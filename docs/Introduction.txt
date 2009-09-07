@@ -1,0 +1,18 @@
+Directed Visual System
+----------------------
+
+A set of programs for the production of visual scenes 
+for use in presentational systems.
+
+----------------------
+
+Usage Scenario:
+
+- Church
+	A church video team would use this suite of programs to produce the visual content for their church services.
+		- Pre-service announcment loops and other info for in house TVs and projectors
+		- Songs lyrics on screens
+		- Camera feeds to nursery and aux screens, overlayed with song lyrics (PiP, etc)
+		- Sermon visuals (slides, text)
+		
+		

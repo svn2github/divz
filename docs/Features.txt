@@ -1,0 +1,150 @@
+Directed Visual System (DViz)
+
+Release 1.0 Feature Target List
+----
+
+Networked Players
+Slide Groups
+Playlists
+Live cameras
+Video backgrounds
+DVD
+Bible text
+
+
+Release 0.1b
+----
+	Specs:
+	------
+		Basic Editor with support for:
+			Slides
+				Basic Timeline
+				Visual Items
+					Video Files
+					Pictures
+					Text
+			Slide Groups
+				Basic SG Timeline
+		Internal Slide Model
+		Basic Stringification Support
+		Save/Log Support
+		Basic Viewer
+			Load Slide Groups 
+			Execute Timeline and Slides
+			Listen for Re-Publish Event from Editor
+			
+		Main Components:
+			Slide Group Editor
+			Playlist Selector
+			Preview Pane
+			Live Control Pane
+			Viewer Window
+		
+	Milestones:
+	-----------
+	
+		Milestone A - Target 10:30pm 2009-09-07
+		----
+			Port FotoWall AbstractContent Items
+			Create Editor Canvas Framework
+			Editor Canvas
+				Resizable Items
+				Properties Window
+			Save Framework
+			
+		Milestone B - Target 10:30pm 2009-09-08
+		----
+			Viewer Canvas
+			Shareable Slide Model
+			Editor Publish Update
+			
+		Milestone C - Target 10:30pm 2009-09-10
+		---
+			Slide Group
+			Timeline Widget
+			Transitions
+		
+		Milestone D - Target 10:30pm 2009-09-13
+		---
+			Prep for Release 0.1b
+			Documentation
+			Test Cases
+			Sample Data
+			Performance Tests
+
+Release 0.2 - Target 2009-09-16
+---
+	Slide Group Visual Elements
+	Playlist Model
+	Viewer Control Panel
+	Effects for Text and Photos
+	
+Relase 0.3 - Target 2009-09-23
+---
+	Timeline Enhancements
+		- Cursor Control Items
+			(jump/loop/pause/wait/sync to other)
+		- Send Sync Signal
+	Non Visual Items
+		Basic Script Element
+		System Exec
+		Basic Audio Support
+		Timeline Control Element
+		
+Release 0.4 - Target 2009-09-30
+---
+	Multiple Outputs
+	Slide "Filter" for say, rear, output
+	Output selection/control UI
+		sync to main / custom Slide Group
+	Preview windows for each output dockable
+
+Release 0.5 - Target 2009-10-14
+---
+	Networkable Viewer (control from main or control on remote, sync to main)
+	Audio in Videos
+	Network Video Feeds
+	Network Feed from Remote DViz 
+	Live Video Camera Item
+	
+Release 0.6 - Target 2009-10-21
+---
+	Visual Polish
+		Transitions (3d/2d)
+		Image/Element Effects
+
+Release 0.7 - Target 2009-11-04
+---
+	DViz Control Enhancments
+		Songs Support
+		Bible Support
+		News Ticker
+		Blank/Clear Buttons
+		Date/Time Item
+		Video Folders
+		Image Folders
+
+Release 0.8 - Target 2009-11-18
+---
+	Remote Control API
+	Remote Control Web Page for Smart Phones
+	Touch Screen Interface for Song Leader Control
+	Keypad Clicker Support for Stage Remotes
+	
+Release 0.9 - Target 2009-11-25
+---
+	DViz Control View Rework and Polish
+	Bug Testing
+	Extensive Documentation
+	Preview Release Online
+	
+Release 1.0 - Target 2009-12-09
+---
+	Public Release
+	$99 for Basic (Simple Editor/Playlist/Viewer/Multi Outputs)
+	$199 for Profesional (Network Viewer/Multiple Viewers Sync over Network/Stream over Network/Song Leader Control UI)
+	
+----------------------------------------------------
+Future Release Feature Sets contingent upon feedback
+----------------------------------------------------
+
