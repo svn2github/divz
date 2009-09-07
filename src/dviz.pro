@@ -3,10 +3,12 @@ contains(QT_CONFIG, opengl): QT += opengl
 #HEADERS   = videoplayer.h  videoitem.h QVideo.h QVideoBuffer.h QVideoDecoder.h QVideoEncoder.h QResizeDecorator.h QVideoTest.h
 #SOURCES   = main.cpp videoplayer.cpp videoitem.cpp QVideo.cpp QVideoBuffer.cpp QVideoDecoder.cpp QVideoEncoder.cpp QResizeDecorator.cpp QVideoTest.cpp
 HEADERS += \
-	dviz.h
+	MainWindow.h \
+	MyGraphicsScene.h
 	
 SOURCES += \
-	dviz.cpp \
+	MainWindow.cpp \
+	MyGraphicsScene.cpp \
 	main.cpp
 
 
