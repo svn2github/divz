@@ -292,31 +292,34 @@ MainWindow::MainWindow(QWidget * parent)
 	
 	//qDebug("Checking for OpenGL...");
 	#ifndef QT_NO_OPENGL
-		graphicsView->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
-		qDebug("Loaded OpenGL viewport.");
+// 		graphicsView->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
+// 		qDebug("Loaded OpenGL viewport.");
 	#endif
 	graphicsView->setRenderHint( QPainter::TextAntialiasing, true);
 	graphicsView->setRenderHint( QPainter::Antialiasing, true );
 	
 	
-	SimpleTextItem * textItem = new SimpleTextItem("Hello, World");
-	QPen textPen;
-	textPen.setWidthF(3);
-	textPen.setColor(QColor(0,0,0,240));
-	textItem->setPen(textPen);
-	textItem->setBrush(QColor(255,255,255,255));
-	textItem->setFont(QFont("Tahoma",88,QFont::Bold));
-	textItem->setZValue(2);
-	textItem->setPos(10,230);
-	scene->addItem(textItem);
-	textItem->setFlags(QGraphicsItem::ItemIsMovable);
+// 	SimpleTextItem * textItem = new SimpleTextItem("Hello, World");
+// 	QPen textPen;
+// 	textPen.setWidthF(3);
+// 	textPen.setColor(QColor(0,0,0,240));
+// 	textItem->setPen(textPen);
+// 	textItem->setBrush(QColor(255,255,255,255));
+// 	textItem->setFont(QFont("Tahoma",88,QFont::Bold));
+// 	textItem->setZValue(2);
+// 	textItem->setPos(10,230);
+// 	scene->addItem(textItem);
+// 	textItem->setFlags(QGraphicsItem::ItemIsMovable);
+// 	
 	
-	
+	scene->addTextContent();
 	
 	QBoxLayout *layout = new QVBoxLayout;
 	layout->addWidget(graphicsView);
 // 	layout->addWidget(rotateSlider);
 // 	layout->addLayout(controlLayout);
+	
+	
 	
 	setLayout(layout);
 }

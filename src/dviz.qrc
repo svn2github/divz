@@ -1,0 +1,51 @@
+<RCC>
+    <qresource prefix="/" >
+        <file>data/action-add.png</file>
+        <file>data/action-configure.png</file>
+        <file>data/action-delete.png</file>
+        <file>data/action-flip-horizontal.png</file>
+        <file>data/action-flip-vertical.png</file>
+        <file>data/action-order-back.png</file>
+        <file>data/action-order-front.png</file>
+        <file>data/action-order-lower.png</file>
+        <file>data/action-order-raise.png</file>
+        <file>data/action-perspective.png</file>
+        <file>data/action-remove.png</file>
+        <file>data/action-rotate.png</file>
+        <file>data/action-save.png</file>
+        <file>data/action-scale.png</file>
+        <file>data/action-snapshot.png</file>
+        <file>data/insert-camera.png</file>
+        <file>data/insert-download.png</file>
+        <file>data/insert-image.png</file>
+        <file>data/insert-text.png</file>
+        <file>data/effects-icons/black-and-white-effect.png</file>
+        <file>data/effects-icons/glow-effect.png</file>
+        <file>data/effects-icons/invert-effect.png</file>
+        <file>data/effects-icons/no-effect.png</file>
+        <file>data/effects-icons/opacity-effect.png</file>
+        <file>data/effects-icons/sepia-effect.png</file>
+        <file>data/effects-icons/nvg-effect.png</file>
+        <file>data/fotowall.png</file>
+        <file>data/opengl-logo.png</file>
+        <file>data/textbold.png</file>
+        <file>data/textinsertimage.png</file>
+        <file>data/textitalic.png</file>
+        <file>data/textsubscript.png</file>
+        <file>data/textsuperscript.png</file>
+        <file>data/textunder.png</file>
+        <!--
+        <file>translations/fotowall_de.qm</file>
+        <file>translations/fotowall_fr.qm</file>
+        <file>translations/fotowall_it.qm</file>
+        <file>translations/fotowall_pl.qm</file>
+        <file>translations/fotowall_pt_BR.qm</file>
+        -->
+    </qresource>
+    <qresource prefix="/plasma-frames" >
+        <file alias="1.svg" >data/frame-plasma-1.svg</file>
+        <file alias="2.svg" >data/frame-plasma-2.svg</file>
+        <file alias="3.svg" >data/frame-plasma-3.svg</file>
+        <file alias="4.svg" >data/frame-plasma-4.svg</file>
+    </qresource>
+</RCC>
