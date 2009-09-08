@@ -17,7 +17,7 @@
 #include "TextContent.h"
 
 TextConfig::TextConfig(TextContent * textContent, QGraphicsItem * parent)
-    : AbstractConfig(textContent, parent)
+    : AbstractConfig(textContent)
     , m_textContent(textContent)
 {
     // inject Text Editor

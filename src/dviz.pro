@@ -24,12 +24,16 @@ RESOURCES += dviz.qrc
 HEADERS += \
 	MainWindow.h \
 	MyGraphicsScene.h \
-	RenderOpts.h 
+	RenderOpts.h \
+	XmlRead.h \
+	XmlSave.h 
 	
 SOURCES += \
 	MainWindow.cpp \
 	MyGraphicsScene.cpp \
-	main.cpp
+	XmlRead.cpp \
+	XmlSave.cpp \
+	main.cpp 
 
 QT += core \
     gui \
@@ -61,6 +65,7 @@ win32 {
 
 include(frames/frames.pri)
 include(items/items.pri)
+include(model/model.pri)
 include(3rdparty/richtextedit/richtextedit.pri)
 include(3rdparty/videocapture/videocapture.pri)
 include(3rdparty/posterazor/posterazor.pri)

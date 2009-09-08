@@ -12,6 +12,7 @@
 #include "items/TextConfig.h"
 #include "RenderOpts.h"
 
+#include <QPushButton>
 
 #include <QAbstractTextDocumentLayout>
 #include <QFile>
@@ -138,12 +139,14 @@ void MyGraphicsScene::slotConfigureContent(const QPoint & scenePoint)
 	
 	// common links
 	m_configs.append(p);
-	addItem(p);
+	//addItem(p);
 	connect(p, SIGNAL(applyLook(quint32,bool,bool)), this, SLOT(slotApplyLook(quint32,bool,bool)));
+	p->setScene(this);
 	p->show();
-	p->setPos(scenePoint - QPoint(10, 10));
-	p->keepInBoundaries(sceneRect().toRect());
-	p->setFocus();
+	
+// 	p->setPos(scenePoint - QPoint(10, 10));
+// 	p->keepInBoundaries(sceneRect().toRect());
+// 	p->setFocus();
 }
 /*
 void MyGraphicsScene::slotBackgroundContent()

@@ -17,18 +17,22 @@
 
 #include <QGraphicsProxyWidget>
 #include <QBasicTimer>
+#include "MyGraphicsScene.h"
 class AbstractContent;
 class Frame;
 class QAbstractButton;
 class QListWidgetItem;
-class StyledButtonItem;
+//class StyledButtonItem;
+class QPushButton;
+class MyGraphicsScene;
 namespace Ui { class AbstractConfig; }
 
+#include <QWidget>
 
-class AbstractConfig : public QGraphicsProxyWidget {
+class AbstractConfig : public QWidget {
     Q_OBJECT
     public:
-        AbstractConfig(AbstractContent * content, QGraphicsItem * parent = 0);
+        AbstractConfig(AbstractContent * content); //, QGraphicsItem * parent = 0);
         virtual ~AbstractConfig();
 
         void dispose();
@@ -38,6 +42,9 @@ class AbstractConfig : public QGraphicsProxyWidget {
 
         // manage property box
         void keepInBoundaries(const QRect & rect);
+        
+        MyGraphicsScene * scene() { return m_scene; }
+        void setScene(MyGraphicsScene * s) { m_scene = s; }
 
     Q_SIGNALS:
         void applyLook(quint32 frameClass, bool mirrored, bool allContents);
@@ -47,12 +54,12 @@ class AbstractConfig : public QGraphicsProxyWidget {
         // used by subclasses
         void addTab(QWidget * widget, const QString & label, bool front = false, bool setCurrent = false);
         void showOkButton(bool show);
-
+/*
         // ::QGraphicsProxyWidget
         void mousePressEvent(QGraphicsSceneMouseEvent * event);
         void mouseDoubleClickEvent(QGraphicsSceneMouseEvent * event);
         void paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget);
-        void resizeEvent(QGraphicsSceneResizeEvent * event);
+        void resizeEvent(QGraphicsSceneResizeEvent * event);*/
 
     protected Q_SLOTS:
         virtual void slotOkClicked() {};
@@ -63,9 +70,10 @@ class AbstractConfig : public QGraphicsProxyWidget {
         void layoutButtons();
         AbstractContent *       m_content;
         Ui::AbstractConfig *    m_commonUi;
-        StyledButtonItem *      m_closeButton;
-        StyledButtonItem *      m_okButton;
+        QPushButton *           m_closeButton;
+        QPushButton *           m_okButton;
         Frame *                 m_frame;
+        MyGraphicsScene *	m_scene;
 
     private Q_SLOTS:
         void on_newFrame_clicked();

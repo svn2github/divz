@@ -33,20 +33,18 @@
 #include <QPropertyAnimation>
 #endif
 
-AbstractConfig::AbstractConfig(AbstractContent * content, QGraphicsItem * parent)
-    : QGraphicsProxyWidget(parent)
+AbstractConfig::AbstractConfig(AbstractContent * content) //, QGraphicsItem * parent)
+    : QWidget()
     , m_content(content)
     , m_commonUi(new Ui::AbstractConfig())
     , m_closeButton(0)
     , m_okButton(0)
     , m_frame(FrameFactory::defaultPanelFrame())
 {
-    // close button
-    m_closeButton = new StyledButtonItem(tr(" x "), font(), this);//this, ":/data/button-close.png", ":/data/button-close-hovered.png", ":/data/button-close-pressed.png");
-    connect(m_closeButton, SIGNAL(clicked()), this, SLOT(slotRequestClose()));
+   
 
     // WIDGET setup
-    QWidget * widget = new QWidget();
+    QWidget * widget = new QWidget(this);
 #if QT_VERSION < 0x040500
     widget->setAttribute(Qt::WA_NoSystemBackground, true);
 #else
@@ -84,11 +82,33 @@ AbstractConfig::AbstractConfig(AbstractContent * content, QGraphicsItem * parent
     connect(m_commonUi->listWidget, SIGNAL(itemSelectionChanged()), this, SLOT(on_listWidget_itemSelectionChanged()));
     connect(m_commonUi->reflection, SIGNAL(toggled(bool)), this, SLOT(on_reflection_toggled(bool)));
 
-    // ITEM setup
-    setWidget(widget);
-    static qreal s_propZBase = 99999;
-    setZValue(s_propZBase++);
+//     // ITEM setup
+//     setWidget(widget);
+//     static qreal s_propZBase = 99999;
+//     setZValue(s_propZBase++);
 
+	QBoxLayout *layout = new QVBoxLayout;
+	layout->addWidget(widget);
+// 	layout->addWidget(rotateSlider);
+// 	layout->addLayout(controlLayout);
+	
+	 // close button
+	m_closeButton = new QPushButton(tr(" x "));
+	connect(m_closeButton, SIGNAL(clicked()), this, SLOT(slotRequestClose()));
+	
+	m_okButton = new QPushButton(tr("ok"));
+	connect(m_okButton, SIGNAL(clicked()), this, SLOT(slotOkClicked()));
+	
+	QBoxLayout *controlLayout = new QHBoxLayout;
+	controlLayout->addStretch(1);
+	controlLayout->addWidget(m_closeButton);
+	controlLayout->addWidget(m_okButton);
+	layout->addLayout(controlLayout);
+	
+	
+	
+	setLayout(layout);
+/*
 #if QT_VERSION >= 0x040600
     // fade in animation
     QPropertyAnimation * ani = new QPropertyAnimation(this, "opacity");
@@ -97,7 +117,7 @@ AbstractConfig::AbstractConfig(AbstractContent * content, QGraphicsItem * parent
     ani->setStartValue(0.0);
     ani->setEndValue(1.0);
     ani->start(QPropertyAnimation::DeleteWhenStopped);
-#endif
+#endif*/
 }
 
 AbstractConfig::~AbstractConfig()
@@ -126,14 +146,14 @@ AbstractContent * AbstractConfig::content() const
 {
     return m_content;
 }
-
+/*
 void AbstractConfig::keepInBoundaries(const QRect & rect)
 {
     QRect r = mapToScene(boundingRect()).boundingRect().toRect();
     r.setLeft(qBound(rect.left(), r.left(), rect.right() - r.width()));
     r.setTop(qBound(rect.top(), r.top(), rect.bottom() - r.height()));
     setPos(r.topLeft());
-}
+}*/
 
 void AbstractConfig::addTab(QWidget * widget, const QString & label, bool front, bool setCurrent)
 {
@@ -152,16 +172,17 @@ void AbstractConfig::addTab(QWidget * widget, const QString & label, bool front,
 void AbstractConfig::showOkButton(bool show)
 {
     if (show) {
-        if (!m_okButton) {
-            m_okButton = new StyledButtonItem(tr("ok"), font(), this);
-            connect(m_okButton, SIGNAL(clicked()), this, SLOT(slotOkClicked()));
-            layoutButtons();
-        }
-        m_okButton->show();
+//         if (!m_okButton) {
+//             m_okButton = new StyledButtonItem(tr("ok"), font(), this);
+//             connect(m_okButton, SIGNAL(clicked()), this, SLOT(slotOkClicked()));
+//             layoutButtons();
+//         }
+	if(m_okButton)
+        	m_okButton->show();
     } else if (m_okButton)
         m_okButton->hide();
 }
-
+/*
 void AbstractConfig::mousePressEvent(QGraphicsSceneMouseEvent * event)
 {
     QGraphicsProxyWidget::mousePressEvent(event);
@@ -192,7 +213,7 @@ void AbstractConfig::resizeEvent(QGraphicsSceneResizeEvent * event)
     layoutButtons();
     QGraphicsProxyWidget::resizeEvent(event);
 }
-
+*/
 void AbstractConfig::slotRequestClose()
 {
     MyGraphicsScene * desk = static_cast<MyGraphicsScene*>(scene());
@@ -215,7 +236,7 @@ void AbstractConfig::populateFrameList()
         item->setData(Qt::UserRole, frameClass);
     }
 }
-
+/*
 void AbstractConfig::layoutButtons()
 {
     // layout the close button
@@ -229,7 +250,7 @@ void AbstractConfig::layoutButtons()
         if (m_okButton)
             m_okButton->setPos(cRect.left() + m_closeButton->boundingRect().width() + 8, cRect.top());
     }
-}
+}*/
 
 void AbstractConfig::on_newFrame_clicked()
 {
