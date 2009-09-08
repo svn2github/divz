@@ -43,28 +43,38 @@ Release 0.1b
 	Milestones:
 	-----------
 	
-		Milestone A - Target 10:30pm 2009-09-07
+		Milestone A - Target 10:30pm 2009-09-06
 		----
 			Port FotoWall AbstractContent Items
 			Create Editor Canvas Framework
 			Editor Canvas
 				Resizable Items
 				Properties Window
-			Save Framework
 			
-		Milestone B - Target 10:30pm 2009-09-08
+		Milestone B - Target 10:30pm 2009-09-07
 		----
-			Viewer Canvas
-			Shareable Slide Model
+			Slide Model / Item Model
+			Slide Group Model
+			Load/Save Framework for slides, items, slide groups, slide templates
+			Adapt abastractconfig to top-level widget
+			
+		Milestone C - Target 10:30pm 2009-09-08
+		----
+			Slide Template Model 
+			Code to translate model to GraphicsView
+			Revert to old CornerItems
+			Create TextBox Item 
+			Basic Editor (toolbar with items, click, add to canvas)
+			Basic Viewer for Model
 			Editor Publish Update
 			
-		Milestone C - Target 10:30pm 2009-09-10
+		Milestone D - Target 10:30pm 2009-09-10
 		---
 			Slide Group
 			Timeline Widget
 			Transitions
 		
-		Milestone D - Target 10:30pm 2009-09-13
+		Milestone E - Target 10:30pm 2009-09-13
 		---
 			Prep for Release 0.1b
 			Documentation
