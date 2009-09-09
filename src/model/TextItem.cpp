@@ -18,17 +18,17 @@ TextItem::~TextItem() {}
 void TextItem::setText(QString text)
 {
 	m_text = text;
-// 	qDebug("TextItem::setText: '%s'",text.toAscii().constData());
+        qDebug("TextItem::setText: '%s'",text.toAscii().constData());
 	setChanged("text",text);
 }
 
-ITEM_PROPSET(TextItem, FontFamily, QString, fontFamily);
-ITEM_PROPSET(TextItem, FontSize, double, fontSize);
-ITEM_PROPSET(TextItem, ShapeEnabled, bool, shapeEnabled);
-ITEM_PROPSET(TextItem, ShapePoint1, QPointF, shapePoint1);
-ITEM_PROPSET(TextItem, ShapePoint2, QPointF, shapePoint2);
-ITEM_PROPSET(TextItem, ShapePoint3, QPointF, shapePoint3);
-ITEM_PROPSET(TextItem, ShapePoint4, QPointF, shapePoint4);
+ITEM_PROPSET(TextItem, FontFamily, QString, fontFamily)
+ITEM_PROPSET(TextItem, FontSize, double, fontSize)
+ITEM_PROPSET(TextItem, ShapeEnabled, bool, shapeEnabled)
+ITEM_PROPSET(TextItem, ShapePoint1, QPointF, shapePoint1)
+ITEM_PROPSET(TextItem, ShapePoint2, QPointF, shapePoint2)
+ITEM_PROPSET(TextItem, ShapePoint3, QPointF, shapePoint3)
+ITEM_PROPSET(TextItem, ShapePoint4, QPointF, shapePoint4)
 
 #include <assert.h>
 AbstractContent * TextItem::createDelegate(QGraphicsScene *scene)

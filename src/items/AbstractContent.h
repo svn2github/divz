@@ -42,7 +42,7 @@ class AbstractContent : public AbstractDisposeable
         
         // HACK for now, not setting virtual so I dont have to edit all the child classes - for now, will edit one-by-one
         void syncFromModelItem(AbstractVisualItem*);
-        AbstractVisualItem * syncToModelItem(AbstractVisualItem *model= 0); //defaults to m_modelItem
+        AbstractVisualItem * syncToModelItem(AbstractVisualItem *model); //defaults to m_modelItem
         
         // size
         QRect contentsRect() const;
@@ -112,6 +112,9 @@ class AbstractContent : public AbstractDisposeable
         QVariant itemChange(GraphicsItemChange change, const QVariant & value);
         
         void setModelItemIsChanging(bool flag = true);
+        void setModelItem(AbstractVisualItem *model);
+        AbstractVisualItem *modelItem() { return m_modelItem; }
+
 
     protected Q_SLOTS:
         void slotConfigure();

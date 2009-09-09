@@ -342,21 +342,21 @@ MainWindow::MainWindow(QWidget * parent)
 		
 		if(item->itemClass() == ITEM_TEXT )
 		{
-// 			printf("Text Item: Text: '%s'\n", ((TextItem *)item)->text().toAscii().constData());
+// 			qDebug("Text Item: Text: '%s'\n", ((TextItem *)item)->text().toAscii().constData());
 		}
 		else
 		{
 			printf("(Unknown item class)\n");
 		}
 		
-		printf("Mark1\n");
+                //printf("Mark1\n");
 		AbstractVisualItem *v = (AbstractVisualItem*)item;
-		printf("Mark2\n");
+                //printf("Mark2\n");
 		AbstractContent * visual = v->createDelegate(scene);
-		printf("Mark3\n");
+                //printf("Mark3\n");
 		scene->initContent(visual, QPoint(v->pos().x(),v->pos().y()));
 		
-		printf("Done loading\n");
+                //printf("Done loading\n");
 		
 	}
 	else
@@ -369,7 +369,7 @@ MainWindow::MainWindow(QWidget * parent)
 		
 		printf("> Save Test:\n");
 		printf("Item Class: %d\n",t->itemClass());
-		printf("Item Name: %s\n",t->itemName().toAscii().constData());
+                qDebug("Item Name: %s\n",t->itemName().toAscii().constData());
 		printf("Item Id: %d\n",t->itemId());
 		
 		AbstractContent * item = t->createDelegate(scene);
@@ -410,7 +410,7 @@ MainWindow::~MainWindow()
 	
 	if(t->itemClass() == ITEM_TEXT )
 	{
-		printf("Text Item: Text: '%s'\n", t->text().toAscii().constData());
+                qDebug("Text Item: Text: '%s'", t->text().toAscii().constData());
 	}
 	else
 	{

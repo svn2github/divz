@@ -77,12 +77,12 @@ QString TextContent::toHtml() const
 
 void TextContent::setHtml(const QString & htmlCode)
 {
-// 	qDebug("Setting HTML... [%s]",htmlCode.toAscii().constData());
+        qDebug("Setting HTML... [%s]",htmlCode.toAscii().constData());
 	m_text->setHtml(htmlCode);
 	updateTextConstraints();
-// 	qDebug("Calling syncToModelItem");
+        qDebug("Calling syncToModelItem");
 	syncToModelItem(0);
-// 	qDebug("Done with syncToModelItem()");
+        qDebug("Done with syncToModelItem()");
 }
 
 bool TextContent::hasShape() const
@@ -159,7 +159,8 @@ QWidget * TextContent::createPropertyWidget()
 
 void TextContent::syncFromModelItem(AbstractVisualItem *model)
 {
-	setModelItemIsChanging(true);
+        //setModelItemIsChanging(true);
+         setModelItem(model);
 	
 	QFont font;
 	TextItem * textModel = dynamic_cast<TextItem*>(model);
@@ -185,7 +186,7 @@ void TextContent::syncFromModelItem(AbstractVisualItem *model)
 	
 	AbstractContent::syncFromModelItem(model);
 	
-	setModelItemIsChanging(false);
+        //setModelItemIsChanging(false);
 }
 
 AbstractVisualItem * TextContent::syncToModelItem(AbstractVisualItem *model)
@@ -197,10 +198,10 @@ AbstractVisualItem * TextContent::syncToModelItem(AbstractVisualItem *model)
 	if(!textModel)
 	{
 		setModelItemIsChanging(false);
-// 		qDebug("TextContent::syncToModelItem: textModel is null, cannot sync\n");
+                  qDebug("TextContent::syncToModelItem: textModel is null, cannot sync\n");
 		return 0;
 	}
-	
+        qDebug("TextContent:syncToModelItem: Syncing to model! Yay!");
 	textModel->setText(m_text->toHtml());
 	textModel->setFontFamily(m_text->defaultFont().family());
 	textModel->setFontSize(m_text->defaultFont().pointSize());

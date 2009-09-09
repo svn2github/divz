@@ -44,6 +44,8 @@ AbstractContent::AbstractContent(QGraphicsScene * scene, QGraphicsItem * parent,
     , m_xRotationAngle(0)
     , m_yRotationAngle(0)
     , m_zRotationAngle(0)
+    , m_modelItem(0)
+    , m_modelItemIsChanging(false)
 {
     // the buffered graphics changes timer
     m_gfxChangeTimer = new QTimer(this);
@@ -148,7 +150,7 @@ void AbstractContent::resizeContents(const QRect & rect, bool keepRatio)
 
     m_contentsRect = rect;
     
-    syncToModelItem(0);
+    syncToModelItem(modelItem());
     
     if (keepRatio) {
         int hfw = contentHeightForWidth(rect.width());
@@ -194,7 +196,7 @@ void AbstractContent::setFrame(Frame * frame)
     if (m_frame)
         FrameFactory::setDefaultPictureClass(m_frame->frameClass());
     resizeContents(m_contentsRect);
-    syncToModelItem(0);
+    syncToModelItem(modelItem());
     layoutChildren();
     update();
     GFX_CHANGED();
@@ -369,11 +371,23 @@ void AbstractContent::modelItemChanged(QString fieldName, QVariant value)
 	}
 }
 
+void AbstractContent::setModelItem(AbstractVisualItem *model)
+{
+//	setModelItemIsChanging(true);
+        m_modelItem = model;
+
+        connect(model, SIGNAL(itemChanged(QString, QVariant)), this, SLOT(modelItemChanged(QString, QVariant)));
+}
+
 void AbstractContent::syncFromModelItem(AbstractVisualItem *model)
 {
-	setModelItemIsChanging(true);
-	
+//	setModelItemIsChanging(true);
+
 	assert(model);
+
+        if(!modelItem())
+            setModelItem(model);
+
 	QRectF r = model->contentsRect();
 	resizeContents(QRect((int)r.left(),(int)r.top(),(int)r.width(),(int)r.height()));
 	
@@ -405,33 +419,35 @@ void AbstractContent::syncFromModelItem(AbstractVisualItem *model)
 	//     domElement = pe.firstChildElement("mirror");
 	//     setMirrorEnabled(domElement.attribute("state").toInt());
 	
-	connect(model, SIGNAL(itemChanged(QString, QVariant)), this, SLOT(modelItemChanged(QString, QVariant)));
+
 	
-	m_modelItem = model;
-	
-	setModelItemIsChanging(false);
+
+//	setModelItemIsChanging(false);
 // 	return true;
 }
 
 AbstractVisualItem * AbstractContent::syncToModelItem(AbstractVisualItem * model)
 {
-	if(m_modelItemIsChanging)
+        /*
+        if(m_modelItemIsChanging)
 	{
+                qDebug("AbstractContent::syncToModelItem: m_modelItemIsChanging is true, not syncing");
 		return 0;
 	}
+        */
 		
 	// catch any loops back in from the model firing signals about its values changing
 	setModelItemIsChanging(true);
 	
 	if(!model)
 	{
-		model = m_modelItem;
+                model = modelItem();
 	}
 	
 	if(!model)
 	{
 		setModelItemIsChanging(false);
-		//qDebug("AbstractContent::syncToModelItem: Unable to sync to model because we've got nothing to sync to!");
+                qDebug("AbstractContent::syncToModelItem: m_modelItem and 'model' arg was NULL, cannot sync");
 		return 0;
 	}
 	
@@ -627,7 +643,7 @@ QVariant AbstractContent::itemChange(GraphicsItemChange change, const QVariant &
             // notify about setPos
             case ItemPositionHasChanged:
                 m_mirrorItem->sourceMoved();
-                syncToModelItem();
+                syncToModelItem(modelItem());
                 break;
 
             // notify about graphics changes
@@ -638,17 +654,17 @@ QVariant AbstractContent::itemChange(GraphicsItemChange change, const QVariant &
 #if QT_VERSION >= 0x040500
             case ItemOpacityHasChanged:
 #endif
-		syncToModelItem();
+                syncToModelItem(modelItem());
                 GFX_CHANGED();
                 break;
 
             case ItemZValueHasChanged:
-                syncToModelItem();
+                syncToModelItem(modelItem());
                 m_mirrorItem->setZValue(zValue());
                 break;
 
             case ItemVisibleHasChanged:
-                syncToModelItem();
+                syncToModelItem(modelItem());
                 m_mirrorItem->setVisible(isVisible());
                 break;
 
