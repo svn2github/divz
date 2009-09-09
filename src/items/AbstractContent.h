@@ -116,6 +116,8 @@ class AbstractContent : public AbstractDisposeable
         AbstractVisualItem *modelItem() { return m_modelItem; }
 
 
+	bool m_dontSyncToModel;
+        
     protected Q_SLOTS:
         void slotConfigure();
         void slotStackFront();

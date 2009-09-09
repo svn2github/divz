@@ -36,6 +36,8 @@ TextContent::TextContent(QGraphicsScene * scene, QGraphicsItem * parent)
     , m_textMargin(4)
     , m_shapeEditor(0)
 {
+	m_dontSyncToModel = true;
+	
 	setFrame(0);
 	setFrameTextEnabled(false);
 	setToolTip(tr("Right click to Edit the text"));
@@ -62,6 +64,8 @@ TextContent::TextContent(QGraphicsScene * scene, QGraphicsItem * parent)
 	m_shapeEditor->setVisible(false);
 	m_shapeEditor->setControlPoints(QList<QPointF>() << QPointF(-100, -50) << QPointF(-10, 40) << QPointF(100, -50) << QPointF(100, 50));
 	connect(m_shapeEditor, SIGNAL(shapeChanged(const QPainterPath &)), this, SLOT(setShapePath(const QPainterPath &)));
+	
+	m_dontSyncToModel = false;
 }
 
 TextContent::~TextContent()
@@ -77,12 +81,12 @@ QString TextContent::toHtml() const
 
 void TextContent::setHtml(const QString & htmlCode)
 {
-        qDebug("Setting HTML... [%s]",htmlCode.toAscii().constData());
+        //qDebug("Setting HTML... [%s]",htmlCode.toAscii().constData());
 	m_text->setHtml(htmlCode);
 	updateTextConstraints();
-        qDebug("Calling syncToModelItem");
+        //qDebug("Calling syncToModelItem");
 	syncToModelItem(0);
-        qDebug("Done with syncToModelItem()");
+        //qDebug("Done with syncToModelItem()");
 }
 
 bool TextContent::hasShape() const
@@ -159,8 +163,8 @@ QWidget * TextContent::createPropertyWidget()
 
 void TextContent::syncFromModelItem(AbstractVisualItem *model)
 {
-        //setModelItemIsChanging(true);
-         setModelItem(model);
+        m_dontSyncToModel = true;
+	setModelItem(model);
 	
 	QFont font;
 	TextItem * textModel = dynamic_cast<TextItem*>(model);
@@ -186,7 +190,7 @@ void TextContent::syncFromModelItem(AbstractVisualItem *model)
 	
 	AbstractContent::syncFromModelItem(model);
 	
-        //setModelItemIsChanging(false);
+        m_dontSyncToModel = false;
 }
 
 AbstractVisualItem * TextContent::syncToModelItem(AbstractVisualItem *model)
@@ -198,10 +202,10 @@ AbstractVisualItem * TextContent::syncToModelItem(AbstractVisualItem *model)
 	if(!textModel)
 	{
 		setModelItemIsChanging(false);
-                  qDebug("TextContent::syncToModelItem: textModel is null, cannot sync\n");
+                //qDebug("TextContent::syncToModelItem: textModel is null, cannot sync\n");
 		return 0;
 	}
-        qDebug("TextContent:syncToModelItem: Syncing to model! Yay!");
+        //qDebug("TextContent:syncToModelItem: Syncing to model! Yay!");
 	textModel->setText(m_text->toHtml());
 	textModel->setFontFamily(m_text->defaultFont().family());
 	textModel->setFontSize(m_text->defaultFont().pointSize());

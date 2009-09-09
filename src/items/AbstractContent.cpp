@@ -30,6 +30,7 @@
 #include <QUrl>
 #include <math.h>
 #include <assert.h>
+#include <QDebug>
 
 AbstractContent::AbstractContent(QGraphicsScene * scene, QGraphicsItem * parent, bool noRescale)
     : AbstractDisposeable(parent, true)
@@ -46,6 +47,7 @@ AbstractContent::AbstractContent(QGraphicsScene * scene, QGraphicsItem * parent,
     , m_zRotationAngle(0)
     , m_modelItem(0)
     , m_modelItemIsChanging(false)
+    , m_dontSyncToModel(true)
 {
     // the buffered graphics changes timer
     m_gfxChangeTimer = new QTimer(this);
@@ -103,6 +105,8 @@ AbstractContent::AbstractContent(QGraphicsScene * scene, QGraphicsItem * parent,
 
     // display mirror
     setMirrorEnabled(RenderOpts::LastMirrorEnabled);
+    
+    m_dontSyncToModel = false;
 }
 
 AbstractContent::~AbstractContent()
@@ -112,6 +116,7 @@ AbstractContent::~AbstractContent()
     delete m_mirrorItem;
     delete m_frameTextItem;
     delete m_frame;
+    m_modelItem = 0;
 }
 
 void AbstractContent::dispose()
@@ -142,32 +147,33 @@ QRect AbstractContent::contentsRect() const
 
 void AbstractContent::resizeContents(const QRect & rect, bool keepRatio)
 {
-    if (!rect.isValid())
-        return;
-
-    
-    prepareGeometryChange();
-
-    m_contentsRect = rect;
-    
-    syncToModelItem(modelItem());
-    
-    if (keepRatio) {
-        int hfw = contentHeightForWidth(rect.width());
-        if (hfw > 1) {
-            m_contentsRect.setTop(-hfw / 2);
-            m_contentsRect.setHeight(hfw);
-        }
-    }
-
-    if (m_frame)
-        m_frameRect = m_frame->frameRect(m_contentsRect);
-    else
-        m_frameRect = m_contentsRect;
-
-    layoutChildren();
-    update();
-    GFX_CHANGED();
+	if (!rect.isValid())
+		return;
+	
+	prepareGeometryChange();
+	
+	m_contentsRect = rect;
+	
+	syncToModelItem(modelItem());
+	
+	if (keepRatio) 
+	{
+		int hfw = contentHeightForWidth(rect.width());
+		if (hfw > 1) 
+		{
+			m_contentsRect.setTop(-hfw / 2);
+			m_contentsRect.setHeight(hfw);
+		}
+	}
+	
+	if (m_frame)
+		m_frameRect = m_frame->frameRect(m_contentsRect);
+	else
+		m_frameRect = m_contentsRect;
+	
+	layoutChildren();
+	update();
+	GFX_CHANGED();
 }
 
 void AbstractContent::resetContentsRatio()
@@ -191,15 +197,15 @@ void AbstractContent::delayedDirty(int ms)
 
 void AbstractContent::setFrame(Frame * frame)
 {
-    delete m_frame;
-    m_frame = frame;
-    if (m_frame)
-        FrameFactory::setDefaultPictureClass(m_frame->frameClass());
-    resizeContents(m_contentsRect);
-    syncToModelItem(modelItem());
-    layoutChildren();
-    update();
-    GFX_CHANGED();
+	delete m_frame;
+	m_frame = frame;
+	if (m_frame)
+		FrameFactory::setDefaultPictureClass(m_frame->frameClass());
+	resizeContents(m_contentsRect);
+	syncToModelItem(modelItem());
+	layoutChildren();
+	update();
+	GFX_CHANGED();
 }
 
 quint32 AbstractContent::frameClass() const
@@ -381,7 +387,7 @@ void AbstractContent::setModelItem(AbstractVisualItem *model)
 
 void AbstractContent::syncFromModelItem(AbstractVisualItem *model)
 {
-//	setModelItemIsChanging(true);
+	m_dontSyncToModel = true;
 
 	assert(model);
 
@@ -422,20 +428,17 @@ void AbstractContent::syncFromModelItem(AbstractVisualItem *model)
 
 	
 
-//	setModelItemIsChanging(false);
-// 	return true;
+	m_dontSyncToModel = false;
 }
 
 AbstractVisualItem * AbstractContent::syncToModelItem(AbstractVisualItem * model)
 {
-        /*
-        if(m_modelItemIsChanging)
+        if(m_dontSyncToModel)
 	{
-                qDebug("AbstractContent::syncToModelItem: m_modelItemIsChanging is true, not syncing");
+                //qDebug("AbstractContent::syncToModelItem: m_inConstructor is true, not syncing");
 		return 0;
 	}
-        */
-		
+        	
 	// catch any loops back in from the model firing signals about its values changing
 	setModelItemIsChanging(true);
 	
@@ -458,6 +461,8 @@ AbstractVisualItem * AbstractContent::syncToModelItem(AbstractVisualItem * model
 	model->setZValue(zValue());
 	model->setIsVisible(isVisible());
 	model->setFrameClass(frameClass());
+	
+	//qDebug() << "AbstractContent::syncToModelItem: pos=" << model->pos() << ", rect=" << model->contentsRect();
 	/*
 
     domElement= doc.createElement("frame-text-enabled");
