@@ -25,19 +25,25 @@ class Frame;
 class MirrorItem;
 class QGraphicsTextItem;
 class QPointF;
+#include "model/AbstractVisualItem.h"
 
 
 /// \brief Base class of Canvas Item (with lots of gadgets!)
 class AbstractContent : public AbstractDisposeable
 {
     Q_OBJECT
+    		
     public:
         AbstractContent(QGraphicsScene * scene, QGraphicsItem * parent = 0, bool noRescale = false);
         virtual ~AbstractContent();
 
         // ::AbstractDisposeable
         void dispose();
-
+        
+        // HACK for now, not setting virtual so I dont have to edit all the child classes - for now, will edit one-by-one
+        void syncFromModelItem(AbstractVisualItem*);
+        AbstractVisualItem * syncToModelItem(AbstractVisualItem *model= 0); //defaults to m_modelItem
+        
         // size
         QRect contentsRect() const;
         void resizeContents(const QRect & rect, bool keepRatio = false);
@@ -68,8 +74,8 @@ class AbstractContent : public AbstractDisposeable
         // to be reimplemented by subclasses
         virtual QString contentName() const = 0;
         virtual QWidget * createPropertyWidget();
-        virtual bool fromXml(QDomElement & parentElement);
-        virtual void toXml(QDomElement & parentElement) const;
+//         virtual bool fromXml(QDomElement & parentElement);
+//         virtual void toXml(QDomElement & parentElement) const;
         virtual QPixmap renderContent(const QSize & size, Qt::AspectRatioMode ratio) const = 0;
 
         // ::QGraphicsItem
@@ -104,6 +110,8 @@ class AbstractContent : public AbstractDisposeable
         void mousePressEvent(QGraphicsSceneMouseEvent * event);
         void keyPressEvent(QKeyEvent * event);
         QVariant itemChange(GraphicsItemChange change, const QVariant & value);
+        
+        void setModelItemIsChanging(bool flag = true);
 
     protected Q_SLOTS:
         void slotConfigure();
@@ -112,6 +120,7 @@ class AbstractContent : public AbstractDisposeable
         void slotStackLower();
         void slotStackBack();
         void slotSaveAs();
+        void modelItemChanged(QString fieldName, QVariant value);
 
     private:
         void createCorner(Qt::Corner corner, bool noRescale);
@@ -131,6 +140,9 @@ class AbstractContent : public AbstractDisposeable
         double              m_xRotationAngle;
         double              m_yRotationAngle;
         double              m_zRotationAngle;
+        AbstractVisualItem *m_modelItem;
+        bool		    m_modelItemIsChanging;
+        
 
     private Q_SLOTS:
         void slotPerspective(const QPointF & sceneRelPoint, Qt::KeyboardModifiers modifiers);

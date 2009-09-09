@@ -27,10 +27,15 @@ class QPushButton;
 class MyGraphicsScene;
 namespace Ui { class AbstractConfig; }
 
+class AbstractVisualItem;
+
 #include <QWidget>
 
 class AbstractConfig : public QWidget {
     Q_OBJECT
+    	
+    	
+    
     public:
         AbstractConfig(AbstractContent * content); //, QGraphicsItem * parent = 0);
         virtual ~AbstractConfig();

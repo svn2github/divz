@@ -5,7 +5,7 @@
 #include <QVariant>
 #include <QDomElement>
 
-#define ITEM_PROPSET(cn,a,b,c) void cn::set##a(b x){m_##c = x;setChanged(#c,x);}
+#define ITEM_PROPSET(className,setterName,typeName,memberName) void className::set##setterName(typeName value){m_##memberName = value;setChanged(#memberName,value);}
 
 
 class AbstractItem : public QObject

@@ -1,11 +1,12 @@
 #include "AbstractVisualItem.h"
 //#include "frames/FrameFactory.h"
 #include <QTransform>
+#include <QDebug>
 
 AbstractVisualItem::AbstractVisualItem() 
 {
 	m_pos = QPointF();
-	m_contentsRect = QRectF();
+	m_contentsRect = QRectF(0,0,0,0);
 	m_isVisible = false;
 	m_zValue = 0;
 	m_frameClass = 0;
@@ -15,11 +16,25 @@ AbstractVisualItem::AbstractVisualItem()
 	m_opacity = 1;
 }
 
+AbstractContent * AbstractVisualItem::createDelegate(QGraphicsScene*) {return 0;}
 
 //#define PROPSET (a,b,c) void AbstractVisualItem::set##a(b x){m_##b = x;setChanged(c,x);}
 
 ITEM_PROPSET(AbstractVisualItem, Pos,        QPointF, pos);
-ITEM_PROPSET(AbstractVisualItem, ContentsRect,QRectF, contentsRect);
+//ITEM_PROPSET(AbstractVisualItem, ContentsRect,QRectF, contentsRect);
+
+void AbstractVisualItem::setContentsRect(QRectF r)
+{
+	
+// 	qDebug() << "AbstractVisualItem::setContentsRect: new: " << r;
+// 	qDebug() << "AbstractVisualItem::setContentsRect: current: " << m_contentsRect;
+	//m_contentsRect.setLeft(0);
+	
+	m_contentsRect = QRectF(r.left(), r.top(), r.width(), r.height());
+	setChanged("contentsRect",r);
+}
+
+
 ITEM_PROPSET(AbstractVisualItem, IsVisible,  bool,    isVisible);
 ITEM_PROPSET(AbstractVisualItem, ZValue,     double,  zValue);
 ITEM_PROPSET(AbstractVisualItem, FrameClass, quint32, frameClass);
@@ -43,7 +58,7 @@ bool AbstractVisualItem::fromXml(QDomElement & pe)
 	y = domElement.firstChildElement("y").text().toDouble();
 	w = domElement.firstChildElement("w").text().toDouble();
 	h = domElement.firstChildElement("h").text().toDouble();
-	setContentsRect(QRect(x, y, w, h));
+	setContentsRect(QRectF(x, y, w, h));
 	
 	// Load position coordinates
 	domElement = pe.firstChildElement("pos");

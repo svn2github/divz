@@ -23,15 +23,17 @@ class MyGraphicsScene : public QGraphicsScene
 	//         friend class XmlSave;
 	
 		MyGraphicsScene(QObject * parent = 0);
-// 		~MyGraphicsScene();
+ 		~MyGraphicsScene();
 		
-		void addTextContent();
+		TextContent * addTextContent();
+		
+		void initContent(AbstractContent * content, const QPoint & pos);
+		
 		
 	signals:
 		void showPropertiesWidget(QWidget * widget);
 		
 	private:
-		void initContent(AbstractContent * content, const QPoint & pos);
 		TextContent * createText(const QPoint & pos);
 	
 		QList<AbstractContent *> m_content;

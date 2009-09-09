@@ -16,6 +16,7 @@
 #include "frames/Frame.h"
 #include "items/BezierCubicItem.h"
 #include "items/TextProperties.h"
+#include "model/TextItem.h"
 // #include "CPixmap.h"
 #include "RenderOpts.h"
 #include <QDebug>
@@ -43,7 +44,7 @@ TextContent::TextContent(QGraphicsScene * scene, QGraphicsItem * parent)
 	m_text = new QTextDocument(this);
 	
 	#if QT_VERSION >= 0x040500
-		m_textMargin = m_text->documentMargin();
+		m_textMargin = (int)m_text->documentMargin();
 	#endif
 	
 	// template text
@@ -76,9 +77,12 @@ QString TextContent::toHtml() const
 
 void TextContent::setHtml(const QString & htmlCode)
 {
-	qDebug("Setting HTML...");
+// 	qDebug("Setting HTML... [%s]",htmlCode.toAscii().constData());
 	m_text->setHtml(htmlCode);
 	updateTextConstraints();
+// 	qDebug("Calling syncToModelItem");
+	syncToModelItem(0);
+// 	qDebug("Done with syncToModelItem()");
 }
 
 bool TextContent::hasShape() const
@@ -153,92 +157,66 @@ QWidget * TextContent::createPropertyWidget()
 	return p;
 }
 
-bool TextContent::fromXml(QDomElement & pe)
+void TextContent::syncFromModelItem(AbstractVisualItem *model)
 {
-	// FIRST load text properties and shape
-	// NOTE: order matters here, we don't want to override the size restored later
-	QString text = pe.firstChildElement("html-text").text();
-	setHtml(text);
+	setModelItemIsChanging(true);
 	
-	// load default font
-	QDomElement domElement;
-	domElement = pe.firstChildElement("default-font");
-	if (domElement.isElement()) 
+	QFont font;
+	TextItem * textModel = dynamic_cast<TextItem*>(model);
+	
+	setHtml(textModel->text());
+	
+	font.setFamily(textModel->fontFamily());
+	font.setPointSize((int)textModel->fontSize());
+	m_text->setDefaultFont(font);
+	
+	
+	bool shapeEnabled = textModel->shapeEnabled();
+	if (shapeEnabled)
 	{
-		QFont font;
-		font.setFamily(domElement.attribute("font-family"));
-		font.setPointSize(domElement.attribute("font-size").toInt());
-		m_text->setDefaultFont(font);
+		QList<QPointF> points;
+		QStringList strPoint;
+		points << textModel->shapePoint1();
+		points << textModel->shapePoint2();
+		points << textModel->shapePoint3();
+		points << textModel->shapePoint4();
+		m_shapeEditor->setControlPoints(points);
 	}
 	
-	// load shape
-	domElement = pe.firstChildElement("shape");
-	if (domElement.isElement()) 
-	{
-		bool shapeEnabled = domElement.attribute("enabled").toInt();
-		domElement = domElement.firstChildElement("control-points");
-		if (shapeEnabled && domElement.isElement()) 
-		{
-			QList<QPointF> points;
-			QStringList strPoint;
-			strPoint = domElement.attribute("one").split(" ");
-			points << QPointF(strPoint.at(0).toFloat(), strPoint.at(1).toFloat());
-			strPoint = domElement.attribute("two").split(" ");
-			points << QPointF(strPoint.at(0).toFloat(), strPoint.at(1).toFloat());
-			strPoint = domElement.attribute("three").split(" ");
-			points << QPointF(strPoint.at(0).toFloat(), strPoint.at(1).toFloat());
-			strPoint = domElement.attribute("four").split(" ");
-			points << QPointF(strPoint.at(0).toFloat(), strPoint.at(1).toFloat());
-			m_shapeEditor->setControlPoints(points);
-		}
-	}
+	AbstractContent::syncFromModelItem(model);
 	
-	// THEN restore the geometry
-	AbstractContent::fromXml(pe);
-	
-	return true;
+	setModelItemIsChanging(false);
 }
 
-void TextContent::toXml(QDomElement & pe) const
+AbstractVisualItem * TextContent::syncToModelItem(AbstractVisualItem *model)
 {
-	AbstractContent::toXml(pe);
-	pe.setTagName("text");
+	setModelItemIsChanging(true);
 	
-	// save text properties
-	QDomDocument doc = pe.ownerDocument();
-	QDomElement domElement;
-	QDomText text;
+	TextItem * textModel = dynamic_cast<TextItem*>(AbstractContent::syncToModelItem(model));
 	
-	// save text (in html)
-	domElement = doc.createElement("html-text");
-	pe.appendChild(domElement);
-	text = doc.createTextNode(m_text->toHtml());
-	domElement.appendChild(text);
+	if(!textModel)
+	{
+		setModelItemIsChanging(false);
+// 		qDebug("TextContent::syncToModelItem: textModel is null, cannot sync\n");
+		return 0;
+	}
 	
-	// save default font
-	domElement = doc.createElement("default-font");
-	domElement.setAttribute("font-family", m_text->defaultFont().family());
-	domElement.setAttribute("font-size", m_text->defaultFont().pointSize());
-	pe.appendChild(domElement);
-	
-	// save shape and control points
-	QDomElement shapeElement = doc.createElement("shape");
-	shapeElement.setAttribute("enabled", hasShape());
-	pe.appendChild(shapeElement);
+	textModel->setText(m_text->toHtml());
+	textModel->setFontFamily(m_text->defaultFont().family());
+	textModel->setFontSize(m_text->defaultFont().pointSize());
+	textModel->setShapeEnabled(hasShape());
 	if (hasShape()) 
 	{
 		QList<QPointF> cp = m_shapeEditor->controlPoints();
-		domElement = doc.createElement("control-points");
-		shapeElement.appendChild(domElement);
-		domElement.setAttribute("one", QString::number(cp[0].x())
-			+ " " + QString::number(cp[0].y()));
-		domElement.setAttribute("two", QString::number(cp[1].x())
-			+ " " + QString::number(cp[1].y()));
-		domElement.setAttribute("three", QString::number(cp[2].x())
-			+ " " + QString::number(cp[2].y()));
-		domElement.setAttribute("four", QString::number(cp[3].x())
-			+ " " + QString::number(cp[3].y()));
+		textModel->setShapePoint1(cp[0]);
+		textModel->setShapePoint2(cp[2]);
+		textModel->setShapePoint3(cp[3]);
+		textModel->setShapePoint4(cp[4]);
 	}
+	
+	setModelItemIsChanging(false);
+	
+	return model;
 }
 
 QPixmap TextContent::renderContent(const QSize & size, Qt::AspectRatioMode /*ratio*/) const
@@ -468,7 +446,7 @@ void TextContent::updateTextConstraints()
 	
 		// 2.2. add the Block's margins
 		QTextBlockFormat tbFormat = tb.blockFormat();
-		blockRect.adjust(-tbFormat.leftMargin(), -tbFormat.topMargin(), tbFormat.rightMargin(), tbFormat.bottomMargin());
+		blockRect.adjust((int)-tbFormat.leftMargin(), (int)-tbFormat.topMargin(), (int)tbFormat.rightMargin(), (int)tbFormat.bottomMargin());
 	
 		// 2.3. store the original block rect
 		m_blockRects.append(blockRect);

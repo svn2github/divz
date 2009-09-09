@@ -41,6 +41,14 @@
 # include <QtOpenGL/QGLWidget>
 #endif
 
+#include <assert.h>
+
+#include "XmlRead.h"
+#include "XmlSave.h"
+#include "model/ItemFactory.h"
+#include "model/Slide.h"
+#include "model/TextItem.h"
+
 
 #include <QCommonStyle>
 class RubberBandStyle : public QCommonStyle 
@@ -312,7 +320,67 @@ MainWindow::MainWindow(QWidget * parent)
 // 	textItem->setFlags(QGraphicsItem::ItemIsMovable);
 // 	
 	
-	scene->addTextContent();
+	//TextContent * text = scene->addTextContent();
+	m_slide = new Slide();
+	
+	printf("\n\n");
+	
+	if(QFile("test.xml").exists())
+	{
+		XmlRead r("test.xml");
+		r.readSlide(m_slide);
+		
+		QList<AbstractItem *> items = m_slide->itemList();
+		AbstractItem * item = items.at(0);
+		
+		assert(item != NULL);
+		
+		printf("> Load Test:\n");
+		printf("Item Class: %d\n",item->itemClass());
+		printf("Item Name: %s\n",item->itemName().toAscii().constData());
+		printf("Item Id: %d\n",item->itemId());
+		
+		if(item->itemClass() == ITEM_TEXT )
+		{
+// 			printf("Text Item: Text: '%s'\n", ((TextItem *)item)->text().toAscii().constData());
+		}
+		else
+		{
+			printf("(Unknown item class)\n");
+		}
+		
+		printf("Mark1\n");
+		AbstractVisualItem *v = (AbstractVisualItem*)item;
+		printf("Mark2\n");
+		AbstractContent * visual = v->createDelegate(scene);
+		printf("Mark3\n");
+		scene->initContent(visual, QPoint(v->pos().x(),v->pos().y()));
+		
+		printf("Done loading\n");
+		
+	}
+	else
+	{
+		TextItem *t = m_slide->createText(QPoint());
+		t->setText("Hello World!");
+		t->setPos(QPointF(10,10));
+		t->setItemName("TextItem-1");
+		t->setItemId(ItemFactory::nextId());
+		
+		printf("> Save Test:\n");
+		printf("Item Class: %d\n",t->itemClass());
+		printf("Item Name: %s\n",t->itemName().toAscii().constData());
+		printf("Item Id: %d\n",t->itemId());
+		
+		AbstractContent * item = t->createDelegate(scene);
+		scene->initContent(item, QPoint(t->pos().x(),t->pos().y()));
+		
+	}
+	
+	
+	printf("\n\n");
+
+
 	
 	QBoxLayout *layout = new QVBoxLayout;
 	layout->addWidget(graphicsView);
@@ -324,4 +392,36 @@ MainWindow::MainWindow(QWidget * parent)
 	setLayout(layout);
 }
 
+MainWindow::~MainWindow()
+{
+	QList<AbstractItem *> items = m_slide->itemList();
+// 	AbstractItem * item = items.at(0);
+		
+	TextItem *t = (TextItem*)items.at(0);
+// 	t->setText("Hello World!");
+// 	t->setPos(QPointF(10,10));
+// 	t->setItemName("TextItem-1");
+// 	t->setItemId(ItemFactory::nextId());
+	
+	printf("> Save Test:\n");
+	printf("Item Class: %d\n",t->itemClass());
+	printf("Item Name: %s\n",t->itemName().toAscii().constData());
+	printf("Item Id: %d\n",t->itemId());
+	
+	if(t->itemClass() == ITEM_TEXT )
+	{
+		printf("Text Item: Text: '%s'\n", t->text().toAscii().constData());
+	}
+	else
+	{
+		printf("(Unknown item class)\n");
+	}
+	
+	XmlSave save("test.xml");
+	save.saveSlide(m_slide);
+	
+	delete m_slide;
+	m_slide = 0;
+
+}
 

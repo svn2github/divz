@@ -57,6 +57,9 @@ class TextContent : public AbstractContent
         QPixmap renderContent(const QSize & size, Qt::AspectRatioMode ratio) const;
         int contentHeightForWidth(int width) const;
         void selectionChanged(bool selected);
+        
+        void syncFromModelItem(AbstractVisualItem*);
+        AbstractVisualItem * syncToModelItem(AbstractVisualItem*);
 
         // ::QGraphicsItem
         void mouseDoubleClickEvent(QGraphicsSceneMouseEvent * event);

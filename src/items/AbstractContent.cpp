@@ -29,6 +29,7 @@
 #include <QTimer>
 #include <QUrl>
 #include <math.h>
+#include <assert.h>
 
 AbstractContent::AbstractContent(QGraphicsScene * scene, QGraphicsItem * parent, bool noRescale)
     : AbstractDisposeable(parent, true)
@@ -142,9 +143,13 @@ void AbstractContent::resizeContents(const QRect & rect, bool keepRatio)
     if (!rect.isValid())
         return;
 
+    
     prepareGeometryChange();
 
     m_contentsRect = rect;
+    
+    syncToModelItem(0);
+    
     if (keepRatio) {
         int hfw = contentHeightForWidth(rect.width());
         if (hfw > 1) {
@@ -189,6 +194,7 @@ void AbstractContent::setFrame(Frame * frame)
     if (m_frame)
         FrameFactory::setDefaultPictureClass(m_frame->frameClass());
     resizeContents(m_contentsRect);
+    syncToModelItem(0);
     layoutChildren();
     update();
     GFX_CHANGED();
@@ -350,115 +356,93 @@ QWidget * AbstractContent::createPropertyWidget()
     return 0;
 }
 
-bool AbstractContent::fromXml(QDomElement & pe)
+void AbstractContent::setModelItemIsChanging(bool flag)
 {
-    // restore content properties
-    QDomElement domElement;
-
-    // Load image size saved in the rect node
-    domElement = pe.firstChildElement("rect");
-    qreal x, y, w, h;
-    x = domElement.firstChildElement("x").text().toDouble();
-    y = domElement.firstChildElement("y").text().toDouble();
-    w = domElement.firstChildElement("w").text().toDouble();
-    h = domElement.firstChildElement("h").text().toDouble();
-    resizeContents(QRect(x, y, w, h));
-
-    // Load position coordinates
-    domElement = pe.firstChildElement("pos");
-    x = domElement.firstChildElement("x").text().toDouble();
-    y = domElement.firstChildElement("y").text().toDouble();
-    setPos(x, y);
-
-    int zvalue = pe.firstChildElement("zvalue").text().toDouble();
-    setZValue(zvalue);
-
-    bool visible = pe.firstChildElement("visible").text().toInt();
-    setVisible(visible);
-
-    bool hasText = pe.firstChildElement("frame-text-enabled").text().toInt();
-    setFrameTextEnabled(hasText);
-    if (hasText) {
-        QString text = pe.firstChildElement("frame-text").text();
-        setFrameText(text);
-    }
-
-    quint32 frameClass = pe.firstChildElement("frame-class").text().toInt();
-    setFrame(frameClass ? FrameFactory::createFrame(frameClass) : 0);
-
-    // restore transformation
-    QDomElement te = pe.firstChildElement("transformation");
-    if (!te.isNull()) {
-        m_xRotationAngle = te.attribute("xRot").toDouble();
-        m_yRotationAngle = te.attribute("yRot").toDouble();
-        m_zRotationAngle = te.attribute("zRot").toDouble();
-        applyRotations();
-    }
-    domElement = pe.firstChildElement("mirror");
-    setMirrorEnabled(domElement.attribute("state").toInt());
-
-    return true;
+	m_modelItemIsChanging = flag;
 }
 
-void AbstractContent::toXml(QDomElement & pe) const
+void AbstractContent::modelItemChanged(QString fieldName, QVariant value)
 {
-    // Save general item properties
-    pe.setTagName("abstract");
-    QDomDocument doc = pe.ownerDocument();
-    QDomElement domElement;
-    QDomText text;
-    QString valueStr;
+	if(m_modelItem && !m_modelItemIsChanging)
+	{
+		syncFromModelItem(m_modelItem);
+	}
+}
 
-    // Save item position and size
-    QDomElement rectParent = doc.createElement("rect");
-    QDomElement xElement = doc.createElement("x");
-    rectParent.appendChild(xElement);
-    QDomElement yElement = doc.createElement("y");
-    rectParent.appendChild(yElement);
-    QDomElement wElement = doc.createElement("w");
-    rectParent.appendChild(wElement);
-    QDomElement hElement = doc.createElement("h");
-    rectParent.appendChild(hElement);
+void AbstractContent::syncFromModelItem(AbstractVisualItem *model)
+{
+	setModelItemIsChanging(true);
+	
+	assert(model);
+	QRectF r = model->contentsRect();
+	resizeContents(QRect((int)r.left(),(int)r.top(),(int)r.width(),(int)r.height()));
+	
+	// Load position coordinates
+	setPos(model->pos());
+	
+	setZValue(model->zValue());
+	
+	setVisible(model->isVisible());
+	/*
+	bool hasText = pe.firstChildElement("frame-text-enabled").text().toInt();
+	setFrameTextEnabled(hasText);
+	if (hasText) {
+		QString text = pe.firstChildElement("frame-text").text();
+		setFrameText(text);
+	}*/
+	
+	quint32 frameClass = model->frameClass();
+	setFrame(frameClass ? FrameFactory::createFrame(frameClass) : 0);
+	
+	// restore transformation
+// 	QDomElement te = pe.firstChildElement("transformation");
+// 	if (!te.isNull()) {
+		m_xRotationAngle = model->xRotation();
+		m_yRotationAngle = model->yRotation();
+		m_zRotationAngle = model->zRotation();
+		applyRotations();
+// 	}
+	//     domElement = pe.firstChildElement("mirror");
+	//     setMirrorEnabled(domElement.attribute("state").toInt());
+	
+	connect(model, SIGNAL(itemChanged(QString, QVariant)), this, SLOT(modelItemChanged(QString, QVariant)));
+	
+	m_modelItem = model;
+	
+	setModelItemIsChanging(false);
+// 	return true;
+}
 
-    QRectF rect = m_contentsRect;
-    xElement.appendChild(doc.createTextNode(QString::number(rect.left())));
-    yElement.appendChild(doc.createTextNode(QString::number(rect.top())));
-    wElement.appendChild(doc.createTextNode(QString::number(rect.width())));
-    hElement.appendChild(doc.createTextNode(QString::number(rect.height())));
-    pe.appendChild(rectParent);
-
-    // Save the position
-    domElement= doc.createElement("pos");
-    xElement = doc.createElement("x");
-    yElement = doc.createElement("y");
-    valueStr.setNum(pos().x());
-    xElement.appendChild(doc.createTextNode(valueStr));
-    valueStr.setNum(pos().y());
-    yElement.appendChild(doc.createTextNode(valueStr));
-    domElement.appendChild(xElement);
-    domElement.appendChild(yElement);
-    pe.appendChild(domElement);
-
-    // Save the stacking position
-    domElement= doc.createElement("zvalue");
-    pe.appendChild(domElement);
-    valueStr.setNum(zValue());
-    text = doc.createTextNode(valueStr);
-    domElement.appendChild(text);
-
-    // Save the visible state
-    domElement= doc.createElement("visible");
-    pe.appendChild(domElement);
-    valueStr.setNum(isVisible());
-    text = doc.createTextNode(valueStr);
-    domElement.appendChild(text);
-
-    // Save the frame class
-    valueStr.setNum(frameClass());
-    domElement= doc.createElement("frame-class");
-    pe.appendChild(domElement);
-    text = doc.createTextNode(valueStr);
-    domElement.appendChild(text);
+AbstractVisualItem * AbstractContent::syncToModelItem(AbstractVisualItem * model)
+{
+	if(m_modelItemIsChanging)
+	{
+		return 0;
+	}
+		
+	// catch any loops back in from the model firing signals about its values changing
+	setModelItemIsChanging(true);
+	
+	if(!model)
+	{
+		model = m_modelItem;
+	}
+	
+	if(!model)
+	{
+		setModelItemIsChanging(false);
+		//qDebug("AbstractContent::syncToModelItem: Unable to sync to model because we've got nothing to sync to!");
+		return 0;
+	}
+	
+	//assert(model);
+	
+	model->setContentsRect(m_contentsRect);
+	model->setPos(pos());
+	model->setZValue(zValue());
+	model->setIsVisible(isVisible());
+	model->setFrameClass(frameClass());
+	/*
 
     domElement= doc.createElement("frame-text-enabled");
     pe.appendChild(domElement);
@@ -471,20 +455,23 @@ void AbstractContent::toXml(QDomElement & pe) const
         pe.appendChild(domElement);
         text = doc.createTextNode(frameText());
         domElement.appendChild(text);
-    }
+    }*/
 
-    // save transformation
-    const QTransform t = transform();
-    if (!t.isIdentity()) {
-        domElement = doc.createElement("transformation");
-        domElement.setAttribute("xRot", m_xRotationAngle);
-        domElement.setAttribute("yRot", m_yRotationAngle);
-        domElement.setAttribute("zRot", m_zRotationAngle);
-        pe.appendChild(domElement);
-    }
-    domElement = doc.createElement("mirror");
-    domElement.setAttribute("state", mirrorEnabled());
-    pe.appendChild(domElement);
+	// save transformation
+	const QTransform t = transform();
+	if (!t.isIdentity()) 
+	{
+		model->setXRotation(m_xRotationAngle);
+		model->setYRotation(m_yRotationAngle);
+		model->setZRotation(m_zRotationAngle);
+	}
+//     domElement = doc.createElement("mirror");
+//     domElement.setAttribute("state", mirrorEnabled());
+//     pe.appendChild(domElement);
+	
+	setModelItemIsChanging(false);
+	
+	return model;
 
 }
 /*
@@ -640,6 +627,7 @@ QVariant AbstractContent::itemChange(GraphicsItemChange change, const QVariant &
             // notify about setPos
             case ItemPositionHasChanged:
                 m_mirrorItem->sourceMoved();
+                syncToModelItem();
                 break;
 
             // notify about graphics changes
@@ -650,14 +638,17 @@ QVariant AbstractContent::itemChange(GraphicsItemChange change, const QVariant &
 #if QT_VERSION >= 0x040500
             case ItemOpacityHasChanged:
 #endif
+		syncToModelItem();
                 GFX_CHANGED();
                 break;
 
             case ItemZValueHasChanged:
+                syncToModelItem();
                 m_mirrorItem->setZValue(zValue());
                 break;
 
             case ItemVisibleHasChanged:
+                syncToModelItem();
                 m_mirrorItem->setVisible(isVisible());
                 break;
 
@@ -680,22 +671,27 @@ void AbstractContent::slotConfigure()
 
 void AbstractContent::slotStackFront()
 {
+	
     emit changeStack(1);
+    syncToModelItem(0);
 }
 
 void AbstractContent::slotStackRaise()
 {
     emit changeStack(2);
+    syncToModelItem(0);
 }
 
 void AbstractContent::slotStackLower()
 {
     emit changeStack(3);
+    syncToModelItem(0);
 }
 
 void AbstractContent::slotStackBack()
 {
     emit changeStack(4);
+    syncToModelItem(0);
 }
 
 void AbstractContent::slotSaveAs()
@@ -761,8 +757,8 @@ void AbstractContent::layoutChildren()
 
     // layout buttons even if no frame
     if (!m_frame) {
-        int right = m_frameRect.right() - 12;
-        int bottom = m_frameRect.bottom() + 2; // if no frame, offset the buttons a little on bottom
+        int right = (int)m_frameRect.right() - 12;
+        int bottom = (int)m_frameRect.bottom() + 2; // if no frame, offset the buttons a little on bottom
         foreach (ButtonItem * button, m_controlItems) {
             button->setPos(right - button->width() / 2, bottom - button->height() / 2);
             right -= button->width() + 4;
@@ -794,6 +790,7 @@ void AbstractContent::slotPerspective(const QPointF & sceneRelPoint, Qt::Keyboar
     m_xRotationAngle = qBound(-70.0, -k * sceneRelPoint.x(), 70.0);
     m_yRotationAngle = qBound(-70.0, -k * sceneRelPoint.y(), 70.0);
     applyRotations();
+    syncToModelItem(0);
 }
 
 void AbstractContent::slotClearPerspective()
@@ -801,6 +798,7 @@ void AbstractContent::slotClearPerspective()
     m_xRotationAngle = 0;
     m_yRotationAngle = 0;
     applyRotations();
+    syncToModelItem(0);
 }
 
 void AbstractContent::slotDirtyEnded()

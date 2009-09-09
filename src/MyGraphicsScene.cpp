@@ -38,9 +38,9 @@ MyGraphicsScene::MyGraphicsScene(QObject * parent)
 {
 }
 
-// MyGraphicsScene::~MyGraphicsScene()
-// {
-// }
+MyGraphicsScene::~MyGraphicsScene()
+{
+}
 
 
 void MyGraphicsScene::initContent(AbstractContent * content, const QPoint & pos)
@@ -64,9 +64,9 @@ static QPoint nearCenter(const QRectF & rect)
     return rect.center().toPoint() + QPoint(2 - (qrand() % 5), 2 - (qrand() % 5));
 }
 
-void MyGraphicsScene::addTextContent()
+TextContent * MyGraphicsScene::addTextContent()
 {
-	createText(nearCenter(sceneRect()));
+	return createText(nearCenter(sceneRect()));
 }
 
 
