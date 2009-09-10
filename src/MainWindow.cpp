@@ -41,6 +41,8 @@
 # include <QtOpenGL/QGLWidget>
 #endif
 
+#include <QToolBar>
+
 #include <assert.h>
 
 #include "XmlRead.h"
@@ -284,18 +286,33 @@ public:
 
 
 MainWindow::MainWindow(QWidget * parent)
-    : QWidget(parent)
+    : QMainWindow(parent)
 {
 	// setup widget
 	QRect geom = QApplication::desktop()->availableGeometry();
 	resize(2 * geom.width() / 3, 2 * geom.height() / 3);
 	
+	QPixmap newpix("new.png");
+// 	QPixmap openpix("open.png");
+// 	QPixmap quitpix("quit.png");
+// 	
+	QToolBar *toolbar = addToolBar("main toolbar");
+	QAction  *newAction = toolbar->addAction(QIcon(newpix), "New Text Item");
+// 	toolbar->addAction(QIcon(openpix), "Open File");
+// 	toolbar->addSeparator();
+// 	QAction *quit = toolbar->addAction(QIcon(quitpix), 
+// 	"Quit Application");
 	
-	MyGraphicsScene *scene = new MyGraphicsScene(this);
+// 	connect(quit, SIGNAL(triggered()), qApp, SLOT(quit()));
+	connect(newAction, SIGNAL(triggered()), this, SLOT(newTextItem()));
+
+	
+	
+	m_scene = new MyGraphicsScene(this);
 	MyGraphicsView *graphicsView = new MyGraphicsView(this);
 	
-	graphicsView->setMyScene(scene);
-	scene->setSceneRect(0,0,1000,1000);
+	graphicsView->setMyScene(m_scene);
+	m_scene->setSceneRect(0,0,1000,1000);
 	
 	
 	//qDebug("Checking for OpenGL...");
@@ -316,11 +333,11 @@ MainWindow::MainWindow(QWidget * parent)
 // 	textItem->setFont(QFont("Tahoma",88,QFont::Bold));
 // 	textItem->setZValue(2);
 // 	textItem->setPos(10,230);
-// 	scene->addItem(textItem);
+// 	m_scene->addItem(textItem);
 // 	textItem->setFlags(QGraphicsItem::ItemIsMovable);
 // 	
 	
-	//TextContent * text = scene->addTextContent();
+	//TextContent * text = m_scene->addTextContent();
 	m_slide = new Slide();
 	
 	printf("\n\n");
@@ -331,30 +348,34 @@ MainWindow::MainWindow(QWidget * parent)
 		r.readSlide(m_slide);
 		
 		QList<AbstractItem *> items = m_slide->itemList();
-		AbstractItem * item = items.at(0);
-		
-		assert(item != NULL);
-		
-		printf("> Load Test:\n");
-		printf("Item Class: %d\n",item->itemClass());
-		printf("Item Name: %s\n",item->itemName().toAscii().constData());
-		printf("Item Id: %d\n",item->itemId());
-		
-		if(item->itemClass() == ITEM_TEXT )
+
+		for(int i=0;i<items.size();i++)
 		{
-// 			qDebug("Text Item: Text: '%s'\n", ((TextItem *)item)->text().toAscii().constData());
+			AbstractItem * item = items.at(i);
+			
+			assert(item != NULL);
+			
+// 			printf("> Load Test:\n");
+// 			printf("Item Class: %d\n",item->itemClass());
+// 			printf("Item Name: %s\n",item->itemName().toAscii().constData());
+// 			printf("Item Id: %d\n",item->itemId());
+			
+			if(item->itemClass() == ITEM_TEXT )
+			{
+	// 			qDebug("Text Item: Text: '%s'\n", ((TextItem *)item)->text().toAscii().constData());
+			}
+			else
+			{
+				printf("(Unknown item class)\n");
+			}
+			
+			//printf("Mark1\n");
+			AbstractVisualItem *v = (AbstractVisualItem*)item;
+			//printf("Mark2\n");
+			AbstractContent * visual = v->createDelegate(m_scene);
+			//printf("Mark3\n");
+			m_scene->initContent(visual, QPoint(v->pos().x(),v->pos().y()));
 		}
-		else
-		{
-			printf("(Unknown item class)\n");
-		}
-		
-                //printf("Mark1\n");
-		AbstractVisualItem *v = (AbstractVisualItem*)item;
-                //printf("Mark2\n");
-		AbstractContent * visual = v->createDelegate(scene);
-                //printf("Mark3\n");
-		scene->initContent(visual, QPoint(v->pos().x(),v->pos().y()));
 		
                 //printf("Done loading\n");
 		
@@ -372,8 +393,8 @@ MainWindow::MainWindow(QWidget * parent)
                 qDebug("Item Name: %s\n",t->itemName().toAscii().constData());
 		printf("Item Id: %d\n",t->itemId());
 		
-		AbstractContent * item = t->createDelegate(scene);
-		scene->initContent(item, QPoint(t->pos().x(),t->pos().y()));
+		AbstractContent * item = t->createDelegate(m_scene);
+		m_scene->initContent(item, QPoint(t->pos().x(),t->pos().y()));
 		
 	}
 	
@@ -382,40 +403,40 @@ MainWindow::MainWindow(QWidget * parent)
 
 
 	
-	QBoxLayout *layout = new QVBoxLayout;
-	layout->addWidget(graphicsView);
-// 	layout->addWidget(rotateSlider);
-// 	layout->addLayout(controlLayout);
+// 	QBoxLayout *layout = new QVBoxLayout;
+// 	layout->addWidget(graphicsView);
+// // 	layout->addWidget(rotateSlider);
+// // 	layout->addLayout(controlLayout);
+// 	
+	setCentralWidget(graphicsView);
 	
-	
-	
-	setLayout(layout);
+	//setLayout(layout);
 }
 
 MainWindow::~MainWindow()
 {
-	QList<AbstractItem *> items = m_slide->itemList();
+	//QList<AbstractItem *> items = m_slide->itemList();
 // 	AbstractItem * item = items.at(0);
 		
-	TextItem *t = (TextItem*)items.at(0);
-// 	t->setText("Hello World!");
-// 	t->setPos(QPointF(10,10));
-// 	t->setItemName("TextItem-1");
-// 	t->setItemId(ItemFactory::nextId());
-	
-	printf("> Save Test:\n");
-	printf("Item Class: %d\n",t->itemClass());
-	printf("Item Name: %s\n",t->itemName().toAscii().constData());
-	printf("Item Id: %d\n",t->itemId());
-	
-	if(t->itemClass() == ITEM_TEXT )
-	{
-                qDebug("Text Item: Text: '%s'", t->text().toAscii().constData());
-	}
-	else
-	{
-		printf("(Unknown item class)\n");
-	}
+// 	TextItem *t = (TextItem*)items.at(0);
+// // 	t->setText("Hello World!");
+// // 	t->setPos(QPointF(10,10));
+// // 	t->setItemName("TextItem-1");
+// // 	t->setItemId(ItemFactory::nextId());
+// 	
+// 	printf("> Save Test:\n");
+// 	printf("Item Class: %d\n",t->itemClass());
+// 	printf("Item Name: %s\n",t->itemName().toAscii().constData());
+// 	printf("Item Id: %d\n",t->itemId());
+// 	
+// 	if(t->itemClass() == ITEM_TEXT )
+// 	{
+//                 qDebug("Text Item: Text: '%s'", t->text().toAscii().constData());
+// 	}
+// 	else
+// 	{
+// 		printf("(Unknown item class)\n");
+// 	}
 	
 	XmlSave save("test.xml");
 	save.saveSlide(m_slide);
@@ -425,3 +446,24 @@ MainWindow::~MainWindow()
 
 }
 
+void MainWindow::newTextItem()
+{
+
+
+
+
+	TextItem *t = m_slide->createText(QPoint());
+	t->setText("<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\"><html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">p, li { white-space: pre-wrap; }</style></head><body style=\" font-family:'Tahoma'; font-size:40pt; font-weight:400; font-style:normal;\"><p style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Hello World!</p></body></html>");
+	
+	t->setPos(QPointF(100,100));
+	t->setItemName("TextItem-2");
+	t->setItemId(ItemFactory::nextId());
+	
+// 	printf("> Save Test:\n");
+// 	printf("Item Class: %d\n",t->itemClass());
+// 	qDebug("Item Name: %s\n",t->itemName().toAscii().constData());
+// 	printf("Item Id: %d\n",t->itemId());
+	
+	AbstractContent * item = t->createDelegate(m_scene);
+	m_scene->initContent(item, QPoint(t->pos().x(),t->pos().y()));
+}
