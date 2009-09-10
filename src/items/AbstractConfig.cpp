@@ -33,8 +33,8 @@
 #include <QPropertyAnimation>
 #endif
 
-AbstractConfig::AbstractConfig(AbstractContent * content) //, QGraphicsItem * parent)
-    : QWidget()
+AbstractConfig::AbstractConfig(AbstractContent * content, QWidget * parent)
+    : QDialog(parent)
     , m_content(content)
     , m_commonUi(new Ui::AbstractConfig())
     , m_closeButton(0)
@@ -43,44 +43,44 @@ AbstractConfig::AbstractConfig(AbstractContent * content) //, QGraphicsItem * pa
 {
    
 
-    // WIDGET setup
-    QWidget * widget = new QWidget(this);
-#if QT_VERSION < 0x040500
-    widget->setAttribute(Qt::WA_NoSystemBackground, true);
-#else
-    widget->setAttribute(Qt::WA_TranslucentBackground, true);
-#endif
-    m_commonUi->setupUi(widget);
-
-    populateFrameList();
-
-    // select the frame
-    quint32 frameClass = m_content->frameClass();
-    if (frameClass != Frame::NoFrame) {
-        for (int i = 0; i < m_commonUi->listWidget->count(); ++i) {
-            QListWidgetItem * item = m_commonUi->listWidget->item(i);
-            if (item->data(Qt::UserRole).toUInt() == frameClass) {
-                item->setSelected(true);
-                break;
-            }
-        }
-    }
-
-    // read other properties
-    m_commonUi->reflection->setChecked(m_content->mirrorEnabled());
-
-    connect(m_commonUi->front, SIGNAL(clicked()), m_content, SLOT(slotStackFront()));
-    connect(m_commonUi->raise, SIGNAL(clicked()), m_content, SLOT(slotStackRaise()));
-    connect(m_commonUi->lower, SIGNAL(clicked()), m_content, SLOT(slotStackLower()));
-    connect(m_commonUi->back, SIGNAL(clicked()), m_content, SLOT(slotStackBack()));
-    connect(m_commonUi->background, SIGNAL(clicked()), m_content, SIGNAL(backgroundMe()));
-    connect(m_commonUi->save, SIGNAL(clicked()), m_content, SLOT(slotSaveAs()));
-    connect(m_commonUi->del, SIGNAL(clicked()), m_content, SIGNAL(deleteItem()), Qt::QueuedConnection);
-    // autoconnection doesn't work because we don't do ->setupUi(this), so here we connect manually
-    connect(m_commonUi->applyLooks, SIGNAL(clicked()), this, SLOT(on_applyLooks_clicked()));
-    connect(m_commonUi->newFrame, SIGNAL(clicked()), this, SLOT(on_newFrame_clicked()));
-    connect(m_commonUi->listWidget, SIGNAL(itemSelectionChanged()), this, SLOT(on_listWidget_itemSelectionChanged()));
-    connect(m_commonUi->reflection, SIGNAL(toggled(bool)), this, SLOT(on_reflection_toggled(bool)));
+	// WIDGET setup
+	QWidget * widget = new QWidget(this);
+// 	#if QT_VERSION < 0x040500
+// 	widget->setAttribute(Qt::WA_NoSystemBackground, true);
+// 	#else
+// 	widget->setAttribute(Qt::WA_TranslucentBackground, true);
+// 	#endif
+	m_commonUi->setupUi(widget);
+	
+	populateFrameList();
+	
+	// select the frame
+	quint32 frameClass = m_content->frameClass();
+	if (frameClass != Frame::NoFrame) {
+		for (int i = 0; i < m_commonUi->listWidget->count(); ++i) {
+		QListWidgetItem * item = m_commonUi->listWidget->item(i);
+		if (item->data(Qt::UserRole).toUInt() == frameClass) {
+			item->setSelected(true);
+			break;
+		}
+		}
+	}
+	
+	// read other properties
+	m_commonUi->reflection->setChecked(m_content->mirrorEnabled());
+	
+	connect(m_commonUi->front, SIGNAL(clicked()), m_content, SLOT(slotStackFront()));
+	connect(m_commonUi->raise, SIGNAL(clicked()), m_content, SLOT(slotStackRaise()));
+	connect(m_commonUi->lower, SIGNAL(clicked()), m_content, SLOT(slotStackLower()));
+	connect(m_commonUi->back, SIGNAL(clicked()), m_content, SLOT(slotStackBack()));
+	connect(m_commonUi->background, SIGNAL(clicked()), m_content, SIGNAL(backgroundMe()));
+	connect(m_commonUi->save, SIGNAL(clicked()), m_content, SLOT(slotSaveAs()));
+	connect(m_commonUi->del, SIGNAL(clicked()), m_content, SIGNAL(deleteItem()), Qt::QueuedConnection);
+	// autoconnection doesn't work because we don't do ->setupUi(this), so here we connect manually
+	connect(m_commonUi->applyLooks, SIGNAL(clicked()), this, SLOT(on_applyLooks_clicked()));
+	connect(m_commonUi->newFrame, SIGNAL(clicked()), this, SLOT(on_newFrame_clicked()));
+	connect(m_commonUi->listWidget, SIGNAL(itemSelectionChanged()), this, SLOT(on_listWidget_itemSelectionChanged()));
+	connect(m_commonUi->reflection, SIGNAL(toggled(bool)), this, SLOT(on_reflection_toggled(bool)));
 
 //     // ITEM setup
 //     setWidget(widget);
@@ -92,12 +92,14 @@ AbstractConfig::AbstractConfig(AbstractContent * content) //, QGraphicsItem * pa
 // 	layout->addWidget(rotateSlider);
 // 	layout->addLayout(controlLayout);
 	
-	 // close button
-	m_closeButton = new QPushButton(tr(" x "));
-	connect(m_closeButton, SIGNAL(clicked()), this, SLOT(slotRequestClose()));
-	
-	m_okButton = new QPushButton(tr("ok"));
+	m_okButton = new QPushButton(tr("Ok"));
+	m_okButton->setDefault(true);
 	connect(m_okButton, SIGNAL(clicked()), this, SLOT(slotOkClicked()));
+	
+	m_closeButton = new QPushButton(tr("Cancel"));
+	connect(m_closeButton, SIGNAL(clicked()), this, SLOT(reject()));
+	
+	setWindowTitle("Item Settings");
 	
 	QBoxLayout *controlLayout = new QHBoxLayout;
 	controlLayout->addStretch(1);
@@ -128,7 +130,7 @@ AbstractConfig::~AbstractConfig()
 
 void AbstractConfig::dispose()
 {
-#if QT_VERSION >= 0x040600
+/*#if QT_VERSION >= 0x040600
     // fade out animation, then delete
     QPropertyAnimation * ani = new QPropertyAnimation(this, "opacity");
     connect(ani, SIGNAL(finished()), this, SLOT(deleteLater()));
@@ -136,10 +138,10 @@ void AbstractConfig::dispose()
     ani->setDuration(200);
     ani->setEndValue(0.0);
     ani->start(QPropertyAnimation::DeleteWhenStopped);
-#else
+#else*/
     // delete this now
     deleteLater();
-#endif
+// #endif
 }
 
 AbstractContent * AbstractConfig::content() const
@@ -216,8 +218,9 @@ void AbstractConfig::resizeEvent(QGraphicsSceneResizeEvent * event)
 */
 void AbstractConfig::slotRequestClose()
 {
-    MyGraphicsScene * desk = static_cast<MyGraphicsScene*>(scene());
-    desk->slotDeleteConfig(this);
+     MyGraphicsScene * desk = static_cast<MyGraphicsScene*>(scene());
+     desk->slotDeleteConfig(this);
+//	done();
 }
 
 void AbstractConfig::populateFrameList()

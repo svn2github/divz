@@ -10,6 +10,12 @@
 // #include "items/WebcamContent.h"
 #include "items/TextContent.h"
 #include "items/TextConfig.h"
+
+#include "model/ItemFactory.h"
+#include "model/Slide.h"
+#include "model/TextItem.h"
+
+
 #include "RenderOpts.h"
 
 #include <QPushButton>
@@ -30,30 +36,58 @@
 #include <QTimer>
 #include <QUrl>
 
+#include <assert.h>
+
 #define COLORPICKER_W 200
 #define COLORPICKER_H 150
 
 MyGraphicsScene::MyGraphicsScene(QObject * parent)
     : QGraphicsScene(parent)
+    , m_slide(0)
 {
 }
 
 MyGraphicsScene::~MyGraphicsScene()
 {
+	m_slide = 0;
+	m_slidePrev = 0;
+	
 }
 
+void MyGraphicsScene::setSlide(Slide *slide, SlideTransition /*trans*/)
+{
+	m_slide = slide;
+	
+	QList<AbstractItem *> items = m_slide->itemList();
+	for(int i=0;i<items.size();i++)
+	{
+		AbstractItem * item = items.at(i);
+		assert(item != NULL);
+		
+		if (AbstractVisualItem * visualItem = dynamic_cast<AbstractVisualItem *>(item))
+		{
+			AbstractContent * visual = visualItem->createDelegate(this);
+			addContent(visual); // QPoint((int)visualItem->pos().x(),(int)visualItem->pos().y()));
+		}
+	}
+}
 
-void MyGraphicsScene::initContent(AbstractContent * content, const QPoint & pos)
+void MyGraphicsScene::slotTransitionStep()
+{
+	// TBD
+}
+
+void MyGraphicsScene::addContent(AbstractContent * content) // const QPoint & pos)
 {
 	connect(content, SIGNAL(configureMe(const QPoint &)), this, SLOT(slotConfigureContent(const QPoint &)));
 	//connect(content, SIGNAL(backgroundMe()), this, SLOT(slotBackgroundContent()));
 	connect(content, SIGNAL(changeStack(int)), this, SLOT(slotStackContent(int)));
 	connect(content, SIGNAL(deleteItem()), this, SLOT(slotDeleteContent()));
-	
+	/*
 	if (!pos.isNull())
 		content->setPos(pos);
 	content->setZValue(m_content.isEmpty() ? 1 : (m_content.last()->zValue() + 1));
-	//content->setCacheMode(QGraphicsItem::DeviceCoordinateCache);
+	//content->setCacheMode(QGraphicsItem::DeviceCoordinateCache);*/
 	content->show();
 	
 	m_content.append(content);
@@ -63,20 +97,29 @@ static QPoint nearCenter(const QRectF & rect)
 {
     return rect.center().toPoint() + QPoint(2 - (qrand() % 5), 2 - (qrand() % 5));
 }
-
+/*
 TextContent * MyGraphicsScene::addTextContent()
 {
 	return createText(nearCenter(sceneRect()));
-}
+}*/
 
 
-TextContent * MyGraphicsScene::createText(const QPoint & pos)
+TextItem * MyGraphicsScene::newTextItem(QString text)
 {
-	TextContent * t = new TextContent(this);
-	initContent(t, pos);
+	TextItem *t = new TextItem();
+	assert(m_slide);
+	m_slide->addItem(t); //m_slide->createText();
+	
+	t->setText(text);
+	t->setPos(nearCenter(sceneRect()));
+	t->setItemName("TextItem");
+	t->setItemId(ItemFactory::nextId());
+	
+	AbstractContent * item = t->createDelegate(this);
+	addContent(item); //, QPoint((int)t->pos().x(),(int)t->pos().y()));
+	
 	return t;
 }
-
 
 /// Slots
 void MyGraphicsScene::slotSelectionChanged()
@@ -109,14 +152,14 @@ void MyGraphicsScene::slotSelectionChanged()
 	emit showPropertiesWidget(0);
 }
 
-void MyGraphicsScene::slotConfigureContent(const QPoint & scenePoint)
+void MyGraphicsScene::slotConfigureContent(const QPoint & /*scenePoint*/)
 {
 	// get the content and ensure it hasn't already a property window
 	AbstractContent * content = dynamic_cast<AbstractContent *>(sender());
 	foreach (AbstractConfig * config, m_configs) 
 	{
-			if (config->content() == content)
-		return;
+		if (config->content() == content)
+			return;
 		// force only 1 property instance
 		slotDeleteConfig(config);
 	}
@@ -252,7 +295,9 @@ void MyGraphicsScene::slotDeleteContent()
 	
 		// unlink content from lists, myself(the Scene) and memory
 		m_content.removeAll(content);
+		m_slide->removeItem(content->modelItem());
 		content->dispose();
+		//delete content;
 	}
 }
 

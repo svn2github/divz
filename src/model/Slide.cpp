@@ -3,28 +3,27 @@
 #include "TextItem.h"
 #include "ItemFactory.h"
 
+#include <assert.h>
+
 Slide::Slide()  {}
-Slide::~Slide() {}
+Slide::~Slide() {
+
+	qDeleteAll(m_items);
+}
 
 QList<AbstractItem *> Slide::itemList() { return m_items; }
 
 void Slide::addItem(AbstractItem *item)
 {
+	assert(item != NULL);
 	m_items.append(item);
 }
 
 void Slide::removeItem(AbstractItem *item)
 {
+	assert(item != NULL);
 	m_items.removeAll(item);
 }
-
-TextItem * Slide::createText(QPoint)
-{
-	TextItem *t = new TextItem();
-	addItem(t);
-	return t;
-}
-
 
 bool Slide::fromXml(QDomElement & pe)
 {
@@ -40,7 +39,7 @@ bool Slide::fromXml(QDomElement & pe)
 // 		if (element.tagName() == "picture")
 // 			content = createPicture(QPoint());
 		if (element.tagName() == "text")
-			content = createText(QPoint());
+			content = new TextItem();
 // 		else if (element.tagName() == "webcam")
 // 			content = desk->createWebcam(element.attribute("input").toInt(), QPoint());
 		if (!content) 
@@ -49,13 +48,17 @@ bool Slide::fromXml(QDomElement & pe)
 			continue;
 		}
 	
+		addItem(content);
+		
 		// restore the item, and delete it if something goes wrong
 		if (!content->fromXml(element)) 
 		{
-			removeItem(content);
+ 			removeItem(content);
 			delete content;
 			continue;
 		}
+		
+		
 		
 	
 // 		// restore the background element of the desk

@@ -14,6 +14,8 @@
 
 class AbstractContent;
 class AbstractConfig;
+class Slide;
+class TextItem;
 
 class MyGraphicsScene : public QGraphicsScene
 {
@@ -24,25 +26,37 @@ class MyGraphicsScene : public QGraphicsScene
 	
 		MyGraphicsScene(QObject * parent = 0);
  		~MyGraphicsScene();
+ 		
+ 		typedef enum SlideTransition { None, CrossFade };
+ 		
+ 		void setSlide(Slide *, SlideTransition t = CrossFade);
 		
-		TextContent * addTextContent();
+// 		TextContent * addTextContent();
 		
-		void initContent(AbstractContent * content, const QPoint & pos);
+		TextItem * newTextItem(QString text = "Lorem Ipsum");
+		
 		
 		
 	signals:
 		void showPropertiesWidget(QWidget * widget);
 		
 	private:
-		TextContent * createText(const QPoint & pos);
+// 		TextContent * createText(const QPoint & pos);
+		void addContent(AbstractContent * content); //, const QPoint & pos);
 	
 		QList<AbstractContent *> m_content;
 		QList<AbstractConfig *> m_configs;
 		
+		Slide * m_slide;
+		Slide * m_slidePrev;
+		SlideTransition * m_currentTransition;
+			
 	private slots:
 		friend class AbstractConfig; // HACK here, only to call 1 method
 //         	friend class PixmapButton; // HACK here, only to call 1 method
         
+		void slotTransitionStep();
+		
 		void slotSelectionChanged();
         	void slotConfigureContent(const QPoint & scenePoint);
 		void slotStackContent(int);

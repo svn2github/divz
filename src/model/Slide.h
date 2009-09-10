@@ -20,7 +20,7 @@ public:
 	void removeItem(AbstractItem *);
 	
 // 	AbstractItem * createPicture(QPoint);
-	TextItem * createText(QPoint);
+// 	TextItem * createText(QPoint);
 	
 	bool fromXml(QDomElement & parentElement);
         void toXml(QDomElement & parentElement, QDomDocument & doc) const;

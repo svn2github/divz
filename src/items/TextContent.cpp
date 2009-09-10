@@ -27,7 +27,7 @@
 #include <QTextDocument>
 #include <QTextFrame>
 #include <QUrl>
-
+#include <QAbstractTextDocumentLayout>
 
 TextContent::TextContent(QGraphicsScene * scene, QGraphicsItem * parent)
     : AbstractContent(scene, parent, false)
@@ -169,6 +169,11 @@ void TextContent::syncFromModelItem(AbstractVisualItem *model)
 	QFont font;
 	TextItem * textModel = dynamic_cast<TextItem*>(model);
 	
+	if(textModel->text().indexOf('<') < 0)
+	{
+		m_text->setPlainText(textModel->text());
+		textModel->setText(m_text->toHtml());
+	}
 	setHtml(textModel->text());
 	
 	font.setFamily(textModel->fontFamily());
@@ -394,11 +399,11 @@ void TextContent::updateTextConstraints()
 	// 1. actual content stretch
 	double prevXScale = 1.0;
 	double prevYScale = 1.0;
-	/* if (m_textRect.width() > 0 && m_textRect.height() > 0) {
+	if (m_textRect.width() > 0 && m_textRect.height() > 0) {
 		QRect cRect = contentsRect();
 		prevXScale = (qreal)cRect.width() / (qreal)m_textRect.width();
 		prevYScale = (qreal)cRect.height() / (qreal)m_textRect.height();
-	}*/
+	}
 	
 	// 2. LAYOUT TEXT. find out Block rects and Document rect
 	int minCharSide = 0;

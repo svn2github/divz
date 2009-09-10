@@ -29,15 +29,15 @@ namespace Ui { class AbstractConfig; }
 
 class AbstractVisualItem;
 
-#include <QWidget>
+#include <QDialog>
 
-class AbstractConfig : public QWidget {
+class AbstractConfig : public QDialog {
     Q_OBJECT
     	
     	
     
     public:
-        AbstractConfig(AbstractContent * content); //, QGraphicsItem * parent = 0);
+        AbstractConfig(AbstractContent * content, QWidget *parent = 0); //, QGraphicsItem * parent = 0);
         virtual ~AbstractConfig();
 
         void dispose();

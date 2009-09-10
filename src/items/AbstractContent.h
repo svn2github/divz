@@ -85,6 +85,8 @@ class AbstractContent : public AbstractDisposeable
         // may be reimplemented by subclasses
         virtual int contentHeightForWidth(int width) const;
         virtual bool contentOpaque() const;
+        
+        AbstractVisualItem *modelItem() { return m_modelItem; }
 
     Q_SIGNALS:
         void configureMe(const QPoint & scenePoint);
@@ -113,7 +115,7 @@ class AbstractContent : public AbstractDisposeable
         
         void setModelItemIsChanging(bool flag = true);
         void setModelItem(AbstractVisualItem *model);
-        AbstractVisualItem *modelItem() { return m_modelItem; }
+        
 
 
 	bool m_dontSyncToModel;
