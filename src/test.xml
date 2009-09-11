@@ -2,108 +2,30 @@
 <slide-group>
     <slide>
         <text>
-            <item-id>6</item-id>
+            <item-id>7</item-id>
             <item-name>TextItem</item-name>
             <rect>
-                <x>-337</x>
-                <y>-78</y>
-                <w>674</w>
-                <h>157</h>
+                <x>-396</x>
+                <y>-92</y>
+                <w>793</w>
+                <h>185</h>
             </rect>
             <pos>
-                <x>373</x>
-                <y>248</y>
+                <x>587</x>
+                <y>227</y>
             </pos>
-            <zvalue>2</zvalue>
+            <zvalue>0</zvalue>
             <opacity>1</opacity>
             <visible>1</visible>
-            <frame-class>4099</frame-class>
-            <transformation yRot="-9" xRot="-70" zRot="0"/>
+            <frame-class>0</frame-class>
+            <transformation yRot="0" xRot="0" zRot="0" />
             <text>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
 &lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
 p, li { white-space: pre-wrap; }
 &lt;/style>&lt;/head>&lt;body style=" font-family:'Sans Serif'; font-size:16pt; font-weight:400; font-style:normal;">
 &lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">Hello, World!&lt;/p>&lt;/body>&lt;/html></text>
-            <default-font font-family="Sans Serif" font-size="16"/>
-            <shape enabled="0"/>
-        </text>
-        <text>
-            <item-id>7</item-id>
-            <item-name>TextItem</item-name>
-            <rect>
-                <x>-353</x>
-                <y>-80</y>
-                <w>707</w>
-                <h>161</h>
-            </rect>
-            <pos>
-                <x>582</x>
-                <y>247</y>
-            </pos>
-            <zvalue>3</zvalue>
-            <opacity>1</opacity>
-            <visible>1</visible>
-            <frame-class>4099</frame-class>
-            <transformation yRot="0.2" xRot="70" zRot="0"/>
-            <text>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
-&lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
-p, li { white-space: pre-wrap; }
-&lt;/style>&lt;/head>&lt;body style=" font-family:'Tahoma'; font-size:40pt; font-weight:400; font-style:normal;">
-&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-family:'Sans Serif'; font-size:16pt;">Lorem Ipsum&lt;/span>&lt;/p>&lt;/body>&lt;/html></text>
-            <default-font font-family="Tahoma" font-size="40"/>
-            <shape enabled="0"/>
-        </text>
-        <text>
-            <item-id>8</item-id>
-            <item-name>TextItem</item-name>
-            <rect>
-                <x>-399</x>
-                <y>-228</y>
-                <w>798</w>
-                <h>457</h>
-            </rect>
-            <pos>
-                <x>484</x>
-                <y>326</y>
-            </pos>
-            <zvalue>1</zvalue>
-            <opacity>1</opacity>
-            <visible>1</visible>
-            <frame-class>4099</frame-class>
-            <transformation yRot="65.40000000000001" xRot="-6.600000000000001" zRot="9.946983933076016"/>
-            <text>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
-&lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
-p, li { white-space: pre-wrap; }
-&lt;/style>&lt;/head>&lt;body style=" font-family:'Sans Serif'; font-size:16pt; font-weight:400; font-style:normal;">
-&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"> &lt;/p>&lt;/body>&lt;/html></text>
-            <default-font font-family="Sans Serif" font-size="16"/>
-            <shape enabled="0"/>
-        </text>
-        <text>
-            <item-id>6</item-id>
-            <item-name>TextItem</item-name>
-            <rect>
-                <x>-442</x>
-                <y>-106</y>
-                <w>885</w>
-                <h>212</h>
-            </rect>
-            <pos>
-                <x>498</x>
-                <y>537</y>
-            </pos>
-            <zvalue>4</zvalue>
-            <opacity>1</opacity>
-            <visible>1</visible>
-            <frame-class>0</frame-class>
-            <transformation yRot="0" xRot="0" zRot="0"/>
-            <text>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
-&lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
-p, li { white-space: pre-wrap; }
-&lt;/style>&lt;/head>&lt;body style=" font-family:'Sans Serif'; font-size:16pt; font-weight:400; font-style:normal;">
-&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">Editor Demo&lt;/p>&lt;/body>&lt;/html></text>
-            <default-font font-family="Sans Serif" font-size="16"/>
-            <shape enabled="0"/>
+            <default-font font-family="Sans Serif" font-size="16" />
+            <shape enabled="0" />
         </text>
     </slide>
 </slide-group>

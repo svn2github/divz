@@ -1,6 +1,7 @@
 #include  "TextItem.h"
 
 #include "items/TextContent.h"
+//#include "items/SimpleTextContent.h"
 
 #include <QGraphicsScene>
 #include <QStringList>
@@ -33,7 +34,8 @@ ITEM_PROPSET(TextItem, ShapePoint4, QPointF, shapePoint4)
 #include <assert.h>
 AbstractContent * TextItem::createDelegate(QGraphicsScene *scene)
 {
-	TextContent * textContent = new TextContent(scene);
+ 	TextContent * textContent = new TextContent(scene);
+//	SimpleTextContent * textContent = new TextContent(scene);
 	assert(textContent);
 	
 	AbstractContent * vi = (AbstractContent *)textContent;

@@ -15,7 +15,8 @@ HEADERS +=  AbstractConfig.h \
     StyledButtonItem.h \
     TextConfig.h \
     TextContent.h \
-    TextProperties.h 
+    TextProperties.h \
+    SimpleTextContent.h  
 
     
 SOURCES += \
@@ -29,4 +30,5 @@ SOURCES += \
     StyledButtonItem.cpp \
     TextConfig.cpp \
     TextContent.cpp \
-    TextProperties.cpp
+    TextProperties.cpp \
+    SimpleTextContent.cpp 

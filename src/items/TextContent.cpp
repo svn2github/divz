@@ -287,12 +287,14 @@ void TextContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * opt
 	QRect sRect = shapedPaint ? m_shapeRect : m_textRect;
 	painter->save();
 	painter->translate(cRect.topLeft());
+	qreal xScale = 1, yScale = 1;
 	if (sRect.width() > 0 && sRect.height() > 0)
 	{
-		qreal xScale = (qreal)cRect.width() / (qreal)sRect.width();
-		qreal yScale = (qreal)cRect.height() / (qreal)sRect.height();
+		xScale = (qreal)cRect.width() / (qreal)sRect.width();
+		yScale = (qreal)cRect.height() / (qreal)sRect.height();
 		if (!qFuzzyCompare(xScale, 1.0) || !qFuzzyCompare(yScale, 1.0))
 		painter->scale(xScale, yScale);
+		
 	}
 	
 	// shape
@@ -301,6 +303,15 @@ void TextContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * opt
 		painter->translate(-shapeOffset);
 	//if (shapedPaint && drawHovering)
 	//    painter->strokePath(m_shapePath, QPen(Qt::red, 0));
+	
+// 	QPen pen;
+// 	qreal w = 3/qMax(xScale, yScale);
+// 	//qDebug("Pen Width: %.04f (%.02f, %.02f)",w,xScale,yScale);
+//  	pen.setWidthF(w);
+//  	pen.setColor(QColor(0,0,0,255));
+//  
+//  	QBrush brush(QColor(255,255,255,255));
+	
 	
 	#if 0
 	// standard rich text document drawing
@@ -337,6 +348,11 @@ void TextContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * opt
 			painter->setFont(font);
 			painter->setPen(format.foreground().color());
 			painter->setBrush(Qt::NoBrush);
+			
+// 			painter->setPen(pen);
+// 			painter->setBrush(brush);
+
+			
 			QFontMetrics metrics(font);
 		
 			// 1.2.2. draw each character
@@ -363,6 +379,11 @@ void TextContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * opt
 				else 
 				{
 					painter->drawText(iPos, textChar);
+					
+// 					QPainterPath p;
+// 					p.addText(iPos,font,textChar);
+// 					painter->drawPath(p);
+	
 					iPos += QPointF(metrics.width(textChar), 0);
 				}
 			}
