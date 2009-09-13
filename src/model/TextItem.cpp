@@ -6,7 +6,7 @@
 #include <QGraphicsScene>
 #include <QStringList>
 
-TextItem::TextItem() 
+TextItem::TextItem() : AbstractVisualItem() 
 {
 	m_fontFamily = "Tahoma";
 	m_fontSize   = 40;

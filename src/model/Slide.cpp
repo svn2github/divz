@@ -1,6 +1,7 @@
 #include "Slide.h"
 
 #include "TextItem.h"
+#include "TextBoxItem.h"
 #include "ItemFactory.h"
 
 #include <assert.h>
@@ -40,6 +41,9 @@ bool Slide::fromXml(QDomElement & pe)
 // 			content = createPicture(QPoint());
 		if (element.tagName() == "text")
 			content = new TextItem();
+		else 
+		if (element.tagName() == "textbox")
+			content = new TextBoxItem();
 // 		else if (element.tagName() == "webcam")
 // 			content = desk->createWebcam(element.attribute("input").toInt(), QPoint());
 		if (!content) 

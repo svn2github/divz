@@ -1,18 +1,4 @@
-/***************************************************************************
- *                                                                         *
- *   This file is part of the Fotowall project,                            *
- *       http://code.google.com/p/fotowall                                 *
- *                                                                         *
- *   Copyright (C) 2009 by Enrico Ros <enrico.ros@gmail.com>               *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- ***************************************************************************/
-
-#include "TextContent.h"
+#include "TextBoxContent.h"
 #include "frames/Frame.h"
 #include "items/BezierCubicItem.h"
 #include "items/TextProperties.h"
@@ -28,8 +14,10 @@
 #include <QTextFrame>
 #include <QUrl>
 #include <QAbstractTextDocumentLayout>
+#include <QDebug>
+#include <QTextOption>
 
-TextContent::TextContent(QGraphicsScene * scene, QGraphicsItem * parent)
+TextBoxContent::TextBoxContent(QGraphicsScene * scene, QGraphicsItem * parent)
     : AbstractContent(scene, parent, false)
     , m_text(0)
     , m_textRect(0, 0, 0, 0)
@@ -68,18 +56,18 @@ TextContent::TextContent(QGraphicsScene * scene, QGraphicsItem * parent)
 	m_dontSyncToModel = false;
 }
 
-TextContent::~TextContent()
+TextBoxContent::~TextBoxContent()
 {
 	delete m_shapeEditor;
 	delete m_text;
 }
 
-QString TextContent::toHtml() const
+QString TextBoxContent::toHtml() const
 {
 	return m_text->toHtml();
 }
 
-void TextContent::setHtml(const QString & htmlCode)
+void TextBoxContent::setHtml(const QString & htmlCode)
 {
         //qDebug("Setting HTML... [%s]",htmlCode.toAscii().constData());
 	m_text->setHtml(htmlCode);
@@ -89,24 +77,24 @@ void TextContent::setHtml(const QString & htmlCode)
         //qDebug("Done with syncToModelItem()");
 }
 
-bool TextContent::hasShape() const
+bool TextBoxContent::hasShape() const
 {
 	return !m_shapePath.isEmpty();
 }
 
-void TextContent::clearShape()
+void TextBoxContent::clearShape()
 {
 	setShapePath(QPainterPath());
 	setShapeEditing(false);
 	emit notifyHasShape(false);
 }
 
-bool TextContent::isShapeEditing() const
+bool TextBoxContent::isShapeEditing() const
 {
 	return m_shapeEditor->isVisible();
 }
 
-void TextContent::setShapeEditing(bool enabled)
+void TextBoxContent::setShapeEditing(bool enabled)
 {
 	if (enabled) 
 	{
@@ -139,7 +127,7 @@ void TextContent::setShapeEditing(bool enabled)
 	}
 }
 
-QWidget * TextContent::createPropertyWidget()
+QWidget * TextBoxContent::createPropertyWidget()
 {
 	TextProperties * p = new TextProperties();
 	
@@ -161,7 +149,7 @@ QWidget * TextContent::createPropertyWidget()
 	return p;
 }
 
-void TextContent::syncFromModelItem(AbstractVisualItem *model)
+void TextBoxContent::syncFromModelItem(AbstractVisualItem *model)
 {
         m_dontSyncToModel = true;
 	setModelItem(model);
@@ -198,7 +186,7 @@ void TextContent::syncFromModelItem(AbstractVisualItem *model)
         m_dontSyncToModel = false;
 }
 
-AbstractVisualItem * TextContent::syncToModelItem(AbstractVisualItem *model)
+AbstractVisualItem * TextBoxContent::syncToModelItem(AbstractVisualItem *model)
 {
 	setModelItemIsChanging(true);
 	
@@ -207,10 +195,10 @@ AbstractVisualItem * TextContent::syncToModelItem(AbstractVisualItem *model)
 	if(!textModel)
 	{
 		setModelItemIsChanging(false);
-                //qDebug("TextContent::syncToModelItem: textModel is null, cannot sync\n");
+                //qDebug("TextBoxContent::syncToModelItem: textModel is null, cannot sync\n");
 		return 0;
 	}
-        //qDebug("TextContent:syncToModelItem: Syncing to model! Yay!");
+        //qDebug("TextBoxContent:syncToModelItem: Syncing to model! Yay!");
 	textModel->setText(m_text->toHtml());
 	textModel->setFontFamily(m_text->defaultFont().family());
 	textModel->setFontSize(m_text->defaultFont().pointSize());
@@ -229,7 +217,7 @@ AbstractVisualItem * TextContent::syncToModelItem(AbstractVisualItem *model)
 	return model;
 }
 
-QPixmap TextContent::renderContent(const QSize & size, Qt::AspectRatioMode /*ratio*/) const
+QPixmap TextBoxContent::renderContent(const QSize & size, Qt::AspectRatioMode /*ratio*/) const
 {
 	// get the base empty pixmap
 	QSize textSize = boundingRect().size().toSize();
@@ -252,7 +240,7 @@ QPixmap TextContent::renderContent(const QSize & size, Qt::AspectRatioMode /*rat
 	return pix;
 }
 
-int TextContent::contentHeightForWidth(int width) const
+int TextBoxContent::contentHeightForWidth(int width) const
 {
 	// if no text size is available, use default
 	if (m_textRect.width() < 1 || m_textRect.height() < 1)
@@ -260,20 +248,20 @@ int TextContent::contentHeightForWidth(int width) const
 	return (m_textRect.height() * width) / m_textRect.width();
 }
 
-void TextContent::selectionChanged(bool selected)
+void TextBoxContent::selectionChanged(bool selected)
 {
 	// hide shape editing controls
 	if (!selected && isShapeEditing())
 		setShapeEditing(false);
 }
 
-void TextContent::mouseDoubleClickEvent(QGraphicsSceneMouseEvent * event)
+void TextBoxContent::mouseDoubleClickEvent(QGraphicsSceneMouseEvent * event)
 {
 	emit backgroundMe();
 	QGraphicsItem::mouseDoubleClickEvent(event);
 }
 
-void TextContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget)
+void TextBoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget)
 {
 	// paint parent
 	AbstractContent::paint(painter, option, widget);
@@ -321,6 +309,8 @@ void TextContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * opt
 	// manual drawing
 	QPointF blockPos = shapedPaint ? QPointF(0, 0) : -m_textRect.topLeft();
 	
+	qDebug("paint(): BEGIN");
+	qDebug() << "paint(): Mark1: blockPos="<<blockPos;
 	// 1. for each Text Block
 	int blockRectIdx = 0;
 	for (QTextBlock tb = m_text->begin(); tb.isValid(); tb = tb.next()) 
@@ -333,6 +323,8 @@ void TextContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * opt
 		QPointF iPos = shapedPaint ? blockPos : blockPos - blockRect.topLeft();
 		blockPos += QPointF(0, blockRect.height());
 	
+		qDebug() << "paint(): Mark2: blockPos="<<blockPos;
+		
 		qreal curLen = 8;
 	
 		// 1.2. iterate over text fragments
@@ -380,6 +372,8 @@ void TextContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * opt
 				{
 					painter->drawText(iPos, textChar);
 					
+					//qDebug() << "paint(): Mark3: iPos="<<iPos;
+					
 // 					QPainterPath p;
 // 					p.addText(iPos,font,textChar);
 // 					painter->drawPath(p);
@@ -394,12 +388,12 @@ void TextContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * opt
 	painter->restore();
 }
 
-QPainterPath TextContent::shapePath() const
+QPainterPath TextBoxContent::shapePath() const
 {
 	return m_shapePath;
 }
 
-void TextContent::setShapePath(const QPainterPath & path)
+void TextBoxContent::setShapePath(const QPainterPath & path)
 {
 	if (path == m_shapePath)
 		return;
@@ -415,7 +409,7 @@ void TextContent::setShapePath(const QPainterPath & path)
 	updateTextConstraints();
 }
 
-void TextContent::updateTextConstraints()
+void TextBoxContent::updateTextConstraints()
 {
 	// 1. actual content stretch
 	double prevXScale = 1.0;
@@ -426,7 +420,21 @@ void TextContent::updateTextConstraints()
 		prevYScale = (qreal)cRect.height() / (qreal)m_textRect.height();
 	}
 	
-	//m_text->setTextWidth(contentsRect().width());
+	QTextOption t;
+	t.setWrapMode(QTextOption::WordWrap);
+	//m_text->documentLayout()->setTextOption(t);
+	
+	for (QTextBlock tb = m_text->begin(); tb.isValid(); tb = tb.next())
+	{
+		tb.layout()->setTextOption(t);
+	}
+	
+	m_text->setTextWidth(contentsRect().width());
+	
+// 	QSizeF sz = m_text->documentLayout()->documentSize();
+// 	m_textRect = QRect(QPoint(0,0),QSize((int)sz.width(),(int)sz.height()));
+	
+	qDebug("updateTextConstraints() BEGIN");
 	
 	// 2. LAYOUT TEXT. find out Block rects and Document rect
 	int minCharSide = 0;
@@ -435,7 +443,7 @@ void TextContent::updateTextConstraints()
 	for (QTextBlock tb = m_text->begin(); tb.isValid(); tb = tb.next()) 
 	{
 		if (!tb.isVisible())
-		continue;
+			continue;
 	
 		// 2.1.A. calc the Block size uniting Fragments bounding rects
 		QRect blockRect(0, 0, 0, 0);
@@ -448,15 +456,20 @@ void TextContent::updateTextConstraints()
 			QString text = frag.text();
 			if (text.trimmed().isEmpty())
 				continue;
+				
+			qDebug() << "updateTextConstraints(): 2.1.A: frag.text()='"<<frag.text()<<"'";
 		
 			QFontMetrics metrics(frag.charFormat().font());
 			if (!minCharSide || metrics.height() > minCharSide)
 				minCharSide = metrics.height();
-		
+				
 			// TODO: implement superscript / subscript (it's in charFormat's alignment)
 			// it must be implemented in paint too
 		
 			QRect textRect = metrics.boundingRect(text);
+			qDebug() << "updateTextConstraints(): 2.1.A: metrics.boundingRect(...)="<<textRect<<"";
+		
+			
 			if (textRect.left() > 9999)
 				continue;
 			if (textRect.top() < blockRect.top())
@@ -464,8 +477,12 @@ void TextContent::updateTextConstraints()
 			if (textRect.bottom() > blockRect.bottom())
 				blockRect.setBottom(textRect.bottom());
 		
+			qDebug() << "updateTextConstraints(): 2.1.A: blockRect.1="<<blockRect<<"";
+			
 			int textWidth = metrics.width(text);
 			blockRect.setWidth(blockRect.width() + textWidth);
+			
+			qDebug() << "updateTextConstraints(): 2.1.A: blockRect.2="<<blockRect<<", textWidth="<<textWidth;
 		}
 		
 		// 2.1.B. calc the Block size of blank lines
@@ -475,17 +492,24 @@ void TextContent::updateTextConstraints()
 			int textHeight = metrics.height();
 			blockRect.setWidth(1);
 			blockRect.setHeight(textHeight);
+			
+			qDebug() << "updateTextConstraints(): 2.1.B: empty line, blockRect="<<blockRect;
 		}
 	
 		// 2.2. add the Block's margins
 		QTextBlockFormat tbFormat = tb.blockFormat();
 		blockRect.adjust((int)-tbFormat.leftMargin(), (int)-tbFormat.topMargin(), (int)tbFormat.rightMargin(), (int)tbFormat.bottomMargin());
+		
+		qDebug() << "updateTextConstraints(): 2.2: blockRect="<<blockRect;
 	
 		// 2.3. store the original block rect
 		m_blockRects.append(blockRect);
 	
 		// 2.4. enlarge the Document rect (uniting the Block rect)
 		blockRect.translate(0, m_textRect.bottom() - blockRect.top() + 1);
+		
+		qDebug() << "updateTextConstraints(): 2.4: translate by (0,"<<(m_textRect.bottom() - blockRect.top() + 1)<<")";
+		
 		if (blockRect.left() < m_textRect.left())
 			m_textRect.setLeft(blockRect.left());
 		if (blockRect.right() > m_textRect.right())
@@ -494,8 +518,12 @@ void TextContent::updateTextConstraints()
 			m_textRect.setTop(blockRect.top());
 		if (blockRect.bottom() > m_textRect.bottom())
 			m_textRect.setBottom(blockRect.bottom());
+			
+		qDebug() << "updateTextConstraints(): 2.4: m_textRect="<<m_textRect;
 	}
 	m_textRect.adjust(-m_textMargin, -m_textMargin, m_textMargin, m_textMargin);
+	
+	qDebug() << "updateTextConstraints(): m_textMargin="<<m_textMargin<<" m_textRect="<<m_textRect;
 	
 	// 3. use shape-based rendering
 	if (hasShape()) 
@@ -529,7 +557,7 @@ void TextContent::updateTextConstraints()
 	resizeContents(QRect(-w / 2, -h / 2, w, h));
 }
 
-void TextContent::updateCache()
+void TextBoxContent::updateCache()
 {
     /*
     m_cachePixmap = QPixmap(contentsRect().size());

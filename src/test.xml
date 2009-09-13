@@ -1,18 +1,18 @@
 <?xml version="1.0" ?>
 <slide-group>
     <slide>
-        <text>
-            <item-id>7</item-id>
+        <textbox>
+            <item-id>10</item-id>
             <item-name>TextItem</item-name>
             <rect>
-                <x>-396</x>
-                <y>-92</y>
-                <w>793</w>
-                <h>185</h>
+                <x>-311</x>
+                <y>-121</y>
+                <w>622</w>
+                <h>242</h>
             </rect>
             <pos>
-                <x>587</x>
-                <y>227</y>
+                <x>345</x>
+                <y>231</y>
             </pos>
             <zvalue>0</zvalue>
             <opacity>1</opacity>
@@ -22,10 +22,11 @@
             <text>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
 &lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
 p, li { white-space: pre-wrap; }
-&lt;/style>&lt;/head>&lt;body style=" font-family:'Sans Serif'; font-size:16pt; font-weight:400; font-style:normal;">
-&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">Hello, World!&lt;/p>&lt;/body>&lt;/html></text>
-            <default-font font-family="Sans Serif" font-size="16" />
+&lt;/style>&lt;/head>&lt;body style=" font-family:'Tahoma'; font-size:40pt; font-weight:400; font-style:normal;">
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-family:'Sans Serif'; font-size:16pt;">Lorem Ipsum&lt;/span>&lt;/p>
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-family:'Sans Serif'; font-size:16pt;">sit dolor fox trot alpha delta tango romeo this that and the other-thing.&lt;/span>&lt;/p>&lt;/body>&lt;/html></text>
+            <default-font font-family="Tahoma" font-size="40" />
             <shape enabled="0" />
-        </text>
+        </textbox>
     </slide>
 </slide-group>
