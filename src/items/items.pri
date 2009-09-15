@@ -17,7 +17,8 @@ HEADERS +=  AbstractConfig.h \
     TextContent.h \
     TextProperties.h \
     SimpleTextContent.h  \
-    TextBoxContent.h
+    TextBoxContent.h \
+    TextBoxConfig.h
 
     
 SOURCES += \
@@ -33,4 +34,5 @@ SOURCES += \
     TextContent.cpp \
     TextProperties.cpp \
     SimpleTextContent.cpp \
-    TextBoxContent.cpp
+    TextBoxContent.cpp \
+    TextBoxConfig.cpp

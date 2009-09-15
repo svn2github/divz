@@ -5,6 +5,25 @@
 class BezierCubicItem;
 class QTextDocument;
 
+#include <QtGui/QTextFragment>
+#include <QPointF>
+
+class TextLineSpec
+{
+	TextLineSpec(QTextFragment tf,QRect r,QString txt) 
+	{ 
+		frag=tf; 
+		rect=r; 
+		text=txt;
+	}
+protected:
+	friend class TextBoxContent;
+	
+	QTextFragment frag;
+	QString text;
+	QRect rect;
+};
+
 /// \brief TODO
 class TextBoxContent : public AbstractContent
 {
@@ -51,6 +70,11 @@ class TextBoxContent : public AbstractContent
         void mouseDoubleClickEvent(QGraphicsSceneMouseEvent * event);
         void paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget = 0);
 
+    private slots:
+        // ::AbstractContent
+        void contentsResized();
+        void delayContentsResized();
+        
     private:
         void updateTextConstraints();
         void updateCache();
@@ -58,6 +82,7 @@ class TextBoxContent : public AbstractContent
         // text document, layouting & rendering
         QTextDocument * m_text;
         QList<QRect> m_blockRects;
+        QList<TextLineSpec> m_lineSpecs;
         QRect m_textRect;
         int m_textMargin;
 

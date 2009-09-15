@@ -10,6 +10,8 @@
 // #include "items/WebcamContent.h"
 #include "items/TextContent.h"
 #include "items/TextConfig.h"
+#include "items/TextBoxConfig.h"
+#include "items/TextBoxContent.h"
 
 #include "model/ItemFactory.h"
 #include "model/Slide.h"
@@ -175,6 +177,9 @@ void MyGraphicsScene::slotConfigureContent(const QPoint & /*scenePoint*/)
 	// text config (dialog and connections)
 	if (TextContent * text = dynamic_cast<TextContent *>(content))
 		p = new TextConfig(text);
+	else
+	if (TextBoxContent * text = dynamic_cast<TextBoxContent *>(content))
+		p = new TextBoxConfig(text);
 	
 	// generic config
 	if (!p)

@@ -174,6 +174,7 @@ void AbstractContent::resizeContents(const QRect & rect, bool keepRatio)
 	layoutChildren();
 	update();
 	GFX_CHANGED();
+	emit resized();
 }
 
 void AbstractContent::resetContentsRatio()
