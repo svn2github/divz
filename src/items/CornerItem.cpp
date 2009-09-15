@@ -22,14 +22,32 @@
 #include <math.h>
 
 CornerItem::CornerItem(Qt::Corner corner, bool rotateOnly, AbstractContent * parent)
-    : QGraphicsItem(parent)
-    , m_content(parent)
-    , m_corner(corner)
-    , m_opMask(rotateOnly ? Rotate | FixRotate : AllowAll)
-    , m_side(8)
-    , m_operation(Off)
+	: QGraphicsItem(parent)
+	, m_content(parent)
+	, m_corner(corner)
+	, m_opMask(rotateOnly ? Rotate | FixRotate : AllowAll)
+	, m_side(8)
+	, m_operation(Off)
+	, m_defaultLeftOp(Scale | FixScale)
+        , m_defaultRightOp(Rotate | Scale | FixScale)
+        , m_defaultMidOp(Scale)
 {
-    setAcceptsHoverEvents(true);
+	setAcceptsHoverEvents(true);
+}
+
+void CornerItem::setDefaultLeftOp(int mask)
+{
+	m_defaultLeftOp = mask;
+}
+
+void CornerItem::setDefaultMidOp(int mask)
+{
+	m_defaultMidOp = mask;
+}
+
+void CornerItem::setDefaultRightOp(int mask)
+{
+	m_defaultRightOp = mask;
 }
 
 void CornerItem::relayout(const QRect & rect)
@@ -73,9 +91,9 @@ void CornerItem::mousePressEvent(QGraphicsSceneMouseEvent * event)
 
     // do the right op
     switch (event->button()) {
-        case Qt::LeftButton:    m_operation = Scale | FixScale; break;
-        case Qt::RightButton:   m_operation = Rotate | Scale | FixScale; break;
-        case Qt::MidButton:     m_operation = Scale; break;
+        case Qt::LeftButton:    m_operation = m_defaultLeftOp; break; //Scale | FixScale; break;
+        case Qt::RightButton:   m_operation = m_defaultRightOp; break; //Rotate | Scale | FixScale; break;
+        case Qt::MidButton:     m_operation = m_defaultMidOp; //Scale; break;
         default:                m_operation = Off; return;
     }
 

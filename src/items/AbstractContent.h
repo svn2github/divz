@@ -133,7 +133,7 @@ class AbstractContent : public AbstractDisposeable
         void slotSaveAs();
         void modelItemChanged(QString fieldName, QVariant value);
 
-    private:
+    protected:
         void createCorner(Qt::Corner corner, bool noRescale);
         void layoutChildren();
         void applyRotations();

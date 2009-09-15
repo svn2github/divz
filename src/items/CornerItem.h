@@ -33,9 +33,8 @@ class CornerItem : public QGraphicsItem
         void mouseMoveEvent(QGraphicsSceneMouseEvent * event);
         void mouseReleaseEvent(QGraphicsSceneMouseEvent * event);
         void paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget = 0);
-
-    private:
-        enum Operation {
+        
+        typedef enum Operation {
             Off         = 0x0000,
             Rotate      = 0x0001,
             FixRotate   = 0x0002,
@@ -43,11 +42,21 @@ class CornerItem : public QGraphicsItem
             FixScale    = 0x0020,
             AllowAll    = 0xFFFF,
         };
+        
+        void setDefaultLeftOp(int);
+        void setDefaultRightOp(int);
+        void setDefaultMidOp(int);
+
+    private:
+        
         AbstractContent * m_content;
         Qt::Corner m_corner;
         int m_opMask;
         int m_side;
         int m_operation;
+        int m_defaultLeftOp;
+        int m_defaultMidOp;
+        int m_defaultRightOp;
         double m_startRatio;
 };
 

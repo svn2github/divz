@@ -5,14 +5,14 @@
             <item-id>10</item-id>
             <item-name>TextItem</item-name>
             <rect>
-                <x>-336</x>
-                <y>-47</y>
-                <w>748</w>
-                <h>117</h>
+                <x>-228</x>
+                <y>-52</y>
+                <w>457</w>
+                <h>320</h>
             </rect>
             <pos>
-                <x>408.971</x>
-                <y>146.193</y>
+                <x>316.125</x>
+                <y>113.375</y>
             </pos>
             <zvalue>0</zvalue>
             <opacity>1</opacity>
@@ -23,7 +23,7 @@
 &lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
 p, li { white-space: pre-wrap; }
 &lt;/style>&lt;/head>&lt;body style=" font-family:'Tahoma'; font-size:40pt; font-weight:400; font-style:normal;">
-&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-family:'Sans Serif'; font-size:24pt;">Josiah david bryan is having lots of fun here whilst editing this text blob. &lt;/span>&lt;span style=" font-family:'Sans Serif'; font-size:24pt; font-weight:600;">Cheers!&lt;/span>&lt;span style=" font-family:'Sans Serif'; font-size:24pt;"> Lets try adding a bit more to &lt;/span>&lt;span style=" font-family:'Sans Serif'; font-size:24pt; font-style:italic;">this&lt;/span>&lt;span style=" font-family:'Sans Serif'; font-size:24pt;">, shall we?&lt;/span>&lt;/p>&lt;/body>&lt;/html></text>
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-size:48pt; font-style:italic;">formatted&lt;/span>&lt;span style=" font-size:48pt;"> &lt;/span>&lt;span style=" font-size:48pt; font-weight:600;">text&lt;/span>&lt;span style=" font-size:48pt;"> with wrapping to an &lt;/span>&lt;span style=" font-size:48pt; text-decoration: underline;">arbitrary rectangle&lt;/span>&lt;span style=" font-size:48pt;"> &lt;/span>&lt;span style=" font-size:48pt; font-weight:600; font-style:italic; text-decoration: underline;">width&lt;/span>&lt;/p>&lt;/body>&lt;/html></text>
             <default-font font-family="Tahoma" font-size="40"/>
             <shape enabled="0"/>
         </textbox>

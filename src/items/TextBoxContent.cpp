@@ -17,6 +17,18 @@
 #include <QDebug>
 #include <QTextOption>
 #include <QTimer>
+#include "items/CornerItem.h"
+
+static QString trimLeft(QString str)
+{
+	static QRegExp white("\\s");
+	while(white.indexIn(str) == 0)
+	{
+		str = str.right(str.length()-1);
+	}
+	return str;
+}
+
 
 TextBoxContent::TextBoxContent(QGraphicsScene * scene, QGraphicsItem * parent)
     : AbstractContent(scene, parent, false)
@@ -57,6 +69,9 @@ TextBoxContent::TextBoxContent(QGraphicsScene * scene, QGraphicsItem * parent)
 	m_dontSyncToModel = false;
 	
 	connect(this, SIGNAL(resized()), this, SLOT(delayContentsResized()));
+	
+	for(int i=0;i<m_cornerItems.size();i++)
+		m_cornerItems.at(i)->setDefaultLeftOp(CornerItem::Scale);
 }
 
 TextBoxContent::~TextBoxContent()
@@ -248,7 +263,137 @@ int TextBoxContent::contentHeightForWidth(int width) const
 	// if no text size is available, use default
 	if (m_textRect.width() < 1 || m_textRect.height() < 1)
 		return AbstractContent::contentHeightForWidth(width);
-	return (m_textRect.height() * width) / m_textRect.width();
+		
+	
+	int textWidth = width;
+
+	//QRegExp rxWhite("\\s+");
+	QRegExp rxWhite("\\b");
+	QRegExp rxNonAZ("[A-Za-z0-9\\s]");
+	
+	// 2. LAYOUT TEXT. find out Block rects and Document rect
+	
+	QPoint cursor(0,0);
+	
+	QRect cursorRect(cursor.x(),cursor.y(),0,0);
+	
+	int blockCount = 0;
+	for (QTextBlock tb = m_text->begin(); tb.isValid(); tb = tb.next()) 
+	{
+		if (!tb.isVisible())
+			continue;
+		
+		QFontMetrics metrics(tb.charFormat().font());
+		int textHeight = 1; // wil be set later
+					
+		QTextBlockFormat tbFormat = tb.blockFormat();
+		//int xZero = -(int)tbFormat.leftMargin();
+		int xZero = 0;
+		cursor.setX(xZero);
+		
+		int blockTop = cursor.y();
+		
+		for (QTextBlock::iterator tbIt = tb.begin(); !(tbIt.atEnd()); ++tbIt) 
+		{
+			QTextFragment frag = tbIt.fragment();
+			if (!frag.isValid())
+				continue;
+		
+			QString text = frag.text();
+			if (text.trimmed().isEmpty())
+				continue;
+			QFontMetrics metrics(frag.charFormat().font());
+		
+			QRect textRect = metrics.boundingRect(text+" ");
+			textHeight = textRect.height();
+			
+			if(cursor.x() + textRect.width() > textWidth)
+			{
+				QStringList words = text.split(rxWhite);
+				// start from end of frag and move backwards
+				
+				QString tmp;
+				QString next;
+				for(int i=0;i<words.size();i++)
+				{
+					tmp += words.at(i);
+					
+					next = "";
+					if(i+1 < words.size())
+						next = words.at(i+1);
+							
+					QRect tmpRect = metrics.boundingRect(tmp+" ");
+					if(cursor.x() + tmpRect.width() > textWidth)
+					{
+						cursor.setX(xZero);
+						cursor.setY(cursor.y() + textHeight);
+					}
+					
+					QRect tmpRect2 = metrics.boundingRect(tmp+next+" ");
+					if(cursor.x() + tmpRect2.width() >= textWidth)
+					{
+						// if the next "word" contains a non-A-Z (or 0-9) character (like a period), dont leave it dangling
+						if(next != "")
+						{
+							int pos = rxNonAZ.indexIn(next);
+							//qDebug() << "updateTextConstraints(): WrapAlpha: 1: Dangle Check: next:"<<next<<", pos:"<<pos;
+							if(pos < 0)
+							{
+								tmp += next;
+								i++;
+							}
+						}
+						
+						tmp =  cursor.x() == 0 ? trimLeft(tmp) : tmp;
+						if(tmp.trimmed().isEmpty())
+							continue;
+							
+						
+						TextLineSpec ts(frag,QRect(cursor - tmpRect.topLeft(), tmpRect.size()), tmp);
+						//m_lineSpecs.append(ts);
+						
+						cursorRect |= ts.rect;
+						cursor.setX(xZero);
+						cursor.setY(cursor.y() + ts.rect.height());
+						
+						tmp = "";
+					}
+				}
+				
+				if(tmp != "")
+				{
+					QRect tmpRect = metrics.boundingRect(tmp+" ");
+					
+					TextLineSpec ts(frag,QRect(cursor - tmpRect.topLeft(), tmpRect.size()),cursor.x() == 0 ? trimLeft(tmp) : tmp);
+					//m_lineSpecs.append(ts);
+					
+					cursorRect |= ts.rect;
+					cursor.setX(cursor.x() + ts.rect.width()); //ts.rect.right());
+					
+						
+				}
+			}
+			else
+			{
+				TextLineSpec ts(frag,QRect(cursor - textRect.topLeft(), textRect.size()),cursor.x() == 0 ? trimLeft(text) : text);
+				//m_lineSpecs.append(ts);
+				
+				cursorRect |= ts.rect;
+				cursor.setX(cursor.x() + ts.rect.width());
+			}
+		}
+		
+		
+		if(cursor.x() > cursorRect.right())
+			cursorRect.setRight(cursor.x());
+		if(cursor.y() > cursorRect.bottom())
+			cursorRect.setBottom(cursor.y());
+			
+		cursor.setY(cursor.y() + textHeight);
+
+	}
+	
+	return cursorRect.height();
 }
 
 void TextBoxContent::selectionChanged(bool selected)
@@ -296,7 +441,7 @@ void TextBoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * 
 	//    painter->strokePath(m_shapePath, QPen(Qt::red, 0));
 	
 	QPen pen;
-	qreal w = 1; ///qMax(xScale, yScale);
+	qreal w = 1.5; ///qMax(xScale, yScale);
 	//qDebug("Pen Width: %.04f (%.02f, %.02f)",w,xScale,yScale);
  	pen.setWidthF(w);
  	pen.setColor(QColor(0,0,0,255));
@@ -422,9 +567,13 @@ void TextBoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * 
 		//painter->drawText(ts.point, ts.text);
 		
 		//painter->drawText(ts.rect.topLeft(), ts.text);
-		QPainterPath p;
-		p.addText(ts.rect.topLeft(),font,ts.text);
-		painter->drawPath(p);
+// 		QPainterPath p;
+// 		p.addText(ts.rect.topLeft(),font,ts.text);
+ 		painter->drawPath(ts.path);
+		
+// 		painter->setPen(Qt::red);
+// 		painter->setBrush(Qt::NoBrush);
+// 		painter->drawRect(ts.rect);
 		
 		//painter->drawText(ts.rect.topLeft() + QPoint(0,metrics.height()), ts.text);
 	}
@@ -456,15 +605,6 @@ void TextBoxContent::setShapePath(const QPainterPath & path)
 	updateTextConstraints();
 }
 
-static QString trimLeft(QString str)
-{
-	static QRegExp white("\\s");
-	while(white.indexIn(str) == 0)
-	{
-		str = str.right(str.length()-1);
-	}
-	return str;
-}
 
 void TextBoxContent::updateTextConstraints()
 {
@@ -516,7 +656,9 @@ void TextBoxContent::updateTextConstraints()
 			continue;
 		
 		QFontMetrics metrics(tb.charFormat().font());
-		int textHeight = metrics.height();
+		//int textHeight = metrics.height();
+		QRect hack = metrics.boundingRect("19XjGHW");
+		int textHeight = hack.height();
 		
 					
 		QTextBlockFormat tbFormat = tb.blockFormat();
@@ -558,6 +700,8 @@ void TextBoxContent::updateTextConstraints()
 			
 // 			cursor.setY(cursor.y() + textRect.y());
 // 			cursor.setX(cursor.x() + textRect.x());
+
+			textHeight = textRect.height();
 			
 			if(cursor.x() + textRect.width() > textWidth)
 			{
@@ -570,11 +714,22 @@ void TextBoxContent::updateTextConstraints()
 				{
 					tmp += words.at(i);
 					
+					
 					next = "";
 					if(i+1 < words.size())
 						next = words.at(i+1);
 							
 					QRect tmpRect = metrics.boundingRect(tmp+" ");
+					if(cursor.x() + tmpRect.width() > textWidth)
+					{
+						cursor.setX(xZero);
+						//cursor.setY(cursor.y() + textRect.height());
+						cursor.setY(cursor.y() + textHeight);
+						//cursorRect |= ts.rect;
+						qDebug() << "updateTextConstraints(): WrapAlpha: 1.2: Text wouldn't fit in current line, wrapping, cursor now at:"<<cursor<<", cursorRect:"<<cursorRect;
+					}
+					
+					
 					QRect tmpRect2 = metrics.boundingRect(tmp+next+" ");
 					if(cursor.x() + tmpRect2.width() >= textWidth)
 					{
@@ -620,7 +775,7 @@ void TextBoxContent::updateTextConstraints()
 				
 				if(tmp != "")
 				{
-					QRect tmpRect = metrics.boundingRect(tmp);
+					QRect tmpRect = metrics.boundingRect(tmp+" ");
 					
 					TextLineSpec ts(frag,QRect(cursor - tmpRect.topLeft(), tmpRect.size()),cursor.x() == 0 ? trimLeft(tmp) : tmp);
 					m_lineSpecs.append(ts);
@@ -629,7 +784,7 @@ void TextBoxContent::updateTextConstraints()
 // 					if(cursor.y() + tmpRect.y() < cursorRect.top())
 // 						cursorRect.setTop(cursor.y() + tmpRect.y());
 							
-					cursor.setX(ts.rect.right());
+					cursor.setX(cursor.x() + ts.rect.width()); //ts.rect.right());
 					/*
 					if(cursor.x() > cursorRect.right())
 						cursorRect.setRight(cursor.x());*/
@@ -644,7 +799,7 @@ void TextBoxContent::updateTextConstraints()
 				m_lineSpecs.append(ts);
 				
 				cursorRect |= ts.rect;
-				cursor.setX(ts.rect.right());
+				cursor.setX(cursor.x() + ts.rect.width()); //ts.rect.right());
 // 				if(cursor.y() + textRect.y() < cursorRect.top())
 // 					cursorRect.setTop(cursor.y() + textRect.y());
 // 				if(cursor.x() > cursorRect.right())
@@ -687,7 +842,7 @@ void TextBoxContent::updateTextConstraints()
 			blockRect.setWidth(1);
 			blockRect.setHeight(textHeight);
 			
-			cursor.setX(1);
+			//cursor.setX(1);
 			//cursor.setY(cursor.y() + textHeight); // + (cursorRect.bottom() - blockTop) + 1);
 		
 			qDebug() << "updateTextConstraints(): 2.1.B: empty line, blockRect="<<blockRect;
@@ -698,10 +853,11 @@ void TextBoxContent::updateTextConstraints()
 		if(cursor.y() > cursorRect.bottom())
 			cursorRect.setBottom(cursor.y());
 			
-		if(cursor.x() > 0)
-		{
-			cursor.setY(cursor.y() + textHeight/1.75);
-		}
+		//if(cursor.x() > 0)
+		//{
+			//qDebug("** textHeight: %d",textHeight);
+			cursor.setY(cursor.y() + textHeight);
+		//}
 		
 		
 	
@@ -747,11 +903,11 @@ void TextBoxContent::updateTextConstraints()
 		newRect.setHeight(m_textRect.height());
 		changed = true;
 	}
-	if(m_textRect.width() > newRect.width())
-	{
-		newRect.setWidth(m_textRect.width());
-		changed = true;
-	}
+// 	if(m_textRect.width() > newRect.width())
+// 	{
+// 		newRect.setWidth(m_textRect.width());
+// 		changed = true;
+// 	}
 	if(changed)
 	{
 		resizeContents(newRect);

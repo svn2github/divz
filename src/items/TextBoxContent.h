@@ -7,6 +7,7 @@ class QTextDocument;
 
 #include <QtGui/QTextFragment>
 #include <QPointF>
+#include <QPainterPath>
 
 class TextLineSpec
 {
@@ -15,13 +16,17 @@ class TextLineSpec
 		frag=tf; 
 		rect=r; 
 		text=txt;
+		path.addText(rect.topLeft(),frag.charFormat().font(),text);
 	}
+	
+	
 protected:
 	friend class TextBoxContent;
 	
 	QTextFragment frag;
 	QString text;
 	QRect rect;
+	QPainterPath path;
 };
 
 /// \brief TODO

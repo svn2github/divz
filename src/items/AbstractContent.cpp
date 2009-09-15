@@ -154,8 +154,6 @@ void AbstractContent::resizeContents(const QRect & rect, bool keepRatio)
 	
 	m_contentsRect = rect;
 	
-	syncToModelItem(modelItem());
-	
 	if (keepRatio) 
 	{
 		int hfw = contentHeightForWidth(rect.width());
@@ -166,10 +164,15 @@ void AbstractContent::resizeContents(const QRect & rect, bool keepRatio)
 		}
 	}
 	
+	
+	syncToModelItem(modelItem());
+	
+	
 	if (m_frame)
 		m_frameRect = m_frame->frameRect(m_contentsRect);
 	else
 		m_frameRect = m_contentsRect;
+	
 	
 	layoutChildren();
 	update();
@@ -512,6 +515,7 @@ QPixmap AbstractContent::renderContent(const QSize & size, Qt::AspectRatioMode r
 */
 QRectF AbstractContent::boundingRect() const
 {
+    //return QRectF(QPointF(0,0),m_frameRect.size());
     return m_frameRect;
 }
 

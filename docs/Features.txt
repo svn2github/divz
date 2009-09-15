@@ -60,8 +60,8 @@ Release 0.1b
 			
 		Milestone C - Target 10:30pm 2009-09-08
 		----
-			Slide Template Model 
 			Code to translate model to GraphicsView
+			Slide Template Model 
 			Revert to old CornerItems
 			Create TextBox Item 
 			Basic Editor (toolbar with items, click, add to canvas)
