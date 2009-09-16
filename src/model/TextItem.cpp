@@ -19,7 +19,7 @@ TextItem::~TextItem() {}
 void TextItem::setText(QString text)
 {
 	m_text = text;
-        qDebug("TextItem::setText: '%s'",text.toAscii().constData());
+        //qDebug("TextItem::setText: '%s'",text.toAscii().constData());
 	setChanged("text",text);
 }
 

@@ -608,70 +608,29 @@ void TextBoxContent::setShapePath(const QPainterPath & path)
 
 void TextBoxContent::updateTextConstraints()
 {
-	// 1. actual content stretch
-	double prevXScale = 1.0;
-	double prevYScale = 1.0;
-	if (m_textRect.width() > 0 && m_textRect.height() > 0) {
-		QRect cRect = contentsRect();
-		prevXScale = (qreal)cRect.width() / (qreal)m_textRect.width();
-		prevYScale = (qreal)cRect.height() / (qreal)m_textRect.height();
-	}
-	
-	QTextOption t;
-	t.setWrapMode(QTextOption::WordWrap);
-	//m_text->documentLayout()->setTextOption(t);
-	
-	for (QTextBlock tb = m_text->begin(); tb.isValid(); tb = tb.next())
-	{
-		tb.layout()->setTextOption(t);
-	}
-	
-	m_text->setTextWidth(contentsRect().width());
-	
 	int textWidth = contentsRect().width();
 	
-// 	QSizeF sz = m_text->documentLayout()->documentSize();
-// 	m_textRect = QRect(QPoint(0,0),QSize((int)sz.width(),(int)sz.height()));
+	//qDebug("updateTextConstraints() BEGIN (width: %d)",textWidth);
 	
-	qDebug("updateTextConstraints() BEGIN (width: %d)",textWidth);
-	
-	//QRegExp rxWhite("\\s+");
 	QRegExp rxWhite("\\b");
 	QRegExp rxNonAZ("[A-Za-z0-9\\s]");
-	
-	// 2. LAYOUT TEXT. find out Block rects and Document rect
-	int minCharSide = 0;
-	m_blockRects.clear();
-	m_textRect = QRect(0, 0, 0, 0);
 	
 	QPoint cursor(0,0);
 	m_lineSpecs.clear();
 	
 	QRect cursorRect(cursor.x(),cursor.y(),0,0);
 	
-	int blockCount = 0;
 	for (QTextBlock tb = m_text->begin(); tb.isValid(); tb = tb.next()) 
 	{
 		if (!tb.isVisible())
 			continue;
 		
-		//QFontMetrics metrics(tb.charFormat().font());
-		//int textHeight = metrics.height();
 		int textHeight = 1;
-		
 					
 		QTextBlockFormat tbFormat = tb.blockFormat();
 		//int xZero = -(int)tbFormat.leftMargin();
 		int xZero = 0;
 		cursor.setX(xZero);
-		// if this is not the first block, add an empty line between the two
-		//cursor.setY(cursor.y() - (int)tbFormat.topMargin() + (blockCount > 0 ? textHeight : 0));//, (int)tbFormat.rightMargin(), (int)tbFormat.bottomMargin());
-		//int pre_y = cursor.y();
-		//cursor.setY(cursor.y()  + (blockCount > 0 ? textHeight : 0));//, (int)tbFormat.rightMargin(), (int)tbFormat.bottomMargin());
-		//qDebug("top-o-the-block: textHeight=%d, y=%d",textHeight,pre_y);
-		
-// 		int blockTop = cursor.y();
-		
 	
 		// 2.1.A. calc the Block size uniting Fragments bounding rects
 		QRect blockRect(0, 0, 0, 0);
@@ -682,30 +641,23 @@ void TextBoxContent::updateTextConstraints()
 				continue;
 		
 			QString text = frag.text();
-// 			if (text.trimmed().isEmpty())
-// 				continue;
-				
-			qDebug() << "updateTextConstraints(): 2.1.A.1: frag.text():"<<frag.text();
+			
+			//qDebug() << "updateTextConstraints(): 2.1.A.1: frag.text():"<<frag.text();
 		
 			QFontMetrics metrics(frag.charFormat().font());
-			if (!minCharSide || metrics.height() > minCharSide)
-				minCharSide = metrics.height();
 				
 			// TODO: implement superscript / subscript (it's in charFormat's alignment)
 			// it must be implemented in paint too
 		
 			QRect textRect = metrics.boundingRect(text+" ");
-			qDebug() << "updateTextConstraints(): 2.1.A.2: metrics.boundingRect(...):"<<textRect;
+			//qDebug() << "updateTextConstraints(): 2.1.A.2: metrics.boundingRect(...):"<<textRect;
 			
-// 			cursor.setY(cursor.y() + textRect.y());
-// 			cursor.setX(cursor.x() + textRect.x());
-
+			// for use in generating the end-of-block break
 			textHeight = textRect.height();
 			
 			if(cursor.x() + textRect.width() > textWidth)
 			{
 				QStringList words = text.split(rxWhite);
-				// start from end of frag and move backwards
 				
 				QString tmp;
 				QString next;
@@ -713,21 +665,28 @@ void TextBoxContent::updateTextConstraints()
 				{
 					tmp += words.at(i);
 					
-					
+					// for non-letter (or #) dangle detection (e.g. dont dangle a period, etc) 
 					next = "";
 					if(i+1 < words.size())
 						next = words.at(i+1);
 							
+					// WHY does Qt metrics.boundingRect() ignore spaces at the end of the line? This is probably my fault - but its confusing.
+					// You see, if tmp ends in a space, ex. "test ", Qt *seems* to only give me the rect for "test", not "text ". However,
+					// if we add a *second* space, Qt drops the 'fake' space instaed, but includes anys spaces in the 'real' text. Wierd? Or am I
+					// screwing up somewhere? Anyone? - JB 20090915
 					QRect tmpRect = metrics.boundingRect(tmp+" ");
+					
+					// wrap cursor if the current word in (tmp) wont fit - e.g. the start of the frag is about the only time this would hit
 					if(!tmp.isEmpty() && cursorRect.width() > 0 && cursorRect.height() > 0 && cursor.x() > 0 && cursor.x() + tmpRect.width() > textWidth)
 					{
 						cursor.setX(xZero);
-						//cursor.setY(cursor.y() + textRect.height());
 						cursor.setY(cursor.y() + textHeight);
-						//cursorRect |= ts.rect;
-						qDebug() << "updateTextConstraints(): WrapAlpha: 1.2: Text wouldn't fit in current line, wrapping, cursor now at:"<<cursor<<", cursorRect:"<<cursorRect;
+						//qDebug() << "updateTextConstraints(): WrapAlpha: 1.2: Text wouldn't fit in current line, wrapping, cursor now at:"<<cursor<<", cursorRect:"<<cursorRect;
 					}
 					
+					// visualTmp is the string to render. Only difference is if this string is at the start of the line,
+					// we trip any spaces at the start of the string. However, if this word is NOT at the start of the line -
+					// we dont trim - e.x. a frag that starts it the middle of the line.
 					QString visualTmp = cursor.x() == 0 ? trimLeft(tmp) : tmp;
 					
 					QRect tmpRect2 = metrics.boundingRect(tmp+next+" ");
@@ -745,28 +704,15 @@ void TextBoxContent::updateTextConstraints()
 							}
 						}
 						
-						//if(tmp.trimmed().isEmpty())
-						//	continue;
-							
-						
 						TextLineSpec ts(frag,QRect(cursor - tmpRect.topLeft(), tmpRect.size()), visualTmp);
 						m_lineSpecs.append(ts);
 						
 						cursorRect |= ts.rect;
-// 						if(cursor.x() + tmpRect.width() > cursorRect.right())
-// 							cursorRect.setRight(cursor.x() + tmpRect.width());
-// 							
-// 						if(cursor.y() + tmpRect.y() < cursorRect.top())
-// 							cursorRect.setTop(cursor.y() + tmpRect.y());
-							
+						
 						cursor.setX(xZero);
-						//cursor.setY(cursor.y() + textRect.height());
 						cursor.setY(cursor.y() + ts.rect.height());
 						
-// 						if(cursor.y() + tmpRect.height() > cursorRect.bottom())
-// 							cursorRect.setBottom(cursor.y() + tmpRect.height());
-						
-						qDebug() << "updateTextConstraints(): WrapAlpha: 1: Partial frag used, text:"<<visualTmp<<", ts.rect:"<<ts.rect<<", cursor now at:"<<cursor<<", cursorRect:"<<cursorRect;
+						//qDebug() << "updateTextConstraints(): WrapAlpha: 1: Partial frag used, text:"<<visualTmp<<", ts.rect:"<<ts.rect<<", cursor now at:"<<cursor<<", cursorRect:"<<cursorRect;
 						
 						tmp = "";
 					}
@@ -780,15 +726,9 @@ void TextBoxContent::updateTextConstraints()
 					m_lineSpecs.append(ts);
 					
 					cursorRect |= ts.rect;
-// 					if(cursor.y() + tmpRect.y() < cursorRect.top())
-// 						cursorRect.setTop(cursor.y() + tmpRect.y());
-							
-					cursor.setX(cursor.x() + ts.rect.width()); //ts.rect.right());
-					/*
-					if(cursor.x() > cursorRect.right())
-						cursorRect.setRight(cursor.x());*/
+					cursor.setX(cursor.x() + ts.rect.width());
 					
-					qDebug() << "updateTextConstraints(): WrapAlpha: 1.1: Leftover partial frag, text:"<<tmp<<", ts.rect:"<<ts.rect<<", cursor now at:"<<cursor<<", cursorRect:"<<cursorRect;
+					//qDebug() << "updateTextConstraints(): WrapAlpha: 1.1: Leftover partial frag, text:"<<tmp<<", ts.rect:"<<ts.rect<<", cursor now at:"<<cursor<<", cursorRect:"<<cursorRect;
 						
 				}
 			}
@@ -798,43 +738,12 @@ void TextBoxContent::updateTextConstraints()
 				m_lineSpecs.append(ts);
 				
 				cursorRect |= ts.rect;
-				cursor.setX(cursor.x() + ts.rect.width()); //ts.rect.right());
-// 				if(cursor.y() + textRect.y() < cursorRect.top())
-// 					cursorRect.setTop(cursor.y() + textRect.y());
-// 				if(cursor.x() > cursorRect.right())
-// 					cursorRect.setRight(cursor.x());
-				qDebug() << "updateTextConstraints(): WrapAlpha: 2: No break needed, full frag fits. ts.rect:"<<ts.rect<<", cursor now at:"<<cursor<<", cursorRect:"<<cursorRect;
+				cursor.setX(cursor.x() + ts.rect.width());
+//				qDebug() << "updateTextConstraints(): WrapAlpha: 2: No break needed, full frag fits. ts.rect:"<<ts.rect<<", cursor now at:"<<cursor<<", cursorRect:"<<cursorRect;
 			}
-			
-// 			if(cursor.x() >= textWidth)
-// 			{
-// 				if(cursor.x() > cursorRect.right())
-// 					cursorRect.setRight(cursor.x());
-// 				cursor.setX(xZero);
-// 				cursor.setY(cursor.y() + textRect.height());
-// 				if(cursor.y() > cursorRect.bottom())
-// 					cursorRect.setBottom(cursor.y());
-// 				qDebug() << "updateTextConstraints(): 3: WrapAlpha: After adding TextLineSpec, hit end of textWidth, cursor now at:"<<cursor;
-// 			}
-// 		
-			
-			if (textRect.left() > 9999)
-				continue;
-			if (textRect.top() < blockRect.top())
-				blockRect.setTop(textRect.top());
-			if (textRect.bottom() > blockRect.bottom())
-				blockRect.setBottom(textRect.bottom());
-		
-			//qDebug() << "updateTextConstraints(): 2.1.A: blockRect.1="<<blockRect<<"";
-			
-			int textWidth = metrics.width(text);
-			blockRect.setWidth(blockRect.width() + textWidth);
-			
-			
-			//qDebug() << "updateTextConstraints(): 2.1.A: blockRect.2="<<blockRect<<", textWidth="<<textWidth;
 		}
 		
-		
+		/*		
 		// 2.1.B. calc the Block size of blank lines
 		if (tb.begin() == tb.end()) 
 		{
@@ -846,52 +755,20 @@ void TextBoxContent::updateTextConstraints()
 		
 			qDebug() << "updateTextConstraints(): 2.1.B: empty line, blockRect="<<blockRect;
 		}
+		*/
 		
 		if(cursor.x() > cursorRect.right())
 			cursorRect.setRight(cursor.x());
 		if(cursor.y() > cursorRect.bottom())
 			cursorRect.setBottom(cursor.y());
 			
-		//if(cursor.x() > 0)
-		//{
-			//qDebug("** textHeight: %d",textHeight);
-			cursor.setY(cursor.y() + textHeight);
-		//}
-		
-		
-	
-		// 2.2. add the Block's margins
-		//QTextBlockFormat tbFormat = tb.blockFormat();
-		blockRect.adjust((int)-tbFormat.leftMargin(), (int)-tbFormat.topMargin(), (int)tbFormat.rightMargin(), (int)tbFormat.bottomMargin());
-		//cursorRect.adjust((int)-tbFormat.leftMargin(), (int)-tbFormat.topMargin(), (int)tbFormat.rightMargin(), (int)tbFormat.bottomMargin());
-		
-		//qDebug() << "updateTextConstraints(): 2.2: blockRect="<<blockRect;
-	
-		// 2.3. store the original block rect
-		m_blockRects.append(blockRect);
-	
-		// 2.4. enlarge the Document rect (uniting the Block rect)
-		blockRect.translate(0, m_textRect.bottom() - blockRect.top() + 1);
-		
-		//qDebug() << "updateTextConstraints(): 2.4: translate by (0,"<<(m_textRect.bottom() - blockRect.top() + 1)<<")";
-		
-		if (blockRect.left() < m_textRect.left())
-			m_textRect.setLeft(blockRect.left());
-		if (blockRect.right() > m_textRect.right())
-			m_textRect.setRight(blockRect.right());
-		if (blockRect.top() < m_textRect.top())
-			m_textRect.setTop(blockRect.top());
-		if (blockRect.bottom() > m_textRect.bottom())
-			m_textRect.setBottom(blockRect.bottom());
-			
-		qDebug() << "updateTextConstraints(): 2.4: m_textRect="<<m_textRect;
-		
-		blockCount++;
+		cursor.setY(cursor.y() + textHeight);
 	}
-	m_textRect.adjust(-m_textMargin, -m_textMargin, m_textMargin, m_textMargin);
 	
-	qDebug() << "updateTextConstraints(): m_textMargin="<<m_textMargin<<" m_textRect="<<m_textRect;
-	qDebug() << "updateTextConstraints(): WrapAlpha: cursorRect:"<<cursorRect<<", contentsRect:"<<contentsRect();
+// 	m_textRect.adjust(-m_textMargin, -m_textMargin, m_textMargin, m_textMargin);
+	
+	//qDebug() << "updateTextConstraints(): m_textMargin="<<m_textMargin<<" m_textRect="<<m_textRect;
+	//qDebug() << "updateTextConstraints(): WrapAlpha: cursorRect:"<<cursorRect<<", contentsRect:"<<contentsRect();
 	
 	m_textRect = cursorRect;
 	
@@ -901,7 +778,6 @@ void TextBoxContent::updateTextConstraints()
 	{
 		newRect.setHeight(m_textRect.height());
 		changed = true;
-		//qDebug("Ka-ching! Changed");
 	}
 // 	if(m_textRect.width() > newRect.width())
 // 	{
@@ -914,39 +790,7 @@ void TextBoxContent::updateTextConstraints()
 	}
 	
 	
-// 	QRect un = contentsRect() | m_textRect;
-// 	resizeContents(un);
-	
-	// 3. use shape-based rendering
-	if (hasShape()) 
-	{
-		#if 1
-			// more precise, but too close to the path
-			m_shapeRect = m_shapePath.boundingRect().toRect();
-		#else
-			// faster, but less precise (as it uses the controls points to determine
-			// the path rect, instead of the path itself)
-			m_shapeRect = m_shapePath.controlPointRect().toRect();
-		#endif
-			minCharSide = qBound(10, minCharSide, 500);
-			m_shapeRect.adjust(-minCharSide, -minCharSide, minCharSide, minCharSide);
-		
-			// FIXME: layout, save layouting and calc the exact size!
-			//int w = m_shapeRect.width();
-			//int h = m_shapeRect.height();
-			//resizeContents(QRect(-w / 2, -h / 2, w, h));
-			resizeContents(m_shapeRect);
-		
-		//      moveBy(m_shapeRect.left(), m_shapeRect.top());
-		//        m_shapePath.translate(-m_shapeRect.left(), -m_shapeRect.top());
-			//setPos(m_shapeRect.center());
-			return;
-	}
-	
-	// 4. resize content keeping stretch
-// 	int w = (int)(prevXScale * (qreal)m_textRect.width());
-// 	int h = (int)(prevYScale * (qreal)m_textRect.height());
-// 	resizeContents(QRect(-w / 2, -h / 2, w, h));
+
 }
 
 void TextBoxContent::delayContentsResized()
