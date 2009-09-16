@@ -681,11 +681,13 @@ void TextBoxContent::updateTextConstraints()
 					// You see, if tmp ends in a space, ex. "test ", Qt *seems* to only give me the rect for "test", not "text ". However,
 					// if we add a *second* space, Qt drops the 'fake' space instaed, but includes anys spaces in the 'real' text. Wierd? Or am I
 					// screwing up somewhere? Anyone? - JB 20090915
-
-                                        // UPDATE: It appears that this spacing 'bug' is only on linux - I've only tested on
-                                        // FC8 so far and windows XP, and XP works fine, but linux needs the extra space. - JB 20090916
-
-                                        QRect tmpRect = metrics.boundingRect(tmp+(add_space ? " " : ""));
+					
+					// UPDATE: It appears that this spacing 'bug' is only on linux - I've only tested on
+					// FC8 so far and windows XP, and XP works fine, but linux needs the extra space. - JB 20090916
+					
+					// UPDATE: I've reported the "bug" on the qt-interest mailing list - we'll see what turns up from that - if anything. - JB 20090916
+					
+					QRect tmpRect = metrics.boundingRect(tmp+(add_space ? " " : ""));
 					
 					// wrap cursor if the current word in (tmp) wont fit - e.g. the start of the frag is about the only time this would hit
 					if(!tmp.isEmpty() && cursorRect.width() > 0 && cursorRect.height() > 0 && cursor.x() > 0 && cursor.x() + tmpRect.width() > textWidth)
