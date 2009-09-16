@@ -332,7 +332,8 @@ MainWindow::MainWindow(QWidget * parent)
 {
 	// setup widget
 	QRect geom = QApplication::desktop()->availableGeometry();
-	resize(2 * geom.width() / 3, 2 * geom.height() / 3);
+	//resize(2 * geom.width() / 3, 2 * geom.height() / 3);
+	resize(1400,300);
 	//move(3500,100);
 	
 	QPixmap newpix("new.png");

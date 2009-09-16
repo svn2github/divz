@@ -655,10 +655,9 @@ void TextBoxContent::updateTextConstraints()
 		if (!tb.isVisible())
 			continue;
 		
-		QFontMetrics metrics(tb.charFormat().font());
+		//QFontMetrics metrics(tb.charFormat().font());
 		//int textHeight = metrics.height();
-		QRect hack = metrics.boundingRect("19XjGHW");
-		int textHeight = hack.height();
+		int textHeight = 1;
 		
 					
 		QTextBlockFormat tbFormat = tb.blockFormat();
@@ -683,10 +682,10 @@ void TextBoxContent::updateTextConstraints()
 				continue;
 		
 			QString text = frag.text();
-			if (text.trimmed().isEmpty())
-				continue;
+// 			if (text.trimmed().isEmpty())
+// 				continue;
 				
-			qDebug() << "updateTextConstraints(): 2.1.A.1: frag.text()='"<<frag.text()<<"'";
+			qDebug() << "updateTextConstraints(): 2.1.A.1: frag.text():"<<frag.text();
 		
 			QFontMetrics metrics(frag.charFormat().font());
 			if (!minCharSide || metrics.height() > minCharSide)
@@ -696,7 +695,7 @@ void TextBoxContent::updateTextConstraints()
 			// it must be implemented in paint too
 		
 			QRect textRect = metrics.boundingRect(text+" ");
-			qDebug() << "updateTextConstraints(): 2.1.A.2: metrics.boundingRect(...)="<<textRect<<"";
+			qDebug() << "updateTextConstraints(): 2.1.A.2: metrics.boundingRect(...):"<<textRect;
 			
 // 			cursor.setY(cursor.y() + textRect.y());
 // 			cursor.setX(cursor.x() + textRect.x());
@@ -746,8 +745,8 @@ void TextBoxContent::updateTextConstraints()
 						}
 						
 						tmp =  cursor.x() == 0 ? trimLeft(tmp) : tmp;
-						if(tmp.trimmed().isEmpty())
-							continue;
+						//if(tmp.trimmed().isEmpty())
+						//	continue;
 							
 						
 						TextLineSpec ts(frag,QRect(cursor - tmpRect.topLeft(), tmpRect.size()), tmp);
