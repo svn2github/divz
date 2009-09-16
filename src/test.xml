@@ -18,7 +18,7 @@
             <opacity>1</opacity>
             <visible>1</visible>
             <frame-class>0</frame-class>
-            <transformation yRot="0" xRot="0" zRot="0" />
+            <transformation yRot="0" xRot="0" zRot="0"/>
         </box>
         <textbox>
             <item-id>12</item-id>
@@ -37,14 +37,14 @@
             <opacity>1</opacity>
             <visible>1</visible>
             <frame-class>0</frame-class>
-            <transformation yRot="0" xRot="0" zRot="0" />
+            <transformation yRot="0" xRot="0" zRot="0"/>
             <text>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
 &lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
 p, li { white-space: pre-wrap; }
 &lt;/style>&lt;/head>&lt;body style=" font-family:'Tahoma'; font-size:40pt; font-weight:400; font-style:normal;">
 &lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-family:'Sans Serif'; font-size:72pt;">Welcome to Directed Visual Systems.&lt;/span>&lt;/p>&lt;/body>&lt;/html></text>
-            <default-font font-family="Tahoma" font-size="40" />
-            <shape enabled="0" />
+            <default-font font-family="Tahoma" font-size="40"/>
+            <shape enabled="0"/>
         </textbox>
     </slide>
 </slide-group>
