@@ -45,9 +45,9 @@ AbstractContent::AbstractContent(QGraphicsScene * scene, QGraphicsItem * parent,
     , m_xRotationAngle(0)
     , m_yRotationAngle(0)
     , m_zRotationAngle(0)
+    , m_dontSyncToModel(true)
     , m_modelItem(0)
     , m_modelItemIsChanging(false)
-    , m_dontSyncToModel(true)
 {
     // the buffered graphics changes timer
     m_gfxChangeTimer = new QTimer(this);

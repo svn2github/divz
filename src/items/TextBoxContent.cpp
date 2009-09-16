@@ -619,6 +619,13 @@ void TextBoxContent::updateTextConstraints()
 	m_lineSpecs.clear();
 	
 	QRect cursorRect(cursor.x(),cursor.y(),0,0);
+
+
+#ifdef UNIX
+        bool add_space = true;
+#else
+        bool add_space = false;
+#endif
 	
 	for (QTextBlock tb = m_text->begin(); tb.isValid(); tb = tb.next()) 
 	{
@@ -649,7 +656,7 @@ void TextBoxContent::updateTextConstraints()
 			// TODO: implement superscript / subscript (it's in charFormat's alignment)
 			// it must be implemented in paint too
 		
-			QRect textRect = metrics.boundingRect(text+" ");
+                        QRect textRect = metrics.boundingRect(text+(add_space ? " " : ""));
 			//qDebug() << "updateTextConstraints(): 2.1.A.2: metrics.boundingRect(...):"<<textRect;
 			
 			// for use in generating the end-of-block break
@@ -674,7 +681,11 @@ void TextBoxContent::updateTextConstraints()
 					// You see, if tmp ends in a space, ex. "test ", Qt *seems* to only give me the rect for "test", not "text ". However,
 					// if we add a *second* space, Qt drops the 'fake' space instaed, but includes anys spaces in the 'real' text. Wierd? Or am I
 					// screwing up somewhere? Anyone? - JB 20090915
-					QRect tmpRect = metrics.boundingRect(tmp+" ");
+
+                                        // UPDATE: It appears that this spacing 'bug' is only on linux - I've only tested on
+                                        // FC8 so far and windows XP, and XP works fine, but linux needs the extra space. - JB 20090916
+
+                                        QRect tmpRect = metrics.boundingRect(tmp+(add_space ? " " : ""));
 					
 					// wrap cursor if the current word in (tmp) wont fit - e.g. the start of the frag is about the only time this would hit
 					if(!tmp.isEmpty() && cursorRect.width() > 0 && cursorRect.height() > 0 && cursor.x() > 0 && cursor.x() + tmpRect.width() > textWidth)
@@ -689,7 +700,7 @@ void TextBoxContent::updateTextConstraints()
 					// we dont trim - e.x. a frag that starts it the middle of the line.
 					QString visualTmp = cursor.x() == 0 ? trimLeft(tmp) : tmp;
 					
-					QRect tmpRect2 = metrics.boundingRect(tmp+next+" ");
+                                        QRect tmpRect2 = metrics.boundingRect(tmp+next+(add_space ? " " : ""));
 					if(visualTmp != "" && cursor.x() + tmpRect2.width() >= textWidth)
 					{
 						// if the next "word" contains a non-A-Z (or 0-9) character (like a period), dont leave it dangling
@@ -704,11 +715,17 @@ void TextBoxContent::updateTextConstraints()
 							}
 						}
 						
-						TextLineSpec ts(frag,QRect(cursor - tmpRect.topLeft(), tmpRect.size()), visualTmp);
+                                                // TextLineSpec holds the position of this subset of the frag on screen.
+                                                // Internally, it also converts the text (visualTmp) to a QPainterPath
+                                                // for quicker rendering.
+                                                TextLineSpec ts(frag,QRect(cursor - tmpRect.topLeft(), tmpRect.size()), visualTmp);
 						m_lineSpecs.append(ts);
 						
+                                                // Unify the linespec rect with the cursor to create the bounding rect
+                                                // for this layout
 						cursorRect |= ts.rect;
 						
+                                                // wrap cursor to next line
 						cursor.setX(xZero);
 						cursor.setY(cursor.y() + ts.rect.height());
 						
@@ -718,14 +735,24 @@ void TextBoxContent::updateTextConstraints()
 					}
 				}
 				
+                                // Catch anything leftover from the block above - e.g. the remainder of the frag
+                                // that didnt hit the end of the line - add it to the list of linespecs, but
+                                // dont wrap the cursor.
 				if(tmp != "")
 				{
-					QRect tmpRect = metrics.boundingRect(tmp+" ");
+                                        QRect tmpRect = metrics.boundingRect(tmp+(add_space ? " " : ""));
 					
 					TextLineSpec ts(frag,QRect(cursor - tmpRect.topLeft(), tmpRect.size()),cursor.x() == 0 ? trimLeft(tmp) : tmp);
 					m_lineSpecs.append(ts);
 					
 					cursorRect |= ts.rect;
+
+                                        // You'll notice here, among other places,
+                                        // we set the cursor X to cursor.x+ts.rect.width,
+                                        // instead of using ts.rect.right - this is because
+                                        // ts.rect.right = ts.rect.x + ts.rect.width, which
+                                        // is not always the same as cursor.x + ts.rect.width,
+                                        // since the text can overlap previous characters.
 					cursor.setX(cursor.x() + ts.rect.width());
 					
 					//qDebug() << "updateTextConstraints(): WrapAlpha: 1.1: Leftover partial frag, text:"<<tmp<<", ts.rect:"<<ts.rect<<", cursor now at:"<<cursor<<", cursorRect:"<<cursorRect;
@@ -734,7 +761,9 @@ void TextBoxContent::updateTextConstraints()
 			}
 			else
 			{
-				TextLineSpec ts(frag,QRect(cursor - textRect.topLeft(), textRect.size()),cursor.x() == 0 ? trimLeft(text) : text);
+                                // This block handles non-broken frags - just add the entire fragment to the line
+                                // and continue on (not wrapping cursor)
+                                TextLineSpec ts(frag,QRect(cursor - textRect.topLeft(), textRect.size()),cursor.x() == 0 ? trimLeft(text) : text);
 				m_lineSpecs.append(ts);
 				
 				cursorRect |= ts.rect;
@@ -757,11 +786,16 @@ void TextBoxContent::updateTextConstraints()
 		}
 		*/
 		
+                // unify the rect again
 		if(cursor.x() > cursorRect.right())
 			cursorRect.setRight(cursor.x());
 		if(cursor.y() > cursorRect.bottom())
 			cursorRect.setBottom(cursor.y());
 			
+                // We wrap the cursor to the next line AFTER
+                // unifying the rect again because if this is the last block in the document,
+                // we dont want and empty line at the end when the bounding rect is drawn.
+                cursor.setX(0);
 		cursor.setY(cursor.y() + textHeight);
 	}
 	
@@ -772,6 +806,8 @@ void TextBoxContent::updateTextConstraints()
 	
 	m_textRect = cursorRect;
 	
+        // Adjust the bounding rect *height* to our document wrapped height, but leave
+        // the width alone.
 	bool changed = false;
 	QRect newRect = contentsRect();
 	if(m_textRect.height() != newRect.height())
