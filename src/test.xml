@@ -1,18 +1,37 @@
 <?xml version="1.0" ?>
 <slide-group>
     <slide>
-        <textbox>
-            <item-id>10</item-id>
-            <item-name>TextItem</item-name>
+        <box>
+            <item-id>11</item-id>
+            <item-name>BoxItem</item-name>
             <rect>
-                <x>-291</x>
-                <y>-20</y>
-                <w>583</w>
-                <h>90</h>
+                <x>0</x>
+                <y>0</y>
+                <w>53</w>
+                <h>51</h>
             </rect>
             <pos>
-                <x>471.125</x>
-                <y>90.375</y>
+                <x>0</x>
+                <y>0</y>
+            </pos>
+            <zvalue>1</zvalue>
+            <opacity>1</opacity>
+            <visible>1</visible>
+            <frame-class>0</frame-class>
+            <transformation yRot="0" xRot="0" zRot="0" />
+        </box>
+        <textbox>
+            <item-id>12</item-id>
+            <item-name>TextBoxItem</item-name>
+            <rect>
+                <x>-100</x>
+                <y>-57</y>
+                <w>486</w>
+                <h>342</h>
+            </rect>
+            <pos>
+                <x>237</x>
+                <y>151</y>
             </pos>
             <zvalue>0</zvalue>
             <opacity>1</opacity>
@@ -23,7 +42,7 @@
 &lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
 p, li { white-space: pre-wrap; }
 &lt;/style>&lt;/head>&lt;body style=" font-family:'Tahoma'; font-size:40pt; font-weight:400; font-style:normal;">
-&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-size:28pt; font-style:italic;">formatted&lt;/span>&lt;span style=" font-size:28pt;"> &lt;/span>&lt;span style=" font-size:28pt; font-weight:600;">text&lt;/span>&lt;span style=" font-size:28pt;"> with wrapping to an &lt;/span>&lt;span style=" font-size:28pt; text-decoration: underline;">arbitrary rectangle&lt;/span>&lt;span style=" font-size:28pt;"> &lt;/span>&lt;span style=" font-size:28pt; font-weight:600; font-style:italic; text-decoration: underline;">width&lt;/span>&lt;/p>&lt;/body>&lt;/html></text>
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-family:'Sans Serif'; font-size:72pt;">Welcome to a new era.&lt;/span>&lt;/p>&lt;/body>&lt;/html></text>
             <default-font font-family="Tahoma" font-size="40" />
             <shape enabled="0" />
         </textbox>

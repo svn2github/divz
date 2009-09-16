@@ -7,7 +7,8 @@ HEADERS +=  \
 	TextItem.h \
 	Slide.h  \
 	ItemFactory.h \
-	TextBoxItem.h 
+	TextBoxItem.h \
+	BoxItem.h 
 
     
 SOURCES += \
@@ -16,4 +17,5 @@ SOURCES += \
 	TextItem.cpp \
 	Slide.cpp \
 	ItemFactory.cpp \
-	TextBoxItem.cpp
+	TextBoxItem.cpp \
+	BoxItem.cpp

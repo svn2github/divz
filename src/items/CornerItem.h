@@ -58,6 +58,7 @@ class CornerItem : public QGraphicsItem
         int m_defaultMidOp;
         int m_defaultRightOp;
         double m_startRatio;
+        QPointF m_startPos;
 };
 
 #endif

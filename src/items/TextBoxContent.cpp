@@ -277,7 +277,7 @@ int TextBoxContent::contentHeightForWidth(int width) const
 	
 	QRect cursorRect(cursor.x(),cursor.y(),0,0);
 	
-	int blockCount = 0;
+// 	int blockCount = 0;
 	for (QTextBlock tb = m_text->begin(); tb.isValid(); tb = tb.next()) 
 	{
 		if (!tb.isVisible())
@@ -291,7 +291,7 @@ int TextBoxContent::contentHeightForWidth(int width) const
 		int xZero = 0;
 		cursor.setX(xZero);
 		
-		int blockTop = cursor.y();
+// 		int blockTop = cursor.y();
 		
 		for (QTextBlock::iterator tbIt = tb.begin(); !(tbIt.atEnd()); ++tbIt) 
 		{
@@ -300,8 +300,8 @@ int TextBoxContent::contentHeightForWidth(int width) const
 				continue;
 		
 			QString text = frag.text();
-			if (text.trimmed().isEmpty())
-				continue;
+// 			if (text.trimmed().isEmpty())
+// 				continue;
 			QFontMetrics metrics(frag.charFormat().font());
 		
 			QRect textRect = metrics.boundingRect(text+" ");
@@ -670,7 +670,7 @@ void TextBoxContent::updateTextConstraints()
 		//cursor.setY(cursor.y()  + (blockCount > 0 ? textHeight : 0));//, (int)tbFormat.rightMargin(), (int)tbFormat.bottomMargin());
 		//qDebug("top-o-the-block: textHeight=%d, y=%d",textHeight,pre_y);
 		
-		int blockTop = cursor.y();
+// 		int blockTop = cursor.y();
 		
 	
 		// 2.1.A. calc the Block size uniting Fragments bounding rects
@@ -719,7 +719,7 @@ void TextBoxContent::updateTextConstraints()
 						next = words.at(i+1);
 							
 					QRect tmpRect = metrics.boundingRect(tmp+" ");
-					if(cursor.x() + tmpRect.width() > textWidth)
+					if(!tmp.isEmpty() && cursorRect.width() > 0 && cursorRect.height() > 0 && cursor.x() > 0 && cursor.x() + tmpRect.width() > textWidth)
 					{
 						cursor.setX(xZero);
 						//cursor.setY(cursor.y() + textRect.height());
@@ -728,9 +728,10 @@ void TextBoxContent::updateTextConstraints()
 						qDebug() << "updateTextConstraints(): WrapAlpha: 1.2: Text wouldn't fit in current line, wrapping, cursor now at:"<<cursor<<", cursorRect:"<<cursorRect;
 					}
 					
+					QString visualTmp = cursor.x() == 0 ? trimLeft(tmp) : tmp;
 					
 					QRect tmpRect2 = metrics.boundingRect(tmp+next+" ");
-					if(cursor.x() + tmpRect2.width() >= textWidth)
+					if(visualTmp != "" && cursor.x() + tmpRect2.width() >= textWidth)
 					{
 						// if the next "word" contains a non-A-Z (or 0-9) character (like a period), dont leave it dangling
 						if(next != "")
@@ -739,17 +740,16 @@ void TextBoxContent::updateTextConstraints()
 							//qDebug() << "updateTextConstraints(): WrapAlpha: 1: Dangle Check: next:"<<next<<", pos:"<<pos;
 							if(pos < 0)
 							{
-								tmp += next;
+								visualTmp += next;
 								i++;
 							}
 						}
 						
-						tmp =  cursor.x() == 0 ? trimLeft(tmp) : tmp;
 						//if(tmp.trimmed().isEmpty())
 						//	continue;
 							
 						
-						TextLineSpec ts(frag,QRect(cursor - tmpRect.topLeft(), tmpRect.size()), tmp);
+						TextLineSpec ts(frag,QRect(cursor - tmpRect.topLeft(), tmpRect.size()), visualTmp);
 						m_lineSpecs.append(ts);
 						
 						cursorRect |= ts.rect;
@@ -766,7 +766,7 @@ void TextBoxContent::updateTextConstraints()
 // 						if(cursor.y() + tmpRect.height() > cursorRect.bottom())
 // 							cursorRect.setBottom(cursor.y() + tmpRect.height());
 						
-						qDebug() << "updateTextConstraints(): WrapAlpha: 1: Partial frag used, text:"<<tmp<<", ts.rect:"<<ts.rect<<", cursor now at:"<<cursor<<", cursorRect:"<<cursorRect;
+						qDebug() << "updateTextConstraints(): WrapAlpha: 1: Partial frag used, text:"<<visualTmp<<", ts.rect:"<<ts.rect<<", cursor now at:"<<cursor<<", cursorRect:"<<cursorRect;
 						
 						tmp = "";
 					}
@@ -897,10 +897,11 @@ void TextBoxContent::updateTextConstraints()
 	
 	bool changed = false;
 	QRect newRect = contentsRect();
-	if(m_textRect.height() > newRect.height())
+	if(m_textRect.height() != newRect.height())
 	{
 		newRect.setHeight(m_textRect.height());
 		changed = true;
+		//qDebug("Ka-ching! Changed");
 	}
 // 	if(m_textRect.width() > newRect.width())
 // 	{

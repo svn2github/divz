@@ -16,6 +16,7 @@
 #include "model/ItemFactory.h"
 #include "model/Slide.h"
 #include "model/TextItem.h"
+#include "model/TextBoxItem.h"
 
 
 #include "RenderOpts.h"
@@ -108,13 +109,13 @@ TextContent * MyGraphicsScene::addTextContent()
 
 TextItem * MyGraphicsScene::newTextItem(QString text)
 {
-	TextItem *t = new TextItem();
+	TextBoxItem *t = new TextBoxItem();
 	assert(m_slide);
 	m_slide->addItem(t); //m_slide->createText();
 	
 	t->setText(text);
 	t->setPos(nearCenter(sceneRect()));
-	t->setItemName("TextItem");
+	t->setItemName("TextBoxItem");
 	t->setItemId(ItemFactory::nextId());
 	
 	AbstractContent * item = t->createDelegate(this);

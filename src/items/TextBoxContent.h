@@ -80,6 +80,9 @@ class TextBoxContent : public AbstractContent
         void contentsResized();
         void delayContentsResized();
         
+    protected:
+//         void layoutText(qreal width, bool storeLineSpecs = true);
+         
     private:
         void updateTextConstraints();
         void updateCache();

@@ -333,7 +333,7 @@ MainWindow::MainWindow(QWidget * parent)
 	// setup widget
 	QRect geom = QApplication::desktop()->availableGeometry();
 	//resize(2 * geom.width() / 3, 2 * geom.height() / 3);
-	resize(1400,300);
+	//resize(1400,600);
 	//move(3500,100);
 	
 	QPixmap newpix("new.png");
@@ -354,7 +354,8 @@ MainWindow::MainWindow(QWidget * parent)
 	MyGraphicsView *graphicsView = new MyGraphicsView(this);
 	
 	graphicsView->setMyScene(m_scene);
-	m_scene->setSceneRect(0,0,1000,1000);
+	m_scene->setSceneRect(0,0,800,600);
+	resize(800,600);
 	
 	
 	//qDebug("Checking for OpenGL...");
