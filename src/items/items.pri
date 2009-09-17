@@ -19,7 +19,8 @@ HEADERS +=  AbstractConfig.h \
     SimpleTextContent.h  \
     TextBoxContent.h \
     TextBoxConfig.h \
-    BoxContent.h
+    BoxContent.h \
+    VideoFileContent.h
 
     
 SOURCES += \
@@ -37,4 +38,5 @@ SOURCES += \
     SimpleTextContent.cpp \
     TextBoxContent.cpp \
     TextBoxConfig.cpp \
-    BoxContent.cpp
+    BoxContent.cpp \
+    VideoFileContent.cpp

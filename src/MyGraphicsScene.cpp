@@ -17,6 +17,7 @@
 #include "model/Slide.h"
 #include "model/TextItem.h"
 #include "model/TextBoxItem.h"
+#include "model/BoxItem.h"
 
 
 #include "RenderOpts.h"
@@ -122,6 +123,24 @@ TextItem * MyGraphicsScene::newTextItem(QString text)
 	addContent(item); //, QPoint((int)t->pos().x(),(int)t->pos().y()));
 	
 	return t;
+}
+
+
+AbstractVisualItem * MyGraphicsScene::newBoxItem()
+{
+        BoxItem *t = new BoxItem();
+        assert(m_slide);
+        m_slide->addItem(t); //m_slide->createText();
+
+        //t->setText(text);
+        t->setPos(nearCenter(sceneRect()));
+        t->setItemName("BoxItem");
+        t->setItemId(ItemFactory::nextId());
+
+        AbstractContent * item = t->createDelegate(this);
+        addContent(item); //, QPoint((int)t->pos().x(),(int)t->pos().y()));
+
+        return t;
 }
 
 /// Slots

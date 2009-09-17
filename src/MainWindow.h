@@ -14,6 +14,7 @@ class MainWindow : public QMainWindow
         
     private slots:
     	void newTextItem();
+        void newBoxItem();
     	
     private:
     	Slide *m_slide;

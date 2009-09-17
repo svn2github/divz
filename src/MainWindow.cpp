@@ -201,6 +201,7 @@ class MyGraphicsView : public QGraphicsView
 						scaleView(qreal(1.2));
 						break;
 					case Qt::Key_Minus:
+                                        case Qt::Key_Equal:
 						scaleView(1 / qreal(1.2));
 						break;
 					default:
@@ -212,7 +213,7 @@ class MyGraphicsView : public QGraphicsView
 		
 		void wheelEvent(QWheelEvent *event)
 		{
-			scaleView(pow((double)2, -event->delta() / 240.0));
+                        scaleView(pow((double)2, event->delta() / 240.0));
 		}
 		
 		
@@ -350,6 +351,9 @@ MainWindow::MainWindow(QWidget * parent)
 // 	connect(quit, SIGNAL(triggered()), qApp, SLOT(quit()));
 	connect(newAction, SIGNAL(triggered()), this, SLOT(newTextItem()));
 
+        QAction  *newBox = toolbar->addAction(QIcon(), "New Box Item");
+        connect(newBox, SIGNAL(triggered()), this, SLOT(newBoxItem()));
+
 	m_scene = new MyGraphicsScene(this);
 	MyGraphicsView *graphicsView = new MyGraphicsView(this);
 	
@@ -415,4 +419,9 @@ MainWindow::~MainWindow()
 void MainWindow::newTextItem()
 {
 	m_scene->newTextItem();
+}
+
+void MainWindow::newBoxItem()
+{
+        m_scene->newBoxItem();
 }
