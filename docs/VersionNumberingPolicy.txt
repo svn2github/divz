@@ -1,0 +1,44 @@
+Directed Visual System
+=============================
+Version Numbering Policy
+=============================
+2009-09-17
+
+Format: 	X.Y.Z
+
+Defenition:	X=Major, Y=Minor, Z=Bugfix
+
+Example:
+    1.1.1 -> 1.1.2 - bugfix only, no change in what the end-user sees.
+    1.1.1 -> 1.2.0 - new features, perhaps a button in the UI has moved. Still fully compatible with the previous version. Documents should be stored identically, network protocols unchanged.
+    1.1.1 -> 2.0.0 - major release, might very well break functionality, documents may have to be converted from previous versions, UI can change drastically.
+
+Notes:
+
+    Every public facing build increments Z before shipping, in order to indicate if it is a bug fix. 
+
+    I'd like to add a build number to every build, but without an automated way to do that via qmake and the .pro files, I'm going to wait on implementing that for now.
+
+    (Based on Various Quotes from Slashdot, below.)
+
+=============================
+
+Various Quotes from Slashdot:
+
+=============================
+
+1.1.1 -> 1.1.2 - bugfix only, no change in what the end-user sees.
+1.1.1 -> 1.2.0 - new features, perhaps a button in the UI has moved. Still fully compatible with the previous version. Documents should be stored identically, network protocols unchanged.
+1.1.1 -> 2.0.0 - major release, might very well break functionality, documents may have to be converted from previous versions, UI can change drastically.
+
+My favorite has been
+
+X.Y (B): X: major version as you've outlined.
+Y: minor version as you've outlined.
+(B): Build number; this is an auto-incrementing number which indicates the build. This is used for QA tracking purposes.
+I can also see adding a .Z, as you've also outlined: every public facing build increments Z before shipping, in order to indicate if it is a bug fix. If there is a .Z, then the build number can be hidden from the user--the only purpose it serves is for customer support to know which build the user has so bugs can be tracked appropriately.
+I don't see any reason why it needs to be any more complicated than that.
+
+The typical three number scheme is derived from the numbering for shared libraries. Often called Major.Minor.BugFix.
+You increment the BugFix number when you implement a bug fix that makes no changes whatsoever to the interface. You increment the Minor number when you extend the interface (by adding new features). Both of these changes are backwardly compatible so you can just restart an executable that uses the library without having to rebuild or relink.
+If you alter the interface in a non-backwardly compatible way then you must relink your executable before it can work with the new version of the library. The Major number is incremented to indicate a non-backwardly compatible change.
