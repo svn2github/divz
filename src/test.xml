@@ -2,49 +2,49 @@
 <slide-group>
     <slide>
         <box>
-            <item-id>11</item-id>
+            <item-id>4</item-id>
             <item-name>BoxItem</item-name>
             <rect>
-                <x>0</x>
-                <y>0</y>
-                <w>618</w>
-                <h>462</h>
+                <x>-78</x>
+                <y>-62</y>
+                <w>96</w>
+                <h>73</h>
             </rect>
             <pos>
-                <x>83</x>
-                <y>23</y>
+                <x>0</x>
+                <y>600</y>
             </pos>
             <zvalue>1</zvalue>
             <opacity>1</opacity>
             <visible>1</visible>
             <frame-class>0</frame-class>
-            <transformation yRot="0" xRot="0" zRot="0"/>
+            <transformation yRot="43.40000000000001" xRot="-3.2" zRot="153.9768200677387" />
         </box>
         <textbox>
-            <item-id>12</item-id>
+            <item-id>5</item-id>
             <item-name>TextBoxItem</item-name>
             <rect>
                 <x>-100</x>
-                <y>-57</y>
-                <w>604</w>
-                <h>456</h>
+                <y>-75</y>
+                <w>632</w>
+                <h>107</h>
             </rect>
             <pos>
-                <x>208</x>
-                <y>86</y>
+                <x>250</x>
+                <y>341</y>
             </pos>
             <zvalue>2</zvalue>
             <opacity>1</opacity>
             <visible>1</visible>
             <frame-class>0</frame-class>
-            <transformation yRot="0" xRot="0" zRot="0"/>
+            <transformation yRot="-19.4" xRot="-70" zRot="0" />
             <text>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
 &lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
 p, li { white-space: pre-wrap; }
-&lt;/style>&lt;/head>&lt;body style=" font-family:'Tahoma'; font-size:40pt; font-weight:400; font-style:normal;">
-&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-family:'Sans Serif'; font-size:72pt;">Welcome to Directed Visual Systems.&lt;/span>&lt;/p>&lt;/body>&lt;/html></text>
-            <default-font font-family="Tahoma" font-size="40"/>
-            <shape enabled="0"/>
+&lt;/style>&lt;/head>&lt;body style=" font-family:'Arial'; font-size:16pt; font-weight:400; font-style:normal;">
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-size:72pt;">Lorem Ipsum&lt;/span>&lt;/p>&lt;/body>&lt;/html></text>
+            <default-font font-family="Arial" font-size="16" />
+            <shape enabled="0" />
         </textbox>
     </slide>
 </slide-group>

@@ -1,0 +1,6 @@
+- text wrap centering
+- resize handles on windows are "off"
+- resizing a perspective object causes Y pos to jump up when dragging wide
+- video item
+- make the outline/fill/effects options a general attribute of the AbstractVisualItem
+-
