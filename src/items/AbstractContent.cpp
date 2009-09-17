@@ -79,13 +79,13 @@ AbstractContent::AbstractContent(QGraphicsScene * scene, QGraphicsItem * parent,
     connect(bConf, SIGNAL(clicked()), this, SLOT(slotConfigure()));
     addButtonItem(bConf);
 
-#if QT_VERSION >= 0x040500
-    ButtonItem * bPersp = new ButtonItem(ButtonItem::Control, Qt::red, QIcon(":/data/action-perspective.png"), this);
-    bPersp->setToolTip(tr("Drag around to change the perspective.\nHold SHIFT to move faster.\nUse CTRL to cancel the transformations."));
-    connect(bPersp, SIGNAL(dragging(const QPointF&,Qt::KeyboardModifiers)), this, SLOT(slotPerspective(const QPointF&,Qt::KeyboardModifiers)));
-    connect(bPersp, SIGNAL(doubleClicked()), this, SLOT(slotClearPerspective()));
-    addButtonItem(bPersp);
-#endif
+// #if QT_VERSION >= 0x040500
+//     ButtonItem * bPersp = new ButtonItem(ButtonItem::Control, Qt::red, QIcon(":/data/action-perspective.png"), this);
+//     bPersp->setToolTip(tr("Drag around to change the perspective.\nHold SHIFT to move faster.\nUse CTRL to cancel the transformations."));
+//     connect(bPersp, SIGNAL(dragging(const QPointF&,Qt::KeyboardModifiers)), this, SLOT(slotPerspective(const QPointF&,Qt::KeyboardModifiers)));
+//     connect(bPersp, SIGNAL(doubleClicked()), this, SLOT(slotClearPerspective()));
+//     addButtonItem(bPersp);
+// #endif
 
     ButtonItem * bDelete = new ButtonItem(ButtonItem::Control, Qt::red, QIcon(":/data/action-delete.png"), this);
     bDelete->setSelectsParent(false);
@@ -521,26 +521,30 @@ QRectF AbstractContent::boundingRect() const
 
 void AbstractContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * /*option*/, QWidget * /*widget*/)
 {
-    const bool opaqueContent = contentOpaque();
-    const bool drawSelection = RenderOpts::HQRendering ? false : isSelected();
-    const QRect frameRect = m_frameRect.toRect();
-
-    if (!m_frame) {
-        // draw the selection only as done in EmptyFrame.cpp
-        if (drawSelection) {
-            painter->setRenderHint(QPainter::Antialiasing, true);
-            painter->setPen(QPen(RenderOpts::hiColor, 1.0));
-            // FIXME: this draws OUTSIDE (but inside the safe 2px area)
-            painter->drawRect(QRectF(frameRect).adjusted(-0.5, -0.5, +0.5, +0.5));
-        }
-    } else {
-        // draw the Frame
-        m_frame->paint(painter, frameRect, drawSelection, opaqueContent);
-
-        // use clip path for contents, if set
-        if (m_frame->clipContents())
-            painter->setClipPath(m_frame->contentsClipPath(m_contentsRect));
-    }
+	const bool opaqueContent = contentOpaque();
+	const bool drawSelection = RenderOpts::HQRendering ? false : isSelected();
+	const QRect frameRect = m_frameRect.toRect();
+	
+	if (!m_frame) 
+	{
+		// draw the selection only as done in EmptyFrame.cpp
+		if (drawSelection) 
+		{
+			painter->setRenderHint(QPainter::Antialiasing, true);
+			painter->setPen(QPen(RenderOpts::hiColor, 1.0));
+			// FIXME: this draws OUTSIDE (but inside the safe 2px area)
+			painter->drawRect(QRectF(frameRect).adjusted(-0.5, -0.5, +0.5, +0.5));
+		}
+	} 
+	else 
+	{
+		// draw the Frame
+		m_frame->paint(painter, frameRect, drawSelection, opaqueContent);
+	
+		// use clip path for contents, if set
+		if (m_frame->clipContents())
+			painter->setClipPath(m_frame->contentsClipPath(m_contentsRect));
+	}
 }
 
 void AbstractContent::selectionChanged(bool /*selected*/)
@@ -601,7 +605,7 @@ void AbstractContent::hoverEnterEvent(QGraphicsSceneHoverEvent * /*event*/)
 
 void AbstractContent::hoverLeaveEvent(QGraphicsSceneHoverEvent * /*event*/)
 {
-    setControlsVisible(false);
+    setControlsVisible(false); //isSelected() ? true : false);
 }
 
 void AbstractContent::dragMoveEvent(QGraphicsSceneDragDropEvent * event)

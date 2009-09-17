@@ -7,12 +7,12 @@
             <rect>
                 <x>-78</x>
                 <y>-62</y>
-                <w>415</w>
-                <h>353</h>
+                <w>748</w>
+                <h>174</h>
             </rect>
             <pos>
-                <x>160</x>
-                <y>211</y>
+                <x>104</x>
+                <y>80</y>
             </pos>
             <zvalue>1</zvalue>
             <opacity>1</opacity>
@@ -26,25 +26,45 @@
             <rect>
                 <x>-100</x>
                 <y>-75</y>
-                <w>632</w>
-                <h>109</h>
+                <w>572</w>
+                <h>364</h>
             </rect>
             <pos>
-                <x>250</x>
-                <y>341</y>
+                <x>237</x>
+                <y>144</y>
             </pos>
             <zvalue>2</zvalue>
             <opacity>1</opacity>
             <visible>1</visible>
             <frame-class>0</frame-class>
-            <transformation yRot="-19.4" xRot="-70" zRot="0"/>
+            <transformation yRot="0" xRot="0" zRot="0"/>
             <text>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
 &lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
 p, li { white-space: pre-wrap; }
 &lt;/style>&lt;/head>&lt;body style=" font-family:'Arial'; font-size:16pt; font-weight:400; font-style:normal;">
-&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-size:72pt;">Lorem Ipsum&lt;/span>&lt;/p>&lt;/body>&lt;/html></text>
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-size:121pt;">Lorem Ipsum&lt;/span>&lt;/p>&lt;/body>&lt;/html></text>
             <default-font font-family="Arial" font-size="16"/>
             <shape enabled="0"/>
         </textbox>
+        <videofile>
+            <item-id>6</item-id>
+            <item-name>BoxItem</item-name>
+            <rect>
+                <x>-600</x>
+                <y>-600</y>
+                <w>1201</w>
+                <h>1201</h>
+            </rect>
+            <pos>
+                <x>407</x>
+                <y>381</y>
+            </pos>
+            <zvalue>0</zvalue>
+            <opacity>1</opacity>
+            <visible>1</visible>
+            <frame-class>0</frame-class>
+            <transformation yRot="0" xRot="0" zRot="0"/>
+            <filename>data/Ancient_Countdown_1_SD.mpg</filename>
+        </videofile>
     </slide>
 </slide-group>

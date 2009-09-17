@@ -18,6 +18,8 @@
 #include "model/TextItem.h"
 #include "model/TextBoxItem.h"
 #include "model/BoxItem.h"
+#include "model/VideoFileItem.h"
+
 
 
 #include "RenderOpts.h"
@@ -130,6 +132,24 @@ AbstractVisualItem * MyGraphicsScene::newBoxItem()
 {
         BoxItem *t = new BoxItem();
         assert(m_slide);
+        m_slide->addItem(t); //m_slide->createText();
+
+        //t->setText(text);
+        t->setPos(nearCenter(sceneRect()));
+        t->setItemName("BoxItem");
+        t->setItemId(ItemFactory::nextId());
+
+        AbstractContent * item = t->createDelegate(this);
+        addContent(item); //, QPoint((int)t->pos().x(),(int)t->pos().y()));
+
+        return t;
+}
+
+AbstractVisualItem * MyGraphicsScene::newVideoItem()
+{
+        VideoFileItem *t = new VideoFileItem();
+        assert(m_slide);
+        t->setFilename("data/Ancient_Countdown_1_SD.mpg");
         m_slide->addItem(t); //m_slide->createText();
 
         //t->setText(text);

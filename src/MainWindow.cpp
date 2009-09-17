@@ -353,6 +353,10 @@ MainWindow::MainWindow(QWidget * parent)
 
         QAction  *newBox = toolbar->addAction(QIcon(), "New Box Item");
         connect(newBox, SIGNAL(triggered()), this, SLOT(newBoxItem()));
+        
+        QAction  *newVideo = toolbar->addAction(QIcon(), "New Video Item");
+        connect(newVideo, SIGNAL(triggered()), this, SLOT(newVideoItem()));
+
 
 	m_scene = new MyGraphicsScene(this);
 	MyGraphicsView *graphicsView = new MyGraphicsView(this);
@@ -424,4 +428,9 @@ void MainWindow::newTextItem()
 void MainWindow::newBoxItem()
 {
         m_scene->newBoxItem();
+}
+
+void MainWindow::newVideoItem()
+{
+        m_scene->newVideoItem();
 }

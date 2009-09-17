@@ -165,6 +165,19 @@ void BoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * opti
  	painter->setBrush(brush);
 	painter->drawRect(QRect(QPoint(0,0),cRect.size()));
 	
+// 	//const bool opaqueContent = contentOpaque();
+// 	const bool drawSelection = RenderOpts::HQRendering ? false : isSelected();
+// 	
+// 	// draw the selection only as done in EmptyFrame.cpp
+// 	if (drawSelection) 
+// 	{
+// 		painter->setRenderHint(QPainter::Antialiasing, true);
+// 		//painter->setCompositionMode(QPainter::CompositionMode_Xor);
+// 		painter->setPen(QPen(RenderOpts::hiColor, 1.0));
+// 		// FIXME: this draws OUTSIDE (but inside the safe 2px area)
+// 		painter->drawRect(cRect); //QRectF(cRect).adjusted(-1.0, -1.0, +1.0, +1.0));
+// 	}
+// 			
 	painter->restore();
 }
 

@@ -30,7 +30,8 @@ CornerItem::CornerItem(Qt::Corner corner, bool rotateOnly, AbstractContent * par
 	, m_operation(Off)
 	, m_defaultLeftOp(Scale | FixScale)
         , m_defaultMidOp(Scale)
-        , m_defaultRightOp(Rotate | Scale | FixScale)
+        , m_defaultRightOp( Scale | FixScale)
+        //Rotate
 {
 	setAcceptsHoverEvents(true);
 }
@@ -61,16 +62,42 @@ void CornerItem::relayout(const QRect & rect)
 
     // place at the right corner
     switch (m_corner) {
-        case Qt::TopLeftCorner: setPos(rect.topLeft() + QPoint(m_side, m_side)); break;
-        case Qt::TopRightCorner: setPos(rect.topRight() + QPoint(-m_side + 1, m_side)); break;
-        case Qt::BottomLeftCorner: setPos(rect.bottomLeft() + QPoint(m_side, -m_side + 1)); break;
-        case Qt::BottomRightCorner: setPos(rect.bottomRight() + QPoint(-m_side + 1, -m_side + 1)); break;
+        case Qt::TopLeftCorner: setPos(rect.topLeft() + QPoint(m_side, m_side)); setCursor(Qt::SizeFDiagCursor); break;
+        case Qt::TopRightCorner: setPos(rect.topRight() + QPoint(-m_side + 1, m_side)); setCursor(Qt::SizeBDiagCursor); break;
+        case Qt::BottomLeftCorner: setPos(rect.bottomLeft() + QPoint(m_side, -m_side + 1)); setCursor(Qt::SizeBDiagCursor); break;
+        case Qt::BottomRightCorner: setPos(rect.bottomRight() + QPoint(-m_side + 1, -m_side + 1)); setCursor(Qt::SizeFDiagCursor); break;
     }
+
 }
 
 QRectF CornerItem::boundingRect() const
 {
-    return QRectF(-m_side, -m_side, 2*m_side, 2*m_side);
+	QRectF rect(-m_side, -m_side, m_side, m_side);
+	if(m_corner == Qt::TopLeftCorner)
+	{
+		rect.translate(-m_side/4,-m_side/4); //,-m_side/2,-m_side/2);
+	}
+	else
+	if(m_corner == Qt::BottomLeftCorner)
+	{
+		//rect.adjust(-m_side/2,m_side/2,-m_side/2,-m_side/2);
+		rect.translate(-m_side/4,m_side*1.25); //,-m_side/2,-m_side/2);
+	}
+	else
+	if(m_corner == Qt::BottomRightCorner)
+	{
+		//rect.adjust(m_side/2,m_side/2,-m_side/2,-m_side/2);
+		rect.translate(m_side*1.25,m_side*1.25); //,-m_side/2,-m_side/2);
+	}
+	else
+	if(m_corner == Qt::TopRightCorner)
+	{
+		//rect.adjust(m_side/2,m_side/2,-m_side/2,-m_side/2);
+		rect.translate(m_side*1.25,-m_side/4); //,-m_side/2,-m_side/2);
+	}
+	
+	return rect;
+    
 }
 
 void CornerItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent * event)
@@ -92,7 +119,8 @@ void CornerItem::mousePressEvent(QGraphicsSceneMouseEvent * event)
     // do the right op
     switch (event->button()) {
         case Qt::LeftButton:    m_operation = m_defaultLeftOp; break; //Scale | FixScale; break;
-        case Qt::RightButton:   m_operation = Rotate | Scale | FixScale; break;
+        case Qt::RightButton:   m_operation =  Scale | FixScale; break;
+        //Rotate
         //m_defaultRightOp; break; //
         case Qt::MidButton:     m_operation = Scale; break;
         //m_defaultMidOp; //
@@ -112,34 +140,35 @@ void CornerItem::mousePressEvent(QGraphicsSceneMouseEvent * event)
 
 void CornerItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 {
-    if (m_operation == Off)
-        return;
-    event->accept();
-
-    // modify the operation using the shortcuts
-    int op = m_operation;
-    if (event->modifiers() & Qt::ShiftModifier)
-        op &= ~FixScale & ~Rotate;
-    if (event->modifiers() & Qt::ControlModifier)
-        //op |= FixRotate;
-        op |= Rotate;
-    if (event->modifiers() & Qt::AltModifier)
-        //op &= ~(Scale | FixScale);
-        op |= FixRotate;
-    op &= m_opMask;
-    if ((op & (Rotate | Scale)) == (Rotate | Scale))
-        op |= FixScale;
-    if ((op & (Rotate | Scale)) == Off)
-        return;
-
-    // vector relative to the centre
-    //QPointF v = pos() + event->pos();
-    QPointF v = pos() + event->pos();
-    if (v.isNull())
-        return;
-
-    // do scaling
-    m_content->delayedDirty();
+	if (m_operation == Off)
+		return;
+	event->accept();
+	
+	
+	// modify the operation using the shortcuts
+	int op = m_operation;
+	if (event->modifiers() & Qt::ShiftModifier)
+		op &= ~FixScale & ~Rotate;
+	if (event->modifiers() & Qt::ControlModifier)
+		//op |= FixRotate;
+		op |= Rotate;
+	if (event->modifiers() & Qt::AltModifier)
+		//op &= ~(Scale | FixScale);
+		op |= FixRotate;
+	op &= m_opMask;
+	if ((op & (Rotate | Scale)) == (Rotate | Scale))
+		op |= FixScale;
+	if ((op & (Rotate | Scale)) == Off)
+		return;
+	
+	// vector relative to the centre
+	//QPointF v = pos() + event->pos();
+	QPointF v = pos() + event->pos();
+	if (v.isNull())
+		return;
+	
+	// do scaling
+	m_content->delayedDirty();
 	if (op & Scale) 
 	{
 		if (op & FixScale) 
@@ -152,6 +181,7 @@ void CornerItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 			m_content->resizeContents(QRect(-W / 2, -H / 2, W, H));
 		} else 
 		{
+			static int counter = 0;
 	
 			QRect cr = m_content->contentsRect();
 			QPointF d = event->pos() - m_startPos;
@@ -159,7 +189,13 @@ void CornerItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 			int W = cr.width() + d.x();
 			int H = cr.height() + d.y();
 			
-			//qDebug() << "Scale Debug: v:"<<v<<", W:"<<W<<", H:"<<H<<", d:"<<d<<", m_corner:"<<m_corner<<", event->pos:"<<event->pos()<<", pos:"<<pos()<<", startPos:"<<m_startPos;
+			counter++;
+			
+			QPointF v2 = event->pos() + m_startPos;
+			qreal W2 = 2 * v2.x();
+            		qreal H2 = 2 * v2.y();
+			
+			qDebug() << "#"<<counter<<" v:"<<v<<", W:"<<W<<", H:"<<H<<", d:"<<d<<", m_corner:"<<m_corner<<", pos:"<<pos()<<", event->pos:"<<event->pos()<<", startPos:"<<m_startPos<<", W2:"<<W2<<", H2:"<<H2;
 			
 			QRectF br = boundingRect();
 			QPointF cpos = m_content->pos();
@@ -175,7 +211,7 @@ void CornerItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 				m_content->moveBy(d.x(),d.y());
 				cr.setWidth((int)(cr.width()  -d.x())); // adjust width (then height..) to compensate for moveBy()
 				cr.setHeight((int)(cr.height()-d.y()));
-				//qDebug("- TopLeft (%.02f,%.02f)",d.x(),y());
+				qDebug("- TopLeft (%.02f,%.02f)",d.x(),y());
 				
 			}
 			else
@@ -189,7 +225,7 @@ void CornerItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 // 					H = hfw;
 					
 				cr.setHeight(H);
-				//qDebug("- BottomLeft (%.02f,%d)",d.x(),H);
+				qDebug("- BottomLeft (%.02f,%d)",d.x(),H);
 			}
 			else
 			if(m_corner == Qt::TopRightCorner)
@@ -197,7 +233,7 @@ void CornerItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 				m_content->moveBy(0,d.y());
 				cr.setHeight((int)(cr.height()-d.y()));
 				cr.setWidth(W);
-				//qDebug("- TopRight (%.02f,%d)",d.y(),W);
+				qDebug("- TopRight (%.02f,%d)",d.y(),W);
 			}
 			else
 			if(m_corner == Qt::BottomRightCorner)
@@ -207,58 +243,67 @@ void CornerItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 // 				if (hfw > 1) 
 // 					H = hfw;
 				cr.setHeight(H);
-//				qDebug("- BottomRight (%d,%d)",W,H);
+				qDebug("- BottomRight (%d,%d)",W,H);
 			}
 			
 			m_content->resizeContents(cr);
 		}
 	}
 
-    // do rotation
-    if (op & Rotate) {
-        QPointF refPos = pos();
-
-        // set item rotation (set rotation relative to current)
-        qreal refAngle = atan2(refPos.y(), refPos.x());
-        qreal newAngle = atan2(v.y(), v.x());
-        double dZr = 57.29577951308232 * (newAngle - refAngle); // 180 * a / M_PI
-        double zr = m_content->rotation(Qt::ZAxis) + dZr;
-
-        // snap to M_PI/4
-        if (op & FixRotate) {
-            int fracts = (int)((zr - 7.5) / 15.0);
-            zr = (qreal)fracts * 15.0;
-        }
-
-        // apply rotation
-        m_content->setRotation(zr, Qt::ZAxis);
-    }
+	// do rotation
+	if (op & Rotate) 
+	{
+		QPointF refPos = pos();
+	
+		// set item rotation (set rotation relative to current)
+		qreal refAngle = atan2(refPos.y(), refPos.x());
+		qreal newAngle = atan2(v.y(), v.x());
+		double dZr = 57.29577951308232 * (newAngle - refAngle); // 180 * a / M_PI
+		double zr = m_content->rotation(Qt::ZAxis) + dZr;
+	
+		// snap to M_PI/4
+		if (op & FixRotate) 
+		{
+			int fracts = (int)((zr - 7.5) / 15.0);
+			zr = (qreal)fracts * 15.0;
+		}
+	
+		// apply rotation
+		m_content->setRotation(zr, Qt::ZAxis);
+	}
 }
 
 void CornerItem::mouseReleaseEvent(QGraphicsSceneMouseEvent * event)
 {
-    event->accept();
-    bool accepted = m_operation != Off;
-    m_operation = Off;
-    update();
-
-    // clicked
-    if (accepted) {
-    }
+	event->accept();
+	bool accepted = m_operation != Off;
+	m_operation = Off;
+	update();
+	
+	// clicked
+	if (accepted) {
+	}
 }
 
 void CornerItem::paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * /*widget*/)
 {
-    if (RenderOpts::HQRendering)
-        return;
-
-    QColor color = RenderOpts::hiColor;
-    if (option->state & QStyle::State_MouseOver) {
-        if (m_operation != Off)
-            color.setAlpha(250);
-        else
-            color.setAlpha(196);
-    } else
-        color.setAlpha(128);
-    painter->fillRect(boundingRect(), color);
+	if (RenderOpts::HQRendering)
+		return;
+	
+	QColor color = Qt::black; //RenderOpts::hiColor;
+	QColor fill = Qt::white;
+	if (option->state & QStyle::State_MouseOver) 
+	{
+		if (m_operation != Off)
+			//color.setAlpha(250);
+			fill = Qt::yellow;
+		else
+			//color.setAlpha(196);
+			fill = Qt::blue;
+	}
+	// else
+		//color.setAlpha(128);
+	painter->setPen(color);
+	painter->setBrush(fill);
+	painter->drawRect(boundingRect());
 }
