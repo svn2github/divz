@@ -32,7 +32,6 @@ QColor RenderOpts::hiColor;
 
 int main(int argc, char **argv)
 {
-	QApplication app(argc, argv);
 		
 	#if !defined(Q_OS_MAC) // raster on OSX == b0rken
 		// use the Raster GraphicsSystem as default on 4.5+
@@ -41,8 +40,10 @@ int main(int argc, char **argv)
 		#endif
 	#endif
 
+	QApplication app(argc, argv);
+	
 	app.setApplicationName("DViz");
-	app.setApplicationVersion("0.1.0");
+	app.setApplicationVersion("0.1.5");
 	app.setOrganizationName("Josiah Bryan");
 	app.setOrganizationDomain("mybryanlife.com");
 
@@ -53,8 +54,6 @@ int main(int argc, char **argv)
 	RenderOpts::hiColor = app.palette().color(QPalette::Highlight);
 	RenderOpts::DisableVideoProvider = app.arguments().contains("-novideo");
 	//s.setValue("fotowall/firstTime", false);
-
-	
 
 	MainWindow mw;
 	//mw.showMaximized();
