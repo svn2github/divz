@@ -4,9 +4,11 @@
 #include <QObject>
 #include <QVariant>
 #include <QDomElement>
+#include <QPen>
+#include <QBrush>
 
 #define ITEM_PROPSET(className,setterName,typeName,memberName) void className::set##setterName(typeName value){m_##memberName = value;setChanged(#memberName,value);}
-
+#define ITEM_PROPDEF(setterName,typeName,memberName) void set##setterName(typeName value); typeName memberName() const { return m_##memberName; }
 
 class AbstractItem : public QObject
 {

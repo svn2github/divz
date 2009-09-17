@@ -14,6 +14,19 @@ AbstractVisualItem::AbstractVisualItem()
 	m_yRotation = 0;
 	m_zRotation = 0;
 	m_opacity = 1;
+	
+	m_fillEnabled = false;
+	m_fillBrush = QBrush(Qt::white);
+	
+	m_outlineEnabled = false;
+	m_outlinePen = QPen(Qt::black);
+	
+	m_mirrorEnabled = false;
+	m_mirrorOffset = 3;
+	
+	m_shadowEnabled = false;
+	m_shadowOffset = 3;
+	m_shadowBrush = QBrush(Qt::black);
 }
 
 AbstractContent * AbstractVisualItem::createDelegate(QGraphicsScene*) {return 0;}
@@ -35,13 +48,27 @@ void AbstractVisualItem::setContentsRect(QRectF r)
 }
 
 
-ITEM_PROPSET(AbstractVisualItem, IsVisible,  bool,    isVisible);
-ITEM_PROPSET(AbstractVisualItem, ZValue,     double,  zValue);
-ITEM_PROPSET(AbstractVisualItem, FrameClass, quint32, frameClass);
-ITEM_PROPSET(AbstractVisualItem, XRotation,  double,  xRotation);
-ITEM_PROPSET(AbstractVisualItem, YRotation,  double,  yRotation);
-ITEM_PROPSET(AbstractVisualItem, ZRotation,  double,  zRotation);
-ITEM_PROPSET(AbstractVisualItem, Opacity,    double,  opacity);
+ITEM_PROPSET(AbstractVisualItem, IsVisible,  		bool,   isVisible);
+ITEM_PROPSET(AbstractVisualItem, ZValue,     		double, zValue);
+ITEM_PROPSET(AbstractVisualItem, FrameClass, 		quint32,frameClass);
+ITEM_PROPSET(AbstractVisualItem, XRotation,  		double, xRotation);
+ITEM_PROPSET(AbstractVisualItem, YRotation,  		double, yRotation);
+ITEM_PROPSET(AbstractVisualItem, ZRotation,  		double, zRotation);
+
+ITEM_PROPSET(AbstractVisualItem, Opacity,    		double, opacity);
+
+ITEM_PROPSET(AbstractVisualItem, FillEnabled,		bool,	fillEnabled);
+ITEM_PROPSET(AbstractVisualItem, FillBrush,		QBrush,	fillBrush);
+
+ITEM_PROPSET(AbstractVisualItem, OutlineEnabled,	bool,	outlineEnabled);
+ITEM_PROPSET(AbstractVisualItem, OutlinePen,		QPen,	outlinePen);
+
+ITEM_PROPSET(AbstractVisualItem, MirrorEnabled,		bool,	mirrorEnabled);
+ITEM_PROPSET(AbstractVisualItem, MirrorOffset,		double,	mirrorOffset);
+
+ITEM_PROPSET(AbstractVisualItem, ShadowEnabled,		bool,	shadowEnabled);
+ITEM_PROPSET(AbstractVisualItem, ShadowOffset,		double,	shadowOffset);
+ITEM_PROPSET(AbstractVisualItem, ShadowBrush,		QBrush,	shadowBrush);
 
 
 bool AbstractVisualItem::fromXml(QDomElement & pe)
@@ -94,9 +121,58 @@ bool AbstractVisualItem::fromXml(QDomElement & pe)
 		m_zRotation = te.attribute("zRot").toDouble();
 		//applyRotations();
 	}
-// 	domElement = pe.firstChildElement("mirror");
-// 	setMirrorEnabled(domElement.attribute("state").toInt());
-// 	
+	
+	domElement = pe.firstChildElement("fill");
+	if(!domElement.isNull()) 
+	{
+		bool hasFill = pe.attribute("enabled").toInt();
+		setFillEnabled(hasFill);
+		if(hasFill)
+		{
+			QBrush fill = brushFromXml(domElement);
+			setFillBrush(fill);
+		}
+	}
+	
+ 	domElement = pe.firstChildElement("outline");
+	if(!domElement.isNull()) 
+	{
+		bool hasOutline = pe.attribute("enabled").toInt();
+		setOutlineEnabled(hasOutline);
+		if(hasOutline)
+		{
+			QPen line = penFromXml(domElement);
+			setOutlinePen(line);
+		}
+	}
+	
+	domElement = pe.firstChildElement("mirror");
+	if(!domElement.isNull()) 
+	{
+		bool flag = pe.attribute("enabled").toInt();
+		setMirrorEnabled(flag);
+		if(flag)
+		{
+			double offset = pe.attribute("offset").toDouble();
+			setMirrorOffset(offset);
+		}
+	}
+	
+	domElement = pe.firstChildElement("shadow");
+	if(!domElement.isNull()) 
+	{
+		bool flag = pe.attribute("enabled").toInt();
+		setShadowEnabled(flag);
+		if(flag)
+		{
+			double offset = pe.attribute("offset").toDouble();
+			setMirrorOffset(offset);
+			
+			QBrush fill = brushFromXml(domElement);
+			setShadowBrush(fill);
+		}
+	}
+	
 	AbstractItem::fromXml(pe);
 	
 	setBeingLoaded(false);
@@ -195,8 +271,194 @@ void AbstractVisualItem::toXml(QDomElement & pe) const
 		domElement.setAttribute("zRot", m_zRotation);
 		pe.appendChild(domElement);
 //	}
-// 	domElement = doc.createElement("mirror");
-// 	domElement.setAttribute("state", mirrorEnabled());
-// 	pe.appendChild(domElement);
+ 	
+ 	domElement = doc.createElement("fill");
+ 	domElement.setAttribute("enabled", fillEnabled());
+ 	brushToXml(domElement,fillBrush());
+ 	pe.appendChild(domElement);
+ 	
+ 	domElement = doc.createElement("outline");
+ 	domElement.setAttribute("enabled", outlineEnabled());
+ 	penToXml(domElement,outlinePen());
+ 	pe.appendChild(domElement);
+ 	
+ 	domElement = doc.createElement("mirror");
+ 	domElement.setAttribute("enabled", mirrorEnabled());
+ 	domElement.setAttribute("offset", mirrorOffset());
+ 	pe.appendChild(domElement);
+ 	
+ 	domElement = doc.createElement("shadow");
+ 	domElement.setAttribute("enabled", shadowEnabled());
+ 	domElement.setAttribute("offset", shadowOffset());
+ 	brushToXml(domElement,shadowBrush());
+ 	pe.appendChild(domElement);
 
+}
+
+static QString qcolorToString(const QColor & color)
+{
+	return QString("%1,%2,%3,%4").arg(color.redF()).arg(color.greenF()).arg(color.blueF()).arg(color.alphaF());
+}
+
+static QColor qcolorFromString(const QString & string)
+{
+	QStringList list = string.split(",");
+	return QColor(list[0].toInt(),list[1].toInt(),list[2].toInt(),list[3].toInt());
+}
+
+void AbstractVisualItem::penToXml(QDomElement & domElement, QPen pen)
+{
+	brushToXml(domElement,pen.brush());
+	domElement.setAttribute("pen-cap",   (int)pen.capStyle());
+	domElement.setAttribute("pen-color", qcolorToString(pen.color()));
+	domElement.setAttribute("pen-join",  (int)pen.joinStyle());
+	domElement.setAttribute("pen-width", pen.widthF());
+}
+
+QPen AbstractVisualItem::penFromXml(QDomElement & domElement)
+{
+	QPen pen;
+	QBrush brush = brushFromXml(domElement);
+	pen.setBrush(brush);
+	pen.setCapStyle((Qt::PenCapStyle)domElement.attribute("pen-cap").toInt());
+	pen.setColor(qcolorFromString(domElement.attribute("pen-color")));
+	pen.setJoinStyle((Qt::PenJoinStyle)domElement.attribute("pen-join").toInt());
+	pen.setWidthF((double)domElement.attribute("pen-width").toDouble());
+	return pen;
+}
+
+void AbstractVisualItem::brushToXml(QDomElement & domElement, QBrush brush)
+{
+	// Gradient:
+	// - type: QGradient::LinearGradient, QGradient::RadialGradient, QGradient::ConicalGradient
+	// - stopList: QVector<QGradientStop> = QPair<qreal,QColor> = QColor<rgba>
+	// 	ex:  24|0.0=2,1,2,.5|1.0=255,255,255,255
+	// Radial has:
+	// - QPointF center, QPointF focal, qreal radius
+	// Linear has:
+	// - Final stop, start
+	// Conical has:
+	// - qreal angle, QPointF center
+	
+	
+	domElement.setAttribute("brush-style",   (int)brush.style());
+	domElement.setAttribute("brush-color", qcolorToString(brush.color()));
+	
+	
+	const QGradient * g = brush.gradient();
+	if(g)
+	{
+		QGradientStops stopList = g->stops();
+		QString s;
+		s += QString::number(stopList.size());
+		s += "|";
+		foreach(QGradientStop stop, stopList)
+		{
+			s += QString::number(stop.first);
+			s += "=";
+			s += qcolorToString(stop.second);
+			s += "|";
+		}
+		domElement.setAttribute("grad-stops", s);
+		
+		domElement.setAttribute("grad-type", (int)g->type());
+		
+		if(g->type() == QGradient::LinearGradient)
+		{
+			QLinearGradient * g2 = (QLinearGradient*)g;
+			QPointF start = g2->start();
+			QPointF stop = g2->finalStop();
+			
+			domElement.setAttribute("grad-point1", QString("%1,%2").arg(start.x()).arg(start.y()));
+			domElement.setAttribute("grad-point2", QString("%1,%2").arg(stop.x()).arg(stop.y()));
+		}
+		else
+		if(g->type() == QGradient::RadialGradient)
+		{
+			QRadialGradient * g2 = (QRadialGradient*)g;
+			QPointF start = g2->center();
+			QPointF stop = g2->focalPoint();
+			qreal arg = g2->radius();
+			
+			domElement.setAttribute("grad-point1", QString("%1,%2").arg(start.x()).arg(start.y()));
+			domElement.setAttribute("grad-point2", QString("%1,%2").arg(stop.x()).arg(stop.y()));
+			domElement.setAttribute("grad-modifier", QString::number(arg));
+		}
+		else
+		if(g->type() == QGradient::ConicalGradient)
+		{
+			QConicalGradient * g2 = (QConicalGradient*)g;
+			QPointF start = g2->center();
+			qreal arg = g2->angle();
+			
+			domElement.setAttribute("grad-point1", QString("%1,%2").arg(start.x()).arg(start.y()));
+			domElement.setAttribute("grad-modifier", QString::number(arg));
+		}
+	}
+}
+
+QBrush AbstractVisualItem::brushFromXml(QDomElement & domElement)
+{
+	QBrush brush;
+	
+	QString gradStops = domElement.attribute("grad-stops");
+	if(!gradStops.isEmpty())
+	{
+		QGradient::Type t = (QGradient::Type)domElement.attribute("grad-type").toInt();
+		
+		// Parse the stop list
+		QGradientStops stopList;
+		QStringList stops = gradStops.split("|");
+		foreach(QString stopDef, stops)
+		{
+			QStringList pair = stopDef.split("=");
+			qreal pos = pair[0].toDouble();
+			QColor color = qcolorFromString(pair[1]);
+			stopList.append(QGradientStop(pos,color));
+		}
+		
+		// Read in the control points
+		QString pnt1 = domElement.attribute("grad-point1");
+		QString pnt2 = domElement.attribute("grad-point2");
+		
+		QStringList split;
+		split = pnt1.split(",");
+		QPointF point1(split[0].toDouble(),split[1].toDouble());
+		
+		split = pnt2.split(",");
+		QPointF point2(split[0].toDouble(),split[1].toDouble());
+		
+		// And the angle/radius modifier, if needed
+		qreal mod = domElement.attribute("grad-modifier").toDouble();
+		
+		
+		// Now, all thats left is to create the appros object and set the stop list, 
+		// then set it on the brush
+		if(t == QGradient::LinearGradient)
+		{
+			QLinearGradient g(point1,point2);
+			g.setStops(stopList);
+			brush = QBrush(g);
+		}
+		else
+		if(t == QGradient::RadialGradient)
+		{
+			QRadialGradient g(point1,mod,point2);
+			g.setStops(stopList);
+			brush = QBrush(g);
+		}
+		else
+		if(t == QGradient::ConicalGradient)
+		{
+			QRadialGradient g(point1,mod);
+			g.setStops(stopList);
+			brush = QBrush(g);
+		}
+	}
+	
+	brush.setColor(qcolorFromString(domElement.attribute("brush-color")));
+	brush.setStyle((Qt::BrushStyle)domElement.attribute("brush-style").toInt());
+	
+	
+	return brush;
 }

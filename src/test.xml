@@ -14,11 +14,11 @@
                 <x>66</x>
                 <y>490</y>
             </pos>
-            <zvalue>1</zvalue>
+            <zvalue>2</zvalue>
             <opacity>1</opacity>
             <visible>1</visible>
             <frame-class>3</frame-class>
-            <transformation yRot="0" xRot="0" zRot="0" />
+            <transformation yRot="0" xRot="0" zRot="0"/>
         </box>
         <textbox>
             <item-id>5</item-id>
@@ -27,7 +27,7 @@
                 <x>-100</x>
                 <y>-75</y>
                 <w>572</w>
-                <h>370</h>
+                <h>364</h>
             </rect>
             <pos>
                 <x>232</x>
@@ -37,14 +37,14 @@
             <opacity>1</opacity>
             <visible>1</visible>
             <frame-class>0</frame-class>
-            <transformation yRot="0" xRot="0" zRot="0" />
+            <transformation yRot="0" xRot="0" zRot="0"/>
             <text>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
 &lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
 p, li { white-space: pre-wrap; }
 &lt;/style>&lt;/head>&lt;body style=" font-family:'Arial'; font-size:16pt; font-weight:400; font-style:normal;">
 &lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-size:121pt; font-weight:600;">   This Week&lt;/span>&lt;/p>&lt;/body>&lt;/html></text>
-            <default-font font-family="Arial" font-size="16" />
-            <shape enabled="0" />
+            <default-font font-family="Arial" font-size="16"/>
+            <shape enabled="0"/>
         </textbox>
         <videofile>
             <item-id>6</item-id>
@@ -62,9 +62,9 @@ p, li { white-space: pre-wrap; }
             <zvalue>1</zvalue>
             <opacity>1</opacity>
             <visible>1</visible>
-            <frame-class>3</frame-class>
-            <transformation yRot="0" xRot="0" zRot="0" />
-            <filename>data/Ancient_Countdown_1_SD.mpg</filename>
+            <frame-class>0</frame-class>
+            <transformation yRot="0" xRot="0" zRot="0"/>
+            <filename>data/Seasons_Loop_3_SD.mpg</filename>
         </videofile>
         <textbox>
             <item-id>4</item-id>
@@ -73,26 +73,26 @@ p, li { white-space: pre-wrap; }
                 <x>-100</x>
                 <y>-75</y>
                 <w>769</w>
-                <h>114</h>
+                <h>102</h>
             </rect>
             <pos>
-                <x>114</x>
-                <y>527</y>
+                <x>113</x>
+                <y>521</y>
             </pos>
             <zvalue>4</zvalue>
             <opacity>1</opacity>
             <visible>1</visible>
             <frame-class>0</frame-class>
-            <transformation yRot="0" xRot="0" zRot="0" />
+            <transformation yRot="0" xRot="0" zRot="0"/>
             <text>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
 &lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
 p, li { white-space: pre-wrap; }
 &lt;/style>&lt;/head>&lt;body style=" font-family:'Arial'; font-size:16pt; font-weight:400; font-style:normal;">
 &lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-family:'Baveuse'; font-size:20pt; font-weight:600;">Up Next This Week:&lt;/span>&lt;/p>
-&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-size:20pt; font-weight:600;">7pm Wednesday: &lt;/span>&lt;span style=" font-family:'Hurry Up'; font-size:20pt; font-weight:600;">Horseshoe Raise at the Ranch!&lt;/span>&lt;/p>
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-size:20pt; font-weight:600;">7pm Wednesday:  &lt;/span>&lt;span style=" font-family:'Hurry Up'; font-size:20pt; font-weight:600;">Horseshoe Race at the Ranch!&lt;/span>&lt;/p>
 &lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-size:20pt; font-weight:600;">6pm Friday:&lt;/span>&lt;span style=" font-family:'Hurry Up'; font-size:20pt; font-weight:600;"> Hotdog Roast!&lt;/span>&lt;/p>&lt;/body>&lt;/html></text>
-            <default-font font-family="Arial" font-size="16" />
-            <shape enabled="0" />
+            <default-font font-family="Arial" font-size="16"/>
+            <shape enabled="0"/>
         </textbox>
     </slide>
 </slide-group>
