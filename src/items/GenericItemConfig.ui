@@ -45,7 +45,7 @@
     <enum>QTabWidget::Rounded</enum>
    </property>
    <property name="currentIndex">
-    <number>1</number>
+    <number>0</number>
    </property>
    <property name="usesScrollButtons">
     <bool>false</bool>
@@ -87,10 +87,18 @@
         </widget>
        </item>
        <item row="0" column="2">
-        <widget class="QDoubleSpinBox" name="locationY"/>
+        <widget class="QDoubleSpinBox" name="locationY">
+         <property name="maximum">
+          <double>10000.000000000000000</double>
+         </property>
+        </widget>
        </item>
        <item row="0" column="0">
-        <widget class="QDoubleSpinBox" name="locationX"/>
+        <widget class="QDoubleSpinBox" name="locationX">
+         <property name="maximum">
+          <double>10000.000000000000000</double>
+         </property>
+        </widget>
        </item>
        <item row="0" column="4">
         <spacer name="horizontalSpacer_8">
@@ -329,10 +337,18 @@
         </widget>
        </item>
        <item row="0" column="2">
-        <widget class="QDoubleSpinBox" name="contentHeight"/>
+        <widget class="QDoubleSpinBox" name="contentHeight">
+         <property name="maximum">
+          <double>10000.000000000000000</double>
+         </property>
+        </widget>
        </item>
        <item row="0" column="0">
-        <widget class="QDoubleSpinBox" name="contentWidth"/>
+        <widget class="QDoubleSpinBox" name="contentWidth">
+         <property name="maximum">
+          <double>10000.000000000000000</double>
+         </property>
+        </widget>
        </item>
        <item row="0" column="4">
         <spacer name="horizontalSpacer_12">
@@ -414,7 +430,11 @@
         </spacer>
        </item>
        <item row="0" column="1">
-        <widget class="QSpinBox" name="spinBox"/>
+        <widget class="QSpinBox" name="opacityBox">
+         <property name="maximum">
+          <number>100</number>
+         </property>
+        </widget>
        </item>
        <item row="0" column="0">
         <widget class="QSlider" name="opacitySlider">
@@ -833,7 +853,7 @@
   <connection>
    <sender>opacitySlider</sender>
    <signal>valueChanged(int)</signal>
-   <receiver>spinBox</receiver>
+   <receiver>opacityBox</receiver>
    <slot>setValue(int)</slot>
    <hints>
     <hint type="sourcelabel">
@@ -847,7 +867,7 @@
    </hints>
   </connection>
   <connection>
-   <sender>spinBox</sender>
+   <sender>opacityBox</sender>
    <signal>valueChanged(int)</signal>
    <receiver>opacitySlider</receiver>
    <slot>setValue(int)</slot>

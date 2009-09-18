@@ -426,6 +426,7 @@ void AbstractContent::setOpacity(double d)
 // 		qDebug() << "AbstractContent::setOpacity(): Model:"<<model->itemName()<<", ID:"<<model->itemId()<<", my opacity right now:"<<opacity()<<", changing to:"<<model->opacity();
 // 	}
 	AbstractDisposeable::setOpacity(d);
+	syncToModelItem(modelItem());
 }
 
 AbstractVisualItem * AbstractContent::syncToModelItem(AbstractVisualItem * model)

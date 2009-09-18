@@ -77,6 +77,8 @@ class AbstractContent : public AbstractDisposeable
 		
 		// to be reimpl
 		
+		void setOpacity(double);
+		
 
 	Q_SIGNALS:
 		void configureMe(const QPoint & scenePoint);
@@ -108,7 +110,7 @@ class AbstractContent : public AbstractDisposeable
 		void setModelItem(AbstractVisualItem *model);
 		
 	
-		void setOpacity(double);
+		
 		
 		bool m_dontSyncToModel;
 		

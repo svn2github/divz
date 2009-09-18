@@ -15,11 +15,11 @@
 #ifndef __TextBoxConfig_h__
 #define __TextBoxConfig_h__
 
-#include "AbstractConfig.h"
+#include "GenericItemConfig.h"
 class RichTextEditorDialog;
 class TextBoxContent;
 
-class TextBoxConfig : public AbstractConfig
+class TextBoxConfig : public GenericItemConfig
 {
     public:
         TextBoxConfig(TextBoxContent * textContent, QGraphicsItem * parent = 0);

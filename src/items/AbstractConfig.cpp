@@ -218,8 +218,8 @@ void AbstractConfig::resizeEvent(QGraphicsSceneResizeEvent * event)
 */
 void AbstractConfig::slotRequestClose()
 {
-     MyGraphicsScene * desk = static_cast<MyGraphicsScene*>(scene());
-     desk->slotDeleteConfig(this);
+//      MyGraphicsScene * desk = static_cast<MyGraphicsScene*>(scene());
+//      desk->slotDeleteConfig(this);
 //	done();
 }
 

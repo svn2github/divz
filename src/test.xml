@@ -15,7 +15,7 @@
                 <y>490</y>
             </pos>
             <zvalue>2</zvalue>
-            <opacity>.75</opacity>
+            <opacity>0.75</opacity>
             <visible>1</visible>
             <frame-class>3</frame-class>
             <transformation yRot="0" xRot="0" zRot="0"/>
@@ -50,7 +50,7 @@
 &lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
 p, li { white-space: pre-wrap; }
 &lt;/style>&lt;/head>&lt;body style=" font-family:'Arial'; font-size:16pt; font-weight:400; font-style:normal;">
-&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-size:121pt; font-weight:600;">   This Week&lt;/span>&lt;/p>&lt;/body>&lt;/html></text>
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-size:121pt; font-weight:600; font-style:italic;">   This Week&lt;/span>&lt;/p>&lt;/body>&lt;/html></text>
             <default-font font-family="Arial" font-size="16"/>
             <shape enabled="0"/>
         </textbox>

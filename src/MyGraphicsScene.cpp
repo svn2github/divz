@@ -1,6 +1,7 @@
 #include "MyGraphicsScene.h"
 #include "frames/FrameFactory.h"
 #include "items/AbstractConfig.h"
+#include "items/GenericItemConfig.h"
 #include "items/AbstractContent.h"
 /*#include "items/PictureContent.h"
 #include "items/PictureConfig.h"*/
@@ -198,14 +199,15 @@ void MyGraphicsScene::slotConfigureContent(const QPoint & /*scenePoint*/)
 {
 	// get the content and ensure it hasn't already a property window
 	AbstractContent * content = dynamic_cast<AbstractContent *>(sender());
-	foreach (AbstractConfig * config, m_configs) 
+	foreach (GenericItemConfig * config, m_configs) 
 	{
 		if (config->content() == content)
 			return;
 		// force only 1 property instance
 		slotDeleteConfig(config);
 	}
-	AbstractConfig * p = 0;
+	//AbstractConfig * p = 0;
+	GenericItemConfig * p = 0;
 	
 // 	// picture config (dialog and connections)
 // 	if (PictureContent * picture = dynamic_cast<PictureContent *>(content)) 
@@ -215,15 +217,15 @@ void MyGraphicsScene::slotConfigureContent(const QPoint & /*scenePoint*/)
 // 	}
 	
 	// text config (dialog and connections)
-	if (TextContent * text = dynamic_cast<TextContent *>(content))
-		p = new TextConfig(text);
-	else
+// 	if (TextContent * text = dynamic_cast<TextContent *>(content))
+// 		p = new TextConfig(text);
+// 	else
 	if (TextBoxContent * text = dynamic_cast<TextBoxContent *>(content))
 		p = new TextBoxConfig(text);
 	
 	// generic config
 	if (!p)
-		p = new AbstractConfig(content);
+		p = new GenericItemConfig(content);
 	
 	// common links
 	m_configs.append(p);
@@ -330,7 +332,7 @@ void MyGraphicsScene::slotDeleteContent()
 // 			setBackContent(0);
 	
 		// remove related property if deleting its content
-		foreach (AbstractConfig * config, m_configs) {
+		foreach (GenericItemConfig * config, m_configs) {
 			if (config->content() == content) 
 			{
 				slotDeleteConfig(config);
@@ -346,7 +348,7 @@ void MyGraphicsScene::slotDeleteContent()
 	}
 }
 
-void MyGraphicsScene::slotDeleteConfig(AbstractConfig * config)
+void MyGraphicsScene::slotDeleteConfig(GenericItemConfig * config)
 {
 	m_configs.removeAll(config);
 	config->dispose();
