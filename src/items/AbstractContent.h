@@ -153,6 +153,7 @@ class AbstractContent : public AbstractDisposeable
         double              m_zRotationAngle;
         AbstractVisualItem *m_modelItem;
         bool		    m_modelItemIsChanging;
+        bool		    m_hovering;
         
 
     private Q_SLOTS:

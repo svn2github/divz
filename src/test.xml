@@ -19,6 +19,10 @@
             <visible>1</visible>
             <frame-class>3</frame-class>
             <transformation yRot="0" xRot="0" zRot="0"/>
+            <fill brush-style="1" enabled="0" brush-color="1,1,1,1"/>
+            <outline brush-style="1" pen-join="64" pen-width="0" enabled="0" brush-color="0,0,0,1" pen-cap="16" pen-color="0,0,0,1"/>
+            <mirror offset="3" enabled="0"/>
+            <shadow brush-style="1" offset="3" enabled="0" brush-color="0,0,0,1"/>
         </box>
         <textbox>
             <item-id>5</item-id>
@@ -38,6 +42,10 @@
             <visible>1</visible>
             <frame-class>0</frame-class>
             <transformation yRot="0" xRot="0" zRot="0"/>
+            <fill brush-style="1" enabled="0" brush-color="1,1,1,1"/>
+            <outline brush-style="1" pen-join="64" pen-width="0" enabled="0" brush-color="0,0,0,1" pen-cap="16" pen-color="0,0,0,1"/>
+            <mirror offset="3" enabled="0"/>
+            <shadow brush-style="1" offset="3" enabled="0" brush-color="0,0,0,1"/>
             <text>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
 &lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
 p, li { white-space: pre-wrap; }
@@ -64,6 +72,10 @@ p, li { white-space: pre-wrap; }
             <visible>1</visible>
             <frame-class>0</frame-class>
             <transformation yRot="0" xRot="0" zRot="0"/>
+            <fill brush-style="1" enabled="0" brush-color="1,1,1,1"/>
+            <outline brush-style="1" pen-join="64" pen-width="0" enabled="0" brush-color="0,0,0,1" pen-cap="16" pen-color="0,0,0,1"/>
+            <mirror offset="3" enabled="0"/>
+            <shadow brush-style="1" offset="3" enabled="0" brush-color="0,0,0,1"/>
             <filename>data/Seasons_Loop_3_SD.mpg</filename>
         </videofile>
         <textbox>
@@ -84,6 +96,10 @@ p, li { white-space: pre-wrap; }
             <visible>1</visible>
             <frame-class>0</frame-class>
             <transformation yRot="0" xRot="0" zRot="0"/>
+            <fill brush-style="1" enabled="0" brush-color="1,1,1,1"/>
+            <outline brush-style="1" pen-join="64" pen-width="0" enabled="0" brush-color="0,0,0,1" pen-cap="16" pen-color="0,0,0,1"/>
+            <mirror offset="3" enabled="0"/>
+            <shadow brush-style="1" offset="3" enabled="0" brush-color="0,0,0,1"/>
             <text>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
 &lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
 p, li { white-space: pre-wrap; }

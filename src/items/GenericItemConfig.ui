@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>Item Properties</string>
   </property>
   <widget class="QDialogButtonBox" name="buttonBox">
    <property name="geometry">
@@ -45,7 +45,7 @@
     <enum>QTabWidget::Rounded</enum>
    </property>
    <property name="currentIndex">
-    <number>0</number>
+    <number>1</number>
    </property>
    <property name="usesScrollButtons">
     <bool>false</bool>
@@ -444,6 +444,9 @@
       </rect>
      </property>
      <layout class="QFormLayout" name="formLayout">
+      <property name="labelAlignment">
+       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+      </property>
       <item row="0" column="0">
        <widget class="QLabel" name="label">
         <property name="text">
@@ -589,9 +592,7 @@
        <widget class="QLineEdit" name="imageFilenamebox"/>
       </item>
       <item row="2" column="0" rowspan="2" colspan="2">
-       <widget class="QWidget" name="imagePreviewWidget" native="true">
-        <zorder>gridLayoutWidget_2</zorder>
-       </widget>
+       <widget class="QWidget" name="imagePreviewWidget" native="true"/>
       </item>
       <item row="1" column="1">
        <widget class="QPushButton" name="imageBrowseButton">
@@ -664,16 +665,6 @@
       </item>
      </layout>
     </widget>
-    <zorder>bgNone</zorder>
-    <zorder>bgColor</zorder>
-    <zorder>solidColorPlaceholder</zorder>
-    <zorder>bgGradient</zorder>
-    <zorder>gradientSelector</zorder>
-    <zorder>bgImage</zorder>
-    <zorder>gridLayoutWidget</zorder>
-    <zorder>bgVideo</zorder>
-    <zorder>gridLayoutWidget_2</zorder>
-    <zorder>videoPreviewWidget</zorder>
    </widget>
    <widget class="QWidget" name="shadowTab">
     <attribute name="title">
@@ -718,6 +709,9 @@
       </rect>
      </property>
      <layout class="QFormLayout" name="formLayout_2">
+      <property name="labelAlignment">
+       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+      </property>
       <item row="0" column="0">
        <widget class="QLabel" name="label_3">
         <property name="text">
@@ -790,7 +784,7 @@
       <item row="0" column="0">
        <widget class="QLabel" name="label_11">
         <property name="text">
-         <string>Shadow Offset</string>
+         <string>Mirror Offset</string>
         </property>
        </widget>
       </item>
@@ -865,22 +859,6 @@
     <hint type="destinationlabel">
      <x>121</x>
      <y>291</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>locationReset</sender>
-   <signal>clicked()</signal>
-   <receiver>GenericItemConfig</receiver>
-   <slot>resetLocationFields()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>226</x>
-     <y>153</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>468</x>
-     <y>419</y>
     </hint>
    </hints>
   </connection>

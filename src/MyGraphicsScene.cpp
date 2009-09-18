@@ -118,8 +118,8 @@ TextItem * MyGraphicsScene::newTextItem(QString text)
 	
 	t->setText(text);
 	t->setPos(nearCenter(sceneRect()));
-	t->setItemName("TextBoxItem");
 	t->setItemId(ItemFactory::nextId());
+	t->setItemName(QString("TextBoxItem%1").arg(t->itemId()));
 	
 	AbstractContent * item = t->createDelegate(this);
 	addContent(item); //, QPoint((int)t->pos().x(),(int)t->pos().y()));
@@ -136,8 +136,8 @@ AbstractVisualItem * MyGraphicsScene::newBoxItem()
 
         //t->setText(text);
         t->setPos(nearCenter(sceneRect()));
-        t->setItemName("BoxItem");
         t->setItemId(ItemFactory::nextId());
+        t->setItemName(QString("BoxItem%1").arg(t->itemId()));
 
         AbstractContent * item = t->createDelegate(this);
         addContent(item); //, QPoint((int)t->pos().x(),(int)t->pos().y()));
@@ -154,8 +154,8 @@ AbstractVisualItem * MyGraphicsScene::newVideoItem()
 
         //t->setText(text);
         t->setPos(nearCenter(sceneRect()));
-        t->setItemName("BoxItem");
         t->setItemId(ItemFactory::nextId());
+	t->setItemName(QString("VideoItem%1").arg(t->itemId()));
 
         AbstractContent * item = t->createDelegate(this);
         addContent(item); //, QPoint((int)t->pos().x(),(int)t->pos().y()));

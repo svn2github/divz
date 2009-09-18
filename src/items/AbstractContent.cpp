@@ -48,6 +48,7 @@ AbstractContent::AbstractContent(QGraphicsScene * scene, QGraphicsItem * parent,
     , m_dontSyncToModel(true)
     , m_modelItem(0)
     , m_modelItemIsChanging(false)
+    , m_hovering(false)
 {
     // the buffered graphics changes timer
     m_gfxChangeTimer = new QTimer(this);
@@ -600,12 +601,14 @@ bool AbstractContent::contentOpaque() const
 
 void AbstractContent::hoverEnterEvent(QGraphicsSceneHoverEvent * /*event*/)
 {
+    m_hovering = true;
     setControlsVisible(true);
 }
 
 void AbstractContent::hoverLeaveEvent(QGraphicsSceneHoverEvent * /*event*/)
 {
-    setControlsVisible(false); //isSelected() ? true : false);
+    m_hovering = false;
+    setControlsVisible(isSelected() ? true : false);
 }
 
 void AbstractContent::dragMoveEvent(QGraphicsSceneDragDropEvent * event)
@@ -661,9 +664,12 @@ QVariant AbstractContent::itemChange(GraphicsItemChange change, const QVariant &
                 break;
 
             // notify about graphics changes
-            case ItemTransformHasChanged:
-            case ItemEnabledHasChanged:
             case ItemSelectedHasChanged:
+                setControlsVisible(isSelected() ? true : false);
+    
+    	    case ItemTransformHasChanged:
+            case ItemEnabledHasChanged:
+            
             case ItemParentHasChanged:
 #if QT_VERSION >= 0x040500
             case ItemOpacityHasChanged:

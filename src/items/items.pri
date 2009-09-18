@@ -3,7 +3,8 @@ DEPENDPATH += $$PWD
 
 
 FORMS += AbstractConfig.ui \
-	TextProperties.ui 
+	TextProperties.ui \
+	GenericItemConfig.ui
 	
 HEADERS +=  AbstractConfig.h \
     AbstractContent.h \
@@ -20,7 +21,8 @@ HEADERS +=  AbstractConfig.h \
     TextBoxContent.h \
     TextBoxConfig.h \
     BoxContent.h \
-    VideoFileContent.h
+    VideoFileContent.h \
+    GenericItemConfig.h
 
     
 SOURCES += \
@@ -39,4 +41,5 @@ SOURCES += \
     TextBoxContent.cpp \
     TextBoxConfig.cpp \
     BoxContent.cpp \
-    VideoFileContent.cpp
+    VideoFileContent.cpp \
+    GenericItemConfig.cpp
