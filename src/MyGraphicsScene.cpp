@@ -130,37 +130,37 @@ TextItem * MyGraphicsScene::newTextItem(QString text)
 
 AbstractVisualItem * MyGraphicsScene::newBoxItem()
 {
-        BoxItem *t = new BoxItem();
-        assert(m_slide);
-        m_slide->addItem(t); //m_slide->createText();
-
-        //t->setText(text);
-        t->setPos(nearCenter(sceneRect()));
-        t->setItemId(ItemFactory::nextId());
-        t->setItemName(QString("BoxItem%1").arg(t->itemId()));
-
-        AbstractContent * item = t->createDelegate(this);
-        addContent(item); //, QPoint((int)t->pos().x(),(int)t->pos().y()));
-
-        return t;
+	BoxItem *t = new BoxItem();
+	assert(m_slide);
+	m_slide->addItem(t); //m_slide->createText();
+	
+	//t->setText(text);
+	t->setPos(nearCenter(sceneRect()));
+	t->setItemId(ItemFactory::nextId());
+	t->setItemName(QString("BoxItem%1").arg(t->itemId()));
+	
+	AbstractContent * item = t->createDelegate(this);
+	addContent(item); //, QPoint((int)t->pos().x(),(int)t->pos().y()));
+	
+	return t;
 }
 
 AbstractVisualItem * MyGraphicsScene::newVideoItem()
 {
-        VideoFileItem *t = new VideoFileItem();
-        assert(m_slide);
-        t->setFilename("data/Ancient_Countdown_1_SD.mpg");
-        m_slide->addItem(t); //m_slide->createText();
-
-        //t->setText(text);
-        t->setPos(nearCenter(sceneRect()));
-        t->setItemId(ItemFactory::nextId());
+	VideoFileItem *t = new VideoFileItem();
+	assert(m_slide);
+	t->setFilename("data/Seasons_Loop_3_SD.mpg");
+	m_slide->addItem(t); //m_slide->createText();
+	
+	//t->setText(text);
+	t->setPos(nearCenter(sceneRect()));
+	t->setItemId(ItemFactory::nextId());
 	t->setItemName(QString("VideoItem%1").arg(t->itemId()));
-
-        AbstractContent * item = t->createDelegate(this);
-        addContent(item); //, QPoint((int)t->pos().x(),(int)t->pos().y()));
-
-        return t;
+	
+	AbstractContent * item = t->createDelegate(this);
+	addContent(item); //, QPoint((int)t->pos().x(),(int)t->pos().y()));
+	
+	return t;
 }
 
 /// Slots
