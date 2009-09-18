@@ -21,18 +21,18 @@ AbstractDisposeable::AbstractDisposeable(QGraphicsItem * parent, bool fadeIn)
     : QGraphicsItem(parent)
 #endif
 {
-    if (fadeIn) {
-#if QT_VERSION >= 0x040600
-        // fade in animation
-        QPropertyAnimation * ani = new QPropertyAnimation(this, "opacity");
-        ani->setEasingCurve(QEasingCurve::OutCubic);
-        ani->setDuration(300);
-        ani->setStartValue(0.0);
-        ani->setEndValue(1.0);
-        ani->start(QPropertyAnimation::DeleteWhenStopped);
-#endif
-        show();
-    }
+//     if (fadeIn) {
+// #if QT_VERSION >= 0x040600
+//         // fade in animation
+//         QPropertyAnimation * ani = new QPropertyAnimation(this, "opacity");
+//         ani->setEasingCurve(QEasingCurve::OutCubic);
+//         ani->setDuration(300);
+//         ani->setStartValue(0.0);
+//         ani->setEndValue(1.0);
+//         ani->start(QPropertyAnimation::DeleteWhenStopped);
+// #endif
+//         show();
+//     }
 }
 
 void AbstractDisposeable::dispose()
