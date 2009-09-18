@@ -105,7 +105,7 @@ AbstractContent::AbstractContent(QGraphicsScene * scene, QGraphicsItem * parent,
     scene->addItem(this);
 
     // display mirror
-    setMirrorEnabled(RenderOpts::LastMirrorEnabled);
+    setMirrorEnabled(false); //RenderOpts::LastMirrorEnabled);
     
     m_dontSyncToModel = false;
 }
@@ -428,12 +428,29 @@ void AbstractContent::syncFromModelItem(AbstractVisualItem *model)
 		applyRotations();
 // 	}
 	//     domElement = pe.firstChildElement("mirror");
-	//     setMirrorEnabled(domElement.attribute("state").toInt());
+	
+	setMirrorEnabled(model->mirrorEnabled());
+	
+	//qDebug() << "AbstractContent: Model:"<<model->itemName()<<", ID:"<<model->itemId()<<", my opacity right now:"<<opacity()<<", changing to:"<<model->opacity();
+	setOpacity(model->opacity());
+	//qDebug() << "AbstractContent: Model:"<<model->itemName()<<", ID:"<<model->itemId()<<", my opacity is now:"<<opacity();
+// 	setPen(model->outlinePen());
+// 	setBrush(model->fillBrush());
 	
 
 	
 
 	m_dontSyncToModel = false;
+}
+
+void AbstractContent::setOpacity(double d)
+{
+// 	AbstractVisualItem * model = modelItem();
+// 	if(model)
+// 	{
+// 		qDebug() << "AbstractContent::setOpacity(): Model:"<<model->itemName()<<", ID:"<<model->itemId()<<", my opacity right now:"<<opacity()<<", changing to:"<<model->opacity();
+// 	}
+	AbstractDisposeable::setOpacity(d);
 }
 
 AbstractVisualItem * AbstractContent::syncToModelItem(AbstractVisualItem * model)
@@ -466,6 +483,7 @@ AbstractVisualItem * AbstractContent::syncToModelItem(AbstractVisualItem * model
 	model->setZValue(zValue());
 	model->setIsVisible(isVisible());
 	model->setFrameClass(frameClass());
+	model->setOpacity(opacity());
 	
 	//qDebug() << "AbstractContent::syncToModelItem: pos=" << model->pos() << ", rect=" << model->contentsRect();
 	/*
@@ -494,6 +512,8 @@ AbstractVisualItem * AbstractContent::syncToModelItem(AbstractVisualItem * model
 //     domElement = doc.createElement("mirror");
 //     domElement.setAttribute("state", mirrorEnabled());
 //     pe.appendChild(domElement);
+
+	model->setMirrorEnabled(mirrorEnabled());
 	
 	setModelItemIsChanging(false);
 	

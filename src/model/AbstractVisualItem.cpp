@@ -2,6 +2,30 @@
 //#include "frames/FrameFactory.h"
 #include <QTransform>
 #include <QDebug>
+    #include <execinfo.h>
+     #include <stdio.h>
+     #include <stdlib.h>
+     
+     /* Obtain a backtrace and print it to stdout. */
+     static void
+     print_trace (void)
+     {
+       void *array[10];
+       size_t size;
+       char **strings;
+       size_t i;
+     
+       size = backtrace (array, 10);
+       strings = backtrace_symbols (array, size);
+     
+       printf ("Obtained %zd stack frames.\n", size);
+     
+       for (i = 0; i < size; i++)
+          printf ("%s\n", strings[i]);
+     
+       free (strings);
+     }
+
 
 AbstractVisualItem::AbstractVisualItem() 
 {
@@ -74,6 +98,8 @@ ITEM_PROPSET(AbstractVisualItem, ShadowBrush,		QBrush,	shadowBrush);
 bool AbstractVisualItem::fromXml(QDomElement & pe)
 {
 	setBeingLoaded(true);
+	
+	AbstractItem::fromXml(pe);
 	
 	// restore content properties
 	QDomElement domElement;
@@ -172,10 +198,7 @@ bool AbstractVisualItem::fromXml(QDomElement & pe)
 			setShadowBrush(fill);
 		}
 	}
-	
-	AbstractItem::fromXml(pe);
-	
-	setBeingLoaded(false);
+		setBeingLoaded(false);
 	
 	return true;
 }

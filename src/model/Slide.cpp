@@ -36,7 +36,7 @@ bool Slide::fromXml(QDomElement & pe)
 	// for each child of 'slide'
 	for (QDomElement element = pe.firstChildElement(); !element.isNull(); element = element.nextSiblingElement()) 
 	{
-		//qDebug("Found an element, tag name=%s", element.tagName().toAscii().constData());
+		//qDebug("Slide::fromXml(): Found an element, tag name=%s", element.tagName().toAscii().constData());
 		// create the right kind of content
 		AbstractItem * content = 0;
 // 		if (element.tagName() == "picture")
@@ -69,8 +69,6 @@ bool Slide::fromXml(QDomElement & pe)
 			delete content;
 			continue;
 		}
-		
-		
 		
 	
 // 		// restore the background element of the desk

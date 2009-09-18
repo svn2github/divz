@@ -121,7 +121,8 @@ class AbstractContent : public AbstractDisposeable
         void setModelItem(AbstractVisualItem *model);
         
 
-
+	void setOpacity(double);
+	
 	bool m_dontSyncToModel;
         
     protected Q_SLOTS:

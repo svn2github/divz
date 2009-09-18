@@ -7,12 +7,12 @@
             <rect>
                 <x>-78</x>
                 <y>-62</y>
-                <w>832</w>
-                <h>162</h>
+                <w>441</w>
+                <h>149</h>
             </rect>
             <pos>
-                <x>66</x>
-                <y>490</y>
+                <x>137</x>
+                <y>227</y>
             </pos>
             <zvalue>2</zvalue>
             <opacity>1</opacity>
@@ -25,21 +25,21 @@
             <shadow brush-style="1" offset="3" enabled="0" brush-color="0,0,0,1"/>
         </box>
         <textbox>
-            <item-id>5</item-id>
-            <item-name>TextBoxItem</item-name>
+            <item-id>7</item-id>
+            <item-name>TextBoxItem7</item-name>
             <rect>
                 <x>-100</x>
                 <y>-75</y>
-                <w>572</w>
-                <h>364</h>
+                <w>200</w>
+                <h>26</h>
             </rect>
             <pos>
-                <x>232</x>
-                <y>113</y>
+                <x>399</x>
+                <y>300</y>
             </pos>
-            <zvalue>3</zvalue>
+            <zvalue>0</zvalue>
             <opacity>1</opacity>
-            <visible>1</visible>
+            <visible>0</visible>
             <frame-class>0</frame-class>
             <transformation yRot="0" xRot="0" zRot="0"/>
             <fill brush-style="1" enabled="0" brush-color="1,1,1,1"/>
@@ -49,65 +49,9 @@
             <text>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
 &lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
 p, li { white-space: pre-wrap; }
-&lt;/style>&lt;/head>&lt;body style=" font-family:'Arial'; font-size:16pt; font-weight:400; font-style:normal;">
-&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-size:121pt; font-weight:600;">   This Week&lt;/span>&lt;/p>&lt;/body>&lt;/html></text>
-            <default-font font-family="Arial" font-size="16"/>
-            <shape enabled="0"/>
-        </textbox>
-        <videofile>
-            <item-id>6</item-id>
-            <item-name>BoxItem</item-name>
-            <rect>
-                <x>-600</x>
-                <y>-600</y>
-                <w>1201</w>
-                <h>1201</h>
-            </rect>
-            <pos>
-                <x>407</x>
-                <y>381</y>
-            </pos>
-            <zvalue>1</zvalue>
-            <opacity>1</opacity>
-            <visible>1</visible>
-            <frame-class>0</frame-class>
-            <transformation yRot="0" xRot="0" zRot="0"/>
-            <fill brush-style="1" enabled="0" brush-color="1,1,1,1"/>
-            <outline brush-style="1" pen-join="64" pen-width="0" enabled="0" brush-color="0,0,0,1" pen-cap="16" pen-color="0,0,0,1"/>
-            <mirror offset="3" enabled="0"/>
-            <shadow brush-style="1" offset="3" enabled="0" brush-color="0,0,0,1"/>
-            <filename>data/Seasons_Loop_3_SD.mpg</filename>
-        </videofile>
-        <textbox>
-            <item-id>4</item-id>
-            <item-name>TextBoxItem</item-name>
-            <rect>
-                <x>-100</x>
-                <y>-75</y>
-                <w>769</w>
-                <h>102</h>
-            </rect>
-            <pos>
-                <x>113</x>
-                <y>521</y>
-            </pos>
-            <zvalue>4</zvalue>
-            <opacity>1</opacity>
-            <visible>1</visible>
-            <frame-class>0</frame-class>
-            <transformation yRot="0" xRot="0" zRot="0"/>
-            <fill brush-style="1" enabled="0" brush-color="1,1,1,1"/>
-            <outline brush-style="1" pen-join="64" pen-width="0" enabled="0" brush-color="0,0,0,1" pen-cap="16" pen-color="0,0,0,1"/>
-            <mirror offset="3" enabled="0"/>
-            <shadow brush-style="1" offset="3" enabled="0" brush-color="0,0,0,1"/>
-            <text>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
-&lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
-p, li { white-space: pre-wrap; }
-&lt;/style>&lt;/head>&lt;body style=" font-family:'Arial'; font-size:16pt; font-weight:400; font-style:normal;">
-&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-family:'Baveuse'; font-size:20pt; font-weight:600;">Up Next This Week:&lt;/span>&lt;/p>
-&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-size:20pt; font-weight:600;">7pm Wednesday:  &lt;/span>&lt;span style=" font-family:'Hurry Up'; font-size:20pt; font-weight:600;">Horseshoe Race at the Ranch!&lt;/span>&lt;/p>
-&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-size:20pt; font-weight:600;">6pm Friday:&lt;/span>&lt;span style=" font-family:'Hurry Up'; font-size:20pt; font-weight:600;"> Hotdog Roast!&lt;/span>&lt;/p>&lt;/body>&lt;/html></text>
-            <default-font font-family="Arial" font-size="16"/>
+&lt;/style>&lt;/head>&lt;body style=" font-family:'Sans Serif'; font-size:16pt; font-weight:400; font-style:normal;">
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">Lorem Ipsum&lt;/p>&lt;/body>&lt;/html></text>
+            <default-font font-family="Sans Serif" font-size="16"/>
             <shape enabled="0"/>
         </textbox>
     </slide>
