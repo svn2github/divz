@@ -368,8 +368,8 @@ MainWindow::MainWindow(QWidget * parent)
 	
 	//qDebug("Checking for OpenGL...");
 	#ifndef QT_NO_OPENGL
-		//graphicsView->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
-		//qDebug("Loaded OpenGL viewport.");
+		graphicsView->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
+		qDebug("Loaded OpenGL viewport.");
 	#endif
 	graphicsView->setRenderHint( QPainter::TextAntialiasing, true);
 	graphicsView->setRenderHint( QPainter::Antialiasing, true );

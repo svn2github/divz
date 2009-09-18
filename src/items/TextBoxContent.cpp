@@ -369,8 +369,6 @@ int TextBoxContent::contentHeightForWidth(int width) const
 					
 					cursorRect |= ts.rect;
 					cursor.setX(cursor.x() + ts.rect.width()); //ts.rect.right());
-					
-						
 				}
 			}
 			else
@@ -620,8 +618,7 @@ void TextBoxContent::updateTextConstraints()
 	
 	QRect cursorRect(cursor.x(),cursor.y(),0,0);
 
-
-#ifdef UNIX
+#ifdef Q_OS_UNIX
         bool add_space = true;
 #else
         bool add_space = false;
@@ -742,22 +739,26 @@ void TextBoxContent::updateTextConstraints()
                                 // dont wrap the cursor.
 				if(tmp != "")
 				{
-                                        QRect tmpRect = metrics.boundingRect(tmp+(add_space ? " " : ""));
-					
-					TextLineSpec ts(frag,QRect(cursor - tmpRect.topLeft(), tmpRect.size()),cursor.x() == 0 ? trimLeft(tmp) : tmp);
-					m_lineSpecs.append(ts);
-					
-					cursorRect |= ts.rect;
-
-                                        // You'll notice here, among other places,
-                                        // we set the cursor X to cursor.x+ts.rect.width,
-                                        // instead of using ts.rect.right - this is because
-                                        // ts.rect.right = ts.rect.x + ts.rect.width, which
-                                        // is not always the same as cursor.x + ts.rect.width,
-                                        // since the text can overlap previous characters.
-					cursor.setX(cursor.x() + ts.rect.width());
-					
-					//qDebug() << "updateTextConstraints(): WrapAlpha: 1.1: Leftover partial frag, text:"<<tmp<<", ts.rect:"<<ts.rect<<", cursor now at:"<<cursor<<", cursorRect:"<<cursorRect;
+					QString visualTmp = cursor.x() == 0 ? trimLeft(tmp) : tmp;
+					if(visualTmp != "")
+					{
+						QRect tmpRect = metrics.boundingRect(tmp+(add_space ? " " : ""));
+						
+						TextLineSpec ts(frag,QRect(cursor - tmpRect.topLeft(), tmpRect.size()),visualTmp);
+						m_lineSpecs.append(ts);
+						
+						cursorRect |= ts.rect;
+	
+						// You'll notice here, among other places,
+						// we set the cursor X to cursor.x+ts.rect.width,
+						// instead of using ts.rect.right - this is because
+						// ts.rect.right = ts.rect.x + ts.rect.width, which
+						// is not always the same as cursor.x + ts.rect.width,
+						// since the text can overlap previous characters.
+						cursor.setX(cursor.x() + ts.rect.width());
+						
+						//qDebug() << "updateTextConstraints(): WrapAlpha: 1.1: Leftover partial frag, text:"<<visualTmp<<", ts.rect:"<<ts.rect<<", cursor now at:"<<cursor<<", cursorRect:"<<cursorRect;
+					}
 						
 				}
 			}
@@ -770,7 +771,7 @@ void TextBoxContent::updateTextConstraints()
 				
 				cursorRect |= ts.rect;
 				cursor.setX(cursor.x() + ts.rect.width());
-//				qDebug() << "updateTextConstraints(): WrapAlpha: 2: No break needed, full frag fits. ts.rect:"<<ts.rect<<", cursor now at:"<<cursor<<", cursorRect:"<<cursorRect;
+				//qDebug() << "updateTextConstraints(): WrapAlpha: 2: No break needed, full frag fits, text:"<<text<<", ts.rect:"<<ts.rect<<", cursor now at:"<<cursor<<", cursorRect:"<<cursorRect;
 			}
 		}
 		
@@ -826,9 +827,6 @@ void TextBoxContent::updateTextConstraints()
 	{
 		resizeContents(newRect);
 	}
-	
-	
-
 }
 
 void TextBoxContent::delayContentsResized()
