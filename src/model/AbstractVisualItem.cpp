@@ -2,6 +2,7 @@
 //#include "frames/FrameFactory.h"
 #include <QTransform>
 #include <QDebug>
+#ifdef UNIX
     #include <execinfo.h>
      #include <stdio.h>
      #include <stdlib.h>
@@ -25,7 +26,7 @@
      
        free (strings);
      }
-
+#endif
 
 AbstractVisualItem::AbstractVisualItem() 
 {

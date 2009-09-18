@@ -169,6 +169,7 @@ void GenericItemConfig::slotResetOpacity()
 {
 	m_content->setOpacity(m_origOpacity);
 	m_commonUi->opacityBox->setValue((int)(m_origOpacity * 100));
+	m_commonUi->opacityBox->selectAll();
 }
 
 void GenericItemConfig::slotResetLocation()
@@ -176,6 +177,8 @@ void GenericItemConfig::slotResetLocation()
 	m_content->setPos(m_origPos);
 	m_commonUi->locationX->setValue(m_origPos.x());
 	m_commonUi->locationY->setValue(m_origPos.y());
+	m_commonUi->locationX->selectAll();
+	m_commonUi->locationY->selectAll();
 }
 
 void GenericItemConfig::slotResetSize()
@@ -186,6 +189,8 @@ void GenericItemConfig::slotResetSize()
 	
 	m_commonUi->contentWidth->setValue((double)m_origSize.width());
 	m_commonUi->contentHeight->setValue((double)m_origSize.height());
+	m_commonUi->contentWidth->selectAll();
+	m_commonUi->contentHeight->selectAll();
 }
 
 

@@ -351,11 +351,11 @@ MainWindow::MainWindow(QWidget * parent)
 // 	connect(quit, SIGNAL(triggered()), qApp, SLOT(quit()));
 	connect(newAction, SIGNAL(triggered()), this, SLOT(newTextItem()));
 
-        QAction  *newBox = toolbar->addAction(QIcon(), "New Box Item");
-        connect(newBox, SIGNAL(triggered()), this, SLOT(newBoxItem()));
-        
-        QAction  *newVideo = toolbar->addAction(QIcon(), "New Video Item");
-        connect(newVideo, SIGNAL(triggered()), this, SLOT(newVideoItem()));
+	QAction  *newBox = toolbar->addAction(QIcon(), "New Box Item");
+	connect(newBox, SIGNAL(triggered()), this, SLOT(newBoxItem()));
+
+	QAction  *newVideo = toolbar->addAction(QIcon(), "New Video Item");
+	connect(newVideo, SIGNAL(triggered()), this, SLOT(newVideoItem()));
 
 
 	m_scene = new MyGraphicsScene(this);
@@ -368,7 +368,7 @@ MainWindow::MainWindow(QWidget * parent)
 	
 	//qDebug("Checking for OpenGL...");
 	#ifndef QT_NO_OPENGL
-		graphicsView->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
+		graphicsView->setViewport(new QGLWidget()); //QGLFormat(QGL::SampleBuffers)));
 		qDebug("Loaded OpenGL viewport.");
 	#endif
 	graphicsView->setRenderHint( QPainter::TextAntialiasing, true);
@@ -402,12 +402,10 @@ MainWindow::MainWindow(QWidget * parent)
 	else
 	{
 		m_scene->setSlide(m_slide);
-		m_scene->newTextItem("Hello, World!");
+                m_scene->newTextItem("Hello, World!");
 	}
-	
-	
 
-	setCentralWidget(graphicsView);
+        setCentralWidget(graphicsView);
 }
 
 MainWindow::~MainWindow()
