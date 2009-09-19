@@ -83,6 +83,25 @@ class GenericItemConfig : public QDialog
 		void slotResetLocation();
 		void slotResetSize();
 		void slotClosed();
+		void setLineColor(const QColor &);
+		void setBgColor(const QColor &);
+		void setShadowColor(const QColor &);
+		void slotImageBrowse();
+		void slotVideoBrowse();
+		
+		void slotLineSizeChanged(double);
+		void slotShadowOffsetChanged(double);
+		void slotMirrorOffsetChanged(double);
+		
+		void slotOutlineEnabled(bool);
+		void slotShadowEnabled(bool);
+		
+		void slotBgNone(bool);
+		void slotBgColor(bool);
+		void slotBgGradient(bool);
+		void slotBgImage(bool);
+		void slotBgVideo(bool);
+		
 };
 
 #endif // GENERICITEMCONFIG_H

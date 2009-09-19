@@ -40,11 +40,13 @@ AbstractVisualItem::AbstractVisualItem()
 	m_zRotation = 0;
 	m_opacity = 1;
 	
-	m_fillEnabled = false;
+	m_fillType = None;
 	m_fillBrush = QBrush(Qt::white);
+	m_fillImageFile = "";
+	m_fillVideoFile = "";
 	
 	m_outlineEnabled = false;
-	m_outlinePen = QPen(Qt::black);
+	m_outlinePen = QPen(Qt::black,1);
 	
 	m_mirrorEnabled = false;
 	m_mirrorOffset = 3;
@@ -82,8 +84,10 @@ ITEM_PROPSET(AbstractVisualItem, ZRotation,  		double, zRotation);
 
 ITEM_PROPSET(AbstractVisualItem, Opacity,    		double, opacity);
 
-ITEM_PROPSET(AbstractVisualItem, FillEnabled,		bool,	fillEnabled);
-ITEM_PROPSET(AbstractVisualItem, FillBrush,		QBrush,	fillBrush);
+ITEM_PROPSET(AbstractVisualItem, FillType,		FillType,	fillType);
+ITEM_PROPSET(AbstractVisualItem, FillBrush,		QBrush,		fillBrush);
+ITEM_PROPSET(AbstractVisualItem, FillImageFile,		QString,	fillImageFile);
+ITEM_PROPSET(AbstractVisualItem, FillVideoFile,		QString,	fillVideoFile);
 
 ITEM_PROPSET(AbstractVisualItem, OutlineEnabled,	bool,	outlineEnabled);
 ITEM_PROPSET(AbstractVisualItem, OutlinePen,		QPen,	outlinePen);
@@ -152,52 +156,58 @@ bool AbstractVisualItem::fromXml(QDomElement & pe)
 	domElement = pe.firstChildElement("fill");
 	if(!domElement.isNull()) 
 	{
-		bool hasFill = pe.attribute("enabled").toInt();
-		setFillEnabled(hasFill);
-		if(hasFill)
-		{
-			QBrush fill = brushFromXml(domElement);
-			setFillBrush(fill);
-		}
+		AbstractVisualItem::FillType t = (AbstractVisualItem::FillType)domElement.attribute("type").toInt();
+		setFillType(t);
+		
+		QBrush fill = brushFromXml(domElement);
+		setFillBrush(fill);
+		
+		setFillImageFile(domElement.attribute("image"));
+		setFillVideoFile(domElement.attribute("video"));
+		
+		//qDebug() << "fromXml: "<<itemName()<<": fillVideoFile
 	}
 	
  	domElement = pe.firstChildElement("outline");
 	if(!domElement.isNull()) 
 	{
-		bool hasOutline = pe.attribute("enabled").toInt();
-		setOutlineEnabled(hasOutline);
-		if(hasOutline)
-		{
+		bool hasOutline = domElement.attribute("enabled").toInt();
+ 		setOutlineEnabled(hasOutline);
+ 		
+// 		if(hasOutline)
+// 		{
 			QPen line = penFromXml(domElement);
-			setOutlinePen(line);
-		}
+			
+			qDebug() << "fromXml:"<<itemName()<<": hasOutline:"<<hasOutline<<", pen: "<<line;
+ 			setOutlinePen(line);
+// 		}
 	}
 	
 	domElement = pe.firstChildElement("mirror");
 	if(!domElement.isNull()) 
 	{
-		bool flag = pe.attribute("enabled").toInt();
+		bool flag = domElement.attribute("enabled").toInt();
 		setMirrorEnabled(flag);
-		if(flag)
-		{
-			double offset = pe.attribute("offset").toDouble();
+// 		if(flag)
+// 		{
+			double offset = domElement.attribute("offset").toDouble();
 			setMirrorOffset(offset);
-		}
+// 		}
 	}
 	
 	domElement = pe.firstChildElement("shadow");
 	if(!domElement.isNull()) 
 	{
-		bool flag = pe.attribute("enabled").toInt();
+		bool flag = domElement.attribute("enabled").toInt();
 		setShadowEnabled(flag);
-		if(flag)
-		{
-			double offset = pe.attribute("offset").toDouble();
+// 		if(flag)
+// 		{
+			double offset = domElement.attribute("offset").toDouble();
 			setMirrorOffset(offset);
 			
 			QBrush fill = brushFromXml(domElement);
 			setShadowBrush(fill);
-		}
+		//}
 	}
 		setBeingLoaded(false);
 	
@@ -297,8 +307,10 @@ void AbstractVisualItem::toXml(QDomElement & pe) const
 //	}
  	
  	domElement = doc.createElement("fill");
- 	domElement.setAttribute("enabled", fillEnabled());
+ 	domElement.setAttribute("type", fillType());
  	brushToXml(domElement,fillBrush());
+ 	domElement.setAttribute("image", fillImageFile());
+ 	domElement.setAttribute("video", fillVideoFile());
  	pe.appendChild(domElement);
  	
  	domElement = doc.createElement("outline");
@@ -321,13 +333,16 @@ void AbstractVisualItem::toXml(QDomElement & pe) const
 
 static QString qcolorToString(const QColor & color)
 {
-	return QString("%1,%2,%3,%4").arg(color.redF()).arg(color.greenF()).arg(color.blueF()).arg(color.alphaF());
+	return QString::number(color.rgba()); //QString("%1,%2,%3,%4").arg(color.redF()).arg(color.greenF()).arg(color.blueF()).arg(color.alphaF());
 }
 
 static QColor qcolorFromString(const QString & string)
 {
-	QStringList list = string.split(",");
-	return QColor(list[0].toInt(),list[1].toInt(),list[2].toInt(),list[3].toInt());
+// 	QStringList list = string.split(",");
+// 	QColor c = QColor(list[0].toInt(),list[1].toInt(),list[2].toInt(),list[3].toInt());
+// 	qDebug()<<"qcolorFromString(): string:"<<string<<", list:"<<list<<", color:"<<c;
+	return QColor(string.toUInt());
+	//return c;
 }
 
 void AbstractVisualItem::penToXml(QDomElement & domElement, QPen pen)

@@ -156,13 +156,13 @@ void BoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * opti
 // 		painter->scale(xScale, yScale);
 // 	}
 	
-	QPen pen;
- 	pen.setWidthF(3);
- 	pen.setColor(QColor(0,0,0,255));
- 
- 	QBrush brush(QColor(255,0,0,255));
- 	painter->setPen(pen);
- 	painter->setBrush(brush);
+// 	QPen pen;
+//  	pen.setWidthF(3);
+//  	pen.setColor(QColor(0,0,0,255));
+//  
+//  	QBrush brush(QColor(255,0,0,255));
+ 	painter->setPen(modelItem()->outlinePen());
+ 	painter->setBrush(modelItem()->fillBrush());
 	painter->drawRect(QRect(QPoint(0,0),cRect.size()));
 	
 // 	//const bool opaqueContent = contentOpaque();

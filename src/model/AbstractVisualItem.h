@@ -13,6 +13,10 @@ class AbstractVisualItem : public AbstractItem
 {
 	Q_OBJECT
 	
+public:
+	typedef enum FillType { None, Solid, Gradient, Image, Video };
+	
+	
 	Q_PROPERTY(QPointF 	pos          	READ pos 		WRITE setPos);
 	Q_PROPERTY(QRectF  	contentsRect 	READ contentsRect 	WRITE setContentsRect);
 	Q_PROPERTY(bool    	isVisible    	READ isVisible		WRITE setIsVisible);
@@ -24,8 +28,10 @@ class AbstractVisualItem : public AbstractItem
 	
 	Q_PROPERTY(quint32 	frameClass   	READ frameClass 	WRITE setFrameClass);
 	
-	Q_PROPERTY(bool	   	fillEnabled 	READ fillEnabled 	WRITE setFillEnabled);
+	Q_PROPERTY(FillType 	fillType 	READ fillType		WRITE setFillType);
 	Q_PROPERTY(QBrush  	fillBrush    	READ fillBrush 		WRITE setFillBrush);
+	Q_PROPERTY(QString  	fillImageFile	READ fillImageFile	WRITE setFillImageFile);
+	Q_PROPERTY(QString	fillVideoFile	READ fillVideoFile	WRITE setFillVideoFile);
 	
 	Q_PROPERTY(bool	   	outlineEnabled 	READ outlineEnabled 	WRITE setOutlineEnabled);
 	Q_PROPERTY(QPen    	outlinePen   	READ outlinePen 	WRITE setOutlinePen);
@@ -110,8 +116,10 @@ public:
 	void setZRotation(double);
 	
 	
-	ITEM_PROPDEF(FillEnabled,	bool,	fillEnabled);
-	ITEM_PROPDEF(FillBrush,		QBrush,	fillBrush);
+	ITEM_PROPDEF(FillType,		FillType, 	fillType);
+	ITEM_PROPDEF(FillBrush,		QBrush,		fillBrush);
+	ITEM_PROPDEF(FillImageFile,	QString,	fillImageFile);
+	ITEM_PROPDEF(FillVideoFile,	QString,	fillVideoFile);
 	
 	ITEM_PROPDEF(OutlineEnabled,	bool,	outlineEnabled);
 	ITEM_PROPDEF(OutlinePen,	QPen,	outlinePen);
@@ -140,8 +148,10 @@ private:
 	double		m_yRotation;
 	double		m_zRotation;
 	
-	bool		m_fillEnabled;
+	FillType	m_fillType;
 	QBrush		m_fillBrush;
+	QString		m_fillImageFile;
+	QString		m_fillVideoFile;
 	
 	bool		m_outlineEnabled;
 	QPen		m_outlinePen;

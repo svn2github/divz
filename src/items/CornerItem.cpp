@@ -195,7 +195,7 @@ void CornerItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 			qreal W2 = 2 * v2.x();
             		qreal H2 = 2 * v2.y();
 			
-			qDebug() << "#"<<counter<<" v:"<<v<<", W:"<<W<<", H:"<<H<<", d:"<<d<<", m_corner:"<<m_corner<<", pos:"<<pos()<<", event->pos:"<<event->pos()<<", startPos:"<<m_startPos<<", W2:"<<W2<<", H2:"<<H2;
+			//qDebug() << "#"<<counter<<" v:"<<v<<", W:"<<W<<", H:"<<H<<", d:"<<d<<", m_corner:"<<m_corner<<", pos:"<<pos()<<", event->pos:"<<event->pos()<<", startPos:"<<m_startPos<<", W2:"<<W2<<", H2:"<<H2;
 			
 			QRectF br = boundingRect();
 			QPointF cpos = m_content->pos();
@@ -211,7 +211,7 @@ void CornerItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 				m_content->moveBy(d.x(),d.y());
 				cr.setWidth((int)(cr.width()  -d.x())); // adjust width (then height..) to compensate for moveBy()
 				cr.setHeight((int)(cr.height()-d.y()));
-				qDebug("- TopLeft (%.02f,%.02f)",d.x(),y());
+				//qDebug("- TopLeft (%.02f,%.02f)",d.x(),y());
 				
 			}
 			else
@@ -225,7 +225,7 @@ void CornerItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 // 					H = hfw;
 					
 				cr.setHeight(H);
-				qDebug("- BottomLeft (%.02f,%d)",d.x(),H);
+				//qDebug("- BottomLeft (%.02f,%d)",d.x(),H);
 			}
 			else
 			if(m_corner == Qt::TopRightCorner)
@@ -233,7 +233,7 @@ void CornerItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 				m_content->moveBy(0,d.y());
 				cr.setHeight((int)(cr.height()-d.y()));
 				cr.setWidth(W);
-				qDebug("- TopRight (%.02f,%d)",d.y(),W);
+				//qDebug("- TopRight (%.02f,%d)",d.y(),W);
 			}
 			else
 			if(m_corner == Qt::BottomRightCorner)
@@ -243,7 +243,7 @@ void CornerItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 // 				if (hfw > 1) 
 // 					H = hfw;
 				cr.setHeight(H);
-				qDebug("- BottomRight (%d,%d)",W,H);
+				//qDebug("- BottomRight (%d,%d)",W,H);
 			}
 			
 			m_content->resizeContents(cr);

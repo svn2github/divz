@@ -540,25 +540,28 @@ void TextBoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * 
 	//qDebug() << "paint(): Mark1: blockPos="<<blockPos;
 	// 1. for each Text Block
 	
+	painter->setPen(modelItem()->outlinePen());
+	painter->setBrush(modelItem()->fillBrush());
+	
 	for(int i=0; i<m_lineSpecs.size(); i++)
 	{
 		TextLineSpec ts = m_lineSpecs.at(i);
 		
-		QTextFragment frag = ts.frag;
-		if (!frag.isValid())
-			continue;
-	
-		QTextCharFormat format = frag.charFormat();
-		QFont font = format.font();
-		painter->setFont(font);
-		//painter->setPen(format.foreground().color());
-		//painter->setBrush(Qt::NoBrush);
-			
-		painter->setPen(pen);
-		painter->setBrush(brush);
-		//painter->setBrush(format.foreground().color());
-			
-		QFontMetrics metrics(format.font());
+// 		QTextFragment frag = ts.frag;
+// 		if (!frag.isValid())
+// 			continue;
+// 	
+// 		QTextCharFormat format = frag.charFormat();
+// 		QFont font = format.font();
+// 		painter->setFont(font);
+// 		//painter->setPen(format.foreground().color());
+// 		//painter->setBrush(Qt::NoBrush);
+// 			
+// 		painter->setPen(pen);
+// 		painter->setBrush(brush);
+// 		//painter->setBrush(format.foreground().color());
+// 			
+// 		QFontMetrics metrics(format.font());
 
 		//qDebug() << "paint(): Rect:"<<ts.rect<<", Text:"<<ts.text;
 		//painter->drawText(ts.point + QPoint(0,metrics.height()), ts.text);

@@ -70,6 +70,7 @@ include(3rdparty/richtextedit/richtextedit.pri)
 include(3rdparty/videocapture/videocapture.pri)
 include(3rdparty/posterazor/posterazor.pri)
 include(qvideo/qvideo.pri)
+include(qtcolorpicker/qtcolorpicker.pri)
 
 # deployment on Linux
 unix {

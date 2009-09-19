@@ -17,6 +17,7 @@
 #include <QAbstractTextDocumentLayout>
 #include <QDebug>
 
+
 VideoFileContent::VideoFileContent(QGraphicsScene * scene, QGraphicsItem * parent)
     : AbstractContent(scene, parent, false)
 //     , m_text(0)
@@ -78,16 +79,19 @@ void VideoFileContent::syncFromModelItem(AbstractVisualItem *model)
         m_dontSyncToModel = true;
 	setModelItem(model);
 	
-	QFont font;
-        VideoFileItem * boxmodel = dynamic_cast<VideoFileItem*>(model);
+	//QFont font;
+        //VideoFileItem * boxmodel = dynamic_cast<VideoFileItem*>(model);
 	
-        setFilename(boxmodel->filename());
+	
 // 	
 // 	font.setFamily(textModel->fontFamily());
 // 	font.setPointSize((int)textModel->fontSize());
 // 	setFont(font);
 	
 	AbstractContent::syncFromModelItem(model);
+	
+	qDebug() << "VideoFileContent::syncFromModel(): Got file: "<<model->fillVideoFile();
+        setFilename(model->fillVideoFile());
 	
         m_dontSyncToModel = false;
 }
@@ -105,7 +109,7 @@ AbstractVisualItem * VideoFileContent::syncToModelItem(AbstractVisualItem *model
 		return 0;
 	}
         //qDebug("TextContent:syncToModelItem: Syncing to model! Yay!");
-        boxModel->setFilename(filename());
+        boxModel->setFillVideoFile(filename());
 // 	textModel->setFontFamily(font().family());
 // 	textModel->setFontSize(font().pointSize());
 	
@@ -116,14 +120,14 @@ AbstractVisualItem * VideoFileContent::syncToModelItem(AbstractVisualItem *model
 
 void VideoFileContent::setFilename(const QString &name)
 {
-    if(!m_video->load(name))
-    {
-            qDebug() << "VideoFileContent::setFilename(): ERROR: Unable to load video"<<name;
-            return;
-    }
-    m_video->setAdvanceMode(QVideo::Manual);
-    m_video->setLooped(true);
-    m_video->play();
+	if(!m_video->load(name))
+	{
+		qDebug() << "VideoFileContent::setFilename(): ERROR: Unable to load video"<<name;
+		return;
+	}
+	m_video->setAdvanceMode(QVideo::Manual);
+	m_video->setLooped(true);
+	m_video->play();
 }
 
 QPixmap VideoFileContent::renderContent(const QSize & size, Qt::AspectRatioMode /*ratio*/) const
@@ -187,6 +191,14 @@ void VideoFileContent::paint(QPainter * painter, const QStyleOptionGraphicsItem 
 
         painter->drawImage(QPoint(0,0), m_image);
 	painter->restore();
+	
+	if(modelItem()->outlineEnabled())
+	{
+		painter->setPen(modelItem()->outlinePen());
+		painter->setBrush(QBrush(Qt::NoBrush));
+		painter->drawRect(QRect(QPoint(0,0),cRect.size()));
+ 	}
+ 	
 }
 
 
