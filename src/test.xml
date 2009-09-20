@@ -34,8 +34,8 @@
                 <h>895</h>
             </rect>
             <pos>
-                <x>210</x>
-                <y>364</y>
+                <x>213</x>
+                <y>314</y>
             </pos>
             <zvalue>1</zvalue>
             <opacity>1</opacity>
@@ -53,15 +53,15 @@
             <item-name>VideoItem19</item-name>
             <rect>
                 <x>-51</x>
-                <y>-38</y>
-                <w>103</w>
-                <h>77</h>
+                <y>-312</y>
+                <w>333</w>
+                <h>257</h>
             </rect>
             <pos>
-                <x>64</x>
-                <y>479</y>
+                <x>498</x>
+                <y>491</y>
             </pos>
-            <zvalue>4</zvalue>
+            <zvalue>3</zvalue>
             <opacity>1</opacity>
             <visible>1</visible>
             <frame-class>0</frame-class>
@@ -78,12 +78,12 @@
             <rect>
                 <x>-100</x>
                 <y>-75</y>
-                <w>480</w>
+                <w>488</w>
                 <h>79</h>
             </rect>
             <pos>
                 <x>263</x>
-                <y>516</y>
+                <y>521</y>
             </pos>
             <zvalue>4</zvalue>
             <opacity>1</opacity>

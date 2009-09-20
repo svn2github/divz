@@ -1,0 +1,12 @@
+-midway resize handles (e.g. centerpoint at top and bottom, left/right for one-axis resize)
+# -fixed-ratio resize using new algorithim * completed * r51
+-generic shadow renderer item (look at mirror item)
+-mirror item offset and size options
+
+
+-video frame grab for first frame
+-video "pause" icons on item
+-video trim (set A/B points)
+
+-image/video crop handle mode
+

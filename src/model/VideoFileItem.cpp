@@ -10,7 +10,6 @@ VideoFileItem::VideoFileItem() : AbstractVisualItem()
 	setFillType(AbstractVisualItem::Video);
 	setOutlineEnabled(true);
 	setOutlinePen(QPen(Qt::black,2));
-	//m_fillBrush = QBrush(Qt::Grey);
 }
 
 VideoFileItem::~VideoFileItem() {}
