@@ -351,7 +351,7 @@ MainWindow::MainWindow(QWidget * parent)
 // 	QPixmap quitpix("quit.png");
 // 	
 	QToolBar *toolbar = addToolBar("main toolbar");
-	QAction  *newAction = toolbar->addAction(QIcon(newpix), "New Text Item");
+	QAction  *newAction = toolbar->addAction(QIcon(), "New Text Item");
 // 	toolbar->addAction(QIcon(openpix), "Open File");
 // 	toolbar->addSeparator();
 // 	QAction *quit = toolbar->addAction(QIcon(quitpix), 

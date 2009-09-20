@@ -382,9 +382,18 @@ void AbstractContent::modelItemChanged(QString fieldName, QVariant value)
 void AbstractContent::setModelItem(AbstractVisualItem *model)
 {
 //	setModelItemIsChanging(true);
-        m_modelItem = model;
-
-        connect(model, SIGNAL(itemChanged(QString, QVariant)), this, SLOT(modelItemChanged(QString, QVariant)));
+	
+	if(m_modelItem != model)
+	{
+		if(m_modelItem != NULL)
+		{
+			disconnect(m_modelItem, 0, this, 0);
+		}
+		
+		m_modelItem = model;
+	
+		connect(model, SIGNAL(itemChanged(QString, QVariant)), this, SLOT(modelItemChanged(QString, QVariant)));
+	}
 }
 
 void AbstractContent::syncFromModelItem(AbstractVisualItem *model)

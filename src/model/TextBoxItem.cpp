@@ -8,6 +8,10 @@
 
 TextBoxItem::TextBoxItem() : TextItem() 
 {
+	setFillType(AbstractVisualItem::Solid);
+	setOutlineEnabled(true);
+	setOutlinePen(QPen(Qt::black,1.5));
+	setFillBrush(QBrush(Qt::white));
 }
 
 TextBoxItem::~TextBoxItem() {}

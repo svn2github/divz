@@ -66,12 +66,13 @@ TextBoxContent::TextBoxContent(QGraphicsScene * scene, QGraphicsItem * parent)
 	m_shapeEditor->setControlPoints(QList<QPointF>() << QPointF(-100, -50) << QPointF(-10, 40) << QPointF(100, -50) << QPointF(100, 50));
 	connect(m_shapeEditor, SIGNAL(shapeChanged(const QPainterPath &)), this, SLOT(setShapePath(const QPainterPath &)));
 	
-	m_dontSyncToModel = false;
 	
 	connect(this, SIGNAL(resized()), this, SLOT(delayContentsResized()));
 	
 	for(int i=0;i<m_cornerItems.size();i++)
 		m_cornerItems.at(i)->setDefaultLeftOp(CornerItem::Scale);
+		
+	m_dontSyncToModel = false;
 }
 
 TextBoxContent::~TextBoxContent()
@@ -172,6 +173,9 @@ void TextBoxContent::syncFromModelItem(AbstractVisualItem *model)
         m_dontSyncToModel = true;
 	setModelItem(model);
 	
+	static int x = 0;
+	x++;
+	//qDebug() << x<<": TextBoxContent::syncFromModelItem() mark";
 	QFont font;
 	TextItem * textModel = dynamic_cast<TextItem*>(model);
 	
@@ -199,6 +203,7 @@ void TextBoxContent::syncFromModelItem(AbstractVisualItem *model)
 		m_shapeEditor->setControlPoints(points);
 	}
 	
+	
 	AbstractContent::syncFromModelItem(model);
 	
         m_dontSyncToModel = false;
@@ -206,9 +211,9 @@ void TextBoxContent::syncFromModelItem(AbstractVisualItem *model)
 
 AbstractVisualItem * TextBoxContent::syncToModelItem(AbstractVisualItem *model)
 {
-	setModelItemIsChanging(true);
-	
 	TextItem * textModel = dynamic_cast<TextItem*>(AbstractContent::syncToModelItem(model));
+	
+	setModelItemIsChanging(true);
 	
 	if(!textModel)
 	{

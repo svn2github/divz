@@ -7,6 +7,10 @@
 
 BoxItem::BoxItem() : AbstractVisualItem() 
 {
+	setFillType(AbstractVisualItem::Solid);
+	setOutlineEnabled(true);
+	setOutlinePen(QPen(Qt::black,3));
+	setFillBrush(QBrush(Qt::white));
 }
 
 BoxItem::~BoxItem() {}

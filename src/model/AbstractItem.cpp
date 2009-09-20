@@ -1,4 +1,5 @@
 #include "AbstractItem.h"
+#include <QDebug>
 
 AbstractItem::AbstractItem() :
 	  m_isBeingLoaded(false)
@@ -12,8 +13,10 @@ void AbstractItem::setChanged(QString name, QVariant value)
 {
 	if(!isBeingLoaded())
 	{
+		//qDebug() << "AbstractItem::setChanged: itemName:"<<itemName()<<", name:"<<name<<", value:"<<value;
 		emit itemChanged(name,value);
 		m_isChanged = true;
+		
 	}
 }
 

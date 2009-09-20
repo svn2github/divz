@@ -331,18 +331,14 @@ void AbstractVisualItem::toXml(QDomElement & pe) const
 
 }
 
-static QString qcolorToString(const QColor & color)
+static inline QString qcolorToString(const QColor & color)
 {
-	return QString::number(color.rgba()); //QString("%1,%2,%3,%4").arg(color.redF()).arg(color.greenF()).arg(color.blueF()).arg(color.alphaF());
+	return QString::number(color.rgba());
 }
 
-static QColor qcolorFromString(const QString & string)
+static inline QColor qcolorFromString(const QString & string)
 {
-// 	QStringList list = string.split(",");
-// 	QColor c = QColor(list[0].toInt(),list[1].toInt(),list[2].toInt(),list[3].toInt());
-// 	qDebug()<<"qcolorFromString(): string:"<<string<<", list:"<<list<<", color:"<<c;
 	return QColor(string.toUInt());
-	//return c;
 }
 
 void AbstractVisualItem::penToXml(QDomElement & domElement, QPen pen)
