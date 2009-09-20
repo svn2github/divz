@@ -59,6 +59,8 @@ MyGraphicsScene::~MyGraphicsScene()
 	m_slide = 0;
 	m_slidePrev = 0;
 	
+	qDeleteAll(m_ownedContent);
+	
 }
 
 void MyGraphicsScene::setSlide(Slide *slide, SlideTransition /*trans*/)
@@ -74,7 +76,7 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition /*trans*/)
 		if (AbstractVisualItem * visualItem = dynamic_cast<AbstractVisualItem *>(item))
 		{
 			AbstractContent * visual = visualItem->createDelegate(this);
-			addContent(visual); // QPoint((int)visualItem->pos().x(),(int)visualItem->pos().y()));
+			addContent(visual,true); // QPoint((int)visualItem->pos().x(),(int)visualItem->pos().y()));
 		}
 	}
 }
@@ -84,7 +86,7 @@ void MyGraphicsScene::slotTransitionStep()
 	// TBD
 }
 
-void MyGraphicsScene::addContent(AbstractContent * content) // const QPoint & pos)
+void MyGraphicsScene::addContent(AbstractContent * content, bool takeOwnership) // const QPoint & pos)
 {
 	connect(content, SIGNAL(configureMe(const QPoint &)), this, SLOT(slotConfigureContent(const QPoint &)));
 	//connect(content, SIGNAL(backgroundMe()), this, SLOT(slotBackgroundContent()));
@@ -93,11 +95,17 @@ void MyGraphicsScene::addContent(AbstractContent * content) // const QPoint & po
 	/*
 	if (!pos.isNull())
 		content->setPos(pos);
-	content->setZValue(m_content.isEmpty() ? 1 : (m_content.last()->zValue() + 1));
 	//content->setCacheMode(QGraphicsItem::DeviceCoordinateCache);*/
+	if(content->zValue() == 0)
+	{
+		content->setZValue(m_content.isEmpty() ? 1 : (m_content.last()->zValue() + 1));
+	}
 	content->show();
 	
 	m_content.append(content);
+	
+	if(takeOwnership)
+		m_ownedContent.append(content);
 }
 
 static QPoint nearCenter(const QRectF & rect)

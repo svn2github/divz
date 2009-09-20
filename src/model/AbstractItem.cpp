@@ -1,6 +1,9 @@
 #include "AbstractItem.h"
 
-AbstractItem::AbstractItem() {}
+AbstractItem::AbstractItem() :
+	  m_isBeingLoaded(false)
+	, m_isChanged(false)
+{}
 
 ITEM_PROPSET(AbstractItem, ItemId,   quint32, itemId);
 ITEM_PROPSET(AbstractItem, ItemName, QString, itemName);

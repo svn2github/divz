@@ -3,6 +3,11 @@
 
 #include <QThread>
 
+// Defn from http://gcc.gnu.org/ml/gcc-bugs/2002-10/msg00259.html
+#ifndef INT64_C
+# define INT64_C(c) c ## LL
+#endif
+
 extern "C" {
 #include "libavcodec/avcodec.h"
 #include "libavformat/avformat.h"

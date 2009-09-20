@@ -154,10 +154,19 @@ class MyGraphicsView : public QGraphicsView
 			setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 			setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 			setInteractive(true);
-			setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing /*| QPainter::SmoothPixmapTransform */);
+			setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing | QPainter::SmoothPixmapTransform );
 			setDragMode(QGraphicsView::RubberBandDrag);
-			setAcceptDrops(true);
+			//setAcceptDrops(true);
 			setFrameStyle(QFrame::NoFrame);
+			
+			setRenderHint( QPainter::TextAntialiasing, true);
+			setRenderHint( QPainter::Antialiasing, true );
+			
+// 			setCacheMode(QGraphicsView::CacheBackground);
+// 			setViewportUpdateMode(QGraphicsView::BoundingRectViewportUpdate);
+// 			setOptimizationFlags(QGraphicsView::DontSavePainterState);
+// 			setViewportUpdateMode(QGraphicsView::SmartViewportUpdate);
+			
 			
 			setTransformationAnchor(AnchorUnderMouse);
 			setResizeAnchor(AnchorViewCenter);
@@ -368,12 +377,9 @@ MainWindow::MainWindow(QWidget * parent)
 	
 	//qDebug("Checking for OpenGL...");
 	#ifndef QT_NO_OPENGL
-		graphicsView->setViewport(new QGLWidget()); //QGLFormat(QGL::SampleBuffers)));
+		//graphicsView->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
 		qDebug("Loaded OpenGL viewport.");
 	#endif
-	graphicsView->setRenderHint( QPainter::TextAntialiasing, true);
-	graphicsView->setRenderHint( QPainter::Antialiasing, true );
-	
 	
 // 	SimpleTextItem * textItem = new SimpleTextItem("Hello, World");
 // 	QPen textPen;

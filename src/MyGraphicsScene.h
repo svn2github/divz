@@ -44,9 +44,10 @@ class MyGraphicsScene : public QGraphicsScene
 		
 	private:
 // 		TextContent * createText(const QPoint & pos);
-		void addContent(AbstractContent * content); //, const QPoint & pos);
+		void addContent(AbstractContent * content, bool takeOnwership = false); //, const QPoint & pos);
 	
 		QList<AbstractContent *> m_content;
+		QList<AbstractContent *> m_ownedContent;
 		QList<GenericItemConfig *> m_configs;
 		
 		Slide * m_slide;

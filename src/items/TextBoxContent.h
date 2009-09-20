@@ -16,7 +16,7 @@ class TextLineSpec
 		frag=tf; 
 		rect=r; 
 		text=txt;
-		path.addText(rect.topLeft(),frag.charFormat().font(),text);
+		//path.addText(rect.topLeft(),frag.charFormat().font(),text);
 	}
 	
 	
@@ -26,7 +26,7 @@ protected:
 	QTextFragment frag;
 	QString text;
 	QRect rect;
-	QPainterPath path;
+	//QPainterPath path;
 };
 
 /// \brief TODO
@@ -98,6 +98,8 @@ class TextBoxContent : public AbstractContent
         BezierCubicItem * m_shapeEditor;
         QPainterPath m_shapePath;
         QRect m_shapeRect;
+        
+        QPainterPath m_textPath;
 };
 
 #endif

@@ -56,6 +56,9 @@ XmlRead::XmlRead(const QString & filePath)
 	}
 	file.close();
 	
+	delete error;
+	error = 0;
+	
 	QDomElement root = doc.documentElement(); // The root node
 // 	m_projectElement = root.firstChildElement("project"); // Get the project node
 // 	m_deskElement = root.firstChildElement("desk");

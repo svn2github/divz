@@ -27,9 +27,8 @@ class AbstractContent : public AbstractDisposeable
 		// ::AbstractDisposeable
 		void dispose();
 		
-		// HACK for now, not setting virtual so I dont have to edit all the child classes - for now, will edit one-by-one
-		void syncFromModelItem(AbstractVisualItem*);
-		AbstractVisualItem * syncToModelItem(AbstractVisualItem *model); //defaults to m_modelItem
+		virtual void syncFromModelItem(AbstractVisualItem*);
+		virtual AbstractVisualItem * syncToModelItem(AbstractVisualItem *model); //defaults to m_modelItem
 		
 		// size
 		QRect contentsRect() const;

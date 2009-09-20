@@ -178,7 +178,7 @@ bool AbstractVisualItem::fromXml(QDomElement & pe)
 // 		{
 			QPen line = penFromXml(domElement);
 			
-			qDebug() << "fromXml:"<<itemName()<<": hasOutline:"<<hasOutline<<", pen: "<<line;
+			//qDebug() << "fromXml:"<<itemName()<<": hasOutline:"<<hasOutline<<", pen: "<<line;
  			setOutlinePen(line);
 // 		}
 	}

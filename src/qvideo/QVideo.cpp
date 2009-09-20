@@ -24,6 +24,10 @@ QVideo::QVideo(const QString & filename, QObject * parent) : QObject(parent),
 	connect(this, SIGNAL(startDecode()), m_video_decoder, SLOT(decode()));
 	connect(m_video_decoder, SIGNAL(reachedEnd()), this, SLOT(determineVideoEndAction()));
 	connect(m_video_decoder, SIGNAL(ready(bool)), this, SLOT(setReady(bool)));
+	
+	// just a random default value
+	m_expectedDelay = 999;
+	m_last_frame_shown = 0;
 
 	setAdvanceMode(QVideo::RealTime);
 
@@ -67,6 +71,8 @@ QVideo::~QVideo()
 {
 	delete m_screen;
 	m_screen = 0;
+	
+	unload();
 }
 
 bool QVideo::load(const QString & filename)

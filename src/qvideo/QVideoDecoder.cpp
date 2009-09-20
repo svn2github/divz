@@ -46,8 +46,19 @@ QVideoDecoder::~QVideoDecoder()
 	if(m_video->m_video_loaded)
 	{
 		freeResources();
+		
+	}
+	
+	if(m_sws_context != NULL)
+	{
 		sws_freeContext(m_sws_context);
 		m_sws_context = NULL;
+	}
+	
+	if(m_frame != NULL)
+	{
+		delete m_frame;
+		m_frame = 0;
 	}
 }
 

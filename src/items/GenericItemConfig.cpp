@@ -159,6 +159,8 @@ GenericItemConfig::GenericItemConfig(AbstractContent * content, QWidget *parent)
 	connect(m_commonUi->bgGradient, SIGNAL(toggled(bool)), this, SLOT(slotBgGradient(bool)));
 	connect(m_commonUi->bgImage, SIGNAL(toggled(bool)), this, SLOT(slotBgImage(bool)));
 	connect(m_commonUi->bgVideo, SIGNAL(toggled(bool)), this, SLOT(slotBgVideo(bool)));
+	
+	m_commonUi->tabWidget->setCurrentIndex(0);
 }
 
 GenericItemConfig::~GenericItemConfig()
@@ -325,9 +327,11 @@ void GenericItemConfig::slotVideoBrowse()
 	{
 		m_commonUi->videoFilenameBox->setText(fileName);
 		m_commonUi->bgVideo->setChecked(true);
-		m_content->modelItem()->setFillType(AbstractVisualItem::Video);
+		//qDebug() << "GenericItemConfig::slotVideoBrowse(): item:"<<m_content->modelItem()->itemName()<<": Got filename: "<<fileName;
 		m_content->modelItem()->setFillVideoFile(fileName);
-		qDebug() << "slotVideoBrowse(): Got filename: "<<fileName;
+		//qDebug() << "GenericItemConfig::slotVideoBrowse(): item:"<<m_content->modelItem()->itemName()<<": Done setting video.";
+		m_content->modelItem()->setFillType(AbstractVisualItem::Video);
+		
 		
 	}
 }
@@ -350,7 +354,6 @@ void slotOutlineEnabled(bool);
 void GenericItemConfig::slotOutlineEnabled(bool flag)
 {
 	m_content->modelItem()->setOutlineEnabled(flag);
-	qDebug() << "slotOutlineEnabled: flag:"<<flag;
 }
 
 void GenericItemConfig::slotShadowEnabled(bool flag)

@@ -77,7 +77,8 @@ QWidget * VideoFileContent::createPropertyWidget()
 void VideoFileContent::syncFromModelItem(AbstractVisualItem *model)
 {
         m_dontSyncToModel = true;
-	setModelItem(model);
+	if(!modelItem())
+		setModelItem(model);
 	
 	//QFont font;
         //VideoFileItem * boxmodel = dynamic_cast<VideoFileItem*>(model);
@@ -90,7 +91,7 @@ void VideoFileContent::syncFromModelItem(AbstractVisualItem *model)
 	
 	AbstractContent::syncFromModelItem(model);
 	
-	qDebug() << "VideoFileContent::syncFromModel(): Got file: "<<model->fillVideoFile();
+	//qDebug() << "VideoFileContent::syncFromModel(): Got file: "<<model->fillVideoFile();
         setFilename(model->fillVideoFile());
 	
         m_dontSyncToModel = false;
@@ -109,7 +110,7 @@ AbstractVisualItem * VideoFileContent::syncToModelItem(AbstractVisualItem *model
 		return 0;
 	}
         //qDebug("TextContent:syncToModelItem: Syncing to model! Yay!");
-        boxModel->setFillVideoFile(filename());
+        //boxModel->setFillVideoFile(filename());
 // 	textModel->setFontFamily(font().family());
 // 	textModel->setFontSize(font().pointSize());
 	
@@ -158,7 +159,7 @@ int VideoFileContent::contentHeightForWidth(int width) const
 {
 // 	// if no text size is available, use default
 // 	if (m_textRect.width() < 1 || m_textRect.height() < 1)
-		return AbstractContent::contentHeightForWidth(width);
+		//return AbstractContent::contentHeightForWidth(width);
         return (m_imageSize.height() * width) / m_imageSize.width();
 }
 
@@ -175,8 +176,8 @@ void VideoFileContent::paint(QPainter * painter, const QStyleOptionGraphicsItem 
         {
                 qreal xScale = (qreal)cRect.width() / (qreal)sRect.width();
                 qreal yScale = (qreal)cRect.height() / (qreal)sRect.height();
-                if (!qFuzzyCompare(xScale, 1.0) || !qFuzzyCompare(yScale, 1.0))
-                    painter->scale(xScale, yScale);
+                 if (!qFuzzyCompare(xScale, 1.0) || !qFuzzyCompare(yScale, 1.0))
+                     painter->scale(xScale, yScale);
         }
         /*
 	QPen pen;
@@ -189,14 +190,39 @@ void VideoFileContent::paint(QPainter * painter, const QStyleOptionGraphicsItem 
 	painter->drawRect(QRect(QPoint(0,0),cRect.size()));
         */
 
-        painter->drawImage(QPoint(0,0), m_image);
-	painter->restore();
+        painter->drawImage(0,0, m_image);
+        
+        painter->restore();
+	
+	
+        if(m_imageSize.width() <= 0)
+        {
+        	QRect fillRect = cRect;
+        	
+        	if(modelItem()->outlineEnabled())
+        	{
+			QPen p = modelItem()->outlinePen();
+			painter->setPen(p);
+			painter->setBrush(QBrush(Qt::NoBrush));
+			
+			int w = p.width();
+			fillRect.adjust(w/2,w/2,-w/2,-w/2);
+		}
+		
+		painter->fillRect(fillRect,QBrush(Qt::gray));
+        }
+        
 	
 	if(modelItem()->outlineEnabled())
 	{
-		painter->setPen(modelItem()->outlinePen());
+		QPen p = modelItem()->outlinePen();
+		painter->setPen(p);
 		painter->setBrush(QBrush(Qt::NoBrush));
-		painter->drawRect(QRect(QPoint(0,0),cRect.size()));
+		
+		QRect lineRect = cRect;
+		int w = p.width();
+		lineRect.adjust(w/2,w/2,-w/2,-w/2);
+		painter->drawRect(lineRect);
  	}
  	
 }
@@ -208,10 +234,13 @@ void VideoFileContent::setVideoFrame(QFFMpegVideoFrame frame)
 
         if(m_imageSize != m_image.size())
         {
-                prepareGeometryChange();
+                //prepareGeometryChange();
                 m_imageSize = m_image.size();
 
-                // Adjust scaling while maintaining aspect ratio
+               /* // Adjust scaling while maintaining aspect ratio
+                QRect c = contentsRect();
+                c.setSize(m_imageSize);
+                */
                 resizeContents(contentsRect(),true);
         }
 

@@ -412,176 +412,11 @@ void TextBoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * 
 	// paint parent
 	AbstractContent::paint(painter, option, widget);
 	
-	// check whether we're drawing shaped
-	const bool shapedPaint = hasShape() && !m_shapeRect.isEmpty();
-	QPointF shapeOffset = m_shapeRect.topLeft();
-	
-	// scale painter for adapting the Text Rect to the Contents Rect
-	QRect cRect = contentsRect();
-	QRect sRect = shapedPaint ? m_shapeRect : m_textRect;
 	painter->save();
-	painter->translate(cRect.topLeft());
-	qreal xScale = 1, yScale = 1;
-	if (sRect.width() > 0 && sRect.height() > 0)
-	{
-		xScale = (qreal)cRect.width() / (qreal)sRect.width();
-		yScale = (qreal)cRect.height() / (qreal)sRect.height();
-		//if (!qFuzzyCompare(xScale, 1.0) || !qFuzzyCompare(yScale, 1.0))
-		//painter->scale(xScale, yScale);
-		
-	}
-	
-	// shape
-	//const bool drawHovering = RenderOpts::HQRendering ? false : isSelected();
-	if (shapedPaint)
-		painter->translate(-shapeOffset);
-	//if (shapedPaint && drawHovering)
-	//    painter->strokePath(m_shapePath, QPen(Qt::red, 0));
-	
-	QPen pen;
-	qreal w = 1.5; ///qMax(xScale, yScale);
-	//qDebug("Pen Width: %.04f (%.02f, %.02f)",w,xScale,yScale);
- 	pen.setWidthF(w);
- 	pen.setColor(QColor(0,0,0,255));
- 
- 	QBrush brush(QColor(255,255,255,255));
-	
-	
-	#if 0
-	// standard rich text document drawing
-	QAbstractTextDocumentLayout::PaintContext pCtx;
-	m_text->documentLayout()->draw(painter, pCtx);
-	#else
-	#if 0
-	
-	// manual drawing
-	QPointF blockPos = shapedPaint ? QPointF(0, 0) : -m_textRect.topLeft();
-	
-	//qDebug("paint(): BEGIN");
-	//qDebug() << "paint(): Mark1: blockPos="<<blockPos;
-	// 1. for each Text Block
-	int blockRectIdx = 0;
-	for (QTextBlock tb = m_text->begin(); tb.isValid(); tb = tb.next()) 
-	{
-		if (!tb.isVisible() || blockRectIdx > m_blockRects.size())
-			continue;
-	
-		// 1.1. compute text insertion position
-		const QRect & blockRect = m_blockRects[blockRectIdx++];
-		QPointF iPos = shapedPaint ? blockPos : blockPos - blockRect.topLeft();
-		blockPos += QPointF(0, blockRect.height());
-	
-		//qDebug() << "paint(): Mark2: blockPos="<<blockPos;
-		
-		qreal curLen = 8;
-	
-		// 1.2. iterate over text fragments
-		for (QTextBlock::iterator tbIt = tb.begin(); !(tbIt.atEnd()); ++tbIt) 
-		{
-			QTextFragment frag = tbIt.fragment();
-			if (!frag.isValid())
-				continue;
-		
-			// 1.2.1. setup painter and metrics for text fragment
-			QTextCharFormat format = frag.charFormat();
-			QFont font = format.font();
-			painter->setFont(font);
-			painter->setPen(format.foreground().color());
-			painter->setBrush(Qt::NoBrush);
-			
-// 			painter->setPen(pen);
-// 			painter->setBrush(brush);
-
-			
-			QFontMetrics metrics(font);
-		
-			// 1.2.2. draw each character
-			QString text = frag.text();
-			foreach (const QChar & textChar, text) 
-			{
-				if (shapedPaint) 
-				{
-					// find point on shape and angle
-					qreal interval = metrics.width(textChar);
-					qreal t = m_shapePath.percentAtLength(curLen);
-					QPointF pt = m_shapePath.pointAtPercent(t);
-					qreal angle = -m_shapePath.angleAtPercent(t);
-			
-					// draw rotated letter
-					painter->save();
-					painter->translate(pt);
-					painter->rotate(angle);
-					painter->drawText(iPos, textChar);
-					painter->restore();
-			
-					curLen += interval;
-				} 
-				else 
-				{
-					painter->drawText(iPos, textChar);
-					
-					//qDebug() << "paint(): Mark3: iPos="<<iPos;
-					
-// 					QPainterPath p;
-// 					p.addText(iPos,font,textChar);
-// 					painter->drawPath(p);
-	
-					iPos += QPointF(metrics.width(textChar), 0);
-				}
-			}
-		}
-	}
-	
-	#else
-	// manual drawing
-	//QPointF blockPos = shapedPaint ? QPointF(0, 0) : -m_textRect.topLeft();
-	
-	//qDebug("paint(): BEGIN");
-	//qDebug() << "paint(): Mark1: blockPos="<<blockPos;
-	// 1. for each Text Block
-	
+	painter->translate(contentsRect().topLeft());
 	painter->setPen(modelItem()->outlinePen());
 	painter->setBrush(modelItem()->fillBrush());
-	
-	for(int i=0; i<m_lineSpecs.size(); i++)
-	{
-		TextLineSpec ts = m_lineSpecs.at(i);
-		
-// 		QTextFragment frag = ts.frag;
-// 		if (!frag.isValid())
-// 			continue;
-// 	
-// 		QTextCharFormat format = frag.charFormat();
-// 		QFont font = format.font();
-// 		painter->setFont(font);
-// 		//painter->setPen(format.foreground().color());
-// 		//painter->setBrush(Qt::NoBrush);
-// 			
-// 		painter->setPen(pen);
-// 		painter->setBrush(brush);
-// 		//painter->setBrush(format.foreground().color());
-// 			
-// 		QFontMetrics metrics(format.font());
-
-		//qDebug() << "paint(): Rect:"<<ts.rect<<", Text:"<<ts.text;
-		//painter->drawText(ts.point + QPoint(0,metrics.height()), ts.text);
-		//painter->drawText(ts.point, ts.text);
-		
-		//painter->drawText(ts.rect.topLeft(), ts.text);
-// 		QPainterPath p;
-// 		p.addText(ts.rect.topLeft(),font,ts.text);
- 		painter->drawPath(ts.path);
-		
-// 		painter->setPen(Qt::red);
-// 		painter->setBrush(Qt::NoBrush);
-// 		painter->drawRect(ts.rect);
-		
-		//painter->drawText(ts.rect.topLeft() + QPoint(0,metrics.height()), ts.text);
-	}
-	
-	#endif
-	#endif
-	
+	painter->drawPath(m_textPath);
 	painter->restore();
 }
 
@@ -626,6 +461,8 @@ void TextBoxContent::updateTextConstraints()
 #else
         bool add_space = false;
 #endif
+	
+	QPainterPath textPath;
 	
 	for (QTextBlock tb = m_text->begin(); tb.isValid(); tb = tb.next()) 
 	{
@@ -721,6 +558,7 @@ void TextBoxContent::updateTextConstraints()
                                                 // Internally, it also converts the text (visualTmp) to a QPainterPath
                                                 // for quicker rendering.
                                                 TextLineSpec ts(frag,QRect(cursor - tmpRect.topLeft(), tmpRect.size()), visualTmp);
+                                                textPath.addText(ts.rect.topLeft(),ts.frag.charFormat().font(),ts.text);
 						m_lineSpecs.append(ts);
 						
                                                 // Unify the linespec rect with the cursor to create the bounding rect
@@ -748,6 +586,7 @@ void TextBoxContent::updateTextConstraints()
 						QRect tmpRect = metrics.boundingRect(tmp+(add_space ? " " : ""));
 						
 						TextLineSpec ts(frag,QRect(cursor - tmpRect.topLeft(), tmpRect.size()),visualTmp);
+						textPath.addText(ts.rect.topLeft(),ts.frag.charFormat().font(),ts.text);
 						m_lineSpecs.append(ts);
 						
 						cursorRect |= ts.rect;
@@ -770,6 +609,7 @@ void TextBoxContent::updateTextConstraints()
                                 // This block handles non-broken frags - just add the entire fragment to the line
                                 // and continue on (not wrapping cursor)
                                 TextLineSpec ts(frag,QRect(cursor - textRect.topLeft(), textRect.size()),cursor.x() == 0 ? trimLeft(text) : text);
+                                textPath.addText(ts.rect.topLeft(),ts.frag.charFormat().font(),ts.text);
 				m_lineSpecs.append(ts);
 				
 				cursorRect |= ts.rect;
@@ -811,6 +651,7 @@ void TextBoxContent::updateTextConstraints()
 	//qDebug() << "updateTextConstraints(): WrapAlpha: cursorRect:"<<cursorRect<<", contentsRect:"<<contentsRect();
 	
 	m_textRect = cursorRect;
+	m_textPath = textPath;
 	
         // Adjust the bounding rect *height* to our document wrapped height, but leave
         // the width alone.

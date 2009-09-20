@@ -373,6 +373,10 @@ void AbstractContent::modelItemChanged(QString fieldName, QVariant value)
 	{
 		syncFromModelItem(m_modelItem);
 	}
+	else
+	{
+		//qDebug() << "AbstractContent::modelItemChanged(): item:"<<(modelItem()?modelItem()->itemName() : "NULL")<<" Ignored signal because m_modelItemIsChanging:"<<m_modelItemIsChanging<<", or m_modelItem:"<<(m_modelItem?"<set>":"<not set>");
+	}
 }
 
 void AbstractContent::setModelItem(AbstractVisualItem *model)
@@ -391,6 +395,8 @@ void AbstractContent::syncFromModelItem(AbstractVisualItem *model)
 	
 	if(!modelItem())
 		setModelItem(model);
+	
+	//qDebug() << "AbstractContent::syncFromModelItem(): item:"<<(modelItem()?modelItem()->itemName() : "NULL")<<": doing sync";
 	
 	QRectF r = model->contentsRect();
 	resizeContents(QRect((int)r.left(),(int)r.top(),(int)r.width(),(int)r.height()));
