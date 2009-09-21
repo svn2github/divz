@@ -62,5 +62,5 @@ XmlSave::~XmlSave()
 
 void XmlSave::saveSlide(Slide * slide)
 {
-	slide->toXml(m_contentElements, doc);
+	slide->toXml(m_contentElements);
 }

@@ -24,16 +24,18 @@ RESOURCES += dviz.qrc
 HEADERS += \
 	MainWindow.h \
 	MyGraphicsScene.h \
-	RenderOpts.h \
-	XmlRead.h \
-	XmlSave.h 
+	RenderOpts.h 
+
+#	XmlRead.h \
+#	XmlSave.h 
 	
 SOURCES += \
 	MainWindow.cpp \
 	MyGraphicsScene.cpp \
-	XmlRead.cpp \
-	XmlSave.cpp \
 	main.cpp 
+
+#	XmlRead.cpp \
+#	XmlSave.cpp \
 
 QT += core \
     gui \

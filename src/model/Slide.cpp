@@ -9,10 +9,14 @@
 #include <assert.h>
 
 Slide::Slide()  {}
-Slide::~Slide() {
-
+Slide::~Slide() 
+{
 	qDeleteAll(m_items);
 }
+
+void Slide::setSlideId(int x)     { m_slideId = x; }
+void Slide::setSlideNumber(int x) { m_slideNumber = x; }
+
 
 QList<AbstractItem *> Slide::itemList() { return m_items; }
 
@@ -32,6 +36,9 @@ bool Slide::fromXml(QDomElement & pe)
 {
 	qDeleteAll(m_items);
 	m_items.clear();
+	
+	m_slideNumber = pe.attribute("number").toInt();
+	m_slideId = pe.attribute("id").toInt();
 
 	// for each child of 'slide'
 	for (QDomElement element = pe.firstChildElement(); !element.isNull(); element = element.nextSiblingElement()) 
@@ -69,36 +76,23 @@ bool Slide::fromXml(QDomElement & pe)
 			delete content;
 			continue;
 		}
-		
-	
-// 		// restore the background element of the desk
-// 		if (element.firstChildElement("set-as-background").isElement()) 
-// 		{
-// 			if (desk->m_backContent) {
-// 				qWarning("XmlRead::readContent: only 1 element with <set-as-background/> allowed");
-// 				continue;
-// 			}
-// 			desk->setBackContent(content);
-// 		}
 	}
 	
 	return true;
 }
 
-void Slide::toXml(QDomElement & pe, QDomDocument & doc) const
+void Slide::toXml(QDomElement & pe) const
 {
+	QDomDocument doc = pe.ownerDocument();
+	
+	pe.setAttribute("number",m_slideNumber);
+	pe.setAttribute("id",m_slideId);
+	
 	foreach (AbstractItem * content, m_items) 
 	{
 		QDomElement element = doc.createElement("renamed-element");
 		pe.appendChild(element);
 		content->toXml(element);
-	
-// 		// add a flag to the background element
-// 		if (desk->m_backContent == content) 
-// 		{
-// 			QDomElement bgEl = doc.createElement("set-as-background");
-// 			element.appendChild(bgEl);
-// 		}
 	}
 
 }

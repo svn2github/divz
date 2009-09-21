@@ -2,7 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include "model/Slide.h"
+#include "model/Document.h"
 class MyGraphicsScene;
 
 class MainWindow : public QMainWindow
@@ -19,7 +19,8 @@ class MainWindow : public QMainWindow
         
     	
     private:
-    	Slide *m_slide;
+    	//Slide *m_slide;
+    	Document m_doc;
     	MyGraphicsScene *m_scene;
 
 };

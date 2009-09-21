@@ -9,6 +9,10 @@
 class Slide : public QObject
 {
 	Q_OBJECT
+	
+	Q_PROPERTY(int slideId READ slideId WRITE setSlideId);
+	Q_PROPERTY(int slideNumber READ slideNumber WRITE setSlideNumber);
+
 
 public:
 	Slide();
@@ -23,13 +27,15 @@ public:
 // 	TextItem * createText(QPoint);
 	
 	bool fromXml(QDomElement & parentElement);
-        void toXml(QDomElement & parentElement, QDomDocument & doc) const;
+        void toXml(QDomElement & parentElement) const;
+	
+	ITEM_PROPDEF(SlideId,		int,	slideId);
+	ITEM_PROPDEF(SlideNumber,	int,	slideNumber);
 	
 private:
 	QList<AbstractItem *> m_items;
-	
-	
-
+	int m_slideNumber;
+	int m_slideId;
 };
 
 

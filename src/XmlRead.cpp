@@ -60,40 +60,11 @@ XmlRead::XmlRead(const QString & filePath)
 	error = 0;
 	
 	QDomElement root = doc.documentElement(); // The root node
-// 	m_projectElement = root.firstChildElement("project"); // Get the project node
-// 	m_deskElement = root.firstChildElement("desk");
-	m_contentElement = root.firstChildElement("slide");
+	m_contentElement = root.firstChildElement("groups");
 }
 
-// void XmlRead::readProject(MainWindow *mainWindow)
-// {
-//     ModeInfo modeInfo;
-//     QDomElement modeElement = m_projectElement.firstChildElement("mode");
-//     QDomElement sizeElement = modeElement.firstChildElement("size");
-//     if (!sizeElement.isNull()) {
-//         float w = sizeElement.firstChildElement("w").text().toFloat();
-//         float h = sizeElement.firstChildElement("h").text().toFloat();
-//         modeInfo.setRealSizeInches(w, h);
-// 
-//     }
-//     QDomElement dpiElement = sizeElement.firstChildElement("dpi");
-//     if(!dpiElement.isNull()) {
-//         int dpi = dpiElement.text().toInt();
-//         modeInfo.setPrintDpi(dpi);
-//     }
-// 
-//     int mode = modeElement.firstChildElement("id").text().toInt();
-//     mainWindow->setModeInfo(modeInfo);
-//     mainWindow->restoreMode(mode);
-// }
-// 
-void XmlRead::readSlide(Slide *slide)
+void XmlRead::readSlide(SlideGroupSet *groupset)
 {
-    // clear Desk [TODO: clear every content! or disasters happen]
-//     qDeleteAll(desk->m_content);
-//     desk->m_content.clear();
-//     desk->m_configs.clear();
-//     desk->m_backContent = 0;
 
-	slide->fromXml(m_contentElement);
+	groupset->fromXml(m_contentElement);
 }

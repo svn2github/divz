@@ -9,7 +9,9 @@ HEADERS +=  \
 	ItemFactory.h \
 	TextBoxItem.h \
         BoxItem.h \
-        VideoFileItem.h
+        VideoFileItem.h \
+        SlideGroup.h \
+        Document.h
 
     
 SOURCES += \
@@ -20,4 +22,6 @@ SOURCES += \
 	ItemFactory.cpp \
 	TextBoxItem.cpp \
         BoxItem.cpp \
-        VideoFileItem.cpp
+        VideoFileItem.cpp \
+        SlideGroup.cpp \
+        Document.cpp

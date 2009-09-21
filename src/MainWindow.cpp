@@ -395,32 +395,63 @@ MainWindow::MainWindow(QWidget * parent)
 // 	
 	
 	//TextContent * text = m_scene->addTextContent();
-	m_slide = new Slide();
+	
 	
 
 	if(QFile("test.xml").exists())
 	{
-		XmlRead r("test.xml");
-		r.readSlide(m_slide);
+		m_doc.load("test.xml");
+		//r.readSlide(m_slide);
 		
-		m_scene->setSlide(m_slide);
+		qDebug("Loaded test.xml");
+		QList<SlideGroup*> glist = m_doc.groupList();
+		if(glist.size() >0)
+		{
+			SlideGroup *g = glist[0];
+			assert(g);
+			
+			QList<Slide*> slist = g->slideList();
+			if(slist.size() > 0)
+			{
+				Slide *s = slist[0];
+				assert(s);
+				m_scene->setSlide(s);
+			}
+			else
+			{	
+				qDebug("Group[0] has 0 slides");
+			}
+		}
+		else
+		{
+			qDebug("Error: No groups in test.xml");
+		}
 	}
 	else
 	{
-		m_scene->setSlide(m_slide);
-                m_scene->newTextItem("Hello, World!");
+		Slide * slide = new Slide();
+		SlideGroup *g = new SlideGroup();
+		g->addSlide(slide);
+		m_doc.addGroup(g);
+		m_scene->setSlide(slide);
+		
+		m_scene->newTextItem("Hello, World!");
+                
 	}
+	
+	
 
         setCentralWidget(graphicsView);
 }
 
 MainWindow::~MainWindow()
 {
-	XmlSave save("test.xml");
-	save.saveSlide(m_slide);
+// 	XmlSave save("test.xml");
+// 	save.saveSlide(m_slide);
+	m_doc.save("test.xml");
 	
-	delete m_slide;
-	m_slide = 0;
+// 	delete m_slide;
+// 	m_slide = 0;
 
 }
 

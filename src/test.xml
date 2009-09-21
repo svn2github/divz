@@ -1,106 +1,108 @@
 <?xml version="1.0" ?>
-<slide-group>
-    <slide>
-        <box>
-            <item-id>4</item-id>
-            <item-name>BoxItem</item-name>
-            <rect>
-                <x>-78</x>
-                <y>-62</y>
-                <w>881</w>
-                <h>88</h>
-            </rect>
-            <pos>
-                <x>43</x>
-                <y>499</y>
-            </pos>
-            <zvalue>2</zvalue>
-            <opacity>0.73</opacity>
-            <visible>1</visible>
-            <frame-class>3</frame-class>
-            <transformation yRot="0" xRot="0" zRot="0"/>
-            <fill brush-style="1" video="" image="" brush-color="4286611584" type="1"/>
-            <outline brush-style="1" pen-join="64" pen-width="3" enabled="1" brush-color="4278190080" pen-cap="16" pen-color="4278190080"/>
-            <mirror offset="3" enabled="0"/>
-            <shadow brush-style="1" offset="3" enabled="0" brush-color="4278190080"/>
-        </box>
-        <videofile>
-            <item-id>14</item-id>
-            <item-name>VideoItem14</item-name>
-            <rect>
-                <x>-597</x>
-                <y>-447</y>
-                <w>1194</w>
-                <h>895</h>
-            </rect>
-            <pos>
-                <x>213</x>
-                <y>314</y>
-            </pos>
-            <zvalue>1</zvalue>
-            <opacity>1</opacity>
-            <visible>1</visible>
-            <frame-class>0</frame-class>
-            <transformation yRot="0" xRot="0" zRot="0"/>
-            <fill brush-style="1" video="/appcluster/dviz/src/data/Ancient_Loop_2_SD.mpg" image="" brush-color="4294967295" type="4"/>
-            <outline brush-style="1" pen-join="64" pen-width="2" enabled="1" brush-color="4278190080" pen-cap="16" pen-color="4278190080"/>
-            <mirror offset="3" enabled="0"/>
-            <shadow brush-style="1" offset="3" enabled="0" brush-color="4278190080"/>
-            <filename>data/Seasons_Loop_3_SD.mpg</filename>
-        </videofile>
-        <videofile>
-            <item-id>19</item-id>
-            <item-name>VideoItem19</item-name>
-            <rect>
-                <x>-51</x>
-                <y>-312</y>
-                <w>333</w>
-                <h>257</h>
-            </rect>
-            <pos>
-                <x>498</x>
-                <y>491</y>
-            </pos>
-            <zvalue>3</zvalue>
-            <opacity>1</opacity>
-            <visible>1</visible>
-            <frame-class>0</frame-class>
-            <transformation yRot="0" xRot="0" zRot="0"/>
-            <fill brush-style="1" video="/appcluster/dviz/src/data/Seasons_Loop_4_SD.mpg" image="" brush-color="4294967295" type="4"/>
-            <outline brush-style="1" pen-join="64" pen-width="2" enabled="1" brush-color="4278190080" pen-cap="16" pen-color="4278190080"/>
-            <mirror offset="3" enabled="1"/>
-            <shadow brush-style="1" offset="3" enabled="0" brush-color="4278190080"/>
-            <filename>data/Seasons_Loop_3_SD.mpg</filename>
-        </videofile>
-        <textbox>
-            <item-id>116</item-id>
-            <item-name>TextBoxItem116</item-name>
-            <rect>
-                <x>-100</x>
-                <y>-75</y>
-                <w>488</w>
-                <h>79</h>
-            </rect>
-            <pos>
-                <x>263</x>
-                <y>521</y>
-            </pos>
-            <zvalue>4</zvalue>
-            <opacity>1</opacity>
-            <visible>1</visible>
-            <frame-class>0</frame-class>
-            <transformation yRot="0" xRot="0" zRot="0"/>
-            <fill brush-style="1" video="" image="" brush-color="4294967295" type="1"/>
-            <outline brush-style="1" pen-join="64" pen-width="1.5" enabled="1" brush-color="4278190080" pen-cap="16" pen-color="4278190080"/>
-            <mirror offset="3" enabled="1"/>
-            <shadow brush-style="1" offset="3" enabled="0" brush-color="4278190080"/>
-            <text>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
+<document title="Hello World" >
+    <group title="Test" number="0" icon="test.ico" type="0" id="0" >
+        <slide number="0" id="0" >
+            <box>
+                <item-id>4</item-id>
+                <item-name>BoxItem</item-name>
+                <rect>
+                    <x>-78</x>
+                    <y>-62</y>
+                    <w>881</w>
+                    <h>88</h>
+                </rect>
+                <pos>
+                    <x>43</x>
+                    <y>499</y>
+                </pos>
+                <zvalue>2</zvalue>
+                <opacity>0.73</opacity>
+                <visible>1</visible>
+                <frame-class>3</frame-class>
+                <transformation yRot="0" xRot="0" zRot="0" />
+                <fill brush-style="1" video="" image="" brush-color="4286611584" type="1" />
+                <outline brush-style="1" pen-join="64" pen-width="3" enabled="1" brush-color="4278190080" pen-cap="16" pen-color="4278190080" />
+                <mirror offset="3" enabled="0" />
+                <shadow brush-style="1" offset="3" enabled="0" brush-color="4278190080" />
+            </box>
+            <videofile>
+                <item-id>14</item-id>
+                <item-name>VideoItem14</item-name>
+                <rect>
+                    <x>-597</x>
+                    <y>-447</y>
+                    <w>1194</w>
+                    <h>895</h>
+                </rect>
+                <pos>
+                    <x>213</x>
+                    <y>314</y>
+                </pos>
+                <zvalue>1</zvalue>
+                <opacity>1</opacity>
+                <visible>1</visible>
+                <frame-class>0</frame-class>
+                <transformation yRot="0" xRot="0" zRot="0" />
+                <fill brush-style="1" video="/appcluster/dviz/src/data/Ancient_Loop_2_SD.mpg" image="" brush-color="4294967295" type="4" />
+                <outline brush-style="1" pen-join="64" pen-width="2" enabled="1" brush-color="4278190080" pen-cap="16" pen-color="4278190080" />
+                <mirror offset="3" enabled="0" />
+                <shadow brush-style="1" offset="3" enabled="0" brush-color="4278190080" />
+                <filename>data/Seasons_Loop_3_SD.mpg</filename>
+            </videofile>
+            <videofile>
+                <item-id>19</item-id>
+                <item-name>VideoItem19</item-name>
+                <rect>
+                    <x>-51</x>
+                    <y>-54</y>
+                    <w>144</w>
+                    <h>108</h>
+                </rect>
+                <pos>
+                    <x>692</x>
+                    <y>383</y>
+                </pos>
+                <zvalue>3</zvalue>
+                <opacity>1</opacity>
+                <visible>1</visible>
+                <frame-class>0</frame-class>
+                <transformation yRot="0" xRot="0" zRot="0" />
+                <fill brush-style="1" video="/appcluster/dviz/src/data/Seasons_Loop_4_SD.mpg" image="" brush-color="4294967295" type="4" />
+                <outline brush-style="1" pen-join="64" pen-width="2" enabled="1" brush-color="4278190080" pen-cap="16" pen-color="4278190080" />
+                <mirror offset="3" enabled="1" />
+                <shadow brush-style="1" offset="3" enabled="0" brush-color="4278190080" />
+                <filename>data/Seasons_Loop_3_SD.mpg</filename>
+            </videofile>
+            <textbox>
+                <item-id>116</item-id>
+                <item-name>TextBoxItem116</item-name>
+                <rect>
+                    <x>-100</x>
+                    <y>-75</y>
+                    <w>482</w>
+                    <h>90</h>
+                </rect>
+                <pos>
+                    <x>252</x>
+                    <y>508</y>
+                </pos>
+                <zvalue>4</zvalue>
+                <opacity>1</opacity>
+                <visible>1</visible>
+                <frame-class>0</frame-class>
+                <transformation yRot="0" xRot="0" zRot="0" />
+                <fill brush-style="1" video="" image="" brush-color="4294967295" type="1" />
+                <outline brush-style="1" pen-join="64" pen-width="1.5" enabled="1" brush-color="4278190080" pen-cap="16" pen-color="4278190080" />
+                <mirror offset="3" enabled="1" />
+                <shadow brush-style="1" offset="3" enabled="0" brush-color="4278190080" />
+                <text>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
 &lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
 p, li { white-space: pre-wrap; }
 &lt;/style>&lt;/head>&lt;body style=" font-family:'Tahoma'; font-size:40pt; font-weight:400; font-style:normal;">
 &lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-family:'Nimbus Roman No9 L'; font-size:48pt;">Welcome to PHC!&lt;/span>&lt;/p>&lt;/body>&lt;/html></text>
-            <default-font font-family="Tahoma" font-size="40"/>
-            <shape enabled="0"/>
-        </textbox>
-    </slide>
-</slide-group>
+                <default-font font-family="Tahoma" font-size="40" />
+                <shape enabled="0" />
+            </textbox>
+        </slide>
+    </group>
+</document>
