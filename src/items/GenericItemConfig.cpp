@@ -322,14 +322,14 @@ void GenericItemConfig::setBgColor(const QColor & c)
 
 void GenericItemConfig::slotVideoBrowse()
 {
-	QString fileName = QFileDialog::getOpenFileName(this, tr("Select Video"), m_commonUi->videoFilenameBox->text(), tr("Video Files (*.mpg *.mp4 *.mpeg *.avi *.mov);;Any File (*.*)"));
+	QString fileName = QFileDialog::getOpenFileName(this, tr("Select Video"), m_commonUi->videoFilenameBox->text(), tr("Video Files (*.wmv *.mpeg *.mpg *.avi *.wmv *.flv *.mov *.mp4 *.m4a *.3gp *.3g2 *.mj2 *.mjpeg *.ipod *.m4v *.gsm *.gif *.swf *.dv *.dvd *.asf *.mtv *.roq *.aac *.ac3 *.aiff *.alaw *.iif);;Any File (*.*)"));
 	if(fileName != "")
 	{
-		m_commonUi->videoFilenameBox->setText(fileName);
+		QDir current = QDir::current();
+		QString relative = current.relativeFilePath(fileName);
+		m_commonUi->videoFilenameBox->setText(relative);
 		m_commonUi->bgVideo->setChecked(true);
-		//qDebug() << "GenericItemConfig::slotVideoBrowse(): item:"<<m_content->modelItem()->itemName()<<": Got filename: "<<fileName;
-		m_content->modelItem()->setFillVideoFile(fileName);
-		//qDebug() << "GenericItemConfig::slotVideoBrowse(): item:"<<m_content->modelItem()->itemName()<<": Done setting video.";
+		m_content->modelItem()->setFillVideoFile(relative);
 		m_content->modelItem()->setFillType(AbstractVisualItem::Video);
 		
 		
@@ -339,11 +339,13 @@ void GenericItemConfig::slotVideoBrowse()
 	
 void GenericItemConfig::slotImageBrowse()
 {
-	QString fileName = QFileDialog::getOpenFileName(this, tr("Select Image"), m_commonUi->imageFilenameBox->text(), tr("Video Files (*.png *.jpg *.bmp *.xpm);;Any File (*.*)"));
+	QString fileName = QFileDialog::getOpenFileName(this, tr("Select Image"), m_commonUi->imageFilenameBox->text(), tr("Image Files (*.png *.jpg *.bmp *.xpm);;Any File (*.*)"));
 	if(fileName != "")
 	{
+		QDir current = QDir::current();
+		QString relative = current.relativeFilePath(fileName);
 		m_content->modelItem()->setFillType(AbstractVisualItem::Image);
-		m_content->modelItem()->setFillImageFile(fileName);
+		m_content->modelItem()->setFillImageFile(relative);
 		m_commonUi->imageFilenameBox->setText(fileName);
 		m_commonUi->bgImage->setChecked(true);
 	}

@@ -239,21 +239,21 @@ QRectF VideoFileContent::boundingRect() const
 
 void VideoFileContent::setVideoFrame(QFFMpegVideoFrame frame)
 {
-        m_image = *(frame.frame);
+	m_image = *(frame.frame);
 
-        if(m_imageSize != m_image.size())
-        {
-                //prepareGeometryChange();
-                m_imageSize = m_image.size();
+	if(m_imageSize != m_image.size())
+	{
+		//prepareGeometryChange();
+		m_imageSize = m_image.size();
 
-               /* // Adjust scaling while maintaining aspect ratio
-                QRect c = contentsRect();
-                c.setSize(m_imageSize);
-                */
-                resizeContents(contentsRect(),true);
-        }
+	       /* // Adjust scaling while maintaining aspect ratio
+		QRect c = contentsRect();
+		c.setSize(m_imageSize);
+		*/
+		resizeContents(contentsRect(),true);
+	}
 
-        update();
+	update();
 }
 
 
