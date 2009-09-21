@@ -8,7 +8,11 @@
 
 #include <assert.h>
 
-Slide::Slide()  {}
+Slide::Slide()  
+{
+	m_slideId = 0;
+	m_slideNumber = 0;
+}
 Slide::~Slide() 
 {
 	qDeleteAll(m_items);

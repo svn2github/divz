@@ -35,15 +35,17 @@ RESOURCES += dviz.qrc
 HEADERS += \
 	MainWindow.h \
 	MyGraphicsScene.h \
-	RenderOpts.h 
+	RenderOpts.h \
+	SlideGroupListModel.h
 
 #	XmlRead.h \
 #	XmlSave.h 
 	
 SOURCES += \
+	main.cpp \
 	MainWindow.cpp \
 	MyGraphicsScene.cpp \
-	main.cpp 
+	SlideGroupListModel.cpp
 
 #	XmlRead.cpp \
 #	XmlSave.cpp \

@@ -28,8 +28,8 @@ class VideoFileContent : public AbstractContent
         // ::AbstractContent
         QString contentName() const { return tr("VideoFile"); }
         QWidget * createPropertyWidget();
-        bool fromXml(QDomElement & parentElement);
-        void toXml(QDomElement & parentElement) const;
+//         bool fromXml(QDomElement & parentElement);
+//         void toXml(QDomElement & parentElement) const;
         QPixmap renderContent(const QSize & size, Qt::AspectRatioMode ratio) const;
         int contentHeightForWidth(int width) const;
 //         void selectionChanged(bool selected);

@@ -67,18 +67,33 @@ MyGraphicsScene::~MyGraphicsScene()
 
 void MyGraphicsScene::setSlide(Slide *slide, SlideTransition /*trans*/)
 {
+	//TODO implement slide transitions
+	if(m_slide == slide)
+	{
+		//qDebug("Not changing slide - same slide!");
+		return;
+	}
+	
+	foreach(AbstractContent *content, m_content)
+	{
+		m_content.removeAll(content);
+		removeItem(content);
+		disconnect(content, 0, 0, 0);
+		content->dispose(false);
+	}
+	clear();
+
 	m_slide = slide;
 	
 	QList<AbstractItem *> items = m_slide->itemList();
-	for(int i=0;i<items.size();i++)
+	foreach(AbstractItem *item, items)
 	{
-		AbstractItem * item = items.at(i);
 		assert(item != NULL);
 		
 		if (AbstractVisualItem * visualItem = dynamic_cast<AbstractVisualItem *>(item))
 		{
 			AbstractContent * visual = visualItem->createDelegate(this);
-			addContent(visual,true); // QPoint((int)visualItem->pos().x(),(int)visualItem->pos().y()));
+			addContent(visual, true); 
 		}
 	}
 }

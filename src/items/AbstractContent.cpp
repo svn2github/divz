@@ -106,7 +106,7 @@ AbstractContent::~AbstractContent()
 	m_modelItem = 0;
 }
 
-void AbstractContent::dispose()
+void AbstractContent::dispose(bool anim)
 {
 	// stick this item
 	setFlags((GraphicsItemFlags)0x00);
@@ -116,15 +116,18 @@ void AbstractContent::dispose()
 	
 	// little rotate animation
 	#if QT_VERSION >= 0x040600
-	QPropertyAnimation * ani = new QPropertyAnimation(this, "rotation");
-	ani->setEasingCurve(QEasingCurve::InQuad);
-	ani->setDuration(300);
-	ani->setEndValue(-30.0);
-	ani->start(QPropertyAnimation::DeleteWhenStopped);
+	if(anim)
+	{
+		QPropertyAnimation * ani = new QPropertyAnimation(this, "rotation");
+		ani->setEasingCurve(QEasingCurve::InQuad);
+		ani->setDuration(300);
+		ani->setEndValue(-30.0);
+		ani->start(QPropertyAnimation::DeleteWhenStopped);
+	}
 	#endif
 	
 	// standard disposition
-	AbstractDisposeable::dispose();
+	AbstractDisposeable::dispose(anim);
 }
 
 QRect AbstractContent::contentsRect() const

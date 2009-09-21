@@ -40,10 +40,13 @@
 #ifndef QT_NO_OPENGL
 # include <QtOpenGL/QGLWidget>
 #endif
+#include <QDockWidget>
+#include <QListView>
 
 #include <QWheelEvent>
 #include <QToolBar>
 
+#include <QDebug>
 #include <assert.h>
 
 #include "XmlRead.h"
@@ -79,68 +82,6 @@ class RubberBandStyle : public QCommonStyle
 			return QCommonStyle::styleHint(hint, option, widget, returnData);
 		}
 };
-/*
-#include <QMessageBox>
-class WarningBox : public QDialog
-{
-	public:
-		WarningBox(const QString & key, const QString & title, const QString & text)
-	#if QT_VERSION >= 0x040500
-		: QDialog(0, Qt::MSWindowsFixedSizeDialogHint | Qt::WindowTitleHint | Qt::WindowSystemMenuHint | Qt::WindowCloseButtonHint)
-	#else
-		: QDialog(0, Qt::MSWindowsFixedSizeDialogHint | Qt::WindowTitleHint | Qt::WindowSystemMenuHint)
-	#endif
-		{
-			// skip this if asked to not repeat it
-			QSettings s;
-			if (s.value(key, false).toBool())
-				return;
-		
-			// create contents
-			QLabel * label = new QLabel(this);
-			label->setTextInteractionFlags(Qt::NoTextInteraction);
-			label->setAlignment(Qt::AlignVCenter | Qt::AlignLeft);
-			label->setOpenExternalLinks(true);
-			label->setContentsMargins(2, 0, 0, 0);
-			label->setTextFormat(Qt::RichText);
-			label->setWordWrap(true);
-			label->setText(text);
-		
-			QLabel * iconLabel = new QLabel(this);
-			iconLabel->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-			iconLabel->setPixmap(style()->standardIcon(QStyle::SP_MessageBoxInformation).pixmap(32, 32));
-		
-			QCheckBox * checkBox = new QCheckBox(this);
-			checkBox->setText(tr("show this warning again next time"));
-		
-			QDialogButtonBox * buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok, Qt::Horizontal, this);
-			buttonBox->setCenterButtons(style()->styleHint(QStyle::SH_MessageBox_CenterButtons, 0, this));
-			QObject::connect(buttonBox, SIGNAL(clicked(QAbstractButton*)), this, SLOT(close()));
-			buttonBox->setFocus();
-		
-			QGridLayout * grid = new QGridLayout(this);
-			grid->addWidget(iconLabel, 0, 0, 2, 1, Qt::AlignTop);
-			grid->addWidget(label, 0, 1, 1, 1);
-			grid->addWidget(checkBox, 1, 1, 1, 1);
-			grid->addWidget(buttonBox, 2, 0, 1, 2);
-		
-			// customize and dialog
-			setWindowTitle(title);
-			setModal(true);
-			setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Preferred);
-			QSize screenSize = QApplication::desktop()->availableGeometry(QCursor::pos()).size();
-			setMinimumWidth(qMin(screenSize.width() - 480, screenSize.width()/2));
-			setMinimumHeight(190);
-			grid->activate();
-			adjustSize();
-			resize(minimumSize());
-			exec();
-		
-			// avoid popping up again, if chosen
-			if (!checkBox->isChecked())
-				s.setValue(key, true);
-		}
-};*/
 
 #include <QGraphicsView>
 class MyGraphicsView : public QGraphicsView 
@@ -243,100 +184,6 @@ class MyGraphicsView : public QGraphicsView
 
 
 
-class SimpleTextItem : public QGraphicsItemGroup
-{
-private:
-	QGraphicsSimpleTextItem * m_shadow;
-	QGraphicsSimpleTextItem * m_text;
-	bool m_shadowEnabled;
-	
-public:
-	SimpleTextItem(QString str = "") : QGraphicsItemGroup()
-	{
-		m_text   = new QGraphicsSimpleTextItem(str);
-		m_shadow = new QGraphicsSimpleTextItem(str);
-		
-// 		QPen textPenShadow;
-// 		textPenShadow.setWidthF(3);
-// 		textPenShadow.setColor(QColor(0,0,0,100));
-// 		m_shadow->setPen(textPenShadow);
-		m_shadow->setBrush(QColor(0,0,0,100));
-		
-		setZValue(1);
-		
-		addToGroup(m_shadow);
-		addToGroup(m_text);
-		
-		m_shadowEnabled = true;
-	}
-	
-	~SimpleTextItem()
-	{
-		if(m_text != NULL) 
-		{
-			delete m_text;
-			m_text = 0;
-		}
-		
-		if(m_shadow != NULL) 
-		{
-			delete m_shadow;
-			m_shadow = 0;
-		}
-	}
-	
-	bool shadowEnabled() { return m_shadowEnabled; }
-	void setShadowEnabled(bool flag) 
-	{ 
-		m_shadowEnabled = flag;
-		if(flag)
-		{
-			m_shadow->show();
-		}
-		else
-		{
-			m_shadow->hide();
-		}
-	}
-	
-	  QFont font () const { return m_text->font(); }
-	QString text () const { return m_text->text(); }
-
-	void setPen ( const QPen & pen )
-	{
-		m_text->setPen(pen);
-		//m_shadow->setPen(pen);
-	}
-	
-	void setBrush( const QBrush & brush )
-	{
-		m_text->setBrush(brush);
-		//m_shadow->setBrush(brush);
-	}
-	
-	void setFont( const QFont & font)
-	{
-		m_text->setFont(font);
-		m_shadow->setFont(font);
-	}
-	
-	void setZValue( qreal z )
-	{
-		((QGraphicsSimpleTextItem*)this)->setZValue(z);
-		m_text->setZValue(z);
-		m_shadow->setZValue(z-0.001);
-	}
-	
-	void setPos( qreal x, qreal y, qreal shadowOffset = 4)
-	{
-		m_shadow->setPos(x+shadowOffset,y+shadowOffset);
-		m_text->setPos(x,y);
-	}
-	
-	
-};
-
-
 MainWindow::MainWindow(QWidget * parent)
     : QMainWindow(parent)
 {
@@ -365,6 +212,9 @@ MainWindow::MainWindow(QWidget * parent)
 
 	QAction  *newVideo = toolbar->addAction(QIcon(), "New Video Item");
 	connect(newVideo, SIGNAL(triggered()), this, SLOT(newVideoItem()));
+	
+	QAction  *newSlide = toolbar->addAction(QIcon(), "New Slide");
+	connect(newSlide, SIGNAL(triggered()), this, SLOT(newSlide()));
 
 
 	m_scene = new MyGraphicsScene(this);
@@ -396,6 +246,9 @@ MainWindow::MainWindow(QWidget * parent)
 	
 	//TextContent * text = m_scene->addTextContent();
 	
+	setupSlideGroupDockWidget();
+	
+
 	
 
 	if(QFile("test.xml").exists())
@@ -404,28 +257,7 @@ MainWindow::MainWindow(QWidget * parent)
 		//r.readSlide(m_slide);
 		
 		qDebug("Loaded test.xml");
-		QList<SlideGroup*> glist = m_doc.groupList();
-		if(glist.size() >0)
-		{
-			SlideGroup *g = glist[0];
-			assert(g);
-			
-			QList<Slide*> slist = g->slideList();
-			if(slist.size() > 0)
-			{
-				Slide *s = slist[0];
-				assert(s);
-				m_scene->setSlide(s);
-			}
-			else
-			{	
-				qDebug("Group[0] has 0 slides");
-			}
-		}
-		else
-		{
-			qDebug("Error: No groups in test.xml");
-		}
+		
 	}
 	else
 	{
@@ -433,14 +265,22 @@ MainWindow::MainWindow(QWidget * parent)
 		SlideGroup *g = new SlideGroup();
 		g->addSlide(slide);
 		m_doc.addGroup(g);
-		m_scene->setSlide(slide);
-		
-		m_scene->newTextItem("Hello, World!");
-                
+		//m_scene->setSlide(slide);
 	}
 	
+	QList<SlideGroup*> glist = m_doc.groupList();
+	if(glist.size() >0)
+	{
+		SlideGroup *g = glist[0];
+		assert(g);
+		
+		setSlideGroup(g);
+	}
+	else
+	{
+		qDebug("Error: No groups in test.xml");
+	}
 	
-
         setCentralWidget(graphicsView);
 }
 
@@ -453,6 +293,79 @@ MainWindow::~MainWindow()
 // 	delete m_slide;
 // 	m_slide = 0;
 
+}
+
+void MainWindow::setupSlideGroupDockWidget()
+{
+	QDockWidget *dock = new QDockWidget(tr("Slides"), this);
+	dock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+	m_slideListView = new QListView(dock);
+	
+	connect(m_slideListView,SIGNAL(activated(const QModelIndex &)),this,SLOT(slideSelected(const QModelIndex &)));
+	connect(m_slideListView,SIGNAL(clicked(const QModelIndex &)),this,SLOT(slideSelected(const QModelIndex &)));
+	
+	// deleting old selection model per http://doc.trolltech.com/4.5/qabstractitemview.html#setModel
+	QItemSelectionModel *m = m_slideListView->selectionModel();
+	
+	m_slideModel = new SlideGroupListModel();
+	
+	m_slideListView->setModel(m_slideModel);
+	if(m)
+	{
+		delete m;
+		m=0;
+	}
+ 	dock->setWidget(m_slideListView);
+	addDockWidget(Qt::LeftDockWidgetArea, dock);
+	//viewMenu->addAction(dock->toggleViewAction());
+}
+
+void MainWindow::setSlideGroup(SlideGroup *g,Slide *curSlide)
+{
+	m_slideGroup = g;
+	m_slideModel->setSlideGroup(g);
+	m_slideListView->reset();
+	m_slideListView->setModel(m_slideModel);
+	
+	if(curSlide)
+	{
+		m_scene->setSlide(curSlide);
+	}
+	else
+	{
+		QList<Slide*> slist = g->slideList();
+		if(slist.size() > 0)
+		{
+			Slide *s = slist[0];
+			assert(s);
+			m_scene->setSlide(s);
+		}
+		else
+		{
+			qDebug("MainWindow::setSlideGroup: Group[0] has 0 slides");
+		}
+	}
+		
+
+}
+
+void MainWindow::slideSelected(const QModelIndex &idx)
+{
+	Slide *s = m_slideModel->slideFromIndex(idx);
+	qDebug() << "MainWindow::slideSelected(): selected slide#:"<<s->slideNumber();
+	m_scene->setSlide(s);
+}
+
+void MainWindow::newSlide()
+{
+	Slide * slide = new Slide();
+	slide->setSlideNumber(m_slideGroup->numSlides());
+	slide->setSlideId(m_slideGroup->numSlides());
+	m_slideGroup->addSlide(slide);
+	
+	//m_scene->setSlide(slide);
+	
+	setSlideGroup(m_slideGroup,slide);
 }
 
 void MainWindow::newTextItem()

@@ -91,6 +91,9 @@ class GenericItemConfig : public QDialog
 		void slotShadowOffsetChanged(double);
 		void slotMirrorOffsetChanged(double);
 		
+		void slotImageFileChanged(const QString&);
+		void slotVideoFileChanged(const QString&);
+		
 		void slotOutlineEnabled(bool);
 		void slotShadowEnabled(bool);
 		

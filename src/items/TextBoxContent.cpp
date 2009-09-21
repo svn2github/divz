@@ -418,9 +418,11 @@ void TextBoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * 
 	AbstractContent::paint(painter, option, widget);
 	
 	painter->save();
+	//TODO should we clip to the rect or FORCE resize the rect? probably clip...
+	painter->setClipRect(contentsRect());
 	painter->translate(contentsRect().topLeft());
 	QPen p = modelItem()->outlinePen();
-	p.setJoinStyle(Qt::RoundJoin);
+	p.setJoinStyle(Qt::MiterJoin);
 	painter->setPen(p);
 	painter->setBrush(modelItem()->fillBrush());
 	painter->drawPath(m_textPath);

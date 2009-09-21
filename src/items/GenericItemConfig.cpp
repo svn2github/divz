@@ -160,6 +160,9 @@ GenericItemConfig::GenericItemConfig(AbstractContent * content, QWidget *parent)
 	connect(m_commonUi->bgImage, SIGNAL(toggled(bool)), this, SLOT(slotBgImage(bool)));
 	connect(m_commonUi->bgVideo, SIGNAL(toggled(bool)), this, SLOT(slotBgVideo(bool)));
 	
+	connect(m_commonUi->imageFilenameBox, SIGNAL(textChanged(const QString&)), this, SLOT(slotImageFileChanged(const QString& )));
+	connect(m_commonUi->videoFilenameBox, SIGNAL(textChanged(const QString&)), this, SLOT(slotVideoFileChanged(const QString& )));
+	
 	m_commonUi->tabWidget->setCurrentIndex(0);
 }
 
@@ -325,33 +328,38 @@ void GenericItemConfig::slotVideoBrowse()
 	QString fileName = QFileDialog::getOpenFileName(this, tr("Select Video"), m_commonUi->videoFilenameBox->text(), tr("Video Files (*.wmv *.mpeg *.mpg *.avi *.wmv *.flv *.mov *.mp4 *.m4a *.3gp *.3g2 *.mj2 *.mjpeg *.ipod *.m4v *.gsm *.gif *.swf *.dv *.dvd *.asf *.mtv *.roq *.aac *.ac3 *.aiff *.alaw *.iif);;Any File (*.*)"));
 	if(fileName != "")
 	{
-		QDir current = QDir::current();
-		QString relative = current.relativeFilePath(fileName);
-		m_commonUi->videoFilenameBox->setText(relative);
-		m_commonUi->bgVideo->setChecked(true);
-		m_content->modelItem()->setFillVideoFile(relative);
-		m_content->modelItem()->setFillType(AbstractVisualItem::Video);
-		
-		
+		slotVideoFileChanged(fileName);
 	}
 }
 	
-	
+void GenericItemConfig::slotVideoFileChanged(const QString& fileName)
+{
+	QDir current = QDir::current();
+	QString relative = current.relativeFilePath(fileName);
+	m_commonUi->videoFilenameBox->setText(relative);
+	m_commonUi->bgVideo->setChecked(true);
+	m_content->modelItem()->setFillVideoFile(relative);
+	m_content->modelItem()->setFillType(AbstractVisualItem::Video);
+}
+
 void GenericItemConfig::slotImageBrowse()
 {
 	QString fileName = QFileDialog::getOpenFileName(this, tr("Select Image"), m_commonUi->imageFilenameBox->text(), tr("Image Files (*.png *.jpg *.bmp *.xpm);;Any File (*.*)"));
 	if(fileName != "")
 	{
-		QDir current = QDir::current();
-		QString relative = current.relativeFilePath(fileName);
-		m_content->modelItem()->setFillType(AbstractVisualItem::Image);
-		m_content->modelItem()->setFillImageFile(relative);
-		m_commonUi->imageFilenameBox->setText(fileName);
-		m_commonUi->bgImage->setChecked(true);
+		slotVideoFileChanged(fileName);
 	}
 }
 
-void slotOutlineEnabled(bool);
+void GenericItemConfig::slotImageFileChanged(const QString& fileName)
+{
+	QDir current = QDir::current();
+	QString relative = current.relativeFilePath(fileName);
+	m_content->modelItem()->setFillType(AbstractVisualItem::Image);
+	m_content->modelItem()->setFillImageFile(relative);
+	m_commonUi->imageFilenameBox->setText(fileName);
+	m_commonUi->bgImage->setChecked(true);
+}
 
 void GenericItemConfig::slotOutlineEnabled(bool flag)
 {

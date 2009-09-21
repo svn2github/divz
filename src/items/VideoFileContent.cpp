@@ -74,17 +74,16 @@ QWidget * VideoFileContent::createPropertyWidget()
 	return 0;
 }
 
+
 void VideoFileContent::syncFromModelItem(AbstractVisualItem *model)
 {
         m_dontSyncToModel = true;
 	if(!modelItem())
 		setModelItem(model);
 	
-	//QFont font;
-        //VideoFileItem * boxmodel = dynamic_cast<VideoFileItem*>(model);
+	QFont font;
+        VideoFileItem * boxmodel = dynamic_cast<VideoFileItem*>(model);
 	
-	
-// 	
 // 	font.setFamily(textModel->fontFamily());
 // 	font.setPointSize((int)textModel->fontSize());
 // 	setFont(font);
@@ -109,15 +108,14 @@ AbstractVisualItem * VideoFileContent::syncToModelItem(AbstractVisualItem *model
                 //qDebug("VideoFileContent::syncToModelItem: textModel is null, cannot sync\n");
 		return 0;
 	}
-        //qDebug("TextContent:syncToModelItem: Syncing to model! Yay!");
-        //boxModel->setFillVideoFile(filename());
-// 	textModel->setFontFamily(font().family());
-// 	textModel->setFontSize(font().pointSize());
+	if(!filename().isEmpty())
+        	boxModel->setFillVideoFile(filename());
 	
 	setModelItemIsChanging(false);
 	
 	return model;
 }
+
 
 void VideoFileContent::setFilename(const QString &name)
 {
@@ -157,9 +155,10 @@ QPixmap VideoFileContent::renderContent(const QSize & size, Qt::AspectRatioMode 
 
 int VideoFileContent::contentHeightForWidth(int width) const
 {
-// 	// if no text size is available, use default
-// 	if (m_textRect.width() < 1 || m_textRect.height() < 1)
-		//return AbstractContent::contentHeightForWidth(width);
+	// if no image size is available, use default
+ 	if (m_imageSize.width() < 1 || m_imageSize.height() < 1)
+		return AbstractContent::contentHeightForWidth(width);
+		
         return (m_imageSize.height() * width) / m_imageSize.width();
 }
 
@@ -168,35 +167,25 @@ void VideoFileContent::paint(QPainter * painter, const QStyleOptionGraphicsItem 
 	// paint parent
 	AbstractContent::paint(painter, option, widget);
 	
+	// Scale the video frame to fit the contents rect
 	QRect cRect = contentsRect();
         QSize sRect = m_imageSize;
 	painter->save();
 	painter->translate(cRect.topLeft());
-	//painter->setClipRect(1,1,cRect.width()-3,cRect.height()-4);
-        if (sRect.width() > 0 && sRect.height() > 0)
+	if (sRect.width() > 0 && sRect.height() > 0)
         {
                 qreal xScale = (qreal)cRect.width() / (qreal)sRect.width();
                 qreal yScale = (qreal)cRect.height() / (qreal)sRect.height();
                  if (!qFuzzyCompare(xScale, 1.0) || !qFuzzyCompare(yScale, 1.0))
                      painter->scale(xScale, yScale);
         }
-        
-        /*
-	QPen pen;
- 	pen.setWidthF(3);
- 	pen.setColor(QColor(0,0,0,255));
- 
- 	QBrush brush(QColor(255,0,0,255));
- 	painter->setPen(pen);
- 	painter->setBrush(brush);
-	painter->drawRect(QRect(QPoint(0,0),cRect.size()));
-        */
 
         painter->drawImage(0,0, m_image);
         
         painter->restore();
 	painter->save();
 	
+	// Draw a blank gray frame if no video frame present
         if(m_imageSize.width() <= 0)
         {
         	QRect fillRect = cRect;
@@ -214,18 +203,14 @@ void VideoFileContent::paint(QPainter * painter, const QStyleOptionGraphicsItem 
 		painter->fillRect(fillRect,QBrush(Qt::gray));
         }
         
-	
+	// Draw an outline around the frame if requested
 	if(modelItem()->outlineEnabled())
 	{
 		QPen p = modelItem()->outlinePen();
 		p.setJoinStyle(Qt::MiterJoin);
 		painter->setPen(p);
 		painter->setBrush(QBrush(Qt::NoBrush));
-		
-		QRect lineRect = cRect;
-		int w = p.width();
-		//lineRect.adjust(w/2,w/2,-w/2,-w/2);
-		painter->drawRect(lineRect);
+		painter->drawRect(cRect);
  	}
  	painter->restore();
  	
@@ -243,13 +228,9 @@ void VideoFileContent::setVideoFrame(QFFMpegVideoFrame frame)
 
 	if(m_imageSize != m_image.size())
 	{
-		//prepareGeometryChange();
 		m_imageSize = m_image.size();
 
-	       /* // Adjust scaling while maintaining aspect ratio
-		QRect c = contentsRect();
-		c.setSize(m_imageSize);
-		*/
+	        // Adjust scaling while maintaining aspect ratio
 		resizeContents(contentsRect(),true);
 	}
 

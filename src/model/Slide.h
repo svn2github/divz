@@ -38,6 +38,6 @@ private:
 	int m_slideId;
 };
 
-
+//Q_DECLARE_METATYPE(Slide);
 
 #endif

@@ -40,7 +40,7 @@ class AbstractDisposeable : public QObject, public QGraphicsItem
         virtual ~AbstractDisposeable() {}
 
         // reimplement this to add a custom deletion behavior
-        virtual void dispose();
+        virtual void dispose(bool anim=true);
 };
 
 #endif

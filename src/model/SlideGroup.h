@@ -35,6 +35,8 @@ public:
 
 	void addSlide(Slide *);
 	QList<Slide *> slideList();
+	int numSlides() { return m_slides.size(); }
+	Slide * at(int sortedIdx);
 	
 	void removeSlide(Slide *);
 	

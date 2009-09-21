@@ -25,7 +25,7 @@ class AbstractContent : public AbstractDisposeable
 		virtual ~AbstractContent();
 	
 		// ::AbstractDisposeable
-		void dispose();
+		void dispose(bool anim=true);
 		
 		virtual void syncFromModelItem(AbstractVisualItem*);
 		virtual AbstractVisualItem * syncToModelItem(AbstractVisualItem *model); //defaults to m_modelItem
