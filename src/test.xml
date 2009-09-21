@@ -35,8 +35,8 @@
                     <h>895</h>
                 </rect>
                 <pos>
-                    <x>217</x>
-                    <y>300</y>
+                    <x>231</x>
+                    <y>282</y>
                 </pos>
                 <zvalue>1</zvalue>
                 <opacity>1</opacity>
@@ -84,7 +84,7 @@
                 </rect>
                 <pos>
                     <x>252</x>
-                    <y>508</y>
+                    <y>516</y>
                 </pos>
                 <zvalue>5</zvalue>
                 <opacity>1</opacity>
@@ -109,15 +109,15 @@ p, li { white-space: pre-wrap; }
                 <rect>
                     <x>-100</x>
                     <y>-75</y>
-                    <w>708</w>
-                    <h>148</h>
+                    <w>488</w>
+                    <h>299</h>
                 </rect>
                 <pos>
-                    <x>148</x>
-                    <y>162</y>
+                    <x>241</x>
+                    <y>119</y>
                 </pos>
                 <zvalue>3</zvalue>
-                <opacity>1</opacity>
+                <opacity>0.64</opacity>
                 <visible>1</visible>
                 <frame-class>0</frame-class>
                 <transformation yRot="0" xRot="0" zRot="0"/>

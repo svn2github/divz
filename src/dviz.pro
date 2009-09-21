@@ -10,6 +10,15 @@ OBJECTS_DIR = .build
 RCC_DIR = .build
 UI_DIR = .build
 
+VERSION  = "0.0.4"
+SVNREV   = $$system(svn info -r HEAD . | grep 'Changed\ Rev' | cut -b 19-)
+BUILDNUM = $$system(perl buildcount.pl -v)
+
+!isEmpty(VERSION) {
+	VERSION = "$${VERSION} (Build $${BUILDNUM}) r$${SVNREV}"
+	VERSTR = '\\"$${VERSION}\\"'  # place quotes around the version string
+	DEFINES += VER=\"$${VERSTR}\" # create a VER macro containing the version string
+}
 
 #HEADERS   = videoplayer.h  videoitem.h QVideo.h QVideoBuffer.h QVideoDecoder.h QVideoEncoder.h QResizeDecorator.h QVideoTest.h
 #SOURCES   = main.cpp videoplayer.cpp videoitem.cpp QVideo.cpp QVideoBuffer.cpp QVideoDecoder.cpp QVideoEncoder.cpp QResizeDecorator.cpp QVideoTest.cpp

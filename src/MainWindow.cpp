@@ -162,10 +162,10 @@ class MyGraphicsView : public QGraphicsView
 			setRenderHint( QPainter::TextAntialiasing, true);
 			setRenderHint( QPainter::Antialiasing, true );
 			
-// 			setCacheMode(QGraphicsView::CacheBackground);
-// 			setViewportUpdateMode(QGraphicsView::BoundingRectViewportUpdate);
-// 			setOptimizationFlags(QGraphicsView::DontSavePainterState);
-// 			setViewportUpdateMode(QGraphicsView::SmartViewportUpdate);
+			setCacheMode(QGraphicsView::CacheBackground);
+			setViewportUpdateMode(QGraphicsView::BoundingRectViewportUpdate);
+			setOptimizationFlags(QGraphicsView::DontSavePainterState);
+			setViewportUpdateMode(QGraphicsView::SmartViewportUpdate);
 			
 			
 			setTransformationAnchor(AnchorUnderMouse);
