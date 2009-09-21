@@ -13,6 +13,8 @@
 #include "items/TextConfig.h"
 #include "items/TextBoxConfig.h"
 #include "items/TextBoxContent.h"
+#include "items/VideoFileContent.h"
+#include "items/VideoFileConfig.h"
 
 #include "model/ItemFactory.h"
 #include "model/Slide.h"
@@ -230,6 +232,9 @@ void MyGraphicsScene::slotConfigureContent(const QPoint & /*scenePoint*/)
 // 	else
 	if (TextBoxContent * text = dynamic_cast<TextBoxContent *>(content))
 		p = new TextBoxConfig(text);
+	else
+	if (VideoFileContent * vid = dynamic_cast<VideoFileContent *>(content))
+		p = new VideoFileConfig(vid);
 	
 	// generic config
 	if (!p)

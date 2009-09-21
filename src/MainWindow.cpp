@@ -151,8 +151,8 @@ class MyGraphicsView : public QGraphicsView
 			, m_desk(0)
 		{
 			// customize widget
-			setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-			setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+// 			setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+// 			setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 			setInteractive(true);
 			setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing | QPainter::SmoothPixmapTransform );
 			setDragMode(QGraphicsView::RubberBandDrag);

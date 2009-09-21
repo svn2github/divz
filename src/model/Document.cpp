@@ -83,13 +83,13 @@ bool Document::fromXml(QDomElement & pe)
 
 	setDocTitle(pe.attribute("title"));
 	
-	qDebug() << "Document::fromXml: title:"<<docTitle();
+	//qDebug() << "Document::fromXml: title:"<<docTitle();
 	// for each slide
 	for (QDomElement element = pe.firstChildElement(); !element.isNull(); element = element.nextSiblingElement()) 
 	{
 		SlideGroup *g = new SlideGroup();
 		addGroup(g);
-		qDebug("Document::fromXml: Loaded new group");
+		//qDebug("Document::fromXml: Loaded new group");
 		
 		// restore the item, and delete it if something goes wrong
 		if (!g->fromXml(element)) 

@@ -419,7 +419,9 @@ void TextBoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * 
 	
 	painter->save();
 	painter->translate(contentsRect().topLeft());
-	painter->setPen(modelItem()->outlinePen());
+	QPen p = modelItem()->outlinePen();
+	p.setJoinStyle(Qt::RoundJoin);
+	painter->setPen(p);
 	painter->setBrush(modelItem()->fillBrush());
 	painter->drawPath(m_textPath);
 	painter->restore();

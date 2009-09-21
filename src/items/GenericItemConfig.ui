@@ -23,7 +23,7 @@
       <enum>QTabWidget::Rounded</enum>
      </property>
      <property name="currentIndex">
-      <number>3</number>
+      <number>0</number>
      </property>
      <property name="usesScrollButtons">
       <bool>false</bool>
@@ -443,106 +443,151 @@
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_10">
        <item>
-        <widget class="QRadioButton" name="bgNone">
-         <property name="text">
-          <string>No Background</string>
-         </property>
+        <widget class="QWidget" name="bgOptNoBg" native="true">
+         <layout class="QVBoxLayout" name="verticalLayout_13">
+          <property name="margin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QRadioButton" name="bgNone">
+            <property name="text">
+             <string>No Background</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </widget>
        </item>
        <item>
-        <widget class="QRadioButton" name="bgColor">
-         <property name="text">
-          <string>Solid Color</string>
-         </property>
-         <property name="checked">
-          <bool>true</bool>
-         </property>
+        <widget class="QWidget" name="bgOptColor" native="true">
+         <layout class="QVBoxLayout" name="verticalLayout_14">
+          <property name="margin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QRadioButton" name="bgColor">
+            <property name="text">
+             <string>Solid Color</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="bgColorPickerLayout"/>
+          </item>
+         </layout>
         </widget>
        </item>
        <item>
-        <layout class="QHBoxLayout" name="bgColorPickerLayout"/>
-       </item>
-       <item>
-        <widget class="QRadioButton" name="bgGradient">
-         <property name="text">
-          <string>Gradient Fill</string>
-         </property>
+        <widget class="QWidget" name="bgOptGradient" native="true">
+         <layout class="QVBoxLayout" name="verticalLayout_15">
+          <property name="margin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QRadioButton" name="bgGradient">
+            <property name="text">
+             <string>Gradient Fill</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QComboBox" name="gradientSelector"/>
+          </item>
+         </layout>
         </widget>
        </item>
        <item>
-        <widget class="QComboBox" name="gradientSelector"/>
-       </item>
-       <item>
-        <widget class="QRadioButton" name="bgImage">
-         <property name="text">
-          <string>Picture from File</string>
-         </property>
+        <widget class="QWidget" name="bgOptImage" native="true">
+         <layout class="QVBoxLayout" name="verticalLayout_16">
+          <property name="margin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QRadioButton" name="bgImage">
+            <property name="text">
+             <string>Picture from File</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <layout class="QGridLayout" name="gridLayout_8">
+            <item row="1" column="0">
+             <widget class="QLineEdit" name="imageFilenameBox"/>
+            </item>
+            <item row="2" column="0" rowspan="2" colspan="2">
+             <widget class="QWidget" name="imagePreviewWidget" native="true"/>
+            </item>
+            <item row="1" column="1">
+             <widget class="QPushButton" name="imageBrowseButton">
+              <property name="text">
+               <string>Browse...</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
         </widget>
        </item>
        <item>
-        <layout class="QGridLayout" name="gridLayout_8">
-         <item row="1" column="0">
-          <widget class="QLineEdit" name="imageFilenameBox"/>
-         </item>
-         <item row="2" column="0" rowspan="2" colspan="2">
-          <widget class="QWidget" name="imagePreviewWidget" native="true"/>
-         </item>
-         <item row="1" column="1">
-          <widget class="QPushButton" name="imageBrowseButton">
-           <property name="text">
-            <string>Browse...</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-       <item>
-        <widget class="QRadioButton" name="bgVideo">
-         <property name="text">
-          <string>Video from File</string>
-         </property>
+        <widget class="QWidget" name="bgOptVideo" native="true">
+         <layout class="QVBoxLayout" name="verticalLayout_17">
+          <property name="margin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QRadioButton" name="bgVideo">
+            <property name="text">
+             <string>Video from File</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <layout class="QGridLayout" name="gridLayout_9">
+            <item row="1" column="1">
+             <widget class="QPushButton" name="videoBrowseButton">
+              <property name="text">
+               <string>Browse...</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0" rowspan="2">
+             <widget class="QWidget" name="videoPreviewWidget" native="true"/>
+            </item>
+            <item row="2" column="1" rowspan="2">
+             <layout class="QVBoxLayout" name="verticalLayout">
+              <item>
+               <widget class="QPushButton" name="videoPlayButton">
+                <property name="text">
+                 <string>Play</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="verticalSpacer">
+                <property name="orientation">
+                 <enum>Qt::Vertical</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>20</width>
+                  <height>40</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+             </layout>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLineEdit" name="videoFilenameBox"/>
+            </item>
+           </layout>
+          </item>
+         </layout>
         </widget>
-       </item>
-       <item>
-        <layout class="QGridLayout" name="gridLayout_9">
-         <item row="1" column="1">
-          <widget class="QPushButton" name="videoBrowseButton">
-           <property name="text">
-            <string>Browse...</string>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="0" rowspan="2">
-          <widget class="QWidget" name="videoPreviewWidget" native="true"/>
-         </item>
-         <item row="2" column="1" rowspan="2">
-          <layout class="QVBoxLayout" name="verticalLayout">
-           <item>
-            <widget class="QPushButton" name="videoPlayButton">
-             <property name="text">
-              <string>Play</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <spacer name="verticalSpacer">
-             <property name="orientation">
-              <enum>Qt::Vertical</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>20</width>
-               <height>40</height>
-              </size>
-             </property>
-            </spacer>
-           </item>
-          </layout>
-         </item>
-         <item row="1" column="0">
-          <widget class="QLineEdit" name="videoFilenameBox"/>
-         </item>
-        </layout>
        </item>
        <item>
         <spacer name="verticalSpacer_3">
@@ -604,7 +649,11 @@
           </widget>
          </item>
          <item row="1" column="1">
-          <widget class="QDoubleSpinBox" name="shadowOffsetBox"/>
+          <widget class="QDoubleSpinBox" name="shadowOffsetBox">
+           <property name="minimum">
+            <double>-99.989999999999995</double>
+           </property>
+          </widget>
          </item>
         </layout>
        </item>
@@ -645,7 +694,11 @@
           </widget>
          </item>
          <item row="0" column="1">
-          <widget class="QDoubleSpinBox" name="mirrorOffset"/>
+          <widget class="QDoubleSpinBox" name="mirrorOffset">
+           <property name="minimum">
+            <double>-99.989999999999995</double>
+           </property>
+          </widget>
          </item>
         </layout>
        </item>

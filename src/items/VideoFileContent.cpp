@@ -172,6 +172,7 @@ void VideoFileContent::paint(QPainter * painter, const QStyleOptionGraphicsItem 
         QSize sRect = m_imageSize;
 	painter->save();
 	painter->translate(cRect.topLeft());
+	//painter->setClipRect(1,1,cRect.width()-3,cRect.height()-4);
         if (sRect.width() > 0 && sRect.height() > 0)
         {
                 qreal xScale = (qreal)cRect.width() / (qreal)sRect.width();
@@ -179,6 +180,7 @@ void VideoFileContent::paint(QPainter * painter, const QStyleOptionGraphicsItem 
                  if (!qFuzzyCompare(xScale, 1.0) || !qFuzzyCompare(yScale, 1.0))
                      painter->scale(xScale, yScale);
         }
+        
         /*
 	QPen pen;
  	pen.setWidthF(3);
@@ -193,7 +195,7 @@ void VideoFileContent::paint(QPainter * painter, const QStyleOptionGraphicsItem 
         painter->drawImage(0,0, m_image);
         
         painter->restore();
-	
+	painter->save();
 	
         if(m_imageSize.width() <= 0)
         {
@@ -216,17 +218,24 @@ void VideoFileContent::paint(QPainter * painter, const QStyleOptionGraphicsItem 
 	if(modelItem()->outlineEnabled())
 	{
 		QPen p = modelItem()->outlinePen();
+		p.setJoinStyle(Qt::MiterJoin);
 		painter->setPen(p);
 		painter->setBrush(QBrush(Qt::NoBrush));
 		
 		QRect lineRect = cRect;
 		int w = p.width();
-		lineRect.adjust(w/2,w/2,-w/2,-w/2);
+		//lineRect.adjust(w/2,w/2,-w/2,-w/2);
 		painter->drawRect(lineRect);
  	}
+ 	painter->restore();
  	
 }
 
+QRectF VideoFileContent::boundingRect() const 
+{
+	qreal penWidth = m_modelItem ? m_modelItem->outlinePen().widthF() : 1.0;
+	return AbstractContent::boundingRect().adjusted(-penWidth/2,-penWidth/2,penWidth,penWidth);
+}
 
 void VideoFileContent::setVideoFrame(QFFMpegVideoFrame frame)
 {

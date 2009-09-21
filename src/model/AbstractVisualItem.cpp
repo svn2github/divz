@@ -47,6 +47,7 @@ AbstractVisualItem::AbstractVisualItem()
 	
 	m_outlineEnabled = false;
 	m_outlinePen = QPen(Qt::black,1);
+	m_outlinePen.setJoinStyle(Qt::MiterJoin);
 	
 	m_mirrorEnabled = false;
 	m_mirrorOffset = 3;

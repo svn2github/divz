@@ -42,10 +42,10 @@ int main(int argc, char **argv)
 
 	QApplication app(argc, argv);
 	
-	printf("VERSION: %s\n", VER);
+	printf("DViz Version %s\n", VER);
 	
 	app.setApplicationName("DViz");
-	app.setApplicationVersion("0.1.5");
+	app.setApplicationVersion(VER); //"0.1.5");
 	app.setOrganizationName("Josiah Bryan");
 	app.setOrganizationDomain("mybryanlife.com");
 

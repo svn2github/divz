@@ -14,6 +14,8 @@ class VideoFileContent : public AbstractContent
     public:
         VideoFileContent(QGraphicsScene * scene, QGraphicsItem * parent = 0);
         ~VideoFileContent();
+        
+        QRectF boundingRect() const;
 
     public Q_SLOTS:
         QString filename() const { return m_filename; }

@@ -305,6 +305,7 @@ void AbstractContent::setRotation(double angle, Qt::Axis axis)
 		case Qt::YAxis: if (m_yRotationAngle == angle) return; m_yRotationAngle = angle; break;
 		case Qt::ZAxis: if (m_zRotationAngle == angle) return; m_zRotationAngle = angle; break;
 	}
+	syncToModelItem(modelItem());
 	applyRotations();
 }
 
@@ -638,18 +639,18 @@ QVariant AbstractContent::itemChange(GraphicsItemChange change, const QVariant &
 	QVariant retVal;
 	bool retValOverride = false;
 	// keep the AbstractContent's center inside the scene rect..
-	if (change == ItemPositionChange && scene()) 
-	{
-		QPointF newPos = value.toPointF();
-		QRectF rect = scene()->sceneRect();
-		if (!rect.contains(newPos)) 
-		{
-			newPos.setX(qBound(rect.left(), newPos.x(), rect.right()));
-			newPos.setY(qBound(rect.top(), newPos.y(), rect.bottom()));
-			retVal = QVariant(newPos);
-			retValOverride = true;
-		}
-	}
+// 	if (change == ItemPositionChange && scene()) 
+// 	{
+// 		QPointF newPos = value.toPointF();
+// 		QRectF rect = scene()->sceneRect();
+// 		if (!rect.contains(newPos)) 
+// 		{
+// 			newPos.setX(qBound(rect.left(), newPos.x(), rect.right()));
+// 			newPos.setY(qBound(rect.top(), newPos.y(), rect.bottom()));
+// 			retVal = QVariant(newPos);
+// 			retValOverride = true;
+// 		}
+// 	}
 	
 	// tell subclasses about selection changes
 	if (change == ItemSelectedHasChanged)
@@ -791,7 +792,7 @@ void AbstractContent::createCorner(Qt::Corner corner, bool noRescale)
 {
 	CornerItem * c = new CornerItem(corner, noRescale, this);
 	c->setVisible(m_controlsVisible);
-	c->setZValue(2.0);
+	c->setZValue(999.0);
 	c->setToolTip(tr("Drag with Left or Right mouse button.\n - Hold down SHIFT for free resize\n - Hold down CTRL to allow rotation\n - Hold down ALT to snap rotation\n - Double click (with LMB/RMB) to restore the aspect ratio/rotation"));
 	m_cornerItems.append(c);
 }
@@ -807,9 +808,10 @@ void AbstractContent::layoutChildren()
 	{
 		int right = (int)m_frameRect.right() - 12;
 		int bottom = (int)m_frameRect.bottom() + 2; // if no frame, offset the buttons a little on bottom
-		foreach (ButtonItem * button, m_controlItems) {
-		button->setPos(right - button->width() / 2, bottom - button->height() / 2);
-		right -= button->width() + 4;
+		foreach (ButtonItem * button, m_controlItems)
+		{
+			button->setPos(right - button->width() / 2, bottom - button->height() / 2);
+			right -= button->width() + 4;
 		}
 		return;
 	}
@@ -825,6 +827,8 @@ void AbstractContent::layoutChildren()
 void AbstractContent::applyRotations()
 {
 	setTransform(QTransform().rotate(m_yRotationAngle, Qt::XAxis).rotate(m_xRotationAngle, Qt::YAxis).rotate(m_zRotationAngle));
+	layoutChildren();
+	GFX_CHANGED();
 }
 
 void AbstractContent::slotPerspective(const QPointF & sceneRelPoint, Qt::KeyboardModifiers modifiers)

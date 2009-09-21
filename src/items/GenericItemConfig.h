@@ -43,8 +43,6 @@ class GenericItemConfig : public QDialog
     
 	protected:
 		void changeEvent(QEvent *e);
-		
-	protected:
 		// used by subclasses
 		void addTab(QWidget * widget, const QString & label, bool front = false, bool setCurrent = false);
 		//void showOkButton(bool show);
@@ -55,7 +53,7 @@ class GenericItemConfig : public QDialog
 		void slotOpacityChanged(int);
 		
 	
-	private:
+	protected:
 		Ui::GenericItemConfig *m_commonUi;
 	
 	private:

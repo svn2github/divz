@@ -119,8 +119,9 @@ void CornerItem::mousePressEvent(QGraphicsSceneMouseEvent * event)
     // do the right op
     switch (event->button()) {
         case Qt::LeftButton:    m_operation = m_defaultLeftOp; break; //Scale | FixScale; break;
-        case Qt::RightButton:   m_operation =  Scale | FixScale; break;
-        //Rotate
+        case Qt::RightButton:   m_operation =  Rotate; break;
+        //Scale | FixScale | 
+        //
         //m_defaultRightOp; break; //
         case Qt::MidButton:     m_operation = Scale; break;
         //m_defaultMidOp; //
@@ -199,10 +200,10 @@ void CornerItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 			
 			QRectF br = boundingRect();
 			QPointF cpos = m_content->pos();
-			if(cpos.x() <=0)
-				d.setX(0);
-			if(cpos.y() <=0)
-				d.setY(0);
+// 			if(cpos.x() <=0)
+// 				d.setX(0);
+// 			if(cpos.y() <=0)
+// 				d.setY(0);
 				
 			if(m_corner == Qt::TopLeftCorner)
 			{

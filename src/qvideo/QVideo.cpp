@@ -27,7 +27,7 @@ QVideo::QVideo(const QString & filename, QObject * parent) : QObject(parent),
 	
 	// just a random default value
 	m_expectedDelay = 999;
-	m_last_frame_shown = 0;
+	m_last_frame_shown = 999;
 
 	setAdvanceMode(QVideo::RealTime);
 
@@ -64,6 +64,9 @@ QVideo::QVideo(QObject *parent) : QObject(parent),
 
 	m_screen = new QLabel();
 
+        // just a random default value
+	m_expectedDelay = 999;
+	m_last_frame_shown = 999;
         m_frame_counter = 0;
 }
 

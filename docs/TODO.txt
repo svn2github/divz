@@ -3,14 +3,28 @@
 -generic shadow renderer item (look at mirror item)
 -mirror item offset and size options
 
-
 -video frame grab for first frame
 -video "pause" icons on item
 -video trim (set A/B points)
 
 -image/video crop handle mode
 
-- text wrap centering
+-text wrap centering
 
-- copy/paste items
-- undo/redo framework
+-copy/paste items
+-undo/redo framework
+
+-relative path for VideoFiles (or any resources for that matter...)
+
+-improve performance for looped video items - maybe cache frames so the loop doesnt have to re-decode?
+	-add flag for video item to either loop or once thru
+
+-add SVG item (just draws an svg item, scalable)
+	- optional itemid
+	
+-items to add:
+	-line item (straight line)
+	-photo
+	-svg
+	-live video
+	
