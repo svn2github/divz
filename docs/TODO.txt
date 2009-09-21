@@ -1,3 +1,12 @@
+-figure out why some items (VideoFileContent for now) jumps position vertically when slide changes
+-figure out why mirror item doesnt get repainted when slide changed back
+-turn off multi-select unless intentional - whatever that is
+-repaint bug -see textitem - when textobx selected and hover over other content, bg in text box turns white...why?
+-make videofileitem store framegrab of last/recent frame as icon or for rendering till video loaded
+	- cache on disk somewhere semi-perm
+
+-implement slide "snapshot" views in list
+
 -midway resize handles (e.g. centerpoint at top and bottom, left/right for one-axis resize)
 # -fixed-ratio resize using new algorithim * completed * r51
 -generic shadow renderer item (look at mirror item)
@@ -27,4 +36,5 @@
 	-photo
 	-svg
 	-live video
+	
 	
