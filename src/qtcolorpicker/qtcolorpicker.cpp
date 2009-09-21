@@ -217,6 +217,8 @@ public:
 
     ColorPickerItem *find(const QColor &col) const;
     QColor color(int index) const;
+    
+    void setLastSel(const QColor & col);
 
 signals:
     void selected(const QColor &);
@@ -439,6 +441,8 @@ void QtColorPicker::setCurrentColor(const QColor &color)
 	insertColor(color, tr("Custom"));
 	item = popup->find(color);
     }
+    
+    popup->setLastSel(color);
 
     col = color;
     setText(item->text());
@@ -889,15 +893,18 @@ void ColorPickerPopup::regenerateGrid()
 void ColorPickerPopup::getColorFromDialog()
 {
     bool ok;
-    QRgb rgb = QColorDialog::getRgba(lastSel.rgba(), &ok, parentWidget());
-    if (!ok)
+    //QRgb rgb = QColorDialog::getRgba(lastSel.rgba(), &ok, parentWidget());
+    QColor col = QColorDialog::getColor(lastSel,parentWidget(),0,QColorDialog::ShowAlphaChannel);
+    if (!col.isValid())
 	return;
 
-    QColor col = QColor::fromRgba(rgb);
+    //QColor col = QColor::fromRgba(rgb);
     insertColor(col, tr("Custom"), -1);
     lastSel = col;
     emit selected(col);
 }
+
+void ColorPickerPopup::setLastSel(const QColor & col) { lastSel = col; }
 
 /*!
     Constructs a ColorPickerItem whose color is set to \a color, and
