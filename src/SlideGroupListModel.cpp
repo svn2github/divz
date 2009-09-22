@@ -66,6 +66,9 @@ void SlideGroupListModel::slideChanged(Slide *slide, QString slideOperation, Abs
 	
 	}
 	
+	if(slide)
+		qDebug() << "SlideGroupListModel::slideChanged: slide#:"<<slide->slideNumber();
+	
 	if(m_dirtyTimer->isActive())
 		m_dirtyTimer->stop();
 		
@@ -179,6 +182,9 @@ void SlideGroupListModel::generatePixmap(int row)
 	painter.setPen(Qt::black);
 	painter.setBrush(Qt::NoBrush);
 	painter.drawRect(0,0,icon_w-1,icon_h-1);
+	
+	qDebug("generatePixmap: Row#%d: Clearing Scene...", row);
+	m_scene->clear();
 	
 	qDebug("generatePixmap: Row#%d: Caching pixmap...", row);
 	m_pixmaps[row] = icon;
