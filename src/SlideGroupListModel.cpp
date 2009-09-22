@@ -42,6 +42,25 @@ Slide * SlideGroupListModel::slideFromIndex(const QModelIndex &index)
 	return m_sortedSlides.at(index.row());
 }
 
+Slide * SlideGroupListModel::slideAt(int row)
+{
+	return m_sortedSlides.at(row);
+}
+
+static quint32 uidCounter = 0;
+	
+QModelIndex SlideGroupListModel::indexForSlide(Slide *slide) const
+{
+	uidCounter++;
+	return createIndex(m_sortedSlides.indexOf(slide),0,uidCounter);
+}
+
+QModelIndex SlideGroupListModel::indexForRow(int row) const
+{
+	uidCounter++;
+	return createIndex(row,0,uidCounter);
+}
+
 QVariant SlideGroupListModel::data(const QModelIndex &index, int role) const
 {
 	if (!index.isValid())

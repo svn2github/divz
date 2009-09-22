@@ -16,6 +16,9 @@ public:
 	
 	void setSlideGroup(SlideGroup*);
 	Slide * slideFromIndex(const QModelIndex &index);
+	Slide * slideAt(int);
+	QModelIndex indexForSlide(Slide *slide) const;
+	QModelIndex indexForRow(int row) const;
 	
 	int rowCount(const QModelIndex &parent = QModelIndex()) const;
 	QVariant data(const QModelIndex &index, int role) const;

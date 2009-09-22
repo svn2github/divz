@@ -10,17 +10,20 @@ OBJECTS_DIR = .build
 RCC_DIR = .build
 UI_DIR = .build
 
-unix {
-    VERSION  = "0.0.4"
-    SVNREV   = $$system(svn info -r HEAD . | grep 'Changed\ Rev' | cut -b 19-)
-    BUILDNUM = $$system(perl buildcount.pl -v)
+BUILDNUM = $$system(perl buildcount.pl -v)
+VERSION  = "0.0.4"
+VERSION = "$${VERSION} (Build $${BUILDNUM})"
 
-    !isEmpty(VERSION) {
-	    VERSION = "$${VERSION} (Build $${BUILDNUM}) r$${SVNREV}"
-	    VERSTR = '\\"$${VERSION}\\"'  # place quotes around the version string
-	    DEFINES += VER=\"$${VERSTR}\" # create a VER macro containing the version string
+unix {
+    SVNREV   = $$system(svn info -r HEAD . | grep Changed\ Rev | cut -b 19-)
+    
+    !isEmpty(SVNREV) {
+	     VERSION = "$${VERSION} r$${SVNREV}"
     }
 }
+
+VERSTR = '\\"$${VERSION}\\"'  # place quotes around the version string
+DEFINES += VER=\"$${VERSTR}\" # create a VER macro containing the version string
 
 #HEADERS   = videoplayer.h  videoitem.h QVideo.h QVideoBuffer.h QVideoDecoder.h QVideoEncoder.h QResizeDecorator.h QVideoTest.h
 #SOURCES   = main.cpp videoplayer.cpp videoitem.cpp QVideo.cpp QVideoBuffer.cpp QVideoDecoder.cpp QVideoEncoder.cpp QResizeDecorator.cpp QVideoTest.cpp

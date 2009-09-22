@@ -642,18 +642,19 @@ QVariant AbstractContent::itemChange(GraphicsItemChange change, const QVariant &
 	QVariant retVal;
 	bool retValOverride = false;
 	// keep the AbstractContent's center inside the scene rect..
-// 	if (change == ItemPositionChange && scene()) 
-// 	{
+	if (change == ItemPositionChange && scene()) 
+	{
+// 		QPointF oldPos = value.toPointF();
 // 		QPointF newPos = value.toPointF();
-// 		QRectF rect = scene()->sceneRect();
-// 		if (!rect.contains(newPos)) 
+// 		int snap = 10;
+// 		newPos.setX(((int)(oldPos.x() / snap)) * snap);
+// 		newPos.setY(((int)(oldPos.y() / snap)) * snap);
+// 		if (newPos != oldPos) 
 // 		{
-// 			newPos.setX(qBound(rect.left(), newPos.x(), rect.right()));
-// 			newPos.setY(qBound(rect.top(), newPos.y(), rect.bottom()));
 // 			retVal = QVariant(newPos);
 // 			retValOverride = true;
 // 		}
-// 	}
+	}
 	
 	// tell subclasses about selection changes
 	if (change == ItemSelectedHasChanged)

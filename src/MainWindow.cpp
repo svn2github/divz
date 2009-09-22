@@ -198,6 +198,7 @@ MainWindow::MainWindow(QWidget * parent)
 // 	QPixmap quitpix("quit.png");
 // 	
 	QToolBar *toolbar = addToolBar("main toolbar");
+	toolbar->setObjectName("maintoolbar");
 	QAction  *newAction = toolbar->addAction(QIcon(), "New Text Item");
 // 	toolbar->addAction(QIcon(openpix), "Open File");
 // 	toolbar->addSeparator();
@@ -221,8 +222,18 @@ MainWindow::MainWindow(QWidget * parent)
 	MyGraphicsView *graphicsView = new MyGraphicsView(this);
 	
 	graphicsView->setMyScene(m_scene);
-	m_scene->setSceneRect(0,0,800,600);
-	resize(800,600);
+	m_scene->setSceneRect(0,0,1024,768);
+	resize(1024,768);
+	
+	QSettings settings;
+	restoreState(settings.value("mainwindow/state").toByteArray());
+	QSize sz = settings.value("mainwindow/size").toSize();
+	if(sz.isValid())
+		resize(sz);
+	
+	QPoint p = settings.value("mainwindow/pos").toPoint();
+	if(!p.isNull())
+		move(p);
 	
 	
 	//qDebug("Checking for OpenGL...");
@@ -290,6 +301,12 @@ MainWindow::~MainWindow()
 // 	save.saveSlide(m_slide);
 	m_doc.save("test.xml");
 	
+	QSettings settings;
+	settings.setValue("mainwindow/size",size());
+	settings.setValue("mainwindow/pos",pos());
+	settings.setValue("mainwindow/state",saveState());
+	
+	
 // 	delete m_slide;
 // 	m_slide = 0;
 
@@ -298,6 +315,7 @@ MainWindow::~MainWindow()
 void MainWindow::setupSlideGroupDockWidget()
 {
 	QDockWidget *dock = new QDockWidget(tr("Slides"), this);
+	dock->setObjectName("SlidesDockWidget");
 	dock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
 	m_slideListView = new QListView(dock);
 	
@@ -325,20 +343,21 @@ void MainWindow::setSlideGroup(SlideGroup *g,Slide *curSlide)
 	m_slideGroup = g;
 	m_slideModel->setSlideGroup(g);
 	m_slideListView->reset();
-	m_slideListView->setModel(m_slideModel);
+	//m_slideListView->setModel(m_slideModel);
 	
 	if(curSlide)
 	{
 		m_scene->setSlide(curSlide);
+		m_slideListView->setCurrentIndex(m_slideModel->indexForSlide(curSlide));
 	}
 	else
 	{
 		QList<Slide*> slist = g->slideList();
 		if(slist.size() > 0)
 		{
-			Slide *s = slist[0];
-			assert(s);
+			Slide *s = m_slideModel->slideAt(0);
 			m_scene->setSlide(s);
+			m_slideListView->setCurrentIndex(m_slideModel->indexForRow(0));
 		}
 		else
 		{
