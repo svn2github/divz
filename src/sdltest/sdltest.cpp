@@ -4,7 +4,7 @@
 /* loopwaves.c is much more robust in handling WAVE files --
 	This is only for simple WAVEs
 */
-#include "SDL_config.h"
+#include "SDL/SDL_config.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -13,8 +13,8 @@
 #include <signal.h>
 #endif
 
-#include "SDL.h"
-#include "SDL_audio.h"
+#include "SDL/SDL.h"
+#include "SDL/SDL_audio.h"
 
 
 //#include <QtGui/QApplication>
