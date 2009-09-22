@@ -24,8 +24,6 @@ QColor RenderOpts::hiColor;
 
 #include <QtGui/QApplication>
 
-#include "XmlRead.h"
-#include "XmlSave.h"
 #include "model/ItemFactory.h"
 #include "model/Slide.h"
 #include "model/TextItem.h"
@@ -41,11 +39,12 @@ int main(int argc, char **argv)
 	#endif
 
 	QApplication app(argc, argv);
-	
+#if defined(VER)
 	printf("DViz Version %s\n", VER);
+	app.setApplicationVersion(VER); //"0.1.5");
+#endif
 	
 	app.setApplicationName("DViz");
-	app.setApplicationVersion(VER); //"0.1.5");
 	app.setOrganizationName("Josiah Bryan");
 	app.setOrganizationDomain("mybryanlife.com");
 

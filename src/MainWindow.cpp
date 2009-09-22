@@ -223,20 +223,20 @@ MainWindow::MainWindow(QWidget * parent)
 	m_scene->setSceneRect(0,0,1024,768);
 	resize(1024,768);
 	
+	// Restore state
 	QSettings settings;
-	restoreState(settings.value("mainwindow/state").toByteArray());
 	QSize sz = settings.value("mainwindow/size").toSize();
 	if(sz.isValid())
 		resize(sz);
-	
 	QPoint p = settings.value("mainwindow/pos").toPoint();
 	if(!p.isNull())
 		move(p);
-	
+	restoreState(settings.value("mainwindow/state").toByteArray());
+
 	
 	//qDebug("Checking for OpenGL...");
 	#ifndef QT_NO_OPENGL
-		graphicsView->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
+		//graphicsView->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
 		qDebug("Loaded OpenGL viewport.");
 	#endif
 	

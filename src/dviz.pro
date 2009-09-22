@@ -11,18 +11,19 @@ RCC_DIR = .build
 UI_DIR = .build
 
 BUILDNUM = $$system(perl buildcount.pl -v)
-VERSION  = "0.0.4"
-VERSION = "$${VERSION} (Build $${BUILDNUM})"
+VERSTR = '\\"$${BUILDNUM}\\"'  # place quotes around the version string
 
 unix {
+    VERSION  = "0.0.4"
+    VERSION = "$${VERSION} (Build $${BUILDNUM})"
     SVNREV   = $$system(svn info -r HEAD . | grep Changed\ Rev | cut -b 19-)
     
     !isEmpty(SVNREV) {
 	     VERSION = "$${VERSION} r$${SVNREV}"
     }
+    VERSTR = '\\"$${VERSION}\\"'  # place quotes around the version string
 }
 
-VERSTR = '\\"$${VERSION}\\"'  # place quotes around the version string
 DEFINES += VER=\"$${VERSTR}\" # create a VER macro containing the version string
 
 #HEADERS   = videoplayer.h  videoitem.h QVideo.h QVideoBuffer.h QVideoDecoder.h QVideoEncoder.h QResizeDecorator.h QVideoTest.h
