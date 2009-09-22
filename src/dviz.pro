@@ -41,17 +41,12 @@ HEADERS += \
 	RenderOpts.h \
 	SlideGroupListModel.h
 
-#	XmlRead.h \
-#	XmlSave.h 
 	
 SOURCES += \
 	main.cpp \
 	MainWindow.cpp \
 	MyGraphicsScene.cpp \
 	SlideGroupListModel.cpp
-
-#	XmlRead.cpp \
-#	XmlSave.cpp \
 
 QT += core \
     gui \

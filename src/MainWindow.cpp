@@ -49,8 +49,6 @@
 #include <QDebug>
 #include <assert.h>
 
-#include "XmlRead.h"
-#include "XmlSave.h"
 #include "model/ItemFactory.h"
 #include "model/Slide.h"
 #include "model/TextItem.h"
@@ -238,7 +236,7 @@ MainWindow::MainWindow(QWidget * parent)
 	
 	//qDebug("Checking for OpenGL...");
 	#ifndef QT_NO_OPENGL
-		//graphicsView->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
+		graphicsView->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
 		qDebug("Loaded OpenGL viewport.");
 	#endif
 	
