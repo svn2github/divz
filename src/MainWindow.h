@@ -28,6 +28,9 @@ private slots:
 	void newSlide();
 	
 	void slideSelected(const QModelIndex &);
+	
+	void slideListModelChanged();
+	
 private:
 	void setupSlideGroupDockWidget();
 	

@@ -31,6 +31,13 @@ public:
 	
 	ITEM_PROPDEF(SlideId,		int,	slideId);
 	ITEM_PROPDEF(SlideNumber,	int,	slideNumber);
+
+signals:
+	// Operation = "Add", "Remove", "Change"
+	void slideItemChanged(AbstractItem *item, QString operation, QString fieldName, QVariant value);
+	
+private slots:
+	void itemChanged(QString fieldName, QVariant value);
 	
 private:
 	QList<AbstractItem *> m_items;

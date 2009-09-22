@@ -96,7 +96,7 @@ class MyGraphicsView : public QGraphicsView
 			setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing | QPainter::SmoothPixmapTransform );
 			setDragMode(QGraphicsView::RubberBandDrag);
 			//setAcceptDrops(true);
-			setFrameStyle(QFrame::NoFrame);
+			//setFrameStyle(QFrame::NoFrame);
 			
 			setRenderHint( QPainter::TextAntialiasing, true);
 			setRenderHint( QPainter::Antialiasing, true );
@@ -324,8 +324,9 @@ void MainWindow::setupSlideGroupDockWidget()
 	QItemSelectionModel *m = m_slideListView->selectionModel();
 	
 	m_slideModel = new SlideGroupListModel();
-	
 	m_slideListView->setModel(m_slideModel);
+	connect(m_slideModel, SIGNAL(modelChanged()), this, SLOT(slideListModelChanged()));
+	
 	if(m)
 	{
 		delete m;
@@ -334,6 +335,12 @@ void MainWindow::setupSlideGroupDockWidget()
  	dock->setWidget(m_slideListView);
 	addDockWidget(Qt::LeftDockWidgetArea, dock);
 	//viewMenu->addAction(dock->toggleViewAction());
+}
+
+void MainWindow::slideListModelChanged()
+{
+	//m_slideModel->setSlideGroup(m_slideGroup);
+	m_slideListView->reset();
 }
 
 void MainWindow::setSlideGroup(SlideGroup *g,Slide *curSlide)

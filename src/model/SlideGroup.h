@@ -42,7 +42,14 @@ public:
 	
 	bool fromXml(QDomElement & parentElement);
         void toXml(QDomElement & parentElement) const;
-	
+
+signals:
+	// Operation = "Add", "Remove", "Change"
+	void slideChanged(Slide *slide, QString slideOperation, AbstractItem *item, QString operation, QString fieldName, QVariant value);
+
+private slots:
+	void slideItemChanged(AbstractItem *item, QString operation, QString fieldName, QVariant value);
+
 private:
 	QList<Slide *> m_slides;
 	int m_groupNumber;
