@@ -621,7 +621,7 @@ void QVideoDecoder::calculateVideoProperties()
 	//frame rate
 	m_video->m_frame_rate = Round(av_q2d(m_av_format_context->streams[m_video_stream]->r_frame_rate));
 	m_fpms = (double)m_video->m_frame_rate / 1000.0f;
-	printf("m_fpms = %.02f, frame_rate=%d\n",m_fpms,m_video->m_frame_rate);
+	//printf("m_fpms = %.02f, frame_rate=%d\n",m_fpms,m_video->m_frame_rate);
 
 	//duration
 	m_video->m_duration = (m_av_format_context->duration / AV_TIME_BASE);

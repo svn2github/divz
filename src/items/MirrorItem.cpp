@@ -32,8 +32,18 @@ MirrorItem::MirrorItem(QGraphicsItem * sourceItem, QGraphicsItem * parent)
     setZValue(m_source->zValue());
 
     // add to the scame scene
-    Q_ASSERT(m_source->scene());
-    m_source->scene()->addItem(this);
+    //Q_ASSERT(m_source->scene());
+    //m_source->scene()->addItem(this);
+    
+    QGraphicsScene *s = m_source->scene();
+    if(!s)
+    {
+    	qDebug("Error: Cannot add MirrorItem to scene because m_source->scene() is null");
+    }
+    else
+    {
+    	s->addItem(this);
+    }
 }
 
 MirrorItem::~MirrorItem()

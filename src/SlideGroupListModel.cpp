@@ -66,8 +66,14 @@ void SlideGroupListModel::slideChanged(Slide *slide, QString slideOperation, Abs
 	
 	}
 	
-	if(slide)
-		qDebug() << "SlideGroupListModel::slideChanged: slide#:"<<slide->slideNumber();
+	if(slideOperation == "remove")
+	{
+		// if a slide was removed, assume all pixmaps are invalid since the order could have changed
+		m_pixmaps.clear();
+	}
+	
+// 	if(slide)
+// 		qDebug() << "SlideGroupListModel::slideChanged: slide#:"<<slide->slideNumber();
 	
 	if(m_dirtyTimer->isActive())
 		m_dirtyTimer->stop();
@@ -149,7 +155,7 @@ QVariant SlideGroupListModel::data(const QModelIndex &index, int role) const
 
 void SlideGroupListModel::generatePixmap(int row)
 {
-	qDebug("generatePixmap: Row#%d: Begin", row);
+	//qDebug("generatePixmap: Row#%d: Begin", row);
 	Slide * slide = m_sortedSlides.at(row);
 	
 	int icon_w = 64;
@@ -158,7 +164,7 @@ void SlideGroupListModel::generatePixmap(int row)
 	QRect sceneRect(0,0,1024,768);
 	if(!m_view)
 	{
-		qDebug("generatePixmap: Row#%d: QGraphicsView setup: View not setup, Initalizing view and scene...", row);
+		//qDebug("generatePixmap: Row#%d: QGraphicsView setup: View not setup, Initalizing view and scene...", row);
 		m_view = new QGraphicsView();
 		m_view->setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing | QPainter::SmoothPixmapTransform );
 		//m_view->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
@@ -168,27 +174,27 @@ void SlideGroupListModel::generatePixmap(int row)
 		m_view->setScene(m_scene);
 	}
 	
-	qDebug("generatePixmap: Row#%d: Setting slide...", row);
+	//qDebug("generatePixmap: Row#%d: Setting slide...", row);
 	m_scene->setSlide(slide);
 	
-	qDebug("generatePixmap: Row#%d: Clearing icon...", row);
+	//qDebug("generatePixmap: Row#%d: Clearing icon...", row);
 	QPixmap icon(icon_w,icon_h);
 	QPainter painter(&icon);
 	painter.fillRect(0,0,icon_w,icon_h,Qt::white);
 	
-	qDebug("generatePixmap: Row#%d: Painting...", row);
+	//qDebug("generatePixmap: Row#%d: Painting...", row);
 	
 	m_view->render(&painter,QRectF(0,0,icon_w,icon_h),sceneRect);
 	painter.setPen(Qt::black);
 	painter.setBrush(Qt::NoBrush);
 	painter.drawRect(0,0,icon_w-1,icon_h-1);
 	
-	qDebug("generatePixmap: Row#%d: Clearing Scene...", row);
+	//qDebug("generatePixmap: Row#%d: Clearing Scene...", row);
 	m_scene->clear();
 	
-	qDebug("generatePixmap: Row#%d: Caching pixmap...", row);
+	//qDebug("generatePixmap: Row#%d: Caching pixmap...", row);
 	m_pixmaps[row] = icon;
-	qDebug("generatePixmap: Row#%d: Done.", row);
+	//qDebug("generatePixmap: Row#%d: Done.", row);
 }
  
 QVariant SlideGroupListModel::headerData(int section, Qt::Orientation orientation, int role) const

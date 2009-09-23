@@ -34,20 +34,27 @@ contains(QT_CONFIG, opengl)|contains(QT_CONFIG, opengles1)|contains(QT_CONFIG, o
     QT += opengl
 }
 
+FORMS += mainwindow.ui
+
 RESOURCES += dviz.qrc
 
 HEADERS += \
 	MainWindow.h \
 	MyGraphicsScene.h \
 	RenderOpts.h \
-	SlideGroupListModel.h
+	SlideGroupListModel.h \
+	SlideEditorWindow.h \
+	DocumentListModel.h
 
 	
 SOURCES += \
 	main.cpp \
 	MainWindow.cpp \
 	MyGraphicsScene.cpp \
-	SlideGroupListModel.cpp
+	SlideGroupListModel.cpp \
+	SlideEditorWindow.cpp \
+	DocumentListModel.cpp
+	
 
 QT += core \
     gui \

@@ -22,13 +22,20 @@ public:
 
 	void addGroup(SlideGroup *);
 	QList<SlideGroup *> groupList();
+	int numGroups() { return m_groups.size(); }
+	SlideGroup * at(int sortedIdx);
 	
 	void removeGroup(SlideGroup *);
 	
 	void load(const QString & filename);
 	void save(const QString & filename = "");
-	
-	
+
+signals:
+	void slideGroupChanged(SlideGroup *g, QString groupOperation, Slide *slide, QString slideOperation, AbstractItem *item, QString operation, QString fieldName, QVariant value);
+
+private slots:
+	void slideChanged(Slide *slide, QString slideOperation, AbstractItem *item, QString operation, QString fieldName, QVariant value);
+
 private:
 	bool fromXml(QDomElement & parentElement);
         void toXml(QDomElement & parentElement) const;

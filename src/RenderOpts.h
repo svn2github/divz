@@ -26,6 +26,8 @@ class RenderOpts
         // global options
         static bool ARGBWindow;
         static bool HQRendering;
+        
+        static bool DisableOpenGL;
 
         // other options
         static bool FirstRun;

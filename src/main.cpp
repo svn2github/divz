@@ -18,6 +18,7 @@ bool RenderOpts::HQRendering = false;
 bool RenderOpts::FirstRun = false;
 bool RenderOpts::OxygenStyleQuirks = false;
 bool RenderOpts::DisableVideoProvider = false;
+bool RenderOpts::DisableOpenGL = false;
 QColor RenderOpts::hiColor;
 
 #include <assert.h>
@@ -39,6 +40,7 @@ int main(int argc, char **argv)
 	#endif
 
 	QApplication app(argc, argv);
+	
 #if defined(VER)
 	printf("DViz Version %s\n", VER);
 	app.setApplicationVersion(VER); //"0.1.5");
@@ -55,7 +57,22 @@ int main(int argc, char **argv)
 	RenderOpts::hiColor = app.palette().color(QPalette::Highlight);
 	RenderOpts::DisableVideoProvider = app.arguments().contains("-novideo");
 	//s.setValue("fotowall/firstTime", false);
-
+	
+	bool noOpenGL = false;
+	
+	if(app.arguments().contains("-nogl"))
+	{
+		noOpenGL = true;
+	}
+	else
+	{
+		noOpenGL = ! s.value("opengl/disable").toBool();
+	}
+	s.setValue("opengl/disable",noOpenGL);
+	
+	RenderOpts::DisableOpenGL = noOpenGL;
+	
+	
 	MainWindow mw;
 	//mw.showMaximized();
 	mw.show();

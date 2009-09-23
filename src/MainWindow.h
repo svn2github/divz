@@ -1,51 +1,36 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include <QMainWindow>
-#include <QListView>
+#include <QtGui/QMainWindow>
 
 #include "model/Document.h"
+#include "DocumentListModel.h"
+#include "SlideEditorWindow.h"
 
-#include "SlideGroupListModel.h"
+namespace Ui {
+	class MainWindow;
+}
 
-class MyGraphicsScene;
-class SlideGroup;
-
-class MainWindow : public QMainWindow
-{
+class MainWindow : public QMainWindow {
 	Q_OBJECT
 public:
-	MainWindow(QWidget * parent = 0);
+	MainWindow(QWidget *parent = 0);
 	~MainWindow();
-	
-public slots:
-	void setSlideGroup(SlideGroup*g,Slide *curSlide=0);
 
-private slots:
-	void newTextItem();
-	void newBoxItem();
-	void newVideoItem();
-	void newSlide();
+protected slots:
+	void groupSelected(const QModelIndex &);
 	
-	void slideSelected(const QModelIndex &);
+protected:
+	void changeEvent(QEvent *e);
 	
-	void slideListModelChanged();
-	
+	void openSlideEditor(SlideGroup *g);
+
 private:
-	void setupSlideGroupDockWidget();
-	
-	//Slide *m_slide;
-	SlideGroup *m_slideGroup;
-	SlideGroupListModel *m_slideModel;
-	
-	QListView *m_slideListView;
-	
+	Ui::MainWindow *m_ui;
 	Document m_doc;
-	MyGraphicsScene *m_scene;
+	DocumentListModel m_docModel;
+	SlideEditorWindow m_editWin;
 	
-	
-
 };
 
-
-#endif
+#endif // MAINWINDOW_H

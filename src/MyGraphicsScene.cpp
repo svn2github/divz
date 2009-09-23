@@ -83,7 +83,7 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition /*trans*/)
 	//TODO implement slide transitions
 	if(m_slide == slide)
 	{
-		qDebug("MyGraphicsScene::setSlide: Not changing slide - same slide!");
+		//qDebug("MyGraphicsScene::setSlide: Not changing slide - same slide!");
 		return;
 	}
 	
