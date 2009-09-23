@@ -1,3 +1,8 @@
+-undo/redo framework
+-slide listbox cant scroll down below the fold
+[DONE] (just cleared all pixmaps) -deleting a slide doesnt clear it's pixmap cached icon in the listmodel
+-add ability to increase/decrease font size of a textbox from the toolbar rather than having to open the properties dialog
+
 -figure out why some items (VideoFileContent for now) jumps position vertically when slide changes
 -figure out why mirror item doesnt get repainted when slide changed back
 -turn off multi-select unless intentional - looks like if one item selected, then right-click on another item, it selects both items
@@ -7,7 +12,7 @@
 
 -since textbox clipping has been turned on, need to keep all text inside content rect - add margin or something to layout - see letter "L" in tahoma at start of a box
 
--implement slide "snapshot" views in list
+[DONE] -implement slide "snapshot" views in list
 
 -midway resize handles (e.g. centerpoint at top and bottom, left/right for one-axis resize)
 -generic shadow renderer item (look at mirror item)
@@ -22,9 +27,9 @@
 -text wrap centering
 
 -copy/paste items
--undo/redo framework
 
--relative path for VideoFiles (or any resources for that matter...)
+
+[DONE] -relative path for VideoFiles (or any resources for that matter...) ** done 
 
 -improve performance for looped video items - maybe cache frames so the loop doesnt have to re-decode?
 	-add flag for video item to either loop or once thru
