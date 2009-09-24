@@ -1,4 +1,10 @@
+-slide editor crash when add box then delete box
+
 -undo/redo framework
+	- see tools/undoframework, esp diagramscene mouse events
+	- dont merge move commands
+	- use the mousepress / clearselected to fix the "turn off multiselect" item, below
+	
 -slide listbox cant scroll down below the fold
 [DONE] (just cleared all pixmaps) -deleting a slide doesnt clear it's pixmap cached icon in the listmodel
 -add ability to increase/decrease font size of a textbox from the toolbar rather than having to open the properties dialog
