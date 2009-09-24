@@ -65,6 +65,11 @@ int main(int argc, char **argv)
 		noOpenGL = true;
 	}
 	else
+	if(app.arguments().contains("-usegl"))
+	{
+		noOpenGL = false;
+	}
+	else
 	{
 		noOpenGL = ! s.value("opengl/disable").toBool();
 	}
