@@ -1,109 +1,494 @@
 <?xml version="1.0" ?>
-<document title="">
-    <group title="My First Slide Group" number="0" icon="" type="0" id="7602176">
-        <slide number="0" id="0">
-            <textbox>
-                <item-id>123</item-id>
-                <item-name>TextBoxItem123</item-name>
+<document title="Hello World" >
+    <group title="Test" number="0" icon="test.ico" type="0" id="0" >
+        <slide number="0" id="2" >
+            <box>
+                <item-id>121</item-id>
+                <item-name>BoxItem121</item-name>
                 <rect>
                     <x>-100</x>
-                    <y>-114</y>
-                    <w>783</w>
-                    <h>114</h>
+                    <y>-75</y>
+                    <w>1118</w>
+                    <h>787</h>
                 </rect>
                 <pos>
-                    <x>222</x>
-                    <y>191</y>
+                    <x>50</x>
+                    <y>60</y>
                 </pos>
-                <zvalue>4</zvalue>
+                <zvalue>1</zvalue>
                 <opacity>1</opacity>
                 <visible>1</visible>
                 <frame-class>0</frame-class>
-                <transformation yRot="0" xRot="0" zRot="0"/>
-                <fill brush-style="1" video="" image="" brush-color="4294967295" type="1"/>
-                <outline brush-style="1" pen-join="64" pen-width="2.5" enabled="1" brush-color="4278190080" pen-cap="16" pen-color="4278190080"/>
-                <mirror offset="3" enabled="0"/>
-                <shadow brush-style="1" offset="3" enabled="0" brush-color="4278190080"/>
-                <text>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
-&lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
-p, li { white-space: pre-wrap; }
-&lt;/style>&lt;/head>&lt;body style=" font-family:'Tahoma'; font-size:40pt; font-weight:400; font-style:normal;">
-&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-family:'Sans Serif'; font-size:72pt; font-weight:600;">Lorem Ipsum&lt;/span>&lt;/p>&lt;/body>&lt;/html></text>
-                <default-font font-family="Tahoma" font-size="40"/>
-                <shape enabled="0"/>
-            </textbox>
+                <transformation yRot="0" xRot="0" zRot="0" />
+                <fill brush-style="1" video="" image="" brush-color="4294901760" type="1" />
+                <outline brush-style="1" pen-join="64" pen-width="3" enabled="1" brush-color="4278190080" pen-cap="16" pen-color="4278190080" />
+                <mirror offset="3" enabled="0" />
+                <shadow brush-style="1" offset="3" enabled="0" brush-color="4278190080" />
+            </box>
             <videofile>
                 <item-id>122</item-id>
                 <item-name>VideoItem122</item-name>
                 <rect>
                     <x>-100</x>
-                    <y>-498</y>
-                    <w>1329</w>
-                    <h>996</h>
+                    <y>-75</y>
+                    <w>200</w>
+                    <h>150</h>
                 </rect>
                 <pos>
-                    <x>47</x>
-                    <y>407</y>
+                    <x>920</x>
+                    <y>80</y>
+                </pos>
+                <zvalue>6</zvalue>
+                <opacity>1</opacity>
+                <visible>1</visible>
+                <frame-class>0</frame-class>
+                <transformation yRot="0" xRot="0" zRot="0" />
+                <fill brush-style="1" video="data/Ancient_Loop_2_SD.mpg" image="" brush-color="4294967295" type="4" />
+                <outline brush-style="1" pen-join="64" pen-width="2" enabled="1" brush-color="4278190080" pen-cap="16" pen-color="4278190080" />
+                <mirror offset="3" enabled="0" />
+                <shadow brush-style="1" offset="3" enabled="0" brush-color="4278190080" />
+                <filename>data/Seasons_Loop_3_SD.mpg</filename>
+            </videofile>
+            <videofile>
+                <item-id>123</item-id>
+                <item-name>VideoItem123</item-name>
+                <rect>
+                    <x>-100</x>
+                    <y>-301</y>
+                    <w>805</w>
+                    <h>603</h>
+                </rect>
+                <pos>
+                    <x>350</x>
+                    <y>470</y>
+                </pos>
+                <zvalue>3</zvalue>
+                <opacity>1</opacity>
+                <visible>1</visible>
+                <frame-class>0</frame-class>
+                <transformation yRot="0" xRot="0" zRot="0" />
+                <fill brush-style="1" video="data/Seasons_Loop_2_SD.mpg" image="" brush-color="4294967295" type="4" />
+                <outline brush-style="1" pen-join="64" pen-width="2" enabled="1" brush-color="4278190080" pen-cap="16" pen-color="4278190080" />
+                <mirror offset="3" enabled="0" />
+                <shadow brush-style="1" offset="3" enabled="0" brush-color="4278190080" />
+                <filename>data/Seasons_Loop_3_SD.mpg</filename>
+            </videofile>
+            <videofile>
+                <item-id>124</item-id>
+                <item-name>VideoItem124</item-name>
+                <rect>
+                    <x>-100</x>
+                    <y>-75</y>
+                    <w>200</w>
+                    <h>150</h>
+                </rect>
+                <pos>
+                    <x>630</x>
+                    <y>80</y>
+                </pos>
+                <zvalue>4</zvalue>
+                <opacity>1</opacity>
+                <visible>1</visible>
+                <frame-class>0</frame-class>
+                <transformation yRot="0" xRot="0" zRot="0" />
+                <fill brush-style="1" video="data/Seasons_Loop_3_SD.mpg" image="" brush-color="4294967295" type="4" />
+                <outline brush-style="1" pen-join="64" pen-width="2" enabled="1" brush-color="4278190080" pen-cap="16" pen-color="4278190080" />
+                <mirror offset="3" enabled="0" />
+                <shadow brush-style="1" offset="3" enabled="0" brush-color="4278190080" />
+                <filename>data/Seasons_Loop_3_SD.mpg</filename>
+            </videofile>
+            <videofile>
+                <item-id>125</item-id>
+                <item-name>VideoItem125</item-name>
+                <rect>
+                    <x>-100</x>
+                    <y>-75</y>
+                    <w>200</w>
+                    <h>150</h>
+                </rect>
+                <pos>
+                    <x>350</x>
+                    <y>80</y>
+                </pos>
+                <zvalue>5</zvalue>
+                <opacity>1</opacity>
+                <visible>1</visible>
+                <frame-class>0</frame-class>
+                <transformation yRot="0" xRot="0" zRot="0" />
+                <fill brush-style="1" video="data/Seasons_Loop_4_SD.mpg" image="" brush-color="4294967295" type="4" />
+                <outline brush-style="1" pen-join="64" pen-width="2" enabled="1" brush-color="4278190080" pen-cap="16" pen-color="4278190080" />
+                <mirror offset="3" enabled="0" />
+                <shadow brush-style="1" offset="3" enabled="0" brush-color="4278190080" />
+                <filename>data/Seasons_Loop_3_SD.mpg</filename>
+            </videofile>
+            <videofile>
+                <item-id>126</item-id>
+                <item-name>VideoItem126</item-name>
+                <rect>
+                    <x>-100</x>
+                    <y>-490</y>
+                    <w>1307</w>
+                    <h>980</h>
+                </rect>
+                <pos>
+                    <x>-40</x>
+                    <y>330</y>
                 </pos>
                 <zvalue>2</zvalue>
                 <opacity>1</opacity>
                 <visible>1</visible>
                 <frame-class>0</frame-class>
-                <transformation yRot="0" xRot="0" zRot="0"/>
-                <fill brush-style="1" video="data/Seasons_Loop_3_SD.mpg" image="" brush-color="4294967295" type="4"/>
-                <outline brush-style="1" pen-join="64" pen-width="2" enabled="1" brush-color="4278190080" pen-cap="16" pen-color="4278190080"/>
-                <mirror offset="3" enabled="0"/>
-                <shadow brush-style="1" offset="3" enabled="0" brush-color="4278190080"/>
+                <transformation yRot="0" xRot="0" zRot="0" />
+                <fill brush-style="1" video="data/Ancient_Loop_4_SD.mpg" image="" brush-color="4294967295" type="4" />
+                <outline brush-style="1" pen-join="64" pen-width="2" enabled="1" brush-color="4278190080" pen-cap="16" pen-color="4278190080" />
+                <mirror offset="3" enabled="0" />
+                <shadow brush-style="1" offset="3" enabled="0" brush-color="4278190080" />
                 <filename>data/Seasons_Loop_3_SD.mpg</filename>
             </videofile>
+            <textbox>
+                <item-id>22</item-id>
+                <item-name>TextBoxItem22</item-name>
+                <rect>
+                    <x>-100</x>
+                    <y>-75</y>
+                    <w>733</w>
+                    <h>151</h>
+                </rect>
+                <pos>
+                    <x>190</x>
+                    <y>620</y>
+                </pos>
+                <zvalue>7</zvalue>
+                <opacity>0.67</opacity>
+                <visible>1</visible>
+                <frame-class>0</frame-class>
+                <transformation yRot="0" xRot="0" zRot="-90.13249257360673" />
+                <fill brush-style="1" video="" image="" brush-color="4278190080" type="1" />
+                <outline brush-style="1" pen-join="64" pen-width="1.5" enabled="1" brush-color="4278190080" pen-cap="16" pen-color="4278190080" />
+                <mirror offset="3" enabled="0" />
+                <shadow brush-style="1" offset="3" enabled="0" brush-color="4278190080" />
+                <text>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
+&lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
+p, li { white-space: pre-wrap; }
+&lt;/style>&lt;/head>&lt;body style=" font-family:'Tahoma'; font-size:40pt; font-weight:400; font-style:normal;">
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">						    &lt;/p>
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-family:'DejaVu LGC Sans'; font-size:48pt; font-weight:600;">PHC Live New Feed&lt;/span>&lt;/p>&lt;/body>&lt;/html></text>
+                <default-font font-family="Tahoma" font-size="40" />
+                <shape enabled="0" />
+            </textbox>
+            <textbox>
+                <item-id>23</item-id>
+                <item-name>TextBoxItem23</item-name>
+                <rect>
+                    <x>-100</x>
+                    <y>-75</y>
+                    <w>200</w>
+                    <h>167</h>
+                </rect>
+                <pos>
+                    <x>450</x>
+                    <y>370</y>
+                </pos>
+                <zvalue>8</zvalue>
+                <opacity>1</opacity>
+                <visible>1</visible>
+                <frame-class>0</frame-class>
+                <transformation yRot="0" xRot="0" zRot="0" />
+                <fill brush-style="1" video="" image="" brush-color="4294967295" type="1" />
+                <outline brush-style="1" pen-join="64" pen-width="1.5" enabled="1" brush-color="4278190080" pen-cap="16" pen-color="4278190080" />
+                <mirror offset="3" enabled="0" />
+                <shadow brush-style="1" offset="3" enabled="0" brush-color="4278190080" />
+                <text>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
+&lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
+p, li { white-space: pre-wrap; }
+&lt;/style>&lt;/head>&lt;body style=" font-family:'Tahoma'; font-size:40pt; font-weight:400; font-style:normal;">
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">										&lt;/p>
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-family:'Sans Serif'; font-size:36pt;">The&lt;/span>&lt;/p>&lt;/body>&lt;/html></text>
+                <default-font font-family="Tahoma" font-size="40" />
+                <shape enabled="0" />
+            </textbox>
+            <textbox>
+                <item-id>24</item-id>
+                <item-name>TextBoxItem24</item-name>
+                <rect>
+                    <x>-100</x>
+                    <y>-75</y>
+                    <w>314</w>
+                    <h>416</h>
+                </rect>
+                <pos>
+                    <x>450</x>
+                    <y>350</y>
+                </pos>
+                <zvalue>9</zvalue>
+                <opacity>1</opacity>
+                <visible>1</visible>
+                <frame-class>0</frame-class>
+                <transformation yRot="0" xRot="0" zRot="0" />
+                <fill brush-style="1" video="" image="" brush-color="4294967295" type="1" />
+                <outline brush-style="1" pen-join="64" pen-width="1.5" enabled="1" brush-color="4278190080" pen-cap="16" pen-color="4278190080" />
+                <mirror offset="3" enabled="0" />
+                <shadow brush-style="1" offset="3" enabled="0" brush-color="4278190080" />
+                <text>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
+&lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
+p, li { white-space: pre-wrap; }
+&lt;/style>&lt;/head>&lt;body style=" font-family:'Tahoma'; font-size:40pt; font-weight:400; font-style:normal;">
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">										&lt;/p>
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-family:'URW Chancery L'; font-size:101pt;">Fields&lt;/span>&lt;/p>&lt;/body>&lt;/html></text>
+                <default-font font-family="Tahoma" font-size="40" />
+                <shape enabled="0" />
+            </textbox>
+            <textbox>
+                <item-id>25</item-id>
+                <item-name>TextBoxItem25</item-name>
+                <rect>
+                    <x>-100</x>
+                    <y>-75</y>
+                    <w>581</w>
+                    <h>201</h>
+                </rect>
+                <pos>
+                    <x>480</x>
+                    <y>480</y>
+                </pos>
+                <zvalue>10</zvalue>
+                <opacity>1</opacity>
+                <visible>1</visible>
+                <frame-class>0</frame-class>
+                <transformation yRot="0" xRot="0" zRot="0" />
+                <fill brush-style="1" video="" image="" brush-color="4294967295" type="1" />
+                <outline brush-style="1" pen-join="64" pen-width="1.5" enabled="1" brush-color="4278190080" pen-cap="16" pen-color="4278190080" />
+                <mirror offset="3" enabled="0" />
+                <shadow brush-style="1" offset="3" enabled="0" brush-color="4278190080" />
+                <text>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
+&lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
+p, li { white-space: pre-wrap; }
+&lt;/style>&lt;/head>&lt;body style=" font-family:'Tahoma'; font-size:40pt; font-weight:400; font-style:normal;">
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">										&lt;/p>
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-size:48pt;">are &lt;/span>&lt;span style=" font-size:48pt; font-weight:600;">ready&lt;/span>&lt;span style=" font-size:48pt;"> for the&lt;/span>&lt;/p>&lt;/body>&lt;/html></text>
+                <default-font font-family="Tahoma" font-size="40" />
+                <shape enabled="0" />
+            </textbox>
+            <textbox>
+                <item-id>26</item-id>
+                <item-name>TextBoxItem26</item-name>
+                <rect>
+                    <x>-100</x>
+                    <y>-75</y>
+                    <w>831</w>
+                    <h>444</h>
+                </rect>
+                <pos>
+                    <x>360</x>
+                    <y>470</y>
+                </pos>
+                <zvalue>11</zvalue>
+                <opacity>1</opacity>
+                <visible>1</visible>
+                <frame-class>0</frame-class>
+                <transformation yRot="0" xRot="0" zRot="0" />
+                <fill brush-style="1" video="" image="" brush-color="4294967295" type="1" />
+                <outline brush-style="1" pen-join="64" pen-width="1.5" enabled="1" brush-color="4278190080" pen-cap="16" pen-color="4278190080" />
+                <mirror offset="3" enabled="0" />
+                <shadow brush-style="1" offset="3" enabled="0" brush-color="4278190080" />
+                <text>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
+&lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
+p, li { white-space: pre-wrap; }
+&lt;/style>&lt;/head>&lt;body style=" font-family:'Tahoma'; font-size:40pt; font-weight:400; font-style:normal;">
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">										&lt;/p>
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-family:'Nimbus Roman No9 L'; font-size:121pt; font-weight:600;">HARVEST&lt;/span>&lt;/p>&lt;/body>&lt;/html></text>
+                <default-font font-family="Tahoma" font-size="40" />
+                <shape enabled="0" />
+            </textbox>
+            <textbox>
+                <item-id>27</item-id>
+                <item-name>TextBoxItem27</item-name>
+                <rect>
+                    <x>-100</x>
+                    <y>-75</y>
+                    <w>475</w>
+                    <h>416</h>
+                </rect>
+                <pos>
+                    <x>520</x>
+                    <y>590</y>
+                </pos>
+                <zvalue>12</zvalue>
+                <opacity>1</opacity>
+                <visible>1</visible>
+                <frame-class>0</frame-class>
+                <transformation yRot="0" xRot="0" zRot="0" />
+                <fill brush-style="1" video="" image="" brush-color="4294967295" type="1" />
+                <outline brush-style="1" pen-join="64" pen-width="1.5" enabled="1" brush-color="4278190080" pen-cap="16" pen-color="4278190080" />
+                <mirror offset="3" enabled="0" />
+                <shadow brush-style="1" offset="3" enabled="0" brush-color="4278190080" />
+                <text>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
+&lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
+p, li { white-space: pre-wrap; }
+&lt;/style>&lt;/head>&lt;body style=" font-family:'Tahoma'; font-size:40pt; font-weight:400; font-style:normal;">
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">										&lt;/p>
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-family:'URW Chancery L'; font-size:101pt; font-weight:600; font-style:italic;">Are you?&lt;/span>&lt;/p>&lt;/body>&lt;/html></text>
+                <default-font font-family="Tahoma" font-size="40" />
+                <shape enabled="0" />
+            </textbox>
+        </slide>
+        <slide number="2" id="0" >
+            <box>
+                <item-id>4</item-id>
+                <item-name>BoxItem</item-name>
+                <rect>
+                    <x>-78</x>
+                    <y>-62</y>
+                    <w>1193</w>
+                    <h>107</h>
+                </rect>
+                <pos>
+                    <x>-18.819</x>
+                    <y>355.191</y>
+                </pos>
+                <zvalue>2</zvalue>
+                <opacity>0.73</opacity>
+                <visible>1</visible>
+                <frame-class>3</frame-class>
+                <transformation yRot="0" xRot="0" zRot="0" />
+                <fill brush-style="1" video="" image="" brush-color="4286611584" type="1" />
+                <outline brush-style="1" pen-join="64" pen-width="3" enabled="1" brush-color="4278190080" pen-cap="16" pen-color="4278190080" />
+                <mirror offset="3" enabled="0" />
+                <shadow brush-style="1" offset="3" enabled="0" brush-color="4278190080" />
+            </box>
+            <textbox>
+                <item-id>116</item-id>
+                <item-name>TextBoxItem116</item-name>
+                <rect>
+                    <x>-100</x>
+                    <y>-75</y>
+                    <w>638</w>
+                    <h>90</h>
+                </rect>
+                <pos>
+                    <x>316</x>
+                    <y>378</y>
+                </pos>
+                <zvalue>3</zvalue>
+                <opacity>1</opacity>
+                <visible>1</visible>
+                <frame-class>0</frame-class>
+                <transformation yRot="0" xRot="0" zRot="0" />
+                <fill brush-style="1" video="" image="" brush-color="4294967295" type="1" />
+                <outline brush-style="1" pen-join="64" pen-width="1.5" enabled="1" brush-color="4278190080" pen-cap="16" pen-color="4278190080" />
+                <mirror offset="3" enabled="1" />
+                <shadow brush-style="1" offset="3" enabled="0" brush-color="4278190080" />
+                <text>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
+&lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
+p, li { white-space: pre-wrap; }
+&lt;/style>&lt;/head>&lt;body style=" font-family:'Tahoma'; font-size:40pt; font-weight:400; font-style:normal;">
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-family:'Nimbus Roman No9 L'; font-size:48pt;">Directed Visual Systems&lt;/span>&lt;/p>&lt;/body>&lt;/html></text>
+                <default-font font-family="Tahoma" font-size="40" />
+                <shape enabled="0" />
+            </textbox>
+            <videofile>
+                <item-id>123</item-id>
+                <item-name>VideoItem123</item-name>
+                <rect>
+                    <x>-100</x>
+                    <y>-420</y>
+                    <w>1121</w>
+                    <h>840</h>
+                </rect>
+                <pos>
+                    <x>48</x>
+                    <y>350</y>
+                </pos>
+                <zvalue>1</zvalue>
+                <opacity>1</opacity>
+                <visible>1</visible>
+                <frame-class>0</frame-class>
+                <transformation yRot="0" xRot="0" zRot="0" />
+                <fill brush-style="1" video="data/Seasons_Loop_3_SD.mpg" image="" brush-color="4294967295" type="4" />
+                <outline brush-style="1" pen-join="64" pen-width="2" enabled="1" brush-color="4278190080" pen-cap="16" pen-color="4278190080" />
+                <mirror offset="3" enabled="0" />
+                <shadow brush-style="1" offset="3" enabled="0" brush-color="4278190080" />
+                <filename>data/Seasons_Loop_3_SD.mpg</filename>
+            </videofile>
+            <videofile>
+                <item-id>28</item-id>
+                <item-name>VideoItem28</item-name>
+                <rect>
+                    <x>-100</x>
+                    <y>-75</y>
+                    <w>200</w>
+                    <h>150</h>
+                </rect>
+                <pos>
+                    <x>297</x>
+                    <y>218</y>
+                </pos>
+                <zvalue>2</zvalue>
+                <opacity>1</opacity>
+                <visible>1</visible>
+                <frame-class>0</frame-class>
+                <transformation yRot="0" xRot="0" zRot="0" />
+                <fill brush-style="1" video="data/Seasons_Loop_3_SD.mpg" image="" brush-color="4294967295" type="4" />
+                <outline brush-style="1" pen-join="64" pen-width="2" enabled="1" brush-color="4278190080" pen-cap="16" pen-color="4278190080" />
+                <mirror offset="3" enabled="1" />
+                <shadow brush-style="1" offset="3" enabled="0" brush-color="4278190080" />
+                <filename>data/Seasons_Loop_3_SD.mpg</filename>
+            </videofile>
+        </slide>
+        <slide number="1" id="1" >
             <box>
                 <item-id>122</item-id>
                 <item-name>BoxItem122</item-name>
                 <rect>
                     <x>-100</x>
                     <y>-75</y>
-                    <w>1042</w>
-                    <h>166</h>
+                    <w>439</w>
+                    <h>107</h>
                 </rect>
                 <pos>
-                    <x>87</x>
-                    <y>132</y>
+                    <x>340</x>
+                    <y>290</y>
                 </pos>
                 <zvalue>3</zvalue>
-                <opacity>1</opacity>
+                <opacity>0.53</opacity>
                 <visible>1</visible>
                 <frame-class>0</frame-class>
-                <transformation yRot="0" xRot="0" zRot="0"/>
-                <fill brush-style="1" video="" image="" brush-color="4278190080" type="1"/>
-                <outline brush-style="1" pen-join="64" pen-width="3" enabled="1" brush-color="4278190080" pen-cap="16" pen-color="4278190080"/>
-                <mirror offset="3" enabled="1"/>
-                <shadow brush-style="1" offset="3" enabled="0" brush-color="4278190080"/>
+                <transformation yRot="0" xRot="0" zRot="0" />
+                <fill brush-style="1" video="" image="" brush-color="4286578688" type="1" />
+                <outline brush-style="1" pen-join="64" pen-width="3" enabled="1" brush-color="4278190080" pen-cap="16" pen-color="4278190080" />
+                <mirror offset="3" enabled="0" />
+                <shadow brush-style="1" offset="3" enabled="0" brush-color="4278190080" />
             </box>
-        </slide>
-        <slide number="1" id="1">
-            <box>
-                <item-id>124</item-id>
-                <item-name>BoxItem124</item-name>
+            <textbox>
+                <item-id>123</item-id>
+                <item-name>TextBoxItem123</item-name>
                 <rect>
                     <x>-100</x>
                     <y>-75</y>
-                    <w>713</w>
-                    <h>60</h>
+                    <w>337</w>
+                    <h>228</h>
                 </rect>
                 <pos>
-                    <x>213</x>
-                    <y>311</y>
+                    <x>350</x>
+                    <y>440</y>
                 </pos>
-                <zvalue>1</zvalue>
+                <zvalue>2</zvalue>
                 <opacity>1</opacity>
                 <visible>1</visible>
                 <frame-class>0</frame-class>
-                <transformation yRot="0" xRot="0" zRot="0"/>
-                <fill brush-style="1" video="" image="" brush-color="4294901760" type="1"/>
-                <outline brush-style="1" pen-join="64" pen-width="3" enabled="1" brush-color="4278190080" pen-cap="16" pen-color="4278190080"/>
-                <mirror offset="3" enabled="0"/>
-                <shadow brush-style="1" offset="3" enabled="0" brush-color="4278190080"/>
-            </box>
+                <transformation yRot="0" xRot="0" zRot="0" />
+                <fill brush-style="1" video="" image="" brush-color="4294967295" type="1" />
+                <outline brush-style="1" pen-join="64" pen-width="1.5" enabled="1" brush-color="4278190080" pen-cap="16" pen-color="4278190080" />
+                <mirror offset="3" enabled="0" />
+                <shadow brush-style="1" offset="3" enabled="0" brush-color="4278190080" />
+                <text>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
+&lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
+p, li { white-space: pre-wrap; }
+&lt;/style>&lt;/head>&lt;body style=" font-family:'Tahoma'; font-size:40pt; font-weight:400; font-style:normal;">
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-family:'Sans Serif'; font-size:72pt; font-weight:600;">Lorem Ipsum&lt;/span>&lt;/p>&lt;/body>&lt;/html></text>
+                <default-font font-family="Tahoma" font-size="40" />
+                <shape enabled="0" />
+            </textbox>
         </slide>
     </group>
 </document>

@@ -1,68 +1,91 @@
+
 TEMPLATE = app
 TARGET = dviz
+
 INCLUDEPATH += .
 DEPENDPATH += .
+
 MOC_DIR = .build
 OBJECTS_DIR = .build
 RCC_DIR = .build
 UI_DIR = .build
+
 BUILDNUM = $$system(perl buildcount.pl -v)
-VERSTR = '\\"$${BUILDNUM}\\"' # place quotes around the version string
-unix { 
-    VERSION = "0.0.4"
+VERSTR = '\\"$${BUILDNUM}\\"'  # place quotes around the version string
+
+unix {
+    VERSION  = "0.0.4"
     VERSION = "$${VERSION} (Build $${BUILDNUM})"
-    SVNREV = $$system(svn info -r HEAD . | grep Changed\ Rev | cut -b 19-)
-    !isEmpty(SVNREV):VERSION = "$${VERSION} r$${SVNREV}"
-    VERSTR = '\\"$${VERSION}\\"' # place quotes around the version string
+    SVNREV   = $$system(svn info -r HEAD . | grep Changed\ Rev | cut -b 19-)
+    
+    !isEmpty(SVNREV) {
+	     VERSION = "$${VERSION} r$${SVNREV}"
+    }
+    VERSTR = '\\"$${VERSION}\\"'  # place quotes around the version string
 }
+
 DEFINES += VER=\"$${VERSTR}\" # create a VER macro containing the version string
 
-# HEADERS = videoplayer.h videoitem.h QVideo.h QVideoBuffer.h QVideoDecoder.h QVideoEncoder.h QResizeDecorator.h QVideoTest.h
-# SOURCES = main.cpp videoplayer.cpp videoitem.cpp QVideo.cpp QVideoBuffer.cpp QVideoDecoder.cpp QVideoEncoder.cpp QResizeDecorator.cpp QVideoTest.cpp
+#HEADERS   = videoplayer.h  videoitem.h QVideo.h QVideoBuffer.h QVideoDecoder.h QVideoEncoder.h QResizeDecorator.h QVideoTest.h
+#SOURCES   = main.cpp videoplayer.cpp videoitem.cpp QVideo.cpp QVideoBuffer.cpp QVideoDecoder.cpp QVideoEncoder.cpp QResizeDecorator.cpp QVideoTest.cpp
+
 # use OpenGL where available
-contains(QT_CONFIG, opengl)|contains(QT_CONFIG, opengles1)|contains(QT_CONFIG, opengles2):QT += opengl
+contains(QT_CONFIG, opengl)|contains(QT_CONFIG, opengles1)|contains(QT_CONFIG, opengles2) {
+    QT += opengl
+}
+
 FORMS += mainwindow.ui
+
 RESOURCES += dviz.qrc
-HEADERS += MainWindow.h \
-    MyGraphicsScene.h \
-    RenderOpts.h \
-    SlideGroupListModel.h \
-    SlideEditorWindow.h \
-    DocumentListModel.h \
-    SlideGroupViewer.h
-SOURCES += main.cpp \
-    MainWindow.cpp \
-    MyGraphicsScene.cpp \
-    SlideGroupListModel.cpp \
-    SlideEditorWindow.cpp \
-    DocumentListModel.cpp \
-    SlideGroupViewer.cpp
+
+HEADERS += \
+	MainWindow.h \
+	MyGraphicsScene.h \
+	RenderOpts.h \
+	SlideGroupListModel.h \
+	SlideEditorWindow.h \
+	DocumentListModel.h \
+	SlideGroupViewer.h
+
+	
+SOURCES += \
+	main.cpp \
+	MainWindow.cpp \
+	MyGraphicsScene.cpp \
+	SlideGroupListModel.cpp \
+	SlideEditorWindow.cpp \
+	DocumentListModel.cpp \
+	SlideGroupViewer.cpp
+	
+
 QT += core \
     gui \
     svg \
     network \
     xml
-unix:LIBS += -lavdevice \
-    -lavformat \
-    -lavcodec \
-    -lavutil \
-    -lswscale \
-    -lbz2
-win32 { 
-    INCLUDEPATH += ./external/ffmpeg/include/msinttypes \
-        ./external/ffmpeg/include/libswscale \
-        ./external/ffmpeg/include/libavutil \
-        ./external/ffmpeg/include/libavdevice \
-        ./external/ffmpeg/include/libavformat \
-        ./external/ffmpeg/include/libavcodec \
-        ./external/ffmpeg/include
-    LIBS += -L"./external/ffmpeg/lib" \
-        -lavcodec-51 \
-        -lavformat-52 \
-        -lavutil-49 \
-        -lavdevice-52 \
-        -lswscale-0
+
+unix {
+    LIBS += -lavdevice -lavformat -lavcodec -lavutil -lswscale -lbz2
 }
+
+win32 {
+     INCLUDEPATH += \
+         ./external/ffmpeg/include/msinttypes \
+         ./external/ffmpeg/include/libswscale \
+         ./external/ffmpeg/include/libavutil \
+         ./external/ffmpeg/include/libavdevice \
+         ./external/ffmpeg/include/libavformat \
+         ./external/ffmpeg/include/libavcodec \
+         ./external/ffmpeg/include
+
+     LIBS += -L"./external/ffmpeg/lib" \
+         -lavcodec-51 \
+         -lavformat-52 \
+         -lavutil-49 \
+         -lavdevice-52 \
+         -lswscale-0
+}
+
 include(frames/frames.pri)
 include(items/items.pri)
 include(model/model.pri)
@@ -73,7 +96,7 @@ include(qvideo/qvideo.pri)
 include(qtcolorpicker/qtcolorpicker.pri)
 
 # deployment on Linux
-unix { 
+unix {
     target.path = /usr/bin
     icon.files = dviz.png
     icon.path = /usr/share/pixmaps
@@ -87,11 +110,14 @@ unix {
         man
 }
 
+
 # static builds
-win32|macx:contains(CONFIG, static)|contains(CONFIG, qt_no_framework) { 
-    DEFINES += STATIC_LINK
-    QTPLUGIN += qgif \
-        qjpeg \
-        qsvg \
-        qtiff
+win32|macx {
+    contains(CONFIG, static)|contains(CONFIG, qt_no_framework) {
+        DEFINES += STATIC_LINK
+        QTPLUGIN += qgif \
+            qjpeg \
+            qsvg \
+            qtiff
+    }
 }

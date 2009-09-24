@@ -22,6 +22,8 @@ SlideGroupViewer::SlideGroupViewer(QWidget *parent)
 	m_scene = new MyGraphicsScene();
 	m_scene->setSceneRect(sceneRect);
 	m_view->setScene(m_scene);
+	
+	m_view->setBackgroundBrush(Qt::gray);
 
 	QVBoxLayout *layout = new QVBoxLayout();
 	layout->addWidget(m_view);
@@ -95,26 +97,11 @@ void SlideGroupViewer::resizeEvent(QResizeEvent *)
 
 void SlideGroupViewer::adjustViewScaling()
 {
-	//int hfw = (m_scene->height() * width()) / m_scene->width();
-	int fw, fh;
-	if(width() > height()) //m_scene->width() > m_scene->height())
-	{
-		qreal rat = m_scene->height() / m_scene->width();
-		fh = height();
-		fw = rat * fh;
-	}
-	else
-	{
-		qreal rat = m_scene->width() / m_scene->height();
-		fw = width();
-		fh = rat * fw;
-	}
-
-	float sx = ((float)fw) / m_scene->width();
-	float sy = ((float)fh) / m_scene->height();
+	float sx = ((float)m_view->width()) / m_scene->width();
+	float sy = ((float)m_view->height()) / m_scene->height();
 
 	float scale = qMin(sx,sy);
-	m_view->scale(scale,scale);
+	m_view->setTransform(QTransform().scale(scale,scale));
 	qDebug("Scaling: %.02f x %.02f = %.02f",sx,sy,scale);
 	m_view->update();
 

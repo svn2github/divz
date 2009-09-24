@@ -4,6 +4,7 @@
 #include <QSettings>
 #include <QFile>
 #include <QDebug>
+#include <QDesktopWidget>
 
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -42,12 +43,25 @@ MainWindow::MainWindow(QWidget *parent) :
 	m_docModel.setDocument(&m_doc);
 	m_ui->listView->setModel(&m_docModel);
 	
-	connect(m_ui->listView,SIGNAL(activated(const QModelIndex &)),this,SLOT(groupSelected(const QModelIndex &)));
+	connect(m_ui->listView,SIGNAL(activated(const QModelIndex &)),this,SLOT(groupSetLive(const QModelIndex &)));
 	connect(m_ui->listView,SIGNAL(clicked(const QModelIndex &)),this,SLOT(groupSelected(const QModelIndex &)));
 	connect(m_ui->listView,SIGNAL(doubleClicked(const QModelIndex &)),this,SLOT(groupDoubleClicked(const QModelIndex &)));
 
 	m_previewWidget = new SlideGroupViewer(m_ui->dwPreview);
 	m_ui->dwPreview->setWidget(m_previewWidget);
+	
+	m_liveViewWidget = new SlideGroupViewer(m_ui->dwLive);
+	m_ui->dwLive->setWidget(m_liveViewWidget);
+	
+	m_liveView = new SlideGroupViewer();
+	
+	QRect geom = QApplication::desktop()->availableGeometry();
+	//resize(2 * geom.width() / 3, 2 * geom.height() / 3);
+	m_liveView->resize(geom.width(),geom.height());
+	m_liveView->move(0,0);
+	
+	m_liveView->setWindowTitle("Live");
+	m_liveView->show();
 
 }
 
@@ -70,6 +84,15 @@ void MainWindow::groupSelected(const QModelIndex &idx)
 	qDebug() << "MainWindow::groupSelected(): selected group#:"<<s->groupNumber()<<", title:"<<s->groupTitle();
 	//openSlideEditor(s);
 	m_previewWidget->setSlideGroup(s);
+}
+
+void MainWindow::groupSetLive(const QModelIndex &idx)
+{
+	SlideGroup *s = m_docModel.groupFromIndex(idx);
+	qDebug() << "MainWindow::groupSelected(): groupSetLive group#:"<<s->groupNumber()<<", title:"<<s->groupTitle();
+	//openSlideEditor(s);
+	m_liveViewWidget->setSlideGroup(s);
+	m_liveView->setSlideGroup(s);
 }
 
 void MainWindow::groupDoubleClicked(const QModelIndex &idx)

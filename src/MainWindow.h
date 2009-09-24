@@ -20,6 +20,7 @@ public:
 
 protected slots:
 	void groupSelected(const QModelIndex &);
+	void groupSetLive(const QModelIndex &);
 	void groupDoubleClicked(const QModelIndex &);
 	
 protected:
@@ -33,6 +34,8 @@ private:
 	DocumentListModel m_docModel;
 	SlideEditorWindow m_editWin;
 	SlideGroupViewer *m_previewWidget;
+	SlideGroupViewer *m_liveViewWidget;
+	SlideGroupViewer *m_liveView;
 };
 
 #endif // MAINWINDOW_H
