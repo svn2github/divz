@@ -6,6 +6,7 @@
 #include "model/Document.h"
 #include "DocumentListModel.h"
 #include "SlideEditorWindow.h"
+#include "SlideGroupViewer.h"
 
 namespace Ui {
 	class MainWindow;
@@ -19,6 +20,7 @@ public:
 
 protected slots:
 	void groupSelected(const QModelIndex &);
+	void groupDoubleClicked(const QModelIndex &);
 	
 protected:
 	void changeEvent(QEvent *e);
@@ -30,7 +32,7 @@ private:
 	Document m_doc;
 	DocumentListModel m_docModel;
 	SlideEditorWindow m_editWin;
-	
+	SlideGroupViewer *m_previewWidget;
 };
 
 #endif // MAINWINDOW_H

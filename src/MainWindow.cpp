@@ -26,6 +26,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	{
 		m_doc.load("test.xml");
 		//r.readSlide(m_slide);
+		setWindowTitle("test.xml - DViz");
 	}
 	else
 	{
@@ -34,6 +35,8 @@ MainWindow::MainWindow(QWidget *parent) :
 		g->addSlide(slide);
 		m_doc.addGroup(g);
 		//m_scene->setSlide(slide);
+
+		setWindowTitle("New Show - DViz");
 	}
 	
 	m_docModel.setDocument(&m_doc);
@@ -41,6 +44,10 @@ MainWindow::MainWindow(QWidget *parent) :
 	
 	connect(m_ui->listView,SIGNAL(activated(const QModelIndex &)),this,SLOT(groupSelected(const QModelIndex &)));
 	connect(m_ui->listView,SIGNAL(clicked(const QModelIndex &)),this,SLOT(groupSelected(const QModelIndex &)));
+	connect(m_ui->listView,SIGNAL(doubleClicked(const QModelIndex &)),this,SLOT(groupDoubleClicked(const QModelIndex &)));
+
+	m_previewWidget = new SlideGroupViewer(m_ui->dwPreview);
+	m_ui->dwPreview->setWidget(m_previewWidget);
 
 }
 
@@ -61,7 +68,17 @@ void MainWindow::groupSelected(const QModelIndex &idx)
 {
 	SlideGroup *s = m_docModel.groupFromIndex(idx);
 	qDebug() << "MainWindow::groupSelected(): selected group#:"<<s->groupNumber()<<", title:"<<s->groupTitle();
-	openSlideEditor(s);
+	//openSlideEditor(s);
+	m_previewWidget->setSlideGroup(s);
+}
+
+void MainWindow::groupDoubleClicked(const QModelIndex &idx)
+{
+	SlideGroup *g = m_docModel.groupFromIndex(idx);
+	qDebug() << "MainWindow::groupSelected(): double-clicked group#:"<<g->groupNumber()<<", title:"<<g->groupTitle();
+	statusBar()->showMessage(QString("Loading %1...").arg(g->groupTitle().isEmpty() ? QString("Group %1").arg(g->groupNumber()) : g->groupTitle()));
+	openSlideEditor(g);
+	statusBar()->clearMessage();
 }
 
 void MainWindow::openSlideEditor(SlideGroup *g)

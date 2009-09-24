@@ -345,6 +345,8 @@ void SlideEditorWindow::setSlideGroup(SlideGroup *g,Slide *curSlide)
 	m_slideGroup = g;
 	m_slideModel->setSlideGroup(g);
 	m_slideListView->reset();
+
+	setWindowTitle(QString("%1 - Slide Editor").arg(g->groupTitle().isEmpty() ? QString("Group %1").arg(g->groupNumber()) : g->groupTitle()));
 	//m_slideListView->setModel(m_slideModel);
 	
 	if(curSlide)
