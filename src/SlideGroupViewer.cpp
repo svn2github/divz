@@ -26,6 +26,7 @@ SlideGroupViewer::SlideGroupViewer(QWidget *parent)
 	m_view->setBackgroundBrush(Qt::gray);
 
 	QVBoxLayout *layout = new QVBoxLayout();
+	layout->setContentsMargins(0,0,0,0);
 	layout->addWidget(m_view);
 	setLayout(layout);
 }

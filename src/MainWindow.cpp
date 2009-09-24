@@ -50,10 +50,11 @@ MainWindow::MainWindow(QWidget *parent) :
 	m_previewWidget = new SlideGroupViewer(m_ui->dwPreview);
 	m_ui->dwPreview->setWidget(m_previewWidget);
 	
-	m_liveViewWidget = new SlideGroupViewer(m_ui->dwLive);
-	m_ui->dwLive->setWidget(m_liveViewWidget);
-	
 	m_liveView = new SlideGroupViewer();
+	
+	m_liveMonitor = new OutputViewer(m_liveView, m_ui->dwLive);
+	m_ui->dwLive->setWidget(m_liveMonitor);
+	
 	
 	QRect geom = QApplication::desktop()->availableGeometry();
 	//resize(2 * geom.width() / 3, 2 * geom.height() / 3);
@@ -62,6 +63,8 @@ MainWindow::MainWindow(QWidget *parent) :
 	
 	m_liveView->setWindowTitle("Live");
 	m_liveView->show();
+	
+	connect(m_ui->actionExit,SIGNAL(activated()), qApp, SLOT(quit()));
 
 }
 
@@ -75,6 +78,10 @@ MainWindow::~MainWindow()
 	settings.setValue("mainwindow/state",saveState());
 	
 	delete m_ui;
+	
+	m_liveView->hide();
+	delete m_liveView;
+	m_liveView = 0;
 }
 
 
@@ -91,7 +98,6 @@ void MainWindow::groupSetLive(const QModelIndex &idx)
 	SlideGroup *s = m_docModel.groupFromIndex(idx);
 	qDebug() << "MainWindow::groupSelected(): groupSetLive group#:"<<s->groupNumber()<<", title:"<<s->groupTitle();
 	//openSlideEditor(s);
-	m_liveViewWidget->setSlideGroup(s);
 	m_liveView->setSlideGroup(s);
 }
 

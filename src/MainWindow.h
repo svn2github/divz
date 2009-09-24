@@ -7,6 +7,7 @@
 #include "DocumentListModel.h"
 #include "SlideEditorWindow.h"
 #include "SlideGroupViewer.h"
+#include "OutputViewer.h"
 
 namespace Ui {
 	class MainWindow;
@@ -34,7 +35,7 @@ private:
 	DocumentListModel m_docModel;
 	SlideEditorWindow m_editWin;
 	SlideGroupViewer *m_previewWidget;
-	SlideGroupViewer *m_liveViewWidget;
+	OutputViewer *m_liveMonitor;
 	SlideGroupViewer *m_liveView;
 };
 

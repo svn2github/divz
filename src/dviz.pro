@@ -45,7 +45,8 @@ HEADERS += \
 	SlideGroupListModel.h \
 	SlideEditorWindow.h \
 	DocumentListModel.h \
-	SlideGroupViewer.h
+	SlideGroupViewer.h \
+	OutputViewer.h
 
 	
 SOURCES += \
@@ -55,7 +56,8 @@ SOURCES += \
 	SlideGroupListModel.cpp \
 	SlideEditorWindow.cpp \
 	DocumentListModel.cpp \
-	SlideGroupViewer.cpp
+	SlideGroupViewer.cpp \
+	OutputViewer.cpp
 	
 
 QT += core \
