@@ -19,6 +19,8 @@ public:
 	void setSlideGroup(SlideGroup*, int startSlide = 0);
 	int numSlides() { return m_sortedSlides.size(); }
 	
+	void clear();
+	
 	MyGraphicsScene * scene() { return m_scene; }
 
 public slots:

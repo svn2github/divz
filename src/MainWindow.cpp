@@ -52,8 +52,8 @@ MainWindow::MainWindow(QWidget *parent) :
 	
 	m_liveView = new SlideGroupViewer();
 	
-	m_liveMonitor = new OutputViewer(m_liveView, m_ui->dwLive);
-	m_ui->dwLive->setWidget(m_liveMonitor);
+	//m_liveMonitor = new OutputViewer(m_liveView, m_ui->dwLive);
+	//m_ui->dwLive->setWidget(m_liveMonitor);
 	
 	
 	QRect geom = QApplication::desktop()->availableGeometry();
@@ -98,7 +98,10 @@ void MainWindow::groupSetLive(const QModelIndex &idx)
 	SlideGroup *s = m_docModel.groupFromIndex(idx);
 	qDebug() << "MainWindow::groupSelected(): groupSetLive group#:"<<s->groupNumber()<<", title:"<<s->groupTitle();
 	//openSlideEditor(s);
+	m_previewWidget->clear();
 	m_liveView->setSlideGroup(s);
+	if(!m_liveView->isVisible())
+		m_liveView->show();
 }
 
 void MainWindow::groupDoubleClicked(const QModelIndex &idx)
@@ -107,6 +110,7 @@ void MainWindow::groupDoubleClicked(const QModelIndex &idx)
 	qDebug() << "MainWindow::groupSelected(): double-clicked group#:"<<g->groupNumber()<<", title:"<<g->groupTitle();
 	statusBar()->showMessage(QString("Loading %1...").arg(g->groupTitle().isEmpty() ? QString("Group %1").arg(g->groupNumber()) : g->groupTitle()));
 	openSlideEditor(g);
+	m_previewWidget->clear();
 	statusBar()->clearMessage();
 }
 

@@ -319,7 +319,7 @@ void SlideEditorWindow::setupSlideGroupDockWidget()
 	
 	m_slideModel = new SlideGroupListModel();
 	m_slideListView->setModel(m_slideModel);
-	connect(m_slideModel, SIGNAL(modelChanged()), this, SLOT(slideListModelChanged()));
+	//connect(m_slideModel, SIGNAL(modelChanged()), this, SLOT(slideListModelChanged()));
 	
 	if(m)
 	{
@@ -331,21 +331,11 @@ void SlideEditorWindow::setupSlideGroupDockWidget()
 	//viewMenu->addAction(dock->toggleViewAction());
 }
 
-void SlideEditorWindow::slideListModelChanged()
-{
-	//m_slideModel->setSlideGroup(m_slideGroup);
-	m_slideListView->reset();
-	
-	Slide *s = m_scene->slide();
-	m_slideListView->setCurrentIndex(m_slideModel->indexForSlide(s));
-}
-
 void SlideEditorWindow::setSlideGroup(SlideGroup *g,Slide *curSlide)
 {
 	m_slideGroup = g;
 	m_slideModel->setSlideGroup(g);
-	m_slideListView->reset();
-
+	
 	setWindowTitle(QString("%1 - Slide Editor").arg(g->groupTitle().isEmpty() ? QString("Group %1").arg(g->groupNumber()) : g->groupTitle()));
 	//m_slideListView->setModel(m_slideModel);
 	

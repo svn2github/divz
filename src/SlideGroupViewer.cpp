@@ -51,6 +51,12 @@ bool slide_group_viewer_slide_num_compare(Slide *a, Slide *b)
 	return (a && b) ? a->slideNumber() < b->slideNumber() : true;
 }
 
+void SlideGroupViewer::clear()
+{
+	m_scene->clear();
+	m_slideGroup = 0;
+}
+
 void SlideGroupViewer::setSlideGroup(SlideGroup *g, int startSlide)
 {
 	//qDebug() << "SlideGroupListModel::setSlideGroup: setting slide group:"<<g->groupNumber();

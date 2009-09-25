@@ -8,6 +8,7 @@
 
 #include "model/SlideGroup.h"
 #include "model/Slide.h"
+#include "RenderOpts.h"
 
 SlideGroupListModel::SlideGroupListModel(SlideGroup *g, QObject *parent)
 		: QAbstractListModel(parent), m_slideGroup(0), m_scene(0), m_view(0), m_dirtyTimer(0)
@@ -53,16 +54,23 @@ void SlideGroupListModel::setSlideGroup(SlideGroup *g)
 	QList<Slide*> slist = g->slideList();
 	qSort(slist.begin(), slist.end(), slide_num_compare);
 	m_sortedSlides = slist;
+	
+	QModelIndex top    = indexForSlide(m_sortedSlides.first()), 
+	            bottom = indexForSlide(m_sortedSlides.last());
+	qDebug() << "SlideGroupListModel::setSlideGroup: top:"<<top<<", bottom:"<<bottom;
+	
+	dataChanged(top,bottom);
+
 }
 
-void SlideGroupListModel::slideChanged(Slide *slide, QString slideOperation, AbstractItem *item, QString operation, QString fieldName, QVariant value)
+void SlideGroupListModel::slideChanged(Slide *slide, QString slideOperation, AbstractItem */*item*/, QString /*operation*/, QString /*fieldName*/, QVariant /*value*/)
 {
 	if(!m_dirtyTimer)
 	{
 		m_dirtyTimer = new QTimer(this);
 		connect(m_dirtyTimer, SIGNAL(timeout()), this, SLOT(modelDirtyTimeout()));
 		
-		m_dirtyTimer->setSingleShot(false);
+		m_dirtyTimer->setSingleShot(true);
 	
 	}
 	
@@ -80,14 +88,26 @@ void SlideGroupListModel::slideChanged(Slide *slide, QString slideOperation, Abs
 		
 	m_pixmaps.remove(m_sortedSlides.indexOf(slide));
 	m_dirtyTimer->start(250);
+	m_dirtySlides << slide;
 }
 
 void SlideGroupListModel::modelDirtyTimeout()
 {
-	emit modelChanged();
+	
+	qSort(m_dirtySlides.begin(),
+	      m_dirtySlides.end(), 
+	      slide_num_compare);
+	
+	QModelIndex top    = indexForSlide(m_dirtySlides.first()), 
+	            bottom = indexForSlide(m_dirtySlides.last());
+	qDebug() << "SlideGroupListModel::modelDirtyTimeout: top:"<<top<<", bottom:"<<bottom;
+	m_dirtySlides.clear();
+	
+	dataChanged(top,bottom);
+	//emit modelChanged();
 }
 	
-int SlideGroupListModel::rowCount(const QModelIndex &parent) const
+int SlideGroupListModel::rowCount(const QModelIndex &/*parent*/) const
 {
 	int rc = m_slideGroup ? m_slideGroup->numSlides() : 0;
 	
@@ -158,8 +178,8 @@ void SlideGroupListModel::generatePixmap(int row)
 	//qDebug("generatePixmap: Row#%d: Begin", row);
 	Slide * slide = m_sortedSlides.at(row);
 	
-	int icon_w = 64;
-	int icon_h = icon_w*0.75;
+	int icon_w = 96;
+	int icon_h = (int)(icon_w*0.75);
 	
 	QRect sceneRect(0,0,1024,768);
 	if(!m_view)
@@ -168,6 +188,13 @@ void SlideGroupListModel::generatePixmap(int row)
 		m_view = new QGraphicsView();
 		m_view->setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing | QPainter::SmoothPixmapTransform );
 		//m_view->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
+		#ifndef QT_NO_OPENGL
+		if(!RenderOpts::DisableOpenGL)
+		{
+			m_view->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
+			qDebug("SlideGroupListModel: Loaded OpenGL viewport.");
+		}
+		#endif
 		
 		m_scene = new MyGraphicsScene();
 		m_scene->setSceneRect(sceneRect);

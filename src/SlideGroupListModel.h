@@ -30,9 +30,6 @@ public:
 	QVariant headerData(int section, Qt::Orientation orientation,
 				int role = Qt::DisplayRole) const;
 	
-signals:
-	void modelChanged();
-	
 private slots:
 	void slideChanged(Slide *slide, QString slideOperation, AbstractItem *item, QString operation, QString fieldName, QVariant value);
 	void modelDirtyTimeout();
@@ -42,6 +39,7 @@ private:
 	
 	SlideGroup * m_slideGroup;
 	QList<Slide*> m_sortedSlides;
+	QList<Slide*> m_dirtySlides;
 	QHash<int,QPixmap> m_pixmaps;
 	
 	MyGraphicsScene * m_scene;

@@ -46,6 +46,8 @@ void QVideoBuffer::addFrame(QFFMpegVideoFrame frame)
 {
 	m_buffer_mutex.lock();
 	m_buffer_queue.enqueue(frame);
+	int buffer_count = m_buffer_queue.count();
+	//qDebug("Buffer size: %d",buffer_count);
 	m_buffer_mutex.unlock();
 	m_needs_frame = false;
 }
