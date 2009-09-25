@@ -205,7 +205,7 @@ SlideEditorWindow::SlideEditorWindow(SlideGroup *group, QWidget * parent)
 	connect(delSlide, SIGNAL(triggered()), this, SLOT(delSlide()));
 
 
-	m_scene = new MyGraphicsScene(this);
+	m_scene = new MyGraphicsScene(MyGraphicsScene::Editor,this);
 	MyGraphicsView *graphicsView = new MyGraphicsView(this);
 	
 	graphicsView->setMyScene(m_scene);

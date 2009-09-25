@@ -48,6 +48,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	connect(m_ui->listView,SIGNAL(doubleClicked(const QModelIndex &)),this,SLOT(groupDoubleClicked(const QModelIndex &)));
 
 	m_previewWidget = new SlideGroupViewer(m_ui->dwPreview);
+	m_previewWidget->scene()->setContextHint(MyGraphicsScene::Preview);
 	m_ui->dwPreview->setWidget(m_previewWidget);
 	
 	m_liveView = new SlideGroupViewer();

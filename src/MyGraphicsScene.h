@@ -1,7 +1,7 @@
 #ifndef MYGRAPHICSSCENE_H
 #define MYGRAPHICSSCENE_H
 
-#include "items/TextContent.h"
+//#include "items/TextContent.h"
 
 #include <QGraphicsScene>
 #include <QDataStream>
@@ -13,6 +13,7 @@
 
 
 class AbstractContent;
+class AbstractVisualItem;
 class GenericItemConfig;
 class Slide;
 class TextItem;
@@ -24,7 +25,15 @@ class MyGraphicsScene : public QGraphicsScene
 	//         friend class XmlRead;
 	//         friend class XmlSave;
 	
-		MyGraphicsScene(QObject * parent = 0);
+		typedef enum ContextHint
+                {
+                	Editor,
+                	Preview,
+                	Monitor,
+                	Live,
+                };
+	
+		MyGraphicsScene(ContextHint hint = Editor, QObject * parent = 0);
  		~MyGraphicsScene();
  		
  		typedef enum SlideTransition { None, CrossFade };
@@ -39,8 +48,11 @@ class MyGraphicsScene : public QGraphicsScene
                 AbstractVisualItem * newVideoItem();
                 
                 void clear();
-		
-		
+                
+               
+                
+                ContextHint contextHint() { return m_contextHint; }
+                void setContextHint(ContextHint);
 		
 	signals:
 		void showPropertiesWidget(QWidget * widget);
@@ -56,6 +68,8 @@ class MyGraphicsScene : public QGraphicsScene
 		Slide * m_slide;
 		Slide * m_slidePrev;
 		SlideTransition * m_currentTransition;
+		
+		ContextHint m_contextHint;
 			
 	private slots:
 		friend class AbstractConfig; // HACK here, only to call 1 method

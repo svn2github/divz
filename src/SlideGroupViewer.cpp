@@ -19,7 +19,7 @@ SlideGroupViewer::SlideGroupViewer(QWidget *parent)
 		m_view->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
 	}
 
-	m_scene = new MyGraphicsScene();
+	m_scene = new MyGraphicsScene(MyGraphicsScene::Live);
 	m_scene->setSceneRect(sceneRect);
 	m_view->setScene(m_scene);
 	

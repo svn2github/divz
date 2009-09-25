@@ -9,7 +9,7 @@
 
 
 OutputViewer::OutputViewer(SlideGroupViewer *output, QWidget *parent)
-	    : QWidget(parent), m_scene(0), m_view(0), m_output(0)
+	    : QWidget(parent), m_scene(0), m_output(0), m_view(0)
 {
 	QRect sceneRect(0,0,1024,768);
 	m_view = new QGraphicsView(this);

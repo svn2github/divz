@@ -50,9 +50,10 @@
 #define COLORPICKER_W 200
 #define COLORPICKER_H 150
 
-MyGraphicsScene::MyGraphicsScene(QObject * parent)
+MyGraphicsScene::MyGraphicsScene(ContextHint hint, QObject * parent)
     : QGraphicsScene(parent)
     , m_slide(0)
+    , m_contextHint(hint)
 {
 }
 
@@ -63,6 +64,11 @@ MyGraphicsScene::~MyGraphicsScene()
 	
 	//qDeleteAll(m_ownedContent);
 	
+}
+
+void MyGraphicsScene::setContextHint(ContextHint hint)
+{
+	m_contextHint = hint;
 }
 
 void MyGraphicsScene::clear()

@@ -51,6 +51,11 @@ void ButtonItem::setSelectsParent(bool selects)
     m_selectsParent = selects;
 }
 
+void ButtonItem::setIcon(const QIcon & icon)
+{
+	m_icon = icon;
+}
+
 QRectF ButtonItem::boundingRect() const
 {
     return QRectF(-8, -8, 16, 16);

@@ -30,7 +30,7 @@ public:
 				int role = Qt::DisplayRole) const;
 	
 signals:
- 	void modelChanged();
+ 	//void modelChanged();
 	
 private slots:
  	void slideGroupChanged(SlideGroup *g, QString groupOperation, Slide *slide, QString slideOperation, AbstractItem *item, QString operation, QString fieldName, QVariant value);
@@ -41,6 +41,7 @@ private:
 	
 	Document * m_doc;
 	QList<SlideGroup*> m_sortedGroups;
+	QList<SlideGroup*> m_dirtyGroups;
 // 	QHash<int,QPixmap> m_pixmaps;
 	
 // 	MyGraphicsScene * m_scene;

@@ -88,7 +88,8 @@ void SlideGroupListModel::slideChanged(Slide *slide, QString slideOperation, Abs
 		
 	m_pixmaps.remove(m_sortedSlides.indexOf(slide));
 	m_dirtyTimer->start(250);
-	m_dirtySlides << slide;
+	if(!m_dirtySlides.contains(slide))
+		m_dirtySlides << slide;
 }
 
 void SlideGroupListModel::modelDirtyTimeout()
@@ -196,7 +197,7 @@ void SlideGroupListModel::generatePixmap(int row)
 		}
 		#endif
 		
-		m_scene = new MyGraphicsScene();
+		m_scene = new MyGraphicsScene(MyGraphicsScene::Preview);
 		m_scene->setSceneRect(sceneRect);
 		m_view->setScene(m_scene);
 	}

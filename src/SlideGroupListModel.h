@@ -7,6 +7,9 @@
 #include <QTimer>
 
 #include "MyGraphicsScene.h"
+#include "model/AbstractItem.h"
+
+#include <math.h>
 
 class Slide;
 class SlideGroup;

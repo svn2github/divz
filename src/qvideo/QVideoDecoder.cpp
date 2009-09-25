@@ -257,6 +257,12 @@ void QVideoDecoder::seek(int ms, int flags)
 
 void QVideoDecoder::restart()
 {
+// 	if(m_frame != NULL)
+// 	{
+// 		delete m_frame;
+// 		m_frame = 0;
+// 	}
+// 	
 	seek(0, AVSEEK_FLAG_BACKWARD);
 }
 

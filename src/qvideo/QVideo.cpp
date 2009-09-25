@@ -146,10 +146,11 @@ void QVideo::setOutputSize(QSize size)
 
 void QVideo::play()
 {
+	m_status = Running;
 	if(!m_play_timer)
 	{
 		m_play_time.start();
-		m_play_timer = startTimer(10);
+		m_play_timer = startTimer(1);
 	}
 	emit movieStateChanged(QMovie::Running);
 }
@@ -161,6 +162,7 @@ void QVideo::seek(int ms)
 
 void QVideo::pause()
 {
+	m_status = Paused;
 	//emit startDecode();
 	killTimer(m_play_timer);
 	m_play_timer = 0;
@@ -169,6 +171,7 @@ void QVideo::pause()
 
 void QVideo::stop()
 {
+	m_status = NotRunning;
 	killTimer(m_play_timer);
 	m_play_timer = 0;
 
@@ -177,6 +180,20 @@ void QVideo::stop()
 	m_video_decoder->restart();
 	m_video_decoder->flushBuffers();
 	emit movieStateChanged(QMovie::NotRunning);
+	
+}
+
+void QVideo::setStatus(Status s)
+{
+	m_status = s;
+	if(s == NotRunning)
+		stop();
+	else
+	if(s == Paused)
+		pause();
+	else
+	if(s == Running)
+		play();
 }
 
 QImage QVideo::advance(int ms)
@@ -258,7 +275,7 @@ void QVideo::consumeFrame()
 		int actual_delay = (global_delay < pts_delay && global_delay > 0) ? global_delay : pts_delay;
 		//actual_delay = 15;
 		//qDebug("Sleeping %d till next frame...",actual_delay);
-		int min = 0;
+		int min = 10;
 		#if !defined(Q_OS_UNIX)
 			min=33 * 2;
 		#endif
@@ -316,6 +333,11 @@ void QVideo::consumeFrame()
 
 void QVideo::displayFrame()
 {
+	if(status() != Running)
+	{
+		qDebug("Not running, not showing frame");
+		return;
+	}
         //qDebug("Done sleeping, showing next frame");
 
         //qDebug("    END frame: %d",m_frame_counter);

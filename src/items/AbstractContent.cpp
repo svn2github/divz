@@ -28,10 +28,10 @@ AbstractContent::AbstractContent(QGraphicsScene * scene, QGraphicsItem * parent,
     , m_transformRefreshTimer(0)
     , m_gfxChangeTimer(0)
     , m_mirrorItem(0)
+    , m_dontSyncToModel(true)
     , m_xRotationAngle(0)
     , m_yRotationAngle(0)
     , m_zRotationAngle(0)
-    , m_dontSyncToModel(true)
     , m_modelItem(0)
     , m_modelItemIsChanging(false)
     , m_hovering(false)
@@ -87,6 +87,9 @@ AbstractContent::AbstractContent(QGraphicsScene * scene, QGraphicsItem * parent,
 	// hide and layoutChildren buttons
 	layoutChildren();
 	
+	// apply context hints for behaviour based on if we're in an editor, live view, preview, etc
+	applySceneContextHint((dynamic_cast<MyGraphicsScene*>(scene))->contextHint());
+	
 	// add to the scene
 	scene->addItem(this);
 	
@@ -104,6 +107,27 @@ AbstractContent::~AbstractContent()
 	delete m_frameTextItem;
 	delete m_frame;
 	m_modelItem = 0;
+}
+
+void AbstractContent::applySceneContextHint(MyGraphicsScene::ContextHint hint)
+{
+	m_contextHint = hint;
+	
+	switch(hint)
+	{
+		case MyGraphicsScene::Live:
+		case MyGraphicsScene::Preview:
+		case MyGraphicsScene::Monitor:
+			// customize item's behavior
+			setFlag(QGraphicsItem::ItemIsMovable, false);
+			setFlag(QGraphicsItem::ItemIsFocusable, false);
+			setFlag(QGraphicsItem::ItemIsSelectable, false);
+			setAcceptHoverEvents(false);
+		
+		case MyGraphicsScene::Editor:
+		default:
+			break;
+	};
 }
 
 void AbstractContent::dispose(bool anim)
@@ -559,6 +583,9 @@ void AbstractContent::GFX_CHANGED() const
 
 void AbstractContent::setControlsVisible(bool visible)
 {
+	if(m_contextHint != MyGraphicsScene::Editor)
+		return;
+		
 	m_controlsVisible = visible;
 	foreach (CornerItem * corner, m_cornerItems)
 		corner->setVisible(visible);

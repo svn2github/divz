@@ -40,6 +40,11 @@ VideoFileContent::VideoFileContent(QGraphicsScene * scene, QGraphicsItem * paren
         connect(m_video, SIGNAL(currentFrame(QFFMpegVideoFrame)),
                      this, SLOT(setVideoFrame(QFFMpegVideoFrame)));
 
+	// add play/pause button
+	m_bSwap = new ButtonItem(ButtonItem::Control, Qt::blue, QIcon(":/data/action-pause.png"), this);
+	m_bSwap->setToolTip(tr("Pause Video"));
+	connect(m_bSwap, SIGNAL(clicked()), this, SLOT(slotTogglePlay()));
+	addButtonItem(m_bSwap);
 	
 	m_dontSyncToModel = false;
 }
@@ -48,6 +53,27 @@ VideoFileContent::~VideoFileContent()
 {
 // 	delete m_shapeEditor;
 // 	delete m_text;
+}
+
+void VideoFileContent::slotTogglePlay()
+{
+	if(m_video->status() != QVideo::Running)
+	{
+		m_bSwap->setToolTip(tr("Pause Video"));
+		m_bSwap->setIcon(QIcon(":/data/action-pause.png"));
+		m_video->play();
+	}
+	else
+	{
+		m_bSwap->setToolTip(tr("Play Video"));
+		m_bSwap->setIcon(QIcon(":/data/action-play.png"));
+		m_video->pause();
+	}
+}
+
+void VideoFileContent::applySceneContextHint(MyGraphicsScene::ContextHint hint)
+{
+	AbstractContent::applySceneContextHint(hint);
 }
 
 QWidget * VideoFileContent::createPropertyWidget()
@@ -124,6 +150,7 @@ void VideoFileContent::setFilename(const QString &name)
 		qDebug() << "VideoFileContent::setFilename(): ERROR: Unable to load video"<<name;
 		return;
 	}
+	//m_imageSize = QSize();
 	m_video->setAdvanceMode(QVideo::Manual);
 	m_video->setLooped(true);
 	m_video->play();
@@ -232,9 +259,19 @@ void VideoFileContent::setVideoFrame(QFFMpegVideoFrame frame)
 
 	        // Adjust scaling while maintaining aspect ratio
 		resizeContents(contentsRect(),true);
+		
+		if(sceneContextHint() != MyGraphicsScene::Live)
+		{
+			m_video->pause();
+			qDebug("VideoFileContent::setVideoFrame: Pausing video file because not in a live scene");
+		}
 	}
 
 	update();
+	GFX_CHANGED();
+	
+// 	m_video->pause();
+// 	qDebug("VideoFileContent::setVideoFrame: Pausing video file AGAIN because not in a live scene");
 }
 
 

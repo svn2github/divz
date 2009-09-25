@@ -73,6 +73,11 @@ public:
 	void setOutputFPS(int fps);
 	void setOutputFile(const QString & output_file);
 	void setOutputSize(QSize size);
+	
+	typedef enum Status {Running, NotRunning, Paused};
+	Status status() { return m_status; }
+	void setStatus(Status);
+	
 
 public slots:
 	void play();
@@ -139,6 +144,8 @@ private:
         QTimer m_nextImageTimer;
         QTime m_frameDebug;
         int m_expectedDelay;
+        
+        Status m_status;
 };
 
 #endif // _QVIDEO_H

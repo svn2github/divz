@@ -31,6 +31,8 @@ class ButtonItem : public QObject, public QGraphicsItem
         int width() const;
         int height() const;
         void setSelectsParent(bool selects);
+        
+        void setIcon(const QIcon & icon);
 
         // ::QGraphicsItem
         QRectF boundingRect() const;

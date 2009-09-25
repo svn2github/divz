@@ -56,14 +56,14 @@ void DocumentListModel::setDocument(Document *doc)
 	m_sortedGroups = glist;
 }
 
-void DocumentListModel::slideGroupChanged(SlideGroup */*g*/, QString groupOperation, Slide */*slide*/, QString /*slideOperation*/, AbstractItem */*item*/, QString /*operation*/, QString /*fieldName*/, QVariant /*value*/)
+void DocumentListModel::slideGroupChanged(SlideGroup *g, QString groupOperation, Slide */*slide*/, QString /*slideOperation*/, AbstractItem */*item*/, QString /*operation*/, QString /*fieldName*/, QVariant /*value*/)
 {
 	if(!m_dirtyTimer)
 	{
 		m_dirtyTimer = new QTimer(this);
 		connect(m_dirtyTimer, SIGNAL(timeout()), this, SLOT(modelDirtyTimeout()));
 		
-		m_dirtyTimer->setSingleShot(false);
+		m_dirtyTimer->setSingleShot(true);
 	
 	}
 	
@@ -81,11 +81,23 @@ void DocumentListModel::slideGroupChanged(SlideGroup */*g*/, QString groupOperat
 		
 // 	m_pixmaps.remove(m_sortedSlides.indexOf(slide));
 	m_dirtyTimer->start(250);
+	if(!m_dirtyGroups.contains(g))
+		m_dirtyGroups << g;
 }
 
 void DocumentListModel::modelDirtyTimeout()
 {
-	emit modelChanged();
+	//emit modelChanged();
+	qSort(m_dirtyGroups.begin(),
+	      m_dirtyGroups.end(), 
+	      group_num_compare);
+	
+	QModelIndex top    = indexForGroup(m_dirtyGroups.first()), 
+	            bottom = indexForGroup(m_dirtyGroups.last());
+	qDebug() << "SDocumentListModel::modelDirtyTimeout: top:"<<top<<", bottom:"<<bottom;
+	m_dirtyGroups.clear();
+	
+	dataChanged(top,bottom);
 }
 	
 int DocumentListModel::rowCount(const QModelIndex &parent) const

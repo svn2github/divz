@@ -4,6 +4,7 @@
 #include "AbstractContent.h"
 #include "qvideo/QVideoBuffer.h"
 #include "qvideo/QVideo.h"
+#include "ButtonItem.h"
 
 /// \brief TODO
 class VideoFileContent : public AbstractContent
@@ -23,6 +24,7 @@ class VideoFileContent : public AbstractContent
 
     private slots:
          void setVideoFrame(QFFMpegVideoFrame);
+         void slotTogglePlay();
 
     public:
         // ::AbstractContent
@@ -36,6 +38,8 @@ class VideoFileContent : public AbstractContent
         
         void syncFromModelItem(AbstractVisualItem*);
         AbstractVisualItem * syncToModelItem(AbstractVisualItem*);
+        
+        void applySceneContextHint(MyGraphicsScene::ContextHint);
 
         // ::QGraphicsItem
 //         void mouseDoubleClickEvent(QGraphicsSceneMouseEvent * event);
@@ -53,6 +57,7 @@ class VideoFileContent : public AbstractContent
          QImage m_image;
          QSize m_imageSize;
          QVideo * m_video;
+         ButtonItem * m_bSwap;
 
 };
 

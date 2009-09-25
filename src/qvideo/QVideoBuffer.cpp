@@ -16,9 +16,13 @@ void QVideoBuffer::flush()
 	int buffer_count = m_buffer_queue.count();
 	for(int i = 0; i < buffer_count; i++)
 	{
-		image = m_buffer_queue.dequeue().frame;
-		delete image;
-		image = 0;
+		// TODO HACK: I know this is wrong - not deleting it - in general.
+		// However, since in the current design, the video buffer at MOST will always
+		// have ONLY one frame in it. That one frame (QVideoDecoder::m_image) is deleted
+		// when the decoder is destroyed. Therefore, dont delete it here.
+// 		image = m_buffer_queue.dequeue().frame;
+// 		delete image;
+// 		image = 0;
 	}
 	emit nowEmpty();
 	m_needs_frame = true;

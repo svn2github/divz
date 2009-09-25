@@ -14,6 +14,8 @@ class MirrorItem;
 class QGraphicsTextItem;
 class QPointF;
 
+#include "MyGraphicsScene.h"
+
 
 /// \brief Base class of Canvas Item (with lots of gadgets!)
 class AbstractContent : public AbstractDisposeable
@@ -77,6 +79,9 @@ class AbstractContent : public AbstractDisposeable
 		// to be reimpl
 		
 		void setOpacity(double);
+		
+		virtual void applySceneContextHint(MyGraphicsScene::ContextHint);
+		MyGraphicsScene::ContextHint sceneContextHint() { return m_contextHint; }
 		
 
 	Q_SIGNALS:
@@ -143,6 +148,8 @@ class AbstractContent : public AbstractDisposeable
 		AbstractVisualItem *m_modelItem;
 		bool		    m_modelItemIsChanging;
 		bool		    m_hovering;
+		
+		MyGraphicsScene::ContextHint	m_contextHint;
 		
 	
 	private Q_SLOTS:
