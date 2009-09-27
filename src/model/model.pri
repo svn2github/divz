@@ -11,7 +11,8 @@ HEADERS +=  \
         BoxItem.h \
         VideoFileItem.h \
         SlideGroup.h \
-        Document.h
+        Document.h \
+        Output.h
 
     
 SOURCES += \
@@ -24,4 +25,5 @@ SOURCES += \
         BoxItem.cpp \
         VideoFileItem.cpp \
         SlideGroup.cpp \
-        Document.cpp
+        Document.cpp \
+        Output.cpp

@@ -16,7 +16,8 @@ SlideGroupViewer::SlideGroupViewer(QWidget *parent)
 	m_view->setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing | QPainter::SmoothPixmapTransform );
 	if(!RenderOpts::DisableOpenGL)
 	{
-		m_view->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
+                m_view->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
+                qDebug("SlideGroupViewer: Loaded OpenGL viewport.");
 	}
 
 	m_scene = new MyGraphicsScene(MyGraphicsScene::Live);
@@ -109,7 +110,7 @@ void SlideGroupViewer::adjustViewScaling()
 
 	float scale = qMin(sx,sy);
 	m_view->setTransform(QTransform().scale(scale,scale));
-	qDebug("Scaling: %.02f x %.02f = %.02f",sx,sy,scale);
+        //qDebug("Scaling: %.02f x %.02f = %.02f",sx,sy,scale);
 	m_view->update();
 
 

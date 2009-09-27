@@ -37,15 +37,11 @@ private slots:
  	void modelDirtyTimeout();
 	
 private:
-// 	void generatePixmap(int);
+	void internalSetup();
 	
 	Document * m_doc;
 	QList<SlideGroup*> m_sortedGroups;
 	QList<SlideGroup*> m_dirtyGroups;
-// 	QHash<int,QPixmap> m_pixmaps;
-	
-// 	MyGraphicsScene * m_scene;
-// 	QGraphicsView * m_view;
 	
  	QTimer * m_dirtyTimer;
 };

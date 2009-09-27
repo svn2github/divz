@@ -17,17 +17,19 @@ QList<Slide *> SlideGroup::slideList() { return m_slides; }
 void SlideGroup::addSlide(Slide *slide)
 {
 	assert(slide != NULL);
+	m_slides.append(slide);
 	emit slideChanged(slide, "add", 0, "", "", QVariant());
 	connect(slide,SIGNAL(slideItemChanged(AbstractItem *, QString, QString, QVariant)),this,SLOT(slideItemChanged(AbstractItem *, QString, QString, QVariant)));
-	m_slides.append(slide);
+
 }
 
 void SlideGroup::removeSlide(Slide *slide)
 {
 	assert(slide != NULL);
 	disconnect(slide,0,this,0);
-	emit slideChanged(slide, "remove", 0, "", "", QVariant());
 	m_slides.removeAll(slide);
+	emit slideChanged(slide, "remove", 0, "", "", QVariant());
+
 }
 
 void SlideGroup::slideItemChanged(AbstractItem *item, QString operation, QString fieldName, QVariant value)

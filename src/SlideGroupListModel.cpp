@@ -51,16 +51,21 @@ void SlideGroupListModel::setSlideGroup(SlideGroup *g)
 	m_slideGroup = g;
 	
 	
-	QList<Slide*> slist = g->slideList();
+
+
+}
+
+void SlideGroupListModel::internalSetup()
+{
+	QList<Slide*> slist = m_slideGroup->slideList();
 	qSort(slist.begin(), slist.end(), slide_num_compare);
 	m_sortedSlides = slist;
-	
-	QModelIndex top    = indexForSlide(m_sortedSlides.first()), 
-	            bottom = indexForSlide(m_sortedSlides.last());
-	qDebug() << "SlideGroupListModel::setSlideGroup: top:"<<top<<", bottom:"<<bottom;
-	
-	dataChanged(top,bottom);
 
+	QModelIndex top    = indexForSlide(m_sortedSlides.first()),
+		    bottom = indexForSlide(m_sortedSlides.last());
+	qDebug() << "SlideGroupListModel::internalSetup: top:"<<top<<", bottom:"<<bottom;
+
+	dataChanged(top,bottom);
 }
 
 void SlideGroupListModel::slideChanged(Slide *slide, QString slideOperation, AbstractItem */*item*/, QString /*operation*/, QString /*fieldName*/, QVariant /*value*/)
@@ -74,22 +79,22 @@ void SlideGroupListModel::slideChanged(Slide *slide, QString slideOperation, Abs
 	
 	}
 	
-	if(slideOperation == "remove")
+	if(slideOperation == "remove" || slideOperation == "add")
 	{
-		// if a slide was removed, assume all pixmaps are invalid since the order could have changed
+		// if a slide was removed/added, assume all pixmaps are invalid since the order could have changed
 		m_pixmaps.clear();
+		internalSetup();
 	}
-	
-// 	if(slide)
-// 		qDebug() << "SlideGroupListModel::slideChanged: slide#:"<<slide->slideNumber();
-	
-	if(m_dirtyTimer->isActive())
-		m_dirtyTimer->stop();
-		
-	m_pixmaps.remove(m_sortedSlides.indexOf(slide));
-	m_dirtyTimer->start(250);
-	if(!m_dirtySlides.contains(slide))
-		m_dirtySlides << slide;
+	else
+	{
+		if(m_dirtyTimer->isActive())
+			m_dirtyTimer->stop();
+
+		m_pixmaps.remove(m_sortedSlides.indexOf(slide));
+		m_dirtyTimer->start(250);
+		if(!m_dirtySlides.contains(slide))
+			m_dirtySlides << slide;
+	}
 }
 
 void SlideGroupListModel::modelDirtyTimeout()

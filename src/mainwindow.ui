@@ -15,8 +15,15 @@
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
+    <property name="margin">
+     <number>0</number>
+    </property>
     <item>
-     <widget class="QListView" name="listView"/>
+     <widget class="QListView" name="listView">
+      <property name="contextMenuPolicy">
+       <enum>Qt::ActionsContextMenu</enum>
+      </property>
+     </widget>
     </item>
    </layout>
   </widget>
@@ -26,12 +33,12 @@
      <x>0</x>
      <y>0</y>
      <width>653</width>
-     <height>26</height>
+     <height>19</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
     <property name="title">
-     <string>File</string>
+     <string>&amp;File</string>
     </property>
     <addaction name="actionNew"/>
     <addaction name="separator"/>
@@ -39,18 +46,21 @@
     <addaction name="actionSave"/>
     <addaction name="actionSave_As"/>
     <addaction name="separator"/>
+    <addaction name="actionSetup_Outputs"/>
+    <addaction name="separator"/>
     <addaction name="actionExit"/>
    </widget>
    <widget class="QMenu" name="menuEdit">
     <property name="title">
-     <string>Edit</string>
+     <string>&amp;Edit</string>
     </property>
     <addaction name="actionNew_Slide_Group"/>
+    <addaction name="actionEdit_Slide_Group"/>
     <addaction name="actionDelete_Slide_Group"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
-     <string>Help</string>
+     <string>&amp;Help</string>
     </property>
     <addaction name="actionAbout_DViz"/>
     <addaction name="separator"/>
@@ -70,6 +80,9 @@
    </attribute>
    <widget class="QWidget" name="dockWidgetContents_2">
     <layout class="QVBoxLayout" name="verticalLayout_2">
+     <property name="margin">
+      <number>0</number>
+     </property>
      <item>
       <widget class="QTabWidget" name="tabWidget">
        <property name="currentIndex">
@@ -141,34 +154,57 @@
    </attribute>
    <widget class="QWidget" name="dockWidgetContents_9"/>
   </widget>
+  <widget class="QToolBar" name="toolBar">
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actionOpen"/>
+   <addaction name="actionSave"/>
+   <addaction name="separator"/>
+   <addaction name="actionNew_Slide_Group"/>
+   <addaction name="actionEdit_Slide_Group"/>
+   <addaction name="actionDelete_Slide_Group"/>
+  </widget>
   <action name="actionOpen">
    <property name="text">
-    <string>Open ...</string>
+    <string>&amp;Open ...</string>
    </property>
   </action>
   <action name="actionSave">
    <property name="text">
-    <string>Save</string>
+    <string>&amp;Save</string>
    </property>
   </action>
   <action name="actionSave_As">
    <property name="text">
-    <string>Save As ...</string>
+    <string>Save &amp;As ...</string>
    </property>
   </action>
   <action name="actionNew">
    <property name="text">
-    <string>New</string>
+    <string>&amp;New</string>
    </property>
   </action>
   <action name="actionNew_Slide_Group">
    <property name="text">
     <string>New Slide Group</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+N</string>
+   </property>
   </action>
   <action name="actionDelete_Slide_Group">
    <property name="text">
     <string>Delete Slide Group</string>
+   </property>
+   <property name="shortcut">
+    <string>Shift+D</string>
    </property>
   </action>
   <action name="actionAbout_DViz">
@@ -183,7 +219,20 @@
   </action>
   <action name="actionExit">
    <property name="text">
-    <string>Exit</string>
+    <string>E&amp;xit</string>
+   </property>
+  </action>
+  <action name="actionEdit_Slide_Group">
+   <property name="text">
+    <string>Edit Slide Group</string>
+   </property>
+   <property name="shortcut">
+    <string>F2</string>
+   </property>
+  </action>
+  <action name="actionSetup_Outputs">
+   <property name="text">
+    <string>Setup Out&amp;puts...</string>
    </property>
   </action>
  </widget>

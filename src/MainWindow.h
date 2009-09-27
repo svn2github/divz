@@ -8,6 +8,7 @@
 #include "SlideEditorWindow.h"
 #include "SlideGroupViewer.h"
 #include "OutputViewer.h"
+#include "OutputSetupDialog.h"
 
 namespace Ui {
 	class MainWindow;
@@ -19,10 +20,25 @@ public:
 	MainWindow(QWidget *parent = 0);
 	~MainWindow();
 
+public slots:
+	void setLiveGroup(SlideGroup*);
+	void editGroup(SlideGroup*);
+	void deleteGroup(SlideGroup*);
+	void previewSlideGroup(SlideGroup*);
+
 protected slots:
 	void groupSelected(const QModelIndex &);
-	void groupSetLive(const QModelIndex &);
 	void groupDoubleClicked(const QModelIndex &);
+
+	void actionEditGroup();
+	void actionNewGroup();
+	void actionDelGroup();
+
+	void setupOutputs();
+
+	//void groupSetLive(const QModelIndex &);
+
+	//void slotListContextMenu(const QPoint &);
 	
 protected:
 	void changeEvent(QEvent *e);
@@ -37,6 +53,8 @@ private:
 	SlideGroupViewer *m_previewWidget;
 	OutputViewer *m_liveMonitor;
 	SlideGroupViewer *m_liveView;
+
+	OutputSetupDialog *m_outputDialog;
 };
 
 #endif // MAINWINDOW_H

@@ -263,12 +263,12 @@ void VideoFileContent::setVideoFrame(QFFMpegVideoFrame frame)
 		if(sceneContextHint() != MyGraphicsScene::Live)
 		{
 			m_video->pause();
-			qDebug("VideoFileContent::setVideoFrame: Pausing video file because not in a live scene");
+                        //qDebug("VideoFileContent::setVideoFrame: Pausing video file because not in a live scene");
 		}
 	}
 
 	update();
-	GFX_CHANGED();
+        //GFX_CHANGED();
 	
 // 	m_video->pause();
 // 	qDebug("VideoFileContent::setVideoFrame: Pausing video file AGAIN because not in a live scene");

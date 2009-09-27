@@ -51,9 +51,20 @@ void DocumentListModel::setDocument(Document *doc)
 	
 	m_doc = doc;
 	
-	QList<SlideGroup*> glist = doc->groupList();
+	internalSetup();
+}
+
+void DocumentListModel::internalSetup()
+{
+	QList<SlideGroup*> glist = m_doc->groupList();
 	qSort(glist.begin(), glist.end(), group_num_compare);
 	m_sortedGroups = glist;
+
+	QModelIndex top    = indexForGroup(m_sortedGroups.first()),
+		    bottom = indexForGroup(m_sortedGroups.last());
+	qDebug() << "DocumentListModel::internalSetup: top:"<<top<<", bottom:"<<bottom;
+
+	dataChanged(top,bottom);
 }
 
 void DocumentListModel::slideGroupChanged(SlideGroup *g, QString groupOperation, Slide */*slide*/, QString /*slideOperation*/, AbstractItem */*item*/, QString /*operation*/, QString /*fieldName*/, QVariant /*value*/)
@@ -67,22 +78,19 @@ void DocumentListModel::slideGroupChanged(SlideGroup *g, QString groupOperation,
 	
 	}
 	
-	if(groupOperation == "remove")
+	if(groupOperation == "remove" || groupOperation == "add")
 	{
-		// if a slide was removed, assume all pixmaps are invalid since the order could have changed
-// 		m_pixmaps.clear();
+		internalSetup();
 	}
-	
-// 	if(slide)
-// 		qDebug() << "DocumentListModel::slideChanged: slide#:"<<slide->slideNumber();
-	
-	if(m_dirtyTimer->isActive())
-		m_dirtyTimer->stop();
-		
-// 	m_pixmaps.remove(m_sortedSlides.indexOf(slide));
-	m_dirtyTimer->start(250);
-	if(!m_dirtyGroups.contains(g))
-		m_dirtyGroups << g;
+	else
+	{
+		if(m_dirtyTimer->isActive())
+			m_dirtyTimer->stop();
+
+		m_dirtyTimer->start(250);
+		if(!m_dirtyGroups.contains(g))
+			m_dirtyGroups << g;
+	}
 }
 
 void DocumentListModel::modelDirtyTimeout()
@@ -94,7 +102,7 @@ void DocumentListModel::modelDirtyTimeout()
 	
 	QModelIndex top    = indexForGroup(m_dirtyGroups.first()), 
 	            bottom = indexForGroup(m_dirtyGroups.last());
-	qDebug() << "SDocumentListModel::modelDirtyTimeout: top:"<<top<<", bottom:"<<bottom;
+        //qDebug() << "DocumentListModel::modelDirtyTimeout: top:"<<top<<", bottom:"<<bottom;
 	m_dirtyGroups.clear();
 	
 	dataChanged(top,bottom);

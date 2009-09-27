@@ -38,6 +38,7 @@ private slots:
 	void modelDirtyTimeout();
 	
 private:
+	void internalSetup();
 	void generatePixmap(int);
 	
 	SlideGroup * m_slideGroup;

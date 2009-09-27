@@ -1,5 +1,6 @@
 #include "MainWindow.h"
 #include "RenderOpts.h"
+#include "AppSettings.h"
 
 #include <QStyle>
 #include <QSettings>
@@ -74,15 +75,20 @@ int main(int argc, char **argv)
 		noOpenGL = ! s.value("opengl/disable").toBool();
 	}
 	s.setValue("opengl/disable",noOpenGL);
-	
+        noOpenGL = false;
 	RenderOpts::DisableOpenGL = noOpenGL;
 	
-	
+	AppSettings::load();
+
 	MainWindow mw;
 	//mw.showMaximized();
 	mw.show();
-	
-	return app.exec();
+
+	int ret = app.exec();
+
+	AppSettings::save();
+
+	return ret;
 	
 // 	printf("\n\n");
 // 	

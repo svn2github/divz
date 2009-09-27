@@ -31,17 +31,19 @@ QList<SlideGroup *> Document::groupList() { return m_groups; }
 void Document::addGroup(SlideGroup *g)
 {
 	assert(g != NULL);
+	m_groups.append(g);
 	emit slideGroupChanged(g, "add", 0, "", 0, "", "", QVariant());
 	connect(g,SIGNAL(slideChanged(Slide *, QString, AbstractItem *, QString, QString, QVariant)),this,SLOT(slideChanged(Slide *, QString, AbstractItem *, QString, QString, QVariant)));
-	m_groups.append(g);
+
 }
 
 void Document::removeGroup(SlideGroup *g)
 {
 	assert(g != NULL);
 	disconnect(g,0,this,0);
-	emit slideGroupChanged(g, "remove", 0, "", 0, "", "", QVariant());
 	m_groups.removeAll(g);
+	emit slideGroupChanged(g, "remove", 0, "", 0, "", "", QVariant());
+
 }
 
 
