@@ -6,6 +6,8 @@
 #include <QDebug>
 #include <QDesktopWidget>
 
+#include "AppSettings.h"
+
 
 MainWindow::MainWindow(QWidget *parent) :
 	QMainWindow(parent),
@@ -73,16 +75,54 @@ MainWindow::MainWindow(QWidget *parent) :
 	//m_ui->dwLive->setWidget(m_liveMonitor);
 	
 	
-	QRect geom = QApplication::desktop()->availableGeometry();
 	//resize(2 * geom.width() / 3, 2 * geom.height() / 3);
-	m_liveView->resize(geom.width(),geom.height());
-	m_liveView->move(0,0);
+
+	m_liveView->setWindowFlags(Qt::FramelessWindowHint);
+
+	Output *out = AppSettings::outputs().at(0);
+	if(out && out->name() == "Live")
+	{
+		Output::OutputType x = out->outputType();
+		if(x == Output::Screen || x == Output::Custom)
+		{
+			QRect geom;
+			if(x == Output::Screen)
+			{
+				int screenNum = out->screenNum();
+				QDesktopWidget *d = QApplication::desktop();
+				geom = d->screenGeometry(screenNum);
+			}
+			else
+			{
+				geom = out->customRect();
+				m_liveView->setWindowFlags(Qt::WindowStaysOnTopHint | Qt::FramelessWindowHint);
+			}
+
+			m_liveView->resize(geom.width(),geom.height());
+			m_liveView->move(geom.left(),geom.top());
+		}
+		else
+		//if(x == Output::Network)
+		{
+			qDebug("Warning: Output to network not supported yet. Still to be written.");
+		}
+	}
+	else
+	{
+		QRect geom = QApplication::desktop()->availableGeometry();
+		m_liveView->resize(geom.width(),geom.height());
+		m_liveView->move(0,0);
+		m_liveView->setWindowTitle("Live");
+		qDebug("Debug: Screen 0 was null or not named Live, setting to default geometry.");
+
+	}
 	
-	m_liveView->setWindowTitle("Live");
 	m_liveView->show();
 	
 	connect(m_ui->actionExit,SIGNAL(activated()), qApp, SLOT(quit()));
 
+	setupOutputList();
+	setupOutputControl();
 }
 
 MainWindow::~MainWindow()
@@ -100,6 +140,16 @@ MainWindow::~MainWindow()
 	m_liveView = 0;
 }
 
+void MainWindow::setupOutputList()
+{
+
+
+}
+
+void MainWindow::setupOutputControl()
+{
+
+}
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {

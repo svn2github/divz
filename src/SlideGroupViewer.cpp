@@ -13,11 +13,14 @@ SlideGroupViewer::SlideGroupViewer(QWidget *parent)
 {
 	QRect sceneRect(0,0,1024,768);
 	m_view = new QGraphicsView(this);
+	m_view->setFrameStyle(QFrame::NoFrame);
+	m_view->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+	m_view->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 	m_view->setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing | QPainter::SmoothPixmapTransform );
 	if(!RenderOpts::DisableOpenGL)
 	{
-                m_view->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
-                qDebug("SlideGroupViewer: Loaded OpenGL viewport.");
+		m_view->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
+		qDebug("SlideGroupViewer: Loaded OpenGL viewport.");
 	}
 
 	m_scene = new MyGraphicsScene(MyGraphicsScene::Live);
@@ -30,6 +33,8 @@ SlideGroupViewer::SlideGroupViewer(QWidget *parent)
 	layout->setContentsMargins(0,0,0,0);
 	layout->addWidget(m_view);
 	setLayout(layout);
+
+
 }
 
 SlideGroupViewer::~SlideGroupViewer()

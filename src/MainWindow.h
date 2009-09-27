@@ -50,6 +50,9 @@ protected:
 	void openSlideEditor(SlideGroup *g);
 
 private:
+	void setupOutputList();
+	void setupOutputControl();
+
 	Ui::MainWindow *m_ui;
 	Document m_doc;
 	DocumentListModel m_docModel;

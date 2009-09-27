@@ -10,6 +10,7 @@
 
 class MyGraphicsScene;
 class SlideGroup;
+class QGraphicsLineItem;
 
 class SlideEditorWindow : public QMainWindow
 {
@@ -34,6 +35,9 @@ private slots:
 	
 private:
 	void setupSlideGroupDockWidget();
+	void setupViewportLines();
+	void addVpLineY(qreal y, qreal x1, qreal x2, bool inside=true);
+	void addVpLineX(qreal x, qreal y1, qreal y2, bool inside=true);
 	
 	//Slide *m_slide;
 	SlideGroup *m_slideGroup;
@@ -43,6 +47,8 @@ private:
 	
 	Document m_doc;
 	MyGraphicsScene *m_scene;
+
+	QList<QGraphicsLineItem *> m_viewportLines;
 	
 	
 

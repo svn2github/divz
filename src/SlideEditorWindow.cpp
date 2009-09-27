@@ -35,6 +35,8 @@
 #include <QDebug>
 #include <assert.h>
 
+#include <QGraphicsLineItem>
+
 #include "model/ItemFactory.h"
 #include "model/Slide.h"
 #include "model/TextItem.h"
@@ -245,9 +247,11 @@ SlideEditorWindow::SlideEditorWindow(SlideGroup *group, QWidget * parent)
 // 	textItem->setFlags(QGraphicsItem::ItemIsMovable);
 // 	
 	
+
 	//TextContent * text = m_scene->addTextContent();
 	
 	setupSlideGroupDockWidget();
+	setupViewportLines();
 	
 
 	
@@ -331,6 +335,107 @@ void SlideEditorWindow::setupSlideGroupDockWidget()
 	//viewMenu->addAction(dock->toggleViewAction());
 }
 
+void SlideEditorWindow::addVpLineX(qreal x, qreal y1, qreal y2, bool in)
+{
+	static QPen pw(Qt::white, 1.0);
+	static QPen pb(Qt::black, 1.0);
+
+	qreal z1 = 0; //in ? 2:0;
+	qreal z2 = in ? 0:2;
+
+	QGraphicsLineItem * g;
+	g = new QGraphicsLineItem(x,y1-z1,x,y2-z1);
+	g->setPen(pb);
+	g->setZValue(9999);
+	m_scene->addItem(g);
+	m_viewportLines << g;
+/*
+	g = new QGraphicsLineItem(x,y1-z2,x,y2-z2);
+	g->setPen(pw);
+	g->setZValue(9999);
+	m_scene->addItem(g);
+	m_viewportLines << g;
+	*/
+}
+
+void SlideEditorWindow::addVpLineY(qreal y, qreal x1, qreal x2, bool in)
+{
+	static QPen pw(Qt::white, 1.0);
+	static QPen pb(Qt::black, 1.0);
+
+	qreal z1 = 0; //in ? 2:0;
+	qreal z2 = in ? 0:2;
+
+	QGraphicsLineItem * g;
+	g = new QGraphicsLineItem(x1-z1,y,x2-z1,y);
+	g->setPen(pb);
+	g->setZValue(9999);
+	m_scene->addItem(g);
+	m_viewportLines << g;
+/*
+	g = new QGraphicsLineItem(x1-z2,y,x2-z2,y);
+	g->setPen(pw);
+	g->setZValue(9999);
+	m_scene->addItem(g);
+	m_viewportLines << g;
+	*/
+}
+
+
+void SlideEditorWindow::setupViewportLines()
+{
+	bool showThirds = true;
+
+	QRectF r = m_scene->sceneRect();
+
+	/*
+	foreach(QGraphicsLineItem *l, m_viewportLines)
+	{
+		m_scene->removeItem(l);
+		delete l;
+		l=0;
+	}
+	*/
+	m_viewportLines.clear();
+
+	// top line
+	addVpLineY(r.y(),r.x(),r.width(),false);
+
+	// bottom line
+	addVpLineY(r.height(),r.x(),r.width());
+
+	// left line
+	addVpLineX(r.x(), r.y(), r.height(),false);
+
+	// right line
+	addVpLineX(r.width(), r.y(), r.height());
+
+	if(showThirds)
+	{
+		// third lines
+		qreal x3 = r.width() / 3;
+		qreal y3 = r.height() / 3;
+
+		qreal x1 = x3;
+		qreal x2 = x3+x3;
+
+		qreal y1 = y3;
+		qreal y2 = y3+y3;
+
+		// draw top horizontal third
+		addVpLineY(y1,r.x(),r.width());
+
+		// bottom horiz. third
+		addVpLineY(y2,r.x(),r.width());
+
+		// left vert third
+		addVpLineX(x1,r.y(),r.height());
+
+		// right vert third
+		addVpLineX(x2,r.y(), r.height());
+	}
+}
+
 void SlideEditorWindow::setSlideGroup(SlideGroup *g,Slide *curSlide)
 {
 	m_slideGroup = g;
@@ -343,6 +448,7 @@ void SlideEditorWindow::setSlideGroup(SlideGroup *g,Slide *curSlide)
 	{
 		m_scene->setSlide(curSlide);
 		m_slideListView->setCurrentIndex(m_slideModel->indexForSlide(curSlide));
+		setupViewportLines();
 	}
 	else
 	{
@@ -352,6 +458,7 @@ void SlideEditorWindow::setSlideGroup(SlideGroup *g,Slide *curSlide)
 			Slide *s = m_slideModel->slideAt(0);
 			m_scene->setSlide(s);
 			m_slideListView->setCurrentIndex(m_slideModel->indexForRow(0));
+			setupViewportLines();
 		}
 		else
 		{
@@ -367,6 +474,7 @@ void SlideEditorWindow::slideSelected(const QModelIndex &idx)
 	Slide *s = m_slideModel->slideFromIndex(idx);
 	qDebug() << "SlideEditorWindow::slideSelected(): selected slide#:"<<s->slideNumber();
 	m_scene->setSlide(s);
+	setupViewportLines();
 }
 
 void SlideEditorWindow::newSlide()
@@ -401,6 +509,7 @@ void SlideEditorWindow::delSlide()
 	if(newSlide)
 	{
 		m_scene->setSlide(newSlide);
+		setupViewportLines();
 	}
 	
 	QList<Slide*> slides = m_slideGroup->slideList();

@@ -14,6 +14,8 @@ OutputSetupDialog::OutputSetupDialog(QWidget *parent) :
 	
 {
 	m_ui->setupUi(this);
+	setWindowTitle(tr("Output Setup"));
+
 	setupOutputList();
 	setupScreenList();
 	
@@ -172,6 +174,8 @@ void OutputSetupDialog::setOutput(Output *output)
 {
 	m_outputIdx = AppSettings::outputs().indexOf(output);
 	m_output = output;
+
+	setWindowTitle(QString(tr("Output Setup - %1")).arg(output->name()));
 	
 	m_ui->screenListView->selectRow(output->screenNum());
 	
@@ -294,13 +298,13 @@ void OutputSetupDialog::setupOutputList()
 
 void OutputSetupDialog::accepted()
 {
-	//QList<QModelIndex> output
-	
+	AppSettings::save();
 	deleteLater();
 }
 
 void OutputSetupDialog::rejected()
 {
+	AppSettings::load();
 	deleteLater();
 }
 
