@@ -23,6 +23,7 @@ public:
 	void clear();
 	
 	MyGraphicsScene * scene() { return m_scene; }
+	QGraphicsView * view() { return m_view; }
 
 public slots:
 	void setSlide(int);

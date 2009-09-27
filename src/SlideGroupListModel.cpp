@@ -11,10 +11,12 @@
 #include "RenderOpts.h"
 
 SlideGroupListModel::SlideGroupListModel(SlideGroup *g, QObject *parent)
-		: QAbstractListModel(parent), m_slideGroup(0), m_scene(0), m_view(0), m_dirtyTimer(0)
+		: QAbstractListModel(parent), m_slideGroup(0), m_scene(0), m_view(0), m_dirtyTimer(0), m_iconSize(96,0), m_sceneRect(0,0,1024,768)
 {
 	if(m_slideGroup)
 		setSlideGroup(g);
+	
+	setSceneRect(m_sceneRect);
 }
 
 SlideGroupListModel::~SlideGroupListModel()
@@ -25,11 +27,11 @@ SlideGroupListModel::~SlideGroupListModel()
 		m_scene = 0;
 	}
 	
-	if(m_view)
-	{
-		delete m_view;
-		m_view = 0;
-	}
+// 	if(m_view)
+// 	{
+// 		delete m_view;
+// 		m_view = 0;
+// 	}
 }
 
 bool slide_num_compare(Slide *a, Slide *b)
@@ -177,32 +179,59 @@ QVariant SlideGroupListModel::data(const QModelIndex &index, int role) const
 		return QVariant();
 }
 
+void SlideGroupListModel::setSceneRect(QRect r)
+{
+	m_sceneRect = r;
+	adjustIconAspectRatio();
+}
+
+void SlideGroupListModel::adjustIconAspectRatio()
+{
+	QRect r = sceneRect();
+	qreal a = (qreal)r.height() / (qreal)r.width();
+	
+	m_iconSize.setHeight((int)(m_iconSize.width() * a));
+}
+
+void SlideGroupListModel::setIconSize(QSize sz)
+{
+	m_iconSize = sz;
+	adjustIconAspectRatio();
+}
+
+
 void SlideGroupListModel::generatePixmap(int row)
 {
 	//qDebug("generatePixmap: Row#%d: Begin", row);
 	Slide * slide = m_sortedSlides.at(row);
 	
-	int icon_w = 96;
-	int icon_h = (int)(icon_w*0.75);
+	int icon_w = m_iconSize.width(); //96;
+	int icon_h = m_iconSize.height(); //(int)(icon_w*0.75);
 	
-	QRect sceneRect(0,0,1024,768);
-	if(!m_view)
+	if(!m_scene)
 	{
 		//qDebug("generatePixmap: Row#%d: QGraphicsView setup: View not setup, Initalizing view and scene...", row);
-		m_view = new QGraphicsView();
-		m_view->setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing | QPainter::SmoothPixmapTransform );
+// 		m_view = new QGraphicsView();
+// 		m_view->setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing | QPainter::SmoothPixmapTransform );
 		//m_view->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
-		#ifndef QT_NO_OPENGL
+/*		#ifndef QT_NO_OPENGL
 		if(!RenderOpts::DisableOpenGL)
 		{
 			m_view->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
 			qDebug("SlideGroupListModel: Loaded OpenGL viewport.");
 		}
-		#endif
+		#endif*/
 		
 		m_scene = new MyGraphicsScene(MyGraphicsScene::Preview);
-		m_scene->setSceneRect(sceneRect);
-		m_view->setScene(m_scene);
+		m_scene->setSceneRect(m_sceneRect);
+		//m_view->setScene(m_scene);
+		
+// 		float sx = ((float)m_view->width()) / m_scene->width();
+// 		float sy = ((float)m_view->height()) / m_scene->height();
+// 	
+// 		float scale = qMax(sx,sy);
+		//m_view->setTransform(QTransform().scale(scale,scale));
+//		m_view->update();
 	}
 	
 	//qDebug("generatePixmap: Row#%d: Setting slide...", row);
@@ -215,7 +244,7 @@ void SlideGroupListModel::generatePixmap(int row)
 	
 	//qDebug("generatePixmap: Row#%d: Painting...", row);
 	
-	m_view->render(&painter,QRectF(0,0,icon_w,icon_h),sceneRect);
+	m_scene->render(&painter,QRectF(0,0,icon_w,icon_h),m_sceneRect);
 	painter.setPen(Qt::black);
 	painter.setBrush(Qt::NoBrush);
 	painter.drawRect(0,0,icon_w-1,icon_h-1);

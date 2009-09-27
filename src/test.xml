@@ -247,7 +247,7 @@ p, li { white-space: pre-wrap; }
                 </rect>
                 <pos>
                     <x>489.455</x>
-                    <y>454.465</y>
+                    <y>462.465</y>
                 </pos>
                 <zvalue>10</zvalue>
                 <opacity>1</opacity>
@@ -276,8 +276,8 @@ p, li { white-space: pre-wrap; }
                     <h>243</h>
                 </rect>
                 <pos>
-                    <x>368.882</x>
-                    <y>482</y>
+                    <x>352.882</x>
+                    <y>483</y>
                 </pos>
                 <zvalue>11</zvalue>
                 <opacity>1</opacity>
@@ -391,8 +391,8 @@ p, li { white-space: pre-wrap; }
                     <h>1071</h>
                 </rect>
                 <pos>
-                    <x>-55.7692</x>
-                    <y>226.923</y>
+                    <x>-95.7692</x>
+                    <y>260.923</y>
                 </pos>
                 <zvalue>1</zvalue>
                 <opacity>1</opacity>
@@ -418,7 +418,7 @@ p, li { white-space: pre-wrap; }
                     <x>308</x>
                     <y>219</y>
                 </pos>
-                <zvalue>2</zvalue>
+                <zvalue>5</zvalue>
                 <opacity>1</opacity>
                 <visible>1</visible>
                 <frame-class>0</frame-class>
@@ -435,18 +435,18 @@ p, li { white-space: pre-wrap; }
                 <rect>
                     <x>-100</x>
                     <y>-75</y>
-                    <w>1512</w>
-                    <h>123</h>
+                    <w>541</w>
+                    <h>268</h>
                 </rect>
                 <pos>
-                    <x>-97</x>
-                    <y>609</y>
+                    <x>5</x>
+                    <y>525.399</y>
                 </pos>
-                <zvalue>3</zvalue>
-                <opacity>0.53</opacity>
+                <zvalue>4</zvalue>
+                <opacity>0.45</opacity>
                 <visible>1</visible>
                 <frame-class>0</frame-class>
-                <transformation yRot="0" xRot="0" zRot="0" />
+                <transformation yRot="0" xRot="0" zRot="45.05150961176983" />
                 <fill brush-style="1" video="" image="" brush-color="4294967295" type="1" />
                 <outline brush-style="1" pen-join="64" pen-width="0" enabled="0" brush-color="4294967295" pen-cap="16" pen-color="4294967295" />
                 <mirror offset="3" enabled="0" />
@@ -464,8 +464,8 @@ p, li { white-space: pre-wrap; }
                     <h>107</h>
                 </rect>
                 <pos>
-                    <x>380</x>
-                    <y>192</y>
+                    <x>349</x>
+                    <y>329</y>
                 </pos>
                 <zvalue>3</zvalue>
                 <opacity>0.53</opacity>

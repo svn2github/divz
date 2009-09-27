@@ -17,6 +17,7 @@ SlideGroupViewer::SlideGroupViewer(QWidget *parent)
 	m_view->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 	m_view->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 	m_view->setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing | QPainter::SmoothPixmapTransform );
+	m_view->setOptimizationFlags(QGraphicsView::DontSavePainterState);
 	if(!RenderOpts::DisableOpenGL)
 	{
 		m_view->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
@@ -121,10 +122,12 @@ void SlideGroupViewer::adjustViewScaling()
 	float sx = ((float)m_view->width()) / m_scene->width();
 	float sy = ((float)m_view->height()) / m_scene->height();
 
-	float scale = qMin(sx,sy);
+	float scale = qMax(sx,sy);
 	m_view->setTransform(QTransform().scale(scale,scale));
         //qDebug("Scaling: %.02f x %.02f = %.02f",sx,sy,scale);
 	m_view->update();
+	//m_view->fitInView(m_scene->sceneRect(), Qt::KeepAspectRatioByExpanding);
+	//m_view->fitInView(m_scene->sceneRect(), Qt::KeepAspectRatio);
 
 
 

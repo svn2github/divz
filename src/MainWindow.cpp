@@ -77,7 +77,8 @@ MainWindow::MainWindow(QWidget *parent) :
 	
 	//resize(2 * geom.width() / 3, 2 * geom.height() / 3);
 
-	m_liveView->setWindowFlags(Qt::FramelessWindowHint);
+	//m_liveView->setWindowFlags(Qt::FramelessWindowHint);
+	m_liveView->view()->setBackgroundBrush(Qt::black);
 
 	Output *out = AppSettings::outputs().at(0);
 	if(out && out->name() == "Live")
@@ -95,7 +96,7 @@ MainWindow::MainWindow(QWidget *parent) :
 			else
 			{
 				geom = out->customRect();
-				m_liveView->setWindowFlags(Qt::WindowStaysOnTopHint | Qt::FramelessWindowHint);
+				//m_liveView->setWindowFlags(Qt::WindowStaysOnTopHint | Qt::FramelessWindowHint);
 			}
 
 			m_liveView->resize(geom.width(),geom.height());

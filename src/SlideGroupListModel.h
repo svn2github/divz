@@ -5,6 +5,8 @@
 #include <QList>
 #include <QGraphicsView>
 #include <QTimer>
+#include <QRect>
+#include <QSize>
 
 #include "MyGraphicsScene.h"
 #include "model/AbstractItem.h"
@@ -21,6 +23,11 @@ Q_OBJECT
 public:
 	SlideGroupListModel(SlideGroup *g = 0, QObject *parent = 0);
 	~SlideGroupListModel();
+	
+	void setSceneRect(QRect);
+	QRect sceneRect(){ return m_sceneRect; }
+	void setIconSize(QSize);
+	QSize iconSize() { return m_iconSize; }
 	
 	void setSlideGroup(SlideGroup*);
 	Slide * slideFromIndex(const QModelIndex &index);
@@ -40,6 +47,7 @@ private slots:
 private:
 	void internalSetup();
 	void generatePixmap(int);
+	void adjustIconAspectRatio();
 	
 	SlideGroup * m_slideGroup;
 	QList<Slide*> m_sortedSlides;
@@ -50,6 +58,10 @@ private:
 	QGraphicsView * m_view;
 	
 	QTimer * m_dirtyTimer;
+	
+	QSize m_iconSize;
+	
+	QRect m_sceneRect;
 };
 
 #endif
