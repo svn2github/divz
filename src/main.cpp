@@ -29,6 +29,7 @@ QColor RenderOpts::hiColor;
 #include "model/ItemFactory.h"
 #include "model/Slide.h"
 #include "model/TextItem.h"
+#include "AppSettings.h"
 
 int main(int argc, char **argv)
 {

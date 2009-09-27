@@ -6,6 +6,7 @@
 #include <QList>
 #include <QGraphicsView>
 #include <QTimer>
+#include <QCloseEvent>
 
 #include "MyGraphicsScene.h"
 #include "model/SlideGroup.h"
@@ -30,6 +31,8 @@ public slots:
 
 protected:
 	void resizeEvent(QResizeEvent *);
+	void closeEvent(QCloseEvent *);
+ 
 	void adjustViewScaling();
 
 private:

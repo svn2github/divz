@@ -96,10 +96,19 @@ MainWindow::~MainWindow()
 	
 	delete m_ui;
 	
-	m_liveView->hide();
 	delete m_liveView;
 	m_liveView = 0;
 }
+
+
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+	event->accept();
+	m_liveView->hide();
+	close();
+	//deleteLater();
+}
+
 
 /*
 void MainWindow::slotListContextMenu(const QPoint &pos)

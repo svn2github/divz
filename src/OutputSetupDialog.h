@@ -2,6 +2,7 @@
 #define OUTPUTSETUPDIALOG_H
 
 #include <QtGui/QDialog>
+#include "model/Output.h"
 
 namespace Ui {
     class OutputSetupDialog;
@@ -16,6 +17,22 @@ public:
 protected slots:
 	void accepted();
 	void rejected();
+	
+	void slotOutputListCellActivated(int,int);
+	void slotScreenListCellActivated(int,int);
+	void slotOutputEnabledStateChanged(int);
+	void slotTabChanged(int);
+	void slotOutputNameChanged(const QString&);
+	void slotCustX(int);
+	void slotCustY(int);
+	void slotCustW(int);
+	void slotCustH(int);
+	void slotNetRoleChanged(bool);
+	void slotHostChanged(const QString&);
+	void slotPortChanged(int);
+	void slotAllowMultChanged(int);
+	void slotNew();
+	void slotDel();
 
 protected:
 	void changeEvent(QEvent *e);
@@ -23,8 +40,12 @@ protected:
 private:
 	void setupScreenList();
 	void setupOutputList();
+	void setOutput(Output*);
 
 	Ui::OutputSetupDialog *m_ui;
+	
+	Output * m_output;
+	int m_outputIdx;
 };
 
 #endif // OUTPUTSETUPDIALOG_H

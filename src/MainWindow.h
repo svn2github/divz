@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QtGui/QMainWindow>
+#include <QCloseEvent>
 
 #include "model/Document.h"
 #include "DocumentListModel.h"
@@ -35,6 +36,8 @@ protected slots:
 	void actionDelGroup();
 
 	void setupOutputs();
+	
+	
 
 	//void groupSetLive(const QModelIndex &);
 
@@ -42,6 +45,7 @@ protected slots:
 	
 protected:
 	void changeEvent(QEvent *e);
+	void closeEvent(QCloseEvent *event);
 	
 	void openSlideEditor(SlideGroup *g);
 

@@ -50,9 +50,7 @@ void SlideGroupListModel::setSlideGroup(SlideGroup *g)
 	
 	m_slideGroup = g;
 	
-	
-
-
+	internalSetup();
 }
 
 void SlideGroupListModel::internalSetup()
