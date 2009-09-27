@@ -4,6 +4,10 @@
 #include <QtGui/QMainWindow>
 #include <QCloseEvent>
 
+#include <QSplitter>
+#include <QListWidget>
+#include <QPushButton>
+
 #include "model/Document.h"
 #include "DocumentListModel.h"
 #include "SlideEditorWindow.h"
@@ -52,6 +56,7 @@ protected:
 private:
 	void setupOutputList();
 	void setupOutputControl();
+	void setupCentralWidget();
 
 	Ui::MainWindow *m_ui;
 	Document m_doc;
@@ -60,6 +65,13 @@ private:
 	SlideGroupViewer *m_previewWidget;
 	OutputViewer *m_liveMonitor;
 	SlideGroupViewer *m_liveView;
+
+	QSplitter * m_splitter;
+	QSplitter * m_splitter2;
+	QListView * m_groupView;
+	QPushButton * m_btnSendOut;
+	QListWidget * m_outputList;
+	QTabWidget * m_outputTabs;
 
 	OutputSetupDialog *m_outputDialog;
 };

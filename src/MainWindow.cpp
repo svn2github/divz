@@ -15,16 +15,7 @@ MainWindow::MainWindow(QWidget *parent) :
 {
 	m_ui->setupUi(this);
 	
-	// Restore state
-	QSettings settings;
-	QSize sz = settings.value("mainwindow/size").toSize();
-	if(sz.isValid())
-		resize(sz);
-	QPoint p = settings.value("mainwindow/pos").toPoint();
-	if(!p.isNull())
-		move(p);
-	restoreState(settings.value("mainwindow/state").toByteArray());
-	
+
 	if(QFile("test.xml").exists())
 	{
 		m_doc.load("test.xml");
@@ -43,11 +34,27 @@ MainWindow::MainWindow(QWidget *parent) :
 	}
 	
 	m_docModel.setDocument(&m_doc);
-	m_ui->listView->setModel(&m_docModel);
-	//m_ui->listView->setContextMenuPolicy(Qt::CustomContextMenu);
-	m_ui->listView->insertAction(0,m_ui->actionEdit_Slide_Group);
-	m_ui->listView->insertAction(0,m_ui->actionNew_Slide_Group);
-	m_ui->listView->insertAction(0,m_ui->actionDelete_Slide_Group);
+
+	setupCentralWidget();
+
+	// Restore state
+	QSettings settings;
+	QSize sz = settings.value("mainwindow/size").toSize();
+	if(sz.isValid())
+		resize(sz);
+	QPoint p = settings.value("mainwindow/pos").toPoint();
+	if(!p.isNull())
+		move(p);
+	restoreState(settings.value("mainwindow/state").toByteArray());
+	m_splitter->restoreState(settings.value("mainwindow/splitter_state").toByteArray());
+	m_splitter2->restoreState(settings.value("mainwindow/splitter2_state").toByteArray());
+
+
+	m_groupView->setModel(&m_docModel);
+	//m_groupView->setContextMenuPolicy(Qt::CustomContextMenu);
+	m_groupView->insertAction(0,m_ui->actionEdit_Slide_Group);
+	m_groupView->insertAction(0,m_ui->actionNew_Slide_Group);
+	m_groupView->insertAction(0,m_ui->actionDelete_Slide_Group);
 
 	m_ui->actionEdit_Slide_Group->setEnabled(false);
 
@@ -59,11 +66,11 @@ MainWindow::MainWindow(QWidget *parent) :
 
 
 
-	//connect(m_ui->listView, SIGNAL(customContextMenuRequested(const QPoint &)), SLOT(slotListContextMenu(const QPoint &)));
+	//connect(m_groupView, SIGNAL(customContextMenuRequested(const QPoint &)), SLOT(slotListContextMenu(const QPoint &)));
 
-	//connect(m_ui->listView,SIGNAL(activated(const QModelIndex &)),this,SLOT(groupSetLive(const QModelIndex &)));
-	connect(m_ui->listView,SIGNAL(clicked(const QModelIndex &)),this,SLOT(groupSelected(const QModelIndex &)));
-	connect(m_ui->listView,SIGNAL(doubleClicked(const QModelIndex &)),this,SLOT(groupDoubleClicked(const QModelIndex &)));
+	//connect(m_groupView,SIGNAL(activated(const QModelIndex &)),this,SLOT(groupSetLive(const QModelIndex &)));
+	connect(m_groupView,SIGNAL(clicked(const QModelIndex &)),this,SLOT(groupSelected(const QModelIndex &)));
+	connect(m_groupView,SIGNAL(doubleClicked(const QModelIndex &)),this,SLOT(groupDoubleClicked(const QModelIndex &)));
 
 	m_previewWidget = new SlideGroupViewer(m_ui->dwPreview);
 	m_previewWidget->scene()->setContextHint(MyGraphicsScene::Preview);
@@ -77,7 +84,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	
 	//resize(2 * geom.width() / 3, 2 * geom.height() / 3);
 
-	//m_liveView->setWindowFlags(Qt::FramelessWindowHint);
+	m_liveView->setWindowFlags(Qt::FramelessWindowHint);
 	m_liveView->view()->setBackgroundBrush(Qt::black);
 
 	Output *out = AppSettings::outputs().at(0);
@@ -96,7 +103,7 @@ MainWindow::MainWindow(QWidget *parent) :
 			else
 			{
 				geom = out->customRect();
-				//m_liveView->setWindowFlags(Qt::WindowStaysOnTopHint | Qt::FramelessWindowHint);
+				m_liveView->setWindowFlags(Qt::WindowStaysOnTopHint | Qt::FramelessWindowHint);
 			}
 
 			m_liveView->resize(geom.width(),geom.height());
@@ -121,10 +128,8 @@ MainWindow::MainWindow(QWidget *parent) :
 	m_liveView->show();
 	
 	connect(m_ui->actionExit,SIGNAL(activated()), qApp, SLOT(quit()));
-
-	setupOutputList();
-	setupOutputControl();
 }
+
 
 MainWindow::~MainWindow()
 {
@@ -134,16 +139,79 @@ MainWindow::~MainWindow()
 	settings.setValue("mainwindow/size",size());
 	settings.setValue("mainwindow/pos",pos());
 	settings.setValue("mainwindow/state",saveState());
-	
+	settings.setValue("mainwindow/splitter_state",m_splitter->saveState());
+	settings.setValue("mainwindow/splitter2_state",m_splitter2->saveState());
+
 	delete m_ui;
 	
 	delete m_liveView;
 	m_liveView = 0;
 }
 
-void MainWindow::setupOutputList()
+void MainWindow::setupCentralWidget()
 {
 
+	m_splitter = new QSplitter(this);
+	//m_splitter->setOrientation(Qt::Vertical);
+	setCentralWidget(m_splitter);
+
+	// left side
+	m_groupView = new QListView(this);
+	m_splitter->addWidget(m_groupView);
+
+	// right side
+	m_splitter2 = new QSplitter(m_splitter);
+	m_splitter2->setOrientation(Qt::Vertical);
+	m_splitter->addWidget(m_splitter2);
+
+	QWidget *topright = new QWidget(m_splitter);
+	QVBoxLayout * layout = new QVBoxLayout(topright);
+	layout->setMargin(0);
+	m_splitter2->addWidget(topright);
+
+	// output controls at top
+	m_btnSendOut = new QPushButton("Send to Output");
+	layout->addWidget(m_btnSendOut);
+
+	m_outputList = new QListWidget();
+	layout->addWidget(m_outputList);
+
+	// live view control at bottom
+	m_outputTabs = new QTabWidget();
+	m_splitter2->addWidget(m_outputTabs);
+
+	setupOutputList();
+	setupOutputControl();
+}
+
+void MainWindow::setupOutputList()
+{
+	QList<Output*> allOut = AppSettings::outputs();
+
+	QList<Output*> outputs;
+	foreach(Output *x, allOut)
+		if(x->isEnabled())
+			outputs << x;
+
+	QListWidget * tbl = m_outputList;
+	//tbl->setSelectionBehavior(QAbstractItemView::SelectRows);
+	//connect(tbl, SIGNAL(cellClicked(int,int)), this, SLOT(slotOutputListCellActivated(int,int)));
+
+	//tbl->setColumnCount(1);
+	//tbl->setHorizontalHeaderLabels(QStringList() << "Name");
+	//tbl->setRowCount(outputs.size());
+
+	QListWidgetItem *prototype = new QListWidgetItem();
+	// setup your prototype
+	prototype->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled|Qt::ItemIsUserCheckable);
+
+	foreach(Output*out, outputs)
+	{
+		QListWidgetItem *t = prototype->clone();
+		t->setText(out->name());
+		t->setCheckState(Qt::Checked);
+		tbl->addItem(t);
+	}
 
 }
 
@@ -164,7 +232,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
 /*
 void MainWindow::slotListContextMenu(const QPoint &pos)
 {
-	QModelIndex idx = m_ui->listView->currentIndex();
+	QModelIndex idx = m_groupView->currentIndex();
 	SlideGroup *s = m_docModel.groupFromIndex(idx);
 	qDebug() << "MainWindow::slotListContextMenu(): selected group#:"<<s->groupNumber()<<", title:"<<s->groupTitle()<<", pos:"<<pos<<", mapToGlobal:"<<mapToGlobal(pos);
 
@@ -222,7 +290,7 @@ void MainWindow::editGroup(SlideGroup *g)
 
 void MainWindow::actionEditGroup()
 {
-	QModelIndex idx = m_ui->listView->currentIndex();
+	QModelIndex idx = m_groupView->currentIndex();
 	SlideGroup *s = m_docModel.groupFromIndex(idx);
 	editGroup(s);
 }
@@ -237,7 +305,7 @@ void MainWindow::actionNewGroup()
 
 void MainWindow::actionDelGroup()
 {
-	QModelIndex idx = m_ui->listView->currentIndex();
+	QModelIndex idx = m_groupView->currentIndex();
 	SlideGroup *s = m_docModel.groupFromIndex(idx);
 	deleteGroup(s);
 }
