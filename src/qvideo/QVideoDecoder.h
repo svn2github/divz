@@ -108,6 +108,8 @@ private:
 	double m_previous_pts;
 
 	int m_decode_timer;
+	
+	bool m_killed;
 };
 
 #endif // QVIDEODECODER_H

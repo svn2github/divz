@@ -29,7 +29,8 @@ QMutex mutex;
 QVideoDecoder::QVideoDecoder(QVideo * video, QObject * parent) : QThread(parent), 
 	m_start_timestamp(0), 
 	m_initial_decode(true),
-	m_previous_pts(0.0)
+	m_previous_pts(0.0),
+	m_killed(false)
 {
 	m_video = video;
 
@@ -48,6 +49,10 @@ QVideoDecoder::QVideoDecoder(QVideo * video, QObject * parent) : QThread(parent)
 
 QVideoDecoder::~QVideoDecoder()
 {
+	m_killed = true;
+	quit();
+	wait();
+	
 	if(m_video->m_video_loaded)
 	{
 		freeResources();
@@ -299,7 +304,7 @@ void QVideoDecoder::read()
 	AVPacket packet;
 
 	int frame_finished = 0;
-	while(!frame_finished)
+	while(!frame_finished && !m_killed)
 	{
 		if(av_read_frame(m_av_format_context, &packet) >= 0) 
 		{
@@ -342,7 +347,7 @@ void QVideoDecoder::decode()
 	double pts;
 
 	int frame_finished = 0;
-	while(!frame_finished)
+	while(!frame_finished && !m_killed)
 	{
 		if(av_read_frame(m_av_format_context, packet) >= 0) 
 		{
@@ -460,7 +465,7 @@ void QVideoDecoder::readFrame()
 	double pts;
 
 	int frame_finished = 0;
-	while(!frame_finished)
+	while(!frame_finished && !m_killed)
 	{
 		if(av_read_frame(m_av_format_context, &packet) >= 0) 
 		{
@@ -547,7 +552,7 @@ void QVideoDecoder::decodeVideoFrame()
 	int frame_finished = 0;
 	long double pts;
 
-	while(!frame_finished)
+	while(!frame_finished && !m_killed)
 	{
 		AVPacket packet;
 		int num_packets = g_packet_queue.video_packets.count();
