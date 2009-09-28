@@ -2,11 +2,16 @@
 
 #include "QVideoBuffer.h"
 #include "QVideoDecoder.h"
+
+#include <QDebug>
+#include <QMutex>
+#include <QMutexLocker>
 //#include "QVideoEncoder.h"
 /*
 #define _WIN32_WINNT 0x0500
 #include <windows.h>
 #include <Winbase.h>*/
+QMutex qvideo_mutex;
 
 QVideo::QVideo(const QString & filename, QObject * parent) : QObject(parent), 
 	m_frame_rate(0.0f), 
@@ -17,14 +22,15 @@ QVideo::QVideo(const QString & filename, QObject * parent) : QObject(parent),
 	m_play_timer(0),
 	m_video_loaded(false)
 {
+	QMutexLocker locker(&qvideo_mutex);
 	av_register_all();
-
+	/*
 	m_video_decoder = new QVideoDecoder(this, this);
 	m_video_decoder->start();
 	connect(this, SIGNAL(startDecode()), m_video_decoder, SLOT(decode()));
 	connect(m_video_decoder, SIGNAL(reachedEnd()), this, SLOT(determineVideoEndAction()));
 	connect(m_video_decoder, SIGNAL(ready(bool)), this, SLOT(setReady(bool)));
-	
+	*/
 	// just a random default value
 	m_expectedDelay = 999;
 	m_last_frame_shown = 999;
@@ -46,15 +52,17 @@ QVideo::QVideo(QObject *parent) : QObject(parent),
 	m_play_timer(0),
 	m_video_loaded(false)
 {
+	QMutexLocker locker(&qvideo_mutex);
 	av_register_all();
 
 	//m_video_encoder = new QVideoEncoder(this, this);
-
+	
 	m_video_decoder = new QVideoDecoder(this, this);
 	m_video_decoder->start();
 	//connect(this, SIGNAL(startDecode()), m_video_decoder, SLOT(decode()));
 	connect(m_video_decoder, SIGNAL(reachedEnd()), this, SLOT(determineVideoEndAction()));
         connect(m_video_decoder, SIGNAL(ready(bool)), this, SLOT(setReady(bool)));
+        
 
         //connect(&m_nextImageTimer, SIGNAL(timeout()), this, SLOT(displayFrame()));
         //m_nextImageTimer.setSingleShot(true);
@@ -78,14 +86,25 @@ QVideo::~QVideo()
 	unload();
 }
 
+
 bool QVideo::load(const QString & filename)
 {
-	return m_video_decoder->load(filename);
+	if(!m_video_decoder)
+		return true;
+	//qDebug() << "QVideo::load:"<<filename<<", entering lock...";
+	QMutexLocker locker(&qvideo_mutex);
+	//qDebug() << "QVideo::load:"<<filename<<", got lock.";
+	
+	bool flag = m_video_decoder->load(filename);
+	
+	//qDebug() << "QVideo::load:"<<filename<<", done loading, flag:"<<flag;
+	return flag;
 }
 
 void QVideo::unload()
 {
-	m_video_decoder->unload();
+	if(m_video_decoder)
+		m_video_decoder->unload();
 }
 
 void QVideo::setAdvanceMode(AdvanceMode mode)
@@ -157,7 +176,8 @@ void QVideo::play()
 
 void QVideo::seek(int ms)
 {
-	m_video_decoder->seek(ms);
+	if(m_video_decoder)
+		m_video_decoder->seek(ms);
 }
 
 void QVideo::pause()
@@ -177,8 +197,11 @@ void QVideo::stop()
 
 // 	m_screen->clear();
 
-	m_video_decoder->restart();
-	m_video_decoder->flushBuffers();
+	if(m_video_decoder)
+	{
+		m_video_decoder->restart();
+		m_video_decoder->flushBuffers();
+	}
 	emit movieStateChanged(QMovie::NotRunning);
 	
 }
@@ -198,6 +221,8 @@ void QVideo::setStatus(Status s)
 
 QImage QVideo::advance(int ms)
 {
+	if(!m_video_decoder)
+		return QImage();
 	QFFMpegVideoFrame video_frame = m_video_decoder->seekToFrame(ms);
 // 	QImage frame = *video_frame.frame;
 // 
@@ -209,7 +234,8 @@ QImage QVideo::advance(int ms)
 
 void QVideo::restart()
 {
-	m_video_decoder->restart();
+	if(m_video_decoder)
+		m_video_decoder->restart();
 }
 
 void QVideo::setReady(bool ready)
@@ -221,7 +247,8 @@ void QVideo::determineVideoEndAction()
 {
 	if(m_looped)
 	{
-		m_video_decoder->restart();
+		if(m_video_decoder)
+			m_video_decoder->restart();
 	}
 	else
 	{
@@ -249,6 +276,9 @@ void QVideo::timerEvent(QTimerEvent * te)
 
 void QVideo::consumeFrame()
 {
+	if(!m_video_decoder)
+		return;
+		
 	if(m_ready_to_play)
 	{
 		//stop timer until displayFrame() has completed

@@ -677,15 +677,17 @@ quint64 QVideoDecoder::calculatePTS(quint64 dts)
 
 void QVideoDecoder::freeResources()
 {
-// 	QMutexLocker locker(&mutex);
+ 	//QMutexLocker locker(&mutex);
 	if(m_video->m_video_loaded)
 	{
+		//mutex.lock();
 		// Free the RGB image
 		av_free(m_buffer);
 		av_free(m_av_rgb_frame);
 
 		// Free the YUV frame
-		av_free(m_av_frame);
+		//av_free(m_av_frame);
+		//mutex.unlock();
 
 		// Close the codec
 		avcodec_close(m_video_codec_context);

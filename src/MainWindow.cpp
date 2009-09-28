@@ -170,11 +170,12 @@ void MainWindow::setupCentralWidget()
 	m_splitter2->addWidget(topright);
 
 	// output controls at top
+	m_outputList = new QListWidget();
+	m_outputList->setMinimumSize(QSize(1,20));
+	layout->addWidget(m_outputList);
+
 	m_btnSendOut = new QPushButton("Send to Output");
 	layout->addWidget(m_btnSendOut);
-
-	m_outputList = new QListWidget();
-	layout->addWidget(m_outputList);
 
 	// live view control at bottom
 	m_outputTabs = new QTabWidget();
