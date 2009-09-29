@@ -53,6 +53,12 @@ class TextBoxContent : public AbstractContent
 
         QPainterPath shapePath() const;
         void setShapePath(const QPainterPath & path);
+        
+        Qt::Alignment xTextAlign() const { return m_xTextAlign; }
+	Qt::Alignment yTextAlign() const { return m_yTextAlign; }
+	
+	void setXTextAlign(Qt::Alignment);
+	void setYTextAlign(Qt::Alignment);
 
     Q_SIGNALS:
         void notifyHasShape(bool);
@@ -86,11 +92,14 @@ class TextBoxContent : public AbstractContent
     private:
         void updateTextConstraints();
         void updateCache();
+        void applyTextXAlign();
+        void addLineToPath(QPainterPath*);
 
         // text document, layouting & rendering
         QTextDocument * m_text;
         QList<QRect> m_blockRects;
         QList<TextLineSpec> m_lineSpecs;
+        QList<TextLineSpec*> m_currentLine;
         QRect m_textRect;
         int m_textMargin;
 
@@ -100,6 +109,9 @@ class TextBoxContent : public AbstractContent
         QRect m_shapeRect;
         
         QPainterPath m_textPath;
+        
+        Qt::Alignment m_xTextAlign;
+        Qt::Alignment m_yTextAlign;
 };
 
 #endif

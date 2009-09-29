@@ -16,6 +16,8 @@ class TextItem : public AbstractVisualItem
 	Q_PROPERTY(QPointF shapePoint2  READ shapePoint2  WRITE setShapePoint2);
 	Q_PROPERTY(QPointF shapePoint3  READ shapePoint3  WRITE setShapePoint3);
 	Q_PROPERTY(QPointF shapePoint4  READ shapePoint4  WRITE setShapePoint4);
+	Q_PROPERTY(Qt::Alignment xTextAlign READ xTextAlign WRITE setXTextAlign);
+	Q_PROPERTY(Qt::Alignment yTextAlign READ yTextAlign WRITE setYTextAlign);
 	
 public:
 	TextItem();
@@ -45,6 +47,13 @@ public:
 	void setShapePoint3(QPointF);
 	void setShapePoint4(QPointF);
 	
+	Qt::Alignment xTextAlign() const { return m_xTextAlign; }
+	Qt::Alignment yTextAlign() const { return m_yTextAlign; }
+	
+	void setXTextAlign(Qt::Alignment);
+	void setYTextAlign(Qt::Alignment);
+	
+	
 	// ::AbstractVisualItem
 	AbstractContent * createDelegate(QGraphicsScene*);
 	
@@ -66,6 +75,9 @@ private:
 	QPointF m_shapePoint2;
 	QPointF m_shapePoint3;
 	QPointF m_shapePoint4;
+	Qt::Alignment m_xTextAlign;
+	Qt::Alignment m_yTextAlign;
+	
 
 };
 

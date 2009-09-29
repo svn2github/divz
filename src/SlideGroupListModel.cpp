@@ -63,7 +63,7 @@ void SlideGroupListModel::internalSetup()
 
 	QModelIndex top    = indexForSlide(m_sortedSlides.first()),
 		    bottom = indexForSlide(m_sortedSlides.last());
-	qDebug() << "SlideGroupListModel::internalSetup: top:"<<top<<", bottom:"<<bottom;
+	//qDebug() << "SlideGroupListModel::internalSetup: top:"<<top<<", bottom:"<<bottom;
 
 	dataChanged(top,bottom);
 }
@@ -106,7 +106,7 @@ void SlideGroupListModel::modelDirtyTimeout()
 	
 	QModelIndex top    = indexForSlide(m_dirtySlides.first()), 
 	            bottom = indexForSlide(m_dirtySlides.last());
-	qDebug() << "SlideGroupListModel::modelDirtyTimeout: top:"<<top<<", bottom:"<<bottom;
+	//qDebug() << "SlideGroupListModel::modelDirtyTimeout: top:"<<top<<", bottom:"<<bottom;
 	m_dirtySlides.clear();
 	
 	dataChanged(top,bottom);
@@ -202,6 +202,8 @@ void SlideGroupListModel::setIconSize(QSize sz)
 
 void SlideGroupListModel::generatePixmap(int row)
 {
+	return;
+	
 	//qDebug("generatePixmap: Row#%d: Begin", row);
 	Slide * slide = m_sortedSlides.at(row);
 	

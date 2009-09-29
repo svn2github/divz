@@ -1,4 +1,5 @@
 #include "MainWindow.h"
+#include "SlideEditorWindow.h"
 #include "RenderOpts.h"
 #include "AppSettings.h"
 
@@ -81,7 +82,11 @@ int main(int argc, char **argv)
 	
 	AppSettings::load();
 
-	MainWindow mw;
+// 	MainWindow mw;
+// 	//mw.showMaximized();
+// 	mw.show();
+
+	SlideEditorWindow mw;
 	//mw.showMaximized();
 	mw.show();
 

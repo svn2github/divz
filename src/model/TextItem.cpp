@@ -10,6 +10,8 @@ TextItem::TextItem() : AbstractVisualItem()
 {
 	m_fontFamily = "Tahoma";
 	m_fontSize   = 40;
+	m_xTextAlign = Qt::AlignLeft;
+	m_yTextAlign = Qt::AlignTop;
 }
 
 TextItem::~TextItem() {}
@@ -30,6 +32,25 @@ ITEM_PROPSET(TextItem, ShapePoint1, QPointF, shapePoint1)
 ITEM_PROPSET(TextItem, ShapePoint2, QPointF, shapePoint2)
 ITEM_PROPSET(TextItem, ShapePoint3, QPointF, shapePoint3)
 ITEM_PROPSET(TextItem, ShapePoint4, QPointF, shapePoint4)
+// ITEM_PROPSET(TextItem, XTextAlign, Qt::Alignment, xTextAlign)
+// ITEM_PROPSET(TextItem, YTextAlign, Qt::Alignment, yTextAlign)
+
+// Declare the setters for alignment manually instead of with the macro
+// because we need to manually cast Qt::Alignment to (int) because
+// QVariant doesnt know how to handle Qt::Alignment nativly
+void TextItem::setXTextAlign(Qt::Alignment z)
+{
+	m_xTextAlign = z;
+        //qDebug("TextItem::setText: '%s'",text.toAscii().constData());
+	setChanged("xTextAlign",(int)z);
+}
+
+void TextItem::setYTextAlign(Qt::Alignment z)
+{
+	m_yTextAlign = z;
+        //qDebug("TextItem::setText: '%s'",text.toAscii().constData());
+	setChanged("yTextAlign",(int)z);
+}
 
 #include <assert.h>
 AbstractContent * TextItem::createDelegate(QGraphicsScene *scene)
@@ -90,6 +111,16 @@ bool TextItem::fromXml(QDomElement & pe)
 		}
 	}
 	
+	domElement = pe.firstChildElement("text-align");
+	if (domElement.isElement()) 
+	{
+		Qt::Alignment x = (Qt::Alignment)domElement.attribute("x").toInt();
+		Qt::Alignment y = (Qt::Alignment)domElement.attribute("y").toInt();
+		setXTextAlign(x);
+		setXTextAlign(y);
+	}
+		
+	
 	
 	setBeingLoaded(false);
 	
@@ -138,5 +169,10 @@ void TextItem::toXml(QDomElement & pe) const
 		domElement.setAttribute("four", QString::number(shapePoint4().x())
 			+ " " + QString::number(shapePoint4().y()));
 	}
+	
+	QDomElement alignElement = doc.createElement("text-align");
+	alignElement.setAttribute("x", (int)xTextAlign());
+	alignElement.setAttribute("y", (int)yTextAlign());
+	pe.appendChild(alignElement);
 }
 

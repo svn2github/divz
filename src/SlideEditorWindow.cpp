@@ -255,7 +255,7 @@ SlideEditorWindow::SlideEditorWindow(SlideGroup *group, QWidget * parent)
 	
 
 	
-/*
+
 	if(QFile("test.xml").exists())
 	{
 		m_doc.load("test.xml");
@@ -270,7 +270,7 @@ SlideEditorWindow::SlideEditorWindow(SlideGroup *group, QWidget * parent)
 		SlideGroup *g = new SlideGroup();
 		g->addSlide(slide);
 		m_doc.addGroup(g);
-		//m_scene->setSlide(slide);
+		m_scene->setSlide(slide);
 	}
 	
 	QList<SlideGroup*> glist = m_doc.groupList();
@@ -284,7 +284,7 @@ SlideEditorWindow::SlideEditorWindow(SlideGroup *group, QWidget * parent)
 	else
 	{
 		qDebug("Error: No groups in test.xml");
-	}*/
+	}
 	
 	if(group != 0)
 		setSlideGroup(group);
@@ -295,7 +295,7 @@ SlideEditorWindow::~SlideEditorWindow()
 {
 // 	XmlSave save("test.xml");
 // 	save.saveSlide(m_slide);
-// 	m_doc.save("test.xml");
+ 	m_doc.save("test.xml");
 	
 	QSettings settings;
 	settings.setValue("slideeditor/size",size());
