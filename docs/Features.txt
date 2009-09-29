@@ -16,63 +16,63 @@ Release 0.1b
 ----
 	Specs:
 	------
-		Basic Editor with support for:
-			Slides
+		x Basic Editor with support for:
+			x Slides
 				Basic Timeline
-				Visual Items
-					Video Files
+				x Visual Items
+					# Video Files
 					Pictures
-					Text
-			Slide Groups
+					# Text
+			x Slide Groups
 				Basic SG Timeline
-		Internal Slide Model
-		Basic Stringification Support
-		Save/Log Support
-		Basic Viewer
-			Load Slide Groups 
+		# Internal Slide Model
+		# Basic Stringification Support
+		# Save/Load Support
+		x  Basic Viewer
+			# Load Slide Groups 
 			Execute Timeline and Slides
 			Listen for Re-Publish Event from Editor
 			
-		Main Components:
-			Slide Group Editor
-			Playlist Selector
-			Preview Pane
+		x Main Components:
+			x Slide Group Editor
+			# Playlist Selector
+			# Preview Pane
 			Live Control Pane
-			Viewer Window
+			x Viewer Window
 		
 	Milestones:
 	-----------
 	
 		Milestone A - Target 10:30pm 2009-09-06
 		----
-			Port FotoWall AbstractContent Items
-			Create Editor Canvas Framework
-			Editor Canvas
-				Resizable Items
-				Properties Window
+			# Port FotoWall AbstractContent Items
+			# Create Editor Canvas Framework
+			# Editor Canvas
+				# Resizable Items
+				# Properties Window
 			
 		Milestone B - Target 10:30pm 2009-09-07
 		----
-			Slide Model / Item Model
-			Slide Group Model
-			Load/Save Framework for slides, items, slide groups, slide templates
-			Adapt abastractconfig to top-level widget
+			# Slide Model / Item Model
+			# Slide Group Model
+			# Load/Save Framework for slides, items, slide groups, slide templates
+			# Adapt abastractconfig to top-level widget
 			
 		Milestone C - Target 10:30pm 2009-09-08
 		----
-			Code to translate model to GraphicsView
-			Slide Template Model 
-			Revert to old CornerItems
-			Create TextBox Item 
-			Basic Editor (toolbar with items, click, add to canvas)
-			Basic Viewer for Model
-			Editor Publish Update
+			# Code to translate model to GraphicsView
+			# Slide Template Model 
+			# Revert to old CornerItems
+			# Create TextBox Item 
+			# Basic Editor (toolbar with items, click, add to canvas)
+			# Basic Viewer for Model
+			*** Editor Publish Update
 			
 		Milestone D - Target 10:30pm 2009-09-10
 		---
-			Slide Group
-			Timeline Widget
-			Transitions
+			# Slide Group
+			*** Timeline Widget
+			*** Transitions
 		
 		Milestone E - Target 10:30pm 2009-09-13
 		---
@@ -85,7 +85,7 @@ Release 0.1b
 Release 0.2 - Target 2009-09-16
 ---
 	Slide Group Visual Elements
-	Playlist Model
+	# Playlist Model
 	Viewer Control Panel
 	Effects for Text and Photos
 	
@@ -103,11 +103,11 @@ Relase 0.3 - Target 2009-09-23
 		
 Release 0.4 - Target 2009-09-30
 ---
-	Multiple Outputs
+	* Multiple Outputs
 	Slide "Filter" for say, rear, output
 	Output selection/control UI
 		sync to main / custom Slide Group
-	Preview windows for each output dockable
+	# Preview windows for each output dockable
 
 Release 0.5 - Target 2009-10-14
 ---
@@ -127,9 +127,12 @@ Release 0.7 - Target 2009-11-04
 ---
 	DViz Control Enhancments
 		Songs Support
+			- may need to move up in schedule
 		Bible Support
 		News Ticker
 		Blank/Clear Buttons
+			- should be fairly easy to do blank
+			- clear requires more abstraction of items
 		Date/Time Item
 		Video Folders
 		Image Folders

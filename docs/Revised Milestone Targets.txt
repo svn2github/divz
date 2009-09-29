@@ -1,0 +1,235 @@
+Directed Visual System (DViz)
+
+Release 1.0 Feature Target List
+----
+
+	"Basic Presentational Tool"
+	
+	
+	Just the basics necessary to replace EasyWorship for use at PHC
+		Currently we use EW for:
+			- Song Lyrics
+				- Cases:
+					- Praise Songs
+					- Hymnals
+				- In future, improve by importing text from PPT and auto-lookup lyrics for hymns online
+				- To replace EW, just need:
+					- basic block lyric support
+					- animated or static backgrounds
+					- centered text within rectangle
+					- Text shadows (structure there, just need to write it)
+					- Text outline (got it)
+					- Song Database 
+					- Lyric editor like EW (one long block of text, translated to slides behind the scenes)
+					- Unlike EW, do NOT honor RTF codes in lyric editor
+					- Foldback support
+						- Right now, we stream a screencap to a second PC to VidBlaster which handles rear projection
+						- For R1.0, networked DViz viewer would be ideal
+						- This implies we need some way to handle foldback generation in the software:
+							 - For songs, easy - we're auto-making the slides
+							 	Two ways we could do it:
+							 		- Slide "filters" on foldback output
+										- Filter on Item Type or Item Tag
+										- Then we just generate slides with appros tags, etc
+										- Filters could be exclusionary (dont show item IF)
+										- Implies filter on front slide as well to hide content only for rear output
+									- Custom output generator for rear output based on SlideGroup code
+										- Lookup GraphicsScene generator from slidegroup type
+										- If none found, use data straight (or fall thru to slide filter)
+										- If found custom generator, feed it the front slidegroup and current slide
+										- Then add the data from the generator to the rear slide
+										- This allows the custom generator to add in the next line text, etc
+							- For other slides, the "foldback" (or rear output) could: 
+								- CHEAT: mirror front content or strip all but text items
+								- Do it Right: Implement above filters/custom generator
+								- Hard part about filters for other types:
+									- Consider this though too: Filters should not only hide/show stuff, but modify also
+									  the SIZE of the text, color, positional stuff (center, left, etc), weight
+									- Filters on other types:
+										- Need way in editor then to add "tags" to items
+										- Tags can be "inherited" from amster slides too
+			- Scripture Reading (Responsive Reading)
+				- Leader reads a passage, audience reads a passage - alternating slides
+				- EW has not been good at this because it doesnt support any other "slides" other than songs
+				- Currently, we use powerpoint with scripture text, and just mirror PPT to rear wall
+				- Out of the gate, we will be "better" because we are building off of slides
+				- To "beat" EW, we just need "cleaned text" support on rear wall, stripped of foreground
+				- To match EW, we just need:
+					- Static image background
+					- Text block (already have that)
+					- Text shadows (structure there, just need to write it)
+					- Text outline (got it)
+			- Announcment Loops (before/after)
+				- Right now, we just import PPT slides and play in a loop
+				- To match basic PPT capabilities as used by the announcment loops, we need:
+					- text blocks (got it)
+					- shadows on text blocks (got basic shadows, gausian blur would be nice)
+					- centering text in block (should be easy to do (cross fingers))
+					- layout assist: center block vert/horizontal (should be very easy)
+					- snap to grid (basic code there in AbstractContent, need to add suppor tin other positional methods)
+					- lines (thin rects will "do" it, but need a true line item)
+					- image backgrounds (should be easy, nothing yet) 
+					- rectangles with transparency and line support
+					- gradients (infrastructure there, need editor or lots of good built-ins)
+					- undo/redo framework
+					- "master" slides (for use with dates on every slide, logo on bottom, etc)
+						- Dont *HAVE* to have master slides - can fake it, but need copy/paste (or clone) support real good then
+				- Out of the gate, improve ppt by:
+					- master slide items Z value can be higher than on the actual slides
+					- video items (already have them)
+				- Future:
+					- animations
+			- Sermons Graphics:
+				- Right now, we again import PPT slides 
+				- This makes heavy use of gradient backgrounds, smooth cross fades, and "random access" to slides
+				- Need all the "match ppt" items from announcment loops
+				- Out of the gate, beat PPT by allowing in-flight slide updates:
+					- Three step update to slide on screen 
+						- target for time to publish (from start of search in control to show button): 10 seconds
+							- Select slide in control - either edit, or copy=and=edit
+							- Make changes
+							- One button "show slide"
+						- This is the single biggest problem I have with the EW/PPT combo - the time it takes to update a slide in-flight
+					- Video Items/bg (probably not use this tho, too distracting)
+				- Future beat PPT:
+					again, animations
+					
+	Stuff we do at PHC that would be nice to have integrated:
+		- Foldback support (see discussion under songs)
+		- House TVs
+			Modes:
+				- Overlay live camera feed with PiP from Main Screens (Camera can be either PiP for songs, or Background for Sermon)
+				- Just mirror front (for announcement loops)
+				- Just camera (when main screens are black but people are on platform talking, etc)
+			Main show stopper:
+				- live camera support
+			Discussion:
+				- The PiP stuff can be done by setting up different slides in a slidegroup for the config wanted
+					- Use the camera as a background or foreground item as desired
+				- Then just transition between the slides
+				- This would need either:
+					- An "item" that is really a network feed from remote dviz:
+						- Either multipart jpeg (the cheating way :-)
+						- Or remote model with sync commands
+							- How to integrate model into a single item?
+							- Easiest way would be to embed a QGraphicsView using a WidgetProxy in the Item
+								- Then just set it up with a MyGraphicsScene, feed it the remote model and setup sync commands
+							- Other methods?
+					- House TVs just as a remote dviz viewer, but content all from main control
+						- Slightly easier - then the scene is full screen
+						- But consider camera latency - transmitting images over the wire
+						- Maybe make the camera item able to take the capture from the machine its "playing" on, not from control
+							- e.g. thinkg of it as "relative" data - relative to the machine its on
+							- in contrast, "absolute" data would be from control
+		- Secondary Feed 
+			- still expiermental right now
+			- Childrens Church during the sermon is in the gymnasium
+			- Need a way to indicate to them when the sermon is done from the control booth
+			- A buzzer would be one way, but I dont want to distract the kids - only to let the leader know 
+			- A flashing light might work - modify a buzzer to show a light instead
+			- Or the "high tech way" would be a laptop connected to a screen running a remote dviz viewer
+			- Then just send a slide to that output when nearly done
+				- The "cats pajamas" would be to have a live webcam connected to that dviz viewer laptop, 
+					feed images back over the net to control
+				- Thinking of that, that would be nice 
+					- the remote dviz viewers could spawn the capture thread
+					- use the capture in local slides (see "relative data", above)
+					- and include the ability to send the image back over the network to control for viewing there
+					- *OR* just mod the control to be able to include resources (sound cap, vid cap) from remote
+						dviz viewers into local presentations, or slids showing on other dviz viewers
+
+	In summary:
+		TARGET USE CASE:
+			- Songs
+			- Scripture Reading
+			- Announcements
+			- Sermon
+		FEATURES NEEDED TO SUPPORT USE CASES
+			(Compressed to one occurance per feature):
+			- Text outline (got it)
+			- rectangles with transparency and line support
+			- "background" support (image/video item)
+			- centered text within rectangle
+			- shadows on text blocks (got basic shadows, gausian blur would be nice)
+			- Lyric editor like EW (one long block of text, translated to slides behind the scenes)
+			- Song Database (Unlike EW, do NOT honor RTF codes in lyric editor)
+			- Foldback support (See discussion above / Slide filters/custom generator)
+			- layout assist: center block vert/horizontal (should be very easy)
+			- snap to grid (basic code there in AbstractContent, need to add suppor tin other positional methods)
+			- lines (thin rects will "do" it, but need a true line item)
+			- image items 
+			- gradients (infrastructure there, need editor or lots of good built-ins)
+			- undo/redo framework
+			- "master" slides (for use with dates on every slide, logo on bottom, etc)
+			- in-flight slide updates (10sec changes)
+			- random-access viewer control (pick any slide, any time)
+			- slide cross-fades
+			- network viewer
+			- camera capture / relative capture
+			- dviz include remote scene feed as an item
+		
+		FEATURES NEED IMPLEMENTED FROM LIST ABOVE:
+			Everything except first two :-)
+			
+
+	Closing:
+		This would be Release 1.0 - "Dviz - Basic Presentational Tool" or "DBPT", that is "Daily Breakfast Post Toasties", or, the "Tasty Breakfast" Release
+		Relase 1.5 will build in "enhancements" that go beyond EW/PPT combo
+		 
+	Milestone Breakdown:
+		The feature list for can be broken down cleanly into:
+			Songs/Scripture Reading - Target
+				- Easily implemented using current visual infrastructure
+				- Just need to add the lyric / scripture abstraction (Song Database)
+				- Needs "Easy" visual additions: Cross Fades, Shadows, Backgrounds, Random-Access viewer control
+			Announcments/Sermon Powerpoints
+				- This is the more general milestone
+				- Needs the more general/more work visual items (images, snap to grid, layout assist, gradients, master slides)
+				- Needs in-flight edits 
+				
+			----
+			At this point, we can "break" and use Dviz is we *have* to, just geting by with 
+			the current VidBlaster remote infrastructure for foldback and inhouse
+				
+			In fact, this could be release 1.0. Then the next two milestones make up release 1.5:
+			----
+			
+			TARGET FOR 1.0: October 5th, 2009
+			
+			---
+			Relase 1.5:
+			---
+			
+			Foldback Support
+				- Harder, more ambigeous
+				- Needs the slide filter/custom generator
+				- Remember: Would like to include only-foldback text, say in songs, like guitar tabs, etc
+				- Blank/Clear Buttons (only here because clear would make use of the foldback text abstraction)
+			Camera/Secondary
+				- Getting into the difficult/complex remote viewer
+				- Camera capture on windows - oofta
+				- Remote scene inclusion - oofta
+			---
+			
+			TARGET FOR 1.5: End of October, Mid November
+			
+			---
+			
+		Next relase 2.0, abstract milestones may be:
+			- In future, improve by importing text from PPT and auto-lookup lyrics for hymns online
+			- animations (smooth image animations a la google, smooth text movements, key frame animation)
+			- Audio support (mp3, video audio)
+			- master slides / master items Z value can be higher than on the actual slides
+			- TARGET FOR 2.0: End of November?
+			
+		Next Release 2.2, abstract milestones may be:
+			- Timeline support (tag items, maybe in 2.0)
+			- Remote controls 
+			- Song leader control for touch screen
+			- Bible Support
+			- News Ticker
+			- Date/Time Item
+			- Video Folders
+			- Image Folders
+			- TARGET FOR 2.2: End of December?
+
