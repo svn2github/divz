@@ -188,13 +188,13 @@ Release 1.0 Feature Target List
 				- Needs in-flight edits 
 				
 			----
-			At this point, we can "break" and use Dviz is we *have* to, just geting by with 
+			At this point, we can "break" and use Dviz as-is if we *have* to, just to get by without EW.
 			the current VidBlaster remote infrastructure for foldback and inhouse
 				
 			In fact, this could be release 1.0. Then the next two milestones make up release 1.5:
 			----
 			
-			TARGET FOR 1.0: October 5th, 2009
+			TARGET FOR 1.0: October 10th, 2009
 			
 			---
 			Relase 1.5:
