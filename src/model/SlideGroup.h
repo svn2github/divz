@@ -25,6 +25,8 @@ public:
 		Generic,
 		SectionHeader,
 		Song,
+		Video,
+		Feed,
 	};
 	
 	ITEM_PROPDEF(GroupId,		int,		groupId);

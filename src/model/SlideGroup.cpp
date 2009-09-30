@@ -2,9 +2,15 @@
 
 #include <assert.h>
 
-SlideGroup::SlideGroup()  
-{
+SlideGroup::SlideGroup() :
+	m_groupNumber(0)
+	, m_groupId(1)
+	, m_groupType(Generic)
+	, m_groupTitle("Untitled Group")
+	, m_iconFile("")
 	
+{
+		
 }
 
 SlideGroup::~SlideGroup() 

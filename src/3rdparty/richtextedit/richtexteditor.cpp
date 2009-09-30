@@ -294,7 +294,7 @@ public slots:
     void updateActions();
 
 private slots:
-    ///void alignmentActionTriggered(QAction *action);
+    void alignmentActionTriggered(QAction *action);
     void sizeInputActivated(const QString &size);
     void fontInputActivated(const QString &face);   // +fotowall
     void colorChanged(const QColor &color);
@@ -313,11 +313,11 @@ private:
     QAction *m_underline_action;
     QAction *m_valign_sup_action;
     QAction *m_valign_sub_action;
-    ///QAction *m_align_left_action;
-    ///QAction *m_align_center_action;
-    ///QAction *m_align_right_action;
-    ///QAction *m_align_justify_action;
-    ///QAction *m_link_action;
+    QAction *m_align_left_action;
+    QAction *m_align_center_action;
+    QAction *m_align_right_action;
+    //QAction *m_align_justify_action;
+    //QAction *m_link_action;
     //QAction *m_image_action;
     ColorAction *m_color_action;
     QComboBox *m_font_size_input;
@@ -405,9 +405,9 @@ RichTextEditorToolBar::RichTextEditorToolBar(RichTextEditor *editor,
     m_underline_action->setShortcut(tr("CTRL+U"));
     addAction(m_underline_action);
 
-    ///addSeparator();
+    addSeparator();
 
-    /**
+    
     // Left, center, right and justified alignment buttons
 
     QActionGroup *alignment_group = new QActionGroup(this);
@@ -429,26 +429,26 @@ RichTextEditorToolBar::RichTextEditorToolBar(RichTextEditor *editor,
             tr("Right Align"), editor, 0, alignment_group);
     addAction(m_align_right_action);
 
-    m_align_justify_action = createCheckableAction(
-            createIconSet(QLatin1String("textjustify.png")),
-            tr("Justify"), editor, 0, alignment_group);
-    addAction(m_align_justify_action);
-
-    addSeparator();
-    */
+//     m_align_justify_action = createCheckableAction(
+//             createIconSet(QLatin1String("textjustify.png")),
+//             tr("Justify"), editor, 0, alignment_group);
+//     addAction(m_align_justify_action);
+// 
+//     addSeparator();
+    
 
     // Superscript and subscript buttons
 
-    m_valign_sup_action = createCheckableAction(
-            createIconSet(QLatin1String("textsuperscript.png")),
-            tr("Superscript"),
-            this, SLOT(setVAlignSuper(bool)), this);
-    ///addAction(m_valign_sup_action);
-
-    m_valign_sub_action = createCheckableAction(
-            createIconSet(QLatin1String("textsubscript.png")),
-            tr("Subscript"),
-            this, SLOT(setVAlignSub(bool)), this);
+//     m_valign_sup_action = createCheckableAction(
+//             createIconSet(QLatin1String("textsuperscript.png")),
+//             tr("Superscript"),
+//             this, SLOT(setVAlignSuper(bool)), this);
+//     ///addAction(m_valign_sup_action);
+// 
+//     m_valign_sub_action = createCheckableAction(
+//             createIconSet(QLatin1String("textsubscript.png")),
+//             tr("Subscript"),
+//             this, SLOT(setVAlignSub(bool)), this);
     ///addAction(m_valign_sub_action);
 
     ///addSeparator();
@@ -472,7 +472,7 @@ RichTextEditorToolBar::RichTextEditorToolBar(RichTextEditor *editor,
 
     updateActions();
 }
-/**
+
 void RichTextEditorToolBar::alignmentActionTriggered(QAction *action)
 {
     Qt::Alignment new_alignment;
@@ -481,15 +481,19 @@ void RichTextEditorToolBar::alignmentActionTriggered(QAction *action)
         new_alignment = Qt::AlignLeft;
     } else if (action == m_align_center_action) {
         new_alignment = Qt::AlignCenter;
-    } else if (action == m_align_right_action) {
-        new_alignment = Qt::AlignRight;
     } else {
-        new_alignment = Qt::AlignJustify;
+        new_alignment = Qt::AlignRight;
     }
+    /*    } else if (action == m_align_right_action) {
+        new_alignment = Qt::AlignRight;
+    }*/
+//      else {
+//         new_alignment = Qt::AlignJustify;
+//     }
 
     m_editor->setAlignment(new_alignment);
 }
-*/
+
 void RichTextEditorToolBar::colorChanged(const QColor &color)
 {
     m_editor->setTextColor(color);
@@ -597,17 +601,20 @@ void RichTextEditorToolBar::updateActions()
         charFormat.verticalAlignment();
     const bool superScript = valign == QTextCharFormat::AlignSuperScript;
     const bool subScript = valign == QTextCharFormat::AlignSubScript;
-/**
-    if (alignment & Qt::AlignLeft) {
+
+    if (alignment & Qt::AlignLeft) 
+    {
         m_align_left_action->setChecked(true);
-    } else if (alignment & Qt::AlignRight) {
+    } 
+    else 
+    if (alignment & Qt::AlignRight) 
+    {
         m_align_right_action->setChecked(true);
-    } else if (alignment & Qt::AlignHCenter) {
+    } else 
+    {
         m_align_center_action->setChecked(true);
-    } else {
-        m_align_justify_action->setChecked(true);
     }
-*/
+
     m_bold_action->setChecked(font.bold());
     m_italic_action->setChecked(font.italic());
     m_underline_action->setChecked(font.underline());
