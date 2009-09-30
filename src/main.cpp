@@ -78,6 +78,8 @@ int main(int argc, char **argv)
 	}
 	s.setValue("opengl/disable",noOpenGL);
         noOpenGL = false;
+	noOpenGL = true;
+
 	RenderOpts::DisableOpenGL = noOpenGL;
 	
 	AppSettings::load();
