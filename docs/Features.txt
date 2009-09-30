@@ -77,7 +77,7 @@ Revised Task list for Release 1.0, 10/10/09:
 		-figure out why mirror item doesnt get repainted when slide changed back
 		-turn off multi-select unless intentional - looks like if one item selected, then right-click on another item, it selects both items
 		-repaint bug -see textitem - when textobx selected and hover over other content, bg in text box turns white...why?
-		-since textbox clipping has been turned on, need to keep all text inside content rect - add margin or something to layout - see letter "L" in tahoma at start of a box
+		[FIXED]-r86-since textbox clipping has been turned on, need to keep all text inside content rect - add margin or something to layout - see letter "L" in tahoma at start of a box
 
 			
 

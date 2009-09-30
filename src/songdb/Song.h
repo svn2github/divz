@@ -15,14 +15,21 @@ class Song : public QObject
 	Q_PROPERTY(QString tags		READ tags		WRITE setTags);
 	Q_PROPERTY(QString number	READ number		WRITE setNumber);
 	Q_PROPERTY(QString text		READ text		WRITE setText);
+	Q_PROPERTY(QString author	READ author		WRITE setAuthor);
+	Q_PROPERTY(QString copyright	READ copyright		WRITE setCopyright);
+	Q_PROPERTY(QString lastUsed	READ lastUsed		WRITE setLastUsed);
 
 public:
 	Song();
 
-	SONG_PROPDEF(SongId,	quint32,	songId);
+	SONG_PROPDEF(SongId,		quint32,	songId);
 	SONG_PROPDEF(Title,		QString,	title);
 	SONG_PROPDEF(Tags,		QString,	tags);
 	SONG_PROPDEF(Text,		QString,	text);
+	SONG_PROPDEF(Author,		QString,	author);
+	SONG_PROPDEF(Copyright,		QString,	copyright);
+	SONG_PROPDEF(LastUsed,		QString,	lastUsed);
+	
 
 
 	QStringList tagList() const;

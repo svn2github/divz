@@ -14,6 +14,9 @@ SONG_PROPSET(Song, SongId,		quint32,	songId);
 SONG_PROPSET(Song, Title,		QString,	title);
 SONG_PROPSET(Song, Tags,		QString,	tags);
 SONG_PROPSET(Song, Text,		QString,	text);
+SONG_PROPSET(Song, Author,		QString,	author);
+SONG_PROPSET(Song, Copyright,		QString,	copyright);
+SONG_PROPSET(Song, LastUsed,		QString,	lastUsed);
 
 QStringList Song::tagList() const
 {
