@@ -11,25 +11,56 @@ void Song::initSongDatabase()
 	m_db = QSqlDatabase::addDatabase("QSQLITE");
 	m_db.setDatabaseName(SONG_FILE);
 	/*bool ok = */m_db.open();
+// 	qDebug()<<"Ok?"<<ok;
 	m_dbIsOpen = true;
+	
+// 	QSqlQuery query;
+// 	//query.exec("SELECT title, number FROM songs where songid=16");
+// 	query.prepare("SELECT * FROM songs where number=?");  
+// 	query.addBindValue(203);
+// 	query.exec();
+// 	if (query.lastError().isValid())
+// 	{
+// 		qDebug() << "initSongDatabase(): query.lastError();
+// 	}
+// 	else
+// 	{
+// 		while (query.next()) 
+// 		{
+// 			QString title = query.value(0).toString();
+// 			int number = query.value(1).toInt();
+// 			if(number == 0)
+// 				continue;
+// 			//check value(1).isNull() before using
+// 			qDebug() << title << number;
+// 		}
+// 	}
 }
 
 Song * Song::retrieve(int id)
 {
 	if(!m_dbIsOpen)
 		initSongDatabase();
-	QSqlQuery query(QString("SELECT * FROM %1 WHERE songid=?").arg(SONG_TABLE),m_db); 
+	QSqlQuery query;
+	query.prepare(QString("SELECT * FROM %1 WHERE songid=?").arg(SONG_TABLE)); 
 	query.addBindValue(id);
+	query.exec();
 	if (query.lastError().isValid())
 	{
-		qDebug() << query.lastError();
+		qDebug() << "retrieve(): "<<query.lastError();
 		return 0;
 	}
 	else
 	{
-		QSqlQueryModel model;
-		model.setQuery(query);
-		return Song::fromSqlRecord(model.record(0));
+		if(query.size())
+		{
+			query.next();
+			return Song::fromQuery(query);
+		}
+		else
+		{
+			return 0;
+		}
 	}
 }
 
@@ -37,18 +68,28 @@ Song * Song::songByNumber(int id)
 {
 	if(!m_dbIsOpen)
 		initSongDatabase();
-	QSqlQuery query(QString("SELECT * FROM %1 WHERE number=?").arg(SONG_TABLE),m_db); 
+	QSqlQuery query("",m_db);
+	QString sql = QString("SELECT * FROM %1 WHERE number=?").arg(SONG_TABLE);
+	query.prepare(sql); 
 	query.addBindValue(id);
+	query.exec();
+	
 	if (query.lastError().isValid())
 	{
-		qDebug() << query.lastError();
+		qDebug() << "songByNumber():"<<query.lastError();
 		return 0;
 	}
 	else
 	{
-		QSqlQueryModel model;
-		model.setQuery(query);
-		return Song::fromSqlRecord(model.record(0));
+		if(query.size())
+		{
+			query.next();
+			return Song::fromQuery(query);
+		}
+		else
+		{
+			return 0;
+		}
 	}
 }
 
@@ -56,23 +97,31 @@ QList<Song*> Song::search(QString text, bool onlyTitle)
 {
 	if(!m_dbIsOpen)
 		initSongDatabase();
-	QSqlQuery query(QString("SELECT * FROM %1 WHERE title LIKE ?").arg(SONG_TABLE) + (onlyTitle ? "" : " AND text LIKE ?"),m_db); 
-	query.addBindValue(QString("%%1%").arg(text));
+	QSqlQuery query;
+	query.prepare(QString("SELECT * FROM %1 WHERE title LIKE :x").arg(SONG_TABLE) + (onlyTitle ? "" : " AND text LIKE :y")); 
+	query.bindValue(":x",QString("%%1%").arg(text));
+	query.exec();
 	if(!onlyTitle)
-		query.addBindValue(QString("%%1%").arg(text));
+		query.bindValue(":y",QString("%%1%").arg(text));
 	if (query.lastError().isValid())
 	{
-		qDebug() << query.lastError();
+		qDebug() << "search():"<<query.lastError();
 		return QList<Song*>();
 	}
 	else
 	{
-		QSqlQueryModel model;
-		model.setQuery(query);
-		QList<Song*> list;
-		for(int i=0;i<model.rowCount();i++)
-			list << Song::fromSqlRecord(model.record(i));
-		return list;
+		if(query.size())
+		{
+			QList<Song*> list;
+			while(query.isValid())
+				list << Song::fromQuery(query);
+			return list;
+			
+		}
+		else
+		{
+			return QList<Song*>();
+		}
 	}
 	
 }
@@ -91,7 +140,7 @@ bool Song::addSong(Song* song)
 	QSqlTableModel tbl(0,m_db);
 	tbl.setTable(SONG_TABLE);
 	
-	if(!tbl.insertRecord(-1,song->m_record))
+	if(!tbl.insertRecord(-1,song->toSqlRecord()))
 	{
 		qDebug() << "Error adding Song: "<<tbl.lastError();
 		return false;
@@ -110,12 +159,14 @@ void Song::deleteSong(Song* song, bool deletePtr)
 	if(!m_dbIsOpen)
 		initSongDatabase();
 		
-	QSqlQuery query(QString("DELETE FROM %1 WHERE songid=?").arg(SONG_TABLE),m_db); 
-	query.addBindValue(song->m_songId);
+	QSqlQuery query;
+	query.prepare(QString("DELETE FROM %1 WHERE songid=:x").arg(SONG_TABLE)); 
+	query.bindValue(":x",song->m_songId);
+	query.exec();
 	
 	if (query.lastError().isValid())
 	{
-		qDebug() << query.lastError();
+		qDebug() << "deleteSong():"<<query.lastError();
 		return;
 	}
 	else
@@ -129,9 +180,13 @@ void Song::deleteSong(Song* song, bool deletePtr)
 	}
 }
 
-Song * Song::fromSqlRecord(QSqlRecord r)
+Song * Song::fromQuery(QSqlQuery q)
 {
+	QSqlRecord r = q.record();
 	Song * s = new Song();
+	//qDebug()<<"fromQuery:"<<r<<", isEmpty? "<<r.isEmpty();
+	//qDebug()<<"fromQuery: title:"<<q.value(r.indexOf("title"));
+	s->m_init = true;
 	s->setSongId(		r.value("songid").toInt());
 	s->setTitle(		r.value("title").toString());
 	s->setTags(		r.value("tags").toString());
@@ -140,8 +195,22 @@ Song * Song::fromSqlRecord(QSqlRecord r)
 	s->setAuthor(		r.value("author").toString());
 	s->setCopyright(	r.value("copyright").toString());
 	s->setLastUsed(		r.value("last_used").toString());
-	s->m_record = r;
+	s->m_init = false;
 	return s;
+}
+
+QSqlRecord Song::toSqlRecord()
+{
+	QSqlRecord r;
+	r.setValue("songid",	songId());
+	r.setValue("title",	title());
+	r.setValue("tags",	tags());
+	r.setValue("number",	number());
+	r.setValue("text",	text());
+	r.setValue("author",	author());
+	r.setValue("copyright",	copyright());
+	r.setValue("last_used",	lastUsed());
+	return r;
 }
 
 Song::Song(QString title, QString text, int number) :
@@ -150,6 +219,7 @@ Song::Song(QString title, QString text, int number) :
 	, m_tags("")
 	, m_number(number)
 	, m_text(text)
+	, m_init(false)
 
 {
 }
@@ -172,4 +242,31 @@ QStringList Song::tagList() const
 void Song::setTagList(const QStringList & list)
 {
 	setTags(list.join(", "));
+}
+
+bool Song::updateDb(QString field, QVariant v)
+{
+	if(m_init)
+		return true;
+		
+	if(!m_dbIsOpen)
+		initSongDatabase();
+	
+	QSqlQuery query;
+	QString sql = QString("UPDATE %1 SET %2 = ? WHERE songid= ?").arg(SONG_TABLE).arg(field);
+	//qDebug() << "updateDb():"<<sql<<", value:"<<v<<", songid:"<<m_songId;
+	query.prepare(sql); 
+	query.addBindValue(v);
+	query.addBindValue(m_songId);
+	query.exec();
+	
+	if (query.lastError().isValid())
+	{
+		qDebug() << "updateDb():"<<query.lastError();
+		return false;
+	}
+	else
+	{
+		return true;
+	}
 }

@@ -6,7 +6,7 @@
 #include <QStringList>
 #include <QList>
 
-#define SONG_PROPSET(className,setterName,typeName,memberName,dbField) void className::set##setterName(typeName value){m_##memberName = value;if(!m_record.isEmpty()){ m_record.setValue(dbField,value); }}
+#define SONG_PROPSET(className,setterName,typeName,memberName,dbField) void className::set##setterName(typeName value){m_##memberName = value;updateDb(dbField,value);}
 #define SONG_PROPDEF(setterName,typeName,memberName) void set##setterName(typeName value); typeName memberName() const { return m_##memberName; }
 
 class Song : public QObject
@@ -31,7 +31,7 @@ public:
 	static bool addSong(Song*);
 	static void deleteSong(Song*, bool deletePointer = true);
 	
-	static Song * fromSqlRecord(QSqlRecord);
+	static Song * fromQuery(QSqlQuery);
 	
 	static QSqlDatabase db();
 
@@ -60,7 +60,10 @@ private:
 	QString m_copyright;
 	QString m_lastUsed;
 
-	QSqlRecord m_record;
+	bool m_init;
+	bool updateDb(QString field, QVariant value);
+	
+	QSqlRecord toSqlRecord();
 	
 	static void initSongDatabase();
 	static bool m_dbIsOpen;

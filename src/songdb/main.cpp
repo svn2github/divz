@@ -18,27 +18,52 @@ int main(int argc, char **argv)
 // 	//db.setPassword("1uTbSbAs");
 // 	bool ok = db.open();
 // 	qDebug()<<"Ok?"<<ok;
-	/*
+	Song::db();
+	
+/*
 	QSqlQuery query;
-	query.exec("SELECT title, number FROM songs"); 
+	query.exec("SELECT author FROM songs where songid=16"); 
 	if (query.lastError().isValid())
 	{
 		qDebug() << query.lastError();
 	}
 	else
 	{
-		while (query.next()) 
-		{
-			QString title = query.value(0).toString();
-			int number = query.value(1).toInt();
-			if(number == 0)
-				continue;
-			// check value(1).isNull() before using
-			qDebug() << title << number;
-		}
-	}
-	*/
+		query.next();
+		qDebug() << "author:" << query.value(0).toString();
+	}*/
 	
+// 	QSqlQuery q2;
+// 	q2.exec("UPDATE songs SET author='' where songid=16");
+// 	if (q2.lastError().isValid())
+// 	{
+// 		qDebug() << q2.lastError();
+// 	}
+// // 	
+//  	return -1;
+
+
+// 	QSqlQuery query;
+// 	query.exec("SELECT title, number FROM songs"); 
+// 	if (query.lastError().isValid())
+// 	{
+// 		qDebug() << query.lastError();
+// 	}
+// 	else
+// 	{
+// 		while (query.next()) 
+// 		{
+// 			QString title = query.value(0).toString();
+// 			int number = query.value(1).toInt();
+// 			if(number == 0)
+// 				continue;
+// 			//check value(1).isNull() before using
+// 			qDebug() << title << number;
+// 		}
+// 	}
+	
+	
+	//return -1;
 	
 	QSqlTableModel * tbl = new QSqlTableModel(0,Song::db());
 	tbl->setTable("songs");
@@ -58,6 +83,28 @@ int main(int argc, char **argv)
 	view->setModel(tbl);
 	view->setWindowTitle("songs.db");
 	view->show();
+	
+	// id=16, nbr=203
+	Song * s = Song::songByNumber(203);
+	//Song * s = Song::retrieve(16);
+	
+	if(s)
+	{
+		qDebug()<<"SongID:"<<s->songId()<<", title:"<<s->title()<<", author:"<<s->author();
+		//s->setAuthor("asdf");
+		
+// 		Song * s = Song::retrieve(16);
+// 		qDebug()<<"try2: SongID:"<<s->songId()<<", title:"<<s->title()<<", author:"<<s->author();
+	}
+	else
+	{
+		qDebug()<<"Can't load song 203 for some unknown reason";
+	}
+	
+	delete s;
+	s=0;
+	
+	//Song::db().close();
 	
 	
 	//return -1;
