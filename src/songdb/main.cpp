@@ -5,17 +5,19 @@
 #include <QSqlTableModel>
 #include <QTableView>
 
+#include "Song.h"
+
 int main(int argc, char **argv)
 {
 	QApplication app(argc, argv);		
 	//QCoreApplication app(argc, argv);		
-	QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
-	//db.setHostName("bigblue");
-	db.setDatabaseName("songs.db");
-	//db.setUserName("acarlson");
-	//db.setPassword("1uTbSbAs");
-	bool ok = db.open();
-	qDebug()<<"Ok?"<<ok;
+// 	QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
+// 	//db.setHostName("bigblue");
+// 	db.setDatabaseName("songs.db");
+// 	//db.setUserName("acarlson");
+// 	//db.setPassword("1uTbSbAs");
+// 	bool ok = db.open();
+// 	qDebug()<<"Ok?"<<ok;
 	/*
 	QSqlQuery query;
 	query.exec("SELECT title, number FROM songs"); 
@@ -37,7 +39,8 @@ int main(int argc, char **argv)
 	}
 	*/
 	
-	QSqlTableModel * tbl = new QSqlTableModel(0,db);
+	
+	QSqlTableModel * tbl = new QSqlTableModel(0,Song::db());
 	tbl->setTable("songs");
 	
 	#define tr
