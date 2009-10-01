@@ -36,6 +36,9 @@
         <file>data/textsubscript.png</file>
         <file>data/textsuperscript.png</file>
         <file>data/textunder.png</file>
+        <file>data/textleft.png</file>
+        <file>data/textright.png</file>
+        <file>data/textcenter.png</file>
         <!--
         <file>translations/fotowall_de.qm</file>
         <file>translations/fotowall_fr.qm</file>

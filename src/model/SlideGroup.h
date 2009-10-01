@@ -45,6 +45,17 @@ public:
 	bool fromXml(QDomElement & parentElement);
         void toXml(QDomElement & parentElement) const;
 
+	// Things you can do with slide groups:
+	// View 
+	//	- add to a scene
+	// Control
+	//	- switch slides in the scene
+	// Edit
+	//	- change content of the group
+	
+	
+	
+
 signals:
 	// Operation = "Add", "Remove", "Change"
 	void slideChanged(Slide *slide, QString slideOperation, AbstractItem *item, QString operation, QString fieldName, QVariant value);

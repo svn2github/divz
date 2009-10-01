@@ -10,6 +10,8 @@ OBJECTS_DIR = .build
 RCC_DIR = .build
 UI_DIR = .build
 
+QT += sql
+
 BUILDNUM = $$system(perl buildcount.pl -v)
 VERSTR = '\\"$${BUILDNUM}\\"'  # place quotes around the version string
 
@@ -96,6 +98,7 @@ win32 {
 include(frames/frames.pri)
 include(items/items.pri)
 include(model/model.pri)
+include(songdb/songdb.pri)
 include(3rdparty/richtextedit/richtextedit.pri)
 include(3rdparty/qtgradienteditor/qtgradienteditor.pri)
 include(3rdparty/videocapture/videocapture.pri)

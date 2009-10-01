@@ -92,13 +92,13 @@ class TextBoxContent : public AbstractContent
     private:
         void updateTextConstraints();
         void updateCache();
-        void applyTextXAlign();
+        void applyTextXAlign(Qt::Alignment);
         void addLineToPath(QPainterPath*);
 
         // text document, layouting & rendering
         QTextDocument * m_text;
         QList<QRect> m_blockRects;
-        QList<TextLineSpec> m_lineSpecs;
+        //QList<TextLineSpec> m_lineSpecs;
         QList<TextLineSpec*> m_currentLine;
         QRect m_textRect;
         int m_textMargin;

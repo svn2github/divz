@@ -8,12 +8,12 @@
                 <rect>
                     <x>-100</x>
                     <y>-75</y>
-                    <w>873</w>
+                    <w>1023</w>
                     <h>231</h>
                 </rect>
                 <pos>
-                    <x>111</x>
-                    <y>346</y>
+                    <x>105</x>
+                    <y>343</y>
                 </pos>
                 <zvalue>1</zvalue>
                 <opacity>1</opacity>
@@ -28,9 +28,9 @@
 &lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
 p, li { white-space: pre-wrap; }
 &lt;/style>&lt;/head>&lt;body style=" font-family:'Tahoma'; font-size:40pt; font-weight:400; font-style:normal;">
-&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-family:'Sans Serif'; font-size:48pt;">Lorem Ipsum &lt;/span>&lt;/p>
-&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-family:'Sans Serif'; font-size:48pt;">are all the same &lt;/span>&lt;/p>
-&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-family:'Sans Serif'; font-size:48pt;">to me.&lt;/span>&lt;/p>&lt;/body>&lt;/html></text>
+&lt;p align="right" style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-family:'Sans Serif'; font-size:48pt; font-weight:600;">Lorem Ipsum &lt;/span>&lt;/p>
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-family:'Sans Serif'; font-size:48pt;">are &lt;/span>&lt;span style=" font-family:'Sans Serif'; font-size:48pt; font-weight:600; font-style:italic;">all the same&lt;/span>&lt;span style=" font-family:'Sans Serif'; font-size:48pt; font-weight:600;"> &lt;/span>&lt;/p>
+&lt;p align="center" style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-family:'Sans Serif'; font-size:48pt;">to &lt;/span>&lt;span style=" font-family:'Sans Serif'; font-size:48pt; text-decoration: underline;">me&lt;/span>&lt;span style=" font-family:'Sans Serif'; font-size:48pt;">.&lt;/span>&lt;/p>&lt;/body>&lt;/html></text>
                 <default-font font-family="Tahoma" font-size="40"/>
                 <shape enabled="0"/>
                 <text-align x="32" y="32"/>

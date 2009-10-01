@@ -182,7 +182,12 @@ void Song::deleteSong(Song* song, bool deletePtr)
 
 Song * Song::fromQuery(QSqlQuery q)
 {
-	QSqlRecord r = q.record();
+	return fromSqlRecord(q.record());
+}
+
+Song * Song::fromSqlRecord(QSqlRecord r)
+{
+	
 	Song * s = new Song();
 	//qDebug()<<"fromQuery:"<<r<<", isEmpty? "<<r.isEmpty();
 	//qDebug()<<"fromQuery: title:"<<q.value(r.indexOf("title"));

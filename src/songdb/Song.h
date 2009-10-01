@@ -6,7 +6,13 @@
 #include <QStringList>
 #include <QList>
 
-#define SONG_PROPSET(className,setterName,typeName,memberName,dbField) void className::set##setterName(typeName value){m_##memberName = value;updateDb(dbField,value);}
+#define SONG_PROPSET(className,setterName,typeName,memberName,dbField) \
+	void className::set##setterName(typeName value) { \
+		m_##memberName = value;  \
+		updateDb(dbField,value); \
+		songChanged(this,#memberName,value); \
+	}
+	
 #define SONG_PROPDEF(setterName,typeName,memberName) void set##setterName(typeName value); typeName memberName() const { return m_##memberName; }
 
 class Song : public QObject
@@ -32,6 +38,7 @@ public:
 	static void deleteSong(Song*, bool deletePointer = true);
 	
 	static Song * fromQuery(QSqlQuery);
+	static Song * fromSqlRecord(QSqlRecord);
 	
 	static QSqlDatabase db();
 
@@ -49,6 +56,11 @@ public:
 	
 	QStringList tagList() const;
 	void setTagList(const QStringList &);
+	
+// 	SongSlideGroup * toSlideGroup();
+
+signals:
+	void songChanged(Song*, QString field, QVariant value);
 
 private:
 	quint32 m_songId;

@@ -57,7 +57,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	m_groupView->insertAction(0,m_ui->actionNew_Slide_Group);
 	m_groupView->insertAction(0,m_ui->actionDelete_Slide_Group);
 
-	m_ui->actionEdit_Slide_Group->setEnabled(false);
+	//m_ui->actionEdit_Slide_Group->setEnabled(false);
 
 	connect(m_ui->actionNew_Slide_Group, SIGNAL(triggered()), this, SLOT(actionNewGroup()));
 	connect(m_ui->actionEdit_Slide_Group, SIGNAL(triggered()), this, SLOT(actionEditGroup()));
@@ -161,6 +161,7 @@ void MainWindow::setupCentralWidget()
 
 	// left side
 	m_groupView = new QListView(this);
+	m_groupView->setContextMenuPolicy(Qt::ActionsContextMenu);
 	m_splitter->addWidget(m_groupView);
 
 	// right side

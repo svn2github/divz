@@ -19,6 +19,7 @@ class Output : public QObject
 	Q_PROPERTY(QString host READ host WRITE setHost);
 	Q_PROPERTY(int port READ port WRITE setPort);
 	Q_PROPERTY(bool allowMultiple READ allowMultiple WRITE setAllowMultiple);
+	Q_PROPERTY(QString tags READ tags WRITE setTags);
 public:
 	Output();
 
@@ -53,6 +54,9 @@ public:
 
 	bool allowMultiple() { return m_allowMultiple; }
 	void setAllowMultiple(bool);
+	
+	QString tags() { return m_tags; }
+	void setTags(QString);
 
 	QByteArray toByteArray();
 	void fromByteArray(QByteArray);
@@ -68,6 +72,7 @@ private:
 	QString m_host;
 	int m_port;
 	bool m_allowMultiple;
+	QString m_tags;
 
 };
 

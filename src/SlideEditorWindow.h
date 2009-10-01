@@ -5,14 +5,17 @@
 #include <QListView>
 
 #include "model/Document.h"
+#include "model/SlideGroupFactory.h"
 
 #include "SlideGroupListModel.h"
+
 
 class MyGraphicsScene;
 class SlideGroup;
 class QGraphicsLineItem;
 
-class SlideEditorWindow : public QMainWindow
+class SlideEditorWindow : public QMainWindow, 
+                          public SlideGroupEditor
 {
 	Q_OBJECT
 public:

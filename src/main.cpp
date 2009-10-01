@@ -84,11 +84,12 @@ int main(int argc, char **argv)
 	
 	AppSettings::load();
 
-	MainWindow mw;
+	/*MainWindow mw;
 	mw.show();
+	*/
 
-	//SlideEditorWindow mw;
-	//mw.show();
+	SlideEditorWindow mw;
+	mw.show();
 
 	int ret = app.exec();
 

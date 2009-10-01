@@ -311,8 +311,8 @@ private:
     QAction *m_bold_action;
     QAction *m_italic_action;
     QAction *m_underline_action;
-    QAction *m_valign_sup_action;
-    QAction *m_valign_sub_action;
+//     QAction *m_valign_sup_action;
+//     QAction *m_valign_sub_action;
     QAction *m_align_left_action;
     QAction *m_align_center_action;
     QAction *m_align_right_action;
@@ -526,7 +526,7 @@ void RichTextEditorToolBar::setVAlignSuper(bool super)
     charFormat.setVerticalAlignment(align);
     m_editor->setCurrentCharFormat(charFormat);
 
-    m_valign_sub_action->setChecked(false);
+//     m_valign_sub_action->setChecked(false);
 }
 
 void RichTextEditorToolBar::setVAlignSub(bool sub)
@@ -538,7 +538,7 @@ void RichTextEditorToolBar::setVAlignSub(bool sub)
     charFormat.setVerticalAlignment(align);
     m_editor->setCurrentCharFormat(charFormat);
 
-    m_valign_sup_action->setChecked(false);
+//     m_valign_sup_action->setChecked(false);
 }
 /**
 void RichTextEditorToolBar::insertLink()
@@ -618,8 +618,8 @@ void RichTextEditorToolBar::updateActions()
     m_bold_action->setChecked(font.bold());
     m_italic_action->setChecked(font.italic());
     m_underline_action->setChecked(font.underline());
-    m_valign_sup_action->setChecked(superScript);
-    m_valign_sub_action->setChecked(subScript);
+//     m_valign_sup_action->setChecked(superScript);
+//     m_valign_sub_action->setChecked(subScript);
 
     const int size = font.pointSize();
     const int idx = m_font_size_input->findText(QString::number(size));

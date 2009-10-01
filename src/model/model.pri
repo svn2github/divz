@@ -12,7 +12,8 @@ HEADERS +=  \
         VideoFileItem.h \
         SlideGroup.h \
         Document.h \
-        Output.h
+        Output.h \
+        SlideGroupFactory.h
 
     
 SOURCES += \
@@ -26,4 +27,5 @@ SOURCES += \
         VideoFileItem.cpp \
         SlideGroup.cpp \
         Document.cpp \
-        Output.cpp
+        Output.cpp \
+        SlideGroupFactory.cpp

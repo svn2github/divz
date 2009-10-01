@@ -245,6 +245,9 @@ void OutputSetupDialog::setupScreenList()
 		t->setText(diz);
 		tbl->setItem(screenNum,1,t);
 	}
+	
+	tbl->resizeColumnsToContents();
+	tbl->resizeRowsToContents();
 }
 
 
@@ -294,6 +297,9 @@ void OutputSetupDialog::setupOutputList()
 
 		row++;
 	}
+	
+	tbl->resizeColumnsToContents();
+	tbl->resizeRowsToContents();
 }
 
 void OutputSetupDialog::accepted()

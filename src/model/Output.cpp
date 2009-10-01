@@ -14,6 +14,7 @@ Output::Output() :
 	, m_host("")
 	, m_port(7777)
 	, m_allowMultiple(true)
+	, m_tags("")
 {}
 
 
@@ -36,6 +37,8 @@ void Output::setPort(int x) { m_port = x; }
 
 void Output::setAllowMultiple(bool x) { m_allowMultiple = x; }
 
+void Output::setTags(QString x) { m_tags = x; }
+
 QByteArray Output::toByteArray()
 {
 	QByteArray array;
@@ -51,6 +54,7 @@ QByteArray Output::toByteArray()
 	b << QVariant(host());
 	b << QVariant(port());
 	b << QVariant(allowMultiple());
+	b << QVariant(tags());
 
 	return array;
 }
@@ -70,4 +74,5 @@ void Output::fromByteArray(QByteArray array)
 	b >> x; setHost(x.toString());
 	b >> x; setPort(x.toInt());
 	b >> x; setAllowMultiple(x.toBool());
+	b >> x; setTags(x.toString());
 }
