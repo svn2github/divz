@@ -23,10 +23,10 @@ Revised Task list for Release 1.0, 10/10/09:
 	---------------------------
 	
 	- Models:
-		[STARTED] - Song Database Model
-			- SQLite Backend 
+		[DONE] - Song Database Model
+			[DONE] - SQLite Backend 
 	- Logic:
-		- Translator/Slide Generator
+		[STARTED] - Translator/Slide Generator
 			- Given a Song, translate into a slide group
 	- UI:
 		- SongDatabase List View
@@ -37,7 +37,7 @@ Revised Task list for Release 1.0, 10/10/09:
 			- Title
 			- Name
 			- Full Text
-		- Random access viewer control
+		[BARELY STARTED] - Random access viewer control
 			- Just do it
 			- Should be "smart" - for songs, render differently than generic slide groups
 			- Go by Group Type?
@@ -48,8 +48,8 @@ Revised Task list for Release 1.0, 10/10/09:
 		- Undo/redo framework
 			- Must have this for sermons and announcment slides
 		- Copy/paste or duplicate slides
-		- Snap to grid support
-		- Increse/decrease size of font from toolbar - needed for sermon/announcment
+		[BARELY STARTED] - Snap to grid support
+		[BARELY STARTED] - Increse/decrease size of font from toolbar - needed for sermon/announcment
 		- Layout asissts - center objects vert/horz
 		- Image Item
 			- Should be easy
@@ -61,7 +61,7 @@ Revised Task list for Release 1.0, 10/10/09:
 			- When slide*Group* is set on scene, need to scan and initalize decoders for all videos, but STOP at first frame
 			- When cross fade starts, start playing
 			- Stop playing prev slide when cross fade ends
-		- Shadows (Text):
+		[STARTED] - Shadows (Text):
 			- Can settle for simple block shadow
 			- Gausian blur if we have time 
 		- Backgrounds:
@@ -69,7 +69,7 @@ Revised Task list for Release 1.0, 10/10/09:
 			- Need support for a slide background item, for use with announcments/sermons
 			- Think about how fotowall did it
 		- SVG Item if we have time
-		- Gradients - can settle for making gradients in gimp and import as photo, but need to eventually have support direclty in dviz
+		[STARTED] - Gradients - can settle for making gradients in gimp and import as photo, but need to eventually have support direclty in dviz
 	- Bugs:
 		-new slide button stopped working
 		-slide editor crash when add box then delete box
