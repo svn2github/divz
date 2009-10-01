@@ -5,6 +5,7 @@
 #include <QFile>
 #include <QDebug>
 #include <QDesktopWidget>
+#include <QMessageBox>
 
 #include "AppSettings.h"
 
@@ -62,7 +63,10 @@ MainWindow::MainWindow(QWidget *parent) :
 	connect(m_ui->actionEdit_Slide_Group, SIGNAL(triggered()), this, SLOT(actionEditGroup()));
 	connect(m_ui->actionDelete_Slide_Group, SIGNAL(triggered()), this, SLOT(actionDelGroup()));
 
-	connect(m_ui->actionSetup_Outputs, SIGNAL(triggered()), this, SLOT(setupOutputs()));
+	connect(m_ui->actionSetup_Outputs, SIGNAL(triggered()), this, SLOT(actionOutputSetupDialog()));
+
+	connect(m_ui->actionAbout_DViz, SIGNAL(triggered()), this, SLOT(actionAboutDviz()));
+	connect(m_ui->actionVisit_DViz_Website, SIGNAL(triggered()), this, SLOT(actionDvizWebsite()));
 
 
 
@@ -195,6 +199,8 @@ void MainWindow::setupOutputList()
 			outputs << x;
 
 	QListWidget * tbl = m_outputList;
+	tbl->clear();
+
 	//tbl->setSelectionBehavior(QAbstractItemView::SelectRows);
 	//connect(tbl, SIGNAL(cellClicked(int,int)), this, SLOT(slotOutputListCellActivated(int,int)));
 
@@ -221,6 +227,25 @@ void MainWindow::setupOutputControl()
 
 }
 
+
+void MainWindow::actionAboutDviz()
+{
+	QString ver = "";
+
+#ifdef VER
+	ver = QString(", Ver %1").arg(VER);
+#endif
+
+	QMessageBox msgBox(QMessageBox::NoIcon,"About DViz",QString("DViz%1\n\"Tasty Breakfast\" Release\n(c) 2009 Josiah Bryan").arg(ver));
+	msgBox.exec();
+}
+
+void MainWindow::actionDvizWebsite()
+{
+	QMessageBox msgBox(QMessageBox::Information,"Visit DViz Website","For more info, go to http://code.google.com/p/dviz");
+	msgBox.exec();
+}
+
 void MainWindow::closeEvent(QCloseEvent *event)
 {
 	event->accept();
@@ -243,10 +268,13 @@ void MainWindow::slotListContextMenu(const QPoint &pos)
 }
 */
 
-void MainWindow::setupOutputs()
+void MainWindow::actionOutputSetupDialog()
 {
 	OutputSetupDialog *d = new OutputSetupDialog(this);
-	d->show();
+	d->exec();
+
+	setupOutputList();
+	setupOutputControl();
 }
 
 void MainWindow::groupSelected(const QModelIndex &idx)

@@ -77,20 +77,18 @@ int main(int argc, char **argv)
 		noOpenGL = ! s.value("opengl/disable").toBool();
 	}
 	s.setValue("opengl/disable",noOpenGL);
-        noOpenGL = false;
+	noOpenGL = false;
 	noOpenGL = true;
 
 	RenderOpts::DisableOpenGL = noOpenGL;
 	
 	AppSettings::load();
 
-// 	MainWindow mw;
-// 	//mw.showMaximized();
-// 	mw.show();
-
-	SlideEditorWindow mw;
-	//mw.showMaximized();
+	MainWindow mw;
 	mw.show();
+
+	//SlideEditorWindow mw;
+	//mw.show();
 
 	int ret = app.exec();
 

@@ -39,7 +39,10 @@ protected slots:
 	void actionNewGroup();
 	void actionDelGroup();
 
-	void setupOutputs();
+	void actionOutputSetupDialog();
+
+	void actionAboutDviz();
+	void actionDvizWebsite();
 	
 	
 
