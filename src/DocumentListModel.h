@@ -65,7 +65,7 @@ private:
 	QHash<int,QPixmap> m_pixmaps;
 	QSize m_iconSize;
 	QRect m_sceneRect;
-	MyGraphicsScene * m_scene;
+	//MyGraphicsScene * m_scene;
 	
  	QTimer * m_dirtyTimer;
 };

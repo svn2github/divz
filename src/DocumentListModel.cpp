@@ -10,9 +10,10 @@
 
 #include "model/SlideGroup.h"
 #include "model/Slide.h"
+#include "model/SlideGroupFactory.h"
 
 DocumentListModel::DocumentListModel(Document *d, QObject *parent)
-		: QAbstractListModel(parent), m_doc(d),/* m_scene(0), m_view(0),*/ m_dirtyTimer(0),  m_iconSize(96,0), m_sceneRect(0,0,1024,768), m_scene(0)
+		: QAbstractListModel(parent), m_doc(d),/* m_scene(0), m_view(0),*/ m_dirtyTimer(0),  m_iconSize(96,0), m_sceneRect(0,0,1024,768)
 {
 	if(m_doc)
 		setDocument(d);
@@ -147,6 +148,8 @@ void DocumentListModel::internalSetup()
 		    bottom = indexForGroup(m_sortedGroups.last());
 	//qDebug() << "DocumentListModel::internalSetup: top:"<<top<<", bottom:"<<bottom;
 
+	m_pixmaps.clear();
+	
 	dataChanged(top,bottom);
 }
 
@@ -286,8 +289,8 @@ void DocumentListModel::setSceneRect(QRect r)
 {
 	m_sceneRect = r;
 	adjustIconAspectRatio();
-	if(m_scene)
-		m_scene->setSceneRect(m_sceneRect);
+// 	if(m_scene)
+// 		m_scene->setSceneRect(m_sceneRect);
 }
 
 void DocumentListModel::adjustIconAspectRatio()
@@ -306,43 +309,24 @@ void DocumentListModel::setIconSize(QSize sz)
 
 void DocumentListModel::generatePixmap(int row)
 {
-	qDebug("generatePixmap: Row#%d: Begin", row);
+	//qDebug("generatePixmap: Row#%d: Begin", row);
 	SlideGroup *g = m_sortedGroups.at(row);
 	
-	Slide * slide = g->at(0);
-	if(!slide)
-	{
-		qDebug("generatePixmap: No slide at 0");
-		return;
-	}
+	QPixmap icon;
 	
-	int icon_w = m_iconSize.width();
-	int icon_h = m_iconSize.height();
+	SlideGroupFactory *factory = SlideGroupFactory::factoryForType(g->groupType());
+	if(!factory)
+		factory = SlideGroupFactory::factoryForType(SlideGroup::Generic);
 	
-	if(!m_scene)
-	{
-		m_scene = new MyGraphicsScene(MyGraphicsScene::Preview);
-		m_scene->setSceneRect(m_sceneRect);
-	}
+	if(factory)
+		icon = factory->generatePreviewPixmap(g,m_iconSize,m_sceneRect);
 	
-	m_scene->setSlide(slide);
-	
-	QPixmap icon(icon_w,icon_h);
-	QPainter painter(&icon);
-	painter.fillRect(0,0,icon_w,icon_h,Qt::white);
-	
-	m_scene->render(&painter,QRectF(0,0,icon_w,icon_h),m_sceneRect);
-	painter.setPen(Qt::black);
-	painter.setBrush(Qt::NoBrush);
-	painter.drawRect(0,0,icon_w-1,icon_h-1);
-	
-	// clear() so we can free memory, stop videos, etc
-	m_scene->clear();
-	
+		
 	m_pixmaps[row] = icon;
+	
 }
 
-QVariant DocumentListModel::headerData(int section, Qt::Orientation orientation, int role) const
+QVariant DocumentListModel::headerData(int section, Qt::Orientation /*orientation*/, int role) const
 {
 	if (role != Qt::DisplayRole)
 		return QVariant();

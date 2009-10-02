@@ -136,6 +136,8 @@ void SlideGroupListModel::internalSetup()
 	QModelIndex top    = indexForSlide(m_sortedSlides.first()),
 		    bottom = indexForSlide(m_sortedSlides.last());
 
+	m_pixmaps.clear();
+	
 	dataChanged(top,bottom);
 	
 }

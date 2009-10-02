@@ -47,7 +47,7 @@ public:
 	virtual void setSlideGroup(SlideGroup*g,Slide *curSlide=0);
 };
 
-
+class MyGraphicsScene;
 class SlideGroupFactory 
 {
 
@@ -61,12 +61,19 @@ private /*static*/:
 
 public:
 	SlideGroupFactory();
+	virtual ~SlideGroupFactory();
 	
-	SlideGroup * newSlideGroup();
+	virtual SlideGroup * newSlideGroup();
 	
-	SlideGroupViewMutator * newViewMutator();
-	SlideGroupViewControl * newViewControl();
-	SlideGroupEditor      * newEditor();
+	virtual SlideGroupViewMutator * newViewMutator();
+	virtual SlideGroupViewControl * newViewControl();
+	virtual SlideGroupEditor      * newEditor();
+	
+	virtual QPixmap			generatePreviewPixmap(SlideGroup*, QSize iconSize, QRect sceneRect);
+
+protected:
+	// for use in generating preview pixmaps
+	MyGraphicsScene * m_scene;
 };
 
 
