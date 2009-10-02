@@ -14,13 +14,23 @@ void AppSettings::load()
 
 	QSettings s;
 	loadOutputs(&s);
+	
+	m_useOpenGL = s.value("app/use-opengl").toBool();
+	qDebug("AppSettings::load(): m_useOpenGL=%d",m_useOpenGL?1:0);
 
 }
 
 void AppSettings::save()
 {
 	QSettings s;
+	
+	qDebug("AppSettings::save(): m_useOpenGL=%d",m_useOpenGL?1:0);
+	s.setValue("app/use-opengl",m_useOpenGL);
+	
 	saveOutputs(&s);
+	
+	
+
 }
 
 
@@ -33,7 +43,6 @@ void AppSettings::saveOutputs(QSettings *s)
 		s->setValue(QString("outputs/output%1").arg(num++), out->toByteArray());
 	}
 
-	s->setValue("useOpenGL",m_useOpenGL);
 }
 
 void AppSettings::loadOutputs(QSettings *s)
@@ -51,7 +60,7 @@ void AppSettings::loadOutputs(QSettings *s)
 		setupSystemPresetOutputs();
 	}
 
-	m_useOpenGL = s->value("useOpenGL").toInt();
+	
 }
 
 void AppSettings::setupSystemPresetOutputs()
@@ -94,5 +103,5 @@ bool AppSettings::removeOutput(Output *out)
 
 void AppSettings::setUseOpenGL(bool f)
 {
-    m_useOpenGL = f;
+	m_useOpenGL = f;
 }

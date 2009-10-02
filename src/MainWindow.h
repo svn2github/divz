@@ -24,6 +24,8 @@ class MainWindow : public QMainWindow {
 public:
 	MainWindow(QWidget *parent = 0);
 	~MainWindow();
+	
+	static Document * currentDocument() { return &m_doc; }
 
 public slots:
 	void setLiveGroup(SlideGroup*);
@@ -42,15 +44,10 @@ protected slots:
 	void actionDelGroup();
 
 	void actionAppSettingsDialog();
+	void actionDocSettingsDialog();
 
 	void actionAboutDviz();
 	void actionDvizWebsite();
-	
-	
-
-	//void groupSetLive(const QModelIndex &);
-
-	//void slotListContextMenu(const QPoint &);
 	
 protected:
 	void changeEvent(QEvent *e);
@@ -64,7 +61,6 @@ private:
 	void setupCentralWidget();
 
 	Ui::MainWindow *m_ui;
-	Document m_doc;
 	DocumentListModel m_docModel;
 	SlideEditorWindow m_editWin;
 	SlideGroupViewer *m_previewWidget;
@@ -79,6 +75,10 @@ private:
 	QTabWidget * m_outputTabs;
 
 	OutputSetupDialog *m_outputDialog;
+	
+	static Document m_doc;
+	
+	
 };
 
 #endif // MAINWINDOW_H

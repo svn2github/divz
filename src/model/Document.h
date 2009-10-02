@@ -37,6 +37,7 @@ public:
 
 signals:
 	void slideGroupChanged(SlideGroup *g, QString groupOperation, Slide *slide, QString slideOperation, AbstractItem *item, QString operation, QString fieldName, QVariant value);
+	void aspectRatioChanged(double);
 
 private slots:
 	void slideChanged(Slide *slide, QString slideOperation, AbstractItem *item, QString operation, QString fieldName, QVariant value);

@@ -38,7 +38,8 @@ contains(QT_CONFIG, opengl)|contains(QT_CONFIG, opengles1)|contains(QT_CONFIG, o
 
 FORMS += mainwindow.ui \
 	outputsetupdialog.ui \
-	AppSettingsDialog.ui
+	AppSettingsDialog.ui \
+	DocumentSettingsDialog.ui
 
 RESOURCES += dviz.qrc
 
@@ -53,7 +54,8 @@ HEADERS += \
 	OutputViewer.h \
 	OutputSetupDialog.h \
 	AppSettings.h \
-	AppSettingsDialog.h
+	AppSettingsDialog.h \
+	DocumentSettingsDialog.h
 
 	
 SOURCES += \
@@ -67,7 +69,8 @@ SOURCES += \
 	OutputViewer.cpp \
 	OutputSetupDialog.cpp \
 	AppSettings.cpp \
-	AppSettingsDialog.cpp
+	AppSettingsDialog.cpp \
+	DocumentSettingsDialog.cpp
 	
 
 QT += core \

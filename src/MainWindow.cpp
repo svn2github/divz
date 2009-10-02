@@ -9,7 +9,9 @@
 
 #include "AppSettings.h"
 #include "AppSettingsDialog.h"
+#include "DocumentSettingsDialog.h"
 
+Document MainWindow::m_doc;
 
 MainWindow::MainWindow(QWidget *parent) :
 	QMainWindow(parent),
@@ -304,6 +306,14 @@ void MainWindow::actionAppSettingsDialog()
 	setupOutputList();
 	setupOutputControl();
 }
+
+void MainWindow::actionDocSettingsDialog()
+{
+	//OutputSetupDialog *d = new OutputSetupDialog(this);
+	DocumentSettingsDialog *d = new DocumentSettingsDialog(&m_doc,this);
+	d->exec();
+}
+
 
 void MainWindow::groupSelected(const QModelIndex &idx)
 {

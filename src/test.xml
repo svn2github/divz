@@ -1,6 +1,7 @@
 <?xml version="1.0" ?>
-<document title="">
-    <group title="" number="1" icon="" type="7536741" id="7667680">
+<document title="" aspect="1.6">
+    <group title="" number="0" icon="" type="7536741" id="7667680">
+        <slide number="16" id="16"/>
         <slide number="0" id="0">
             <textbox>
                 <item-id>125</item-id>
@@ -239,9 +240,8 @@ p, li { white-space: pre-wrap; }
         <slide number="13" id="13"/>
         <slide number="14" id="14"/>
         <slide number="15" id="15"/>
-        <slide number="16" id="16"/>
     </group>
-    <group title="" number="0" icon="" type="0" id="1">
+    <group title="" number="2" icon="" type="0" id="1">
         <slide number="0" id="0">
             <box>
                 <item-id>140</item-id>
@@ -249,12 +249,12 @@ p, li { white-space: pre-wrap; }
                 <rect>
                     <x>-100</x>
                     <y>-75</y>
-                    <w>200</w>
-                    <h>150</h>
+                    <w>691</w>
+                    <h>826</h>
                 </rect>
                 <pos>
-                    <x>513</x>
-                    <y>383</y>
+                    <x>598</x>
+                    <y>64</y>
                 </pos>
                 <zvalue>1</zvalue>
                 <opacity>1</opacity>
@@ -268,7 +268,7 @@ p, li { white-space: pre-wrap; }
             </box>
         </slide>
     </group>
-    <group title="" number="2" icon="" type="0" id="1">
+    <group title="" number="1" icon="" type="0" id="1">
         <slide number="0" id="0">
             <box>
                 <item-id>139</item-id>
@@ -276,12 +276,12 @@ p, li { white-space: pre-wrap; }
                 <rect>
                     <x>-100</x>
                     <y>-75</y>
-                    <w>200</w>
-                    <h>150</h>
+                    <w>518</w>
+                    <h>838</h>
                 </rect>
                 <pos>
-                    <x>510</x>
-                    <y>383</y>
+                    <x>88</x>
+                    <y>66</y>
                 </pos>
                 <zvalue>1</zvalue>
                 <opacity>1</opacity>

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>453</width>
-    <height>202</height>
+    <width>534</width>
+    <height>219</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -44,14 +44,14 @@ p, li { white-space: pre-wrap; }
          <widget class="QDoubleSpinBox" name="aspectRatio"/>
         </item>
         <item>
-         <widget class="QPushButton" name="pushButton_2">
+         <widget class="QPushButton" name="btn4x3">
           <property name="text">
            <string>Use 4 x 3 (Normal)</string>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="pushButton">
+         <widget class="QPushButton" name="btn16x9">
           <property name="text">
            <string>Use 16 x 9 (Wide Screen)</string>
           </property>
