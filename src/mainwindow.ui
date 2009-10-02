@@ -39,7 +39,8 @@
     <addaction name="actionSave"/>
     <addaction name="actionSave_As"/>
     <addaction name="separator"/>
-    <addaction name="actionSetup_Outputs"/>
+    <addaction name="actionApp_Settings"/>
+    <addaction name="actionDoc_Settings"/>
     <addaction name="separator"/>
     <addaction name="actionExit"/>
    </widget>
@@ -223,9 +224,14 @@
     <string>F2</string>
    </property>
   </action>
-  <action name="actionSetup_Outputs">
+  <action name="actionApp_Settings">
    <property name="text">
-    <string>Settings ...</string>
+    <string>Program Settings ...</string>
+   </property>
+  </action>
+  <action name="actionDoc_Settings">
+   <property name="text">
+    <string>Document Settings ...</string>
    </property>
   </action>
  </widget>
