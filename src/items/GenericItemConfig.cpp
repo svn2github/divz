@@ -36,13 +36,9 @@ GenericItemConfig::GenericItemConfig(AbstractContent * content, QWidget *parent)
 	
 	// read other properties
 	if(m_content->mirrorEnabled())
-	{
 		m_commonUi->reflectionEnabled->setChecked(true);
-	}
 	else
-	{
 		m_commonUi->reflectionNone->setChecked(true);
-	}
 	
 	m_commonUi->mirrorOffset->setValue(m_content->modelItem()->mirrorOffset());
 	
@@ -79,6 +75,9 @@ GenericItemConfig::GenericItemConfig(AbstractContent * content, QWidget *parent)
 	shadowColorLayout->addWidget(shadowColorPicker);
 	m_commonUi->shadowColorPlaceholder->setLayout(shadowColorLayout);
 	
+	if(m_content->modelItem()->shadowEnabled())
+		m_commonUi->shadowSolid->setChecked(true);
+	
 	
 	AbstractVisualItem::FillType t = m_content->modelItem()->fillType();
 	QAbstractButton *b = 0;
@@ -109,7 +108,8 @@ GenericItemConfig::GenericItemConfig(AbstractContent * content, QWidget *parent)
 	
 	m_commonUi->outlineBox->setValue(m_content->modelItem()->outlinePen().widthF());
 	
-	m_commonUi->shadowOffsetBox->setValue(m_content->modelItem()->shadowOffset());
+	m_commonUi->shadowXOffsetBox->setValue(m_content->modelItem()->shadowOffsetX());
+	m_commonUi->shadowYOffsetBox->setValue(m_content->modelItem()->shadowOffsetY());
 	
 	
 	
@@ -146,7 +146,8 @@ GenericItemConfig::GenericItemConfig(AbstractContent * content, QWidget *parent)
 	connect(m_commonUi->contentWidth, SIGNAL(valueChanged(double)), this, SLOT(slotSizeChanged(double)));
 	connect(m_commonUi->contentHeight, SIGNAL(valueChanged(double)), this, SLOT(slotSizeChanged(double)));
 	
-	connect(m_commonUi->shadowOffsetBox, SIGNAL(valueChanged(double)), this, SLOT(slotShadowOffsetChanged(double)));
+	connect(m_commonUi->shadowXOffsetBox, SIGNAL(valueChanged(double)), this, SLOT(slotShadowXOffsetChanged(double)));
+	connect(m_commonUi->shadowYOffsetBox, SIGNAL(valueChanged(double)), this, SLOT(slotShadowYOffsetChanged(double)));
 	connect(m_commonUi->outlineBox, SIGNAL(valueChanged(double)), this, SLOT(slotLineSizeChanged(double)));
 	connect(m_commonUi->mirrorOffset, SIGNAL(valueChanged(double)), this, SLOT(slotMirrorOffsetChanged(double)));
 	
@@ -162,6 +163,15 @@ GenericItemConfig::GenericItemConfig(AbstractContent * content, QWidget *parent)
 	
 	connect(m_commonUi->imageFilenameBox, SIGNAL(textChanged(const QString&)), this, SLOT(slotImageFileChanged(const QString& )));
 	connect(m_commonUi->videoFilenameBox, SIGNAL(textChanged(const QString&)), this, SLOT(slotVideoFileChanged(const QString& )));
+	
+	connect(m_commonUi->shadowOffsetPresetB, SIGNAL(clicked()), this, SLOT(shadowOffsetPresetB()));
+	connect(m_commonUi->shadowOffsetPresetBL, SIGNAL(clicked()), this, SLOT(shadowOffsetPresetBL()));
+	connect(m_commonUi->shadowOffsetPresetBR, SIGNAL(clicked()), this, SLOT(shadowOffsetPresetBR()));
+	connect(m_commonUi->shadowOffsetPresetL, SIGNAL(clicked()), this, SLOT(shadowOffsetPresetL()));
+	connect(m_commonUi->shadowOffsetPresetR, SIGNAL(clicked()), this, SLOT(shadowOffsetPresetR()));
+	connect(m_commonUi->shadowOffsetPresetT, SIGNAL(clicked()), this, SLOT(shadowOffsetPresetT()));
+	connect(m_commonUi->shadowOffsetPresetTL, SIGNAL(clicked()), this, SLOT(shadowOffsetPresetTL()));
+	connect(m_commonUi->shadowOffsetPresetTR, SIGNAL(clicked()), this, SLOT(shadowOffsetPresetTR()));
 	
 	m_commonUi->tabWidget->setCurrentIndex(0);
 }
@@ -411,7 +421,61 @@ void GenericItemConfig::slotLineSizeChanged(double d)
 	
 }
 
-void GenericItemConfig::slotShadowOffsetChanged(double d)
+void GenericItemConfig::slotShadowXOffsetChanged(double d)
 {
-	m_content->modelItem()->setShadowOffset(d);
+	m_content->modelItem()->setShadowOffsetX(d);
+}
+
+void GenericItemConfig::slotShadowYOffsetChanged(double d)
+{
+	m_content->modelItem()->setShadowOffsetY(d);
+}
+
+void GenericItemConfig::setShadowOffsets(double x, double y)
+{
+	m_commonUi->shadowXOffsetBox->setValue(x);
+	m_commonUi->shadowYOffsetBox->setValue(y);
+	
+	m_content->modelItem()->setShadowOffsetX(x);
+	m_content->modelItem()->setShadowOffsetY(y);
+}
+
+void GenericItemConfig::shadowOffsetPresetB()
+{
+	setShadowOffsets(0,3);	
+}
+
+void GenericItemConfig::shadowOffsetPresetBL()
+{
+	setShadowOffsets(-3,3);	
+}
+
+void GenericItemConfig::shadowOffsetPresetBR()
+{
+	setShadowOffsets(3,3);	
+}
+
+void GenericItemConfig::shadowOffsetPresetL()
+{
+	setShadowOffsets(-3,0);	
+}
+
+void GenericItemConfig::shadowOffsetPresetR()
+{
+	setShadowOffsets(3,0);	
+}
+		
+void GenericItemConfig::shadowOffsetPresetT()
+{
+	setShadowOffsets(0,-3);	
+}
+
+void GenericItemConfig::shadowOffsetPresetTL()
+{
+	setShadowOffsets(-3,-3);	
+}
+
+void GenericItemConfig::shadowOffsetPresetTR()
+{
+	setShadowOffsets(3,-3);	
 }

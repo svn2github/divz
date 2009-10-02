@@ -88,7 +88,8 @@ class GenericItemConfig : public QDialog
 		void slotVideoBrowse();
 		
 		void slotLineSizeChanged(double);
-		void slotShadowOffsetChanged(double);
+		void slotShadowXOffsetChanged(double);
+		void slotShadowYOffsetChanged(double);
 		void slotMirrorOffsetChanged(double);
 		
 		void slotImageFileChanged(const QString&);
@@ -102,6 +103,17 @@ class GenericItemConfig : public QDialog
 		void slotBgGradient(bool);
 		void slotBgImage(bool);
 		void slotBgVideo(bool);
+		
+		void shadowOffsetPresetB();
+		void shadowOffsetPresetBL();
+		void shadowOffsetPresetBR();
+		void shadowOffsetPresetL();
+		void shadowOffsetPresetR();
+		void shadowOffsetPresetT();
+		void shadowOffsetPresetTL();
+		void shadowOffsetPresetTR();
+		
+		void setShadowOffsets(double x, double y);
 		
 };
 

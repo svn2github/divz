@@ -16,7 +16,7 @@ BUILDNUM = $$system(perl buildcount.pl -v)
 VERSTR = '\\"$${BUILDNUM}\\"'  # place quotes around the version string
 
 unix {
-    VERSION  = "0.0.4"
+    VERSION  = "0.5.5"
     VERSION = "$${VERSION} (Build $${BUILDNUM})"
     SVNREV   = $$system(svn info -r HEAD . | grep Changed\ Rev | cut -b 19-)
     

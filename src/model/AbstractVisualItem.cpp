@@ -53,7 +53,8 @@ AbstractVisualItem::AbstractVisualItem()
 	m_mirrorOffset = 3;
 	
 	m_shadowEnabled = false;
-	m_shadowOffset = 3;
+	m_shadowOffsetX = 3;
+	m_shadowOffsetY = 3;
 	m_shadowBrush = QBrush(Qt::black);
 }
 
@@ -97,7 +98,8 @@ ITEM_PROPSET(AbstractVisualItem, MirrorEnabled,		bool,	mirrorEnabled);
 ITEM_PROPSET(AbstractVisualItem, MirrorOffset,		double,	mirrorOffset);
 
 ITEM_PROPSET(AbstractVisualItem, ShadowEnabled,		bool,	shadowEnabled);
-ITEM_PROPSET(AbstractVisualItem, ShadowOffset,		double,	shadowOffset);
+ITEM_PROPSET(AbstractVisualItem, ShadowOffsetX,		double,	shadowOffsetX);
+ITEM_PROPSET(AbstractVisualItem, ShadowOffsetY,		double,	shadowOffsetY);
 ITEM_PROPSET(AbstractVisualItem, ShadowBrush,		QBrush,	shadowBrush);
 
 
@@ -203,8 +205,11 @@ bool AbstractVisualItem::fromXml(QDomElement & pe)
 		setShadowEnabled(flag);
 // 		if(flag)
 // 		{
-			double offset = domElement.attribute("offset").toDouble();
-			setMirrorOffset(offset);
+			double offsetX = domElement.attribute("x").toDouble();
+			setShadowOffsetX(offsetX);
+			
+			double offsetY = domElement.attribute("y").toDouble();
+			setShadowOffsetY(offsetY);
 			
 			QBrush fill = brushFromXml(domElement);
 			setShadowBrush(fill);
@@ -326,7 +331,8 @@ void AbstractVisualItem::toXml(QDomElement & pe) const
  	
  	domElement = doc.createElement("shadow");
  	domElement.setAttribute("enabled", shadowEnabled());
- 	domElement.setAttribute("offset", shadowOffset());
+ 	domElement.setAttribute("x", shadowOffsetX());
+ 	domElement.setAttribute("y", shadowOffsetY());
  	brushToXml(domElement,shadowBrush());
  	pe.appendChild(domElement);
 

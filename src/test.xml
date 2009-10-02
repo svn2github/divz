@@ -13,9 +13,9 @@
                 </rect>
                 <pos>
                     <x>105</x>
-                    <y>343</y>
+                    <y>344</y>
                 </pos>
-                <zvalue>1</zvalue>
+                <zvalue>2</zvalue>
                 <opacity>1</opacity>
                 <visible>1</visible>
                 <frame-class>0</frame-class>
@@ -23,7 +23,7 @@
                 <fill brush-style="1" video="" image="" brush-color="4294967295" type="1"/>
                 <outline brush-style="1" pen-join="64" pen-width="1.5" enabled="1" brush-color="4278190080" pen-cap="16" pen-color="4278190080"/>
                 <mirror offset="3" enabled="0"/>
-                <shadow brush-style="1" offset="3" enabled="0" brush-color="4278190080"/>
+                <shadow brush-style="1" x="2" y="2" enabled="1" brush-color="4278190080"/>
                 <text>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
 &lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
 p, li { white-space: pre-wrap; }
@@ -35,6 +35,29 @@ p, li { white-space: pre-wrap; }
                 <shape enabled="0"/>
                 <text-align x="32" y="32"/>
             </textbox>
+            <box>
+                <item-id>129</item-id>
+                <item-name>BoxItem129</item-name>
+                <rect>
+                    <x>-100</x>
+                    <y>-75</y>
+                    <w>592</w>
+                    <h>567</h>
+                </rect>
+                <pos>
+                    <x>287</x>
+                    <y>182</y>
+                </pos>
+                <zvalue>1</zvalue>
+                <opacity>1</opacity>
+                <visible>1</visible>
+                <frame-class>0</frame-class>
+                <transformation yRot="0" xRot="0" zRot="0"/>
+                <fill brush-style="1" video="" image="" brush-color="4294967295" type="1"/>
+                <outline brush-style="1" pen-join="64" pen-width="3" enabled="1" brush-color="4278190080" pen-cap="16" pen-color="4278190080"/>
+                <mirror offset="3" enabled="0"/>
+                <shadow brush-style="1" x="0" y="0" enabled="0" brush-color="4278190080"/>
+            </box>
         </slide>
     </group>
 </document>

@@ -44,6 +44,7 @@ Revised Task list for Release 1.0, 10/10/09:
 			- Think about custom foldback generator - this is just a custom viewer control generator needed
 		- In-flight edits
 	- Visuals:
+		- Add Aspect Ratio setting
 		[DONE] - Text Centering in a Text Box
 		- Undo/redo framework
 			- Must have this for sermons and announcment slides
@@ -61,7 +62,7 @@ Revised Task list for Release 1.0, 10/10/09:
 			- When slide*Group* is set on scene, need to scan and initalize decoders for all videos, but STOP at first frame
 			- When cross fade starts, start playing
 			- Stop playing prev slide when cross fade ends
-		[STARTED] - Shadows (Text):
+		[DONE] - Shadows (Text):
 			- Can settle for simple block shadow
 			- Gausian blur if we have time 
 		- Backgrounds:
