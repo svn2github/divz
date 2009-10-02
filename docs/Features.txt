@@ -72,13 +72,13 @@ Revised Task list for Release 1.0, 10/10/09:
 		- SVG Item if we have time
 		[STARTED] - Gradients - can settle for making gradients in gimp and import as photo, but need to eventually have support direclty in dviz
 	- Bugs:
-		-new slide button stopped working
-		-slide editor crash when add box then delete box
-		-slide listbox cant scroll down below the fold
-		-figure out why some items (VideoFileContent for now) jumps position vertically when slide changes
-		-figure out why mirror item doesnt get repainted when slide changed back
-		-turn off multi-select unless intentional - looks like if one item selected, then right-click on another item, it selects both items
-		-repaint bug -see textitem - when textobx selected and hover over other content, bg in text box turns white...why?
+		[FIXED] -new slide button stopped working
+		[WORKSFORME] -slide editor crash when add box then delete box
+		[FIXED] -slide listbox cant scroll down below the fold
+		[WORKSFORME] -figure out why some items (VideoFileContent for now) jumps position vertically when slide changes
+		[FIXED] -figure out why mirror item doesnt get repainted when slide changed back
+		[FIXED] -turn off multi-select unless intentional - looks like if one item selected, then right-click on another item, it selects both items
+		[FIXED] -repaint bug -see textitem - when textobx selected and hover over other content, bg in text box turns white...why?
 		[FIXED] (r86) -since textbox clipping has been turned on, need to keep all text inside content rect - add margin or something to layout - see letter "L" in tahoma at start of a box
 
 			
