@@ -41,7 +41,7 @@ protected slots:
 	void actionNewGroup();
 	void actionDelGroup();
 
-	void actionOutputSetupDialog();
+	void actionAppSettingsDialog();
 
 	void actionAboutDviz();
 	void actionDvizWebsite();

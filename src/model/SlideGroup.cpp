@@ -43,7 +43,8 @@ void SlideGroup::removeSlide(Slide *slide)
 void SlideGroup::slideItemChanged(AbstractItem *item, QString operation, QString fieldName, QVariant value)
 {
 	Slide * slide = dynamic_cast<Slide *>(sender());
-	sortSlides();
+	if(fieldName == "slideNumber")
+		sortSlides();
 	emit slideChanged(slide, "change", item, operation, fieldName, value);
 }
 

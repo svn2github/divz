@@ -15,12 +15,12 @@ Bible text
 -----
 
 Revised Task list for Release 1.0, 10/10/09:
-	---------------------------
+	----------------------------
 	"Tasty Breakfast" Release
-	---------------------------
+	----------------------------
 	Target Use Cases: 
-	Songs, Announcments, Sermon
-	---------------------------
+	Songs, Announcements, Sermon
+	----------------------------
 	
 	- Models:
 		[DONE] - Song Database Model

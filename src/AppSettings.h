@@ -17,11 +17,15 @@ public:
 	static void addOutput(Output*);
 	static bool removeOutput(Output*);
 
+	static bool useOpenGL() { return m_useOpenGL; }
+	static void setUseOpenGL(bool);
+
 private:
 	static void setupSystemPresetOutputs();
 	static void loadOutputs(QSettings*);
 	static void saveOutputs(QSettings*);
 	static QList<Output*> m_outputs;
+	static bool m_useOpenGL;
 };
 
 #endif

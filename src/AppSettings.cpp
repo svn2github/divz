@@ -6,6 +6,7 @@
 #include "model/Output.h"
 
 QList<Output*> AppSettings::m_outputs;
+bool AppSettings::m_useOpenGL;
 
 void AppSettings::load()
 {
@@ -31,6 +32,8 @@ void AppSettings::saveOutputs(QSettings *s)
 	{
 		s->setValue(QString("outputs/output%1").arg(num++), out->toByteArray());
 	}
+
+	s->setValue("useOpenGL",m_useOpenGL);
 }
 
 void AppSettings::loadOutputs(QSettings *s)
@@ -47,6 +50,8 @@ void AppSettings::loadOutputs(QSettings *s)
 	{
 		setupSystemPresetOutputs();
 	}
+
+	m_useOpenGL = s->value("useOpenGL").toInt();
 }
 
 void AppSettings::setupSystemPresetOutputs()
@@ -85,4 +90,9 @@ bool AppSettings::removeOutput(Output *out)
 
 	m_outputs.removeAll(out);
 	return true;
+}
+
+void AppSettings::setUseOpenGL(bool f)
+{
+    m_useOpenGL = f;
 }

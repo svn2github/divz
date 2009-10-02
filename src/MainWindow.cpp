@@ -8,6 +8,7 @@
 #include <QMessageBox>
 
 #include "AppSettings.h"
+#include "AppSettingsDialog.h"
 
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -59,7 +60,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	connect(m_ui->actionEdit_Slide_Group, SIGNAL(triggered()), this, SLOT(actionEditGroup()));
 	connect(m_ui->actionDelete_Slide_Group, SIGNAL(triggered()), this, SLOT(actionDelGroup()));
 
-	connect(m_ui->actionSetup_Outputs, SIGNAL(triggered()), this, SLOT(actionOutputSetupDialog()));
+	connect(m_ui->actionSetup_Outputs, SIGNAL(triggered()), this, SLOT(actionAppSettingsDialog()));
 
 	connect(m_ui->actionAbout_DViz, SIGNAL(triggered()), this, SLOT(actionAboutDviz()));
 	connect(m_ui->actionVisit_DViz_Website, SIGNAL(triggered()), this, SLOT(actionDvizWebsite()));
@@ -293,9 +294,10 @@ void MainWindow::slotListContextMenu(const QPoint &pos)
 }
 */
 
-void MainWindow::actionOutputSetupDialog()
+void MainWindow::actionAppSettingsDialog()
 {
-	OutputSetupDialog *d = new OutputSetupDialog(this);
+	//OutputSetupDialog *d = new OutputSetupDialog(this);
+	AppSettingsDialog *d = new AppSettingsDialog(this);
 	d->exec();
 
 	setupOutputList();

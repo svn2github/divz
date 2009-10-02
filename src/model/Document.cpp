@@ -15,7 +15,7 @@
 
 #include <QDebug>
 
-Document::Document(const QString & s)  
+Document::Document(const QString & s) : m_docTitle(""), m_filename(""), m_aspectRatio(4/3)
 {
 	if(!s.isEmpty())
 		load(s);
@@ -27,6 +27,8 @@ Document::~Document()
 }
 
 QList<SlideGroup *> Document::groupList() { return m_groups; }
+
+void Document::setAspectRatio(double f) { m_aspectRatio = f; }
 
 void Document::addGroup(SlideGroup *g)
 {
@@ -95,6 +97,7 @@ bool Document::fromXml(QDomElement & pe)
 	m_groups.clear();
 
 	setDocTitle(pe.attribute("title"));
+	setAspectRatio(pe.attribute("aspect").toDouble());
 	
 	//qDebug() << "Document::fromXml: title:"<<docTitle();
 	// for each slide
@@ -143,7 +146,7 @@ void Document::save(const QString & filename)
 	
 	// This element contains all the others.
 	QDomElement rootElement = doc.createElement("document");
-	
+
 	toXml(rootElement);
 	
 	// Add the root (and all the sub-nodes) to the document
@@ -160,6 +163,7 @@ void Document::save(const QString & filename)
 void Document::toXml(QDomElement & pe) const
 {
 	pe.setAttribute("title",docTitle());
+	pe.setAttribute("aspect",aspectRatio());
 	
 	QDomDocument doc = pe.ownerDocument();
 	

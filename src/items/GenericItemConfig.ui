@@ -47,7 +47,7 @@
                <string>To Front</string>
               </property>
               <property name="icon">
-               <iconset>
+               <iconset resource="../dviz.qrc">
                 <normaloff>:/data/action-order-front.png</normaloff>:/data/action-order-front.png</iconset>
               </property>
               <property name="toolButtonStyle">
@@ -61,7 +61,7 @@
                <string>Raise</string>
               </property>
               <property name="icon">
-               <iconset>
+               <iconset resource="../dviz.qrc">
                 <normaloff>:/data/action-order-raise.png</normaloff>:/data/action-order-raise.png</iconset>
               </property>
               <property name="toolButtonStyle">
@@ -75,7 +75,7 @@
                <string>Lower</string>
               </property>
               <property name="icon">
-               <iconset>
+               <iconset resource="../dviz.qrc">
                 <normaloff>:/data/action-order-lower.png</normaloff>:/data/action-order-lower.png</iconset>
               </property>
               <property name="toolButtonStyle">
@@ -89,7 +89,7 @@
                <string>To Back</string>
               </property>
               <property name="icon">
-               <iconset>
+               <iconset resource="../dviz.qrc">
                 <normaloff>:/data/action-order-back.png</normaloff>:/data/action-order-back.png</iconset>
               </property>
               <property name="toolButtonStyle">
@@ -166,7 +166,7 @@
                <string>Reset</string>
               </property>
               <property name="icon">
-               <iconset>
+               <iconset resource="../dviz.qrc">
                 <normaloff>:/data/action-delete.png</normaloff>:/data/action-delete.png</iconset>
               </property>
               <property name="toolButtonStyle">
@@ -230,7 +230,7 @@
                <string>Reset</string>
               </property>
               <property name="icon">
-               <iconset>
+               <iconset resource="../dviz.qrc">
                 <normaloff>:/data/action-delete.png</normaloff>:/data/action-delete.png</iconset>
               </property>
               <property name="toolButtonStyle">
@@ -257,7 +257,7 @@
                <string>Reset</string>
               </property>
               <property name="icon">
-               <iconset>
+               <iconset resource="../dviz.qrc">
                 <normaloff>:/data/action-delete.png</normaloff>:/data/action-delete.png</iconset>
               </property>
               <property name="toolButtonStyle">
@@ -314,7 +314,7 @@
                <string>Save As Image ...</string>
               </property>
               <property name="icon">
-               <iconset>
+               <iconset resource="../dviz.qrc">
                 <normaloff>:/data/action-save.png</normaloff>:/data/action-save.png</iconset>
               </property>
               <property name="toolButtonStyle">
@@ -328,7 +328,7 @@
                <string>Remove</string>
               </property>
               <property name="icon">
-               <iconset>
+               <iconset resource="../dviz.qrc">
                 <normaloff>:/data/action-delete.png</normaloff>:/data/action-delete.png</iconset>
               </property>
               <property name="toolButtonStyle">
@@ -694,6 +694,9 @@
                  <property name="toolTip">
                   <string>Horizontal position of the shadow, relative to the item</string>
                  </property>
+                 <property name="alignment">
+                  <set>Qt::AlignCenter</set>
+                 </property>
                  <property name="minimum">
                   <double>-99.989999999999995</double>
                  </property>
@@ -706,6 +709,15 @@
                 <widget class="QDoubleSpinBox" name="shadowYOffsetBox">
                  <property name="toolTip">
                   <string>Vertical position of the shadow, relative to the item</string>
+                 </property>
+                 <property name="frame">
+                  <bool>true</bool>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignCenter</set>
+                 </property>
+                 <property name="buttonSymbols">
+                  <enum>QAbstractSpinBox::UpDownArrows</enum>
                  </property>
                  <property name="minimum">
                   <double>-99.989999999999995</double>
@@ -800,7 +812,9 @@
    </item>
   </layout>
  </widget>
- <resources/>
+ <resources>
+  <include location="../dviz.qrc"/>
+ </resources>
  <connections>
   <connection>
    <sender>buttonBox</sender>
