@@ -51,11 +51,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	m_splitter2->restoreState(settings.value("mainwindow/splitter2_state").toByteArray());
 
 
-	m_groupView->setModel(&m_docModel);
-	//m_groupView->setContextMenuPolicy(Qt::CustomContextMenu);
-	m_groupView->insertAction(0,m_ui->actionEdit_Slide_Group);
-	m_groupView->insertAction(0,m_ui->actionNew_Slide_Group);
-	m_groupView->insertAction(0,m_ui->actionDelete_Slide_Group);
+	
 
 	//m_ui->actionEdit_Slide_Group->setEnabled(false);
 
@@ -73,9 +69,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	//connect(m_groupView, SIGNAL(customContextMenuRequested(const QPoint &)), SLOT(slotListContextMenu(const QPoint &)));
 
 	//connect(m_groupView,SIGNAL(activated(const QModelIndex &)),this,SLOT(groupSetLive(const QModelIndex &)));
-	connect(m_groupView,SIGNAL(clicked(const QModelIndex &)),this,SLOT(groupSelected(const QModelIndex &)));
-	connect(m_groupView,SIGNAL(doubleClicked(const QModelIndex &)),this,SLOT(groupDoubleClicked(const QModelIndex &)));
-
+	
 	m_previewWidget = new SlideGroupViewer(m_ui->dwPreview);
 	m_previewWidget->scene()->setContextHint(MyGraphicsScene::Preview);
 	m_ui->dwPreview->setWidget(m_previewWidget);
@@ -152,6 +146,14 @@ MainWindow::~MainWindow()
 	m_liveView = 0;
 }
 
+
+void MainWindow::groupsDropped(QList<SlideGroup*> list)
+{
+	QModelIndex idx = m_docModel.indexForGroup(list.first());
+	m_groupView->setCurrentIndex(idx);
+}
+
+
 void MainWindow::setupCentralWidget()
 {
 
@@ -161,8 +163,30 @@ void MainWindow::setupCentralWidget()
 
 	// left side
 	m_groupView = new QListView(this);
+	
+	m_groupView->setViewMode(QListView::ListMode);
+	m_groupView->setMovement(QListView::Free);
+	m_groupView->setWordWrap(true);
+	m_groupView->setSelectionMode(QAbstractItemView::ExtendedSelection);
+	m_groupView->setDragEnabled(true);
+	m_groupView->setAcceptDrops(true);
+	m_groupView->setDropIndicatorShown(true);
+	
+	m_groupView->setModel(&m_docModel);
 	m_groupView->setContextMenuPolicy(Qt::ActionsContextMenu);
+	m_groupView->insertAction(0,m_ui->actionEdit_Slide_Group);
+	m_groupView->insertAction(0,m_ui->actionNew_Slide_Group);
+	m_groupView->insertAction(0,m_ui->actionDelete_Slide_Group);
+	
+	connect(&m_docModel, SIGNAL(groupsDropped(QList<SlideGroup*>)), this, SLOT(groupsDropped(QList<SlideGroup*>)));
+	
+	connect(m_groupView,SIGNAL(clicked(const QModelIndex &)),this,SLOT(groupSelected(const QModelIndex &)));
+	connect(m_groupView,SIGNAL(doubleClicked(const QModelIndex &)),this,SLOT(groupDoubleClicked(const QModelIndex &)));
+	
 	m_splitter->addWidget(m_groupView);
+	
+	
+
 
 	// right side
 	m_splitter2 = new QSplitter(m_splitter);

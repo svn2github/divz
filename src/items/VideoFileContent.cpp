@@ -220,6 +220,13 @@ void VideoFileContent::paint(QPainter * painter, const QStyleOptionGraphicsItem 
         	if(modelItem()->outlineEnabled())
         	{
 			QPen p = modelItem()->outlinePen();
+			if(sceneContextHint() == MyGraphicsScene::Preview)
+			{
+				QTransform tx = painter->transform();
+				qreal scale = qMax(tx.m11(),tx.m22());
+				p.setWidthF(1/scale * p.widthF());
+			}
+				
 			painter->setPen(p);
 			painter->setBrush(QBrush(Qt::NoBrush));
 			
@@ -235,6 +242,13 @@ void VideoFileContent::paint(QPainter * painter, const QStyleOptionGraphicsItem 
 	{
 		QPen p = modelItem()->outlinePen();
 		p.setJoinStyle(Qt::MiterJoin);
+		if(sceneContextHint() == MyGraphicsScene::Preview)
+		{
+			QTransform tx = painter->transform();
+			qreal scale = qMax(tx.m11(),tx.m22());
+			p.setWidthF(1/scale * p.widthF());
+		}
+			
 		painter->setPen(p);
 		painter->setBrush(QBrush(Qt::NoBrush));
 		painter->drawRect(cRect);

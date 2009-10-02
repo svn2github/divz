@@ -443,6 +443,13 @@ void TextBoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * 
 	painter->save();
 	QPen p = modelItem()->outlinePen();
 	p.setJoinStyle(Qt::MiterJoin);
+	if(sceneContextHint() == MyGraphicsScene::Preview)
+	{
+		QTransform tx = painter->transform();
+		qreal scale = qMax(tx.m11(),tx.m22());
+		p.setWidthF(1/scale * p.widthF());
+	}
+		
 	//TODO should we clip to the rect or FORCE resize the rect? probably clip...
 	painter->setClipRect(contentsRect());
 	painter->translate(contentsRect().topLeft() + QPoint(p.width(),p.width()));

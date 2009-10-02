@@ -12,10 +12,12 @@
 #include "model/Slide.h"
 
 DocumentListModel::DocumentListModel(Document *d, QObject *parent)
-		: QAbstractListModel(parent), m_doc(d),/* m_scene(0), m_view(0),*/ m_dirtyTimer(0)
+		: QAbstractListModel(parent), m_doc(d),/* m_scene(0), m_view(0),*/ m_dirtyTimer(0),  m_iconSize(96,0), m_sceneRect(0,0,1024,768), m_scene(0)
 {
 	if(m_doc)
 		setDocument(d);
+		
+	setSceneRect(m_sceneRect);
 }
 
 DocumentListModel::~DocumentListModel()
@@ -33,6 +35,86 @@ DocumentListModel::~DocumentListModel()
 // 	}
 }
 
+
+Qt::ItemFlags DocumentListModel::flags(const QModelIndex &index) const
+{
+	if (index.isValid())	
+		return Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsDragEnabled | Qt::ItemIsDropEnabled;
+	
+	return Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsDropEnabled;
+}
+
+
+bool DocumentListModel::dropMimeData ( const QMimeData * data, Qt::DropAction /*action*/, int /*row*/, int /*column*/, const QModelIndex & parent )
+{
+	QByteArray ba = data->data(itemMimeType());
+	QStringList list = QString(ba).split(",");
+	
+	// convert csv list to integer list of slide numbers
+	QList<int> removed;
+	for(int i=0;i<list.size();i++)
+	{
+		int x = list.at(i).toInt();
+		removed << x;
+	}
+	
+	// add the slides from start to parent row
+	QList<SlideGroup*> newList;
+	for(int i=0;i<parent.row()+1;i++)
+		if(!removed.contains(i))
+			newList << m_sortedGroups.at(i);
+	
+	// add in the dropped slides
+	QList<SlideGroup*> dropped;
+	foreach(int x, removed)
+	{
+		newList << m_sortedGroups.at(x);
+		dropped << m_sortedGroups.at(x);;
+	}
+	
+	// add in the rest of the slides
+	for(int i=parent.row()+1;i<m_sortedGroups.size();i++)
+		if(!removed.contains(i))
+			newList << m_sortedGroups.at(i);
+	
+	// renumber all the slides
+	int nbr = 0;
+	foreach(SlideGroup *x, newList)
+		x->setGroupNumber(nbr++);
+	
+	m_sortedGroups = newList;
+	
+	m_pixmaps.clear();
+	
+	QModelIndex top    = indexForGroup(m_sortedGroups.first()),
+		    bottom = indexForGroup(m_sortedGroups.last());
+	
+	dataChanged(top,bottom);
+	
+	emit groupsDropped(dropped);
+	
+	return true;	
+}
+
+QMimeData * DocumentListModel::mimeData(const QModelIndexList & list) const
+{
+	if(list.size() <= 0)
+		return 0;
+	
+	QStringList x;
+	foreach(QModelIndex idx, list)
+		x << QString::number(idx.row());
+	
+	QByteArray ba;
+	ba.append(x.join(","));
+	
+	QMimeData *data = new QMimeData();
+	data->setData(itemMimeType(), ba);
+	
+	return data;
+}
+
+
 bool group_num_compare(SlideGroup *a, SlideGroup *b)
 {
 	return (a && b) ? a->groupNumber() < b->groupNumber() : true;
@@ -45,6 +127,7 @@ void DocumentListModel::setDocument(Document *doc)
 	{
 		disconnect(m_doc,0,this,0);
 	}
+	
 	
 	if(m_doc != doc)
 		connect(doc,SIGNAL(slideGroupChanged(SlideGroup *, QString, Slide *, QString, AbstractItem *, QString, QString, QVariant)),this,SLOT(slideGroupChanged(SlideGroup *, QString, Slide *, QString, AbstractItem *, QString, QString, QVariant)));
@@ -62,7 +145,7 @@ void DocumentListModel::internalSetup()
 
 	QModelIndex top    = indexForGroup(m_sortedGroups.first()),
 		    bottom = indexForGroup(m_sortedGroups.last());
-	qDebug() << "DocumentListModel::internalSetup: top:"<<top<<", bottom:"<<bottom;
+	//qDebug() << "DocumentListModel::internalSetup: top:"<<top<<", bottom:"<<bottom;
 
 	dataChanged(top,bottom);
 }
@@ -77,16 +160,31 @@ void DocumentListModel::slideGroupChanged(SlideGroup *g, QString groupOperation,
 		m_dirtyTimer->setSingleShot(true);
 	
 	}
-	
+	//qDebug() << "slideGroupChanged:"<<groupOperation;
 	if(groupOperation == "remove" || groupOperation == "add")
 	{
+		// if a group was removed/added, assume all pixmaps are invalid since the order could have changed
+		m_pixmaps.clear();
+		
+		int sz = m_doc->groupList().size();
+		if(groupOperation == "add")
+			beginInsertRows(QModelIndex(),sz-1,sz);
+		else
+			beginRemoveRows(QModelIndex(),0,sz+1); // hack - yes, I know
+		
 		internalSetup();
+		
+		if(groupOperation == "add")
+			endInsertRows();
+		else
+			endRemoveRows();
 	}
 	else
 	{
 		if(m_dirtyTimer->isActive())
 			m_dirtyTimer->stop();
 
+		m_pixmaps.remove(m_sortedGroups.indexOf(g));
 		m_dirtyTimer->start(250);
 		if(!m_dirtyGroups.contains(g))
 			m_dirtyGroups << g;
@@ -126,37 +224,30 @@ SlideGroup * DocumentListModel::groupAt(int row)
 	return m_sortedGroups.at(row);
 }
 
-static quint32 documentModelUidCounter = 0;
+static quint32 DocumentListModel_uidCounter = 0;
 	
 QModelIndex DocumentListModel::indexForGroup(SlideGroup *g) const
 {
-	documentModelUidCounter++;
-	return createIndex(m_sortedGroups.indexOf(g),0,documentModelUidCounter);
+	DocumentListModel_uidCounter++;
+	return createIndex(m_sortedGroups.indexOf(g),0,DocumentListModel_uidCounter);
 }
 
 QModelIndex DocumentListModel::indexForRow(int row) const
 {
-	documentModelUidCounter++;
-	return createIndex(row,0,documentModelUidCounter);
+	DocumentListModel_uidCounter++;
+	return createIndex(row,0,DocumentListModel_uidCounter);
 }
 
 QVariant DocumentListModel::data(const QModelIndex &index, int role) const
 {
 	if (!index.isValid())
-	{
-		//qDebug() << "DocumentListModel::data: invalid index";
 		return QVariant();
-	}
 	
 	if (index.row() >= m_sortedGroups.size())
-	{
-		//qDebug() << "DocumentListModel::data: index out of range at:"<<index.row();
 		return QVariant();
-	}
 	
 	if (role == Qt::DisplayRole)
 	{
-		//qDebug() << "DocumentListModel::data: VALID:"<<index.row();
 		SlideGroup *g = m_sortedGroups.at(index.row());
 		if(!g->groupTitle().isEmpty())
 		{
@@ -169,81 +260,92 @@ QVariant DocumentListModel::data(const QModelIndex &index, int role) const
 	}
 	else if(Qt::DecorationRole == role)
 	{
-// 		if(!m_pixmaps.contains(index.row()))
-// 		{
-// 			DocumentListModel * self = const_cast<DocumentListModel*>(this);
-// 			self->generatePixmap(index.row());
-// 		}
+		if(!m_pixmaps.contains(index.row()))
+		{
+			DocumentListModel * self = const_cast<DocumentListModel*>(this);
+			self->generatePixmap(index.row());
+		}
 		
 		//return QPixmap(":/images/ok.png");
-		//return m_pixmaps[index.row()];
-		SlideGroup *g = m_sortedGroups.at(index.row());
-		if(!g->iconFile().isEmpty())
-		{
-			return QIcon(g->iconFile());
-		}
-		else
-		{
-			return QVariant();
-		}
+		return m_pixmaps[index.row()];
+// 		SlideGroup *g = m_sortedGroups.at(index.row());
+// 		if(!g->iconFile().isEmpty())
+// 		{
+// 			return QIcon(g->iconFile());
+// 		}
+// 		else
+// 		{
+// 			return QVariant();
+// 		}
 	}
 	else
 		return QVariant();
 }
-/*
+
+void DocumentListModel::setSceneRect(QRect r)
+{
+	m_sceneRect = r;
+	adjustIconAspectRatio();
+	if(m_scene)
+		m_scene->setSceneRect(m_sceneRect);
+}
+
+void DocumentListModel::adjustIconAspectRatio()
+{
+	QRect r = sceneRect();
+	qreal a = (qreal)r.height() / (qreal)r.width();
+	
+	m_iconSize.setHeight((int)(m_iconSize.width() * a));
+}
+
+void DocumentListModel::setIconSize(QSize sz)
+{
+	m_iconSize = sz;
+	adjustIconAspectRatio();
+}
+
 void DocumentListModel::generatePixmap(int row)
 {
-	//qDebug("generatePixmap: Row#%d: Begin", row);
-	Slide * slide = m_sortedSlides.at(row);
+	qDebug("generatePixmap: Row#%d: Begin", row);
+	SlideGroup *g = m_sortedGroups.at(row);
 	
-	int icon_w = 64;
-	int icon_h = icon_w*0.75;
-	
-	QRect sceneRect(0,0,1024,768);
-	if(!m_view)
+	Slide * slide = g->at(0);
+	if(!slide)
 	{
-		//qDebug("generatePixmap: Row#%d: QGraphicsView setup: View not setup, Initalizing view and scene...", row);
-		m_view = new QGraphicsView();
-		m_view->setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing | QPainter::SmoothPixmapTransform );
-		//m_view->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
-		
-		m_scene = new MyGraphicsScene();
-		m_scene->setSceneRect(sceneRect);
-		m_view->setScene(m_scene);
+		qDebug("generatePixmap: No slide at 0");
+		return;
 	}
 	
-	//qDebug("generatePixmap: Row#%d: Setting slide...", row);
+	int icon_w = m_iconSize.width();
+	int icon_h = m_iconSize.height();
+	
+	if(!m_scene)
+	{
+		m_scene = new MyGraphicsScene(MyGraphicsScene::Preview);
+		m_scene->setSceneRect(m_sceneRect);
+	}
+	
 	m_scene->setSlide(slide);
 	
-	//qDebug("generatePixmap: Row#%d: Clearing icon...", row);
 	QPixmap icon(icon_w,icon_h);
 	QPainter painter(&icon);
 	painter.fillRect(0,0,icon_w,icon_h,Qt::white);
 	
-	//qDebug("generatePixmap: Row#%d: Painting...", row);
-	
-	m_view->render(&painter,QRectF(0,0,icon_w,icon_h),sceneRect);
+	m_scene->render(&painter,QRectF(0,0,icon_w,icon_h),m_sceneRect);
 	painter.setPen(Qt::black);
 	painter.setBrush(Qt::NoBrush);
 	painter.drawRect(0,0,icon_w-1,icon_h-1);
 	
-	//qDebug("generatePixmap: Row#%d: Clearing Scene...", row);
+	// clear() so we can free memory, stop videos, etc
 	m_scene->clear();
 	
-	//qDebug("generatePixmap: Row#%d: Caching pixmap...", row);
 	m_pixmaps[row] = icon;
-	//qDebug("generatePixmap: Row#%d: Done.", row);
 }
- */
+
 QVariant DocumentListModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
 	if (role != Qt::DisplayRole)
 		return QVariant();
 	
-	//qDebug() << "DocumentListModel::headerData: requested data for:"<<section;
-	
-	if (orientation == Qt::Horizontal)
-		return QString("Column %1").arg(section);
-	else
-		return QString("Group %1").arg(section);
+	return QString("Group %1").arg(section);
 }

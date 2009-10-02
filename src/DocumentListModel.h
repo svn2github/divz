@@ -9,6 +9,7 @@
 #include "model/Document.h"
 #include "MyGraphicsScene.h"
 
+#include <QMimeData>
 
 class DocumentListModel : public QAbstractListModel
 {
@@ -24,14 +25,30 @@ public:
 	QModelIndex indexForGroup(SlideGroup *g) const;
 	QModelIndex indexForRow(int row) const;
 	
+	void setSceneRect(QRect);
+	QRect sceneRect(){ return m_sceneRect; }
+	void setIconSize(QSize);
+	QSize iconSize() { return m_iconSize; }
+	
 	int rowCount(const QModelIndex &parent = QModelIndex()) const;
 	QVariant data(const QModelIndex &index, int role) const;
 	QVariant headerData(int section, Qt::Orientation orientation,
 				int role = Qt::DisplayRole) const;
+				
+	/* Drag and Drop Support */
+	Qt::ItemFlags flags(const QModelIndex &index) const;
+	Qt::DropActions supportedDropActions() const { return Qt::MoveAction; }
+
+	QStringList mimeTypes () const { QStringList x; x<<itemMimeType(); return x; }
+ 	QMimeData * mimeData(const QModelIndexList & indexes) const;
+ 	bool dropMimeData(const QMimeData * data, Qt::DropAction action, int row, int column, const QModelIndex & parent);
+ 	
+ 	// Not from AbstractListModel, just for utility
+	QString itemMimeType() const { return "application/x-dviz-document-listmodel-item"; }
 	
 signals:
- 	//void modelChanged();
-	
+	void groupsDropped(QList<SlideGroup*>);
+
 private slots:
  	void slideGroupChanged(SlideGroup *g, QString groupOperation, Slide *slide, QString slideOperation, AbstractItem *item, QString operation, QString fieldName, QVariant value);
  	void modelDirtyTimeout();
@@ -42,6 +59,13 @@ private:
 	Document * m_doc;
 	QList<SlideGroup*> m_sortedGroups;
 	QList<SlideGroup*> m_dirtyGroups;
+	
+	void generatePixmap(int);
+	void adjustIconAspectRatio();
+	QHash<int,QPixmap> m_pixmaps;
+	QSize m_iconSize;
+	QRect m_sceneRect;
+	MyGraphicsScene * m_scene;
 	
  	QTimer * m_dirtyTimer;
 };

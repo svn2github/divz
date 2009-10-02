@@ -38,7 +38,7 @@ public:
 	void addSlide(Slide *);
 	QList<Slide *> slideList();
 	int numSlides() { return m_slides.size(); }
-	Slide * at(int sortedIdx);
+	Slide * at(int sortedIdx) { return m_slides.at(sortedIdx); }
 	
 	void removeSlide(Slide *);
 	
@@ -70,7 +70,9 @@ private:
 	GroupType m_groupType;
 	QString m_groupTitle;
 	QString m_iconFile;
-
+	
+	void sortSlides();
+	
 };
 
 #endif

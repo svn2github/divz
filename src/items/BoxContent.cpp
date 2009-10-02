@@ -139,6 +139,14 @@ int BoxContent::contentHeightForWidth(int width) const
 //	return (m_textRect.height() * width) / m_textRect.width();
 }
 
+
+QRectF BoxContent::boundingRect() const 
+{
+	qreal penWidth = m_modelItem ? m_modelItem->outlinePen().widthF() : 1.0;
+	return AbstractContent::boundingRect().adjusted(-penWidth/2,-penWidth/2,penWidth,penWidth);
+}
+
+
 void BoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget)
 {
 	// paint parent
@@ -164,7 +172,11 @@ void BoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * opti
 	QPen p = modelItem()->outlinePen();
 	p.setJoinStyle(Qt::MiterJoin);
 	if(sceneContextHint() == MyGraphicsScene::Preview)
-		p.setWidthF(p.widthF()*3);
+	{
+		QTransform tx = painter->transform();
+		qreal scale = qMax(tx.m11(),tx.m22());
+		p.setWidthF(1/scale * p.widthF());
+	}
 		
 	painter->setPen(p);
  	painter->setBrush(modelItem()->fillBrush());

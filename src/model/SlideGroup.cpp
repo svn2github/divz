@@ -6,7 +6,7 @@ SlideGroup::SlideGroup() :
 	m_groupNumber(0)
 	, m_groupId(1)
 	, m_groupType(Generic)
-	, m_groupTitle("Untitled Group")
+	, m_groupTitle("")
 	, m_iconFile("")
 	
 {
@@ -24,6 +24,7 @@ void SlideGroup::addSlide(Slide *slide)
 {
 	assert(slide != NULL);
 	m_slides.append(slide);
+	sortSlides();
 	emit slideChanged(slide, "add", 0, "", "", QVariant());
 	connect(slide,SIGNAL(slideItemChanged(AbstractItem *, QString, QString, QVariant)),this,SLOT(slideItemChanged(AbstractItem *, QString, QString, QVariant)));
 
@@ -34,6 +35,7 @@ void SlideGroup::removeSlide(Slide *slide)
 	assert(slide != NULL);
 	disconnect(slide,0,this,0);
 	m_slides.removeAll(slide);
+	sortSlides();
 	emit slideChanged(slide, "remove", 0, "", "", QVariant());
 
 }
@@ -41,6 +43,7 @@ void SlideGroup::removeSlide(Slide *slide)
 void SlideGroup::slideItemChanged(AbstractItem *item, QString operation, QString fieldName, QVariant value)
 {
 	Slide * slide = dynamic_cast<Slide *>(sender());
+	sortSlides();
 	emit slideChanged(slide, "change", item, operation, fieldName, value);
 }
 
@@ -96,4 +99,15 @@ void SlideGroup::toXml(QDomElement & pe) const
 		pe.appendChild(element);
 		slide->toXml(element);	
 	}
+}
+
+
+bool SlideGroup_slide_num_compare(Slide *a, Slide *b)
+{
+	return (a && b) ? a->slideNumber() < b->slideNumber() : true;
+}
+
+void SlideGroup::sortSlides()
+{
+	qSort(m_slides.begin(), m_slides.end(), SlideGroup_slide_num_compare);
 }

@@ -32,6 +32,8 @@ public slots:
 	void previewSlideGroup(SlideGroup*);
 
 protected slots:
+	void groupsDropped(QList<SlideGroup*> list);
+	
 	void groupSelected(const QModelIndex &);
 	void groupDoubleClicked(const QModelIndex &);
 
