@@ -73,7 +73,7 @@ GenericItemConfig::GenericItemConfig(AbstractContent * content, QWidget *parent)
 	shadowColorPicker->setCurrentColor(m_content->modelItem()->shadowBrush().color());
 	connect(shadowColorPicker, SIGNAL(colorChanged(const QColor &)), this, SLOT(setShadowColor(const QColor &)));
 	shadowColorLayout->addWidget(shadowColorPicker);
-	m_commonUi->shadowColorPlaceholder->setLayout(shadowColorLayout);
+	m_commonUi->shadowColorGb->setLayout(shadowColorLayout);
 	
 	if(m_content->modelItem()->shadowEnabled())
 		m_commonUi->shadowSolid->setChecked(true);
@@ -117,7 +117,7 @@ GenericItemConfig::GenericItemConfig(AbstractContent * content, QWidget *parent)
 	connect(m_commonUi->raise, SIGNAL(clicked()), m_content, SLOT(slotStackRaise()));
 	connect(m_commonUi->lower, SIGNAL(clicked()), m_content, SLOT(slotStackLower()));
 	connect(m_commonUi->back, SIGNAL(clicked()), m_content, SLOT(slotStackBack()));
-	connect(m_commonUi->background, SIGNAL(clicked()), m_content, SIGNAL(backgroundMe()));
+	//connect(m_commonUi->background, SIGNAL(clicked()), m_content, SIGNAL(backgroundMe()));
 	connect(m_commonUi->save, SIGNAL(clicked()), m_content, SLOT(slotSaveAs()));
 	connect(m_commonUi->del, SIGNAL(clicked()), m_content, SIGNAL(deleteItem()), Qt::QueuedConnection);
 	// autoconnection doesn't work because we don't do ->setupUi(this), so here we connect manually

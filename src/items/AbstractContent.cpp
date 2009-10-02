@@ -629,13 +629,13 @@ bool AbstractContent::contentOpaque() const
 void AbstractContent::hoverEnterEvent(QGraphicsSceneHoverEvent * /*event*/)
 {
 	m_hovering = true;
-	setControlsVisible(true);
+	//setControlsVisible(true);
 }
 
 void AbstractContent::hoverLeaveEvent(QGraphicsSceneHoverEvent * /*event*/)
 {
 	m_hovering = false;
-	setControlsVisible(isSelected() ? true : false);
+	//setControlsVisible(isSelected() ? true : false);
 }
 
 void AbstractContent::dragMoveEvent(QGraphicsSceneDragDropEvent * event)

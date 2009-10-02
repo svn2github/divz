@@ -308,12 +308,20 @@ SlideEditorWindow::~SlideEditorWindow()
 
 }
 
+
 void SlideEditorWindow::setupSlideGroupDockWidget()
 {
 	QDockWidget *dock = new QDockWidget(tr("Slides"), this);
 	dock->setObjectName("SlidesDockWidget");
 	dock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
 	m_slideListView = new QListView(dock);
+	m_slideListView->setViewMode(QListView::ListMode);
+	m_slideListView->setMovement(QListView::Free);
+	m_slideListView->setWordWrap(true);
+	m_slideListView->setSelectionMode(QAbstractItemView::ExtendedSelection);
+	m_slideListView->setDragEnabled(true);
+	m_slideListView->setAcceptDrops(true);
+	m_slideListView->setDropIndicatorShown(true);
 	
 	connect(m_slideListView,SIGNAL(activated(const QModelIndex &)),this,SLOT(slideSelected(const QModelIndex &)));
 	connect(m_slideListView,SIGNAL(clicked(const QModelIndex &)),this,SLOT(slideSelected(const QModelIndex &)));
@@ -323,7 +331,7 @@ void SlideEditorWindow::setupSlideGroupDockWidget()
 	
 	m_slideModel = new SlideGroupListModel();
 	m_slideListView->setModel(m_slideModel);
-	//connect(m_slideModel, SIGNAL(modelChanged()), this, SLOT(slideListModelChanged()));
+	connect(m_slideModel, SIGNAL(slidesDropped(QList<Slide*>)), this, SLOT(slidesDropped(QList<Slide*>)));
 	
 	if(m)
 	{
@@ -436,6 +444,12 @@ void SlideEditorWindow::setupViewportLines()
 	}
 }
 
+void SlideEditorWindow::slidesDropped(QList<Slide*> list)
+{
+	QModelIndex idx = m_slideModel->indexForSlide(list.first());
+	m_slideListView->setCurrentIndex(idx);
+}
+
 void SlideEditorWindow::setSlideGroup(SlideGroup *g,Slide *curSlide)
 {
 	m_slideGroup = g;
@@ -483,6 +497,7 @@ void SlideEditorWindow::newSlide()
 	slide->setSlideNumber(m_slideGroup->numSlides());
 	slide->setSlideId(m_slideGroup->numSlides());
 	m_slideGroup->addSlide(slide);
+	qDebug() << "newSlide: Added slide#"<<slide->slideNumber();
 	
 	//m_scene->setSlide(slide);
 	
@@ -494,10 +509,11 @@ void SlideEditorWindow::delSlide()
 	Slide * slide = m_scene->slide();
 	qDebug() << "delSlide: Removing slide#"<<slide->slideNumber();
 	
-	m_slideGroup->removeSlide(slide);
-	
 	QModelIndex idx = m_slideModel->indexForSlide(slide);
 	QModelIndex prev = m_slideModel->indexForRow(idx.row() - 1 > 0 ? idx.row() - 1 : 0);
+	
+	m_slideGroup->removeSlide(slide);
+	
 	
 	Slide *newSlide = 0;
 	if(prev.isValid())

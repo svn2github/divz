@@ -15,11 +15,8 @@ TextBoxConfig::TextBoxConfig(TextBoxContent * textContent, QGraphicsItem * paren
 	addTab(m_editor, tr("Text"), false, true);
 	m_editor->focusEditor();	
 	
-	m_commonUi->bgOptGradient->setVisible(true);
-	m_commonUi->bgOptColor->setVisible(true);
 	m_commonUi->bgOptImage->setVisible(false);
-	m_commonUi->bgOptNoBg->setVisible(true);
-	m_commonUi->bgVideo->setVisible(false);
+	m_commonUi->bgOptVideo->setVisible(false);
 	
 	resize(640,300);
 }

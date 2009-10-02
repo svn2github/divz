@@ -163,6 +163,9 @@ void BoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * opti
 //  	QBrush brush(QColor(255,0,0,255));
 	QPen p = modelItem()->outlinePen();
 	p.setJoinStyle(Qt::MiterJoin);
+	if(sceneContextHint() == MyGraphicsScene::Preview)
+		p.setWidthF(p.widthF()*3);
+		
 	painter->setPen(p);
  	painter->setBrush(modelItem()->fillBrush());
 	painter->drawRect(QRect(QPoint(0,0),cRect.size()));

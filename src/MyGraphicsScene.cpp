@@ -236,12 +236,14 @@ void MyGraphicsScene::slotSelectionChanged()
 
 void MyGraphicsScene::slotConfigureContent(const QPoint & /*scenePoint*/)
 {
+	clearSelection();
+	
 	// get the content and ensure it hasn't already a property window
 	AbstractContent * content = dynamic_cast<AbstractContent *>(sender());
 	foreach (GenericItemConfig * config, m_configs) 
 	{
-		if (config->content() == content)
-			return;
+// 		if (config->content() == content)
+// 			return;
 		// force only 1 property instance
 		slotDeleteConfig(config);
 	}
@@ -394,6 +396,7 @@ void MyGraphicsScene::slotDeleteConfig(GenericItemConfig * config)
 {
 	m_configs.removeAll(config);
 	config->dispose();
+	update();
 }
 
 

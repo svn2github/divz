@@ -13,6 +13,8 @@
 
 #include <math.h>
 
+#include <QStringList>
+
 class Slide;
 class SlideGroup;
 
@@ -23,6 +25,17 @@ Q_OBJECT
 public:
 	SlideGroupListModel(SlideGroup *g = 0, QObject *parent = 0);
 	~SlideGroupListModel();
+	
+	/* Drag and Drop Support */
+	Qt::ItemFlags flags(const QModelIndex &index) const;
+	Qt::DropActions supportedDropActions() const { return Qt::MoveAction; }
+
+	QString itemMimeType() const { return "application/x-dviz-slidegroup-listmodel-item"; }
+ 	QStringList mimeTypes () const { QStringList x; x<<itemMimeType(); return x; }
+ 	QMimeData * mimeData(const QModelIndexList & indexes) const;
+ 	bool dropMimeData(const QMimeData * data, Qt::DropAction action, int row, int column, const QModelIndex & parent);
+ 	
+// 	
 	
 	void setSceneRect(QRect);
 	QRect sceneRect(){ return m_sceneRect; }
@@ -39,6 +52,9 @@ public:
 	QVariant data(const QModelIndex &index, int role) const;
 	QVariant headerData(int section, Qt::Orientation orientation,
 				int role = Qt::DisplayRole) const;
+
+signals:
+	void slidesDropped(QList<Slide*>);
 	
 private slots:
 	void slideChanged(Slide *slide, QString slideOperation, AbstractItem *item, QString operation, QString fieldName, QVariant value);

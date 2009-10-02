@@ -5,6 +5,7 @@
 # include <QtOpenGL/QGLWidget>
 #endif
 
+#include <QMimeData>
 
 #include "model/SlideGroup.h"
 #include "model/Slide.h"
@@ -34,6 +35,130 @@ SlideGroupListModel::~SlideGroupListModel()
 // 	}
 }
 
+Qt::ItemFlags SlideGroupListModel::flags(const QModelIndex &index) const
+{
+    	if (index.isValid())	
+		return Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsDragEnabled | Qt::ItemIsDropEnabled;
+	
+	return Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsDropEnabled;
+
+}
+/*
+
+bool SlideGroupListModel::insertRows(int row, int count, const QModelIndex & parent)
+{
+	qDebug()<<"insertRows(): row:"<<row<<", count:"<<count;
+}
+
+bool SlideGroupListModel::removeRows(int row, int count, const QModelIndex & parent)
+{
+	qDebug()<<"removeRows(): row:"<<row<<", count:"<<count;
+}
+
+bool SlideGroupListModel::setData(const QModelIndex & index, const QVariant & value, int role)
+{
+	qDebug()<<"setData() on row: "<<index.row()<<", value:"<<value<<", role:"<<role;
+}*/
+
+bool SlideGroupListModel::dropMimeData ( const QMimeData * data, Qt::DropAction action, int row, int column, const QModelIndex & parent )
+{
+	//("application/x-qabstractitemmodeldatalist");
+	QByteArray ba = data->data(itemMimeType());
+	QStringList list = QString(ba).split(",");
+// 	qDebug()<<"dropMimeData(): action:"<<action<<", row:"<<row<<", parentRow: "<<parent.row()<<", formats: "<<data->formats()<<", dropped slides:("<<(list.join("|"))<<")";
+	
+	//beginInsertRows(QModelIndex(),0,m_sortedSlides.size());
+	
+	// convert csv list to integer list of slide numbers
+	QList<int> removed;
+	for(int i=0;i<list.size();i++)
+	{
+		int x = list.at(i).toInt();
+		removed << x;
+// 		qDebug() << "dropMimeData(): step1: Decode: got slide: "<<x;
+	}
+	
+	// add the slides from start to parent row
+	QList<Slide*> newList;
+	for(int i=0;i<parent.row()+1;i++)
+	{
+		if(!removed.contains(i))
+		{
+			newList << m_sortedSlides.at(i);
+// 			qDebug() << "dropMimeData(): step2: Prepending slide: "<<i;
+		}
+	}
+	
+	// add in the dropped slides
+	QList<Slide*> dropped;
+	foreach(int x, removed)
+	{
+		newList << m_sortedSlides.at(x);
+		dropped << m_sortedSlides.at(x);;
+// 		qDebug() << "dropMimeData(): step3: adding dropped slide: "<<x;
+	}
+	
+	// add in the rest of the slides
+	for(int i=parent.row()+1;i<m_sortedSlides.size();i++)
+	{
+		if(!removed.contains(i))
+		{
+			newList << m_sortedSlides.at(i);
+// 			qDebug() << "dropMimeData(): step4: Postpending slide: "<<i;
+		}
+	}
+	
+	// renumber all the slides
+	int nbr = 0;
+	foreach(Slide *x, newList)
+	{
+// 		qDebug() << "dropMimeData(): Old Slide Nbr:"<<x->slideNumber()<<", New Slide Nbr: "<<nbr;
+		x->setSlideNumber(nbr++);
+	}
+	
+	m_sortedSlides = newList;
+	/*
+	internalSetup();
+	
+	endInsertRows();
+	*/
+	//emit slideOrderChanged();
+	
+	m_pixmaps.clear();
+	
+ 	QModelIndex top    = indexForSlide(m_sortedSlides.first()),
+ 		    bottom = indexForSlide(m_sortedSlides.last());
+// 		    
+ 	dataChanged(top,bottom);
+ 	
+ 	
+ 	emit slidesDropped(dropped);
+// 	
+// 	reset();
+	
+	return true;	
+}
+
+//QStringList mimeTypes () const { QStringList x; x<<; }
+QMimeData * SlideGroupListModel::mimeData(const QModelIndexList & list) const
+{
+	if(list.size() <= 0)
+		return 0;
+	
+	QStringList x;
+	foreach(QModelIndex idx, list)
+		x << QString::number(idx.row());
+	
+	//qDebug() << "mimeData(): list of rows: "<<x;
+	QMimeData *data = new QMimeData();
+	QByteArray ba;
+	ba.append(x.join(","));
+	data->setData(itemMimeType(), ba);
+	
+	return data;
+}
+
+
 bool slide_num_compare(Slide *a, Slide *b)
 {
 	return (a && b) ? a->slideNumber() < b->slideNumber() : true;
@@ -57,15 +182,17 @@ void SlideGroupListModel::setSlideGroup(SlideGroup *g)
 
 void SlideGroupListModel::internalSetup()
 {
+	
 	QList<Slide*> slist = m_slideGroup->slideList();
 	qSort(slist.begin(), slist.end(), slide_num_compare);
 	m_sortedSlides = slist;
 
 	QModelIndex top    = indexForSlide(m_sortedSlides.first()),
 		    bottom = indexForSlide(m_sortedSlides.last());
-	//qDebug() << "SlideGroupListModel::internalSetup: top:"<<top<<", bottom:"<<bottom;
+	//qDebug() << "SlideGroupListModel::internalSetup: top:"<<top.row()<<", bottom:"<<bottom.row();
 
 	dataChanged(top,bottom);
+	
 }
 
 void SlideGroupListModel::slideChanged(Slide *slide, QString slideOperation, AbstractItem */*item*/, QString /*operation*/, QString /*fieldName*/, QVariant /*value*/)
@@ -83,7 +210,19 @@ void SlideGroupListModel::slideChanged(Slide *slide, QString slideOperation, Abs
 	{
 		// if a slide was removed/added, assume all pixmaps are invalid since the order could have changed
 		m_pixmaps.clear();
+		
+		int sz = m_slideGroup->slideList().size();
+		if(slideOperation == "add")
+			beginInsertRows(QModelIndex(),sz-1,sz);
+		else
+			beginRemoveRows(QModelIndex(),0,sz+1);
+		
 		internalSetup();
+		
+		if(slideOperation == "add")
+			endInsertRows();
+		else
+			endRemoveRows();
 	}
 	else
 	{
@@ -202,7 +341,7 @@ void SlideGroupListModel::setIconSize(QSize sz)
 
 void SlideGroupListModel::generatePixmap(int row)
 {
-	return;
+	//return;
 	
 	//qDebug("generatePixmap: Row#%d: Begin", row);
 	Slide * slide = m_sortedSlides.at(row);
