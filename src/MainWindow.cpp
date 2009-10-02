@@ -11,12 +11,14 @@
 #include "AppSettingsDialog.h"
 #include "DocumentSettingsDialog.h"
 
-Document MainWindow::m_doc;
+MainWindow * MainWindow::static_mainWindow = 0;
 
 MainWindow::MainWindow(QWidget *parent) :
 	QMainWindow(parent),
 	m_ui(new Ui::MainWindow)
 {
+	static_mainWindow = this;
+	
 	m_ui->setupUi(this);
 	
 
@@ -400,4 +402,14 @@ void MainWindow::changeEvent(QEvent *e)
 		default:
 			break;
 	}
+}
+
+
+QRect MainWindow::standardSceneRect(double aspectRatio)
+{
+	if(aspectRatio < 0)
+		aspectRatio = m_doc.aspectRatio();
+	
+	int height = 768;
+	return QRect(0,0,aspectRatio * height,height);
 }

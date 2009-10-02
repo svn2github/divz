@@ -24,10 +24,15 @@ protected:
 	void resizeEvent(QResizeEvent *);
 	void adjustViewScaling();
 
+private slots:
+	void appSettingsChanged();
+	//void aspectRatioChanged(double);
+
 private:
 	SlideGroupViewer * m_output;
 	MyGraphicsScene * m_scene;
 	QGraphicsView * m_view;
+	bool m_usingGL;
 
 };
 

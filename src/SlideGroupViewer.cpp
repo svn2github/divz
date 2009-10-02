@@ -7,23 +7,33 @@
 # include <QtOpenGL/QGLWidget>
 #endif
 
+#include "MainWindow.h"
+#include "AppSettings.h"
 
 SlideGroupViewer::SlideGroupViewer(QWidget *parent)
-	    : QWidget(parent), m_slideGroup(0), m_scene(0), m_view(0)
+	    : QWidget(parent), m_slideGroup(0), m_scene(0), m_view(0), m_usingGL(false)
 {
 	QRect sceneRect(0,0,1024,768);
+	
+	if(MainWindow::mw())
+	{
+		MainWindow *mw = MainWindow::mw();
+		sceneRect = mw->standardSceneRect();
+		
+		connect(mw, SIGNAL(appSettingsChanged()), this, SLOT(appSettingsChagned()));
+ 		connect(mw, SIGNAL(aspectRatioChanged(double)), this, SLOT(aspectRatioChanged(double)));
+	}
+	
 	m_view = new QGraphicsView(this);
 	m_view->setFrameStyle(QFrame::NoFrame);
 	m_view->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 	m_view->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 	m_view->setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing | QPainter::SmoothPixmapTransform );
 	m_view->setOptimizationFlags(QGraphicsView::DontSavePainterState);
-	if(!RenderOpts::DisableOpenGL)
-	{
-		m_view->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
-		qDebug("SlideGroupViewer: Loaded OpenGL viewport.");
-	}
-
+	
+	appSettingsChanged();
+	//qDebug("SlideGroupViewer: Loaded OpenGL viewport.");
+	
 	m_scene = new MyGraphicsScene(MyGraphicsScene::Live);
 	m_scene->setSceneRect(sceneRect);
 	m_view->setScene(m_scene);
@@ -36,6 +46,26 @@ SlideGroupViewer::SlideGroupViewer(QWidget *parent)
 	setLayout(layout);
 
 
+}
+
+void SlideGroupViewer::appSettingsChanged()
+{
+	if(AppSettings::useOpenGL() && !m_usingGL)
+	{
+		m_usingGL = true;
+		m_view->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
+	}
+	else
+	if(!AppSettings::useOpenGL() && m_usingGL)
+	{
+		m_usingGL = false;
+		m_view->setViewport(new QWidget());
+	}
+}
+
+void SlideGroupViewer::aspectRatioChanged(double)
+{
+	m_scene->setSceneRect(MainWindow::mw()->standardSceneRect());
 }
 
 SlideGroupViewer::~SlideGroupViewer()

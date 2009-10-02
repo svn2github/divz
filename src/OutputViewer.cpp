@@ -1,6 +1,7 @@
 #include "OutputViewer.h"
 
-#include "RenderOpts.h"
+#include "MainWindow.h"
+#include "AppSettings.h"
 
 #include <QVBoxLayout>
 #ifndef QT_NO_OPENGL
@@ -9,15 +10,13 @@
 
 
 OutputViewer::OutputViewer(SlideGroupViewer *output, QWidget *parent)
-	    : QWidget(parent), m_scene(0), m_output(0), m_view(0)
+	    : QWidget(parent), m_scene(0), m_output(0), m_view(0), m_usingGL(false)
 {
-	QRect sceneRect(0,0,1024,768);
 	m_view = new QGraphicsView(this);
 	m_view->setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing | QPainter::SmoothPixmapTransform );
-	if(!RenderOpts::DisableOpenGL)
-	{
-		m_view->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
-	}
+	
+	// check to see if we need to set the GL viewport
+	appSettingsChanged();
 
 	if(output)
 		setViewer(output);
@@ -28,6 +27,27 @@ OutputViewer::OutputViewer(SlideGroupViewer *output, QWidget *parent)
 	layout->setContentsMargins(0,0,0,0);
 	layout->addWidget(m_view);
 	setLayout(layout);
+	
+	if(MainWindow::mw())
+	{
+		connect(MainWindow::mw(), SIGNAL(appSettingsChanged()), this, SLOT(appSettingsChagned()));
+// 		connect(mw, SIGNAL(aspectRatioChanged(Document*)), this, SLOT(docSettingsChagned(Document*)));
+	}
+}
+
+void OutputViewer::appSettingsChanged()
+{
+	if(AppSettings::useOpenGL() && !m_usingGL)
+	{
+		m_usingGL = true;
+		m_view->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
+	}
+	else
+	if(!AppSettings::useOpenGL() && m_usingGL)
+	{
+		m_usingGL = false;
+		m_view->setViewport(new QWidget());
+	}
 }
 
 OutputViewer::~OutputViewer()

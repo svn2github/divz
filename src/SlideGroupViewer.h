@@ -30,6 +30,10 @@ public slots:
 	void nextSlide();
 	void prevSlide();
 
+private slots:
+	void appSettingsChanged();
+	void aspectRatioChanged(double);
+
 protected:
 	void resizeEvent(QResizeEvent *);
 	void closeEvent(QCloseEvent *);
@@ -43,6 +47,7 @@ private:
 
 	MyGraphicsScene * m_scene;
 	QGraphicsView * m_view;
+	bool m_usingGL;
 
 };
 

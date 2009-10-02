@@ -40,7 +40,8 @@
 #include "model/ItemFactory.h"
 #include "model/Slide.h"
 #include "model/TextItem.h"
-
+#include "MainWindow.h"
+#include "AppSettings.h"
 
 #include <QCommonStyle>
 class RubberBandStyle : public QCommonStyle 
@@ -171,7 +172,7 @@ class MyGraphicsView : public QGraphicsView
 
 
 SlideEditorWindow::SlideEditorWindow(SlideGroup *group, QWidget * parent)
-    : QMainWindow(parent)
+    : QMainWindow(parent), m_usingGL(false)
 {
 	// setup widget
 	QRect geom = QApplication::desktop()->availableGeometry();
@@ -208,11 +209,23 @@ SlideEditorWindow::SlideEditorWindow(SlideGroup *group, QWidget * parent)
 
 
 	m_scene = new MyGraphicsScene(MyGraphicsScene::Editor,this);
-	MyGraphicsView *graphicsView = new MyGraphicsView(this);
+	m_view = new MyGraphicsView(this);
 	
-	graphicsView->setMyScene(m_scene);
-	m_scene->setSceneRect(0,0,1024,768);
-	resize(1024,768);
+	
+	QRect sceneRect(0,0,1024,768);
+	
+	if(MainWindow::mw())
+	{
+		MainWindow *mw = MainWindow::mw();
+		sceneRect = mw->standardSceneRect();
+		
+		connect(mw, SIGNAL(appSettingsChanged()),       this, SLOT(appSettingsChagned()));
+ 		connect(mw, SIGNAL(aspectRatioChanged(double)), this, SLOT(aspectRatioChanged(double)));
+	}
+	
+	m_view->setMyScene(m_scene);
+	m_scene->setSceneRect(sceneRect);
+	resize(sceneRect.width(),sceneRect.height());
 	
 	// Restore state
 	QSettings settings;
@@ -227,12 +240,13 @@ SlideEditorWindow::SlideEditorWindow(SlideGroup *group, QWidget * parent)
 	
 	//qDebug("Checking for OpenGL...");
 	#ifndef QT_NO_OPENGL
-	if(!RenderOpts::DisableOpenGL)
-	{
-		graphicsView->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
-		qDebug("SlideEditorWindow: Loaded OpenGL viewport.");
-	}
+// 	if(!RenderOpts::DisableOpenGL)
+// 	{
+// 		m_view->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
+// 		qDebug("SlideEditorWindow: Loaded OpenGL viewport.");
+// 	}
 	#endif
+	appSettingsChanged();
 	
 // 	SimpleTextItem * textItem = new SimpleTextItem("Hello, World");
 // 	QPen textPen;
@@ -288,7 +302,7 @@ SlideEditorWindow::SlideEditorWindow(SlideGroup *group, QWidget * parent)
 	
 	if(group != 0)
 		setSlideGroup(group);
-        setCentralWidget(graphicsView);
+        setCentralWidget(m_view);
 }
 
 SlideEditorWindow::~SlideEditorWindow()
@@ -306,6 +320,27 @@ SlideEditorWindow::~SlideEditorWindow()
 // 	delete m_slide;
 // 	m_slide = 0;
 
+}
+
+void SlideEditorWindow::appSettingsChanged()
+{
+	if(AppSettings::useOpenGL() && !m_usingGL)
+	{
+		m_usingGL = true;
+		m_view->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
+	}
+	else
+	if(!AppSettings::useOpenGL() && m_usingGL)
+	{
+		m_usingGL = false;
+		m_view->setViewport(new QWidget());
+	}
+}
+
+void SlideEditorWindow::aspectRatioChanged(double)
+{
+	m_scene->setSceneRect(MainWindow::mw()->standardSceneRect());
+	setupViewportLines();
 }
 
 

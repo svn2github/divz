@@ -13,6 +13,7 @@
 class MyGraphicsScene;
 class SlideGroup;
 class QGraphicsLineItem;
+class MyGraphicsView;
 
 class SlideEditorWindow : public QMainWindow, 
                           public SlideGroupEditor
@@ -36,6 +37,9 @@ private slots:
 	
 	void slidesDropped(QList<Slide*>);
 	
+	void appSettingsChanged();
+	void aspectRatioChanged(double);
+	
 private:
 	void setupSlideGroupDockWidget();
 	void setupViewportLines();
@@ -50,10 +54,11 @@ private:
 	
 	Document m_doc;
 	MyGraphicsScene *m_scene;
+	MyGraphicsView *m_view;
 
 	QList<QGraphicsLineItem *> m_viewportLines;
 	
-	
+	bool m_usingGL;	
 
 };
 

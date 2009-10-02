@@ -16,21 +16,15 @@ void AppSettings::load()
 	loadOutputs(&s);
 	
 	m_useOpenGL = s.value("app/use-opengl").toBool();
-	qDebug("AppSettings::load(): m_useOpenGL=%d",m_useOpenGL?1:0);
-
 }
 
 void AppSettings::save()
 {
 	QSettings s;
 	
-	qDebug("AppSettings::save(): m_useOpenGL=%d",m_useOpenGL?1:0);
 	s.setValue("app/use-opengl",m_useOpenGL);
 	
 	saveOutputs(&s);
-	
-	
-
 }
 
 

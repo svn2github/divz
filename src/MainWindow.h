@@ -21,11 +21,21 @@ namespace Ui {
 
 class MainWindow : public QMainWindow {
 	Q_OBJECT
+public /*static*/:
+	static MainWindow * mw() { return static_mainWindow; }
+
 public:
 	MainWindow(QWidget *parent = 0);
 	~MainWindow();
 	
-	static Document * currentDocument() { return &m_doc; }
+	Document * currentDocument() { return &m_doc; }
+	QRect standardSceneRect(double aspectRatio = -1);
+	
+signals:
+	void documentChanged(Document*);
+	void docSettingsChanged(Document*);
+	void aspectRatioChanged(double);
+	void appSettingsChanged();
 
 public slots:
 	void setLiveGroup(SlideGroup*);
@@ -76,9 +86,10 @@ private:
 
 	OutputSetupDialog *m_outputDialog;
 	
-	static Document m_doc;
+	Document m_doc;
 	
-	
+	/** static */
+	static MainWindow * static_mainWindow;	
 };
 
 #endif // MAINWINDOW_H
