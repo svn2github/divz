@@ -20,8 +20,8 @@ SlideGroupViewer::SlideGroupViewer(QWidget *parent)
 		MainWindow *mw = MainWindow::mw();
 		sceneRect = mw->standardSceneRect();
 		
-		connect(mw, SIGNAL(appSettingsChanged()), this, SLOT(appSettingsChagned()));
- 		connect(mw, SIGNAL(aspectRatioChanged(double)), this, SLOT(aspectRatioChanged(double)));
+		//connect(mw, SIGNAL(appSettingsChanged()), this, SLOT(appSettingsChagned()));
+ 		//connect(mw, SIGNAL(aspectRatioChanged(double)), this, SLOT(aspectRatioChanged(double)));
 	}
 	
 	m_view = new QGraphicsView(this);
