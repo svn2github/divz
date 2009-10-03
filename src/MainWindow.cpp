@@ -305,6 +305,7 @@ void MainWindow::actionAppSettingsDialog()
 	AppSettingsDialog *d = new AppSettingsDialog(this);
 	d->exec();
 
+	emit appSettingsChanged();
 	setupOutputList();
 	setupOutputControl();
 }
@@ -312,8 +313,12 @@ void MainWindow::actionAppSettingsDialog()
 void MainWindow::actionDocSettingsDialog()
 {
 	//OutputSetupDialog *d = new OutputSetupDialog(this);
+	double ar = m_doc.aspectRatio();
 	DocumentSettingsDialog *d = new DocumentSettingsDialog(&m_doc,this);
 	d->exec();
+	if(ar != m_doc.aspectRatio())
+		emit aspectRatioChanged(m_doc.aspectRatio());
+	
 }
 
 

@@ -328,17 +328,20 @@ void SlideEditorWindow::appSettingsChanged()
 	{
 		m_usingGL = true;
 		m_view->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
+		qDebug("SlideEditorWindow::appSettingsChanged(): Loaded OpenGL Viewport");
 	}
 	else
 	if(!AppSettings::useOpenGL() && m_usingGL)
 	{
 		m_usingGL = false;
 		m_view->setViewport(new QWidget());
+		qDebug("SlideEditorWindow::appSettingsChanged(): Loaded Non-GL Viewport");
 	}
 }
 
-void SlideEditorWindow::aspectRatioChanged(double)
+void SlideEditorWindow::aspectRatioChanged(double x)
 {
+	qDebug("SlideEditorWindow::aspectRatioChanged(): New aspect ratio: %.02f",x);
 	m_scene->setSceneRect(MainWindow::mw()->standardSceneRect());
 	setupViewportLines();
 }

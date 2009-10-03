@@ -11,7 +11,7 @@
 #include "AppSettings.h"
 
 SlideGroupViewer::SlideGroupViewer(QWidget *parent)
-	    : QWidget(parent), m_slideGroup(0), m_scene(0), m_view(0), m_usingGL(false)
+	    : QWidget(parent), m_slideGroup(0), m_scene(0), m_view(0), m_usingGL(false), m_slideNum(0)
 {
 	QRect sceneRect(0,0,1024,768);
 	
@@ -20,8 +20,8 @@ SlideGroupViewer::SlideGroupViewer(QWidget *parent)
 		MainWindow *mw = MainWindow::mw();
 		sceneRect = mw->standardSceneRect();
 		
-		//connect(mw, SIGNAL(appSettingsChanged()), this, SLOT(appSettingsChagned()));
- 		//connect(mw, SIGNAL(aspectRatioChanged(double)), this, SLOT(aspectRatioChanged(double)));
+		connect(mw, SIGNAL(appSettingsChanged()), this, SLOT(appSettingsChanged()));
+ 		connect(mw, SIGNAL(aspectRatioChanged(double)), this, SLOT(aspectRatioChanged(double)));
 	}
 	
 	m_view = new QGraphicsView(this);
@@ -48,26 +48,6 @@ SlideGroupViewer::SlideGroupViewer(QWidget *parent)
 
 }
 
-void SlideGroupViewer::appSettingsChanged()
-{
-	if(AppSettings::useOpenGL() && !m_usingGL)
-	{
-		m_usingGL = true;
-		m_view->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
-	}
-	else
-	if(!AppSettings::useOpenGL() && m_usingGL)
-	{
-		m_usingGL = false;
-		m_view->setViewport(new QWidget());
-	}
-}
-
-void SlideGroupViewer::aspectRatioChanged(double)
-{
-	m_scene->setSceneRect(MainWindow::mw()->standardSceneRect());
-}
-
 SlideGroupViewer::~SlideGroupViewer()
 {
 	if(m_scene)
@@ -82,6 +62,30 @@ SlideGroupViewer::~SlideGroupViewer()
 		m_view = 0;
 	}
 }
+
+void SlideGroupViewer::appSettingsChanged()
+{
+	if(AppSettings::useOpenGL() && !m_usingGL)
+	{
+		m_usingGL = true;
+		m_view->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
+		qDebug("SlideGroupViewer::appSettingsChanged(): Loaded OpenGL Viewport");
+	}
+	else
+	if(!AppSettings::useOpenGL() && m_usingGL)
+	{
+		m_usingGL = false;
+		m_view->setViewport(new QWidget());
+		qDebug("SlideGroupViewer::appSettingsChanged(): Loaded Non-GL Viewport");
+	}
+}
+
+void SlideGroupViewer::aspectRatioChanged(double x)
+{
+	qDebug("SlideGroupViewer::aspectRatioChanged(): New aspect ratio: %.02f",x);
+	m_scene->setSceneRect(MainWindow::mw()->standardSceneRect());
+}
+
 
 void SlideGroupViewer::closeEvent(QCloseEvent *event)
 {
@@ -141,6 +145,33 @@ void SlideGroupViewer::setSlideGroup(SlideGroup *g, int startSlide)
 	}
 }
 
+void SlideGroupViewer::setSlide(int x)
+{
+	m_slideNum = x;
+	setSlide(m_sortedSlides.at(x));
+
+}
+
+void SlideGroupViewer::setSlide(Slide *s)
+{
+	m_scene->setSlide(s);
+}
+
+void SlideGroupViewer::nextSlide()
+{
+	m_slideNum ++;
+	if(m_slideNum >= m_sortedSlides.size())
+		m_slideNum = m_sortedSlides.size() - 1;
+	setSlide(m_slideNum);
+}
+
+void SlideGroupViewer::prevSlide()
+{
+	m_slideNum --;
+	if(m_slideNum < 0)
+		m_slideNum = 0;
+	setSlide(m_slideNum);
+}
 
 void SlideGroupViewer::resizeEvent(QResizeEvent *)
 {
@@ -162,3 +193,4 @@ void SlideGroupViewer::adjustViewScaling()
 
 
 }
+

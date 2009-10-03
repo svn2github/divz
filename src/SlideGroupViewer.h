@@ -13,6 +13,7 @@
 
 class SlideGroupViewer : public QWidget
 {
+	Q_OBJECT
 public:
 	SlideGroupViewer(QWidget *parent=0);
 	~SlideGroupViewer();
@@ -27,6 +28,7 @@ public:
 
 public slots:
 	void setSlide(int);
+	void setSlide(Slide*);
 	void nextSlide();
 	void prevSlide();
 
@@ -44,6 +46,8 @@ private:
 	SlideGroup * m_slideGroup;
 	QList<Slide*> m_sortedSlides;
 //	QHash<int,QPixmap> m_pixmaps;
+
+	int m_slideNum;
 
 	MyGraphicsScene * m_scene;
 	QGraphicsView * m_view;
