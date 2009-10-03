@@ -76,13 +76,18 @@ class MyGraphicsScene : public QGraphicsScene
 		QTimer * m_fadeTimer;
 		
 		ContextHint m_contextHint;
+		
+		QGraphicsItem * m_fadeRoot;
+		QGraphicsItem * m_liveRoot;
 			
 	private slots:
 		friend class AbstractConfig; // HACK here, only to call 1 method
 		friend class GenericItemConfig; // HACK here, only to call 1 method
 //         	friend class PixmapButton; // HACK here, only to call 1 method
         
+        	void startTransition();
 		void slotTransitionStep();
+		void endTransition();
 		
 		void slotSelectionChanged();
         	void slotConfigureContent(const QPoint & scenePoint);

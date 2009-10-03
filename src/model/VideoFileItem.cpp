@@ -17,9 +17,9 @@ VideoFileItem::~VideoFileItem() {}
 ITEM_PROPSET(VideoFileItem, Filename, QString, filename)
 
 #include <assert.h>
-AbstractContent * VideoFileItem::createDelegate(QGraphicsScene *scene)
+AbstractContent * VideoFileItem::createDelegate(QGraphicsScene*scene,QGraphicsItem*parent)
 {
-        VideoFileContent * delegate = new VideoFileContent(scene);
+        VideoFileContent * delegate = new VideoFileContent(scene,parent);
         assert(delegate);
         delegate->syncFromModelItem(this);
         return delegate;

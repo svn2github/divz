@@ -55,7 +55,7 @@ public:
 	
 	
 	// ::AbstractVisualItem
-	AbstractContent * createDelegate(QGraphicsScene*);
+	AbstractContent * createDelegate(QGraphicsScene*scene=0,QGraphicsItem*parent=0);
 	
 	// ::AbstractItem
 	

@@ -8,6 +8,7 @@
 
 class QGraphicsScene;
 class AbstractContent;
+class QGraphicsItem;
 
 class AbstractVisualItem : public AbstractItem
 {
@@ -82,7 +83,7 @@ public:
 
 	
 	// Convert the attributes here into an AbstractContent object
-	virtual AbstractContent * createDelegate(QGraphicsScene*);
+	virtual AbstractContent * createDelegate(QGraphicsScene*scene=0,QGraphicsItem*parent=0);
 	
 	// Scene position
 	QPointF pos() const { return m_pos; }

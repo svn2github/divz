@@ -53,9 +53,9 @@ void TextItem::setYTextAlign(Qt::Alignment z)
 }
 
 #include <assert.h>
-AbstractContent * TextItem::createDelegate(QGraphicsScene *scene)
+AbstractContent * TextItem::createDelegate(QGraphicsScene *scene,QGraphicsItem*parent)
 {
- 	TextContent * textContent = new TextContent(scene);
+ 	TextContent * textContent = new TextContent(scene,parent);
 //	SimpleTextContent * textContent = new TextContent(scene);
 	assert(textContent);
 	

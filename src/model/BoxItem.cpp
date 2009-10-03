@@ -16,9 +16,9 @@ BoxItem::BoxItem() : AbstractVisualItem()
 BoxItem::~BoxItem() {}
 
 #include <assert.h>
-AbstractContent * BoxItem::createDelegate(QGraphicsScene *scene)
+AbstractContent * BoxItem::createDelegate(QGraphicsScene *scene,QGraphicsItem *parent)
 {
- 	BoxContent * box = new BoxContent(scene);
+ 	BoxContent * box = new BoxContent(scene,parent);
 //	SimpleTextContent * textContent = new TextContent(scene);
 	assert(box);
 	

@@ -17,9 +17,9 @@ TextBoxItem::TextBoxItem() : TextItem()
 TextBoxItem::~TextBoxItem() {}
 
 #include <assert.h>
-AbstractContent * TextBoxItem::createDelegate(QGraphicsScene *scene)
+AbstractContent * TextBoxItem::createDelegate(QGraphicsScene*scene,QGraphicsItem*parent)
 {
- 	TextBoxContent * textContent = new TextBoxContent(scene);
+ 	TextBoxContent * textContent = new TextBoxContent(scene,parent);
 //	SimpleTextContent * textContent = new TextContent(scene);
 	assert(textContent);
 	

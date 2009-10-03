@@ -1,323 +1,76 @@
 <?xml version="1.0" ?>
-<document title="" aspect="1.33">
-    <group title="" number="0" icon="" type="7536741" id="7667680">
-        <slide number="16" id="16"/>
-        <slide number="0" id="0">
+<document title="" aspect="1.33" >
+    <group title="" number="0" icon="" type="0" id="1" >
+        <slide number="0" id="0" >
             <textbox>
-                <item-id>125</item-id>
-                <item-name>TextBoxItem125</item-name>
+                <item-id>24</item-id>
+                <item-name>TextBoxItem24</item-name>
                 <rect>
                     <x>-100</x>
                     <y>-75</y>
-                    <w>1023</w>
-                    <h>379</h>
+                    <w>910</w>
+                    <h>534</h>
                 </rect>
                 <pos>
-                    <x>109</x>
-                    <y>364</y>
+                    <x>235</x>
+                    <y>178</y>
                 </pos>
-                <zvalue>3</zvalue>
+                <zvalue>1</zvalue>
                 <opacity>1</opacity>
                 <visible>1</visible>
                 <frame-class>0</frame-class>
-                <transformation yRot="0" xRot="0" zRot="0"/>
-                <fill brush-style="1" video="" image="" brush-color="4294967295" type="1"/>
-                <outline brush-style="1" pen-join="64" pen-width="1.5" enabled="1" brush-color="4278190080" pen-cap="16" pen-color="4278190080"/>
-                <mirror offset="3" enabled="0"/>
-                <shadow brush-style="1" x="2" y="2" enabled="1" brush-color="4278190080"/>
+                <transformation yRot="0" xRot="0" zRot="0" />
+                <fill brush-style="1" video="" image="" brush-color="4294967295" type="1" />
+                <outline brush-style="1" pen-join="64" pen-width="1.5" enabled="1" brush-color="4278190080" pen-cap="16" pen-color="4278190080" />
+                <mirror offset="3" enabled="0" />
+                <shadow brush-style="1" x="3" y="3" enabled="0" brush-color="4278190080" />
                 <text>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
 &lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
 p, li { white-space: pre-wrap; }
 &lt;/style>&lt;/head>&lt;body style=" font-family:'Tahoma'; font-size:40pt; font-weight:400; font-style:normal;">
-&lt;p align="right" style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-family:'Sans Serif'; font-size:48pt; font-weight:600;">Lorem Ipsum &lt;/span>&lt;/p>
-&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-family:'Sans Serif'; font-size:48pt;">are &lt;/span>&lt;span style=" font-family:'Sans Serif'; font-size:48pt; font-weight:600; font-style:italic;">all the same&lt;/span>&lt;span style=" font-family:'Sans Serif'; font-size:48pt; font-weight:600;"> &lt;/span>&lt;/p>
-&lt;p align="center" style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-family:'Sans Serif'; font-size:101pt; font-weight:600;">t&lt;/span>&lt;span style=" font-family:'Sans Serif'; font-size:101pt; font-style:italic;">o&lt;/span>&lt;span style=" font-family:'Sans Serif'; font-size:101pt;"> &lt;/span>&lt;span style=" font-family:'Sans Serif'; font-size:101pt; text-decoration: underline;">me&lt;/span>&lt;span style=" font-family:'Sans Serif'; font-size:101pt;">.&lt;/span>&lt;/p>&lt;/body>&lt;/html></text>
-                <default-font font-family="Tahoma" font-size="40"/>
-                <shape enabled="0"/>
-                <text-align x="32" y="32"/>
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-family:'Sans Serif'; font-size:171pt; font-weight:600;">Lorem Ipsum&lt;/span>&lt;/p>&lt;/body>&lt;/html></text>
+                <default-font font-family="Tahoma" font-size="40" />
+                <shape enabled="0" />
+                <text-align x="32" y="32" />
             </textbox>
-            <box>
-                <item-id>129</item-id>
-                <item-name>BoxItem129</item-name>
-                <rect>
-                    <x>-100</x>
-                    <y>-75</y>
-                    <w>592</w>
-                    <h>567</h>
-                </rect>
-                <pos>
-                    <x>289</x>
-                    <y>190</y>
-                </pos>
-                <zvalue>1</zvalue>
-                <opacity>1</opacity>
-                <visible>1</visible>
-                <frame-class>0</frame-class>
-                <transformation yRot="0" xRot="0" zRot="0"/>
-                <fill brush-style="1" video="" image="" brush-color="4294901760" type="1"/>
-                <outline brush-style="1" pen-join="64" pen-width="3" enabled="1" brush-color="4278190080" pen-cap="16" pen-color="4278190080"/>
-                <mirror offset="3" enabled="0"/>
-                <shadow brush-style="1" x="0" y="0" enabled="0" brush-color="4278190080"/>
-            </box>
-            <box>
-                <item-id>134</item-id>
-                <item-name>BoxItem134</item-name>
-                <rect>
-                    <x>-100</x>
-                    <y>-75</y>
-                    <w>200</w>
-                    <h>150</h>
-                </rect>
-                <pos>
-                    <x>165</x>
-                    <y>648</y>
-                </pos>
-                <zvalue>4</zvalue>
-                <opacity>1</opacity>
-                <visible>1</visible>
-                <frame-class>0</frame-class>
-                <transformation yRot="0" xRot="0" zRot="0"/>
-                <fill brush-style="1" video="" image="" brush-color="4294967295" type="1"/>
-                <outline brush-style="1" pen-join="64" pen-width="3" enabled="1" brush-color="4278190080" pen-cap="16" pen-color="4278190080"/>
-                <mirror offset="3" enabled="0"/>
-                <shadow brush-style="1" x="3" y="3" enabled="0" brush-color="4278190080"/>
-            </box>
-            <box>
-                <item-id>135</item-id>
-                <item-name>BoxItem135</item-name>
-                <rect>
-                    <x>-100</x>
-                    <y>-75</y>
-                    <w>200</w>
-                    <h>150</h>
-                </rect>
-                <pos>
-                    <x>148</x>
-                    <y>162</y>
-                </pos>
-                <zvalue>5</zvalue>
-                <opacity>1</opacity>
-                <visible>1</visible>
-                <frame-class>0</frame-class>
-                <transformation yRot="0" xRot="0" zRot="0"/>
-                <fill brush-style="1" video="" image="" brush-color="4294967295" type="1"/>
-                <outline brush-style="1" pen-join="64" pen-width="3" enabled="1" brush-color="4278190080" pen-cap="16" pen-color="4278190080"/>
-                <mirror offset="3" enabled="0"/>
-                <shadow brush-style="1" x="3" y="3" enabled="0" brush-color="4278190080"/>
-            </box>
-            <box>
-                <item-id>136</item-id>
-                <item-name>BoxItem136</item-name>
-                <rect>
-                    <x>-100</x>
-                    <y>-75</y>
-                    <w>200</w>
-                    <h>150</h>
-                </rect>
-                <pos>
-                    <x>730</x>
-                    <y>176</y>
-                </pos>
-                <zvalue>6</zvalue>
-                <opacity>1</opacity>
-                <visible>1</visible>
-                <frame-class>0</frame-class>
-                <transformation yRot="0" xRot="0" zRot="0"/>
-                <fill brush-style="1" video="" image="" brush-color="4294967295" type="1"/>
-                <outline brush-style="1" pen-join="64" pen-width="3" enabled="1" brush-color="4278190080" pen-cap="16" pen-color="4278190080"/>
-                <mirror offset="3" enabled="0"/>
-                <shadow brush-style="1" x="3" y="3" enabled="0" brush-color="4278190080"/>
-            </box>
-            <videofile>
-                <item-id>137</item-id>
-                <item-name>VideoItem137</item-name>
-                <rect>
-                    <x>-100</x>
-                    <y>-127</y>
-                    <w>340</w>
-                    <h>255</h>
-                </rect>
-                <pos>
-                    <x>435</x>
-                    <y>314</y>
-                </pos>
-                <zvalue>2</zvalue>
-                <opacity>1</opacity>
-                <visible>1</visible>
-                <frame-class>0</frame-class>
-                <transformation yRot="0" xRot="0" zRot="0"/>
-                <fill brush-style="1" video="data/Seasons_Loop_3_SD.mpg" image="" brush-color="4294967295" type="4"/>
-                <outline brush-style="1" pen-join="64" pen-width="2" enabled="1" brush-color="4278190080" pen-cap="16" pen-color="4278190080"/>
-                <mirror offset="3" enabled="0"/>
-                <shadow brush-style="1" x="3" y="3" enabled="0" brush-color="4278190080"/>
-                <filename>data/Seasons_Loop_3_SD.mpg</filename>
-            </videofile>
-        </slide>
-        <slide number="1" id="2">
-            <box>
-                <item-id>131</item-id>
-                <item-name>BoxItem131</item-name>
-                <rect>
-                    <x>-100</x>
-                    <y>-75</y>
-                    <w>200</w>
-                    <h>150</h>
-                </rect>
-                <pos>
-                    <x>510</x>
-                    <y>386</y>
-                </pos>
-                <zvalue>1</zvalue>
-                <opacity>1</opacity>
-                <visible>1</visible>
-                <frame-class>0</frame-class>
-                <transformation yRot="0" xRot="0" zRot="0"/>
-                <fill brush-style="1" video="" image="" brush-color="4278190208" type="1"/>
-                <outline brush-style="1" pen-join="64" pen-width="3" enabled="1" brush-color="4278190080" pen-cap="16" pen-color="4278190080"/>
-                <mirror offset="3" enabled="0"/>
-                <shadow brush-style="1" x="3" y="3" enabled="0" brush-color="4278190080"/>
-            </box>
-        </slide>
-        <slide number="2" id="1">
-            <box>
-                <item-id>130</item-id>
-                <item-name>BoxItem130</item-name>
-                <rect>
-                    <x>-100</x>
-                    <y>-75</y>
-                    <w>200</w>
-                    <h>150</h>
-                </rect>
-                <pos>
-                    <x>513</x>
-                    <y>385</y>
-                </pos>
-                <zvalue>1</zvalue>
-                <opacity>1</opacity>
-                <visible>1</visible>
-                <frame-class>0</frame-class>
-                <transformation yRot="0" xRot="0" zRot="0"/>
-                <fill brush-style="1" video="" image="" brush-color="4286611456" type="1"/>
-                <outline brush-style="1" pen-join="64" pen-width="3" enabled="1" brush-color="4278190080" pen-cap="16" pen-color="4278190080"/>
-                <mirror offset="3" enabled="0"/>
-                <shadow brush-style="1" x="3" y="3" enabled="0" brush-color="4278190080"/>
-            </box>
-        </slide>
-        <slide number="3" id="3">
-            <box>
-                <item-id>132</item-id>
-                <item-name>BoxItem132</item-name>
-                <rect>
-                    <x>-100</x>
-                    <y>-75</y>
-                    <w>200</w>
-                    <h>150</h>
-                </rect>
-                <pos>
-                    <x>514</x>
-                    <y>385</y>
-                </pos>
-                <zvalue>1</zvalue>
-                <opacity>1</opacity>
-                <visible>1</visible>
-                <frame-class>0</frame-class>
-                <transformation yRot="0" xRot="0" zRot="0"/>
-                <fill brush-style="1" video="" image="" brush-color="4294967295" type="1"/>
-                <outline brush-style="1" pen-join="64" pen-width="3" enabled="1" brush-color="4286578816" pen-cap="16" pen-color="4286578816"/>
-                <mirror offset="3" enabled="0"/>
-                <shadow brush-style="1" x="3" y="3" enabled="0" brush-color="4278190080"/>
-            </box>
-        </slide>
-        <slide number="4" id="5"/>
-        <slide number="5" id="6"/>
-        <slide number="6" id="4"/>
-        <slide number="7" id="7"/>
-        <slide number="8" id="8"/>
-        <slide number="9" id="9"/>
-        <slide number="10" id="10"/>
-        <slide number="11" id="11"/>
-        <slide number="12" id="12"/>
-        <slide number="13" id="13"/>
-        <slide number="14" id="14"/>
-        <slide number="15" id="15"/>
-    </group>
-    <group title="" number="2" icon="" type="0" id="1">
-        <slide number="0" id="0">
-            <box>
-                <item-id>140</item-id>
-                <item-name>BoxItem140</item-name>
-                <rect>
-                    <x>-100</x>
-                    <y>-75</y>
-                    <w>691</w>
-                    <h>826</h>
-                </rect>
-                <pos>
-                    <x>598</x>
-                    <y>64</y>
-                </pos>
-                <zvalue>1</zvalue>
-                <opacity>1</opacity>
-                <visible>1</visible>
-                <frame-class>0</frame-class>
-                <transformation yRot="0" xRot="0" zRot="0"/>
-                <fill brush-style="1" video="" image="" brush-color="4278255360" type="1"/>
-                <outline brush-style="1" pen-join="64" pen-width="3" enabled="1" brush-color="4278190080" pen-cap="16" pen-color="4278190080"/>
-                <mirror offset="3" enabled="0"/>
-                <shadow brush-style="1" x="3" y="3" enabled="0" brush-color="4278190080"/>
-            </box>
         </slide>
     </group>
-    <group title="" number="1" icon="" type="0" id="1">
-        <slide number="0" id="0">
-            <box>
-                <item-id>139</item-id>
-                <item-name>BoxItem139</item-name>
+    <group title="" number="0" icon="" type="0" id="1" >
+        <slide number="0" id="0" >
+            <textbox>
+                <item-id>26</item-id>
+                <item-name>TextBoxItem26</item-name>
                 <rect>
                     <x>-100</x>
                     <y>-75</y>
-                    <w>518</w>
-                    <h>838</h>
+                    <w>996</w>
+                    <h>756</h>
                 </rect>
                 <pos>
-                    <x>88</x>
-                    <y>66</y>
+                    <x>111</x>
+                    <y>87</y>
                 </pos>
                 <zvalue>1</zvalue>
                 <opacity>1</opacity>
                 <visible>1</visible>
                 <frame-class>0</frame-class>
-                <transformation yRot="0" xRot="0" zRot="0"/>
-                <fill brush-style="1" video="" image="" brush-color="4294967040" type="1"/>
-                <outline brush-style="1" pen-join="64" pen-width="3" enabled="1" brush-color="4278190080" pen-cap="16" pen-color="4278190080"/>
-                <mirror offset="3" enabled="0"/>
-                <shadow brush-style="1" x="3" y="3" enabled="0" brush-color="4278190080"/>
-            </box>
+                <transformation yRot="0" xRot="0" zRot="0" />
+                <fill brush-style="1" video="" image="" brush-color="4294967295" type="1" />
+                <outline brush-style="1" pen-join="64" pen-width="1.5" enabled="1" brush-color="4278190080" pen-cap="16" pen-color="4278190080" />
+                <mirror offset="3" enabled="0" />
+                <shadow brush-style="1" x="3" y="3" enabled="0" brush-color="4278190080" />
+                <text>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
+&lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
+p, li { white-space: pre-wrap; }
+&lt;/style>&lt;/head>&lt;body style=" font-family:'Tahoma'; font-size:40pt; font-weight:400; font-style:normal;">
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-family:'Sans Serif'; font-size:242pt;">Hello World&lt;/span>&lt;/p>&lt;/body>&lt;/html></text>
+                <default-font font-family="Tahoma" font-size="40" />
+                <shape enabled="0" />
+                <text-align x="32" y="32" />
+            </textbox>
         </slide>
-        <slide number="1" id="1">
-            <box>
-                <item-id>141</item-id>
-                <item-name>BoxItem141</item-name>
-                <rect>
-                    <x>-100</x>
-                    <y>-75</y>
-                    <w>200</w>
-                    <h>150</h>
-                </rect>
-                <pos>
-                    <x>238</x>
-                    <y>221</y>
-                </pos>
-                <zvalue>1</zvalue>
-                <opacity>1</opacity>
-                <visible>1</visible>
-                <frame-class>0</frame-class>
-                <transformation yRot="0" xRot="0" zRot="0"/>
-                <fill brush-style="1" video="" image="" brush-color="4294902015" type="1"/>
-                <outline brush-style="1" pen-join="64" pen-width="3" enabled="1" brush-color="4278190080" pen-cap="16" pen-color="4278190080"/>
-                <mirror offset="3" enabled="0"/>
-                <shadow brush-style="1" x="3" y="3" enabled="0" brush-color="4278190080"/>
-            </box>
-        </slide>
+    </group>
+    <group title="" number="0" icon="" type="0" id="1" >
+        <slide number="0" id="0" />
     </group>
 </document>

@@ -50,12 +50,25 @@
 #define COLORPICKER_W 200
 #define COLORPICKER_H 150
 
+class RootObject : public QGraphicsItem
+{
+public:
+	RootObject(QGraphicsScene*x):QGraphicsItem(0,x){}
+	QRectF boundingRect() const { return scene()->sceneRect(); }
+	void paint(QPainter*, const QStyleOptionGraphicsItem*, QWidget*) {}
+};
+
 MyGraphicsScene::MyGraphicsScene(ContextHint hint, QObject * parent)
     : QGraphicsScene(parent)
     , m_slide(0)
     , m_contextHint(hint)
     , m_fadeTimer(0)
 {
+	m_fadeRoot = new RootObject(this);
+	m_fadeRoot->setPos(0,0);
+	
+	m_liveRoot = new RootObject(this);
+	m_liveRoot->setPos(0,0);
 }
 
 MyGraphicsScene::~MyGraphicsScene()
@@ -64,6 +77,11 @@ MyGraphicsScene::~MyGraphicsScene()
 	//m_slidePrev = 0;
 	
 	//qDeleteAll(m_ownedContent);
+	delete m_fadeRoot;
+	delete m_liveRoot;
+	
+	m_fadeRoot = 0;
+	m_liveRoot = 0;
 	
 }
 
@@ -77,12 +95,17 @@ void MyGraphicsScene::clear()
 	foreach(AbstractContent *content, m_content)
 	{
 		m_content.removeAll(content);
+		if(content->parentItem() == m_liveRoot)
+			content->setParentItem(0);
 		removeItem(content);
+		
 		disconnect(content, 0, 0, 0);
 		content->dispose(false);
 	}
 	m_slide = 0;
-	QGraphicsScene::clear();
+	
+	// dont remove our fade/live root
+	//QGraphicsScene::clear();
 }
 	
 void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans)
@@ -94,41 +117,18 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans)
 		return;
 	}
 	
+	if(contextHint() == Preview)
+		trans = None; 
+	
 	m_currentTransition = trans;
 	
+	//trans = None;
 	if(trans == None)
 	{
 		clear();
 	}
 	else
 	{
-// 		if(m_prevContent.size() > 0 || (m_fadeTimer && m_fadeTimer->isActive()) )
-// 		{
-// 			m_fadeTimer->stop();
-// 			foreach(AbstractContent *content, m_prevContent)
-// 			{
-// 				m_prevContent.removeAll(content);
-// 				removeItem(content);
-// 				disconnect(content, 0, 0, 0);
-// 				content->dispose(false);
-// // 				delete content;
-// // 				content = 0;
-// 				
-// 			}
-// 		}
-// 		
-		m_prevContent.clear();
-		foreach(AbstractContent *x, m_content)
-			m_prevContent << x;
-		
-// 		foreach(AbstractContent *content, m_content)
-// 		{
-// 			m_content.removeAll(content);
-// 			//removeItem(content);
-// 			//disconnect(content, 0, 0, 0);
-// 			//content->dispose(false);
-// 		}
-// 		m_slide = 0;
 		
 		if(!m_fadeTimer)
 		{
@@ -136,21 +136,30 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans)
 			connect(m_fadeTimer, SIGNAL(timeout()), this, SLOT(slotTransitionStep()));
 		}
 		
-		m_fadeSteps = 10;
-		m_fadeStepCounter = 0;
+		
+		if(m_fadeTimer->isActive())
+			endTransition(); 
+			
+		qDebug() << "setSlide: Reparenting"<<m_content.size()<<"items";
 		
 		foreach(AbstractContent *x, m_content)
-		{
-			double opac =0;
-			qDebug("calk:mark1: %p",x);
-			if(x)
-				opac = x->opacity();
-			qDebug("calk:mark2");
-			double inc = opac/ (double)m_fadeSteps;
-			m_fadeIncx << inc;
-		}
+			x->setParentItem(m_fadeRoot);
+			
+		qDebug() << "setSlide: Done reparenting.";
+
+		m_fadeStepCounter = 0;
+		m_fadeSteps = 30;
 		
-		m_fadeTimer->start(1000 * 2 / m_fadeSteps);
+		m_fadeRoot->setZValue(999999);
+		
+		
+		// start with faderoot fully visible, and live root invisible, then cross fade between the two
+		m_fadeRoot->setOpacity(1);
+		m_liveRoot->setOpacity(0);
+		
+		int ms = 1000  / m_fadeSteps;
+		m_fadeTimer->start(ms);
+		qDebug() << "setSlide: Starting fade timer for "<<ms<<"ms";
 		
 	}
 
@@ -163,10 +172,41 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans)
 		
 		if (AbstractVisualItem * visualItem = dynamic_cast<AbstractVisualItem *>(item))
 		{
-			AbstractContent * visual = visualItem->createDelegate(this);
+			AbstractContent * visual = visualItem->createDelegate(this,m_liveRoot);
 			addContent(visual, true);
-			
+			//addItem(visual);
+			//visual->setParentItem(m_liveRoot);
 			//visual->setAnimationState(AbstractContent::AnimStop);
+		}
+	}
+	
+	m_liveRoot->setZValue(0);
+}
+
+void MyGraphicsScene::startTransition()
+{
+}
+
+void MyGraphicsScene::endTransition()
+{
+	m_fadeTimer->stop();
+	
+	m_fadeRoot->setOpacity(0);
+	m_liveRoot->setOpacity(1);
+	
+	QList<QGraphicsItem*> kids = m_fadeRoot->childItems();
+	foreach(QGraphicsItem *k, kids)
+	{
+		k->setVisible(false);
+		k->setParentItem(0);
+		removeItem(k);
+		
+		AbstractContent *z = dynamic_cast<AbstractContent*>(k);
+		if(z)
+		{
+			m_content.removeAll(z);
+			disconnect(z, 0, 0, 0);
+			z->dispose(false);
 		}
 	}
 }
@@ -175,30 +215,14 @@ void MyGraphicsScene::slotTransitionStep()
 {
 	if( ++ m_fadeStepCounter < m_fadeSteps)
 	{
-		for(int i=0;i<m_prevContent.size();i++)
-		{
-			double step = m_fadeIncx[i];
-			AbstractContent *c = m_prevContent[i];
-			if(c)
-			{
-				qDebug("trans step:mark1");
-			
-				c->setOpacity(c->opacity() - step);
-				qDebug("trans step:mark2");
-			}
-		}
+		double inc = (double)1 / m_fadeSteps;
+		m_fadeRoot->setOpacity(m_fadeRoot->opacity() - inc);
+		m_liveRoot->setOpacity(m_liveRoot->opacity() + inc);
+		qDebug()<<"slotTransitionStep: step"<<m_fadeStepCounter<<"/"<<m_fadeSteps<<", inc:"<<inc<<", fade:"<<m_fadeRoot->opacity()<<", live:"<<m_liveRoot->opacity();
 	}
 	else
 	{
-		m_fadeTimer->stop();
-		foreach(AbstractContent *content, m_prevContent)
-		{
-			content->setOpacity(1);
-			content->setVisible(false);
- 			m_prevContent.removeAll(content);
- 			removeItem(content);
- 			content->dispose(false);
-		}
+		endTransition();
 	}
 	
 }
@@ -220,7 +244,7 @@ void MyGraphicsScene::addContent(AbstractContent * content, bool takeOwnership) 
 	content->show();
 	
 	m_content.append(content);
-	addItem(content);
+	//addItem(content);
 	
 	if(takeOwnership)
 		m_ownedContent.append(content);

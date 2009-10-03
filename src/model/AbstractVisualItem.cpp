@@ -58,7 +58,7 @@ AbstractVisualItem::AbstractVisualItem()
 	m_shadowBrush = QBrush(Qt::black);
 }
 
-AbstractContent * AbstractVisualItem::createDelegate(QGraphicsScene*) {return 0;}
+AbstractContent * AbstractVisualItem::createDelegate(QGraphicsScene*,QGraphicsItem*) {return 0;}
 
 //#define PROPSET (a,b,c) void AbstractVisualItem::set##a(b x){m_##b = x;setChanged(c,x);}
 
