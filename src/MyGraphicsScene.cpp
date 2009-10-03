@@ -54,13 +54,14 @@ MyGraphicsScene::MyGraphicsScene(ContextHint hint, QObject * parent)
     : QGraphicsScene(parent)
     , m_slide(0)
     , m_contextHint(hint)
+    , m_fadeTimer(0)
 {
 }
 
 MyGraphicsScene::~MyGraphicsScene()
 {
 	m_slide = 0;
-	m_slidePrev = 0;
+	//m_slidePrev = 0;
 	
 	//qDeleteAll(m_ownedContent);
 	
@@ -84,7 +85,7 @@ void MyGraphicsScene::clear()
 	QGraphicsScene::clear();
 }
 	
-void MyGraphicsScene::setSlide(Slide *slide, SlideTransition /*trans*/)
+void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans)
 {
 	//TODO implement slide transitions
 	if(m_slide == slide)
@@ -93,7 +94,65 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition /*trans*/)
 		return;
 	}
 	
-	clear();
+	m_currentTransition = trans;
+	
+	if(trans == None)
+	{
+		clear();
+	}
+	else
+	{
+// 		if(m_prevContent.size() > 0 || (m_fadeTimer && m_fadeTimer->isActive()) )
+// 		{
+// 			m_fadeTimer->stop();
+// 			foreach(AbstractContent *content, m_prevContent)
+// 			{
+// 				m_prevContent.removeAll(content);
+// 				removeItem(content);
+// 				disconnect(content, 0, 0, 0);
+// 				content->dispose(false);
+// // 				delete content;
+// // 				content = 0;
+// 				
+// 			}
+// 		}
+// 		
+		m_prevContent.clear();
+		foreach(AbstractContent *x, m_content)
+			m_prevContent << x;
+		
+// 		foreach(AbstractContent *content, m_content)
+// 		{
+// 			m_content.removeAll(content);
+// 			//removeItem(content);
+// 			//disconnect(content, 0, 0, 0);
+// 			//content->dispose(false);
+// 		}
+// 		m_slide = 0;
+		
+		if(!m_fadeTimer)
+		{
+			m_fadeTimer = new QTimer(this);
+			connect(m_fadeTimer, SIGNAL(timeout()), this, SLOT(slotTransitionStep()));
+		}
+		
+		m_fadeSteps = 10;
+		m_fadeStepCounter = 0;
+		
+		foreach(AbstractContent *x, m_content)
+		{
+			double opac =0;
+			qDebug("calk:mark1: %p",x);
+			if(x)
+				opac = x->opacity();
+			qDebug("calk:mark2");
+			double inc = opac/ (double)m_fadeSteps;
+			m_fadeIncx << inc;
+		}
+		
+		m_fadeTimer->start(1000 * 2 / m_fadeSteps);
+		
+	}
 
 	m_slide = slide;
 	
@@ -114,7 +173,34 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition /*trans*/)
 
 void MyGraphicsScene::slotTransitionStep()
 {
-	// TBD
+	if( ++ m_fadeStepCounter < m_fadeSteps)
+	{
+		for(int i=0;i<m_prevContent.size();i++)
+		{
+			double step = m_fadeIncx[i];
+			AbstractContent *c = m_prevContent[i];
+			if(c)
+			{
+				qDebug("trans step:mark1");
+			
+				c->setOpacity(c->opacity() - step);
+				qDebug("trans step:mark2");
+			}
+		}
+	}
+	else
+	{
+		m_fadeTimer->stop();
+		foreach(AbstractContent *content, m_prevContent)
+		{
+			content->setOpacity(1);
+			content->setVisible(false);
+ 			m_prevContent.removeAll(content);
+ 			removeItem(content);
+ 			content->dispose(false);
+		}
+	}
+	
 }
 
 void MyGraphicsScene::addContent(AbstractContent * content, bool takeOwnership) // const QPoint & pos)
@@ -134,6 +220,7 @@ void MyGraphicsScene::addContent(AbstractContent * content, bool takeOwnership) 
 	content->show();
 	
 	m_content.append(content);
+	addItem(content);
 	
 	if(takeOwnership)
 		m_ownedContent.append(content);

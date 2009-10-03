@@ -38,7 +38,7 @@ class MyGraphicsScene : public QGraphicsScene
  		
  		typedef enum SlideTransition { None, CrossFade };
  		
- 		void setSlide(Slide *, SlideTransition t = CrossFade);
+ 		void setSlide(Slide *, SlideTransition t = None);
  		Slide * slide() { return m_slide; }
 		
 // 		TextContent * addTextContent();
@@ -63,11 +63,17 @@ class MyGraphicsScene : public QGraphicsScene
 	
 		QList<AbstractContent *> m_content;
 		QList<AbstractContent *> m_ownedContent;
+		QList<AbstractContent *> m_prevContent;
 		QList<GenericItemConfig *> m_configs;
 		
 		Slide * m_slide;
-		Slide * m_slidePrev;
-		SlideTransition * m_currentTransition;
+		//Slide * m_slidePrev;
+		SlideTransition m_currentTransition;
+		
+		int m_fadeSteps;
+		int m_fadeStepCounter;
+		QList<double> m_fadeIncx;
+		QTimer * m_fadeTimer;
 		
 		ContextHint m_contextHint;
 			

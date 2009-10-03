@@ -126,7 +126,7 @@ void SlideGroupViewer::setSlideGroup(SlideGroup *g, int startSlide)
 	if(startSlide)
 	{
 		Slide *s = m_sortedSlides.at(startSlide);
-		m_scene->setSlide(s);
+		m_scene->setSlide(s,MyGraphicsScene::CrossFade);
 		//m_slideListView->setCurrentIndex(m_slideModel->indexForSlide(curSlide));
 	}
 	else
@@ -135,7 +135,7 @@ void SlideGroupViewer::setSlideGroup(SlideGroup *g, int startSlide)
 		if(slist.size() > 0)
 		{
 			Slide *s = m_sortedSlides.at(0);
-			m_scene->setSlide(s);
+			m_scene->setSlide(s,MyGraphicsScene::CrossFade);
 			//m_slideListView->setCurrentIndex(m_slideModel->indexForRow(0));
 		}
 		else
@@ -154,7 +154,7 @@ void SlideGroupViewer::setSlide(int x)
 
 void SlideGroupViewer::setSlide(Slide *s)
 {
-	m_scene->setSlide(s);
+	m_scene->setSlide(s,MyGraphicsScene::CrossFade);
 }
 
 void SlideGroupViewer::nextSlide()
