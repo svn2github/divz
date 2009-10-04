@@ -279,7 +279,7 @@ TextItem * MyGraphicsScene::newTextItem(QString text)
 	t->setItemId(ItemFactory::nextId());
 	t->setItemName(QString("TextBoxItem%1").arg(t->itemId()));
 	
-	AbstractContent * item = t->createDelegate(this);
+	AbstractContent * item = t->createDelegate(this,m_liveRoot);
 	addContent(item); //, QPoint((int)t->pos().x(),(int)t->pos().y()));
 	
 	return t;
@@ -297,7 +297,7 @@ AbstractVisualItem * MyGraphicsScene::newBoxItem()
 	t->setItemId(ItemFactory::nextId());
 	t->setItemName(QString("BoxItem%1").arg(t->itemId()));
 	
-	AbstractContent * item = t->createDelegate(this);
+	AbstractContent * item = t->createDelegate(this,m_liveRoot);
 	addContent(item); //, QPoint((int)t->pos().x(),(int)t->pos().y()));
 	
 	return t;
@@ -315,7 +315,7 @@ AbstractVisualItem * MyGraphicsScene::newVideoItem()
 	t->setItemId(ItemFactory::nextId());
 	t->setItemName(QString("VideoItem%1").arg(t->itemId()));
 	
-	AbstractContent * item = t->createDelegate(this);
+	AbstractContent * item = t->createDelegate(this,m_liveRoot);
 	addContent(item); //, QPoint((int)t->pos().x(),(int)t->pos().y()));
 	
 	return t;

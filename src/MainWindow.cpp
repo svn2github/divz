@@ -341,7 +341,7 @@ void MainWindow::setLiveGroup(SlideGroup *s)
 	//SlideGroup *s = m_docModel.groupFromIndex(idx);
         //qDebug() << "MainWindow::groupSelected(): groupSetLive group#:"<<s->groupNumber()<<", title:"<<s->groupTitle();
 	//openSlideEditor(s);
-	m_previewWidget->clear();
+	//m_previewWidget->clear();
 	m_liveView->setSlideGroup(s);
 	if(!m_liveView->isVisible())
 		m_liveView->show();
@@ -358,7 +358,7 @@ void MainWindow::editGroup(SlideGroup *g)
 {
 	statusBar()->showMessage(QString("Loading %1...").arg(g->groupTitle().isEmpty() ? QString("Group %1").arg(g->groupNumber()) : g->groupTitle()));
 	openSlideEditor(g);
-	m_previewWidget->clear();
+	//m_previewWidget->clear();
 	statusBar()->clearMessage();
 }
 

@@ -111,6 +111,9 @@ void SlideGroupViewer::clear()
 void SlideGroupViewer::setSlideGroup(SlideGroup *g, int startSlide)
 {
 	//qDebug() << "SlideGroupListModel::setSlideGroup: setting slide group:"<<g->groupNumber();
+	if(m_slideGroup == g)
+		return;
+
 	if(m_slideGroup && m_slideGroup != g)
 	{
 		//disconnect(m_slideGroup,0,this,0);
