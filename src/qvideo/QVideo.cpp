@@ -384,10 +384,10 @@ void QVideo::displayFrame()
 //         }
 
         m_last_frame_shown = m_frame_counter;
-	emit currentFrame(m_current_frame);
+	emit newPixmap(QPixmap::fromImage(*m_current_frame.frame));
 
-// 	delete m_current_frame.frame;
-// 	m_current_frame.frame = 0;
+ 	delete m_current_frame.frame;
+ 	m_current_frame.frame = 0;
 
 	//resume playing
         m_play_timer = startTimer(1);

@@ -98,7 +98,7 @@ public slots:
 
 signals:
 	void startDecode();
-	void currentFrame(QFFMpegVideoFrame frame);
+	void newPixmap(const QPixmap &);
 	void movieStateChanged(QMovie::MovieState state);
 
 protected:

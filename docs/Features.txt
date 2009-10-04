@@ -44,7 +44,7 @@ Revised Task list for Release 1.0, 10/10/09:
 			- Think about custom foldback generator - this is just a custom viewer control generator needed
 		- In-flight edits
 	- Visuals:
-		- Add Aspect Ratio setting
+		[DONE] - Add Aspect Ratio setting
 		[DONE] - Text Centering in a Text Box
 		- Undo/redo framework
 			- Must have this for sermons and announcment slides
@@ -55,10 +55,10 @@ Revised Task list for Release 1.0, 10/10/09:
 		- Image Item
 			- Should be easy
 			- If we have time, add crop handles
-		- Cross Fade on Changing Slide
-			- Important Point:
-				- Need to abstract video source/decoder to a "singleton" 
-				- Once source/decoder for that file per program
+		[ALMOST] - Cross Fade on Changing Slide
+			[DONE] - Important Point:
+				[DONE] - Need to abstract video source/decoder to a "singleton" 
+				[DONE] - Once source/decoder for that file per program
 			- When slide*Group* is set on scene, need to scan and initalize decoders for all videos, but STOP at first frame
 			- When cross fade starts, start playing
 			- Stop playing prev slide when cross fade ends

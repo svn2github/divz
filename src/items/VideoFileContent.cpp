@@ -20,6 +20,7 @@
 
 VideoFileContent::VideoFileContent(QGraphicsScene * scene, QGraphicsItem * parent)
     : AbstractContent(scene, parent, false)
+    , m_videoProvider(0)
 //     , m_text(0)
 //     , m_textRect(0, 0, 0, 0)
 //     , m_textMargin(4)
@@ -34,11 +35,11 @@ VideoFileContent::VideoFileContent(QGraphicsScene * scene, QGraphicsItem * paren
         //for(int i=0;i<m_cornerItems.size();i++)
         //	m_cornerItems.at(i)->setDefaultLeftOp(CornerItem::Scale);
 
-        m_video = new QVideo(this);
-        //connect(m_video, SIGNAL(movieStateChanged(QMovie::MovieState)),
-        //           this, SLOT(movieStateChanged(QMovie::MovieState)));
-        connect(m_video, SIGNAL(currentFrame(QFFMpegVideoFrame)),
-                     this, SLOT(setVideoFrame(QFFMpegVideoFrame)));
+//         m_video = new QVideo(this);
+//         //connect(m_video, SIGNAL(movieStateChanged(QMovie::MovieState)),
+//         //           this, SLOT(movieStateChanged(QMovie::MovieState)));
+//         connect(m_video, SIGNAL(currentFrame(QFFMpegVideoFrame)),
+//                      this, SLOT(setVideoFrame(QFFMpegVideoFrame)));
 
 	// add play/pause button
 	m_bSwap = new ButtonItem(ButtonItem::Control, Qt::blue, QIcon(":/data/action-pause.png"), this);
@@ -53,21 +54,23 @@ VideoFileContent::~VideoFileContent()
 {
 // 	delete m_shapeEditor;
 // 	delete m_text;
+	m_videoProvider->disconnectReceiver(this);
+	QVideoProvider::releaseProvider(m_videoProvider);
 }
 
 void VideoFileContent::slotTogglePlay()
 {
-	if(m_video->status() != QVideo::Running)
+	if(m_videoProvider->isPlaying())
 	{
 		m_bSwap->setToolTip(tr("Pause Video"));
 		m_bSwap->setIcon(QIcon(":/data/action-pause.png"));
-		m_video->play();
+		m_videoProvider->play();
 	}
 	else
 	{
 		m_bSwap->setToolTip(tr("Play Video"));
 		m_bSwap->setIcon(QIcon(":/data/action-play.png"));
-		m_video->pause();
+		m_videoProvider->pause();
 	}
 }
 
@@ -103,8 +106,7 @@ QWidget * VideoFileContent::createPropertyWidget()
 
 void VideoFileContent::syncFromModelItem(AbstractVisualItem *model)
 {
-        m_dontSyncToModel = true;
-	if(!modelItem())
+        if(!modelItem())
 		setModelItem(model);
 	
 	QFont font;
@@ -116,7 +118,9 @@ void VideoFileContent::syncFromModelItem(AbstractVisualItem *model)
 	
 	AbstractContent::syncFromModelItem(model);
 	
-	//qDebug() << "VideoFileContent::syncFromModel(): Got file: "<<model->fillVideoFile();
+	m_dontSyncToModel = true;
+	
+	qDebug() << "VideoFileContent::syncFromModel(): Got file: "<<model->fillVideoFile();
         setFilename(model->fillVideoFile());
 	
         m_dontSyncToModel = false;
@@ -124,18 +128,19 @@ void VideoFileContent::syncFromModelItem(AbstractVisualItem *model)
 
 AbstractVisualItem * VideoFileContent::syncToModelItem(AbstractVisualItem *model)
 {
-	setModelItemIsChanging(true);
 	
         VideoFileItem * boxModel = dynamic_cast<VideoFileItem*>(AbstractContent::syncToModelItem(model));
 	
 	if(!boxModel)
-	{
-		setModelItemIsChanging(false);
-                //qDebug("VideoFileContent::syncToModelItem: textModel is null, cannot sync\n");
 		return 0;
-	}
+	
+	setModelItemIsChanging(true);
+	
 	if(!filename().isEmpty())
+	{
+		qDebug() << "VideoFileContent::syncToModelItem(): Saving filename: "<<filename();
         	boxModel->setFillVideoFile(filename());
+        }
 	
 	setModelItemIsChanging(false);
 	
@@ -145,15 +150,33 @@ AbstractVisualItem * VideoFileContent::syncToModelItem(AbstractVisualItem *model
 
 void VideoFileContent::setFilename(const QString &name)
 {
-	if(!m_video->load(name))
+// 	if(!m_video->load(name))
+// 	{
+// 		qDebug() << "VideoFileContent::setFilename(): ERROR: Unable to load video"<<name;
+// 		return;
+// 	}
+	QVideoProvider * p = QVideoProvider::providerForFile(name);
+	
+	if(m_videoProvider && m_videoProvider == p)
 	{
-		qDebug() << "VideoFileContent::setFilename(): ERROR: Unable to load video"<<name;
 		return;
 	}
+	else
+	if(m_videoProvider)
+	{
+		m_videoProvider->disconnectReceiver(this);
+		QVideoProvider::releaseProvider(m_videoProvider);
+	}
+	
+	qDebug() << "VideoFileContent::setFilename: Loading"<<name;
+	
+	m_videoProvider = p;
+	m_videoProvider->connectReceiver(this, SLOT(setPixmap(const QPixmap &)));
+
 	//m_imageSize = QSize();
-	m_video->setAdvanceMode(QVideo::Manual);
-	m_video->setLooped(true);
-	m_video->play();
+// 	m_video->setAdvanceMode(QVideo::Manual);
+// 	m_video->setLooped(true);
+	//m_video->play();
 }
 
 QPixmap VideoFileContent::renderContent(const QSize & size, Qt::AspectRatioMode /*ratio*/) const
@@ -207,7 +230,7 @@ void VideoFileContent::paint(QPainter * painter, const QStyleOptionGraphicsItem 
                      painter->scale(xScale, yScale);
         }
 
-        painter->drawImage(0,0, m_image);
+        painter->drawPixmap(0,0, m_pixmap);
         
         painter->restore();
 	painter->save();
@@ -263,20 +286,20 @@ QRectF VideoFileContent::boundingRect() const
 	return AbstractContent::boundingRect().adjusted(-penWidth/2,-penWidth/2,penWidth,penWidth);
 }
 
-void VideoFileContent::setVideoFrame(QFFMpegVideoFrame frame)
+void VideoFileContent::setPixmap(const QPixmap & pixmap)
 {
-	m_image = *(frame.frame);
+	m_pixmap = pixmap;
 
-	if(m_imageSize != m_image.size())
+	if(m_imageSize != m_pixmap.size())
 	{
-		m_imageSize = m_image.size();
+		m_imageSize = m_pixmap.size();
 
 	        // Adjust scaling while maintaining aspect ratio
 		resizeContents(contentsRect(),true);
 		
 		if(sceneContextHint() != MyGraphicsScene::Live)
 		{
-			m_video->pause();
+			m_still = true;
                         //qDebug("VideoFileContent::setVideoFrame: Pausing video file because not in a live scene");
 		}
 	}

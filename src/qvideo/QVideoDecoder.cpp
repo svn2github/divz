@@ -411,17 +411,18 @@ void QVideoDecoder::decode()
 				
 					size_t num_bytes = m_av_rgb_frame->linesize[0] * m_video_codec_context->height;
 
-					if(m_frame == NULL)
-					{
-						m_frame = new QImage(m_video_codec_context->width, m_video_codec_context->height, QImage::Format_RGB32);
-					}
+// 					if(m_frame == NULL)
+// 					{
+// 						m_frame = new QImage(m_video_codec_context->width, m_video_codec_context->height, QImage::Format_RGB32);
+// 					}
 
-					memcpy(m_frame->bits(), m_av_rgb_frame->data[0], num_bytes);
+					QImage * frame = new QImage(m_video_codec_context->width, m_video_codec_context->height, QImage::Format_RGB32);
+					memcpy(frame->bits(), m_av_rgb_frame->data[0], num_bytes);
 
 					av_free_packet(packet);
 
 					QFFMpegVideoFrame video_frame;
-					video_frame.frame = m_frame;
+					video_frame.frame = frame;
 					video_frame.pts = pts;
 					video_frame.previous_pts = m_previous_pts;
 

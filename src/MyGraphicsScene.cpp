@@ -50,11 +50,13 @@
 #define COLORPICKER_W 200
 #define COLORPICKER_H 150
 
+#include "MainWindow.h"
+
 class RootObject : public QGraphicsItem
 {
 public:
 	RootObject(QGraphicsScene*x):QGraphicsItem(0,x){}
-	QRectF boundingRect() const { return scene()->sceneRect(); }
+	QRectF boundingRect() const { return QRectF(); } //MainWindow::mw()->standardSceneRect(); }
 	void paint(QPainter*, const QStyleOptionGraphicsItem*, QWidget*) {}
 };
 
@@ -122,6 +124,8 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans)
 	
 	m_currentTransition = trans;
 	
+	qDebug() << "MyGraphicsScene::setSlide(): Setting slide # "<<slide->slideNumber();
+	
 	//trans = None;
 	if(trans == None)
 	{
@@ -147,9 +151,6 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans)
 			
 		qDebug() << "setSlide: Done reparenting.";
 
-		m_fadeStepCounter = 0;
-		m_fadeSteps = 30;
-		
 		m_fadeRoot->setZValue(999999);
 		
 		
@@ -157,8 +158,10 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans)
 		m_fadeRoot->setOpacity(1);
 		m_liveRoot->setOpacity(0);
 		
-		int ms = 1000  / m_fadeSteps;
-		m_fadeTimer->start(ms);
+		m_fadeStepCounter = 0;
+		m_fadeSteps = 30/4;
+		int ms = 500  / m_fadeSteps;
+		m_fadeTimer->start(ms); //ms);
 		qDebug() << "setSlide: Starting fade timer for "<<ms<<"ms";
 		
 	}
@@ -172,6 +175,7 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans)
 		
 		if (AbstractVisualItem * visualItem = dynamic_cast<AbstractVisualItem *>(item))
 		{
+			qDebug() << "MyGraphicsScene::setSlide(): Creating new content item from:"<<visualItem->itemName();
 			AbstractContent * visual = visualItem->createDelegate(this,m_liveRoot);
 			addContent(visual, true);
 			//addItem(visual);
@@ -209,6 +213,9 @@ void MyGraphicsScene::endTransition()
 			z->dispose(false);
 		}
 	}
+	
+	update();
+	
 }
 
 void MyGraphicsScene::slotTransitionStep()

@@ -10,6 +10,9 @@
 #define ITEM_PROPSET(className,setterName,typeName,memberName) void className::set##setterName(typeName value){m_##memberName = value;setChanged(#memberName,value);}
 #define ITEM_PROPDEF(setterName,typeName,memberName) void set##setterName(typeName value); typeName memberName() const { return m_##memberName; }
 
+#define DMARK __FILE__":"#__LINE__
+#include <QDebug>
+
 class AbstractItem : public QObject
 {
 	Q_OBJECT

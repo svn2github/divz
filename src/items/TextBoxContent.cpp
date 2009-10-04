@@ -189,7 +189,8 @@ QWidget * TextBoxContent::createPropertyWidget()
 void TextBoxContent::syncFromModelItem(AbstractVisualItem *model)
 {
         m_dontSyncToModel = true;
-	setModelItem(model);
+	if(!modelItem())
+		setModelItem(model);
 	
 	static int x = 0;
 	x++;

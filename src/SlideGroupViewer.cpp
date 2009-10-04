@@ -7,6 +7,8 @@
 # include <QtOpenGL/QGLWidget>
 #endif
 
+
+
 #include "MainWindow.h"
 #include "AppSettings.h"
 
@@ -126,6 +128,7 @@ void SlideGroupViewer::setSlideGroup(SlideGroup *g, int startSlide)
 	if(startSlide)
 	{
 		Slide *s = m_sortedSlides.at(startSlide);
+		qDebug() << "SlideGroupViewer::setSlideGroup(): Setting slide group #"<<g->groupNumber()<<", starting at slide:"<<startSlide;
 		m_scene->setSlide(s,MyGraphicsScene::CrossFade);
 		//m_slideListView->setCurrentIndex(m_slideModel->indexForSlide(curSlide));
 	}
@@ -134,6 +137,7 @@ void SlideGroupViewer::setSlideGroup(SlideGroup *g, int startSlide)
 		QList<Slide*> slist = g->slideList();
 		if(slist.size() > 0)
 		{
+			qDebug() << "SlideGroupViewer::setSlideGroup(): Setting slide group #"<<g->groupNumber()<<", defaulting to slide 0";
 			Slide *s = m_sortedSlides.at(0);
 			m_scene->setSlide(s,MyGraphicsScene::CrossFade);
 			//m_slideListView->setCurrentIndex(m_slideModel->indexForRow(0));
@@ -148,6 +152,7 @@ void SlideGroupViewer::setSlideGroup(SlideGroup *g, int startSlide)
 void SlideGroupViewer::setSlide(int x)
 {
 	m_slideNum = x;
+	qDebug() << "SlideGroupViewer::setSlide(): Setting slide to idx"<<x;
 	setSlide(m_sortedSlides.at(x));
 
 }

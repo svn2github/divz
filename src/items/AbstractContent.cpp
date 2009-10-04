@@ -179,9 +179,6 @@ void AbstractContent::resizeContents(const QRect & rect, bool keepRatio)
 	}
 	
 	
-	syncToModelItem(modelItem());
-	
-	
 	if (m_frame)
 		m_frameRect = m_frame->frameRect(m_contentsRect);
 	else
@@ -397,13 +394,15 @@ void AbstractContent::setModelItemIsChanging(bool flag)
 
 void AbstractContent::modelItemChanged(QString fieldName, QVariant value)
 {
+	qDebug() << "AbstractContent::modelItemChanged(): fieldName:"<<fieldName;
 	if(m_modelItem && !m_modelItemIsChanging)
 	{
+		qDebug() << "AbstractContent::modelItemChanged(): syncing from model";
 		syncFromModelItem(m_modelItem);
 	}
 	else
 	{
-		//qDebug() << "AbstractContent::modelItemChanged(): item:"<<(modelItem()?modelItem()->itemName() : "NULL")<<" Ignored signal because m_modelItemIsChanging:"<<m_modelItemIsChanging<<", or m_modelItem:"<<(m_modelItem?"<set>":"<not set>");
+		qDebug() << "AbstractContent::modelItemChanged(): item:"<<(modelItem()?modelItem()->itemName() : "NULL")<<" Ignored signal because m_modelItemIsChanging:"<<m_modelItemIsChanging<<", or m_modelItem:"<<(m_modelItem?"<set>":"<not set>");
 	}
 }
 
@@ -413,6 +412,8 @@ void AbstractContent::setModelItem(AbstractVisualItem *model)
 	
 	if(m_modelItem != model)
 	{
+		qDebug() << "AbstractContent::setModelItem(): Received new model item";
+	
 		if(m_modelItem != NULL)
 		{
 			disconnect(m_modelItem, 0, this, 0);
@@ -433,7 +434,7 @@ void AbstractContent::syncFromModelItem(AbstractVisualItem *model)
 	if(!modelItem())
 		setModelItem(model);
 	
-	//qDebug() << "AbstractContent::syncFromModelItem(): item:"<<(modelItem()?modelItem()->itemName() : "NULL")<<": doing sync";
+	qDebug() << "AbstractContent::syncFromModelItem(): item:"<<(modelItem()?modelItem()->itemName() : "NULL")<<": doing sync";
 	
 	QRectF r = model->contentsRect();
 	resizeContents(QRect((int)r.left(),(int)r.top(),(int)r.width(),(int)r.height()));
@@ -657,6 +658,17 @@ void AbstractContent::mousePressEvent(QGraphicsSceneMouseEvent * event)
 	}
 }
 
+void AbstractContent::mouseReleaseEvent(QGraphicsSceneMouseEvent * event)
+{
+	QGraphicsItem::mouseReleaseEvent(event);
+	syncToModelItem(modelItem());
+}
+
+
+	
+	
+	
+
 void AbstractContent::keyPressEvent(QKeyEvent * event)
 {
 	event->accept();
@@ -698,7 +710,7 @@ QVariant AbstractContent::itemChange(GraphicsItemChange change, const QVariant &
 			if(m_mirrorItem)
 				m_mirrorItem->sourceMoved();
 			
-			syncToModelItem(modelItem());
+			//syncToModelItem(modelItem());
 			break;
 	
 		// notify about graphics changes
@@ -712,18 +724,18 @@ QVariant AbstractContent::itemChange(GraphicsItemChange change, const QVariant &
 #if QT_VERSION >= 0x040500
 		case ItemOpacityHasChanged:
 #endif
-			syncToModelItem(modelItem());
+			//syncToModelItem(modelItem());
 			GFX_CHANGED();
 			break;
 	
 		case ItemZValueHasChanged:
-			syncToModelItem(modelItem());
+			//syncToModelItem(modelItem());
 			if(m_mirrorItem)
 				m_mirrorItem->setZValue(zValue());
 			break;
 	
 		case ItemVisibleHasChanged:
-			syncToModelItem(modelItem());
+			//syncToModelItem(modelItem());
 			if(m_mirrorItem)
 				m_mirrorItem->setVisible(isVisible());
 			break;

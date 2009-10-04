@@ -107,6 +107,7 @@ class AbstractContent : public AbstractDisposeable
 		void dragMoveEvent(QGraphicsSceneDragDropEvent * event);
 		void dropEvent(QGraphicsSceneDragDropEvent * event);
 		void mousePressEvent(QGraphicsSceneMouseEvent * event);
+		void mouseReleaseEvent(QGraphicsSceneMouseEvent * event);
 		void keyPressEvent(QKeyEvent * event);
 		QVariant itemChange(GraphicsItemChange change, const QVariant & value);
 		
