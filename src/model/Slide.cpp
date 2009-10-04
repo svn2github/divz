@@ -4,6 +4,7 @@
 #include "TextBoxItem.h"
 #include "BoxItem.h"
 #include "VideoFileItem.h"
+#include "BackgroundItem.h"
 #include "ItemFactory.h"
 
 #include <assert.h>
@@ -20,6 +21,18 @@ Slide::~Slide()
 
 void Slide::setSlideId(int x)     { m_slideId = x; }
 void Slide::setSlideNumber(int x) { m_slideNumber = x; }
+
+AbstractItem * Slide::background()
+{
+	foreach(AbstractItem *x, m_items)
+		if(x->itemClass() == BackgroundItem::ItemClass)
+			return x;
+	AbstractItem * bg = new BackgroundItem();
+	bg->setItemId(ItemFactory::nextId());
+	bg->setItemName(QString("BackgroundItem%1").arg(bg->itemId()));
+	addItem(bg);
+	return bg;
+}
 
 
 QList<AbstractItem *> Slide::itemList() { return m_items; }
@@ -73,6 +86,9 @@ bool Slide::fromXml(QDomElement & pe)
 		else 
 		if (element.tagName() == "videofile")
 			content = new VideoFileItem();
+		else 
+		if (element.tagName() == "background")
+			content = new BackgroundItem();
 // 		else if (element.tagName() == "webcam")
 // 			content = desk->createWebcam(element.attribute("input").toInt(), QPoint());
 		if (!content) 

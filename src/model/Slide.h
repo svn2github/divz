@@ -21,6 +21,8 @@ public:
 	void addItem(AbstractItem *);
 	QList<AbstractItem *> itemList();
 	
+	AbstractItem * background();
+	
 	void removeItem(AbstractItem *);
 	
 // 	AbstractItem * createPicture(QPoint);

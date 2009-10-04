@@ -23,7 +23,8 @@ HEADERS +=  AbstractConfig.h \
     BoxContent.h \
     VideoFileContent.h \
     GenericItemConfig.h \
-    VideoFileConfig.h
+    VideoFileConfig.h \
+    BackgroundContent.h
  
     
 SOURCES += \
@@ -44,4 +45,5 @@ SOURCES += \
     BoxContent.cpp \
     VideoFileContent.cpp \
     GenericItemConfig.cpp \
-    VideoFileConfig.cpp
+    VideoFileConfig.cpp \
+    BackgroundContent.cpp

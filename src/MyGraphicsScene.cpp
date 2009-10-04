@@ -22,6 +22,7 @@
 #include "model/TextBoxItem.h"
 #include "model/BoxItem.h"
 #include "model/VideoFileItem.h"
+#include "model/BackgroundItem.h"
 
 
 
@@ -156,7 +157,7 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans)
 		
 		// start with faderoot fully visible, and live root invisible, then cross fade between the two
 		m_fadeRoot->setOpacity(1);
-		m_liveRoot->setOpacity(0);
+		//m_liveRoot->setOpacity(0);
 		
 		m_fadeStepCounter = 0;
 		m_fadeSteps = 30/4;
@@ -168,6 +169,9 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans)
 
 	m_slide = slide;
 	
+	// force creation of bg if doesnt exist
+	m_slide->background();
+	
 	QList<AbstractItem *> items = m_slide->itemList();
 	foreach(AbstractItem *item, items)
 	{
@@ -178,6 +182,9 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans)
 			qDebug() << "MyGraphicsScene::setSlide(): Creating new content item from:"<<visualItem->itemName();
 			AbstractContent * visual = visualItem->createDelegate(this,m_liveRoot);
 			addContent(visual, true);
+			
+			if(visualItem->itemClass() == BackgroundItem::ItemClass)
+				m_bg = dynamic_cast<BackgroundItem*>(visualItem);
 			//addItem(visual);
 			//visual->setParentItem(m_liveRoot);
 			//visual->setAnimationState(AbstractContent::AnimStop);
@@ -224,7 +231,7 @@ void MyGraphicsScene::slotTransitionStep()
 	{
 		double inc = (double)1 / m_fadeSteps;
 		m_fadeRoot->setOpacity(m_fadeRoot->opacity() - inc);
-		m_liveRoot->setOpacity(m_liveRoot->opacity() + inc);
+		//m_liveRoot->setOpacity(m_liveRoot->opacity() + inc);
 		qDebug()<<"slotTransitionStep: step"<<m_fadeStepCounter<<"/"<<m_fadeSteps<<", inc:"<<inc<<", fade:"<<m_fadeRoot->opacity()<<", live:"<<m_liveRoot->opacity();
 	}
 	else
@@ -458,6 +465,8 @@ void MyGraphicsScene::slotStackContent(int op)
 	int z = 1;
 	foreach (AbstractContent * content, m_content)
 		content->setZValue(z++);
+	
+	m_bg->setZValue(-999);
 }
 
 static QList<AbstractContent *> content(const QList<QGraphicsItem *> & items) 

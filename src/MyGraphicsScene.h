@@ -17,6 +17,7 @@ class AbstractVisualItem;
 class GenericItemConfig;
 class Slide;
 class TextItem;
+class BackgroundItem;
 
 class MyGraphicsScene : public QGraphicsScene
 {
@@ -79,6 +80,8 @@ class MyGraphicsScene : public QGraphicsScene
 		
 		QGraphicsItem * m_fadeRoot;
 		QGraphicsItem * m_liveRoot;
+		
+		BackgroundItem * m_bg;
 			
 	private slots:
 		friend class AbstractConfig; // HACK here, only to call 1 method

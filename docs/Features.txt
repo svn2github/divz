@@ -65,13 +65,15 @@ Revised Task list for Release 1.0, 10/10/09:
 		[DONE] - Shadows (Text):
 			- Can settle for simple block shadow
 			- Gausian blur if we have time 
-		- Backgrounds:
-			- We could cheat and just generate a foreground item positioned correctly
-			- Need support for a slide background item, for use with announcments/sermons
-			- Think about how fotowall did it
+		[STARTED] - Backgrounds:
+			- Add background item type & Position automatically, Disable movement
+			- Still cant set item color/props with config box
 		- SVG Item if we have time
 		[STARTED] - Gradients - can settle for making gradients in gimp and import as photo, but need to eventually have support direclty in dviz
 	- Bugs:
+		Centered TextBox items appear too far to the left in icon previews (list models, etc)
+		Setting config on background item causes it to "go away" until program reload
+		
 		[FIXED] -new slide button stopped working
 		[WORKSFORME] -slide editor crash when add box then delete box
 		[FIXED] -slide listbox cant scroll down below the fold

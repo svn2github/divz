@@ -13,7 +13,8 @@ HEADERS +=  \
         SlideGroup.h \
         Document.h \
         Output.h \
-        SlideGroupFactory.h
+        SlideGroupFactory.h \
+        BackgroundItem.h
 
     
 SOURCES += \
@@ -28,4 +29,5 @@ SOURCES += \
         SlideGroup.cpp \
         Document.cpp \
         Output.cpp \
-        SlideGroupFactory.cpp
+        SlideGroupFactory.cpp \
+        BackgroundItem.cpp
