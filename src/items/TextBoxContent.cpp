@@ -19,7 +19,7 @@
 #include <QTimer>
 #include "items/CornerItem.h"
 
-#define DEBUG_LAYOUT 0
+#define DEBUG_LAYOUT 1
 
 static QString trimLeft(QString str)
 {
@@ -455,17 +455,17 @@ void TextBoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * 
 	//TODO should we clip to the rect or FORCE resize the rect? probably clip...
 	painter->setClipRect(contentsRect());
 	painter->translate(contentsRect().topLeft() + QPoint(p.width(),p.width()));
-	// draw shadow
-	if(modelItem()->shadowEnabled())
-	{
-		double x = modelItem()->shadowOffsetX();
-		double y = modelItem()->shadowOffsetY();
-		painter->translate(x,y);
-		painter->setPen(Qt::NoPen);	
-		painter->setBrush(modelItem()->shadowBrush());
-		painter->drawPath(m_textPath);
-		painter->translate(-x,-y);
-	}
+// 	// draw shadow
+// 	if(modelItem()->shadowEnabled())
+// 	{
+// 		double x = modelItem()->shadowOffsetX();
+// 		double y = modelItem()->shadowOffsetY();
+// 		painter->translate(x,y);
+// 		painter->setPen(Qt::NoPen);	
+// 		painter->setBrush(modelItem()->shadowBrush());
+// 		painter->drawPath(m_textPath);
+// 		painter->translate(-x,-y);
+// 	}
 	// draw text
 	painter->setPen(p);
 	painter->setBrush(modelItem()->fillBrush());
@@ -795,10 +795,13 @@ void TextBoxContent::applyTextXAlign(Qt::Alignment x)
 	foreach(TextLineSpec * ts, m_currentLine)
 	{
 		
+		w = ts->rect.width();
+		ts->rect.setLeft(cursor);
+		
 		if(DEBUG_LAYOUT)
 			qDebug() << "applyTextAlign(): moved"<<ts->text<<" to X"<<cursor<<", ts->rect:"<<ts->rect;
-		w = ts->rect.width();
-		ts->rect.setX(cursor);
+		
+		//ts->rect.setX(cursor);
 //		qDebug() << "applyTextAlign(): DEBUG MOVE: ts->rect:"<<ts->rect;
 		cursor += w; //ts->rect.width();
 	}

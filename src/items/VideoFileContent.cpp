@@ -17,6 +17,7 @@
 #include <QAbstractTextDocumentLayout>
 #include <QDebug>
 
+#define DEBUG_VIDEOFILECONTENT 0
 
 VideoFileContent::VideoFileContent(QGraphicsScene * scene, QGraphicsItem * parent)
     : AbstractContent(scene, parent, false)
@@ -120,7 +121,8 @@ void VideoFileContent::syncFromModelItem(AbstractVisualItem *model)
 	
 	m_dontSyncToModel = true;
 	
-	qDebug() << "VideoFileContent::syncFromModel(): Got file: "<<model->fillVideoFile();
+	if(DEBUG_VIDEOFILECONTENT)
+		qDebug() << "VideoFileContent::syncFromModel(): Got file: "<<model->fillVideoFile();
         setFilename(model->fillVideoFile());
 	
         m_dontSyncToModel = false;
@@ -138,7 +140,8 @@ AbstractVisualItem * VideoFileContent::syncToModelItem(AbstractVisualItem *model
 	
 	if(!filename().isEmpty())
 	{
-		qDebug() << "VideoFileContent::syncToModelItem(): Saving filename: "<<filename();
+		if(DEBUG_VIDEOFILECONTENT)
+			qDebug() << "VideoFileContent::syncToModelItem(): Saving filename: "<<filename();
         	boxModel->setFillVideoFile(filename());
         }
 	
@@ -168,7 +171,8 @@ void VideoFileContent::setFilename(const QString &name)
 		QVideoProvider::releaseProvider(m_videoProvider);
 	}
 	
-	qDebug() << "VideoFileContent::setFilename: Loading"<<name;
+	if(DEBUG_VIDEOFILECONTENT)
+		qDebug() << "VideoFileContent::setFilename: Loading"<<name;
 	
 	m_videoProvider = p;
 	m_videoProvider->connectReceiver(this, SLOT(setPixmap(const QPixmap &)));

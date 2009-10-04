@@ -381,6 +381,22 @@ void SlideEditorWindow::setupSlideGroupDockWidget()
 	//viewMenu->addAction(dock->toggleViewAction());
 }
 
+class MyLine : public QGraphicsLineItem
+{
+public:
+	MyLine ( qreal x1, qreal y1, qreal x2, qreal y2, QGraphicsItem * parent = 0 ) : 
+		QGraphicsLineItem (x1,y1,x2,y2,parent) {}
+	
+	void paint(QPainter*p, const QStyleOptionGraphicsItem*, QWidget*)
+	{
+		p->save();
+		p->setCompositionMode(QPainter::CompositionMode_Difference);
+		p->setPen(pen());
+		p->drawLine(line());
+		p->restore();
+	}	
+};
+
 void SlideEditorWindow::addVpLineX(qreal x, qreal y1, qreal y2, bool in)
 {
 	static QPen pw(Qt::white, 1.0);
@@ -390,8 +406,8 @@ void SlideEditorWindow::addVpLineX(qreal x, qreal y1, qreal y2, bool in)
 //	qreal z2 = in ? 0:2;
 
 	QGraphicsLineItem * g;
-	g = new QGraphicsLineItem(x,y1-z1,x,y2-z1);
-	g->setPen(pb);
+	g = new MyLine(x,y1-z1,x,y2-z1);
+	g->setPen(pw);
 	g->setZValue(9999);
 	m_scene->addItem(g);
 	m_viewportLines << g;
@@ -413,8 +429,8 @@ void SlideEditorWindow::addVpLineY(qreal y, qreal x1, qreal x2, bool in)
 	//qreal z2 = in ? 0:2;
 
 	QGraphicsLineItem * g;
-	g = new QGraphicsLineItem(x1-z1,y,x2-z1,y);
-	g->setPen(pb);
+	g = new MyLine(x1-z1,y,x2-z1,y);
+	g->setPen(pw);
 	g->setZValue(9999);
 	m_scene->addItem(g);
 	m_viewportLines << g;

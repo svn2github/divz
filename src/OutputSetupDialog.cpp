@@ -38,6 +38,7 @@ OutputSetupDialog::OutputSetupDialog(QWidget *parent) :
 	connect(m_ui->btnNewOutput, SIGNAL(clicked()), this, SLOT(slotNew()));
 	connect(m_ui->btnDelOutput, SIGNAL(clicked()), this, SLOT(slotDel()));
 	
+	m_ui->screenListView->setEnabled(false);
 	m_ui->btnDelOutput->setEnabled(false);
 	m_ui->label_2->setText("");
 }
@@ -205,6 +206,8 @@ void OutputSetupDialog::setOutput(Output *output)
 	
 	m_ui->outputName->setEnabled(output->isSystem() ? false:true);
 	m_ui->label_2->setText( m_output->isSystem() ? "This is a system output, you cannot change the name." : "");
+	
+	m_ui->screenListView->setEnabled(true);
 	
 	// flush any changes the previosly-selected output back into the list view
 	//setupOutputList();

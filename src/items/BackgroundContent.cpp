@@ -84,12 +84,18 @@ void BackgroundContent::syncFromModelItem(AbstractVisualItem *model)
 // 	setFont(font);
 	
 	AbstractContent::syncFromModelItem(model);
-	
+	m_dontSyncToModel = true;
 	
 	setPos(0,0);
 	if(scene())
-		resizeContents(scene()->sceneRect().toRect());
-	setZValue(-99999);
+	{
+		QRect r = scene()->sceneRect().toRect();
+		//qDebug() << "BackgroundContent::syncFromModelItem(): Setting rect:"<<r;
+		resizeContents(r);
+	}
+	setZValue(-9999);
+	setVisible(true);
+	update();
 	
         m_dontSyncToModel = false;
 }

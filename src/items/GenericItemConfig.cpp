@@ -42,14 +42,14 @@ GenericItemConfig::GenericItemConfig(AbstractContent * content, QWidget *parent)
 	
 	m_commonUi->mirrorOffset->setValue(m_content->modelItem()->mirrorOffset());
 	
-	m_origOpacity = m_content->opacity();
+	m_origOpacity = m_content->modelItem()->opacity();
 	m_commonUi->opacityBox->setValue((int)( m_origOpacity * 100 ));
 	
-	m_origPos = m_content->pos();
+	m_origPos = m_content->modelItem()->pos();
 	m_commonUi->locationX->setValue(m_origPos.x());
 	m_commonUi->locationY->setValue(m_origPos.y());
 	
-	m_origSize = m_content->contentsRect().size();
+	m_origSize = m_content->modelItem()->contentsRect().size();
 	m_commonUi->contentWidth->setValue((double)m_origSize.width());
 	m_commonUi->contentHeight->setValue((double)m_origSize.height());
 	
@@ -258,19 +258,19 @@ void GenericItemConfig::slotMirrorOn(bool checked)
 
 void GenericItemConfig::slotOpacityChanged(int o)
 {
-	m_content->setOpacity((double)o / 100);
+	m_content->modelItem()->setOpacity((double)o / 100);
 }
 
 void GenericItemConfig::slotResetOpacity()
 {
-	m_content->setOpacity(m_origOpacity);
+	m_content->modelItem()->setOpacity(m_origOpacity);
 	m_commonUi->opacityBox->setValue((int)(m_origOpacity * 100));
 	m_commonUi->opacityBox->selectAll();
 }
 
 void GenericItemConfig::slotResetLocation()
 {
-	m_content->setPos(m_origPos);
+	m_content->modelItem()->setPos(m_origPos);
 	m_commonUi->locationX->setValue(m_origPos.x());
 	m_commonUi->locationY->setValue(m_origPos.y());
 	m_commonUi->locationX->selectAll();
@@ -279,9 +279,9 @@ void GenericItemConfig::slotResetLocation()
 
 void GenericItemConfig::slotResetSize()
 {
-	QRect cr = m_content->contentsRect();
+	QRectF cr = m_content->modelItem()->contentsRect();
 	cr.setSize(m_origSize);
-	m_content->resizeContents(cr);
+	m_content->modelItem()->setContentsRect(cr);
 	
 	m_commonUi->contentWidth->setValue((double)m_origSize.width());
 	m_commonUi->contentHeight->setValue((double)m_origSize.height());
@@ -297,9 +297,9 @@ void GenericItemConfig::slotSizeChanged(double)
 	s.setWidth((int)m_commonUi->contentWidth->value());
 	s.setHeight((int)m_commonUi->contentHeight->value());
 	
-	QRect cr = m_content->contentsRect();
+	QRectF cr = m_content->modelItem()->contentsRect();
 	cr.setSize(m_origSize);
-	m_content->resizeContents(cr);
+	m_content->modelItem()->setContentsRect(cr);
 }
 
 
@@ -308,7 +308,7 @@ void GenericItemConfig::slotLocationChanged(double)
 	QPointF p;
 	p.setX(m_commonUi->locationX->value());
 	p.setY(m_commonUi->locationY->value());
-	m_content->setPos(p);
+	m_content->modelItem()->setPos(p);
 	
 }
 

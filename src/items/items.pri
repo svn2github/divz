@@ -24,7 +24,8 @@ HEADERS +=  AbstractConfig.h \
     VideoFileContent.h \
     GenericItemConfig.h \
     VideoFileConfig.h \
-    BackgroundContent.h
+    BackgroundContent.h \
+    BackgroundConfig.h
  
     
 SOURCES += \
@@ -46,4 +47,5 @@ SOURCES += \
     VideoFileContent.cpp \
     GenericItemConfig.cpp \
     VideoFileConfig.cpp \
-    BackgroundContent.cpp
+    BackgroundContent.cpp \
+    BackgroundConfig.cpp

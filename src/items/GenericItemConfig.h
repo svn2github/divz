@@ -68,7 +68,7 @@ class GenericItemConfig : public QDialog
 		
 		double 			m_origOpacity;
 		QPointF			m_origPos;
-		QSize			m_origSize;
+		QSizeF			m_origSize;
 	
 	private Q_SLOTS:
 // 		void on_newFrame_clicked();

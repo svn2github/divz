@@ -1,6 +1,8 @@
 #include "QVideoProvider.h"
 #include <QFileInfo>
 #include <QDebug>
+
+#define DEBUG_QVIDEOPROVIDER 0
 	
 	
 QMap<QString,QVideoProvider*> QVideoProvider::m_fileProviderMap;
@@ -17,12 +19,14 @@ QVideoProvider * QVideoProvider::providerForFile(const QString & file)
 		//qDebug() << "QVideoProvider::providerForFile: Found provider for file:"<<file<<", loading...";
 		QVideoProvider *v = m_fileProviderMap[can];
 		v->m_refCount++;
-		qDebug() << "QVideoProvider::providerForFile: + Found existing provider for file:"<<file<<", refCount:"<<v->m_refCount;
+		if(DEBUG_QVIDEOPROVIDER)
+			qDebug() << "QVideoProvider::providerForFile: + Found existing provider for file:"<<file<<", refCount:"<<v->m_refCount;
 		return v;
 	}
 	else
 	{
-		qDebug() << "QVideoProvider::providerForFile: - Creating new provider for file:"<<file;
+		if(DEBUG_QVIDEOPROVIDER)
+			qDebug() << "QVideoProvider::providerForFile: - Creating new provider for file:"<<file;
 		QVideoProvider *v = new QVideoProvider(can);
 		m_fileProviderMap[can] = v;
 		v->m_refCount=1;
@@ -36,10 +40,12 @@ void QVideoProvider::releaseProvider(QVideoProvider *v)
 	if(!v)
 		return;
 	v->m_refCount --;
-	qDebug() << "QVideoProvider::releaseProvider: Released provider for file:"<<v->m_canonicalFilePath<<", refCount:"<<v->m_refCount;
+	if(DEBUG_QVIDEOPROVIDER)
+		qDebug() << "QVideoProvider::releaseProvider: Released provider for file:"<<v->m_canonicalFilePath<<", refCount:"<<v->m_refCount;
 	if(v->m_refCount < 0)
 	{
-		qDebug() << "QVideoProvider::releaseProvider: DELETING PROVIDER FOR:"<<v->m_canonicalFilePath<<", refCount:"<<v->m_refCount;
+		if(DEBUG_QVIDEOPROVIDER)
+			qDebug() << "QVideoProvider::releaseProvider: DELETING PROVIDER FOR:"<<v->m_canonicalFilePath<<", refCount:"<<v->m_refCount;
 		
 		m_fileProviderMap.remove(v->m_canonicalFilePath);
 		delete v;
@@ -57,7 +63,8 @@ QVideoProvider::QVideoProvider(const QString &f) :
 {
 	if(!m_video->load(f))
 	{
-		qDebug() << "QVideoProvider: ERROR: Unable to load video"<<f;
+		if(DEBUG_QVIDEOPROVIDER)
+			qDebug() << "QVideoProvider: ERROR: Unable to load video"<<f;
 		m_isValid = false;
 	}
 	if(m_isValid)

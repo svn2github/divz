@@ -18,6 +18,8 @@
 #include <assert.h>
 #include <QDebug>
 
+#define DEBUG_ABSTRACTCONTENT 0
+
 AbstractContent::AbstractContent(QGraphicsScene * scene, QGraphicsItem * parent, bool noRescale)
     : AbstractDisposeable(parent, true)
     , m_contentsRect(-100, -75, 200, 150)
@@ -394,15 +396,18 @@ void AbstractContent::setModelItemIsChanging(bool flag)
 
 void AbstractContent::modelItemChanged(QString fieldName, QVariant value)
 {
-	qDebug() << "AbstractContent::modelItemChanged(): fieldName:"<<fieldName;
+	if(DEBUG_ABSTRACTCONTENT)
+		qDebug() << "AbstractContent::modelItemChanged(): fieldName:"<<fieldName;
 	if(m_modelItem && !m_modelItemIsChanging)
 	{
-		qDebug() << "AbstractContent::modelItemChanged(): syncing from model";
+		if(DEBUG_ABSTRACTCONTENT)
+			qDebug() << "AbstractContent::modelItemChanged(): syncing from model";
 		syncFromModelItem(m_modelItem);
 	}
 	else
 	{
-		qDebug() << "AbstractContent::modelItemChanged(): item:"<<(modelItem()?modelItem()->itemName() : "NULL")<<" Ignored signal because m_modelItemIsChanging:"<<m_modelItemIsChanging<<", or m_modelItem:"<<(m_modelItem?"<set>":"<not set>");
+		if(DEBUG_ABSTRACTCONTENT)
+			qDebug() << "AbstractContent::modelItemChanged(): item:"<<(modelItem()?modelItem()->itemName() : "NULL")<<" Ignored signal because m_modelItemIsChanging:"<<m_modelItemIsChanging<<", or m_modelItem:"<<(m_modelItem?"<set>":"<not set>");
 	}
 }
 
@@ -412,7 +417,8 @@ void AbstractContent::setModelItem(AbstractVisualItem *model)
 	
 	if(m_modelItem != model)
 	{
-		qDebug() << "AbstractContent::setModelItem(): Received new model item";
+		if(DEBUG_ABSTRACTCONTENT)
+			qDebug() << "AbstractContent::setModelItem(): Received new model item";
 	
 		if(m_modelItem != NULL)
 		{
@@ -434,13 +440,16 @@ void AbstractContent::syncFromModelItem(AbstractVisualItem *model)
 	if(!modelItem())
 		setModelItem(model);
 	
-	qDebug() << "AbstractContent::syncFromModelItem(): item:"<<(modelItem()?modelItem()->itemName() : "NULL")<<": doing sync";
+	if(DEBUG_ABSTRACTCONTENT)
+		qDebug() << "AbstractContent::syncFromModelItem(): item:"<<(modelItem()?modelItem()->itemName() : "NULL")<<": doing sync";
 	
 	QRectF r = model->contentsRect();
-	resizeContents(QRect((int)r.left(),(int)r.top(),(int)r.width(),(int)r.height()));
+	//qDebug() << "AbstractContent::syncFromModelItem(): Setting rect:"<<r;
+	resizeContents(r.toRect());
 	
 	// Load position coordinates
 	setPos(model->pos());
+	//qDebug() << "AbstractContent::syncFromModelItem(): Setting pos:"<<model->pos();
 	
 	setZValue(model->zValue());
 	
@@ -707,6 +716,8 @@ QVariant AbstractContent::itemChange(GraphicsItemChange change, const QVariant &
 	{
 		// notify about setPos
 		case ItemPositionHasChanged:
+			if(DEBUG_ABSTRACTCONTENT)
+				qDebug() << "AbstractContent::itemChange: " << modelItem()->itemName() << " ItemPositionHasChanged:"<<value;
 			if(m_mirrorItem)
 				m_mirrorItem->sourceMoved();
 			
@@ -715,6 +726,8 @@ QVariant AbstractContent::itemChange(GraphicsItemChange change, const QVariant &
 	
 		// notify about graphics changes
 		case ItemSelectedHasChanged:
+			if(DEBUG_ABSTRACTCONTENT)
+				qDebug() << "AbstractContent::itemChange: " << modelItem()->itemName() << " ItemSelectedHasChanged:"<<value;
 			setControlsVisible(value.toBool() ? true : false);
 	
 		case ItemTransformHasChanged:
@@ -724,17 +737,23 @@ QVariant AbstractContent::itemChange(GraphicsItemChange change, const QVariant &
 #if QT_VERSION >= 0x040500
 		case ItemOpacityHasChanged:
 #endif
+			if(DEBUG_ABSTRACTCONTENT)
+				qDebug() << "AbstractContent::itemChange: " << modelItem()->itemName() << " ItemTransformHasChanged - ItemOpacityHasChanged:"<<value;
 			//syncToModelItem(modelItem());
 			GFX_CHANGED();
 			break;
 	
 		case ItemZValueHasChanged:
 			//syncToModelItem(modelItem());
+			if(DEBUG_ABSTRACTCONTENT)
+				qDebug() << "AbstractContent::itemChange: " << modelItem()->itemName() << " ItemZValueHasChanged:"<<value;
 			if(m_mirrorItem)
 				m_mirrorItem->setZValue(zValue());
 			break;
 	
 		case ItemVisibleHasChanged:
+			if(DEBUG_ABSTRACTCONTENT)
+				qDebug() << "AbstractContent::itemChange: " << modelItem()->itemName() << " ItemVisibleHasChanged:"<<value;
 			//syncToModelItem(modelItem());
 			if(m_mirrorItem)
 				m_mirrorItem->setVisible(isVisible());

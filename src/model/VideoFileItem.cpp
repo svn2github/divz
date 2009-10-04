@@ -21,7 +21,7 @@ AbstractContent * VideoFileItem::createDelegate(QGraphicsScene*scene,QGraphicsIt
 {
         VideoFileContent * delegate = new VideoFileContent(scene,parent);
         assert(delegate);
-        qDebug("VideoFileItem::createDelegate()");
+        //qDebug("VideoFileItem::createDelegate()");
         delegate->syncFromModelItem(this);
         return delegate;
 }

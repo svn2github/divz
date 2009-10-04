@@ -15,6 +15,8 @@
 #include "items/TextBoxContent.h"
 #include "items/VideoFileContent.h"
 #include "items/VideoFileConfig.h"
+#include "items/BackgroundContent.h"
+#include "items/BackgroundConfig.h"
 
 #include "model/ItemFactory.h"
 #include "model/Slide.h"
@@ -52,6 +54,8 @@
 #define COLORPICKER_H 150
 
 #include "MainWindow.h"
+
+#define DEBUG_MYGRAPHICSSCENE 0
 
 class RootObject : public QGraphicsItem
 {
@@ -125,7 +129,8 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans)
 	
 	m_currentTransition = trans;
 	
-	qDebug() << "MyGraphicsScene::setSlide(): Setting slide # "<<slide->slideNumber();
+	if(DEBUG_MYGRAPHICSSCENE)
+		qDebug() << "MyGraphicsScene::setSlide(): Setting slide # "<<slide->slideNumber();
 	
 	//trans = None;
 	if(trans == None)
@@ -145,12 +150,14 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans)
 		if(m_fadeTimer->isActive())
 			endTransition(); 
 			
-		qDebug() << "setSlide: Reparenting"<<m_content.size()<<"items";
+// 		if(DEBUG_MYGRAPHICSSCENE)
+// 			qDebug() << "MyGraphicsScene::setSlide(): Reparenting"<<m_content.size()<<"items";
 		
 		foreach(AbstractContent *x, m_content)
 			x->setParentItem(m_fadeRoot);
 			
-		qDebug() << "setSlide: Done reparenting.";
+// 		if(DEBUG_MYGRAPHICSSCENE)
+// 			qDebug() << "MyGraphicsScene::setSlide(): Done reparenting.";
 
 		m_fadeRoot->setZValue(999999);
 		
@@ -163,7 +170,8 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans)
 		m_fadeSteps = 30/4;
 		int ms = 500  / m_fadeSteps;
 		m_fadeTimer->start(ms); //ms);
-		qDebug() << "setSlide: Starting fade timer for "<<ms<<"ms";
+// 		if(DEBUG_MYGRAPHICSSCENE)
+// 			qDebug() << "MyGraphicsScene::setSlide(): Starting fade timer for "<<ms<<"ms";
 		
 	}
 
@@ -179,7 +187,8 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans)
 		
 		if (AbstractVisualItem * visualItem = dynamic_cast<AbstractVisualItem *>(item))
 		{
-			qDebug() << "MyGraphicsScene::setSlide(): Creating new content item from:"<<visualItem->itemName();
+			if(DEBUG_MYGRAPHICSSCENE)
+				qDebug() << "MyGraphicsScene::setSlide(): Creating new content item from:"<<visualItem->itemName();
 			AbstractContent * visual = visualItem->createDelegate(this,m_liveRoot);
 			addContent(visual, true);
 			
@@ -232,7 +241,8 @@ void MyGraphicsScene::slotTransitionStep()
 		double inc = (double)1 / m_fadeSteps;
 		m_fadeRoot->setOpacity(m_fadeRoot->opacity() - inc);
 		//m_liveRoot->setOpacity(m_liveRoot->opacity() + inc);
-		qDebug()<<"slotTransitionStep: step"<<m_fadeStepCounter<<"/"<<m_fadeSteps<<", inc:"<<inc<<", fade:"<<m_fadeRoot->opacity()<<", live:"<<m_liveRoot->opacity();
+		if(DEBUG_MYGRAPHICSSCENE)
+			qDebug()<<"MyGraphicsScene::slotTransitionStep(): step"<<m_fadeStepCounter<<"/"<<m_fadeSteps<<", inc:"<<inc<<", fade:"<<m_fadeRoot->opacity()<<", live:"<<m_liveRoot->opacity();
 	}
 	else
 	{
@@ -391,6 +401,8 @@ void MyGraphicsScene::slotConfigureContent(const QPoint & /*scenePoint*/)
 	else
 	if (VideoFileContent * vid = dynamic_cast<VideoFileContent *>(content))
 		p = new VideoFileConfig(vid);
+	if (BackgroundContent * bg = dynamic_cast<BackgroundContent *>(content))
+		p = new BackgroundConfig(bg);
 	
 	// generic config
 	if (!p)

@@ -214,6 +214,18 @@ Release 1.0 Feature Target List
 			TARGET FOR 1.5: End of October, Mid November
 			
 			---
+		
+		** Fit these in somewhere:
+			- Lighting system integration (MIDI commands)
+			- External controller support (e.g. use unused faders on light board to control cross fades or trigger changes)
+			- Automatic image/video sorting/grouping by color scheme/theme
+			- Generate color scheme from image/video
+			- Process incomming sound into beats and generate video to that beat 
+			- Sound visualization plugin 
+			- Live projector interaction 
+				(two or three cameras pointed at the wall the projector is shooting at, triangulate peoples fingers on the wall to interact with scene)
+				
+			I havn't written any of the code above yet, but I've got "ideas" or leads on where to find starting points for most of it.
 			
 		Next relase 2.0, abstract milestones may be:
 			- In future, improve by importing text from PPT and auto-lookup lyrics for hymns online
