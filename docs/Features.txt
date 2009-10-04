@@ -29,6 +29,10 @@ Revised Task list for Release 1.0, 10/10/09:
 		[STARTED] - Translator/Slide Generator
 			- Given a Song, translate into a slide group
 	- UI:
+		- List of forms needed:
+			- "Grid and Guidelines" Form
+			- Slide Group settings (aspect ratio, etc)
+			- Song Editor
 		- SongDatabase List View
 			- Three columns:
 				- Title, #, Tags (Chorus, Hymn, etc)

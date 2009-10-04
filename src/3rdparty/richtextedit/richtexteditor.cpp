@@ -599,8 +599,8 @@ void RichTextEditorToolBar::updateActions()
     const QFont font = charFormat.font();
     const QTextCharFormat::VerticalAlignment valign =
         charFormat.verticalAlignment();
-    const bool superScript = valign == QTextCharFormat::AlignSuperScript;
-    const bool subScript = valign == QTextCharFormat::AlignSubScript;
+    //const bool superScript = valign == QTextCharFormat::AlignSuperScript;
+    //const bool subScript = valign == QTextCharFormat::AlignSubScript;
 
     if (alignment & Qt::AlignLeft) 
     {

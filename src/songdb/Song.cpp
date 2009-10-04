@@ -145,7 +145,10 @@ bool Song::addSong(Song* song)
 		qDebug() << "Error adding Song: "<<tbl.lastError();
 		return false;
 	}
+
+	return true;
 }
+
 
 QSqlDatabase Song::db()
 {

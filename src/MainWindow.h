@@ -8,6 +8,10 @@
 #include <QListWidget>
 #include <QPushButton>
 
+#include <QTableView>
+#include <QLineEdit>
+#include <QComboBox>
+
 #include "model/Document.h"
 #include "DocumentListModel.h"
 #include "SlideEditorWindow.h"
@@ -68,7 +72,9 @@ protected:
 private:
 	void setupOutputList();
 	void setupOutputControl();
+	void setupOutputViews();
 	void setupCentralWidget();
+	void setupSongList();
 
 	Ui::MainWindow *m_ui;
 	DocumentListModel m_docModel;
@@ -83,6 +89,10 @@ private:
 	QPushButton * m_btnSendOut;
 	QListWidget * m_outputList;
 	QTabWidget * m_outputTabs;
+
+	QTableView * m_songList;
+	QLineEdit * m_songSearch;
+	QComboBox * m_searchOpt;
 
 	OutputSetupDialog *m_outputDialog;
 	

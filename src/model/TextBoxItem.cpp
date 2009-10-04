@@ -23,7 +23,7 @@ AbstractContent * TextBoxItem::createDelegate(QGraphicsScene*scene,QGraphicsItem
 //	SimpleTextContent * textContent = new TextContent(scene);
 	assert(textContent);
 	
-	AbstractContent * vi = (AbstractContent *)textContent;
+//	AbstractContent * vi = (AbstractContent *)textContent;
 	//printf("Debug: itemId: %d\n", vi->itemId());
 	
 	textContent->syncFromModelItem(this);

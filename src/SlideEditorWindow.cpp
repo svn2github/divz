@@ -387,7 +387,7 @@ void SlideEditorWindow::addVpLineX(qreal x, qreal y1, qreal y2, bool in)
 	static QPen pb(Qt::black, 1.0);
 
 	qreal z1 = 0; //in ? 2:0;
-	qreal z2 = in ? 0:2;
+//	qreal z2 = in ? 0:2;
 
 	QGraphicsLineItem * g;
 	g = new QGraphicsLineItem(x,y1-z1,x,y2-z1);
@@ -410,7 +410,7 @@ void SlideEditorWindow::addVpLineY(qreal y, qreal x1, qreal x2, bool in)
 	static QPen pb(Qt::black, 1.0);
 
 	qreal z1 = 0; //in ? 2:0;
-	qreal z2 = in ? 0:2;
+	//qreal z2 = in ? 0:2;
 
 	QGraphicsLineItem * g;
 	g = new QGraphicsLineItem(x1-z1,y,x2-z1,y);
