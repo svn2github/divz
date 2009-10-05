@@ -23,7 +23,7 @@
       <enum>QTabWidget::Rounded</enum>
      </property>
      <property name="currentIndex">
-      <number>3</number>
+      <number>2</number>
      </property>
      <property name="usesScrollButtons">
       <bool>false</bool>
@@ -434,14 +434,24 @@
           <property name="margin">
            <number>0</number>
           </property>
-          <item>
-           <widget class="QRadioButton" name="bgNone">
-            <property name="text">
-             <string>No Background</string>
-            </property>
-           </widget>
-          </item>
          </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QRadioButton" name="bgNone">
+         <property name="text">
+          <string>No Background</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QRadioButton" name="bgColor">
+         <property name="text">
+          <string>Solid Color</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
         </widget>
        </item>
        <item>
@@ -451,19 +461,16 @@
            <number>0</number>
           </property>
           <item>
-           <widget class="QRadioButton" name="bgColor">
-            <property name="text">
-             <string>Solid Color</string>
-            </property>
-            <property name="checked">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item>
            <layout class="QHBoxLayout" name="bgColorPickerLayout"/>
           </item>
          </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QRadioButton" name="bgGradient">
+         <property name="text">
+          <string>Gradient Fill</string>
+         </property>
         </widget>
        </item>
        <item>
@@ -473,16 +480,16 @@
            <number>0</number>
           </property>
           <item>
-           <widget class="QRadioButton" name="bgGradient">
-            <property name="text">
-             <string>Gradient Fill</string>
-            </property>
-           </widget>
-          </item>
-          <item>
            <widget class="QComboBox" name="gradientSelector"/>
           </item>
          </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QRadioButton" name="bgImage">
+         <property name="text">
+          <string>Picture from File</string>
+         </property>
         </widget>
        </item>
        <item>
@@ -491,13 +498,6 @@
           <property name="margin">
            <number>0</number>
           </property>
-          <item>
-           <widget class="QRadioButton" name="bgImage">
-            <property name="text">
-             <string>Picture from File</string>
-            </property>
-           </widget>
-          </item>
           <item>
            <layout class="QGridLayout" name="gridLayout_8">
             <item row="1" column="0">
@@ -519,18 +519,18 @@
         </widget>
        </item>
        <item>
+        <widget class="QRadioButton" name="bgVideo">
+         <property name="text">
+          <string>Video from File</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QWidget" name="bgOptVideo" native="true">
          <layout class="QVBoxLayout" name="verticalLayout_17">
           <property name="margin">
            <number>0</number>
           </property>
-          <item>
-           <widget class="QRadioButton" name="bgVideo">
-            <property name="text">
-             <string>Video from File</string>
-            </property>
-           </widget>
-          </item>
           <item>
            <layout class="QGridLayout" name="gridLayout_9">
             <item row="1" column="1">
