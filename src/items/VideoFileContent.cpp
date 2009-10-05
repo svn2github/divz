@@ -22,6 +22,7 @@
 VideoFileContent::VideoFileContent(QGraphicsScene * scene, QGraphicsItem * parent)
     : AbstractContent(scene, parent, false)
     , m_videoProvider(0)
+    , m_still(false)
 //     , m_text(0)
 //     , m_textRect(0, 0, 0, 0)
 //     , m_textMargin(4)
@@ -176,7 +177,7 @@ void VideoFileContent::setFilename(const QString &name)
 	
 	m_videoProvider = p;
 	m_videoProvider->connectReceiver(this, SLOT(setPixmap(const QPixmap &)));
-	
+	m_videoProvider->play();
 	
 	// prime the pump, so to speak
 	setPixmap(m_videoProvider->pixmap());
@@ -308,15 +309,18 @@ void VideoFileContent::setPixmap(const QPixmap & pixmap)
 	        // Adjust scaling while maintaining aspect ratio
 		resizeContents(contentsRect(),true);
 		
-		if(sceneContextHint() != MyGraphicsScene::Live)
-		{
-			m_still = true;
-			m_videoProvider->pause();
-                        //qDebug("VideoFileContent::setVideoFrame: Pausing video file because not in a live scene");
-		}
+		
 	}
+	
 
 	update();
+	
+	if(sceneContextHint() != MyGraphicsScene::Live)
+	{
+		m_still = true;
+		//m_videoProvider->pause();
+		//qDebug("VideoFileContent::setVideoFrame: Pausing video file because not in a live scene");
+	}
         //GFX_CHANGED();
 	
 // 	m_video->pause();

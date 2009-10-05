@@ -17,6 +17,8 @@
 #include "items/VideoFileConfig.h"
 #include "items/BackgroundContent.h"
 #include "items/BackgroundConfig.h"
+#include "items/BoxConfig.h"
+#include "items/BoxContent.h"
 
 #include "model/ItemFactory.h"
 #include "model/Slide.h"
@@ -403,6 +405,8 @@ void MyGraphicsScene::slotConfigureContent(const QPoint & /*scenePoint*/)
 		p = new VideoFileConfig(vid);
 	if (BackgroundContent * bg = dynamic_cast<BackgroundContent *>(content))
 		p = new BackgroundConfig(bg);
+	if (BoxContent * box = dynamic_cast<BoxContent *>(content))
+		p = new BoxConfig(box);
 	
 	// generic config
 	if (!p)
