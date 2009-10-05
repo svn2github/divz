@@ -38,11 +38,11 @@ private:
 	OutputView *m_view;	
 };
 
-class SlideGroupEditor
+class AbstractSlideGroupEditor : public QWidget
 {
 public:
-	SlideGroupEditor(SlideGroup *g=0, QWidget * parent = 0);
-	virtual ~SlideGroupEditor();
+	AbstractSlideGroupEditor(SlideGroup *g=0, QWidget * parent = 0);
+	virtual ~AbstractSlideGroupEditor();
 	
 	virtual void setSlideGroup(SlideGroup*g,Slide *curSlide=0);
 };
@@ -67,7 +67,7 @@ public:
 	
 	virtual SlideGroupViewMutator * newViewMutator();
 	virtual SlideGroupViewControl * newViewControl();
-	virtual SlideGroupEditor      * newEditor();
+	virtual AbstractSlideGroupEditor * newEditor();
 	
 	virtual QPixmap			generatePreviewPixmap(SlideGroup*, QSize iconSize, QRect sceneRect);
 

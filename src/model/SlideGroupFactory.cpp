@@ -43,10 +43,10 @@ void SlideGroupViewControl::setCurrentSlide(Slide*)
 
 }
 	
-/** SlideGroupEditor **/
-SlideGroupEditor::SlideGroupEditor(SlideGroup */*g*/, QWidget */*parent*/) {}
-SlideGroupEditor::~SlideGroupEditor() {}
-void SlideGroupEditor::setSlideGroup(SlideGroup */*g*/,Slide */*curSlide*/) {}
+/** AbstractSlideGroupEditor **/
+AbstractSlideGroupEditor::AbstractSlideGroupEditor(SlideGroup */*g*/, QWidget *parent) : QWidget(parent) {}
+AbstractSlideGroupEditor::~AbstractSlideGroupEditor() {}
+void AbstractSlideGroupEditor::setSlideGroup(SlideGroup */*g*/,Slide */*curSlide*/) {}
 
 
 /** SlideGroupFactory **/
@@ -95,7 +95,7 @@ SlideGroupViewControl * SlideGroupFactory::newViewControl()
 	return new SlideGroupViewControl();
 }
 
-SlideGroupEditor * SlideGroupFactory::newEditor()
+AbstractSlideGroupEditor * SlideGroupFactory::newEditor()
 {
 	return new SlideEditorWindow();
 }

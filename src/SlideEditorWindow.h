@@ -17,9 +17,9 @@ class QGraphicsLineItem;
 class MyGraphicsView;
 class QUndoStack;
 class QUndoView;
+class QSplitter;
 
-class SlideEditorWindow : public QMainWindow, 
-                          public SlideGroupEditor
+class SlideEditorWindow : public AbstractSlideGroupEditor
 {
 	Q_OBJECT
 public:
@@ -44,7 +44,7 @@ private slots:
 	void aspectRatioChanged(double);
 	
 private:
-	void setupSlideGroupDockWidget();
+	void setupSlideList();
 	void setupViewportLines();
 	void addVpLineY(qreal y, qreal x1, qreal x2, bool inside=true);
 	void addVpLineX(qreal x, qreal y1, qreal y2, bool inside=true);
@@ -54,6 +54,7 @@ private:
 	SlideGroupListModel *m_slideModel;
 	
 	QListView *m_slideListView;
+	QSplitter * m_splitter;
 	
 	Document m_doc;
 	MyGraphicsScene *m_scene;

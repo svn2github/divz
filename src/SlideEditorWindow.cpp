@@ -31,6 +31,8 @@
 
 #include <QWheelEvent>
 #include <QToolBar>
+#include <QSplitter>
+
 
 #include <QDebug>
 #include <assert.h>
@@ -175,7 +177,7 @@ class MyGraphicsView : public QGraphicsView
 
 
 SlideEditorWindow::SlideEditorWindow(SlideGroup *group, QWidget * parent)
-    : QMainWindow(parent), m_usingGL(false)
+    : AbstractSlideGroupEditor(group,parent), m_usingGL(false)
 {
 	// setup widget
 	QRect geom = QApplication::desktop()->availableGeometry();
@@ -187,7 +189,7 @@ SlideEditorWindow::SlideEditorWindow(SlideGroup *group, QWidget * parent)
 // 	QPixmap openpix("open.png");
 // 	QPixmap quitpix("quit.png");
 // 	
-	QToolBar *toolbar = addToolBar("main toolbar");
+	QToolBar *toolbar = new QToolBar("main toolbar");
 	toolbar->setObjectName("maintoolbar");
 	QAction  *newAction = toolbar->addAction(QIcon(), "New Text Item");
 // 	toolbar->addAction(QIcon(openpix), "Open File");
@@ -238,38 +240,23 @@ SlideEditorWindow::SlideEditorWindow(SlideGroup *group, QWidget * parent)
 	QPoint p = settings.value("slideeditor/pos").toPoint();
 	if(!p.isNull())
 		move(p);
-	restoreState(settings.value("slideeditor/state").toByteArray());
 
-	
-	//qDebug("Checking for OpenGL...");
-	#ifndef QT_NO_OPENGL
-// 	if(!RenderOpts::DisableOpenGL)
-// 	{
-// 		m_view->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
-// 		qDebug("SlideEditorWindow: Loaded OpenGL viewport.");
-// 	}
-	#endif
 	appSettingsChanged();
 	
-// 	SimpleTextItem * textItem = new SimpleTextItem("Hello, World");
-// 	QPen textPen;
-// 	textPen.setWidthF(3);
-// 	textPen.setColor(QColor(0,0,0,240));
-// 	textItem->setPen(textPen);
-// 	textItem->setBrush(QColor(255,255,255,255));
-// 	textItem->setFont(QFont("Tahoma",88,QFont::Bold));
-// 	textItem->setZValue(2);
-// 	textItem->setPos(10,230);
-// 	m_scene->addItem(textItem);
-// 	textItem->setFlags(QGraphicsItem::ItemIsMovable);
-// 	
-	
+	m_splitter = new QSplitter(this);
+	m_splitter->setOrientation(Qt::Horizontal);
 
-	//TextContent * text = m_scene->addTextContent();
-	
-	setupSlideGroupDockWidget();
+	setupSlideList();
 	setupViewportLines();
-	
+
+	m_splitter->addWidget(m_view);
+
+	QVBoxLayout *layout = new QVBoxLayout;
+	layout->addWidget(toolbar);
+	layout->addWidget(m_splitter);
+	setLayout(layout);
+
+	m_splitter->restoreState(settings.value("slideeditor/splitter").toByteArray());
 
 	
 /*
@@ -305,7 +292,7 @@ SlideEditorWindow::SlideEditorWindow(SlideGroup *group, QWidget * parent)
 	
 	if(group != 0)
 		setSlideGroup(group);
-        setCentralWidget(m_view);
+	//setCentralWidget(m_view);
         
         m_undoStack = new QUndoStack();
         setupUndoView();
@@ -320,7 +307,7 @@ SlideEditorWindow::~SlideEditorWindow()
 	QSettings settings;
 	settings.setValue("slideeditor/size",size());
 	settings.setValue("slideeditor/pos",pos());
-	settings.setValue("slideeditor/state",saveState());
+	settings.setValue("slideeditor/splitter",m_splitter->saveState());
 	
 	delete m_undoStack;
 	
@@ -364,12 +351,9 @@ void SlideEditorWindow::aspectRatioChanged(double x)
 }
 
 
-void SlideEditorWindow::setupSlideGroupDockWidget()
+void SlideEditorWindow::setupSlideList()
 {
-	QDockWidget *dock = new QDockWidget(tr("Slides"), this);
-	dock->setObjectName("SlidesDockWidget");
-	dock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
-	m_slideListView = new QListView(dock);
+	m_slideListView = new QListView(this);
 	m_slideListView->setViewMode(QListView::ListMode);
 	m_slideListView->setMovement(QListView::Free);
 	m_slideListView->setWordWrap(true);
@@ -377,6 +361,8 @@ void SlideEditorWindow::setupSlideGroupDockWidget()
 	m_slideListView->setDragEnabled(true);
 	m_slideListView->setAcceptDrops(true);
 	m_slideListView->setDropIndicatorShown(true);
+
+	m_splitter->addWidget(m_slideListView);
 	
 	connect(m_slideListView,SIGNAL(activated(const QModelIndex &)),this,SLOT(slideSelected(const QModelIndex &)));
 	connect(m_slideListView,SIGNAL(clicked(const QModelIndex &)),this,SLOT(slideSelected(const QModelIndex &)));
@@ -393,8 +379,8 @@ void SlideEditorWindow::setupSlideGroupDockWidget()
 		delete m;
 		m=0;
 	}
- 	dock->setWidget(m_slideListView);
-	addDockWidget(Qt::LeftDockWidgetArea, dock);
+	//dock->setWidget(m_slideListView);
+	//addDockWidget(Qt::LeftDockWidgetArea, dock);
 	//viewMenu->addAction(dock->toggleViewAction());
 }
 
