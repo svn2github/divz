@@ -35,6 +35,9 @@
 #include <QDebug>
 #include <assert.h>
 
+#include <QUndoView>
+#include <QUndoStack>
+
 #include <QGraphicsLineItem>
 
 #include "model/ItemFactory.h"
@@ -303,6 +306,9 @@ SlideEditorWindow::SlideEditorWindow(SlideGroup *group, QWidget * parent)
 	if(group != 0)
 		setSlideGroup(group);
         setCentralWidget(m_view);
+        
+        m_undoStack = new QUndoStack();
+        setupUndoView();
 }
 
 SlideEditorWindow::~SlideEditorWindow()
@@ -316,10 +322,21 @@ SlideEditorWindow::~SlideEditorWindow()
 	settings.setValue("slideeditor/pos",pos());
 	settings.setValue("slideeditor/state",saveState());
 	
+	delete m_undoStack;
+	
 	
 // 	delete m_slide;
 // 	m_slide = 0;
 
+}
+
+
+void SlideEditorWindow::setupUndoView()
+{
+    m_undoView = new QUndoView(m_undoStack);
+    m_undoView->setWindowTitle(tr("Undo Stack"));
+    m_undoView->show();
+    m_undoView->setAttribute(Qt::WA_QuitOnClose, false);
 }
 
 void SlideEditorWindow::appSettingsChanged()

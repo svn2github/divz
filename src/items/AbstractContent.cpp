@@ -394,7 +394,7 @@ void AbstractContent::setModelItemIsChanging(bool flag)
 	m_modelItemIsChanging = flag;
 }
 
-void AbstractContent::modelItemChanged(QString fieldName, QVariant value)
+void AbstractContent::modelItemChanged(QString fieldName, QVariant value, QVariant oldValue)
 {
 	if(DEBUG_ABSTRACTCONTENT)
 		qDebug() << "AbstractContent::modelItemChanged(): fieldName:"<<fieldName;
@@ -427,7 +427,7 @@ void AbstractContent::setModelItem(AbstractVisualItem *model)
 		
 		m_modelItem = model;
 	
-		connect(model, SIGNAL(itemChanged(QString, QVariant)), this, SLOT(modelItemChanged(QString, QVariant)));
+		connect(model, SIGNAL(itemChanged(QString, QVariant, QVariant)), this, SLOT(modelItemChanged(QString, QVariant,QVariant)));
 	}
 }
 

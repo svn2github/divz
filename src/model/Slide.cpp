@@ -40,8 +40,8 @@ QList<AbstractItem *> Slide::itemList() { return m_items; }
 void Slide::addItem(AbstractItem *item)
 {
 	assert(item != NULL);
-	emit slideItemChanged(item,"add","",QVariant());
-	connect(item,SIGNAL(itemChanged(QString, QVariant)),this,SLOT(itemChanged(QString, QVariant)));
+	emit slideItemChanged(item,"add","",QVariant(),QVariant());
+	connect(item,SIGNAL(itemChanged(QString, QVariant, QVariant)),this,SLOT(itemChanged(QString, QVariant, QVariant)));
 	m_items.append(item);
 }
 
@@ -49,14 +49,14 @@ void Slide::removeItem(AbstractItem *item)
 {
 	assert(item != NULL);
 	disconnect(item,0,this,0);
-	emit slideItemChanged(item,"remove","",QVariant());
+	emit slideItemChanged(item,"remove","",QVariant(),QVariant());
 	m_items.removeAll(item);
 }
 
-void Slide::itemChanged(QString s,QVariant v)
+void Slide::itemChanged(QString s,QVariant v,QVariant old)
 {
 	AbstractItem * item = dynamic_cast<AbstractItem *>(sender());
-	emit slideItemChanged(item,"change",s,v);
+	emit slideItemChanged(item,"change",s,v,old);
 }
 
 bool Slide::fromXml(QDomElement & pe)

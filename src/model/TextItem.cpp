@@ -20,9 +20,10 @@ TextItem::~TextItem() {}
 //ITEM_PROPSET(TextItem, Text, QString, text);
 void TextItem::setText(QString text)
 {
+	QString old = m_text;
 	m_text = text;
         //qDebug("TextItem::setText: '%s'",text.toAscii().constData());
-	setChanged("text",text);
+	setChanged("text",text,old);
 }
 
 ITEM_PROPSET(TextItem, FontFamily, QString, fontFamily)
@@ -40,16 +41,18 @@ ITEM_PROPSET(TextItem, ShapePoint4, QPointF, shapePoint4)
 // QVariant doesnt know how to handle Qt::Alignment nativly
 void TextItem::setXTextAlign(Qt::Alignment z)
 {
+	Qt::Alignment old = m_xTextAlign;
 	m_xTextAlign = z;
         //qDebug("TextItem::setText: '%s'",text.toAscii().constData());
-	setChanged("xTextAlign",(int)z);
+	setChanged("xTextAlign",(int)z,(int)old);
 }
 
 void TextItem::setYTextAlign(Qt::Alignment z)
 {
+	Qt::Alignment old = m_yTextAlign;
 	m_yTextAlign = z;
         //qDebug("TextItem::setText: '%s'",text.toAscii().constData());
-	setChanged("yTextAlign",(int)z);
+	setChanged("yTextAlign",(int)z,(int)old);
 }
 
 #include <assert.h>

@@ -10,10 +10,13 @@
 #include "SlideGroupListModel.h"
 
 
+
 class MyGraphicsScene;
 class SlideGroup;
 class QGraphicsLineItem;
 class MyGraphicsView;
+class QUndoStack;
+class QUndoView;
 
 class SlideEditorWindow : public QMainWindow, 
                           public SlideGroupEditor
@@ -59,6 +62,10 @@ private:
 	QList<QGraphicsLineItem *> m_viewportLines;
 	
 	bool m_usingGL;	
+	
+	void setupUndoView();
+	QUndoView * m_undoView;
+	QUndoStack * m_undoStack;
 
 };
 

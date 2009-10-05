@@ -72,8 +72,9 @@ void AbstractVisualItem::setContentsRect(QRectF r)
 // 	qDebug() << "AbstractVisualItem::setContentsRect: current: " << m_contentsRect;
 	//m_contentsRect.setLeft(0);
 	
+	QRectF old = m_contentsRect;
 	m_contentsRect = QRectF(r.left(), r.top(), r.width(), r.height());
-	setChanged("contentsRect",r);
+	setChanged("contentsRect",r,old);
 }
 
 

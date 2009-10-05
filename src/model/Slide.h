@@ -36,10 +36,10 @@ public:
 
 signals:
 	// Operation = "Add", "Remove", "Change"
-	void slideItemChanged(AbstractItem *item, QString operation, QString fieldName, QVariant value);
+	void slideItemChanged(AbstractItem *item, QString operation, QString fieldName, QVariant value, QVariant oldValue);
 	
 private slots:
-	void itemChanged(QString fieldName, QVariant value);
+	void itemChanged(QString fieldName, QVariant value, QVariant);
 	
 private:
 	QList<AbstractItem *> m_items;

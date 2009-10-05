@@ -61,7 +61,7 @@ signals:
 	void slideChanged(Slide *slide, QString slideOperation, AbstractItem *item, QString operation, QString fieldName, QVariant value);
 
 private slots:
-	void slideItemChanged(AbstractItem *item, QString operation, QString fieldName, QVariant value);
+	void slideItemChanged(AbstractItem *item, QString operation, QString fieldName, QVariant value, QVariant old);
 
 private:
 	QList<Slide *> m_slides;

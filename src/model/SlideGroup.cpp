@@ -26,7 +26,7 @@ void SlideGroup::addSlide(Slide *slide)
 	m_slides.append(slide);
 	sortSlides();
 	emit slideChanged(slide, "add", 0, "", "", QVariant());
-	connect(slide,SIGNAL(slideItemChanged(AbstractItem *, QString, QString, QVariant)),this,SLOT(slideItemChanged(AbstractItem *, QString, QString, QVariant)));
+	connect(slide,SIGNAL(slideItemChanged(AbstractItem *, QString, QString, QVariant, QVariant)),this,SLOT(slideItemChanged(AbstractItem *, QString, QString, QVariant, QVariant)));
 
 }
 
@@ -40,7 +40,7 @@ void SlideGroup::removeSlide(Slide *slide)
 
 }
 
-void SlideGroup::slideItemChanged(AbstractItem *item, QString operation, QString fieldName, QVariant value)
+void SlideGroup::slideItemChanged(AbstractItem *item, QString operation, QString fieldName, QVariant value, QVariant /*oldValue*/)
 {
 	Slide * slide = dynamic_cast<Slide *>(sender());
 	if(fieldName == "slideNumber")

@@ -126,7 +126,7 @@ class AbstractContent : public AbstractDisposeable
 		void slotStackLower();
 		void slotStackBack();
 		void slotSaveAs();
-		void modelItemChanged(QString fieldName, QVariant value);
+		void modelItemChanged(QString fieldName, QVariant value, QVariant oldValue);
 	
 	protected:
 		void createCorner(Qt::Corner corner, bool noRescale);

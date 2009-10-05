@@ -7,7 +7,12 @@
 #include <QPen>
 #include <QBrush>
 
-#define ITEM_PROPSET(className,setterName,typeName,memberName) void className::set##setterName(typeName value){m_##memberName = value;setChanged(#memberName,value);}
+#define ITEM_PROPSET(className,setterName,typeName,memberName) \
+	void className::set##setterName(typeName newValue) { \
+		typeName oldValue = m_##memberName; \
+		m_##memberName = newValue; \
+		setChanged(#memberName,newValue,oldValue); \
+	}
 #define ITEM_PROPDEF(setterName,typeName,memberName) void set##setterName(typeName value); typeName memberName() const { return m_##memberName; }
 
 #define DMARK __FILE__":"#__LINE__
@@ -50,11 +55,11 @@ public:
 	bool isBeingLoaded() { return m_isBeingLoaded; }
 	
 signals:
-	void itemChanged(QString fieldName, QVariant value);
+	void itemChanged(QString fieldName, QVariant value, QVariant oldValue);
 	
 protected:
 	void clearIsChanged();
-	void setChanged(QString fieldName, QVariant value);
+	void setChanged(QString fieldName, QVariant value, QVariant oldValue);
 	void setBeingLoaded(bool);
 	
 private:

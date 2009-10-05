@@ -9,12 +9,12 @@ AbstractItem::AbstractItem() :
 ITEM_PROPSET(AbstractItem, ItemId,   quint32, itemId);
 ITEM_PROPSET(AbstractItem, ItemName, QString, itemName);
 
-void AbstractItem::setChanged(QString name, QVariant value)
+void AbstractItem::setChanged(QString name, QVariant value, QVariant oldValue)
 {
 	if(!isBeingLoaded())
 	{
 		//qDebug() << "AbstractItem::setChanged: itemName:"<<itemName()<<", name:"<<name<<", value:"<<value;
-		emit itemChanged(name,value);
+		emit itemChanged(name,value,oldValue);
 		m_isChanged = true;
 		
 	}
