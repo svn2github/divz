@@ -78,17 +78,17 @@ Revised Task list for Release 1.0, 10/10/09:
 		Consider moving opengl option to a per-output setting
 		Consider making Output objects QObjects that can emit signals when changed
 	- Bugs:
+		When video item is showing in live and preview, then a different slide group is shown in preview, the live item stops playing
 		[FIXED] Centered TextBox items appear too far to the left in icon previews (list models, etc)
 		[FIXED] Setting config on background item causes it to "go away" until program reload
 		[FIXED] Output Dialog should have all tabs on left disabled until output selected, otherwise SIGSEGV if user clicks screen list before selecting output
-
-		[FIXED] -new slide button stopped working
-		[WORKSFORME] -slide editor crash when add box then delete box
-		[FIXED] -slide listbox cant scroll down below the fold
-		[WORKSFORME] -figure out why some items (VideoFileContent for now) jumps position vertically when slide changes
-		[FIXED] -figure out why mirror item doesnt get repainted when slide changed back
-		[FIXED] -turn off multi-select unless intentional - looks like if one item selected, then right-click on another item, it selects both items
-		[FIXED] -repaint bug -see textitem - when textobx selected and hover over other content, bg in text box turns white...why?
+		[FIXED] new slide button stopped working
+		[WORKSFORME] slide editor crash when add box then delete box
+		[FIXED] slide listbox cant scroll down below the fold
+		[WORKSFORME] figure out why some items (VideoFileContent for now) jumps position vertically when slide changes
+		[FIXED] figure out why mirror item doesnt get repainted when slide changed back
+		[FIXED] turn off multi-select unless intentional - looks like if one item selected, then right-click on another item, it selects both items
+		[FIXED] repaint bug -see textitem - when textobx selected and hover over other content, bg in text box turns white...why?
 		[FIXED] (r86) -since textbox clipping has been turned on, need to keep all text inside content rect - add margin or something to layout - see letter "L" in tahoma at start of a box
 
 			
