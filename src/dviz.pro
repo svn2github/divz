@@ -111,6 +111,7 @@ include(3rdparty/videocapture/videocapture.pri)
 include(3rdparty/posterazor/posterazor.pri)
 include(qvideo/qvideo.pri)
 include(qtcolorpicker/qtcolorpicker.pri)
+include(audio/audio.pri)
 
 # deployment on Linux
 unix {
