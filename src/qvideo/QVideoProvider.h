@@ -31,8 +31,7 @@ public:
 	
 	bool isValid() { return m_isValid; }
 	
-signals:
-	void newPixmap(const QPixmap & pixmap);
+	QPixmap pixmap() { return m_lastPixmap; }
 	
 public slots:
 	void stop();
@@ -40,7 +39,9 @@ public slots:
 	void pause();
 	void seekTo(int ms);
 	
-
+private slots:
+	void newPixmap(const QPixmap & pixmap);
+	
 private:
 	QVideoProvider(const QString &);
 	
@@ -50,6 +51,9 @@ private:
 	int m_refCount;
 	
 	bool m_isValid; 
+	QPixmap m_lastPixmap;
+	
+	int m_playCount;
 	
 };
 

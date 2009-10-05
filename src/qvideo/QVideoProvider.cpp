@@ -59,7 +59,8 @@ QVideoProvider::QVideoProvider(const QString &f) :
 	m_canonicalFilePath(f),
 	m_video(new QVideo(this)),
 	m_refCount(0),
-	m_isValid(true)
+	m_isValid(true),
+	m_playCount(0)
 {
 	if(!m_video->load(f))
 	{
@@ -69,17 +70,25 @@ QVideoProvider::QVideoProvider(const QString &f) :
 	}
 	if(m_isValid)
 	{
+		connect(m_video, SIGNAL(newPixmap(QPixmap)), this, SLOT(newPixmap(QPixmap)));
 		m_video->setAdvanceMode(QVideo::Manual);
 		m_video->setLooped(true);
-		m_video->play();
+		//m_video->play();
+		play();
 	}
 }
 
 QVideoProvider::~QVideoProvider()
 {
 	m_video->stop();
+	//disconnect(m_video,0,0,0);
 	delete m_video;
 	m_video = 0;
+}
+
+void QVideoProvider::newPixmap(const QPixmap & pix)
+{
+	m_lastPixmap = pix;
 }
 
 void QVideoProvider::connectReceiver(QObject * receiver, const char * method)
@@ -92,6 +101,7 @@ void QVideoProvider::connectReceiver(QObject * receiver, const char * method)
 
 void QVideoProvider::disconnectReceiver(QObject * receiver)
 {
+	if(receiver && m_video)
 	disconnect(m_video, 0, receiver, 0);
 }
 //	void newPixmap(const QPixmap & pixmap);
@@ -104,10 +114,15 @@ void QVideoProvider::stop()
 void QVideoProvider::play()
 {
 	m_video->play();
+	m_playCount ++;
 }
 void QVideoProvider::pause()
 {
-	m_video->pause();
+	// dont pause unless all players are paused
+	m_playCount --;
+	if(m_playCount <= 0)
+		m_video->pause();
+	
 }
 void QVideoProvider::seekTo(int ms)
 {

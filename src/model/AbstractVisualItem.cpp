@@ -32,7 +32,7 @@ AbstractVisualItem::AbstractVisualItem()
 {
 	m_pos = QPointF();
 	m_contentsRect = QRectF(0,0,0,0);
-	m_isVisible = false;
+	m_isVisible = true;
 	m_zValue = 0;
 	m_frameClass = 0;
 	m_xRotation = 0;

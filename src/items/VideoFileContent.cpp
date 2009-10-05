@@ -176,6 +176,10 @@ void VideoFileContent::setFilename(const QString &name)
 	
 	m_videoProvider = p;
 	m_videoProvider->connectReceiver(this, SLOT(setPixmap(const QPixmap &)));
+	
+	
+	// prime the pump, so to speak
+	setPixmap(m_videoProvider->pixmap());
 
 	//m_imageSize = QSize();
 // 	m_video->setAdvanceMode(QVideo::Manual);
@@ -292,8 +296,11 @@ QRectF VideoFileContent::boundingRect() const
 
 void VideoFileContent::setPixmap(const QPixmap & pixmap)
 {
+	if(m_still)
+		return;
+		
 	m_pixmap = pixmap;
-
+	
 	if(m_imageSize != m_pixmap.size())
 	{
 		m_imageSize = m_pixmap.size();
@@ -304,6 +311,7 @@ void VideoFileContent::setPixmap(const QPixmap & pixmap)
 		if(sceneContextHint() != MyGraphicsScene::Live)
 		{
 			m_still = true;
+			m_videoProvider->pause();
                         //qDebug("VideoFileContent::setVideoFrame: Pausing video file because not in a live scene");
 		}
 	}

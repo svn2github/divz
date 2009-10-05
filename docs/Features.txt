@@ -67,11 +67,11 @@ Revised Task list for Release 1.0, 10/10/09:
 			- When cross fade starts, start playing
 			- Stop playing prev slide when cross fade ends
 		[DONE] - Shadows (Text):
-			- Can settle for simple block shadow
-			- Gausian blur if we have time 
-		[STARTED] - Backgrounds:
-			- Add background item type & Position automatically, Disable movement
-			- Still cant set item color/props with config box
+			[DONE] - Can settle for simple block shadow
+			[LATER] - Gausian blur if we have time 
+		[DONE] - Backgrounds:
+			[DONE] - Add background item type & Position automatically, Disable movement
+			[DONE] - Still cant set item color/props with config box
 		- SVG Item if we have time
 		[STARTED] - Gradients - can settle for making gradients in gimp and import as photo, but need to eventually have support direclty in dviz
 	- Improvements:

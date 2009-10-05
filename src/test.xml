@@ -13,7 +13,7 @@
                 </rect>
                 <pos>
                     <x>188</x>
-                    <y>177</y>
+                    <y>172</y>
                 </pos>
                 <zvalue>1</zvalue>
                 <opacity>1</opacity>
@@ -51,7 +51,7 @@ p, li { white-space: pre-wrap; }
                 <visible>0</visible>
                 <frame-class>0</frame-class>
                 <transformation yRot="0" xRot="0" zRot="0"/>
-                <fill brush-style="1" video="" image="" brush-color="4278255360" type="4"/>
+                <fill brush-style="1" video="data/Seasons_Loop_3_SD.mpg" image="" brush-color="4278255360" type="1"/>
                 <outline brush-style="1" pen-join="0" pen-width="1" enabled="0" brush-color="4278190080" pen-cap="16" pen-color="4278190080"/>
                 <mirror offset="3" enabled="0"/>
                 <shadow brush-style="1" x="3" y="3" enabled="0" brush-color="4278190080"/>

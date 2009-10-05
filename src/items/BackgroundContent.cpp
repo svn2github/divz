@@ -17,8 +17,14 @@
 #include <QAbstractTextDocumentLayout>
 #include <QDebug>
 
+#include "qvideo/QVideoProvider.h"
+
+#define DEBUG_BACKGROUNDCONTENT 0
+
 BackgroundContent::BackgroundContent(QGraphicsScene * scene, QGraphicsItem * parent)
     : AbstractContent(scene, parent, false)
+    , m_still(false)
+    , m_videoProvider(0)
 {
 	m_dontSyncToModel = true;
 	
@@ -85,6 +91,10 @@ void BackgroundContent::syncFromModelItem(AbstractVisualItem *model)
 	
 	AbstractContent::syncFromModelItem(model);
 	m_dontSyncToModel = true;
+	
+	
+	if(model->fillVideoFile()!="")
+		setVideoFile(model->fillVideoFile());
 	
 	setPos(0,0);
 	if(scene())
@@ -170,7 +180,7 @@ void BackgroundContent::paint(QPainter * painter, const QStyleOptionGraphicsItem
 	QRect cRect = contentsRect();
 // 	QRect sRect = m_textRect;
 	painter->save();
-	painter->translate(cRect.topLeft());
+	//painter->translate(cRect.topLeft());
 // 	if (sRect.width() > 0 && sRect.height() > 0)
 // 	{
 // 		qreal xScale = (qreal)cRect.width() / (qreal)sRect.width();
@@ -194,8 +204,34 @@ void BackgroundContent::paint(QPainter * painter, const QStyleOptionGraphicsItem
 // 	}
 // 		
 	painter->setPen(Qt::NoPen);
- 	painter->setBrush(modelItem()->fillBrush());
-	painter->drawRect(QRect(QPoint(0,0),cRect.size()));
+	AbstractVisualItem::FillType fill = modelItem()->fillType();
+	if(fill == AbstractVisualItem::Solid)
+	{
+		painter->setBrush(modelItem()->fillBrush());
+		painter->drawRect(cRect); //QRect(QPoint(0,0),cRect.size()));
+	}
+	else
+	if(fill == AbstractVisualItem::Gradient ||
+	   fill == AbstractVisualItem::Image)
+	{
+		// Noop yet
+		painter->setBrush(Qt::white);
+		painter->drawRect(cRect); //QRect(QPoint(0,0),cRect.size()));
+	}
+	else
+	{
+		if(m_imageSize.width() <= 0)
+		{
+			painter->fillRect(cRect,QBrush(Qt::gray));
+		}
+		else
+		{
+			painter->setBrush(Qt::NoBrush);
+			painter->setRenderHint(QPainter::SmoothPixmapTransform, true);
+			painter->drawPixmap(cRect, m_pixmap);
+		}
+	}
+	
 	
 // 	//const bool opaqueContent = contentOpaque();
 // 	const bool drawSelection = RenderOpts::HQRendering ? false : isSelected();
@@ -212,4 +248,81 @@ void BackgroundContent::paint(QPainter * painter, const QStyleOptionGraphicsItem
 // 			
 	painter->restore();
 }
+
+
+void BackgroundContent::setVideoFile(const QString &name)
+{
+// 	if(!m_video->load(name))
+// 	{
+// 		qDebug() << "VideoFileContent::setFilename(): ERROR: Unable to load video"<<name;
+// 		return;
+// 	}
+	QVideoProvider * p = QVideoProvider::providerForFile(name);
+	
+	if(m_videoProvider && m_videoProvider == p)
+	{
+		return;
+	}
+	else
+	if(m_videoProvider)
+	{
+		m_videoProvider->disconnectReceiver(this);
+		QVideoProvider::releaseProvider(m_videoProvider);
+	}
+	
+	if(DEBUG_BACKGROUNDCONTENT)
+		qDebug() << "BackgroundContent::setVideoFile: Loading"<<name;
+	
+	m_videoProvider = p;
+	m_videoProvider->connectReceiver(this, SLOT(setPixmap(const QPixmap &)));
+	
+	// prime the pump, so to speak
+	setPixmap(m_videoProvider->pixmap());
+	
+	if(modelItem()->fillType() == AbstractVisualItem::Video)
+	{
+		if(!m_videoProvider->isPlaying())
+			m_videoProvider->play();
+		m_still = false;
+	}
+	else
+		m_videoProvider->pause();
+
+	//m_imageSize = QSize();
+// 	m_video->setAdvanceMode(QVideo::Manual);
+// 	m_video->setLooped(true);
+	//m_video->play();
+}
+
+
+void BackgroundContent::setPixmap(const QPixmap & pixmap)
+{
+	if(m_still)
+		return;
+		
+	m_pixmap = pixmap;
+
+	if(m_imageSize != m_pixmap.size())
+	{
+		m_imageSize = m_pixmap.size();
+
+	        // Adjust scaling while maintaining aspect ratio
+		//resizeContents(contentsRect(),true);
+		
+	}
+
+	update();
+	
+	if(sceneContextHint() != MyGraphicsScene::Live)
+	{
+		m_still = true;
+		//m_videoProvider->pause();
+	}
+        //GFX_CHANGED();
+	
+// 	m_video->pause();
+// 	qDebug("VideoFileContent::setVideoFrame: Pausing video file AGAIN because not in a live scene");
+}
+
+
 
