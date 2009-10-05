@@ -12,7 +12,7 @@
 #include "RenderOpts.h"
 
 SlideGroupListModel::SlideGroupListModel(SlideGroup *g, QObject *parent)
-		: QAbstractListModel(parent), m_slideGroup(0), m_scene(0), m_dirtyTimer(0), m_iconSize(96,0), m_sceneRect(0,0,1024,768)
+		: QAbstractListModel(parent), m_slideGroup(0), m_scene(0), m_dirtyTimer(0), m_iconSize(192,0), m_sceneRect(0,0,1024,768)
 {
 	if(m_slideGroup)
 		setSlideGroup(g);

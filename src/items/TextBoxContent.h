@@ -74,6 +74,8 @@ class TextBoxContent : public AbstractContent
         int contentHeightForWidth(int width) const;
         void selectionChanged(bool selected);
         
+        void resizeContents(const QRect & rect, bool keepRatio = false);
+        
         void syncFromModelItem(AbstractVisualItem*);
         AbstractVisualItem * syncToModelItem(AbstractVisualItem*);
 
@@ -90,7 +92,7 @@ class TextBoxContent : public AbstractContent
 //         void layoutText(qreal width, bool storeLineSpecs = true);
          
     private:
-        void updateTextConstraints();
+        void updateTextConstraints(int w = -1);
         void updateCache();
         void applyTextXAlign(Qt::Alignment);
         void addLineToPath(QPainterPath*);

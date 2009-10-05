@@ -390,7 +390,7 @@ public:
 	void paint(QPainter*p, const QStyleOptionGraphicsItem*, QWidget*)
 	{
 		p->save();
-		p->setCompositionMode(QPainter::CompositionMode_Difference);
+		//p->setCompositionMode(QPainter::CompositionMode_Difference);
 		p->setPen(pen());
 		p->drawLine(line());
 		p->restore();
@@ -399,8 +399,8 @@ public:
 
 void SlideEditorWindow::addVpLineX(qreal x, qreal y1, qreal y2, bool in)
 {
-	static QPen pw(Qt::white, 1.0);
-	static QPen pb(Qt::black, 1.0);
+	static QPen pw(Qt::gray, 0,Qt::DotLine);
+	static QPen pb(Qt::black, 0,Qt::DotLine);
 
 	qreal z1 = 0; //in ? 2:0;
 //	qreal z2 = in ? 0:2;
@@ -422,8 +422,8 @@ void SlideEditorWindow::addVpLineX(qreal x, qreal y1, qreal y2, bool in)
 
 void SlideEditorWindow::addVpLineY(qreal y, qreal x1, qreal x2, bool in)
 {
-	static QPen pw(Qt::white, 1.0);
-	static QPen pb(Qt::black, 1.0);
+	static QPen pw(Qt::gray, 0,Qt::DotLine);
+	static QPen pb(Qt::black, 0,Qt::DotLine);
 
 	qreal z1 = 0; //in ? 2:0;
 	//qreal z2 = in ? 0:2;

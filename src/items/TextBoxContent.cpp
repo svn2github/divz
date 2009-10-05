@@ -17,9 +17,10 @@
 #include <QDebug>
 #include <QTextOption>
 #include <QTimer>
+#include <QPainterPathStroker>
 #include "items/CornerItem.h"
 
-#define DEBUG_LAYOUT 1
+#define DEBUG_LAYOUT 0
 
 static QString trimLeft(QString str)
 {
@@ -71,7 +72,7 @@ TextBoxContent::TextBoxContent(QGraphicsScene * scene, QGraphicsItem * parent)
 	connect(m_shapeEditor, SIGNAL(shapeChanged(const QPainterPath &)), this, SLOT(setShapePath(const QPainterPath &)));
 	
 	
-	connect(this, SIGNAL(resized()), this, SLOT(delayContentsResized()));
+	//connect(this, SIGNAL(resized()), this, SLOT(delayContentsResized()));
 	
 	for(int i=0;i<m_cornerItems.size();i++)
 		m_cornerItems.at(i)->setDefaultLeftOp(CornerItem::Scale);
@@ -94,6 +95,7 @@ void TextBoxContent::setHtml(const QString & htmlCode)
 {
         //qDebug("Setting HTML... [%s]",htmlCode.toAscii().constData());
 	m_text->setHtml(htmlCode);
+	//qDebug()<<"TextBoxContent::setHtml: (not shown)";
 	updateTextConstraints();
         //qDebug("Calling syncToModelItem");
 	syncToModelItem(0);
@@ -103,6 +105,7 @@ void TextBoxContent::setHtml(const QString & htmlCode)
 void TextBoxContent::setXTextAlign(Qt::Alignment x)
 {
 	m_xTextAlign = x;
+        //qDebug()<<"TextBoxContent::setXTextAlign: "<<x;
         updateTextConstraints();
         syncToModelItem(0);
 }
@@ -110,6 +113,7 @@ void TextBoxContent::setXTextAlign(Qt::Alignment x)
 void TextBoxContent::setYTextAlign(Qt::Alignment y)
 {
 	m_yTextAlign = y;
+        //qDebug()<<"TextBoxContent::setYTextAlign: "<<y;
         updateTextConstraints();
         syncToModelItem(0);
 }
@@ -455,17 +459,23 @@ void TextBoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * 
 	//TODO should we clip to the rect or FORCE resize the rect? probably clip...
 	painter->setClipRect(contentsRect());
 	painter->translate(contentsRect().topLeft() + QPoint(p.width(),p.width()));
-// 	// draw shadow
-// 	if(modelItem()->shadowEnabled())
-// 	{
-// 		double x = modelItem()->shadowOffsetX();
-// 		double y = modelItem()->shadowOffsetY();
-// 		painter->translate(x,y);
-// 		painter->setPen(Qt::NoPen);	
-// 		painter->setBrush(modelItem()->shadowBrush());
-// 		painter->drawPath(m_textPath);
-// 		painter->translate(-x,-y);
-// 	}
+	
+	// stroke the path (create fillable path from text points)
+// 	QPainterPathStroker s;
+// 	QPainterPath path = s.createStroke(m_textPath);
+	// Doesn't look right, so I disabled it
+	
+	// draw shadow
+	if(modelItem()->shadowEnabled())
+	{
+		double x = modelItem()->shadowOffsetX();
+		double y = modelItem()->shadowOffsetY();
+		painter->translate(x,y);
+		painter->setPen(Qt::NoPen);	
+		painter->setBrush(modelItem()->shadowBrush());
+		painter->drawPath(m_textPath);
+		painter->translate(-x,-y);
+	}
 	// draw text
 	painter->setPen(p);
 	painter->setBrush(modelItem()->fillBrush());
@@ -480,24 +490,29 @@ QPainterPath TextBoxContent::shapePath() const
 
 void TextBoxContent::setShapePath(const QPainterPath & path)
 {
-	if (path == m_shapePath)
-		return;
-	
-	// invalidate rectangles
-	m_textRect = QRect();
-	m_shapeRect = QRect();
-	
-	// set new path
-	m_shapePath = path;
-	
-	// regenerate text layouting
-	updateTextConstraints();
+// 	if (path == m_shapePath)
+// 		return;
+// 	
+// 	// invalidate rectangles
+// 	m_textRect = QRect();
+// 	m_shapeRect = QRect();
+// 	
+// 	// set new path
+// 	m_shapePath = path;
+// 	
+// 	// regenerate text layouting
+// 	updateTextConstraints();
 }
 
 
-void TextBoxContent::updateTextConstraints()
+void TextBoxContent::updateTextConstraints(int w)
 {
-	int textWidth = contentsRect().width();
+	if(!m_text)
+		return;
+		
+	int textWidth = w;
+	if(w < 0)
+		textWidth = contentsRect().width();
 	
 	if(DEBUG_LAYOUT)
 		qDebug("updateTextConstraints() BEGIN (width: %d)",textWidth);
@@ -755,7 +770,7 @@ void TextBoxContent::updateTextConstraints()
 // 	}
 	if(changed)
 	{
-		resizeContents(newRect);
+		AbstractContent::resizeContents(newRect);
 	}
 }
 
@@ -830,11 +845,19 @@ void TextBoxContent::delayContentsResized()
 void TextBoxContent::contentsResized()
 {
 	//qDebug("contentsResized hit");
+ 	//qDebug()<<"TextBoxContent::contentsResized()";
  	updateTextConstraints();
  	update();
 // 	QRect un = rect | m_textRect;
 // 	AbstractContent::resizeContents(un,keepRatio);
 //	AbstractContent::resizeContents(rect,keepRatio);
+}
+
+void TextBoxContent::resizeContents(const QRect & rect, bool keepRatio)
+{
+	updateTextConstraints(rect.width());
+	AbstractContent::resizeContents(rect,keepRatio);
+	update();
 }
 
 void TextBoxContent::updateCache()

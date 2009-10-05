@@ -34,7 +34,7 @@ class AbstractContent : public AbstractDisposeable
 		
 		// size
 		QRect contentsRect() const;
-		void resizeContents(const QRect & rect, bool keepRatio = false);
+		virtual void resizeContents(const QRect & rect, bool keepRatio = false);
 		void resetContentsRatio();
 		void delayedDirty(int ms = 400);
 	
