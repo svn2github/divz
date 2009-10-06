@@ -42,8 +42,8 @@ public:
 	
 	void removeSlide(Slide *);
 	
-	bool fromXml(QDomElement & parentElement);
-        void toXml(QDomElement & parentElement) const;
+	virtual bool fromXml(QDomElement & parentElement);
+        virtual void toXml(QDomElement & parentElement) const;
 
 	// Things you can do with slide groups:
 	// View 

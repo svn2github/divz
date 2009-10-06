@@ -160,14 +160,23 @@ void MainWindow::setupSongList()
 	m_songTableModel->removeColumn(4); //, Qt::Horizontal, tr("Author"));
 	m_songTableModel->removeColumn(5); //, Qt::Horizontal, tr("Copyright"));
 	m_songTableModel->removeColumn(6); //6, Qt::Horizontal, tr("Last Used"));
-	
+// 	
 	m_songProxyModel = new QSortFilterProxyModel(this);
 	m_songProxyModel->setSourceModel(m_songTableModel);
 	m_songProxyModel->setSortCaseSensitivity(Qt::CaseInsensitive);
+	
+	m_songProxyModel->removeColumn(0); //, Qt::Horizontal, tr("SongID"));
+	m_songProxyModel->setHeaderData(1, Qt::Horizontal, tr("Number"));
+	m_songProxyModel->setHeaderData(2, Qt::Horizontal, tr("Title"));
+	m_songProxyModel->removeColumn(3); //, Qt::Horizontal, tr("Text"));
+	m_songProxyModel->removeColumn(4); //, Qt::Horizontal, tr("Author"));
+	m_songProxyModel->removeColumn(5); //, Qt::Horizontal, tr("Copyright"));
+	m_songProxyModel->removeColumn(6); //6, Qt::Horizontal, tr("Last Used"));
 
 	m_songList->setAlternatingRowColors(true);
 	m_songList->setModel(m_songProxyModel);
 	m_songList->setSortingEnabled(true);
+	m_songList->setEditTriggers(QAbstractItemView::NoEditTriggers);
 	
 	vbox->addLayout(hbox);
 	vbox->addWidget(m_songList);

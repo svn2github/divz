@@ -80,6 +80,14 @@ Revised Task list for Release 1.0, 10/10/09:
 		Add editing to slide group/slide model lists in the list itself (e.g. to change slide/group title)
 		
 	- Bugs:
+		Song Text not being layed out properly with the "center" functionality (text being clipped, etc)
+		Song slide preview has lines that are "too think"
+		Song text on output is too far to the top-left (but preview is fine)
+		Need to implement song editor
+		Need to set item name in slide generator for songs
+		Need to set item id in slide generator
+		Songs aren't being converted toXml properly (is toXml virtual??)
+			made it virtual, but still doesn't seem to be saving - tbd
 		[FIXED] When another slide live first, then trans to video slide, single click (preview) different slide, the live item stops playing
 		[FIXED] Centered TextBox items appear too far to the left in icon previews (list models, etc)
 		[FIXED] Setting config on background item causes it to "go away" until program reload
