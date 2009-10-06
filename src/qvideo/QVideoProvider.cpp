@@ -2,7 +2,7 @@
 #include <QFileInfo>
 #include <QDebug>
 
-#define DEBUG_QVIDEOPROVIDER 1
+#define DEBUG_QVIDEOPROVIDER 0
 	
 	
 QMap<QString,QVideoProvider*> QVideoProvider::m_fileProviderMap;
@@ -106,7 +106,8 @@ void QVideoProvider::disconnectReceiver(QObject * receiver)
 {
 	if(receiver && m_video)
 	{
-		qDebug() << "QVideoProvider::disconnectReceiver()";
+		if(DEBUG_QVIDEOPROVIDER)
+			qDebug() << "QVideoProvider::disconnectReceiver()";
 		disconnect(m_video, 0, receiver, 0);
 	}
 }
@@ -116,24 +117,28 @@ void QVideoProvider::stop()
 {
 	m_video->stop();
 	m_playCount --;
-	qDebug() << "[PLAY -] QVideoProvider::stop(): m_playCount:"<<m_playCount;
+	if(DEBUG_QVIDEOPROVIDER)
+		qDebug() << "[PLAY -] QVideoProvider::stop(): m_playCount:"<<m_playCount;
 }
 
 void QVideoProvider::play()
 {
 	m_video->play();
 	m_playCount ++;
-	qDebug() << "[PLAY +] QVideoProvider::play(): m_playCount:"<<m_playCount;
+	if(DEBUG_QVIDEOPROVIDER)
+		qDebug() << "[PLAY +] QVideoProvider::play(): m_playCount:"<<m_playCount;
 }
 void QVideoProvider::pause()
 {
 	// dont pause unless all players are paused
 	//if(m_playCount > 0)
 		m_playCount --;
-	qDebug() << "[PLAY -] QVideoProvider::pause(): m_playCount:"<<m_playCount;
+	if(DEBUG_QVIDEOPROVIDER)
+		qDebug() << "[PLAY -] QVideoProvider::pause(): m_playCount:"<<m_playCount;
 	if(m_playCount <= 0)
 	{
-		qDebug() << "QVideoProvider::pause(): m_video->pause() hit";
+		if(DEBUG_QVIDEOPROVIDER)
+			qDebug() << "QVideoProvider::pause(): m_video->pause() hit";
 		m_video->pause();
 	}
 	

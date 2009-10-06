@@ -17,7 +17,8 @@ MainWindow * MainWindow::static_mainWindow = 0;
 
 MainWindow::MainWindow(QWidget *parent) :
 	QMainWindow(parent),
-	m_ui(new Ui::MainWindow)
+	m_ui(new Ui::MainWindow),
+	m_liveView(0)
 {
 	static_mainWindow = this;
 	
@@ -42,6 +43,14 @@ MainWindow::MainWindow(QWidget *parent) :
 	}
 	
 	m_docModel.setDocument(&m_doc);
+	
+	// setup live view before central widget because central widget uses live view in the view control code
+	m_liveView = new SlideGroupViewer();
+	m_liveView->setWindowFlags(Qt::FramelessWindowHint);
+	m_liveView->view()->setBackgroundBrush(Qt::black);
+
+	setupOutputViews();
+	
 
 	setupCentralWidget();
 
@@ -82,13 +91,11 @@ MainWindow::MainWindow(QWidget *parent) :
 	m_previewWidget->scene()->setContextHint(MyGraphicsScene::Preview);
 	m_ui->dwPreview->setWidget(m_previewWidget);
 	
-	m_liveView = new SlideGroupViewer();
-	m_liveView->setWindowFlags(Qt::FramelessWindowHint);
-	m_liveView->view()->setBackgroundBrush(Qt::black);
-
-	setupOutputViews();
+	
 	
 	m_liveView->show();
+	
+	//setLiveGroup(m_doc.groupList().at(0));
 	
 	connect(m_ui->actionExit,SIGNAL(activated()), qApp, SLOT(quit()));
 }
@@ -172,6 +179,7 @@ void MainWindow::setupCentralWidget()
 	m_groupView = new QListView(this);
 	
 	m_groupView->setViewMode(QListView::ListMode);
+	//m_groupView->setViewMode(QListView::IconMode);
 	m_groupView->setMovement(QListView::Free);
 	m_groupView->setWordWrap(true);
 	m_groupView->setSelectionMode(QAbstractItemView::ExtendedSelection);

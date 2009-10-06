@@ -9,7 +9,7 @@
 
 #include <assert.h>
 
-/** SlideGroupViewMutator **/
+/** SlideGroupViewMutator:: **/
 
 SlideGroupViewMutator::SlideGroupViewMutator() {}
 SlideGroupViewMutator::~SlideGroupViewMutator() {}
@@ -19,7 +19,7 @@ QList<AbstractItem *> SlideGroupViewMutator::itemList(Output*, SlideGroup*, Slid
 }
 
 
-/** SlideGroupViewControl **/
+/** SlideGroupViewControl:: **/
 SlideGroupViewControl::SlideGroupViewControl(SlideGroupViewer *g, QWidget *w )
 	: QWidget(w),
 	m_slideViewer(0)
@@ -27,16 +27,20 @@ SlideGroupViewControl::SlideGroupViewControl(SlideGroupViewer *g, QWidget *w )
 		
 	QVBoxLayout * layout = new QVBoxLayout();
 	
+	/** Setup the list view in icon mode */
 	m_listView = new QListView(this);
-	m_listView->setMovement(QListView::Static);
 	m_listView->setViewMode(QListView::IconMode);
-	m_listView->setSelectionMode(QAbstractItemView::ExtendedSelection);
+	m_listView->setMovement(QListView::Static);
+	m_listView->setSelectionMode(QAbstractItemView::SingleSelection);
 	
 	connect(m_listView,SIGNAL(activated(const QModelIndex &)),this,SLOT(slideSelected(const QModelIndex &)));
-	connect(m_listView,SIGNAL(clicked(const QModelIndex &)),this,SLOT(slideSelected(const QModelIndex &)));
+	connect(m_listView,SIGNAL(clicked(const QModelIndex &)),  this,SLOT(slideSelected(const QModelIndex &)));
+	connect(m_listView,SIGNAL(entered(const QModelIndex &)),  this,SLOT(slideSelected(const QModelIndex &)));
 	
 	// deleting old selection model per http://doc.trolltech.com/4.5/qabstractitemview.html#setModel
 	QItemSelectionModel *m = m_listView->selectionModel();
+//	if(m)
+// 		disconnect(m,0,this,0);
 	
 	m_slideModel = new SlideGroupListModel();
 	m_listView->setModel(m_slideModel);
@@ -47,8 +51,12 @@ SlideGroupViewControl::SlideGroupViewControl(SlideGroupViewer *g, QWidget *w )
 		m=0;
 	}
 	
+	QItemSelectionModel *currentSelectionModel = m_listView->selectionModel();
+	connect(currentSelectionModel, SIGNAL(currentchanged(const QModelIndex &, const QModelIndex &)), this, SLOT(currentchanged(const QModelIndex &, const QModelIndex &)));
+	
 	layout->addWidget(m_listView);
 	
+	/** Setup the button controls at the bottom */
 	QHBoxLayout *hbox = new QHBoxLayout();
 	
 	QPushButton *btn;
@@ -69,6 +77,12 @@ SlideGroupViewControl::SlideGroupViewControl(SlideGroupViewer *g, QWidget *w )
 	
 }
 	
+	
+void SlideGroupViewControl::currentChanged(const QModelIndex &idx,const QModelIndex &)
+{
+	slideSelected(idx);
+}
+
 void SlideGroupViewControl::slideSelected(const QModelIndex &idx)
 {
 	Slide *s = m_slideModel->slideFromIndex(idx);
@@ -97,10 +111,11 @@ void SlideGroupViewControl::setOutputView(SlideGroupViewer *v)
 void SlideGroupViewControl::setSlideGroup(SlideGroup *g, Slide *curSlide)
 {
 	assert(g);
-	qDebug()<<"SlideGroupViewControl::setSlideGroup: mark1";
+	qDebug()<<"SlideGroupViewControl::setSlideGroup: Loading group#"<<g->groupNumber();
 	m_slideModel->setSlideGroup(g);
-	m_listView->setModel(m_slideModel);
-	qDebug()<<"SlideGroupViewControl::setSlideGroup: mark2";
+	// reset seems to be required
+	m_listView->reset();
+	//qDebug()<<"SlideGroupViewControl::setSlideGroup: mark2";
 	if(!m_slideViewer)
 	{
 		qWarning("SlideGroupViewControl::setSlideGroup: No slide viewer given to the control!");
@@ -109,12 +124,13 @@ void SlideGroupViewControl::setSlideGroup(SlideGroup *g, Slide *curSlide)
 	{
 		//m_slideViewer->setSlideGroup(g); //,curSlide);
 	}
-	qDebug()<<"SlideGroupViewControl::setSlideGroup: mark3";
+	//qDebug()<<"SlideGroupViewControl::setSlideGroup: mark3";
 	//m_slideViewer->setCurrentIndex(m_slideModel->indexForSlide(curSlide));
 }
 	
 void SlideGroupViewControl::nextSlide()
 {
+	//fprintf(stderr,"m_slideViewer=%p\n",m_slideViewer);
 	Slide *s = m_slideViewer->nextSlide();
 	m_listView->setCurrentIndex(m_slideModel->indexForSlide(s));
 }
@@ -137,13 +153,13 @@ void SlideGroupViewControl::setCurrentSlide(Slide *s)
 	m_listView->setCurrentIndex(m_slideModel->indexForSlide(s));
 }
 	
-/** AbstractSlideGroupEditor **/
+/** AbstractSlideGroupEditor:: **/
 AbstractSlideGroupEditor::AbstractSlideGroupEditor(SlideGroup */*g*/, QWidget *parent) : QWidget(parent) {}
 AbstractSlideGroupEditor::~AbstractSlideGroupEditor() {}
 void AbstractSlideGroupEditor::setSlideGroup(SlideGroup */*g*/,Slide */*curSlide*/) {}
 
 
-/** SlideGroupFactory **/
+/** SlideGroupFactory:: **/
 /** Static Members **/
 QMap<SlideGroup::GroupType, SlideGroupFactory*> SlideGroupFactory::m_factoryMap;
 

@@ -30,7 +30,7 @@ Revised Task list for Release 1.0, 10/10/09:
 			- Given a Song, translate into a slide group
 	- UI:
 		- List of forms needed:
-			- "Grid and Guidelines" Form
+			[ALMOST] - "Grid and Guidelines" Form
 			- Slide Group settings (aspect ratio, etc)
 			- Song Editor
 		- SongDatabase List View
@@ -41,11 +41,11 @@ Revised Task list for Release 1.0, 10/10/09:
 			- Title
 			- Name
 			- Full Text
-		[BARELY STARTED] - Random access viewer control
-			- Just do it
-			- Should be "smart" - for songs, render differently than generic slide groups
-			- Go by Group Type?
-			- Think about custom foldback generator - this is just a custom viewer control generator needed
+		[ALMOST] - Random access viewer control
+			[ALSMOT] - Just do it
+			[FRAMEWORK DONE] - Should be "smart" - for songs, render differently than generic slide groups
+			[FRAMEWORK DONE] - Go by Group Type?
+			[FRAMEWORK DONE] - Think about custom foldback generator - this is just a custom viewer control generator needed
 		- In-flight edits
 	- Visuals:
 		[DONE] - Add Aspect Ratio setting

@@ -40,6 +40,7 @@ public slots:
 	
 private slots:
 	virtual void slideSelected(const QModelIndex &);
+	virtual void currentChanged(const QModelIndex &, const QModelIndex &);
 	
 private:
 	SlideGroupViewer *m_slideViewer;

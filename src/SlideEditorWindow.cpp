@@ -355,6 +355,7 @@ void SlideEditorWindow::setupSlideList()
 {
 	m_slideListView = new QListView(this);
 	m_slideListView->setViewMode(QListView::ListMode);
+	//m_slideListView->setViewMode(QListView::IconMode);
 	m_slideListView->setMovement(QListView::Free);
 	m_slideListView->setWordWrap(true);
 	m_slideListView->setSelectionMode(QAbstractItemView::ExtendedSelection);
