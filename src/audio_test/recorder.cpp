@@ -1,22 +1,50 @@
 #include "recorder.h"
 
+#include <QDebug>
+
+#include "../audio/qaudiodeviceinfo.h"
+
 Recorder::Recorder()
 {
-	outputFile.setFileName("/test.raw");
-	outputFile.open( QIODevice::WriteOnly | QIODevice::Truncate );
+	QList<QAudioDeviceId> list = QAudioDeviceInfo::deviceList(QAudio::AudioInput);
+	foreach(QAudioDeviceId devid, list)
+	{
+		QAudioDeviceInfo deviceInfo(devid);
+		qDebug() << "Device name: " << deviceInfo.deviceName();
+		QStringList codecs = deviceInfo.supportedCodecs();
+		qDebug() << "       Supported Codecs: "<<codecs;
+	}
+
+	//outputFile.setFileName("/test.raw");
+	//outputFile.open( QIODevice::WriteOnly | QIODevice::Truncate );
 	
 	QAudioFormat format;
-	// set up the format you want, eg.
+
 	format.setFrequency(8000);
 	format.setChannels(1);
 	format.setSampleSize(8);
+
 	format.setCodec("audio/pcm");
 	format.setByteOrder(QAudioFormat::LittleEndian);
 	format.setSampleType(QAudioFormat::UnSignedInt);
 	
-	audio = new QAudioInput(format, this);
-	QTimer::singleShot(3000, this, SLOT(stopRecording()));
-	audio->start(&outputFile);
+	qDebug() << "Going to create input...";
+	audio = new QAudioInput(list[1], format, this); //, format, this);
+	qDebug() << "Created input...";
+	QTimer::singleShot(10000, this, SLOT(stopRecording()));
+
+	//audio->start(&outputFile);
+	connect(&sample, SIGNAL(timeout()), this, SLOT(sampleIO()));
+	sample.start(50);
+
+	buffer.setBuffer(&byteArray);
+	buffer.open(QBuffer::ReadWrite);
+	//connect(&buffer, SIGNAL(bytesWritten()), this, SLOT(sampleIO()));
+
+	audio->start(&buffer);
+
+	//io = audio->start();
+	qDebug() << "Recording started.";
 	// Records audio for 3000ms
 } 
 
@@ -26,8 +54,49 @@ Recorder::~Recorder()
 	audio = 0;
 }
 
+void Recorder::sampleIO()
+{
+    /*
+	char buf[4096];
+	//int read = io->read((char*)&buf,sizeof(buf));
+	//fwrite(buf, 8, read, stdout);
+	int ba = io->bytesAvailable();
+	//QByteArray b = io->read(4096);
+	//qDebug() << "SampleIO: ba:"<<ba<<", b:"<<b;
+	int read = io->read( (char*)&buf, 4096);
+	qDebug() << "**************** Bytes Read: "<<read;
+	*/
+
+	//int ba = buffer.bytesAvailable();
+	//QByteArray b = io->read(4096);
+	//qDebug() << "SampleIO: data: "<<byteArray.size();
+	//byteArray.chop(byteArray.size());
+	int sz = byteArray.size();
+	int sum = 0;
+	char * data = byteArray.data();
+	for(int i=0;i<sz;i++)
+	{
+	    sum += (int)data[i];
+	}
+	int avg = sz == 0 ? 0 : sum / sz;
+	byteArray.clear();
+	buffer.seek(0);
+
+	qDebug() << "SampleIO: bytes: "<<sz<<", avg:"<<avg;
+
+
+    /*
+	char ch;
+	buffer.seek(0);
+	 buffer.getChar(&ch);  // ch == 'Q'
+	 buffer.getChar(&ch);  // ch == 't'
+	 buffer.getChar(&ch);  // ch == ' '
+	 buffer.getChar(&ch);  // ch == 'r'
+*/
+}
 void Recorder::stopRecording()
 {
 	audio->stop();
-	outputFile.close();
+	//outputFile.close();
+	exit(-1);
 }

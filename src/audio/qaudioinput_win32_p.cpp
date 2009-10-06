@@ -50,12 +50,13 @@
 // We mean it.
 //
 
+//static int RandomGlobalVar = 0;
 
 #include "qaudioinput_win32_p.h"
 
 QT_BEGIN_NAMESPACE
 
-//#define DEBUG_AUDIO 1
+//#define DEBUG_AUDIO 0
 
 static CRITICAL_SECTION waveInCriticalSection;
 
@@ -322,7 +323,7 @@ qint64 QAudioInputPrivate::read(char* data, qint64 len)
                 l = audioSource->write(waveBlocks[header].lpData,
                         waveBlocks[header].dwBytesRecorded);
 #ifdef DEBUG_AUDIO
-                qDebug()<<"IN: "<<waveBlocks[header].dwBytesRecorded<<", OUT: "<<l;
+		qDebug()<<"[A] IN: "<<waveBlocks[header].dwBytesRecorded<<", OUT: "<<l;
 #endif
                 if(l < 0) {
                     // error
@@ -347,7 +348,7 @@ qint64 QAudioInputPrivate::read(char* data, qint64 len)
                 memcpy(p,waveBlocks[header].lpData,waveBlocks[header].dwBytesRecorded);
                 l = waveBlocks[header].dwBytesRecorded;
 #ifdef DEBUG_AUDIO
-                qDebug()<<"IN: "<<waveBlocks[header].dwBytesRecorded<<", OUT: "<<l;
+		qDebug()<<"[B] IN: "<<waveBlocks[header].dwBytesRecorded<<", OUT: "<<l;
 #endif
                 totalTimeValue += waveBlocks[header].dwBytesRecorded
                     /((settings.channels()*settings.sampleSize()/8))
@@ -464,12 +465,12 @@ void QAudioInputPrivate::suspend()
 
 void QAudioInputPrivate::feedback()
 {
+
+    bytesAvailable = bytesReady();
 #ifdef DEBUG_AUDIO
     QTime now(QTime::currentTime());
-    qDebug()<<now.second()<<"s "<<now.msec()<<"ms :feedback() INPUT";
+    qDebug()<<now.second()<<"s "<<now.msec()<<"ms :feedback() INPUT: bytesAvailable:"<<bytesAvailable;
 #endif
-    bytesAvailable = bytesReady();
-
     if(!(deviceState==QAudio::StopState||deviceState==QAudio::SuspendState))
         emit processMore();
 }

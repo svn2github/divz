@@ -4,6 +4,9 @@
 
 #include <QTimer>
 #include <QFile>
+#include <QIODevice>
+#include <QByteArray>
+#include <QBuffer>
 
 class Recorder : public QObject
 {
@@ -14,7 +17,13 @@ public:
 
 public slots:
 	void stopRecording();
+	void sampleIO();
+
 private:
 	QAudioInput * audio;
 	QFile outputFile;
+	QIODevice *io;
+	QTimer sample;
+	QByteArray byteArray;
+	QBuffer buffer;
 };
