@@ -20,6 +20,25 @@ QList<AbstractItem *> SlideGroupViewMutator::itemList(Output*, SlideGroup*, Slid
 
 
 /** SlideGroupViewControl:: **/
+// class SlideGroupViewControlListView : public QListView
+// { 
+// public:
+// 	SlideGroupViewControlListView(SlideGroupViewControl * ctrl, QWidget *parent) : QListView(parent), ctrl(ctrl) {}
+// protected:
+// 	void keyPressEvent(QKeyEvent *event)
+// 	{
+// 		QModelIndex oldIdx = currentIndex();
+// 		QListView::keyPressEvent(event);
+// 		QModelIndex newIdx = currentIndex();
+// 		if(oldIdx.row() != newIdx.row())
+// 		{
+// 			ctrl->slideSelected(newIdx);
+// 		}
+// 	}
+// 	
+// 	SlideGroupViewControl *ctrl;
+// };
+
 SlideGroupViewControl::SlideGroupViewControl(SlideGroupViewer *g, QWidget *w )
 	: QWidget(w),
 	m_slideViewer(0)
@@ -52,7 +71,7 @@ SlideGroupViewControl::SlideGroupViewControl(SlideGroupViewer *g, QWidget *w )
 	}
 	
 	QItemSelectionModel *currentSelectionModel = m_listView->selectionModel();
-	connect(currentSelectionModel, SIGNAL(currentchanged(const QModelIndex &, const QModelIndex &)), this, SLOT(currentchanged(const QModelIndex &, const QModelIndex &)));
+	connect(currentSelectionModel, SIGNAL(currentChanged(const QModelIndex &, const QModelIndex &)), this, SLOT(currentChanged(const QModelIndex &, const QModelIndex &)));
 	
 	layout->addWidget(m_listView);
 	
