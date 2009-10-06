@@ -84,6 +84,8 @@ QVideo::~QVideo()
 	m_screen = 0;*/
 	
 	unload();
+	delete m_video_decoder;
+	m_video_decoder = 0;
 }
 
 
@@ -171,6 +173,7 @@ void QVideo::play()
 		m_play_time.start();
 		m_play_timer = startTimer(1);
 	}
+	//m_video_decoder->decode(); // start decoding again
 	emit movieStateChanged(QMovie::Running);
 }
 

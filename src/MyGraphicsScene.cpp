@@ -109,7 +109,10 @@ void MyGraphicsScene::clear()
 		removeItem(content);
 		
 		disconnect(content, 0, 0, 0);
+		//qDebug() << "Disposing of content";
 		content->dispose(false);
+		//delete content;
+		content = 0;
 	}
 	m_slide = 0;
 	

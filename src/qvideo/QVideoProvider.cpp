@@ -2,7 +2,7 @@
 #include <QFileInfo>
 #include <QDebug>
 
-#define DEBUG_QVIDEOPROVIDER 0
+#define DEBUG_QVIDEOPROVIDER 1
 	
 	
 QMap<QString,QVideoProvider*> QVideoProvider::m_fileProviderMap;
@@ -20,16 +20,19 @@ QVideoProvider * QVideoProvider::providerForFile(const QString & file)
 		QVideoProvider *v = m_fileProviderMap[can];
 		v->m_refCount++;
 		if(DEBUG_QVIDEOPROVIDER)
-			qDebug() << "QVideoProvider::providerForFile: + Found existing provider for file:"<<file<<", refCount:"<<v->m_refCount;
+			qDebug() << "[REFF +] QVideoProvider::providerForFile(): + Found existing provider for file:"<<file<<", refCount:"<<v->m_refCount;
+		v->play();
 		return v;
 	}
 	else
 	{
 		if(DEBUG_QVIDEOPROVIDER)
-			qDebug() << "QVideoProvider::providerForFile: - Creating new provider for file:"<<file;
+			qDebug() << "[REFF +] QVideoProvider::providerForFile(): - Creating new provider for file:"<<file;
 		QVideoProvider *v = new QVideoProvider(can);
 		m_fileProviderMap[can] = v;
 		v->m_refCount=1;
+		v->play();
+
 		return v;
 	}
 }
@@ -41,11 +44,11 @@ void QVideoProvider::releaseProvider(QVideoProvider *v)
 		return;
 	v->m_refCount --;
 	if(DEBUG_QVIDEOPROVIDER)
-		qDebug() << "QVideoProvider::releaseProvider: Released provider for file:"<<v->m_canonicalFilePath<<", refCount:"<<v->m_refCount;
-	if(v->m_refCount < 0)
+		qDebug() << "[REF -] QVideoProvider::releaseProvider(): - Released provider for file:"<<v->m_canonicalFilePath<<", refCount:"<<v->m_refCount;
+	if(v->m_refCount <= 0)
 	{
 		if(DEBUG_QVIDEOPROVIDER)
-			qDebug() << "QVideoProvider::releaseProvider: DELETING PROVIDER FOR:"<<v->m_canonicalFilePath<<", refCount:"<<v->m_refCount;
+			qDebug() << "[REF -] QVideoProvider::releaseProvider: DELETING PROVIDER FOR:"<<v->m_canonicalFilePath<<", refCount:"<<v->m_refCount;
 		
 		m_fileProviderMap.remove(v->m_canonicalFilePath);
 		delete v;
@@ -74,7 +77,6 @@ QVideoProvider::QVideoProvider(const QString &f) :
 		m_video->setAdvanceMode(QVideo::Manual);
 		m_video->setLooped(true);
 		//m_video->play();
-		play();
 	}
 }
 
@@ -93,8 +95,9 @@ void QVideoProvider::newPixmap(const QPixmap & pix)
 
 void QVideoProvider::connectReceiver(QObject * receiver, const char * method)
 {
-	if (!connect(m_video, SIGNAL(newPixmap(QPixmap)), receiver, method)) {
-		qWarning("QVideoProvider::connectReceiver: error connecting provider %s to %s", m_canonicalFilePath.toAscii().data(), method);
+	if (!connect(m_video, SIGNAL(newPixmap(QPixmap)), receiver, method))
+	{
+		qWarning("QVideoProvider::connectReceiver(): error connecting provider %s to %s", m_canonicalFilePath.toAscii().data(), method);
 		return;
 	}
 }
@@ -102,26 +105,37 @@ void QVideoProvider::connectReceiver(QObject * receiver, const char * method)
 void QVideoProvider::disconnectReceiver(QObject * receiver)
 {
 	if(receiver && m_video)
-	disconnect(m_video, 0, receiver, 0);
+	{
+		qDebug() << "QVideoProvider::disconnectReceiver()";
+		disconnect(m_video, 0, receiver, 0);
+	}
 }
 //	void newPixmap(const QPixmap & pixmap);
 	
 void QVideoProvider::stop()
 {
 	m_video->stop();
+	m_playCount --;
+	qDebug() << "[PLAY -] QVideoProvider::stop(): m_playCount:"<<m_playCount;
 }
 
 void QVideoProvider::play()
 {
 	m_video->play();
 	m_playCount ++;
+	qDebug() << "[PLAY +] QVideoProvider::play(): m_playCount:"<<m_playCount;
 }
 void QVideoProvider::pause()
 {
 	// dont pause unless all players are paused
-	m_playCount --;
+	//if(m_playCount > 0)
+		m_playCount --;
+	qDebug() << "[PLAY -] QVideoProvider::pause(): m_playCount:"<<m_playCount;
 	if(m_playCount <= 0)
+	{
+		qDebug() << "QVideoProvider::pause(): m_video->pause() hit";
 		m_video->pause();
+	}
 	
 }
 void QVideoProvider::seekTo(int ms)

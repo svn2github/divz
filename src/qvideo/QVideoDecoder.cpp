@@ -341,6 +341,9 @@ void QVideoDecoder::read()
 
 void QVideoDecoder::decode()
 {
+	if(m_video->m_status == QVideo::NotRunning)
+		return;
+		
 	emit ready(false);
 
 	AVPacket pkt1, *packet = &pkt1;

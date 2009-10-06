@@ -66,8 +66,11 @@ BackgroundContent::BackgroundContent(QGraphicsScene * scene, QGraphicsItem * par
 
 BackgroundContent::~BackgroundContent()
 {
-// 	delete m_shapeEditor;
-// 	delete m_text;
+	if(m_videoProvider)
+	{
+		m_videoProvider->disconnectReceiver(this);
+		QVideoProvider::releaseProvider(m_videoProvider);
+	}
 }
 
 QWidget * BackgroundContent::createPropertyWidget()
@@ -286,7 +289,10 @@ void BackgroundContent::setVideoFile(const QString &name)
 		m_still = false;
 	}
 	else
+	{
+		//qDebug("
 		m_videoProvider->pause();
+	}
 
 	//m_imageSize = QSize();
 // 	m_video->setAdvanceMode(QVideo::Manual);

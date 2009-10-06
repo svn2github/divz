@@ -177,7 +177,7 @@ void VideoFileContent::setFilename(const QString &name)
 	
 	m_videoProvider = p;
 	m_videoProvider->connectReceiver(this, SLOT(setPixmap(const QPixmap &)));
-	m_videoProvider->play();
+	//m_videoProvider->play();
 	
 	// prime the pump, so to speak
 	setPixmap(m_videoProvider->pixmap());
@@ -317,14 +317,13 @@ void VideoFileContent::setPixmap(const QPixmap & pixmap)
 	
 	if(sceneContextHint() != MyGraphicsScene::Live)
 	{
+		//qDebug() << "VideFileContent::setPixmap(): sceneContextHint() != Live, setting m_still true"; 
 		m_still = true;
-		//m_videoProvider->pause();
+		m_videoProvider->pause();
 		//qDebug("VideoFileContent::setVideoFrame: Pausing video file because not in a live scene");
 	}
         //GFX_CHANGED();
 	
-// 	m_video->pause();
-// 	qDebug("VideoFileContent::setVideoFrame: Pausing video file AGAIN because not in a live scene");
 }
 
 

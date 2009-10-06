@@ -77,8 +77,10 @@ Revised Task list for Release 1.0, 10/10/09:
 	- Improvements:
 		Consider moving opengl option to a per-output setting
 		Consider making Output objects QObjects that can emit signals when changed
+		Add editing to slide group/slide model lists in the list itself (e.g. to change slide/group title)
+		
 	- Bugs:
-		When video item is showing in live and preview, then a different slide group is shown in preview, the live item stops playing
+		[FIXED] When another slide live first, then trans to video slide, single click (preview) different slide, the live item stops playing
 		[FIXED] Centered TextBox items appear too far to the left in icon previews (list models, etc)
 		[FIXED] Setting config on background item causes it to "go away" until program reload
 		[FIXED] Output Dialog should have all tabs on left disabled until output selected, otherwise SIGSEGV if user clicks screen list before selecting output

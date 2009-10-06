@@ -58,7 +58,7 @@ p, li { white-space: pre-wrap; }
             </background>
         </slide>
     </group>
-    <group title="" number="0" icon="" type="0" id="1" >
+    <group title="" number="1" icon="" type="0" id="1" >
         <slide number="0" id="0" >
             <background>
                 <item-id>146</item-id>
@@ -93,8 +93,8 @@ p, li { white-space: pre-wrap; }
                     <h>150</h>
                 </rect>
                 <pos>
-                    <x>123</x>
-                    <y>146</y>
+                    <x>267</x>
+                    <y>176</y>
                 </pos>
                 <zvalue>-9998</zvalue>
                 <opacity>1</opacity>

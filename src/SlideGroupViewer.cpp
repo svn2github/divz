@@ -110,7 +110,7 @@ void SlideGroupViewer::clear()
 
 void SlideGroupViewer::setSlideGroup(SlideGroup *g, int startSlide)
 {
-	//qDebug() << "SlideGroupListModel::setSlideGroup: setting slide group:"<<g->groupNumber();
+	//qDebug() << "SlideGroupListModel::setSlideGroup: (SceneContextHint:"<<m_scene->contextHint()<<"), setting slide group:"<<g->groupNumber();
 	if(m_slideGroup == g)
 		return;
 
@@ -131,7 +131,7 @@ void SlideGroupViewer::setSlideGroup(SlideGroup *g, int startSlide)
 	if(startSlide)
 	{
 		Slide *s = m_sortedSlides.at(startSlide);
-		qDebug() << "SlideGroupViewer::setSlideGroup(): Setting slide group #"<<g->groupNumber()<<", starting at slide:"<<startSlide;
+		//qDebug() << "SlideGroupViewer::setSlideGroup(): Setting slide group #"<<g->groupNumber()<<", starting at slide:"<<startSlide;
 		m_scene->setSlide(s,MyGraphicsScene::CrossFade);
 		//m_slideListView->setCurrentIndex(m_slideModel->indexForSlide(curSlide));
 	}
@@ -140,7 +140,7 @@ void SlideGroupViewer::setSlideGroup(SlideGroup *g, int startSlide)
 		QList<Slide*> slist = g->slideList();
 		if(slist.size() > 0)
 		{
-			qDebug() << "SlideGroupViewer::setSlideGroup(): Setting slide group #"<<g->groupNumber()<<", defaulting to slide 0";
+			//qDebug() << "SlideGroupViewer::setSlideGroup(): Setting slide group #"<<g->groupNumber()<<", defaulting to slide 0";
 			Slide *s = m_sortedSlides.at(0);
 			m_scene->setSlide(s,MyGraphicsScene::CrossFade);
 			//m_slideListView->setCurrentIndex(m_slideModel->indexForRow(0));
