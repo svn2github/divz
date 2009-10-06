@@ -11,6 +11,8 @@
 #include "AppSettingsDialog.h"
 #include "DocumentSettingsDialog.h"
 
+#include "model/SlideGroupFactory.h"
+
 MainWindow * MainWindow::static_mainWindow = 0;
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -214,6 +216,20 @@ void MainWindow::setupCentralWidget()
 	// live view control at bottom
 	m_outputTabs = new QTabWidget();
 	m_splitter2->addWidget(m_outputTabs);
+	
+	SlideGroupFactory *factory;// = SlideGroupFactory::factoryForType(g->groupType());
+	//if(!factory)
+		factory = SlideGroupFactory::factoryForType(SlideGroup::Generic);
+	
+	if(factory)
+	{
+		m_viewControl = factory->newViewControl();
+		
+		m_viewControl->setOutputView(m_liveView);
+	
+		m_outputTabs->addTab(m_viewControl,"Live");
+	}
+	
 
 	setupOutputList();
 	setupOutputControl();
@@ -342,9 +358,30 @@ void MainWindow::setLiveGroup(SlideGroup *s)
         //qDebug() << "MainWindow::groupSelected(): groupSetLive group#:"<<s->groupNumber()<<", title:"<<s->groupTitle();
 	//openSlideEditor(s);
 	//m_previewWidget->clear();
-	m_liveView->setSlideGroup(s);
+	
+	SlideGroup * g = m_liveView->slideGroup();
+	
 	if(!m_liveView->isVisible())
 		m_liveView->show();
+		
+	if(g && g->groupType() != s->groupType())
+	{
+		SlideGroupFactory *factory = SlideGroupFactory::factoryForType(s->groupType());
+		if(!factory)
+			factory = SlideGroupFactory::factoryForType(SlideGroup::Generic);
+		
+		if(factory)
+		{
+			m_outputTabs->removeTab(m_outputTabs->indexOf(m_viewControl));
+			m_viewControl = factory->newViewControl();
+			m_viewControl->setOutputView(m_liveView);
+			m_outputTabs->addTab(m_viewControl,"Live");
+		}
+	}
+	
+	m_viewControl->setSlideGroup(s);
+	m_liveView->setSlideGroup(s);
+	
 }
 
 void MainWindow::groupDoubleClicked(const QModelIndex &idx)

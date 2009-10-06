@@ -8,7 +8,10 @@
 #include <QMap>
 #include <QWidget>
 
-class OutputView;
+//class OutputView;
+#include "SlideGroupViewer.h"
+#include "SlideGroupListModel.h"
+#include <QListView>
 
 class SlideGroupViewMutator
 {
@@ -18,24 +21,30 @@ public:
 	virtual QList<AbstractItem *> itemList(Output*, SlideGroup*, Slide*);
 };
 
+class QListView;
 class SlideGroupViewControl : public QWidget
 {
 	Q_OBJECT
 public:
-	SlideGroupViewControl(OutputView * view=0, QWidget * parent = 0);
+	SlideGroupViewControl(SlideGroupViewer * view=0, QWidget * parent = 0);
 	
-	OutputView * view() { return m_view; }
-	virtual void setOutputView(OutputView *);
+	SlideGroupViewer * view() { return m_slideViewer; }
+	virtual void setOutputView(SlideGroupViewer *);
 	
 public slots:
-	virtual void setSlideGroup(SlideGroup*g,Slide *curSlide=0);
+	virtual void setSlideGroup(SlideGroup *g, Slide *curSlide=0);
 	virtual void nextSlide();
 	virtual void prevSlide();
 	virtual void setCurrentSlide(int);
 	virtual void setCurrentSlide(Slide*);
 	
+private slots:
+	virtual void slideSelected(const QModelIndex &);
+	
 private:
-	OutputView *m_view;	
+	SlideGroupViewer *m_slideViewer;
+	SlideGroupListModel *m_slideModel;	
+	QListView *m_listView;
 };
 
 class AbstractSlideGroupEditor : public QWidget

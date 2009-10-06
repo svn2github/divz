@@ -19,6 +19,8 @@ public:
 	~SlideGroupViewer();
 
 	void setSlideGroup(SlideGroup*, int startSlide = 0);
+	SlideGroup * slideGroup() { return m_slideGroup; }
+	
 	int numSlides() { return m_sortedSlides.size(); }
 	
 	void clear();
@@ -27,10 +29,10 @@ public:
 	QGraphicsView * view() { return m_view; }
 
 public slots:
-	void setSlide(int);
-	void setSlide(Slide*);
-	void nextSlide();
-	void prevSlide();
+	Slide * setSlide(Slide *);
+	Slide * setSlide(int);
+	Slide * nextSlide();
+	Slide * prevSlide();
 
 private slots:
 	void appSettingsChanged();

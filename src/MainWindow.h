@@ -23,6 +23,8 @@ namespace Ui {
 	class MainWindow;
 }
 
+class SlideGroupViewControl;
+
 class MainWindow : public QMainWindow {
 	Q_OBJECT
 public /*static*/:
@@ -97,6 +99,8 @@ private:
 	OutputSetupDialog *m_outputDialog;
 	
 	Document m_doc;
+	
+	SlideGroupViewControl * m_viewControl;
 	
 	/** static */
 	static MainWindow * static_mainWindow;	
