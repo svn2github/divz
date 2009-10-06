@@ -7,11 +7,18 @@
 #include <QDesktopWidget>
 #include <QMessageBox>
 
+#include <QTableView>
+
+#include <QLabel>
+
 #include "AppSettings.h"
 #include "AppSettingsDialog.h"
 #include "DocumentSettingsDialog.h"
 
 #include "model/SlideGroupFactory.h"
+
+#include "songdb/SongSlideGroup.h"
+#include "songdb/SongRecord.h"
 
 MainWindow * MainWindow::static_mainWindow = 0;
 
@@ -98,6 +105,9 @@ MainWindow::MainWindow(QWidget *parent) :
 	//setLiveGroup(m_doc.groupList().at(0));
 	
 	connect(m_ui->actionExit,SIGNAL(activated()), qApp, SLOT(quit()));
+	
+	
+	setupSongList();
 }
 
 
@@ -116,6 +126,68 @@ MainWindow::~MainWindow()
 	
 	delete m_liveView;
 	m_liveView = 0;
+}
+
+void MainWindow::setupSongList()
+{
+// 	QTableView * m_songList;
+// 	QLineEdit * m_songSearch;
+// 	QComboBox * m_searchOpt;
+	QVBoxLayout *vbox = new QVBoxLayout();
+	
+	QHBoxLayout *hbox = new QHBoxLayout();
+	QLabel *label = new QLabel("Search:");
+	m_songSearch = new QLineEdit(m_ui->tabSongs);
+	//m_searchOpt = new QComboBox(m_ui->tabSongs);
+	//QPushButton * searchBtn = new QPushButton(m_ui->tabSongs);
+	hbox->addWidget(label);
+	hbox->addWidget(m_songSearch);
+	//hbox->addWidget(m_SearchOpt);
+	//hbox->addWidget(searchBtn);
+	connect(m_songSearch, SIGNAL(textChanged(const QString &)), this, SLOT(songFilterChanged(const QString &)));
+
+	m_songList = new QTableView(m_ui->tabSongs);
+	
+	m_songTableModel = new QSqlTableModel(0,SongRecord::db());
+	m_songTableModel->setTable("songs");
+	
+	m_songTableModel->select();
+	//tbl->removeColumn(0); // don't show the ID
+	m_songTableModel->removeColumn(0); //, Qt::Horizontal, tr("SongID"));
+	m_songTableModel->setHeaderData(1, Qt::Horizontal, tr("Number"));
+	m_songTableModel->setHeaderData(2, Qt::Horizontal, tr("Title"));
+	m_songTableModel->removeColumn(3); //, Qt::Horizontal, tr("Text"));
+	m_songTableModel->removeColumn(4); //, Qt::Horizontal, tr("Author"));
+	m_songTableModel->removeColumn(5); //, Qt::Horizontal, tr("Copyright"));
+	m_songTableModel->removeColumn(6); //6, Qt::Horizontal, tr("Last Used"));
+	
+	m_songProxyModel = new QSortFilterProxyModel(this);
+	m_songProxyModel->setSourceModel(m_songTableModel);
+	m_songProxyModel->setSortCaseSensitivity(Qt::CaseInsensitive);
+
+	m_songList->setAlternatingRowColors(true);
+	m_songList->setModel(m_songProxyModel);
+	m_songList->setSortingEnabled(true);
+	
+	vbox->addLayout(hbox);
+	vbox->addWidget(m_songList);
+	m_ui->tabSongs->setLayout(vbox);
+	connect(m_songList, SIGNAL(doubleClicked(const QModelIndex &)), this, SLOT(songDoubleClicked(const QModelIndex &)));
+}
+
+void MainWindow::songDoubleClicked(const QModelIndex &idx)
+{
+	QSqlRecord record = m_songTableModel->record(idx.row());
+	SongRecord *song = SongRecord::fromSqlRecord(record);
+	SongSlideGroup *group = new SongSlideGroup();
+	group->setSong(song);
+	m_doc.addGroup(group);
+}
+
+void MainWindow::songFilterChanged(const QString &text)
+{
+	QRegExp regExp(text, Qt::CaseInsensitive, QRegExp::Wildcard);
+	m_songProxyModel->setFilterRegExp(regExp);
 }
 
 
@@ -186,6 +258,7 @@ void MainWindow::setupCentralWidget()
 	m_groupView->setDragEnabled(true);
 	m_groupView->setAcceptDrops(true);
 	m_groupView->setDropIndicatorShown(true);
+	m_groupView->setEditTriggers(QAbstractItemView::EditKeyPressed); 
 	
 	m_groupView->setModel(&m_docModel);
 	m_groupView->setContextMenuPolicy(Qt::ActionsContextMenu);

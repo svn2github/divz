@@ -43,6 +43,9 @@ public:
  	QMimeData * mimeData(const QModelIndexList & indexes) const;
  	bool dropMimeData(const QMimeData * data, Qt::DropAction action, int row, int column, const QModelIndex & parent);
  	
+ 	/* Editing Support */
+ 	bool setData(const QModelIndex & index, const QVariant & value, int role = Qt::EditRole);
+ 	
  	// Not from AbstractListModel, just for utility
 	QString itemMimeType() const { return "application/x-dviz-document-listmodel-item"; }
 	

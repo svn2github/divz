@@ -1,6 +1,7 @@
-#include "model/SlideGroupFactory.h"
+#include "SongSlideGroupFactory.h"
 
-#include "SlideEditorWindow.h"
+#include "SongEditorWindow.h"
+#include "SongSlideGroup.h"
 
 #include <QListView>
 #include <QVBoxLayout>
@@ -11,9 +12,9 @@
 
 /** SlideGroupViewMutator:: **/
 
-SlideGroupViewMutator::SlideGroupViewMutator() {}
-SlideGroupViewMutator::~SlideGroupViewMutator() {}
-QList<AbstractItem *> SlideGroupViewMutator::itemList(Output*, SlideGroup*, Slide*s)
+SongSlideGroupViewMutator::SongSlideGroupViewMutator() {}
+SongSlideGroupViewMutator::~SongSlideGroupViewMutator() {}
+QList<AbstractItem *> SongSlideGroupViewMutator::itemList(Output*, SlideGroup*, Slide*s)
 {
 	return s->itemList();
 }
@@ -40,63 +41,14 @@ QList<AbstractItem *> SlideGroupViewMutator::itemList(Output*, SlideGroup*, Slid
 // };
 
 #define DEBUG_SLIDEGROUPVIEWCONTROL 0
-SlideGroupViewControl::SlideGroupViewControl(SlideGroupViewer *g, QWidget *w )
-	: QWidget(w),
-	m_slideViewer(0)
+SongSlideGroupViewControl::SongSlideGroupViewControl(SlideGroupViewer *g, QWidget *w )
+	: SlideGroupViewControl(g,w)
 {
-		
-	QVBoxLayout * layout = new QVBoxLayout();
 	
-	/** Setup the list view in icon mode */
-	m_listView = new QListView(this);
-	m_listView->setViewMode(QListView::IconMode);
-	m_listView->setMovement(QListView::Static);
-	m_listView->setSelectionMode(QAbstractItemView::SingleSelection);
-	
-	connect(m_listView,SIGNAL(activated(const QModelIndex &)),this,SLOT(slideSelected(const QModelIndex &)));
-	connect(m_listView,SIGNAL(clicked(const QModelIndex &)),  this,SLOT(slideSelected(const QModelIndex &)));
-	connect(m_listView,SIGNAL(entered(const QModelIndex &)),  this,SLOT(slideSelected(const QModelIndex &)));
-	
-	// deleting old selection model per http://doc.trolltech.com/4.5/qabstractitemview.html#setModel
-	QItemSelectionModel *m = m_listView->selectionModel();
-//	if(m)
-// 		disconnect(m,0,this,0);
-	
-	m_slideModel = new SlideGroupListModel();
-	m_listView->setModel(m_slideModel);
-	
-	if(m)
-	{
-		delete m;
-		m=0;
-	}
-	
-	QItemSelectionModel *currentSelectionModel = m_listView->selectionModel();
-	connect(currentSelectionModel, SIGNAL(currentChanged(const QModelIndex &, const QModelIndex &)), this, SLOT(currentChanged(const QModelIndex &, const QModelIndex &)));
-	
-	layout->addWidget(m_listView);
-	
-	/** Setup the button controls at the bottom */
-	QHBoxLayout *hbox = new QHBoxLayout();
-	
-	QPushButton *btn;
-	
-	btn = new QPushButton("<< Prev");
-	connect(btn, SIGNAL(clicked()), this, SLOT(prevSlide()));
-	hbox->addWidget(btn);
-	
-	btn = new QPushButton(">> Next");
-	connect(btn, SIGNAL(clicked()), this, SLOT(nextSlide()));
-	hbox->addWidget(btn);
-	
-	layout->addLayout(hbox);
-	setLayout(layout);
-	
-	if(g)
-		setOutputView(g);
 	
 }
-	
+
+/*
 	
 void SlideGroupViewControl::currentChanged(const QModelIndex &idx,const QModelIndex &)
 {
@@ -161,64 +113,42 @@ void SlideGroupViewControl::setCurrentSlide(Slide *s)
 	m_slideViewer->setSlide(s);
 	m_listView->setCurrentIndex(m_slideModel->indexForSlide(s));
 }
-	
+	*/
 /** AbstractSlideGroupEditor:: **/
-AbstractSlideGroupEditor::AbstractSlideGroupEditor(SlideGroup */*g*/, QWidget *parent) : QWidget(parent) {}
-AbstractSlideGroupEditor::~AbstractSlideGroupEditor() {}
-void AbstractSlideGroupEditor::setSlideGroup(SlideGroup */*g*/,Slide */*curSlide*/) {}
+// SongSlideGroupEditor::SongSlideGroupEditor(SlideGroup *g, QWidget *parent) : AbstractSlideGroupEditor(g,parent) {}
+// SongSlideGroupEditor::~SongSlideGroupEditor() {}
+// void SongSlideGroupEditor::setSlideGroup(SlideGroup */*g*/,Slide */*curSlide*/) {}
 
 
 /** SlideGroupFactory:: **/
-/** Static Members **/
-QMap<SlideGroup::GroupType, SlideGroupFactory*> SlideGroupFactory::m_factoryMap;
-
-void SlideGroupFactory::registerFactoryForType(SlideGroup::GroupType type, SlideGroupFactory *f)
-{
-	m_factoryMap[type] = f;
-}
-	
-void SlideGroupFactory::removeFactoryForType(SlideGroup::GroupType type)
-{
-	m_factoryMap.remove(type);
-}
-
-SlideGroupFactory * SlideGroupFactory::factoryForType(SlideGroup::GroupType type)
-{
-	return m_factoryMap[type];
-}
 
 /** Class Members **/
 
-SlideGroupFactory::SlideGroupFactory() : m_scene(0) {}
-SlideGroupFactory::~SlideGroupFactory()
+SongSlideGroupFactory::SongSlideGroupFactory() : SlideGroupFactory() {}
+/*SongSlideGroupFactory::~SongSlideGroupFactory()
 {
-	if(m_scene)
-	{
-		delete m_scene;
-		m_scene = 0;
-	}
+}*/
+	
+SlideGroup * SongSlideGroupFactory::newSlideGroup()
+{
+	return dynamic_cast<SlideGroup*>(new SongSlideGroup());
 }
 	
-SlideGroup * SlideGroupFactory::newSlideGroup()
+SlideGroupViewMutator * SongSlideGroupFactory::newViewMutator()
 {
-	return new SlideGroup();
-}
-	
-SlideGroupViewMutator * SlideGroupFactory::newViewMutator()
-{
-	return new SlideGroupViewMutator();
+	return new SongSlideGroupViewMutator();
 }
 
-SlideGroupViewControl * SlideGroupFactory::newViewControl()
+SlideGroupViewControl * SongSlideGroupFactory::newViewControl()
 {
-	return new SlideGroupViewControl();
+	return new SongSlideGroupViewControl();
 }
 
-AbstractSlideGroupEditor * SlideGroupFactory::newEditor()
+AbstractSlideGroupEditor * SongSlideGroupFactory::newEditor()
 {
-	return new SlideEditorWindow();
+	return new SongEditorWindow();
 }
-
+/*
 QPixmap	SlideGroupFactory::generatePreviewPixmap(SlideGroup *g, QSize iconSize, QRect sceneRect)
 {
 		
@@ -252,4 +182,5 @@ QPixmap	SlideGroupFactory::generatePreviewPixmap(SlideGroup *g, QSize iconSize, 
 	m_scene->clear();
 	
 	return icon;
-}
+}*/
+

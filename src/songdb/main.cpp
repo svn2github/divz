@@ -5,7 +5,7 @@
 #include <QSqlTableModel>
 #include <QTableView>
 
-#include "Song.h"
+#include "SongRecord.h"
 
 int main(int argc, char **argv)
 {
@@ -18,7 +18,7 @@ int main(int argc, char **argv)
 // 	//db.setPassword("1uTbSbAs");
 // 	bool ok = db.open();
 // 	qDebug()<<"Ok?"<<ok;
-	Song::db();
+	SongRecord::db();
 	
 /*
 	QSqlQuery query;
@@ -65,7 +65,7 @@ int main(int argc, char **argv)
 	
 	//return -1;
 	
-	QSqlTableModel * tbl = new QSqlTableModel(0,Song::db());
+	QSqlTableModel * tbl = new QSqlTableModel(0,SongRecord::db());
 	tbl->setTable("songs");
 	
 	#define tr
@@ -85,7 +85,7 @@ int main(int argc, char **argv)
 	view->show();
 	
 	// id=16, nbr=203
-	Song * s = Song::songByNumber(203);
+	SongRecord * s = SongRecord::songByNumber(203);
 	//Song * s = Song::retrieve(16);
 	
 	if(s)
@@ -104,7 +104,7 @@ int main(int argc, char **argv)
 	delete s;
 	s=0;
 	
-	//Song::db().close();
+	//SongRecord::db().close();
 	
 	
 	//return -1;

@@ -31,6 +31,7 @@ QColor RenderOpts::hiColor;
 #include "model/Slide.h"
 #include "model/TextItem.h"
 #include "model/SlideGroupFactory.h"
+#include "songdb/SongSlideGroupFactory.h"
 #include "AppSettings.h"
 
 int main(int argc, char **argv)
@@ -56,6 +57,7 @@ int main(int argc, char **argv)
 	
 	
 	SlideGroupFactory::registerFactoryForType(SlideGroup::Generic, new SlideGroupFactory());
+	SlideGroupFactory::registerFactoryForType(SlideGroup::Song,    new SongSlideGroupFactory());
 
 	RenderOpts::OxygenStyleQuirks = app.style()->objectName() == QLatin1String("oxygen");
 	

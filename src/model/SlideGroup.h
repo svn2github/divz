@@ -63,7 +63,7 @@ signals:
 private slots:
 	void slideItemChanged(AbstractItem *item, QString operation, QString fieldName, QVariant value, QVariant old);
 
-private:
+protected:
 	QList<Slide *> m_slides;
 	int m_groupNumber;
 	int m_groupId;

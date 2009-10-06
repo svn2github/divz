@@ -1,12 +1,12 @@
-#include "Song.h"
+#include "SongRecord.h"
 
 #define SONG_FILE "songs.db"
 #define SONG_TABLE "songs"
 
-bool Song::m_dbIsOpen = false;
-QSqlDatabase Song::m_db;
+bool SongRecord::m_dbIsOpen = false;
+QSqlDatabase SongRecord::m_db;
 
-void Song::initSongDatabase()
+void SongRecord::initSongDatabase()
 {
 	m_db = QSqlDatabase::addDatabase("QSQLITE");
 	m_db.setDatabaseName(SONG_FILE);
@@ -37,7 +37,7 @@ void Song::initSongDatabase()
 // 	}
 }
 
-Song * Song::retrieve(int id)
+SongRecord * SongRecord::retrieve(int id)
 {
 	if(!m_dbIsOpen)
 		initSongDatabase();
@@ -55,7 +55,7 @@ Song * Song::retrieve(int id)
 		if(query.size())
 		{
 			query.next();
-			return Song::fromQuery(query);
+			return SongRecord::fromQuery(query);
 		}
 		else
 		{
@@ -64,7 +64,7 @@ Song * Song::retrieve(int id)
 	}
 }
 
-Song * Song::songByNumber(int id)
+SongRecord * SongRecord::songByNumber(int id)
 {
 	if(!m_dbIsOpen)
 		initSongDatabase();
@@ -84,7 +84,7 @@ Song * Song::songByNumber(int id)
 		if(query.size())
 		{
 			query.next();
-			return Song::fromQuery(query);
+			return SongRecord::fromQuery(query);
 		}
 		else
 		{
@@ -93,7 +93,7 @@ Song * Song::songByNumber(int id)
 	}
 }
 
-QList<Song*> Song::search(QString text, bool onlyTitle)
+QList<SongRecord*> SongRecord::search(QString text, bool onlyTitle)
 {
 	if(!m_dbIsOpen)
 		initSongDatabase();
@@ -106,27 +106,27 @@ QList<Song*> Song::search(QString text, bool onlyTitle)
 	if (query.lastError().isValid())
 	{
 		qDebug() << "search():"<<query.lastError();
-		return QList<Song*>();
+		return QList<SongRecord*>();
 	}
 	else
 	{
 		if(query.size())
 		{
-			QList<Song*> list;
+			QList<SongRecord*> list;
 			while(query.isValid())
-				list << Song::fromQuery(query);
+				list << SongRecord::fromQuery(query);
 			return list;
 			
 		}
 		else
 		{
-			return QList<Song*>();
+			return QList<SongRecord*>();
 		}
 	}
 	
 }
 
-bool Song::addSong(Song* song)
+bool SongRecord::addSong(SongRecord* song)
 {
 	if(!song)
 	{
@@ -150,14 +150,14 @@ bool Song::addSong(Song* song)
 }
 
 
-QSqlDatabase Song::db()
+QSqlDatabase SongRecord::db()
 {
 	if(!m_dbIsOpen)
 		initSongDatabase();
 	return m_db;
 }
 
-void Song::deleteSong(Song* song, bool deletePtr)
+void SongRecord::deleteSong(SongRecord* song, bool deletePtr)
 {
 	if(!m_dbIsOpen)
 		initSongDatabase();
@@ -183,15 +183,15 @@ void Song::deleteSong(Song* song, bool deletePtr)
 	}
 }
 
-Song * Song::fromQuery(QSqlQuery q)
+SongRecord * SongRecord::fromQuery(QSqlQuery q)
 {
 	return fromSqlRecord(q.record());
 }
 
-Song * Song::fromSqlRecord(QSqlRecord r)
+SongRecord * SongRecord::fromSqlRecord(QSqlRecord r)
 {
 	
-	Song * s = new Song();
+	SongRecord * s = new SongRecord();
 	//qDebug()<<"fromQuery:"<<r<<", isEmpty? "<<r.isEmpty();
 	//qDebug()<<"fromQuery: title:"<<q.value(r.indexOf("title"));
 	s->m_init = true;
@@ -207,7 +207,7 @@ Song * Song::fromSqlRecord(QSqlRecord r)
 	return s;
 }
 
-QSqlRecord Song::toSqlRecord()
+QSqlRecord SongRecord::toSqlRecord()
 {
 	QSqlRecord r;
 	r.setValue("songid",	songId());
@@ -221,7 +221,7 @@ QSqlRecord Song::toSqlRecord()
 	return r;
 }
 
-Song::Song(QString title, QString text, int number) :
+SongRecord::SongRecord(QString title, QString text, int number) :
 	m_songId(0)
 	, m_title(title)
 	, m_tags("")
@@ -232,27 +232,27 @@ Song::Song(QString title, QString text, int number) :
 {
 }
 
-SONG_PROPSET(Song, SongId,		int,		songId,		"songid");
-SONG_PROPSET(Song, Title,		QString,	title,		"title");
-SONG_PROPSET(Song, Tags,		QString,	tags,		"tags");
-SONG_PROPSET(Song, Number,		int,		number,		"number");
-SONG_PROPSET(Song, Text,		QString,	text,		"text");
-SONG_PROPSET(Song, Author,		QString,	author,		"author");
-SONG_PROPSET(Song, Copyright,		QString,	copyright,	"copyright");
-SONG_PROPSET(Song, LastUsed,		QString,	lastUsed,	"last_used");
+SONG_PROPSET(SongRecord, SongId,	int,		songId,		"songid");
+SONG_PROPSET(SongRecord, Title,		QString,	title,		"title");
+SONG_PROPSET(SongRecord, Tags,		QString,	tags,		"tags");
+SONG_PROPSET(SongRecord, Number,	int,		number,		"number");
+SONG_PROPSET(SongRecord, Text,		QString,	text,		"text");
+SONG_PROPSET(SongRecord, Author,	QString,	author,		"author");
+SONG_PROPSET(SongRecord, Copyright,	QString,	copyright,	"copyright");
+SONG_PROPSET(SongRecord, LastUsed,	QString,	lastUsed,	"last_used");
 
-QStringList Song::tagList() const
+QStringList SongRecord::tagList() const
 {
 	static QRegExp tagRegex("\\s*,\\s*");
 	return tags().split(tagRegex);
 }
 
-void Song::setTagList(const QStringList & list)
+void SongRecord::setTagList(const QStringList & list)
 {
 	setTags(list.join(", "));
 }
 
-bool Song::updateDb(QString field, QVariant v)
+bool SongRecord::updateDb(QString field, QVariant v)
 {
 	if(m_init)
 		return true;

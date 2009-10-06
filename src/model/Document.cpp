@@ -107,7 +107,12 @@ bool Document::fromXml(QDomElement & pe)
 	// for each slide
 	for (QDomElement element = pe.firstChildElement(); !element.isNull(); element = element.nextSiblingElement()) 
 	{
-		SlideGroup *g = new SlideGroup();
+		SlideGroup *g = 0;
+		 
+// 		if (element.tagName() == "song")
+// 			g = new SongSlideGroup();
+// 		else
+			g = new SlideGroup();
 		addGroup(g);
 		//qDebug("Document::fromXml: Loaded new group");
 		

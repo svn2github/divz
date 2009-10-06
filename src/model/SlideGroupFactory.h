@@ -38,11 +38,11 @@ public slots:
 	virtual void setCurrentSlide(int);
 	virtual void setCurrentSlide(Slide*);
 	
-private slots:
+protected slots:
 	virtual void slideSelected(const QModelIndex &);
 	virtual void currentChanged(const QModelIndex &, const QModelIndex &);
 	
-private:
+protected:
 	SlideGroupViewer *m_slideViewer;
 	SlideGroupListModel *m_slideModel;	
 	QListView *m_listView;
@@ -77,9 +77,9 @@ public:
 	
 	virtual SlideGroupViewMutator * newViewMutator();
 	virtual SlideGroupViewControl * newViewControl();
-	virtual AbstractSlideGroupEditor * newEditor();
+	virtual AbstractSlideGroupEditor   * newEditor();
 	
-	virtual QPixmap			generatePreviewPixmap(SlideGroup*, QSize iconSize, QRect sceneRect);
+	virtual QPixmap generatePreviewPixmap(SlideGroup*, QSize iconSize, QRect sceneRect);
 
 protected:
 	// for use in generating preview pixmaps

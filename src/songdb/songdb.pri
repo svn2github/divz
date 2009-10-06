@@ -2,8 +2,14 @@ VPATH += $$PWD
 DEPENDPATH += $$PWD
 
 HEADERS +=  \
-	Song.h
+	SongRecord.h \
+	SongSlideGroup.h \
+	SongSlideGroupFactory.h \
+	SongEditorWindow.h
 
     
 SOURCES += \
-	Song.cpp
+	SongRecord.cpp \
+	SongSlideGroup.cpp \
+	SongSlideGroupFactory.cpp \
+	SongEditorWindow.cpp

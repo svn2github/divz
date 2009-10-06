@@ -1,5 +1,5 @@
-#ifndef SONG_H
-#define SONG_H
+#ifndef SongRecord_H
+#define SongRecord_H
 
 #include <QtSql>
 #include <QSqlTableModel>
@@ -15,7 +15,7 @@
 	
 #define SONG_PROPDEF(setterName,typeName,memberName) void set##setterName(typeName value); typeName memberName() const { return m_##memberName; }
 
-class Song : public QObject
+class SongRecord : public QObject
 {
 	Q_OBJECT
 
@@ -30,20 +30,20 @@ class Song : public QObject
 
 /* Static */
 public:
-	static Song * retrieve(int songId);
-	static Song * songByNumber(int number);
-	static QList<Song*> search(QString text, bool onlyTitle = false);
+	static SongRecord * retrieve(int songId);
+	static SongRecord * songByNumber(int number);
+	static QList<SongRecord*> search(QString text, bool onlyTitle = false);
 
-	static bool addSong(Song*);
-	static void deleteSong(Song*, bool deletePointer = true);
+	static bool addSong(SongRecord*);
+	static void deleteSong(SongRecord*, bool deletePointer = true);
 	
-	static Song * fromQuery(QSqlQuery);
-	static Song * fromSqlRecord(QSqlRecord);
+	static SongRecord * fromQuery(QSqlQuery);
+	static SongRecord * fromSqlRecord(QSqlRecord);
 	
 	static QSqlDatabase db();
 
 public:
-	Song(QString title = "", QString text = "", int number = 0);
+	SongRecord(QString title = "", QString text = "", int number = 0);
 
 	SONG_PROPDEF(SongId,		int,		songId);
 	SONG_PROPDEF(Title,		QString,	title);
@@ -60,7 +60,7 @@ public:
 // 	SongSlideGroup * toSlideGroup();
 
 signals:
-	void songChanged(Song*, QString field, QVariant value);
+	void songChanged(SongRecord*, QString field, QVariant value);
 
 private:
 	quint32 m_songId;
@@ -83,4 +83,4 @@ private:
 };
 
 
-#endif // SONG_H
+#endif // SongRecord_H

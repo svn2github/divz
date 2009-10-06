@@ -12,6 +12,11 @@
 #include <QLineEdit>
 #include <QComboBox>
 
+#include <QSortFilterProxyModel>
+#include <QtSql>
+#include <QDebug>
+#include <QSqlTableModel>
+
 #include "model/Document.h"
 #include "DocumentListModel.h"
 #include "SlideEditorWindow.h"
@@ -54,6 +59,9 @@ protected slots:
 	
 	void groupSelected(const QModelIndex &);
 	void groupDoubleClicked(const QModelIndex &);
+	
+	void songDoubleClicked(const QModelIndex &);
+	void songFilterChanged(const QString&);
 
 	void actionEditGroup();
 	void actionNewGroup();
@@ -95,6 +103,8 @@ private:
 	QTableView * m_songList;
 	QLineEdit * m_songSearch;
 	QComboBox * m_searchOpt;
+	QSortFilterProxyModel * m_songProxyModel;
+	QSqlTableModel * m_songTableModel;
 
 	OutputSetupDialog *m_outputDialog;
 	

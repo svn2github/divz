@@ -40,9 +40,9 @@ DocumentListModel::~DocumentListModel()
 Qt::ItemFlags DocumentListModel::flags(const QModelIndex &index) const
 {
 	if (index.isValid())	
-		return Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsDragEnabled | Qt::ItemIsDropEnabled;
+		return /*Qt::ItemIsEditable |*/ Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsDragEnabled | Qt::ItemIsDropEnabled;
 	
-	return Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsDropEnabled;
+	return/* Qt::ItemIsEditable | */Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsDropEnabled;
 }
 
 
@@ -113,6 +113,16 @@ QMimeData * DocumentListModel::mimeData(const QModelIndexList & list) const
 	data->setData(itemMimeType(), ba);
 	
 	return data;
+}
+
+bool DocumentListModel::setData(const QModelIndex & index, const QVariant & value, int /*role*/)
+{
+	QString name = value.toString();
+	SlideGroup * s = groupFromIndex(index);
+	s->setGroupTitle(name);
+	
+	emit dataChanged(index,index);
+	return true;
 }
 
 

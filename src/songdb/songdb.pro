@@ -10,5 +10,5 @@ INCLUDEPATH += .
 QT += sql
 
 # Input
-HEADERS += Song.h
-SOURCES += main.cpp Song.cpp
+HEADERS += SongRecord.h
+SOURCES += main.cpp SongRecord.cpp

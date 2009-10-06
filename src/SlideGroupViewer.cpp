@@ -110,7 +110,7 @@ void SlideGroupViewer::clear()
 
 void SlideGroupViewer::setSlideGroup(SlideGroup *g, int startSlide)
 {
-	qDebug() << "SlideGroupViewer::setSlideGroup: (SceneContextHint:"<<m_scene->contextHint()<<"), setting slide group:"<<g->groupNumber();
+	//qDebug() << "SlideGroupViewer::setSlideGroup: (SceneContextHint:"<<m_scene->contextHint()<<"), setting slide group:"<<g->groupNumber();
 	if(m_slideGroup == g)
 		return;
 
