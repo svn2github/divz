@@ -82,16 +82,15 @@ Revised Task list for Release 1.0, 10/10/09:
 	- Improvements:
 		Need to implement song editor
 		Add outputview objects to encapsulate slidegroupviewer or network client/server
-		Songs need to be vertically centered as well
-		Need to change double click on song list to send straight to live
 		Need to add drag-drop from song list to song group
 		Consider moving opengl option to a per-output setting
 		Consider making Output objects QObjects that can emit signals when changed
-		Add editing to slide group/slide model lists in the list itself (e.g. to change slide/group title)
+		[FIXED] Songs need to be vertically centered as well
+		[REJECTED] Need to change double click on song list to send straight to live
+		[REJECTED] Add editing to slide group/slide model lists in the list itself (e.g. to change slide/group title)
 		
 	- Bugs:
-		Cross fading text with shadows shows ugly "dark" text during crossfade - need to investigate clipping shadow to only visible part of painter path
-		
+		[FIXED] Cross fading text with shadows shows ugly "dark" text during crossfade - need to investigate clipping shadow to only visible part of painter path
 		[FIXED] When dbl click on a FILTERED song list, the song clicked comes from the UNFILTERED list (e.g. its not the song clicked)
 		[FIXED] Major problems with song list display
 		[FIXED] Song Text not being layed out properly with the "center" functionality (text being clipped, etc) - Can't use <br> tags I fond out.

@@ -30,7 +30,8 @@ public:
         virtual void toXml(QDomElement & parentElement) const;
 
 protected:
-	void textToSlides();
+	typedef enum SongTextFilter { Standard, AllowRear, AllowAll };
+	void textToSlides(SongTextFilter filter = Standard);
 	void removeAllSlides();
 
 private:

@@ -465,9 +465,19 @@ void TextBoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * 
 // 	QPainterPath path = s.createStroke(m_textPath);
 	// Doesn't look right, so I disabled it
 	
+	QPainterPath clipPath;
+	clipPath.addRect(QRectF(0,0,contentsRect().width(),contentsRect().height()));
+	
 	// draw shadow
 	if(modelItem()->shadowEnabled())
 	{
+		painter->save();
+		
+		// apply the "mask" of the text to be painted on top
+		QPainterPath textClip = clipPath.subtracted(m_textPath);
+		painter->setClipPath(textClip);
+		
+		// draw the text - but only the parts not under the "top" text should be painted
 		double x = modelItem()->shadowOffsetX();
 		double y = modelItem()->shadowOffsetY();
 		painter->translate(x,y);
@@ -475,7 +485,11 @@ void TextBoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * 
 		painter->setBrush(modelItem()->shadowBrush());
 		painter->drawPath(m_textPath);
 		painter->translate(-x,-y);
+		
+		// reset clipping rect
+		painter->restore();
 	}
+	
 	// draw text
 	painter->setPen(p);
 	painter->setBrush(modelItem()->fillBrush());
