@@ -516,6 +516,38 @@ void TextBoxContent::updateTextConstraints(int w)
 	
 	if(DEBUG_LAYOUT)
 		qDebug("updateTextConstraints() BEGIN (width: %d)",textWidth);
+		
+		
+		
+	/*	
+		
+		
+	QTextOption t;
+        t.setWrapMode(QTextOption::WordWrap);
+        //m_text->documentLayout()->setTextOption(t);
+        
+        QPen p = modelItem()->outlinePen();
+	p.setJoinStyle(Qt::MiterJoin);
+        
+        for (QTextBlock tb = m_text->begin(); tb.isValid(); tb = tb.next())
+        {
+                tb.layout()->setTextOption(t);
+                
+                for (QTextBlock::iterator tbIt = tb.begin(); !(tbIt.atEnd()); ++tbIt) 
+		{
+			QTextFragment frag = tbIt.fragment();
+			if (!frag.isValid())
+				continue;
+			
+        }
+        
+        m_text->setTextWidth(contentsRect().width());*/
+        
+//      QSizeF sz = m_text->documentLayout()->documentSize();
+//      m_textRect = QRect(QPoint(0,0),QSize((int)sz.width(),(int)sz.height()));
+
+
+		
 	
 	QRegExp rxWhite("\\b");
 	QRegExp rxNonAZ("[A-Za-z0-9\\s]");
@@ -532,8 +564,6 @@ void TextBoxContent::updateTextConstraints(int w)
 #endif
 	
 	QPainterPath textPath;
-	
-
 	
 	for (QTextBlock tb = m_text->begin(); tb.isValid(); tb = tb.next()) 
 	{
@@ -710,20 +740,30 @@ void TextBoxContent::updateTextConstraints(int w)
 			}
 		}
 		
-		/*		
+		
 		// 2.1.B. calc the Block size of blank lines
 		if (tb.begin() == tb.end()) 
 		{
-			blockRect.setWidth(1);
-			blockRect.setHeight(textHeight);
+			QFontMetrics metrics(tb.charFormat().font());
+			int textHeight = metrics.height();
+			
+			QRect rect(0,0,1,textHeight);
+			
+			cursorRect |= rect;
+						
+			// wrap cursor to next line
+			//applyTextXAlign(blockAlign);
+			//addLineToPath(&textPath);
+			cursor.setX(xZero);
+			cursor.setY(cursor.y() + textHeight);
 			
 			//cursor.setX(1);
 			//cursor.setY(cursor.y() + textHeight); // + (cursorRect.bottom() - blockTop) + 1);
 		
 			if(DEBUG_LAYOUT)
-				qDebug() << "updateTextConstraints(): 2.1.B: empty line, blockRect="<<blockRect;
+				qDebug() << "updateTextConstraints(): 2.1.B: empty line, rect="<<rect;
 		}
-		*/
+		
 		
                 // unify the rect again
 		if(cursor.x() > cursorRect.right())
