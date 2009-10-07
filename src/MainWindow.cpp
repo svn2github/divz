@@ -135,24 +135,29 @@ void MainWindow::setupSongList()
 // 	QComboBox * m_searchOpt;
 	QVBoxLayout *vbox = new QVBoxLayout();
 	
+	// Setup filter box at the top of the widget
 	QHBoxLayout *hbox = new QHBoxLayout();
 	QLabel *label = new QLabel("Search:");
 	m_songSearch = new QLineEdit(m_ui->tabSongs);
 	//m_searchOpt = new QComboBox(m_ui->tabSongs);
-	//QPushButton * searchBtn = new QPushButton(m_ui->tabSongs);
+	m_clearSearchBtn = new QPushButton("Clear");
+	m_clearSearchBtn->setVisible(false);
+	
 	hbox->addWidget(label);
 	hbox->addWidget(m_songSearch);
 	//hbox->addWidget(m_SearchOpt);
-	//hbox->addWidget(searchBtn);
+	hbox->addWidget(m_clearSearchBtn);
+	
 	connect(m_songSearch, SIGNAL(textChanged(const QString &)), this, SLOT(songFilterChanged(const QString &)));
-
+	connect(m_clearSearchBtn, SIGNAL(clicked()), this, SLOT(songFilterReset()));
+	
+	// Now for the song list itself
 	m_songList = new QTableView(m_ui->tabSongs);
 	
+	// Setup the source model from the SQLite database
 	m_songTableModel = new QSqlTableModel(0,SongRecord::db());
-	m_songTableModel->setTable("songs");
-	
+	m_songTableModel->setTable(SONG_TABLE);
 	m_songTableModel->select();
-	//tbl->removeColumn(0); // don't show the ID
 	m_songTableModel->setHeaderData(0, Qt::Horizontal, tr("SongID"));
 	m_songTableModel->setHeaderData(1, Qt::Horizontal, tr("Number"));
 	m_songTableModel->setHeaderData(2, Qt::Horizontal, tr("Title"));
@@ -161,24 +166,16 @@ void MainWindow::setupSongList()
 	m_songTableModel->setHeaderData(5, Qt::Horizontal, tr("Copyright"));
 	m_songTableModel->setHeaderData(6, Qt::Horizontal, tr("Last Used"));
 	
-// 	
+	// Setup the proxy model to handle the sorting/filtering
 	m_songProxyModel = new QSortFilterProxyModel(this);
 	m_songProxyModel->setSourceModel(m_songTableModel);
 	m_songProxyModel->setSortCaseSensitivity(Qt::CaseInsensitive);
-	
-// 	m_songProxyModel->removeColumn(0); //, Qt::Horizontal, tr("SongID"));
-// 	m_songProxyModel->setHeaderData(1, Qt::Horizontal, tr("Number"));
-// 	m_songProxyModel->setHeaderData(2, Qt::Horizontal, tr("Title"));
-// 	m_songProxyModel->removeColumn(3); //, Qt::Horizontal, tr("Text"));
-// 	m_songProxyModel->removeColumn(4); //, Qt::Horizontal, tr("Author"));
-// 	m_songProxyModel->removeColumn(5); //, Qt::Horizontal, tr("Copyright"));
-// 	m_songProxyModel->removeColumn(6); //6, Qt::Horizontal, tr("Last Used"));
+	m_songProxyModel->setFilterKeyColumn(2);	
 
-	m_songList->setAlternatingRowColors(true);
+	// Finish setup on the TableView itself
 	m_songList->setModel(m_songProxyModel);
-	m_songList->setSortingEnabled(true);
-	m_songList->setEditTriggers(QAbstractItemView::NoEditTriggers);
 	
+	// hide unecessary columns
 	m_songList->setColumnHidden(0,true);
 	m_songList->setColumnHidden(1,true);
 	m_songList->setColumnHidden(3,true);
@@ -187,15 +184,24 @@ void MainWindow::setupSongList()
 	m_songList->setColumnHidden(6,true);
 	m_songList->setColumnHidden(7,true);
 	
-	m_songList->horizontalHeader()->setSortIndicator(0,Qt::AscendingOrder);
+	// setup desired options
+	m_songList->setAlternatingRowColors(true);
+	m_songList->setSortingEnabled(true);
 	m_songList->verticalHeader()->setVisible(false);
+	m_songList->setEditTriggers(QAbstractItemView::NoEditTriggers);
 	
+	// setup initial sorting direction
+	m_songList->horizontalHeader()->setSortIndicator(0,Qt::AscendingOrder);
+	
+	// this will have to be done every time the filter changes (below)
 	m_songList->resizeColumnsToContents();
 	m_songList->resizeRowsToContents();
 	
+	// finish widget setup
 	vbox->addLayout(hbox);
 	vbox->addWidget(m_songList);
 	m_ui->tabSongs->setLayout(vbox);
+	
 	connect(m_songList, SIGNAL(doubleClicked(const QModelIndex &)), this, SLOT(songDoubleClicked(const QModelIndex &)));
 }
 
@@ -212,6 +218,15 @@ void MainWindow::songFilterChanged(const QString &text)
 {
 	QRegExp regExp(text, Qt::CaseInsensitive, QRegExp::Wildcard);
 	m_songProxyModel->setFilterRegExp(regExp);
+	m_songList->resizeColumnsToContents();
+	m_songList->resizeRowsToContents();
+	m_clearSearchBtn->setVisible(!text.isEmpty());
+}
+
+void MainWindow::songFilterReset()
+{
+	songFilterChanged("");
+	m_songSearch->setText("");
 }
 
 

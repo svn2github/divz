@@ -62,6 +62,7 @@ protected slots:
 	
 	void songDoubleClicked(const QModelIndex &);
 	void songFilterChanged(const QString&);
+	void songFilterReset();
 
 	void actionEditGroup();
 	void actionNewGroup();
@@ -103,6 +104,7 @@ private:
 	QTableView * m_songList;
 	QLineEdit * m_songSearch;
 	QComboBox * m_searchOpt;
+	QPushButton * m_clearSearchBtn;
 	QSortFilterProxyModel * m_songProxyModel;
 	QSqlTableModel * m_songTableModel;
 

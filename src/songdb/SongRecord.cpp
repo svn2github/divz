@@ -1,8 +1,5 @@
 #include "SongRecord.h"
 
-#define SONG_FILE "songs.db"
-#define SONG_TABLE "songs"
-
 bool SongRecord::m_dbIsOpen = false;
 QSqlDatabase SongRecord::m_db;
 

@@ -33,29 +33,33 @@ Revised Task list for Release 1.0, 10/10/09:
 			[ALMOST] - "Grid and Guidelines" Form
 			- Slide Group settings (aspect ratio, etc)
 			- Song Editor
-		- SongDatabase List View
-			- Three columns:
-				- Title, #, Tags (Chorus, Hymn, etc)
-		- Search Function:
-			- Default to Full Text, Sort by Title
-			- Title
-			- Name
-			- Full Text
+		[DONE] - SongDatabase List View
+			- One column
+			#- Three columns:
+			#	- Title, #, Tags (Chorus, Hymn, etc)
+		[DONE] - Search Function:
+			[NOT IMPL] - Default to Full Text, Sort by Title
+				- only implemented title search, but can match any part of title and can use wildcards
+			#- Title
+			#- Name
+			#- Full Text
 		[ALMOST] - Random access viewer control
 			[ALSMOT] - Just do it
 			[FRAMEWORK DONE] - Should be "smart" - for songs, render differently than generic slide groups
 			[FRAMEWORK DONE] - Go by Group Type?
 			[FRAMEWORK DONE] - Think about custom foldback generator - this is just a custom viewer control generator needed
-		- In-flight edits
+		[FRAMEWORK] - In-flight edits
+			- need to add specific framework for this
 	- Visuals:
 		[DONE] - Add Aspect Ratio setting
 		[DONE] - Text Centering in a Text Box
-		- Undo/redo framework
+		[BARELY STARTED] - Undo/redo framework
 			- Must have this for sermons and announcment slides
 		- Copy/paste or duplicate slides
 		[BARELY STARTED] - Snap to grid support
 		[BARELY STARTED] - Increse/decrease size of font from toolbar - needed for sermon/announcment
 		- Layout asissts - center objects vert/horz
+			- need hint for this (e.g. songs) to auto adjust - maybe?
 		- Image Item
 			- Should be easy
 			- If we have time, add crop handles
@@ -74,13 +78,19 @@ Revised Task list for Release 1.0, 10/10/09:
 			[DONE] - Still cant set item color/props with config box
 		- SVG Item if we have time
 		[STARTED] - Gradients - can settle for making gradients in gimp and import as photo, but need to eventually have support direclty in dviz
+	
 	- Improvements:
+		Add outputview objects to encapsulate slidegroupviewer or network client/server
+		Songs need to be vertically centered as well
+		Need to change double click on song list to send straight to live
+		Need to add drag-drop from song list to song group
 		Consider moving opengl option to a per-output setting
 		Consider making Output objects QObjects that can emit signals when changed
 		Add editing to slide group/slide model lists in the list itself (e.g. to change slide/group title)
-		
+	
 	- Bugs:
-		[ALMOST] Major problems with song list display
+		Cross fading text with shadows shows ugly "dark" text during crossfade - need to investigate clipping shadow to only visible part of painter path
+		[FIXED] Major problems with song list display
 			filtering just broke
 		[FIXED] Song Text not being layed out properly with the "center" functionality (text being clipped, etc) - Can't use <br> tags I fond out.
 		[HACK-FIX] Song slide preview has lines that are "too thick"
@@ -104,9 +114,9 @@ Revised Task list for Release 1.0, 10/10/09:
 		[FIXED] repaint bug -see textitem - when textobx selected and hover over other content, bg in text box turns white...why?
 		[FIXED] (r86) -since textbox clipping has been turned on, need to keep all text inside content rect - add margin or something to layout - see letter "L" in tahoma at start of a box
 
-			584-1000
-			neural intesive care unit
-			
+
+513-584-1000
+neural intesive care unit
 
 
 Release 0.1b

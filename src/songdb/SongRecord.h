@@ -15,6 +15,9 @@
 	
 #define SONG_PROPDEF(setterName,typeName,memberName) void set##setterName(typeName value); typeName memberName() const { return m_##memberName; }
 
+#define SONG_FILE "songs.db"
+#define SONG_TABLE "songs"
+
 class SongRecord : public QObject
 {
 	Q_OBJECT
