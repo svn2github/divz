@@ -112,7 +112,8 @@ include(3rdparty/posterazor/posterazor.pri)
 include(qvideo/qvideo.pri)
 include(qtcolorpicker/qtcolorpicker.pri)
 #include(audio/audio.pri)
-include(qtmultimedia/multimedia.pri)
+#include(qtmultimedia/multimedia.pri)
+include(qtmultimedia/audio/audio.pri)
 
 # deployment on Linux
 unix {

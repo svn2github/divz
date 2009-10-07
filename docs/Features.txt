@@ -80,6 +80,7 @@ Revised Task list for Release 1.0, 10/10/09:
 		[STARTED] - Gradients - can settle for making gradients in gimp and import as photo, but need to eventually have support direclty in dviz
 	
 	- Improvements:
+		Need to implement song editor
 		Add outputview objects to encapsulate slidegroupviewer or network client/server
 		Songs need to be vertically centered as well
 		Need to change double click on song list to send straight to live
@@ -87,16 +88,15 @@ Revised Task list for Release 1.0, 10/10/09:
 		Consider moving opengl option to a per-output setting
 		Consider making Output objects QObjects that can emit signals when changed
 		Add editing to slide group/slide model lists in the list itself (e.g. to change slide/group title)
-	
+		
 	- Bugs:
-		When dbl click on a FILTERED song list, the song clicked comes from the UNFILTERED list (e.g. its not the song clicked)
 		Cross fading text with shadows shows ugly "dark" text during crossfade - need to investigate clipping shadow to only visible part of painter path
+		
+		[FIXED] When dbl click on a FILTERED song list, the song clicked comes from the UNFILTERED list (e.g. its not the song clicked)
 		[FIXED] Major problems with song list display
-			filtering just broke
 		[FIXED] Song Text not being layed out properly with the "center" functionality (text being clipped, etc) - Can't use <br> tags I fond out.
 		[HACK-FIX] Song slide preview has lines that are "too thick"
 		[FIXED] Song text on output is too far to the top-left (but preview is fine) - aspect ratio was set wrong and had to adjustViewScaling when chaged
-		Need to implement song editor
 		[FIXED] Need to set item name in slide generator for songs
 		[FIXED] Need to set item id in slide generator
 		[FIXED] Songs aren't being converted toXml properly (is toXml virtual??)

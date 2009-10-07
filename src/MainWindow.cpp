@@ -207,7 +207,8 @@ void MainWindow::setupSongList()
 
 void MainWindow::songDoubleClicked(const QModelIndex &idx)
 {
-	QSqlRecord record = m_songTableModel->record(idx.row());
+	QModelIndex sourceIdx = m_songProxyModel->mapToSource(idx);
+	QSqlRecord record = m_songTableModel->record(sourceIdx.row());
 	SongRecord *song = SongRecord::fromSqlRecord(record);
 	SongSlideGroup *group = new SongSlideGroup();
 	group->setSong(song);
