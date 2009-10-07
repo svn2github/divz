@@ -46,8 +46,8 @@
 #include <QPainter>
 #include <QVBoxLayout>
 
-#include <QAudioDeviceInfo>
-#include <QAudioInput>
+#include "audio/qaudiodeviceinfo.h"
+#include "audio/qaudioinput.h"
 #include "audioinput.h"
 
 #ifndef M_PI
@@ -211,7 +211,7 @@ void RenderArea::paintEvent(QPaintEvent * /* event */)
     painter.setPen(Qt::red);
     int max = 0;
     for(int i=0;i<sampleSize;i++) {
-        int m = (int)(sqrt(samples[i])/32768);
+	int m = (int)(sqrt(samples[i])/32768);
         if(m > max)
             max = m;
     }

@@ -46,7 +46,7 @@
 #include <QPushButton>
 #include <QComboBox>
 
-#include <qaudioinput.h>
+#include "audio/qaudioinput.h"
 
 #define BUFFER_SIZE_LOG 9
 #define BUFFER_SIZE (1 << BUFFER_SIZE_LOG)
