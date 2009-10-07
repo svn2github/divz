@@ -89,6 +89,7 @@ Revised Task list for Release 1.0, 10/10/09:
 		Add editing to slide group/slide model lists in the list itself (e.g. to change slide/group title)
 	
 	- Bugs:
+		When dbl click on a FILTERED song list, the song clicked comes from the UNFILTERED list (e.g. its not the song clicked)
 		Cross fading text with shadows shows ugly "dark" text during crossfade - need to investigate clipping shadow to only visible part of painter path
 		[FIXED] Major problems with song list display
 			filtering just broke
