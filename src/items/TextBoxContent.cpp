@@ -453,7 +453,7 @@ void TextBoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * 
 		QTransform tx = painter->transform();
 		qreal scale = qMax(tx.m11(),tx.m22());
 		if(scale>0)
-			p.setWidthF(1/scale * p.widthF());
+			p.setWidthF(1/scale * p.widthF() * .5);
 	}
 		
 	//TODO should we clip to the rect or FORCE resize the rect? probably clip...

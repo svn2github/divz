@@ -283,6 +283,7 @@ void SlideGroupListModel::setIconSize(QSize sz)
 
 void SlideGroupListModel::generatePixmap(int row)
 {
+// 	return;
 	Slide * slide = m_sortedSlides.at(row);
 	
 	int icon_w = m_iconSize.width();

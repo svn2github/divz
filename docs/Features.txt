@@ -80,14 +80,17 @@ Revised Task list for Release 1.0, 10/10/09:
 		Add editing to slide group/slide model lists in the list itself (e.g. to change slide/group title)
 		
 	- Bugs:
-		Song Text not being layed out properly with the "center" functionality (text being clipped, etc)
-		Song slide preview has lines that are "too think"
-		Song text on output is too far to the top-left (but preview is fine)
+		[ALMOST] Major problems with song list display
+			filtering just broke
+		[FIXED] Song Text not being layed out properly with the "center" functionality (text being clipped, etc) - Can't use <br> tags I fond out.
+		[HACK-FIX] Song slide preview has lines that are "too thick"
+		[FIXED] Song text on output is too far to the top-left (but preview is fine) - aspect ratio was set wrong and had to adjustViewScaling when chaged
 		Need to implement song editor
-		Need to set item name in slide generator for songs
-		Need to set item id in slide generator
-		Songs aren't being converted toXml properly (is toXml virtual??)
-			made it virtual, but still doesn't seem to be saving - tbd
+		[FIXED] Need to set item name in slide generator for songs
+		[FIXED] Need to set item id in slide generator
+		[FIXED] Songs aren't being converted toXml properly (is toXml virtual??)
+			made it virtual, but still doesn't seem to be saving - tbd -
+			needed to match the function signatures exactly - in this case, toXml was missing the 'const' from the original defn
 		[FIXED] When another slide live first, then trans to video slide, single click (preview) different slide, the live item stops playing
 		[FIXED] Centered TextBox items appear too far to the left in icon previews (list models, etc)
 		[FIXED] Setting config on background item causes it to "go away" until program reload
@@ -101,6 +104,8 @@ Revised Task list for Release 1.0, 10/10/09:
 		[FIXED] repaint bug -see textitem - when textobx selected and hover over other content, bg in text box turns white...why?
 		[FIXED] (r86) -since textbox clipping has been turned on, need to keep all text inside content rect - add margin or something to layout - see letter "L" in tahoma at start of a box
 
+			584-1000
+			neural intesive care unit
 			
 
 

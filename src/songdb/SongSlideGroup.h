@@ -26,8 +26,8 @@ public:
 	bool isTextDiffFromDb() { return m_isTextDiffFromDb; }
 	
 	// SlideGroup::
-	bool fromXml(QDomElement & parentElement);
-        void toXml(QDomElement & parentElement) ;
+	virtual bool fromXml(QDomElement & parentElement);
+        virtual void toXml(QDomElement & parentElement) const;
 
 protected:
 	void textToSlides();

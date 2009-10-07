@@ -18,7 +18,7 @@ class SlideGroup : public QObject
 	
 public:
 	SlideGroup();
-	~SlideGroup();
+	virtual ~SlideGroup();
 	
 	typedef enum GroupType 
 	{

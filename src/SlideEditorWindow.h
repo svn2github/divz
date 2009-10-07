@@ -9,8 +9,6 @@
 
 #include "SlideGroupListModel.h"
 
-
-
 class MyGraphicsScene;
 class SlideGroup;
 class QGraphicsLineItem;

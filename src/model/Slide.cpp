@@ -124,5 +124,4 @@ void Slide::toXml(QDomElement & pe) const
 		pe.appendChild(element);
 		content->toXml(element);
 	}
-
 }

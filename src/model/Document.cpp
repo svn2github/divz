@@ -15,6 +15,8 @@
 
 #include <QDebug>
 
+#include "songdb/SongSlideGroup.h"
+
 Document::Document(const QString & s) : m_docTitle(""), m_filename(""), m_aspectRatio(4/3)
 {
 	if(!s.isEmpty())
@@ -109,9 +111,9 @@ bool Document::fromXml(QDomElement & pe)
 	{
 		SlideGroup *g = 0;
 		 
-// 		if (element.tagName() == "song")
-// 			g = new SongSlideGroup();
-// 		else
+		if (element.tagName() == "song")
+			g = new SongSlideGroup();
+		else
 			g = new SlideGroup();
 		addGroup(g);
 		//qDebug("Document::fromXml: Loaded new group");
@@ -171,10 +173,10 @@ void Document::save(const QString & filename)
 
 void Document::toXml(QDomElement & pe) const
 {
+	QDomDocument doc = pe.ownerDocument();
+	
 	pe.setAttribute("title",docTitle());
 	pe.setAttribute("aspect",aspectRatio());
-	
-	QDomDocument doc = pe.ownerDocument();
 	
 	foreach (SlideGroup * g, m_groups) 
 	{

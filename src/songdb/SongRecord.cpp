@@ -192,8 +192,8 @@ SongRecord * SongRecord::fromSqlRecord(QSqlRecord r)
 {
 	
 	SongRecord * s = new SongRecord();
-	//qDebug()<<"fromQuery:"<<r<<", isEmpty? "<<r.isEmpty();
-	//qDebug()<<"fromQuery: title:"<<q.value(r.indexOf("title"));
+	//qDebug()<<"fromSqlRecord:"<<r<<", isEmpty? "<<r.isEmpty();
+	//qDebug()<<"fromSqlRecord: title:"<<q.value(r.indexOf("title"));
 	s->m_init = true;
 	s->setSongId(		r.value("songid").toInt());
 	s->setTitle(		r.value("title").toString());

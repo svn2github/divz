@@ -86,6 +86,7 @@ void SlideGroupViewer::aspectRatioChanged(double x)
 {
 	qDebug("SlideGroupViewer::aspectRatioChanged(): New aspect ratio: %.02f",x);
 	m_scene->setSceneRect(MainWindow::mw()->standardSceneRect());
+	adjustViewScaling();
 }
 
 

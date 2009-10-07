@@ -48,6 +48,9 @@
 #include "MainWindow.h"
 #include "AppSettings.h"
 
+#define DEBUG_MODE 0
+
+
 #include <QCommonStyle>
 class RubberBandStyle : public QCommonStyle 
 {
@@ -259,36 +262,38 @@ SlideEditorWindow::SlideEditorWindow(SlideGroup *group, QWidget * parent)
 	m_splitter->restoreState(settings.value("slideeditor/splitter").toByteArray());
 
 	
-/*
-	if(QFile("test.xml").exists())
+	if(DEBUG_MODE)
 	{
-		m_doc.load("test.xml");
-		//r.readSlide(m_slide);
+		if(QFile("test.xml").exists())
+		{
+			m_doc.load("test.xml");
+			//r.readSlide(m_slide);
+			
+			qDebug("Loaded test.xml");
+			
+		}
+		else
+		{
+			Slide * slide = new Slide();
+			SlideGroup *g = new SlideGroup();
+			g->addSlide(slide);
+			m_doc.addGroup(g);
+			m_scene->setSlide(slide);
+		}
 		
-		qDebug("Loaded test.xml");
-		
+		QList<SlideGroup*> glist = m_doc.groupList();
+		if(glist.size() >2)
+		{
+			SlideGroup *g = glist[2];
+			assert(g);
+			
+			setSlideGroup(g);
+		}
+		else
+		{
+			qDebug("Error: No groups in test.xml");
+		}
 	}
-	else
-	{
-		Slide * slide = new Slide();
-		SlideGroup *g = new SlideGroup();
-		g->addSlide(slide);
-		m_doc.addGroup(g);
-		m_scene->setSlide(slide);
-	}
-	
-	QList<SlideGroup*> glist = m_doc.groupList();
-	if(glist.size() >0)
-	{
-		SlideGroup *g = glist[0];
-		assert(g);
-		
-		setSlideGroup(g);
-	}
-	else
-	{
-		qDebug("Error: No groups in test.xml");
-	}*/
 	
 	if(group != 0)
 		setSlideGroup(group);
@@ -302,7 +307,9 @@ SlideEditorWindow::~SlideEditorWindow()
 {
 // 	XmlSave save("test.xml");
 // 	save.saveSlide(m_slide);
-// 	m_doc.save("test.xml");
+ 	
+ 	if(DEBUG_MODE)
+ 		m_doc.save("test.xml");
 	
 	QSettings settings;
 	settings.setValue("slideeditor/size",size());
