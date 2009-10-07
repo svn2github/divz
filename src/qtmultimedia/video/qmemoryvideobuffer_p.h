@@ -59,11 +59,11 @@ QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-QT_MODULE(Multimedia)
+//QT_MODULE(Multimedia)
 
 class QMemoryVideoBufferPrivate;
 
-class Q_MULTIMEDIA_EXPORT QMemoryVideoBuffer : public QAbstractVideoBuffer
+class QMemoryVideoBuffer : public QAbstractVideoBuffer
 {
     Q_DECLARE_PRIVATE(QMemoryVideoBuffer)
 public:

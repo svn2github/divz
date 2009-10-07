@@ -51,14 +51,14 @@ QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-QT_MODULE(Multimedia)
+//QT_MODULE(Multimedia)
 
 class QSize;
 class QVariant;
 
 class QVideoFramePrivate;
 
-class Q_MULTIMEDIA_EXPORT QVideoFrame
+class QVideoFrame
 {
 public:
     enum FieldType

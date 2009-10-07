@@ -58,12 +58,12 @@ QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-QT_MODULE(Multimedia)
+//QT_MODULE(Multimedia)
 
 class QAudioDeviceFactory;
 
 class QAudioDeviceInfoPrivate;
-class Q_MULTIMEDIA_EXPORT QAudioDeviceInfo
+class QAudioDeviceInfo
 {
     friend class QAudioDeviceFactory;
 

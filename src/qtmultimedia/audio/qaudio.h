@@ -51,7 +51,7 @@ QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-QT_MODULE(Multimedia)
+//QT_MODULE(Multimedia)
 
 namespace QAudio
 {

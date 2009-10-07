@@ -53,13 +53,13 @@ QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-QT_MODULE(Multimedia)
+//QT_MODULE(Multimedia)
 
 class QDebug;
 
 class QVideoSurfaceFormatPrivate;
 
-class Q_MULTIMEDIA_EXPORT QVideoSurfaceFormat
+class QVideoSurfaceFormat
 {
 public:
     enum Direction
@@ -142,7 +142,8 @@ private:
 };
 
 #ifndef QT_NO_DEBUG_STREAM
-Q_MULTIMEDIA_EXPORT QDebug operator<<(QDebug, const QVideoSurfaceFormat &);
+//Q_MULTIMEDIA_EXPORT
+QDebug operator<<(QDebug, const QVideoSurfaceFormat &);
 #endif
 
 QT_END_NAMESPACE

@@ -55,12 +55,12 @@ QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-QT_MODULE(Multimedia)
+//QT_MODULE(Multimedia)
 
 
 class QAbstractAudioInput;
 
-class Q_MULTIMEDIA_EXPORT QAudioInput : public QObject
+class QAudioInput : public QObject
 {
     Q_OBJECT
 

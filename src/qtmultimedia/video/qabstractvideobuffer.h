@@ -48,13 +48,13 @@ QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-QT_MODULE(Multimedia)
+//QT_MODULE(Multimedia)
 
 class QVariant;
 
 class QAbstractVideoBufferPrivate;
 
-class Q_MULTIMEDIA_EXPORT QAbstractVideoBuffer
+class QAbstractVideoBuffer
 {
 public:
     enum HandleType

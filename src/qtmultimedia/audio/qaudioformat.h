@@ -52,12 +52,12 @@ QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-QT_MODULE(Multimedia)
+//QT_MODULE(Multimedia)
 
 
 class QAudioFormatPrivate;
 
-class Q_MULTIMEDIA_EXPORT QAudioFormat
+class QAudioFormat
 {
 public:
     enum SampleType { Unknown, SignedInt, UnSignedInt, Float };

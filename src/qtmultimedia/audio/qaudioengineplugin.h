@@ -56,9 +56,9 @@ QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-QT_MODULE(Multimedia)
+//QT_MODULE(Multimedia)
 
-struct Q_MULTIMEDIA_EXPORT QAudioEngineFactoryInterface : public QFactoryInterface
+struct QAudioEngineFactoryInterface : public QFactoryInterface
 {
     virtual QList<QByteArray> deviceList(QAudio::Mode) const = 0;
     virtual QAbstractAudioInput* createInput(const QByteArray& device, const QAudioFormat& format = QAudioFormat()) = 0;
@@ -70,7 +70,7 @@ struct Q_MULTIMEDIA_EXPORT QAudioEngineFactoryInterface : public QFactoryInterfa
     "com.nokia.qt.QAudioEngineFactoryInterface"
 Q_DECLARE_INTERFACE(QAudioEngineFactoryInterface, QAudioEngineFactoryInterface_iid)
 
-class Q_MULTIMEDIA_EXPORT QAudioEnginePlugin : public QObject, public QAudioEngineFactoryInterface
+class QAudioEnginePlugin : public QObject, public QAudioEngineFactoryInterface
 {
     Q_OBJECT
     Q_INTERFACES(QAudioEngineFactoryInterface:QFactoryInterface)

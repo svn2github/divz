@@ -49,14 +49,14 @@ QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-QT_MODULE(Multimedia)
+//QT_MODULE(Multimedia)
 
 class QRectF;
 class QVideoSurfaceFormat;
 
 class QAbstractVideoSurfacePrivate;
 
-class Q_MULTIMEDIA_EXPORT QAbstractVideoSurface : public QObject
+class QAbstractVideoSurface : public QObject
 {
     Q_OBJECT
 
