@@ -7,7 +7,10 @@ TARGET =
 DEPENDPATH += .
 INCLUDEPATH += ../
 
-include(../audio/audio.pri)
+#include(../audio/audio.pri)
+include(../qtmultimedia/audio/audio.pri)
+include(../qtmultimedia/video/video.pri)
+#include(../qtmultimedia/multimedia.pri)
 
 
 

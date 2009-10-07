@@ -46,8 +46,8 @@
 #include <QPainter>
 #include <QVBoxLayout>
 
-#include "audio/qaudiodeviceinfo.h"
-#include "audio/qaudioinput.h"
+#include "qtmultimedia/audio/qaudiodeviceinfo.h"
+#include "qtmultimedia/audio/qaudioinput.h"
 #include "audioinput.h"
 
 #define BUFFER_SIZE 4096
@@ -201,7 +201,7 @@ InputTest::InputTest()
     format.setSampleSize(16);
     format.setSampleType(QAudioFormat::SignedInt);
     format.setByteOrder(QAudioFormat::LittleEndian);
-    format.setCodec("audio/pcm");
+    format.setCodec(QLatin1String("audio/pcm"));
 
     audioInput = new QAudioInput(format,this);
     connect(audioInput,SIGNAL(notify()),SLOT(status()));

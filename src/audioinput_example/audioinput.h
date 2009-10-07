@@ -46,7 +46,7 @@
 #include <QPushButton>
 #include <QComboBox>
 
-#include "audio/qaudioinput.h"
+#include "qtmultimedia/audio/qaudioinput.h"
 
 class AudioInfo : public QIODevice
 {
