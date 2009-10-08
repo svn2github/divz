@@ -2,9 +2,11 @@
 #include "ui_outputsetupdialog.h"
 #include "model/Output.h"
 #include "AppSettings.h"
+#include "MainWindow.h"
 
 #include <QDesktopWidget>
 #include <QDebug>
+#include <QMessageBox>
 
 OutputSetupDialog::OutputSetupDialog(QWidget *parent) :
 	QDialog(parent)
@@ -41,6 +43,8 @@ OutputSetupDialog::OutputSetupDialog(QWidget *parent) :
 	m_ui->screenListView->setEnabled(false);
 	m_ui->btnDelOutput->setEnabled(false);
 	m_ui->label_2->setText("");
+
+	connect(m_ui->buttonBox, SIGNAL(accepted()), this, SLOT(accepted()));
 }
 
 void OutputSetupDialog::slotNew()
@@ -108,7 +112,7 @@ void OutputSetupDialog::slotCustX(int x)
 	if(!m_output)
 		return;
 	QRect r = m_output->customRect();
-	r.setX(x);
+	r = QRect(x,r.y(),r.width(),r.height());
 	m_output->setCustomRect(r);
 }
 
@@ -118,7 +122,7 @@ void OutputSetupDialog::slotCustY(int x)
 	if(!m_output)
 		return;
 	QRect r = m_output->customRect();
-	r.setY(x);
+	r = QRect(r.x(),x,r.width(),r.height());
 	m_output->setCustomRect(r);
 }
 
@@ -128,7 +132,7 @@ void OutputSetupDialog::slotCustW(int x)
 	if(!m_output)
 		return;
 	QRect r = m_output->customRect();
-	r.setWidth(x);
+	r = QRect(r.x(),r.y(),x,r.height());
 	m_output->setCustomRect(r);
 }
 
@@ -138,7 +142,7 @@ void OutputSetupDialog::slotCustH(int x)
 	if(!m_output)
 		return;
 	QRect r = m_output->customRect();
-	r.setHeight(x);
+	r = QRect(r.x(),r.y(),r.width(),x);
 	m_output->setCustomRect(r);
 }
 
@@ -308,6 +312,47 @@ void OutputSetupDialog::setupOutputList()
 void OutputSetupDialog::accepted()
 {
 	AppSettings::save();
+
+	Output *out = AppSettings::outputs().at(0);
+	if(out)
+	{
+		QRect r;
+		bool isValid = false;
+		if(out->outputType() == Output::Custom)
+		{
+			r = out->customRect();
+			isValid = true;
+		}
+		else
+		{
+			int screenNum = out->screenNum();
+			QDesktopWidget *d = QApplication::desktop();
+			r = d->screenGeometry(screenNum);
+			isValid = true;
+		}
+
+		//qDebug()<<"output dialog: r:"<<r<<",isValid:"<<isValid;
+
+		if(isValid)
+		{
+			qreal ar = (qreal)r.width() / (qreal)r.height();
+			//qDebug()<<"New ar:"<<ar;
+			if(ar != MainWindow::mw()->currentDocument()->aspectRatio())
+			{
+				if(QMessageBox::question(
+					this,
+					"Aspect Ratio Different",
+					"The output you just chose has a different aspect ratio than the current document. Do you want to set the document's aspect ratio to match the output aspect ratio?",
+					QMessageBox::Save | QMessageBox::Discard,
+					QMessageBox::Save
+				) == QMessageBox::Save)
+				{
+					MainWindow::mw()->currentDocument()->setAspectRatio(ar);
+				}
+			}
+		}
+	}
+
 	deleteLater();
 }
 
