@@ -96,6 +96,7 @@ class TextBoxContent : public AbstractContent
         void updateCache();
         void applyTextXAlign(Qt::Alignment);
         void addLineToPath(QPainterPath*);
+        void updateShadowClipPath();
 
         // text document, layouting & rendering
         QTextDocument * m_text;
@@ -111,6 +112,7 @@ class TextBoxContent : public AbstractContent
         QRect m_shapeRect;
         
         QPainterPath m_textPath;
+        QPainterPath m_shadowClipPath;
         
         Qt::Alignment m_xTextAlign;
         Qt::Alignment m_yTextAlign;

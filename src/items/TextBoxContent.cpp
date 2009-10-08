@@ -465,17 +465,13 @@ void TextBoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * 
 // 	QPainterPath path = s.createStroke(m_textPath);
 	// Doesn't look right, so I disabled it
 	
-	QPainterPath clipPath;
-	clipPath.addRect(QRectF(0,0,contentsRect().width(),contentsRect().height()));
-	
 	// draw shadow
 	if(modelItem()->shadowEnabled())
 	{
 		painter->save();
 		
 		// apply the "mask" of the text to be painted on top
-		QPainterPath textClip = clipPath.subtracted(m_textPath);
-		painter->setClipPath(textClip);
+		painter->setClipPath(m_shadowClipPath);
 		
 		// draw the text - but only the parts not under the "top" text should be painted
 		double x = modelItem()->shadowOffsetX();
@@ -495,6 +491,14 @@ void TextBoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * 
 	painter->setBrush(modelItem()->fillBrush());
 	painter->drawPath(m_textPath);
 	painter->restore();
+}
+
+void TextBoxContent::updateShadowClipPath()
+{
+	QPainterPath clipPath;
+	clipPath.addRect(QRectF(0,0,contentsRect().width(),contentsRect().height()));
+	
+	m_shadowClipPath = clipPath.subtracted(m_textPath);
 }
 
 QPainterPath TextBoxContent::shapePath() const
@@ -826,6 +830,8 @@ void TextBoxContent::updateTextConstraints(int w)
 	{
 		AbstractContent::resizeContents(newRect);
 	}
+	
+	updateShadowClipPath();
 }
 
 void TextBoxContent::applyTextXAlign(Qt::Alignment x)
