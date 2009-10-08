@@ -2,8 +2,8 @@
 
 #include "model/TextBoxItem.h"
 #include "model/BackgroundItem.h"
-#include "MainWindow.h"
 #include "model/ItemFactory.h"
+#include "MainWindow.h"
 
 #include <QTextDocument>
 #include <QTextBlock>
@@ -14,7 +14,10 @@ SongSlideGroup::SongSlideGroup() : SlideGroup(),
 	m_song(0),
 	m_text(""),
 	m_isTextDiffFromDb(false)
-{}
+{
+	if(MainWindow::mw())
+		connect(MainWindow::mw(), SIGNAL(aspectRatioChanged(double)), this, SLOT(aspectRatioChanged(double)));
+}
 
 void SongSlideGroup::setSong(SongRecord *s)
 {
@@ -53,6 +56,12 @@ void SongSlideGroup::removeAllSlides()
 	}
 	
 	qDeleteAll(m_slides);
+}
+
+void SongSlideGroup::aspectRatioChanged(double x)
+{
+	removeAllSlides();
+	textToSlides();
 }
 
 void SongSlideGroup::textToSlides(SongTextFilter filter)

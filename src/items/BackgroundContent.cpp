@@ -309,13 +309,7 @@ void BackgroundContent::setPixmap(const QPixmap & pixmap)
 	m_pixmap = pixmap;
 
 	if(m_imageSize != m_pixmap.size())
-	{
 		m_imageSize = m_pixmap.size();
-
-	        // Adjust scaling while maintaining aspect ratio
-		//resizeContents(contentsRect(),true);
-		
-	}
 
 	update();
 	

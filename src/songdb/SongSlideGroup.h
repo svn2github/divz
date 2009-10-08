@@ -33,6 +33,9 @@ protected:
 	typedef enum SongTextFilter { Standard, AllowRear, AllowAll };
 	void textToSlides(SongTextFilter filter = Standard);
 	void removeAllSlides();
+	
+protected slots:
+	void aspectRatioChanged(double x);
 
 private:
 	SongRecord * m_song;

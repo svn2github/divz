@@ -278,6 +278,9 @@ void QVideoDecoder::restart()
 // 		m_frame = 0;
 // 	}
 // 	
+	if(!m_video->m_video_loaded)
+		return;
+		
 	seek(0, AVSEEK_FLAG_BACKWARD);
 }
 

@@ -31,4 +31,31 @@ Soon His beauty we'll behold;
 Soon the pearly gates will open,
 </text>
     </song>
+    <group title="" number="0" icon="" type="0" id="1">
+        <slide number="0" id="0">
+            <background>
+                <item-id>761</item-id>
+                <item-name>BackgroundItem761</item-name>
+                <rect>
+                    <x>0</x>
+                    <y>0</y>
+                    <w>0</w>
+                    <h>0</h>
+                </rect>
+                <pos>
+                    <x>0</x>
+                    <y>0</y>
+                </pos>
+                <zvalue>0</zvalue>
+                <opacity>1</opacity>
+                <visible>1</visible>
+                <frame-class>0</frame-class>
+                <transformation yRot="0" xRot="0" zRot="0"/>
+                <fill brush-style="1" video="data/Seasons_Loop_4_SD.mpg" image="" brush-color="4278190080" type="4"/>
+                <outline brush-style="1" pen-join="0" pen-width="1" enabled="0" brush-color="4278190080" pen-cap="16" pen-color="4278190080"/>
+                <mirror offset="3" enabled="0"/>
+                <shadow brush-style="1" x="3" y="3" enabled="0" brush-color="4278190080"/>
+            </background>
+        </slide>
+    </group>
 </document>

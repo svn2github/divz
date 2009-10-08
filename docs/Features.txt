@@ -90,10 +90,13 @@ Revised Task list for Release 1.0, 10/10/09:
 		[REJECTED] Add editing to slide group/slide model lists in the list itself (e.g. to change slide/group title)
 		
 	- Bugs:
-		When changing AR, reload document (or recreate slides)
 		When changing output size with custom output, output disappers until program restart
-		Video slides crashing when made live on Win32
+		*When setting video in slide editor, it never shows first frame
+			- partially fixed - if add vid, close editor, reopen editor/program, it shows
+			- just not when first assigned
 		
+		[FIXED] Video slides crashing when made live on Win32
+		[FIXED] When changing AR, reload document (or recreate slides)
 		[FIXED] Cross fading text with shadows shows ugly "dark" text during crossfade - need to investigate clipping shadow to only visible part of painter path
 		[FIXED] When dbl click on a FILTERED song list, the song clicked comes from the UNFILTERED list (e.g. its not the song clicked)
 		[FIXED] Major problems with song list display

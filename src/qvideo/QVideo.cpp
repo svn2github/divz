@@ -200,7 +200,7 @@ void QVideo::stop()
 
 // 	m_screen->clear();
 
-	if(m_video_decoder)
+	if(m_video_decoder && m_video_loaded)
 	{
 		m_video_decoder->restart();
 		m_video_decoder->flushBuffers();

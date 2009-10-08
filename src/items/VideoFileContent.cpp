@@ -308,10 +308,7 @@ void VideoFileContent::setPixmap(const QPixmap & pixmap)
 
 	        // Adjust scaling while maintaining aspect ratio
 		resizeContents(contentsRect(),true);
-		
-		
 	}
-	
 
 	update();
 	
@@ -319,11 +316,10 @@ void VideoFileContent::setPixmap(const QPixmap & pixmap)
 	{
 		//qDebug() << "VideFileContent::setPixmap(): sceneContextHint() != Live, setting m_still true"; 
 		m_still = true;
-		m_videoProvider->pause();
+		//m_videoProvider->pause();
 		//qDebug("VideoFileContent::setVideoFrame: Pausing video file because not in a live scene");
 	}
         //GFX_CHANGED();
-	
 }
 
 
