@@ -161,27 +161,40 @@ void VideoFileContent::setFilename(const QString &name)
 // 	}
 	QVideoProvider * p = QVideoProvider::providerForFile(name);
 	
+	if(DEBUG_VIDEOFILECONTENT)
+		qDebug() << "VideoFileContent::setFilename(): Loading file:"<<name;
+			
 	if(m_videoProvider && m_videoProvider == p)
 	{
+		if(DEBUG_VIDEOFILECONTENT)
+			qDebug() << "VideoFileContent::setFilename(): Provider pointer matches existing provider, nothing changed.";
 		return;
 	}
 	else
 	if(m_videoProvider)
 	{
+		if(DEBUG_VIDEOFILECONTENT)
+			qDebug() << "VideoFileContent::setFilename(): Disconnecting existing provider";
 		m_videoProvider->disconnectReceiver(this);
 		QVideoProvider::releaseProvider(m_videoProvider);
 	}
 	
 	if(DEBUG_VIDEOFILECONTENT)
-		qDebug() << "VideoFileContent::setFilename: Loading"<<name;
+		qDebug() << "VideoFileContent::setFilename(): Loading"<<name;
+	
 	
 	m_videoProvider = p;
 	m_videoProvider->connectReceiver(this, SLOT(setPixmap(const QPixmap &)));
-	//m_videoProvider->play();
 	
 	// prime the pump, so to speak
 	setPixmap(m_videoProvider->pixmap());
 
+	if(!m_videoProvider->isPlaying())
+		m_videoProvider->play();
+	m_still = false;
+	
+	
+	
 	//m_imageSize = QSize();
 // 	m_video->setAdvanceMode(QVideo::Manual);
 // 	m_video->setLooped(true);
@@ -297,7 +310,8 @@ QRectF VideoFileContent::boundingRect() const
 
 void VideoFileContent::setPixmap(const QPixmap & pixmap)
 {
-	if(m_still && m_imageSize.width() >= 0)
+	//qDebug() << "VideFileContent::setPixmap(): hit: m_still:"<<m_still<<", m_imageSize:"<<m_imageSize;
+	if(m_still && m_imageSize.width() > 0)
 		return;
 		
 	m_pixmap = pixmap;
@@ -308,16 +322,19 @@ void VideoFileContent::setPixmap(const QPixmap & pixmap)
 
 	        // Adjust scaling while maintaining aspect ratio
 		resizeContents(contentsRect(),true);
+		
+		//if(DEBUG_VIDEOFILECONTENT)
+		//	qDebug() << "VideFileContent::setPixmap(): new frame size:"<<m_imageSize; 
 	}
 
 	update();
 	
-	if(sceneContextHint() != MyGraphicsScene::Live)
+	if(sceneContextHint() != MyGraphicsScene::Live && m_imageSize.width() > 0)
 	{
-		//qDebug() << "VideFileContent::setPixmap(): sceneContextHint() != Live, setting m_still true"; 
+		if(DEBUG_VIDEOFILECONTENT)
+			qDebug() << "VideFileContent::setPixmap(): sceneContextHint() != Live, setting m_still true"; 
 		m_still = true;
 		m_videoProvider->pause();
-		//qDebug("VideoFileContent::setVideoFrame: Pausing video file because not in a live scene");
 	}
         //GFX_CHANGED();
 }

@@ -11,6 +11,7 @@
 #include "model/SlideGroup.h"
 #include "model/Slide.h"
 #include "model/SlideGroupFactory.h"
+#include "MainWindow.h"
 
 DocumentListModel::DocumentListModel(Document *d, QObject *parent)
 		: QAbstractListModel(parent), m_doc(d),/* m_scene(0), m_view(0),*/ m_dirtyTimer(0),  m_iconSize(192,0), m_sceneRect(0,0,1024,768)
@@ -18,6 +19,12 @@ DocumentListModel::DocumentListModel(Document *d, QObject *parent)
 	if(m_doc)
 		setDocument(d);
 		
+	if(MainWindow::mw())
+	{
+		m_sceneRect = MainWindow::mw()->standardSceneRect();
+		connect(MainWindow::mw(), SIGNAL(aspectRatioChanged(double)), this, SLOT(aspectRatioChanged(double)));
+	}
+			
 	setSceneRect(m_sceneRect);
 }
 
@@ -36,6 +43,10 @@ DocumentListModel::~DocumentListModel()
 // 	}
 }
 
+void DocumentListModel::aspectRatioChanged(double)
+{
+	setSceneRect(MainWindow::mw()->standardSceneRect());
+}
 
 Qt::ItemFlags DocumentListModel::flags(const QModelIndex &index) const
 {
@@ -299,8 +310,13 @@ void DocumentListModel::setSceneRect(QRect r)
 {
 	m_sceneRect = r;
 	adjustIconAspectRatio();
-// 	if(m_scene)
-// 		m_scene->setSceneRect(m_sceneRect);
+	
+	QModelIndex top    = indexForGroup(m_sortedGroups.first()), 
+	            bottom = indexForGroup(m_sortedGroups.last());
+	
+	m_pixmaps.clear();
+	
+	dataChanged(top,bottom);
 }
 
 void DocumentListModel::adjustIconAspectRatio()

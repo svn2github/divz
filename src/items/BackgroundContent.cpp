@@ -290,8 +290,8 @@ void BackgroundContent::setVideoFile(const QString &name)
 	}
 	else
 	{
-		//qDebug("
-		m_videoProvider->pause();
+		if(m_videoProvider->isPlaying())
+			m_videoProvider->pause();
 	}
 
 	//m_imageSize = QSize();
@@ -303,7 +303,7 @@ void BackgroundContent::setVideoFile(const QString &name)
 
 void BackgroundContent::setPixmap(const QPixmap & pixmap)
 {
-	if(m_still && m_imageSize.width() >= 0)
+	if(m_still && m_imageSize.width() > 0)
 		return;
 		
 	m_pixmap = pixmap;
@@ -313,15 +313,12 @@ void BackgroundContent::setPixmap(const QPixmap & pixmap)
 
 	update();
 	
-	if(sceneContextHint() != MyGraphicsScene::Live)
+	if(sceneContextHint() != MyGraphicsScene::Live && m_imageSize.width() > 0)
 	{
 		m_still = true;
 		m_videoProvider->pause();
 	}
         //GFX_CHANGED();
-	
-// 	m_video->pause();
-// 	qDebug("VideoFileContent::setVideoFrame: Pausing video file AGAIN because not in a live scene");
 }
 
 

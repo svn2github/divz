@@ -20,18 +20,18 @@ QVideoProvider * QVideoProvider::providerForFile(const QString & file)
 		QVideoProvider *v = m_fileProviderMap[can];
 		v->m_refCount++;
 		if(DEBUG_QVIDEOPROVIDER)
-			qDebug() << "[REFF +] QVideoProvider::providerForFile(): + Found existing provider for file:"<<file<<", refCount:"<<v->m_refCount;
-		v->play();
+			qDebug() << "[REF +] QVideoProvider::providerForFile(): + Found existing provider for file:"<<file<<", refCount:"<<v->m_refCount;
+		//v->play();
 		return v;
 	}
 	else
 	{
 		if(DEBUG_QVIDEOPROVIDER)
-			qDebug() << "[REFF +] QVideoProvider::providerForFile(): - Creating new provider for file:"<<file;
+			qDebug() << "[REF +] QVideoProvider::providerForFile(): - Creating new provider for file:"<<file;
 		QVideoProvider *v = new QVideoProvider(can);
 		m_fileProviderMap[can] = v;
 		v->m_refCount=1;
-		v->play();
+		//v->play();
 
 		return v;
 	}
@@ -116,7 +116,8 @@ void QVideoProvider::disconnectReceiver(QObject * receiver)
 void QVideoProvider::stop()
 {
 	m_video->stop();
-	m_playCount --;
+	if(m_playCount>0)
+		m_playCount --;
 	if(DEBUG_QVIDEOPROVIDER)
 		qDebug() << "[PLAY -] QVideoProvider::stop(): m_playCount:"<<m_playCount;
 }
@@ -131,7 +132,7 @@ void QVideoProvider::play()
 void QVideoProvider::pause()
 {
 	// dont pause unless all players are paused
-	//if(m_playCount > 0)
+	if(m_playCount>0)
 		m_playCount --;
 	if(DEBUG_QVIDEOPROVIDER)
 		qDebug() << "[PLAY -] QVideoProvider::pause(): m_playCount:"<<m_playCount;

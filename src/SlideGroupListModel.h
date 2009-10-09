@@ -61,6 +61,7 @@ signals:
 private slots:
 	void slideChanged(Slide *slide, QString slideOperation, AbstractItem *item, QString operation, QString fieldName, QVariant value);
 	void modelDirtyTimeout();
+	void aspectRatioChanged(double);
 	
 private:
 	void internalSetup();

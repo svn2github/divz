@@ -20,7 +20,8 @@ QVideo::QVideo(const QString & filename, QObject * parent) : QObject(parent),
 	m_ready_to_play(false),
 	m_advance_mode(QVideo::RealTime),
 	m_play_timer(0),
-	m_video_loaded(false)
+	m_video_loaded(false),
+	m_status(Paused)
 {
 	QMutexLocker locker(&qvideo_mutex);
 	av_register_all();
@@ -50,7 +51,8 @@ QVideo::QVideo(QObject *parent) : QObject(parent),
 	m_ready_to_play(false),
 	m_advance_mode(QVideo::RealTime),
 	m_play_timer(0),
-	m_video_loaded(false)
+	m_video_loaded(false),
+	m_status(Paused)
 {
 	QMutexLocker locker(&qvideo_mutex);
 	av_register_all();
@@ -171,8 +173,13 @@ void QVideo::play()
 	if(!m_play_timer)
 	{
 		m_play_time.start();
-		m_play_timer = startTimer(1);
+		//m_play_timer = startTimer(1);
 	}
+	else
+	{
+		killTimer(m_play_timer);
+	}
+	m_play_timer = startTimer(1);
 	//m_video_decoder->decode(); // start decoding again
 	emit movieStateChanged(QMovie::Running);
 }
@@ -243,6 +250,7 @@ void QVideo::restart()
 
 void QVideo::setReady(bool ready)
 {
+	//qDebug() << "QVideo::setReady(): ready:"<<ready;
 	m_ready_to_play = ready;
 }
 
@@ -366,14 +374,15 @@ void QVideo::consumeFrame()
 
 void QVideo::displayFrame()
 {
-	if(status() != Running)
+	//qDebug("    END frame: %d",m_frame_counter);
+        
+        if(status() != Running)
 	{
-		qDebug("Not running, not showing frame");
+		//qDebug("Not running, not showing frame");
 		return;
 	}
         //qDebug("Done sleeping, showing next frame");
 
-        //qDebug("    END frame: %d",m_frame_counter);
         int xflag = 0;
         if(m_frameDebug.elapsed() > m_expectedDelay * 3)
         {

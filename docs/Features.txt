@@ -70,6 +70,7 @@ Revised Task list for Release 1.0, 10/10/09:
 			- When slide*Group* is set on scene, need to scan and initalize decoders for all videos, but STOP at first frame
 			- When cross fade starts, start playing
 			- Stop playing prev slide when cross fade ends
+			- Dont Release provider unless slide group is taken off scene?
 		[DONE] - Shadows (Text):
 			[DONE] - Can settle for simple block shadow
 			[LATER] - Gausian blur if we have time 
@@ -99,11 +100,8 @@ Revised Task list for Release 1.0, 10/10/09:
 	- Bugs:
 		When using 1.6AR, content locations centered in slide editor appear off center in preview and live (but correct in icons)
 		When changing output size with custom output, output disappers until program restart
-		*When setting video in slide editor, it never shows first frame
-			- partially fixed - if add vid, close editor, reopen editor/program, it shows
-			- just not when first assigned
-			- see if improvment above fixes bug when back at work
 		
+		[FIXED] When setting video in slide editor, it never shows first frame
 		[FIXED] Video slides crashing when made live on Win32
 		[FIXED] When changing AR, reload document (or recreate slides)
 		[FIXED] Cross fading text with shadows shows ugly "dark" text during crossfade - need to investigate clipping shadow to only visible part of painter path

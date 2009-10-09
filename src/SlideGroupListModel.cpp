@@ -9,7 +9,7 @@
 
 #include "model/SlideGroup.h"
 #include "model/Slide.h"
-#include "RenderOpts.h"
+#include "MainWindow.h"
 
 SlideGroupListModel::SlideGroupListModel(SlideGroup *g, QObject *parent)
 		: QAbstractListModel(parent), m_slideGroup(0), m_scene(0), m_dirtyTimer(0), m_iconSize(192,0), m_sceneRect(0,0,1024,768)
@@ -17,6 +17,12 @@ SlideGroupListModel::SlideGroupListModel(SlideGroup *g, QObject *parent)
 	if(m_slideGroup)
 		setSlideGroup(g);
 	
+	if(MainWindow::mw())
+	{
+		m_sceneRect = MainWindow::mw()->standardSceneRect();
+		connect(MainWindow::mw(), SIGNAL(aspectRatioChanged(double)), this, SLOT(aspectRatioChanged(double)));
+	}
+			
 	setSceneRect(m_sceneRect);
 }
 
@@ -28,6 +34,12 @@ SlideGroupListModel::~SlideGroupListModel()
 		m_scene = 0;
 	}
 }
+
+void SlideGroupListModel::aspectRatioChanged(double)
+{
+	setSceneRect(MainWindow::mw()->standardSceneRect());
+}
+
 
 Qt::ItemFlags SlideGroupListModel::flags(const QModelIndex &index) const
 {
@@ -264,6 +276,13 @@ void SlideGroupListModel::setSceneRect(QRect r)
 	adjustIconAspectRatio();
 	if(m_scene)
 		m_scene->setSceneRect(m_sceneRect);
+	
+	QModelIndex top    = indexForSlide(m_sortedSlides.first()), 
+	            bottom = indexForSlide(m_sortedSlides.last());
+        //qDebug() << "DocumentListModel::modelDirtyTimeout: top:"<<top<<", bottom:"<<bottom;
+	m_pixmaps.clear();
+	
+	dataChanged(top,bottom);
 }
 
 void SlideGroupListModel::adjustIconAspectRatio()
@@ -283,7 +302,7 @@ void SlideGroupListModel::setIconSize(QSize sz)
 
 void SlideGroupListModel::generatePixmap(int row)
 {
-// 	return;
+ 	return;
 	Slide * slide = m_sortedSlides.at(row);
 	
 	int icon_w = m_iconSize.width();

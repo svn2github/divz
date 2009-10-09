@@ -55,6 +55,7 @@ signals:
 private slots:
  	void slideGroupChanged(SlideGroup *g, QString groupOperation, Slide *slide, QString slideOperation, AbstractItem *item, QString operation, QString fieldName, QVariant value);
  	void modelDirtyTimeout();
+ 	void aspectRatioChanged(double);
 	
 private:
 	void internalSetup();
