@@ -18,6 +18,7 @@ class GenericItemConfig;
 class Slide;
 class TextItem;
 class BackgroundItem;
+class QVideoProvider;
 
 class MyGraphicsScene : public QGraphicsScene
 {

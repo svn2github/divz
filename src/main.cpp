@@ -27,11 +27,11 @@ QColor RenderOpts::hiColor;
 
 #include <QtGui/QApplication>
 
-#include "model/ItemFactory.h"
-#include "model/Slide.h"
-#include "model/TextItem.h"
-#include "model/SlideGroupFactory.h"
-#include "songdb/SongSlideGroupFactory.h"
+// #include "model/ItemFactory.h"
+// #include "model/Slide.h"
+// #include "model/TextItem.h"
+ #include "model/SlideGroupFactory.h"
+ #include "songdb/SongSlideGroupFactory.h"
 #include "AppSettings.h"
 
 int main(int argc, char **argv)

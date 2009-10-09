@@ -221,7 +221,7 @@ AbstractSlideGroupEditor * SlideGroupFactory::newEditor()
 
 QPixmap	SlideGroupFactory::generatePreviewPixmap(SlideGroup *g, QSize iconSize, QRect sceneRect)
 {
-	return QPixmap();
+//	return QPixmap();
 	
 	Slide * slide = g->at(0);
 	if(!slide)
@@ -235,8 +235,12 @@ QPixmap	SlideGroupFactory::generatePreviewPixmap(SlideGroup *g, QSize iconSize, 
 	
 	if(!m_scene)
 		m_scene = new MyGraphicsScene(MyGraphicsScene::Preview);
+	//qDebug() << "SlideGroupFactory::generatePreviewPixmap(): checking scene rect: "<<sceneRect;
 	if(m_scene->sceneRect() != sceneRect)
+	{
+		//qDebug() << "SlideGroupFactory::generatePreviewPixmap(): setting new scene rect: "<<sceneRect;
 		m_scene->setSceneRect(sceneRect);
+	}
 	
 	m_scene->setSlide(slide);
 	

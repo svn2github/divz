@@ -189,7 +189,7 @@ void VideoFileContent::setFilename(const QString &name)
 	// prime the pump, so to speak
 	setPixmap(m_videoProvider->pixmap());
 
-	if(!m_videoProvider->isPlaying())
+	//if(!m_videoProvider->isPlaying())
 		m_videoProvider->play();
 	m_still = false;
 	

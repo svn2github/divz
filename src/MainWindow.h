@@ -53,6 +53,8 @@ public slots:
 	void editGroup(SlideGroup*);
 	void deleteGroup(SlideGroup*);
 	void previewSlideGroup(SlideGroup*);
+	void openFile(const QString &);
+	void saveFile(const QString &file = "");
 
 protected slots:
 	void groupsDropped(QList<SlideGroup*> list);
@@ -88,27 +90,27 @@ private:
 	void setupSongList();
 
 	Ui::MainWindow *m_ui;
-	DocumentListModel m_docModel;
 	SlideEditorWindow m_editWin;
-	SlideGroupViewer *m_previewWidget;
-	OutputViewer *m_liveMonitor;
-	SlideGroupViewer *m_liveView;
+	DocumentListModel * m_docModel;
+	SlideGroupViewer  * m_previewWidget;
+	OutputViewer      * m_liveMonitor;
+	SlideGroupViewer  * m_liveView;
 
-	QSplitter * m_splitter;
-	QSplitter * m_splitter2;
-	QListView * m_groupView;
+	QSplitter   * m_splitter;
+	QSplitter   * m_splitter2;
+	QListView   * m_groupView;
 	QPushButton * m_btnSendOut;
 	QListWidget * m_outputList;
-	QTabWidget * m_outputTabs;
+	QTabWidget  * m_outputTabs;
 
-	QTableView * m_songList;
-	QLineEdit * m_songSearch;
-	QComboBox * m_searchOpt;
-	QPushButton * m_clearSearchBtn;
+	QTableView    * m_songList;
+	QLineEdit     * m_songSearch;
+	QComboBox     * m_searchOpt;
+	QPushButton   * m_clearSearchBtn;
 	QSortFilterProxyModel * m_songProxyModel;
 	QSqlTableModel * m_songTableModel;
 
-	OutputSetupDialog *m_outputDialog;
+	OutputSetupDialog * m_outputDialog;
 	
 	Document m_doc;
 	

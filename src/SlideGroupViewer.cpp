@@ -7,7 +7,7 @@
 # include <QtOpenGL/QGLWidget>
 #endif
 
-
+#include "qvideo/QVideoProvider.h"
 
 #include "MainWindow.h"
 #include "AppSettings.h"
@@ -105,6 +105,7 @@ bool slide_group_viewer_slide_num_compare(Slide *a, Slide *b)
 
 void SlideGroupViewer::clear()
 {
+	releaseVideoProvders();
 	m_scene->clear();
 	m_slideGroup = 0;
 }
@@ -118,6 +119,7 @@ void SlideGroupViewer::setSlideGroup(SlideGroup *g, int startSlide)
 	if(m_slideGroup && m_slideGroup != g)
 	{
 		//disconnect(m_slideGroup,0,this,0);
+		releaseVideoProvders();
 	}
 
 	//if(m_slideGroup != g)
@@ -128,6 +130,9 @@ void SlideGroupViewer::setSlideGroup(SlideGroup *g, int startSlide)
 	QList<Slide*> slist = g->slideList();
 	qSort(slist.begin(), slist.end(), slide_group_viewer_slide_num_compare);
 	m_sortedSlides = slist;
+	
+	// See comments on the function itself for what this is for
+	initVideoProviders();
 
 	if(startSlide)
 	{
@@ -198,8 +203,67 @@ void SlideGroupViewer::adjustViewScaling()
 	m_view->update();
 	//m_view->fitInView(m_scene->sceneRect(), Qt::KeepAspectRatioByExpanding);
 	//m_view->fitInView(m_scene->sceneRect(), Qt::KeepAspectRatio);
-
-
-
 }
 
+// Method: void initVideoProviders() 
+// This whole business of integrating with the QVideoProvider framework in the SlideGroupViewer itself
+// is desiged to basically initalize the video streams before it "goes live" to create a seamless
+// transition. The vote is still out on whether or not this actually helps - it seems to. We'll see.
+void SlideGroupViewer::initVideoProviders()
+{
+	if(!m_slideGroup)
+		return;
+		
+	QList<Slide*> slist = m_slideGroup->slideList();	
+	foreach(Slide *slide, slist)
+	{
+		QList<AbstractItem *> items = slide->itemList();
+		foreach(AbstractItem *item, items)
+		{
+			if (AbstractVisualItem * visualItem = dynamic_cast<AbstractVisualItem *>(item))
+			{
+				QString videoFile = visualItem->fillVideoFile();
+				if(!videoFile.isEmpty())
+				{
+					QVideoProvider * p = QVideoProvider::providerForFile(videoFile);
+					connect(p, SIGNAL(streamStarted()), this, SLOT(videoStreamStarted()));
+					
+					m_videoProvidersConsumed[p->canonicalFilePath()] = false;
+					
+					m_videoProviders << p;
+					
+					if(!p->isPlaying())
+						p->play();
+					
+					
+				}
+			}
+		}
+	}
+}
+
+void SlideGroupViewer::releaseVideoProvders()
+{
+	foreach(QVideoProvider *p, m_videoProviders)
+	{
+		p->disconnectReceiver(this);
+		QVideoProvider::releaseProvider(p);
+	}
+	
+	m_videoProvidersConsumed.clear();
+	m_videoProviders.clear();
+	
+}
+
+void SlideGroupViewer::videoStreamStarted()
+{
+	QVideoProvider *p = dynamic_cast<QVideoProvider *>(sender());
+	if(!p)
+		return;
+		
+	if(!m_videoProvidersConsumed[p->canonicalFilePath()])
+	{
+		m_videoProvidersConsumed[p->canonicalFilePath()] = true;
+		//p->pause();
+	}
+}

@@ -43,8 +43,9 @@ DocumentListModel::~DocumentListModel()
 // 	}
 }
 
-void DocumentListModel::aspectRatioChanged(double)
+void DocumentListModel::aspectRatioChanged(double x)
 {
+	//qDebug() << "DocumentListModel::aspectRatioChanged: x:"<<x;
 	setSceneRect(MainWindow::mw()->standardSceneRect());
 }
 
@@ -323,6 +324,8 @@ void DocumentListModel::adjustIconAspectRatio()
 {
 	QRect r = sceneRect();
 	qreal a = (qreal)r.height() / (qreal)r.width();
+	
+	//qDebug() << "DocumentListModel::adjustIconAspectRatio(): r:"<<r<<", a:"<<a;
 	
 	m_iconSize.setHeight((int)(m_iconSize.width() * a));
 }

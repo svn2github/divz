@@ -274,6 +274,7 @@ void SlideGroupListModel::setSceneRect(QRect r)
 {
 	m_sceneRect = r;
 	adjustIconAspectRatio();
+	
 	if(m_scene)
 		m_scene->setSceneRect(m_sceneRect);
 	
@@ -302,7 +303,7 @@ void SlideGroupListModel::setIconSize(QSize sz)
 
 void SlideGroupListModel::generatePixmap(int row)
 {
- 	return;
+// 	return;
 	Slide * slide = m_sortedSlides.at(row);
 	
 	int icon_w = m_iconSize.width();

@@ -33,6 +33,12 @@ public:
 	
 	QPixmap pixmap() { return m_lastPixmap; }
 	
+	QString canonicalFilePath() { return m_canonicalFilePath; }
+	
+signals:
+	void streamStarted();
+	void streamStopped();	
+
 public slots:
 	void stop();
 	void play();
@@ -54,6 +60,8 @@ private:
 	QPixmap m_lastPixmap;
 	
 	int m_playCount;
+	
+	bool m_streamStarted;
 	
 };
 

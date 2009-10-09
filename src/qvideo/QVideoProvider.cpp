@@ -63,7 +63,8 @@ QVideoProvider::QVideoProvider(const QString &f) :
 	m_video(new QVideo(this)),
 	m_refCount(0),
 	m_isValid(true),
-	m_playCount(0)
+	m_playCount(0),
+	m_streamStarted(false)
 {
 	if(!m_video->load(f))
 	{
@@ -91,6 +92,11 @@ QVideoProvider::~QVideoProvider()
 void QVideoProvider::newPixmap(const QPixmap & pix)
 {
 	m_lastPixmap = pix;
+	if(!m_streamStarted)
+	{
+		m_streamStarted = true;
+		emit streamStarted();
+	}
 }
 
 void QVideoProvider::connectReceiver(QObject * receiver, const char * method)
@@ -115,11 +121,17 @@ void QVideoProvider::disconnectReceiver(QObject * receiver)
 	
 void QVideoProvider::stop()
 {
-	m_video->stop();
 	if(m_playCount>0)
 		m_playCount --;
+	if(m_playCount <= 0)
+	{
+		m_streamStarted = false;
+		emit streamStopped();
+		m_video->stop();
+	}
+	
 	if(DEBUG_QVIDEOPROVIDER)
-		qDebug() << "[PLAY -] QVideoProvider::stop(): m_playCount:"<<m_playCount;
+		qDebug() << "[PLAY -] QVideoProvider::stop(): "<<m_canonicalFilePath<<" m_playCount:"<<m_playCount;
 }
 
 void QVideoProvider::play()
@@ -127,7 +139,7 @@ void QVideoProvider::play()
 	m_video->play();
 	m_playCount ++;
 	if(DEBUG_QVIDEOPROVIDER)
-		qDebug() << "[PLAY +] QVideoProvider::play(): m_playCount:"<<m_playCount;
+		qDebug() << "[PLAY +] QVideoProvider::play(): "<<m_canonicalFilePath<<" m_playCount:"<<m_playCount;
 }
 void QVideoProvider::pause()
 {
@@ -135,12 +147,16 @@ void QVideoProvider::pause()
 	if(m_playCount>0)
 		m_playCount --;
 	if(DEBUG_QVIDEOPROVIDER)
-		qDebug() << "[PLAY -] QVideoProvider::pause(): m_playCount:"<<m_playCount;
+		qDebug() << "[PLAY -] QVideoProvider::pause(): "<<m_canonicalFilePath<<" m_playCount:"<<m_playCount;
 	if(m_playCount <= 0)
 	{
 		if(DEBUG_QVIDEOPROVIDER)
-			qDebug() << "QVideoProvider::pause(): m_video->pause() hit";
+			qDebug() << "QVideoProvider::pause(): "<<m_canonicalFilePath<<" m_video->pause() hit";
+		
 		m_video->pause();
+		
+		m_streamStarted = false;
+		emit streamStopped();
 	}
 	
 }

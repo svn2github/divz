@@ -37,7 +37,9 @@ public slots:
 private slots:
 	void appSettingsChanged();
 	void aspectRatioChanged(double);
-
+	
+	void videoStreamStarted();
+		
 protected:
 	void resizeEvent(QResizeEvent *);
 	void closeEvent(QCloseEvent *);
@@ -45,6 +47,11 @@ protected:
 	void adjustViewScaling();
 
 private:
+	void initVideoProviders();
+	void releaseVideoProvders();
+	QList<QVideoProvider*> m_videoProviders;
+	QMap<QString,bool> m_videoProvidersConsumed;
+	
 	SlideGroup * m_slideGroup;
 	QList<Slide*> m_sortedSlides;
 //	QHash<int,QPixmap> m_pixmaps;

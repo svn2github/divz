@@ -137,6 +137,8 @@ void Document::save(const QString & filename)
 	QString tmp = filename;
 	if(tmp.isEmpty())
 		tmp = m_filename;
+	else
+		m_filename = tmp;
 		
 	QDomDocument doc;
 	QFile file;

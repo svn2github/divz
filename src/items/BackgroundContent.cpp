@@ -284,7 +284,7 @@ void BackgroundContent::setVideoFile(const QString &name)
 	
 	if(modelItem()->fillType() == AbstractVisualItem::Video)
 	{
-		if(!m_videoProvider->isPlaying())
+		//if(!m_videoProvider->isPlaying())
 			m_videoProvider->play();
 		m_still = false;
 	}

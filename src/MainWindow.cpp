@@ -25,31 +25,17 @@ MainWindow * MainWindow::static_mainWindow = 0;
 MainWindow::MainWindow(QWidget *parent) :
 	QMainWindow(parent),
 	m_ui(new Ui::MainWindow),
-	m_liveView(0)
+	m_liveView(0),
+	m_docModel(0)
+	
 {
 	static_mainWindow = this;
 	
 	m_ui->setupUi(this);
 	
-
-	if(QFile("test.xml").exists())
-	{
-		m_doc.load("test.xml");
-		//r.readSlide(m_slide);
-		setWindowTitle("test.xml - DViz");
-	}
-	else
-	{
-		Slide * slide = new Slide();
-		SlideGroup *g = new SlideGroup();
-		g->addSlide(slide);
-		m_doc.addGroup(g);
-		//m_scene->setSlide(slide);
-
-		setWindowTitle("New Show - DViz");
-	}
+	m_docModel = new DocumentListModel();
 	
-	m_docModel.setDocument(&m_doc);
+	openFile("test.xml");
 	
 	// setup live view before central widget because central widget uses live view in the view control code
 	m_liveView = new SlideGroupViewer();
@@ -113,7 +99,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
-	m_doc.save("test.xml");
+	saveFile();
 	
 	QSettings settings;
 	settings.setValue("mainwindow/size",size());
@@ -126,6 +112,51 @@ MainWindow::~MainWindow()
 	
 	delete m_liveView;
 	m_liveView = 0;
+	
+	delete m_docModel;
+}
+
+void MainWindow::openFile(const QString & file)
+{
+	double oldAspect = m_doc.aspectRatio();
+	
+	if(!m_doc.filename().isEmpty())
+		m_doc.save();
+	
+	if(QFile(file).exists())
+	{
+		m_doc.load(file);
+		//r.readSlide(m_slide);
+		setWindowTitle(file + " - DViz");
+	}
+	else
+	{
+		Slide * slide = new Slide();
+		SlideGroup *g = new SlideGroup();
+		g->addSlide(slide);
+		m_doc.addGroup(g);
+		//m_scene->setSlide(slide);
+
+		setWindowTitle("New File - DViz");
+	}
+	
+	
+	
+	if(oldAspect != m_doc.aspectRatio())
+	{
+		//qDebug()<<"mainwindow open:"<<file<<", oldAspect:"<<oldAspect<<", new:"<<m_doc.aspectRatio();
+		emit aspectRatioChanged(m_doc.aspectRatio());
+	}
+		
+	m_docModel->setDocument(&m_doc);
+}
+
+void MainWindow::saveFile(const QString & file)
+{
+	m_doc.save(file.isEmpty() ? m_doc.filename() : file);
+	
+	setWindowTitle(m_doc.filename() + " - DViz");
+	
 }
 
 void MainWindow::setupSongList()
@@ -275,7 +306,7 @@ void MainWindow::setupOutputViews()
 
 void MainWindow::groupsDropped(QList<SlideGroup*> list)
 {
-	QModelIndex idx = m_docModel.indexForGroup(list.first());
+	QModelIndex idx = m_docModel->indexForGroup(list.first());
 	m_groupView->setCurrentIndex(idx);
 }
 
@@ -300,13 +331,13 @@ void MainWindow::setupCentralWidget()
 	m_groupView->setDropIndicatorShown(true);
 	m_groupView->setEditTriggers(QAbstractItemView::EditKeyPressed); 
 	
-	m_groupView->setModel(&m_docModel);
+	m_groupView->setModel(m_docModel);
 	m_groupView->setContextMenuPolicy(Qt::ActionsContextMenu);
 	m_groupView->insertAction(0,m_ui->actionEdit_Slide_Group);
 	m_groupView->insertAction(0,m_ui->actionNew_Slide_Group);
 	m_groupView->insertAction(0,m_ui->actionDelete_Slide_Group);
 	
-	connect(&m_docModel, SIGNAL(groupsDropped(QList<SlideGroup*>)), this, SLOT(groupsDropped(QList<SlideGroup*>)));
+	connect(m_docModel, SIGNAL(groupsDropped(QList<SlideGroup*>)), this, SLOT(groupsDropped(QList<SlideGroup*>)));
 	
 	connect(m_groupView,SIGNAL(clicked(const QModelIndex &)),this,SLOT(groupSelected(const QModelIndex &)));
 	connect(m_groupView,SIGNAL(doubleClicked(const QModelIndex &)),this,SLOT(groupDoubleClicked(const QModelIndex &)));
@@ -461,7 +492,7 @@ void MainWindow::actionDocSettingsDialog()
 
 void MainWindow::groupSelected(const QModelIndex &idx)
 {
-	SlideGroup *s = m_docModel.groupFromIndex(idx);
+	SlideGroup *s = m_docModel->groupFromIndex(idx);
         //qDebug() << "MainWindow::groupSelected(): selected group#:"<<s->groupNumber()<<", title:"<<s->groupTitle();
 	//openSlideEditor(s);
 	previewSlideGroup(s);
@@ -475,7 +506,7 @@ void MainWindow::previewSlideGroup(SlideGroup *s)
 
 void MainWindow::setLiveGroup(SlideGroup *s)
 {
-	//SlideGroup *s = m_docModel.groupFromIndex(idx);
+	//SlideGroup *s = m_docModel->groupFromIndex(idx);
         //qDebug() << "MainWindow::groupSelected(): groupSetLive group#:"<<s->groupNumber()<<", title:"<<s->groupTitle();
 	//openSlideEditor(s);
 	//m_previewWidget->clear();
@@ -507,7 +538,7 @@ void MainWindow::setLiveGroup(SlideGroup *s)
 
 void MainWindow::groupDoubleClicked(const QModelIndex &idx)
 {
-	SlideGroup *g = m_docModel.groupFromIndex(idx);
+	SlideGroup *g = m_docModel->groupFromIndex(idx);
         //qDebug() << "MainWindow::groupSelected(): double-clicked group#:"<<g->groupNumber()<<", title:"<<g->groupTitle();
 	setLiveGroup(g);
 }
@@ -523,7 +554,7 @@ void MainWindow::editGroup(SlideGroup *g)
 void MainWindow::actionEditGroup()
 {
 	QModelIndex idx = m_groupView->currentIndex();
-	SlideGroup *s = m_docModel.groupFromIndex(idx);
+	SlideGroup *s = m_docModel->groupFromIndex(idx);
 	editGroup(s);
 }
 
@@ -538,7 +569,7 @@ void MainWindow::actionNewGroup()
 void MainWindow::actionDelGroup()
 {
 	QModelIndex idx = m_groupView->currentIndex();
-	SlideGroup *s = m_docModel.groupFromIndex(idx);
+	SlideGroup *s = m_docModel->groupFromIndex(idx);
 	deleteGroup(s);
 }
 
