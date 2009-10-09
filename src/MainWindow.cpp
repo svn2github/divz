@@ -6,10 +6,10 @@
 #include <QDebug>
 #include <QDesktopWidget>
 #include <QMessageBox>
-
 #include <QTableView>
-
 #include <QLabel>
+#include <QFileDialog>
+#include <QMessageBox>
 
 #include "AppSettings.h"
 #include "AppSettingsDialog.h"
@@ -26,7 +26,9 @@ MainWindow::MainWindow(QWidget *parent) :
 	QMainWindow(parent),
 	m_ui(new Ui::MainWindow),
 	m_liveView(0),
-	m_docModel(0)
+	m_docModel(0),
+	m_doc(0),
+	m_viewControl(0)
 	
 {
 	static_mainWindow = this;
@@ -35,7 +37,8 @@ MainWindow::MainWindow(QWidget *parent) :
 	
 	m_docModel = new DocumentListModel();
 	
-	openFile("test.xml");
+	if(!openFile("test.xml"))
+		actionNew();
 	
 	// setup live view before central widget because central widget uses live view in the view control code
 	m_liveView = new SlideGroupViewer();
@@ -63,6 +66,11 @@ MainWindow::MainWindow(QWidget *parent) :
 	
 
 	//m_ui->actionEdit_Slide_Group->setEnabled(false);
+
+	connect(m_ui->actionOpen, SIGNAL(triggered()), this, SLOT(actionOpen()));
+	connect(m_ui->actionSave, SIGNAL(triggered()), this, SLOT(actionSave()));
+	connect(m_ui->actionSave_As, SIGNAL(triggered()), this, SLOT(actionSaveAs()));
+	connect(m_ui->actionNew, SIGNAL(triggered()), this, SLOT(actionNew()));
 
 	connect(m_ui->actionNew_Slide_Group, SIGNAL(triggered()), this, SLOT(actionNewGroup()));
 	connect(m_ui->actionEdit_Slide_Group, SIGNAL(triggered()), this, SLOT(actionEditGroup()));
@@ -101,6 +109,8 @@ MainWindow::~MainWindow()
 {
 	saveFile();
 	
+	clearAllOutputs();
+	
 	QSettings settings;
 	settings.setValue("mainwindow/size",size());
 	settings.setValue("mainwindow/pos",pos());
@@ -114,48 +124,115 @@ MainWindow::~MainWindow()
 	m_liveView = 0;
 	
 	delete m_docModel;
+	delete m_doc;
 }
 
-void MainWindow::openFile(const QString & file)
+void MainWindow::clearAllOutputs()
 {
-	double oldAspect = m_doc.aspectRatio();
+	m_liveView->clear();
+	m_previewWidget->clear();
 	
-	if(!m_doc.filename().isEmpty())
-		m_doc.save();
 	
-	if(QFile(file).exists())
-	{
-		m_doc.load(file);
-		//r.readSlide(m_slide);
-		setWindowTitle(file + " - DViz");
-	}
-	else
-	{
-		Slide * slide = new Slide();
-		SlideGroup *g = new SlideGroup();
-		g->addSlide(slide);
-		m_doc.addGroup(g);
-		//m_scene->setSlide(slide);
+	if(m_viewControl)
+		m_viewControl->releaseSlideGroup();
+}
 
-		setWindowTitle("New File - DViz");
-	}
-	
-	
-	
-	if(oldAspect != m_doc.aspectRatio())
+void MainWindow::actionOpen()
+{
+	QString fileName = QFileDialog::getOpenFileName(this, tr("Select DViz File"), m_doc->filename(), tr("DViz XML File (*.xml);;Any File (*.*)"));
+	if(fileName != "")
 	{
-		//qDebug()<<"mainwindow open:"<<file<<", oldAspect:"<<oldAspect<<", new:"<<m_doc.aspectRatio();
-		emit aspectRatioChanged(m_doc.aspectRatio());
+		if(openFile(fileName))
+		{
+			return;
+		}
+		else
+		{
+			QMessageBox::critical(this,"File Does Not Exist","Sorry, but the file you chose does not exist. Please try again.");
+		}
+	}
+}
+
+void MainWindow::actionSave()
+{
+	if(m_doc->filename().isEmpty())
+		actionSaveAs();
+	else
+		saveFile();
+		
+}
+
+void MainWindow::actionSaveAs()
+{
+	QString fileName = QFileDialog::getSaveFileName(this, tr("Choose a Filename"), m_doc->filename(), tr("DViz XML File (*.xml);;Any File (*.*)"));
+	if(fileName != "")
+	{
+		saveFile(fileName);
+	}
+}
+
+void MainWindow::actionNew()
+{
+	if(m_doc)
+	{
+		clearAllOutputs();
+		delete m_doc;
 	}
 		
-	m_docModel->setDocument(&m_doc);
+	m_doc = new Document();
+	
+	Slide * slide = new Slide();
+	SlideGroup *g = new SlideGroup();
+	g->addSlide(slide);
+	m_doc->addGroup(g);
+	//m_scene->setSlide(slide);
+
+	m_docModel->setDocument(m_doc);
+	
+	setWindowTitle("New File - DViz");
+}
+
+bool MainWindow::openFile(const QString & file)
+{
+	if(!QFile(file).exists())
+		return false;
+	
+	double oldAspect = 0;
+	
+	if(m_doc)
+	{
+		oldAspect = m_doc->aspectRatio();
+		if(!m_doc->filename().isEmpty())
+			m_doc->save();
+		
+		clearAllOutputs();
+		delete m_doc;
+	}
+	
+	m_doc = new Document(file);
+		
+	//m_doc->load(file);
+	//r.readSlide(m_slide);
+	setWindowTitle(file + " - DViz");
+	
+	
+	
+	if(oldAspect != m_doc->aspectRatio())
+	{
+		//qDebug()<<"mainwindow open:"<<file<<", oldAspect:"<<oldAspect<<", new:"<<m_doc->aspectRatio();
+		emit aspectRatioChanged(m_doc->aspectRatio());
+	}
+		
+	m_docModel->setDocument(m_doc);
+	
+	return true;
 }
 
 void MainWindow::saveFile(const QString & file)
 {
-	m_doc.save(file.isEmpty() ? m_doc.filename() : file);
+	m_doc->save(file.isEmpty() ? m_doc->filename() : file);
 	
-	setWindowTitle(m_doc.filename() + " - DViz");
+	setWindowTitle(m_doc->filename() + " - DViz");
 	
 }
 
@@ -243,7 +320,7 @@ void MainWindow::songDoubleClicked(const QModelIndex &idx)
 	SongRecord *song = SongRecord::fromSqlRecord(record);
 	SongSlideGroup *group = new SongSlideGroup();
 	group->setSong(song);
-	m_doc.addGroup(group);
+	m_doc->addGroup(group);
 }
 
 void MainWindow::songFilterChanged(const QString &text)
@@ -481,11 +558,11 @@ void MainWindow::actionAppSettingsDialog()
 void MainWindow::actionDocSettingsDialog()
 {
 	//OutputSetupDialog *d = new OutputSetupDialog(this);
-	double ar = m_doc.aspectRatio();
-	DocumentSettingsDialog *d = new DocumentSettingsDialog(&m_doc,this);
+	double ar = m_doc->aspectRatio();
+	DocumentSettingsDialog *d = new DocumentSettingsDialog(m_doc,this);
 	d->exec();
-	if(ar != m_doc.aspectRatio())
-		emit aspectRatioChanged(m_doc.aspectRatio());
+	if(ar != m_doc->aspectRatio())
+		emit aspectRatioChanged(m_doc->aspectRatio());
 	
 }
 
@@ -563,7 +640,7 @@ void MainWindow::actionNewGroup()
 	Slide * slide = new Slide();
 	SlideGroup *g = new SlideGroup();
 	g->addSlide(slide);
-	m_doc.addGroup(g);
+	m_doc->addGroup(g);
 }
 
 void MainWindow::actionDelGroup()
@@ -575,7 +652,7 @@ void MainWindow::actionDelGroup()
 
 void MainWindow::deleteGroup(SlideGroup *s)
 {
-	m_doc.removeGroup(s);
+	m_doc->removeGroup(s);
 }
 
 
@@ -602,7 +679,12 @@ void MainWindow::changeEvent(QEvent *e)
 QRect MainWindow::standardSceneRect(double aspectRatio)
 {
 	if(aspectRatio < 0)
-		aspectRatio = m_doc.aspectRatio();
+	{
+		if(m_doc)
+			aspectRatio = m_doc->aspectRatio();
+		else
+			aspectRatio = 4/3;
+	}
 	
 	int height = 768;
 	return QRect(0,0,aspectRatio * height,height);

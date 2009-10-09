@@ -39,7 +39,7 @@ public:
 	MainWindow(QWidget *parent = 0);
 	~MainWindow();
 	
-	Document * currentDocument() { return &m_doc; }
+	Document * currentDocument() { return m_doc; }
 	QRect standardSceneRect(double aspectRatio = -1);
 	
 signals:
@@ -53,8 +53,9 @@ public slots:
 	void editGroup(SlideGroup*);
 	void deleteGroup(SlideGroup*);
 	void previewSlideGroup(SlideGroup*);
-	void openFile(const QString &);
+	bool openFile(const QString &);
 	void saveFile(const QString &file = "");
+	void clearAllOutputs();
 
 protected slots:
 	void groupsDropped(QList<SlideGroup*> list);
@@ -75,6 +76,11 @@ protected slots:
 
 	void actionAboutDviz();
 	void actionDvizWebsite();
+	
+	void actionOpen();
+	void actionSave();
+	void actionSaveAs();
+	void actionNew();
 	
 protected:
 	void changeEvent(QEvent *e);
@@ -112,7 +118,7 @@ private:
 
 	OutputSetupDialog * m_outputDialog;
 	
-	Document m_doc;
+	Document * m_doc;
 	
 	SlideGroupViewControl * m_viewControl;
 	

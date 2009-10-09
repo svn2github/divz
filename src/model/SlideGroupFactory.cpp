@@ -137,6 +137,12 @@ void SlideGroupViewControl::setSlideGroup(SlideGroup *g, Slide *curSlide)
 	// reset seems to be required
 	m_listView->reset();
 }
+
+void SlideGroupViewControl::releaseSlideGroup()
+{
+	m_slideModel->releaseSlideGroup();
+	m_listView->reset();
+}
 	
 void SlideGroupViewControl::nextSlide()
 {

@@ -14,6 +14,7 @@
 #include <math.h>
 
 #include <QStringList>
+#include <QPointer>
 
 class Slide;
 class SlideGroup;
@@ -54,6 +55,7 @@ public:
  	// Not from AbstractListModel, just for utility
 	QString itemMimeType() const { return "application/x-dviz-slidegroup-listmodel-item"; }
  	
+ 	void releaseSlideGroup();
 
 signals:
 	void slidesDropped(QList<Slide*>);
@@ -62,6 +64,7 @@ private slots:
 	void slideChanged(Slide *slide, QString slideOperation, AbstractItem *item, QString operation, QString fieldName, QVariant value);
 	void modelDirtyTimeout();
 	void aspectRatioChanged(double);
+	
 	
 private:
 	void internalSetup();

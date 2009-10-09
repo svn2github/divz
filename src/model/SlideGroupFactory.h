@@ -33,6 +33,7 @@ public:
 	
 public slots:
 	virtual void setSlideGroup(SlideGroup *g, Slide *curSlide=0);
+	virtual void releaseSlideGroup();
 	virtual void nextSlide();
 	virtual void prevSlide();
 	virtual void setCurrentSlide(int);

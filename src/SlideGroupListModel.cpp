@@ -127,20 +127,44 @@ bool slide_num_compare(Slide *a, Slide *b)
 
 void SlideGroupListModel::setSlideGroup(SlideGroup *g)
 {
-	if(m_slideGroup && m_slideGroup != g)
+	if(!g)
+		return;
+		
+	if(m_slideGroup)// && m_slideGroup != g)
+	{
 		disconnect(m_slideGroup,0,this,0);
+	}
 	
-	if(m_slideGroup != g)
+	if(m_slideGroup) // != g)
+	{
 		connect(g,SIGNAL(slideChanged(Slide *, QString, AbstractItem *, QString, QString, QVariant)),this,SLOT(slideChanged(Slide *, QString, AbstractItem *, QString, QString, QVariant)));
+		connect(g,SIGNAL(destroyed(QObject*)), this, SLOT(releaseSlideGroup()));
+	}
 	
 	m_slideGroup = g;
 	
 	internalSetup();
 }
 
+void SlideGroupListModel::releaseSlideGroup()
+{
+	if(!m_slideGroup)
+		return;
+		
+	m_pixmaps.clear();
+	disconnect(m_slideGroup,0,this,0);
+	int sz = m_slideGroup->slideList().size();
+	beginRemoveRows(QModelIndex(),0,sz);
+	m_slideGroup = 0;
+	endRemoveRows();
+}
+
+
 void SlideGroupListModel::internalSetup()
 {
-	
+	if(!m_slideGroup)
+		return;
+		
 	QList<Slide*> slist = m_slideGroup->slideList();
 	qSort(slist.begin(), slist.end(), slide_num_compare);
 	m_sortedSlides = slist;
@@ -156,6 +180,9 @@ void SlideGroupListModel::internalSetup()
 
 void SlideGroupListModel::slideChanged(Slide *slide, QString slideOperation, AbstractItem */*item*/, QString /*operation*/, QString /*fieldName*/, QVariant /*value*/)
 {
+	if(!m_slideGroup)
+		return;
+		
 	if(!m_dirtyTimer)
 	{
 		m_dirtyTimer = new QTimer(this);
