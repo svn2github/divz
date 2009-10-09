@@ -96,7 +96,7 @@ private:
 	void setupSongList();
 
 	Ui::MainWindow *m_ui;
-	SlideEditorWindow m_editWin;
+	SlideEditorWindow * m_editWin;
 	DocumentListModel * m_docModel;
 	SlideGroupViewer  * m_previewWidget;
 	OutputViewer      * m_liveMonitor;

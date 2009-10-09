@@ -28,12 +28,15 @@ MainWindow::MainWindow(QWidget *parent) :
 	m_liveView(0),
 	m_docModel(0),
 	m_doc(0),
-	m_viewControl(0)
+	m_viewControl(0),
+	m_editWin(0)
 	
 {
 	static_mainWindow = this;
 	
 	m_ui->setupUi(this);
+	
+	m_editWin = new SlideEditorWindow();
 	
 	m_docModel = new DocumentListModel();
 	
@@ -125,6 +128,7 @@ MainWindow::~MainWindow()
 	
 	delete m_docModel;
 	delete m_doc;
+	delete m_editWin;
 }
 
 void MainWindow::clearAllOutputs()
@@ -658,8 +662,8 @@ void MainWindow::deleteGroup(SlideGroup *s)
 
 void MainWindow::openSlideEditor(SlideGroup *g)
 {
-	m_editWin.setSlideGroup(g);
-	m_editWin.show();
+	m_editWin->setSlideGroup(g);
+	m_editWin->show();
 }
 
 void MainWindow::changeEvent(QEvent *e)

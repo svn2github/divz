@@ -460,14 +460,13 @@ void SlideEditorWindow::setupViewportLines()
 
 	QRectF r = m_scene->sceneRect();
 
-	/*
 	foreach(QGraphicsLineItem *l, m_viewportLines)
 	{
 		m_scene->removeItem(l);
 		delete l;
 		l=0;
 	}
-	*/
+	
 	m_viewportLines.clear();
 
 	// top line
