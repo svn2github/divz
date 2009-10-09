@@ -36,20 +36,21 @@
 //TODO for 2D use setErasePixmap Qt function insetead of m_background
 
 // make the linker happy only for gcc < 4.0
-#if !( __GNUC__ > 4 || ( __GNUC__ == 4 && __GNUC_MINOR__ >= 0 ) )
-template class Analyzer::Base<QWidget>;
-#endif
+//#if !( __GNUC__ > 4 || ( __GNUC__ == 4 && __GNUC_MINOR__ >= 0 ) )
+///template class Analyzer::Base<QWidget>;
+//#endif
 
 
-template<class W>
-Analyzer::Base<W>::Base( QWidget *parent, uint timeout, uint scopeSize )
-        : W( parent )
+Analyzer::Base::Base( QWidget *parent, uint timeout, uint scopeSize )
+        : QWidget( parent )
         , m_timeout( timeout )
         , m_fht( new FHT(scopeSize) )
-{}
+{
+	connect( &m_timer, SIGNAL( timeout() ), SLOT( draw() ) );
+}
 
-template<class W> bool
-Analyzer::Base<W>::event( QEvent *e )
+bool
+Analyzer::Base::event( QEvent *e )
 {
     switch( e->type() ) {
 
@@ -68,8 +69,8 @@ Analyzer::Base<W>::event( QEvent *e )
     return QWidget::event( e );
 }
 
-template<class W> void
-Analyzer::Base<W>::transform( Scope &scope ) //virtual
+void
+Analyzer::Base::transform( Scope &scope ) //virtual
 {
     //this is a standard transformation that should give
     //an FFT scope that has bands for pretty analyzers
@@ -88,13 +89,13 @@ Analyzer::Base<W>::transform( Scope &scope ) //virtual
     delete [] f;
 }
 
-// template<class W> void
-// Analyzer::Base<W>::drawFrame()
+// void
+// Analyzer::Base::drawFrame()
 // {
 //         return;
 // #if 0
 //     EngineBase *engine = EngineController::engine();
-// 
+//
 //     switch( engine->state() )
 //     {
 //     case Engine::Playing:
@@ -102,33 +103,33 @@ Analyzer::Base<W>::transform( Scope &scope ) //virtual
 //         const Engine::Scope &thescope = engine->scope();
 //         static Analyzer::Scope scope( 512 );
 //         int i = 0;
-// 
+//
 //         // convert to mono here - our built in analyzers need mono, but we the engines provide interleaved pcm
 //         for( uint x = 0; (int)x < m_fht->size(); ++x )
 //         {
 //            scope[x] = double(thescope[i] + thescope[i+1]) / (2*(1<<15));
 //            i += 2;
 //         }
-// 
+//
 //         transform( scope );
 //         analyze( scope );
-// 
+//
 //         scope.resize( m_fht->size() );
-// 
+//
 //         break;
 //     }
 //     case Engine::Paused:
 //         paused();
 //         break;
-// 
+//
 //     default:
 //         demo();
 //     }
 // #endif
 // }
 
-template<class W> int
-Analyzer::Base<W>::resizeExponent( int exp )
+int
+Analyzer::Base::resizeExponent( int exp )
 {
     if ( exp < 3 )
         exp = 3;
@@ -142,8 +143,8 @@ Analyzer::Base<W>::resizeExponent( int exp )
     return exp;
 }
 
-template<class W> int
-Analyzer::Base<W>::resizeForBands( int bands )
+int
+Analyzer::Base::resizeForBands( int bands )
 {
     int exp;
     if ( bands <= 8 )
@@ -163,12 +164,12 @@ Analyzer::Base<W>::resizeForBands( int bands )
     return m_fht->size() / 2;
 }
 
-template<class W> void
-Analyzer::Base<W>::paused() //virtual
+void
+Analyzer::Base::paused() //virtual
 {}
 
-template<class W> void
-Analyzer::Base<W>::demo() //virtual
+void
+Analyzer::Base::demo() //virtual
 {
     static int t = 201; //FIXME make static to namespace perhaps
 
@@ -189,15 +190,16 @@ Analyzer::Base<W>::demo() //virtual
 }
 
 
-
-Analyzer::Base2D::Base2D( QWidget *parent, uint timeout, uint scopeSize )
+/*
+Analyzer::Base::Base( QWidget *parent, uint timeout, uint scopeSize )
    : Base<QWidget>( parent, timeout, scopeSize )
 {
     connect( &m_timer, SIGNAL( timeout() ), SLOT( draw() ) );
 }
+*/
 
 void
-Analyzer::Base2D::polish()
+Analyzer::Base::polish()
 {
     //TODO is there much point in this anymore?
 
@@ -209,18 +211,18 @@ Analyzer::Base2D::polish()
 }
 
 // void
-// Analyzer::Base2D::drawFrame()
+// Analyzer::Base::drawFrame()
 // {}
-        
+
 void
-Analyzer::Base2D::resizeEvent( QResizeEvent *e )
+Analyzer::Base::resizeEvent( QResizeEvent *e )
 {
     m_background = QPixmap( size() );
 
     QWidget::resizeEvent( e );
 }
 
-
+/*
 #ifdef HAVE_QGLWIDGET
 Analyzer::Base3D::Base3D( QWidget *parent, uint timeout, uint scopeSize )
         : Base<QGLWidget>( parent, timeout, scopeSize )
@@ -228,7 +230,7 @@ Analyzer::Base3D::Base3D( QWidget *parent, uint timeout, uint scopeSize )
     connect( &m_timer, SIGNAL( timeout() ), SLOT( draw() ) );
 }
 #endif
-
+*/
 
 void
 Analyzer::interpolate( const Scope &inVec, Scope &outVec ) //static

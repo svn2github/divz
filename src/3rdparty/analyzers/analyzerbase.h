@@ -13,7 +13,7 @@
  * You should have received a copy of the GNU General Public License along with         *
  * this program.  If not, see <http://www.gnu.org/licenses/>.                           *
  ****************************************************************************************/
- 
+
 #ifndef ANALYZERBASE_H
 #define ANALYZERBASE_H
 
@@ -59,12 +59,13 @@ namespace Analyzer {
 
 typedef std::vector<float> Scope;
 
-template<class W> class Base : public W
+class Base : public QWidget
 {
+	Q_OBJECT
 public:
     uint timeout() const { return m_timeout; }
 
-protected:
+public:
     Base( QWidget*, uint, uint = 7 );
     ~Base() { delete m_fht; }
 
@@ -82,24 +83,8 @@ protected:
         m_timeout = newTimeout;
     }
 
-private:
-    bool event( QEvent* );
-
-protected:
-    QTimer m_timer;
-    uint   m_timeout;
-    FHT    *m_fht;
-};
-
-
-class Base2D : public Base<QWidget>
-{
-Q_OBJECT
-public:
     const QPixmap *background() const { return &m_background; }
 
-private slots:
-    //void draw() { drawFrame(); }
 
 protected slots:
     void set50fps() { changeTimeout( 50 ); }
@@ -108,8 +93,11 @@ protected slots:
     void set20fps() { changeTimeout( 20 ); }
     void set10fps() { changeTimeout( 10 ); }
 
+
 protected:
-    Base2D( QWidget*, uint timeout, uint scopeSize = 7 );
+    bool event( QEvent* );
+
+
 
     virtual void init() {}
 
@@ -119,9 +107,18 @@ protected:
 
     void polish();
 
+protected:
+    QTimer m_timer;
+    uint   m_timeout;
+    FHT    *m_fht;
+
+
 private:
     QPixmap m_background;
+
 };
+
+/*
 
 
 
@@ -147,7 +144,7 @@ private slots:
 #endif
 };
 
-
+*/
 class Factory
 {
     //Currently this is a rather small class, its only purpose

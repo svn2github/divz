@@ -34,7 +34,7 @@ class QPalette;
  * @author Max Howell
  */
 
-class BlockAnalyzer : public Analyzer::Base2D
+class BlockAnalyzer : public Analyzer::Base
 {
 public:
     BlockAnalyzer( QWidget* );

@@ -50,18 +50,26 @@
 #include "qtmultimedia/audio/qaudioinput.h"
 #include "audioinput.h"
 
+
 #define BUFFER_SIZE 4096
 
-AudioInfo::AudioInfo(QObject* parent, QAudioInput* device)
-    :QIODevice( parent )
+AudioInfo::AudioInfo(QObject* parent, QAudioInput* device, Analyzer::Base *an)
+    :QIODevice( parent ),
+    analyzer(an)
+
 {
     input = device;
 
     m_maxValue = 0;
+
+    outputFile.setFileName("/test.pcm");
+    outputFile.open( QIODevice::WriteOnly | QIODevice::Truncate );
+
 }
 
 AudioInfo::~AudioInfo()
 {
+    outputFile.close();
 }
 
 void AudioInfo::start()
@@ -88,9 +96,13 @@ qint64 AudioInfo::writeData(const char *data, qint64 len)
     int maxAmp = 32768; // max for S16 samples
     bool clipping = false;
 
+    outputFile.write(data,len);
+
     m_maxValue = 0;
 
     qint16* s = (qint16*)data;
+
+	scope.clear();
 
     // sample format is S16LE, only!
 
@@ -98,6 +110,11 @@ qint64 AudioInfo::writeData(const char *data, qint64 len)
         qint16 sample = *s;
         s++;
         if(abs(sample) > m_maxValue) m_maxValue = abs(sample);
+
+        float value = ((float)abs(sample)/(float)maxAmp);
+		if(value > 1)
+			value = 1;
+		scope.push_back(value);
     }
     // check for clipping
     if(m_maxValue>=(maxAmp-1)) clipping = true;
@@ -107,6 +124,9 @@ qint64 AudioInfo::writeData(const char *data, qint64 len)
     else m_maxValue = (int)(value*100);
 
     emit update();
+
+    if(analyzer)
+    	analyzer->analyze(scope);
 
     return len;
 }
@@ -169,6 +189,9 @@ InputTest::InputTest()
     canvas = new RenderArea;
     layout->addWidget(canvas);
 
+    BarAnalyzer * analyzer = new BarAnalyzer(this);
+    layout->addWidget(analyzer);
+
     deviceBox = new QComboBox(this);
     QList<QAudioDeviceInfo> devices = QAudioDeviceInfo::deviceList(QAudio::AudioInput);
     for(int i = 0; i < devices.size(); ++i) {
@@ -206,7 +229,7 @@ InputTest::InputTest()
     audioInput = new QAudioInput(format,this);
     connect(audioInput,SIGNAL(notify()),SLOT(status()));
     connect(audioInput,SIGNAL(stateChanged(QAudio::State)),SLOT(state(QAudio::State)));
-    audioinfo  = new AudioInfo(this,audioInput);
+    audioinfo  = new AudioInfo(this,audioInput,analyzer);
     connect(audioinfo,SIGNAL(update()),SLOT(refreshDisplay()));
     audioinfo->start();
     audioInput->start(audioinfo);

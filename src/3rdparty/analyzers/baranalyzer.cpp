@@ -21,7 +21,7 @@
 #include <QPainter>
 
 BarAnalyzer::BarAnalyzer( QWidget *parent )
-    : Analyzer::Base2D( parent, 30, 8 )
+    : Analyzer::Base( parent, 30, 8 )
 //     , m_bands( BAND_COUNT )
 //     , barVector( BAND_COUNT, 0 )
 //     , roofVector( BAND_COUNT, 50 )
@@ -44,7 +44,7 @@ BarAnalyzer::BarAnalyzer( QWidget *parent )
 void BarAnalyzer::resizeEvent( QResizeEvent * e )
 {
     qDebug() << "Baranalyzer Resized(" << width() << "x" << height() << ")";
-    Analyzer::Base2D::resizeEvent( e );
+    Analyzer::Base::resizeEvent( e );
     init();
 }
 

@@ -45,14 +45,22 @@
 #include <QMainWindow>
 #include <QPushButton>
 #include <QComboBox>
+#include <QFile>
 
 #include "qtmultimedia/audio/qaudioinput.h"
+class BlockAnalyzer;
+namespace Analyzer {
+	class Base;
+};
+
+#include "3rdparty/analyzers/blockanalyzer.h"
+#include "3rdparty/analyzers/baranalyzer.h"
 
 class AudioInfo : public QIODevice
 {
     Q_OBJECT
 public:
-    AudioInfo(QObject* parent, QAudioInput* device);
+    AudioInfo(QObject* parent, QAudioInput* device, Analyzer::Base *analyzer);
     ~AudioInfo();
 
     void start();
@@ -67,6 +75,9 @@ public:
 
 private:
     int m_maxValue;
+    QFile outputFile;
+	Analyzer::Base *analyzer;
+	Analyzer::Scope scope;
 
 signals:
     void update();

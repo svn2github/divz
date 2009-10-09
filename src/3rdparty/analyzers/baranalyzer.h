@@ -27,7 +27,7 @@
 typedef std::vector<uint> aroofMemVec;
 
 
-class BarAnalyzer : public Analyzer::Base2D
+class BarAnalyzer : public Analyzer::Base
 {
     public:
         BarAnalyzer( QWidget* );

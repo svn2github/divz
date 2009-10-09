@@ -48,7 +48,7 @@ static inline uint myMax( uint v1, uint v2 ) { return v1 > v2 ? v1 : v2; }
 
 
 BlockAnalyzer::BlockAnalyzer( QWidget *parent )
-        : Analyzer::Base2D( parent, 20, 9 )
+        : Analyzer::Base( parent, 20, 9 )
         , m_columns( 0 )         //uint
         , m_rows( 0 )            //uint
         , m_y( 0 )               //uint
@@ -80,7 +80,7 @@ BlockAnalyzer::resizeEvent( QResizeEvent *e )
 {
    //DEBUG_BLOCK
 
-   Analyzer::Base2D::resizeEvent( e );
+   Analyzer::Base::resizeEvent( e );
 
    const uint oldRows = m_rows;
 
@@ -453,13 +453,13 @@ BlockAnalyzer::contextMenuEvent( QContextMenuEvent * )
 
     a = menu->addAction( tr("33 fps"), this, SLOT( set33fps() ) );
     if( timeout() == 33 ) a->setChecked( true );
-    
+
     a = menu->addAction( tr("25 fps"), this, SLOT( set25fps() ) );
     if( timeout() == 25 ) a->setChecked( true );
-    
+
     a = menu->addAction( tr("20 fps"), this, SLOT( set20fps() ) );
     if( timeout() == 20 ) a->setChecked( true );
-    
+
     a = menu->addAction( tr("10 fps"), this, SLOT( set10fps() ) );
     if( timeout() == 10 ) a->setChecked( true );
 

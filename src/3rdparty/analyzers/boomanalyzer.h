@@ -25,7 +25,7 @@
 @author Max Howell
 */
 
-class BoomAnalyzer : public Analyzer::Base2D
+class BoomAnalyzer : public Analyzer::Base
 {
 Q_OBJECT
 public:

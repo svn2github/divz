@@ -25,7 +25,7 @@
 @author Melchior FRANZ
 */
 
-class Sonogram : public Analyzer::Base2D
+class Sonogram : public Analyzer::Base
 {
 public:
     Sonogram(QWidget*);
