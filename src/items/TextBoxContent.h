@@ -100,6 +100,7 @@ class TextBoxContent : public AbstractContent
 
         // text document, layouting & rendering
         QTextDocument * m_text;
+        QTextDocument * m_shadowText;
         QList<QRect> m_blockRects;
         //QList<TextLineSpec> m_lineSpecs;
         QList<TextLineSpec*> m_currentLine;

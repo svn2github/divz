@@ -283,7 +283,7 @@ SlideEditorWindow::SlideEditorWindow(SlideGroup *group, QWidget * parent)
 		QList<SlideGroup*> glist = m_doc.groupList();
 		if(glist.size() >2)
 		{
-			SlideGroup *g = glist[2];
+			SlideGroup *g = glist[0];
 			assert(g);
 			
 			setSlideGroup(g);
@@ -352,8 +352,11 @@ void SlideEditorWindow::appSettingsChanged()
 void SlideEditorWindow::aspectRatioChanged(double x)
 {
 	qDebug("SlideEditorWindow::aspectRatioChanged(): New aspect ratio: %.02f",x);
-	m_scene->setSceneRect(MainWindow::mw()->standardSceneRect());
-	setupViewportLines();
+	if(MainWindow::mw())
+	{
+		m_scene->setSceneRect(MainWindow::mw()->standardSceneRect());
+		setupViewportLines();
+	}
 }
 
 

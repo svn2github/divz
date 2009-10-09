@@ -164,12 +164,14 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans)
 // 		if(DEBUG_MYGRAPHICSSCENE)
 // 			qDebug() << "MyGraphicsScene::setSlide(): Done reparenting.";
 
-		m_fadeRoot->setZValue(999999);
+		m_fadeRoot->setZValue(250);
 		
 		
 		// start with faderoot fully visible, and live root invisible, then cross fade between the two
+		// UPDATE: flip faderoot behind now
+		
 		m_fadeRoot->setOpacity(1);
-		//m_liveRoot->setOpacity(0);
+		m_liveRoot->setOpacity(0);
 		
 		m_fadeStepCounter = 0;
 		m_fadeSteps = 30/4;
@@ -205,7 +207,7 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans)
 		}
 	}
 	
-	m_liveRoot->setZValue(0);
+	m_liveRoot->setZValue(500);
 }
 
 void MyGraphicsScene::startTransition()
@@ -244,8 +246,8 @@ void MyGraphicsScene::slotTransitionStep()
 	if( ++ m_fadeStepCounter < m_fadeSteps)
 	{
 		double inc = (double)1 / m_fadeSteps;
-		m_fadeRoot->setOpacity(m_fadeRoot->opacity() - inc);
-		//m_liveRoot->setOpacity(m_liveRoot->opacity() + inc);
+		//m_fadeRoot->setOpacity(m_fadeRoot->opacity() - inc);
+		m_liveRoot->setOpacity(m_liveRoot->opacity() + inc);
 		if(DEBUG_MYGRAPHICSSCENE)
 			qDebug()<<"MyGraphicsScene::slotTransitionStep(): step"<<m_fadeStepCounter<<"/"<<m_fadeSteps<<", inc:"<<inc<<", fade:"<<m_fadeRoot->opacity()<<", live:"<<m_liveRoot->opacity();
 	}

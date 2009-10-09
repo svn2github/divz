@@ -126,7 +126,7 @@ void SongSlideGroup::textToSlides(SongTextFilter filter)
 		
 		// Run a basic algorithim to find the max font size to fit inside this screen
 		QString htmlStr = html.join("");
-		QRectF textRect = MainWindow::mw()->standardSceneRect();
+		QRectF textRect = MainWindow::mw() ? MainWindow::mw()->standardSceneRect() : QRectF(0,0,1024,768);
 		
 		int ptSize = 32;	// starting pt size (must match pt size in static html above)
 		int sizeInc = 4;	// how big of a jump to add to the ptSize each iteration

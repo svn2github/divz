@@ -81,7 +81,6 @@ Revised Task list for Release 1.0, 10/10/09:
 		[STARTED] - Gradients - can settle for making gradients in gimp and import as photo, but need to eventually have support direclty in dviz
 	
 	- Improvements:
-		Look at setting char format thru cursor and using text document to render
 		Global cache pixmaps
 		On first start, intelligently detect aspect ratio of primary output - if no primary out, create small custom rect in top right
 		Crop handles should be easy - as move left in, move X out. Basically keep the image rect the same (or add negative offsets)
@@ -91,6 +90,7 @@ Revised Task list for Release 1.0, 10/10/09:
 		Consider moving opengl option to a per-output setting
 		Consider making Output objects QObjects that can emit signals when changed
 		
+		[DONE] Look at setting char format thru cursor and using text document to render
 		[DONE] In video content/bg: dont reject image if m_still is set UNLESS also has m_size>0 already
 		[REJECTED] Need to change double click on song list to send straight to live
 		[REJECTED] Add editing to slide group/slide model lists in the list itself (e.g. to change slide/group title)
@@ -98,8 +98,7 @@ Revised Task list for Release 1.0, 10/10/09:
 		[LATER] Script plugin item
 		
 	- Bugs:
-		Song cross fade / go live performance is terrible
-		
+		[FIXED] Song cross fade / go live performance is terrible
 		[HACK-FIX] Slide editor -> new slide doesnt show slide in list model again!
 		[FIXED] When go live, auto select the current live slide
 		[WORKSFORME] Slide in icon preview for slide group isnt always the first slide
