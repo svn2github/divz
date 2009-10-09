@@ -303,7 +303,7 @@ void BackgroundContent::setVideoFile(const QString &name)
 
 void BackgroundContent::setPixmap(const QPixmap & pixmap)
 {
-	if(m_still)
+	if(m_still && m_imageSize.width() >= 0)
 		return;
 		
 	m_pixmap = pixmap;
@@ -316,7 +316,7 @@ void BackgroundContent::setPixmap(const QPixmap & pixmap)
 	if(sceneContextHint() != MyGraphicsScene::Live)
 	{
 		m_still = true;
-		//m_videoProvider->pause();
+		m_videoProvider->pause();
 	}
         //GFX_CHANGED();
 	

@@ -80,6 +80,13 @@ Revised Task list for Release 1.0, 10/10/09:
 		[STARTED] - Gradients - can settle for making gradients in gimp and import as photo, but need to eventually have support direclty in dviz
 	
 	- Improvements:
+		[DONE] In video content/bg: dont reject image if m_still is set UNLESS also has m_size>0 already
+		Look at setting char format thru cursor and using text document to render
+		Global cache pixmaps
+		On first start, intelligently detect aspect ratio of primary output - if no primary out, create small custom rect in top right
+		Master overlay - add "disable master overlay" to slide group option box
+		Script plugin item
+		Crop handles should be easy - as move left in, move X out. Basically keep the image rect the same (or add negative offsets)
 		Need to implement song editor
 		Add outputview objects to encapsulate slidegroupviewer or network client/server
 		Need to add drag-drop from song list to song group
@@ -90,10 +97,12 @@ Revised Task list for Release 1.0, 10/10/09:
 		[REJECTED] Add editing to slide group/slide model lists in the list itself (e.g. to change slide/group title)
 		
 	- Bugs:
+		When using 1.6AR, content locations centered in slide editor appear off center in preview and live (but correct in icons)
 		When changing output size with custom output, output disappers until program restart
 		*When setting video in slide editor, it never shows first frame
 			- partially fixed - if add vid, close editor, reopen editor/program, it shows
 			- just not when first assigned
+			- see if improvment above fixes bug when back at work
 		
 		[FIXED] Video slides crashing when made live on Win32
 		[FIXED] When changing AR, reload document (or recreate slides)

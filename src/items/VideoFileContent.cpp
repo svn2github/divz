@@ -297,7 +297,7 @@ QRectF VideoFileContent::boundingRect() const
 
 void VideoFileContent::setPixmap(const QPixmap & pixmap)
 {
-	if(m_still)
+	if(m_still && m_imageSize.width() >= 0)
 		return;
 		
 	m_pixmap = pixmap;
@@ -316,7 +316,7 @@ void VideoFileContent::setPixmap(const QPixmap & pixmap)
 	{
 		//qDebug() << "VideFileContent::setPixmap(): sceneContextHint() != Live, setting m_still true"; 
 		m_still = true;
-		//m_videoProvider->pause();
+		m_videoProvider->pause();
 		//qDebug("VideoFileContent::setVideoFrame: Pausing video file because not in a live scene");
 	}
         //GFX_CHANGED();
