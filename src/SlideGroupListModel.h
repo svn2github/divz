@@ -55,10 +55,13 @@ public:
  	// Not from AbstractListModel, just for utility
 	QString itemMimeType() const { return "application/x-dviz-slidegroup-listmodel-item"; }
  	
- 	void releaseSlideGroup();
+ 	
 
 signals:
 	void slidesDropped(QList<Slide*>);
+	
+public slots:	
+	void releaseSlideGroup();
 	
 private slots:
 	void slideChanged(Slide *slide, QString slideOperation, AbstractItem *item, QString operation, QString fieldName, QVariant value);

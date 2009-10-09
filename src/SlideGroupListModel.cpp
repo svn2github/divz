@@ -194,6 +194,12 @@ void SlideGroupListModel::slideChanged(Slide *slide, QString slideOperation, Abs
 	
 	}
 	
+// 	if(slideOperation == "change" && !m_sortedSlides.contains(slide))
+// 	{
+// 		slideOperation = "add";
+// 	}
+	//qDebug() << "slideChanged: operation:"<<slideOperation;
+	
 	if(slideOperation == "remove" || slideOperation == "add")
 	{
 		// if a slide was removed/added, assume all pixmaps are invalid since the order could have changed
@@ -205,6 +211,7 @@ void SlideGroupListModel::slideChanged(Slide *slide, QString slideOperation, Abs
 		else
 			beginRemoveRows(QModelIndex(),0,sz+1); // hack - yes, I know
 		
+		//qDebug("slide added");
 		internalSetup();
 		
 		if(slideOperation == "add")

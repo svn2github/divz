@@ -76,8 +76,8 @@ void OutputViewer::adjustViewScaling()
 	float sx = ((float)m_view->width()) / m_scene->width();
 	float sy = ((float)m_view->height()) / m_scene->height();
 
-	float scale = qMin(sx,sy);
+	float scale = qMax(sx,sy);
 	m_view->setTransform(QTransform().scale(scale,scale));
-	qDebug("Scaling: %.02f x %.02f = %.02f",sx,sy,scale);
+	//qDebug("Scaling: %.02f x %.02f = %.02f",sx,sy,scale);
 	m_view->update();
 }

@@ -382,6 +382,8 @@ void MainWindow::setupOutputViews()
 		qDebug("Debug: Screen 0 was null or not named Live, setting to default geometry.");
 
 	}
+	
+	m_liveView->setVisible(true);
 }
 
 
@@ -662,8 +664,12 @@ void MainWindow::deleteGroup(SlideGroup *s)
 
 void MainWindow::openSlideEditor(SlideGroup *g)
 {
+	// WHY ??????
+	// If we setSlideGroup BEFORE but not AFTER, then newslide btn works only after clicking twice (So to speak)
+	// If AFTER and not BEFORE, then list is BLANK unless click new btn a few times. WHY????fs
 	m_editWin->setSlideGroup(g);
 	m_editWin->show();
+	m_editWin->setSlideGroup(g);
 }
 
 void MainWindow::changeEvent(QEvent *e)

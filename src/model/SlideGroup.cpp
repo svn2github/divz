@@ -25,9 +25,10 @@ void SlideGroup::addSlide(Slide *slide)
 	assert(slide != NULL);
 	m_slides.append(slide);
 	sortSlides();
-	emit slideChanged(slide, "add", 0, "", "", QVariant());
 	connect(slide,SIGNAL(slideItemChanged(AbstractItem *, QString, QString, QVariant, QVariant)),this,SLOT(slideItemChanged(AbstractItem *, QString, QString, QVariant, QVariant)));
-
+	
+	//qDebug("SlideGroup:: slide ADDED");
+	emit slideChanged(slide, "add", 0, "", "", QVariant());
 }
 
 void SlideGroup::removeSlide(Slide *slide)
@@ -36,6 +37,7 @@ void SlideGroup::removeSlide(Slide *slide)
 	disconnect(slide,0,this,0);
 	m_slides.removeAll(slide);
 	sortSlides();
+	//qDebug("SlideGroup:: slide REMOVED");
 	emit slideChanged(slide, "remove", 0, "", "", QVariant());
 
 }
@@ -45,6 +47,7 @@ void SlideGroup::slideItemChanged(AbstractItem *item, QString operation, QString
 	Slide * slide = dynamic_cast<Slide *>(sender());
 	if(fieldName == "slideNumber")
 		sortSlides();
+	//qDebug("SlideGroup:: slide item changed");
 	emit slideChanged(slide, "change", item, operation, fieldName, value);
 }
 
@@ -80,6 +83,8 @@ bool SlideGroup::fromXml(QDomElement & pe)
 		}
 		
 	}
+	
+	sortSlides();
 	
 	return true;
 }

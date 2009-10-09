@@ -226,7 +226,7 @@ SlideEditorWindow::SlideEditorWindow(SlideGroup *group, QWidget * parent)
 		MainWindow *mw = MainWindow::mw();
 		sceneRect = mw->standardSceneRect();
 		
-		connect(mw, SIGNAL(appSettingsChanged()),       this, SLOT(appSettingsChagned()));
+		connect(mw, SIGNAL(appSettingsChanged()),       this, SLOT(appSettingsChanged()));
  		connect(mw, SIGNAL(aspectRatioChanged(double)), this, SLOT(aspectRatioChanged(double)));
 	}
 	
@@ -294,7 +294,7 @@ SlideEditorWindow::SlideEditorWindow(SlideGroup *group, QWidget * parent)
 		}
 	}
 	
-	if(group != 0)
+	if(group)
 		setSlideGroup(group);
 	//setCentralWidget(m_view);
         
@@ -515,8 +515,20 @@ void SlideEditorWindow::slidesDropped(QList<Slide*> list)
 
 void SlideEditorWindow::setSlideGroup(SlideGroup *g,Slide *curSlide)
 {
-	m_slideGroup = g;
-	m_slideModel->setSlideGroup(g);
+// 	if(g != m_slideGroup)
+// 	{
+// 		m_slideModel->releaseSlideGroup();
+// 		
+		//bool newFlag = m_slideModel ? false :true;
+		
+		m_slideGroup = g;
+		m_slideModel->setSlideGroup(g);
+		
+		//if(newFlag)
+		//	m_slideListView->reset();
+		
+		
+	//}
 	
 	setWindowTitle(QString("%1 - Slide Editor").arg(g->groupTitle().isEmpty() ? QString("Group %1").arg(g->groupNumber()) : g->groupTitle()));
 	//m_slideListView->setModel(m_slideModel);
@@ -559,6 +571,8 @@ void SlideEditorWindow::newSlide()
 	Slide * slide = new Slide();
 	slide->setSlideNumber(m_slideGroup->numSlides());
 	slide->setSlideId(m_slideGroup->numSlides());
+	
+	//qDebug() << "newSlide: ADDING "<<slide->slideNumber();
 	m_slideGroup->addSlide(slide);
 	qDebug() << "newSlide: Added slide#"<<slide->slideNumber();
 	
