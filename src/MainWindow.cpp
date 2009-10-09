@@ -98,7 +98,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	
 	//setLiveGroup(m_doc.groupList().at(0));
 	
-	connect(m_ui->actionExit,SIGNAL(activated()), qApp, SLOT(quit()));
+	connect(m_ui->actionExit,SIGNAL(triggered()), qApp, SLOT(quit()));
 	
 	
 	setupSongList();

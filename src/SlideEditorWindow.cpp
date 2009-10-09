@@ -50,7 +50,6 @@
 
 #define DEBUG_MODE 0
 
-
 #include <QCommonStyle>
 class RubberBandStyle : public QCommonStyle 
 {
@@ -371,17 +370,17 @@ void SlideEditorWindow::setupSlideList()
 	m_slideListView->setDropIndicatorShown(true);
 
 	m_splitter->addWidget(m_slideListView);
-	
+
 	connect(m_slideListView,SIGNAL(activated(const QModelIndex &)),this,SLOT(slideSelected(const QModelIndex &)));
 	connect(m_slideListView,SIGNAL(clicked(const QModelIndex &)),this,SLOT(slideSelected(const QModelIndex &)));
-	
+
 	// deleting old selection model per http://doc.trolltech.com/4.5/qabstractitemview.html#setModel
 	QItemSelectionModel *m = m_slideListView->selectionModel();
-	
+
 	m_slideModel = new SlideGroupListModel();
 	m_slideListView->setModel(m_slideModel);
 	connect(m_slideModel, SIGNAL(slidesDropped(QList<Slide*>)), this, SLOT(slidesDropped(QList<Slide*>)));
-	
+
 	if(m)
 	{
 		delete m;

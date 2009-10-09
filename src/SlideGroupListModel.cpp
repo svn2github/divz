@@ -11,6 +11,8 @@
 #include "model/Slide.h"
 #include "MainWindow.h"
 
+#define DEBUG_MARK() qDebug() << "[DEBUG] "<<__FILE__<<":"<<__LINE__
+
 SlideGroupListModel::SlideGroupListModel(SlideGroup *g, QObject *parent)
 		: QAbstractListModel(parent), m_slideGroup(0), m_scene(0), m_dirtyTimer(0), m_iconSize(192,0), m_sceneRect(0,0,1024,768)
 {
@@ -304,13 +306,16 @@ void SlideGroupListModel::setSceneRect(QRect r)
 	
 	if(m_scene)
 		m_scene->setSceneRect(m_sceneRect);
-	
-	QModelIndex top    = indexForSlide(m_sortedSlides.first()), 
-	            bottom = indexForSlide(m_sortedSlides.last());
-        //qDebug() << "DocumentListModel::modelDirtyTimeout: top:"<<top<<", bottom:"<<bottom;
-	m_pixmaps.clear();
-	
-	dataChanged(top,bottom);
+
+	if(!m_sortedSlides.isEmpty())
+	{
+		QModelIndex top    = indexForSlide(m_sortedSlides.first()),
+			    bottom = indexForSlide(m_sortedSlides.last());
+		//qDebug() << "DocumentListModel::modelDirtyTimeout: top:"<<top<<", bottom:"<<bottom;
+		m_pixmaps.clear();
+
+		dataChanged(top,bottom);
+	}
 }
 
 void SlideGroupListModel::adjustIconAspectRatio()
@@ -343,7 +348,7 @@ void SlideGroupListModel::generatePixmap(int row)
 	}
 	
 	m_scene->setSlide(slide);
-	
+
 	QPixmap icon(icon_w,icon_h);
 	QPainter painter(&icon);
 	painter.fillRect(0,0,icon_w,icon_h,Qt::white);

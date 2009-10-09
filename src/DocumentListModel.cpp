@@ -13,6 +13,8 @@
 #include "model/SlideGroupFactory.h"
 #include "MainWindow.h"
 
+#define DEBUG_MARK() qDebug() << "mark: "<<__FILE__<<":"<<__LINE__
+
 DocumentListModel::DocumentListModel(Document *d, QObject *parent)
 		: QAbstractListModel(parent), m_doc(d),/* m_scene(0), m_view(0),*/ m_dirtyTimer(0),  m_iconSize(192,0), m_sceneRect(0,0,1024,768)
 {
@@ -312,12 +314,15 @@ void DocumentListModel::setSceneRect(QRect r)
 	m_sceneRect = r;
 	adjustIconAspectRatio();
 	
-	QModelIndex top    = indexForGroup(m_sortedGroups.first()), 
-	            bottom = indexForGroup(m_sortedGroups.last());
-	
-	m_pixmaps.clear();
-	
-	dataChanged(top,bottom);
+	if(!m_sortedGroups.isEmpty())
+	{
+		QModelIndex top    = indexForGroup(m_sortedGroups.first()), 
+			    bottom = indexForGroup(m_sortedGroups.last());
+
+		m_pixmaps.clear();
+
+		dataChanged(top,bottom);
+	}
 }
 
 void DocumentListModel::adjustIconAspectRatio()
