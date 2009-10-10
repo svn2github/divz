@@ -27,12 +27,12 @@ Revised Task list for Release 1.0, 10/10/09:
 			[DONE] - SQLite Backend 
 	- Logic:
 		[DONE] - Translator/Slide Generator
-			- Given a Song, translate into a slide group
+			[DONE] - Given a Song, translate into a slide group
 	- UI:
 		- List of forms needed:
 			[ALMOST] - "Grid and Guidelines" Form
 			- Slide Group settings (aspect ratio, etc)
-			- Song Editor
+			[DONE] - Song Editor
 		[DONE] - SongDatabase List View
 			- One column
 			#- Three columns:
@@ -81,7 +81,6 @@ Revised Task list for Release 1.0, 10/10/09:
 		[STARTED] - Gradients - can settle for making gradients in gimp and import as photo, but need to eventually have support direclty in dviz
 	
 	- Improvements:
-		Need to implement song editor
 		Need to add drag-drop from song list to song group
 		Add outputview objects to encapsulate slidegroupviewer or network client/server
 		Crop handles should be easy - as move left in, move X out. Basically keep the image rect the same (or add negative offsets)
@@ -90,6 +89,7 @@ Revised Task list for Release 1.0, 10/10/09:
 		Consider moving opengl option to a per-output setting
 		Consider making Output objects QObjects that can emit signals when changed
 		
+		[DONE] Need to implement song editor
 		[DONE] Look at setting char format thru cursor and using text document to render
 		[DONE] In video content/bg: dont reject image if m_still is set UNLESS also has m_size>0 already
 		[REJECTED] Need to change double click on song list to send straight to live

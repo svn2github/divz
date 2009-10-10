@@ -666,14 +666,30 @@ void MainWindow::deleteGroup(SlideGroup *s)
 }
 
 
-void MainWindow::openSlideEditor(SlideGroup *g)
+void MainWindow::openSlideEditor(SlideGroup *group)
 {
+	if(group->groupType() != SlideGroup::Generic)
+	{
+		SlideGroupFactory *factory = SlideGroupFactory::factoryForType(group->groupType());
+		if(!factory)
+			factory = SlideGroupFactory::factoryForType(SlideGroup::Generic);
+		
+		if(factory)
+		{
+			AbstractSlideGroupEditor * editor = factory->newEditor();
+			editor->setSlideGroup(group);
+			editor->show();
+			return;
+		}
+	}
+	
+	
 	// WHY ??????
 	// If we setSlideGroup BEFORE but not AFTER, then newslide btn works only after clicking twice (So to speak)
 	// If AFTER and not BEFORE, then list is BLANK unless click new btn a few times. WHY????fs
-	m_editWin->setSlideGroup(g);
+	m_editWin->setSlideGroup(group);
 	m_editWin->show();
-	m_editWin->setSlideGroup(g);
+	m_editWin->setSlideGroup(group);
 }
 
 void MainWindow::changeEvent(QEvent *e)

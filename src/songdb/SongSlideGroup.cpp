@@ -40,7 +40,7 @@ void SongSlideGroup::setSong(SongRecord *s)
 	m_text = s->text();
 	
 	setGroupTitle(s->title());
-	
+		
 	// convert the text to slides
 	textToSlides();
 }
@@ -224,7 +224,6 @@ void SongSlideGroup::setText(QString newText)
 
 bool SongSlideGroup::fromXml(QDomElement & pe)
 {
-	SlideGroup::fromXml(pe);
 	
 	int songid = pe.attribute("songid").toInt();
 	
@@ -241,6 +240,9 @@ bool SongSlideGroup::fromXml(QDomElement & pe)
 	
 	QString text = pe.firstChildElement("text").text();
 	setText(text);
+	
+	// super fromXml AFTER the above so it can override group title
+	SlideGroup::fromXml(pe);
 	
 	return true;
 }
@@ -268,4 +270,5 @@ void SongSlideGroup::toXml(QDomElement & pe) const
 	QDomElement domElement = doc.createElement("text");
 	pe.appendChild(domElement);
 	domElement.appendChild(doc.createTextNode(m_text));
+	
 }
