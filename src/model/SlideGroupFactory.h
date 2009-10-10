@@ -22,6 +22,18 @@ public:
 };
 
 class QListView;
+class SlideGroupViewControl;
+
+class SlideGroupViewControlListView : public QListView
+{ 
+public:
+	SlideGroupViewControlListView(SlideGroupViewControl * ctrl);
+protected:
+	void keyPressEvent(QKeyEvent *event);	
+	SlideGroupViewControl *ctrl;
+};
+
+
 class SlideGroupViewControl : public QWidget
 {
 	Q_OBJECT
@@ -46,7 +58,8 @@ protected slots:
 protected:
 	SlideGroupViewer *m_slideViewer;
 	SlideGroupListModel *m_slideModel;	
-	QListView *m_listView;
+	SlideGroupViewControlListView *m_listView;
+	friend class SlideGroupViewControlListView;
 };
 
 class AbstractSlideGroupEditor : public QWidget

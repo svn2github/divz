@@ -587,23 +587,27 @@ void MainWindow::previewSlideGroup(SlideGroup *s)
 	m_previewWidget->setSlideGroup(s);
 }
 
-void MainWindow::setLiveGroup(SlideGroup *s)
+void MainWindow::setLiveGroup(SlideGroup *newGroup)
 {
 	//SlideGroup *s = m_docModel->groupFromIndex(idx);
         //qDebug() << "MainWindow::groupSelected(): groupSetLive group#:"<<s->groupNumber()<<", title:"<<s->groupTitle();
 	//openSlideEditor(s);
 	//m_previewWidget->clear();
 	
-	SlideGroup * g = m_liveView->slideGroup();
+	SlideGroup * oldGroup = m_liveView->slideGroup();
 	
 	if(!m_liveView->isVisible())
 		m_liveView->show();
-		
-	if(g && g->groupType() != s->groupType())
+	
+	//qDebug() << "MainWindow::setLiveGroup(): newGroup->groupType():"<<newGroup->groupType()<<", SlideGroup::Generic:"<<SlideGroup::Generic;
+	if((oldGroup && oldGroup->groupType() != newGroup->groupType()) || newGroup->groupType() != SlideGroup::Generic)
 	{
-		SlideGroupFactory *factory = SlideGroupFactory::factoryForType(s->groupType());
+		SlideGroupFactory *factory = SlideGroupFactory::factoryForType(newGroup->groupType());
 		if(!factory)
+		{
+			//qDebug() << "MainWindow::setLiveGroup(): Factory fell thu for request, going to generic control";
 			factory = SlideGroupFactory::factoryForType(SlideGroup::Generic);
+		}
 		
 		if(factory)
 		{
@@ -614,8 +618,8 @@ void MainWindow::setLiveGroup(SlideGroup *s)
 		}
 	}
 	
-	m_viewControl->setSlideGroup(s);
-	m_liveView->setSlideGroup(s);
+	m_viewControl->setSlideGroup(newGroup);
+	m_liveView->setSlideGroup(newGroup);
 	
 }
 

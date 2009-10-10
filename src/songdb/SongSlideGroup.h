@@ -15,7 +15,7 @@ private:
 // 	
 public:
 	SongSlideGroup();
-	//GroupType groupType() { return SlideGroup::Song; }	
+	GroupType groupType() const { return SlideGroup::Song; }	
 	
 	SongRecord * song() { return m_song; }
 	void setSong(SongRecord*);

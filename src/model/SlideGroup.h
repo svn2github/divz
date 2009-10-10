@@ -31,7 +31,7 @@ public:
 	
 	ITEM_PROPDEF(GroupId,		int,		groupId);
 	ITEM_PROPDEF(GroupNumber,	int,		groupNumber);
-	ITEM_PROPDEF(GroupType,		GroupType,	groupType);
+	V_ITEM_PROPDEF(GroupType,	GroupType,	groupType);
 	ITEM_PROPDEF(GroupTitle,	QString,	groupTitle);
 	ITEM_PROPDEF(IconFile,		QString,	iconFile);
 

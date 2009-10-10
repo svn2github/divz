@@ -2,6 +2,7 @@
 
 #include "SongEditorWindow.h"
 #include "SongSlideGroup.h"
+#include "SongSlideGroupListModel.h"
 
 #include <QListView>
 #include <QVBoxLayout>
@@ -44,7 +45,14 @@ QList<AbstractItem *> SongSlideGroupViewMutator::itemList(Output*, SlideGroup*, 
 SongSlideGroupViewControl::SongSlideGroupViewControl(SlideGroupViewer *g, QWidget *w )
 	: SlideGroupViewControl(g,w)
 {
-	
+	if(m_slideModel)
+		delete m_slideModel;
+		
+	//qDebug()<<"SongSlideGroupViewControl(): creating new SongSlideGroupListModel()";
+	m_slideModel = new SongSlideGroupListModel();
+	m_listView->setModel(m_slideModel);
+	m_listView->setViewMode(QListView::ListMode);
+	m_listView->reset();	
 	
 }
 

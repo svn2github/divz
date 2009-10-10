@@ -14,6 +14,7 @@
 		setChanged(#memberName,newValue,oldValue); \
 	}
 #define ITEM_PROPDEF(setterName,typeName,memberName) void set##setterName(typeName value); typeName memberName() const { return m_##memberName; }
+#define V_ITEM_PROPDEF(setterName,typeName,memberName) virtual void set##setterName(typeName value); virtual typeName memberName() const { return m_##memberName; }
 
 #define DMARK __FILE__":"#__LINE__
 #include <QDebug>

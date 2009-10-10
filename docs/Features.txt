@@ -26,7 +26,7 @@ Revised Task list for Release 1.0, 10/10/09:
 		[DONE] - Song Database Model
 			[DONE] - SQLite Backend 
 	- Logic:
-		[STARTED] - Translator/Slide Generator
+		[DONE] - Translator/Slide Generator
 			- Given a Song, translate into a slide group
 	- UI:
 		- List of forms needed:
@@ -43,34 +43,34 @@ Revised Task list for Release 1.0, 10/10/09:
 			#- Title
 			#- Name
 			#- Full Text
-		[ALMOST] - Random access viewer control
-			[ALSMOT] - Just do it
-			[FRAMEWORK DONE] - Should be "smart" - for songs, render differently than generic slide groups
-			[FRAMEWORK DONE] - Go by Group Type?
-			[FRAMEWORK DONE] - Think about custom foldback generator - this is just a custom viewer control generator needed
-		[FRAMEWORK] - In-flight edits
+		[DONE] - Random access viewer control
+			[DONE] - Just do it
+			[DONE] - Should be "smart" - for songs, render differently than generic slide groups
+			[DONE] - Go by Group Type?
+		[*] - In-flight edits
 			- need to add specific framework for this
 	- Visuals:
 		[DONE] - Add Aspect Ratio setting
 		[DONE] - Text Centering in a Text Box
-		[BARELY STARTED] - Undo/redo framework
+		[*] - Undo/redo framework
 			- Must have this for sermons and announcment slides
+		[*] - Snap to grid support
+		[*] - Increse/decrease size of font from toolbar - needed for sermon/announcment
+			- see code in textboxcontent.cpp for cursor usage
 		- Copy/paste or duplicate slides
-		[BARELY STARTED] - Snap to grid support
-		[BARELY STARTED] - Increse/decrease size of font from toolbar - needed for sermon/announcment
 		- Layout asissts - center objects vert/horz
 			- need hint for this (e.g. songs) to auto adjust - maybe?
 		- Image Item
 			- Should be easy
 			- If we have time, add crop handles
-		[ALMOST] - Cross Fade on Changing Slide
+		[DONE] - Cross Fade on Changing Slide
 			[DONE] - Important Point:
 				[DONE] - Need to abstract video source/decoder to a "singleton" 
 				[DONE] - Once source/decoder for that file per program
-			- When slide*Group* is set on scene, need to scan and initalize decoders for all videos, but STOP at first frame
-			- When cross fade starts, start playing
-			- Stop playing prev slide when cross fade ends
-			- Dont Release provider unless slide group is taken off scene?
+			[DONE] - When slide*Group* is set on scene, need to scan and initalize decoders for all videos, but STOP at first frame
+			[DONE] - When cross fade starts, start playing
+			[DONE] - Stop playing prev slide when cross fade ends
+			[DONE] - Dont Release provider unless slide group is taken off scene?
 		[DONE] - Shadows (Text):
 			[DONE] - Can settle for simple block shadow
 			[LATER] - Gausian blur if we have time 
@@ -81,12 +81,12 @@ Revised Task list for Release 1.0, 10/10/09:
 		[STARTED] - Gradients - can settle for making gradients in gimp and import as photo, but need to eventually have support direclty in dviz
 	
 	- Improvements:
-		Global cache pixmaps
-		On first start, intelligently detect aspect ratio of primary output - if no primary out, create small custom rect in top right
-		Crop handles should be easy - as move left in, move X out. Basically keep the image rect the same (or add negative offsets)
 		Need to implement song editor
-		Add outputview objects to encapsulate slidegroupviewer or network client/server
 		Need to add drag-drop from song list to song group
+		Add outputview objects to encapsulate slidegroupviewer or network client/server
+		Crop handles should be easy - as move left in, move X out. Basically keep the image rect the same (or add negative offsets)
+		On first start, intelligently detect aspect ratio of primary output - if no primary out, create small custom rect in top right
+		Global cache pixmaps
 		Consider moving opengl option to a per-output setting
 		Consider making Output objects QObjects that can emit signals when changed
 		

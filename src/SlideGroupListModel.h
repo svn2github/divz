@@ -25,7 +25,7 @@ Q_OBJECT
 
 public:
 	SlideGroupListModel(SlideGroup *g = 0, QObject *parent = 0);
-	~SlideGroupListModel();
+	virtual ~SlideGroupListModel();
 	
 	void setSceneRect(QRect);
 	QRect sceneRect(){ return m_sceneRect; }
@@ -69,9 +69,9 @@ private slots:
 	void aspectRatioChanged(double);
 	
 	
-private:
+protected:
+	virtual void generatePixmap(int);
 	void internalSetup();
-	void generatePixmap(int);
 	void adjustIconAspectRatio();
 	
 	SlideGroup * m_slideGroup;

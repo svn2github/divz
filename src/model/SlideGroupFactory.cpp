@@ -6,7 +6,7 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QPushButton>
-
+#include <QKeyEvent>
 #include <assert.h>
 
 /** SlideGroupViewMutator:: **/
@@ -19,36 +19,39 @@ QList<AbstractItem *> SlideGroupViewMutator::itemList(Output*, SlideGroup*, Slid
 }
 
 
-/** SlideGroupViewControl:: **/
-// class SlideGroupViewControlListView : public QListView
-// { 
-// public:
-// 	SlideGroupViewControlListView(SlideGroupViewControl * ctrl, QWidget *parent) : QListView(parent), ctrl(ctrl) {}
-// protected:
-// 	void keyPressEvent(QKeyEvent *event)
-// 	{
-// 		QModelIndex oldIdx = currentIndex();
-// 		QListView::keyPressEvent(event);
-// 		QModelIndex newIdx = currentIndex();
-// 		if(oldIdx.row() != newIdx.row())
-// 		{
-// 			ctrl->slideSelected(newIdx);
-// 		}
-// 	}
-// 	
-// 	SlideGroupViewControl *ctrl;
-// };
+/** SlideGroupViewControlListView:: **/
+/* We reimplement QListView's keyPressEvent to detect
+  selection changes on key press events in QListView::ListMode.
+  Aparently, in list mode the selection model's currentChanged()
+  signal doesn't get fired on keypress, but in IconMode it does.
+  We use IconMode by default in the ViewControl below, but the
+  SongSlideGroupViewControl uses ListMode - this allows either
+  icon or list mode to change slides just by pressing up or down
+*/ 
+SlideGroupViewControlListView::SlideGroupViewControlListView(SlideGroupViewControl * ctrl) : QListView(ctrl), ctrl(ctrl) {}
+void SlideGroupViewControlListView::keyPressEvent(QKeyEvent *event)
+{
+	QModelIndex oldIdx = currentIndex();
+	QListView::keyPressEvent(event);
+	QModelIndex newIdx = currentIndex();
+	if(oldIdx.row() != newIdx.row())
+	{
+		ctrl->slideSelected(newIdx);
+	}
+}
 
+/** SlideGroupViewControl:: **/
 #define DEBUG_SLIDEGROUPVIEWCONTROL 0
 SlideGroupViewControl::SlideGroupViewControl(SlideGroupViewer *g, QWidget *w )
 	: QWidget(w),
-	m_slideViewer(0)
+	m_slideViewer(0),
+	m_slideModel(0)
 {
-		
 	QVBoxLayout * layout = new QVBoxLayout();
 	
 	/** Setup the list view in icon mode */
-	m_listView = new QListView(this);
+	//m_listView = new QListView(this);
+	m_listView = new SlideGroupViewControlListView(this);
 	m_listView->setViewMode(QListView::IconMode);
 	m_listView->setMovement(QListView::Static);
 	m_listView->setSelectionMode(QAbstractItemView::SingleSelection);
