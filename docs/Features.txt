@@ -52,7 +52,7 @@ Revised Task list for Release 1.0, 10/10/09:
 	- Visuals:
 		[DONE] - Add Aspect Ratio setting
 		[DONE] - Text Centering in a Text Box
-		[*] - Undo/redo framework
+		[LATER?] - Undo/redo framework
 			- Must have this for sermons and announcment slides
 		[*] - Snap to grid support
 		[*] - Increse/decrease size of font from toolbar - needed for sermon/announcment
@@ -63,6 +63,7 @@ Revised Task list for Release 1.0, 10/10/09:
 		- Image Item
 			- Should be easy
 			- If we have time, add crop handles
+		- SVG Item if we have time
 		[DONE] - Cross Fade on Changing Slide
 			[DONE] - Important Point:
 				[DONE] - Need to abstract video source/decoder to a "singleton" 
@@ -77,10 +78,10 @@ Revised Task list for Release 1.0, 10/10/09:
 		[DONE] - Backgrounds:
 			[DONE] - Add background item type & Position automatically, Disable movement
 			[DONE] - Still cant set item color/props with config box
-		- SVG Item if we have time
-		[STARTED] - Gradients - can settle for making gradients in gimp and import as photo, but need to eventually have support direclty in dviz
+		[LATER] - Gradients - can settle for making gradients in gimp and import as photo, but need to eventually have support direclty in dviz
 	
 	- Improvements:
+		Auto-change slides/slide groups after X seconds
 		Need to add drag-drop from song list to song group
 		Add outputview objects to encapsulate slidegroupviewer or network client/server
 		Crop handles should be easy - as move left in, move X out. Basically keep the image rect the same (or add negative offsets)
@@ -94,6 +95,8 @@ Revised Task list for Release 1.0, 10/10/09:
 		[DONE] In video content/bg: dont reject image if m_still is set UNLESS also has m_size>0 already
 		[REJECTED] Need to change double click on song list to send straight to live
 		[REJECTED] Add editing to slide group/slide model lists in the list itself (e.g. to change slide/group title)
+		[LATER] Audio with videos
+		[LATER] Per-verse custom slides - key to header OR passage#
 		[LATER] Master overlay - add "disable master overlay" to slide group option box
 		[LATER] Script plugin item
 		
