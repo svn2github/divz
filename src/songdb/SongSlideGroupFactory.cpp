@@ -22,26 +22,6 @@ QList<AbstractItem *> SongSlideGroupViewMutator::itemList(Output*, SlideGroup*, 
 
 
 /** SlideGroupViewControl:: **/
-// class SlideGroupViewControlListView : public QListView
-// { 
-// public:
-// 	SlideGroupViewControlListView(SlideGroupViewControl * ctrl, QWidget *parent) : QListView(parent), ctrl(ctrl) {}
-// protected:
-// 	void keyPressEvent(QKeyEvent *event)
-// 	{
-// 		QModelIndex oldIdx = currentIndex();
-// 		QListView::keyPressEvent(event);
-// 		QModelIndex newIdx = currentIndex();
-// 		if(oldIdx.row() != newIdx.row())
-// 		{
-// 			ctrl->slideSelected(newIdx);
-// 		}
-// 	}
-// 	
-// 	SlideGroupViewControl *ctrl;
-// };
-
-#define DEBUG_SLIDEGROUPVIEWCONTROL 0
 SongSlideGroupViewControl::SongSlideGroupViewControl(SlideGroupViewer *g, QWidget *w )
 	: SlideGroupViewControl(g,w)
 {
@@ -56,81 +36,9 @@ SongSlideGroupViewControl::SongSlideGroupViewControl(SlideGroupViewer *g, QWidge
 	
 }
 
-/*
-	
-void SlideGroupViewControl::currentChanged(const QModelIndex &idx,const QModelIndex &)
-{
-	slideSelected(idx);
-}
-
-void SlideGroupViewControl::slideSelected(const QModelIndex &idx)
-{
-	Slide *s = m_slideModel->slideFromIndex(idx);
-	if(DEBUG_SLIDEGROUPVIEWCONTROL)
-		qDebug() << "SlideGroupViewControl::slideSelected(): selected slide#:"<<s->slideNumber();
-	m_slideViewer->setSlide(s);
-}
-
-void SlideGroupViewControl::setOutputView(SlideGroupViewer *v) 
-{ 
-	SlideGroup *g = 0;
-	if(m_slideViewer) 
-		g = m_slideViewer->slideGroup();
-	
-	if(DEBUG_SLIDEGROUPVIEWCONTROL)
-		qDebug() << "SlideGroupViewControl::setOutputView()";
-	m_slideViewer = v;
-	
-	if(g)
-	{
-		//m_slideModel->setSlideGroup(g);
-		m_slideViewer->setSlideGroup(g);
-	}
-}
-	
-void SlideGroupViewControl::setSlideGroup(SlideGroup *g, Slide *curSlide)
-{
-	assert(g);
-	if(DEBUG_SLIDEGROUPVIEWCONTROL)
-		qDebug()<<"SlideGroupViewControl::setSlideGroup: Loading group#"<<g->groupNumber();
-	m_slideModel->setSlideGroup(g);
-	// reset seems to be required
-	m_listView->reset();
-}
-	
-void SlideGroupViewControl::nextSlide()
-{
-	Slide *s = m_slideViewer->nextSlide();
-	m_listView->setCurrentIndex(m_slideModel->indexForSlide(s));
-}
-
-void SlideGroupViewControl::prevSlide()
-{
-	Slide *s = m_slideViewer->prevSlide();
-	m_listView->setCurrentIndex(m_slideModel->indexForSlide(s));
-}
-
-void SlideGroupViewControl::setCurrentSlide(int x)
-{
-	Slide *s = m_slideViewer->setSlide(x);
-	m_listView->setCurrentIndex(m_slideModel->indexForSlide(s));
-}
-
-void SlideGroupViewControl::setCurrentSlide(Slide *s)
-{
-	m_slideViewer->setSlide(s);
-	m_listView->setCurrentIndex(m_slideModel->indexForSlide(s));
-}
-	*/
-/** AbstractSlideGroupEditor:: **/
-// SongSlideGroupEditor::SongSlideGroupEditor(SlideGroup *g, QWidget *parent) : AbstractSlideGroupEditor(g,parent) {}
-// SongSlideGroupEditor::~SongSlideGroupEditor() {}
-// void SongSlideGroupEditor::setSlideGroup(SlideGroup */*g*/,Slide */*curSlide*/) {}
 
 
-/** SlideGroupFactory:: **/
-
-/** Class Members **/
+/** SongSlideGroupFactory:: **/
 
 SongSlideGroupFactory::SongSlideGroupFactory() : SlideGroupFactory() {}
 /*SongSlideGroupFactory::~SongSlideGroupFactory()

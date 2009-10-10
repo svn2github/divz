@@ -102,6 +102,18 @@ Revised Task list for Release 1.0, 10/10/09:
 		
 	- Bugs:
 		On windows, when setting video item live, it doesnt play unless you dbl-click the slide again
+		Win32: If blank document "<document/>", crash when add group then click group
+		Win32: When starting with no document (test.xml), closing program results in "cannot write to ''" (should prompt to save as)
+		Win32: File->New crashes
+		Starting new results in incorrect AR for "new" doc - doc should adopt current live AR
+		Shadow option has no effect on box object - either remove tab or enable shaodw
+		Turning on/off line has no effect on box 
+		Turning on/off bg has no effect on box
+		Changing AR doesn't resize background elements of slides in document - probably should automatically
+		Auto-sizing song text should be an option that can be enabled/disabled
+		Document list icons need to be lot smaller
+		Perfomance of the document pixmap model generator becomes a problem with a lot of songs - need to investigate - possibly use different cache key
+		
 		
 		[FIXED] text config box text is white - maybe need to get html from model item for editing??
 		[FIXED] Song cross fade / go live performance is terrible

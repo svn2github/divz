@@ -96,7 +96,7 @@ qint64 AudioInfo::writeData(const char *data, qint64 len)
     int maxAmp = 32768; // max for S16 samples
     bool clipping = false;
 
-    outputFile.write(data,len);
+    //outputFile.write(data,len);
 
     m_maxValue = 0;
 
@@ -185,12 +185,16 @@ InputTest::InputTest()
 {
     QWidget *window = new QWidget;
     QVBoxLayout* layout = new QVBoxLayout;
-
+    /*
     canvas = new RenderArea;
     layout->addWidget(canvas);
+    */
+
+    layout->setContentsMargins(0,0,0,0);
 
     BarAnalyzer * analyzer = new BarAnalyzer(this);
     layout->addWidget(analyzer);
+    /*
 
     deviceBox = new QComboBox(this);
     QList<QAudioDeviceInfo> devices = QAudioDeviceInfo::deviceList(QAudio::AudioInput);
@@ -209,6 +213,7 @@ InputTest::InputTest()
     button2->setText(tr("Click To Suspend"));
     connect(button2,SIGNAL(clicked()),SLOT(toggleSuspend()));
     layout->addWidget(button2);
+    */
 
     window->setLayout(layout);
     setCentralWidget(window);
@@ -230,7 +235,7 @@ InputTest::InputTest()
     connect(audioInput,SIGNAL(notify()),SLOT(status()));
     connect(audioInput,SIGNAL(stateChanged(QAudio::State)),SLOT(state(QAudio::State)));
     audioinfo  = new AudioInfo(this,audioInput,analyzer);
-    connect(audioinfo,SIGNAL(update()),SLOT(refreshDisplay()));
+    //connect(audioinfo,SIGNAL(update()),SLOT(refreshDisplay()));
     audioinfo->start();
     audioInput->start(audioinfo);
 }

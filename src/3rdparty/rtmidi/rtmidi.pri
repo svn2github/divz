@@ -11,7 +11,7 @@ win32 {
     DEFINES += __WINDOWS_MM__
     LIBS += -lwinmm
     
-    linker : -mwindows
+    #linker : -mwindows
 }
 
 macx {
