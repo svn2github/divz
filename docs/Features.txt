@@ -99,8 +99,8 @@ Revised Task list for Release 1.0, 10/10/09:
 		
 	- Bugs:
 		On windows, when setting video item live, it doesnt play unless you dbl-click the slide again
-		On windows (not tested on linux), text config box text is white - maybe need to get html from model item for editing??
 		
+		[FIXED] text config box text is white - maybe need to get html from model item for editing??
 		[FIXED] Song cross fade / go live performance is terrible
 		[HACK-FIX] Slide editor -> new slide doesnt show slide in list model again!
 		[FIXED] When go live, auto select the current live slide

@@ -42,6 +42,9 @@ TextBoxContent::TextBoxContent(QGraphicsScene * scene, QGraphicsItem * parent)
     , m_shapeEditor(0)
     , m_xTextAlign(Qt::AlignLeft)
     , m_yTextAlign(Qt::AlignTop)
+    , m_cacheScaleX(-1)
+    , m_cacheScaleY(-1)
+    , m_textCache(0)
 {
 	m_dontSyncToModel = true;
 	
@@ -88,11 +91,14 @@ TextBoxContent::~TextBoxContent()
 	delete m_shapeEditor;
 	delete m_text;
 	delete m_shadowText;
+	if(m_textCache)
+		delete m_textCache;
 }
 
-QString TextBoxContent::toHtml() const
+QString TextBoxContent::toHtml()
 {
-	return m_text->toHtml();
+	TextItem * textModel = dynamic_cast<TextItem*>(modelItem());
+	return textModel ? textModel->text() : "";
 }
 
 void TextBoxContent::setHtml(const QString & htmlCode)
@@ -359,32 +365,47 @@ void TextBoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * 
 	painter->setClipRect(contentsRect());
 	painter->translate(contentsRect().topLeft()); // + QPoint(p.width(),p.width()));
 	
-	QAbstractTextDocumentLayout::PaintContext pCtx;
-        
-	if(modelItem()->shadowEnabled())
+	bool pixmapReset = false;
+	if(!m_textCache || m_textCache->size() != contentsRect().size())
 	{
-		painter->save();
-		// HACK because when crossfading the shadow "seems" to fade out last
-		painter->setOpacity(painter->opacity() < 0.8 ? 0 : 1);
-		// HACK to not have to do the opacity hack, I'd love to rever to the
-		// clip path, but I dont know how to convert a QTextDocument to a QTextPath!
-		
-		// apply the "mask" of the text to be painted on top
-		//painter->setClipPath(m_shadowClipPath);
-		
-		// draw the text - but only the parts not under the "top" text should be painted
-		double x = modelItem()->shadowOffsetX();
-		double y = modelItem()->shadowOffsetY();
-		painter->translate(x,y);
-		m_shadowText->documentLayout()->draw(painter, pCtx);
-		painter->translate(-x,-y);
-		
-		// reset clipping rect
-		painter->restore();
+		if(m_textCache)
+			delete m_textCache;
+		m_textCache = new QPixmap(contentsRect().size());
+		pixmapReset = true;
 	}
-
-	m_text->documentLayout()->draw(painter, pCtx);
 	
+	// The primary and only reason we cache the text rendering is inorder
+	// to paint the text and shadow as a single unit (e.g. composite the
+	// shadow+text BEFORE applying opacity rather than setting the opacity
+	// before rendering the shaodw.) If we didnt cache the text as a pixmap
+	// (e.g. render text directly) then when crossfading, the shadow
+	// "apperas" to fade out last, after the text
+	QTransform tx = painter->transform();
+	if(pixmapReset || m_cacheScaleX != tx.m11() || m_cacheScaleY != tx.m22())
+	{
+		m_cacheScaleX = tx.m11();
+		m_cacheScaleY = tx.m22();
+		
+		m_textCache->fill(Qt::transparent);
+		QPainter textPainter(m_textCache);
+		
+		QAbstractTextDocumentLayout::PaintContext pCtx;
+		
+		if(modelItem()->shadowEnabled())
+		{
+			textPainter.save();
+			
+			textPainter.translate(modelItem()->shadowOffsetX(),modelItem()->shadowOffsetY());
+			m_shadowText->documentLayout()->draw(&textPainter, pCtx);
+			
+			textPainter.restore();
+		}
+	
+		m_text->documentLayout()->draw(&textPainter, pCtx);
+	}
+	
+	painter->drawPixmap(0,0,*m_textCache);
+		
 	painter->restore();
 }
 

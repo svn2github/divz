@@ -42,7 +42,7 @@ class TextBoxContent : public AbstractContent
         ~TextBoxContent();
 
     public Q_SLOTS:
-        QString toHtml() const;
+        QString toHtml();
         void setHtml(const QString & htmlCode);
 
         bool hasShape() const;
@@ -97,6 +97,10 @@ class TextBoxContent : public AbstractContent
         void applyTextXAlign(Qt::Alignment);
         void addLineToPath(QPainterPath*);
         void updateShadowClipPath();
+        
+        QPixmap *m_textCache;
+        qreal m_cacheScaleX;
+        qreal m_cacheScaleY;
 
         // text document, layouting & rendering
         QTextDocument * m_text;
