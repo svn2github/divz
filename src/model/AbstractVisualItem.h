@@ -17,7 +17,6 @@ class AbstractVisualItem : public AbstractItem
 public:
 	typedef enum FillType { None, Solid, Gradient, Image, Video };
 	
-	
 	Q_PROPERTY(QPointF 	pos          	READ pos 		WRITE setPos);
 	Q_PROPERTY(QRectF  	contentsRect 	READ contentsRect 	WRITE setContentsRect);
 	Q_PROPERTY(bool    	isVisible    	READ isVisible		WRITE setIsVisible);
@@ -166,6 +165,12 @@ private:
 	double		m_shadowOffsetX;
 	double		m_shadowOffsetY;
 	QBrush		m_shadowBrush;
+	
+	//Q_DECLARE_METATYPE(FillType);
 };
 
+Q_DECLARE_METATYPE(AbstractVisualItem::FillType);
+
+	
+	
 #endif

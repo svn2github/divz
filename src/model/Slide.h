@@ -33,6 +33,8 @@ public:
 	
 	ITEM_PROPDEF(SlideId,		int,	slideId);
 	ITEM_PROPDEF(SlideNumber,	int,	slideNumber);
+	
+	Slide * clone();
 
 signals:
 	// Operation = "Add", "Remove", "Change"

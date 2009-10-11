@@ -68,43 +68,12 @@ QWidget * BoxContent::createPropertyWidget()
 
 void BoxContent::syncFromModelItem(AbstractVisualItem *model)
 {
-        m_dontSyncToModel = true;
-	setModelItem(model);
-	
-	QFont font;
-	BoxItem * boxmodel = dynamic_cast<BoxItem*>(model);
-	
-// 	setText(textModel->text());
-// 	
-// 	font.setFamily(textModel->fontFamily());
-// 	font.setPointSize((int)textModel->fontSize());
-// 	setFont(font);
-	
 	AbstractContent::syncFromModelItem(model);
-	
-        m_dontSyncToModel = false;
 }
 
 AbstractVisualItem * BoxContent::syncToModelItem(AbstractVisualItem *model)
-{
-	setModelItemIsChanging(true);
-	
-	BoxItem * boxModel = dynamic_cast<BoxItem*>(AbstractContent::syncToModelItem(model));
-	
-	if(!boxModel)
-	{
-		setModelItemIsChanging(false);
-                //qDebug("BoxContent::syncToModelItem: textModel is null, cannot sync\n");
-		return 0;
-	}
-        //qDebug("TextContent:syncToModelItem: Syncing to model! Yay!");
-// 	textModel->setText(text());
-// 	textModel->setFontFamily(font().family());
-// 	textModel->setFontSize(font().pointSize());
-	
-	setModelItemIsChanging(false);
-	
-	return model;
+{	
+	return AbstractContent::syncToModelItem(model);
 }
 
 QPixmap BoxContent::renderContent(const QSize & size, Qt::AspectRatioMode /*ratio*/) const
@@ -153,48 +122,65 @@ void BoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * opti
 	AbstractContent::paint(painter, option, widget);
 	
 	QRect cRect = contentsRect();
-// 	QRect sRect = m_textRect;
-	painter->save();
-	painter->translate(cRect.topLeft());
-// 	if (sRect.width() > 0 && sRect.height() > 0)
-// 	{
-// 		qreal xScale = (qreal)cRect.width() / (qreal)sRect.width();
-// 		qreal yScale = (qreal)cRect.height() / (qreal)sRect.height();
-// 		if (!qFuzzyCompare(xScale, 1.0) || !qFuzzyCompare(yScale, 1.0))
-// 		painter->scale(xScale, yScale);
-// 	}
 	
-// 	QPen pen;
-//  	pen.setWidthF(3);
-//  	pen.setColor(QColor(0,0,0,255));
-//  
-//  	QBrush brush(QColor(255,0,0,255));
-	QPen p = modelItem()->outlinePen();
-	p.setJoinStyle(Qt::MiterJoin);
-	if(sceneContextHint() == MyGraphicsScene::Preview)
+	QPen p(Qt::NoPen);
+	
+	
+	if(modelItem()->shadowEnabled())
 	{
-		QTransform tx = painter->transform();
-		qreal scale = qMax(tx.m11(),tx.m22());
-		p.setWidthF(1/scale * p.widthF());
-	}
+		painter->save();
 		
-	painter->setPen(p);
- 	painter->setBrush(modelItem()->fillBrush());
-	painter->drawRect(QRect(QPoint(0,0),cRect.size()));
+		qreal penWidth = 0;
+		if(modelItem()->outlineEnabled())
+		{
+			penWidth = modelItem()->outlinePen().widthF();
+		}
+			
+			
+		painter->setPen(Qt::NoPen);
+		painter->setBrush(modelItem() ? modelItem()->shadowBrush() : Qt::black);
+		
+		int x = modelItem()->shadowOffsetX();
+		int y = modelItem()->shadowOffsetY();
+		x += x == 0 ? 0 : x>0 ? penWidth : -penWidth;
+		y += y == 0 ? 0 : y>0 ? penWidth : -penWidth;
+		//qDebug() << "Boxshadow: "<<x<<","<<y;
+		painter->translate(x,y);
+		
+		painter->drawRect(cRect);
+		
+		painter->restore();
+	}
 	
-// 	//const bool opaqueContent = contentOpaque();
-// 	const bool drawSelection = RenderOpts::HQRendering ? false : isSelected();
-// 	
-// 	// draw the selection only as done in EmptyFrame.cpp
-// 	if (drawSelection) 
-// 	{
-// 		painter->setRenderHint(QPainter::Antialiasing, true);
-// 		//painter->setCompositionMode(QPainter::CompositionMode_Xor);
-// 		painter->setPen(QPen(RenderOpts::hiColor, 1.0));
-// 		// FIXME: this draws OUTSIDE (but inside the safe 2px area)
-// 		painter->drawRect(cRect); //QRectF(cRect).adjusted(-1.0, -1.0, +1.0, +1.0));
-// 	}
-// 			
+	painter->save();
+	
+	
+	if(modelItem()->outlineEnabled())
+	{
+		p = modelItem()->outlinePen();
+		p.setJoinStyle(Qt::MiterJoin);
+		if(sceneContextHint() == MyGraphicsScene::Preview)
+		{
+			QTransform tx = painter->transform();
+			qreal scale = qMax(tx.m11(),tx.m22());
+			p.setWidthF(1/scale * p.widthF());
+		}
+		
+	}
+	
+	// If no fill, no outline, and in the editor, draw a 1px outline inorder to be better able to edit/remove the box
+	if(modelItem()->fillType() == AbstractVisualItem::None 
+		&& !modelItem()->outlineEnabled()
+		&& sceneContextHint() == MyGraphicsScene::Editor)
+		p = QPen(Qt::blue, 0);
+	
+	painter->setPen(p);
+	
+	if(modelItem()->fillType() != AbstractVisualItem::None)
+		painter->setBrush(modelItem()->fillBrush());
+	
+	painter->drawRect(cRect);
+	
 	painter->restore();
 }
 

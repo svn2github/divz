@@ -45,7 +45,8 @@ void SlideGroupViewControlListView::keyPressEvent(QKeyEvent *event)
 SlideGroupViewControl::SlideGroupViewControl(SlideGroupViewer *g, QWidget *w )
 	: QWidget(w),
 	m_slideViewer(0),
-	m_slideModel(0)
+	m_slideModel(0),
+	m_releasingSlideGroup(false)
 {
 	QVBoxLayout * layout = new QVBoxLayout();
 	
@@ -108,6 +109,8 @@ void SlideGroupViewControl::currentChanged(const QModelIndex &idx,const QModelIn
 
 void SlideGroupViewControl::slideSelected(const QModelIndex &idx)
 {
+	if(m_releasingSlideGroup)
+		return;
 	Slide *s = m_slideModel->slideFromIndex(idx);
 	if(DEBUG_SLIDEGROUPVIEWCONTROL)
 		qDebug() << "SlideGroupViewControl::slideSelected(): selected slide#:"<<s->slideNumber();
@@ -146,8 +149,10 @@ void SlideGroupViewControl::setSlideGroup(SlideGroup *g, Slide *curSlide)
 
 void SlideGroupViewControl::releaseSlideGroup()
 {
+	m_releasingSlideGroup = true;
 	m_slideModel->releaseSlideGroup();
 	m_listView->reset();
+	m_releasingSlideGroup = false;
 }
 	
 void SlideGroupViewControl::nextSlide()

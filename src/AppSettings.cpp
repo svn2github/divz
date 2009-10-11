@@ -6,7 +6,10 @@
 #include "model/Output.h"
 
 QList<Output*> AppSettings::m_outputs;
-bool AppSettings::m_useOpenGL;
+bool AppSettings::m_useOpenGL = false;
+
+double AppSettings::m_liveAspect = 0;
+// double AppSettings::m_docAspect = 0;
 
 void AppSettings::load()
 {
@@ -16,6 +19,8 @@ void AppSettings::load()
 	loadOutputs(&s);
 	
 	m_useOpenGL = s.value("app/use-opengl").toBool();
+	
+	updateLiveAspectRatio();
 }
 
 void AppSettings::save()
@@ -25,6 +30,8 @@ void AppSettings::save()
 	s.setValue("app/use-opengl",m_useOpenGL);
 	
 	saveOutputs(&s);
+	
+	updateLiveAspectRatio();
 }
 
 
@@ -65,6 +72,7 @@ void AppSettings::setupSystemPresetOutputs()
 		out->setName("Live");
 		out->setOutputType(Output::Screen);
 		out->setScreenNum(0);
+		out->setTags("live");
 	m_outputs << out;
 
 	out = new Output();
@@ -73,6 +81,7 @@ void AppSettings::setupSystemPresetOutputs()
 		out->setName("Foldback");
 		out->setOutputType(Output::Screen);
 		out->setScreenNum(1);
+		out->setTags("foldback");
 	m_outputs << out;
 
 	out = new Output();
@@ -81,6 +90,7 @@ void AppSettings::setupSystemPresetOutputs()
 		out->setName("Secondary");
 		out->setOutputType(Output::Screen);
 		out->setScreenNum(2);
+		out->setTags("secondary");
 	m_outputs << out;
 }
 
@@ -95,7 +105,30 @@ bool AppSettings::removeOutput(Output *out)
 	return true;
 }
 
+Output * AppSettings::taggedOutput(QString tag)
+{
+	foreach(Output *out, m_outputs)
+		if(out->tags().indexOf(tag) > -1 || out->name().toLower().indexOf(tag) > -1)
+			return out;
+	return 0;
+}
+
 void AppSettings::setUseOpenGL(bool f)
 {
 	m_useOpenGL = f;
 }
+
+
+void AppSettings::updateLiveAspectRatio()
+{
+	Output *out = taggedOutput("live");
+	if(out)
+	{
+		m_liveAspect = out->aspectRatio();
+	}
+	else
+	{
+		m_liveAspect = -1;
+	}
+}
+

@@ -25,6 +25,11 @@ public:
 	
 	bool isTextDiffFromDb() { return m_isTextDiffFromDb; }
 	
+	inline SlideGroup * slideTemplates() { return m_slideTemplates; }
+	void setSlideTemplates(SlideGroup*);
+	
+	SlideGroup * createDefaultTemplates();
+	
 	// SlideGroup::
 	virtual bool fromXml(QDomElement & parentElement);
         virtual void toXml(QDomElement & parentElement) const;
@@ -41,6 +46,8 @@ private:
 	SongRecord * m_song;
 	QString m_text;
 	bool m_isTextDiffFromDb;
+	
+	SlideGroup *m_slideTemplates;
 
 
 };

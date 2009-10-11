@@ -22,6 +22,8 @@ public:
 	
 	// loading/saving
         void toXml(QDomElement & parentElement) const;
+        
+        AbstractItem * clone();
 };
 
 

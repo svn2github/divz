@@ -30,13 +30,16 @@ public:
 	AbstractItem();
 // 	~AbstractItem();
 	
+	// class and type are NOT pure virtual so that clone() can work as expected
+	
+	enum { ItemClass = 0x0 };
+	
 	// class identification
-	virtual quint32 itemClass() const = 0;
-	enum { Abstract = 0 };
+	virtual quint32 itemClass() const { return ItemClass; }
 	
 	// Type of item - Visual items should inherit AbstractVisualItem, NonVisual should inherit AbstractNonVisualItem
-	typedef enum ItemType { Visual, NonVisual };
-	virtual ItemType itemType() const = 0;
+	typedef enum ItemType { Abstract, Visual, NonVisual };
+	virtual ItemType itemType() const { return Abstract; }
 	
 	// Unique ID of an item 
 	quint32 itemId() const { return m_itemId; }
@@ -55,6 +58,8 @@ public:
 	
 	bool isBeingLoaded() { return m_isBeingLoaded; }
 	
+	AbstractItem * clone();
+
 signals:
 	void itemChanged(QString fieldName, QVariant value, QVariant oldValue);
 	
@@ -63,7 +68,10 @@ protected:
 	void setChanged(QString fieldName, QVariant value, QVariant oldValue);
 	void setBeingLoaded(bool);
 	
+	AbstractItem * cloneTo(AbstractItem *);
+	
 private:
+	
 	// Fields
 	qint32		m_itemClass;
 	ItemType	m_itemType;

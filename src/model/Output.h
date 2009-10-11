@@ -60,6 +60,8 @@ public:
 
 	QByteArray toByteArray();
 	void fromByteArray(QByteArray);
+	
+	double aspectRatio();
 
 private:
 	bool m_isSystem;

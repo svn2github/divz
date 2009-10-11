@@ -72,10 +72,10 @@ TextBoxContent::TextBoxContent(QGraphicsScene * scene, QGraphicsItem * parent)
 	setHtml(m_text->toHtml());
 	
 	// shape editor
-	m_shapeEditor = new BezierCubicItem(this);
-	m_shapeEditor->setVisible(false);
-	m_shapeEditor->setControlPoints(QList<QPointF>() << QPointF(-100, -50) << QPointF(-10, 40) << QPointF(100, -50) << QPointF(100, 50));
-	connect(m_shapeEditor, SIGNAL(shapeChanged(const QPainterPath &)), this, SLOT(setShapePath(const QPainterPath &)));
+// 	m_shapeEditor = new BezierCubicItem(this);
+// 	m_shapeEditor->setVisible(false);
+// 	m_shapeEditor->setControlPoints(QList<QPointF>() << QPointF(-100, -50) << QPointF(-10, 40) << QPointF(100, -50) << QPointF(100, 50));
+// 	connect(m_shapeEditor, SIGNAL(shapeChanged(const QPainterPath &)), this, SLOT(setShapePath(const QPainterPath &)));
 	
 	
 	//connect(this, SIGNAL(resized()), this, SLOT(delayContentsResized()));
@@ -88,7 +88,7 @@ TextBoxContent::TextBoxContent(QGraphicsScene * scene, QGraphicsItem * parent)
 
 TextBoxContent::~TextBoxContent()
 {
-	delete m_shapeEditor;
+	//delete m_shapeEditor;
 	delete m_text;
 	delete m_shadowText;
 	if(m_textCache)
@@ -169,40 +169,41 @@ void TextBoxContent::clearShape()
 
 bool TextBoxContent::isShapeEditing() const
 {
-	return m_shapeEditor->isVisible();
+	//return m_shapeEditor->isVisible();
+	return false;
 }
 
 void TextBoxContent::setShapeEditing(bool enabled)
 {
-	if (enabled) 
-	{
-		// shape editor on
-		if (!m_shapeEditor->isVisible()) 
-		{
-			m_shapeEditor->show();
-			emit notifyShapeEditing(true);
-		}
-	
-		// begin new shape
-		if (!hasShape()) 
-		{
-			// use caching only when drawing shaped [disabled because updates are wrong when cached!]
-			//setCacheMode(enabled ? QGraphicsItem::DeviceCoordinateCache : QGraphicsItem::NoCache);
-		
-			// use new shape
-			setShapePath(m_shapeEditor->shape());
-			emit notifyHasShape(true);
-		}
-	} 
-	else 
-	{
-		// shape editor off
-		if (m_shapeEditor->isVisible()) 
-		{
-			m_shapeEditor->hide();
-			emit notifyShapeEditing(false);
-		}
-	}
+// 	if (enabled) 
+// 	{
+// 		// shape editor on
+// 		if (!m_shapeEditor->isVisible()) 
+// 		{
+// 			m_shapeEditor->show();
+// 			emit notifyShapeEditing(true);
+// 		}
+// 	
+// 		// begin new shape
+// 		if (!hasShape()) 
+// 		{
+// 			// use caching only when drawing shaped [disabled because updates are wrong when cached!]
+// 			//setCacheMode(enabled ? QGraphicsItem::DeviceCoordinateCache : QGraphicsItem::NoCache);
+// 		
+// 			// use new shape
+// 			setShapePath(m_shapeEditor->shape());
+// 			emit notifyHasShape(true);
+// 		}
+// 	} 
+// 	else 
+// 	{
+// 		// shape editor off
+// 		if (m_shapeEditor->isVisible()) 
+// 		{
+// 			m_shapeEditor->hide();
+// 			emit notifyShapeEditing(false);
+// 		}
+// 	}
 }
 
 QWidget * TextBoxContent::createPropertyWidget()
@@ -251,17 +252,17 @@ void TextBoxContent::syncFromModelItem(AbstractVisualItem *model)
 	m_text->setDefaultFont(font);
 	
 	
-	bool shapeEnabled = textModel->shapeEnabled();
-	if (shapeEnabled)
-	{
-		QList<QPointF> points;
-		QStringList strPoint;
-		points << textModel->shapePoint1();
-		points << textModel->shapePoint2();
-		points << textModel->shapePoint3();
-		points << textModel->shapePoint4();
-		m_shapeEditor->setControlPoints(points);
-	}
+// 	bool shapeEnabled = textModel->shapeEnabled();
+// 	if (shapeEnabled)
+// 	{
+// 		QList<QPointF> points;
+// 		QStringList strPoint;
+// 		points << textModel->shapePoint1();
+// 		points << textModel->shapePoint2();
+// 		points << textModel->shapePoint3();
+// 		points << textModel->shapePoint4();
+// 		m_shapeEditor->setControlPoints(points);
+// 	}
 	
 	setXTextAlign(textModel->xTextAlign());
 	setYTextAlign(textModel->yTextAlign());
@@ -287,16 +288,16 @@ AbstractVisualItem * TextBoxContent::syncToModelItem(AbstractVisualItem *model)
 	textModel->setText(m_text->toHtml());
 	textModel->setFontFamily(m_text->defaultFont().family());
 	textModel->setFontSize(m_text->defaultFont().pointSize());
-	textModel->setShapeEnabled(hasShape());
-	if (hasShape()) 
-	{
-		QList<QPointF> cp = m_shapeEditor->controlPoints();
-		textModel->setShapePoint1(cp[0]);
-		textModel->setShapePoint2(cp[2]);
-		textModel->setShapePoint3(cp[3]);
-		textModel->setShapePoint4(cp[4]);
-	}
-	
+ 	textModel->setShapeEnabled(hasShape());
+// 	if (hasShape()) 
+// 	{
+// 		QList<QPointF> cp = m_shapeEditor->controlPoints();
+// 		textModel->setShapePoint1(cp[0]);
+// 		textModel->setShapePoint2(cp[2]);
+// 		textModel->setShapePoint3(cp[3]);
+// 		textModel->setShapePoint4(cp[4]);
+// 	}
+// 	
 	textModel->setXTextAlign(xTextAlign());
 	textModel->setYTextAlign(yTextAlign());
 	

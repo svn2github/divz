@@ -71,17 +71,19 @@ bool SlideGroup::fromXml(QDomElement & pe)
 	// for each slide
 	for (QDomElement element = pe.firstChildElement(); !element.isNull(); element = element.nextSiblingElement()) 
 	{
-		Slide *s = new Slide();
-		addSlide(s);
-		
-		// restore the item, and delete it if something goes wrong
-		if (!s->fromXml(element)) 
+		if(element.tagName() == "slide")
 		{
- 			removeSlide(s);
-			delete s;
-			continue;
+			Slide *s = new Slide();
+			addSlide(s);
+			
+			// restore the item, and delete it if something goes wrong
+			if (!s->fromXml(element)) 
+			{
+				removeSlide(s);
+				delete s;
+				continue;
+			}
 		}
-		
 	}
 	
 	sortSlides();

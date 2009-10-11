@@ -3,6 +3,7 @@
 #include "model/TextBoxItem.h"
 #include "model/BackgroundItem.h"
 #include "model/ItemFactory.h"
+#include "model/TextBoxItem.h"
 #include "MainWindow.h"
 
 #include <QTextDocument>
@@ -13,7 +14,8 @@
 SongSlideGroup::SongSlideGroup() : SlideGroup(),
 	m_song(0),
 	m_text(""),
-	m_isTextDiffFromDb(false)
+	m_isTextDiffFromDb(false),
+	m_slideTemplates(0)
 {
 	if(MainWindow::mw())
 		connect(MainWindow::mw(), SIGNAL(aspectRatioChanged(double)), this, SLOT(aspectRatioChanged(double)));
@@ -64,6 +66,42 @@ void SongSlideGroup::aspectRatioChanged(double x)
 	textToSlides();
 }
 
+SlideGroup * SongSlideGroup::createDefaultTemplates()
+{
+	SlideGroup *group = new SlideGroup();
+	
+	Slide *slide = new Slide();
+	
+	BackgroundItem * bg = dynamic_cast<BackgroundItem*>(slide->background());
+	if(bg)
+	{
+		bg->setFillType(AbstractVisualItem::Solid);
+		bg->setFillBrush(Qt::blue);
+	}
+	
+	// Create the textbox to hold the slide lyrics
+	TextBoxItem * text = new TextBoxItem();
+	text->setItemId(ItemFactory::nextId());
+	text->setItemName(QString("TextBox%1").arg(text->itemId()));
+		
+	QRectF textRect = MainWindow::mw() ? MainWindow::mw()->standardSceneRect() : FALLBACK_SCREEN_RECT;
+		
+	text->setPos(QPointF(0,0));
+	text->setContentsRect(textRect);
+	
+	QPen pen = QPen(Qt::black,1.5);
+	pen.setJoinStyle(Qt::MiterJoin);
+	text->setOutlinePen(pen);
+	
+	text->setOutlineEnabled(true);
+	text->setShadowEnabled(true);
+	
+	slide->addItem(text);
+	group->addSlide(slide);
+	
+	return group;
+}
+
 void SongSlideGroup::textToSlides(SongTextFilter filter)
 {
 	static QString slideHeader = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\"><html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">p, li { white-space: pre-wrap; }</style></head><body style=\"font-family:'Sans Serif'; font-size:9pt; font-weight:400; font-style:normal;\">";
@@ -83,31 +121,102 @@ void SongSlideGroup::textToSlides(SongTextFilter filter)
 	
 	QRegExp excludeLineRegExp(
         		//filter == Standard ? "^\\s*(Verse|Chorus|Tag|Bridge|End(ing)?|Intro(duction)|B:|R:|C:|T:|G:)?)(\\s*\\(.*\\))?\\s*$" :
-        		filter == Standard  ? "^\\s*(Verse|Chorus|Tag|Bridge|End(ing)?|Intro(duction)?|B:|R:|C:|T:|G:)(\\s+\\d+)?(\\s*\\(.*\\))?\\s*$" :
-        		filter == AllowRear ? "^\\s*(Verse|Chorus|Tag|Bridge|End(ing)?|Intro(duction)?)(\\s+\\d+)?(\\s*\\(.*\\))?\\s*$" :
+        		filter == Standard  ? "^\\s*(Verse|Chorus|Tag|Bridge|End(ing)?|Intro(duction)?|B:|R:|C:|T:|G:|\\[|\\|)(\\s+\\d+)?(\\s*\\(.*\\))?\\s*.*$" :
+        		filter == AllowRear ? "^\\s*(Verse|Chorus|Tag|Bridge|End(ing)?|Intro(duction)?)(\\s+\\d+)?(\\s*\\(.*\\))?\\s*.*$" :
         		"",
         	Qt::CaseInsensitive);
         
         //qDebug() << "SongSlideGroup::textToSlides: filter int:"<<filter<<", using exclusion pattern:"<<excludeLineRegExp.pattern();
         
-	//qDebug() << "SongSlideGroup::textToSlides: slides:"<<list;
+	qDebug() << "SongSlideGroup::textToSlides: slides:"<<list;
 	int slideNbr = 0;
 	foreach(QString passage, list)
 	{
-		Slide *slide = new Slide();
+		Slide *slide = 0;
+		TextBoxItem *text = 0;
+		bool textboxFromTemplate = false;
 		
-		// Setup the slide background (TODO this needs to be a changeable in the UI once in the list
-		BackgroundItem * bg = dynamic_cast<BackgroundItem*>(slide->background());
-		if(bg)
+		qDebug()<<"SongSlideGroup::textToSlides(): Processing Slide # "<<slideNbr;
+		
+		if(slideTemplates() && slideTemplates()->numSlides())
 		{
-			bg->setFillType(AbstractVisualItem::Solid);
-			bg->setFillBrush(Qt::blue);
+			qDebug()<<"SongSlideGroup::textToSlides(): slideNbr:"<<slideNbr<<": Have templates, processing.";
+			SlideGroup *group = slideTemplates();
+			
+			slide = group->at(0)->clone();
+			qDebug()<<"SongSlideGroup::textToSlides(): slideNbr:"<<slideNbr<<": Cloned slide 0 (master)";
+			
+			if(group->numSlides() > 1 && slideNbr < group->numSlides())
+			{
+				// Add items from the song slide to our master slide.
+				// Don't clone the song slide since we've already cloned
+				// the master slide - instead, we'll clone the items in
+				// this slide, below.
+				Slide *songSlide = group->at(slideNbr);
+				
+				qDebug()<<"SongSlideGroup::textToSlides(): slideNbr:"<<slideNbr<<": Cloned passage slide for #"<<slideNbr;
+				
+				QList<AbstractItem *> items = songSlide->itemList();
+				foreach(AbstractItem * item, items)
+					slide->addItem(item->clone());
+			}
+			
+			// Use the first textbox in the slide as the lyrics slide
+			QList<AbstractItem *> items = slide->itemList();
+			foreach(AbstractItem * item, items)
+			{
+				if(item->itemClass() == TextBoxItem::ItemClass)
+				{
+					text = dynamic_cast<TextBoxItem*>(item);
+					textboxFromTemplate = true;
+					qDebug()<<"SongSlideGroup::textToSlides(): slideNbr:"<<slideNbr<<": Found textbox from template, name:"<<text->itemName();
+				}
+			}
+			
+			// If no textbox, we've got to create one!
+			if(!text)
+			{
+				// Create the textbox to hold the slide lyrics
+				text = new TextBoxItem();
+				text->setItemId(ItemFactory::nextId());
+				text->setItemName(QString("TextBox%1").arg(text->itemId()));
+				
+				qDebug()<<"SongSlideGroup::textToSlides(): slideNbr:"<<slideNbr<<": No textbox in template, adding new box.";
+			}
+			
+			
+			BackgroundItem * bg = dynamic_cast<BackgroundItem*>(slide->background());
+			if(bg)
+			{
+				qDebug()<<"SongSlideGroup::textToSlides(): slideNbr:"<<slideNbr<<": Loaded background "<<bg->itemName()<<" in final slide";
+			}
+			else
+			{
+				qDebug()<<"SongSlideGroup::textToSlides(): slideNbr:"<<slideNbr<<": No background in final slide!.";
+			}
+		}
+		else
+		{
+			// No templates, assume the defaults
+			slide = new Slide();
+			
+			qDebug()<<"SongSlideGroup::textToSlides(): slideNbr:"<<slideNbr<<": No templates in slide group, generating new template.";
+			
+			BackgroundItem * bg = dynamic_cast<BackgroundItem*>(slide->background());
+			if(bg)
+			{
+				bg->setFillType(AbstractVisualItem::Solid);
+				bg->setFillBrush(Qt::blue);
+			}
+			
+			// Create the textbox to hold the slide lyrics
+			text = new TextBoxItem();
+			text->setItemId(ItemFactory::nextId());
+			text->setItemName(QString("TextBox%1").arg(text->itemId()));
 		}
 		
-		// Create the textbox to hold the slide lyrics
-		TextBoxItem *text = new TextBoxItem();
-		text->setItemId(ItemFactory::nextId());
-		text->setItemName(QString("TextBox%1").arg(text->itemId()));
+		
+		
 		
 		// Create the HTML for the lyrics
 		QStringList lines = passage.split("\n");
@@ -126,7 +235,9 @@ void SongSlideGroup::textToSlides(SongTextFilter filter)
 		
 		// Run a basic algorithim to find the max font size to fit inside this screen
 		QString htmlStr = html.join("");
-		QRectF textRect = MainWindow::mw() ? MainWindow::mw()->standardSceneRect() : QRectF(0,0,1024,768);
+		QRectF textRect = MainWindow::mw() ? MainWindow::mw()->standardSceneRect() : FALLBACK_SCREEN_RECT;
+		if(textboxFromTemplate)
+			textRect = text->contentsRect();
 		
 		int ptSize = 32;	// starting pt size (must match pt size in static html above)
 		int sizeInc = 4;	// how big of a jump to add to the ptSize each iteration
@@ -179,15 +290,28 @@ void SongSlideGroup::textToSlides(SongTextFilter filter)
 		}
 		
 		// Finalize setup
-		text->setPos(QPointF(0,0));
-		text->setContentsRect(textRect);
-		text->setOutlineEnabled(true);
-		text->setOutlinePen(pen);
-		text->setShadowEnabled(true);
-		slide->addItem(text);
+		if(!textboxFromTemplate)
+		{
+			text->setPos(QPointF(0,0));
+			text->setContentsRect(textRect);
+			text->setOutlinePen(pen);
+			text->setOutlineEnabled(true);
+			text->setShadowEnabled(true);
+			slide->addItem(text);
+			
+			qDebug()<<"SongSlideGroup::textToSlides(): slideNbr:"<<slideNbr<<": Textbox was not in template, finalized setup at 0x0, rect:"<<textRect;
+		}
 		
 		slide->setSlideNumber(slideNbr++);
 		
+		qDebug()<<"SongSlideGroup::textToSlides(): slideNbr:"<<slideNbr<<": Items in final slide:";
+			
+		QList<AbstractItem *> items = slide->itemList();
+		foreach(AbstractItem * item, items)
+		{
+			qDebug()<<"SongSlideGroup::textToSlides(): slideNbr:"<<slideNbr<<": Item:"<<item->itemName();
+		}
+			
 		addSlide(slide);
 	}
 }
@@ -221,10 +345,32 @@ void SongSlideGroup::setText(QString newText)
 		m_isTextDiffFromDb = true;
 }
 	
+void SongSlideGroup::setSlideTemplates(SlideGroup *templates)
+{
+	m_slideTemplates = templates;
+}
 
 bool SongSlideGroup::fromXml(QDomElement & pe)
 {
 	
+	
+	QDomElement slideTemplateElement = pe.firstChildElement("templates");
+	if(!slideTemplateElement.isNull())
+	{
+		SlideGroup *templates = new SlideGroup();
+			
+		// restore the item, and delete it if something goes wrong
+		if (!templates->fromXml(slideTemplateElement)) 
+		{
+			qWarning("SongSlideGroup::fromXml(): Couldn't load templates from XML for some reason. Need to debug.");
+			delete templates;
+		}
+		else
+		{
+			setSlideTemplates(templates);
+		}
+	}
+			
 	int songid = pe.attribute("songid").toInt();
 	
 	SongRecord *song = SongRecord::retrieve(songid);
@@ -270,5 +416,12 @@ void SongSlideGroup::toXml(QDomElement & pe) const
 	QDomElement domElement = doc.createElement("text");
 	pe.appendChild(domElement);
 	domElement.appendChild(doc.createTextNode(m_text));
+	
+	if(m_slideTemplates)
+	{
+		QDomElement element = doc.createElement("templates");
+		pe.appendChild(element);
+		m_slideTemplates->toXml(element);
+	}
 	
 }

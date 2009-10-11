@@ -316,27 +316,10 @@ void OutputSetupDialog::accepted()
 	Output *out = AppSettings::outputs().at(0);
 	if(out)
 	{
-		QRect r;
-		bool isValid = false;
-		if(out->outputType() == Output::Custom)
-		{
-			r = out->customRect();
-			isValid = true;
-		}
-		else
-		{
-			int screenNum = out->screenNum();
-			QDesktopWidget *d = QApplication::desktop();
-			r = d->screenGeometry(screenNum);
-			isValid = true;
-		}
+		double ar = out->aspectRatio();
 
-		//qDebug()<<"output dialog: r:"<<r<<",isValid:"<<isValid;
-
-		if(isValid)
+		if(ar > -1)
 		{
-			qreal ar = (qreal)r.width() / (qreal)r.height();
-			//qDebug()<<"New ar:"<<ar;
 			if(ar != MainWindow::mw()->currentDocument()->aspectRatio())
 			{
 				if(QMessageBox::question(

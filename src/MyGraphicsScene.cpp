@@ -281,6 +281,12 @@ void MyGraphicsScene::addContent(AbstractContent * content, bool takeOwnership) 
 		m_ownedContent.append(content);
 }
 
+void MyGraphicsScene::setSceneRect(const QRectF& rect)
+{
+	QGraphicsScene::setSceneRect(rect);
+	emit sceneRectChanged(rect);
+}
+
 static QPoint nearCenter(const QRectF & rect)
 {
     return rect.center().toPoint() + QPoint(2 - (qrand() % 5), 2 - (qrand() % 5));

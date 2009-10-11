@@ -1,5 +1,6 @@
 #include "AbstractItem.h"
 #include <QDebug>
+#include <QMetaProperty>
 
 AbstractItem::AbstractItem() :
 	  m_isBeingLoaded(false)
@@ -24,7 +25,35 @@ void AbstractItem::clearIsChanged() { m_isChanged = false; }
 
 void AbstractItem::setBeingLoaded(bool flag) { m_isBeingLoaded = flag; }
 
+AbstractItem * AbstractItem::clone()
+{
+	return cloneTo(new AbstractItem());
+}
 
+AbstractItem * AbstractItem::cloneTo(AbstractItem *item)
+{
+	item->setBeingLoaded(true);
+	
+	qDebug() << "AbstractItem::clone():"<<itemName()<<": Cloning item.";
+	
+	// So we dont have to engineer our own method of tracking
+	// properties, just assume all inherited objects delcare the relevant
+	// properties using Q_PROPERTY macro
+	const QMetaObject *metaobject = metaObject();
+	int count = metaobject->propertyCount();
+	for (int i=0; i<count; ++i) 
+	{
+		QMetaProperty metaproperty = metaobject->property(i);
+		const char *name = metaproperty.name();
+		QVariant value = property(name);
+		//qDebug() << "AbstractItem::clone():"<<itemName()<<": prop:"<<name<<", value:"<<value;
+		item->setProperty(name,value);
+	}
+	
+	item->setBeingLoaded(false);
+	
+	return item;
+}
 
 bool AbstractItem::fromXml(QDomElement & pe)
 {

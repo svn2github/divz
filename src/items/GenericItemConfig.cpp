@@ -174,6 +174,9 @@ GenericItemConfig::GenericItemConfig(AbstractContent * content, QWidget *parent)
 	connect(m_commonUi->shadowOffsetPresetTR, SIGNAL(clicked()), this, SLOT(shadowOffsetPresetTR()));
 	
 	m_commonUi->tabWidget->setCurrentIndex(0);
+	
+	// hide till used in later revisions
+	m_commonUi->videoPlayButton->setVisible(false);
 }
 
 GenericItemConfig::~GenericItemConfig()

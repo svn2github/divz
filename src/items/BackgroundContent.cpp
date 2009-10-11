@@ -25,6 +25,7 @@ BackgroundContent::BackgroundContent(QGraphicsScene * scene, QGraphicsItem * par
     : AbstractContent(scene, parent, false)
     , m_still(false)
     , m_videoProvider(0)
+    , m_sceneSignalConnected(false)
 {
 	m_dontSyncToModel = true;
 	
@@ -105,12 +106,24 @@ void BackgroundContent::syncFromModelItem(AbstractVisualItem *model)
 		QRect r = scene()->sceneRect().toRect();
 		//qDebug() << "BackgroundContent::syncFromModelItem(): Setting rect:"<<r;
 		resizeContents(r);
+		
+		if(!m_sceneSignalConnected)
+		{
+			connect(dynamic_cast<MyGraphicsScene*>(scene()), SIGNAL(sceneRectChanged(const QRectF&)), this, SLOT(sceneRectChanged(const QRectF&)));
+			m_sceneSignalConnected = true;
+		}
+			
 	}
 	setZValue(-9999);
 	setVisible(true);
 	update();
 	
         m_dontSyncToModel = false;
+}
+
+void BackgroundContent::sceneRectChanged(const QRectF& rect)
+{
+	resizeContents(rect.toRect());
 }
 
 AbstractVisualItem * BackgroundContent::syncToModelItem(AbstractVisualItem *model)

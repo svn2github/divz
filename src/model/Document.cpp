@@ -15,10 +15,17 @@
 
 #include <QDebug>
 
+#include "AppSettings.h"
+
 #include "songdb/SongSlideGroup.h"
 
 Document::Document(const QString & s) : m_docTitle(""), m_filename(""), m_aspectRatio(4/3)
 {
+	double ar = AppSettings::liveAspectRatio();
+	if(ar > -1)
+		m_aspectRatio = ar;
+
+		
 	if(!s.isEmpty())
 		load(s);
 }

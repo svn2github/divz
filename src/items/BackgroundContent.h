@@ -33,6 +33,7 @@ class BackgroundContent : public AbstractContent
 
     private slots:
     	void setPixmap(const QPixmap & pixmap);
+    	void sceneRectChanged(const QRectF &);
     	
     private:
     	void setVideoFile(const QString &name);
@@ -41,6 +42,8 @@ class BackgroundContent : public AbstractContent
 	QSize m_imageSize;
 	QVideoProvider * m_videoProvider;
 	bool m_still;
+	
+	bool m_sceneSignalConnected;
 };
 
 #endif

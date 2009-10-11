@@ -43,8 +43,11 @@ int main(int argc, char **argv)
 		QApplication::setGraphicsSystem("raster");
 		#endif
 	#endif
-
+	
 	QApplication app(argc, argv);
+	
+	int qtype1 = qRegisterMetaType<AbstractVisualItem::FillType>("FillType");
+
 	
 #if defined(VER)
 	printf("DViz Version %s\n", VER);

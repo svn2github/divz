@@ -37,3 +37,5 @@ void BoxItem::toXml(QDomElement & pe) const
 	pe.setTagName("box");
 }
 
+
+AbstractItem * BoxItem::clone() { return AbstractItem::cloneTo(new BoxItem()); }

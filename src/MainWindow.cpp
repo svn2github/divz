@@ -54,17 +54,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	setupCentralWidget();
 
 	// Restore state
-	QSettings settings;
-	QSize sz = settings.value("mainwindow/size").toSize();
-	if(sz.isValid())
-		resize(sz);
-	QPoint p = settings.value("mainwindow/pos").toPoint();
-	if(!p.isNull())
-		move(p);
-	restoreState(settings.value("mainwindow/state").toByteArray());
-	m_splitter->restoreState(settings.value("mainwindow/splitter_state").toByteArray());
-	m_splitter2->restoreState(settings.value("mainwindow/splitter2_state").toByteArray());
-
+	loadWindowState();
 
 	
 
@@ -110,17 +100,12 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
-	saveFile();
+	// done in close event now
+	//actionSave();
 	
 	clearAllOutputs();
 	
-	QSettings settings;
-	settings.setValue("mainwindow/size",size());
-	settings.setValue("mainwindow/pos",pos());
-	settings.setValue("mainwindow/state",saveState());
-	settings.setValue("mainwindow/splitter_state",m_splitter->saveState());
-	settings.setValue("mainwindow/splitter2_state",m_splitter2->saveState());
-
+	
 	delete m_ui;
 	
 	delete m_liveView;
@@ -129,6 +114,32 @@ MainWindow::~MainWindow()
 	delete m_docModel;
 	delete m_doc;
 	delete m_editWin;
+}
+
+void MainWindow::loadWindowState()
+{
+	QSettings settings;
+	QSize sz = settings.value("mainwindow/size").toSize();
+	if(sz.isValid())
+		resize(sz);
+	QPoint p = settings.value("mainwindow/pos").toPoint();
+	if(!p.isNull())
+		move(p);
+	restoreState(settings.value("mainwindow/state").toByteArray());
+	m_splitter->restoreState(settings.value("mainwindow/splitter_state").toByteArray());
+	m_splitter2->restoreState(settings.value("mainwindow/splitter2_state").toByteArray());
+
+}
+
+void MainWindow::saveWindowState()
+{
+	QSettings settings;
+	settings.setValue("mainwindow/size",size());
+	settings.setValue("mainwindow/pos",pos());
+	settings.setValue("mainwindow/state",saveState());
+	settings.setValue("mainwindow/splitter_state",m_splitter->saveState());
+	settings.setValue("mainwindow/splitter2_state",m_splitter2->saveState());
+
 }
 
 void MainWindow::clearAllOutputs()
@@ -157,22 +168,26 @@ void MainWindow::actionOpen()
 	}
 }
 
-void MainWindow::actionSave()
+bool MainWindow::actionSave()
 {
 	if(m_doc->filename().isEmpty())
-		actionSaveAs();
+		return actionSaveAs();
 	else
 		saveFile();
+	return true;
 		
 }
 
-void MainWindow::actionSaveAs()
+bool MainWindow::actionSaveAs()
 {
 	QString fileName = QFileDialog::getSaveFileName(this, tr("Choose a Filename"), m_doc->filename(), tr("DViz XML File (*.xml);;Any File (*.*)"));
 	if(fileName != "")
 	{
 		saveFile(fileName);
+		return true;
 	}
+	
+	return false;
 }
 
 void MainWindow::actionNew()
@@ -237,6 +252,8 @@ void MainWindow::saveFile(const QString & file)
 	m_doc->save(file.isEmpty() ? m_doc->filename() : file);
 	
 	setWindowTitle(m_doc->filename() + " - DViz");
+	
+	saveWindowState();
 	
 }
 
@@ -529,9 +546,17 @@ void MainWindow::actionDvizWebsite()
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
-	event->accept();
-	m_liveView->hide();
-	close();
+	if(actionSave())
+	{
+		event->accept();
+		m_liveView->hide();
+		//close();
+	} 
+	else 
+	{
+		event->ignore();
+	}
+
 	//deleteLater();
 }
 

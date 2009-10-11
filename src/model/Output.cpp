@@ -2,6 +2,8 @@
 
 #include <QDataStream>
 #include <QIODevice>
+#include <QApplication>
+#include <QDesktopWidget>
 
 Output::Output() :
 	m_isSystem(false)
@@ -75,4 +77,26 @@ void Output::fromByteArray(QByteArray array)
 	b >> x; setPort(x.toInt());
 	b >> x; setAllowMultiple(x.toBool());
 	b >> x; setTags(x.toString());
+}
+
+double Output::aspectRatio()
+{
+
+	QRect r;
+	bool isValid = false;
+	if(outputType() == Output::Custom)
+	{
+		r = customRect();
+		isValid = true;
+	}
+	else
+	{
+		r = QApplication::desktop()->screenGeometry(screenNum());
+		isValid = true;
+	}
+
+	if(isValid)
+		return (double)r.width() / (double)r.height();
+	else
+		return -1;
 }

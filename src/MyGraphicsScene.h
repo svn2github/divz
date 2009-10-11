@@ -55,9 +55,12 @@ class MyGraphicsScene : public QGraphicsScene
                 
                 ContextHint contextHint() { return m_contextHint; }
                 void setContextHint(ContextHint);
+                
+                void setSceneRect(const QRectF &);
 		
 	signals:
 		void showPropertiesWidget(QWidget * widget);
+		void sceneRectChanged(const QRectF &);
 		
 	private:
 // 		TextContent * createText(const QPoint & pos);

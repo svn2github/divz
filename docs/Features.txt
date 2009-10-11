@@ -89,6 +89,7 @@ Revised Task list for Release 1.0, 10/10/09:
 		Global cache pixmaps
 		Consider moving opengl option to a per-output setting
 		Consider making Output objects QObjects that can emit signals when changed
+		Update QVideo to use QAudioOutput in qtmultimedia tree to play audio in video files
 		
 		[DONE] Need to implement song editor
 		[DONE] Look at setting char format thru cursor and using text document to render
@@ -101,29 +102,50 @@ Revised Task list for Release 1.0, 10/10/09:
 		[LATER] Script plugin item
 		
 	- Bugs:
+		Need better method of managing song regexps - right now the filters exist in the pixmap generation routines, the editor window, and the slide group!!
+		Visual item's QColor toxml routines dont save alpha channel!
 		On windows, when setting video item live, it doesnt play unless you dbl-click the slide again
 		Win32: If blank document "<document/>", crash when add group then click group
-		Win32: When starting with no document (test.xml), closing program results in "cannot write to ''" (should prompt to save as)
 		Win32: File->New crashes
-		Starting new results in incorrect AR for "new" doc - doc should adopt current live AR
-		Shadow option has no effect on box object - either remove tab or enable shaodw
-		Turning on/off line has no effect on box 
-		Turning on/off bg has no effect on box
-		Changing AR doesn't resize background elements of slides in document - probably should automatically
+				probably fixed, need to verify 
 		Auto-sizing song text should be an option that can be enabled/disabled
-		Document list icons need to be lot smaller
 		Perfomance of the document pixmap model generator becomes a problem with a lot of songs - need to investigate - possibly use different cache key
 		
-		
+		[FIXED] In item config dialog, video "play" button does nothing - hide for later revs
+		[FIXED] Starting new results in incorrect AR for "new" doc - doc should adopt current live AR
+				Added liveAspectRatio method to app settings and routines to search outputs by tag
+		[FIXED] When starting with no document (test.xml), closing program results in "cannot write to ''" (should prompt to save as)
+				Do saveFile in closeEvent, check for empty filename, prompt saveas, if cancel saveas, then dont accept close event
+		[FIXED] File->New with item on live output item crashes dviz
+				the releasegroup method caused currentChanged signal, which caused the view control to try to change slides while group was being released
+				just added bool lock flag so when releasegroup was called, the signal that listened for currentchanged would ignore signals
+		[FIXED] Document list icons need to be lot smaller
+				Changed initial icon size in DocumentListModel from 192 to 48
+		[FIXED] Shadow option has no effect on box object - either remove tab or enable shaodw
+				enabled basic shadow rendering - no gausian blur yet
+		[FIXED] Turning on/off line has no effect on box 
+		[FIXED] Turning on/off bg has no effect on box
+				made BoxContent honor fillEnabled/outlineEnabled flags
+		[FIXED] Changing AR doesn't resize background elements of slides in document - probably should automatically
+				updated BackGround content to listen for a 'sceneRectChanged()' signal from MyGraphicsScene
 		[FIXED] text config box text is white - maybe need to get html from model item for editing??
+				adjusted textconfig dialog to load/save text to model and rely on sync signals to load text to visual delegate
 		[FIXED] Song cross fade / go live performance is terrible
+				converted text layout to use Qt's QTextDocument after learning how to set text output pen
 		[HACK-FIX] Slide editor -> new slide doesnt show slide in list model again!
+				hacked by doing a calling m_editWin->setSlideGroup(group); before AND after showing the edit window - doesnt seem right, but it works
 		[FIXED] When go live, auto select the current live slide
+				simple code change to set currentIndex
 		[WORKSFORME] Slide in icon preview for slide group isnt always the first slide
+				not sure where I saw this, but can't repeat
 		[FIXED] When changing output size with custom output, output disappers until program restart
+				simply called setVisible on outputs after closing the output dialog
 		[FIXED] When using 1.6AR, content locations centered in slide editor appear off center in preview and live (but correct in icons)
+				it was actually the slideditor window that was wrong (and the live view) because both were created before the document was loaded
 		[FIXED] Somtimes going live with video item it doesnt play
+				had to do with QVideoProvider's internal play/pause counter
 		[FIXED] When setting video in slide editor, it never shows first frame
+				had to do with QVideoProvider's internal play/pause counter
 		[FIXED] Video slides crashing when made live on Win32
 		[FIXED] When changing AR, reload document (or recreate slides)
 		[FIXED] Songs need to be vertically centered as well
@@ -136,8 +158,7 @@ Revised Task list for Release 1.0, 10/10/09:
 		[FIXED] Need to set item name in slide generator for songs
 		[FIXED] Need to set item id in slide generator
 		[FIXED] Songs aren't being converted toXml properly (is toXml virtual??)
-			made it virtual, but still doesn't seem to be saving - tbd -
-			needed to match the function signatures exactly - in this case, toXml was missing the 'const' from the original defn
+				needed to match the function signatures exactly - in this case, toXml was missing the 'const' from the original defn
 		[FIXED] When another slide live first, then trans to video slide, single click (preview) different slide, the live item stops playing
 		[FIXED] Centered TextBox items appear too far to the left in icon previews (list models, etc)
 		[FIXED] Setting config on background item causes it to "go away" until program reload

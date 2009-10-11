@@ -39,3 +39,5 @@ void BackgroundItem::toXml(QDomElement & pe) const
 	pe.setTagName("background");
 }
 
+
+AbstractItem * BackgroundItem::clone() { return AbstractItem::cloneTo(new BackgroundItem()); }

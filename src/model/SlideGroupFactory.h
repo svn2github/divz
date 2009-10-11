@@ -60,6 +60,7 @@ protected:
 	SlideGroupListModel *m_slideModel;	
 	SlideGroupViewControlListView *m_listView;
 	friend class SlideGroupViewControlListView;
+	bool m_releasingSlideGroup;
 };
 
 class AbstractSlideGroupEditor : public QWidget

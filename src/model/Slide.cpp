@@ -8,6 +8,7 @@
 #include "ItemFactory.h"
 
 #include <assert.h>
+#include <QMetaProperty>
 
 Slide::Slide()  
 {
@@ -21,6 +22,41 @@ Slide::~Slide()
 
 void Slide::setSlideId(int x)     { m_slideId = x; }
 void Slide::setSlideNumber(int x) { m_slideNumber = x; }
+
+Slide * Slide::clone()
+{
+	Slide * newSlide = new Slide();
+	
+	newSlide->setSlideId(ItemFactory::nextId());
+	
+	// So we dont have to engineer our own method of tracking
+	// properties, just assume all inherited objects delcare the relevant
+	// properties using Q_PROPERTY macro
+	const QMetaObject *metaobject = metaObject();
+	int count = metaobject->propertyCount();
+	for (int i=0; i<count; ++i) 
+	{
+		QMetaProperty metaproperty = metaobject->property(i);
+		const char *name = metaproperty.name();
+		QVariant value = property(name);
+		newSlide->setProperty(name,value);
+	}
+	
+	foreach (AbstractItem * content, newSlide->m_items) 
+		newSlide->removeItem(content);
+	
+	foreach(AbstractItem *oldItem, m_items)
+	{
+		AbstractItem * newItem = oldItem->clone();
+			
+		newItem->setItemId(ItemFactory::nextId());
+		//newItem->setItemName(QString("NewItem%1").arg(bg->itemId()));
+		newSlide->addItem(newItem);
+	}
+	
+	return newSlide;
+}
+
 
 AbstractItem * Slide::background()
 {

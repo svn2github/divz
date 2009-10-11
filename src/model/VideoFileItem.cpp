@@ -59,3 +59,5 @@ void VideoFileItem::toXml(QDomElement & pe) const
         domElement.appendChild(text);
 }
 
+
+AbstractItem * VideoFileItem::clone() { return AbstractItem::cloneTo(new VideoFileItem()); }

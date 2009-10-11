@@ -74,7 +74,8 @@ class AbstractContent : public AbstractDisposeable
 		virtual int contentHeightForWidth(int width) const;
 		virtual bool contentOpaque() const;
 		
-		AbstractVisualItem *modelItem() { return m_modelItem; }
+		// Bad programmer - optimizing before testing if its needed. Well, I dont know that it can hurt...
+		inline AbstractVisualItem *modelItem() { return m_modelItem; }
 		
 		// to be reimpl
 		

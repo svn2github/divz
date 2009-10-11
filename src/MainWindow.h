@@ -24,6 +24,8 @@
 #include "OutputViewer.h"
 #include "OutputSetupDialog.h"
 
+#define FALLBACK_SCREEN_RECT QRectF(0,0,1024,768)
+
 namespace Ui {
 	class MainWindow;
 }
@@ -78,16 +80,19 @@ protected slots:
 	void actionDvizWebsite();
 	
 	void actionOpen();
-	void actionSave();
-	void actionSaveAs();
+	bool actionSave();
+	bool actionSaveAs();
 	void actionNew();
+	
+	void saveWindowState();
+	void loadWindowState();
 	
 protected:
 	void changeEvent(QEvent *e);
 	void closeEvent(QCloseEvent *event);
 	
 	void openSlideEditor(SlideGroup *g);
-
+	
 private:
 	void setupOutputList();
 	void setupOutputControl();

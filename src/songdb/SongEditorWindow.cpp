@@ -6,10 +6,13 @@
 #include <QLabel>
 #include <QTextEdit>
 
+#include "SlideEditorWindow.h"
 #include "SongSlideGroup.h"
 
 SongEditorWindow::SongEditorWindow(SlideGroup *g, QWidget *parent) : 
-	AbstractSlideGroupEditor(g,parent) 
+	AbstractSlideGroupEditor(g,parent),
+	m_slideGroup(0),
+	m_editWin(0)
 {
 	setAttribute(Qt::WA_DeleteOnClose,true);
 	
@@ -21,6 +24,7 @@ SongEditorWindow::SongEditorWindow(SlideGroup *g, QWidget *parent) :
 	
 	m_title = new QLineEdit();
 	hbox1->addWidget(m_title);
+
 	
 	vbox->addLayout(hbox1);
 	
@@ -37,7 +41,13 @@ SongEditorWindow::SongEditorWindow(SlideGroup *g, QWidget *parent) :
 	
 	vbox->addWidget(m_editor);
 	
+	
 	QHBoxLayout * hbox2 = new QHBoxLayout();
+	
+	QPushButton * tmplEditBtn = new QPushButton("Edit Background && Templates...");
+	connect(tmplEditBtn, SIGNAL(clicked()), this, SLOT(editSongTemplate()));
+	hbox2->addWidget(tmplEditBtn);
+	
 	hbox2->addStretch();
 	
 	QPushButton *btn;
@@ -57,7 +67,38 @@ SongEditorWindow::SongEditorWindow(SlideGroup *g, QWidget *parent) :
 	
 }
 
-//SongEditorWindow::~SongEditorWindow() {}
+void SongEditorWindow::editSongTemplate()
+{
+	if(!m_slideGroup)
+		return;
+	
+	SongSlideGroup * songGroup = dynamic_cast<SongSlideGroup*>(m_slideGroup);
+	if(!songGroup)
+		return;
+		
+	if(!m_editWin)
+		m_editWin = new SlideEditorWindow();
+	
+	SlideGroup * tmpl = songGroup->slideTemplates();
+	if(!tmpl)
+	{
+		tmpl = songGroup->createDefaultTemplates();
+		songGroup->setSlideTemplates(tmpl);
+	}
+	
+	// set slide group twice like MainWindow does
+	m_editWin->setSlideGroup(tmpl);
+	m_editWin->show();
+	m_editWin->setSlideGroup(tmpl);
+	
+}
+
+SongEditorWindow::~SongEditorWindow() 
+{
+	if(m_editWin)
+		delete m_editWin;
+}
+
 void SongEditorWindow::setSlideGroup(SlideGroup *g,Slide */*curSlide*/) 
 {
 	m_slideGroup = g;
@@ -103,7 +144,7 @@ SongEditorHighlighter::SongEditorHighlighter(QTextDocument *parent)
 	rearFormat.setFontWeight(QFont::Bold);
 	rearFormat.setForeground(Qt::white);
 	rearFormat.setBackground(Qt::blue);
-	rule.pattern = QRegExp("\\s*((?:B:|R:|C:|T:|G:).*)");
+	rule.pattern = QRegExp("\\s*((?:B:|R:|C:|T:|G:|\\[|\\|).*)");
 	rule.format = rearFormat;
 	highlightingRules.append(rule);
 }

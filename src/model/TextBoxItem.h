@@ -19,10 +19,13 @@ public:
 	// ::AbstractItem
 	
 	// class identification
-	quint32 itemClass() const { return 0x0002; }
+	typedef enum { ItemClass = 0x0002 };
+	quint32 itemClass() const { return ItemClass; }
 	
 	// loading/saving
         void toXml(QDomElement & parentElement) const;
+        
+        AbstractItem * clone();
 };
 
 

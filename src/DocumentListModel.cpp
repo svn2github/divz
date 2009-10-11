@@ -16,7 +16,7 @@
 #define DEBUG_MARK() qDebug() << "mark: "<<__FILE__<<":"<<__LINE__
 
 DocumentListModel::DocumentListModel(Document *d, QObject *parent)
-		: QAbstractListModel(parent), m_doc(d),/* m_scene(0), m_view(0),*/ m_dirtyTimer(0),  m_iconSize(192,0), m_sceneRect(0,0,1024,768)
+		: QAbstractListModel(parent), m_doc(d),/* m_scene(0), m_view(0),*/ m_dirtyTimer(0),  m_iconSize(48,0), m_sceneRect(0,0,1024,768)
 {
 	if(m_doc)
 		setDocument(d);
