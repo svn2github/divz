@@ -77,7 +77,10 @@ void SongEditorWindow::editSongTemplate()
 		return;
 		
 	if(!m_editWin)
+	{
 		m_editWin = new SlideEditorWindow();
+		connect(m_editWin, SIGNAL(closed()), this, SLOT(editorWindowClosed()));
+	}
 	
 	SlideGroup * tmpl = songGroup->slideTemplates();
 	if(!tmpl)
@@ -91,6 +94,15 @@ void SongEditorWindow::editSongTemplate()
 	m_editWin->show();
 	m_editWin->setSlideGroup(tmpl);
 	
+}
+
+void SongEditorWindow::editorWindowClosed()
+{
+	SongSlideGroup * songGroup = dynamic_cast<SongSlideGroup*>(m_slideGroup);
+	if(!songGroup)
+		return;
+
+	songGroup->setSlideTemplates(songGroup->slideTemplates());
 }
 
 SongEditorWindow::~SongEditorWindow() 

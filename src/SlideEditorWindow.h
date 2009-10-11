@@ -27,6 +27,12 @@ public:
 public slots:
 	void setSlideGroup(SlideGroup*g,Slide *curSlide=0);
 
+signals:
+	void closed();
+
+protected:
+	void closeEvent(QCloseEvent*);
+
 private slots:
 	void newTextItem();
 	void newBoxItem();

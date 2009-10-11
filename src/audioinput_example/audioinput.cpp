@@ -238,6 +238,9 @@ InputTest::InputTest()
     //connect(audioinfo,SIGNAL(update()),SLOT(refreshDisplay()));
     audioinfo->start();
     audioInput->start(audioinfo);
+
+    setWindowFlags(Qt::WindowStaysOnTopHint);
+
 }
 
 InputTest::~InputTest() {}

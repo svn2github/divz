@@ -47,6 +47,9 @@ public slots:
 	
 	void editSongTemplate();
 
+private slots:
+	void editorWindowClosed();
+
 private:
 	QTextEdit *m_editor;
 	SongEditorHighlighter *m_highlighter;

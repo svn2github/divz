@@ -323,12 +323,18 @@ SlideEditorWindow::~SlideEditorWindow()
 
 }
 
+void SlideEditorWindow::closeEvent(QCloseEvent *evt)
+{
+	evt->accept();
+	emit closed();
+}
+
 
 void SlideEditorWindow::setupUndoView()
 {
     m_undoView = new QUndoView(m_undoStack);
     m_undoView->setWindowTitle(tr("Undo Stack"));
-    m_undoView->show();
+    //m_undoView->show();
     m_undoView->setAttribute(Qt::WA_QuitOnClose, false);
 }
 
