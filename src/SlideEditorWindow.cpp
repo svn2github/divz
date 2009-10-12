@@ -679,6 +679,7 @@ public:
 			setText(QString("Added %1").arg(guessTitle(item->itemName().isEmpty() ? "New Item" : item->itemName())));
 		}
 	
+	
 	virtual void undo() 
 	{ 
 		m_window->ignoreUndoChanged(true);
@@ -714,13 +715,6 @@ private:
 		{ 
 			setText(QString("Removed %1").arg(guessTitle(item->itemName())));
 		}
-	
-	// We're not going to undo this after it's destroyed, so its safe to delete the item from meory
-	~UndoSlideItemRemoved()
-	{
-		delete m_item;
-		m_item = 0;
-	}
 	
 	virtual void undo() 
 	{ 
@@ -794,10 +788,11 @@ public:
 		}
 		
 	// We're not going to undo this after it's destroyed, so its safe to delete the slide from meory
+	// NOT safe to DELETE - because if we UNDO a slide removal, that means we ADDED it back in!
 	~UndoSlideRemoved() 
 	{
-		delete m_slide;
-		m_slide = 0;
+		//delete m_slide;
+		//m_slide = 0;
 	}
 	
 	
