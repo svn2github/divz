@@ -17,7 +17,7 @@ void AbstractItem::setChanged(QString name, QVariant value, QVariant oldValue)
 		//qDebug() << "AbstractItem::setChanged: itemName:"<<itemName()<<", name:"<<name<<", value:"<<value;
 		emit itemChanged(name,value,oldValue);
 		m_isChanged = true;
-		
+
 	}
 }
 
@@ -33,15 +33,15 @@ AbstractItem * AbstractItem::clone()
 AbstractItem * AbstractItem::cloneTo(AbstractItem *item)
 {
 	item->setBeingLoaded(true);
-	
-	qDebug() << "AbstractItem::clone():"<<itemName()<<": Cloning item.";
-	
+
+	//qDebug() << "AbstractItem::clone():"<<itemName()<<": Cloning item.";
+
 	// So we dont have to engineer our own method of tracking
 	// properties, just assume all inherited objects delcare the relevant
 	// properties using Q_PROPERTY macro
 	const QMetaObject *metaobject = metaObject();
 	int count = metaobject->propertyCount();
-	for (int i=0; i<count; ++i) 
+	for (int i=0; i<count; ++i)
 	{
 		QMetaProperty metaproperty = metaobject->property(i);
 		const char *name = metaproperty.name();
@@ -49,25 +49,25 @@ AbstractItem * AbstractItem::cloneTo(AbstractItem *item)
 		//qDebug() << "AbstractItem::clone():"<<itemName()<<": prop:"<<name<<", value:"<<value;
 		item->setProperty(name,value);
 	}
-	
+
 	item->setBeingLoaded(false);
-	
+
 	return item;
 }
 
 bool AbstractItem::fromXml(QDomElement & pe)
 {
 	setBeingLoaded(true);
-	
+
 	// restore content properties
 	QString text = pe.firstChildElement("item-name").text();
 	setItemName(text);
-	
+
 	quint32 id = pe.firstChildElement("item-id").text().toInt();
 	setItemId(id);
-	
+
 	setBeingLoaded(false);
-	
+
 	return true;
 }
 
@@ -79,13 +79,13 @@ void AbstractItem::toXml(QDomElement & pe) const
 	QDomElement domElement;
 	QDomText text;
 	QString valueStr;
-	
+
 	valueStr.setNum(itemId());
 	domElement= doc.createElement("item-id");
 	pe.appendChild(domElement);
 	text = doc.createTextNode(valueStr);
 	domElement.appendChild(text);
-	
+
 	domElement= doc.createElement("item-name");
 	pe.appendChild(domElement);
 	text = doc.createTextNode(itemName());

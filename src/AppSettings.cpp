@@ -8,6 +8,11 @@
 QList<Output*> AppSettings::m_outputs;
 bool AppSettings::m_useOpenGL = false;
 
+QSizeF AppSettings::m_gridSize = QSizeF(10,10);
+bool AppSettings::m_gridEnabled = true;
+bool AppSettings::m_thirdGuideEnabled = true;
+
+
 double AppSettings::m_liveAspect = 0;
 // double AppSettings::m_docAspect = 0;
 
@@ -17,20 +22,28 @@ void AppSettings::load()
 
 	QSettings s;
 	loadOutputs(&s);
-	
+
 	m_useOpenGL = s.value("app/use-opengl").toBool();
-	
+	m_gridSize = s.value("app/grid/size",m_gridSize).toSizeF();
+	m_gridEnabled = s.value("app/grid/enabled",true).toBool();
+	m_thirdGuideEnabled = s.value("app/thirdguide",true).toBool();
+
 	updateLiveAspectRatio();
 }
 
 void AppSettings::save()
 {
 	QSettings s;
-	
+
 	s.setValue("app/use-opengl",m_useOpenGL);
-	
+
+	s.setValue("app/grid/size",m_gridSize);
+	s.setValue("app/grid/enabled",m_gridEnabled);
+	s.setValue("app/thirdguide",m_thirdGuideEnabled);
+
+
 	saveOutputs(&s);
-	
+
 	updateLiveAspectRatio();
 }
 
@@ -61,7 +74,7 @@ void AppSettings::loadOutputs(QSettings *s)
 		setupSystemPresetOutputs();
 	}
 
-	
+
 }
 
 void AppSettings::setupSystemPresetOutputs()
@@ -118,6 +131,31 @@ void AppSettings::setUseOpenGL(bool f)
 	m_useOpenGL = f;
 }
 
+void AppSettings::setGridSize(QSizeF sz)
+{
+	m_gridSize = sz;
+}
+
+void AppSettings::setGridEnabled(bool flag)
+{
+		m_gridEnabled = flag;
+}
+
+void AppSettings::setThirdGuideEnabled(bool flag)
+{
+		m_thirdGuideEnabled = flag;
+}
+
+QPointF AppSettings::snapToGrid(QPointF newPos)
+{
+	if(gridEnabled())
+	{
+		QSizeF sz = AppSettings::gridSize();
+		newPos.setX(((int)(newPos.x() / sz.width() )) * sz.width());
+		newPos.setY(((int)(newPos.y() / sz.height())) * sz.height());
+	}
+	return newPos;
+}
 
 void AppSettings::updateLiveAspectRatio()
 {

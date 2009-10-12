@@ -44,18 +44,18 @@ SongEditorWindow::SongEditorWindow(SlideGroup *g, QWidget *parent) :
 	
 	QHBoxLayout * hbox2 = new QHBoxLayout();
 	
-	QPushButton * tmplEditBtn = new QPushButton("Edit Background && Templates...");
+	QPushButton * tmplEditBtn = new QPushButton("Edit &Background && Templates...");
 	connect(tmplEditBtn, SIGNAL(clicked()), this, SLOT(editSongTemplate()));
 	hbox2->addWidget(tmplEditBtn);
 	
 	hbox2->addStretch();
 	
 	QPushButton *btn;
-	btn = new QPushButton("Save Song");
+	btn = new QPushButton("&Save Song");
 	connect(btn, SIGNAL(clicked()), this, SLOT(accepted()));
 	hbox2->addWidget(btn);
 	
-	btn = new QPushButton("Cancel");
+	btn = new QPushButton("&Cancel");
 	connect(btn, SIGNAL(clicked()), this, SLOT(close()));
 	hbox2->addWidget(btn);
 	

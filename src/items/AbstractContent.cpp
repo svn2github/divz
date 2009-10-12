@@ -4,6 +4,7 @@
 #include "MirrorItem.h"
 #include "RenderOpts.h"
 #include "frames/FrameFactory.h"
+#include "AppSettings.h"
 #include <QApplication>
 #include <QFileDialog>
 #include <QFileInfo>
@@ -42,7 +43,7 @@ AbstractContent::AbstractContent(QGraphicsScene * scene, QGraphicsItem * parent,
 	m_gfxChangeTimer = new QTimer(this);
 	m_gfxChangeTimer->setInterval(0);
 	m_gfxChangeTimer->setSingleShot(true);
-	
+
 	// customize item's behavior
 	setFlags(QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsFocusable | QGraphicsItem::ItemIsSelectable);
 	#if QT_VERSION >= 0x040600
@@ -51,23 +52,23 @@ AbstractContent::AbstractContent(QGraphicsScene * scene, QGraphicsItem * parent,
 	// allow some items (eg. the shape controls for text) to be shown
 	setFlag(QGraphicsItem::ItemClipsChildrenToShape, false);
 	setAcceptHoverEvents(true);
-	
+
 	// create child controls
 	createCorner(Qt::TopLeftCorner, noRescale);
 	createCorner(Qt::TopRightCorner, noRescale);
 	createCorner(Qt::BottomLeftCorner, noRescale);
 	createCorner(Qt::BottomRightCorner, noRescale);
-	
+
 	//ButtonItem * bFront = new ButtonItem(ButtonItem::Control, Qt::blue, QIcon(":/data/action-order-front.png"), this);
 	//bFront->setToolTip(tr("Raise"));
 	//connect(bFront, SIGNAL(clicked()), this, SLOT(slotStackRaise()));
 	//addButtonItem(bFront);
-	
+
 	ButtonItem * bConf = new ButtonItem(ButtonItem::Control, Qt::green, QIcon(":/data/action-configure.png"), this);
 	bConf->setToolTip(tr("Change properties..."));
 	connect(bConf, SIGNAL(clicked()), this, SLOT(slotConfigure()));
 	addButtonItem(bConf);
-	
+
 	#if QT_VERSION >= 0x040500
 	    ButtonItem * bPersp = new ButtonItem(ButtonItem::Control, Qt::red, QIcon(":/data/action-perspective.png"), this);
 	    bPersp->setToolTip(tr("Drag around to change the perspective.\nHold SHIFT to move faster.\nUse CTRL to cancel the transformations."));
@@ -75,29 +76,29 @@ AbstractContent::AbstractContent(QGraphicsScene * scene, QGraphicsItem * parent,
 	    connect(bPersp, SIGNAL(doubleClicked()), this, SLOT(slotClearPerspective()));
 	    addButtonItem(bPersp);
 	#endif
-	
+
 	ButtonItem * bDelete = new ButtonItem(ButtonItem::Control, Qt::red, QIcon(":/data/action-delete.png"), this);
 	bDelete->setSelectsParent(false);
 	bDelete->setToolTip(tr("Remove"));
 	connect(bDelete, SIGNAL(clicked()), this, SIGNAL(deleteItem()));
 	addButtonItem(bDelete);
-	
+
 	// create default frame
 	Frame * frame = FrameFactory::defaultPictureFrame();
 	setFrame(frame);
-	
+
 	// hide and layoutChildren buttons
 	layoutChildren();
-	
+
 	// apply context hints for behaviour based on if we're in an editor, live view, preview, etc
 	applySceneContextHint((dynamic_cast<MyGraphicsScene*>(scene))->contextHint());
-	
+
 	// add to the scene
 	//scene->addItem(this);
-	
+
 	// display mirror
 	setMirrorEnabled(false); //RenderOpts::LastMirrorEnabled);
-	
+
 	m_dontSyncToModel = false;
 }
 
@@ -114,7 +115,7 @@ AbstractContent::~AbstractContent()
 void AbstractContent::applySceneContextHint(MyGraphicsScene::ContextHint hint)
 {
 	m_contextHint = hint;
-	
+
 	switch(hint)
 	{
 		case MyGraphicsScene::Live:
@@ -125,7 +126,7 @@ void AbstractContent::applySceneContextHint(MyGraphicsScene::ContextHint hint)
 			setFlag(QGraphicsItem::ItemIsFocusable, false);
 			setFlag(QGraphicsItem::ItemIsSelectable, false);
 			setAcceptHoverEvents(false);
-		
+
 		case MyGraphicsScene::Editor:
 		default:
 			break;
@@ -136,10 +137,10 @@ void AbstractContent::dispose(bool anim)
 {
 	// stick this item
 	setFlags((GraphicsItemFlags)0x00);
-	
+
 	// fade out mirror too
 	setMirrorEnabled(false);
-	
+
 	// little rotate animation
 	#if QT_VERSION >= 0x040600
 	if(anim)
@@ -151,7 +152,7 @@ void AbstractContent::dispose(bool anim)
 		ani->start(QPropertyAnimation::DeleteWhenStopped);
 	}
 	#endif
-	
+
 	// standard disposition
 	AbstractDisposeable::dispose(anim);
 }
@@ -165,28 +166,28 @@ void AbstractContent::resizeContents(const QRect & rect, bool keepRatio)
 {
 	if (!rect.isValid())
 		return;
-	
+
 	prepareGeometryChange();
-	
+
 	m_contentsRect = rect;
-	
-	if (keepRatio) 
+
+	if (keepRatio)
 	{
 		int hfw = contentHeightForWidth(rect.width());
-		if (hfw > 1) 
+		if (hfw > 1)
 		{
 			m_contentsRect.setTop(-hfw / 2);
 			m_contentsRect.setHeight(hfw);
 		}
 	}
-	
-	
+
+
 	if (m_frame)
 		m_frameRect = m_frame->frameRect(m_contentsRect);
 	else
 		m_frameRect = m_contentsRect;
-	
-	
+
+
 	layoutChildren();
 	update();
 	GFX_CHANGED();
@@ -202,7 +203,7 @@ void AbstractContent::delayedDirty(int ms)
 {
 	// tell rendering that we're changing stuff
 	m_dirtyTransforming = true;
-	
+
 	// start refresh timer
 	if (!m_transformRefreshTimer) {
 		m_transformRefreshTimer = new QTimer(this);
@@ -277,7 +278,7 @@ class MyTextItem : public QGraphicsTextItem {
 void AbstractContent::setFrameTextEnabled(bool enabled)
 {
 	// create the Text Item, if enabled...
-	if (enabled && !m_frameTextItem) 
+	if (enabled && !m_frameTextItem)
 	{
 		m_frameTextItem = new MyTextItem(this);
 		m_frameTextItem->setTextInteractionFlags(Qt::TextEditorInteraction);
@@ -287,9 +288,9 @@ void AbstractContent::setFrameTextEnabled(bool enabled)
 		m_frameTextItem->setZValue(1.0);
 		layoutChildren();
 	}
-	
+
 	// ...or destroy it if disabled
-	else if (!enabled && m_frameTextItem) 
+	else if (!enabled && m_frameTextItem)
 	{
 		delete m_frameTextItem;
 		m_frameTextItem = 0;
@@ -325,7 +326,7 @@ void AbstractContent::addButtonItem(ButtonItem * button)
 
 void AbstractContent::setRotation(double angle, Qt::Axis axis)
 {
-	switch (axis) 
+	switch (axis)
 	{
 		case Qt::XAxis: if (m_xRotationAngle == angle) return; m_xRotationAngle = angle; break;
 		case Qt::YAxis: if (m_yRotationAngle == angle) return; m_yRotationAngle = angle; break;
@@ -337,7 +338,7 @@ void AbstractContent::setRotation(double angle, Qt::Axis axis)
 
 double AbstractContent::rotation(Qt::Axis axis) const
 {
-	switch (axis) 
+	switch (axis)
 	{
 		case Qt::XAxis: return m_xRotationAngle;
 		case Qt::YAxis: return m_yRotationAngle;
@@ -349,12 +350,12 @@ double AbstractContent::rotation(Qt::Axis axis) const
 
 void AbstractContent::setMirrorEnabled(bool enabled)
 {
-	if (m_mirrorItem && !enabled) 
+	if (m_mirrorItem && !enabled)
 	{
 		m_mirrorItem->dispose();
 		m_mirrorItem = 0;
 	}
-	if (enabled && !m_mirrorItem) 
+	if (enabled && !m_mirrorItem)
 	{
 		m_mirrorItem = new MirrorItem(this);
 		connect(m_gfxChangeTimer, SIGNAL(timeout()), m_mirrorItem, SLOT(sourceChanged()));
@@ -371,7 +372,7 @@ void AbstractContent::ensureVisible(const QRectF & rect)
 {
 	// keep the center inside the scene rect
 	QPointF center = pos();
-	if (!rect.contains(center)) 
+	if (!rect.contains(center))
 	{
 		center.setX(qBound(rect.left(), center.x(), rect.right()));
 		center.setY(qBound(rect.top(), center.y(), rect.bottom()));
@@ -414,19 +415,19 @@ void AbstractContent::modelItemChanged(QString fieldName, QVariant value, QVaria
 void AbstractContent::setModelItem(AbstractVisualItem *model)
 {
 //	setModelItemIsChanging(true);
-	
+
 	if(m_modelItem != model)
 	{
 		if(DEBUG_ABSTRACTCONTENT)
 			qDebug() << "AbstractContent::setModelItem(): Received new model item";
-	
+
 		if(m_modelItem != NULL)
 		{
 			disconnect(m_modelItem, 0, this, 0);
 		}
-		
+
 		m_modelItem = model;
-	
+
 		connect(model, SIGNAL(itemChanged(QString, QVariant, QVariant)), this, SLOT(modelItemChanged(QString, QVariant,QVariant)));
 	}
 }
@@ -434,37 +435,37 @@ void AbstractContent::setModelItem(AbstractVisualItem *model)
 void AbstractContent::syncFromModelItem(AbstractVisualItem *model)
 {
 	m_dontSyncToModel = true;
-	
+
 	assert(model);
-	
+
 	if(!modelItem())
 		setModelItem(model);
-	
+
 	if(DEBUG_ABSTRACTCONTENT)
 		qDebug() << "AbstractContent::syncFromModelItem(): item:"<<(modelItem()?modelItem()->itemName() : "NULL")<<": doing sync";
-	
+
 	QRectF r = model->contentsRect();
 	//qDebug() << "AbstractContent::syncFromModelItem(): Setting rect:"<<r;
 	resizeContents(r.toRect());
-	
+
 	// Load position coordinates
 	setPos(model->pos());
 	//qDebug() << "AbstractContent::syncFromModelItem(): Setting pos:"<<model->pos();
-	
+
 	setZValue(model->zValue());
-	
+
 	setVisible(model->isVisible());
 
 	quint32 frameClass = model->frameClass();
 	setFrame(frameClass ? FrameFactory::createFrame(frameClass) : 0);
-	
+
 	m_xRotationAngle = model->xRotation();
 	m_yRotationAngle = model->yRotation();
 	m_zRotationAngle = model->zRotation();
 	applyRotations();
-	
+
 	setMirrorEnabled(model->mirrorEnabled());
-	
+
 	setOpacity(model->opacity());
 
 
@@ -489,46 +490,46 @@ AbstractVisualItem * AbstractContent::syncToModelItem(AbstractVisualItem * model
                 //qDebug("AbstractContent::syncToModelItem: m_inConstructor is true, not syncing");
 		return 0;
 	}
-        	
+
 	// catch any loops back in from the model firing signals about its values changing
 	setModelItemIsChanging(true);
-	
+
 	if(!model)
 	{
                 model = modelItem();
 	}
-	
+
 	if(!model)
 	{
 		setModelItemIsChanging(false);
                 qDebug("AbstractContent::syncToModelItem: m_modelItem and 'model' arg was NULL, cannot sync");
 		return 0;
 	}
-	
+
 	//assert(model);
-	
+
 	model->setContentsRect(m_contentsRect);
 	model->setPos(pos());
 	model->setZValue(zValue());
 	model->setIsVisible(isVisible());
 	model->setFrameClass(frameClass());
 	model->setOpacity(opacity());
-	
+
 	//qDebug() << "AbstractContent::syncToModelItem: pos=" << model->pos() << ", rect=" << model->contentsRect();
 
 	// save transformation
 	const QTransform t = transform();
-	if (!t.isIdentity()) 
+	if (!t.isIdentity())
 	{
 		model->setXRotation(m_xRotationAngle);
 		model->setYRotation(m_yRotationAngle);
 		model->setZRotation(m_zRotationAngle);
 	}
-	
+
 	model->setMirrorEnabled(mirrorEnabled());
-	
+
 	setModelItemIsChanging(false);
-	
+
 	return model;
 
 }
@@ -557,23 +558,23 @@ void AbstractContent::paint(QPainter * painter, const QStyleOptionGraphicsItem *
 	const bool opaqueContent = contentOpaque();
 	const bool drawSelection = RenderOpts::HQRendering ? false : isSelected();
 	const QRect frameRect = m_frameRect.toRect();
-	
-	if (!m_frame) 
+
+	if (!m_frame)
 	{
 		// draw the selection only as done in EmptyFrame.cpp
-		if (drawSelection) 
+		if (drawSelection)
 		{
 			painter->setRenderHint(QPainter::Antialiasing, true);
 			painter->setPen(QPen(RenderOpts::hiColor, 1.0));
 			// FIXME: this draws OUTSIDE (but inside the safe 2px area)
 			painter->drawRect(QRectF(frameRect).adjusted(-0.5, -0.5, +0.5, +0.5));
 		}
-	} 
-	else 
+	}
+	else
 	{
 		// draw the Frame
 		m_frame->paint(painter, frameRect, drawSelection, opaqueContent);
-	
+
 		// use clip path for contents, if set
 		if (m_frame->clipContents())
 			painter->setClipPath(m_frame->contentsClipPath(m_contentsRect));
@@ -595,7 +596,7 @@ void AbstractContent::setControlsVisible(bool visible)
 {
 	if(m_contextHint != MyGraphicsScene::Editor)
 		return;
-		
+
 	m_controlsVisible = visible;
 	foreach (CornerItem * corner, m_cornerItems)
 		corner->setVisible(visible);
@@ -609,7 +610,7 @@ QPixmap AbstractContent::ratioScaledPixmap(const QPixmap * source, const QSize &
 	if (scaledPixmap.size() != size) {
 		int offX = (scaledPixmap.width() - size.width()) / 2;
 		int offY = (scaledPixmap.height() - size.height()) / 2;
-		if (ratio == Qt::KeepAspectRatio) 
+		if (ratio == Qt::KeepAspectRatio)
 		{
 			QPixmap rightSizePixmap(size);
 			rightSizePixmap.fill(Qt::transparent);
@@ -618,7 +619,7 @@ QPixmap AbstractContent::ratioScaledPixmap(const QPixmap * source, const QSize &
 			p.end();
 			return rightSizePixmap;
 		}
-		if (ratio == Qt::KeepAspectRatioByExpanding) 
+		if (ratio == Qt::KeepAspectRatioByExpanding)
 		{
 			return scaledPixmap.copy(offX, offY, size.width(), size.height());
 		}
@@ -674,9 +675,9 @@ void AbstractContent::mouseReleaseEvent(QGraphicsSceneMouseEvent * event)
 }
 
 
-	
-	
-	
+
+
+
 
 void AbstractContent::keyPressEvent(QKeyEvent * event)
 {
@@ -690,29 +691,26 @@ QVariant AbstractContent::itemChange(GraphicsItemChange change, const QVariant &
 	QVariant retVal;
 	bool retValOverride = false;
 	// keep the AbstractContent's center inside the scene rect..
-	if (change == ItemPositionChange && scene()) 
+	if (change == ItemPositionChange && scene() && AppSettings::gridEnabled())
 	{
-// 		QPointF oldPos = value.toPointF();
-// 		QPointF newPos = value.toPointF();
-// 		int snap = 10;
-// 		newPos.setX(((int)(oldPos.x() / snap)) * snap);
-// 		newPos.setY(((int)(oldPos.y() / snap)) * snap);
-// 		if (newPos != oldPos) 
-// 		{
-// 			retVal = QVariant(newPos);
-// 			retValOverride = true;
-// 		}
+ 		QPointF newPos = AppSettings::snapToGrid(value.toPointF());
+
+ 		if (newPos != value.toPointF())
+ 		{
+ 			retVal = QVariant(newPos);
+ 			retValOverride = true;
+ 		}
 	}
-	
+
 	// tell subclasses about selection changes
 	if (change == ItemSelectedHasChanged)
 		selectionChanged(value.toBool());
-		
+
 	//qDebug() << "itemChange(): value:"<<value;
-	
+
 	// changes that affect the mirror item
 	//if (m_mirrorItem) {
-	switch (change) 
+	switch (change)
 	{
 		// notify about setPos
 		case ItemPositionHasChanged:
@@ -720,19 +718,19 @@ QVariant AbstractContent::itemChange(GraphicsItemChange change, const QVariant &
 				qDebug() << "AbstractContent::itemChange: " << modelItem()->itemName() << " ItemPositionHasChanged:"<<value;
 			if(m_mirrorItem)
 				m_mirrorItem->sourceMoved();
-			
+
 			//syncToModelItem(modelItem());
 			break;
-	
+
 		// notify about graphics changes
 		case ItemSelectedHasChanged:
 			if(DEBUG_ABSTRACTCONTENT)
 				qDebug() << "AbstractContent::itemChange: " << modelItem()->itemName() << " ItemSelectedHasChanged:"<<value;
 			setControlsVisible(value.toBool() ? true : false);
-	
+
 		case ItemTransformHasChanged:
 		case ItemEnabledHasChanged:
-		
+
 		case ItemParentHasChanged:
 #if QT_VERSION >= 0x040500
 		case ItemOpacityHasChanged:
@@ -742,7 +740,7 @@ QVariant AbstractContent::itemChange(GraphicsItemChange change, const QVariant &
 			//syncToModelItem(modelItem());
 			GFX_CHANGED();
 			break;
-	
+
 		case ItemZValueHasChanged:
 			//syncToModelItem(modelItem());
 			if(DEBUG_ABSTRACTCONTENT)
@@ -750,7 +748,7 @@ QVariant AbstractContent::itemChange(GraphicsItemChange change, const QVariant &
 			if(m_mirrorItem)
 				m_mirrorItem->setZValue(zValue());
 			break;
-	
+
 		case ItemVisibleHasChanged:
 			if(DEBUG_ABSTRACTCONTENT)
 				qDebug() << "AbstractContent::itemChange: " << modelItem()->itemName() << " ItemVisibleHasChanged:"<<value;
@@ -758,13 +756,13 @@ QVariant AbstractContent::itemChange(GraphicsItemChange change, const QVariant &
 			if(m_mirrorItem)
 				m_mirrorItem->setVisible(isVisible());
 			break;
-	
+
 		default:
 			break;
 	}
-	
+
 	// ..or just apply the value
-	
+
 	QVariant otherVal = QGraphicsItem::itemChange(change, value);
 	return retValOverride ? retVal : otherVal;
 }
@@ -779,7 +777,7 @@ void AbstractContent::slotConfigure()
 
 void AbstractContent::slotStackFront()
 {
-	
+
     emit changeStack(1);
     syncToModelItem(0);
 }
@@ -809,31 +807,31 @@ void AbstractContent::slotSaveAs()
 		return;
 	if (QFileInfo(fileName).suffix().isEmpty())
 		fileName += ".png";
-	
+
 	// find out the Transform chain to mirror a rotated item
 	QRectF sceneRectF = mapToScene(boundingRect()).boundingRect();
 	QTransform tFromItem = transform() * QTransform(1, 0, 0, 1, pos().x(), pos().y());
 	QTransform tFromPixmap = QTransform(1, 0, 0, 1, sceneRectF.left(), sceneRectF.top());
 	QTransform tItemToPixmap = tFromItem * tFromPixmap.inverted();
-	
+
 	// render on the image
 	int iHeight = (int)sceneRectF.height();
 	if (m_mirrorItem)
 		iHeight += (int)m_mirrorItem->boundingRect().height();
 	QImage image((int)sceneRectF.width(), iHeight, QImage::Format_ARGB32);
 	image.fill(Qt::transparent);
-	
+
 	// enable hi-q rendering
 	bool prevHQ = RenderOpts::HQRendering;
 	RenderOpts::HQRendering = true;
-	
+
 	// draw the transformed item onto the pixmap
 	QPainter p(&image);
 	p.setRenderHint(QPainter::Antialiasing, true);
 	p.setRenderHint(QPainter::SmoothPixmapTransform, true);
 	p.setTransform(tItemToPixmap);
 	paint(&p, 0, 0);
-	if (m_mirrorItem) 
+	if (m_mirrorItem)
 	{
 		p.resetTransform();
 		p.translate(0, (qreal)((int)sceneRectF.height()));
@@ -841,9 +839,9 @@ void AbstractContent::slotSaveAs()
 	}
 	p.end();
 	RenderOpts::HQRendering = prevHQ;
-	
+
 	// save image and check errors
-	if (!image.save(fileName) || !QFile::exists(fileName)) 
+	if (!image.save(fileName) || !QFile::exists(fileName))
 	{
 		QMessageBox::warning(0, tr("File Error"), tr("Error saving the Object to '%1'").arg(fileName));
 		return;
@@ -864,9 +862,9 @@ void AbstractContent::layoutChildren()
 	// layout corners
 	foreach (CornerItem * corner, m_cornerItems)
 		corner->relayout(m_contentsRect);
-	
+
 	// layout buttons even if no frame
-	if (!m_frame) 
+	if (!m_frame)
 	{
 		int right = (int)m_frameRect.right() - 12;
 		int bottom = (int)m_frameRect.bottom() + 2; // if no frame, offset the buttons a little on bottom
@@ -877,10 +875,10 @@ void AbstractContent::layoutChildren()
 		}
 		return;
 	}
-	
+
 	// layout all controls
 	m_frame->layoutButtons(m_controlItems, m_frameRect.toRect());
-	
+
 	// layout text, if present
 	if (m_frameTextItem)
 		m_frame->layoutText(m_frameTextItem, m_frameRect.toRect());
@@ -897,7 +895,7 @@ void AbstractContent::slotPerspective(const QPointF & sceneRelPoint, Qt::Keyboar
 {
 	if (modifiers & Qt::ControlModifier)
 		return slotClearPerspective();
-	
+
 	double k = 0.2;
 	if (modifiers != Qt::NoModifier)
 		k = 0.5;

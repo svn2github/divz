@@ -47,20 +47,20 @@ TextBoxContent::TextBoxContent(QGraphicsScene * scene, QGraphicsItem * parent)
     , m_textCache(0)
 {
 	m_dontSyncToModel = true;
-	
+
 	setFrame(0);
 	setFrameTextEnabled(false);
 	setToolTip(tr("Right click to Edit the text"));
-	
+
 	// create a text document
 	m_text = new QTextDocument(this);
 	// for drawing the shadow
 	m_shadowText = new QTextDocument(this);
-	
+
 	#if QT_VERSION >= 0x040500
 		m_textMargin = (int)m_text->documentMargin();
 	#endif
-	
+
 	// template text
 	QFont font;
 	#ifdef Q_OS_WIN
@@ -70,19 +70,19 @@ TextBoxContent::TextBoxContent(QGraphicsScene * scene, QGraphicsItem * parent)
 	m_text->setDefaultFont(font);
 	m_text->setPlainText(tr("right click to edit..."));
 	setHtml(m_text->toHtml());
-	
+
 	// shape editor
 // 	m_shapeEditor = new BezierCubicItem(this);
 // 	m_shapeEditor->setVisible(false);
 // 	m_shapeEditor->setControlPoints(QList<QPointF>() << QPointF(-100, -50) << QPointF(-10, 40) << QPointF(100, -50) << QPointF(100, 50));
 // 	connect(m_shapeEditor, SIGNAL(shapeChanged(const QPainterPath &)), this, SLOT(setShapePath(const QPainterPath &)));
-	
-	
+
+
 	//connect(this, SIGNAL(resized()), this, SLOT(delayContentsResized()));
-	
+
 	for(int i=0;i<m_cornerItems.size();i++)
 		m_cornerItems.at(i)->setDefaultLeftOp(CornerItem::Scale);
-		
+
 	m_dontSyncToModel = false;
 }
 
@@ -110,33 +110,36 @@ void TextBoxContent::setHtml(const QString & htmlCode)
 	updateTextConstraints();
         //qDebug("Calling syncToModelItem");
 	syncToModelItem(0);
-	
+
 	// Apply outline pen to the html
 	QTextCursor cursor(m_text);
 	cursor.select(QTextCursor::Document);
-	
+
 	QTextCharFormat format;
-	
+
 	QPen p = modelItem() ? modelItem()->outlinePen() : QPen(Qt::black,1.5);
 	p.setJoinStyle(Qt::MiterJoin);
-	
+
 	format.setTextOutline(p);
 	format.setForeground(modelItem() ? modelItem()->fillBrush() : Qt::white);
-	
+
 	cursor.mergeCharFormat(format);
-	
+
 	// Setup the shadow text formatting if enabled
 	if(modelItem() && modelItem()->shadowEnabled())
 	{
 		QTextCursor cursor(m_shadowText);
 		cursor.select(QTextCursor::Document);
-		
+
 		QTextCharFormat format;
 		format.setTextOutline(Qt::NoPen);
 		format.setForeground(modelItem() ? modelItem()->shadowBrush() : Qt::black);
-		
+
 		cursor.mergeCharFormat(format);
 	}
+
+	delete m_textCache;
+	m_textCache = 0;
 }
 
 void TextBoxContent::setXTextAlign(Qt::Alignment x)
@@ -154,7 +157,7 @@ void TextBoxContent::setYTextAlign(Qt::Alignment y)
         updateTextConstraints();
         syncToModelItem(0);
 }
-	
+
 bool TextBoxContent::hasShape() const
 {
 	return !m_shapePath.isEmpty();
@@ -175,30 +178,30 @@ bool TextBoxContent::isShapeEditing() const
 
 void TextBoxContent::setShapeEditing(bool enabled)
 {
-// 	if (enabled) 
+// 	if (enabled)
 // 	{
 // 		// shape editor on
-// 		if (!m_shapeEditor->isVisible()) 
+// 		if (!m_shapeEditor->isVisible())
 // 		{
 // 			m_shapeEditor->show();
 // 			emit notifyShapeEditing(true);
 // 		}
-// 	
+//
 // 		// begin new shape
-// 		if (!hasShape()) 
+// 		if (!hasShape())
 // 		{
 // 			// use caching only when drawing shaped [disabled because updates are wrong when cached!]
 // 			//setCacheMode(enabled ? QGraphicsItem::DeviceCoordinateCache : QGraphicsItem::NoCache);
-// 		
+//
 // 			// use new shape
 // 			setShapePath(m_shapeEditor->shape());
 // 			emit notifyHasShape(true);
 // 		}
-// 	} 
-// 	else 
+// 	}
+// 	else
 // 	{
 // 		// shape editor off
-// 		if (m_shapeEditor->isVisible()) 
+// 		if (m_shapeEditor->isVisible())
 // 		{
 // 			m_shapeEditor->hide();
 // 			emit notifyShapeEditing(false);
@@ -209,14 +212,14 @@ void TextBoxContent::setShapeEditing(bool enabled)
 QWidget * TextBoxContent::createPropertyWidget()
 {
 	TextProperties * p = new TextProperties();
-	
+
 	// common properties
 	connect(p->bFront, SIGNAL(clicked()), this, SLOT(slotStackFront()));
 	connect(p->bRaise, SIGNAL(clicked()), this, SLOT(slotStackRaise()));
 	connect(p->bLower, SIGNAL(clicked()), this, SLOT(slotStackLower()));
 	connect(p->bBack, SIGNAL(clicked()), this, SLOT(slotStackBack()));
 	connect(p->bDel, SIGNAL(clicked()), this, SIGNAL(deleteItem()), Qt::QueuedConnection);
-	
+
 	// shape properties
 	p->bEditShape->setChecked(isShapeEditing());
 	connect(this, SIGNAL(notifyShapeEditing(bool)), p->bEditShape, SLOT(setChecked(bool)));
@@ -224,7 +227,7 @@ QWidget * TextBoxContent::createPropertyWidget()
 	p->bClearShape->setVisible(hasShape());
 	connect(this, SIGNAL(notifyHasShape(bool)), p->bClearShape, SLOT(setVisible(bool)));
 	connect(p->bClearShape, SIGNAL(clicked()), this, SLOT(clearShape()));
-	
+
 	return p;
 }
 
@@ -233,25 +236,25 @@ void TextBoxContent::syncFromModelItem(AbstractVisualItem *model)
         m_dontSyncToModel = true;
 	if(!modelItem())
 		setModelItem(model);
-	
+
 	static int x = 0;
 	x++;
 	//qDebug() << x<<": TextBoxContent::syncFromModelItem() mark";
 	QFont font;
 	TextItem * textModel = dynamic_cast<TextItem*>(model);
-	
+
 	if(textModel->text().indexOf('<') < 0)
 	{
 		m_text->setPlainText(textModel->text());
 		textModel->setText(m_text->toHtml());
 	}
 	setHtml(textModel->text());
-	
+
 	font.setFamily(textModel->fontFamily());
 	font.setPointSize((int)textModel->fontSize());
 	m_text->setDefaultFont(font);
-	
-	
+
+
 // 	bool shapeEnabled = textModel->shapeEnabled();
 // 	if (shapeEnabled)
 // 	{
@@ -263,21 +266,21 @@ void TextBoxContent::syncFromModelItem(AbstractVisualItem *model)
 // 		points << textModel->shapePoint4();
 // 		m_shapeEditor->setControlPoints(points);
 // 	}
-	
+
 	setXTextAlign(textModel->xTextAlign());
 	setYTextAlign(textModel->yTextAlign());
-	
+
 	AbstractContent::syncFromModelItem(model);
-	
+
         m_dontSyncToModel = false;
 }
 
 AbstractVisualItem * TextBoxContent::syncToModelItem(AbstractVisualItem *model)
 {
 	TextItem * textModel = dynamic_cast<TextItem*>(AbstractContent::syncToModelItem(model));
-	
+
 	setModelItemIsChanging(true);
-	
+
 	if(!textModel)
 	{
 		setModelItemIsChanging(false);
@@ -289,7 +292,7 @@ AbstractVisualItem * TextBoxContent::syncToModelItem(AbstractVisualItem *model)
 	textModel->setFontFamily(m_text->defaultFont().family());
 	textModel->setFontSize(m_text->defaultFont().pointSize());
  	textModel->setShapeEnabled(hasShape());
-// 	if (hasShape()) 
+// 	if (hasShape())
 // 	{
 // 		QList<QPointF> cp = m_shapeEditor->controlPoints();
 // 		textModel->setShapePoint1(cp[0]);
@@ -297,12 +300,12 @@ AbstractVisualItem * TextBoxContent::syncToModelItem(AbstractVisualItem *model)
 // 		textModel->setShapePoint3(cp[3]);
 // 		textModel->setShapePoint4(cp[4]);
 // 	}
-// 	
+//
 	textModel->setXTextAlign(xTextAlign());
 	textModel->setYTextAlign(yTextAlign());
-	
+
 	setModelItemIsChanging(false);
-	
+
 	return model;
 }
 
@@ -316,7 +319,7 @@ QPixmap TextBoxContent::renderContent(const QSize & size, Qt::AspectRatioMode /*
 			th = textSize.height();
 	if (w < 2 || h < 2 || tw < 2 || th < 2)
 		return QPixmap();
-	
+
 	// draw text (centered, maximized keeping aspect ratio)
 	float scale = qMin(w / (tw + 16), h / (th + 16));
 	QPixmap pix(size);
@@ -334,8 +337,8 @@ int TextBoxContent::contentHeightForWidth(int width) const
 	// if no text size is available, use default
 	if (m_textRect.width() < 1 || m_textRect.height() < 1)
 		return AbstractContent::contentHeightForWidth(width);
-		
-	
+
+
 	m_text->setTextWidth(width);
 	QSizeF sz = m_text->documentLayout()->documentSize();
       	m_text->setTextWidth(contentsRect().width());
@@ -359,13 +362,13 @@ void TextBoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * 
 {
 	// paint parent
 	AbstractContent::paint(painter, option, widget);
-	
+
 	painter->save();
-	
+
 	//TODO should we clip to the rect or FORCE resize the rect? probably clip...
 	painter->setClipRect(contentsRect());
 	painter->translate(contentsRect().topLeft()); // + QPoint(p.width(),p.width()));
-	
+
 	bool pixmapReset = false;
 	if(!m_textCache || m_textCache->size() != contentsRect().size())
 	{
@@ -374,7 +377,7 @@ void TextBoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * 
 		m_textCache = new QPixmap(contentsRect().size());
 		pixmapReset = true;
 	}
-	
+
 	// The primary and only reason we cache the text rendering is inorder
 	// to paint the text and shadow as a single unit (e.g. composite the
 	// shadow+text BEFORE applying opacity rather than setting the opacity
@@ -386,27 +389,49 @@ void TextBoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * 
 	{
 		m_cacheScaleX = tx.m11();
 		m_cacheScaleY = tx.m22();
-		
+
 		m_textCache->fill(Qt::transparent);
 		QPainter textPainter(m_textCache);
-		
+
 		QAbstractTextDocumentLayout::PaintContext pCtx;
-		
+
 		if(modelItem()->shadowEnabled())
 		{
 			textPainter.save();
-			
+
 			textPainter.translate(modelItem()->shadowOffsetX(),modelItem()->shadowOffsetY());
 			m_shadowText->documentLayout()->draw(&textPainter, pCtx);
-			
+
 			textPainter.restore();
 		}
-	
+
 		m_text->documentLayout()->draw(&textPainter, pCtx);
 	}
-	
+
 	painter->drawPixmap(0,0,*m_textCache);
-		
+
+
+
+
+
+
+	if(sceneContextHint() == MyGraphicsScene::Editor &&
+		m_text->toPlainText().trimmed() == "")
+	{
+		QPen p = modelItem() ? modelItem()->outlinePen() : QPen(Qt::black,1.5);
+		painter->setPen(p);
+		painter->setBrush(Qt::NoBrush);
+
+		painter->drawRect(QRect(QPoint(0,0),contentsRect().size()));
+	}
+
+
+
+
+
+
+
+
 	painter->restore();
 }
 
@@ -414,7 +439,7 @@ void TextBoxContent::updateShadowClipPath()
 {
 // 	QPainterPath clipPath;
 // 	clipPath.addRect(QRectF(0,0,contentsRect().width(),contentsRect().height()));
-// 	
+//
 // 	m_shadowClipPath = clipPath.subtracted(m_textPath);
 }
 
@@ -427,14 +452,14 @@ void TextBoxContent::setShapePath(const QPainterPath & path)
 {
 // 	if (path == m_shapePath)
 // 		return;
-// 	
+//
 // 	// invalidate rectangles
 // 	m_textRect = QRect();
 // 	m_shapeRect = QRect();
-// 	
+//
 // 	// set new path
 // 	m_shapePath = path;
-// 	
+//
 // 	// regenerate text layouting
 // 	updateTextConstraints();
 }
@@ -444,18 +469,18 @@ void TextBoxContent::updateTextConstraints(int w)
 {
 	if(!m_text)
 		return;
-		
+
 	int textWidth = w;
 	if(w < 0)
 		textWidth = contentsRect().width();
-	
+
 	if(DEBUG_LAYOUT)
 		qDebug("updateTextConstraints() BEGIN (width: %d)",textWidth);
-		
-	
+
+
 	m_text->setTextWidth(textWidth);
 	m_shadowText->setTextWidth(textWidth);
-	
+
 	QSizeF sz = m_text->documentLayout()->documentSize();
       	m_textRect = QRect(QPoint(0,0),sz.toSize());
 
@@ -465,8 +490,10 @@ void TextBoxContent::updateTextConstraints(int w)
 		// the width alone.
 		bool changed = false;
 		QRect newRect = contentsRect();
-		if(m_textRect.height() != newRect.height())
+		if(m_textRect.height() > newRect.height())
 		{
+			// Changed from "!=" comparrison to ">" inorder to not mess up song slide templates
+			// - JB 20091011
 			newRect.setHeight(m_textRect.height());
 			changed = true;
 		}
@@ -479,9 +506,9 @@ void TextBoxContent::updateTextConstraints(int w)
 		{
 			AbstractContent::resizeContents(newRect);
 		}
-	
+
 	}
-	
+
 	updateShadowClipPath();
 }
 

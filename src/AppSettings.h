@@ -20,7 +20,19 @@ public:
 
 	static bool useOpenGL() { return m_useOpenGL; }
 	static void setUseOpenGL(bool);
-	
+
+	static QSizeF gridSize() { return m_gridSize; }
+	static void setGridSize(QSizeF);
+
+	static bool gridEnabled() { return m_gridEnabled; }
+	static void setGridEnabled(bool);
+
+	static bool thirdGuideEnabled() { return m_thirdGuideEnabled; }
+	static void setThirdGuideEnabled(bool);
+
+	static QPointF snapToGrid(QPointF);
+
+
 	static double liveAspectRatio() { return m_liveAspect; }
 // 	static double currentDocumentAspectRatio() { return m_docAspect; }
 // 	static QRect standardSceneRect(double aspectRatio = -1);
@@ -34,10 +46,14 @@ private:
 	static void setupSystemPresetOutputs();
 	static void loadOutputs(QSettings*);
 	static void saveOutputs(QSettings*);
-	
+
 	static QList<Output*> m_outputs;
 	static bool m_useOpenGL;
-	
+
+	static QSizeF m_gridSize;
+	static bool m_gridEnabled;
+	static bool m_thirdGuideEnabled;
+
 	static double m_liveAspect;
 // 	static double m_docAspect;
 };

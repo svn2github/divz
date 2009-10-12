@@ -52,18 +52,6 @@ Revised Task list for Release 1.0, 10/10/09:
 	- Visuals:
 		[DONE] - Add Aspect Ratio setting
 		[DONE] - Text Centering in a Text Box
-		[LATER?] - Undo/redo framework
-			- Must have this for sermons and announcment slides
-		[*] - Snap to grid support
-		[*] - Increse/decrease size of font from toolbar - needed for sermon/announcment
-			- see code in textboxcontent.cpp for cursor usage
-		- Copy/paste or duplicate slides
-		- Layout asissts - center objects vert/horz
-			- need hint for this (e.g. songs) to auto adjust - maybe?
-		- Image Item
-			- Should be easy
-			- If we have time, add crop handles
-		- SVG Item if we have time
 		[DONE] - Cross Fade on Changing Slide
 			[DONE] - Important Point:
 				[DONE] - Need to abstract video source/decoder to a "singleton" 
@@ -79,17 +67,36 @@ Revised Task list for Release 1.0, 10/10/09:
 			[DONE] - Add background item type & Position automatically, Disable movement
 			[DONE] - Still cant set item color/props with config box
 		[LATER] - Gradients - can settle for making gradients in gimp and import as photo, but need to eventually have support direclty in dviz
+		[LATER?] - Undo/redo framework
+			- Must have this for sermons and announcment slides
+		[ALMOST] - Snap to grid support
+			- need to add form UI
+		[*] - Increse/decrease size of font from toolbar - needed for sermon/announcment
+			- see code in textboxcontent.cpp for cursor usage
+		- Copy/paste or duplicate slides
+		- Layout asissts - center objects vert/horz
+			- need hint for this (e.g. songs) to auto adjust - maybe?
+		- Image Item
+			- Should be easy
+			- If we have time, add crop handles
+		- SVG Item if we have time
 	
 	- Improvements:
+		[*] - In-flight edits
+			- need to add specific framework for this
+		Need to add form to config snap to grid
+		Need to integrate appsettings::thirdguidenabled to mygraphicscene
+		Need to have a reset template button
 		Auto-change slides/slide groups after X seconds
 		Need to add drag-drop from song list to song group
 		Add outputview objects to encapsulate slidegroupviewer or network client/server
 		Crop handles should be easy - as move left in, move X out. Basically keep the image rect the same (or add negative offsets)
 		On first start, intelligently detect aspect ratio of primary output - if no primary out, create small custom rect in top right
-		Global cache pixmaps
+		Global cache pixmaps of doc/slide lists 
 		Consider moving opengl option to a per-output setting
 		Consider making Output objects QObjects that can emit signals when changed
-		Update QVideo to use QAudioOutput in qtmultimedia tree to play audio in video files
+		Save song templates/bg in a "template collection"
+		Add drag/drop background for songs from a yet-to-be-made vid/image bg pallette
 		
 		[DONE] Need to implement song editor
 		[DONE] Look at setting char format thru cursor and using text document to render
@@ -97,20 +104,33 @@ Revised Task list for Release 1.0, 10/10/09:
 		[REJECTED] Need to change double click on song list to send straight to live
 		[REJECTED] Add editing to slide group/slide model lists in the list itself (e.g. to change slide/group title)
 		[LATER] Audio with videos
+				Update QVideo to use QAudioOutput in qtmultimedia tree to play audio in video files
 		[LATER] Per-verse custom slides - key to header OR passage#
 		[LATER] Master overlay - add "disable master overlay" to slide group option box
 		[LATER] Script plugin item
 		
 	- Bugs:
+		Crossfading slides with identical content seems to "dim" just slightly for a moment
+				caused by fact that each items opacity fades individually on the scene so the bg "shows thru" the text until fully opaqe while crossfading
+				possible fix: seperate fade roots for background content vs non-background content
+		Backgrounds in per-verse slides dont work consistently (sometimes override, sometimes master shows thru)
+		Text editor in slide still white sometimes
 		Need better method of managing song regexps - right now the filters exist in the pixmap generation routines, the editor window, and the slide group!!
 		Visual item's QColor toxml routines dont save alpha channel!
 		On windows, when setting video item live, it doesnt play unless you dbl-click the slide again
 		Win32: If blank document "<document/>", crash when add group then click group
 		Win32: File->New crashes
 				probably fixed, need to verify 
+				Nope! Still need work.
+				Crashes even with non-live items
 		Auto-sizing song text should be an option that can be enabled/disabled
 		Perfomance of the document pixmap model generator becomes a problem with a lot of songs - need to investigate - possibly use different cache key
 		
+		[FIXED] Need to ignore height of song textbox in template
+				Fixed underlying problem - Compensated by enlarging textbox if needed, but not shrinking textbox
+		[FIXED] Editing text doesnt update slide editor slide until close editor and reopen
+				had to delete cached rendered text pixmap (delete m_text and update graphics, regenerating cached pixmap)
+		[FIXED] In SongGroup, define "first textbox" by z value - current def is too arbitrary (relies on order of items added)
 		[FIXED] In item config dialog, video "play" button does nothing - hide for later revs
 		[FIXED] Starting new results in incorrect AR for "new" doc - doc should adopt current live AR
 				Added liveAspectRatio method to app settings and routines to search outputs by tag

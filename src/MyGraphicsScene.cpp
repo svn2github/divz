@@ -169,14 +169,17 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans)
 		
 		// start with faderoot fully visible, and live root invisible, then cross fade between the two
 		// UPDATE: flip faderoot behind now
-		
+
+		m_fadeStepCounter = 0;
+		m_fadeSteps = 30;
+		int ms = 250  / m_fadeSteps;
+		m_fadeTimer->start(ms); //ms);
+
+		double inc = (double)1 / m_fadeSteps;
+
 		m_fadeRoot->setOpacity(1);
 		m_liveRoot->setOpacity(0);
-		
-		m_fadeStepCounter = 0;
-		m_fadeSteps = 30/4;
-		int ms = 500  / m_fadeSteps;
-		m_fadeTimer->start(ms); //ms);
+
 // 		if(DEBUG_MYGRAPHICSSCENE)
 // 			qDebug() << "MyGraphicsScene::setSlide(): Starting fade timer for "<<ms<<"ms";
 		
