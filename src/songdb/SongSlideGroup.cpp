@@ -115,11 +115,18 @@ bool SongSlideGroup_itemZCompare(AbstractItem *a, AbstractItem *b)
 
 void SongSlideGroup::textToSlides(SongTextFilter filter)
 {
-	static QString slideHeader = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\"><html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">p, li { white-space: pre-wrap; }</style></head><body style=\"font-family:'Tahoma, Sans Serif'; font-size:9pt; font-weight:400; font-style:normal;\">";
+	static QString slideHeader = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">"
+				     "<html>"
+				     "<head><meta name=\"qrichtext\" content=\"1\" />"
+				     "<style type=\"text/css\">p, li { white-space: pre-wrap; }</style>"
+				     "</head>"
+				     "<body style=\"font-family:'Tahoma, Sans Serif'; font-size:9pt; font-weight:400; font-style:normal;\">";
+	static QString linePrefix  = "<p align=\"center\" style=\"margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">"
+				     "<span style=\" font-family:'Tahoma, Sans-Serif'; font-size:32pt; font-weight:800;\">";
+	static QString lineSuffix =  "</span>"
+				     "</p>";
 	static QString slideFooter = "</body></html>";
-	static QString linePrefix = "<p align=\"center\" style=\"margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:'Tahoma, Sans-Serif'; font-size:32pt; font-weight:800;\">";
-	static QString lineSuffix = "</span></p>";
-
+	
 	QString text = m_text.replace("\r\n","\n");
 	QStringList list = text.split("\n\n");
 
@@ -282,7 +289,7 @@ void SongSlideGroup::textToSlides(SongTextFilter filter)
 		}
 		html << slideFooter;
 
-		// Run a basic algorithim to find the max font size to fit inside this screen
+		// Run a basic algorithim to find the max font size to fit inside this text rectangle (textRect)
 		QString htmlStr = html.join("");
 		QRectF textRect = MainWindow::mw() ? MainWindow::mw()->standardSceneRect() : FALLBACK_SCREEN_RECT;
 		if(textboxFromTemplate)
@@ -330,17 +337,18 @@ void SongSlideGroup::textToSlides(SongTextFilter filter)
 		htmlStr = lastGoodHtml;
 		text->setText(htmlStr);
 
-		// Center text on screen
-		if(boxHeight > -1)
-		{
-			qreal y = textRect.height()/2 - boxHeight/2;
-			//qDebug() << "centering: boxHeight:"<<boxHeight<<", textRect height:"<<textRect.height()<<", centered Y:"<<y;
-			textRect = QRectF(0,y,textRect.width(),boxHeight);
-		}
-
 		// Finalize setup
 		if(!textboxFromTemplate)
 		{
+			
+			// Center text on screen
+			if(boxHeight > -1)
+			{
+				qreal y = textRect.height()/2 - boxHeight/2;
+				//qDebug() << "centering: boxHeight:"<<boxHeight<<", textRect height:"<<textRect.height()<<", centered Y:"<<y;
+				textRect = QRectF(0,y,textRect.width(),boxHeight);
+			}
+
 			text->setPos(QPointF(0,0));
 			text->setContentsRect(textRect);
 			text->setOutlinePen(pen);
@@ -352,15 +360,7 @@ void SongSlideGroup::textToSlides(SongTextFilter filter)
 		}
 
 		slide->setSlideNumber(slideNbr++);
-
-		//qDebug()<<"SongSlideGroup::textToSlides(): slideNbr:"<<slideNbr<<": Items in final slide:";
-
-		QList<AbstractItem *> items = slide->itemList();
-		foreach(AbstractItem * item, items)
-		{
-			//qDebug()<<"SongSlideGroup::textToSlides(): slideNbr:"<<slideNbr<<": Item:"<<item->itemName();
-		}
-
+		
 		addSlide(slide);
 	}
 }

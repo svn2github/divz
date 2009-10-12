@@ -132,10 +132,7 @@ void BoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * opti
 		
 		qreal penWidth = 0;
 		if(modelItem()->outlineEnabled())
-		{
 			penWidth = modelItem()->outlinePen().widthF();
-		}
-			
 			
 		painter->setPen(Qt::NoPen);
 		painter->setBrush(modelItem() ? modelItem()->shadowBrush() : Qt::black);
@@ -145,8 +142,15 @@ void BoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * opti
 		x += x == 0 ? 0 : x>0 ? penWidth : -penWidth;
 		y += y == 0 ? 0 : y>0 ? penWidth : -penWidth;
 		//qDebug() << "Boxshadow: "<<x<<","<<y;
-		painter->translate(x,y);
 		
+// 		QPainterPath clipPath;
+// 		clipPath.addRect(QRectF(0,0,contentsRect().width(),contentsRect().height()));
+// 		
+// 		m_shadowClipPath = clipPath.subtracted(m_textPath);
+// 
+// 
+// 		painter->setClipRect(cRect);
+		painter->translate(x,y);
 		painter->drawRect(cRect);
 		
 		painter->restore();
