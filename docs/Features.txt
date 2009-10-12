@@ -125,6 +125,7 @@ Revised Task list for Release 1.0, 10/10/09:
 				However, remote dviz viewers will have to hook into the slideeditor window's closed() signal to send an updated slide group to the remote viewer OR listen for changes to props and send those changes over the wire
 		
 	- Bugs:
+		Undo/redo of shadow enabled on text box doesn't seem to work
 		F2 with no slidegroup selected in main screen - segfault
 		Add slide, add box, delete slide, undo delete slide, move box - segfault
 				Still segfaulting - gdb gives good trace, but not sure why its segfaulting

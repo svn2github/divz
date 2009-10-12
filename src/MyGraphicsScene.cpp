@@ -172,7 +172,10 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans)
 	
 	if(slide)
 	{
-		disconnect(slide,0,this,0);
+		
+		//qDebug() << "MyGraphicsScene::setSlide(): going to dump slide QObject info:";
+		//slide->dumpObjectInfo();
+		//disconnect(slide,0,this,0);
 		connect(slide,SIGNAL(slideItemChanged(AbstractItem *, QString, QString, QVariant, QVariant)),this,SLOT(slideItemChanged(AbstractItem *, QString, QString, QVariant, QVariant)));
 	}
 	

@@ -805,23 +805,26 @@ public:
 	{ 
 		m_window->ignoreUndoChanged(true);
 		qDebug() << "UndoSlideRemoved::undo: re-adding slide#"<<m_slide->slideNumber();
-		Slide *slide = m_slide->clone();
+		//Slide *slide = m_slide->clone();
+		Slide * slide = m_slide;
 		m_window->slideGroup()->addSlide(slide);
+		qDebug() << "UndoSlideRemoved::undo: Settings slide group and slide to slide#"<<slide->slideNumber();
 		m_window->setSlideGroup(m_window->slideGroup(),slide);
-		delete m_slide;
-		m_slide = slide;
+		qDebug() << "UndoSlideRemoved::undo: Done with undo on slide#"<<slide->slideNumber();
+		//delete m_slide;
+		//m_slide = slide;
 		m_window->ignoreUndoChanged(false);
 	}
 	virtual void redo() 
 	{ 
-		//if(redoCount++ > 0)
-		//{
+ 		if(redoCount++ > 0)
+ 		{
 			//qDebug() << "UndoSlideItemChanged::redo: REDO cmd for "<<m_item->itemName()<<", field:"<<m_field<<", oldValue:"<<m_oldValue<<", newValue:"<<m_value;
 			m_window->ignoreUndoChanged(true);
 			qDebug() << "UndoSlideRemoved::redo: removing slide#"<<m_slide->slideNumber();
 			m_window->slideGroup()->removeSlide(m_slide);
 			m_window->ignoreUndoChanged(false);
-		//}
+		}
 	}
 private:
 	SlideEditorWindow *m_window;

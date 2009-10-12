@@ -238,7 +238,7 @@ AbstractSlideGroupEditor * SlideGroupFactory::newEditor()
 
 QPixmap	SlideGroupFactory::generatePreviewPixmap(SlideGroup *g, QSize iconSize, QRect sceneRect)
 {
-//	return QPixmap();
+	return QPixmap();
 	
 	Slide * slide = g->at(0);
 	if(!slide)

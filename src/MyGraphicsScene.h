@@ -9,7 +9,7 @@
 #include <QPixmap>
 #include <QRect>
 #include <QTime>
-
+#include <QVariant>
 
 
 class AbstractContent;

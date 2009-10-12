@@ -198,7 +198,7 @@ void SlideGroupListModel::slideChanged(Slide *slide, QString slideOperation, Abs
 // 	{
 // 		slideOperation = "add";
 // 	}
-	//qDebug() << "slideChanged: operation:"<<slideOperation;
+	qDebug() << "SlideGroupListModel::slideChanged: operation:"<<slideOperation;
 	
 	if(slideOperation == "remove" || slideOperation == "add")
 	{
@@ -342,7 +342,7 @@ void SlideGroupListModel::setIconSize(QSize sz)
 
 void SlideGroupListModel::generatePixmap(int row)
 {
-// 	return;
+ 	return;
 	Slide * slide = m_sortedSlides.at(row);
 	
 	int icon_w = m_iconSize.width();
