@@ -302,11 +302,11 @@ void VideoFileContent::paint(QPainter * painter, const QStyleOptionGraphicsItem 
  	
 }
 
-QRectF VideoFileContent::boundingRect() const 
-{
-	qreal penWidth = m_modelItem ? m_modelItem->outlinePen().widthF() : 1.0;
-	return AbstractContent::boundingRect().adjusted(-penWidth/2,-penWidth/2,penWidth,penWidth);
-}
+// QRectF VideoFileContent::boundingRect() const 
+// {
+// 	qreal penWidth = m_modelItem ? m_modelItem->outlinePen().widthF() : 1.0;
+// 	return AbstractContent::boundingRect().adjusted(-penWidth/2,-penWidth/2,penWidth,penWidth);
+// }
 
 void VideoFileContent::setPixmap(const QPixmap & pixmap)
 {

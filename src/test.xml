@@ -314,12 +314,12 @@ p, li { white-space: pre-wrap; }
                 <rect>
                     <x>-100</x>
                     <y>-75</y>
-                    <w>764</w>
-                    <h>488</h>
+                    <w>644</w>
+                    <h>118</h>
                 </rect>
                 <pos>
-                    <x>361</x>
-                    <y>214</y>
+                    <x>380</x>
+                    <y>200</y>
                 </pos>
                 <zvalue>-9998</zvalue>
                 <opacity>1</opacity>
@@ -329,7 +329,7 @@ p, li { white-space: pre-wrap; }
                 <fill brush-style="1" video="" image="" brush-color="4278255615" type="1"/>
                 <outline brush-style="1" pen-join="64" pen-width="3" enabled="1" brush-color="4278222976" pen-cap="16" pen-color="4278222976"/>
                 <mirror offset="3" enabled="0"/>
-                <shadow brush-style="1" x="10" y="10" enabled="1" brush-color="4278190080"/>
+                <shadow brush-style="1" x="3" y="3" enabled="1" brush-color="4278190080"/>
             </box>
         </slide>
     </group>

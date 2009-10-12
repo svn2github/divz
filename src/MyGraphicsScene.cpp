@@ -70,8 +70,8 @@ public:
 MyGraphicsScene::MyGraphicsScene(ContextHint hint, QObject * parent)
     : QGraphicsScene(parent)
     , m_slide(0)
-    , m_contextHint(hint)
     , m_fadeTimer(0)
+    , m_contextHint(hint)
 {
 	m_fadeRoot = new RootObject(this);
 	m_fadeRoot->setPos(0,0);
@@ -175,7 +175,7 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans)
 		int ms = 250  / m_fadeSteps;
 		m_fadeTimer->start(ms); //ms);
 
-		double inc = (double)1 / m_fadeSteps;
+// 		double inc = (double)1 / m_fadeSteps;
 
 		m_fadeRoot->setOpacity(1);
 		m_liveRoot->setOpacity(0);

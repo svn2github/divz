@@ -2,41 +2,19 @@
 #define TEXTBOXCONTENT_H
 
 #include "AbstractContent.h"
-class BezierCubicItem;
 class QTextDocument;
 
 #include <QtGui/QTextFragment>
 #include <QPointF>
 #include <QPainterPath>
 
-class TextLineSpec
-{
-	TextLineSpec(QTextFragment tf,QRect r,QString txt) 
-	{ 
-		frag=tf; 
-		rect=r; 
-		text=txt;
-		//path.addText(rect.topLeft(),frag.charFormat().font(),text);
-	}
-	
-	
-protected:
-	friend class TextBoxContent;
-	
-	QTextFragment frag;
-	QString text;
-	QRect rect;
-	//QPainterPath path;
-};
 
 /// \brief TODO
 class TextBoxContent : public AbstractContent
 {
     Q_OBJECT
     Q_PROPERTY(QString html READ toHtml WRITE setHtml)
-    Q_PROPERTY(bool hasShape READ hasShape NOTIFY notifyHasShape)
-    Q_PROPERTY(bool shapeEditing READ isShapeEditing WRITE setShapeEditing NOTIFY notifyShapeEditing)
-    Q_PROPERTY(QPainterPath shapePath READ shapePath WRITE setShapePath)
+
     public:
         TextBoxContent(QGraphicsScene * scene, QGraphicsItem * parent = 0);
         ~TextBoxContent();
@@ -45,21 +23,12 @@ class TextBoxContent : public AbstractContent
         QString toHtml();
         void setHtml(const QString & htmlCode);
 
-        bool hasShape() const;
-        void clearShape();
-
-        bool isShapeEditing() const;
-        void setShapeEditing(bool enabled);
-
-        QPainterPath shapePath() const;
-        void setShapePath(const QPainterPath & path);
-        
-        Qt::Alignment xTextAlign() const { return m_xTextAlign; }
-	Qt::Alignment yTextAlign() const { return m_yTextAlign; }
+//         Qt::Alignment xTextAlign() const { return m_xTextAlign; }
+// 	Qt::Alignment yTextAlign() const { return m_yTextAlign; }
 	
-	void setXTextAlign(Qt::Alignment);
-	void setYTextAlign(Qt::Alignment);
-
+// 	void setXTextAlign(Qt::Alignment);
+// 	void setYTextAlign(Qt::Alignment);
+	
     Q_SIGNALS:
         void notifyHasShape(bool);
         void notifyShapeEditing(bool);
@@ -87,16 +56,10 @@ class TextBoxContent : public AbstractContent
         // ::AbstractContent
         void contentsResized();
         void delayContentsResized();
-        
-    protected:
-//         void layoutText(qreal width, bool storeLineSpecs = true);
          
     private:
         void updateTextConstraints(int w = -1);
-        void updateCache();
-        void applyTextXAlign(Qt::Alignment);
-        void addLineToPath(QPainterPath*);
-        void updateShadowClipPath();
+        //void updateCache();
         
         QPixmap *m_textCache;
         qreal m_cacheScaleX;
@@ -105,22 +68,14 @@ class TextBoxContent : public AbstractContent
         // text document, layouting & rendering
         QTextDocument * m_text;
         QTextDocument * m_shadowText;
-        QList<QRect> m_blockRects;
-        //QList<TextLineSpec> m_lineSpecs;
-        QList<TextLineSpec*> m_currentLine;
+        
+        // TODO are these still used?
         QRect m_textRect;
         int m_textMargin;
 
-        // shape related stuff
-        BezierCubicItem * m_shapeEditor;
-        QPainterPath m_shapePath;
-        QRect m_shapeRect;
-        
-        QPainterPath m_textPath;
-        QPainterPath m_shadowClipPath;
-        
+/*        
         Qt::Alignment m_xTextAlign;
-        Qt::Alignment m_yTextAlign;
+        Qt::Alignment m_yTextAlign;*/
 };
 
 #endif

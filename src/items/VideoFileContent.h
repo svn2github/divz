@@ -8,18 +8,17 @@
 #include "ButtonItem.h"
 
 
-/// \brief TODO
+/// \brief The VideoFileContent class plays videos from disk using the FFMPEG via QVideoProvider.
+
 class VideoFileContent : public AbstractContent
 {
-    Q_OBJECT
-    Q_PROPERTY(QString filename READ filename WRITE setFilename)
-    
+	Q_OBJECT
+	Q_PROPERTY(QString filename READ filename WRITE setFilename)
+
     public:
 	VideoFileContent(QGraphicsScene * scene, QGraphicsItem * parent = 0);
 	~VideoFileContent();
 	
-	QRectF boundingRect() const;
-
     public Q_SLOTS:
 	QString filename() const { return m_filename; }
 	void setFilename(const QString & text);
@@ -45,20 +44,15 @@ class VideoFileContent : public AbstractContent
 	void paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget = 0);
 	
     private:
-//         void updateTextConstraints();
-//         void updateCache();
 
-        // text document, layouting & rendering
-         QString m_filename;
-//         QList<QRect> m_blockRects;
-//         QRect m_textRect;
-//         int m_textMargin;
-         QPixmap m_pixmap;
-         QSize m_imageSize;
-         //QVideo * m_video;
-         QVideoProvider * m_videoProvider;
-         ButtonItem * m_bSwap;
-         bool m_still;
+	QString m_filename;
+	
+	QPixmap m_pixmap;
+	QSize m_imageSize;
+	
+	QVideoProvider * m_videoProvider;
+	ButtonItem * m_bSwap;
+	bool m_still;
 
 };
 

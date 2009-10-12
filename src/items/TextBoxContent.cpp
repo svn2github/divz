@@ -22,29 +22,28 @@
 
 #define DEBUG_LAYOUT 0
 
-static QString trimLeft(QString str)
-{
-	static QRegExp white("\\s");
-	while(white.indexIn(str) == 0)
-	{
-		str = str.right(str.length()-1);
-	}
-	return str;
-}
-
+// static QString trimLeft(QString str)
+// {
+// 	static QRegExp white("\\s");
+// 	while(white.indexIn(str) == 0)
+// 	{
+// 		str = str.right(str.length()-1);
+// 	}
+// 	return str;
+// }
+// 
 
 TextBoxContent::TextBoxContent(QGraphicsScene * scene, QGraphicsItem * parent)
     : AbstractContent(scene, parent, false)
+    , m_textCache(0)
+    , m_cacheScaleX(-1)
+    , m_cacheScaleY(-1)
     , m_text(0)
     , m_shadowText(0)
     , m_textRect(0, 0, 0, 0)
     , m_textMargin(4)
-    , m_shapeEditor(0)
-    , m_xTextAlign(Qt::AlignLeft)
-    , m_yTextAlign(Qt::AlignTop)
-    , m_cacheScaleX(-1)
-    , m_cacheScaleY(-1)
-    , m_textCache(0)
+//     , m_xTextAlign(Qt::AlignLeft)
+//     , m_yTextAlign(Qt::AlignTop)
 {
 	m_dontSyncToModel = true;
 
@@ -71,13 +70,6 @@ TextBoxContent::TextBoxContent(QGraphicsScene * scene, QGraphicsItem * parent)
 	m_text->setPlainText(tr("right click to edit..."));
 	setHtml(m_text->toHtml());
 
-	// shape editor
-// 	m_shapeEditor = new BezierCubicItem(this);
-// 	m_shapeEditor->setVisible(false);
-// 	m_shapeEditor->setControlPoints(QList<QPointF>() << QPointF(-100, -50) << QPointF(-10, 40) << QPointF(100, -50) << QPointF(100, 50));
-// 	connect(m_shapeEditor, SIGNAL(shapeChanged(const QPainterPath &)), this, SLOT(setShapePath(const QPainterPath &)));
-
-
 	//connect(this, SIGNAL(resized()), this, SLOT(delayContentsResized()));
 
 	for(int i=0;i<m_cornerItems.size();i++)
@@ -88,7 +80,6 @@ TextBoxContent::TextBoxContent(QGraphicsScene * scene, QGraphicsItem * parent)
 
 TextBoxContent::~TextBoxContent()
 {
-	//delete m_shapeEditor;
 	delete m_text;
 	delete m_shadowText;
 	if(m_textCache)
@@ -142,7 +133,7 @@ void TextBoxContent::setHtml(const QString & htmlCode)
 	m_textCache = 0;
 }
 
-void TextBoxContent::setXTextAlign(Qt::Alignment x)
+/*void TextBoxContent::setXTextAlign(Qt::Alignment x)
 {
 	m_xTextAlign = x;
         //qDebug()<<"TextBoxContent::setXTextAlign: "<<x;
@@ -157,57 +148,7 @@ void TextBoxContent::setYTextAlign(Qt::Alignment y)
         updateTextConstraints();
         syncToModelItem(0);
 }
-
-bool TextBoxContent::hasShape() const
-{
-	return !m_shapePath.isEmpty();
-}
-
-void TextBoxContent::clearShape()
-{
-	setShapePath(QPainterPath());
-	setShapeEditing(false);
-	emit notifyHasShape(false);
-}
-
-bool TextBoxContent::isShapeEditing() const
-{
-	//return m_shapeEditor->isVisible();
-	return false;
-}
-
-void TextBoxContent::setShapeEditing(bool enabled)
-{
-// 	if (enabled)
-// 	{
-// 		// shape editor on
-// 		if (!m_shapeEditor->isVisible())
-// 		{
-// 			m_shapeEditor->show();
-// 			emit notifyShapeEditing(true);
-// 		}
-//
-// 		// begin new shape
-// 		if (!hasShape())
-// 		{
-// 			// use caching only when drawing shaped [disabled because updates are wrong when cached!]
-// 			//setCacheMode(enabled ? QGraphicsItem::DeviceCoordinateCache : QGraphicsItem::NoCache);
-//
-// 			// use new shape
-// 			setShapePath(m_shapeEditor->shape());
-// 			emit notifyHasShape(true);
-// 		}
-// 	}
-// 	else
-// 	{
-// 		// shape editor off
-// 		if (m_shapeEditor->isVisible())
-// 		{
-// 			m_shapeEditor->hide();
-// 			emit notifyShapeEditing(false);
-// 		}
-// 	}
-}
+*/
 
 QWidget * TextBoxContent::createPropertyWidget()
 {
@@ -220,13 +161,6 @@ QWidget * TextBoxContent::createPropertyWidget()
 	connect(p->bBack, SIGNAL(clicked()), this, SLOT(slotStackBack()));
 	connect(p->bDel, SIGNAL(clicked()), this, SIGNAL(deleteItem()), Qt::QueuedConnection);
 
-	// shape properties
-	p->bEditShape->setChecked(isShapeEditing());
-	connect(this, SIGNAL(notifyShapeEditing(bool)), p->bEditShape, SLOT(setChecked(bool)));
-	connect(p->bEditShape, SIGNAL(toggled(bool)), this, SLOT(setShapeEditing(bool)));
-	p->bClearShape->setVisible(hasShape());
-	connect(this, SIGNAL(notifyHasShape(bool)), p->bClearShape, SLOT(setVisible(bool)));
-	connect(p->bClearShape, SIGNAL(clicked()), this, SLOT(clearShape()));
 
 	return p;
 }
@@ -255,20 +189,8 @@ void TextBoxContent::syncFromModelItem(AbstractVisualItem *model)
 	m_text->setDefaultFont(font);
 
 
-// 	bool shapeEnabled = textModel->shapeEnabled();
-// 	if (shapeEnabled)
-// 	{
-// 		QList<QPointF> points;
-// 		QStringList strPoint;
-// 		points << textModel->shapePoint1();
-// 		points << textModel->shapePoint2();
-// 		points << textModel->shapePoint3();
-// 		points << textModel->shapePoint4();
-// 		m_shapeEditor->setControlPoints(points);
-// 	}
-
-	setXTextAlign(textModel->xTextAlign());
-	setYTextAlign(textModel->yTextAlign());
+// 	setXTextAlign(textModel->xTextAlign());
+// 	setYTextAlign(textModel->yTextAlign());
 
 	AbstractContent::syncFromModelItem(model);
 
@@ -291,24 +213,16 @@ AbstractVisualItem * TextBoxContent::syncToModelItem(AbstractVisualItem *model)
 	textModel->setText(m_text->toHtml());
 	textModel->setFontFamily(m_text->defaultFont().family());
 	textModel->setFontSize(m_text->defaultFont().pointSize());
- 	textModel->setShapeEnabled(hasShape());
-// 	if (hasShape())
-// 	{
-// 		QList<QPointF> cp = m_shapeEditor->controlPoints();
-// 		textModel->setShapePoint1(cp[0]);
-// 		textModel->setShapePoint2(cp[2]);
-// 		textModel->setShapePoint3(cp[3]);
-// 		textModel->setShapePoint4(cp[4]);
-// 	}
-//
-	textModel->setXTextAlign(xTextAlign());
-	textModel->setYTextAlign(yTextAlign());
+
+// 	textModel->setXTextAlign(xTextAlign());
+// 	textModel->setYTextAlign(yTextAlign());
 
 	setModelItemIsChanging(false);
 
 	return model;
 }
 
+	
 QPixmap TextBoxContent::renderContent(const QSize & size, Qt::AspectRatioMode /*ratio*/) const
 {
 	// get the base empty pixmap
@@ -342,14 +256,12 @@ int TextBoxContent::contentHeightForWidth(int width) const
 	m_text->setTextWidth(width);
 	QSizeF sz = m_text->documentLayout()->documentSize();
       	m_text->setTextWidth(contentsRect().width());
-      	return sz.height();
+      	return (int)sz.height();
 }
 
-void TextBoxContent::selectionChanged(bool selected)
+void TextBoxContent::selectionChanged(bool /*selected*/)
 {
-	// hide shape editing controls
-	if (!selected && isShapeEditing())
-		setShapeEditing(false);
+
 }
 
 void TextBoxContent::mouseDoubleClickEvent(QGraphicsSceneMouseEvent * event)
@@ -424,46 +336,9 @@ void TextBoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * 
 
 		painter->drawRect(QRect(QPoint(0,0),contentsRect().size()));
 	}
-
-
-
-
-
-
-
-
+	
 	painter->restore();
 }
-
-void TextBoxContent::updateShadowClipPath()
-{
-// 	QPainterPath clipPath;
-// 	clipPath.addRect(QRectF(0,0,contentsRect().width(),contentsRect().height()));
-//
-// 	m_shadowClipPath = clipPath.subtracted(m_textPath);
-}
-
-QPainterPath TextBoxContent::shapePath() const
-{
-	return m_shapePath;
-}
-
-void TextBoxContent::setShapePath(const QPainterPath & path)
-{
-// 	if (path == m_shapePath)
-// 		return;
-//
-// 	// invalidate rectangles
-// 	m_textRect = QRect();
-// 	m_shapeRect = QRect();
-//
-// 	// set new path
-// 	m_shapePath = path;
-//
-// 	// regenerate text layouting
-// 	updateTextConstraints();
-}
-
 
 void TextBoxContent::updateTextConstraints(int w)
 {
@@ -484,32 +359,23 @@ void TextBoxContent::updateTextConstraints(int w)
 	QSizeF sz = m_text->documentLayout()->documentSize();
       	m_textRect = QRect(QPoint(0,0),sz.toSize());
 
-	if(1)
+	// Adjust the bounding rect *height* to our document wrapped height, but leave
+	// the width alone.
+	bool changed = false;
+	QRect newRect = contentsRect();
+	if(m_textRect.height() > newRect.height())
 	{
-		// Adjust the bounding rect *height* to our document wrapped height, but leave
-		// the width alone.
-		bool changed = false;
-		QRect newRect = contentsRect();
-		if(m_textRect.height() > newRect.height())
-		{
-			// Changed from "!=" comparrison to ">" inorder to not mess up song slide templates
-			// - JB 20091011
-			newRect.setHeight(m_textRect.height());
-			changed = true;
-		}
-	// 	if(m_textRect.width() > newRect.width())
-	// 	{
-	// 		newRect.setWidth(m_textRect.width());
-	// 		changed = true;
-	// 	}
-		if(changed)
-		{
-			AbstractContent::resizeContents(newRect);
-		}
-
+		// Changed from "!=" comparrison to ">" inorder to not mess up song slide templates
+		// - JB 20091011
+		newRect.setHeight(m_textRect.height());
+		changed = true;
+	}
+	
+	if(changed)
+	{
+		AbstractContent::resizeContents(newRect);
 	}
 
-	updateShadowClipPath();
 }
 
 void TextBoxContent::delayContentsResized()
@@ -529,15 +395,12 @@ void TextBoxContent::resizeContents(const QRect & rect, bool keepRatio)
 	AbstractContent::resizeContents(rect,keepRatio);
 	update();
 }
-
+/*
 void TextBoxContent::updateCache()
 {
-    /*
     m_cachePixmap = QPixmap(contentsRect().size());
     m_cachePixmap.fill(QColor(0, 0, 0, 0));
     QPainter painter(&m_cachePixmap);
     painter.setRenderHint(QPainter::Antialiasing);
 
-    ...
-    */
-}
+}*/

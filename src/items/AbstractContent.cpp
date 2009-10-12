@@ -550,7 +550,28 @@ QPixmap AbstractContent::renderContent(const QSize & size, Qt::AspectRatioMode r
 QRectF AbstractContent::boundingRect() const
 {
 	//return QRectF(QPointF(0,0),m_frameRect.size());
-	return m_frameRect;
+	
+	double sx = 0;
+	double sy = 0;
+	qreal penWidth = m_modelItem && m_modelItem->outlineEnabled() ? 
+		m_modelItem->outlinePen().widthF() : 1.0;
+	
+	if(m_modelItem && m_modelItem->shadowEnabled())
+	{
+		sx = m_modelItem->shadowOffsetX();
+		sy = m_modelItem->shadowOffsetY();
+		
+		// compensate for pen width - assum shadow position is contents+pen
+		sx += sx == 0 ? 0 : sx>0 ? penWidth : -penWidth;
+		sy += sy == 0 ? 0 : sy>0 ? penWidth : -penWidth;
+	}
+		
+	return m_frameRect.adjusted(
+		-penWidth/2 + sx<0?sx:0,
+		-penWidth/2 + sy<0?sy:0,
+		 penWidth   + sx>0?sx:0,
+		 penWidth   + sy>0?sy:0
+		);
 }
 
 void AbstractContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * /*option*/, QWidget * /*widget*/)

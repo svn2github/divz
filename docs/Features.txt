@@ -84,6 +84,9 @@ Revised Task list for Release 1.0, 10/10/09:
 	- Improvements:
 		[*] - In-flight edits
 			- need to add specific framework for this
+		Add rounded rectangle item / or round boxcontent corners
+		When searching for song, auto select first result
+		When searching for song and press enter in text field, auto-add first song to list, shift+enter to GO LIVE
 		Need to add form to config snap to grid
 		Need to integrate appsettings::thirdguidenabled to mygraphicscene
 		Need to have a reset template button

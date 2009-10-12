@@ -19,6 +19,7 @@
 
 BoxContent::BoxContent(QGraphicsScene * scene, QGraphicsItem * parent)
     : AbstractContent(scene, parent, false)
+    , m_shadowClipDirty(true)
 //     , m_text(0)
 //     , m_textRect(0, 0, 0, 0)
 //     , m_textMargin(4)
@@ -69,6 +70,7 @@ QWidget * BoxContent::createPropertyWidget()
 void BoxContent::syncFromModelItem(AbstractVisualItem *model)
 {
 	AbstractContent::syncFromModelItem(model);
+	m_shadowClipDirty = true;
 }
 
 AbstractVisualItem * BoxContent::syncToModelItem(AbstractVisualItem *model)
@@ -102,17 +104,7 @@ QPixmap BoxContent::renderContent(const QSize & size, Qt::AspectRatioMode /*rati
 
 int BoxContent::contentHeightForWidth(int width) const
 {
-// 	// if no text size is available, use default
-// 	if (m_textRect.width() < 1 || m_textRect.height() < 1)
-		return AbstractContent::contentHeightForWidth(width);
-//	return (m_textRect.height() * width) / m_textRect.width();
-}
-
-
-QRectF BoxContent::boundingRect() const 
-{
-	qreal penWidth = m_modelItem ? m_modelItem->outlinePen().widthF() : 1.0;
-	return AbstractContent::boundingRect().adjusted(-penWidth/2,-penWidth/2,penWidth,penWidth);
+	return AbstractContent::contentHeightForWidth(width);
 }
 
 
@@ -137,19 +129,16 @@ void BoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * opti
 		painter->setPen(Qt::NoPen);
 		painter->setBrush(modelItem() ? modelItem()->shadowBrush() : Qt::black);
 		
-		int x = modelItem()->shadowOffsetX();
-		int y = modelItem()->shadowOffsetY();
+		double x = modelItem()->shadowOffsetX();
+		double y = modelItem()->shadowOffsetY();
 		x += x == 0 ? 0 : x>0 ? penWidth : -penWidth;
 		y += y == 0 ? 0 : y>0 ? penWidth : -penWidth;
-		//qDebug() << "Boxshadow: "<<x<<","<<y;
 		
-// 		QPainterPath clipPath;
-// 		clipPath.addRect(QRectF(0,0,contentsRect().width(),contentsRect().height()));
-// 		
-// 		m_shadowClipPath = clipPath.subtracted(m_textPath);
-// 
-// 
-// 		painter->setClipRect(cRect);
+		if(m_shadowClipDirty)
+ 			updateShadowClipPath();
+ 			
+ 		painter->setClipPath(m_shadowClipPath);
+ 		
 		painter->translate(x,y);
 		painter->drawRect(cRect);
 		
@@ -188,3 +177,53 @@ void BoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * opti
 	painter->restore();
 }
 
+void BoxContent::updateShadowClipPath()
+{
+	QPainterPath boundingPath;
+		boundingPath.addRect(boundingRect());
+		
+		QPainterPath contentPath;
+		
+		// This outline-only clipping path is very buggy! 
+		// It only "looks" like it works for bottom-right shadows - it cuts off anything
+		// that goes top-left. And, the distance from the top-left sides of the outline
+		// is too big of a gap - should be touching. I'll leave this code in for now,
+		// since its better than nothing, but it needs to be revisited later.
+		if(modelItem()->outlineEnabled() &&
+			modelItem()->fillType() == AbstractVisualItem::None)
+		{
+			// need to "cut hole" in clip path where bg of slide shows thru
+			// e.g. with just an outline, show shadow for all sides of outline,
+			// not just, for example, the bottom right side
+			QPainterPath hole;
+			// assume outline is drawn "around" contents rect
+			QRect holeRect = contentsRect();
+			double x = modelItem()->shadowOffsetX();
+			double y = modelItem()->shadowOffsetY();
+			
+			holeRect = holeRect.adjusted(
+//  				x > 0 ? x : 0,
+//  				y > 0 ? y : 0,
+//  				x * -1,
+//  				y * -1
+				(int)(x * 4), 
+				(int)(y * 4),
+				0,
+				0
+				//-x*2,
+				//-y*2
+			);
+				
+			//qDebug() << "shadow hole: "<<holeRect<<", contents:"<<contentsRect();
+			//hole.addRect(holeRect);
+			//contentPath = contentPath.subtracted(hole);
+			contentPath.addRect(holeRect);
+		}
+		else
+		{
+			contentPath.addRect(contentsRect());
+		}
+		
+	m_shadowClipPath = boundingPath.subtracted(contentPath);
+
+}
