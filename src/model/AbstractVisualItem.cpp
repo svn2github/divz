@@ -63,19 +63,19 @@ AbstractContent * AbstractVisualItem::createDelegate(QGraphicsScene*,QGraphicsIt
 //#define PROPSET (a,b,c) void AbstractVisualItem::set##a(b x){m_##b = x;setChanged(c,x);}
 
 ITEM_PROPSET(AbstractVisualItem, Pos,        QPointF, pos);
-//ITEM_PROPSET(AbstractVisualItem, ContentsRect,QRectF, contentsRect);
+ITEM_PROPSET(AbstractVisualItem, ContentsRect,QRectF, contentsRect);
 
-void AbstractVisualItem::setContentsRect(QRectF r)
-{
-	
-// 	qDebug() << "AbstractVisualItem::setContentsRect: new: " << r;
-// 	qDebug() << "AbstractVisualItem::setContentsRect: current: " << m_contentsRect;
-	//m_contentsRect.setLeft(0);
-	
-	QRectF old = m_contentsRect;
-	m_contentsRect = QRectF(r.left(), r.top(), r.width(), r.height());
-	setChanged("contentsRect",r,old);
-}
+// void AbstractVisualItem::setContentsRect(QRectF r)
+// {
+// 	
+//  	//qDebug() << "AbstractVisualItem::setContentsRect: r:" << r;
+// // 	qDebug() << "AbstractVisualItem::setContentsRect: current: " << m_contentsRect;
+// 	//m_contentsRect.setLeft(0);
+// 	
+// 	QRectF old = m_contentsRect;
+// 	m_contentsRect = QRectF(r.left(), r.top(), r.width(), r.height());
+// 	setChanged("contentsRect",r,old);
+// }
 
 
 ITEM_PROPSET(AbstractVisualItem, IsVisible,  		bool,   isVisible);
@@ -88,6 +88,14 @@ ITEM_PROPSET(AbstractVisualItem, ZRotation,  		double, zRotation);
 ITEM_PROPSET(AbstractVisualItem, Opacity,    		double, opacity);
 
 ITEM_PROPSET(AbstractVisualItem, FillType,		FillType,	fillType);
+// void AbstractVisualItem::setFillType(FillType x)
+// {
+// 	//qDebug() << "AbstractVisualItem::setFillType: x="<<x;
+// 	FillType oldValue = m_fillType;
+// 	m_fillType = x;
+// 	setChanged("fillType",x,oldValue);
+// }
+
 ITEM_PROPSET(AbstractVisualItem, FillBrush,		QBrush,		fillBrush);
 ITEM_PROPSET(AbstractVisualItem, FillImageFile,		QString,	fillImageFile);
 ITEM_PROPSET(AbstractVisualItem, FillVideoFile,		QString,	fillVideoFile);

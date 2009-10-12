@@ -318,8 +318,8 @@ p, li { white-space: pre-wrap; }
                     <h>118</h>
                 </rect>
                 <pos>
-                    <x>380</x>
-                    <y>200</y>
+                    <x>250</x>
+                    <y>140</y>
                 </pos>
                 <zvalue>3</zvalue>
                 <opacity>1</opacity>
@@ -332,19 +332,19 @@ p, li { white-space: pre-wrap; }
                 <shadow brush-style="1" x="3" y="3" enabled="1" brush-color="4278190080"/>
             </box>
             <box>
-                <item-id>2479</item-id>
-                <item-name>BoxItem2479</item-name>
+                <item-id>3203</item-id>
+                <item-name>BoxItem3203</item-name>
                 <rect>
                     <x>-100</x>
                     <y>-75</y>
-                    <w>430</w>
-                    <h>420</h>
+                    <w>650</w>
+                    <h>150</h>
                 </rect>
                 <pos>
-                    <x>270</x>
-                    <y>200</y>
+                    <x>290</x>
+                    <y>320</y>
                 </pos>
-                <zvalue>2</zvalue>
+                <zvalue>4</zvalue>
                 <opacity>1</opacity>
                 <visible>1</visible>
                 <frame-class>0</frame-class>

@@ -45,6 +45,7 @@
 #include "model/ItemFactory.h"
 #include "model/Slide.h"
 #include "model/TextItem.h"
+#include "model/BackgroundItem.h"
 #include "MainWindow.h"
 #include "AppSettings.h"
 
@@ -550,7 +551,7 @@ void SlideEditorWindow::setSlideGroup(SlideGroup *g,Slide *curSlide)
 		
 	//}
 	
-	// Trigger slideItemChange slot connections
+	// Trigger slideItemChange slot connections, but not an undo entry
 	m_ignoreUndoPropChanges = true;
 	QList<Slide*> slist = g->slideList();
 	foreach(Slide *slide, slist)
@@ -643,7 +644,6 @@ QString guessTitle(QString field)
 	{ 
 		if(redoCount++ > 0)
 		{
-			//qDebug() << "UndoSlideItemChanged::redo: REDO cmd for "<<m_item->itemName()<<", field:"<<m_field<<", oldValue:"<<m_oldValue<<", newValue:"<<m_value;
 			m_window->ignoreUndoChanged(true);
 			m_item->setProperty(m_field.toLocal8Bit().constData(),m_value); 
 			m_window->ignoreUndoChanged(false);
@@ -676,12 +676,15 @@ public:
 	UndoSlideItemAdded(SlideEditorWindow *window, Slide *slide, AbstractItem *item)
 		: m_window(window), m_slide(slide), m_item(item), redoCount(0) 
 		{ 
-			setText(QString("Added %1").arg(guessTitle(item->itemName())));
+			setText(QString("Added %1").arg(guessTitle(item->itemName().isEmpty() ? "New Item" : item->itemName())));
 		}
 	
 	virtual void undo() 
 	{ 
 		m_window->ignoreUndoChanged(true);
+		// Todo: not sure why I have to explicitly call removeVisualDelegate here instead of relying on sig/slots to do it, 
+		// but removeItem() doesnt seem to work for this situation unless I call removeVisualDelegate() here as well
+		m_window->scene()->removeVisualDelegate(m_item);
 		m_slide->removeItem(m_item);
 		m_window->ignoreUndoChanged(false);
 	}
@@ -689,7 +692,6 @@ public:
 	{ 
 		if(redoCount++ > 0)
 		{
-			//qDebug() << "UndoSlideItemChanged::redo: REDO cmd for "<<m_item->itemName()<<", field:"<<m_field<<", oldValue:"<<m_oldValue<<", newValue:"<<m_value;
 			m_window->ignoreUndoChanged(true);
 			m_slide->addItem(m_item);
 			m_window->ignoreUndoChanged(false);
@@ -713,10 +715,17 @@ private:
 			setText(QString("Removed %1").arg(guessTitle(item->itemName())));
 		}
 	
+	// We're not going to undo this after it's destroyed, so its safe to delete the item from meory
+	~UndoSlideItemRemoved()
+	{
+		delete m_item;
+		m_item = 0;
+	}
+	
 	virtual void undo() 
 	{ 
 		m_window->ignoreUndoChanged(true);
-		m_slide->removeItem(m_item);
+		m_slide->addItem(m_item);
 		m_window->ignoreUndoChanged(false);
 	}
 	virtual void redo() 
@@ -725,7 +734,7 @@ private:
 		{
 			//qDebug() << "UndoSlideItemChanged::redo: REDO cmd for "<<m_item->itemName()<<", field:"<<m_field<<", oldValue:"<<m_oldValue<<", newValue:"<<m_value;
 			m_window->ignoreUndoChanged(true);
-			m_slide->addItem(m_item);
+			m_slide->removeItem(m_item);
 			m_window->ignoreUndoChanged(false);
 		}
 	}
@@ -742,7 +751,7 @@ public:
 	UndoSlideAdded(SlideEditorWindow *window, Slide *slide)
 		: m_window(window), m_slide(slide), redoCount(0) 
 		{ 
-			setText(QString("Added Slide# %1").arg(slide->slideNumber()));
+			setText(QString("Added Slide# %1").arg(slide->slideNumber()+1));
 		}
 	
 	virtual void undo() 
@@ -767,30 +776,52 @@ private:
 	int redoCount;
 };
 
+// WARNING This command WILL crash dviz if you undo call redo() after undo(), then add an item to that slide - segfault!
+// Need to fix! However, I've got to leave for the day so I'm going to commit this code and work later on it.
+
 class UndoSlideRemoved : public QUndoCommand
 {
 public:
 	UndoSlideRemoved(SlideEditorWindow *window, Slide *slide)
 		: m_window(window), m_slide(slide), redoCount(0) 
 		{ 
-			setText(QString("Removed Slide# %1").arg(slide->slideNumber()));
+			setText(QString("Removed Slide# %1").arg(slide->slideNumber()+1));
+			qDebug() << "UndoSlideRemoved::(): New cmd because you deleted slide#"<<m_slide->slideNumber();
+			
+// 			// we cloned the slide, so we can safely delete the slide now
+// 			delete slide;
+// 			slide = 0;
 		}
+		
+	// We're not going to undo this after it's destroyed, so its safe to delete the slide from meory
+	~UndoSlideRemoved() 
+	{
+		delete m_slide;
+		m_slide = 0;
+	}
+	
 	
 	virtual void undo() 
 	{ 
 		m_window->ignoreUndoChanged(true);
-		m_window->slideGroup()->addSlide(m_slide);
+		qDebug() << "UndoSlideRemoved::undo: re-adding slide#"<<m_slide->slideNumber();
+		Slide *slide = m_slide->clone();
+		m_window->slideGroup()->addSlide(slide);
+		m_window->setSlideGroup(m_window->slideGroup(),slide);
+		delete m_slide;
+		m_slide = slide;
 		m_window->ignoreUndoChanged(false);
 	}
 	virtual void redo() 
 	{ 
-		if(redoCount++ > 0)
-		{
+		//if(redoCount++ > 0)
+		//{
 			//qDebug() << "UndoSlideItemChanged::redo: REDO cmd for "<<m_item->itemName()<<", field:"<<m_field<<", oldValue:"<<m_oldValue<<", newValue:"<<m_value;
 			m_window->ignoreUndoChanged(true);
+			qDebug() << "UndoSlideRemoved::redo: removing slide#"<<m_slide->slideNumber();
 			m_window->slideGroup()->removeSlide(m_slide);
 			m_window->ignoreUndoChanged(false);
-		}
+		//}
 	}
 private:
 	SlideEditorWindow *m_window;
@@ -809,11 +840,11 @@ void SlideEditorWindow::slideChanged(Slide *slide, QString slideOperation, Abstr
 {
 	if(slideOperation == "remove")
 	{
-		//qDebug()<<"SlideEditorWindow::slideChanged: (remove), disconnecting from slide#"<<slide->slideNumber();
+		qDebug()<<"SlideEditorWindow::slideChanged: (remove), disconnecting from slide#"<<slide->slideNumber();
 		disconnect(slide,0,this,0);
 		if(!m_ignoreUndoPropChanges)
 		{
-			m_undoStack->push(new UndoSlideRemoved(this,m_scene->slide()));
+			m_undoStack->push(new UndoSlideRemoved(this,slide));
 		}
 	}
 	else
@@ -826,7 +857,7 @@ void SlideEditorWindow::slideChanged(Slide *slide, QString slideOperation, Abstr
 		
 		if(!m_ignoreUndoPropChanges)
 		{
-			m_undoStack->push(new UndoSlideAdded(this,m_scene->slide()));
+			m_undoStack->push(new UndoSlideAdded(this,slide));
 		}
 	}
 	else
@@ -844,7 +875,7 @@ void SlideEditorWindow::slideItemChanged(AbstractItem *item, QString operation, 
 	
 	if(operation == "add")
 	{
-		if(!m_ignoreUndoPropChanges)
+		if(!m_ignoreUndoPropChanges && ! dynamic_cast<BackgroundItem*>(item))
 		{
 			m_undoStack->push(new UndoSlideItemAdded(this,m_scene->slide(),item));
 		}
@@ -931,37 +962,40 @@ void SlideEditorWindow::delSlide()
 {
 	Slide * slide = m_scene->slide();
 	qDebug() << "delSlide: Removing slide#"<<slide->slideNumber();
-	
+	/*
 	QModelIndex idx = m_slideModel->indexForSlide(slide);
 	QModelIndex prev = m_slideModel->indexForRow(idx.row() - 1 > 0 ? idx.row() - 1 : 0);
-	
+	*/
 	m_slideGroup->removeSlide(slide);
+	//m_undoStack->push(new UndoSlideRemoved(this,slide));
 	
+// 	Slide *newSlide = 0;
+// 	if(prev.isValid())
+// 	{
+// 		m_slideListView->setCurrentIndex(prev);
+// 		newSlide = m_slideModel->slideAt(prev.row());
+// 	}
+// 	
+// 	if(newSlide)
+// 	{
+// 		m_scene->setSlide(newSlide);
+// 		setupViewportLines();
+// 	}
+// 	
+// 	QList<Slide*> slides = m_slideGroup->slideList();
+// 	int counter = 0;
+// 	foreach(Slide *s, slides)
+// 	{
+// 		s->setSlideNumber(counter++);
+// 	}
+// 	
+// 	setSlideGroup(m_slideGroup,newSlide);
 	
-	Slide *newSlide = 0;
-	if(prev.isValid())
-	{
-		m_slideListView->setCurrentIndex(prev);
-		newSlide = m_slideModel->slideAt(prev.row());
-	}
-	
-	if(newSlide)
-	{
-		m_scene->setSlide(newSlide);
-		setupViewportLines();
-	}
-	
-	QList<Slide*> slides = m_slideGroup->slideList();
-	int counter = 0;
-	foreach(Slide *s, slides)
-	{
-		s->setSlideNumber(counter++);
-	}
-	
-	setSlideGroup(m_slideGroup,newSlide);
-	
-	delete slide;
-	slide = 0;
+	// Dont delete here, delete when UndoSlideRemoved command is destroyed
+	// change: go ahead, delete - we clone slide above
+	// nope, try not to now
+	//delete slide;
+	//slide = 0;
 }
 
 

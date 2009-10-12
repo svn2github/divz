@@ -17,6 +17,7 @@ Slide::Slide()
 }
 Slide::~Slide() 
 {
+	qDebug() << "Slide::~Slide() - destorying slide";
 	qDeleteAll(m_items);
 }
 

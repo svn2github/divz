@@ -14,9 +14,6 @@ class AbstractVisualItem : public AbstractItem
 {
 	Q_OBJECT
 	
-public:
-	typedef enum FillType { None, Solid, Gradient, Image, Video };
-	
 	Q_PROPERTY(QPointF 	pos          	READ pos 		WRITE setPos);
 	Q_PROPERTY(QRectF  	contentsRect 	READ contentsRect 	WRITE setContentsRect);
 	Q_PROPERTY(bool    	isVisible    	READ isVisible		WRITE setIsVisible);
@@ -44,6 +41,7 @@ public:
 	Q_PROPERTY(double	shadowOffsetY 	READ shadowOffsetY	WRITE setShadowOffsetY);
 	Q_PROPERTY(QBrush	shadowBrush 	READ shadowBrush	WRITE setShadowBrush);
 	
+	Q_ENUMS(FillType);
 	
 	
 	// Brush has:
@@ -62,6 +60,8 @@ public:
 	
 	
 public:
+	typedef enum FillType { None, Solid, Gradient, Image, Video };
+
 	AbstractVisualItem();
 // 	~AbstractVisualItem();
 	

@@ -86,7 +86,6 @@ Revised Task list for Release 1.0, 10/10/09:
 		- SVG Item if we have time
 	
 	- Improvements:
-		
 		Add rounded rectangle item / or round boxcontent corners
 		When searching for song, auto select first result
 		When searching for song and press enter in text field, auto-add first song to list, shift+enter to GO LIVE
@@ -104,6 +103,9 @@ Revised Task list for Release 1.0, 10/10/09:
 		Save song templates/bg in a "template collection"
 		Add drag/drop background for songs from a yet-to-be-made vid/image bg pallette
 		
+		[DONE] Test NOT specialcasing filltype now that we've added the Q_ENUMS macro
+		[DONE] Group together add item commands in an undo group
+				Moved the slide->addItem() call in MyGraphicsScene to after the basic name/id prop sets
 		[DONE] Need to implement song editor
 		[DONE] Look at setting char format thru cursor and using text document to render
 		[DONE] In video content/bg: dont reject image if m_still is set UNLESS also has m_size>0 already
@@ -123,8 +125,13 @@ Revised Task list for Release 1.0, 10/10/09:
 				However, remote dviz viewers will have to hook into the slideeditor window's closed() signal to send an updated slide group to the remote viewer OR listen for changes to props and send those changes over the wire
 		
 	- Bugs:
-		Undo of item removal doesn't work corectly
-		Undo/redo of change fill type doesn't work - probably need to cast to/from int
+		F2 with no slidegroup selected in main screen - segfault
+		Add slide, add box, delete slide, undo delete slide, move box - segfault
+				Still segfaulting - gdb gives good trace, but not sure why its segfaulting
+				Need to commit code for the night - will work more on this later
+		Adding an item to an slide that was removed then readded causes segfault
+				Still segfaulting - gdb gives good trace, but not sure why its segfaulting
+				Need to commit code for the night - will work more on this later
 		Rotating a boxcontent causes very wierd pen width scaling issues in previews
 		Crossfading slides with identical content seems to "dim" just slightly for a moment
 				caused by fact that each items opacity fades individually on the scene so the bg "shows thru" the text until fully opaqe while crossfading
@@ -143,6 +150,19 @@ Revised Task list for Release 1.0, 10/10/09:
 		Auto-sizing song text should be an option that can be enabled/disabled
 		Perfomance of the document pixmap model generator becomes a problem with a lot of songs - need to investigate - possibly use different cache key
 		
+		[FIXED] Undoing "del slide" causes segfault (e.g. trying to re-add slide using undo after deleing the slide)
+				slideeditorwindow was doing 'delete slide' at end of the slot that removed the slide
+				moved the delete slide to the destructor of UndoSlideRemoved action
+		[FIXED] Undo "add slide" removes the wrong slide!
+				logic error - I gave the wrong slide to the UndoSlideAdded action
+		[FIXED] Undo item add never removes the item (goes back to add item, just doesnt remove it)
+				for some reason, we have to call m_window->scene()->removeVisualDelegate() explicitly in the UndoSlideItemAdded::undo() handler
+		[FIXED] Undo of item removal doesn't work corectly
+				undo item removal works now - just swapped method calls around in the command
+		[FIXED] Undo/redo of change fill type doesn't work - probably need to cast to/from int
+				had to special-case the fillType field in the UndoSlideItemChanged command
+				seems QObject::setProperty() never called the property writer for fillType, my guess is because fillType is a custom enum
+				Fixed: had to call Q_ENUMS(FillType) after the Q_PROPERTY declerations - now I don't need to special case filltype - yay!
 		[FIXED] "Lower" btn in config doesnt propegate to live view
 				due to not syncing to model in the qgraphicsitem propchanged event, zvalue wasnt being sent to model
 				changed MyGraphicsScene (which handles the z value changing) to update content->modelItem(), which would then propogate to the visual

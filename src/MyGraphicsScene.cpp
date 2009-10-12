@@ -136,24 +136,24 @@ void MyGraphicsScene::slideItemChanged(AbstractItem *item, QString operation, QS
 
 void MyGraphicsScene::removeVisualDelegate(AbstractItem *item)
 {
-	QList<QGraphicsItem*> kids = m_liveRoot->childItems();
-	foreach(QGraphicsItem *k, kids)
+	//qDebug() << "MyGraphicsScene::removeVisualDelegate: Going to remove: "<<item->itemName();
+	foreach(AbstractContent *z, m_content)
 	{
-		AbstractContent *z = dynamic_cast<AbstractContent*>(k);
-		if(z && z->modelItem() == item)
+		if(z->modelItem() == item)
 		{
-		
-			k->setVisible(false);
-			k->setParentItem(0);
-			removeItem(k);
-		
+			z->setVisible(false);
+			z->setParentItem(0);
+			removeItem(z);
+			
 			m_content.removeAll(z);
 			disconnect(z, 0, 0, 0);
 			z->dispose(false);
-			
+				
 			return;
 		}
 	}
+// 	qDebug() << "MyGraphicsScene::removeVisualDelegate: Couldn't find visual delegate for item requested: "<<item->itemName();
+// 	fprintf(stderr,"MyGraphicsScene::removeVisualDelegate: Can't find delegate for m_item=%p\n",item);
 }
 
 void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans)
@@ -172,6 +172,7 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans)
 	
 	if(slide)
 	{
+		disconnect(slide,0,this,0);
 		connect(slide,SIGNAL(slideItemChanged(AbstractItem *, QString, QString, QVariant, QVariant)),this,SLOT(slideItemChanged(AbstractItem *, QString, QString, QVariant, QVariant)));
 	}
 	
@@ -360,12 +361,13 @@ TextItem * MyGraphicsScene::newTextItem(QString text)
 {
 	TextBoxItem *t = new TextBoxItem();
 	assert(m_slide);
-	m_slide->addItem(t); //m_slide->createText();
 	
 	t->setText(text);
 	t->setPos(nearCenter(sceneRect()));
 	t->setItemId(ItemFactory::nextId());
 	t->setItemName(QString("TextBoxItem%1").arg(t->itemId()));
+	
+	m_slide->addItem(t); //m_slide->createText();
 	
 	AbstractContent * item = t->createDelegate(this,m_liveRoot);
 	addContent(item); //, QPoint((int)t->pos().x(),(int)t->pos().y()));
@@ -378,12 +380,13 @@ AbstractVisualItem * MyGraphicsScene::newBoxItem()
 {
 	BoxItem *t = new BoxItem();
 	assert(m_slide);
-	m_slide->addItem(t); //m_slide->createText();
 	
 	//t->setText(text);
 	t->setPos(nearCenter(sceneRect()));
 	t->setItemId(ItemFactory::nextId());
 	t->setItemName(QString("BoxItem%1").arg(t->itemId()));
+	
+	m_slide->addItem(t); //m_slide->createText();
 	
 	AbstractContent * item = t->createDelegate(this,m_liveRoot);
 	addContent(item); //, QPoint((int)t->pos().x(),(int)t->pos().y()));
@@ -396,12 +399,13 @@ AbstractVisualItem * MyGraphicsScene::newVideoItem()
 	VideoFileItem *t = new VideoFileItem();
 	assert(m_slide);
 	t->setFilename("data/Seasons_Loop_3_SD.mpg");
-	m_slide->addItem(t); //m_slide->createText();
 	
 	//t->setText(text);
 	t->setPos(nearCenter(sceneRect()));
 	t->setItemId(ItemFactory::nextId());
 	t->setItemName(QString("VideoItem%1").arg(t->itemId()));
+	
+	m_slide->addItem(t); //m_slide->createText();
 	
 	AbstractContent * item = t->createDelegate(this,m_liveRoot);
 	addContent(item); //, QPoint((int)t->pos().x(),(int)t->pos().y()));
