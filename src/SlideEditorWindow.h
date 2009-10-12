@@ -16,6 +16,7 @@ class MyGraphicsView;
 class QUndoStack;
 class QUndoView;
 class QSplitter;
+class QUndoCommand;
 
 class SlideEditorWindow : public AbstractSlideGroupEditor
 {
@@ -27,6 +28,9 @@ public:
 public slots:
 	void setSlideGroup(SlideGroup*g,Slide *curSlide=0);
 
+	void ignoreUndoChanged(bool);
+	
+	
 signals:
 	void closed();
 
@@ -46,6 +50,10 @@ private slots:
 	
 	void appSettingsChanged();
 	void aspectRatioChanged(double);
+	
+	void slideChanged(Slide *slide, QString slideOperation, AbstractItem *item, QString operation, QString fieldName, QVariant value);
+	void slideItemChanged(AbstractItem *item, QString operation, QString fieldName, QVariant value, QVariant old);
+	void releaseSlideGroup();
 	
 private:
 	void setupSlideList();
@@ -71,6 +79,8 @@ private:
 	void setupUndoView();
 	QUndoView * m_undoView;
 	QUndoStack * m_undoStack;
+
+	bool m_ignoreUndoPropChanges;
 
 };
 

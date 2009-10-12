@@ -150,11 +150,11 @@ p, li { white-space: pre-wrap; }
                     <x>-100</x>
                     <y>-75</y>
                     <w>874</w>
-                    <h>266</h>
+                    <h>274</h>
                 </rect>
                 <pos>
-                    <x>289</x>
-                    <y>335</y>
+                    <x>280</x>
+                    <y>330</y>
                 </pos>
                 <zvalue>-9998</zvalue>
                 <opacity>1</opacity>
@@ -169,7 +169,7 @@ p, li { white-space: pre-wrap; }
 &lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
 p, li { white-space: pre-wrap; }
 &lt;/style>&lt;/head>&lt;body style=" font-family:'Tahoma'; font-size:40pt; font-weight:400; font-style:normal;">
-&lt;p align="center" style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-family:'Bitstream Vera Sans'; font-size:85pt; font-weight:600;">Welcome to PHC!&lt;/span>&lt;/p>&lt;/body>&lt;/html></text>
+&lt;p align="center" style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-family:'Bitstream Vera Sans'; font-size:85pt; font-weight:600; color:#ffffff;">Welcome to PHC!&lt;/span>&lt;/p>&lt;/body>&lt;/html></text>
                 <default-font font-family="Tahoma" font-size="40"/>
                 <shape enabled="0"/>
                 <text-align x="32" y="32"/>
@@ -298,7 +298,7 @@ p, li { white-space: pre-wrap; }
                     <x>0</x>
                     <y>0</y>
                 </pos>
-                <zvalue>0</zvalue>
+                <zvalue>-999</zvalue>
                 <opacity>1</opacity>
                 <visible>1</visible>
                 <frame-class>0</frame-class>
@@ -321,7 +321,7 @@ p, li { white-space: pre-wrap; }
                     <x>380</x>
                     <y>200</y>
                 </pos>
-                <zvalue>-9998</zvalue>
+                <zvalue>3</zvalue>
                 <opacity>1</opacity>
                 <visible>1</visible>
                 <frame-class>0</frame-class>
@@ -330,6 +330,29 @@ p, li { white-space: pre-wrap; }
                 <outline brush-style="1" pen-join="64" pen-width="3" enabled="1" brush-color="4278222976" pen-cap="16" pen-color="4278222976"/>
                 <mirror offset="3" enabled="0"/>
                 <shadow brush-style="1" x="3" y="3" enabled="1" brush-color="4278190080"/>
+            </box>
+            <box>
+                <item-id>2479</item-id>
+                <item-name>BoxItem2479</item-name>
+                <rect>
+                    <x>-100</x>
+                    <y>-75</y>
+                    <w>430</w>
+                    <h>420</h>
+                </rect>
+                <pos>
+                    <x>270</x>
+                    <y>200</y>
+                </pos>
+                <zvalue>2</zvalue>
+                <opacity>1</opacity>
+                <visible>1</visible>
+                <frame-class>0</frame-class>
+                <transformation yRot="0" xRot="0" zRot="0"/>
+                <fill brush-style="1" video="" image="" brush-color="4294967295" type="1"/>
+                <outline brush-style="1" pen-join="64" pen-width="3" enabled="1" brush-color="4278190080" pen-cap="16" pen-color="4278190080"/>
+                <mirror offset="3" enabled="0"/>
+                <shadow brush-style="1" x="3" y="3" enabled="0" brush-color="4278190080"/>
             </box>
         </slide>
     </group>

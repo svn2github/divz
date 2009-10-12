@@ -179,7 +179,9 @@ class MyGraphicsView : public QGraphicsView
 
 
 SlideEditorWindow::SlideEditorWindow(SlideGroup *group, QWidget * parent)
-    : AbstractSlideGroupEditor(group,parent), m_usingGL(false)
+    : AbstractSlideGroupEditor(group,parent), m_usingGL(false),
+    m_ignoreUndoPropChanges(false),
+    m_slideGroup(0)
 {
 	// setup widget
 	QRect geom = QApplication::desktop()->availableGeometry();
@@ -214,6 +216,13 @@ SlideEditorWindow::SlideEditorWindow(SlideGroup *group, QWidget * parent)
 	QAction  *delSlide = toolbar->addAction(QIcon(), "Delete Slide");
 	connect(delSlide, SIGNAL(triggered()), this, SLOT(delSlide()));
 
+	toolbar->addSeparator();
+        
+        m_undoStack = new QUndoStack();
+        setupUndoView();
+        
+        toolbar->addAction(m_undoStack->createUndoAction(this));
+        toolbar->addAction(m_undoStack->createRedoAction(this));
 
 	m_scene = new MyGraphicsScene(MyGraphicsScene::Editor,this);
 	m_view = new MyGraphicsView(this);
@@ -298,8 +307,7 @@ SlideEditorWindow::SlideEditorWindow(SlideGroup *group, QWidget * parent)
 		setSlideGroup(group);
 	//setCentralWidget(m_view);
         
-        m_undoStack = new QUndoStack();
-        setupUndoView();
+        
 }
 
 SlideEditorWindow::~SlideEditorWindow()
@@ -334,7 +342,7 @@ void SlideEditorWindow::setupUndoView()
 {
     m_undoView = new QUndoView(m_undoStack);
     m_undoView->setWindowTitle(tr("Undo Stack"));
-    //m_undoView->show();
+    m_undoView->show();
     m_undoView->setAttribute(Qt::WA_QuitOnClose, false);
 }
 
@@ -416,7 +424,7 @@ public:
 	}	
 };
 
-void SlideEditorWindow::addVpLineX(qreal x, qreal y1, qreal y2, bool in)
+void SlideEditorWindow::addVpLineX(qreal x, qreal y1, qreal y2, bool /*in*/)
 {
 	static QPen pw(Qt::gray, 0,Qt::DotLine);
 	static QPen pb(Qt::black, 0,Qt::DotLine);
@@ -439,7 +447,7 @@ void SlideEditorWindow::addVpLineX(qreal x, qreal y1, qreal y2, bool in)
 	*/
 }
 
-void SlideEditorWindow::addVpLineY(qreal y, qreal x1, qreal x2, bool in)
+void SlideEditorWindow::addVpLineY(qreal y, qreal x1, qreal x2, bool /*in*/)
 {
 	static QPen pw(Qt::gray, 0,Qt::DotLine);
 	static QPen pb(Qt::black, 0,Qt::DotLine);
@@ -524,6 +532,9 @@ void SlideEditorWindow::slidesDropped(QList<Slide*> list)
 
 void SlideEditorWindow::setSlideGroup(SlideGroup *g,Slide *curSlide)
 {
+	if(m_slideGroup)
+		disconnect(m_slideGroup,0,this,0);
+	
 // 	if(g != m_slideGroup)
 // 	{
 // 		m_slideModel->releaseSlideGroup();
@@ -538,6 +549,14 @@ void SlideEditorWindow::setSlideGroup(SlideGroup *g,Slide *curSlide)
 		
 		
 	//}
+	
+	// Trigger slideItemChange slot connections
+	QList<Slide*> slist = g->slideList();
+	foreach(Slide *slide, slist)
+		slideChanged(slide, "add", 0, "", "", QVariant());
+	
+	connect(g,SIGNAL(slideChanged(Slide *, QString, AbstractItem *, QString, QString, QVariant)),this,SLOT(slideChanged(Slide *, QString, AbstractItem *, QString, QString, QVariant)));
+	connect(g,SIGNAL(destroyed(QObject*)), this, SLOT(releaseSlideGroup()));
 	
 	setWindowTitle(QString("%1 - Slide Editor").arg(g->groupTitle().isEmpty() ? QString("Group %1").arg(g->groupNumber()) : g->groupTitle()));
 	//m_slideListView->setModel(m_slideModel);
@@ -566,6 +585,176 @@ void SlideEditorWindow::setSlideGroup(SlideGroup *g,Slide *curSlide)
 		
 
 }
+
+void SlideEditorWindow::slideChanged(Slide *slide, QString slideOperation, AbstractItem */*item*/, QString /*itemOperation*/, QString /*fieldName*/, QVariant /*value*/)
+{
+	if(slideOperation == "remove")
+	{
+		//qDebug()<<"SlideEditorWindow::slideChanged: (remove), disconnecting from slide#"<<slide->slideNumber();
+		disconnect(slide,0,this,0);
+	}
+	else
+	if(slideOperation == "add")
+	{
+		//qDebug()<<"SlideEditorWindow::slideChanged: (add), connecting to slide#"<<slide->slideNumber();
+		// so we dont duplicate events in case we vet this signal twice
+		disconnect(slide,0,this,0);
+		connect(slide,SIGNAL(slideItemChanged(AbstractItem *, QString, QString, QVariant, QVariant)),this,SLOT(slideItemChanged(AbstractItem *, QString, QString, QVariant, QVariant)));
+	}
+	else
+	if(slideOperation == "change")
+	{
+		// "change" would be an add/remove/change of an AbstractItem to the slide itself.
+		// This will be procssed in slideItemChanged().
+	}
+}
+
+QString guessTitle(QString field)
+{
+	static QRegExp rUpperCase = QRegExp("([a-z])([A-Z])");
+	static QRegExp rFirstLetter = QRegExp("([a-z])");
+	static QRegExp rLetterNumber = QRegExp("([a-z])([0-9])");
+	//static QRegExp rUnderScore 
+	//$name =~ s/([a-z])_([a-z])/$1.' '.uc($2)/segi;
+	
+	QString tmp = field;
+	tmp.replace(rUpperCase,"\\1 \\2");
+	if(tmp.indexOf(rFirstLetter) == 0)
+	{
+		QChar x = tmp.at(0);
+		tmp.remove(0,1);
+		tmp.prepend(QString(x).toUpper());
+	}
+	
+	tmp.replace(rLetterNumber,"\\1 #\\2");
+	//$name =~ s/^([a-z])/uc($1)/seg;
+	
+// 	$name =~ s/\/([a-z])/'\/'.uc($1)/seg;
+// 	$name =~ s/\s([a-z])/' '.uc($1)/seg;
+// 	$name =~ s/\s(of|the|and|a)\s/' '.lc($1).' '/segi;
+// 	$name .= '?' if $name =~ /^is/i;
+// 	$name =~ s/id$//gi;
+// 	my $chr = '#';
+// 	$name =~ s/num$/$chr/gi; 
+// 	$name =~ s/datetime$/Date\/Time/gi;
+// 	$name =~ s/\best\b/Est./gi;
+
+	return tmp;
+	
+
+}
+
+ class UndoSlideItemChanged : public QUndoCommand
+ {
+ public:
+	UndoSlideItemChanged(SlideEditorWindow *window, AbstractItem *item, QString field, QVariant value, QVariant oldValue)
+		: m_window(window), m_item(item), m_field(field), m_value(value), m_oldValue(oldValue), redoCount(0) 
+		{ 
+			setText(QString("Change %2 of %1").arg(guessTitle(item->itemName())).arg(guessTitle(field)));
+		}
+	
+	virtual int id() const { return 0x001; }
+	virtual void undo() 
+	{ 
+		m_window->ignoreUndoChanged(true);
+		m_item->setProperty(m_field.toLocal8Bit().constData(),m_oldValue); 
+		m_window->ignoreUndoChanged(false);
+	}
+	virtual void redo() 
+	{ 
+		if(redoCount++ > 0)
+		{
+			//qDebug() << "UndoSlideItemChanged::redo: REDO cmd for "<<m_item->itemName()<<", field:"<<m_field<<", oldValue:"<<m_oldValue<<", newValue:"<<m_value;
+			m_window->ignoreUndoChanged(true);
+			m_item->setProperty(m_field.toLocal8Bit().constData(),m_value); 
+			m_window->ignoreUndoChanged(false);
+		}
+	}
+	virtual bool mergeWidth(const QUndoCommand * other)
+	{
+		if(other->id() != id())
+			return false;
+		UndoSlideItemChanged * cmd = const_cast<UndoSlideItemChanged*>((UndoSlideItemChanged*)other);
+		if(cmd->m_field    == m_field &&
+		   cmd->m_value    == m_value &&
+		   cmd->m_oldValue == m_oldValue)
+			return true;
+			
+		return false;
+	}
+ private:
+ 	SlideEditorWindow *m_window;
+	AbstractItem *m_item;
+	QString m_field;
+	QVariant m_value;
+	QVariant m_oldValue;
+	int redoCount;
+ };
+ 
+void SlideEditorWindow::ignoreUndoChanged(bool flag)
+{
+	m_ignoreUndoPropChanges = flag;
+}
+
+void SlideEditorWindow::slideItemChanged(AbstractItem *item, QString operation, QString fieldName, QVariant value, QVariant oldValue)
+{
+// 	Slide * slide = dynamic_cast<Slide *>(sender());
+	
+	if(operation == "add")
+	{
+	
+	}
+	else
+	if(operation == "remove")
+	{
+	
+	}
+	else
+	if(operation == "change")
+	{
+		if(item)
+		{
+			if(!m_ignoreUndoPropChanges)
+			{
+				if(value != oldValue)
+				{
+					QUndoCommand * changeCmd = new UndoSlideItemChanged(this,item,fieldName,value,oldValue);
+					m_undoStack->push(changeCmd);
+					
+					//qDebug() << "SlideEditorWindow::slideItemChanged: New Cmd for "<<item->itemName()<<", field:"<<fieldName<<", oldValue:"<<oldValue<<", newValue:"<<value;
+				}
+				else
+				{
+					//qDebug() << "SlideEditorWindow::slideItemChanged: IGNORING Cmd for "<<item->itemName()<<", field:"<<fieldName<<", oldValue:"<<oldValue<<", newValue:"<<value;
+				}
+			}
+			else
+			{
+				//qDebug() << "SlideEditorWindow::slideItemChanged: Ignoring prop change on "<<item->itemName();
+			}
+		}
+		else
+		{
+			//qDebug() << "SlideEditorWindow::slideItemChanged: Item was null, no undo data recorded.";
+		}
+		
+	}
+	
+
+}
+
+
+
+void SlideEditorWindow::releaseSlideGroup()
+{
+	if(!m_slideGroup)
+		return;
+		
+	disconnect(m_slideGroup,0,this,0);
+	m_slideGroup = 0;
+	
+}
+
 
 void SlideEditorWindow::slideSelected(const QModelIndex &idx)
 {

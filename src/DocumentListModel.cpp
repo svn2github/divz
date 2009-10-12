@@ -16,7 +16,11 @@
 #define DEBUG_MARK() qDebug() << "mark: "<<__FILE__<<":"<<__LINE__
 
 DocumentListModel::DocumentListModel(Document *d, QObject *parent)
-		: QAbstractListModel(parent), m_doc(d),/* m_scene(0), m_view(0),*/ m_dirtyTimer(0),  m_iconSize(48,0), m_sceneRect(0,0,1024,768)
+		: QAbstractListModel(parent), 
+			m_doc(d),/* m_scene(0), m_view(0),*/ 
+			m_iconSize(48,0), 
+			m_dirtyTimer(0), 
+			m_sceneRect(0,0,1024,768)
 {
 	if(m_doc)
 		setDocument(d);
@@ -45,7 +49,7 @@ DocumentListModel::~DocumentListModel()
 // 	}
 }
 
-void DocumentListModel::aspectRatioChanged(double x)
+void DocumentListModel::aspectRatioChanged(double /*x*/)
 {
 	//qDebug() << "DocumentListModel::aspectRatioChanged: x:"<<x;
 	setSceneRect(MainWindow::mw()->standardSceneRect());
@@ -233,7 +237,7 @@ void DocumentListModel::modelDirtyTimeout()
 	dataChanged(top,bottom);
 }
 	
-int DocumentListModel::rowCount(const QModelIndex &parent) const
+int DocumentListModel::rowCount(const QModelIndex &/*parent*/) const
 {
 	int rc = m_doc ? m_doc->numGroups() : 0;
 	

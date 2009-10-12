@@ -10,7 +10,7 @@
 
 
 OutputViewer::OutputViewer(SlideGroupViewer *output, QWidget *parent)
-	    : QWidget(parent), m_scene(0), m_output(0), m_view(0), m_usingGL(false)
+	    : QWidget(parent), m_output(0), m_scene(0), m_view(0), m_usingGL(false)
 {
 	m_view = new QGraphicsView(this);
 	m_view->setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing | QPainter::SmoothPixmapTransform );

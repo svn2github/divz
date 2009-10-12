@@ -14,10 +14,12 @@ void AbstractItem::setChanged(QString name, QVariant value, QVariant oldValue)
 {
 	if(!isBeingLoaded())
 	{
-		//qDebug() << "AbstractItem::setChanged: itemName:"<<itemName()<<", name:"<<name<<", value:"<<value;
-		emit itemChanged(name,value,oldValue);
-		m_isChanged = true;
-
+		if(value != oldValue)
+		{
+			//qDebug() << "AbstractItem::setChanged: itemName:"<<itemName()<<", name:"<<name<<", value:"<<value;
+			emit itemChanged(name,value,oldValue);
+			m_isChanged = true;
+		}
 	}
 }
 

@@ -120,6 +120,40 @@ void MyGraphicsScene::clear()
 	//QGraphicsScene::clear();
 }
 	
+void MyGraphicsScene::slideItemChanged(AbstractItem *item, QString operation, QString fieldName, QVariant value, QVariant /*oldValue*/)
+{
+	Slide * slide = dynamic_cast<Slide *>(sender());
+	
+	if(operation == "change")
+		return;
+	else
+	if(operation == "add")
+		createVisualDelegate(item);
+	else
+	if(operation == "remove")
+	{
+		QList<QGraphicsItem*> kids = m_liveRoot->childItems();
+		foreach(QGraphicsItem *k, kids)
+		{
+			AbstractContent *z = dynamic_cast<AbstractContent*>(k);
+			if(z && z->modelItem() == item)
+			{
+			
+				k->setVisible(false);
+				k->setParentItem(0);
+				removeItem(k);
+			
+				m_content.removeAll(z);
+				disconnect(z, 0, 0, 0);
+				z->dispose(false);
+				
+				return;
+			}
+		}
+	}
+}
+
+
 void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans)
 {
 	//TODO implement slide transitions
@@ -127,6 +161,16 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans)
 	{
 		//qDebug("MyGraphicsScene::setSlide: Not changing slide - same slide!");
 		return;
+	}
+	
+	if(m_slide)// && m_slideGroup != g)
+	{
+		disconnect(m_slide,0,this,0);
+	}
+	
+	if(slide)
+	{
+		connect(slide,SIGNAL(slideItemChanged(AbstractItem *, QString, QString, QVariant, QVariant)),this,SLOT(slideItemChanged(AbstractItem *, QString, QString, QVariant, QVariant)));
 	}
 	
 	if(contextHint() == Preview)
@@ -195,22 +239,31 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans)
 	{
 		assert(item != NULL);
 		
-		if (AbstractVisualItem * visualItem = dynamic_cast<AbstractVisualItem *>(item))
-		{
-			if(DEBUG_MYGRAPHICSSCENE)
-				qDebug() << "MyGraphicsScene::setSlide(): Creating new content item from:"<<visualItem->itemName();
-			AbstractContent * visual = visualItem->createDelegate(this,m_liveRoot);
-			addContent(visual, true);
-			
-			if(visualItem->itemClass() == BackgroundItem::ItemClass)
-				m_bg = dynamic_cast<BackgroundItem*>(visualItem);
-			//addItem(visual);
-			//visual->setParentItem(m_liveRoot);
-			//visual->setAnimationState(AbstractContent::AnimStop);
-		}
+		createVisualDelegate(item);
 	}
 	
 	m_liveRoot->setZValue(500);
+}
+
+AbstractContent * MyGraphicsScene::createVisualDelegate(AbstractItem *item)
+{
+	if (AbstractVisualItem * visualItem = dynamic_cast<AbstractVisualItem *>(item))
+	{
+		if(DEBUG_MYGRAPHICSSCENE)
+			qDebug() << "MyGraphicsScene::setSlide(): Creating new content item from:"<<visualItem->itemName();
+		AbstractContent * visual = visualItem->createDelegate(this,m_liveRoot);
+		addContent(visual, true);
+		
+		if(visualItem->itemClass() == BackgroundItem::ItemClass)
+			m_bg = dynamic_cast<BackgroundItem*>(visualItem);
+		//addItem(visual);
+		//visual->setParentItem(m_liveRoot);
+		//visual->setAnimationState(AbstractContent::AnimStop);
+		
+		return visual;
+	}
+	
+	return 0;
 }
 
 void MyGraphicsScene::startTransition()
@@ -273,7 +326,7 @@ void MyGraphicsScene::addContent(AbstractContent * content, bool takeOwnership) 
 	//content->setCacheMode(QGraphicsItem::DeviceCoordinateCache);*/
 	if(content->zValue() == 0)
 	{
-		content->setZValue(m_content.isEmpty() ? 1 : (m_content.last()->zValue() + 1));
+		content->modelItem()->setZValue(m_content.isEmpty() ? 1 : (m_content.last()->zValue() + 1));
 	}
 	content->show();
 	
@@ -494,7 +547,7 @@ void MyGraphicsScene::slotStackContent(int op)
 	// reassign z-levels
 	int z = 1;
 	foreach (AbstractContent * content, m_content)
-		content->setZValue(z++);
+		content->modelItem()->setZValue(z++);
 	
 	m_bg->setZValue(-999);
 }

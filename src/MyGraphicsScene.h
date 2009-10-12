@@ -15,9 +15,12 @@
 class AbstractContent;
 class AbstractVisualItem;
 class GenericItemConfig;
+
 class Slide;
+class AbstractItem;
 class TextItem;
 class BackgroundItem;
+
 class QVideoProvider;
 
 class MyGraphicsScene : public QGraphicsScene
@@ -57,6 +60,8 @@ class MyGraphicsScene : public QGraphicsScene
                 void setContextHint(ContextHint);
                 
                 void setSceneRect(const QRectF &);
+                
+                AbstractContent * createVisualDelegate(AbstractItem *item);
 		
 	signals:
 		void showPropertiesWidget(QWidget * widget);
@@ -102,6 +107,8 @@ class MyGraphicsScene : public QGraphicsScene
 		void slotDeleteContent();
 		void slotDeleteConfig(GenericItemConfig * config);
 		void slotApplyLook(quint32 frameClass, bool mirrored, bool allContent);
+		
+		void slideItemChanged(AbstractItem *item, QString operation, QString fieldName, QVariant value, QVariant old);
 };
 
 #endif

@@ -30,8 +30,8 @@ AbstractContent::AbstractContent(QGraphicsScene * scene, QGraphicsItem * parent,
     , m_dirtyTransforming(false)
     , m_transformRefreshTimer(0)
     , m_gfxChangeTimer(0)
-    , m_mirrorItem(0)
     , m_dontSyncToModel(true)
+    , m_mirrorItem(0)
     , m_xRotationAngle(0)
     , m_yRotationAngle(0)
     , m_zRotationAngle(0)
@@ -395,7 +395,7 @@ void AbstractContent::setModelItemIsChanging(bool flag)
 	m_modelItemIsChanging = flag;
 }
 
-void AbstractContent::modelItemChanged(QString fieldName, QVariant value, QVariant oldValue)
+void AbstractContent::modelItemChanged(QString fieldName, QVariant /*value*/, QVariant /*oldValue*/)
 {
 	if(DEBUG_ABSTRACTCONTENT)
 		qDebug() << "AbstractContent::modelItemChanged(): fieldName:"<<fieldName;
@@ -507,9 +507,18 @@ AbstractVisualItem * AbstractContent::syncToModelItem(AbstractVisualItem * model
 	}
 
 	//assert(model);
+	
+	if(DEBUG_ABSTRACTCONTENT)
+		qDebug() << "AbstractContent::syncToModelItem(): item:"<<model->itemName()<<": doing sync";
 
 	model->setContentsRect(m_contentsRect);
+	
+	if(DEBUG_ABSTRACTCONTENT)
+		qDebug() << "AbstractContent::syncToModelItem(): item:"<<model->itemName()<<": setPos():"<<pos()<<" - START";
 	model->setPos(pos());
+	if(DEBUG_ABSTRACTCONTENT)
+		qDebug() << "AbstractContent::syncToModelItem(): item:"<<model->itemName()<<": setPos():"<<pos()<<" - DONE";
+	
 	model->setZValue(zValue());
 	model->setIsVisible(isVisible());
 	model->setFrameClass(frameClass());
