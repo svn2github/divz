@@ -30,6 +30,8 @@ public slots:
 
 	void ignoreUndoChanged(bool);
 	
+	MyGraphicsScene * scene() { return m_scene; }
+	SlideGroup * slideGroup() { return m_slideGroup; } 
 	
 signals:
 	void closed();

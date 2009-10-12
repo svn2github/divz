@@ -131,28 +131,30 @@ void MyGraphicsScene::slideItemChanged(AbstractItem *item, QString operation, QS
 		createVisualDelegate(item);
 	else
 	if(operation == "remove")
+		removeVisualDelegate(item);
+}
+
+void MyGraphicsScene::removeVisualDelegate(AbstractItem *item)
+{
+	QList<QGraphicsItem*> kids = m_liveRoot->childItems();
+	foreach(QGraphicsItem *k, kids)
 	{
-		QList<QGraphicsItem*> kids = m_liveRoot->childItems();
-		foreach(QGraphicsItem *k, kids)
+		AbstractContent *z = dynamic_cast<AbstractContent*>(k);
+		if(z && z->modelItem() == item)
 		{
-			AbstractContent *z = dynamic_cast<AbstractContent*>(k);
-			if(z && z->modelItem() == item)
-			{
+		
+			k->setVisible(false);
+			k->setParentItem(0);
+			removeItem(k);
+		
+			m_content.removeAll(z);
+			disconnect(z, 0, 0, 0);
+			z->dispose(false);
 			
-				k->setVisible(false);
-				k->setParentItem(0);
-				removeItem(k);
-			
-				m_content.removeAll(z);
-				disconnect(z, 0, 0, 0);
-				z->dispose(false);
-				
-				return;
-			}
+			return;
 		}
 	}
 }
-
 
 void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans)
 {

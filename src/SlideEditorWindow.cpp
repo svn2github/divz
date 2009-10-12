@@ -551,9 +551,11 @@ void SlideEditorWindow::setSlideGroup(SlideGroup *g,Slide *curSlide)
 	//}
 	
 	// Trigger slideItemChange slot connections
+	m_ignoreUndoPropChanges = true;
 	QList<Slide*> slist = g->slideList();
 	foreach(Slide *slide, slist)
 		slideChanged(slide, "add", 0, "", "", QVariant());
+	m_ignoreUndoPropChanges = false;
 	
 	connect(g,SIGNAL(slideChanged(Slide *, QString, AbstractItem *, QString, QString, QVariant)),this,SLOT(slideChanged(Slide *, QString, AbstractItem *, QString, QString, QVariant)));
 	connect(g,SIGNAL(destroyed(QObject*)), this, SLOT(releaseSlideGroup()));
@@ -584,29 +586,6 @@ void SlideEditorWindow::setSlideGroup(SlideGroup *g,Slide *curSlide)
 	}
 		
 
-}
-
-void SlideEditorWindow::slideChanged(Slide *slide, QString slideOperation, AbstractItem */*item*/, QString /*itemOperation*/, QString /*fieldName*/, QVariant /*value*/)
-{
-	if(slideOperation == "remove")
-	{
-		//qDebug()<<"SlideEditorWindow::slideChanged: (remove), disconnecting from slide#"<<slide->slideNumber();
-		disconnect(slide,0,this,0);
-	}
-	else
-	if(slideOperation == "add")
-	{
-		//qDebug()<<"SlideEditorWindow::slideChanged: (add), connecting to slide#"<<slide->slideNumber();
-		// so we dont duplicate events in case we vet this signal twice
-		disconnect(slide,0,this,0);
-		connect(slide,SIGNAL(slideItemChanged(AbstractItem *, QString, QString, QVariant, QVariant)),this,SLOT(slideItemChanged(AbstractItem *, QString, QString, QVariant, QVariant)));
-	}
-	else
-	if(slideOperation == "change")
-	{
-		// "change" would be an add/remove/change of an AbstractItem to the slide itself.
-		// This will be procssed in slideItemChanged().
-	}
 }
 
 QString guessTitle(QString field)
@@ -674,7 +653,7 @@ QString guessTitle(QString field)
 	{
 		if(other->id() != id())
 			return false;
-		UndoSlideItemChanged * cmd = const_cast<UndoSlideItemChanged*>((UndoSlideItemChanged*)other);
+		const UndoSlideItemChanged * cmd = static_cast<const UndoSlideItemChanged*>(other);
 		if(cmd->m_field    == m_field &&
 		   cmd->m_value    == m_value &&
 		   cmd->m_oldValue == m_oldValue)
@@ -682,19 +661,182 @@ QString guessTitle(QString field)
 			
 		return false;
 	}
- private:
- 	SlideEditorWindow *m_window;
+private:
+	SlideEditorWindow *m_window;
 	AbstractItem *m_item;
 	QString m_field;
 	QVariant m_value;
 	QVariant m_oldValue;
 	int redoCount;
- };
+};
  
+class UndoSlideItemAdded : public QUndoCommand
+{
+public:
+	UndoSlideItemAdded(SlideEditorWindow *window, Slide *slide, AbstractItem *item)
+		: m_window(window), m_slide(slide), m_item(item), redoCount(0) 
+		{ 
+			setText(QString("Added %1").arg(guessTitle(item->itemName())));
+		}
+	
+	virtual void undo() 
+	{ 
+		m_window->ignoreUndoChanged(true);
+		m_slide->removeItem(m_item);
+		m_window->ignoreUndoChanged(false);
+	}
+	virtual void redo() 
+	{ 
+		if(redoCount++ > 0)
+		{
+			//qDebug() << "UndoSlideItemChanged::redo: REDO cmd for "<<m_item->itemName()<<", field:"<<m_field<<", oldValue:"<<m_oldValue<<", newValue:"<<m_value;
+			m_window->ignoreUndoChanged(true);
+			m_slide->addItem(m_item);
+			m_window->ignoreUndoChanged(false);
+		}
+	}
+private:
+	SlideEditorWindow *m_window;
+	Slide *m_slide;
+	AbstractItem *m_item;
+	int redoCount;
+};
+
+
+ 
+ class UndoSlideItemRemoved : public QUndoCommand
+ {
+ public:
+	UndoSlideItemRemoved(SlideEditorWindow *window, Slide *slide, AbstractItem *item)
+		: m_window(window), m_slide(slide), m_item(item), redoCount(0) 
+		{ 
+			setText(QString("Removed %1").arg(guessTitle(item->itemName())));
+		}
+	
+	virtual void undo() 
+	{ 
+		m_window->ignoreUndoChanged(true);
+		m_slide->removeItem(m_item);
+		m_window->ignoreUndoChanged(false);
+	}
+	virtual void redo() 
+	{ 
+		if(redoCount++ > 0)
+		{
+			//qDebug() << "UndoSlideItemChanged::redo: REDO cmd for "<<m_item->itemName()<<", field:"<<m_field<<", oldValue:"<<m_oldValue<<", newValue:"<<m_value;
+			m_window->ignoreUndoChanged(true);
+			m_slide->addItem(m_item);
+			m_window->ignoreUndoChanged(false);
+		}
+	}
+private:
+	SlideEditorWindow *m_window;
+	Slide *m_slide;
+	AbstractItem *m_item;
+	int redoCount;
+};
+
+class UndoSlideAdded : public QUndoCommand
+{
+public:
+	UndoSlideAdded(SlideEditorWindow *window, Slide *slide)
+		: m_window(window), m_slide(slide), redoCount(0) 
+		{ 
+			setText(QString("Added Slide# %1").arg(slide->slideNumber()));
+		}
+	
+	virtual void undo() 
+	{ 
+		m_window->ignoreUndoChanged(true);
+		m_window->slideGroup()->removeSlide(m_slide);
+		m_window->ignoreUndoChanged(false);
+	}
+	virtual void redo() 
+	{ 
+		if(redoCount++ > 0)
+		{
+			//qDebug() << "UndoSlideItemChanged::redo: REDO cmd for "<<m_item->itemName()<<", field:"<<m_field<<", oldValue:"<<m_oldValue<<", newValue:"<<m_value;
+			m_window->ignoreUndoChanged(true);
+			m_window->slideGroup()->addSlide(m_slide);
+			m_window->ignoreUndoChanged(false);
+		}
+	}
+private:
+	SlideEditorWindow *m_window;
+	Slide *m_slide;
+	int redoCount;
+};
+
+class UndoSlideRemoved : public QUndoCommand
+{
+public:
+	UndoSlideRemoved(SlideEditorWindow *window, Slide *slide)
+		: m_window(window), m_slide(slide), redoCount(0) 
+		{ 
+			setText(QString("Removed Slide# %1").arg(slide->slideNumber()));
+		}
+	
+	virtual void undo() 
+	{ 
+		m_window->ignoreUndoChanged(true);
+		m_window->slideGroup()->addSlide(m_slide);
+		m_window->ignoreUndoChanged(false);
+	}
+	virtual void redo() 
+	{ 
+		if(redoCount++ > 0)
+		{
+			//qDebug() << "UndoSlideItemChanged::redo: REDO cmd for "<<m_item->itemName()<<", field:"<<m_field<<", oldValue:"<<m_oldValue<<", newValue:"<<m_value;
+			m_window->ignoreUndoChanged(true);
+			m_window->slideGroup()->removeSlide(m_slide);
+			m_window->ignoreUndoChanged(false);
+		}
+	}
+private:
+	SlideEditorWindow *m_window;
+	Slide *m_slide;
+	int redoCount;
+};
+
+
 void SlideEditorWindow::ignoreUndoChanged(bool flag)
 {
 	m_ignoreUndoPropChanges = flag;
 }
+
+
+void SlideEditorWindow::slideChanged(Slide *slide, QString slideOperation, AbstractItem */*item*/, QString /*itemOperation*/, QString /*fieldName*/, QVariant /*value*/)
+{
+	if(slideOperation == "remove")
+	{
+		//qDebug()<<"SlideEditorWindow::slideChanged: (remove), disconnecting from slide#"<<slide->slideNumber();
+		disconnect(slide,0,this,0);
+		if(!m_ignoreUndoPropChanges)
+		{
+			m_undoStack->push(new UndoSlideRemoved(this,m_scene->slide()));
+		}
+	}
+	else
+	if(slideOperation == "add")
+	{
+		//qDebug()<<"SlideEditorWindow::slideChanged: (add), connecting to slide#"<<slide->slideNumber();
+		// so we dont duplicate events in case we vet this signal twice
+		disconnect(slide,0,this,0);
+		connect(slide,SIGNAL(slideItemChanged(AbstractItem *, QString, QString, QVariant, QVariant)),this,SLOT(slideItemChanged(AbstractItem *, QString, QString, QVariant, QVariant)));
+		
+		if(!m_ignoreUndoPropChanges)
+		{
+			m_undoStack->push(new UndoSlideAdded(this,m_scene->slide()));
+		}
+	}
+	else
+	if(slideOperation == "change")
+	{
+		// "change" would be an add/remove/change of an AbstractItem to the slide itself.
+		// This will be procssed in slideItemChanged().
+	}
+}
+
 
 void SlideEditorWindow::slideItemChanged(AbstractItem *item, QString operation, QString fieldName, QVariant value, QVariant oldValue)
 {
@@ -702,12 +844,18 @@ void SlideEditorWindow::slideItemChanged(AbstractItem *item, QString operation, 
 	
 	if(operation == "add")
 	{
-	
+		if(!m_ignoreUndoPropChanges)
+		{
+			m_undoStack->push(new UndoSlideItemAdded(this,m_scene->slide(),item));
+		}
 	}
 	else
 	if(operation == "remove")
 	{
-	
+		if(!m_ignoreUndoPropChanges)
+		{
+			m_undoStack->push(new UndoSlideItemRemoved(this,m_scene->slide(),item));
+		}
 	}
 	else
 	if(operation == "change")

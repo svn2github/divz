@@ -123,6 +123,8 @@ Revised Task list for Release 1.0, 10/10/09:
 				However, remote dviz viewers will have to hook into the slideeditor window's closed() signal to send an updated slide group to the remote viewer OR listen for changes to props and send those changes over the wire
 		
 	- Bugs:
+		Undo of item removal doesn't work corectly
+		Undo/redo of change fill type doesn't work - probably need to cast to/from int
 		Rotating a boxcontent causes very wierd pen width scaling issues in previews
 		Crossfading slides with identical content seems to "dim" just slightly for a moment
 				caused by fact that each items opacity fades individually on the scene so the bg "shows thru" the text until fully opaqe while crossfading

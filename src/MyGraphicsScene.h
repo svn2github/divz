@@ -51,17 +51,16 @@ class MyGraphicsScene : public QGraphicsScene
 		TextItem * newTextItem(QString text = "Lorem Ipsum");
                 AbstractVisualItem * newBoxItem();
                 AbstractVisualItem * newVideoItem();
-                
+
                 void clear();
-                
-               
-                
+
                 ContextHint contextHint() { return m_contextHint; }
                 void setContextHint(ContextHint);
-                
+
                 void setSceneRect(const QRectF &);
-                
+
                 AbstractContent * createVisualDelegate(AbstractItem *item);
+                void removeVisualDelegate(AbstractItem *item);
 		
 	signals:
 		void showPropertiesWidget(QWidget * widget);
