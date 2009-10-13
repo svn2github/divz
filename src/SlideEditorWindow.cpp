@@ -780,43 +780,22 @@ public:
 		: m_window(window), m_slide(slide), redoCount(0) 
 		{ 
 			setText(QString("Removed Slide# %1").arg(slide->slideNumber()+1));
-			qDebug() << "UndoSlideRemoved::(): New cmd because you deleted slide#"<<m_slide->slideNumber();
-			
-// 			// we cloned the slide, so we can safely delete the slide now
-// 			delete slide;
-// 			slide = 0;
+			//qDebug() << "UndoSlideRemoved::(): New cmd because you deleted slide#"<<m_slide->slideNumber();
 		}
-		
-	// We're not going to undo this after it's destroyed, so its safe to delete the slide from meory
-	// NOT safe to DELETE - because if we UNDO a slide removal, that means we ADDED it back in!
-	~UndoSlideRemoved() 
-	{
-		//delete m_slide;
-		//m_slide = 0;
-	}
-	
+
 	
 	virtual void undo() 
 	{ 
 		m_window->ignoreUndoChanged(true);
-		qDebug() << "UndoSlideRemoved::undo: re-adding slide#"<<m_slide->slideNumber();
-		//Slide *slide = m_slide->clone();
-		Slide * slide = m_slide;
-		m_window->slideGroup()->addSlide(slide);
-		qDebug() << "UndoSlideRemoved::undo: Settings slide group and slide to slide#"<<slide->slideNumber();
-		m_window->setSlideGroup(m_window->slideGroup(),slide);
-		qDebug() << "UndoSlideRemoved::undo: Done with undo on slide#"<<slide->slideNumber();
-		//delete m_slide;
-		//m_slide = slide;
+		m_window->slideGroup()->addSlide(m_slide);
+		m_window->setSlideGroup(m_window->slideGroup(),m_slide);
 		m_window->ignoreUndoChanged(false);
 	}
 	virtual void redo() 
 	{ 
  		if(redoCount++ > 0)
  		{
-			//qDebug() << "UndoSlideItemChanged::redo: REDO cmd for "<<m_item->itemName()<<", field:"<<m_field<<", oldValue:"<<m_oldValue<<", newValue:"<<m_value;
 			m_window->ignoreUndoChanged(true);
-			qDebug() << "UndoSlideRemoved::redo: removing slide#"<<m_slide->slideNumber();
 			m_window->slideGroup()->removeSlide(m_slide);
 			m_window->ignoreUndoChanged(false);
 		}
@@ -838,7 +817,7 @@ void SlideEditorWindow::slideChanged(Slide *slide, QString slideOperation, Abstr
 {
 	if(slideOperation == "remove")
 	{
-		qDebug()<<"SlideEditorWindow::slideChanged: (remove), disconnecting from slide#"<<slide->slideNumber();
+		//qDebug()<<"SlideEditorWindow::slideChanged: (remove), disconnecting from slide#"<<slide->slideNumber();
 		disconnect(slide,0,this,0);
 		if(!m_ignoreUndoPropChanges)
 		{
@@ -853,7 +832,12 @@ void SlideEditorWindow::slideChanged(Slide *slide, QString slideOperation, Abstr
 		disconnect(slide,0,this,0);
 		connect(slide,SIGNAL(slideItemChanged(AbstractItem *, QString, QString, QVariant, QVariant)),this,SLOT(slideItemChanged(AbstractItem *, QString, QString, QVariant, QVariant)));
 		
-		if(!m_ignoreUndoPropChanges)
+		if(m_ignoreUndoPropChanges)
+		{
+			QModelIndex idx = m_slideModel->indexForSlide(slide);
+			m_slideListView->setCurrentIndex(idx);
+		}
+		else
 		{
 			m_undoStack->push(new UndoSlideAdded(this,slide));
 		}
@@ -936,7 +920,7 @@ void SlideEditorWindow::releaseSlideGroup()
 void SlideEditorWindow::slideSelected(const QModelIndex &idx)
 {
 	Slide *s = m_slideModel->slideFromIndex(idx);
-	qDebug() << "SlideEditorWindow::slideSelected(): selected slide#:"<<s->slideNumber();
+	//qDebug() << "SlideEditorWindow::slideSelected(): selected slide#:"<<s->slideNumber();
 	m_scene->setSlide(s);
 	setupViewportLines();
 }
@@ -949,7 +933,7 @@ void SlideEditorWindow::newSlide()
 	
 	//qDebug() << "newSlide: ADDING "<<slide->slideNumber();
 	m_slideGroup->addSlide(slide);
-	qDebug() << "newSlide: Added slide#"<<slide->slideNumber();
+	//qDebug() << "newSlide: Added slide#"<<slide->slideNumber();
 	
 	//m_scene->setSlide(slide);
 	
@@ -959,35 +943,35 @@ void SlideEditorWindow::newSlide()
 void SlideEditorWindow::delSlide()
 {
 	Slide * slide = m_scene->slide();
-	qDebug() << "delSlide: Removing slide#"<<slide->slideNumber();
-	/*
+	//qDebug() << "delSlide: Removing slide#"<<slide->slideNumber();
+	
 	QModelIndex idx = m_slideModel->indexForSlide(slide);
 	QModelIndex prev = m_slideModel->indexForRow(idx.row() - 1 > 0 ? idx.row() - 1 : 0);
-	*/
+	
 	m_slideGroup->removeSlide(slide);
 	//m_undoStack->push(new UndoSlideRemoved(this,slide));
 	
-// 	Slide *newSlide = 0;
-// 	if(prev.isValid())
-// 	{
-// 		m_slideListView->setCurrentIndex(prev);
-// 		newSlide = m_slideModel->slideAt(prev.row());
-// 	}
-// 	
-// 	if(newSlide)
-// 	{
-// 		m_scene->setSlide(newSlide);
-// 		setupViewportLines();
-// 	}
-// 	
-// 	QList<Slide*> slides = m_slideGroup->slideList();
-// 	int counter = 0;
-// 	foreach(Slide *s, slides)
-// 	{
-// 		s->setSlideNumber(counter++);
-// 	}
-// 	
-// 	setSlideGroup(m_slideGroup,newSlide);
+	Slide *newSlide = 0;
+	if(prev.isValid())
+	{
+		m_slideListView->setCurrentIndex(prev);
+		newSlide = m_slideModel->slideAt(prev.row());
+	}
+	
+	if(newSlide)
+	{
+		m_scene->setSlide(newSlide);
+		setupViewportLines();
+	}
+	
+	QList<Slide*> slides = m_slideGroup->slideList();
+	int counter = 0;
+	foreach(Slide *s, slides)
+	{
+		s->setSlideNumber(counter++);
+	}
+	
+	setSlideGroup(m_slideGroup,newSlide);
 	
 	// Dont delete here, delete when UndoSlideRemoved command is destroyed
 	// change: go ahead, delete - we clone slide above

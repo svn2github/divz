@@ -127,12 +127,6 @@ Revised Task list for Release 1.0, 10/10/09:
 	- Bugs:
 		Undo/redo of shadow enabled on text box doesn't seem to work
 		F2 with no slidegroup selected in main screen - segfault
-		Add slide, add box, delete slide, undo delete slide, move box - segfault
-				Still segfaulting - gdb gives good trace, but not sure why its segfaulting
-				Need to commit code for the night - will work more on this later
-		Adding an item to an slide that was removed then readded causes segfault
-				Still segfaulting - gdb gives good trace, but not sure why its segfaulting
-				Need to commit code for the night - will work more on this later
 		Rotating a boxcontent causes very wierd pen width scaling issues in previews
 		Crossfading slides with identical content seems to "dim" just slightly for a moment
 				caused by fact that each items opacity fades individually on the scene so the bg "shows thru" the text until fully opaqe while crossfading
@@ -151,6 +145,10 @@ Revised Task list for Release 1.0, 10/10/09:
 		Auto-sizing song text should be an option that can be enabled/disabled
 		Perfomance of the document pixmap model generator becomes a problem with a lot of songs - need to investigate - possibly use different cache key
 		
+		[FIXED] Add slide, add box, delete slide, undo delete slide, move box - segfault
+				not sure exactly what fixed it - I really dont. Somewhere in the last 2 svn revs it was fixed.
+		[FIXED] Adding an item to an slide that was removed then readded causes segfault
+				not sure exactly what fixed it - I really dont. Somewhere in the last 2 svn revs it was fixed.
 		[FIXED] Undoing "del slide" causes segfault (e.g. trying to re-add slide using undo after deleing the slide)
 				slideeditorwindow was doing 'delete slide' at end of the slot that removed the slide
 				moved the delete slide to the destructor of UndoSlideRemoved action
