@@ -666,6 +666,8 @@ void MainWindow::editGroup(SlideGroup *g)
 void MainWindow::actionEditGroup()
 {
 	QModelIndex idx = m_groupView->currentIndex();
+	if(!idx.isValid())
+		return;
 	SlideGroup *s = m_docModel->groupFromIndex(idx);
 	editGroup(s);
 }
@@ -681,6 +683,8 @@ void MainWindow::actionNewGroup()
 void MainWindow::actionDelGroup()
 {
 	QModelIndex idx = m_groupView->currentIndex();
+	if(!idx.isValid())
+		return;
 	SlideGroup *s = m_docModel->groupFromIndex(idx);
 	deleteGroup(s);
 }

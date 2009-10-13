@@ -47,7 +47,7 @@ Revised Task list for Release 1.0, 10/10/09:
 			[DONE] - Just do it
 			[DONE] - Should be "smart" - for songs, render differently than generic slide groups
 			[DONE] - Go by Group Type?
-		[*] - In-flight edits
+		[POSSIBLY LATER] - In-flight edits
 			- need to add specific framework for this
 	- Visuals:
 		[DONE] - Add Aspect Ratio setting
@@ -66,13 +66,13 @@ Revised Task list for Release 1.0, 10/10/09:
 		[DONE] - Backgrounds:
 			[DONE] - Add background item type & Position automatically, Disable movement
 			[DONE] - Still cant set item color/props with config box
-		[LATER] - Gradients - can settle for making gradients in gimp and import as photo, but need to eventually have support direclty in dviz
-		[STARTED] - Undo/redo framework
+		[DONE] - Undo/redo framework
 			- Must have this for sermons and announcment slides
 			- Property change undo/redo is supported
 			- Now must implement undo/redo for:
 				- add/remove slides
 				- add/remove items on slides
+		[LATER] - Gradients - can settle for making gradients in gimp and import as photo, but need to eventually have support direclty in dviz
 		[ALMOST] - Snap to grid support
 			- need to add form UI
 		[*] - Increse/decrease size of font from toolbar - needed for sermon/announcment
@@ -86,6 +86,7 @@ Revised Task list for Release 1.0, 10/10/09:
 		- SVG Item if we have time
 	
 	- Improvements:
+		Auto-sizing song text should be an option that can be enabled/disabled
 		Add rounded rectangle item / or round boxcontent corners
 		When searching for song, auto select first result
 		When searching for song and press enter in text field, auto-add first song to list, shift+enter to GO LIVE
@@ -123,18 +124,16 @@ Revised Task list for Release 1.0, 10/10/09:
 				however, the reason to have a "special key" to update viewer instead of live update (like PPT) in my mind was mainly for text items - so people dont see each keystroke on live output. 
 				However, since text is edited in editor dialog THEN updated as a visually atomic transaction, a live-link between the editor is okay.
 				However, remote dviz viewers will have to hook into the slideeditor window's closed() signal to send an updated slide group to the remote viewer OR listen for changes to props and send those changes over the wire
-		
-	- Bugs:
-		Undo/redo of shadow enabled on text box doesn't seem to work
-		F2 with no slidegroup selected in main screen - segfault
-		Rotating a boxcontent causes very wierd pen width scaling issues in previews
-		Crossfading slides with identical content seems to "dim" just slightly for a moment
+		[LATER] Crossfading slides with identical content seems to "dim" just slightly for a moment
 				caused by fact that each items opacity fades individually on the scene so the bg "shows thru" the text until fully opaqe while crossfading
 				possible fix: seperate fade roots for background content vs non-background content
-		Backgrounds in per-verse slides dont work consistently (sometimes override, sometimes master shows thru)
+				putting off for now inorder to get this release out the door
+				this is more an asthetic preference right now - and an important one, but not a showstopper. More of an improvment I guess.
+		
+	- Bugs:
+		Rotating a boxcontent causes very wierd pen width scaling issues in previews
 		Text editor in slide still white sometimes
 		Need better method of managing song regexps - right now the filters exist in the pixmap generation routines, the editor window, and the slide group!!
-		Visual item's QColor toxml routines dont save alpha channel!
 		On windows, when setting video item live, it doesnt play unless you dbl-click the slide again
 		Win32: If blank document "<document/>", crash when add group then click group
 		Win32: File->New crashes
@@ -142,9 +141,18 @@ Revised Task list for Release 1.0, 10/10/09:
 				Nope! Still need work.
 				Crashes even with non-live items
 				Confirmed that it "new" works on linux tho - need to debug on windows then - drats
-		Auto-sizing song text should be an option that can be enabled/disabled
 		Perfomance of the document pixmap model generator becomes a problem with a lot of songs - need to investigate - possibly use different cache key
 		
+		[FIXED] Backgrounds in per-verse slides dont work consistently (sometimes override, sometimes master shows thru)
+				I think its because both BackgroundContent items (from master and child) are added to final slide 
+				need to remove master bg if one in child
+				could not preproduce on linux, but I applied the assumed fix anyway - remove master bg if child slide has a bg
+		[FIXED] Visual item's QColor toxml routines dont save alpha channel!
+				modified routines in AbstractVisualItem to save qcolor as a explicit csv-list of rgba values instead of a uint-cast .rgba() value
+		[FIXED] Undo/redo of shadow enabled on text box doesn't seem to work
+				typo of the property name - fixed the Q_PROPERTY's property name and its all good now
+		[FIXED] F2 with no slidegroup selected in main screen - segfault
+				Checked idx.isValid() in actionEditGroup() and actionDelGroup()
 		[FIXED] Add slide, add box, delete slide, undo delete slide, move box - segfault
 				not sure exactly what fixed it - I really dont. Somewhere in the last 2 svn revs it was fixed.
 		[FIXED] Adding an item to an slide that was removed then readded causes segfault

@@ -170,12 +170,17 @@ void SongSlideGroup::textToSlides(SongTextFilter filter)
 				// Since we've cloned a master slide and have another slide to clone, calc the max Z on the
 				// master and rebase everything on secondary slide starting at the maxZ of the master slide
 				double masterZValue = 0;
+				BackgroundItem * bg = 0;
 				QList<AbstractItem *> masterItems = slide->itemList();
 				foreach(AbstractItem * item, masterItems)
 				{
 					AbstractVisualItem * visual = dynamic_cast<AbstractVisualItem*>(item);
 					if(visual && visual->zValue() > masterZValue)
 						masterZValue = visual->zValue();
+					
+					BackgroundItem * bgTmp = dynamic_cast<BackgroundItem*>(item);
+					if(bgTmp && bgTmp->fillType() != AbstractVisualItem::None)
+						bg = bgTmp;
 				}
 				//qDebug()<<"SongSlideGroup::textToSlides(): slideNbr:"<<slideNbr<<": masterZValue:"<<masterZValue;
 
@@ -188,15 +193,24 @@ void SongSlideGroup::textToSlides(SongTextFilter filter)
 
 				//qDebug()<<"SongSlideGroup::textToSlides(): slideNbr:"<<slideNbr<<": Cloned passage slide for #"<<slideNbr;
 
+				bool secondaryBg = false;	
 				QList<AbstractItem *> items = songSlide->itemList();
 				foreach(AbstractItem * item, items)
 				{
 					BackgroundItem * bg = dynamic_cast<BackgroundItem*>(item);
-					if(bg && bg->fillType() == AbstractVisualItem::None)
+					if(bg)
 					{
-						//qDebug() << "Skipping inherited bg from seondary slide because exists and no fill";
-						continue;
+						if(bg->fillType() == AbstractVisualItem::None)
+						{
+							//qDebug() << "Skipping inherited bg from seondary slide because exists and no fill";
+							continue;
+						}
+						else
+						{
+							secondaryBg = true;
+						}
 					}
+					
 
 					AbstractItem * newItem = item->clone();
 					AbstractVisualItem * newVisual = dynamic_cast<AbstractVisualItem*>(newItem);
@@ -210,6 +224,10 @@ void SongSlideGroup::textToSlides(SongTextFilter filter)
 
 					slide->addItem(newItem);
 				}
+				
+				// If we have both a master and a child bg, remove the master bg
+				if(secondaryBg && bg)
+					slide->removeItem(bg);
 			}
 
 			// Use the first textbox in the slide as the lyrics slide

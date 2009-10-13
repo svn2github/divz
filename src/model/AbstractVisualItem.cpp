@@ -107,6 +107,14 @@ ITEM_PROPSET(AbstractVisualItem, MirrorEnabled,		bool,	mirrorEnabled);
 ITEM_PROPSET(AbstractVisualItem, MirrorOffset,		double,	mirrorOffset);
 
 ITEM_PROPSET(AbstractVisualItem, ShadowEnabled,		bool,	shadowEnabled);
+// void AbstractVisualItem::setShadowEnabled(bool flag)
+// {
+// 	bool oldValue = m_shadowEnabled;
+// 	m_shadowEnabled = flag;
+// 	qDebug() << "AbstractVisualItem::setShadowEnabled: old:"<<oldValue<<", new:"<<flag;
+// 	setChanged("shadowEnabled", flag, oldValue);
+// }
+
 ITEM_PROPSET(AbstractVisualItem, ShadowOffsetX,		double,	shadowOffsetX);
 ITEM_PROPSET(AbstractVisualItem, ShadowOffsetY,		double,	shadowOffsetY);
 ITEM_PROPSET(AbstractVisualItem, ShadowBrush,		QBrush,	shadowBrush);
@@ -349,12 +357,28 @@ void AbstractVisualItem::toXml(QDomElement & pe) const
 
 static inline QString qcolorToString(const QColor & color)
 {
-	return QString::number(color.rgba());
+	//return QString::number((unsigned int)color.rgba());
+	
+	QStringList rgba;
+	rgba << QString::number(color.red());
+	rgba << QString::number(color.green());
+	rgba << QString::number(color.blue());
+	rgba << QString::number(color.alpha());
+	return rgba.join(",");
+
 }
 
 static inline QColor qcolorFromString(const QString & string)
 {
-	return QColor(string.toUInt());
+	if(string.indexOf(",") < 0)
+		return QColor(string.toUInt());
+	
+	QStringList rgba = string.split(",");
+	
+	return QColor(  rgba[0].toInt(), // r
+			rgba[1].toInt(), // g 
+			rgba[2].toInt(), // b
+			rgba[3].toInt()); // a
 }
 
 void AbstractVisualItem::penToXml(QDomElement & domElement, QPen pen)
