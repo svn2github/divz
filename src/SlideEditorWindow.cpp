@@ -645,7 +645,7 @@ QString guessTitle(QString field)
 	{ 
 		if(redoCount++ > 0)
 		{
-			//m_window->ignoreUndoChanged(true);
+			m_window->ignoreUndoChanged(true);
 			//qDebug() << "UndoSlideItemChanged::redo: REDO cmd for "<<m_item->itemName()<<", field:"<<m_field<<", oldValue:"<<m_oldValue<<", newValue:"<<m_value;
 			m_item->setProperty(m_field.toLocal8Bit().constData(),m_value); 
 			m_window->ignoreUndoChanged(false);
