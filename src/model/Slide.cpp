@@ -14,6 +14,7 @@ Slide::Slide()
 {
 	m_slideId = 0;
 	m_slideNumber = 0;
+	m_autoChangeTime = 0;
 }
 Slide::~Slide() 
 {
@@ -22,7 +23,19 @@ Slide::~Slide()
 }
 
 void Slide::setSlideId(int x)     { m_slideId = x; }
-void Slide::setSlideNumber(int x) { m_slideNumber = x; }
+void Slide::setSlideNumber(int x)
+{
+	int old = m_slideNumber;
+	m_slideNumber = x; 
+	emit slideItemChanged(0,"change","slideNumber",x,old);
+}
+
+void Slide::setAutoChangeTime(double x) 
+{ 
+	double old = m_autoChangeTime;
+	m_autoChangeTime = x;	
+	emit slideItemChanged(0,"change","autoChangeTime",x,old); 
+}
 
 Slide * Slide::clone()
 {

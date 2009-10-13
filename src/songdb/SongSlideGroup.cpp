@@ -408,7 +408,7 @@ void SongSlideGroup::setText(QString newText)
 		textToSlides();
 	}
 
-	if(newText != song()->text())
+	if(song() && newText != song()->text())
 		m_isTextDiffFromDb = true;
 }
 

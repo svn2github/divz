@@ -12,6 +12,7 @@ class Slide : public QObject
 	
 	Q_PROPERTY(int slideId READ slideId WRITE setSlideId);
 	Q_PROPERTY(int slideNumber READ slideNumber WRITE setSlideNumber);
+	Q_PROPERTY(int autoChangeTime READ autoChangeTime WRITE setAutoChangeTime);
 
 
 public:
@@ -34,6 +35,9 @@ public:
 	ITEM_PROPDEF(SlideId,		int,	slideId);
 	ITEM_PROPDEF(SlideNumber,	int,	slideNumber);
 	
+	// A value of 0 means never change automatically
+	ITEM_PROPDEF(AutoChangeTime,	double,	autoChangeTime);
+	
 	Slide * clone();
 
 signals:
@@ -47,6 +51,7 @@ private:
 	QList<AbstractItem *> m_items;
 	int m_slideNumber;
 	int m_slideId;
+	double m_autoChangeTime;
 };
 
 //Q_DECLARE_METATYPE(Slide);

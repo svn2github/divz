@@ -8,7 +8,7 @@ SlideGroup::SlideGroup() :
 	, m_groupType(Generic)
 	, m_groupTitle("")
 	, m_iconFile("")
-	
+	, m_autoChangeGroup(true)
 {
 		
 }
@@ -54,8 +54,13 @@ void SlideGroup::slideItemChanged(AbstractItem *item, QString operation, QString
 void SlideGroup::setGroupNumber(int x)	   { m_groupNumber = x; }
 void SlideGroup::setGroupId(int x)	   { m_groupId = x; } 
 void SlideGroup::setGroupType(GroupType t) { m_groupType = t; }
-void SlideGroup::setGroupTitle(QString s)  { m_groupTitle = s; }
+void SlideGroup::setGroupTitle(QString s)  
+{
+	m_groupTitle = s; 
+	emit slideChanged(0, "change", 0, "change", "groupTitle", s);
+}
 void SlideGroup::setIconFile(QString s)    { m_iconFile = s; }
+void SlideGroup::setAutoChangeGroup(bool s){ m_autoChangeGroup = s; }
 
 bool SlideGroup::fromXml(QDomElement & pe)
 {

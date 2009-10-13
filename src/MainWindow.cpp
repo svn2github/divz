@@ -278,6 +278,7 @@ void MainWindow::setupSongList()
 	hbox->addWidget(m_clearSearchBtn);
 	
 	connect(m_songSearch, SIGNAL(textChanged(const QString &)), this, SLOT(songFilterChanged(const QString &)));
+	connect(m_songSearch, SIGNAL(returnPressed()), this, SLOT(songSearchReturnPressed()));
 	connect(m_clearSearchBtn, SIGNAL(clicked()), this, SLOT(songFilterReset()));
 	
 	// Now for the song list itself
@@ -334,6 +335,13 @@ void MainWindow::setupSongList()
 	connect(m_songList, SIGNAL(doubleClicked(const QModelIndex &)), this, SLOT(songDoubleClicked(const QModelIndex &)));
 }
 
+void MainWindow::songSearchReturnPressed() 
+{
+	QModelIndex idx = m_songProxyModel->index(0,0);
+	if(idx.isValid())
+		songDoubleClicked(idx);
+}
+
 void MainWindow::songDoubleClicked(const QModelIndex &idx)
 {
 	QModelIndex sourceIdx = m_songProxyModel->mapToSource(idx);
@@ -351,6 +359,12 @@ void MainWindow::songFilterChanged(const QString &text)
 	m_songList->resizeColumnsToContents();
 	m_songList->resizeRowsToContents();
 	m_clearSearchBtn->setVisible(!text.isEmpty());
+	QModelIndex idx = m_songProxyModel->index(0,0);
+	if(idx.isValid())
+	{
+		//qDebug() << "selecting idx:"<<idx;
+		m_songList->setCurrentIndex(idx); //,QItemSelectionModel::Select);
+	}
 }
 
 void MainWindow::songFilterReset()

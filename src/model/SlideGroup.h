@@ -14,6 +14,7 @@ class SlideGroup : public QObject
 	Q_PROPERTY(GroupType groupType READ groupType WRITE setGroupType);
 	Q_PROPERTY(QString groupTitle READ groupTitle WRITE setGroupTitle);
 	Q_PROPERTY(QString iconFile READ iconFile WRITE setIconFile);
+	Q_PROPERTY(bool autoChangeGroup READ autoChangeGroup WRITE setAutoChangeGroup);
 	
 	
 public:
@@ -34,6 +35,7 @@ public:
 	V_ITEM_PROPDEF(GroupType,	GroupType,	groupType);
 	ITEM_PROPDEF(GroupTitle,	QString,	groupTitle);
 	ITEM_PROPDEF(IconFile,		QString,	iconFile);
+	ITEM_PROPDEF(AutoChangeGroup,	bool,		autoChangeGroup);
 
 	void addSlide(Slide *);
 	QList<Slide *> slideList();
@@ -70,6 +72,7 @@ protected:
 	GroupType m_groupType;
 	QString m_groupTitle;
 	QString m_iconFile;
+	bool m_autoChangeGroup;
 	
 	void sortSlides();
 	

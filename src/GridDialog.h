@@ -15,6 +15,13 @@ public:
 
 protected:
     void changeEvent(QEvent *e);
+    
+protected slots:
+    void snapToGridEnabled(bool);
+    void setGridSize(double);
+    void setThirdEnabled(bool);
+    void linkActivated(const QString&);
+    
 
 private:
     Ui::GridDialog *m_ui;

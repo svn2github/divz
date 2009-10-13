@@ -362,6 +362,8 @@ void SlideEditorWindow::appSettingsChanged()
 		m_view->setViewport(new QWidget());
 		qDebug("SlideEditorWindow::appSettingsChanged(): Loaded Non-GL Viewport");
 	}
+	
+	setupViewportLines();
 }
 
 void SlideEditorWindow::aspectRatioChanged(double x)
@@ -474,7 +476,7 @@ void SlideEditorWindow::addVpLineY(qreal y, qreal x1, qreal x2, bool /*in*/)
 
 void SlideEditorWindow::setupViewportLines()
 {
-	bool showThirds = true;
+	bool showThirds = AppSettings::thirdGuideEnabled();
 
 	QRectF r = m_scene->sceneRect();
 
