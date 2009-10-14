@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 <document title="Test Document" aspect="1.6">
-    <song title="When We All Get To Heaven - Edit Testn" songid="366" number="2" icon="" type="2" id="1">
+    <song title="When We All Get To Heaven - Edit Testn" number="2" icon="" type="2" id="1">
         <text>Chorus 1
 When we all get to heaven,
 | ----------------------------
@@ -58,7 +58,7 @@ Soon the pearly gates will open,
                     <fill brush-style="1" video="data/Seasons_Loop_4_SD.mpg" image="" brush-color="255,0,0,255" type="1"/>
                     <outline brush-style="1" pen-join="0" pen-width="1" enabled="0" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255"/>
                     <mirror offset="3" enabled="0"/>
-                    <shadow brush-style="1" x="3" y="3" enabled="0" brush-color="0,0,0,255"/>
+                    <shadow brush-style="1" x="3" y="3" enabled="0" blur="3" brush-color="0,0,0,255"/>
                 </background>
                 <textbox>
                     <item-id>1651</item-id>
@@ -81,7 +81,7 @@ Soon the pearly gates will open,
                     <fill brush-style="1" video="" image="" brush-color="255,255,255,255" type="1"/>
                     <outline brush-style="1" pen-join="64" pen-width="1.5" enabled="1" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255"/>
                     <mirror offset="3" enabled="0"/>
-                    <shadow brush-style="1" x="3" y="3" enabled="1" brush-color="0,0,0,255"/>
+                    <shadow brush-style="1" x="3" y="3" enabled="1" blur="3" brush-color="0,0,0,255"/>
                     <text>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
 &lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
 p, li { white-space: pre-wrap; }
@@ -114,7 +114,7 @@ p, li { white-space: pre-wrap; }
                     <fill brush-style="1" video="" image="" brush-color="0,255,0,255" type="1"/>
                     <outline brush-style="1" pen-join="0" pen-width="1" enabled="0" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255"/>
                     <mirror offset="3" enabled="0"/>
-                    <shadow brush-style="1" x="3" y="3" enabled="0" brush-color="0,0,0,255"/>
+                    <shadow brush-style="1" x="3" y="3" enabled="0" blur="3" brush-color="0,0,0,255"/>
                 </background>
             </slide>
             <slide number="2" timeout="0" id="1">
@@ -139,7 +139,7 @@ p, li { white-space: pre-wrap; }
                     <fill brush-style="1" video="" image="" brush-color="0,0,255,255" type="1"/>
                     <outline brush-style="1" pen-join="0" pen-width="1" enabled="0" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255"/>
                     <mirror offset="3" enabled="0"/>
-                    <shadow brush-style="1" x="3" y="3" enabled="0" brush-color="0,0,0,255"/>
+                    <shadow brush-style="1" x="3" y="3" enabled="0" blur="3" brush-color="0,0,0,255"/>
                 </background>
             </slide>
         </templates>
@@ -167,7 +167,7 @@ p, li { white-space: pre-wrap; }
                 <fill brush-style="1" video="data/Seasons_Loop_4_SD.mpg" image="" brush-color="0,0,0,255" type="4"/>
                 <outline brush-style="1" pen-join="0" pen-width="1" enabled="0" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255"/>
                 <mirror offset="3" enabled="0"/>
-                <shadow brush-style="1" x="3" y="3" enabled="0" brush-color="0,0,0,255"/>
+                <shadow brush-style="1" x="3" y="3" enabled="0" blur="3" brush-color="0,0,0,255"/>
             </background>
             <textbox>
                 <item-id>104</item-id>
@@ -190,7 +190,7 @@ p, li { white-space: pre-wrap; }
                 <fill brush-style="1" video="" image="" brush-color="255,255,255,255" type="1"/>
                 <outline brush-style="1" pen-join="64" pen-width="3" enabled="1" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255"/>
                 <mirror offset="3" enabled="0"/>
-                <shadow brush-style="1" x="3" y="3" enabled="1" brush-color="0,0,0,255"/>
+                <shadow brush-style="1" x="3" y="3" enabled="1" blur="3" brush-color="0,0,0,255"/>
                 <text>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
 &lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
 p, li { white-space: pre-wrap; }
@@ -223,7 +223,7 @@ p, li { white-space: pre-wrap; }
                 <fill brush-style="1" video="data/Seasons_Loop_4_SD.mpg" image="" brush-color="0,0,0,255" type="4"/>
                 <outline brush-style="1" pen-join="0" pen-width="1" enabled="0" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255"/>
                 <mirror offset="3" enabled="0"/>
-                <shadow brush-style="1" x="3" y="3" enabled="0" brush-color="0,0,0,255"/>
+                <shadow brush-style="1" x="3" y="3" enabled="0" blur="3" brush-color="0,0,0,255"/>
             </background>
             <textbox>
                 <item-id>1132</item-id>
@@ -246,7 +246,7 @@ p, li { white-space: pre-wrap; }
                 <fill brush-style="1" video="" image="" brush-color="255,255,255,255" type="1"/>
                 <outline brush-style="1" pen-join="64" pen-width="3" enabled="1" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255"/>
                 <mirror offset="3" enabled="0"/>
-                <shadow brush-style="1" x="3" y="3" enabled="1" brush-color="0,0,0,255"/>
+                <shadow brush-style="1" x="3" y="3" enabled="1" blur="3" brush-color="0,0,0,255"/>
                 <text>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
 &lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
 p, li { white-space: pre-wrap; }
@@ -281,7 +281,7 @@ p, li { white-space: pre-wrap; }
                 <fill brush-style="1" video="" image="" brush-color="0,0,0,255" type="1"/>
                 <outline brush-style="1" pen-join="0" pen-width="1" enabled="0" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255"/>
                 <mirror offset="3" enabled="0"/>
-                <shadow brush-style="1" x="3" y="3" enabled="0" brush-color="0,0,0,255"/>
+                <shadow brush-style="1" x="3" y="3" enabled="0" blur="3" brush-color="0,0,0,255"/>
             </background>
             <videofile>
                 <item-id>815</item-id>
@@ -304,7 +304,7 @@ p, li { white-space: pre-wrap; }
                 <fill brush-style="1" video="data/Seasons_Loop_3_SD.mpg" image="" brush-color="255,255,255,255" type="4"/>
                 <outline brush-style="1" pen-join="64" pen-width="2" enabled="1" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255"/>
                 <mirror offset="3" enabled="0"/>
-                <shadow brush-style="1" x="3" y="3" enabled="0" brush-color="0,0,0,255"/>
+                <shadow brush-style="1" x="3" y="3" enabled="0" blur="3" brush-color="0,0,0,255"/>
                 <filename>data/Seasons_Loop_3_SD.mpg</filename>
             </videofile>
         </slide>
@@ -332,7 +332,7 @@ p, li { white-space: pre-wrap; }
                 <fill brush-style="1" video="data/Seasons_Loop_3_SD.mpg" image="" brush-color="0,0,255,255" type="4"/>
                 <outline brush-style="1" pen-join="0" pen-width="1" enabled="0" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255"/>
                 <mirror offset="3" enabled="0"/>
-                <shadow brush-style="1" x="3" y="3" enabled="0" brush-color="0,0,0,255"/>
+                <shadow brush-style="1" x="3" y="3" enabled="0" blur="3" brush-color="0,0,0,255"/>
             </background>
             <box>
                 <item-id>1519</item-id>
@@ -345,7 +345,7 @@ p, li { white-space: pre-wrap; }
                 </rect>
                 <pos>
                     <x>210</x>
-                    <y>380</y>
+                    <y>375</y>
                 </pos>
                 <zvalue>1</zvalue>
                 <opacity>1</opacity>
@@ -355,7 +355,7 @@ p, li { white-space: pre-wrap; }
                 <fill brush-style="1" video="" image="" brush-color="255,255,255,128" type="1"/>
                 <outline brush-style="1" pen-join="64" pen-width="3" enabled="1" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255"/>
                 <mirror offset="3" enabled="0"/>
-                <shadow brush-style="1" x="3" y="3" enabled="1" brush-color="0,0,0,64"/>
+                <shadow brush-style="1" x="7" y="7" enabled="1" blur="7" brush-color="0,0,0,255"/>
             </box>
             <textbox>
                 <item-id>1520</item-id>
@@ -367,8 +367,8 @@ p, li { white-space: pre-wrap; }
                     <h>122</h>
                 </rect>
                 <pos>
-                    <x>260</x>
-                    <y>400</y>
+                    <x>255</x>
+                    <y>390</y>
                 </pos>
                 <zvalue>4</zvalue>
                 <opacity>1</opacity>
@@ -378,7 +378,7 @@ p, li { white-space: pre-wrap; }
                 <fill brush-style="1" video="" image="" brush-color="255,255,255,255" type="1"/>
                 <outline brush-style="1" pen-join="64" pen-width="1.5" enabled="1" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255"/>
                 <mirror offset="3" enabled="0"/>
-                <shadow brush-style="1" x="3" y="3" enabled="0" brush-color="0,0,0,255"/>
+                <shadow brush-style="1" x="3" y="3" enabled="1" blur="3" brush-color="0,0,0,255"/>
                 <text>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
 &lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
 p, li { white-space: pre-wrap; }
@@ -413,7 +413,7 @@ p, li { white-space: pre-wrap; }
                 <fill brush-style="1" video="data/Seasons_Loop_3_SD.mpg" image="" brush-color="0,0,255,255" type="4"/>
                 <outline brush-style="1" pen-join="0" pen-width="1" enabled="0" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255"/>
                 <mirror offset="3" enabled="0"/>
-                <shadow brush-style="1" x="3" y="3" enabled="0" brush-color="0,0,0,255"/>
+                <shadow brush-style="1" x="3" y="3" enabled="0" blur="3" brush-color="0,0,0,255"/>
             </background>
             <box>
                 <item-id>1455</item-id>
@@ -436,7 +436,7 @@ p, li { white-space: pre-wrap; }
                 <fill brush-style="1" video="" image="" brush-color="0,255,255,255" type="1"/>
                 <outline brush-style="1" pen-join="64" pen-width="3" enabled="1" brush-color="0,128,128,255" pen-cap="16" pen-color="0,128,128,255"/>
                 <mirror offset="3" enabled="0"/>
-                <shadow brush-style="1" x="3" y="3" enabled="1" brush-color="0,0,0,255"/>
+                <shadow brush-style="1" x="3" y="3" enabled="1" blur="3" brush-color="0,0,0,255"/>
             </box>
             <box>
                 <item-id>1456</item-id>
@@ -459,7 +459,7 @@ p, li { white-space: pre-wrap; }
                 <fill brush-style="1" video="" image="" brush-color="255,255,255,128" type="1"/>
                 <outline brush-style="1" pen-join="64" pen-width="3" enabled="1" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255"/>
                 <mirror offset="3" enabled="0"/>
-                <shadow brush-style="1" x="3" y="3" enabled="1" brush-color="0,0,0,64"/>
+                <shadow brush-style="1" x="3" y="3" enabled="1" blur="3" brush-color="0,0,0,64"/>
             </box>
             <textbox>
                 <item-id>1637</item-id>
@@ -482,7 +482,7 @@ p, li { white-space: pre-wrap; }
                 <fill brush-style="1" video="" image="" brush-color="255,255,255,255" type="1"/>
                 <outline brush-style="1" pen-join="64" pen-width="1.5" enabled="1" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255"/>
                 <mirror offset="3" enabled="0"/>
-                <shadow brush-style="1" x="3" y="3" enabled="1" brush-color="0,0,0,255"/>
+                <shadow brush-style="1" x="3" y="3" enabled="1" blur="3" brush-color="0,0,0,255"/>
                 <text>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
 &lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
 p, li { white-space: pre-wrap; }
@@ -517,7 +517,7 @@ p, li { white-space: pre-wrap; }
                 <fill brush-style="1" video="data/Seasons_Loop_3_SD.mpg" image="" brush-color="0,0,255,255" type="1"/>
                 <outline brush-style="1" pen-join="0" pen-width="1" enabled="0" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255"/>
                 <mirror offset="3" enabled="0"/>
-                <shadow brush-style="1" x="3" y="3" enabled="0" brush-color="0,0,0,255"/>
+                <shadow brush-style="1" x="3" y="3" enabled="0" blur="3" brush-color="0,0,0,255"/>
             </background>
             <box>
                 <item-id>1250</item-id>
@@ -540,7 +540,7 @@ p, li { white-space: pre-wrap; }
                 <fill brush-style="1" video="" image="" brush-color="0,255,255,255" type="1"/>
                 <outline brush-style="1" pen-join="64" pen-width="3" enabled="1" brush-color="0,128,128,255" pen-cap="16" pen-color="0,128,128,255"/>
                 <mirror offset="3" enabled="0"/>
-                <shadow brush-style="1" x="3" y="3" enabled="1" brush-color="0,0,0,255"/>
+                <shadow brush-style="1" x="3" y="3" enabled="1" blur="3" brush-color="0,0,0,255"/>
             </box>
             <box>
                 <item-id>3203</item-id>
@@ -563,7 +563,7 @@ p, li { white-space: pre-wrap; }
                 <fill brush-style="1" video="" image="" brush-color="255,255,255,128" type="1"/>
                 <outline brush-style="1" pen-join="64" pen-width="3" enabled="1" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255"/>
                 <mirror offset="3" enabled="0"/>
-                <shadow brush-style="1" x="3" y="3" enabled="1" brush-color="0,0,0,64"/>
+                <shadow brush-style="1" x="3" y="3" enabled="1" blur="3" brush-color="0,0,0,64"/>
             </box>
             <textbox>
                 <item-id>1515</item-id>
@@ -586,7 +586,7 @@ p, li { white-space: pre-wrap; }
                 <fill brush-style="1" video="" image="" brush-color="255,255,255,255" type="1"/>
                 <outline brush-style="1" pen-join="64" pen-width="1.5" enabled="1" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255"/>
                 <mirror offset="3" enabled="0"/>
-                <shadow brush-style="1" x="3" y="3" enabled="1" brush-color="0,0,0,255"/>
+                <shadow brush-style="1" x="3" y="3" enabled="1" blur="3" brush-color="0,0,0,255"/>
                 <text>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
 &lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
 p, li { white-space: pre-wrap; }
@@ -600,7 +600,7 @@ p, li { white-space: pre-wrap; }
             </textbox>
         </slide>
     </group>
-    <song title="** BLANK SONG **" songid="1" number="0" icon="" type="2" id="1">
+    <song title="** BLANK SONG **" number="0" icon="" type="2" id="1">
         <text>Hello World
 
 Hello World</text>

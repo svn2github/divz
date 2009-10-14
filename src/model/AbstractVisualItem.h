@@ -37,6 +37,7 @@ class AbstractVisualItem : public AbstractItem
 	Q_PROPERTY(double	mirrorOffset 	READ mirrorOffset 	WRITE setMirrorOffset);
 	
 	Q_PROPERTY(bool		shadowEnabled	READ shadowEnabled	WRITE setShadowEnabled);
+	Q_PROPERTY(double 	shadowBlurRadius READ shadowBlurRadius	WRITE setShadowBlurRadius);
 	Q_PROPERTY(double	shadowOffsetX 	READ shadowOffsetX	WRITE setShadowOffsetX);
 	Q_PROPERTY(double	shadowOffsetY 	READ shadowOffsetY	WRITE setShadowOffsetY);
 	Q_PROPERTY(QBrush	shadowBrush 	READ shadowBrush	WRITE setShadowBrush);
@@ -129,6 +130,7 @@ public:
 	ITEM_PROPDEF(MirrorOffset,	double,	mirrorOffset);
 	
 	ITEM_PROPDEF(ShadowEnabled,	bool,	shadowEnabled);
+	ITEM_PROPDEF(ShadowBlurRadius,	double,	shadowBlurRadius);
 	ITEM_PROPDEF(ShadowOffsetX,	double,	shadowOffsetX);
 	ITEM_PROPDEF(ShadowOffsetY,	double,	shadowOffsetY);
 	ITEM_PROPDEF(ShadowBrush,	QBrush,	shadowBrush);
@@ -162,6 +164,7 @@ private:
 	double		m_mirrorOffset;
 	
 	bool		m_shadowEnabled;
+	int		m_shadowBlurRadius;
 	double		m_shadowOffsetX;
 	double		m_shadowOffsetY;
 	QBrush		m_shadowBrush;

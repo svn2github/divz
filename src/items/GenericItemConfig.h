@@ -84,6 +84,7 @@ class GenericItemConfig : public QDialog
 		void setLineColor(const QColor &);
 		void setBgColor(const QColor &);
 		void setShadowColor(const QColor &);
+		void setShadowBlur(int);
 		void slotImageBrowse();
 		void slotVideoBrowse();
 		

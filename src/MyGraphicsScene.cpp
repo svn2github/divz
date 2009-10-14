@@ -59,10 +59,26 @@
 
 #define DEBUG_MYGRAPHICSSCENE 0
 
+#define qSetEffectOpacity(item,opacity) { QGraphicsOpacityEffect * opac = dynamic_cast<QGraphicsOpacityEffect*>(item->graphicsEffect()); if(opac) opac->setOpacity(opacity); }
+//#define qGetEffectOpacity(item,opacity) dynamic_cast<QGraphicsOpacityEffect*>item->graphicsEffect() ? (dynamic_cast<QGraphicsOpacityEffect*>item->graphicsEffect())->opacity() : 0
+
+#if QT_VERSION >= 0x040600
+	#include <QGraphicsOpacityEffect>
+
+	#define QT46_OPAC_ENAB 1
+#endif
+
 class RootObject : public QGraphicsItem
 {
 public:
-	RootObject(QGraphicsScene*x):QGraphicsItem(0,x){}
+	RootObject(QGraphicsScene*x):QGraphicsItem(0,x){
+	
+		#if QT46_OPAC_ENAB > 0 
+			QGraphicsOpacityEffect * opac = new QGraphicsOpacityEffect();
+			opac->setOpacity(1);
+			setGraphicsEffect(opac);
+		#endif
+	}
 	QRectF boundingRect() const { return QRectF(); } //MainWindow::mw()->standardSceneRect(); }
 	void paint(QPainter*, const QStyleOptionGraphicsItem*, QWidget*) {}
 };
@@ -227,8 +243,15 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans)
 
 // 		double inc = (double)1 / m_fadeSteps;
 
-		m_fadeRoot->setOpacity(1);
-		m_liveRoot->setOpacity(0);
+		
+				
+		#if QT46_OPAC_ENAB > 0
+			qSetEffectOpacity(m_fadeRoot,1);
+			qSetEffectOpacity(m_liveRoot,0);
+		#else
+			m_fadeRoot->setOpacity(1);
+			m_liveRoot->setOpacity(0);
+		#endif
 
 // 		if(DEBUG_MYGRAPHICSSCENE)
 // 			qDebug() << "MyGraphicsScene::setSlide(): Starting fade timer for "<<ms<<"ms";
@@ -279,9 +302,13 @@ void MyGraphicsScene::startTransition()
 void MyGraphicsScene::endTransition()
 {
 	m_fadeTimer->stop();
-	
-	m_fadeRoot->setOpacity(0);
-	m_liveRoot->setOpacity(1);
+	#if QT46_OPAC_ENAB > 0
+		qSetEffectOpacity(m_fadeRoot,0);
+		qSetEffectOpacity(m_liveRoot,1);
+	#else
+		m_fadeRoot->setOpacity(0);
+		m_liveRoot->setOpacity(1);
+	#endif
 	
 	QList<QGraphicsItem*> kids = m_fadeRoot->childItems();
 	foreach(QGraphicsItem *k, kids)
@@ -309,7 +336,13 @@ void MyGraphicsScene::slotTransitionStep()
 	{
 		double inc = (double)1 / m_fadeSteps;
 		//m_fadeRoot->setOpacity(m_fadeRoot->opacity() - inc);
-		m_liveRoot->setOpacity(m_liveRoot->opacity() + inc);
+		#if QT46_OPAC_ENAB > 0
+			QGraphicsOpacityEffect * opac = dynamic_cast<QGraphicsOpacityEffect*>(m_liveRoot->graphicsEffect()); 
+			if(opac) 
+				opac->setOpacity(opac->opacity() + inc);
+		#else
+			m_liveRoot->setOpacity(m_liveRoot->opacity() + inc);
+		#endif
 		if(DEBUG_MYGRAPHICSSCENE)
 			qDebug()<<"MyGraphicsScene::slotTransitionStep(): step"<<m_fadeStepCounter<<"/"<<m_fadeSteps<<", inc:"<<inc<<", fade:"<<m_fadeRoot->opacity()<<", live:"<<m_liveRoot->opacity();
 	}

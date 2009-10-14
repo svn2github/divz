@@ -55,7 +55,7 @@ AbstractVisualItem::AbstractVisualItem()
 	m_shadowEnabled = false;
 	m_shadowOffsetX = 3;
 	m_shadowOffsetY = 3;
-	m_shadowBrush = QBrush(Qt::black);
+	m_shadowBrush = QBrush(QColor(0,0,0,80));
 }
 
 AbstractContent * AbstractVisualItem::createDelegate(QGraphicsScene*,QGraphicsItem*) {return 0;}
@@ -115,6 +115,7 @@ ITEM_PROPSET(AbstractVisualItem, ShadowEnabled,		bool,	shadowEnabled);
 // 	setChanged("shadowEnabled", flag, oldValue);
 // }
 
+ITEM_PROPSET(AbstractVisualItem, ShadowBlurRadius,		double,	shadowBlurRadius);
 ITEM_PROPSET(AbstractVisualItem, ShadowOffsetX,		double,	shadowOffsetX);
 ITEM_PROPSET(AbstractVisualItem, ShadowOffsetY,		double,	shadowOffsetY);
 ITEM_PROPSET(AbstractVisualItem, ShadowBrush,		QBrush,	shadowBrush);
@@ -222,6 +223,11 @@ bool AbstractVisualItem::fromXml(QDomElement & pe)
 		setShadowEnabled(flag);
 // 		if(flag)
 // 		{
+			int blur = domElement.attribute("blur").toInt();
+			if(!blur || blur<=0)
+				blur = 3;
+			setShadowBlurRadius(blur);
+			
 			double offsetX = domElement.attribute("x").toDouble();
 			setShadowOffsetX(offsetX);
 			
@@ -348,6 +354,7 @@ void AbstractVisualItem::toXml(QDomElement & pe) const
  	
  	domElement = doc.createElement("shadow");
  	domElement.setAttribute("enabled", shadowEnabled());
+ 	domElement.setAttribute("blur", shadowBlurRadius());
  	domElement.setAttribute("x", shadowOffsetX());
  	domElement.setAttribute("y", shadowOffsetY());
  	brushToXml(domElement,shadowBrush());

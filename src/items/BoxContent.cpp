@@ -17,6 +17,10 @@
 #include <QAbstractTextDocumentLayout>
 #include <QDebug>
 
+#if QT_VERSION >= 0x040600
+	#define QT46_SHADOW_ENAB 1
+#endif
+
 BoxContent::BoxContent(QGraphicsScene * scene, QGraphicsItem * parent)
     : AbstractContent(scene, parent, false)
     , m_shadowClipDirty(true)
@@ -117,7 +121,7 @@ void BoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * opti
 	
 	QPen p(Qt::NoPen);
 	
-	
+	#if QT46_SHADOW_ENAB == 0
 	if(modelItem()->shadowEnabled())
 	{
 		painter->save();
@@ -144,6 +148,7 @@ void BoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * opti
 		
 		painter->restore();
 	}
+	#endif
 	
 	painter->save();
 	

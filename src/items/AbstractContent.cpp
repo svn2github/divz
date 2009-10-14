@@ -479,9 +479,10 @@ void AbstractContent::syncFromModelItem(AbstractVisualItem *model)
 	if(model->shadowEnabled())
 	{
 		QGraphicsDropShadowEffect * shadow = new QGraphicsDropShadowEffect(this);
-		shadow->setBlurRadius(5);
+		shadow->setBlurRadius(model->shadowBlurRadius());
 		shadow->setXOffset(model->shadowOffsetX());
 		shadow->setYOffset(model->shadowOffsetY());
+		shadow->setColor(model->shadowBrush().color());
 		setGraphicsEffect(shadow);
 
 	}
