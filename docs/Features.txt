@@ -14,7 +14,7 @@ Bible text
 
 -----
 
-Revised Task list for Release 1.0, 10/10/09:
+Revised Task list for Release 1.0, 10/18/09:
 	----------------------------
 	"Tasty Breakfast" Release
 	----------------------------
@@ -29,9 +29,10 @@ Revised Task list for Release 1.0, 10/10/09:
 		[DONE] - Translator/Slide Generator
 			[DONE] - Given a Song, translate into a slide group
 	- UI:
-		- List of forms needed:
-			[ALMOST] - "Grid and Guidelines" Form
-			- Slide Group settings (aspect ratio, etc)
+		[DONE] - List of forms needed:
+			[DONE] - "Grid and Guidelines" Form
+			[DONE] - Slide Group settings (aspect ratio, etc)
+				[LATER] aspect ratio per slide
 			[DONE] - Song Editor
 		[DONE] - SongDatabase List View
 			- One column
@@ -68,44 +69,42 @@ Revised Task list for Release 1.0, 10/10/09:
 			[DONE] - Still cant set item color/props with config box
 		[DONE] - Undo/redo framework
 			- Must have this for sermons and announcment slides
-			- Property change undo/redo is supported
-			- Now must implement undo/redo for:
-				- add/remove slides
-				- add/remove items on slides
 		[DONE] - Snap to grid support
+		[DONE] - Increse/decrease size of font from toolbar - needed for sermon/announcment
+		[DONE] - Copy/paste or duplicate slides
 		[LATER] - Gradients - can settle for making gradients in gimp and import as photo, but need to eventually have support direclty in dviz
-		[*] - Increse/decrease size of font from toolbar - needed for sermon/announcment
-			- see code in textboxcontent.cpp for cursor usage
-		- Copy/paste or duplicate slides
 		- Layout asissts - center objects vert/horz
 			- need hint for this (e.g. songs) to auto adjust - maybe?
+			- should be easy - have toolbar, just add actions and a slot, do calcs, set position
 		- Image Item
 			- Should be easy
 			- If we have time, add crop handles
 		- SVG Item if we have time
 	
 	- Improvements:
-
+		Prompt to save custom output location on close
+		Add video pallette
+		Add image palette
+		Add slide pallette
+		Add song template palette
 		[STARTED] Auto-change slides/slide groups after X seconds
-				added field in Slide.h, now to make SlideGroupViewer and UI honor the field (and SlideGroup::autoChangeGroup() flag in MainWindow)
+			added field in Slide.h, now to make SlideGroupViewer and UI honor the field (and SlideGroup::autoChangeGroup() flag in MainWindow)
 		[STARTED] When searching for song, auto select first result
-				setCurrentIndex() doesnt seem to be working
+			setCurrentIndex() doesnt seem to be working
 		Integrated grid dialog into slideeditor window
-		Change SlideEditor in SlideGroupFactory.h to inherit from QMainWindow, then change songeeditor to just set a central widget
 		Need to add keyboard nudging/movement of items
 			implement AbstractContent::keypressevent
 		Need song new/edit/delete functionality
-		right-click on slide list in editor to open slide config (incl'd bg config tab or btn to config bg)
+		[STARTED] right-click on slide list in editor to open slide config (incl'd bg config tab or btn to config bg)
 			props like time to automatically switch slides, etc
+			added toolbar item for it
 		f2 on selected item to open prop dialog
 		Auto-sizing song text should be an option that can be enabled/disabled
 			if not autosize, pull size from template / textobx
 		option of font family should be available for song
 			should it pull from textbox?
+			should be easy to extract using text cursor - see model/TextItem.cpp - findFontsize() method
 		Add rounded rectangle item / or round boxcontent corners
-		When searching for song and shift+enter, add song and  GO LIVE
-			shift+enter will take a bit of work - would have to subclass QLineEdit and override keypressevent
-			
 		Need to have a reset template button
 		Need to add drag-drop from song list to song group
 		Add outputview objects to encapsulate slidegroupviewer or network client/server
@@ -117,6 +116,11 @@ Revised Task list for Release 1.0, 10/10/09:
 		Save song templates/bg in a "template collection"
 		Add drag/drop background for songs from a yet-to-be-made vid/image bg pallette
 		
+		[DONE] Set Ctrl+Z/Ctrl+shift+z as undo/redo shortcuts
+		[DPNE] Set default font size on new text items larger than 16pt
+		[DONE] Add appros icons to slide editor window and mainwidnow
+		[DONE] Close undostack or integrate as a dock into slideeditor
+		[DONE] Change SlideEditor in SlideGroupFactory.h to inherit from QMainWindow, then change songeeditor to just set a central widget
 		[DONE] When searching for song and press enter in text field, auto-add first song to list, 
 		[DONE] Need to add form to config snap to grid
 		[DONE] Need to integrate appsettings::thirdguidenabled to mygraphicscene
@@ -145,8 +149,15 @@ Revised Task list for Release 1.0, 10/10/09:
 				possible fix: seperate fade roots for background content vs non-background content
 				putting off for now inorder to get this release out the door
 				this is more an asthetic preference right now - and an important one, but not a showstopper. More of an improvment I guess.
+		[LATER] When searching for song and shift+enter, add song and  GO LIVE
+				shift+enter will take a bit of work - would have to subclass QLineEdit and override keypressevent
+				
 		
 	- Bugs:
+		when adding new item, set selected
+		using toolbar, set font size to 1pt, zoom in so text is in view (blob of black), and then press "up size" btn - segfault
+		when zooming in on text using mouse wheel, it doesn't re-render for new scale  
+		close all open editors on closing mainwindow
 		Rotating a boxcontent causes very wierd pen width scaling issues in previews
 		Text editor in slide still white sometimes
 		Need better method of managing song regexps - right now the filters exist in the pixmap generation routines, the editor window, and the slide group!!
@@ -159,6 +170,8 @@ Revised Task list for Release 1.0, 10/10/09:
 				Confirmed that it "new" works on linux tho - need to debug on windows then - drats
 		Perfomance of the document pixmap model generator becomes a problem with a lot of songs - need to investigate - possibly use different cache key
 		
+		[DONE] adding items to slides doesnt put them on top (need to check on z order)
+				for some reason, the m_content array in MyGraphicsScene was showing empty(), so I used the QGraphicsScene::items() method to get list of items for zvalue cals instead
 		[FIXED] Backgrounds in per-verse slides dont work consistently (sometimes override, sometimes master shows thru)
 				I think its because both BackgroundContent items (from master and child) are added to final slide 
 				need to remove master bg if one in child

@@ -16,7 +16,7 @@ public:
 
 protected:
     void changeEvent(QEvent *e);
-
+protected slots:
     void setAutoChangeTime(double);
     void configBg();
 

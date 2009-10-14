@@ -14,6 +14,7 @@
 #include "AppSettings.h"
 #include "AppSettingsDialog.h"
 #include "DocumentSettingsDialog.h"
+#include "SlideGroupSettingsDialog.h"
 
 #include "model/SlideGroupFactory.h"
 
@@ -60,16 +61,32 @@ MainWindow::MainWindow(QWidget *parent) :
 
 	//m_ui->actionEdit_Slide_Group->setEnabled(false);
 
+	m_ui->actionOpen->setIcon(QIcon(":data/stock-open.png"));
 	connect(m_ui->actionOpen, SIGNAL(triggered()), this, SLOT(actionOpen()));
+	m_ui->actionSave->setIcon(QIcon(":data/stock-save.png"));
 	connect(m_ui->actionSave, SIGNAL(triggered()), this, SLOT(actionSave()));
+	m_ui->actionSave_As->setIcon(QIcon(":data/stock-save.png"));
 	connect(m_ui->actionSave_As, SIGNAL(triggered()), this, SLOT(actionSaveAs()));
+	m_ui->actionNew->setIcon(QIcon(":data/stock-new.png"));
 	connect(m_ui->actionNew, SIGNAL(triggered()), this, SLOT(actionNew()));
 
+	m_ui->actionNew_Slide_Group->setIcon(QIcon(":data/stock-add.png"));
 	connect(m_ui->actionNew_Slide_Group, SIGNAL(triggered()), this, SLOT(actionNewGroup()));
+	m_ui->actionEdit_Slide_Group->setIcon(QIcon(":data/stock-edit.png"));
+	m_ui->actionEdit_Slide_Group->setEnabled(false);
 	connect(m_ui->actionEdit_Slide_Group, SIGNAL(triggered()), this, SLOT(actionEditGroup()));
+	m_ui->actionSlide_Group_Properties->setIcon(QIcon(":data/stock-properties.png"));
+	m_ui->actionSlide_Group_Properties->setEnabled(false);
+	connect(m_ui->actionSlide_Group_Properties, SIGNAL(triggered()), this, SLOT(actionGroupProperties()));
+	m_ui->actionDelete_Slide_Group->setIcon(QIcon(":data/stock-delete.png"));
+	m_ui->actionDelete_Slide_Group->setEnabled(false);
 	connect(m_ui->actionDelete_Slide_Group, SIGNAL(triggered()), this, SLOT(actionDelGroup()));
+	
+	
 
+	m_ui->actionApp_Settings->setIcon(QIcon(":data/stock-preferences.png"));
 	connect(m_ui->actionApp_Settings, SIGNAL(triggered()), this, SLOT(actionAppSettingsDialog()));
+	m_ui->actionDoc_Settings->setIcon(QIcon(":data/stock-properties.png"));
 	connect(m_ui->actionDoc_Settings, SIGNAL(triggered()), this, SLOT(actionDocSettingsDialog()));
 
 	connect(m_ui->actionAbout_DViz, SIGNAL(triggered()), this, SLOT(actionAboutDviz()));
@@ -448,8 +465,10 @@ void MainWindow::setupCentralWidget()
 	m_groupView->setModel(m_docModel);
 	m_groupView->setContextMenuPolicy(Qt::ActionsContextMenu);
 	m_groupView->insertAction(0,m_ui->actionEdit_Slide_Group);
+	m_groupView->insertAction(0,m_ui->actionSlide_Group_Properties);
 	m_groupView->insertAction(0,m_ui->actionNew_Slide_Group);
 	m_groupView->insertAction(0,m_ui->actionDelete_Slide_Group);
+	
 	
 	connect(m_docModel, SIGNAL(groupsDropped(QList<SlideGroup*>)), this, SLOT(groupsDropped(QList<SlideGroup*>)));
 	
@@ -619,6 +638,9 @@ void MainWindow::groupSelected(const QModelIndex &idx)
 	//openSlideEditor(s);
 	previewSlideGroup(s);
 	m_ui->actionEdit_Slide_Group->setEnabled(true);
+	m_ui->actionDelete_Slide_Group->setEnabled(true);
+	m_ui->actionSlide_Group_Properties->setEnabled(true);
+	
 }
 
 void MainWindow::previewSlideGroup(SlideGroup *s)
@@ -685,6 +707,18 @@ void MainWindow::actionEditGroup()
 	SlideGroup *s = m_docModel->groupFromIndex(idx);
 	editGroup(s);
 }
+
+void MainWindow::actionGroupProperties()
+{
+	QModelIndex idx = m_groupView->currentIndex();
+	if(!idx.isValid())
+		return;
+	SlideGroup *s = m_docModel->groupFromIndex(idx);
+	SlideGroupSettingsDialog d(s,this);
+	d.adjustSize();
+	d.exec();
+}
+
 
 void MainWindow::actionNewGroup()
 {

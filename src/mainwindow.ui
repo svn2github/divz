@@ -163,6 +163,7 @@
    <addaction name="separator"/>
    <addaction name="actionNew_Slide_Group"/>
    <addaction name="actionEdit_Slide_Group"/>
+   <addaction name="actionSlide_Group_Properties"/>
    <addaction name="actionDelete_Slide_Group"/>
   </widget>
   <action name="actionOpen">
@@ -224,6 +225,16 @@
     <string>F2</string>
    </property>
   </action>
+  <action name="actionSlide_Group_Properties">
+	  <property name="text">
+		  <string>Slide Group Properties</string>
+	  </property>
+	  <property name="shortcut">
+		  <string>SHIFT+F2</string>
+	  </property>
+  </action>
+  
+  
   <action name="actionApp_Settings">
    <property name="text">
     <string>Program Settings ...</string>

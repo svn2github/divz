@@ -32,7 +32,7 @@
 #include <QWheelEvent>
 #include <QToolBar>
 #include <QSplitter>
-
+#include <QDoubleSpinBox>
 
 #include <QDebug>
 #include <assert.h>
@@ -48,6 +48,10 @@
 #include "model/BackgroundItem.h"
 #include "MainWindow.h"
 #include "AppSettings.h"
+#include "items/TextBoxContent.h"
+
+#include "SlideSettingsDialog.h"
+#include "SlideGroupSettingsDialog.h"
 
 #define DEBUG_MODE 0
 
@@ -184,46 +188,6 @@ SlideEditorWindow::SlideEditorWindow(SlideGroup *group, QWidget * parent)
     m_ignoreUndoPropChanges(false),
     m_slideGroup(0)
 {
-	// setup widget
-	QRect geom = QApplication::desktop()->availableGeometry();
-	//resize(2 * geom.width() / 3, 2 * geom.height() / 3);
-	//resize(1400,600);
-	//move(3500,100);
-	
-	QPixmap newpix("new.png");
-// 	QPixmap openpix("open.png");
-// 	QPixmap quitpix("quit.png");
-// 	
-	QToolBar *toolbar = new QToolBar("main toolbar");
-	toolbar->setObjectName("maintoolbar");
-	QAction  *newAction = toolbar->addAction(QIcon(), "New Text Item");
-// 	toolbar->addAction(QIcon(openpix), "Open File");
-// 	toolbar->addSeparator();
-// 	QAction *quit = toolbar->addAction(QIcon(quitpix), 
-// 	"Quit Application");
-	
-// 	connect(quit, SIGNAL(triggered()), qApp, SLOT(quit()));
-	connect(newAction, SIGNAL(triggered()), this, SLOT(newTextItem()));
-
-	QAction  *newBox = toolbar->addAction(QIcon(), "New Box Item");
-	connect(newBox, SIGNAL(triggered()), this, SLOT(newBoxItem()));
-
-	QAction  *newVideo = toolbar->addAction(QIcon(), "New Video Item");
-	connect(newVideo, SIGNAL(triggered()), this, SLOT(newVideoItem()));
-	
-	QAction  *newSlide = toolbar->addAction(QIcon(), "New Slide");
-	connect(newSlide, SIGNAL(triggered()), this, SLOT(newSlide()));
-	
-	QAction  *delSlide = toolbar->addAction(QIcon(), "Delete Slide");
-	connect(delSlide, SIGNAL(triggered()), this, SLOT(delSlide()));
-
-	toolbar->addSeparator();
-        
-        m_undoStack = new QUndoStack();
-        setupUndoView();
-        
-        toolbar->addAction(m_undoStack->createUndoAction(this));
-        toolbar->addAction(m_undoStack->createRedoAction(this));
 
 	m_scene = new MyGraphicsScene(MyGraphicsScene::Editor,this);
 	m_view = new MyGraphicsView(this);
@@ -242,6 +206,8 @@ SlideEditorWindow::SlideEditorWindow(SlideGroup *group, QWidget * parent)
 	
 	m_view->setMyScene(m_scene);
 	m_scene->setSceneRect(sceneRect);
+	setCentralWidget(m_view);
+	
 	resize(sceneRect.width(),sceneRect.height());
 	
 	// Restore state
@@ -255,22 +221,17 @@ SlideEditorWindow::SlideEditorWindow(SlideGroup *group, QWidget * parent)
 
 	appSettingsChanged();
 	
-	m_splitter = new QSplitter(this);
-	m_splitter->setOrientation(Qt::Horizontal);
-
-	setupSlideList();
-	setupViewportLines();
-
-	m_splitter->addWidget(m_view);
-
-	QVBoxLayout *layout = new QVBoxLayout;
-	layout->addWidget(toolbar);
-	layout->addWidget(m_splitter);
-	setLayout(layout);
-
-	m_splitter->restoreState(settings.value("slideeditor/splitter").toByteArray());
-
+        m_undoStack = new QUndoStack();
 	
+	setupSlideList();
+	setupToolbar();
+	setupUndoView();
+	setupViewportLines();
+	
+	
+	restoreState(settings.value("slideeditor/state").toByteArray());
+
+
 	if(DEBUG_MODE)
 	{
 		if(QFile("test.xml").exists())
@@ -306,30 +267,21 @@ SlideEditorWindow::SlideEditorWindow(SlideGroup *group, QWidget * parent)
 	
 	if(group)
 		setSlideGroup(group);
-	//setCentralWidget(m_view);
-        
-        
+	
+	
 }
 
 SlideEditorWindow::~SlideEditorWindow()
 {
-// 	XmlSave save("test.xml");
-// 	save.saveSlide(m_slide);
- 	
  	if(DEBUG_MODE)
  		m_doc.save("test.xml");
 	
 	QSettings settings;
 	settings.setValue("slideeditor/size",size());
 	settings.setValue("slideeditor/pos",pos());
-	settings.setValue("slideeditor/splitter",m_splitter->saveState());
+	settings.setValue("slideeditor/state",saveState());
 	
 	delete m_undoStack;
-	
-	
-// 	delete m_slide;
-// 	m_slide = 0;
-
 }
 
 void SlideEditorWindow::closeEvent(QCloseEvent *evt)
@@ -338,13 +290,154 @@ void SlideEditorWindow::closeEvent(QCloseEvent *evt)
 	emit closed();
 }
 
+void SlideEditorWindow::setupToolbar()
+{
+	QToolBar *toolbar = addToolBar("main toolbar");
+	toolbar->setObjectName("maintoolbar");
+	
+	QAction  *groupProp = toolbar->addAction(QIcon(":data/stock-preferences.png"), "Slide Group Properties");
+	connect(groupProp, SIGNAL(triggered()), this, SLOT(groupProperties()));
+	
+	toolbar->addSeparator();
+	
+	QAction  *slideProp = toolbar->addAction(QIcon(":data/stock-properties.png"), "Slide Properties");
+	connect(slideProp, SIGNAL(triggered()), this, SLOT(slideProperties()));
+	
+	toolbar->addSeparator();
+	
+	QAction  *newAction = toolbar->addAction(QIcon(":data/insert-text-24.png"), "New Text Item");
+	connect(newAction, SIGNAL(triggered()), this, SLOT(newTextItem()));
+
+	QAction  *newBox = toolbar->addAction(QIcon(":data/stock-insert-table.png"), "New Box Item");
+	connect(newBox, SIGNAL(triggered()), this, SLOT(newBoxItem()));
+
+	QAction  *newVideo = toolbar->addAction(QIcon(":data/stock-panel-multimedia.png"), "New Video Item");
+	connect(newVideo, SIGNAL(triggered()), this, SLOT(newVideoItem()));
+	
+	QAction  *newImage = toolbar->addAction(QIcon(":data/insert-image-24.png"), "New Image Item");
+	newImage->setEnabled(false);
+	//connect(newImage, SIGNAL(triggered()), this, SLOT(newImageItem()));
+	
+	toolbar->addSeparator();
+	
+	QAction  *newSlide = toolbar->addAction(QIcon(":data/stock-add.png"), "New Slide");
+	connect(newSlide, SIGNAL(triggered()), this, SLOT(newSlide()));
+	
+	QAction  *dupSlide = toolbar->addAction(QIcon(":data/stock-convert.png"), "Duplicate Slide");
+	connect(dupSlide, SIGNAL(triggered()), this, SLOT(dupSlide()));
+	
+	toolbar->addSeparator();
+
+	
+	m_textBase = new QWidget(toolbar);
+	QHBoxLayout * layout = new QHBoxLayout(m_textBase);
+	QLabel * label = new QLabel("Text Size: ");
+	layout->addWidget(label);
+	
+	m_textSizeBox = new QDoubleSpinBox(m_textBase);
+	m_textSizeBox->setSuffix("pt");
+	m_textSizeBox->setMinimum(1);
+	m_textSizeBox->setMaximum(5000);
+	connect(m_textSizeBox, SIGNAL(valueChanged(double)), this, SLOT(textSizeChanged(double)));
+	
+	m_textBase->setEnabled(false);
+	
+	layout->addWidget(m_textSizeBox);
+	m_textBase->setLayout(layout);
+	
+	toolbar->addWidget(m_textBase);
+	
+	m_textPlusAction = toolbar->addAction(QIcon(":data/stock-sort-descending.png"), "Increase Font Size");
+	connect(m_textPlusAction, SIGNAL(triggered()), this, SLOT(textPlus()));
+	
+	m_textMinusAction = toolbar->addAction(QIcon(":data/stock-sort-ascending.png"), "Decrease Font Size");
+	connect(m_textMinusAction, SIGNAL(triggered()), this, SLOT(textMinus()));
+	
+	m_textPlusAction->setEnabled(false);
+	m_textMinusAction->setEnabled(false);
+	
+	connect(m_scene, SIGNAL(selectionChanged()), this, SLOT(selectionChanged()));
+	
+	toolbar->addSeparator();
+	
+	QAction *action = m_undoStack->createUndoAction(this);
+	action->setIcon(QIcon(":data/stock-undo.png"));
+	action->setShortcut(QString("CTRL+Z"));
+	toolbar->addAction(action);
+	
+	action = m_undoStack->createRedoAction(this);
+	action->setIcon(QIcon(":data/stock-redo2.png"));
+	action->setShortcut(QString("CTRL+SHIFT+Z"));
+	toolbar->addAction(action);
+
+	toolbar->addSeparator();
+	
+	QAction  *delSlide = toolbar->addAction(QIcon(":data/stock-delete.png"), "Delete Slide");
+	connect(delSlide, SIGNAL(triggered()), this, SLOT(delSlide()));
+}
+
+void SlideEditorWindow::selectionChanged()
+{
+	m_currentTextItems.clear();
+	QList<QGraphicsItem *> selection = m_scene->selectedItems();
+	bool foundText = false;
+	double sizeSum = 0.0;
+	foreach(QGraphicsItem *item, selection)
+	{
+		TextBoxContent * tmp = dynamic_cast<TextBoxContent*>(item);
+		if(tmp)
+		{
+			m_currentTextItems << tmp;
+			foundText = true;
+			sizeSum += dynamic_cast<TextItem*>(tmp->modelItem())->findFontSize();
+		}
+	}
+	
+	if(foundText)
+		m_textSizeBox->setValue(sizeSum / m_currentTextItems.size()); 
+	
+	m_textBase->setEnabled(foundText);
+	m_textPlusAction->setEnabled(foundText);
+	m_textMinusAction->setEnabled(foundText);
+}
+
+void SlideEditorWindow::textPlus()
+{
+	if(m_currentTextItems.size() <= 0)
+		return;
+		
+	double value = m_textSizeBox->value();
+	value += TOOLBAR_TEXT_SIZE_INC;
+	m_textSizeBox->setValue(value);
+	
+}
+
+void SlideEditorWindow::textMinus()
+{
+	if(m_currentTextItems.size() <= 0)
+		return;
+		
+	double value = m_textSizeBox->value();
+	value -= TOOLBAR_TEXT_SIZE_INC;
+	m_textSizeBox->setValue(value);
+	
+}
+	
+void SlideEditorWindow::textSizeChanged(double pt)
+{
+	if(m_currentTextItems.size() <= 0)
+		return;
+	foreach(TextBoxContent *text, m_currentTextItems)
+		dynamic_cast<TextItem*>(text->modelItem())->setFontSize(pt);
+}
 
 void SlideEditorWindow::setupUndoView()
 {
-    m_undoView = new QUndoView(m_undoStack);
-    m_undoView->setWindowTitle(tr("Undo Stack"));
-    m_undoView->show();
-    m_undoView->setAttribute(Qt::WA_QuitOnClose, false);
+	QDockWidget *dock = new QDockWidget(tr("Undo/Redo"), this);
+	dock->setObjectName("undoViewDock");
+	m_undoView = new QUndoView(m_undoStack,dock);
+	dock->setWidget(m_undoView);
+	addDockWidget(Qt::LeftDockWidgetArea, dock);
 }
 
 void SlideEditorWindow::appSettingsChanged()
@@ -379,7 +472,9 @@ void SlideEditorWindow::aspectRatioChanged(double x)
 
 void SlideEditorWindow::setupSlideList()
 {
-	m_slideListView = new QListView(this);
+	QDockWidget *dock = new QDockWidget(tr("Slide List"), this);
+	dock->setObjectName("slideListDock");
+	m_slideListView = new QListView(dock);
 	m_slideListView->setViewMode(QListView::ListMode);
 	//m_slideListView->setViewMode(QListView::IconMode);
 	m_slideListView->setMovement(QListView::Free);
@@ -388,8 +483,6 @@ void SlideEditorWindow::setupSlideList()
 	m_slideListView->setDragEnabled(true);
 	m_slideListView->setAcceptDrops(true);
 	m_slideListView->setDropIndicatorShown(true);
-
-	m_splitter->addWidget(m_slideListView);
 
 	connect(m_slideListView,SIGNAL(activated(const QModelIndex &)),this,SLOT(slideSelected(const QModelIndex &)));
 	connect(m_slideListView,SIGNAL(clicked(const QModelIndex &)),this,SLOT(slideSelected(const QModelIndex &)));
@@ -406,8 +499,8 @@ void SlideEditorWindow::setupSlideList()
 		delete m;
 		m=0;
 	}
-	//dock->setWidget(m_slideListView);
-	//addDockWidget(Qt::LeftDockWidgetArea, dock);
+	dock->setWidget(m_slideListView);
+	addDockWidget(Qt::LeftDockWidgetArea, dock);
 	//viewMenu->addAction(dock->toggleViewAction());
 }
 
@@ -942,6 +1035,35 @@ void SlideEditorWindow::newSlide()
 	//m_scene->setSlide(slide);
 	
 	setSlideGroup(m_slideGroup,slide);
+}
+
+void SlideEditorWindow::dupSlide()
+{
+	Slide * oldSlide = m_scene->slide();
+	Slide * slide = oldSlide->clone();
+	
+	slide->setSlideNumber(m_slideGroup->numSlides());
+	slide->setSlideId(m_slideGroup->numSlides());
+	
+	m_slideGroup->addSlide(slide);
+	
+	setSlideGroup(m_slideGroup,slide);
+}
+
+void SlideEditorWindow::slideProperties()
+{
+	Slide * slide = m_scene->slide();
+	
+	SlideSettingsDialog d(slide,this);
+	d.adjustSize();
+	d.exec();
+}
+
+void SlideEditorWindow::groupProperties()
+{
+	SlideGroupSettingsDialog d(m_slideGroup,this);
+	d.adjustSize();
+	d.exec();
 }
 
 void SlideEditorWindow::delSlide()

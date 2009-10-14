@@ -180,7 +180,7 @@ void SlideGroupViewControl::setCurrentSlide(Slide *s)
 }
 	
 /** AbstractSlideGroupEditor:: **/
-AbstractSlideGroupEditor::AbstractSlideGroupEditor(SlideGroup */*g*/, QWidget *parent) : QWidget(parent) {}
+AbstractSlideGroupEditor::AbstractSlideGroupEditor(SlideGroup */*g*/, QWidget *parent) : QMainWindow(parent) {}
 AbstractSlideGroupEditor::~AbstractSlideGroupEditor() {}
 void AbstractSlideGroupEditor::setSlideGroup(SlideGroup */*g*/,Slide */*curSlide*/) {}
 

@@ -5,6 +5,9 @@
 
 #include <QGraphicsScene>
 #include <QStringList>
+#include <QTextDocument>
+#include <QTextCharFormat>
+#include <QTextCursor>
 
 TextItem::TextItem() : AbstractVisualItem() 
 {
@@ -27,7 +30,7 @@ void TextItem::setText(QString text)
 }
 
 ITEM_PROPSET(TextItem, FontFamily, QString, fontFamily)
-ITEM_PROPSET(TextItem, FontSize, double, fontSize)
+//ITEM_PROPSET(TextItem, FontSize, double, fontSize)
 ITEM_PROPSET(TextItem, ShapeEnabled, bool, shapeEnabled)
 ITEM_PROPSET(TextItem, ShapePoint1, QPointF, shapePoint1)
 ITEM_PROPSET(TextItem, ShapePoint2, QPointF, shapePoint2)
@@ -54,6 +57,39 @@ void TextItem::setYTextAlign(Qt::Alignment z)
         //qDebug("TextItem::setText: '%s'",text.toAscii().constData());
 	setChanged("yTextAlign",(int)z,(int)old);
 }
+
+
+void TextItem::setFontSize(double size)
+{
+	QTextDocument doc;
+	if(text().indexOf('<') < 0)
+		doc.setPlainText(text());
+	else
+		doc.setHtml(text());
+	QTextCursor cursor(&doc);
+	cursor.select(QTextCursor::Document);
+
+	QTextCharFormat format;
+	format.setFontPointSize(size);
+	cursor.mergeCharFormat(format);
+
+	setText(doc.toHtml());
+}
+
+
+double TextItem::findFontSize()
+{
+	QTextDocument doc;
+	if(text().indexOf('<') < 0)
+		doc.setPlainText(text());
+	else
+		doc.setHtml(text());
+	QTextCursor cursor(&doc);
+	cursor.select(QTextCursor::Document);
+	QTextCharFormat format = cursor.charFormat();
+	return format.fontPointSize();
+}
+
 
 #include <assert.h>
 AbstractContent * TextItem::createDelegate(QGraphicsScene *scene,QGraphicsItem*parent)
@@ -83,7 +119,7 @@ bool TextItem::fromXml(QDomElement & pe)
 	if (domElement.isElement()) 
 	{
 		setFontFamily(domElement.attribute("font-family"));
-		setFontSize(domElement.attribute("font-size").toDouble());
+		//setFontSize(domElement.attribute("font-size").toDouble());
 // 		QFont font;
 // 		font.setFamily(domElement.attribute("font-family"));
 // 		font.setPointSize(domElement.attribute("font-size").toInt());

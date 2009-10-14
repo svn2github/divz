@@ -73,6 +73,7 @@ protected slots:
 	void actionEditGroup();
 	void actionNewGroup();
 	void actionDelGroup();
+	void actionGroupProperties();
 
 	void actionAppSettingsDialog();
 	void actionDocSettingsDialog();

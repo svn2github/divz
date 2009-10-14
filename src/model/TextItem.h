@@ -32,6 +32,7 @@ public:
 	
 	double fontSize() const { return m_fontSize; }
 	void setFontSize(double);
+	double findFontSize();
 	
 	// Shape (Beizer)
 	bool shapeEnabled() const { return m_shapeEnabled; }

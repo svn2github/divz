@@ -116,6 +116,7 @@ bool Slide::fromXml(QDomElement & pe)
 	
 	m_slideNumber = pe.attribute("number").toInt();
 	m_slideId = pe.attribute("id").toInt();
+	m_autoChangeTime = pe.attribute("timeout").toInt();
 
 	// for each child of 'slide'
 	for (QDomElement element = pe.firstChildElement(); !element.isNull(); element = element.nextSiblingElement()) 
@@ -167,6 +168,7 @@ void Slide::toXml(QDomElement & pe) const
 	
 	pe.setAttribute("number",m_slideNumber);
 	pe.setAttribute("id",m_slideId);
+	pe.setAttribute("timeout",m_autoChangeTime);
 	
 	foreach (AbstractItem * content, m_items) 
 	{

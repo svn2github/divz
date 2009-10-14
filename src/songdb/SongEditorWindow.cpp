@@ -16,7 +16,9 @@ SongEditorWindow::SongEditorWindow(SlideGroup *g, QWidget *parent) :
 {
 	setAttribute(Qt::WA_DeleteOnClose,true);
 	
-	QVBoxLayout * vbox = new QVBoxLayout(this);
+	QWidget *centerWidget = new QWidget(this);
+	
+	QVBoxLayout * vbox = new QVBoxLayout(centerWidget);
 	
 	QHBoxLayout * hbox1 = new QHBoxLayout();
 	QLabel *label = new QLabel("Title: ");
@@ -45,6 +47,7 @@ SongEditorWindow::SongEditorWindow(SlideGroup *g, QWidget *parent) :
 	QHBoxLayout * hbox2 = new QHBoxLayout();
 	
 	QPushButton * tmplEditBtn = new QPushButton("Edit &Background && Templates...");
+	tmplEditBtn->setIcon(QIcon(":data/stock-select-color.png"));
 	connect(tmplEditBtn, SIGNAL(clicked()), this, SLOT(editSongTemplate()));
 	hbox2->addWidget(tmplEditBtn);
 	
@@ -52,6 +55,7 @@ SongEditorWindow::SongEditorWindow(SlideGroup *g, QWidget *parent) :
 	
 	QPushButton *btn;
 	btn = new QPushButton("&Save Song");
+	btn->setIcon(QIcon(":data/stock-save.png"));
 	connect(btn, SIGNAL(clicked()), this, SLOT(accepted()));
 	hbox2->addWidget(btn);
 	
@@ -62,6 +66,7 @@ SongEditorWindow::SongEditorWindow(SlideGroup *g, QWidget *parent) :
 	vbox->addLayout(hbox2);
 	
 	//setLayout(vbox);
+	setCentralWidget(centerWidget);
 	
 	resize(500,600);
 	

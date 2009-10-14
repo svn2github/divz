@@ -92,6 +92,8 @@ QString TextBoxContent::toHtml()
 	return textModel ? textModel->text() : "";
 }
 
+
+
 void TextBoxContent::setHtml(const QString & htmlCode)
 {
         //qDebug("Setting HTML... [%s]",htmlCode.toAscii().constData());
@@ -131,6 +133,8 @@ void TextBoxContent::setHtml(const QString & htmlCode)
 
 	delete m_textCache;
 	m_textCache = 0;
+	
+	update();
 }
 
 /*void TextBoxContent::setXTextAlign(Qt::Alignment x)
@@ -179,6 +183,7 @@ void TextBoxContent::syncFromModelItem(AbstractVisualItem *model)
 
 	if(textModel->text().indexOf('<') < 0)
 	{
+		//qDebug() << "TextBoxContent:: converting plain text from model item to html";
 		m_text->setPlainText(textModel->text());
 		textModel->setText(m_text->toHtml());
 	}
@@ -210,9 +215,9 @@ AbstractVisualItem * TextBoxContent::syncToModelItem(AbstractVisualItem *model)
 		return 0;
 	}
         //qDebug("TextBoxContent:syncToModelItem: Syncing to model! Yay!");
-	textModel->setText(m_text->toHtml());
+	//textModel->setText(m_text->toHtml());
 	textModel->setFontFamily(m_text->defaultFont().family());
-	textModel->setFontSize(m_text->defaultFont().pointSize());
+	//textModel->setFontSize(m_text->defaultFont().pointSize());
 
 // 	textModel->setXTextAlign(xTextAlign());
 // 	textModel->setYTextAlign(yTextAlign());

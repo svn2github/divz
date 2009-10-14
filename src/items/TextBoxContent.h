@@ -22,6 +22,8 @@ class TextBoxContent : public AbstractContent
     public Q_SLOTS:
         QString toHtml();
         void setHtml(const QString & htmlCode);
+        
+        
 
 //         Qt::Alignment xTextAlign() const { return m_xTextAlign; }
 // 	Qt::Alignment yTextAlign() const { return m_yTextAlign; }

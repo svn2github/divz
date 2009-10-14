@@ -12,6 +12,7 @@
 #include "SlideGroupViewer.h"
 #include "SlideGroupListModel.h"
 #include <QListView>
+#include <QMainWindow>
 
 class SlideGroupViewMutator
 {
@@ -63,13 +64,18 @@ protected:
 	bool m_releasingSlideGroup;
 };
 
-class AbstractSlideGroupEditor : public QWidget
+class AbstractSlideGroupEditor : public QMainWindow
 {
+	Q_OBJECT
 public:
 	AbstractSlideGroupEditor(SlideGroup *g=0, QWidget * parent = 0);
 	virtual ~AbstractSlideGroupEditor();
 	
 	virtual void setSlideGroup(SlideGroup*g,Slide *curSlide=0);
+
+signals:
+	void closed();
+	
 };
 
 class MyGraphicsScene;

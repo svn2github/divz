@@ -20,7 +20,9 @@
         <file>data/insert-camera.png</file>
         <file>data/insert-download.png</file>
         <file>data/insert-image.png</file>
+        <file>data/insert-image-24.png</file>
         <file>data/insert-text.png</file>
+        <file>data/insert-text-24.png</file>
         <file>data/effects-icons/black-and-white-effect.png</file>
         <file>data/effects-icons/glow-effect.png</file>
         <file>data/effects-icons/invert-effect.png</file>
@@ -39,6 +41,82 @@
         <file>data/textleft.png</file>
         <file>data/textright.png</file>
         <file>data/textcenter.png</file>
+        
+        <file>data/stock-about.png</file>
+        <file>data/stock-add.png</file>
+        <file>data/stock-apply.png</file>
+        <file>data/stock-attach.png</file>
+        <file>data/stock-bold.png</file>
+        <file>data/stock-bookmark-page.png</file>
+        <file>data/stock-bookmarks.png</file>
+        <file>data/stock-book.png</file>
+        <file>data/stock-cdrom.png</file>
+        <file>data/stock-clear.png</file>
+        <file>data/stock-close.png</file>
+        <file>data/stock-connect.png</file>
+        <file>data/stock-convert.png</file>
+        <file>data/stock-copy.png</file>
+        <file>data/stock-cut.png</file>
+        <file>data/stock-delete.png</file>
+        <file>data/stock-disconnect.png</file>
+        <file>data/stock-download.png</file>
+        <file>data/stock-edit.png</file>
+        <file>data/stock-execute.png</file>
+        <file>data/stock-export.png</file>
+        <file>data/stock-find-and-replace.png</file>
+        <file>data/stock-find.png</file>
+        <file>data/stock-font.png</file>
+        <file>data/stock-foo.png</file>
+        <file>data/stock-fullscreen.png</file>
+        <file>data/stock-go-back.png</file>
+        <file>data/stock-go-down.png</file>
+        <file>data/stock-go-forward.png</file>
+        <file>data/stock-goto-bottom.png</file>
+        <file>data/stock-goto-first.png</file>
+        <file>data/stock-goto-last.png</file>
+        <file>data/stock-goto-top.png</file>
+        <file>data/stock-go-up.png</file>
+        <file>data/stock-help.png</file>
+        <file>data/stock-history.png</file>
+        <file>data/stock-home.png</file>
+        <file>data/stock-import.png</file>
+        <file>data/stock-insert-image.png</file>
+        <file>data/stock-insert-object.png</file>
+        <file>data/stock-insert-table.png</file>
+        <file>data/stock-italic.png</file>
+        <file>data/stock-jump-to.png</file>
+        <file>data/stock-line-in.png</file>
+        <file>data/stock-media-eject.png</file>
+        <file>data/stock-media-ffwd.png</file>
+        <file>data/stock-media-next.png</file>
+        <file>data/stock-media-pause.png</file>
+        <file>data/stock-media-play.png</file>
+        <file>data/stock-media-rec.png</file>
+        <file>data/stock-media-rewind.png</file>
+        <file>data/stock-media-stop.png</file>
+        <file>data/stock-mic.png</file>
+        <file>data/stock-new.png</file>
+        <file>data/stock-open.png</file>
+        <file>data/stock-panel-multimedia.png</file>
+        <file>data/stock-panel-screenshot.png</file>
+        <file>data/stock-paste.png</file>
+        <file>data/stock-preferences.png</file>
+        <file>data/stock-properties.png</file>
+        <file>data/stock-redo.png</file>
+        <file>data/stock-redo2.png</file>
+        <file>data/stock-refresh.png</file>
+        <file>data/stock-remove.png</file>
+        <file>data/stock-save.png</file>
+        <file>data/stock-select-color.png</file>
+        <file>data/stock-sort-ascending.png</file>
+        <file>data/stock-sort-descending.png</file>
+        <file>data/stock-stop.png</file>
+        <file>data/stock-undo.png</file>
+        <file>data/stock-zoom-100.png</file>
+        <file>data/stock-zoom-fit.png</file>
+        <file>data/stock-zoom-in.png</file>
+        <file>data/stock-zoom-out.png</file>
+        
         <!--
         <file>translations/fotowall_de.qm</file>
         <file>translations/fotowall_fr.qm</file>

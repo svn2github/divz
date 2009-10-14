@@ -332,7 +332,9 @@ void MyGraphicsScene::addContent(AbstractContent * content, bool takeOwnership) 
 	//content->setCacheMode(QGraphicsItem::DeviceCoordinateCache);*/
 	if(content->zValue() == 0)
 	{
-		content->modelItem()->setZValue(m_content.isEmpty() ? 1 : (m_content.last()->zValue() + 1));
+		QList<QGraphicsItem*> kids = items();
+		double z = kids.isEmpty() ? 1 : (kids.last()->zValue() + 1);
+		content->modelItem()->setZValue(z);
 	}
 	content->show();
 	
@@ -365,10 +367,13 @@ TextItem * MyGraphicsScene::newTextItem(QString text)
 	TextBoxItem *t = new TextBoxItem();
 	assert(m_slide);
 	
+	// text should automatically enlarge the rect
+	t->setContentsRect(QRect(0,0,400,10));
 	t->setText(text);
 	t->setPos(nearCenter(sceneRect()));
 	t->setItemId(ItemFactory::nextId());
 	t->setItemName(QString("TextBoxItem%1").arg(t->itemId()));
+	t->setFontSize(38.0);
 	
 	m_slide->addItem(t); //m_slide->createText();
 	
