@@ -355,7 +355,7 @@ p, li { white-space: pre-wrap; }
                 <fill brush-style="1" video="" image="" brush-color="255,255,255,128" type="1"/>
                 <outline brush-style="1" pen-join="64" pen-width="3" enabled="1" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255"/>
                 <mirror offset="3" enabled="0"/>
-                <shadow brush-style="1" x="7" y="7" enabled="1" blur="7" brush-color="0,0,0,255"/>
+                <shadow brush-style="1" x="3" y="3" enabled="1" blur="3" brush-color="0,0,0,128"/>
             </box>
             <textbox>
                 <item-id>1520</item-id>

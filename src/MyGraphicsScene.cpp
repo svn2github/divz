@@ -65,7 +65,7 @@
 #if QT_VERSION >= 0x040600
 	#include <QGraphicsOpacityEffect>
 
-	#define QT46_OPAC_ENAB 1
+	#define QT46_OPAC_ENAB 0
 #endif
 
 class RootObject : public QGraphicsItem

@@ -23,7 +23,7 @@
 #define DEBUG_LAYOUT 0
 
 #if QT_VERSION >= 0x040600
-	#define QT46_SHADOW_ENAB 1
+	#define QT46_SHADOW_ENAB 0
 #endif
 
 // static QString trimLeft(QString str)

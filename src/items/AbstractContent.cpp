@@ -22,7 +22,7 @@
 #if QT_VERSION >= 0x040600
 	#include <QGraphicsDropShadowEffect>
 
-	#define QT46_SHADOW_ENAB 1
+	#define QT46_SHADOW_ENAB 0
 #endif
 
 

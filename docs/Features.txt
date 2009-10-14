@@ -153,9 +153,11 @@ Revised Task list for Release 1.0, 10/18/09:
 				this is more an asthetic preference right now - and an important one, but not a showstopper. More of an improvment I guess.
 		[LATER] When searching for song and shift+enter, add song and  GO LIVE
 				shift+enter will take a bit of work - would have to subclass QLineEdit and override keypressevent
-				
-		
+		[LATER] Gausian blur shadows (start impl using QGraphicsEffects from 4.6, but performance is terrible, so I'll have to do some heavy optimizations before we can use it.)
+		[LATER] Video Capture (started impl, but again, performance is terrible. That may be due to the FormatOpts specified, or in ffmpeg, or the capture hardware - need to trace - later!)
+	
 	- Bugs:
+		qt4.6b-win32: Adding a new video item or changing filename of existing item causes program crash
 		qt4.6b-win32: chaing document aspect ratio doesnt affect slide editor until program restart
 		when adding new item, set selected
 		using toolbar, set font size to 1pt, zoom in so text is in view (blob of black), and then press "up size" btn - segfault

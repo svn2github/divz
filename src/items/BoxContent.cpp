@@ -18,7 +18,7 @@
 #include <QDebug>
 
 #if QT_VERSION >= 0x040600
-	#define QT46_SHADOW_ENAB 1
+	#define QT46_SHADOW_ENAB 0
 #endif
 
 BoxContent::BoxContent(QGraphicsScene * scene, QGraphicsItem * parent)
