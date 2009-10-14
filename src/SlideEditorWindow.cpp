@@ -337,6 +337,8 @@ void SlideEditorWindow::setupToolbar()
 	m_textSizeBox = new QDoubleSpinBox(m_textBase);
 	m_textSizeBox->setSuffix("pt");
 	m_textSizeBox->setMinimum(1);
+	m_textSizeBox->setValue(38);
+	m_textSizeBox->setDecimals(1);
 	m_textSizeBox->setMaximum(5000);
 	connect(m_textSizeBox, SIGNAL(valueChanged(double)), this, SLOT(textSizeChanged(double)));
 	
