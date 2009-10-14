@@ -26,8 +26,8 @@ PacketQueue g_packet_queue;
 QMutex mutex;
 
 
-QVideoDecoder::QVideoDecoder(QVideo * video, QObject * parent) : QThread(parent), 
-	m_start_timestamp(0), 
+QVideoDecoder::QVideoDecoder(QVideo * video, QObject * parent) : QThread(parent),
+	m_start_timestamp(0),
 	m_initial_decode(true),
 	m_previous_pts(0.0),
 	m_killed(false)
@@ -36,7 +36,7 @@ QVideoDecoder::QVideoDecoder(QVideo * video, QObject * parent) : QThread(parent)
 
 	m_time_base_rational.num = 1;
 	m_time_base_rational.den = AV_TIME_BASE;
-	
+
 	m_sws_context = NULL;
 	m_frame = NULL;
 
@@ -52,19 +52,19 @@ QVideoDecoder::~QVideoDecoder()
 	m_killed = true;
 	quit();
 	wait();
-	
+
 	if(m_video->m_video_loaded)
 	{
 		freeResources();
-		
+
 	}
-	
+
 	if(m_sws_context != NULL)
 	{
 		sws_freeContext(m_sws_context);
 		m_sws_context = NULL;
 	}
-	
+
 	if(m_frame != NULL)
 	{
 		delete m_frame;
@@ -76,19 +76,42 @@ bool QVideoDecoder::load(const QString & filename)
 {
 	if(!QFile::exists(filename))
 		return false;
-		
+
 	//QMutexLocker locker(&mutex);
 
 
+	 AVInputFormat *inFmt = NULL;
+
+	 QString fileTmp = filename;
+
+	 if(fileTmp.indexOf(":"))
+	 {
+		 QStringList list = fileTmp.split(":");
+		 qDebug() << "[DEBUG] QVideoDecoder::load(): splitting args, list:"<<list;
+		 fileTmp = list[1];
+		 if(fileTmp.isEmpty())
+		 	fileTmp = "0";
+
+		 inFmt = av_find_input_format(qPrintable(list[0]));
+		 if( !inFmt ){
+		   fprintf(stderr,"Unable to open video capture\n");
+		   return -1;
+		 }
+	}
+
+
+
+
 	// Open video file
-	if(av_open_input_file(&m_av_format_context, qPrintable(filename), NULL, 0, NULL) != 0)
+	if(av_open_input_file(&m_av_format_context, qPrintable(fileTmp), inFmt, 0, NULL) != 0)
+	//if(av_open_input_file(&m_av_format_context, "0", inFmt, 0, NULL) != 0)
 	{
 		fprintf(stderr,"[WARN] QVideoDecoder::load(): av_open_input_file() failed.\n");
 		return false;
 	}
 
 	// Retrieve stream information
-	if(av_find_stream_info(m_av_format_context) < 0) 
+	if(av_find_stream_info(m_av_format_context) < 0)
 	{
 		fprintf(stderr,"[WARN] QVideoDecoder::load(): av_find_stream_info() failed.\n");
 		return false;
@@ -101,11 +124,11 @@ bool QVideoDecoder::load(const QString & filename)
 	m_audio_stream = -1;
 	for(i = 0; i < m_av_format_context->nb_streams; i++)
 	{
-		if(m_av_format_context->streams[i]->codec->codec_type == CODEC_TYPE_VIDEO) 
+		if(m_av_format_context->streams[i]->codec->codec_type == CODEC_TYPE_VIDEO)
 		{
 			m_video_stream = i;
 		}
-		if(m_av_format_context->streams[i]->codec->codec_type == CODEC_TYPE_AUDIO) 
+		if(m_av_format_context->streams[i]->codec->codec_type == CODEC_TYPE_AUDIO)
 		{
 			m_audio_stream = i;
 		}
@@ -123,7 +146,7 @@ bool QVideoDecoder::load(const QString & filename)
 
 	// Find the decoder for the video stream
 	m_video_codec =avcodec_find_decoder(m_video_codec_context->codec_id);
-	if(m_video_codec == NULL) 
+	if(m_video_codec == NULL)
 	{
 		fprintf(stderr,"[WARN] QVideoDecoder::load(): avcodec_find_decoder() failed.\n");
 		return false;
@@ -169,15 +192,15 @@ bool QVideoDecoder::load(const QString & filename)
 // 		wanted_spec.samples = SDL_AUDIO_BUFFER_SIZE;
 // 		//wanted_spec.callback = audio_callback;
 // 		wanted_spec.userdata = m_audio_codec_context;
-// 
-// 		if(SDL_OpenAudio(&wanted_spec, &spec) < 0) 
+//
+// 		if(SDL_OpenAudio(&wanted_spec, &spec) < 0)
 // 		{
 // 			//error
 // 			return false;
 // 		}
-// 
+//
 		m_audio_codec = avcodec_find_decoder(m_audio_codec_context->codec_id);
-		if(!m_audio_codec) 
+		if(!m_audio_codec)
 		{
 			//unsupported codec
 			return false;
@@ -205,7 +228,7 @@ bool QVideoDecoder::load(const QString & filename)
 * a frame at the time it is allocated.
 */
 
-//int our_get_buffer(AVCodecContext *c, AVFrame *pic) 
+//int our_get_buffer(AVCodecContext *c, AVFrame *pic)
 //{
 //	int ret = avcodec_default_get_buffer(c, pic);
 //	uint64_t *pts = (uint64_t*)av_malloc(sizeof(uint64_t));
@@ -214,7 +237,7 @@ bool QVideoDecoder::load(const QString & filename)
 //	return ret;
 //}
 //
-//void our_release_buffer(AVCodecContext *c, AVFrame *pic) 
+//void our_release_buffer(AVCodecContext *c, AVFrame *pic)
 //{
 //	if(pic) av_freep(&pic->opaque);
 //	avcodec_default_release_buffer(c, pic);
@@ -262,7 +285,7 @@ void QVideoDecoder::seek(int ms, int flags)
 
 	int64_t seek_target = (int64_t)(seconds * AV_TIME_BASE);
 
-	seek_target = av_rescale_q(seek_target, m_time_base_rational, 
+	seek_target = av_rescale_q(seek_target, m_time_base_rational,
 		m_av_format_context->streams[m_video_stream]->time_base);
 
 	av_seek_frame(m_av_format_context, m_video_stream, seek_target, flags);
@@ -277,10 +300,10 @@ void QVideoDecoder::restart()
 // 		delete m_frame;
 // 		m_frame = 0;
 // 	}
-// 	
+//
 	if(!m_video->m_video_loaded)
 		return;
-		
+
 	seek(0, AVSEEK_FLAG_BACKWARD);
 }
 
@@ -309,17 +332,17 @@ void QVideoDecoder::read()
 	int frame_finished = 0;
 	while(!frame_finished && !m_killed)
 	{
-		if(av_read_frame(m_av_format_context, &packet) >= 0) 
+		if(av_read_frame(m_av_format_context, &packet) >= 0)
 		{
 			// Is this a packet from the video stream?
-			if(packet.stream_index == m_video_stream) 
+			if(packet.stream_index == m_video_stream)
 			{
 				//global_video_pkt_pts = packet.pts;
 
 				avcodec_decode_video(m_video_codec_context, m_av_frame, &frame_finished, packet.data, packet.size);
 
 				// Did we get a video frame?
-				if(frame_finished) 
+				if(frame_finished)
 				{
 					av_free_packet(&packet);
 				}
@@ -346,7 +369,7 @@ void QVideoDecoder::decode()
 {
 	if(m_video->m_status == QVideo::NotRunning)
 		return;
-		
+
 	emit ready(false);
 
 	AVPacket pkt1, *packet = &pkt1;
@@ -355,10 +378,10 @@ void QVideoDecoder::decode()
 	int frame_finished = 0;
 	while(!frame_finished && !m_killed)
 	{
-		if(av_read_frame(m_av_format_context, packet) >= 0) 
+		if(av_read_frame(m_av_format_context, packet) >= 0)
 		{
 			// Is this a packet from the video stream?
-			if(packet->stream_index == m_video_stream) 
+			if(packet->stream_index == m_video_stream)
 			{
 				//global_video_pkt_pts = packet.pts;
 
@@ -367,17 +390,17 @@ void QVideoDecoder::decode()
 // 				mutex.unlock();
 
 
-				if(packet->dts == AV_NOPTS_VALUE && 
-					      m_av_frame->opaque && 
-				  *(uint64_t*)m_av_frame->opaque != AV_NOPTS_VALUE) 
+				if(packet->dts == AV_NOPTS_VALUE &&
+					      m_av_frame->opaque &&
+				  *(uint64_t*)m_av_frame->opaque != AV_NOPTS_VALUE)
 				{
 					pts = *(uint64_t *)m_av_frame->opaque;
-				} 
-				else if(packet->dts != AV_NOPTS_VALUE) 
+				}
+				else if(packet->dts != AV_NOPTS_VALUE)
 				{
 					pts = packet->dts;
-				} 
-				else 
+				}
+				else
 				{
 					pts = 0;
 				}
@@ -385,7 +408,7 @@ void QVideoDecoder::decode()
 				pts *= av_q2d(m_timebase);
 
 				// Did we get a video frame?
-				if(frame_finished) 
+				if(frame_finished)
 				{
 					size_t num_native_bytes = m_av_frame->linesize[0]     * m_video_codec_context->height;
 					size_t num_rgb_bytes    = m_av_rgb_frame->linesize[0] * m_video_codec_context->height;
@@ -395,10 +418,10 @@ void QVideoDecoder::decode()
 					{
 						mutex.lock();
 						m_sws_context = sws_getContext(
-							m_video_codec_context->width, m_video_codec_context->height, 
-							m_video_codec_context->pix_fmt, 
-							m_video_codec_context->width, m_video_codec_context->height, 
-							PIX_FMT_RGB32, 
+							m_video_codec_context->width, m_video_codec_context->height,
+							m_video_codec_context->pix_fmt,
+							m_video_codec_context->width, m_video_codec_context->height,
+							PIX_FMT_RGB32,
 							SWS_BICUBIC, NULL, NULL, NULL); //SWS_PRINT_INFO
 						mutex.unlock();
 						//printf("decode(): created m_sws_context\n");
@@ -406,15 +429,15 @@ void QVideoDecoder::decode()
 					//printf("decode(): got frame\n");
 
 // 					mutex.lock();
-					sws_scale(m_sws_context, 
-						  m_av_frame->data, 
-						  m_av_frame->linesize, 0, 
-						  m_video_codec_context->height, 
-						  m_av_rgb_frame->data, 
+					sws_scale(m_sws_context,
+						  m_av_frame->data,
+						  m_av_frame->linesize, 0,
+						  m_video_codec_context->height,
+						  m_av_rgb_frame->data,
 						  m_av_rgb_frame->linesize);
 // 					mutex.unlock();
 
-				
+
 					size_t num_bytes = m_av_rgb_frame->linesize[0] * m_video_codec_context->height;
 
 					if(m_frame == NULL)
@@ -474,24 +497,24 @@ void QVideoDecoder::readFrame()
 	int frame_finished = 0;
 	while(!frame_finished && !m_killed)
 	{
-		if(av_read_frame(m_av_format_context, &packet) >= 0) 
+		if(av_read_frame(m_av_format_context, &packet) >= 0)
 		{
 			// Is this a packet from the video stream?
-			if(packet.stream_index == m_video_stream) 
+			if(packet.stream_index == m_video_stream)
 			{
 				//global_video_pkt_pts = packet.pts;
 
 				avcodec_decode_video(m_video_codec_context, m_av_frame, &frame_finished, packet.data, packet.size);
 
-				if(packet.dts == AV_NOPTS_VALUE && m_av_frame->opaque && *(uint64_t*)m_av_frame->opaque != AV_NOPTS_VALUE) 
+				if(packet.dts == AV_NOPTS_VALUE && m_av_frame->opaque && *(uint64_t*)m_av_frame->opaque != AV_NOPTS_VALUE)
 				{
 					pts = *(uint64_t *)m_av_frame->opaque;
-				} 
-				else if(packet.dts != AV_NOPTS_VALUE) 
+				}
+				else if(packet.dts != AV_NOPTS_VALUE)
 				{
 					pts = packet.dts;
-				} 
-				else 
+				}
+				else
 				{
 					pts = 0;
 				}
@@ -499,19 +522,19 @@ void QVideoDecoder::readFrame()
 				pts *= av_q2d(m_timebase);
 
 				// Did we get a video frame?
-				if(frame_finished) 
+				if(frame_finished)
 				{
 					// Convert the image from its native format to RGB, then copy the image data to a QImage
 					if(m_sws_context == NULL)
 					{
-						m_sws_context = sws_getContext(m_video_codec_context->width, m_video_codec_context->height, 
-							m_video_codec_context->pix_fmt, m_video_codec_context->width, m_video_codec_context->height, 
+						m_sws_context = sws_getContext(m_video_codec_context->width, m_video_codec_context->height,
+							m_video_codec_context->pix_fmt, m_video_codec_context->width, m_video_codec_context->height,
 							PIX_FMT_RGB32, SWS_PRINT_INFO, NULL, NULL, NULL);
 						//printf("readFrame(): created m_sws_context\n");
 					}
 					printf("readFrame(): got frame\n");
-					
-					sws_scale(m_sws_context, m_av_frame->data, m_av_frame->linesize, 0, 
+
+					sws_scale(m_sws_context, m_av_frame->data, m_av_frame->linesize, 0,
 						m_video_codec_context->height, m_av_rgb_frame->data, m_av_rgb_frame->linesize);
 
 					size_t num_bytes = m_av_rgb_frame->linesize[0] * m_video_codec_context->height;
@@ -570,15 +593,15 @@ void QVideoDecoder::decodeVideoFrame()
 
 		avcodec_decode_video(m_video_codec_context, m_av_frame, &frame_finished, packet.data, packet.size);
 
-		if(packet.dts == AV_NOPTS_VALUE && m_av_frame->opaque && *(uint64_t*)m_av_frame->opaque != AV_NOPTS_VALUE) 
+		if(packet.dts == AV_NOPTS_VALUE && m_av_frame->opaque && *(uint64_t*)m_av_frame->opaque != AV_NOPTS_VALUE)
 		{
 			pts = *(uint64_t *)m_av_frame->opaque;
-		} 
-		else if(packet.dts != AV_NOPTS_VALUE) 
+		}
+		else if(packet.dts != AV_NOPTS_VALUE)
 		{
 			pts = packet.dts;
-		} 
-		else 
+		}
+		else
 		{
 			pts = 0;
 		}
@@ -586,19 +609,19 @@ void QVideoDecoder::decodeVideoFrame()
 		pts *= av_q2d(m_timebase);
 
 		// Did we get a video frame?
-		if(frame_finished) 
+		if(frame_finished)
 		{
 			// Convert the image from its native format to RGB, then copy the image data to a QImage
 			if(m_sws_context == NULL)
 			{
-				m_sws_context = sws_getContext(m_video_codec_context->width, m_video_codec_context->height, 
-					m_video_codec_context->pix_fmt, m_video_codec_context->width, m_video_codec_context->height, 
+				m_sws_context = sws_getContext(m_video_codec_context->width, m_video_codec_context->height,
+					m_video_codec_context->pix_fmt, m_video_codec_context->width, m_video_codec_context->height,
 					PIX_FMT_RGB32, SWS_PRINT_INFO, NULL, NULL, NULL);
 				//printf("decodeVideoFrame(): created m_sws_context\n");
 			}
 			printf("decodeVideoFrame(): got frame\n");
 
-			sws_scale(m_sws_context, m_av_frame->data, m_av_frame->linesize, 0, 
+			sws_scale(m_sws_context, m_av_frame->data, m_av_frame->linesize, 0,
 				m_video_codec_context->height, m_av_rgb_frame->data, m_av_rgb_frame->linesize);
 
 			size_t num_bytes = m_av_rgb_frame->linesize[0] * m_video_codec_context->height;
