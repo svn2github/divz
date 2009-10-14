@@ -1,0 +1,21 @@
+Linux:
+	If you're building under linux, it should be quite easy. Just go into dviz/src, run /path/to/qt4.6/bin/qmake, then just run make
+	Make sure your LD_LIBRARY_PATH is set correctly to point to the Qt 4.6 libraries and QT_PLUGIN_PATH to the plugins dir under the 4.6 folder.
+
+
+
+Win32:
+	Did the first build with the Qt 4.6 Beta on Win32 - fairly easy.
+	Used the Qt 4.6 Command Prompt shortcut from the start menu.
+	
+	Transcript of commands:
+
+		C:\>cd c:\j\ew-data\dviz-qt4.6\src
+		C:\j\EW-Data\dviz-qt4.6\src>c:\qt\4.6.0-beta1\bin\qmake.exe -spec "c:\qt\4.6.0-beta1\mkspecs\win32-g++"  -win32 -o Makefile dviz.pro
+		C:\j\EW-Data\dviz-qt4.6\src>mingw32-make -w
+		
+	Had to copy various DLLs from c:\qt\qt4.6.0-beta1\bin to dviz\src\debug inorder to get dviz to run (since the DLLs weren't in the windows path.)
+	
+	Runs fine! 
+	
+	Now to test out the new graphics effects!

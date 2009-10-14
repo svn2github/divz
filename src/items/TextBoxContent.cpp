@@ -22,6 +22,10 @@
 
 #define DEBUG_LAYOUT 0
 
+#if QT_VERSION >= 0x040600
+	#define QT46_SHADOW_ENAB 1
+#endif
+
 // static QString trimLeft(QString str)
 // {
 // 	static QRegExp white("\\s");
@@ -31,7 +35,7 @@
 // 	}
 // 	return str;
 // }
-// 
+//
 
 TextBoxContent::TextBoxContent(QGraphicsScene * scene, QGraphicsItem * parent)
     : AbstractContent(scene, parent, false)
@@ -118,6 +122,7 @@ void TextBoxContent::setHtml(const QString & htmlCode)
 
 	cursor.mergeCharFormat(format);
 
+	#if QT46_SHADOW_ENAB == 0
 	// Setup the shadow text formatting if enabled
 	if(modelItem() && modelItem()->shadowEnabled())
 	{
@@ -130,10 +135,11 @@ void TextBoxContent::setHtml(const QString & htmlCode)
 
 		cursor.mergeCharFormat(format);
 	}
+	#endif
 
 	delete m_textCache;
 	m_textCache = 0;
-	
+
 	update();
 }
 
@@ -227,7 +233,7 @@ AbstractVisualItem * TextBoxContent::syncToModelItem(AbstractVisualItem *model)
 	return model;
 }
 
-	
+
 QPixmap TextBoxContent::renderContent(const QSize & size, Qt::AspectRatioMode /*ratio*/) const
 {
 	// get the base empty pixmap
@@ -286,6 +292,11 @@ void TextBoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * 
 	painter->setClipRect(contentsRect());
 	painter->translate(contentsRect().topLeft()); // + QPoint(p.width(),p.width()));
 
+
+
+	//	QAbstractTextDocumentLayout::PaintContext pCtx;
+	//	m_text->documentLayout()->draw(painter, pCtx);
+
 	bool pixmapReset = false;
 	if(!m_textCache || m_textCache->size() != contentsRect().size())
 	{
@@ -312,6 +323,7 @@ void TextBoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * 
 
 		QAbstractTextDocumentLayout::PaintContext pCtx;
 
+		#if QT46_SHADOW_ENAB == 0
 		if(modelItem()->shadowEnabled())
 		{
 			textPainter.save();
@@ -321,15 +333,12 @@ void TextBoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * 
 
 			textPainter.restore();
 		}
+		#endif
 
 		m_text->documentLayout()->draw(&textPainter, pCtx);
 	}
 
 	painter->drawPixmap(0,0,*m_textCache);
-
-
-
-
 
 
 	if(sceneContextHint() == MyGraphicsScene::Editor &&
@@ -341,7 +350,8 @@ void TextBoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * 
 
 		painter->drawRect(QRect(QPoint(0,0),contentsRect().size()));
 	}
-	
+
+
 	painter->restore();
 }
 
@@ -375,7 +385,7 @@ void TextBoxContent::updateTextConstraints(int w)
 		newRect.setHeight(m_textRect.height());
 		changed = true;
 	}
-	
+
 	if(changed)
 	{
 		AbstractContent::resizeContents(newRect);

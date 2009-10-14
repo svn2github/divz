@@ -19,6 +19,13 @@
 #include <assert.h>
 #include <QDebug>
 
+#if QT_VERSION >= 0x040600
+	#include <QGraphicsDropShadowEffect>
+
+	#define QT46_SHADOW_ENAB 1
+#endif
+
+
 #define DEBUG_ABSTRACTCONTENT 0
 
 AbstractContent::AbstractContent(QGraphicsScene * scene, QGraphicsItem * parent, bool noRescale)
@@ -46,8 +53,8 @@ AbstractContent::AbstractContent(QGraphicsScene * scene, QGraphicsItem * parent,
 
 	// customize item's behavior
 	setFlags(QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsFocusable | QGraphicsItem::ItemIsSelectable);
-	#if QT_VERSION >= 0x040600
-	setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
+	#if QT46_SHADOW_ENAB
+		setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
 	#endif
 	// allow some items (eg. the shape controls for text) to be shown
 	setFlag(QGraphicsItem::ItemClipsChildrenToShape, false);
@@ -468,6 +475,18 @@ void AbstractContent::syncFromModelItem(AbstractVisualItem *model)
 
 	setOpacity(model->opacity());
 
+	#if QT46_SHADOW_ENAB > 0
+	if(model->shadowEnabled())
+	{
+		QGraphicsDropShadowEffect * shadow = new QGraphicsDropShadowEffect(this);
+		shadow->setBlurRadius(5);
+		shadow->setXOffset(model->shadowOffsetX());
+		shadow->setYOffset(model->shadowOffsetY());
+		setGraphicsEffect(shadow);
+
+	}
+	#endif
+
 
 	m_dontSyncToModel = false;
 }
@@ -507,18 +526,18 @@ AbstractVisualItem * AbstractContent::syncToModelItem(AbstractVisualItem * model
 	}
 
 	//assert(model);
-	
+
 	if(DEBUG_ABSTRACTCONTENT)
 		qDebug() << "AbstractContent::syncToModelItem(): item:"<<model->itemName()<<": doing sync";
 
 	model->setContentsRect(m_contentsRect);
-	
+
 	if(DEBUG_ABSTRACTCONTENT)
 		qDebug() << "AbstractContent::syncToModelItem(): item:"<<model->itemName()<<": setPos():"<<pos()<<" - START";
 	model->setPos(pos());
 	if(DEBUG_ABSTRACTCONTENT)
 		qDebug() << "AbstractContent::syncToModelItem(): item:"<<model->itemName()<<": setPos():"<<pos()<<" - DONE";
-	
+
 	model->setZValue(zValue());
 	model->setIsVisible(isVisible());
 	model->setFrameClass(frameClass());
@@ -559,22 +578,22 @@ QPixmap AbstractContent::renderContent(const QSize & size, Qt::AspectRatioMode r
 QRectF AbstractContent::boundingRect() const
 {
 	//return QRectF(QPointF(0,0),m_frameRect.size());
-	
+
 	double sx = 0;
 	double sy = 0;
-	qreal penWidth = m_modelItem && m_modelItem->outlineEnabled() ? 
+	qreal penWidth = m_modelItem && m_modelItem->outlineEnabled() ?
 		m_modelItem->outlinePen().widthF() : 1.0;
-	
+
 	if(m_modelItem && m_modelItem->shadowEnabled())
 	{
 		sx = m_modelItem->shadowOffsetX();
 		sy = m_modelItem->shadowOffsetY();
-		
+
 		// compensate for pen width - assum shadow position is contents+pen
 		sx += sx == 0 ? 0 : sx>0 ? penWidth : -penWidth;
 		sy += sy == 0 ? 0 : sy>0 ? penWidth : -penWidth;
 	}
-		
+
 	return m_frameRect.adjusted(
 		-penWidth/2 + sx<0?sx:0,
 		-penWidth/2 + sy<0?sy:0,

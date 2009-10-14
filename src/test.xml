@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
-<document title="Test Document" aspect="1.6" >
-    <song title="When We All Get To Heaven - Edit Testn" songid="366" number="2" icon="" type="2" id="1" >
+<document title="Test Document" aspect="1.6">
+    <song title="When We All Get To Heaven - Edit Testn" songid="366" number="2" icon="" type="2" id="1">
         <text>Chorus 1
 When we all get to heaven,
 | ----------------------------
@@ -35,8 +35,8 @@ Onward to the prize before us!
 Soon His beauty we'll behold;
 Soon the pearly gates will open,
 </text>
-        <templates title="" number="0" icon="" type="0" id="1" >
-            <slide number="0" timeout="0" id="0" >
+        <templates title="" number="0" icon="" type="0" id="1">
+            <slide number="0" timeout="0" id="0">
                 <background>
                     <item-id>1514</item-id>
                     <item-name>BackgroundItem1514</item-name>
@@ -54,11 +54,11 @@ Soon the pearly gates will open,
                     <opacity>1</opacity>
                     <visible>1</visible>
                     <frame-class>0</frame-class>
-                    <transformation yRot="0" xRot="0" zRot="0" />
-                    <fill brush-style="1" video="data/Seasons_Loop_4_SD.mpg" image="" brush-color="255,0,0,255" type="1" />
-                    <outline brush-style="1" pen-join="0" pen-width="1" enabled="0" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255" />
-                    <mirror offset="3" enabled="0" />
-                    <shadow brush-style="1" x="3" y="3" enabled="0" brush-color="0,0,0,255" />
+                    <transformation yRot="0" xRot="0" zRot="0"/>
+                    <fill brush-style="1" video="data/Seasons_Loop_4_SD.mpg" image="" brush-color="255,0,0,255" type="1"/>
+                    <outline brush-style="1" pen-join="0" pen-width="1" enabled="0" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255"/>
+                    <mirror offset="3" enabled="0"/>
+                    <shadow brush-style="1" x="3" y="3" enabled="0" brush-color="0,0,0,255"/>
                 </background>
                 <textbox>
                     <item-id>1651</item-id>
@@ -77,22 +77,22 @@ Soon the pearly gates will open,
                     <opacity>1</opacity>
                     <visible>1</visible>
                     <frame-class>0</frame-class>
-                    <transformation yRot="0" xRot="0" zRot="0" />
-                    <fill brush-style="1" video="" image="" brush-color="255,255,255,255" type="1" />
-                    <outline brush-style="1" pen-join="64" pen-width="1.5" enabled="1" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255" />
-                    <mirror offset="3" enabled="0" />
-                    <shadow brush-style="1" x="3" y="3" enabled="1" brush-color="0,0,0,255" />
+                    <transformation yRot="0" xRot="0" zRot="0"/>
+                    <fill brush-style="1" video="" image="" brush-color="255,255,255,255" type="1"/>
+                    <outline brush-style="1" pen-join="64" pen-width="1.5" enabled="1" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255"/>
+                    <mirror offset="3" enabled="0"/>
+                    <shadow brush-style="1" x="3" y="3" enabled="1" brush-color="0,0,0,255"/>
                     <text>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
 &lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
 p, li { white-space: pre-wrap; }
 &lt;/style>&lt;/head>&lt;body style=" font-family:'Sans Serif'; font-size:9pt; font-weight:400; font-style:normal;">
 &lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-size:101pt; color:#ffffff;">Song Goes Here!&lt;/span>&lt;/p>&lt;/body>&lt;/html></text>
-                    <default-font font-family="Tahoma" font-size="40" />
-                    <shape enabled="0" />
-                    <text-align x="32" y="32" />
+                    <default-font font-family="Tahoma" font-size="40"/>
+                    <shape enabled="0"/>
+                    <text-align x="32" y="32"/>
                 </textbox>
             </slide>
-            <slide number="1" timeout="0" id="2" >
+            <slide number="1" timeout="0" id="2">
                 <background>
                     <item-id>4113</item-id>
                     <item-name>BackgroundItem4113</item-name>
@@ -110,14 +110,14 @@ p, li { white-space: pre-wrap; }
                     <opacity>1</opacity>
                     <visible>1</visible>
                     <frame-class>0</frame-class>
-                    <transformation yRot="0" xRot="0" zRot="0" />
-                    <fill brush-style="1" video="" image="" brush-color="0,255,0,255" type="1" />
-                    <outline brush-style="1" pen-join="0" pen-width="1" enabled="0" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255" />
-                    <mirror offset="3" enabled="0" />
-                    <shadow brush-style="1" x="3" y="3" enabled="0" brush-color="0,0,0,255" />
+                    <transformation yRot="0" xRot="0" zRot="0"/>
+                    <fill brush-style="1" video="" image="" brush-color="0,255,0,255" type="1"/>
+                    <outline brush-style="1" pen-join="0" pen-width="1" enabled="0" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255"/>
+                    <mirror offset="3" enabled="0"/>
+                    <shadow brush-style="1" x="3" y="3" enabled="0" brush-color="0,0,0,255"/>
                 </background>
             </slide>
-            <slide number="2" timeout="0" id="1" >
+            <slide number="2" timeout="0" id="1">
                 <background>
                     <item-id>4112</item-id>
                     <item-name>BackgroundItem4112</item-name>
@@ -135,17 +135,17 @@ p, li { white-space: pre-wrap; }
                     <opacity>1</opacity>
                     <visible>1</visible>
                     <frame-class>0</frame-class>
-                    <transformation yRot="0" xRot="0" zRot="0" />
-                    <fill brush-style="1" video="" image="" brush-color="0,0,255,255" type="1" />
-                    <outline brush-style="1" pen-join="0" pen-width="1" enabled="0" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255" />
-                    <mirror offset="3" enabled="0" />
-                    <shadow brush-style="1" x="3" y="3" enabled="0" brush-color="0,0,0,255" />
+                    <transformation yRot="0" xRot="0" zRot="0"/>
+                    <fill brush-style="1" video="" image="" brush-color="0,0,255,255" type="1"/>
+                    <outline brush-style="1" pen-join="0" pen-width="1" enabled="0" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255"/>
+                    <mirror offset="3" enabled="0"/>
+                    <shadow brush-style="1" x="3" y="3" enabled="0" brush-color="0,0,0,255"/>
                 </background>
             </slide>
         </templates>
     </song>
-    <group title="" number="3" icon="" type="0" id="1" >
-        <slide number="0" timeout="0" id="0" >
+    <group title="" number="3" icon="" type="0" id="1">
+        <slide number="0" timeout="0" id="0">
             <background>
                 <item-id>761</item-id>
                 <item-name>BackgroundItem761</item-name>
@@ -163,11 +163,11 @@ p, li { white-space: pre-wrap; }
                 <opacity>1</opacity>
                 <visible>1</visible>
                 <frame-class>0</frame-class>
-                <transformation yRot="0" xRot="0" zRot="0" />
-                <fill brush-style="1" video="data/Seasons_Loop_4_SD.mpg" image="" brush-color="0,0,0,255" type="4" />
-                <outline brush-style="1" pen-join="0" pen-width="1" enabled="0" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255" />
-                <mirror offset="3" enabled="0" />
-                <shadow brush-style="1" x="3" y="3" enabled="0" brush-color="0,0,0,255" />
+                <transformation yRot="0" xRot="0" zRot="0"/>
+                <fill brush-style="1" video="data/Seasons_Loop_4_SD.mpg" image="" brush-color="0,0,0,255" type="4"/>
+                <outline brush-style="1" pen-join="0" pen-width="1" enabled="0" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255"/>
+                <mirror offset="3" enabled="0"/>
+                <shadow brush-style="1" x="3" y="3" enabled="0" brush-color="0,0,0,255"/>
             </background>
             <textbox>
                 <item-id>104</item-id>
@@ -176,7 +176,7 @@ p, li { white-space: pre-wrap; }
                     <x>-100</x>
                     <y>-75</y>
                     <w>874</w>
-                    <h>274</h>
+                    <h>282</h>
                 </rect>
                 <pos>
                     <x>280</x>
@@ -186,22 +186,22 @@ p, li { white-space: pre-wrap; }
                 <opacity>1</opacity>
                 <visible>1</visible>
                 <frame-class>0</frame-class>
-                <transformation yRot="0" xRot="0" zRot="0" />
-                <fill brush-style="1" video="" image="" brush-color="255,255,255,255" type="1" />
-                <outline brush-style="1" pen-join="64" pen-width="3" enabled="1" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255" />
-                <mirror offset="3" enabled="0" />
-                <shadow brush-style="1" x="3" y="3" enabled="1" brush-color="0,0,0,255" />
+                <transformation yRot="0" xRot="0" zRot="0"/>
+                <fill brush-style="1" video="" image="" brush-color="255,255,255,255" type="1"/>
+                <outline brush-style="1" pen-join="64" pen-width="3" enabled="1" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255"/>
+                <mirror offset="3" enabled="0"/>
+                <shadow brush-style="1" x="3" y="3" enabled="1" brush-color="0,0,0,255"/>
                 <text>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
 &lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
 p, li { white-space: pre-wrap; }
-&lt;/style>&lt;/head>&lt;body style=" font-family:'Tahoma'; font-size:40pt; font-weight:400; font-style:normal;">
+&lt;/style>&lt;/head>&lt;body style=" font-family:'MS Shell Dlg 2'; font-size:8.25pt; font-weight:400; font-style:normal;">
 &lt;p align="center" style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-family:'Bitstream Vera Sans'; font-size:85pt; font-weight:600; color:#ffffff;">Welcome to PHC!&lt;/span>&lt;/p>&lt;/body>&lt;/html></text>
-                <default-font font-family="Tahoma" font-size="40" />
-                <shape enabled="0" />
-                <text-align x="32" y="32" />
+                <default-font font-family="Tahoma" font-size="40"/>
+                <shape enabled="0"/>
+                <text-align x="32" y="32"/>
             </textbox>
         </slide>
-        <slide number="1" timeout="0" id="1" >
+        <slide number="1" timeout="0" id="1">
             <background>
                 <item-id>1131</item-id>
                 <item-name>BackgroundItem1131</item-name>
@@ -219,11 +219,11 @@ p, li { white-space: pre-wrap; }
                 <opacity>1</opacity>
                 <visible>1</visible>
                 <frame-class>0</frame-class>
-                <transformation yRot="0" xRot="0" zRot="0" />
-                <fill brush-style="1" video="data/Seasons_Loop_4_SD.mpg" image="" brush-color="0,0,0,255" type="4" />
-                <outline brush-style="1" pen-join="0" pen-width="1" enabled="0" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255" />
-                <mirror offset="3" enabled="0" />
-                <shadow brush-style="1" x="3" y="3" enabled="0" brush-color="0,0,0,255" />
+                <transformation yRot="0" xRot="0" zRot="0"/>
+                <fill brush-style="1" video="data/Seasons_Loop_4_SD.mpg" image="" brush-color="0,0,0,255" type="4"/>
+                <outline brush-style="1" pen-join="0" pen-width="1" enabled="0" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255"/>
+                <mirror offset="3" enabled="0"/>
+                <shadow brush-style="1" x="3" y="3" enabled="0" brush-color="0,0,0,255"/>
             </background>
             <textbox>
                 <item-id>1132</item-id>
@@ -242,24 +242,24 @@ p, li { white-space: pre-wrap; }
                 <opacity>1</opacity>
                 <visible>1</visible>
                 <frame-class>0</frame-class>
-                <transformation yRot="0" xRot="0" zRot="0" />
-                <fill brush-style="1" video="" image="" brush-color="255,255,255,255" type="1" />
-                <outline brush-style="1" pen-join="64" pen-width="3" enabled="1" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255" />
-                <mirror offset="3" enabled="0" />
-                <shadow brush-style="1" x="3" y="3" enabled="1" brush-color="0,0,0,255" />
+                <transformation yRot="0" xRot="0" zRot="0"/>
+                <fill brush-style="1" video="" image="" brush-color="255,255,255,255" type="1"/>
+                <outline brush-style="1" pen-join="64" pen-width="3" enabled="1" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255"/>
+                <mirror offset="3" enabled="0"/>
+                <shadow brush-style="1" x="3" y="3" enabled="1" brush-color="0,0,0,255"/>
                 <text>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
 &lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
 p, li { white-space: pre-wrap; }
 &lt;/style>&lt;/head>&lt;body style=" font-family:'Tahoma'; font-size:40pt; font-weight:400; font-style:normal;">
 &lt;p align="center" style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-family:'Bitstream Vera Sans'; font-size:72pt; font-weight:600;">We're glad you're here!&lt;/span>&lt;/p>&lt;/body>&lt;/html></text>
-                <default-font font-family="Tahoma" font-size="40" />
-                <shape enabled="0" />
-                <text-align x="32" y="32" />
+                <default-font font-family="Tahoma" font-size="40"/>
+                <shape enabled="0"/>
+                <text-align x="32" y="32"/>
             </textbox>
         </slide>
     </group>
-    <group title="" number="0" icon="" type="0" id="1" >
-        <slide number="0" timeout="0" id="0" >
+    <group title="" number="0" icon="" type="0" id="1">
+        <slide number="0" timeout="0" id="0">
             <background>
                 <item-id>803</item-id>
                 <item-name>BackgroundItem803</item-name>
@@ -277,11 +277,11 @@ p, li { white-space: pre-wrap; }
                 <opacity>1</opacity>
                 <visible>1</visible>
                 <frame-class>0</frame-class>
-                <transformation yRot="0" xRot="0" zRot="0" />
-                <fill brush-style="1" video="" image="" brush-color="0,0,0,255" type="1" />
-                <outline brush-style="1" pen-join="0" pen-width="1" enabled="0" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255" />
-                <mirror offset="3" enabled="0" />
-                <shadow brush-style="1" x="3" y="3" enabled="0" brush-color="0,0,0,255" />
+                <transformation yRot="0" xRot="0" zRot="0"/>
+                <fill brush-style="1" video="" image="" brush-color="0,0,0,255" type="1"/>
+                <outline brush-style="1" pen-join="0" pen-width="1" enabled="0" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255"/>
+                <mirror offset="3" enabled="0"/>
+                <shadow brush-style="1" x="3" y="3" enabled="0" brush-color="0,0,0,255"/>
             </background>
             <videofile>
                 <item-id>815</item-id>
@@ -300,17 +300,17 @@ p, li { white-space: pre-wrap; }
                 <opacity>1</opacity>
                 <visible>1</visible>
                 <frame-class>0</frame-class>
-                <transformation yRot="0" xRot="0" zRot="0" />
-                <fill brush-style="1" video="data/Seasons_Loop_3_SD.mpg" image="" brush-color="255,255,255,255" type="4" />
-                <outline brush-style="1" pen-join="64" pen-width="2" enabled="1" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255" />
-                <mirror offset="3" enabled="0" />
-                <shadow brush-style="1" x="3" y="3" enabled="0" brush-color="0,0,0,255" />
+                <transformation yRot="0" xRot="0" zRot="0"/>
+                <fill brush-style="1" video="data/Seasons_Loop_3_SD.mpg" image="" brush-color="255,255,255,255" type="4"/>
+                <outline brush-style="1" pen-join="64" pen-width="2" enabled="1" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255"/>
+                <mirror offset="3" enabled="0"/>
+                <shadow brush-style="1" x="3" y="3" enabled="0" brush-color="0,0,0,255"/>
                 <filename>data/Seasons_Loop_3_SD.mpg</filename>
             </videofile>
         </slide>
     </group>
-    <group title="My First Group" number="1" icon="" type="0" id="1" >
-        <slide number="0" timeout="1" id="2" >
+    <group title="My First Group" number="1" icon="" type="0" id="1">
+        <slide number="0" timeout="1" id="2">
             <background>
                 <item-id>1517</item-id>
                 <item-name>BackgroundItem897</item-name>
@@ -328,11 +328,11 @@ p, li { white-space: pre-wrap; }
                 <opacity>1</opacity>
                 <visible>1</visible>
                 <frame-class>0</frame-class>
-                <transformation yRot="0" xRot="0" zRot="0" />
-                <fill brush-style="1" video="data/Seasons_Loop_3_SD.mpg" image="" brush-color="0,0,255,255" type="4" />
-                <outline brush-style="1" pen-join="0" pen-width="1" enabled="0" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255" />
-                <mirror offset="3" enabled="0" />
-                <shadow brush-style="1" x="3" y="3" enabled="0" brush-color="0,0,0,255" />
+                <transformation yRot="0" xRot="0" zRot="0"/>
+                <fill brush-style="1" video="data/Seasons_Loop_3_SD.mpg" image="" brush-color="0,0,255,255" type="4"/>
+                <outline brush-style="1" pen-join="0" pen-width="1" enabled="0" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255"/>
+                <mirror offset="3" enabled="0"/>
+                <shadow brush-style="1" x="3" y="3" enabled="0" brush-color="0,0,0,255"/>
             </background>
             <box>
                 <item-id>1519</item-id>
@@ -351,11 +351,11 @@ p, li { white-space: pre-wrap; }
                 <opacity>1</opacity>
                 <visible>1</visible>
                 <frame-class>0</frame-class>
-                <transformation yRot="0" xRot="0" zRot="0" />
-                <fill brush-style="1" video="" image="" brush-color="255,255,255,128" type="1" />
-                <outline brush-style="1" pen-join="64" pen-width="3" enabled="1" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255" />
-                <mirror offset="3" enabled="0" />
-                <shadow brush-style="1" x="3" y="3" enabled="1" brush-color="0,0,0,64" />
+                <transformation yRot="0" xRot="0" zRot="0"/>
+                <fill brush-style="1" video="" image="" brush-color="255,255,255,128" type="1"/>
+                <outline brush-style="1" pen-join="64" pen-width="3" enabled="1" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255"/>
+                <mirror offset="3" enabled="0"/>
+                <shadow brush-style="1" x="3" y="3" enabled="1" brush-color="0,0,0,64"/>
             </box>
             <textbox>
                 <item-id>1520</item-id>
@@ -374,24 +374,24 @@ p, li { white-space: pre-wrap; }
                 <opacity>1</opacity>
                 <visible>1</visible>
                 <frame-class>0</frame-class>
-                <transformation yRot="0" xRot="0" zRot="0" />
-                <fill brush-style="1" video="" image="" brush-color="255,255,255,255" type="1" />
-                <outline brush-style="1" pen-join="64" pen-width="1.5" enabled="1" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255" />
-                <mirror offset="3" enabled="0" />
-                <shadow brush-style="1" x="3" y="3" enabled="0" brush-color="0,0,0,255" />
+                <transformation yRot="0" xRot="0" zRot="0"/>
+                <fill brush-style="1" video="" image="" brush-color="255,255,255,255" type="1"/>
+                <outline brush-style="1" pen-join="64" pen-width="1.5" enabled="1" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255"/>
+                <mirror offset="3" enabled="0"/>
+                <shadow brush-style="1" x="3" y="3" enabled="0" brush-color="0,0,0,255"/>
                 <text>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
 &lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
 p, li { white-space: pre-wrap; }
 &lt;/style>&lt;/head>&lt;body style=" font-family:'Sans Serif'; font-size:9pt; font-weight:400; font-style:normal;">
 &lt;p align="center" style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-size:72pt; font-weight:600; color:#ffffff;">Welcome to DViz&lt;/span>&lt;/p>&lt;/body>&lt;/html></text>
-                <default-font font-family="Tahoma" font-size="40" />
-                <shape enabled="1" >
-                    <control-points one="0 0" two="0 0" four="0 0" three="0 0" />
+                <default-font font-family="Tahoma" font-size="40"/>
+                <shape enabled="1">
+                    <control-points one="0 0" two="0 0" four="0 0" three="0 0"/>
                 </shape>
-                <text-align x="32" y="32" />
+                <text-align x="32" y="32"/>
             </textbox>
         </slide>
-        <slide number="1" timeout="1" id="1" >
+        <slide number="1" timeout="1" id="1">
             <background>
                 <item-id>1454</item-id>
                 <item-name>BackgroundItem897</item-name>
@@ -409,11 +409,11 @@ p, li { white-space: pre-wrap; }
                 <opacity>1</opacity>
                 <visible>1</visible>
                 <frame-class>0</frame-class>
-                <transformation yRot="0" xRot="0" zRot="0" />
-                <fill brush-style="1" video="data/Seasons_Loop_3_SD.mpg" image="" brush-color="0,0,255,255" type="4" />
-                <outline brush-style="1" pen-join="0" pen-width="1" enabled="0" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255" />
-                <mirror offset="3" enabled="0" />
-                <shadow brush-style="1" x="3" y="3" enabled="0" brush-color="0,0,0,255" />
+                <transformation yRot="0" xRot="0" zRot="0"/>
+                <fill brush-style="1" video="data/Seasons_Loop_3_SD.mpg" image="" brush-color="0,0,255,255" type="4"/>
+                <outline brush-style="1" pen-join="0" pen-width="1" enabled="0" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255"/>
+                <mirror offset="3" enabled="0"/>
+                <shadow brush-style="1" x="3" y="3" enabled="0" brush-color="0,0,0,255"/>
             </background>
             <box>
                 <item-id>1455</item-id>
@@ -432,11 +432,11 @@ p, li { white-space: pre-wrap; }
                 <opacity>0.37</opacity>
                 <visible>1</visible>
                 <frame-class>0</frame-class>
-                <transformation yRot="0" xRot="0" zRot="0" />
-                <fill brush-style="1" video="" image="" brush-color="0,255,255,255" type="1" />
-                <outline brush-style="1" pen-join="64" pen-width="3" enabled="1" brush-color="0,128,128,255" pen-cap="16" pen-color="0,128,128,255" />
-                <mirror offset="3" enabled="0" />
-                <shadow brush-style="1" x="3" y="3" enabled="1" brush-color="0,0,0,255" />
+                <transformation yRot="0" xRot="0" zRot="0"/>
+                <fill brush-style="1" video="" image="" brush-color="0,255,255,255" type="1"/>
+                <outline brush-style="1" pen-join="64" pen-width="3" enabled="1" brush-color="0,128,128,255" pen-cap="16" pen-color="0,128,128,255"/>
+                <mirror offset="3" enabled="0"/>
+                <shadow brush-style="1" x="3" y="3" enabled="1" brush-color="0,0,0,255"/>
             </box>
             <box>
                 <item-id>1456</item-id>
@@ -455,11 +455,11 @@ p, li { white-space: pre-wrap; }
                 <opacity>1</opacity>
                 <visible>1</visible>
                 <frame-class>0</frame-class>
-                <transformation yRot="0" xRot="0" zRot="0" />
-                <fill brush-style="1" video="" image="" brush-color="255,255,255,128" type="1" />
-                <outline brush-style="1" pen-join="64" pen-width="3" enabled="1" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255" />
-                <mirror offset="3" enabled="0" />
-                <shadow brush-style="1" x="3" y="3" enabled="1" brush-color="0,0,0,64" />
+                <transformation yRot="0" xRot="0" zRot="0"/>
+                <fill brush-style="1" video="" image="" brush-color="255,255,255,128" type="1"/>
+                <outline brush-style="1" pen-join="64" pen-width="3" enabled="1" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255"/>
+                <mirror offset="3" enabled="0"/>
+                <shadow brush-style="1" x="3" y="3" enabled="1" brush-color="0,0,0,64"/>
             </box>
             <textbox>
                 <item-id>1637</item-id>
@@ -478,24 +478,24 @@ p, li { white-space: pre-wrap; }
                 <opacity>1</opacity>
                 <visible>1</visible>
                 <frame-class>0</frame-class>
-                <transformation yRot="0" xRot="0" zRot="0" />
-                <fill brush-style="1" video="" image="" brush-color="255,255,255,255" type="1" />
-                <outline brush-style="1" pen-join="64" pen-width="1.5" enabled="1" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255" />
-                <mirror offset="3" enabled="0" />
-                <shadow brush-style="1" x="3" y="3" enabled="1" brush-color="0,0,0,255" />
+                <transformation yRot="0" xRot="0" zRot="0"/>
+                <fill brush-style="1" video="" image="" brush-color="255,255,255,255" type="1"/>
+                <outline brush-style="1" pen-join="64" pen-width="1.5" enabled="1" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255"/>
+                <mirror offset="3" enabled="0"/>
+                <shadow brush-style="1" x="3" y="3" enabled="1" brush-color="0,0,0,255"/>
                 <text>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
 &lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
 p, li { white-space: pre-wrap; }
 &lt;/style>&lt;/head>&lt;body style=" font-family:'Sans Serif'; font-size:9pt; font-weight:400; font-style:normal;">
 &lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-size:72pt;">Lorem Ipsum&lt;/span>&lt;/p>&lt;/body>&lt;/html></text>
-                <default-font font-family="Tahoma" font-size="40" />
-                <shape enabled="1" >
-                    <control-points one="0 0" two="0 0" four="0 0" three="0 0" />
+                <default-font font-family="Tahoma" font-size="40"/>
+                <shape enabled="1">
+                    <control-points one="0 0" two="0 0" four="0 0" three="0 0"/>
                 </shape>
-                <text-align x="32" y="32" />
+                <text-align x="32" y="32"/>
             </textbox>
         </slide>
-        <slide number="2" timeout="1" id="0" >
+        <slide number="2" timeout="1" id="0">
             <background>
                 <item-id>897</item-id>
                 <item-name>BackgroundItem897</item-name>
@@ -513,11 +513,11 @@ p, li { white-space: pre-wrap; }
                 <opacity>1</opacity>
                 <visible>1</visible>
                 <frame-class>0</frame-class>
-                <transformation yRot="0" xRot="0" zRot="0" />
-                <fill brush-style="1" video="data/Seasons_Loop_3_SD.mpg" image="" brush-color="0,0,255,255" type="1" />
-                <outline brush-style="1" pen-join="0" pen-width="1" enabled="0" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255" />
-                <mirror offset="3" enabled="0" />
-                <shadow brush-style="1" x="3" y="3" enabled="0" brush-color="0,0,0,255" />
+                <transformation yRot="0" xRot="0" zRot="0"/>
+                <fill brush-style="1" video="data/Seasons_Loop_3_SD.mpg" image="" brush-color="0,0,255,255" type="1"/>
+                <outline brush-style="1" pen-join="0" pen-width="1" enabled="0" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255"/>
+                <mirror offset="3" enabled="0"/>
+                <shadow brush-style="1" x="3" y="3" enabled="0" brush-color="0,0,0,255"/>
             </background>
             <box>
                 <item-id>1250</item-id>
@@ -536,11 +536,11 @@ p, li { white-space: pre-wrap; }
                 <opacity>1</opacity>
                 <visible>1</visible>
                 <frame-class>0</frame-class>
-                <transformation yRot="0" xRot="0" zRot="0" />
-                <fill brush-style="1" video="" image="" brush-color="0,255,255,255" type="1" />
-                <outline brush-style="1" pen-join="64" pen-width="3" enabled="1" brush-color="0,128,128,255" pen-cap="16" pen-color="0,128,128,255" />
-                <mirror offset="3" enabled="0" />
-                <shadow brush-style="1" x="3" y="3" enabled="1" brush-color="0,0,0,255" />
+                <transformation yRot="0" xRot="0" zRot="0"/>
+                <fill brush-style="1" video="" image="" brush-color="0,255,255,255" type="1"/>
+                <outline brush-style="1" pen-join="64" pen-width="3" enabled="1" brush-color="0,128,128,255" pen-cap="16" pen-color="0,128,128,255"/>
+                <mirror offset="3" enabled="0"/>
+                <shadow brush-style="1" x="3" y="3" enabled="1" brush-color="0,0,0,255"/>
             </box>
             <box>
                 <item-id>3203</item-id>
@@ -559,11 +559,11 @@ p, li { white-space: pre-wrap; }
                 <opacity>1</opacity>
                 <visible>1</visible>
                 <frame-class>0</frame-class>
-                <transformation yRot="0" xRot="0" zRot="0" />
-                <fill brush-style="1" video="" image="" brush-color="255,255,255,128" type="1" />
-                <outline brush-style="1" pen-join="64" pen-width="3" enabled="1" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255" />
-                <mirror offset="3" enabled="0" />
-                <shadow brush-style="1" x="3" y="3" enabled="1" brush-color="0,0,0,64" />
+                <transformation yRot="0" xRot="0" zRot="0"/>
+                <fill brush-style="1" video="" image="" brush-color="255,255,255,128" type="1"/>
+                <outline brush-style="1" pen-join="64" pen-width="3" enabled="1" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255"/>
+                <mirror offset="3" enabled="0"/>
+                <shadow brush-style="1" x="3" y="3" enabled="1" brush-color="0,0,0,64"/>
             </box>
             <textbox>
                 <item-id>1515</item-id>
@@ -582,25 +582,25 @@ p, li { white-space: pre-wrap; }
                 <opacity>1</opacity>
                 <visible>1</visible>
                 <frame-class>0</frame-class>
-                <transformation yRot="0" xRot="0" zRot="0" />
-                <fill brush-style="1" video="" image="" brush-color="255,255,255,255" type="1" />
-                <outline brush-style="1" pen-join="64" pen-width="1.5" enabled="1" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255" />
-                <mirror offset="3" enabled="0" />
-                <shadow brush-style="1" x="3" y="3" enabled="1" brush-color="0,0,0,255" />
+                <transformation yRot="0" xRot="0" zRot="0"/>
+                <fill brush-style="1" video="" image="" brush-color="255,255,255,255" type="1"/>
+                <outline brush-style="1" pen-join="64" pen-width="1.5" enabled="1" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255"/>
+                <mirror offset="3" enabled="0"/>
+                <shadow brush-style="1" x="3" y="3" enabled="1" brush-color="0,0,0,255"/>
                 <text>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
 &lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
 p, li { white-space: pre-wrap; }
-&lt;/style>&lt;/head>&lt;body style=" font-family:'Tahoma'; font-size:40pt; font-weight:400; font-style:normal;">
+&lt;/style>&lt;/head>&lt;body style=" font-family:'MS Shell Dlg 2'; font-size:8.25pt; font-weight:400; font-style:normal;">
 &lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-family:'Sans Serif'; font-size:101pt; color:#ffffff;">Lorem Ipsum&lt;/span>&lt;/p>&lt;/body>&lt;/html></text>
-                <default-font font-family="Tahoma" font-size="40" />
-                <shape enabled="1" >
-                    <control-points one="0 0" two="0 0" four="0 0" three="0 0" />
+                <default-font font-family="Tahoma" font-size="40"/>
+                <shape enabled="1">
+                    <control-points one="0 0" two="0 0" four="0 0" three="0 0"/>
                 </shape>
-                <text-align x="32" y="32" />
+                <text-align x="32" y="32"/>
             </textbox>
         </slide>
     </group>
-    <song title="** BLANK SONG **" songid="1" number="0" icon="" type="2" id="1" >
+    <song title="** BLANK SONG **" songid="1" number="0" icon="" type="2" id="1">
         <text>Hello World
 
 Hello World</text>

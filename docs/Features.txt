@@ -82,6 +82,8 @@ Revised Task list for Release 1.0, 10/18/09:
 		- SVG Item if we have time
 	
 	- Improvements:
+		default background color should be gray or something "nicer" than black
+			still start out live as black though
 		Prompt to save custom output location on close
 		Add video pallette
 		Add image palette
@@ -154,6 +156,7 @@ Revised Task list for Release 1.0, 10/18/09:
 				
 		
 	- Bugs:
+		qt4.6b-win32: chaing document aspect ratio doesnt affect slide editor until program restart
 		when adding new item, set selected
 		using toolbar, set font size to 1pt, zoom in so text is in view (blob of black), and then press "up size" btn - segfault
 		when zooming in on text using mouse wheel, it doesn't re-render for new scale  
