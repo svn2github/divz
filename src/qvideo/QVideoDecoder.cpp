@@ -4,6 +4,7 @@
 
 extern "C" {
 #include "libswscale/swscale.h"
+#include "libavdevice/avdevice.h"
 }
 #include "QVideoDecoder.h"
 
@@ -78,44 +79,60 @@ bool QVideoDecoder::load(const QString & filename)
 		return false;
 
 	//QMutexLocker locker(&mutex);
-
+    static int debugCounter = 0;
 
 	 AVInputFormat *inFmt = NULL;
+	 AVFormatParameters formatParams;
+	memset(&formatParams, 0, sizeof(AVFormatParameters));
 
 	 QString fileTmp = filename;
-
-	 if(fileTmp.indexOf(":"))
+//	 if(debugCounter ++ <= 0)
+//		fileTmp = "vfwcap://0";
+//	qDebug() << "[DEBUG] QVideoDecoder::load(): starting with fileTmp:"<<fileTmp;
+	 bool customInputFormat = false;
+	 if(fileTmp.indexOf("://") > -1)
 	 {
-		 QStringList list = fileTmp.split(":");
-		 qDebug() << "[DEBUG] QVideoDecoder::load(): splitting args, list:"<<list;
+		 QStringList list = fileTmp.split("://");
+		 qDebug() << "[DEBUG] QVideoDecoder::load(): input format args:"<<list;
 		 fileTmp = list[1];
 		 if(fileTmp.isEmpty())
 		 	fileTmp = "0";
-
+		 avdevice_register_all();
 		 inFmt = av_find_input_format(qPrintable(list[0]));
-		 if( !inFmt ){
-		   fprintf(stderr,"Unable to open video capture\n");
-		   return -1;
+		 if( !inFmt )
+		 {
+		       qDebug() << "[ERROR] QVideoDecoder::load(): Unable to find input format:"<<list[0];
+		       return -1;
 		 }
+
+
+		 formatParams.time_base.num = 1;
+		 formatParams.time_base.den = 25;
+
+		 customInputFormat = true;
+
 	}
 
 
 
 
 	// Open video file
-	if(av_open_input_file(&m_av_format_context, qPrintable(fileTmp), inFmt, 0, NULL) != 0)
-	//if(av_open_input_file(&m_av_format_context, "0", inFmt, 0, NULL) != 0)
+	 //
+	if(av_open_input_file(&m_av_format_context, qPrintable(fileTmp), inFmt, 0, &formatParams) != 0)
+	//if(av_open_input_file(&m_av_format_context, "1", inFmt, 0, NULL) != 0)
 	{
-		fprintf(stderr,"[WARN] QVideoDecoder::load(): av_open_input_file() failed.\n");
+		qDebug() << "[WARN] QVideoDecoder::load(): av_open_input_file() failed, fileTmp:"<<fileTmp;
 		return false;
 	}
 
 	// Retrieve stream information
-	if(av_find_stream_info(m_av_format_context) < 0)
-	{
-		fprintf(stderr,"[WARN] QVideoDecoder::load(): av_find_stream_info() failed.\n");
-		return false;
-	}
+	if(!customInputFormat)
+	    if(av_find_stream_info(m_av_format_context) < 0)
+	    {
+		    qDebug() << "[WARN] QVideoDecoder::load(): av_find_stream_info() failed.";
+		    return false;
+	    }
+
 
 	int i;
 
@@ -135,7 +152,7 @@ bool QVideoDecoder::load(const QString & filename)
 	}
 	if(m_video_stream == -1)
 	{
-		fprintf(stderr,"[WARN] QVideoDecoder::load(): Cannot find video stream.\n");
+		qDebug() << "[WARN] QVideoDecoder::load(): Cannot find video stream.";
 		return false;
 	}
 
@@ -148,14 +165,14 @@ bool QVideoDecoder::load(const QString & filename)
 	m_video_codec =avcodec_find_decoder(m_video_codec_context->codec_id);
 	if(m_video_codec == NULL)
 	{
-		fprintf(stderr,"[WARN] QVideoDecoder::load(): avcodec_find_decoder() failed.\n");
+		qDebug() << "[WARN] QVideoDecoder::load(): avcodec_find_decoder() failed.";
 		return false;
 	}
 
 	// Open codec
 	if(avcodec_open(m_video_codec_context, m_video_codec) < 0)
 	{
-		fprintf(stderr,"[WARN] QVideoDecoder::load(): avcodec_open() failed.\n");
+		qDebug() << "[WARN] QVideoDecoder::load(): avcodec_open() failed.";
 		return false;
 	}
 
@@ -166,7 +183,7 @@ bool QVideoDecoder::load(const QString & filename)
 	m_av_rgb_frame =avcodec_alloc_frame();
 	if(m_av_rgb_frame == NULL)
 	{
-		fprintf(stderr,"[WARN] QVideoDecoder::load(): avcodec_alloc_frame() failed.\n");
+		qDebug() << "[WARN] QVideoDecoder::load(): avcodec_alloc_frame() failed.";
 		return false;
 	}
 
