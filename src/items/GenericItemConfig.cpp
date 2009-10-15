@@ -376,10 +376,10 @@ void GenericItemConfig::slotVideoFileChanged(const QString& fileName)
 
 void GenericItemConfig::slotImageBrowse()
 {
-	QString fileName = QFileDialog::getOpenFileName(this, tr("Select Image"), m_commonUi->imageFilenameBox->text(), tr("Image Files (*.png *.jpg *.bmp *.xpm);;Any File (*.*)"));
+	QString fileName = QFileDialog::getOpenFileName(this, tr("Select Image"), m_commonUi->imageFilenameBox->text(), tr("Image Files (*.png *.jpg *.bmp *.svg *.xpm);;Any File (*.*)"));
 	if(fileName != "")
 	{
-		slotVideoFileChanged(fileName);
+		slotImageFileChanged(fileName);
 	}
 }
 

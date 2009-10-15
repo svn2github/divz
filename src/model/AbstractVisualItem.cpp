@@ -56,7 +56,7 @@ AbstractVisualItem::AbstractVisualItem()
 	m_shadowBlurRadius = 3;
 	m_shadowOffsetX = 3;
 	m_shadowOffsetY = 3;
-	m_shadowBrush = QBrush(QColor(0,0,0,80));
+	m_shadowBrush = QBrush(Qt::black);
 }
 
 AbstractContent * AbstractVisualItem::createDelegate(QGraphicsScene*,QGraphicsItem*) {return 0;}

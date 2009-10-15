@@ -19,6 +19,8 @@
 #include "items/BackgroundConfig.h"
 #include "items/BoxConfig.h"
 #include "items/BoxContent.h"
+#include "items/ImageConfig.h"
+#include "items/ImageContent.h"
 
 #include "model/ItemFactory.h"
 #include "model/Slide.h"
@@ -27,6 +29,7 @@
 #include "model/BoxItem.h"
 #include "model/VideoFileItem.h"
 #include "model/BackgroundItem.h"
+#include "model/ImageItem.h"
 
 
 
@@ -395,7 +398,7 @@ TextContent * MyGraphicsScene::addTextContent()
 }*/
 
 
-TextItem * MyGraphicsScene::newTextItem(QString text)
+AbstractVisualItem * MyGraphicsScene::newTextItem(QString text)
 {
 	TextBoxItem *t = new TextBoxItem();
 	assert(m_slide);
@@ -450,6 +453,23 @@ AbstractVisualItem * MyGraphicsScene::newVideoItem()
 	
 	AbstractContent * item = t->createDelegate(this,m_liveRoot);
 	addContent(item); //, QPoint((int)t->pos().x(),(int)t->pos().y()));
+	
+	return t;
+}
+
+AbstractVisualItem * MyGraphicsScene::newImageItem()
+{
+	ImageItem *t = new ImageItem();
+	assert(m_slide);
+	
+	t->setPos(nearCenter(sceneRect()));
+	t->setItemId(ItemFactory::nextId());
+	t->setItemName(QString("ImageItem%1").arg(t->itemId()));
+	
+	m_slide->addItem(t);
+	
+	AbstractContent * item = t->createDelegate(this,m_liveRoot);
+	addContent(item);
 	
 	return t;
 }
@@ -517,10 +537,15 @@ void MyGraphicsScene::slotConfigureContent(const QPoint & /*scenePoint*/)
 	else
 	if (VideoFileContent * vid = dynamic_cast<VideoFileContent *>(content))
 		p = new VideoFileConfig(vid);
+	else
 	if (BackgroundContent * bg = dynamic_cast<BackgroundContent *>(content))
 		p = new BackgroundConfig(bg);
+	else
 	if (BoxContent * box = dynamic_cast<BoxContent *>(content))
 		p = new BoxConfig(box);
+	else
+	if (ImageContent * box = dynamic_cast<ImageContent *>(content))
+		p = new ImageConfig(box);
 	
 	// generic config
 	if (!p)

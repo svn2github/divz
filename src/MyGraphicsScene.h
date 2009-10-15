@@ -48,9 +48,10 @@ class MyGraphicsScene : public QGraphicsScene
 		
 // 		TextContent * addTextContent();
 		
-		TextItem * newTextItem(QString text = "Lorem Ipsum");
+		AbstractVisualItem * newTextItem(QString text = "Lorem Ipsum");
                 AbstractVisualItem * newBoxItem();
                 AbstractVisualItem * newVideoItem();
+                AbstractVisualItem * newImageItem();
 
                 void clear();
 

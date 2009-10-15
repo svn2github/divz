@@ -11,6 +11,8 @@ RCC_DIR = .build
 UI_DIR = .build
 
 QT += sql
+#QTPLUGIN += qjpeg
+#QT += jpeg
 
 BUILDNUM = $$system(perl buildcount.pl -v)
 VERSTR = '\\"$${BUILDNUM}\\"'  # place quotes around the version string

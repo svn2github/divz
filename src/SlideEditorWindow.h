@@ -48,6 +48,7 @@ private slots:
 	void newTextItem();
 	void newBoxItem();
 	void newVideoItem();
+	void newImageItem();
 	void newSlide();
 	void delSlide();
 	void slideProperties();

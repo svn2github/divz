@@ -3,6 +3,7 @@
 #include "TextItem.h"
 #include "TextBoxItem.h"
 #include "BoxItem.h"
+#include "ImageItem.h"
 #include "VideoFileItem.h"
 #include "BackgroundItem.h"
 #include "ItemFactory.h"
@@ -134,6 +135,9 @@ bool Slide::fromXml(QDomElement & pe)
 		else 
 		if (element.tagName() == "box")
 			content = new BoxItem();
+		else
+		if (element.tagName() == "image")
+			content = new ImageItem();
 		else 
 		if (element.tagName() == "videofile")
 			content = new VideoFileItem();

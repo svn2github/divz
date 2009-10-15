@@ -17,10 +17,10 @@ void AbstractItem::setChanged(QString name, QVariant value, QVariant oldValue)
 	{
 		if(value != oldValue)
 		{
+			m_revision ++;
 			//qDebug() << "AbstractItem::setChanged: itemName:"<<itemName()<<", name:"<<name<<", value:"<<value;
 			emit itemChanged(name,value,oldValue);
 			m_isChanged = true;
-			m_revision ++;
 		}
 	}
 }

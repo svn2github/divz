@@ -315,8 +315,7 @@ void SlideEditorWindow::setupToolbar()
 	connect(newVideo, SIGNAL(triggered()), this, SLOT(newVideoItem()));
 	
 	QAction  *newImage = toolbar->addAction(QIcon(":data/insert-image-24.png"), "New Image Item");
-	newImage->setEnabled(false);
-	//connect(newImage, SIGNAL(triggered()), this, SLOT(newImageItem()));
+	connect(newImage, SIGNAL(triggered()), this, SLOT(newImageItem()));
 	
 	toolbar->addSeparator();
 	
@@ -1122,4 +1121,9 @@ void SlideEditorWindow::newBoxItem()
 void SlideEditorWindow::newVideoItem()
 {
         m_scene->newVideoItem();
+}
+
+void SlideEditorWindow::newImageItem()
+{
+        m_scene->newImageItem();
 }

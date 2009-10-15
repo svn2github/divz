@@ -97,8 +97,12 @@ void TextBoxContent::setHtml(const QString & htmlCode)
 
 	QTextCharFormat format;
 
-	QPen p = modelItem() ? modelItem()->outlinePen() : QPen(Qt::black,1.5);
-	p.setJoinStyle(Qt::MiterJoin);
+	QPen p(Qt::NoPen);
+	if(modelItem() && modelItem()->outlineEnabled())
+	{
+		p = modelItem()->outlinePen();
+		p.setJoinStyle(Qt::MiterJoin);
+	}
 
 	format.setTextOutline(p);
 	format.setForeground(modelItem() ? modelItem()->fillBrush() : Qt::white);
@@ -282,7 +286,7 @@ void TextBoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * 
 	// Update 20091015: Implemented very aggressive caching across TextBoxContent instances
 	// that share the same modelItem() (see ::cacheKey()) inorder to avoid re-rendering 
 	// potentially expensive drop shadows, below.
-	if(!QPixmapCache::find(cacheKey(),cache))
+	if(!QPixmapCache::find(cacheKey(),cache) && m_text->toPlainText().trimmed() != "")
 	{
 		//qDebug()<<"modelItem():"<<modelItem()->itemName()<<": Cache redraw\n";
 		
@@ -352,8 +356,6 @@ void TextBoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * 
 		QPixmapCache::insert(cacheKey(), cache);
 	}
 
-	painter->drawPixmap(0,0,cache);
-
 	// Draw a rectangular outline in the editor inorder to visually locate empty text blocks
 	if(sceneContextHint() == MyGraphicsScene::Editor &&
 		m_text->toPlainText().trimmed() == "")
@@ -363,6 +365,10 @@ void TextBoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * 
 		painter->setBrush(Qt::NoBrush);
 
 		painter->drawRect(QRect(QPoint(0,0),contentsRect().size()));
+	}
+	else
+	{
+		painter->drawPixmap(0,0,cache);
 	}
 
 
