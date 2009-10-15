@@ -61,7 +61,8 @@ HEADERS += \
 	DocumentSettingsDialog.h \
 	GridDialog.h \
 	SlideSettingsDialog.h \
-	SlideGroupSettingsDialog.h
+	SlideGroupSettingsDialog.h \
+	ImageFilters.h
 
 	
 SOURCES += \
@@ -79,7 +80,8 @@ SOURCES += \
 	DocumentSettingsDialog.cpp \
 	GridDialog.cpp \
 	SlideSettingsDialog.cpp \
-	SlideGroupSettingsDialog.cpp
+	SlideGroupSettingsDialog.cpp \
+	ImageFilters.cpp
 	
 
 QT += core \
@@ -123,6 +125,7 @@ include(qvideo/qvideo.pri)
 include(qtcolorpicker/qtcolorpicker.pri)
 include(qtmultimedia/audio/audio.pri)
 include(3rdparty/rtmidi/rtmidi.pri)
+include(3rdparty/md5/md5.pri)
 
 # deployment on Linux
 unix {

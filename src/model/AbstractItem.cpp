@@ -5,6 +5,7 @@
 AbstractItem::AbstractItem() :
 	  m_isBeingLoaded(false)
 	, m_isChanged(false)
+	, m_revision(0)
 {}
 
 ITEM_PROPSET(AbstractItem, ItemId,   quint32, itemId);
@@ -19,6 +20,7 @@ void AbstractItem::setChanged(QString name, QVariant value, QVariant oldValue)
 			//qDebug() << "AbstractItem::setChanged: itemName:"<<itemName()<<", name:"<<name<<", value:"<<value;
 			emit itemChanged(name,value,oldValue);
 			m_isChanged = true;
+			m_revision ++;
 		}
 	}
 }

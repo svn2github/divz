@@ -59,6 +59,9 @@ public:
 	bool isBeingLoaded() { return m_isBeingLoaded; }
 
 	virtual AbstractItem * clone();
+	
+	// ++ every time setChanged() is called, starts at zero for every object, not persistant across program runs
+	quint32 revision() { return m_revision; }
 
 signals:
 	void itemChanged(QString fieldName, QVariant value, QVariant oldValue);
@@ -82,6 +85,8 @@ private:
 	bool		m_isChanged;	// true if any of the properties have been changed using their write accessors after object creation
 
 	bool		m_isBeingLoaded; // true if being loaded (fromXml) - prevents itemChanged() signal from being fired by setChanged()
+	
+	quint32 	m_revision; // ++ every time setChanged() is called, starts at zero for every object, not persistant across program runs
 
 };
 

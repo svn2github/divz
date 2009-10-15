@@ -61,6 +61,9 @@ class TextBoxContent : public AbstractContent
          
     private:
         void updateTextConstraints(int w = -1);
+        
+        QString cacheKey();
+        void dirtyCache();
         //void updateCache();
         
         QPixmap *m_textCache;
@@ -74,6 +77,8 @@ class TextBoxContent : public AbstractContent
         // TODO are these still used?
         QRect m_textRect;
         int m_textMargin;
+        
+        quint32 m_lastModelRev;
 
 /*        
         Qt::Alignment m_xTextAlign;

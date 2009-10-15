@@ -20,34 +20,22 @@
 #include <QPainterPathStroker>
 #include "items/CornerItem.h"
 
+#include <QPixmapCache>
+#include "ImageFilters.h"
+
 #define DEBUG_LAYOUT 0
 
 #if QT_VERSION >= 0x040600
 	#define QT46_SHADOW_ENAB 0
 #endif
 
-// static QString trimLeft(QString str)
-// {
-// 	static QRegExp white("\\s");
-// 	while(white.indexIn(str) == 0)
-// 	{
-// 		str = str.right(str.length()-1);
-// 	}
-// 	return str;
-// }
-//
-
 TextBoxContent::TextBoxContent(QGraphicsScene * scene, QGraphicsItem * parent)
     : AbstractContent(scene, parent, false)
-    , m_textCache(0)
-    , m_cacheScaleX(-1)
-    , m_cacheScaleY(-1)
     , m_text(0)
     , m_shadowText(0)
     , m_textRect(0, 0, 0, 0)
     , m_textMargin(4)
-//     , m_xTextAlign(Qt::AlignLeft)
-//     , m_yTextAlign(Qt::AlignTop)
+    , m_lastModelRev(0)
 {
 	m_dontSyncToModel = true;
 
@@ -86,8 +74,6 @@ TextBoxContent::~TextBoxContent()
 {
 	delete m_text;
 	delete m_shadowText;
-	if(m_textCache)
-		delete m_textCache;
 }
 
 QString TextBoxContent::toHtml()
@@ -100,13 +86,10 @@ QString TextBoxContent::toHtml()
 
 void TextBoxContent::setHtml(const QString & htmlCode)
 {
-        //qDebug("Setting HTML... [%s]",htmlCode.toAscii().constData());
-	m_text->setHtml(htmlCode);
+        m_text->setHtml(htmlCode);
 	m_shadowText->setHtml(htmlCode);
-	//qDebug()<<"TextBoxContent::setHtml: (not shown)";
 	updateTextConstraints();
-        //qDebug("Calling syncToModelItem");
-	syncToModelItem(0);
+        syncToModelItem(0);
 
 	// Apply outline pen to the html
 	QTextCursor cursor(m_text);
@@ -137,28 +120,21 @@ void TextBoxContent::setHtml(const QString & htmlCode)
 	}
 	#endif
 
-	delete m_textCache;
-	m_textCache = 0;
+	// Cache gets dirty in syncfrommodelitem conditionally based on model revision
+	//dirtyCache();
 
 	update();
 }
 
-/*void TextBoxContent::setXTextAlign(Qt::Alignment x)
+QString TextBoxContent::cacheKey()
 {
-	m_xTextAlign = x;
-        //qDebug()<<"TextBoxContent::setXTextAlign: "<<x;
-        updateTextConstraints();
-        syncToModelItem(0);
+	return QString().sprintf("%p",static_cast<void*>(modelItem()));
 }
 
-void TextBoxContent::setYTextAlign(Qt::Alignment y)
+void TextBoxContent::dirtyCache()
 {
-	m_yTextAlign = y;
-        //qDebug()<<"TextBoxContent::setYTextAlign: "<<y;
-        updateTextConstraints();
-        syncToModelItem(0);
+	QPixmapCache::remove(cacheKey());
 }
-*/
 
 QWidget * TextBoxContent::createPropertyWidget()
 {
@@ -179,7 +155,15 @@ void TextBoxContent::syncFromModelItem(AbstractVisualItem *model)
 {
         m_dontSyncToModel = true;
 	if(!modelItem())
+	{
 		setModelItem(model);
+		
+		// Start out the last remembered model rev at the rev of the model
+		// so we dont force a redraw of the cache just because we're a fresh
+		// object.
+		if(QPixmapCache::find(cacheKey(),0))
+			m_lastModelRev = modelItem()->revision();
+	}
 
 	static int x = 0;
 	x++;
@@ -199,11 +183,15 @@ void TextBoxContent::syncFromModelItem(AbstractVisualItem *model)
 	font.setPointSize((int)textModel->fontSize());
 	m_text->setDefaultFont(font);
 
-
-// 	setXTextAlign(textModel->xTextAlign());
-// 	setYTextAlign(textModel->yTextAlign());
-
 	AbstractContent::syncFromModelItem(model);
+	
+	if(modelItem()->revision() != m_lastModelRev)
+	{
+		//qDebug()<<"modelItem():"<<modelItem()->itemName()<<": last revision:"<<m_lastModelRev<<", this revision:"<<m_lastModelRev<<", cache dirty!";
+		
+		m_lastModelRev = modelItem()->revision();
+		dirtyCache();
+	}
 
         m_dontSyncToModel = false;
 }
@@ -224,9 +212,6 @@ AbstractVisualItem * TextBoxContent::syncToModelItem(AbstractVisualItem *model)
 	//textModel->setText(m_text->toHtml());
 	textModel->setFontFamily(m_text->defaultFont().family());
 	//textModel->setFontSize(m_text->defaultFont().pointSize());
-
-// 	textModel->setXTextAlign(xTextAlign());
-// 	textModel->setYTextAlign(yTextAlign());
 
 	setModelItemIsChanging(false);
 
@@ -281,6 +266,7 @@ void TextBoxContent::mouseDoubleClickEvent(QGraphicsSceneMouseEvent * event)
 	QGraphicsItem::mouseDoubleClickEvent(event);
 }
 
+
 void TextBoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget)
 {
 	// paint parent
@@ -293,54 +279,69 @@ void TextBoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * 
 	painter->translate(contentsRect().topLeft()); // + QPoint(p.width(),p.width()));
 
 
-
-	//	QAbstractTextDocumentLayout::PaintContext pCtx;
-	//	m_text->documentLayout()->draw(painter, pCtx);
-
-	bool pixmapReset = false;
-	if(!m_textCache || m_textCache->size() != contentsRect().size())
-	{
-		if(m_textCache)
-			delete m_textCache;
-		m_textCache = new QPixmap(contentsRect().size());
-		pixmapReset = true;
-	}
-
+	QPixmap cache;
+	
 	// The primary and only reason we cache the text rendering is inorder
 	// to paint the text and shadow as a single unit (e.g. composite the
 	// shadow+text BEFORE applying opacity rather than setting the opacity
 	// before rendering the shaodw.) If we didnt cache the text as a pixmap
 	// (e.g. render text directly) then when crossfading, the shadow
-	// "apperas" to fade out last, after the text
-	QTransform tx = painter->transform();
-	if(pixmapReset || m_cacheScaleX != tx.m11() || m_cacheScaleY != tx.m22())
+	// "apperas" to fade out last, after the text.
+	
+	// Update 20091015: Implemented very aggressive caching across TextBoxContent instances
+	// that share the same modelItem() (see ::cacheKey()) inorder to avoid re-rendering 
+	// potentially expensive drop shadows, below.
+	if(!QPixmapCache::find(cacheKey(),cache))
 	{
-		m_cacheScaleX = tx.m11();
-		m_cacheScaleY = tx.m22();
+		//qDebug()<<"modelItem():"<<modelItem()->itemName()<<": Cache redraw\n";
+		
+		QSizeF shadowSize = modelItem()->shadowEnabled() ? QSizeF(modelItem()->shadowOffsetX(),modelItem()->shadowOffsetY()) : QSizeF(0,0);
+		cache = QPixmap((contentsRect().size()+shadowSize).toSize());
 
-		m_textCache->fill(Qt::transparent);
-		QPainter textPainter(m_textCache);
+		cache.fill(Qt::transparent);
+		QPainter textPainter(&cache);
 
 		QAbstractTextDocumentLayout::PaintContext pCtx;
 
 		#if QT46_SHADOW_ENAB == 0
 		if(modelItem()->shadowEnabled())
 		{
+			// create temporary pixmap to hold a copy of the text
+			QPixmap tmpPx(contentsRect().size());
+			tmpPx.fill(Qt::transparent);
+			
+			// render the text
+			QPainter tmpPainter(&tmpPx);
+			m_text->documentLayout()->draw(&tmpPainter, pCtx);
+			
+			// blacken the text by applying a color to the copy using a QPainter::CompositionMode_DestinationIn operation. 
+			// This produces a homogeneously-colored pixmap.
+			tmpPainter.setCompositionMode(QPainter::CompositionMode_SourceIn);
+			tmpPainter.fillRect(0, 0, tmpPx.width(), tmpPx.height(), modelItem()->shadowBrush().color());
+			tmpPainter.end();
+
+			// blur the colored text
+			QImage tmpImage = tmpPx.toImage();
+			QRect rect = QRect(0,0,tmpPx.width(), tmpPx.height());
+			QImage blurredImage = ImageFilters::blurred(tmpImage, rect, modelItem()->shadowBlurRadius());
+			QPixmap blurred = QPixmap::fromImage(blurredImage);
+			
+			// render the blurred text at an offset into the cache
 			textPainter.save();
-
 			textPainter.translate(modelItem()->shadowOffsetX(),modelItem()->shadowOffsetY());
-			m_shadowText->documentLayout()->draw(&textPainter, pCtx);
-
+			textPainter.drawPixmap(0,0,blurred);
 			textPainter.restore();
 		}
 		#endif
 
 		m_text->documentLayout()->draw(&textPainter, pCtx);
+		
+		QPixmapCache::insert(cacheKey(), cache);
 	}
 
-	painter->drawPixmap(0,0,*m_textCache);
+	painter->drawPixmap(0,0,cache);
 
-
+	// Draw a rectangular outline in the editor inorder to visually locate empty text blocks
 	if(sceneContextHint() == MyGraphicsScene::Editor &&
 		m_text->toPlainText().trimmed() == "")
 	{
