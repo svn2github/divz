@@ -225,7 +225,7 @@ bool AbstractVisualItem::fromXml(QDomElement & pe)
 // 		if(flag)
 // 		{
 			int blur = domElement.attribute("blur").toInt();
-			if(!blur || blur<=0)
+			if(!blur || blur<0)
 				blur = 3;
 			setShadowBlurRadius(blur);
 			

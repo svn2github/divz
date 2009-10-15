@@ -82,6 +82,8 @@ Revised Task list for Release 1.0, 10/18/09:
 		- SVG Item if we have time
 	
 	- Improvements:
+		when pressing F2 and group is live, should start editor on lvie slide
+		in editor, implement F5 (or similar key) to change Live to this group (if needed) and set this slide as current
 		default background color should be gray or something "nicer" than black
 			still start out live as black though
 		Prompt to save custom output location on close
@@ -122,6 +124,7 @@ Revised Task list for Release 1.0, 10/18/09:
 		[STARTED] Gausian blur shadows (start impl using QGraphicsEffects from 4.6, but performance is terrible, so I'll have to do some heavy optimizations before we can use it.)
 			Implemented basic blur using code from qpixmapfilters.cpp, integrated into dviz in ImageFilters.cpp
 			First implementation in TextBoxContent.cpp, included with very aggressive caching via QPixmapCache
+			Started implementation in BoxContent.cpp, but paused to work on other features.
 
 		[DONE] Set Ctrl+Z/Ctrl+shift+z as undo/redo shortcuts
 		[DPNE] Set default font size on new text items larger than 16pt

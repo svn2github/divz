@@ -16,6 +16,8 @@
 #include <QUrl>
 #include <QAbstractTextDocumentLayout>
 #include <QDebug>
+#include <QPixmapCache>
+#include "ImageFilters.h"
 
 #if QT_VERSION >= 0x040600
 	#define QT46_SHADOW_ENAB 0
@@ -73,9 +75,31 @@ QWidget * BoxContent::createPropertyWidget()
 
 void BoxContent::syncFromModelItem(AbstractVisualItem *model)
 {
+	if(!modelItem())
+	{
+		setModelItem(model);
+		
+		// Start out the last remembered model rev at the rev of the model
+		// so we dont force a redraw of the cache just because we're a fresh
+		// object.
+		if(QPixmapCache::find(cacheKey(),0))
+			m_lastModelRev = modelItem()->revision();
+	}
+	
 	AbstractContent::syncFromModelItem(model);
+	
+	if(modelItem()->revision() != m_lastModelRev)
+	{
+		//qDebug()<<"modelItem():"<<modelItem()->itemName()<<": last revision:"<<m_lastModelRev<<", this revision:"<<m_lastModelRev<<", cache dirty!";
+		
+		m_lastModelRev = modelItem()->revision();
+		dirtyCache();
+	}
+	
 	m_shadowClipDirty = true;
 }
+
+
 
 AbstractVisualItem * BoxContent::syncToModelItem(AbstractVisualItem *model)
 {	
@@ -119,8 +143,6 @@ void BoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * opti
 	
 	QRect cRect = contentsRect();
 	
-	QPen p(Qt::NoPen);
-	
 	#if QT46_SHADOW_ENAB == 0
 	if(modelItem()->shadowEnabled())
 	{
@@ -130,28 +152,74 @@ void BoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * opti
 		if(modelItem()->outlineEnabled())
 			penWidth = modelItem()->outlinePen().widthF();
 			
-		painter->setPen(Qt::NoPen);
-		painter->setBrush(modelItem() ? modelItem()->shadowBrush() : Qt::black);
-		
 		double x = modelItem()->shadowOffsetX();
 		double y = modelItem()->shadowOffsetY();
 		x += x == 0 ? 0 : x>0 ? penWidth : -penWidth;
 		y += y == 0 ? 0 : y>0 ? penWidth : -penWidth;
-		
-		if(m_shadowClipDirty)
- 			updateShadowClipPath();
- 			
- 		painter->setClipPath(m_shadowClipPath);
- 		
-		painter->translate(x,y);
-		painter->drawRect(cRect);
+			
+		// disabling for now because the blurred shadow is rendered "wrong" (position/size) and I'm too lazy to fix it right now. 
+		// I'll come back to it in a bit.
+		if(1) //modelItem()->shadowBlurRadius() == 0)
+		{
+			// render a "cheap" shadow
+			
+			painter->setPen(Qt::NoPen);
+			painter->setBrush(modelItem() ? modelItem()->shadowBrush() : Qt::black);
+			
+			if(m_shadowClipDirty)
+				updateShadowClipPath();
+				
+			painter->setClipPath(m_shadowClipPath);
+			
+			painter->translate(x,y);
+			painter->drawRect(cRect);
+		}
+		else
+		{
+			
+			QPixmap cache;
+			if(!QPixmapCache::find(cacheKey(),cache))
+			{
+				// create temporary pixmap to hold the foreground
+				QPixmap tmpPx(contentsRect().size());
+				tmpPx.fill(Qt::transparent);
+				
+				// render the text
+				QPainter tmpPainter(&tmpPx);
+				drawForeground(&tmpPainter);
+				
+				// blacken the text by applying a color to the copy using a QPainter::CompositionMode_DestinationIn operation. 
+				// This produces a homogeneously-colored pixmap.
+				QRect rect = QRect(0, 0, tmpPx.width(), tmpPx.height());
+				tmpPainter.setCompositionMode(QPainter::CompositionMode_SourceIn);
+				tmpPainter.fillRect(rect, modelItem()->shadowBrush().color());
+				tmpPainter.end();
+	
+				// blur the colored text
+				QImage  orignalImage   = tmpPx.toImage();
+				QImage  blurredImage   = ImageFilters::blurred(orignalImage, rect, modelItem()->shadowBlurRadius());
+				cache = QPixmap::fromImage(blurredImage);
+			}
+			
+			painter->translate(x,y);
+			painter->drawPixmap(0, 0, cache);
+		}
 		
 		painter->restore();
 	}
 	#endif
 	
-	painter->save();
+	drawForeground(painter);
+}
+
+
+void BoxContent::drawForeground(QPainter * painter)
+{
+	QRect cRect = contentsRect();
 	
+	QPen p(Qt::NoPen);
+	
+	painter->save();
 	
 	if(modelItem()->outlineEnabled())
 	{

@@ -18,6 +18,7 @@
 #include <math.h>
 #include <assert.h>
 #include <QDebug>
+#include <QPixmapCache>
 
 #if QT_VERSION >= 0x040600
 	#include <QGraphicsDropShadowEffect>
@@ -491,6 +492,19 @@ void AbstractContent::syncFromModelItem(AbstractVisualItem *model)
 
 	m_dontSyncToModel = false;
 }
+
+
+QString AbstractContent::cacheKey()
+{
+        return QString().sprintf("%p",static_cast<void*>(modelItem()));
+}
+
+void AbstractContent::dirtyCache()
+{
+        QPixmapCache::remove(cacheKey());
+}
+
+
 
 void AbstractContent::setOpacity(double d)
 {

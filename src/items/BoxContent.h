@@ -31,10 +31,13 @@ public:
 	void paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget = 0);
 
 private:
+	void drawForeground(QPainter *painter);
+
 	void updateShadowClipPath();
 	
 	QPainterPath m_shadowClipPath;
 	bool m_shadowClipDirty;
+	quint32 m_lastModelRev;
 
 };
 

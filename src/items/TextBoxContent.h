@@ -61,9 +61,7 @@ class TextBoxContent : public AbstractContent
          
     private:
         void updateTextConstraints(int w = -1);
-        
-        QString cacheKey();
-        void dirtyCache();
+     
         //void updateCache();
         
         QPixmap *m_textCache;

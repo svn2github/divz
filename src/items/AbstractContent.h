@@ -115,8 +115,9 @@ class AbstractContent : public AbstractDisposeable
 		void setModelItemIsChanging(bool flag = true);
 		void setModelItem(AbstractVisualItem *model);
 		
-	
-		
+	   
+		virtual QString cacheKey();
+		void dirtyCache();
 		
 		bool m_dontSyncToModel;
 		
