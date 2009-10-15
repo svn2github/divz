@@ -89,6 +89,7 @@ Revised Task list for Release 1.0, 10/18/09:
 		Add image palette
 		Add slide pallette
 		Add song template palette
+		in songeditor, be able to hit ESC to close
 		[STARTED] Auto-change slides/slide groups after X seconds
 			added field in Slide.h, now to make SlideGroupViewer and UI honor the field (and SlideGroup::autoChangeGroup() flag in MainWindow)
 		[STARTED] When searching for song, auto select first result
