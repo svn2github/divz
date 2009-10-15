@@ -163,6 +163,7 @@ void MainWindow::clearAllOutputs()
 {
 	m_liveView->clear();
 	m_previewWidget->clear();
+	qDebug() << "MainWindow::clearAllOutputs: Releasing preview slides\n";
 	
 	
 	if(m_viewControl)
@@ -645,6 +646,7 @@ void MainWindow::groupSelected(const QModelIndex &idx)
 
 void MainWindow::previewSlideGroup(SlideGroup *s)
 {
+	//qDebug() << "MainWindow::previewSlideGroup: Loading preview slide\n";
 	m_previewWidget->setSlideGroup(s);
 }
 
@@ -679,7 +681,9 @@ void MainWindow::setLiveGroup(SlideGroup *newGroup)
 		}
 	}
 	
+	//qDebug() << "MainWindow::setLiveGroup: Loading into view control";
 	m_viewControl->setSlideGroup(newGroup);
+	//qDebug() << "MainWindow::setLiveGroup: Loading into LIVE output";
 	m_liveView->setSlideGroup(newGroup);
 	
 }

@@ -157,8 +157,6 @@ void BoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * opti
 		x += x == 0 ? 0 : x>0 ? penWidth : -penWidth;
 		y += y == 0 ? 0 : y>0 ? penWidth : -penWidth;
 			
-		// disabling for now because the blurred shadow is rendered "wrong" (position/size) and I'm too lazy to fix it right now. 
-		// I'll come back to it in a bit.
 		if(modelItem()->shadowBlurRadius() == 0)
 		{
 			// render a "cheap" shadow

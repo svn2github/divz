@@ -354,6 +354,7 @@ void SlideGroupListModel::generatePixmap(int row)
 		m_scene->setSceneRect(m_sceneRect);
 	}
 	
+	//qDebug() << "SlideGroupListModel::generatePixmap: Loading slide";
 	m_scene->setSlide(slide);
 
 	QPixmap icon(icon_w,icon_h);
@@ -367,6 +368,7 @@ void SlideGroupListModel::generatePixmap(int row)
 	
 	// clear() so we can free memory, stop videos, etc
 	m_scene->clear();
+	//qDebug() << "SlideGroupListModel::generatePixmap: Releasing slide\n";
 	
 	m_pixmaps[row] = icon;
 }

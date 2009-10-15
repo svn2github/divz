@@ -119,6 +119,7 @@ void SlideGroupViewer::setSlideGroup(SlideGroup *g, int startSlide)
 	if(m_slideGroup && m_slideGroup != g)
 	{
 		//disconnect(m_slideGroup,0,this,0);
+		//qDebug() << "SlideGroupViewer::setSlideGroup: Releasing video providers due to slide change";
 		releaseVideoProvders();
 	}
 
@@ -132,8 +133,10 @@ void SlideGroupViewer::setSlideGroup(SlideGroup *g, int startSlide)
 	m_sortedSlides = slist;
 	
 	// See comments on the function itself for what this is for
+	//qDebug() << "SlideGroupViewer::setSlideGroup: Initalizing video providers...";
 	initVideoProviders();
 
+	//qDebug() << "SlideGroupViewer::setSlideGroup: Loading slide into scene";
 	if(startSlide)
 	{
 		Slide *s = m_sortedSlides.at(startSlide);
@@ -226,16 +229,21 @@ void SlideGroupViewer::initVideoProviders()
 				if(!videoFile.isEmpty())
 				{
 					QVideoProvider * p = QVideoProvider::providerForFile(videoFile);
-					connect(p, SIGNAL(streamStarted()), this, SLOT(videoStreamStarted()));
-					
-					m_videoProvidersConsumed[p->canonicalFilePath()] = false;
-					
-					m_videoProviders << p;
-					
-					if(!p->isPlaying())
+					if(m_videoProvidersOpened[p->canonicalFilePath()])
+					{
+						QVideoProvider::releaseProvider(p);
+					}
+					else
+					{
+						m_videoProvidersOpened[p->canonicalFilePath()]   = true;
+						m_videoProvidersConsumed[p->canonicalFilePath()] = false;
+						
+						connect(p, SIGNAL(streamStarted()), this, SLOT(videoStreamStarted()));
+						
+						m_videoProviders << p;
+						
 						p->play();
-					
-					
+					}
 				}
 			}
 		}
@@ -251,6 +259,7 @@ void SlideGroupViewer::releaseVideoProvders()
 	}
 	
 	m_videoProvidersConsumed.clear();
+	m_videoProvidersOpened.clear();
 	m_videoProviders.clear();
 	
 }
@@ -264,6 +273,7 @@ void SlideGroupViewer::videoStreamStarted()
 	if(!m_videoProvidersConsumed[p->canonicalFilePath()])
 	{
 		m_videoProvidersConsumed[p->canonicalFilePath()] = true;
-		//p->pause();
+		//qDebug() << "SlideGroupViewer::videoStreamStarted: Consuming video stream and requesting pause";
+		p->pause();
 	}
 }

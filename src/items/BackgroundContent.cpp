@@ -290,27 +290,23 @@ void BackgroundContent::setVideoFile(const QString &name)
 		qDebug() << "BackgroundContent::setVideoFile: Loading"<<name;
 	
 	m_videoProvider = p;
-	m_videoProvider->connectReceiver(this, SLOT(setPixmap(const QPixmap &)));
-	
-	// prime the pump, so to speak
-	setPixmap(m_videoProvider->pixmap());
 	
 	if(modelItem()->fillType() == AbstractVisualItem::Video)
 	{
-		//if(!m_videoProvider->isPlaying())
-			m_videoProvider->play();
+		m_videoProvider->play();
+		
 		m_still = false;
+		
+		// prime the pump, so to speak
+		setPixmap(m_videoProvider->pixmap());
+		
 	}
 	else
 	{
-		if(m_videoProvider->isPlaying())
-			m_videoProvider->pause();
+		m_still = true;
 	}
-
-	//m_imageSize = QSize();
-// 	m_video->setAdvanceMode(QVideo::Manual);
-// 	m_video->setLooped(true);
-	//m_video->play();
+	
+	m_videoProvider->connectReceiver(this, SLOT(setPixmap(const QPixmap &)));
 }
 
 
@@ -328,6 +324,8 @@ void BackgroundContent::setPixmap(const QPixmap & pixmap)
 	
 	if(sceneContextHint() != MyGraphicsScene::Live && m_imageSize.width() > 0)
 	{
+		if(DEBUG_BACKGROUNDCONTENT)
+			qDebug() << "VideFileContent::setPixmap(): sceneContextHint() != Live, setting m_still true"; 
 		m_still = true;
 		m_videoProvider->pause();
 	}

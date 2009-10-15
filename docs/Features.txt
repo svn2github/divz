@@ -182,6 +182,8 @@ Revised Task list for Release 1.0, 10/18/09:
 				Confirmed that it "new" works on linux tho - need to debug on windows then - drats
 		Perfomance of the document pixmap model generator becomes a problem with a lot of songs - need to investigate - possibly use different cache key
 		
+		[FIXED] video still randomly pausing when switching slides in editor or going live
+				Adjusted SlideGroupViewer's video provider handling, adjusted the order of play/setpixmap calls in background content and video file content
 		[DONE] adding items to slides doesnt put them on top (need to check on z order)
 				for some reason, the m_content array in MyGraphicsScene was showing empty(), so I used the QGraphicsScene::items() method to get list of items for zvalue cals instead
 		[FIXED] Backgrounds in per-verse slides dont work consistently (sometimes override, sometimes master shows thru)

@@ -633,7 +633,14 @@
            </widget>
           </item>
           <item>
-           <widget class="QSpinBox" name="blurBox"/>
+           <widget class="QSpinBox" name="blurBox">
+            <property name="specialValueText">
+             <string>(No Blur)</string>
+            </property>
+            <property name="maximum">
+             <number>16</number>
+            </property>
+           </widget>
           </item>
           <item>
            <spacer name="horizontalSpacer">

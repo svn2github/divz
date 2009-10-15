@@ -183,22 +183,15 @@ void VideoFileContent::setFilename(const QString &name)
 		qDebug() << "VideoFileContent::setFilename(): Loading"<<name;
 	
 	
+	m_still = false;
+	
 	m_videoProvider = p;
-	m_videoProvider->connectReceiver(this, SLOT(setPixmap(const QPixmap &)));
+	m_videoProvider->play();
 	
 	// prime the pump, so to speak
 	setPixmap(m_videoProvider->pixmap());
-
-	//if(!m_videoProvider->isPlaying())
-		m_videoProvider->play();
-	m_still = false;
 	
-	
-	
-	//m_imageSize = QSize();
-// 	m_video->setAdvanceMode(QVideo::Manual);
-// 	m_video->setLooped(true);
-	//m_video->play();
+	m_videoProvider->connectReceiver(this, SLOT(setPixmap(const QPixmap &)));
 }
 
 QPixmap VideoFileContent::renderContent(const QSize & size, Qt::AspectRatioMode /*ratio*/) const

@@ -51,6 +51,7 @@ private:
 	void releaseVideoProvders();
 	QList<QVideoProvider*> m_videoProviders;
 	QMap<QString,bool> m_videoProvidersConsumed;
+	QMap<QString,bool> m_videoProvidersOpened;
 	
 	SlideGroup * m_slideGroup;
 	QList<Slide*> m_sortedSlides;

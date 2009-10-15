@@ -259,6 +259,7 @@ QPixmap	SlideGroupFactory::generatePreviewPixmap(SlideGroup *g, QSize iconSize, 
 		m_scene->setSceneRect(sceneRect);
 	}
 	
+	//qDebug() << "SlideGroupFactory::generatePixmap: Loading slide";
 	m_scene->setSlide(slide);
 	
 	QPixmap icon(icon_w,icon_h);
@@ -272,6 +273,7 @@ QPixmap	SlideGroupFactory::generatePreviewPixmap(SlideGroup *g, QSize iconSize, 
 	
 	// clear() so we can free memory, stop videos, etc
 	m_scene->clear();
+	//qDebug() << "SlideGroupFactory::generatePixmap: Releasing slide\n";
 	
 	return icon;
 }
