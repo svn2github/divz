@@ -121,11 +121,11 @@ Revised Task list for Release 1.0, 10/18/09:
 		Save song templates/bg in a "template collection"
 		Add drag/drop background for songs from a yet-to-be-made vid/image bg pallette
 		
-		[STARTED] Gausian blur shadows (start impl using QGraphicsEffects from 4.6, but performance is terrible, so I'll have to do some heavy optimizations before we can use it.)
+		[DONE] Gausian blur shadows (start impl using QGraphicsEffects from 4.6, but performance is terrible, so I'll have to do some heavy optimizations before we can use it.)
 			Implemented basic blur using code from qpixmapfilters.cpp, integrated into dviz in ImageFilters.cpp
 			First implementation in TextBoxContent.cpp, included with very aggressive caching via QPixmapCache
 			Started implementation in BoxContent.cpp, but paused to work on other features.
-
+			Finished implementation and fixed issues in box content.
 		[DONE] Set Ctrl+Z/Ctrl+shift+z as undo/redo shortcuts
 		[DPNE] Set default font size on new text items larger than 16pt
 		[DONE] Add appros icons to slide editor window and mainwidnow

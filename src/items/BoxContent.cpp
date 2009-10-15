@@ -141,12 +141,12 @@ void BoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * opti
 	// paint parent
 	AbstractContent::paint(painter, option, widget);
 	
-	QRect cRect = contentsRect();
-	
 	#if QT46_SHADOW_ENAB == 0
 	if(modelItem()->shadowEnabled())
 	{
 		painter->save();
+		
+		QRect cRect = contentsRect();
 		
 		qreal penWidth = 0;
 		if(modelItem()->outlineEnabled())
@@ -159,10 +159,9 @@ void BoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * opti
 			
 		// disabling for now because the blurred shadow is rendered "wrong" (position/size) and I'm too lazy to fix it right now. 
 		// I'll come back to it in a bit.
-		if(1) //modelItem()->shadowBlurRadius() == 0)
+		if(modelItem()->shadowBlurRadius() == 0)
 		{
 			// render a "cheap" shadow
-			
 			painter->setPen(Qt::NoPen);
 			painter->setBrush(modelItem() ? modelItem()->shadowBrush() : Qt::black);
 			
@@ -177,16 +176,26 @@ void BoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * opti
 		else
 		{
 			
+			double radius = modelItem()->shadowBlurRadius();
+			double radiusSquared = radius*radius;
+			
 			QPixmap cache;
 			if(!QPixmapCache::find(cacheKey(),cache))
 			{
 				// create temporary pixmap to hold the foreground
-				QPixmap tmpPx(contentsRect().size());
+				double blurSize = radiusSquared*2;
+				QSize shadowSize((int)blurSize,(int)blurSize);
+				QPixmap tmpPx(contentsRect().size()+shadowSize);
 				tmpPx.fill(Qt::transparent);
 				
-				// render the text
 				QPainter tmpPainter(&tmpPx);
+				tmpPainter.save();
+				
+				// render the foreground
+				QPoint tl = cRect.topLeft();
+				tmpPainter.translate(tl.x() * -1 + radiusSquared, tl.y() * -1  + radiusSquared);
 				drawForeground(&tmpPainter);
+				tmpPainter.restore();
 				
 				// blacken the text by applying a color to the copy using a QPainter::CompositionMode_DestinationIn operation. 
 				// This produces a homogeneously-colored pixmap.
@@ -197,12 +206,15 @@ void BoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * opti
 	
 				// blur the colored text
 				QImage  orignalImage   = tmpPx.toImage();
-				QImage  blurredImage   = ImageFilters::blurred(orignalImage, rect, modelItem()->shadowBlurRadius());
+				QImage  blurredImage   = ImageFilters::blurred(orignalImage, rect, (int)radius);
 				cache = QPixmap::fromImage(blurredImage);
+				
+				QPixmapCache::insert(cacheKey(), cache);
 			}
 			
-			painter->translate(x,y);
-			painter->drawPixmap(0, 0, cache);
+			//qDebug() << "Drawing box shadow at offset:"<<QPoint(x,y)<<", topLeft:"<<cRect.topLeft()<<", size:"<<cache.size();
+			painter->translate(x - radiusSquared,y - radiusSquared);
+			painter->drawPixmap(cRect.topLeft(), cache);
 		}
 		
 		painter->restore();

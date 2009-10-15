@@ -355,7 +355,7 @@ p, li { white-space: pre-wrap; }
                 <fill brush-style="1" video="" image="" brush-color="255,255,255,128" type="1"/>
                 <outline brush-style="1" pen-join="64" pen-width="3" enabled="1" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255"/>
                 <mirror offset="3" enabled="0"/>
-                <shadow brush-style="1" x="3" y="3" enabled="1" blur="3" brush-color="0,0,0,128"/>
+                <shadow brush-style="1" x="0" y="0" enabled="1" blur="20" brush-color="255,255,0,255"/>
             </box>
             <textbox>
                 <item-id>1520</item-id>
@@ -363,12 +363,12 @@ p, li { white-space: pre-wrap; }
                 <rect>
                     <x>-100</x>
                     <y>-75</y>
-                    <w>920</w>
+                    <w>980</w>
                     <h>122</h>
                 </rect>
                 <pos>
-                    <x>255</x>
-                    <y>390</y>
+                    <x>226</x>
+                    <y>398</y>
                 </pos>
                 <zvalue>4</zvalue>
                 <opacity>1</opacity>

@@ -266,7 +266,7 @@ void TextBoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * 
 	painter->save();
 
 	//TODO should we clip to the rect or FORCE resize the rect? probably clip...
-	painter->setClipRect(contentsRect());
+	//painter->setClipRect(contentsRect());
 	painter->translate(contentsRect().topLeft()); // + QPoint(p.width(),p.width()));
 
 
@@ -309,13 +309,21 @@ void TextBoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * 
 			}
 			else
 			{
+				double radius = modelItem()->shadowBlurRadius();
+				double radiusSquared = radius*radius;
+				
 				// create temporary pixmap to hold a copy of the text
-				QPixmap tmpPx(contentsRect().size());
+				double blurSize = (int)(radiusSquared*2);
+				QSize shadowSize(blurSize,blurSize);
+				QPixmap tmpPx(contentsRect().size()+shadowSize);
 				tmpPx.fill(Qt::transparent);
 				
 				// render the text
 				QPainter tmpPainter(&tmpPx);
+				tmpPainter.save();
+				tmpPainter.translate(radiusSquared, radiusSquared);
 				m_text->documentLayout()->draw(&tmpPainter, pCtx);
+				tmpPainter.restore();
 				
 				// blacken the text by applying a color to the copy using a QPainter::CompositionMode_DestinationIn operation. 
 				// This produces a homogeneously-colored pixmap.
@@ -326,12 +334,13 @@ void TextBoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * 
 	
 				// blur the colored text
 				QImage  orignalImage   = tmpPx.toImage();
-				QImage  blurredImage   = ImageFilters::blurred(orignalImage, rect, modelItem()->shadowBlurRadius());
+				QImage  blurredImage   = ImageFilters::blurred(orignalImage, rect, (int)radius);
 				QPixmap blurredPixmap  = QPixmap::fromImage(blurredImage);
 				
 				// render the blurred text at an offset into the cache
 				textPainter.save();
-				textPainter.translate(modelItem()->shadowOffsetX(),modelItem()->shadowOffsetY());
+				textPainter.translate(modelItem()->shadowOffsetX() - radiusSquared,
+						      modelItem()->shadowOffsetY() - radiusSquared);
 				textPainter.drawPixmap(0, 0, blurredPixmap);
 				textPainter.restore();
 			}
