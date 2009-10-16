@@ -177,7 +177,19 @@ void AbstractContent::resizeContents(const QRect & rect, bool keepRatio)
 	
 	prepareGeometryChange();
 
-	dirtyCache();
+	if(modelItem())
+	{
+		if(modelItem()->contentsRect().toRect() != rect)
+		{
+			//qDebug() << "resizeContents: *IS dirty cache";
+			//dirtyCache();
+		}
+		else
+		{
+			//qDebug() << "resizeContents: NOT dirty cache";
+		}
+	}
+	
 
 	m_contentsRect = rect;
 
@@ -972,7 +984,7 @@ void AbstractContent::slotPerspective(const QPointF & sceneRelPoint, Qt::Keyboar
 }
 
 void AbstractContent::slotClearPerspective()
-	{
+{
 	m_xRotationAngle = 0;
 	m_yRotationAngle = 0;
 	applyRotations();

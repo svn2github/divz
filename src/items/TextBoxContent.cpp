@@ -292,7 +292,7 @@ void TextBoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * 
 	// potentially expensive drop shadows, below.
 	if(!QPixmapCache::find(cacheKey(),cache) && m_text->toPlainText().trimmed() != "")
 	{
-		//qDebug()<<"modelItem():"<<modelItem()->itemName()<<": Cache redraw\n";
+		//qDebug()<<"TextBoxContent::paint(): modelItem:"<<modelItem()->itemName()<<": Cache redraw";
 		
 		QSizeF shadowSize = modelItem()->shadowEnabled() ? QSizeF(modelItem()->shadowOffsetX(),modelItem()->shadowOffsetY()) : QSizeF(0,0);
 		cache = QPixmap((contentsRect().size()+shadowSize).toSize());

@@ -11,21 +11,19 @@ RCC_DIR = .build
 UI_DIR = .build
 
 QT += sql
-#QTPLUGIN += qjpeg
-#QT += jpeg
 
 BUILDNUM = $$system(perl buildcount.pl -v)
 VERSTR = '\\"$${BUILDNUM}\\"'  # place quotes around the version string
 
 unix {
-    VERSION  = "0.8.2"
-    VERSION = "$${VERSION} (Build $${BUILDNUM})"
-    SVNREV   = $$system(svn info -r HEAD . | grep Changed\ Rev | cut -b 19-)
-    
-    !isEmpty(SVNREV) {
-	     VERSION = "$${VERSION} r$${SVNREV}"
-    }
-    VERSTR = '\\"$${VERSION}\\"'  # place quotes around the version string
+	VERSION  = "0.8.2"
+	VERSION = "$${VERSION} (Build $${BUILDNUM})"
+	SVNREV   = $$system(svn info -r HEAD . | grep Changed\ Rev | cut -b 19-)
+	
+	!isEmpty(SVNREV) {
+		VERSION = "$${VERSION} r$${SVNREV}"
+	}
+	VERSTR = '\\"$${VERSION}\\"'  # place quotes around the version string
 }
 
 DEFINES += VER=\"$${VERSTR}\" # create a VER macro containing the version string
@@ -35,7 +33,7 @@ DEFINES += VER=\"$${VERSTR}\" # create a VER macro containing the version string
 
 # use OpenGL where available
 contains(QT_CONFIG, opengl)|contains(QT_CONFIG, opengles1)|contains(QT_CONFIG, opengles2) {
-    QT += opengl
+	QT += opengl
 }
 
 FORMS += mainwindow.ui \
@@ -87,31 +85,31 @@ SOURCES += \
 	
 
 QT += core \
-    gui \
-    svg \
-    network \
-    xml
+	gui \
+	svg \
+	network \
+	xml
 
 unix {
-    LIBS += -lavdevice -lavformat -lavcodec -lavutil -lswscale -lbz2
+	LIBS += -lavdevice -lavformat -lavcodec -lavutil -lswscale -lbz2
 }
 
 win32 {
-     INCLUDEPATH += \
-         ./external/ffmpeg/include/msinttypes \
-         ./external/ffmpeg/include/libswscale \
-         ./external/ffmpeg/include/libavutil \
-         ./external/ffmpeg/include/libavdevice \
-         ./external/ffmpeg/include/libavformat \
-         ./external/ffmpeg/include/libavcodec \
-         ./external/ffmpeg/include
-
-     LIBS += -L"./external/ffmpeg/lib" \
-         -lavcodec-51 \
-         -lavformat-52 \
-         -lavutil-49 \
-         -lavdevice-52 \
-         -lswscale-0
+	INCLUDEPATH += \
+		./external/ffmpeg/include/msinttypes \
+		./external/ffmpeg/include/libswscale \
+		./external/ffmpeg/include/libavutil \
+		./external/ffmpeg/include/libavdevice \
+		./external/ffmpeg/include/libavformat \
+		./external/ffmpeg/include/libavcodec \
+		./external/ffmpeg/include
+	
+	LIBS += -L"./external/ffmpeg/lib" \
+		-lavcodec-51 \
+		-lavformat-52 \
+		-lavutil-49 \
+		-lavdevice-52 \
+		-lswscale-0
 }
 
 include(frames/frames.pri)
@@ -131,29 +129,29 @@ include(3rdparty/md5/md5.pri)
 
 # deployment on Linux
 unix {
-    target.path = /usr/bin
-    icon.files = dviz.png
-    icon.path = /usr/share/pixmaps
-    dfile.files = dviz.desktop
-    dfile.path = /usr/share/applications
-    man.files = dviz.1
-    man.path = /usr/share/man/man1
-    INSTALLS += target \
-        icon \
-        dfile \
-        man
+	target.path = /usr/bin
+	icon.files = dviz.png
+	icon.path = /usr/share/pixmaps
+	dfile.files = dviz.desktop
+	dfile.path = /usr/share/applications
+	man.files = dviz.1
+	man.path = /usr/share/man/man1
+	INSTALLS += target \
+		icon \
+		dfile \
+		man
 }
 
 
 # static builds
 win32|macx {
-    contains(CONFIG, static)|contains(CONFIG, qt_no_framework) {
-        DEFINES += STATIC_LINK
-        QTPLUGIN += qgif \
-            qjpeg \
-            qsvg \
-            qtiff
-    }
+	contains(CONFIG, static)|contains(CONFIG, qt_no_framework) {
+		DEFINES  += STATIC_LINK
+		QTPLUGIN += qgif \
+			qjpeg \
+			qsvg \
+			qtiff
+	}
 }
 
 

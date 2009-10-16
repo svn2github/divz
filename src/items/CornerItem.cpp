@@ -314,7 +314,9 @@ void CornerItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 				//qDebug("- BottomRight (%d,%d)",W,H);
 			}
 
+			m_content->dirtyCache();
 			m_content->resizeContents(cr);
+			//m_content->update();
 		//}
 	}
 

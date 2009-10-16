@@ -21,6 +21,7 @@ ImageContent::ImageContent(QGraphicsScene * scene, QGraphicsItem * parent)
     : AbstractContent(scene, parent, false)
     , m_shadowClipDirty(true)
     , m_svgRenderer(0)
+    , m_fileLoaded(false)
 {
 	m_dontSyncToModel = true;
 	
@@ -72,26 +73,37 @@ void ImageContent::syncFromModelItem(AbstractVisualItem *model)
 void ImageContent::loadFile(const QString &file)
 {
 	//qDebug() << "ImageContent::loadFile: "<<file;
+	if(file.isEmpty())
+	{
+		m_fileLoaded = false;
+		disposeSvgRenderer();
+		m_pixmap = QPixmap();
+		return;
+	}
+	
 	if(file.endsWith(".svg",Qt::CaseInsensitive))
+	{
 		loadSvg(file);
+	}
 	else
 	{
-		//qDebug() << "ImageContent::loadFile: Using QImageReader";
+		disposeSvgRenderer();
 		QImageReader reader(file);
 		QImage image = reader.read();
 		if(image.isNull())
 		{
-			//qDebug() << "ImageContent::loadFile: Image reader didn't like our file: "<<reader.errorString();
+			qDebug() << "ImageContent::loadFile: Unable to read"<<file<<": "<<reader.errorString();
 		}
 		else
 		{
 			QPixmap px = QPixmap::fromImage(image);
 			setPixmap(px);
+			m_fileLoaded = true;
 		}
 	}
 }
 
-void ImageContent::loadSvg(const QString &file)
+void ImageContent::disposeSvgRenderer()
 {
 	if(m_svgRenderer)
 	{
@@ -99,10 +111,17 @@ void ImageContent::loadSvg(const QString &file)
 		delete m_svgRenderer;
 		m_svgRenderer = 0;
 	}
+}
+
+void ImageContent::loadSvg(const QString &file)
+{
+	disposeSvgRenderer();
 	
 	m_svgRenderer = new QSvgRenderer(file);
+	m_fileLoaded = true;
 	
 	m_pixmap = QPixmap(m_svgRenderer->viewBox().size());
+	checkSize();
 	
 	connect(m_svgRenderer, SIGNAL(repaintNeeded()), this, SLOT(renderSvg()));
 	renderSvg();	
@@ -110,18 +129,17 @@ void ImageContent::loadSvg(const QString &file)
 
 void ImageContent::renderSvg()
 {
+	/*
 	m_pixmap.fill(Qt::transparent);
 	QPainter p(&m_pixmap);
 	m_svgRenderer->render(&p);
 	p.end();
+	*/
 	update();
 }
 
-void ImageContent::setPixmap(const QPixmap & pixmap)
+void ImageContent::checkSize()
 {
-	m_pixmap = pixmap;
-	//qDebug() << "ImageContent::setPixmap: Got pixmap, size:"<<pixmap.size();
-	
 	if(m_imageSize != m_pixmap.size())
 	{
 		m_imageSize = m_pixmap.size();
@@ -129,7 +147,14 @@ void ImageContent::setPixmap(const QPixmap & pixmap)
 	        // Adjust scaling while maintaining aspect ratio
 		resizeContents(contentsRect(),true);
 	}
+}
 
+void ImageContent::setPixmap(const QPixmap & pixmap)
+{
+	m_pixmap = pixmap;
+	//qDebug() << "ImageContent::setPixmap: Got pixmap, size:"<<pixmap.size();
+	
+	checkSize();
 	update();
 }
 
@@ -216,6 +241,8 @@ void ImageContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * op
 			QPixmap cache;
 			if(!QPixmapCache::find(cacheKey(),cache))
 			{
+				//qDebug()<<"ImageContent::paint(): modelItem:"<<modelItem()->itemName()<<": Cache redraw";
+				
 				// create temporary pixmap to hold the foreground
 				double blurSize = radiusSquared*2;
 				QSize shadowSize((int)blurSize,(int)blurSize);
@@ -259,17 +286,31 @@ void ImageContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * op
 }
 
 
-void ImageContent::drawForeground(QPainter * painter)
+void ImageContent::drawForeground(QPainter *painter)
 {
 	QRect cRect = contentsRect();
 	
-	QPen p(Qt::NoPen);
-	
 	painter->save();
+	
+	if(!m_fileLoaded)
+	{
+		painter->fillRect(cRect,Qt::gray);
+	}
+	else
+	{
+		if(m_svgRenderer)
+		{
+			m_svgRenderer->render(painter,cRect);
+		}
+		else
+		{
+			painter->drawPixmap(cRect, m_pixmap);
+		}
+	}
 	
 	if(modelItem()->outlineEnabled())
 	{
-		p = modelItem()->outlinePen();
+		QPen p = modelItem()->outlinePen();
 		p.setJoinStyle(Qt::MiterJoin);
 		if(sceneContextHint() == MyGraphicsScene::Preview)
 		{
@@ -278,21 +319,7 @@ void ImageContent::drawForeground(QPainter * painter)
 			p.setWidthF(1/scale * p.widthF());
 		}
 		
-	}
-	
-// 	if(modelItem()->fillType() != AbstractVisualItem::None)
-// 	{
-// 		painter->setBrush(modelItem()->fillBrush());
-// 		painter->fillRect(cRect);
-// 	}
-
-	//if(m_imageSize.width() <= 0 || m_pixmap.isNull())
-	//	painter->fillRect(cRect,Qt::gray);
-        	
-	painter->drawPixmap(cRect, m_pixmap);
-	
-	if(p.style() != Qt::NoPen)
-	{
+		painter->setPen(p);
 		painter->setBrush(Qt::NoBrush);
 		painter->drawRect(cRect);
 	}

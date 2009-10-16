@@ -88,7 +88,6 @@ Revised Task list for Release 1.0, 10/18/09:
 		Add image palette
 		Add slide pallette
 		Add song template palette
-		[DONE] Default shadow text should be black
 		
 		[STARTED] Auto-change slides/slide groups after X seconds
 			added field in Slide.h, now to make SlideGroupViewer and UI honor the field (and SlideGroup::autoChangeGroup() flag in MainWindow)
@@ -98,9 +97,6 @@ Revised Task list for Release 1.0, 10/18/09:
 		Need to add keyboard nudging/movement of items
 			implement AbstractContent::keypressevent
 		Need song new/edit/delete functionality
-		[STARTED] right-click on slide list in editor to open slide config (incl'd bg config tab or btn to config bg)
-			props like time to automatically switch slides, etc
-			added toolbar item for it
 		f2 on selected item to open prop dialog
 		Auto-sizing song text should be an option that can be enabled/disabled
 			if not autosize, pull size from template / textobx
@@ -119,6 +115,10 @@ Revised Task list for Release 1.0, 10/18/09:
 		Save song templates/bg in a "template collection"
 		Add drag/drop background for songs from a yet-to-be-made vid/image bg pallette
 		
+		[DONE] Default shadow text should be black
+		[DONE] right-click on slide list in editor to open slide config (incl'd bg config tab or btn to config bg)
+			props like time to automatically switch slides, etc
+			added toolbar item for it
 		[DONE] in songeditor, be able to hit ESC to close
 			- ALT+C instead
 		[DONE] default background color should be gray or something "nicer" than black
@@ -167,7 +167,6 @@ Revised Task list for Release 1.0, 10/18/09:
 		[LATER] Video Capture (started impl, but again, performance is terrible. That may be due to the FormatOpts specified, or in ffmpeg, or the capture hardware - need to trace - later!)
 	
 	- Bugs:
-		when fading betwen verses in songs, takes too long to render blurred shadows - need to default song shadows to 0 radius or make faster rendering (pre-render?)
 		qt4.6b-win32: Adding a new video item or changing filename of existing item causes program crash
 		qt4.6b-win32: chaing document aspect ratio doesnt affect slide editor until program restart
 		when adding new item, set selected
@@ -186,9 +185,14 @@ Revised Task list for Release 1.0, 10/18/09:
 				Confirmed that it "new" works on linux tho - need to debug on windows then - drats
 		Perfomance of the document pixmap model generator becomes a problem with a lot of songs - need to investigate - possibly use different cache key
 		
+		[FIXED] boxcontent should not offset by pen width
+		[FIXED] svg needs to scale as contents rect is resized
+		[FIXED] when fading betwen verses in songs, takes too long to render blurred shadows - need to default song shadows to 0 radius or make faster rendering (pre-render?)
+				tuned the render cache (an edge case was introduced last night causing slide text to clear the cache every time the delegate was re-created)
+				performance could still be better, but it seems acceptable for now
 		[FIXED] video still randomly pausing when switching slides in editor or going live
 				Adjusted SlideGroupViewer's video provider handling, adjusted the order of play/setpixmap calls in background content and video file content
-		[DONE] adding items to slides doesnt put them on top (need to check on z order)
+		[FIXED] adding items to slides doesnt put them on top (need to check on z order)
 				for some reason, the m_content array in MyGraphicsScene was showing empty(), so I used the QGraphicsScene::items() method to get list of items for zvalue cals instead
 		[FIXED] Backgrounds in per-verse slides dont work consistently (sometimes override, sometimes master shows thru)
 				I think its because both BackgroundContent items (from master and child) are added to final slide 

@@ -94,6 +94,8 @@ class AbstractContent : public AbstractDisposeable
 		void resized();
 
 	protected:
+		friend class CornerItem;
+		
 		// may be reimplemented by subclasses
 		virtual void selectionChanged(bool selected);
 	

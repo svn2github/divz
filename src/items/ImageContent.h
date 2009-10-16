@@ -39,8 +39,9 @@ private:
 	
 	void loadFile(const QString&);
 	void loadSvg(const QString&);
-	
 	void setPixmap(const QPixmap &);
+	void checkSize();
+	void disposeSvgRenderer();
 	
 	QPixmap m_pixmap;
 	QSize m_imageSize;
@@ -50,6 +51,8 @@ private:
 	
 	QPainterPath m_shadowClipPath;
 	bool m_shadowClipDirty;
+	
+	bool m_fileLoaded;
 	
 	quint32 m_lastModelRev;
 };

@@ -369,8 +369,11 @@ void MyGraphicsScene::addContent(AbstractContent * content, bool takeOwnership) 
 	if(content->zValue() == 0)
 	{
 		QList<QGraphicsItem*> kids = items();
-		double z = kids.isEmpty() ? 1 : (kids.last()->zValue() + 1);
-		content->modelItem()->setZValue(z);
+		double zMax = 1;
+		foreach(QGraphicsItem *item, kids)
+			if(item->zValue() > zMax)
+				zMax = item->zValue();
+		content->modelItem()->setZValue(zMax);
 	}
 	content->show();
 	
