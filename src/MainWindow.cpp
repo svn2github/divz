@@ -650,7 +650,7 @@ void MainWindow::previewSlideGroup(SlideGroup *s)
 	m_previewWidget->setSlideGroup(s);
 }
 
-void MainWindow::setLiveGroup(SlideGroup *newGroup)
+void MainWindow::setLiveGroup(SlideGroup *newGroup, Slide *currentSlide)
 {
 	//SlideGroup *s = m_docModel->groupFromIndex(idx);
         //qDebug() << "MainWindow::groupSelected(): groupSetLive group#:"<<s->groupNumber()<<", title:"<<s->groupTitle();
@@ -682,9 +682,9 @@ void MainWindow::setLiveGroup(SlideGroup *newGroup)
 	}
 	
 	//qDebug() << "MainWindow::setLiveGroup: Loading into view control";
-	m_viewControl->setSlideGroup(newGroup);
+	m_viewControl->setSlideGroup(newGroup,currentSlide);
 	//qDebug() << "MainWindow::setLiveGroup: Loading into LIVE output";
-	m_liveView->setSlideGroup(newGroup);
+	m_liveView->setSlideGroup(newGroup,currentSlide);
 	
 }
 
@@ -695,10 +695,10 @@ void MainWindow::groupDoubleClicked(const QModelIndex &idx)
 	setLiveGroup(g);
 }
 
-void MainWindow::editGroup(SlideGroup *g)
+void MainWindow::editGroup(SlideGroup *g, Slide *slide)
 {
 	statusBar()->showMessage(QString("Loading %1...").arg(g->groupTitle().isEmpty() ? QString("Group %1").arg(g->groupNumber()) : g->groupTitle()));
-	openSlideEditor(g);
+	openSlideEditor(g,slide);
 	//m_previewWidget->clear();
 	statusBar()->clearMessage();
 }
@@ -747,7 +747,7 @@ void MainWindow::deleteGroup(SlideGroup *s)
 }
 
 
-void MainWindow::openSlideEditor(SlideGroup *group)
+void MainWindow::openSlideEditor(SlideGroup *group,Slide *slide)
 {
 	if(group->groupType() != SlideGroup::Generic)
 	{
@@ -758,7 +758,7 @@ void MainWindow::openSlideEditor(SlideGroup *group)
 		if(factory)
 		{
 			AbstractSlideGroupEditor * editor = factory->newEditor();
-			editor->setSlideGroup(group);
+			editor->setSlideGroup(group,slide);
 			editor->show();
 			return;
 		}
@@ -768,9 +768,9 @@ void MainWindow::openSlideEditor(SlideGroup *group)
 	// WHY ??????
 	// If we setSlideGroup BEFORE but not AFTER, then newslide btn works only after clicking twice (So to speak)
 	// If AFTER and not BEFORE, then list is BLANK unless click new btn a few times. WHY????fs
-	m_editWin->setSlideGroup(group);
+	m_editWin->setSlideGroup(group,slide);
 	m_editWin->show();
-	m_editWin->setSlideGroup(group);
+	m_editWin->setSlideGroup(group,slide);
 }
 
 void MainWindow::changeEvent(QEvent *e)

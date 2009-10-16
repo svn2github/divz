@@ -82,7 +82,7 @@ void BoxContent::syncFromModelItem(AbstractVisualItem *model)
 		// Start out the last remembered model rev at the rev of the model
 		// so we dont force a redraw of the cache just because we're a fresh
 		// object.
-		if(QPixmapCache::find(cacheKey(),0))
+		if(QPixmapCache::find(cacheKey()))
 			m_lastModelRev = modelItem()->revision();
 	}
 	

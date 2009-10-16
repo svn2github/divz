@@ -110,7 +110,7 @@ void SlideGroupViewer::clear()
 	m_slideGroup = 0;
 }
 
-void SlideGroupViewer::setSlideGroup(SlideGroup *g, int startSlide)
+void SlideGroupViewer::setSlideGroup(SlideGroup *g, Slide *startSlide)
 {
 	//qDebug() << "SlideGroupViewer::setSlideGroup: (SceneContextHint:"<<m_scene->contextHint()<<"), setting slide group:"<<g->groupNumber();
 	if(m_slideGroup == g)
@@ -139,9 +139,8 @@ void SlideGroupViewer::setSlideGroup(SlideGroup *g, int startSlide)
 	//qDebug() << "SlideGroupViewer::setSlideGroup: Loading slide into scene";
 	if(startSlide)
 	{
-		Slide *s = m_sortedSlides.at(startSlide);
 		//qDebug() << "SlideGroupViewer::setSlideGroup(): Setting slide group #"<<g->groupNumber()<<", starting at slide:"<<startSlide;
-		m_scene->setSlide(s,MyGraphicsScene::CrossFade);
+		m_scene->setSlide(startSlide,MyGraphicsScene::CrossFade);
 		//m_slideListView->setCurrentIndex(m_slideModel->indexForSlide(curSlide));
 	}
 	else

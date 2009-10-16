@@ -83,9 +83,6 @@ Revised Task list for Release 1.0, 10/18/09:
 	
 	- Improvements:
 		when pressing F2 and group is live, should start editor on lvie slide
-		in editor, implement F5 (or similar key) to change Live to this group (if needed) and set this slide as current
-		default background color should be gray or something "nicer" than black
-			still start out live as black though
 		Prompt to save custom output location on close
 		Add video pallette
 		Add image palette
@@ -121,6 +118,9 @@ Revised Task list for Release 1.0, 10/18/09:
 		Save song templates/bg in a "template collection"
 		Add drag/drop background for songs from a yet-to-be-made vid/image bg pallette
 		
+		[DONE] default background color should be gray or something "nicer" than black
+			still start out live as black though
+		[DONE] in editor, implement F5 (or similar key) to change Live to this group (if needed) and set this slide as current
 		[DONE] Gausian blur shadows (start impl using QGraphicsEffects from 4.6, but performance is terrible, so I'll have to do some heavy optimizations before we can use it.)
 			Implemented basic blur using code from qpixmapfilters.cpp, integrated into dviz in ImageFilters.cpp
 			First implementation in TextBoxContent.cpp, included with very aggressive caching via QPixmapCache
@@ -164,6 +164,7 @@ Revised Task list for Release 1.0, 10/18/09:
 		[LATER] Video Capture (started impl, but again, performance is terrible. That may be due to the FormatOpts specified, or in ffmpeg, or the capture hardware - need to trace - later!)
 	
 	- Bugs:
+		when fading betwen verses in songs, takes too long to render blurred shadows - need to default song shadows to 0 radius or make faster rendering (pre-render?)
 		qt4.6b-win32: Adding a new video item or changing filename of existing item causes program crash
 		qt4.6b-win32: chaing document aspect ratio doesnt affect slide editor until program restart
 		when adding new item, set selected

@@ -29,6 +29,10 @@
 	#define QT46_SHADOW_ENAB 0
 #endif
 
+#ifndef qFuzzyIsNull
+	#define qFuzzyIsNull(a) (a<0.00001)
+#endif
+
 TextBoxContent::TextBoxContent(QGraphicsScene * scene, QGraphicsItem * parent)
     : AbstractContent(scene, parent, false)
     , m_text(0)
@@ -156,7 +160,7 @@ void TextBoxContent::syncFromModelItem(AbstractVisualItem *model)
 		// Start out the last remembered model rev at the rev of the model
 		// so we dont force a redraw of the cache just because we're a fresh
 		// object.
-		if(QPixmapCache::find(cacheKey(),0))
+		if(QPixmapCache::find(cacheKey()))
 			m_lastModelRev = modelItem()->revision();
 	}
 

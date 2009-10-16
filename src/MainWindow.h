@@ -51,8 +51,8 @@ signals:
 	void appSettingsChanged();
 
 public slots:
-	void setLiveGroup(SlideGroup*);
-	void editGroup(SlideGroup*);
+	void setLiveGroup(SlideGroup*, Slide *slide=0);
+	void editGroup(SlideGroup*, Slide *slide=0);
 	void deleteGroup(SlideGroup*);
 	void previewSlideGroup(SlideGroup*);
 	bool openFile(const QString &);
@@ -93,7 +93,7 @@ protected:
 	void changeEvent(QEvent *e);
 	void closeEvent(QCloseEvent *event);
 	
-	void openSlideEditor(SlideGroup *g);
+	void openSlideEditor(SlideGroup *g,Slide *slide=0);
 	
 private:
 	void setupOutputList();

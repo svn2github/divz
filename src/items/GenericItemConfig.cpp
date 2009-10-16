@@ -84,13 +84,6 @@ GenericItemConfig::GenericItemConfig(AbstractContent * content, QWidget *parent)
 	connect(m_commonUi->blurBox, SIGNAL(valueChanged(int)), this, SLOT(setShadowBlur(int)));
 	m_commonUi->blurBox->setValue(m_content->modelItem()->shadowBlurRadius());
 	
-	#if QT_VERSION < 0x040600
-		m_commonUi->blurGroup->setVisible(false);
-	#endif
-	
-	
-	
-	
 	
 	
 	AbstractVisualItem::FillType t = m_content->modelItem()->fillType();

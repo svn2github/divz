@@ -306,24 +306,38 @@ void SlideEditorWindow::setupToolbar()
 	toolbar->addSeparator();
 	
 	QAction  *newAction = toolbar->addAction(QIcon(":data/insert-text-24.png"), "New Text Item");
+	newAction->setShortcut(QString("CTRL+SHIFT+T"));
 	connect(newAction, SIGNAL(triggered()), this, SLOT(newTextItem()));
 
 	QAction  *newBox = toolbar->addAction(QIcon(":data/stock-insert-table.png"), "New Box Item");
+	newBox->setShortcut(QString("CTRL+SHIFT+B"));
 	connect(newBox, SIGNAL(triggered()), this, SLOT(newBoxItem()));
 
 	QAction  *newVideo = toolbar->addAction(QIcon(":data/stock-panel-multimedia.png"), "New Video Item");
+	newVideo->setShortcut(QString("CTRL+SHIFT+V"));
 	connect(newVideo, SIGNAL(triggered()), this, SLOT(newVideoItem()));
 	
 	QAction  *newImage = toolbar->addAction(QIcon(":data/insert-image-24.png"), "New Image Item");
+	newImage->setShortcut(QString("CTRL+SHIFT+I"));
 	connect(newImage, SIGNAL(triggered()), this, SLOT(newImageItem()));
 	
 	toolbar->addSeparator();
 	
 	QAction  *newSlide = toolbar->addAction(QIcon(":data/stock-add.png"), "New Slide");
+	newSlide->setShortcut(QString("CTRL+M"));
 	connect(newSlide, SIGNAL(triggered()), this, SLOT(newSlide()));
 	
 	QAction  *dupSlide = toolbar->addAction(QIcon(":data/stock-convert.png"), "Duplicate Slide");
+	dupSlide->setShortcut(QString("CTRL+D"));
 	connect(dupSlide, SIGNAL(triggered()), this, SLOT(dupSlide()));
+	
+	toolbar->addSeparator();
+	
+	QAction  *liveAction  = toolbar->addAction(QIcon(":data/stock-fullscreen.png"), "Send the Current Slide to the Live Output");
+	liveAction->setShortcut(QString("F5"));
+	connect(liveAction, SIGNAL(triggered()), this, SLOT(setCurrentSlideLive()));
+	
+	
 	
 	toolbar->addSeparator();
 
@@ -349,9 +363,11 @@ void SlideEditorWindow::setupToolbar()
 	toolbar->addWidget(m_textBase);
 	
 	m_textPlusAction = toolbar->addAction(QIcon(":data/stock-sort-descending.png"), "Increase Font Size");
+	m_textPlusAction->setShortcut(QString("CTRL+SHFIT++"));
 	connect(m_textPlusAction, SIGNAL(triggered()), this, SLOT(textPlus()));
 	
 	m_textMinusAction = toolbar->addAction(QIcon(":data/stock-sort-ascending.png"), "Decrease Font Size");
+	m_textMinusAction->setShortcut(QString("CTRL+SHFIT+-"));
 	connect(m_textMinusAction, SIGNAL(triggered()), this, SLOT(textMinus()));
 	
 	m_textPlusAction->setEnabled(false);
@@ -375,6 +391,15 @@ void SlideEditorWindow::setupToolbar()
 	
 	QAction  *delSlide = toolbar->addAction(QIcon(":data/stock-delete.png"), "Delete Slide");
 	connect(delSlide, SIGNAL(triggered()), this, SLOT(delSlide()));
+}
+
+void SlideEditorWindow::setCurrentSlideLive()
+{
+	if(!MainWindow::mw())
+		return;
+	if(!m_slideGroup)
+		return;
+	MainWindow::mw()->setLiveGroup(m_slideGroup,m_scene->slide());
 }
 
 void SlideEditorWindow::selectionChanged()

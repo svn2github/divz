@@ -72,6 +72,8 @@ private slots:
 	
 	void selectionChanged();
 	
+	void setCurrentSlideLive();
+	
 private:
 	void setupSlideList();
 	void setupViewportLines();

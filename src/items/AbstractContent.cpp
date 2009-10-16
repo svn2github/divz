@@ -174,8 +174,10 @@ void AbstractContent::resizeContents(const QRect & rect, bool keepRatio)
 {
 	if (!rect.isValid())
 		return;
-
+	
 	prepareGeometryChange();
+
+	dirtyCache();
 
 	m_contentsRect = rect;
 

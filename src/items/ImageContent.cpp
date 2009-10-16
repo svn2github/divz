@@ -50,7 +50,7 @@ void ImageContent::syncFromModelItem(AbstractVisualItem *model)
 		// Start out the last remembered model rev at the rev of the model
 		// so we dont force a redraw of the cache just because we're a fresh
 		// object.
-		if(QPixmapCache::find(cacheKey(),0))
+		if(QPixmapCache::find(cacheKey()))
 			m_lastModelRev = modelItem()->revision();
 	}
 	
@@ -111,9 +111,9 @@ void ImageContent::loadSvg(const QString &file)
 void ImageContent::renderSvg()
 {
 	m_pixmap.fill(Qt::transparent);
-	QPainter painter(&m_pixmap);
-	m_svgRenderer->render(&painter);
-	painter.end();
+	QPainter p(&m_pixmap);
+	m_svgRenderer->render(&p);
+	p.end();
 	update();
 }
 
@@ -286,8 +286,8 @@ void ImageContent::drawForeground(QPainter * painter)
 // 		painter->fillRect(cRect);
 // 	}
 
-	if(m_imageSize.width() <= 0 || m_pixmap.isNull())
-		painter->fillRect(cRect,Qt::gray);
+	//if(m_imageSize.width() <= 0 || m_pixmap.isNull())
+	//	painter->fillRect(cRect,Qt::gray);
         	
 	painter->drawPixmap(cRect, m_pixmap);
 	

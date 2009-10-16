@@ -18,7 +18,8 @@ public:
 	SlideGroupViewer(QWidget *parent=0);
 	~SlideGroupViewer();
 
-	void setSlideGroup(SlideGroup*, int startSlide = 0);
+	//void setSlideGroup(SlideGroup*, int startSlide = 0);
+	void setSlideGroup(SlideGroup*, Slide *slide = 0);
 	SlideGroup * slideGroup() { return m_slideGroup; }
 	
 	int numSlides() { return m_sortedSlides.size(); }
