@@ -88,7 +88,8 @@ Revised Task list for Release 1.0, 10/18/09:
 		Add image palette
 		Add slide pallette
 		Add song template palette
-		in songeditor, be able to hit ESC to close
+		[DONE] Default shadow text should be black
+		
 		[STARTED] Auto-change slides/slide groups after X seconds
 			added field in Slide.h, now to make SlideGroupViewer and UI honor the field (and SlideGroup::autoChangeGroup() flag in MainWindow)
 		[STARTED] When searching for song, auto select first result
@@ -118,6 +119,8 @@ Revised Task list for Release 1.0, 10/18/09:
 		Save song templates/bg in a "template collection"
 		Add drag/drop background for songs from a yet-to-be-made vid/image bg pallette
 		
+		[DONE] in songeditor, be able to hit ESC to close
+			- ALT+C instead
 		[DONE] default background color should be gray or something "nicer" than black
 			still start out live as black though
 		[DONE] in editor, implement F5 (or similar key) to change Live to this group (if needed) and set this slide as current
