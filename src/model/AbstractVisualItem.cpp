@@ -57,6 +57,9 @@ AbstractVisualItem::AbstractVisualItem()
 	m_shadowOffsetX = 3;
 	m_shadowOffsetY = 3;
 	m_shadowBrush = QBrush(Qt::black);
+	
+	m_sourceOffsetTL = QPointF(0,0);
+	m_sourceOffsetBR = QPointF(0,0);
 }
 
 AbstractContent * AbstractVisualItem::createDelegate(QGraphicsScene*,QGraphicsItem*) {return 0;}
@@ -65,7 +68,8 @@ AbstractContent * AbstractVisualItem::createDelegate(QGraphicsScene*,QGraphicsIt
 
 ITEM_PROPSET(AbstractVisualItem, Pos,        QPointF, pos);
 ITEM_PROPSET(AbstractVisualItem, ContentsRect,QRectF, contentsRect);
-
+ITEM_PROPSET(AbstractVisualItem, SourceOffsetTL,  QPointF, sourceOffsetTL);
+ITEM_PROPSET(AbstractVisualItem, SourceOffsetBR,  QPointF, sourceOffsetBR);
 // void AbstractVisualItem::setContentsRect(QRectF r)
 // {
 // 	
@@ -134,16 +138,47 @@ bool AbstractVisualItem::fromXml(QDomElement & pe)
 	// Load image size saved in the rect node
 	domElement = pe.firstChildElement("rect");
 	qreal x, y, w, h;
-	x = domElement.firstChildElement("x").text().toDouble();
-	y = domElement.firstChildElement("y").text().toDouble();
-	w = domElement.firstChildElement("w").text().toDouble();
-	h = domElement.firstChildElement("h").text().toDouble();
+	
+	// older formats of the file had <x>, <y>, ... elements under <rect>
+	if(!domElement.firstChildElement("x").isNull())
+	{
+		x = domElement.firstChildElement("x").text().toDouble();
+		y = domElement.firstChildElement("y").text().toDouble();
+		w = domElement.firstChildElement("w").text().toDouble();
+		h = domElement.firstChildElement("h").text().toDouble();
+	}
+	else
+	{
+		x = domElement.attribute("x").toDouble();
+		y = domElement.attribute("y").toDouble();
+		w = domElement.attribute("w").toDouble();
+		h = domElement.attribute("h").toDouble();
+	}
 	setContentsRect(QRectF(x, y, w, h));
+	
+	// Load image size saved in the rect node
+	domElement = pe.firstChildElement("source");
+	qreal x1,y1,x2,y2;
+	x1 = domElement.attribute("x1").toDouble();
+	y1 = domElement.attribute("y1").toDouble();
+	x2 = domElement.attribute("x2").toDouble();
+	y2 = domElement.attribute("y2").toDouble();
+	setSourceOffsetTL(QPoint(x1,y1));
+	setSourceOffsetBR(QPoint(x2,y2));
 	
 	// Load position coordinates
 	domElement = pe.firstChildElement("pos");
-	x = domElement.firstChildElement("x").text().toDouble();
-	y = domElement.firstChildElement("y").text().toDouble();
+	// older formats of the file had <x> and <y> elements under <pos>
+	if(!domElement.firstChildElement("x").isNull())
+	{
+		x = domElement.firstChildElement("x").text().toDouble();
+		y = domElement.firstChildElement("y").text().toDouble();
+	}
+	else
+	{
+		x = domElement.attribute("x").toDouble();
+		y = domElement.attribute("y").toDouble();
+	}
 	setPos(QPointF(x, y));
 	
 	double zvalue = pe.firstChildElement("zvalue").text().toDouble();
@@ -257,32 +292,28 @@ void AbstractVisualItem::toXml(QDomElement & pe) const
 	
 	// Save item position and size
 	QDomElement rectParent = doc.createElement("rect");
-	QDomElement xElement = doc.createElement("x");
-	rectParent.appendChild(xElement);
-	QDomElement yElement = doc.createElement("y");
-	rectParent.appendChild(yElement);
-	QDomElement wElement = doc.createElement("w");
-	rectParent.appendChild(wElement);
-	QDomElement hElement = doc.createElement("h");
-	rectParent.appendChild(hElement);
 	
 	QRectF rect = m_contentsRect;
-	xElement.appendChild(doc.createTextNode(QString::number(rect.left())));
-	yElement.appendChild(doc.createTextNode(QString::number(rect.top())));
-	wElement.appendChild(doc.createTextNode(QString::number(rect.width())));
-	hElement.appendChild(doc.createTextNode(QString::number(rect.height())));
+	rectParent.setAttribute("x",QString::number(rect.left()));
+	rectParent.setAttribute("y",QString::number(rect.top()));
+	rectParent.setAttribute("w",QString::number(rect.width()));
+	rectParent.setAttribute("h",QString::number(rect.height()));
 	pe.appendChild(rectParent);
+	
+	// Save item source rect
+	rectParent = doc.createElement("source");
+	rectParent.setAttribute("x1",QString::number(m_sourceOffsetTL.x()));
+	rectParent.setAttribute("y1",QString::number(m_sourceOffsetTL.y()));
+	rectParent.setAttribute("x2",QString::number(m_sourceOffsetBR.x()));
+	rectParent.setAttribute("y2",QString::number(m_sourceOffsetBR.y()));
+	pe.appendChild(rectParent);
+	
+	
 	
 	// Save the position
 	domElement= doc.createElement("pos");
-	xElement = doc.createElement("x");
-	yElement = doc.createElement("y");
-	valueStr.setNum(pos().x());
-	xElement.appendChild(doc.createTextNode(valueStr));
-	valueStr.setNum(pos().y());
-	yElement.appendChild(doc.createTextNode(valueStr));
-	domElement.appendChild(xElement);
-	domElement.appendChild(yElement);
+	domElement.setAttribute("x",pos().x());
+	domElement.setAttribute("y",pos().y());
 	pe.appendChild(domElement);
 	
 	// Save the stacking position

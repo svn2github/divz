@@ -32,6 +32,7 @@
 #include "model/ImageItem.h"
 
 
+#include "AppSettings.h"
 
 #include "RenderOpts.h"
 
@@ -61,6 +62,8 @@
 #include "MainWindow.h"
 
 #define DEBUG_MYGRAPHICSSCENE 0
+
+#define DEBUG_KEYHANDLER 0
 
 #define qSetEffectOpacity(item,opacity) { QGraphicsOpacityEffect * opac = dynamic_cast<QGraphicsOpacityEffect*>(item->graphicsEffect()); if(opac) opac->setOpacity(opacity); }
 //#define qGetEffectOpacity(item,opacity) dynamic_cast<QGraphicsOpacityEffect*>item->graphicsEffect() ? (dynamic_cast<QGraphicsOpacityEffect*>item->graphicsEffect())->opacity() : 0
@@ -97,6 +100,8 @@ MyGraphicsScene::MyGraphicsScene(ContextHint hint, QObject * parent)
 	
 	m_liveRoot = new RootObject(this);
 	m_liveRoot->setPos(0,0);
+	
+	//installEventFilter(this);
 }
 
 MyGraphicsScene::~MyGraphicsScene()
@@ -110,6 +115,12 @@ MyGraphicsScene::~MyGraphicsScene()
 	
 	m_fadeRoot = 0;
 	m_liveRoot = 0;
+	
+	// Since the items are cloned when added to the copy buffer,
+	// AND cloned when pasted, its safe to delete them from memory
+	// in destructor
+	if(m_copyBuffer.size())
+		qDeleteAll(m_copyBuffer);
 	
 }
 
@@ -419,6 +430,9 @@ AbstractVisualItem * MyGraphicsScene::newTextItem(QString text)
 	AbstractContent * item = t->createDelegate(this,m_liveRoot);
 	addContent(item); //, QPoint((int)t->pos().x(),(int)t->pos().y()));
 	
+	clearSelection();
+	item->setSelected(true);
+	
 	return t;
 }
 
@@ -437,6 +451,9 @@ AbstractVisualItem * MyGraphicsScene::newBoxItem()
 	
 	AbstractContent * item = t->createDelegate(this,m_liveRoot);
 	addContent(item); //, QPoint((int)t->pos().x(),(int)t->pos().y()));
+	
+	clearSelection();
+	item->setSelected(true);
 	
 	return t;
 }
@@ -457,6 +474,9 @@ AbstractVisualItem * MyGraphicsScene::newVideoItem()
 	AbstractContent * item = t->createDelegate(this,m_liveRoot);
 	addContent(item); //, QPoint((int)t->pos().x(),(int)t->pos().y()));
 	
+	clearSelection();
+	item->setSelected(true);
+	
 	return t;
 }
 
@@ -474,7 +494,197 @@ AbstractVisualItem * MyGraphicsScene::newImageItem()
 	AbstractContent * item = t->createDelegate(this,m_liveRoot);
 	addContent(item);
 	
+	clearSelection();
+	item->setSelected(true);
+	
 	return t;
+}
+
+
+void MyGraphicsScene::copyCurrentSelection(bool removeSelection)
+{
+	QList<QGraphicsItem *> selection = selectedItems();
+		
+	// Since the items are cloned when added to the copy buffer,
+	// AND cloned when pasted, its safe to delete them from memory
+	// when replacing the buffer
+	if(m_copyBuffer.size())
+		qDeleteAll(m_copyBuffer);
+		
+		
+	foreach(QGraphicsItem *item, selection)
+	{
+		AbstractContent * content = dynamic_cast<AbstractContent *>(item);
+		AbstractItem * model = content->modelItem();
+		m_copyBuffer << model->clone();
+		
+		// this will add it to the undo stack and remove it from the scene
+		if(removeSelection)
+			m_slide->removeItem(model);
+	}
+}
+
+void MyGraphicsScene::pasteCopyBuffer()
+{
+	if(!m_copyBuffer.size())
+		return;
+	
+	clearSelection();
+	foreach(AbstractItem *item, m_copyBuffer)
+	{
+		AbstractItem * clone = item->clone();
+		clone->setItemId(ItemFactory::nextId());
+		QString name = clone->itemName();
+		name.replace(QRegExp("(\\d+)$"),QString::number(clone->itemId()));
+		clone->setItemName(name);
+		m_slide->addItem(clone);
+		
+		m_content.last()->setSelected(true);
+	}
+}
+
+void MyGraphicsScene::selectAll()
+{
+	// TODO is clearSelection() neeeded?
+	clearSelection();
+	QList<QGraphicsItem*> kids = items();
+	foreach(QGraphicsItem *item, kids)
+		item->setSelected(true);
+}
+
+bool MyGraphicsScene::eventFilter(QObject *obj, QEvent *event)
+{
+// 	if (event->type() == QEvent::KeyPress) {
+// 		QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
+// 		qDebug("Ate key press %d", keyEvent->key());
+// 		return true;
+// 	} else {
+// 		// standard event processing
+// 		return QObject::eventFilter(obj, event);
+// 	}
+	return QObject::eventFilter(obj, event);
+}
+     
+void MyGraphicsScene::keyPressEvent(QKeyEvent * event)
+{
+	if(DEBUG_KEYHANDLER)
+		qDebug() << "MyGraphicsScene::keyPressEvent(): key:"<<event->key();
+	if(event->modifiers() & Qt::ControlModifier)
+	{
+		if(DEBUG_KEYHANDLER)
+			qDebug() << "MyGraphicsScene::keyPressEvent(): key:"<<event->key()<<", path 1";
+		switch(event->key())
+		{
+			case Qt::Key_C:
+				copyCurrentSelection();
+				event->accept();
+				break;
+				
+			case Qt::Key_X:
+				copyCurrentSelection(true);
+				event->accept();
+				break;
+				
+			case Qt::Key_V:
+				pasteCopyBuffer();
+				event->accept();
+				break;
+				
+			case Qt::Key_A:
+				selectAll();
+				event->accept();
+				break;
+				
+			default:
+				if(DEBUG_KEYHANDLER)
+					qDebug() << "MyGraphicsScene::keyPressEvent(): key:"<<event->key()<<", path 1: fall thru, no key";
+				break;
+		}
+		
+		if(DEBUG_KEYHANDLER)
+			qDebug() << "MyGraphicsScene::keyPressEvent(): key:"<<event->key()<<", path 1, end of path, accepted?"<<event->isAccepted();
+		
+		//if(!event->isAccepted())
+		//{
+			if(DEBUG_KEYHANDLER)
+				qDebug() << "MyGraphicsScene::keyPressEvent(): key:"<<event->key()<<", path 2";	
+			QSizeF grid = AppSettings::gridSize();
+			qreal x = grid.width();
+			qreal y = grid.height();
+			if(x<5)
+				x = 5;
+			if(y<5)
+				y = 5;
+			
+			QList<QGraphicsItem *> selection = selectedItems();
+			if(DEBUG_KEYHANDLER)
+				qDebug() << "MyGraphicsScene::keyPressEvent(): key:"<<event->key()<<", path 2, selection size:"<<selection.size();
+			if(selection.size() > 0)
+			{
+				AbstractContent * content = dynamic_cast<AbstractContent *>(selection.first());
+				if(DEBUG_KEYHANDLER)
+					qDebug() << "MyGraphicsScene::keyPressEvent(): key:"<<event->key()<<", path 2, first content model item name:"<<content->modelItem()->itemName();
+				switch(event->key())
+				{
+					case Qt::Key_Delete:
+						slotDeleteContent();
+						event->accept();
+						break;
+					case Qt::Key_Up:
+						if(DEBUG_KEYHANDLER)
+							qDebug() << "MyGraphicsScene::keyPressEvent(): key:"<<event->key()<<", path 2: move up:"<<y;
+						content->moveBy(0,-y);
+						content->syncToModelItem(0);
+						event->accept();
+						break;
+					case Qt::Key_Down:
+						if(DEBUG_KEYHANDLER)
+							qDebug() << "MyGraphicsScene::keyPressEvent(): key:"<<event->key()<<", path 2: move down:"<<y;
+						content->moveBy(0,+y);
+						content->syncToModelItem(0);
+						event->accept();
+						break;
+					case Qt::Key_Left:
+						if(DEBUG_KEYHANDLER)
+							qDebug() << "MyGraphicsScene::keyPressEvent(): key:"<<event->key()<<", path 2: move left:"<<x;
+						content->moveBy(-x,0);
+						content->syncToModelItem(0);
+						event->accept();
+						break;
+					case Qt::Key_Right:
+						if(DEBUG_KEYHANDLER)
+							qDebug() << "MyGraphicsScene::keyPressEvent(): key:"<<event->key()<<", path 2: move right:"<<x;
+						content->moveBy(+x,0);
+						content->syncToModelItem(0);
+						event->accept();
+						break;
+					case Qt::Key_F2:
+					case Qt::Key_Space:
+					case Qt::Key_Enter:
+						if(DEBUG_KEYHANDLER)
+							qDebug() << "MyGraphicsScene::keyPressEvent(): key:"<<event->key()<<", path 2: config content key";
+						configureContent(content);
+						event->accept();
+						break;
+					default:
+						if(DEBUG_KEYHANDLER)
+							qDebug() << "MyGraphicsScene::keyPressEvent(): key:"<<event->key()<<", path 2: fall thru, no key";
+						break;
+				}
+			}
+		//}
+		
+		if(DEBUG_KEYHANDLER)
+			qDebug() << "MyGraphicsScene::keyPressEvent(): key:"<<event->key()<<", path 2, end of path, accepted?"<<event->isAccepted();
+		
+	}
+	
+	if(!event->isAccepted())
+	{
+		if(DEBUG_KEYHANDLER)
+			qDebug() << "MyGraphicsScene::keyPressEvent(): key:"<<event->key()<<", default - event not accepted, sending to parent";
+		QGraphicsScene::keyPressEvent(event);
+	}
 }
 
 /// Slots
@@ -521,20 +731,15 @@ void MyGraphicsScene::slotConfigureContent(const QPoint & /*scenePoint*/)
 		// force only 1 property instance
 		slotDeleteConfig(config);
 	}
-	//AbstractConfig * p = 0;
+	
+	configureContent(content);
+}
+
+void MyGraphicsScene::configureContent(AbstractContent *content)
+{
+
 	GenericItemConfig * p = 0;
 	
-// 	// picture config (dialog and connections)
-// 	if (PictureContent * picture = dynamic_cast<PictureContent *>(content)) 
-// 	{
-// 		p = new PictureConfig(picture);
-// 		connect(p, SIGNAL(applyEffect(const PictureEffect &, bool)), this, SLOT(slotApplyEffect(const PictureEffect &, bool)));
-// 	}
-	
-	// text config (dialog and connections)
-// 	if (TextContent * text = dynamic_cast<TextContent *>(content))
-// 		p = new TextConfig(text);
-// 	else
 	if (TextBoxContent * text = dynamic_cast<TextBoxContent *>(content))
 		p = new TextBoxConfig(text);
 	else
@@ -556,15 +761,13 @@ void MyGraphicsScene::slotConfigureContent(const QPoint & /*scenePoint*/)
 	
 	// common links
 	m_configs.append(p);
-	//addItem(p);
+	
 	connect(p, SIGNAL(applyLook(quint32,bool,bool)), this, SLOT(slotApplyLook(quint32,bool,bool)));
 	p->setScene(this);
 	p->show();
-	
-// 	p->setPos(scenePoint - QPoint(10, 10));
-// 	p->keepInBoundaries(sceneRect().toRect());
-// 	p->setFocus();
+
 }
+
 /*
 void MyGraphicsScene::slotBackgroundContent()
 {

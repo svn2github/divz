@@ -46,6 +46,8 @@ AbstractContent::AbstractContent(QGraphicsScene * scene, QGraphicsItem * parent,
     , m_modelItem(0)
     , m_modelItemIsChanging(false)
     , m_hovering(false)
+    , m_sourceOffsetTL(0,0)
+    , m_sourceOffsetBR(0,0)
 {
 	// the buffered graphics changes timer
 	m_gfxChangeTimer = new QTimer(this);
@@ -62,10 +64,17 @@ AbstractContent::AbstractContent(QGraphicsScene * scene, QGraphicsItem * parent,
 	setAcceptHoverEvents(true);
 
 	// create child controls
-	createCorner(Qt::TopLeftCorner, noRescale);
-	createCorner(Qt::TopRightCorner, noRescale);
-	createCorner(Qt::BottomLeftCorner, noRescale);
-	createCorner(Qt::BottomRightCorner, noRescale);
+	createCorner(CornerItem::TopLeftCorner, noRescale);
+	createCorner(CornerItem::TopRightCorner, noRescale);
+	createCorner(CornerItem::BottomLeftCorner, noRescale);
+	createCorner(CornerItem::BottomRightCorner, noRescale);
+	
+	// create midpoint handles
+	createCorner(CornerItem::MidTop, noRescale);
+	createCorner(CornerItem::MidLeft, noRescale);
+	createCorner(CornerItem::MidRight, noRescale);
+	createCorner(CornerItem::MidBottom, noRescale);
+	
 
 	//ButtonItem * bFront = new ButtonItem(ButtonItem::Control, Qt::blue, QIcon(":/data/action-order-front.png"), this);
 	//bFront->setToolTip(tr("Raise"));
@@ -176,20 +185,6 @@ void AbstractContent::resizeContents(const QRect & rect, bool keepRatio)
 		return;
 	
 	prepareGeometryChange();
-
-	if(modelItem())
-	{
-		if(modelItem()->contentsRect().toRect() != rect)
-		{
-			//qDebug() << "resizeContents: *IS dirty cache";
-			//dirtyCache();
-		}
-		else
-		{
-			//qDebug() << "resizeContents: NOT dirty cache";
-		}
-	}
-	
 
 	m_contentsRect = rect;
 
@@ -502,6 +497,9 @@ void AbstractContent::syncFromModelItem(AbstractVisualItem *model)
 
 	}
 	#endif
+	
+	setSourceOffsetTL(model->sourceOffsetTL());
+	setSourceOffsetBR(model->sourceOffsetBR());
 
 
 	m_dontSyncToModel = false;
@@ -585,6 +583,9 @@ AbstractVisualItem * AbstractContent::syncToModelItem(AbstractVisualItem * model
 
 	model->setMirrorEnabled(mirrorEnabled());
 
+	model->setSourceOffsetTL(sourceOffsetTL());
+	model->setSourceOffsetBR(sourceOffsetBR());
+	
 	setModelItemIsChanging(false);
 
 	return model;
@@ -760,8 +761,36 @@ void AbstractContent::mouseReleaseEvent(QGraphicsSceneMouseEvent * event)
 void AbstractContent::keyPressEvent(QKeyEvent * event)
 {
 	event->accept();
-	if (event->key() == Qt::Key_Delete)
-		emit deleteItem();
+	QSizeF grid = AppSettings::gridSize();
+	qreal x = grid.width();
+	qreal y = grid.height();
+	if(x<5)
+		x = 5;
+	if(y<5)
+		y = 5;
+	
+	switch(event->key())
+	{
+		case Qt::Key_Delete:
+			emit deleteItem();
+			break;
+		
+		case Qt::Key_Up:
+			moveBy(0,-y);
+			break;
+		case Qt::Key_Down:
+			moveBy(0,+y);
+			break;
+		case Qt::Key_Left:
+			moveBy(-x,0);
+			break;
+		case Qt::Key_Right:
+			moveBy(+x,0);
+			break;
+			
+		default:
+			break;
+	}
 }
 
 QVariant AbstractContent::itemChange(GraphicsItemChange change, const QVariant & value)
@@ -926,7 +955,7 @@ void AbstractContent::slotSaveAs()
 	}
 }
 
-void AbstractContent::createCorner(Qt::Corner corner, bool noRescale)
+void AbstractContent::createCorner(CornerItem::CornerPosition corner, bool noRescale)
 {
 	CornerItem * c = new CornerItem(corner, noRescale, this);
 	c->setVisible(m_controlsVisible);
@@ -996,4 +1025,16 @@ void AbstractContent::slotDirtyEnded()
 	m_dirtyTransforming = false;
 	update();
 	GFX_CHANGED();
+}
+
+void AbstractContent::setSourceOffsetTL(QPointF x)
+{
+	m_sourceOffsetTL = x;
+	update();
+}
+
+void AbstractContent::setSourceOffsetBR(QPointF x)
+{
+	m_sourceOffsetBR = x;
+	update();
 }

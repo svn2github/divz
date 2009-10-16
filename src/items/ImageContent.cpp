@@ -143,8 +143,8 @@ void ImageContent::checkSize()
 	if(m_imageSize != m_pixmap.size())
 	{
 		m_imageSize = m_pixmap.size();
-
-	        // Adjust scaling while maintaining aspect ratio
+		
+		// Adjust scaling while maintaining aspect ratio
 		resizeContents(contentsRect(),true);
 	}
 }
@@ -304,7 +304,25 @@ void ImageContent::drawForeground(QPainter *painter)
 		}
 		else
 		{
-			painter->drawPixmap(cRect, m_pixmap);
+			if(!sourceOffsetTL().isNull() || !sourceOffsetBR().isNull())
+			{
+				QPointF tl = sourceOffsetTL();
+				QPointF br = sourceOffsetBR();
+				QRect px = m_pixmap.rect();
+				int x1 = (int)(tl.x() * px.width());
+				int y1 = (int)(tl.y() * px.height());
+				QRect source( 
+					px.x() + x1,
+					px.y() + y1,
+					px.width()  + (int)(br.x() * px.width())  - (px.x() + x1),
+					px.height() + (int)(br.y() * px.height()) - (px.y() + y1)
+				);
+					
+				//qDebug() << "ImageContent::drawForeground:"<<modelItem()->itemName()<<": tl:"<<tl<<", br:"<<br<<", source:"<<source;
+				painter->drawPixmap(cRect, m_pixmap, source);
+			}
+			else
+				painter->drawPixmap(cRect, m_pixmap);
 		}
 	}
 	

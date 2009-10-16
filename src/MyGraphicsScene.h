@@ -62,19 +62,33 @@ class MyGraphicsScene : public QGraphicsScene
 
                 AbstractContent * createVisualDelegate(AbstractItem *item);
                 void removeVisualDelegate(AbstractItem *item);
+                QList<AbstractItem *> copyBuffer();
+                
+                void configureContent(AbstractContent *content);
 		
 	signals:
 		void showPropertiesWidget(QWidget * widget);
 		void sceneRectChanged(const QRectF &);
+	
+	public slots:
+		void copyCurrentSelection(bool removeSelection = false);
+		void pasteCopyBuffer();
+		void selectAll();
+	
+	protected:
+		void keyPressEvent(QKeyEvent * event);
+		bool eventFilter(QObject *obj, QEvent *event);
+
 		
 	private:
 // 		TextContent * createText(const QPoint & pos);
 		void addContent(AbstractContent * content, bool takeOnwership = false); //, const QPoint & pos);
-	
+		
 		QList<AbstractContent *> m_content;
 		QList<AbstractContent *> m_ownedContent;
 		QList<AbstractContent *> m_prevContent;
 		QList<GenericItemConfig *> m_configs;
+		QList<AbstractItem *> m_copyBuffer;
 		
 		Slide * m_slide;
 		//Slide * m_slidePrev;

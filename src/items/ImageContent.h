@@ -30,6 +30,8 @@ public:
 	
 	// ::QGraphicsItem
 	void paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget = 0);
+	
+	bool hasSourceOffsets() { return true; }
 
 private slots:
 	void renderSvg();

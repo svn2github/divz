@@ -35,6 +35,11 @@ QVariant SongSlideGroupListModel::data(const QModelIndex &index, int role) const
 
 void SongSlideGroupListModel::generatePixmap(int row)
 {
+	// Ask the parent to generate a pixmap *just* so that 
+	// the TextBoxContent in the slide at "row" can cache
+	// rendered pixmaps before going live.
+	SlideGroupListModel::generatePixmap(row);
+	
 	Slide * slide = m_sortedSlides.at(row);
 	
 	static QString slideHeader = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\"><html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">p, li { white-space: pre-wrap; }</style></head><body style=\"font-family:'Sans Serif'; font-size:9pt; font-weight:400; font-style:normal;\">";

@@ -72,49 +72,65 @@ Revised Task list for Release 1.0, 10/18/09:
 		[DONE] - Snap to grid support
 		[DONE] - Increse/decrease size of font from toolbar - needed for sermon/announcment
 		[DONE] - Copy/paste or duplicate slides
+		[DONE] - Image Item
+		[DONE] - SVG Item if we have time
+			internal to image item
 		[LATER] - Gradients - can settle for making gradients in gimp and import as photo, but need to eventually have support direclty in dviz
 		- Layout asissts - center objects vert/horz
 			- need hint for this (e.g. songs) to auto adjust - maybe?
 			- should be easy - have toolbar, just add actions and a slot, do calcs, set position
-		- Image Item
-			- Should be easy
-			- If we have time, add crop handles
-		- SVG Item if we have time
 	
 	- Improvements:
-		when pressing F2 and group is live, should start editor on lvie slide
-		Prompt to save custom output location on close
-		Add video pallette
-		Add image palette
-		Add slide pallette
-		Add song template palette
 		
+		[STARTED] when pressing F2 and group is live, should start editor on lvie slide
+			problems with keyevent not getting any keys other than ctrl+(...)
 		[STARTED] Auto-change slides/slide groups after X seconds
 			added field in Slide.h, now to make SlideGroupViewer and UI honor the field (and SlideGroup::autoChangeGroup() flag in MainWindow)
 		[STARTED] When searching for song, auto select first result
 			setCurrentIndex() doesnt seem to be working
-		Integrated grid dialog into slideeditor window
-		Need to add keyboard nudging/movement of items
-			implement AbstractContent::keypressevent
-		Need song new/edit/delete functionality
-		f2 on selected item to open prop dialog
-		Auto-sizing song text should be an option that can be enabled/disabled
-			if not autosize, pull size from template / textobx
-		option of font family should be available for song
-			should it pull from textbox?
-			should be easy to extract using text cursor - see model/TextItem.cpp - findFontsize() method
-		Add rounded rectangle item / or round boxcontent corners
-		Need to have a reset template button
-		Need to add drag-drop from song list to song group
-		Add outputview objects to encapsulate slidegroupviewer or network client/server
-		Crop handles should be easy - as move left in, move X out. Basically keep the image rect the same (or add negative offsets)
-		On first start, intelligently detect aspect ratio of primary output - if no primary out, create small custom rect in top right
-		Global cache pixmaps of doc/slide lists 
-		Consider moving opengl option to a per-output setting
-		Consider making Output objects QObjects that can emit signals when changed
-		Save song templates/bg in a "template collection"
-		Add drag/drop background for songs from a yet-to-be-made vid/image bg pallette
+		[STARTED] Crop handles should be easy - as move left in, move X out. Basically keep the image rect the same (or add negative offsets)
+			not as easy as it looks!
+			
+		= Main UI =
+			Add video pallette
+			Add image palette
+			Add slide pallette
+			Add song template palette
+			Add drag/drop background for songs from a yet-to-be-made vid/image bg pallette
 		
+		= Editor / Visual =
+			Integrated grid dialog into slideeditor window
+			Add rounded rectangle item / or round boxcontent corners
+		
+		= Songs =
+			Save song templates/bg in a "template collection"
+			Need song new/edit/delete functionality
+			Auto-sizing song text should be an option that can be enabled/disabled
+				if not autosize, pull size from template / textobx
+			option of font family should be available for song
+				should it pull from textbox?
+				should be easy to extract using text cursor - see model/TextItem.cpp - findFontsize() method
+			Need to have a reset template button
+			Need to add drag-drop from song list to song group
+		
+		= Outputs =
+			Prompt to save custom output location on close
+			Add outputview objects to encapsulate slidegroupviewer or network client/server
+			On first start, intelligently detect aspect ratio of primary output - if no primary out, create small custom rect in top right
+		
+		= Misc = 
+			Global cache pixmaps of doc/slide lists 
+			Consider moving opengl option to a per-output setting
+			Consider making Output objects QObjects that can emit signals when changed
+		
+			Move dialogs into their own subfolder in the source tree
+			Move qt color dialog into 3rdparty
+			Add color theme support vis a vi powerpoint
+			Adapt genericitemconfig dialog to work on model item only without having to use the visual delegate
+			
+		[DONE] add "sourceRect" attribute to visual item and delegates 
+		[DONE] collapse <rect> and <pos> elements in the xml to use attributes rather than child elements
+		[DONE] Need to add keyboard nudging/movement of items
 		[DONE] Default shadow text should be black
 		[DONE] right-click on slide list in editor to open slide config (incl'd bg config tab or btn to config bg)
 			props like time to automatically switch slides, etc
@@ -167,24 +183,34 @@ Revised Task list for Release 1.0, 10/18/09:
 		[LATER] Video Capture (started impl, but again, performance is terrible. That may be due to the FormatOpts specified, or in ffmpeg, or the capture hardware - need to trace - later!)
 	
 	- Bugs:
+		items modified in editor dont correctly "start out" in lvie view or icons
+			see photos, blue box
+			seems to be the changes dont always get synced back to model item (position, size)
+			now it updates live when editing, but goint to diff slide then going back - starts at old position
 		qt4.6b-win32: Adding a new video item or changing filename of existing item causes program crash
 		qt4.6b-win32: chaing document aspect ratio doesnt affect slide editor until program restart
-		when adding new item, set selected
 		using toolbar, set font size to 1pt, zoom in so text is in view (blob of black), and then press "up size" btn - segfault
-		when zooming in on text using mouse wheel, it doesn't re-render for new scale  
 		close all open editors on closing mainwindow
 		Rotating a boxcontent causes very wierd pen width scaling issues in previews
-		Text editor in slide still white sometimes
 		Need better method of managing song regexps - right now the filters exist in the pixmap generation routines, the editor window, and the slide group!!
-		On windows, when setting video item live, it doesnt play unless you dbl-click the slide again
-		Win32: If blank document "<document/>", crash when add group then click group
-		Win32: File->New crashes
+		Perfomance of the document pixmap model generator becomes a problem with a lot of songs - need to investigate - possibly use different cache key
+		
+		[NEED CONFIRMED] On windows, when setting video item live, it doesnt play unless you dbl-click the slide again
+				other fixes (below) may have fixed this - need to confirm
+				
+		[NEED CONFIRMED] Win32: If blank document "<document/>", crash when add group then click group
+		[NEED CONFIRMED] Win32: File->New crashes
 				probably fixed, need to verify 
 				Nope! Still need work.
 				Crashes even with non-live items
 				Confirmed that it "new" works on linux tho - need to debug on windows then - drats
-		Perfomance of the document pixmap model generator becomes a problem with a lot of songs - need to investigate - possibly use different cache key
 		
+		[REJECTED] when zooming in on text using mouse wheel, it doesn't re-render for new scale  
+				due to live performance that the caching improves, I'm not going to "fix" this right now
+		[FIXED] Text editor in slide still white sometimes
+				made it so modified text in box content doesnt ever sync to model item
+				text config box sets text on model item instead and sync up
+		[FIXED] when adding new item, set selected
 		[FIXED] boxcontent should not offset by pen width
 		[FIXED] svg needs to scale as contents rect is resized
 		[FIXED] when fading betwen verses in songs, takes too long to render blurred shadows - need to default song shadows to 0 radius or make faster rendering (pre-render?)

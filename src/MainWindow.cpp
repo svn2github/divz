@@ -48,6 +48,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	m_liveView = new SlideGroupViewer();
 	m_liveView->setWindowFlags(Qt::FramelessWindowHint);
 	m_liveView->view()->setBackgroundBrush(Qt::black);
+	m_liveView->setCursor(Qt::BlankCursor);
 
 	setupOutputViews();
 	

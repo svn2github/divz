@@ -5,10 +5,10 @@
 #include <QDomElement>
 #include "3rdparty/enricomath.h"
 #include "model/AbstractVisualItem.h"
+#include "CornerItem.h"
 
 class AbstractConfig;
 class ButtonItem;
-class CornerItem;
 class Frame;
 class MirrorItem;
 class QGraphicsTextItem;
@@ -84,6 +84,13 @@ class AbstractContent : public AbstractDisposeable
 		virtual void applySceneContextHint(MyGraphicsScene::ContextHint);
 		MyGraphicsScene::ContextHint sceneContextHint() { return m_contextHint; }
 		
+		// e.g for images or videos, the source rect describes where in the actual image to take from
+		virtual bool hasSourceOffsets() { return false; }
+		QPointF sourceOffsetTL() { return m_sourceOffsetTL; }
+		virtual void setSourceOffsetTL(QPointF);
+		QPointF sourceOffsetBR() { return m_sourceOffsetBR; }
+		virtual void setSourceOffsetBR(QPointF);
+		
 
 	Q_SIGNALS:
 		void configureMe(const QPoint & scenePoint);
@@ -133,7 +140,7 @@ class AbstractContent : public AbstractDisposeable
 		void modelItemChanged(QString fieldName, QVariant value, QVariant oldValue);
 	
 	protected:
-		void createCorner(Qt::Corner corner, bool noRescale);
+		void createCorner(CornerItem::CornerPosition corner, bool noRescale);
 		void layoutChildren();
 		void applyRotations();
 		QRect               m_contentsRect;
@@ -155,6 +162,9 @@ class AbstractContent : public AbstractDisposeable
 		bool		    m_hovering;
 		
 		MyGraphicsScene::ContextHint	m_contextHint;
+		
+		QPointF		    m_sourceOffsetTL;
+		QPointF		    m_sourceOffsetBR;
 		
 	
 	private Q_SLOTS:

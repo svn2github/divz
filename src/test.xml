@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 <document title="Test Document" aspect="1.6">
-    <song title="When We All Get To Heaven - Edit Testn" number="2" icon="" type="2" id="1">
+    <song title="When We All Get To Heaven - Edit Testn" songid="0" number="2" icon="" type="2" id="1">
         <text>Chorus 1
 When we all get to heaven,
 | ----------------------------
@@ -40,16 +40,9 @@ Soon the pearly gates will open,
                 <background>
                     <item-id>1514</item-id>
                     <item-name>BackgroundItem1514</item-name>
-                    <rect>
-                        <x>0</x>
-                        <y>0</y>
-                        <w>0</w>
-                        <h>0</h>
-                    </rect>
-                    <pos>
-                        <x>0</x>
-                        <y>0</y>
-                    </pos>
+                    <rect w="0" x="0" y="0" h="0"/>
+                    <source y1="0" x1="0" y2="0" x2="0"/>
+                    <pos x="0" y="0"/>
                     <zvalue>0</zvalue>
                     <opacity>1</opacity>
                     <visible>1</visible>
@@ -63,16 +56,9 @@ Soon the pearly gates will open,
                 <textbox>
                     <item-id>1651</item-id>
                     <item-name>TextBoxItem1651</item-name>
-                    <rect>
-                        <x>-100</x>
-                        <y>-75</y>
-                        <w>1100</w>
-                        <h>738</h>
-                    </rect>
-                    <pos>
-                        <x>130</x>
-                        <y>100</y>
-                    </pos>
+                    <rect w="1100" x="-100" y="-75" h="738"/>
+                    <source y1="0" x1="0" y2="0" x2="0"/>
+                    <pos x="130" y="100"/>
                     <zvalue>-9996</zvalue>
                     <opacity>1</opacity>
                     <visible>1</visible>
@@ -96,16 +82,9 @@ p, li { white-space: pre-wrap; }
                 <background>
                     <item-id>4113</item-id>
                     <item-name>BackgroundItem4113</item-name>
-                    <rect>
-                        <x>0</x>
-                        <y>0</y>
-                        <w>0</w>
-                        <h>0</h>
-                    </rect>
-                    <pos>
-                        <x>0</x>
-                        <y>0</y>
-                    </pos>
+                    <rect w="0" x="0" y="0" h="0"/>
+                    <source y1="0" x1="0" y2="0" x2="0"/>
+                    <pos x="0" y="0"/>
                     <zvalue>0</zvalue>
                     <opacity>1</opacity>
                     <visible>1</visible>
@@ -121,16 +100,9 @@ p, li { white-space: pre-wrap; }
                 <background>
                     <item-id>4112</item-id>
                     <item-name>BackgroundItem4112</item-name>
-                    <rect>
-                        <x>0</x>
-                        <y>0</y>
-                        <w>0</w>
-                        <h>0</h>
-                    </rect>
-                    <pos>
-                        <x>0</x>
-                        <y>0</y>
-                    </pos>
+                    <rect w="0" x="0" y="0" h="0"/>
+                    <source y1="0" x1="0" y2="0" x2="0"/>
+                    <pos x="0" y="0"/>
                     <zvalue>0</zvalue>
                     <opacity>1</opacity>
                     <visible>1</visible>
@@ -149,16 +121,9 @@ p, li { white-space: pre-wrap; }
             <background>
                 <item-id>761</item-id>
                 <item-name>BackgroundItem761</item-name>
-                <rect>
-                    <x>0</x>
-                    <y>0</y>
-                    <w>0</w>
-                    <h>0</h>
-                </rect>
-                <pos>
-                    <x>0</x>
-                    <y>0</y>
-                </pos>
+                <rect w="0" x="0" y="0" h="0"/>
+                <source y1="0" x1="0" y2="0" x2="0"/>
+                <pos x="0" y="0"/>
                 <zvalue>0</zvalue>
                 <opacity>1</opacity>
                 <visible>1</visible>
@@ -172,16 +137,9 @@ p, li { white-space: pre-wrap; }
             <textbox>
                 <item-id>104</item-id>
                 <item-name>TextBoxItem104</item-name>
-                <rect>
-                    <x>-100</x>
-                    <y>-75</y>
-                    <w>874</w>
-                    <h>282</h>
-                </rect>
-                <pos>
-                    <x>280</x>
-                    <y>330</y>
-                </pos>
+                <rect w="874" x="-100" y="-75" h="282"/>
+                <source y1="0" x1="0" y2="0" x2="0"/>
+                <pos x="280" y="330"/>
                 <zvalue>-9998</zvalue>
                 <opacity>1</opacity>
                 <visible>1</visible>
@@ -205,16 +163,9 @@ p, li { white-space: pre-wrap; }
             <background>
                 <item-id>1131</item-id>
                 <item-name>BackgroundItem1131</item-name>
-                <rect>
-                    <x>0</x>
-                    <y>0</y>
-                    <w>0</w>
-                    <h>0</h>
-                </rect>
-                <pos>
-                    <x>0</x>
-                    <y>0</y>
-                </pos>
+                <rect w="0" x="0" y="0" h="0"/>
+                <source y1="0" x1="0" y2="0" x2="0"/>
+                <pos x="0" y="0"/>
                 <zvalue>0</zvalue>
                 <opacity>1</opacity>
                 <visible>1</visible>
@@ -228,16 +179,9 @@ p, li { white-space: pre-wrap; }
             <textbox>
                 <item-id>1132</item-id>
                 <item-name>TextBoxItem1132</item-name>
-                <rect>
-                    <x>-100</x>
-                    <y>-75</y>
-                    <w>981</w>
-                    <h>228</h>
-                </rect>
-                <pos>
-                    <x>240</x>
-                    <y>343</y>
-                </pos>
+                <rect w="981" x="-100" y="-75" h="228"/>
+                <source y1="0" x1="0" y2="0" x2="0"/>
+                <pos x="240" y="343"/>
                 <zvalue>-9998</zvalue>
                 <opacity>1</opacity>
                 <visible>1</visible>
@@ -263,16 +207,9 @@ p, li { white-space: pre-wrap; }
             <background>
                 <item-id>803</item-id>
                 <item-name>BackgroundItem803</item-name>
-                <rect>
-                    <x>0</x>
-                    <y>0</y>
-                    <w>0</w>
-                    <h>0</h>
-                </rect>
-                <pos>
-                    <x>0</x>
-                    <y>0</y>
-                </pos>
+                <rect w="0" x="0" y="0" h="0"/>
+                <source y1="0" x1="0" y2="0" x2="0"/>
+                <pos x="0" y="0"/>
                 <zvalue>0</zvalue>
                 <opacity>1</opacity>
                 <visible>1</visible>
@@ -286,16 +223,9 @@ p, li { white-space: pre-wrap; }
             <videofile>
                 <item-id>815</item-id>
                 <item-name>VideoItem815</item-name>
-                <rect>
-                    <x>-100</x>
-                    <y>-276</y>
-                    <w>736</w>
-                    <h>552</h>
-                </rect>
-                <pos>
-                    <x>346</x>
-                    <y>394</y>
-                </pos>
+                <rect w="736" x="-100" y="-276" h="552"/>
+                <source y1="0" x1="0" y2="0" x2="0"/>
+                <pos x="346" y="394"/>
                 <zvalue>-9998</zvalue>
                 <opacity>1</opacity>
                 <visible>1</visible>
@@ -314,16 +244,9 @@ p, li { white-space: pre-wrap; }
             <background>
                 <item-id>897</item-id>
                 <item-name>BackgroundItem897</item-name>
-                <rect>
-                    <x>0</x>
-                    <y>0</y>
-                    <w>0</w>
-                    <h>0</h>
-                </rect>
-                <pos>
-                    <x>0</x>
-                    <y>0</y>
-                </pos>
+                <rect w="0" x="0" y="0" h="0"/>
+                <source y1="0" x1="0" y2="0" x2="0"/>
+                <pos x="0" y="0"/>
                 <zvalue>-999</zvalue>
                 <opacity>1</opacity>
                 <visible>1</visible>
@@ -337,16 +260,9 @@ p, li { white-space: pre-wrap; }
             <box>
                 <item-id>1250</item-id>
                 <item-name>BoxItem1250</item-name>
-                <rect>
-                    <x>-100</x>
-                    <y>-75</y>
-                    <w>274</w>
-                    <h>148</h>
-                </rect>
-                <pos>
-                    <x>242.892</x>
-                    <y>96.113</y>
-                </pos>
+                <rect w="469" x="-100" y="-75" h="148"/>
+                <source y1="0" x1="0" y2="0" x2="0"/>
+                <pos x="815.8920000000001" y="387.113"/>
                 <zvalue>3</zvalue>
                 <opacity>1</opacity>
                 <visible>1</visible>
@@ -360,16 +276,9 @@ p, li { white-space: pre-wrap; }
             <box>
                 <item-id>3203</item-id>
                 <item-name>BoxItem3203</item-name>
-                <rect>
-                    <x>-100</x>
-                    <y>-75</y>
-                    <w>410</w>
-                    <h>260</h>
-                </rect>
-                <pos>
-                    <x>441.846</x>
-                    <y>155.917</y>
-                </pos>
+                <rect w="440" x="-100" y="-75" h="260"/>
+                <source y1="0" x1="0" y2="0" x2="0"/>
+                <pos x="273.846" y="326.917"/>
                 <zvalue>4</zvalue>
                 <opacity>1</opacity>
                 <visible>1</visible>
@@ -383,17 +292,10 @@ p, li { white-space: pre-wrap; }
             <textbox>
                 <item-id>1515</item-id>
                 <item-name>TextBoxItem1515</item-name>
-                <rect>
-                    <x>-100</x>
-                    <y>-17</y>
-                    <w>1020</w>
-                    <h>186</h>
-                </rect>
-                <pos>
-                    <x>180</x>
-                    <y>399.527</y>
-                </pos>
-                <zvalue>6</zvalue>
+                <rect w="1020" x="-100" y="-17" h="186"/>
+                <source y1="0" x1="0" y2="0" x2="0"/>
+                <pos x="295" y="311.527"/>
+                <zvalue>5</zvalue>
                 <opacity>1</opacity>
                 <visible>1</visible>
                 <frame-class>0</frame-class>
@@ -414,24 +316,17 @@ p, li { white-space: pre-wrap; }
                 <text-align x="32" y="32"/>
             </textbox>
             <image>
-                <item-id>6291</item-id>
-                <item-name>ImageItem6291</item-name>
-                <rect>
-                    <x>-100</x>
-                    <y>-313</y>
-                    <w>627</w>
-                    <h>627</h>
-                </rect>
-                <pos>
-                    <x>786.475</x>
-                    <y>348.237</y>
-                </pos>
-                <zvalue>5</zvalue>
+                <item-id>6676</item-id>
+                <item-name>ImageItem6676</item-name>
+                <rect w="1278" x="-100" y="-479" h="958"/>
+                <source y1="0" x1="0" y2="0" x2="0"/>
+                <pos x="63.99999999999994" y="385.0000000000002"/>
+                <zvalue>1</zvalue>
                 <opacity>1</opacity>
                 <visible>1</visible>
                 <frame-class>0</frame-class>
                 <transformation yRot="0" xRot="0" zRot="0"/>
-                <fill brush-style="1" video="" image="samples/glass.svg" brush-color="255,255,255,255" type="3"/>
+                <fill brush-style="1" video="" image="sample/floating-leaves.jpg" brush-color="255,255,255,255" type="3"/>
                 <outline brush-style="1" pen-join="64" pen-width="3" enabled="0" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255"/>
                 <mirror offset="3" enabled="0"/>
                 <shadow brush-style="1" x="3" y="3" enabled="0" blur="3" brush-color="0,0,0,255"/>
@@ -441,16 +336,9 @@ p, li { white-space: pre-wrap; }
             <background>
                 <item-id>1517</item-id>
                 <item-name>BackgroundItem897</item-name>
-                <rect>
-                    <x>0</x>
-                    <y>0</y>
-                    <w>0</w>
-                    <h>0</h>
-                </rect>
-                <pos>
-                    <x>0</x>
-                    <y>0</y>
-                </pos>
+                <rect w="0" x="0" y="0" h="0"/>
+                <source y1="0" x1="0" y2="0" x2="0"/>
+                <pos x="0" y="0"/>
                 <zvalue>-999</zvalue>
                 <opacity>1</opacity>
                 <visible>1</visible>
@@ -464,16 +352,9 @@ p, li { white-space: pre-wrap; }
             <box>
                 <item-id>1519</item-id>
                 <item-name>BoxItem3203</item-name>
-                <rect>
-                    <x>-100</x>
-                    <y>-75</y>
-                    <w>1010</w>
-                    <h>160</h>
-                </rect>
-                <pos>
-                    <x>210</x>
-                    <y>370</y>
-                </pos>
+                <rect w="1010" x="-100" y="-75" h="160"/>
+                <source y1="0" x1="0" y2="0" x2="0"/>
+                <pos x="210" y="370"/>
                 <zvalue>2</zvalue>
                 <opacity>1</opacity>
                 <visible>1</visible>
@@ -487,16 +368,9 @@ p, li { white-space: pre-wrap; }
             <textbox>
                 <item-id>1520</item-id>
                 <item-name>TextBoxItem1520</item-name>
-                <rect>
-                    <x>-100</x>
-                    <y>-75</y>
-                    <w>980</w>
-                    <h>122</h>
-                </rect>
-                <pos>
-                    <x>246</x>
-                    <y>406</y>
-                </pos>
+                <rect w="980" x="-100" y="-75" h="122"/>
+                <source y1="0" x1="0" y2="0" x2="0"/>
+                <pos x="231" y="391"/>
                 <zvalue>3</zvalue>
                 <opacity>1</opacity>
                 <visible>1</visible>
@@ -520,16 +394,9 @@ p, li { white-space: pre-wrap; }
             <image>
                 <item-id>6093</item-id>
                 <item-name>ImageItem6093</item-name>
-                <rect>
-                    <x>-100</x>
-                    <y>-134</y>
-                    <w>269</w>
-                    <h>269</h>
-                </rect>
-                <pos>
-                    <x>890</x>
-                    <y>144</y>
-                </pos>
+                <rect w="254" x="-100" y="-134" h="254"/>
+                <source y1="0" x1="0" y2="0" x2="0"/>
+                <pos x="929" y="149"/>
                 <zvalue>4</zvalue>
                 <opacity>1</opacity>
                 <visible>1</visible>
@@ -545,16 +412,9 @@ p, li { white-space: pre-wrap; }
             <background>
                 <item-id>1454</item-id>
                 <item-name>BackgroundItem897</item-name>
-                <rect>
-                    <x>0</x>
-                    <y>0</y>
-                    <w>0</w>
-                    <h>0</h>
-                </rect>
-                <pos>
-                    <x>0</x>
-                    <y>0</y>
-                </pos>
+                <rect w="0" x="0" y="0" h="0"/>
+                <source y1="0" x1="0" y2="0" x2="0"/>
+                <pos x="0" y="0"/>
                 <zvalue>-999</zvalue>
                 <opacity>1</opacity>
                 <visible>1</visible>
@@ -568,16 +428,9 @@ p, li { white-space: pre-wrap; }
             <box>
                 <item-id>1455</item-id>
                 <item-name>BoxItem1250</item-name>
-                <rect>
-                    <x>-100</x>
-                    <y>-75</y>
-                    <w>274</w>
-                    <h>148</h>
-                </rect>
-                <pos>
-                    <x>370</x>
-                    <y>250</y>
-                </pos>
+                <rect w="274" x="-100" y="-75" h="148"/>
+                <source y1="0" x1="0" y2="0" x2="0"/>
+                <pos x="370" y="250"/>
                 <zvalue>2</zvalue>
                 <opacity>0.37</opacity>
                 <visible>1</visible>
@@ -591,16 +444,9 @@ p, li { white-space: pre-wrap; }
             <box>
                 <item-id>1456</item-id>
                 <item-name>BoxItem3203</item-name>
-                <rect>
-                    <x>-100</x>
-                    <y>-75</y>
-                    <w>1270</w>
-                    <h>180</h>
-                </rect>
-                <pos>
-                    <x>80</x>
-                    <y>730</y>
-                </pos>
+                <rect w="1270" x="-100" y="-75" h="180"/>
+                <source y1="0" x1="0" y2="0" x2="0"/>
+                <pos x="80" y="730"/>
                 <zvalue>3</zvalue>
                 <opacity>1</opacity>
                 <visible>1</visible>
@@ -614,16 +460,9 @@ p, li { white-space: pre-wrap; }
             <textbox>
                 <item-id>1637</item-id>
                 <item-name>TextBoxItem1637</item-name>
-                <rect>
-                    <x>-100</x>
-                    <y>-61</y>
-                    <w>680</w>
-                    <h>122</h>
-                </rect>
-                <pos>
-                    <x>390</x>
-                    <y>710</y>
-                </pos>
+                <rect w="680" x="-100" y="-61" h="122"/>
+                <source y1="0" x1="0" y2="0" x2="0"/>
+                <pos x="390" y="710"/>
                 <zvalue>5</zvalue>
                 <opacity>1</opacity>
                 <visible>1</visible>
@@ -646,7 +485,7 @@ p, li { white-space: pre-wrap; }
             </textbox>
         </slide>
     </group>
-    <song title="** BLANK SONG **" number="1" icon="" type="2" id="1">
+    <song title="** BLANK SONG **" songid="0" number="1" icon="" type="2" id="1">
         <text>Hello World
 
 Hello World</text>
@@ -655,16 +494,9 @@ Hello World</text>
                 <background>
                     <item-id>5471</item-id>
                     <item-name>BackgroundItem5471</item-name>
-                    <rect>
-                        <x>0</x>
-                        <y>0</y>
-                        <w>0</w>
-                        <h>0</h>
-                    </rect>
-                    <pos>
-                        <x>0</x>
-                        <y>0</y>
-                    </pos>
+                    <rect w="0" x="0" y="0" h="0"/>
+                    <source y1="0" x1="0" y2="0" x2="0"/>
+                    <pos x="0" y="0"/>
                     <zvalue>0</zvalue>
                     <opacity>1</opacity>
                     <visible>1</visible>
@@ -678,16 +510,9 @@ Hello World</text>
                 <textbox>
                     <item-id>5472</item-id>
                     <item-name>TextBox5472</item-name>
-                    <rect>
-                        <x>0</x>
-                        <y>0</y>
-                        <w>1228</w>
-                        <h>768</h>
-                    </rect>
-                    <pos>
-                        <x>9</x>
-                        <y>-3</y>
-                    </pos>
+                    <rect w="1228" x="0" y="0" h="768"/>
+                    <source y1="0" x1="0" y2="0" x2="0"/>
+                    <pos x="9" y="-3"/>
                     <zvalue>1</zvalue>
                     <opacity>1</opacity>
                     <visible>1</visible>

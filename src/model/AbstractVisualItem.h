@@ -16,6 +16,8 @@ class AbstractVisualItem : public AbstractItem
 	
 	Q_PROPERTY(QPointF 	pos          	READ pos 		WRITE setPos);
 	Q_PROPERTY(QRectF  	contentsRect 	READ contentsRect 	WRITE setContentsRect);
+	Q_PROPERTY(QPointF	sourceOffsetTL 	READ sourceOffsetTL	WRITE setSourceOffsetTL);
+	Q_PROPERTY(QPointF	sourceOffsetBR 	READ sourceOffsetBR	WRITE setSourceOffsetBR);
 	Q_PROPERTY(bool    	isVisible    	READ isVisible		WRITE setIsVisible);
 	Q_PROPERTY(double  	zValue       	READ zValue 		WRITE setZValue);
 	Q_PROPERTY(double  	opacity      	READ opacity   		WRITE setOpacity);
@@ -93,6 +95,12 @@ public:
 	QRectF contentsRect() const { return m_contentsRect; }
 	void setContentsRect(QRectF);
 	
+	// Source rectangle (for images, etc)
+	QPointF sourceOffsetTL() const { return m_sourceOffsetTL; }
+	void setSourceOffsetTL(QPointF);
+	QPointF sourceOffsetBR() const { return m_sourceOffsetBR; }
+	void setSourceOffsetBR(QPointF);
+	
 	// Basic attributes
 	bool isVisible() const { return m_isVisible; }
 	void setIsVisible(bool);
@@ -117,6 +125,8 @@ public:
 	double zRotation() { return m_zRotation; }
 	void setZRotation(double);
 	
+	virtual bool hasSourceOffsets() { return false; }
+	
 	
 	ITEM_PROPDEF(FillType,		FillType, 	fillType);
 	ITEM_PROPDEF(FillBrush,		QBrush,		fillBrush);
@@ -140,6 +150,8 @@ private:
 	// Fields
 	QPointF		m_pos;		// position on the canvas in sceen coordinates
 	QRectF		m_contentsRect;	// contents rectangle of this item
+	QPointF		m_sourceOffsetTL;	// source rect - used by images & videos
+	QPointF		m_sourceOffsetBR;	// source rect - used by images & videos
 	
 	bool		m_isVisible;
 	double		m_zValue;

@@ -22,7 +22,7 @@
 #include <QStyleOptionGraphicsItem>
 #include <math.h>
 
-CornerItem::CornerItem(Qt::Corner corner, bool rotateOnly, AbstractContent * parent)
+CornerItem::CornerItem(CornerPosition corner, bool rotateOnly, AbstractContent * parent)
 	: QGraphicsItem(parent)
 	, m_content(parent)
 	, m_corner(corner)
@@ -54,19 +54,29 @@ void CornerItem::setDefaultRightOp(int mask)
 
 void CornerItem::relayout(const QRect & rect)
 {
-    // change side, if needed
-    int side = 1 + (int)sqrt((float)qMin(rect.width(), rect.height()));
-    if (side != m_side) {
-        prepareGeometryChange();
-        m_side = side;
-    }
+//     // change side, if needed
+//     int side = 1 + (int)sqrt((float)qMin(rect.width(), rect.height()));
+//     if (side != m_side) {
+//         prepareGeometryChange();
+//         //m_side = side;
+//         
+//         // TODO does this break anything?
+//     	m_side = 8;
+//     }
+    
+    
 
     // place at the right corner
     switch (m_corner) {
-        case Qt::TopLeftCorner: setPos(rect.topLeft() + QPoint(m_side, m_side)); setCursor(Qt::SizeFDiagCursor); break;
-        case Qt::TopRightCorner: setPos(rect.topRight() + QPoint(-m_side + 1, m_side)); setCursor(Qt::SizeBDiagCursor); break;
-        case Qt::BottomLeftCorner: setPos(rect.bottomLeft() + QPoint(m_side, -m_side + 1)); setCursor(Qt::SizeBDiagCursor); break;
-        case Qt::BottomRightCorner: setPos(rect.bottomRight() + QPoint(-m_side + 1, -m_side + 1)); setCursor(Qt::SizeFDiagCursor); break;
+        case TopLeftCorner: setPos(rect.topLeft() + QPoint(m_side, m_side)); setCursor(Qt::SizeFDiagCursor); break;
+        case TopRightCorner: setPos(rect.topRight() + QPoint(-m_side + 1, m_side)); setCursor(Qt::SizeBDiagCursor); break;
+        case BottomLeftCorner: setPos(rect.bottomLeft() + QPoint(m_side, -m_side + 1)); setCursor(Qt::SizeBDiagCursor); break;
+        case BottomRightCorner: setPos(rect.bottomRight() + QPoint(-m_side + 1, -m_side + 1)); setCursor(Qt::SizeFDiagCursor); break;
+        
+        case MidTop: setPos(QPoint(rect.left() + rect.width()/2, rect.top()) + QPoint(m_side, m_side)); setCursor(Qt::SizeVerCursor); break;
+        case MidLeft: setPos(QPoint(rect.left(), rect.top() + rect.height()/2) + QPoint(-m_side + 1, m_side)); setCursor(Qt::SizeHorCursor); break;
+        case MidRight: setPos(QPoint(rect.right(), rect.top() + rect.height()/2) + QPoint(m_side, -m_side + 1)); setCursor(Qt::SizeHorCursor); break;
+        case MidBottom: setPos(QPoint(rect.left() + rect.width()/2, rect.bottom()) + QPoint(-m_side + 1, -m_side + 1)); setCursor(Qt::SizeVerCursor); break;
     }
 
 }
@@ -74,27 +84,49 @@ void CornerItem::relayout(const QRect & rect)
 QRectF CornerItem::boundingRect() const
 {
 	QRectF rect(-m_side, -m_side, m_side, m_side);
-	if(m_corner == Qt::TopLeftCorner)
+	if(m_corner == TopLeftCorner)
 	{
 		rect.translate(-m_side/4,-m_side/4); //,-m_side/2,-m_side/2);
 	}
 	else
-	if(m_corner == Qt::BottomLeftCorner)
+	if(m_corner == BottomLeftCorner)
 	{
 		//rect.adjust(-m_side/2,m_side/2,-m_side/2,-m_side/2);
 		rect.translate(-m_side/4,m_side*1.25); //,-m_side/2,-m_side/2);
 	}
 	else
-	if(m_corner == Qt::BottomRightCorner)
+	if(m_corner == BottomRightCorner)
 	{
 		//rect.adjust(m_side/2,m_side/2,-m_side/2,-m_side/2);
 		rect.translate(m_side*1.25,m_side*1.25); //,-m_side/2,-m_side/2);
 	}
 	else
-	if(m_corner == Qt::TopRightCorner)
+	if(m_corner == TopRightCorner)
 	{
 		//rect.adjust(m_side/2,m_side/2,-m_side/2,-m_side/2);
 		rect.translate(m_side*1.25,-m_side/4); //,-m_side/2,-m_side/2);
+	}
+	else
+	if(m_corner == MidTop)
+	{
+		//rect.adjust(m_side/2,m_side/2,-m_side/2,-m_side/2);
+		rect.translate(-m_side/2,-m_side/4); //,-m_side/2,-m_side/2);
+	}
+	if(m_corner == MidLeft)
+	{
+		rect.translate(m_side + m_side/2,-m_side/2); //,-m_side/2,-m_side/2);
+	}
+	else
+	if(m_corner == MidBottom)
+	{
+		//rect.adjust(-m_side/2,m_side/2,-m_side/2,-m_side/2);
+		rect.translate(m_side*1.25,m_side*1.25); //,-m_side/2,-m_side/2);
+	}
+	else
+	if(m_corner == MidRight)
+	{
+		//rect.adjust(m_side/2,m_side/2,-m_side/2,-m_side/2);
+		rect.translate(-m_side/2,m_side + m_side/2); //,-m_side/2,-m_side/2);
 	}
 
 	return rect;
@@ -131,6 +163,8 @@ void CornerItem::mousePressEvent(QGraphicsSceneMouseEvent * event)
 
     // filter out unwanted operations
     m_operation &= m_opMask;
+    
+    //m_operation = Crop | Scale;
 
     // intial parameters
     QRect contentsRect = m_content->contentsRect();
@@ -207,7 +241,10 @@ void CornerItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 // 			if(cpos.y() <=0)
 // 				d.setY(0);
 
-			if(m_corner == Qt::TopLeftCorner)
+			QPointF srcTL  = m_content->sourceOffsetTL();
+			QPointF srcBR  = m_content->sourceOffsetBR();
+
+			if(m_corner == TopLeftCorner)
 			{
 				//m_content->setPos(m_startPos + (event->pos() - pos()));
 
@@ -224,7 +261,6 @@ void CornerItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 						m_content->moveBy(d.x(),deltaY);
 						cr.setWidth(newWidth); // adjust width (then height..) to compensate for moveBy()
 						cr.setHeight(newHeight); // adjust width (then height..) to compensate for moveBy()
-
 					}
 					else
 					{
@@ -241,8 +277,19 @@ void CornerItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 				else
 				{
 					m_content->moveBy(d.x(),d.y());
-					cr.setWidth((int)(cr.width()  -d.x())); // adjust width (then height..) to compensate for moveBy()
-					cr.setHeight((int)(cr.height()-d.y()));
+					cr.setWidth((int)(cr.width()   - d.x())); // adjust width (then height..) to compensate for moveBy()
+					cr.setHeight((int)(cr.height() - d.y()));
+					
+					if(op & Crop)
+					{
+						QPointF pre = srcTL;
+						
+						qreal perc = d.x() / cr.width();
+						srcTL.setX( srcTL.x() + perc);
+						
+						perc = d.y() / cr.height();
+						srcTL.setY( srcTL.y() + perc);
+					}
  				}
 
 
@@ -250,7 +297,81 @@ void CornerItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 
 			}
 			else
-			if(m_corner == Qt::BottomLeftCorner)
+			if(m_corner == MidTop)
+			{
+				//m_content->setPos(m_startPos + (event->pos() - pos()));
+
+				if(op & FixScale)
+				{
+					int newHeight = (int)(cr.height()  -d.y());
+					int newWidth = (int)(newHeight * m_startRatio);
+					int deltaX = cr.width() - newWidth;
+
+					m_content->moveBy(deltaX,d.y());
+					cr.setWidth(newWidth); // adjust width (then height..) to compensate for moveBy()
+					cr.setHeight(newHeight); // adjust width (then height..) to compensate for moveBy()
+				}
+				else
+				{
+					m_content->moveBy(0,d.y());
+					//cr.setWidth((int)(cr.width()  -d.x())); // adjust width (then height..) to compensate for moveBy()
+					cr.setHeight((int)(cr.height()-d.y()));
+					
+					if(op & Crop)
+					{
+					
+						QPointF pre = srcTL;
+						qreal perc = d.y() / cr.height();
+						srcTL.setY( srcTL.y() + perc);
+						
+						//qDebug() << "CornerItem::mouseMoveEvent(): /Scale/MidTop/Crop: pre:"<<pre<<", perc:"<<perc<<", post:"<<srcTL;
+					}
+ 				}
+			}
+			else
+			if(m_corner == MidLeft)
+			{
+				//m_content->setPos(m_startPos + (event->pos() - pos()));
+
+				if(op & FixScale)
+				{
+					int newWidth = (int)(cr.width()  -d.x());
+					int newHeight = (int)(newWidth / m_startRatio);
+					int deltaY = cr.height() - newHeight;
+
+					m_content->moveBy(d.x(),deltaY);
+					cr.setWidth(newWidth); // adjust width (then height..) to compensate for moveBy()
+					cr.setHeight(newHeight); // adjust width (then height..) to compensate for moveBy()
+				}
+				else
+				{
+					m_content->moveBy(d.x(),0);
+					cr.setWidth((int)(cr.width()  -d.x())); // adjust width (then height..) to compensate for moveBy()
+					//cr.setHeight((int)(cr.height()-d.y()));
+					
+// 					if(op & Crop)
+// 					{
+// 						sr.translate((int)-d.x(),0);
+// 						sr.setWidth((int)(sr.width()   + d.x()));
+// 					}
+
+					if(op & Crop)
+					{
+					
+						QPointF pre = srcTL;
+						qreal perc = d.x() / cr.width();
+						srcTL.setX( srcTL.x() + perc);
+						
+						//qDebug() << "CornerItem::mouseMoveEvent(): /Scale/MidLeft/Crop: pre:"<<pre<<", perc:"<<perc<<", post:"<<srcTL;
+					}
+ 				}
+
+
+				//qDebug("- TopLeft (%.02f,%.02f)",d.x(),y());
+
+			}
+			else
+			if(m_corner == BottomLeftCorner)
 			{
 				m_content->moveBy(d.x(),0);
 				cr.setWidth((int)(cr.width()-d.x()));
@@ -259,6 +380,8 @@ void CornerItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 // 				if (hfw > 1)
 // 					H = hfw;
 
+				int oldHeight = cr.height();
+				
 				if(op & FixScale)
 				{
 					cr.setHeight((int)(cr.width() / m_startRatio));
@@ -267,14 +390,27 @@ void CornerItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 				{
 					cr.setHeight(H);
 				}
+				
+				if(op & Crop)
+				{
+					QPointF pre = srcTL;
+					qreal perc = d.x() / cr.width();
+					srcTL.setX( srcTL.x() + perc);
+					
+					pre = srcBR;
+					perc = d.y() / cr.height();
+					srcBR.setY( srcBR.y() + perc);
+				}
+
 
 				//qDebug("- BottomLeft (%.02f,%d)",d.x(),H);
 			}
 			else
-			if(m_corner == Qt::TopRightCorner)
+			if(m_corner == TopRightCorner)
 			{
 
 
+				int oldWidth = cr.width();
 				if(op & FixScale)
 				{
 					int newHeight = (int)(cr.height()  -d.y());
@@ -292,13 +428,24 @@ void CornerItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 					cr.setHeight((int)(cr.height()-d.y()));
 				}
 
-
-
+				if(op & Crop)
+				{
+					QPointF pre = srcTL;
+					qreal perc = d.x() / cr.width();
+					srcTL.setX( srcTL.x() + perc);
+					
+					pre = srcBR;
+					perc = d.y() / cr.height();
+					srcBR.setY( srcBR.y() + perc);
+				}
 				//qDebug("- TopRight (%.02f,%d)",d.y(),W);
 			}
 			else
-			if(m_corner == Qt::BottomRightCorner)
+			if(m_corner == BottomRightCorner)
 			{
+				int oldWidth = cr.width();
+				int oldHeight= cr.height();
+				
 				cr.setWidth(W);
 // 				int hfw = m_content->contentHeightForWidth(W);
 // 				if (hfw > 1)
@@ -311,11 +458,69 @@ void CornerItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 				{
 					cr.setHeight(H);
 				}
+				
+				if(op & Crop)
+				{
+					QPointF pre = srcBR;
+					
+					qreal perc = d.x() / cr.width();
+					srcBR.setX( srcBR.x() + perc);
+					
+					perc = d.y() / cr.height();
+					srcBR.setY( srcBR.y() + perc);
+				}
 				//qDebug("- BottomRight (%d,%d)",W,H);
+			}
+			else
+			if(m_corner == MidRight)
+			{
+				int oldWidth = cr.width();
+				cr.setWidth(W);
+// 				int hfw = m_content->contentHeightForWidth(W);
+// 				if (hfw > 1)
+// 					H = hfw;
+				if(op & FixScale)
+				{
+					cr.setHeight((int)(cr.width() / m_startRatio));
+				}
+				
+				if(op & Crop)
+				{
+					QPointF pre = srcBR;
+					
+					qreal perc = d.x() / cr.width();
+					srcBR.setX( srcBR.x() + perc);
+				}
+			}
+			else
+			if(m_corner == MidBottom)
+			{
+				int oldHeight= cr.height();
+				
+				if(op & FixScale)
+				{
+					int newWidth = (int)(H * m_startRatio);
+					cr.setWidth(newWidth); // adjust width (then height..) to compensate for moveBy()
+				}
+				
+				cr.setHeight(H);
+				
+				if(op & Crop)
+				{
+					QPointF pre = srcBR;
+					qreal perc = d.y() / cr.height();
+					srcBR.setY( srcBR.y() + perc);
+				}
 			}
 
 			m_content->dirtyCache();
 			m_content->resizeContents(cr);
+			
+			if(op & Crop)
+			{
+				m_content->setSourceOffsetTL(srcTL);
+				m_content->setSourceOffsetBR(srcBR);
+			}
 			//m_content->update();
 		//}
 	}
