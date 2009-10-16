@@ -84,8 +84,6 @@ Revised Task list for Release 1.0, 10/18/09:
 		
 		[STARTED] when pressing F2 and group is live, should start editor on lvie slide
 			problems with keyevent not getting any keys other than ctrl+(...)
-		[STARTED] Auto-change slides/slide groups after X seconds
-			added field in Slide.h, now to make SlideGroupViewer and UI honor the field (and SlideGroup::autoChangeGroup() flag in MainWindow)
 		[STARTED] When searching for song, auto select first result
 			setCurrentIndex() doesnt seem to be working
 		[STARTED] Crop handles should be easy - as move left in, move X out. Basically keep the image rect the same (or add negative offsets)
@@ -101,6 +99,9 @@ Revised Task list for Release 1.0, 10/18/09:
 		= Editor / Visual =
 			Integrated grid dialog into slideeditor window
 			Add rounded rectangle item / or round boxcontent corners
+			move/add item config to a dock widget
+			add animation to image items
+			selection panel
 		
 		= Songs =
 			Save song templates/bg in a "template collection"
@@ -128,6 +129,8 @@ Revised Task list for Release 1.0, 10/18/09:
 			Add color theme support vis a vi powerpoint
 			Adapt genericitemconfig dialog to work on model item only without having to use the visual delegate
 			
+		[DONE] Auto-change slides/slide groups after X seconds
+			added field in Slide.h, now to make SlideGroupViewer and UI honor the field (and SlideGroup::autoChangeGroup() flag in MainWindow)
 		[DONE] add "sourceRect" attribute to visual item and delegates 
 		[DONE] collapse <rect> and <pos> elements in the xml to use attributes rather than child elements
 		[DONE] Need to add keyboard nudging/movement of items
@@ -183,6 +186,8 @@ Revised Task list for Release 1.0, 10/18/09:
 		[LATER] Video Capture (started impl, but again, performance is terrible. That may be due to the FormatOpts specified, or in ffmpeg, or the capture hardware - need to trace - later!)
 	
 	- Bugs:
+		if you start a group live that has an timer on it, and switch groups to another one without pausing the timer, segfault when first timer expires
+			not sure why, the timer is stopped but it still fires! Reported on qt-interest at 2009-10-16 17:08 - we'll see what response we get
 		items modified in editor dont correctly "start out" in lvie view or icons
 			see photos, blue box
 			seems to be the changes dont always get synced back to model item (position, size)

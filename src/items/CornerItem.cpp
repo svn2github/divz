@@ -556,9 +556,10 @@ void CornerItem::mouseReleaseEvent(QGraphicsSceneMouseEvent * event)
 	update();
 
 	// clicked
-	if (accepted) {
+	//if (accepted) {
 		m_content->syncToModelItem(0);
-	}
+		qDebug() << "CornerItem::mouseReleaseEvent(): synced!";
+	//}
 }
 
 void CornerItem::paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * /*widget*/)

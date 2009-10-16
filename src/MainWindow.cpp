@@ -49,6 +49,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	m_liveView->setWindowFlags(Qt::FramelessWindowHint);
 	m_liveView->view()->setBackgroundBrush(Qt::black);
 	m_liveView->setCursor(Qt::BlankCursor);
+	connect(m_liveView, SIGNAL(nextGroup()), this, SLOT(nextGroup()));
 
 	setupOutputViews();
 	
@@ -513,7 +514,7 @@ void MainWindow::setupCentralWidget()
 		m_viewControl = factory->newViewControl();
 		
 		m_viewControl->setOutputView(m_liveView);
-	
+		
 		m_outputTabs->addTab(m_viewControl,"Live");
 	}
 	
@@ -643,6 +644,20 @@ void MainWindow::groupSelected(const QModelIndex &idx)
 	m_ui->actionDelete_Slide_Group->setEnabled(true);
 	m_ui->actionSlide_Group_Properties->setEnabled(true);
 	
+}
+
+void MainWindow::nextGroup()
+{
+	QModelIndex idx = m_groupView->currentIndex();
+	int nextRow = idx.row() + 1;
+	if(nextRow >= m_doc->numGroups())
+		nextRow = 0;
+		
+	SlideGroup *nextGroup = m_docModel->groupAt(nextRow);
+	setLiveGroup(nextGroup);
+	
+	QModelIndex nextIdx = m_docModel->indexForGroup(nextGroup);
+	m_groupView->setCurrentIndex(nextIdx);
 }
 
 void MainWindow::previewSlideGroup(SlideGroup *s)

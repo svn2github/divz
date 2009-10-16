@@ -29,6 +29,9 @@ public:
 	MyGraphicsScene * scene() { return m_scene; }
 	QGraphicsView * view() { return m_view; }
 
+signals:
+	void nextGroup();
+
 public slots:
 	Slide * setSlide(Slide *);
 	Slide * setSlide(int);

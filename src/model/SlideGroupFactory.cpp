@@ -7,6 +7,7 @@
 #include <QHBoxLayout>
 #include <QPushButton>
 #include <QKeyEvent>
+#include <QLabel>
 #include <assert.h>
 
 /** SlideGroupViewMutator:: **/
@@ -46,7 +47,13 @@ SlideGroupViewControl::SlideGroupViewControl(SlideGroupViewer *g, QWidget *w )
 	: QWidget(w),
 	m_slideViewer(0),
 	m_slideModel(0),
-	m_releasingSlideGroup(false)
+	m_releasingSlideGroup(false),
+	m_changeTimer(0),
+	m_countTimer(0),
+	m_timeLabel(0),
+	m_timerState(Undefined),
+	m_currentTimeLength(0),
+	m_elapsedAtPause(0)
 {
 	QVBoxLayout * layout = new QVBoxLayout();
 	
@@ -85,13 +92,33 @@ SlideGroupViewControl::SlideGroupViewControl(SlideGroupViewer *g, QWidget *w )
 	
 	QPushButton *btn;
 	
-	btn = new QPushButton("<< Prev");
+	btn = new QPushButton(QIcon(":/data/control_start_blue.png"),"P&rev");
 	connect(btn, SIGNAL(clicked()), this, SLOT(prevSlide()));
 	hbox->addWidget(btn);
 	
-	btn = new QPushButton(">> Next");
+	m_timeLabel = new QLabel(this);
+	m_timeLabel->setEnabled(false);
+	m_timeLabel->setText("00:00");
+	m_timeLabel->setFont(QFont("Monospace",9));
+	hbox->addWidget(m_timeLabel);
+	
+	m_timeButton = new QPushButton(QIcon(":/data/action-play.png"),"&Play");
+	connect(m_timeButton, SIGNAL(clicked()), this, SLOT(toggleTimerState()));
+	m_timeButton->setEnabled(false);
+	hbox->addWidget(m_timeButton);
+	
+	btn = new QPushButton(QIcon(":/data/control_end_blue.png"),"&Next");
 	connect(btn, SIGNAL(clicked()), this, SLOT(nextSlide()));
 	hbox->addWidget(btn);
+	
+	m_elapsedTime.start();
+	
+// 	m_changeTimer = new QTimer(this);
+// 	connect(m_changeTimer, SIGNAL(timeout()), this, SLOT(nextSlide()));
+	
+	m_countTimer = new QTimer(this);
+	connect(m_countTimer, SIGNAL(timeout()), this, SLOT(updateTimeLabel()));
+	m_countTimer->setInterval(100);
 	
 	layout->addLayout(hbox);
 	setLayout(layout);
@@ -99,6 +126,105 @@ SlideGroupViewControl::SlideGroupViewControl(SlideGroupViewer *g, QWidget *w )
 	if(g)
 		setOutputView(g);
 	
+}
+
+void SlideGroupViewControl::enableAnimation(double time)
+{
+	if(DEBUG_SLIDEGROUPVIEWCONTROL)
+		qDebug() << "SlideGroupViewControl::enableAnimation(): time:"<<time;
+		
+	if(time == 0)
+	{
+		if(DEBUG_SLIDEGROUPVIEWCONTROL)
+			qDebug() << "SlideGroupViewControl::enableAnimation(): stopping all timers";
+		
+		toggleTimerState(Stopped,true);
+		m_timeButton->setEnabled(false);
+		
+		
+		if(m_changeTimer)
+		{
+			m_changeTimer->stop();
+			disconnect(m_changeTimer, 0, this,0);
+			delete m_changeTimer;
+			m_changeTimer = 0;
+		}
+		
+		return;
+	}
+	
+	if(!m_changeTimer)
+	{
+		m_changeTimer = new QTimer(this);
+		connect(m_changeTimer, SIGNAL(timeout()), this, SLOT(myFunkySlot()));
+	}
+		
+	
+	m_timeButton->setEnabled(true);
+	m_timeLabel->setText(formatTime(time));
+	
+	m_currentTimeLength = time;
+	
+	toggleTimerState(Running,true);
+}
+
+void SlideGroupViewControl::toggleTimerState(TimerState state, bool resetTimer)
+{
+	if(state == Undefined)
+		state = m_timerState == Running ? Stopped : Running;
+	m_timerState = state;
+		
+	bool flag = state == Running;
+	
+	if(DEBUG_SLIDEGROUPVIEWCONTROL)
+		qDebug() << "SlideGroupViewControl::toggleTimerState: state:"<<state<<", resetTimer:"<<resetTimer<<", flag:"<<flag;
+	
+	m_timeButton->setIcon(flag ? QIcon(":/data/action-pause.png") : QIcon(":/data/action-play.png"));
+	m_timeButton->setText(flag ? "&Pause" : "&Play");
+	m_timeLabel->setEnabled(flag);
+	
+	if(flag)
+	{
+		if(!resetTimer)
+			m_currentTimeLength -= m_elapsedAtPause/1000;
+			
+		if(DEBUG_SLIDEGROUPVIEWCONTROL)
+			qDebug() << "SlideGroupViewControl::toggleTimerState(): starting timer at:"<<m_currentTimeLength;
+		
+		if(m_changeTimer)
+			m_changeTimer->start(m_currentTimeLength * 1000);
+		m_countTimer->start();
+		m_elapsedTime.start();
+	}
+	else
+	{
+		if(m_changeTimer)
+			m_changeTimer->stop();
+		m_countTimer->stop();
+		m_elapsedAtPause = m_elapsedTime.elapsed();
+		
+		if(DEBUG_SLIDEGROUPVIEWCONTROL)
+			qDebug() << "SlideGroupViewControl::toggleTimerState(): stopping timer at:"<<(m_elapsedAtPause/1000);
+		
+		if(resetTimer)
+			m_timeLabel->setText(formatTime(0));
+	}
+		
+}
+
+QString SlideGroupViewControl::formatTime(double time)
+{
+	double min = time/60;
+	double sec = (min - (int)(min)) * 60;
+	return  (min<10? "0":"") + QString::number((int)min) + ":" +
+		(sec<10? "0":"") + QString::number((int)sec);
+
+}
+
+void SlideGroupViewControl::updateTimeLabel()
+{
+	double time = m_currentTimeLength - m_elapsedTime.elapsed()/1000;
+	m_timeLabel->setText(formatTime(time));
 }
 	
 	
@@ -112,9 +238,13 @@ void SlideGroupViewControl::slideSelected(const QModelIndex &idx)
 	if(m_releasingSlideGroup)
 		return;
 	Slide *s = m_slideModel->slideFromIndex(idx);
+	if(!s)
+		return;
 	if(DEBUG_SLIDEGROUPVIEWCONTROL)
 		qDebug() << "SlideGroupViewControl::slideSelected(): selected slide#:"<<s->slideNumber();
 	m_slideViewer->setSlide(s);
+	toggleTimerState(Stopped,true);
+	enableAnimation(s->autoChangeTime());
 }
 
 void SlideGroupViewControl::setOutputView(SlideGroupViewer *v) 
@@ -137,14 +267,24 @@ void SlideGroupViewControl::setOutputView(SlideGroupViewer *v)
 void SlideGroupViewControl::setSlideGroup(SlideGroup *g, Slide *curSlide)
 {
 	assert(g);
+	if(m_timerState == Running)
+	{
+		toggleTimerState();
+		//enableAnimation(0);
+	}
+	
 	if(DEBUG_SLIDEGROUPVIEWCONTROL)
 		qDebug()<<"SlideGroupViewControl::setSlideGroup: Loading group#"<<g->groupNumber();
 	m_slideModel->setSlideGroup(g);
+	
 	// reset seems to be required
 	m_listView->reset();
 	if(!curSlide)
 		curSlide = g->at(0);
 	m_listView->setCurrentIndex(m_slideModel->indexForSlide(curSlide));
+	
+	if(DEBUG_SLIDEGROUPVIEWCONTROL)
+		qDebug()<<"SlideGroupViewControl::setSlideGroup: DONE Loading group#"<<g->groupNumber();
 }
 
 void SlideGroupViewControl::releaseSlideGroup()
@@ -154,11 +294,23 @@ void SlideGroupViewControl::releaseSlideGroup()
 	m_listView->reset();
 	m_releasingSlideGroup = false;
 }
+
+void SlideGroupViewControl::myFunkySlot()
+{
+	if(DEBUG_SLIDEGROUPVIEWCONTROL)
+		qDebug() << "SlideGroupViewControl::myFunkySlot(): mark";
+	nextSlide();
+}
 	
 void SlideGroupViewControl::nextSlide()
 {
-	Slide *s = m_slideViewer->nextSlide();
-	m_listView->setCurrentIndex(m_slideModel->indexForSlide(s));
+	if(DEBUG_SLIDEGROUPVIEWCONTROL)
+		qDebug() << "SlideGroupViewControl::nextSlide(): mark";
+	Slide *nextSlide = m_slideViewer->nextSlide();
+	if(nextSlide)
+		m_listView->setCurrentIndex(m_slideModel->indexForSlide(nextSlide));
+	else
+		toggleTimerState(Stopped,true);
 }
 
 void SlideGroupViewControl::prevSlide()

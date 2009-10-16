@@ -115,6 +115,8 @@ void SlideGroupViewer::setSlideGroup(SlideGroup *g, Slide *startSlide)
 	//qDebug() << "SlideGroupViewer::setSlideGroup: (SceneContextHint:"<<m_scene->contextHint()<<"), setting slide group:"<<g->groupNumber();
 	if(m_slideGroup == g)
 		return;
+		
+	m_slideNum = 0;
 
 	if(m_slideGroup && m_slideGroup != g)
 	{
@@ -142,6 +144,7 @@ void SlideGroupViewer::setSlideGroup(SlideGroup *g, Slide *startSlide)
 		//qDebug() << "SlideGroupViewer::setSlideGroup(): Setting slide group #"<<g->groupNumber()<<", starting at slide:"<<startSlide;
 		m_scene->setSlide(startSlide,MyGraphicsScene::CrossFade);
 		//m_slideListView->setCurrentIndex(m_slideModel->indexForSlide(curSlide));
+		m_slideNum = m_sortedSlides.indexOf(startSlide);
 	}
 	else
 	{
@@ -170,6 +173,7 @@ Slide * SlideGroupViewer::setSlide(int x)
 Slide * SlideGroupViewer::setSlide(Slide *s)
 {
 	m_scene->setSlide(s,MyGraphicsScene::CrossFade);
+	m_slideNum = m_sortedSlides.indexOf(s);
 	return s;
 }
 
@@ -177,7 +181,19 @@ Slide * SlideGroupViewer::nextSlide()
 {
 	m_slideNum ++;
 	if(m_slideNum >= m_sortedSlides.size())
-		m_slideNum = m_sortedSlides.size() - 1;
+	{
+		if(m_slideGroup->autoChangeGroup())
+		{
+			//m_slideNum = m_sortedSlides.size() - 1;
+			emit nextGroup();
+			return 0;
+		}
+		else
+		{
+			m_slideNum = 0;
+		}
+	}
+	
 	return setSlide(m_slideNum);
 }
 

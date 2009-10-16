@@ -58,6 +58,7 @@ public slots:
 	bool openFile(const QString &);
 	void saveFile(const QString &file = "");
 	void clearAllOutputs();
+	void nextGroup();
 
 protected slots:
 	void groupsDropped(QList<SlideGroup*> list);

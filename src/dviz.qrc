@@ -42,6 +42,9 @@
         <file>data/textright.png</file>
         <file>data/textcenter.png</file>
         
+        <file>data/control_end_blue.png</file>
+        <file>data/control_start_blue.png</file>
+        
         <file>data/stock-about.png</file>
         <file>data/stock-add.png</file>
         <file>data/stock-apply.png</file>

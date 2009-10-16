@@ -34,7 +34,9 @@ protected:
 	SlideGroupViewControl *ctrl;
 };
 
-
+#include <QTime>
+class QLabel;
+class QPushButton;
 class SlideGroupViewControl : public QWidget
 {
 	Q_OBJECT
@@ -44,6 +46,7 @@ public:
 	SlideGroupViewer * view() { return m_slideViewer; }
 	virtual void setOutputView(SlideGroupViewer *);
 	
+	typedef enum TimerState { Undefined, Running, Stopped };
 public slots:
 	virtual void setSlideGroup(SlideGroup *g, Slide *curSlide=0);
 	virtual void releaseSlideGroup();
@@ -51,17 +54,34 @@ public slots:
 	virtual void prevSlide();
 	virtual void setCurrentSlide(int);
 	virtual void setCurrentSlide(Slide*);
+	virtual void toggleTimerState(TimerState state = Undefined, bool resetTimer = false);
+	
+	virtual void myFunkySlot();
 	
 protected slots:
 	virtual void slideSelected(const QModelIndex &);
 	virtual void currentChanged(const QModelIndex &, const QModelIndex &);
 	
+	virtual void updateTimeLabel();
+	virtual void enableAnimation(double time = 0);
+	
+	
 protected:
+	QString formatTime(double);
+
 	SlideGroupViewer *m_slideViewer;
 	SlideGroupListModel *m_slideModel;	
 	SlideGroupViewControlListView *m_listView;
 	friend class SlideGroupViewControlListView;
 	bool m_releasingSlideGroup;
+	QTimer * m_changeTimer;
+	QTimer * m_countTimer;
+	QTime m_elapsedTime;
+	QLabel * m_timeLabel;
+	QPushButton * m_timeButton;
+	TimerState m_timerState;
+	double m_currentTimeLength;
+	double m_elapsedAtPause;
 };
 
 class AbstractSlideGroupEditor : public QMainWindow
