@@ -31,6 +31,7 @@ namespace Ui {
 }
 
 class SlideGroupViewControl;
+class SongSlideGroup;
 
 class MainWindow : public QMainWindow {
 	Q_OBJECT
@@ -70,6 +71,10 @@ protected slots:
 	void songFilterChanged(const QString&);
 	void songFilterReset();
 	void songSearchReturnPressed();
+	void addNewSong();
+	void newSongAccepted();
+	void editSongInDB();
+	void deleteCurrentSong();
 
 	void actionEditGroup();
 	void actionNewGroup();
@@ -129,6 +134,8 @@ private:
 	Document * m_doc;
 	
 	SlideGroupViewControl * m_viewControl;
+	
+	SongSlideGroup * m_tmpNewSong;
 	
 	/** static */
 	static MainWindow * static_mainWindow;	

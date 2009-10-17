@@ -323,6 +323,16 @@ void SlideEditorWindow::setupToolbar()
 	
 	toolbar->addSeparator();
 	
+	QAction  *centerHor = toolbar->addAction(QIcon(":data/obj-center-hor.png"), "Center Items Horizontally");
+	centerHor->setShortcut(QString("CTRL+SHIFT+H"));
+	connect(centerHor, SIGNAL(triggered()), this, SLOT(centerSelHorz()));
+	
+	QAction  *centerVer = toolbar->addAction(QIcon(":data/obj-center-ver.png"), "Center Items Vertically");
+	centerVer->setShortcut(QString("CTRL+SHIFT+V"));
+	connect(centerVer, SIGNAL(triggered()), this, SLOT(centerSelVert()));
+	
+	toolbar->addSeparator();
+	
 	QAction  *newSlide = toolbar->addAction(QIcon(":data/stock-add.png"), "New Slide");
 	newSlide->setShortcut(QString("CTRL+M"));
 	connect(newSlide, SIGNAL(triggered()), this, SLOT(newSlide()));
@@ -400,6 +410,46 @@ void SlideEditorWindow::setCurrentSlideLive()
 	if(!m_slideGroup)
 		return;
 	MainWindow::mw()->setLiveGroup(m_slideGroup,m_scene->slide());
+}
+
+
+void SlideEditorWindow::centerSelHorz()
+{
+	QList<QGraphicsItem *> selection = m_scene->selectedItems();
+	QRectF scene = m_scene->sceneRect();
+		
+	qreal halfX = scene.width()/2;
+	qreal halfY = scene.height()/2;
+	foreach(QGraphicsItem *item, selection)
+	{
+		AbstractContent * content = dynamic_cast<AbstractContent *>(item);
+		if(content)
+		{
+			QRectF r = content->boundingRect();
+			content->setPos( halfX - r.width()/2, content->pos().y() );
+			content->syncToModelItem(0);
+		}
+	}
+}
+
+
+void SlideEditorWindow::centerSelVert()
+{
+	QList<QGraphicsItem *> selection = m_scene->selectedItems();
+	QRectF scene = m_scene->sceneRect();
+		
+	qreal halfX = scene.width()/2;
+	qreal halfY = scene.height()/2;
+	foreach(QGraphicsItem *item, selection)
+	{
+		AbstractContent * content = dynamic_cast<AbstractContent *>(item);
+		if(content)
+		{
+			QRectF r = content->boundingRect();
+			content->setPos( content->pos().x(), halfY - r.height()/2 );
+			content->syncToModelItem(0);
+		}
+	}
 }
 
 void SlideEditorWindow::selectionChanged()

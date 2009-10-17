@@ -76,7 +76,7 @@ Revised Task list for Release 1.0, 10/18/09:
 		[DONE] - SVG Item if we have time
 			internal to image item
 		[LATER] - Gradients - can settle for making gradients in gimp and import as photo, but need to eventually have support direclty in dviz
-		- Layout asissts - center objects vert/horz
+		[STARTED] - Layout asissts - center objects vert/horz
 			- need hint for this (e.g. songs) to auto adjust - maybe?
 			- should be easy - have toolbar, just add actions and a slot, do calcs, set position
 	
@@ -105,7 +105,7 @@ Revised Task list for Release 1.0, 10/18/09:
 		
 		= Songs =
 			Save song templates/bg in a "template collection"
-			Need song new/edit/delete functionality
+			[STARTED] Need song new/edit/delete functionality
 			Auto-sizing song text should be an option that can be enabled/disabled
 				if not autosize, pull size from template / textobx
 			option of font family should be available for song

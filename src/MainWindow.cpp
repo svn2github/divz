@@ -20,6 +20,7 @@
 
 #include "songdb/SongSlideGroup.h"
 #include "songdb/SongRecord.h"
+#include "songdb/SongEditorWindow.h"
 
 MainWindow * MainWindow::static_mainWindow = 0;
 
@@ -354,9 +355,27 @@ void MainWindow::setupSongList()
 	m_songList->resizeColumnsToContents();
 	m_songList->resizeRowsToContents();
 	
+	// setup buttons at bottom
+	QHBoxLayout *hbox2 = new QHBoxLayout();
+	QPushButton *btn;
+	
+	btn = new QPushButton(QIcon(":/data/stock-new.png"),"&New Song");
+	connect(btn, SIGNAL(clicked()), this, SLOT(addNewSong()));
+	hbox2->addWidget(btn);
+	
+	btn = new QPushButton(QIcon(":/data/stock-edit.png"),"&Edit Song");
+	connect(btn, SIGNAL(clicked()), this, SLOT(editSongInDB()));
+	hbox2->addWidget(btn);
+	
+	btn = new QPushButton(QIcon(":/data/stock-delete.png"),"&Delete Song");
+	connect(btn, SIGNAL(clicked()), this, SLOT(deleteCurrentSong()));
+	hbox2->addWidget(btn);
+	
+	
 	// finish widget setup
 	vbox->addLayout(hbox);
 	vbox->addWidget(m_songList);
+	vbox->addLayout(hbox2);
 	m_ui->tabSongs->setLayout(vbox);
 	
 	connect(m_songList, SIGNAL(doubleClicked(const QModelIndex &)), this, SLOT(songDoubleClicked(const QModelIndex &)));
@@ -367,6 +386,48 @@ void MainWindow::songSearchReturnPressed()
 	QModelIndex idx = m_songProxyModel->index(0,0);
 	if(idx.isValid())
 		songDoubleClicked(idx);
+}
+
+void MainWindow::addNewSong()
+{
+	SongRecord * song = new SongRecord();
+	m_tmpNewSong = new SongSlideGroup();
+	m_tmpNewSong->setSong(song);
+	
+	SongEditorWindow * editor = new SongEditorWindow();
+	editor->setSlideGroup(m_tmpNewSong);
+	
+	connect(editor,SIGNAL(accepted()), this, SLOT(newSongAccepted()));
+}
+
+void MainWindow::newSongAccepted()
+{
+	SongRecord * song = m_tmpNewSong->song();
+	SongRecord::addSong(song);
+	
+	song->setText(m_tmpNewSong->text());
+	
+	// LOTS TODO HERE:
+	// - make new song seleted
+	// - make sure editor is deleted
+	// - handel editor "cancel" pressed
+}
+
+void MainWindow::deleteCurrentSong()
+{
+	QModelIndex idx = m_songProxyModel->mapToSource(m_songList->currentIndex());
+	QSqlRecord record = m_songTableModel->record(idx.row());
+	SongRecord *song = SongRecord::fromSqlRecord(record);
+	if(QMessageBox::warning(this,"Really Delete Song?","Are you sure you want to delete this song? This cannot be undone.",QMessageBox::Ok | QMessageBox::Cancel) 
+		== QMessageBox::Ok)
+	{
+		SongRecord::deleteSong(song);
+	}
+}
+
+void MainWindow::editSongInDB() 
+{
+	// TODO
 }
 
 void MainWindow::songDoubleClicked(const QModelIndex &idx)

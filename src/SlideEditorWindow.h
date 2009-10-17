@@ -59,6 +59,9 @@ private slots:
 	void textPlus();
 	void textMinus();
 	
+	void centerSelVert();
+	void centerSelHorz();
+	
 	void slideSelected(const QModelIndex &);
 	
 	void slidesDropped(QList<Slide*>);

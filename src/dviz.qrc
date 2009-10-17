@@ -41,6 +41,8 @@
         <file>data/textleft.png</file>
         <file>data/textright.png</file>
         <file>data/textcenter.png</file>
+        <file>data/obj-center-hor.png</file>
+        <file>data/obj-center-ver.png</file>
         
         <file>data/control_end_blue.png</file>
         <file>data/control_start_blue.png</file>
