@@ -95,6 +95,8 @@ SlideGroupViewControl::SlideGroupViewControl(SlideGroupViewer *g, QWidget *w )
 	btn = new QPushButton(QIcon(":/data/control_start_blue.png"),"P&rev");
 	connect(btn, SIGNAL(clicked()), this, SLOT(prevSlide()));
 	hbox->addWidget(btn);
+
+	hbox->addStretch(1);
 	
 	m_timeLabel = new QLabel(this);
 	m_timeLabel->setEnabled(false);
@@ -107,9 +109,13 @@ SlideGroupViewControl::SlideGroupViewControl(SlideGroupViewer *g, QWidget *w )
 	m_timeButton->setEnabled(false);
 	hbox->addWidget(m_timeButton);
 	
+	hbox->addStretch(1);
+
 	btn = new QPushButton(QIcon(":/data/control_end_blue.png"),"&Next");
 	connect(btn, SIGNAL(clicked()), this, SLOT(nextSlide()));
 	hbox->addWidget(btn);
+
+
 	
 	m_elapsedTime.start();
 	

@@ -10,10 +10,10 @@ SlideGroup::SlideGroup() :
 	, m_iconFile("")
 	, m_autoChangeGroup(true)
 {
-		
+
 }
 
-SlideGroup::~SlideGroup() 
+SlideGroup::~SlideGroup()
 {
 	qDeleteAll(m_slides);
 }
@@ -26,7 +26,7 @@ void SlideGroup::addSlide(Slide *slide)
 	m_slides.append(slide);
 	sortSlides();
 	connect(slide,SIGNAL(slideItemChanged(AbstractItem *, QString, QString, QVariant, QVariant)),this,SLOT(slideItemChanged(AbstractItem *, QString, QString, QVariant, QVariant)));
-	
+
 	//qDebug("SlideGroup:: slide ADDED");
 	emit slideChanged(slide, "add", 0, "", "", QVariant());
 }
@@ -52,11 +52,11 @@ void SlideGroup::slideItemChanged(AbstractItem *item, QString operation, QString
 }
 
 void SlideGroup::setGroupNumber(int x)	   { m_groupNumber = x; }
-void SlideGroup::setGroupId(int x)	   { m_groupId = x; } 
+void SlideGroup::setGroupId(int x)	   { m_groupId = x; }
 void SlideGroup::setGroupType(GroupType t) { m_groupType = t; }
-void SlideGroup::setGroupTitle(QString s)  
+void SlideGroup::setGroupTitle(QString s)
 {
-	m_groupTitle = s; 
+	m_groupTitle = s;
 	emit slideChanged(0, "change", 0, "change", "groupTitle", s);
 }
 void SlideGroup::setIconFile(QString s)    { m_iconFile = s; }
@@ -72,17 +72,18 @@ bool SlideGroup::fromXml(QDomElement & pe)
 	setGroupType((GroupType)pe.attribute("type").toInt());
 	setGroupTitle(pe.attribute("title"));
 	setIconFile(pe.attribute("icon"));
-	
+	setAutoChangeGroup((bool)pe.attribute("auto").toInt());
+
 	// for each slide
-	for (QDomElement element = pe.firstChildElement(); !element.isNull(); element = element.nextSiblingElement()) 
+	for (QDomElement element = pe.firstChildElement(); !element.isNull(); element = element.nextSiblingElement())
 	{
 		if(element.tagName() == "slide")
 		{
 			Slide *s = new Slide();
 			addSlide(s);
-			
+
 			// restore the item, and delete it if something goes wrong
-			if (!s->fromXml(element)) 
+			if (!s->fromXml(element))
 			{
 				removeSlide(s);
 				delete s;
@@ -90,9 +91,9 @@ bool SlideGroup::fromXml(QDomElement & pe)
 			}
 		}
 	}
-	
+
 	sortSlides();
-	
+
 	return true;
 }
 
@@ -103,14 +104,15 @@ void SlideGroup::toXml(QDomElement & pe) const
 	pe.setAttribute("type",(int)groupType());
 	pe.setAttribute("title",groupTitle());
 	pe.setAttribute("icon",iconFile());
-	
+	pe.setAttribute("auto",(int)autoChangeGroup());
+
 	QDomDocument doc = pe.ownerDocument();
-	
-	foreach (Slide * slide, m_slides) 
+
+	foreach (Slide * slide, m_slides)
 	{
 		QDomElement element = doc.createElement("slide");
 		pe.appendChild(element);
-		slide->toXml(element);	
+		slide->toXml(element);
 	}
 }
 

@@ -129,6 +129,19 @@ Revised Task list for Release 1.0, 10/18/09:
 			Add color theme support vis a vi powerpoint
 			Adapt genericitemconfig dialog to work on model item only without having to use the visual delegate
 			
+			Turn timer red when < 3 seconds (3...2...1)
+			Make timer label bold & larger
+			
+			dialog titles on slide/group dialogs
+			show timeout as second line in slide list model
+			add btn to slide timeout button for zero and for "guess"
+			rename 2nd option in group dialog from "do nothing" to "loop"
+			move group options button further to right in editor
+			
+			add next/prev btns to preview widget
+			
+			add key accelerators to slide group options dialog
+			
 		[DONE] Auto-change slides/slide groups after X seconds
 			added field in Slide.h, now to make SlideGroupViewer and UI honor the field (and SlideGroup::autoChangeGroup() flag in MainWindow)
 		[DONE] add "sourceRect" attribute to visual item and delegates 
@@ -186,6 +199,7 @@ Revised Task list for Release 1.0, 10/18/09:
 		[LATER] Video Capture (started impl, but again, performance is terrible. That may be due to the FormatOpts specified, or in ffmpeg, or the capture hardware - need to trace - later!)
 	
 	- Bugs:
+		When setting live from editor (and other times?) and the group changes, need to change selected group in document list model
 		if you start a group live that has an timer on it, and switch groups to another one without pausing the timer, segfault when first timer expires
 			not sure why, the timer is stopped but it still fires! Reported on qt-interest at 2009-10-16 17:08 - we'll see what response we get
 		items modified in editor dont correctly "start out" in lvie view or icons
@@ -204,11 +218,15 @@ Revised Task list for Release 1.0, 10/18/09:
 				other fixes (below) may have fixed this - need to confirm
 				
 		[NEED CONFIRMED] Win32: If blank document "<document/>", crash when add group then click group
-		[NEED CONFIRMED] Win32: File->New crashes
+		win32: File->New crashes
 				probably fixed, need to verify 
 				Nope! Still need work.
 				Crashes even with non-live items
 				Confirmed that it "new" works on linux tho - need to debug on windows then - drats
+				confirmed it still "doesnt work" as of 10-16
+					freezes program
+		win32: Open file crashes
+					
 		
 		[REJECTED] when zooming in on text using mouse wheel, it doesn't re-render for new scale  
 				due to live performance that the caching improves, I'm not going to "fix" this right now
