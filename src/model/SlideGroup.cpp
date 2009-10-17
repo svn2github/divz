@@ -8,7 +8,7 @@ SlideGroup::SlideGroup() :
 	, m_groupType(Generic)
 	, m_groupTitle("")
 	, m_iconFile("")
-	, m_autoChangeGroup(true)
+	, m_autoChangeGroup(false)
 {
 
 }

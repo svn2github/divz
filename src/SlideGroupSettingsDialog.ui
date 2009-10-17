@@ -23,7 +23,7 @@
       <item>
        <widget class="QLabel" name="label_2">
         <property name="text">
-         <string>Group Title:</string>
+         <string>Group &amp;Title:</string>
         </property>
        </widget>
       </item>
@@ -49,19 +49,19 @@ when that slide is finished displaying?</string>
        </widget>
       </item>
       <item>
+	      <widget class="QRadioButton" name="rNothing">
+		      <property name="text">
+			      <string>&amp;Loop to the start of this slide group</string>
+		      </property>
+	      </widget>
+      </item>
+      <item>
        <widget class="QRadioButton" name="rChange">
         <property name="text">
-         <string>Automatically show first slide of next slide group</string>
+         <string>&amp;Automatically show first slide of next slide group</string>
         </property>
         <property name="checked">
          <bool>true</bool>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QRadioButton" name="rNothing">
-        <property name="text">
-         <string>Don't do anything</string>
         </property>
        </widget>
       </item>

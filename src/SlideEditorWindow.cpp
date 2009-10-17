@@ -295,15 +295,16 @@ void SlideEditorWindow::setupToolbar()
 	QToolBar *toolbar = addToolBar("main toolbar");
 	toolbar->setObjectName("maintoolbar");
 	
+	QAction  *slideProp = toolbar->addAction(QIcon(":data/stock-properties.png"), "Slide Properties");
+	connect(slideProp, SIGNAL(triggered()), this, SLOT(slideProperties()));
+	
+	toolbar->addSeparator();
+	
 	QAction  *groupProp = toolbar->addAction(QIcon(":data/stock-preferences.png"), "Slide Group Properties");
 	connect(groupProp, SIGNAL(triggered()), this, SLOT(groupProperties()));
 	
 	toolbar->addSeparator();
 	
-	QAction  *slideProp = toolbar->addAction(QIcon(":data/stock-properties.png"), "Slide Properties");
-	connect(slideProp, SIGNAL(triggered()), this, SLOT(slideProperties()));
-	
-	toolbar->addSeparator();
 	
 	QAction  *newAction = toolbar->addAction(QIcon(":data/insert-text-24.png"), "New Text Item");
 	newAction->setShortcut(QString("CTRL+SHIFT+T"));
@@ -426,7 +427,7 @@ void SlideEditorWindow::centerSelHorz()
 		if(content)
 		{
 			QRectF r = content->boundingRect();
-			content->setPos( halfX - r.width()/2, content->pos().y() );
+			content->setPos( halfX - r.width()/2 - r.left() + scene.left(), content->pos().y() );
 			content->syncToModelItem(0);
 		}
 	}
@@ -446,7 +447,7 @@ void SlideEditorWindow::centerSelVert()
 		if(content)
 		{
 			QRectF r = content->boundingRect();
-			content->setPos( content->pos().x(), halfY - r.height()/2 );
+			content->setPos( content->pos().x(), halfY - r.height()/2 - r.top() + scene.top());
 			content->syncToModelItem(0);
 		}
 	}

@@ -75,10 +75,11 @@ Revised Task list for Release 1.0, 10/18/09:
 		[DONE] - Image Item
 		[DONE] - SVG Item if we have time
 			internal to image item
-		[LATER] - Gradients - can settle for making gradients in gimp and import as photo, but need to eventually have support direclty in dviz
-		[STARTED] - Layout asissts - center objects vert/horz
+		[DONE] - Layout asissts - center objects vert/horz
 			- need hint for this (e.g. songs) to auto adjust - maybe?
 			- should be easy - have toolbar, just add actions and a slot, do calcs, set position
+		[LATER] - Gradients - can settle for making gradients in gimp and import as photo, but need to eventually have support direclty in dviz
+		
 	
 	- Improvements:
 		
@@ -135,12 +136,16 @@ Revised Task list for Release 1.0, 10/18/09:
 			[DONE] dialog titles on slide/group dialogs
 			[DONE] show timeout as second line in slide list model
 			add btn to slide timeout button for zero and for "guess"
-			rename 2nd option in group dialog from "do nothing" to "loop"
-			move group options button further to right in editor
+			[DONE] rename 2nd option in group dialog from "do nothing" to "loop"
+			[DONE] move group options button further to right in editor
 			
 			add next/prev btns to preview widget
 			
-			add key accelerators to slide group options dialog
+			[DONE] add key accelerators to slide group options dialog
+			
+			[STARTED] make keyboard movements snap to half-grid points
+				harder than I thought, because kbd is done in mygraphicsscene, but snapping is done in abstract content
+				need to set a flag maybe?
 			
 			
 			

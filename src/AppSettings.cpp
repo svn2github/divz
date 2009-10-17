@@ -146,13 +146,15 @@ void AppSettings::setThirdGuideEnabled(bool flag)
 		m_thirdGuideEnabled = flag;
 }
 
-QPointF AppSettings::snapToGrid(QPointF newPos)
+QPointF AppSettings::snapToGrid(QPointF newPos, bool halfGrid)
 {
 	if(gridEnabled())
 	{
 		QSizeF sz = AppSettings::gridSize();
-		newPos.setX(((int)(newPos.x() / sz.width() )) * sz.width());
-		newPos.setY(((int)(newPos.y() / sz.height())) * sz.height());
+		qreal x = sz.width()  / (halfGrid ? 2:1);
+		qreal y = sz.height() / (halfGrid ? 2:1);
+		newPos.setX(((int)(newPos.x() / x)) * x);
+		newPos.setY(((int)(newPos.y() / y)) * y);
 	}
 	return newPos;
 }

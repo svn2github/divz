@@ -30,7 +30,7 @@ public:
 	static bool thirdGuideEnabled() { return m_thirdGuideEnabled; }
 	static void setThirdGuideEnabled(bool);
 
-	static QPointF snapToGrid(QPointF);
+	static QPointF snapToGrid(QPointF, bool halfGird = false);
 
 
 	static double liveAspectRatio() { return m_liveAspect; }
