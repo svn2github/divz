@@ -48,6 +48,10 @@ public:
  	
  	// Not from AbstractListModel, just for utility
 	QString itemMimeType() const { return "application/x-dviz-document-listmodel-item"; }
+		
+		
+	void releaseDocument();
+	
 	
 signals:
 	void groupsDropped(QList<SlideGroup*>);

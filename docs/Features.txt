@@ -129,11 +129,11 @@ Revised Task list for Release 1.0, 10/18/09:
 			Add color theme support vis a vi powerpoint
 			Adapt genericitemconfig dialog to work on model item only without having to use the visual delegate
 			
-			Turn timer red when < 3 seconds (3...2...1)
-			Make timer label bold & larger
+			[DONE] Turn timer red when < 3 seconds (3...2...1)
+			[DONE] Make timer label bold & larger
 			
-			dialog titles on slide/group dialogs
-			show timeout as second line in slide list model
+			[DONE] dialog titles on slide/group dialogs
+			[DONE] show timeout as second line in slide list model
 			add btn to slide timeout button for zero and for "guess"
 			rename 2nd option in group dialog from "do nothing" to "loop"
 			move group options button further to right in editor
@@ -141,6 +141,9 @@ Revised Task list for Release 1.0, 10/18/09:
 			add next/prev btns to preview widget
 			
 			add key accelerators to slide group options dialog
+			
+			
+			
 			
 		[DONE] Auto-change slides/slide groups after X seconds
 			added field in Slide.h, now to make SlideGroupViewer and UI honor the field (and SlideGroup::autoChangeGroup() flag in MainWindow)
@@ -199,15 +202,17 @@ Revised Task list for Release 1.0, 10/18/09:
 		[LATER] Video Capture (started impl, but again, performance is terrible. That may be due to the FormatOpts specified, or in ffmpeg, or the capture hardware - need to trace - later!)
 	
 	- Bugs:
+		when closing and have not saved yet, first ASK if they want to save before showing save as dialog
 		When setting live from editor (and other times?) and the group changes, need to change selected group in document list model
-		if you start a group live that has an timer on it, and switch groups to another one without pausing the timer, segfault when first timer expires
-			not sure why, the timer is stopped but it still fires! Reported on qt-interest at 2009-10-16 17:08 - we'll see what response we get
+			
 		items modified in editor dont correctly "start out" in lvie view or icons
-			see photos, blue box
-			seems to be the changes dont always get synced back to model item (position, size)
-			now it updates live when editing, but goint to diff slide then going back - starts at old position
+				see photos, blue box
+				seems to be the changes dont always get synced back to model item (position, size)
+				now it updates live when editing, but goint to diff slide then going back - starts at old position
 		qt4.6b-win32: Adding a new video item or changing filename of existing item causes program crash
-		qt4.6b-win32: chaing document aspect ratio doesnt affect slide editor until program restart
+		[NEED CONFIRMED] qt4.6b-win32: chaing document aspect ratio doesnt affect slide editor until program restart
+				should be fixed thanks to changes made below .. i think
+				
 		using toolbar, set font size to 1pt, zoom in so text is in view (blob of black), and then press "up size" btn - segfault
 		close all open editors on closing mainwindow
 		Rotating a boxcontent causes very wierd pen width scaling issues in previews
@@ -217,17 +222,43 @@ Revised Task list for Release 1.0, 10/18/09:
 		[NEED CONFIRMED] On windows, when setting video item live, it doesnt play unless you dbl-click the slide again
 				other fixes (below) may have fixed this - need to confirm
 				
-		[NEED CONFIRMED] Win32: If blank document "<document/>", crash when add group then click group
-		win32: File->New crashes
+		[ON HOLD] If blank document "<document/>", crash when add group then click group
+				doesnt crash any more, but qpainter reports all sorts of errors on console when trying to render the icon and the group never goes live
+				this would be considered a corrupt file and right now I dont have a gracious way of detecting this
+				however, we must handle corrupt files to some extent
+					preferably, detect the file is corrupt and refuse to load 
+				
+				
+		[NEED CONFIRMED] win32: File->New crashes
 				probably fixed, need to verify 
 				Nope! Still need work.
 				Crashes even with non-live items
 				Confirmed that it "new" works on linux tho - need to debug on windows then - drats
 				confirmed it still "doesnt work" as of 10-16
 					freezes program
-		win32: Open file crashes
+				confirmed it DOES work as of 10-16 on *linux*
+				should work now with code changes (releaseDocument() method added)
+				
+		[NEED CONFIRMED] Open file crashes
+				crashes on both win32 and linux
+				should work now with code changes (releaseDocument() method added)
 					
+		= Show Stoppers =
+			[FIXED] file open crashing
+				fixed crashing
+			[FIXED] now opening multislide file only show first group
+				had to call begin/end remove rows in the model
+			[NEED CONFIRMED] file new crashing
+				possibly related to the other crashing of file->open - added releaseDocument() to doc list model
+			[FIXED] file open doesnt adjust AR in editor correctly
+			[NEED CONFIRMED] jpeg problems on windows
+				check if building in debug or release mode
+			
 		
+		[FIXED] if you start a group live that has an timer on it, and switch groups to another one without pausing the timer, segfault when first timer expires
+				not sure why, the timer is stopped but it still fires! Reported on qt-interest at 2009-10-16 17:08 - we'll see what response we get
+				suggestion made to use internal locking variable - will try
+				had to delete the original view control when chaging factories
 		[REJECTED] when zooming in on text using mouse wheel, it doesn't re-render for new scale  
 				due to live performance that the caching improves, I'm not going to "fix" this right now
 		[FIXED] Text editor in slide still white sometimes

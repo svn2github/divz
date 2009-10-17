@@ -37,12 +37,13 @@ MainWindow::MainWindow(QWidget *parent) :
 	
 	m_ui->setupUi(this);
 	
-	m_editWin = new SlideEditorWindow();
-	
 	m_docModel = new DocumentListModel();
 	
 	if(!openFile("test.xml"))
 		actionNew();
+	
+	// init the editor win AFTER load/new so that editor win starts out with the correct aspect ratio	
+	m_editWin = new SlideEditorWindow();
 	
 	// setup live view before central widget because central widget uses live view in the view control code
 	m_liveView = new SlideGroupViewer();
@@ -215,6 +216,8 @@ void MainWindow::actionNew()
 	if(m_doc)
 	{
 		clearAllOutputs();
+		
+		m_docModel->releaseDocument();
 		delete m_doc;
 	}
 		
@@ -245,6 +248,8 @@ bool MainWindow::openFile(const QString & file)
 			m_doc->save();
 		
 		clearAllOutputs();
+		
+		m_docModel->releaseDocument();
 		delete m_doc;
 	}
 	
@@ -254,15 +259,17 @@ bool MainWindow::openFile(const QString & file)
 	//r.readSlide(m_slide);
 	setWindowTitle(file + " - DViz");
 	
-	
-	
+	//qDebug()<<"MainWindow::open(): "<<file<<", oldAspect:"<<oldAspect<<", new:"<<m_doc->aspectRatio();
 	if(oldAspect != m_doc->aspectRatio())
 	{
-		//qDebug()<<"mainwindow open:"<<file<<", oldAspect:"<<oldAspect<<", new:"<<m_doc->aspectRatio();
+		//qDebug()<<"MainWindow::open(): emitting aspectRatioChanged()"; 
 		emit aspectRatioChanged(m_doc->aspectRatio());
 	}
 		
+// 	qDebug() << "MainWindow::open(): m_docModel->setDocument() - start";
+// 	printf("MainWindow::open(): m_docModel ptr: %p\n",m_docModel);
 	m_docModel->setDocument(m_doc);
+//	qDebug() << "MainWindow::open(): m_docModel->setDocument() - end";
 	
 	return true;
 }
@@ -690,7 +697,14 @@ void MainWindow::setLiveGroup(SlideGroup *newGroup, Slide *currentSlide)
 		
 		if(factory)
 		{
+			//qDebug() << "MainWindow::setLiveGroup(): got new factory, initalizing";
 			m_outputTabs->removeTab(m_outputTabs->indexOf(m_viewControl));
+			if(m_viewControl)
+			{
+				delete m_viewControl;
+				m_viewControl = 0;
+			}	
+			
 			m_viewControl = factory->newViewControl();
 			m_viewControl->setOutputView(m_liveView);
 			m_outputTabs->addTab(m_viewControl,"Live");

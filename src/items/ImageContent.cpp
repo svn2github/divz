@@ -215,8 +215,8 @@ void ImageContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * op
 			
 		double x = modelItem()->shadowOffsetX();
 		double y = modelItem()->shadowOffsetY();
-		x += x == 0 ? 0 : x>0 ? penWidth : -penWidth;
-		y += y == 0 ? 0 : y>0 ? penWidth : -penWidth;
+// 		x += x == 0 ? 0 : x>0 ? penWidth : -penWidth;
+// 		y += y == 0 ? 0 : y>0 ? penWidth : -penWidth;
 			
 		if(modelItem()->shadowBlurRadius() == 0)
 		{

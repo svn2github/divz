@@ -11,6 +11,8 @@ SlideGroupSettingsDialog::SlideGroupSettingsDialog(SlideGroup *g, QWidget *paren
     connect(m_ui->rChange, SIGNAL(toggled(bool)), this, SLOT(autoChangeGroup(bool)));
     m_ui->title->setText(m_slideGroup->groupTitle().isEmpty() ? QString("Group %1").arg(m_slideGroup->groupNumber()+1) : m_slideGroup->groupTitle());
     connect(m_ui->title, SIGNAL(textChanged(const QString&)), this, SLOT(titleChanged(const QString&)));
+    
+    setWindowTitle("Slide Group Settings");
 }
 
 SlideGroupSettingsDialog::~SlideGroupSettingsDialog()

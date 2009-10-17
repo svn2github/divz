@@ -253,11 +253,16 @@ int SlideGroupListModel::rowCount(const QModelIndex &/*parent*/) const
 
 Slide * SlideGroupListModel::slideFromIndex(const QModelIndex &index)
 {
-	return m_sortedSlides.at(index.row());
+	if(!index.isValid())
+		return 0;
+	return slideAt(index.row());
 }
 
 Slide * SlideGroupListModel::slideAt(int row)
 {
+	if(row < 0 || row >= m_sortedSlides.size())
+		return 0;
+			
 	return m_sortedSlides.at(row);
 }
 
@@ -286,7 +291,10 @@ QVariant SlideGroupListModel::data(const QModelIndex &index, int role) const
 	if (role == Qt::DisplayRole)
 	{
 		//qDebug() << "SlideGroupListModel::data: VALID:"<<index.row();
-		return QString("Slide %1").arg(m_sortedSlides.at(index.row())->slideNumber()+1);
+		
+		Slide *slide = m_sortedSlides.at(index.row());
+		return QString("Slide %1").arg(slide->slideNumber()+1) +
+			(slide->autoChangeTime() > 0 ? QString("\n%1 secs").arg(slide->autoChangeTime()) : QString());
 	}
 	else if(Qt::DecorationRole == role)
 	{

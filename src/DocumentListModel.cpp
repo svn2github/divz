@@ -149,21 +149,36 @@ bool group_num_compare(SlideGroup *a, SlideGroup *b)
 	return (a && b) ? a->groupNumber() < b->groupNumber() : true;
 }
 
+void DocumentListModel::releaseDocument()
+{
+	int sz = m_doc->groupList().size();
+	beginRemoveRows(QModelIndex(),0,sz); // hack - yes, I know
+	
+	disconnect(m_doc,0,this,0);
+	m_doc = 0;
+	m_sortedGroups.clear();
+	
+	endRemoveRows();
+}
+
 void DocumentListModel::setDocument(Document *doc)
 {
+// 	printf("DocumentListModel::setDocument: old doc ptr: %p\n",m_doc);
+// 	printf("DocumentListModel::setDocument: new doc ptr: %p\n",doc);
 	//qDebug() << "DocumentListModel::setDocument: setting slide group:"<<g->groupNumber();
 	if(m_doc && m_doc != doc)
-	{
-		disconnect(m_doc,0,this,0);
-	}
+		releaseDocument();
 	
-	
-	if(m_doc != doc)
-		connect(doc,SIGNAL(slideGroupChanged(SlideGroup *, QString, Slide *, QString, AbstractItem *, QString, QString, QVariant)),this,SLOT(slideGroupChanged(SlideGroup *, QString, Slide *, QString, AbstractItem *, QString, QString, QVariant)));
+	connect(doc,SIGNAL(slideGroupChanged(SlideGroup *, QString, Slide *, QString, AbstractItem *, QString, QString, QVariant)),this,SLOT(slideGroupChanged(SlideGroup *, QString, Slide *, QString, AbstractItem *, QString, QString, QVariant)));
 	
 	m_doc = doc;
 	
+	int sz = m_doc->groupList().size();
+	beginInsertRows(QModelIndex(),0,sz);
+	
 	internalSetup();
+	
+	endInsertRows();
 }
 
 void DocumentListModel::internalSetup()
@@ -171,6 +186,8 @@ void DocumentListModel::internalSetup()
 	QList<SlideGroup*> glist = m_doc->groupList();
 	qSort(glist.begin(), glist.end(), group_num_compare);
 	m_sortedGroups = glist;
+	
+	//qDebug() << "DocumentListModel::internalSetup(): glist.size(): "<<glist.size();
 
 	QModelIndex top    = indexForGroup(m_sortedGroups.first()),
 		    bottom = indexForGroup(m_sortedGroups.last());

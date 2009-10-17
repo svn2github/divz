@@ -101,7 +101,7 @@ SlideGroupViewControl::SlideGroupViewControl(SlideGroupViewer *g, QWidget *w )
 	m_timeLabel = new QLabel(this);
 	m_timeLabel->setEnabled(false);
 	m_timeLabel->setText("00:00");
-	m_timeLabel->setFont(QFont("Monospace",9));
+	m_timeLabel->setFont(QFont("Monospace",12,QFont::Bold));
 	hbox->addWidget(m_timeLabel);
 	
 	m_timeButton = new QPushButton(QIcon(":/data/action-play.png"),"&Play");
@@ -119,8 +119,9 @@ SlideGroupViewControl::SlideGroupViewControl(SlideGroupViewer *g, QWidget *w )
 	
 	m_elapsedTime.start();
 	
-// 	m_changeTimer = new QTimer(this);
-// 	connect(m_changeTimer, SIGNAL(timeout()), this, SLOT(nextSlide()));
+	m_changeTimer = new QTimer(this);
+	m_changeTimer->setSingleShot(true);
+	connect(m_changeTimer, SIGNAL(timeout()), this, SLOT(nextSlide()));
 	
 	m_countTimer = new QTimer(this);
 	connect(m_countTimer, SIGNAL(timeout()), this, SLOT(updateTimeLabel()));
@@ -146,25 +147,9 @@ void SlideGroupViewControl::enableAnimation(double time)
 		
 		toggleTimerState(Stopped,true);
 		m_timeButton->setEnabled(false);
-		
-		
-		if(m_changeTimer)
-		{
-			m_changeTimer->stop();
-			disconnect(m_changeTimer, 0, this,0);
-			delete m_changeTimer;
-			m_changeTimer = 0;
-		}
-		
 		return;
 	}
 	
-	if(!m_changeTimer)
-	{
-		m_changeTimer = new QTimer(this);
-		connect(m_changeTimer, SIGNAL(timeout()), this, SLOT(myFunkySlot()));
-	}
-		
 	
 	m_timeButton->setEnabled(true);
 	m_timeLabel->setText(formatTime(time));
@@ -197,15 +182,13 @@ void SlideGroupViewControl::toggleTimerState(TimerState state, bool resetTimer)
 		if(DEBUG_SLIDEGROUPVIEWCONTROL)
 			qDebug() << "SlideGroupViewControl::toggleTimerState(): starting timer at:"<<m_currentTimeLength;
 		
-		if(m_changeTimer)
-			m_changeTimer->start(m_currentTimeLength * 1000);
+		m_changeTimer->start(m_currentTimeLength * 1000);
 		m_countTimer->start();
 		m_elapsedTime.start();
 	}
 	else
 	{
-		if(m_changeTimer)
-			m_changeTimer->stop();
+		m_changeTimer->stop();
 		m_countTimer->stop();
 		m_elapsedAtPause = m_elapsedTime.elapsed();
 		
@@ -230,7 +213,7 @@ QString SlideGroupViewControl::formatTime(double time)
 void SlideGroupViewControl::updateTimeLabel()
 {
 	double time = m_currentTimeLength - m_elapsedTime.elapsed()/1000;
-	m_timeLabel->setText(formatTime(time));
+	m_timeLabel->setText(QString("<font color='%1'>%2</font>").arg(time <= 3 ? "red" : "black").arg(formatTime(time)));
 }
 	
 	
@@ -243,14 +226,13 @@ void SlideGroupViewControl::slideSelected(const QModelIndex &idx)
 {
 	if(m_releasingSlideGroup)
 		return;
-	Slide *s = m_slideModel->slideFromIndex(idx);
-	if(!s)
+	Slide *slide = m_slideModel->slideFromIndex(idx);
+	if(!slide)
 		return;
 	if(DEBUG_SLIDEGROUPVIEWCONTROL)
-		qDebug() << "SlideGroupViewControl::slideSelected(): selected slide#:"<<s->slideNumber();
-	m_slideViewer->setSlide(s);
-	toggleTimerState(Stopped,true);
-	enableAnimation(s->autoChangeTime());
+		qDebug() << "SlideGroupViewControl::slideSelected(): selected slide#:"<<slide->slideNumber();
+	m_slideViewer->setSlide(slide);
+	enableAnimation(slide->autoChangeTime());
 }
 
 void SlideGroupViewControl::setOutputView(SlideGroupViewer *v) 
@@ -273,14 +255,12 @@ void SlideGroupViewControl::setOutputView(SlideGroupViewer *v)
 void SlideGroupViewControl::setSlideGroup(SlideGroup *g, Slide *curSlide)
 {
 	assert(g);
-	if(m_timerState == Running)
-	{
-		toggleTimerState();
-		//enableAnimation(0);
-	}
 	
 	if(DEBUG_SLIDEGROUPVIEWCONTROL)
 		qDebug()<<"SlideGroupViewControl::setSlideGroup: Loading group#"<<g->groupNumber();
+	
+	enableAnimation(0);
+	
 	m_slideModel->setSlideGroup(g);
 	
 	// reset seems to be required
@@ -289,8 +269,8 @@ void SlideGroupViewControl::setSlideGroup(SlideGroup *g, Slide *curSlide)
 		curSlide = g->at(0);
 	m_listView->setCurrentIndex(m_slideModel->indexForSlide(curSlide));
 	
-	if(DEBUG_SLIDEGROUPVIEWCONTROL)
-		qDebug()<<"SlideGroupViewControl::setSlideGroup: DONE Loading group#"<<g->groupNumber();
+	//if(DEBUG_SLIDEGROUPVIEWCONTROL)
+	//	qDebug()<<"SlideGroupViewControl::setSlideGroup: DONE Loading group#"<<g->groupNumber();
 }
 
 void SlideGroupViewControl::releaseSlideGroup()
@@ -301,13 +281,6 @@ void SlideGroupViewControl::releaseSlideGroup()
 	m_releasingSlideGroup = false;
 }
 
-void SlideGroupViewControl::myFunkySlot()
-{
-	if(DEBUG_SLIDEGROUPVIEWCONTROL)
-		qDebug() << "SlideGroupViewControl::myFunkySlot(): mark";
-	nextSlide();
-}
-	
 void SlideGroupViewControl::nextSlide()
 {
 	if(DEBUG_SLIDEGROUPVIEWCONTROL)

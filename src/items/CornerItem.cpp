@@ -558,7 +558,7 @@ void CornerItem::mouseReleaseEvent(QGraphicsSceneMouseEvent * event)
 	// clicked
 	//if (accepted) {
 		m_content->syncToModelItem(0);
-		qDebug() << "CornerItem::mouseReleaseEvent(): synced!";
+		//qDebug() << "CornerItem::mouseReleaseEvent(): synced!";
 	//}
 }
 

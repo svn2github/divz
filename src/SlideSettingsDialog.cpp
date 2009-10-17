@@ -17,6 +17,8 @@ SlideSettingsDialog::SlideSettingsDialog(Slide *slide, QWidget *parent) :
     // Not implemented yet, so hide from UI
     m_ui->boxConfigBg->setVisible(false);
     connect(m_ui->btnConfigBg, SIGNAL(clicked()), this, SLOT(configBg()));
+    
+    setWindowTitle("Slide Settings");
 }
 
 SlideSettingsDialog::~SlideSettingsDialog()
