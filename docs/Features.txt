@@ -129,19 +129,36 @@ Revised Task list for Release 1.0, 10/18/09:
 			Move qt color dialog into 3rdparty
 			Add color theme support vis a vi powerpoint
 			Adapt genericitemconfig dialog to work on model item only without having to use the visual delegate
-			
-			[DONE] Turn timer red when < 3 seconds (3...2...1)
-			[DONE] Make timer label bold & larger
-			
-			[DONE] dialog titles on slide/group dialogs
-			[DONE] show timeout as second line in slide list model
+
 			add btn to slide timeout button for zero and for "guess"
-			[DONE] rename 2nd option in group dialog from "do nothing" to "loop"
-			[DONE] move group options button further to right in editor
+			
 			
 			add next/prev btns to preview widget
+			add a "zero offset" shadow preset btn
 			
-			[DONE] add key accelerators to slide group options dialog
+			intelligent merge (optimize) cross fades by comparing items from two slides and if none changed, then dont cross fade those items
+			
+			integrate image functionality to background items
+			
+			path in titlebar should only be file, not abs path
+			
+			start video browser on using last video path - same for images
+				remember across runs using AppSettings
+				
+			add seperator in mainwindow before trash group
+			
+			set tooltip of toolbar icons in main and editor to include shortuct text (Ctrl+X or whatever)
+			
+			is there a way to make the live output not show up in task list???
+			
+			fonts in the program settings dialog still are incongruant sizes between all boxes
+			
+			spacebar should change song slides
+			
+			add black and clear buttons to song view control
+				black button should work for any group type
+			
+			future: investigate midi area with auto aranging/tiling of windows
 			
 			[STARTED] make keyboard movements snap to half-grid points
 				harder than I thought, because kbd is done in mygraphicsscene, but snapping is done in abstract content
@@ -149,7 +166,14 @@ Revised Task list for Release 1.0, 10/18/09:
 			
 			
 			
-			
+		[DONE] Turn timer red when < 3 seconds (3...2...1)
+		[DONE] Make timer label bold & larger
+
+		[DONE] dialog titles on slide/group dialogs
+		[DONE] show timeout as second line in slide list model
+		[DONE] rename 2nd option in group dialog from "do nothing" to "loop"
+		[DONE] move group options button further to right in editor		
+		[DONE] add key accelerators to slide group options dialog
 		[DONE] Auto-change slides/slide groups after X seconds
 			added field in Slide.h, now to make SlideGroupViewer and UI honor the field (and SlideGroup::autoChangeGroup() flag in MainWindow)
 		[DONE] add "sourceRect" attribute to visual item and delegates 
@@ -207,6 +231,22 @@ Revised Task list for Release 1.0, 10/18/09:
 		[LATER] Video Capture (started impl, but again, performance is terrible. That may be due to the FormatOpts specified, or in ffmpeg, or the capture hardware - need to trace - later!)
 	
 	- Bugs:
+		kbd movement needs to move all items in the selection stack
+
+		going live with a song takes too long - need to make < .25 second
+				or a slide - both take a while
+				large song (Amazing grace - praise song) takes > 3 - 5 seconds
+
+		new items STILL not going on top
+				need probably to check z vals of fade roots
+				
+		large image items (original file size) makes image items take long time to repaint, which reduces responsiveness of UI
+				for Editor, maybe scale image down at time of load and only repaint that, rather than scale on every repaint
+				or scale once when contents rect changes
+				
+		when dragging multiple-select items, only one item syncs back to the model - the others dont
+				as evidenced when the slide is live, drag multiple items, only one moves in live view
+		during resize, image shadow doesnt scale
 		when closing and have not saved yet, first ASK if they want to save before showing save as dialog
 		When setting live from editor (and other times?) and the group changes, need to change selected group in document list model
 			
@@ -224,17 +264,22 @@ Revised Task list for Release 1.0, 10/18/09:
 		Need better method of managing song regexps - right now the filters exist in the pixmap generation routines, the editor window, and the slide group!!
 		Perfomance of the document pixmap model generator becomes a problem with a lot of songs - need to investigate - possibly use different cache key
 		
-		[NEED CONFIRMED] On windows, when setting video item live, it doesnt play unless you dbl-click the slide again
+		[CONFIRMED EDGE CASE] On windows, when setting video item live, it doesnt play unless you dbl-click the slide again
 				other fixes (below) may have fixed this - need to confirm
+				CONFIRM still broken on the .mpg video as of rev211 - test.xml, first group, third slide
+					first two slides play videos fine (.mov) (slides auto change on timer)
+					but when the third slide playes (data/s..loop..3.mpg), it doesnt start video first time around 
+					video plays fine when group loops back through
+					this only happens FIRST time, and only righ after program launch
+					even opening/closing test.xml and reopening doesnt reproduce - video playes fine
 				
 		[ON HOLD] If blank document "<document/>", crash when add group then click group
 				doesnt crash any more, but qpainter reports all sorts of errors on console when trying to render the icon and the group never goes live
 				this would be considered a corrupt file and right now I dont have a gracious way of detecting this
 				however, we must handle corrupt files to some extent
 					preferably, detect the file is corrupt and refuse to load 
-				
-				
-		[NEED CONFIRMED] win32: File->New crashes
+					
+		[FIXED] win32: File->New crashes
 				probably fixed, need to verify 
 				Nope! Still need work.
 				Crashes even with non-live items
@@ -243,23 +288,25 @@ Revised Task list for Release 1.0, 10/18/09:
 					freezes program
 				confirmed it DOES work as of 10-16 on *linux*
 				should work now with code changes (releaseDocument() method added)
-				
-		[NEED CONFIRMED] Open file crashes
+				it works now! 10-17-09
+		[FIXED] Open file crashes
 				crashes on both win32 and linux
 				should work now with code changes (releaseDocument() method added)
-					
-		= Show Stoppers =
+				it works now! 10-17-09
+		[FIXED] = Show Stoppers =
 			[FIXED] file open crashing
 				fixed crashing
 			[FIXED] now opening multislide file only show first group
 				had to call begin/end remove rows in the model
-			[NEED CONFIRMED] file new crashing
+			[FIXED] file new crashing
 				possibly related to the other crashing of file->open - added releaseDocument() to doc list model
+				works - 10-17-09
 			[FIXED] file open doesnt adjust AR in editor correctly
-			[NEED CONFIRMED] jpeg problems on windows
+			[FIXED] jpeg problems on windows
 				check if building in debug or release mode
-			
-		
+				not sure what was the problem - jpegs work fine in windows
+				large (>1MB) jpegs take a while to render (>.1 sec) due to time it takes to scale
+				see bug report above - need to optimize rendering, cache scaled versions
 		[FIXED] if you start a group live that has an timer on it, and switch groups to another one without pausing the timer, segfault when first timer expires
 				not sure why, the timer is stopped but it still fires! Reported on qt-interest at 2009-10-16 17:08 - we'll see what response we get
 				suggestion made to use internal locking variable - will try
