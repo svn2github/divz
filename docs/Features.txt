@@ -150,6 +150,7 @@ Revised Task list for Release 1.0, 10/18/09:
 			set tooltip of toolbar icons in main and editor to include shortuct text (Ctrl+X or whatever)
 			
 			is there a way to make the live output not show up in task list???
+					see http://lists.trolltech.com/qt-interest/2007-07/thread00362-0.html for discussion on the opposite problem
 			
 			fonts in the program settings dialog still are incongruant sizes between all boxes
 			
