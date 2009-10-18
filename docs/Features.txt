@@ -157,8 +157,30 @@ Revised Task list for Release 1.0, 10/18/09:
 			
 			add black and clear buttons to song view control
 				black button should work for any group type
+				
+			when pressing f5 to go live in editor, should prompt if you want to enable auto change timer for this slide or not
 			
 			future: investigate midi area with auto aranging/tiling of windows
+			
+			when editor going to new slide and only one item in slide, select that item
+			
+			make selection in editor "smarter" 
+				maybe by implementing better shapes for items
+				e.g. convert text to painter path somehow and return as shape...maybe...
+				
+			offer "advanced" text item (restore old text layout code) that can do advanced font letter spacing, etc
+				or maybe there is someway to adjust letter spacing in Qt's code?
+			
+			in editor, make PGUP/PGDOWN change slides
+			
+			make font size buttons use different algorithim for sizing fonts
+				e.g. < 22, inc by 2
+				from 22-44, inc by 4
+				44-80, inc by 6
+				8-100, inc by 8
+				100-130, inc by 10
+				130>, inc by 25??
+				or some form of exponential, rounded percentage inc? (e.g. (int)(cur size * 1.5)) ?
 			
 			[STARTED] make keyboard movements snap to half-grid points
 				harder than I thought, because kbd is done in mygraphicsscene, but snapping is done in abstract content
@@ -231,6 +253,8 @@ Revised Task list for Release 1.0, 10/18/09:
 		[LATER] Video Capture (started impl, but again, performance is terrible. That may be due to the FormatOpts specified, or in ffmpeg, or the capture hardware - need to trace - later!)
 	
 	- Bugs:
+		crossfading between videos of same bg (see r212 the "Dir Viz" slide - dup and then try cross fading) is hoorible performance!
+			
 		kbd movement needs to move all items in the selection stack
 
 		going live with a song takes too long - need to make < .25 second

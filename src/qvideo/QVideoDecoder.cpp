@@ -75,8 +75,8 @@ QVideoDecoder::~QVideoDecoder()
 
 bool QVideoDecoder::load(const QString & filename)
 {
-	if(!QFile::exists(filename))
-		return false;
+	//if(!QFile::exists(filename))
+	//	return false;
 
 	//QMutexLocker locker(&mutex);
     static int debugCounter = 0;
@@ -86,30 +86,38 @@ bool QVideoDecoder::load(const QString & filename)
 	memset(&formatParams, 0, sizeof(AVFormatParameters));
 
 	 QString fileTmp = filename;
-//	 if(debugCounter ++ <= 0)
-//		fileTmp = "vfwcap://0";
-//	qDebug() << "[DEBUG] QVideoDecoder::load(): starting with fileTmp:"<<fileTmp;
+	 //if(debugCounter ++ <= 0)
+		//fileTmp = "vfwcap://0";
+	if(fileTmp == "C:/dummy.txt")
+		fileTmp = "vfwcap-0";
+	qDebug() << "[DEBUG] QVideoDecoder::load(): starting with fileTmp:"<<fileTmp;
 	 bool customInputFormat = false;
-	 if(fileTmp.indexOf("://") > -1)
+	 if(fileTmp.indexOf("-") > -1)
 	 {
-		 QStringList list = fileTmp.split("://");
-		 qDebug() << "[DEBUG] QVideoDecoder::load(): input format args:"<<list;
-		 fileTmp = list[1];
-		 if(fileTmp.isEmpty())
-		 	fileTmp = "0";
-		 avdevice_register_all();
-		 inFmt = av_find_input_format(qPrintable(list[0]));
-		 if( !inFmt )
+		 QStringList list = fileTmp.split("-");
+		 if(list.size() == 2)
 		 {
-		       qDebug() << "[ERROR] QVideoDecoder::load(): Unable to find input format:"<<list[0];
-		       return -1;
-		 }
+			 qDebug() << "[DEBUG] QVideoDecoder::load(): input format args:"<<list;
+			 fileTmp = list[1];
+			 if(fileTmp.isEmpty())
+				fileTmp = "0";
+			 avdevice_register_all();
+			 QString fmt = list[0];
+			 if(fmt == "cap")
+				fmt = "vfwcap";
+			 inFmt = av_find_input_format(qPrintable(list[0]));
+			 if( !inFmt )
+			 {
+				   qDebug() << "[ERROR] QVideoDecoder::load(): Unable to find input format:"<<list[0];
+				   return -1;
+			 }
 
 
-		 formatParams.time_base.num = 1;
-		 formatParams.time_base.den = 25;
+			 formatParams.time_base.num = 1;
+			 formatParams.time_base.den = 25;
 
-		 customInputFormat = true;
+			 customInputFormat = true;
+		}
 
 	}
 
