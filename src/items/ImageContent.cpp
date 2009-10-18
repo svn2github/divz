@@ -22,6 +22,7 @@ ImageContent::ImageContent(QGraphicsScene * scene, QGraphicsItem * parent)
     , m_shadowClipDirty(true)
     , m_svgRenderer(0)
     , m_fileLoaded(false)
+    , m_fileName("")
 {
 	m_dontSyncToModel = true;
 	
@@ -72,7 +73,23 @@ void ImageContent::syncFromModelItem(AbstractVisualItem *model)
 
 void ImageContent::loadFile(const QString &file)
 {
-	//qDebug() << "ImageContent::loadFile: "<<file;
+	// JPEGs, especially large ones (e.g. file on disk is > 2MB, etc) take a long time to load, decode, and convert to pixmap.
+	// (Long by UI standards anyway, e.g. > .2sec). So, we optimize away extreneous loadings by not reloading if the file & mtime
+	// has not changed. If we're a new item, we also check the global pixmap cache for an already-loaded copy of this image, 
+	// again keyed by file name + mtime. For SVG files, though, we only perform the first check (dont reload if not changed),
+	// but we dont cache a pixmap copy of them for scaling reasons (so we can have clean scaling.)
+	QString fileMod = QFileInfo(file).lastModified().toString();
+	if(file == m_fileName && fileMod == m_fileLastModified)
+	{
+		//qDebug() << "ImageContent::loadFile: "<<file<<": no change, not reloading";
+		return;
+	}
+	
+	//qDebug() << "ImageContent::loadFile: "<<file<<": (current file:"<<m_fileName<<"), fileMod:"<<fileMod<<", m_fileLastModified:"<<m_fileLastModified;
+	
+	m_fileName = file;
+	m_fileLastModified = fileMod;
+	
 	if(file.isEmpty())
 	{
 		m_fileLoaded = false;
@@ -88,17 +105,31 @@ void ImageContent::loadFile(const QString &file)
 	else
 	{
 		disposeSvgRenderer();
-		QImageReader reader(file);
-		QImage image = reader.read();
-		if(image.isNull())
+		QPixmap cache;
+		QString cacheKey = QString("%1:%2").arg(file).arg(fileMod);
+		if(QPixmapCache::find(cacheKey,cache))
 		{
-			qDebug() << "ImageContent::loadFile: Unable to read"<<file<<": "<<reader.errorString();
+			setPixmap(cache);
+			m_fileLoaded = true;
+			//qDebug() << "ImageContent::loadFile: "<<file<<": pixmap cache hit on "<<cacheKey;
 		}
 		else
 		{
-			QPixmap px = QPixmap::fromImage(image);
-			setPixmap(px);
-			m_fileLoaded = true;
+			QImageReader reader(file);
+			QImage image = reader.read();
+			if(image.isNull())
+			{
+				qDebug() << "ImageContent::loadFile: Unable to read"<<file<<": "<<reader.errorString();
+			}
+			else
+			{
+				QPixmap px = QPixmap::fromImage(image);
+				setPixmap(px);
+				m_fileLoaded = true;
+				
+				//qDebug() << "ImageContent::loadFile: "<<file<<": pixmap cache MISS on "<<cacheKey;
+				QPixmapCache::insert(cacheKey, px);
+			}
 		}
 	}
 }
@@ -135,6 +166,7 @@ void ImageContent::renderSvg()
 	m_svgRenderer->render(&p);
 	p.end();
 	*/
+	dirtyCache();
 	update();
 }
 
@@ -195,6 +227,13 @@ int ImageContent::contentHeightForWidth(int width) const
 		
         return (m_imageSize.height() * width) / m_imageSize.width();
 }
+
+void ImageContent::dirtyCache()
+{
+        QPixmapCache::remove(cacheKey());
+        QPixmapCache::remove(cacheKey() + "foreground");
+}
+
 
 
 void ImageContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget)
@@ -304,25 +343,45 @@ void ImageContent::drawForeground(QPainter *painter)
 		}
 		else
 		{
-			if(!sourceOffsetTL().isNull() || !sourceOffsetBR().isNull())
+			//static int dbg_counter =0;
+			//dbg_counter++;
+			//QPixmap cache;
+			//QString foregroundKey = cacheKey()+"foreground";
+			//if(!QPixmapCache::find(foregroundKey,cache))
 			{
-				QPointF tl = sourceOffsetTL();
-				QPointF br = sourceOffsetBR();
-				QRect px = m_pixmap.rect();
-				int x1 = (int)(tl.x() * px.width());
-				int y1 = (int)(tl.y() * px.height());
-				QRect source( 
-					px.x() + x1,
-					px.y() + y1,
-					px.width()  + (int)(br.x() * px.width())  - (px.x() + x1),
-					px.height() + (int)(br.y() * px.height()) - (px.y() + y1)
-				);
-					
-				//qDebug() << "ImageContent::drawForeground:"<<modelItem()->itemName()<<": tl:"<<tl<<", br:"<<br<<", source:"<<source;
-				painter->drawPixmap(cRect, m_pixmap, source);
+				//qDebug() << dbg_counter << "Foreground pixmap dirty, redrawing";
+				//QPixmap tmpPx(cRect.size());
+				//tmpPx.fill(Qt::transparent);
+				
+				//QPainter tmpPainter(&tmpPx);
+				//QRect destRect(0,0,cRect.width(),cRect.height());
+				
+				if(!sourceOffsetTL().isNull() || !sourceOffsetBR().isNull())
+				{
+					QPointF tl = sourceOffsetTL();
+					QPointF br = sourceOffsetBR();
+					QRect px = m_pixmap.rect();
+					int x1 = (int)(tl.x() * px.width());
+					int y1 = (int)(tl.y() * px.height());
+					QRect source( 
+						px.x() + x1,
+						px.y() + y1,
+						px.width()  - (int)(br.x() * px.width())  + (px.x() + x1),
+						px.height() - (int)(br.y() * px.height()) + (px.y() + y1)
+					);
+						
+					qDebug() << "ImageContent::drawForeground:"<<modelItem()->itemName()<<": tl:"<<tl<<", br:"<<br<<", source:"<<source;
+					//tmpPainter.drawPixmap(destRect, m_pixmap, source);
+					painter->drawPixmap(cRect, m_pixmap, source);
+				}
+				else
+					//tmpPainter.drawPixmap(destRect, m_pixmap);
+					painter->drawPixmap(cRect, m_pixmap);
+				//tmpPainter.end();
+				//QPixmapCache::insert(foregroundKey, cache);
 			}
-			else
-				painter->drawPixmap(cRect, m_pixmap);
+			
+			//painter->drawPixmap(cRect.topLeft(),cache);
 		}
 	}
 	

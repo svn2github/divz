@@ -28,10 +28,12 @@ public:
 	void syncFromModelItem(AbstractVisualItem*);
 	AbstractVisualItem * syncToModelItem(AbstractVisualItem*);
 	
+	void dirtyCache();
+	bool hasSourceOffsets() { return true; }
+	
 	// ::QGraphicsItem
 	void paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget = 0);
 	
-	bool hasSourceOffsets() { return true; }
 
 private slots:
 	void renderSvg();
@@ -55,6 +57,8 @@ private:
 	bool m_shadowClipDirty;
 	
 	bool m_fileLoaded;
+	QString m_fileName;
+	QString m_fileLastModified;
 	
 	quint32 m_lastModelRev;
 };

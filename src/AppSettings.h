@@ -3,6 +3,7 @@
 
 #include <QSettings>
 #include <QList>
+#include <QMap>
 #include "model/Output.h"
 
 class MainWindow;
@@ -37,6 +38,9 @@ public:
 // 	static double currentDocumentAspectRatio() { return m_docAspect; }
 // 	static QRect standardSceneRect(double aspectRatio = -1);
 
+	static QString previousPath(const QString& key);
+	static void setPreviousPath(const QString& key, const QString & path);
+
 protected:
 	friend class MainWindow;
 // 	static double setCurrentDocumentAspectRatio(double);
@@ -55,6 +59,8 @@ private:
 	static bool m_thirdGuideEnabled;
 
 	static double m_liveAspect;
+	
+	static QMap<QString,QString> m_previousPathList;
 // 	static double m_docAspect;
 };
 

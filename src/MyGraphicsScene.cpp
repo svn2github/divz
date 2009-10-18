@@ -158,30 +158,42 @@ void MyGraphicsScene::slideItemChanged(AbstractItem *item, QString operation, QS
 		return;
 	else
 	if(operation == "add")
-		createVisualDelegate(item);
+	{
+		AbstractContent * content = createVisualDelegate(item);
+		if(content)
+		{
+			clearSelection();
+			content->setSelected(true);
+		}
+	}
 	else
 	if(operation == "remove")
 		removeVisualDelegate(item);
 }
 
+AbstractContent * MyGraphicsScene::findVisualDelegate(AbstractItem *item)
+{
+	foreach(AbstractContent *z, m_content)
+		if(z->modelItem() == item)
+			return z;
+	return 0;
+}
+
 void MyGraphicsScene::removeVisualDelegate(AbstractItem *item)
 {
 	//qDebug() << "MyGraphicsScene::removeVisualDelegate: Going to remove: "<<item->itemName();
-	foreach(AbstractContent *z, m_content)
-	{
-		if(z->modelItem() == item)
-		{
-			z->setVisible(false);
-			z->setParentItem(0);
-			removeItem(z);
-			
-			m_content.removeAll(z);
-			disconnect(z, 0, 0, 0);
-			z->dispose(false);
-				
-			return;
-		}
-	}
+	AbstractContent *z = findVisualDelegate(item);
+	if(!z)
+		return;
+		
+	z->setVisible(false);
+	z->setParentItem(0);
+	removeItem(z);
+	
+	m_content.removeAll(z);
+	disconnect(z, 0, 0, 0);
+	z->dispose(false);
+		
 // 	qDebug() << "MyGraphicsScene::removeVisualDelegate: Couldn't find visual delegate for item requested: "<<item->itemName();
 // 	fprintf(stderr,"MyGraphicsScene::removeVisualDelegate: Can't find delegate for m_item=%p\n",item);
 }
@@ -251,7 +263,7 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans)
 		// UPDATE: flip faderoot behind now
 
 		m_fadeStepCounter = 0;
-		m_fadeSteps = 30;
+		m_fadeSteps = 15;
 		int ms = 250  / m_fadeSteps;
 		m_fadeTimer->start(ms); //ms);
 
@@ -369,6 +381,12 @@ void MyGraphicsScene::slotTransitionStep()
 
 void MyGraphicsScene::addContent(AbstractContent * content, bool takeOwnership) // const QPoint & pos)
 {
+	if(m_content.contains(content))
+	{
+		content->show();
+		return;
+	}
+		
 	connect(content, SIGNAL(configureMe(const QPoint &)), this, SLOT(slotConfigureContent(const QPoint &)));
 	//connect(content, SIGNAL(backgroundMe()), this, SLOT(slotBackgroundContent()));
 	connect(content, SIGNAL(changeStack(int)), this, SLOT(slotStackContent(int)));
@@ -377,15 +395,22 @@ void MyGraphicsScene::addContent(AbstractContent * content, bool takeOwnership) 
 	if (!pos.isNull())
 		content->setPos(pos);
 	//content->setCacheMode(QGraphicsItem::DeviceCoordinateCache);*/
-	if(content->zValue() == 0)
-	{
-		QList<QGraphicsItem*> kids = items();
-		double zMax = 1;
-		foreach(QGraphicsItem *item, kids)
-			if(item->zValue() > zMax)
-				zMax = item->zValue();
-		content->modelItem()->setZValue(zMax);
-	}
+// 	if(content->zValue() == 0)
+// 	{
+// 		//QList<QGraphicsItem*> kids = m_liveRoot->childItems();
+// 		
+// 		double zMax = 1;
+// 		qDebug() << "Add content: found "<<m_content.size()<<" kids";
+// 		foreach(AbstractContent *item, m_content)
+// 		{
+// 			qDebug() << "item->zValue():"<<item->modelItem()->zValue();
+// 			if(item->modelItem()->zValue() > zMax)
+// 				zMax = item->modelItem()->zValue();
+// 		}
+// 		qDebug() << "Add content: zMax is now: "<<zMax;
+// 		content->modelItem()->setZValue(zMax);
+// 		content->setZValue(zMax);
+// 	}
 	content->show();
 	
 	m_content.append(content);
@@ -427,12 +452,7 @@ AbstractVisualItem * MyGraphicsScene::newTextItem(QString text)
 	
 	m_slide->addItem(t); //m_slide->createText();
 	
-	AbstractContent * item = t->createDelegate(this,m_liveRoot);
-	addContent(item); //, QPoint((int)t->pos().x(),(int)t->pos().y()));
-	
-	clearSelection();
-	item->setSelected(true);
-	
+
 	return t;
 }
 
@@ -449,12 +469,7 @@ AbstractVisualItem * MyGraphicsScene::newBoxItem()
 	
 	m_slide->addItem(t); //m_slide->createText();
 	
-	AbstractContent * item = t->createDelegate(this,m_liveRoot);
-	addContent(item); //, QPoint((int)t->pos().x(),(int)t->pos().y()));
-	
-	clearSelection();
-	item->setSelected(true);
-	
+
 	return t;
 }
 
@@ -471,12 +486,7 @@ AbstractVisualItem * MyGraphicsScene::newVideoItem()
 	
 	m_slide->addItem(t); //m_slide->createText();
 	
-	AbstractContent * item = t->createDelegate(this,m_liveRoot);
-	addContent(item); //, QPoint((int)t->pos().x(),(int)t->pos().y()));
-	
-	clearSelection();
-	item->setSelected(true);
-	
+
 	return t;
 }
 
@@ -488,18 +498,24 @@ AbstractVisualItem * MyGraphicsScene::newImageItem()
 	t->setPos(nearCenter(sceneRect()));
 	t->setItemId(ItemFactory::nextId());
 	t->setItemName(QString("ImageItem%1").arg(t->itemId()));
+	t->setZValue(maxZValue());
 	
 	m_slide->addItem(t);
 	
-	AbstractContent * item = t->createDelegate(this,m_liveRoot);
-	addContent(item);
-	
-	clearSelection();
-	item->setSelected(true);
 	
 	return t;
 }
 
+int MyGraphicsScene::maxZValue()
+{
+	//qDebug()<< "newImageItem: m_content.size():"<<m_content.size();
+	int max = 0;
+	foreach(AbstractContent *c, m_content)
+		if(c->zValue() > max)
+			max = c->zValue();
+	//qDebug()<<"newImageItem: max:"<<max;
+	return max;
+}
 
 void MyGraphicsScene::copyCurrentSelection(bool removeSelection)
 {

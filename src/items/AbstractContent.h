@@ -126,7 +126,7 @@ class AbstractContent : public AbstractDisposeable
 		
 	   
 		virtual QString cacheKey();
-		void dirtyCache();
+		virtual void dirtyCache();
 		
 		bool m_dontSyncToModel;
 		

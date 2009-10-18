@@ -11,7 +11,7 @@ bool AppSettings::m_useOpenGL = false;
 QSizeF AppSettings::m_gridSize = QSizeF(10,10);
 bool AppSettings::m_gridEnabled = true;
 bool AppSettings::m_thirdGuideEnabled = true;
-
+QMap<QString,QString> AppSettings::m_previousPathList;
 
 double AppSettings::m_liveAspect = 0;
 // double AppSettings::m_docAspect = 0;
@@ -27,7 +27,11 @@ void AppSettings::load()
 	m_gridSize = s.value("app/grid/size",m_gridSize).toSizeF();
 	m_gridEnabled = s.value("app/grid/enabled",true).toBool();
 	m_thirdGuideEnabled = s.value("app/thirdguide",true).toBool();
-
+	QMap<QString,QVariant> map = s.value("app/previous-path-list").toMap();
+	QList<QString> keys = map.keys();
+	foreach(QString key, keys)
+		m_previousPathList[key] = map[key].toString();
+	
 	updateLiveAspectRatio();
 }
 
@@ -40,11 +44,27 @@ void AppSettings::save()
 	s.setValue("app/grid/size",m_gridSize);
 	s.setValue("app/grid/enabled",m_gridEnabled);
 	s.setValue("app/thirdguide",m_thirdGuideEnabled);
+	
+	QMap<QString,QVariant> map;
+	QList<QString> keys = m_previousPathList.keys();
+	foreach(QString key, keys)
+		map[key] = QVariant(m_previousPathList[key]);
+	s.setValue("app/previous-path-list",map);
 
 
 	saveOutputs(&s);
 
 	updateLiveAspectRatio();
+}
+
+QString AppSettings::previousPath(const QString& key)
+{
+	return m_previousPathList[key];
+}
+
+void AppSettings::setPreviousPath(const QString& key, const QString & path)
+{
+	m_previousPathList[key] = path;
 }
 
 

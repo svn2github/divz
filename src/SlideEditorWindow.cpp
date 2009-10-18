@@ -402,6 +402,20 @@ void SlideEditorWindow::setupToolbar()
 	
 	QAction  *delSlide = toolbar->addAction(QIcon(":data/stock-delete.png"), "Delete Slide");
 	connect(delSlide, SIGNAL(triggered()), this, SLOT(delSlide()));
+	
+	
+	foreach(QAction *action, toolbar->actions())
+	{
+		QString shortcut = action->shortcut().toString();
+		if(!shortcut.trimmed().isEmpty())
+		{
+			QString text = action->text();
+			text.replace("&","");
+			action->setText(QString("%1 (%2)").arg(text).arg(shortcut));
+		}
+	}
+
+
 }
 
 void SlideEditorWindow::setCurrentSlideLive()

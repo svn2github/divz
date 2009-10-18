@@ -142,13 +142,6 @@ Revised Task list for Release 1.0, 10/18/09:
 			
 			path in titlebar should only be file, not abs path
 			
-			start video browser on using last video path - same for images
-				remember across runs using AppSettings
-				
-			add seperator in mainwindow before trash group
-			
-			set tooltip of toolbar icons in main and editor to include shortuct text (Ctrl+X or whatever)
-			
 			is there a way to make the live output not show up in task list???
 					see http://lists.trolltech.com/qt-interest/2007-07/thread00362-0.html for discussion on the opposite problem
 			
@@ -187,7 +180,13 @@ Revised Task list for Release 1.0, 10/18/09:
 				harder than I thought, because kbd is done in mygraphicsscene, but snapping is done in abstract content
 				need to set a flag maybe?
 			
-			
+		[DONE] start video browser on using last video path - same for images
+			remember across runs using AppSettings
+			added AppSettings::previousPath() and related settor
+			integrated functionality into GenericItemConfig
+		
+		[DONE] add seperator in mainwindow before trash group
+		[DONE] set tooltip of toolbar icons in main and editor to include shortuct text (Ctrl+X or whatever)
 			
 		[DONE] Turn timer red when < 3 seconds (3...2...1)
 		[DONE] Make timer label bold & larger
@@ -254,21 +253,11 @@ Revised Task list for Release 1.0, 10/18/09:
 		[LATER] Video Capture (started impl, but again, performance is terrible. That may be due to the FormatOpts specified, or in ffmpeg, or the capture hardware - need to trace - later!)
 	
 	- Bugs:
+		if edit slide, go live, the edit again, the Live Slide List View pixmap does not regenerate
 		crossfading between videos of same bg (see r212 the "Dir Viz" slide - dup and then try cross fading) is hoorible performance!
 			
 		kbd movement needs to move all items in the selection stack
 
-		going live with a song takes too long - need to make < .25 second
-				or a slide - both take a while
-				large song (Amazing grace - praise song) takes > 3 - 5 seconds
-
-		new items STILL not going on top
-				need probably to check z vals of fade roots
-				
-		large image items (original file size) makes image items take long time to repaint, which reduces responsiveness of UI
-				for Editor, maybe scale image down at time of load and only repaint that, rather than scale on every repaint
-				or scale once when contents rect changes
-				
 		when dragging multiple-select items, only one item syncs back to the model - the others dont
 				as evidenced when the slide is live, drag multiple items, only one moves in live view
 		during resize, image shadow doesnt scale
@@ -304,6 +293,19 @@ Revised Task list for Release 1.0, 10/18/09:
 				however, we must handle corrupt files to some extent
 					preferably, detect the file is corrupt and refuse to load 
 					
+		[FIXED] new items STILL not going on top
+				need probably to check z vals of fade roots
+				redesigned the new item algorithims in mygraphicscene to only add to slide and let the sig/slot events add to the scene
+		[FIXED] going live with a song takes too long - need to make < .25 second
+				or a slide - both take a while
+				large song (Amazing grace - praise song) takes > 3 - 5 seconds
+				time seems to be in the pixmap generation - need better caching
+				for songs: cached generated pixmaps based on passage text and disabled the call to the parent generate pixmap in SlideGroupListModel 
+		[FIXED] large image items (original file size) makes image items take long time to repaint, which reduces responsiveness of UI
+				for Editor, maybe scale image down at time of load and only repaint that, rather than scale on every repaint
+				or scale once when contents rect changes
+				had to do with loading times when model item changed
+					had to cache the loaded pixmap, NOT the scaled pixmap
 		[FIXED] win32: File->New crashes
 				probably fixed, need to verify 
 				Nope! Still need work.

@@ -62,7 +62,9 @@ class MyGraphicsScene : public QGraphicsScene
 
                 AbstractContent * createVisualDelegate(AbstractItem *item);
                 void removeVisualDelegate(AbstractItem *item);
+                AbstractContent * findVisualDelegate(AbstractItem *item);
                 QList<AbstractItem *> copyBuffer();
+		
                 
                 void configureContent(AbstractContent *content);
 		
@@ -83,6 +85,7 @@ class MyGraphicsScene : public QGraphicsScene
 	private:
 // 		TextContent * createText(const QPoint & pos);
 		void addContent(AbstractContent * content, bool takeOnwership = false); //, const QPoint & pos);
+		int maxZValue();
 		
 		QList<AbstractContent *> m_content;
 		QList<AbstractContent *> m_ownedContent;

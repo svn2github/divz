@@ -34,6 +34,8 @@ QColor RenderOpts::hiColor;
  #include "songdb/SongSlideGroupFactory.h"
 #include "AppSettings.h"
 
+#include <QPixmapCache>
+
 int main(int argc, char **argv)
 {
 		
@@ -45,6 +47,9 @@ int main(int argc, char **argv)
  	#endif
 	
 	QApplication app(argc, argv);
+	
+	// cache 256 MB of pixmaps
+	QPixmapCache::setCacheLimit(256 * 1024);
 	
 	int qtype1 = qRegisterMetaType<AbstractVisualItem::FillType>("FillType");
 

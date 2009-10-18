@@ -19,6 +19,8 @@
 #include "GenericItemConfig.h"
 #include "ui_GenericItemConfig.h"
 
+#include "AppSettings.h"
+#include <QFileInfo>
 
 
 static void setupColorPicker(QtColorPicker*p)
@@ -350,10 +352,17 @@ void GenericItemConfig::setBgColor(const QColor & c)
 
 void GenericItemConfig::slotVideoBrowse()
 {
+	QString text = m_commonUi->videoFilenameBox->text();
+	if(text.trimmed().isEmpty())
+	{
+		text = AppSettings::previousPath("videos");
+	}
+	
 	QString fileName = QFileDialog::getOpenFileName(this, tr("Select Video"), m_commonUi->videoFilenameBox->text(), tr("Video Files (*.wmv *.mpeg *.mpg *.avi *.wmv *.flv *.mov *.mp4 *.m4a *.3gp *.3g2 *.mj2 *.mjpeg *.ipod *.m4v *.gsm *.gif *.swf *.dv *.dvd *.asf *.mtv *.roq *.aac *.ac3 *.aiff *.alaw *.iif);;Any File (*.*)"));
 	if(fileName != "")
 	{
 		slotVideoFileChanged(fileName);
+		AppSettings::setPreviousPath("videos",QFileInfo(fileName).absolutePath());
 	}
 }
 	
@@ -369,10 +378,17 @@ void GenericItemConfig::slotVideoFileChanged(const QString& fileName)
 
 void GenericItemConfig::slotImageBrowse()
 {
-	QString fileName = QFileDialog::getOpenFileName(this, tr("Select Image"), m_commonUi->imageFilenameBox->text(), tr("Image Files (*.png *.jpg *.bmp *.svg *.xpm);;Any File (*.*)"));
+	QString text = m_commonUi->imageFilenameBox->text();
+	if(text.trimmed().isEmpty())
+	{
+		text = AppSettings::previousPath("images");
+	}
+	
+	QString fileName = QFileDialog::getOpenFileName(this, tr("Select Image"), text, tr("Image Files (*.png *.jpg *.bmp *.svg *.xpm);;Any File (*.*)"));
 	if(fileName != "")
 	{
 		slotImageFileChanged(fileName);
+		AppSettings::setPreviousPath("images",QFileInfo(fileName).absolutePath());
 	}
 }
 

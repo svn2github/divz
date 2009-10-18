@@ -470,7 +470,8 @@ void AbstractContent::syncFromModelItem(AbstractVisualItem *model)
 	//qDebug() << "AbstractContent::syncFromModelItem(): Setting pos:"<<model->pos();
 
 	setZValue(model->zValue());
-
+	//qDebug() << "AbstractContent::syncFromModelItem(): item:"<<(modelItem()?modelItem()->itemName() : "NULL")<<": model->zValue(): "<<model->zValue()<<", my zvalue: "<<zValue();
+	
 	setVisible(model->isVisible());
 
 	quint32 frameClass = model->frameClass();

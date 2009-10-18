@@ -2,6 +2,8 @@
 #include "SongSlideGroup.h"
 #include <QAbstractTextDocumentLayout>
 #include "MainWindow.h"
+//#include "3rdparty/md5/md5.h"
+#include <QPixmapCache>
 
 SongSlideGroupListModel::SongSlideGroupListModel(SlideGroup *g, QObject *parent) 
 	: SlideGroupListModel(g,parent)
@@ -24,6 +26,7 @@ QVariant SongSlideGroupListModel::data(const QModelIndex &index, int role) const
 	
 	if (role == Qt::DisplayRole)
 	{
+		//return QString("Slide %1").arg(index.row()); 
 		return QVariant(); 
 	}
 	else
@@ -35,10 +38,13 @@ QVariant SongSlideGroupListModel::data(const QModelIndex &index, int role) const
 
 void SongSlideGroupListModel::generatePixmap(int row)
 {
+	//return;
+	
 	// Ask the parent to generate a pixmap *just* so that 
 	// the TextBoxContent in the slide at "row" can cache
 	// rendered pixmaps before going live.
-	SlideGroupListModel::generatePixmap(row);
+	// Disabled for now due to the performance hit by this function for long slide groups such as long songs
+	//SlideGroupListModel::generatePixmap(row);
 	
 	Slide * slide = m_sortedSlides.at(row);
 	
@@ -61,58 +67,69 @@ void SongSlideGroupListModel::generatePixmap(int row)
 	
 	QString passage = row >= list.size() ? "" : list[row];
 	
-	// Outline pen for the text
-	QPen pen = QPen(Qt::black,1.5);
-	pen.setJoinStyle(Qt::MiterJoin);
-	
-	// Used for centering and font size search
-	QTextDocument doc;
-	
-	static QRegExp excludeLineRegExp(
-        		//filter == Standard ? "^\\s*(Verse|Chorus|Tag|Bridge|End(ing)?|Intro(duction)|B:|R:|C:|T:|G:)?)(\\s*\\(.*\\))?\\s*$" :
-        		//filter == Standard  ? 
-        		"^\\s*(Verse|Chorus|Tag|Bridge|End(ing)?|Intro(duction)?|B:|R:|C:|T:|G:)(\\s+\\d+)?(\\s*\\(.*\\).*)?\\s*$"
-        		//filter == AllowRear ? "^\\s*(Verse|Chorus|Tag|Bridge|End(ing)?|Intro(duction)?)(\\s+\\d+)?(\\s*\\(.*\\))?\\s*$" :
-        		//"",
-        		,
-        	Qt::CaseInsensitive);
-        
-	// Create the HTML for the lyrics
-	QStringList lines = passage.split("\n");
-	QStringList html;
-	html << slideHeader;
-	foreach(QString line, lines)
+	QPixmap icon;
+	if(!QPixmapCache::find(passage,icon))
 	{
-		if(line.contains(excludeLineRegExp))
-			html << highlightBlockPrefix;
-		else
-			html << linePrefix;
-			
-		html << line;
-		html << lineSuffix;
+		//qDebug() << "SongSlideGroup: Regen row "<<row;
+		
+		// Outline pen for the text
+		QPen pen = QPen(Qt::black,1.5);
+		pen.setJoinStyle(Qt::MiterJoin);
+		
+		// Used for centering and font size search
+		QTextDocument doc;
+		
+		static QRegExp excludeLineRegExp(
+				//filter == Standard ? "^\\s*(Verse|Chorus|Tag|Bridge|End(ing)?|Intro(duction)|B:|R:|C:|T:|G:)?)(\\s*\\(.*\\))?\\s*$" :
+				//filter == Standard  ? 
+				"^\\s*(Verse|Chorus|Tag|Bridge|End(ing)?|Intro(duction)?|B:|R:|C:|T:|G:)(\\s+\\d+)?(\\s*\\(.*\\).*)?\\s*$"
+				//filter == AllowRear ? "^\\s*(Verse|Chorus|Tag|Bridge|End(ing)?|Intro(duction)?)(\\s+\\d+)?(\\s*\\(.*\\))?\\s*$" :
+				//"",
+				,
+			Qt::CaseInsensitive);
+		
+		// Create the HTML for the lyrics
+		QStringList lines = passage.split("\n");
+		QStringList html;
+		html << slideHeader;
+		foreach(QString line, lines)
+		{
+			if(line.contains(excludeLineRegExp))
+				html << highlightBlockPrefix;
+			else
+				html << linePrefix;
+				
+			html << line;
+			html << lineSuffix;
+		}
+		html << slideFooter;
+		
+		m_text->setHtml(html.join(""));
+		
+		// Run a basic algorithim to find the max font size to fit inside this screen
+		QString htmlStr = html.join("");
+		
+		QRectF textRect = MainWindow::mw() ? MainWindow::mw()->standardSceneRect() : QRectF(0,0,1024,768);
+		
+		int iconWidth = textRect.width() / 48 * 9;
+		m_text->setTextWidth(iconWidth);
+		
+		int iconHeight = m_text->size().height();
+		
+		//qDebug()<<"SongSlideGroupListModel::generatePixmap: passage#:"<<row<<"<<, iconWidth:"<<iconWidth<<", iconHeight:"<<iconHeight;
+		
+		//QPixmap icon(iconWidth,iconHeight);
+		icon = QPixmap(iconWidth,iconHeight);
+		icon.fill(Qt::transparent);
+		
+		QPainter textPainter(&icon);
+		QAbstractTextDocumentLayout::PaintContext pCtx;
+		m_text->documentLayout()->draw(&textPainter, pCtx);
+		
+		textPainter.end();
+		
+		QPixmapCache::insert(passage,icon);
 	}
-	html << slideFooter;
-	
-	m_text->setHtml(html.join(""));
-	
-	// Run a basic algorithim to find the max font size to fit inside this screen
-	QString htmlStr = html.join("");
-	
-	QRectF textRect = MainWindow::mw() ? MainWindow::mw()->standardSceneRect() : QRectF(0,0,1024,768);
-	
-	int iconWidth = textRect.width() / 48 * 9;
-	m_text->setTextWidth(iconWidth);
-	
-	int iconHeight = m_text->size().height();
-	
-	//qDebug()<<"SongSlideGroupListModel::generatePixmap: passage#:"<<row<<"<<, iconWidth:"<<iconWidth<<", iconHeight:"<<iconHeight;
-	
-	QPixmap icon(iconWidth,iconHeight);
-	icon.fill(Qt::transparent);
-	
-	QPainter textPainter(&icon);
-	QAbstractTextDocumentLayout::PaintContext pCtx;
-	m_text->documentLayout()->draw(&textPainter, pCtx);
-	
-	m_pixmaps[row] = icon;
+		
+ 	m_pixmaps[row] = icon;
 }

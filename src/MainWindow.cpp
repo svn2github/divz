@@ -64,37 +64,67 @@ MainWindow::MainWindow(QWidget *parent) :
 	
 
 	//m_ui->actionEdit_Slide_Group->setEnabled(false);
+	QList<QAction*> actionList;
 
 	m_ui->actionOpen->setIcon(QIcon(":data/stock-open.png"));
+	actionList << m_ui->actionOpen;
+	m_ui->actionOpen->setToolTip(m_ui->actionOpen->text() + "(" + m_ui->actionOpen->shortcut().toString() + ")");
 	connect(m_ui->actionOpen, SIGNAL(triggered()), this, SLOT(actionOpen()));
+	
 	m_ui->actionSave->setIcon(QIcon(":data/stock-save.png"));
+	actionList << m_ui->actionSave;
 	connect(m_ui->actionSave, SIGNAL(triggered()), this, SLOT(actionSave()));
+	
 	m_ui->actionSave_As->setIcon(QIcon(":data/stock-save.png"));
 	connect(m_ui->actionSave_As, SIGNAL(triggered()), this, SLOT(actionSaveAs()));
+	actionList << m_ui->actionSave_As;
+	
 	m_ui->actionNew->setIcon(QIcon(":data/stock-new.png"));
 	connect(m_ui->actionNew, SIGNAL(triggered()), this, SLOT(actionNew()));
+	actionList << m_ui->actionNew;
 
 	m_ui->actionNew_Slide_Group->setIcon(QIcon(":data/stock-add.png"));
 	connect(m_ui->actionNew_Slide_Group, SIGNAL(triggered()), this, SLOT(actionNewGroup()));
+	actionList << m_ui->actionNew_Slide_Group;
+	
 	m_ui->actionEdit_Slide_Group->setIcon(QIcon(":data/stock-edit.png"));
 	m_ui->actionEdit_Slide_Group->setEnabled(false);
 	connect(m_ui->actionEdit_Slide_Group, SIGNAL(triggered()), this, SLOT(actionEditGroup()));
+	actionList << m_ui->actionEdit_Slide_Group;
+	
 	m_ui->actionSlide_Group_Properties->setIcon(QIcon(":data/stock-properties.png"));
 	m_ui->actionSlide_Group_Properties->setEnabled(false);
 	connect(m_ui->actionSlide_Group_Properties, SIGNAL(triggered()), this, SLOT(actionGroupProperties()));
+	actionList << m_ui->actionSlide_Group_Properties;
+	
 	m_ui->actionDelete_Slide_Group->setIcon(QIcon(":data/stock-delete.png"));
 	m_ui->actionDelete_Slide_Group->setEnabled(false);
 	connect(m_ui->actionDelete_Slide_Group, SIGNAL(triggered()), this, SLOT(actionDelGroup()));
+	actionList << m_ui->actionDelete_Slide_Group;
 	
 	
 
 	m_ui->actionApp_Settings->setIcon(QIcon(":data/stock-preferences.png"));
 	connect(m_ui->actionApp_Settings, SIGNAL(triggered()), this, SLOT(actionAppSettingsDialog()));
+	actionList << m_ui->actionApp_Settings;
+	
 	m_ui->actionDoc_Settings->setIcon(QIcon(":data/stock-properties.png"));
 	connect(m_ui->actionDoc_Settings, SIGNAL(triggered()), this, SLOT(actionDocSettingsDialog()));
+	actionList << m_ui->actionDoc_Settings;
 
 	connect(m_ui->actionAbout_DViz, SIGNAL(triggered()), this, SLOT(actionAboutDviz()));
 	connect(m_ui->actionVisit_DViz_Website, SIGNAL(triggered()), this, SLOT(actionDvizWebsite()));
+	
+	foreach(QAction *action, actionList)
+	{
+		QString shortcut = action->shortcut().toString();
+		if(!shortcut.trimmed().isEmpty())
+		{
+			QString text = action->text();
+			text.replace("&","");
+			action->setText(QString("%1 (%2)").arg(text).arg(shortcut));
+		}
+	}
 
 
 

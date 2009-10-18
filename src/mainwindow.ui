@@ -26,7 +26,7 @@
      <x>0</x>
      <y>0</y>
      <width>653</width>
-     <height>19</height>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -164,6 +164,7 @@
    <addaction name="actionNew_Slide_Group"/>
    <addaction name="actionEdit_Slide_Group"/>
    <addaction name="actionSlide_Group_Properties"/>
+   <addaction name="separator"/>
    <addaction name="actionDelete_Slide_Group"/>
   </widget>
   <action name="actionOpen">
@@ -226,15 +227,13 @@
    </property>
   </action>
   <action name="actionSlide_Group_Properties">
-	  <property name="text">
-		  <string>Slide Group Properties</string>
-	  </property>
-	  <property name="shortcut">
-		  <string>SHIFT+F2</string>
-	  </property>
+   <property name="text">
+    <string>Slide Group Properties</string>
+   </property>
+   <property name="shortcut">
+    <string>Shift+F2</string>
+   </property>
   </action>
-  
-  
   <action name="actionApp_Settings">
    <property name="text">
     <string>Program Settings ...</string>
