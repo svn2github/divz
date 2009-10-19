@@ -12,8 +12,10 @@
 #include "MainWindow.h"
 #include "AppSettings.h"
 
+Slide * SlideGroupViewer::m_blackSlide = 0;
+
 SlideGroupViewer::SlideGroupViewer(QWidget *parent)
-	    : QWidget(parent), m_slideGroup(0), m_scene(0), m_view(0), m_slideNum(0),  m_usingGL(false)
+	    : QWidget(parent), m_slideGroup(0), m_scene(0), m_view(0), m_slideNum(0),  m_usingGL(false), m_clearSlide(0), m_clearSlideNum(-1), m_clearEnabled(false)
 {
 	QRect sceneRect(0,0,1024,768);
 	
@@ -63,6 +65,13 @@ SlideGroupViewer::~SlideGroupViewer()
 		delete m_view;
 		m_view = 0;
 	}
+	
+	if(m_clearSlide)
+	{
+		delete m_clearSlide;
+		m_clearSlide = 0;
+	}
+	
 }
 
 void SlideGroupViewer::appSettingsChanged()
@@ -117,6 +126,9 @@ void SlideGroupViewer::setSlideGroup(SlideGroup *g, Slide *startSlide)
 		return;
 		
 	m_slideNum = 0;
+	
+	m_clearSlideNum = -1;
+
 
 	if(m_slideGroup && m_slideGroup != g)
 	{
@@ -203,6 +215,65 @@ Slide * SlideGroupViewer::prevSlide()
 	if(m_slideNum < 0)
 		m_slideNum = 0;
 	return setSlide(m_slideNum);
+}
+
+void SlideGroupViewer::fadeBlackFrame(bool enable)
+{
+	if(!m_blackSlide)
+	{
+		m_blackSlide = new Slide();
+		dynamic_cast<AbstractVisualItem*>(m_blackSlide->background())->setFillBrush(QBrush(Qt::black));
+	}
+	
+	if(enable)
+	{
+		// *dont* use our setSlide() method because we dont want to 
+		// change m_slideNum - we just want the "fadeToBlack" to be temporary
+		m_scene->setSlide(m_blackSlide,MyGraphicsScene::CrossFade);
+	}
+	else
+	{
+		if(m_clearEnabled && m_clearSlide)
+		{
+			m_scene->setSlide(m_clearSlide,MyGraphicsScene::CrossFade);
+		}
+		else
+		{
+			Slide *currentSlide = m_sortedSlides.at(m_slideNum);
+			m_scene->setSlide(currentSlide,MyGraphicsScene::CrossFade);
+		}
+	}
+}
+
+void SlideGroupViewer::fadeClearFrame(bool enable)
+{
+	if(enable)
+	{
+		if(m_clearSlide && m_clearSlideNum != m_slideNum)
+		{
+			delete m_clearSlide;
+			m_clearSlide = 0;
+		}
+		
+		if(!m_clearSlide)
+		{
+			m_clearSlideNum = m_slideNum;
+			
+			Slide *currentSlide = m_sortedSlides.at(m_slideNum);
+			
+			m_clearSlide = new Slide();
+			m_clearSlide->addItem(currentSlide->background()->clone());
+		}
+		
+		m_scene->setSlide(m_clearSlide,MyGraphicsScene::CrossFade);
+	}
+	else
+	{
+		Slide *currentSlide = m_sortedSlides.at(m_slideNum);
+		m_scene->setSlide(currentSlide,MyGraphicsScene::CrossFade);
+	}
+	
+	m_clearEnabled = enable;
 }
 
 void SlideGroupViewer::resizeEvent(QResizeEvent *)

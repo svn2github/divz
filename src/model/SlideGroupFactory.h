@@ -56,6 +56,9 @@ public slots:
 	virtual void setCurrentSlide(Slide*);
 	virtual void toggleTimerState(TimerState state = Undefined, bool resetTimer = false);
 	
+	virtual void fadeBlackFrame(bool);
+	virtual void fadeClearFrame(bool);
+	
 protected slots:
 	virtual void slideSelected(const QModelIndex &);
 	virtual void currentChanged(const QModelIndex &, const QModelIndex &);
@@ -80,6 +83,9 @@ protected:
 	TimerState m_timerState;
 	double m_currentTimeLength;
 	double m_elapsedAtPause;
+	
+	QPushButton * m_blackButton;
+	QPushButton * m_clearButton;
 
 };
 

@@ -37,6 +37,9 @@ public slots:
 	Slide * setSlide(int);
 	Slide * nextSlide();
 	Slide * prevSlide();
+	
+	void fadeBlackFrame(bool);
+	void fadeClearFrame(bool);
 
 private slots:
 	void appSettingsChanged();
@@ -67,6 +70,10 @@ private:
 	QGraphicsView * m_view;
 	bool m_usingGL;
 
+	static Slide * m_blackSlide;
+	Slide * m_clearSlide;
+	int m_clearSlideNum;
+	bool m_clearEnabled;
 };
 
 #endif // SLIDEGROUPVIEWER_H

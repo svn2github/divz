@@ -143,11 +143,6 @@ Revised Task list for Release 1.0, 10/18/09:
 			
 			fonts in the program settings dialog still are incongruant sizes between all boxes
 			
-			spacebar should change song slides
-			
-			add black and clear buttons to song view control
-				black button should work for any group type
-				
 			when pressing f5 to go live in editor, should prompt if you want to enable auto change timer for this slide or not
 			
 			future: investigate midi area with auto aranging/tiling of windows
@@ -177,6 +172,12 @@ Revised Task list for Release 1.0, 10/18/09:
 			[STARTED] make keyboard movements snap to half-grid points
 				harder than I thought, because kbd is done in mygraphicsscene, but snapping is done in abstract content
 				need to set a flag maybe?
+			
+		[DONE] add black and clear buttons to song view control
+			clear only shows background - so it works with any group type, as does fade to black
+				
+		[DONE] spacebar should change song slides
+		[DONE] go-live should set focus to list view
 			
 		[DONE] integrate image functionality to background items
 			

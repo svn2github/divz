@@ -32,12 +32,19 @@ QList<AbstractItem *> SlideGroupViewMutator::itemList(Output*, SlideGroup*, Slid
 SlideGroupViewControlListView::SlideGroupViewControlListView(SlideGroupViewControl * ctrl) : QListView(ctrl), ctrl(ctrl) {}
 void SlideGroupViewControlListView::keyPressEvent(QKeyEvent *event)
 {
-	QModelIndex oldIdx = currentIndex();
-	QListView::keyPressEvent(event);
-	QModelIndex newIdx = currentIndex();
-	if(oldIdx.row() != newIdx.row())
+	if(event->key() == Qt::Key_Space)
 	{
-		ctrl->slideSelected(newIdx);
+		ctrl->nextSlide();
+	}
+	else
+	{
+		QModelIndex oldIdx = currentIndex();
+		QListView::keyPressEvent(event);
+		QModelIndex newIdx = currentIndex();
+		if(oldIdx.row() != newIdx.row())
+		{
+			ctrl->slideSelected(newIdx);
+		}
 	}
 }
 
@@ -57,12 +64,30 @@ SlideGroupViewControl::SlideGroupViewControl(SlideGroupViewer *g, QWidget *w )
 {
 	QVBoxLayout * layout = new QVBoxLayout();
 	
+	/** Setup top buttons */
+	QHBoxLayout * hbox1 = new QHBoxLayout();
+	hbox1->addStretch(1);
+	
+	QPushButton * m_blackButton = new QPushButton(QIcon(":/data/stock-media-stop.png"),"&Black");
+	m_blackButton->setCheckable(true);
+	connect(m_blackButton, SIGNAL(toggled(bool)), this, SLOT(fadeBlackFrame(bool)));
+	hbox1->addWidget(m_blackButton);
+	
+	m_clearButton = new QPushButton(QIcon(":/data/stock-media-eject.png"),"&Clear");
+	m_clearButton->setCheckable(true);
+	connect(m_clearButton, SIGNAL(toggled(bool)), this, SLOT(fadeClearFrame(bool)));
+	hbox1->addWidget(m_clearButton);
+	
+	layout->addLayout(hbox1);
+	
 	/** Setup the list view in icon mode */
 	//m_listView = new QListView(this);
 	m_listView = new SlideGroupViewControlListView(this);
 	m_listView->setViewMode(QListView::IconMode);
 	m_listView->setMovement(QListView::Static);
 	m_listView->setSelectionMode(QAbstractItemView::SingleSelection);
+	setFocusProxy(m_listView);
+	setFocusPolicy(Qt::StrongFocus);
 	
 	connect(m_listView,SIGNAL(activated(const QModelIndex &)),this,SLOT(slideSelected(const QModelIndex &)));
 	connect(m_listView,SIGNAL(clicked(const QModelIndex &)),  this,SLOT(slideSelected(const QModelIndex &)));
@@ -89,19 +114,20 @@ SlideGroupViewControl::SlideGroupViewControl(SlideGroupViewer *g, QWidget *w )
 	
 	/** Setup the button controls at the bottom */
 	QHBoxLayout *hbox = new QHBoxLayout();
-	
 	QPushButton *btn;
 	
+	// "Prev" button
 	btn = new QPushButton(QIcon(":/data/control_start_blue.png"),"P&rev");
 	connect(btn, SIGNAL(clicked()), this, SLOT(prevSlide()));
 	hbox->addWidget(btn);
-
+	
 	hbox->addStretch(1);
 	
+	// animation controls
 	m_timeLabel = new QLabel(this);
 	m_timeLabel->setEnabled(false);
 	m_timeLabel->setText("00:00");
-	m_timeLabel->setFont(QFont("Monospace",12,QFont::Bold));
+	m_timeLabel->setFont(QFont("Monospace",10,QFont::Bold));
 	hbox->addWidget(m_timeLabel);
 	
 	m_timeButton = new QPushButton(QIcon(":/data/action-play.png"),"&Play");
@@ -111,12 +137,13 @@ SlideGroupViewControl::SlideGroupViewControl(SlideGroupViewer *g, QWidget *w )
 	
 	hbox->addStretch(1);
 
+	// "Next" button
 	btn = new QPushButton(QIcon(":/data/control_end_blue.png"),"&Next");
 	connect(btn, SIGNAL(clicked()), this, SLOT(nextSlide()));
 	hbox->addWidget(btn);
 
 
-	
+	/** Initalize animation timers **/
 	m_elapsedTime.start();
 	
 	m_changeTimer = new QTimer(this);
@@ -309,7 +336,18 @@ void SlideGroupViewControl::setCurrentSlide(Slide *s)
 	m_slideViewer->setSlide(s);
 	m_listView->setCurrentIndex(m_slideModel->indexForSlide(s));
 }
+
+void SlideGroupViewControl::fadeBlackFrame(bool toggled)
+{
+	m_slideViewer->fadeBlackFrame(toggled);
+	m_clearButton->setEnabled(!toggled);
+}
 	
+void SlideGroupViewControl::fadeClearFrame(bool toggled)
+{
+	m_slideViewer->fadeClearFrame(toggled);
+}
+
 /** AbstractSlideGroupEditor:: **/
 AbstractSlideGroupEditor::AbstractSlideGroupEditor(SlideGroup */*g*/, QWidget *parent) : QMainWindow(parent) {}
 AbstractSlideGroupEditor::~AbstractSlideGroupEditor() {}

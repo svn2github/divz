@@ -806,6 +806,7 @@ void MainWindow::setLiveGroup(SlideGroup *newGroup, Slide *currentSlide)
 	m_viewControl->setSlideGroup(newGroup,currentSlide);
 	//qDebug() << "MainWindow::setLiveGroup: Loading into LIVE output";
 	m_liveView->setSlideGroup(newGroup,currentSlide);
+	m_viewControl->setFocus(Qt::OtherFocusReason);
 	
 }
 
