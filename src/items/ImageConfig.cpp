@@ -1,7 +1,7 @@
 #include "ImageConfig.h"
 #include "ImageContent.h"
 
-#include "ui_GenericItemConfigBase.h"
+#include "ui_GenericItemConfig.h"
 
 ImageConfig::ImageConfig(ImageContent * v, QGraphicsItem * parent)
     : GenericItemConfig(v)

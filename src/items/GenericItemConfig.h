@@ -14,27 +14,13 @@ class MyGraphicsScene;
 
 class AbstractVisualItem;
 
-#include <QtGui/QWidget>
 #include <QtGui/QDialog>
 
 namespace Ui {
-    class GenericItemConfigBase;
+    class GenericItemConfig;
 }
 
-class GenericItemConfig;
-
-class GenericItemConfigDialog  : public QDialog
-{
-	Q_OBJECT
-	public:
-		GenericItemConfigDialog(GenericItemConfig*config, QWidget*parent=0);
-	//public slots:
-	//	void slotClose();
-};
-		
-		
-
-class GenericItemConfig : public QWidget 
+class GenericItemConfig : public QDialog 
 {
 	Q_OBJECT
 	public:
@@ -51,8 +37,6 @@ class GenericItemConfig : public QWidget
 		
 		MyGraphicsScene * scene() { return m_scene; }
 		void setScene(MyGraphicsScene * s) { m_scene = s; }
-		
-		GenericItemConfigDialog * toDialog(QWidget *parent=0);
 	
 	Q_SIGNALS:
 		void applyLook(quint32 frameClass, bool mirrored, bool allContents);
@@ -70,7 +54,7 @@ class GenericItemConfig : public QWidget
 		
 	
 	protected:
-		Ui::GenericItemConfigBase *m_commonUi;
+		Ui::GenericItemConfig *m_commonUi;
 	
 	private:
 		void populateFrameList();

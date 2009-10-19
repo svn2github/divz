@@ -4,8 +4,7 @@ DEPENDPATH += $$PWD
 
 FORMS += AbstractConfig.ui \
 	TextProperties.ui \
-	GenericItemConfig.ui \
-	GenericItemConfigBase.ui 
+	GenericItemConfig.ui
 	
 HEADERS +=  AbstractConfig.h \
     AbstractContent.h \

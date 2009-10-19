@@ -907,10 +907,10 @@ void MyGraphicsScene::configureContent(AbstractContent *content)
 	
 	//connect(p, SIGNAL(applyLook(quint32,bool,bool)), this, SLOT(slotApplyLook(quint32,bool,bool)));
 	//p->setScene(this);
-	//p->show();
+	p->show();
 	
-	QDialog * d = p->toDialog();
-	d->show();
+	//QDialog * d = p->toDialog();
+	//d->show();
 
 }
 
