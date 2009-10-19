@@ -13,11 +13,12 @@
 #include <QWidget>
 #include <QSettings>
 #include <QDebug>
+#include <QDialogButtonBox>
 
 #include <qtcolorpicker.h>
 
 #include "GenericItemConfig.h"
-#include "ui_GenericItemConfig.h"
+#include "ui_GenericItemConfigBase.h"
 
 #include "AppSettings.h"
 #include <QFileInfo>
@@ -28,9 +29,37 @@ static void setupColorPicker(QtColorPicker*p)
 	p->setStandardColors();
 }
 
+//connect(m_commonUi->buttonBox, SIGNAL(accepted()), this, SLOT(slotOkClicked()));
+	//connect(m_commonUi->buttonBox, SIGNAL(accepted()), this, SLOT(slotClosed()));
+	//connect(m_commonUi->buttonBox, SIGNAL(rejected()), this, SLOT(slotClosed()));
+	
+GenericItemConfigDialog::GenericItemConfigDialog(GenericItemConfig *configWidget, QWidget *parent) 
+	: QDialog(parent)
+{
+	QVBoxLayout *layout = new QVBoxLayout(this);
+	//layout->setContentsMargins(0,0,0,0);
+	layout->addWidget(configWidget);
+	
+	QHBoxLayout *hbox = new QHBoxLayout();
+	QPushButton *btn = new QPushButton("Close");
+	connect(btn,SIGNAL(clicked()), this, SLOT(close()));
+	hbox->addWidget(btn);
+	
+	layout->addLayout(hbox);
+}
+
+GenericItemConfigDialog * GenericItemConfig::toDialog(QWidget *parent)
+{
+	GenericItemConfigDialog * d = new GenericItemConfigDialog(this,parent);
+	d->setAttribute(Qt::WA_DeleteOnClose);
+	return d;
+}
+
+//void GenericItemConfigDialog::slotClose()
+
 GenericItemConfig::GenericItemConfig(AbstractContent * content, QWidget *parent) :
-	QDialog(parent)
-	, m_commonUi(new Ui::GenericItemConfig())
+	QWidget(parent)
+	, m_commonUi(new Ui::GenericItemConfigBase())
 	, m_content(content)
 	, m_closeButton(0)
 	, m_okButton(0)
@@ -135,9 +164,9 @@ GenericItemConfig::GenericItemConfig(AbstractContent * content, QWidget *parent)
 // 	connect(m_commonUi->listWidget, SIGNAL(itemSelectionChanged()), this, SLOT(on_listWidget_itemSelectionChanged()));
 	connect(m_commonUi->reflectionEnabled, SIGNAL(toggled(bool)), this, SLOT(slotMirrorOn(bool)));
 	//connect(m_commonUi->reflectionNone, SIGNAL(toggled(bool)), this, SLOT(slotMirrorOff(bool)));
-	connect(m_commonUi->buttonBox, SIGNAL(accepted()), this, SLOT(slotOkClicked()));
-	connect(m_commonUi->buttonBox, SIGNAL(accepted()), this, SLOT(slotClosed()));
-	connect(m_commonUi->buttonBox, SIGNAL(rejected()), this, SLOT(slotClosed()));
+	//connect(m_commonUi->buttonBox, SIGNAL(accepted()), this, SLOT(slotOkClicked()));
+	//connect(m_commonUi->buttonBox, SIGNAL(accepted()), this, SLOT(slotClosed()));
+	//connect(m_commonUi->buttonBox, SIGNAL(rejected()), this, SLOT(slotClosed()));
 	connect(m_commonUi->opacityBox, SIGNAL(valueChanged(int)), this, SLOT(slotOpacityChanged(int)));
 	
 	connect(m_commonUi->sizeReset,     SIGNAL(clicked()), this, SLOT(slotResetSize()));
@@ -195,16 +224,16 @@ GenericItemConfig::~GenericItemConfig()
 
 void GenericItemConfig::slotClosed()
 {
-     if(scene())
-     {
-	MyGraphicsScene * desk = static_cast<MyGraphicsScene*>(scene());
-	desk->slotDeleteConfig(this);
-     }
-     else
-     {
-     	close();
-     	deleteLater();
-     }
+	if(scene())
+	{
+		MyGraphicsScene * desk = static_cast<MyGraphicsScene*>(scene());
+		desk->slotDeleteConfig(this);
+	}
+	else
+	{
+		close();
+		deleteLater();
+	}
 //	done();
 }
 
@@ -228,7 +257,7 @@ void GenericItemConfig::dispose()
 
 void GenericItemConfig::changeEvent(QEvent *e)
 {
-	QDialog::changeEvent(e);
+	QWidget::changeEvent(e);
 	switch (e->type()) {
 	case QEvent::LanguageChange:
 		m_commonUi->retranslateUi(this);

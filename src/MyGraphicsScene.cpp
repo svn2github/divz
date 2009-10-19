@@ -715,87 +715,107 @@ void MyGraphicsScene::keyPressEvent(QKeyEvent * event)
 					qDebug() << "MyGraphicsScene::keyPressEvent(): key:"<<event->key()<<", path 1: fall thru, no key";
 				break;
 		}
+	}
+	else
+	{
 		
 		if(DEBUG_KEYHANDLER)
 			qDebug() << "MyGraphicsScene::keyPressEvent(): key:"<<event->key()<<", path 1, end of path, accepted?"<<event->isAccepted();
 		
-		//if(!event->isAccepted())
-		//{
-			if(DEBUG_KEYHANDLER)
-				qDebug() << "MyGraphicsScene::keyPressEvent(): key:"<<event->key()<<", path 2";	
-			QSizeF grid = AppSettings::gridSize();
-			// snap to half a grid point - the content->flagKeyboardMotivatedMovement() call tells AppSettings::snapToGrid()
-			// in AbstractContent to allow it to be half a grid point
-			qreal x = grid.width()/2;
-			qreal y = grid.height()/2;
+		if(DEBUG_KEYHANDLER)
+			qDebug() << "MyGraphicsScene::keyPressEvent(): key:"<<event->key()<<", path 2";	
+		QSizeF grid = AppSettings::gridSize();
+		// snap to half a grid point - the content->flagKeyboardMotivatedMovement() call tells AppSettings::snapToGrid()
+		// in AbstractContent to allow it to be half a grid point
+		qreal x = grid.width()/2;
+		qreal y = grid.height()/2;
+		
+		// arbitrary magic numbers - no significance, just random preference
+		if(x<=0)
+			x = 5;
+		if(y<=5)
+			y = 5;
+		
+		QList<QGraphicsItem *> selection = selectedItems();
+		if(DEBUG_KEYHANDLER)
+			qDebug() << "MyGraphicsScene::keyPressEvent(): key:"<<event->key()<<", path 2, selection size:"<<selection.size();
+		if(selection.size() > 0)
+		{
 			
-			// arbitrary magic numbers - no significance, just random preference
-			if(x<=0)
-				x = 5;
-			if(y<=5)
-				y = 5;
-			
-			QList<QGraphicsItem *> selection = selectedItems();
 			if(DEBUG_KEYHANDLER)
-				qDebug() << "MyGraphicsScene::keyPressEvent(): key:"<<event->key()<<", path 2, selection size:"<<selection.size();
-			if(selection.size() > 0)
+				qDebug() << "MyGraphicsScene::keyPressEvent(): key:"<<event->key()<<", path 2"; //, first content model item name:"<<content->modelItem()->itemName();
+			switch(event->key())
 			{
-				AbstractContent * content = dynamic_cast<AbstractContent *>(selection.first());
-				if(DEBUG_KEYHANDLER)
-					qDebug() << "MyGraphicsScene::keyPressEvent(): key:"<<event->key()<<", path 2, first content model item name:"<<content->modelItem()->itemName();
-				switch(event->key())
-				{
-					case Qt::Key_Delete:
-						slotDeleteContent();
-						event->accept();
-						break;
-					case Qt::Key_Up:
-						if(DEBUG_KEYHANDLER)
-							qDebug() << "MyGraphicsScene::keyPressEvent(): key:"<<event->key()<<", path 2: move up:"<<y;
+				case Qt::Key_Delete:
+					slotDeleteContent();
+					event->accept();
+					break;
+				case Qt::Key_Up:
+					if(DEBUG_KEYHANDLER)
+						qDebug() << "MyGraphicsScene::keyPressEvent(): key:"<<event->key()<<", path 2: move up:"<<y;
+					foreach(QGraphicsItem *item, selection)
+					{
+						AbstractContent * content = dynamic_cast<AbstractContent *>(item);
 						content->flagKeyboardMotivatedMovement();
 						content->moveBy(0,-y);
 						content->syncToModelItem(0);
-						event->accept();
-						break;
-					case Qt::Key_Down:
-						if(DEBUG_KEYHANDLER)
-							qDebug() << "MyGraphicsScene::keyPressEvent(): key:"<<event->key()<<", path 2: move down:"<<y;
+					}
+					event->accept();
+					break;
+				case Qt::Key_Down:
+					if(DEBUG_KEYHANDLER)
+						qDebug() << "MyGraphicsScene::keyPressEvent(): key:"<<event->key()<<", path 2: move down:"<<y;
+					foreach(QGraphicsItem *item, selection)
+					{
+						AbstractContent * content = dynamic_cast<AbstractContent *>(item);
 						content->flagKeyboardMotivatedMovement();
 						content->moveBy(0,+y);
 						content->syncToModelItem(0);
-						event->accept();
-						break;
-					case Qt::Key_Left:
-						if(DEBUG_KEYHANDLER)
-							qDebug() << "MyGraphicsScene::keyPressEvent(): key:"<<event->key()<<", path 2: move left:"<<x;
+					}
+					event->accept();
+					break;
+				case Qt::Key_Left:
+					if(DEBUG_KEYHANDLER)
+						qDebug() << "MyGraphicsScene::keyPressEvent(): key:"<<event->key()<<", path 2: move left:"<<x;
+					foreach(QGraphicsItem *item, selection)
+					{
+						AbstractContent * content = dynamic_cast<AbstractContent *>(item);
 						content->flagKeyboardMotivatedMovement();
 						content->moveBy(-x,0);
 						content->syncToModelItem(0);
-						event->accept();
-						break;
-					case Qt::Key_Right:
-						if(DEBUG_KEYHANDLER)
-							qDebug() << "MyGraphicsScene::keyPressEvent(): key:"<<event->key()<<", path 2: move right:"<<x;
+					}
+					event->accept();
+					break;
+				case Qt::Key_Right:
+					if(DEBUG_KEYHANDLER)
+						qDebug() << "MyGraphicsScene::keyPressEvent(): key:"<<event->key()<<", path 2: move right:"<<x;
+					foreach(QGraphicsItem *item, selection)
+					{
+						AbstractContent * content = dynamic_cast<AbstractContent *>(item);
 						content->flagKeyboardMotivatedMovement();
 						content->moveBy(+x,0);
 						content->syncToModelItem(0);
-						event->accept();
-						break;
-					case Qt::Key_F2:
-					case Qt::Key_Space:
-					case Qt::Key_Enter:
-						if(DEBUG_KEYHANDLER)
-							qDebug() << "MyGraphicsScene::keyPressEvent(): key:"<<event->key()<<", path 2: config content key";
+					}
+					event->accept();
+					break;
+				case Qt::Key_F4:
+				case Qt::Key_Space:
+				//case Qt::Key_Enter:
+					if(DEBUG_KEYHANDLER)
+						qDebug() << "MyGraphicsScene::keyPressEvent(): key:"<<event->key()<<", path 2: config content key";
+					foreach(QGraphicsItem *item, selection)
+					{
+						AbstractContent * content = dynamic_cast<AbstractContent *>(item);
 						configureContent(content);
-						event->accept();
-						break;
-					default:
-						if(DEBUG_KEYHANDLER)
-							qDebug() << "MyGraphicsScene::keyPressEvent(): key:"<<event->key()<<", path 2: fall thru, no key";
-						break;
-				}
+					}
+					event->accept();
+					break;
+				default:
+					if(DEBUG_KEYHANDLER)
+						qDebug() << "MyGraphicsScene::keyPressEvent(): key:"<<event->key()<<", path 2: fall thru, no key";
+					break;
 			}
-		//}
+		}
 		
 		if(DEBUG_KEYHANDLER)
 			qDebug() << "MyGraphicsScene::keyPressEvent(): key:"<<event->key()<<", path 2, end of path, accepted?"<<event->isAccepted();
@@ -847,13 +867,13 @@ void MyGraphicsScene::slotConfigureContent(const QPoint & /*scenePoint*/)
 	
 	// get the content and ensure it hasn't already a property window
 	AbstractContent * content = dynamic_cast<AbstractContent *>(sender());
-	foreach (GenericItemConfig * config, m_configs) 
-	{
-// 		if (config->content() == content)
-// 			return;
-		// force only 1 property instance
-		slotDeleteConfig(config);
-	}
+// 	foreach (GenericItemConfig * config, m_configs) 
+// 	{
+// // 		if (config->content() == content)
+// // 			return;
+// 		// force only 1 property instance
+// 		//slotDeleteConfig(config);
+// 	}
 	
 	configureContent(content);
 }
@@ -883,11 +903,14 @@ void MyGraphicsScene::configureContent(AbstractContent *content)
 		p = new GenericItemConfig(content);
 	
 	// common links
-	m_configs.append(p);
+	//m_configs.append(p);
 	
-	connect(p, SIGNAL(applyLook(quint32,bool,bool)), this, SLOT(slotApplyLook(quint32,bool,bool)));
-	p->setScene(this);
-	p->show();
+	//connect(p, SIGNAL(applyLook(quint32,bool,bool)), this, SLOT(slotApplyLook(quint32,bool,bool)));
+	//p->setScene(this);
+	//p->show();
+	
+	QDialog * d = p->toDialog();
+	d->show();
 
 }
 
@@ -986,14 +1009,14 @@ void MyGraphicsScene::slotDeleteContent()
 // 		if (m_backContent == content)
 // 			setBackContent(0);
 	
-		// remove related property if deleting its content
-		foreach (GenericItemConfig * config, m_configs) {
-			if (config->content() == content) 
-			{
-				slotDeleteConfig(config);
-				break;
-			}
-		}
+// 		// remove related property if deleting its content
+// 		foreach (GenericItemConfig * config, m_configs) {
+// 			if (config->content() == content) 
+// 			{
+// 				slotDeleteConfig(config);
+// 				break;
+// 			}
+// 		}
 	
 		// unlink content from lists, myself(the Scene) and memory
 		m_content.removeAll(content);
@@ -1005,9 +1028,9 @@ void MyGraphicsScene::slotDeleteContent()
 
 void MyGraphicsScene::slotDeleteConfig(GenericItemConfig * config)
 {
-	m_configs.removeAll(config);
-	config->dispose();
-	update();
+// 	m_configs.removeAll(config);
+// 	config->dispose();
+// 	update();
 }
 
 

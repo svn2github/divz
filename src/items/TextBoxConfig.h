@@ -21,13 +21,17 @@ class TextBoxContent;
 
 class TextBoxConfig : public GenericItemConfig
 {
+	Q_OBJECT
     public:
         TextBoxConfig(TextBoxContent * textContent, QGraphicsItem * parent = 0);
         ~TextBoxConfig();
 
+    private slots:
+        void applyTextSlot();
+    	void resetTextSlot();
     private:
         // ::AbstractConfig
-        void slotOkClicked();
+        //void slotOkClicked();
         TextBoxContent * m_textContent;
         RichTextEditorDialog * m_editor;
 };

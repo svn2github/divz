@@ -111,7 +111,8 @@ void SlideSettingsDialog::configBg()
     //QMessageBox::information(this,"Not Implemented","Sorry, but this button has not been implemented yet!");
     BackgroundContent * bg = dynamic_cast<BackgroundContent*>(dynamic_cast<AbstractVisualItem*>(m_slide->background())->createDelegate());
     BackgroundConfig config(bg);
-    config.exec();
+    QDialog *d = config.toDialog();
+    d->exec();
     delete bg;
 }
 

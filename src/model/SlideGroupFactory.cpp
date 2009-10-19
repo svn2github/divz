@@ -233,14 +233,16 @@ QString SlideGroupViewControl::formatTime(double time)
 {
 	double min = time/60;
 	double sec = (min - (int)(min)) * 60;
+	double ms  = (sec - (int)(sec)) * 60;
 	return  (min<10? "0":"") + QString::number((int)min) + ":" +
-		(sec<10? "0":"") + QString::number((int)sec);
+		(sec<10? "0":"") + QString::number((int)sec) + "." +
+		(ms <10? "0":"") + QString::number((int)ms );
 
 }
 
 void SlideGroupViewControl::updateTimeLabel()
 {
-	double time = m_currentTimeLength - m_elapsedTime.elapsed()/1000;
+	double time = ((double)m_currentTimeLength) - ((double)m_elapsedTime.elapsed())/1000;
 	m_timeLabel->setText(QString("<font color='%1'>%2</font>").arg(time <= 3 ? "red" : "black").arg(formatTime(time)));
 }
 	

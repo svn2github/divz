@@ -23,6 +23,8 @@ class BackgroundItem;
 
 class QVideoProvider;
 
+class MyGraphicsView;
+
 class MyGraphicsScene : public QGraphicsScene
 {
 	Q_OBJECT
@@ -64,6 +66,8 @@ class MyGraphicsScene : public QGraphicsScene
                 void removeVisualDelegate(AbstractItem *item);
                 AbstractContent * findVisualDelegate(AbstractItem *item);
                 QList<AbstractItem *> copyBuffer();
+                
+                QList<AbstractContent *> abstractContent() { return m_content; }
 		
                 
                 void configureContent(AbstractContent *content);
@@ -78,6 +82,7 @@ class MyGraphicsScene : public QGraphicsScene
 		void selectAll();
 	
 	protected:
+		friend class MyGraphicsView;
 		void keyPressEvent(QKeyEvent * event);
 		bool eventFilter(QObject *obj, QEvent *event);
 

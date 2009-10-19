@@ -1,7 +1,7 @@
 #include "BackgroundConfig.h"
 #include "BackgroundContent.h"
 
-#include "ui_GenericItemConfig.h"
+#include "ui_GenericItemConfigBase.h"
 
 BackgroundConfig::BackgroundConfig(BackgroundContent * v, QGraphicsItem * parent)
     : GenericItemConfig(v)

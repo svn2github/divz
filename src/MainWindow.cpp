@@ -142,7 +142,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	
 	//setLiveGroup(m_doc.groupList().at(0));
 	
-	connect(m_ui->actionExit,SIGNAL(triggered()), qApp, SLOT(quit()));
+	connect(m_ui->actionExit,SIGNAL(triggered()), this, SLOT(close()));
 	
 	
 	setupSongList();
@@ -680,6 +680,30 @@ void MainWindow::actionDvizWebsite()
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
+	if(m_doc->filename().isEmpty())
+	{
+		switch(QMessageBox::question(this,"File Not Saved","This file has not yet been saved - do you want to give it a file name? Click 'Save' to save the document to a file, click 'Discard' to continue closing and loose all changes, or click 'Cancel' to cancel closing and return to the program.",
+			QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel))
+		{
+			case QMessageBox::Save:
+				if(!actionSaveAs())
+					event->ignore();
+				else
+				{
+					event->accept();
+					m_liveView->hide();
+				}
+				return;
+			case QMessageBox::Discard:
+				event->accept();
+				m_liveView->hide();
+				return;
+			default:
+				event->ignore();
+				return;
+		};
+	}
+	else
 	if(actionSave())
 	{
 		event->accept();

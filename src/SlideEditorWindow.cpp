@@ -34,11 +34,15 @@
 #include <QSplitter>
 #include <QDoubleSpinBox>
 
+#include <QMessageBox>
+
 #include <QDebug>
 #include <assert.h>
 
 #include <QUndoView>
 #include <QUndoStack>
+
+#include <QApplication>
 
 #include <QGraphicsLineItem>
 
@@ -49,6 +53,7 @@
 #include "MainWindow.h"
 #include "AppSettings.h"
 #include "items/TextBoxContent.h"
+
 
 #include "SlideSettingsDialog.h"
 #include "SlideGroupSettingsDialog.h"
@@ -89,6 +94,7 @@ class MyGraphicsView : public QGraphicsView
 		MyGraphicsView(QWidget * parent)
 			: QGraphicsView(parent)
 			, m_desk(0)
+			, m_editorWindow(dynamic_cast<SlideEditorWindow*>(parent))
 		{
 			// customize widget
 // 			setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -157,6 +163,26 @@ class MyGraphicsView : public QGraphicsView
 						QGraphicsView::keyPressEvent(event);
 				}
 			}
+			else
+			{
+				switch(event->key())
+				{
+					case Qt::Key_PageUp:
+						if(!m_editorWindow->prevSlide())
+							QApplication::beep();
+						break;
+						
+					case Qt::Key_PageDown:
+						if(!m_editorWindow->nextSlide())
+							QApplication::beep();
+						break;
+						
+					default:
+						m_desk->keyPressEvent(event);
+						break;
+				}
+				
+			}
 		}
 		
 		
@@ -178,6 +204,7 @@ class MyGraphicsView : public QGraphicsView
 	
 	private:
 		MyGraphicsScene * m_desk;
+		SlideEditorWindow * m_editorWindow;
 };
 
 
@@ -426,7 +453,24 @@ void SlideEditorWindow::setCurrentSlideLive()
 		return;
 	if(!m_slideGroup)
 		return;
-	MainWindow::mw()->setLiveGroup(m_slideGroup,m_scene->slide());
+	Slide * slide = m_scene->slide();
+	double changeTime = slide->autoChangeTime();
+	if(changeTime > 0)
+	{
+		if(QMessageBox::question(this,
+			"Allow Slide to Auto-Change?",
+			QString("This slide is set to automatically change to the next slide after %1 seconds. Do you want to ALLOW this slide to automatically change (click Yes) or do you want to CANCEL the timer, just for this viewing?").arg(changeTime),
+			QMessageBox::Yes | QMessageBox::Cancel, QMessageBox::Yes
+			) == QMessageBox::Cancel)
+			slide->setAutoChangeTime(0);
+	}
+	
+	MainWindow::mw()->setLiveGroup(m_slideGroup,slide);
+	
+	if(changeTime > 0 && slide->autoChangeTime() == 0)
+	{
+		slide->setAutoChangeTime(changeTime);
+	}
 }
 
 
@@ -754,28 +798,102 @@ void SlideEditorWindow::setSlideGroup(SlideGroup *g,Slide *curSlide)
 	
 	if(curSlide)
 	{
-		m_scene->setSlide(curSlide);
-		m_slideListView->setCurrentIndex(m_slideModel->indexForSlide(curSlide));
-		setupViewportLines();
+		setCurrentSlide(curSlide);
 	}
 	else
 	{
 		QList<Slide*> slist = g->slideList();
 		if(slist.size() > 0)
-		{
-			Slide *s = m_slideModel->slideAt(0);
-			m_scene->setSlide(s);
-			m_slideListView->setCurrentIndex(m_slideModel->indexForRow(0));
-			setupViewportLines();
-		}
+			setCurrentSlide(m_slideModel->slideAt(0));
 		else
-		{
 			qDebug("SlideEditorWindow::setSlideGroup: Group[0] has 0 slides");
-		}
 	}
 		
 
 }
+
+//#define qGrep(LIST_TYPE, NEW_LIST, OLD_LIST, IT_CLAUSE) \
+//	foreach(LIST_TYPE _it, OLD_LIST) if(LIST_CLAUSE) NEW_LIST.append(_it);
+
+#define qGrep(IT_VAR, OLD_LIST, CLAUSE)  \
+	({typedef Q_TYPEOF(OLD_LIST) OLD_LIST_T; OLD_LIST_T newList; foreach(IT_VAR, OLD_LIST) {if(CLAUSE) {newList.append(_it);}}; newList; })
+
+
+#define XY(X,Y) X##Y
+#define MakeNameXY(FX,LINE) XY(FX,LINE)
+#define MakeName(FX) MakeNameXY(FX,__LINE__)
+
+// from http://okmij.org/ftp/cpp-digest/Functional-Cpp.html#LinAlg
+#define Lambda(args,ret_type,body) \
+	class MakeName(__Lambda___) { \
+		public: ret_type operator() args { body; } }
+
+//sorted = qSortX(Lambda((AbstractContent*a,AbstractContent*b),bool, return (a && b) ? a->zValue() < b->zValue()), nonBg);
+#define qSortX(OLD_LIST, TYPE_SPEC, COMPARE_BODY) \
+	({ QList<TYPE_SPEC> newList = OLD_LIST; \
+		qSort(  newList.begin(),  \
+			newList.end(),    \
+			Lambda((TYPE_SPEC a, TYPE_SPEC b), bool, return (a && b) ? COMPARE_BODY : true) ); newList; });
+		
+namespace SlideEditorWindowSortFunctions {
+	bool sort_abscon_zvalue(AbstractContent *a, AbstractContent *b) 
+	{
+		return (a && b) ? a->zValue() < b->zValue() : true;
+	}
+};
+
+void SlideEditorWindow::setCurrentSlide(Slide *slide)
+{
+	m_scene->setSlide(slide);
+	m_slideListView->setCurrentIndex(m_slideModel->indexForSlide(slide));
+	setupViewportLines();
+	
+	QList<AbstractContent *> nonBg;
+	//nonBg = qGrep(AbstractContent * _it, m_scene->abstractContent(),
+	//	_it->modelItem()->itemClass() != BackgroundItem::ItemClass);
+		
+	foreach(AbstractContent *item, m_scene->abstractContent())
+		if(item->modelItem()->itemClass() != BackgroundItem::ItemClass)
+			nonBg << item;
+	
+	if(nonBg.isEmpty())
+		return;
+	
+	//QList<AbstractContent*> sorted = nonBg;
+	//qSort(sorted.begin(), sorted.end(), Lambda((AbstractContent*a,AbstractContent*b),bool, return (a && b) ? a->zValue() < b->zValue()), nonBg);
+	//sorted = qSortX(nonBg, AbstractContent *, a->zValue() < b->zValue() );
+	
+	qSort(nonBg.begin(), nonBg.end(), SlideEditorWindowSortFunctions::sort_abscon_zvalue);
+
+	m_scene->clearSelection();
+	nonBg.last()->setSelected(true);
+}
+
+Slide * SlideEditorWindow::nextSlide()
+{
+	QModelIndex idx = m_slideListView->currentIndex();
+	int max = m_slideModel->rowCount();
+	if(idx.row() + 1 >= max)
+		return 0;
+	
+	Slide * slide = m_slideModel->slideAt(idx.row() + 1);
+	setCurrentSlide(slide);
+	
+	return slide;
+}
+
+Slide * SlideEditorWindow::prevSlide()
+{
+	QModelIndex idx = m_slideListView->currentIndex();
+	if(idx.row() - 1 < 0)
+		return 0;
+	
+	Slide * slide = m_slideModel->slideAt(idx.row() - 1);
+	setCurrentSlide(slide);
+	
+	return slide;
+}
+
 
 QString guessTitle(QString field)
 {
@@ -978,7 +1096,8 @@ public:
 	{ 
 		m_window->ignoreUndoChanged(true);
 		m_window->slideGroup()->addSlide(m_slide);
-		m_window->setSlideGroup(m_window->slideGroup(),m_slide);
+		//m_window->setSlideGroup(m_window->slideGroup(),m_slide);
+		m_window->setCurrentSlide(m_slide);
 		m_window->ignoreUndoChanged(false);
 	}
 	virtual void redo() 
@@ -1111,8 +1230,7 @@ void SlideEditorWindow::slideSelected(const QModelIndex &idx)
 {
 	Slide *s = m_slideModel->slideFromIndex(idx);
 	//qDebug() << "SlideEditorWindow::slideSelected(): selected slide#:"<<s->slideNumber();
-	m_scene->setSlide(s);
-	setupViewportLines();
+	setCurrentSlide(s);
 }
 
 void SlideEditorWindow::newSlide()
@@ -1127,7 +1245,8 @@ void SlideEditorWindow::newSlide()
 	
 	//m_scene->setSlide(slide);
 	
-	setSlideGroup(m_slideGroup,slide);
+	//setSlideGroup(m_slideGroup,slide);
+	setCurrentSlide(slide);
 }
 
 void SlideEditorWindow::dupSlide()
@@ -1140,7 +1259,8 @@ void SlideEditorWindow::dupSlide()
 	
 	m_slideGroup->addSlide(slide);
 	
-	setSlideGroup(m_slideGroup,slide);
+	//setSlideGroup(m_slideGroup,slide);
+	setCurrentSlide(slide);
 }
 
 void SlideEditorWindow::slideProperties()
@@ -1177,11 +1297,11 @@ void SlideEditorWindow::delSlide()
 		newSlide = m_slideModel->slideAt(prev.row());
 	}
 	
-	if(newSlide)
-	{
-		m_scene->setSlide(newSlide);
-		setupViewportLines();
-	}
+// 	if(newSlide)
+// 	{
+// 		m_scene->setSlide(newSlide);
+// 		setupViewportLines();
+// 	}
 	
 	QList<Slide*> slides = m_slideGroup->slideList();
 	int counter = 0;
@@ -1190,7 +1310,8 @@ void SlideEditorWindow::delSlide()
 		s->setSlideNumber(counter++);
 	}
 	
-	setSlideGroup(m_slideGroup,newSlide);
+	//setSlideGroup(m_slideGroup,newSlide);
+	setCurrentSlide(newSlide);
 	
 	// Dont delete here, delete when UndoSlideRemoved command is destroyed
 	// change: go ahead, delete - we clone slide above

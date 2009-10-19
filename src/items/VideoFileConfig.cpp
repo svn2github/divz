@@ -1,7 +1,7 @@
 #include "VideoFileConfig.h"
 #include "VideoFileContent.h"
 
-#include "ui_GenericItemConfig.h"
+#include "ui_GenericItemConfigBase.h"
 
 VideoFileConfig::VideoFileConfig(VideoFileContent * v, QGraphicsItem * parent)
     : GenericItemConfig(v)

@@ -137,11 +137,7 @@ Revised Task list for Release 1.0, 10/18/09:
 			
 			fonts in the program settings dialog still are incongruant sizes between all boxes
 			
-			when pressing f5 to go live in editor, should prompt if you want to enable auto change timer for this slide or not
-			
 			future: investigate midi area with auto aranging/tiling of windows
-			
-			when editor going to new slide and only one item in slide, select that item
 			
 			make selection in editor "smarter" 
 				maybe by implementing better shapes for items
@@ -151,8 +147,6 @@ Revised Task list for Release 1.0, 10/18/09:
 				or maybe there is someway to adjust letter spacing in Qt's code?
 				QTextCharFormat does offer horizontal letter spacing...
 				custom vertical letter spacing could be achieved by a custom layout - see qq24: http://doc.trolltech.com/qq/qq24-textlayouts.html
-			
-			in editor, make PGUP/PGDOWN change slides
 			
 			add pixmap cache size option to program settings dialog
 			add crossfade speed and quality options to program settings dialog
@@ -173,9 +167,19 @@ Revised Task list for Release 1.0, 10/18/09:
 					- generating the slides takes a LONG time in ppt once you click CREATE
 					- powerpoint does NOT automatically set the LOOP SLIDE SHOW *or* an intelligent per slide auto-change time
 			
+					
+		[DONE] when editor going to new slide and only one item in slide, select that item
+				actually, we make the top-most (zvalue) item selected
+		[DONE] modified SlideEditorWindow to use setcurrentslide internally instead of setslidegroup to change current slide for editing operations
+		[DONE] fix graphics scene so dont have to press CTRL+(key) to move items
+		[DONE] in editor, make PGUP/PGDOWN change slides
+		[DONE] when pressing f5 to go live in editor, should prompt if you want to enable auto change timer for this slide or not
+				feels kinda hack-ish right now - I just prompt the user to enable/disable timer if time is set
+				if user says No, disable timer - then I set the timeout on the slide model to 0, show the slide, and then set time on slide back to orig time
+				feels kinda hackish-but it works and I dont see any negative side effects (yet)
+					
 		[DONE] pressing f2 in slide editor when focus in slide list should open slide prop dialog box
 		[DONE] when pressing F2 and group is live, should start editor on lvie slide
-		
 		[DONE] add btn to slide timeout button for zero and for "guess"
 		[DONE] auto focus slide timeout box in slide prop dialog
 			
@@ -234,6 +238,8 @@ Revised Task list for Release 1.0, 10/18/09:
 			First implementation in TextBoxContent.cpp, included with very aggressive caching via QPixmapCache
 			Started implementation in BoxContent.cpp, but paused to work on other features.
 			Finished implementation and fixed issues in box content.
+		[DONE] Per-verse custom slides - key to header OR passage#
+				using slide templates, the change was trivial
 		[DONE] Set Ctrl+Z/Ctrl+shift+z as undo/redo shortcuts
 		[DPNE] Set default font size on new text items larger than 16pt
 		[DONE] Add appros icons to slide editor window and mainwidnow
@@ -252,7 +258,6 @@ Revised Task list for Release 1.0, 10/18/09:
 		[REJECTED] Add editing to slide group/slide model lists in the list itself (e.g. to change slide/group title)
 		[LATER] Audio with videos
 				Update QVideo to use QAudioOutput in qtmultimedia tree to play audio in video files
-		[LATER] Per-verse custom slides - key to header OR passage#
 		[LATER] Master overlay - add "disable master overlay" to slide group option box
 		[LATER] Script plugin item
 		[LATER] In-flight edits
@@ -278,12 +283,9 @@ Revised Task list for Release 1.0, 10/18/09:
 		if edit slide, go live, the edit again, the Live Slide List View pixmap does not regenerate
 		crossfading between videos of same bg (see r212 the "Dir Viz" slide - dup and then try cross fading) is hoorible performance!
 			
-		kbd movement needs to move all items in the selection stack
-
 		when dragging multiple-select items, only one item syncs back to the model - the others dont
 				as evidenced when the slide is live, drag multiple items, only one moves in live view
 		during resize, image shadow doesnt scale
-		when closing and have not saved yet, first ASK if they want to save before showing save as dialog
 		When setting live from editor (and other times?) and the group changes, need to change selected group in document list model
 			
 		items modified in editor dont correctly "start out" in lvie view or icons
@@ -315,6 +317,11 @@ Revised Task list for Release 1.0, 10/18/09:
 				however, we must handle corrupt files to some extent
 					preferably, detect the file is corrupt and refuse to load 
 					
+		[FIXED] when closing and have not saved yet, first ASK if they want to save before showing save as dialog
+				updated mainwindow closeEvent() to prompt
+		[FIXED] kbd movement needs to move all items in the selection stack
+				just an algorithmic code change
+		
 		[FIXED] new items STILL not going on top
 				need probably to check z vals of fade roots
 				redesigned the new item algorithims in mygraphicscene to only add to slide and let the sig/slot events add to the scene

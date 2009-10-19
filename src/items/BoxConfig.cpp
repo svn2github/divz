@@ -1,7 +1,7 @@
 #include "BoxConfig.h"
 #include "BoxContent.h"
 
-#include "ui_GenericItemConfig.h"
+#include "ui_GenericItemConfigBase.h"
 
 BoxConfig::BoxConfig(BoxContent * v, QGraphicsItem * parent)
     : GenericItemConfig(v)

@@ -35,6 +35,9 @@ public:
 	
 public slots:
 	void setSlideGroup(SlideGroup*g,Slide *curSlide=0);
+	void setCurrentSlide(Slide *slide);
+	Slide * nextSlide();
+	Slide * prevSlide();
 
 	void ignoreUndoChanged(bool);
 	
