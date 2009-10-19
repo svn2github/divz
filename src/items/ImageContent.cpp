@@ -373,54 +373,68 @@ void ImageContent::drawForeground(QPainter *painter)
 		}
 		else
 		{
-			static int dbg_counter =0;
-			dbg_counter++;
+			
+			//static int dbg_counter =0;
+			//dbg_counter++;
+			
+			// this rect describes our "model" height in terms of item coordinates
+			QRect tmpRect(0,0,cRect.width(),cRect.height());
+			
+			// This is the key to getting good looking scaled & cached pixmaps -
+			// it transforms our item coordinates into view coordinates. 
+			// What this means is that if our item is 100x100, but the view is scaled
+			// by 1.5, our final pixmap would be scaled by the painter to 150x150.
+			// That means that even though after the cache generation we tell drawPixmap()
+			// to use our 100x100 rect, it will do the same transform and figure out that
+			// it needs to scale the pixmap to 150x150. Therefore, what we are doing here
+			// is calculating what drawPixmap() will *really* need, even though we tell
+			// it something different (100x100). Then, we dont scale the pixamp to 100x100 - no,
+			// we scale it only to 150x150. And then the painter can render the pixels 1:1
+			// rather than having to scale up and make it look pixelated.
+			tmpRect = painter->combinedTransform().mapRect(tmpRect);
+			
+			QRect destRect(0,0,tmpRect.width(),tmpRect.height());
+			
+			// cache the scaled pixmap according to the transformed size of the view
+			QString foregroundKey = QString(cacheKey()+":%1:%2").arg(destRect.width()).arg(destRect.height());
+			
 			QPixmap cache;
-			QString foregroundKey = QString(cacheKey()+":%1:%2").arg(cRect.width()).arg(cRect.height());
 			if(!QPixmapCache::find(foregroundKey,cache))
 			{
 				//qDebug() << "ImageContent::drawForeground: " << dbg_counter << "Foreground pixmap dirty, redrawing";
-				cache = QPixmap(cRect.size());
+				cache = QPixmap(destRect.size());
 				cache.fill(Qt::transparent);
 				
 				QPainter tmpPainter(&cache);
 				tmpPainter.setRenderHint(QPainter::HighQualityAntialiasing, true);
 				tmpPainter.setRenderHint(QPainter::SmoothPixmapTransform, true);
-				tmpPainter.setRenderHint(QPainter::Antialiasing, true);
 				
-				
-				
-				QRect destRect(0,0,cRect.width(),cRect.height());
-				//DEBUG_TMARK();
-				
-// 				if(!sourceOffsetTL().isNull() || !sourceOffsetBR().isNull())
-// 				{
-// 					QPointF tl = sourceOffsetTL();
-// 					QPointF br = sourceOffsetBR();
-// 					QRect px = m_pixmap.rect();
-// 					int x1 = (int)(tl.x() * px.width());
-// 					int y1 = (int)(tl.y() * px.height());
-// 					QRect source( 
-// 						px.x() + x1,
-// 						px.y() + y1,
-// 						px.width()  - (int)(br.x() * px.width())  + (px.x() + x1),
-// 						px.height() - (int)(br.y() * px.height()) + (px.y() + y1)
-// 					);
-// 						
-// 					qDebug() << "ImageContent::drawForeground:"<<modelItem()->itemName()<<": tl:"<<tl<<", br:"<<br<<", source:"<<source;
-// 					//tmpPainter.drawPixmap(destRect, m_pixmap, source);
-// 					painter->drawPixmap(cRect, m_pixmap, source);
-// 				}
-// 				else
+				if(!sourceOffsetTL().isNull() || !sourceOffsetBR().isNull())
+				{
+					QPointF tl = sourceOffsetTL();
+					QPointF br = sourceOffsetBR();
+					QRect px = m_pixmap.rect();
+					int x1 = (int)(tl.x() * px.width());
+					int y1 = (int)(tl.y() * px.height());
+					QRect source( 
+						px.x() + x1,
+						px.y() + y1,
+						px.width()  - (int)(br.x() * px.width())  + (px.x() + x1),
+						px.height() - (int)(br.y() * px.height()) + (px.y() + y1)
+					);
+						
+					qDebug() << "ImageContent::drawForeground:"<<modelItem()->itemName()<<": tl:"<<tl<<", br:"<<br<<", source:"<<source;
+					tmpPainter.drawPixmap(destRect, m_pixmap, source);
+				}
+				else
 					tmpPainter.drawPixmap(destRect, m_pixmap);
-					//painter->drawPixmap(cRect, m_pixmap);
+				
 				tmpPainter.end();
 				if(!QPixmapCache::insert(foregroundKey, cache))
-					qDebug() << "ImageContent::drawForeground: Cant insert cache";
+					qDebug() << "ImageContent::drawForeground:"<<modelItem()->itemName()<<": Can't cache the image. This will slow performance of cross fades and slide editor. Make the cache larger using the Program Settings menu.";
 			}
 			
-			painter->drawPixmap(cRect.topLeft(),cache);
-			//painter->drawPixmap(cRect, m_pixmap);
+			painter->drawPixmap(cRect,cache);
 		}
 	}
 	
@@ -428,13 +442,13 @@ void ImageContent::drawForeground(QPainter *painter)
 	{
 		QPen p = modelItem()->outlinePen();
 		p.setJoinStyle(Qt::MiterJoin);
-		if(sceneContextHint() == MyGraphicsScene::Preview)
-		{
-			QTransform tx = painter->transform();
-			qreal scale = qMax(tx.m11(),tx.m22());
-			p.setWidthF(1/scale * p.widthF());
-		}
-		
+// 		if(sceneContextHint() == MyGraphicsScene::Preview)
+// 		{
+// 			QTransform tx = painter->transform();
+// 			qreal scale = qMax(tx.m11(),tx.m22());
+// 			p.setWidthF(1/scale * p.widthF());
+// 		}
+// 		
 		painter->setPen(p);
 		painter->setBrush(Qt::NoBrush);
 		painter->drawRect(cRect);

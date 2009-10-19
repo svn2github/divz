@@ -514,7 +514,7 @@ int MyGraphicsScene::maxZValue()
 		if(c->zValue() > max)
 			max = c->zValue();
 	//qDebug()<<"newImageItem: max:"<<max;
-	return max;
+	return max+1;
 }
 
 void MyGraphicsScene::copyCurrentSelection(bool removeSelection)
