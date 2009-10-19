@@ -149,6 +149,8 @@ Revised Task list for Release 1.0, 10/18/09:
 				
 			offer "advanced" text item (restore old text layout code) that can do advanced font letter spacing, etc
 				or maybe there is someway to adjust letter spacing in Qt's code?
+				QTextCharFormat does offer horizontal letter spacing...
+				custom vertical letter spacing could be achieved by a custom layout - see qq24: http://doc.trolltech.com/qq/qq24-textlayouts.html
 			
 			in editor, make PGUP/PGDOWN change slides
 			
@@ -163,6 +165,13 @@ Revised Task list for Release 1.0, 10/18/09:
 				100-130, inc by 10
 				130>, inc by 25??
 				or some form of exponential, rounded percentage inc? (e.g. (int)(cur size * 1.5)) ?
+				
+			add image slideshow group type
+				or group "generator" / importer?
+				like what powerpoint has - but:
+					- ppt displayes NO progress dialog or bar when reading large image lists (just a busy cursor)
+					- generating the slides takes a LONG time in ppt once you click CREATE
+					- powerpoint does NOT automatically set the LOOP SLIDE SHOW *or* an intelligent per slide auto-change time
 			
 		[DONE] pressing f2 in slide editor when focus in slide list should open slide prop dialog box
 		[DONE] when pressing F2 and group is live, should start editor on lvie slide
