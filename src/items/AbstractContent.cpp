@@ -108,7 +108,8 @@ AbstractContent::AbstractContent(QGraphicsScene * scene, QGraphicsItem * parent,
 	layoutChildren();
 
 	// apply context hints for behaviour based on if we're in an editor, live view, preview, etc
-	applySceneContextHint((dynamic_cast<MyGraphicsScene*>(scene))->contextHint());
+	if(scene)
+		applySceneContextHint((dynamic_cast<MyGraphicsScene*>(scene))->contextHint());
 
 	// add to the scene
 	//scene->addItem(this);

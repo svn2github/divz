@@ -59,6 +59,39 @@ AbstractItem * AbstractItem::cloneTo(AbstractItem *item)
 	return item;
 }
 
+quint32 AbstractItem::valueKey()
+{
+	m_valueKeyTmp.clear();
+	QDataStream b(&m_valueKeyTmp, QIODevice::WriteOnly);
+	
+	const QMetaObject *metaobject = metaObject();
+	int count = metaobject->propertyCount();
+	for (int i=0; i<count; ++i)
+	{
+		QMetaProperty metaproperty = metaobject->property(i);
+		const char *name = metaproperty.name();
+		if(strcmp(name,"objectName") != 0 &&
+			strcmp(name,"itemId") != 0 &&
+			strcmp(name,"itemName") != 0)
+		{
+			QVariant value = property(name);
+			b << name;
+			b << value.toString();
+		}
+	}
+	
+	quint32 val = 0;
+	const char *data = m_valueKeyTmp.constData();
+	for(int i=0;i<m_valueKeyTmp.size();i++)
+	{
+		val += data[i];
+	}
+	//qDebug() << "Item:"<<itemName()<<": int:"<<val<<" (size:"<<m_valueKeyTmp.size()<<")";
+	
+	//return m_valueKeyTmp.constData();
+	return val;
+}
+
 bool AbstractItem::fromXml(QDomElement & pe)
 {
 	setBeingLoaded(true);

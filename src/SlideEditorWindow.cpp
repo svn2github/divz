@@ -296,11 +296,13 @@ void SlideEditorWindow::setupToolbar()
 	toolbar->setObjectName("maintoolbar");
 	
 	QAction  *slideProp = toolbar->addAction(QIcon(":data/stock-properties.png"), "Slide Properties");
+	slideProp->setShortcut(QString("F2"));
 	connect(slideProp, SIGNAL(triggered()), this, SLOT(slideProperties()));
 	
 	toolbar->addSeparator();
 	
 	QAction  *groupProp = toolbar->addAction(QIcon(":data/stock-preferences.png"), "Slide Group Properties");
+	groupProp->setShortcut(QString("SHIFT+F2"));
 	connect(groupProp, SIGNAL(triggered()), this, SLOT(groupProperties()));
 	
 	toolbar->addSeparator();

@@ -19,6 +19,8 @@ protected:
 protected slots:
     void setAutoChangeTime(double);
     void configBg();
+    void slotGuess();
+    void slotNever();
 
 private:
     Ui::SlideSettingsDialog *m_ui;

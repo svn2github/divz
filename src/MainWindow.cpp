@@ -830,8 +830,12 @@ void MainWindow::actionEditGroup()
 	QModelIndex idx = m_groupView->currentIndex();
 	if(!idx.isValid())
 		return;
-	SlideGroup *s = m_docModel->groupFromIndex(idx);
-	editGroup(s);
+	SlideGroup *group = m_docModel->groupFromIndex(idx);
+	Slide *slide = 0;
+	if(m_liveView->slideGroup() == group)
+		slide = m_viewControl->selectedSlide();
+		
+	editGroup(group,slide);
 }
 
 void MainWindow::actionGroupProperties()

@@ -60,7 +60,7 @@ class MyGraphicsScene : public QGraphicsScene
 
                 void setSceneRect(const QRectF &);
 
-                AbstractContent * createVisualDelegate(AbstractItem *item);
+                AbstractContent * createVisualDelegate(AbstractItem *item, QGraphicsItem * parent =0);
                 void removeVisualDelegate(AbstractItem *item);
                 AbstractContent * findVisualDelegate(AbstractItem *item);
                 QList<AbstractItem *> copyBuffer();
@@ -106,6 +106,7 @@ class MyGraphicsScene : public QGraphicsScene
 		
 		QGraphicsItem * m_fadeRoot;
 		QGraphicsItem * m_liveRoot;
+		QGraphicsItem * m_staticRoot;
 		
 		BackgroundItem * m_bg;
 			

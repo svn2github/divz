@@ -83,8 +83,6 @@ Revised Task list for Release 1.0, 10/18/09:
 	
 	- Improvements:
 		
-		[STARTED] when pressing F2 and group is live, should start editor on lvie slide
-			problems with keyevent not getting any keys other than ctrl+(...)
 		[STARTED] When searching for song, auto select first result
 			setCurrentIndex() doesnt seem to be working
 		[STARTED] Crop handles should be easy - as move left in, move X out. Basically keep the image rect the same (or add negative offsets)
@@ -130,13 +128,9 @@ Revised Task list for Release 1.0, 10/18/09:
 			Add color theme support vis a vi powerpoint
 			Adapt genericitemconfig dialog to work on model item only without having to use the visual delegate
 
-			add btn to slide timeout button for zero and for "guess"
-			
-			
 			add next/prev btns to preview widget
 			add a "zero offset" shadow preset btn
-			
-			intelligent merge (optimize) cross fades by comparing items from two slides and if none changed, then dont cross fade those items
+			add test alignment (left/right/center) to toolbar
 			
 			is there a way to make the live output not show up in task list???
 					see http://lists.trolltech.com/qt-interest/2007-07/thread00362-0.html for discussion on the opposite problem
@@ -159,6 +153,7 @@ Revised Task list for Release 1.0, 10/18/09:
 			in editor, make PGUP/PGDOWN change slides
 			
 			add pixmap cache size option to program settings dialog
+			add crossfade speed and quality options to program settings dialog
 			
 			make font size buttons use different algorithim for sizing fonts
 				e.g. < 22, inc by 2
@@ -169,10 +164,18 @@ Revised Task list for Release 1.0, 10/18/09:
 				130>, inc by 25??
 				or some form of exponential, rounded percentage inc? (e.g. (int)(cur size * 1.5)) ?
 			
-			[STARTED] make keyboard movements snap to half-grid points
-				harder than I thought, because kbd is done in mygraphicsscene, but snapping is done in abstract content
-				need to set a flag maybe?
+		[DONE] pressing f2 in slide editor when focus in slide list should open slide prop dialog box
+		[DONE] when pressing F2 and group is live, should start editor on lvie slide
+		
+		[DONE] add btn to slide timeout button for zero and for "guess"
+		[DONE] auto focus slide timeout box in slide prop dialog
 			
+		[ON HOLD] intelligent merge (optimize) cross fades by comparing items from two slides and if none changed, then dont cross fade those items
+			on hold because:
+				- image backgrounds fade correctly (appear static) when duplicated - not sure how or why, but it looks find for now
+					- it was with videos that it appears in correct, and we can probably hack it to look okay with videos without full merge support
+				- on hold also because the algorithm, though it looks correct, was not achieving desired effect and I've put 2 hours into this already (more than its worth right now)
+		
 		[DONE] add black and clear buttons to song view control
 			clear only shows background - so it works with any group type, as does fade to black
 				
@@ -182,6 +185,11 @@ Revised Task list for Release 1.0, 10/18/09:
 		[DONE] integrate image functionality to background items
 			
 		[DONE] path in titlebar should only be file, not abs path
+		[DONE] make keyboard movements snap to half-grid points
+			harder than I thought, because kbd is done in mygraphicsscene, but snapping is done in abstract content
+			need to set a flag maybe?
+			this was finished back in r215(?) or somewhere in the last 5-10 revs, just forgot to mark it done
+		
 		[DONE] start video browser on using last video path - same for images
 			remember across runs using AppSettings
 			added AppSettings::previousPath() and related settor
@@ -255,6 +263,9 @@ Revised Task list for Release 1.0, 10/18/09:
 		[LATER] Video Capture (started impl, but again, performance is terrible. That may be due to the FormatOpts specified, or in ffmpeg, or the capture hardware - need to trace - later!)
 	
 	- Bugs:
+		clicking "no bg" in dialog doesnt clear background if it was image previously in editor
+		adding slide in editor doesnt update list in live view control
+		
 		if edit slide, go live, the edit again, the Live Slide List View pixmap does not regenerate
 		crossfading between videos of same bg (see r212 the "Dir Viz" slide - dup and then try cross fading) is hoorible performance!
 			

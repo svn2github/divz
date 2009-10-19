@@ -95,6 +95,9 @@ MyGraphicsScene::MyGraphicsScene(ContextHint hint, QObject * parent)
     , m_fadeTimer(0)
     , m_contextHint(hint)
 {
+	m_staticRoot = new RootObject(this);
+	m_staticRoot->setPos(0,0);
+	
 	m_fadeRoot = new RootObject(this);
 	m_fadeRoot->setPos(0,0);
 	
@@ -110,9 +113,11 @@ MyGraphicsScene::~MyGraphicsScene()
 	//m_slidePrev = 0;
 	
 	//qDeleteAll(m_ownedContent);
+	delete m_staticRoot;
 	delete m_fadeRoot;
 	delete m_liveRoot;
 	
+	m_staticRoot = 0;
 	m_fadeRoot = 0;
 	m_liveRoot = 0;
 	
@@ -229,6 +234,11 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans)
 	if(DEBUG_MYGRAPHICSSCENE)
 		qDebug() << "MyGraphicsScene::setSlide(): Setting slide # "<<slide->slideNumber();
 	
+// 	//QMap<QString,AbstractItem*> consumedDuplicates;
+// 	QList<quint32> consumedDuplicates;
+// 	//QList<AbstractItem*> consumedItems;
+// 	//QStringList consumedItemNames;
+// 	
 	//trans = None;
 	if(trans == None)
 	{
@@ -236,6 +246,25 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans)
 	}
 	else
 	{
+// 		//QStringList newSlideKeys;
+// 		QMap<quint32,AbstractItem*> newSlideKeys;
+// 		// have existing content?
+// 		if(m_content.size() > 0)
+// 		{
+// 			qDebug() << "MyGraphicsScene::setSlide(): Existing content, creating key hash";
+// 			// create key list 
+// 			QList<AbstractItem *> items = m_slide->itemList();
+// 			foreach(AbstractItem *item, items)
+// 			{
+// 				assert(item != NULL);
+// 				
+// 				//newSlideKeys << item->valueKey();
+// 				quint32 key = item->valueKey();
+// 				newSlideKeys[key] = item;
+// 				qDebug() << "MyGraphicsScene::setSlide(): Key Hash for New Slide: item:"<<item->itemName()<<", key:"<<key;
+// 			}
+// 		}
+				
 		
 		if(!m_fadeTimer)
 		{
@@ -247,20 +276,65 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans)
 		if(m_fadeTimer->isActive())
 			endTransition(); 
 			
-// 		if(DEBUG_MYGRAPHICSSCENE)
-// 			qDebug() << "MyGraphicsScene::setSlide(): Reparenting"<<m_content.size()<<"items";
-		
+ 		if(DEBUG_MYGRAPHICSSCENE)
+ 			qDebug() << "MyGraphicsScene::setSlide(): Reparenting"<<m_content.size()<<"items";
+		m_staticRoot->setZValue(100);
+			
 		foreach(AbstractContent *x, m_content)
-			x->setParentItem(m_fadeRoot);
+		{
+			
+// 			AbstractItem * model = x->modelItem();
+// 			quint32 key = model->valueKey();
+// 			
+// 			// item with exact same attributes on the new slide
+// 			if(newSlideKeys.contains(key))
+// 			{
+// 				qDebug() << "MyGraphicsScene::setSlide(): Reparenting: Found duplicate:"<<model->itemName();
+// 				// Since this item in m_content (x) has EXACTLY the same 
+// 				// attributes on the new slide as on the old slide,
+// 				// we DONT cross fade it. Instead, we just create the new 
+// 				// slide's item on the static root and remove the old
+// 				// item completly from the slide. Since the static root
+// 				// doesnt get faded, it will just "show thru." And since
+// 				// we flag this item as a consumed duplicate, it doesn't 
+// 				// get added to the live root till endTransition() is called
+// 				AbstractItem * newItem = newSlideKeys[key];
+// 				createVisualDelegate(newItem,m_staticRoot);
+// 				//consumedItems << newItem;
+// 				//consumedItemNames << newItem->itemName();
+// 				
+// 				//qDebug() << "MyGraphicsScene::setSlide(): Reparenting: Removing old";
+// 				x->setVisible(false);
+// 				x->setParentItem(0);
+// 				removeItem(x);
+// 				
+// 				m_content.removeAll(x);
+// 				disconnect(x, 0, 0, 0);
+// 				x->dispose(false);
+// 				
+// 				qDebug() << "MyGraphicsScene::setSlide(): Reparenting: Consuming key:"<<key;
+// 				consumedDuplicates << key;
+// 				//duplicateKeys[key] = true;
+// 			}
+// 			else
+// 			{
+// 				qDebug() << "MyGraphicsScene::setSlide(): Reparenting: Not duplicate, moving to fade root";
+				x->setParentItem(m_fadeRoot);
+//			}
+		}
 			
 // 		if(DEBUG_MYGRAPHICSSCENE)
 // 			qDebug() << "MyGraphicsScene::setSlide(): Done reparenting.";
 
-		m_fadeRoot->setZValue(250);
+		m_fadeRoot->setZValue(200);
 		
 		
 		// start with faderoot fully visible, and live root invisible, then cross fade between the two
-		// UPDATE: flip faderoot behind now
+		// UPDATE: flip faderoot behind now.
+		
+		// With live root now "in front of" the fade root (stuff that should fade out)
+		// it is actually the live root that is fading in. This has the advantage of being able to 
+		// fade in a slide with nothing else behind it - which is a nice effect.
 
 		m_fadeStepCounter = 0;
 		m_fadeSteps = 15;
@@ -294,14 +368,32 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans)
 	{
 		assert(item != NULL);
 		
-		createVisualDelegate(item);
+// 		quint32 key = item->valueKey();
+// 		
+// 		// item with exact same attributes NOT on the old slide
+// 		if(!consumedDuplicates.contains(key))
+// 		//if(!duplicateKeys[key])
+// 		//if(!consumedItems.contains(item))
+// 		//if(!consumedItemNames.contains(item->itemName()))
+// 		{
+			createVisualDelegate(item);
+// 			qDebug() << "MyGraphicsScene::setSlide(): New Slide: Item NOT duplicate:"<<item->itemName();
+// 		}
+// 		else
+// 		{
+// 			qDebug() << "MyGraphicsScene::setSlide(): New Slide: Item was duplicate:"<<item->itemName();
+// 		}
 	}
 	
-	m_liveRoot->setZValue(500);
+	m_liveRoot->setZValue(300);
+	
+//	qDebug() << "MyGraphicsScene::setSlide(): Setting slide # "<<slide->slideNumber()<<" - DONE.";
 }
 
-AbstractContent * MyGraphicsScene::createVisualDelegate(AbstractItem *item)
+AbstractContent * MyGraphicsScene::createVisualDelegate(AbstractItem *item, QGraphicsItem * parent)
 {
+	if(!parent)
+		parent = m_liveRoot;
 	if (AbstractVisualItem * visualItem = dynamic_cast<AbstractVisualItem *>(item))
 	{
 		if(DEBUG_MYGRAPHICSSCENE)
@@ -309,8 +401,11 @@ AbstractContent * MyGraphicsScene::createVisualDelegate(AbstractItem *item)
 		AbstractContent * visual = visualItem->createDelegate(this,m_liveRoot);
 		addContent(visual, true);
 		
+		// We store the background item purely for the sake of keeping it on the bottom when 
+		// another item requests a re-ordering of the content stack
 		if(visualItem->itemClass() == BackgroundItem::ItemClass)
 			m_bg = dynamic_cast<BackgroundItem*>(visualItem);
+			
 		//addItem(visual);
 		//visual->setParentItem(m_liveRoot);
 		//visual->setAnimationState(AbstractContent::AnimStop);
@@ -336,7 +431,11 @@ void MyGraphicsScene::endTransition()
 		m_liveRoot->setOpacity(1);
 	#endif
 	
-	QList<QGraphicsItem*> kids = m_fadeRoot->childItems();
+	QList<QGraphicsItem*> kids = m_staticRoot->childItems();
+	foreach(QGraphicsItem *k, kids)
+		k->setParentItem(m_liveRoot);
+	
+	kids = m_fadeRoot->childItems();
 	foreach(QGraphicsItem *k, kids)
 	{
 		k->setVisible(false);

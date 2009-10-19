@@ -52,13 +52,18 @@ public:
 	// Item name for human reference - not meant for content
 	QString	itemName() const { return m_itemName; }
 	void setItemName(QString);
-
+	
 	// Return true of any of the properties have been changed
 	bool isChanged() { return m_isChanged; }
 
 	bool isBeingLoaded() { return m_isBeingLoaded; }
 
 	virtual AbstractItem * clone();
+	
+	// If any property of this model changes, the valueKey() should change,
+	// but the valueKey() should NOT change across program instances
+	// or file instances if the properties are EXACTLY the same
+	virtual quint32 valueKey();
 	
 	// ++ every time setChanged() is called, starts at zero for every object, not persistant across program runs
 	quint32 revision() { return m_revision; }
@@ -87,6 +92,8 @@ private:
 	bool		m_isBeingLoaded; // true if being loaded (fromXml) - prevents itemChanged() signal from being fired by setChanged()
 	
 	quint32 	m_revision; // ++ every time setChanged() is called, starts at zero for every object, not persistant across program runs
+	
+	QByteArray 	m_valueKeyTmp; // used to create the valueKey()
 
 };
 

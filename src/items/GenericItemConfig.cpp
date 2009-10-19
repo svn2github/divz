@@ -195,8 +195,16 @@ GenericItemConfig::~GenericItemConfig()
 
 void GenericItemConfig::slotClosed()
 {
-     MyGraphicsScene * desk = static_cast<MyGraphicsScene*>(scene());
-     desk->slotDeleteConfig(this);
+     if(scene())
+     {
+	MyGraphicsScene * desk = static_cast<MyGraphicsScene*>(scene());
+	desk->slotDeleteConfig(this);
+     }
+     else
+     {
+     	close();
+     	deleteLater();
+     }
 //	done();
 }
 

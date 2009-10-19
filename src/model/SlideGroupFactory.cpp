@@ -60,7 +60,8 @@ SlideGroupViewControl::SlideGroupViewControl(SlideGroupViewer *g, QWidget *w )
 	m_timeLabel(0),
 	m_timerState(Undefined),
 	m_currentTimeLength(0),
-	m_elapsedAtPause(0)
+	m_elapsedAtPause(0),
+	m_selectedSlide(0)
 {
 	QVBoxLayout * layout = new QVBoxLayout();
 	
@@ -260,6 +261,8 @@ void SlideGroupViewControl::slideSelected(const QModelIndex &idx)
 		qDebug() << "SlideGroupViewControl::slideSelected(): selected slide#:"<<slide->slideNumber();
 	m_slideViewer->setSlide(slide);
 	enableAnimation(slide->autoChangeTime());
+	
+	m_selectedSlide = slide;
 }
 
 void SlideGroupViewControl::setOutputView(SlideGroupViewer *v) 

@@ -46,6 +46,8 @@ public:
 	SlideGroupViewer * view() { return m_slideViewer; }
 	virtual void setOutputView(SlideGroupViewer *);
 	
+	Slide * selectedSlide() { return m_selectedSlide; }
+	
 	typedef enum TimerState { Undefined, Running, Stopped };
 public slots:
 	virtual void setSlideGroup(SlideGroup *g, Slide *curSlide=0);
@@ -86,6 +88,8 @@ protected:
 	
 	QPushButton * m_blackButton;
 	QPushButton * m_clearButton;
+	
+	Slide * m_selectedSlide;
 
 };
 
