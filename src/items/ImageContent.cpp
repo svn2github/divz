@@ -8,7 +8,7 @@
 #include <QDebug>
 #include <QPixmapCache>
 #include <QSvgRenderer>
-
+#include <QTime>
 #include <QImageReader>
 
 #include "ImageFilters.h"
@@ -16,6 +16,9 @@
 #if QT_VERSION >= 0x040600
 	#define QT46_SHADOW_ENAB 0
 #endif
+
+#define DEBUG_MARK() qDebug() << "mark: "<<__FILE__<<":"<<__LINE__
+
 
 ImageContent::ImageContent(QGraphicsScene * scene, QGraphicsItem * parent)
     : AbstractContent(scene, parent, false)
@@ -128,7 +131,8 @@ void ImageContent::loadFile(const QString &file)
 				m_fileLoaded = true;
 				
 				//qDebug() << "ImageContent::loadFile: "<<file<<": pixmap cache MISS on "<<cacheKey;
-				QPixmapCache::insert(cacheKey, px);
+				if(!QPixmapCache::insert(cacheKey, px))
+					qDebug() << "ImageContent::loadFile: "<<file<<": ::insert returned FALSE - pixmap not cached";
 			}
 		}
 	}
@@ -235,15 +239,24 @@ void ImageContent::dirtyCache()
 }
 
 
+#define DEBUG_TMARK() DEBUG_MARK() << ":" << t.restart() << "ms"
 
 void ImageContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget)
 {
+	QTime total;
+	total.start();
+	QTime t;
+	t.start();
 	// paint parent
 	AbstractContent::paint(painter, option, widget);
+	
+	//DEBUG_TMARK();
 	
 	#if QT46_SHADOW_ENAB == 0
 	if(modelItem()->shadowEnabled())
 	{
+		//DEBUG_TMARK();
+		
 		painter->save();
 		
 		QRect cRect = contentsRect();
@@ -280,7 +293,7 @@ void ImageContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * op
 			QPixmap cache;
 			if(!QPixmapCache::find(cacheKey(),cache))
 			{
-				//qDebug()<<"ImageContent::paint(): modelItem:"<<modelItem()->itemName()<<": Cache redraw";
+				//qDebug()<<"ImageContent::paint(): modelItem:"<<modelItem()->itemName()<<": shadow cache redraw";
 				
 				// create temporary pixmap to hold the foreground
 				double blurSize = radiusSquared*2;
@@ -316,72 +329,98 @@ void ImageContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * op
 			painter->translate(x - radiusSquared,y - radiusSquared);
 			painter->drawPixmap(cRect.topLeft(), cache);
 		}
+		//DEBUG_TMARK();
 		
 		painter->restore();
+		//DEBUG_TMARK();
 	}
 	#endif
-	
+	//DEBUG_TMARK();
 	drawForeground(painter);
+	//DEBUG_TMARK();
+	
+	
+	//qDebug() << "ImageContent::paint(): \t \t Elapsed:"<<(((double)total.elapsed())/1000.0)<<" sec";
 }
 
 
 void ImageContent::drawForeground(QPainter *painter)
 {
+	QTime total;
+	total.start();
+	QTime t;
+	t.start();
+	
+	//qDebug() << "ImageContent::drawForeground(): start";
+	
 	QRect cRect = contentsRect();
 	
 	painter->save();
 	
+	//DEBUG_TMARK();
+	
 	if(!m_fileLoaded)
 	{
 		painter->fillRect(cRect,Qt::gray);
+		//DEBUG_TMARK();
 	}
 	else
 	{
 		if(m_svgRenderer)
 		{
 			m_svgRenderer->render(painter,cRect);
+			//DEBUG_TMARK();
 		}
 		else
 		{
-			//static int dbg_counter =0;
-			//dbg_counter++;
-			//QPixmap cache;
-			//QString foregroundKey = cacheKey()+"foreground";
-			//if(!QPixmapCache::find(foregroundKey,cache))
+			static int dbg_counter =0;
+			dbg_counter++;
+			QPixmap cache;
+			QString foregroundKey = QString(cacheKey()+":%1:%2").arg(cRect.width()).arg(cRect.height());
+			if(!QPixmapCache::find(foregroundKey,cache))
 			{
-				//qDebug() << dbg_counter << "Foreground pixmap dirty, redrawing";
-				//QPixmap tmpPx(cRect.size());
-				//tmpPx.fill(Qt::transparent);
+				//qDebug() << "ImageContent::drawForeground: " << dbg_counter << "Foreground pixmap dirty, redrawing";
+				cache = QPixmap(cRect.size());
+				cache.fill(Qt::transparent);
 				
-				//QPainter tmpPainter(&tmpPx);
-				//QRect destRect(0,0,cRect.width(),cRect.height());
+				QPainter tmpPainter(&cache);
+				tmpPainter.setRenderHint(QPainter::HighQualityAntialiasing, true);
+				tmpPainter.setRenderHint(QPainter::SmoothPixmapTransform, true);
+				tmpPainter.setRenderHint(QPainter::Antialiasing, true);
 				
-				if(!sourceOffsetTL().isNull() || !sourceOffsetBR().isNull())
-				{
-					QPointF tl = sourceOffsetTL();
-					QPointF br = sourceOffsetBR();
-					QRect px = m_pixmap.rect();
-					int x1 = (int)(tl.x() * px.width());
-					int y1 = (int)(tl.y() * px.height());
-					QRect source( 
-						px.x() + x1,
-						px.y() + y1,
-						px.width()  - (int)(br.x() * px.width())  + (px.x() + x1),
-						px.height() - (int)(br.y() * px.height()) + (px.y() + y1)
-					);
-						
-					qDebug() << "ImageContent::drawForeground:"<<modelItem()->itemName()<<": tl:"<<tl<<", br:"<<br<<", source:"<<source;
-					//tmpPainter.drawPixmap(destRect, m_pixmap, source);
-					painter->drawPixmap(cRect, m_pixmap, source);
-				}
-				else
-					//tmpPainter.drawPixmap(destRect, m_pixmap);
-					painter->drawPixmap(cRect, m_pixmap);
-				//tmpPainter.end();
-				//QPixmapCache::insert(foregroundKey, cache);
+				
+				
+				QRect destRect(0,0,cRect.width(),cRect.height());
+				//DEBUG_TMARK();
+				
+// 				if(!sourceOffsetTL().isNull() || !sourceOffsetBR().isNull())
+// 				{
+// 					QPointF tl = sourceOffsetTL();
+// 					QPointF br = sourceOffsetBR();
+// 					QRect px = m_pixmap.rect();
+// 					int x1 = (int)(tl.x() * px.width());
+// 					int y1 = (int)(tl.y() * px.height());
+// 					QRect source( 
+// 						px.x() + x1,
+// 						px.y() + y1,
+// 						px.width()  - (int)(br.x() * px.width())  + (px.x() + x1),
+// 						px.height() - (int)(br.y() * px.height()) + (px.y() + y1)
+// 					);
+// 						
+// 					qDebug() << "ImageContent::drawForeground:"<<modelItem()->itemName()<<": tl:"<<tl<<", br:"<<br<<", source:"<<source;
+// 					//tmpPainter.drawPixmap(destRect, m_pixmap, source);
+// 					painter->drawPixmap(cRect, m_pixmap, source);
+// 				}
+// 				else
+					tmpPainter.drawPixmap(destRect, m_pixmap);
+					//painter->drawPixmap(cRect, m_pixmap);
+				tmpPainter.end();
+				if(!QPixmapCache::insert(foregroundKey, cache))
+					qDebug() << "ImageContent::drawForeground: Cant insert cache";
 			}
 			
-			//painter->drawPixmap(cRect.topLeft(),cache);
+			painter->drawPixmap(cRect.topLeft(),cache);
+			//painter->drawPixmap(cRect, m_pixmap);
 		}
 	}
 	
@@ -399,9 +438,13 @@ void ImageContent::drawForeground(QPainter *painter)
 		painter->setPen(p);
 		painter->setBrush(Qt::NoBrush);
 		painter->drawRect(cRect);
+		//DEBUG_TMARK();
 	}
 	
 	painter->restore();
+	
+	//DEBUG_TMARK();
+	//qDebug() << "ImageContent::drawForeground(): \t \t Elapsed:"<<(((double)total.elapsed())/1000.0)<<" sec";
 }
 
 void ImageContent::updateShadowClipPath()

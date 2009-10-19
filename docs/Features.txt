@@ -140,8 +140,6 @@ Revised Task list for Release 1.0, 10/18/09:
 			
 			integrate image functionality to background items
 			
-			path in titlebar should only be file, not abs path
-			
 			is there a way to make the live output not show up in task list???
 					see http://lists.trolltech.com/qt-interest/2007-07/thread00362-0.html for discussion on the opposite problem
 			
@@ -180,6 +178,7 @@ Revised Task list for Release 1.0, 10/18/09:
 				harder than I thought, because kbd is done in mygraphicsscene, but snapping is done in abstract content
 				need to set a flag maybe?
 			
+		[DONE] path in titlebar should only be file, not abs path
 		[DONE] start video browser on using last video path - same for images
 			remember across runs using AppSettings
 			added AppSettings::previousPath() and related settor

@@ -91,7 +91,10 @@ class AbstractContent : public AbstractDisposeable
 		QPointF sourceOffsetBR() { return m_sourceOffsetBR; }
 		virtual void setSourceOffsetBR(QPointF);
 		
-
+		// hackish way of telling the item that the ItemPositionChange it's about to receive was from the keyboard and therefore
+		// only snap to half a grid point
+		void flagKeyboardMotivatedMovement();
+		
 	Q_SIGNALS:
 		void configureMe(const QPoint & scenePoint);
 		void changeStack(int opcode);
@@ -165,6 +168,8 @@ class AbstractContent : public AbstractDisposeable
 		
 		QPointF		    m_sourceOffsetTL;
 		QPointF		    m_sourceOffsetBR;
+		
+		bool 		    m_kbdMotivated;
 		
 	
 	private Q_SLOTS:

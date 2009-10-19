@@ -794,6 +794,11 @@ void AbstractContent::keyPressEvent(QKeyEvent * event)
 	}
 }
 
+void AbstractContent::flagKeyboardMotivatedMovement() 
+{
+	m_kbdMotivated  = true;
+}
+
 QVariant AbstractContent::itemChange(GraphicsItemChange change, const QVariant & value)
 {
 	QVariant retVal;
@@ -801,7 +806,11 @@ QVariant AbstractContent::itemChange(GraphicsItemChange change, const QVariant &
 	// keep the AbstractContent's center inside the scene rect..
 	if (change == ItemPositionChange && scene() && AppSettings::gridEnabled())
 	{
- 		QPointF newPos = AppSettings::snapToGrid(value.toPointF());
+ 		QPointF newPos = AppSettings::snapToGrid(value.toPointF(),m_kbdMotivated);
+ 		
+ 		// reset the keyboard flag - if another key press comes, it will be set again by the scene
+ 		if(m_kbdMotivated)
+ 			m_kbdMotivated = false;
 
  		if (newPos != value.toPointF())
  		{

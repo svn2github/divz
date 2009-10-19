@@ -288,7 +288,7 @@ bool MainWindow::openFile(const QString & file)
 		
 	//m_doc->load(file);
 	//r.readSlide(m_slide);
-	setWindowTitle(file + " - DViz");
+	setWindowTitle(QFileInfo(file).fileName() + " - DViz");
 	
 	//qDebug()<<"MainWindow::open(): "<<file<<", oldAspect:"<<oldAspect<<", new:"<<m_doc->aspectRatio();
 	if(oldAspect != m_doc->aspectRatio())
@@ -309,7 +309,7 @@ void MainWindow::saveFile(const QString & file)
 {
 	m_doc->save(file.isEmpty() ? m_doc->filename() : file);
 	
-	setWindowTitle(m_doc->filename() + " - DViz");
+	setWindowTitle(QFileInfo(m_doc->filename()).fileName() + " - DViz");
 	
 	saveWindowState();
 	

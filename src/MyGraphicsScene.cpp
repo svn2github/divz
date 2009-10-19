@@ -625,11 +625,15 @@ void MyGraphicsScene::keyPressEvent(QKeyEvent * event)
 			if(DEBUG_KEYHANDLER)
 				qDebug() << "MyGraphicsScene::keyPressEvent(): key:"<<event->key()<<", path 2";	
 			QSizeF grid = AppSettings::gridSize();
-			qreal x = grid.width();
-			qreal y = grid.height();
-			if(x<5)
+			// snap to half a grid point - the content->flagKeyboardMotivatedMovement() call tells AppSettings::snapToGrid()
+			// in AbstractContent to allow it to be half a grid point
+			qreal x = grid.width()/2;
+			qreal y = grid.height()/2;
+			
+			// arbitrary magic numbers - no significance, just random preference
+			if(x<=0)
 				x = 5;
-			if(y<5)
+			if(y<=5)
 				y = 5;
 			
 			QList<QGraphicsItem *> selection = selectedItems();
@@ -649,6 +653,7 @@ void MyGraphicsScene::keyPressEvent(QKeyEvent * event)
 					case Qt::Key_Up:
 						if(DEBUG_KEYHANDLER)
 							qDebug() << "MyGraphicsScene::keyPressEvent(): key:"<<event->key()<<", path 2: move up:"<<y;
+						content->flagKeyboardMotivatedMovement();
 						content->moveBy(0,-y);
 						content->syncToModelItem(0);
 						event->accept();
@@ -656,6 +661,7 @@ void MyGraphicsScene::keyPressEvent(QKeyEvent * event)
 					case Qt::Key_Down:
 						if(DEBUG_KEYHANDLER)
 							qDebug() << "MyGraphicsScene::keyPressEvent(): key:"<<event->key()<<", path 2: move down:"<<y;
+						content->flagKeyboardMotivatedMovement();
 						content->moveBy(0,+y);
 						content->syncToModelItem(0);
 						event->accept();
@@ -663,6 +669,7 @@ void MyGraphicsScene::keyPressEvent(QKeyEvent * event)
 					case Qt::Key_Left:
 						if(DEBUG_KEYHANDLER)
 							qDebug() << "MyGraphicsScene::keyPressEvent(): key:"<<event->key()<<", path 2: move left:"<<x;
+						content->flagKeyboardMotivatedMovement();
 						content->moveBy(-x,0);
 						content->syncToModelItem(0);
 						event->accept();
@@ -670,6 +677,7 @@ void MyGraphicsScene::keyPressEvent(QKeyEvent * event)
 					case Qt::Key_Right:
 						if(DEBUG_KEYHANDLER)
 							qDebug() << "MyGraphicsScene::keyPressEvent(): key:"<<event->key()<<", path 2: move right:"<<x;
+						content->flagKeyboardMotivatedMovement();
 						content->moveBy(+x,0);
 						content->syncToModelItem(0);
 						event->accept();
