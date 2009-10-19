@@ -303,6 +303,24 @@ p, li { white-space: pre-wrap; }
                 <shadow brush-style="1" x="3" y="3" enabled="0" blur="3" brush-color="0,0,0,255"/>
             </image>
         </slide>
+        <slide number="2" timeout="0" id="2">
+            <background>
+                <item-id>8370</item-id>
+                <item-name>BackgroundItem8370</item-name>
+                <rect w="0" x="0" y="0" h="0"/>
+                <source y1="0" x1="0" y2="0" x2="0"/>
+                <pos x="0" y="0"/>
+                <zvalue>0</zvalue>
+                <opacity>1</opacity>
+                <visible>1</visible>
+                <frame-class>0</frame-class>
+                <transformation yRot="0" xRot="0" zRot="0"/>
+                <fill brush-style="1" video="" image="samples/stills from church/sdc11169.jpg" brush-color="192,192,192,255" type="3"/>
+                <outline brush-style="1" pen-join="0" pen-width="1" enabled="0" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255"/>
+                <mirror offset="3" enabled="0"/>
+                <shadow brush-style="1" x="3" y="3" enabled="0" blur="3" brush-color="0,0,0,255"/>
+            </background>
+        </slide>
     </group>
     <group title="My First Group" number="0" icon="" type="0" id="1" auto="0">
         <slide number="0" timeout="5" id="2">

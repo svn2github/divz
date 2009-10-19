@@ -138,8 +138,6 @@ Revised Task list for Release 1.0, 10/18/09:
 			
 			intelligent merge (optimize) cross fades by comparing items from two slides and if none changed, then dont cross fade those items
 			
-			integrate image functionality to background items
-			
 			is there a way to make the live output not show up in task list???
 					see http://lists.trolltech.com/qt-interest/2007-07/thread00362-0.html for discussion on the opposite problem
 			
@@ -165,6 +163,8 @@ Revised Task list for Release 1.0, 10/18/09:
 			
 			in editor, make PGUP/PGDOWN change slides
 			
+			add pixmap cache size option to program settings dialog
+			
 			make font size buttons use different algorithim for sizing fonts
 				e.g. < 22, inc by 2
 				from 22-44, inc by 4
@@ -177,6 +177,8 @@ Revised Task list for Release 1.0, 10/18/09:
 			[STARTED] make keyboard movements snap to half-grid points
 				harder than I thought, because kbd is done in mygraphicsscene, but snapping is done in abstract content
 				need to set a flag maybe?
+			
+		[DONE] integrate image functionality to background items
 			
 		[DONE] path in titlebar should only be file, not abs path
 		[DONE] start video browser on using last video path - same for images

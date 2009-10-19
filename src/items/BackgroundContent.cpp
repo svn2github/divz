@@ -11,11 +11,11 @@
 #include <QGraphicsScene>
 #include <QMimeData>
 #include <QPainter>
-#include <QTextDocument>
-#include <QTextFrame>
 #include <QUrl>
-#include <QAbstractTextDocumentLayout>
 #include <QDebug>
+#include <QPixmapCache>
+#include <QSvgRenderer>
+#include <QImageReader>
 
 #include "qvideo/QVideoProvider.h"
 
@@ -26,6 +26,10 @@ BackgroundContent::BackgroundContent(QGraphicsScene * scene, QGraphicsItem * par
     , m_still(false)
     , m_videoProvider(0)
     , m_sceneSignalConnected(false)
+    , m_svgRenderer(0)
+    , m_fileLoaded(false)
+    , m_fileName("")
+    , m_fileLastModified("")
 {
 	m_dontSyncToModel = true;
 	
@@ -97,8 +101,13 @@ void BackgroundContent::syncFromModelItem(AbstractVisualItem *model)
 	m_dontSyncToModel = true;
 	
 	
-	if(model->fillVideoFile()!="")
+	if(model->fillVideoFile()!="" &&
+		modelItem()->fillType() == AbstractVisualItem::Video)
 		setVideoFile(model->fillVideoFile());
+		
+	if(modelItem()->fillImageFile() != "" &&
+		modelItem()->fillType() == AbstractVisualItem::Image)
+		setImageFile(modelItem()->fillImageFile());
 	
 	setPos(0,0);
 	if(scene())
@@ -121,6 +130,105 @@ void BackgroundContent::syncFromModelItem(AbstractVisualItem *model)
         m_dontSyncToModel = false;
 }
 
+
+void BackgroundContent::setImageFile(const QString &file)
+{
+	// JPEGs, especially large ones (e.g. file on disk is > 2MB, etc) take a long time to load, decode, and convert to pixmap.
+	// (Long by UI standards anyway, e.g. > .2sec). So, we optimize away extreneous loadings by not reloading if the file & mtime
+	// has not changed. If we're a new item, we also check the global pixmap cache for an already-loaded copy of this image, 
+	// again keyed by file name + mtime. For SVG files, though, we only perform the first check (dont reload if not changed),
+	// but we dont cache a pixmap copy of them for scaling reasons (so we can have clean scaling.)
+	QString fileMod = QFileInfo(file).lastModified().toString();
+	if(file == m_fileName && fileMod == m_fileLastModified)
+	{
+		//qDebug() << "ImageContent::loadFile: "<<file<<": no change, not reloading";
+		return;
+	}
+	
+	//qDebug() << "ImageContent::loadFile: "<<file<<": (current file:"<<m_fileName<<"), fileMod:"<<fileMod<<", m_fileLastModified:"<<m_fileLastModified;
+	
+	m_fileName = file;
+	m_fileLastModified = fileMod;
+	
+	if(file.isEmpty())
+	{
+		m_fileLoaded = false;
+		disposeSvgRenderer();
+		m_pixmap = QPixmap();
+		return;
+	}
+	
+	if(file.endsWith(".svg",Qt::CaseInsensitive))
+	{
+		loadSvg(file);
+	}
+	else
+	{
+		disposeSvgRenderer();
+		QPixmap cache;
+		QString cacheKey = QString("%1:%2").arg(file).arg(fileMod);
+		if(QPixmapCache::find(cacheKey,cache))
+		{
+			setPixmap(cache);
+			m_fileLoaded = true;
+			//qDebug() << "ImageContent::loadFile: "<<file<<": pixmap cache hit on "<<cacheKey;
+		}
+		else
+		{
+			QImageReader reader(file);
+			QImage image = reader.read();
+			if(image.isNull())
+			{
+				qDebug() << "BackgroundContent::loadFile: Unable to read"<<file<<": "<<reader.errorString();
+			}
+			else
+			{
+				QPixmap px = QPixmap::fromImage(image);
+				setPixmap(px);
+				m_fileLoaded = true;
+				
+				//qDebug() << "ImageContent::loadFile: "<<file<<": pixmap cache MISS on "<<cacheKey;
+				if(!QPixmapCache::insert(cacheKey, px))
+					qDebug() << "BackgroundContent::loadFile: "<<file<<": ::insert returned FALSE - pixmap not cached";
+			}
+		}
+	}
+}
+
+void BackgroundContent::disposeSvgRenderer()
+{
+	if(m_svgRenderer)
+	{
+		disconnect(m_svgRenderer,0,this,0);
+		delete m_svgRenderer;
+		m_svgRenderer = 0;
+	}
+}
+
+void BackgroundContent::loadSvg(const QString &file)
+{
+	disposeSvgRenderer();
+	
+	m_svgRenderer = new QSvgRenderer(file);
+	m_fileLoaded = true;
+	
+	m_pixmap = QPixmap(m_svgRenderer->viewBox().size());
+	
+	if(m_imageSize != m_pixmap.size())
+		m_imageSize = m_pixmap.size();
+	
+	connect(m_svgRenderer, SIGNAL(repaintNeeded()), this, SLOT(renderSvg()));
+	renderSvg();	
+}
+
+void BackgroundContent::renderSvg()
+{
+	// not needed since we dont cache render or shadow in the background
+	//dirtyCache();
+	update();
+}
+
+
 void BackgroundContent::sceneRectChanged(const QRectF& rect)
 {
 	resizeContents(rect.toRect());
@@ -132,18 +240,8 @@ AbstractVisualItem * BackgroundContent::syncToModelItem(AbstractVisualItem *mode
 	
 	if(!boxModel)
 	{
-		//setModelItemIsChanging(false);
-                //qDebug("BackgroundContent::syncToModelItem: textModel is null, cannot sync\n");
 		return 0;
 	}
-	setModelItemIsChanging(true);
-
-        //qDebug("TextContent:syncToModelItem: Syncing to model! Yay!");
-// 	textModel->setText(text());
-// 	textModel->setFontFamily(font().family());
-// 	textModel->setFontSize(font().pointSize());
-	
-	setModelItemIsChanging(false);
 	
 	return model;
 }
@@ -194,31 +292,9 @@ void BackgroundContent::paint(QPainter * painter, const QStyleOptionGraphicsItem
 	AbstractContent::paint(painter, option, widget);
 	
 	QRect cRect = contentsRect();
-// 	QRect sRect = m_textRect;
-	painter->save();
-	//painter->translate(cRect.topLeft());
-// 	if (sRect.width() > 0 && sRect.height() > 0)
-// 	{
-// 		qreal xScale = (qreal)cRect.width() / (qreal)sRect.width();
-// 		qreal yScale = (qreal)cRect.height() / (qreal)sRect.height();
-// 		if (!qFuzzyCompare(xScale, 1.0) || !qFuzzyCompare(yScale, 1.0))
-// 		painter->scale(xScale, yScale);
-// 	}
 	
-// 	QPen pen;
-//  	pen.setWidthF(3);
-//  	pen.setColor(QColor(0,0,0,255));
-//  
-//  	QBrush brush(QColor(255,0,0,255));
-// 	QPen p = modelItem()->outlinePen();
-// 	p.setJoinStyle(Qt::MiterJoin);
-// 	if(sceneContextHint() == MyGraphicsScene::Preview)
-// 	{
-// 		QTransform tx = painter->transform();
-// 		qreal scale = qMax(tx.m11(),tx.m22());
-// 		p.setWidthF(1/scale * p.widthF());
-// 	}
-// 		
+	painter->save();
+		
 	painter->setPen(Qt::NoPen);
 	AbstractVisualItem::FillType fill = modelItem()->fillType();
 	if(fill == AbstractVisualItem::Solid)
@@ -227,12 +303,88 @@ void BackgroundContent::paint(QPainter * painter, const QStyleOptionGraphicsItem
 		painter->drawRect(cRect); //QRect(QPoint(0,0),cRect.size()));
 	}
 	else
-	if(fill == AbstractVisualItem::Gradient ||
-	   fill == AbstractVisualItem::Image)
+	if(fill == AbstractVisualItem::Gradient)
 	{
 		// Noop yet
 		painter->setBrush(Qt::white);
 		painter->drawRect(cRect); //QRect(QPoint(0,0),cRect.size()));
+	}
+	else
+	if(fill == AbstractVisualItem::Image)
+	{
+		if(!m_fileLoaded)
+		{
+			painter->fillRect(cRect,Qt::gray);
+		}
+		else
+		{
+			if(m_svgRenderer)
+			{
+				m_svgRenderer->render(painter,cRect);
+			}
+			else
+			{
+				
+				// this rect describes our "model" height in terms of item coordinates
+				QRect tmpRect(0,0,cRect.width(),cRect.height());
+				
+				// This is the key to getting good looking scaled & cached pixmaps -
+				// it transforms our item coordinates into view coordinates. 
+				// What this means is that if our item is 100x100, but the view is scaled
+				// by 1.5, our final pixmap would be scaled by the painter to 150x150.
+				// That means that even though after the cache generation we tell drawPixmap()
+				// to use our 100x100 rect, it will do the same transform and figure out that
+				// it needs to scale the pixmap to 150x150. Therefore, what we are doing here
+				// is calculating what drawPixmap() will *really* need, even though we tell
+				// it something different (100x100). Then, we dont scale the pixamp to 100x100 - no,
+				// we scale it only to 150x150. And then the painter can render the pixels 1:1
+				// rather than having to scale up and make it look pixelated.
+				tmpRect = painter->combinedTransform().mapRect(tmpRect);
+				
+				QRect destRect(0,0,tmpRect.width(),tmpRect.height());
+				
+				// cache the scaled pixmap according to the transformed size of the view
+				QString foregroundKey = QString(cacheKey()+":%1:%2").arg(destRect.width()).arg(destRect.height());
+				
+				QPixmap cache;
+				if(!QPixmapCache::find(foregroundKey,cache))
+				{
+					//qDebug() << "ImageContent::drawForeground: " << dbg_counter << "Foreground pixmap dirty, redrawing";
+					cache = QPixmap(destRect.size());
+					cache.fill(Qt::transparent);
+					
+					QPainter tmpPainter(&cache);
+					tmpPainter.setRenderHint(QPainter::HighQualityAntialiasing, true);
+					tmpPainter.setRenderHint(QPainter::SmoothPixmapTransform, true);
+					
+					if(!sourceOffsetTL().isNull() || !sourceOffsetBR().isNull())
+					{
+						QPointF tl = sourceOffsetTL();
+						QPointF br = sourceOffsetBR();
+						QRect px = m_pixmap.rect();
+						int x1 = (int)(tl.x() * px.width());
+						int y1 = (int)(tl.y() * px.height());
+						QRect source( 
+							px.x() + x1,
+							px.y() + y1,
+							px.width()  - (int)(br.x() * px.width())  + (px.x() + x1),
+							px.height() - (int)(br.y() * px.height()) + (px.y() + y1)
+						);
+							
+						qDebug() << "BackgroundContent::paint:"<<modelItem()->itemName()<<": tl:"<<tl<<", br:"<<br<<", source:"<<source;
+						tmpPainter.drawPixmap(destRect, m_pixmap, source);
+					}
+					else
+						tmpPainter.drawPixmap(destRect, m_pixmap);
+					
+					tmpPainter.end();
+					if(!QPixmapCache::insert(foregroundKey, cache))
+						qDebug() << "BackgroundContent::paint:"<<modelItem()->itemName()<<": Can't cache the image. This will slow performance of cross fades and slide editor. Make the cache larger using the Program Settings menu.";
+				}
+				
+				painter->drawPixmap(cRect,cache);
+			}
+		}
 	}
 	else
 	{
@@ -322,10 +474,12 @@ void BackgroundContent::setPixmap(const QPixmap & pixmap)
 
 	update();
 	
-	if(sceneContextHint() != MyGraphicsScene::Live && m_imageSize.width() > 0)
+	if(sceneContextHint() != MyGraphicsScene::Live && 
+		modelItem()->fillType() == AbstractVisualItem::Video &&
+		m_imageSize.width() > 0)
 	{
 		if(DEBUG_BACKGROUNDCONTENT)
-			qDebug() << "VideFileContent::setPixmap(): sceneContextHint() != Live, setting m_still true"; 
+			qDebug() << "BackgroundContent::setPixmap(): sceneContextHint() != Live, setting m_still true"; 
 		m_still = true;
 		m_videoProvider->pause();
 	}

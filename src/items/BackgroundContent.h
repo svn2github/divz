@@ -3,6 +3,7 @@
 
 #include "AbstractContent.h"
 class QVideoProvider;
+class QSvgRenderer;
 
 /// \brief TODO
 class BackgroundContent : public AbstractContent
@@ -34,9 +35,13 @@ class BackgroundContent : public AbstractContent
     private slots:
     	void setPixmap(const QPixmap & pixmap);
     	void sceneRectChanged(const QRectF &);
+    	void renderSvg();
     	
     private:
     	void setVideoFile(const QString &name);
+    	void setImageFile(const QString&);
+	void loadSvg(const QString&);
+	void disposeSvgRenderer();
     	
 	QPixmap m_pixmap;
 	QSize m_imageSize;
@@ -44,6 +49,12 @@ class BackgroundContent : public AbstractContent
 	bool m_still;
 	
 	bool m_sceneSignalConnected;
+	
+	QSvgRenderer * m_svgRenderer;
+	
+	bool m_fileLoaded;
+	QString m_fileName;
+	QString m_fileLastModified;
 };
 
 #endif
