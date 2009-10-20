@@ -13,6 +13,7 @@
 #include <QWidget>
 #include <QSettings>
 #include <QDebug>
+#include <QShortcut>
 
 #include <qtcolorpicker.h>
 
@@ -23,13 +24,46 @@
 #include <QFileInfo>
 
 
+
+
 static void setupColorPicker(QtColorPicker*p)
 {
 	p->setStandardColors();
 }
 
+	
+class GenericItemConfigDialog : public QDialog
+{
+public:
+	GenericItemConfigDialog(GenericItemConfig *configWidget, QWidget *parent) 
+		: QDialog(parent)
+	{
+		QVBoxLayout *layout = new QVBoxLayout(this);
+		layout->setContentsMargins(0,0,0,0);
+		layout->addWidget(configWidget);
+		/*
+		QHBoxLayout *hbox = new QHBoxLayout();
+		QPushButton *btn = new QPushButton("Close");
+		connect(btn,SIGNAL(clicked()), this, SLOT(close()));
+		hbox->addWidget(btn);
+		
+// 		QShortcut * shortcut = new QShortcut(QKeySequence(Qt::Key_Escape), this);
+// 		connect(shortcut, SIGNAL(activated()), this, SLOT(close()));
+		
+		layout->addLayout(hbox);*/
+	}
+};
+
+QDialog * GenericItemConfig::toDialog(QWidget *parent)
+{
+	GenericItemConfigDialog * d = new GenericItemConfigDialog(this,parent);
+	//d->setAttribute(Qt::WA_DeleteOnClose);
+	return dynamic_cast<QDialog*>(d);
+}
+
+
 GenericItemConfig::GenericItemConfig(AbstractContent * content, QWidget *parent) :
-	QDialog(parent)
+	QWidget(parent)
 	, m_commonUi(new Ui::GenericItemConfig())
 	, m_content(content)
 	, m_closeButton(0)
@@ -228,7 +262,7 @@ void GenericItemConfig::dispose()
 
 void GenericItemConfig::changeEvent(QEvent *e)
 {
-	QDialog::changeEvent(e);
+	QWidget::changeEvent(e);
 	switch (e->type()) {
 	case QEvent::LanguageChange:
 		m_commonUi->retranslateUi(this);

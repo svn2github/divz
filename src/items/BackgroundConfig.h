@@ -7,7 +7,7 @@ class BackgroundContent;
 class BackgroundConfig : public GenericItemConfig
 {
     public:
-        BackgroundConfig(BackgroundContent * v, QGraphicsItem * parent = 0);
+        BackgroundConfig(BackgroundContent * v, QWidget * parent = 0);
         ~BackgroundConfig();
 
     private:

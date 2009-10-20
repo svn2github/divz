@@ -7,6 +7,7 @@
 #include "items/BackgroundConfig.h"
 #include "items/BackgroundContent.h"
 #include <QMessageBox>
+#include "ui_GenericItemConfig.h"
 
 
 SlideSettingsDialog::SlideSettingsDialog(Slide *slide, QWidget *parent) :
@@ -23,10 +24,20 @@ SlideSettingsDialog::SlideSettingsDialog(Slide *slide, QWidget *parent) :
 
     //// Not implemented yet, so hide from UI
     //m_ui->boxConfigBg->setVisible(false);
-    connect(m_ui->btnConfigBg, SIGNAL(clicked()), this, SLOT(configBg()));
+    //connect(m_ui->btnConfigBg, SIGNAL(clicked()), this, SLOT(configBg()));
+
+    BackgroundContent * bg = dynamic_cast<BackgroundContent*>(dynamic_cast<AbstractVisualItem*>(m_slide->background())->createDelegate());
+    BackgroundConfig *config = new BackgroundConfig(bg);
+    
+    m_ui->tabWidget->addTab(config->m_commonUi->backgroundTab,"Background");
+    //config->setWindowModality(Qt::WindowModal);
+    
 
     setWindowTitle("Slide Settings");
     m_ui->slideChangeTime->setFocus(Qt::OtherFocusReason);
+    
+    //adjustSize();
+    //resize(577, 494);
 
 }
 
@@ -104,15 +115,6 @@ void SlideSettingsDialog::slotGuess()
 
 	
 	m_ui->slideChangeTime->setValue(guess);
-}
-
-void SlideSettingsDialog::configBg()
-{
-    //QMessageBox::information(this,"Not Implemented","Sorry, but this button has not been implemented yet!");
-    BackgroundContent * bg = dynamic_cast<BackgroundContent*>(dynamic_cast<AbstractVisualItem*>(m_slide->background())->createDelegate());
-    BackgroundConfig config(bg);
-    config.exec();
-    delete bg;
 }
 
 void SlideSettingsDialog::changeEvent(QEvent *e)

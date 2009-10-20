@@ -19,8 +19,9 @@ class AbstractVisualItem;
 namespace Ui {
     class GenericItemConfig;
 }
+class SlideSettingsDialog;
 
-class GenericItemConfig : public QDialog 
+class GenericItemConfig : public QWidget 
 {
 	Q_OBJECT
 	public:
@@ -28,6 +29,8 @@ class GenericItemConfig : public QDialog
 		virtual ~GenericItemConfig();
 		
 		void dispose();
+		
+		QDialog * toDialog(QWidget *parent=0);
 	
 		// the related content
 		AbstractContent * content() const;
@@ -54,6 +57,7 @@ class GenericItemConfig : public QDialog
 		
 	
 	protected:
+		friend class SlideSettingsDialog;
 		Ui::GenericItemConfig *m_commonUi;
 	
 	private:

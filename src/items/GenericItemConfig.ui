@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
  <class>GenericItemConfig</class>
- <widget class="QDialog" name="GenericItemConfig">
+ <widget class="QWidget" name="GenericItemConfig">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -845,7 +845,7 @@
       <enum>Qt::Horizontal</enum>
      </property>
      <property name="standardButtons">
-      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+      <set>QDialogButtonBox::Save</set>
      </property>
     </widget>
    </item>
@@ -859,30 +859,14 @@
    <sender>buttonBox</sender>
    <signal>accepted()</signal>
    <receiver>GenericItemConfig</receiver>
-   <slot>accept()</slot>
+   <slot>close()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>228</x>
-     <y>454</y>
+     <x>237</x>
+     <y>484</y>
     </hint>
     <hint type="destinationlabel">
      <x>157</x>
-     <y>274</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>buttonBox</sender>
-   <signal>rejected()</signal>
-   <receiver>GenericItemConfig</receiver>
-   <slot>reject()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>296</x>
-     <y>460</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>286</x>
      <y>274</y>
     </hint>
    </hints>
@@ -894,12 +878,12 @@
    <slot>setValue(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>148</x>
-     <y>293</y>
+     <x>131</x>
+     <y>317</y>
     </hint>
     <hint type="destinationlabel">
-     <x>186</x>
-     <y>293</y>
+     <x>226</x>
+     <y>320</y>
     </hint>
    </hints>
   </connection>
@@ -910,12 +894,12 @@
    <slot>setValue(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>195</x>
-     <y>282</y>
+     <x>226</x>
+     <y>320</y>
     </hint>
     <hint type="destinationlabel">
-     <x>121</x>
-     <y>291</y>
+     <x>131</x>
+     <y>317</y>
     </hint>
    </hints>
   </connection>

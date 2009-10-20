@@ -3,8 +3,8 @@
 
 #include "ui_GenericItemConfig.h"
 
-BackgroundConfig::BackgroundConfig(BackgroundContent * v, QGraphicsItem * parent)
-    : GenericItemConfig(v)
+BackgroundConfig::BackgroundConfig(BackgroundContent * v, QWidget * parent)
+    : GenericItemConfig(v,parent)
     , m_bg(v)
 {
 // 	m_commonUi->bgOptGradient->setVisible(false);

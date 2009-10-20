@@ -1268,7 +1268,8 @@ void SlideEditorWindow::slideProperties()
 	Slide * slide = m_scene->slide();
 	
 	SlideSettingsDialog d(slide,this);
-	d.adjustSize();
+	//d.adjustSize();
+	d.resize(400, 400);
 	d.exec();
 }
 
