@@ -64,7 +64,8 @@ HEADERS += \
 	GridDialog.h \
 	SlideSettingsDialog.h \
 	SlideGroupSettingsDialog.h \
-	ImageFilters.h
+	ImageFilters.h \
+	SlideItemListModel.h
 
 	
 SOURCES += \
@@ -83,7 +84,8 @@ SOURCES += \
 	GridDialog.cpp \
 	SlideSettingsDialog.cpp \
 	SlideGroupSettingsDialog.cpp \
-	ImageFilters.cpp
+	ImageFilters.cpp \
+	SlideItemListModel.cpp
 	
 
 QT += core \

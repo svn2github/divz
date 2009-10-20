@@ -77,48 +77,17 @@
 #include "items/ImageConfig.h"
 #include "items/ImageContent.h"
 
-
+#include "GridDialog.h"
 
 #include "SlideSettingsDialog.h"
 #include "SlideGroupSettingsDialog.h"
 
+#include "SlideItemListModel.h"
+
 #define DEBUG_MODE 0
 
 
-QString guessTitle(QString field)
-{
-	static QRegExp rUpperCase = QRegExp("([a-z])([A-Z])");
-	static QRegExp rFirstLetter = QRegExp("([a-z])");
-	static QRegExp rLetterNumber = QRegExp("([a-z])([0-9])");
-	//static QRegExp rUnderScore 
-	//$name =~ s/([a-z])_([a-z])/$1.' '.uc($2)/segi;
-	
-	QString tmp = field;
-	tmp.replace(rUpperCase,"\\1 \\2");
-	if(tmp.indexOf(rFirstLetter) == 0)
-	{
-		QChar x = tmp.at(0);
-		tmp.remove(0,1);
-		tmp.prepend(QString(x).toUpper());
-	}
-	
-	tmp.replace(rLetterNumber,"\\1 #\\2");
-	//$name =~ s/^([a-z])/uc($1)/seg;
-	
-// 	$name =~ s/\/([a-z])/'\/'.uc($1)/seg;
-// 	$name =~ s/\s([a-z])/' '.uc($1)/seg;
-// 	$name =~ s/\s(of|the|and|a)\s/' '.lc($1).' '/segi;
-// 	$name .= '?' if $name =~ /^is/i;
-// 	$name =~ s/id$//gi;
-// 	my $chr = '#';
-// 	$name =~ s/num$/$chr/gi; 
-// 	$name =~ s/datetime$/Date\/Time/gi;
-// 	$name =~ s/\best\b/Est./gi;
 
-	return tmp;
-	
-
-}
 
 
 #include <QCommonStyle>
@@ -277,7 +246,8 @@ SlideEditorWindow::SlideEditorWindow(SlideGroup *group, QWidget * parent)
     m_slideGroup(0),
     m_propDockEmpty(0),
     m_currentConfigContent(0),
-    m_currentConfig(0)
+    m_currentConfig(0),
+    m_itemListView(0)
 {
 
 	m_scene = new MyGraphicsScene(MyGraphicsScene::Editor,this);
@@ -318,7 +288,9 @@ SlideEditorWindow::SlideEditorWindow(SlideGroup *group, QWidget * parent)
 	setupToolbar();
 	setupUndoView();
 	setupPropDock();
+	setupItemList();
 	setupViewportLines();
+	
 	
 	
 	restoreState(settings.value("slideeditor/state").toByteArray());
@@ -387,58 +359,58 @@ void SlideEditorWindow::setupToolbar()
 	QToolBar *toolbar = addToolBar("main toolbar");
 	toolbar->setObjectName("maintoolbar");
 	
-	QAction  *slideProp = toolbar->addAction(QIcon(":data/stock-properties.png"), "Slide Properties");
+	QAction  *slideProp = toolbar->addAction(QIcon(":/data/stock-properties.png"), "Slide Properties");
 	slideProp->setShortcut(QString("F2"));
 	connect(slideProp, SIGNAL(triggered()), this, SLOT(slideProperties()));
 	
 	toolbar->addSeparator();
 	
-	QAction  *groupProp = toolbar->addAction(QIcon(":data/stock-preferences.png"), "Slide Group Properties");
+	QAction  *groupProp = toolbar->addAction(QIcon(":/data/stock-preferences.png"), "Slide Group Properties");
 	groupProp->setShortcut(QString("SHIFT+F2"));
 	connect(groupProp, SIGNAL(triggered()), this, SLOT(groupProperties()));
 	
 	toolbar->addSeparator();
 	
 	
-	QAction  *newAction = toolbar->addAction(QIcon(":data/insert-text-24.png"), "New Text Item");
+	QAction  *newAction = toolbar->addAction(QIcon(":/data/insert-text-24.png"), "New Text Item");
 	newAction->setShortcut(QString("CTRL+SHIFT+T"));
 	connect(newAction, SIGNAL(triggered()), this, SLOT(newTextItem()));
 
-	QAction  *newBox = toolbar->addAction(QIcon(":data/stock-insert-table.png"), "New Box Item");
+	QAction  *newBox = toolbar->addAction(QIcon(":/data/insert-rect-24.png"), "New Box Item");
 	newBox->setShortcut(QString("CTRL+SHIFT+B"));
 	connect(newBox, SIGNAL(triggered()), this, SLOT(newBoxItem()));
 
-	QAction  *newVideo = toolbar->addAction(QIcon(":data/stock-panel-multimedia.png"), "New Video Item");
+	QAction  *newVideo = toolbar->addAction(QIcon(":/data/stock-panel-multimedia.png"), "New Video Item");
 	newVideo->setShortcut(QString("CTRL+SHIFT+V"));
 	connect(newVideo, SIGNAL(triggered()), this, SLOT(newVideoItem()));
 	
-	QAction  *newImage = toolbar->addAction(QIcon(":data/insert-image-24.png"), "New Image Item");
+	QAction  *newImage = toolbar->addAction(QIcon(":/data/insert-image-24.png"), "New Image Item");
 	newImage->setShortcut(QString("CTRL+SHIFT+I"));
 	connect(newImage, SIGNAL(triggered()), this, SLOT(newImageItem()));
 	
 	toolbar->addSeparator();
 	
-	QAction  *centerHor = toolbar->addAction(QIcon(":data/obj-center-hor.png"), "Center Items Horizontally");
+	QAction  *centerHor = toolbar->addAction(QIcon(":/data/obj-center-hor.png"), "Center Items Horizontally");
 	centerHor->setShortcut(QString("CTRL+SHIFT+H"));
 	connect(centerHor, SIGNAL(triggered()), this, SLOT(centerSelHorz()));
 	
-	QAction  *centerVer = toolbar->addAction(QIcon(":data/obj-center-ver.png"), "Center Items Vertically");
+	QAction  *centerVer = toolbar->addAction(QIcon(":/data/obj-center-ver.png"), "Center Items Vertically");
 	centerVer->setShortcut(QString("CTRL+SHIFT+V"));
 	connect(centerVer, SIGNAL(triggered()), this, SLOT(centerSelVert()));
 	
 	toolbar->addSeparator();
 	
-	QAction  *newSlide = toolbar->addAction(QIcon(":data/stock-add.png"), "New Slide");
+	QAction  *newSlide = toolbar->addAction(QIcon(":/data/stock-add.png"), "New Slide");
 	newSlide->setShortcut(QString("CTRL+M"));
 	connect(newSlide, SIGNAL(triggered()), this, SLOT(newSlide()));
 	
-	QAction  *dupSlide = toolbar->addAction(QIcon(":data/stock-convert.png"), "Duplicate Slide");
+	QAction  *dupSlide = toolbar->addAction(QIcon(":/data/stock-convert.png"), "Duplicate Slide");
 	dupSlide->setShortcut(QString("CTRL+D"));
 	connect(dupSlide, SIGNAL(triggered()), this, SLOT(dupSlide()));
 	
 	toolbar->addSeparator();
 	
-	QAction  *liveAction  = toolbar->addAction(QIcon(":data/stock-fullscreen.png"), "Send the Current Slide to the Live Output");
+	QAction  *liveAction  = toolbar->addAction(QIcon(":/data/stock-fullscreen.png"), "Send the Current Slide to the Live Output");
 	liveAction->setShortcut(QString("F5"));
 	connect(liveAction, SIGNAL(triggered()), this, SLOT(setCurrentSlideLive()));
 	
@@ -467,11 +439,11 @@ void SlideEditorWindow::setupToolbar()
 	
 	toolbar->addWidget(m_textBase);
 	
-	m_textPlusAction = toolbar->addAction(QIcon(":data/stock-sort-descending.png"), "Increase Font Size");
+	m_textPlusAction = toolbar->addAction(QIcon(":/data/stock-sort-descending.png"), "Increase Font Size");
 	m_textPlusAction->setShortcut(QString("CTRL+SHFIT++"));
 	connect(m_textPlusAction, SIGNAL(triggered()), this, SLOT(textPlus()));
 	
-	m_textMinusAction = toolbar->addAction(QIcon(":data/stock-sort-ascending.png"), "Decrease Font Size");
+	m_textMinusAction = toolbar->addAction(QIcon(":/data/stock-sort-ascending.png"), "Decrease Font Size");
 	m_textMinusAction->setShortcut(QString("CTRL+SHFIT+-"));
 	connect(m_textMinusAction, SIGNAL(triggered()), this, SLOT(textMinus()));
 	
@@ -483,20 +455,24 @@ void SlideEditorWindow::setupToolbar()
 	toolbar->addSeparator();
 	
 	QAction *action = m_undoStack->createUndoAction(this);
-	action->setIcon(QIcon(":data/stock-undo.png"));
+	action->setIcon(QIcon(":/data/stock-undo.png"));
 	action->setShortcut(QString("CTRL+Z"));
 	toolbar->addAction(action);
 	
 	action = m_undoStack->createRedoAction(this);
-	action->setIcon(QIcon(":data/stock-redo2.png"));
+	action->setIcon(QIcon(":/data/stock-redo2.png"));
 	action->setShortcut(QString("CTRL+SHIFT+Z"));
 	toolbar->addAction(action);
 
 	toolbar->addSeparator();
 	
-	QAction  *delSlide = toolbar->addAction(QIcon(":data/stock-delete.png"), "Delete Slide");
+	QAction  *delSlide = toolbar->addAction(QIcon(":/data/stock-delete.png"), "Delete Slide");
 	connect(delSlide, SIGNAL(triggered()), this, SLOT(delSlide()));
 	
+	toolbar->addSeparator();
+	
+	QAction  *configGrid = toolbar->addAction(QIcon(":/data/config-grid.png"), "Setup Grid and Guidelines");
+	connect(configGrid, SIGNAL(triggered()), this, SLOT(slotConfigGrid()));
 	
 	foreach(QAction *action, toolbar->actions())
 	{
@@ -510,6 +486,15 @@ void SlideEditorWindow::setupToolbar()
 	}
 
 
+}
+
+
+void SlideEditorWindow::slotConfigGrid()
+{
+	GridDialog d(this);
+	d.exec();
+	
+	setupViewportLines();
 }
 
 void SlideEditorWindow::setCurrentSlideLive()
@@ -606,6 +591,12 @@ void SlideEditorWindow::selectionChanged()
 	m_textMinusAction->setEnabled(foundText);
 	
 	updatePropDock(firstContent);
+	
+	if(firstContent && m_itemListView)
+	{
+		QModelIndex idx = m_itemModel->indexForItem(firstContent->modelItem());
+		m_itemListView->setCurrentIndex(idx);
+	}
 }
 
 void SlideEditorWindow::textPlus()
@@ -714,7 +705,7 @@ void SlideEditorWindow::updatePropDock(AbstractContent *content)
     		m_currentConfigContent = content;
     		m_currentConfig = p;
     		
-    		m_propDock->setWindowTitle(QString("Settings for %1").arg(guessTitle(content->modelItem()->itemName())));
+    		m_propDock->setWindowTitle(QString("Settings for %1").arg(AbstractItem::guessTitle(content->modelItem()->itemName())));
 	}
 }
 
@@ -802,9 +793,56 @@ void SlideEditorWindow::setupSlideList()
 	//viewMenu->addAction(dock->toggleViewAction());
 }
 
+
+void SlideEditorWindow::setupItemList()
+{
+	QDockWidget *dock = new QDockWidget(tr("Item List"), this);
+	dock->setObjectName("slideItemDock");
+	m_itemListView = new QListView(dock);
+	m_itemListView->setViewMode(QListView::ListMode);
+	//m_slideListView->setViewMode(QListView::IconMode);
+	m_itemListView->setMovement(QListView::Free);
+	m_itemListView->setWordWrap(true);
+	m_itemListView->setSelectionMode(QAbstractItemView::ExtendedSelection);
+	m_itemListView->setDragEnabled(true);
+	m_itemListView->setAcceptDrops(true);
+	m_itemListView->setDropIndicatorShown(true);
+
+	connect(m_itemListView,SIGNAL(activated(const QModelIndex &)),this,SLOT(itemSelected(const QModelIndex &)));
+	connect(m_itemListView,SIGNAL(clicked(const QModelIndex &)),this,SLOT(itemSelected(const QModelIndex &)));
+
+	// deleting old selection model per http://doc.trolltech.com/4.5/qabstractitemview.html#setModel
+	//QItemSelectionModel *m = m_itemListView->selectionModel();
+	
+	m_itemModel = new SlideItemListModel();
+	m_itemListView->setModel(m_itemModel);
+	connect(m_itemModel, SIGNAL(itemsDropped(QList<AbstractItem*>)), this, SLOT(itemsDropped(QList<AbstractItem*>)));
+
+// 	if(m)
+// 	{
+// 		delete m;
+// 		m=0;
+// 	}
+	
+// 	QItemSelectionModel *currentSelectionModel = m_itemListView->selectionModel();
+// 	connect(currentSelectionModel, SIGNAL(currentChanged(const QModelIndex &, const QModelIndex &)), this, SLOT(currentItemChanged(const QModelIndex &, const QModelIndex &)));
+// 	
+	dock->setWidget(m_itemListView);
+	addDockWidget(Qt::RightDockWidgetArea, dock);
+	//viewMenu->addAction(dock->toggleViewAction());
+}
+
+
+
+
 void SlideEditorWindow::currentChanged(const QModelIndex &idx,const QModelIndex &)
 {
 	slideSelected(idx);
+}
+
+void SlideEditorWindow::currentItemChanged(const QModelIndex &idx,const QModelIndex &)
+{
+	itemSelected(idx);
 }
 
 
@@ -930,6 +968,12 @@ void SlideEditorWindow::slidesDropped(QList<Slide*> list)
 	m_slideListView->setCurrentIndex(idx);
 }
 
+void SlideEditorWindow::itemsDropped(QList<AbstractItem*> list)
+{
+	QModelIndex idx = m_itemModel->indexForItem(list.first());
+	m_itemListView->setCurrentIndex(idx);
+}
+
 void SlideEditorWindow::setSlideGroup(SlideGroup *g,Slide *curSlide)
 {
 	if(m_slideGroup)
@@ -1021,6 +1065,14 @@ void SlideEditorWindow::setCurrentSlide(Slide *slide)
 
 	m_scene->clearSelection();
 	kids.last()->setSelected(true);
+	
+	m_itemModel->setSlide(slide);
+	
+// 	if(kids.last()->modelItem() && m_itemListView)
+// 	{
+// 		QModelIndex idx = m_itemModel->indexForItem(kids.last()->modelItem());
+// 		m_itemListView->setCurrentIndex(idx);
+// 	}
 }
 
 Slide * SlideEditorWindow::nextSlide()
@@ -1057,7 +1109,7 @@ Slide * SlideEditorWindow::prevSlide()
 	UndoSlideItemChanged(SlideEditorWindow *window, AbstractItem *item, QString field, QVariant value, QVariant oldValue)
 		: m_window(window), m_item(item), m_field(field), m_value(value), m_oldValue(oldValue), redoCount(0) 
 		{ 
-			setText(QString("Change %2 of %1").arg(guessTitle(item->itemName())).arg(guessTitle(field)));
+			setText(QString("Change %2 of %1").arg(AbstractItem::guessTitle(item->itemName())).arg(AbstractItem::guessTitle(field)));
 		}
 	
 	virtual int id() const { return 0x001; }
@@ -1105,7 +1157,7 @@ public:
 	UndoSlideItemAdded(SlideEditorWindow *window, Slide *slide, AbstractItem *item)
 		: m_window(window), m_slide(slide), m_item(item), redoCount(0) 
 		{ 
-			setText(QString("Added %1").arg(guessTitle(item->itemName().isEmpty() ? "New Item" : item->itemName())));
+			setText(QString("Added %1").arg(AbstractItem::guessTitle(item->itemName().isEmpty() ? "New Item" : item->itemName())));
 		}
 	
 	
@@ -1142,7 +1194,7 @@ private:
 	UndoSlideItemRemoved(SlideEditorWindow *window, Slide *slide, AbstractItem *item)
 		: m_window(window), m_slide(slide), m_item(item), redoCount(0) 
 		{ 
-			setText(QString("Removed %1").arg(guessTitle(item->itemName())));
+			setText(QString("Removed %1").arg(AbstractItem::guessTitle(item->itemName())));
 		}
 	
 	virtual void undo() 
@@ -1351,8 +1403,24 @@ void SlideEditorWindow::slideSelected(const QModelIndex &idx)
 {
 	Slide *s = m_slideModel->slideFromIndex(idx);
 	//qDebug() << "SlideEditorWindow::slideSelected(): selected slide#:"<<s->slideNumber();
-	setCurrentSlide(s);
+	if(m_scene->slide() != s)
+		setCurrentSlide(s);
 }
+
+
+void SlideEditorWindow::itemSelected(const QModelIndex &idx)
+{
+	
+	AbstractItem * item = m_itemModel->itemFromIndex(idx);
+	//qDebug() << "SlideEditorWindow::itemSelected(): selected item:"<<item->itemName();
+	AbstractContent * content = m_scene->findVisualDelegate(item);
+	if(content && !content->isSelected())
+	{
+		m_scene->clearSelection();
+		content->setSelected(true);
+	}
+}
+
 
 void SlideEditorWindow::newSlide()
 {
@@ -1442,23 +1510,27 @@ void SlideEditorWindow::delSlide()
 	//slide = 0;
 }
 
-
+// TODO shouldn't need the "m_itemModel->setSlide(slide)" calls!!!!
 void SlideEditorWindow::newTextItem()
 {
 	m_scene->newTextItem();
+	m_itemModel->setSlide(m_scene->slide());
 }
 
 void SlideEditorWindow::newBoxItem()
 {
         m_scene->newBoxItem();
+        m_itemModel->setSlide(m_scene->slide());
 }
 
 void SlideEditorWindow::newVideoItem()
 {
         m_scene->newVideoItem();
+        m_itemModel->setSlide(m_scene->slide());
 }
 
 void SlideEditorWindow::newImageItem()
 {
         m_scene->newImageItem();
+        m_itemModel->setSlide(m_scene->slide());
 }

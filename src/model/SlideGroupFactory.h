@@ -90,6 +90,8 @@ protected:
 	QPushButton * m_clearButton;
 	
 	Slide * m_selectedSlide;
+	
+	bool m_timerWasActiveBeforeFade;
 
 };
 

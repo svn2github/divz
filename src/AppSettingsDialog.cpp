@@ -24,14 +24,14 @@ void AppSettingsDialog::slotUseOpenGLChanged(bool f)
 
 void AppSettingsDialog::slotConfigOutputs()
 {
-	OutputSetupDialog *d = new OutputSetupDialog(this);
-	d->exec();
+	OutputSetupDialog d(this);
+	d.exec();
 }
 
 void AppSettingsDialog::slotConfigGrid()
 {
-	GridDialog *d = new GridDialog(this);
-	d->exec();
+	GridDialog d(this);
+	d.exec();
 }
 
 AppSettingsDialog::~AppSettingsDialog()

@@ -548,6 +548,7 @@ AbstractVisualItem * MyGraphicsScene::newTextItem(QString text)
 	t->setItemId(ItemFactory::nextId());
 	t->setItemName(QString("TextBoxItem%1").arg(t->itemId()));
 	t->setFontSize(38.0);
+	t->setZValue(maxZValue());
 	
 	m_slide->addItem(t); //m_slide->createText();
 	
@@ -565,6 +566,7 @@ AbstractVisualItem * MyGraphicsScene::newBoxItem()
 	t->setPos(nearCenter(sceneRect()));
 	t->setItemId(ItemFactory::nextId());
 	t->setItemName(QString("BoxItem%1").arg(t->itemId()));
+	t->setZValue(maxZValue());
 	
 	m_slide->addItem(t); //m_slide->createText();
 	
@@ -582,6 +584,7 @@ AbstractVisualItem * MyGraphicsScene::newVideoItem()
 	t->setPos(nearCenter(sceneRect()));
 	t->setItemId(ItemFactory::nextId());
 	t->setItemName(QString("VideoItem%1").arg(t->itemId()));
+	t->setZValue(maxZValue());
 	
 	m_slide->addItem(t); //m_slide->createText();
 	

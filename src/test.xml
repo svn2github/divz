@@ -202,20 +202,20 @@ p, li { white-space: pre-wrap; }
             </textbox>
         </slide>
     </group>
-    <group title="Image and Fade Test Group" number="0" icon="" type="0" id="1" auto="0">
-        <slide number="0" timeout="0" id="0">
+    <group title="PHYSH Logo" number="0" icon="" type="0" id="1" auto="0">
+        <slide number="0" timeout="5" id="0">
             <background>
                 <item-id>803</item-id>
                 <item-name>BackgroundItem803</item-name>
-                <rect w="0" x="0" y="0" h="0"/>
+                <rect w="1021" x="0" y="0" h="768"/>
                 <source y1="0" x1="0" y2="0" x2="0"/>
                 <pos x="0" y="0"/>
-                <zvalue>-999</zvalue>
+                <zvalue>-9999</zvalue>
                 <opacity>1</opacity>
                 <visible>1</visible>
                 <frame-class>0</frame-class>
                 <transformation yRot="0" xRot="0" zRot="0"/>
-                <fill brush-style="1" video="" image="" brush-color="255,255,255,255" type="1"/>
+                <fill brush-style="1" video="samples/jumpbacks/093_JumpBack.mov" image="" brush-color="255,255,255,255" type="4"/>
                 <outline brush-style="1" pen-join="0" pen-width="1" enabled="0" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255"/>
                 <mirror offset="3" enabled="0"/>
                 <shadow brush-style="1" x="3" y="3" enabled="0" blur="3" brush-color="0,0,0,255"/>
@@ -225,7 +225,7 @@ p, li { white-space: pre-wrap; }
                 <item-name>ImageItem7335</item-name>
                 <rect w="1040" x="-100" y="-390" h="780"/>
                 <source y1="0" x1="0" y2="0" x2="0"/>
-                <pos x="100" y="380"/>
+                <pos x="1372" y="1041"/>
                 <zvalue>2</zvalue>
                 <opacity>1</opacity>
                 <visible>1</visible>
@@ -241,7 +241,7 @@ p, li { white-space: pre-wrap; }
                 <item-name>ImageItem2950</item-name>
                 <rect w="510" x="-100" y="-191" h="382"/>
                 <source y1="0" x1="0" y2="0" x2="0"/>
-                <pos x="630" y="520"/>
+                <pos x="1245" y="307.0000000000001"/>
                 <zvalue>3</zvalue>
                 <opacity>1</opacity>
                 <visible>1</visible>
@@ -252,8 +252,304 @@ p, li { white-space: pre-wrap; }
                 <mirror offset="3" enabled="0"/>
                 <shadow brush-style="1" x="-3" y="-3" enabled="0" blur="3" brush-color="0,0,0,255"/>
             </image>
+            <image>
+                <item-id>9640</item-id>
+                <item-name>ImageItem9640</item-name>
+                <rect w="530" x="-100" y="-100" h="530"/>
+                <source y1="0" x1="0" y2="0" x2="0"/>
+                <pos x="955.9999999999998" y="-522.9999999999998"/>
+                <zvalue>5</zvalue>
+                <opacity>1</opacity>
+                <visible>1</visible>
+                <frame-class>0</frame-class>
+                <transformation yRot="0" xRot="0" zRot="0"/>
+                <fill brush-style="1" video="" image="sample/playlist-new.svg" brush-color="255,255,255,255" type="3"/>
+                <outline brush-style="1" pen-join="64" pen-width="3" enabled="0" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255"/>
+                <mirror offset="3" enabled="0"/>
+                <shadow brush-style="1" x="3" y="3" enabled="0" blur="3" brush-color="0,0,0,255"/>
+            </image>
+            <textbox>
+                <item-id>9643</item-id>
+                <item-name>TextBoxItem9643</item-name>
+                <rect w="985" x="0" y="-229" h="278"/>
+                <source y1="0" x1="0" y2="0" x2="0"/>
+                <pos x="71.50000000000034" y="147.7500000000003"/>
+                <zvalue>8</zvalue>
+                <opacity>0.8</opacity>
+                <visible>1</visible>
+                <frame-class>0</frame-class>
+                <transformation yRot="0" xRot="0" zRot="38.96717691984206"/>
+                <fill brush-style="1" video="" image="" brush-color="255,255,255,255" type="1"/>
+                <outline brush-style="1" pen-join="64" pen-width="1.5" enabled="1" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255"/>
+                <mirror offset="3" enabled="0"/>
+                <shadow brush-style="1" x="0" y="0" enabled="1" blur="8" brush-color="0,0,0,255"/>
+                <text>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
+&lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
+p, li { white-space: pre-wrap; }
+&lt;/style>&lt;/head>&lt;body style=" font-family:'Sans Serif'; font-size:9pt; font-weight:400; font-style:normal;">
+&lt;p align="center" style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-size:171pt; font-weight:600;">PHYSH&lt;/span>&lt;/p>&lt;/body>&lt;/html></text>
+                <default-font font-family="Tahoma" font-size="40"/>
+                <shape enabled="1">
+                    <control-points one="0 0" two="0 0" four="0 0" three="0 0"/>
+                </shape>
+                <text-align x="32" y="32"/>
+            </textbox>
+            <image>
+                <item-id>9647</item-id>
+                <item-name>ImageItem9647</item-name>
+                <rect w="65" x="-100" y="-47" h="94"/>
+                <source y1="0" x1="0" y2="0" x2="0"/>
+                <pos x="112.0000000000001" y="644.5"/>
+                <zvalue>9</zvalue>
+                <opacity>1</opacity>
+                <visible>1</visible>
+                <frame-class>0</frame-class>
+                <transformation yRot="0" xRot="0" zRot="0"/>
+                <fill brush-style="1" video="" image="data/phc-logo-transparent.png" brush-color="255,255,255,255" type="3"/>
+                <outline brush-style="1" pen-join="64" pen-width="3" enabled="0" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255"/>
+                <mirror offset="3" enabled="0"/>
+                <shadow brush-style="1" x="0" y="0" enabled="1" blur="5" brush-color="255,255,255,255"/>
+            </image>
+            <image>
+                <item-id>9648</item-id>
+                <item-name>ImageItem9648</item-name>
+                <rect w="65" x="-100" y="-47" h="94"/>
+                <source y1="0" x1="0" y2="0" x2="0"/>
+                <pos x="112.0000000000001" y="644.5"/>
+                <zvalue>9</zvalue>
+                <opacity>1</opacity>
+                <visible>1</visible>
+                <frame-class>0</frame-class>
+                <transformation yRot="0" xRot="0" zRot="0"/>
+                <fill brush-style="1" video="" image="data/phc-logo-transparent.png" brush-color="255,255,255,255" type="3"/>
+                <outline brush-style="1" pen-join="64" pen-width="3" enabled="0" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255"/>
+                <mirror offset="3" enabled="0"/>
+                <shadow brush-style="1" x="0" y="0" enabled="1" blur="5" brush-color="255,255,255,255"/>
+            </image>
+            <image>
+                <item-id>9649</item-id>
+                <item-name>ImageItem9649</item-name>
+                <rect w="65" x="-100" y="-47" h="94"/>
+                <source y1="0" x1="0" y2="0" x2="0"/>
+                <pos x="112.0000000000001" y="644.5"/>
+                <zvalue>9</zvalue>
+                <opacity>1</opacity>
+                <visible>1</visible>
+                <frame-class>0</frame-class>
+                <transformation yRot="0" xRot="0" zRot="0"/>
+                <fill brush-style="1" video="" image="data/phc-logo-transparent.png" brush-color="255,255,255,255" type="3"/>
+                <outline brush-style="1" pen-join="64" pen-width="3" enabled="0" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255"/>
+                <mirror offset="3" enabled="0"/>
+                <shadow brush-style="1" x="0" y="0" enabled="1" blur="5" brush-color="255,255,255,255"/>
+            </image>
+            <image>
+                <item-id>9650</item-id>
+                <item-name>ImageItem9650</item-name>
+                <rect w="65" x="-100" y="-47" h="94"/>
+                <source y1="0" x1="0" y2="0" x2="0"/>
+                <pos x="112.0000000000001" y="644.5"/>
+                <zvalue>9</zvalue>
+                <opacity>1</opacity>
+                <visible>1</visible>
+                <frame-class>0</frame-class>
+                <transformation yRot="0" xRot="0" zRot="0"/>
+                <fill brush-style="1" video="" image="data/phc-logo-transparent.png" brush-color="255,255,255,255" type="3"/>
+                <outline brush-style="1" pen-join="64" pen-width="3" enabled="0" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255"/>
+                <mirror offset="3" enabled="0"/>
+                <shadow brush-style="1" x="0" y="0" enabled="1" blur="5" brush-color="255,255,255,255"/>
+            </image>
+            <image>
+                <item-id>9651</item-id>
+                <item-name>ImageItem9651</item-name>
+                <rect w="65" x="-100" y="-47" h="94"/>
+                <source y1="0" x1="0" y2="0" x2="0"/>
+                <pos x="112.0000000000001" y="644.5"/>
+                <zvalue>9</zvalue>
+                <opacity>1</opacity>
+                <visible>1</visible>
+                <frame-class>0</frame-class>
+                <transformation yRot="0" xRot="0" zRot="0"/>
+                <fill brush-style="1" video="" image="data/phc-logo-transparent.png" brush-color="255,255,255,255" type="3"/>
+                <outline brush-style="1" pen-join="64" pen-width="3" enabled="0" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255"/>
+                <mirror offset="3" enabled="0"/>
+                <shadow brush-style="1" x="0" y="0" enabled="1" blur="5" brush-color="255,255,255,255"/>
+            </image>
         </slide>
-        <slide number="1" timeout="0" id="1">
+        <slide number="1" timeout="3" id="4">
+            <background>
+                <item-id>9653</item-id>
+                <item-name>BackgroundItem803</item-name>
+                <rect w="1021" x="0" y="0" h="768"/>
+                <source y1="0" x1="0" y2="0" x2="0"/>
+                <pos x="0" y="0"/>
+                <zvalue>-9999</zvalue>
+                <opacity>1</opacity>
+                <visible>1</visible>
+                <frame-class>0</frame-class>
+                <transformation yRot="0" xRot="0" zRot="0"/>
+                <fill brush-style="1" video="samples/jumpbacks/093_JumpBack.mov" image="" brush-color="255,255,255,255" type="4"/>
+                <outline brush-style="1" pen-join="0" pen-width="1" enabled="0" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255"/>
+                <mirror offset="3" enabled="0"/>
+                <shadow brush-style="1" x="3" y="3" enabled="0" blur="3" brush-color="0,0,0,255"/>
+            </background>
+            <image>
+                <item-id>9654</item-id>
+                <item-name>ImageItem7335</item-name>
+                <rect w="1040" x="-100" y="-390" h="780"/>
+                <source y1="0" x1="0" y2="0" x2="0"/>
+                <pos x="1372" y="1041"/>
+                <zvalue>2</zvalue>
+                <opacity>1</opacity>
+                <visible>1</visible>
+                <frame-class>0</frame-class>
+                <transformation yRot="0" xRot="0" zRot="0"/>
+                <fill brush-style="1" video="" image="samples/stills from church/sdc10802.jpg" brush-color="255,255,255,255" type="3"/>
+                <outline brush-style="1" pen-join="64" pen-width="3" enabled="0" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255"/>
+                <mirror offset="3" enabled="0"/>
+                <shadow brush-style="1" x="3" y="3" enabled="0" blur="3" brush-color="0,0,0,255"/>
+            </image>
+            <image>
+                <item-id>9655</item-id>
+                <item-name>ImageItem2950</item-name>
+                <rect w="510" x="-100" y="-191" h="382"/>
+                <source y1="0" x1="0" y2="0" x2="0"/>
+                <pos x="1245" y="307.0000000000001"/>
+                <zvalue>3</zvalue>
+                <opacity>1</opacity>
+                <visible>1</visible>
+                <frame-class>0</frame-class>
+                <transformation yRot="0" xRot="0" zRot="0"/>
+                <fill brush-style="1" video="" image="samples/stills from church/sdc11175.jpg" brush-color="255,255,255,255" type="3"/>
+                <outline brush-style="1" pen-join="64" pen-width="3" enabled="0" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255"/>
+                <mirror offset="3" enabled="0"/>
+                <shadow brush-style="1" x="-3" y="-3" enabled="0" blur="3" brush-color="0,0,0,255"/>
+            </image>
+            <image>
+                <item-id>9656</item-id>
+                <item-name>ImageItem9640</item-name>
+                <rect w="530" x="-100" y="-100" h="530"/>
+                <source y1="0" x1="0" y2="0" x2="0"/>
+                <pos x="955.9999999999998" y="-522.9999999999998"/>
+                <zvalue>5</zvalue>
+                <opacity>1</opacity>
+                <visible>1</visible>
+                <frame-class>0</frame-class>
+                <transformation yRot="0" xRot="0" zRot="0"/>
+                <fill brush-style="1" video="" image="sample/playlist-new.svg" brush-color="255,255,255,255" type="3"/>
+                <outline brush-style="1" pen-join="64" pen-width="3" enabled="0" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255"/>
+                <mirror offset="3" enabled="0"/>
+                <shadow brush-style="1" x="3" y="3" enabled="0" blur="3" brush-color="0,0,0,255"/>
+            </image>
+            <textbox>
+                <item-id>9657</item-id>
+                <item-name>TextBoxItem9643</item-name>
+                <rect w="1225" x="0" y="-229" h="542"/>
+                <source y1="0" x1="0" y2="0" x2="0"/>
+                <pos x="-1.499999999999659" y="85.75000000000034"/>
+                <zvalue>8</zvalue>
+                <opacity>0.8</opacity>
+                <visible>1</visible>
+                <frame-class>0</frame-class>
+                <transformation yRot="0" xRot="0" zRot="38.96717691984206"/>
+                <fill brush-style="1" video="" image="" brush-color="255,255,255,255" type="1"/>
+                <outline brush-style="1" pen-join="64" pen-width="1.5" enabled="1" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255"/>
+                <mirror offset="3" enabled="0"/>
+                <shadow brush-style="1" x="0" y="0" enabled="1" blur="8" brush-color="0,0,0,255"/>
+                <text>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
+&lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
+p, li { white-space: pre-wrap; }
+&lt;/style>&lt;/head>&lt;body style=" font-family:'Sans Serif'; font-size:9pt; font-weight:400; font-style:normal;">
+&lt;p align="center" style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-size:171pt; font-weight:600;">Welcome&lt;/span>&lt;/p>&lt;/body>&lt;/html></text>
+                <default-font font-family="Tahoma" font-size="40"/>
+                <shape enabled="1">
+                    <control-points one="0 0" two="0 0" four="0 0" three="0 0"/>
+                </shape>
+                <text-align x="32" y="32"/>
+            </textbox>
+            <image>
+                <item-id>9658</item-id>
+                <item-name>ImageItem9647</item-name>
+                <rect w="65" x="-100" y="-47" h="94"/>
+                <source y1="0" x1="0" y2="0" x2="0"/>
+                <pos x="112.0000000000001" y="644.5"/>
+                <zvalue>9</zvalue>
+                <opacity>1</opacity>
+                <visible>1</visible>
+                <frame-class>0</frame-class>
+                <transformation yRot="0" xRot="0" zRot="0"/>
+                <fill brush-style="1" video="" image="data/phc-logo-transparent.png" brush-color="255,255,255,255" type="3"/>
+                <outline brush-style="1" pen-join="64" pen-width="3" enabled="0" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255"/>
+                <mirror offset="3" enabled="0"/>
+                <shadow brush-style="1" x="0" y="0" enabled="1" blur="5" brush-color="255,255,255,255"/>
+            </image>
+            <image>
+                <item-id>9659</item-id>
+                <item-name>ImageItem9648</item-name>
+                <rect w="65" x="-100" y="-47" h="94"/>
+                <source y1="0" x1="0" y2="0" x2="0"/>
+                <pos x="112.0000000000001" y="644.5"/>
+                <zvalue>9</zvalue>
+                <opacity>1</opacity>
+                <visible>1</visible>
+                <frame-class>0</frame-class>
+                <transformation yRot="0" xRot="0" zRot="0"/>
+                <fill brush-style="1" video="" image="data/phc-logo-transparent.png" brush-color="255,255,255,255" type="3"/>
+                <outline brush-style="1" pen-join="64" pen-width="3" enabled="0" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255"/>
+                <mirror offset="3" enabled="0"/>
+                <shadow brush-style="1" x="0" y="0" enabled="1" blur="5" brush-color="255,255,255,255"/>
+            </image>
+            <image>
+                <item-id>9660</item-id>
+                <item-name>ImageItem9649</item-name>
+                <rect w="65" x="-100" y="-47" h="94"/>
+                <source y1="0" x1="0" y2="0" x2="0"/>
+                <pos x="112.0000000000001" y="644.5"/>
+                <zvalue>9</zvalue>
+                <opacity>1</opacity>
+                <visible>1</visible>
+                <frame-class>0</frame-class>
+                <transformation yRot="0" xRot="0" zRot="0"/>
+                <fill brush-style="1" video="" image="data/phc-logo-transparent.png" brush-color="255,255,255,255" type="3"/>
+                <outline brush-style="1" pen-join="64" pen-width="3" enabled="0" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255"/>
+                <mirror offset="3" enabled="0"/>
+                <shadow brush-style="1" x="0" y="0" enabled="1" blur="5" brush-color="255,255,255,255"/>
+            </image>
+            <image>
+                <item-id>9661</item-id>
+                <item-name>ImageItem9650</item-name>
+                <rect w="65" x="-100" y="-47" h="94"/>
+                <source y1="0" x1="0" y2="0" x2="0"/>
+                <pos x="112.0000000000001" y="644.5"/>
+                <zvalue>9</zvalue>
+                <opacity>1</opacity>
+                <visible>1</visible>
+                <frame-class>0</frame-class>
+                <transformation yRot="0" xRot="0" zRot="0"/>
+                <fill brush-style="1" video="" image="data/phc-logo-transparent.png" brush-color="255,255,255,255" type="3"/>
+                <outline brush-style="1" pen-join="64" pen-width="3" enabled="0" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255"/>
+                <mirror offset="3" enabled="0"/>
+                <shadow brush-style="1" x="0" y="0" enabled="1" blur="5" brush-color="255,255,255,255"/>
+            </image>
+            <image>
+                <item-id>9662</item-id>
+                <item-name>ImageItem9651</item-name>
+                <rect w="65" x="-100" y="-47" h="94"/>
+                <source y1="0" x1="0" y2="0" x2="0"/>
+                <pos x="112.0000000000001" y="644.5"/>
+                <zvalue>9</zvalue>
+                <opacity>1</opacity>
+                <visible>1</visible>
+                <frame-class>0</frame-class>
+                <transformation yRot="0" xRot="0" zRot="0"/>
+                <fill brush-style="1" video="" image="data/phc-logo-transparent.png" brush-color="255,255,255,255" type="3"/>
+                <outline brush-style="1" pen-join="64" pen-width="3" enabled="0" brush-color="0,0,0,255" pen-cap="16" pen-color="0,0,0,255"/>
+                <mirror offset="3" enabled="0"/>
+                <shadow brush-style="1" x="0" y="0" enabled="1" blur="5" brush-color="255,255,255,255"/>
+            </image>
+        </slide>
+    </group>
+    <group title="Test Group" number="0" icon="" type="0" id="1" auto="0">
+        <slide number="2" timeout="0" id="1">
             <background>
                 <item-id>2952</item-id>
                 <item-name>BackgroundItem803</item-name>
@@ -303,14 +599,14 @@ p, li { white-space: pre-wrap; }
                 <shadow brush-style="1" x="3" y="3" enabled="0" blur="3" brush-color="0,0,0,255"/>
             </image>
         </slide>
-        <slide number="2" timeout="2" id="2">
+        <slide number="3" timeout="2" id="2">
             <background>
                 <item-id>8370</item-id>
                 <item-name>BackgroundItem8370</item-name>
-                <rect w="0" x="0" y="0" h="0"/>
+                <rect w="1021" x="0" y="0" h="768"/>
                 <source y1="0" x1="0" y2="0" x2="0"/>
                 <pos x="0" y="0"/>
-                <zvalue>0</zvalue>
+                <zvalue>-9999</zvalue>
                 <opacity>1</opacity>
                 <visible>1</visible>
                 <frame-class>0</frame-class>
@@ -321,14 +617,14 @@ p, li { white-space: pre-wrap; }
                 <shadow brush-style="1" x="3" y="3" enabled="0" blur="3" brush-color="0,0,0,255"/>
             </background>
         </slide>
-        <slide number="3" timeout="0" id="3">
+        <slide number="4" timeout="0" id="3">
             <background>
                 <item-id>8826</item-id>
                 <item-name>BackgroundItem8370</item-name>
-                <rect w="0" x="0" y="0" h="0"/>
+                <rect w="1021" x="0" y="0" h="768"/>
                 <source y1="0" x1="0" y2="0" x2="0"/>
                 <pos x="0" y="0"/>
-                <zvalue>0</zvalue>
+                <zvalue>-9999</zvalue>
                 <opacity>1</opacity>
                 <visible>1</visible>
                 <frame-class>0</frame-class>

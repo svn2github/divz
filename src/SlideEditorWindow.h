@@ -26,6 +26,7 @@ class AbstractContent;
 class QTabWidget;
 class SlideEditorWindowListView;
 class SlideEditorWindow;
+class SlideItemListModel;
 
 class SlideEditorWindowListView : public QListView
 { 
@@ -66,6 +67,9 @@ protected slots:
 	friend class SlideEditorWindowListView;
 	void slideSelected(const QModelIndex &);
 	void currentChanged(const QModelIndex &idx,const QModelIndex &);
+	
+	void itemSelected(const QModelIndex &);
+	void currentItemChanged(const QModelIndex &idx,const QModelIndex &);
 
 private slots:
 	void newTextItem();
@@ -85,9 +89,12 @@ private slots:
 	void centerSelVert();
 	void centerSelHorz();
 	
+	void slotConfigGrid();
+	
 	
 	
 	void slidesDropped(QList<Slide*>);
+	void itemsDropped(QList<AbstractItem*>);
 	
 	void appSettingsChanged();
 	void aspectRatioChanged(double);
@@ -105,6 +112,7 @@ private:
 	void setupViewportLines();
 	void setupToolbar();
 	void setupPropDock();
+	void setupItemList();
 	
 	void updatePropDock(AbstractContent*);
 	
@@ -117,6 +125,9 @@ private:
 	
 	SlideEditorWindowListView *m_slideListView;
 	QSplitter * m_splitter;
+	
+	QListView *m_itemListView;
+	SlideItemListModel *m_itemModel;
 	
 	Document m_doc;
 	MyGraphicsScene *m_scene;

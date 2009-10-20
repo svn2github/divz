@@ -96,10 +96,8 @@ Revised Task list for Release 1.0, 10/18/09:
 			Add drag/drop background for songs from a yet-to-be-made vid/image bg pallette
 		
 		= Editor / Visual =
-			Integrated grid dialog into slideeditor window
 			Add rounded rectangle item / or round boxcontent corners
 			add animation to image items
-			selection panel
 		
 		= Songs =
 			Save song templates/bg in a "template collection"
@@ -166,7 +164,12 @@ Revised Task list for Release 1.0, 10/18/09:
 					- generating the slides takes a LONG time in ppt once you click CREATE
 					- powerpoint does NOT automatically set the LOOP SLIDE SHOW *or* an intelligent per slide auto-change time
 			
-					
+			add slide timeout widgets to toolbar
+			add slide bg config btn to toolbar
+			
+		[DONE] Integrated grid dialog into slideeditor window
+		[DONE] selection panel
+
 		[DONE] move/add item config to a dock widget
 			
 		[DONE] when editor going to new slide and only one item in slide, select that item
@@ -278,6 +281,10 @@ Revised Task list for Release 1.0, 10/18/09:
 		[LATER] Video Capture (started impl, but again, performance is terrible. That may be due to the FormatOpts specified, or in ffmpeg, or the capture hardware - need to trace - later!)
 	
 	- Bugs:
+		black and clear buttons need to pause timer	
+			started, not working yet tho
+		slide auto change time doesnt seem to save when using guess button
+		
 		clicking "no bg" in dialog doesnt clear background if it was image previously in editor
 		adding slide in editor doesnt update list in live view control
 		
@@ -318,6 +325,8 @@ Revised Task list for Release 1.0, 10/18/09:
 				however, we must handle corrupt files to some extent
 					preferably, detect the file is corrupt and refuse to load 
 					
+		[FIXED] slide item list in editor doesnt add items to the list until slide model set again
+				hacked it by just setting the model again on the item list when a new item is added
 		[FIXED] when closing and have not saved yet, first ASK if they want to save before showing save as dialog
 				updated mainwindow closeEvent() to prompt
 		[FIXED] kbd movement needs to move all items in the selection stack

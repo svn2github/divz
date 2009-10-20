@@ -67,6 +67,8 @@ public:
 	
 	// ++ every time setChanged() is called, starts at zero for every object, not persistant across program runs
 	quint32 revision() { return m_revision; }
+	
+	static QString guessTitle(QString field);
 
 signals:
 	void itemChanged(QString fieldName, QVariant value, QVariant oldValue);

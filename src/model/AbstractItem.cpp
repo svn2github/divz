@@ -2,6 +2,41 @@
 #include <QDebug>
 #include <QMetaProperty>
 
+QString AbstractItem::guessTitle(QString field)
+{
+	static QRegExp rUpperCase = QRegExp("([a-z])([A-Z])");
+	static QRegExp rFirstLetter = QRegExp("([a-z])");
+	static QRegExp rLetterNumber = QRegExp("([a-z])([0-9])");
+	//static QRegExp rUnderScore 
+	//$name =~ s/([a-z])_([a-z])/$1.' '.uc($2)/segi;
+	
+	QString tmp = field;
+	tmp.replace(rUpperCase,"\\1 \\2");
+	if(tmp.indexOf(rFirstLetter) == 0)
+	{
+		QChar x = tmp.at(0);
+		tmp.remove(0,1);
+		tmp.prepend(QString(x).toUpper());
+	}
+	
+	tmp.replace(rLetterNumber,"\\1 #\\2");
+	//$name =~ s/^([a-z])/uc($1)/seg;
+	
+// 	$name =~ s/\/([a-z])/'\/'.uc($1)/seg;
+// 	$name =~ s/\s([a-z])/' '.uc($1)/seg;
+// 	$name =~ s/\s(of|the|and|a)\s/' '.lc($1).' '/segi;
+// 	$name .= '?' if $name =~ /^is/i;
+// 	$name =~ s/id$//gi;
+// 	my $chr = '#';
+// 	$name =~ s/num$/$chr/gi; 
+// 	$name =~ s/datetime$/Date\/Time/gi;
+// 	$name =~ s/\best\b/Est./gi;
+
+	return tmp;
+	
+
+}
+
 AbstractItem::AbstractItem() :
 	  m_isBeingLoaded(false)
 	, m_isChanged(false)

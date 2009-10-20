@@ -21,7 +21,7 @@ public:
 	
 	void addItem(AbstractItem *);
 	QList<AbstractItem *> itemList();
-	
+	int itemCount() { return m_items.size(); }
 	AbstractItem * background();
 	
 	void removeItem(AbstractItem *);

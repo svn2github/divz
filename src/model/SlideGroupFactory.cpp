@@ -61,7 +61,8 @@ SlideGroupViewControl::SlideGroupViewControl(SlideGroupViewer *g, QWidget *w )
 	m_timerState(Undefined),
 	m_currentTimeLength(0),
 	m_elapsedAtPause(0),
-	m_selectedSlide(0)
+	m_selectedSlide(0),
+	m_timerWasActiveBeforeFade(0)
 {
 	QVBoxLayout * layout = new QVBoxLayout();
 	
@@ -264,6 +265,8 @@ void SlideGroupViewControl::slideSelected(const QModelIndex &idx)
 	m_slideViewer->setSlide(slide);
 	enableAnimation(slide->autoChangeTime());
 	
+	//if(m_clearButton->is
+	
 	m_selectedSlide = slide;
 }
 
@@ -346,11 +349,38 @@ void SlideGroupViewControl::fadeBlackFrame(bool toggled)
 {
 	m_slideViewer->fadeBlackFrame(toggled);
 	m_clearButton->setEnabled(!toggled);
+	
+	if(!!m_clearButton->isChecked())
+	{
+		if(toggled)
+		{
+			m_timerWasActiveBeforeFade = m_changeTimer->isActive();
+			if(m_changeTimer)
+				toggleTimerState(Stopped);
+		}
+		else
+		{
+			if(m_timerWasActiveBeforeFade)
+				toggleTimerState(Stopped);
+		}
+	}
 }
 	
 void SlideGroupViewControl::fadeClearFrame(bool toggled)
 {
 	m_slideViewer->fadeClearFrame(toggled);
+	
+	if(toggled)
+	{
+		m_timerWasActiveBeforeFade = m_changeTimer->isActive();
+		if(m_changeTimer)
+			toggleTimerState(Stopped);
+	}
+	else
+	{
+		if(m_timerWasActiveBeforeFade)
+			toggleTimerState(Stopped);
+	}
 }
 
 /** AbstractSlideGroupEditor:: **/
