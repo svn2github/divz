@@ -180,6 +180,43 @@ Revised Task list for Release 1.0, 10/18/09:
 				[DONE] need to find ops in control that rely on calling the public view() or scene() methods
 					[DONE] best way may be just to move those methods private :-)
 			
+			add blackberry remote control interface
+				two part:
+					server side code in dviz
+					client side code on bb - java 
+				communicate using json
+					need to find midp-compat json class for java
+				this would be client calling ops on server
+				and server sending:
+					list of groups
+					current group idx
+					list of slides in current group
+					current slide in group
+					
+					group title (+icon??)
+					slide #, slide text, (+icon??)
+					
+					event: slide change, group change, pause/play
+					
+				client sending:
+					next slide
+					prev slide
+					set slide #
+					black 
+					clear
+					pause
+					play
+					set group#
+					
+			add mjpeg output feed (server) with configurable FPS / quality for compat with vidblaster
+				use widget topixmap routine?
+				or mygracphisview topixmap?
+				or mygraphicscene topixmap?
+			
+				should be function in slidegroupviewer (basically, a clone output option)
+					multithreaded - compress frame jpeg once, then offer to all clients
+			
+			
 		[DONE] add pixmap cache size option to program settings dialog
 		[DONE] add crossfade speed and quality options to program settings dialog
 			
