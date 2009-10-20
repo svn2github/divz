@@ -61,9 +61,9 @@ OutputViewer::~OutputViewer()
 
 void OutputViewer::setViewer(SlideGroupViewer *output)
 {
-	m_output = output;
-	m_scene = output->scene();
-	m_view->setScene(m_scene);
+// 	m_output = output;
+// 	m_scene = output->scene();
+// 	m_view->setScene(m_scene);
 }
 
 void OutputViewer::resizeEvent(QResizeEvent *)

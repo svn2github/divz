@@ -52,6 +52,16 @@ SlideGroupViewer::SlideGroupViewer(QWidget *parent)
 
 }
 
+void SlideGroupViewer::setBackground(QColor c)
+{
+	view()->setBackgroundBrush(c);
+}
+
+void SlideGroupViewer::setSceneContextHint(MyGraphicsScene::ContextHint hint)
+{
+	scene()->setContextHint(hint);
+}
+
 SlideGroupViewer::~SlideGroupViewer()
 {
 	if(m_scene)

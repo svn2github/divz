@@ -26,9 +26,9 @@ public:
 	
 	void clear();
 	
-	MyGraphicsScene * scene() { return m_scene; }
-	QGraphicsView * view() { return m_view; }
-
+	void setBackground(QColor);
+	void setSceneContextHint(MyGraphicsScene::ContextHint);
+	
 signals:
 	void nextGroup();
 
@@ -54,6 +54,9 @@ protected:
 	void adjustViewScaling();
 
 private:
+	MyGraphicsScene * scene() { return m_scene; }
+	QGraphicsView * view() { return m_view; }
+
 	void initVideoProviders();
 	void releaseVideoProvders();
 	QList<QVideoProvider*> m_videoProviders;

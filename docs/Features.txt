@@ -166,6 +166,20 @@ Revised Task list for Release 1.0, 10/18/09:
 			
 			make cross fade speed configurable on a per slide or per slide GRoup basis (e.g for songs)
 			
+			add network viewer client
+				for viewer, client or server doesnt matter
+					probably should start with client and remove the :server: option from the output dialog for now
+					then Dviz control is the server
+				expected opts:
+					pretty much all public operations of SlideGroupViewer.h
+					will need a group viewer network proxy to reside in control, then proxy calls out to the client
+					no calls from client back into the control that I know of
+					** Will have to send appsetting changes over the network ...
+						or should appsettings be local to the client??
+					** Will have to send apsect ratio changes over the line
+				[DONE] need to find ops in control that rely on calling the public view() or scene() methods
+					[DONE] best way may be just to move those methods private :-)
+			
 		[DONE] add pixmap cache size option to program settings dialog
 		[DONE] add crossfade speed and quality options to program settings dialog
 			

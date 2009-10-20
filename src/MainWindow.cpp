@@ -49,7 +49,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	// setup live view before central widget because central widget uses live view in the view control code
 	m_liveView = new SlideGroupViewer();
 	m_liveView->setWindowFlags(Qt::FramelessWindowHint);
-	m_liveView->view()->setBackgroundBrush(Qt::black);
+	m_liveView->setBackground(Qt::black);
 	m_liveView->setCursor(Qt::BlankCursor);
 	connect(m_liveView, SIGNAL(nextGroup()), this, SLOT(nextGroup()));
 
@@ -133,7 +133,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	//connect(m_groupView,SIGNAL(activated(const QModelIndex &)),this,SLOT(groupSetLive(const QModelIndex &)));
 	
 	m_previewWidget = new SlideGroupViewer(m_ui->dwPreview);
-	m_previewWidget->scene()->setContextHint(MyGraphicsScene::Preview);
+	m_previewWidget->setSceneContextHint(MyGraphicsScene::Preview);
 	m_ui->dwPreview->setWidget(m_previewWidget);
 	
 	
