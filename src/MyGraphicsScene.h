@@ -45,7 +45,7 @@ class MyGraphicsScene : public QGraphicsScene
  		
  		typedef enum SlideTransition { None, CrossFade };
  		
- 		void setSlide(Slide *, SlideTransition t = None);
+ 		void setSlide(Slide *, SlideTransition t = None, int speed = -1, int quality = -1);
  		Slide * slide() { return m_slide; }
 		
 // 		TextContent * addTextContent();

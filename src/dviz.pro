@@ -130,6 +130,7 @@ include(qtcolorpicker/qtcolorpicker.pri)
 include(qtmultimedia/audio/audio.pri)
 include(3rdparty/rtmidi/rtmidi.pri)
 include(3rdparty/md5/md5.pri)
+include(3rdparty/qjson/qjson.pri)
 
 # deployment on Linux
 unix {

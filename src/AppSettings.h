@@ -40,6 +40,15 @@ public:
 
 	static QString previousPath(const QString& key);
 	static void setPreviousPath(const QString& key, const QString & path);
+	
+	static int pixmapCacheSize() { return m_pixmapCacheSize; }
+	static void setPixmapCacheSize(int);
+	
+	static int crossFadeSpeed() { return m_crossFadeSpeed; }
+	static void setCrossFadeSpeed(int);
+	
+	static int crossFadeQuality() { return m_crossFadeQuality; }
+	static void setCrossFadeQuality(int);
 
 protected:
 	friend class MainWindow;
@@ -62,6 +71,11 @@ private:
 	
 	static QMap<QString,QString> m_previousPathList;
 // 	static double m_docAspect;
+
+	static int m_pixmapCacheSize;
+	static int m_crossFadeSpeed; // ms
+	static int m_crossFadeQuality; // frames
+
 };
 
 #endif

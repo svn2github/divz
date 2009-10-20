@@ -590,7 +590,9 @@ void SlideEditorWindow::selectionChanged()
 	m_textPlusAction->setEnabled(foundText);
 	m_textMinusAction->setEnabled(foundText);
 	
-	updatePropDock(firstContent);
+	// dont update if no firstContent so we dont clear out the prop dock
+	if(firstContent)
+		updatePropDock(firstContent);
 	
 	if(firstContent && m_itemListView)
 	{

@@ -5,6 +5,8 @@
 #include <QList>
 #include "model/Output.h"
 
+#include <QPixmapCache>
+
 QList<Output*> AppSettings::m_outputs;
 bool AppSettings::m_useOpenGL = false;
 
@@ -15,6 +17,10 @@ QMap<QString,QString> AppSettings::m_previousPathList;
 
 double AppSettings::m_liveAspect = 0;
 // double AppSettings::m_docAspect = 0;
+
+int AppSettings::m_pixmapCacheSize = 256;
+int AppSettings::m_crossFadeSpeed = 250; // ms
+int AppSettings::m_crossFadeQuality = 15; // frames
 
 void AppSettings::load()
 {
@@ -31,6 +37,12 @@ void AppSettings::load()
 	QList<QString> keys = map.keys();
 	foreach(QString key, keys)
 		m_previousPathList[key] = map[key].toString();
+	
+	m_pixmapCacheSize  = s.value("app/cache-size",256).toInt();
+	m_crossFadeSpeed   = s.value("app/fade-speed",250).toInt();
+	m_crossFadeQuality = s.value("app/fade-quality",15).toInt();
+	
+	QPixmapCache::setCacheLimit(m_pixmapCacheSize * 1024);
 	
 	updateLiveAspectRatio();
 }
@@ -50,6 +62,11 @@ void AppSettings::save()
 	foreach(QString key, keys)
 		map[key] = QVariant(m_previousPathList[key]);
 	s.setValue("app/previous-path-list",map);
+	
+	s.setValue("app/cache-size",m_pixmapCacheSize);
+	s.setValue("app/fade-speed",m_crossFadeSpeed);
+	s.setValue("app/fade-quality",m_crossFadeQuality);
+	
 
 
 	saveOutputs(&s);
@@ -65,6 +82,22 @@ QString AppSettings::previousPath(const QString& key)
 void AppSettings::setPreviousPath(const QString& key, const QString & path)
 {
 	m_previousPathList[key] = path;
+}
+
+void AppSettings::setCrossFadeSpeed(int x)
+{
+	m_crossFadeSpeed = x;
+}
+
+void AppSettings::setCrossFadeQuality(int x)
+{
+	m_crossFadeQuality = x;
+}
+
+void AppSettings::setPixmapCacheSize(int x)
+{
+	m_pixmapCacheSize = x;
+	QPixmapCache::setCacheLimit(x * 1024);
 }
 
 

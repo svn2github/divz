@@ -19,7 +19,9 @@ protected:
 protected slots:
 	void slotUseOpenGLChanged(bool);
 	void slotConfigOutputs();
-	void slotConfigGrid();
+	
+	void slotAccepted();
+	//void slotRejected();
 
 private:
 	Ui::AppSettingsDialog *m_ui;

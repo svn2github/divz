@@ -145,9 +145,6 @@ Revised Task list for Release 1.0, 10/18/09:
 				QTextCharFormat does offer horizontal letter spacing...
 				custom vertical letter spacing could be achieved by a custom layout - see qq24: http://doc.trolltech.com/qq/qq24-textlayouts.html
 			
-			add pixmap cache size option to program settings dialog
-			add crossfade speed and quality options to program settings dialog
-			
 			make font size buttons use different algorithim for sizing fonts
 				e.g. < 22, inc by 2
 				from 22-44, inc by 4
@@ -166,6 +163,11 @@ Revised Task list for Release 1.0, 10/18/09:
 			
 			add slide timeout widgets to toolbar
 			add slide bg config btn to toolbar
+			
+			make cross fade speed configurable on a per slide or per slide GRoup basis (e.g for songs)
+			
+		[DONE] add pixmap cache size option to program settings dialog
+		[DONE] add crossfade speed and quality options to program settings dialog
 			
 		[DONE] Integrated grid dialog into slideeditor window
 		[DONE] selection panel
@@ -281,8 +283,6 @@ Revised Task list for Release 1.0, 10/18/09:
 		[LATER] Video Capture (started impl, but again, performance is terrible. That may be due to the FormatOpts specified, or in ffmpeg, or the capture hardware - need to trace - later!)
 	
 	- Bugs:
-		black and clear buttons need to pause timer	
-			started, not working yet tho
 		slide auto change time doesnt seem to save when using guess button
 		
 		clicking "no bg" in dialog doesnt clear background if it was image previously in editor
@@ -325,6 +325,7 @@ Revised Task list for Release 1.0, 10/18/09:
 				however, we must handle corrupt files to some extent
 					preferably, detect the file is corrupt and refuse to load 
 					
+		[FIXED] black and clear buttons need to pause timer	
 		[FIXED] slide item list in editor doesnt add items to the list until slide model set again
 				hacked it by just setting the model again on the item list when a new item is added
 		[FIXED] when closing and have not saved yet, first ASK if they want to save before showing save as dialog

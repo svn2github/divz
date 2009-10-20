@@ -211,9 +211,16 @@ void SlideGroupViewControl::toggleTimerState(TimerState state, bool resetTimer)
 		if(DEBUG_SLIDEGROUPVIEWCONTROL)
 			qDebug() << "SlideGroupViewControl::toggleTimerState(): starting timer at:"<<m_currentTimeLength;
 		
-		m_changeTimer->start(m_currentTimeLength * 1000);
-		m_countTimer->start();
-		m_elapsedTime.start();
+		if(m_currentTimeLength <= 0)
+		{
+			nextSlide();
+		}
+		else
+		{
+			m_changeTimer->start(m_currentTimeLength * 1000);
+			m_countTimer->start();
+			m_elapsedTime.start();
+		}
 	}
 	else
 	{
@@ -350,18 +357,18 @@ void SlideGroupViewControl::fadeBlackFrame(bool toggled)
 	m_slideViewer->fadeBlackFrame(toggled);
 	m_clearButton->setEnabled(!toggled);
 	
-	if(!!m_clearButton->isChecked())
+	if(!m_clearButton->isChecked())
 	{
 		if(toggled)
 		{
-			m_timerWasActiveBeforeFade = m_changeTimer->isActive();
-			if(m_changeTimer)
+			m_timerWasActiveBeforeFade = m_timerState == Running;
+			if(m_timerWasActiveBeforeFade)
 				toggleTimerState(Stopped);
 		}
 		else
 		{
 			if(m_timerWasActiveBeforeFade)
-				toggleTimerState(Stopped);
+				toggleTimerState(Running);
 		}
 	}
 }
@@ -372,14 +379,14 @@ void SlideGroupViewControl::fadeClearFrame(bool toggled)
 	
 	if(toggled)
 	{
-		m_timerWasActiveBeforeFade = m_changeTimer->isActive();
-		if(m_changeTimer)
+		m_timerWasActiveBeforeFade = m_timerState == Running;
+		if(m_timerWasActiveBeforeFade)
 			toggleTimerState(Stopped);
 	}
 	else
 	{
 		if(m_timerWasActiveBeforeFade)
-			toggleTimerState(Stopped);
+			toggleTimerState(Running);
 	}
 }
 

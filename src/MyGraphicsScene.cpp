@@ -203,7 +203,7 @@ void MyGraphicsScene::removeVisualDelegate(AbstractItem *item)
 // 	fprintf(stderr,"MyGraphicsScene::removeVisualDelegate: Can't find delegate for m_item=%p\n",item);
 }
 
-void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans)
+void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans, int speed, int quality)
 {
 	//TODO implement slide transitions
 	if(m_slide == slide)
@@ -265,6 +265,11 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans)
 // 			}
 // 		}
 				
+		if(speed < 0)
+			speed = AppSettings::crossFadeSpeed();
+		if(quality < 0)
+			quality = AppSettings::crossFadeQuality();
+			
 		
 		if(!m_fadeTimer)
 		{
@@ -337,8 +342,9 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans)
 		// fade in a slide with nothing else behind it - which is a nice effect.
 
 		m_fadeStepCounter = 0;
-		m_fadeSteps = 15;
-		int ms = 250  / m_fadeSteps;
+		m_fadeSteps = quality; //15;
+		//int ms = 250  / m_fadeSteps;
+		int ms = speed / m_fadeSteps;
 		m_fadeTimer->start(ms); //ms);
 
 // 		double inc = (double)1 / m_fadeSteps;
