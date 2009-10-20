@@ -41,7 +41,7 @@ BackgroundContent::BackgroundContent(QGraphicsScene * scene, QGraphicsItem * par
 	
 	setFlag(QGraphicsItem::ItemIsMovable,false);
 	setFlag(QGraphicsItem::ItemIsFocusable,false);
-	setFlag(QGraphicsItem::ItemIsSelectable,false);
+	setFlag(QGraphicsItem::ItemIsSelectable,true);
 	#if QT_VERSION >= 0x040600
 	setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
 	#endif

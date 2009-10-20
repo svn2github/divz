@@ -20,6 +20,21 @@ class QUndoCommand;
 class QDoubleSpinBox;
 class QAction;
 class TextBoxContent;
+class QDockWidget;
+class GenericItemConfig;
+class AbstractContent;
+class QTabWidget;
+class SlideEditorWindowListView;
+class SlideEditorWindow;
+
+class SlideEditorWindowListView : public QListView
+{ 
+public:
+	SlideEditorWindowListView(SlideEditorWindow * ctrl, QWidget *parent=0);
+protected:
+	void keyPressEvent(QKeyEvent *event);	
+	SlideEditorWindow *ctrl;
+};
 
 #define TOOLBAR_TEXT_SIZE_INC 4
 
@@ -47,6 +62,11 @@ signals:
 protected:
 	void closeEvent(QCloseEvent*);
 
+protected slots:
+	friend class SlideEditorWindowListView;
+	void slideSelected(const QModelIndex &);
+	void currentChanged(const QModelIndex &idx,const QModelIndex &);
+
 private slots:
 	void newTextItem();
 	void newBoxItem();
@@ -65,7 +85,7 @@ private slots:
 	void centerSelVert();
 	void centerSelHorz();
 	
-	void slideSelected(const QModelIndex &);
+	
 	
 	void slidesDropped(QList<Slide*>);
 	
@@ -84,6 +104,9 @@ private:
 	void setupSlideList();
 	void setupViewportLines();
 	void setupToolbar();
+	void setupPropDock();
+	
+	void updatePropDock(AbstractContent*);
 	
 	void addVpLineY(qreal y, qreal x1, qreal x2, bool inside=true);
 	void addVpLineX(qreal x, qreal y1, qreal y2, bool inside=true);
@@ -92,7 +115,7 @@ private:
 	SlideGroup *m_slideGroup;
 	SlideGroupListModel *m_slideModel;
 	
-	QListView *m_slideListView;
+	SlideEditorWindowListView *m_slideListView;
 	QSplitter * m_splitter;
 	
 	Document m_doc;
@@ -116,6 +139,14 @@ private:
 	QWidget * m_textBase;
 	
 	QList<TextBoxContent*> m_currentTextItems;
+	
+	QDockWidget * m_propDock;
+	QWidget *m_propDockEmpty;
+	GenericItemConfig *m_currentConfig;
+	AbstractContent *m_currentConfigContent;
+	
+	QTabWidget * m_propDockBase;
+	QWidget * m_currentPropWidget;
 
 };
 

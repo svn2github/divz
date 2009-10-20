@@ -807,17 +807,26 @@ QVariant AbstractContent::itemChange(GraphicsItemChange change, const QVariant &
 	// keep the AbstractContent's center inside the scene rect..
 	if (change == ItemPositionChange && scene() && AppSettings::gridEnabled())
 	{
- 		QPointF newPos = AppSettings::snapToGrid(value.toPointF(),m_kbdMotivated);
- 		
- 		// reset the keyboard flag - if another key press comes, it will be set again by the scene
- 		if(m_kbdMotivated)
- 			m_kbdMotivated = false;
-
- 		if (newPos != value.toPointF())
- 		{
- 			retVal = QVariant(newPos);
+		if(! (flags() & QGraphicsItem::ItemIsMovable) )
+		{
+			retVal = QVariant(pos());
  			retValOverride = true;
  		}
+ 		else
+ 		{
+				
+			QPointF newPos = AppSettings::snapToGrid(value.toPointF(),m_kbdMotivated);
+			
+			// reset the keyboard flag - if another key press comes, it will be set again by the scene
+			if(m_kbdMotivated)
+				m_kbdMotivated = false;
+	
+			if (newPos != value.toPointF())
+			{
+				retVal = QVariant(newPos);
+				retValOverride = true;
+			}
+		}
 	}
 
 	// tell subclasses about selection changes

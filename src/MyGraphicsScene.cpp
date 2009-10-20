@@ -756,9 +756,12 @@ void MyGraphicsScene::keyPressEvent(QKeyEvent * event)
 					foreach(QGraphicsItem *item, selection)
 					{
 						AbstractContent * content = dynamic_cast<AbstractContent *>(item);
-						content->flagKeyboardMotivatedMovement();
-						content->moveBy(0,-y);
-						content->syncToModelItem(0);
+						if(content->modelItem()->itemClass() != BackgroundItem::ItemClass)
+						{
+							content->flagKeyboardMotivatedMovement();
+							content->moveBy(0,-y);
+							content->syncToModelItem(0);
+						}
 					}
 					event->accept();
 					break;
@@ -768,9 +771,12 @@ void MyGraphicsScene::keyPressEvent(QKeyEvent * event)
 					foreach(QGraphicsItem *item, selection)
 					{
 						AbstractContent * content = dynamic_cast<AbstractContent *>(item);
-						content->flagKeyboardMotivatedMovement();
-						content->moveBy(0,+y);
-						content->syncToModelItem(0);
+						if(content->modelItem()->itemClass() != BackgroundItem::ItemClass)
+						{
+							content->flagKeyboardMotivatedMovement();
+							content->moveBy(0,+y);
+							content->syncToModelItem(0);
+						}
 					}
 					event->accept();
 					break;
@@ -780,9 +786,12 @@ void MyGraphicsScene::keyPressEvent(QKeyEvent * event)
 					foreach(QGraphicsItem *item, selection)
 					{
 						AbstractContent * content = dynamic_cast<AbstractContent *>(item);
-						content->flagKeyboardMotivatedMovement();
-						content->moveBy(-x,0);
-						content->syncToModelItem(0);
+						if(content->modelItem()->itemClass() != BackgroundItem::ItemClass)
+						{
+							content->flagKeyboardMotivatedMovement();
+							content->moveBy(-x,0);
+							content->syncToModelItem(0);
+						}
 					}
 					event->accept();
 					break;
@@ -792,9 +801,12 @@ void MyGraphicsScene::keyPressEvent(QKeyEvent * event)
 					foreach(QGraphicsItem *item, selection)
 					{
 						AbstractContent * content = dynamic_cast<AbstractContent *>(item);
-						content->flagKeyboardMotivatedMovement();
-						content->moveBy(+x,0);
-						content->syncToModelItem(0);
+						if(content->modelItem()->itemClass() != BackgroundItem::ItemClass)
+						{
+							content->flagKeyboardMotivatedMovement();
+							content->moveBy(+x,0);
+							content->syncToModelItem(0);
+						}
 					}
 					event->accept();
 					break;

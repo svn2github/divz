@@ -14,6 +14,7 @@
 #include <QSettings>
 #include <QDebug>
 #include <QShortcut>
+#include <QDockWidget>
 
 #include <qtcolorpicker.h>
 
@@ -169,9 +170,10 @@ GenericItemConfig::GenericItemConfig(AbstractContent * content, QWidget *parent)
 // 	connect(m_commonUi->listWidget, SIGNAL(itemSelectionChanged()), this, SLOT(on_listWidget_itemSelectionChanged()));
 	connect(m_commonUi->reflectionEnabled, SIGNAL(toggled(bool)), this, SLOT(slotMirrorOn(bool)));
 	//connect(m_commonUi->reflectionNone, SIGNAL(toggled(bool)), this, SLOT(slotMirrorOff(bool)));
-	connect(m_commonUi->buttonBox, SIGNAL(accepted()), this, SLOT(slotOkClicked()));
-	connect(m_commonUi->buttonBox, SIGNAL(accepted()), this, SLOT(slotClosed()));
-	connect(m_commonUi->buttonBox, SIGNAL(rejected()), this, SLOT(slotClosed()));
+	connect(m_commonUi->btnSave, SIGNAL(clicked()), this, SLOT(slotOkClicked()));
+	connect(m_commonUi->btnSave, SIGNAL(clicked()), this, SLOT(slotClosed()));
+// 	connect(m_commonUi->buttonBox, SIGNAL(accepted()), this, SLOT(slotClosed()));
+// 	connect(m_commonUi->buttonBox, SIGNAL(rejected()), this, SLOT(slotClosed()));
 	connect(m_commonUi->opacityBox, SIGNAL(valueChanged(int)), this, SLOT(slotOpacityChanged(int)));
 	
 	connect(m_commonUi->sizeReset,     SIGNAL(clicked()), this, SLOT(slotResetSize()));
@@ -229,16 +231,30 @@ GenericItemConfig::~GenericItemConfig()
 
 void GenericItemConfig::slotClosed()
 {
-     if(scene())
-     {
-	MyGraphicsScene * desk = static_cast<MyGraphicsScene*>(scene());
-	desk->slotDeleteConfig(this);
-     }
-     else
-     {
-     	close();
-     	deleteLater();
-     }
+//     qDebug() << "GenericItemConfig::slotClosed()! ";
+//      if(scene())
+//      {
+//      	qDebug() << "GenericItemConfig::slotClosed(): mark1 ";
+// 	MyGraphicsScene * desk = static_cast<MyGraphicsScene*>(scene());
+// 	qDebug() << "GenericItemConfig::slotClosed(): mark2 ";
+// 	desk->slotDeleteConfig(this);
+// 	qDebug() << "GenericItemConfig::slotClosed(): mark3 ";
+//      }
+//      else
+//      {
+     	//qDebug() << "GenericItemConfig::slotClosed(): mark4 ";
+     	if(parentWidget() && dynamic_cast<QDockWidget*>(parentWidget()))
+     	{
+     		//qDebug() << "GenericItemConfig::slotClosed(): mark5 ";
+     		return;
+     	}
+     	else
+     	{
+     		//qDebug() << "GenericItemConfig::slotClosed(): mark6 ";
+		close();
+		deleteLater();
+	}
+ //    }
 //	done();
 }
 

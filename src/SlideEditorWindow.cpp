@@ -55,10 +55,71 @@
 #include "items/TextBoxContent.h"
 
 
+
+#include "items/GenericItemConfig.h"
+#include "items/AbstractContent.h"
+/*#include "items/PictureContent.h"
+#include "items/PictureConfig.h"*/
+#include "items/TextContent.h"
+#include "items/TextConfig.h"
+// #include "items/WebContentSelectorItem.h"
+// #include "items/WebcamContent.h"
+#include "items/TextContent.h"
+#include "items/TextConfig.h"
+#include "items/TextBoxConfig.h"
+#include "items/TextBoxContent.h"
+#include "items/VideoFileContent.h"
+#include "items/VideoFileConfig.h"
+#include "items/BackgroundContent.h"
+#include "items/BackgroundConfig.h"
+#include "items/BoxConfig.h"
+#include "items/BoxContent.h"
+#include "items/ImageConfig.h"
+#include "items/ImageContent.h"
+
+
+
 #include "SlideSettingsDialog.h"
 #include "SlideGroupSettingsDialog.h"
 
 #define DEBUG_MODE 0
+
+
+QString guessTitle(QString field)
+{
+	static QRegExp rUpperCase = QRegExp("([a-z])([A-Z])");
+	static QRegExp rFirstLetter = QRegExp("([a-z])");
+	static QRegExp rLetterNumber = QRegExp("([a-z])([0-9])");
+	//static QRegExp rUnderScore 
+	//$name =~ s/([a-z])_([a-z])/$1.' '.uc($2)/segi;
+	
+	QString tmp = field;
+	tmp.replace(rUpperCase,"\\1 \\2");
+	if(tmp.indexOf(rFirstLetter) == 0)
+	{
+		QChar x = tmp.at(0);
+		tmp.remove(0,1);
+		tmp.prepend(QString(x).toUpper());
+	}
+	
+	tmp.replace(rLetterNumber,"\\1 #\\2");
+	//$name =~ s/^([a-z])/uc($1)/seg;
+	
+// 	$name =~ s/\/([a-z])/'\/'.uc($1)/seg;
+// 	$name =~ s/\s([a-z])/' '.uc($1)/seg;
+// 	$name =~ s/\s(of|the|and|a)\s/' '.lc($1).' '/segi;
+// 	$name .= '?' if $name =~ /^is/i;
+// 	$name =~ s/id$//gi;
+// 	my $chr = '#';
+// 	$name =~ s/num$/$chr/gi; 
+// 	$name =~ s/datetime$/Date\/Time/gi;
+// 	$name =~ s/\best\b/Est./gi;
+
+	return tmp;
+	
+
+}
+
 
 #include <QCommonStyle>
 class RubberBandStyle : public QCommonStyle 
@@ -213,7 +274,10 @@ class MyGraphicsView : public QGraphicsView
 SlideEditorWindow::SlideEditorWindow(SlideGroup *group, QWidget * parent)
     : AbstractSlideGroupEditor(group,parent), m_usingGL(false),
     m_ignoreUndoPropChanges(false),
-    m_slideGroup(0)
+    m_slideGroup(0),
+    m_propDockEmpty(0),
+    m_currentConfigContent(0),
+    m_currentConfig(0)
 {
 
 	m_scene = new MyGraphicsScene(MyGraphicsScene::Editor,this);
@@ -253,6 +317,7 @@ SlideEditorWindow::SlideEditorWindow(SlideGroup *group, QWidget * parent)
 	setupSlideList();
 	setupToolbar();
 	setupUndoView();
+	setupPropDock();
 	setupViewportLines();
 	
 	
@@ -519,8 +584,11 @@ void SlideEditorWindow::selectionChanged()
 	QList<QGraphicsItem *> selection = m_scene->selectedItems();
 	bool foundText = false;
 	double sizeSum = 0.0;
+	AbstractContent * firstContent = 0;
 	foreach(QGraphicsItem *item, selection)
 	{
+		if(!firstContent) 
+			firstContent = dynamic_cast<AbstractContent*>(item);
 		TextBoxContent * tmp = dynamic_cast<TextBoxContent*>(item);
 		if(tmp)
 		{
@@ -536,6 +604,8 @@ void SlideEditorWindow::selectionChanged()
 	m_textBase->setEnabled(foundText);
 	m_textPlusAction->setEnabled(foundText);
 	m_textMinusAction->setEnabled(foundText);
+	
+	updatePropDock(firstContent);
 }
 
 void SlideEditorWindow::textPlus()
@@ -577,6 +647,77 @@ void SlideEditorWindow::setupUndoView()
 	addDockWidget(Qt::LeftDockWidgetArea, dock);
 }
 
+void SlideEditorWindow::setupPropDock()
+{
+	m_propDock = new QDockWidget(tr("Item Properties"), this);
+	m_propDock->setObjectName("itemPropDock");
+	
+	updatePropDock(0);
+	
+	//m_propDock->setWidget(m_undoView);
+	addDockWidget(Qt::RightDockWidgetArea, m_propDock);
+}
+
+void SlideEditorWindow::updatePropDock(AbstractContent *content)
+{
+	if(!content)
+	{
+		if(!m_propDockEmpty)
+		{
+			m_propDockEmpty = new QWidget();
+			QVBoxLayout *layout = new QVBoxLayout(m_propDockEmpty);
+			QLabel *label = new QLabel("<center><font color='gray'><b>No item selected</b></font></center>");
+			layout->addWidget(label);
+		}
+			
+		m_propDock->setWidget(m_propDockEmpty);
+		m_propDockEmpty->show();
+		
+		m_propDock->setWindowTitle("Item Settings");
+	}
+	else
+	{
+		if(m_currentConfig && m_currentConfigContent != content)
+		{
+			m_currentConfig->close();
+			delete m_currentConfig;
+			m_currentConfig = 0;
+			m_currentConfigContent = 0;
+		}
+		
+		// TODO this is a duplicate of code in MyGraphicsScene
+		GenericItemConfig * p = 0;
+		
+		if (TextBoxContent * text = dynamic_cast<TextBoxContent *>(content))
+			p = new TextBoxConfig(text);
+		else
+		if (VideoFileContent * vid = dynamic_cast<VideoFileContent *>(content))
+			p = new VideoFileConfig(vid);
+		else
+		if (BackgroundContent * bg = dynamic_cast<BackgroundContent *>(content))
+			p = new BackgroundConfig(bg);
+		else
+		if (BoxContent * box = dynamic_cast<BoxContent *>(content))
+			p = new BoxConfig(box);
+		else
+		if (ImageContent * box = dynamic_cast<ImageContent *>(content))
+			p = new ImageConfig(box);
+		
+		// generic config
+		if (!p)
+			p = new GenericItemConfig(content);
+		
+		m_propDock->setWidget(p);
+		p->show();
+		p->adjustSize();
+		
+    		m_currentConfigContent = content;
+    		m_currentConfig = p;
+    		
+    		m_propDock->setWindowTitle(QString("Settings for %1").arg(guessTitle(content->modelItem()->itemName())));
+	}
+}
+
 void SlideEditorWindow::appSettingsChanged()
 {
 	if(AppSettings::useOpenGL() && !m_usingGL)
@@ -607,11 +748,27 @@ void SlideEditorWindow::aspectRatioChanged(double x)
 }
 
 
+
+SlideEditorWindowListView::SlideEditorWindowListView(SlideEditorWindow * ctrl, QWidget *parent) : QListView(ctrl), ctrl(ctrl) {}
+void SlideEditorWindowListView::keyPressEvent(QKeyEvent *event)
+{
+
+	QModelIndex oldIdx = currentIndex();
+	QListView::keyPressEvent(event);
+	QModelIndex newIdx = currentIndex();
+	if(oldIdx.row() != newIdx.row())
+	{
+		ctrl->slideSelected(newIdx);
+	}
+}
+
+
+
 void SlideEditorWindow::setupSlideList()
 {
 	QDockWidget *dock = new QDockWidget(tr("Slide List"), this);
 	dock->setObjectName("slideListDock");
-	m_slideListView = new QListView(dock);
+	m_slideListView = new SlideEditorWindowListView(this,dock);
 	m_slideListView->setViewMode(QListView::ListMode);
 	//m_slideListView->setViewMode(QListView::IconMode);
 	m_slideListView->setMovement(QListView::Free);
@@ -626,7 +783,7 @@ void SlideEditorWindow::setupSlideList()
 
 	// deleting old selection model per http://doc.trolltech.com/4.5/qabstractitemview.html#setModel
 	QItemSelectionModel *m = m_slideListView->selectionModel();
-
+	
 	m_slideModel = new SlideGroupListModel();
 	m_slideListView->setModel(m_slideModel);
 	connect(m_slideModel, SIGNAL(slidesDropped(QList<Slide*>)), this, SLOT(slidesDropped(QList<Slide*>)));
@@ -636,10 +793,20 @@ void SlideEditorWindow::setupSlideList()
 		delete m;
 		m=0;
 	}
+	
+	QItemSelectionModel *currentSelectionModel = m_slideListView->selectionModel();
+	connect(currentSelectionModel, SIGNAL(currentChanged(const QModelIndex &, const QModelIndex &)), this, SLOT(currentChanged(const QModelIndex &, const QModelIndex &)));
+	
 	dock->setWidget(m_slideListView);
 	addDockWidget(Qt::LeftDockWidgetArea, dock);
 	//viewMenu->addAction(dock->toggleViewAction());
 }
+
+void SlideEditorWindow::currentChanged(const QModelIndex &idx,const QModelIndex &)
+{
+	slideSelected(idx);
+}
+
 
 class MyLine : public QGraphicsLineItem
 {
@@ -848,25 +1015,12 @@ void SlideEditorWindow::setCurrentSlide(Slide *slide)
 	m_slideListView->setCurrentIndex(m_slideModel->indexForSlide(slide));
 	setupViewportLines();
 	
-	QList<AbstractContent *> nonBg;
-	//nonBg = qGrep(AbstractContent * _it, m_scene->abstractContent(),
-	//	_it->modelItem()->itemClass() != BackgroundItem::ItemClass);
-		
-	foreach(AbstractContent *item, m_scene->abstractContent())
-		if(item->modelItem()->itemClass() != BackgroundItem::ItemClass)
-			nonBg << item;
+	QList<AbstractContent *> kids = m_scene->abstractContent();
 	
-	if(nonBg.isEmpty())
-		return;
-	
-	//QList<AbstractContent*> sorted = nonBg;
-	//qSort(sorted.begin(), sorted.end(), Lambda((AbstractContent*a,AbstractContent*b),bool, return (a && b) ? a->zValue() < b->zValue()), nonBg);
-	//sorted = qSortX(nonBg, AbstractContent *, a->zValue() < b->zValue() );
-	
-	qSort(nonBg.begin(), nonBg.end(), SlideEditorWindowSortFunctions::sort_abscon_zvalue);
+	qSort(kids.begin(), kids.end(), SlideEditorWindowSortFunctions::sort_abscon_zvalue);
 
 	m_scene->clearSelection();
-	nonBg.last()->setSelected(true);
+	kids.last()->setSelected(true);
 }
 
 Slide * SlideEditorWindow::nextSlide()
@@ -895,40 +1049,7 @@ Slide * SlideEditorWindow::prevSlide()
 }
 
 
-QString guessTitle(QString field)
-{
-	static QRegExp rUpperCase = QRegExp("([a-z])([A-Z])");
-	static QRegExp rFirstLetter = QRegExp("([a-z])");
-	static QRegExp rLetterNumber = QRegExp("([a-z])([0-9])");
-	//static QRegExp rUnderScore 
-	//$name =~ s/([a-z])_([a-z])/$1.' '.uc($2)/segi;
-	
-	QString tmp = field;
-	tmp.replace(rUpperCase,"\\1 \\2");
-	if(tmp.indexOf(rFirstLetter) == 0)
-	{
-		QChar x = tmp.at(0);
-		tmp.remove(0,1);
-		tmp.prepend(QString(x).toUpper());
-	}
-	
-	tmp.replace(rLetterNumber,"\\1 #\\2");
-	//$name =~ s/^([a-z])/uc($1)/seg;
-	
-// 	$name =~ s/\/([a-z])/'\/'.uc($1)/seg;
-// 	$name =~ s/\s([a-z])/' '.uc($1)/seg;
-// 	$name =~ s/\s(of|the|and|a)\s/' '.lc($1).' '/segi;
-// 	$name .= '?' if $name =~ /^is/i;
-// 	$name =~ s/id$//gi;
-// 	my $chr = '#';
-// 	$name =~ s/num$/$chr/gi; 
-// 	$name =~ s/datetime$/Date\/Time/gi;
-// 	$name =~ s/\best\b/Est./gi;
 
-	return tmp;
-	
-
-}
 
  class UndoSlideItemChanged : public QUndoCommand
  {

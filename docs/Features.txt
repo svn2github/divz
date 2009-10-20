@@ -98,7 +98,6 @@ Revised Task list for Release 1.0, 10/18/09:
 		= Editor / Visual =
 			Integrated grid dialog into slideeditor window
 			Add rounded rectangle item / or round boxcontent corners
-			move/add item config to a dock widget
 			add animation to image items
 			selection panel
 		
@@ -168,6 +167,8 @@ Revised Task list for Release 1.0, 10/18/09:
 					- powerpoint does NOT automatically set the LOOP SLIDE SHOW *or* an intelligent per slide auto-change time
 			
 					
+		[DONE] move/add item config to a dock widget
+			
 		[DONE] when editor going to new slide and only one item in slide, select that item
 				actually, we make the top-most (zvalue) item selected
 		[DONE] modified SlideEditorWindow to use setcurrentslide internally instead of setslidegroup to change current slide for editing operations
