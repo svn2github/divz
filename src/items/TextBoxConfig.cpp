@@ -10,7 +10,7 @@ TextBoxConfig::TextBoxConfig(TextBoxContent * textContent, QGraphicsItem * paren
 {
 	// inject Text Editor
 	m_editor = new RichTextEditorDialog();
-	m_editor->setMinimumSize(425, 400);
+	//m_editor->setMinimumSize(425, 400);
 	
 	TextItem * textModel = dynamic_cast<TextItem*>(m_textContent->modelItem());
 	m_editor->setText(textModel->text());
@@ -22,7 +22,7 @@ TextBoxConfig::TextBoxConfig(TextBoxContent * textContent, QGraphicsItem * paren
 	m_commonUi->bgOptImage->setVisible(false);
 	m_commonUi->bgOptVideo->setVisible(false);
 	
-	resize(640,300);
+	//resize(640,300);
 }
 
 TextBoxConfig::~TextBoxConfig()

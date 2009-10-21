@@ -358,9 +358,12 @@ void SlideEditorWindow::closeEvent(QCloseEvent *evt)
 
 void SlideEditorWindow::setupToolbar()
 {
+	QList<QToolBar*> toolbars;
 	QToolBar *toolbar = addToolBar("main toolbar");
+	toolbars<<toolbar;
+
 	toolbar->setObjectName("maintoolbar");
-	
+
 	QAction  *slideProp = toolbar->addAction(QIcon(":/data/stock-properties.png"), "Slide Properties");
 	slideProp->setShortcut(QString("F2"));
 	connect(slideProp, SIGNAL(triggered()), this, SLOT(slideProperties()));
@@ -374,6 +377,8 @@ void SlideEditorWindow::setupToolbar()
 	//toolbar->addSeparator();
 	
 	toolbar = addToolBar("insert toolbar");
+	toolbars<<toolbar;
+
 	
 	
 	QAction  *newAction = toolbar->addAction(QIcon(":/data/insert-text-24.png"), "New Text Item");
@@ -393,6 +398,8 @@ void SlideEditorWindow::setupToolbar()
 	connect(newImage, SIGNAL(triggered()), this, SLOT(newImageItem()));
 	
 	toolbar = addToolBar("item arrange toolbar");
+	toolbars<<toolbar;
+
 	
 	QAction  *centerHor = toolbar->addAction(QIcon(":/data/obj-center-hor.png"), "Center Items Horizontally");
 	centerHor->setShortcut(QString("CTRL+SHIFT+H"));
@@ -403,6 +410,8 @@ void SlideEditorWindow::setupToolbar()
 	connect(centerVer, SIGNAL(triggered()), this, SLOT(centerSelVert()));
 	
 	toolbar = addToolBar("slide ops tb");
+	toolbars<<toolbar;
+
 	
 	QAction  *newSlide = toolbar->addAction(QIcon(":/data/stock-add.png"), "New Slide");
 	newSlide->setShortcut(QString("CTRL+M"));
@@ -426,6 +435,8 @@ void SlideEditorWindow::setupToolbar()
 	
 	
 	toolbar = addToolBar("text size tb");
+	toolbars<<toolbar;
+
 
 	
 	m_textBase = new QWidget(toolbar);
@@ -462,6 +473,8 @@ void SlideEditorWindow::setupToolbar()
 	connect(m_scene, SIGNAL(selectionChanged()), this, SLOT(selectionChanged()));
 	
 	toolbar = addToolBar("undo/redo tb");
+	toolbars<<toolbar;
+
 	
 	QAction *action = m_undoStack->createUndoAction(this);
 	action->setIcon(QIcon(":/data/stock-undo.png"));
@@ -475,6 +488,8 @@ void SlideEditorWindow::setupToolbar()
 
 	
 	toolbar = addToolBar("slide timeout tb");
+	toolbars<<toolbar;
+
 	
 	QWidget * base2 = new QWidget(toolbar);
 	QHBoxLayout * layout2 = new QHBoxLayout(base2);
@@ -503,6 +518,8 @@ void SlideEditorWindow::setupToolbar()
 	
 	//toolbar->addSeparator();
 	toolbar = addToolBar("text size tb");
+	toolbars<<toolbar;
+
 	QAction  *liveAction  = toolbar->addAction(QIcon(":/data/stock-fullscreen.png"), "Send the Current Slide to the Live Output");
 	liveAction->setShortcut(QString("F5"));
 	connect(liveAction, SIGNAL(triggered()), this, SLOT(setCurrentSlideLive()));
@@ -510,6 +527,8 @@ void SlideEditorWindow::setupToolbar()
 	
 	
 	toolbar = addToolBar("fade speed tb");
+	toolbars<<toolbar;
+
 	
 	QWidget * base3 = new QWidget(toolbar);
 	QHBoxLayout * layout3 = new QHBoxLayout(base3);
@@ -540,20 +559,24 @@ void SlideEditorWindow::setupToolbar()
 	
 		
 	toolbar = addToolBar("misc tb");
+	toolbars<<toolbar;
+
 	
 	QAction  *configGrid = toolbar->addAction(QIcon(":/data/config-grid.png"), "Setup Grid and Guidelines");
 	connect(configGrid, SIGNAL(triggered()), this, SLOT(slotConfigGrid()));
 	
 	
-	
-	foreach(QAction *action, toolbar->actions())
+	foreach(QToolBar *tb, toolbars)
 	{
-		QString shortcut = action->shortcut().toString();
-		if(!shortcut.trimmed().isEmpty())
+		foreach(QAction *action, tb->actions())
 		{
-			QString text = action->text();
-			text.replace("&","");
-			action->setText(QString("%1 (%2)").arg(text).arg(shortcut));
+			QString shortcut = action->shortcut().toString();
+			if(!shortcut.trimmed().isEmpty())
+			{
+				QString text = action->text();
+				text.replace("&","");
+				action->setText(QString("%1 (%2)").arg(text).arg(shortcut));
+			}
 		}
 	}
 	
