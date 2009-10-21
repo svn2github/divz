@@ -35,8 +35,8 @@ Onward to the prize before us!
 Soon His beauty we'll behold;
 Soon the pearly gates will open,
 </text>
-        <templates title="" number="0" icon="" type="0" id="1" auto="0">
-            <slide number="0" timeout="0" id="0">
+        <templates title="" fade-speed="0" number="0" icon="" inherit-fade="1" type="0" id="1" fade-quality="0" auto="0">
+            <slide fade-speed="0" number="0" timeout="0" inherit-fade="1" id="0" fade-quality="0">
                 <background>
                     <item-id>1514</item-id>
                     <item-name>BackgroundItem1514</item-name>
@@ -78,7 +78,7 @@ p, li { white-space: pre-wrap; }
                     <text-align x="32" y="32"/>
                 </textbox>
             </slide>
-            <slide number="1" timeout="0" id="2">
+            <slide fade-speed="0" number="1" timeout="0" inherit-fade="1" id="2" fade-quality="0">
                 <background>
                     <item-id>4113</item-id>
                     <item-name>BackgroundItem4113</item-name>
@@ -96,7 +96,7 @@ p, li { white-space: pre-wrap; }
                     <shadow brush-style="1" x="3" y="3" enabled="0" blur="3" brush-color="0,0,0,255"/>
                 </background>
             </slide>
-            <slide number="2" timeout="0" id="1">
+            <slide fade-speed="0" number="2" timeout="0" inherit-fade="1" id="1" fade-quality="0">
                 <background>
                     <item-id>4112</item-id>
                     <item-name>BackgroundItem4112</item-name>
@@ -116,8 +116,8 @@ p, li { white-space: pre-wrap; }
             </slide>
         </templates>
     </song>
-    <group title="" number="5" icon="" type="0" id="1" auto="0">
-        <slide number="0" timeout="0" id="0">
+    <group title="" fade-speed="0" number="5" icon="" inherit-fade="1" type="0" id="1" fade-quality="0" auto="0">
+        <slide fade-speed="0" number="0" timeout="0" inherit-fade="1" id="0" fade-quality="0">
             <background>
                 <item-id>761</item-id>
                 <item-name>BackgroundItem761</item-name>
@@ -159,7 +159,7 @@ p, li { white-space: pre-wrap; }
                 <text-align x="32" y="32"/>
             </textbox>
         </slide>
-        <slide number="1" timeout="0" id="1">
+        <slide fade-speed="0" number="1" timeout="0" inherit-fade="1" id="1" fade-quality="0">
             <background>
                 <item-id>1131</item-id>
                 <item-name>BackgroundItem1131</item-name>
@@ -202,8 +202,8 @@ p, li { white-space: pre-wrap; }
             </textbox>
         </slide>
     </group>
-    <group title="PHYSH Logo" number="0" icon="" type="0" id="1" auto="0">
-        <slide number="0" timeout="5" id="0">
+    <group title="PHYSH Logo" fade-speed="0" number="0" icon="" inherit-fade="1" type="0" id="1" fade-quality="0" auto="0">
+        <slide fade-speed="3000" number="0" timeout="5" inherit-fade="1" id="0" fade-quality="60">
             <background>
                 <item-id>803</item-id>
                 <item-name>BackgroundItem803</item-name>
@@ -375,7 +375,7 @@ p, li { white-space: pre-wrap; }
                 <shadow brush-style="1" x="0" y="0" enabled="1" blur="5" brush-color="255,255,255,255"/>
             </image>
         </slide>
-        <slide number="1" timeout="3" id="4">
+        <slide fade-speed="0" number="1" timeout="3" inherit-fade="1" id="4" fade-quality="0">
             <background>
                 <item-id>9653</item-id>
                 <item-name>BackgroundItem803</item-name>
@@ -548,8 +548,8 @@ p, li { white-space: pre-wrap; }
             </image>
         </slide>
     </group>
-    <group title="Test Group" number="0" icon="" type="0" id="1" auto="0">
-        <slide number="2" timeout="0" id="1">
+    <group title="Test Group" fade-speed="0" number="0" icon="" inherit-fade="1" type="0" id="1" fade-quality="0" auto="0">
+        <slide fade-speed="0" number="2" timeout="0" inherit-fade="1" id="1" fade-quality="0">
             <background>
                 <item-id>2952</item-id>
                 <item-name>BackgroundItem803</item-name>
@@ -599,7 +599,7 @@ p, li { white-space: pre-wrap; }
                 <shadow brush-style="1" x="3" y="3" enabled="0" blur="3" brush-color="0,0,0,255"/>
             </image>
         </slide>
-        <slide number="3" timeout="2" id="2">
+        <slide fade-speed="0" number="3" timeout="2" inherit-fade="1" id="2" fade-quality="0">
             <background>
                 <item-id>8370</item-id>
                 <item-name>BackgroundItem8370</item-name>
@@ -617,7 +617,7 @@ p, li { white-space: pre-wrap; }
                 <shadow brush-style="1" x="3" y="3" enabled="0" blur="3" brush-color="0,0,0,255"/>
             </background>
         </slide>
-        <slide number="4" timeout="0" id="3">
+        <slide fade-speed="0" number="4" timeout="0" inherit-fade="1" id="3" fade-quality="0">
             <background>
                 <item-id>8826</item-id>
                 <item-name>BackgroundItem8370</item-name>
@@ -662,8 +662,8 @@ p, li { white-space: pre-wrap; }
             </textbox>
         </slide>
     </group>
-    <group title="My First Group" number="1" icon="" type="0" id="1" auto="0">
-        <slide number="0" timeout="5" id="2">
+    <group title="My First Group" fade-speed="50" number="1" icon="" inherit-fade="0" type="0" id="1" fade-quality="1" auto="0">
+        <slide fade-speed="2538" number="0" timeout="5" inherit-fade="1" id="2" fade-quality="25">
             <background>
                 <item-id>1517</item-id>
                 <item-name>BackgroundItem897</item-name>
@@ -739,7 +739,7 @@ p, li { white-space: pre-wrap; }
                 <shadow brush-style="1" x="3" y="3" enabled="1" blur="3" brush-color="0,0,0,255"/>
             </image>
         </slide>
-        <slide number="1" timeout="5" id="0">
+        <slide fade-speed="0" number="1" timeout="5" inherit-fade="1" id="0" fade-quality="0">
             <background>
                 <item-id>897</item-id>
                 <item-name>BackgroundItem897</item-name>
@@ -806,8 +806,8 @@ p, li { white-space: pre-wrap; }
                 <text>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
 &lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
 p, li { white-space: pre-wrap; }
-&lt;/style>&lt;/head>&lt;body style=" font-family:'MS Shell Dlg 2'; font-size:8.25pt; font-weight:400; font-style:normal;">
-&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-family:'Sans Serif'; font-size:101pt; font-weight:600; color:#ffffff;">Lorem Ipsum&lt;/span>&lt;/p>&lt;/body>&lt;/html></text>
+&lt;/style>&lt;/head>&lt;body style=" font-family:'Sans Serif'; font-size:9pt; font-weight:400; font-style:normal;">
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-size:101pt; font-weight:600; color:#ffffff;">Lorem Ipsum&lt;/span>&lt;/p>&lt;/body>&lt;/html></text>
                 <default-font font-family="Tahoma" font-size="40"/>
                 <shape enabled="1">
                     <control-points one="0 0" two="0 0" four="0 0" three="0 0"/>
@@ -815,7 +815,7 @@ p, li { white-space: pre-wrap; }
                 <text-align x="32" y="32"/>
             </textbox>
         </slide>
-        <slide number="2" timeout="6" id="1">
+        <slide fade-speed="1332" number="2" timeout="6" inherit-fade="0" id="1" fade-quality="40">
             <background>
                 <item-id>1454</item-id>
                 <item-name>BackgroundItem897</item-name>
@@ -892,7 +892,7 @@ p, li { white-space: pre-wrap; }
                 <text>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
 &lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
 p, li { white-space: pre-wrap; }
-&lt;/style>&lt;/head>&lt;body style=" font-family:'MS Shell Dlg 2'; font-size:8.25pt; font-weight:400; font-style:normal;">
+&lt;/style>&lt;/head>&lt;body style=" font-family:'Sans Serif'; font-size:9pt; font-weight:400; font-style:normal;">
 &lt;p align="center" style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-family:'Monotype Corsiva'; font-size:121pt;">Welcome to PHC&lt;/span>&lt;/p>&lt;/body>&lt;/html></text>
                 <default-font font-family="Tahoma" font-size="40"/>
                 <shape enabled="0"/>
@@ -904,8 +904,8 @@ p, li { white-space: pre-wrap; }
         <text>Hello World
 
 Hello World</text>
-        <templates title="" number="0" icon="" type="0" id="1" auto="0">
-            <slide number="0" timeout="0" id="0">
+        <templates title="" fade-speed="0" number="0" icon="" inherit-fade="1" type="0" id="1" fade-quality="0" auto="0">
+            <slide fade-speed="0" number="0" timeout="0" inherit-fade="1" id="0" fade-quality="0">
                 <background>
                     <item-id>5471</item-id>
                     <item-name>BackgroundItem5471</item-name>
@@ -949,8 +949,8 @@ p, li { white-space: pre-wrap; }
             </slide>
         </templates>
     </song>
-    <group title="VidCap Test" number="6" icon="" type="0" id="1" auto="0">
-        <slide number="0" timeout="0" id="0">
+    <group title="VidCap Test" fade-speed="0" number="6" icon="" inherit-fade="1" type="0" id="1" fade-quality="0" auto="0">
+        <slide fade-speed="0" number="0" timeout="0" inherit-fade="1" id="0" fade-quality="0">
             <background>
                 <item-id>1819</item-id>
                 <item-name>BackgroundItem1819</item-name>

@@ -38,6 +38,28 @@ void Slide::setAutoChangeTime(double x)
 	emit slideItemChanged(0,"change","autoChangeTime",x,old); 
 }
 
+void Slide::setInheritFadeSettings(bool x) 
+{ 
+	bool old = m_inheritFadeSettings;
+	m_inheritFadeSettings = x;	
+	emit slideItemChanged(0,"change","inheritFadeSettings",x,old); 
+}
+
+void Slide::setCrossFadeSpeed(double x) 
+{ 
+	double old = m_crossFadeSpeed;
+	m_crossFadeSpeed = x;	
+	emit slideItemChanged(0,"change","crossFadeSpeed",x,old); 
+}
+
+void Slide::setCrossFadeQuality(double x) 
+{ 
+	double old = m_crossFadeQuality;
+	m_crossFadeQuality = x;	
+	emit slideItemChanged(0,"change","crossFadeQuality",x,old); 
+}
+
+
 Slide * Slide::clone()
 {
 	Slide * newSlide = new Slide();
@@ -118,6 +140,11 @@ bool Slide::fromXml(QDomElement & pe)
 	m_slideNumber = pe.attribute("number").toInt();
 	m_slideId = pe.attribute("id").toInt();
 	m_autoChangeTime = pe.attribute("timeout").toInt();
+	
+	QVariant inherit = pe.attribute("inherit-fade");
+	m_inheritFadeSettings = inherit.isNull() ? true : (bool)inherit.toInt();
+	m_crossFadeSpeed = pe.attribute("fade-speed").toDouble();
+	m_crossFadeQuality = pe.attribute("fade-quality").toDouble();
 
 	// for each child of 'slide'
 	for (QDomElement element = pe.firstChildElement(); !element.isNull(); element = element.nextSiblingElement()) 
@@ -173,6 +200,9 @@ void Slide::toXml(QDomElement & pe) const
 	pe.setAttribute("number",m_slideNumber);
 	pe.setAttribute("id",m_slideId);
 	pe.setAttribute("timeout",m_autoChangeTime);
+	pe.setAttribute("inherit-fade",(int)m_inheritFadeSettings);
+	pe.setAttribute("fade-speed",m_crossFadeSpeed);
+	pe.setAttribute("fade-quality",m_crossFadeQuality);
 	
 	foreach (AbstractItem * content, m_items) 
 	{
@@ -180,4 +210,65 @@ void Slide::toXml(QDomElement & pe) const
 		pe.appendChild(element);
 		content->toXml(element);
 	}
+}
+
+double Slide::guessTimeout()
+{
+	double guess = 0;
+	
+	double assumedImageArea = 1024 * 768;
+	double perItemWeight = 0.1;
+	double perImageWeightFactorOfArea = 1/(assumedImageArea / 2);
+	double perTextWeightFactorOfLength = 60.0 / (300.0 * 5.0);
+	// formula for text factor is: 60seconds / (300.0 avg words per minute for avg adult * 5 letters per avg word length)
+	
+	static QRegExp rxToText("<[^>]*>");
+	
+	bool special = false;
+	QList<AbstractItem *> items = itemList();
+	foreach(AbstractItem *item, items)
+	{
+		AbstractVisualItem * vis = dynamic_cast<AbstractVisualItem*>(item);
+		if(vis)
+		{
+			//qDebug() << "Processing visual:"<<vis->itemName();
+			special = false;
+			if(vis->itemClass() == BackgroundItem::ItemClass)
+			{
+				if(vis->fillType() == AbstractVisualItem::Image ||
+				   vis->fillType() == AbstractVisualItem::Video)
+				{
+					
+					guess += assumedImageArea * perImageWeightFactorOfArea;
+					special = true;
+				}
+			}
+			else
+			if(vis->itemClass() == ImageItem::ItemClass)
+			{
+				QRectF cRect = vis->contentsRect();
+				guess += cRect.width() * cRect.height() * perImageWeightFactorOfArea;
+				special = true;
+			}
+			else
+			if(vis->itemClass() == TextBoxItem::ItemClass)
+			{
+				TextBoxItem * textBox = dynamic_cast<TextBoxItem*>(vis);
+				QString text = textBox->text().replace( rxToText, "" );
+				double g = ((double)text.length()) * perTextWeightFactorOfLength;
+				//qDebug() << "Found textbox:"<<vis->itemName()<<", length:"<<text.length()<<", g:"<<g<<", factor:"<<perTextWeightFactorOfLength;
+				guess += g;
+				special = true;
+			}
+			
+			if(!special)
+			{
+				//qDebug() << "Visual:"<<vis->itemName()<<" not special";
+				guess += perItemWeight;
+			}
+		}
+	}
+	
+	return guess;
+
 }

@@ -61,6 +61,11 @@ void SlideGroup::setGroupTitle(QString s)
 }
 void SlideGroup::setIconFile(QString s)    { m_iconFile = s; }
 void SlideGroup::setAutoChangeGroup(bool s){ m_autoChangeGroup = s; }
+void SlideGroup::setInheritFadeSettings(bool x){ m_inheritFadeSettings = x; }
+void SlideGroup::setCrossFadeSpeed(double x){ m_crossFadeSpeed = x; }
+void SlideGroup::setCrossFadeQuality(double x){ m_crossFadeQuality = x; }
+
+
 
 bool SlideGroup::fromXml(QDomElement & pe)
 {
@@ -73,6 +78,11 @@ bool SlideGroup::fromXml(QDomElement & pe)
 	setGroupTitle(pe.attribute("title"));
 	setIconFile(pe.attribute("icon"));
 	setAutoChangeGroup((bool)pe.attribute("auto").toInt());
+	
+	QVariant inherit = pe.attribute("inherit-fade");
+	setInheritFadeSettings(inherit.isNull() ? true : (bool)inherit.toInt());
+	setCrossFadeSpeed(pe.attribute("fade-speed").toDouble());
+	setCrossFadeQuality(pe.attribute("fade-quality").toDouble());
 
 	// for each slide
 	for (QDomElement element = pe.firstChildElement(); !element.isNull(); element = element.nextSiblingElement())
@@ -105,6 +115,9 @@ void SlideGroup::toXml(QDomElement & pe) const
 	pe.setAttribute("title",groupTitle());
 	pe.setAttribute("icon",iconFile());
 	pe.setAttribute("auto",(int)autoChangeGroup());
+	pe.setAttribute("inherit-fade",(int)m_inheritFadeSettings);
+	pe.setAttribute("fade-speed",m_crossFadeSpeed);
+	pe.setAttribute("fade-quality",m_crossFadeQuality);
 
 	QDomDocument doc = pe.ownerDocument();
 

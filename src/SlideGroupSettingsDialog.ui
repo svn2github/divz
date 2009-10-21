@@ -6,14 +6,14 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>363</width>
-    <height>260</height>
+    <width>385</width>
+    <height>522</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Dialog</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout">
+  <layout class="QVBoxLayout" name="verticalLayout_3">
    <item>
     <widget class="QGroupBox" name="groupBox">
      <property name="title">
@@ -24,6 +24,9 @@
        <widget class="QLabel" name="label_2">
         <property name="text">
          <string>Group &amp;Title:</string>
+        </property>
+        <property name="buddy">
+         <cstring>title</cstring>
         </property>
        </widget>
       </item>
@@ -49,11 +52,11 @@ when that slide is finished displaying?</string>
        </widget>
       </item>
       <item>
-	      <widget class="QRadioButton" name="rNothing">
-		      <property name="text">
-			      <string>&amp;Loop to the start of this slide group</string>
-		      </property>
-	      </widget>
+       <widget class="QRadioButton" name="rNothing">
+        <property name="text">
+         <string>&amp;Loop to the start of this slide group</string>
+        </property>
+       </widget>
       </item>
       <item>
        <widget class="QRadioButton" name="rChange">
@@ -63,6 +66,168 @@ when that slide is finished displaying?</string>
         <property name="checked">
          <bool>true</bool>
         </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupBox_4">
+     <property name="title">
+      <string>Cross Fade Speed &amp;&amp; Quality</string>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout_5">
+      <item>
+       <widget class="QRadioButton" name="btnUseApp">
+        <property name="text">
+         <string>Use &amp;Program Settings for Cross Fade Speed &amp;&amp; Quality</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QRadioButton" name="btnUseGroup">
+        <property name="text">
+         <string>&amp;Use the settings below instead:</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QWidget" name="fadeSettingsBase" native="true">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <layout class="QVBoxLayout" name="verticalLayout">
+         <property name="margin">
+          <number>0</number>
+         </property>
+         <item>
+          <widget class="QLabel" name="label_6">
+           <property name="text">
+            <string>Speed is how long the total fade should take, expressed
+in milliseconds. There are 1000ms in 1 second.</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <layout class="QGridLayout" name="gridLayout">
+           <item row="0" column="0">
+            <widget class="QLabel" name="label_4">
+             <property name="text">
+              <string>Speed</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0">
+            <widget class="QLabel" name="label_5">
+             <property name="text">
+              <string>Quality</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QSlider" name="speedSlider">
+             <property name="minimum">
+              <number>50</number>
+             </property>
+             <property name="maximum">
+              <number>5000</number>
+             </property>
+             <property name="singleStep">
+              <number>100</number>
+             </property>
+             <property name="pageStep">
+              <number>500</number>
+             </property>
+             <property name="value">
+              <number>250</number>
+             </property>
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="invertedAppearance">
+              <bool>false</bool>
+             </property>
+             <property name="invertedControls">
+              <bool>false</bool>
+             </property>
+             <property name="tickPosition">
+              <enum>QSlider::TicksBelow</enum>
+             </property>
+             <property name="tickInterval">
+              <number>500</number>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QSlider" name="qualitySlider">
+             <property name="minimum">
+              <number>1</number>
+             </property>
+             <property name="maximum">
+              <number>60</number>
+             </property>
+             <property name="singleStep">
+              <number>5</number>
+             </property>
+             <property name="value">
+              <number>15</number>
+             </property>
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="tickPosition">
+              <enum>QSlider::TicksBelow</enum>
+             </property>
+             <property name="tickInterval">
+              <number>5</number>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="2">
+            <widget class="QSpinBox" name="speedBox">
+             <property name="suffix">
+              <string> ms</string>
+             </property>
+             <property name="minimum">
+              <number>50</number>
+             </property>
+             <property name="maximum">
+              <number>5000</number>
+             </property>
+             <property name="singleStep">
+              <number>10</number>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="2">
+            <widget class="QSpinBox" name="qualityBox">
+             <property name="suffix">
+              <string> frames</string>
+             </property>
+             <property name="minimum">
+              <number>1</number>
+             </property>
+             <property name="maximum">
+              <number>60</number>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_7">
+           <property name="text">
+            <string>Quality is the number of intermediate (partially faded)
+frames to show from start to end of the cross fade. 
+The more frames, the slower the fade may run and the
+slower videos may display.</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </widget>
       </item>
      </layout>
@@ -89,8 +254,8 @@ when that slide is finished displaying?</string>
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>248</x>
-     <y>254</y>
+     <x>257</x>
+     <y>512</y>
     </hint>
     <hint type="destinationlabel">
      <x>157</x>
@@ -105,12 +270,92 @@ when that slide is finished displaying?</string>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>316</x>
-     <y>260</y>
+     <x>325</x>
+     <y>512</y>
     </hint>
     <hint type="destinationlabel">
      <x>286</x>
      <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>btnUseGroup</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>fadeSettingsBase</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>80</x>
+     <y>287</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>356</x>
+     <y>367</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>speedBox</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>speedSlider</receiver>
+   <slot>setValue(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>294</x>
+     <y>346</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>225</x>
+     <y>350</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>speedSlider</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>speedBox</receiver>
+   <slot>setValue(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>168</x>
+     <y>352</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>303</x>
+     <y>353</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>qualitySlider</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>qualityBox</receiver>
+   <slot>setValue(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>221</x>
+     <y>383</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>311</x>
+     <y>383</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>qualityBox</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>qualitySlider</receiver>
+   <slot>setValue(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>296</x>
+     <y>384</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>216</x>
+     <y>385</y>
     </hint>
    </hints>
   </connection>

@@ -307,6 +307,7 @@ void SlideGroupViewControl::setSlideGroup(SlideGroup *g, Slide *curSlide)
 	
 	// reset seems to be required
 	m_listView->reset();
+	
 	if(!curSlide)
 		curSlide = g->at(0);
 	m_listView->setCurrentIndex(m_slideModel->indexForSlide(curSlide));

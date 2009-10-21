@@ -15,6 +15,9 @@ class SlideGroup : public QObject
 	Q_PROPERTY(QString groupTitle READ groupTitle WRITE setGroupTitle);
 	Q_PROPERTY(QString iconFile READ iconFile WRITE setIconFile);
 	Q_PROPERTY(bool autoChangeGroup READ autoChangeGroup WRITE setAutoChangeGroup);
+	Q_PROPERTY(double inheritFadeSettings READ inheritFadeSettings WRITE setInheritFadeSettings);
+	Q_PROPERTY(double crossFadeSpeed READ crossFadeSpeed WRITE setCrossFadeSpeed);
+	Q_PROPERTY(double crossFadeQuality READ crossFadeQuality WRITE setCrossFadeQuality);
 	
 	
 public:
@@ -36,6 +39,9 @@ public:
 	ITEM_PROPDEF(GroupTitle,	QString,	groupTitle);
 	ITEM_PROPDEF(IconFile,		QString,	iconFile);
 	ITEM_PROPDEF(AutoChangeGroup,	bool,		autoChangeGroup);
+	ITEM_PROPDEF(InheritFadeSettings,bool,		inheritFadeSettings);  
+	ITEM_PROPDEF(CrossFadeSpeed,	double,		crossFadeSpeed);    // secs
+	ITEM_PROPDEF(CrossFadeQuality,	double,		crossFadeQuality);  // frames
 
 	void addSlide(Slide *);
 	QList<Slide *> slideList();
@@ -75,6 +81,10 @@ protected:
 	bool m_autoChangeGroup;
 	
 	void sortSlides();
+	
+	bool m_inheritFadeSettings;
+	double m_crossFadeSpeed;
+	double m_crossFadeQuality;
 	
 };
 

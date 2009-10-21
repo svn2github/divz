@@ -164,9 +164,7 @@ void SlideGroupViewer::setSlideGroup(SlideGroup *g, Slide *startSlide)
 	if(startSlide)
 	{
 		//qDebug() << "SlideGroupViewer::setSlideGroup(): Setting slide group #"<<g->groupNumber()<<", starting at slide:"<<startSlide;
-		m_scene->setSlide(startSlide,MyGraphicsScene::CrossFade);
-		//m_slideListView->setCurrentIndex(m_slideModel->indexForSlide(curSlide));
-		m_slideNum = m_sortedSlides.indexOf(startSlide);
+		setSlide(startSlide);
 	}
 	else
 	{
@@ -174,8 +172,7 @@ void SlideGroupViewer::setSlideGroup(SlideGroup *g, Slide *startSlide)
 		if(slist.size() > 0)
 		{
 			//qDebug() << "SlideGroupViewer::setSlideGroup(): Setting slide group #"<<g->groupNumber()<<", defaulting to slide 0";
-			Slide *s = m_sortedSlides.at(0);
-			m_scene->setSlide(s,MyGraphicsScene::CrossFade);
+			setSlide(m_sortedSlides.at(0));
 			//m_slideListView->setCurrentIndex(m_slideModel->indexForRow(0));
 		}
 		else
@@ -192,11 +189,35 @@ Slide * SlideGroupViewer::setSlide(int x)
 	return setSlide(m_sortedSlides.at(x));	
 }
 
-Slide * SlideGroupViewer::setSlide(Slide *s)
+Slide * SlideGroupViewer::setSlide(Slide *slide)
 {
-	m_scene->setSlide(s,MyGraphicsScene::CrossFade);
-	m_slideNum = m_sortedSlides.indexOf(s);
-	return s;
+	// start cross fade settings with program settings
+	int speed = AppSettings::crossFadeSpeed();
+	int quality = AppSettings::crossFadeQuality();
+	//qDebug() << "SlideGroupViewer::setSlide(): [app] speed:"<<speed<<", quality:"<<quality;
+	
+	// change to slide group if sett
+	if(m_slideGroup && !m_slideGroup->inheritFadeSettings())
+	{
+		speed = m_slideGroup->crossFadeSpeed();
+		quality = m_slideGroup->crossFadeQuality();
+		//qDebug() << "SlideGroupViewer::setSlide():     [group] speed:"<<speed<<", quality:"<<quality;
+	}
+	
+	// and use slide settings if set instead of the other two sets of settings
+	if(slide && !slide->inheritFadeSettings())
+	{
+		if(slide->crossFadeSpeed() > 0)
+			speed = slide->crossFadeSpeed();
+		if(slide->crossFadeQuality() > 0)
+			quality = slide->crossFadeQuality();
+		//qDebug() << "SlideGroupViewer::setSlide():         [slide] speed:"<<speed<<", quality:"<<quality;
+	}
+		
+	
+	m_scene->setSlide(slide,MyGraphicsScene::CrossFade,speed,quality);
+	m_slideNum = m_sortedSlides.indexOf(slide);
+	return slide;
 }
 
 Slide * SlideGroupViewer::nextSlide()

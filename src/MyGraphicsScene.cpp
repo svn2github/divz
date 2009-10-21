@@ -265,11 +265,19 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans, int speed, i
 // 			}
 // 		}
 				
-		if(speed < 0)
+		if(speed <= 0)
+		{
 			speed = AppSettings::crossFadeSpeed();
-		if(quality < 0)
+			//qDebug() << "MyGraphicsScene::setSlide(): Using app settings for fade speed";
+		}
+		
+		if(quality <= 0)
+		{
 			quality = AppSettings::crossFadeQuality();
+			//qDebug() << "MyGraphicsScene::setSlide(): Using app settings for fade quality";
+		}
 			
+		//qDebug() << "MyGraphicsScene::setSlide(): [final] speed:"<<speed<<", quality:"<<quality;
 		
 		if(!m_fadeTimer)
 		{
@@ -347,7 +355,7 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans, int speed, i
 		int ms = speed / m_fadeSteps;
 		m_fadeTimer->start(ms); //ms);
 
-// 		double inc = (double)1 / m_fadeSteps;
+ 		double inc = (double)1 / m_fadeSteps;
 
 		
 				
@@ -360,7 +368,7 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans, int speed, i
 		#endif
 
 // 		if(DEBUG_MYGRAPHICSSCENE)
-// 			qDebug() << "MyGraphicsScene::setSlide(): Starting fade timer for "<<ms<<"ms";
+ 			//qDebug() << "MyGraphicsScene::setSlide(): Starting fade timer for"<<ms<<"ms"<<"/frame, inc:"<<inc<<", steps:"<<m_fadeSteps<<" ( speed:"<<speed<<", quality:"<<quality<<")";
 		
 	}
 

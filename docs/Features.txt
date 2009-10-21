@@ -161,10 +161,6 @@ Revised Task list for Release 1.0, 10/18/09:
 					- generating the slides takes a LONG time in ppt once you click CREATE
 					- powerpoint does NOT automatically set the LOOP SLIDE SHOW *or* an intelligent per slide auto-change time
 			
-			add slide timeout widgets to toolbar
-			add slide bg config btn to toolbar
-			
-			make cross fade speed configurable on a per slide or per slide GRoup basis (e.g for songs)
 			
 			add network viewer client
 				for viewer, client or server doesnt matter
@@ -216,6 +212,10 @@ Revised Task list for Release 1.0, 10/18/09:
 				should be function in slidegroupviewer (basically, a clone output option)
 					multithreaded - compress frame jpeg once, then offer to all clients
 			
+			
+		[DONE] make cross fade speed configurable on a per slide or per slide GRoup basis (e.g for songs)
+		[DONE] add slide timeout widgets to toolbar
+		[DONE] add slide bg config btn to toolbar
 			
 		[DONE] add pixmap cache size option to program settings dialog
 		[DONE] add crossfade speed and quality options to program settings dialog
@@ -334,6 +334,7 @@ Revised Task list for Release 1.0, 10/18/09:
 		[LATER] Video Capture (started impl, but again, performance is terrible. That may be due to the FormatOpts specified, or in ffmpeg, or the capture hardware - need to trace - later!)
 	
 	- Bugs:
+		editor undo/redo framework doesnt pickup slide property changes
 		slide auto change time doesnt seem to save when using guess button
 		
 		clicking "no bg" in dialog doesnt clear background if it was image previously in editor

@@ -33,6 +33,8 @@
 #include <QToolBar>
 #include <QSplitter>
 #include <QDoubleSpinBox>
+#include <QSlider>
+#include <QCheckBox>
 
 #include <QMessageBox>
 
@@ -410,7 +412,7 @@ void SlideEditorWindow::setupToolbar()
 	
 	toolbar->addSeparator();
 	
-	QAction  *liveAction  = toolbar->addAction(QIcon(":/data/stock-fullscreen.png"), "Send the Current Slide to the Live Output");
+	QAction  *liveAction  = toolbar->addAction(QIcon(":/data/stock-insert-image.png"), "Send the Current Slide to the Live Output");
 	liveAction->setShortcut(QString("F5"));
 	connect(liveAction, SIGNAL(triggered()), this, SLOT(setCurrentSlideLive()));
 	
@@ -474,6 +476,68 @@ void SlideEditorWindow::setupToolbar()
 	QAction  *configGrid = toolbar->addAction(QIcon(":/data/config-grid.png"), "Setup Grid and Guidelines");
 	connect(configGrid, SIGNAL(triggered()), this, SLOT(slotConfigGrid()));
 	
+	toolbar->addSeparator();
+	QWidget * base2 = new QWidget(toolbar);
+	QHBoxLayout * layout2 = new QHBoxLayout(base2);
+	QLabel * label2 = new QLabel("Go to Next Slide After: ");
+	layout2->addWidget(label2);
+	
+	m_slideTimeout = new QDoubleSpinBox(m_textBase);
+	m_slideTimeout->setSuffix(" sec");
+	m_slideTimeout->setSpecialValueText("(Never)");
+	m_slideTimeout->setMinimum(0);
+	m_slideTimeout->setValue(0);
+	m_slideTimeout->setDecimals(2);
+	m_slideTimeout->setMaximum(5000);
+	connect(m_slideTimeout, SIGNAL(valueChanged(double)), this, SLOT(setSlideTimeout(double)));
+	layout2->addWidget(m_slideTimeout);
+	base2->setLayout(layout2);
+	toolbar->addWidget(base2);
+	
+	QAction * zeroTimeout = toolbar->addAction(QIcon(":/data/stock-clear.png"), "Set change time to zero (Never change)");
+	zeroTimeout->setShortcut(QString("CTRL+SHIFT+N"));
+	connect(zeroTimeout, SIGNAL(triggered()), this, SLOT(zeroSlideTimeout()));
+	
+	QAction * guessTimeout = toolbar->addAction(QIcon(":/data/stock-about.png"), "Guess an appropriate change time based on slide contents");
+	guessTimeout->setShortcut(QString("CTRL+SHIFT+G"));
+	connect(guessTimeout, SIGNAL(triggered()), this, SLOT(guessSlideTimeout()));
+	
+	toolbar->addSeparator();
+	
+	QAction  *configBg = toolbar->addAction(QIcon(":/data/stock-insert-image.png"), "Setup Slide Background");
+	configBg->setShortcut(QString("CTRL+SHIFT+B"));
+	connect(configBg, SIGNAL(triggered()), this, SLOT(slotConfigBackground()));
+	
+	
+	toolbar->addSeparator();
+	QWidget * base3 = new QWidget(toolbar);
+	QHBoxLayout * layout3 = new QHBoxLayout(base3);
+	
+	m_fadeSliderLabel = new QLabel("Fade Speed: (Fast)");
+	layout3->addWidget(m_fadeSliderLabel);
+	
+	m_fadeSlider = new QSlider(Qt::Horizontal,base3);
+	m_fadeSlider->setMinimum(0);
+	m_fadeSlider->setValue(1);
+	m_fadeSlider->setMaximum(100);
+	m_fadeSlider->setMaximum(100);
+	m_fadeSlider->setTickInterval(10);
+	m_fadeSlider->setTickPosition(QSlider::TicksBelow);
+	connect(m_fadeSlider, SIGNAL(valueChanged(int)), this, SLOT(setFadeSpeedPreset(int)));
+	layout3->addWidget(m_fadeSlider);
+	
+	m_fadeSliderLabel2 = new QLabel("(Slow) ");
+	layout3->addWidget(m_fadeSliderLabel2);
+	
+	m_inheritFadeBox = new QCheckBox("Use Default Settings",base3);
+	m_inheritFadeBox->setToolTip("Use the fade speed and quality settings for this slide group or application settings");
+	connect(m_inheritFadeBox, SIGNAL(toggled(bool)), this, SLOT(setInheritFade(bool)));
+	layout3->addWidget(m_inheritFadeBox);
+
+	base3->setLayout(layout3);
+	toolbar->addWidget(base3);
+	
+	
 	foreach(QAction *action, toolbar->actions())
 	{
 		QString shortcut = action->shortcut().toString();
@@ -484,8 +548,67 @@ void SlideEditorWindow::setupToolbar()
 			action->setText(QString("%1 (%2)").arg(text).arg(shortcut));
 		}
 	}
+	
 
 
+}
+
+void SlideEditorWindow::setInheritFade(bool flag)
+{
+	m_scene->slide()->setInheritFadeSettings(flag);
+	m_fadeSlider->setEnabled(!flag);
+	m_fadeSliderLabel->setEnabled(!flag);
+	m_fadeSliderLabel2->setEnabled(!flag);
+}
+
+void SlideEditorWindow::setFadeSpeedPreset(int value)
+{
+	double percent = ((double)value) / 100.0;
+	double speed = 3000.0 * percent;
+	if(speed<1)
+		speed = 1;
+	double quality = 0.04*speed; // "standard" quality is 10 frames every 250 ms
+	double qualityMax = speed<500 ? 20 :
+			    speed<1000 ? 30 :
+			    speed<2000 ? 45 :
+			    speed<=3000 ? 60 : 30;
+	quality = qMin(qualityMax,quality);
+	if(quality<1)
+		quality=1;
+	//qDebug() << "SlideEditorWindow::setFadeSpeedPreset: value:"<<value<<" ("<<percent<<"), speed:"<<speed<<", quality:"<<quality<<" ( qualityMax:"<<qualityMax<<")";
+	m_fadeSlider->setToolTip(QString("%1 % - %2 ms / %3 fames").arg(value).arg(speed).arg(quality));
+	m_scene->slide()->setCrossFadeSpeed(speed);
+	m_scene->slide()->setCrossFadeQuality(quality);
+}
+
+void SlideEditorWindow::guessSlideTimeout()
+{
+	m_slideTimeout->setValue(m_scene->slide()->guessTimeout());
+}
+
+void SlideEditorWindow::zeroSlideTimeout()
+{
+	m_slideTimeout->setValue(0);
+}
+
+void SlideEditorWindow::setSlideTimeout(double d)
+{
+	m_scene->slide()->setAutoChangeTime(d);
+}
+
+void SlideEditorWindow::slotConfigBackground()
+{
+	BackgroundItem * bg = dynamic_cast<BackgroundItem*>(m_scene->slide()->background());
+	BackgroundContent *bgContent = dynamic_cast<BackgroundContent*>(m_scene->findVisualDelegate(bg));
+	if(bgContent)
+	{
+		BackgroundConfig * bgConfig = new BackgroundConfig(bgContent);
+		bgConfig->show();
+	}
+	else
+	{
+		QMessageBox::critical(this,"No Background","Internal Error: Could not find background object to configure!");
+	}
 }
 
 
@@ -703,6 +826,7 @@ void SlideEditorWindow::updatePropDock(AbstractContent *content)
 		m_propDock->setWidget(p);
 		p->show();
 		p->adjustSize();
+		m_propDock->adjustSize();
 		
     		m_currentConfigContent = content;
     		m_currentConfig = p;
@@ -1067,6 +1191,15 @@ void SlideEditorWindow::setCurrentSlide(Slide *slide)
 
 	m_scene->clearSelection();
 	kids.last()->setSelected(true);
+	
+	m_slideTimeout->setValue(slide->autoChangeTime());
+	
+	double crossFadeSpeed = slide->crossFadeSpeed() / 3000;
+	if(crossFadeSpeed>1)
+		crossFadeSpeed = 1;
+	
+	m_fadeSlider->setValue((int)(crossFadeSpeed * 100));
+	m_inheritFadeBox->setChecked(slide->inheritFadeSettings());
 	
 	m_itemModel->setSlide(slide);
 	

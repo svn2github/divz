@@ -13,6 +13,10 @@ class Slide : public QObject
 	Q_PROPERTY(int slideId READ slideId WRITE setSlideId);
 	Q_PROPERTY(int slideNumber READ slideNumber WRITE setSlideNumber);
 	Q_PROPERTY(int autoChangeTime READ autoChangeTime WRITE setAutoChangeTime);
+	
+	Q_PROPERTY(double inheritFadeSettings READ inheritFadeSettings WRITE setInheritFadeSettings);
+	Q_PROPERTY(double crossFadeSpeed READ crossFadeSpeed WRITE setCrossFadeSpeed);
+	Q_PROPERTY(double crossFadeQuality READ crossFadeQuality WRITE setCrossFadeQuality);
 
 
 public:
@@ -38,7 +42,14 @@ public:
 	// A value of 0 means never change automatically
 	ITEM_PROPDEF(AutoChangeTime,	double,	autoChangeTime);
 	
+	ITEM_PROPDEF(InheritFadeSettings,bool,	inheritFadeSettings);  
+	ITEM_PROPDEF(CrossFadeSpeed,	double,	crossFadeSpeed);    // secs
+	ITEM_PROPDEF(CrossFadeQuality,	double,	crossFadeQuality);  // frames
+	
 	Slide * clone();
+	
+	// guess a change time based on slide contents
+	double guessTimeout();
 
 signals:
 	// Operation = "Add", "Remove", "Change"
@@ -52,6 +63,9 @@ private:
 	int m_slideNumber;
 	int m_slideId;
 	double m_autoChangeTime;
+	bool m_inheritFadeSettings;
+	double m_crossFadeSpeed;
+	double m_crossFadeQuality;
 };
 
 //Q_DECLARE_METATYPE(Slide);

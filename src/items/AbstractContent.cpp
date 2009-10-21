@@ -465,12 +465,12 @@ void AbstractContent::syncFromModelItem(AbstractVisualItem *model)
 		qDebug() << "AbstractContent::syncFromModelItem(): item:"<<(modelItem()?modelItem()->itemName() : "NULL")<<": doing sync";
 
 	QRectF r = model->contentsRect();
-	qDebug() << "AbstractContent::syncFromModelItem(): Setting rect:"<<r;
+	//qDebug() << "AbstractContent::syncFromModelItem(): Setting rect:"<<r;
 	resizeContents(r.toRect());
 
 	// Load position coordinates
 	setPos(model->pos());
-	qDebug() << "AbstractContent::syncFromModelItem(): Setting pos:"<<model->pos()<<", pos now is:"<<pos();
+	//qDebug() << "AbstractContent::syncFromModelItem(): Setting pos:"<<model->pos()<<", pos now is:"<<pos();
 
 	setZValue(model->zValue());
 	//qDebug() << "AbstractContent::syncFromModelItem(): item:"<<(modelItem()?modelItem()->itemName() : "NULL")<<": model->zValue(): "<<model->zValue()<<", my zvalue: "<<zValue();

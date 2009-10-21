@@ -20,6 +20,7 @@ protected slots:
     void setAutoChangeTime(double);
     void slotGuess();
     void slotNever();
+    void slotAccepted();
 
 private:
     Ui::SlideSettingsDialog *m_ui;

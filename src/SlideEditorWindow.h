@@ -28,6 +28,10 @@ class SlideEditorWindowListView;
 class SlideEditorWindow;
 class SlideItemListModel;
 
+class QCheckBox;
+class QSlider;
+class QLabel;
+
 class SlideEditorWindowListView : public QListView
 { 
 public:
@@ -91,6 +95,13 @@ private slots:
 	
 	void slotConfigGrid();
 	
+	void slotConfigBackground();
+	void setSlideTimeout(double);
+	void zeroSlideTimeout();
+	void guessSlideTimeout();
+	
+	void setInheritFade(bool);
+	void setFadeSpeedPreset(int);
 	
 	
 	void slidesDropped(QList<Slide*>);
@@ -148,6 +159,13 @@ private:
 	QAction * m_textMinusAction;
 	QDoubleSpinBox * m_textSizeBox;
 	QWidget * m_textBase;
+	
+	QDoubleSpinBox * m_slideTimeout;
+	
+	QCheckBox * m_inheritFadeBox;
+	QSlider * m_fadeSlider;
+	QLabel * m_fadeSliderLabel;
+	QLabel * m_fadeSliderLabel2;
 	
 	QList<TextBoxContent*> m_currentTextItems;
 	

@@ -21,6 +21,7 @@ protected:
 protected slots:
     void titleChanged(const QString&);
     void autoChangeGroup(bool);
+    void slotAccepted();
 
 private:
     Ui::SlideGroupSettingsDialog *m_ui;
