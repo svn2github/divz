@@ -129,6 +129,10 @@ Revised Task list for Release 1.0, 10/18/09:
 			
 			add next/prev btns to preview widget
 			add a "zero offset" shadow preset btn
+			alter shadows options from x/y offset to angle + distance (keep btns)
+			set object names on the toolbars in slide editor window
+			start docks on left (?maybe?)
+			setup editor to zoom mygraphicsscene automatically ONLY when opening window, not when resizing during use
 			
 			delete key in group list should delete (with prompt) current group
 			add seperator before group delete icon in toolbar
