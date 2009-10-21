@@ -9,6 +9,28 @@
 #include "SlideEditorWindow.h"
 #include "SongSlideGroup.h"
 
+class MyQTextEdit : public QTextEdit
+{
+public:
+	MyQTextEdit() : QTextEdit() {}
+protected:
+	void insertFromMimeData ( const QMimeData * source )
+	{
+		if(source)
+		{
+			//QMimeData data = *source;
+			qDebug() << "MyQTextEdit::insertFromMimeData(): Formats dropped: "<<source->formats();
+			
+			QTextEdit::insertFromMimeData(source);
+			
+		}
+		else
+		{
+			qDebug() << "MyQTextEdit::insertFromMimeData(): No *source ptr provided";
+		}
+	}
+};
+
 SongEditorWindow::SongEditorWindow(SlideGroup *g, QWidget *parent) : 
 	AbstractSlideGroupEditor(g,parent),
 	m_slideGroup(0),
@@ -36,7 +58,7 @@ SongEditorWindow::SongEditorWindow(SlideGroup *g, QWidget *parent) :
 	font.setFixedPitch(true);
 	font.setPointSize(10);
 	
-	m_editor = new QTextEdit;
+	m_editor = new MyQTextEdit;
 	m_editor->setFont(font);
 	
 	m_highlighter = new SongEditorHighlighter(m_editor->document());
@@ -46,10 +68,10 @@ SongEditorWindow::SongEditorWindow(SlideGroup *g, QWidget *parent) :
 	
 	QHBoxLayout * hbox2 = new QHBoxLayout();
 	
-	QPushButton * tmplEditBtn = new QPushButton("Edit &Background && Templates...");
-	tmplEditBtn->setIcon(QIcon(":data/stock-select-color.png"));
-	connect(tmplEditBtn, SIGNAL(clicked()), this, SLOT(editSongTemplate()));
-	hbox2->addWidget(tmplEditBtn);
+	m_tmplEditButton = new QPushButton("Edit &Background && Templates...");
+	m_tmplEditButton->setIcon(QIcon(":data/stock-select-color.png"));
+	connect(m_tmplEditButton, SIGNAL(clicked()), this, SLOT(editSongTemplate()));
+	hbox2->addWidget(m_tmplEditButton);
 	
 	hbox2->addStretch();
 	
@@ -126,6 +148,26 @@ void SongEditorWindow::setSlideGroup(SlideGroup *g,Slide */*curSlide*/)
 	m_editor->setPlainText(text);
 	m_title->setText(songGroup->groupTitle());
 	setWindowTitle(songGroup->groupTitle() + " - Song Editor");
+	m_editor->setFocus(Qt::OtherFocusReason);
+			
+}
+
+void SongEditorWindow::setSlideGroup(SlideGroup *g,bool syncToDatabase) 
+{
+	setSlideGroup(g);
+	if(syncToDatabase)
+	{
+		if(!dynamic_cast<SongSlideGroup*>(g)->song()->songId())
+		{
+			setWindowTitle("New Song - Song Editor");
+			m_title->setText("");
+			m_title->setFocus(Qt::OtherFocusReason);
+		}
+	}
+	
+	m_syncToDatabase = syncToDatabase;
+	
+	m_tmplEditButton->setVisible(!syncToDatabase);
 			
 }
 
@@ -139,10 +181,37 @@ void SongEditorWindow::accepted()
 			songGroup->setGroupTitle(m_title->text());
 			//songGroup->song()->setText(m_editor->toPlainText());
 			songGroup->setText(m_editor->toPlainText());
+			
+			if(m_syncToDatabase)
+			{
+				
+				SongRecord * song = songGroup->song();
+				song->setTitle(m_title->text());
+				song->setText(m_editor->toPlainText());
+				
+				if(!songGroup->song()->songId())
+				{
+					SongRecord::addSong(song);
+					emit songCreated(song);
+				}
+			}
+			
+			emit songSaved();
 		}
 	}
 	close();
 }
+
+void SongEditorWindow::closeEvent(QCloseEvent *evt)
+{
+// 	if(m_syncToDatabase)
+// 	{
+// 		delete songGroup->song();
+// 		delete songGroup;
+// 	}
+	evt->accept();
+}
+
 
 
 

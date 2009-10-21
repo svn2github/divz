@@ -133,14 +133,39 @@ bool SongRecord::addSong(SongRecord* song)
 	
 	if(!m_dbIsOpen)
 		initSongDatabase();
-		
-	QSqlTableModel tbl(0,m_db);
-	tbl.setTable(SONG_TABLE);
 	
-	if(!tbl.insertRecord(-1,song->toSqlRecord()))
+	QSqlQuery query;
+	query.prepare(QString("INSERT INTO %1 ( title,  tags,  number,  text,  author,  copyright,  last_used) "
+			              "VALUES (:title, :tags, :number, :text, :author, :copyright, :last_used)").arg(SONG_TABLE));
+	
+	//query.bindValue(":songid",	song->songId());
+	query.bindValue(":title",	song->title());
+	query.bindValue(":tags",	song->tags());
+	query.bindValue(":number",	song->number());
+	query.bindValue(":text",	song->text());
+	query.bindValue(":author",	song->author());
+	query.bindValue(":copyright",	song->copyright());
+	query.bindValue(":last_used",	song->lastUsed());
+	
+	query.exec();
+	
+	if (query.lastError().isValid())
 	{
-		qDebug() << "Error adding Song: "<<tbl.lastError();
+		qDebug() << "Error adding Song: "<<query.lastError();
 		return false;
+	}
+	else
+	{
+		QVariant var = query.lastInsertId();
+		if(!var.isValid())
+		{
+			qDebug() << "SongRecord::addSong(): Song insert succeeded, but no lastInsertId() available.";
+		}
+		else
+		{
+			song->setSongId(var.toInt());
+			//qDebug() << "SongRecord::addSong(): Inserted songid "<<song->songId();
+		}
 	}
 
 	return true;
@@ -159,9 +184,11 @@ void SongRecord::deleteSong(SongRecord* song, bool deletePtr)
 	if(!m_dbIsOpen)
 		initSongDatabase();
 		
+	qDebug() << "SongRecord::deleteSong(): Deleting songid:"<<song->songId();
+	
 	QSqlQuery query;
-	query.prepare(QString("DELETE FROM %1 WHERE songid=:x").arg(SONG_TABLE)); 
-	query.bindValue(":x",song->m_songId);
+	query.prepare(QString("DELETE FROM %1 WHERE songid=?").arg(SONG_TABLE)); 
+	query.addBindValue(song->m_songId);
 	query.exec();
 	
 	if (query.lastError().isValid())
@@ -171,7 +198,7 @@ void SongRecord::deleteSong(SongRecord* song, bool deletePtr)
 	}
 	else
 	{
-		query.exec();
+		
 		if(deletePtr)
 		{
 			delete song;

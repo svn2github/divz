@@ -371,7 +371,9 @@ void SlideEditorWindow::setupToolbar()
 	groupProp->setShortcut(QString("SHIFT+F2"));
 	connect(groupProp, SIGNAL(triggered()), this, SLOT(groupProperties()));
 	
-	toolbar->addSeparator();
+	//toolbar->addSeparator();
+	
+	toolbar = addToolBar("insert toolbar");
 	
 	
 	QAction  *newAction = toolbar->addAction(QIcon(":/data/insert-text-24.png"), "New Text Item");
@@ -390,7 +392,7 @@ void SlideEditorWindow::setupToolbar()
 	newImage->setShortcut(QString("CTRL+SHIFT+I"));
 	connect(newImage, SIGNAL(triggered()), this, SLOT(newImageItem()));
 	
-	toolbar->addSeparator();
+	toolbar = addToolBar("item arrange toolbar");
 	
 	QAction  *centerHor = toolbar->addAction(QIcon(":/data/obj-center-hor.png"), "Center Items Horizontally");
 	centerHor->setShortcut(QString("CTRL+SHIFT+H"));
@@ -400,7 +402,7 @@ void SlideEditorWindow::setupToolbar()
 	centerVer->setShortcut(QString("CTRL+SHIFT+V"));
 	connect(centerVer, SIGNAL(triggered()), this, SLOT(centerSelVert()));
 	
-	toolbar->addSeparator();
+	toolbar = addToolBar("slide ops tb");
 	
 	QAction  *newSlide = toolbar->addAction(QIcon(":/data/stock-add.png"), "New Slide");
 	newSlide->setShortcut(QString("CTRL+M"));
@@ -412,18 +414,23 @@ void SlideEditorWindow::setupToolbar()
 	
 	toolbar->addSeparator();
 	
-	QAction  *liveAction  = toolbar->addAction(QIcon(":/data/stock-insert-image.png"), "Send the Current Slide to the Live Output");
-	liveAction->setShortcut(QString("F5"));
-	connect(liveAction, SIGNAL(triggered()), this, SLOT(setCurrentSlideLive()));
-	
-	
-	
+	QAction  *configBg = toolbar->addAction(QIcon(":/data/stock-insert-image.png"), "Setup Slide Background");
+	configBg->setShortcut(QString("CTRL+SHIFT+B"));
+	connect(configBg, SIGNAL(triggered()), this, SLOT(slotConfigBackground()));
+
 	toolbar->addSeparator();
+	
+	QAction  *delSlide = toolbar->addAction(QIcon(":/data/stock-delete.png"), "Delete Slide");
+	connect(delSlide, SIGNAL(triggered()), this, SLOT(delSlide()));
+	
+	
+	
+	toolbar = addToolBar("text size tb");
 
 	
 	m_textBase = new QWidget(toolbar);
 	QHBoxLayout * layout = new QHBoxLayout(m_textBase);
-	QLabel * label = new QLabel("Text Size: ");
+	QLabel * label = new QLabel("Text: ");
 	layout->addWidget(label);
 	
 	m_textSizeBox = new QDoubleSpinBox(m_textBase);
@@ -454,7 +461,7 @@ void SlideEditorWindow::setupToolbar()
 	
 	connect(m_scene, SIGNAL(selectionChanged()), this, SLOT(selectionChanged()));
 	
-	toolbar->addSeparator();
+	toolbar = addToolBar("undo/redo tb");
 	
 	QAction *action = m_undoStack->createUndoAction(this);
 	action->setIcon(QIcon(":/data/stock-undo.png"));
@@ -466,20 +473,12 @@ void SlideEditorWindow::setupToolbar()
 	action->setShortcut(QString("CTRL+SHIFT+Z"));
 	toolbar->addAction(action);
 
-	toolbar->addSeparator();
 	
-	QAction  *delSlide = toolbar->addAction(QIcon(":/data/stock-delete.png"), "Delete Slide");
-	connect(delSlide, SIGNAL(triggered()), this, SLOT(delSlide()));
+	toolbar = addToolBar("slide timeout tb");
 	
-	toolbar->addSeparator();
-	
-	QAction  *configGrid = toolbar->addAction(QIcon(":/data/config-grid.png"), "Setup Grid and Guidelines");
-	connect(configGrid, SIGNAL(triggered()), this, SLOT(slotConfigGrid()));
-	
-	toolbar->addSeparator();
 	QWidget * base2 = new QWidget(toolbar);
 	QHBoxLayout * layout2 = new QHBoxLayout(base2);
-	QLabel * label2 = new QLabel("Go to Next Slide After: ");
+	QLabel * label2 = new QLabel("Change Slides In: ");
 	layout2->addWidget(label2);
 	
 	m_slideTimeout = new QDoubleSpinBox(m_textBase);
@@ -502,18 +501,20 @@ void SlideEditorWindow::setupToolbar()
 	guessTimeout->setShortcut(QString("CTRL+SHIFT+G"));
 	connect(guessTimeout, SIGNAL(triggered()), this, SLOT(guessSlideTimeout()));
 	
-	toolbar->addSeparator();
+	//toolbar->addSeparator();
+	toolbar = addToolBar("text size tb");
+	QAction  *liveAction  = toolbar->addAction(QIcon(":/data/stock-fullscreen.png"), "Send the Current Slide to the Live Output");
+	liveAction->setShortcut(QString("F5"));
+	connect(liveAction, SIGNAL(triggered()), this, SLOT(setCurrentSlideLive()));
 	
-	QAction  *configBg = toolbar->addAction(QIcon(":/data/stock-insert-image.png"), "Setup Slide Background");
-	configBg->setShortcut(QString("CTRL+SHIFT+B"));
-	connect(configBg, SIGNAL(triggered()), this, SLOT(slotConfigBackground()));
 	
 	
-	toolbar->addSeparator();
+	toolbar = addToolBar("fade speed tb");
+	
 	QWidget * base3 = new QWidget(toolbar);
 	QHBoxLayout * layout3 = new QHBoxLayout(base3);
 	
-	m_fadeSliderLabel = new QLabel("Fade Speed: (Fast)");
+	m_fadeSliderLabel = new QLabel("Fade Speed: (+)");
 	layout3->addWidget(m_fadeSliderLabel);
 	
 	m_fadeSlider = new QSlider(Qt::Horizontal,base3);
@@ -526,16 +527,23 @@ void SlideEditorWindow::setupToolbar()
 	connect(m_fadeSlider, SIGNAL(valueChanged(int)), this, SLOT(setFadeSpeedPreset(int)));
 	layout3->addWidget(m_fadeSlider);
 	
-	m_fadeSliderLabel2 = new QLabel("(Slow) ");
+	m_fadeSliderLabel2 = new QLabel("(-) ");
 	layout3->addWidget(m_fadeSliderLabel2);
 	
-	m_inheritFadeBox = new QCheckBox("Use Default Settings",base3);
+	m_inheritFadeBox = new QCheckBox("Use Default",base3);
 	m_inheritFadeBox->setToolTip("Use the fade speed and quality settings for this slide group or application settings");
 	connect(m_inheritFadeBox, SIGNAL(toggled(bool)), this, SLOT(setInheritFade(bool)));
 	layout3->addWidget(m_inheritFadeBox);
 
 	base3->setLayout(layout3);
 	toolbar->addWidget(base3);
+	
+		
+	toolbar = addToolBar("misc tb");
+	
+	QAction  *configGrid = toolbar->addAction(QIcon(":/data/config-grid.png"), "Setup Grid and Guidelines");
+	connect(configGrid, SIGNAL(triggered()), this, SLOT(slotConfigGrid()));
+	
 	
 	
 	foreach(QAction *action, toolbar->actions())

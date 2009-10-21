@@ -73,6 +73,17 @@ QWidget * BoxContent::createPropertyWidget()
 	return 0;
 }
 
+void BoxContent::setCornerRounding(QPointF x)
+{
+	m_cornerRounding = x;
+	update();
+}
+
+QPointF BoxContent::cornerRounding()
+{
+	return m_cornerRounding;
+}
+
 void BoxContent::syncFromModelItem(AbstractVisualItem *model)
 {
 	if(!modelItem())
@@ -87,6 +98,9 @@ void BoxContent::syncFromModelItem(AbstractVisualItem *model)
 	}
 	
 	AbstractContent::syncFromModelItem(model);
+	
+	// Enable when model has had corner rounding added
+	//setCornerRounding(dynamic_cast<BoxItem*>(model)->cornerRounding());
 	
 	if(modelItem()->revision() != m_lastModelRev)
 	{
@@ -255,7 +269,18 @@ void BoxContent::drawForeground(QPainter * painter)
 	if(modelItem()->fillType() != AbstractVisualItem::None)
 		painter->setBrush(modelItem()->fillBrush());
 	
-	painter->drawRect(cRect);
+	QPointF rounding = cornerRounding();
+		
+	// If shadow is enabled but 0 blur, that means the shadow uses a QPainterPath for clipping.
+	// Since QPainterPath doesn't support rounded rects as of Qt4.5, we dont draw the foreground rounded.
+	// However, we can round the rect if we have a non-0 blur OR if the shadow is turned off completly.
+	if(modelItem()->shadowEnabled() && modelItem()->shadowBlurRadius() == 0)
+		rounding = QPoint(0,0);
+		
+	if(rounding.isNull())
+		painter->drawRect(cRect);
+	else
+		painter->drawRoundedRect(cRect,rounding.x(),rounding.y(),Qt::RelativeSize);
 	
 	painter->restore();
 }

@@ -96,12 +96,15 @@ Revised Task list for Release 1.0, 10/18/09:
 			Add drag/drop background for songs from a yet-to-be-made vid/image bg pallette
 		
 		= Editor / Visual =
-			Add rounded rectangle item / or round boxcontent corners
+			[STARTED] Add rounded rectangle item / or round boxcontent corners
+				Added rounding code to visual delegate
+				Still need to add rounding to model and to config UI
+				Later, need to focus on songs now.
 			add animation to image items
 		
 		= Songs =
 			Save song templates/bg in a "template collection"
-			[STARTED] Need song new/edit/delete functionality
+			[DONE] Need song new/edit/delete functionality
 			Auto-sizing song text should be an option that can be enabled/disabled
 				if not autosize, pull size from template / textobx
 			option of font family should be available for song
@@ -123,11 +126,12 @@ Revised Task list for Release 1.0, 10/18/09:
 			Move dialogs into their own subfolder in the source tree
 			Move qt color dialog into 3rdparty
 			Add color theme support vis a vi powerpoint
-			Adapt genericitemconfig dialog to work on model item only without having to use the visual delegate
-
+			
 			add next/prev btns to preview widget
 			add a "zero offset" shadow preset btn
-			add test alignment (left/right/center) to toolbar
+			
+			delete key in group list should delete (with prompt) current group
+			add seperator before group delete icon in toolbar
 			
 			is there a way to make the live output not show up in task list???
 					see http://lists.trolltech.com/qt-interest/2007-07/thread00362-0.html for discussion on the opposite problem
@@ -213,6 +217,11 @@ Revised Task list for Release 1.0, 10/18/09:
 					multithreaded - compress frame jpeg once, then offer to all clients
 			
 			
+		[LATER] Adapt genericitemconfig dialog to work on model item only without having to use the visual delegate
+			not needed right now, we can create abstractcontent delegates for the dialog if neeeded
+		[LATER] add test alignment (left/right/center) to toolbar
+			now that we have the settings widgets integrated as a dock in the editor and it auto-changes to text config when text selected, we may not need this in toolbar
+	
 		[DONE] make cross fade speed configurable on a per slide or per slide GRoup basis (e.g for songs)
 		[DONE] add slide timeout widgets to toolbar
 		[DONE] add slide bg config btn to toolbar
@@ -334,6 +343,7 @@ Revised Task list for Release 1.0, 10/18/09:
 		[LATER] Video Capture (started impl, but again, performance is terrible. That may be due to the FormatOpts specified, or in ffmpeg, or the capture hardware - need to trace - later!)
 	
 	- Bugs:
+		when no slide is live, clicking then UNclicking "Black" btn causes segflt
 		editor undo/redo framework doesnt pickup slide property changes
 		slide auto change time doesnt seem to save when using guess button
 		

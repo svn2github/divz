@@ -8,7 +8,7 @@
 class BoxContent : public AbstractContent
 {
 	Q_OBJECT
-
+	Q_PROPERTY(QPointF cornerRounding READ cornerRounding WRITE setCornerRounding)
 public:
 	BoxContent(QGraphicsScene * scene, QGraphicsItem * parent = 0);
 	~BoxContent();
@@ -24,6 +24,9 @@ public:
 	QPixmap renderContent(const QSize & size, Qt::AspectRatioMode ratio) const;
 	int contentHeightForWidth(int width) const;
 	
+	QPointF cornerRounding();
+	void setCornerRounding(QPointF);
+	
 	void syncFromModelItem(AbstractVisualItem*);
 	AbstractVisualItem * syncToModelItem(AbstractVisualItem*);
 	
@@ -38,6 +41,8 @@ private:
 	QPainterPath m_shadowClipPath;
 	bool m_shadowClipDirty;
 	quint32 m_lastModelRev;
+	
+	QPointF m_cornerRounding;
 
 };
 

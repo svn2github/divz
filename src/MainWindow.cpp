@@ -380,6 +380,8 @@ void MainWindow::setupSongList()
 	
 	// setup initial sorting direction
 	m_songList->horizontalHeader()->setSortIndicator(0,Qt::AscendingOrder);
+	m_songProxyModel->sort(2,Qt::AscendingOrder);
+ 	m_songTableModel->sort(2,Qt::AscendingOrder);
 	
 	// this will have to be done every time the filter changes (below)
 	m_songList->resizeColumnsToContents();
@@ -393,11 +395,11 @@ void MainWindow::setupSongList()
 	connect(btn, SIGNAL(clicked()), this, SLOT(addNewSong()));
 	hbox2->addWidget(btn);
 	
-	btn = new QPushButton(QIcon(":/data/stock-edit.png"),"&Edit Song");
+	btn = new QPushButton(QIcon(":/data/stock-edit.png"),"Edi&t");
 	connect(btn, SIGNAL(clicked()), this, SLOT(editSongInDB()));
 	hbox2->addWidget(btn);
 	
-	btn = new QPushButton(QIcon(":/data/stock-delete.png"),"&Delete Song");
+	btn = new QPushButton(QIcon(":/data/stock-delete.png"),"&Delete");
 	connect(btn, SIGNAL(clicked()), this, SLOT(deleteCurrentSong()));
 	hbox2->addWidget(btn);
 	
@@ -421,27 +423,29 @@ void MainWindow::songSearchReturnPressed()
 void MainWindow::addNewSong()
 {
 	SongRecord * song = new SongRecord();
-	m_tmpNewSong = new SongSlideGroup();
-	m_tmpNewSong->setSong(song);
+	SongSlideGroup * group = new SongSlideGroup();
+	group->setSong(song);
 	
 	SongEditorWindow * editor = new SongEditorWindow();
-	editor->setSlideGroup(m_tmpNewSong);
+	editor->setSlideGroup(group,true);
 	
-	connect(editor,SIGNAL(accepted()), this, SLOT(newSongAccepted()));
+	connect(editor, SIGNAL(songCreated(SongRecord*)), this, SLOT(songCreated(SongRecord*)));
+	
+	editor->show();
 }
 
-void MainWindow::newSongAccepted()
+void MainWindow::songCreated(SongRecord */*song*/)
 {
-	SongRecord * song = m_tmpNewSong->song();
-	SongRecord::addSong(song);
+	// TODO: set current index in table to song
 	
-	song->setText(m_tmpNewSong->text());
+	m_songProxyModel->sort(2,Qt::AscendingOrder);
+ 	m_songTableModel->sort(2,Qt::AscendingOrder);
 	
-	// LOTS TODO HERE:
-	// - make new song seleted
-	// - make sure editor is deleted
-	// - handel editor "cancel" pressed
+	m_songList->resizeColumnsToContents();
+	m_songList->resizeRowsToContents();
+
 }
+
 
 void MainWindow::deleteCurrentSong()
 {
@@ -451,13 +455,44 @@ void MainWindow::deleteCurrentSong()
 	if(QMessageBox::warning(this,"Really Delete Song?","Are you sure you want to delete this song? This cannot be undone.",QMessageBox::Ok | QMessageBox::Cancel) 
 		== QMessageBox::Ok)
 	{
+		m_songTableModel->removeRows(idx.row(),1);
 		SongRecord::deleteSong(song);
+		
+		m_songProxyModel->sort(2,Qt::AscendingOrder);
+ 		m_songTableModel->sort(2,Qt::AscendingOrder);
+	
+		// this will have to be done every time the filter changes (below)
+		m_songList->resizeColumnsToContents();
+		m_songList->resizeRowsToContents();
 	}
 }
 
 void MainWindow::editSongInDB() 
 {
-	// TODO
+	QModelIndex idx = m_songProxyModel->mapToSource(m_songList->currentIndex());
+	if(idx.isValid())
+	{
+		QSqlRecord record = m_songTableModel->record(idx.row());
+		SongRecord *song = SongRecord::fromSqlRecord(record);
+		
+		SongSlideGroup * group = new SongSlideGroup();
+		group->setSong(song);
+		
+		SongEditorWindow * editor = new SongEditorWindow();
+		editor->setSlideGroup(group,true);
+		editor->show();
+		
+		connect(editor, SIGNAL(songSaved()), this, SLOT(editSongAccepted()));
+	}
+}
+
+void MainWindow::editSongAccepted()
+{
+	m_songProxyModel->sort(2,Qt::AscendingOrder);
+ 	m_songTableModel->sort(2,Qt::AscendingOrder);
+	
+	m_songList->resizeColumnsToContents();
+	m_songList->resizeRowsToContents();
 }
 
 void MainWindow::songDoubleClicked(const QModelIndex &idx)
@@ -474,6 +509,8 @@ void MainWindow::songFilterChanged(const QString &text)
 {
 	QRegExp regExp(text, Qt::CaseInsensitive, QRegExp::Wildcard);
 	m_songProxyModel->setFilterRegExp(regExp);
+	m_songProxyModel->sort(2,Qt::AscendingOrder);
+ 	m_songTableModel->sort(2,Qt::AscendingOrder);
 	m_songList->resizeColumnsToContents();
 	m_songList->resizeRowsToContents();
 	m_clearSearchBtn->setVisible(!text.isEmpty());

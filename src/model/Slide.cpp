@@ -88,6 +88,10 @@ Slide * Slide::clone()
 			
 		newItem->setItemId(ItemFactory::nextId());
 		//newItem->setItemName(QString("NewItem%1").arg(bg->itemId()));
+		QString name = newItem->itemName();
+		name.replace(QRegExp("(\\d+)$"),QString::number(newItem->itemId()));
+		newItem->setItemName(name);
+		
 		newSlide->addItem(newItem);
 	}
 	
