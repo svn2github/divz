@@ -89,12 +89,12 @@ bool QVideoDecoder::load(const QString & filename)
 	 //if(debugCounter ++ <= 0)
 		//fileTmp = "vfwcap://0";
 	if(fileTmp == "C:/dummy.txt")
-		fileTmp = "vfwcap-0";
+		fileTmp = "vfwcap://0";
 	qDebug() << "[DEBUG] QVideoDecoder::load(): starting with fileTmp:"<<fileTmp;
 	 bool customInputFormat = false;
-	 if(fileTmp.indexOf("-") > -1)
+	 if(fileTmp.indexOf("://") > -1)
 	 {
-		 QStringList list = fileTmp.split("-");
+		 QStringList list = fileTmp.split("://");
 		 if(list.size() == 2)
 		 {
 			 qDebug() << "[DEBUG] QVideoDecoder::load(): input format args:"<<list;

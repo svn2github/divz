@@ -19,6 +19,8 @@
 #include <assert.h>
 #include <QDebug>
 #include <QPixmapCache>
+#include "model/BackgroundItem.h"
+
 
 #if QT_VERSION >= 0x040600
 	#include <QGraphicsDropShadowEffect>
@@ -463,12 +465,12 @@ void AbstractContent::syncFromModelItem(AbstractVisualItem *model)
 		qDebug() << "AbstractContent::syncFromModelItem(): item:"<<(modelItem()?modelItem()->itemName() : "NULL")<<": doing sync";
 
 	QRectF r = model->contentsRect();
-	//qDebug() << "AbstractContent::syncFromModelItem(): Setting rect:"<<r;
+	qDebug() << "AbstractContent::syncFromModelItem(): Setting rect:"<<r;
 	resizeContents(r.toRect());
 
 	// Load position coordinates
 	setPos(model->pos());
-	//qDebug() << "AbstractContent::syncFromModelItem(): Setting pos:"<<model->pos();
+	qDebug() << "AbstractContent::syncFromModelItem(): Setting pos:"<<model->pos()<<", pos now is:"<<pos();
 
 	setZValue(model->zValue());
 	//qDebug() << "AbstractContent::syncFromModelItem(): item:"<<(modelItem()?modelItem()->itemName() : "NULL")<<": model->zValue(): "<<model->zValue()<<", my zvalue: "<<zValue();
@@ -505,6 +507,8 @@ void AbstractContent::syncFromModelItem(AbstractVisualItem *model)
 
 
 	m_dontSyncToModel = false;
+
+	//update();
 }
 
 
@@ -807,7 +811,7 @@ QVariant AbstractContent::itemChange(GraphicsItemChange change, const QVariant &
 	// keep the AbstractContent's center inside the scene rect..
 	if (change == ItemPositionChange && scene() && AppSettings::gridEnabled())
 	{
-		if(! (flags() & QGraphicsItem::ItemIsMovable) )
+		if(modelItem() && modelItem()->itemClass() == BackgroundItem::ItemClass)
 		{
 			retVal = QVariant(pos());
  			retValOverride = true;
