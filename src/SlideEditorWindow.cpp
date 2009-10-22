@@ -359,7 +359,7 @@ void SlideEditorWindow::closeEvent(QCloseEvent *evt)
 void SlideEditorWindow::setupToolbar()
 {
 	QList<QToolBar*> toolbars;
-	QToolBar *toolbar = addToolBar("main toolbar");
+	QToolBar *toolbar = addToolBar("Slide Setup");
 	toolbars<<toolbar;
 
 	toolbar->setObjectName("maintoolbar");
@@ -376,7 +376,7 @@ void SlideEditorWindow::setupToolbar()
 	
 	//toolbar->addSeparator();
 	
-	toolbar = addToolBar("insert toolbar");
+	toolbar = addToolBar("New Objects");
 	toolbars<<toolbar;
 
 	
@@ -397,7 +397,7 @@ void SlideEditorWindow::setupToolbar()
 	newImage->setShortcut(QString("CTRL+SHIFT+I"));
 	connect(newImage, SIGNAL(triggered()), this, SLOT(newImageItem()));
 	
-	toolbar = addToolBar("item arrange toolbar");
+	toolbar = addToolBar("Arrange Items");
 	toolbars<<toolbar;
 
 	
@@ -409,7 +409,7 @@ void SlideEditorWindow::setupToolbar()
 	centerVer->setShortcut(QString("CTRL+SHIFT+V"));
 	connect(centerVer, SIGNAL(triggered()), this, SLOT(centerSelVert()));
 	
-	toolbar = addToolBar("slide ops tb");
+	toolbar = addToolBar("Slide Operations");
 	toolbars<<toolbar;
 
 	
@@ -434,7 +434,7 @@ void SlideEditorWindow::setupToolbar()
 	
 	
 	
-	toolbar = addToolBar("text size tb");
+	toolbar = addToolBar("Text Size");
 	toolbars<<toolbar;
 
 
@@ -472,7 +472,7 @@ void SlideEditorWindow::setupToolbar()
 	
 	connect(m_scene, SIGNAL(selectionChanged()), this, SLOT(selectionChanged()));
 	
-	toolbar = addToolBar("undo/redo tb");
+	toolbar = addToolBar("Undo/Redo");
 	toolbars<<toolbar;
 
 	
@@ -487,7 +487,7 @@ void SlideEditorWindow::setupToolbar()
 	toolbar->addAction(action);
 
 	
-	toolbar = addToolBar("slide timeout tb");
+	toolbar = addToolBar("Slide Timeout");
 	toolbars<<toolbar;
 
 	
@@ -517,7 +517,7 @@ void SlideEditorWindow::setupToolbar()
 	connect(guessTimeout, SIGNAL(triggered()), this, SLOT(guessSlideTimeout()));
 	
 	//toolbar->addSeparator();
-	toolbar = addToolBar("text size tb");
+	toolbar = addToolBar("Live");
 	toolbars<<toolbar;
 
 	QAction  *liveAction  = toolbar->addAction(QIcon(":/data/stock-fullscreen.png"), "Send the Current Slide to the Live Output");
@@ -526,7 +526,7 @@ void SlideEditorWindow::setupToolbar()
 	
 	
 	
-	toolbar = addToolBar("fade speed tb");
+	toolbar = addToolBar("Fade Speed");
 	toolbars<<toolbar;
 
 	
@@ -558,7 +558,7 @@ void SlideEditorWindow::setupToolbar()
 	toolbar->addWidget(base3);
 	
 		
-	toolbar = addToolBar("misc tb");
+	toolbar = addToolBar("Editor Setup");
 	toolbars<<toolbar;
 
 	
@@ -568,6 +568,7 @@ void SlideEditorWindow::setupToolbar()
 	
 	foreach(QToolBar *tb, toolbars)
 	{
+		tb->setObjectName((char*)tb->windowTitle().constData());
 		foreach(QAction *action, tb->actions())
 		{
 			QString shortcut = action->shortcut().toString();
@@ -1180,7 +1181,7 @@ void SlideEditorWindow::setSlideGroup(SlideGroup *g,Slide *curSlide)
 
 }
 
-//#define qGrep(LIST_TYPE, NEW_LIST, OLD_LIST, IT_CLAUSE) \
+//#define qGrep(LIST_TYPE, NEW_LIST, OLD_LIST, IT_CLAUSE) 
 //	foreach(LIST_TYPE _it, OLD_LIST) if(LIST_CLAUSE) NEW_LIST.append(_it);
 
 #define qGrep(IT_VAR, OLD_LIST, CLAUSE)  \

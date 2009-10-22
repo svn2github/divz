@@ -164,7 +164,7 @@ bool SongRecord::addSong(SongRecord* song)
 		else
 		{
 			song->setSongId(var.toInt());
-			//qDebug() << "SongRecord::addSong(): Inserted songid "<<song->songId();
+			qDebug() << "[DEBUG] SongRecord::addSong(): Inserted songid "<<song->songId();
 		}
 	}
 

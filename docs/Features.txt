@@ -133,6 +133,12 @@ Revised Task list for Release 1.0, 10/18/09:
 			set object names on the toolbars in slide editor window
 			start docks on left (?maybe?)
 			setup editor to zoom mygraphicsscene automatically ONLY when opening window, not when resizing during use
+			adding new group to grou p list should put it at the top /bottom of the list - not middle!
+			
+			slide props dock should current tab to prev tab index IF titles match at that index
+			
+			[BUG] song editor NEW/EDIT not saving
+			
 			
 			delete key in group list should delete (with prompt) current group
 			add seperator before group delete icon in toolbar

@@ -21,21 +21,21 @@ int main(int argc, char **argv)
 	SongRecord::db();
 	
 	
-	SongRecord * s = SongRecord::retrieve(388);
-	//SongRecord * s = new SongRecord();
-// 	s->setTitle("A bbbbbbb");
-// 	s->setText("bzzzzzzzzz");
-// 	SongRecord::addSong(s);
+//	SongRecord * s = SongRecord::retrieve(388);
+	SongRecord * s = new SongRecord();
+ 	s->setTitle("A bbbbbbb");
+ 	s->setText("bzzzzzzzzz");
+ 	SongRecord::addSong(s);
 // 	if(s->title() != "A Bee Song")
 // 	{
 // 		s->setText("A Bee Song");
 // 		qDebug(" ** Updated title");
 // 	}
  	qDebug()<<"SongID:"<<s->songId()<<", title:"<<s->title()<<", author:"<<s->author();
-	if(s && s->songId())
+/*	if(s && s->songId())
 		qDebug("Got song # 388");
 	else
-		qDebug("Song # 388 does NOT exist");
+		qDebug("Song # 388 does NOT exist");*/
 	
 	if(s && s->songId())
 		SongRecord::deleteSong(s);
