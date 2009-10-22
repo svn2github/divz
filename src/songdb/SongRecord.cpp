@@ -1,4 +1,5 @@
 #include "SongRecord.h"
+#include "SongRecordListModel.h"
 
 bool SongRecord::m_dbIsOpen = false;
 QSqlDatabase SongRecord::m_db;
@@ -168,6 +169,8 @@ bool SongRecord::addSong(SongRecord* song)
 		}
 	}
 
+	SongRecordListModel::instance()->addSong(song);
+
 	return true;
 }
 
@@ -198,7 +201,7 @@ void SongRecord::deleteSong(SongRecord* song, bool deletePtr)
 	}
 	else
 	{
-		
+		SongRecordListModel::instance()->removeSong(song);	
 		if(deletePtr)
 		{
 			delete song;

@@ -21,6 +21,8 @@
 #include "songdb/SongSlideGroup.h"
 #include "songdb/SongRecord.h"
 #include "songdb/SongEditorWindow.h"
+#include "songdb/SongRecordListModel.h"
+
 
 MainWindow * MainWindow::static_mainWindow = 0;
 
@@ -317,15 +319,13 @@ void MainWindow::saveFile(const QString & file)
 
 void MainWindow::setupSongList()
 {
-// 	QTableView * m_songList;
-// 	QLineEdit * m_songSearch;
-// 	QComboBox * m_searchOpt;
 	QVBoxLayout *vbox = new QVBoxLayout();
 	
 	// Setup filter box at the top of the widget
 	QHBoxLayout *hbox = new QHBoxLayout();
-	QLabel *label = new QLabel("Search:");
+	QLabel *label = new QLabel("Searc&h:");
 	m_songSearch = new QLineEdit(m_ui->tabSongs);
+	label->setBuddy(m_songSearch);
 	//m_searchOpt = new QComboBox(m_ui->tabSongs);
 	m_clearSearchBtn = new QPushButton("Clear");
 	m_clearSearchBtn->setVisible(false);
@@ -340,52 +340,20 @@ void MainWindow::setupSongList()
 	connect(m_clearSearchBtn, SIGNAL(clicked()), this, SLOT(songFilterReset()));
 	
 	// Now for the song list itself
-	m_songList = new QTableView(m_ui->tabSongs);
+	m_songList = new QListView(m_ui->tabSongs);
 	
 	// Setup the source model from the SQLite database
-	m_songTableModel = new QSqlTableModel(0,SongRecord::db());
-	m_songTableModel->setTable(SONG_TABLE);
-	m_songTableModel->select();
-	m_songTableModel->setHeaderData(0, Qt::Horizontal, tr("SongID"));
-	m_songTableModel->setHeaderData(1, Qt::Horizontal, tr("Number"));
-	m_songTableModel->setHeaderData(2, Qt::Horizontal, tr("Title"));
-	m_songTableModel->setHeaderData(3, Qt::Horizontal, tr("Text"));
-	m_songTableModel->setHeaderData(4, Qt::Horizontal, tr("Author"));
-	m_songTableModel->setHeaderData(5, Qt::Horizontal, tr("Copyright"));
-	m_songTableModel->setHeaderData(6, Qt::Horizontal, tr("Last Used"));
+	m_songListModel = SongRecordListModel::instance();
 	
-	// Setup the proxy model to handle the sorting/filtering
-	m_songProxyModel = new QSortFilterProxyModel(this);
-	m_songProxyModel->setSourceModel(m_songTableModel);
-	m_songProxyModel->setSortCaseSensitivity(Qt::CaseInsensitive);
-	m_songProxyModel->setFilterKeyColumn(2);	
-
 	// Finish setup on the TableView itself
-	m_songList->setModel(m_songProxyModel);
-	
-	// hide unecessary columns
-	m_songList->setColumnHidden(0,true);
-	m_songList->setColumnHidden(1,true);
-	m_songList->setColumnHidden(3,true);
-	m_songList->setColumnHidden(4,true);
-	m_songList->setColumnHidden(5,true);
-	m_songList->setColumnHidden(6,true);
-	m_songList->setColumnHidden(7,true);
+	m_songList->setModel(m_songListModel);
 	
 	// setup desired options
-	m_songList->setAlternatingRowColors(true);
-	m_songList->setSortingEnabled(true);
-	m_songList->verticalHeader()->setVisible(false);
-	m_songList->setEditTriggers(QAbstractItemView::NoEditTriggers);
-	
-	// setup initial sorting direction
-	m_songList->horizontalHeader()->setSortIndicator(0,Qt::AscendingOrder);
-	m_songProxyModel->sort(2,Qt::AscendingOrder);
- 	m_songTableModel->sort(2,Qt::AscendingOrder);
+	//m_songList->setAlternatingRowColors(true);
 	
 	// this will have to be done every time the filter changes (below)
-	m_songList->resizeColumnsToContents();
-	m_songList->resizeRowsToContents();
+	//m_songList->resizeColumnsToContents();
+	//m_songList->resizeRowsToContents();
 	
 	// setup buttons at bottom
 	QHBoxLayout *hbox2 = new QHBoxLayout();
@@ -415,7 +383,7 @@ void MainWindow::setupSongList()
 
 void MainWindow::songSearchReturnPressed() 
 {
-	QModelIndex idx = m_songProxyModel->index(0,0);
+	QModelIndex idx = m_songListModel->indexForRow(0);
 	if(idx.isValid())
 		songDoubleClicked(idx);
 }
@@ -437,43 +405,40 @@ void MainWindow::addNewSong()
 void MainWindow::songCreated(SongRecord */*song*/)
 {
 	// TODO: set current index in table to song
-	
+	/*
 	m_songProxyModel->sort(2,Qt::AscendingOrder);
  	m_songTableModel->sort(2,Qt::AscendingOrder);
 	
 	m_songList->resizeColumnsToContents();
-	m_songList->resizeRowsToContents();
+	m_songList->resizeRowsToContents();*/
 
 }
 
 
 void MainWindow::deleteCurrentSong()
 {
-	QModelIndex idx = m_songProxyModel->mapToSource(m_songList->currentIndex());
-	QSqlRecord record = m_songTableModel->record(idx.row());
-	SongRecord *song = SongRecord::fromSqlRecord(record);
+	QModelIndex idx = m_songList->currentIndex();
+	SongRecord *song = m_songListModel->songFromIndex(idx);
 	if(QMessageBox::warning(this,"Really Delete Song?","Are you sure you want to delete this song? This cannot be undone.",QMessageBox::Ok | QMessageBox::Cancel) 
 		== QMessageBox::Ok)
 	{
-		m_songTableModel->removeRows(idx.row(),1);
 		SongRecord::deleteSong(song);
 		
-		m_songProxyModel->sort(2,Qt::AscendingOrder);
- 		m_songTableModel->sort(2,Qt::AscendingOrder);
-	
-		// this will have to be done every time the filter changes (below)
-		m_songList->resizeColumnsToContents();
-		m_songList->resizeRowsToContents();
+// 		m_songProxyModel->sort(2,Qt::AscendingOrder);
+//  		m_songTableModel->sort(2,Qt::AscendingOrder);
+// 	
+// 		// this will have to be done every time the filter changes (below)
+// 		m_songList->resizeColumnsToContents();
+// 		m_songList->resizeRowsToContents();
 	}
 }
 
 void MainWindow::editSongInDB() 
 {
-	QModelIndex idx = m_songProxyModel->mapToSource(m_songList->currentIndex());
+	QModelIndex idx = m_songList->currentIndex();
 	if(idx.isValid())
 	{
-		QSqlRecord record = m_songTableModel->record(idx.row());
-		SongRecord *song = SongRecord::fromSqlRecord(record);
+		SongRecord *song = m_songListModel->songFromIndex(idx);
 		
 		SongSlideGroup * group = new SongSlideGroup();
 		group->setSong(song);
@@ -488,18 +453,16 @@ void MainWindow::editSongInDB()
 
 void MainWindow::editSongAccepted()
 {
-	m_songProxyModel->sort(2,Qt::AscendingOrder);
- 	m_songTableModel->sort(2,Qt::AscendingOrder);
-	
-	m_songList->resizeColumnsToContents();
-	m_songList->resizeRowsToContents();
+// 	m_songProxyModel->sort(2,Qt::AscendingOrder);
+//  	m_songTableModel->sort(2,Qt::AscendingOrder);
+// 	
+// 	m_songList->resizeColumnsToContents();
+// 	m_songList->resizeRowsToContents();
 }
 
 void MainWindow::songDoubleClicked(const QModelIndex &idx)
 {
-	QModelIndex sourceIdx = m_songProxyModel->mapToSource(idx);
-	QSqlRecord record = m_songTableModel->record(sourceIdx.row());
-	SongRecord *song = SongRecord::fromSqlRecord(record);
+	SongRecord * song = m_songListModel->songFromIndex(idx);
 	SongSlideGroup *group = new SongSlideGroup();
 	group->setSong(song);
 	m_doc->addGroup(group);
@@ -507,14 +470,15 @@ void MainWindow::songDoubleClicked(const QModelIndex &idx)
 
 void MainWindow::songFilterChanged(const QString &text)
 {
-	QRegExp regExp(text, Qt::CaseInsensitive, QRegExp::Wildcard);
-	m_songProxyModel->setFilterRegExp(regExp);
-	m_songProxyModel->sort(2,Qt::AscendingOrder);
- 	m_songTableModel->sort(2,Qt::AscendingOrder);
-	m_songList->resizeColumnsToContents();
-	m_songList->resizeRowsToContents();
+	m_songListModel->filter(text);
+	//QRegExp regExp(text, Qt::CaseInsensitive, QRegExp::Wildcard);
+	//m_songProxyModel->setFilterRegExp(regExp);
+	//m_songProxyModel->sort(2,Qt::AscendingOrder);
+ 	//m_songTableModel->sort(2,Qt::AscendingOrder);
+	//m_songList->resizeColumnsToContents();
+	//m_songList->resizeRowsToContents();
 	m_clearSearchBtn->setVisible(!text.isEmpty());
-	QModelIndex idx = m_songProxyModel->index(0,0);
+	QModelIndex idx = m_songListModel->indexForRow(0);
 	if(idx.isValid())
 	{
 		//qDebug() << "selecting idx:"<<idx;

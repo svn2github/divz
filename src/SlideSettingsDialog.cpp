@@ -11,9 +11,9 @@
 
 
 SlideSettingsDialog::SlideSettingsDialog(Slide *slide, QWidget *parent) :
-    QDialog(parent),
-    m_ui(new Ui::SlideSettingsDialog),
-    m_slide(slide)
+	QDialog(parent),
+	m_ui(new Ui::SlideSettingsDialog),
+	m_slide(slide)
 {
 	m_ui->setupUi(this);
 	m_ui->slideChangeTime->setValue(slide->autoChangeTime());
@@ -22,16 +22,11 @@ SlideSettingsDialog::SlideSettingsDialog(Slide *slide, QWidget *parent) :
 	connect(m_ui->btnNever, SIGNAL(clicked()), this, SLOT(slotNever()));
 	connect(m_ui->btnGuess, SIGNAL(clicked()), this, SLOT(slotGuess()));
 	
-	//// Not implemented yet, so hide from UI
-	//m_ui->boxConfigBg->setVisible(false);
-	//connect(m_ui->btnConfigBg, SIGNAL(clicked()), this, SLOT(configBg()));
-	
-	BackgroundContent * bg = dynamic_cast<BackgroundContent*>(dynamic_cast<AbstractVisualItem*>(m_slide->background())->createDelegate());
+	BackgroundContent *bg = dynamic_cast<BackgroundContent*>(dynamic_cast<AbstractVisualItem*>(m_slide->background())->createDelegate());
 	BackgroundConfig *config = new BackgroundConfig(bg);
 	
 	m_ui->tabWidget->addTab(config->m_commonUi->backgroundTab,"Background");
 	//config->setWindowModality(Qt::WindowModal);
-	
 	
 	setWindowTitle("Slide Settings");
 	m_ui->slideChangeTime->setFocus(Qt::OtherFocusReason);
@@ -40,14 +35,11 @@ SlideSettingsDialog::SlideSettingsDialog(Slide *slide, QWidget *parent) :
 		m_ui->btnUseGroup->setChecked(true);
 	else
 		m_ui->btnUseSlide->setChecked(true);
+	
 	m_ui->speedBox->setValue(m_slide->crossFadeSpeed());
 	m_ui->qualityBox->setValue(m_slide->crossFadeQuality());
 	
 	connect(m_ui->buttonBox, SIGNAL(accepted()), this, SLOT(slotAccepted()));
-	
-	//adjustSize();
-	//resize(577, 494);
-
 }
 
 void SlideSettingsDialog::slotAccepted()
@@ -56,19 +48,18 @@ void SlideSettingsDialog::slotAccepted()
 	m_slide->setCrossFadeSpeed(m_ui->speedBox->value());
 	m_slide->setCrossFadeQuality(m_ui->qualityBox->value());
 	
-	//qDebug() << "SlideSettingsDialog::slotAccepted(): "<<m_slide->inheritFadeSettings()<<", "<<m_slide->crossFadeSpeed()<<", "<<m_slide->crossFadeQuality();
 	close();
 }
 
 
 SlideSettingsDialog::~SlideSettingsDialog()
 {
-    delete m_ui;
+	delete m_ui;
 }
 
 void SlideSettingsDialog::setAutoChangeTime(double d)
 {
-    m_slide->setAutoChangeTime(d);
+	m_slide->setAutoChangeTime(d);
 }
 
 void SlideSettingsDialog::slotNever()
@@ -83,12 +74,13 @@ void SlideSettingsDialog::slotGuess()
 
 void SlideSettingsDialog::changeEvent(QEvent *e)
 {
-    QDialog::changeEvent(e);
-    switch (e->type()) {
-    case QEvent::LanguageChange:
-        m_ui->retranslateUi(this);
-        break;
-    default:
-        break;
-    }
+	QDialog::changeEvent(e);
+	switch (e->type()) 
+	{
+		case QEvent::LanguageChange:
+			m_ui->retranslateUi(this);
+			break;
+		default:
+			break;
+	}
 }

@@ -6,6 +6,7 @@
 #include <QTableView>
 
 #include "SongRecord.h"
+#include "SongRecordListModel.h"
 
 int main(int argc, char **argv)
 {
@@ -17,42 +18,44 @@ int main(int argc, char **argv)
 // 	//db.setUserName("acarlson");
 // 	//db.setPassword("1uTbSbAs");
 // 	bool ok = db.open();
-// 	qDebug()<<"Ok?"<<ok;
-	SongRecord::db();
-	
-	
-//	SongRecord * s = SongRecord::retrieve(388);
-	SongRecord * s = new SongRecord();
- 	s->setTitle("A bbbbbbb");
- 	s->setText("bzzzzzzzzz");
- 	SongRecord::addSong(s);
-// 	if(s->title() != "A Bee Song")
-// 	{
-// 		s->setText("A Bee Song");
-// 		qDebug(" ** Updated title");
-// 	}
- 	qDebug()<<"SongID:"<<s->songId()<<", title:"<<s->title()<<", author:"<<s->author();
-/*	if(s && s->songId())
-		qDebug("Got song # 388");
-	else
-		qDebug("Song # 388 does NOT exist");*/
-	
+// // 	qDebug()<<"Ok?"<<ok;
+// 	SongRecord::db();
+// 	
+// 	
+// //	SongRecord * s = SongRecord::retrieve(388);
+// 	SongRecord * s = new SongRecord();
+//  	s->setTitle("A bbbbbbb");
+//  	s->setText("bzzzzzzzzz");
+//  	SongRecord::addSong(s);
+// // 	if(s->title() != "A Bee Song")
+// // 	{
+// // 		s->setText("A Bee Song");
+// // 		qDebug(" ** Updated title");
+// // 	}
+//  	qDebug()<<"SongID:"<<s->songId()<<", title:"<<s->title()<<", author:"<<s->author();
+// /*	if(s && s->songId())
+// 		qDebug("Got song # 388");
+// 	else
+// 		qDebug("Song # 388 does NOT exist");*/
+// 	
+	SongRecordListModel::instance()->filter("test");
+/*	
 	if(s && s->songId())
 		SongRecord::deleteSong(s);
 	
-	
-// /*
+	*/
+
 // 	QSqlQuery query;
-// 	query.exec("SELECT author FROM songs where songid=16"); 
+// 	query.exec("SELECT title FROM songs"); 
 // 	if (query.lastError().isValid())
 // 	{
 // 		qDebug() << query.lastError();
 // 	}
 // 	else
 // 	{
-// 		query.next();
-// 		qDebug() << "author:" << query.value(0).toString();
-// 	}*/
+// 		while(query.next())
+// 			qDebug() << "string:" << query.value(0).toString();
+// 	}
 // 	
 // // 	QSqlQuery q2;
 // // 	q2.exec("UPDATE songs SET author='' where songid=16");

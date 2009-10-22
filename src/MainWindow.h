@@ -8,7 +8,7 @@
 #include <QListWidget>
 #include <QPushButton>
 
-#include <QTableView>
+#include <QListView>
 #include <QLineEdit>
 #include <QComboBox>
 
@@ -33,6 +33,7 @@ namespace Ui {
 class SlideGroupViewControl;
 class SongSlideGroup;
 class SongRecord;
+class SongRecordListModel;
 
 class MainWindow : public QMainWindow {
 	Q_OBJECT
@@ -124,12 +125,11 @@ private:
 	QListWidget * m_outputList;
 	QTabWidget  * m_outputTabs;
 
-	QTableView    * m_songList;
+	QListView     * m_songList;
 	QLineEdit     * m_songSearch;
 	QComboBox     * m_searchOpt;
 	QPushButton   * m_clearSearchBtn;
-	QSortFilterProxyModel * m_songProxyModel;
-	QSqlTableModel * m_songTableModel;
+	SongRecordListModel * m_songListModel;
 
 	OutputSetupDialog * m_outputDialog;
 	
