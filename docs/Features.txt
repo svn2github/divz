@@ -89,8 +89,8 @@ Revised Task list for Release 1.0, 10/18/09:
 			not as easy as it looks!
 			
 		= Main UI =
-			Add video pallette
-			Add image palette
+			[STARTED] Add video pallette
+			[STARTED] Add image palette
 			Add slide pallette
 			Add song template palette
 			Add drag/drop background for songs from a yet-to-be-made vid/image bg pallette
@@ -121,6 +121,14 @@ Revised Task list for Release 1.0, 10/18/09:
 			On first start, intelligently detect aspect ratio of primary output - if no primary out, create small custom rect in top right
 		
 		= Misc = 
+			add current directory label to media browser
+			integrate media browser with background setting and add video / image group
+			allow multiple select in media browser (e.g. multiple images)
+			add custom icons (preview icons) to mbrowser
+			add preview pane to media browser
+			add combobox filter to media browser
+			when chaing directory in media browser, focus on list
+		
 			[DONE] Global cache pixmaps of doc/slide lists 
 			Consider moving opengl option to a per-output setting
 			Consider making Output objects QObjects that can emit signals when changed
