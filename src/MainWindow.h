@@ -30,12 +30,8 @@ namespace Ui {
 	class MainWindow;
 }
 
-class SlideGroupViewControl;
-class SongSlideGroup;
 class SongRecord;
-class SongRecordListModel;
-class QTextEdit;
-class MyQListView;
+class SongBrowser;
 
 class MainWindow : public QMainWindow {
 	Q_OBJECT
@@ -60,8 +56,10 @@ public slots:
 	void editGroup(SlideGroup*, Slide *slide=0);
 	void deleteGroup(SlideGroup*);
 	void previewSlideGroup(SlideGroup*);
+	
 	bool openFile(const QString &);
 	void saveFile(const QString &file = "");
+	
 	void clearAllOutputs();
 	void nextGroup();
 
@@ -71,18 +69,8 @@ protected slots:
 	void groupSelected(const QModelIndex &);
 	void groupDoubleClicked(const QModelIndex &);
 	
-	friend class MyQListView;
-	void songDoubleClicked(const QModelIndex &);
-	void songSingleClicked(const QModelIndex &);
-	void songFilterChanged(const QString&);
-	void songFilterReset();
-	void songSearchReturnPressed();
-	void addNewSong();
-	void songCreated(SongRecord*);
-	void editSongAccepted();
-	void editSongInDB();
-	void deleteCurrentSong();
-
+	void songSelected(SongRecord*);
+	
 	void actionEditGroup();
 	void actionNewGroup();
 	void actionDelGroup();
@@ -114,13 +102,15 @@ private:
 	void setupOutputViews();
 	void setupCentralWidget();
 	void setupSongList();
-
+	
 	Ui::MainWindow *m_ui;
 	SlideEditorWindow * m_editWin;
 	DocumentListModel * m_docModel;
 	SlideGroupViewer  * m_previewWidget;
 	OutputViewer      * m_liveMonitor;
 	SlideGroupViewer  * m_liveView;
+	
+	SongBrowser * m_songBrowser;
 
 	QSplitter   * m_splitter;
 	QSplitter   * m_splitter2;
@@ -128,13 +118,6 @@ private:
 	QPushButton * m_btnSendOut;
 	QListWidget * m_outputList;
 	QTabWidget  * m_outputTabs;
-
-	MyQListView   * m_songList;
-	QLineEdit     * m_songSearch;
-	QComboBox     * m_searchOpt;
-	QPushButton   * m_clearSearchBtn;
-	SongRecordListModel * m_songListModel;
-	QTextEdit     * m_songTextPreview;
 
 	OutputSetupDialog * m_outputDialog;
 	

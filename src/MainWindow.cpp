@@ -6,7 +6,6 @@
 #include <QDebug>
 #include <QDesktopWidget>
 #include <QMessageBox>
-#include <QTableView>
 #include <QLabel>
 #include <QFileDialog>
 #include <QMessageBox>
@@ -21,8 +20,7 @@
 
 #include "songdb/SongSlideGroup.h"
 #include "songdb/SongRecord.h"
-#include "songdb/SongEditorWindow.h"
-#include "songdb/SongRecordListModel.h"
+#include "songdb/SongBrowser.h"
 
 
 MainWindow * MainWindow::static_mainWindow = 0;
@@ -43,7 +41,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	
 	m_docModel = new DocumentListModel();
 	
-	if(!openFile("test.xml"))
+	if(!openFile("song-test.xml"))
 		actionNew();
 	
 	// init the editor win AFTER load/new so that editor win starts out with the correct aspect ratio	
@@ -60,6 +58,11 @@ MainWindow::MainWindow(QWidget *parent) :
 	
 
 	setupCentralWidget();
+
+	setupSongList();
+	
+	//setupMediaBrowser();
+
 
 	// Restore state
 	loadWindowState();
@@ -148,7 +151,6 @@ MainWindow::MainWindow(QWidget *parent) :
 	connect(m_ui->actionExit,SIGNAL(triggered()), this, SLOT(close()));
 	
 	
-	setupSongList();
 }
 
 
@@ -182,6 +184,7 @@ void MainWindow::loadWindowState()
 	restoreState(settings.value("mainwindow/state").toByteArray());
 	m_splitter->restoreState(settings.value("mainwindow/splitter_state").toByteArray());
 	m_splitter2->restoreState(settings.value("mainwindow/splitter2_state").toByteArray());
+	m_songBrowser->restoreState(settings.value("mainwindow/songbrowser_state").toByteArray());
 
 }
 
@@ -193,7 +196,7 @@ void MainWindow::saveWindowState()
 	settings.setValue("mainwindow/state",saveState());
 	settings.setValue("mainwindow/splitter_state",m_splitter->saveState());
 	settings.setValue("mainwindow/splitter2_state",m_splitter2->saveState());
-
+	settings.setValue("mainwindow/songbrowser_state",m_songBrowser->saveState());
 }
 
 void MainWindow::clearAllOutputs()
@@ -317,238 +320,24 @@ void MainWindow::saveFile(const QString & file)
 	saveWindowState();
 	
 }
-class MyQListView : public QListView
-{
-public:
-	MyQListView(MainWindow * ctrl, QWidget *parent) : QListView(ctrl), ctrl(ctrl) {}
-protected:
-	void keyPressEvent(QKeyEvent *event)
-	{
-		QModelIndex oldIdx = currentIndex();
-		QListView::keyPressEvent(event);
-		QModelIndex newIdx = currentIndex();
-		if(oldIdx.row() != newIdx.row())
-		{
-			ctrl->songSingleClicked(newIdx);
-		}
-	}
-	
-	MainWindow * ctrl;
-};
 
 void MainWindow::setupSongList()
 {
-	QVBoxLayout *vbox = new QVBoxLayout();
-	vbox->setContentsMargins(0,0,0,0);
+	QVBoxLayout * baseLayout = new QVBoxLayout(m_ui->tabSongs);
+	baseLayout->setContentsMargins(0,0,0,0);
 	
-	// Setup filter box at the top of the widget
-	QHBoxLayout *hbox = new QHBoxLayout();
-	QLabel *label = new QLabel("Searc&h:");
-	m_songSearch = new QLineEdit(m_ui->tabSongs);
-	label->setBuddy(m_songSearch);
-	//m_searchOpt = new QComboBox(m_ui->tabSongs);
-	m_clearSearchBtn = new QPushButton("Clear");
-	m_clearSearchBtn->setVisible(false);
+	m_songBrowser = new SongBrowser();
+	baseLayout->addWidget(m_songBrowser);
 	
-	hbox->addWidget(label);
-	hbox->addWidget(m_songSearch);
-	//hbox->addWidget(m_SearchOpt);
-	hbox->addWidget(m_clearSearchBtn);
-	
-	connect(m_songSearch, SIGNAL(textChanged(const QString &)), this, SLOT(songFilterChanged(const QString &)));
-	connect(m_songSearch, SIGNAL(returnPressed()), this, SLOT(songSearchReturnPressed()));
-	connect(m_clearSearchBtn, SIGNAL(clicked()), this, SLOT(songFilterReset()));
-	
-	// Now for the song list itself
-	m_songList = new MyQListView(this,m_ui->tabSongs);
-	
-	// Setup the source model from the SQLite database
-	m_songListModel = SongRecordListModel::instance();
-	
-	// Finish setup on the TableView itself
-	m_songList->setModel(m_songListModel);
-	
-	// setup desired options
-	m_songList->setAlternatingRowColors(true);
-	
-	// this will have to be done every time the filter changes (below)
-	//m_songList->resizeColumnsToContents();
-	//m_songList->resizeRowsToContents();
-	
-	// setup buttons at bottom
-	QHBoxLayout *hbox2 = new QHBoxLayout();
-	QPushButton *btn;
-	
-	btn = new QPushButton(QIcon(":/data/stock-new.png"),"&New Song");
-	connect(btn, SIGNAL(clicked()), this, SLOT(addNewSong()));
-	hbox2->addWidget(btn);
-	
-	btn = new QPushButton(QIcon(":/data/stock-edit.png"),"Edi&t");
-	connect(btn, SIGNAL(clicked()), this, SLOT(editSongInDB()));
-	hbox2->addWidget(btn);
-	
-	btn = new QPushButton(QIcon(":/data/stock-delete.png"),"&Delete");
-	connect(btn, SIGNAL(clicked()), this, SLOT(deleteCurrentSong()));
-	hbox2->addWidget(btn);
-	
-	
-	// initalize splitter
-	QVBoxLayout * baseLayout = new QVBoxLayout();
-	QSplitter * split = new QSplitter(Qt::Vertical);
-	baseLayout->addWidget(split);
-	
-	// add song list to splitter
-	QWidget * topBase = new QWidget();
-	vbox->addLayout(hbox);
-	vbox->addWidget(m_songList);
-	vbox->addLayout(hbox2);
-	topBase->setLayout(vbox);
-	
-	split->addWidget(topBase);
-
-	// add song text preview
-	m_songTextPreview = new QTextEdit;
-	m_songTextPreview->setReadOnly(true);
-
-	QFont font;
-	font.setFamily("Courier");
-	font.setFixedPitch(true);
-	font.setPointSize(8);
-	m_songTextPreview->setFont(font);
-
-	new SongEditorHighlighter(m_songTextPreview->document());
-	split->addWidget(m_songTextPreview);
-	
-	// apply splitter to main window
-	m_ui->tabSongs->setLayout(baseLayout);
-	
-	connect(m_songList, SIGNAL(doubleClicked(const QModelIndex &)), this, SLOT(songDoubleClicked(const QModelIndex &)));
-	connect(m_songList,       SIGNAL(clicked(const QModelIndex &)), this, SLOT(songSingleClicked(const QModelIndex &)));
-
+	connect(m_songBrowser, SIGNAL(songSelected(SongRecord*)), this, SLOT(songSelected(SongRecord*)));
 }
 
-void MainWindow::songSearchReturnPressed() 
+void MainWindow::songSelected(SongRecord *song)
 {
-	QModelIndex idx = m_songListModel->indexForRow(0);
-	if(idx.isValid())
-		songDoubleClicked(idx);
-}
-
-void MainWindow::addNewSong()
-{
-	SongRecord * song = new SongRecord();
-	SongSlideGroup * group = new SongSlideGroup();
-	group->setSong(song);
-	
-	SongEditorWindow * editor = new SongEditorWindow();
-	editor->setSlideGroup(group,true);
-	
-	connect(editor, SIGNAL(songCreated(SongRecord*)), this, SLOT(songCreated(SongRecord*)));
-	
-	editor->show();
-}
-
-void MainWindow::songCreated(SongRecord */*song*/)
-{
-	// TODO: set current index in table to song
-	/*
-	m_songProxyModel->sort(2,Qt::AscendingOrder);
- 	m_songTableModel->sort(2,Qt::AscendingOrder);
-	
-	m_songList->resizeColumnsToContents();
-	m_songList->resizeRowsToContents();*/
-
-}
-
-
-void MainWindow::deleteCurrentSong()
-{
-	QModelIndex idx = m_songList->currentIndex();
-	SongRecord *song = m_songListModel->songFromIndex(idx);
-	if(QMessageBox::warning(this,"Really Delete Song?","Are you sure you want to delete this song? This cannot be undone.",QMessageBox::Ok | QMessageBox::Cancel) 
-		== QMessageBox::Ok)
-	{
-		SongRecord::deleteSong(song);
-		
-// 		m_songProxyModel->sort(2,Qt::AscendingOrder);
-//  		m_songTableModel->sort(2,Qt::AscendingOrder);
-// 	
-// 		// this will have to be done every time the filter changes (below)
-// 		m_songList->resizeColumnsToContents();
-// 		m_songList->resizeRowsToContents();
-	}
-}
-
-void MainWindow::editSongInDB() 
-{
-	QModelIndex idx = m_songList->currentIndex();
-	if(idx.isValid())
-	{
-		SongRecord *song = m_songListModel->songFromIndex(idx);
-		
-		SongSlideGroup * group = new SongSlideGroup();
-		group->setSong(song);
-		
-		SongEditorWindow * editor = new SongEditorWindow();
-		editor->setSlideGroup(group,true);
-		editor->show();
-		
-		connect(editor, SIGNAL(songSaved()), this, SLOT(editSongAccepted()));
-	}
-}
-
-void MainWindow::editSongAccepted()
-{
-// 	m_songProxyModel->sort(2,Qt::AscendingOrder);
-//  	m_songTableModel->sort(2,Qt::AscendingOrder);
-// 	
-// 	m_songList->resizeColumnsToContents();
-// 	m_songList->resizeRowsToContents();
-}
-
-void MainWindow::songDoubleClicked(const QModelIndex &idx)
-{
-	SongRecord * song = m_songListModel->songFromIndex(idx);
 	SongSlideGroup *group = new SongSlideGroup();
 	group->setSong(song);
 	m_doc->addGroup(group);
 }
-
-void MainWindow::songSingleClicked(const QModelIndex &idx)
-{
-	SongRecord * song = m_songListModel->songFromIndex(idx);
-	m_songTextPreview->setPlainText(
-		    QString("%1\n\n%2")
-			.arg(song->title())
-			.arg(song->text())
-		);
-}
-
-
-void MainWindow::songFilterChanged(const QString &text)
-{
-	m_songListModel->filter(text);
-	//QRegExp regExp(text, Qt::CaseInsensitive, QRegExp::Wildcard);
-	//m_songProxyModel->setFilterRegExp(regExp);
-	//m_songProxyModel->sort(2,Qt::AscendingOrder);
- 	//m_songTableModel->sort(2,Qt::AscendingOrder);
-	//m_songList->resizeColumnsToContents();
-	//m_songList->resizeRowsToContents();
-	m_clearSearchBtn->setVisible(!text.isEmpty());
-	QModelIndex idx = m_songListModel->indexForRow(0);
-	if(idx.isValid())
-	{
-		//qDebug() << "selecting idx:"<<idx;
-		m_songList->setCurrentIndex(idx); //,QItemSelectionModel::Select);
-	}
-}
-
-void MainWindow::songFilterReset()
-{
-	songFilterChanged("");
-	m_songSearch->setText("");
-}
-
 
 void MainWindow::setupOutputViews()
 {

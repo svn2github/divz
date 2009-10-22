@@ -87,9 +87,9 @@
          <string>Songs</string>
         </attribute>
        </widget>
-       <widget class="QWidget" name="tabSlides">
+       <widget class="QWidget" name="tabMedia">
         <attribute name="title">
-         <string>Slides</string>
+         <string>Media Files</string>
         </attribute>
        </widget>
       </widget>
@@ -163,8 +163,8 @@
    <addaction name="separator"/>
    <addaction name="actionNew_Slide_Group"/>
    <addaction name="actionEdit_Slide_Group"/>
-   <addaction name="actionSlide_Group_Properties"/>
    <addaction name="separator"/>
+   <addaction name="actionSlide_Group_Properties"/>
    <addaction name="actionDelete_Slide_Group"/>
   </widget>
   <action name="actionOpen">

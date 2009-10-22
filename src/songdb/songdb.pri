@@ -7,7 +7,8 @@ HEADERS +=  \
 	SongSlideGroup.h \
 	SongSlideGroupFactory.h \
 	SongSlideGroupListModel.h \
-	SongEditorWindow.h 
+	SongEditorWindow.h \
+	SongBrowser.h
 
     
 SOURCES += \
@@ -16,4 +17,5 @@ SOURCES += \
 	SongSlideGroup.cpp \
 	SongSlideGroupFactory.cpp \
 	SongSlideGroupListModel.cpp \
-	SongEditorWindow.cpp
+	SongEditorWindow.cpp \
+	SongBrowser.cpp

@@ -132,19 +132,12 @@ Revised Task list for Release 1.0, 10/18/09:
 			add next/prev btns to preview widget
 			add a "zero offset" shadow preset btn
 			alter shadows options from x/y offset to angle + distance (keep btns)
-			[DONE] set object names on the toolbars in slide editor window
 			start docks on left (?maybe?)
 			setup editor to zoom mygraphicsscene automatically ONLY when opening window, not when resizing during use
-			[DONE] adding new group to grou p list should put it at the top /bottom of the list - not middle!
-			[FIXED] deleting one song group shouldnt change sort order of anboth3r!
 			
 			slide props dock should current tab to prev tab index IF titles match at that index
 			
-			[BUG] song editor NEW/EDIT not saving
-			
-			
 			delete key in group list should delete (with prompt) current group
-			add seperator before group delete icon in toolbar
 			
 			is there a way to make the live output not show up in task list???
 					see http://lists.trolltech.com/qt-interest/2007-07/thread00362-0.html for discussion on the opposite problem
@@ -229,6 +222,11 @@ Revised Task list for Release 1.0, 10/18/09:
 				should be function in slidegroupviewer (basically, a clone output option)
 					multithreaded - compress frame jpeg once, then offer to all clients
 			
+			
+		[DONE] set object names on the toolbars in slide editor window
+		[DONE] adding new group to grou p list should put it at the top /bottom of the list - not middle!
+		[DONE] add seperator before group delete icon in toolbar
+			moved properties icon over one
 			
 		[LATER] Adapt genericitemconfig dialog to work on model item only without having to use the visual delegate
 			not needed right now, we can create abstractcontent delegates for the dialog if neeeded
@@ -356,15 +354,6 @@ Revised Task list for Release 1.0, 10/18/09:
 		[LATER] Video Capture (started impl, but again, performance is terrible. That may be due to the FormatOpts specified, or in ffmpeg, or the capture hardware - need to trace - later!)
 	
 	- Bugs:
-		Slides jump to wrong slide: to repeat: song-test.xml, go live with song, click verse 3, jumps to verse 4
-			
-		[FIXED] Opening song-test.xml after test.xml is open, go live with song: First slide is gray box, 3rd slide is "welcome phc" (from test.xml) on blue bg instead of verse
-			fixed gray box (modded removeAllSlides function in song slide group)
-			*seems* to be working, but I think it has to do with the pixmap cache of the textbox. Need to clear cache on destruction of item
-			updated AbstractContent to dirty cache on descruction
-			
-		[FIXED] Opening document with songs in them, click song, crash with index out of range/ slide group has no slides
-		[FIXED] when no slide is live, clicking then UNclicking "Black" btn causes segflt
 		editor undo/redo framework doesnt pickup slide property changes
 		slide auto change time doesnt seem to save when using guess button
 		
@@ -408,6 +397,22 @@ Revised Task list for Release 1.0, 10/18/09:
 				however, we must handle corrupt files to some extent
 					preferably, detect the file is corrupt and refuse to load 
 					
+		[FIXED] deleting one song group shouldnt change sort order of anboth3r!
+			old bug, just putting down here. Fixed it last night.
+		[FIXED] song editor NEW/EDIT not saving
+			old bug, just putting down here. Fixed it last night.
+		
+		[FIXED] Slides jump to wrong slide: to repeat: song-test.xml, go live with song, click verse 3, jumps to verse 4
+				remove extrenuous connection to QListView entered() signal - originally designed to catch selection changes by keypress, but that never worked
+				this seemed to be what caused the errant slide changes
+			
+		[FIXED] Opening song-test.xml after test.xml is open, go live with song: First slide is gray box, 3rd slide is "welcome phc" (from test.xml) on blue bg instead of verse
+			fixed gray box (modded removeAllSlides function in song slide group)
+			*seems* to be working, but I think it has to do with the pixmap cache of the textbox. Need to clear cache on destruction of item
+			updated AbstractContent to dirty cache on descruction
+			cannot repeat problem any more, asuming fixed
+		[FIXED] Opening document with songs in them, click song, crash with index out of range/ slide group has no slides
+		[FIXED] when no slide is live, clicking then UNclicking "Black" btn causes segflt
 		[FIXED] black and clear buttons need to pause timer	
 		[FIXED] slide item list in editor doesnt add items to the list until slide model set again
 				hacked it by just setting the model again on the item list when a new item is added
