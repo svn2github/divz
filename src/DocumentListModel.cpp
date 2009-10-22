@@ -108,7 +108,7 @@ bool DocumentListModel::dropMimeData ( const QMimeData * data, Qt::DropAction /*
 	int nbr = 0;
 	foreach(SlideGroup *x, newList)
 	{
-		qDebug() << "DocumentListModel::dropMimeData: nbr:"<<nbr<<", title:"<<x->groupTitle();
+		//qDebug() << "DocumentListModel::dropMimeData: nbr:"<<nbr<<", title:"<<x->groupTitle();
 		x->setGroupNumber(nbr++);
 	}
 	

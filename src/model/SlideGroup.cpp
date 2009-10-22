@@ -80,7 +80,7 @@ bool SlideGroup::fromXml(QDomElement & pe)
 	setIconFile(pe.attribute("icon"));
 	setAutoChangeGroup((bool)pe.attribute("auto").toInt());
 	
-	qDebug()<<"SlideGroup::fromXml: number:"<<groupNumber()<<", title:"<<groupTitle();
+	//qDebug()<<"SlideGroup::fromXml: number:"<<groupNumber()<<", title:"<<groupTitle();
 	
 	QVariant inherit = pe.attribute("inherit-fade");
 	setInheritFadeSettings(inherit.isNull() ? true : (bool)inherit.toInt());

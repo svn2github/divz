@@ -103,15 +103,17 @@ Revised Task list for Release 1.0, 10/18/09:
 			add animation to image items
 		
 		= Songs =
-			Save song templates/bg in a "template collection"
+			Need to have a reset template button
+			Add song verse view below song list in main window
+			
 			[DONE] Need song new/edit/delete functionality
-			Auto-sizing song text should be an option that can be enabled/disabled
+			[LATER] Save song templates/bg in a "template collection"
+			[LATER] Auto-sizing song text should be an option that can be enabled/disabled
 				if not autosize, pull size from template / textobx
-			option of font family should be available for song
+			[LATER] option of font family should be available for song
 				should it pull from textbox?
 				should be easy to extract using text cursor - see model/TextItem.cpp - findFontsize() method
-			Need to have a reset template button
-			Need to add drag-drop from song list to song group
+			[LATER] Need to add drag-drop from song list to song group
 		
 		= Outputs =
 			Prompt to save custom output location on close
