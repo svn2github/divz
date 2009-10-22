@@ -10,6 +10,7 @@
 #include <QLabel>
 #include <QFileDialog>
 #include <QMessageBox>
+#include <QTextEdit>
 
 #include "AppSettings.h"
 #include "AppSettingsDialog.h"
@@ -349,7 +350,7 @@ void MainWindow::setupSongList()
 	m_songList->setModel(m_songListModel);
 	
 	// setup desired options
-	//m_songList->setAlternatingRowColors(true);
+	m_songList->setAlternatingRowColors(true);
 	
 	// this will have to be done every time the filter changes (below)
 	//m_songList->resizeColumnsToContents();
@@ -374,7 +375,7 @@ void MainWindow::setupSongList()
 	
 	// initalize splitter
 	QVBoxLayout * baseLayout = new QVBoxLayout();
-	QSplitter * split = new QSplitter();
+	QSplitter * split = new QSplitter(Qt::Vertical);
 	baseLayout->addWidget(split);
 	
 	// add song list to splitter
@@ -385,11 +386,26 @@ void MainWindow::setupSongList()
 	topBase->setLayout(vbox);
 	
 	split->addWidget(topBase);
+
+	// add song text preview
+	m_songTextPreview = new QTextEdit;
+	m_songTextPreview->setReadOnly(true);
+
+	QFont font;
+	font.setFamily("Courier");
+	font.setFixedPitch(true);
+	font.setPointSize(8);
+	m_songTextPreview->setFont(font);
+
+	new SongEditorHighlighter(m_songTextPreview->document());
+	split->addWidget(m_songTextPreview);
 	
 	// apply splitter to main window
 	m_ui->tabSongs->setLayout(baseLayout);
 	
 	connect(m_songList, SIGNAL(doubleClicked(const QModelIndex &)), this, SLOT(songDoubleClicked(const QModelIndex &)));
+	connect(m_songList,       SIGNAL(clicked(const QModelIndex &)), this, SLOT(songSingleClicked(const QModelIndex &)));
+
 }
 
 void MainWindow::songSearchReturnPressed() 
@@ -478,6 +494,17 @@ void MainWindow::songDoubleClicked(const QModelIndex &idx)
 	group->setSong(song);
 	m_doc->addGroup(group);
 }
+
+void MainWindow::songSingleClicked(const QModelIndex &idx)
+{
+	SongRecord * song = m_songListModel->songFromIndex(idx);
+	m_songTextPreview->setPlainText(
+		    QString("%1\n\n%2")
+			.arg(song->title())
+			.arg(song->text())
+		);
+}
+
 
 void MainWindow::songFilterChanged(const QString &text)
 {
