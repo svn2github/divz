@@ -65,13 +65,8 @@ void SlideGroup::setInheritFadeSettings(bool x){ m_inheritFadeSettings = x; }
 void SlideGroup::setCrossFadeSpeed(double x){ m_crossFadeSpeed = x; }
 void SlideGroup::setCrossFadeQuality(double x){ m_crossFadeQuality = x; }
 
-
-
-bool SlideGroup::fromXml(QDomElement & pe)
+void SlideGroup::loadGroupAttributes(QDomElement & pe)
 {
-	qDeleteAll(m_slides);
-	m_slides.clear();
-
 	setGroupNumber(pe.attribute("number").toInt());
 	
 	setGroupId(pe.attribute("id").toInt());
@@ -86,6 +81,12 @@ bool SlideGroup::fromXml(QDomElement & pe)
 	setInheritFadeSettings(inherit.isNull() ? true : (bool)inherit.toInt());
 	setCrossFadeSpeed(pe.attribute("fade-speed").toDouble());
 	setCrossFadeQuality(pe.attribute("fade-quality").toDouble());
+}
+
+void SlideGroup::loadSlideList(QDomElement & pe)
+{
+	qDeleteAll(m_slides);
+	m_slides.clear();
 
 	// for each slide
 	for (QDomElement element = pe.firstChildElement(); !element.isNull(); element = element.nextSiblingElement())
@@ -106,11 +107,9 @@ bool SlideGroup::fromXml(QDomElement & pe)
 	}
 
 	sortSlides();
-
-	return true;
 }
 
-void SlideGroup::toXml(QDomElement & pe) const
+void SlideGroup::saveGroupAttributes(QDomElement & pe) const
 {
 	pe.setAttribute("number",groupNumber());
 	pe.setAttribute("id",groupId());
@@ -121,7 +120,10 @@ void SlideGroup::toXml(QDomElement & pe) const
 	pe.setAttribute("inherit-fade",(int)m_inheritFadeSettings);
 	pe.setAttribute("fade-speed",m_crossFadeSpeed);
 	pe.setAttribute("fade-quality",m_crossFadeQuality);
+}
 
+void SlideGroup::saveSlideList(QDomElement & pe) const
+{
 	QDomDocument doc = pe.ownerDocument();
 
 	foreach (Slide * slide, m_slides)
@@ -130,6 +132,19 @@ void SlideGroup::toXml(QDomElement & pe) const
 		pe.appendChild(element);
 		slide->toXml(element);
 	}
+}
+
+bool SlideGroup::fromXml(QDomElement & pe)
+{
+	loadGroupAttributes(pe);
+	loadSlideList(pe);
+	return true;
+}
+
+void SlideGroup::toXml(QDomElement & pe) const
+{
+	saveGroupAttributes(pe);
+	saveSlideList(pe);
 }
 
 

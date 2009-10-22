@@ -124,6 +124,8 @@ AbstractContent::AbstractContent(QGraphicsScene * scene, QGraphicsItem * parent,
 
 AbstractContent::~AbstractContent()
 {
+	dirtyCache();
+	
 	qDeleteAll(m_cornerItems);
 	qDeleteAll(m_controlItems);
 	delete m_mirrorItem;

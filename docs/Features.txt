@@ -356,6 +356,14 @@ Revised Task list for Release 1.0, 10/18/09:
 		[LATER] Video Capture (started impl, but again, performance is terrible. That may be due to the FormatOpts specified, or in ffmpeg, or the capture hardware - need to trace - later!)
 	
 	- Bugs:
+		Slides jump to wrong slide: to repeat: song-test.xml, go live with song, click verse 3, jumps to verse 4
+			
+		[FIXED] Opening song-test.xml after test.xml is open, go live with song: First slide is gray box, 3rd slide is "welcome phc" (from test.xml) on blue bg instead of verse
+			fixed gray box (modded removeAllSlides function in song slide group)
+			*seems* to be working, but I think it has to do with the pixmap cache of the textbox. Need to clear cache on destruction of item
+			updated AbstractContent to dirty cache on descruction
+			
+		[FIXED] Opening document with songs in them, click song, crash with index out of range/ slide group has no slides
 		[FIXED] when no slide is live, clicking then UNclicking "Black" btn causes segflt
 		editor undo/redo framework doesnt pickup slide property changes
 		slide auto change time doesnt seem to save when using guess button

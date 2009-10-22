@@ -313,7 +313,8 @@ void SlideGroupViewControl::setSlideGroup(SlideGroup *g, Slide *curSlide)
 	
 	if(!curSlide)
 		curSlide = g->at(0);
-	m_listView->setCurrentIndex(m_slideModel->indexForSlide(curSlide));
+	if(curSlide)
+		m_listView->setCurrentIndex(m_slideModel->indexForSlide(curSlide));
 	
 	//if(DEBUG_SLIDEGROUPVIEWCONTROL)
 	//	qDebug()<<"SlideGroupViewControl::setSlideGroup: DONE Loading group#"<<g->groupNumber();
@@ -454,6 +455,8 @@ AbstractSlideGroupEditor * SlideGroupFactory::newEditor()
 QPixmap	SlideGroupFactory::generatePreviewPixmap(SlideGroup *g, QSize iconSize, QRect sceneRect)
 {
 	//return QPixmap();
+	if(g->numSlides() <= 0)
+		return QPixmap();
 	
 	Slide * slide = g->at(0);
 	if(!slide)

@@ -317,10 +317,29 @@ void MainWindow::saveFile(const QString & file)
 	saveWindowState();
 	
 }
+class MyQListView : public QListView
+{
+public:
+	MyQListView(MainWindow * ctrl, QWidget *parent) : QListView(ctrl), ctrl(ctrl) {}
+protected:
+	void keyPressEvent(QKeyEvent *event)
+	{
+		QModelIndex oldIdx = currentIndex();
+		QListView::keyPressEvent(event);
+		QModelIndex newIdx = currentIndex();
+		if(oldIdx.row() != newIdx.row())
+		{
+			ctrl->songSingleClicked(newIdx);
+		}
+	}
+	
+	MainWindow * ctrl;
+};
 
 void MainWindow::setupSongList()
 {
 	QVBoxLayout *vbox = new QVBoxLayout();
+	vbox->setContentsMargins(0,0,0,0);
 	
 	// Setup filter box at the top of the widget
 	QHBoxLayout *hbox = new QHBoxLayout();
@@ -341,7 +360,7 @@ void MainWindow::setupSongList()
 	connect(m_clearSearchBtn, SIGNAL(clicked()), this, SLOT(songFilterReset()));
 	
 	// Now for the song list itself
-	m_songList = new QListView(m_ui->tabSongs);
+	m_songList = new MyQListView(this,m_ui->tabSongs);
 	
 	// Setup the source model from the SQLite database
 	m_songListModel = SongRecordListModel::instance();

@@ -114,18 +114,25 @@ bool Document::fromXml(QDomElement & pe)
 	setAspectRatio(pe.attribute("aspect").toDouble());
 	
 	//qDebug() << "Document::fromXml: title:"<<docTitle();
+	//qDebug() << "Document::fromXml: Loading...";
 	// for each slide
 	for (QDomElement element = pe.firstChildElement(); !element.isNull(); element = element.nextSiblingElement()) 
 	{
 		SlideGroup *g = 0;
 		 
 		if (element.tagName() == "song")
+		{
+			//qDebug("Document::fromXml: Group type: Song");
 			g = new SongSlideGroup();
+		}
 		else
+		{
+			//qDebug("Document::fromXml: Group type: Generic");
 			g = new SlideGroup();
+		}
 		addGroup(g);
-		//qDebug("Document::fromXml: Loaded new group");
 		
+		//qDebug("Document::fromXml: Converting group from xml...");
 		// restore the item, and delete it if something goes wrong
 		if (!g->fromXml(element)) 
 		{
@@ -137,8 +144,12 @@ bool Document::fromXml(QDomElement & pe)
 		
 		if(g->groupNumber()<0)
 			g->setGroupNumber(m_groups.size());
+			
+		//qDebug() << "Document::fromXml: Done loading group, loaded:"<<g->numSlides()<<"slides, title:"<<g->groupTitle();
+		
 	}
 	
+	//qDebug() << "Document::fromXml: Done Loading, loaded:"<<numGroups()<<"groups";
 	return true;
 }
 

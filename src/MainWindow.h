@@ -35,6 +35,7 @@ class SongSlideGroup;
 class SongRecord;
 class SongRecordListModel;
 class QTextEdit;
+class MyQListView;
 
 class MainWindow : public QMainWindow {
 	Q_OBJECT
@@ -70,6 +71,7 @@ protected slots:
 	void groupSelected(const QModelIndex &);
 	void groupDoubleClicked(const QModelIndex &);
 	
+	friend class MyQListView;
 	void songDoubleClicked(const QModelIndex &);
 	void songSingleClicked(const QModelIndex &);
 	void songFilterChanged(const QString&);
@@ -127,7 +129,7 @@ private:
 	QListWidget * m_outputList;
 	QTabWidget  * m_outputTabs;
 
-	QListView     * m_songList;
+	MyQListView   * m_songList;
 	QLineEdit     * m_songSearch;
 	QComboBox     * m_searchOpt;
 	QPushButton   * m_clearSearchBtn;

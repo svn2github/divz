@@ -53,10 +53,11 @@ void SongSlideGroup::removeAllSlides()
 	foreach(Slide *slide, m_slides)
 	{
 		disconnect(slide,0,this,0);
-		m_slides.removeAll(slide);
+		//m_slides.removeAll(slide);
 		emit slideChanged(slide, "remove", 0, "", "", QVariant());
 	}
 
+	m_slides.clear();
 	qDeleteAll(m_slides);
 }
 
@@ -115,6 +116,8 @@ bool SongSlideGroup_itemZCompare(AbstractItem *a, AbstractItem *b)
 
 void SongSlideGroup::textToSlides(SongTextFilter filter)
 {
+	//qDebug()<<"SongSlideGroup::textToSlides(): "<<(song() ? song()->title() : " (no song) ")<<": Start of text to slides";
+	
 	static QString slideHeader = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">"
 				     "<html>"
 				     "<head><meta name=\"qrichtext\" content=\"1\" />"
@@ -347,7 +350,7 @@ void SongSlideGroup::textToSlides(SongTextFilter filter)
 			}
 			else
 			{
-				//qDebug()<<"size search: last good ptsize:"<<lastGoodSize<<", stopping search";
+				//qDebug()<<"SongSlideGroup::textToSlides(): size search: last good ptsize:"<<lastGoodSize<<", stopping search";
 				done = true;
 			}
 		}
@@ -363,7 +366,7 @@ void SongSlideGroup::textToSlides(SongTextFilter filter)
 			if(boxHeight > -1)
 			{
 				qreal y = textRect.height()/2 - boxHeight/2;
-				//qDebug() << "centering: boxHeight:"<<boxHeight<<", textRect height:"<<textRect.height()<<", centered Y:"<<y;
+				//qDebug() << "SongSlideGroup::textToSlides(): centering: boxHeight:"<<boxHeight<<", textRect height:"<<textRect.height()<<", centered Y:"<<y;
 				textRect = QRectF(0,y,textRect.width(),boxHeight);
 			}
 
@@ -380,7 +383,12 @@ void SongSlideGroup::textToSlides(SongTextFilter filter)
 		slide->setSlideNumber(slideNbr++);
 		
 		addSlide(slide);
+		
+		//qDebug()<<"SongSlideGroup::textToSlides(): Added passage:"<<passage;
+		//qDebug()<<"SongSlideGroup::textToSlides(): Added slide#:"<<slide->slideNumber()<<", numSlides():"<<numSlides();
 	}
+	
+	//qDebug()<<"SongSlideGroup::textToSlides():"<<(song() ? song()->title() : " (no song) ")<<": End of text to slides, numSlides():"<<numSlides();
 }
 
 /* public */
@@ -403,7 +411,7 @@ void SongSlideGroup::setText(QString newText)
 
 	if(newText != oldText)
 	{
-		qDebug() << "SongSlideGroup::setText: Text is different, regenerating.";
+		//qDebug() << "SongSlideGroup::setText: Text is different, regenerating.";
 		removeAllSlides();
 		textToSlides();
 	}
@@ -422,7 +430,7 @@ void SongSlideGroup::setSlideTemplates(SlideGroup *templates)
 bool SongSlideGroup::fromXml(QDomElement & pe)
 {
 
-
+	//qDebug() << "SongSlideGroup::fromXml(): Start";
 	QDomElement slideTemplateElement = pe.firstChildElement("templates");
 	if(!slideTemplateElement.isNull())
 	{
@@ -441,24 +449,30 @@ bool SongSlideGroup::fromXml(QDomElement & pe)
 	}
 
 	int songid = pe.attribute("songid").toInt();
+	//qDebug() << "SongSlideGroup::fromXml(): songid from xml:"<<songid;
 
 	SongRecord *song = SongRecord::retrieve(songid);
-	if(song)
+	if(song && song->songId())
 	{
+		//qDebug() << "SongSlideGroup::fromXml(): Validated song, title: "<<song->title();
 		setSong(song);
-		//qDebug() << "SongSlideGroup::fromXml: VALIDATED SongID "<<songid;
+		//qDebug() << "SongSlideGroup::fromXml(): Set song done,  title: "<<song->title()<<", num slides:"<<numSlides();
+		//qDebug() << "SongSlideGroup::fromXml: VALIDATED SongID "<<songid<<", songTitle:"<<song->title();
 	}
 	else
 	{
 		qWarning("SongSlideGroup::fromXml: Invalid songid %d in XML!",songid);
 	}
 
+	//qDebug() << "SongSlideGroup::fromXml(): Loading text, num slides:"<<numSlides();
 	QString text = pe.firstChildElement("text").text();
 	setText(text);
+	//qDebug() << "SongSlideGroup::fromXml(): Text loaded,  num slides:"<<numSlides();
 
-	// super fromXml AFTER the above so it can override group title
-	SlideGroup::fromXml(pe);
+	// load group atrributes after calling setSong() above so it can override the group title 
+	loadGroupAttributes(pe);
 
+	//qDebug() << "SongSlideGroup::fromXml(): Done loading song group, num slides:"<<numSlides();
 	return true;
 }
 
@@ -466,18 +480,8 @@ void SongSlideGroup::toXml(QDomElement & pe) const
 {
 	pe.setTagName("song");
 
-	// duplicating SlideGroup code here because I dont want to call the super function and have it
-	// save all the generated slides
-	pe.setAttribute("number",groupNumber());
-	pe.setAttribute("id",groupId());
-	pe.setAttribute("type",(int)groupType());
-	pe.setAttribute("title",groupTitle());
-	pe.setAttribute("icon",iconFile());
-	pe.setAttribute("auto",(int)autoChangeGroup());
-	pe.setAttribute("inherit-fade",(int)m_inheritFadeSettings);
-	pe.setAttribute("fade-speed",m_crossFadeSpeed);
-	pe.setAttribute("fade-quality",m_crossFadeQuality);
-
+	saveGroupAttributes(pe);
+	
 	// song specific stuff
 	if(m_song)
 	{

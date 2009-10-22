@@ -46,7 +46,7 @@ public:
 	void addSlide(Slide *);
 	QList<Slide *> slideList();
 	int numSlides() { return m_slides.size(); }
-	Slide * at(int sortedIdx) { return m_slides.at(sortedIdx); }
+	Slide * at(int sortedIdx) { return sortedIdx < m_slides.size() ? m_slides.at(sortedIdx) : 0; }
 	
 	void removeSlide(Slide *);
 	
@@ -72,6 +72,12 @@ private slots:
 	void slideItemChanged(AbstractItem *item, QString operation, QString fieldName, QVariant value, QVariant old);
 
 protected:
+	void loadGroupAttributes(QDomElement & parentElement);
+	void loadSlideList(QDomElement & parentElement);
+	
+	void saveGroupAttributes(QDomElement & parentElement) const;
+	void saveSlideList(QDomElement & parentElement) const;
+
 	QList<Slide *> m_slides;
 	int m_groupNumber;
 	int m_groupId;

@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 <document title="Test Document" aspect="1.6">
-    <song title="When We All Get To Heaven - Edit Testn" songid="0" fade-speed="0" number="4" icon="" inherit-fade="1" type="2" id="1" fade-quality="0" auto="0">
+    <song title="When We All Get To Heaven - Edit Testn" fade-speed="0" number="4" icon="" inherit-fade="1" type="2" id="1" fade-quality="0" auto="0">
         <text>Chorus 1
 When we all get to heaven,
 | ----------------------------
@@ -868,7 +868,7 @@ p, li { white-space: pre-wrap; }
             </textbox>
         </slide>
     </group>
-    <song title="** BLANK SONG **" songid="0" fade-speed="0" number="6" icon="" inherit-fade="1" type="2" id="1" fade-quality="0" auto="0">
+    <song title="** BLANK SONG **" fade-speed="0" number="6" icon="" inherit-fade="1" type="2" id="1" fade-quality="0" auto="0">
         <text>Hello World
 
 Hello World</text>

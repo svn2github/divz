@@ -169,8 +169,12 @@ void SlideGroupListModel::internalSetup()
 {
 	if(!m_slideGroup)
 		return;
-		
+	
 	QList<Slide*> slist = m_slideGroup->slideList();
+	
+	if(slist.size() <= 0)
+		return;
+		
 	qSort(slist.begin(), slist.end(), slide_num_compare);
 	m_sortedSlides = slist;
 
