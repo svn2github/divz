@@ -22,6 +22,7 @@
 #include "songdb/SongRecord.h"
 #include "songdb/SongBrowser.h"
 
+#include "MediaBrowser.h"
 
 MainWindow * MainWindow::static_mainWindow = 0;
 
@@ -62,8 +63,14 @@ MainWindow::MainWindow(QWidget *parent) :
 	setupSongList();
 	
 	//setupMediaBrowser();
-
-
+	QVBoxLayout * mediaBrowserLayout = new QVBoxLayout(m_ui->tabMedia);
+	mediaBrowserLayout->setContentsMargins(0,0,0,0);
+	
+	MediaBrowser *browser = new MediaBrowser();
+	mediaBrowserLayout->addWidget(browser);
+	
+	//connect(browser, SIGNAL(fileSelected(const QFileInfo&)), this, SLOT(mediaFileSelected(const QModelIndex&)));
+	
 	// Restore state
 	loadWindowState();
 
