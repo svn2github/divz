@@ -6,6 +6,9 @@
 #endif
 
 #include <QMimeData>
+#include <QPixmap>
+#include <QPixmapCache>
+
 
 #include "model/SlideGroup.h"
 #include "model/Slide.h"
@@ -298,17 +301,22 @@ QVariant SlideGroupListModel::data(const QModelIndex &index, int role) const
 	}
 	else if(Qt::DecorationRole == role)
 	{
-		if(!m_pixmaps.contains(index.row()))
+		Slide *g = m_sortedSlides.at(index.row());
+		QString cacheKey = QString().sprintf("%p",static_cast<void*>(g));
+		QPixmap icon;
+		
+		if(!QPixmapCache::find(cacheKey,icon))
 		{
 			// HACK - Have to remove the const'ness from 'this' so that
 			// we can cache the pixmap internally. Not sure if this is
 			// going to ruin anything - but it seems to work just fine
 			// so far!
 			SlideGroupListModel * self = const_cast<SlideGroupListModel*>(this);
-			self->generatePixmap(index.row());
+			icon = self->generatePixmap(g);
+			QPixmapCache::insert(cacheKey,icon);
 		}
 		
-		return m_pixmaps[index.row()];
+		return icon;
 	}
 	else
 		return QVariant();
@@ -348,10 +356,9 @@ void SlideGroupListModel::setIconSize(QSize sz)
 }
 
 
-void SlideGroupListModel::generatePixmap(int row)
+QPixmap SlideGroupListModel::generatePixmap(Slide *slide)
 {
- 	//return;
-	Slide * slide = m_sortedSlides.at(row);
+ 	//return QPixmap();
 	
 	int icon_w = m_iconSize.width();
 	int icon_h = m_iconSize.height();
@@ -378,7 +385,7 @@ void SlideGroupListModel::generatePixmap(int row)
 	m_scene->clear();
 	//qDebug() << "SlideGroupListModel::generatePixmap: Releasing slide\n";
 	
-	m_pixmaps[row] = icon;
+	return icon;
 }
  
 QVariant SlideGroupListModel::headerData(int section, Qt::Orientation orientation, int role) const

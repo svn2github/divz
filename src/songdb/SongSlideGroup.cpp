@@ -473,6 +473,10 @@ void SongSlideGroup::toXml(QDomElement & pe) const
 	pe.setAttribute("type",(int)groupType());
 	pe.setAttribute("title",groupTitle());
 	pe.setAttribute("icon",iconFile());
+	pe.setAttribute("auto",(int)autoChangeGroup());
+	pe.setAttribute("inherit-fade",(int)m_inheritFadeSettings);
+	pe.setAttribute("fade-speed",m_crossFadeSpeed);
+	pe.setAttribute("fade-quality",m_crossFadeQuality);
 
 	// song specific stuff
 	if(m_song)

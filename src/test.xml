@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 <document title="Test Document" aspect="1.6">
-    <song title="When We All Get To Heaven - Edit Testn" songid="0" number="4" icon="" type="2" id="1">
+    <song title="When We All Get To Heaven - Edit Testn" songid="0" fade-speed="0" number="4" icon="" inherit-fade="1" type="2" id="1" fade-quality="0" auto="0">
         <text>Chorus 1
 When we all get to heaven,
 | ----------------------------
@@ -116,7 +116,7 @@ p, li { white-space: pre-wrap; }
             </slide>
         </templates>
     </song>
-    <group title="" fade-speed="0" number="5" icon="" inherit-fade="1" type="0" id="1" fade-quality="0" auto="0">
+    <group title="Welcome Test" fade-speed="50" number="3" icon="" inherit-fade="1" type="0" id="1" fade-quality="1" auto="0">
         <slide fade-speed="0" number="0" timeout="0" inherit-fade="1" id="0" fade-quality="0">
             <background>
                 <item-id>761</item-id>
@@ -202,7 +202,7 @@ p, li { white-space: pre-wrap; }
             </textbox>
         </slide>
     </group>
-    <group title="PHYSH Logo" fade-speed="0" number="0" icon="" inherit-fade="1" type="0" id="1" fade-quality="0" auto="0">
+    <group title="PHYSH Logo" fade-speed="0" number="1" icon="" inherit-fade="1" type="0" id="1" fade-quality="0" auto="0">
         <slide fade-speed="3000" number="0" timeout="5" inherit-fade="1" id="0" fade-quality="60">
             <background>
                 <item-id>803</item-id>
@@ -516,7 +516,7 @@ p, li { white-space: pre-wrap; }
             </image>
         </slide>
     </group>
-    <group title="Test Group" fade-speed="0" number="0" icon="" inherit-fade="1" type="0" id="1" fade-quality="0" auto="0">
+    <group title="Test Group" fade-speed="0" number="2" icon="" inherit-fade="1" type="0" id="1" fade-quality="0" auto="0">
         <slide fade-speed="0" number="2" timeout="0" inherit-fade="1" id="1" fade-quality="0">
             <background>
                 <item-id>2952</item-id>
@@ -630,7 +630,7 @@ p, li { white-space: pre-wrap; }
             </textbox>
         </slide>
     </group>
-    <group title="My First Group" fade-speed="50" number="1" icon="" inherit-fade="0" type="0" id="1" fade-quality="1" auto="0">
+    <group title="My First Group" fade-speed="50" number="0" icon="" inherit-fade="0" type="0" id="1" fade-quality="1" auto="0">
         <slide fade-speed="2538" number="0" timeout="5" inherit-fade="1" id="2" fade-quality="25">
             <background>
                 <item-id>1517</item-id>
@@ -868,7 +868,7 @@ p, li { white-space: pre-wrap; }
             </textbox>
         </slide>
     </group>
-    <song title="** BLANK SONG **" songid="0" number="3" icon="" type="2" id="1">
+    <song title="** BLANK SONG **" songid="0" fade-speed="0" number="6" icon="" inherit-fade="1" type="2" id="1" fade-quality="0" auto="0">
         <text>Hello World
 
 Hello World</text>
@@ -917,7 +917,7 @@ p, li { white-space: pre-wrap; }
             </slide>
         </templates>
     </song>
-    <group title="VidCap Test" fade-speed="0" number="6" icon="" inherit-fade="1" type="0" id="1" fade-quality="0" auto="0">
+    <group title="VidCap Test" fade-speed="0" number="5" icon="" inherit-fade="1" type="0" id="1" fade-quality="0" auto="0">
         <slide fade-speed="0" number="0" timeout="0" inherit-fade="1" id="0" fade-quality="0">
             <background>
                 <item-id>1819</item-id>
@@ -937,7 +937,7 @@ p, li { white-space: pre-wrap; }
             </background>
         </slide>
     </group>
-    <song title="Amazing Grace - Praise Song" songid="18" number="2" icon="" type="2" id="1">
+    <song title="Amazing Grace - Praise Song" songid="18" fade-speed="0" number="7" icon="" inherit-fade="1" type="2" id="1" fade-quality="0" auto="0">
         <text>Tag 1
 Amazing grace how sweet the sound
 That saved a wretch like me!
@@ -997,36 +997,5 @@ I've been set free
 my God my Savior has ransomed me
 and like a flood His mercy rains
 </text>
-    </song>
-    <song title="Jesus Is The Sweetest Name I Know" songid="180" number="0" icon="" type="2" id="1">
-        <text>Chorus 1
-Jesus is the sweetest name I know,
-And He's just the same as His lovely name,
-And that's the reason why I love Him so;
-Oh, Jesus is the sweetest name I know. 
-
-Verse 1
-There have been names that I have loved to hear,
-But never has there been a name so dear
-To this heart of mine as the name divine,
-The precious, precious name of Jesus. 
-
-Verse 2
-There is no name in earth or heav'n above,
-That we should give such honor and such love,
-As the blessed name; let us all acclaim;
-That wondrous, glorious name of Jesus. 
-
-Verse 3
-And some day I shall see Him face to face,
-To thank and praise Him for His wondrous grace,
-Which He gave to me when He made me free;
-</text>
-    </song>
-    <song title="****** ABC *****" songid="410" number="0" icon="" type="2" id="1">
-        <text>asdfasdfsadf</text>
-    </song>
-    <song title="****** ABC *****" songid="410" number="0" icon="" type="2" id="1">
-        <text>sssss</text>
     </song>
 </document>

@@ -68,7 +68,7 @@ private:
 	QList<SlideGroup*> m_sortedGroups;
 	QList<SlideGroup*> m_dirtyGroups;
 	
-	void generatePixmap(int);
+	QPixmap generatePixmap(SlideGroup*);
 	void adjustIconAspectRatio();
 	QHash<int,QPixmap> m_pixmaps;
 	QSize m_iconSize;

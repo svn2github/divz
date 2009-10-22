@@ -15,7 +15,7 @@ public:
 	QVariant data(const QModelIndex &index, int role) const;
 	
 protected:
-	void generatePixmap(int);
+	QPixmap generatePixmap(Slide*);
 	
 	QTextDocument *m_text;
 };

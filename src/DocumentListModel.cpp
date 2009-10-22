@@ -5,15 +5,23 @@
 # include <QtOpenGL/QGLWidget>
 #endif
 
-#include <QIcon>
-
 
 #include "model/SlideGroup.h"
 #include "model/Slide.h"
 #include "model/SlideGroupFactory.h"
 #include "MainWindow.h"
 
+#include <QPixmap>
+#include <QPixmapCache>
+
 #define DEBUG_MARK() qDebug() << "mark: "<<__FILE__<<":"<<__LINE__
+
+bool group_num_compare(SlideGroup *a, SlideGroup *b)
+{
+	return (a && b) ? a->groupNumber() < b->groupNumber() : true;
+}
+
+
 
 DocumentListModel::DocumentListModel(Document *d, QObject *parent)
 		: QAbstractListModel(parent), 
@@ -99,11 +107,16 @@ bool DocumentListModel::dropMimeData ( const QMimeData * data, Qt::DropAction /*
 	// renumber all the slides
 	int nbr = 0;
 	foreach(SlideGroup *x, newList)
+	{
+		qDebug() << "DocumentListModel::dropMimeData: nbr:"<<nbr<<", title:"<<x->groupTitle();
 		x->setGroupNumber(nbr++);
+	}
 	
 	m_sortedGroups = newList;
 	
 	m_pixmaps.clear();
+	
+	//qSort(m_sortedGroups.begin(), m_sortedGroups.end(), group_num_compare);
 	
 	QModelIndex top    = indexForGroup(m_sortedGroups.first()),
 		    bottom = indexForGroup(m_sortedGroups.last());
@@ -143,11 +156,6 @@ bool DocumentListModel::setData(const QModelIndex & index, const QVariant & valu
 	return true;
 }
 
-
-bool group_num_compare(SlideGroup *a, SlideGroup *b)
-{
-	return (a && b) ? a->groupNumber() < b->groupNumber() : true;
-}
 
 void DocumentListModel::releaseDocument()
 {
@@ -212,7 +220,8 @@ void DocumentListModel::slideGroupChanged(SlideGroup *g, QString groupOperation,
 	if(groupOperation == "remove" || groupOperation == "add")
 	{
 		// if a group was removed/added, assume all pixmaps are invalid since the order could have changed
-		m_pixmaps.clear();
+		//if(groupOperation == "remove")
+		//	m_pixmaps.clear();
 		
 		int sz = m_doc->groupList().size();
 		if(groupOperation == "add")
@@ -308,14 +317,18 @@ QVariant DocumentListModel::data(const QModelIndex &index, int role) const
 	}
 	else if(Qt::DecorationRole == role)
 	{
-		if(!m_pixmaps.contains(index.row()))
+		SlideGroup *g = m_sortedGroups.at(index.row());
+		QString cacheKey = QString().sprintf("%p",static_cast<void*>(g));
+		QPixmap icon;
+		if(!QPixmapCache::find(cacheKey,icon))
 		{
 			DocumentListModel * self = const_cast<DocumentListModel*>(this);
-			self->generatePixmap(index.row());
+			icon = self->generatePixmap(g);
+			QPixmapCache::insert(cacheKey,icon);
 		}
 		
 		//return QPixmap(":/images/ok.png");
-		return m_pixmaps[index.row()];
+		return icon;
 // 		SlideGroup *g = m_sortedGroups.at(index.row());
 // 		if(!g->iconFile().isEmpty())
 // 		{
@@ -362,11 +375,8 @@ void DocumentListModel::setIconSize(QSize sz)
 	adjustIconAspectRatio();
 }
 
-void DocumentListModel::generatePixmap(int row)
+QPixmap DocumentListModel::generatePixmap(SlideGroup *g)
 {
-	//qDebug("generatePixmap: Row#%d: Begin", row);
-	SlideGroup *g = m_sortedGroups.at(row);
-	
 	QPixmap icon;
 	
 	SlideGroupFactory *factory = SlideGroupFactory::factoryForType(g->groupType());
@@ -377,7 +387,7 @@ void DocumentListModel::generatePixmap(int row)
 		icon = factory->generatePreviewPixmap(g,m_iconSize,m_sceneRect);
 	
 		
-	m_pixmaps[row] = icon;
+	return icon;
 	
 }
 

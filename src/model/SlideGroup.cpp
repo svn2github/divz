@@ -3,7 +3,7 @@
 #include <assert.h>
 
 SlideGroup::SlideGroup() :
-	m_groupNumber(0)
+	m_groupNumber(-1)
 	, m_groupId(1)
 	, m_groupType(Generic)
 	, m_groupTitle("")
@@ -73,11 +73,14 @@ bool SlideGroup::fromXml(QDomElement & pe)
 	m_slides.clear();
 
 	setGroupNumber(pe.attribute("number").toInt());
+	
 	setGroupId(pe.attribute("id").toInt());
 	setGroupType((GroupType)pe.attribute("type").toInt());
 	setGroupTitle(pe.attribute("title"));
 	setIconFile(pe.attribute("icon"));
 	setAutoChangeGroup((bool)pe.attribute("auto").toInt());
+	
+	qDebug()<<"SlideGroup::fromXml: number:"<<groupNumber()<<", title:"<<groupTitle();
 	
 	QVariant inherit = pe.attribute("inherit-fade");
 	setInheritFadeSettings(inherit.isNull() ? true : (bool)inherit.toInt());

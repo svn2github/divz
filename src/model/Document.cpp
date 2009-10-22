@@ -47,6 +47,7 @@ void Document::addGroup(SlideGroup *g)
 {
 	assert(g != NULL);
 	m_groups.append(g);
+	g->setGroupNumber(m_groups.size());
 	emit slideGroupChanged(g, "add", 0, "", 0, "", "", QVariant());
 	connect(g,SIGNAL(slideChanged(Slide *, QString, AbstractItem *, QString, QString, QVariant)),this,SLOT(slideChanged(Slide *, QString, AbstractItem *, QString, QString, QVariant)));
 
@@ -134,6 +135,8 @@ bool Document::fromXml(QDomElement & pe)
 			continue;
 		}
 		
+		if(g->groupNumber()<0)
+			g->setGroupNumber(m_groups.size());
 	}
 	
 	return true;

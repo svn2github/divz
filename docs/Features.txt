@@ -119,7 +119,7 @@ Revised Task list for Release 1.0, 10/18/09:
 			On first start, intelligently detect aspect ratio of primary output - if no primary out, create small custom rect in top right
 		
 		= Misc = 
-			Global cache pixmaps of doc/slide lists 
+			[DONE] Global cache pixmaps of doc/slide lists 
 			Consider moving opengl option to a per-output setting
 			Consider making Output objects QObjects that can emit signals when changed
 		
@@ -130,10 +130,11 @@ Revised Task list for Release 1.0, 10/18/09:
 			add next/prev btns to preview widget
 			add a "zero offset" shadow preset btn
 			alter shadows options from x/y offset to angle + distance (keep btns)
-			set object names on the toolbars in slide editor window
+			[DONE] set object names on the toolbars in slide editor window
 			start docks on left (?maybe?)
 			setup editor to zoom mygraphicsscene automatically ONLY when opening window, not when resizing during use
-			adding new group to grou p list should put it at the top /bottom of the list - not middle!
+			[DONE] adding new group to grou p list should put it at the top /bottom of the list - not middle!
+			[FIXED] deleting one song group shouldnt change sort order of anboth3r!
 			
 			slide props dock should current tab to prev tab index IF titles match at that index
 			

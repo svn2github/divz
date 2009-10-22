@@ -70,7 +70,7 @@ private slots:
 	
 	
 protected:
-	virtual void generatePixmap(int);
+	virtual QPixmap generatePixmap(Slide*);
 	void internalSetup();
 	void adjustIconAspectRatio();
 	
