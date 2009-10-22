@@ -372,11 +372,22 @@ void MainWindow::setupSongList()
 	hbox2->addWidget(btn);
 	
 	
-	// finish widget setup
+	// initalize splitter
+	QVBoxLayout * baseLayout = new QVBoxLayout();
+	QSplitter * split = new QSplitter();
+	baseLayout->addWidget(split);
+	
+	// add song list to splitter
+	QWidget * topBase = new QWidget();
 	vbox->addLayout(hbox);
 	vbox->addWidget(m_songList);
 	vbox->addLayout(hbox2);
-	m_ui->tabSongs->setLayout(vbox);
+	topBase->setLayout(vbox);
+	
+	split->addWidget(topBase);
+	
+	// apply splitter to main window
+	m_ui->tabSongs->setLayout(baseLayout);
 	
 	connect(m_songList, SIGNAL(doubleClicked(const QModelIndex &)), this, SLOT(songDoubleClicked(const QModelIndex &)));
 }

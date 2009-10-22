@@ -34,6 +34,7 @@ class SlideGroupViewControl;
 class SongSlideGroup;
 class SongRecord;
 class SongRecordListModel;
+class QTextEdit;
 
 class MainWindow : public QMainWindow {
 	Q_OBJECT
@@ -130,6 +131,7 @@ private:
 	QComboBox     * m_searchOpt;
 	QPushButton   * m_clearSearchBtn;
 	SongRecordListModel * m_songListModel;
+	QTextEdit     * m_songTextPreview;
 
 	OutputSetupDialog * m_outputDialog;
 	

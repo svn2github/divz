@@ -250,6 +250,9 @@ Slide * SlideGroupViewer::prevSlide()
 
 void SlideGroupViewer::fadeBlackFrame(bool enable)
 {
+	if(m_sortedSlides.size() <= 0)
+		return;
+		
 	if(!m_blackSlide)
 	{
 		m_blackSlide = new Slide();
@@ -270,8 +273,11 @@ void SlideGroupViewer::fadeBlackFrame(bool enable)
 		}
 		else
 		{
-			Slide *currentSlide = m_sortedSlides.at(m_slideNum);
-			m_scene->setSlide(currentSlide,MyGraphicsScene::CrossFade);
+			if(m_slideNum < m_sortedSlides.size())
+			{
+				Slide *currentSlide = m_sortedSlides.at(m_slideNum);
+				m_scene->setSlide(currentSlide,MyGraphicsScene::CrossFade);
+			}
 		}
 	}
 }
@@ -300,8 +306,11 @@ void SlideGroupViewer::fadeClearFrame(bool enable)
 	}
 	else
 	{
-		Slide *currentSlide = m_sortedSlides.at(m_slideNum);
-		m_scene->setSlide(currentSlide,MyGraphicsScene::CrossFade);
+		if(m_slideNum < m_sortedSlides.size())
+		{
+			Slide *currentSlide = m_sortedSlides.at(m_slideNum);
+			m_scene->setSlide(currentSlide,MyGraphicsScene::CrossFade);
+		}
 	}
 	
 	m_clearEnabled = enable;

@@ -356,7 +356,7 @@ Revised Task list for Release 1.0, 10/18/09:
 		[LATER] Video Capture (started impl, but again, performance is terrible. That may be due to the FormatOpts specified, or in ffmpeg, or the capture hardware - need to trace - later!)
 	
 	- Bugs:
-		when no slide is live, clicking then UNclicking "Black" btn causes segflt
+		[FIXED] when no slide is live, clicking then UNclicking "Black" btn causes segflt
 		editor undo/redo framework doesnt pickup slide property changes
 		slide auto change time doesnt seem to save when using guess button
 		

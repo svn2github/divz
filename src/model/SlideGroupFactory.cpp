@@ -70,13 +70,15 @@ SlideGroupViewControl::SlideGroupViewControl(SlideGroupViewer *g, QWidget *w )
 	QHBoxLayout * hbox1 = new QHBoxLayout();
 	hbox1->addStretch(1);
 	
-	QPushButton * m_blackButton = new QPushButton(QIcon(":/data/stock-media-stop.png"),"&Black");
+	m_blackButton = new QPushButton(QIcon(":/data/stock-media-stop.png"),"&Black");
 	m_blackButton->setCheckable(true);
+	m_blackButton->setEnabled(false); // enable on first slide thats set on us
 	connect(m_blackButton, SIGNAL(toggled(bool)), this, SLOT(fadeBlackFrame(bool)));
 	hbox1->addWidget(m_blackButton);
 	
 	m_clearButton = new QPushButton(QIcon(":/data/stock-media-eject.png"),"&Clear");
 	m_clearButton->setCheckable(true);
+	m_clearButton->setEnabled(false); // enable on first slide thats set on us
 	connect(m_clearButton, SIGNAL(toggled(bool)), this, SLOT(fadeClearFrame(bool)));
 	hbox1->addWidget(m_clearButton);
 	
@@ -272,8 +274,6 @@ void SlideGroupViewControl::slideSelected(const QModelIndex &idx)
 	m_slideViewer->setSlide(slide);
 	enableAnimation(slide->autoChangeTime());
 	
-	//if(m_clearButton->is
-	
 	m_selectedSlide = slide;
 }
 
@@ -300,6 +300,9 @@ void SlideGroupViewControl::setSlideGroup(SlideGroup *g, Slide *curSlide)
 	
 	if(DEBUG_SLIDEGROUPVIEWCONTROL)
 		qDebug()<<"SlideGroupViewControl::setSlideGroup: Loading group#"<<g->groupNumber();
+	
+	m_clearButton->setEnabled(true);
+	m_blackButton->setEnabled(true); 
 	
 	enableAnimation(0);
 	
