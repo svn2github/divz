@@ -403,7 +403,8 @@ void QVideo::displayFrame()
  	//m_current_frame.frame = 0;
 
 	//resume playing
-        m_play_timer = startTimer(1);
+	if(status() == Running)
+		m_play_timer = startTimer(1);
         //consumeFrame();
 }
 

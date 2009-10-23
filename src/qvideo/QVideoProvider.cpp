@@ -1,6 +1,9 @@
 #include "QVideoProvider.h"
 #include <QFileInfo>
 #include <QDebug>
+#include <QPixmapCache>
+
+#include "3rdparty/md5/md5.h"
 
 #define DEBUG_QVIDEOPROVIDER 0
 	
@@ -56,6 +59,110 @@ void QVideoProvider::releaseProvider(QVideoProvider *v)
 	}
 }
 	
+	
+// If icon in disk cache for file, returns the icon. Otherwise, returns a null 
+// pixmap and starts a QVideoIconGenerator to generate the icon so it will be 
+// in the cache for the next time (stores QDir::tempPath() + "/qvideoprovider/" + md5sum of canonical file path)
+QPixmap QVideoProvider::iconForFile(const QString & file)
+{
+	QFileInfo info(file);
+	QString abs = info.absoluteFilePath();
+	
+	QPixmap cache;
+	if(!QPixmapCache::find(abs,cache))
+	{
+		cache = QVideoIconGenerator::iconForFile(file);
+		if(!cache.isNull())
+		{
+			QPixmapCache::insert(abs,cache);
+			return cache;
+		}
+	}
+	
+	static QPixmap grayPixmap(64,64);
+	if(grayPixmap.isNull())
+	{
+		grayPixmap.fill(Qt::lightGray);
+		QPixmap overlay(":/data/videoframeoverlay.png");
+		QPainter paint(&grayPixmap);
+		paint.drawPixmap(grayPixmap.rect(), overlay);
+		paint.end();
+	}
+		
+		
+	return grayPixmap;
+}
+
+
+
+QPixmap QVideoIconGenerator::iconForFile(const QString & file)
+{
+	QFileInfo info(file);
+	
+	QString cacheFiename = cacheFile(info.canonicalFilePath());
+	if(QFile(cacheFiename).exists())
+	{
+		return QPixmap(cacheFiename);
+	}
+	else
+	{
+		QVideoProvider * p = QVideoProvider::providerForFile(file);
+		
+		if(p->isPlaying())
+		{
+			QPixmap pix = p->pixmap();
+			if(!pix.isNull())
+			{
+				storePixmap(pix,p);
+				QVideoProvider::releaseProvider(p);
+				return pix;
+			}
+		}
+		
+		new QVideoIconGenerator(p);
+		return QPixmap();
+	}
+}
+
+QString QVideoIconGenerator::cacheFile(QVideoProvider *p)
+{
+	return cacheFile(p->canonicalFilePath());
+}
+
+QString QVideoIconGenerator::cacheFile(const QString& canonicalFilePath)
+{
+	return QString("%1/qvideoframecache_%2").arg(QDir::tempPath()).arg(MD5::md5sum(canonicalFilePath));
+}
+
+QVideoIconGenerator::QVideoIconGenerator(QVideoProvider* p) : QObject(), m_provider(p)
+{
+	p->connectReceiver(this,SLOT(newPixmap(const QPixmap &)));
+	p->play();
+}
+
+void QVideoIconGenerator::storePixmap(const QPixmap & pixmap, QVideoProvider *p)
+{
+	QPixmap copy = pixmap;
+	QPixmap overlay(":/data/videoframeoverlay.png");
+	QPainter paint(&copy);
+	paint.drawPixmap(copy.rect(), overlay);
+	paint.end();
+	
+	//qDebug() << "QVideoIconGenerator::storePixmap: Saving to:"<<cacheFile(p);
+	copy.save(cacheFile(p), "PNG");
+}
+
+void QVideoIconGenerator::newPixmap(const QPixmap & pixmap)
+{
+	storePixmap(pixmap,m_provider);
+	
+	m_provider->pause();
+	m_provider->disconnectReceiver(this);
+	
+	QVideoProvider::releaseProvider(m_provider);
+	deleteLater();
+}
+
 	
 QVideoProvider::QVideoProvider(const QString &f) :
 	QObject(),

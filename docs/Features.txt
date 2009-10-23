@@ -123,10 +123,10 @@ Revised Task list for Release 1.0, 10/18/09:
 		= Misc = 
 			integrate media browser with background setting and add video / image group
 			allow multiple select in media browser (e.g. multiple images)
-			add custom icons (preview icons) to mbrowser
 			add preview pane to media browser
 			when chaing directory in media browser, focus on list
 		
+			[DONE] add custom icons (preview icons) to mbrowser
 			[DONE] add current directory label to media browser
 			[DONE] add combobox filter to media browser
 			

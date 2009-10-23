@@ -5,6 +5,32 @@
 #include <QPixmap>
 #include "QVideo.h"
 
+class QVideoProvider;
+
+class QVideoIconGenerator : public QObject
+{
+	Q_OBJECT
+	
+public /*static*/:
+	// If icon in disk cache for file, returns the icon. Otherwise, returns a null 
+	// pixmap and starts a QVideoIconGenerator to generate the icon so it will be 
+	// in the cache for the next time (stores QDir::tempPath() + "/qvideoprovider/" + md5sum of canonical file path)
+	static QPixmap iconForFile(const QString&);
+	
+private:
+	static QString cacheFile(QVideoProvider *);
+	static QString cacheFile(const QString&);
+	static void storePixmap(const QPixmap&, QVideoProvider *);
+
+	QVideoIconGenerator(QVideoProvider*);
+	
+private slots:
+	void newPixmap(const QPixmap &);
+
+private:
+	QVideoProvider * m_provider;
+};
+
 class QVideoProvider : public QObject
 {
 	Q_OBJECT
@@ -15,6 +41,9 @@ public:
 	
 	// de-inc refcount. If refcount<=0, delete provider
 	static void releaseProvider(QVideoProvider*);
+	
+	// Returns the first cached frame of the video or Qt::lightGray pixmap if no frame cached.
+	static QPixmap iconForFile(const QString &);
 	
 private:
 	static QMap<QString,QVideoProvider*> m_fileProviderMap;

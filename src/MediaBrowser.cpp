@@ -13,8 +13,81 @@
 #include <QListView>
 #include <QDebug>
 #include <QComboBox>
+#include <QPixmapCache>
+#include <QFileIconProvider>
 
+#include "qvideo/QVideoProvider.h"
+#include "3rdparty/md5/md5.h"
 #include "AppSettings.h"
+
+#define LIST_ICON_SIZE QSize(48,48)
+
+class MyQFileIconProvider : public QFileIconProvider
+{
+public:
+	QRegExp videoRegexp;
+	QRegExp imageRegexp;
+	MyQFileIconProvider() : QFileIconProvider() 
+	{
+		videoRegexp = QRegExp("(wmv|mpeg|mpg|avi|wmv|flv|mov|mp4|m4a|3gp|3g2|mj2|mjpeg|ipod|m4v|gsm|gif|swf|dv|dvd|asf|mtv|roq|aac|ac3|aiff|alaw|iif)",Qt::CaseInsensitive);
+		imageRegexp = QRegExp("(png|jpg|bmp|svg|xpm)",Qt::CaseInsensitive);
+	}
+	
+	bool isVideo(const QString &extension) const { return extension.indexOf(videoRegexp) == 0; }
+	bool isImage(const QString &extension) const { return extension.indexOf(imageRegexp) == 0; }
+	
+	QIcon icon(const QFileInfo& info) const
+	{
+		QApplication::processEvents();
+		if(isVideo(info.suffix()))
+		{
+			//qDebug() << "MyQFileIconProvider::icon(): video file:"<<info.absoluteFilePath();
+			return QVideoProvider::iconForFile(info.absoluteFilePath());
+		}
+		else
+		if(isImage(info.suffix()))
+		{
+			//qDebug() << "MyQFileIconProvider::icon(): image file:"<<info.absoluteFilePath();
+			QString file = info.absoluteFilePath();
+			QPixmap cache;
+			QString cacheFile = QString("%1/imageiconcache_%2").arg(QDir::tempPath()).arg(MD5::md5sum(file));
+				
+			if(!QPixmapCache::find(cacheFile,cache))
+			{
+				if(QFile(cacheFile).exists())
+				{
+					cache.load(cacheFile);
+					QPixmapCache::insert(cacheFile,cache);
+				}
+				else
+				{
+					QPixmap orig(file);
+					if(orig.isNull())
+					{
+						cache = QPixmap();
+						QPixmapCache::insert(cacheFile,cache);
+					}
+					else
+					{
+						cache = orig.scaled(LIST_ICON_SIZE,Qt::IgnoreAspectRatio,Qt::SmoothTransformation);
+						cache.save(cacheFile,"PNG");
+						//qDebug() << "MyQFileIconProvider::icon(): image file: caching to:"<<cacheFile<<" for "<<file;
+						QPixmapCache::insert(cacheFile,cache);
+						
+						//QApplication::processEvents();
+					}
+				}
+			}
+			return cache;
+		}
+		else
+		{
+			return QFileIconProvider::icon(info);
+		}
+	}
+};
+
+
 
 MediaBrowser::MediaBrowser(QWidget *parent)
 	: QWidget(parent)
@@ -84,8 +157,10 @@ void MediaBrowser::setupUI()
 	// Now for the list itself
 	m_listView = new QListView(this);
 	m_listView->setAlternatingRowColors(true);
+	m_listView->setIconSize(LIST_ICON_SIZE);
 	
 	m_fsModel = new QFileSystemModel(this);
+	m_fsModel->setIconProvider(new MyQFileIconProvider());
 	m_fsModel->setNameFilterDisables(false);
 	
 	m_listView->setModel(m_fsModel);
@@ -98,13 +173,16 @@ void MediaBrowser::setupUI()
 	QHBoxLayout *hbox3 = new QHBoxLayout(m_btnBase);
 	SET_MARGIN(hbox3,0);
 	
-	m_btnAddToSchedue = new QPushButton("Add to Schedule");
+	m_btnAddToSchedue = new QPushButton(QIcon(":/data/stock-add.png"),"");
+	m_btnAddToSchedue->setToolTip("Add selected file to schedule");
 	hbox3->addWidget(m_btnAddToSchedue);
 	
-	m_btnSetAsBg = new QPushButton("Set as Background");
+	m_btnSetAsBg = new QPushButton(QIcon(":/data/stock-apply.png"),"");
+	m_btnSetAsBg->setToolTip("Set selected file as background for the current live slide or, if no live slide, current slide group");
 	hbox3->addWidget(m_btnSetAsBg);
 	
-	m_btnSetAsBgLater = new QPushButton("Set as Background Later");
+	m_btnSetAsBgLater = new QPushButton(QIcon(":/data/stock-apply-clock.png"),"");
+	m_btnSetAsBgLater->setToolTip("Set selected file as background for the NEXT slide to go live");
 	hbox3->addWidget(m_btnSetAsBgLater);
 	
 	connect(m_btnAddToSchedue, SIGNAL(clicked()), this, SLOT(slotAddToSchedule()));
@@ -119,11 +197,11 @@ void MediaBrowser::setupUI()
 	QHBoxLayout *hbox2 = new QHBoxLayout(m_folderBoxBase);
 	SET_MARGIN(hbox2,0);
 	
-	m_dirBox = new QLineEdit(m_folderBoxBase);
-	hbox2->addWidget(m_dirBox);
-	
 	m_filterBox = new QComboBox(m_folderBoxBase);
 	hbox2->addWidget(m_filterBox);
+	
+	m_dirBox = new QLineEdit(m_folderBoxBase);
+	hbox2->addWidget(m_dirBox);
 	
 	connect(m_dirBox, SIGNAL(returnPressed()), this, SLOT(dirBoxReturnPressed()));
 	connect(m_filterBox, SIGNAL(currentIndexChanged(int)), this, SLOT(fileTypeChanged(int)));
