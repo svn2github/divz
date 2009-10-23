@@ -157,6 +157,9 @@ void MediaBrowser::setupUI()
 	m_listView->setAlternatingRowColors(true);
 	m_listView->setIconSize(LIST_ICON_SIZE);
 	
+	// below doesnt seem to be enough
+	//m_listView->setEditTriggers(QAbstractItemView::SelectedClicked | QAbstractItemView::EditKeyPressed);
+	
 	m_fsModel = new QFileSystemModel(this);
 	m_fsModel->setIconProvider(new MyQFileIconProvider());
 	m_fsModel->setNameFilterDisables(false);
