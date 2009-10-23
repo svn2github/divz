@@ -9,6 +9,7 @@ class QFileInfo;
 class QModelIndex;
 class QPushButton;
 class QLineEdit;
+class QComboBox;
 #include <QStringList>
 
 class MediaBrowser : public QWidget
@@ -33,13 +34,21 @@ public slots:
 	void goForward();
 	void goUp();
 	
+	void setFileTypeFilterList(QStringList);
+	
 protected slots:
 	void indexDoubleClicked(const QModelIndex&);
+	void indexSingleClicked(const QModelIndex&);
 	
 	void filterChanged(const QString&);
 	void filterReturnPressed();
 	
-	//void fileTypeChanged(const QString&);
+	void dirBoxReturnPressed();
+	void fileTypeChanged(int);
+	
+	void slotAddToSchedule();
+	void slotSetAsBg();
+	void slotSetAsBgLater();
 
 protected:
 	void setupUI();
@@ -57,23 +66,35 @@ protected:
 	
 	QStringList makeModelFilterList(const QString &userFilter);
 
-	QWidget	      * m_searchBase;
-	QPushButton   * m_clearSearchBtn;
-	QLineEdit     * m_searchBox;
+	QWidget		* m_searchBase;
+	QPushButton	* m_clearSearchBtn;
+	QLineEdit	* m_searchBox;
 	
-	QPushButton   * m_btnBack;
-	QPushButton   * m_btnForward;
-	QPushButton   * m_btnUp;
+	QPushButton	* m_btnBack;
+	QPushButton	* m_btnForward;
+	QPushButton	* m_btnUp;
 	
 	QStringList	m_pathsBackward;
 	QStringList	m_pathsForward;
 	
-	QListView * m_listView;
+	QListView 	* m_listView;
 	QFileSystemModel * m_fsModel;
 	
-	QString		m_fileTypeFilter;
+	QStringList	m_currentTypeFilterList;
 	
 	QString		m_currentDirectory;
+	
+	QWidget		* m_folderBoxBase;
+	QLineEdit	* m_dirBox;
+	QComboBox	* m_filterBox;
+	
+	QStringList	m_filteTypeFilterList;
+	
+	QWidget		* m_btnBase;
+	QPushButton	* m_btnAddToSchedue;
+	QPushButton	* m_btnSetAsBg;
+	QPushButton	* m_btnSetAsBgLater;
+	
 };
 
 

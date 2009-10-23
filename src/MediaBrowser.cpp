@@ -18,11 +18,20 @@
 
 MediaBrowser::MediaBrowser(QWidget *parent)
 	: QWidget(parent)
-	, m_fileTypeFilter("")
 	, m_currentDirectory("")
 {
 	setObjectName("MediaBrowser");
 	setupUI();
+	
+	QStringList filters;
+	
+	filters << tr("Media Files (*.wmv *.mpeg *.mpg *.avi *.wmv *.flv *.mov *.mp4 *.m4a *.3gp *.3g2 *.mj2 *.mjpeg *.ipod *.m4v *.gsm *.gif *.swf *.dv *.dvd *.asf *.mtv *.roq *.aac *.ac3 *.aiff *.alaw *.iif *.png *.jpg *.bmp *.svg *.xpm)");
+	filters << tr("Video Files (*.wmv *.mpeg *.mpg *.avi *.wmv *.flv *.mov *.mp4 *.m4a *.3gp *.3g2 *.mj2 *.mjpeg *.ipod *.m4v *.gsm *.gif *.swf *.dv *.dvd *.asf *.mtv *.roq *.aac *.ac3 *.aiff *.alaw *.iif)");
+	filters << tr("Image Files (*.png *.jpg *.bmp *.svg *.xpm)");
+	filters << tr("Any File (*.*)");
+	
+	setFileTypeFilterList(filters);
+	
 	//setDirectory("/home/josiah",false);
 	setDirectory(AppSettings::previousPath("media"));
 }
@@ -80,19 +89,146 @@ void MediaBrowser::setupUI()
 	m_fsModel->setNameFilterDisables(false);
 	
 	m_listView->setModel(m_fsModel);
-
-	vbox->addWidget(m_searchBase);
-	vbox->addWidget(m_listView);
 	
 	connect(m_listView, SIGNAL(doubleClicked(const QModelIndex &)), this, SLOT(indexDoubleClicked(const QModelIndex &)));
+	connect(m_listView,       SIGNAL(clicked(const QModelIndex &)), this, SLOT(indexSingleClicked(const QModelIndex &)));
+	
+	// Add action buttons
+	m_btnBase = new QWidget(this);
+	QHBoxLayout *hbox3 = new QHBoxLayout(m_btnBase);
+	SET_MARGIN(hbox3,0);
+	
+	m_btnAddToSchedue = new QPushButton("Add to Schedule");
+	hbox3->addWidget(m_btnAddToSchedue);
+	
+	m_btnSetAsBg = new QPushButton("Set as Background");
+	hbox3->addWidget(m_btnSetAsBg);
+	
+	m_btnSetAsBgLater = new QPushButton("Set as Background Later");
+	hbox3->addWidget(m_btnSetAsBgLater);
+	
+	connect(m_btnAddToSchedue, SIGNAL(clicked()), this, SLOT(slotAddToSchedule()));
+	connect(m_btnSetAsBg, SIGNAL(clicked()), this, SLOT(slotSetAsBg()));
+	connect(m_btnSetAsBgLater, SIGNAL(clicked()), this, SLOT(slotSetAsBgLater()));
+	
+	// enabled by indexSingleClicked()
+	m_btnBase->setEnabled(false);
+	
+	// Add the directory box and filter box at bottom
+	m_folderBoxBase = new QWidget(this);
+	QHBoxLayout *hbox2 = new QHBoxLayout(m_folderBoxBase);
+	SET_MARGIN(hbox2,0);
+	
+	m_dirBox = new QLineEdit(m_folderBoxBase);
+	hbox2->addWidget(m_dirBox);
+	
+	m_filterBox = new QComboBox(m_folderBoxBase);
+	hbox2->addWidget(m_filterBox);
+	
+	connect(m_dirBox, SIGNAL(returnPressed()), this, SLOT(dirBoxReturnPressed()));
+	connect(m_filterBox, SIGNAL(currentIndexChanged(int)), this, SLOT(fileTypeChanged(int)));
+	
+	
+	vbox->addWidget(m_searchBase);
+	vbox->addWidget(m_listView);
+	vbox->addWidget(m_btnBase);
+	vbox->addWidget(m_folderBoxBase);
+}
+
+void MediaBrowser::setFileTypeFilterList(QStringList list)
+{
+	static QRegExp parse1("(.*)\\s*\\(([^\\)]+)\\)");
+	
+	m_filterBox->clear();
+	foreach(QString string, list)
+	{
+		if(parse1.indexIn(string)>-1)
+		{
+			QStringList cap = parse1.capturedTexts();
+			m_filterBox->addItem(cap.at(1), cap.at(2));
+		}
+	}
+}
+
+void MediaBrowser::fileTypeChanged(int selectedIndex)
+{
+	QString type = m_filterBox->itemData(selectedIndex).toString();
+	
+	static QRegExp parse2("(\\*\\.\\w+)\\s*");
+
+	QString list = type;
+	
+	m_currentTypeFilterList.clear();
+	int pos=0;
+	int count=0;
+	while(pos>=0)
+	{
+		pos = parse2.indexIn(list,pos);
+		if(pos>=0)
+		{
+			pos += parse2.matchedLength();
+			m_currentTypeFilterList.append(parse2.capturedTexts().at(1));
+			count ++;
+		}
+	}
+		
+// 		if(count == 0)
+// 		{
+// 			qDebug() << "MediaBrowser::fileTypeChanged: parse2 didnt match:"<<list;
+// 		}
+// 		else
+// 		{
+// 			qDebug() << "MediaBrowser::fileTypeChanged: parse2 matched:"<<m_currentTypeFilterList;
+// 		}
+		
+	// re-apply the filters to the file model
+	filterChanged(m_searchBox->text());
+	
+}
+
+void MediaBrowser::slotAddToSchedule()
+{
+	QModelIndex idx = m_listView->currentIndex();
+	if(idx.isValid())
+	{
+		QFileInfo info = m_fsModel->fileInfo(idx);
+		emit fileSelected(info);
+	}
+}
+
+void MediaBrowser::slotSetAsBg()
+{
+	QModelIndex idx = m_listView->currentIndex();
+	if(idx.isValid())
+	{
+		QFileInfo info = m_fsModel->fileInfo(idx);
+		emit setBackground(info,false);
+	}
+}
+
+void MediaBrowser::slotSetAsBgLater()
+{
+	QModelIndex idx = m_listView->currentIndex();
+	if(idx.isValid())
+	{
+		QFileInfo info = m_fsModel->fileInfo(idx);
+		emit setBackground(info,true);
+	}
 }
 
 
 void MediaBrowser::filterReturnPressed() 
 {
-// 	QModelIndex idx = m_fsModel->indexForRow(0);
-// 	if(idx.isValid())
-// 		indexDoubleClicked(idx);
+ 	QModelIndex idx = m_fsModel->index(0,0);
+ 	if(idx.isValid())
+ 		indexDoubleClicked(idx);
+}
+
+void MediaBrowser::dirBoxReturnPressed() 
+{
+ 	QString dir = m_dirBox->text();
+ 	if(!dir.isEmpty())
+ 		setDirectory(dir);
 }
 
 
@@ -110,9 +246,25 @@ void MediaBrowser::indexDoubleClicked(const QModelIndex &idx)
 	}
 }
 
+void MediaBrowser::indexSingleClicked(const QModelIndex &idx)
+{
+	QFileInfo info = m_fsModel->fileInfo(idx);
+	m_btnBase->setEnabled(idx.isValid() && !info.isDir());
+	
+// 	if(info.isDir())
+// 	{
+// 		QString path = info.filePath();
+// 		setDirectory(path);
+// 	}
+// 	else
+// 	{
+// 		emit fileSelected(info);
+// 	}
+}
+
 void MediaBrowser::setDirectory(const QString &path, bool addToHistory)
 {
-	qDebug() << "setDirectory(): setting folder path:"<<path;
+	//qDebug() << "setDirectory(): setting folder path:"<<path;
 	QModelIndex root = m_fsModel->setRootPath(path);
 	m_listView->setRootIndex(root);
 	
@@ -126,23 +278,26 @@ void MediaBrowser::setDirectory(const QString &path, bool addToHistory)
 	
 	m_currentDirectory = path;
 	checkCanGoUp();
+	
+	m_dirBox->setText(path);
 }
 
 bool MediaBrowser::checkCanGoUp()
 {
 	QFileInfo info(m_currentDirectory);
-	QString can = info.canonicalFilePath();
-	QStringList split = can.split("/");
+	QString path = info.canonicalFilePath();
 	
-	if(split.size() <= 1)
+	QStringList folders = path.split(QDir::separator());
+	
+	if(folders.size() <= 1)
 	{
-		qDebug() << "checkCanGoUp(): False, can't go up from:"<<can;
+		//qDebug() << "checkCanGoUp(): False, can't go up from:"<<path;
 		m_btnUp->setEnabled(false);
 		return false;
 	}
 	else
 	{
-		qDebug() << "checkCanGoUp(): True, can go up from:"<<can;
+		//qDebug() << "checkCanGoUp(): True, can go up from:"<<path;
 		m_btnUp->setEnabled(true);
 		return true;
 	}
@@ -154,14 +309,16 @@ void MediaBrowser::goUp()
 		return;
 		
 	QFileInfo info(m_currentDirectory);
-	QString can = info.canonicalFilePath();
-	QStringList split = can.split("/");
-	split.takeLast();
-	QString newPath = split.join("/");
+	QString path = info.canonicalFilePath();
+	
+	QStringList folders = path.split(QDir::separator());
+	folders.takeLast();
+	
+	QString newPath = folders.join(QDir::separator());
 	
 	setDirectory(newPath);
 	
-	qDebug() << "goUp(): newPath:"<<newPath;
+	//qDebug() << "goUp(): newPath:"<<newPath;
 }
 
 void MediaBrowser::goBack()
@@ -171,7 +328,7 @@ void MediaBrowser::goBack()
 		unshiftForward(m_currentDirectory);
 	setDirectory(path,false);
 	
-	qDebug() << "goBack(): path:"<<path;
+	//qDebug() << "goBack(): path:"<<path;
 }
 
 void MediaBrowser::goForward()
@@ -181,7 +338,7 @@ void MediaBrowser::goForward()
 		pushBackward(m_currentDirectory);
 	setDirectory(path,false);
 	
-	qDebug() << "goForward(): path:"<<path;
+	//qDebug() << "goForward(): path:"<<path;
 }
 
 void MediaBrowser::clearForward()
@@ -194,14 +351,14 @@ void MediaBrowser::pushBackward(const QString &path)
 {
 	m_pathsBackward << path;
 	m_btnBack->setEnabled(true);
-	qDebug() << "pushBackward(): path:"<<path<<", list:"<<m_pathsBackward;
+	//qDebug() << "pushBackward(): path:"<<path<<", list:"<<m_pathsBackward;
 }
 
 QString MediaBrowser::popBackward()
 {
 	QString path = m_pathsBackward.takeLast();
 	m_btnBack->setEnabled(m_pathsBackward.size() > 0);
-	qDebug() << "popBackward(): path:"<<path<<", list:"<<m_pathsBackward;
+	//qDebug() << "popBackward(): path:"<<path<<", list:"<<m_pathsBackward;
 	return path;
 }
 
@@ -209,14 +366,14 @@ void MediaBrowser::unshiftForward(const QString &path)
 {
 	m_pathsForward.prepend(path);
 	m_btnForward->setEnabled(true);
-	qDebug() << "unshiftForward(): path:"<<path<<", list:"<<m_pathsForward;
+	//qDebug() << "unshiftForward(): path:"<<path<<", list:"<<m_pathsForward;
 }
 
 QString MediaBrowser::shiftForward()
 {
 	QString path = m_pathsForward.takeFirst();
 	m_btnForward->setEnabled(m_pathsForward.size() > 0);
-	qDebug() << "shiftBackward(): path:"<<path<<", list:"<<m_pathsForward;
+	//qDebug() << "shiftBackward(): path:"<<path<<", list:"<<m_pathsForward;
 	return path;
 }
 
@@ -224,7 +381,7 @@ QString MediaBrowser::shiftForward()
 void MediaBrowser::filterChanged(const QString &text)
 {
 	QStringList filter = makeModelFilterList(text);
-	qDebug() << "filterChanged(): text:"<<text<<", filter:"<<filter;
+	//qDebug() << "filterChanged(): text:"<<text<<", filter:"<<filter;
 	m_fsModel->setNameFilters(filter);
 	m_clearSearchBtn->setVisible(!text.isEmpty());
 // 	QModelIndex idx = m_fsModel->indexForRow(0);
@@ -236,22 +393,29 @@ QStringList MediaBrowser::makeModelFilterList(const QString& text)
 {
 	QString filter = text;
 	
-	if(m_fileTypeFilter == "")
-		m_fileTypeFilter = "*.*";
+	QStringList list;
 	
 	// if user doesnt include any wildcard, start it out for them correctly
-	if(filter.indexOf("*")<0)
+	if(filter.indexOf("*")<0 && !filter.isEmpty())
 		filter = QString("*%1").arg(filter);
 	
 	// if user doesnt specify an extension, include the one from m_fileTypeFilter
-	if(filter.indexOf(".")<0)
-		filter = QString("%1%2").arg(filter).arg(m_fileTypeFilter);
-	else
+	if(filter.indexOf(".")>=0)
+	{
 		filter = QString("%1*").arg(filter);
+		list << filter;
+	}
+	else
+	{
+		// process the list of extensions chosen in the combo box
+		if(m_currentTypeFilterList.size()<=0)
+			m_currentTypeFilterList << "*.*";
+		
+		foreach(QString typeFilter, m_currentTypeFilterList)
+			list << QString("%1%2").arg(filter).arg(typeFilter);
+	}
 	
-	QStringList list;
-	list << filter;
-	
+	//qDebug() << "MediaBrowser::makeModelFilterList: text:"<<text<<", list:"<<list;
 	return list;
 }
 
