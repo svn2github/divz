@@ -189,7 +189,10 @@ void VideoFileContent::setFilename(const QString &name)
 	m_videoProvider->play();
 	
 	// prime the pump, so to speak
-	setPixmap(m_videoProvider->pixmap());
+	if(sceneContextHint() == MyGraphicsScene::Preview)
+		setPixmap(QVideoProvider::iconForFile(name));
+	else
+		setPixmap(m_videoProvider->pixmap());
 	
 	m_videoProvider->connectReceiver(this, SLOT(setPixmap(const QPixmap &)));
 }

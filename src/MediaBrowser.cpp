@@ -22,30 +22,28 @@
 
 #define LIST_ICON_SIZE QSize(48,48)
 
+QRegExp MediaBrowser::videoRegexp = QRegExp("(wmv|mpeg|mpg|avi|wmv|flv|mov|mp4|m4a|3gp|3g2|mj2|mjpeg|ipod|m4v|gsm|gif|swf|dv|dvd|asf|mtv|roq|aac|ac3|aiff|alaw|iif)",Qt::CaseInsensitive);
+QRegExp MediaBrowser::imageRegexp = QRegExp("(png|jpg|bmp|svg|xpm)",Qt::CaseInsensitive);
+		
+bool MediaBrowser::isVideo(const QString &extension) { return extension.indexOf(videoRegexp) == 0; }
+bool MediaBrowser::isImage(const QString &extension) { return extension.indexOf(imageRegexp) == 0; }
+
+	
 class MyQFileIconProvider : public QFileIconProvider
 {
 public:
-	QRegExp videoRegexp;
-	QRegExp imageRegexp;
-	MyQFileIconProvider() : QFileIconProvider() 
-	{
-		videoRegexp = QRegExp("(wmv|mpeg|mpg|avi|wmv|flv|mov|mp4|m4a|3gp|3g2|mj2|mjpeg|ipod|m4v|gsm|gif|swf|dv|dvd|asf|mtv|roq|aac|ac3|aiff|alaw|iif)",Qt::CaseInsensitive);
-		imageRegexp = QRegExp("(png|jpg|bmp|svg|xpm)",Qt::CaseInsensitive);
-	}
-	
-	bool isVideo(const QString &extension) const { return extension.indexOf(videoRegexp) == 0; }
-	bool isImage(const QString &extension) const { return extension.indexOf(imageRegexp) == 0; }
+	MyQFileIconProvider() : QFileIconProvider()  {}
 	
 	QIcon icon(const QFileInfo& info) const
 	{
 		QApplication::processEvents();
-		if(isVideo(info.suffix()))
+		if(MediaBrowser::isVideo(info.suffix()))
 		{
 			//qDebug() << "MyQFileIconProvider::icon(): video file:"<<info.absoluteFilePath();
 			return QVideoProvider::iconForFile(info.absoluteFilePath());
 		}
 		else
-		if(isImage(info.suffix()))
+		if(MediaBrowser::isImage(info.suffix()))
 		{
 			//qDebug() << "MyQFileIconProvider::icon(): image file:"<<info.absoluteFilePath();
 			QString file = info.absoluteFilePath();

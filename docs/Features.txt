@@ -122,10 +122,17 @@ Revised Task list for Release 1.0, 10/18/09:
 		
 		= Misc = 
 			integrate media browser with background setting and add video / image group
-			allow multiple select in media browser (e.g. multiple images)
-			add preview pane to media browser
-			when chaing directory in media browser, focus on list
+			when changing directory in media browser, focus on list
+			
+			when adding item to document, set selected index
+			slide editor needs to set disabled slider
+			
+			check defaults for inherit cross fade settings on groups
+			set default on groups to go to next slide
 		
+			[LATER] allow multiple select in media browser (e.g. multiple images)
+			[LATER] add preview pane to media browser
+			
 			[DONE] add custom icons (preview icons) to mbrowser
 			[DONE] add current directory label to media browser
 			[DONE] add combobox filter to media browser
@@ -363,6 +370,7 @@ Revised Task list for Release 1.0, 10/18/09:
 		[LATER] Video Capture (started impl, but again, performance is terrible. That may be due to the FormatOpts specified, or in ffmpeg, or the capture hardware - need to trace - later!)
 	
 	- Bugs:
+		clicking "next" and auto-going to first slide of next group when from normal slide to song, segfault 
 		editor undo/redo framework doesnt pickup slide property changes
 		slide auto change time doesnt seem to save when using guess button
 		

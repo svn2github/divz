@@ -15,6 +15,8 @@
 #include <QPixmapCache>
 
 #define DEBUG_MARK() qDebug() << "mark: "<<__FILE__<<":"<<__LINE__
+#define POINTER_STRING(ptr) QString().sprintf("%p",static_cast<void*>(ptr))
+
 
 bool group_num_compare(SlideGroup *a, SlideGroup *b)
 {
@@ -114,8 +116,6 @@ bool DocumentListModel::dropMimeData ( const QMimeData * data, Qt::DropAction /*
 	
 	m_sortedGroups = newList;
 	
-	m_pixmaps.clear();
-	
 	//qSort(m_sortedGroups.begin(), m_sortedGroups.end(), group_num_compare);
 	
 	QModelIndex top    = indexForGroup(m_sortedGroups.first()),
@@ -201,8 +201,6 @@ void DocumentListModel::internalSetup()
 		    bottom = indexForGroup(m_sortedGroups.last());
 	//qDebug() << "DocumentListModel::internalSetup: top:"<<top<<", bottom:"<<bottom;
 
-	m_pixmaps.clear();
-	
 	dataChanged(top,bottom);
 }
 
@@ -219,10 +217,6 @@ void DocumentListModel::slideGroupChanged(SlideGroup *g, QString groupOperation,
 	//qDebug() << "slideGroupChanged:"<<groupOperation;
 	if(groupOperation == "remove" || groupOperation == "add")
 	{
-		// if a group was removed/added, assume all pixmaps are invalid since the order could have changed
-		//if(groupOperation == "remove")
-		//	m_pixmaps.clear();
-		
 		int sz = m_doc->groupList().size();
 		if(groupOperation == "add")
 			beginInsertRows(QModelIndex(),sz-1,sz);
@@ -241,7 +235,8 @@ void DocumentListModel::slideGroupChanged(SlideGroup *g, QString groupOperation,
 		if(m_dirtyTimer->isActive())
 			m_dirtyTimer->stop();
 
-		m_pixmaps.remove(m_sortedGroups.indexOf(g));
+		QPixmapCache::remove(POINTER_STRING(g));
+			
 		m_dirtyTimer->start(250);
 		if(!m_dirtyGroups.contains(g))
 			m_dirtyGroups << g;
@@ -318,7 +313,7 @@ QVariant DocumentListModel::data(const QModelIndex &index, int role) const
 	else if(Qt::DecorationRole == role)
 	{
 		SlideGroup *g = m_sortedGroups.at(index.row());
-		QString cacheKey = QString().sprintf("%p",static_cast<void*>(g));
+		QString cacheKey = POINTER_STRING(g);
 		QPixmap icon;
 		if(!QPixmapCache::find(cacheKey,icon))
 		{
@@ -327,17 +322,7 @@ QVariant DocumentListModel::data(const QModelIndex &index, int role) const
 			QPixmapCache::insert(cacheKey,icon);
 		}
 		
-		//return QPixmap(":/images/ok.png");
 		return icon;
-// 		SlideGroup *g = m_sortedGroups.at(index.row());
-// 		if(!g->iconFile().isEmpty())
-// 		{
-// 			return QIcon(g->iconFile());
-// 		}
-// 		else
-// 		{
-// 			return QVariant();
-// 		}
 	}
 	else
 		return QVariant();
@@ -353,7 +338,8 @@ void DocumentListModel::setSceneRect(QRect r)
 		QModelIndex top    = indexForGroup(m_sortedGroups.first()), 
 			    bottom = indexForGroup(m_sortedGroups.last());
 
-		m_pixmaps.clear();
+		foreach(SlideGroup *g, m_sortedGroups)
+			QPixmapCache::remove(POINTER_STRING(g));
 
 		dataChanged(top,bottom);
 	}

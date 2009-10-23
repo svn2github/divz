@@ -11,10 +11,17 @@ class QPushButton;
 class QLineEdit;
 class QComboBox;
 #include <QStringList>
+#include <QRegExp>
 
 class MediaBrowser : public QWidget
 {
 	Q_OBJECT
+public /*static*/:
+	static QRegExp videoRegexp;
+	static QRegExp imageRegexp;
+	
+	static bool isVideo(const QString &extension);
+	static bool isImage(const QString &extension);
 
 public:
 	MediaBrowser(QWidget *parent=0);

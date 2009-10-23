@@ -450,8 +450,11 @@ void BackgroundContent::setVideoFile(const QString &name)
 		m_still = false;
 		
 		// prime the pump, so to speak
-		setPixmap(m_videoProvider->pixmap());
-		
+		if(sceneContextHint() == MyGraphicsScene::Preview)
+			setPixmap(QVideoProvider::iconForFile(name));
+		else
+			setPixmap(m_videoProvider->pixmap());
+			
 	}
 	else
 	{

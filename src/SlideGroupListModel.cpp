@@ -16,6 +16,8 @@
 
 #define DEBUG_MARK() qDebug() << "[DEBUG] "<<__FILE__<<":"<<__LINE__
 
+#define POINTER_STRING(ptr) QString().sprintf("%p",static_cast<void*>(ptr))
+
 SlideGroupListModel::SlideGroupListModel(SlideGroup *g, QObject *parent)
 		: QAbstractListModel(parent), m_slideGroup(0), m_scene(0), m_dirtyTimer(0), m_iconSize(192,0), m_sceneRect(0,0,1024,768)
 {
@@ -94,8 +96,6 @@ bool SlideGroupListModel::dropMimeData ( const QMimeData * data, Qt::DropAction 
 	
 	m_sortedSlides = newList;
 	
-	m_pixmaps.clear();
-	
 	QModelIndex top    = indexForSlide(m_sortedSlides.first()),
 		    bottom = indexForSlide(m_sortedSlides.last());
 	
@@ -156,7 +156,6 @@ void SlideGroupListModel::releaseSlideGroup()
 	if(!m_slideGroup)
 		return;
 		
-	m_pixmaps.clear();
 	disconnect(m_slideGroup,0,this,0);
 	int sz = m_slideGroup->slideList().size();
 	beginRemoveRows(QModelIndex(),0,sz);
@@ -181,8 +180,6 @@ void SlideGroupListModel::internalSetup()
 	QModelIndex top    = indexForSlide(m_sortedSlides.first()),
 		    bottom = indexForSlide(m_sortedSlides.last());
 
-	m_pixmaps.clear();
-	
 	dataChanged(top,bottom);
 	
 }
@@ -209,9 +206,6 @@ void SlideGroupListModel::slideChanged(Slide *slide, QString slideOperation, Abs
 	
 	if(slideOperation == "remove" || slideOperation == "add")
 	{
-		// if a slide was removed/added, assume all pixmaps are invalid since the order could have changed
-		m_pixmaps.clear();
-		
 		int sz = m_slideGroup->slideList().size();
 		if(slideOperation == "add")
 			beginInsertRows(QModelIndex(),sz-1,sz);
@@ -231,7 +225,8 @@ void SlideGroupListModel::slideChanged(Slide *slide, QString slideOperation, Abs
 		if(m_dirtyTimer->isActive())
 			m_dirtyTimer->stop();
 
-		m_pixmaps.remove(m_sortedSlides.indexOf(slide));
+		QPixmapCache::remove(POINTER_STRING(slide));
+		
 		m_dirtyTimer->start(250);
 		if(!m_dirtySlides.contains(slide))
 			m_dirtySlides << slide;
@@ -306,7 +301,7 @@ QVariant SlideGroupListModel::data(const QModelIndex &index, int role) const
 	else if(Qt::DecorationRole == role)
 	{
 		Slide *g = m_sortedSlides.at(index.row());
-		QString cacheKey = QString().sprintf("%p",static_cast<void*>(g));
+		QString cacheKey = POINTER_STRING(g);
 		QPixmap icon;
 		
 		if(!QPixmapCache::find(cacheKey,icon))
@@ -339,7 +334,9 @@ void SlideGroupListModel::setSceneRect(QRect r)
 		QModelIndex top    = indexForSlide(m_sortedSlides.first()),
 			    bottom = indexForSlide(m_sortedSlides.last());
 		//qDebug() << "DocumentListModel::modelDirtyTimeout: top:"<<top<<", bottom:"<<bottom;
-		m_pixmaps.clear();
+		
+		foreach(Slide *slide, m_sortedSlides)
+			QPixmapCache::remove(POINTER_STRING(slide));
 
 		dataChanged(top,bottom);
 	}

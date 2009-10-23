@@ -6,7 +6,10 @@
 #include "3rdparty/md5/md5.h"
 
 #define DEBUG_QVIDEOPROVIDER 0
-	
+
+#include <QMutex>
+#include <QMutexLocker>
+QMutex icon_mutex;
 	
 QMap<QString,QVideoProvider*> QVideoProvider::m_fileProviderMap;
 
@@ -79,16 +82,18 @@ QPixmap QVideoProvider::iconForFile(const QString & file)
 		}
 	}
 	
-	static QPixmap grayPixmap(64,64);
-	if(grayPixmap.isNull())
-	{
-		grayPixmap.fill(Qt::lightGray);
-		QPixmap overlay(":/data/videoframeoverlay.png");
-		QPainter paint(&grayPixmap);
-		paint.drawPixmap(grayPixmap.rect(), overlay);
-		paint.end();
-	}
-		
+	if(!cache.isNull())
+		return cache;
+	
+	// Dont insert the gray pixmap into cache in case we actually get 
+	// a pixmap on the next call to the generator for the same file
+	QPixmap grayPixmap(48,48);
+	grayPixmap.fill(Qt::lightGray);
+	QPixmap overlay(":/data/videoframeoverlay.png");
+	QPainter paint(&grayPixmap);
+	paint.setRenderHint(QPainter::SmoothPixmapTransform,true);
+	paint.drawPixmap(grayPixmap.rect(), overlay);
+	paint.end();
 		
 	return grayPixmap;
 }
@@ -158,8 +163,8 @@ void QVideoIconGenerator::newPixmap(const QPixmap & pixmap)
 	
 	m_provider->pause();
 	m_provider->disconnectReceiver(this);
-	
 	QVideoProvider::releaseProvider(m_provider);
+	
 	deleteLater();
 }
 

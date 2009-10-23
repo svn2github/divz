@@ -62,19 +62,11 @@ MainWindow::MainWindow(QWidget *parent) :
 
 	setupSongList();
 	
-	//setupMediaBrowser();
-	QVBoxLayout * mediaBrowserLayout = new QVBoxLayout(m_ui->tabMedia);
-	mediaBrowserLayout->setContentsMargins(0,0,0,0);
+	setupMediaBrowser();
 	
-	MediaBrowser *browser = new MediaBrowser();
-	mediaBrowserLayout->addWidget(browser);
-	
-	//connect(browser, SIGNAL(fileSelected(const QFileInfo&)), this, SLOT(mediaFileSelected(const QModelIndex&)));
 	
 	// Restore state
 	loadWindowState();
-
-	
 
 	//m_ui->actionEdit_Slide_Group->setEnabled(false);
 	QList<QAction*> actionList;
@@ -344,8 +336,62 @@ void MainWindow::songSelected(SongRecord *song)
 	SongSlideGroup *group = new SongSlideGroup();
 	group->setSong(song);
 	m_doc->addGroup(group);
+	if(m_liveView->slideGroup())
+		setLiveGroup(group);
 }
 
+
+void MainWindow::setupMediaBrowser()
+{
+	QVBoxLayout * mediaBrowserLayout = new QVBoxLayout(m_ui->tabMedia);
+	mediaBrowserLayout->setContentsMargins(0,0,0,0);
+	
+	MediaBrowser *browser = new MediaBrowser();
+	mediaBrowserLayout->addWidget(browser);
+	
+	connect(browser, SIGNAL(fileSelected(const QFileInfo&)), this, SLOT(fileSelected(const QFileInfo&)));
+	connect(browser, SIGNAL(setBackground(const QFileInfo&, bool)), this, SLOT(setBackground(const QFileInfo&, bool)));
+	
+}
+
+void MainWindow::fileSelected(const QFileInfo &info)
+{
+	QString ext = info.suffix();
+	
+	Slide * slide = new Slide();
+	AbstractVisualItem * bg = dynamic_cast<AbstractVisualItem*>(slide->background());
+	
+	if(MediaBrowser::isVideo(ext))
+	{
+		bg->setFillType(AbstractVisualItem::Video);
+		bg->setFillVideoFile(info.absoluteFilePath());
+		
+	}
+	else
+	if(MediaBrowser::isImage(ext))
+	{
+		bg->setFillType(AbstractVisualItem::Image);
+		bg->setFillImageFile(info.absoluteFilePath());
+	}
+	else
+	{
+		QMessageBox::warning(this,"Unknown File Type","I'm not sure how to handle that file. Sorry!");
+		delete slide;
+		return;
+	}
+	
+	SlideGroup *g = new SlideGroup();
+	g->addSlide(slide);
+	m_doc->addGroup(g);
+	if(m_liveView->slideGroup())
+		setLiveGroup(g);
+}
+
+void MainWindow::setBackground(const QFileInfo &info, bool waitForNextSlide)
+{
+
+}
+	
 void MainWindow::setupOutputViews()
 {
     	Output *out = AppSettings::outputs().at(0);

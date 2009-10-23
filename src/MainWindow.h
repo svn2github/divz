@@ -15,7 +15,6 @@
 #include <QSortFilterProxyModel>
 #include <QtSql>
 #include <QDebug>
-#include <QSqlTableModel>
 
 #include "model/Document.h"
 #include "DocumentListModel.h"
@@ -32,6 +31,7 @@ namespace Ui {
 
 class SongRecord;
 class SongBrowser;
+class QFileInfo;
 
 class MainWindow : public QMainWindow {
 	Q_OBJECT
@@ -71,6 +71,9 @@ protected slots:
 	
 	void songSelected(SongRecord*);
 	
+	void fileSelected(const QFileInfo&);
+	void setBackground(const QFileInfo&, bool waitForNextSlide);
+	
 	void actionEditGroup();
 	void actionNewGroup();
 	void actionDelGroup();
@@ -102,6 +105,7 @@ private:
 	void setupOutputViews();
 	void setupCentralWidget();
 	void setupSongList();
+	void setupMediaBrowser();
 	
 	Ui::MainWindow *m_ui;
 	SlideEditorWindow * m_editWin;
