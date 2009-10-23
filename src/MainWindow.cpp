@@ -24,6 +24,8 @@
 
 #include "MediaBrowser.h"
 
+#include "OutputInstance.h"
+
 MainWindow * MainWindow::static_mainWindow = 0;
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -49,10 +51,11 @@ MainWindow::MainWindow(QWidget *parent) :
 	m_editWin = new SlideEditorWindow();
 	
 	// setup live view before central widget because central widget uses live view in the view control code
-	m_liveView = new SlideGroupViewer();
-	m_liveView->setWindowFlags(Qt::FramelessWindowHint);
-	m_liveView->setBackground(Qt::black);
-	m_liveView->setCursor(Qt::BlankCursor);
+	Output *out = AppSettings::outputs().at(0);
+	m_liveView = new OutputInstance(out);
+// 	m_liveView->setWindowFlags(Qt::FramelessWindowHint);
+// 	m_liveView->setBackground(Qt::black);
+// 	m_liveView->setCursor(Qt::BlankCursor);
 	connect(m_liveView, SIGNAL(nextGroup()), this, SLOT(nextGroup()));
 
 	setupOutputViews();
@@ -442,30 +445,30 @@ void MainWindow::setupOutputViews()
     	Output *out = AppSettings::outputs().at(0);
 	if(out && out->name() == "Live")
 	{
-		Output::OutputType x = out->outputType();
-		if(x == Output::Screen || x == Output::Custom)
-		{
-			QRect geom;
-			if(x == Output::Screen)
-			{
-				int screenNum = out->screenNum();
-				QDesktopWidget *d = QApplication::desktop();
-				geom = d->screenGeometry(screenNum);
-			}
-			else
-			{
-				geom = out->customRect();
-				m_liveView->setWindowFlags(Qt::WindowStaysOnTopHint | Qt::FramelessWindowHint);
-			}
-
-			m_liveView->resize(geom.width(),geom.height());
-			m_liveView->move(geom.left(),geom.top());
-		}
-		else
-		//if(x == Output::Network)
-		{
-			qDebug("Warning: Output to network not supported yet. Still to be written.");
-		}
+// 		Output::OutputType x = out->outputType();
+// 		if(x == Output::Screen || x == Output::Custom)
+// 		{
+// 			QRect geom;
+// 			if(x == Output::Screen)
+// 			{
+// 				int screenNum = out->screenNum();
+// 				QDesktopWidget *d = QApplication::desktop();
+// 				geom = d->screenGeometry(screenNum);
+// 			}
+// 			else
+// 			{
+// 				geom = out->customRect();
+// 				m_liveView->setWindowFlags(Qt::WindowStaysOnTopHint | Qt::FramelessWindowHint);
+// 			}
+// 
+// 			m_liveView->resize(geom.width(),geom.height());
+// 			m_liveView->move(geom.left(),geom.top());
+// 		}
+// 		else
+// 		//if(x == Output::Network)
+// 		{
+// 			qDebug("Warning: Output to network not supported yet. Still to be written.");
+// 		}
 	}
 	else
 	{

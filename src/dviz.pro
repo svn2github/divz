@@ -66,7 +66,8 @@ HEADERS += \
 	SlideGroupSettingsDialog.h \
 	ImageFilters.h \
 	SlideItemListModel.h \
-	MediaBrowser.h
+	MediaBrowser.h \
+	OutputInstance.h
 
 	
 SOURCES += \
@@ -87,7 +88,8 @@ SOURCES += \
 	SlideGroupSettingsDialog.cpp \
 	ImageFilters.cpp \
 	SlideItemListModel.cpp \
-	MediaBrowser.cpp
+	MediaBrowser.cpp \
+	OutputInstance.cpp
 	
 
 QT += core \

@@ -37,14 +37,15 @@ protected:
 #include <QTime>
 class QLabel;
 class QPushButton;
+class OutputInstance;
 class SlideGroupViewControl : public QWidget
 {
 	Q_OBJECT
 public:
-	SlideGroupViewControl(SlideGroupViewer * view=0, QWidget * parent = 0);
+	SlideGroupViewControl(OutputInstance * view=0, QWidget * parent = 0);
 	
-	SlideGroupViewer * view() { return m_slideViewer; }
-	virtual void setOutputView(SlideGroupViewer *);
+	OutputInstance * view() { return m_slideViewer; }
+	virtual void setOutputView(OutputInstance *);
 	
 	Slide * selectedSlide() { return m_selectedSlide; }
 	
@@ -72,7 +73,7 @@ protected slots:
 protected:
 	QString formatTime(double);
 
-	SlideGroupViewer *m_slideViewer;
+	OutputInstance *m_slideViewer;
 	SlideGroupListModel *m_slideModel;	
 	SlideGroupViewControlListView *m_listView;
 	friend class SlideGroupViewControlListView;

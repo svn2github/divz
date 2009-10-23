@@ -1,6 +1,7 @@
 #include "model/SlideGroupFactory.h"
 
 #include "SlideEditorWindow.h"
+#include "OutputInstance.h"
 
 #include <QListView>
 #include <QVBoxLayout>
@@ -50,7 +51,7 @@ void SlideGroupViewControlListView::keyPressEvent(QKeyEvent *event)
 
 /** SlideGroupViewControl:: **/
 #define DEBUG_SLIDEGROUPVIEWCONTROL 0
-SlideGroupViewControl::SlideGroupViewControl(SlideGroupViewer *g, QWidget *w )
+SlideGroupViewControl::SlideGroupViewControl(OutputInstance *g, QWidget *w )
 	: QWidget(w),
 	m_slideViewer(0),
 	m_slideModel(0),
@@ -277,7 +278,7 @@ void SlideGroupViewControl::slideSelected(const QModelIndex &idx)
 	m_selectedSlide = slide;
 }
 
-void SlideGroupViewControl::setOutputView(SlideGroupViewer *v) 
+void SlideGroupViewControl::setOutputView(OutputInstance *v) 
 { 
 	SlideGroup *g = 0;
 	if(m_slideViewer) 

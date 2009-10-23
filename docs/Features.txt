@@ -133,6 +133,7 @@ Revised Task list for Release 1.0, 10/18/09:
 			
 			when changing text using tooplbar icons, need to update prop dock with new html 
 			
+			make document icons render "smoother" at the small size 
 			
 			add image slideshow group type
 				or group "generator" / importer?
@@ -405,6 +406,45 @@ Revised Task list for Release 1.0, 10/18/09:
 		[LATER] Video Capture (started impl, but again, performance is terrible. That may be due to the FormatOpts specified, or in ffmpeg, or the capture hardware - need to trace - later!)
 	
 	- Bugs:
+		slide editor crashes right after opening editor (eg press F2, editor becomes visible, crash) with new OutputInstance class integrated into code base
+			dont have time now to debug, stack trace:
+		
+			Program received signal SIGSEGV, Segmentation fault.
+			[Switching to Thread -1208444656 (LWP 5722)]
+			0x080810c6 in AbstractItem::itemId (this=0x0) at .build-debug-shared/../model/AbstractItem.h:45
+			45              quint32 itemId() const { return m_itemId; }
+			(gdb) bt
+			#0  0x080810c6 in AbstractItem::itemId (this=0x0) at .build-debug-shared/../model/AbstractItem.h:45
+			#1  0x080b50b6 in SlideItemListModelSortFunctions::item_zval_compare (a=0x0, b=0x99f0048) at SlideItemListModel.cpp:29
+			#2  0x080b610b in QAlgorithmsPrivate::qSortHelper<QList<AbstractItem*>::iterator, AbstractItem*, bool (*)(AbstractItem*, AbstractItem*)> (start=@0xbfeee0a0, end=@0xbfeee09c, t=@0xac556cc,
+			lessThan=0x80b4fc0 <SlideItemListModelSortFunctions::item_zval_compare(AbstractItem*, AbstractItem*)>) at ../../../include/QtCore/../../src/corelib/tools/qalgorithms.h:362
+			#3  0x080b6481 in qSort<QList<AbstractItem*>::iterator, bool (*)(AbstractItem*, AbstractItem*)> (start=@0xbfeee0f0, end=@0xbfeee0ec,
+			lessThan=0x80b4fc0 <SlideItemListModelSortFunctions::item_zval_compare(AbstractItem*, AbstractItem*)>) at ../../../include/QtCore/../../src/corelib/tools/qalgorithms.h:187
+			#4  0x080b449b in SlideItemListModel::modelDirtyTimeout (this=0x9b763a8) at SlideItemListModel.cpp:269
+			#5  0x081bf33b in SlideItemListModel::qt_metacall (this=0x9b763a8, _c=QMetaObject::InvokeMetaMethod, _id=3, _a=0xbfeee1d0) at .build-debug-shared/moc_SlideItemListModel.cpp:84
+			#6  0x0054796b in QMetaObject::metacall (object=0xbfeee054, cl=QMetaObject::InvokeMetaMethod, idx=27, argv=0xbfeee1d0) at kernel/qmetaobject.cpp:237
+			#7  0x00555130 in QMetaObject::activate (sender=0xac49400, m=0x65a7a4, local_signal_index=0, argv=<value optimized out>) at kernel/qobject.cpp:3390
+			#8  0x005aa8c7 in QTimer::timeout (this=0xac49400) at .moc/release-shared/moc_qtimer.cpp:134
+			#9  0x0055e20e in QTimer::timerEvent (this=0xac49400, e=0xbfeee6d8) at kernel/qtimer.cpp:271
+			#10 0x00552b3f in QObject::event (this=0xac49400, e=0xbfeee6d8) at kernel/qobject.cpp:1202
+			#11 0x00c9340f in QApplicationPrivate::notify_helper (this=0x98807f8, receiver=0xac49400, e=0xbfeee6d8) at kernel/qapplication.cpp:4198
+			#12 0x00c9889e in QApplication::notify (this=0xbfeee9c8, receiver=0xac49400, e=0xbfeee6d8) at kernel/qapplication.cpp:3682
+			#13 0x0054149b in QCoreApplication::notifyInternal (this=0xbfeee9c8, receiver=0xac49400, event=0xbfeee6d8) at kernel/qcoreapplication.cpp:704
+			#14 0x00570f93 in QTimerInfoList::activateTimers (this=0x9883ff4) at ../../include/QtCore/../../src/corelib/kernel/qcoreapplication.h:215
+			#15 0x0056e714 in timerSourceDispatch (source=0x9883fc0) at kernel/qeventdispatcher_glib.cpp:184
+			#16 0x0056e744 in idleTimerSourceDispatch (source=0x9884028) at kernel/qeventdispatcher_glib.cpp:231
+			#17 0x0335c10c in g_main_context_dispatch () from /lib/libglib-2.0.so.0
+			#18 0x0335f54f in ?? () from /lib/libglib-2.0.so.0
+			#19 0x0335fab5 in g_main_context_iteration () from /lib/libglib-2.0.so.0
+			#20 0x0056eb48 in QEventDispatcherGlib::processEvents (this=0x9881128, flags=@0xbfeee858) at kernel/qeventdispatcher_glib.cpp:407
+			#21 0x00d39f15 in QGuiEventDispatcherGlib::processEvents (this=0x9881128, flags=@0xbfeee888) at kernel/qguieventdispatcher_glib.cpp:202
+			#22 0x0054049d in QEventLoop::processEvents (this=0xbfeee900, flags=@0xbfeee8c8) at kernel/qeventloop.cpp:149
+			#23 0x0054082d in QEventLoop::exec (this=0xbfeee900, flags=@0xbfeee908) at kernel/qeventloop.cpp:201
+			#24 0x00542bb1 in QCoreApplication::exec () at kernel/qcoreapplication.cpp:981
+			#25 0x00c92cf7 in QApplication::exec () at kernel/qapplication.cpp:3603
+			#26 0x0806f3ab in main (argc=1, argv=0xbfeeeaf4) at main.cpp:107
+			
+
 		cross fade on songs with video bg seems to lag
 		clicking "next" and auto-going to first slide of next group when from normal slide to song, segfault 
 		editor undo/redo framework doesnt pickup slide property changes

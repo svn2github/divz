@@ -202,7 +202,7 @@ p, li { white-space: pre-wrap; }
             </textbox>
         </slide>
     </group>
-    <group title="PHYSH Logo" fade-speed="0" number="1" icon="" inherit-fade="1" type="0" id="1" fade-quality="0" auto="0">
+    <group title="PHYSH Logo" fade-speed="50" number="1" icon="" inherit-fade="1" type="0" id="1" fade-quality="1" auto="1">
         <slide fade-speed="3000" number="0" timeout="5" inherit-fade="1" id="0" fade-quality="60">
             <background>
                 <item-id>803</item-id>

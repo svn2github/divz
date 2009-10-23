@@ -1,0 +1,261 @@
+#include "OutputInstance.h"
+#include "model/SlideGroup.h"
+#include "MainWindow.h"
+#include "AppSettings.h"
+#include "MyGraphicsScene.h"
+
+#include <QDesktopWidget>
+#include <QApplication>
+#include <QVBoxLayout>
+
+bool OuputInstance_slide_num_compare(Slide *a, Slide *b)
+{
+	return (a && b) ? a->slideNumber() < b->slideNumber() : true;
+}
+
+
+
+OutputInstance::OutputInstance(Output *out, QWidget *parent)
+	: QWidget(parent)
+	, m_output(out)
+	, m_viewer(0)
+	, m_slideGroup(0)
+	, m_slideNum(-1)
+{
+	// MUST be created after main window, so allow segfault if no main window
+	MainWindow *mw = MainWindow::mw();
+		
+	connect(mw, SIGNAL(appSettingsChanged()), this, SLOT(applyOutputSettings()));
+	
+	// even though we dont worry about AR ourself, we need to tell the networked client about AR changes
+	//connect(mw, SIGNAL(aspectRatioChanged(double)), this, SLOT(aspectRatioChanged(double)));
+
+	QVBoxLayout *layout = new QVBoxLayout(this);
+	layout->setContentsMargins(0,0,0,0);
+	
+	m_viewer = new SlideGroupViewer(this);
+	m_viewer->setBackground(Qt::black);
+	m_viewer->setCursor(Qt::BlankCursor);
+	connect(m_viewer, SIGNAL(nextGroup()), this, SLOT(slotNextGroup()));
+	
+	layout->addWidget(m_viewer);
+	
+	applyOutputSettings();
+}
+
+OutputInstance::~OutputInstance() {}
+
+void OutputInstance::applyOutputSettings()
+{
+	Output::OutputType x = m_output->outputType();
+	if(x == Output::Screen || x == Output::Custom)
+	{
+		QRect geom;
+		if(x == Output::Screen)
+		{
+			QDesktopWidget *d = QApplication::desktop();
+			
+			int screenNum = m_output->screenNum();
+			geom = d->screenGeometry(screenNum);
+			
+			setWindowFlags(Qt::FramelessWindowHint);
+		}
+		else
+		{
+			geom = m_output->customRect();
+			setWindowFlags(Qt::WindowStaysOnTopHint | Qt::FramelessWindowHint);
+		}
+
+		resize(geom.width(),geom.height());
+		move(geom.left(),geom.top());
+		setVisible(true);
+	}
+	else
+	//if(x == Output::Network)
+	{
+		qDebug("Warning: Output to network not supported yet. Still to be written.");
+		setVisible(false);
+	}
+}
+
+// proxy methods
+void OutputInstance::slotNextGroup()
+{
+	emit nextGroup();
+}
+
+void OutputInstance::setSlideGroup(SlideGroup *group, Slide * startSlide)
+{
+	Output::OutputType x = m_output->outputType();
+	if(x == Output::Screen || x == Output::Custom)
+	{
+		m_viewer->setSlideGroup(group,startSlide);
+	}
+	else
+	{
+		// TODO
+	}
+	
+	// Replicate the OutputInstance logic internally.
+	// Right now, not needed. But for a network viewer, we'll do this to reduce network logic & trafic needed
+	m_slideGroup  = group;
+	
+	QList<Slide*> slist = group->slideList();
+	qSort(slist.begin(), slist.end(), OuputInstance_slide_num_compare);
+	m_sortedSlides = slist;
+	
+	if(startSlide)
+		setSlide(startSlide);
+	else
+	{
+		QList<Slide*> slist = group->slideList();
+		if(slist.size() > 0)
+			setSlide(m_sortedSlides.at(0));
+		else
+			qDebug("OutputInstance::setSlideGroup: Group[0] has 0 slides");
+	}
+}
+
+SlideGroup * OutputInstance::slideGroup()
+{
+	return m_slideGroup;
+}
+
+int OutputInstance::numSlides()
+{
+	return m_slideGroup ? m_slideGroup->numSlides() : -1;
+}
+
+void OutputInstance::clear()
+{
+	Output::OutputType outType = m_output->outputType();
+	if(outType == Output::Screen || outType == Output::Custom)
+	{
+		m_viewer->clear();
+		
+	}
+	else
+	{
+		// TODO
+	}
+}
+
+void OutputInstance::setBackground(QColor color)
+{
+	Output::OutputType outType = m_output->outputType();
+	if(outType == Output::Screen || outType == Output::Custom)
+	{
+		m_viewer->setBackground(color);
+	}
+	else
+	{
+		// TODO
+	}
+}
+
+void OutputInstance::setSceneContextHint(MyGraphicsScene::ContextHint hint)
+{
+	Output::OutputType outType = m_output->outputType();
+	if(outType == Output::Screen || outType == Output::Custom)
+	{
+		m_viewer->setSceneContextHint(hint);
+	}
+	else
+	{
+		// TODO
+	}
+}
+
+Slide * OutputInstance::setSlide(int x)
+{
+	return setSlide(m_sortedSlides.at(x));	
+}
+
+Slide * OutputInstance::setSlide(Slide *slide)
+{
+	m_slideNum = m_sortedSlides.indexOf(slide);
+	
+	Output::OutputType x = m_output->outputType();
+	if(x == Output::Screen || x == Output::Custom)
+	{
+		m_viewer->setSlide(slide);
+		
+	}
+	else
+	{
+		// TODO
+	}
+	
+	return slide;
+}
+
+
+Slide * OutputInstance::nextSlide()
+{
+	m_slideNum ++;
+	if(m_slideNum >= m_sortedSlides.size())
+	{
+		if(m_slideGroup->autoChangeGroup())
+		{
+			//m_slideNum = m_sortedSlides.size() - 1;
+			emit nextGroup();
+			return 0;
+		}
+		else
+		{
+			m_slideNum = 0;
+		}
+	}
+	
+	return setSlide(m_slideNum);
+}
+
+Slide * OutputInstance::prevSlide()
+{
+	m_slideNum --;
+	if(m_slideNum < 0)
+		m_slideNum = 0;
+	return setSlide(m_slideNum);
+}
+
+void OutputInstance::fadeBlackFrame(bool enable)
+{
+	if(m_sortedSlides.size() <= 0)
+		return;
+		
+	Output::OutputType outType = m_output->outputType();
+	if(outType == Output::Screen || outType == Output::Custom)
+	{
+		m_viewer->fadeBlackFrame(enable);
+	}
+	else
+	{
+		// TODO
+	}
+}
+
+void OutputInstance::fadeClearFrame(bool enable)
+{
+	Output::OutputType outType = m_output->outputType();
+	if(outType == Output::Screen || outType == Output::Custom)
+	{
+		m_viewer->fadeClearFrame(enable);
+	}
+	else
+	{
+		// TODO
+	}
+}
+
+void OutputInstance::setLiveBackground(const QFileInfo &info, bool waitForNextSlide)
+{
+	Output::OutputType outType = m_output->outputType();
+	if(outType == Output::Screen || outType == Output::Custom)
+	{
+		m_viewer->setLiveBackground(info,waitForNextSlide);
+	}
+	else
+	{
+		// TODO
+	}
+}

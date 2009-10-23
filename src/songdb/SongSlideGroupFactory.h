@@ -15,7 +15,7 @@ class SongSlideGroupViewControl : public SlideGroupViewControl
 {
 	Q_OBJECT
 public:
-	SongSlideGroupViewControl(SlideGroupViewer * view=0, QWidget * parent = 0);
+	SongSlideGroupViewControl(OutputInstance * view=0, QWidget * parent = 0);
 	
 	//SlideGroupViewer * view() { return m_slideViewer; }
 	//virtual void setOutputView(SlideGroupViewer *);

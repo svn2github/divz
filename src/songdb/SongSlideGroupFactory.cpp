@@ -22,7 +22,7 @@ QList<AbstractItem *> SongSlideGroupViewMutator::itemList(Output*, SlideGroup*, 
 
 
 /** SlideGroupViewControl:: **/
-SongSlideGroupViewControl::SongSlideGroupViewControl(SlideGroupViewer *g, QWidget *w )
+SongSlideGroupViewControl::SongSlideGroupViewControl(OutputInstance *g, QWidget *w )
 	: SlideGroupViewControl(g,w)
 {
 	if(m_slideModel)

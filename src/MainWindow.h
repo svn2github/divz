@@ -32,6 +32,7 @@ namespace Ui {
 class SongRecord;
 class SongBrowser;
 class QFileInfo;
+class OutputInstance;
 
 class MainWindow : public QMainWindow {
 	Q_OBJECT
@@ -112,7 +113,7 @@ private:
 	DocumentListModel * m_docModel;
 	SlideGroupViewer  * m_previewWidget;
 	OutputViewer      * m_liveMonitor;
-	SlideGroupViewer  * m_liveView;
+	OutputInstance    * m_liveView;
 	
 	SongBrowser * m_songBrowser;
 
