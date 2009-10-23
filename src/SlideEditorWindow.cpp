@@ -350,6 +350,19 @@ SlideEditorWindow::~SlideEditorWindow()
 	delete m_undoStack;
 }
 
+void SlideEditorWindow::showEvent(QShowEvent *evt)
+{
+	evt->accept();
+	
+	float sx = ((float)m_view->width()) / m_scene->width();
+	float sy = ((float)m_view->height()) / m_scene->height();
+
+	float scale = qMin(sx,sy);
+	m_view->setTransform(QTransform().scale(scale,scale));
+        //qDebug("Scaling: %.02f x %.02f = %.02f",sx,sy,scale);
+	m_view->update();
+}
+
 void SlideEditorWindow::closeEvent(QCloseEvent *evt)
 {
 	evt->accept();
@@ -825,8 +838,14 @@ void SlideEditorWindow::updatePropDock(AbstractContent *content)
 	}
 	else
 	{
+		int previousIdx = -1;
+		QString previousTitle = "";
+		
 		if(m_currentConfig && m_currentConfigContent != content)
 		{
+			previousIdx = m_currentConfig->tabWidget()->currentIndex();
+			previousTitle = m_currentConfig->tabWidget()->tabText(previousIdx);
+			
 			m_currentConfig->close();
 			delete m_currentConfig;
 			m_currentConfig = 0;
@@ -859,6 +878,10 @@ void SlideEditorWindow::updatePropDock(AbstractContent *content)
 		p->show();
 		p->adjustSize();
 		m_propDock->adjustSize();
+		
+		if(previousIdx > -1 &&
+			p->tabWidget()->tabText(previousIdx) == previousTitle)
+			p->tabWidget()->setCurrentIndex(previousIdx);
 		
     		m_currentConfigContent = content;
     		m_currentConfig = p;
@@ -1232,6 +1255,8 @@ void SlideEditorWindow::setCurrentSlide(Slide *slide)
 	
 	m_fadeSlider->setValue((int)(crossFadeSpeed * 100));
 	m_inheritFadeBox->setChecked(slide->inheritFadeSettings());
+	setInheritFade(slide->inheritFadeSettings());
+	
 	
 	m_itemModel->setSlide(slide);
 	

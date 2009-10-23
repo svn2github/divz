@@ -20,6 +20,8 @@ namespace Ui {
     class GenericItemConfig;
 }
 class SlideSettingsDialog;
+class QTabWidget;
+class QtColorPicker;
 
 class GenericItemConfig : public QWidget 
 {
@@ -40,6 +42,8 @@ class GenericItemConfig : public QWidget
 		
 		MyGraphicsScene * scene() { return m_scene; }
 		void setScene(MyGraphicsScene * s) { m_scene = s; }
+		
+		QTabWidget * tabWidget();
 	
 	Q_SIGNALS:
 		void applyLook(quint32 frameClass, bool mirrored, bool allContents);
@@ -73,6 +77,8 @@ class GenericItemConfig : public QWidget
 		double 			m_origOpacity;
 		QPointF			m_origPos;
 		QSizeF			m_origSize;
+		
+		QtColorPicker 		* m_shadowColorPicker;
 	
 	private Q_SLOTS:
 // 		void on_newFrame_clicked();
@@ -97,6 +103,10 @@ class GenericItemConfig : public QWidget
 		void slotShadowYOffsetChanged(double);
 		void slotMirrorOffsetChanged(double);
 		
+		void slotShadowAlphaChanged(int);
+		void slotShadowDistanceChanged(int);
+		void setShadowAlphaBox();
+		
 		void slotImageFileChanged(const QString&);
 		void slotVideoFileChanged(const QString&);
 		
@@ -109,6 +119,7 @@ class GenericItemConfig : public QWidget
 		void slotBgImage(bool);
 		void slotBgVideo(bool);
 		
+		void shadowOffsetPreset0();
 		void shadowOffsetPresetB();
 		void shadowOffsetPresetBL();
 		void shadowOffsetPresetBR();

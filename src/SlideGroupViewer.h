@@ -7,6 +7,7 @@
 #include <QGraphicsView>
 #include <QTimer>
 #include <QCloseEvent>
+#include <QFileInfo>
 
 #include "MyGraphicsScene.h"
 #include "model/SlideGroup.h"
@@ -40,12 +41,16 @@ public slots:
 	
 	void fadeBlackFrame(bool);
 	void fadeClearFrame(bool);
+	
+	void setLiveBackground(const QFileInfo &, bool waitForNextSlide);
 
 private slots:
 	void appSettingsChanged();
 	void aspectRatioChanged(double);
 	
 	void videoStreamStarted();
+	
+	void crossFadeFinished();
 		
 protected:
 	void resizeEvent(QResizeEvent *);
@@ -56,6 +61,8 @@ protected:
 private:
 	MyGraphicsScene * scene() { return m_scene; }
 	QGraphicsView * view() { return m_view; }
+	
+	void applyBackground(const QFileInfo&, Slide *slide=0);
 
 	void initVideoProviders();
 	void releaseVideoProvders();
@@ -77,6 +84,9 @@ private:
 	Slide * m_clearSlide;
 	int m_clearSlideNum;
 	bool m_clearEnabled;
+	
+	QFileInfo m_nextBg;
+	bool m_bgWaitingForNextSlide;
 };
 
 #endif // SLIDEGROUPVIEWER_H

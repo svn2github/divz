@@ -107,11 +107,11 @@ GenericItemConfig::GenericItemConfig(AbstractContent * content, QWidget *parent)
 	m_commonUi->outlineColorPlaceholder->setLayout(lineColorLayout);
 	
 	QBoxLayout *shadowColorLayout = new QHBoxLayout;
-	QtColorPicker * shadowColorPicker = new QtColorPicker;
-	setupColorPicker(shadowColorPicker);
-	shadowColorPicker->setCurrentColor(m_content->modelItem()->shadowBrush().color());
-	connect(shadowColorPicker, SIGNAL(colorChanged(const QColor &)), this, SLOT(setShadowColor(const QColor &)));
-	shadowColorLayout->addWidget(shadowColorPicker);
+	m_shadowColorPicker = new QtColorPicker;
+	setupColorPicker(m_shadowColorPicker);
+	m_shadowColorPicker->setCurrentColor(m_content->modelItem()->shadowBrush().color());
+	connect(m_shadowColorPicker, SIGNAL(colorChanged(const QColor &)), this, SLOT(setShadowColor(const QColor &)));
+	shadowColorLayout->addWidget(m_shadowColorPicker);
 	m_commonUi->shadowColorGb->setLayout(shadowColorLayout);
 	
 	if(m_content->modelItem()->shadowEnabled())
@@ -209,6 +209,7 @@ GenericItemConfig::GenericItemConfig(AbstractContent * content, QWidget *parent)
 	connect(m_commonUi->imageFilenameBox, SIGNAL(textChanged(const QString&)), this, SLOT(slotImageFileChanged(const QString& )));
 	connect(m_commonUi->videoFilenameBox, SIGNAL(textChanged(const QString&)), this, SLOT(slotVideoFileChanged(const QString& )));
 	
+	connect(m_commonUi->shadowOffsetPreset0, SIGNAL(clicked()), this, SLOT(shadowOffsetPreset0()));
 	connect(m_commonUi->shadowOffsetPresetB, SIGNAL(clicked()), this, SLOT(shadowOffsetPresetB()));
 	connect(m_commonUi->shadowOffsetPresetBL, SIGNAL(clicked()), this, SLOT(shadowOffsetPresetBL()));
 	connect(m_commonUi->shadowOffsetPresetBR, SIGNAL(clicked()), this, SLOT(shadowOffsetPresetBR()));
@@ -218,16 +219,46 @@ GenericItemConfig::GenericItemConfig(AbstractContent * content, QWidget *parent)
 	connect(m_commonUi->shadowOffsetPresetTL, SIGNAL(clicked()), this, SLOT(shadowOffsetPresetTL()));
 	connect(m_commonUi->shadowOffsetPresetTR, SIGNAL(clicked()), this, SLOT(shadowOffsetPresetTR()));
 	
+	connect(m_commonUi->alphaBox, SIGNAL(valueChanged(int)), this, SLOT(slotShadowAlphaChanged(int)));
+	
 	m_commonUi->tabWidget->setCurrentIndex(0);
 	
 	// hide till used in later revisions
 	m_commonUi->videoPlayButton->setVisible(false);
+	m_commonUi->distanceSlider->setVisible(false);
+	
+	setShadowAlphaBox();
 }
 
 GenericItemConfig::~GenericItemConfig()
 {
 	delete m_commonUi;
 }
+
+
+void GenericItemConfig::slotShadowDistanceChanged(int x)
+{
+
+}
+
+void GenericItemConfig::slotShadowAlphaChanged(int x)
+{
+	QColor c = m_content->modelItem()->shadowBrush().color();
+	
+	int alpha = (int)((100.0 - ((double)x))/100.0 * 255.0);
+	c.setAlpha(alpha);
+	m_shadowColorPicker->setCurrentColor(c);
+	m_content->modelItem()->setShadowBrush(c);
+}
+
+void GenericItemConfig::setShadowAlphaBox()
+{
+	QColor c = m_content->modelItem()->shadowBrush().color();
+	int alpha = 100 - (int)(((double)c.alpha())/255.0 * 100.0);
+	m_commonUi->alphaBox->setValue(alpha);
+}
+		
+QTabWidget * GenericItemConfig::tabWidget() { return m_commonUi->tabWidget; }
 
 void GenericItemConfig::slotClosed()
 {
@@ -527,6 +558,11 @@ void GenericItemConfig::setShadowOffsets(double x, double y)
 	
 	m_content->modelItem()->setShadowOffsetX(x);
 	m_content->modelItem()->setShadowOffsetY(y);
+}
+
+void GenericItemConfig::shadowOffsetPreset0()
+{
+	setShadowOffsets(0,0);	
 }
 
 void GenericItemConfig::shadowOffsetPresetB()

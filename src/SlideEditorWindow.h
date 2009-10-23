@@ -43,6 +43,7 @@ protected:
 
 #define TOOLBAR_TEXT_SIZE_INC 4
 
+class QShowEvent;
 class SlideEditorWindow : public AbstractSlideGroupEditor
 {
 	Q_OBJECT
@@ -66,6 +67,7 @@ signals:
 
 protected:
 	void closeEvent(QCloseEvent*);
+	void showEvent(QShowEvent*);
 
 protected slots:
 	friend class SlideEditorWindowListView;
@@ -74,7 +76,7 @@ protected slots:
 	
 	void itemSelected(const QModelIndex &);
 	void currentItemChanged(const QModelIndex &idx,const QModelIndex &);
-
+	
 private slots:
 	void newTextItem();
 	void newBoxItem();

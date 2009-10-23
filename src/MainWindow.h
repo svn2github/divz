@@ -72,7 +72,7 @@ protected slots:
 	void songSelected(SongRecord*);
 	
 	void fileSelected(const QFileInfo&);
-	void setBackground(const QFileInfo&, bool waitForNextSlide);
+	void setSelectedBackground(const QFileInfo&);
 	
 	void actionEditGroup();
 	void actionNewGroup();

@@ -29,7 +29,8 @@ public:
 	
 signals:
 	void fileSelected(const QFileInfo&);
-	void setBackground(const QFileInfo&, bool waitForNextSlide);
+	void setSelectedBackground(const QFileInfo&);
+	void setLiveBackground(const QFileInfo&, bool waitForNextSlide);
 	
 public slots:
 	void setFilter(const QString&);
@@ -54,8 +55,9 @@ protected slots:
 	void fileTypeChanged(int);
 	
 	void slotAddToSchedule();
-	void slotSetAsBg();
+	void slotSetAsBgCurrent();
 	void slotSetAsBgLater();
+	void slotSetAsBgLive();
 
 protected:
 	void setupUI();
@@ -99,8 +101,9 @@ protected:
 	
 	QWidget		* m_btnBase;
 	QPushButton	* m_btnAddToSchedue;
-	QPushButton	* m_btnSetAsBg;
+	QPushButton	* m_btnSetAsBgLive;
 	QPushButton	* m_btnSetAsBgLater;
+	QPushButton	* m_btnSetAsBgCurrent;
 	
 };
 

@@ -174,21 +174,26 @@ void MediaBrowser::setupUI()
 	QHBoxLayout *hbox3 = new QHBoxLayout(m_btnBase);
 	SET_MARGIN(hbox3,0);
 	
+	m_btnSetAsBgLive = new QPushButton(QIcon(":/data/stock-apply-ffwd.png"),"");
+	m_btnSetAsBgLive->setToolTip("Set selected file as background for the current live slide");
+	hbox3->addWidget(m_btnSetAsBgLive);
+	
 	m_btnAddToSchedue = new QPushButton(QIcon(":/data/stock-add.png"),"");
 	m_btnAddToSchedue->setToolTip("Add selected file to schedule");
 	hbox3->addWidget(m_btnAddToSchedue);
 	
-	m_btnSetAsBg = new QPushButton(QIcon(":/data/stock-apply.png"),"");
-	m_btnSetAsBg->setToolTip("Set selected file as background for the current live slide or, if no live slide, current slide group");
-	hbox3->addWidget(m_btnSetAsBg);
-	
-	m_btnSetAsBgLater = new QPushButton(QIcon(":/data/stock-apply-clock.png"),"");
+	m_btnSetAsBgLater = new QPushButton(QIcon(":/data/stock-apply-next.png"),"");
 	m_btnSetAsBgLater->setToolTip("Set selected file as background for the NEXT slide to go live");
 	hbox3->addWidget(m_btnSetAsBgLater);
 	
+	m_btnSetAsBgCurrent = new QPushButton(QIcon(":/data/stock-apply-pause.png"),"");
+	m_btnSetAsBgCurrent->setToolTip("Set selected file as background for the selected slide group");
+	hbox3->addWidget(m_btnSetAsBgCurrent);
+	
 	connect(m_btnAddToSchedue, SIGNAL(clicked()), this, SLOT(slotAddToSchedule()));
-	connect(m_btnSetAsBg, SIGNAL(clicked()), this, SLOT(slotSetAsBg()));
+	connect(m_btnSetAsBgCurrent, SIGNAL(clicked()), this, SLOT(slotSetAsBgCurrent()));
 	connect(m_btnSetAsBgLater, SIGNAL(clicked()), this, SLOT(slotSetAsBgLater()));
+	connect(m_btnSetAsBgLive, SIGNAL(clicked()), this, SLOT(slotSetAsBgLive()));
 	
 	// enabled by indexSingleClicked()
 	m_btnBase->setEnabled(false);
@@ -275,13 +280,13 @@ void MediaBrowser::slotAddToSchedule()
 	}
 }
 
-void MediaBrowser::slotSetAsBg()
+void MediaBrowser::slotSetAsBgCurrent()
 {
 	QModelIndex idx = m_listView->currentIndex();
 	if(idx.isValid())
 	{
 		QFileInfo info = m_fsModel->fileInfo(idx);
-		emit setBackground(info,false);
+		emit setSelectedBackground(info);
 	}
 }
 
@@ -291,9 +296,21 @@ void MediaBrowser::slotSetAsBgLater()
 	if(idx.isValid())
 	{
 		QFileInfo info = m_fsModel->fileInfo(idx);
-		emit setBackground(info,true);
+		emit setLiveBackground(info,true);
 	}
 }
+
+
+void MediaBrowser::slotSetAsBgLive()
+{
+	QModelIndex idx = m_listView->currentIndex();
+	if(idx.isValid())
+	{
+		QFileInfo info = m_fsModel->fileInfo(idx);
+		emit setLiveBackground(info,false);
+	}
+}
+
 
 
 void MediaBrowser::filterReturnPressed() 
@@ -321,7 +338,8 @@ void MediaBrowser::indexDoubleClicked(const QModelIndex &idx)
 	}
 	else
 	{
-		emit fileSelected(info);
+		//emit fileSelected(info);
+		emit setLiveBackground(info,false);
 	}
 }
 
@@ -359,6 +377,8 @@ void MediaBrowser::setDirectory(const QString &path, bool addToHistory)
 	checkCanGoUp();
 	
 	m_dirBox->setText(path);
+	
+	m_listView->setFocus(Qt::OtherFocusReason);
 }
 
 bool MediaBrowser::checkCanGoUp()

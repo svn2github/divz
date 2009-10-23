@@ -11,11 +11,21 @@
 
 #include "MainWindow.h"
 #include "AppSettings.h"
+#include "MediaBrowser.h"
 
 Slide * SlideGroupViewer::m_blackSlide = 0;
 
 SlideGroupViewer::SlideGroupViewer(QWidget *parent)
-	    : QWidget(parent), m_slideGroup(0), m_scene(0), m_view(0), m_slideNum(0),  m_usingGL(false), m_clearSlide(0), m_clearSlideNum(-1), m_clearEnabled(false)
+	    : QWidget(parent)
+	    , m_slideGroup(0)
+	    , m_scene(0)
+	    , m_view(0) 
+	    , m_slideNum(0)
+	    , m_usingGL(false)
+	    , m_clearSlide(0)
+	    , m_clearSlideNum(-1)
+	    , m_clearEnabled(false)
+	    , m_bgWaitingForNextSlide(false)
 {
 	QRect sceneRect(0,0,1024,768);
 	
@@ -42,14 +52,69 @@ SlideGroupViewer::SlideGroupViewer(QWidget *parent)
 	m_scene->setSceneRect(sceneRect);
 	m_view->setScene(m_scene);
 	
+	connect(m_scene, SIGNAL(crossFadeFinished()), this, SLOT(crossFadeFinished()));
+	
 	m_view->setBackgroundBrush(Qt::gray);
 
 	QVBoxLayout *layout = new QVBoxLayout();
 	layout->setContentsMargins(0,0,0,0);
 	layout->addWidget(m_view);
 	setLayout(layout);
+}
 
 
+void SlideGroupViewer::applyBackground(const QFileInfo &info, Slide * onlyThisSlide)
+{
+	if(!m_slideGroup)
+		return;
+		
+	QString ext = info.suffix();
+	
+	QString abs = info.absoluteFilePath();
+	
+	QList<Slide *> slides;
+	if(onlyThisSlide)
+		slides.append(onlyThisSlide);
+	else
+		slides = m_slideGroup->slideList();
+		
+	foreach(Slide * slide, slides)
+	{
+		AbstractVisualItem * bg = dynamic_cast<AbstractVisualItem*>(slide->background());
+		
+		if(MediaBrowser::isVideo(ext))
+		{
+			bg->setFillType(AbstractVisualItem::Video);
+			bg->setFillVideoFile(abs);
+			
+		}
+		else
+		if(MediaBrowser::isImage(ext))
+		{
+			bg->setFillType(AbstractVisualItem::Image);
+			bg->setFillImageFile(abs);
+		}
+	}
+}
+
+void SlideGroupViewer::setLiveBackground(const QFileInfo &info, bool waitForNextSlide)
+{
+	QString ext = info.suffix();
+	if(!MediaBrowser::isVideo(ext) &&
+		!MediaBrowser::isImage(ext))
+	{
+		QMessageBox::warning(this,"Unknown File Type","I'm not sure how to handle that file. Sorry!");
+		return;
+	}
+	
+	if(!waitForNextSlide)
+		applyBackground(info);
+	else
+	{
+		m_nextBg = info;
+		m_bgWaitingForNextSlide = true;
+	}
+	
 }
 
 void SlideGroupViewer::setBackground(QColor c)
@@ -213,11 +278,23 @@ Slide * SlideGroupViewer::setSlide(Slide *slide)
 			quality = slide->crossFadeQuality();
 		//qDebug() << "SlideGroupViewer::setSlide():         [slide] speed:"<<speed<<", quality:"<<quality;
 	}
-		
+	
+	
+	if(m_bgWaitingForNextSlide)
+		applyBackground(m_nextBg, slide);
 	
 	m_scene->setSlide(slide,MyGraphicsScene::CrossFade,speed,quality);
 	m_slideNum = m_sortedSlides.indexOf(slide);
 	return slide;
+}
+
+void SlideGroupViewer::crossFadeFinished()
+{
+	if(m_bgWaitingForNextSlide)
+	{
+		m_bgWaitingForNextSlide = false;
+		applyBackground(m_nextBg);
+	}
 }
 
 Slide * SlideGroupViewer::nextSlide()
@@ -326,7 +403,7 @@ void SlideGroupViewer::adjustViewScaling()
 	float sx = ((float)m_view->width()) / m_scene->width();
 	float sy = ((float)m_view->height()) / m_scene->height();
 
-	float scale = qMax(sx,sy);
+	float scale = qMin(sx,sy);
 	m_view->setTransform(QTransform().scale(scale,scale));
         //qDebug("Scaling: %.02f x %.02f = %.02f",sx,sy,scale);
 	m_view->update();

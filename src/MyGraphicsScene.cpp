@@ -367,6 +367,7 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans, int speed, i
 			m_liveRoot->setOpacity(0);
 		#endif
 
+		emit crossFadeStarted();
 // 		if(DEBUG_MYGRAPHICSSCENE)
  			//qDebug() << "MyGraphicsScene::setSlide(): Starting fade timer for"<<ms<<"ms"<<"/frame, inc:"<<inc<<", steps:"<<m_fadeSteps<<" ( speed:"<<speed<<", quality:"<<quality<<")";
 		
@@ -465,6 +466,7 @@ void MyGraphicsScene::endTransition()
 		}
 	}
 	
+	emit crossFadeFinished();
 	update();
 	
 }

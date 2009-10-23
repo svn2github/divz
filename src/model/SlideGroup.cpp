@@ -9,6 +9,9 @@ SlideGroup::SlideGroup() :
 	, m_groupTitle("")
 	, m_iconFile("")
 	, m_autoChangeGroup(false)
+	, m_inheritFadeSettings(true)
+	, m_crossFadeSpeed(250)
+	, m_crossFadeQuality(15)
 {
 
 }

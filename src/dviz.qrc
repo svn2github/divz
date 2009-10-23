@@ -52,6 +52,9 @@
         <file>data/stock-add.png</file>
         <file>data/stock-apply.png</file>
         <file>data/stock-apply-clock.png</file>
+        <file>data/stock-apply-pause.png</file>
+        <file>data/stock-apply-next.png</file>
+        <file>data/stock-apply-ffwd.png</file>
         <file>data/stock-attach.png</file>
         <file>data/stock-bold.png</file>
         <file>data/stock-bookmark-page.png</file>

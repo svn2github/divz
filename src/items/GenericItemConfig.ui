@@ -615,14 +615,50 @@
        <item>
         <widget class="QGroupBox" name="shadowColorGb">
          <property name="title">
-          <string>Shadow Color</string>
+          <string>Color</string>
          </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="groupBox_7">
+         <property name="title">
+          <string>Transparency</string>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout_3">
+          <item>
+           <widget class="QLabel" name="label_6">
+            <property name="text">
+             <string>Transparency:</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QSpinBox" name="alphaBox">
+            <property name="suffix">
+             <string>%</string>
+            </property>
+            <property name="maximum">
+             <number>100</number>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QSlider" name="transparencySlider">
+            <property name="maximum">
+             <number>100</number>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </widget>
        </item>
        <item>
         <widget class="QGroupBox" name="blurGroup">
          <property name="title">
-          <string>Shadow Blur Radius</string>
+          <string>Blur Radius</string>
          </property>
          <layout class="QHBoxLayout" name="horizontalLayout_2">
           <item>
@@ -643,17 +679,17 @@
            </widget>
           </item>
           <item>
-           <spacer name="horizontalSpacer">
+           <widget class="QSlider" name="blurSlider">
+            <property name="maximum">
+             <number>16</number>
+            </property>
+            <property name="pageStep">
+             <number>4</number>
+            </property>
             <property name="orientation">
              <enum>Qt::Horizontal</enum>
             </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>40</width>
-              <height>20</height>
-             </size>
-            </property>
-           </spacer>
+           </widget>
           </item>
          </layout>
         </widget>
@@ -666,63 +702,63 @@
          <layout class="QVBoxLayout" name="verticalLayout_18">
           <item>
            <layout class="QGridLayout" name="gridLayout_4">
-            <item row="0" column="0">
+            <item row="1" column="0">
              <widget class="QPushButton" name="shadowOffsetPresetTL">
               <property name="text">
                <string>Top Left</string>
               </property>
              </widget>
             </item>
-            <item row="0" column="1">
+            <item row="1" column="1">
              <widget class="QPushButton" name="shadowOffsetPresetT">
               <property name="text">
                <string>Top</string>
               </property>
              </widget>
             </item>
-            <item row="0" column="2">
+            <item row="1" column="2">
              <widget class="QPushButton" name="shadowOffsetPresetTR">
               <property name="text">
                <string>Top Right</string>
               </property>
              </widget>
             </item>
-            <item row="1" column="0">
+            <item row="2" column="0">
              <widget class="QPushButton" name="shadowOffsetPresetL">
               <property name="text">
                <string>Left</string>
               </property>
              </widget>
             </item>
-            <item row="1" column="2">
+            <item row="2" column="2">
              <widget class="QPushButton" name="shadowOffsetPresetR">
               <property name="text">
                <string>Right</string>
               </property>
              </widget>
             </item>
-            <item row="2" column="0">
+            <item row="3" column="0">
              <widget class="QPushButton" name="shadowOffsetPresetBL">
               <property name="text">
                <string>Bottom Left</string>
               </property>
              </widget>
             </item>
-            <item row="2" column="1">
+            <item row="3" column="1">
              <widget class="QPushButton" name="shadowOffsetPresetB">
               <property name="text">
                <string>Bottom</string>
               </property>
              </widget>
             </item>
-            <item row="2" column="2">
+            <item row="3" column="2">
              <widget class="QPushButton" name="shadowOffsetPresetBR">
               <property name="text">
                <string>Bottom Right</string>
               </property>
              </widget>
             </item>
-            <item row="1" column="1">
+            <item row="0" column="1">
              <widget class="QWidget" name="widget" native="true">
               <layout class="QHBoxLayout" name="horizontalLayout">
                <property name="margin">
@@ -759,7 +795,10 @@
                   <enum>QAbstractSpinBox::UpDownArrows</enum>
                  </property>
                  <property name="minimum">
-                  <double>-99.989999999999995</double>
+                  <double>-100.000000000000000</double>
+                 </property>
+                 <property name="maximum">
+                  <double>100.000000000000000</double>
                  </property>
                  <property name="singleStep">
                   <double>0.500000000000000</double>
@@ -767,6 +806,33 @@
                 </widget>
                </item>
               </layout>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QPushButton" name="shadowOffsetPreset0">
+              <property name="text">
+               <string>Center</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_4">
+              <property name="text">
+               <string>Shadow Distance:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="2">
+             <widget class="QSlider" name="distanceSlider">
+              <property name="minimum">
+               <number>0</number>
+              </property>
+              <property name="maximum">
+               <number>100</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
              </widget>
             </item>
            </layout>
@@ -880,7 +946,7 @@
      <y>317</y>
     </hint>
     <hint type="destinationlabel">
-     <x>226</x>
+     <x>207</x>
      <y>320</y>
     </hint>
    </hints>
@@ -892,12 +958,76 @@
    <slot>setValue(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>226</x>
+     <x>207</x>
      <y>320</y>
     </hint>
     <hint type="destinationlabel">
      <x>131</x>
      <y>317</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>blurSlider</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>blurBox</receiver>
+   <slot>setValue(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>214</x>
+     <y>228</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>155</x>
+     <y>224</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>blurBox</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>blurSlider</receiver>
+   <slot>setValue(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>165</x>
+     <y>233</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>245</x>
+     <y>229</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>alphaBox</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>transparencySlider</receiver>
+   <slot>setValue(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>152</x>
+     <y>158</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>212</x>
+     <y>164</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>transparencySlider</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>alphaBox</receiver>
+   <slot>setValue(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>316</x>
+     <y>160</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>142</x>
+     <y>165</y>
     </hint>
    </hints>
   </connection>

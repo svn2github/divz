@@ -75,6 +75,9 @@ class MyGraphicsScene : public QGraphicsScene
 	signals:
 		void showPropertiesWidget(QWidget * widget);
 		void sceneRectChanged(const QRectF &);
+		
+		void crossFadeStarted();
+		void crossFadeFinished();
 	
 	public slots:
 		void copyCurrentSelection(bool removeSelection = false);

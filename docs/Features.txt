@@ -83,20 +83,26 @@ Revised Task list for Release 1.0, 10/18/09:
 	
 	- Improvements:
 		
-		[STARTED] When searching for song, auto select first result
+		[DONE] When searching for song, auto select first result
 			setCurrentIndex() doesnt seem to be working
-		[STARTED] Crop handles should be easy - as move left in, move X out. Basically keep the image rect the same (or add negative offsets)
+		[HOLD] Crop handles should be easy - as move left in, move X out. Basically keep the image rect the same (or add negative offsets)
 			not as easy as it looks!
+			not a show stopper right now, move to later release
 			
 		= Main UI =
-			[STARTED] Add video pallette
-			[STARTED] Add image palette
 			Add slide pallette
-			Add song template palette
-			Add drag/drop background for songs from a yet-to-be-made vid/image bg pallette
+			
+			[DONE] Add song template palette
+				no support for stored song templates right now in models right now
+				not a show stopper right now
+			
+			[DONE] Add video pallette
+			[DONE] Add image palette
+			[LATER] Add drag/drop background for songs from a yet-to-be-made vid/image bg pallette
+				have buttons to do this right now, D&D can come later
 		
 		= Editor / Visual =
-			[STARTED] Add rounded rectangle item / or round boxcontent corners
+			[HOLD] Add rounded rectangle item / or round boxcontent corners
 				Added rounding code to visual delegate
 				Still need to add rounding to model and to config UI
 				Later, need to focus on songs now.
@@ -104,8 +110,8 @@ Revised Task list for Release 1.0, 10/18/09:
 		
 		= Songs =
 			Need to have a reset template button
-			Add song verse view below song list in main window
 			
+			[DONE] Add song verse view below song list in main window
 			[DONE] Need song new/edit/delete functionality
 			[LATER] Save song templates/bg in a "template collection"
 			[LATER] Auto-sizing song text should be an option that can be enabled/disabled
@@ -116,70 +122,18 @@ Revised Task list for Release 1.0, 10/18/09:
 			[LATER] Need to add drag-drop from song list to song group
 		
 		= Outputs =
-			Prompt to save custom output location on close
+			[LATER] Prompt to save custom output location on close
+				not a show stopper right now
+				
 			Add outputview objects to encapsulate slidegroupviewer or network client/server
 			On first start, intelligently detect aspect ratio of primary output - if no primary out, create small custom rect in top right
 		
 		= Misc = 
-			integrate media browser with background setting and add video / image group
-			when changing directory in media browser, focus on list
+			[MAYBE] Add color theme support vis a vi powerpoint
 			
-			when adding item to document, set selected index
-			slide editor needs to set disabled slider
+			when changing text using tooplbar icons, need to update prop dock with new html 
 			
-			check defaults for inherit cross fade settings on groups
-			set default on groups to go to next slide
-		
-			[LATER] allow multiple select in media browser (e.g. multiple images)
-			[LATER] add preview pane to media browser
 			
-			[DONE] add custom icons (preview icons) to mbrowser
-			[DONE] add current directory label to media browser
-			[DONE] add combobox filter to media browser
-			
-			[DONE] Global cache pixmaps of doc/slide lists 
-			Consider moving opengl option to a per-output setting
-			Consider making Output objects QObjects that can emit signals when changed
-		
-			Move dialogs into their own subfolder in the source tree
-			Move qt color dialog into 3rdparty
-			Add color theme support vis a vi powerpoint
-			
-			add next/prev btns to preview widget
-			add a "zero offset" shadow preset btn
-			alter shadows options from x/y offset to angle + distance (keep btns)
-			start docks on left (?maybe?)
-			setup editor to zoom mygraphicsscene automatically ONLY when opening window, not when resizing during use
-			
-			slide props dock should current tab to prev tab index IF titles match at that index
-			
-			delete key in group list should delete (with prompt) current group
-			
-			is there a way to make the live output not show up in task list???
-					see http://lists.trolltech.com/qt-interest/2007-07/thread00362-0.html for discussion on the opposite problem
-			
-			fonts in the program settings dialog still are incongruant sizes between all boxes
-			
-			future: investigate midi area with auto aranging/tiling of windows
-			
-			make selection in editor "smarter" 
-				maybe by implementing better shapes for items
-				e.g. convert text to painter path somehow and return as shape...maybe...
-				
-			offer "advanced" text item (restore old text layout code) that can do advanced font letter spacing, etc
-				or maybe there is someway to adjust letter spacing in Qt's code?
-				QTextCharFormat does offer horizontal letter spacing...
-				custom vertical letter spacing could be achieved by a custom layout - see qq24: http://doc.trolltech.com/qq/qq24-textlayouts.html
-			
-			make font size buttons use different algorithim for sizing fonts
-				e.g. < 22, inc by 2
-				from 22-44, inc by 4
-				44-80, inc by 6
-				8-100, inc by 8
-				100-130, inc by 10
-				130>, inc by 25??
-				or some form of exponential, rounded percentage inc? (e.g. (int)(cur size * 1.5)) ?
-				
 			add image slideshow group type
 				or group "generator" / importer?
 				like what powerpoint has - but:
@@ -201,35 +155,6 @@ Revised Task list for Release 1.0, 10/18/09:
 					** Will have to send apsect ratio changes over the line
 				[DONE] need to find ops in control that rely on calling the public view() or scene() methods
 					[DONE] best way may be just to move those methods private :-)
-			
-			add blackberry remote control interface
-				two part:
-					server side code in dviz
-					client side code on bb - java 
-				communicate using json
-					need to find midp-compat json class for java
-				this would be client calling ops on server
-				and server sending:
-					list of groups
-					current group idx
-					list of slides in current group
-					current slide in group
-					
-					group title (+icon??)
-					slide #, slide text, (+icon??)
-					
-					event: slide change, group change, pause/play
-					
-				client sending:
-					next slide
-					prev slide
-					set slide #
-					black 
-					clear
-					pause
-					play
-					set group#
-					
 			add mjpeg output feed (server) with configurable FPS / quality for compat with vidblaster
 				use widget topixmap routine?
 				or mygracphisview topixmap?
@@ -238,7 +163,117 @@ Revised Task list for Release 1.0, 10/18/09:
 				should be function in slidegroupviewer (basically, a clone output option)
 					multithreaded - compress frame jpeg once, then offer to all clients
 			
+		
+		
+		[LATER] add blackberry remote control interface
+			two part:
+				server side code in dviz
+				client side code on bb - java 
+			communicate using json
+				need to find midp-compat json class for java
+			this would be client calling ops on server
+			and server sending:
+				list of groups
+				current group idx
+				list of slides in current group
+				current slide in group
+				
+				group title (+icon??)
+				slide #, slide text, (+icon??)
+				
+				event: slide change, group change, pause/play
+				
+			client sending:
+				next slide
+				prev slide
+				set slide #
+				black 
+				clear
+				pause
+				play
+				set group#
+				
+		[LATER] Add zooming toolbar to slide group editor
+				not a show stopper
 			
+		[LATER] cross fade set background ops on live group
+			not a show stopper right now
+		
+		[REJECTED] set default on groups to go to next slide
+			dont do this until fixing segfault bug when doing going next group / first slide to song group
+	
+		[LATER] allow multiple select in media browser (e.g. multiple images)
+		[LATER] add preview pane to media browser
+		
+		[LATER] Consider moving opengl option to a per-output setting
+			not a show stopper right now
+		[REJECTED] Consider making Output objects QObjects that can emit signals when changed
+			I dont want the outputs changing while changing options on dialog, only when saved. So rely on mainwindow signals
+	
+		[LATER] Move dialogs into their own subfolder in the source tree
+			not a show stopper right now
+			
+		[LATER] Move qt color dialog into 3rdparty
+			not a show stopper right now
+		
+		[LATER] add next/prev btns to preview widget
+			not a show stopper right now
+		
+		[LATER] alter shadows options from x/y offset to angle + distance (keep btns)
+			not a show stopper right now
+			
+		[LATER] start docks on left (?maybe?)
+			not a show stopper right now
+		
+		[LATER] delete key in group list should delete (with prompt) current group
+			already does CTRL+D
+			maybe later
+		
+		[LATER] is there a way to make the live output not show up in task list???
+			see http://lists.trolltech.com/qt-interest/2007-07/thread00362-0.html for discussion on the opposite problem
+			not a show stopper right now
+		
+		[LATER] fonts in the program settings dialog still are incongruant sizes between all boxes
+			not a show stopper right now
+		
+		[LATER] future: investigate midi area with auto aranging/tiling of windows
+		
+		[LATER] make selection in editor "smarter" 
+			maybe by implementing better shapes for items
+			e.g. convert text to painter path somehow and return as shape...maybe...
+			
+		[LATER] offer "advanced" text item (restore old text layout code) that can do advanced font letter spacing, etc
+			or maybe there is someway to adjust letter spacing in Qt's code?
+			QTextCharFormat does offer horizontal letter spacing...
+			custom vertical letter spacing could be achieved by a custom layout - see qq24: http://doc.trolltech.com/qq/qq24-textlayouts.html
+		
+		[LATER] make font size buttons use different algorithim for sizing fonts
+			e.g. < 22, inc by 2
+			from 22-44, inc by 4
+			44-80, inc by 6
+			8-100, inc by 8
+			100-130, inc by 10
+			130>, inc by 25??
+			or some form of exponential, rounded percentage inc? (e.g. (int)(cur size * 1.5)) ?
+		
+			
+		[DONE] setup editor to zoom mygraphicsscene automatically ONLY when opening window, not when resizing during use
+		[DONE] slide props dock should current tab to prev tab index IF titles match at that index
+		[DONE] add shadow transparency slider which just adjusts the alpha channel of the color
+		[DONE] add a "zero offset" shadow preset btn
+		[DONE] make preview widget zoom to min width, not max height
+		[DONE] integrate media browser with background setting and add video / image group
+		[DONE] when changing directory in media browser, focus on list
+		[DONE] when adding item to document, set selected index
+		[DONE] when removing groups from doc, set sel idx
+		[DONE] slide editor needs to set disabled slider
+		[DONE] check defaults for inherit cross fade settings on groups
+		[DONE] add custom icons (preview icons) to mbrowser
+		[DONE] add current directory label to media browser
+		[DONE] add combobox filter to media browser
+		
+		[DONE] Global cache pixmaps of doc/slide lists 
+		
 		[DONE] set object names on the toolbars in slide editor window
 		[DONE] adding new group to grou p list should put it at the top /bottom of the list - not middle!
 		[DONE] add seperator before group delete icon in toolbar
@@ -370,6 +405,7 @@ Revised Task list for Release 1.0, 10/18/09:
 		[LATER] Video Capture (started impl, but again, performance is terrible. That may be due to the FormatOpts specified, or in ffmpeg, or the capture hardware - need to trace - later!)
 	
 	- Bugs:
+		cross fade on songs with video bg seems to lag
 		clicking "next" and auto-going to first slide of next group when from normal slide to song, segfault 
 		editor undo/redo framework doesnt pickup slide property changes
 		slide auto change time doesnt seem to save when using guess button

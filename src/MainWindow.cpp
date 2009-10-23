@@ -336,8 +336,10 @@ void MainWindow::songSelected(SongRecord *song)
 	SongSlideGroup *group = new SongSlideGroup();
 	group->setSong(song);
 	m_doc->addGroup(group);
-	if(m_liveView->slideGroup())
+	if(!m_liveView->slideGroup())
 		setLiveGroup(group);
+	QModelIndex idx = m_docModel->indexForGroup(group);
+	m_groupView->setCurrentIndex(idx);
 }
 
 
@@ -349,8 +351,10 @@ void MainWindow::setupMediaBrowser()
 	MediaBrowser *browser = new MediaBrowser();
 	mediaBrowserLayout->addWidget(browser);
 	
+	connect(browser, SIGNAL(setLiveBackground(const QFileInfo&, bool)), m_liveView, SLOT(setLiveBackground(const QFileInfo&, bool)));
+	
+	connect(browser, SIGNAL(setSelectedBackground(const QFileInfo&)), this, SLOT(setSelectedBackground(const QFileInfo&)));
 	connect(browser, SIGNAL(fileSelected(const QFileInfo&)), this, SLOT(fileSelected(const QFileInfo&)));
-	connect(browser, SIGNAL(setBackground(const QFileInfo&, bool)), this, SLOT(setBackground(const QFileInfo&, bool)));
 	
 }
 
@@ -383,13 +387,54 @@ void MainWindow::fileSelected(const QFileInfo &info)
 	SlideGroup *g = new SlideGroup();
 	g->addSlide(slide);
 	m_doc->addGroup(g);
-	if(m_liveView->slideGroup())
+	if(!m_liveView->slideGroup())
 		setLiveGroup(g);
+	QModelIndex idx = m_docModel->indexForGroup(g);
+	m_groupView->setCurrentIndex(idx);
 }
 
-void MainWindow::setBackground(const QFileInfo &info, bool waitForNextSlide)
+void MainWindow::setSelectedBackground(const QFileInfo &info)
 {
-
+	QModelIndex idx = m_groupView->currentIndex();
+	if(idx.isValid())
+	{
+		SlideGroup *group = m_docModel->groupFromIndex(idx);
+		
+		QString ext = info.suffix();
+		if(!MediaBrowser::isVideo(ext) &&
+		   !MediaBrowser::isImage(ext))
+		{
+			QMessageBox::warning(this,"Unknown File Type","I'm not sure how to handle that file. Sorry!");
+			return;
+		}
+		
+		QString abs = info.absoluteFilePath();
+		
+		QList<Slide *> slides = group->slideList();
+		foreach(Slide * slide, slides)
+		{
+			AbstractVisualItem * bg = dynamic_cast<AbstractVisualItem*>(slide->background());
+			
+			if(MediaBrowser::isVideo(ext))
+			{
+				bg->setFillType(AbstractVisualItem::Video);
+				bg->setFillVideoFile(abs);
+				
+			}
+			else
+			if(MediaBrowser::isImage(ext))
+			{
+				bg->setFillType(AbstractVisualItem::Image);
+				bg->setFillImageFile(abs);
+			}
+		}
+		
+		qDebug() << "Finished setting "<<abs<<" as background on group "<<group->groupTitle();
+	}
+	else
+	{
+		QMessageBox::warning(this,"No Slide Group Selected","First, click a group in the list THEN click the 'Set Selected Background' button in the media browser!");
+	}
 }
 	
 void MainWindow::setupOutputViews()
@@ -781,6 +826,9 @@ void MainWindow::actionNewGroup()
 	SlideGroup *g = new SlideGroup();
 	g->addSlide(slide);
 	m_doc->addGroup(g);
+	
+	QModelIndex idx = m_docModel->indexForGroup(g);
+	m_groupView->setCurrentIndex(idx);
 }
 
 void MainWindow::actionDelGroup()
@@ -794,7 +842,12 @@ void MainWindow::actionDelGroup()
 
 void MainWindow::deleteGroup(SlideGroup *s)
 {
+	QModelIndex idx = m_docModel->indexForGroup(s);
+	
 	m_doc->removeGroup(s);
+	
+	if(idx.row()>0)
+		m_groupView->setCurrentIndex(m_docModel->indexForRow(idx.row()-1));
 }
 
 
