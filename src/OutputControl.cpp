@@ -19,6 +19,7 @@
 #include "AppSettings.h"
 
 #define POINTER_STRING(ptr) QString().sprintf("%p",static_cast<void*>(ptr))
+
 OutputControl::OutputControl(QWidget *parent) 
 	: QWidget(parent)
 	, m_inst(0)
@@ -46,10 +47,9 @@ void OutputControl::setupUI()
 	
 	QLabel *label = new QLabel("Fade Speed:");
 	hbox1->addWidget(label);
-	QSlider *m_fadeSlider = new QSlider(Qt::Horizontal);
+	    m_fadeSlider = new QSlider(Qt::Horizontal);
 	m_fadeSlider->setMinimum(0);
 	m_fadeSlider->setValue(1);
-	m_fadeSlider->setMaximum(100);
 	m_fadeSlider->setMaximum(100);
 	m_fadeSlider->setTickInterval(10);
 	m_fadeSlider->setTickPosition(QSlider::TicksBelow);
@@ -349,8 +349,12 @@ void OutputControl::setOutputInstance(OutputInstance * inst)
 {
 	m_inst = inst;
 	setupSyncWithBox();
-	if(inst->output()->tags().indexOf("foldback") > -1)
+
+	if(inst->output()->name() == "Foldback")
 		setIsOutputSynced(true);
+
+	// HACK - later need to default to app settings
+	m_fadeSlider->setValue(25);
 }
 
 void OutputControl::setViewControl(SlideGroupViewControl *ctrl)
@@ -378,22 +382,19 @@ void OutputControl::setViewControl(SlideGroupViewControl *ctrl)
 
 void OutputControl::setCrossFadeSpeed(int value)
 {
-	if(!m_inst)
-		return;
-	
 	double percent = ((double)value) / 100.0;
-	double speed = 3000.0 * percent;
+	double speed = 1250.0 * percent;
 	if(speed<1)
 		speed = 1;
-	double quality = 0.04*speed; // "standard" quality is 10 frames every 250 ms
-	double qualityMax = speed<500 ? 20 :
-			    speed<1000 ? 30 :
-			    speed<2000 ? 45 :
-			    speed<=3000 ? 60 : 30;
+	double quality = 0.05*speed; // "standard" quality is 10 frames every 250 ms
+	double qualityMax   = speed<  500 ? 20 :
+			    speed< 1000 ? 30 :
+			    speed< 2000 ? 40 :
+			    speed<=3000 ? 50 : 30;
 	quality = qMin(qualityMax,quality);
 	if(quality<1)
 		quality=1;
-	//qDebug() << "SlideEditorWindow::setFadeSpeedPreset: value:"<<value<<" ("<<percent<<"), speed:"<<speed<<", quality:"<<quality<<" ( qualityMax:"<<qualityMax<<")";
+	//qDebug() << "OutputControl::setFadeSpeedPreset: value:"<<value<<" ("<<percent<<"), speed:"<<speed<<", quality:"<<quality<<" ( qualityMax:"<<qualityMax<<")";
 	m_fadeSlider->setToolTip(QString("%1 % - %2 ms / %3 fames").arg(value).arg(speed).arg(quality));
 		
 	m_inst->setFadeSpeed(speed);

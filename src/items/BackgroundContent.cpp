@@ -342,9 +342,11 @@ void BackgroundContent::paint(QPainter * painter, const QStyleOptionGraphicsItem
 				tmpRect = painter->combinedTransform().mapRect(tmpRect);
 				
 				QRect destRect(0,0,tmpRect.width(),tmpRect.height());
-				
 				// cache the scaled pixmap according to the transformed size of the view
-				QString foregroundKey = QString(cacheKey()+":%1:%2").arg(destRect.width()).arg(destRect.height());
+				QString foregroundKey = QString(cacheKey()+":%1:%2:%3:%4")
+							.arg(destRect.width()).arg(destRect.height())
+							.arg(m_fileName).arg(m_fileLastModified);
+
 				
 				QPixmap cache;
 				if(!QPixmapCache::find(foregroundKey,cache))

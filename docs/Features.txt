@@ -436,6 +436,25 @@ Revised Task list for Release 1.0, 10/18/09:
 		[LATER] Video Capture (started impl, but again, performance is terrible. That may be due to the FormatOpts specified, or in ffmpeg, or the capture hardware - need to trace - later!)
 	
 	- Bugs:
+		experienced random crash when copying/pasting item but could not reproduce
+			need to implement autosave
+		foldback sync with filters causes crash
+			steps to reproduce:
+				live
+				select song
+				go to foldback
+				set sync
+				turn on filter and resize
+				go back to live
+				select slide
+				select non-song slide
+				select song again
+				crash
+			notes:
+				must have filters on
+				must select another slide after turning on filters
+
+	
 		deleting m_doc in mainwindow::openfile causes segflt when golive with next group - why??
 		[FIXED] output control doesnt set live widget control on app init - must set ;live group to set view control
 		foldback display already set to text-only filter before requested
