@@ -30,6 +30,15 @@ public:
 	void setBackground(QColor);
 	void setSceneContextHint(MyGraphicsScene::ContextHint);
 	
+	Slide *overlaySlide() { return m_overlaySlide; }
+	bool isOverlayEnabled() { return m_overlayEnabled; } 
+	
+	bool isTextOnlyFilterEnabled() { return m_textOnlyFilter; }
+	bool isAutoResizeTextEnabled() { return m_autoResizeText; }
+	
+	int fadeSpeed() { return m_fadeSpeed; }
+	int fadeQuality() { return m_fadeQuality; } 
+	
 signals:
 	void nextGroup();
 
@@ -43,6 +52,15 @@ public slots:
 	void fadeClearFrame(bool);
 	
 	void setLiveBackground(const QFileInfo &, bool waitForNextSlide);
+	
+	void setOverlaySlide(Slide *);
+	void setOverlayEnabled(bool);
+	void setTextOnlyFilterEnabled(bool);
+	void setAutoResizeTextEnabled(bool);
+	
+	void setFadeSpeed(int);
+	void setFadeQuality(int);
+	
 
 private slots:
 	void appSettingsChanged();
@@ -61,6 +79,10 @@ protected:
 private:
 	MyGraphicsScene * scene() { return m_scene; }
 	QGraphicsView * view() { return m_view; }
+	
+	Slide * applySlideFilters(Slide*);
+	
+	void applySlideFilters();
 	
 	void applyBackground(const QFileInfo&, Slide *slide=0);
 
@@ -84,9 +106,19 @@ private:
 	Slide * m_clearSlide;
 	int m_clearSlideNum;
 	bool m_clearEnabled;
+	bool m_blackEnabled;
 	
 	QFileInfo m_nextBg;
 	bool m_bgWaitingForNextSlide;
+	
+	Slide * m_overlaySlide;
+	bool m_overlayEnabled;
+	
+	bool m_textOnlyFilter;
+	bool m_autoResizeText;
+	
+	int m_fadeSpeed;
+	int m_fadeQuality;
 };
 
 #endif // SLIDEGROUPVIEWER_H

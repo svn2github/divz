@@ -67,7 +67,8 @@ HEADERS += \
 	ImageFilters.h \
 	SlideItemListModel.h \
 	MediaBrowser.h \
-	OutputInstance.h
+	OutputInstance.h \
+	OutputControl.h
 
 	
 SOURCES += \
@@ -89,7 +90,8 @@ SOURCES += \
 	ImageFilters.cpp \
 	SlideItemListModel.cpp \
 	MediaBrowser.cpp \
-	OutputInstance.cpp
+	OutputInstance.cpp \
+	OutputControl.cpp
 	
 
 QT += core \

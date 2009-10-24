@@ -7,11 +7,18 @@
 # include <QtOpenGL/QGLWidget>
 #endif
 
+#include <QTextDocument>
+#include <QTextBlock>
+#include <QTextOption>
+
 #include "qvideo/QVideoProvider.h"
 
 #include "MainWindow.h"
 #include "AppSettings.h"
 #include "MediaBrowser.h"
+
+#include "model/TextBoxItem.h"
+#include "model/BackgroundItem.h"
 
 Slide * SlideGroupViewer::m_blackSlide = 0;
 
@@ -25,7 +32,12 @@ SlideGroupViewer::SlideGroupViewer(QWidget *parent)
 	    , m_clearSlide(0)
 	    , m_clearSlideNum(-1)
 	    , m_clearEnabled(false)
+	    , m_blackEnabled(false)
 	    , m_bgWaitingForNextSlide(false)
+	    , m_overlaySlide(0)
+	    , m_overlayEnabled(0)
+	    , m_fadeSpeed(-1)
+	    , m_fadeQuality(-1)
 {
 	QRect sceneRect(0,0,1024,768);
 	
@@ -60,6 +72,242 @@ SlideGroupViewer::SlideGroupViewer(QWidget *parent)
 	layout->setContentsMargins(0,0,0,0);
 	layout->addWidget(m_view);
 	setLayout(layout);
+}
+
+
+void SlideGroupViewer::setOverlaySlide(Slide * newSlide)
+{
+	m_overlaySlide = newSlide;
+	m_overlayEnabled = true;  // TODO should we default to this?
+	applySlideFilters();
+}
+
+void SlideGroupViewer::setOverlayEnabled(bool enable)
+{
+	m_overlayEnabled = enable;
+	applySlideFilters();
+}
+
+void SlideGroupViewer::setTextOnlyFilterEnabled(bool enable)
+{
+	m_textOnlyFilter = enable;
+	applySlideFilters();
+}
+
+void SlideGroupViewer::setAutoResizeTextEnabled(bool enable)
+{
+	m_autoResizeText = enable;
+	applySlideFilters();	
+}
+
+void SlideGroupViewer::setFadeSpeed(int value)
+{
+	m_fadeSpeed = value;
+}
+
+void SlideGroupViewer::setFadeQuality(int value)
+{
+	m_fadeQuality = value;
+}
+
+void SlideGroupViewer::applySlideFilters()
+{
+	if(!m_slideGroup)
+		return;
+		
+	if(!m_blackEnabled && !m_clearEnabled)
+	{
+		Slide *currentSlide = m_sortedSlides.at(m_slideNum);
+		m_scene->setSlide(applySlideFilters(currentSlide),MyGraphicsScene::CrossFade);
+	}
+}
+
+bool SlideGroupViewer_itemZCompare(AbstractItem *a, AbstractItem *b)
+{
+	AbstractVisualItem * va = dynamic_cast<AbstractVisualItem*>(a);
+	AbstractVisualItem * vb = dynamic_cast<AbstractVisualItem*>(b);
+
+	// Decending sort (eg. highest to lowest) because we want the highest
+	// zvalue first n the list instead of last
+	return (va && vb) ? va->zValue() > vb->zValue() : true;
+}
+
+
+Slide * SlideGroupViewer::applySlideFilters(Slide * sourceSlide)
+{
+	if((!m_overlaySlide || !m_overlayEnabled)
+		&& !m_textOnlyFilter && !m_autoResizeText)
+		return sourceSlide;
+	
+	Slide * slide = new Slide();
+	
+	double baseZValue = 0;
+	BackgroundItem * originalBg = 0;
+	
+	QList<AbstractItem *> origList = sourceSlide->itemList();
+	foreach(AbstractItem * sourceItem, origList)
+	{
+		if(m_textOnlyFilter && !sourceItem->inherits("TextBoxItem"))
+			continue;
+			
+		// TODO see if we can do this - adding an item to another slide while its still on the original slide
+		slide->addItem(sourceItem);
+		
+		AbstractVisualItem * visual = dynamic_cast<AbstractVisualItem*>(sourceItem);
+		if(visual && visual->zValue() > baseZValue)
+			baseZValue = visual->zValue();
+			
+		BackgroundItem * bgTmp = dynamic_cast<BackgroundItem*>(sourceItem);
+		if(bgTmp && bgTmp->fillType() != AbstractVisualItem::None)
+			originalBg = bgTmp;
+	}
+	
+	// Apply auto size text filter BEFORE the overlay so we dont resize any overlay text boxes
+	if(m_autoResizeText)
+	{
+		// Use the first textbox in the slide as the slide to resize
+		// "first" as defined by ZValue
+		QList<AbstractItem *> items = slide->itemList();
+		qSort(items.begin(), items.end(), SlideGroupViewer_itemZCompare);
+
+
+		TextBoxItem *text = 0;
+		
+		foreach(AbstractItem * item, items)
+		{
+			AbstractVisualItem * newVisual = dynamic_cast<AbstractVisualItem*>(item);
+			//qDebug()<<"SongSlideGroup::textToSlides(): slideNbr:"<<slideNbr<<": item list
+			if(!text && item->inherits("TextBoxItem"))
+			{
+				text = dynamic_cast<TextBoxItem*>(item);
+				
+			}
+		}
+		
+		if(text)
+		{
+			TextBoxItem * autoText = dynamic_cast<TextBoxItem*>(text->clone());
+			slide->removeItem(text);
+			
+			QRectF scene = m_scene->sceneRect();
+			int width = scene.width();
+			int height = scene.height();
+			
+			double ptSize = autoText->findFontSize();
+			int sizeInc = 4;	// how big of a jump to add to the ptSize each iteration
+			int count = 0;		// current loop iteration
+			int maxCount = 50; 	// max iterations of the search loop (allows font to get up to 232pt)
+			bool done = false;
+			
+			int lastGoodSize = ptSize;
+			QString lastGoodHtml = autoText->text();;
+			
+			QTextDocument doc;
+			
+			// for centering
+			qreal boxHeight = -1;
+			
+			int heightTmp;
+			
+			while(!done && count++ < maxCount)
+			{
+				
+				autoText->setFontSize(ptSize);
+				doc.setHtml(autoText->text());
+				doc.setTextWidth(width);
+				heightTmp = doc.documentLayout()->documentSize().height();
+				
+				if(heightTmp < height)
+				{
+					lastGoodSize = ptSize;
+					lastGoodHtml = autoText->text();
+					boxHeight = heightTmp;
+	
+					//qDebug()<<"size search: "<<ptSize<<"pt was good, trying higher";
+					ptSize += sizeInc;
+	
+				}
+				else
+				{
+					//qDebug()<<"SongSlideGroup::textToSlides(): size search: last good ptsize:"<<lastGoodSize<<", stopping search";
+					done = true;
+				}
+			}
+	
+			autoText->setText(lastGoodHtml);
+			
+			// Center text on screen
+			if(boxHeight > -1)
+			{
+				qreal y = scene.height()/2 - boxHeight/2;
+				//qDebug() << "SongSlideGroup::textToSlides(): centering: boxHeight:"<<boxHeight<<", textRect height:"<<textRect.height()<<", centered Y:"<<y;
+				autoText->setContentsRect(QRectF(0,y,width,boxHeight));
+			}
+
+			// Outline pen for the text
+			QPen pen = QPen(Qt::black,1.5);
+			pen.setJoinStyle(Qt::MiterJoin);
+			
+			autoText->setPos(QPointF(0,0));
+			autoText->setOutlinePen(pen);
+			autoText->setOutlineEnabled(true);
+			autoText->setFillBrush(Qt::white);
+			autoText->setFillType(AbstractVisualItem::Solid);
+			autoText->setShadowEnabled(false);
+			
+			slide->addItem(autoText);
+		}
+	}
+	
+	// Apply slide overlay
+	if(m_overlaySlide && m_overlayEnabled)
+	{
+		bool secondaryBg = false;	
+		QList<AbstractItem *> items = m_overlaySlide->itemList();
+		
+		foreach(AbstractItem * overlayItem, items)
+		{
+			BackgroundItem * bg = dynamic_cast<BackgroundItem*>(overlayItem);
+			if(bg)
+			{
+				if(bg->fillType() == AbstractVisualItem::None)
+				{
+					//qDebug() << "Skipping inherited bg from seondary slide because exists and no fill";
+					continue;
+				}
+				else
+				{
+					secondaryBg = true;
+				}
+			}
+			
+	
+			// TODO see if we can do this - adding an item to another slide while its still on the original slide
+			AbstractItem * newItem = overlayItem; //->clone();
+			AbstractVisualItem * newVisual = dynamic_cast<AbstractVisualItem*>(overlayItem);
+	
+			// rebase zvalue so everything in this slide is on top of the original slide
+			if(newVisual && baseZValue!=0)
+			{
+				newVisual->setZValue(newVisual->zValue() + baseZValue);
+				qDebug()<<"SlideGroupViewer::applySlideFilters: rebased" << newVisual->itemName() << "to new Z" << newVisual->zValue();
+			}
+			
+			if(m_textOnlyFilter ? newItem->inherits("TextBoxItem") : true)
+				slide->addItem(newItem);
+		}
+		
+		// If we have both a overlay and a original bg, remove the original bg
+		if(secondaryBg && originalBg)
+			slide->removeItem(originalBg);
+	}
+	
+	if(m_textOnlyFilter)
+	{
+		dynamic_cast<AbstractVisualItem*>(slide->background())->setFillBrush(QBrush(Qt::black));
+	}
+	
+	return slide;
 }
 
 
@@ -279,11 +527,16 @@ Slide * SlideGroupViewer::setSlide(Slide *slide)
 		//qDebug() << "SlideGroupViewer::setSlide():         [slide] speed:"<<speed<<", quality:"<<quality;
 	}
 	
+	// allow this viewer's cross fade settings to override everything else
+	if(m_fadeQuality > 0)
+		quality = m_fadeQuality;
+	if(m_fadeSpeed > 0)
+		speed = m_fadeSpeed;
 	
 	if(m_bgWaitingForNextSlide)
 		applyBackground(m_nextBg, slide);
 	
-	m_scene->setSlide(slide,MyGraphicsScene::CrossFade,speed,quality);
+	m_scene->setSlide(applySlideFilters(slide),MyGraphicsScene::CrossFade,speed,quality);
 	m_slideNum = m_sortedSlides.indexOf(slide);
 	return slide;
 }
@@ -330,6 +583,8 @@ void SlideGroupViewer::fadeBlackFrame(bool enable)
 	if(m_sortedSlides.size() <= 0)
 		return;
 		
+	m_blackEnabled = enable;
+	
 	if(!m_blackSlide)
 	{
 		m_blackSlide = new Slide();
@@ -353,7 +608,7 @@ void SlideGroupViewer::fadeBlackFrame(bool enable)
 			if(m_slideNum < m_sortedSlides.size())
 			{
 				Slide *currentSlide = m_sortedSlides.at(m_slideNum);
-				m_scene->setSlide(currentSlide,MyGraphicsScene::CrossFade);
+				m_scene->setSlide(applySlideFilters(currentSlide),MyGraphicsScene::CrossFade);
 			}
 		}
 	}
@@ -386,7 +641,7 @@ void SlideGroupViewer::fadeClearFrame(bool enable)
 		if(m_slideNum < m_sortedSlides.size())
 		{
 			Slide *currentSlide = m_sortedSlides.at(m_slideNum);
-			m_scene->setSlide(currentSlide,MyGraphicsScene::CrossFade);
+			m_scene->setSlide(applySlideFilters(currentSlide),MyGraphicsScene::CrossFade);
 		}
 	}
 	

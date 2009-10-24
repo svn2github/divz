@@ -72,6 +72,8 @@ void OutputInstance::applyOutputSettings()
 		move(geom.left(),geom.top());
 		
 		setVisible(m_output->isEnabled());
+		
+		setWindowTitle(QString("%1 Output - DViz").arg(m_output->name()));
 	}
 	else
 	//if(x == Output::Network)
@@ -169,8 +171,114 @@ void OutputInstance::setSceneContextHint(MyGraphicsScene::ContextHint hint)
 	}
 }
 
+void OutputInstance::setOverlaySlide(Slide * newSlide)
+{
+	m_overlaySlide = newSlide;
+	if(!m_output->isEnabled())
+		return;
+	Output::OutputType x = m_output->outputType();
+	if(x == Output::Screen || x == Output::Custom)
+	{
+		m_viewer->setOverlaySlide(newSlide);
+	}
+	else
+	{
+		// TODO
+	}
+}
+
+void OutputInstance::setOverlayEnabled(bool enable)
+{
+	m_overlayEnabled = enable;
+	if(!m_output->isEnabled())
+		return;
+	Output::OutputType x = m_output->outputType();
+	if(x == Output::Screen || x == Output::Custom)
+	{
+		m_viewer->setOverlayEnabled(enable);
+	}
+	else
+	{
+		// TODO
+	}
+}
+
+void OutputInstance::setTextOnlyFilterEnabled(bool enable)
+{
+	m_textOnlyFilter = enable;
+	if(!m_output->isEnabled())
+		return;
+	Output::OutputType x = m_output->outputType();
+	if(x == Output::Screen || x == Output::Custom)
+	{
+		m_viewer->setTextOnlyFilterEnabled(enable);
+	}
+	else
+	{
+		// TODO
+	}
+}
+
+void OutputInstance::setAutoResizeTextEnabled(bool enable)
+{
+	m_autoResizeText = enable;
+	if(!m_output->isEnabled())
+		return;
+	Output::OutputType x = m_output->outputType();
+	if(x == Output::Screen || x == Output::Custom)
+	{
+		m_viewer->setAutoResizeTextEnabled(enable);
+	}
+	else
+	{
+		// TODO
+	}
+}
+
+
+void OutputInstance::setFadeSpeed(int value)
+{
+	m_fadeSpeed = value;
+	if(!m_output->isEnabled())
+		return;
+	Output::OutputType x = m_output->outputType();
+	if(x == Output::Screen || x == Output::Custom)
+	{
+		m_viewer->setFadeSpeed(value);
+	}
+	else
+	{
+		// TODO
+	}
+}
+
+
+void OutputInstance::setFadeQuality(int value)
+{
+	m_fadeQuality = value;
+	if(!m_output->isEnabled())
+		return;
+	Output::OutputType x = m_output->outputType();
+	if(x == Output::Screen || x == Output::Custom)
+	{
+		m_viewer->setFadeQuality(value);
+	}
+	else
+	{
+		// TODO
+	}
+}
+
+
 Slide * OutputInstance::setSlide(int x)
 {
+	qDebug() << "OutputInstance::setSlide: ["<<m_output->name()<<"] Setting slide#:"<<x;
+	if(x >= m_sortedSlides.size() || x<0)
+	{
+		qDebug() << "OutputInstance::setSlide: ["<<m_output->name()<<"] "<<x<<" is out of range, size: "<<m_sortedSlides.size();
+		return 0;
+	}
+		
 	return setSlide(m_sortedSlides.at(x));	
 }
 
@@ -180,6 +288,14 @@ Slide * OutputInstance::setSlide(Slide *slide)
 		return 0;
 		
 	m_slideNum = m_sortedSlides.indexOf(slide);
+	if(m_slideNum >-1 )
+	{
+		emit slideChanged(m_slideNum);
+	}
+	else
+	{
+		qDebug() << "OutputInstance::setSlide: ["<<m_output->name()<<"] Slide ptr given isn't in my list of m_sortedSlides!";
+	}
 	
 	Output::OutputType x = m_output->outputType();
 	if(x == Output::Screen || x == Output::Custom)

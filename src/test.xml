@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 <document title="Test Document" aspect="1.6">
-    <song title="When We All Get To Heaven - Edit Testn" fade-speed="0" number="4" icon="" inherit-fade="1" type="2" id="1" fade-quality="0" auto="0">
+    <song title="When We All Get To Heaven - Edit Testn" fade-speed="0" number="3" icon="" inherit-fade="1" type="2" id="1" fade-quality="0" auto="0">
         <text>Chorus 1
 When we all get to heaven,
 | ----------------------------
@@ -116,7 +116,7 @@ p, li { white-space: pre-wrap; }
             </slide>
         </templates>
     </song>
-    <group title="Welcome Test" fade-speed="50" number="3" icon="" inherit-fade="1" type="0" id="1" fade-quality="1" auto="0">
+    <group title="Welcome Test" fade-speed="50" number="4" icon="" inherit-fade="1" type="0" id="1" fade-quality="1" auto="0">
         <slide fade-speed="0" number="0" timeout="0" inherit-fade="1" id="0" fade-quality="0">
             <background>
                 <item-id>761</item-id>
@@ -202,7 +202,7 @@ p, li { white-space: pre-wrap; }
             </textbox>
         </slide>
     </group>
-    <group title="PHYSH Logo" fade-speed="50" number="1" icon="" inherit-fade="1" type="0" id="1" fade-quality="1" auto="1">
+    <group title="PHYSH Logo" fade-speed="50" number="2" icon="" inherit-fade="1" type="0" id="1" fade-quality="1" auto="1">
         <slide fade-speed="3000" number="0" timeout="5" inherit-fade="1" id="0" fade-quality="60">
             <background>
                 <item-id>803</item-id>
@@ -516,7 +516,7 @@ p, li { white-space: pre-wrap; }
             </image>
         </slide>
     </group>
-    <group title="Test Group" fade-speed="0" number="2" icon="" inherit-fade="1" type="0" id="1" fade-quality="0" auto="0">
+    <group title="Test Group" fade-speed="0" number="0" icon="" inherit-fade="1" type="0" id="1" fade-quality="0" auto="0">
         <slide fade-speed="0" number="2" timeout="0" inherit-fade="1" id="1" fade-quality="0">
             <background>
                 <item-id>2952</item-id>
@@ -630,7 +630,7 @@ p, li { white-space: pre-wrap; }
             </textbox>
         </slide>
     </group>
-    <group title="My First Group" fade-speed="50" number="0" icon="" inherit-fade="0" type="0" id="1" fade-quality="1" auto="0">
+    <group title="My First Group" fade-speed="50" number="1" icon="" inherit-fade="0" type="0" id="1" fade-quality="1" auto="0">
         <slide fade-speed="2538" number="0" timeout="5" inherit-fade="1" id="2" fade-quality="25">
             <background>
                 <item-id>1517</item-id>

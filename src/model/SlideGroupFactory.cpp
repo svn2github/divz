@@ -65,50 +65,52 @@ SlideGroupViewControl::SlideGroupViewControl(OutputInstance *g, QWidget *w )
 	m_currentTimeLength(0),
 	m_elapsedAtPause(0),
 	m_selectedSlide(0),
-	m_timerWasActiveBeforeFade(0)
+	m_timerWasActiveBeforeFade(0),
+	m_clearActive(false),
+	m_blackActive(false)
 {
 	QVBoxLayout * layout = new QVBoxLayout();
 	
 	/** Setup top buttons */
-	QHBoxLayout * hbox1 = new QHBoxLayout();
-	
-	QComboBox *box = new QComboBox();
-	box->addItem("Live");
-	box->addItem("Synced");
-	hbox1->addWidget(box);
-	
-	//hbox1->addStretch(1);
-	
-	QLabel *label = new QLabel("Fade Speed:");
-	hbox1->addWidget(label);
-	QSlider *slider = new QSlider(Qt::Horizontal);
-	hbox1->addWidget(slider,1);
-	
-	QSpinBox *edit = new QSpinBox();
-	connect(slider, SIGNAL(valueChanged(int)), edit, SLOT(setValue(int)));
-	connect(edit, SIGNAL(valueChanged(int)), slider, SLOT(setValue(int)));
-	
-	edit->setSuffix("%");
-	edit->setValue(5);
-	//edit->setMaximumWidth(50);
-	hbox1->addWidget(edit);
-	
-	//hbox1->addStretch(1);
-	
-	m_blackButton = new QPushButton(QIcon(":/data/stock-media-stop.png"),"&Black");
-	m_blackButton->setCheckable(true);
-	m_blackButton->setEnabled(false); // enable on first slide thats set on us
-	connect(m_blackButton, SIGNAL(toggled(bool)), this, SLOT(fadeBlackFrame(bool)));
-	hbox1->addWidget(m_blackButton);
-	
-	m_clearButton = new QPushButton(QIcon(":/data/stock-media-eject.png"),"&Clear");
-	m_clearButton->setCheckable(true);
-	m_clearButton->setEnabled(false); // enable on first slide thats set on us
-	connect(m_clearButton, SIGNAL(toggled(bool)), this, SLOT(fadeClearFrame(bool)));
-	hbox1->addWidget(m_clearButton);
-	
-	layout->addLayout(hbox1);
-	
+// 	QHBoxLayout * hbox1 = new QHBoxLayout();
+// 	
+// 	QComboBox *box = new QComboBox();
+// 	box->addItem("Live");
+// 	box->addItem("Synced");
+// 	hbox1->addWidget(box);
+// 	
+// 	//hbox1->addStretch(1);
+// 	
+// 	QLabel *label = new QLabel("Fade Speed:");
+// 	hbox1->addWidget(label);
+// 	QSlider *slider = new QSlider(Qt::Horizontal);
+// 	hbox1->addWidget(slider,1);
+// 	
+// 	QSpinBox *edit = new QSpinBox();
+// 	connect(slider, SIGNAL(valueChanged(int)), edit, SLOT(setValue(int)));
+// 	connect(edit, SIGNAL(valueChanged(int)), slider, SLOT(setValue(int)));
+// 	
+// 	edit->setSuffix("%");
+// 	edit->setValue(5);
+// 	//edit->setMaximumWidth(50);
+// 	hbox1->addWidget(edit);
+// 	
+// 	//hbox1->addStretch(1);
+// 	
+// 	QPushButton * m_blackButton = new QPushButton(QIcon(":/data/stock-media-stop.png"),"&Black");
+// 	m_blackButton->setCheckable(true);
+// 	//m_blackButton->setEnabled(false); // enable on first slide thats set on us
+// 	connect(m_blackButton, SIGNAL(toggled(bool)), this, SLOT(fadeBlackFrame(bool)));
+// 	hbox1->addWidget(m_blackButton);
+// 	
+// 	QPushButton * m_clearButton = new QPushButton(QIcon(":/data/stock-media-eject.png"),"&Clear");
+// 	m_clearButton->setCheckable(true);
+// 	//m_clearButton->setEnabled(false); // enable on first slide thats set on us
+// 	connect(m_clearButton, SIGNAL(toggled(bool)), this, SLOT(fadeClearFrame(bool)));
+// 	hbox1->addWidget(m_clearButton);
+// 	
+// 	layout->addLayout(hbox1);
+// 	
 	/** Setup the list view in icon mode */
 	//m_listView = new QListView(this);
 	m_listView = new SlideGroupViewControlListView(this);
@@ -326,8 +328,8 @@ void SlideGroupViewControl::setSlideGroup(SlideGroup *g, Slide *curSlide)
 	if(DEBUG_SLIDEGROUPVIEWCONTROL)
 		qDebug()<<"SlideGroupViewControl::setSlideGroup: Loading group#"<<g->groupNumber();
 	
-	m_clearButton->setEnabled(true);
-	m_blackButton->setEnabled(true); 
+// 	m_clearButton->setEnabled(true);
+// 	m_blackButton->setEnabled(true); 
 	
 	enableAnimation(0);
 	
@@ -384,11 +386,49 @@ void SlideGroupViewControl::setCurrentSlide(Slide *s)
 
 void SlideGroupViewControl::fadeBlackFrame(bool toggled)
 {
-	m_slideViewer->fadeBlackFrame(toggled);
-	m_clearButton->setEnabled(!toggled);
+	//m_clearButton->setEnabled(!toggled);
+	m_blackActive = toggled;
 	
-	if(!m_clearButton->isChecked())
+		
+	SlideGroup *g = 0;
+	if(m_slideViewer) 
+		g = m_slideViewer->slideGroup();
+	
+	if(g)
 	{
+		if(!toggled && m_clearActive)
+			m_slideViewer->fadeClearFrame(true);
+		else
+			m_slideViewer->fadeBlackFrame(toggled);
+		
+		if(!m_clearActive)
+		{
+			if(toggled)
+			{
+				m_timerWasActiveBeforeFade = m_timerState == Running;
+				if(m_timerWasActiveBeforeFade)
+					toggleTimerState(Stopped);
+			}
+			else
+			{
+				if(m_timerWasActiveBeforeFade)
+					toggleTimerState(Running);
+			}
+		}
+	}
+}
+	
+void SlideGroupViewControl::fadeClearFrame(bool toggled)
+{
+	m_clearActive = toggled;
+		
+	SlideGroup *g = 0;
+	if(m_slideViewer) 
+		g = m_slideViewer->slideGroup();
+		
+	if(!m_blackActive && g)
+	{
+		m_slideViewer->fadeClearFrame(toggled);
 		if(toggled)
 		{
 			m_timerWasActiveBeforeFade = m_timerState == Running;
@@ -400,23 +440,6 @@ void SlideGroupViewControl::fadeBlackFrame(bool toggled)
 			if(m_timerWasActiveBeforeFade)
 				toggleTimerState(Running);
 		}
-	}
-}
-	
-void SlideGroupViewControl::fadeClearFrame(bool toggled)
-{
-	m_slideViewer->fadeClearFrame(toggled);
-	
-	if(toggled)
-	{
-		m_timerWasActiveBeforeFade = m_timerState == Running;
-		if(m_timerWasActiveBeforeFade)
-			toggleTimerState(Stopped);
-	}
-	else
-	{
-		if(m_timerWasActiveBeforeFade)
-			toggleTimerState(Running);
 	}
 }
 

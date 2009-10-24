@@ -33,6 +33,7 @@ class SongRecord;
 class SongBrowser;
 class QFileInfo;
 class OutputInstance;
+class OutputControl;
 
 class MainWindow : public QMainWindow {
 	Q_OBJECT
@@ -45,6 +46,11 @@ public:
 	
 	Document * currentDocument() { return m_doc; }
 	QRect standardSceneRect(double aspectRatio = -1);
+	
+	OutputInstance * outputInst(int id) { return m_outputInstances.contains(id) ? m_outputInstances[id] : 0; }
+	OutputControl * outputControl(int id) { return m_outputControls.contains(id) ? m_outputControls[id] : 0; }
+	SlideGroupViewControl * viewControl(int id) { return m_viewControls.contains(id) ? m_viewControls[id] : 0; }
+	
 	
 signals:
 	void documentChanged(Document*);
@@ -130,10 +136,8 @@ private:
 	SlideGroupViewControl * m_viewControl;
 	
 	QMap<int, OutputInstance *> m_outputInstances;
-	OutputInstance * outputInst(int id) { return m_outputInstances.contains(id) ? m_outputInstances[id] : 0; }
-	
 	QMap<int, SlideGroupViewControl *> m_viewControls;
-	SlideGroupViewControl * viewControl(int id) { return m_viewControls.contains(id) ? m_viewControls[id] : 0; }
+	QMap<int, OutputControl *> m_outputControls;
 	
 	OutputInstance * liveInst();// { return output(AppSettings::taggedOutput("live")->id()); }
 	SlideGroupViewControl * liveCtrl();// { return viewControl(AppSettings::taggedOutput("live")->id()); }

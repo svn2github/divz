@@ -37,6 +37,8 @@ Document::~Document()
 
 QList<SlideGroup *> Document::groupList() { return m_groups; }
 
+SlideGroup * Document::at(int x) { return m_groups.at(x); }
+
 void Document::setAspectRatio(double f) 
 { 
 	m_aspectRatio = f; 

@@ -267,6 +267,8 @@ int TextBoxContent::contentHeightForWidth(int width) const
 
 	m_text->setTextWidth(width);
 	QSizeF sz = m_text->documentLayout()->documentSize();
+	
+	// restore orig width
       	m_text->setTextWidth(contentsRect().width());
       	
       	//qDebug() << "TextBoxContent::contentHeightForWidth(): \t \t Elapsed:"<<(((double)total.elapsed())/1000.0)<<" sec";

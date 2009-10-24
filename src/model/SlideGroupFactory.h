@@ -87,12 +87,14 @@ protected:
 	double m_currentTimeLength;
 	double m_elapsedAtPause;
 	
-	QPushButton * m_blackButton;
-	QPushButton * m_clearButton;
+// 	QPushButton * m_blackButton;
+// 	QPushButton * m_clearButton;
 	
 	Slide * m_selectedSlide;
 	
 	bool m_timerWasActiveBeforeFade;
+	bool m_clearActive;
+	bool m_blackActive;
 
 };
 
