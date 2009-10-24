@@ -124,7 +124,7 @@ AbstractContent::AbstractContent(QGraphicsScene * scene, QGraphicsItem * parent,
 
 AbstractContent::~AbstractContent()
 {
-	dirtyCache();
+	//dirtyCache();
 	
 	qDeleteAll(m_cornerItems);
 	qDeleteAll(m_controlItems);

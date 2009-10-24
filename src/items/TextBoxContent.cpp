@@ -33,6 +33,10 @@
 	#define qFuzzyIsNull(a) (a<0.00001)
 #endif
 
+#define DEBUG_MARK() qDebug() << "mark: "<<__FILE__<<":"<<__LINE__
+#define DEBUG_TMARK() DEBUG_MARK() << ":" << t.restart() << "ms"
+#define DEBUG_TSTART() QTime total;total.start(); QTime t;t.start();
+
 TextBoxContent::TextBoxContent(QGraphicsScene * scene, QGraphicsItem * parent)
     : AbstractContent(scene, parent, false)
     , m_text(0)
@@ -41,12 +45,12 @@ TextBoxContent::TextBoxContent(QGraphicsScene * scene, QGraphicsItem * parent)
     , m_textMargin(4)
     , m_lastModelRev(0)
 {
+	DEBUG_TSTART();
 	m_dontSyncToModel = true;
 
 	setFrame(0);
 	setFrameTextEnabled(false);
 	setToolTip(tr("Right click to Edit the text"));
-
 	// create a text document
 	m_text = new QTextDocument(this);
 	// for drawing the shadow
@@ -55,7 +59,6 @@ TextBoxContent::TextBoxContent(QGraphicsScene * scene, QGraphicsItem * parent)
 	#if QT_VERSION >= 0x040500
 		m_textMargin = (int)m_text->documentMargin();
 	#endif
-
 	// template text
 	QFont font;
 	#ifdef Q_OS_WIN
@@ -63,15 +66,14 @@ TextBoxContent::TextBoxContent(QGraphicsScene * scene, QGraphicsItem * parent)
 	#endif
 	font.setPointSize(16);
 	m_text->setDefaultFont(font);
-	m_text->setPlainText(tr("right click to edit..."));
-	setHtml(m_text->toHtml());
 
 	//connect(this, SIGNAL(resized()), this, SLOT(delayContentsResized()));
-
 	for(int i=0;i<m_cornerItems.size();i++)
 		m_cornerItems.at(i)->setDefaultLeftOp(CornerItem::Scale);
 
 	m_dontSyncToModel = false;
+	
+	//qDebug() << "TextBoxContent(): \t \t Elapsed:"<<(((double)total.elapsed())/1000.0)<<" sec";
 }
 
 TextBoxContent::~TextBoxContent()
@@ -90,10 +92,13 @@ QString TextBoxContent::toHtml()
 
 void TextBoxContent::setHtml(const QString & htmlCode)
 {
-        m_text->setHtml(htmlCode);
+        DEBUG_TSTART();
+	
+	m_text->setHtml(htmlCode);
 	m_shadowText->setHtml(htmlCode);
+	
 	updateTextConstraints();
-        syncToModelItem(0);
+	syncToModelItem(0);
 
 	// Apply outline pen to the html
 	QTextCursor cursor(m_text);
@@ -111,27 +116,33 @@ void TextBoxContent::setHtml(const QString & htmlCode)
 	format.setTextOutline(p);
 	format.setForeground(modelItem() ? modelItem()->fillBrush() : Qt::white);
 
+	
 	cursor.mergeCharFormat(format);
-
+	
 	#if QT46_SHADOW_ENAB == 0
 	// Setup the shadow text formatting if enabled
 	if(modelItem() && modelItem()->shadowEnabled())
 	{
-		QTextCursor cursor(m_shadowText);
-		cursor.select(QTextCursor::Document);
-
-		QTextCharFormat format;
-		format.setTextOutline(Qt::NoPen);
-		format.setForeground(modelItem() ? modelItem()->shadowBrush() : Qt::black);
-
-		cursor.mergeCharFormat(format);
+		if(qFuzzyIsNull(modelItem()->shadowBlurRadius()))
+		{
+			QTextCursor cursor(m_shadowText);
+			cursor.select(QTextCursor::Document);
+	
+			QTextCharFormat format;
+			format.setTextOutline(Qt::NoPen);
+			format.setForeground(modelItem() ? modelItem()->shadowBrush() : Qt::black);
+	
+			cursor.mergeCharFormat(format);
+		}
 	}
 	#endif
-
+	
 	// Cache gets dirty in syncfrommodelitem conditionally based on model revision
 	//dirtyCache();
 
 	update();
+	
+	//qDebug() << "TextBoxContent::setHtml(): \t \t Elapsed:"<<(((double)total.elapsed())/1000.0)<<" sec";
 }
 
 
@@ -152,7 +163,8 @@ QWidget * TextBoxContent::createPropertyWidget()
 
 void TextBoxContent::syncFromModelItem(AbstractVisualItem *model)
 {
-        m_dontSyncToModel = true;
+        DEBUG_TSTART();
+	m_dontSyncToModel = true;
 	if(!modelItem())
 	{
 		setModelItem(model);
@@ -197,6 +209,8 @@ void TextBoxContent::syncFromModelItem(AbstractVisualItem *model)
 
 AbstractVisualItem * TextBoxContent::syncToModelItem(AbstractVisualItem *model)
 {
+	DEBUG_TSTART();
+	
 	TextItem * textModel = dynamic_cast<TextItem*>(AbstractContent::syncToModelItem(model));
 
 	setModelItemIsChanging(true);
@@ -214,6 +228,8 @@ AbstractVisualItem * TextBoxContent::syncToModelItem(AbstractVisualItem *model)
 
 	setModelItemIsChanging(false);
 
+	//qDebug() << "TextBoxContent::syncToModelItem(): \t \t Elapsed:"<<(((double)total.elapsed())/1000.0)<<" sec";
+	
 	return model;
 }
 
@@ -243,6 +259,7 @@ QPixmap TextBoxContent::renderContent(const QSize & size, Qt::AspectRatioMode /*
 
 int TextBoxContent::contentHeightForWidth(int width) const
 {
+	DEBUG_TSTART();
 	// if no text size is available, use default
 	if (m_textRect.width() < 1 || m_textRect.height() < 1)
 		return AbstractContent::contentHeightForWidth(width);
@@ -251,6 +268,8 @@ int TextBoxContent::contentHeightForWidth(int width) const
 	m_text->setTextWidth(width);
 	QSizeF sz = m_text->documentLayout()->documentSize();
       	m_text->setTextWidth(contentsRect().width());
+      	
+      	//qDebug() << "TextBoxContent::contentHeightForWidth(): \t \t Elapsed:"<<(((double)total.elapsed())/1000.0)<<" sec";
       	return (int)sz.height();
 }
 
@@ -268,6 +287,7 @@ void TextBoxContent::mouseDoubleClickEvent(QGraphicsSceneMouseEvent * event)
 
 void TextBoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget)
 {
+	DEBUG_TSTART();
 	// paint parent
 	AbstractContent::paint(painter, option, widget);
 
@@ -292,7 +312,7 @@ void TextBoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * 
 	// potentially expensive drop shadows, below.
 	if(!QPixmapCache::find(cacheKey(),cache) && m_text->toPlainText().trimmed() != "")
 	{
-		//qDebug()<<"TextBoxContent::paint(): modelItem:"<<modelItem()->itemName()<<": Cache redraw";
+		qDebug()<<"TextBoxContent::paint(): modelItem:"<<modelItem()->itemName()<<": Cache redraw";
 		
 		QSizeF shadowSize = modelItem()->shadowEnabled() ? QSizeF(modelItem()->shadowOffsetX(),modelItem()->shadowOffsetY()) : QSizeF(0,0);
 		cache = QPixmap((contentsRect().size()+shadowSize).toSize());
@@ -377,10 +397,13 @@ void TextBoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * 
 
 
 	painter->restore();
+	
+	//qDebug() << "TextBoxContent::paint(): \t \t Elapsed:"<<(((double)total.elapsed())/1000.0)<<" sec";
 }
 
 void TextBoxContent::updateTextConstraints(int w)
 {
+	DEBUG_TSTART();
 	if(!m_text)
 		return;
 
@@ -414,6 +437,8 @@ void TextBoxContent::updateTextConstraints(int w)
 	{
 		AbstractContent::resizeContents(newRect);
 	}
+	
+	//qDebug() << "TextBoxContent::updateTextConstraints(): \t \t Elapsed:"<<(((double)total.elapsed())/1000.0)<<" sec";
 
 }
 
@@ -424,15 +449,19 @@ void TextBoxContent::delayContentsResized()
 
 void TextBoxContent::contentsResized()
 {
+ 	DEBUG_TSTART();
  	updateTextConstraints();
  	update();
+ 	//qDebug() << "TextBoxContent::contentsResized(): \t \t Elapsed:"<<(((double)total.elapsed())/1000.0)<<" sec";
 }
 
 void TextBoxContent::resizeContents(const QRect & rect, bool keepRatio)
 {
+	DEBUG_TSTART();
 	updateTextConstraints(rect.width());
 	AbstractContent::resizeContents(rect,keepRatio);
 	update();
+	//qDebug() << "TextBoxContent::resizeContents(): \t \t Elapsed:"<<(((double)total.elapsed())/1000.0)<<" sec";
 }
 /*
 void TextBoxContent::updateCache()

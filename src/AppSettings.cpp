@@ -179,6 +179,14 @@ Output * AppSettings::taggedOutput(QString tag)
 	return 0;
 }
 
+Output * AppSettings::outputById(int id)
+{
+	foreach(Output *out, m_outputs)
+		if(out->id() == id)
+			return out;
+	return 0;
+}
+
 void AppSettings::setUseOpenGL(bool f)
 {
 	m_useOpenGL = f;
@@ -191,12 +199,12 @@ void AppSettings::setGridSize(QSizeF sz)
 
 void AppSettings::setGridEnabled(bool flag)
 {
-		m_gridEnabled = flag;
+	m_gridEnabled = flag;
 }
 
 void AppSettings::setThirdGuideEnabled(bool flag)
 {
-		m_thirdGuideEnabled = flag;
+	m_thirdGuideEnabled = flag;
 }
 
 QPointF AppSettings::snapToGrid(QPointF newPos, bool halfGrid)

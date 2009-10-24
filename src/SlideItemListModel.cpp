@@ -15,21 +15,20 @@
 
 
 
-namespace SlideItemListModelSortFunctions {
-	bool item_zval_compare(AbstractItem *a, AbstractItem *b)
-	{
-		AbstractVisualItem * va = dynamic_cast<AbstractVisualItem*>(a);
-		AbstractVisualItem * vb = dynamic_cast<AbstractVisualItem*>(a);
-		if(va && vb) 
-			return va->zValue() > vb->zValue();
-		if(!va && vb)
-			return true;
-		if(va && !vb)
-			return false;
-		return a->itemId() < b->itemId();
-	}
-
-};
+bool SlideItemListModel_item_zval_compare(AbstractItem *a, AbstractItem *b)
+{
+	AbstractVisualItem * va = dynamic_cast<AbstractVisualItem*>(a);
+	AbstractVisualItem * vb = dynamic_cast<AbstractVisualItem*>(a);
+	if(va && vb) 
+		return va->zValue() > vb->zValue();
+	if(!va && vb)
+		return true;
+	if(va && !vb)
+		return false;
+	if(!a || !b)
+		return false;
+	return a->itemId() < b->itemId();
+}
 
 SlideItemListModel::SlideItemListModel(Slide *g, QObject *parent)
 		: QAbstractListModel(parent), m_slide(0), /*m_scene(0), */m_dirtyTimer(0), m_iconSize(192,0)/*, m_sceneRect(0,0,1024,768)*/
@@ -125,7 +124,7 @@ bool SlideItemListModel::dropMimeData ( const QMimeData * data, Qt::DropAction /
 	//m_sortedItems = newList;
 	
 	QList<AbstractItem*> slist = m_slide->itemList();
-	qSort(slist.begin(), slist.end(), SlideItemListModelSortFunctions::item_zval_compare);
+	qSort(slist.begin(), slist.end(), SlideItemListModel_item_zval_compare);
 	m_sortedItems = slist;
 	
 	
@@ -198,7 +197,7 @@ void SlideItemListModel::internalSetup()
 		return;
 		
 	QList<AbstractItem*> slist = m_slide->itemList();
-	qSort(slist.begin(), slist.end(), SlideItemListModelSortFunctions::item_zval_compare);
+	qSort(slist.begin(), slist.end(), SlideItemListModel_item_zval_compare);
 	m_sortedItems = slist;
 
 	QModelIndex top    = indexForItem(m_sortedItems.first()),
@@ -266,7 +265,7 @@ void SlideItemListModel::modelDirtyTimeout()
 	
 	qSort(m_dirtyItems.begin(),
 	      m_dirtyItems.end(), 
-	      SlideItemListModelSortFunctions::item_zval_compare);
+	      SlideItemListModel_item_zval_compare);
 	      
 	
 	QModelIndex top    = indexForItem(m_dirtyItems.first()), 

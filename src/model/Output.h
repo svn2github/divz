@@ -6,6 +6,7 @@
 #include <QObject>
 #include <QVariant>
 
+class OutputInstance;
 class Output : public QObject
 {
 	Q_OBJECT
@@ -61,9 +62,16 @@ public:
 	QByteArray toByteArray();
 	void fromByteArray(QByteArray);
 	
+	int id();
+	
 	double aspectRatio();
+	
+	OutputInstance * instance() { return m_instance; }
+	void setInstance(OutputInstance *);
 
 private:
+	void generateId();
+	
 	bool m_isSystem;
 	bool m_isEnabled;
 	QString m_name;
@@ -75,6 +83,9 @@ private:
 	int m_port;
 	bool m_allowMultiple;
 	QString m_tags;
+	int m_id;
+	
+	OutputInstance * m_instance;
 
 };
 

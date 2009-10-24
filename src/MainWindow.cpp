@@ -50,17 +50,8 @@ MainWindow::MainWindow(QWidget *parent) :
 	// init the editor win AFTER load/new so that editor win starts out with the correct aspect ratio	
 	m_editWin = new SlideEditorWindow();
 	
-	// setup live view before central widget because central widget uses live view in the view control code
-	Output *out = AppSettings::outputs().at(0);
-	m_liveView = new OutputInstance(out);
-// 	m_liveView->setWindowFlags(Qt::FramelessWindowHint);
-// 	m_liveView->setBackground(Qt::black);
-// 	m_liveView->setCursor(Qt::BlankCursor);
-	connect(m_liveView, SIGNAL(nextGroup()), this, SLOT(nextGroup()));
-
 	setupOutputViews();
 	
-
 	setupCentralWidget();
 
 	setupSongList();
@@ -146,7 +137,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	
 	
 	
-	m_liveView->show();
+	//m_liveView->show();
 	
 	//setLiveGroup(m_doc.groupList().at(0));
 	
@@ -166,13 +157,16 @@ MainWindow::~MainWindow()
 	
 	delete m_ui;
 	
-	delete m_liveView;
-	m_liveView = 0;
+	//delete m_liveView;
+	//m_liveView = 0;
 	
 	delete m_docModel;
 	delete m_doc;
 	delete m_editWin;
 }
+
+OutputInstance * MainWindow::liveInst() { return outputInst(AppSettings::taggedOutput("live")->id()); }
+SlideGroupViewControl * MainWindow::liveCtrl() { return viewControl(AppSettings::taggedOutput("live")->id()); }
 
 void MainWindow::loadWindowState()
 {
@@ -203,13 +197,12 @@ void MainWindow::saveWindowState()
 
 void MainWindow::clearAllOutputs()
 {
-	m_liveView->clear();
+// 	m_liveView->clear();
 	m_previewWidget->clear();
 	qDebug() << "MainWindow::clearAllOutputs: Releasing preview slides\n";
 	
-	
-	if(m_viewControl)
-		m_viewControl->releaseSlideGroup();
+/*	if(m_viewControl)
+		m_viewControl->releaseSlideGroup();*/
 }
 
 void MainWindow::actionOpen()
@@ -339,7 +332,7 @@ void MainWindow::songSelected(SongRecord *song)
 	SongSlideGroup *group = new SongSlideGroup();
 	group->setSong(song);
 	m_doc->addGroup(group);
-	if(!m_liveView->slideGroup())
+	if(!liveInst()->slideGroup())
 		setLiveGroup(group);
 	QModelIndex idx = m_docModel->indexForGroup(group);
 	m_groupView->setCurrentIndex(idx);
@@ -354,7 +347,8 @@ void MainWindow::setupMediaBrowser()
 	MediaBrowser *browser = new MediaBrowser();
 	mediaBrowserLayout->addWidget(browser);
 	
-	connect(browser, SIGNAL(setLiveBackground(const QFileInfo&, bool)), m_liveView, SLOT(setLiveBackground(const QFileInfo&, bool)));
+	foreach(OutputInstance *inst, m_outputInstances)
+		connect(browser, SIGNAL(setLiveBackground(const QFileInfo&, bool)), inst, SLOT(setLiveBackground(const QFileInfo&, bool)));
 	
 	connect(browser, SIGNAL(setSelectedBackground(const QFileInfo&)), this, SLOT(setSelectedBackground(const QFileInfo&)));
 	connect(browser, SIGNAL(fileSelected(const QFileInfo&)), this, SLOT(fileSelected(const QFileInfo&)));
@@ -390,7 +384,7 @@ void MainWindow::fileSelected(const QFileInfo &info)
 	SlideGroup *g = new SlideGroup();
 	g->addSlide(slide);
 	m_doc->addGroup(g);
-	if(!m_liveView->slideGroup())
+	if(!liveInst()->slideGroup())
 		setLiveGroup(g);
 	QModelIndex idx = m_docModel->indexForGroup(g);
 	m_groupView->setCurrentIndex(idx);
@@ -442,45 +436,18 @@ void MainWindow::setSelectedBackground(const QFileInfo &info)
 	
 void MainWindow::setupOutputViews()
 {
-    	Output *out = AppSettings::outputs().at(0);
-	if(out && out->name() == "Live")
-	{
-// 		Output::OutputType x = out->outputType();
-// 		if(x == Output::Screen || x == Output::Custom)
-// 		{
-// 			QRect geom;
-// 			if(x == Output::Screen)
-// 			{
-// 				int screenNum = out->screenNum();
-// 				QDesktopWidget *d = QApplication::desktop();
-// 				geom = d->screenGeometry(screenNum);
-// 			}
-// 			else
-// 			{
-// 				geom = out->customRect();
-// 				m_liveView->setWindowFlags(Qt::WindowStaysOnTopHint | Qt::FramelessWindowHint);
-// 			}
-// 
-// 			m_liveView->resize(geom.width(),geom.height());
-// 			m_liveView->move(geom.left(),geom.top());
-// 		}
-// 		else
-// 		//if(x == Output::Network)
-// 		{
-// 			qDebug("Warning: Output to network not supported yet. Still to be written.");
-// 		}
-	}
-	else
-	{
-		QRect geom = QApplication::desktop()->availableGeometry();
-		m_liveView->resize(geom.width(),geom.height());
-		m_liveView->move(0,0);
-		m_liveView->setWindowTitle("Live");
-		qDebug("Debug: Screen 0 was null or not named Live, setting to default geometry.");
-
-	}
+	QList<Output*> allOut = AppSettings::outputs();
 	
-	m_liveView->setVisible(true);
+	foreach(Output *out, allOut)
+	{
+		if(!m_outputInstances.contains(out->id()))
+		{
+			OutputInstance *inst = new OutputInstance(out);
+			connect(inst, SIGNAL(nextGroup()), this, SLOT(nextGroup()));
+			
+			m_outputInstances[out->id()] = inst;
+		}
+	}
 }
 
 
@@ -551,22 +518,28 @@ void MainWindow::setupCentralWidget()
 	m_outputTabs = new QTabWidget();
 	m_splitter2->addWidget(m_outputTabs);
 	
-	SlideGroupFactory *factory;// = SlideGroupFactory::factoryForType(g->groupType());
-	//if(!factory)
-		factory = SlideGroupFactory::factoryForType(SlideGroup::Generic);
+	QList<Output*> allOut = AppSettings::outputs();
 	
-	if(factory)
+	foreach(Output *output, allOut)
 	{
-		m_viewControl = factory->newViewControl();
+		OutputInstance *inst = outputInst(output->id());
+		SlideGroupViewControl *ctrl = viewControl(output->id());
+	
+		SlideGroupFactory *factory = SlideGroupFactory::factoryForType(SlideGroup::Generic);
 		
-		m_viewControl->setOutputView(m_liveView);
-		
-		m_outputTabs->addTab(m_viewControl,"Live");
+		if(factory)
+		{
+			ctrl = factory->newViewControl();
+			ctrl->setOutputView(inst);
+			
+			m_viewControls[output->id()] = ctrl;
+			
+			m_outputTabs->addTab(ctrl,output->name());
+		}
 	}
 	
 
 	setupOutputList();
-	setupOutputControl();
 }
 
 void MainWindow::setupOutputList()
@@ -597,14 +570,9 @@ void MainWindow::setupOutputList()
 		QListWidgetItem *t = prototype->clone();
 		t->setText(out->name());
 		t->setCheckState(Qt::Checked);
+		t->setData(Qt::UserRole + 100, out->id());
 		tbl->addItem(t);
 	}
-
-}
-
-void MainWindow::setupOutputControl()
-{
-
 }
 
 
@@ -639,12 +607,16 @@ void MainWindow::closeEvent(QCloseEvent *event)
 				else
 				{
 					event->accept();
-					m_liveView->hide();
+					//m_liveView->hide();
+					foreach(OutputInstance *inst, m_outputInstances)
+						inst->hide();
 				}
 				return;
 			case QMessageBox::Discard:
 				event->accept();
-				m_liveView->hide();
+				//m_liveView->hide();
+				foreach(OutputInstance *inst, m_outputInstances)
+					inst->hide();
 				return;
 			default:
 				event->ignore();
@@ -655,7 +627,9 @@ void MainWindow::closeEvent(QCloseEvent *event)
 	if(actionSave())
 	{
 		event->accept();
-		m_liveView->hide();
+		//m_liveView->hide();
+		foreach(OutputInstance *inst, m_outputInstances)
+			inst->hide();
 		//close();
 	} 
 	else 
@@ -689,7 +663,6 @@ void MainWindow::actionAppSettingsDialog()
 	emit appSettingsChanged();
 	setupOutputViews();
 	setupOutputList();
-	setupOutputControl();
 }
 
 void MainWindow::actionDocSettingsDialog()
@@ -738,48 +711,70 @@ void MainWindow::previewSlideGroup(SlideGroup *s)
 
 void MainWindow::setLiveGroup(SlideGroup *newGroup, Slide *currentSlide)
 {
-	//SlideGroup *s = m_docModel->groupFromIndex(idx);
-        //qDebug() << "MainWindow::groupSelected(): groupSetLive group#:"<<s->groupNumber()<<", title:"<<s->groupTitle();
-	//openSlideEditor(s);
-	//m_previewWidget->clear();
+	QListWidget * tbl = m_outputList;
+	int tblCnt = tbl->count();
 	
-	SlideGroup * oldGroup = m_liveView->slideGroup();
-	
-	if(!m_liveView->isVisible())
-		m_liveView->show();
-	
-	//qDebug() << "MainWindow::setLiveGroup(): newGroup->groupType():"<<newGroup->groupType()<<", SlideGroup::Generic:"<<SlideGroup::Generic;
-	if((oldGroup && oldGroup->groupType() != newGroup->groupType()) || newGroup->groupType() != SlideGroup::Generic)
+	QList<Output*> selectedOutputs;
+
+	for(int idx=0;idx<tblCnt;idx++)
 	{
-		SlideGroupFactory *factory = SlideGroupFactory::factoryForType(newGroup->groupType());
-		if(!factory)
+		QListWidgetItem * item = tbl->item(idx);
+		//t->setData(Qt::UserRole + 100, out->id());
+		if(item->checkState() == Qt::Checked)
 		{
-			//qDebug() << "MainWindow::setLiveGroup(): Factory fell thu for request, going to generic control";
-			factory = SlideGroupFactory::factoryForType(SlideGroup::Generic);
-		}
-		
-		if(factory)
-		{
-			//qDebug() << "MainWindow::setLiveGroup(): got new factory, initalizing";
-			m_outputTabs->removeTab(m_outputTabs->indexOf(m_viewControl));
-			if(m_viewControl)
-			{
-				delete m_viewControl;
-				m_viewControl = 0;
-			}	
-			
-			m_viewControl = factory->newViewControl();
-			m_viewControl->setOutputView(m_liveView);
-			m_outputTabs->addTab(m_viewControl,"Live");
+			int id = item->data(Qt::UserRole + 100).toInt();
+			Output * out = AppSettings::outputById(id);
+			selectedOutputs.append(out);
 		}
 	}
 	
-	//qDebug() << "MainWindow::setLiveGroup: Loading into view control";
-	m_viewControl->setSlideGroup(newGroup,currentSlide);
-	//qDebug() << "MainWindow::setLiveGroup: Loading into LIVE output";
-	m_liveView->setSlideGroup(newGroup,currentSlide);
-	//qDebug() << "MainWindow::setLiveGroup: Loading into LIVE output (done)";
-	m_viewControl->setFocus(Qt::OtherFocusReason);
+	
+	foreach(Output *output, selectedOutputs)
+	{
+		OutputInstance *inst = outputInst(output->id());
+		SlideGroupViewControl *ctrl = viewControl(output->id());
+		 
+		SlideGroup * oldGroup = inst->slideGroup();
+		
+		if(!inst->isVisible())
+			inst->show();
+		
+		//qDebug() << "MainWindow::setLiveGroup(): newGroup->groupType():"<<newGroup->groupType()<<", SlideGroup::Generic:"<<SlideGroup::Generic;
+		if((oldGroup && oldGroup->groupType() != newGroup->groupType()) || newGroup->groupType() != SlideGroup::Generic)
+		{
+			SlideGroupFactory *factory = SlideGroupFactory::factoryForType(newGroup->groupType());
+			if(!factory)
+			{
+				//qDebug() << "MainWindow::setLiveGroup(): Factory fell thu for request, going to generic control";
+				factory = SlideGroupFactory::factoryForType(SlideGroup::Generic);
+			}
+			
+			if(factory)
+			{
+				//qDebug() << "MainWindow::setLiveGroup(): got new factory, initalizing";
+				m_outputTabs->removeTab(m_outputTabs->indexOf(ctrl));
+				if(ctrl)
+				{
+					delete ctrl;
+					ctrl = 0;
+				}	
+				
+				
+				ctrl = factory->newViewControl();
+				ctrl->setOutputView(inst);
+				m_outputTabs->addTab(ctrl,output->name());
+				
+				m_viewControls[output->id()] = ctrl;
+			}
+		}
+		
+		//qDebug() << "MainWindow::setLiveGroup: Loading into view control";
+		ctrl->setSlideGroup(newGroup,currentSlide);
+		//qDebug() << "MainWindow::setLiveGroup: Loading into LIVE output";
+		inst->setSlideGroup(newGroup,currentSlide);
+		//qDebug() << "MainWindow::setLiveGroup: Loading into LIVE output (done)";
+		ctrl->setFocus(Qt::OtherFocusReason);
+	}
 	
 }
 
@@ -805,8 +800,8 @@ void MainWindow::actionEditGroup()
 		return;
 	SlideGroup *group = m_docModel->groupFromIndex(idx);
 	Slide *slide = 0;
-	if(m_liveView->slideGroup() == group)
-		slide = m_viewControl->selectedSlide();
+	if(liveInst()->slideGroup() == group)
+		slide = liveCtrl()->selectedSlide();
 		
 	editGroup(group,slide);
 }

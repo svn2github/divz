@@ -18,6 +18,7 @@ public:
 	static void addOutput(Output*);
 	static bool removeOutput(Output*);
 	static Output * taggedOutput(QString tag);
+	static Output * outputById(int id);
 
 	static bool useOpenGL() { return m_useOpenGL; }
 	static void setUseOpenGL(bool);

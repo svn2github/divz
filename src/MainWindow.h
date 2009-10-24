@@ -102,7 +102,6 @@ protected:
 	
 private:
 	void setupOutputList();
-	void setupOutputControl();
 	void setupOutputViews();
 	void setupCentralWidget();
 	void setupSongList();
@@ -129,6 +128,15 @@ private:
 	Document * m_doc;
 	
 	SlideGroupViewControl * m_viewControl;
+	
+	QMap<int, OutputInstance *> m_outputInstances;
+	OutputInstance * outputInst(int id) { return m_outputInstances.contains(id) ? m_outputInstances[id] : 0; }
+	
+	QMap<int, SlideGroupViewControl *> m_viewControls;
+	SlideGroupViewControl * viewControl(int id) { return m_viewControls.contains(id) ? m_viewControls[id] : 0; }
+	
+	OutputInstance * liveInst();// { return output(AppSettings::taggedOutput("live")->id()); }
+	SlideGroupViewControl * liveCtrl();// { return viewControl(AppSettings::taggedOutput("live")->id()); }
 	
 	/** static */
 	static MainWindow * static_mainWindow;	

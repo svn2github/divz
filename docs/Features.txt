@@ -407,6 +407,9 @@ Revised Task list for Release 1.0, 10/18/09:
 	
 	- Bugs:
 		slide editor crashes right after opening editor (eg press F2, editor becomes visible, crash) with new OutputInstance class integrated into code base
+			UPDATE: doesnt sigsegv on CentOS5 - seems to me it might be the test data I'm using at the office. I patched the method indicated below anyway
+				at SlideItemListModel.cpp:29 to confirm that both a & b ptrs are valid (non null) - we'll see if that fixes it when returning to the office.
+				
 			dont have time now to debug, stack trace:
 		
 			Program received signal SIGSEGV, Segmentation fault.

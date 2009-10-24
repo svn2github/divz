@@ -1,5 +1,5 @@
 #include "Output.h"
-
+#include <QSettings>
 #include <QDataStream>
 #include <QIODevice>
 #include <QApplication>
@@ -17,8 +17,26 @@ Output::Output() :
 	, m_port(7777)
 	, m_allowMultiple(true)
 	, m_tags("")
-{}
+	, m_id(-1)
+{
+	generateId();
+}
 
+void Output::generateId()
+{
+	QSettings x;
+	int id = x.value("output/max-id",100).toInt();
+	id++;
+	x.setValue("output/max-id",id);
+	m_id = id;
+}
+
+int Output::id()
+{
+	if(m_id<=0)
+		generateId();
+	return m_id;
+}
 
 void Output::setIsSystem(bool x) { m_isSystem = x; }
 void Output::setIsEnabled(bool x) { m_isEnabled = x; }
@@ -57,6 +75,7 @@ QByteArray Output::toByteArray()
 	b << QVariant(port());
 	b << QVariant(allowMultiple());
 	b << QVariant(tags());
+	b << QVariant(id());
 
 	return array;
 }
@@ -77,6 +96,14 @@ void Output::fromByteArray(QByteArray array)
 	b >> x; setPort(x.toInt());
 	b >> x; setAllowMultiple(x.toBool());
 	b >> x; setTags(x.toString());
+	b >> x; 
+		if(!x.isNull())
+			m_id = x.toInt();
+}
+
+void Output::setInstance(OutputInstance *instance)
+{
+	m_instance = instance;
 }
 
 double Output::aspectRatio()

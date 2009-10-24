@@ -22,6 +22,8 @@ OutputInstance::OutputInstance(Output *out, QWidget *parent)
 	, m_slideGroup(0)
 	, m_slideNum(-1)
 {
+	out->setInstance(this);
+	
 	// MUST be created after main window, so allow segfault if no main window
 	MainWindow *mw = MainWindow::mw();
 		
@@ -68,7 +70,8 @@ void OutputInstance::applyOutputSettings()
 
 		resize(geom.width(),geom.height());
 		move(geom.left(),geom.top());
-		setVisible(true);
+		
+		setVisible(m_output->isEnabled());
 	}
 	else
 	//if(x == Output::Network)
@@ -173,6 +176,9 @@ Slide * OutputInstance::setSlide(int x)
 
 Slide * OutputInstance::setSlide(Slide *slide)
 {
+	if(!m_output->isEnabled())
+		return 0;
+		
 	m_slideNum = m_sortedSlides.indexOf(slide);
 	
 	Output::OutputType x = m_output->outputType();
@@ -220,6 +226,9 @@ Slide * OutputInstance::prevSlide()
 
 void OutputInstance::fadeBlackFrame(bool enable)
 {
+	if(!m_output->isEnabled())
+		return;
+		
 	if(m_sortedSlides.size() <= 0)
 		return;
 		
@@ -236,6 +245,9 @@ void OutputInstance::fadeBlackFrame(bool enable)
 
 void OutputInstance::fadeClearFrame(bool enable)
 {
+	if(!m_output->isEnabled())
+		return;
+		
 	Output::OutputType outType = m_output->outputType();
 	if(outType == Output::Screen || outType == Output::Custom)
 	{
@@ -249,6 +261,9 @@ void OutputInstance::fadeClearFrame(bool enable)
 
 void OutputInstance::setLiveBackground(const QFileInfo &info, bool waitForNextSlide)
 {
+	if(!m_output->isEnabled())
+		return;
+		
 	Output::OutputType outType = m_output->outputType();
 	if(outType == Output::Screen || outType == Output::Custom)
 	{
