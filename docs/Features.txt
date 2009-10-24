@@ -131,6 +131,36 @@ Revised Task list for Release 1.0, 10/18/09:
 		= Misc = 
 			[MAYBE] Add color theme support vis a vi powerpoint
 			
+			add generic pre-render on document load 
+				loop thru every group, every slide and call Paint on every visual delegate
+			
+			multioutputs:
+				when outputting to only one output, need to keep live tab in same place
+				enable cross fade slider with similar math algorihm to the editor window
+				
+				add synced support 
+					using qstackedwidget, change output control to sync options
+						- sync with what:
+							- which output - combo box drop down
+						- filter or no filter
+						- filter type 
+							- at start, offer builtin filters:
+								foreground only
+								text only
+								background only
+								video only
+								non-text only
+						- default background if background only
+							what color, etc
+						- template overlay option (select a slide group to overlay on top of or behind)
+							- possibly LATER
+						- auto-size test options:
+							- if only one text box found on slide, max fill to screen and max font size like in song
+							- or only first text box - or only "top" text box - i think songs use top box from template
+						- cross fade enabled for this output (default no for foldback-tagged outputs)
+						- LATER, offer user-designed filters:
+							- scripted filter?
+						
 			when changing text using tooplbar icons, need to update prop dock with new html 
 			
 			make document icons render "smoother" at the small size 

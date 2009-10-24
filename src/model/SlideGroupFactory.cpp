@@ -48,7 +48,9 @@ void SlideGroupViewControlListView::keyPressEvent(QKeyEvent *event)
 		}
 	}
 }
-
+#include <QComboBox>
+#include <QSpinBox>
+#include <QSlider>
 /** SlideGroupViewControl:: **/
 #define DEBUG_SLIDEGROUPVIEWCONTROL 0
 SlideGroupViewControl::SlideGroupViewControl(OutputInstance *g, QWidget *w )
@@ -69,7 +71,29 @@ SlideGroupViewControl::SlideGroupViewControl(OutputInstance *g, QWidget *w )
 	
 	/** Setup top buttons */
 	QHBoxLayout * hbox1 = new QHBoxLayout();
-	hbox1->addStretch(1);
+	
+	QComboBox *box = new QComboBox();
+	box->addItem("Live");
+	box->addItem("Synced");
+	hbox1->addWidget(box);
+	
+	//hbox1->addStretch(1);
+	
+	QLabel *label = new QLabel("Fade Speed:");
+	hbox1->addWidget(label);
+	QSlider *slider = new QSlider(Qt::Horizontal);
+	hbox1->addWidget(slider,1);
+	
+	QSpinBox *edit = new QSpinBox();
+	connect(slider, SIGNAL(valueChanged(int)), edit, SLOT(setValue(int)));
+	connect(edit, SIGNAL(valueChanged(int)), slider, SLOT(setValue(int)));
+	
+	edit->setSuffix("%");
+	edit->setValue(5);
+	//edit->setMaximumWidth(50);
+	hbox1->addWidget(edit);
+	
+	//hbox1->addStretch(1);
 	
 	m_blackButton = new QPushButton(QIcon(":/data/stock-media-stop.png"),"&Black");
 	m_blackButton->setCheckable(true);

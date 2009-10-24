@@ -522,6 +522,9 @@ void MainWindow::setupCentralWidget()
 	
 	foreach(Output *output, allOut)
 	{
+		if(!output->isEnabled())
+			continue;
+			
 		OutputInstance *inst = outputInst(output->id());
 		SlideGroupViewControl *ctrl = viewControl(output->id());
 	
