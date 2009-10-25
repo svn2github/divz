@@ -272,10 +272,10 @@ void OutputInstance::setFadeQuality(int value)
 
 Slide * OutputInstance::setSlide(int x)
 {
-	qDebug() << "OutputInstance::setSlide: ["<<m_output->name()<<"] Setting slide#:"<<x;
+	//qDebug() << "OutputInstance::setSlide: ["<<m_output->name()<<"] Setting slide#:"<<x;
 	if(x >= m_sortedSlides.size() || x<0)
 	{
-		qDebug() << "OutputInstance::setSlide: ["<<m_output->name()<<"] "<<x<<" is out of range, size: "<<m_sortedSlides.size();
+		//qDebug() << "OutputInstance::setSlide: ["<<m_output->name()<<"] "<<x<<" is out of range, size: "<<m_sortedSlides.size();
 		return 0;
 	}
 		
@@ -294,7 +294,7 @@ Slide * OutputInstance::setSlide(Slide *slide)
 	}
 	else
 	{
-		qDebug() << "OutputInstance::setSlide: ["<<m_output->name()<<"] Slide ptr given isn't in my list of m_sortedSlides!";
+		//qDebug() << "OutputInstance::setSlide: ["<<m_output->name()<<"] Slide ptr given isn't in my list of m_sortedSlides!";
 	}
 	
 	Output::OutputType x = m_output->outputType();

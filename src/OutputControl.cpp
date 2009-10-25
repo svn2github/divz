@@ -69,14 +69,14 @@ void OutputControl::setupUI()
 	m_blackButton->setEnabled(false); // enable when view control set
 	hbox1->addWidget(m_blackButton);
 	
-	//connect(m_blackButton, SIGNAL(toggled(bool)), this, SLOT(fadeBlackFrame(bool)));
+	connect(m_blackButton, SIGNAL(toggled(bool)), this, SLOT(fadeBlackFrame(bool)));
 	
 	m_clearButton = new QPushButton(QIcon(":/data/stock-media-eject.png"),"&Clear");
 	m_clearButton->setCheckable(true);
 	m_clearButton->setEnabled(false); 
 	hbox1->addWidget(m_clearButton);
 	
-	//connect(m_clearButton, SIGNAL(toggled(bool)), this, SLOT(fadeClearFrame(bool)));
+	connect(m_clearButton, SIGNAL(toggled(bool)), this, SLOT(fadeClearFrame(bool)));
 	
 	layout->addLayout(hbox1);
 	
@@ -338,10 +338,10 @@ void OutputControl::setIsOutputSynced(bool flag)
 	else
 		setSyncSource(m_syncInst);
 	
-	/*
-	qDebug() << "OutputControl::setIsOutputSynced: flag:"<<flag;
-	qDebug() << "OutputControl::setViewControl: m_ctrl:"<<POINTER_STRING(m_ctrl)<<", m_syncWidget:"<<POINTER_STRING(m_syncWidget);
-	*/
+	
+	//qDebug() << "OutputControl::setIsOutputSynced: flag:"<<flag;
+	//qDebug() << "OutputControl::setViewControl: m_ctrl:"<<POINTER_STRING(m_ctrl)<<", m_syncWidget:"<<POINTER_STRING(m_syncWidget);
+	
 	m_stack->setCurrentWidget( flag ? m_syncWidget : m_ctrl );
 }
 
@@ -351,20 +351,40 @@ void OutputControl::setOutputInstance(OutputInstance * inst)
 	setupSyncWithBox();
 
 	if(inst->output()->name() == "Foldback")
+	//{
+		//qDebug() << "Output is foldback!";
 		setIsOutputSynced(true);
+	//}
+		
+	connect(m_inst, SIGNAL(slideChanged(int)), this, SLOT(slideChanged(int)));
 
 	// HACK - later need to default to app settings
 	m_fadeSlider->setValue(25);
 }
 
-void OutputControl::setViewControl(SlideGroupViewControl *ctrl)
+void OutputControl::slideChanged(int)
+{
+	m_blackButton->setChecked(false);
+	m_clearButton->setChecked(false);
+}
+
+void OutputControl::fadeBlackFrame(bool flag) 
 {
 	if(m_ctrl)
-	{
-		disconnect(m_ctrl,0,m_blackButton,0);
-		disconnect(m_ctrl,0,m_clearButton,0);
+		m_ctrl->fadeBlackFrame(flag);
+}
+
+void OutputControl::fadeClearFrame(bool flag) 
+{
+	if(m_ctrl)
+		m_ctrl->fadeClearFrame(flag);
+}
+
+void OutputControl::setViewControl(SlideGroupViewControl *ctrl)
+{
+	//qDebug() << "OutputControl::setViewControl: ["<<m_inst->output()->name()<<"]: old ctrl:"<<POINTER_STRING(m_ctrl)<<", new ctrl:"<<POINTER_STRING(ctrl)<<", btns:"<<POINTER_STRING(m_blackButton)<<","<<POINTER_STRING(m_clearButton);
+	if(m_ctrl)
 		m_stack->removeWidget(m_ctrl);
-	}
 	
 	m_ctrl = ctrl;
 	
@@ -375,9 +395,6 @@ void OutputControl::setViewControl(SlideGroupViewControl *ctrl)
 	
 	m_blackButton->setEnabled(true);
 	m_clearButton->setEnabled(true);
-	
-	connect(m_blackButton, SIGNAL(toggled(bool)), m_ctrl, SLOT(fadeBlackFrame(bool)));
-	connect(m_clearButton, SIGNAL(toggled(bool)), m_ctrl, SLOT(fadeClearFrame(bool)));
 }
 
 void OutputControl::setCrossFadeSpeed(int value)

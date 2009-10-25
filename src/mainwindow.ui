@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>653</width>
+    <width>807</width>
     <height>465</height>
    </rect>
   </property>
@@ -25,7 +25,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>653</width>
+     <width>807</width>
      <height>26</height>
     </rect>
    </property>
@@ -60,9 +60,16 @@
     <addaction name="separator"/>
     <addaction name="actionVisit_DViz_Website"/>
    </widget>
+   <widget class="QMenu" name="menuTools">
+    <property name="title">
+     <string>Tools</string>
+    </property>
+    <addaction name="actionImages_Import_Tool"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
    <addaction name="menuHelp"/>
+   <addaction name="menuTools"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <widget class="QDockWidget" name="dwItems">
@@ -80,7 +87,7 @@
      <item>
       <widget class="QTabWidget" name="tabWidget">
        <property name="currentIndex">
-        <number>1</number>
+        <number>0</number>
        </property>
        <widget class="QWidget" name="tabSongs">
         <attribute name="title">
@@ -166,6 +173,8 @@
    <addaction name="separator"/>
    <addaction name="actionSlide_Group_Properties"/>
    <addaction name="actionDelete_Slide_Group"/>
+   <addaction name="separator"/>
+   <addaction name="actionImages_Import_Tool"/>
   </widget>
   <action name="actionOpen">
    <property name="text">
@@ -242,6 +251,11 @@
   <action name="actionDoc_Settings">
    <property name="text">
     <string>Document Settings ...</string>
+   </property>
+  </action>
+  <action name="actionImages_Import_Tool">
+   <property name="text">
+    <string>Images Import Tool</string>
    </property>
   </action>
  </widget>

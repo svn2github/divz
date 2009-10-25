@@ -186,8 +186,9 @@ Revised Task list for Release 1.0, 10/18/09:
 			
 			make document icons render "smoother" at the small size 
 			
-			add image slideshow group type
+			[STARTED] add image slideshow group type
 				or group "generator" / importer?
+					[DONE] added importer under MainWindow::imageImportTool()
 				like what powerpoint has - but:
 					- ppt displayes NO progress dialog or bar when reading large image lists (just a busy cursor)
 					- generating the slides takes a LONG time in ppt once you click CREATE
@@ -457,9 +458,14 @@ Revised Task list for Release 1.0, 10/18/09:
 		[LATER] Video Capture (started impl, but again, performance is terrible. That may be due to the FormatOpts specified, or in ffmpeg, or the capture hardware - need to trace - later!)
 	
 	- Bugs:
+		need to fix the hackish method of setting slide groups on synced outputs in MainWindow - needs to be cleaner!
+		automatic enabling of foldback sync with live doesnt seem to be working (see OutputControl::setOutputInstance)
+		setting slide group overrides black/clear buttons - should not override
+		
 		experienced random crash when copying/pasting item but could not reproduce
-			need to implement autosave
-		foldback sync with filters causes crash
+			[DONE] need to implement autosave
+		
+		[FIXED] foldback sync with filters causes crash
 			steps to reproduce:
 				live
 				select song
@@ -474,11 +480,15 @@ Revised Task list for Release 1.0, 10/18/09:
 			notes:
 				must have filters on
 				must select another slide after turning on filters
+				
+			had to do with disconnecting from m_ctrl when calling setViewControl -bypassed it by using our own sig/slot for the buttons and proxying the calls
 
 	
 		deleting m_doc in mainwindow::openfile causes segflt when golive with next group - why??
+		
+		[FIXED] foldback display already set to text-only filter before requested
+				wasnt initalizing status variables in constructor, so this was due to corrupt memory in the boolean flags
 		[FIXED] output control doesnt set live widget control on app init - must set ;live group to set view control
-		foldback display already set to text-only filter before requested
 		[FIXED] need to default text bg on textonly slides to black
 		[FIXED] clicking slide in live after setting up sync causes segflt
 	

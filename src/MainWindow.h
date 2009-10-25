@@ -69,6 +69,9 @@ public slots:
 	
 	void clearAllOutputs();
 	void nextGroup();
+	
+	
+	void imageImportTool();
 
 protected slots:
 	void groupsDropped(QList<SlideGroup*> list);

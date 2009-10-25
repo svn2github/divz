@@ -115,6 +115,10 @@ MainWindow::MainWindow(QWidget *parent) :
 	connect(m_ui->actionAbout_DViz, SIGNAL(triggered()), this, SLOT(actionAboutDviz()));
 	connect(m_ui->actionVisit_DViz_Website, SIGNAL(triggered()), this, SLOT(actionDvizWebsite()));
 	
+	m_ui->actionImages_Import_Tool->setIcon(QIcon(":data/insert-image-24.png"));
+	connect(m_ui->actionImages_Import_Tool, SIGNAL(triggered()), this, SLOT(imageImportTool()));
+	
+	
 	foreach(QAction *action, actionList)
 	{
 		QString shortcut = action->shortcut().toString();
@@ -251,7 +255,8 @@ void MainWindow::actionNew()
 		clearAllOutputs();
 		
 		m_docModel->releaseDocument();
-		delete m_doc;
+		// Not deleting because of not deleting in open file
+		//delete m_doc;
 	}
 		
 	m_doc = new Document();
@@ -265,6 +270,86 @@ void MainWindow::actionNew()
 	m_docModel->setDocument(m_doc);
 	
 	setWindowTitle("New File - DViz");
+}
+
+
+
+
+void MainWindow::imageImportTool()
+{
+	QFileDialog dialog;
+	
+	QString dirPath = QFileDialog::getExistingDirectory(this, tr("Select Images Folder to Import"),
+                                                 AppSettings::previousPath("images"),
+                                                 QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
+	
+	if(!dirPath.isEmpty())
+	{
+		QDir dir(dirPath);
+		
+		QStringList filters;
+		filters << "*.bmp";
+		filters << "*.png";
+		filters << "*.jpg";
+		filters << "*.jpeg";
+		filters << "*.xpm";
+		filters << "*.svg";
+		QStringList list = dir.entryList(filters);
+		
+		qDebug() << "list: "<<list;
+		
+		if(list.size() <= 0)
+		{
+			QMessageBox::warning(this,"No Images Found","No images found in the folder you chose.");
+		}
+		else
+		{
+			SlideGroup *group = new SlideGroup();
+			group->setAutoChangeGroup(false);
+			group->setGroupTitle(dir.dirName());
+			
+			int slideNum = 0;
+			foreach(QString file, list)
+			{
+				Slide * slide = new Slide();
+				AbstractVisualItem * bg = dynamic_cast<AbstractVisualItem*>(slide->background());
+				
+				QString path = QString("%1/%2").arg(dir.absolutePath()).arg(file);
+				qDebug() << "Making slide for:"<<path;
+				
+				bg->setFillType(AbstractVisualItem::Image);
+				bg->setFillImageFile(path);
+	
+				slide->setAutoChangeTime(2.0);
+				slide->setSlideNumber(slideNum);
+				
+				group->addSlide(slide);
+				
+				slideNum++;
+			
+			}
+			
+			m_doc->addGroup(group);
+		}
+	}
+		
+	/*
+	
+	dynamic_cast<AbstractVisualItem*>(slide->background())->setFillBrush(QBrush(Qt::black));
+	
+	
+	
+	SlideGroup *g = new SlideGroup();
+	
+	
+	
+	g->addSlide(slide);
+	m_doc->addGroup(g);
+	//m_scene->setSlide(slide);
+
+	m_docModel->setDocument(m_doc);
+	
+	setWindowTitle("New File - DViz");*/
 }
 
 bool MainWindow::openFile(const QString & file)

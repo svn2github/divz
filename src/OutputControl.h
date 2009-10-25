@@ -52,6 +52,12 @@ protected slots:
 	
 	// inorder to reload the list of outputs for the sync widget box
 	void setupSyncWithBox();
+	
+	void fadeBlackFrame(bool);
+	void fadeClearFrame(bool);
+	
+	// inorder to untoggle black/clear buttons
+	void slideChanged(int);
 
 protected:
 	void setupUI();

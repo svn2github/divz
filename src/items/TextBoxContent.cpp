@@ -301,14 +301,22 @@ void TextBoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * 
 
 	if(sceneContextHint() == MyGraphicsScene::Preview)
 	{
+		// If we're drawing in a Preview scene, then we render directly with the painter
+		// (rather than caching the results in a pixmap) because this allows the painter 
+		// to scale the text glyphs directly (vector scaling), rather than scaling bits 
+		// in a pixmap (bitmap scaling), producing more legible results at lower scalings
+		
 		QAbstractTextDocumentLayout::PaintContext pCtx;
 		
-		painter->save();
-		
-		painter->translate(modelItem()->shadowOffsetX(),modelItem()->shadowOffsetY());
-		m_shadowText->documentLayout()->draw(painter, pCtx);
-
-		painter->restore();
+		if(modelItem()->shadowEnabled())
+		{
+			painter->save();
+			
+			painter->translate(modelItem()->shadowOffsetX(),modelItem()->shadowOffsetY());
+			m_shadowText->documentLayout()->draw(painter, pCtx);
+	
+			painter->restore();
+		}
 		
 		m_text->documentLayout()->draw(painter, pCtx);
 	}
