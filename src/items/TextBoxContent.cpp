@@ -299,102 +299,117 @@ void TextBoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * 
 	//painter->setClipRect(contentsRect());
 	painter->translate(contentsRect().topLeft()); // + QPoint(p.width(),p.width()));
 
-
-	QPixmap cache;
-	
-	// The primary and only reason we cache the text rendering is inorder
-	// to paint the text and shadow as a single unit (e.g. composite the
-	// shadow+text BEFORE applying opacity rather than setting the opacity
-	// before rendering the shaodw.) If we didnt cache the text as a pixmap
-	// (e.g. render text directly) then when crossfading, the shadow
-	// "apperas" to fade out last, after the text.
-	
-	// Update 20091015: Implemented very aggressive caching across TextBoxContent instances
-	// that share the same modelItem() (see ::cacheKey()) inorder to avoid re-rendering 
-	// potentially expensive drop shadows, below.
-	if(!QPixmapCache::find(cacheKey(),cache) && m_text->toPlainText().trimmed() != "")
+	if(sceneContextHint() == MyGraphicsScene::Preview)
 	{
-		qDebug()<<"TextBoxContent::paint(): modelItem:"<<modelItem()->itemName()<<": Cache redraw";
-		
-		QSizeF shadowSize = modelItem()->shadowEnabled() ? QSizeF(modelItem()->shadowOffsetX(),modelItem()->shadowOffsetY()) : QSizeF(0,0);
-		cache = QPixmap((contentsRect().size()+shadowSize).toSize());
-
-		cache.fill(Qt::transparent);
-		QPainter textPainter(&cache);
-
 		QAbstractTextDocumentLayout::PaintContext pCtx;
-
-		#if QT46_SHADOW_ENAB == 0
-		if(modelItem()->shadowEnabled())
-		{
-			if(qFuzzyIsNull(modelItem()->shadowBlurRadius()))
-			{
-				// render a "cheap" version of the shadow using the shadow text document
-				textPainter.save();
-	
-				textPainter.translate(modelItem()->shadowOffsetX(),modelItem()->shadowOffsetY());
-				m_shadowText->documentLayout()->draw(&textPainter, pCtx);
-	
-				textPainter.restore();
-			}
-			else
-			{
-				double radius = modelItem()->shadowBlurRadius();
-				double radiusSquared = radius*radius;
-				
-				// create temporary pixmap to hold a copy of the text
-				double blurSize = (int)(radiusSquared*2);
-				QSize shadowSize(blurSize,blurSize);
-				QPixmap tmpPx(contentsRect().size()+shadowSize);
-				tmpPx.fill(Qt::transparent);
-				
-				// render the text
-				QPainter tmpPainter(&tmpPx);
-				tmpPainter.save();
-				tmpPainter.translate(radiusSquared, radiusSquared);
-				m_text->documentLayout()->draw(&tmpPainter, pCtx);
-				tmpPainter.restore();
-				
-				// blacken the text by applying a color to the copy using a QPainter::CompositionMode_DestinationIn operation. 
-				// This produces a homogeneously-colored pixmap.
-				QRect rect = QRect(0, 0, tmpPx.width(), tmpPx.height());
-				tmpPainter.setCompositionMode(QPainter::CompositionMode_SourceIn);
-				tmpPainter.fillRect(rect, modelItem()->shadowBrush().color());
-				tmpPainter.end();
-	
-				// blur the colored text
-				QImage  orignalImage   = tmpPx.toImage();
-				QImage  blurredImage   = ImageFilters::blurred(orignalImage, rect, (int)radius);
-				QPixmap blurredPixmap  = QPixmap::fromImage(blurredImage);
-				
-				// render the blurred text at an offset into the cache
-				textPainter.save();
-				textPainter.translate(modelItem()->shadowOffsetX() - radiusSquared,
-						      modelItem()->shadowOffsetY() - radiusSquared);
-				textPainter.drawPixmap(0, 0, blurredPixmap);
-				textPainter.restore();
-			}
-		}
-		#endif
-
-		m_text->documentLayout()->draw(&textPainter, pCtx);
 		
-		QPixmapCache::insert(cacheKey(), cache);
-	}
+		painter->save();
+		
+		painter->translate(modelItem()->shadowOffsetX(),modelItem()->shadowOffsetY());
+		m_shadowText->documentLayout()->draw(painter, pCtx);
 
-	// Draw a rectangular outline in the editor inorder to visually locate empty text blocks
-	if(sceneContextHint() == MyGraphicsScene::Editor &&
-		m_text->toPlainText().trimmed() == "")
-	{
-		QPen p = modelItem() ? modelItem()->outlinePen() : QPen(Qt::black,1.5);
-		painter->setPen(p);
-		painter->setBrush(Qt::NoBrush);
-
-		painter->drawRect(QRect(QPoint(0,0),contentsRect().size()));
+		painter->restore();
+		
+		m_text->documentLayout()->draw(painter, pCtx);
 	}
 	else
 	{
-		painter->drawPixmap(0,0,cache);
+		QPixmap cache;
+		
+		// The primary and only reason we cache the text rendering is inorder
+		// to paint the text and shadow as a single unit (e.g. composite the
+		// shadow+text BEFORE applying opacity rather than setting the opacity
+		// before rendering the shaodw.) If we didnt cache the text as a pixmap
+		// (e.g. render text directly) then when crossfading, the shadow
+		// "apperas" to fade out last, after the text.
+		
+		// Update 20091015: Implemented very aggressive caching across TextBoxContent instances
+		// that share the same modelItem() (see ::cacheKey()) inorder to avoid re-rendering 
+		// potentially expensive drop shadows, below.
+		if(!QPixmapCache::find(cacheKey(),cache) && m_text->toPlainText().trimmed() != "")
+		{
+			qDebug()<<"TextBoxContent::paint(): modelItem:"<<modelItem()->itemName()<<": Cache redraw";
+			
+			QSizeF shadowSize = modelItem()->shadowEnabled() ? QSizeF(modelItem()->shadowOffsetX(),modelItem()->shadowOffsetY()) : QSizeF(0,0);
+			cache = QPixmap((contentsRect().size()+shadowSize).toSize());
+	
+			cache.fill(Qt::transparent);
+			QPainter textPainter(&cache);
+	
+			QAbstractTextDocumentLayout::PaintContext pCtx;
+	
+			#if QT46_SHADOW_ENAB == 0
+			if(modelItem()->shadowEnabled())
+			{
+				if(qFuzzyIsNull(modelItem()->shadowBlurRadius()))
+				{
+					// render a "cheap" version of the shadow using the shadow text document
+					textPainter.save();
+		
+					textPainter.translate(modelItem()->shadowOffsetX(),modelItem()->shadowOffsetY());
+					m_shadowText->documentLayout()->draw(&textPainter, pCtx);
+		
+					textPainter.restore();
+				}
+				else
+				{
+					double radius = modelItem()->shadowBlurRadius();
+					double radiusSquared = radius*radius;
+					
+					// create temporary pixmap to hold a copy of the text
+					double blurSize = (int)(radiusSquared*2);
+					QSize shadowSize(blurSize,blurSize);
+					QPixmap tmpPx(contentsRect().size()+shadowSize);
+					tmpPx.fill(Qt::transparent);
+					
+					// render the text
+					QPainter tmpPainter(&tmpPx);
+					tmpPainter.save();
+					tmpPainter.translate(radiusSquared, radiusSquared);
+					m_text->documentLayout()->draw(&tmpPainter, pCtx);
+					tmpPainter.restore();
+					
+					// blacken the text by applying a color to the copy using a QPainter::CompositionMode_DestinationIn operation. 
+					// This produces a homogeneously-colored pixmap.
+					QRect rect = QRect(0, 0, tmpPx.width(), tmpPx.height());
+					tmpPainter.setCompositionMode(QPainter::CompositionMode_SourceIn);
+					tmpPainter.fillRect(rect, modelItem()->shadowBrush().color());
+					tmpPainter.end();
+		
+					// blur the colored text
+					QImage  orignalImage   = tmpPx.toImage();
+					QImage  blurredImage   = ImageFilters::blurred(orignalImage, rect, (int)radius);
+					QPixmap blurredPixmap  = QPixmap::fromImage(blurredImage);
+					
+					// render the blurred text at an offset into the cache
+					textPainter.save();
+					textPainter.translate(modelItem()->shadowOffsetX() - radiusSquared,
+							modelItem()->shadowOffsetY() - radiusSquared);
+					textPainter.drawPixmap(0, 0, blurredPixmap);
+					textPainter.restore();
+				}
+			}
+			#endif
+	
+			m_text->documentLayout()->draw(&textPainter, pCtx);
+			
+			QPixmapCache::insert(cacheKey(), cache);
+		}
+	
+		// Draw a rectangular outline in the editor inorder to visually locate empty text blocks
+		if(sceneContextHint() == MyGraphicsScene::Editor &&
+			m_text->toPlainText().trimmed() == "")
+		{
+			QPen p = modelItem() ? modelItem()->outlinePen() : QPen(Qt::black,1.5);
+			painter->setPen(p);
+			painter->setBrush(Qt::NoBrush);
+	
+			painter->drawRect(QRect(QPoint(0,0),contentsRect().size()));
+		}
+		else
+		{
+			painter->drawPixmap(0,0,cache);
+		}
 	}
 
 

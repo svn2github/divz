@@ -35,7 +35,7 @@
 #include <QDoubleSpinBox>
 #include <QSlider>
 #include <QCheckBox>
-
+#include <QTimer>
 #include <QMessageBox>
 
 #include <QDebug>
@@ -89,8 +89,21 @@
 #define DEBUG_MODE 0
 
 
+class MySaveThread : public QThread
+{
+public:
+	MySaveThread(Document*doc)  : m_doc(doc) {}
+	void run()
+	{
+		if(!m_doc)
+			return;
+		m_doc->save();
+	}
+	Document *m_doc;
+	
+};
 
-
+ 
 
 #include <QCommonStyle>
 class RubberBandStyle : public QCommonStyle 
@@ -333,6 +346,10 @@ SlideEditorWindow::SlideEditorWindow(SlideGroup *group, QWidget * parent)
 	
 	if(group)
 		setSlideGroup(group);
+		
+	m_autosaveTimer = new QTimer();
+	connect(m_autosaveTimer, SIGNAL(timeout()), this, SLOT(autosave()));
+	
 	
 	
 }
@@ -361,10 +378,13 @@ void SlideEditorWindow::showEvent(QShowEvent *evt)
 	m_view->setTransform(QTransform().scale(scale,scale));
         //qDebug("Scaling: %.02f x %.02f = %.02f",sx,sy,scale);
 	m_view->update();
+	
+	m_autosaveTimer->start(1000 * 5);
 }
 
 void SlideEditorWindow::closeEvent(QCloseEvent *evt)
 {
+	m_autosaveTimer->stop();
 	evt->accept();
 	emit closed();
 }
@@ -596,6 +616,14 @@ void SlideEditorWindow::setupToolbar()
 	
 
 
+}
+
+void SlideEditorWindow::autosave()
+{
+	qDebug() << "Spawning autosave...";
+	MySaveThread * t = new MySaveThread(MainWindow::mw()->currentDocument());
+	t->start();
+	qDebug() << "Autosave started.";
 }
 
 void SlideEditorWindow::setInheritFade(bool flag)

@@ -31,6 +31,7 @@ class SlideItemListModel;
 class QCheckBox;
 class QSlider;
 class QLabel;
+class QTimer;
 
 class SlideEditorWindowListView : public QListView
 { 
@@ -120,6 +121,8 @@ private slots:
 	
 	void setCurrentSlideLive();
 	
+	void autosave();
+	
 private:
 	void setupSlideList();
 	void setupViewportLines();
@@ -178,6 +181,8 @@ private:
 	
 	QTabWidget * m_propDockBase;
 	QWidget * m_currentPropWidget;
+	
+	QTimer * m_autosaveTimer;
 
 };
 

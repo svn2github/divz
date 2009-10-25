@@ -144,13 +144,12 @@ Revised Task list for Release 1.0, 10/18/09:
 			need an autofit textbox btn
 			and an autosize textbox
 			make autosave
-				more intelligent
 				on/off from toolbar
-				stop timer when editor closes
-			the slide list icons reallly need to be clearer and rendered better
+				[DONE] stop timer when editor closes
+			[DONE] the slide list icons reallly need to be clearer and rendered better
 			need to put generation of slide pixmaps in a thread...somehow....or process GUI events...
-			put next/prev controls on slide view control right next to each other
-			change key combo for "next"
+			[DONE] put next/prev controls on slide view control right next to each other
+			[DONE] change key combo for "next" (now is 'x')
 			make a background "apply to all" button
 			
 			add generic pre-render on document load 

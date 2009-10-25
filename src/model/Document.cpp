@@ -19,6 +19,10 @@
 
 #include "songdb/SongSlideGroup.h"
 
+#include <QMutex>
+#include <QMutexLocker>
+QMutex document_saveMutex;
+
 Document::Document(const QString & s) : m_docTitle(""), m_filename(""), m_aspectRatio(4/3)
 {
 	double ar = AppSettings::liveAspectRatio();
@@ -157,6 +161,8 @@ bool Document::fromXml(QDomElement & pe)
 
 void Document::save(const QString & filename)
 {
+	QMutexLocker lock(&document_saveMutex);
+	
 	QString tmp = filename;
 	if(tmp.isEmpty())
 		tmp = m_filename;
@@ -194,6 +200,8 @@ void Document::save(const QString & filename)
 	//save in the file (4 spaces indent)
 	doc.save(out, 4);
 	file.close();
+	
+	qDebug() << "Document::save: Done writing "<<tmp;
 }
 
 void Document::toXml(QDomElement & pe) const
