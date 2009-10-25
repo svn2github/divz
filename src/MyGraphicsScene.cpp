@@ -746,8 +746,8 @@ void MyGraphicsScene::keyPressEvent(QKeyEvent * event)
 		QSizeF grid = AppSettings::gridSize();
 		// snap to half a grid point - the content->flagKeyboardMotivatedMovement() call tells AppSettings::snapToGrid()
 		// in AbstractContent to allow it to be half a grid point
-		qreal x = grid.width()/2;
-		qreal y = grid.height()/2;
+		qreal x = grid.width();///2;
+		qreal y = grid.height();///2;
 		
 		// arbitrary magic numbers - no significance, just random preference
 		if(x<=0)

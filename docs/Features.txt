@@ -131,6 +131,28 @@ Revised Task list for Release 1.0, 10/18/09:
 		= Misc = 
 			[MAYBE] Add color theme support vis a vi powerpoint
 			
+			
+			make slide list model zoomable 
+				e.g. zoom slide list in editor
+				zoom slide list in control
+				zoom doc list in main window
+			do need vertical line spacing
+			text toolbar vs rich editor in config box dont agree - config box doesnt pick up same text size
+			cloning text objects looses the original font size even tho we copy the html
+			rich text editor should allow manually typed point sizes
+			rich text editor should accept only plain text mime type and assume current formatting
+			need an autofit textbox btn
+			and an autosize textbox
+			make autosave
+				more intelligent
+				on/off from toolbar
+				stop timer when editor closes
+			the slide list icons reallly need to be clearer and rendered better
+			need to put generation of slide pixmaps in a thread...somehow....or process GUI events...
+			put next/prev controls on slide view control right next to each other
+			change key combo for "next"
+			make a background "apply to all" button
+			
 			add generic pre-render on document load 
 				loop thru every group, every slide and call Paint on every visual delegate
 			

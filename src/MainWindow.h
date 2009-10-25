@@ -132,6 +132,8 @@ private:
 	OutputSetupDialog * m_outputDialog;
 	
 	Document * m_doc;
+
+	QTimer	* m_autosaveTimer;
 	
 	SlideGroupViewControl * m_viewControl;
 	
@@ -144,6 +146,8 @@ private:
 	
 	/** static */
 	static MainWindow * static_mainWindow;	
+
+
 };
 
 #endif // MAINWINDOW_H

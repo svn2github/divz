@@ -36,7 +36,8 @@ MainWindow::MainWindow(QWidget *parent) :
 	m_docModel(0),
 	m_doc(0),
 	m_viewControl(0),
-	m_editWin(0)
+	m_editWin(0),
+	m_autosaveTimer(0)
 	
 {
 	static_mainWindow = this;
@@ -101,7 +102,6 @@ MainWindow::MainWindow(QWidget *parent) :
 	m_ui->actionDelete_Slide_Group->setEnabled(false);
 	connect(m_ui->actionDelete_Slide_Group, SIGNAL(triggered()), this, SLOT(actionDelGroup()));
 	actionList << m_ui->actionDelete_Slide_Group;
-	
 	
 
 	m_ui->actionApp_Settings->setIcon(QIcon(":data/stock-preferences.png"));
@@ -289,6 +289,13 @@ bool MainWindow::openFile(const QString & file)
 	}
 	
 	m_doc = new Document(file);
+
+	if(!m_autosaveTimer)
+	{
+		m_autosaveTimer = new QTimer();
+		connect(m_autosaveTimer, SIGNAL(timeout()), this, SLOT(actionSave()));
+
+	}
 		
 	//m_doc->load(file);
 	//r.readSlide(m_slide);
@@ -936,6 +943,8 @@ void MainWindow::deleteGroup(SlideGroup *s)
 
 void MainWindow::openSlideEditor(SlideGroup *group,Slide *slide)
 {
+	// Turn off timer for tomorrows service - just until I can make it a button option
+	//m_autosaveTimer->start(1000 * 30);
 	if(group->groupType() != SlideGroup::Generic)
 	{
 		SlideGroupFactory *factory = SlideGroupFactory::factoryForType(group->groupType());

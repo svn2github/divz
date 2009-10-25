@@ -531,7 +531,10 @@ QPixmap	SlideGroupFactory::generatePreviewPixmap(SlideGroup *g, QSize iconSize, 
 	QPixmap icon(icon_w,icon_h);
 	QPainter painter(&icon);
 	painter.fillRect(0,0,icon_w,icon_h,Qt::white);
-	
+	painter.setRenderHint(QPainter::SmoothPixmapTransform, true);
+	painter.setRenderHint(QPainter::Antialiasing, true);
+	painter.setRenderHint(QPainter::TextAntialiasing, true);
+
 	m_scene->render(&painter,QRectF(0,0,icon_w,icon_h),sceneRect);
 	painter.setPen(Qt::black);
 	painter.setBrush(Qt::NoBrush);
