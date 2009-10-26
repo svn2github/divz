@@ -17,6 +17,7 @@ OutputSetupDialog::OutputSetupDialog(QWidget *parent) :
 {
 	m_ui->setupUi(this);
 	setWindowTitle(tr("Output Setup"));
+	setWindowIcon(QIcon(":/data/icon-d.png"));
 
 	setupOutputList();
 	setupScreenList();

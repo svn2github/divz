@@ -74,6 +74,7 @@ void OutputInstance::applyOutputSettings()
 		setVisible(m_output->isEnabled());
 		
 		setWindowTitle(QString("%1 Output - DViz").arg(m_output->name()));
+		setWindowIcon(QIcon(":/data/icon-d.png"));
 	}
 	else
 	//if(x == Output::Network)

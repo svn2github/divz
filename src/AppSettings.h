@@ -50,7 +50,7 @@ public:
 	
 	static int crossFadeQuality() { return m_crossFadeQuality; }
 	static void setCrossFadeQuality(int);
-
+	
 protected:
 	friend class MainWindow;
 // 	static double setCurrentDocumentAspectRatio(double);

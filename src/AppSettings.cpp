@@ -22,6 +22,7 @@ int AppSettings::m_pixmapCacheSize = 256;
 int AppSettings::m_crossFadeSpeed = 250; // ms
 int AppSettings::m_crossFadeQuality = 15; // frames
 
+
 void AppSettings::load()
 {
 	m_outputs.clear();

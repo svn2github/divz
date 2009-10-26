@@ -29,6 +29,8 @@ SlideSettingsDialog::SlideSettingsDialog(Slide *slide, QWidget *parent) :
 	//config->setWindowModality(Qt::WindowModal);
 	
 	setWindowTitle("Slide Settings");
+	setWindowIcon(QIcon(":/data/icon-d.png"));
+	
 	m_ui->slideChangeTime->setFocus(Qt::OtherFocusReason);
 	
 	if(m_slide->inheritFadeSettings())

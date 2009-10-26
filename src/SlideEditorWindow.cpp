@@ -574,7 +574,8 @@ void SlideEditorWindow::setupToolbar()
 	m_fadeSlider->setValue(1);
 	m_fadeSlider->setMaximum(100);
 	m_fadeSlider->setMaximum(100);
-	m_fadeSlider->setTickInterval(10);
+	m_fadeSlider->setSingleStep(5);
+	m_fadeSlider->setTickInterval(5);
 	m_fadeSlider->setTickPosition(QSlider::TicksBelow);
 	connect(m_fadeSlider, SIGNAL(valueChanged(int)), this, SLOT(setFadeSpeedPreset(int)));
 	layout3->addWidget(m_fadeSlider);
@@ -1214,6 +1215,7 @@ void SlideEditorWindow::setSlideGroup(SlideGroup *g,Slide *curSlide)
 	connect(g,SIGNAL(destroyed(QObject*)), this, SLOT(releaseSlideGroup()));
 	
 	setWindowTitle(QString("%1 - Slide Editor").arg(g->groupTitle().isEmpty() ? QString("Group %1").arg(g->groupNumber()) : g->groupTitle()));
+	setWindowIcon(QIcon(":/data/icon-d.png"));
 	//m_slideListView->setModel(m_slideModel);
 	
 	if(curSlide)

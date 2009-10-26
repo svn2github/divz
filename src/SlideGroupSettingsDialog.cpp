@@ -13,6 +13,7 @@ SlideGroupSettingsDialog::SlideGroupSettingsDialog(SlideGroup *g, QWidget *paren
 	connect(m_ui->title, SIGNAL(textChanged(const QString&)), this, SLOT(titleChanged(const QString&)));
 	
 	setWindowTitle("Slide Group Settings");
+	setWindowIcon(QIcon(":/data/icon-d.png"));
 	
 	if(m_slideGroup->inheritFadeSettings())
 		m_ui->btnUseApp->setChecked(true);

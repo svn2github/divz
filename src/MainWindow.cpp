@@ -43,7 +43,7 @@ MainWindow::MainWindow(QWidget *parent) :
 {
 	static_mainWindow = this;
 	
-	setWindowIcon(QIcon(":/data/icon-next-small.png"));
+	setWindowIcon(QIcon(":/data/icon-d.png"));
 	
 	m_ui->setupUi(this);
 	
@@ -655,20 +655,18 @@ void MainWindow::setupOutputList()
 		delete box;
 	}
 	
-	QList<Output*> allOut = AppSettings::outputs();
-
-	QList<Output*> outputs;
-	foreach(Output *x, allOut)
-		if(x->isEnabled())
-			outputs << x;
-
-	foreach(Output*out, outputs)
+	m_outputCheckboxes.clear();
+	
+	foreach(Output*out, AppSettings::outputs())
 	{
-		QCheckBox *box = new QCheckBox(out->name());
-		m_outputCheckboxes[out->id()] = box;
-		
-		box->setChecked(true);
-		m_outputCheckboxBase->layout()->addWidget(box);
+		if(out->isEnabled())
+		{
+			QCheckBox *box = new QCheckBox(out->name());
+			m_outputCheckboxes[out->id()] = box;
+			
+			box->setChecked(true);
+			m_outputCheckboxBase->layout()->addWidget(box);
+		}
 	}
 }
 

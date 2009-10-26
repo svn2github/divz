@@ -66,6 +66,7 @@ SlideGroupViewer::SlideGroupViewer(QWidget *parent)
 	m_scene->setSceneRect(sceneRect);
 	m_view->setScene(m_scene);
 	
+	// inorder to set the background on the rest of the slides if asked to set background on next live slide
 	connect(m_scene, SIGNAL(crossFadeFinished()), this, SLOT(crossFadeFinished()));
 	
 	m_view->setBackgroundBrush(Qt::gray);
@@ -351,7 +352,7 @@ void SlideGroupViewer::setLiveBackground(const QFileInfo &info, bool waitForNext
 {
 	QString ext = info.suffix();
 	if(!MediaBrowser::isVideo(ext) &&
-		!MediaBrowser::isImage(ext))
+	   !MediaBrowser::isImage(ext))
 	{
 		QMessageBox::warning(this,"Unknown File Type","I'm not sure how to handle that file. Sorry!");
 		return;

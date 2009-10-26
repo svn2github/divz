@@ -47,11 +47,12 @@ void OutputControl::setupUI()
 	
 	QLabel *label = new QLabel("Fade Speed:");
 	hbox1->addWidget(label);
-	    m_fadeSlider = new QSlider(Qt::Horizontal);
+	m_fadeSlider = new QSlider(Qt::Horizontal);
 	m_fadeSlider->setMinimum(0);
 	m_fadeSlider->setValue(1);
 	m_fadeSlider->setMaximum(100);
 	m_fadeSlider->setTickInterval(10);
+	//m_fadeSlider->setSingleStep(5);
 	m_fadeSlider->setTickPosition(QSlider::TicksBelow);
 	hbox1->addWidget(m_fadeSlider,1);
 	
@@ -247,6 +248,18 @@ void OutputControl::overlayDocumentChanged(const QString& filename)
 	setOverlayDocument(m_overlayDoc);
 }
 
+
+bool OutputControl_group_num_compare(SlideGroup *a, SlideGroup *b)
+{
+	return (a && b) ? a->groupNumber() < b->groupNumber() : true;
+}
+
+bool OutputControl_slide_num_compare(Slide *a, Slide *b)
+{
+	return (a && b) ? a->slideNumber() < b->slideNumber() : true;
+}
+
+
 void OutputControl::setOverlayDocument(Document *doc)
 {
 	m_overlayDoc = doc;
@@ -255,7 +268,11 @@ void OutputControl::setOverlayDocument(Document *doc)
 	
 	if(sz > 0)
 	{
-		SlideGroup *g = m_overlayDoc->at(0);
+		// Sort the groups so that our "first group" matches the sort order the user sees in the editor
+		QList<SlideGroup*> glist = m_overlayDoc->groupList();
+		qSort(glist.begin(), glist.end(), OutputControl_group_num_compare);
+		
+		SlideGroup *g = glist[0];
 		
 		QPixmap icon;
 	
@@ -273,7 +290,11 @@ void OutputControl::setOverlayDocument(Document *doc)
 		
 		if(g->numSlides() > 0)
 		{
-			Slide * slide = g->at(0);
+			// subway mexican sweetshop mcdonalds
+			QList<Slide*> slist = g->slideList();
+			qSort(slist.begin(), slist.end(), OutputControl_slide_num_compare);
+			Slide * slide = slist[0];
+			
 			if(!slide)
 			{
 				qDebug("setOverlayDocument: No slide at 0");
