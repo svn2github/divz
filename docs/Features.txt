@@ -131,12 +131,7 @@ Revised Task list for Release 1.0, 10/18/09:
 		= Misc = 
 			[MAYBE] Add color theme support vis a vi powerpoint
 			
-			[DONE] move the "send to output" part of the mainwindow splitter as a combobox+btn over the group list (checkable combobox)
-				cant figure out how to do checkable combox, so used list of qcheckboxes
 			need to save clear/black state across changing songs (e.g. clear at end of one song, set new song, needs to fade new background/new clear slide)
-			synced outputs should not show in list of "send to" outputs
-			[DONE] put next/prev btns in ctrl over on left, play btn on right
-			[DONE] need to update combobox in syncwidget to "sync" staet when setting outputcontrol sync'd progratically
 			need to pre-render all text boxes
 			need video preview widget 
 			need to be able to preview slides (next/prev button)
@@ -172,7 +167,6 @@ Revised Task list for Release 1.0, 10/18/09:
 			need to find a way to make the fade speed slider "snap to" increments of, say, 5%
 			fade speed slider should apply to black/clear fades as well 
 			need to add kbd shortcuts to song list "clear" button and to the song editor "title" field
-			[DONE] need to find a dviz icon
 			make slide list model zoomable 
 				e.g. zoom slide list in editor
 				zoom slide list in control
@@ -190,7 +184,6 @@ Revised Task list for Release 1.0, 10/18/09:
 			add generic pre-render on document load 
 				loop thru every group, every slide and call Paint on every visual delegate
 			make autosave - on/off from toolbar
-			[DONE] stop autosave timer when editor closes
 			investigate cross fading on synced outputs - seems to NOT cross fade, BUT I never told it NOT to...huh...
 				after watching it, it looks like the sync-signal sets the NEW slide without cross fade, THEN it tries to cross fade to the new slide - resulting in meerly a slight dimming effect for a moment
 					which is better than nothing, but ideally it should NOT cross fade
@@ -273,6 +266,9 @@ Revised Task list for Release 1.0, 10/18/09:
 				play
 				set group#
 				
+		[REJECTED] synced outputs should not show in list of "send to" outputs
+				decided that this is false
+		
 		[LATER] Add zooming toolbar to slide group editor
 				not a show stopper
 			
@@ -336,7 +332,13 @@ Revised Task list for Release 1.0, 10/18/09:
 			130>, inc by 25??
 			or some form of exponential, rounded percentage inc? (e.g. (int)(cur size * 1.5)) ?
 		
-			
+		
+		[DONE] need to find a dviz icon
+		[DONE] move the "send to output" part of the mainwindow splitter as a combobox+btn over the group list (checkable combobox)
+			cant figure out how to do checkable combox, so used list of qcheckboxes
+		[DONE] put next/prev btns in ctrl over on left, play btn on right
+		[DONE] need to update combobox in syncwidget to "sync" staet when setting outputcontrol sync'd progratically
+		[DONE] stop autosave timer when editor closes
 			
 		[DONE] the slide list icons reallly need to be clearer and rendered better
 		[DONE] put next/prev controls on slide view control right next to each other

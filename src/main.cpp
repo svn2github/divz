@@ -30,12 +30,18 @@ QColor RenderOpts::hiColor;
 // #include "model/ItemFactory.h"
 // #include "model/Slide.h"
 // #include "model/TextItem.h"
- #include "model/SlideGroupFactory.h"
- #include "songdb/SongSlideGroupFactory.h"
+#include "model/SlideGroupFactory.h"
+#include "songdb/SongSlideGroupFactory.h"
 #include "AppSettings.h"
 
 #include <QPixmapCache>
 
+
+#include "itemlistfilters/SlideTextOnlyFilter.h"
+#include "itemlistfilters/SlideNonTextOnlyFilter.h"
+#include "itemlistfilters/SlideBackgroundOnlyFilter.h"
+#include "itemlistfilters/SlideForegroundOnlyFilter.h"
+	
 int main(int argc, char **argv)
 {
 		
@@ -53,6 +59,11 @@ int main(int argc, char **argv)
 	
 	int qtype1 = qRegisterMetaType<AbstractVisualItem::FillType>("FillType");
 
+	
+	AbstractItemListFilter::registerFilterInstance(SlideTextOnlyFilter::instance());
+	AbstractItemListFilter::registerFilterInstance(SlideNonTextOnlyFilter::instance());
+	AbstractItemListFilter::registerFilterInstance(SlideBackgroundOnlyFilter::instance());
+	AbstractItemListFilter::registerFilterInstance(SlideForegroundOnlyFilter::instance());
 	
 #if defined(VER)
 	printf("DViz Version %s\n", VER);

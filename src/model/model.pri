@@ -15,7 +15,8 @@ HEADERS +=  \
         Output.h \
         SlideGroupFactory.h \
         BackgroundItem.h \
-        ImageItem.h 
+        ImageItem.h \
+        AbstractItemListFilter.h
 
     
 SOURCES += \
@@ -32,4 +33,5 @@ SOURCES += \
         Output.cpp \
         SlideGroupFactory.cpp \
         BackgroundItem.cpp \
-        ImageItem.cpp
+        ImageItem.cpp \
+        AbstractItemListFilter.cpp

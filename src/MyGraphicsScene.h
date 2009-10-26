@@ -76,8 +76,10 @@ class MyGraphicsScene : public QGraphicsScene
 		void showPropertiesWidget(QWidget * widget);
 		void sceneRectChanged(const QRectF &);
 		
-		void crossFadeStarted();
-		void crossFadeFinished();
+		void crossFadeStarted(Slide *oldSlide, Slide *newSlide);
+		void crossFadeFinished(Slide *oldSlide, Slide *newSlide);
+		
+		void slideDiscarded(Slide*);
 	
 	public slots:
 		void copyCurrentSelection(bool removeSelection = false);
@@ -102,7 +104,7 @@ class MyGraphicsScene : public QGraphicsScene
 		QList<AbstractItem *> m_copyBuffer;
 		
 		Slide * m_slide;
-		//Slide * m_slidePrev;
+		Slide * m_slidePrev;
 		SlideTransition m_currentTransition;
 		
 		int m_fadeSteps;

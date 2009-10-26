@@ -149,6 +149,8 @@ void MyGraphicsScene::clear()
 		//delete content;
 		content = 0;
 	}
+	
+	emit slideDiscarded(m_slide);
 	m_slide = 0;
 	
 	// dont remove our fade/live root
@@ -367,12 +369,13 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans, int speed, i
 			m_liveRoot->setOpacity(0);
 		#endif
 
-		emit crossFadeStarted();
+		emit crossFadeStarted(m_slide,slide);
 // 		if(DEBUG_MYGRAPHICSSCENE)
  			//qDebug() << "MyGraphicsScene::setSlide(): Starting fade timer for"<<ms<<"ms"<<"/frame, inc:"<<inc<<", steps:"<<m_fadeSteps<<" ( speed:"<<speed<<", quality:"<<quality<<")";
 		
 	}
 
+	m_slidePrev = m_slide;
 	m_slide = slide;
 	
 	// force creation of bg if doesnt exist
@@ -466,7 +469,8 @@ void MyGraphicsScene::endTransition()
 		}
 	}
 	
-	emit crossFadeFinished();
+	emit crossFadeFinished(m_slidePrev,m_slide);
+	emit slideDiscarded(m_slidePrev);
 	update();
 	
 }

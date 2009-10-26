@@ -6,6 +6,7 @@
 #include <QDomElement>
 #include <QPen>
 #include <QBrush>
+#include <QList>
 
 #define ITEM_PROPSET(className,setterName,typeName,memberName) \
 	void className::set##setterName(typeName newValue) { \
@@ -58,7 +59,7 @@ public:
 
 	bool isBeingLoaded() { return m_isBeingLoaded; }
 
-	virtual AbstractItem * clone();
+	virtual AbstractItem * clone() const;
 	
 	// If any property of this model changes, the valueKey() should change,
 	// but the valueKey() should NOT change across program instances
@@ -78,7 +79,7 @@ protected:
 	void setChanged(QString fieldName, QVariant value, QVariant oldValue);
 	void setBeingLoaded(bool);
 
-	AbstractItem * cloneTo(AbstractItem *);
+	AbstractItem * cloneTo(AbstractItem *) const;
 
 private:
 
@@ -98,5 +99,7 @@ private:
 	QByteArray 	m_valueKeyTmp; // used to create the valueKey()
 
 };
+
+typedef QList<AbstractItem *> AbstractItemList;
 
 #endif

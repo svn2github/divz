@@ -2,6 +2,8 @@
 #include <QDebug>
 #include <QMetaProperty>
 
+#include "ItemFactory.h"
+
 QString AbstractItem::guessTitle(QString field)
 {
 	static QRegExp rUpperCase = QRegExp("([a-z])([A-Z])");
@@ -64,12 +66,12 @@ void AbstractItem::clearIsChanged() { m_isChanged = false; }
 
 void AbstractItem::setBeingLoaded(bool flag) { m_isBeingLoaded = flag; }
 
-AbstractItem * AbstractItem::clone()
+AbstractItem * AbstractItem::clone() const
 {
 	return cloneTo(new AbstractItem());
 }
 
-AbstractItem * AbstractItem::cloneTo(AbstractItem *item)
+AbstractItem * AbstractItem::cloneTo(AbstractItem *item) const
 {
 	item->setBeingLoaded(true);
 
@@ -89,6 +91,13 @@ AbstractItem * AbstractItem::cloneTo(AbstractItem *item)
 		item->setProperty(name,value);
 	}
 
+	item->setItemId(ItemFactory::nextId());
+	//newItem->setItemName(QString("NewItem%1").arg(bg->itemId()));
+	QString name = item->itemName();
+	static QRegExp rxEndingDigits("(\\d+)$");
+	name.replace(rxEndingDigits,QString::number(item->itemId()));
+	item->setItemName(name);
+	
 	item->setBeingLoaded(false);
 
 	return item;

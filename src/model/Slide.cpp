@@ -20,7 +20,7 @@ Slide::Slide()
 Slide::~Slide() 
 {
 	//qDebug() << "Slide::~Slide() - destorying slide";
-	qDeleteAll(m_items);
+	qDeleteAll(m_ownedItems);
 }
 
 void Slide::setSlideId(int x)     { m_slideId = x; }
@@ -84,15 +84,7 @@ Slide * Slide::clone()
 	
 	foreach(AbstractItem *oldItem, m_items)
 	{
-		AbstractItem * newItem = oldItem->clone();
-			
-		newItem->setItemId(ItemFactory::nextId());
-		//newItem->setItemName(QString("NewItem%1").arg(bg->itemId()));
-		QString name = newItem->itemName();
-		name.replace(QRegExp("(\\d+)$"),QString::number(newItem->itemId()));
-		newItem->setItemName(name);
-		
-		newSlide->addItem(newItem);
+		newSlide->addItem(oldItem->clone());
 	}
 	
 	return newSlide;
@@ -114,12 +106,14 @@ AbstractItem * Slide::background()
 
 QList<AbstractItem *> Slide::itemList() { return m_items; }
 
-void Slide::addItem(AbstractItem *item)
+void Slide::addItem(AbstractItem *item, bool takeOwnership)
 {
 	assert(item != NULL);
 	emit slideItemChanged(item,"add","",QVariant(),QVariant());
 	connect(item,SIGNAL(itemChanged(QString, QVariant, QVariant)),this,SLOT(itemChanged(QString, QVariant, QVariant)));
 	m_items.append(item);
+	if(takeOwnership)
+		m_ownedItems << item;
 }
 
 void Slide::removeItem(AbstractItem *item)
@@ -128,6 +122,7 @@ void Slide::removeItem(AbstractItem *item)
 	disconnect(item,0,this,0);
 	emit slideItemChanged(item,"remove","",QVariant(),QVariant());
 	m_items.removeAll(item);
+	m_ownedItems.removeAll(item);
 }
 
 void Slide::itemChanged(QString s,QVariant v,QVariant old)

@@ -12,6 +12,8 @@
 #include "MyGraphicsScene.h"
 #include "model/SlideGroup.h"
 
+#include "model/AbstractItemListFilter.h"
+
 class SlideGroupViewer : public QWidget
 {
 	Q_OBJECT
@@ -35,6 +37,10 @@ public:
 	
 	bool isTextOnlyFilterEnabled() { return m_textOnlyFilter; }
 	bool isAutoResizeTextEnabled() { return m_autoResizeText; }
+	
+	void addFilter(AbstractItemListFilter *);
+	void removeFilter(AbstractItemListFilter *);
+	bool hasFilter(AbstractItemListFilter *filter) { return m_slideFilters.contains(filter); }
 	
 	int fadeSpeed() { return m_fadeSpeed; }
 	int fadeQuality() { return m_fadeQuality; } 
@@ -68,7 +74,8 @@ private slots:
 	
 	void videoStreamStarted();
 	
-	void crossFadeFinished();
+	void crossFadeFinished(Slide*,Slide*);
+	void slideDiscarded(Slide*);
 		
 protected:
 	void resizeEvent(QResizeEvent *);
@@ -81,6 +88,7 @@ private:
 	QGraphicsView * view() { return m_view; }
 	
 	Slide * applySlideFilters(Slide*);
+	AbstractItem * applyMutations(AbstractItem*);
 	
 	void applySlideFilters();
 	
@@ -119,6 +127,10 @@ private:
 	
 	int m_fadeSpeed;
 	int m_fadeQuality;
+	
+	QList<Slide*>	m_slideFilterByproduct;
+	
+	QList<AbstractItemListFilter*> m_slideFilters;
 };
 
 #endif // SLIDEGROUPVIEWER_H

@@ -23,7 +23,7 @@ public:
 	Slide();
 	~Slide();
 	
-	void addItem(AbstractItem *);
+	void addItem(AbstractItem *, bool takeOwnership = true);
 	QList<AbstractItem *> itemList();
 	int itemCount() { return m_items.size(); }
 	AbstractItem * background();
@@ -60,6 +60,7 @@ private slots:
 	
 private:
 	QList<AbstractItem *> m_items;
+	QList<AbstractItem *> m_ownedItems;
 	int m_slideNumber;
 	int m_slideId;
 	double m_autoChangeTime;

@@ -20,6 +20,8 @@
 #include "model/TextBoxItem.h"
 #include "model/BackgroundItem.h"
 
+#include "itemlistfilters/SlideTextOnlyFilter.h"
+
 Slide * SlideGroupViewer::m_blackSlide = 0;
 
 SlideGroupViewer::SlideGroupViewer(QWidget *parent)
@@ -67,7 +69,11 @@ SlideGroupViewer::SlideGroupViewer(QWidget *parent)
 	m_view->setScene(m_scene);
 	
 	// inorder to set the background on the rest of the slides if asked to set background on next live slide
-	connect(m_scene, SIGNAL(crossFadeFinished()), this, SLOT(crossFadeFinished()));
+	connect(m_scene, SIGNAL(crossFadeFinished(Slide*,Slide*)), this, SLOT(crossFadeFinished(Slide*,Slide*)));
+	
+	// inorder to delete any slides created during the applyFilteres phase
+	connect(m_scene, SIGNAL(slideDiscarded(Slide*)), this, SLOT(slideDiscarded(Slide*)));
+	
 	
 	m_view->setBackgroundBrush(Qt::gray);
 
@@ -94,7 +100,11 @@ void SlideGroupViewer::setOverlayEnabled(bool enable)
 void SlideGroupViewer::setTextOnlyFilterEnabled(bool enable)
 {
 	m_textOnlyFilter = enable;
-	applySlideFilters();
+	if(enable)
+		addFilter(SlideTextOnlyFilter::instance());
+	else
+		removeFilter(SlideTextOnlyFilter::instance());
+	//applySlideFilters();
 }
 
 void SlideGroupViewer::setAutoResizeTextEnabled(bool enable)
@@ -139,30 +149,46 @@ bool SlideGroupViewer_itemZCompare(AbstractItem *a, AbstractItem *b)
 Slide * SlideGroupViewer::applySlideFilters(Slide * sourceSlide)
 {
 	if((!m_overlaySlide || !m_overlayEnabled)
-		&& !m_textOnlyFilter && !m_autoResizeText)
+		&& !m_textOnlyFilter 
+		&& !m_autoResizeText
+		&& m_slideFilters.size() <= 0)
 		return sourceSlide;
 	
 	Slide * slide = new Slide();
 	
+	// for deleting this slide after the scene is done with it (in slideDiscarded())
+	m_slideFilterByproduct << slide;
+	
 	double baseZValue = 0;
 	BackgroundItem * originalBg = 0;
 	
-	QList<AbstractItem *> origList = sourceSlide->itemList();
+	AbstractItemList origList = sourceSlide->itemList();
 	foreach(AbstractItem * sourceItem, origList)
 	{
-		if(m_textOnlyFilter && !sourceItem->inherits("TextBoxItem"))
-			continue;
+		bool approved = true;
+		foreach(AbstractItemListFilter * filter, m_slideFilters)
+			if(!filter->approve(sourceItem))
+				approved = false;
+				
+		if(approved)
+		{
+			AbstractItem *mutated = applyMutations(sourceItem);
 			
-		// TODO see if we can do this - adding an item to another slide while its still on the original slide
-		slide->addItem(sourceItem);
-		
-		AbstractVisualItem * visual = dynamic_cast<AbstractVisualItem*>(sourceItem);
-		if(visual && visual->zValue() > baseZValue)
-			baseZValue = visual->zValue();
+			// if mutated != originalItem, that means that the filter returned a clone()'ed item with changes,
+			// therefore, allow the slide to take ownership and delete the mutated item when slide is discared
+			// (in the slideDiscarded() slot)
+			slide->addItem(mutated,mutated != sourceItem);
 			
-		BackgroundItem * bgTmp = dynamic_cast<BackgroundItem*>(sourceItem);
-		if(bgTmp && bgTmp->fillType() != AbstractVisualItem::None)
-			originalBg = bgTmp;
+			// determine max zvalue for use in rebasing overlay items
+			AbstractVisualItem * visual = dynamic_cast<AbstractVisualItem*>(sourceItem);
+			if(visual && visual->zValue() > baseZValue)
+				baseZValue = visual->zValue();
+			
+			// find the background in this list in case their is a background in the overlay
+			BackgroundItem * bgTmp = dynamic_cast<BackgroundItem*>(sourceItem);
+			if(bgTmp && bgTmp->fillType() != AbstractVisualItem::None)
+				originalBg = bgTmp;
+		}
 	}
 	
 	// Apply auto size text filter BEFORE the overlay so we dont resize any overlay text boxes
@@ -170,7 +196,7 @@ Slide * SlideGroupViewer::applySlideFilters(Slide * sourceSlide)
 	{
 		// Use the first textbox in the slide as the slide to resize
 		// "first" as defined by ZValue
-		QList<AbstractItem *> items = slide->itemList();
+		AbstractItemList items = slide->itemList();
 		qSort(items.begin(), items.end(), SlideGroupViewer_itemZCompare);
 
 
@@ -266,38 +292,51 @@ Slide * SlideGroupViewer::applySlideFilters(Slide * sourceSlide)
 	if(m_overlaySlide && m_overlayEnabled)
 	{
 		bool secondaryBg = false;	
-		QList<AbstractItem *> items = m_overlaySlide->itemList();
+		AbstractItemList items = m_overlaySlide->itemList();
 		
 		foreach(AbstractItem * overlayItem, items)
 		{
-			BackgroundItem * bg = dynamic_cast<BackgroundItem*>(overlayItem);
-			if(bg)
+			// TODO should filters apply to overlays? to be decided, but for now, yes.
+			bool approved = true;
+			foreach(AbstractItemListFilter * filter, m_slideFilters)
+				if(!filter->approve(overlayItem))
+					approved = false;
+					
+			if(approved)
 			{
-				if(bg->fillType() == AbstractVisualItem::None)
+			
+				BackgroundItem * bg = dynamic_cast<BackgroundItem*>(overlayItem);
+				if(bg)
 				{
-					//qDebug() << "Skipping inherited bg from seondary slide because exists and no fill";
-					continue;
+					if(bg->fillType() == AbstractVisualItem::None)
+					{
+						//qDebug() << "Skipping inherited bg from seondary slide because exists and no fill";
+						continue;
+					}
+					else
+					{
+						secondaryBg = true;
+					}
 				}
-				else
+				
+		
+				AbstractVisualItem * visual = dynamic_cast<AbstractVisualItem*>(overlayItem);
+		
+				// rebase zvalue so everything in this slide is on top of the original slide
+				if(visual && baseZValue!=0)
 				{
-					secondaryBg = true;
+					visual->setZValue(visual->zValue() + baseZValue);
+					//qDebug()<<"SlideGroupViewer::applySlideFilters: rebased" << newVisual->itemName() << "to new Z" << newVisual->zValue();
 				}
+				
+				AbstractItem *mutated = applyMutations(overlayItem);
+				
+				// if mutated != originalItem, that means that the filter returned a clone()'ed item with changes,
+				// therefore, allow the slide to take ownership and delete the mutated item when slide is discared
+				// (in the slideDiscarded() slot)
+				slide->addItem(mutated,mutated != overlayItem);
 			}
 			
-	
-			// TODO see if we can do this - adding an item to another slide while its still on the original slide
-			AbstractItem * newItem = overlayItem; //->clone();
-			AbstractVisualItem * newVisual = dynamic_cast<AbstractVisualItem*>(overlayItem);
-	
-			// rebase zvalue so everything in this slide is on top of the original slide
-			if(newVisual && baseZValue!=0)
-			{
-				newVisual->setZValue(newVisual->zValue() + baseZValue);
-				qDebug()<<"SlideGroupViewer::applySlideFilters: rebased" << newVisual->itemName() << "to new Z" << newVisual->zValue();
-			}
-			
-			if(m_textOnlyFilter ? newItem->inherits("TextBoxItem") : true)
-				slide->addItem(newItem);
 		}
 		
 		// If we have both a overlay and a original bg, remove the original bg
@@ -305,14 +344,54 @@ Slide * SlideGroupViewer::applySlideFilters(Slide * sourceSlide)
 			slide->removeItem(originalBg);
 	}
 	
-	if(m_textOnlyFilter)
+	// not needed, because SlideTextOnlyFilter (the successor to the m_textOnlyFlag) can
+	// mutate the BackgroundItem in its mutate() method, above
+// 	if(m_textOnlyFilter)
+// 	{
+// 		dynamic_cast<AbstractVisualItem*>(slide->background())->setFillBrush(QBrush(Qt::black));
+// 	}
+
+	// nitch case - not sure if it will ever get hit (why would the slide NOT have a background by now?)
+	// but if it doesn't, we still should generate a background and pass it thru the filters
+	if(!originalBg)
 	{
-		dynamic_cast<AbstractVisualItem*>(slide->background())->setFillBrush(QBrush(Qt::black));
+		AbstractVisualItem * originalItem = dynamic_cast<AbstractVisualItem*>(slide->background());
+		AbstractItem *mutated = applyMutations(originalItem);
+		if(mutated != originalItem)
+		{
+			slide->removeItem(originalItem);
+			slide->addItem(mutated,true); // allow slide to delete our mutated backgroundd
+			
+			// nitch note:
+			// since we DIDN'T origianl background (originalBg was false),
+			// that means the call to slide->background() called 'new BackgroundItem'
+			// and since we removed the newly create background item to replace it with our
+			// mutation, that means that it (the originalItem) won't get deleted when
+			// the slide is deleted, so we must delete it here.
+			delete originalItem;
+		}
+		
 	}
 	
 	return slide;
 }
 
+
+AbstractItem * SlideGroupViewer::applyMutations(AbstractItem *originalItem)
+{
+	bool mutated = false;
+	AbstractItem *mutateTmp = originalItem;
+	foreach(AbstractItemListFilter * filter, m_slideFilters)
+	{
+		mutateTmp = filter->mutate(mutateTmp);
+		if(mutateTmp)
+			mutated = true;
+		else
+			mutateTmp = originalItem;
+	}
+	
+	return mutateTmp;
+}
 
 void SlideGroupViewer::applyBackground(const QFileInfo &info, Slide * onlyThisSlide)
 {
@@ -544,13 +623,34 @@ Slide * SlideGroupViewer::setSlide(Slide *slide)
 	return slide;
 }
 
-void SlideGroupViewer::crossFadeFinished()
+void SlideGroupViewer::crossFadeFinished(Slide *oldSlide,Slide*/*newSlide*/)
 {
 	if(m_bgWaitingForNextSlide)
 	{
 		m_bgWaitingForNextSlide = false;
 		applyBackground(m_nextBg);
 	}
+}
+
+void SlideGroupViewer::slideDiscarded(Slide *oldSlide)
+{
+	if(oldSlide && m_slideFilterByproduct.contains(oldSlide))
+	{
+		m_slideFilterByproduct.removeAll(oldSlide);
+		delete oldSlide;
+	}
+}
+
+void SlideGroupViewer::addFilter(AbstractItemListFilter * filter)
+{
+	m_slideFilters.append(filter);
+	applySlideFilters();
+}
+
+void SlideGroupViewer::removeFilter(AbstractItemListFilter *filter)
+{
+	m_slideFilters.removeAll(filter);
+	applySlideFilters();
 }
 
 Slide * SlideGroupViewer::nextSlide()
@@ -681,7 +781,7 @@ void SlideGroupViewer::initVideoProviders()
 	QList<Slide*> slist = m_slideGroup->slideList();	
 	foreach(Slide *slide, slist)
 	{
-		QList<AbstractItem *> items = slide->itemList();
+		AbstractItemList items = slide->itemList();
 		foreach(AbstractItem *item, items)
 		{
 			if (AbstractVisualItem * visualItem = dynamic_cast<AbstractVisualItem *>(item))
