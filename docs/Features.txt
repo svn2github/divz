@@ -131,6 +131,42 @@ Revised Task list for Release 1.0, 10/18/09:
 		= Misc = 
 			[MAYBE] Add color theme support vis a vi powerpoint
 			
+			need video preview widget 
+			need to pre-render all text boxes
+			need to be able to preview slides (next/prev button)
+				move preview dock to under the group list - simple slide list model + preview window
+			need to add checkbox to song editor window to save back to database
+			debug why some photos were gray
+			need to store song background choices that were set using media browser
+				make it auto-create a template, set bg on the template?
+			need to save clear/black state across changing songs (e.g. clear at end of one song, set new song, needs to fade new background/new clear slide)
+			need to update combobox in syncwidget to "sync" staet when setting outputcontrol sync'd progratically
+			up arrow in media browser doesnt work on win32
+			large nbr of photos imported using import tool - some of them render gray - caching issues?
+			put next/prev btns in ctrl over on left, play btn on right
+			move the "send to output" part of the mainwindow splitter as a combobox+btn over the group list (checkable combobox)
+			integrate the proper song filter/song generator code for foldback displays
+			generalize the filters code 
+			make filters and auto-size text code applicable to non-synced outputs as well
+			make an output MJPEG-only (e.g. no need for visible widget)
+				subclass of the network output
+				no need for custom dviz viewer on other end
+				need to render that as a "viewer" widget though - could take view from that
+			after editing a song in database, it needs to update the lyrics preview widget below
+			port over the song database conversion code to windows
+			add timeout, titling options to song import tool
+			add progress bar to song import tool
+			when loading slide group with lots of songs, UI freezes for too long
+				this is due to the loading of images in the image item 
+				which is due to the creating of slide pixmaps
+				need someway to delay-create the slide pixmaps
+				while were on it, delay-creat the group pixmaps as well
+			need to find a way to make the fade speed slider "snap to" increments of, say, 5%
+			fade speed slider should apply to black/clear fades as well 
+			need to add kbd shortcuts to song list "clear" button and to the song editor "title" field
+			need to find a dviz icon
+			images import tool maybe should use different file browser dialog - because on win32, its that directory tree dialog with no field to type in - I hate that dialog
+			
 			
 			make slide list model zoomable 
 				e.g. zoom slide list in editor
