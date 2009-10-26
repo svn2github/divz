@@ -522,7 +522,7 @@ QString AbstractContent::cacheKey()
 void AbstractContent::dirtyCache()
 {
 	QString str = modelItem() ? modelItem()->itemName()  : "";
-	qDebug() << "AbstractContent::dirtyCache(): "<<str; 
+	//qDebug() << "AbstractContent::dirtyCache(): "<<str; 
         QPixmapCache::remove(cacheKey());
 }
 

@@ -131,96 +131,87 @@ Revised Task list for Release 1.0, 10/18/09:
 		= Misc = 
 			[MAYBE] Add color theme support vis a vi powerpoint
 			
-			need video preview widget 
+			[DONE] move the "send to output" part of the mainwindow splitter as a combobox+btn over the group list (checkable combobox)
+				cant figure out how to do checkable combox, so used list of qcheckboxes
+			need to save clear/black state across changing songs (e.g. clear at end of one song, set new song, needs to fade new background/new clear slide)
+			synced outputs should not show in list of "send to" outputs
+			[DONE] put next/prev btns in ctrl over on left, play btn on right
+			[DONE] need to update combobox in syncwidget to "sync" staet when setting outputcontrol sync'd progratically
 			need to pre-render all text boxes
+			need video preview widget 
 			need to be able to preview slides (next/prev button)
 				move preview dock to under the group list - simple slide list model + preview window
+			
 			need to add checkbox to song editor window to save back to database
-			debug why some photos were gray
+			after editing a song in database, it needs to update the lyrics preview widget below
+			port over the song database conversion code to windows
+			
+			large nbr of photos imported using import tool - some of them render gray - caching issues?
+			add timeout, titling options to image import tool
+			add progress bar to image import tool
+			when loading slide group with lots of image, UI freezes for too long
+				this is due to the loading of images in the image item 
+				which is due to the creating of slide pixmaps
+				need someway to delay-create the slide pixmaps
+				while were on it, delay-creat the group pixmaps as well
+			need to put generation of slide pixmaps in a thread...somehow....or process GUI events...
+			images import tool maybe should use different file browser dialog - because on win32, its that directory tree dialog with no field to type in - I hate that dialog
+			
 			need to store song background choices that were set using media browser
 				make it auto-create a template, set bg on the template?
-			need to save clear/black state across changing songs (e.g. clear at end of one song, set new song, needs to fade new background/new clear slide)
-			need to update combobox in syncwidget to "sync" staet when setting outputcontrol sync'd progratically
-			up arrow in media browser doesnt work on win32
-			large nbr of photos imported using import tool - some of them render gray - caching issues?
-			put next/prev btns in ctrl over on left, play btn on right
-			move the "send to output" part of the mainwindow splitter as a combobox+btn over the group list (checkable combobox)
 			integrate the proper song filter/song generator code for foldback displays
-			generalize the filters code 
+			generalize the filters code [e.g. filter plugin somehow, more than just text only]
 			make filters and auto-size text code applicable to non-synced outputs as well
 			make an output MJPEG-only (e.g. no need for visible widget)
 				subclass of the network output
 				no need for custom dviz viewer on other end
 				need to render that as a "viewer" widget though - could take view from that
-			after editing a song in database, it needs to update the lyrics preview widget below
-			port over the song database conversion code to windows
-			add timeout, titling options to song import tool
-			add progress bar to song import tool
-			when loading slide group with lots of songs, UI freezes for too long
-				this is due to the loading of images in the image item 
-				which is due to the creating of slide pixmaps
-				need someway to delay-create the slide pixmaps
-				while were on it, delay-creat the group pixmaps as well
+			up arrow in media browser doesnt work on win32
+				can't debug yet - laptop in car :-)
+			
 			need to find a way to make the fade speed slider "snap to" increments of, say, 5%
 			fade speed slider should apply to black/clear fades as well 
 			need to add kbd shortcuts to song list "clear" button and to the song editor "title" field
-			need to find a dviz icon
-			images import tool maybe should use different file browser dialog - because on win32, its that directory tree dialog with no field to type in - I hate that dialog
-			
-			
+			[DONE] need to find a dviz icon
 			make slide list model zoomable 
 				e.g. zoom slide list in editor
 				zoom slide list in control
 				zoom doc list in main window
-			do need vertical line spacing
+			
+			do need vertical line spacing for artistic use in desigining slides
 			text toolbar vs rich editor in config box dont agree - config box doesnt pick up same text size
 			cloning text objects looses the original font size even tho we copy the html
 			rich text editor should allow manually typed point sizes
 			rich text editor should accept only plain text mime type and assume current formatting
 			need an autofit textbox btn
 			and an autosize textbox
-			make autosave
-				on/off from toolbar
-				[DONE] stop timer when editor closes
-			[DONE] the slide list icons reallly need to be clearer and rendered better
-			need to put generation of slide pixmaps in a thread...somehow....or process GUI events...
-			[DONE] put next/prev controls on slide view control right next to each other
-			[DONE] change key combo for "next" (now is 'x')
-			make a background "apply to all" button
 			
+			make a background "apply to all" button
 			add generic pre-render on document load 
 				loop thru every group, every slide and call Paint on every visual delegate
-			
-			multioutputs:
-				when outputting to only one output, need to keep live tab in same place
-				enable cross fade slider with similar math algorihm to the editor window
-				
-				add synced support 
-					using qstackedwidget, change output control to sync options
-						- sync with what:
-							- which output - combo box drop down
-						- filter or no filter
-						- filter type 
-							- at start, offer builtin filters:
-								foreground only
-								text only
-								background only
-								video only
-								non-text only
-						- default background if background only
-							what color, etc
-						- template overlay option (select a slide group to overlay on top of or behind)
-							- possibly LATER
-						- auto-size test options:
-							- if only one text box found on slide, max fill to screen and max font size like in song
-							- or only first text box - or only "top" text box - i think songs use top box from template
-						- cross fade enabled for this output (default no for foldback-tagged outputs)
-						- LATER, offer user-designed filters:
-							- scripted filter?
-						
+			make autosave - on/off from toolbar
+			[DONE] stop autosave timer when editor closes
+			investigate cross fading on synced outputs - seems to NOT cross fade, BUT I never told it NOT to...huh...
+				after watching it, it looks like the sync-signal sets the NEW slide without cross fade, THEN it tries to cross fade to the new slide - resulting in meerly a slight dimming effect for a moment
+					which is better than nothing, but ideally it should NOT cross fade
+					but this points to a possible problem - setting the slide with no fade, then setting again with cross fade - still need to investigate
+				update:
+					seems to only do the "dim fade" (prev update) when text-only filter enabled
+					with no text-only filter, cross fades like normal
+					
+			allow user to choose only-text background color
 			when changing text using tooplbar icons, need to update prop dock with new html 
+			when switching background to video, somehow render the previous background video UNTIL the first frame of the next video is ready
 			
-			make document icons render "smoother" at the small size 
+			offer more filter types for outputs
+				- at start, offer builtin filters:
+						foreground only
+						text only
+						background only
+						video only
+						non-text only
+				[LATER] offer user-designed filters:
+					- scripted filter?
 			
 			[STARTED] add image slideshow group type
 				or group "generator" / importer?
@@ -346,6 +337,30 @@ Revised Task list for Release 1.0, 10/18/09:
 			or some form of exponential, rounded percentage inc? (e.g. (int)(cur size * 1.5)) ?
 		
 			
+			
+		[DONE] the slide list icons reallly need to be clearer and rendered better
+		[DONE] put next/prev controls on slide view control right next to each other
+		[DONE] change key combo for "next" (now is 't')
+			original rev for this note said 'now is 'x'' - it really was 't', just had a brain fart - sorry.
+		
+		[DONE] multioutputs:
+			[DONE] when outputting to only one output, need to keep live tab in same place
+				change to OutputInstance which embeds SlideGroupViewControl
+			[DONE] enable cross fade slider with similar math algorihm to the editor window
+			
+			[DONE] add synced support 
+				using qstackedwidget, change output control to sync options
+					- sync with what:
+						- which output - combo box drop down
+					- filter or no filter
+					- template overlay option (select a slide group to overlay on top of or behind)
+					- auto-size test options:
+						- if only one text box found on slide, max fill to screen and max font size like in song
+						- or only first text box - or only "top" text box - i think songs use top box from template
+		
+		[DONE] make document icons render "smoother" at the small size 
+				render directly using the given painter in TextBoxContent instead of caching the results of scene hint is Preview
+	
 		[DONE] setup editor to zoom mygraphicsscene automatically ONLY when opening window, not when resizing during use
 		[DONE] slide props dock should current tab to prev tab index IF titles match at that index
 		[DONE] add shadow transparency slider which just adjusts the alpha channel of the color
@@ -495,44 +510,12 @@ Revised Task list for Release 1.0, 10/18/09:
 	
 	- Bugs:
 		need to fix the hackish method of setting slide groups on synced outputs in MainWindow - needs to be cleaner!
-		automatic enabling of foldback sync with live doesnt seem to be working (see OutputControl::setOutputInstance)
 		setting slide group overrides black/clear buttons - should not override
 		
 		experienced random crash when copying/pasting item but could not reproduce
-			[DONE] need to implement autosave
+			temporary fix: impl autosave (done)
 		
-		[FIXED] foldback sync with filters causes crash
-			steps to reproduce:
-				live
-				select song
-				go to foldback
-				set sync
-				turn on filter and resize
-				go back to live
-				select slide
-				select non-song slide
-				select song again
-				crash
-			notes:
-				must have filters on
-				must select another slide after turning on filters
-				
-			had to do with disconnecting from m_ctrl when calling setViewControl -bypassed it by using our own sig/slot for the buttons and proxying the calls
-
-	
 		deleting m_doc in mainwindow::openfile causes segflt when golive with next group - why??
-		
-		[FIXED] foldback display already set to text-only filter before requested
-				wasnt initalizing status variables in constructor, so this was due to corrupt memory in the boolean flags
-		[FIXED] output control doesnt set live widget control on app init - must set ;live group to set view control
-		[FIXED] need to default text bg on textonly slides to black
-		[FIXED] clicking slide in live after setting up sync causes segflt
-	
-		[FIXED] slide editor crashes right after opening editor (eg press F2, editor becomes visible, crash) with new OutputInstance class integrated into code base
-			UPDATE: doesnt sigsegv on CentOS5 - seems to me it might be the test data I'm using at the office. I patched the method indicated below anyway
-				at SlideItemListModel.cpp:29 to confirm that both a & b ptrs are valid (non null) - we'll see if that fixes it when returning to the office.
-			UPDATE:
-				seems fixed on original system - not sure of cause.
 				
 		cross fade on songs with video bg seems to lag
 		clicking "next" and auto-going to first slide of next group when from normal slide to song, segfault 
@@ -554,15 +537,10 @@ Revised Task list for Release 1.0, 10/18/09:
 				see photos, blue box
 				seems to be the changes dont always get synced back to model item (position, size)
 				now it updates live when editing, but goint to diff slide then going back - starts at old position
-		qt4.6b-win32: Adding a new video item or changing filename of existing item causes program crash
-		[NEED CONFIRMED] qt4.6b-win32: chaing document aspect ratio doesnt affect slide editor until program restart
-				should be fixed thanks to changes made below .. i think
-				
 		using toolbar, set font size to 1pt, zoom in so text is in view (blob of black), and then press "up size" btn - segfault
 		close all open editors on closing mainwindow
 		Rotating a boxcontent causes very wierd pen width scaling issues in previews
 		Need better method of managing song regexps - right now the filters exist in the pixmap generation routines, the editor window, and the slide group!!
-		Perfomance of the document pixmap model generator becomes a problem with a lot of songs - need to investigate - possibly use different cache key
 		
 		[CONFIRMED EDGE CASE] On windows, when setting video item live, it doesnt play unless you dbl-click the slide again
 				other fixes (below) may have fixed this - need to confirm
@@ -579,6 +557,48 @@ Revised Task list for Release 1.0, 10/18/09:
 				however, we must handle corrupt files to some extent
 					preferably, detect the file is corrupt and refuse to load 
 					
+		[ON HOLD] qt4.6b-win32: Adding a new video item or changing filename of existing item causes program crash
+				not using qt4.6b on windows right now - staying with 4.5.3, and 4.5 doesnt have this problem
+		
+		
+		[FIXED] automatic enabling of foldback sync with live doesnt seem to be working (see OutputControl::setOutputInstance)
+			it was working, just not setting the combobox indes
+		[FIXED] foldback display already set to text-only filter before requested
+			wasnt initalizing status variables in constructor, so this was due to corrupt memory in the boolean flags
+		[FIXED] output control doesnt set live widget control on app init - must set ;live group to set view control
+		[FIXED] need to default text bg on textonly slides to black
+		[FIXED] clicking slide in live after setting up sync causes segflt
+	
+		[FIXED] foldback sync with filters causes crash
+			steps to reproduce:
+				live
+				select song
+				go to foldback
+				set sync
+				turn on filter and resize
+				go back to live
+				select slide
+				select non-song slide
+				select song again
+				crash
+			notes:
+				must have filters on
+				must select another slide after turning on filters
+				
+			had to do with disconnecting from m_ctrl when calling setViewControl -bypassed it by using our own sig/slot for the buttons and proxying the calls
+
+		[FIXED] slide editor crashes right after opening editor (eg press F2, editor becomes visible, crash) with new OutputInstance class integrated into code base
+			UPDATE: doesnt sigsegv on CentOS5 - seems to me it might be the test data I'm using at the office. I patched the method indicated below anyway
+				at SlideItemListModel.cpp:29 to confirm that both a & b ptrs are valid (non null) - we'll see if that fixes it when returning to the office.
+			UPDATE:
+				seems fixed on original system - not sure of cause.
+		
+		[FIXED] qt4.6b-win32: chaing document aspect ratio doesnt affect slide editor until program restart
+				should be fixed thanks to changes made below .. i think
+				done a while ago
+		[FIXED] Perfomance of the document pixmap model generator becomes a problem with a lot of songs - need to investigate - possibly use different cache key
+				changed caching to cache on ptr value instead of row #
+				
 		[FIXED] deleting one song group shouldnt change sort order of anboth3r!
 			old bug, just putting down here. Fixed it last night.
 		[FIXED] song editor NEW/EDIT not saving

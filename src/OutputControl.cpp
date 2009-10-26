@@ -39,11 +39,11 @@ void OutputControl::setupUI()
 	// setup first row: type selector, cross fade speed, and black/clear btns
 	QHBoxLayout * hbox1 = new QHBoxLayout();
 	
-	QComboBox *box = new QComboBox();
-	box->addItem("Live");
-	box->addItem("Synced");
-	hbox1->addWidget(box);
-	connect(box, SIGNAL(currentIndexChanged(int)), this, SLOT(setIsOutputSynced(int)));
+	m_syncStatusSelector = new QComboBox();
+	m_syncStatusSelector->addItem("Live");
+	m_syncStatusSelector->addItem("Synced");
+	hbox1->addWidget(m_syncStatusSelector);
+	connect(m_syncStatusSelector, SIGNAL(currentIndexChanged(int)), this, SLOT(setIsOutputSynced(int)));
 	
 	QLabel *label = new QLabel("Fade Speed:");
 	hbox1->addWidget(label);
@@ -171,11 +171,11 @@ void OutputControl::setupSyncWidgetUI()
 	label = new QLabel("Text-only Filter: ");
 	layout->addWidget(label,rowNbr,0);
 	
-	QPushButton * textFilterBtn = new QPushButton("Only Show Text");
-	textFilterBtn->setCheckable(true);
-	layout->addWidget(textFilterBtn,rowNbr,1);
+	m_textFilterBtn = new QPushButton("Only Show Text");
+	m_textFilterBtn->setCheckable(true);
+	layout->addWidget(m_textFilterBtn,rowNbr,1);
 	
-	connect(textFilterBtn, SIGNAL(toggled(bool)), this, SLOT(setSyncTextOnlyFilterEnabled(bool)));
+	connect(m_textFilterBtn, SIGNAL(toggled(bool)), this, SLOT(setSyncTextOnlyFilterEnabled(bool)));
 	
 // 	// Row 3: Text only background
 //	rowNbr++;
@@ -197,10 +197,11 @@ void OutputControl::setupSyncWidgetUI()
 	
 	QPushButton *btn = new QPushButton("Intelli-Size Top Textbox");
 	btn->setCheckable(true);
+	btn->setEnabled(false);
 	layout->addWidget(btn,rowNbr,1);
 	
 	connect(btn, SIGNAL(toggled(bool)), this, SLOT(setSyncTextResizeEnabled(bool)));
-	connect(textFilterBtn, SIGNAL(toggled(bool)), btn, SLOT(setEnabled(bool)));
+	connect(m_textFilterBtn, SIGNAL(toggled(bool)), btn, SLOT(setEnabled(bool)));
 	
 	// make the last row expand - i think it should, not tested tet
 	rowNbr++;
@@ -315,6 +316,8 @@ void OutputControl::setSyncTextOnlyFilterEnabled(bool flag)
 {
 	if(m_inst)
 		m_inst->setTextOnlyFilterEnabled(flag);
+	if(m_textFilterBtn->isChecked() != flag)
+		m_textFilterBtn->setChecked(flag);
 }
 
 void OutputControl::setSyncSource(OutputInstance * inst)
@@ -343,6 +346,9 @@ void OutputControl::setIsOutputSynced(bool flag)
 	//qDebug() << "OutputControl::setViewControl: m_ctrl:"<<POINTER_STRING(m_ctrl)<<", m_syncWidget:"<<POINTER_STRING(m_syncWidget);
 	
 	m_stack->setCurrentWidget( flag ? m_syncWidget : m_ctrl );
+	
+	if(m_syncStatusSelector->currentIndex() != (int)flag)
+		m_syncStatusSelector->setCurrentIndex((int)flag);
 }
 
 void OutputControl::setOutputInstance(OutputInstance * inst)
@@ -350,11 +356,12 @@ void OutputControl::setOutputInstance(OutputInstance * inst)
 	m_inst = inst;
 	setupSyncWithBox();
 
-	if(inst->output()->name() == "Foldback")
-	//{
-		//qDebug() << "Output is foldback!";
+	if(inst->output()->tags().toLower().indexOf("foldback") >= 0 ||
+	   inst->output()->name().toLower().indexOf("foldback") >= 0)
+	{
 		setIsOutputSynced(true);
-	//}
+		setSyncTextOnlyFilterEnabled(true);
+	}
 		
 	connect(m_inst, SIGNAL(slideChanged(int)), this, SLOT(slideChanged(int)));
 
@@ -418,4 +425,7 @@ void OutputControl::setCrossFadeSpeed(int value)
 	m_inst->setFadeQuality(quality);
 }
 
-void OutputControl::setIsOutputSynced(int flag) { setIsOutputSynced(flag == 1); }
+void OutputControl::setIsOutputSynced(int flag) 
+{	
+	setIsOutputSynced(flag == 1); 
+}

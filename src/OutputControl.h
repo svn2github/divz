@@ -41,7 +41,10 @@ public slots:
 	void setOverlayEnabled(bool);
 	void setSyncTextOnlyFilterEnabled(bool);
 	void setSyncTextResizeEnabled(bool);
-	
+
+/*public*/ 
+signals:
+	void outputIsSyncedChanged(bool);
 	
 protected slots:
 	void syncOutputChanged(int idx);
@@ -87,6 +90,9 @@ protected:
 	//QtColorPicker		* m_colorPicker;
 	
 	bool			m_outputIsSynced;
+	
+	QComboBox		* m_syncStatusSelector;
+	QPushButton 		* m_textFilterBtn;
 };
 
 

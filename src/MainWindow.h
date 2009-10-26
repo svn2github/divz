@@ -34,6 +34,7 @@ class SongBrowser;
 class QFileInfo;
 class OutputInstance;
 class OutputControl;
+class QCheckBox;
 
 class MainWindow : public QMainWindow {
 	Q_OBJECT
@@ -103,6 +104,8 @@ protected slots:
 	void saveWindowState();
 	void loadWindowState();
 	
+	void slotSendToOutputs();
+	
 protected:
 	void changeEvent(QEvent *e);
 	void closeEvent(QCloseEvent *event);
@@ -112,6 +115,7 @@ protected:
 private:
 	void setupOutputList();
 	void setupOutputViews();
+	void setupOutputControls();
 	void setupCentralWidget();
 	void setupSongList();
 	void setupMediaBrowser();
@@ -126,10 +130,8 @@ private:
 	SongBrowser * m_songBrowser;
 
 	QSplitter   * m_splitter;
-	QSplitter   * m_splitter2;
 	QListView   * m_groupView;
 	QPushButton * m_btnSendOut;
-	QListWidget * m_outputList;
 	QTabWidget  * m_outputTabs;
 
 	OutputSetupDialog * m_outputDialog;
@@ -146,6 +148,11 @@ private:
 	
 	OutputInstance * liveInst();// { return output(AppSettings::taggedOutput("live")->id()); }
 	SlideGroupViewControl * liveCtrl();// { return viewControl(AppSettings::taggedOutput("live")->id()); }
+	
+	QMap<int,QCheckBox*>	m_outputCheckboxes;
+	QWidget			* m_outputCheckboxBase;
+	
+	QWidget			* m_previewControlBase;
 	
 	/** static */
 	static MainWindow * static_mainWindow;	

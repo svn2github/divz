@@ -149,6 +149,19 @@ SlideGroupViewControl::SlideGroupViewControl(OutputInstance *g, QWidget *w )
 	
 	//hbox->addStretch(1);
 	
+	// "Prev" button
+	btn = new QPushButton(QIcon(":/data/control_start_blue.png"),"P&rev");
+	connect(btn, SIGNAL(clicked()), this, SLOT(prevSlide()));
+	hbox->addWidget(btn);
+	
+	// "Next" button
+	btn = new QPushButton(QIcon(":/data/control_end_blue.png"),"Nex&t");
+	connect(btn, SIGNAL(clicked()), this, SLOT(nextSlide()));
+	hbox->addWidget(btn);
+	
+	
+	hbox->addStretch(1);
+
 	// animation controls
 	m_timeLabel = new QLabel(this);
 	m_timeLabel->setEnabled(false);
@@ -160,18 +173,6 @@ SlideGroupViewControl::SlideGroupViewControl(OutputInstance *g, QWidget *w )
 	connect(m_timeButton, SIGNAL(clicked()), this, SLOT(toggleTimerState()));
 	m_timeButton->setEnabled(false);
 	hbox->addWidget(m_timeButton);
-	
-	hbox->addStretch(1);
-
-	// "Prev" button
-	btn = new QPushButton(QIcon(":/data/control_start_blue.png"),"P&rev");
-	connect(btn, SIGNAL(clicked()), this, SLOT(prevSlide()));
-	hbox->addWidget(btn);
-	
-	// "Next" button
-	btn = new QPushButton(QIcon(":/data/control_end_blue.png"),"Nex&t");
-	connect(btn, SIGNAL(clicked()), this, SLOT(nextSlide()));
-	hbox->addWidget(btn);
 
 
 	/** Initalize animation timers **/

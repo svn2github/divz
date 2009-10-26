@@ -10,6 +10,7 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QTextEdit>
+#include <QCheckBox>
 
 #include "AppSettings.h"
 #include "AppSettingsDialog.h"
@@ -41,6 +42,8 @@ MainWindow::MainWindow(QWidget *parent) :
 	
 {
 	static_mainWindow = this;
+	
+	setWindowIcon(QIcon(":/data/icon-next-small.png"));
 	
 	m_ui->setupUi(this);
 	
@@ -184,7 +187,7 @@ void MainWindow::loadWindowState()
 		move(p);
 	restoreState(settings.value("mainwindow/state").toByteArray());
 	m_splitter->restoreState(settings.value("mainwindow/splitter_state").toByteArray());
-	m_splitter2->restoreState(settings.value("mainwindow/splitter2_state").toByteArray());
+	//m_splitter2->restoreState(settings.value("mainwindow/splitter2_state").toByteArray());
 	m_songBrowser->restoreState(settings.value("mainwindow/songbrowser_state").toByteArray());
 
 }
@@ -196,7 +199,7 @@ void MainWindow::saveWindowState()
 	settings.setValue("mainwindow/pos",pos());
 	settings.setValue("mainwindow/state",saveState());
 	settings.setValue("mainwindow/splitter_state",m_splitter->saveState());
-	settings.setValue("mainwindow/splitter2_state",m_splitter2->saveState());
+	//settings.setValue("mainwindow/splitter2_state",m_splitter2->saveState());
 	settings.setValue("mainwindow/songbrowser_state",m_songBrowser->saveState());
 }
 
@@ -561,7 +564,35 @@ void MainWindow::setupCentralWidget()
 	setCentralWidget(m_splitter);
 
 	// left side
-	m_groupView = new QListView(this);
+	QWidget * leftBase = new QWidget(this);
+	QVBoxLayout * leftLayout = new QVBoxLayout(leftBase);
+	leftLayout->setMargin(0);
+	
+	
+	QWidget * ouputChoiceBase = new QWidget();
+	QHBoxLayout * ouputChoiceBaseLayout = new QHBoxLayout(ouputChoiceBase);
+	ouputChoiceBaseLayout->setMargin(0);
+	
+	ouputChoiceBaseLayout->addStretch(1);
+	
+	// Output checkbox list
+	m_outputCheckboxBase = new QWidget();
+	QHBoxLayout * outputCheckboxBaseLayout = new QHBoxLayout(m_outputCheckboxBase);
+	outputCheckboxBaseLayout->setMargin(0);
+	ouputChoiceBaseLayout->addWidget(m_outputCheckboxBase);
+	
+	setupOutputList();
+	
+	// Send to output button
+	m_btnSendOut = new QPushButton(QIcon(":/data/stock-fullscreen.png"),"Send to Output");
+	ouputChoiceBaseLayout->addWidget(m_btnSendOut);
+	connect(m_btnSendOut, SIGNAL(clicked()), this, SLOT(slotSendToOutputs()));
+	
+	leftLayout->addWidget(ouputChoiceBase);
+	leftLayout->setSpacing(2);
+	
+	// List of groups
+	m_groupView = new QListView(leftBase);
 	
 	m_groupView->setViewMode(QListView::ListMode);
 	//m_groupView->setViewMode(QListView::IconMode);
@@ -580,75 +611,50 @@ void MainWindow::setupCentralWidget()
 	m_groupView->insertAction(0,m_ui->actionNew_Slide_Group);
 	m_groupView->insertAction(0,m_ui->actionDelete_Slide_Group);
 	
+	leftLayout->addWidget(m_groupView);
 	
 	connect(m_docModel, SIGNAL(groupsDropped(QList<SlideGroup*>)), this, SLOT(groupsDropped(QList<SlideGroup*>)));
 	
 	connect(m_groupView,SIGNAL(clicked(const QModelIndex &)),this,SLOT(groupSelected(const QModelIndex &)));
 	connect(m_groupView,SIGNAL(doubleClicked(const QModelIndex &)),this,SLOT(groupDoubleClicked(const QModelIndex &)));
 	
-	m_splitter->addWidget(m_groupView);
+	
+	m_splitter->addWidget(leftBase);
 	
 	
+	// preview widget
+	//m_previewControlBase
+	// TODO Later
 
+	
 
-	// right side
-	m_splitter2 = new QSplitter(m_splitter);
-	m_splitter2->setOrientation(Qt::Vertical);
-	m_splitter->addWidget(m_splitter2);
-
-	QWidget *topright = new QWidget(m_splitter);
-	QVBoxLayout * layout = new QVBoxLayout(topright);
-	layout->setMargin(0);
-	m_splitter2->addWidget(topright);
-
-	// output controls at top
-	m_outputList = new QListWidget();
-	m_outputList->setMinimumSize(QSize(1,20));
-	layout->addWidget(m_outputList);
-
-	m_btnSendOut = new QPushButton("Send to Output");
-	layout->addWidget(m_btnSendOut);
-
-	// live view control at bottom
+	// live view control on right side of splitter
 	m_outputTabs = new QTabWidget();
-	m_splitter2->addWidget(m_outputTabs);
 	
-	QList<Output*> allOut = AppSettings::outputs();
+	setupOutputControls();
+	m_splitter->addWidget(m_outputTabs);
 	
-	foreach(Output *output, allOut)
-	{
-		if(!output->isEnabled())
-			continue;
-			
-		OutputInstance *inst = outputInst(output->id());
-		//SlideGroupViewControl *ctrl = viewControl(output->id());
-		
-		OutputControl * outCtrl = new OutputControl();
-		outCtrl->setOutputInstance(inst);
-		m_outputControls[output->id()] = outCtrl;
-		
-		m_outputTabs->addTab(outCtrl, output->name());
-		
-		SlideGroupFactory *factory = SlideGroupFactory::factoryForType(SlideGroup::Generic);
-		
-		if(factory)
-		{
-			SlideGroupViewControl * ctrl = factory->newViewControl();
-			ctrl->setOutputView(inst);
-			outCtrl->setViewControl(ctrl);
-			
-			m_viewControls[output->id()] = ctrl;
-			
-			//m_outputTabs->addTab(ctrl,output->name());
-		}
-	}
 	
 
-	setupOutputList();
+	
+}
+
+void MainWindow::slotSendToOutputs()
+{
+	QModelIndex idx = m_groupView->currentIndex();
+	if(idx.isValid())
+		groupDoubleClicked(idx);
 }
 
 void MainWindow::setupOutputList()
 {
+	foreach(QCheckBox *box, m_outputCheckboxes)
+	{
+		m_outputCheckboxBase->layout()->removeWidget(box);
+		box->setVisible(false);
+		delete box;
+	}
+	
 	QList<Output*> allOut = AppSettings::outputs();
 
 	QList<Output*> outputs;
@@ -656,27 +662,13 @@ void MainWindow::setupOutputList()
 		if(x->isEnabled())
 			outputs << x;
 
-	QListWidget * tbl = m_outputList;
-	tbl->clear();
-
-	//tbl->setSelectionBehavior(QAbstractItemView::SelectRows);
-	//connect(tbl, SIGNAL(cellClicked(int,int)), this, SLOT(slotOutputListCellActivated(int,int)));
-
-	//tbl->setColumnCount(1);
-	//tbl->setHorizontalHeaderLabels(QStringList() << "Name");
-	//tbl->setRowCount(outputs.size());
-
-	QListWidgetItem *prototype = new QListWidgetItem();
-	// setup your prototype
-	prototype->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled|Qt::ItemIsUserCheckable);
-
 	foreach(Output*out, outputs)
 	{
-		QListWidgetItem *t = prototype->clone();
-		t->setText(out->name());
-		t->setCheckState(Qt::Checked);
-		t->setData(Qt::UserRole + 100, out->id());
-		tbl->addItem(t);
+		QCheckBox *box = new QCheckBox(out->name());
+		m_outputCheckboxes[out->id()] = box;
+		
+		box->setChecked(true);
+		m_outputCheckboxBase->layout()->addWidget(box);
 	}
 }
 
@@ -768,7 +760,53 @@ void MainWindow::actionAppSettingsDialog()
 	emit appSettingsChanged();
 	setupOutputViews();
 	setupOutputList();
+	setupOutputControls();
+	
 }
+
+void MainWindow::setupOutputControls()
+{
+	QList<Output*> allOut = AppSettings::outputs();
+	
+	foreach(Output *output, allOut)
+	{
+		if(m_outputControls.contains(output->id()))
+		{
+			OutputControl * outCtrl = m_outputControls[output->id()];
+			
+			int idx = m_outputTabs->indexOf(outCtrl);
+			
+			m_outputTabs->setTabEnabled(idx,output->isEnabled());
+		}
+		else
+		{
+			OutputInstance *inst = outputInst(output->id());
+			//SlideGroupViewControl *ctrl = viewControl(output->id());
+			
+			OutputControl * outCtrl = new OutputControl();
+			outCtrl->setOutputInstance(inst);
+			m_outputControls[output->id()] = outCtrl;
+			
+			int idx = m_outputTabs->addTab(outCtrl, output->name());
+			
+			m_outputTabs->setTabEnabled(idx,output->isEnabled());
+			
+			SlideGroupFactory *factory = SlideGroupFactory::factoryForType(SlideGroup::Generic);
+			
+			if(factory)
+			{
+				SlideGroupViewControl * ctrl = factory->newViewControl();
+				ctrl->setOutputView(inst);
+				outCtrl->setViewControl(ctrl);
+				
+				m_viewControls[output->id()] = ctrl;
+				
+				//m_outputTabs->addTab(ctrl,output->name());
+			}
+		}
+	}
+}
+	
 
 void MainWindow::actionDocSettingsDialog()
 {
@@ -816,23 +854,14 @@ void MainWindow::previewSlideGroup(SlideGroup *s)
 
 void MainWindow::setLiveGroup(SlideGroup *newGroup, Slide *currentSlide)
 {
-	QListWidget * tbl = m_outputList;
-	int tblCnt = tbl->count();
-	
 	QList<Output*> selectedOutputs;
-	QList<int> selectedIds;
-
-	for(int idx=0;idx<tblCnt;idx++)
+	QList<Output*> allOut = AppSettings::outputs();
+	
+	foreach(Output *out, allOut)
 	{
-		QListWidgetItem * item = tbl->item(idx);
-		//t->setData(Qt::UserRole + 100, out->id());
-		if(item->checkState() == Qt::Checked)
-		{
-			int id = item->data(Qt::UserRole + 100).toInt();
-			Output * out = AppSettings::outputById(id);
+		QCheckBox *box = m_outputCheckboxes[out->id()];
+		if(box && box->isChecked())
 			selectedOutputs.append(out);
-			selectedIds.append(id);
-		}
 	}
 	
 	QList<int> alreadyConsumed;
@@ -842,7 +871,7 @@ void MainWindow::setLiveGroup(SlideGroup *newGroup, Slide *currentSlide)
 	{
 		OutputInstance *inst = outputCtrl->outputInstance();
 		Output * output = inst->output();
-		if(selectedIds.contains(output->id()))
+		if(selectedOutputs.contains(output))
 		{
 			if(outputCtrl->outputIsSynced())
 			{
