@@ -64,7 +64,7 @@ void SongBrowser::setupUI()
 	m_songSearch = new QLineEdit(m_searchBase);
 	label->setBuddy(m_songSearch);
 	
-	m_clearSearchBtn = new QPushButton("Clear");
+	m_clearSearchBtn = new QPushButton("C&lear");
 	m_clearSearchBtn->setVisible(false);
 	
 	hbox->addWidget(label);
@@ -232,7 +232,7 @@ void SongBrowser::editSongInDB()
 
 void SongBrowser::editSongAccepted(/*SongRecord**/)
 {
-
+	songSingleClicked(m_songList->currentIndex());
 }
 
 void SongBrowser::songDoubleClicked(const QModelIndex &idx)

@@ -75,6 +75,8 @@ private slots:
 	
 	void slotNextGroup();
 	
+	void slideChanged(Slide *, QString, AbstractItem *, QString, QString, QVariant);
+	
 protected:
 	//void closeEvent(QCloseEvent *);
 

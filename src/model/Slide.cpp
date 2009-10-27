@@ -83,9 +83,7 @@ Slide * Slide::clone() const
 		newSlide->removeItem(content);
 	
 	foreach(AbstractItem *oldItem, m_items)
-	{
 		newSlide->addItem(oldItem->clone());
-	}
 	
 	return newSlide;
 }
@@ -94,7 +92,7 @@ Slide * Slide::clone() const
 AbstractItem * Slide::background()
 {
 	foreach(AbstractItem *x, m_items)
-		if(x->itemClass() == BackgroundItem::ItemClass)
+		if(x && x->inherits("BackgroundItem")) //itemClass() == BackgroundItem::ItemClass)
 			return x;
 	AbstractItem * bg = new BackgroundItem();
 	bg->setItemId(ItemFactory::nextId());

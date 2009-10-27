@@ -131,17 +131,17 @@ Revised Task list for Release 1.0, 10/18/09:
 		= Misc = 
 			[MAYBE] Add color theme support vis a vi powerpoint
 			
-			new document AR still not correct in the icons
-			changing model doesnt update slidegrouplistmodel icons
+			[DONE] new document AR still not correct in the icons
+			[DONE] changing model doesnt update slidegrouplistmodel icons
 			
-			need to save clear/black state across changing songs (e.g. clear at end of one song, set new song, needs to fade new background/new clear slide)
+			[DONE] need to save clear/black state across changing songs (e.g. clear at end of one song, set new song, needs to fade new background/new clear slide)
 			need to pre-render all text boxes
 			need video preview widget 
 			need to be able to preview slides (next/prev button)
 				move preview dock to under the group list - simple slide list model + preview window
 			
 			[DONE] need to add checkbox to song editor window to save back to database
-			after editing a song in database, it needs to update the lyrics preview widget below
+			[DONE] after editing a song in database, it needs to update the lyrics preview widget below
 			port over the song database conversion code to windows
 			
 			large nbr of photos imported using import tool - some of them render gray - caching issues?
@@ -170,18 +170,20 @@ Revised Task list for Release 1.0, 10/18/09:
 			[DONE] need to store song background choices that were set using media browser
 				[DONE] make it auto-create a template, set bg on the template?
 			integrate the proper song filter/song generator code for foldback displays
-			generalize the filters code [e.g. filter plugin somehow, more than just text only]
+			[DONE] generalize the filters code [e.g. filter plugin somehow, more than just text only]
+				filters are generalized, just need to integrate with UIfs
 			make filters and auto-size text code applicable to non-synced outputs as well
 			make an output MJPEG-only (e.g. no need for visible widget)
 				subclass of the network output
 				no need for custom dviz viewer on other end
 				need to render that as a "viewer" widget though - could take view from that
-			up arrow in media browser doesnt work on win32
-				can't debug yet - laptop in car :-)
+			[FOXED] up arrow in media browser doesnt work on win32
+				canonical path in QFileInfo still usedd '/' as the dir seperator on windows, even though QDir::separator() returns "\" - grrr!
 			
-			need to find a way to make the fade speed slider "snap to" increments of, say, 5%
-			fade speed slider should apply to black/clear fades as well 
-			need to add kbd shortcuts to song list "clear" button and to the song editor "title" field
+			[REJECTED] need to find a way to make the fade speed slider "snap to" increments of, say, 5%
+				can't seem to find out how
+			[DONE] fade speed slider should apply to black/clear fades as well 
+			[DONE] need to add kbd shortcuts to song list "clear" button and to the song editor "title" field
 			
 			make slide list model zoomable 
 				e.g. zoom slide list in editor
@@ -200,13 +202,15 @@ Revised Task list for Release 1.0, 10/18/09:
 			add generic pre-render on document load 
 				loop thru every group, every slide and call Paint on every visual delegate
 			make autosave - on/off from toolbar
-			investigate cross fading on synced outputs - seems to NOT cross fade, BUT I never told it NOT to...huh...
+			[FIXED] investigate cross fading on synced outputs - seems to NOT cross fade, BUT I never told it NOT to...huh...
 				after watching it, it looks like the sync-signal sets the NEW slide without cross fade, THEN it tries to cross fade to the new slide - resulting in meerly a slight dimming effect for a moment
 					which is better than nothing, but ideally it should NOT cross fade
 					but this points to a possible problem - setting the slide with no fade, then setting again with cross fade - still need to investigate
 				update:
 					seems to only do the "dim fade" (prev update) when text-only filter enabled
 					with no text-only filter, cross fades like normal
+				update:
+					it was a case of not disconnecting correctly from m_syncInst in OutputControl
 					
 			allow user to choose only-text background color
 			when changing text using tooplbar icons, need to update prop dock with new html 
@@ -528,11 +532,17 @@ Revised Task list for Release 1.0, 10/18/09:
 		[LATER] Video Capture (started impl, but again, performance is terrible. That may be due to the FormatOpts specified, or in ffmpeg, or the capture hardware - need to trace - later!)
 	
 	- Bugs:
+					
+		when auto-size text is enabled on foldback, foldback doesnt display correct verse all the time - sometimes displays a different verse that what it should be showing
+
 		need to fix the hackish method of setting slide groups on synced outputs in MainWindow - needs to be cleaner!
-		setting slide group overrides black/clear buttons - should not override
 		
-		experienced random crash when copying/pasting item but could not reproduce
+		[FIXED] setting slide group overrides black/clear buttons - should not override
+			reworked internals of SlideGroupViewer to accomidate
+		
+		[FIXED] experienced random crash when copying/pasting item but could not reproduce
 			temporary fix: impl autosave (done)
+			final fix: qDeleteAll does not clear a list - so I had to do m_copyBuffer.clear() after qDeleteAll - that fixed it.
 		
 		deleting m_doc in mainwindow::openfile causes segflt when golive with next group - why??
 				
@@ -542,9 +552,12 @@ Revised Task list for Release 1.0, 10/18/09:
 		slide auto change time doesnt seem to save when using guess button
 		
 		clicking "no bg" in dialog doesnt clear background if it was image previously in editor
-		adding slide in editor doesnt update list in live view control
+		[FIXED] adding slide in editor doesnt update list in live view control
+			the OutputInstance proxy methods were not updating their list, and SlideItemListModel wasnt updatign correctly either
 		
-		if edit slide, go live, the edit again, the Live Slide List View pixmap does not regenerate
+		[FIXED] if edit slide, go live, the edit again, the Live Slide List View pixmap does not regenerate
+			dont remeber how - something to do with catching the change signal
+			
 		crossfading between videos of same bg (see r212 the "Dir Viz" slide - dup and then try cross fading) is hoorible performance!
 			
 		when dragging multiple-select items, only one item syncs back to the model - the others dont

@@ -32,6 +32,7 @@ public:
 	
 	double fontSize() const { return m_fontSize; }
 	void setFontSize(double);
+	void changeFontSize(double); // force change the html font size
 	double findFontSize();
 	
 	// Shape (Beizer)

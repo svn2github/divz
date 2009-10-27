@@ -90,6 +90,25 @@ void OutputInstance::slotNextGroup()
 	emit nextGroup();
 }
 
+
+void OutputInstance::slideChanged(Slide *slide, QString slideOperation, AbstractItem */*item*/, QString /*operation*/, QString /*fieldName*/, QVariant /*value*/)
+{
+	if(!m_slideGroup)
+		return;
+		
+	if(slideOperation == "add" || slideOperation == "remove")
+	{
+		QList<Slide*> slist = m_slideGroup->slideList();
+		qSort(slist.begin(), slist.end(), OuputInstance_slide_num_compare);
+		m_sortedSlides = slist;
+		
+		if(m_slideNum >= m_sortedSlides.size())
+			m_slideNum = 0;
+	}
+	
+}
+
+
 void OutputInstance::setSlideGroup(SlideGroup *group, Slide * startSlide)
 {
 	Output::OutputType x = m_output->outputType();
@@ -104,6 +123,18 @@ void OutputInstance::setSlideGroup(SlideGroup *group, Slide * startSlide)
 	
 	// Replicate the OutputInstance logic internally.
 	// Right now, not needed. But for a network viewer, we'll do this to reduce network logic & trafic needed
+	
+	
+	if(m_slideGroup == group)
+		return;
+		
+	m_slideNum = 0;
+
+	if(m_slideGroup)
+		disconnect(m_slideGroup,0,this,0);
+	
+	connect(group,SIGNAL(slideChanged(Slide *, QString, AbstractItem *, QString, QString, QVariant)),this,SLOT(slideChanged(Slide *, QString, AbstractItem *, QString, QString, QVariant)));
+
 	m_slideGroup  = group;
 	
 	QList<Slide*> slist = group->slideList();
@@ -111,12 +142,12 @@ void OutputInstance::setSlideGroup(SlideGroup *group, Slide * startSlide)
 	m_sortedSlides = slist;
 	
 	if(startSlide)
-		setSlide(startSlide);
+		m_slideNum = m_sortedSlides.indexOf(startSlide);
 	else
 	{
 		QList<Slide*> slist = group->slideList();
 		if(slist.size() > 0)
-			setSlide(m_sortedSlides.at(0));
+			m_slideNum = 0;
 		else
 			qDebug("OutputInstance::setSlideGroup: Group[0] has 0 slides");
 	}
@@ -291,6 +322,7 @@ Slide * OutputInstance::setSlide(Slide *slide)
 	m_slideNum = m_sortedSlides.indexOf(slide);
 	if(m_slideNum >-1 )
 	{
+		//qDebug() << "OutputInstance::setSlide: ["<<m_output->name()<<"] emit slideChanged("<<m_slideNum<<")";
 		emit slideChanged(m_slideNum);
 	}
 	else

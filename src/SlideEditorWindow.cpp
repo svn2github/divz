@@ -827,7 +827,7 @@ void SlideEditorWindow::textSizeChanged(double pt)
 	if(m_currentTextItems.size() <= 0)
 		return;
 	foreach(TextBoxContent *text, m_currentTextItems)
-		dynamic_cast<TextItem*>(text->modelItem())->setFontSize(pt);
+		dynamic_cast<TextItem*>(text->modelItem())->changeFontSize(pt);
 }
 
 void SlideEditorWindow::setupUndoView()
@@ -1049,12 +1049,14 @@ void SlideEditorWindow::setupItemList()
 
 void SlideEditorWindow::currentChanged(const QModelIndex &idx,const QModelIndex &)
 {
-	slideSelected(idx);
+	if(idx.isValid())
+		slideSelected(idx);
 }
 
 void SlideEditorWindow::currentItemChanged(const QModelIndex &idx,const QModelIndex &)
 {
-	itemSelected(idx);
+	if(idx.isValid())
+		itemSelected(idx);
 }
 
 
@@ -1271,6 +1273,9 @@ void SlideEditorWindow::setCurrentSlide(Slide *slide)
 	m_scene->setSlide(slide);
 	m_slideListView->setCurrentIndex(m_slideModel->indexForSlide(slide));
 	setupViewportLines();
+	
+	if(!slide)
+		return;
 	
 	QList<AbstractContent *> kids = m_scene->abstractContent();
 	

@@ -140,13 +140,15 @@ void SlideGroupListModel::setSlideGroup(SlideGroup *g)
 		disconnect(m_slideGroup,0,this,0);
 	}
 	
-	if(m_slideGroup) // != g)
+	
+	if(g) // != g)
 	{
 		connect(g,SIGNAL(slideChanged(Slide *, QString, AbstractItem *, QString, QString, QVariant)),this,SLOT(slideChanged(Slide *, QString, AbstractItem *, QString, QString, QVariant)));
 		connect(g,SIGNAL(destroyed(QObject*)), this, SLOT(releaseSlideGroup()));
 	}
 	
 	m_slideGroup = g;
+	
 	
 	internalSetup();
 }

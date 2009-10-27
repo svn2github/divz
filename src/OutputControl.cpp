@@ -232,11 +232,21 @@ void OutputControl::setupSyncWithBox()
 
 void OutputControl::syncOutputChanged(int idx)
 {
+	if(idx<0)
+		return;
+		
 	int outputId = m_syncWithBox->itemData(idx).toInt();
 	//Output * out = AppSettings::outputById(outputId);
 	OutputInstance * inst = MainWindow::mw()->outputInst(outputId);
 	
-	setSyncSource(inst);
+	if(!inst)
+	{
+		qDebug() << "OutputControl::syncOutputChanged(): idx:"<<idx<<", outputId:"<<outputId<<": output doesnt exist.";
+	}
+	else
+	{
+		setSyncSource(inst);
+	}
 }
 
 void OutputControl::overlayDocumentChanged(const QString& filename)
@@ -341,15 +351,27 @@ void OutputControl::setSyncTextOnlyFilterEnabled(bool flag)
 		m_textFilterBtn->setChecked(flag);
 }
 
+#define POINTER_STRING(ptr) QString().sprintf("%p",static_cast<void*>(ptr))
 void OutputControl::setSyncSource(OutputInstance * inst)
 {
-	if(m_syncInst && m_outputIsSynced)
-		disconnect(m_syncInst,0,this,0);
+	if(m_syncInst && m_inst) // && m_outputIsSynced)
+	{
+		//qDebug() << "OutputControl::setSyncSource: ["<<m_inst->output()->name()<<"] disconnecting from "<<m_syncInst->output()->name();
+		disconnect(m_syncInst,0,m_inst,0);
+	}
 	
 	m_syncInst = inst;
 	
 	if(m_outputIsSynced)
-		connect(m_syncInst, SIGNAL(slideChanged(int)), m_inst, SLOT(setSlide(int)));	
+	{
+		if(m_syncInst && m_inst)
+		{
+			connect(m_syncInst, SIGNAL(slideChanged(int)), m_inst, SLOT(setSlide(int)));	
+			//qDebug() << "OutputControl::setSyncSource: ["<<m_inst->output()->name()<<"] connecting to "<<m_syncInst->output()->name();
+		}
+		else
+			qDebug() << "OutputControl::setSyncSource(): output is synced but m_syncInst:"<<POINTER_STRING(m_syncInst)<<" or m_inst:"<<POINTER_STRING(m_inst);
+	}
 }
 
 void OutputControl::setIsOutputSynced(bool flag)
@@ -377,23 +399,26 @@ void OutputControl::setOutputInstance(OutputInstance * inst)
 	m_inst = inst;
 	setupSyncWithBox();
 
+	connect(m_inst, SIGNAL(slideChanged(int)), this, SLOT(slideChanged(int)));
+
+	// HACK - later need to default to app settings
+	m_fadeSlider->setValue(25);
+	
+	
 	if(inst->output()->tags().toLower().indexOf("foldback") >= 0 ||
 	   inst->output()->name().toLower().indexOf("foldback") >= 0)
 	{
 		setIsOutputSynced(true);
 		setSyncTextOnlyFilterEnabled(true);
+		m_fadeSlider->setValue(0);
 	}
 		
-	connect(m_inst, SIGNAL(slideChanged(int)), this, SLOT(slideChanged(int)));
-
-	// HACK - later need to default to app settings
-	m_fadeSlider->setValue(25);
 }
 
 void OutputControl::slideChanged(int)
 {
-	m_blackButton->setChecked(false);
-	m_clearButton->setChecked(false);
+// 	m_blackButton->setChecked(false);
+// 	m_clearButton->setChecked(false);
 }
 
 void OutputControl::fadeBlackFrame(bool flag) 

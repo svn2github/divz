@@ -23,6 +23,7 @@
 #include "itemlistfilters/SlideTextOnlyFilter.h"
 
 Slide * SlideGroupViewer::m_blackSlide = 0;
+int SlideGroupViewer::m_blackSlideRefCount = 0;
 
 SlideGroupViewer::SlideGroupViewer(QWidget *parent)
 	    : QWidget(parent)
@@ -44,6 +45,7 @@ SlideGroupViewer::SlideGroupViewer(QWidget *parent)
 	    , m_fadeQuality(-1)
 {
 	QRect sceneRect(0,0,1024,768);
+	m_blackSlideRefCount++;
 	
 	if(MainWindow::mw())
 	{
@@ -131,7 +133,7 @@ void SlideGroupViewer::applySlideFilters()
 	if(!m_blackEnabled && !m_clearEnabled)
 	{
 		Slide *currentSlide = m_sortedSlides.at(m_slideNum);
-		m_scene->setSlide(applySlideFilters(currentSlide),MyGraphicsScene::CrossFade);
+		setSlideInternal(applySlideFilters(currentSlide));
 	}
 }
 
@@ -218,52 +220,107 @@ Slide * SlideGroupViewer::applySlideFilters(Slide * sourceSlide)
 			TextBoxItem * autoText = dynamic_cast<TextBoxItem*>(text->clone());
 			slide->removeItem(text);
 			
+			
 			QRectF scene = m_scene->sceneRect();
 			int width = scene.width();
 			int height = scene.height();
 			
-			double ptSize = autoText->findFontSize();
-			int sizeInc = 4;	// how big of a jump to add to the ptSize each iteration
-			int count = 0;		// current loop iteration
-			int maxCount = 50; 	// max iterations of the search loop (allows font to get up to 232pt)
-			bool done = false;
-			
-			int lastGoodSize = ptSize;
-			QString lastGoodHtml = autoText->text();;
-			
-			QTextDocument doc;
+			const QString sizeKey = QString("%1:%2:%3").arg(autoText->text()).arg(width).arg(height);
 			
 			// for centering
 			qreal boxHeight = -1;
-			
-			int heightTmp;
-			
-			while(!done && count++ < maxCount)
+				
+			double ptSize = -1;
+			if(m_autoTextSizeCache.contains(sizeKey))
 			{
+				ptSize = *(m_autoTextSizeCache[sizeKey]);
 				
-				autoText->setFontSize(ptSize);
-				doc.setHtml(autoText->text());
+				//qDebug()<<"SongSlideGroup::textToSlides(): size search: CACHE HIT: loaded size:"<<ptSize;
+				
+				// We go thru the much-more-verbose method of creating
+				// the document and setting the html, width, merge cursor,
+				// etc, just so we can get the document height after
+				// setting the font size inorder to use it to center the textbox.
+				// If we didnt nead the height, we could just use autoText->setFontSize()
+				
+				QTextDocument doc;
 				doc.setTextWidth(width);
-				heightTmp = doc.documentLayout()->documentSize().height();
+				doc.setHtml(autoText->text());
+					
+				QTextCursor cursor(&doc);
+				cursor.select(QTextCursor::Document);
 				
-				if(heightTmp < height)
-				{
-					lastGoodSize = ptSize;
-					lastGoodHtml = autoText->text();
-					boxHeight = heightTmp;
-	
-					//qDebug()<<"size search: "<<ptSize<<"pt was good, trying higher";
-					ptSize += sizeInc;
-	
-				}
-				else
-				{
-					//qDebug()<<"SongSlideGroup::textToSlides(): size search: last good ptsize:"<<lastGoodSize<<", stopping search";
-					done = true;
-				}
+				QTextCharFormat format;
+				format.setFontPointSize(ptSize);
+				cursor.mergeCharFormat(format);
+				
+				boxHeight = doc.documentLayout()->documentSize().height();
+				
+				autoText->setText(doc.toHtml());
 			}
-	
-			autoText->setText(lastGoodHtml);
+			else
+			{
+				double ptSize = autoText->findFontSize();
+				double sizeInc = 2.0;	// how big of a jump to add to the ptSize each iteration
+				int count = 0;		// current loop iteration
+				int maxCount = 50; 	// max iterations of the search loop
+				bool done = false;
+				
+				int lastGoodSize = ptSize;
+				QString lastGoodHtml = autoText->text();;
+				
+				QTextDocument doc;
+				
+				int heightTmp;
+				
+				doc.setTextWidth(width);
+				doc.setHtml(autoText->text());
+					
+				QTextCursor cursor(&doc);
+				cursor.select(QTextCursor::Document);
+				
+				QTextCharFormat format;
+					
+				while(!done && count++ < maxCount)
+				{
+					format.setFontPointSize(ptSize);
+					cursor.mergeCharFormat(format);
+					
+					//autoText->setFontSize(ptSize);
+					//doc.setHtml(autoText->text());
+					heightTmp = doc.documentLayout()->documentSize().height();
+					
+					if(heightTmp < height)
+					{
+						lastGoodSize = ptSize;
+						//lastGoodHtml = autoText->text();
+						boxHeight = heightTmp;
+		
+						sizeInc *= 1.5;
+						//qDebug()<<"size search: "<<ptSize<<"pt was good, trying higher, inc:"<<sizeInc<<"pt";
+						ptSize += sizeInc;
+		
+					}
+					else
+					{
+						//qDebug()<<"SongSlideGroup::textToSlides(): size search: last good ptsize:"<<lastGoodSize<<", stopping search";
+						done = true;
+					}
+				}
+		
+				format.setFontPointSize(lastGoodSize);
+				cursor.mergeCharFormat(format);
+				
+				autoText->setText(doc.toHtml());
+				
+				//qDebug()<<"SongSlideGroup::textToSlides(): size search: caching ptsize:"<<lastGoodSize;
+				//m_autoTextSizeCache[sizeKey] = lastGoodSize;
+				
+				// We are using a QCache instead of a plain QMap, so that requires a pointer value 
+				// Using QCache because the key for the cache could potentially become quite large if there are large amounts of HTML
+				// and I dont want to just keep accumlating html in the cache infinitely
+				m_autoTextSizeCache.insert(sizeKey, new double(lastGoodSize),1);
+			}
 			
 			// Center text on screen
 			if(boxHeight > -1)
@@ -464,6 +521,14 @@ SlideGroupViewer::~SlideGroupViewer()
 		m_clearSlide = 0;
 	}
 	
+	m_blackSlideRefCount --;
+	if(m_blackSlideRefCount <= 0 && m_blackSlide)
+	{
+		delete m_blackSlide;
+		m_blackSlide = 0;
+		qDebug() << "SlideGroupViewer: Deleting black slide";
+	}
+	
 }
 
 void SlideGroupViewer::appSettingsChanged()
@@ -511,6 +576,30 @@ void SlideGroupViewer::clear()
 	m_slideGroup = 0;
 }
 
+void SlideGroupViewer::slideChanged(Slide *slide, QString slideOperation, AbstractItem */*item*/, QString /*operation*/, QString /*fieldName*/, QVariant /*value*/)
+{
+	if(!m_slideGroup)
+		return;
+		
+	if(slideOperation == "add" || slideOperation == "remove")
+	{
+		QList<Slide*> slist = m_slideGroup->slideList();
+		qSort(slist.begin(), slist.end(), slide_group_viewer_slide_num_compare);
+		m_sortedSlides = slist;
+		
+		if(m_slideNum >= m_sortedSlides.size())
+			m_slideNum = 0;
+	}
+	else
+	{
+		int nbr = m_sortedSlides.indexOf(slide);
+		if(nbr == m_slideNum)
+			if(!reapplySpecialFrames())
+				setSlideInternal(applySlideFilters(slide));
+	}
+	
+}
+
 void SlideGroupViewer::setSlideGroup(SlideGroup *g, Slide *startSlide)
 {
 	//qDebug() << "SlideGroupViewer::setSlideGroup: (SceneContextHint:"<<m_scene->contextHint()<<"), setting slide group:"<<g->groupNumber();
@@ -524,13 +613,13 @@ void SlideGroupViewer::setSlideGroup(SlideGroup *g, Slide *startSlide)
 
 	if(m_slideGroup && m_slideGroup != g)
 	{
-		//disconnect(m_slideGroup,0,this,0);
+		disconnect(m_slideGroup,0,this,0);
 		//qDebug() << "SlideGroupViewer::setSlideGroup: Releasing video providers due to slide change";
 		releaseVideoProvders();
 	}
 
-	//if(m_slideGroup != g)
-	//	connect(g,SIGNAL(slideChanged(Slide *, QString, AbstractItem *, QString, QString, QVariant)),this,SLOT(slideChanged(Slide *, QString, AbstractItem *, QString, QString, QVariant)));
+	if(m_slideGroup != g)
+		connect(g,SIGNAL(slideChanged(Slide *, QString, AbstractItem *, QString, QString, QVariant)),this,SLOT(slideChanged(Slide *, QString, AbstractItem *, QString, QString, QVariant)));
 
 	m_slideGroup = g;
 
@@ -573,41 +662,46 @@ Slide * SlideGroupViewer::setSlide(int x)
 
 Slide * SlideGroupViewer::setSlide(Slide *slide)
 {
-	// start cross fade settings with program settings
-	int speed = AppSettings::crossFadeSpeed();
-	int quality = AppSettings::crossFadeQuality();
-	//qDebug() << "SlideGroupViewer::setSlide(): [app] speed:"<<speed<<", quality:"<<quality;
-	
-	// change to slide group if sett
-	if(m_slideGroup && !m_slideGroup->inheritFadeSettings())
-	{
-		speed = m_slideGroup->crossFadeSpeed();
-		quality = m_slideGroup->crossFadeQuality();
-		//qDebug() << "SlideGroupViewer::setSlide():     [group] speed:"<<speed<<", quality:"<<quality;
-	}
-	
-	// and use slide settings if set instead of the other two sets of settings
-	if(slide && !slide->inheritFadeSettings())
-	{
-		if(slide->crossFadeSpeed() > 0)
-			speed = slide->crossFadeSpeed();
-		if(slide->crossFadeQuality() > 0)
-			quality = slide->crossFadeQuality();
-		//qDebug() << "SlideGroupViewer::setSlide():         [slide] speed:"<<speed<<", quality:"<<quality;
-	}
-	
-	// allow this viewer's cross fade settings to override everything else
-	if(m_fadeQuality > 0)
-		quality = m_fadeQuality;
-	if(m_fadeSpeed > 0)
-		speed = m_fadeSpeed;
-	
 	if(m_bgWaitingForNextSlide)
 		applyBackground(m_nextBg, slide);
-	
-	m_scene->setSlide(applySlideFilters(slide),MyGraphicsScene::CrossFade,speed,quality);
+		
 	m_slideNum = m_sortedSlides.indexOf(slide);
+	
+	if(!reapplySpecialFrames())
+	{
+		//qDebug() << "SlideGroupViewer::setSlide(): Special frames returned false, setting slide directly";
+		setSlideInternal(applySlideFilters(slide));
+	}
+	
 	return slide;
+}
+
+bool SlideGroupViewer::reapplySpecialFrames()
+{
+	// If clear or black is enabled, then we dont want to take it off clear or black just becase we 
+	// changed slides. Therefore, regenerate the clear frame with the new slide's background and fade 
+	// to the clear slide (or black slide, if that's enabled) 
+	if(m_clearEnabled || m_blackEnabled)
+	{
+		// setting it to -1 forces generateClearFrame() to re-generate the frame, even if the slide
+		// index stayed the same
+		m_clearSlideNum = -1;
+		generateClearFrame();
+		
+		if(m_blackEnabled)
+		{
+			generateBlackFrame();
+			setSlideInternal(m_blackSlide);
+		}
+		else
+		{
+			setSlideInternal(m_clearSlide);
+		}
+		
+		return true;
+	}
+	
+	return false;
 }
 
 void SlideGroupViewer::crossFadeFinished(Slide *oldSlide,Slide*/*newSlide*/)
@@ -668,6 +762,44 @@ Slide * SlideGroupViewer::prevSlide()
 	return setSlide(m_slideNum);
 }
 
+
+void SlideGroupViewer::setSlideInternal(Slide *slide)
+{
+	//qDebug() << "SlideGroupViewer::setSlideInternal(): Setting slide# "<<slide->slideNumber();
+	
+	// start cross fade settings with program settings
+	int speed   = AppSettings::crossFadeSpeed();
+	int quality = AppSettings::crossFadeQuality();
+	//qDebug() << "SlideGroupViewer::setSlideInternal(): [app] speed:"<<speed<<", quality:"<<quality;
+	
+	// change to slide group if sett
+	if(m_slideGroup && !m_slideGroup->inheritFadeSettings())
+	{
+		speed = m_slideGroup->crossFadeSpeed();
+		quality = m_slideGroup->crossFadeQuality();
+		//qDebug() << "SlideGroupViewer::setSlideInternal(): [group] speed:"<<speed<<", quality:"<<quality;
+	}
+	
+	// and use slide settings if set instead of the other two sets of settings
+	if(slide && !slide->inheritFadeSettings())
+	{
+		if(slide->crossFadeSpeed() > 0)
+			speed = slide->crossFadeSpeed();
+		if(slide->crossFadeQuality() > 0)
+			quality = slide->crossFadeQuality();
+		//qDebug() << "SlideGroupViewer::setSlideInternal(): [slide] speed:"<<speed<<", quality:"<<quality;
+	}
+	
+	// allow this viewer's cross fade settings to override everything else
+	if(m_fadeQuality > 0)
+		quality = m_fadeQuality;
+	if(m_fadeSpeed > 0)
+		speed = m_fadeSpeed;
+	
+	//qDebug() << "SlideGroupViewer::setSlideInternal(): [final] speed:"<<speed<<", quality:"<<quality;
+	m_scene->setSlide(slide,MyGraphicsScene::CrossFade,speed,quality);
+}
+
 void SlideGroupViewer::fadeBlackFrame(bool enable)
 {
 	if(m_sortedSlides.size() <= 0)
@@ -675,30 +807,26 @@ void SlideGroupViewer::fadeBlackFrame(bool enable)
 		
 	m_blackEnabled = enable;
 	
-	if(!m_blackSlide)
-	{
-		m_blackSlide = new Slide();
-		dynamic_cast<AbstractVisualItem*>(m_blackSlide->background())->setFillBrush(QBrush(Qt::black));
-	}
-	
 	if(enable)
 	{
+		generateBlackFrame();
+		
 		// *dont* use our setSlide() method because we dont want to 
 		// change m_slideNum - we just want the "fadeToBlack" to be temporary
-		m_scene->setSlide(m_blackSlide,MyGraphicsScene::CrossFade);
+		setSlideInternal(m_blackSlide);
 	}
 	else
 	{
 		if(m_clearEnabled && m_clearSlide)
 		{
-			m_scene->setSlide(m_clearSlide,MyGraphicsScene::CrossFade);
+			setSlideInternal(m_clearSlide);
 		}
 		else
 		{
 			if(m_slideNum < m_sortedSlides.size())
 			{
 				Slide *currentSlide = m_sortedSlides.at(m_slideNum);
-				m_scene->setSlide(applySlideFilters(currentSlide),MyGraphicsScene::CrossFade);
+				setSlideInternal(applySlideFilters(currentSlide));
 			}
 		}
 	}
@@ -708,35 +836,62 @@ void SlideGroupViewer::fadeClearFrame(bool enable)
 {
 	if(enable)
 	{
-		if(m_clearSlide && m_clearSlideNum != m_slideNum)
-		{
-			delete m_clearSlide;
-			m_clearSlide = 0;
-		}
-		
-		if(!m_clearSlide)
-		{
-			m_clearSlideNum = m_slideNum;
-			
-			Slide *currentSlide = m_sortedSlides.at(m_slideNum);
-			
-			m_clearSlide = new Slide();
-			m_clearSlide->addItem(currentSlide->background()->clone());
-		}
-		
-		m_scene->setSlide(m_clearSlide,MyGraphicsScene::CrossFade);
+		generateClearFrame();
+		setSlideInternal(m_clearSlide);
 	}
 	else
 	{
 		if(m_slideNum < m_sortedSlides.size())
 		{
 			Slide *currentSlide = m_sortedSlides.at(m_slideNum);
-			m_scene->setSlide(applySlideFilters(currentSlide),MyGraphicsScene::CrossFade);
+			setSlideInternal(applySlideFilters(currentSlide));
 		}
 	}
 	
 	m_clearEnabled = enable;
 }
+
+void SlideGroupViewer::generateClearFrame()
+{
+	if(m_clearSlide && 
+	   m_clearSlideNum != m_slideNum)
+	{
+		// can't delete now because if m_clearSlide is live on the scene,
+		// then when we call m_scene->setSlide(), the scene will try to
+		// disconnect slots from m_clearSlide. Also, we cant delete it 
+		// using deleteLater() because the scene will want to cross fade
+		// away from this slide and deleting it would delete the items
+		// during the cross fade. However, when the scene emits
+		// slideDiscarded(), it is safe to delete this slide. Our 
+		// slideDiscarded() handler uses the list m_slideFilterByproduct 
+		// to delete any slides needed when the scene is done with them.
+		m_slideFilterByproduct << m_clearSlide;
+		m_clearSlide = 0;
+	}
+	
+	if(!m_clearSlide)
+	{
+		m_clearSlideNum = m_slideNum;
+		
+		Slide *currentSlide = m_sortedSlides.at(m_slideNum);
+		
+		m_clearSlide = new Slide();
+		
+		m_clearSlide->addItem(currentSlide->background()->clone());
+	}
+}
+
+void SlideGroupViewer::generateBlackFrame()
+{
+
+	if(!m_blackSlide)
+	{
+		m_blackSlide = new Slide();
+		dynamic_cast<AbstractVisualItem*>(m_blackSlide->background())->setFillBrush(QBrush(Qt::black));
+	}
+	
+}
+
 
 void SlideGroupViewer::resizeEvent(QResizeEvent *)
 {

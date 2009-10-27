@@ -51,7 +51,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	
 	if(!openFile("song-test.xml"))
 		actionNew();
-	
+		
 	// init the editor win AFTER load/new so that editor win starts out with the correct aspect ratio	
 	m_editWin = new SlideEditorWindow();
 	
@@ -66,6 +66,8 @@ MainWindow::MainWindow(QWidget *parent) :
 	
 	// Restore state
 	loadWindowState();
+	
+	
 
 	//m_ui->actionEdit_Slide_Group->setEnabled(false);
 	QList<QAction*> actionList;
@@ -651,8 +653,8 @@ void MainWindow::setupOutputList()
 	foreach(QCheckBox *box, m_outputCheckboxes)
 	{
 		m_outputCheckboxBase->layout()->removeWidget(box);
-		box->setVisible(false);
-		delete box;
+		//box->setVisible(false);
+		//delete box;
 	}
 	
 	m_outputCheckboxes.clear();
@@ -847,7 +849,7 @@ void MainWindow::nextGroup()
 void MainWindow::previewSlideGroup(SlideGroup *s)
 {
 	//qDebug() << "MainWindow::previewSlideGroup: Loading preview slide\n";
-	m_previewWidget->setSlideGroup(s);
+	//m_previewWidget->setSlideGroup(s);
 }
 
 void MainWindow::setLiveGroup(SlideGroup *newGroup, Slide *currentSlide)
@@ -1073,12 +1075,8 @@ void MainWindow::openSlideEditor(SlideGroup *group,Slide *slide)
 	}
 	
 	
-	// WHY ??????
-	// If we setSlideGroup BEFORE but not AFTER, then newslide btn works only after clicking twice (So to speak)
-	// If AFTER and not BEFORE, then list is BLANK unless click new btn a few times. WHY????fs
 	m_editWin->setSlideGroup(group,slide);
 	m_editWin->show();
-	m_editWin->setSlideGroup(group,slide);
 }
 
 void MainWindow::changeEvent(QEvent *e)
@@ -1102,7 +1100,7 @@ QRect MainWindow::standardSceneRect(double aspectRatio)
 		if(m_doc)
 			aspectRatio = m_doc->aspectRatio();
 		else
-			aspectRatio = 4/3;
+			aspectRatio = AppSettings::liveAspectRatio();
 	}
 	
 	int height = 768;

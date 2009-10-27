@@ -207,6 +207,13 @@ void MyGraphicsScene::removeVisualDelegate(AbstractItem *item)
 
 void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans, int speed, int quality)
 {
+	if(m_slide && !slide)
+	{
+		clear();
+		m_slide = 0;
+		return;
+	}
+	
 	//TODO implement slide transitions
 	if(m_slide == slide)
 	{
@@ -559,7 +566,8 @@ TextContent * MyGraphicsScene::addTextContent()
 AbstractVisualItem * MyGraphicsScene::newTextItem(QString text)
 {
 	TextBoxItem *t = new TextBoxItem();
-	assert(m_slide);
+	if(!m_slide)
+		return 0;
 	
 	// text should automatically enlarge the rect
 	t->setContentsRect(QRect(0,0,400,10));
@@ -567,7 +575,7 @@ AbstractVisualItem * MyGraphicsScene::newTextItem(QString text)
 	t->setPos(nearCenter(sceneRect()));
 	t->setItemId(ItemFactory::nextId());
 	t->setItemName(QString("TextBoxItem%1").arg(t->itemId()));
-	t->setFontSize(38.0);
+	t->changeFontSize(52.0);
 	t->setZValue(maxZValue());
 	
 	m_slide->addItem(t); //m_slide->createText();
@@ -580,7 +588,8 @@ AbstractVisualItem * MyGraphicsScene::newTextItem(QString text)
 AbstractVisualItem * MyGraphicsScene::newBoxItem()
 {
 	BoxItem *t = new BoxItem();
-	assert(m_slide);
+	if(!m_slide)
+		return 0;
 	
 	//t->setText(text);
 	t->setPos(nearCenter(sceneRect()));
@@ -597,7 +606,8 @@ AbstractVisualItem * MyGraphicsScene::newBoxItem()
 AbstractVisualItem * MyGraphicsScene::newVideoItem()
 {
 	VideoFileItem *t = new VideoFileItem();
-	assert(m_slide);
+	if(!m_slide)
+		return 0;
 	t->setFilename("data/Seasons_Loop_3_SD.mpg");
 	
 	//t->setText(text);
@@ -615,7 +625,8 @@ AbstractVisualItem * MyGraphicsScene::newVideoItem()
 AbstractVisualItem * MyGraphicsScene::newImageItem()
 {
 	ImageItem *t = new ImageItem();
-	assert(m_slide);
+	if(!m_slide)
+		return 0;
 	
 	t->setPos(nearCenter(sceneRect()));
 	t->setItemId(ItemFactory::nextId());
@@ -648,17 +659,24 @@ void MyGraphicsScene::copyCurrentSelection(bool removeSelection)
 	// when replacing the buffer
 	if(m_copyBuffer.size())
 		qDeleteAll(m_copyBuffer);
+	m_copyBuffer.clear();
 		
 		
 	foreach(QGraphicsItem *item, selection)
 	{
 		AbstractContent * content = dynamic_cast<AbstractContent *>(item);
-		AbstractItem * model = content->modelItem();
-		m_copyBuffer << model->clone();
-		
-		// this will add it to the undo stack and remove it from the scene
-		if(removeSelection)
-			m_slide->removeItem(model);
+		if(content)
+		{
+			AbstractItem * model = content->modelItem();
+			if(!model)
+				continue;
+				
+			m_copyBuffer << model->clone();
+			
+			// this will add it to the undo stack and remove it from the scene
+			if(removeSelection && m_slide)
+				m_slide->removeItem(model);
+		}
 	}
 }
 
@@ -667,16 +685,21 @@ void MyGraphicsScene::pasteCopyBuffer()
 	if(!m_copyBuffer.size())
 		return;
 	
+	if(!m_slide)
+		return;
+	
 	clearSelection();
+	
 	foreach(AbstractItem *item, m_copyBuffer)
 	{
+		if(!item)
+			continue;
 		AbstractItem * clone = item->clone();
-		clone->setItemId(ItemFactory::nextId());
-		QString name = clone->itemName();
-		name.replace(QRegExp("(\\d+)$"),QString::number(clone->itemId()));
-		clone->setItemName(name);
+		if(!clone)
+			continue;
 		m_slide->addItem(clone);
 		
+		// last visual item, not last AbstractItem
 		m_content.last()->setSelected(true);
 	}
 }

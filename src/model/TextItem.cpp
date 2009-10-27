@@ -30,7 +30,7 @@ void TextItem::setText(QString text)
 }
 
 ITEM_PROPSET(TextItem, FontFamily, QString, fontFamily)
-//ITEM_PROPSET(TextItem, FontSize, double, fontSize)
+ITEM_PROPSET(TextItem, FontSize, double, fontSize)
 ITEM_PROPSET(TextItem, ShapeEnabled, bool, shapeEnabled)
 ITEM_PROPSET(TextItem, ShapePoint1, QPointF, shapePoint1)
 ITEM_PROPSET(TextItem, ShapePoint2, QPointF, shapePoint2)
@@ -59,7 +59,7 @@ void TextItem::setYTextAlign(Qt::Alignment z)
 }
 
 
-void TextItem::setFontSize(double size)
+void TextItem::changeFontSize(double size)
 {
 	QTextDocument doc;
 	if(text().indexOf('<') < 0)

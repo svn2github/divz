@@ -281,8 +281,8 @@ int BackgroundContent::contentHeightForWidth(int width) const
 
 QRectF BackgroundContent::boundingRect() const 
 {
-	qreal penWidth = m_modelItem ? m_modelItem->outlinePen().widthF() : 1.0;
-	return AbstractContent::boundingRect().adjusted(-penWidth/2,-penWidth/2,penWidth,penWidth);
+	//qreal penWidth = m_modelItem ? m_modelItem->outlinePen().widthF() : 1.0;
+	return AbstractContent::boundingRect();//.adjusted(-penWidth/2,-penWidth/2,penWidth,penWidth);
 }
 
 

@@ -8,6 +8,7 @@
 #include <QTimer>
 #include <QCloseEvent>
 #include <QFileInfo>
+#include <QCache>
 
 #include "MyGraphicsScene.h"
 #include "model/SlideGroup.h"
@@ -76,6 +77,8 @@ private slots:
 	
 	void crossFadeFinished(Slide*,Slide*);
 	void slideDiscarded(Slide*);
+	
+	void slideChanged(Slide *slide, QString slideOperation, AbstractItem *item, QString operation, QString fieldName, QVariant value);
 		
 protected:
 	void resizeEvent(QResizeEvent *);
@@ -90,10 +93,18 @@ private:
 	Slide * applySlideFilters(Slide*);
 	AbstractItem * applyMutations(AbstractItem*);
 	
+	// internal routine to find the cross fade quality/speed and set the slideon the scene
+	void setSlideInternal(Slide*);
+	// just calls setSlideInternal(applySlideFilters(currentSlide)) and finds the current slide
 	void applySlideFilters();
-	
+	// internal routine to apply the background to the slide group
 	void applyBackground(const QFileInfo&, Slide *slide=0);
-
+	
+	void generateClearFrame();
+	void generateBlackFrame();
+	
+	bool reapplySpecialFrames();
+	
 	void initVideoProviders();
 	void releaseVideoProvders();
 	QList<QVideoProvider*> m_videoProviders;
@@ -111,8 +122,11 @@ private:
 	bool m_usingGL;
 
 	static Slide * m_blackSlide;
+	static int m_blackSlideRefCount;
+	
 	Slide * m_clearSlide;
 	int m_clearSlideNum;
+	
 	bool m_clearEnabled;
 	bool m_blackEnabled;
 	
@@ -131,6 +145,8 @@ private:
 	QList<Slide*>	m_slideFilterByproduct;
 	
 	QList<AbstractItemListFilter*> m_slideFilters;
+	
+	QCache<QString,double> m_autoTextSizeCache;
 };
 
 #endif // SLIDEGROUPVIEWER_H

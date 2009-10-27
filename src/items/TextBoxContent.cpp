@@ -182,18 +182,25 @@ void TextBoxContent::syncFromModelItem(AbstractVisualItem *model)
 	QFont font;
 	TextItem * textModel = dynamic_cast<TextItem*>(model);
 
-	if(textModel->text().indexOf('<') < 0)
-	{
-		//qDebug() << "TextBoxContent:: converting plain text from model item to html";
-		m_text->setPlainText(textModel->text());
-		textModel->setText(m_text->toHtml());
-	}
-	setHtml(textModel->text());
-
 	font.setFamily(textModel->fontFamily());
 	font.setPointSize((int)textModel->fontSize());
 	m_text->setDefaultFont(font);
+	
+	
 
+	if(textModel->text().indexOf('<') < 0)
+	{
+		qDebug() << "TextBoxContent:: converting plain text from model item to html";
+		m_text->setPlainText(textModel->text());
+		textModel->setText(m_text->toHtml());
+	}
+	
+	//qDebug() << "TextBoxContent:: Original HTML:"<<textModel->text();
+	setHtml(textModel->text());
+	//qDebug() << "TextBoxContent::      New HTML:"<<m_text->toHtml();
+	
+
+	
 	AbstractContent::syncFromModelItem(model);
 	
 	if(modelItem()->revision() != m_lastModelRev)

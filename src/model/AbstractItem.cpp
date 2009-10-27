@@ -99,6 +99,8 @@ AbstractItem * AbstractItem::cloneTo(AbstractItem *item) const
 	item->setItemName(name);
 	
 	item->setBeingLoaded(false);
+	
+	//qDebug() << "AbstractItem::clone():"<<itemName()<<": Done cloning.";
 
 	return item;
 }
