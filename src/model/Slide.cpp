@@ -60,7 +60,7 @@ void Slide::setCrossFadeQuality(double x)
 }
 
 
-Slide * Slide::clone()
+Slide * Slide::clone() const
 {
 	Slide * newSlide = new Slide();
 	

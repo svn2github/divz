@@ -38,5 +38,5 @@ void TextBoxItem::toXml(QDomElement & pe) const
 	pe.setTagName("textbox");
 }
 
-AbstractItem * TextBoxItem::clone() { return AbstractItem::cloneTo(new TextBoxItem()); }
+AbstractItem * TextBoxItem::clone() const { return AbstractItem::cloneTo(new TextBoxItem()); }
 

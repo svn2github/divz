@@ -60,4 +60,4 @@ void VideoFileItem::toXml(QDomElement & pe) const
 }
 
 
-AbstractItem * VideoFileItem::clone() { return AbstractItem::cloneTo(new VideoFileItem()); }
+AbstractItem * VideoFileItem::clone() const { return AbstractItem::cloneTo(new VideoFileItem()); }

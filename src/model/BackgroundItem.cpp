@@ -40,4 +40,4 @@ void BackgroundItem::toXml(QDomElement & pe) const
 }
 
 
-AbstractItem * BackgroundItem::clone() { return AbstractItem::cloneTo(new BackgroundItem()); }
+AbstractItem * BackgroundItem::clone() const { return AbstractItem::cloneTo(new BackgroundItem()); }

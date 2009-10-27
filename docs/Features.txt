@@ -131,6 +131,9 @@ Revised Task list for Release 1.0, 10/18/09:
 		= Misc = 
 			[MAYBE] Add color theme support vis a vi powerpoint
 			
+			new document AR still not correct in the icons
+			changing model doesnt update slidegrouplistmodel icons
+			
 			need to save clear/black state across changing songs (e.g. clear at end of one song, set new song, needs to fade new background/new clear slide)
 			need to pre-render all text boxes
 			need video preview widget 
@@ -164,10 +167,8 @@ Revised Task list for Release 1.0, 10/18/09:
 			need to put generation of slide pixmaps in a thread...somehow....or process GUI events...
 			images import tool maybe should use different file browser dialog - because on win32, its that directory tree dialog with no field to type in - I hate that dialog
 			
-			[STARTED] need to store song background choices that were set using media browser
+			[DONE] need to store song background choices that were set using media browser
 				[DONE] make it auto-create a template, set bg on the template?
-				still not working yet...
-				song bgs now start gray instead of blue (!!)
 			integrate the proper song filter/song generator code for foldback displays
 			generalize the filters code [e.g. filter plugin somehow, more than just text only]
 			make filters and auto-size text code applicable to non-synced outputs as well

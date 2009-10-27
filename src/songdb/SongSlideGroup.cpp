@@ -10,6 +10,7 @@
 #include <QTextBlock>
 #include <QTextOption>
 
+#define DEBUG_TEXTOSLIDES 0
 
 SongSlideGroup::SongSlideGroup() : SlideGroup(),
 	m_song(0),
@@ -79,6 +80,10 @@ SlideGroup * SongSlideGroup::createDefaultTemplates()
 		bg->setFillType(AbstractVisualItem::Solid);
 		bg->setFillBrush(Qt::blue);
 	}
+	else
+	{
+		qDebug() << "SongSlideGroup::createDefaultTemplates: Could not find background in slide.";
+	}
 
 	// Create the textbox to hold the slide lyrics
 	TextBoxItem * text = new TextBoxItem();
@@ -117,7 +122,8 @@ bool SongSlideGroup_itemZCompare(AbstractItem *a, AbstractItem *b)
 
 void SongSlideGroup::textToSlides(SongTextFilter filter)
 {
-	//qDebug()<<"SongSlideGroup::textToSlides(): "<<(song() ? song()->title() : " (no song) ")<<": Start of text to slides";
+	if(DEBUG_TEXTOSLIDES)
+		qDebug()<<"SongSlideGroup::textToSlides(): "<<(song() ? song()->title() : " (no song) ")<<": Start of text to slides";
 	
 	static QString slideHeader = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">"
 				     "<html>"
@@ -155,9 +161,13 @@ void SongSlideGroup::textToSlides(SongTextFilter filter)
 		m_slideTemplates = createDefaultTemplates();
 	}
 	
-        //qDebug() << "SongSlideGroup::textToSlides: filter int:"<<filter<<", using exclusion pattern:"<<excludeLineRegExp.pattern();
+        if(DEBUG_TEXTOSLIDES)
+        	qDebug() << "SongSlideGroup::textToSlides(): filter int:"<<filter<<", using exclusion pattern:"<<excludeLineRegExp.pattern();
 
-	//qDebug() << "SongSlideGroup::textToSlides: slides:"<<list;
+	SlideGroup * templates = slideTemplates();
+	
+	if(DEBUG_TEXTOSLIDES)
+		qDebug() << "SongSlideGroup::textToSlides(): slides:"<<list;
 	int slideNbr = 0;
 	foreach(QString passage, list)
 	{
@@ -165,21 +175,31 @@ void SongSlideGroup::textToSlides(SongTextFilter filter)
 		TextBoxItem *text = 0;
 		bool textboxFromTemplate = false;
 
-		//qDebug()<<"SongSlideGroup::textToSlides(): Processing Slide # "<<slideNbr;
+		if(DEBUG_TEXTOSLIDES)
+			qDebug()<<"SongSlideGroup::textToSlides(): Processing Slide # "<<slideNbr;
 
-		//qDebug()<<"SongSlideGroup::textToSlides(): slideNbr:"<<slideNbr<<": Have templates, processing.";
-		SlideGroup *group = slideTemplates();
+// 		if(DEBUG_TEXTOSLIDES)
+// 			qDebug()<<"SongSlideGroup::textToSlides(): slideNbr:"<<slideNbr<<": Have templates, processing.";
 
-		slide = group->at(0)->clone();
-		//qDebug()<<"SongSlideGroup::textToSlides(): slideNbr:"<<slideNbr<<": Cloned slide 0 (master)";
+		slide = templates->at(0)->clone();
+		if(DEBUG_TEXTOSLIDES)
+		{
+			qDebug()<<"SongSlideGroup::textToSlides(): slideNbr:"<<slideNbr<<": Cloned slide 0 (master)";
+			AbstractItemList list = slide->itemList();
+			foreach(AbstractItem *item, list)
+			{
+				qDebug() << "SongSlideGroup::textToSlides(): \t Master Debug:"<<item->itemName();
+			}
+		}
+			
 
 		// If more than one slide, assum first slide is master slide and following slides are keyed to verses
-		if(group->numSlides() > 1 && slideNbr+1 < group->numSlides())
+		if(templates->numSlides() > 1 && slideNbr+1 < templates->numSlides())
 		{
 			// Since we've cloned a master slide and have another slide to clone, calc the max Z on the
 			// master and rebase everything on secondary slide starting at the maxZ of the master slide
 			double masterZValue = 0;
-			BackgroundItem * bg = 0;
+			BackgroundItem * masterBg = 0;
 			QList<AbstractItem *> masterItems = slide->itemList();
 			foreach(AbstractItem * item, masterItems)
 			{
@@ -189,18 +209,20 @@ void SongSlideGroup::textToSlides(SongTextFilter filter)
 				
 				BackgroundItem * bgTmp = dynamic_cast<BackgroundItem*>(item);
 				if(bgTmp && bgTmp->fillType() != AbstractVisualItem::None)
-					bg = bgTmp;
+					masterBg = bgTmp;
 			}
-			//qDebug()<<"SongSlideGroup::textToSlides(): slideNbr:"<<slideNbr<<": masterZValue:"<<masterZValue;
+			if(DEBUG_TEXTOSLIDES)
+				qDebug()<<"SongSlideGroup::textToSlides(): slideNbr:"<<slideNbr<<": masterZValue:"<<masterZValue;
 
 
 			// Add items from the song slide to our master slide.
 			// Don't clone the song slide since we've already cloned
 			// the master slide - instead, we'll clone the items in
 			// this slide, below.
-			Slide *songSlide = group->at(slideNbr+1);
+			Slide *songSlide = templates->at(slideNbr+1);
 
-			//qDebug()<<"SongSlideGroup::textToSlides(): slideNbr:"<<slideNbr<<": Cloned passage slide for #"<<slideNbr;
+			if(DEBUG_TEXTOSLIDES)
+				qDebug()<<"SongSlideGroup::textToSlides(): slideNbr:"<<slideNbr<<": Cloned passage slide for #"<<slideNbr;
 
 			bool secondaryBg = false;	
 			QList<AbstractItem *> items = songSlide->itemList();
@@ -211,7 +233,8 @@ void SongSlideGroup::textToSlides(SongTextFilter filter)
 				{
 					if(bg->fillType() == AbstractVisualItem::None)
 					{
-						//qDebug() << "Skipping inherited bg from seondary slide because exists and no fill";
+						if(DEBUG_TEXTOSLIDES)
+							qDebug() << "Skipping inherited bg from seondary slide because exists and no fill";
 						continue;
 					}
 					else
@@ -228,15 +251,20 @@ void SongSlideGroup::textToSlides(SongTextFilter filter)
 				if(newVisual && masterZValue!=0)
 				{
 					newVisual->setZValue(newVisual->zValue() + masterZValue);
-					//qDebug()<<"SongSlideGroup::textToSlides(): slideNbr:"<<slideNbr<<": rebased" << newVisual->itemName() << "to new Z" << newVisual->zValue();
+					if(DEBUG_TEXTOSLIDES)
+						qDebug()<<"SongSlideGroup::textToSlides(): slideNbr:"<<slideNbr<<": rebased" << newVisual->itemName() << "to new Z" << newVisual->zValue();
 				}
 
 				slide->addItem(newItem);
 			}
 			
 			// If we have both a master and a child bg, remove the master bg
-			if(secondaryBg && bg)
-				slide->removeItem(bg);
+			if(secondaryBg && masterBg)
+			{
+				if(DEBUG_TEXTOSLIDES)
+					qDebug()<<"SongSlideGroup::textToSlides(): slideNbr:"<<slideNbr<<": Found secondaryBg on slide"<<slideNbr<<", removing masterBg";
+				slide->removeItem(masterBg);
+			}
 		}
 
 		// Use the first textbox in the slide as the lyrics slide
@@ -247,12 +275,14 @@ void SongSlideGroup::textToSlides(SongTextFilter filter)
 		foreach(AbstractItem * item, items)
 		{
 			AbstractVisualItem * newVisual = dynamic_cast<AbstractVisualItem*>(item);
-			//qDebug()<<"SongSlideGroup::textToSlides(): slideNbr:"<<slideNbr<<": item list
+			if(DEBUG_TEXTOSLIDES)
+				qDebug()<<"SongSlideGroup::textToSlides(): slideNbr:"<<slideNbr<<": item list: "<<newVisual->itemName();
 			if(!text && item->itemClass() == TextBoxItem::ItemClass)
 			{
 				text = dynamic_cast<TextBoxItem*>(item);
 				textboxFromTemplate = true;
-				//qDebug()<<"SongSlideGroup::textToSlides(): slideNbr:"<<slideNbr<<": Found textbox from template, name:"<<text->itemName();
+				if(DEBUG_TEXTOSLIDES)
+					qDebug()<<"SongSlideGroup::textToSlides(): slideNbr:"<<slideNbr<<": Found textbox from template, name:"<<text->itemName();
 			}
 		}
 
@@ -264,18 +294,21 @@ void SongSlideGroup::textToSlides(SongTextFilter filter)
 			text->setItemId(ItemFactory::nextId());
 			text->setItemName(QString("TextBox%1").arg(text->itemId()));
 
-			//qDebug()<<"SongSlideGroup::textToSlides(): slideNbr:"<<slideNbr<<": No textbox in template, adding new box.";
+			if(DEBUG_TEXTOSLIDES)
+				qDebug()<<"SongSlideGroup::textToSlides(): slideNbr:"<<slideNbr<<": No textbox in template, adding new box.";
 		}
 
 
 		BackgroundItem * bg = dynamic_cast<BackgroundItem*>(slide->background());
 		if(bg)
 		{
-			//qDebug()<<"SongSlideGroup::textToSlides(): slideNbr:"<<slideNbr<<": Loaded background "<<bg->itemName()<<" in final slide";
+			if(DEBUG_TEXTOSLIDES)
+				qDebug()<<"SongSlideGroup::textToSlides(): slideNbr:"<<slideNbr<<": Loaded background "<<bg->itemName()<<" in final slide";
 		}
 		else
 		{
-			//qDebug()<<"SongSlideGroup::textToSlides(): slideNbr:"<<slideNbr<<": No background in final slide!.";
+			if(DEBUG_TEXTOSLIDES)
+				qDebug()<<"SongSlideGroup::textToSlides(): slideNbr:"<<slideNbr<<": No background in final slide!.";
 		}
 	
 
@@ -334,7 +367,8 @@ void SongSlideGroup::textToSlides(SongTextFilter filter)
 			}
 			else
 			{
-				//qDebug()<<"SongSlideGroup::textToSlides(): size search: last good ptsize:"<<lastGoodSize<<", stopping search";
+				if(DEBUG_TEXTOSLIDES)
+					qDebug()<<"SongSlideGroup::textToSlides(): size search: last good ptsize:"<<lastGoodSize<<", stopping search";
 				done = true;
 			}
 		}
@@ -361,18 +395,21 @@ void SongSlideGroup::textToSlides(SongTextFilter filter)
 			text->setShadowEnabled(true);
 			slide->addItem(text);
 
-			//qDebug()<<"SongSlideGroup::textToSlides(): slideNbr:"<<slideNbr<<": Textbox was not in template, finalized setup at 0x0, rect:"<<textRect;
+			if(DEBUG_TEXTOSLIDES)
+				qDebug()<<"SongSlideGroup::textToSlides(): slideNbr:"<<slideNbr<<": Textbox was not in template, finalized setup at 0x0, rect:"<<textRect;
 		}
 
 		slide->setSlideNumber(slideNbr++);
 		
 		addSlide(slide);
 		
-		//qDebug()<<"SongSlideGroup::textToSlides(): Added passage:"<<passage;
+		if(DEBUG_TEXTOSLIDES)
+			qDebug()<<"SongSlideGroup::textToSlides(): Added passage:"<<passage;
 		//qDebug()<<"SongSlideGroup::textToSlides(): Added slide#:"<<slide->slideNumber()<<", numSlides():"<<numSlides();
 	}
 	
-	//qDebug()<<"SongSlideGroup::textToSlides():"<<(song() ? song()->title() : " (no song) ")<<": End of text to slides, numSlides():"<<numSlides();
+	if(DEBUG_TEXTOSLIDES)
+		qDebug()<<"SongSlideGroup::textToSlides():"<<(song() ? song()->title() : " (no song) ")<<": End of text to slides, numSlides():"<<numSlides();
 }
 
 /* public */

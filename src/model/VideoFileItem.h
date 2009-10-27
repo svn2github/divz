@@ -27,7 +27,7 @@ public:
         bool fromXml(QDomElement & parentElement);
         void toXml(QDomElement & parentElement) const;
         
-        AbstractItem * clone();
+        AbstractItem * clone() const;
 
 protected:
         QString m_filename;

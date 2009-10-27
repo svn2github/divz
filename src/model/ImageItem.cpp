@@ -29,4 +29,4 @@ void ImageItem::toXml(QDomElement & pe) const
 }
 
 
-AbstractItem * ImageItem::clone() { return AbstractItem::cloneTo(new ImageItem()); }
+AbstractItem * ImageItem::clone() const { return AbstractItem::cloneTo(new ImageItem()); }

@@ -38,4 +38,4 @@ void BoxItem::toXml(QDomElement & pe) const
 }
 
 
-AbstractItem * BoxItem::clone() { return AbstractItem::cloneTo(new BoxItem()); }
+AbstractItem * BoxItem::clone() const { return AbstractItem::cloneTo(new BoxItem()); }

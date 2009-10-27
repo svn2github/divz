@@ -54,7 +54,7 @@ int main(int argc, char **argv)
 	
 	QApplication app(argc, argv);
 	
-	// cache 256 MB of pixmaps
+	// start the cache at 256 MB of pixmaps
 	QPixmapCache::setCacheLimit(256 * 1024);
 	
 	int qtype1 = qRegisterMetaType<AbstractVisualItem::FillType>("FillType");

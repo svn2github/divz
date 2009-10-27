@@ -16,7 +16,7 @@ AbstractItem * SlideTextOnlyFilter::mutate(const AbstractItem * sourceItem)
 {
 	if(sourceItem && sourceItem->inherits("BackgroundItem"))
 	{
-		AbstractItem * clone = dynamic_cast<BackgroundItem*>(const_cast<AbstractItem*>(sourceItem))->clone();
+		AbstractItem * clone = sourceItem->clone();
 		AbstractVisualItem * bg = dynamic_cast<AbstractVisualItem*>(clone);
 		bg->setFillType(AbstractVisualItem::Solid);
 		bg->setFillBrush(m_backgroundColor);

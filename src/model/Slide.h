@@ -46,7 +46,7 @@ public:
 	ITEM_PROPDEF(CrossFadeSpeed,	double,	crossFadeSpeed);    // secs
 	ITEM_PROPDEF(CrossFadeQuality,	double,	crossFadeQuality);  // frames
 	
-	Slide * clone();
+	Slide * clone() const;
 	
 	// guess a change time based on slide contents
 	double guessTimeout();
