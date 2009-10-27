@@ -97,6 +97,8 @@ public:
 	{
 		if(!m_doc)
 			return;
+		if(m_doc->filename().isEmpty())
+			return;
 		m_doc->save();
 	}
 	Document *m_doc;

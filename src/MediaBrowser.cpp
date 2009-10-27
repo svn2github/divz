@@ -40,7 +40,8 @@ public:
 		if(MediaBrowser::isVideo(info.suffix()))
 		{
 			//qDebug() << "MyQFileIconProvider::icon(): video file:"<<info.absoluteFilePath();
-			return QVideoProvider::iconForFile(info.absoluteFilePath());
+			//return QVideoProvider::iconForFile(info.absoluteFilePath());
+			return QFileIconProvider::icon(info);
 		}
 		else
 		if(MediaBrowser::isImage(info.suffix()))
@@ -386,11 +387,14 @@ bool MediaBrowser::checkCanGoUp()
 	QFileInfo info(m_currentDirectory);
 	QString path = info.canonicalFilePath();
 	
-	QStringList folders = path.split(QDir::separator());
+	//QDir::separator()
+	QString sep = "/"; // even on windows, canonicalFilePath() uses '/' as the separator
+
+	QStringList folders = path.split(sep);
 	
 	if(folders.size() <= 1)
 	{
-		//qDebug() << "checkCanGoUp(): False, can't go up from:"<<path;
+		//qDebug() << "checkCanGoUp(): False, can't go up from:"<<path<<", folder list:"<<folders<<", sep:"<<QDir::separator();
 		m_btnUp->setEnabled(false);
 		return false;
 	}
@@ -410,10 +414,11 @@ void MediaBrowser::goUp()
 	QFileInfo info(m_currentDirectory);
 	QString path = info.canonicalFilePath();
 	
-	QStringList folders = path.split(QDir::separator());
+	QString sep = "/"; // even on windows, canonicalFilePath() uses '/' as the separator
+	QStringList folders = path.split(sep); //QDir::separator());
 	folders.takeLast();
 	
-	QString newPath = folders.join(QDir::separator());
+	QString newPath = folders.join(sep); //QDir::separator());
 	
 	setDirectory(newPath);
 	
