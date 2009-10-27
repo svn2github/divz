@@ -42,6 +42,7 @@ public:
 	virtual bool fromXml(QDomElement & parentElement);
         virtual void toXml(QDomElement & parentElement) const;
 
+	void changeBackground(AbstractVisualItem::FillType fillType, QVariant fillValue, Slide *onlyThisSlide);
 protected:
 	typedef enum SongTextFilter { Standard, AllowRear, AllowAll };
 	void textToSlides(SongTextFilter filter = Standard);

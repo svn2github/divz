@@ -52,6 +52,8 @@ public:
 	
 	virtual bool fromXml(QDomElement & parentElement);
         virtual void toXml(QDomElement & parentElement) const;
+        
+        virtual void changeBackground(AbstractVisualItem::FillType fillType, QVariant fillValue, Slide *onlyThisSlide = 0); 
 
 	// Things you can do with slide groups:
 	// View 

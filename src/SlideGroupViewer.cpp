@@ -402,29 +402,16 @@ void SlideGroupViewer::applyBackground(const QFileInfo &info, Slide * onlyThisSl
 	
 	QString abs = info.absoluteFilePath();
 	
-	QList<Slide *> slides;
-	if(onlyThisSlide)
-		slides.append(onlyThisSlide);
+	AbstractVisualItem::FillType type = AbstractVisualItem::None;
+	if(MediaBrowser::isVideo(ext))
+		type = AbstractVisualItem::Video;
 	else
-		slides = m_slideGroup->slideList();
-		
-	foreach(Slide * slide, slides)
-	{
-		AbstractVisualItem * bg = dynamic_cast<AbstractVisualItem*>(slide->background());
-		
-		if(MediaBrowser::isVideo(ext))
-		{
-			bg->setFillType(AbstractVisualItem::Video);
-			bg->setFillVideoFile(abs);
-			
-		}
-		else
-		if(MediaBrowser::isImage(ext))
-		{
-			bg->setFillType(AbstractVisualItem::Image);
-			bg->setFillImageFile(abs);
-		}
-	}
+	if(MediaBrowser::isImage(ext))
+		type = AbstractVisualItem::Image;
+	
+	if(type!=AbstractVisualItem::None)
+		m_slideGroup->changeBackground(type,abs,onlyThisSlide);
+	
 }
 
 void SlideGroupViewer::setLiveBackground(const QFileInfo &info, bool waitForNextSlide)

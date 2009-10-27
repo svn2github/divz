@@ -54,6 +54,8 @@ public slots:
 	
 	void editSongTemplate();
 	
+	void setSyncToDatabase(bool);
+	
 signals:
 	void songCreated(SongRecord*);
 	void songSaved();

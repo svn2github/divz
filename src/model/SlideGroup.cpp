@@ -160,3 +160,33 @@ void SlideGroup::sortSlides()
 {
 	qSort(m_slides.begin(), m_slides.end(), SlideGroup_slide_num_compare);
 }
+
+void SlideGroup::changeBackground(AbstractVisualItem::FillType fillType, QVariant fillValue, Slide *onlyThisSlide)
+{
+	QList<Slide *> slides;
+	if(onlyThisSlide)
+		slides.append(onlyThisSlide);
+	else
+		slides = slideList();
+		
+	foreach(Slide * slide, slides)
+	{
+		AbstractVisualItem * bg = dynamic_cast<AbstractVisualItem*>(slide->background());
+		
+		bg->setFillType(fillType);
+		if(fillType == AbstractVisualItem::Video)
+		{
+			bg->setFillVideoFile(fillValue.toString());
+		}
+		else
+		if(fillType == AbstractVisualItem::Image)
+		{
+			bg->setFillImageFile(fillValue.toString());
+		}/*
+		else
+		if(fillType == AbstractVisualItem::Solid)
+		{
+			bg->setFillBrush(fillValue.toColor());
+		}*/
+	}
+}

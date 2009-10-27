@@ -137,7 +137,7 @@ Revised Task list for Release 1.0, 10/18/09:
 			need to be able to preview slides (next/prev button)
 				move preview dock to under the group list - simple slide list model + preview window
 			
-			need to add checkbox to song editor window to save back to database
+			[DONE] need to add checkbox to song editor window to save back to database
 			after editing a song in database, it needs to update the lyrics preview widget below
 			port over the song database conversion code to windows
 			
@@ -149,11 +149,25 @@ Revised Task list for Release 1.0, 10/18/09:
 				which is due to the creating of slide pixmaps
 				need someway to delay-create the slide pixmaps
 				while were on it, delay-creat the group pixmaps as well
+				since cant render qpixmaps outside gui thread, maybe something like:	
+					in generatepixmap:
+						setup mygraphicsscene with slide
+						ask scene if ready to render
+							this would require us to delay loading the image item for a split second
+							scene would ask each abstractcontent if canrender
+						if no, then queue the pixmap for render later and return gray pixmap
+						recheck again in X ms (10 ms)
+							if still no, queue again
+							render anyway after X ms (2000ms ? )
+					call gui process events every time thru generatepixmap ?
+						
 			need to put generation of slide pixmaps in a thread...somehow....or process GUI events...
 			images import tool maybe should use different file browser dialog - because on win32, its that directory tree dialog with no field to type in - I hate that dialog
 			
-			need to store song background choices that were set using media browser
-				make it auto-create a template, set bg on the template?
+			[STARTED] need to store song background choices that were set using media browser
+				[DONE] make it auto-create a template, set bg on the template?
+				still not working yet...
+				song bgs now start gray instead of blue (!!)
 			integrate the proper song filter/song generator code for foldback displays
 			generalize the filters code [e.g. filter plugin somehow, more than just text only]
 			make filters and auto-size text code applicable to non-synced outputs as well
@@ -167,6 +181,7 @@ Revised Task list for Release 1.0, 10/18/09:
 			need to find a way to make the fade speed slider "snap to" increments of, say, 5%
 			fade speed slider should apply to black/clear fades as well 
 			need to add kbd shortcuts to song list "clear" button and to the song editor "title" field
+			
 			make slide list model zoomable 
 				e.g. zoom slide list in editor
 				zoom slide list in control
@@ -332,6 +347,7 @@ Revised Task list for Release 1.0, 10/18/09:
 			130>, inc by 25??
 			or some form of exponential, rounded percentage inc? (e.g. (int)(cur size * 1.5)) ?
 		
+		[DONE] when cloning items, MUST set ID and itemname in the abstractitem::clone() method!!
 		
 		[DONE] need to find a dviz icon
 		[DONE] move the "send to output" part of the mainwindow splitter as a combobox+btn over the group list (checkable combobox)

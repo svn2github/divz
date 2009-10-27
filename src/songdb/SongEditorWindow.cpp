@@ -5,6 +5,7 @@
 #include <QPushButton>
 #include <QLabel>
 #include <QTextEdit>
+#include <QCheckBox>
 
 #include "SlideEditorWindow.h"
 #include "SongSlideGroup.h"
@@ -34,7 +35,8 @@ protected:
 SongEditorWindow::SongEditorWindow(SlideGroup *g, QWidget *parent) : 
 	AbstractSlideGroupEditor(g,parent),
 	m_slideGroup(0),
-	m_editWin(0)
+	m_editWin(0),
+	m_syncToDatabase(true)
 {
 	setAttribute(Qt::WA_DeleteOnClose,true);
 	
@@ -43,10 +45,12 @@ SongEditorWindow::SongEditorWindow(SlideGroup *g, QWidget *parent) :
 	QVBoxLayout * vbox = new QVBoxLayout(centerWidget);
 	
 	QHBoxLayout * hbox1 = new QHBoxLayout();
-	QLabel *label = new QLabel("Title: ");
+	QLabel *label = new QLabel("&Title: ");
 	hbox1->addWidget(label);
 	
 	m_title = new QLineEdit();
+	
+	label->setBuddy(m_title);
 	hbox1->addWidget(m_title);
 
 	
@@ -74,6 +78,13 @@ SongEditorWindow::SongEditorWindow(SlideGroup *g, QWidget *parent) :
 	hbox2->addWidget(m_tmplEditButton);
 	
 	hbox2->addStretch();
+	
+	QCheckBox * box = new QCheckBox("S&ync Changes to Database");
+	box->setToolTip("If checked, saving changes will update the master song database as well as the copy of the song in this document");
+	box->setChecked(true);
+	connect(box, SIGNAL(toggled(bool)), this, SLOT(setSyncToDatabase(bool)));
+	
+	hbox2->addWidget(box);
 	
 	QPushButton *btn;
 	btn = new QPushButton("&Save Song");
@@ -169,6 +180,11 @@ void SongEditorWindow::setSlideGroup(SlideGroup *g,bool syncToDatabase)
 	
 	m_tmplEditButton->setVisible(!syncToDatabase);
 			
+}
+
+void SongEditorWindow::setSyncToDatabase(bool sync)
+{
+	m_syncToDatabase = sync;
 }
 
 void SongEditorWindow::accepted()
