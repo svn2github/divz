@@ -1,11 +1,12 @@
 #ifndef SlideForegroundOnlyFilter_h
 #define SlideForegroundOnlyFilter_h
 
-#include "model/AbstractItemListFilter.h"
+#include "model/AbstractItemFilter.h"
 
-class SlideForegroundOnlyFilter : public AbstractItemListFilter
+class SlideForegroundOnlyFilter : public AbstractItemFilter
 {
-private:
+	Q_OBJECT
+protected:
 	SlideForegroundOnlyFilter();
 	static SlideForegroundOnlyFilter * m_staticInstance;
 	

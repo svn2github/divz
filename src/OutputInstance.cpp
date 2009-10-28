@@ -8,6 +8,8 @@
 #include <QApplication>
 #include <QVBoxLayout>
 
+#include "itemlistfilters/SlideTextOnlyFilter.h"
+
 bool OuputInstance_slide_num_compare(Slide *a, Slide *b)
 {
 	return (a && b) ? a->slideNumber() < b->slideNumber() : true;
@@ -244,6 +246,49 @@ void OutputInstance::setTextOnlyFilterEnabled(bool enable)
 	if(x == Output::Screen || x == Output::Custom)
 	{
 		m_viewer->setTextOnlyFilterEnabled(enable);
+	}
+	else
+	{
+		// TODO
+	}
+	
+	m_textOnlyFilter = enable;
+	if(enable)
+		addFilter(SlideTextOnlyFilter::instance());
+	else
+		removeFilter(SlideTextOnlyFilter::instance());
+}
+
+void OutputInstance::addFilter(AbstractItemFilter * filter)
+{
+	if(!m_slideFilters.contains(filter))
+		m_slideFilters.append(filter);
+	//applySlideFilters();
+	
+	if(!m_output->isEnabled())
+		return;
+	Output::OutputType x = m_output->outputType();
+	if(x == Output::Screen || x == Output::Custom)
+	{
+		m_viewer->addFilter(filter);
+	}
+	else
+	{
+		// TODO
+	}
+}
+
+void OutputInstance::removeFilter(AbstractItemFilter *filter)
+{
+	m_slideFilters.removeAll(filter);
+	//applySlideFilters();
+	
+	if(!m_output->isEnabled())
+		return;
+	Output::OutputType x = m_output->outputType();
+	if(x == Output::Screen || x == Output::Custom)
+	{
+		m_viewer->removeFilter(filter);
 	}
 	else
 	{

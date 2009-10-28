@@ -122,7 +122,7 @@ public:
 	
 	virtual SlideGroup * newSlideGroup();
 	
-	virtual QList<AbstractItemListFilter*> customFiltersFor(OutputInstance *instace = 0);
+	virtual AbstractItemFilterList customFiltersFor(OutputInstance *instace = 0);
 	virtual SlideGroupViewControl * newViewControl();
 	virtual AbstractSlideGroupEditor   * newEditor();
 	

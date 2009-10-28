@@ -138,6 +138,7 @@ Revised Task list for Release 1.0, 10/18/09:
 			
 			port over the song database conversion code to windows
 			
+			rewrite dirmodel inorder to delay-load icons
 			
 			large nbr of photos imported using import tool - some of them render gray - caching issues?
 			add timeout, titling options to image import tool
@@ -159,10 +160,9 @@ Revised Task list for Release 1.0, 10/18/09:
 							render anyway after X ms (2000ms ? )
 					call gui process events every time thru generatepixmap ?
 						
-			need to put generation of slide pixmaps in a thread...somehow....or process GUI events...
 			images import tool maybe should use different file browser dialog - because on win32, its that directory tree dialog with no field to type in - I hate that dialog
 			
-			integrate the proper song filter/song generator code for foldback displays
+			[DONE] integrate the proper song filter/song generator code for foldback displays
 			make filters and auto-size text code applicable to non-synced outputs as well
 			make an output MJPEG-only (e.g. no need for visible widget)
 				subclass of the network output
@@ -191,12 +191,12 @@ Revised Task list for Release 1.0, 10/18/09:
 			when changing text using tooplbar icons, need to update prop dock with new html 
 			when switching background to video, somehow render the previous background video UNTIL the first frame of the next video is ready
 			
-			offer more filter types for outputs
-				- at start, offer builtin filters:
+			[DONE] offer more filter types for outputs
+				[DONE] at start, offer builtin filters:
 						foreground only
 						text only
 						background only
-						video only
+						[LATER/NA] video only
 						non-text only
 				[LATER] offer user-designed filters:
 					- scripted filter?
@@ -534,7 +534,8 @@ Revised Task list for Release 1.0, 10/18/09:
 		[LATER] Video Capture (started impl, but again, performance is terrible. That may be due to the FormatOpts specified, or in ffmpeg, or the capture hardware - need to trace - later!)
 	
 	- Bugs:
-					
+		when going from song item live to regular slide live, the text-only filter checkbox doesnt get re-checked
+		
 		when auto-size text is enabled on foldback, foldback doesnt display correct verse all the time - sometimes displays a different verse that what it should be showing
 
 		need to fix the hackish method of setting slide groups on synced outputs in MainWindow - needs to be cleaner!

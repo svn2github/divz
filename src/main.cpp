@@ -60,10 +60,10 @@ int main(int argc, char **argv)
 	int qtype1 = qRegisterMetaType<AbstractVisualItem::FillType>("FillType");
 
 	
-	AbstractItemListFilter::registerFilterInstance(SlideTextOnlyFilter::instance());
-	AbstractItemListFilter::registerFilterInstance(SlideNonTextOnlyFilter::instance());
-	AbstractItemListFilter::registerFilterInstance(SlideBackgroundOnlyFilter::instance());
-	AbstractItemListFilter::registerFilterInstance(SlideForegroundOnlyFilter::instance());
+	AbstractItemFilter::registerFilterInstance(SlideTextOnlyFilter::instance());
+	AbstractItemFilter::registerFilterInstance(SlideNonTextOnlyFilter::instance());
+	AbstractItemFilter::registerFilterInstance(SlideBackgroundOnlyFilter::instance());
+	AbstractItemFilter::registerFilterInstance(SlideForegroundOnlyFilter::instance());
 	
 #if defined(VER)
 	printf("DViz Version %s\n", VER);

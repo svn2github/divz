@@ -2,11 +2,12 @@
 #define SONGSLIDEGROUPFACTORY_H
 
 #include "model/SlideGroupFactory.h"
-#include "model/AbstractItemListFilter.h"
+#include "itemlistfilters/SlideTextOnlyFilter.h"
 
-class SongFoldbackTextFilter : public AbstractItemListFilter
+class SongFoldbackTextFilter : public SlideTextOnlyFilter
 {
-private:
+	Q_OBJECT
+protected:
 	SongFoldbackTextFilter();
 	static SongFoldbackTextFilter * m_staticInstance;
 	
@@ -57,7 +58,7 @@ public:
 	
 	SlideGroup * newSlideGroup();
 	
-	QList<AbstractItemListFilter*> customFiltersFor(OutputInstance *instace = 0);
+	AbstractItemFilterList customFiltersFor(OutputInstance *instace = 0);
 	SlideGroupViewControl * newViewControl();
 	AbstractSlideGroupEditor   * newEditor();
 	

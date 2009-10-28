@@ -799,6 +799,8 @@ void MainWindow::setupOutputControls()
 				ctrl->setOutputView(inst);
 				outCtrl->setViewControl(ctrl);
 				
+				outCtrl->setCustomFilters(factory->customFiltersFor(outCtrl->outputInstance()));
+				
 				m_viewControls[output->id()] = ctrl;
 				
 				//m_outputTabs->addTab(ctrl,output->name());
@@ -911,6 +913,7 @@ void MainWindow::setLiveGroup(SlideGroup *newGroup, Slide *currentSlide)
 						ctrl->setOutputView(inst);
 						//m_outputTabs->addTab(ctrl,output->name());
 						outputCtrl->setViewControl(ctrl);
+						outputCtrl->setCustomFilters(factory->customFiltersFor(outputCtrl->outputInstance()));
 						
 						m_viewControls[output->id()] = ctrl;
 					}
@@ -968,6 +971,7 @@ void MainWindow::setLiveGroup(SlideGroup *newGroup, Slide *currentSlide)
 					ctrl->setOutputView(inst);
 					//m_outputTabs->addTab(ctrl,output->name());
 					outputCtrl->setViewControl(ctrl);
+					outputCtrl->setCustomFilters(factory->customFiltersFor(outputCtrl->outputInstance()));
 					
 					m_viewControls[output->id()] = ctrl;
 				}

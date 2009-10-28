@@ -14,14 +14,30 @@ bool SlideTextOnlyFilter::approve(AbstractItem *item)  { return item && item->in
 
 AbstractItem * SlideTextOnlyFilter::mutate(const AbstractItem * sourceItem)
 {
-	if(sourceItem && sourceItem->inherits("BackgroundItem"))
+	if(sourceItem)
 	{
-		AbstractItem * clone = sourceItem->clone();
-		AbstractVisualItem * bg = dynamic_cast<AbstractVisualItem*>(clone);
-		bg->setFillType(AbstractVisualItem::Solid);
-		bg->setFillBrush(m_backgroundColor);
-		
-		return clone;
+		if(sourceItem->inherits("TextBoxItem"))
+		{
+			AbstractItem * clone = sourceItem->clone();
+			
+			AbstractVisualItem * text = dynamic_cast<AbstractVisualItem*>(clone);
+			text->setShadowEnabled(false);
+			text->setOutlineEnabled(false);
+			
+			return clone;
+		}
+		else
+		if(sourceItem->inherits("BackgroundItem"))
+		{
+			AbstractItem * clone = sourceItem->clone();
+			
+			AbstractVisualItem * bg = dynamic_cast<AbstractVisualItem*>(clone);
+			bg->setFillType(AbstractVisualItem::Solid);
+			bg->setFillBrush(m_backgroundColor);
+			bg->setShadowEnabled(false);
+			
+			return clone;
+		}
 	}
 	
 	return 0;

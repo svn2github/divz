@@ -17,7 +17,10 @@
 /** SongFoldbackTextFilter **/
 
 SongFoldbackTextFilter * SongFoldbackTextFilter::m_staticInstance = new SongFoldbackTextFilter();
-SongFoldbackTextFilter::SongFoldbackTextFilter() {}
+
+SongFoldbackTextFilter::SongFoldbackTextFilter()
+	: SlideTextOnlyFilter()
+	{}
 
 bool SongFoldbackTextFilter::isMandatoryFor(OutputInstance * inst)
 {
@@ -26,78 +29,88 @@ bool SongFoldbackTextFilter::isMandatoryFor(OutputInstance * inst)
 }
 
 bool SongFoldbackTextFilter::approve(AbstractItem *) { return true; }
-AbstractItem * SongFoldbackTextFilter::mutate(const AbstractItem *item)
+AbstractItem * SongFoldbackTextFilter::mutate(const AbstractItem *sourceItem)
 {
 		
-	static QString slideHeader = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\"><html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">p, li { white-space: pre-wrap; }</style></head><body style=\"font-family:'Sans Serif'; font-size:9pt; font-weight:400; font-style:normal;\">";
+	static QString slideHeader = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\"><html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">p, li { white-space: pre-wrap; }</style></head><body style=\"font-family:'Monospace'; font-size:38pt; font-weight:800; font-style:normal;\">";
 	static QString slideFooter = "</body></html>";
-	static QString linePrefix = "<p align=\"left\" style=\"margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:'Sans Serif'; font-size:9pt; font-weight:400;\">";
+	static QString linePrefix = "<p align=\"left\" style=\"margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:'Monospace'; font-size:38pt; font-weight:800;\">";
 	static QString lineSuffix = "</span></p>";
 
-	static QString highlightBlockPrefix = "<p align=\"left\" style=\"margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; background:red; color:white\"><span style=\" font-family:'Sans Serif'; color:white;background:red;font-size:9pt; font-weight:400;\">";
+	static QString highlightBlockPrefix = "<p align=\"left\" style=\"margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; background:red; color:white\"><span style=\" font-family:'Monospace'; color:white;background:red;font-size:38pt; font-weight:400;\">";
 	
-	static QRegExp excludeLineRegExp("^\\s*(Verse|Chorus|Tag|Bridge|End(ing)?|Intro(duction)?|B:|R:|C:|T:|G:|\\|)(\\s+\\d+)?(\\s*\\(.*\\).*)?\\s*$",Qt::CaseInsensitive);
+	static QRegExp excludeLineRegExp("^\\s*(Verse|Chorus|Tag|Bridge|End(ing)?|Intro(duction)?|B:|R:|C:|T:|G:|\\|)(.*)?\\s*$",Qt::CaseInsensitive);
 
 	//Adds in guitar chords and other rear-screen text, as well as the next passage preview on the last line
-	if(item && item->inherits("TextBoxItem"))
+	if(sourceItem)
 	{
-		QVariant slideNumber = item->property("SongSlideNumber");
-		if(slideNumber.isValid())
+		if(sourceItem->inherits("TextBoxItem"))
 		{
-			QVariant slideGroup = item->property("SongSlideGroup");
-			SongSlideGroup * songGroup = slideGroup.value<SongSlideGroup*>();
-				
-			QString text = songGroup->text().replace("\r\n","\n");
-			QStringList list = text.split("\n\n");
-			
-			int row = slideNumber.toInt();
-			QString passage = row >= list.size() ? "" : list[row];
-			
-			
-			// Create the HTML for the lyrics
-			QStringList lines = passage.split("\n");
-			QStringList html;
-			html << slideHeader;
-			foreach(QString line, lines)
+			QVariant slideNumber = sourceItem->property("SongSlideNumber");
+			if(slideNumber.isValid())
 			{
-				if(line.contains(excludeLineRegExp))
-					html << highlightBlockPrefix;
-				else
-					html << linePrefix;
+				QVariant slideGroup = sourceItem->property("SongSlideGroup");
+				SongSlideGroup * songGroup = slideGroup.value<SongSlideGroup*>();
 					
-				html << line;
-				html << lineSuffix;
+				QString text = songGroup->text().replace("\r\n","\n");
+				QStringList list = text.split("\n\n");
+				
+				int row = slideNumber.toInt();
+				QString passage = row >= list.size() ? "" : list[row];
+				
+				
+				// Create the HTML for the lyrics
+				QStringList lines = passage.split("\n");
+				QStringList html;
+				html << slideHeader;
+				foreach(QString line, lines)
+				{
+					if(line.contains(excludeLineRegExp))
+						html << highlightBlockPrefix;
+					else
+						html << linePrefix;
+						
+					html << line;
+					html << lineSuffix;
+				}
+				
+				// add in last line
+				if(row+1 < list.size())
+				{
+					QString next = list[row+1];
+					next = next.replace(QRegExp("(Verse|Chorus|Tag|Bridge|End(ing)?|Intro(duction)?|B:|R:|C:|T:|G:|\\|)(\\s+\\d+)?(\\s*\\(.*\\).*)?",Qt::CaseInsensitive),""); // dont show rear text in first line of next slide
+					QString textBlob = next.replace("\n","/");
+					QString substring = textBlob.left(28); // TODO MAGIC NUMBER ...is 30 a good width?
+					html << linePrefix;
+					html << "..."; // <br> is intentional to give it some whitespace before this line
+					html << substring;
+					html << lineSuffix;
+				}
+				
+				
+				html << slideFooter;
+				
+				AbstractItem * clone = sourceItem->clone();
+				TextBoxItem *textbox = dynamic_cast<TextBoxItem*>(clone); 
+				textbox->setText(html.join(""));
+				textbox->setShadowEnabled(false);
+				textbox->setOutlineEnabled(false);
+				//qDebug() << "Song slide filter html: "<<html.join("");
+				
+				return clone;
+				
 			}
-			
-			// add in last line
-			if(row+1 < list.size())
+			else
 			{
-				QString next = list[row+1];
-				next = next.replace(excludeLineRegExp,""); // dont show rear text in first line of next slide
-				QString textBlob = next.replace("\n"," / ");
-				QString substring = textBlob.left(30); // TODO MAGIC NUMBER ...is 30 a good width?
-				html << linePrefix;
-				html << "<br><b><i>Next:</i></b>"; // <br> is intentional to give it some whitespace before this line
-				html << substring;
-				html << lineSuffix;
+				// no way to ID which passage of the song this textbox is for,
+				// therefore no way to find the original text
 			}
-			
-			
-			html << slideFooter;
-			
-			AbstractItem * clone = item->clone();
-			TextBoxItem *textbox = dynamic_cast<TextBoxItem*>(clone); 
-			textbox->setText(html.join(""));
-			
-			return clone;
-			
+		
 		}
 		else
 		{
-			// no way to ID which passage of the song this textbox is for,
-			// therefore no way to find the original text
+			return SlideTextOnlyFilter::mutate(sourceItem);
 		}
-	
 	}
 	
 	return 0;
@@ -134,9 +147,9 @@ SlideGroup * SongSlideGroupFactory::newSlideGroup()
 	return dynamic_cast<SlideGroup*>(new SongSlideGroup());
 }
 	
-QList<AbstractItemListFilter*> SongSlideGroupFactory::customFiltersFor(OutputInstance */*instace*/)
+AbstractItemFilterList SongSlideGroupFactory::customFiltersFor(OutputInstance */*instace*/)
 {
-	QList<AbstractItemListFilter*> list;
+	AbstractItemFilterList list;
 	list << SongFoldbackTextFilter::instance();
 	return list;
 }

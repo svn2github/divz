@@ -16,6 +16,8 @@ class SlideGroup;
 
 #include <QWidget>
 #include "model/Output.h"
+#include "model/AbstractItemFilter.h"
+
 
 class OutputInstance : public QWidget
 {
@@ -40,6 +42,10 @@ public:
 	
 	bool isTextOnlyFilterEnabled() { return m_textOnlyFilter; }
 	bool isAutoResizeTextEnabled() { return m_autoResizeText; }
+	
+	void addFilter(AbstractItemFilter *);
+	void removeFilter(AbstractItemFilter *);
+	bool hasFilter(AbstractItemFilter *filter) { return m_slideFilters.contains(filter); }
 	
 	int fadeSpeed() { return m_fadeSpeed; }
 	int fadeQuality() { return m_fadeQuality; } 
@@ -98,6 +104,8 @@ private:
 	
 	int m_fadeSpeed;
 	int m_fadeQuality;
+
+	AbstractItemFilterList m_slideFilters;
 };
 
 #endif // SLIDEGROUPVIEWER_H

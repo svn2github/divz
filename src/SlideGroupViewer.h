@@ -13,7 +13,7 @@
 #include "MyGraphicsScene.h"
 #include "model/SlideGroup.h"
 
-#include "model/AbstractItemListFilter.h"
+#include "model/AbstractItemFilter.h"
 
 class SlideGroupViewer : public QWidget
 {
@@ -39,9 +39,9 @@ public:
 	bool isTextOnlyFilterEnabled() { return m_textOnlyFilter; }
 	bool isAutoResizeTextEnabled() { return m_autoResizeText; }
 	
-	void addFilter(AbstractItemListFilter *);
-	void removeFilter(AbstractItemListFilter *);
-	bool hasFilter(AbstractItemListFilter *filter) { return m_slideFilters.contains(filter); }
+	void addFilter(AbstractItemFilter *);
+	void removeFilter(AbstractItemFilter *);
+	bool hasFilter(AbstractItemFilter *filter) { return m_slideFilters.contains(filter); }
 	
 	int fadeSpeed() { return m_fadeSpeed; }
 	int fadeQuality() { return m_fadeQuality; } 
@@ -144,7 +144,7 @@ private:
 	
 	QList<Slide*>	m_slideFilterByproduct;
 	
-	QList<AbstractItemListFilter*> m_slideFilters;
+	AbstractItemFilterList m_slideFilters;
 	
 	QCache<QString,double> m_autoTextSizeCache;
 };

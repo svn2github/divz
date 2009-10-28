@@ -168,7 +168,7 @@ Slide * SlideGroupViewer::applySlideFilters(Slide * sourceSlide)
 	foreach(AbstractItem * sourceItem, origList)
 	{
 		bool approved = true;
-		foreach(AbstractItemListFilter * filter, m_slideFilters)
+		foreach(AbstractItemFilter * filter, m_slideFilters)
 			if(!filter->approve(sourceItem))
 				approved = false;
 				
@@ -264,9 +264,9 @@ Slide * SlideGroupViewer::applySlideFilters(Slide * sourceSlide)
 			else
 			{
 				double ptSize = autoText->findFontSize();
-				double sizeInc = 2.0;	// how big of a jump to add to the ptSize each iteration
+				double sizeInc = 1;	// how big of a jump to add to the ptSize each iteration
 				int count = 0;		// current loop iteration
-				int maxCount = 50; 	// max iterations of the search loop
+				int maxCount = 100; 	// max iterations of the search loop
 				bool done = false;
 				
 				int lastGoodSize = ptSize;
@@ -299,7 +299,7 @@ Slide * SlideGroupViewer::applySlideFilters(Slide * sourceSlide)
 						//lastGoodHtml = autoText->text();
 						boxHeight = heightTmp;
 		
-						sizeInc *= 1.5;
+						sizeInc *= 1.1;
 						//qDebug()<<"size search: "<<ptSize<<"pt was good, trying higher, inc:"<<sizeInc<<"pt";
 						ptSize += sizeInc;
 		
@@ -316,7 +316,7 @@ Slide * SlideGroupViewer::applySlideFilters(Slide * sourceSlide)
 				
 				autoText->setText(doc.toHtml());
 				
-				//qDebug()<<"SongSlideGroup::textToSlides(): size search: caching ptsize:"<<lastGoodSize;
+				qDebug()<<"SongSlideGroup::textToSlides(): size search: caching ptsize:"<<lastGoodSize<<", count: "<<count;
 				//m_autoTextSizeCache[sizeKey] = lastGoodSize;
 				
 				// We are using a QCache instead of a plain QMap, so that requires a pointer value 
@@ -358,7 +358,7 @@ Slide * SlideGroupViewer::applySlideFilters(Slide * sourceSlide)
 		{
 			// TODO should filters apply to overlays? to be decided, but for now, yes.
 			bool approved = true;
-			foreach(AbstractItemListFilter * filter, m_slideFilters)
+			foreach(AbstractItemFilter * filter, m_slideFilters)
 				if(!filter->approve(overlayItem))
 					approved = false;
 					
@@ -434,7 +434,7 @@ AbstractItem * SlideGroupViewer::applyMutations(AbstractItem *originalItem)
 {
 	bool mutated = false;
 	AbstractItem *mutateTmp = originalItem;
-	foreach(AbstractItemListFilter * filter, m_slideFilters)
+	foreach(AbstractItemFilter * filter, m_slideFilters)
 	{
 		mutateTmp = filter->mutate(mutateTmp);
 		if(mutateTmp)
@@ -718,13 +718,14 @@ void SlideGroupViewer::slideDiscarded(Slide *oldSlide)
 	}
 }
 
-void SlideGroupViewer::addFilter(AbstractItemListFilter * filter)
+void SlideGroupViewer::addFilter(AbstractItemFilter * filter)
 {
-	m_slideFilters.append(filter);
+	if(!m_slideFilters.contains(filter))
+		m_slideFilters.append(filter);
 	applySlideFilters();
 }
 
-void SlideGroupViewer::removeFilter(AbstractItemListFilter *filter)
+void SlideGroupViewer::removeFilter(AbstractItemFilter *filter)
 {
 	m_slideFilters.removeAll(filter);
 	applySlideFilters();

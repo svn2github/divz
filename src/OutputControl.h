@@ -7,6 +7,7 @@
 #include <QPushButton>
 #include <QLineEdit>
 #include <QComboBox>
+#include <QListWidget>
 
 #include <qtcolorpicker.h>
 
@@ -14,6 +15,8 @@ class OutputInstance;
 class SlideGroupViewControl;
 class Document;
 class Slide;
+
+#include "model/AbstractItemFilter.h"
 
 class OutputControl :  public QWidget
 {
@@ -30,17 +33,20 @@ public:
 public slots:
 	void setOutputInstance(OutputInstance*);
 	void setViewControl(SlideGroupViewControl*);
+	void setCustomFilters(AbstractItemFilterList);
 	
 	void setCrossFadeSpeed(int value);
 	
 	void setIsOutputSynced(bool);
 	void setSyncSource(OutputInstance*);
-	//void setSyncBackground(const QColor &);
+	void setTextOnlyBackground(const QColor &);
 	
 	void setOverlayDocument(Document*);
 	void setOverlayEnabled(bool);
-	void setSyncTextOnlyFilterEnabled(bool);
-	void setSyncTextResizeEnabled(bool);
+	void setTextOnlyFilterEnabled(bool);
+	void setTextResizeEnabled(bool);
+	
+	
 
 /*public*/ 
 signals:
@@ -61,10 +67,13 @@ protected slots:
 	
 	// inorder to untoggle black/clear buttons
 	void slideChanged(int);
+	
+	void filterListItemChanged(QListWidgetItem * item);
 
 protected:
 	void setupUI();
 	void setupSyncWidgetUI();
+	void setupFilterList(AbstractItemFilterList selected = AbstractItemFilterList());
 	
 	QLabel			* m_overlayPreviewLabel;
 	QStackedWidget		* m_stack;
@@ -87,12 +96,16 @@ protected:
 	QWidget			* m_syncWidget;
 	QComboBox		* m_syncWithBox;
 	
-	//QtColorPicker		* m_colorPicker;
+	QtColorPicker		* m_colorPicker;
 	
 	bool			m_outputIsSynced;
 	
 	QComboBox		* m_syncStatusSelector;
-	QPushButton 		* m_textFilterBtn;
+	QPushButton 		* m_textResizeBtn;
+	
+	
+	AbstractItemFilterList	m_customFilterList;
+	QListWidget		* m_filterList;
 };
 
 

@@ -18,6 +18,8 @@
 #include "OutputInstance.h"
 #include "AppSettings.h"
 
+#include "itemlistfilters/SlideTextOnlyFilter.h"
+
 #define POINTER_STRING(ptr) QString().sprintf("%p",static_cast<void*>(ptr))
 
 OutputControl::OutputControl(QWidget *parent) 
@@ -92,7 +94,7 @@ void OutputControl::setupUI()
 	connect(m_overlayDocBox, SIGNAL(textChanged(const QString&)), this, SLOT(overlayDocumentChanged(const QString&)));
 	hbox2->addWidget(m_overlayDocBox,2); // large stretch
 	
-	QPushButton *btn1 = new QPushButton("&Browse");
+	QPushButton *btn1 = new QPushButton("Browse");
 	hbox2->addWidget(btn1);
 	
 	connect(m_overlayDocBox, SIGNAL(textChanged(const QString&)), this, SLOT(overlayDocumentChanged(const QString&)));
@@ -169,40 +171,53 @@ void OutputControl::setupSyncWidgetUI()
 	// Row 2: Text only filter on/off
 	rowNbr++;
 	
-	label = new QLabel("Text-only Filter: ");
+	//label = new QLabel("Text-only Filter: ");
+	label = new QLabel("Filters: ");
 	layout->addWidget(label,rowNbr,0);
 	
-	m_textFilterBtn = new QPushButton("Only Show Text");
-	m_textFilterBtn->setCheckable(true);
-	layout->addWidget(m_textFilterBtn,rowNbr,1);
-	
-	connect(m_textFilterBtn, SIGNAL(toggled(bool)), this, SLOT(setSyncTextOnlyFilterEnabled(bool)));
-	
-// 	// Row 3: Text only background
-//	rowNbr++;
-// 	label = new QLabel("Text-only Background: ");
-// 	layout->addWidget(label,2,0);
+// 	m_textFilterBtn = new QPushButton("Only Show Text");
+// 	m_textFilterBtn->setCheckable(true);
+// 	layout->addWidget(m_textFilterBtn,rowNbr,1);
 // 	
-// 	m_colorPicker = new QtColorPicker();
-// 	m_colorPicker->setStandardColors();
-// 	m_colorPicker->setCurrentColor(Qt::black);
-// 	layout->addWidget(m_colorPicker,2,1);
-// 	
-	//connect(m_colorPicker, SIGNAL(colorChanged(const QColor &)), this, SLOT(setSyncBackground(const QColor &)));
-	//connect(textFilterBtn, SIGNAL(toggled(bool)), m_colorPicker, SLOT(setEnabled(bool)));
+// 	connect(m_textFilterBtn, SIGNAL(toggled(bool)), this, SLOT(setTextOnlyFilterEnabled(bool)));
+
+	m_filterList = new QListWidget();
+	
+	m_customFilterList = AbstractItemFilter::availableFilters();
+	
+	setupFilterList();
+	
+	layout->addWidget(m_filterList,rowNbr,1);
+	
+	connect(m_filterList, SIGNAL(itemChanged(QListWidgetItem *)), this, SLOT(filterListItemChanged(QListWidgetItem *)));
+	
+	
+	
+	// Row 3: Text only background
+	rowNbr++;
+	label = new QLabel("Text-only Background: ");
+	layout->addWidget(label,rowNbr,0);
+	
+	m_colorPicker = new QtColorPicker();
+	m_colorPicker->setStandardColors();
+	m_colorPicker->setCurrentColor(Qt::black);
+	layout->addWidget(m_colorPicker,rowNbr,1);
+	
+	connect(m_colorPicker, SIGNAL(colorChanged(const QColor &)), this, SLOT(setTextOnlyBackground(const QColor &)));
+//	connect(textFilterBtn, SIGNAL(toggled(bool)), m_colorPicker, SLOT(setEnabled(bool)));
 	
 	// Row 3: REsize top textbox
 	rowNbr++;
 	label = new QLabel("Resize Top Textbox: ");
 	layout->addWidget(label,rowNbr,0);
 	
-	QPushButton *btn = new QPushButton("Intelli-Size Top Textbox");
-	btn->setCheckable(true);
-	btn->setEnabled(false);
-	layout->addWidget(btn,rowNbr,1);
+	m_textResizeBtn = new QPushButton("Intelli-Size Top Textbox");
+	m_textResizeBtn->setCheckable(true);
+	//m_textResizeBtn->setEnabled(false);
+	layout->addWidget(m_textResizeBtn,rowNbr,1);
 	
-	connect(btn, SIGNAL(toggled(bool)), this, SLOT(setSyncTextResizeEnabled(bool)));
-	connect(m_textFilterBtn, SIGNAL(toggled(bool)), btn, SLOT(setEnabled(bool)));
+	connect(m_textResizeBtn, SIGNAL(toggled(bool)), this, SLOT(setTextResizeEnabled(bool)));
+//	connect(m_textFilterBtn, SIGNAL(toggled(bool)), m_textResizeBtn, SLOT(setEnabled(bool)));
 	
 	// make the last row expand - i think it should, not tested tet
 	rowNbr++;
@@ -227,6 +242,54 @@ void OutputControl::setupSyncWithBox()
 		{
 			m_syncWithBox->addItem(out->name(), QVariant(out->id()));
 		}
+	}
+}
+
+void OutputControl::setupFilterList(AbstractItemFilterList selected)
+{
+	m_filterList->clear();
+
+	for(int i=0; i<m_customFilterList.size(); i++)
+	{
+		AbstractItemFilter * impl = m_customFilterList[i];
+		
+		QListWidgetItem *t = new QListWidgetItem();
+		t->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled|Qt::ItemIsUserCheckable);
+		t->setCheckState(Qt::Unchecked);
+		t->setText(impl->filterName());
+		t->setData(Qt::UserRole + 100, i);
+		
+		if(impl->isMandatoryFor(outputInstance()))
+		{
+			t->setCheckState(Qt::Checked);
+			t->setFlags(Qt::ItemIsSelectable|Qt::ItemIsUserCheckable);
+			m_inst->addFilter(impl);
+		}
+		else
+		if(selected.contains(impl))
+		{
+			t->setCheckState(Qt::Checked);
+			m_inst->addFilter(impl);
+		}
+		
+		m_filterList->addItem(t);
+	}
+}
+	
+void OutputControl::filterListItemChanged(QListWidgetItem *item)
+{
+	bool enabled = item->checkState() == Qt::Checked;
+	QVariant var = item->data(Qt::UserRole + 100);
+	if(var.isValid())
+	{
+		int idx = var.toInt();
+	
+		AbstractItemFilter * filter = m_customFilterList[idx];
+		
+		if(enabled)
+			m_inst->addFilter(filter);
+		else
+			m_inst->removeFilter(filter);
 	}
 }
 
@@ -337,18 +400,66 @@ void OutputControl::setOverlayEnabled(bool flag)
 		m_inst->setOverlayEnabled(flag);
 }
 
-void OutputControl::setSyncTextResizeEnabled(bool flag)
+void OutputControl::setTextResizeEnabled(bool flag)
 {
 	if(m_inst)
 		m_inst->setAutoResizeTextEnabled(flag);
+	if(m_textResizeBtn->isChecked() != flag)
+		m_textResizeBtn->setChecked(flag);
 }
 
-void OutputControl::setSyncTextOnlyFilterEnabled(bool flag)
+void OutputControl::setTextOnlyFilterEnabled(bool flag)
 {
 	if(m_inst)
 		m_inst->setTextOnlyFilterEnabled(flag);
-	if(m_textFilterBtn->isChecked() != flag)
-		m_textFilterBtn->setChecked(flag);
+	//if(m_textFilterBtn->isChecked() != flag)
+	//	m_textFilterBtn->setChecked(flag);
+	
+	int idx = m_customFilterList.indexOf(SlideTextOnlyFilter::instance());
+	QListWidgetItem * item = m_filterList->item(idx);
+	
+	if(item)
+	{
+		bool enabled = item->checkState() == Qt::Checked;
+		if(enabled != flag)
+		{
+			item->setCheckState(Qt::Checked);
+			filterListItemChanged(item);
+		}
+	}
+	else
+	{
+		qDebug() << "OutputControl::setTextOnlyFilterEnabled: ["<<flag<<"]: idx:"<<idx<<", QListWidgetItem was null, unable to update list widget";
+		
+		if(flag)
+			m_inst->addFilter(SlideTextOnlyFilter::instance());
+		else
+			m_inst->removeFilter(SlideTextOnlyFilter::instance());
+		
+	}
+}
+
+void OutputControl::setTextOnlyBackground(const QColor & color)
+{
+	AbstractItemFilterList internalList = m_customFilterList;
+	
+	SlideTextOnlyFilter * textFilter = 0;
+	
+	foreach(AbstractItemFilter *filter, internalList)
+	{
+		if(!textFilter && filter->inherits("SlideTextOnlyFilter"))
+			textFilter = dynamic_cast<SlideTextOnlyFilter*>(filter);
+	}
+	
+	textFilter->setBackgroundColor(color);
+	if(m_inst->hasFilter(textFilter))
+	{
+		// by removing, then adding again, this forces the output 
+		// view to re-apply the filter with the new settings.
+		// TODO maybe in future find a more efficient way of applying changes.
+		m_inst->removeFilter(textFilter);
+		m_inst->addFilter(textFilter);
+	}
 }
 
 #define POINTER_STRING(ptr) QString().sprintf("%p",static_cast<void*>(ptr))
@@ -399,17 +510,18 @@ void OutputControl::setOutputInstance(OutputInstance * inst)
 	m_inst = inst;
 	setupSyncWithBox();
 
-	connect(m_inst, SIGNAL(slideChanged(int)), this, SLOT(slideChanged(int)));
+	// not needed right now
+	//connect(m_inst, SIGNAL(slideChanged(int)), this, SLOT(slideChanged(int)));
 
-	// HACK - later need to default to app settings
+	// HACK need to default to app settings
 	m_fadeSlider->setValue(25);
-	
 	
 	if(inst->output()->tags().toLower().indexOf("foldback") >= 0 ||
 	   inst->output()->name().toLower().indexOf("foldback") >= 0)
 	{
 		setIsOutputSynced(true);
-		setSyncTextOnlyFilterEnabled(true);
+		setTextOnlyFilterEnabled(true);
+		setTextResizeEnabled(true);
 		m_fadeSlider->setValue(0);
 	}
 		
@@ -448,6 +560,37 @@ void OutputControl::setViewControl(SlideGroupViewControl *ctrl)
 	
 	m_blackButton->setEnabled(true);
 	m_clearButton->setEnabled(true);
+}
+
+void OutputControl::setCustomFilters(AbstractItemFilterList list)
+{
+	AbstractItemFilterList selected;
+	for(int i=0; i<m_customFilterList.size(); i++)
+	{
+		QListWidgetItem * item =m_filterList->item(i);
+		if(item && item->checkState() == Qt::Checked)
+			selected.append(m_customFilterList[i]);
+	}
+	
+	m_customFilterList = list;
+	
+	AbstractItemFilterList internalList = AbstractItemFilter::availableFilters();
+	foreach(AbstractItemFilter *filter, internalList)
+	{
+		bool derivitiveFound = false;
+		foreach(AbstractItemFilter *custom, m_customFilterList)
+			if(custom->inherits(filter->metaObject()->className()))
+				derivitiveFound = true;
+		
+		if(!derivitiveFound)
+			m_customFilterList.append(filter);
+		else
+			if(m_inst && m_inst->hasFilter(filter))
+				m_inst->removeFilter(filter);
+
+	}
+	
+	setupFilterList(selected);
 }
 
 void OutputControl::setCrossFadeSpeed(int value)

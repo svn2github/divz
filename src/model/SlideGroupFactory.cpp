@@ -471,9 +471,9 @@ SlideGroupFactory::~SlideGroupFactory()
 	}
 }
 
-QList<AbstractItemListFilter*> SlideGroupFactory::customFiltersFor(OutputInstance *instace)
+AbstractItemFilterList SlideGroupFactory::customFiltersFor(OutputInstance *instace)
 {
-	return QList<AbstractItemListFilter*>();
+	return AbstractItemFilterList();
 }
 	
 SlideGroup * SlideGroupFactory::newSlideGroup()

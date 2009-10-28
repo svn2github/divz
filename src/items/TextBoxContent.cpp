@@ -306,7 +306,7 @@ void TextBoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * 
 	//painter->setClipRect(contentsRect());
 	painter->translate(contentsRect().topLeft()); // + QPoint(p.width(),p.width()));
 
-	if(sceneContextHint() == MyGraphicsScene::Preview)
+	if(sceneContextHint() == MyGraphicsScene::Preview || !modelItem()->shadowEnabled())
 	{
 		// If we're drawing in a Preview scene, then we render directly with the painter
 		// (rather than caching the results in a pixmap) because this allows the painter 

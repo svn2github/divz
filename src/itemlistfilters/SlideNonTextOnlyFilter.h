@@ -1,11 +1,12 @@
 #ifndef SlideNonTextOnlyFilter_h
 #define SlideNonTextOnlyFilter_h
 
-#include "model/AbstractItemListFilter.h"
+#include "model/AbstractItemFilter.h"
 
-class SlideNonTextOnlyFilter : public AbstractItemListFilter
+class SlideNonTextOnlyFilter : public AbstractItemFilter
 {
-private:
+	Q_OBJECT
+protected:
 	SlideNonTextOnlyFilter();
 	static SlideNonTextOnlyFilter * m_staticInstance;
 	

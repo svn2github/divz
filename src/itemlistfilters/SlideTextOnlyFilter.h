@@ -2,11 +2,12 @@
 #define SlideTextOnlyFilter_h
 
 #include <QColor>
-#include "model/AbstractItemListFilter.h"
+#include "model/AbstractItemFilter.h"
 
-class SlideTextOnlyFilter : public AbstractItemListFilter
+class SlideTextOnlyFilter : public AbstractItemFilter
 {
-private:
+	Q_OBJECT
+protected:
 	SlideTextOnlyFilter();
 	static SlideTextOnlyFilter * m_staticInstance;
 	
