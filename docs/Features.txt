@@ -131,18 +131,13 @@ Revised Task list for Release 1.0, 10/18/09:
 		= Misc = 
 			[MAYBE] Add color theme support vis a vi powerpoint
 			
-			[DONE] new document AR still not correct in the icons
-			[DONE] changing model doesnt update slidegrouplistmodel icons
-			
-			[DONE] need to save clear/black state across changing songs (e.g. clear at end of one song, set new song, needs to fade new background/new clear slide)
 			need to pre-render all text boxes
 			need video preview widget 
 			need to be able to preview slides (next/prev button)
 				move preview dock to under the group list - simple slide list model + preview window
 			
-			[DONE] need to add checkbox to song editor window to save back to database
-			[DONE] after editing a song in database, it needs to update the lyrics preview widget below
 			port over the song database conversion code to windows
+			
 			
 			large nbr of photos imported using import tool - some of them render gray - caching issues?
 			add timeout, titling options to image import tool
@@ -167,23 +162,12 @@ Revised Task list for Release 1.0, 10/18/09:
 			need to put generation of slide pixmaps in a thread...somehow....or process GUI events...
 			images import tool maybe should use different file browser dialog - because on win32, its that directory tree dialog with no field to type in - I hate that dialog
 			
-			[DONE] need to store song background choices that were set using media browser
-				[DONE] make it auto-create a template, set bg on the template?
 			integrate the proper song filter/song generator code for foldback displays
-			[DONE] generalize the filters code [e.g. filter plugin somehow, more than just text only]
-				filters are generalized, just need to integrate with UIfs
 			make filters and auto-size text code applicable to non-synced outputs as well
 			make an output MJPEG-only (e.g. no need for visible widget)
 				subclass of the network output
 				no need for custom dviz viewer on other end
 				need to render that as a "viewer" widget though - could take view from that
-			[FOXED] up arrow in media browser doesnt work on win32
-				canonical path in QFileInfo still usedd '/' as the dir seperator on windows, even though QDir::separator() returns "\" - grrr!
-			
-			[REJECTED] need to find a way to make the fade speed slider "snap to" increments of, say, 5%
-				can't seem to find out how
-			[DONE] fade speed slider should apply to black/clear fades as well 
-			[DONE] need to add kbd shortcuts to song list "clear" button and to the song editor "title" field
 			
 			make slide list model zoomable 
 				e.g. zoom slide list in editor
@@ -202,16 +186,7 @@ Revised Task list for Release 1.0, 10/18/09:
 			add generic pre-render on document load 
 				loop thru every group, every slide and call Paint on every visual delegate
 			make autosave - on/off from toolbar
-			[FIXED] investigate cross fading on synced outputs - seems to NOT cross fade, BUT I never told it NOT to...huh...
-				after watching it, it looks like the sync-signal sets the NEW slide without cross fade, THEN it tries to cross fade to the new slide - resulting in meerly a slight dimming effect for a moment
-					which is better than nothing, but ideally it should NOT cross fade
-					but this points to a possible problem - setting the slide with no fade, then setting again with cross fade - still need to investigate
-				update:
-					seems to only do the "dim fade" (prev update) when text-only filter enabled
-					with no text-only filter, cross fades like normal
-				update:
-					it was a case of not disconnecting correctly from m_syncInst in OutputControl
-					
+			
 			allow user to choose only-text background color
 			when changing text using tooplbar icons, need to update prop dock with new html 
 			when switching background to video, somehow render the previous background video UNTIL the first frame of the next video is ready
@@ -351,6 +326,33 @@ Revised Task list for Release 1.0, 10/18/09:
 			100-130, inc by 10
 			130>, inc by 25??
 			or some form of exponential, rounded percentage inc? (e.g. (int)(cur size * 1.5)) ?
+		
+		[DONE] new document AR still not correct in the icons
+		[DONE] changing model doesnt update slidegrouplistmodel icons
+		[DONE] need to save clear/black state across changing songs (e.g. clear at end of one song, set new song, needs to fade new background/new clear slide)
+		[DONE] need to add checkbox to song editor window to save back to database
+		[DONE] after editing a song in database, it needs to update the lyrics preview widget below
+		[DONE] need to store song background choices that were set using media browser
+			[DONE] make it auto-create a template, set bg on the template?
+		[DONE] generalize the filters code [e.g. filter plugin somehow, more than just text only]
+			filters are generalized, just need to integrate with UIfs
+		[FIXED] up arrow in media browser doesnt work on win32
+			canonical path in QFileInfo still usedd '/' as the dir seperator on windows, even though QDir::separator() returns "\" - grrr!
+		
+		[REJECTED] need to find a way to make the fade speed slider "snap to" increments of, say, 5%
+			can't seem to find out how
+		[DONE] fade speed slider should apply to black/clear fades as well 
+		[DONE] need to add kbd shortcuts to song list "clear" button and to the song editor "title" field
+		[FIXED] investigate cross fading on synced outputs - seems to NOT cross fade, BUT I never told it NOT to...huh...
+			after watching it, it looks like the sync-signal sets the NEW slide without cross fade, THEN it tries to cross fade to the new slide - resulting in meerly a slight dimming effect for a moment
+				which is better than nothing, but ideally it should NOT cross fade
+				but this points to a possible problem - setting the slide with no fade, then setting again with cross fade - still need to investigate
+			update:
+				seems to only do the "dim fade" (prev update) when text-only filter enabled
+				with no text-only filter, cross fades like normal
+			update:
+				it was a case of not disconnecting correctly from m_syncInst in OutputControl
+				
 		
 		[DONE] when cloning items, MUST set ID and itemname in the abstractitem::clone() method!!
 		

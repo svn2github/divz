@@ -60,6 +60,6 @@ private:
 
 
 };
-
+Q_DECLARE_METATYPE(SongSlideGroup*);
 
 #endif

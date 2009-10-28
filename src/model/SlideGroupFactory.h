@@ -14,14 +14,6 @@
 #include <QListView>
 #include <QMainWindow>
 
-class SlideGroupViewMutator
-{
-public:
-	SlideGroupViewMutator();
-	virtual ~SlideGroupViewMutator();
-	virtual QList<AbstractItem *> itemList(Output*, SlideGroup*, Slide*);
-};
-
 class QListView;
 class SlideGroupViewControl;
 
@@ -130,7 +122,7 @@ public:
 	
 	virtual SlideGroup * newSlideGroup();
 	
-	virtual SlideGroupViewMutator * newViewMutator();
+	virtual QList<AbstractItemListFilter*> customFiltersFor(OutputInstance *instace = 0);
 	virtual SlideGroupViewControl * newViewControl();
 	virtual AbstractSlideGroupEditor   * newEditor();
 	

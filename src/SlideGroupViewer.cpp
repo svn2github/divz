@@ -179,6 +179,9 @@ Slide * SlideGroupViewer::applySlideFilters(Slide * sourceSlide)
 			// if mutated != originalItem, that means that the filter returned a clone()'ed item with changes,
 			// therefore, allow the slide to take ownership and delete the mutated item when slide is discared
 			// (in the slideDiscarded() slot)
+			// However, if the muted is the SAME as the sourceItem, we DONT want the slide deleting the sourceItem,
+			// because the sourceItem comes straight from the sourceSlide, which still has to exist long after
+			// this slide goes off-screen.
 			slide->addItem(mutated,mutated != sourceItem);
 			
 			// determine max zvalue for use in rebasing overlay items
@@ -401,13 +404,6 @@ Slide * SlideGroupViewer::applySlideFilters(Slide * sourceSlide)
 			slide->removeItem(originalBg);
 	}
 	
-	// not needed, because SlideTextOnlyFilter (the successor to the m_textOnlyFlag) can
-	// mutate the BackgroundItem in its mutate() method, above
-// 	if(m_textOnlyFilter)
-// 	{
-// 		dynamic_cast<AbstractVisualItem*>(slide->background())->setFillBrush(QBrush(Qt::black));
-// 	}
-
 	// nitch case - not sure if it will ever get hit (why would the slide NOT have a background by now?)
 	// but if it doesn't, we still should generate a background and pass it thru the filters
 	if(!originalBg)

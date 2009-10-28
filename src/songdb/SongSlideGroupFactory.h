@@ -2,14 +2,25 @@
 #define SONGSLIDEGROUPFACTORY_H
 
 #include "model/SlideGroupFactory.h"
+#include "model/AbstractItemListFilter.h"
 
-class SongSlideGroupViewMutator : public SlideGroupViewMutator
+class SongFoldbackTextFilter : public AbstractItemListFilter
 {
+private:
+	SongFoldbackTextFilter();
+	static SongFoldbackTextFilter * m_staticInstance;
+	
 public:
-	SongSlideGroupViewMutator();
-	~SongSlideGroupViewMutator();
-	virtual QList<AbstractItem *> itemList(Output*, SlideGroup*, Slide*);
+	static SongFoldbackTextFilter * instance() { return m_staticInstance; }
+	
+	QString filterName() const { return "Song Foldback Text"; }
+	QString filterDescription() const { return "Adds in guitar chords and other rear-screen text, as well as the next passage preview on the last line."; }
+	
+	bool approve(AbstractItem *item);
+	AbstractItem * mutate(const AbstractItem*);
+	bool isMandatoryFor(OutputInstance * instance = 0);
 };
+
 
 class SongSlideGroupViewControl : public SlideGroupViewControl
 {
@@ -46,7 +57,7 @@ public:
 	
 	SlideGroup * newSlideGroup();
 	
-	SlideGroupViewMutator * newViewMutator();
+	QList<AbstractItemListFilter*> customFiltersFor(OutputInstance *instace = 0);
 	SlideGroupViewControl * newViewControl();
 	AbstractSlideGroupEditor   * newEditor();
 	

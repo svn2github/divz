@@ -375,7 +375,15 @@ void SongSlideGroup::textToSlides(SongTextFilter filter)
 
 		htmlStr = lastGoodHtml;
 		text->setText(htmlStr);
-
+		
+		// these two dynamic properties are used in the SongFoldbackTextFilter to 
+		// reference back to this slide group, extract original text, and mutate
+		// it for the foldback display
+		QVariant slideGroupVar;
+		slideGroupVar.setValue(this);
+		text->setProperty("SongSlideGroup",  slideGroupVar);
+		text->setProperty("SongSlideNumber", slideNbr);
+			
 		// Finalize setup
 		if(!textboxFromTemplate)
 		{

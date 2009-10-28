@@ -11,16 +11,6 @@
 #include <QLabel>
 #include <assert.h>
 
-/** SlideGroupViewMutator:: **/
-
-SlideGroupViewMutator::SlideGroupViewMutator() {}
-SlideGroupViewMutator::~SlideGroupViewMutator() {}
-QList<AbstractItem *> SlideGroupViewMutator::itemList(Output*, SlideGroup*, Slide*s)
-{
-	return s->itemList();
-}
-
-
 /** SlideGroupViewControlListView:: **/
 /* We reimplement QListView's keyPressEvent to detect
   selection changes on key press events in QListView::ListMode.
@@ -480,17 +470,17 @@ SlideGroupFactory::~SlideGroupFactory()
 		m_scene = 0;
 	}
 }
+
+QList<AbstractItemListFilter*> SlideGroupFactory::customFiltersFor(OutputInstance *instace)
+{
+	return QList<AbstractItemListFilter*>();
+}
 	
 SlideGroup * SlideGroupFactory::newSlideGroup()
 {
 	return new SlideGroup();
 }
 	
-SlideGroupViewMutator * SlideGroupFactory::newViewMutator()
-{
-	return new SlideGroupViewMutator();
-}
-
 SlideGroupViewControl * SlideGroupFactory::newViewControl()
 {
 	return new SlideGroupViewControl();

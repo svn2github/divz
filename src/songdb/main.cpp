@@ -8,10 +8,24 @@
 #include "SongRecord.h"
 #include "SongRecordListModel.h"
 
+ Q_DECLARE_METATYPE(SongRecord*);
+
 int main(int argc, char **argv)
 {
 	//QApplication app(argc, argv);		
-	QCoreApplication app(argc, argv);		
+	QCoreApplication app(argc, argv);
+			
+			
+	SongRecord * s = new SongRecord();
+	s->setTitle("test");
+	
+	//qRegisterMetaType<SongRecord*>("SongRecord");
+	
+	QVariant v;
+	v.setValue(s);// = QVariant::fromValue(s);
+	 
+	SongRecord * x = v.value<SongRecord*>();
+	qDebug()<<"title:"<<x->title();
 // 	QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
 // 	//db.setHostName("bigblue");
 // 	db.setDatabaseName("songs.db");
@@ -38,7 +52,7 @@ int main(int argc, char **argv)
 // 	else
 // 		qDebug("Song # 388 does NOT exist");*/
 // 	
-	SongRecordListModel::instance()->filter("test");
+	//SongRecordListModel::instance()->filter("test");
 /*	
 	if(s && s->songId())
 		SongRecord::deleteSong(s);

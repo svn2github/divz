@@ -80,7 +80,7 @@ QPixmap SongSlideGroupListModel::generatePixmap(Slide *slide)
 		static QRegExp excludeLineRegExp(
 				//filter == Standard ? "^\\s*(Verse|Chorus|Tag|Bridge|End(ing)?|Intro(duction)|B:|R:|C:|T:|G:)?)(\\s*\\(.*\\))?\\s*$" :
 				//filter == Standard  ? 
-				"^\\s*(Verse|Chorus|Tag|Bridge|End(ing)?|Intro(duction)?|B:|R:|C:|T:|G:)(\\s+\\d+)?(\\s*\\(.*\\).*)?\\s*$"
+				"^\\s*(Verse|Chorus|Tag|Bridge|End(ing)?|Intro(duction)?|B:|R:|C:|T:|G:|\\|)(\\s+\\d+)?(\\s*\\(.*\\).*)?\\s*$"
 				//filter == AllowRear ? "^\\s*(Verse|Chorus|Tag|Bridge|End(ing)?|Intro(duction)?)(\\s+\\d+)?(\\s*\\(.*\\))?\\s*$" :
 				//"",
 				,
