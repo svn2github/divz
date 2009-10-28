@@ -18,6 +18,7 @@
 #include <QImageReader>
 
 #include "qvideo/QVideoProvider.h"
+#include "MediaBrowser.h"
 
 #define DEBUG_BACKGROUNDCONTENT 0
 
@@ -133,6 +134,13 @@ void BackgroundContent::syncFromModelItem(AbstractVisualItem *model)
 
 void BackgroundContent::setImageFile(const QString &file)
 {
+	if(sceneContextHint() == MyGraphicsScene::Preview)
+	{
+		setPixmap(MediaBrowser::iconForImage(file,MEDIABROWSER_LIST_ICON_SIZE));
+		m_fileLoaded = true;
+		return;
+	}
+			
 	// JPEGs, especially large ones (e.g. file on disk is > 2MB, etc) take a long time to load, decode, and convert to pixmap.
 	// (Long by UI standards anyway, e.g. > .2sec). So, we optimize away extreneous loadings by not reloading if the file & mtime
 	// has not changed. If we're a new item, we also check the global pixmap cache for an already-loaded copy of this image, 

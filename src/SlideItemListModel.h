@@ -8,8 +8,8 @@
 #include <QRect>
 #include <QSize>
 
-#include "MyGraphicsScene.h"
-#include "model/AbstractItem.h"
+class MyGraphicsScene;
+class AbstractItem;
 
 #include <math.h>
 

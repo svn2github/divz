@@ -30,6 +30,11 @@ AbstractContent * TextBoxItem::createDelegate(QGraphicsScene*scene,QGraphicsItem
 	return textContent;
 }
 
+void TextBoxItem::warmVisualCache()
+{
+ 	TextBoxContent::warmVisualCache(this);
+}
+
 void TextBoxItem::toXml(QDomElement & pe) const
 {
 	TextItem::toXml(pe);

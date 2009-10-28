@@ -55,6 +55,9 @@
 #include "MainWindow.h"
 #include "AppSettings.h"
 #include "items/TextBoxContent.h"
+#include "model/Document.h"
+#include "model/SlideGroupFactory.h"
+#include "SlideGroupListModel.h"
 
 
 
@@ -63,11 +66,9 @@
 /*#include "items/PictureContent.h"
 #include "items/PictureConfig.h"*/
 #include "items/TextContent.h"
-#include "items/TextConfig.h"
 // #include "items/WebContentSelectorItem.h"
 // #include "items/WebcamContent.h"
 #include "items/TextContent.h"
-#include "items/TextConfig.h"
 #include "items/TextBoxConfig.h"
 #include "items/TextBoxContent.h"
 #include "items/VideoFileContent.h"
@@ -317,7 +318,8 @@ SlideEditorWindow::SlideEditorWindow(SlideGroup *group, QWidget * parent)
 	{
 		if(QFile("test.xml").exists())
 		{
-			m_doc.load("test.xml");
+			m_doc = new Document();
+			m_doc->load("test.xml");
 			//r.readSlide(m_slide);
 			
 			qDebug("Loaded test.xml");
@@ -328,11 +330,11 @@ SlideEditorWindow::SlideEditorWindow(SlideGroup *group, QWidget * parent)
 			Slide * slide = new Slide();
 			SlideGroup *g = new SlideGroup();
 			g->addSlide(slide);
-			m_doc.addGroup(g);
+			m_doc->addGroup(g);
 			m_scene->setSlide(slide);
 		}
 		
-		QList<SlideGroup*> glist = m_doc.groupList();
+		QList<SlideGroup*> glist = m_doc->groupList();
 		if(glist.size() >2)
 		{
 			SlideGroup *g = glist[0];
@@ -359,7 +361,13 @@ SlideEditorWindow::SlideEditorWindow(SlideGroup *group, QWidget * parent)
 SlideEditorWindow::~SlideEditorWindow()
 {
  	if(DEBUG_MODE)
- 		m_doc.save("test.xml");
+ 	{
+ 		if(m_doc)
+ 		{	
+ 			m_doc->save("test.xml");
+ 			delete m_doc;
+ 		}
+ 	}
 	
 	QSettings settings;
 	settings.setValue("slideeditor/size",size());
@@ -989,6 +997,7 @@ void SlideEditorWindow::setupSlideList()
 	
 	m_slideModel = new SlideGroupListModel();
 	m_slideListView->setModel(m_slideModel);
+	connect(m_slideModel, SIGNAL(repaintList()), this, SLOT(repaintSlideList()));
 	connect(m_slideModel, SIGNAL(slidesDropped(QList<Slide*>)), this, SLOT(slidesDropped(QList<Slide*>)));
 
 	if(m)
@@ -1005,6 +1014,12 @@ void SlideEditorWindow::setupSlideList()
 	//viewMenu->addAction(dock->toggleViewAction());
 }
 
+void SlideEditorWindow::repaintSlideList()
+{
+	m_slideListView->clearFocus();
+	m_slideListView->setFocus();
+	m_slideListView->update();
+}
 
 void SlideEditorWindow::setupItemList()
 {

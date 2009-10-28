@@ -2,7 +2,7 @@
 #define SLIDEGROUPSETTINGSDIALOG_H
 
 #include <QtGui/QDialog>
-#include "model/SlideGroup.h"
+class SlideGroup;
 
 namespace Ui {
     class SlideGroupSettingsDialog;

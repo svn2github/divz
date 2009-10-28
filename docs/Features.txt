@@ -131,10 +131,11 @@ Revised Task list for Release 1.0, 10/18/09:
 		= Misc = 
 			[MAYBE] Add color theme support vis a vi powerpoint
 			
-			need to pre-render all text boxes
+			[STARTED] need to pre-render all text boxes
+				does it in song groups
 			need video preview widget 
-			need to be able to preview slides (next/prev button)
-				move preview dock to under the group list - simple slide list model + preview window
+			[DONE] need to be able to preview slides (next/prev button)
+				[DONE] move preview dock to under the group list - simple slide list model + preview window
 			
 			port over the song database conversion code to windows
 			
@@ -534,9 +535,17 @@ Revised Task list for Release 1.0, 10/18/09:
 		[LATER] Video Capture (started impl, but again, performance is terrible. That may be due to the FormatOpts specified, or in ffmpeg, or the capture hardware - need to trace - later!)
 	
 	- Bugs:
-		when going from song item live to regular slide live, the text-only filter checkbox doesnt get re-checked
+		video icons dont render the actual icon after loading if not already in disk cache
+		
+		overlay enable crashes if no group live
+	
+		[FIXED] deleting last group in doc crashes
+			patched documentlistmodel::internalsetup to not emit datachanged if slist is empty
+		[FIXED] when going from song item live to regular slide live, the text-only filter checkbox doesnt get re-checked
+			framework had to be updated to support this functionality
 		
 		when auto-size text is enabled on foldback, foldback doesnt display correct verse all the time - sometimes displays a different verse that what it should be showing
+			cant repeat yet
 
 		need to fix the hackish method of setting slide groups on synced outputs in MainWindow - needs to be cleaner!
 		
@@ -550,7 +559,10 @@ Revised Task list for Release 1.0, 10/18/09:
 		deleting m_doc in mainwindow::openfile causes segflt when golive with next group - why??
 				
 		cross fade on songs with video bg seems to lag
-		clicking "next" and auto-going to first slide of next group when from normal slide to song, segfault 
+		
+		[FIXED] clicking "next" and auto-going to first slide of next group when from normal slide to song, segfault 
+				patched SlideGroupFactory / ViewControl / nextSlide to only toggleTimerState to stopped if timer is running
+				
 		editor undo/redo framework doesnt pickup slide property changes
 		slide auto change time doesnt seem to save when using guess button
 		

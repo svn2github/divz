@@ -3,6 +3,7 @@
 #include "model/Output.h"
 #include "AppSettings.h"
 #include "MainWindow.h"
+#include "model/Document.h"
 
 #include <QDesktopWidget>
 #include <QDebug>

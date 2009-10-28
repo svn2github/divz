@@ -13,6 +13,7 @@
 #include "model/Document.h"
 #include "model/SlideGroup.h"
 #include "model/Slide.h"
+#include "model/Output.h"
 
 #include "MainWindow.h"
 #include "OutputInstance.h"
@@ -415,7 +416,11 @@ void OutputControl::setTextOnlyFilterEnabled(bool flag)
 	//if(m_textFilterBtn->isChecked() != flag)
 	//	m_textFilterBtn->setChecked(flag);
 	
-	int idx = m_customFilterList.indexOf(SlideTextOnlyFilter::instance());
+	int idx;
+	for(int i=0;i<m_customFilterList.size();i++)
+		if(m_customFilterList[i]->inherits("SlideTextOnlyFilter"))
+			idx = i, i = m_customFilterList.size();
+			//indexOf(SlideTextOnlyFilter::instance());
 	QListWidgetItem * item = m_filterList->item(idx);
 	
 	if(item)
@@ -516,15 +521,20 @@ void OutputControl::setOutputInstance(OutputInstance * inst)
 	// HACK need to default to app settings
 	m_fadeSlider->setValue(25);
 	
-	if(inst->output()->tags().toLower().indexOf("foldback") >= 0 ||
-	   inst->output()->name().toLower().indexOf("foldback") >= 0)
+	setupFoldbackSettings();
+		
+}
+
+void OutputControl::setupFoldbackSettings()
+{
+	if(m_inst->output()->tags().toLower().indexOf("foldback") >= 0 ||
+	   m_inst->output()->name().toLower().indexOf("foldback") >= 0)
 	{
 		setIsOutputSynced(true);
 		setTextOnlyFilterEnabled(true);
 		setTextResizeEnabled(true);
 		m_fadeSlider->setValue(0);
 	}
-		
 }
 
 void OutputControl::slideChanged(int)
@@ -560,6 +570,9 @@ void OutputControl::setViewControl(SlideGroupViewControl *ctrl)
 	
 	m_blackButton->setEnabled(true);
 	m_clearButton->setEnabled(true);
+	
+	// need to re-apply fade speed
+	m_fadeSlider->setValue(m_fadeSlider->value());
 }
 
 void OutputControl::setCustomFilters(AbstractItemFilterList list)
@@ -567,10 +580,12 @@ void OutputControl::setCustomFilters(AbstractItemFilterList list)
 	AbstractItemFilterList selected;
 	for(int i=0; i<m_customFilterList.size(); i++)
 	{
-		QListWidgetItem * item =m_filterList->item(i);
+		QListWidgetItem * item = m_filterList->item(i);
 		if(item && item->checkState() == Qt::Checked)
 			selected.append(m_customFilterList[i]);
 	}
+	
+	m_inst->removeAllFilters();
 	
 	m_customFilterList = list;
 	
@@ -584,13 +599,11 @@ void OutputControl::setCustomFilters(AbstractItemFilterList list)
 		
 		if(!derivitiveFound)
 			m_customFilterList.append(filter);
-		else
-			if(m_inst && m_inst->hasFilter(filter))
-				m_inst->removeFilter(filter);
-
 	}
 	
 	setupFilterList(selected);
+	
+	setupFoldbackSettings();
 }
 
 void OutputControl::setCrossFadeSpeed(int value)
@@ -600,7 +613,7 @@ void OutputControl::setCrossFadeSpeed(int value)
 	if(speed<1)
 		speed = 1;
 	double quality = 0.05*speed; // "standard" quality is 10 frames every 250 ms
-	double qualityMax   = speed<  500 ? 20 :
+	double qualityMax = speed<  500 ? 20 :
 			    speed< 1000 ? 30 :
 			    speed< 2000 ? 40 :
 			    speed<=3000 ? 50 : 30;

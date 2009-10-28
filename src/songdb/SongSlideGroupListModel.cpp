@@ -2,6 +2,7 @@
 #include "SongSlideGroup.h"
 #include <QAbstractTextDocumentLayout>
 #include "MainWindow.h"
+#include "model/Slide.h"
 //#include "3rdparty/md5/md5.h"
 #include <QPixmapCache>
 

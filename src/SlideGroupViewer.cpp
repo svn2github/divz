@@ -17,6 +17,10 @@
 #include "AppSettings.h"
 #include "MediaBrowser.h"
 
+#include "MyGraphicsScene.h"
+
+#include "model/Slide.h"
+#include "model/SlideGroup.h"
 #include "model/TextBoxItem.h"
 #include "model/BackgroundItem.h"
 
@@ -728,6 +732,12 @@ void SlideGroupViewer::addFilter(AbstractItemFilter * filter)
 void SlideGroupViewer::removeFilter(AbstractItemFilter *filter)
 {
 	m_slideFilters.removeAll(filter);
+	applySlideFilters();
+}
+
+void SlideGroupViewer::removeAllFilters()
+{
+	m_slideFilters.clear();
 	applySlideFilters();
 }
 

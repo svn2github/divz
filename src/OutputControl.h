@@ -75,6 +75,8 @@ protected:
 	void setupSyncWidgetUI();
 	void setupFilterList(AbstractItemFilterList selected = AbstractItemFilterList());
 	
+	void setupFoldbackSettings();
+	
 	QLabel			* m_overlayPreviewLabel;
 	QStackedWidget		* m_stack;
 	OutputInstance		* m_inst;

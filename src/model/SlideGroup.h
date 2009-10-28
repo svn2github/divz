@@ -1,9 +1,9 @@
 #ifndef SLIDEGROUP_H
 #define SLIDEGROUP_H
 
-#include "Slide.h"
-
 #include <QList>
+class Slide;
+#include "AbstractVisualItem.h"
 
 class SlideGroup : public QObject
 {

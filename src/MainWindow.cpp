@@ -16,6 +16,15 @@
 #include "AppSettingsDialog.h"
 #include "DocumentSettingsDialog.h"
 #include "SlideGroupSettingsDialog.h"
+#include "model/Output.h"
+#include "model/Slide.h"
+
+#include "model/Document.h"
+#include "DocumentListModel.h"
+#include "SlideEditorWindow.h"
+#include "SlideGroupViewer.h"
+#include "OutputViewer.h"
+#include "OutputSetupDialog.h"
 
 #include "model/SlideGroupFactory.h"
 
@@ -141,9 +150,9 @@ MainWindow::MainWindow(QWidget *parent) :
 
 	//connect(m_groupView,SIGNAL(activated(const QModelIndex &)),this,SLOT(groupSetLive(const QModelIndex &)));
 	
-	m_previewWidget = new SlideGroupViewer(m_ui->dwPreview);
-	m_previewWidget->setSceneContextHint(MyGraphicsScene::Preview);
-	m_ui->dwPreview->setWidget(m_previewWidget);
+// 	m_previewWidget = new SlideGroupViewer(m_ui->dwPreview);
+// 	m_previewWidget->setSceneContextHint(MyGraphicsScene::Preview);
+// 	m_ui->dwPreview->setWidget(m_previewWidget);
 	
 	
 	
@@ -189,7 +198,8 @@ void MainWindow::loadWindowState()
 		move(p);
 	restoreState(settings.value("mainwindow/state").toByteArray());
 	m_splitter->restoreState(settings.value("mainwindow/splitter_state").toByteArray());
-	//m_splitter2->restoreState(settings.value("mainwindow/splitter2_state").toByteArray());
+	m_splitter2->restoreState(settings.value("mainwindow/splitter2_state").toByteArray());
+	m_splitter3->restoreState(settings.value("mainwindow/splitter34_state").toByteArray());
 	m_songBrowser->restoreState(settings.value("mainwindow/songbrowser_state").toByteArray());
 
 }
@@ -201,14 +211,15 @@ void MainWindow::saveWindowState()
 	settings.setValue("mainwindow/pos",pos());
 	settings.setValue("mainwindow/state",saveState());
 	settings.setValue("mainwindow/splitter_state",m_splitter->saveState());
-	//settings.setValue("mainwindow/splitter2_state",m_splitter2->saveState());
+	settings.setValue("mainwindow/splitter2_state",m_splitter2->saveState());
+	settings.setValue("mainwindow/splitter34_state",m_splitter3->saveState());
 	settings.setValue("mainwindow/songbrowser_state",m_songBrowser->saveState());
 }
 
 void MainWindow::clearAllOutputs()
 {
 // 	m_liveView->clear();
-	m_previewWidget->clear();
+	//m_previewWidget->clear();
 	qDebug() << "MainWindow::clearAllOutputs: Releasing preview slides\n";
 	
 	foreach(SlideGroupViewControl *ctrl, m_viewControls)
@@ -566,6 +577,8 @@ void MainWindow::setupCentralWidget()
 	setCentralWidget(m_splitter);
 
 	// left side
+	m_splitter2 = new QSplitter(m_splitter);
+	
 	QWidget * leftBase = new QWidget(this);
 	QVBoxLayout * leftLayout = new QVBoxLayout(leftBase);
 	leftLayout->setMargin(0);
@@ -620,14 +633,35 @@ void MainWindow::setupCentralWidget()
 	connect(m_groupView,SIGNAL(clicked(const QModelIndex &)),this,SLOT(groupSelected(const QModelIndex &)));
 	connect(m_groupView,SIGNAL(doubleClicked(const QModelIndex &)),this,SLOT(groupDoubleClicked(const QModelIndex &)));
 	
+	m_splitter2->addWidget(leftBase);
 	
-	m_splitter->addWidget(leftBase);
-	
+	m_splitter3 = new QSplitter(m_splitter2);
+	m_splitter3->setOrientation(Qt::Horizontal);
 	
 	// preview widget
 	//m_previewControlBase
 	// TODO Later
-
+	
+	m_previewInstance = new OutputInstance(Output::previewInstance());
+	
+	QWidget * m_previewControlBase = new QWidget();
+	QVBoxLayout * leftLayout3 = new QVBoxLayout(m_previewControlBase);
+	leftLayout3->setMargin(0);
+	
+	m_previewControl = new SlideGroupViewControl();
+	m_previewControl->setOutputView(m_previewInstance);
+	
+	leftLayout3->addWidget(m_previewControl);
+	
+	m_splitter3->addWidget(m_previewControlBase);
+	m_splitter3->addWidget(m_previewInstance);
+	
+	m_splitter2->addWidget(m_splitter3);
+	
+	
+	m_splitter->addWidget(m_splitter2);
+	
+	
 	
 
 	// live view control on right side of splitter
@@ -848,10 +882,47 @@ void MainWindow::nextGroup()
 	m_groupView->setCurrentIndex(nextIdx);
 }
 
-void MainWindow::previewSlideGroup(SlideGroup *s)
+void MainWindow::previewSlideGroup(SlideGroup *newGroup)
 {
 	//qDebug() << "MainWindow::previewSlideGroup: Loading preview slide\n";
 	//m_previewWidget->setSlideGroup(s);
+	
+// 	SlideGroup * oldGroup = m_previewInstance->slideGroup();
+// 	
+// 	//qDebug() << "MainWindow::setLiveGroup(): newGroup->groupType():"<<newGroup->groupType()<<", SlideGroup::Generic:"<<SlideGroup::Generic;
+// 	if((oldGroup && oldGroup->groupType() != newGroup->groupType()) || newGroup->groupType() != SlideGroup::Generic)
+// 	{
+// 		SlideGroupFactory *factory = SlideGroupFactory::factoryForType(newGroup->groupType());
+// 		if(!factory)
+// 		{
+// 			//qDebug() << "MainWindow::setLiveGroup(): Factory fell thu for request, going to generic control";
+// 			factory = SlideGroupFactory::factoryForType(SlideGroup::Generic);
+// 		}
+// 		
+// 		if(factory)
+// 		{
+// 			//qDebug() << "MainWindow::setLiveGroup(): got new factory, initalizing";
+// 			if(m_previewControl)
+// 			{
+// 				m_previewControlBase->layout()->removeWidget(m_previewControl);
+// // 				delete m_previewControl;
+// // 				m_previewControl = 0;
+// 			}	
+// 			
+// 			
+// 			m_previewControl = factory->newViewControl();
+// 			m_previewControl->setOutputView(m_previewInstance);
+// 			m_previewControlBase->layout()->addWidget(m_previewControl);
+// 		}
+// 	}
+	
+	//qDebug() << "MainWindow::setLiveGroup: Loading into view control";
+	m_previewControl->setSlideGroup(newGroup);
+	//qDebug() << "MainWindow::setLiveGroup: Loading into LIVE output";
+	m_previewInstance->setSlideGroup(newGroup);
+	//qDebug() << "MainWindow::setLiveGroup: Loading into LIVE output (done)";
+	m_previewControl->setFocus(Qt::OtherFocusReason);
+				
 }
 
 void MainWindow::setLiveGroup(SlideGroup *newGroup, Slide *currentSlide)
@@ -879,7 +950,7 @@ void MainWindow::setLiveGroup(SlideGroup *newGroup, Slide *currentSlide)
 			{
 				qDebug() << "MainWindow::setLiveGroup: preping synced output:"<<output->name();
 				alreadyConsumed << output->id();
-				
+			
 				SlideGroupViewControl *ctrl = viewControl(output->id());
 				
 				SlideGroup * oldGroup = inst->slideGroup();

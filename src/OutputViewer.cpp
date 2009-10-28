@@ -3,6 +3,10 @@
 #include "MainWindow.h"
 #include "AppSettings.h"
 
+#include "MyGraphicsScene.h"
+#include "model/SlideGroup.h"
+#include "SlideGroupViewer.h"
+
 #include <QVBoxLayout>
 #ifndef QT_NO_OPENGL
 # include <QtOpenGL/QGLWidget>

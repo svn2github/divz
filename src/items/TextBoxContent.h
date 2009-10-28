@@ -7,7 +7,33 @@ class QTextDocument;
 #include <QtGui/QTextFragment>
 #include <QPointF>
 #include <QPainterPath>
+#include <QThread>
 
+class TextBoxWarmingThread : public QThread
+{
+	Q_OBJECT
+public:
+	TextBoxWarmingThread(AbstractVisualItem*);
+	virtual ~TextBoxWarmingThread() {};
+	void run();
+signals:
+	void renderDone(QImage *);
+private:
+	AbstractVisualItem * m_model;
+};
+
+class TextBoxWarmingThreadManager : public QObject
+{
+	Q_OBJECT
+public:
+	TextBoxWarmingThreadManager(AbstractVisualItem*);
+private slots:
+	void renderDone(QImage*);
+private:
+	AbstractVisualItem * m_model;
+	TextBoxWarmingThread * m_thread;
+};
+	
 
 /// \brief TODO
 class TextBoxContent : public AbstractContent
@@ -23,7 +49,7 @@ class TextBoxContent : public AbstractContent
         QString toHtml();
         void setHtml(const QString & htmlCode);
         
-        
+	static void warmVisualCache(AbstractVisualItem*);
 
 //         Qt::Alignment xTextAlign() const { return m_xTextAlign; }
 // 	Qt::Alignment yTextAlign() const { return m_yTextAlign; }

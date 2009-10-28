@@ -21,8 +21,15 @@ class Output : public QObject
 	Q_PROPERTY(int port READ port WRITE setPort);
 	Q_PROPERTY(bool allowMultiple READ allowMultiple WRITE setAllowMultiple);
 	Q_PROPERTY(QString tags READ tags WRITE setTags);
+	
+	static Output * m_staticPreviewInstance;
 public:
+	static Output * previewInstance() { return m_staticPreviewInstance; }
+	
+	typedef enum OutputType { Screen, Custom, Network, Preview };
+
 	Output();
+	Output(OutputType type);
 
 	bool isSystem() { return m_isSystem; }
 	void setIsSystem(bool);
@@ -33,7 +40,6 @@ public:
 	QString name() { return m_name; }
 	void setName(QString);
 
-	typedef enum OutputType { Screen, Custom, Network };
 	OutputType outputType() { return m_outputType; }
 	void setOutputType(OutputType);
 

@@ -20,6 +20,7 @@
 #include <QDebug>
 #include <QPixmapCache>
 #include "model/BackgroundItem.h"
+#include "model/AbstractVisualItem.h"
 
 
 #if QT_VERSION >= 0x040600
@@ -516,7 +517,12 @@ void AbstractContent::syncFromModelItem(AbstractVisualItem *model)
 
 QString AbstractContent::cacheKey()
 {
-        return QString().sprintf("%p",static_cast<void*>(modelItem()));
+        return cacheKey(modelItem());
+}
+
+QString AbstractContent::cacheKey(AbstractVisualItem *model)
+{
+        return QString().sprintf("%p",static_cast<void*>(model));
 }
 
 void AbstractContent::dirtyCache()

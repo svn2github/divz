@@ -1,7 +1,7 @@
 #ifndef DOCUMENT_H
 #define DOCUMENT_H
 
-#include "SlideGroup.h"
+#include "model/SlideGroup.h"
 
 #include <QList>
 

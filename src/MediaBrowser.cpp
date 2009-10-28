@@ -15,12 +15,13 @@
 #include <QComboBox>
 #include <QPixmapCache>
 #include <QFileIconProvider>
+#include <QDir>
 
 #include "qvideo/QVideoProvider.h"
 #include "3rdparty/md5/md5.h"
 #include "AppSettings.h"
 
-#define LIST_ICON_SIZE QSize(48,48)
+#define CACHE_DIR "dviz-imageiconcache"
 
 QRegExp MediaBrowser::videoRegexp = QRegExp("(wmv|mpeg|mpg|avi|wmv|flv|mov|mp4|m4a|3gp|3g2|mj2|mjpeg|ipod|m4v|gsm|gif|swf|dv|dvd|asf|mtv|roq|aac|ac3|aiff|alaw|iif)",Qt::CaseInsensitive);
 QRegExp MediaBrowser::imageRegexp = QRegExp("(png|jpg|bmp|svg|xpm)",Qt::CaseInsensitive);
@@ -28,7 +29,51 @@ QRegExp MediaBrowser::imageRegexp = QRegExp("(png|jpg|bmp|svg|xpm)",Qt::CaseInse
 bool MediaBrowser::isVideo(const QString &extension) { return extension.indexOf(videoRegexp) == 0; }
 bool MediaBrowser::isImage(const QString &extension) { return extension.indexOf(imageRegexp) == 0; }
 
+QPixmap MediaBrowser::iconForImage(const QString & file, const QSize & size)
+{
+	QPixmap cache;
+	QDir path(QString("%1/%2").arg(QDir::tempPath()).arg(CACHE_DIR));
+	if(!path.exists())
+		QDir(QDir::tempPath()).mkdir(CACHE_DIR);
+		
+	QString cacheFile = QString("%1/%2/%3-%4x%5").arg(QDir::tempPath()).arg(CACHE_DIR).arg(MD5::md5sum(file)).arg(size.width()).arg(size.height());
 	
+	//qDebug() << "MediaBrowser::iconForImage: file:"<<file<<", size:"<<size<<", cacheFile: "<<cacheFile;
+	if(!QPixmapCache::find(cacheFile,cache))
+	{
+		if(QFile(cacheFile).exists())
+		{
+			cache.load(cacheFile);
+			QPixmapCache::insert(cacheFile,cache);
+			//qDebug() << "MediaBrowser::iconForImage: file:"<<file<<", size:"<<size<<": hit DISK";
+		}
+		else
+		{
+			QPixmap orig(file);
+			if(orig.isNull())
+			{
+				cache = QPixmap();
+				QPixmapCache::insert(cacheFile,cache);
+				//qDebug() << "MediaBrowser::iconForImage: file:"<<file<<", size:"<<size<<": load INVALID";
+			}
+			else
+			{
+				cache = orig.scaled(size,Qt::IgnoreAspectRatio,Qt::SmoothTransformation);
+				cache.save(cacheFile,"PNG");
+				//qDebug() << "MyQFileIconProvider::icon(): image file: caching to:"<<cacheFile<<" for "<<file;
+				QPixmapCache::insert(cacheFile,cache);
+				//qDebug() << "MediaBrowser::iconForImage: file:"<<file<<", size:"<<size<<": load GOOD";
+				//QApplication::processEvents();
+			}
+		}
+	}
+	else
+	{
+		qDebug() << "MediaBrowser::iconForImage: file:"<<file<<", size:"<<size<<": hit RAM";
+	}
+	return cache;
+}
+
 class MyQFileIconProvider : public QFileIconProvider
 {
 public:
@@ -40,44 +85,14 @@ public:
 		if(MediaBrowser::isVideo(info.suffix()))
 		{
 			//qDebug() << "MyQFileIconProvider::icon(): video file:"<<info.absoluteFilePath();
-			//return QVideoProvider::iconForFile(info.absoluteFilePath());
-			return QFileIconProvider::icon(info);
+			return QVideoProvider::iconForFile(info.absoluteFilePath());
+			//return QFileIconProvider::icon(info);
 		}
 		else
 		if(MediaBrowser::isImage(info.suffix()))
 		{
 			//qDebug() << "MyQFileIconProvider::icon(): image file:"<<info.absoluteFilePath();
-			QString file = info.absoluteFilePath();
-			QPixmap cache;
-			QString cacheFile = QString("%1/imageiconcache_%2").arg(QDir::tempPath()).arg(MD5::md5sum(file));
-				
-			if(!QPixmapCache::find(cacheFile,cache))
-			{
-				if(QFile(cacheFile).exists())
-				{
-					cache.load(cacheFile);
-					QPixmapCache::insert(cacheFile,cache);
-				}
-				else
-				{
-					QPixmap orig(file);
-					if(orig.isNull())
-					{
-						cache = QPixmap();
-						QPixmapCache::insert(cacheFile,cache);
-					}
-					else
-					{
-						cache = orig.scaled(LIST_ICON_SIZE,Qt::IgnoreAspectRatio,Qt::SmoothTransformation);
-						cache.save(cacheFile,"PNG");
-						//qDebug() << "MyQFileIconProvider::icon(): image file: caching to:"<<cacheFile<<" for "<<file;
-						QPixmapCache::insert(cacheFile,cache);
-						
-						//QApplication::processEvents();
-					}
-				}
-			}
-			return cache;
+			return MediaBrowser::iconForImage(info.absoluteFilePath(),MEDIABROWSER_LIST_ICON_SIZE);
 		}
 		else
 		{
@@ -156,7 +171,7 @@ void MediaBrowser::setupUI()
 	// Now for the list itself
 	m_listView = new QListView(this);
 	m_listView->setAlternatingRowColors(true);
-	m_listView->setIconSize(LIST_ICON_SIZE);
+	m_listView->setIconSize(MEDIABROWSER_LIST_ICON_SIZE);
 	
 	// below doesnt seem to be enough
 	//m_listView->setEditTriggers(QAbstractItemView::SelectedClicked | QAbstractItemView::EditKeyPressed);

@@ -2,6 +2,9 @@
 
 #include <assert.h>
 
+#include "Slide.h"
+
+
 SlideGroup::SlideGroup() :
 	m_groupNumber(-1)
 	, m_groupId(1)

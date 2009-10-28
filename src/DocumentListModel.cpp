@@ -6,10 +6,15 @@
 #endif
 
 
+#include "model/SlideGroupFactory.h"
 #include "model/SlideGroup.h"
 #include "model/Slide.h"
-#include "model/SlideGroupFactory.h"
+#include "model/Document.h"
+
+#include "MyGraphicsScene.h"
 #include "MainWindow.h"
+
+
 
 #include <QPixmap>
 #include <QPixmapCache>
@@ -195,12 +200,12 @@ void DocumentListModel::internalSetup()
 	qSort(glist.begin(), glist.end(), group_num_compare);
 	m_sortedGroups = glist;
 	
-	//qDebug() << "DocumentListModel::internalSetup(): glist.size(): "<<glist.size();
-
+	if(m_sortedGroups.isEmpty())
+		return;
+	
 	QModelIndex top    = indexForGroup(m_sortedGroups.first()),
 		    bottom = indexForGroup(m_sortedGroups.last());
-	//qDebug() << "DocumentListModel::internalSetup: top:"<<top<<", bottom:"<<bottom;
-
+	
 	dataChanged(top,bottom);
 }
 

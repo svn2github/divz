@@ -1,8 +1,6 @@
 #ifndef MYGRAPHICSSCENE_H
 #define MYGRAPHICSSCENE_H
 
-//#include "items/TextContent.h"
-
 #include <QGraphicsScene>
 #include <QDataStream>
 #include <QPainter>
@@ -36,6 +34,7 @@ class MyGraphicsScene : public QGraphicsScene
                 {
                 	Editor,
                 	Preview,
+                	BackgroundPreview,
                 	Monitor,
                 	Live,
                 };
@@ -48,30 +47,29 @@ class MyGraphicsScene : public QGraphicsScene
  		void setSlide(Slide *, SlideTransition t = None, int speed = -1, int quality = -1);
  		Slide * slide() { return m_slide; }
 		
-// 		TextContent * addTextContent();
+		bool isDataLoadComplete();
 		
 		AbstractVisualItem * newTextItem(QString text = "Lorem Ipsum");
-                AbstractVisualItem * newBoxItem();
-                AbstractVisualItem * newVideoItem();
-                AbstractVisualItem * newImageItem();
-
-                void clear();
-
-                ContextHint contextHint() { return m_contextHint; }
-                void setContextHint(ContextHint);
-
-                void setSceneRect(const QRectF &);
-
-                AbstractContent * createVisualDelegate(AbstractItem *item, QGraphicsItem * parent =0);
-                void removeVisualDelegate(AbstractItem *item);
-                AbstractContent * findVisualDelegate(AbstractItem *item);
-                QList<AbstractItem *> copyBuffer();
-                
-                QList<AbstractContent *> abstractContent() { return m_content; }
+		AbstractVisualItem * newBoxItem();
+		AbstractVisualItem * newVideoItem();
+		AbstractVisualItem * newImageItem();
 		
-                
-                void configureContent(AbstractContent *content);
+		void clear();
 		
+		ContextHint contextHint() { return m_contextHint; }
+		void setContextHint(ContextHint);
+		
+		void setSceneRect(const QRectF &);
+		
+		AbstractContent * createVisualDelegate(AbstractItem *item, QGraphicsItem * parent =0);
+		void removeVisualDelegate(AbstractItem *item);
+		AbstractContent * findVisualDelegate(AbstractItem *item);
+		QList<AbstractItem *> copyBuffer();
+		
+		QList<AbstractContent *> abstractContent() { return m_content; }
+		
+		void configureContent(AbstractContent *content);
+	
 	signals:
 		void showPropertiesWidget(QWidget * widget);
 		void sceneRectChanged(const QRectF &);

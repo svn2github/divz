@@ -2,7 +2,7 @@
 #define OUTPUTSETUPDIALOG_H
 
 #include <QtGui/QDialog>
-#include "model/Output.h"
+class Output;
 
 namespace Ui {
     class OutputSetupDialog;

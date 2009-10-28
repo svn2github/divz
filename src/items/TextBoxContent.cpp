@@ -19,6 +19,7 @@
 #include <QTimer>
 #include <QPainterPathStroker>
 #include "items/CornerItem.h"
+#include "model/TextBoxItem.h"
 
 #include <QPixmapCache>
 #include "ImageFilters.h"
@@ -293,6 +294,162 @@ void TextBoxContent::mouseDoubleClickEvent(QGraphicsSceneMouseEvent * event)
 	QGraphicsItem::mouseDoubleClickEvent(event);
 }
 
+void TextBoxContent::warmVisualCache(AbstractVisualItem *model)
+{
+	new TextBoxWarmingThreadManager(model);
+}
+
+TextBoxWarmingThreadManager::TextBoxWarmingThreadManager(AbstractVisualItem *model) : m_model(model)
+{
+	QPixmap cache;
+
+	if(!QPixmapCache::find(AbstractContent::cacheKey(model),cache))
+	{
+		m_thread = new TextBoxWarmingThread(model);
+		connect(m_thread, SIGNAL(renderDone(QImage*)), this, SLOT(renderDone(QImage*)));
+		m_thread->start();
+	}
+	else
+	{
+		deleteLater();
+	}
+}
+
+void TextBoxWarmingThreadManager::renderDone(QImage *image)
+{
+	QPixmapCache::insert(AbstractContent::cacheKey(m_model), QPixmap::fromImage(*image));
+	deleteLater();
+}
+
+TextBoxWarmingThread::TextBoxWarmingThread(AbstractVisualItem *model) : m_model(model) {}
+void TextBoxWarmingThread::run()
+{
+	
+	TextBoxItem * model = dynamic_cast<TextBoxItem*>(m_model);
+	
+	qDebug()<<"TextBoxWarmingThread::run(): modelItem:"<<model->itemName()<<": Cache redraw";
+	
+			
+	QString htmlCode = model->text();
+	
+	QTextDocument doc;
+	QTextDocument shadowDoc;
+	
+	doc.setHtml(htmlCode);
+	shadowDoc.setHtml(htmlCode);
+	
+	int textWidth = model->contentsRect().toRect().width();
+
+	doc.setTextWidth(textWidth);
+	shadowDoc.setTextWidth(textWidth);
+
+	
+	
+	// Apply outline pen to the html
+	QTextCursor cursor(&doc);
+	cursor.select(QTextCursor::Document);
+
+	QTextCharFormat format;
+
+	QPen p(Qt::NoPen);
+	if(model && model->outlineEnabled())
+	{
+		p = model->outlinePen();
+		p.setJoinStyle(Qt::MiterJoin);
+	}
+
+	format.setTextOutline(p);
+	format.setForeground(model ? model->fillBrush() : Qt::white);
+
+	
+	cursor.mergeCharFormat(format);
+	
+	#if QT46_SHADOW_ENAB == 0
+	// Setup the shadow text formatting if enabled
+	if(model && model->shadowEnabled())
+	{
+		if(qFuzzyIsNull(model->shadowBlurRadius()))
+		{
+			QTextCursor cursor(&shadowDoc);
+			cursor.select(QTextCursor::Document);
+	
+			QTextCharFormat format;
+			format.setTextOutline(Qt::NoPen);
+			format.setForeground(model ? model->shadowBrush() : Qt::black);
+	
+			cursor.mergeCharFormat(format);
+		}
+	}
+	#endif
+	
+			
+	QSizeF shadowSize = model->shadowEnabled() ? QSizeF(model->shadowOffsetX(),model->shadowOffsetY()) : QSizeF(0,0);
+	QImage *cache = new QImage((model->contentsRect().size()+shadowSize).toSize(),QImage::Format_ARGB32_Premultiplied);
+
+	QPainter textPainter(cache);
+	textPainter.fillRect(cache->rect(),Qt::transparent);
+	
+
+	QAbstractTextDocumentLayout::PaintContext pCtx;
+
+	#if QT46_SHADOW_ENAB == 0
+	if(model->shadowEnabled())
+	{
+		if(qFuzzyIsNull(model->shadowBlurRadius()))
+		{
+			// render a "cheap" version of the shadow using the shadow text document
+			textPainter.save();
+
+			textPainter.translate(model->shadowOffsetX(),model->shadowOffsetY());
+			shadowDoc.documentLayout()->draw(&textPainter, pCtx);
+
+			textPainter.restore();
+		}
+		else
+		{
+			double radius = model->shadowBlurRadius();
+			double radiusSquared = radius*radius;
+			
+			// create temporary pixmap to hold a copy of the text
+			double blurSize = (int)(radiusSquared*2);
+			QSize shadowSize(blurSize,blurSize);
+			QImage tmpImage((model->contentsRect().size()+shadowSize).toSize(),QImage::Format_ARGB32);
+			
+			// render the text
+			QPainter tmpPainter(&tmpImage);
+			tmpPainter.fillRect(tmpImage.rect(),Qt::transparent);
+			
+			tmpPainter.save();
+			tmpPainter.translate(radiusSquared, radiusSquared);
+			doc.documentLayout()->draw(&tmpPainter, pCtx);
+			tmpPainter.restore();
+			
+			// blacken the text by applying a color to the copy using a QPainter::CompositionMode_DestinationIn operation. 
+			// This produces a homogeneously-colored pixmap.
+			QRect rect = tmpImage.rect();
+			tmpPainter.setCompositionMode(QPainter::CompositionMode_SourceIn);
+			tmpPainter.fillRect(rect, model->shadowBrush().color());
+			tmpPainter.end();
+
+			// blur the colored text
+			QImage  blurredImage   = ImageFilters::blurred(tmpImage, rect, (int)radius);
+			
+			// render the blurred text at an offset into the cache
+			textPainter.save();
+			textPainter.translate(model->shadowOffsetX() - radiusSquared,
+					model->shadowOffsetY() - radiusSquared);
+			textPainter.drawImage(0, 0, blurredImage);
+			textPainter.restore();
+		}
+	}
+	#endif
+	
+	doc.documentLayout()->draw(&textPainter, pCtx);
+	
+	textPainter.end();
+	
+	emit renderDone(cache);
+}
 
 void TextBoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget)
 {
@@ -313,6 +470,8 @@ void TextBoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * 
 		// to scale the text glyphs directly (vector scaling), rather than scaling bits 
 		// in a pixmap (bitmap scaling), producing more legible results at lower scalings
 		
+		//qDebug() << "TextBoxContent::paint: Rendering either preview or no shadow";
+		
 		QAbstractTextDocumentLayout::PaintContext pCtx;
 		
 		if(modelItem()->shadowEnabled())
@@ -330,6 +489,7 @@ void TextBoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * 
 	else
 	{
 		QPixmap cache;
+		//qDebug() << "TextBoxContent::paint: Rendering either live or with shadow";
 		
 		// The primary and only reason we cache the text rendering is inorder
 		// to paint the text and shadow as a single unit (e.g. composite the

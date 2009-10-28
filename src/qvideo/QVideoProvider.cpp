@@ -10,6 +10,10 @@
 #include <QMutex>
 #include <QMutexLocker>
 QMutex icon_mutex;
+
+#include <QDir>
+
+#define CACHE_DIR "dviz-qvideoframecache"
 	
 QMap<QString,QVideoProvider*> QVideoProvider::m_fileProviderMap;
 
@@ -136,7 +140,12 @@ QString QVideoIconGenerator::cacheFile(QVideoProvider *p)
 
 QString QVideoIconGenerator::cacheFile(const QString& canonicalFilePath)
 {
-	return QString("%1/qvideoframecache_%2").arg(QDir::tempPath()).arg(MD5::md5sum(canonicalFilePath));
+	QPixmap cache;
+	QDir path(QString("%1/%2").arg(QDir::tempPath()).arg(CACHE_DIR));
+	if(!path.exists())
+		QDir(QDir::tempPath()).mkdir(CACHE_DIR);
+	
+	return QString("%1/%2/%3").arg(QDir::tempPath()).arg(CACHE_DIR).arg(MD5::md5sum(canonicalFilePath));
 }
 
 QVideoIconGenerator::QVideoIconGenerator(QVideoProvider* p) : QObject(), m_provider(p)

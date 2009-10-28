@@ -1,5 +1,6 @@
 #include "DocumentSettingsDialog.h"
 #include "ui_DocumentSettingsDialog.h"
+#include "model/Document.h"
 
 DocumentSettingsDialog::DocumentSettingsDialog(Document *d, QWidget *parent) :
     QDialog(parent),

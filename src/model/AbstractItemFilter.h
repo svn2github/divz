@@ -31,7 +31,7 @@ public:
 	virtual QString filterName() const { return "No Filter"; }
 	virtual QString filterDescription() const { return "No filter applied"; }
 	
-	virtual bool isMandatoryFor(OutputInstance * instance = 0) { return false; }
+	virtual bool isMandatoryFor(OutputInstance * /*instance */= 0) { return false; }
 	
 	// Base implementation of filter() passes item thru mutate() if approve() returns true and adds it to a new list
 	//virtual AbstractItemList filter(const AbstractItemList &);

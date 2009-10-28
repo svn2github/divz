@@ -5,6 +5,7 @@
 #include "SongSlideGroupListModel.h"
 
 #include "OutputInstance.h"
+#include "model/Output.h"
 #include "model/TextBoxItem.h"
 
 #include <QListView>
@@ -163,39 +164,3 @@ AbstractSlideGroupEditor * SongSlideGroupFactory::newEditor()
 {
 	return new SongEditorWindow();
 }
-/*
-QPixmap	SlideGroupFactory::generatePreviewPixmap(SlideGroup *g, QSize iconSize, QRect sceneRect)
-{
-		
-	Slide * slide = g->at(0);
-	if(!slide)
-	{
-		qDebug("SlideGroupFactory::generatePreviewPixmap: No slide at 0");
-		return QPixmap();
-	}
-
-	int icon_w = iconSize.width();
-	int icon_h = iconSize.height();
-	
-	if(!m_scene)
-		m_scene = new MyGraphicsScene(MyGraphicsScene::Preview);
-	if(m_scene->sceneRect() != sceneRect)
-		m_scene->setSceneRect(sceneRect);
-	
-	m_scene->setSlide(slide);
-	
-	QPixmap icon(icon_w,icon_h);
-	QPainter painter(&icon);
-	painter.fillRect(0,0,icon_w,icon_h,Qt::white);
-	
-	m_scene->render(&painter,QRectF(0,0,icon_w,icon_h),sceneRect);
-	painter.setPen(Qt::black);
-	painter.setBrush(Qt::NoBrush);
-	painter.drawRect(0,0,icon_w-1,icon_h-1);
-	
-	// clear() so we can free memory, stop videos, etc
-	m_scene->clear();
-	
-	return icon;
-}*/
-

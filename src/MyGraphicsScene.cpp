@@ -6,11 +6,9 @@
 /*#include "items/PictureContent.h"
 #include "items/PictureConfig.h"*/
 #include "items/TextContent.h"
-#include "items/TextConfig.h"
 // #include "items/WebContentSelectorItem.h"
 // #include "items/WebcamContent.h"
 #include "items/TextContent.h"
-#include "items/TextConfig.h"
 #include "items/TextBoxConfig.h"
 #include "items/TextBoxContent.h"
 #include "items/VideoFileContent.h"
@@ -413,6 +411,14 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans, int speed, i
 	m_liveRoot->setZValue(300);
 	
 //	qDebug() << "MyGraphicsScene::setSlide(): Setting slide # "<<slide->slideNumber()<<" - DONE.";
+}
+
+bool MyGraphicsScene::isDataLoadComplete()
+{
+	foreach(AbstractContent *item, m_content)
+		if(!item->isDataLoadComplete())
+			return false;
+	return true;
 }
 
 AbstractContent * MyGraphicsScene::createVisualDelegate(AbstractItem *item, QGraphicsItem * parent)

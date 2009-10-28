@@ -24,6 +24,7 @@
 #include "AppSettings.h"
 #include <QFileInfo>
 
+#include "model/AbstractVisualItem.h"
 
 
 

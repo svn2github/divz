@@ -1,4 +1,5 @@
 #include "Document.h"
+#include "SlideGroup.h"
 
 #include <assert.h>
 

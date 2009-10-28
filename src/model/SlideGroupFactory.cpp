@@ -1,7 +1,12 @@
 #include "model/SlideGroupFactory.h"
+#include "model/AbstractItem.h"
+#include "model/SlideGroup.h"
+#include "model/Output.h"
+#include "model/Slide.h"
 
 #include "SlideEditorWindow.h"
 #include "OutputInstance.h"
+
 
 #include <QListView>
 #include <QVBoxLayout>
@@ -121,6 +126,7 @@ SlideGroupViewControl::SlideGroupViewControl(OutputInstance *g, QWidget *w )
 	
 	m_slideModel = new SlideGroupListModel();
 	m_listView->setModel(m_slideModel);
+	connect(m_slideModel, SIGNAL(repaintList()), this, SLOT(repaintList()));
 	
 	if(m)
 	{
@@ -182,6 +188,16 @@ SlideGroupViewControl::SlideGroupViewControl(OutputInstance *g, QWidget *w )
 	if(g)
 		setOutputView(g);
 	
+}
+
+void SlideGroupViewControl::repaintList()
+{
+	//qDebug() << "SlideGroupViewControl::repaintList(): mark";
+ 	m_listView->clearFocus();
+ 	m_listView->setFocus();
+	m_listView->repaint();
+	
+	//qDebug() << "SlideGroupViewControl::repaintList(): mark done";
 }
 
 void SlideGroupViewControl::enableAnimation(double time)
@@ -354,6 +370,7 @@ void SlideGroupViewControl::nextSlide()
 	if(nextSlide)
 		m_listView->setCurrentIndex(m_slideModel->indexForSlide(nextSlide));
 	else
+	if(m_timerState == Running)
 		toggleTimerState(Stopped,true);
 }
 
@@ -509,12 +526,8 @@ QPixmap	SlideGroupFactory::generatePreviewPixmap(SlideGroup *g, QSize iconSize, 
 	
 	if(!m_scene)
 		m_scene = new MyGraphicsScene(MyGraphicsScene::Preview);
-	//qDebug() << "SlideGroupFactory::generatePreviewPixmap(): checking scene rect: "<<sceneRect;
 	if(m_scene->sceneRect() != sceneRect)
-	{
-		//qDebug() << "SlideGroupFactory::generatePreviewPixmap(): setting new scene rect: "<<sceneRect;
 		m_scene->setSceneRect(sceneRect);
-	}
 	
 	//qDebug() << "SlideGroupFactory::generatePixmap: Loading slide";
 	m_scene->setSlide(slide);

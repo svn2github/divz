@@ -2,11 +2,11 @@ VPATH += $$PWD
 DEPENDPATH += $$PWD
 
 
-FORMS += AbstractConfig.ui \
-	TextProperties.ui \
+FORMS += \
+        TextProperties.ui \
 	GenericItemConfig.ui
 	
-HEADERS +=  AbstractConfig.h \
+HEADERS += \
     AbstractContent.h \
     AbstractDisposeable.h \
     BezierCubicItem.h \
@@ -14,7 +14,6 @@ HEADERS +=  AbstractConfig.h \
     CornerItem.h \
     MirrorItem.h \
     StyledButtonItem.h \
-    TextConfig.h \
     TextContent.h \
     TextProperties.h \
     SimpleTextContent.h  \
@@ -32,7 +31,6 @@ HEADERS +=  AbstractConfig.h \
  
     
 SOURCES += \
-    AbstractConfig.cpp \
     AbstractContent.cpp \
     AbstractDisposeable.cpp \
     BezierCubicItem.cpp \
@@ -40,7 +38,6 @@ SOURCES += \
     CornerItem.cpp \
     MirrorItem.cpp \
     StyledButtonItem.cpp \
-    TextConfig.cpp \
     TextContent.cpp \
     TextProperties.cpp \
     SimpleTextContent.cpp \

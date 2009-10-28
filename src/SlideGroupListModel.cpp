@@ -9,7 +9,7 @@
 #include <QPixmap>
 #include <QPixmapCache>
 
-
+#include "MyGraphicsScene.h"
 #include "model/SlideGroup.h"
 #include "model/Slide.h"
 #include "MainWindow.h"
@@ -21,6 +21,18 @@
 SlideGroupListModel::SlideGroupListModel(SlideGroup *g, QObject *parent)
 		: QAbstractListModel(parent), m_slideGroup(0), m_scene(0), m_dirtyTimer(0), m_iconSize(192,0), m_sceneRect(0,0,1024,768)
 {
+		
+	m_dirtyTimer = new QTimer(this);
+	m_dirtyTimer->setSingleShot(true);
+	connect(m_dirtyTimer, SIGNAL(timeout()), this, SLOT(modelDirtyTimeout()));
+	
+	m_dirtyTimer2 = new QTimer(this);
+	m_dirtyTimer2->setSingleShot(true);
+	connect(m_dirtyTimer2, SIGNAL(timeout()), this, SLOT(modelDirtyTimeout2()));
+	
+	
+
+	
 	if(m_slideGroup)
 		setSlideGroup(g);
 	
@@ -190,15 +202,7 @@ void SlideGroupListModel::slideChanged(Slide *slide, QString slideOperation, Abs
 {
 	if(!m_slideGroup)
 		return;
-		
-	if(!m_dirtyTimer)
-	{
-		m_dirtyTimer = new QTimer(this);
-		connect(m_dirtyTimer, SIGNAL(timeout()), this, SLOT(modelDirtyTimeout()));
-		
-		m_dirtyTimer->setSingleShot(true);
 	
-	}
 	
 // 	if(slideOperation == "change" && !m_sortedSlides.contains(slide))
 // 	{
@@ -224,15 +228,19 @@ void SlideGroupListModel::slideChanged(Slide *slide, QString slideOperation, Abs
 	}
 	else
 	{
-		if(m_dirtyTimer->isActive())
-			m_dirtyTimer->stop();
-
-		QPixmapCache::remove(POINTER_STRING(slide));
-		
-		m_dirtyTimer->start(250);
-		if(!m_dirtySlides.contains(slide))
-			m_dirtySlides << slide;
+		markSlideDirty(slide);
 	}
+}
+
+void SlideGroupListModel::markSlideDirty(Slide *slide)
+{
+	if(m_dirtyTimer->isActive())
+		m_dirtyTimer->stop();
+
+	m_dirtyTimer->start(250);
+	
+	if(!m_dirtySlides.contains(slide))
+		m_dirtySlides << slide;
 }
 
 void SlideGroupListModel::modelDirtyTimeout()
@@ -242,10 +250,37 @@ void SlideGroupListModel::modelDirtyTimeout()
 	      m_dirtySlides.end(), 
 	      slide_num_compare);
 	
+	if(m_dirtySlides.isEmpty())
+		return;
+	
+	foreach(Slide *slide, m_dirtySlides)
+		QPixmapCache::remove(POINTER_STRING(slide));
+	
 	QModelIndex top    = indexForSlide(m_dirtySlides.first()), 
 	            bottom = indexForSlide(m_dirtySlides.last());
+	
 	//qDebug() << "SlideGroupListModel::modelDirtyTimeout: top:"<<top<<", bottom:"<<bottom;
+	
 	m_dirtySlides.clear();
+	
+	dataChanged(top,bottom);
+}
+
+
+void SlideGroupListModel::modelDirtyTimeout2()
+{
+	
+	qSort(m_dirtySlides2.begin(),
+	      m_dirtySlides2.end(), 
+	      slide_num_compare);
+	
+	if(m_dirtySlides2.isEmpty())
+		return;
+	
+	QModelIndex top    = indexForSlide(m_dirtySlides2.first()), 
+	            bottom = indexForSlide(m_dirtySlides2.last());
+	
+	m_dirtySlides2.clear();
 	
 	dataChanged(top,bottom);
 }
@@ -306,6 +341,8 @@ QVariant SlideGroupListModel::data(const QModelIndex &index, int role) const
 		QString cacheKey = POINTER_STRING(g);
 		QPixmap icon;
 		
+		//qDebug() << "SlideGroupListModel::data: Decoration for row:"<<index.row();
+		
 		if(!QPixmapCache::find(cacheKey,icon))
 		{
 			// HACK - Have to remove the const'ness from 'this' so that
@@ -362,33 +399,130 @@ void SlideGroupListModel::setIconSize(QSize sz)
 QPixmap SlideGroupListModel::generatePixmap(Slide *slide)
 {
  	//return QPixmap();
-	
-	int icon_w = m_iconSize.width();
-	int icon_h = m_iconSize.height();
-	
-	if(!m_scene)
+ 	//qDebug() << "SlideGroupListModel::generatePixmap: Slide#"<<slide->slideNumber()<<": Mark 0";
+ 	
+ 	if(m_dataLoadPending.contains(slide))
+ 	{
+ 		if(m_dataLoadPending[slide]->isDataLoadComplete())
+ 		{
+ 			//qDebug() << "SlideGroupListModel::generatePixmap: Slide#"<<slide->slideNumber()<<": Mark 1";
+ 			MyGraphicsScene * scene = m_dataLoadPending[slide];
+ 			m_dataLoadPending.remove(slide);
+ 			
+ 			QPixmap pixmap = renderScene(scene);
+ 			//delete scene;
+ 			
+ 			emit repaintList();
+ 			
+ 			return pixmap;
+ 		}
+ 		else
+ 		{
+ 			MyGraphicsScene * scene = m_dataLoadPending[slide];
+			
+			int counter = scene->property("_dirty_counter").toInt();
+ 			scene->setProperty("_dirty_counter",counter+1);
+ 			
+ 			if(counter > 1)
+ 			{
+ 				//qDebug() << "SlideGroupListModel::generatePixmap: Slide#"<<slide->slideNumber()<<": Mark 1.5\n\n";
+ 				
+ 				m_dataLoadPending.remove(slide);
+				
+				QPixmap pixmap = renderScene(scene);
+				//delete scene;
+				
+				emit repaintList();
+				
+				//QModelIndex idx = indexForSlide(slide);
+				//dataChanged(idx,idx);
+				
+				if(m_dirtyTimer2->isActive())
+					m_dirtyTimer2->stop();
+			
+				m_dirtyTimer2->start(10);
+				
+				if(!m_dirtySlides2.contains(slide))
+					m_dirtySlides2 << slide;
+				
+				return pixmap;
+ 			}
+ 			else
+ 			{
+				//qDebug() << "SlideGroupListModel::generatePixmap: Slide#"<<slide->slideNumber()<<": Mark 2:"<<counter;
+				markSlideDirty(slide);
+				return defaultPendingPixmap();
+			}
+ 		}
+ 	}
+ 	else
+ 	{
+		if(!m_scene)
+			m_scene = new MyGraphicsScene(MyGraphicsScene::Preview);
+		if(m_scene->sceneRect() != m_sceneRect)
+			m_scene->setSceneRect(m_sceneRect);
+		
+		m_scene->setSlide(slide);
+		
+		if(m_scene->isDataLoadComplete())
+		{
+			//qDebug() << "SlideGroupListModel::generatePixmap: Slide#"<<slide->slideNumber()<<": Mark 3";
+			return renderScene(m_scene);
+		}
+		else
+		{
+			//qDebug() << "SlideGroupListModel::generatePixmap: Slide#"<<slide->slideNumber()<<": Mark 4";
+			markSlideDirty(slide);
+			
+			m_scene->setProperty("_dirty_counter",0);
+			m_dataLoadPending[slide] = m_scene;
+			m_scene = 0;	
+			
+			return defaultPendingPixmap();
+		}
+	}
+}
+
+QPixmap SlideGroupListModel::defaultPendingPixmap()
+{
+	if(m_pendingPixmap.isNull())
 	{
-		m_scene = new MyGraphicsScene(MyGraphicsScene::Preview);
-		m_scene->setSceneRect(m_sceneRect);
+		int icon_w = m_iconSize.width();
+		int icon_h = m_iconSize.height();
+			
+		m_pendingPixmap = QPixmap(icon_w,icon_h);
+		
+		QPainter painter(&m_pendingPixmap);
+		painter.fillRect(0,0,icon_w,icon_h,Qt::lightGray);
+		
+		painter.setPen(Qt::black);
+		painter.setBrush(Qt::NoBrush);
+		painter.drawRect(0,0,icon_w-1,icon_h-1);
+		
+		painter.end();
 	}
 	
-	//qDebug() << "SlideGroupListModel::generatePixmap: Loading slide";
-	m_scene->setSlide(slide);
+	return m_pendingPixmap;
+}
 
+QPixmap SlideGroupListModel::renderScene(MyGraphicsScene *scene)
+{
+	int icon_w = m_iconSize.width();
+	int icon_h = m_iconSize.height();
+		
 	QPixmap icon(icon_w,icon_h);
 	QPainter painter(&icon);
 	painter.fillRect(0,0,icon_w,icon_h,Qt::white);
 	painter.setRenderHint(QPainter::SmoothPixmapTransform, true);
 	painter.setRenderHint(QPainter::Antialiasing, true);
 	painter.setRenderHint(QPainter::TextAntialiasing, true);
-	m_scene->render(&painter,QRectF(0,0,icon_w,icon_h),m_sceneRect);
+	
+	scene->render(&painter,QRectF(0,0,icon_w,icon_h),m_sceneRect);
 	painter.setPen(Qt::black);
 	painter.setBrush(Qt::NoBrush);
 	painter.drawRect(0,0,icon_w-1,icon_h-1);
 	
-	// clear() so we can free memory, stop videos, etc
-	m_scene->clear();
-	//qDebug() << "SlideGroupListModel::generatePixmap: Releasing slide\n";
+	scene->clear();
 	
 	return icon;
 }

@@ -1,5 +1,6 @@
 #include "SlideGroupSettingsDialog.h"
 #include "ui_SlideGroupSettingsDialog.h"
+#include "model/SlideGroup.h"
 
 SlideGroupSettingsDialog::SlideGroupSettingsDialog(SlideGroup *g, QWidget *parent) :
     QDialog(parent),

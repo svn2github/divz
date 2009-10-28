@@ -11,7 +11,8 @@
 #include <QCache>
 
 #include "MyGraphicsScene.h"
-#include "model/SlideGroup.h"
+
+class SlideGroup;
 
 #include "model/AbstractItemFilter.h"
 
@@ -42,6 +43,7 @@ public:
 	void addFilter(AbstractItemFilter *);
 	void removeFilter(AbstractItemFilter *);
 	bool hasFilter(AbstractItemFilter *filter) { return m_slideFilters.contains(filter); }
+	void removeAllFilters();
 	
 	int fadeSpeed() { return m_fadeSpeed; }
 	int fadeQuality() { return m_fadeQuality; } 

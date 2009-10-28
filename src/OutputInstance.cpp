@@ -8,6 +8,12 @@
 #include <QApplication>
 #include <QVBoxLayout>
 
+#include "SlideGroupViewer.h"
+#include "MyGraphicsScene.h"
+#include "model/Slide.h"
+#include "model/Output.h"
+#include "model/AbstractItemFilter.h"
+
 #include "itemlistfilters/SlideTextOnlyFilter.h"
 
 bool OuputInstance_slide_num_compare(Slide *a, Slide *b)
@@ -79,6 +85,11 @@ void OutputInstance::applyOutputSettings()
 		setWindowIcon(QIcon(":/data/icon-d.png"));
 	}
 	else
+	if(x == Output::Preview)
+	{
+		m_viewer->setCursor(Qt::ArrowCursor);
+	}
+	else
 	//if(x == Output::Network)
 	{
 		qDebug("Warning: Output to network not supported yet. Still to be written.");
@@ -114,7 +125,7 @@ void OutputInstance::slideChanged(Slide *slide, QString slideOperation, Abstract
 void OutputInstance::setSlideGroup(SlideGroup *group, Slide * startSlide)
 {
 	Output::OutputType x = m_output->outputType();
-	if(x == Output::Screen || x == Output::Custom)
+	if(x == Output::Screen || x == Output::Custom || x == Output::Preview)
 	{
 		m_viewer->setSlideGroup(group,startSlide);
 	}
@@ -168,7 +179,7 @@ int OutputInstance::numSlides()
 void OutputInstance::clear()
 {
 	Output::OutputType outType = m_output->outputType();
-	if(outType == Output::Screen || outType == Output::Custom)
+	if(outType == Output::Screen || outType == Output::Custom || outType == Output::Preview)
 	{
 		m_viewer->clear();
 		
@@ -182,7 +193,7 @@ void OutputInstance::clear()
 void OutputInstance::setBackground(QColor color)
 {
 	Output::OutputType outType = m_output->outputType();
-	if(outType == Output::Screen || outType == Output::Custom)
+	if(outType == Output::Screen || outType == Output::Custom || outType == Output::Preview)
 	{
 		m_viewer->setBackground(color);
 	}
@@ -195,7 +206,7 @@ void OutputInstance::setBackground(QColor color)
 void OutputInstance::setSceneContextHint(MyGraphicsScene::ContextHint hint)
 {
 	Output::OutputType outType = m_output->outputType();
-	if(outType == Output::Screen || outType == Output::Custom)
+	if(outType == Output::Screen || outType == Output::Custom || outType == Output::Preview)
 	{
 		m_viewer->setSceneContextHint(hint);
 	}
@@ -211,7 +222,7 @@ void OutputInstance::setOverlaySlide(Slide * newSlide)
 	if(!m_output->isEnabled())
 		return;
 	Output::OutputType x = m_output->outputType();
-	if(x == Output::Screen || x == Output::Custom)
+	if(x == Output::Screen || x == Output::Custom || x == Output::Preview)
 	{
 		m_viewer->setOverlaySlide(newSlide);
 	}
@@ -227,7 +238,7 @@ void OutputInstance::setOverlayEnabled(bool enable)
 	if(!m_output->isEnabled())
 		return;
 	Output::OutputType x = m_output->outputType();
-	if(x == Output::Screen || x == Output::Custom)
+	if(x == Output::Screen || x == Output::Custom || x == Output::Preview)
 	{
 		m_viewer->setOverlayEnabled(enable);
 	}
@@ -243,7 +254,7 @@ void OutputInstance::setTextOnlyFilterEnabled(bool enable)
 	if(!m_output->isEnabled())
 		return;
 	Output::OutputType x = m_output->outputType();
-	if(x == Output::Screen || x == Output::Custom)
+	if(x == Output::Screen || x == Output::Custom || x == Output::Preview)
 	{
 		m_viewer->setTextOnlyFilterEnabled(enable);
 	}
@@ -268,7 +279,7 @@ void OutputInstance::addFilter(AbstractItemFilter * filter)
 	if(!m_output->isEnabled())
 		return;
 	Output::OutputType x = m_output->outputType();
-	if(x == Output::Screen || x == Output::Custom)
+	if(x == Output::Screen || x == Output::Custom || x == Output::Preview)
 	{
 		m_viewer->addFilter(filter);
 	}
@@ -286,9 +297,26 @@ void OutputInstance::removeFilter(AbstractItemFilter *filter)
 	if(!m_output->isEnabled())
 		return;
 	Output::OutputType x = m_output->outputType();
-	if(x == Output::Screen || x == Output::Custom)
+	if(x == Output::Screen || x == Output::Custom || x == Output::Preview)
 	{
 		m_viewer->removeFilter(filter);
+	}
+	else
+	{
+		// TODO
+	}
+}
+
+void OutputInstance::removeAllFilters()
+{
+	m_slideFilters.clear();
+	
+	if(!m_output->isEnabled())
+		return;
+	Output::OutputType x = m_output->outputType();
+	if(x == Output::Screen || x == Output::Custom || x == Output::Preview)
+	{
+		m_viewer->removeAllFilters();
 	}
 	else
 	{
@@ -302,7 +330,7 @@ void OutputInstance::setAutoResizeTextEnabled(bool enable)
 	if(!m_output->isEnabled())
 		return;
 	Output::OutputType x = m_output->outputType();
-	if(x == Output::Screen || x == Output::Custom)
+	if(x == Output::Screen || x == Output::Custom || x == Output::Preview)
 	{
 		m_viewer->setAutoResizeTextEnabled(enable);
 	}
@@ -319,7 +347,7 @@ void OutputInstance::setFadeSpeed(int value)
 	if(!m_output->isEnabled())
 		return;
 	Output::OutputType x = m_output->outputType();
-	if(x == Output::Screen || x == Output::Custom)
+	if(x == Output::Screen || x == Output::Custom || x == Output::Preview)
 	{
 		m_viewer->setFadeSpeed(value);
 	}
@@ -336,7 +364,7 @@ void OutputInstance::setFadeQuality(int value)
 	if(!m_output->isEnabled())
 		return;
 	Output::OutputType x = m_output->outputType();
-	if(x == Output::Screen || x == Output::Custom)
+	if(x == Output::Screen || x == Output::Custom || x == Output::Preview)
 	{
 		m_viewer->setFadeQuality(value);
 	}
@@ -376,7 +404,7 @@ Slide * OutputInstance::setSlide(Slide *slide)
 	}
 	
 	Output::OutputType x = m_output->outputType();
-	if(x == Output::Screen || x == Output::Custom)
+	if(x == Output::Screen || x == Output::Custom || x == Output::Preview)
 	{
 		m_viewer->setSlide(slide);
 		
@@ -427,7 +455,7 @@ void OutputInstance::fadeBlackFrame(bool enable)
 		return;
 		
 	Output::OutputType outType = m_output->outputType();
-	if(outType == Output::Screen || outType == Output::Custom)
+	if(outType == Output::Screen || outType == Output::Custom || outType == Output::Preview)
 	{
 		m_viewer->fadeBlackFrame(enable);
 	}
@@ -443,7 +471,7 @@ void OutputInstance::fadeClearFrame(bool enable)
 		return;
 		
 	Output::OutputType outType = m_output->outputType();
-	if(outType == Output::Screen || outType == Output::Custom)
+	if(outType == Output::Screen || outType == Output::Custom || outType == Output::Preview)
 	{
 		m_viewer->fadeClearFrame(enable);
 	}
@@ -459,7 +487,7 @@ void OutputInstance::setLiveBackground(const QFileInfo &info, bool waitForNextSl
 		return;
 		
 	Output::OutputType outType = m_output->outputType();
-	if(outType == Output::Screen || outType == Output::Custom)
+	if(outType == Output::Screen || outType == Output::Custom || outType == Output::Preview)
 	{
 		m_viewer->setLiveBackground(info,waitForNextSlide);
 	}

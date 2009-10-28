@@ -4,9 +4,10 @@
 #include <QSettings>
 #include <QList>
 #include <QMap>
-#include "model/Output.h"
+#include <QSizeF>
 
 class MainWindow;
+class Output;
 class AppSettings
 {
 public:

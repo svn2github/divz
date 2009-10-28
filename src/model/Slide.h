@@ -2,7 +2,6 @@
 #define SLIDE_H
 
 #include "AbstractItem.h"
-#include "TextItem.h"
 
 #include <QList>
 
@@ -30,8 +29,6 @@ public:
 	
 	void removeItem(AbstractItem *);
 	
-// 	AbstractItem * createPicture(QPoint);
-// 	TextItem * createText(QPoint);
 	
 	bool fromXml(QDomElement & parentElement);
         void toXml(QDomElement & parentElement) const;

@@ -5,6 +5,24 @@
 #include <QApplication>
 #include <QDesktopWidget>
 
+Output * Output::m_staticPreviewInstance = new Output(Output::Preview);
+
+Output::Output(Output::OutputType type) :
+ 	  m_outputType(type)
+	, m_isEnabled(true)
+	, m_name("Output")
+	, m_screenNum(0)
+	, m_customRect(QRect(0,0,1024,768))
+	, m_networkRole(Server)
+	, m_host("")
+	, m_port(7777)
+	, m_allowMultiple(true)
+	, m_tags("")
+	, m_id(-1)
+{
+	generateId();
+}
+
 Output::Output() :
 	m_isSystem(false)
 	, m_isEnabled(true)

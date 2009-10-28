@@ -13,6 +13,8 @@ class QComboBox;
 #include <QStringList>
 #include <QRegExp>
 
+#define MEDIABROWSER_LIST_ICON_SIZE QSize(48,48)
+
 class MediaBrowser : public QWidget
 {
 	Q_OBJECT
@@ -22,6 +24,8 @@ public /*static*/:
 	
 	static bool isVideo(const QString &extension);
 	static bool isImage(const QString &extension);
+	
+	static QPixmap iconForImage(const QString & file, const QSize & size);
 
 public:
 	MediaBrowser(QWidget *parent=0);

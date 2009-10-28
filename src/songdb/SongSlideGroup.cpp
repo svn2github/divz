@@ -3,7 +3,8 @@
 #include "model/TextBoxItem.h"
 #include "model/BackgroundItem.h"
 #include "model/ItemFactory.h"
-#include "model/TextBoxItem.h"
+#include "model/Slide.h"
+#include "model/SlideGroup.h"
 #include "MainWindow.h"
 
 #include <QTextDocument>
@@ -410,6 +411,8 @@ void SongSlideGroup::textToSlides(SongTextFilter filter)
 		slide->setSlideNumber(slideNbr++);
 		
 		addSlide(slide);
+		
+		text->warmVisualCache();
 		
 		if(DEBUG_TEXTOSLIDES)
 			qDebug()<<"SongSlideGroup::textToSlides(): Added passage:"<<passage;

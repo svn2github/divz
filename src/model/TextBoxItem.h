@@ -15,6 +15,7 @@ public:
 	
 	// ::AbstractVisualItem
 	AbstractContent * createDelegate(QGraphicsScene*scene=0,QGraphicsItem*parent=0);
+	void warmVisualCache();
 	
 	// ::AbstractItem
 	

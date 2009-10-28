@@ -86,6 +86,7 @@ public:
 	
 	// Convert the attributes here into an AbstractContent object
 	virtual AbstractContent * createDelegate(QGraphicsScene*scene=0,QGraphicsItem*parent=0);
+	virtual void warmVisualCache() {}
 	
 	// Scene position
 	QPointF pos() const { return m_pos; }

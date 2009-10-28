@@ -1,5 +1,6 @@
 #include "Slide.h"
 
+#include "AbstractItem.h"
 #include "TextItem.h"
 #include "TextBoxItem.h"
 #include "BoxItem.h"
@@ -7,6 +8,8 @@
 #include "VideoFileItem.h"
 #include "BackgroundItem.h"
 #include "ItemFactory.h"
+
+
 
 #include <assert.h>
 #include <QMetaProperty>
@@ -112,6 +115,9 @@ void Slide::addItem(AbstractItem *item, bool takeOwnership)
 	m_items.append(item);
 	if(takeOwnership)
 		m_ownedItems << item;
+		
+// 	if(item->inherits("TextBoxItem"))
+// 		dynamic_cast<TextBoxItem*>(item)->warmVisualCache();
 }
 
 void Slide::removeItem(AbstractItem *item)

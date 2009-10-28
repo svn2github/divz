@@ -9,14 +9,15 @@
 #include <QCloseEvent>
 #include <QFileInfo>
 
+#include "model/AbstractItemFilter.h"
+
 class SlideGroupViewer;
 class SlideGroup;
-
-#include "MyGraphicsScene.h"
+class Slide;
 
 #include <QWidget>
-#include "model/Output.h"
-#include "model/AbstractItemFilter.h"
+class Output;
+#include "MyGraphicsScene.h"
 
 
 class OutputInstance : public QWidget
@@ -46,6 +47,7 @@ public:
 	void addFilter(AbstractItemFilter *);
 	void removeFilter(AbstractItemFilter *);
 	bool hasFilter(AbstractItemFilter *filter) { return m_slideFilters.contains(filter); }
+	void removeAllFilters();
 	
 	int fadeSpeed() { return m_fadeSpeed; }
 	int fadeQuality() { return m_fadeQuality; } 

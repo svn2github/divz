@@ -4,8 +4,10 @@
 #include "AbstractDisposeable.h"
 #include <QDomElement>
 #include "3rdparty/enricomath.h"
-#include "model/AbstractVisualItem.h"
 #include "CornerItem.h"
+
+class AbstractVisualItem;
+
 
 class AbstractConfig;
 class ButtonItem;
@@ -31,6 +33,9 @@ class AbstractContent : public AbstractDisposeable
 		
 		virtual void syncFromModelItem(AbstractVisualItem*);
 		virtual AbstractVisualItem * syncToModelItem(AbstractVisualItem *model); //defaults to m_modelItem
+		
+		virtual bool isDataLoadComplete() { return true; }
+		static void warmVisualCache(AbstractVisualItem*) {}
 		
 		// size
 		QRect contentsRect() const;
@@ -94,6 +99,8 @@ class AbstractContent : public AbstractDisposeable
 		// hackish way of telling the item that the ItemPositionChange it's about to receive was from the keyboard and therefore
 		// only snap to half a grid point
 		void flagKeyboardMotivatedMovement();
+		
+		static QString cacheKey(AbstractVisualItem *);
 		
 	Q_SIGNALS:
 		void configureMe(const QPoint & scenePoint);

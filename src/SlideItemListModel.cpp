@@ -7,6 +7,8 @@
 
 #include <QMimeData>
 
+#include "MyGraphicsScene.h"
+#include "model/AbstractItem.h"
 #include "model/SlideGroup.h"
 #include "model/Slide.h"
 #include "MainWindow.h"

@@ -2,7 +2,7 @@
 #define DOCUMENTSETTINGSDIALOG_H
 
 #include <QtGui/QDialog>
-#include "model/Document.h"
+class Document;
 
 namespace Ui {
     class DocumentSettingsDialog;

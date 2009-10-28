@@ -6,10 +6,12 @@
 #include <QGraphicsView>
 #include <QTimer>
 
-#include "model/Document.h"
-#include "MyGraphicsScene.h"
-
+class Document;
+class MyGraphicsScene;
 #include <QMimeData>
+class SlideGroup;
+class Slide;
+class AbstractItem;
 
 class DocumentListModel : public QAbstractListModel
 {

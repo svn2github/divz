@@ -8,13 +8,14 @@
 #include <QRect>
 #include <QSize>
 
-#include "MyGraphicsScene.h"
-#include "model/AbstractItem.h"
+class MyGraphicsScene;
+class AbstractItem;
 
 #include <math.h>
 
 #include <QStringList>
 #include <QPointer>
+#include <QHash>
 
 class Slide;
 class SlideGroup;
@@ -59,6 +60,7 @@ public:
 
 signals:
 	void slidesDropped(QList<Slide*>);
+	void repaintList();
 	
 public slots:	
 	void releaseSlideGroup();
@@ -66,26 +68,37 @@ public slots:
 private slots:
 	void slideChanged(Slide *slide, QString slideOperation, AbstractItem *item, QString operation, QString fieldName, QVariant value);
 	void modelDirtyTimeout();
+	void modelDirtyTimeout2();
 	void aspectRatioChanged(double);
 	
 	
 protected:
 	virtual QPixmap generatePixmap(Slide*);
+	virtual QPixmap renderScene(MyGraphicsScene*);
+	QPixmap defaultPendingPixmap();
+	void markSlideDirty(Slide*);
+	
 	void internalSetup();
 	void adjustIconAspectRatio();
 	
 	SlideGroup * m_slideGroup;
 	QList<Slide*> m_sortedSlides;
 	QList<Slide*> m_dirtySlides;
+	QList<Slide*> m_dirtySlides2;
 	QHash<int,QPixmap> m_pixmaps;
 	
 	MyGraphicsScene * m_scene;
 	//QGraphicsView * m_view;
 	
 	QTimer * m_dirtyTimer;
+	QTimer * m_dirtyTimer2;
 	
 	QSize m_iconSize;
 	QRect m_sceneRect;
+	
+	QPixmap m_pendingPixmap;
+	
+	QHash<Slide*, MyGraphicsScene*> m_dataLoadPending;
 };
 
 #endif

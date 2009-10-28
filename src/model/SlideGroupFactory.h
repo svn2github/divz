@@ -1,9 +1,10 @@
 #ifndef SLIDEGROUPFACTORY_H
 #define SLIDEGROUPFACTORY_H
 
-#include "AbstractItem.h"
-#include "SlideGroup.h"
-#include "Output.h"
+class Output;
+#include "model/SlideGroup.h"
+class AbstractItem;
+
 #include <QList>
 #include <QMap>
 #include <QWidget>
@@ -61,6 +62,8 @@ protected slots:
 	virtual void updateTimeLabel();
 	virtual void enableAnimation(double time = 0);
 	
+private slots:
+	void repaintList();
 	
 protected:
 	QString formatTime(double);

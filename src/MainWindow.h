@@ -16,12 +16,15 @@
 #include <QtSql>
 #include <QDebug>
 
-#include "model/Document.h"
-#include "DocumentListModel.h"
-#include "SlideEditorWindow.h"
-#include "SlideGroupViewer.h"
-#include "OutputViewer.h"
-#include "OutputSetupDialog.h"
+class Document;
+class DocumentListModel;
+class SlideEditorWindow;
+class SlideGroupViewer;
+class OutputViewer;
+class OutputSetupDialog;
+class SlideGroupViewControl;
+class Slide;
+class SlideGroup;
 
 #define FALLBACK_SCREEN_RECT QRectF(0,0,1024,768)
 
@@ -123,7 +126,6 @@ private:
 	Ui::MainWindow *m_ui;
 	SlideEditorWindow * m_editWin;
 	DocumentListModel * m_docModel;
-	SlideGroupViewer  * m_previewWidget;
 	OutputViewer      * m_liveMonitor;
 	OutputInstance    * m_liveView;
 	
@@ -133,6 +135,14 @@ private:
 	QListView   * m_groupView;
 	QPushButton * m_btnSendOut;
 	QTabWidget  * m_outputTabs;
+	
+	QSplitter   * m_splitter2;
+	QSplitter   * m_splitter3;
+	QWidget     * m_previewControlBase;
+	SlideGroupViewControl * m_previewControl;
+	OutputInstance * m_previewInstance;
+	
+	
 
 	OutputSetupDialog * m_outputDialog;
 	
@@ -152,7 +162,7 @@ private:
 	QMap<int,QCheckBox*>	m_outputCheckboxes;
 	QWidget			* m_outputCheckboxBase;
 	
-	QWidget			* m_previewControlBase;
+	//QWidget			* m_previewControlBase;
 	
 	/** static */
 	static MainWindow * static_mainWindow;	

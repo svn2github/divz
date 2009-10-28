@@ -4,11 +4,12 @@
 #include <QMainWindow>
 #include <QListView>
 
-#include "model/Document.h"
-#include "model/SlideGroupFactory.h"
+#include "model/SlideGroupFactory.h" 
+class Document;
 
-#include "SlideGroupListModel.h"
-
+class SlideGroupFactory;
+class SlideGroupListModel;
+class AbstractItem;
 class MyGraphicsScene;
 class SlideGroup;
 class QGraphicsLineItem;
@@ -123,6 +124,9 @@ private slots:
 	
 	void autosave();
 	
+	
+	void repaintSlideList();
+	
 private:
 	void setupSlideList();
 	void setupViewportLines();
@@ -145,7 +149,7 @@ private:
 	QListView *m_itemListView;
 	SlideItemListModel *m_itemModel;
 	
-	Document m_doc;
+	Document * m_doc;
 	MyGraphicsScene *m_scene;
 	MyGraphicsView *m_view;
 

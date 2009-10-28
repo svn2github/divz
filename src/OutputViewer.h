@@ -7,9 +7,8 @@
 #include <QGraphicsView>
 #include <QTimer>
 
-#include "MyGraphicsScene.h"
-#include "model/SlideGroup.h"
-#include "SlideGroupViewer.h"
+class MyGraphicsScene;
+class SlideGroupViewer;
 
 class OutputViewer : public QWidget
 {
