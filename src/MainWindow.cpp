@@ -198,8 +198,8 @@ void MainWindow::loadWindowState()
 		move(p);
 	restoreState(settings.value("mainwindow/state").toByteArray());
 	m_splitter->restoreState(settings.value("mainwindow/splitter_state").toByteArray());
-	m_splitter2->restoreState(settings.value("mainwindow/splitter2_state").toByteArray());
-	m_splitter3->restoreState(settings.value("mainwindow/splitter34_state").toByteArray());
+	m_splitter2->restoreState(settings.value("mainwindow/grouplistsplitter_state").toByteArray());
+	//m_splitter3->restoreState(settings.value("mainwindow/splitter34_state").toByteArray());
 	m_songBrowser->restoreState(settings.value("mainwindow/songbrowser_state").toByteArray());
 
 }
@@ -211,8 +211,8 @@ void MainWindow::saveWindowState()
 	settings.setValue("mainwindow/pos",pos());
 	settings.setValue("mainwindow/state",saveState());
 	settings.setValue("mainwindow/splitter_state",m_splitter->saveState());
-	settings.setValue("mainwindow/splitter2_state",m_splitter2->saveState());
-	settings.setValue("mainwindow/splitter34_state",m_splitter3->saveState());
+	settings.setValue("mainwindow/grouplistsplitter_state",m_splitter2->saveState());
+	//settings.setValue("mainwindow/splitter34_state",m_splitter3->saveState());
 	settings.setValue("mainwindow/songbrowser_state",m_songBrowser->saveState());
 }
 
@@ -578,6 +578,7 @@ void MainWindow::setupCentralWidget()
 
 	// left side
 	m_splitter2 = new QSplitter(m_splitter);
+	m_splitter2->setOrientation(Qt::Vertical);
 	
 	QWidget * leftBase = new QWidget(this);
 	QVBoxLayout * leftLayout = new QVBoxLayout(leftBase);
@@ -635,8 +636,8 @@ void MainWindow::setupCentralWidget()
 	
 	m_splitter2->addWidget(leftBase);
 	
-	m_splitter3 = new QSplitter(m_splitter2);
-	m_splitter3->setOrientation(Qt::Horizontal);
+	//m_splitter3 = new QSplitter(m_splitter2);
+	//m_splitter3->setOrientation(Qt::Vertical);
 	
 	// preview widget
 	//m_previewControlBase
@@ -653,11 +654,10 @@ void MainWindow::setupCentralWidget()
 	
 	leftLayout3->addWidget(m_previewControl);
 	
-	m_splitter3->addWidget(m_previewControlBase);
-	m_splitter3->addWidget(m_previewInstance);
+	m_splitter2->addWidget(m_previewControlBase);
+	m_splitter2->addWidget(m_previewInstance);
 	
-	m_splitter2->addWidget(m_splitter3);
-	
+	//m_splitter2->addWidget(m_splitter3);
 	
 	m_splitter->addWidget(m_splitter2);
 	
