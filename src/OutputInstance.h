@@ -85,12 +85,16 @@ private slots:
 	
 	void slideChanged(Slide *, QString, AbstractItem *, QString, QString, QVariant);
 	
+	void slotGrabPixmap();
+	
 protected:
 	//void closeEvent(QCloseEvent *);
 
 private:
 	Output *m_output;
 	SlideGroupViewer *m_viewer;
+	
+	QTimer * m_grabTimer;
 
 	SlideGroup * m_slideGroup;
 	QList<Slide*> m_sortedSlides;
@@ -108,6 +112,8 @@ private:
 	int m_fadeQuality;
 
 	AbstractItemFilterList m_slideFilters;
+	
+	bool m_isFoldback;
 };
 
 #endif // SLIDEGROUPVIEWER_H

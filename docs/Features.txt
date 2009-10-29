@@ -131,35 +131,26 @@ Revised Task list for Release 1.0, 10/18/09:
 		= Misc = 
 			[MAYBE] Add color theme support vis a vi powerpoint
 			
+			[LATER] rewrite dirmodel inorder to delay-load icons
+				cant delay load icons yet due to qlistview not repainting properly - reported on qt-interest
 			[STARTED] need to pre-render all text boxes
 				does it in song groups
-			[DONE] need to be able to preview slides (next/prev button)
-				[DONE] move preview dock to under the group list - simple slide list model + preview window
-			
-			[DONE] start with overlay disabled
+			add generic pre-render on document load 
+				loop thru every group, every slide and call Paint on every visual delegate
 			
 			need file preview widget below media browser
 				click once on file to preview
 				
-			[DONE] max fade speed slider needs to be greater
-				Bumped max to 2000ms (2sec)
-			[DONE] double-clicking on preview slide should go live with that slide
 			would be nice: while editing slide thats live, if change, cross fade to changed version
 			media browser - when "going back" or "going up", should remeber the last selected index
 			
-			[FIXED] crash on invalid overlay document:
-			[FIXED] should not check overlay document name while typing - only when finished
-			
-			[DONE] draw black line (dotted?) between slides in song list model
-			[DONE] preview control needs to change viewcontrols correctly
-			
-			port over the song database conversion code to windows
-			
-			rewrite dirmodel inorder to delay-load icons
+			[STARTED] port over the song database conversion code to windows
+				compiles pxxmlexport (pxtools) on win32 - doesnt execute
+				need to integrate it into a dialog in dviz
 			
 			large nbr of photos imported using import tool - some of them render gray - caching issues?
-			add timeout, titling options to image import tool
 			add progress bar to image import tool
+			add timeout, titling options to image import tool
 			when loading slide group with lots of image, UI freezes for too long
 				this is due to the loading of images in the image item 
 				which is due to the creating of slide pixmaps
@@ -179,8 +170,15 @@ Revised Task list for Release 1.0, 10/18/09:
 						
 			images import tool maybe should use different file browser dialog - because on win32, its that directory tree dialog with no field to type in - I hate that dialog
 			
-			[DONE] integrate the proper song filter/song generator code for foldback displays
-			make filters and auto-size text code applicable to non-synced outputs as well
+			[STARTED] add image slideshow group type
+				or group "generator" / importer?
+					[DONE] added importer under MainWindow::imageImportTool()
+				like what powerpoint has - but:
+					- ppt displayes NO progress dialog or bar when reading large image lists (just a busy cursor)
+					- generating the slides takes a LONG time in ppt once you click CREATE
+					- powerpoint does NOT automatically set the LOOP SLIDE SHOW *or* an intelligent per slide auto-change time
+			
+			
 			make an output MJPEG-only (e.g. no need for visible widget)
 				subclass of the network output
 				no need for custom dviz viewer on other end
@@ -193,39 +191,17 @@ Revised Task list for Release 1.0, 10/18/09:
 			
 			do need vertical line spacing for artistic use in desigining slides
 			text toolbar vs rich editor in config box dont agree - config box doesnt pick up same text size
-			cloning text objects looses the original font size even tho we copy the html
 			rich text editor should allow manually typed point sizes
 			rich text editor should accept only plain text mime type and assume current formatting
 			need an autofit textbox btn
 			and an autosize textbox
+			when changing text using tooplbar icons, need to update prop dock with new html 
 			
 			make a background "apply to all" button
-			add generic pre-render on document load 
-				loop thru every group, every slide and call Paint on every visual delegate
 			make autosave - on/off from toolbar
+			make autosave time configurable via app settings
 			
-			allow user to choose only-text background color
-			when changing text using tooplbar icons, need to update prop dock with new html 
 			when switching background to video, somehow render the previous background video UNTIL the first frame of the next video is ready
-			
-			[DONE] offer more filter types for outputs
-				[DONE] at start, offer builtin filters:
-						foreground only
-						text only
-						background only
-						[LATER/NA] video only
-						non-text only
-				[LATER] offer user-designed filters:
-					- scripted filter?
-			
-			[STARTED] add image slideshow group type
-				or group "generator" / importer?
-					[DONE] added importer under MainWindow::imageImportTool()
-				like what powerpoint has - but:
-					- ppt displayes NO progress dialog or bar when reading large image lists (just a busy cursor)
-					- generating the slides takes a LONG time in ppt once you click CREATE
-					- powerpoint does NOT automatically set the LOOP SLIDE SHOW *or* an intelligent per slide auto-change time
-			
 			
 			add network viewer client
 				for viewer, client or server doesnt matter
@@ -240,6 +216,7 @@ Revised Task list for Release 1.0, 10/18/09:
 					** Will have to send apsect ratio changes over the line
 				[DONE] need to find ops in control that rely on calling the public view() or scene() methods
 					[DONE] best way may be just to move those methods private :-)
+					
 			add mjpeg output feed (server) with configurable FPS / quality for compat with vidblaster
 				use widget topixmap routine?
 				or mygracphisview topixmap?
@@ -344,6 +321,24 @@ Revised Task list for Release 1.0, 10/18/09:
 			130>, inc by 25??
 			or some form of exponential, rounded percentage inc? (e.g. (int)(cur size * 1.5)) ?
 		
+		
+		
+		[FIXED] cloning text objects looses the original font size even tho we copy the html
+			
+		[DONE] integrate the proper song filter/song generator code for foldback displays
+		[DONE] make filters and auto-size text code applicable to non-synced outputs as well
+			
+		[DONE] offer more filter types for outputs
+			[DONE] at start, offer builtin filters:
+					foreground only
+					text only
+					background only
+					[LATER/NA] video only
+					non-text only
+			[LATER] offer user-designed filters:
+				- scripted filter?
+		
+		[DONE] allow user to choose only-text background color
 		[DONE] new document AR still not correct in the icons
 		[DONE] changing model doesnt update slidegrouplistmodel icons
 		[DONE] need to save clear/black state across changing songs (e.g. clear at end of one song, set new song, needs to fade new background/new clear slide)
@@ -370,6 +365,15 @@ Revised Task list for Release 1.0, 10/18/09:
 			update:
 				it was a case of not disconnecting correctly from m_syncInst in OutputControl
 				
+		
+		[DONE] need to be able to preview slides (next/prev button)
+			[DONE] move preview dock to under the group list - simple slide list model + preview window
+		[DONE] start with overlay disabled
+		[DONE] max fade speed slider needs to be greater
+			Bumped max to 2000ms (2sec)
+		[DONE] double-clicking on preview slide should go live with that slide
+		[DONE] draw black line (dotted?) between slides in song list model
+		[DONE] preview control needs to change viewcontrols correctly
 		
 		[DONE] when cloning items, MUST set ID and itemname in the abstractitem::clone() method!!
 		
@@ -555,6 +559,11 @@ Revised Task list for Release 1.0, 10/18/09:
 		
 		overlay enable crashes if no group live
 	
+		[FIXED] crash on invalid overlay document:
+			made box readonly
+		[FIXED] should not check overlay document name while typing - only when finished
+			made box readonly
+		
 		[FIXED] deleting last group in doc crashes
 			patched documentlistmodel::internalsetup to not emit datachanged if slist is empty
 		[FIXED] when going from song item live to regular slide live, the text-only filter checkbox doesnt get re-checked

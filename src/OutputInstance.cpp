@@ -8,6 +8,8 @@
 #include <QApplication>
 #include <QVBoxLayout>
 
+#include <QImageWriter>
+
 #include "SlideGroupViewer.h"
 #include "MyGraphicsScene.h"
 #include "model/Slide.h"
@@ -29,8 +31,13 @@ OutputInstance::OutputInstance(Output *out, QWidget *parent)
 	, m_viewer(0)
 	, m_slideGroup(0)
 	, m_slideNum(-1)
+	, m_isFoldback(false)
 {
 	out->setInstance(this);
+	
+	if(out->tags().toLower().indexOf("foldback") >= 0 ||
+	   out->name().toLower().indexOf("foldback") >= 0)
+		m_isFoldback = true;
 	
 	// MUST be created after main window, so allow segfault if no main window
 	MainWindow *mw = MainWindow::mw();
@@ -51,9 +58,51 @@ OutputInstance::OutputInstance(Output *out, QWidget *parent)
 	layout->addWidget(m_viewer);
 	
 	applyOutputSettings();
+	
+	m_grabTimer = new QTimer();
+	connect(m_grabTimer, SIGNAL(timeout()), this, SLOT(slotGrabPixmap()));
+	
+	m_grabTimer->start(500);
 }
 
 OutputInstance::~OutputInstance() {}
+
+void OutputInstance::slotGrabPixmap()
+{
+	if(!m_isFoldback)
+		return;
+	static int frameCounter = 0;
+	static double frameTimeSum = 0;
+	
+	frameCounter++;
+	
+	QTime t;
+	t.start();
+	
+	QList<QByteArray> list = QImageWriter::supportedImageFormats();
+	qDebug()<<"ImageWriter format list: "<<list;
+	
+	qDebug("Starting frame grab...");
+	QPixmap frame = QPixmap::grabWidget(m_viewer);
+	
+	
+	QImageWriter writer("/tmp/test.png");
+	if(!writer.canWrite())
+	{
+		qDebug() << "ImageWriter can't write!";
+	}
+	else
+	if(!writer.write(frame.toImage()))
+	{
+		qDebug() << "ImageWriter reported error:"<<writer.errorString();
+	}
+			
+	double elapsed = ((double)t.elapsed()) / 1000.0;
+	
+	frameTimeSum += elapsed;
+	
+	qDebug("Frame: %d, Elapsed: %.02f, Avg: %.02f, FPS: %.02f\n", frameCounter, elapsed, frameTimeSum / frameCounter, frameCounter / frameTimeSum);
+}
 
 void OutputInstance::applyOutputSettings()
 {
