@@ -153,7 +153,7 @@ void OutputControl::setupAdvancedUI()
 	int rowNbr = 0;
 	
 
-	// Row 0: Text only filter on/off
+	// Row: Text only filter on/off
 	
 	//label = new QLabel("Text-only Filter: ");
 	label = new QLabel("Overlay: ");
@@ -163,7 +163,9 @@ void OutputControl::setupAdvancedUI()
 	QHBoxLayout * hbox1 = new QHBoxLayout();
 	
 	m_overlayDocBox = new QLineEdit(this);
-	connect(m_overlayDocBox, SIGNAL(textChanged(const QString&)), this, SLOT(overlayDocumentChanged(const QString&)));
+	m_overlayDocBox->setReadOnly(true);
+	
+	//connect(m_overlayDocBox, SIGNAL(textChanged(const QString&)), this, SLOT(overlayDocumentChanged(const QString&)));
 	hbox1->addWidget(m_overlayDocBox,2); // large stretch
 	
 	QPushButton *btn1 = new QPushButton("Browse");
@@ -195,34 +197,7 @@ void OutputControl::setupAdvancedUI()
 	
 	gridLayout->addLayout(hbox2,rowNbr,1);
 	
-	
-	// Row 3: Text only background
-	rowNbr++;
-	label = new QLabel("Text-only Background: ");
-	gridLayout->addWidget(label,rowNbr,0);
-	
-	m_colorPicker = new QtColorPicker();
-	m_colorPicker->setStandardColors();
-	m_colorPicker->setCurrentColor(Qt::black);
-	gridLayout->addWidget(m_colorPicker,rowNbr,1);
-	
-	connect(m_colorPicker, SIGNAL(colorChanged(const QColor &)), this, SLOT(setTextOnlyBackground(const QColor &)));
-//	connect(textFilterBtn, SIGNAL(toggled(bool)), m_colorPicker, SLOT(setEnabled(bool)));
-	
-	// Row 3: REsize top textbox
-	rowNbr++;
-	label = new QLabel("Resize Top Textbox: ");
-	gridLayout->addWidget(label,rowNbr,0);
-	
-	m_textResizeBtn = new QPushButton("Intelli-Size Top Textbox");
-	m_textResizeBtn->setCheckable(true);
-	//m_textResizeBtn->setEnabled(false);
-	gridLayout->addWidget(m_textResizeBtn,rowNbr,1);
-	
-	connect(m_textResizeBtn, SIGNAL(toggled(bool)), this, SLOT(setTextResizeEnabled(bool)));
-//	connect(m_textFilterBtn, SIGNAL(toggled(bool)), m_textResizeBtn, SLOT(setEnabled(bool)));
-	
-	// Row 4: Sync/live setting
+	// Row: Sync/live setting
 	rowNbr++;
 	label = new QLabel("Control Type: ");
 	gridLayout->addWidget(label,rowNbr,0);
@@ -234,7 +209,7 @@ void OutputControl::setupAdvancedUI()
 	gridLayout->addWidget(m_syncStatusSelector,rowNbr,1);
 	connect(m_syncStatusSelector, SIGNAL(currentIndexChanged(int)), this, SLOT(setIsOutputSynced(int)));
 	
-	// Row 4: Output sync source
+	// Row: Output sync source
 	rowNbr++;
 	
 	label = new QLabel("Sync With: ");
@@ -251,10 +226,35 @@ void OutputControl::setupAdvancedUI()
 	// MUST be created after main window, so allow segfault if no main window
 	MainWindow *mw = MainWindow::mw();
 	connect(mw, SIGNAL(appSettingsChanged()), this, SLOT(setupSyncWithBox()));
+		
+	// Row: Text only background
+	rowNbr++;
+	label = new QLabel("Text-only Background: ");
+	gridLayout->addWidget(label,rowNbr,0);
+	
+	m_colorPicker = new QtColorPicker();
+	m_colorPicker->setStandardColors();
+	m_colorPicker->setCurrentColor(Qt::black);
+	gridLayout->addWidget(m_colorPicker,rowNbr,1);
+	
+	connect(m_colorPicker, SIGNAL(colorChanged(const QColor &)), this, SLOT(setTextOnlyBackground(const QColor &)));
+//	connect(textFilterBtn, SIGNAL(toggled(bool)), m_colorPicker, SLOT(setEnabled(bool)));
+	
+	// Row: Resize top textbox
+	rowNbr++;
+	label = new QLabel("Resize Top Textbox: ");
+	gridLayout->addWidget(label,rowNbr,0);
+	
+	m_textResizeBtn = new QPushButton("Intelli-Size Top Textbox");
+	m_textResizeBtn->setCheckable(true);
+	//m_textResizeBtn->setEnabled(false);
+	gridLayout->addWidget(m_textResizeBtn,rowNbr,1);
+	
+	connect(m_textResizeBtn, SIGNAL(toggled(bool)), this, SLOT(setTextResizeEnabled(bool)));
+//	connect(m_textFilterBtn, SIGNAL(toggled(bool)), m_textResizeBtn, SLOT(setEnabled(bool)));
 	
 	
-	
-	// Row 2: Text only filter on/off
+	// Row: Text only filter on/off
 	rowNbr++;
 	
 	//label = new QLabel("Text-only Filter: ");

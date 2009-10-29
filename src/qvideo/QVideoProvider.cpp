@@ -204,9 +204,9 @@ QVideoProvider::QVideoProvider(const QString &f) :
 
 QVideoProvider::~QVideoProvider()
 {
+	disconnect(m_video,0,this,0);
 	m_video->stop();
-	//disconnect(m_video,0,0,0);
-	delete m_video;
+	m_video->deleteLater();
 	m_video = 0;
 }
 

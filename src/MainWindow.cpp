@@ -645,12 +645,13 @@ void MainWindow::setupCentralWidget()
 	
 	m_previewInstance = new OutputInstance(Output::previewInstance());
 	
-	QWidget * m_previewControlBase = new QWidget();
+	m_previewControlBase = new QWidget();
 	QVBoxLayout * leftLayout3 = new QVBoxLayout(m_previewControlBase);
 	leftLayout3->setMargin(0);
 	
 	m_previewControl = new SlideGroupViewControl();
 	m_previewControl->setOutputView(m_previewInstance);
+	connect(m_previewControl, SIGNAL(slideDoubleClicked(Slide *)), this, SLOT(previewSlideDoubleClicked(Slide *)));
 	
 	leftLayout3->addWidget(m_previewControl);
 	
@@ -887,34 +888,38 @@ void MainWindow::previewSlideGroup(SlideGroup *newGroup)
 	//qDebug() << "MainWindow::previewSlideGroup: Loading preview slide\n";
 	//m_previewWidget->setSlideGroup(s);
 	
-// 	SlideGroup * oldGroup = m_previewInstance->slideGroup();
-// 	
-// 	//qDebug() << "MainWindow::setLiveGroup(): newGroup->groupType():"<<newGroup->groupType()<<", SlideGroup::Generic:"<<SlideGroup::Generic;
-// 	if((oldGroup && oldGroup->groupType() != newGroup->groupType()) || newGroup->groupType() != SlideGroup::Generic)
-// 	{
-// 		SlideGroupFactory *factory = SlideGroupFactory::factoryForType(newGroup->groupType());
-// 		if(!factory)
-// 		{
-// 			//qDebug() << "MainWindow::setLiveGroup(): Factory fell thu for request, going to generic control";
-// 			factory = SlideGroupFactory::factoryForType(SlideGroup::Generic);
-// 		}
-// 		
-// 		if(factory)
-// 		{
-// 			//qDebug() << "MainWindow::setLiveGroup(): got new factory, initalizing";
-// 			if(m_previewControl)
-// 			{
-// 				m_previewControlBase->layout()->removeWidget(m_previewControl);
-// // 				delete m_previewControl;
-// // 				m_previewControl = 0;
-// 			}	
-// 			
-// 			
-// 			m_previewControl = factory->newViewControl();
-// 			m_previewControl->setOutputView(m_previewInstance);
-// 			m_previewControlBase->layout()->addWidget(m_previewControl);
-// 		}
-// 	}
+	SlideGroup * oldGroup = m_previewInstance->slideGroup();
+	
+	//qDebug() << "MainWindow::setLiveGroup(): newGroup->groupType():"<<newGroup->groupType()<<", SlideGroup::Generic:"<<SlideGroup::Generic;
+	if((oldGroup && oldGroup->groupType() != newGroup->groupType()) 
+		|| newGroup->groupType() != SlideGroup::Generic)
+	{
+		SlideGroupFactory *factory = SlideGroupFactory::factoryForType(newGroup->groupType());
+		if(!factory)
+		{
+			//qDebug() << "MainWindow::setLiveGroup(): Factory fell thu for request, going to generic control";
+			factory = SlideGroupFactory::factoryForType(SlideGroup::Generic);
+		}
+		
+		if(factory)
+		{
+			//qDebug() << "MainWindow::setLiveGroup(): got new factory, initalizing";
+			if(m_previewControl)
+			{
+				m_previewControlBase->layout()->removeWidget(m_previewControl);
+				disconnect(m_previewControl, 0, this, 0);
+ 				delete m_previewControl;
+ 				m_previewControl = 0;
+			}	
+			
+			
+			m_previewControl = factory->newViewControl();
+			m_previewControl->setOutputView(m_previewInstance);
+			m_previewControlBase->layout()->addWidget(m_previewControl);
+			
+			connect(m_previewControl, SIGNAL(slideDoubleClicked(Slide *)), this, SLOT(previewSlideDoubleClicked(Slide *)));
+		}
+	}
 	
 	//qDebug() << "MainWindow::setLiveGroup: Loading into view control";
 	m_previewControl->setSlideGroup(newGroup);
@@ -923,6 +928,12 @@ void MainWindow::previewSlideGroup(SlideGroup *newGroup)
 	//qDebug() << "MainWindow::setLiveGroup: Loading into LIVE output (done)";
 	m_previewControl->setFocus(Qt::OtherFocusReason);
 				
+}
+
+void MainWindow::previewSlideDoubleClicked(Slide *slide)
+{
+	SlideGroup *group = m_previewInstance->slideGroup();
+	setLiveGroup(group,slide);
 }
 
 void MainWindow::setLiveGroup(SlideGroup *newGroup, Slide *currentSlide)
@@ -1063,7 +1074,13 @@ void MainWindow::groupDoubleClicked(const QModelIndex &idx)
 {
 	SlideGroup *g = m_docModel->groupFromIndex(idx);
         //qDebug() << "MainWindow::groupSelected(): double-clicked group#:"<<g->groupNumber()<<", title:"<<g->groupTitle();
-	setLiveGroup(g);
+
+        Slide *slide = 0;
+	SlideGroup *previewGroup = m_previewInstance->slideGroup();
+	if(previewGroup == g && m_previewControl)
+		slide = m_previewControl->selectedSlide();
+	
+	setLiveGroup(g,slide);
 }
 
 void MainWindow::editGroup(SlideGroup *g, Slide *slide)

@@ -136,19 +136,22 @@ Revised Task list for Release 1.0, 10/18/09:
 			[DONE] need to be able to preview slides (next/prev button)
 				[DONE] move preview dock to under the group list - simple slide list model + preview window
 			
+			[DONE] start with overlay disabled
+			
 			need file preview widget below media browser
 				click once on file to preview
 				
 			[DONE] max fade speed slider needs to be greater
 				Bumped max to 2000ms (2sec)
-			double-clicking on preview slide should go live with that slide
+			[DONE] double-clicking on preview slide should go live with that slide
 			would be nice: while editing slide thats live, if change, cross fade to changed version
 			media browser - when "going back" or "going up", should remeber the last selected index
 			
-			bug - crash on invalid overlay document:
-			bug - should not check overlay document name while typing - only when finished
+			[FIXED] crash on invalid overlay document:
+			[FIXED] should not check overlay document name while typing - only when finished
 			
-			draw black line (dotted?) between slides in song list model
+			[DONE] draw black line (dotted?) between slides in song list model
+			[DONE] preview control needs to change viewcontrols correctly
 			
 			port over the song database conversion code to windows
 			

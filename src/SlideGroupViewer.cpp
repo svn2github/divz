@@ -93,7 +93,6 @@ SlideGroupViewer::SlideGroupViewer(QWidget *parent)
 void SlideGroupViewer::setOverlaySlide(Slide * newSlide)
 {
 	m_overlaySlide = newSlide;
-	m_overlayEnabled = true;  // TODO should we default to this?
 	applySlideFilters();
 }
 
@@ -604,7 +603,11 @@ void SlideGroupViewer::setSlideGroup(SlideGroup *g, Slide *startSlide)
 {
 	//qDebug() << "SlideGroupViewer::setSlideGroup: (SceneContextHint:"<<m_scene->contextHint()<<"), setting slide group:"<<g->groupNumber();
 	if(m_slideGroup == g)
+	{
+		if(startSlide)
+			setSlide(startSlide);
 		return;
+	}
 		
 	m_slideNum = 0;
 	

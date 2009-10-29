@@ -43,6 +43,11 @@ public:
 	Slide * selectedSlide() { return m_selectedSlide; }
 	
 	typedef enum TimerState { Undefined, Running, Stopped };
+	
+signals:
+	void slideDoubleClicked(Slide *);
+	void slideSelected(Slide *);
+	
 public slots:
 	virtual void setSlideGroup(SlideGroup *g, Slide *curSlide=0);
 	virtual void releaseSlideGroup();
@@ -58,6 +63,7 @@ public slots:
 protected slots:
 	virtual void slideSelected(const QModelIndex &);
 	virtual void currentChanged(const QModelIndex &, const QModelIndex &);
+	virtual void slideDoubleClicked(const QModelIndex &);
 	
 	virtual void updateTimeLabel();
 	virtual void enableAnimation(double time = 0);

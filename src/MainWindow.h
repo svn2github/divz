@@ -109,6 +109,8 @@ protected slots:
 	
 	void slotSendToOutputs();
 	
+	void previewSlideDoubleClicked(Slide*);
+	
 protected:
 	void changeEvent(QEvent *e);
 	void closeEvent(QCloseEvent *event);

@@ -125,6 +125,10 @@ QPixmap SongSlideGroupListModel::generatePixmap(Slide *slide)
 		QAbstractTextDocumentLayout::PaintContext pCtx;
 		m_text->documentLayout()->draw(&textPainter, pCtx);
 		
+		textPainter.setPen(QPen(Qt::black,1,Qt::DotLine));
+		textPainter.setBrush(Qt::NoBrush);
+		textPainter.drawLine(0,iconHeight-1,iconWidth-1,iconHeight-1);
+		
 		textPainter.end();
 		
 		QPixmapCache::insert(passage,icon);

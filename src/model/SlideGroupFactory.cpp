@@ -118,6 +118,7 @@ SlideGroupViewControl::SlideGroupViewControl(OutputInstance *g, QWidget *w )
 	
 	connect(m_listView,SIGNAL(activated(const QModelIndex &)),this,SLOT(slideSelected(const QModelIndex &)));
 	connect(m_listView,SIGNAL(clicked(const QModelIndex &)),  this,SLOT(slideSelected(const QModelIndex &)));
+	connect(m_listView,SIGNAL(doubleClicked(const QModelIndex &)),this,SLOT(slideDoubleClicked(const QModelIndex &)));
 	//connect(m_listView,SIGNAL(entered(const QModelIndex &)),  this,SLOT(slideSelected(const QModelIndex &)));
 	
 	// deleting old selection model per http://doc.trolltech.com/4.5/qabstractitemview.html#setModel
@@ -310,6 +311,19 @@ void SlideGroupViewControl::slideSelected(const QModelIndex &idx)
 	enableAnimation(slide->autoChangeTime());
 	
 	m_selectedSlide = slide;
+	
+	emit slideSelected(slide);
+}
+
+
+void SlideGroupViewControl::slideDoubleClicked(const QModelIndex &idx)
+{
+	if(m_releasingSlideGroup)
+		return;
+	Slide *slide = m_slideModel->slideFromIndex(idx);
+	if(!slide)
+		return;
+	emit slideDoubleClicked(slide);
 }
 
 void SlideGroupViewControl::setOutputView(OutputInstance *v) 
