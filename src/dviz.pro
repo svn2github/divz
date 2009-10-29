@@ -68,7 +68,8 @@ HEADERS += \
 	SlideItemListModel.h \
 	MediaBrowser.h \
 	OutputInstance.h \
-	OutputControl.h
+	OutputControl.h \
+	JpegServer.h
 
 	
 SOURCES += \
@@ -91,7 +92,8 @@ SOURCES += \
 	SlideItemListModel.cpp \
 	MediaBrowser.cpp \
 	OutputInstance.cpp \
-	OutputControl.cpp
+	OutputControl.cpp \
+	JpegServer.cpp
 	
 
 QT += core \

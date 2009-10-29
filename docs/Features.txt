@@ -144,6 +144,9 @@ Revised Task list for Release 1.0, 10/18/09:
 			would be nice: while editing slide thats live, if change, cross fade to changed version
 			media browser - when "going back" or "going up", should remeber the last selected index
 			
+			need video controls - at least in media browser preview
+				would be nice to integrate into slideviewcontrol
+			
 			[STARTED] port over the song database conversion code to windows
 				compiles pxxmlexport (pxtools) on win32 - doesnt execute
 				need to integrate it into a dialog in dviz
@@ -203,6 +206,8 @@ Revised Task list for Release 1.0, 10/18/09:
 			
 			when switching background to video, somehow render the previous background video UNTIL the first frame of the next video is ready
 			
+			song text looks like its not centering correctly - check it out
+			
 			add network viewer client
 				for viewer, client or server doesnt matter
 					probably should start with client and remove the :server: option from the output dialog for now
@@ -217,13 +222,15 @@ Revised Task list for Release 1.0, 10/18/09:
 				[DONE] need to find ops in control that rely on calling the public view() or scene() methods
 					[DONE] best way may be just to move those methods private :-)
 					
-			add mjpeg output feed (server) with configurable FPS / quality for compat with vidblaster
+			[DONE] add mjpeg output feed (server) with configurable FPS / quality for compat with vidblaster
 				use widget topixmap routine?
 				or mygracphisview topixmap?
 				or mygraphicscene topixmap?
 			
 				should be function in slidegroupviewer (basically, a clone output option)
 					multithreaded - compress frame jpeg once, then offer to all clients
+					
+				hacked a bit right now - just does foldback - maybe more later
 			
 		
 		

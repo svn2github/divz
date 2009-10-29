@@ -15,6 +15,7 @@
 #include "model/Slide.h"
 #include "model/Output.h"
 #include "model/AbstractItemFilter.h"
+#include "JpegServer.h"
 
 #include "itemlistfilters/SlideTextOnlyFilter.h"
 
@@ -32,6 +33,7 @@ OutputInstance::OutputInstance(Output *out, QWidget *parent)
 	, m_slideGroup(0)
 	, m_slideNum(-1)
 	, m_isFoldback(false)
+	, m_server(0)
 {
 	out->setInstance(this);
 	
@@ -71,6 +73,22 @@ void OutputInstance::slotGrabPixmap()
 {
 	if(!m_isFoldback)
 		return;
+		
+	if(!m_server)
+	{
+		m_server = new JpegServer();
+		m_server->setProvider(this, SIGNAL(imageReady(QImage*)), true); // true = delete image when transmitted
+		
+		if (!m_server->listen()) 
+		{
+			qDebug() << "JpegServer could not start: "<<m_server->errorString();
+		}
+		else
+		{
+			qDebug() << output()->name()<<": JpegServer listening on "<<m_server->myAddress();
+		}
+	}
+	
 	static int frameCounter = 0;
 	static double frameTimeSum = 0;
 	
@@ -79,29 +97,15 @@ void OutputInstance::slotGrabPixmap()
 	QTime t;
 	t.start();
 	
-	QList<QByteArray> list = QImageWriter::supportedImageFormats();
-	qDebug()<<"ImageWriter format list: "<<list;
-	
-	qDebug("Starting frame grab...");
 	QPixmap frame = QPixmap::grabWidget(m_viewer);
 	
+	emit imageReady(new QImage(frame.toImage()));
 	
-	QImageWriter writer("/tmp/test.png");
-	if(!writer.canWrite())
-	{
-		qDebug() << "ImageWriter can't write!";
-	}
-	else
-	if(!writer.write(frame.toImage()))
-	{
-		qDebug() << "ImageWriter reported error:"<<writer.errorString();
-	}
-			
-	double elapsed = ((double)t.elapsed()) / 1000.0;
+	double elapsed = ((double)t.elapsed()); // / 1000.0;
 	
 	frameTimeSum += elapsed;
 	
-	qDebug("Frame: %d, Elapsed: %.02f, Avg: %.02f, FPS: %.02f\n", frameCounter, elapsed, frameTimeSum / frameCounter, frameCounter / frameTimeSum);
+	//qDebug("Frame: %d, Elapsed: %.02f, Avg: %.02f, FPmS: %.02f, Port: %d", frameCounter, elapsed, frameTimeSum / frameCounter, frameCounter / frameTimeSum, m_server->serverPort());
 }
 
 void OutputInstance::applyOutputSettings()

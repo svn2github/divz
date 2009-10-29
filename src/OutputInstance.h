@@ -18,7 +18,7 @@ class Slide;
 #include <QWidget>
 class Output;
 #include "MyGraphicsScene.h"
-
+class JpegServer;
 
 class OutputInstance : public QWidget
 {
@@ -56,6 +56,8 @@ signals:
 	void nextGroup();
 	
 	void slideChanged(int);
+	
+	void imageReady(QImage*);
 
 public slots:
 	Slide * setSlide(Slide *);
@@ -114,6 +116,8 @@ private:
 	AbstractItemFilterList m_slideFilters;
 	
 	bool m_isFoldback;
+	
+	JpegServer *m_server;
 };
 
 #endif // SLIDEGROUPVIEWER_H
