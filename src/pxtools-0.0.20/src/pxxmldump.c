@@ -56,8 +56,8 @@ int create_xml_line(px_header *header, px_fieldInfo **felder, px_records block, 
 #define BLOCK_COPY(x,size) \
 	memcpy(x,   block + block_index, size); \
 	/*printf("\nBl-IDX1: %04x - ",block_index);*/ \
-	block_index += size; 
-	
+	block_index += size;
+
 	printf("  <row>\n");
 	for (i = 0; i < header->numFields; i++ ) {
 		printf("    <%s name=\"%s\">", get_xml_tag(felder, i), felder[i]->name);
@@ -66,33 +66,33 @@ int create_xml_line(px_header *header, px_fieldInfo **felder, px_records block, 
 			int j;
 			BLOCK_COPY(str, felder[i]->size);
 			str[felder[i]->size] = '\0';
-			
+
 			for (j = 0; str[j] != '\0'; j++) {
 				switch(str[j]) {
 				case '<': puts("&lt;"); break;
 				case '>': puts("&gt;"); break;
 				case '&': puts("&amp;"); break;
-					
+
 				default:  putchar(str[j]);
 				}
 			}
 			free(str);
     } else if (felder[i]->type == PX_Field_Type_BCD) {
       char *str = malloc(felder[i]->size + 1);
-			
+
       fprintf(stderr,"aslhf�asdhfsadbf\n"),
-			
+
 	BLOCK_COPY(str, felder[i]->size);
-			
+
       printf("%s", str);
-			
+
       free(str);
     } else if (felder[i]->type == PX_Field_Type_ShortInt) {
       unsigned short s;
       unsigned long long d;
-			
+
       BLOCK_COPY(&s, felder[i]->size);
-			
+
       switch(PXtoLong(s, &d, felder[i]->type)) {
       case VALUE_OK:
 	printf("%Ld", d );
@@ -102,13 +102,13 @@ int create_xml_line(px_header *header, px_fieldInfo **felder, px_records block, 
       default:
 	break;
       }
-			
+
     } else if (felder[i]->type == PX_Field_Type_Logical) {
       unsigned char s;
       unsigned long long d;
-			
+
       BLOCK_COPY(&s, felder[i]->size);
-			
+
       switch(PXtoLong(s, &d, felder[i]->type)) {
       case VALUE_OK:
 	printf("%Lx", d);
@@ -121,9 +121,9 @@ int create_xml_line(px_header *header, px_fieldInfo **felder, px_records block, 
     } else if (felder[i]->type == PX_Field_Type_LongInt) {
       unsigned long s;
       unsigned long long d;
-			
+
       BLOCK_COPY(&s, felder[i]->size);
-			
+
       switch(PXtoLong(s, &d, felder[i]->type)) {
       case VALUE_OK:
 	printf("%Ld", d );
@@ -136,9 +136,9 @@ int create_xml_line(px_header *header, px_fieldInfo **felder, px_records block, 
     } else if (felder[i]->type == PX_Field_Type_Incremental) {
       unsigned long s;
       unsigned long long d;
-			
+
       BLOCK_COPY(&s, felder[i]->size);
-			
+
       switch(PXtoLong(s, &d, felder[i]->type)) {
       case VALUE_OK:
 	printf("%Ld", d );
@@ -151,9 +151,9 @@ int create_xml_line(px_header *header, px_fieldInfo **felder, px_records block, 
     } else if (felder[i]->type == PX_Field_Type_Number) {
       unsigned long long s;
       double d;
-			
+
       BLOCK_COPY(&s, felder[i]->size);
-			
+
       switch(PXtoDouble(s, &d, felder[i]->type)) {
       case VALUE_OK:
 	printf("%f", d );
@@ -163,13 +163,13 @@ int create_xml_line(px_header *header, px_fieldInfo **felder, px_records block, 
       default:
 	break;
       }
-			
+
     } else if (felder[i]->type == PX_Field_Type_Currency) {
       unsigned long long s;
       double d;
-			
+
       BLOCK_COPY(&s, felder[i]->size);
-			
+
       switch(PXtoDouble(s, &d, felder[i]->type)) {
       case VALUE_OK:
 	printf("%f", d );
@@ -182,7 +182,7 @@ int create_xml_line(px_header *header, px_fieldInfo **felder, px_records block, 
     } else if (felder[i]->type == PX_Field_Type_Date) {
       unsigned long long s;
       struct tm _tm;
-			
+
       BLOCK_COPY(&s, felder[i]->size);
 
       switch (PXtoTM(s, &_tm, felder[i]->type)) {
@@ -198,7 +198,7 @@ int create_xml_line(px_header *header, px_fieldInfo **felder, px_records block, 
     } else if (felder[i]->type == PX_Field_Type_Time) {
       unsigned long long s;
       struct tm _tm;
-			
+
       BLOCK_COPY(&s, felder[i]->size);
 
       switch (PXtoTM(s, &_tm, felder[i]->type)) {
@@ -213,7 +213,7 @@ int create_xml_line(px_header *header, px_fieldInfo **felder, px_records block, 
     } else if (felder[i]->type == PX_Field_Type_Timestamp) {
       unsigned long long s;
       struct tm _tm;
-			
+
       BLOCK_COPY(&s, felder[i]->size);
 
       switch (PXtoTM(s, &_tm, felder[i]->type)) {
@@ -229,12 +229,12 @@ int create_xml_line(px_header *header, px_fieldInfo **felder, px_records block, 
     } else if (felder[i]->type == PX_Field_Type_MemoBLOB) {
       void *blob = malloc(felder[i]->size);
       char *s = NULL;
-			
+
       BLOCK_COPY(blob, felder[i]->size);
-			
+
       s = PXMEMOtoString(blob, felder[i]->size, blobname);
-			
-			
+
+
       if (s != NULL) {
 	printf("%s",s);
 	free(s);
@@ -251,7 +251,7 @@ int create_xml_line(px_header *header, px_fieldInfo **felder, px_records block, 
   }
 #undef BLOCK_COPY
   printf("  </row>\n");
-	
+
   return 0;
 }
 int create_xml_dump(px_header *header, px_fieldInfo **felder, px_blocks **blocks, char *blobname) {
@@ -264,7 +264,7 @@ int create_xml_dump(px_header *header, px_fieldInfo **felder, px_blocks **blocks
   n = header->firstBlock - 1;
   while (n != -1) {
     if (c >= header->usedBlocks) {
-      fprintf(stderr, 
+      fprintf(stderr,
 	      "%s.%d: Leaving here as are trying to use more blocks "
 	      "then registered in the header (header->usedBlocks\n"
 	      "Tell me if I'm wrong\n", __FILE__, __LINE__);
@@ -306,15 +306,16 @@ void display_version() {
 }
 
 int main ( int argc, char **argv) {
+	printf("hello\n");
   px_header header;
   px_fieldInfo **felder;
   px_blocks **blocks;
-	
+
   int f,i,settablename = 0;
   char tablename[255] = "";
   char *blobname = NULL, *filename = NULL;
 #ifdef HAVE_GETOPT_LONG
-  static struct option long_options[] = 
+  static struct option long_options[] =
     {
       {"blobname", required_argument, 0, 'b'},
       {"filename", required_argument, 0, 'f'},
@@ -324,22 +325,22 @@ int main ( int argc, char **argv) {
       {0, 0, 0, 0}
     };
 #endif
-  while ( 
+  while (
 #ifdef HAVE_GETOPT_LONG
-	  (i = getopt_long(argc, argv, "b:f:hn:V", long_options, (int *) 0)) != EOF 
+	  (i = getopt_long(argc, argv, "b:f:hn:V", long_options, (int *) 0)) != EOF
 #else
-	  (i = getopt(argc, argv, "b:f:hn:V")) != EOF 
+	  (i = getopt(argc, argv, "b:f:hn:V")) != EOF
 #endif
-	  ) {	
+	  ) {
     switch (i) {
-    case 'n' : 
+    case 'n' :
       settablename = 1;
       if (strlen(optarg) > sizeof(tablename)-1) {
 	fprintf(stderr, "tablename too longn\n");
 	exit (-1);
       }
       strcpy(tablename, optarg);
-				
+
       break;
     case 'b' :
       blobname = optarg;
@@ -357,7 +358,7 @@ int main ( int argc, char **argv) {
       break;
     }
   }
-	
+
   if (strlen(tablename) > 75) {
     printf("error: specified tablename is too long\n");
     exit(-1);
@@ -382,19 +383,19 @@ int main ( int argc, char **argv) {
     printf("File '%s' is not a paradox-file\n", filename);
     return -1;
   }
-	
+
   blocks = PXparseBlocks(f, &header);
-	
+
   close (f);
   if (settablename) strcpy(header.tableName,tablename);
-	
+
   if (!blocks) {
     printf("Keine Spalten\n");
     return(-1);
   }
-	
+
   create_xml_dump (&header, felder, blocks, blobname);
-	
+
   return 0;
 }
 

@@ -4,7 +4,7 @@
 #include <fcntl.h>
 #include <time.h>
 #include <string.h>
-#include <libintl.h>
+//#include <libintl.h>
 #include "config.h"
 #include "pxtypes.h"
 #include "pxconvert.h"
@@ -13,7 +13,7 @@
 /*************************
    taken from c't 1997 - 15
    ftp://ftp.heise.de/pub/ct/ct9715.zip
-   
+
    input:   julian date
             (day since 1.1.4713 before Chr.)
    output:  year
@@ -44,7 +44,7 @@ void gdate(long jd, int *jahr, int *monat, int *tag) {
 		m-=9;
 		j++;
 	}
-	
+
 	*jahr	= (int)j;
 	*monat	= (int)m;
 	*tag	= (int)t;
@@ -87,7 +87,7 @@ void copy_from_le(void *_dst, const char *src, int len) {
 #else
 		dst[i] = src[i];
 #endif
-	} 
+	}
 }
 
 void fix_sign (char *dst, int len) {
@@ -110,11 +110,11 @@ int PXtoLong(unsigned long long number, unsigned long long *ret, int type) {
 	unsigned long long retval = 0;
 	char *s = (char *)&number;
 	char *d = (char *)&retval;
-	
+
 	switch (type) {
 		case PX_Field_Type_Logical:
 			copy_from_be(d,s,1);
-			
+
 			if (s[0] & 0x80) {
 				fix_sign(d, 1);
 			} else if (retval == 0) {
@@ -124,10 +124,10 @@ int PXtoLong(unsigned long long number, unsigned long long *ret, int type) {
 				retval = (char )retval;
 			}
 			break;
-		
-		case PX_Field_Type_ShortInt: 
+
+		case PX_Field_Type_ShortInt:
 			copy_from_be(d,s,2);
-			
+
 			if (s[0] & 0x80) {
 				fix_sign(d, 2);
 			} else if (retval == 0) {
@@ -138,9 +138,9 @@ int PXtoLong(unsigned long long number, unsigned long long *ret, int type) {
 			}
 			break;
 		case PX_Field_Type_Incremental:
-		case PX_Field_Type_LongInt: 
+		case PX_Field_Type_LongInt:
 			copy_from_be(d,s,4);
-			
+
 			if (s[0] & 0x80) {
 				fix_sign(d, 4);
 			} else if (retval == 0) {
@@ -155,7 +155,7 @@ int PXtoLong(unsigned long long number, unsigned long long *ret, int type) {
 				__FILE__, __LINE__,
 				type);
 			return VALUE_ERROR;
-		
+
 	}
 	*ret = retval;
 	return VALUE_OK;
@@ -165,12 +165,12 @@ int PXtoDouble(unsigned long long number, double *ret, int type) {
 	double retval = 0;
 	unsigned char *s = (unsigned char *)&number;
 	unsigned char *d = (unsigned char *)&retval;
-	
+
 	switch (type) {
-	case PX_Field_Type_Currency: 
-	case PX_Field_Type_Number: 
+	case PX_Field_Type_Currency:
+	case PX_Field_Type_Number:
 		copy_from_be(d,s,8);
-		
+
 		if (s[0] & 0x80) {
 			/* positive */
 			fix_sign(d, 8);
@@ -199,13 +199,13 @@ int PXtoTM (unsigned long long number, struct tm *tm, int type ) {
 	char *d = (char *)&retval;
 	long jd;
 	int y,m,dy;
-	
+
 	struct tm *_tm = tm;
-	
+
 	switch (type) {
-		case PX_Field_Type_Date: 
+		case PX_Field_Type_Date:
 			copy_from_be(d,s,4);
-			
+
 			if (s[0] & 0x80) {
 				fix_sign(d, 4);
 			} else if (retval == 0) {
@@ -220,7 +220,7 @@ int PXtoTM (unsigned long long number, struct tm *tm, int type ) {
 			** if the date is before 1.1.1970 i add 100 years (365*100 + 24)
 			** (seem not to be valid for paradox 7.0)
 			*/
-#ifdef Y2K_WORKAROUND			
+#ifdef Y2K_WORKAROUND
 			if (retval < 719528) {
 				retval += 36524;
 			}
@@ -228,16 +228,16 @@ int PXtoTM (unsigned long long number, struct tm *tm, int type ) {
 #if 1
 			jd = jdatum(1,1,1);
 			jd += retval - 1;
-			
+
 			gdate(jd, &y, &m, &dy);
-			
-			/* if the date has more than letters 
-			   we assume that it some inserted correctly 
+
+			/* if the date has more than letters
+			   we assume that it some inserted correctly
 			   (not as an 2 letter short cut.) */
-			   
-			if (y >= 100) 
+
+			if (y >= 100)
 				_tm->tm_year	= y - 1900;
-			else 
+			else
 				_tm->tm_year	= y;
 
 			_tm->tm_mon	= m - 1;
@@ -245,13 +245,13 @@ int PXtoTM (unsigned long long number, struct tm *tm, int type ) {
 
 #else
 			t = (retval - 719528 + 365) * 24 * 60 * 60;
-			
+
 			_tm = localtime( &t );
 #endif
 			break;
 		case PX_Field_Type_Time:
 			copy_from_be(d,s,4);
-			
+
 			if (s[0] & 0x80) {
 				fix_sign(d, 4);
 				retval /= 1000; // lost miliseconds !!
@@ -266,31 +266,31 @@ int PXtoTM (unsigned long long number, struct tm *tm, int type ) {
 					__FILE__, __LINE__,
 					number, retval);
 				return VALUE_ERROR;
-			} 
+			}
 			break;
-		case PX_Field_Type_Timestamp: 
+		case PX_Field_Type_Timestamp:
 			copy_from_be(d,s,8);
-			
+
 			if (s[0] & 0x80) {
 				fix_sign(d, 8);
-				
+
 			/* the last byte is unused */
 				retval >>= 8;
-			
+
 			/* the timestamp seems to have a resolution of 1/500s */
 				retval /= 500;
-				
+
 			/* the adjustment that is neccesary to convert paradox
-			** timestamp to unix-timestamp [-> time()] 
+			** timestamp to unix-timestamp [-> time()]
 			**
-			** FIXME: this value is guessed !! 
-			** the garantued precission is +/- 1 second 
+			** FIXME: this value is guessed !!
+			** the garantued precission is +/- 1 second
 			*/
-			
+
 				retval -= 37603860709183;
-			
+
 				t = retval;
-				
+
 				_tm = gmtime( &t );
 			} else if (retval == 0) {
 				return VALUE_IS_NULL;
@@ -299,7 +299,7 @@ int PXtoTM (unsigned long long number, struct tm *tm, int type ) {
 					__FILE__, __LINE__,
 					number, retval);
 				return VALUE_ERROR;
-			} 
+			}
 			break;
 		default:
 			fprintf(stderr,"%s.%d: Can't convert type (%02x)!\n",
@@ -307,7 +307,7 @@ int PXtoTM (unsigned long long number, struct tm *tm, int type ) {
 				type);
 			return -1;
 	}
-	
+
 	memcpy(tm, _tm, sizeof(struct tm));
 	return VALUE_OK;
 }
@@ -323,7 +323,7 @@ int PXtoQuotedString(char *dst, const unsigned char *src, int type) {
 			type);
 		return -1;
 	}
-	
+
 	while(*src) {
 		switch(*src) {
 /* cp431(??) -> latin1 */
@@ -382,22 +382,22 @@ char *PXMEMOtoString(void *blob, int size, char *blobname) {
 	unsigned char index = 0;
 	char *string = NULL;
 	int fd;
-	
+
 	/* if the MEMO field contains less than 10 bytes it is stored in the .DB file */
-	if (size < 10) return NULL;	
-	
+	if (size < 10) return NULL;
+
 	copy_from_le(&offset, (char *)blob+(size-10), 4);
 	copy_from_le(&length, (char *)blob+(size-6), 4);
 	copy_from_le(&mod_number, (char *)blob+(size-2), 2);
-	
+
 	copy_from_le(&index, (char *)blob+(size-10), 1);
-	
+
 	offset &= 0xffffff00;
-#ifdef DEBUG	
+#ifdef DEBUG
 	fprintf(stderr, "[BLOB] offset: %08lx, length: %08lx, mod_number: %04x, index: %02x\n", offset, length, mod_number, index);
 #endif
 	if (index == 0x00) return NULL;
-	
+
 	if (!blobname) {
 		fprintf(stderr, "[BLOB] offset: %08lx, length: %08lx, mod_number: %04x, index: %02x - do I need a BLOB-filename '-b ...' ?\n", offset, length, mod_number, index);
 		return NULL;
@@ -408,17 +408,17 @@ char *PXMEMOtoString(void *blob, int size, char *blobname) {
 	fd = open(blobname, O_RDONLY);
 #endif
 	if (fd == -1) return NULL;
-	
+
 	if (index == 0xff) {
 		/* type 02 block */
 		mb_type2_pointer idx;
 		char head[9];
-		
+
 		/* go to the right block */
 		lseek(fd, offset, SEEK_SET);
-		
+
 		read(fd, head, sizeof(head));
-		
+
 		copy_from_le(&idx.type,	       head + 0, sizeof(idx.type));
 		copy_from_le(&idx.size_div_4k, head + 1, sizeof(idx.size_div_4k));
 		copy_from_le(&idx.length,      head + 3, sizeof(idx.length));
@@ -428,7 +428,7 @@ char *PXMEMOtoString(void *blob, int size, char *blobname) {
 				__FILE__, __LINE__);
 			return NULL;
 		}
-		
+
 		if (length != idx.length) {
 			fprintf(stderr, "%s.%d: type 02 blob length doesn't match with BLOB length\n",
 				__FILE__, __LINE__);
@@ -443,9 +443,9 @@ char *PXMEMOtoString(void *blob, int size, char *blobname) {
 			length);
 #endif
 		string = malloc(length + 1);
-		
+
 		if (read(fd, string, length) != length) {
-			fprintf (stderr, "%s.%d: Read less than requested\n", 
+			fprintf (stderr, "%s.%d: Read less than requested\n",
 				 __FILE__, __LINE__);
 		}
 		string[length] = '\0';
@@ -453,40 +453,40 @@ char *PXMEMOtoString(void *blob, int size, char *blobname) {
 		int _start, _length;
 		char head[5];
 		mb_type3_pointer idx;
-		
-		
+
+
 		/* go to the right block and skip the header */
 		lseek(fd, offset + (12 + ( 5 * index )), SEEK_SET);
-		
+
 		read(fd, head, sizeof(head));
-		
+
 		copy_from_le(&idx.offset,	 head + 0, sizeof(idx.offset));
 		copy_from_le(&idx.length_div_16, head + 1, sizeof(idx.length_div_16));
 		copy_from_le(&idx.mod_count,	 head + 2, sizeof(idx.mod_count));
 		copy_from_le(&idx.length_mod_16, head + 4, sizeof(idx.length_mod_16));
-		
+
 		_start = idx.offset * 16;
 		_length = idx.length_div_16 * 16 + idx.length_mod_16;
-		
+
 		lseek(fd, offset + _start, SEEK_SET);
-		
+
 		string = malloc(length + 1);
-		
+
 		if (read(fd, string, length) != length) {
-			fprintf (stderr, "%s.%d: Read less than requested\n", 
+			fprintf (stderr, "%s.%d: Read less than requested\n",
 				 __FILE__, __LINE__);
 		}
 		string[length] = '\0';
-		
+
 		if (strncmp((char *)blob, string, size-10) != 0) {
-			fprintf (stderr, "%s.%d: Extract failed: %s != %s\n", 
+			fprintf (stderr, "%s.%d: Extract failed: %s != %s\n",
 				 __FILE__, __LINE__, (char *)blob, string);
-			
+
 			free(string);
 			string = NULL;
 		}
 	}
-	
+
 	close(fd);
 	return string;
 }
@@ -498,22 +498,22 @@ int PXBLOBtoBinary(void *blob, int size, char *blobname, void ** binstorage, int
 	unsigned char index = 0;
 	char *string = NULL;
 	int fd;
-	
+
 	/* if the MEMO field contains less than 10 bytes it is stored in the .DB file */
-	if (size < 10) return 0;	
-	
+	if (size < 10) return 0;
+
 	copy_from_le(&offset, (char *)blob+(size-10), 4);
 	copy_from_le(&length, (char *)blob+(size-6), 4);
 	copy_from_le(&mod_number, (char *)blob+(size-2), 2);
-	
+
 	copy_from_le(&index, (char *)blob+(size-10), 1);
-	
+
 	offset &= 0xffffff00;
-#ifdef DEBUG	
+#ifdef DEBUG
 	fprintf(stderr, "[BLOB] offset: %08lx, length: %08lx, mod_number: %04x, index: %02x\n", offset, length, mod_number, index);
 #endif
 	if (index == 0x00) return 0;
-	
+
 	if (!blobname) {
 		fprintf(stderr, "[BLOB] offset: %08lx, length: %08lx, mod_number: %04x, index: %02x - do I need a BLOB-filename '-b ...' ?\n", offset, length, mod_number, index);
 		return -1;
@@ -524,17 +524,17 @@ int PXBLOBtoBinary(void *blob, int size, char *blobname, void ** binstorage, int
 	fd = open(blobname, O_RDONLY);
 #endif
 	if (fd == -1) return -1;
-	
+
 	if (index == 0xff) {
 		/* type 02 block */
 		mb_type2_pointer idx;
 		char head[9];
-		
+
 		/* go to the right block */
 		lseek(fd, offset, SEEK_SET);
-		
+
 		read(fd, head, sizeof(head));
-		
+
 		copy_from_le(&idx.type,	       head + 0, sizeof(idx.type));
 		copy_from_le(&idx.size_div_4k, head + 1, sizeof(idx.size_div_4k));
 		copy_from_le(&idx.length,      head + 3, sizeof(idx.length));
@@ -544,7 +544,7 @@ int PXBLOBtoBinary(void *blob, int size, char *blobname, void ** binstorage, int
 				__FILE__, __LINE__);
 			return -1;
 		}
-		
+
 		if (length != idx.length) {
 			fprintf(stderr, "%s.%d: type 02 blob length doesn't match with BLOB length\n",
 				__FILE__, __LINE__);
@@ -559,55 +559,55 @@ int PXBLOBtoBinary(void *blob, int size, char *blobname, void ** binstorage, int
 			length);
 #endif
 		string = malloc(length + 1);
-		
+
 		if (read(fd, string, length) != length) {
-			fprintf (stderr, "%s.%d: Read less than requested\n", 
+			fprintf (stderr, "%s.%d: Read less than requested\n",
 				 __FILE__, __LINE__);
 		}
 		string[length] = '\0';
-		
+
 	} else {
 		int _start, _length;
 		char head[5];
 		mb_type3_pointer idx;
-		
-		
+
+
 		/* go to the right block and skip the header */
 		lseek(fd, offset + (12 + ( 5 * index )), SEEK_SET);
-		
+
 		read(fd, head, sizeof(head));
-		
+
 		copy_from_le(&idx.offset,	 head + 0, sizeof(idx.offset));
 		copy_from_le(&idx.length_div_16, head + 1, sizeof(idx.length_div_16));
 		copy_from_le(&idx.mod_count,	 head + 2, sizeof(idx.mod_count));
 		copy_from_le(&idx.length_mod_16, head + 4, sizeof(idx.length_mod_16));
-		
+
 		_start = idx.offset * 16;
 		_length = idx.length_div_16 * 16 + idx.length_mod_16;
-		
+
 		lseek(fd, offset + _start, SEEK_SET);
-		
+
 		string = malloc(length + 1);
-		
+
 		if (read(fd, string, length) != length) {
-			fprintf (stderr, "%s.%d: Read less than requested\n", 
+			fprintf (stderr, "%s.%d: Read less than requested\n",
 				 __FILE__, __LINE__);
 		}
 		string[length] = '\0';
-		
+
 		if (strncmp((char *)blob, string, size-10) != 0) {
-			fprintf (stderr, "%s.%d: Extract failed: %s != %s\n", 
+			fprintf (stderr, "%s.%d: Extract failed: %s != %s\n",
 				 __FILE__, __LINE__, (char *)blob, string);
-			
+
 			free(string);
 			string = NULL;
 		}
 	}
-	
+
 	close(fd);
-	
+
 	*binsize = length;
 	*binstorage = string;
-	
+
 	return 0;
 }

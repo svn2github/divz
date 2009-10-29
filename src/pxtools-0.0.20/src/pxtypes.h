@@ -4,14 +4,14 @@
 #include "config.h"
 
 #ifdef HAVE_GETTEXT
-#include <libintl.h>
+//#include <libintl.h>
 #include <locale.h>
 #define _(String) gettext(String)
 #else
 #define _(String) String
 #endif
 
-/* void * are escaped for the 64bit machines 
+/* void * are escaped for the 64bit machines
  * otherwise they are too long (8bytes)
  */
 
@@ -20,7 +20,7 @@ typedef struct {
 	signed short headerSize;		/* 0x02 */
 	unsigned char fileType;			/* 0x04 */
 	unsigned char maxTableSize;		/* 0x05 */
-	unsigned int numRecords;		/* 0x06 */ 
+	unsigned int numRecords;		/* 0x06 */
 	unsigned short usedBlocks;		/* 0x0a */
 	unsigned short fileBlocks;		/* 0x0c */
 	unsigned short firstBlock;		/* 0x0e */
@@ -33,7 +33,7 @@ typedef struct {
 	unsigned short indexRootBlock;		/* 0x1e */
 	unsigned char indexLevels;		/* 0x20 */
 	signed short numFields;			/* 0x21 */
-	signed short primaryKeyFields;		/* 0x23 */	
+	signed short primaryKeyFields;		/* 0x23 */
 	unsigned int encryption1;		/* 0x25 */
 	unsigned char sortOrder;		/* 0x29 */
 	unsigned char modifiedFlags2;		/* 0x2a */
@@ -71,7 +71,7 @@ typedef struct {
 	unsigned short changeCount4;		/* 0x70 */
 	unsigned int dummy_f;			/* 0x72 */
 	unsigned short dummy_10;		/* 0x76 */
-	
+
 	char tableName[79];			/* ---- */
 } px_header;
 
