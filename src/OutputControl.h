@@ -69,10 +69,13 @@ protected slots:
 	void slideChanged(int);
 	
 	void filterListItemChanged(QListWidgetItem * item);
+	
+	void setAdvancedWidgetVisible(bool);
 
 protected:
 	void setupUI();
 	void setupSyncWidgetUI();
+	void setupAdvancedUI();
 	void setupFilterList(AbstractItemFilterList selected = AbstractItemFilterList());
 	
 	void setupFoldbackSettings();
@@ -85,6 +88,8 @@ protected:
 	
 	QSlider			* m_fadeSlider;
 	
+	QPushButton		* m_advancedButton;
+	QWidget			* m_advancedWidget;
 	
 	QPushButton		* m_blackButton;
 	QPushButton		* m_clearButton;

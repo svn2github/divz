@@ -42,11 +42,21 @@ void OutputControl::setupUI()
 	// setup first row: type selector, cross fade speed, and black/clear btns
 	QHBoxLayout * hbox1 = new QHBoxLayout();
 	
-	m_syncStatusSelector = new QComboBox();
-	m_syncStatusSelector->addItem("Live");
-	m_syncStatusSelector->addItem("Synced");
-	hbox1->addWidget(m_syncStatusSelector);
-	connect(m_syncStatusSelector, SIGNAL(currentIndexChanged(int)), this, SLOT(setIsOutputSynced(int)));
+		
+	m_blackButton = new QPushButton(QIcon(":/data/stock-media-stop.png"),"&Black");
+	m_blackButton->setCheckable(true);
+	m_blackButton->setEnabled(false); // enable when view control set
+	hbox1->addWidget(m_blackButton);
+	
+	connect(m_blackButton, SIGNAL(toggled(bool)), this, SLOT(fadeBlackFrame(bool)));
+	
+	m_clearButton = new QPushButton(QIcon(":/data/stock-media-eject.png"),"&Clear");
+	m_clearButton->setCheckable(true);
+	m_clearButton->setEnabled(false); 
+	hbox1->addWidget(m_clearButton);
+	
+	connect(m_clearButton, SIGNAL(toggled(bool)), this, SLOT(fadeClearFrame(bool)));
+	
 	
 	QLabel *label = new QLabel("Fade Speed:");
 	hbox1->addWidget(label);
@@ -67,51 +77,25 @@ void OutputControl::setupUI()
 	connect(edit, SIGNAL(valueChanged(int)), m_fadeSlider, SLOT(setValue(int)));
 	connect(m_fadeSlider, SIGNAL(valueChanged(int)), edit, SLOT(setValue(int)));
 	connect(m_fadeSlider, SIGNAL(valueChanged(int)), this, SLOT(setCrossFadeSpeed(int)));
+
 	
-	m_blackButton = new QPushButton(QIcon(":/data/stock-media-stop.png"),"&Black");
-	m_blackButton->setCheckable(true);
-	m_blackButton->setEnabled(false); // enable when view control set
-	hbox1->addWidget(m_blackButton);
+	m_advancedButton = new QPushButton(QIcon(":/data/stock-go-down.png"), "Advanced");
+	m_advancedButton->setCheckable(true);
+	hbox1->addWidget(m_advancedButton);
 	
-	connect(m_blackButton, SIGNAL(toggled(bool)), this, SLOT(fadeBlackFrame(bool)));
+	connect(m_advancedButton, SIGNAL(toggled(bool)), this, SLOT(setAdvancedWidgetVisible(bool)));
 	
-	m_clearButton = new QPushButton(QIcon(":/data/stock-media-eject.png"),"&Clear");
-	m_clearButton->setCheckable(true);
-	m_clearButton->setEnabled(false); 
-	hbox1->addWidget(m_clearButton);
 	
-	connect(m_clearButton, SIGNAL(toggled(bool)), this, SLOT(fadeClearFrame(bool)));
-	
+
 	layout->addLayout(hbox1);
 	
+	// Setup advanced widget (shown/hidden with "advanced" button, above)
+	m_advancedWidget = new QWidget(this);
+	setupAdvancedUI();
+	layout->addWidget(m_advancedWidget);
 	
-	// setup second row: overlay selector, preview, and on/off btns
-	QHBoxLayout * hbox2 = new QHBoxLayout();
+	m_advancedWidget->setVisible(false);
 	
-	QLabel *label2 = new QLabel("Overlay:");
-	hbox2->addWidget(label2);
-	
-	m_overlayDocBox = new QLineEdit(this);
-	connect(m_overlayDocBox, SIGNAL(textChanged(const QString&)), this, SLOT(overlayDocumentChanged(const QString&)));
-	hbox2->addWidget(m_overlayDocBox,2); // large stretch
-	
-	QPushButton *btn1 = new QPushButton("Browse");
-	hbox2->addWidget(btn1);
-	
-	connect(m_overlayDocBox, SIGNAL(textChanged(const QString&)), this, SLOT(overlayDocumentChanged(const QString&)));
-	connect(btn1, SIGNAL(clicked()), this, SLOT(overlayBrowseClicked()));
-	
-	m_overlayPreviewLabel = new QLabel("(No Overlay)");
-	hbox2->addWidget(m_overlayPreviewLabel);
-	
-	m_overlayEnabledBtn = new QPushButton("&Enable Overlay");
-	m_overlayEnabledBtn->setCheckable(true);
-	m_overlayEnabledBtn->setEnabled(false);
-	hbox2->addWidget(m_overlayEnabledBtn);
-	
-	connect(m_overlayEnabledBtn, SIGNAL(toggled(bool)), this, SLOT(setOverlayEnabled(bool)));
-	
-	layout->addLayout(hbox2);
 	
 	// setup stacked widget
 	m_stack = new QStackedWidget(this);
@@ -131,6 +115,14 @@ void OutputControl::setupUI()
 
 }
 
+
+void OutputControl::setAdvancedWidgetVisible(bool flag)
+{
+	m_advancedWidget->setVisible(flag);
+	m_advancedButton->setIcon(flag ? QIcon(":/data/stock-go-up.png") : QIcon(":/data/stock-go-down.png"));
+}
+
+
 void OutputControl::overlayBrowseClicked()
 {
 	QString text = m_overlayDocBox->text();
@@ -148,37 +140,130 @@ void OutputControl::overlayBrowseClicked()
 	}
 }
 
-void OutputControl::setupSyncWidgetUI()
+
+void OutputControl::setupAdvancedUI()
 {
-	// setup sync widget rows: sync with, filter on/off, background color, and resize text on/off
-	//QVBoxLayout * layout = new QVBoxLayout(m_syncWidget);
+
+	QVBoxLayout * layout = new QVBoxLayout(m_advancedWidget);
 	
-	QGridLayout * layout = new QGridLayout(m_syncWidget);
 	
+		
+	QGridLayout * gridLayout = new QGridLayout();
 	QLabel *label;
-	
 	int rowNbr = 0;
 	
-	// Row 1: Output sync source
+
+	// Row 0: Text only filter on/off
+	
+	//label = new QLabel("Text-only Filter: ");
+	label = new QLabel("Overlay: ");
+	gridLayout->addWidget(label,rowNbr,0);
+	
+	
+	QHBoxLayout * hbox1 = new QHBoxLayout();
+	
+	m_overlayDocBox = new QLineEdit(this);
+	connect(m_overlayDocBox, SIGNAL(textChanged(const QString&)), this, SLOT(overlayDocumentChanged(const QString&)));
+	hbox1->addWidget(m_overlayDocBox,2); // large stretch
+	
+	QPushButton *btn1 = new QPushButton("Browse");
+	hbox1->addWidget(btn1);
+	
+	connect(m_overlayDocBox, SIGNAL(textChanged(const QString&)), this, SLOT(overlayDocumentChanged(const QString&)));
+	connect(btn1, SIGNAL(clicked()), this, SLOT(overlayBrowseClicked()));
+	
+	gridLayout->addLayout(hbox1,rowNbr,1);
+	
+	// add preview & btn below browse
+	rowNbr++;
+	
+	QHBoxLayout * hbox2 = new QHBoxLayout();
+	
+	hbox2->addStretch(1);
+	
+	m_overlayPreviewLabel = new QLabel("(No Overlay)");
+	hbox2->addWidget(m_overlayPreviewLabel);
+	
+	hbox2->addStretch(1);
+	
+	m_overlayEnabledBtn = new QPushButton("&Enable Overlay");
+	m_overlayEnabledBtn->setCheckable(true);
+	m_overlayEnabledBtn->setEnabled(false);
+	hbox2->addWidget(m_overlayEnabledBtn);
+	
+	connect(m_overlayEnabledBtn, SIGNAL(toggled(bool)), this, SLOT(setOverlayEnabled(bool)));
+	
+	gridLayout->addLayout(hbox2,rowNbr,1);
+	
+	
+	// Row 3: Text only background
+	rowNbr++;
+	label = new QLabel("Text-only Background: ");
+	gridLayout->addWidget(label,rowNbr,0);
+	
+	m_colorPicker = new QtColorPicker();
+	m_colorPicker->setStandardColors();
+	m_colorPicker->setCurrentColor(Qt::black);
+	gridLayout->addWidget(m_colorPicker,rowNbr,1);
+	
+	connect(m_colorPicker, SIGNAL(colorChanged(const QColor &)), this, SLOT(setTextOnlyBackground(const QColor &)));
+//	connect(textFilterBtn, SIGNAL(toggled(bool)), m_colorPicker, SLOT(setEnabled(bool)));
+	
+	// Row 3: REsize top textbox
+	rowNbr++;
+	label = new QLabel("Resize Top Textbox: ");
+	gridLayout->addWidget(label,rowNbr,0);
+	
+	m_textResizeBtn = new QPushButton("Intelli-Size Top Textbox");
+	m_textResizeBtn->setCheckable(true);
+	//m_textResizeBtn->setEnabled(false);
+	gridLayout->addWidget(m_textResizeBtn,rowNbr,1);
+	
+	connect(m_textResizeBtn, SIGNAL(toggled(bool)), this, SLOT(setTextResizeEnabled(bool)));
+//	connect(m_textFilterBtn, SIGNAL(toggled(bool)), m_textResizeBtn, SLOT(setEnabled(bool)));
+	
+	// Row 4: Sync/live setting
+	rowNbr++;
+	label = new QLabel("Control Type: ");
+	gridLayout->addWidget(label,rowNbr,0);
+	
+	m_syncStatusSelector = new QComboBox(m_advancedWidget);
+	m_syncStatusSelector->addItem("Live");
+	m_syncStatusSelector->addItem("Synced");
+	
+	gridLayout->addWidget(m_syncStatusSelector,rowNbr,1);
+	connect(m_syncStatusSelector, SIGNAL(currentIndexChanged(int)), this, SLOT(setIsOutputSynced(int)));
+	
+	// Row 4: Output sync source
+	rowNbr++;
+	
 	label = new QLabel("Sync With: ");
-	layout->addWidget(label,rowNbr,0);
+	gridLayout->addWidget(label,rowNbr,0);
 	
 	m_syncWithBox = new QComboBox();
 	setupSyncWithBox();
-	layout->addWidget(m_syncWithBox,rowNbr,1);
+	gridLayout->addWidget(m_syncWithBox,rowNbr,1);
+	
+	m_syncWithBox->setEnabled(false);
 	
 	connect(m_syncWithBox, SIGNAL(currentIndexChanged(int)), this, SLOT(syncOutputChanged(int)));
+	
+	// MUST be created after main window, so allow segfault if no main window
+	MainWindow *mw = MainWindow::mw();
+	connect(mw, SIGNAL(appSettingsChanged()), this, SLOT(setupSyncWithBox()));
+	
+	
 	
 	// Row 2: Text only filter on/off
 	rowNbr++;
 	
 	//label = new QLabel("Text-only Filter: ");
 	label = new QLabel("Filters: ");
-	layout->addWidget(label,rowNbr,0);
+	gridLayout->addWidget(label,rowNbr,0,Qt::AlignTop);
 	
 // 	m_textFilterBtn = new QPushButton("Only Show Text");
 // 	m_textFilterBtn->setCheckable(true);
-// 	layout->addWidget(m_textFilterBtn,rowNbr,1);
+// 	gridLayout->addWidget(m_textFilterBtn,rowNbr,1);
 // 	
 // 	connect(m_textFilterBtn, SIGNAL(toggled(bool)), this, SLOT(setTextOnlyFilterEnabled(bool)));
 
@@ -188,47 +273,21 @@ void OutputControl::setupSyncWidgetUI()
 	
 	setupFilterList();
 	
-	layout->addWidget(m_filterList,rowNbr,1);
+	gridLayout->addWidget(m_filterList,rowNbr,1);
 	
 	connect(m_filterList, SIGNAL(itemChanged(QListWidgetItem *)), this, SLOT(filterListItemChanged(QListWidgetItem *)));
 	
 	
 	
-	// Row 3: Text only background
-	rowNbr++;
-	label = new QLabel("Text-only Background: ");
-	layout->addWidget(label,rowNbr,0);
 	
-	m_colorPicker = new QtColorPicker();
-	m_colorPicker->setStandardColors();
-	m_colorPicker->setCurrentColor(Qt::black);
-	layout->addWidget(m_colorPicker,rowNbr,1);
-	
-	connect(m_colorPicker, SIGNAL(colorChanged(const QColor &)), this, SLOT(setTextOnlyBackground(const QColor &)));
-//	connect(textFilterBtn, SIGNAL(toggled(bool)), m_colorPicker, SLOT(setEnabled(bool)));
-	
-	// Row 3: REsize top textbox
-	rowNbr++;
-	label = new QLabel("Resize Top Textbox: ");
-	layout->addWidget(label,rowNbr,0);
-	
-	m_textResizeBtn = new QPushButton("Intelli-Size Top Textbox");
-	m_textResizeBtn->setCheckable(true);
-	//m_textResizeBtn->setEnabled(false);
-	layout->addWidget(m_textResizeBtn,rowNbr,1);
-	
-	connect(m_textResizeBtn, SIGNAL(toggled(bool)), this, SLOT(setTextResizeEnabled(bool)));
-//	connect(m_textFilterBtn, SIGNAL(toggled(bool)), m_textResizeBtn, SLOT(setEnabled(bool)));
-	
-	// make the last row expand - i think it should, not tested tet
-	rowNbr++;
-	layout->setRowStretch(rowNbr,99);
+	layout->addLayout(gridLayout);
+	//layout->addStretch(1);
 	
 	
-	// MUST be created after main window, so allow segfault if no main window
-	MainWindow *mw = MainWindow::mw();
-		
-	connect(mw, SIGNAL(appSettingsChanged()), this, SLOT(setupSyncWithBox()));
+}
+
+void OutputControl::setupSyncWidgetUI()
+{
 	
 }
 
@@ -354,7 +413,7 @@ void OutputControl::setOverlayDocument(Document *doc)
 		if(!factory)
 			factory = SlideGroupFactory::factoryForType(SlideGroup::Generic);
 		
-		double iconHeight = 32.0;
+		double iconHeight = 64.0;
 		if(factory)
 			icon = factory->generatePreviewPixmap(g,QSize(doc->aspectRatio() * iconHeight,iconHeight),MainWindow::mw()->standardSceneRect(doc->aspectRatio()));
 			
@@ -506,6 +565,8 @@ void OutputControl::setIsOutputSynced(bool flag)
 	
 	m_stack->setCurrentWidget( flag ? m_syncWidget : m_ctrl );
 	
+	m_syncWithBox->setEnabled(flag);
+	
 	if(m_syncStatusSelector->currentIndex() != (int)flag)
 		m_syncStatusSelector->setCurrentIndex((int)flag);
 }
@@ -609,7 +670,7 @@ void OutputControl::setCustomFilters(AbstractItemFilterList list)
 void OutputControl::setCrossFadeSpeed(int value)
 {
 	double percent = ((double)value) / 100.0;
-	double speed = 1250.0 * percent;
+	double speed = 2000.0 * percent;
 	if(speed<1)
 		speed = 1;
 	double quality = 0.05*speed; // "standard" quality is 10 frames every 250 ms

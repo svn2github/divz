@@ -65,6 +65,7 @@ SlideGroupViewControl::SlideGroupViewControl(OutputInstance *g, QWidget *w )
 	m_blackActive(false)
 {
 	QVBoxLayout * layout = new QVBoxLayout();
+	layout->setMargin(0);
 	
 	/** Setup top buttons */
 // 	QHBoxLayout * hbox1 = new QHBoxLayout();
