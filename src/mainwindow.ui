@@ -65,6 +65,7 @@
      <string>Tools</string>
     </property>
     <addaction name="actionImages_Import_Tool"/>
+    <addaction name="actionText_Import_Tool"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
@@ -256,6 +257,11 @@
   <action name="actionImages_Import_Tool">
    <property name="text">
     <string>Images Import Tool</string>
+   </property>
+  </action>
+  <action name="actionText_Import_Tool">
+   <property name="text">
+    <string>Text Import Tool</string>
    </property>
   </action>
  </widget>

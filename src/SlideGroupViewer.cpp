@@ -7,10 +7,6 @@
 # include <QtOpenGL/QGLWidget>
 #endif
 
-#include <QTextDocument>
-#include <QTextBlock>
-#include <QTextOption>
-
 #include "qvideo/QVideoProvider.h"
 
 #include "MainWindow.h"
@@ -302,116 +298,15 @@ Slide * SlideGroupViewer::applySlideFilters(Slide * sourceSlide)
 			TextBoxItem * autoText = dynamic_cast<TextBoxItem*>(text->clone());
 			slide->removeItem(text);
 			
+			QSize scene = m_scene->sceneRect().size().toSize();
 			
-			QRectF scene = m_scene->sceneRect();
-			int width = scene.width();
-			int height = scene.height();
-			
-			const QString sizeKey = QString("%1:%2:%3").arg(autoText->text()).arg(width).arg(height);
-			
-			// for centering
-			qreal boxHeight = -1;
-				
-			double ptSize = -1;
-			if(m_autoTextSizeCache.contains(sizeKey))
-			{
-				ptSize = *(m_autoTextSizeCache[sizeKey]);
-				
-				//qDebug()<<"SongSlideGroup::textToSlides(): size search: CACHE HIT: loaded size:"<<ptSize;
-				
-				// We go thru the much-more-verbose method of creating
-				// the document and setting the html, width, merge cursor,
-				// etc, just so we can get the document height after
-				// setting the font size inorder to use it to center the textbox.
-				// If we didnt nead the height, we could just use autoText->setFontSize()
-				
-				QTextDocument doc;
-				doc.setTextWidth(width);
-				doc.setHtml(autoText->text());
-					
-				QTextCursor cursor(&doc);
-				cursor.select(QTextCursor::Document);
-				
-				QTextCharFormat format;
-				format.setFontPointSize(ptSize);
-				cursor.mergeCharFormat(format);
-				
-				boxHeight = doc.documentLayout()->documentSize().height();
-				
-				autoText->setText(doc.toHtml());
-			}
-			else
-			{
-				double ptSize = autoText->findFontSize();
-				double sizeInc = 1;	// how big of a jump to add to the ptSize each iteration
-				int count = 0;		// current loop iteration
-				int maxCount = 100; 	// max iterations of the search loop
-				bool done = false;
-				
-				int lastGoodSize = ptSize;
-				QString lastGoodHtml = autoText->text();;
-				
-				QTextDocument doc;
-				
-				int heightTmp;
-				
-				doc.setTextWidth(width);
-				doc.setHtml(autoText->text());
-					
-				QTextCursor cursor(&doc);
-				cursor.select(QTextCursor::Document);
-				
-				QTextCharFormat format;
-					
-				while(!done && count++ < maxCount)
-				{
-					format.setFontPointSize(ptSize);
-					cursor.mergeCharFormat(format);
-					
-					//autoText->setFontSize(ptSize);
-					//doc.setHtml(autoText->text());
-					heightTmp = doc.documentLayout()->documentSize().height();
-					
-					if(heightTmp < height)
-					{
-						lastGoodSize = ptSize;
-						//lastGoodHtml = autoText->text();
-						boxHeight = heightTmp;
-		
-						sizeInc *= 1.1;
-						//qDebug()<<"size search: "<<ptSize<<"pt was good, trying higher, inc:"<<sizeInc<<"pt";
-						ptSize += sizeInc;
-		
-					}
-					else
-					{
-						//qDebug()<<"SongSlideGroup::textToSlides(): size search: last good ptsize:"<<lastGoodSize<<", stopping search";
-						done = true;
-					}
-				}
-		
-				format.setFontPointSize(lastGoodSize);
-				cursor.mergeCharFormat(format);
-				
-				autoText->setText(doc.toHtml());
-				
-				qDebug()<<"SongSlideGroup::textToSlides(): size search: caching ptsize:"<<lastGoodSize<<", count: "<<count;
-				//m_autoTextSizeCache[sizeKey] = lastGoodSize;
-				
-				// We are using a QCache instead of a plain QMap, so that requires a pointer value 
-				// Using QCache because the key for the cache could potentially become quite large if there are large amounts of HTML
-				// and I dont want to just keep accumlating html in the cache infinitely
-				m_autoTextSizeCache.insert(sizeKey, new double(lastGoodSize),1);
-			}
+			int fittedHeight = autoText->fitToSize(scene);
 			
 			// Center text on screen
-			if(boxHeight > -1)
-			{
-				qreal y = scene.height()/2 - boxHeight/2;
-				//qDebug() << "SongSlideGroup::textToSlides(): centering: boxHeight:"<<boxHeight<<", textRect height:"<<textRect.height()<<", centered Y:"<<y;
-				autoText->setContentsRect(QRectF(0,y,width,boxHeight));
-			}
-
+			qreal y = scene.height()/2 - fittedHeight /2;
+			//qDebug() << "SongSlideGroup::textToSlides(): centering: boxHeight:"<<boxHeight<<", textRect height:"<<textRect.height()<<", centered Y:"<<y;
+			autoText->setContentsRect(QRectF(0,y,scene.width(),fittedHeight));
+			
 			// Outline pen for the text
 			QPen pen = QPen(Qt::black,1.5);
 			pen.setJoinStyle(Qt::MiterJoin);

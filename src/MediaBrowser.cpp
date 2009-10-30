@@ -189,7 +189,7 @@ void MediaBrowser::setupUI()
 	m_btnUp->setEnabled(false);
 	connect(m_btnUp, SIGNAL(clicked()), this, SLOT(goUp()));
 	
-	QLabel *label = new QLabel("Fi&lter:");
+	QLabel *label = new QLabel("Se&arch:");
 	m_searchBox = new QLineEdit(m_searchBase);
 	label->setBuddy(m_searchBox);
 	

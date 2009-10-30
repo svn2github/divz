@@ -8,6 +8,9 @@
 #include <QTextDocument>
 #include <QTextCharFormat>
 #include <QTextCursor>
+#include <QAbstractTextDocumentLayout>
+
+QCache<QString,double> TextItem::static_autoTextSizeCache;
 
 TextItem::TextItem() : AbstractVisualItem() 
 {
@@ -88,6 +91,112 @@ double TextItem::findFontSize()
 	cursor.select(QTextCursor::Document);
 	QTextCharFormat format = cursor.charFormat();
 	return format.fontPointSize();
+}
+
+int TextItem::fitToSize(const QSize& size)
+{
+	int width = size.width();
+	int height = size.height();
+	
+	const QString sizeKey = QString("%1:%2:%3").arg(text()).arg(width).arg(height);
+	
+	// for centering
+	qreal boxHeight = -1;
+		
+	double ptSize = -1;
+	if(static_autoTextSizeCache.contains(sizeKey))
+	{
+		ptSize = *(static_autoTextSizeCache[sizeKey]);
+		
+		//qDebug()<<"TextItem::fitToSize(): size search: CACHE HIT: loaded size:"<<ptSize;
+		
+		// We go thru the much-more-verbose method of creating
+		// the document and setting the html, width, merge cursor,
+		// etc, just so we can get the document height after
+		// setting the font size inorder to use it to center the textbox.
+		// If we didnt nead the height, we could just use autoText->setFontSize()
+		
+		QTextDocument doc;
+		doc.setTextWidth(width);
+		doc.setHtml(text());
+			
+		QTextCursor cursor(&doc);
+		cursor.select(QTextCursor::Document);
+		
+		QTextCharFormat format;
+		format.setFontPointSize(ptSize);
+		cursor.mergeCharFormat(format);
+		
+		boxHeight = doc.documentLayout()->documentSize().height();
+		
+		setText(doc.toHtml());
+	}
+	else
+	{
+		double ptSize = findFontSize();
+		double sizeInc = 1;	// how big of a jump to add to the ptSize each iteration
+		int count = 0;		// current loop iteration
+		int maxCount = 100; 	// max iterations of the search loop
+		bool done = false;
+		
+		int lastGoodSize = ptSize;
+		QString lastGoodHtml = text();
+		
+		QTextDocument doc;
+		
+		int heightTmp;
+		
+		doc.setTextWidth(width);
+		doc.setHtml(text());
+			
+		QTextCursor cursor(&doc);
+		cursor.select(QTextCursor::Document);
+		
+		QTextCharFormat format;
+			
+		while(!done && count++ < maxCount)
+		{
+			format.setFontPointSize(ptSize);
+			cursor.mergeCharFormat(format);
+			
+			//setFontSize(ptSize);
+			//doc.setHtml(text());
+			heightTmp = doc.documentLayout()->documentSize().height();
+			
+			if(heightTmp < height)
+			{
+				lastGoodSize = ptSize;
+				//lastGoodHtml = text();
+				boxHeight = heightTmp;
+
+				sizeInc *= 1.1;
+				//qDebug()<<"size search: "<<ptSize<<"pt was good, trying higher, inc:"<<sizeInc<<"pt";
+				ptSize += sizeInc;
+
+			}
+			else
+			{
+				//qDebug()<<"SongSlideGroup::textToSlides(): size search: last good ptsize:"<<lastGoodSize<<", stopping search";
+				done = true;
+			}
+		}
+
+		format.setFontPointSize(lastGoodSize);
+		cursor.mergeCharFormat(format);
+		
+		setText(doc.toHtml());
+		
+		qDebug()<<"TextItem::fitToSize(): size search: caching ptsize:"<<lastGoodSize<<", count: "<<count;
+		//static_autoTextSizeCache[sizeKey] = lastGoodSize;
+		
+		// We are using a QCache instead of a plain QMap, so that requires a pointer value 
+		// Using QCache because the key for the cache could potentially become quite large if there are large amounts of HTML
+		// and I dont want to just keep accumlating html in the cache infinitely
+		static_autoTextSizeCache.insert(sizeKey, new double(lastGoodSize),1);
+	}
+	
+	return boxHeight;
+	
 }
 
 

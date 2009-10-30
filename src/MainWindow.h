@@ -77,6 +77,7 @@ public slots:
 	
 	
 	void imageImportTool();
+	void textImportTool();
 
 protected slots:
 	void groupsDropped(QList<SlideGroup*> list);

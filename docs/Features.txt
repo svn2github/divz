@@ -143,7 +143,7 @@ Revised Task list for Release 1.0, 10/18/09:
 				need an autofit textbox btn
 				and an autosize textbox
 				when changing text using tooplbar icons, need to update prop dock with new html 
-				text import tool:
+				[STARTED] text import tool:
 					grab text file 
 					go thru file, grab 6 lines at a time
 					try to get to be at least 45 - 50 px high

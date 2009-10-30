@@ -151,7 +151,6 @@ private:
 	
 	AbstractItemFilterList m_slideFilters;
 	
-	QCache<QString,double> m_autoTextSizeCache;
 };
 
 #endif // SLIDEGROUPVIEWER_H

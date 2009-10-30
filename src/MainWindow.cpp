@@ -293,8 +293,6 @@ void MainWindow::actionNew()
 
 void MainWindow::imageImportTool()
 {
-	QFileDialog dialog;
-	
 	QString dirPath = QFileDialog::getExistingDirectory(this, tr("Select Images Folder to Import"),
                                                  AppSettings::previousPath("images"),
                                                  QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
@@ -366,6 +364,60 @@ void MainWindow::imageImportTool()
 	m_docModel->setDocument(m_doc);
 	
 	setWindowTitle("New File - DViz");*/
+}
+
+void MainWindow::textImportTool()
+{
+	QString fileName = QFileDialog::getOpenFileName(this, tr("Select Text File"), 
+		AppSettings::previousPath("text"), 
+		tr("Text Files (*.txt);;Any File (*.*)")
+	);
+	
+	
+	if(!fileName.isEmpty())
+	{
+// 		QFile file(fileName);
+// 		if (!file.open (IO_ReadOnly))
+// 		{
+// 			QMessageBox::warning(this,"Can't Read File",QString("Unable to open %1").arg(fileName));
+// 		}
+// 
+// 		QStringList lines;
+// 		QTextStream stream(&file);
+// 		while( ! stream.eof() )
+// 			lines << stream.readLine();
+// 			
+// 		
+		
+		//QMessageBox::warning(this,"No Images Found","No images found in the folder you chose.");
+			
+// 			SlideGroup *group = new SlideGroup();
+// 			group->setAutoChangeGroup(false);
+// 			group->setGroupTitle(dir.dirName());
+// 			
+// 			int slideNum = 0;
+// 			foreach(QString file, list)
+// 			{
+// 				Slide * slide = new Slide();
+// 				AbstractVisualItem * bg = dynamic_cast<AbstractVisualItem*>(slide->background());
+// 				
+// 				QString path = QString("%1/%2").arg(dir.absolutePath()).arg(file);
+// 				qDebug() << "Making slide for:"<<path;
+// 				
+// 				bg->setFillType(AbstractVisualItem::Image);
+// 				bg->setFillImageFile(path);
+// 	
+// 				slide->setAutoChangeTime(2.0);
+// 				slide->setSlideNumber(slideNum);
+// 				
+// 				group->addSlide(slide);
+// 				
+// 				slideNum++;
+// 			
+// 			}
+// 			
+// 			m_doc->addGroup(group);
+	}
 }
 
 bool MainWindow::openFile(const QString & file)

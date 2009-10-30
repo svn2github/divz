@@ -2,7 +2,7 @@
 #define TEXTITEM_H
 
 #include "AbstractVisualItem.h"
-
+#include <QCache>
 
 class TextItem : public AbstractVisualItem
 {
@@ -56,6 +56,8 @@ public:
 	void setYTextAlign(Qt::Alignment);
 	
 	
+	int fitToSize(const QSize &);
+	
 	// ::AbstractVisualItem
 	AbstractContent * createDelegate(QGraphicsScene*scene=0,QGraphicsItem*parent=0);
 	
@@ -79,6 +81,9 @@ private:
 	QPointF m_shapePoint4;
 	Qt::Alignment m_xTextAlign;
 	Qt::Alignment m_yTextAlign;
+	
+	static QCache<QString,double> static_autoTextSizeCache;
+
 	
 
 };
