@@ -3,6 +3,7 @@
 
 #include <QList>
 class Slide;
+class QFileInfo;
 #include "AbstractVisualItem.h"
 
 class SlideGroup : public QObject
@@ -53,7 +54,10 @@ public:
 	virtual bool fromXml(QDomElement & parentElement);
         virtual void toXml(QDomElement & parentElement) const;
         
-        virtual void changeBackground(AbstractVisualItem::FillType fillType, QVariant fillValue, Slide *onlyThisSlide = 0); 
+        virtual void changeBackground(AbstractVisualItem::FillType fillType, QVariant fillValue, Slide *onlyThisSlide = 0);
+        virtual bool changeBackground(const QFileInfo & info, Slide *onlyThisSlide = 0);
+        
+        static bool canUseBackground(const QFileInfo & info);
 
 	// Things you can do with slide groups:
 	// View 

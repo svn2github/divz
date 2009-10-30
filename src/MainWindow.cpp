@@ -199,7 +199,7 @@ void MainWindow::loadWindowState()
 	restoreState(settings.value("mainwindow/state").toByteArray());
 	m_splitter->restoreState(settings.value("mainwindow/splitter_state").toByteArray());
 	m_splitter2->restoreState(settings.value("mainwindow/grouplistsplitter_state").toByteArray());
-	//m_splitter3->restoreState(settings.value("mainwindow/splitter34_state").toByteArray());
+	m_mediaBrowser->restoreState(settings.value("mainwindow/mediabrowser_state").toByteArray());
 	m_songBrowser->restoreState(settings.value("mainwindow/songbrowser_state").toByteArray());
 
 }
@@ -212,7 +212,7 @@ void MainWindow::saveWindowState()
 	settings.setValue("mainwindow/state",saveState());
 	settings.setValue("mainwindow/splitter_state",m_splitter->saveState());
 	settings.setValue("mainwindow/grouplistsplitter_state",m_splitter2->saveState());
-	//settings.setValue("mainwindow/splitter34_state",m_splitter3->saveState());
+	settings.setValue("mainwindow/mediabrowser_state",m_mediaBrowser->saveState());
 	settings.setValue("mainwindow/songbrowser_state",m_songBrowser->saveState());
 }
 
@@ -455,49 +455,35 @@ void MainWindow::setupMediaBrowser()
 	QVBoxLayout * mediaBrowserLayout = new QVBoxLayout(m_ui->tabMedia);
 	mediaBrowserLayout->setContentsMargins(0,0,0,0);
 	
-	MediaBrowser *browser = new MediaBrowser();
-	mediaBrowserLayout->addWidget(browser);
+	m_mediaBrowser = new MediaBrowser();
+	mediaBrowserLayout->addWidget(m_mediaBrowser);
 	
 	foreach(OutputInstance *inst, m_outputInstances)
-		connect(browser, SIGNAL(setLiveBackground(const QFileInfo&, bool)), inst, SLOT(setLiveBackground(const QFileInfo&, bool)));
+		connect(m_mediaBrowser, SIGNAL(setLiveBackground(const QFileInfo&, bool)), inst, SLOT(setLiveBackground(const QFileInfo&, bool)));
 	
-	connect(browser, SIGNAL(setSelectedBackground(const QFileInfo&)), this, SLOT(setSelectedBackground(const QFileInfo&)));
-	connect(browser, SIGNAL(fileSelected(const QFileInfo&)), this, SLOT(fileSelected(const QFileInfo&)));
+	connect(m_mediaBrowser, SIGNAL(setSelectedBackground(const QFileInfo&)), this, SLOT(setSelectedBackground(const QFileInfo&)));
+	connect(m_mediaBrowser, SIGNAL(fileSelected(const QFileInfo&)), this, SLOT(fileSelected(const QFileInfo&)));
 	
 }
 
 void MainWindow::fileSelected(const QFileInfo &info)
 {
-	QString ext = info.suffix();
-	
-	Slide * slide = new Slide();
-	AbstractVisualItem * bg = dynamic_cast<AbstractVisualItem*>(slide->background());
-	
-	if(MediaBrowser::isVideo(ext))
-	{
-		bg->setFillType(AbstractVisualItem::Video);
-		bg->setFillVideoFile(info.absoluteFilePath());
-		
-	}
-	else
-	if(MediaBrowser::isImage(ext))
-	{
-		bg->setFillType(AbstractVisualItem::Image);
-		bg->setFillImageFile(info.absoluteFilePath());
-	}
-	else
+	if(!SlideGroup::canUseBackground(info))
 	{
 		QMessageBox::warning(this,"Unknown File Type","I'm not sure how to handle that file. Sorry!");
-		delete slide;
 		return;
 	}
 	
-	SlideGroup *g = new SlideGroup();
-	g->addSlide(slide);
-	m_doc->addGroup(g);
+	Slide * slide = new Slide();
+	SlideGroup *group = new SlideGroup();
+	group->addSlide(slide);
+	
+	group->changeBackground(info);
+	
+	m_doc->addGroup(group);
 	if(!liveInst()->slideGroup())
-		setLiveGroup(g);
-	QModelIndex idx = m_docModel->indexForGroup(g);
+		setLiveGroup(group);
+	QModelIndex idx = m_docModel->indexForGroup(group);
 	m_groupView->setCurrentIndex(idx);
 }
 
@@ -506,38 +492,18 @@ void MainWindow::setSelectedBackground(const QFileInfo &info)
 	QModelIndex idx = m_groupView->currentIndex();
 	if(idx.isValid())
 	{
-		SlideGroup *group = m_docModel->groupFromIndex(idx);
-		
-		QString ext = info.suffix();
-		if(!MediaBrowser::isVideo(ext) &&
-		   !MediaBrowser::isImage(ext))
+		if(!SlideGroup::canUseBackground(info))
 		{
 			QMessageBox::warning(this,"Unknown File Type","I'm not sure how to handle that file. Sorry!");
 			return;
 		}
 		
-		QString abs = info.absoluteFilePath();
-		
-		QList<Slide *> slides = group->slideList();
-		foreach(Slide * slide, slides)
+		SlideGroup *group = m_docModel->groupFromIndex(idx);
+		if(group)
 		{
-			AbstractVisualItem * bg = dynamic_cast<AbstractVisualItem*>(slide->background());
-			
-			if(MediaBrowser::isVideo(ext))
-			{
-				bg->setFillType(AbstractVisualItem::Video);
-				bg->setFillVideoFile(abs);
-				
-			}
-			else
-			if(MediaBrowser::isImage(ext))
-			{
-				bg->setFillType(AbstractVisualItem::Image);
-				bg->setFillImageFile(abs);
-			}
+			group->changeBackground(info);
+			qDebug() << "Finished setting "<<abs<<" as background on group "<<group->groupTitle();
 		}
-		
-		qDebug() << "Finished setting "<<abs<<" as background on group "<<group->groupTitle();
 	}
 	else
 	{

@@ -25,6 +25,7 @@ class OutputSetupDialog;
 class SlideGroupViewControl;
 class Slide;
 class SlideGroup;
+class MediaBrowser;
 
 #define FALLBACK_SCREEN_RECT QRectF(0,0,1024,768)
 
@@ -165,6 +166,8 @@ private:
 	QWidget			* m_outputCheckboxBase;
 	
 	//QWidget			* m_previewControlBase;
+	
+	MediaBrowser * m_mediaBrowser;
 	
 	/** static */
 	static MainWindow * static_mainWindow;	

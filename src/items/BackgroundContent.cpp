@@ -22,6 +22,9 @@
 
 #define DEBUG_BACKGROUNDCONTENT 0
 
+#define MAX_SCALED_WIDTH 4500
+#define MAX_SCALED_HEIGHT 2500
+
 BackgroundContent::BackgroundContent(QGraphicsScene * scene, QGraphicsItem * parent)
     : AbstractContent(scene, parent, false)
     , m_still(false)
@@ -139,6 +142,14 @@ void BackgroundContent::setImageFile(const QString &file)
 		setPixmap(MediaBrowser::iconForImage(file,MEDIABROWSER_LIST_ICON_SIZE));
 		m_fileLoaded = true;
 		return;
+	}
+	
+	if(m_videoProvider)
+	{
+		// TODO We ASSUME were playing the video before we got the image
+		//m_videoProvider->pause();
+		m_videoProvider->disconnectReceiver(this);
+		QVideoProvider::releaseProvider(m_videoProvider);
 	}
 			
 	// JPEGs, especially large ones (e.g. file on disk is > 2MB, etc) take a long time to load, decode, and convert to pixmap.
@@ -350,16 +361,34 @@ void BackgroundContent::paint(QPainter * painter, const QStyleOptionGraphicsItem
 				tmpRect = painter->combinedTransform().mapRect(tmpRect);
 				
 				QRect destRect(0,0,tmpRect.width(),tmpRect.height());
+				
+				// Limit the size of the final image inorder to prevent the user from
+				// inadvertantly killing the speed of the painting by scaling a really huge image
+				// in the media browser preview
+				if(destRect.width()  > MAX_SCALED_WIDTH || 
+				   destRect.height() > MAX_SCALED_HEIGHT)
+				{
+					float sx = ((float)MAX_SCALED_WIDTH)  / ((float)destRect.width());
+					float sy = ((float)MAX_SCALED_HEIGHT) / ((float)destRect.height());
+				
+					float scale = qMin(sx,sy);
+					destRect.setWidth( destRect.width()  * sx);
+					destRect.setHeight(destRect.height() * sy);
+				}
+				
 				// cache the scaled pixmap according to the transformed size of the view
-				QString foregroundKey = QString(cacheKey()+":%1:%2:%3:%4")
-							.arg(destRect.width()).arg(destRect.height())
-							.arg(m_fileName).arg(m_fileLastModified);
-
+				QString foregroundKey = QString("%1:%2:%3:%4")
+							.arg(m_fileName).arg(m_fileLastModified)
+							.arg(destRect.width()).arg(destRect.height());
+							
+				//qDebug() << "foregroundKey: "<<foregroundKey;
 				
 				QPixmap cache;
 				if(!QPixmapCache::find(foregroundKey,cache))
 				{
-					//qDebug() << "ImageContent::drawForeground: " << dbg_counter << "Foreground pixmap dirty, redrawing";
+// 					QTime t;
+// 					t.start();
+// 					qDebug() << "BackgroundContent::drawForeground: Foreground pixmap dirty, redrawing size:"<<destRect;
 					cache = QPixmap(destRect.size());
 					cache.fill(Qt::transparent);
 					
@@ -390,6 +419,8 @@ void BackgroundContent::paint(QPainter * painter, const QStyleOptionGraphicsItem
 					tmpPainter.end();
 					if(!QPixmapCache::insert(foregroundKey, cache))
 						qDebug() << "BackgroundContent::paint:"<<modelItem()->itemName()<<": Can't cache the image. This will slow performance of cross fades and slide editor. Make the cache larger using the Program Settings menu.";
+					
+// 					qDebug() << "BackgroundContent::drawForeground: Foreground pixmap dirty, end drawing size:"<<destRect<<", elapsed: "<<t.elapsed();
 				}
 				
 				painter->drawPixmap(cRect,cache);

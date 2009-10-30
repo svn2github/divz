@@ -16,12 +16,45 @@
 #include <QPixmapCache>
 #include <QFileIconProvider>
 #include <QDir>
+#include <QGraphicsView>
+#include <QSplitter>
 
 #include "qvideo/QVideoProvider.h"
 #include "3rdparty/md5/md5.h"
 #include "AppSettings.h"
 
+#include "SlideGroupViewer.h"
+#include "model/SlideGroup.h"
+#include "model/Slide.h"
+
+
 #define CACHE_DIR "dviz-imageiconcache"
+
+
+/* We reimplement QListView's keyPressEvent to detect
+  selection changes on key press events in QListView::ListMode.
+  Aparently, in list mode the selection model's currentChanged()
+  signal doesn't get fired on keypress, but in IconMode it does.
+  We use IconMode by default in the ViewControl below, but the
+  SongSlideGroupViewControl uses ListMode - this allows either
+  icon or list mode to change slides just by pressing up or down
+*/ 
+class MediaBrowserQListView : public QListView
+{
+public:
+	MediaBrowserQListView(QWidget * ctrl) : QListView(ctrl) {}
+	void keyPressEvent(QKeyEvent *event)
+	{
+		QModelIndex oldIdx = currentIndex();
+		QListView::keyPressEvent(event);
+		QModelIndex newIdx = currentIndex();
+		if(oldIdx.row() != newIdx.row())
+		{
+			emit clicked(newIdx);
+		}
+	}
+};
+
 
 QRegExp MediaBrowser::videoRegexp = QRegExp("(wmv|mpeg|mpg|avi|wmv|flv|mov|mp4|m4a|3gp|3g2|mj2|mjpeg|ipod|m4v|gsm|gif|swf|dv|dvd|asf|mtv|roq|aac|ac3|aiff|alaw|iif)",Qt::CaseInsensitive);
 QRegExp MediaBrowser::imageRegexp = QRegExp("(png|jpg|bmp|svg|xpm)",Qt::CaseInsensitive);
@@ -129,11 +162,17 @@ MediaBrowser::~MediaBrowser() {}
 
 void MediaBrowser::setupUI()
 {
-	QVBoxLayout *vbox = new QVBoxLayout(this);
-	//SET_MARGIN(vbox,0);
+	QVBoxLayout *vbox0 = new QVBoxLayout(this);
+	m_splitter = new QSplitter(this);
+	m_splitter->setOrientation(Qt::Vertical);
+	vbox0->addWidget(m_splitter);
+	
+	QWidget *browser = new QWidget(m_splitter);
+	QVBoxLayout *vbox = new QVBoxLayout(browser);
+	SET_MARGIN(vbox,0);
 	
 	// Setup filter box at the top of the widget
-	m_searchBase = new QWidget(this);
+	m_searchBase = new QWidget(browser);
 	
 	QHBoxLayout *hbox = new QHBoxLayout(m_searchBase);
 	SET_MARGIN(hbox,0);
@@ -169,14 +208,14 @@ void MediaBrowser::setupUI()
 	connect(m_clearSearchBtn, SIGNAL(clicked()), this, SLOT(clearFilter()));
 	
 	// Now for the list itself
-	m_listView = new QListView(this);
+	m_listView = new MediaBrowserQListView(browser);
 	m_listView->setAlternatingRowColors(true);
 	m_listView->setIconSize(MEDIABROWSER_LIST_ICON_SIZE);
 	
 	// below doesnt seem to be enough
 	//m_listView->setEditTriggers(QAbstractItemView::SelectedClicked | QAbstractItemView::EditKeyPressed);
 	
-	m_fsModel = new QFileSystemModel(this);
+	m_fsModel = new QFileSystemModel(browser);
 	m_fsModel->setIconProvider(new MyQFileIconProvider());
 	m_fsModel->setNameFilterDisables(false);
 	
@@ -186,7 +225,7 @@ void MediaBrowser::setupUI()
 	connect(m_listView,       SIGNAL(clicked(const QModelIndex &)), this, SLOT(indexSingleClicked(const QModelIndex &)));
 	
 	// Add action buttons
-	m_btnBase = new QWidget(this);
+	m_btnBase = new QWidget(browser);
 	QHBoxLayout *hbox3 = new QHBoxLayout(m_btnBase);
 	SET_MARGIN(hbox3,0);
 	
@@ -215,7 +254,7 @@ void MediaBrowser::setupUI()
 	m_btnBase->setEnabled(false);
 	
 	// Add the directory box and filter box at bottom
-	m_folderBoxBase = new QWidget(this);
+	m_folderBoxBase = new QWidget(browser);
 	QHBoxLayout *hbox2 = new QHBoxLayout(m_folderBoxBase);
 	SET_MARGIN(hbox2,0);
 	
@@ -233,7 +272,36 @@ void MediaBrowser::setupUI()
 	vbox->addWidget(m_listView);
 	vbox->addWidget(m_btnBase);
 	vbox->addWidget(m_folderBoxBase);
+	
+	m_splitter->addWidget(browser);
+	
+	
+	m_viewer = new SlideGroupViewer(m_splitter);
+	m_viewer->setCanZoom(true);
+	
+	Slide * slide = new Slide();
+	AbstractVisualItem * bg = dynamic_cast<AbstractVisualItem*>(slide->background());
+	bg->setFillType(AbstractVisualItem::Solid);
+	bg->setFillBrush(Qt::black);
+	
+	SlideGroup *group = new SlideGroup();
+	group->addSlide(slide);
+	m_viewer->setSlideGroup(group);
+	
+	m_splitter->addWidget(m_viewer);
 }
+
+QByteArray MediaBrowser::saveState() 
+{
+	return m_splitter->saveState();
+}
+
+bool MediaBrowser::restoreState(const QByteArray &state) 
+{
+	return m_splitter->restoreState(state);
+}
+
+
 
 void MediaBrowser::setFileTypeFilterList(QStringList list)
 {
@@ -364,15 +432,10 @@ void MediaBrowser::indexSingleClicked(const QModelIndex &idx)
 	QFileInfo info = m_fsModel->fileInfo(idx);
 	m_btnBase->setEnabled(idx.isValid() && !info.isDir());
 	
-// 	if(info.isDir())
-// 	{
-// 		QString path = info.filePath();
-// 		setDirectory(path);
-// 	}
-// 	else
-// 	{
-// 		emit fileSelected(info);
-// 	}
+	if(SlideGroup::canUseBackground(info))
+		m_viewer->slideGroup()->changeBackground(info);
+	else
+		m_viewer->slideGroup()->changeBackground(AbstractVisualItem::Solid,"#000");
 }
 
 void MediaBrowser::setDirectory(const QString &path, bool addToHistory)

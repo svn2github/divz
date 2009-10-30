@@ -10,6 +10,8 @@ class QModelIndex;
 class QPushButton;
 class QLineEdit;
 class QComboBox;
+class QSplitter;
+class SlideGroupViewer;
 #include <QStringList>
 #include <QRegExp>
 
@@ -30,6 +32,9 @@ public /*static*/:
 public:
 	MediaBrowser(QWidget *parent=0);
 	~MediaBrowser();
+	
+	QByteArray saveState();
+	bool restoreState (const QByteArray & state);
 	
 signals:
 	void fileSelected(const QFileInfo&);
@@ -108,6 +113,9 @@ protected:
 	QPushButton	* m_btnSetAsBgLive;
 	QPushButton	* m_btnSetAsBgLater;
 	QPushButton	* m_btnSetAsBgCurrent;
+	
+	SlideGroupViewer * m_viewer;
+	QSplitter	* m_splitter;
 	
 };
 

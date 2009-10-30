@@ -128,23 +128,67 @@ Revised Task list for Release 1.0, 10/18/09:
 			Add outputview objects to encapsulate slidegroupviewer or network client/server
 			On first start, intelligently detect aspect ratio of primary output - if no primary out, create small custom rect in top right
 		
+		= TODAY =	
+			[DONE] media browser preview
+				need file preview widget below media browser
+					click once on file to preview
+	
+			master slide ?
+		
+			text work
+				do need vertical line spacing for artistic use in desigining slides
+				text toolbar vs rich editor in config box dont agree - config box doesnt pick up same text size
+				rich text editor should allow manually typed point sizes
+				rich text editor should accept only plain text mime type and assume current formatting
+				need an autofit textbox btn
+				and an autosize textbox
+				when changing text using tooplbar icons, need to update prop dock with new html 
+				text import tool:
+					grab text file 
+					go thru file, grab 6 lines at a time
+					try to get to be at least 45 - 50 px high
+					drop lines back to next batch till at least 45px high
+					create slides as you go
+					
+			images work
+				large nbr of photos imported using import tool - some of them render gray - caching issues?
+				add progress bar to image import tool
+				add timeout, titling options to image import tool
+				when loading slide group with lots of image, UI freezes for too long
+					this is due to the loading of images in the image item 
+					which is due to the creating of slide pixmaps
+					need someway to delay-create the slide pixmaps
+					while were on it, delay-creat the group pixmaps as well
+					since cant render qpixmaps outside gui thread, maybe something like:	
+						in generatepixmap:
+							setup mygraphicsscene with slide
+							ask scene if ready to render
+								this would require us to delay loading the image item for a split second
+								scene would ask each abstractcontent if canrender
+							if no, then queue the pixmap for render later and return gray pixmap
+							recheck again in X ms (10 ms)
+								if still no, queue again
+								render anyway after X ms (2000ms ? )
+						call gui process events every time thru generatepixmap ?
+							
+				images import tool maybe should use different file browser dialog - because on win32, its that directory tree dialog with no field to type in - I hate that dialog
+		
+			misc:
+				make a background "apply to all" button
+				make autosave - on/off from toolbar
+				make autosave time configurable via app settings
+				
+				when switching background to video, somehow render the previous background video UNTIL the first frame of the next video is ready
+			
+			
 		= Misc = 
 			[MAYBE] Add color theme support vis a vi powerpoint
-			
-			[LATER] rewrite dirmodel inorder to delay-load icons
-				cant delay load icons yet due to qlistview not repainting properly - reported on qt-interest
+		
 			[STARTED] need to pre-render all text boxes
 				does it in song groups
 			add generic pre-render on document load 
 				loop thru every group, every slide and call Paint on every visual delegate
-			
-			need file preview widget below media browser
-				click once on file to preview
 				
-			[DONE] allow slide & group fade settings to override OutputControl
-			[LATER] add checkbox to outputcontrol to force-override fade settings
-			[DONE] change "play" button in view control to "start" - when anim framework added, it can be called "play" again
-			
 			add web newsticker item
 				can use CSV or XML file as data source
 			add countdown item
@@ -159,27 +203,6 @@ Revised Task list for Release 1.0, 10/18/09:
 				compiles pxxmlexport (pxtools) on win32 - doesnt execute
 				need to integrate it into a dialog in dviz
 			
-			large nbr of photos imported using import tool - some of them render gray - caching issues?
-			add progress bar to image import tool
-			add timeout, titling options to image import tool
-			when loading slide group with lots of image, UI freezes for too long
-				this is due to the loading of images in the image item 
-				which is due to the creating of slide pixmaps
-				need someway to delay-create the slide pixmaps
-				while were on it, delay-creat the group pixmaps as well
-				since cant render qpixmaps outside gui thread, maybe something like:	
-					in generatepixmap:
-						setup mygraphicsscene with slide
-						ask scene if ready to render
-							this would require us to delay loading the image item for a split second
-							scene would ask each abstractcontent if canrender
-						if no, then queue the pixmap for render later and return gray pixmap
-						recheck again in X ms (10 ms)
-							if still no, queue again
-							render anyway after X ms (2000ms ? )
-					call gui process events every time thru generatepixmap ?
-						
-			images import tool maybe should use different file browser dialog - because on win32, its that directory tree dialog with no field to type in - I hate that dialog
 			
 			[STARTED] add image slideshow group type
 				or group "generator" / importer?
@@ -194,23 +217,6 @@ Revised Task list for Release 1.0, 10/18/09:
 				zoom slide list in control
 				zoom doc list in main window
 			
-			do need vertical line spacing for artistic use in desigining slides
-			text toolbar vs rich editor in config box dont agree - config box doesnt pick up same text size
-			rich text editor should allow manually typed point sizes
-			rich text editor should accept only plain text mime type and assume current formatting
-			need an autofit textbox btn
-			and an autosize textbox
-			when changing text using tooplbar icons, need to update prop dock with new html 
-			
-			make a background "apply to all" button
-			make autosave - on/off from toolbar
-			make autosave time configurable via app settings
-			
-			when switching background to video, somehow render the previous background video UNTIL the first frame of the next video is ready
-			
-			[FIXED] song text looks like its not centering correctly - check it out
-				due to the fact that we automatically create templates, we had to find a different way to decide to auto-center or not
-				changed to check to see if textbox was the same size as the screen - if so, then center the box
 			
 			add network viewer client
 				for viewer, client or server doesnt matter
@@ -359,6 +365,16 @@ Revised Task list for Release 1.0, 10/18/09:
 			or some form of exponential, rounded percentage inc? (e.g. (int)(cur size * 1.5)) ?
 		
 		
+		
+		[FIXED] song text looks like its not centering correctly - check it out
+			due to the fact that we automatically create templates, we had to find a different way to decide to auto-center or not
+			changed to check to see if textbox was the same size as the screen - if so, then center the box
+		
+		[LATER] rewrite dirmodel inorder to delay-load icons
+			cant delay load icons yet due to qlistview not repainting properly - reported on qt-interest
+		[DONE] allow slide & group fade settings to override OutputControl
+		[LATER] add checkbox to outputcontrol to force-override fade settings
+		[DONE] change "play" button in view control to "start" - when anim framework added, it can be called "play" again
 		
 		[FIXED] cloning text objects looses the original font size even tho we copy the html
 			

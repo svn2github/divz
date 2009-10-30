@@ -16,6 +16,7 @@ class SlideGroup;
 
 #include "model/AbstractItemFilter.h"
 
+class SlideGroupViewerGraphicsView;
 class SlideGroupViewer : public QWidget
 {
 	Q_OBJECT
@@ -47,6 +48,9 @@ public:
 	
 	int fadeSpeed() { return m_fadeSpeed; }
 	int fadeQuality() { return m_fadeQuality; } 
+	
+	void setCanZoom(bool);
+	bool canZoom();
 	
 signals:
 	void nextGroup();
@@ -90,7 +94,6 @@ protected:
 
 private:
 	MyGraphicsScene * scene() { return m_scene; }
-	QGraphicsView * view() { return m_view; }
 	
 	Slide * applySlideFilters(Slide*);
 	AbstractItem * applyMutations(AbstractItem*);
@@ -120,7 +123,7 @@ private:
 	int m_slideNum;
 
 	MyGraphicsScene * m_scene;
-	QGraphicsView * m_view;
+	SlideGroupViewerGraphicsView * m_view;
 	bool m_usingGL;
 
 	static Slide * m_blackSlide;

@@ -1,9 +1,10 @@
 #include "SlideGroup.h"
 
 #include <assert.h>
+#include <QFileInfo>
 
 #include "Slide.h"
-
+#include "MediaBrowser.h"
 
 SlideGroup::SlideGroup() :
 	m_groupNumber(-1)
@@ -164,6 +165,34 @@ void SlideGroup::sortSlides()
 	qSort(m_slides.begin(), m_slides.end(), SlideGroup_slide_num_compare);
 }
 
+bool SlideGroup::canUseBackground(const QFileInfo & info)
+{
+	QString ext = info.suffix();
+	return MediaBrowser::isVideo(ext) || MediaBrowser::isImage(ext);
+}
+
+bool SlideGroup::changeBackground(const QFileInfo & info, Slide *onlyThisSlide)
+{
+	QString ext = info.suffix();
+	
+	QString abs = info.absoluteFilePath();
+	
+	AbstractVisualItem::FillType type = AbstractVisualItem::None;
+	if(MediaBrowser::isVideo(ext))
+		type = AbstractVisualItem::Video;
+	else
+	if(MediaBrowser::isImage(ext))
+		type = AbstractVisualItem::Image;
+	
+	if(type!=AbstractVisualItem::None)
+	{
+		changeBackground(type,abs,onlyThisSlide);
+		return true;
+	}
+	
+	return false;
+}
+
 void SlideGroup::changeBackground(AbstractVisualItem::FillType fillType, QVariant fillValue, Slide *onlyThisSlide)
 {
 	QList<Slide *> slides;
@@ -185,11 +214,11 @@ void SlideGroup::changeBackground(AbstractVisualItem::FillType fillType, QVarian
 		if(fillType == AbstractVisualItem::Image)
 		{
 			bg->setFillImageFile(fillValue.toString());
-		}/*
+		}
 		else
 		if(fillType == AbstractVisualItem::Solid)
 		{
-			bg->setFillBrush(fillValue.toColor());
-		}*/
+			bg->setFillBrush(QColor(fillValue.toString()));
+		}
 	}
 }

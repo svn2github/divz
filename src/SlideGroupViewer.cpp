@@ -26,6 +26,73 @@
 
 #include "itemlistfilters/SlideTextOnlyFilter.h"
 
+
+class SlideGroupViewerGraphicsView : public QGraphicsView 
+{
+	public:
+		SlideGroupViewerGraphicsView(QWidget * parent)
+			: QGraphicsView(parent)
+			, m_canZoom(false)
+		{
+			setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing | QPainter::SmoothPixmapTransform );
+			setCacheMode(QGraphicsView::CacheBackground);
+			setViewportUpdateMode(QGraphicsView::BoundingRectViewportUpdate);
+			setOptimizationFlags(QGraphicsView::DontSavePainterState);
+			setViewportUpdateMode(QGraphicsView::SmartViewportUpdate);
+			setTransformationAnchor(AnchorUnderMouse);
+			setResizeAnchor(AnchorViewCenter);
+		}
+	
+		bool canZoom() { return m_canZoom; }
+		void setCanZoom(bool flag) { m_canZoom = flag; }
+	
+	
+	protected:
+		void keyPressEvent(QKeyEvent *event)
+		{
+			if(event->modifiers() & Qt::ControlModifier)
+			{
+				
+				switch (event->key()) 
+				{
+					case Qt::Key_Plus:
+						scaleView(qreal(1.2));
+						break;
+					case Qt::Key_Minus:
+                                        case Qt::Key_Equal:
+						scaleView(1 / qreal(1.2));
+						break;
+					default:
+						QGraphicsView::keyPressEvent(event);
+				}
+			}
+		}
+		
+		
+		void wheelEvent(QWheelEvent *event)
+		{
+                        scaleView(pow((double)2, event->delta() / 240.0));
+		}
+		
+		
+		void scaleView(qreal scaleFactor)
+		{
+			if(!m_canZoom)
+				return;
+				
+			qreal factor = matrix().scale(scaleFactor, scaleFactor).mapRect(QRectF(0, 0, 1, 1)).width();
+			if (factor < 0.07 || factor > 100)
+				return;
+			
+			scale(scaleFactor, scaleFactor);
+		}
+	private:
+		bool m_canZoom;
+};
+
+
+
+
 Slide * SlideGroupViewer::m_blackSlide = 0;
 int SlideGroupViewer::m_blackSlideRefCount = 0;
 
@@ -60,7 +127,8 @@ SlideGroupViewer::SlideGroupViewer(QWidget *parent)
  		connect(mw, SIGNAL(aspectRatioChanged(double)), this, SLOT(aspectRatioChanged(double)));
 	}
 	
-	m_view = new QGraphicsView(this);
+	//m_view = new QGraphicsView(this);
+	m_view = new SlideGroupViewerGraphicsView(this);
 	m_view->setFrameStyle(QFrame::NoFrame);
 	m_view->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 	m_view->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -87,6 +155,14 @@ SlideGroupViewer::SlideGroupViewer(QWidget *parent)
 	layout->setContentsMargins(0,0,0,0);
 	layout->addWidget(m_view);
 	setLayout(layout);
+}
+
+bool SlideGroupViewer::canZoom() { return m_view->canZoom(); }
+
+
+void SlideGroupViewer::setCanZoom(bool flag)
+{
+	m_view->setCanZoom(flag);
 }
 
 
@@ -453,20 +529,8 @@ void SlideGroupViewer::applyBackground(const QFileInfo &info, Slide * onlyThisSl
 {
 	if(!m_slideGroup)
 		return;
-		
-	QString ext = info.suffix();
 	
-	QString abs = info.absoluteFilePath();
-	
-	AbstractVisualItem::FillType type = AbstractVisualItem::None;
-	if(MediaBrowser::isVideo(ext))
-		type = AbstractVisualItem::Video;
-	else
-	if(MediaBrowser::isImage(ext))
-		type = AbstractVisualItem::Image;
-	
-	if(type!=AbstractVisualItem::None)
-		m_slideGroup->changeBackground(type,abs,onlyThisSlide);
+	m_slideGroup->changeBackground(info,onlyThisSlide);
 	
 }
 
@@ -492,7 +556,7 @@ void SlideGroupViewer::setLiveBackground(const QFileInfo &info, bool waitForNext
 
 void SlideGroupViewer::setBackground(QColor c)
 {
-	view()->setBackgroundBrush(c);
+	m_view->setBackgroundBrush(c);
 }
 
 void SlideGroupViewer::setSceneContextHint(MyGraphicsScene::ContextHint hint)
