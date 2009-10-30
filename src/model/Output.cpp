@@ -7,37 +7,37 @@
 
 Output * Output::m_staticPreviewInstance = new Output(Output::Preview);
 
-Output::Output(Output::OutputType type) :
- 	  m_outputType(type)
-	, m_isEnabled(true)
-	, m_name("Output")
-	, m_screenNum(0)
-	, m_customRect(QRect(0,0,1024,768))
-	, m_networkRole(Server)
-	, m_host("")
-	, m_port(7777)
-	, m_allowMultiple(true)
-	, m_tags("")
-	, m_id(-1)
+Output::Output(Output::OutputType type)
 {
+	setupDefaults();
+	generateId();
+	setOutputType(type);
+}
+
+Output::Output()
+{
+	setupDefaults();
 	generateId();
 }
 
-Output::Output() :
-	m_isSystem(false)
-	, m_isEnabled(true)
-	, m_name("Untitled Output")
-	, m_outputType(Custom)
-	, m_screenNum(0)
-	, m_customRect(QRect(0,0,1024,768))
-	, m_networkRole(Server)
-	, m_host("")
-	, m_port(7777)
-	, m_allowMultiple(true)
-	, m_tags("")
-	, m_id(-1)
+void Output::setupDefaults()
 {
-	generateId();
+	m_isSystem		= false;
+	m_isEnabled		= true;
+	m_name			= "Untitled Output";
+	m_outputType		= Custom;
+	m_screenNum		= 0;
+	m_customRect		= QRect(0,0,1024,768);
+	m_networkRole		= Server;
+	m_host			= "";
+	m_port			= 7777;
+	m_allowMultiple		= true;
+	m_tags			= "";
+	m_id			= -1;
+	m_stayOnTop		= true;
+	m_mjpegServerEnabled	= false;
+	m_mjpegServerPort	= 8080;
+	m_mjpegServerFPS	= 7;
 }
 
 void Output::generateId()
@@ -77,6 +77,12 @@ void Output::setAllowMultiple(bool x) { m_allowMultiple = x; }
 
 void Output::setTags(QString x) { m_tags = x; }
 
+void Output::setStayOnTop(bool x) { m_stayOnTop = x; }
+void Output::setMjpegServerEnabled(bool x) { m_mjpegServerEnabled = x; }
+void Output::setMjpegServerPort(int x) { m_mjpegServerPort = x; }
+void Output::setMjpegServerFPS(int x) { m_mjpegServerFPS = x; }
+
+
 QByteArray Output::toByteArray()
 {
 	QByteArray array;
@@ -94,7 +100,11 @@ QByteArray Output::toByteArray()
 	b << QVariant(allowMultiple());
 	b << QVariant(tags());
 	b << QVariant(id());
-
+	b << QVariant(stayOnTop());
+	b << QVariant(mjpegServerEnabled());
+	b << QVariant(mjpegServerPort());
+	b << QVariant(mjpegServerFPS());
+	
 	return array;
 }
 
@@ -117,6 +127,12 @@ void Output::fromByteArray(QByteArray array)
 	b >> x; 
 		if(!x.isNull())
 			m_id = x.toInt();
+	
+	b >> x; setStayOnTop(x.isNull() ? true : x.toBool());
+	
+	b >> x; setMjpegServerEnabled(x.isNull() ? false : x.toBool());
+	b >> x; setMjpegServerPort(x.isNull() ? 8080     : x.toInt());
+	b >> x; setMjpegServerFPS(x.isNull() ? 7         : x.toInt());
 }
 
 void Output::setInstance(OutputInstance *instance)

@@ -33,6 +33,11 @@ protected slots:
 	void slotAllowMultChanged(int);
 	void slotNew();
 	void slotDel();
+	
+	void slotStayOnTop(bool);
+	void slotMjpegEnabled(bool);
+	void slotMjpegPort(int);
+	void slotMjpegFps(int);
 
 protected:
 	void changeEvent(QEvent *e);

@@ -59,27 +59,29 @@ OutputInstance::OutputInstance(Output *out, QWidget *parent)
 	
 	layout->addWidget(m_viewer);
 	
-	applyOutputSettings();
-	
 	m_grabTimer = new QTimer();
 	connect(m_grabTimer, SIGNAL(timeout()), this, SLOT(slotGrabPixmap()));
+			
+	applyOutputSettings();
 	
-	m_grabTimer->start(500);
 }
 
 OutputInstance::~OutputInstance() {}
 
 void OutputInstance::slotGrabPixmap()
 {
-	if(!m_isFoldback)
+	if(!m_output->mjpegServerEnabled())
 		return;
 		
-	if(!m_server)
+	if(!m_server || m_server->serverPort() != m_output->mjpegServerPort())
 	{
+		if(m_server)
+			delete m_server;
+		
 		m_server = new JpegServer();
 		m_server->setProvider(this, SIGNAL(imageReady(QImage*)), true); // true = delete image when transmitted
 		
-		if (!m_server->listen()) 
+		if (!m_server->listen(QHostAddress::Any,m_output->mjpegServerPort())) 
 		{
 			qDebug() << "JpegServer could not start: "<<m_server->errorString();
 		}
@@ -126,7 +128,10 @@ void OutputInstance::applyOutputSettings()
 		else
 		{
 			geom = m_output->customRect();
-			setWindowFlags(Qt::WindowStaysOnTopHint | Qt::FramelessWindowHint);
+			if(m_output->stayOnTop())
+				setWindowFlags(Qt::WindowStaysOnTopHint | Qt::FramelessWindowHint);
+			else
+				setWindowFlags(Qt::FramelessWindowHint);
 		}
 
 		resize(geom.width(),geom.height());
@@ -136,6 +141,14 @@ void OutputInstance::applyOutputSettings()
 		
 		setWindowTitle(QString("%1 Output - DViz").arg(m_output->name()));
 		setWindowIcon(QIcon(":/data/icon-d.png"));
+		
+		
+		if(m_grabTimer->isActive())
+			m_grabTimer->stop();
+			
+		if(m_output->mjpegServerEnabled())
+			m_grabTimer->start(1000 / m_output->mjpegServerFPS());
+
 	}
 	else
 	if(x == Output::Preview)

@@ -22,6 +22,13 @@ class Output : public QObject
 	Q_PROPERTY(bool allowMultiple READ allowMultiple WRITE setAllowMultiple);
 	Q_PROPERTY(QString tags READ tags WRITE setTags);
 	
+	Q_PROPERTY(bool stayOnTop READ stayOnTop WRITE setStayOnTop);
+	
+	Q_PROPERTY(bool mjpegServerEnabled READ mjpegServerEnabled WRITE setMjpegServerEnabled);
+	Q_PROPERTY(int mjpegServerPort READ mjpegServerPort WRITE setMjpegServerPort);
+	Q_PROPERTY(int mjpegServerFPS READ mjpegServerFPS WRITE setMjpegServerFPS);
+	
+	
 	static Output * m_staticPreviewInstance;
 public:
 	static Output * previewInstance() { return m_staticPreviewInstance; }
@@ -64,7 +71,20 @@ public:
 	
 	QString tags() { return m_tags; }
 	void setTags(QString);
-
+	
+	bool stayOnTop() { return m_stayOnTop; }
+	void setStayOnTop(bool);
+	
+	bool mjpegServerEnabled() { return m_mjpegServerEnabled; }
+	void setMjpegServerEnabled(bool);
+	
+	int mjpegServerPort() { return m_mjpegServerPort; }
+	void setMjpegServerPort(int);
+	
+	int mjpegServerFPS() { return m_mjpegServerFPS; } 
+	void setMjpegServerFPS(int);
+	
+	
 	QByteArray toByteArray();
 	void fromByteArray(QByteArray);
 	
@@ -76,6 +96,7 @@ public:
 	void setInstance(OutputInstance *);
 
 private:
+	void setupDefaults();
 	void generateId();
 	
 	bool m_isSystem;
@@ -90,6 +111,11 @@ private:
 	bool m_allowMultiple;
 	QString m_tags;
 	int m_id;
+	
+	bool m_stayOnTop;
+	bool m_mjpegServerEnabled;
+	int m_mjpegServerPort;
+	int m_mjpegServerFPS;	
 	
 	OutputInstance * m_instance;
 

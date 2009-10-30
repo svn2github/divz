@@ -31,6 +31,24 @@ OutputSetupDialog::OutputSetupDialog(QWidget *parent) :
 	connect(m_ui->customWidth,  SIGNAL(valueChanged(int)), this, SLOT(slotCustW(int)));
 	connect(m_ui->customHeight, SIGNAL(valueChanged(int)), this, SLOT(slotCustH(int)));
 	
+	
+	connect(m_ui->stayOnTop, SIGNAL(toggled(bool)), this, SLOT(slotStayOnTop(bool)));
+	
+	connect(m_ui->mjpegEnabled, SIGNAL(toggled(bool)), this, SLOT(slotMjpegEnabled(bool)));
+	connect(m_ui->mjpegEnabled, SIGNAL(toggled(bool)), m_ui->mjpegEnabled2, SLOT(setChecked(bool)));
+	connect(m_ui->mjpegEnabled2, SIGNAL(toggled(bool)), m_ui->mjpegEnabled, SLOT(setChecked(bool)));
+	
+	
+	connect(m_ui->mjpegPort, SIGNAL(valueChanged(int)), this, SLOT(slotMjpegPort(int)));
+	connect(m_ui->mjpegPort, SIGNAL(valueChanged(int)), m_ui->mjpegPort2, SLOT(setValue(int)));
+	connect(m_ui->mjpegPort2, SIGNAL(valueChanged(int)), m_ui->mjpegPort, SLOT(setValue(int)));
+	
+	
+	connect(m_ui->mjpegFps, SIGNAL(valueChanged(int)), this, SLOT(slotMjpegFps(int)));
+	connect(m_ui->mjpegFps, SIGNAL(valueChanged(int)), m_ui->mjpegFps2, SLOT(setValue(int)));
+	connect(m_ui->mjpegFps2, SIGNAL(valueChanged(int)), m_ui->mjpegFps, SLOT(setValue(int)));
+	
+	
 	connect(m_ui->cbOutputEnabled, SIGNAL(stateChanged(int)), this, SLOT(slotOutputEnabledStateChanged(int)));
 	connect(m_ui->rbListen, SIGNAL(toggled(bool)), this, SLOT(slotNetRoleChanged(bool)));
 	
@@ -169,6 +187,33 @@ void OutputSetupDialog::slotAllowMultChanged(int x)
 	m_output->setAllowMultiple(x ? true : false);
 }
 
+void OutputSetupDialog::slotStayOnTop(bool x)
+{
+	if(!m_output)
+		return;
+	m_output->setStayOnTop(x);
+}
+
+void OutputSetupDialog::slotMjpegEnabled(bool x)
+{
+	if(!m_output)
+		return;
+	m_output->setMjpegServerEnabled(x);
+}
+
+void OutputSetupDialog::slotMjpegPort(int x)
+{
+	if(!m_output)
+		return;
+	m_output->setMjpegServerPort(x);
+}
+
+void OutputSetupDialog::slotMjpegFps(int x)
+{
+	if(!m_output)
+		return;
+	m_output->setMjpegServerFPS(x);
+}
 
 void OutputSetupDialog::slotTabChanged(int tab)
 {
@@ -214,6 +259,14 @@ void OutputSetupDialog::setOutput(Output *output)
 	m_ui->label_2->setText( m_output->isSystem() ? "This is a system output, you cannot change the name." : "");
 	
 	m_ui->screenListView->setEnabled(true);
+	
+	
+	m_ui->stayOnTop->setChecked(output->stayOnTop());
+	
+	m_ui->mjpegEnabled->setChecked(output->mjpegServerEnabled());
+	m_ui->mjpegPort->setValue(output->mjpegServerPort());
+	m_ui->mjpegFps->setValue(output->mjpegServerFPS());
+	
 	
 	// flush any changes the previosly-selected output back into the list view
 	//setupOutputList();
