@@ -141,9 +141,9 @@ Revised Task list for Release 1.0, 10/18/09:
 			need file preview widget below media browser
 				click once on file to preview
 				
-			allow slide & group fade settings to override OutputControl
-			add checkbox to outputcontrol to force-override fade settings
-			change "play" button in view control to "start" - when anim framework added, it can be called "play" again
+			[DONE] allow slide & group fade settings to override OutputControl
+			[LATER] add checkbox to outputcontrol to force-override fade settings
+			[DONE] change "play" button in view control to "start" - when anim framework added, it can be called "play" again
 			
 			add web newsticker item
 				can use CSV or XML file as data source
@@ -188,34 +188,6 @@ Revised Task list for Release 1.0, 10/18/09:
 					- ppt displayes NO progress dialog or bar when reading large image lists (just a busy cursor)
 					- generating the slides takes a LONG time in ppt once you click CREATE
 					- powerpoint does NOT automatically set the LOOP SLIDE SHOW *or* an intelligent per slide auto-change time
-					
-			animation framework
-				each item on slide gets own 'channel' on timeline
-				channels sorted by Z-order (top channel - top item)
-				length of item on timeline is "life" of item
-				default start/end of life - appear/dissappear (setVisible)
-				allow for enterenace/exit effects: fade in, fade out, others...
-				keyframed animation:
-					when moving to spots on timeline, move items properly to the spot they would be in live view
-					indicate keyframes on timeline with dots or something
-					allow keyframes to EASILY be deleted from timeline (click + drag off, click+delete, rightlick+delete)
-					allow to click keyframe to jump to that spot on timeline
-					to add keyframe to anim, move to spot on timeline, then move item to new spot
-						if current spot on timeline already has keyframe, update that keyframe instead
-					store keyframes as list of: QMap<$itemId, QMap<$propertyName, $propertyValue>>
-					keyframes are PER item, not per spot on timeline
-					many items can have keyframe at single spot...right? or should they be per spot on timeline? think on it
-				some items have builtin length - like video
-					videos that can be looped have infinite length - e.g. they can be resized on the timeline as long as you want
-					regular videos have X length and cant go past that
-					need to add flag to VideoFileItem for "bool looped"
-			 
-			
-			
-			make an output MJPEG-only (e.g. no need for visible widget)
-				subclass of the network output
-				no need for custom dviz viewer on other end
-				need to render that as a "viewer" widget though - could take view from that
 			
 			make slide list model zoomable 
 				e.g. zoom slide list in editor
@@ -236,7 +208,9 @@ Revised Task list for Release 1.0, 10/18/09:
 			
 			when switching background to video, somehow render the previous background video UNTIL the first frame of the next video is ready
 			
-			song text looks like its not centering correctly - check it out
+			[FIXED] song text looks like its not centering correctly - check it out
+				due to the fact that we automatically create templates, we had to find a different way to decide to auto-center or not
+				changed to check to see if textbox was the same size as the screen - if so, then center the box
 			
 			add network viewer client
 				for viewer, client or server doesnt matter
@@ -256,13 +230,18 @@ Revised Task list for Release 1.0, 10/18/09:
 				use widget topixmap routine?
 				or mygracphisview topixmap?
 				or mygraphicscene topixmap?
-			
 				should be function in slidegroupviewer (basically, a clone output option)
 					multithreaded - compress frame jpeg once, then offer to all clients
-					
 				hacked a bit right now - just does foldback - maybe more later
+				less hackish now - settings to configure in OutputSetupDialog
 			
-		
+			[LATER] make an output MJPEG-only (e.g. no need for visible widget)
+				subclass of the network output
+				no need for custom dviz viewer on other end
+				need to render that as a "viewer" widget though - could take view from that
+				right now, added stayOnTop flag to custom output and MJpeg Server settings, so could setup custom output
+					as mjpeg feed and just put it behind other windows
+			
 		
 		[LATER] add blackberry remote control interface
 			two part:
@@ -295,6 +274,27 @@ Revised Task list for Release 1.0, 10/18/09:
 		[REJECTED] synced outputs should not show in list of "send to" outputs
 				decided that this is false
 		
+		[LATER] animation framework
+			each item on slide gets own 'channel' on timeline
+			channels sorted by Z-order (top channel - top item)
+			length of item on timeline is "life" of item
+			default start/end of life - appear/dissappear (setVisible)
+			allow for enterenace/exit effects: fade in, fade out, others...
+			keyframed animation:
+				when moving to spots on timeline, move items properly to the spot they would be in live view
+				indicate keyframes on timeline with dots or something
+				allow keyframes to EASILY be deleted from timeline (click + drag off, click+delete, rightlick+delete)
+				allow to click keyframe to jump to that spot on timeline
+				to add keyframe to anim, move to spot on timeline, then move item to new spot
+					if current spot on timeline already has keyframe, update that keyframe instead
+				store keyframes as list of: QMap<$itemId, QMap<$propertyName, $propertyValue>>
+				keyframes are PER item, not per spot on timeline
+				many items can have keyframe at single spot...right? or should they be per spot on timeline? think on it
+			some items have builtin length - like video
+				videos that can be looped have infinite length - e.g. they can be resized on the timeline as long as you want
+				regular videos have X length and cant go past that
+				need to add flag to VideoFileItem for "bool looped"
+			
 		[LATER] Add zooming toolbar to slide group editor
 				not a show stopper
 			

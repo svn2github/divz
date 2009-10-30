@@ -19,6 +19,10 @@
 
 #include "itemlistfilters/SlideTextOnlyFilter.h"
 
+// Size of the jpeg server image buffer before it starts
+// deleting frames. 10 is just an arbitrary magic nbr.
+#define MAX_IMGBUFFER_SIZE 10
+
 bool OuputInstance_slide_num_compare(Slide *a, Slide *b)
 {
 	return (a && b) ? a->slideNumber() < b->slideNumber() : true;
@@ -66,20 +70,28 @@ OutputInstance::OutputInstance(Output *out, QWidget *parent)
 	
 }
 
-OutputInstance::~OutputInstance() {}
+OutputInstance::~OutputInstance() 
+{
+	if(!m_imgBuffer.isEmpty())
+	{
+		qDeleteAll(m_imgBuffer);
+		m_imgBuffer.clear();
+	}
+}
 
 void OutputInstance::slotGrabPixmap()
 {
 	if(!m_output->mjpegServerEnabled())
 		return;
 		
-	if(!m_server || m_server->serverPort() != m_output->mjpegServerPort())
+	if(!m_server ||
+	    m_server->serverPort() != m_output->mjpegServerPort())
 	{
 		if(m_server)
 			delete m_server;
 		
 		m_server = new JpegServer();
-		m_server->setProvider(this, SIGNAL(imageReady(QImage*)), true); // true = delete image when transmitted
+		m_server->setProvider(this, SIGNAL(imageReady(QImage*)), false); // false = dont delete the image
 		
 		if (!m_server->listen(QHostAddress::Any,m_output->mjpegServerPort())) 
 		{
@@ -87,25 +99,32 @@ void OutputInstance::slotGrabPixmap()
 		}
 		else
 		{
-			qDebug() << output()->name()<<": JpegServer listening on "<<m_server->myAddress();
+			qDebug() << "OutputInstance"<<output()->name()<<": JpegServer listening on "<<m_server->myAddress();
 		}
 	}
 	
-	static int frameCounter = 0;
-	static double frameTimeSum = 0;
-	
-	frameCounter++;
-	
-	QTime t;
-	t.start();
+// 	static int frameCounter = 0;
+// 	static double frameTimeSum = 0;
+// 	
+// 	frameCounter++;
+// 	
+// 	QTime t;
+// 	t.start();
 	
 	QPixmap frame = QPixmap::grabWidget(m_viewer);
 	
-	emit imageReady(new QImage(frame.toImage()));
+	QImage * frameImg = new QImage(frame.toImage());
 	
-	double elapsed = ((double)t.elapsed()); // / 1000.0;
+	emit imageReady(frameImg);
 	
-	frameTimeSum += elapsed;
+// 	double elapsed = ((double)t.elapsed()); // / 1000.0;
+// 	
+// 	frameTimeSum += elapsed;
+	
+	m_imgBuffer.append(frameImg);
+	
+	if(m_imgBuffer.size() >= MAX_IMGBUFFER_SIZE)
+		delete m_imgBuffer.takeFirst();
 	
 	//qDebug("Frame: %d, Elapsed: %.02f, Avg: %.02f, FPmS: %.02f, Port: %d", frameCounter, elapsed, frameTimeSum / frameCounter, frameCounter / frameTimeSum, m_server->serverPort());
 }

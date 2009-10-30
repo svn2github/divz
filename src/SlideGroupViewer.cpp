@@ -782,7 +782,17 @@ void SlideGroupViewer::setSlideInternal(Slide *slide)
 	int quality = AppSettings::crossFadeQuality();
 	//qDebug() << "SlideGroupViewer::setSlideInternal(): [app] speed:"<<speed<<", quality:"<<quality;
 	
-	// change to slide group if sett
+	// allow this viewer's cross fade settings to override app settings
+	if(m_fadeQuality > 0 || m_fadeSpeed > 0)
+	{
+		if(m_fadeQuality > 0)
+			quality = m_fadeQuality;
+		if(m_fadeSpeed > 0)
+			speed = m_fadeSpeed;
+		//qDebug() << "SlideGroupViewer::setSlideInternal(): [viewer] speed:"<<speed<<", quality:"<<quality;
+	}
+		
+	// change to slide group if set
 	if(m_slideGroup && !m_slideGroup->inheritFadeSettings())
 	{
 		speed = m_slideGroup->crossFadeSpeed();
@@ -793,18 +803,14 @@ void SlideGroupViewer::setSlideInternal(Slide *slide)
 	// and use slide settings if set instead of the other two sets of settings
 	if(slide && !slide->inheritFadeSettings())
 	{
-		if(slide->crossFadeSpeed() > 0)
+		// the 0.01 test is due to the fact that I forgot to initalize cross fade speed/quality in the Slide object constructor in 
+		// older builds (fixed now.) So, if user loads file from older builds, these variables may have corrupted settings, so dont allow overide.
+		if(slide->crossFadeSpeed() > 0.01)
 			speed = slide->crossFadeSpeed();
-		if(slide->crossFadeQuality() > 0)
+		if(slide->crossFadeQuality() > 0.01)
 			quality = slide->crossFadeQuality();
 		//qDebug() << "SlideGroupViewer::setSlideInternal(): [slide] speed:"<<speed<<", quality:"<<quality;
 	}
-	
-	// allow this viewer's cross fade settings to override everything else
-	if(m_fadeQuality > 0)
-		quality = m_fadeQuality;
-	if(m_fadeSpeed > 0)
-		speed = m_fadeSpeed;
 	
 	//qDebug() << "SlideGroupViewer::setSlideInternal(): [final] speed:"<<speed<<", quality:"<<quality;
 	m_scene->setSlide(slide,MyGraphicsScene::CrossFade,speed,quality);

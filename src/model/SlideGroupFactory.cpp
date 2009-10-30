@@ -167,7 +167,7 @@ SlideGroupViewControl::SlideGroupViewControl(OutputInstance *g, QWidget *w )
 	m_timeLabel->setFont(QFont("Monospace",10,QFont::Bold));
 	hbox->addWidget(m_timeLabel);
 	
-	m_timeButton = new QPushButton(QIcon(":/data/action-play.png"),"&Play");
+	m_timeButton = new QPushButton(QIcon(":/data/action-play.png"),"&Start");
 	connect(m_timeButton, SIGNAL(clicked()), this, SLOT(toggleTimerState()));
 	m_timeButton->setEnabled(false);
 	hbox->addWidget(m_timeButton);
@@ -238,7 +238,7 @@ void SlideGroupViewControl::toggleTimerState(TimerState state, bool resetTimer)
 		qDebug() << "SlideGroupViewControl::toggleTimerState: state:"<<state<<", resetTimer:"<<resetTimer<<", flag:"<<flag;
 	
 	m_timeButton->setIcon(flag ? QIcon(":/data/action-pause.png") : QIcon(":/data/action-play.png"));
-	m_timeButton->setText(flag ? "&Pause" : "&Play");
+	m_timeButton->setText(flag ? "&Pause" : "&Start");
 	m_timeLabel->setEnabled(flag);
 	
 	if(flag)

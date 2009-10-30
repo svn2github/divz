@@ -92,14 +92,15 @@ void JpegServerThread::imageReady(QImage *image)
 	if(!image)
 		return;
 	
+ 	static int frameCounter = 0;
+ 	frameCounter++;
+ 	//qDebug() << "JpegServerThread: [START] Writing Frame#:"<<frameCounter;
+	
 	QImage tmp = *image;
 	
 	if(tmp.format() != QImage::Format_RGB32)
 		tmp = tmp.convertToFormat(QImage::Format_RGB32);
 		
-// 	static int frameCounter = 0;
-// 	frameCounter++;
-// 	qDebug() << "JpegServerThread: Writing Frame#:"<<frameCounter;
 	
 	
 	m_socket->write("Content-type: image/jpeg\r\n\r\n");
@@ -123,6 +124,8 @@ void JpegServerThread::imageReady(QImage *image)
 		delete image;
 		image = 0;
 	}
+	
+	//qDebug() << "JpegServerThread: [END] Writing Frame#:"<<frameCounter;
 }
 
 

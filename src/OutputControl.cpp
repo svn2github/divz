@@ -580,7 +580,7 @@ void OutputControl::setOutputInstance(OutputInstance * inst)
 	//connect(m_inst, SIGNAL(slideChanged(int)), this, SLOT(slideChanged(int)));
 
 	// HACK need to default to app settings
-	m_fadeSlider->setValue(25);
+	m_fadeSlider->setValue(15);
 	
 	setupFoldbackSettings();
 		

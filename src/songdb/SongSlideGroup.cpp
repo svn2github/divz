@@ -330,7 +330,8 @@ void SongSlideGroup::textToSlides(SongTextFilter filter)
 
 		// Run a basic algorithim to find the max font size to fit inside this text rectangle (textRect)
 		QString htmlStr = html.join("");
-		QRectF textRect = MainWindow::mw() ? MainWindow::mw()->standardSceneRect() : FALLBACK_SCREEN_RECT;
+		QRectF screenRect = MainWindow::mw() ? MainWindow::mw()->standardSceneRect() : FALLBACK_SCREEN_RECT;
+		QRectF textRect = screenRect;
 		if(textboxFromTemplate)
 			textRect = text->contentsRect();
 
@@ -386,7 +387,7 @@ void SongSlideGroup::textToSlides(SongTextFilter filter)
 		text->setProperty("SongSlideNumber", slideNbr);
 			
 		// Finalize setup
-		if(!textboxFromTemplate)
+		if(textRect == screenRect)
 		{
 			
 			// Center text on screen
@@ -399,14 +400,21 @@ void SongSlideGroup::textToSlides(SongTextFilter filter)
 
 			text->setPos(QPointF(0,0));
 			text->setContentsRect(textRect);
-			text->setOutlinePen(pen);
-			text->setOutlineEnabled(true);
-			text->setShadowEnabled(true);
-			slide->addItem(text);
+			
+			if(!textboxFromTemplate)
+			{
+				text->setOutlinePen(pen);
+				text->setOutlineEnabled(true);
+				text->setShadowEnabled(true);
+				text->setShadowBlurRadius(7);
+				slide->addItem(text);
+			}
 
 			if(DEBUG_TEXTOSLIDES)
 				qDebug()<<"SongSlideGroup::textToSlides(): slideNbr:"<<slideNbr<<": Textbox was not in template, finalized setup at 0x0, rect:"<<textRect;
 		}
+		
+		//qDebug()<<"SongSlideGroup::textToSlides(): slideNbr:"<<slideNbr<<": textboxFromTemplate:"<<textboxFromTemplate<<", boxHeight:"<<boxHeight;
 
 		slide->setSlideNumber(slideNbr++);
 		

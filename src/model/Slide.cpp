@@ -19,6 +19,9 @@ Slide::Slide()
 	m_slideId = 0;
 	m_slideNumber = 0;
 	m_autoChangeTime = 0;
+	m_inheritFadeSettings = true;
+	m_crossFadeSpeed = 250;
+	m_crossFadeQuality = 15;
 }
 Slide::~Slide() 
 {
