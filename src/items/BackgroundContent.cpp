@@ -150,6 +150,7 @@ void BackgroundContent::setImageFile(const QString &file)
 		//m_videoProvider->pause();
 		m_videoProvider->disconnectReceiver(this);
 		QVideoProvider::releaseProvider(m_videoProvider);
+		m_videoProvider = 0;
 	}
 			
 	// JPEGs, especially large ones (e.g. file on disk is > 2MB, etc) take a long time to load, decode, and convert to pixmap.

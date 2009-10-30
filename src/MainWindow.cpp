@@ -11,6 +11,9 @@
 #include <QMessageBox>
 #include <QTextEdit>
 #include <QCheckBox>
+#include <QFile>
+#include <QTextStream>
+		
 
 #include "AppSettings.h"
 #include "AppSettingsDialog.h"
@@ -18,6 +21,7 @@
 #include "SlideGroupSettingsDialog.h"
 #include "model/Output.h"
 #include "model/Slide.h"
+#include "model/TextBoxItem.h"
 
 #include "model/Document.h"
 #include "DocumentListModel.h"
@@ -26,6 +30,7 @@
 #include "OutputViewer.h"
 #include "OutputSetupDialog.h"
 
+#include "model/ItemFactory.h"
 #include "model/SlideGroupFactory.h"
 
 #include "songdb/SongSlideGroup.h"
@@ -131,6 +136,9 @@ MainWindow::MainWindow(QWidget *parent) :
 	
 	m_ui->actionImages_Import_Tool->setIcon(QIcon(":data/insert-image-24.png"));
 	connect(m_ui->actionImages_Import_Tool, SIGNAL(triggered()), this, SLOT(imageImportTool()));
+	
+	m_ui->actionText_Import_Tool->setIcon(QIcon(":data/insert-text-24.png"));
+	connect(m_ui->actionText_Import_Tool, SIGNAL(triggered()), this, SLOT(textImportTool()));
 	
 	
 	foreach(QAction *action, actionList)
@@ -376,47 +384,94 @@ void MainWindow::textImportTool()
 	
 	if(!fileName.isEmpty())
 	{
-// 		QFile file(fileName);
-// 		if (!file.open (IO_ReadOnly))
-// 		{
-// 			QMessageBox::warning(this,"Can't Read File",QString("Unable to open %1").arg(fileName));
-// 		}
-// 
-// 		QStringList lines;
-// 		QTextStream stream(&file);
-// 		while( ! stream.eof() )
-// 			lines << stream.readLine();
-// 			
-// 		
+		int MinTextSize = 45;
 		
-		//QMessageBox::warning(this,"No Images Found","No images found in the folder you chose.");
+		QFile file(fileName);
+		if(!file.open(QIODevice::ReadOnly))
+		{
+			QMessageBox::warning(this,"Can't Read File",QString("Unable to open %1").arg(fileName));
+			return;
+		}
+
+		QStringList lines;
+		QTextStream stream(&file);
+		while( ! stream.atEnd() )
+			lines << stream.readLine();
 			
-// 			SlideGroup *group = new SlideGroup();
-// 			group->setAutoChangeGroup(false);
-// 			group->setGroupTitle(dir.dirName());
-// 			
-// 			int slideNum = 0;
-// 			foreach(QString file, list)
-// 			{
-// 				Slide * slide = new Slide();
-// 				AbstractVisualItem * bg = dynamic_cast<AbstractVisualItem*>(slide->background());
-// 				
-// 				QString path = QString("%1/%2").arg(dir.absolutePath()).arg(file);
-// 				qDebug() << "Making slide for:"<<path;
-// 				
-// 				bg->setFillType(AbstractVisualItem::Image);
-// 				bg->setFillImageFile(path);
-// 	
-// 				slide->setAutoChangeTime(2.0);
-// 				slide->setSlideNumber(slideNum);
-// 				
-// 				group->addSlide(slide);
-// 				
-// 				slideNum++;
-// 			
-// 			}
-// 			
-// 			m_doc->addGroup(group);
+		QSize fitSize = standardSceneRect().size();
+		
+		SlideGroup *group = new SlideGroup();
+		group->setGroupTitle(AbstractItem::guessTitle(QFileInfo(fileName).baseName()));
+		
+		int slideNum = 0;
+				
+		TextBoxItem * tmpText = 0;
+		QStringList tmpList;
+		for(int x=0; x<lines.size(); x++)
+		{
+			tmpList.append(lines[x]);
+			
+			if(!tmpText)
+			{
+				tmpText = new TextBoxItem();
+				tmpText->setItemId(ItemFactory::nextId());
+				tmpText->setItemName(QString("TextBoxItem%1").arg(tmpText->itemId()));
+			}
+			
+			tmpText->setText(tmpList.join("\n"));
+			
+			int realHeight = tmpText->fitToSize(fitSize,MinTextSize);
+			if(realHeight < 0)
+			{
+				if(tmpList.size() > 1)
+				{
+					// return last line to the file buffer
+					lines.prepend(tmpList.takeFirst());
+					
+					tmpText->setText(tmpList.join("\n"));
+					realHeight = tmpText->fitToSize(fitSize,MinTextSize);
+				}
+				
+				Slide * slide = new Slide();
+				AbstractVisualItem * bg = dynamic_cast<AbstractVisualItem*>(slide->background());
+				
+				qDebug() << "Slide "<<slideNum<<": [\n"<<tmpList.join("\n")<<"\n]";;
+				
+				bg->setFillType(AbstractVisualItem::Solid);
+				bg->setFillBrush(Qt::blue);
+		
+				// Center text on screen
+				qreal y = fitSize.height()/2 - realHeight/2;
+				//qDebug() << "SongSlideGroup::textToSlides(): centering: boxHeight:"<<boxHeight<<", textRect height:"<<textRect.height()<<", centered Y:"<<y;
+				tmpText->setContentsRect(QRectF(0,y,fitSize.width(),realHeight));
+				
+				// Outline pen for the text
+				QPen pen = QPen(Qt::black,1.5);
+				pen.setJoinStyle(Qt::MiterJoin);
+				
+				tmpText->setPos(QPointF(0,0));
+				tmpText->setOutlinePen(pen);
+				tmpText->setOutlineEnabled(true);
+				tmpText->setFillBrush(Qt::white);
+				tmpText->setFillType(AbstractVisualItem::Solid);
+				tmpText->setShadowEnabled(true);
+				tmpText->setShadowBlurRadius(6);
+				
+				slide->addItem(tmpText);
+				tmpText = 0;
+				
+				slide->setSlideNumber(slideNum);
+				group->addSlide(slide);
+				slideNum++;
+				
+				tmpList.clear();
+				
+				
+				
+			}
+		}
+		
+		m_doc->addGroup(group);
 	}
 }
 

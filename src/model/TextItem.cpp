@@ -93,12 +93,12 @@ double TextItem::findFontSize()
 	return format.fontPointSize();
 }
 
-int TextItem::fitToSize(const QSize& size)
+int TextItem::fitToSize(const QSize& size, int minimumFontSize)
 {
 	int width = size.width();
 	int height = size.height();
 	
-	const QString sizeKey = QString("%1:%2:%3").arg(text()).arg(width).arg(height);
+	const QString sizeKey = QString("%1:%2:%3:%4").arg(text()).arg(width).arg(height).arg(minimumFontSize);
 	
 	// for centering
 	qreal boxHeight = -1;
@@ -118,7 +118,10 @@ int TextItem::fitToSize(const QSize& size)
 		
 		QTextDocument doc;
 		doc.setTextWidth(width);
-		doc.setHtml(text());
+		if(text().indexOf('<') < 0)
+			doc.setPlainText(text());
+		else
+			doc.setHtml(text());
 			
 		QTextCursor cursor(&doc);
 		cursor.select(QTextCursor::Document);
@@ -133,7 +136,7 @@ int TextItem::fitToSize(const QSize& size)
 	}
 	else
 	{
-		double ptSize = findFontSize();
+		double ptSize = minimumFontSize > 0 ? minimumFontSize : findFontSize();
 		double sizeInc = 1;	// how big of a jump to add to the ptSize each iteration
 		int count = 0;		// current loop iteration
 		int maxCount = 100; 	// max iterations of the search loop
@@ -147,7 +150,10 @@ int TextItem::fitToSize(const QSize& size)
 		int heightTmp;
 		
 		doc.setTextWidth(width);
-		doc.setHtml(text());
+		if(text().indexOf('<') < 0)
+			doc.setPlainText(text());
+		else
+			doc.setHtml(text());
 			
 		QTextCursor cursor(&doc);
 		cursor.select(QTextCursor::Document);
@@ -159,8 +165,6 @@ int TextItem::fitToSize(const QSize& size)
 			format.setFontPointSize(ptSize);
 			cursor.mergeCharFormat(format);
 			
-			//setFontSize(ptSize);
-			//doc.setHtml(text());
 			heightTmp = doc.documentLayout()->documentSize().height();
 			
 			if(heightTmp < height)
@@ -186,7 +190,7 @@ int TextItem::fitToSize(const QSize& size)
 		
 		setText(doc.toHtml());
 		
-		qDebug()<<"TextItem::fitToSize(): size search: caching ptsize:"<<lastGoodSize<<", count: "<<count;
+		qDebug()<<"TextItem::fitToSize(): size search: caching ptsize:"<<lastGoodSize<<", count: "<<count<<"( minimum size was:"<<minimumFontSize<<")";
 		//static_autoTextSizeCache[sizeKey] = lastGoodSize;
 		
 		// We are using a QCache instead of a plain QMap, so that requires a pointer value 

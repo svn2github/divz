@@ -308,12 +308,12 @@ Slide * SlideGroupViewer::applySlideFilters(Slide * sourceSlide)
 			autoText->setContentsRect(QRectF(0,y,scene.width(),fittedHeight));
 			
 			// Outline pen for the text
-			QPen pen = QPen(Qt::black,1.5);
-			pen.setJoinStyle(Qt::MiterJoin);
+			//QPen pen = QPen(Qt::black,1.5);
+			//pen.setJoinStyle(Qt::MiterJoin);
 			
 			autoText->setPos(QPointF(0,0));
-			autoText->setOutlinePen(pen);
-			autoText->setOutlineEnabled(true);
+			autoText->setOutlinePen(Qt::NoPen);
+			autoText->setOutlineEnabled(false);
 			autoText->setFillBrush(Qt::white);
 			autoText->setFillType(AbstractVisualItem::Solid);
 			autoText->setShadowEnabled(false);

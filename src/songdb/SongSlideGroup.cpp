@@ -102,7 +102,7 @@ SlideGroup * SongSlideGroup::createDefaultTemplates()
 
 	text->setOutlineEnabled(true);
 	text->setShadowEnabled(true);
-	//text->setShadowRadius(6);
+	text->setShadowBlurRadius(6);
 
 	slide->addItem(text);
 	group->addSlide(slide);

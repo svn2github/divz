@@ -34,6 +34,7 @@ public:
 	void setFontSize(double);
 	void changeFontSize(double); // force change the html font size
 	double findFontSize();
+	int fitToSize(const QSize &, int minimumFontSize = 0);
 	
 	// Shape (Beizer)
 	bool shapeEnabled() const { return m_shapeEnabled; }
@@ -54,9 +55,6 @@ public:
 	
 	void setXTextAlign(Qt::Alignment);
 	void setYTextAlign(Qt::Alignment);
-	
-	
-	int fitToSize(const QSize &);
 	
 	// ::AbstractVisualItem
 	AbstractContent * createDelegate(QGraphicsScene*scene=0,QGraphicsItem*parent=0);
