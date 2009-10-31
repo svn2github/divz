@@ -245,10 +245,11 @@ int TextItem::fitToSize(const QSize& size, int minimumFontSize)
 	
 }
 
-QSize TextItem::findNaturalSize()
+QSize TextItem::findNaturalSize(int atWidth)
 {
 	QTextDocument doc;
-	//doc.setTextWidth(width);
+	if(atWidth > 0)
+		doc.setTextWidth(atWidth);
 	if (Qt::mightBeRichText(text()))
 		doc.setHtml(text());
 	else

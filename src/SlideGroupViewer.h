@@ -151,6 +151,8 @@ private:
 	
 	AbstractItemFilterList m_slideFilters;
 	
+	Slide * m_clonedSlide;
+	
 };
 
 #endif // SLIDEGROUPVIEWER_H

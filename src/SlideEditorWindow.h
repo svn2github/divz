@@ -97,6 +97,7 @@ private slots:
 	void textMinus();
 	void textFitToRect();
 	void textNaturalBox();
+	void textFitToSlide();
 	
 	void editMasterSlide();
 	void masterSlideEditorClosed();
@@ -178,6 +179,7 @@ private:
 	
 	QAction * m_textNaturalBoxAction;
 	QAction * m_textFitToBoxAction;
+	QAction * m_textFitToSlideAction;
 	
 	QDoubleSpinBox * m_slideTimeout;
 	

@@ -524,9 +524,17 @@ void SlideEditorWindow::setupToolbar()
 	m_textFitToBoxAction->setShortcut(QString("CTRL+SHFIT+F"));
 	connect(m_textFitToBoxAction, SIGNAL(triggered()), this, SLOT(textFitToRect()));
 	
+	m_textFitToSlideAction = toolbar->addAction(QIcon(":/data/stock-fit-rect.png"), "Fit Text to Slide");
+	m_textFitToSlideAction->setShortcut(QString("CTRL+SHFIT+S"));
+	connect(m_textFitToSlideAction, SIGNAL(triggered()), this, SLOT(textFitToSlide()));
+	
 	m_textNaturalBoxAction = toolbar->addAction(QIcon(":/data/stock-fit-in.png"), "Fit Box to Text Naturally");
 	m_textNaturalBoxAction->setShortcut(QString("CTRL+SHFIT+N"));
 	connect(m_textNaturalBoxAction, SIGNAL(triggered()), this, SLOT(textNaturalBox()));
+	
+	m_textNaturalBoxAction->setEnabled(false);
+	m_textFitToSlideAction->setEnabled(false);
+	m_textFitToBoxAction->setEnabled(false);
 	
 	connect(m_scene, SIGNAL(selectionChanged()), this, SLOT(selectionChanged()));
 	
@@ -813,6 +821,9 @@ void SlideEditorWindow::selectionChanged()
 	m_textBase->setEnabled(foundText);
 	m_textPlusAction->setEnabled(foundText);
 	m_textMinusAction->setEnabled(foundText);
+	m_textNaturalBoxAction->setEnabled(foundText);
+	m_textFitToSlideAction->setEnabled(foundText);
+	m_textFitToBoxAction->setEnabled(foundText);
 	
 	// dont update if no firstContent so we dont clear out the prop dock
 	if(firstContent)
@@ -867,6 +878,23 @@ void SlideEditorWindow::textFitToRect()
 }
 
 
+void SlideEditorWindow::textFitToSlide()
+{
+	if(m_currentTextItems.size() <= 0)
+		return;
+		
+	QRectF rect = m_scene->sceneRect();
+	QSize size = rect.size().toSize();
+	foreach(TextBoxContent *text, m_currentTextItems)
+	{
+		dynamic_cast<TextItem*>(text->modelItem())->fitToSize(size,8);
+		text->modelItem()->setPos(QPointF(0,0));
+		text->modelItem()->setContentsRect(QRectF(QPointF(0,0),rect.size()));
+	}
+	
+}
+
+
 void SlideEditorWindow::textNaturalBox()
 {
 	if(m_currentTextItems.size() <= 0)
@@ -874,7 +902,7 @@ void SlideEditorWindow::textNaturalBox()
 		
 	foreach(TextBoxContent *text, m_currentTextItems)
 	{
-		QSize natural = dynamic_cast<TextItem*>(text->modelItem())->findNaturalSize();
+		QSize natural = dynamic_cast<TextItem*>(text->modelItem())->findNaturalSize(m_scene->sceneRect().width());
 		text->modelItem()->setContentsRect(QRectF(text->modelItem()->contentsRect().topLeft(),QSizeF(natural)));
 	}
 }

@@ -353,7 +353,9 @@ void MainWindow::textImportTool()
 	
 	if(!fileName.isEmpty())
 	{
-		int MinTextSize = 45;
+		int MinTextSize = 36;
+		
+		AppSettings::setPreviousPath("text",fileName);
 		
 		QFile file(fileName);
 		if(!file.open(QIODevice::ReadOnly))
@@ -378,6 +380,10 @@ void MainWindow::textImportTool()
 		QStringList tmpList;
 		for(int x=0; x<lines.size(); x++)
 		{
+			if(tmpList.isEmpty() && 
+			  lines[x].trimmed().isEmpty())
+				continue;
+				
 			tmpList.append(lines[x]);
 			
 			if(!tmpText)

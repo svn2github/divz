@@ -110,6 +110,7 @@ SlideGroupViewer::SlideGroupViewer(QWidget *parent)
 	    , m_autoResizeText(false)
 	    , m_fadeSpeed(-1)
 	    , m_fadeQuality(-1)
+	    , m_clonedSlide(0)
 {
 	QRect sceneRect(0,0,1024,768);
 	m_blackSlideRefCount++;
@@ -547,6 +548,9 @@ void SlideGroupViewer::slideChanged(Slide *slide, QString slideOperation, Abstra
 		
 		if(m_slideNum >= m_sortedSlides.size())
 			m_slideNum = 0;
+			
+// 		if(AppSettings::liveEditMode() == AppSettings::Smooth)
+// 			setSlideInternal(applySlideFilters(slide));
 	}
 	else
 	{
@@ -627,7 +631,20 @@ Slide * SlideGroupViewer::setSlide(Slide *slide)
 	if(m_bgWaitingForNextSlide)
 		applyBackground(m_nextBg, slide);
 		
+// 	if(AppSettings::liveEditMode() == AppSettings::Smooth)
+// 	{
+// 		// for deleting this slide after the scene is done with it (in slideDiscarded())
+// 		if(m_clonedSlide)
+// 			m_slideFilterByproduct << m_clonedSlide;
+// 			
+// 		m_clonedSlide = slide->clone();
+// 	}
+
+		
 	m_slideNum = m_sortedSlides.indexOf(slide);
+	
+// 	if(AppSettings::liveEditMode() == AppSettings::Smooth && m_clonedSlide)
+// 		slide = m_clonedSlide;
 	
 	if(!reapplySpecialFrames())
 	{

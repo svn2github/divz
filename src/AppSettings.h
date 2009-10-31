@@ -13,6 +13,16 @@ class AppSettings
 public:
 	static void load();
 	static void save();
+	
+	typedef enum LiveEditMode
+	{
+		Live,
+		Smooth,
+		Publish
+	};
+	
+	static LiveEditMode liveEditMode() { return m_liveEditMode; }
+	static void setLiveEditMode(LiveEditMode);
 
 	static QList<Output*> outputs() { return m_outputs; }
 	static int numOutputs() { return m_outputs.size(); }
@@ -77,6 +87,8 @@ private:
 	static int m_pixmapCacheSize;
 	static int m_crossFadeSpeed; // ms
 	static int m_crossFadeQuality; // frames
+	
+	static LiveEditMode m_liveEditMode;
 
 };
 
