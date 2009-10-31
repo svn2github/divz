@@ -303,6 +303,10 @@ SlideEditorWindow::SlideEditorWindow(SlideGroup *group, QWidget * parent)
 		move(p);
 	}
 
+	m_autosaveTimer = new QTimer();
+	connect(m_autosaveTimer, SIGNAL(timeout()), this, SLOT(autosave()));
+	
+
 	appSettingsChanged();
 	
         m_undoStack = new QUndoStack();
@@ -356,11 +360,6 @@ SlideEditorWindow::SlideEditorWindow(SlideGroup *group, QWidget * parent)
 	if(group)
 		setSlideGroup(group);
 		
-	m_autosaveTimer = new QTimer();
-	connect(m_autosaveTimer, SIGNAL(timeout()), this, SLOT(autosave()));
-	
-	
-	
 }
 
 SlideEditorWindow::~SlideEditorWindow()
@@ -1078,7 +1077,7 @@ void SlideEditorWindow::appSettingsChanged()
 	setupViewportLines();
 	
 	// reapply autosave time
-	if(m_autosaveTimer->isActive())
+	if(m_autosaveTimer && m_autosaveTimer->isActive())
 	{
 		m_autosaveTimer->stop();
 		if(AppSettings::autosaveTime() > 0)
