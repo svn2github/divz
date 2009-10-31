@@ -297,7 +297,11 @@ SlideEditorWindow::SlideEditorWindow(SlideGroup *group, QWidget * parent)
 		resize(sz);
 	QPoint p = settings.value("slideeditor/pos").toPoint();
 	if(!p.isNull())
+	{
+		if(p.y() < 0)
+			p.setY(1);
 		move(p);
+	}
 
 	appSettingsChanged();
 	
@@ -378,6 +382,20 @@ SlideEditorWindow::~SlideEditorWindow()
 	delete m_undoStack;
 }
 
+void SlideEditorWindow::setAutosaveOn(bool flag)
+{
+	if(flag)
+	{
+		if(AppSettings::autosaveTime() > 0)
+			m_autosaveTimer->start(AppSettings::autosaveTime() * 1000);
+	}
+	else
+	{
+		if(m_autosaveTimer->isActive())
+			m_autosaveTimer->stop();
+	}
+}
+
 void SlideEditorWindow::showEvent(QShowEvent *evt)
 {
 	evt->accept();
@@ -390,7 +408,8 @@ void SlideEditorWindow::showEvent(QShowEvent *evt)
         //qDebug("Scaling: %.02f x %.02f = %.02f",sx,sy,scale);
 	m_view->update();
 	
-	m_autosaveTimer->start(1000 * 5);
+	if(AppSettings::autosaveTime() > 0)
+		m_autosaveTimer->start(AppSettings::autosaveTime() * 1000);
 }
 
 void SlideEditorWindow::closeEvent(QCloseEvent *evt)
@@ -631,6 +650,12 @@ void SlideEditorWindow::setupToolbar()
 	
 	QAction  *configGrid = toolbar->addAction(QIcon(":/data/config-grid.png"), "Setup Grid and Guidelines");
 	connect(configGrid, SIGNAL(triggered()), this, SLOT(slotConfigGrid()));
+	
+	QAction  *autosaveOn = toolbar->addAction(QIcon(":/data/stock-history.png"), "Enable/Disable Autosave");
+	autosaveOn->setCheckable(true);
+	autosaveOn->setChecked(true);
+	connect(autosaveOn, SIGNAL(toggled(bool)), this, SLOT(setAutosaveOn(bool)));
+	
 	
 	
 	foreach(QToolBar *tb, toolbars)
@@ -1051,6 +1076,14 @@ void SlideEditorWindow::appSettingsChanged()
 	}
 	
 	setupViewportLines();
+	
+	// reapply autosave time
+	if(m_autosaveTimer->isActive())
+	{
+		m_autosaveTimer->stop();
+		if(AppSettings::autosaveTime() > 0)
+			m_autosaveTimer->start(AppSettings::autosaveTime() * 1000);
+	}
 }
 
 void SlideEditorWindow::aspectRatioChanged(double x)

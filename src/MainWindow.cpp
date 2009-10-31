@@ -191,7 +191,11 @@ void MainWindow::loadWindowState()
 		resize(sz);
 	QPoint p = settings.value("mainwindow/pos").toPoint();
 	if(!p.isNull())
+	{
+		if(p.y() < 0)
+			p.setY(1);
 		move(p);
+	}
 	restoreState(settings.value("mainwindow/state").toByteArray());
 	m_splitter->restoreState(settings.value("mainwindow/splitter_state").toByteArray());
 	m_splitter2->restoreState(settings.value("mainwindow/grouplistsplitter_state").toByteArray());
