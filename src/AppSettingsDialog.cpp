@@ -18,7 +18,7 @@ AppSettingsDialog::AppSettingsDialog(QWidget *parent) :
 	m_ui->speedBox->setValue(AppSettings::crossFadeSpeed());
 	m_ui->qualityBox->setValue(AppSettings::crossFadeQuality());
 	
-	if(AppSettings::liveEditMode() == AppSettings::Smooth)
+	if(AppSettings::liveEditMode() == AppSettings::SmoothEdit)
 		m_ui->editModeSmooth->setChecked(true);
 	else
 		m_ui->editModeLive->setChecked(true);
@@ -33,7 +33,7 @@ void AppSettingsDialog::slotAccepted()
 	AppSettings::setPixmapCacheSize( m_ui->cacheBox->value());
 	AppSettings::setCrossFadeSpeed(m_ui->speedBox->value());
 	AppSettings::setCrossFadeQuality(m_ui->qualityBox->value());
-	AppSettings::setLiveEditMode(m_ui->editModeSmooth->isChecked() ? AppSettings::Smooth : AppSettings::Live);
+	AppSettings::setLiveEditMode(m_ui->editModeSmooth->isChecked() ? AppSettings::SmoothEdit : AppSettings::LiveEdit);
 	close();
 }
 

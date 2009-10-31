@@ -12,6 +12,7 @@ class QLineEdit;
 class QComboBox;
 class QSplitter;
 class SlideGroupViewer;
+#include <QHash>
 #include <QStringList>
 #include <QRegExp>
 
@@ -94,6 +95,8 @@ protected:
 	
 	QStringList	m_pathsBackward;
 	QStringList	m_pathsForward;
+	
+	QHash<QString,QModelIndex> m_lastIndexForPath;
 	
 	QListView 	* m_listView;
 	QFileSystemModel * m_fsModel;

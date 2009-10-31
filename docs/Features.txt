@@ -129,6 +129,17 @@ Revised Task list for Release 1.0, 10/18/09:
 			On first start, intelligently detect aspect ratio of primary output - if no primary out, create small custom rect in top right
 		
 		= TODAY =	
+			[DONE] media browser remember index
+			[DONE] progress dialog framework for deep operations
+			insert plain text from rich
+			autosave toolbar
+			fix icon
+			fix fitting algorithm
+			look at smooth pub
+			look at text import tool
+			look at images rendering gray
+			
+			
 			[DONE] media browser preview
 				need file preview widget below media browser
 					click once on file to preview
@@ -198,7 +209,7 @@ Revised Task list for Release 1.0, 10/18/09:
 			add countdown item
 			
 			[STARTED] would be nice: while editing slide thats live, if change, cross fade to changed version
-			media browser - when "going back" or "going up", should remeber the last selected index
+			[DONE] media browser - when "going back" or "going up", should remeber the last selected index
 			
 			need video controls - at least in media browser preview
 				would be nice to integrate into slideviewcontrol

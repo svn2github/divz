@@ -7,6 +7,7 @@
 #include "SlideEditorWindow.h"
 #include "OutputInstance.h"
 
+#include "DeepProgressIndicator.h"
 
 #include <QListView>
 #include <QVBoxLayout>
@@ -341,10 +342,7 @@ void SlideGroupViewControl::setOutputView(OutputInstance *v)
 	m_slideViewer = v;
 	
 	if(g)
-	{
-		//m_slideModel->setSlideGroup(g);
 		m_slideViewer->setSlideGroup(g);
-	}
 }
 	
 void SlideGroupViewControl::setSlideGroup(SlideGroup *g, Slide *curSlide)
@@ -361,10 +359,18 @@ void SlideGroupViewControl::setSlideGroup(SlideGroup *g, Slide *curSlide)
 	
 	m_group = g;
 	
+	DeepProgressIndicator *d = new DeepProgressIndicator(m_slideModel,this);
+	d->setText(QString("Loading Group #%1...").arg(g->groupNumber()));
+	d->setTitle(QString("Loading Group #%1").arg(g->groupNumber()));
+	d->setSize(g->numSlides());
+	
 	m_slideModel->setSlideGroup(g);
 	
 	// reset seems to be required
 	m_listView->reset();
+	
+	d->close();
+	
 	
 	if(!curSlide)
 		curSlide = g->at(0);

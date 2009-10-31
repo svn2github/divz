@@ -14,7 +14,7 @@
 #include <QFile>
 #include <QTextStream>
 		
-
+#include "DeepProgressIndicator.h"
 #include "AppSettings.h"
 #include "AppSettingsDialog.h"
 #include "DocumentSettingsDialog.h"
@@ -117,7 +117,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	connect(m_ui->actionSlide_Group_Properties, SIGNAL(triggered()), this, SLOT(actionGroupProperties()));
 	actionList << m_ui->actionSlide_Group_Properties;
 	
-	m_ui->actionDelete_Slide_Group->setIcon(QIcon(":data/stock-delete.png"));
+	m_ui->actionDelete_Slide_Group->setIcon(QIcon(":data/stock-delete.png")); 
 	m_ui->actionDelete_Slide_Group->setEnabled(false);
 	connect(m_ui->actionDelete_Slide_Group, SIGNAL(triggered()), this, SLOT(actionDelGroup()));
 	actionList << m_ui->actionDelete_Slide_Group;
@@ -482,7 +482,8 @@ bool MainWindow::openFile(const QString & file)
 		
 	//m_doc->load(file);
 	//r.readSlide(m_slide);
-	setWindowTitle("DViz - " + QFileInfo(file).fileName());
+	QString fileName = QFileInfo(file).fileName();
+	setWindowTitle("DViz - " + fileName);
 	
 	//qDebug()<<"MainWindow::open(): "<<file<<", oldAspect:"<<oldAspect<<", new:"<<m_doc->aspectRatio();
 	if(oldAspect != m_doc->aspectRatio())
@@ -493,7 +494,14 @@ bool MainWindow::openFile(const QString & file)
 		
 // 	qDebug() << "MainWindow::open(): m_docModel->setDocument() - start";
 // 	printf("MainWindow::open(): m_docModel ptr: %p\n",m_docModel);
+	DeepProgressIndicator *d = new DeepProgressIndicator(m_docModel,this);
+	d->setText(QString("Loading %1...").arg(fileName));
+	d->setTitle(QString("Loading %1").arg(fileName));
+	d->setSize(m_doc->numGroups());
+	
 	m_docModel->setDocument(m_doc);
+	
+	d->close();
 //	qDebug() << "MainWindow::open(): m_docModel->setDocument() - end";
 	
 	return true;

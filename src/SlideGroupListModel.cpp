@@ -14,6 +14,8 @@
 #include "model/Slide.h"
 #include "MainWindow.h"
 
+#include "DeepProgressIndicator.h"
+
 #define DEBUG_MARK() qDebug() << "[DEBUG] "<<__FILE__<<":"<<__LINE__
 
 #define POINTER_STRING(ptr) QString().sprintf("%p",static_cast<void*>(ptr))
@@ -400,6 +402,9 @@ QPixmap SlideGroupListModel::generatePixmap(Slide *slide)
 {
  	//return QPixmap();
  	//qDebug() << "SlideGroupListModel::generatePixmap: Slide#"<<slide->slideNumber()<<": Mark 0";
+ 	DeepProgressIndicator * d = DeepProgressIndicator::indicatorForObject(this);
+ 	if(d)
+ 		d->step();
  	
  	if(m_dataLoadPending.contains(slide))
  	{

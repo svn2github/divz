@@ -13,7 +13,7 @@
 
 #include "MyGraphicsScene.h"
 #include "MainWindow.h"
-
+#include "DeepProgressIndicator.h"
 
 
 #include <QPixmap>
@@ -368,6 +368,10 @@ void DocumentListModel::setIconSize(QSize sz)
 
 QPixmap DocumentListModel::generatePixmap(SlideGroup *g)
 {
+	DeepProgressIndicator * d = DeepProgressIndicator::indicatorForObject(this);
+ 	if(d)
+ 		d->step();
+ 		
 	QPixmap icon;
 	
 	SlideGroupFactory *factory = SlideGroupFactory::factoryForType(g->groupType());

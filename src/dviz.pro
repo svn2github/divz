@@ -69,7 +69,8 @@ HEADERS += \
 	MediaBrowser.h \
 	OutputInstance.h \
 	OutputControl.h \
-	JpegServer.h
+	JpegServer.h \
+	DeepProgressIndicator.h
 
 	
 SOURCES += \
@@ -93,7 +94,8 @@ SOURCES += \
 	MediaBrowser.cpp \
 	OutputInstance.cpp \
 	OutputControl.cpp \
-	JpegServer.cpp
+	JpegServer.cpp \
+	DeepProgressIndicator.cpp
 	
 
 QT += core \

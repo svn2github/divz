@@ -22,7 +22,9 @@ int AppSettings::m_pixmapCacheSize = 256;
 int AppSettings::m_crossFadeSpeed = 250; // ms
 int AppSettings::m_crossFadeQuality = 15; // frames
 
-AppSettings::LiveEditMode AppSettings::m_liveEditMode = AppSettings::Live; 
+AppSettings::LiveEditMode AppSettings::m_liveEditMode = AppSettings::LiveEdit; 
+
+int AppSettings::m_autosaveTime = 60; // seconds
 
 void AppSettings::load()
 {
@@ -45,6 +47,8 @@ void AppSettings::load()
 	m_crossFadeQuality = s.value("app/fade-quality",15).toInt();
 	
 	m_liveEditMode = (LiveEditMode)s.value("app/live-edit-mode",0).toInt();
+	
+	m_autosaveTime = s.value("app/autosave",60).toInt();
 	
 	QPixmapCache::setCacheLimit(m_pixmapCacheSize * 1024);
 	
@@ -72,6 +76,7 @@ void AppSettings::save()
 	s.setValue("app/fade-quality",m_crossFadeQuality);
 	
 	s.setValue("app/live-edit-mode",(int)m_liveEditMode);
+	s.setValue("app/autosave",m_autosaveTime);
 
 	saveOutputs(&s);
 
@@ -81,6 +86,11 @@ void AppSettings::save()
 void AppSettings::setLiveEditMode(LiveEditMode mode)
 {
 	m_liveEditMode = mode;
+}
+
+void AppSettings::setAutosaveTime(int time)
+{
+	m_autosaveTime = time;
 }
 
 QString AppSettings::previousPath(const QString& key)

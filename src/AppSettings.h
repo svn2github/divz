@@ -16,9 +16,9 @@ public:
 	
 	typedef enum LiveEditMode
 	{
-		Live,
-		Smooth,
-		Publish
+		LiveEdit,
+		SmoothEdit,
+		PublishEdit
 	};
 	
 	static LiveEditMode liveEditMode() { return m_liveEditMode; }
@@ -62,6 +62,9 @@ public:
 	static int crossFadeQuality() { return m_crossFadeQuality; }
 	static void setCrossFadeQuality(int);
 	
+	static int autosaveTime() { return m_autosaveTime; }
+	static void setAutosaveTime(int);
+	
 protected:
 	friend class MainWindow;
 // 	static double setCurrentDocumentAspectRatio(double);
@@ -89,6 +92,8 @@ private:
 	static int m_crossFadeQuality; // frames
 	
 	static LiveEditMode m_liveEditMode;
+	
+	static int m_autosaveTime; //seconds
 
 };
 

@@ -27,6 +27,7 @@
 #include "model/SlideGroup.h"
 #include "model/Slide.h"
 
+#include "DeepProgressIndicator.h"
 
 #define CACHE_DIR "dviz-imageiconcache"
 
@@ -71,6 +72,8 @@ QPixmap MediaBrowser::iconForImage(const QString & file, const QSize & size)
 		
 	QString cacheFile = QString("%1/%2/%3-%4x%5").arg(QDir::tempPath()).arg(CACHE_DIR).arg(MD5::md5sum(file)).arg(size.width()).arg(size.height());
 	
+	
+	
 	//qDebug() << "MediaBrowser::iconForImage: file:"<<file<<", size:"<<size<<", cacheFile: "<<cacheFile;
 	if(!QPixmapCache::find(cacheFile,cache))
 	{
@@ -114,6 +117,11 @@ public:
 	
 	QIcon icon(const QFileInfo& info) const
 	{
+		DeepProgressIndicator * d = DeepProgressIndicator::indicatorForObject(dynamic_cast<void*>(const_cast<MyQFileIconProvider*>(this)));
+		if(d)
+			d->step();
+		
+		
 		QApplication::processEvents();
 		if(MediaBrowser::isVideo(info.suffix()))
 		{
@@ -441,8 +449,28 @@ void MediaBrowser::indexSingleClicked(const QModelIndex &idx)
 void MediaBrowser::setDirectory(const QString &path, bool addToHistory)
 {
 	//qDebug() << "setDirectory(): setting folder path:"<<path;
+	
+	QModelIndex idx = m_listView->currentIndex();
+	if(idx.isValid() && !m_currentDirectory.isEmpty())
+		m_lastIndexForPath[m_currentDirectory] = idx;
+			
+	DeepProgressIndicator *d = new DeepProgressIndicator(m_fsModel->iconProvider(),this);
+	d->setText(QString("Loading %1...").arg(path));
+	d->setTitle("Loading Folder");
+	d->setSize(100);
+	
 	QModelIndex root = m_fsModel->setRootPath(path);
 	m_listView->setRootIndex(root);
+	
+	d->close();
+	d->deleteLater();
+	
+	if(m_lastIndexForPath.contains(path))
+	{
+		QModelIndex idx = m_lastIndexForPath[path];
+		if(idx.isValid())
+			m_listView->setCurrentIndex(idx);
+	}
 	
 	if(addToHistory && !m_currentDirectory.isEmpty())
 	{
