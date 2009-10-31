@@ -54,6 +54,9 @@ QPixmap SongSlideGroupListModel::generatePixmap(Slide *slide)
 
 	static QString highlightBlockPrefix = "<p align=\"left\" style=\"margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; background:red; color:white\"><span style=\" font-family:'Sans Serif'; color:white;background:red;font-size:9pt; font-weight:400;\">";
 	
+	static QRegExp rxTag("\\s*(Verse|Chorus|Tag|Bridge|End(ing)?|Intro(duction)?)(\\s+\\d+)?(\\s*\\(.*\\))?\\s*");
+	static QRegExp rxRear("\\s*((?:B:|R:|C:|T:|G:|\\[|\\|).*)\\s*");
+	
 	SongSlideGroup * songGroup = dynamic_cast<SongSlideGroup*>(m_slideGroup);
 	if(!songGroup)
 	{
@@ -77,7 +80,7 @@ QPixmap SongSlideGroupListModel::generatePixmap(Slide *slide)
 		
 		// Used for centering and font size search
 		QTextDocument doc;
-		
+	/*	
 		static QRegExp excludeLineRegExp(
 				//filter == Standard ? "^\\s*(Verse|Chorus|Tag|Bridge|End(ing)?|Intro(duction)|B:|R:|C:|T:|G:)?)(\\s*\\(.*\\))?\\s*$" :
 				//filter == Standard  ? 
@@ -85,7 +88,7 @@ QPixmap SongSlideGroupListModel::generatePixmap(Slide *slide)
 				//filter == AllowRear ? "^\\s*(Verse|Chorus|Tag|Bridge|End(ing)?|Intro(duction)?)(\\s+\\d+)?(\\s*\\(.*\\))?\\s*$" :
 				//"",
 				,
-			Qt::CaseInsensitive);
+			Qt::CaseInsensitive);*/
 		
 		// Create the HTML for the lyrics
 		QStringList lines = passage.split("\n");
@@ -93,8 +96,11 @@ QPixmap SongSlideGroupListModel::generatePixmap(Slide *slide)
 		html << slideHeader;
 		foreach(QString line, lines)
 		{
-			if(line.contains(excludeLineRegExp))
+			if(line.contains(rxTag))
 				html << highlightBlockPrefix;
+			else
+			if(line.contains(rxRear))
+				continue;
 			else
 				html << linePrefix;
 				

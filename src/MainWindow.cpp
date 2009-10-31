@@ -155,18 +155,6 @@ MainWindow::MainWindow(QWidget *parent) :
 
 
 	//connect(m_groupView, SIGNAL(customContextMenuRequested(const QPoint &)), SLOT(slotListContextMenu(const QPoint &)));
-
-	//connect(m_groupView,SIGNAL(activated(const QModelIndex &)),this,SLOT(groupSetLive(const QModelIndex &)));
-	
-// 	m_previewWidget = new SlideGroupViewer(m_ui->dwPreview);
-// 	m_previewWidget->setSceneContextHint(MyGraphicsScene::Preview);
-// 	m_ui->dwPreview->setWidget(m_previewWidget);
-	
-	
-	
-	//m_liveView->show();
-	
-	//setLiveGroup(m_doc.groupList().at(0));
 	
 	connect(m_ui->actionExit,SIGNAL(triggered()), this, SLOT(close()));
 	
@@ -289,8 +277,7 @@ void MainWindow::actionNew()
 	SlideGroup *g = new SlideGroup();
 	g->addSlide(slide);
 	m_doc->addGroup(g);
-	//m_scene->setSlide(slide);
-
+	
 	m_docModel->setDocument(m_doc);
 	
 	setWindowTitle("DViz - New File");
@@ -354,24 +341,6 @@ void MainWindow::imageImportTool()
 			m_doc->addGroup(group);
 		}
 	}
-		
-	/*
-	
-	dynamic_cast<AbstractVisualItem*>(slide->background())->setFillBrush(QBrush(Qt::black));
-	
-	
-	
-	SlideGroup *g = new SlideGroup();
-	
-	
-	
-	g->addSlide(slide);
-	m_doc->addGroup(g);
-	//m_scene->setSlide(slide);
-
-	m_docModel->setDocument(m_doc);
-	
-	setWindowTitle("New File - DViz");*/
 }
 
 void MainWindow::textImportTool()
@@ -959,7 +928,6 @@ void MainWindow::nextGroup()
 void MainWindow::previewSlideGroup(SlideGroup *newGroup)
 {
 	//qDebug() << "MainWindow::previewSlideGroup: Loading preview slide\n";
-	//m_previewWidget->setSlideGroup(s);
 	
 	SlideGroup * oldGroup = m_previewInstance->slideGroup();
 	
@@ -994,11 +962,11 @@ void MainWindow::previewSlideGroup(SlideGroup *newGroup)
 		}
 	}
 	
-	//qDebug() << "MainWindow::setLiveGroup: Loading into view control";
+	//qDebug() << "MainWindow::previewSlideGroup: Loading into view control";
 	m_previewControl->setSlideGroup(newGroup);
-	//qDebug() << "MainWindow::setLiveGroup: Loading into LIVE output";
+	//qDebug() << "MainWindow::previewSlideGroup: Loading into LIVE output";
 	m_previewInstance->setSlideGroup(newGroup);
-	//qDebug() << "MainWindow::setLiveGroup: Loading into LIVE output (done)";
+	//qDebug() << "MainWindow::previewSlideGroup: Loading into LIVE output (done)";
 	m_previewControl->setFocus(Qt::OtherFocusReason);
 				
 }

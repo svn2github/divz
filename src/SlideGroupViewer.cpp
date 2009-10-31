@@ -21,7 +21,7 @@
 #include "model/BackgroundItem.h"
 
 #include "itemlistfilters/SlideTextOnlyFilter.h"
-
+#define PTRS(ptr) QString().sprintf("%p",static_cast<void*>(ptr))
 
 class SlideGroupViewerGraphicsView : public QGraphicsView 
 {
@@ -560,7 +560,7 @@ void SlideGroupViewer::slideChanged(Slide *slide, QString slideOperation, Abstra
 
 void SlideGroupViewer::setSlideGroup(SlideGroup *g, Slide *startSlide)
 {
-	//qDebug() << "SlideGroupViewer::setSlideGroup: (SceneContextHint:"<<m_scene->contextHint()<<"), setting slide group:"<<g->groupNumber();
+	//qDebug() << "SlideGroupViewer::setSlideGroup: (SceneContextHint:"<<m_scene->contextHint()<<"), setting slide group:"<<g->groupNumber()<<", group ptr: "<<PTRS(g);
 	if(m_slideGroup == g)
 	{
 		if(startSlide)
@@ -633,6 +633,10 @@ Slide * SlideGroupViewer::setSlide(Slide *slide)
 	{
 		//qDebug() << "SlideGroupViewer::setSlide(): Special frames returned false, setting slide directly";
 		setSlideInternal(applySlideFilters(slide));
+	}
+	else
+	{
+		//qDebug() << "SlideGroupViewer::setSlide(): Special frames did it itself";
 	}
 	
 	return slide;
@@ -734,7 +738,7 @@ Slide * SlideGroupViewer::prevSlide()
 
 void SlideGroupViewer::setSlideInternal(Slide *slide)
 {
-	//qDebug() << "SlideGroupViewer::setSlideInternal(): Setting slide# "<<slide->slideNumber();
+	//qDebug() << "SlideGroupViewer::setSlideInternal(): Setting slide# "<<slide->slideNumber()<<", group ptr: "<<PTRS(m_slideGroup);
 	
 	// start cross fade settings with program settings
 	int speed   = AppSettings::crossFadeSpeed();
@@ -772,6 +776,22 @@ void SlideGroupViewer::setSlideInternal(Slide *slide)
 	}
 	
 	//qDebug() << "SlideGroupViewer::setSlideInternal(): [final] speed:"<<speed<<", quality:"<<quality;
+	
+	if(m_slideGroup &&
+		slide != m_blackSlide &&
+		slide != m_clearSlide)
+	{
+		//qDebug() << "SlideGroupViewer::setSlideInternal(): Slide# "<<slide->slideNumber()<<": Have slide group, using master slide, group ptr: "<<PTRS(m_slideGroup)<<", master ptr:"<<PTRS(m_slideGroup->masterSlide());
+		//if(m_scene->masterSlide() != m_slideGroup->masterSlide())
+		m_scene->setMasterSlide(applySlideFilters(m_slideGroup->masterSlide()));
+	}
+	else
+	{
+		//qDebug() << "SlideGroupViewer::setSlideInternal(): Slide# "<<slide->slideNumber()<<": No slide group, clearing master, group ptr: "<<PTRS(m_slideGroup);
+		m_scene->setMasterSlide(0);
+	}
+	
+	//qDebug() << "SlideGroupViewer::setSlideInternal(): Slide# "<<slide->slideNumber()<<": Have slide group, using master slide";
 	m_scene->setSlide(slide,MyGraphicsScene::CrossFade,speed,quality);
 }
 

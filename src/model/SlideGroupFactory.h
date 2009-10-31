@@ -74,6 +74,7 @@ private slots:
 protected:
 	QString formatTime(double);
 
+	SlideGroup * m_group;
 	OutputInstance *m_slideViewer;
 	SlideGroupListModel *m_slideModel;	
 	SlideGroupViewControlListView *m_listView;

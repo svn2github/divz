@@ -126,6 +126,9 @@
         <file>data/stock-zoom-fit.png</file>
         <file>data/stock-zoom-in.png</file>
         <file>data/stock-zoom-out.png</file>
+        <file>data/stock-fit-out.png</file>
+        <file>data/stock-fit-in.png</file>
+        <file>data/master-slide.png</file>
         <file>data/icon-next-small.png</file>
         <file>data/icon-next-large.png</file>
         <file>data/icon-d.png</file>

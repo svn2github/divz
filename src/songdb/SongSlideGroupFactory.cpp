@@ -38,9 +38,14 @@ AbstractItem * SongFoldbackTextFilter::mutate(const AbstractItem *sourceItem)
 	static QString linePrefix = "<p align=\"left\" style=\"margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:'Monospace'; font-size:38pt; font-weight:800;\">";
 	static QString lineSuffix = "</span></p>";
 
-	static QString highlightBlockPrefix = "<p align=\"left\" style=\"margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; background:red; color:white\"><span style=\" font-family:'Monospace'; color:white;background:red;font-size:38pt; font-weight:400;\">";
+	static QString highlightBlockPrefix = "<p align=\"left\" style=\"margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; background:blue; color:white\"><span style=\" font-family:'Monospace'; color:white;background:blue;font-size:.8em; font-weight:400;\">";
 	
-	static QRegExp excludeLineRegExp("^\\s*(Verse|Chorus|Tag|Bridge|End(ing)?|Intro(duction)?|B:|R:|C:|T:|G:|\\|)(.*)?\\s*$",Qt::CaseInsensitive);
+	static QString nextLinePrefix = "<p align=\"left\" style=\"margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; background:green; color:white\"><span style=\" font-family:'Monospace'; color:white;background:green;font-size:36pt; font-weight:400;\">";
+	
+	//static QRegExp excludeLineRegExp("^\\s*(Verse|Chorus|Tag|Bridge|End(ing)?|Intro(duction)?|B:|R:|C:|T:|G:|\\|)(.*)?\\s*$",Qt::CaseInsensitive);
+	static QRegExp rxTag("\\s*(Verse|Chorus|Tag|Bridge|End(ing)?|Intro(duction)?)(\\s+\\d+)?(\\s*\\(.*\\))?\\s*");
+	static QRegExp rxRear("\\s*((?:B:|R:|C:|T:|G:|\\[|\\|).*)\\s*");
+	
 
 	//Adds in guitar chords and other rear-screen text, as well as the next passage preview on the last line
 	if(sourceItem)
@@ -66,7 +71,10 @@ AbstractItem * SongFoldbackTextFilter::mutate(const AbstractItem *sourceItem)
 				html << slideHeader;
 				foreach(QString line, lines)
 				{
-					if(line.contains(excludeLineRegExp))
+					if(line.contains(rxTag))
+						continue;
+					else
+					if(line.contains(rxRear))
 						html << highlightBlockPrefix;
 					else
 						html << linePrefix;
@@ -82,7 +90,7 @@ AbstractItem * SongFoldbackTextFilter::mutate(const AbstractItem *sourceItem)
 					next = next.replace(QRegExp("(Verse|Chorus|Tag|Bridge|End(ing)?|Intro(duction)?|B:|R:|C:|T:|G:|\\|)(\\s+\\d+)?(\\s*\\(.*\\).*)?",Qt::CaseInsensitive),""); // dont show rear text in first line of next slide
 					QString textBlob = next.replace("\n","/");
 					QString substring = textBlob.left(28); // TODO MAGIC NUMBER ...is 30 a good width?
-					html << linePrefix;
+					html << nextLinePrefix; //linePrefix;
 					html << "..."; // <br> is intentional to give it some whitespace before this line
 					html << substring;
 					html << lineSuffix;

@@ -462,6 +462,7 @@ QPixmap SlideGroupListModel::generatePixmap(Slide *slide)
 		if(m_scene->sceneRect() != m_sceneRect)
 			m_scene->setSceneRect(m_sceneRect);
 		
+		m_scene->setMasterSlide(m_slideGroup->masterSlide());
 		m_scene->setSlide(slide);
 		
 		if(m_scene->isDataLoadComplete())

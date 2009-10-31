@@ -46,6 +46,11 @@ class MyGraphicsScene : public QGraphicsScene
  		
  		void setSlide(Slide *, SlideTransition t = None, int speed = -1, int quality = -1);
  		Slide * slide() { return m_slide; }
+ 		
+ 		// changing the master slide has no effect while the slide is displayed - master slide
+ 		// is merged with items comming in from the new slide during the setSlide() call
+ 		void setMasterSlide(Slide *);
+ 		Slide * masterSlide() { return m_masterSlide; }
 		
 		bool isDataLoadComplete();
 		
@@ -66,7 +71,7 @@ class MyGraphicsScene : public QGraphicsScene
 		AbstractContent * findVisualDelegate(AbstractItem *item);
 		QList<AbstractItem *> copyBuffer();
 		
-		QList<AbstractContent *> abstractContent() { return m_content; }
+		QList<AbstractContent *> abstractContent(bool onlyMasterItems = false);
 		
 		void configureContent(AbstractContent *content);
 	
@@ -78,11 +83,16 @@ class MyGraphicsScene : public QGraphicsScene
 		void crossFadeFinished(Slide *oldSlide, Slide *newSlide);
 		
 		void slideDiscarded(Slide*);
+		
+		void itemDoubleClicked(AbstractContent *item);
 	
 	public slots:
 		void copyCurrentSelection(bool removeSelection = false);
 		void pasteCopyBuffer();
 		void selectAll();
+		
+	protected slots:
+		void slotItemDoubleClicked(AbstractContent*);
 	
 	protected:
 		friend class MyGraphicsView;
@@ -95,6 +105,8 @@ class MyGraphicsScene : public QGraphicsScene
 		void addContent(AbstractContent * content, bool takeOnwership = false); //, const QPoint & pos);
 		int maxZValue();
 		
+		void applyMasterSlideItemFlags(AbstractContent *content);
+		
 		QList<AbstractContent *> m_content;
 		QList<AbstractContent *> m_ownedContent;
 		QList<AbstractContent *> m_prevContent;
@@ -104,6 +116,8 @@ class MyGraphicsScene : public QGraphicsScene
 		Slide * m_slide;
 		Slide * m_slidePrev;
 		SlideTransition m_currentTransition;
+		
+		Slide * m_masterSlide;
 		
 		int m_fadeSteps;
 		int m_fadeStepCounter;

@@ -72,6 +72,8 @@
 	#define QT46_OPAC_ENAB 0
 #endif
 
+#define PTRS(ptr) QString().sprintf("%p",static_cast<void*>(ptr))
+
 class RootObject : public QGraphicsItem
 {
 public:
@@ -92,6 +94,7 @@ MyGraphicsScene::MyGraphicsScene(ContextHint hint, QObject * parent)
     , m_slide(0)
     , m_fadeTimer(0)
     , m_contextHint(hint)
+    , m_masterSlide(0)
 {
 	m_staticRoot = new RootObject(this);
 	m_staticRoot->setPos(0,0);
@@ -124,6 +127,20 @@ MyGraphicsScene::~MyGraphicsScene()
 	// in destructor
 	if(m_copyBuffer.size())
 		qDeleteAll(m_copyBuffer);
+	
+}
+
+void MyGraphicsScene::setMasterSlide(Slide *slide)
+{
+	if(m_masterSlide)
+		disconnect(m_masterSlide,0,this,0);
+	
+	m_masterSlide = slide;
+	//qDebug() << "MyGraphicsScene::setMasterSlide(): master ptr:"<<PTRS(m_masterSlide);
+	
+	if(m_masterSlide)
+		connect(m_masterSlide,SIGNAL(slideItemChanged(AbstractItem *, QString, QString, QVariant, QVariant)),this,SLOT(slideItemChanged(AbstractItem *, QString, QString, QVariant, QVariant)));
+	
 	
 }
 
@@ -167,8 +184,15 @@ void MyGraphicsScene::slideItemChanged(AbstractItem *item, QString operation, QS
 		AbstractContent * content = createVisualDelegate(item);
 		if(content)
 		{
-			clearSelection();
-			content->setSelected(true);
+			if(slide == m_masterSlide)
+			{
+				applyMasterSlideItemFlags(content);
+			}
+			else
+			{
+				clearSelection();
+				content->setSelected(true);
+			}
 		}
 	}
 	else
@@ -296,8 +320,8 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans, int speed, i
 		if(m_fadeTimer->isActive())
 			endTransition(); 
 			
- 		if(DEBUG_MYGRAPHICSSCENE)
- 			qDebug() << "MyGraphicsScene::setSlide(): Reparenting"<<m_content.size()<<"items";
+ 		//if(DEBUG_MYGRAPHICSSCENE)
+ 			//qDebug() << "MyGraphicsScene::setSlide(): Reparenting"<<m_content.size()<<"items";
 		m_staticRoot->setZValue(100);
 			
 		foreach(AbstractContent *x, m_content)
@@ -384,12 +408,18 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans, int speed, i
 	m_slide = slide;
 	
 	// force creation of bg if doesnt exist
-	m_slide->background();
+	BackgroundItem * bgTmp = dynamic_cast<BackgroundItem*>(m_slide->background());
+	BackgroundItem * originalBg = 0;
+	if(bgTmp && bgTmp->fillType() != AbstractVisualItem::None)
+		originalBg = bgTmp;
 	
+ 	double baseZValue = 0;
 	QList<AbstractItem *> items = m_slide->itemList();
 	foreach(AbstractItem *item, items)
 	{
 		assert(item != NULL);
+		
+		
 		
 // 		quint32 key = item->valueKey();
 // 		
@@ -399,7 +429,10 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans, int speed, i
 // 		//if(!consumedItems.contains(item))
 // 		//if(!consumedItemNames.contains(item->itemName()))
 // 		{
-			createVisualDelegate(item);
+			AbstractContent * visual = createVisualDelegate(item);
+			//determine max zvalue for use in rebasing overlay items
+			if(visual && visual->zValue() > baseZValue)
+				baseZValue = visual->zValue();
 // 			qDebug() << "MyGraphicsScene::setSlide(): New Slide: Item NOT duplicate:"<<item->itemName();
 // 		}
 // 		else
@@ -408,9 +441,103 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans, int speed, i
 // 		}
 	}
 	
+	
+	if(m_masterSlide)
+	{
+		//qDebug() << "MyGraphicsScene::setSlide(): using master ptr:"<<PTRS(m_masterSlide);
+		bool secondaryBg = false;
+		
+		QList<AbstractItem *> items = m_masterSlide->itemList();
+		foreach(AbstractItem *item, items)
+		{
+			assert(item != NULL);
+			
+			BackgroundItem * bg = dynamic_cast<BackgroundItem*>(item);
+			if(bg)
+			{
+				continue;
+				//if(bg->fillType() == AbstractVisualItem::None)
+// 				{
+// 					//qDebug() << "Skipping inherited bg from seondary slide because exists and no fill";
+// 					continue;
+// 				}
+// 				else
+// 				{
+// 					secondaryBg = true;
+// 				}
+			}
+		
+			AbstractContent * content = createVisualDelegate(item);
+			applyMasterSlideItemFlags(content);
+			
+			// rebase zvalue so everything in this slide is on top of the original slide
+			if(content && baseZValue!=0)
+				content->setZValue(content->zValue() + baseZValue);
+				
+			//qDebug() << "MyGraphicsScene::setSlide(): Added Master Item: "<<item->itemName()<<", Z: "<<content->zValue();
+		}
+		
+		if(items.isEmpty())
+		{
+			//qDebug() << "MyGraphicsScene::setSlide(): Master Item List EMPTY";
+		}
+		
+// 		if(secondaryBg && originalBg)
+// 			removeVisualDelegate(originalBg);
+	
+	}
+	else
+	{
+		//qDebug() << "MyGraphicsScene::setSlide(): NO MASTER SLIDE";
+	}
+	
+
 	m_liveRoot->setZValue(300);
 	
-//	qDebug() << "MyGraphicsScene::setSlide(): Setting slide # "<<slide->slideNumber()<<" - DONE.";
+	//qDebug() << "MyGraphicsScene::setSlide(): Setting slide # "<<slide->slideNumber()<<" - DONE.";
+}
+
+QList<AbstractContent *> MyGraphicsScene::abstractContent(bool onlyMasterItems)
+{
+	QList<AbstractContent *> newList;
+	foreach(AbstractContent * item, m_content)
+	{
+		QVariant masterFlag = item->property("flag_fromMaster");
+		if(onlyMasterItems)
+		{
+			if(!masterFlag.isNull() && masterFlag.toBool())
+				newList << item;
+		}
+		else
+		{
+			if(masterFlag.isNull() || !masterFlag.toBool())
+				newList << item;
+		}
+	}
+	
+	return newList;
+}
+
+void MyGraphicsScene::applyMasterSlideItemFlags(AbstractContent *content)
+{
+	if(!content)
+		return;
+		
+	// customize item's behavior
+	content->setFlag(QGraphicsItem::ItemIsMovable, false);
+	content->setFlag(QGraphicsItem::ItemIsFocusable, false);
+	content->setFlag(QGraphicsItem::ItemIsSelectable, false);
+	content->setAcceptHoverEvents(false);
+	content->setProperty("flag_fromMaster",true);
+	if(m_contextHint == Editor)
+		content->setToolTip("Master Slide Item - Double-Click to Edit Master Slide");
+	
+	connect(content, SIGNAL(doubleClicked(AbstractContent*)), this, SLOT(slotItemDoubleClicked(AbstractContent*)));
+}
+
+void MyGraphicsScene::slotItemDoubleClicked(AbstractContent *item)
+{
+	emit itemDoubleClicked(item);
 }
 
 bool MyGraphicsScene::isDataLoadComplete()

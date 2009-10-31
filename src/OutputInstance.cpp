@@ -212,6 +212,7 @@ void OutputInstance::setSlideGroup(SlideGroup *group, Slide * startSlide)
 	Output::OutputType x = m_output->outputType();
 	if(x == Output::Screen || x == Output::Custom || x == Output::Preview)
 	{
+		//qDebug() << "OutputInstance::setSlideGroup: ["<<m_output->name()<<"] Calling m_viewer->setSlideGroup()";
 		m_viewer->setSlideGroup(group,startSlide);
 	}
 	else
@@ -491,6 +492,7 @@ Slide * OutputInstance::setSlide(Slide *slide)
 	Output::OutputType x = m_output->outputType();
 	if(x == Output::Screen || x == Output::Custom || x == Output::Preview)
 	{
+		//qDebug() << "OutputInstance::setSlide: ["<<m_output->name()<<"] Setting slide#"<<m_slideNum;
 		m_viewer->setSlide(slide);
 		
 	}

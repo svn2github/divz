@@ -79,6 +79,8 @@ protected slots:
 	void itemSelected(const QModelIndex &);
 	void currentItemChanged(const QModelIndex &idx,const QModelIndex &);
 	
+	void itemDoubleClicked(AbstractContent *);
+	
 private slots:
 	void newTextItem();
 	void newBoxItem();
@@ -93,6 +95,11 @@ private slots:
 	void textSizeChanged(double);
 	void textPlus();
 	void textMinus();
+	void textFitToRect();
+	void textNaturalBox();
+	
+	void editMasterSlide();
+	void masterSlideEditorClosed();
 	
 	void centerSelVert();
 	void centerSelHorz();
@@ -169,6 +176,9 @@ private:
 	QDoubleSpinBox * m_textSizeBox;
 	QWidget * m_textBase;
 	
+	QAction * m_textNaturalBoxAction;
+	QAction * m_textFitToBoxAction;
+	
 	QDoubleSpinBox * m_slideTimeout;
 	
 	QCheckBox * m_inheritFadeBox;
@@ -187,6 +197,10 @@ private:
 	QWidget * m_currentPropWidget;
 	
 	QTimer * m_autosaveTimer;
+	
+	QAction * m_masterSlideAction;
+	
+	SlideEditorWindow * m_masterSlideEditor;
 
 };
 

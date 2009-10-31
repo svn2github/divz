@@ -35,6 +35,7 @@ public:
 	void changeFontSize(double); // force change the html font size
 	double findFontSize();
 	int fitToSize(const QSize &, int minimumFontSize = 0);
+	QSize findNaturalSize();
 	
 	// Shape (Beizer)
 	bool shapeEnabled() const { return m_shapeEnabled; }

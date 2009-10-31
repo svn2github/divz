@@ -39,16 +39,6 @@
 **
 ****************************************************************************/
 
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists for the convenience
-// of Qt Designer.  This header
-// file may change from version to version without notice, or even be removed.
-//
-// We mean it.
-//
 
 #ifndef RICHTEXTEDITOR_H
 #define RICHTEXTEDITOR_H
@@ -75,6 +65,8 @@ public:
     void setText(const QString &text);
     QString text(Qt::TextFormat format = Qt::AutoText) const;
 
+    void initFontSize(double);
+
 private slots:
     void tabIndexChanged(int newIndex);
     void richTextChanged();
@@ -87,6 +79,7 @@ private:
     QTextEdit      *m_text_edit;
     QTabWidget     *m_tab_widget;
     State m_state;
+    QToolBar	   *m_tool_bar;
 };
 
 #endif // RITCHTEXTEDITOR_H

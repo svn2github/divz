@@ -52,24 +52,15 @@ public:
 	void removeSlide(Slide *);
 	
 	virtual bool fromXml(QDomElement & parentElement);
-        virtual void toXml(QDomElement & parentElement) const;
-        
-        virtual void changeBackground(AbstractVisualItem::FillType fillType, QVariant fillValue, Slide *onlyThisSlide = 0);
-        virtual bool changeBackground(const QFileInfo & info, Slide *onlyThisSlide = 0);
-        
-        static bool canUseBackground(const QFileInfo & info);
-
-	// Things you can do with slide groups:
-	// View 
-	//	- add to a scene
-	// Control
-	//	- switch slides in the scene
-	// Edit
-	//	- change content of the group
+	virtual void toXml(QDomElement & parentElement) const;
 	
+	virtual void changeBackground(AbstractVisualItem::FillType fillType, QVariant fillValue, Slide *onlyThisSlide = 0);
+	virtual bool changeBackground(const QFileInfo & info, Slide *onlyThisSlide = 0);
 	
+	static bool canUseBackground(const QFileInfo & info);
 	
-
+	virtual Slide * masterSlide();
+	
 signals:
 	// Operation = "Add", "Remove", "Change"
 	void slideChanged(Slide *slide, QString slideOperation, AbstractItem *item, QString operation, QString fieldName, QVariant value);
@@ -97,6 +88,10 @@ protected:
 	bool m_inheritFadeSettings;
 	double m_crossFadeSpeed;
 	double m_crossFadeQuality;
+	
+	Slide * m_masterSlide;
+	
+
 	
 };
 

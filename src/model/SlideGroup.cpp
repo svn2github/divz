@@ -16,6 +16,7 @@ SlideGroup::SlideGroup() :
 	, m_inheritFadeSettings(true)
 	, m_crossFadeSpeed(250)
 	, m_crossFadeQuality(15)
+	, m_masterSlide(0)
 {
 
 }
@@ -23,6 +24,12 @@ SlideGroup::SlideGroup() :
 SlideGroup::~SlideGroup()
 {
 	qDeleteAll(m_slides);
+	m_slides.clear();
+	if(m_masterSlide)
+	{
+		delete m_masterSlide;
+		m_masterSlide = 0;
+	}
 }
 
 QList<Slide *> SlideGroup::slideList() { return m_slides; }
@@ -111,6 +118,22 @@ void SlideGroup::loadSlideList(QDomElement & pe)
 				continue;
 			}
 		}
+		else
+		if(element.tagName() == "master")
+		{
+			Slide *s = new Slide();
+			s->setSlideNumber(-1);
+			
+			// restore the item, and delete it if something goes wrong
+			if (!s->fromXml(element))
+			{
+				removeSlide(s);
+				delete s;
+				continue;
+			}
+			
+			m_masterSlide = s;
+		}
 	}
 
 	sortSlides();
@@ -138,6 +161,13 @@ void SlideGroup::saveSlideList(QDomElement & pe) const
 		QDomElement element = doc.createElement("slide");
 		pe.appendChild(element);
 		slide->toXml(element);
+	}
+	
+	if(m_masterSlide)
+	{
+		QDomElement element = doc.createElement("master");
+		pe.appendChild(element);
+		m_masterSlide->toXml(element);
 	}
 }
 
@@ -221,4 +251,17 @@ void SlideGroup::changeBackground(AbstractVisualItem::FillType fillType, QVarian
 			bg->setFillBrush(QColor(fillValue.toString()));
 		}
 	}
+}
+
+Slide * SlideGroup::masterSlide()
+{
+	if(!m_masterSlide)
+	{
+		m_masterSlide = new Slide();
+		m_masterSlide->setSlideNumber(-1);
+	}
+	
+//	qDebug() << "SlideGroup::masterSlide: accessor for ptr: "<<QString().sprintf("%p",m_masterSlide);
+	
+	return m_masterSlide;
 }

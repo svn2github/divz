@@ -265,7 +265,8 @@ SlideEditorWindow::SlideEditorWindow(SlideGroup *group, QWidget * parent)
     m_propDockEmpty(0),
     m_currentConfigContent(0),
     m_currentConfig(0),
-    m_itemListView(0)
+    m_itemListView(0),
+    m_masterSlideEditor(0)
 {
 
 	m_scene = new MyGraphicsScene(MyGraphicsScene::Editor,this);
@@ -469,6 +470,12 @@ void SlideEditorWindow::setupToolbar()
 	QAction  *configBg = toolbar->addAction(QIcon(":/data/stock-insert-image.png"), "Setup Slide Background");
 	configBg->setShortcut(QString("CTRL+SHIFT+B"));
 	connect(configBg, SIGNAL(triggered()), this, SLOT(slotConfigBackground()));
+	
+	m_masterSlideAction = toolbar->addAction(QIcon(":/data/master-slide.png"), "Edit Master Slide");
+	m_masterSlideAction->setShortcut(QString("CTRL+SHIFT+M"));
+	connect(m_masterSlideAction, SIGNAL(triggered()), this, SLOT(editMasterSlide()));
+	
+	
 
 	toolbar->addSeparator();
 	
@@ -512,6 +519,14 @@ void SlideEditorWindow::setupToolbar()
 	
 	m_textPlusAction->setEnabled(false);
 	m_textMinusAction->setEnabled(false);
+	
+	m_textFitToBoxAction = toolbar->addAction(QIcon(":/data/stock-fit-out.png"), "Fit Text to Box");
+	m_textFitToBoxAction->setShortcut(QString("CTRL+SHFIT+F"));
+	connect(m_textFitToBoxAction, SIGNAL(triggered()), this, SLOT(textFitToRect()));
+	
+	m_textNaturalBoxAction = toolbar->addAction(QIcon(":/data/stock-fit-in.png"), "Fit Box to Text Naturally");
+	m_textNaturalBoxAction->setShortcut(QString("CTRL+SHFIT+N"));
+	connect(m_textNaturalBoxAction, SIGNAL(triggered()), this, SLOT(textNaturalBox()));
 	
 	connect(m_scene, SIGNAL(selectionChanged()), this, SLOT(selectionChanged()));
 	
@@ -667,7 +682,9 @@ void SlideEditorWindow::setFadeSpeedPreset(int value)
 
 void SlideEditorWindow::guessSlideTimeout()
 {
-	m_slideTimeout->setValue(m_scene->slide()->guessTimeout());
+	double time = m_scene->slide()->guessTimeout();
+	m_slideTimeout->setValue(time);
+	m_scene->slide()->setAutoChangeTime(time);
 }
 
 void SlideEditorWindow::zeroSlideTimeout()
@@ -836,6 +853,66 @@ void SlideEditorWindow::textSizeChanged(double pt)
 		return;
 	foreach(TextBoxContent *text, m_currentTextItems)
 		dynamic_cast<TextItem*>(text->modelItem())->changeFontSize(pt);
+}
+
+
+void SlideEditorWindow::textFitToRect()
+{
+	if(m_currentTextItems.size() <= 0)
+		return;
+		
+	foreach(TextBoxContent *text, m_currentTextItems)
+		dynamic_cast<TextItem*>(text->modelItem())->fitToSize(text->contentsRect().size(),8);
+	
+}
+
+
+void SlideEditorWindow::textNaturalBox()
+{
+	if(m_currentTextItems.size() <= 0)
+		return;
+		
+	foreach(TextBoxContent *text, m_currentTextItems)
+	{
+		QSize natural = dynamic_cast<TextItem*>(text->modelItem())->findNaturalSize();
+		text->modelItem()->setContentsRect(QRectF(text->modelItem()->contentsRect().topLeft(),QSizeF(natural)));
+	}
+}
+
+void SlideEditorWindow::itemDoubleClicked(AbstractContent *item)
+{
+	// The flag_fromMaster property is set by MyGraphicsScene for master slide items
+	QVariant masterFlag = item->property("flag_fromMaster");
+	if(!masterFlag.isNull() && masterFlag.toBool())
+		editMasterSlide();
+}
+
+void SlideEditorWindow::editMasterSlide()
+{
+	if(!m_slideGroup)
+		return;
+		
+	if(m_masterSlideEditor)
+	{
+		m_masterSlideEditor->show();
+		m_masterSlideEditor->raise();
+	}
+	else
+	{
+		m_masterSlideEditor = new SlideEditorWindow();
+		SlideGroup *tmpGroup = new SlideGroup();
+		tmpGroup->setGroupTitle(QString("Master Slide for %1").arg(m_slideGroup->groupTitle().isEmpty() ? QString("Group %1").arg(m_slideGroup->groupNumber()) : m_slideGroup->groupTitle()));
+		tmpGroup->addSlide(m_slideGroup->masterSlide());
+		m_masterSlideEditor->setSlideGroup(tmpGroup,m_slideGroup->masterSlide());
+		connect(m_masterSlideEditor, SIGNAL(closed()), this, SLOT(masterSlideEditorClosed()));
+		
+		m_masterSlideEditor->show();
+	}
+}
+
+void SlideEditorWindow::masterSlideEditorClosed()
+{
+	// TODO anything needed to do here?
 }
 
 void SlideEditorWindow::setupUndoView()
@@ -1203,37 +1280,36 @@ void SlideEditorWindow::itemsDropped(QList<AbstractItem*> list)
 	m_itemListView->setCurrentIndex(idx);
 }
 
-void SlideEditorWindow::setSlideGroup(SlideGroup *g,Slide *curSlide)
+void SlideEditorWindow::setSlideGroup(SlideGroup *group, Slide *curSlide)
 {
 	if(m_slideGroup)
 		disconnect(m_slideGroup,0,this,0);
+		
+	if(m_masterSlideEditor)
+	{
+		m_masterSlideEditor->close();
+		delete m_masterSlideEditor;
+		m_masterSlideEditor = 0;
+	}
 	
-// 	if(g != m_slideGroup)
-// 	{
-// 		m_slideModel->releaseSlideGroup();
-// 		
-		//bool newFlag = m_slideModel ? false :true;
 		
-		m_slideGroup = g;
-		m_slideModel->setSlideGroup(g);
-		
-		//if(newFlag)
-		//	m_slideListView->reset();
-		
-		
-	//}
+	m_slideGroup = group;
+	m_slideModel->setSlideGroup(group);
+	
+	m_scene->setMasterSlide(m_slideGroup->masterSlide());
+	
 	
 	// Trigger slideItemChange slot connections, but not an undo entry
 	m_ignoreUndoPropChanges = true;
-	QList<Slide*> slist = g->slideList();
+	QList<Slide*> slist = group->slideList();
 	foreach(Slide *slide, slist)
 		slideChanged(slide, "add", 0, "", "", QVariant());
 	m_ignoreUndoPropChanges = false;
 	
-	connect(g,SIGNAL(slideChanged(Slide *, QString, AbstractItem *, QString, QString, QVariant)),this,SLOT(slideChanged(Slide *, QString, AbstractItem *, QString, QString, QVariant)));
-	connect(g,SIGNAL(destroyed(QObject*)), this, SLOT(releaseSlideGroup()));
+	connect(group,SIGNAL(slideChanged(Slide *, QString, AbstractItem *, QString, QString, QVariant)),this,SLOT(slideChanged(Slide *, QString, AbstractItem *, QString, QString, QVariant)));
+	connect(group,SIGNAL(destroyed(QObject*)), this, SLOT(releaseSlideGroup()));
 	
-	setWindowTitle(QString("%1 - Slide Editor").arg(g->groupTitle().isEmpty() ? QString("Group %1").arg(g->groupNumber()) : g->groupTitle()));
+	setWindowTitle(QString("%1 - Slide Editor").arg(group->groupTitle().isEmpty() ? QString("Group %1").arg(group->groupNumber()) : group->groupTitle()));
 	setWindowIcon(QIcon(":/data/icon-d.png"));
 	//m_slideListView->setModel(m_slideModel);
 	
@@ -1243,7 +1319,7 @@ void SlideEditorWindow::setSlideGroup(SlideGroup *g,Slide *curSlide)
 	}
 	else
 	{
-		QList<Slide*> slist = g->slideList();
+		QList<Slide*> slist = group->slideList();
 		if(slist.size() > 0)
 			setCurrentSlide(m_slideModel->slideAt(0));
 		else
@@ -1513,7 +1589,6 @@ public:
 	{ 
 		m_window->ignoreUndoChanged(true);
 		m_window->slideGroup()->addSlide(m_slide);
-		//m_window->setSlideGroup(m_window->slideGroup(),m_slide);
 		m_window->setCurrentSlide(m_slide);
 		m_window->ignoreUndoChanged(false);
 	}
@@ -1676,9 +1751,6 @@ void SlideEditorWindow::newSlide()
 	m_slideGroup->addSlide(slide);
 	//qDebug() << "newSlide: Added slide#"<<slide->slideNumber();
 	
-	//m_scene->setSlide(slide);
-	
-	//setSlideGroup(m_slideGroup,slide);
 	setCurrentSlide(slide);
 }
 
@@ -1692,7 +1764,6 @@ void SlideEditorWindow::dupSlide()
 	
 	m_slideGroup->addSlide(slide);
 	
-	//setSlideGroup(m_slideGroup,slide);
 	setCurrentSlide(slide);
 }
 
@@ -1744,7 +1815,6 @@ void SlideEditorWindow::delSlide()
 		s->setSlideNumber(counter++);
 	}
 	
-	//setSlideGroup(m_slideGroup,newSlide);
 	setCurrentSlide(newSlide);
 	
 	// Dont delete here, delete when UndoSlideRemoved command is destroyed

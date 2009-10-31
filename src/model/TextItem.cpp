@@ -65,16 +65,18 @@ void TextItem::setYTextAlign(Qt::Alignment z)
 void TextItem::changeFontSize(double size)
 {
 	QTextDocument doc;
-	if(text().indexOf('<') < 0)
-		doc.setPlainText(text());
-	else
+	if (Qt::mightBeRichText(text()))
 		doc.setHtml(text());
+	else
+		doc.setPlainText(text());
+
 	QTextCursor cursor(&doc);
 	cursor.select(QTextCursor::Document);
 
 	QTextCharFormat format;
 	format.setFontPointSize(size);
 	cursor.mergeCharFormat(format);
+	cursor.mergeBlockCharFormat(format);
 
 	setText(doc.toHtml());
 }
@@ -83,10 +85,11 @@ void TextItem::changeFontSize(double size)
 double TextItem::findFontSize()
 {
 	QTextDocument doc;
-	if(text().indexOf('<') < 0)
-		doc.setPlainText(text());
-	else
+	if (Qt::mightBeRichText(text()))
 		doc.setHtml(text());
+	else
+		doc.setPlainText(text());
+
 	QTextCursor cursor(&doc);
 	cursor.select(QTextCursor::Document);
 	QTextCharFormat format = cursor.charFormat();
@@ -118,10 +121,11 @@ int TextItem::fitToSize(const QSize& size, int minimumFontSize)
 		
 		QTextDocument doc;
 		doc.setTextWidth(width);
-		if(text().indexOf('<') < 0)
-			doc.setPlainText(text());
-		else
+		if (Qt::mightBeRichText(text()))
 			doc.setHtml(text());
+		else
+			doc.setPlainText(text());
+
 			
 		QTextCursor cursor(&doc);
 		cursor.select(QTextCursor::Document);
@@ -150,10 +154,11 @@ int TextItem::fitToSize(const QSize& size, int minimumFontSize)
 		int heightTmp;
 		
 		doc.setTextWidth(width);
-		if(text().indexOf('<') < 0)
-			doc.setPlainText(text());
-		else
+		if (Qt::mightBeRichText(text()))
 			doc.setHtml(text());
+		else
+			doc.setPlainText(text());
+
 			
 		QTextCursor cursor(&doc);
 		cursor.select(QTextCursor::Document);
@@ -184,6 +189,43 @@ int TextItem::fitToSize(const QSize& size, int minimumFontSize)
 				done = true;
 			}
 		}
+		
+		if(boxHeight < 0 && minimumFontSize <= 0) // didnt find a size
+		{
+			ptSize = 100;
+			
+			count = 0;
+			done = false;
+			sizeInc = 1;
+			
+			qDebug()<<"TextItem::fitToSize(): size search: going UP failed, now I'll try to go DOWN";
+			
+			while(!done && count++ < maxCount)
+			{
+				
+				format.setFontPointSize(ptSize);
+				cursor.mergeCharFormat(format);
+				
+				heightTmp = doc.documentLayout()->documentSize().height();
+				
+				if(heightTmp < height)
+				{
+					lastGoodSize = ptSize;
+					//lastGoodHtml = text();
+					boxHeight = heightTmp;
+	
+					sizeInc *= 1.1;
+					//qDebug()<<"size search: "<<ptSize<<"pt was good, trying higher, inc:"<<sizeInc<<"pt";
+					ptSize -= sizeInc;
+	
+				}
+				else
+				{
+					//qDebug()<<"SongSlideGroup::textToSlides(): size search: last good ptsize:"<<lastGoodSize<<", stopping search";
+					done = true;
+				}
+			}
+		}
 
 		format.setFontPointSize(lastGoodSize);
 		cursor.mergeCharFormat(format);
@@ -201,6 +243,18 @@ int TextItem::fitToSize(const QSize& size, int minimumFontSize)
 	
 	return boxHeight;
 	
+}
+
+QSize TextItem::findNaturalSize()
+{
+	QTextDocument doc;
+	//doc.setTextWidth(width);
+	if (Qt::mightBeRichText(text()))
+		doc.setHtml(text());
+	else
+		doc.setPlainText(text());
+	
+	return doc.documentLayout()->documentSize().toSize();
 }
 
 

@@ -109,6 +109,7 @@ class AbstractContent : public AbstractDisposeable
 		void deleteItem();
 		void contentChanged();
 		void resized();
+		void doubleClicked(AbstractContent*);
 
 	protected:
 		friend class CornerItem;
@@ -128,6 +129,7 @@ class AbstractContent : public AbstractDisposeable
 		void dropEvent(QGraphicsSceneDragDropEvent * event);
 		void mousePressEvent(QGraphicsSceneMouseEvent * event);
 		void mouseReleaseEvent(QGraphicsSceneMouseEvent * event);
+		void mouseDoubleClickEvent(QGraphicsSceneMouseEvent * event);
 		void keyPressEvent(QKeyEvent * event);
 		QVariant itemChange(GraphicsItemChange change, const QVariant & value);
 		

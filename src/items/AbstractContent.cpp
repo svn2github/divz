@@ -769,7 +769,10 @@ void AbstractContent::mouseReleaseEvent(QGraphicsSceneMouseEvent * event)
 	syncToModelItem(modelItem());
 }
 
-
+void AbstractContent::mouseDoubleClickEvent(QGraphicsSceneMouseEvent * event)
+{
+	emit doubleClicked(this);
+}
 
 
 

@@ -62,7 +62,8 @@ SlideGroupViewControl::SlideGroupViewControl(OutputInstance *g, QWidget *w )
 	m_selectedSlide(0),
 	m_timerWasActiveBeforeFade(0),
 	m_clearActive(false),
-	m_blackActive(false)
+	m_blackActive(false),
+	m_group(0)
 {
 	QVBoxLayout * layout = new QVBoxLayout();
 	layout->setMargin(0);
@@ -307,7 +308,10 @@ void SlideGroupViewControl::slideSelected(const QModelIndex &idx)
 		return;
 	if(DEBUG_SLIDEGROUPVIEWCONTROL)
 		qDebug() << "SlideGroupViewControl::slideSelected(): selected slide#:"<<slide->slideNumber();
-	m_slideViewer->setSlide(slide);
+	if(m_slideViewer->slideGroup() != m_group)
+		m_slideViewer->setSlideGroup(m_group,slide);
+	else
+		m_slideViewer->setSlide(slide);
 	enableAnimation(slide->autoChangeTime());
 	
 	m_selectedSlide = slide;
@@ -355,6 +359,8 @@ void SlideGroupViewControl::setSlideGroup(SlideGroup *g, Slide *curSlide)
 	
 	enableAnimation(0);
 	
+	m_group = g;
+	
 	m_slideModel->setSlideGroup(g);
 	
 	// reset seems to be required
@@ -372,6 +378,7 @@ void SlideGroupViewControl::setSlideGroup(SlideGroup *g, Slide *curSlide)
 void SlideGroupViewControl::releaseSlideGroup()
 {
 	m_releasingSlideGroup = true;
+	m_group = 0;
 	m_slideModel->releaseSlideGroup();
 	m_listView->reset();
 	m_releasingSlideGroup = false;
@@ -545,6 +552,7 @@ QPixmap	SlideGroupFactory::generatePreviewPixmap(SlideGroup *g, QSize iconSize, 
 		m_scene->setSceneRect(sceneRect);
 	
 	//qDebug() << "SlideGroupFactory::generatePixmap: Loading slide";
+	m_scene->setMasterSlide(g->masterSlide());
 	m_scene->setSlide(slide);
 	
 	QPixmap icon(icon_w,icon_h);

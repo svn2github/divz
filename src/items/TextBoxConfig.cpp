@@ -14,15 +14,31 @@ TextBoxConfig::TextBoxConfig(TextBoxContent * textContent, QGraphicsItem * paren
 	
 	TextItem * textModel = dynamic_cast<TextItem*>(m_textContent->modelItem());
 	m_editor->setText(textModel->text());
+	m_editor->initFontSize(textModel->findFontSize());
 	
 	m_editor->adjustSize();
 	addTab(m_editor, tr("Text"), false, true);
 	m_editor->focusEditor();	
 	
 	m_commonUi->bgOptImage->setVisible(false);
+	m_commonUi->bgImage->setVisible(false);
 	m_commonUi->bgOptVideo->setVisible(false);
+	m_commonUi->bgVideo->setVisible(false);
+	
+	
 	
 	//resize(640,300);
+	connect(textContent->modelItem(), SIGNAL(itemChanged(QString, QVariant, QVariant)), this, SLOT(itemChanged(QString, QVariant, QVariant)));
+}
+
+void TextBoxConfig::itemChanged(QString fieldName, QVariant value, QVariant)
+{
+	if(fieldName == "text")
+	{
+		TextItem * textModel = dynamic_cast<TextItem*>(m_textContent->modelItem());
+		m_editor->setText(textModel->text());
+		m_editor->initFontSize(textModel->findFontSize());
+	}
 }
 
 TextBoxConfig::~TextBoxConfig()

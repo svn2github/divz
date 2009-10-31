@@ -41,6 +41,7 @@
 
 #define notImplemented() {qWarning("%s:%d: %s NOT Implemented!", __FILE__, __LINE__, __FUNCTION__);}
 #include <QIcon>
+#include <QDebug>
 #include <QFileDialog>
 #include <QFontComboBox>
 QIcon createIconSet(QString iconName)
@@ -105,6 +106,7 @@ private:
 public slots:
     void setFontBold(bool b);
     void setFontPointSize(double);
+    void updateFontPointSize(double d);
     void setText(const QString &text);
     QString text(Qt::TextFormat format) const;
 
@@ -191,6 +193,22 @@ public:
     {}
 
     void contextMenuEvent(QContextMenuEvent *event);
+    
+    void insertFromMimeData ( const QMimeData * source )
+	{
+		if(source)
+		{
+			//QMimeData data = *source;
+			qDebug() << "HtmlTextEdit::insertFromMimeData(): Formats dropped: "<<source->formats();
+			
+			QTextEdit::insertFromMimeData(source);
+			
+		}
+		else
+		{
+			qDebug() << "HtmlTextEdit::insertFromMimeData(): No *source ptr provided";
+		}
+	}
 
 private slots:
     void actionTriggered(QAction *action);
@@ -292,6 +310,7 @@ public:
 
 public slots:
     void updateActions();
+    void updateFontSize(double d);
 
 private slots:
     void alignmentActionTriggered(QAction *action);
@@ -303,6 +322,7 @@ private slots:
     ///void insertLink();
     ///void insertImage();
     void slotWheelScrolled(int steps);    // +fotowall
+    
 
 protected: // +fotowall
     void paintEvent(QPaintEvent * event);   // +fotowall
@@ -359,7 +379,7 @@ RichTextEditorToolBar::RichTextEditorToolBar(RichTextEditor *editor,
     ///addSeparator();
 
     // Font size combo box
-    m_font_size_input->setEditable(false);
+    m_font_size_input->setEditable(true);
 
     QList<int> font_sizes = QFontDatabase::standardSizes(); // +fotowall
     qreal lastSize = font_sizes.last();
@@ -634,6 +654,22 @@ void RichTextEditorToolBar::updateActions()
     m_color_action->setColor(m_editor->textColor());
 }
 
+void RichTextEditorToolBar::updateFontSize(double d)
+{
+	const int size = d;
+	const int idx = m_font_size_input->findText(QString::number(size));
+	if (idx != -1)
+		m_font_size_input->setCurrentIndex(idx);
+	else
+	{
+		m_font_size_input->addItem(QString::number(size));
+		const int idx = m_font_size_input->findText(QString::number(size));
+		if (idx != -1)
+			m_font_size_input->setCurrentIndex(idx);
+	}
+		
+}
+
 RichTextEditor::RichTextEditor(QWidget *parent)
     : QTextEdit(parent)
 {
@@ -684,6 +720,13 @@ void RichTextEditor::setDefaultFont(const QFont &font)
     emit textChanged();
 }
 
+void RichTextEditor::updateFontPointSize(double d)
+{
+    setFontPointSize(d);
+    emit textChanged();
+    
+}
+
 QString RichTextEditor::text(Qt::TextFormat format) const
 {
     switch (format) {
@@ -719,14 +762,14 @@ RichTextEditorDialog::RichTextEditorDialog(QWidget *parent)  :
     connect(m_text_edit, SIGNAL(textChanged()), this, SLOT(sourceChanged()));
 
     // The toolbar needs to be created after the RichTextEditor
-    QToolBar *tool_bar = m_editor->createToolBar(this);
-    tool_bar->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
+    m_tool_bar = m_editor->createToolBar(this);
+    m_tool_bar->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
 
     QWidget *rich_edit = new QWidget;
     QVBoxLayout *rich_edit_layout = new QVBoxLayout(rich_edit);
     rich_edit_layout->setMargin(0);     // +fotowall
     rich_edit_layout->setSpacing(0);    // +fotowall
-    rich_edit_layout->addWidget(tool_bar);
+    rich_edit_layout->addWidget(m_tool_bar);
     rich_edit_layout->addWidget(m_editor);
 
     QWidget *plain_edit = new QWidget;
@@ -764,6 +807,13 @@ RichTextEditorDialog::RichTextEditorDialog(QWidget *parent)  :
 
 RichTextEditorDialog::~RichTextEditorDialog()
 {
+}
+
+void RichTextEditorDialog::initFontSize(double d)
+{
+	m_editor->updateFontPointSize(d);
+	dynamic_cast<RichTextEditorToolBar*>(m_tool_bar)->updateFontSize(d);
+	m_editor->setFocus();
 }
 
 void RichTextEditorDialog::focusEditor()

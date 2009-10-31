@@ -133,22 +133,24 @@ Revised Task list for Release 1.0, 10/18/09:
 				need file preview widget below media browser
 					click once on file to preview
 	
-			master slide ?
+			[DONE] master slide
 		
 			text work
 				do need vertical line spacing for artistic use in desigining slides
-				text toolbar vs rich editor in config box dont agree - config box doesnt pick up same text size
-				rich text editor should allow manually typed point sizes
 				rich text editor should accept only plain text mime type and assume current formatting
-				need an autofit textbox btn
-				and an autosize textbox
-				when changing text using tooplbar icons, need to update prop dock with new html 
-				[FINISHED] text import tool:
+				make textboxitem honor colors other than black set using char format
+				[DONE] text toolbar vs rich editor in config box dont agree - config box doesnt pick up same text size
+				[DONE] when changing text using tooplbar icons, need to update prop dock with new html 
+				[DONE] rich text editor should allow manually typed point sizes
+				[DONE] need an autofit textbox btn
+				[DONE] and an autosize textbox
+				[DONE] text import tool:
 					grab text file 
 					go thru file, grab 6 lines at a time
 					try to get to be at least 45 - 50 px high
 					drop lines back to next batch till at least 45px high
 					create slides as you go
+				bug in text import tool: some slides imported move box all the way to the left
 					
 			images work
 				large nbr of photos imported using import tool - some of them render gray - caching issues?

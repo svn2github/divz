@@ -251,9 +251,9 @@ void BoxContent::drawForeground(QPainter * painter)
 		p.setJoinStyle(Qt::MiterJoin);
 		if(sceneContextHint() == MyGraphicsScene::Preview)
 		{
-			QTransform tx = painter->transform();
-			qreal scale = qMax(tx.m11(),tx.m22());
-			p.setWidthF(1/scale * p.widthF());
+// 			QTransform tx = painter->transform();
+// 			qreal scale = qMax(tx.m11(),tx.m22());
+// 			p.setWidthF(1/scale * p.widthF());
 		}
 		
 	}
