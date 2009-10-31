@@ -44,6 +44,10 @@
 #include <QDebug>
 #include <QFileDialog>
 #include <QFontComboBox>
+#include <QApplication>
+#include <QClipboard>
+#include <QShortcut>
+
 QIcon createIconSet(QString iconName)
 {
     // remap for better names in the data dir
@@ -209,6 +213,15 @@ public:
 			qDebug() << "HtmlTextEdit::insertFromMimeData(): No *source ptr provided";
 		}
 	}
+	
+	void paste()
+	{
+// 		Q_D(QTextEdit);
+// 		d->control->paste();
+		qDebug() << "HtmlTextEdit::paste(): paste called";
+		const QMimeData *md = QApplication::clipboard()->mimeData();
+		insertFromMimeData(md);
+	}
 
 private slots:
     void actionTriggered(QAction *action);
@@ -321,6 +334,7 @@ private slots:
     void setVAlignSub(bool sub);
     ///void insertLink();
     ///void insertImage();
+    void pastePlain();
     void slotWheelScrolled(int steps);    // +fotowall
     
 
@@ -339,8 +353,11 @@ private:
     //QAction *m_align_justify_action;
     //QAction *m_link_action;
     //QAction *m_image_action;
+    QAction *m_paste_plain_action;
     ColorAction *m_color_action;
     QComboBox *m_font_size_input;
+    
+    QShortcut * m_shortcut;
 
     QFontComboBox *m_font_face_input;   // +fotowall
 
@@ -366,6 +383,7 @@ RichTextEditorToolBar::RichTextEditorToolBar(RichTextEditor *editor,
     QToolBar(parent),
     ///m_link_action(new QAction(this)),
     ///m_image_action(new QAction(this)),
+    m_paste_plain_action(new QAction(this)),
     m_color_action(new ColorAction(this)),
     m_font_size_input(new QComboBox),
     m_font_face_input(new QFontComboBox(this)), // +fotowall
@@ -408,24 +426,37 @@ RichTextEditorToolBar::RichTextEditorToolBar(RichTextEditor *editor,
     // Bold, italic and underline buttons
 
     m_bold_action = createCheckableAction(
-            createIconSet(QLatin1String("textbold.png")),
+            createIconSet(QLatin1String("format-text-bold.png")),
             tr("Bold"), editor, SLOT(setFontBold(bool)), this);
     m_bold_action->setShortcut(tr("CTRL+B"));
     addAction(m_bold_action);
 
     m_italic_action = createCheckableAction(
-            createIconSet(QLatin1String("textitalic.png")),
+            createIconSet(QLatin1String("format-text-italic.png")),
             tr("Italic"), editor, SLOT(setFontItalic(bool)), this);
     m_italic_action->setShortcut(tr("CTRL+I"));
     addAction(m_italic_action);
 
     m_underline_action = createCheckableAction(
-            createIconSet(QLatin1String("textunder.png")),
+            createIconSet(QLatin1String("format-text-underline.png")),
             tr("Underline"), editor, SLOT(setFontUnderline(bool)), this);
     m_underline_action->setShortcut(tr("CTRL+U"));
     addAction(m_underline_action);
+    m_underline_action->setVisible(false);
 
     addSeparator();
+    
+    
+    
+    m_paste_plain_action->setIcon(createIconSet(QLatin1String("stock-attach.png")));
+    m_paste_plain_action->setText(tr("Paste Plain Text"));
+    connect(m_paste_plain_action, SIGNAL(triggered()), SLOT(pastePlain()));
+    m_paste_plain_action->setShortcut(QString("CTRL+SHIFT+V"));
+    addAction(m_paste_plain_action);
+    
+//      m_shortcut = new QShortcut(QKeySequence(tr("Ctrl+SHIFT+V")),this);
+//      connect(m_shortcut, SIGNAL(activated()), this, SLOT(pastePlain()));
+//      connect(m_shortcut, SIGNAL(activatedAmbiguously()), this, SLOT(pastePlain()));
 
     
     // Left, center, right and justified alignment buttons
@@ -434,21 +465,22 @@ RichTextEditorToolBar::RichTextEditorToolBar(RichTextEditor *editor,
     connect(alignment_group, SIGNAL(triggered(QAction*)),
                              SLOT(alignmentActionTriggered(QAction*)));
 
-    m_align_left_action = createCheckableAction(
-            createIconSet(QLatin1String("textleft.png")),
-            tr("Left Align"), editor, 0, alignment_group);
-    addAction(m_align_left_action);
-
     m_align_center_action = createCheckableAction(
-            createIconSet(QLatin1String("textcenter.png")),
+            createIconSet(QLatin1String("format-justify-center.png")),
             tr("Center"), editor, 0, alignment_group);
     addAction(m_align_center_action);
 
     m_align_right_action = createCheckableAction(
-            createIconSet(QLatin1String("textright.png")),
+            createIconSet(QLatin1String("format-justify-right.png")),
             tr("Right Align"), editor, 0, alignment_group);
     addAction(m_align_right_action);
 
+	m_align_left_action = createCheckableAction(
+            createIconSet(QLatin1String("format-justify-left.png")),
+            tr("Left Align"), editor, 0, alignment_group);
+    addAction(m_align_left_action);
+
+    
 //     m_align_justify_action = createCheckableAction(
 //             createIconSet(QLatin1String("textjustify.png")),
 //             tr("Justify"), editor, 0, alignment_group);
@@ -577,6 +609,29 @@ void RichTextEditorToolBar::insertImage()
         m_editor->insertHtml(QLatin1String("<img src=\"") + path + QLatin1String("\"/>"));
 }
 */
+
+void RichTextEditorToolBar::pastePlain()
+{
+    ///const QString path = IconSelector::choosePixmapResource(m_core, m_core->resourceModel(), QString(), this);
+    //const QString path = QFileDialog::getOpenFileName(this, tr("Open File"), QString(), tr("Images (*.jpeg *.jpg *.png *.bmp *.tif *.tiff)"));
+    //if (!path.isEmpty())
+      //  m_editor->insertHtml(QLatin1String("<img src=\"") + path + QLatin1String("\"/>"));
+      
+	//qDebug() << "RichTextEditorToolBar::pastePlain() called";
+	const QMimeData *md = QApplication::clipboard()->mimeData();
+	//qDebug() << "RichTextEditorToolBar::pastePlain(): Formats: "<<md->formats();
+	if(md->hasText())
+	{
+		m_editor->insertPlainText(md->text());
+		//qDebug() << "RichTextEditorToolBar::pastePlain(): Plain text: "<<md->text();
+	}
+	else
+	{
+		//qDebug() << "RichTextEditorToolBar::pastePlain(): no plain text avail";
+	}
+	
+}
+
 void RichTextEditorToolBar::slotWheelScrolled(int steps)    // +fotowall
 {
     // find out the new font index
@@ -654,6 +709,11 @@ void RichTextEditorToolBar::updateActions()
     m_color_action->setColor(m_editor->textColor());
 }
 
+bool RichTextEditorToolBar_sortNumberString(QString a, QString b)
+{
+	return a.toInt() < b.toInt();
+}
+
 void RichTextEditorToolBar::updateFontSize(double d)
 {
 	const int size = d;
@@ -663,6 +723,15 @@ void RichTextEditorToolBar::updateFontSize(double d)
 	else
 	{
 		m_font_size_input->addItem(QString::number(size));
+		
+		QStringList list;
+		for(int i=0; i<m_font_size_input->count(); i++)
+			list << m_font_size_input->itemText(i);
+		qSort(list.begin(), list.end(), RichTextEditorToolBar_sortNumberString);
+		m_font_size_input->clear();
+		m_font_size_input->addItems(list);
+		
+		
 		const int idx = m_font_size_input->findText(QString::number(size));
 		if (idx != -1)
 			m_font_size_input->setCurrentIndex(idx);

@@ -131,10 +131,11 @@ Revised Task list for Release 1.0, 10/18/09:
 		= TODAY =	
 			[DONE] media browser remember index
 			[DONE] progress dialog framework for deep operations
-			insert plain text from rich
+			[DONE] insert plain text from rich
+				added toolbar icon to do it since I couldn't get CTRL+V to overide
 			[DONE] autosave toolbar
 			[DONE] fix icon
-			fix fitting algorithm
+			[DONE] fix fitting algorithm
 			look at smooth pub
 			look at text import tool
 			look at images rendering gray
@@ -146,12 +147,11 @@ Revised Task list for Release 1.0, 10/18/09:
 	
 			[DONE] master slide
 		
-			text work
-				rich text editor should accept only plain text mime type and assume current formatting
-				bug in text import tool: some slides imported move box all the way to the left
-				
+			[DONE] text work
 				[LATER] do need vertical line spacing for artistic use in desigining slides
 				[LATER] make textboxitem honor colors other than black set using char format
+				[DONE] rich text editor should accept only plain text mime type and assume current formatting
+					added toolbar icon to do it since couldnt get CTRL+V override
 				[DONE] text toolbar vs rich editor in config box dont agree - config box doesnt pick up same text size
 				[DONE] when changing text using tooplbar icons, need to update prop dock with new html 
 				[DONE] rich text editor should allow manually typed point sizes
@@ -194,6 +194,9 @@ Revised Task list for Release 1.0, 10/18/09:
 				[DONE] make autosave time configurable via app settings
 				
 				when switching background to video, somehow render the previous background video UNTIL the first frame of the next video is ready
+				
+				bug in text import tool: some slides imported move box all the way to the left
+				
 			
 			
 		= Misc = 

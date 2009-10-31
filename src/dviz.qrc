@@ -133,6 +133,15 @@
         <file>data/icon-next-small.png</file>
         <file>data/icon-next-large.png</file>
         <file>data/icon-d.png</file>
+        <file>data/format-justify-center.png</file>
+        <file>data/format-justify-fill.png</file>
+        <file>data/format-justify-left.png</file>
+        <file>data/format-justify-right.png</file>
+        <file>data/format-text-bold.png</file>
+        <file>data/format-text-italic.png</file>
+        <file>data/format-text-underline.png</file>
+        
+        
         
         <!--
         <file>translations/fotowall_de.qm</file>
