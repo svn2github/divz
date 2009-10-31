@@ -4,7 +4,6 @@
 #include <QWidget>
 
 class QFileSystemModel;
-class QListView;
 class QFileInfo;
 class QModelIndex;
 class QPushButton;
@@ -15,6 +14,7 @@ class SlideGroupViewer;
 #include <QHash>
 #include <QStringList>
 #include <QRegExp>
+#include <QListView>
 
 #define MEDIABROWSER_LIST_ICON_SIZE QSize(48,48)
 
@@ -31,14 +31,30 @@ public /*static*/:
 	static QPixmap iconForImage(const QString & file, const QSize & size);
 
 public:
-	MediaBrowser(QWidget *parent=0);
+	MediaBrowser(const QString &directory="", QWidget *parent=0);
 	~MediaBrowser();
 	
 	QByteArray saveState();
 	bool restoreState (const QByteArray & state);
 	
+	void setPreviousPathKey(const QString&);
+	QString previousPathKey() { return m_prevPathKey; }
+	
+	void setBackgroundActionsEnabled(bool);
+	bool backgroundActionsEnabled() { return m_backgroundActionsEnabled; }
+	
+	void setViewMode(QListView::ViewMode);
+	QListView::ViewMode viewMode();
+	
+	void setSplitterOrientation(Qt::Orientation);
+	Qt::Orientation splitterOrientation();
+	
+	void setIconSize(const QSize &);
+	QSize iconSize() { return m_iconSize; }
+	
 signals:
 	void fileSelected(const QFileInfo&);
+	void fileDoubleClicked(const QFileInfo&);
 	void setSelectedBackground(const QFileInfo&);
 	void setLiveBackground(const QFileInfo&, bool waitForNextSlide);
 	
@@ -119,6 +135,12 @@ protected:
 	
 	SlideGroupViewer * m_viewer;
 	QSplitter	* m_splitter;
+	
+	QString		m_prevPathKey;
+	
+	bool		m_backgroundActionsEnabled;
+	
+	QSize		m_iconSize;
 	
 };
 

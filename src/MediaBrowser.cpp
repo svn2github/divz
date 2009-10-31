@@ -113,7 +113,7 @@ QPixmap MediaBrowser::iconForImage(const QString & file, const QSize & size)
 class MyQFileIconProvider : public QFileIconProvider
 {
 public:
-	MyQFileIconProvider() : QFileIconProvider()  {}
+	MyQFileIconProvider() : QFileIconProvider(), m_iconSize(MEDIABROWSER_LIST_ICON_SIZE)  {}
 	
 	QIcon icon(const QFileInfo& info) const
 	{
@@ -133,20 +133,28 @@ public:
 		if(MediaBrowser::isImage(info.suffix()))
 		{
 			//qDebug() << "MyQFileIconProvider::icon(): image file:"<<info.absoluteFilePath();
-			return MediaBrowser::iconForImage(info.absoluteFilePath(),MEDIABROWSER_LIST_ICON_SIZE);
+			return MediaBrowser::iconForImage(info.absoluteFilePath(),m_iconSize);
 		}
 		else
 		{
 			return QFileIconProvider::icon(info);
 		}
 	}
+	
+	void setIconSize(QSize s) { m_iconSize = s; }
+private:
+	QSize m_iconSize;
+	
 };
 
 
 
-MediaBrowser::MediaBrowser(QWidget *parent)
+MediaBrowser::MediaBrowser(const QString &directory, QWidget *parent)
 	: QWidget(parent)
 	, m_currentDirectory("")
+	, m_prevPathKey("media")
+	, m_backgroundActionsEnabled(true)
+	, m_iconSize(MEDIABROWSER_LIST_ICON_SIZE)
 {
 	setObjectName("MediaBrowser");
 	setupUI();
@@ -160,10 +168,9 @@ MediaBrowser::MediaBrowser(QWidget *parent)
 	
 	setFileTypeFilterList(filters);
 	
-	//setDirectory("/home/josiah",false);
-	setDirectory(AppSettings::previousPath("media"));
+	setDirectory(directory.isEmpty() ? AppSettings::previousPath(m_prevPathKey) : directory);
 }
-	
+
 MediaBrowser::~MediaBrowser() {}
 #define SET_MARGIN(layout,margin) \
 	layout->setContentsMargins(margin,margin,margin,margin);
@@ -218,7 +225,7 @@ void MediaBrowser::setupUI()
 	// Now for the list itself
 	m_listView = new MediaBrowserQListView(browser);
 	m_listView->setAlternatingRowColors(true);
-	m_listView->setIconSize(MEDIABROWSER_LIST_ICON_SIZE);
+	m_listView->setIconSize(m_iconSize);
 	
 	// below doesnt seem to be enough
 	//m_listView->setEditTriggers(QAbstractItemView::SelectedClicked | QAbstractItemView::EditKeyPressed);
@@ -309,7 +316,61 @@ bool MediaBrowser::restoreState(const QByteArray &state)
 	return m_splitter->restoreState(state);
 }
 
+void MediaBrowser::setPreviousPathKey(const QString& key)
+{
+	m_prevPathKey = key;
+	setDirectory(AppSettings::previousPath(m_prevPathKey));
+}
 
+void MediaBrowser::setViewMode(QListView::ViewMode mode)
+{
+	m_listView->setViewMode(mode);
+	if(mode == QListView::ListMode)
+		m_listView->setAlternatingRowColors(true);
+	else
+		m_listView->setAlternatingRowColors(false);
+}
+
+QListView::ViewMode MediaBrowser::viewMode()
+{
+	return m_listView->viewMode();
+}
+
+void MediaBrowser::setIconSize(const QSize & size)
+{
+	DeepProgressIndicator *d = new DeepProgressIndicator(m_fsModel->iconProvider(),this);
+	d->setText(QString("Updating Icons..."));
+	d->setTitle("Updating Icons");
+	d->setSize(100);
+	
+	m_listView->setIconSize(size);
+	MyQFileIconProvider * p = dynamic_cast<MyQFileIconProvider*>(m_fsModel->iconProvider());
+	if(p)
+		p->setIconSize(size);
+		
+	d->close();
+	//d->deleteLater();
+	d->dialog()->close();
+	d->close();
+	delete d;
+	
+}
+
+void MediaBrowser::setSplitterOrientation(Qt::Orientation o)
+{
+	m_splitter->setOrientation(o);
+}
+
+Qt::Orientation MediaBrowser::splitterOrientation()
+{
+	return m_splitter->orientation();
+}
+	
+void MediaBrowser::setBackgroundActionsEnabled(bool flag)
+{
+	m_btnBase->setVisible(flag);
+	m_backgroundActionsEnabled = flag;
+}	
 
 void MediaBrowser::setFileTypeFilterList(QStringList list)
 {
@@ -324,6 +385,12 @@ void MediaBrowser::setFileTypeFilterList(QStringList list)
 			m_filterBox->addItem(cap.at(1), cap.at(2));
 		}
 	}
+	
+	int idx = m_filterBox->currentIndex();
+	if(idx<0)
+		idx = 0;
+	
+	fileTypeChanged(idx);
 }
 
 void MediaBrowser::fileTypeChanged(int selectedIndex)
@@ -430,8 +497,12 @@ void MediaBrowser::indexDoubleClicked(const QModelIndex &idx)
 	}
 	else
 	{
-		//emit fileSelected(info);
-		emit setLiveBackground(info,false);
+		if(m_backgroundActionsEnabled)
+			emit setLiveBackground(info,false);
+		else
+			emit fileSelected(info);
+		
+		emit fileDoubleClicked(info);
 	}
 }
 
@@ -444,11 +515,26 @@ void MediaBrowser::indexSingleClicked(const QModelIndex &idx)
 		m_viewer->slideGroup()->changeBackground(info);
 	else
 		m_viewer->slideGroup()->changeBackground(AbstractVisualItem::Solid,"#000");
+	
+	if(!m_backgroundActionsEnabled)
+		emit fileSelected(info);
 }
 
 void MediaBrowser::setDirectory(const QString &path, bool addToHistory)
 {
 	//qDebug() << "setDirectory(): setting folder path:"<<path;
+	
+	QString directory = path;
+	QString file = "";
+	
+	QFileInfo info(path);
+	if(info.isFile())
+	{
+		directory = info.absolutePath();
+		file = info.fileName();
+	}
+	
+	//qDebug() << "MediaBrowser::setDirectory: path:"<<path<<", is file:"<<info.isFile()<<", directory:"<<directory<<", file:"<<file;
 	
 	QModelIndex idx = m_listView->currentIndex();
 	if(idx.isValid() && !m_currentDirectory.isEmpty())
@@ -459,15 +545,19 @@ void MediaBrowser::setDirectory(const QString &path, bool addToHistory)
 	d->setTitle("Loading Folder");
 	d->setSize(100);
 	
-	QModelIndex root = m_fsModel->setRootPath(path);
+	QModelIndex root = m_fsModel->setRootPath(directory);
 	m_listView->setRootIndex(root);
 	
 	d->close();
-	d->deleteLater();
+	//d->deleteLater();
+	d->dialog()->close();
+	d->close();
+	delete d;
 	
-	if(m_lastIndexForPath.contains(path))
+	
+	if(m_lastIndexForPath.contains(directory))
 	{
-		QModelIndex idx = m_lastIndexForPath[path];
+		QModelIndex idx = m_lastIndexForPath[directory];
 		if(idx.isValid())
 			m_listView->setCurrentIndex(idx);
 	}
@@ -478,12 +568,22 @@ void MediaBrowser::setDirectory(const QString &path, bool addToHistory)
 		clearForward();
 	}
 	
-	AppSettings::setPreviousPath("media",path);
+	AppSettings::setPreviousPath(m_prevPathKey,directory);
 	
-	m_currentDirectory = path;
+	m_currentDirectory = directory;
 	checkCanGoUp();
 	
 	m_dirBox->setText(path);
+	
+	if(!file.isEmpty())
+	{
+		QModelIndex idx = m_fsModel->index(path);
+		if(idx.isValid())
+		{
+			m_listView->setCurrentIndex(idx);
+			indexSingleClicked(idx);
+		}
+	}
 	
 	m_listView->setFocus(Qt::OtherFocusReason);
 }

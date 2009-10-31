@@ -22,6 +22,7 @@ namespace Ui {
 class SlideSettingsDialog;
 class QTabWidget;
 class QtColorPicker;
+#include <QFileInfo>
 
 class GenericItemConfig : public QWidget 
 {
@@ -59,6 +60,8 @@ class GenericItemConfig : public QWidget
 		//void slotRequestClose();
 		void slotOpacityChanged(int);
 		
+		void slotVideoDblClicked(const QFileInfo&);
+		void slotImageDblClicked(const QFileInfo&);
 	
 	protected:
 		friend class SlideSettingsDialog;

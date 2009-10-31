@@ -41,7 +41,7 @@ void DeepProgressIndicator::step()
 	m_value = m_value + 1;
 	if(m_dialog)
 		m_dialog->setValue(m_value);
-	qDebug() << "DeepProgressIndicator::step(): "<<m_text<<":"<<m_value<<"/"<<m_size;
+	//qDebug() << "DeepProgressIndicator::step(): "<<m_text<<":"<<m_value<<"/"<<m_size;
 }
 	
 void DeepProgressIndicator::setSize(int size)

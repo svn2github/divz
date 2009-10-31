@@ -67,6 +67,7 @@ HEADERS += \
 	ImageFilters.h \
 	SlideItemListModel.h \
 	MediaBrowser.h \
+	MediaBrowserDialog.h \
 	OutputInstance.h \
 	OutputControl.h \
 	JpegServer.h \
@@ -92,6 +93,7 @@ SOURCES += \
 	ImageFilters.cpp \
 	SlideItemListModel.cpp \
 	MediaBrowser.cpp \
+	MediaBrowserDialog.cpp \
 	OutputInstance.cpp \
 	OutputControl.cpp \
 	JpegServer.cpp \
