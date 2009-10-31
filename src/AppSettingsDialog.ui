@@ -98,7 +98,10 @@ p, li { white-space: pre-wrap; }
            </widget>
           </item>
           <item>
-           <widget class="QRadioButton" name="radioButton">
+           <widget class="QRadioButton" name="editModePublished">
+            <property name="toolTip">
+             <string>No changes are made visible unless the slide is re-sent to the output.</string>
+            </property>
             <property name="text">
              <string>Published Edit</string>
             </property>

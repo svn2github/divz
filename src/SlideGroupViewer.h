@@ -152,6 +152,10 @@ private:
 	AbstractItemFilterList m_slideFilters;
 	
 	Slide * m_clonedSlide;
+	Slide * m_clonedOriginal;
+	
+	bool m_fadeInProgress;
+	
 	
 };
 

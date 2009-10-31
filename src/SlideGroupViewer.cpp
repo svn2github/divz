@@ -111,6 +111,8 @@ SlideGroupViewer::SlideGroupViewer(QWidget *parent)
 	    , m_fadeSpeed(-1)
 	    , m_fadeQuality(-1)
 	    , m_clonedSlide(0)
+	    , m_clonedOriginal(0)
+	    , m_fadeInProgress(false)
 {
 	QRect sceneRect(0,0,1024,768);
 	m_blackSlideRefCount++;
@@ -535,7 +537,7 @@ void SlideGroupViewer::clear()
 	m_slideGroup = 0;
 }
 
-void SlideGroupViewer::slideChanged(Slide *slide, QString slideOperation, AbstractItem */*item*/, QString /*operation*/, QString /*fieldName*/, QVariant /*value*/)
+void SlideGroupViewer::slideChanged(Slide *slide, QString slideOperation, AbstractItem *item, QString /*operation*/, QString /*fieldName*/, QVariant /*value*/)
 {
 	if(!m_slideGroup)
 		return;
@@ -549,15 +551,22 @@ void SlideGroupViewer::slideChanged(Slide *slide, QString slideOperation, Abstra
 		if(m_slideNum >= m_sortedSlides.size())
 			m_slideNum = 0;
 			
-// 		if(AppSettings::liveEditMode() == AppSettings::Smooth)
-// 			setSlideInternal(applySlideFilters(slide));
+ 		if(AppSettings::liveEditMode() == AppSettings::SmoothEdit)
+ 		{
+ 			qDebug() << "SlideGroupViewer::slideChanged() [slot]: SmoothEdit selected, re-showing slide due to add/remove item";
+ 			setSlideInternal(applySlideFilters(slide));
+ 		}
 	}
 	else
 	{
 		int nbr = m_sortedSlides.indexOf(slide);
 		if(nbr == m_slideNum)
 			if(!reapplySpecialFrames())
-				setSlideInternal(applySlideFilters(slide));
+				if(AppSettings::liveEditMode() == AppSettings::SmoothEdit)
+				{
+					qDebug() << "SlideGroupViewer::slideChanged() [slot]: SmoothEdit selected, re-showing slide due to change on item: "<<item->itemName();
+					setSlideInternal(applySlideFilters(slide));
+				}
 	}
 	
 }
@@ -631,16 +640,6 @@ Slide * SlideGroupViewer::setSlide(Slide *slide)
 	if(m_bgWaitingForNextSlide)
 		applyBackground(m_nextBg, slide);
 		
-// 	if(AppSettings::liveEditMode() == AppSettings::Smooth)
-// 	{
-// 		// for deleting this slide after the scene is done with it (in slideDiscarded())
-// 		if(m_clonedSlide)
-// 			m_slideFilterByproduct << m_clonedSlide;
-// 			
-// 		m_clonedSlide = slide->clone();
-// 	}
-
-		
 	m_slideNum = m_sortedSlides.indexOf(slide);
 	
 // 	if(AppSettings::liveEditMode() == AppSettings::Smooth && m_clonedSlide)
@@ -696,13 +695,18 @@ void SlideGroupViewer::crossFadeFinished(Slide *oldSlide,Slide*/*newSlide*/)
 	}
 }
 
+#define MAX_BYPRODUCT_SIZE 5
 void SlideGroupViewer::slideDiscarded(Slide *oldSlide)
 {
+	m_fadeInProgress = false;
 	if(oldSlide && m_slideFilterByproduct.contains(oldSlide))
 	{
 		m_slideFilterByproduct.removeAll(oldSlide);
 		delete oldSlide;
 	}
+	
+	if(m_slideFilterByproduct.size() > MAX_BYPRODUCT_SIZE)
+		delete m_slideFilterByproduct.takeFirst();
 }
 
 void SlideGroupViewer::addFilter(AbstractItemFilter * filter)
@@ -756,6 +760,28 @@ Slide * SlideGroupViewer::prevSlide()
 void SlideGroupViewer::setSlideInternal(Slide *slide)
 {
 	//qDebug() << "SlideGroupViewer::setSlideInternal(): Setting slide# "<<slide->slideNumber()<<", group ptr: "<<PTRS(m_slideGroup);
+	if(AppSettings::liveEditMode() == AppSettings::SmoothEdit ||
+	   AppSettings::liveEditMode() == AppSettings::PublishEdit)
+	{
+		if(m_clonedOriginal == slide && m_fadeInProgress)
+		{
+			qDebug() << "SlideGroupViewer::setSlideInternal(): Smooth/Publish selected, and slide givin is same as the one thats fading in, so rejecting set request until fade completed";
+			return;
+		}
+		
+		// for deleting this slide after the scene is done with it (in slideDiscarded())
+		if(m_clonedSlide)
+			m_slideFilterByproduct << m_clonedSlide;
+			
+		m_clonedSlide = slide->clone();
+		
+		qDebug() << "SlideGroupViewer::setSlideInternal(): Smooth/Publish selected, cloning slide for internal use";
+		
+		slide = m_clonedSlide;
+	}
+
+	m_fadeInProgress = true;
+
 	
 	// start cross fade settings with program settings
 	int speed   = AppSettings::crossFadeSpeed();
