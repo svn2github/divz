@@ -85,7 +85,7 @@ QPixmap MediaBrowser::iconForImage(const QString & file, const QSize & size)
 		{
 			cache.load(cacheFile);
 			QPixmapCache::insert(cacheFile,cache);
-			qDebug() << "MediaBrowser::iconForImage: file:"<<file<<", size:"<<size<<": hit DISK";
+			qDebug() << "MediaBrowser::iconForImage: file:"<<file<<", size:"<<size<<": hit DISK (loaded scaled from disk cache)";
 		}
 		else
 		{
@@ -94,7 +94,7 @@ QPixmap MediaBrowser::iconForImage(const QString & file, const QSize & size)
 			{
 				cache = QPixmap();
 				QPixmapCache::insert(cacheFile,cache);
-				qDebug() << "MediaBrowser::iconForImage: file:"<<file<<", size:"<<size<<": load INVALID";
+				qDebug() << "MediaBrowser::iconForImage: file:"<<file<<", size:"<<size<<": load INVALID (Can't load original)";
 			}
 			else
 			{
@@ -102,14 +102,14 @@ QPixmap MediaBrowser::iconForImage(const QString & file, const QSize & size)
 				cache.save(cacheFile,"PNG");
 				//qDebug() << "MyQFileIconProvider::icon(): image file: caching to:"<<cacheFile<<" for "<<file;
 				QPixmapCache::insert(cacheFile,cache);
-				qDebug() << "MediaBrowser::iconForImage: file:"<<file<<", size:"<<size<<": load GOOD";
+				qDebug() << "MediaBrowser::iconForImage: file:"<<file<<", size:"<<size<<": load GOOD (loaded original and scaled)";
 				//QApplication::processEvents();
 			}
 		}
 	}
 	else
 	{
-		qDebug() << "MediaBrowser::iconForImage: file:"<<file<<", size:"<<size<<": hit RAM";
+		qDebug() << "MediaBrowser::iconForImage: file:"<<file<<", size:"<<size<<": hit RAM (scaled image already in ram)";
 	}
 	return cache;
 }

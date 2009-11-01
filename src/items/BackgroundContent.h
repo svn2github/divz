@@ -55,6 +55,9 @@ class BackgroundContent : public AbstractContent
 	bool m_fileLoaded;
 	QString m_fileName;
 	QString m_fileLastModified;
+	
+	QString m_lastForegroundKey;
+	QString m_lastImageKey;
 };
 
 #endif

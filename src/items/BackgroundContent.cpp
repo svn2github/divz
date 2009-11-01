@@ -16,8 +16,11 @@
 #include <QPixmapCache>
 #include <QSvgRenderer>
 #include <QImageReader>
+#include <QDir>
+#include <QFile>
 
 #include "qvideo/QVideoProvider.h"
+#include "3rdparty/md5/md5.h"
 #include "MediaBrowser.h"
 #include "AppSettings.h"
 
@@ -35,6 +38,7 @@ BackgroundContent::BackgroundContent(QGraphicsScene * scene, QGraphicsItem * par
     , m_fileLoaded(false)
     , m_fileName("")
     , m_fileLastModified("")
+    , m_lastForegroundKey("")
 {
 	m_dontSyncToModel = true;
 	
@@ -81,6 +85,9 @@ BackgroundContent::~BackgroundContent()
 		m_videoProvider->disconnectReceiver(this);
 		QVideoProvider::releaseProvider(m_videoProvider);
 	}
+	
+	if(!m_lastForegroundKey.isEmpty())
+		QPixmapCache::remove(m_lastForegroundKey);
 }
 
 QWidget * BackgroundContent::createPropertyWidget()
@@ -105,15 +112,6 @@ void BackgroundContent::syncFromModelItem(AbstractVisualItem *model)
 	AbstractContent::syncFromModelItem(model);
 	m_dontSyncToModel = true;
 	
-	
-	if(model->fillVideoFile()!="" &&
-		modelItem()->fillType() == AbstractVisualItem::Video)
-		setVideoFile(model->fillVideoFile());
-		
-	if(modelItem()->fillImageFile() != "" &&
-		modelItem()->fillType() == AbstractVisualItem::Image)
-		setImageFile(modelItem()->fillImageFile());
-	
 	setPos(0,0);
 	if(scene())
 	{
@@ -128,6 +126,16 @@ void BackgroundContent::syncFromModelItem(AbstractVisualItem *model)
 		}
 			
 	}
+	
+	
+	if(model->fillVideoFile()!="" &&
+		modelItem()->fillType() == AbstractVisualItem::Video)
+		setVideoFile(model->fillVideoFile());
+		
+	if(modelItem()->fillImageFile() != "" &&
+		modelItem()->fillType() == AbstractVisualItem::Image)
+		setImageFile(modelItem()->fillImageFile());
+	
 	setZValue(-9999);
 	setVisible(true);
 	update();
@@ -135,7 +143,7 @@ void BackgroundContent::syncFromModelItem(AbstractVisualItem *model)
         m_dontSyncToModel = false;
 }
 
-
+#define BG_IMG_CACHE_DIR "dviz-backgroundimagecache"
 void BackgroundContent::setImageFile(const QString &file)
 {
 	if(sceneContextHint() == MyGraphicsScene::Preview)
@@ -186,43 +194,96 @@ void BackgroundContent::setImageFile(const QString &file)
 	else
 	{
 		disposeSvgRenderer();
+		//QString cacheKey = QString("%1:%2:%3x%4").arg(file).arg(fileMod);
+		
 		QPixmap cache;
-		QString cacheKey = QString("%1:%2").arg(file).arg(fileMod);
+		
+		QSize size = contentsRect().size();
+		
+		QDir path(QString("%1/%2").arg(QDir::tempPath()).arg(BG_IMG_CACHE_DIR));
+		if(!path.exists())
+			QDir(QDir::tempPath()).mkdir(BG_IMG_CACHE_DIR);
+			
+		QString cacheKey = QString("%1/%2/%3-%4x%5")
+					.arg(QDir::tempPath())
+					.arg(BG_IMG_CACHE_DIR)
+					.arg(MD5::md5sum(file))
+					.arg(size.width())
+					.arg(size.height());
+		
+		if(!m_lastImageKey.isEmpty() &&
+		    m_lastImageKey != cacheKey)
+			QPixmapCache::remove(m_lastImageKey);
+			
+		m_lastImageKey = cacheKey;
+		qDebug() << "BackgroundContent::setImageFile: file:"<<file<<", size:"<<size<<", cacheKey:"<<cacheKey;
+
 		if(QPixmapCache::find(cacheKey,cache))
 		{
 			setPixmap(cache);
 			m_fileLoaded = true;
 			//qDebug() << "ImageContent::loadFile: "<<file<<": pixmap cache hit on "<<cacheKey;
+			qDebug() << "BackgroundContent::setImageFile: file:"<<file<<", size:"<<size<<": hit RAM (loaded scaled from memory)";
 		}
 		else
 		{
-			QImageReader reader(file);
-			QImage image = reader.read();
-			if(image.isNull())
+			if(QFile(cacheKey).exists())
 			{
-				qDebug() << "BackgroundContent::loadFile: Unable to read"<<file<<": "<<reader.errorString()<<", Trying to force-reset some cache space";
-				QPixmapCache::setCacheLimit(10 * 1024);
-				QPixmapCache::insert("test",QPixmap(1024,768));
-				image = reader.read();
-				QPixmapCache::setCacheLimit(AppSettings::pixmapCacheSize() * 1024);
-
-				image = reader.read();
+				cache.load(cacheKey);
+				QPixmapCache::insert(cacheKey,cache);
+				setPixmap(cache);
+				m_fileLoaded = true;
+				qDebug() << "BackgroundContent::setImageFile: file:"<<file<<", size:"<<size<<": hit DISK (loaded scaled from disk cache)";
+			}
+			else
+			{
+				QImageReader reader(file);
+				QImage image = reader.read();
 				if(image.isNull())
 				{
-					qDebug() << "BackgroundContent::loadFile: Still unable to read"<<file<<": "<<reader.errorString();
+					if(reader.errorString().indexOf("Unable")>-1)
+					{
+						qDebug() << "BackgroundContent::setImageFile: Unable to read"<<file<<": "<<reader.errorString()<<", Trying to force-reset some cache space";
+						
+						QPixmapCache::setCacheLimit(10 * 1024);
+						QPixmap testPm(1024,768);
+						testPm.fill(Qt::lightGray);
+						if(QPixmapCache::insert("test",testPm))
+							qDebug() << "BackgroundContent::setImageFile: Unable to insert text pixmap into cache after shrinkage";
+						
+						//QPixmapCache::setCacheLimit(AppSettings::pixmapCacheSize() * 1024);
+		
+						image = reader.read();
+						if(image.isNull())
+						{
+							qDebug() << "BackgroundContent::setImageFile: Still unable to read"<<file<<": "<<reader.errorString();
+						}
+					}
+					else
+					{
+						qDebug() << "BackgroundContent::setImageFile: Unable to read"<<file<<": "<<reader.errorString();
+					}
+	
 				}
-
-			}
-
-			if(!image.isNull())
-			{
-				QPixmap px = QPixmap::fromImage(image);
-				setPixmap(px);
-				m_fileLoaded = true;
-				
-				//qDebug() << "ImageContent::loadFile: "<<file<<": pixmap cache MISS on "<<cacheKey;
-				if(!QPixmapCache::insert(cacheKey, px))
-					qDebug() << "BackgroundContent::loadFile: "<<file<<": ::insert returned FALSE - pixmap not cached";
+	
+				if(!image.isNull())
+				{
+					cache = QPixmap::fromImage(image.scaled(size,Qt::IgnoreAspectRatio,Qt::SmoothTransformation));
+					cache.save(cacheKey,"PNG");
+					
+					setPixmap(cache);
+					m_fileLoaded = true;
+					
+					qDebug() << "BackgroundContent::setImageFile: file:"<<file<<", size:"<<size<<": loaded original, scaled and cached";
+					
+					//qDebug() << "ImageContent::loadFile: "<<file<<": pixmap cache MISS on "<<cacheKey;
+					if(!QPixmapCache::insert(cacheKey, cache))
+						qDebug() << "BackgroundContent::loadFile: "<<file<<": QPixmapCache::insert returned FALSE - pixmap not cached";
+				}
+				else
+				{
+					qDebug() << "BackgroundContent::setImageFile: file:"<<file<<", size:"<<size<<": NOT LOADED";
+				}
 			}
 		}
 	}
@@ -396,6 +457,12 @@ void BackgroundContent::paint(QPainter * painter, const QStyleOptionGraphicsItem
 							.arg(destRect.width()).arg(destRect.height());
 							
 				//qDebug() << "foregroundKey: "<<foregroundKey;
+				
+				if(m_lastForegroundKey != foregroundKey &&
+				  !m_lastForegroundKey.isEmpty())
+					QPixmapCache::remove(m_lastForegroundKey);
+					
+				m_lastForegroundKey = foregroundKey;
 				
 				QPixmap cache;
 				if(!QPixmapCache::find(foregroundKey,cache))

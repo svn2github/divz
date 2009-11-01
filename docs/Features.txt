@@ -661,6 +661,7 @@ Revised Task list for Release 1.0, 10/18/09:
 		would be nice to add on-the-fly image tweaking (brightness/contrast) for backgrounds, etc
 		would be nice to copy/paste entire slide groups
 		would be nice to be able to save a just a single slide group to a file / import slide group from a file
+		foldback display should not run timer on animated groups!!!
 		
 		video icons dont render the actual icon after loading if not already in disk cache
 		
