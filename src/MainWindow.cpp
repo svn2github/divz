@@ -63,7 +63,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	
 	m_docModel = new DocumentListModel();
 	
-	if(!openFile("song-test.xml"))
+	if(!openFile("2009-11-01.xml"))
 		actionNew();
 		
 	// init the editor win AFTER load/new so that editor win starts out with the correct aspect ratio	
@@ -357,7 +357,7 @@ void MainWindow::textImportTool()
 	
 	if(!fileName.isEmpty())
 	{
-		int MinTextSize = 36;
+		int MinTextSize = 48;
 		
 		AppSettings::setPreviousPath("text",fileName);
 		
@@ -379,6 +379,9 @@ void MainWindow::textImportTool()
 		group->setGroupTitle(AbstractItem::guessTitle(QFileInfo(fileName).baseName()));
 		
 		int slideNum = 0;
+
+		QString blockPrefix = "<span style='font-family:Calibri,Tahoma,Arial,Sans-Serif;font-weight:800'><b>";
+		QString blockSuffix = "</b></span>";
 				
 		TextBoxItem * tmpText = 0;
 		QStringList tmpList;
@@ -397,7 +400,10 @@ void MainWindow::textImportTool()
 				tmpText->setItemName(QString("TextBoxItem%1").arg(tmpText->itemId()));
 			}
 			
-			tmpText->setText(tmpList.join("\n"));
+			tmpText->setText(QString("%1%2%3")
+					    .arg(blockPrefix)
+					    .arg(tmpList.join("\n"))
+					    .arg(blockSuffix));
 			
 			int realHeight = tmpText->fitToSize(fitSize,MinTextSize);
 			if(realHeight < 0)
@@ -407,7 +413,10 @@ void MainWindow::textImportTool()
 					// return last line to the file buffer
 					lines.prepend(tmpList.takeFirst());
 					
-					tmpText->setText(tmpList.join("\n"));
+					tmpText->setText(QString("%1%2%3")
+							    .arg(blockPrefix)
+							    .arg(tmpList.join("\n"))
+							    .arg(blockSuffix));
 					realHeight = tmpText->fitToSize(fitSize,MinTextSize);
 				}
 				
@@ -704,6 +713,7 @@ void MainWindow::setupCentralWidget()
 	// TODO Later
 	
 	m_previewInstance = new OutputInstance(Output::previewInstance());
+	m_previewInstance->setCanZoom(true);
 	
 	m_previewControlBase = new QWidget();
 	QVBoxLayout * leftLayout3 = new QVBoxLayout(m_previewControlBase);

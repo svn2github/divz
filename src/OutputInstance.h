@@ -38,6 +38,7 @@ public:
 	
 	void setBackground(QColor);
 	void setSceneContextHint(MyGraphicsScene::ContextHint);
+	void setCanZoom(bool);
 	
 	Slide *overlaySlide() { return m_overlaySlide; }
 	bool isOverlayEnabled() { return m_overlayEnabled; } 

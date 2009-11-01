@@ -9,7 +9,8 @@ BackgroundItem::BackgroundItem() : AbstractVisualItem()
 {
 	setFillType(AbstractVisualItem::Solid);
 	setOutlineEnabled(false);
-	setFillBrush(QBrush(Qt::lightGray));
+	//setFillBrush(QBrush(Qt::lightGray));
+	setFillBrush(QBrush(Qt::black));
 }
 
 BackgroundItem::~BackgroundItem() {}

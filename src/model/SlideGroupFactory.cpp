@@ -26,7 +26,41 @@
   SongSlideGroupViewControl uses ListMode - this allows either
   icon or list mode to change slides just by pressing up or down
 */ 
-SlideGroupViewControlListView::SlideGroupViewControlListView(SlideGroupViewControl * ctrl) : QListView(ctrl), ctrl(ctrl) {}
+SlideGroupViewControlListView::SlideGroupViewControlListView(SlideGroupViewControl * ctrl)
+	: QListView(ctrl)
+	, ctrl(ctrl)
+{
+
+	QString stylesheet =
+		" QListView {"
+		"     show-decoration-selected: 1;" /* make the selection span the entire width of the view */
+		" }"
+		""
+		" QListView::item:alternate {"
+		"     background: #EEEEEE;"
+		" }"
+		""
+		" QListView::item:selected {"
+		"     border: 1px solid #6a6ea9;"
+		" }"
+		""
+		" QListView::item:selected:!active {"
+		"     background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,"
+		"                                 stop: 0 #ABAFE5, stop: 1 #8588B2);"
+		" }"
+		""
+		" QListView::item:selected:active {"
+		"     background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,"
+		"                                 stop: 0 #6a6ea9, stop: 1 #888dd9);"
+		" }"
+		""
+		" QListView::item:hover {"
+		"     background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,"
+		"                                 stop: 0 #FAFBFE, stop: 1 #DCDEF1);"
+		" }";
+
+	setStyleSheet(stylesheet);
+}
 void SlideGroupViewControlListView::keyPressEvent(QKeyEvent *event)
 {
 	if(event->key() == Qt::Key_Space)
@@ -539,9 +573,22 @@ AbstractSlideGroupEditor * SlideGroupFactory::newEditor()
 QPixmap	SlideGroupFactory::generatePreviewPixmap(SlideGroup *g, QSize iconSize, QRect sceneRect)
 {
 	//return QPixmap();
-	if(g->numSlides() <= 0)
-		return QPixmap();
-	
+	int icon_w = iconSize.width();
+	int icon_h = iconSize.height();
+
+
+	if(g->numSlides() <= 0 || g->groupTitle().startsWith("--"))
+	{
+		QPixmap icon(icon_w,icon_h);
+		icon.fill(Qt::white);
+		QPainter painter(&icon);
+		painter.setPen(QPen(Qt::black,1.0,Qt::DotLine));
+		painter.setBrush(Qt::NoBrush);
+		painter.drawRect(0,0,icon_w-1,icon_h-1);
+		return icon;
+	}
+
+
 	Slide * slide = g->at(0);
 	if(!slide)
 	{
@@ -549,8 +596,6 @@ QPixmap	SlideGroupFactory::generatePreviewPixmap(SlideGroup *g, QSize iconSize, 
 		return QPixmap();
 	}
 
-	int icon_w = iconSize.width();
-	int icon_h = iconSize.height();
 	
 	if(!m_scene)
 		m_scene = new MyGraphicsScene(MyGraphicsScene::Preview);

@@ -19,6 +19,7 @@
 
 #include "qvideo/QVideoProvider.h"
 #include "MediaBrowser.h"
+#include "AppSettings.h"
 
 #define DEBUG_BACKGROUNDCONTENT 0
 
@@ -139,9 +140,9 @@ void BackgroundContent::setImageFile(const QString &file)
 {
 	if(sceneContextHint() == MyGraphicsScene::Preview)
 	{
-		setPixmap(MediaBrowser::iconForImage(file,MEDIABROWSER_LIST_ICON_SIZE));
-		m_fileLoaded = true;
-		return;
+		//setPixmap(MediaBrowser::iconForImage(file,MEDIABROWSER_LIST_ICON_SIZE));
+		//m_fileLoaded = true;
+		//return;
 	}
 	
 	if(m_videoProvider)
@@ -199,9 +200,21 @@ void BackgroundContent::setImageFile(const QString &file)
 			QImage image = reader.read();
 			if(image.isNull())
 			{
-				qDebug() << "BackgroundContent::loadFile: Unable to read"<<file<<": "<<reader.errorString();
+				qDebug() << "BackgroundContent::loadFile: Unable to read"<<file<<": "<<reader.errorString()<<", Trying to force-reset some cache space";
+				QPixmapCache::setCacheLimit(10 * 1024);
+				QPixmapCache::insert("test",QPixmap(1024,768));
+				image = reader.read();
+				QPixmapCache::setCacheLimit(AppSettings::pixmapCacheSize() * 1024);
+
+				image = reader.read();
+				if(image.isNull())
+				{
+					qDebug() << "BackgroundContent::loadFile: Still unable to read"<<file<<": "<<reader.errorString();
+				}
+
 			}
-			else
+
+			if(!image.isNull())
 			{
 				QPixmap px = QPixmap::fromImage(image);
 				setPixmap(px);

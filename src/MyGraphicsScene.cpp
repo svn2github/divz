@@ -466,13 +466,16 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans, int speed, i
 // 					secondaryBg = true;
 // 				}
 			}
-		
-			AbstractContent * content = createVisualDelegate(item);
-			applyMasterSlideItemFlags(content);
-			
-			// rebase zvalue so everything in this slide is on top of the original slide
-			if(content && baseZValue!=0)
-				content->setZValue(content->zValue() + baseZValue);
+			else
+			{
+
+				AbstractContent * content = createVisualDelegate(item);
+				applyMasterSlideItemFlags(content);
+
+				// rebase zvalue so everything in this slide is on top of the original slide
+				if(content && baseZValue!=0)
+					content->setZValue(content->zValue() + baseZValue);
+			}
 				
 			//qDebug() << "MyGraphicsScene::setSlide(): Added Master Item: "<<item->itemName()<<", Z: "<<content->zValue();
 		}

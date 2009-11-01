@@ -92,7 +92,8 @@ private slots:
 	void dupSlide();
 	void groupProperties();
 	
-	void textSizeChanged(double);
+	//void textSizeChanged(double);
+	void textSizeBoxChanged();
 	void textPlus();
 	void textMinus();
 	void textFitToRect();

@@ -580,7 +580,7 @@ void OutputControl::setOutputInstance(OutputInstance * inst)
 	//connect(m_inst, SIGNAL(slideChanged(int)), this, SLOT(slideChanged(int)));
 
 	// HACK need to default to app settings
-	m_fadeSlider->setValue(15);
+	m_fadeSlider->setValue(25);
 	
 	setupFoldbackSettings();
 		
@@ -594,7 +594,8 @@ void OutputControl::setupFoldbackSettings()
 		setIsOutputSynced(true);
 		setTextOnlyFilterEnabled(true);
 		setTextResizeEnabled(true);
-		m_fadeSlider->setValue(0);
+		setAdvancedWidgetVisible(true);
+		m_fadeSlider->setValue(10);
 	}
 }
 

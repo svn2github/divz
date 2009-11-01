@@ -289,6 +289,19 @@ void OutputInstance::setBackground(QColor color)
 	}
 }
 
+void OutputInstance::setCanZoom(bool flag)
+{
+	Output::OutputType outType = m_output->outputType();
+	if(outType == Output::Screen || outType == Output::Custom || outType == Output::Preview)
+	{
+		m_viewer->setCanZoom(flag);
+	}
+	else
+	{
+		// TODO
+	}
+}
+
 void OutputInstance::setSceneContextHint(MyGraphicsScene::ContextHint hint)
 {
 	Output::OutputType outType = m_output->outputType();

@@ -70,18 +70,22 @@ QPixmap MediaBrowser::iconForImage(const QString & file, const QSize & size)
 	if(!path.exists())
 		QDir(QDir::tempPath()).mkdir(CACHE_DIR);
 		
-	QString cacheFile = QString("%1/%2/%3-%4x%5").arg(QDir::tempPath()).arg(CACHE_DIR).arg(MD5::md5sum(file)).arg(size.width()).arg(size.height());
+	QString cacheFile = QString("%1/%2/%3-%4x%5")
+				.arg(QDir::tempPath())
+				.arg(CACHE_DIR)
+				.arg(MD5::md5sum(file))
+				.arg(size.width())
+				.arg(size.height());
+
 	
-	
-	
-	//qDebug() << "MediaBrowser::iconForImage: file:"<<file<<", size:"<<size<<", cacheFile: "<<cacheFile;
+	qDebug() << "MediaBrowser::iconForImage: file:"<<file<<", size:"<<size<<", cacheFile: "<<cacheFile;
 	if(!QPixmapCache::find(cacheFile,cache))
 	{
 		if(QFile(cacheFile).exists())
 		{
 			cache.load(cacheFile);
 			QPixmapCache::insert(cacheFile,cache);
-			//qDebug() << "MediaBrowser::iconForImage: file:"<<file<<", size:"<<size<<": hit DISK";
+			qDebug() << "MediaBrowser::iconForImage: file:"<<file<<", size:"<<size<<": hit DISK";
 		}
 		else
 		{
@@ -90,7 +94,7 @@ QPixmap MediaBrowser::iconForImage(const QString & file, const QSize & size)
 			{
 				cache = QPixmap();
 				QPixmapCache::insert(cacheFile,cache);
-				//qDebug() << "MediaBrowser::iconForImage: file:"<<file<<", size:"<<size<<": load INVALID";
+				qDebug() << "MediaBrowser::iconForImage: file:"<<file<<", size:"<<size<<": load INVALID";
 			}
 			else
 			{
@@ -98,7 +102,7 @@ QPixmap MediaBrowser::iconForImage(const QString & file, const QSize & size)
 				cache.save(cacheFile,"PNG");
 				//qDebug() << "MyQFileIconProvider::icon(): image file: caching to:"<<cacheFile<<" for "<<file;
 				QPixmapCache::insert(cacheFile,cache);
-				//qDebug() << "MediaBrowser::iconForImage: file:"<<file<<", size:"<<size<<": load GOOD";
+				qDebug() << "MediaBrowser::iconForImage: file:"<<file<<", size:"<<size<<": load GOOD";
 				//QApplication::processEvents();
 			}
 		}

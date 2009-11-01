@@ -518,7 +518,8 @@ void SlideEditorWindow::setupToolbar()
 	m_textSizeBox->setValue(38);
 	m_textSizeBox->setDecimals(1);
 	m_textSizeBox->setMaximum(5000);
-	connect(m_textSizeBox, SIGNAL(valueChanged(double)), this, SLOT(textSizeChanged(double)));
+	//connect(m_textSizeBox, SIGNAL(returnPressed()), this, SLOT(textSizeChanged(double)));
+	connect(m_textSizeBox, SIGNAL(editingFinished()), this, SLOT(textSizeBoxChanged()));
 	
 	m_textBase->setEnabled(false);
 	
@@ -882,10 +883,12 @@ void SlideEditorWindow::textMinus()
 	
 }
 	
-void SlideEditorWindow::textSizeChanged(double pt)
+//void SlideEditorWindow::textSizeChanged(double pt)
+void SlideEditorWindow::textSizeBoxChanged()
 {
 	if(m_currentTextItems.size() <= 0)
 		return;
+	double pt = m_textSizeBox->value();
 	foreach(TextBoxContent *text, m_currentTextItems)
 		dynamic_cast<TextItem*>(text->modelItem())->changeFontSize(pt);
 }

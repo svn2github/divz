@@ -518,7 +518,7 @@ RichTextEditorToolBar::RichTextEditorToolBar(RichTextEditor *editor,
     addAction(m_image_action);
 */
 
-    connect(editor, SIGNAL(wheelScrolled(int)), this, SLOT(slotWheelScrolled(int)));    // +fotowall
+    //connect(editor, SIGNAL(wheelScrolled(int)), this, SLOT(slotWheelScrolled(int)));    // +fotowall
     connect(editor, SIGNAL(textChanged()), this, SLOT(updateActions()));
     connect(editor, SIGNAL(stateChanged()), this, SLOT(updateActions()));
 

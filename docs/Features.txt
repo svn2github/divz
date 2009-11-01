@@ -207,6 +207,17 @@ Revised Task list for Release 1.0, 10/18/09:
 			add generic pre-render on document load 
 				loop thru every group, every slide and call Paint on every visual delegate
 				
+			store cached data in the document as text
+				textbox caches
+				document list model icon caches
+				slide group icon list model caches
+				
+			add transition (slide up) for foldback
+			
+			[DONE] default foldback to open advanced
+			[DONE] list selection background on windows needs to be non-blue
+			[DONE] foldback to 10% trans (200ms/10 frame)
+			
 			add web newsticker item
 				can use CSV or XML file as data source
 			add countdown item
@@ -626,6 +637,31 @@ Revised Task list for Release 1.0, 10/18/09:
 		[LATER] Video Capture (started impl, but again, performance is terrible. That may be due to the FormatOpts specified, or in ffmpeg, or the capture hardware - need to trace - later!)
 	
 	- Bugs:
+		when in editor and go live with slide(F5), progress dialog steals focus from editor sometimes
+		when BLACK output, and then golive with group and no group currently live, group overrides black
+		when tuyping pnt size into totolbar, wait till return pressed
+		[MAYBE FIXED] when drag-select text itme swith different font sizes, they are made to be the same
+		if set background color on foldback while song active, song filter disables and doesnt re-enable till song go live again
+		songfilter doesnt use background color for foldback that is already set before song golive
+		crash: songs with per-slide template boxes cause crash when golive
+		crash: open document with mjpeg client attached (not crash on first load, but when open doc after a doc already opened)
+		slide group icons for songs all render same bg as first song
+			temp fixed by not using MediaBrowser::iconForImage in BackgroundContent - but need try fix
+		rear song filter: for passages that contain paranethesis after the tag keyword, the "next line" part of the filter doesnt pick up any text
+		phc logo overlays didint draw the shadow correclty - its almost like they drew the shadow with a vertically-compressed original, and its not till i drag them from original position that the shaodw renders correctly
+		slide editor sometimes doesnt show all the slides in the list model
+			ex slide is live (large group - 29 slides), press F2, editor opens with only one slide in list (this slide)
+			when I duplicate a slide in the editor tho, the list suddenly "refreshes" and looks correct
+		slide editor doesnt save state when closed
+			move save/load state to close/show events
+		images dont load sometimes - even from disk (image reader error: "unable to load image data" or something like that)
+		scroll wheel move size in slide list view control is too large
+		another vote for the zoomable icons in list views (slide list/doc list)
+		would be nice to accept midi input for fade speed slider
+		would be nice to add on-the-fly image tweaking (brightness/contrast) for backgrounds, etc
+		would be nice to copy/paste entire slide groups
+		would be nice to be able to save a just a single slide group to a file / import slide group from a file
+		
 		video icons dont render the actual icon after loading if not already in disk cache
 		
 		overlay enable crashes if no group live
