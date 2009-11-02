@@ -30,6 +30,7 @@ public:
 	
 	Output * output() { return m_output; }
 	
+	void setSlideGroup(SlideGroup*, int startSlide);
 	void setSlideGroup(SlideGroup*, Slide *slide = 0);
 	SlideGroup * slideGroup();
 	

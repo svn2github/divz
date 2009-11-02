@@ -142,13 +142,13 @@ void OutputInstance::applyOutputSettings()
 			int screenNum = m_output->screenNum();
 			geom = d->screenGeometry(screenNum);
 			
-			setWindowFlags(Qt::FramelessWindowHint);
+			setWindowFlags(Qt::FramelessWindowHint | Qt::ToolTip);
 		}
 		else
 		{
 			geom = m_output->customRect();
 			if(m_output->stayOnTop())
-				setWindowFlags(Qt::WindowStaysOnTopHint | Qt::FramelessWindowHint);
+				setWindowFlags(Qt::WindowStaysOnTopHint | Qt::FramelessWindowHint | Qt::ToolTip);
 			else
 				setWindowFlags(Qt::FramelessWindowHint);
 		}
@@ -206,6 +206,16 @@ void OutputInstance::slideChanged(Slide *slide, QString slideOperation, Abstract
 	
 }
 
+void OutputInstance::setSlideGroup(SlideGroup *group, int startSlide)
+{
+	if(!group)
+		return;
+	if(startSlide < 0)
+		startSlide = 0;
+	if(startSlide > group->numSlides()-1)
+		startSlide = group->numSlides()-1;
+	setSlideGroup(group, group->at(startSlide));
+}
 
 void OutputInstance::setSlideGroup(SlideGroup *group, Slide * startSlide)
 {

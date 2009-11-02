@@ -120,6 +120,8 @@ void OutputControl::setAdvancedWidgetVisible(bool flag)
 {
 	m_advancedWidget->setVisible(flag);
 	m_advancedButton->setIcon(flag ? QIcon(":/data/stock-go-up.png") : QIcon(":/data/stock-go-down.png"));
+	if(m_advancedButton->isChecked() != flag)
+		m_advancedButton->setChecked(flag);
 }
 
 

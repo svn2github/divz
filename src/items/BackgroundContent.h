@@ -33,16 +33,16 @@ class BackgroundContent : public AbstractContent
 	void paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget = 0);
 
     private slots:
-    	void setPixmap(const QPixmap & pixmap);
-    	void sceneRectChanged(const QRectF &);
-    	void renderSvg();
-    	
+	void setPixmap(const QPixmap & pixmap);
+	void sceneRectChanged(const QRectF &);
+	void renderSvg();
+
     private:
-    	void setVideoFile(const QString &name);
-    	void setImageFile(const QString&);
+	void setVideoFile(const QString &name);
+	void setImageFile(const QString&);
 	void loadSvg(const QString&);
 	void disposeSvgRenderer();
-    	
+
 	QPixmap m_pixmap;
 	QSize m_imageSize;
 	QVideoProvider * m_videoProvider;

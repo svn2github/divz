@@ -524,7 +524,7 @@ void MainWindow::saveFile(const QString & file)
 {
 	m_doc->save(file.isEmpty() ? m_doc->filename() : file);
 	
-	setWindowTitle(QFileInfo(m_doc->filename()).fileName() + " - DViz");
+	setWindowTitle("DViz - " + QFileInfo(m_doc->filename()).fileName());
 	
 	saveWindowState();
 	

@@ -324,10 +324,16 @@ void TextBoxWarmingThreadManager::renderDone(QImage *image)
 TextBoxWarmingThread::TextBoxWarmingThread(AbstractVisualItem *model) : m_model(model) {}
 void TextBoxWarmingThread::run()
 {
-	
 	TextBoxItem * model = dynamic_cast<TextBoxItem*>(m_model);
 	
-	qDebug()<<"TextBoxWarmingThread::run(): modelItem:"<<model->itemName()<<": Cache redraw";
+	//int sleepTime = (int)(((float)qrand()) / ((float)RAND_MAX) * 10000.0 + 2000.0);
+	
+	qDebug()<<"TextBoxWarmingThread::run(): modelItem:"<<model->itemName();//<<": Cache redraw, sleep: "<<sleepTime;
+	
+	// Sleep doesnt work - if I sleep, then it seems the cache is never updated!
+	//sleep((unsigned long)sleepTime);
+	//sleep(1000);
+	
 	
 			
 	QString htmlCode = model->text();

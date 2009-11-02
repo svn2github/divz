@@ -375,7 +375,8 @@ void OutputSetupDialog::accepted()
 
 		if(ar > -1)
 		{
-			if(ar != MainWindow::mw()->currentDocument()->aspectRatio())
+			if(MainWindow::mw()->currentDocument() &&
+			   ar != MainWindow::mw()->currentDocument()->aspectRatio())
 			{
 				if(QMessageBox::question(
 					this,

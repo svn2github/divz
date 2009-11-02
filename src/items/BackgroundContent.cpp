@@ -46,8 +46,6 @@ BackgroundContent::BackgroundContent(QGraphicsScene * scene, QGraphicsItem * par
 	setFrameTextEnabled(false);
 	setToolTip(tr("Background - right click for options."));
 	
-// 	setText("Welcome");
-	
 	setFlag(QGraphicsItem::ItemIsMovable,false);
 	setFlag(QGraphicsItem::ItemIsFocusable,false);
 	setFlag(QGraphicsItem::ItemIsSelectable,true);
@@ -148,9 +146,9 @@ void BackgroundContent::setImageFile(const QString &file)
 {
 	if(sceneContextHint() == MyGraphicsScene::Preview)
 	{
-		//setPixmap(MediaBrowser::iconForImage(file,MEDIABROWSER_LIST_ICON_SIZE));
-		//m_fileLoaded = true;
-		//return;
+		setPixmap(MediaBrowser::iconForImage(file,MEDIABROWSER_LIST_ICON_SIZE));
+		m_fileLoaded = true;
+		return;
 	}
 	
 	if(m_videoProvider)
