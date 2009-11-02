@@ -23,6 +23,7 @@
 
 #include <QtCore/QDebug>
 
+#define QJSON_VERBOSE_DEBUG_OUTPUT
 // define qjsonDebug()
 #ifdef QJSON_VERBOSE_DEBUG_OUTPUT
   inline QDebug qjsonDebug() { return QDebug(QtDebugMsg); }

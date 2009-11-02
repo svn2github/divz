@@ -60,10 +60,10 @@ void NetworkClient::log(const QString& str)
 }
 
 void NetworkClient::dataReady()
-{/*
+{
 	QDataStream in(m_socket);
-	in.setVersion(QDataStream::Qt_4_0);*/
-	/*
+	in.setVersion(QDataStream::Qt_4_0);
+	
 	if (m_blockSize == 0) 
 	{
 		if (m_socket->bytesAvailable() < (int)sizeof(quint16))
@@ -78,7 +78,9 @@ void NetworkClient::dataReady()
 	m_dataBlock.clear();
 	in >> m_dataBlock;
 	
-	log(QString("[DEBUG] NetworkClient::dataReady(): dataBlock: %1").arg(QString(m_dataBlock)));*/
+	m_blockSize = 0;
+	
+	log(QString("[DEBUG] NetworkClient::dataReady(): dataBlock: %1").arg(QString(m_dataBlock)));
 
 	processBlock();
 }
@@ -86,8 +88,8 @@ void NetworkClient::dataReady()
 void NetworkClient::processBlock()
 {
 	bool ok;
-	QVariant result = m_parser->parse(m_socket,&ok);
-	//m_parser->parse(m_dataBlock, &ok);
+	//QVariant result = m_parser->parse(m_socket,&ok);
+	QVariant result = m_parser->parse(m_dataBlock, &ok);
 	if(!ok)
 	{
 		m_lastError = QString("Error in data at %1: %2\nData: %3").arg(m_parser->errorLine()).arg(m_parser->errorString()).arg(QString(m_dataBlock));
