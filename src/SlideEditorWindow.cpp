@@ -290,18 +290,6 @@ SlideEditorWindow::SlideEditorWindow(SlideGroup *group, QWidget * parent)
 	
 	resize(sceneRect.width(),sceneRect.height());
 	
-	// Restore state
-	QSettings settings;
-	QSize sz = settings.value("slideeditor/size").toSize();
-	if(sz.isValid())
-		resize(sz);
-	QPoint p = settings.value("slideeditor/pos").toPoint();
-	if(!p.isNull())
-	{
-		if(p.y() < 0)
-			p.setY(1);
-		move(p);
-	}
 
 	m_autosaveTimer = new QTimer();
 	connect(m_autosaveTimer, SIGNAL(timeout()), this, SLOT(autosave()));
@@ -318,9 +306,7 @@ SlideEditorWindow::SlideEditorWindow(SlideGroup *group, QWidget * parent)
 	setupItemList();
 	setupViewportLines();
 	
-	
-	
-	restoreState(settings.value("slideeditor/state").toByteArray());
+
 
 
 	if(DEBUG_MODE)
@@ -371,12 +357,7 @@ SlideEditorWindow::~SlideEditorWindow()
  			m_doc->save("test.xml");
  			delete m_doc;
  		}
- 	}
-	
-	QSettings settings;
-	settings.setValue("slideeditor/size",size());
-	settings.setValue("slideeditor/pos",pos());
-	settings.setValue("slideeditor/state",saveState());
+	}
 	
 	delete m_undoStack;
 }
@@ -398,6 +379,24 @@ void SlideEditorWindow::setAutosaveOn(bool flag)
 void SlideEditorWindow::showEvent(QShowEvent *evt)
 {
 	evt->accept();
+
+	// Restore state
+	QSettings settings;
+	QSize sz = settings.value("slideeditor/size").toSize();
+	if(sz.isValid())
+		resize(sz);
+	QPoint p = settings.value("slideeditor/pos").toPoint();
+	if(!p.isNull())
+	{
+		if(p.y() < 0)
+			p.setY(1);
+		move(p);
+	}
+
+
+	restoreState(settings.value("slideeditor/state").toByteArray());
+
+
 	
 	float sx = ((float)m_view->width()) / m_scene->width();
 	float sy = ((float)m_view->height()) / m_scene->height();
@@ -413,6 +412,11 @@ void SlideEditorWindow::showEvent(QShowEvent *evt)
 
 void SlideEditorWindow::closeEvent(QCloseEvent *evt)
 {
+	QSettings settings;
+	settings.setValue("slideeditor/size",size());
+	settings.setValue("slideeditor/pos",pos());
+	settings.setValue("slideeditor/state",saveState());
+
 	m_autosaveTimer->stop();
 	evt->accept();
 	emit closed();

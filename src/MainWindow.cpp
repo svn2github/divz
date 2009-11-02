@@ -63,7 +63,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	
 	m_docModel = new DocumentListModel();
 	
-	if(!openFile("2009-11-01.xml"))
+	if(!openFile("song-test.xml"))
 		actionNew();
 		
 	// init the editor win AFTER load/new so that editor win starts out with the correct aspect ratio	

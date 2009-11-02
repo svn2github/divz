@@ -652,7 +652,7 @@ Revised Task list for Release 1.0, 10/18/09:
 		slide editor sometimes doesnt show all the slides in the list model
 			ex slide is live (large group - 29 slides), press F2, editor opens with only one slide in list (this slide)
 			when I duplicate a slide in the editor tho, the list suddenly "refreshes" and looks correct
-		slide editor doesnt save state when closed
+		[FIXED] slide editor doesnt save state when closed
 			move save/load state to close/show events
 		images dont load sometimes - even from disk (image reader error: "unable to load image data" or something like that)
 		scroll wheel move size in slide list view control is too large
@@ -662,6 +662,8 @@ Revised Task list for Release 1.0, 10/18/09:
 		would be nice to copy/paste entire slide groups
 		would be nice to be able to save a just a single slide group to a file / import slide group from a file
 		foldback display should not run timer on animated groups!!!
+		image import crashes while mjpeg output live
+		mainwindow - when saving file, it puts dviz after filename instead of before
 		
 		video icons dont render the actual icon after loading if not already in disk cache
 		
