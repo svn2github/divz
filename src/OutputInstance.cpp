@@ -16,6 +16,7 @@
 #include "model/Output.h"
 #include "model/AbstractItemFilter.h"
 #include "JpegServer.h"
+#include "OutputServer.h"
 
 #include "itemlistfilters/SlideTextOnlyFilter.h"
 
@@ -37,7 +38,8 @@ OutputInstance::OutputInstance(Output *out, QWidget *parent)
 	, m_slideGroup(0)
 	, m_slideNum(-1)
 	, m_isFoldback(false)
-	, m_server(0)
+	, m_jpegServer(0)
+	, m_outputServer(0)
 {
 	out->setInstance(this);
 	
@@ -84,22 +86,22 @@ void OutputInstance::slotGrabPixmap()
 	if(!m_output->mjpegServerEnabled())
 		return;
 		
-	if(!m_server ||
-	    m_server->serverPort() != m_output->mjpegServerPort())
+	if(!m_jpegServer ||
+	    m_jpegServer->serverPort() != m_output->mjpegServerPort())
 	{
-		if(m_server)
-			delete m_server;
+		if(m_jpegServer)
+			delete m_jpegServer;
 		
-		m_server = new JpegServer();
-		m_server->setProvider(this, SIGNAL(imageReady(QImage*)), false); // false = dont delete the image
+		m_jpegServer = new JpegServer();
+		m_jpegServer->setProvider(this, SIGNAL(imageReady(QImage*)), false); // false = dont delete the image
 		
-		if (!m_server->listen(QHostAddress::Any,m_output->mjpegServerPort())) 
+		if (!m_jpegServer->listen(QHostAddress::Any,m_output->mjpegServerPort())) 
 		{
-			qDebug() << "JpegServer could not start: "<<m_server->errorString();
+			qDebug() << "JpegServer could not start: "<<m_jpegServer->errorString();
 		}
 		else
 		{
-			qDebug() << "OutputInstance"<<output()->name()<<": JpegServer listening on "<<m_server->myAddress();
+			qDebug() << "OutputInstance"<<output()->name()<<": JpegServer listening on "<<m_jpegServer->myAddress();
 		}
 	}
 	
@@ -126,7 +128,7 @@ void OutputInstance::slotGrabPixmap()
 	if(m_imgBuffer.size() >= MAX_IMGBUFFER_SIZE)
 		delete m_imgBuffer.takeFirst();
 	
-	//qDebug("Frame: %d, Elapsed: %.02f, Avg: %.02f, FPmS: %.02f, Port: %d", frameCounter, elapsed, frameTimeSum / frameCounter, frameCounter / frameTimeSum, m_server->serverPort());
+	//qDebug("Frame: %d, Elapsed: %.02f, Avg: %.02f, FPmS: %.02f, Port: %d", frameCounter, elapsed, frameTimeSum / frameCounter, frameCounter / frameTimeSum, m_jpegServer->serverPort());
 }
 
 void OutputInstance::applyOutputSettings()
@@ -148,7 +150,7 @@ void OutputInstance::applyOutputSettings()
 		{
 			geom = m_output->customRect();
 			if(m_output->stayOnTop())
-				setWindowFlags(Qt::WindowStaysOnTopHint | Qt::FramelessWindowHint | Qt::ToolTip);
+				setWindowFlags(Qt::WindowStaysOnTopHint | Qt::FramelessWindowHint); // | Qt::ToolTip);
 			else
 				setWindowFlags(Qt::FramelessWindowHint);
 		}
@@ -175,10 +177,29 @@ void OutputInstance::applyOutputSettings()
 		m_viewer->setCursor(Qt::ArrowCursor);
 	}
 	else
-	//if(x == Output::Network)
+	if(x == Output::Network)
 	{
-		qDebug("Warning: Output to network not supported yet. Still to be written.");
+		//qDebug("Warning: Output to network not supported yet. Still to be written.");
 		setVisible(false);
+			
+		if(!m_outputServer ||
+		    m_outputServer->serverPort() != m_output->port())
+		{
+			if(m_outputServer)
+				delete m_outputServer;
+			
+			m_outputServer = new OutputServer();
+			m_outputServer->setInstance(this);
+			
+			if (!m_outputServer->listen(QHostAddress::Any,m_output->port())) 
+			{
+				qDebug() << "OutputSErver could not start: "<<m_outputServer->errorString();
+			}
+			else
+			{
+				qDebug() << "OutputInstance"<<output()->name()<<": OutputServer listening on "<<m_outputServer->myAddress();
+			}
+		}
 	}
 }
 
@@ -227,7 +248,20 @@ void OutputInstance::setSlideGroup(SlideGroup *group, Slide * startSlide)
 	}
 	else
 	{
-		// TODO
+		if(startSlide)
+			m_slideNum = m_sortedSlides.indexOf(startSlide);
+		else
+			m_slideNum = 0;
+		
+		if(m_outputServer)
+		{
+			qDebug() << "OutputInstance::m_outputServer: Sending group to server, num:"<<m_slideNum;
+			m_outputServer->cmdSetSlideGroup(group,m_slideNum);
+		}
+		else
+		{
+			qDebug() << "OutputInstance::m_outputSErver: No server created.";
+		}
 	}
 	
 	// Replicate the OutputInstance logic internally.
@@ -282,6 +316,8 @@ void OutputInstance::clear()
 	}
 	else
 	{
+		//if(m_outputServer)
+		//	cmdClear();
 		// TODO
 	}
 }
@@ -295,7 +331,8 @@ void OutputInstance::setBackground(QColor color)
 	}
 	else
 	{
-		// TODO
+		if(m_outputServer)
+			m_outputServer->cmdSetBackroundColor(color.name());
 	}
 }
 
@@ -308,6 +345,8 @@ void OutputInstance::setCanZoom(bool flag)
 	}
 	else
 	{
+		//if(m_outputServer)
+		//	setCanZoom(flag);
 		// TODO
 	}
 }
@@ -321,6 +360,8 @@ void OutputInstance::setSceneContextHint(MyGraphicsScene::ContextHint hint)
 	}
 	else
 	{
+		//if(m_outputServer)
+		//	cmdSetSceneContextHint(hint);
 		// TODO
 	}
 }
@@ -337,7 +378,8 @@ void OutputInstance::setOverlaySlide(Slide * newSlide)
 	}
 	else
 	{
-		// TODO
+		if(m_outputServer)
+			m_outputServer->cmdSetOverlaySlide(newSlide);
 	}
 }
 
@@ -353,6 +395,8 @@ void OutputInstance::setOverlayEnabled(bool enable)
 	}
 	else
 	{
+		//if(m_outputServer)
+		//	m_outputServer->setOverlayEnabled(enable);
 		// TODO
 	}
 }
@@ -369,7 +413,9 @@ void OutputInstance::setTextOnlyFilterEnabled(bool enable)
 	}
 	else
 	{
-		// TODO
+		// int filterId =  ...
+		//if(m_outputServer)
+		//	m_outputServer->addFilter(filterId);
 	}
 	
 	m_textOnlyFilter = enable;
@@ -394,7 +440,9 @@ void OutputInstance::addFilter(AbstractItemFilter * filter)
 	}
 	else
 	{
-		// TODO
+		// int filterId = ...
+		// if(m_outputServer)
+		//	m_outputServer->addFilter(filterId);
 	}
 }
 
@@ -412,13 +460,15 @@ void OutputInstance::removeFilter(AbstractItemFilter *filter)
 	}
 	else
 	{
-		// TODO
+		// int filterId = ...
+		// if(m_outputServer)
+		//	m_outputServer->removeFilter(filterId);
 	}
 }
 
 void OutputInstance::removeAllFilters()
 {
-	m_slideFilters.clear();
+	
 	
 	if(!m_output->isEnabled())
 		return;
@@ -429,8 +479,12 @@ void OutputInstance::removeAllFilters()
 	}
 	else
 	{
-		// TODO
+// 		foreach(AbstractFilter *filter, m_slideFilters)
+// 			// if(m_outputServer)
+//			m_outputServer->removeFilter(filterId);
 	}
+	
+	m_slideFilters.clear();
 }
 
 void OutputInstance::setAutoResizeTextEnabled(bool enable)
@@ -445,7 +499,8 @@ void OutputInstance::setAutoResizeTextEnabled(bool enable)
 	}
 	else
 	{
-		// TODO
+		if(m_outputServer)
+			m_outputServer->cmdSetAutoResizeTextEnabled(enable);
 	}
 }
 
@@ -462,7 +517,8 @@ void OutputInstance::setFadeSpeed(int value)
 	}
 	else
 	{
-		// TODO
+		if(m_outputServer)
+			m_outputServer->cmdSetFadeSpeed(value);
 	}
 }
 
@@ -479,7 +535,8 @@ void OutputInstance::setFadeQuality(int value)
 	}
 	else
 	{
-		// TODO
+		if(m_outputServer)
+			m_outputServer->cmdSetFadeQuality(value);
 	}
 }
 
@@ -521,7 +578,11 @@ Slide * OutputInstance::setSlide(Slide *slide)
 	}
 	else
 	{
-		// TODO
+		if(m_outputServer)
+		{
+			qDebug() << "OutputInstance::m_outputServer: Sending slide to server, num:"<<m_slideNum;
+			m_outputServer->cmdSetSlide(m_slideNum);
+		}
 	}
 	
 	return slide;
@@ -571,7 +632,8 @@ void OutputInstance::fadeBlackFrame(bool enable)
 	}
 	else
 	{
-		// TODO
+		if(m_outputServer)
+			m_outputServer->cmdFadeBlack(enable);
 	}
 }
 
@@ -587,7 +649,8 @@ void OutputInstance::fadeClearFrame(bool enable)
 	}
 	else
 	{
-		// TODO
+		if(m_outputServer)
+			m_outputServer->cmdFadeClear(enable);
 	}
 }
 
@@ -603,6 +666,7 @@ void OutputInstance::setLiveBackground(const QFileInfo &info, bool waitForNextSl
 	}
 	else
 	{
-		// TODO
+		if(m_outputServer)
+			m_outputServer->cmdSetLiveBackground(info.absoluteFilePath(),waitForNextSlide);
 	}
 }

@@ -136,10 +136,8 @@ Revised Task list for Release 1.0, 10/18/09:
 			[DONE] autosave toolbar
 			[DONE] fix icon
 			[DONE] fix fitting algorithm
-			look at smooth pub
-			look at text import tool
-			look at images rendering gray
-			
+			[DONE] look at images rendering gray
+				redesigned backgroundcontent setimagefile method to cache scaled version in RAM instead of the original full size
 			
 			[DONE] media browser preview
 				need file preview widget below media browser
@@ -189,13 +187,14 @@ Revised Task list for Release 1.0, 10/18/09:
 				images import tool maybe should use different file browser dialog - because on win32, its that directory tree dialog with no field to type in - I hate that dialog
 		
 			misc:
-				make a background "apply to all" button
 				[DONE] make autosave - on/off from toolbar
 				[DONE] make autosave time configurable via app settings
 				
+				make a background "apply to all" button
 				when switching background to video, somehow render the previous background video UNTIL the first frame of the next video is ready
 				
 				bug in text import tool: some slides imported move box all the way to the left
+				rework text import tool to break lines at sentance markers
 				
 			
 			
@@ -204,34 +203,85 @@ Revised Task list for Release 1.0, 10/18/09:
 		
 			[STARTED] need to pre-render all text boxes
 				does it in song groups
+			
+			from EW forums:
+				spellcheck - with non-us dictonaries
+				printing
+				time-based group changes (wall clock time)
+				song folders
+				search by any word in song
+				search by hymn
+				song tags
+				background tags
+				make abs/relative include paths optional
+				video queue
+					import tool?
+				default background option
+				multiple database users
+					shared copy over network
+				libavcodec support :-)
+				drag-drop background onto verses of song
+				store sequencing of songs
+				ccli chords
+				logo feature
+				freeze front of house but change foldback
+				nusery/mesg alert moduler (network input)
+					could be done via http server
+				scripture auto seperate into slides
+					like our existing text import tool
+				mailing list in addition to forumes
+					
+			[DONE] when setting advanced btn progamtically on output control, need to toggle btn too
+			take key shortcuts off of preview control
+			make location of cache folder root (tempdir) a setting/option 
+				for use with network dviz viewer
+				
 			add generic pre-render on document load 
 				loop thru every group, every slide and call Paint on every visual delegate
-				
 			store cached data in the document as text
 				textbox caches
 				document list model icon caches
 				slide group icon list model caches
-				
 			add transition (slide up) for foldback
-			
-			[DONE] default foldback to open advanced
-			[DONE] list selection background on windows needs to be non-blue
-			[DONE] foldback to 10% trans (200ms/10 frame)
-			
+			add photo pipe tool for importing photo cards
 			add web newsticker item
 				can use CSV or XML file as data source
 			add countdown item
-			
-			[STARTED] would be nice: while editing slide thats live, if change, cross fade to changed version
-			[DONE] media browser - when "going back" or "going up", should remeber the last selected index
-			
 			need video controls - at least in media browser preview
 				would be nice to integrate into slideviewcontrol
+			
+			make slide list model zoomable 
+				e.g. zoom slide list in editor
+				zoom slide list in control
+				zoom doc list in main window
+		
+			another vote for the zoomable icons in list views (slide list/doc list)
+			accept midi input for fade speed slider
+			add on-the-fly image tweaking (brightness/contrast) for backgrounds, etc
+			copy/paste entire slide groups
+			save a just a single slide group to a file / import slide group from a file
+			foldback settings should remember setetings across group changes
+				e.g. changing songs should not change fade speed
+			saving text in editor should not move cursor
+			"fit to natural size" should fit to mininimum natural size
+			findFontSize should return max not min font
+			font display in toolbar should show max not avg
+			changing font size by typing should fit to natural size
+			change default text settings
+				40pt font
+				1.5 line
+				7pt blur
+				10% shadow (?)
+					check sermon settings
+			make default text settings changable
+			add "default item settings" dialog for each item type
+			change main program config dialog to use qtoolbox		
+			
+			[STARTED] would be nice: while editing slide thats live, if change, cross fade to changed version
 			
 			[STARTED] port over the song database conversion code to windows
 				compiles pxxmlexport (pxtools) on win32 - doesnt execute
 				need to integrate it into a dialog in dviz
-			
 			
 			[STARTED] add image slideshow group type
 				or group "generator" / importer?
@@ -240,12 +290,6 @@ Revised Task list for Release 1.0, 10/18/09:
 					- ppt displayes NO progress dialog or bar when reading large image lists (just a busy cursor)
 					- generating the slides takes a LONG time in ppt once you click CREATE
 					- powerpoint does NOT automatically set the LOOP SLIDE SHOW *or* an intelligent per slide auto-change time
-			
-			make slide list model zoomable 
-				e.g. zoom slide list in editor
-				zoom slide list in control
-				zoom doc list in main window
-			
 			
 			add network viewer client
 				for viewer, client or server doesnt matter
@@ -261,15 +305,6 @@ Revised Task list for Release 1.0, 10/18/09:
 				[DONE] need to find ops in control that rely on calling the public view() or scene() methods
 					[DONE] best way may be just to move those methods private :-)
 					
-			[DONE] add mjpeg output feed (server) with configurable FPS / quality for compat with vidblaster
-				use widget topixmap routine?
-				or mygracphisview topixmap?
-				or mygraphicscene topixmap?
-				should be function in slidegroupviewer (basically, a clone output option)
-					multithreaded - compress frame jpeg once, then offer to all clients
-				hacked a bit right now - just does foldback - maybe more later
-				less hackish now - settings to configure in OutputSetupDialog
-			
 			[LATER] make an output MJPEG-only (e.g. no need for visible widget)
 				subclass of the network output
 				no need for custom dviz viewer on other end
@@ -407,6 +442,20 @@ Revised Task list for Release 1.0, 10/18/09:
 		
 		[FIXED] cloning text objects looses the original font size even tho we copy the html
 			
+					
+		[DONE] add mjpeg output feed (server) with configurable FPS / quality for compat with vidblaster
+			use widget topixmap routine?
+			or mygracphisview topixmap?
+			or mygraphicscene topixmap?
+			should be function in slidegroupviewer (basically, a clone output option)
+				multithreaded - compress frame jpeg once, then offer to all clients
+			hacked a bit right now - just does foldback - maybe more later
+			less hackish now - settings to configure in OutputSetupDialog
+	
+		[DONE] default foldback to open advanced
+		[DONE] list selection background on windows needs to be non-blue
+		[DONE] foldback to 10% trans (200ms/10 frame)
+		[DONE] media browser - when "going back" or "going up", should remeber the last selected index
 		[DONE] integrate the proper song filter/song generator code for foldback displays
 		[DONE] make filters and auto-size text code applicable to non-synced outputs as well
 			
@@ -639,8 +688,6 @@ Revised Task list for Release 1.0, 10/18/09:
 	- Bugs:
 		when in editor and go live with slide(F5), progress dialog steals focus from editor sometimes
 		when BLACK output, and then golive with group and no group currently live, group overrides black
-		when tuyping pnt size into totolbar, wait till return pressed
-		[MAYBE FIXED] when drag-select text itme swith different font sizes, they are made to be the same
 		if set background color on foldback while song active, song filter disables and doesnt re-enable till song go live again
 		songfilter doesnt use background color for foldback that is already set before song golive
 		crash: songs with per-slide template boxes cause crash when golive
@@ -652,62 +699,35 @@ Revised Task list for Release 1.0, 10/18/09:
 		slide editor sometimes doesnt show all the slides in the list model
 			ex slide is live (large group - 29 slides), press F2, editor opens with only one slide in list (this slide)
 			when I duplicate a slide in the editor tho, the list suddenly "refreshes" and looks correct
-		[FIXED] slide editor doesnt save state when closed
-			move save/load state to close/show events
 		images dont load sometimes - even from disk (image reader error: "unable to load image data" or something like that)
 		scroll wheel move size in slide list view control is too large
-		another vote for the zoomable icons in list views (slide list/doc list)
-		would be nice to accept midi input for fade speed slider
-		would be nice to add on-the-fly image tweaking (brightness/contrast) for backgrounds, etc
-		would be nice to copy/paste entire slide groups
-		would be nice to be able to save a just a single slide group to a file / import slide group from a file
 		foldback display should not run timer on animated groups!!!
-		image import crashes while mjpeg output live
-		mainwindow - when saving file, it puts dviz after filename instead of before
+		crash: image import crashes while mjpeg output live
+		
+		[FIXED] mainwindow - when saving file, it puts dviz after filename instead of before
+		[FIXED] when tuyping pnt size into totolbar, wait till return pressed
+		[FIXED] when drag-select text itme swith different font sizes, they are made to be the same
+		[FIXED] slide editor doesnt save state when closed
+			move save/load state to close/show events
 		
 		video icons dont render the actual icon after loading if not already in disk cache
 		
 		overlay enable crashes if no group live
-	
-		[FIXED] crash on invalid overlay document:
-			made box readonly
-		[FIXED] should not check overlay document name while typing - only when finished
-			made box readonly
-		
-		[FIXED] deleting last group in doc crashes
-			patched documentlistmodel::internalsetup to not emit datachanged if slist is empty
-		[FIXED] when going from song item live to regular slide live, the text-only filter checkbox doesnt get re-checked
-			framework had to be updated to support this functionality
 		
 		when auto-size text is enabled on foldback, foldback doesnt display correct verse all the time - sometimes displays a different verse that what it should be showing
 			cant repeat yet
 
 		need to fix the hackish method of setting slide groups on synced outputs in MainWindow - needs to be cleaner!
 		
-		[FIXED] setting slide group overrides black/clear buttons - should not override
-			reworked internals of SlideGroupViewer to accomidate
-		
-		[FIXED] experienced random crash when copying/pasting item but could not reproduce
-			temporary fix: impl autosave (done)
-			final fix: qDeleteAll does not clear a list - so I had to do m_copyBuffer.clear() after qDeleteAll - that fixed it.
-		
 		deleting m_doc in mainwindow::openfile causes segflt when golive with next group - why??
 				
 		cross fade on songs with video bg seems to lag
 		
-		[FIXED] clicking "next" and auto-going to first slide of next group when from normal slide to song, segfault 
-				patched SlideGroupFactory / ViewControl / nextSlide to only toggleTimerState to stopped if timer is running
-				
 		editor undo/redo framework doesnt pickup slide property changes
 		slide auto change time doesnt seem to save when using guess button
 		
 		clicking "no bg" in dialog doesnt clear background if it was image previously in editor
-		[FIXED] adding slide in editor doesnt update list in live view control
-			the OutputInstance proxy methods were not updating their list, and SlideItemListModel wasnt updatign correctly either
 		
-		[FIXED] if edit slide, go live, the edit again, the Live Slide List View pixmap does not regenerate
-			dont remeber how - something to do with catching the change signal
-			
 		crossfading between videos of same bg (see r212 the "Dir Viz" slide - dup and then try cross fading) is hoorible performance!
 			
 		when dragging multiple-select items, only one item syncs back to the model - the others dont
@@ -742,7 +762,26 @@ Revised Task list for Release 1.0, 10/18/09:
 		[ON HOLD] qt4.6b-win32: Adding a new video item or changing filename of existing item causes program crash
 				not using qt4.6b on windows right now - staying with 4.5.3, and 4.5 doesnt have this problem
 		
-		
+	
+		[FIXED] crash on invalid overlay document:
+			made box readonly
+		[FIXED] should not check overlay document name while typing - only when finished
+			made box readonly
+		[FIXED] deleting last group in doc crashes
+			patched documentlistmodel::internalsetup to not emit datachanged if slist is empty
+		[FIXED] when going from song item live to regular slide live, the text-only filter checkbox doesnt get re-checked
+			framework had to be updated to support this functionality
+		[FIXED] setting slide group overrides black/clear buttons - should not override
+			reworked internals of SlideGroupViewer to accomidate
+		[FIXED] experienced random crash when copying/pasting item but could not reproduce
+			temporary fix: impl autosave (done)
+			final fix: qDeleteAll does not clear a list - so I had to do m_copyBuffer.clear() after qDeleteAll - that fixed it.
+		[FIXED] clicking "next" and auto-going to first slide of next group when from normal slide to song, segfault 
+				patched SlideGroupFactory / ViewControl / nextSlide to only toggleTimerState to stopped if timer is running
+		[FIXED] adding slide in editor doesnt update list in live view control
+			the OutputInstance proxy methods were not updating their list, and SlideItemListModel wasnt updatign correctly either
+		[FIXED] if edit slide, go live, the edit again, the Live Slide List View pixmap does not regenerate
+			dont remeber how - something to do with catching the change signal
 		[FIXED] automatic enabling of foldback sync with live doesnt seem to be working (see OutputControl::setOutputInstance)
 			it was working, just not setting the combobox indes
 		[FIXED] foldback display already set to text-only filter before requested

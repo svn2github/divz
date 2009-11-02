@@ -66,7 +66,8 @@ HEADERS += \
 	OutputControl.h \
 	JpegServer.h \
 	DeepProgressIndicator.h \
-	ConnectDialog.h 
+	ConnectDialog.h \
+	OutputServer.h
 	
 SOURCES += main.cpp \
 	MainWindow.cpp \
@@ -92,7 +93,8 @@ SOURCES += main.cpp \
 	OutputInstance.cpp \
 	OutputControl.cpp \
 	JpegServer.cpp \
-	DeepProgressIndicator.cpp 
+	DeepProgressIndicator.cpp \
+	OutputServer.cpp
 	
 
 QT += core \

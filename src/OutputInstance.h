@@ -19,6 +19,7 @@ class Slide;
 class Output;
 #include "MyGraphicsScene.h"
 class JpegServer;
+class OutputServer;
 class QImage;
 
 class OutputInstance : public QWidget
@@ -120,8 +121,10 @@ private:
 	
 	bool m_isFoldback;
 	
-	JpegServer *m_server;
+	JpegServer *m_jpegServer;
 	QList<QImage*> m_imgBuffer;
+	
+	OutputServer *m_outputServer;
 };
 
 #endif // SLIDEGROUPVIEWER_H

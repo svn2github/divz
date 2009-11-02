@@ -71,7 +71,8 @@ HEADERS += \
 	OutputInstance.h \
 	OutputControl.h \
 	JpegServer.h \
-	DeepProgressIndicator.h
+	DeepProgressIndicator.h \
+	OutputServer.h
 
 	
 SOURCES += \
@@ -97,7 +98,8 @@ SOURCES += \
 	OutputInstance.cpp \
 	OutputControl.cpp \
 	JpegServer.cpp \
-	DeepProgressIndicator.cpp
+	DeepProgressIndicator.cpp \
+	OutputServer.cpp
 	
 
 QT += core \

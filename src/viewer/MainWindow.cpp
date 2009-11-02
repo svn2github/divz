@@ -27,6 +27,9 @@ MainWindow::MainWindow(QWidget *parent)
 	connect(m_ui->actionSetup_Outputs, SIGNAL(triggered()), this, SLOT(slotOutputSetup()));
 	connect(m_ui->actionExit, SIGNAL(triggered()), this, SLOT(slotExit()));
 	
+	m_ui->actionDisconnect->setEnabled(false);
+	m_ui->actionConnect_To->setEnabled(true);
+	
 	m_ui->actionConnect_To->setIcon(QIcon(":/data/stock-connect.png"));
 	m_ui->actionDisconnect->setIcon(QIcon(":/data/stock-disconnect.png"));
 	m_ui->actionSetup_Outputs->setIcon(QIcon(":data/stock-preferences.png"));
