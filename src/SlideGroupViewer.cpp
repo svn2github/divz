@@ -840,14 +840,12 @@ void SlideGroupViewer::setSlideInternal(Slide *slide)
 
 void SlideGroupViewer::fadeBlackFrame(bool enable)
 {
-	if(m_sortedSlides.size() <= 0)
-		return;
-		
 	m_blackEnabled = enable;
 	
 	if(enable)
 	{
 		generateBlackFrame();
+		//qDebug() << "SlideGroupViewer::fadeBlackFrame: "<<enable;
 		
 		// *dont* use our setSlide() method because we dont want to 
 		// change m_slideNum - we just want the "fadeToBlack" to be temporary
@@ -861,6 +859,10 @@ void SlideGroupViewer::fadeBlackFrame(bool enable)
 		}
 		else
 		{
+			if(m_sortedSlides.size() <= 0)
+				return;
+		
+	
 			if(m_slideNum < m_sortedSlides.size())
 			{
 				Slide *currentSlide = m_sortedSlides.at(m_slideNum);

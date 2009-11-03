@@ -132,6 +132,7 @@ MyGraphicsScene::~MyGraphicsScene()
 
 void MyGraphicsScene::setMasterSlide(Slide *slide)
 {
+	//qDebug() << "MyGraphicsScene::setMasterSlide(): EXISTING master ptr:"<<PTRS(m_masterSlide);
 	if(m_masterSlide)
 		disconnect(m_masterSlide,0,this,0);
 	

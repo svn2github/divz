@@ -3,6 +3,7 @@
 
 #include <QtGui/QMainWindow>
 #include <QCloseEvent>
+#include <QShowEvent>
 
 #include <QSplitter>
 #include <QListWidget>
@@ -115,7 +116,8 @@ protected slots:
 	
 protected:
 	void changeEvent(QEvent *e);
-	void closeEvent(QCloseEvent *event);
+	void closeEvent(QCloseEvent *);
+	void showEvent(QShowEvent*);
 	
 	void openSlideEditor(SlideGroup *g,Slide *slide=0);
 	

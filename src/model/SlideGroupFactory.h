@@ -60,6 +60,9 @@ public slots:
 	virtual void fadeBlackFrame(bool);
 	virtual void fadeClearFrame(bool);
 	
+	virtual void setIsPreviewControl(bool);
+	virtual void setEnabled(bool);
+	
 protected slots:
 	virtual void slideSelected(const QModelIndex &);
 	virtual void currentChanged(const QModelIndex &, const QModelIndex &);
@@ -85,6 +88,8 @@ protected:
 	QTime m_elapsedTime;
 	QLabel * m_timeLabel;
 	QPushButton * m_timeButton;
+	QPushButton * m_prevBtn;
+	QPushButton * m_nextBtn;
 	TimerState m_timerState;
 	double m_currentTimeLength;
 	double m_elapsedAtPause;
@@ -97,7 +102,8 @@ protected:
 	bool m_timerWasActiveBeforeFade;
 	bool m_clearActive;
 	bool m_blackActive;
-
+	
+	bool m_isPreviewControl;
 };
 
 class AbstractSlideGroupEditor : public QMainWindow

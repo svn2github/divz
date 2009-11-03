@@ -144,12 +144,7 @@ void BackgroundContent::syncFromModelItem(AbstractVisualItem *model)
 #define BG_IMG_CACHE_DIR "dviz-backgroundimagecache"
 void BackgroundContent::setImageFile(const QString &file)
 {
-	if(sceneContextHint() == MyGraphicsScene::Preview)
-	{
-		setPixmap(MediaBrowser::iconForImage(file,MEDIABROWSER_LIST_ICON_SIZE));
-		m_fileLoaded = true;
-		return;
-	}
+	
 	
 	if(m_videoProvider)
 	{
@@ -185,6 +180,13 @@ void BackgroundContent::setImageFile(const QString &file)
 		return;
 	}
 	
+/*	if()
+	{
+		setPixmap(MediaBrowser::iconForImage(file,MEDIABROWSER_LIST_ICON_SIZE));
+		m_fileLoaded = true;
+		return;
+	}*/
+	
 	if(file.endsWith(".svg",Qt::CaseInsensitive))
 	{
 		loadSvg(file);
@@ -202,12 +204,13 @@ void BackgroundContent::setImageFile(const QString &file)
 		if(!path.exists())
 			QDir(QDir::tempPath()).mkdir(BG_IMG_CACHE_DIR);
 			
-		QString cacheKey = QString("%1/%2/%3-%4x%5")
+		QString cacheKey = QString("%1/%2/%3-%4x%5%6")
 					.arg(QDir::tempPath())
 					.arg(BG_IMG_CACHE_DIR)
 					.arg(MD5::md5sum(file))
 					.arg(size.width())
-					.arg(size.height());
+					.arg(size.height())
+					.arg(sceneContextHint() == MyGraphicsScene::Preview ? "-icon" : "");
 		
 		if(!m_lastImageKey.isEmpty() &&
 		    m_lastImageKey != cacheKey)
@@ -221,7 +224,7 @@ void BackgroundContent::setImageFile(const QString &file)
 			setPixmap(cache);
 			m_fileLoaded = true;
 			//qDebug() << "ImageContent::loadFile: "<<file<<": pixmap cache hit on "<<cacheKey;
-			qDebug() << "BackgroundContent::setImageFile: file:"<<file<<", size:"<<size<<": hit RAM (loaded scaled from memory)";
+			//qDebug() << "BackgroundContent::setImageFile: file:"<<file<<", size:"<<size<<": hit RAM (loaded scaled from memory)";
 		}
 		else
 		{
@@ -235,44 +238,15 @@ void BackgroundContent::setImageFile(const QString &file)
 			}
 			else
 			{
-				QImageReader reader(file);
-				QImage image = reader.read();
-				if(image.isNull())
+				if(sceneContextHint() == MyGraphicsScene::Preview)
 				{
-					if(reader.errorString().indexOf("Unable")>-1)
-					{
-						qDebug() << "BackgroundContent::setImageFile: Unable to read"<<file<<": "<<reader.errorString()<<", Trying to force-reset some cache space";
-						
-						QPixmapCache::setCacheLimit(10 * 1024);
-						QPixmap testPm(1024,768);
-						testPm.fill(Qt::lightGray);
-						if(QPixmapCache::insert("test",testPm))
-							qDebug() << "BackgroundContent::setImageFile: Unable to insert text pixmap into cache after shrinkage";
-						
-						//QPixmapCache::setCacheLimit(AppSettings::pixmapCacheSize() * 1024);
-		
-						image = reader.read();
-						if(image.isNull())
-						{
-							qDebug() << "BackgroundContent::setImageFile: Still unable to read"<<file<<": "<<reader.errorString();
-						}
-					}
-					else
-					{
-						qDebug() << "BackgroundContent::setImageFile: Unable to read"<<file<<": "<<reader.errorString();
-					}
-	
-				}
-	
-				if(!image.isNull())
-				{
-					cache = QPixmap::fromImage(image.scaled(size,Qt::IgnoreAspectRatio,Qt::SmoothTransformation));
+					cache = MediaBrowser::iconForImage(file,MEDIABROWSER_LIST_ICON_SIZE);
 					cache.save(cacheKey,"PNG");
 					
 					setPixmap(cache);
 					m_fileLoaded = true;
 					
-					qDebug() << "BackgroundContent::setImageFile: file:"<<file<<", size:"<<size<<": loaded original, scaled and cached";
+					qDebug() << "BackgroundContent::setImageFile: file:"<<file<<", size:"<<size<<": loaded MediaBrowser Icon, scaled and cached";
 					
 					//qDebug() << "ImageContent::loadFile: "<<file<<": pixmap cache MISS on "<<cacheKey;
 					if(!QPixmapCache::insert(cacheKey, cache))
@@ -280,7 +254,53 @@ void BackgroundContent::setImageFile(const QString &file)
 				}
 				else
 				{
-					qDebug() << "BackgroundContent::setImageFile: file:"<<file<<", size:"<<size<<": NOT LOADED";
+					QImageReader reader(file);
+					QImage image = reader.read();
+					if(image.isNull())
+					{
+						if(reader.errorString().indexOf("Unable")>-1)
+						{
+							qDebug() << "BackgroundContent::setImageFile: Unable to read"<<file<<": "<<reader.errorString()<<", Trying to force-reset some cache space";
+							
+							QPixmapCache::setCacheLimit(10 * 1024);
+							QPixmap testPm(1024,768);
+							testPm.fill(Qt::lightGray);
+							if(QPixmapCache::insert("test",testPm))
+								qDebug() << "BackgroundContent::setImageFile: Unable to insert text pixmap into cache after shrinkage";
+							
+							//QPixmapCache::setCacheLimit(AppSettings::pixmapCacheSize() * 1024);
+			
+							image = reader.read();
+							if(image.isNull())
+							{
+								qDebug() << "BackgroundContent::setImageFile: Still unable to read"<<file<<": "<<reader.errorString();
+							}
+						}
+						else
+						{
+							qDebug() << "BackgroundContent::setImageFile: Unable to read"<<file<<": "<<reader.errorString();
+						}
+		
+					}
+		
+					if(!image.isNull())
+					{
+						cache = QPixmap::fromImage(image.scaled(size,Qt::IgnoreAspectRatio,Qt::SmoothTransformation));
+						cache.save(cacheKey,"PNG");
+						
+						setPixmap(cache);
+						m_fileLoaded = true;
+						
+						qDebug() << "BackgroundContent::setImageFile: file:"<<file<<", size:"<<size<<": loaded original, scaled and cached";
+						
+						//qDebug() << "ImageContent::loadFile: "<<file<<": pixmap cache MISS on "<<cacheKey;
+						if(!QPixmapCache::insert(cacheKey, cache))
+							qDebug() << "BackgroundContent::loadFile: "<<file<<": QPixmapCache::insert returned FALSE - pixmap not cached";
+					}
+					else
+					{
+						qDebug() << "BackgroundContent::setImageFile: file:"<<file<<", size:"<<size<<": NOT LOADED";
+					}
 				}
 			}
 		}

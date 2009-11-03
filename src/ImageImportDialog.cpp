@@ -159,7 +159,7 @@ void ImageImportDialog::accept()
 	progress.setLabelText("Importing Files ...");
 	progress.setMinimumDuration(500);
 	
-	QRect sceneRect(0,0,1024,768);
+	QRect sceneRect(FALLBACK_SCREEN_RECT.toRect());
 	
 	if(MainWindow::mw())
 	{

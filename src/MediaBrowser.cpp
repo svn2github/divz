@@ -79,6 +79,12 @@ QPixmap MediaBrowser::iconForImage(const QString & file, const QSize & size)
 
 	
 	qDebug() << "MediaBrowser::iconForImage: file:"<<file<<", size:"<<size<<", cacheFile: "<<cacheFile;
+	//QPixmap orig(file);
+	//orig = orig.scaled(size,Qt::IgnoreAspectRatio,Qt::SmoothTransformation);
+	//orig.detach();
+	
+	//return orig;
+			
 	if(!QPixmapCache::find(cacheFile,cache))
 	{
 		if(QFile(cacheFile).exists())
@@ -111,6 +117,9 @@ QPixmap MediaBrowser::iconForImage(const QString & file, const QSize & size)
 	{
 		qDebug() << "MediaBrowser::iconForImage: file:"<<file<<", size:"<<size<<": hit RAM (scaled image already in ram)";
 	}
+	
+	qDebug() << "MediaBrowser::data: iconForImage: file:"<<file<<", cacheKey:"<<cache.cacheKey();
+		
 	return cache;
 }
 

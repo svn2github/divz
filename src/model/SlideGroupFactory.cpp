@@ -184,14 +184,14 @@ SlideGroupViewControl::SlideGroupViewControl(OutputInstance *g, QWidget *w )
 	//hbox->addStretch(1);
 	
 	// "Prev" button
-	btn = new QPushButton(QIcon(":/data/control_start_blue.png"),"P&rev");
-	connect(btn, SIGNAL(clicked()), this, SLOT(prevSlide()));
-	hbox->addWidget(btn);
+	m_prevBtn = new QPushButton(QIcon(":/data/control_start_blue.png"),"P&rev");
+	connect(m_prevBtn, SIGNAL(clicked()), this, SLOT(prevSlide()));
+	hbox->addWidget(m_prevBtn);
 	
 	// "Next" button
-	btn = new QPushButton(QIcon(":/data/control_end_blue.png"),"Nex&t");
-	connect(btn, SIGNAL(clicked()), this, SLOT(nextSlide()));
-	hbox->addWidget(btn);
+	m_nextBtn = new QPushButton(QIcon(":/data/control_end_blue.png"),"Nex&t");
+	connect(m_nextBtn, SIGNAL(clicked()), this, SLOT(nextSlide()));
+	hbox->addWidget(m_nextBtn);
 	
 	
 	hbox->addStretch(1);
@@ -228,6 +228,14 @@ SlideGroupViewControl::SlideGroupViewControl(OutputInstance *g, QWidget *w )
 	
 }
 
+void SlideGroupViewControl::setIsPreviewControl(bool flag)
+{
+	m_isPreviewControl= flag;
+	m_timeButton->setText(!flag ? "&Start" : "Start");
+	m_prevBtn->setText(!flag ? "P&rev" : "Prev");
+	m_nextBtn->setText(!flag ? "Nex&t" : "Next");
+}
+
 void SlideGroupViewControl::repaintList()
 {
 	//qDebug() << "SlideGroupViewControl::repaintList(): mark";
@@ -243,7 +251,7 @@ void SlideGroupViewControl::enableAnimation(double time)
 	if(DEBUG_SLIDEGROUPVIEWCONTROL)
 		qDebug() << "SlideGroupViewControl::enableAnimation(): time:"<<time;
 		
-	if(time == 0)
+	if(time == 0 || !isEnabled())
 	{
 		if(DEBUG_SLIDEGROUPVIEWCONTROL)
 			qDebug() << "SlideGroupViewControl::enableAnimation(): stopping all timers";
@@ -262,6 +270,13 @@ void SlideGroupViewControl::enableAnimation(double time)
 	toggleTimerState(Running,true);
 }
 
+void SlideGroupViewControl::setEnabled(bool flag)
+{
+	if(!flag && m_timerState == Running)
+		toggleTimerState(Stopped);
+	QWidget::setEnabled(flag);
+}
+
 void SlideGroupViewControl::toggleTimerState(TimerState state, bool resetTimer)
 {
 	if(state == Undefined)
@@ -274,7 +289,7 @@ void SlideGroupViewControl::toggleTimerState(TimerState state, bool resetTimer)
 		qDebug() << "SlideGroupViewControl::toggleTimerState: state:"<<state<<", resetTimer:"<<resetTimer<<", flag:"<<flag;
 	
 	m_timeButton->setIcon(flag ? QIcon(":/data/action-pause.png") : QIcon(":/data/action-play.png"));
-	m_timeButton->setText(flag ? "&Pause" : "&Start");
+	m_timeButton->setText(m_isPreviewControl ? (flag ? "Pause" : "Start") : (flag ? "&Pause" : "&Start"));
 	m_timeLabel->setEnabled(flag);
 	
 	if(flag)
@@ -464,13 +479,12 @@ void SlideGroupViewControl::fadeBlackFrame(bool toggled)
 	if(m_slideViewer) 
 		g = m_slideViewer->slideGroup();
 	
-	if(g)
-	{
 		if(!toggled && m_clearActive)
 			m_slideViewer->fadeClearFrame(true);
 		else
 			m_slideViewer->fadeBlackFrame(toggled);
-		
+	if(g)
+	{
 		if(!m_clearActive)
 		{
 			if(toggled)
@@ -496,19 +510,22 @@ void SlideGroupViewControl::fadeClearFrame(bool toggled)
 	if(m_slideViewer) 
 		g = m_slideViewer->slideGroup();
 		
-	if(!m_blackActive && g)
+	if(!m_blackActive)
 	{
 		m_slideViewer->fadeClearFrame(toggled);
-		if(toggled)
+		if(g)
 		{
-			m_timerWasActiveBeforeFade = m_timerState == Running;
-			if(m_timerWasActiveBeforeFade)
-				toggleTimerState(Stopped);
-		}
-		else
-		{
-			if(m_timerWasActiveBeforeFade)
-				toggleTimerState(Running);
+			if(toggled)
+			{
+				m_timerWasActiveBeforeFade = m_timerState == Running;
+				if(m_timerWasActiveBeforeFade)
+					toggleTimerState(Stopped);
+			}
+			else
+			{
+				if(m_timerWasActiveBeforeFade)
+					toggleTimerState(Running);
+			}
 		}
 	}
 }
@@ -620,6 +637,8 @@ QPixmap	SlideGroupFactory::generatePreviewPixmap(SlideGroup *g, QSize iconSize, 
 	
 	// clear() so we can free memory, stop videos, etc
 	m_scene->clear();
+	// clear the master slide because it may be deleted after generating the pixmap (e.g. in OutputControl::setOverlayDocument)
+	m_scene->setMasterSlide(0);
 	//qDebug() << "SlideGroupFactory::generatePixmap: Releasing slide\n";
 	
 	return icon;

@@ -232,7 +232,7 @@ Revised Task list for Release 1.0, 10/18/09:
 				mailing list in addition to forumes
 					
 			[DONE] when setting advanced btn progamtically on output control, need to toggle btn too
-			take key shortcuts off of preview control
+			[DONE] take key shortcuts off of preview control
 			make location of cache folder root (tempdir) a setting/option 
 				for use with network dviz viewer
 				
@@ -257,13 +257,14 @@ Revised Task list for Release 1.0, 10/18/09:
 		
 			another vote for the zoomable icons in list views (slide list/doc list)
 			accept midi input for fade speed slider
-			add on-the-fly image tweaking (brightness/contrast) for backgrounds, etc
+			[LATER] add on-the-fly image tweaking (brightness/contrast) for backgrounds, etc
+				can't find code to do it right now
 			copy/paste entire slide groups
 			save a just a single slide group to a file / import slide group from a file
 			foldback settings should remember setetings across group changes
 				e.g. changing songs should not change fade speed
 			saving text in editor should not move cursor
-			"fit to natural size" should fit to mininimum natural size
+			[LATER] "fit to natural size" should fit to mininimum natural size
 			findFontSize should return max not min font
 			font display in toolbar should show max not avg
 			changing font size by typing should fit to natural size
@@ -687,32 +688,21 @@ Revised Task list for Release 1.0, 10/18/09:
 	
 	- Bugs:
 		when in editor and go live with slide(F5), progress dialog steals focus from editor sometimes
-		when BLACK output, and then golive with group and no group currently live, group overrides black
 		if set background color on foldback while song active, song filter disables and doesnt re-enable till song go live again
 		songfilter doesnt use background color for foldback that is already set before song golive
-		crash: songs with per-slide template boxes cause crash when golive
-		crash: open document with mjpeg client attached (not crash on first load, but when open doc after a doc already opened)
-		slide group icons for songs all render same bg as first song
-			temp fixed by not using MediaBrowser::iconForImage in BackgroundContent - but need try fix
+		[WORKSFORME] crash: songs with per-slide template boxes cause crash when golive
+			cannot repeat on linux
 		rear song filter: for passages that contain paranethesis after the tag keyword, the "next line" part of the filter doesnt pick up any text
 		phc logo overlays didint draw the shadow correclty - its almost like they drew the shadow with a vertically-compressed original, and its not till i drag them from original position that the shaodw renders correctly
-		slide editor sometimes doesnt show all the slides in the list model
-			ex slide is live (large group - 29 slides), press F2, editor opens with only one slide in list (this slide)
-			when I duplicate a slide in the editor tho, the list suddenly "refreshes" and looks correct
-		images dont load sometimes - even from disk (image reader error: "unable to load image data" or something like that)
-		scroll wheel move size in slide list view control is too large
-		foldback display should not run timer on animated groups!!!
-		crash: image import crashes while mjpeg output live
 		
-		[FIXED] mainwindow - when saving file, it puts dviz after filename instead of before
-		[FIXED] when tuyping pnt size into totolbar, wait till return pressed
-		[FIXED] when drag-select text itme swith different font sizes, they are made to be the same
-		[FIXED] slide editor doesnt save state when closed
-			move save/load state to close/show events
+		[HOLD] crash: image import crashes while mjpeg output live
+		[HOLD] crash: open document with mjpeg client attached (not crash on first load, but when open doc after a doc already opened)
+			cannot replicate on linux
+			may be only windows - need to confirm
+		
 		
 		video icons dont render the actual icon after loading if not already in disk cache
 		
-		overlay enable crashes if no group live
 		
 		when auto-size text is enabled on foldback, foldback doesnt display correct verse all the time - sometimes displays a different verse that what it should be showing
 			cant repeat yet
@@ -721,17 +711,14 @@ Revised Task list for Release 1.0, 10/18/09:
 		
 		deleting m_doc in mainwindow::openfile causes segflt when golive with next group - why??
 				
-		cross fade on songs with video bg seems to lag
+		[MAYBEF IXED] cross fade on songs with video bg seems to lag
 		
 		editor undo/redo framework doesnt pickup slide property changes
-		slide auto change time doesnt seem to save when using guess button
 		
 		clicking "no bg" in dialog doesnt clear background if it was image previously in editor
 		
 		crossfading between videos of same bg (see r212 the "Dir Viz" slide - dup and then try cross fading) is hoorible performance!
 			
-		when dragging multiple-select items, only one item syncs back to the model - the others dont
-				as evidenced when the slide is live, drag multiple items, only one moves in live view
 		during resize, image shadow doesnt scale
 		When setting live from editor (and other times?) and the group changes, need to change selected group in document list model
 			
@@ -761,8 +748,37 @@ Revised Task list for Release 1.0, 10/18/09:
 					
 		[ON HOLD] qt4.6b-win32: Adding a new video item or changing filename of existing item causes program crash
 				not using qt4.6b on windows right now - staying with 4.5.3, and 4.5 doesnt have this problem
+		[HOLD] scroll wheel move size in slide list view control is too large
+			not a show stopper right now
+			
+			
+		[FIXED] when dragging multiple-select items, only one item syncs back to the model - the others dont
+			as evidenced when the slide is live, drag multiple items, only one moves in live view
+			update abstractcontent - mouserelease to call synctomodel on other selected items 
+		[FIXED] slide auto change time doesnt seem to save when using guess button
+			explicitly set the change time on the slide object when guessing time
+		[FIXED] when BLACK output, and then golive with group and no group currently live, group overrides black
+			fixed by removing some unecessary checks in slidegroupviewer, outputinstance, and slidegroupviewcontrol to allow the call to fadeBlackFrame to go all the way to the slidegroupviewer
+		[FIXED] slide group icons for songs all render same bg as first song
+			temp fixed by not using MediaBrowser::iconForImage in BackgroundContent - but need try fix
+			redesigned usage of MediaBrowserIcon in BackgroundContent - works now
+		[FIXED] slide editor sometimes doesnt show all the slides in the list model
+			ex slide is live (large group - 29 slides), press F2, editor opens with only one slide in list (this slide)
+			when I duplicate a slide in the editor tho, the list suddenly "refreshes" and looks correct
+			restored behaviour in mainwindow wherein it sets the slidegroup again after showing the editor
+		[FIXED] images dont load sometimes - even from disk (image reader error: "unable to load image data" or something like that)
+			fixed by using less memory in backgroundcontent
+		[FIXED] foldback display should not run timer on animated groups!!!
+			added setIsPreviewControl() to SlideGroupViewControl
+		[FIXED] mainwindow - when saving file, it puts dviz after filename instead of before
+		[FIXED] when tuyping pnt size into totolbar, wait till return pressed
+		[FIXED] when drag-select text itme swith different font sizes, they are made to be the same
+			fixed - made toolbar textsize box only change font on return pressed
 		
-	
+		[FIXED] slide editor doesnt save state when closed
+			move save/load state to close/show events
+		[FIXED] overlay enable crashes if no group live
+			had to setMasterSlide(0) in slidegroupfactory/generatepixmap
 		[FIXED] crash on invalid overlay document:
 			made box readonly
 		[FIXED] should not check overlay document name while typing - only when finished

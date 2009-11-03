@@ -145,13 +145,16 @@ void OutputInstance::applyOutputSettings(bool startHidden)
 			int screenNum = m_output->screenNum();
 			geom = d->screenGeometry(screenNum);
 			
-			setWindowFlags(Qt::FramelessWindowHint | Qt::ToolTip);
+			if(d->numScreens() == 1)
+				setWindowFlags(Qt::FramelessWindowHint); 
+			else
+				setWindowFlags(Qt::FramelessWindowHint | Qt::ToolTip);
 		}
 		else
 		{
 			geom = m_output->customRect();
 			if(m_output->stayOnTop())
-				setWindowFlags(Qt::WindowStaysOnTopHint | Qt::FramelessWindowHint); // | Qt::ToolTip);
+				setWindowFlags(Qt::WindowStaysOnTopHint | Qt::FramelessWindowHint | Qt::ToolTip);
 			else
 				setWindowFlags(Qt::FramelessWindowHint);
 		}
@@ -671,9 +674,6 @@ void OutputInstance::fadeBlackFrame(bool enable)
 	if(!m_output->isEnabled())
 		return;
 		
-	if(m_sortedSlides.size() <= 0)
-		return;
-		
 	Output::OutputType outType = m_output->outputType();
 	if(outType == Output::Screen || outType == Output::Custom || outType == Output::Preview)
 	{
@@ -684,6 +684,9 @@ void OutputInstance::fadeBlackFrame(bool enable)
 		if(m_outputServer)
 			m_outputServer->sendCommand(OutputServer::FadeBlack,enable);
 	}
+	
+// 	if(m_sortedSlides.size() <= 0)
+// 		return;
 }
 
 void OutputInstance::fadeClearFrame(bool enable)

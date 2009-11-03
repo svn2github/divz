@@ -767,6 +767,21 @@ void AbstractContent::mouseReleaseEvent(QGraphicsSceneMouseEvent * event)
 {
 	QGraphicsItem::mouseReleaseEvent(event);
 	syncToModelItem(modelItem());
+	
+	if(scene())
+	{
+		// explictly call syncToModelItem() on the other selection items
+		// because only the first item selected receives the mouseReleaseEvent() on drag stop
+		
+		QList<QGraphicsItem *> selection = scene()->selectedItems();
+			
+		foreach(QGraphicsItem *item, selection)
+		{
+			AbstractContent * content = dynamic_cast<AbstractContent *>(item);
+			if(content)
+				content->syncToModelItem(content->modelItem());
+		}
+	}
 }
 
 void AbstractContent::mouseDoubleClickEvent(QGraphicsSceneMouseEvent * event)

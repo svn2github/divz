@@ -147,57 +147,19 @@ void OutputControl::setupAdvancedUI()
 {
 
 	QVBoxLayout * layout = new QVBoxLayout(m_advancedWidget);
-	
-	
+	layout->setMargin(0);
 		
 	QGridLayout * gridLayout = new QGridLayout();
 	QLabel *label;
 	int rowNbr = 0;
 	
-
-	// Row: Text only filter on/off
-	
-	//label = new QLabel("Text-only Filter: ");
-	label = new QLabel("Overlay: ");
-	gridLayout->addWidget(label,rowNbr,0);
-	
-	
-	QHBoxLayout * hbox1 = new QHBoxLayout();
-	
-	m_overlayDocBox = new QLineEdit(this);
-	m_overlayDocBox->setReadOnly(true);
-	
-	//connect(m_overlayDocBox, SIGNAL(textChanged(const QString&)), this, SLOT(overlayDocumentChanged(const QString&)));
-	hbox1->addWidget(m_overlayDocBox,2); // large stretch
-	
-	QPushButton *btn1 = new QPushButton("Browse");
-	hbox1->addWidget(btn1);
-	
-	connect(m_overlayDocBox, SIGNAL(textChanged(const QString&)), this, SLOT(overlayDocumentChanged(const QString&)));
-	connect(btn1, SIGNAL(clicked()), this, SLOT(overlayBrowseClicked()));
-	
-	gridLayout->addLayout(hbox1,rowNbr,1);
-	
-	// add preview & btn below browse
+	// row: add seperator line
 	rowNbr++;
+	QFrame * line_3 = new QFrame();
+        line_3->setFrameShape(QFrame::HLine);
+        line_3->setFrameShadow(QFrame::Sunken);
+        gridLayout->addWidget(line_3,rowNbr,0,1,2);
 	
-	QHBoxLayout * hbox2 = new QHBoxLayout();
-	
-	hbox2->addStretch(1);
-	
-	m_overlayPreviewLabel = new QLabel("(No Overlay)");
-	hbox2->addWidget(m_overlayPreviewLabel);
-	
-	hbox2->addStretch(1);
-	
-	m_overlayEnabledBtn = new QPushButton("&Enable Overlay");
-	m_overlayEnabledBtn->setCheckable(true);
-	m_overlayEnabledBtn->setEnabled(false);
-	hbox2->addWidget(m_overlayEnabledBtn);
-	
-	connect(m_overlayEnabledBtn, SIGNAL(toggled(bool)), this, SLOT(setOverlayEnabled(bool)));
-	
-	gridLayout->addLayout(hbox2,rowNbr,1);
 	
 	// Row: Sync/live setting
 	rowNbr++;
@@ -228,20 +190,69 @@ void OutputControl::setupAdvancedUI()
 	// MUST be created after main window, so allow segfault if no main window
 	MainWindow *mw = MainWindow::mw();
 	connect(mw, SIGNAL(appSettingsChanged()), this, SLOT(setupSyncWithBox()));
-		
-	// Row: Text only background
+	
+	
+	// row: add seperator line
 	rowNbr++;
-	label = new QLabel("Text-only Background: ");
+	QFrame * line_1 = new QFrame();
+        line_1->setFrameShape(QFrame::HLine);
+        line_1->setFrameShadow(QFrame::Sunken);
+        gridLayout->addWidget(line_1,rowNbr,0,1,2);
+        
+        // row: add overlay
+	rowNbr++;
+	
+	//label = new QLabel("Text-only Filter: ");
+	label = new QLabel("Overlay: ");
 	gridLayout->addWidget(label,rowNbr,0);
 	
-	m_colorPicker = new QtColorPicker();
-	m_colorPicker->setStandardColors();
-	m_colorPicker->setCurrentColor(Qt::black);
-	gridLayout->addWidget(m_colorPicker,rowNbr,1);
 	
-	connect(m_colorPicker, SIGNAL(colorChanged(const QColor &)), this, SLOT(setTextOnlyBackground(const QColor &)));
-//	connect(textFilterBtn, SIGNAL(toggled(bool)), m_colorPicker, SLOT(setEnabled(bool)));
+	QHBoxLayout * hbox1 = new QHBoxLayout();
 	
+	m_overlayDocBox = new QLineEdit(this);
+	m_overlayDocBox->setReadOnly(true);
+	
+	//connect(m_overlayDocBox, SIGNAL(textChanged(const QString&)), this, SLOT(overlayDocumentChanged(const QString&)));
+	hbox1->addWidget(m_overlayDocBox,2); // large stretch
+	
+	QPushButton *btn1 = new QPushButton("Browse");
+	hbox1->addWidget(btn1);
+	
+	connect(m_overlayDocBox, SIGNAL(textChanged(const QString&)), this, SLOT(overlayDocumentChanged(const QString&)));
+	connect(btn1, SIGNAL(clicked()), this, SLOT(overlayBrowseClicked()));
+	
+	gridLayout->addLayout(hbox1,rowNbr,1);
+	
+	// row: add preview & btn below browse
+	rowNbr++;
+	
+	QHBoxLayout * hbox2 = new QHBoxLayout();
+	
+	hbox2->addStretch(1);
+	
+	m_overlayPreviewLabel = new QLabel("(No Overlay)");
+	hbox2->addWidget(m_overlayPreviewLabel);
+	
+	hbox2->addStretch(1);
+	
+	m_overlayEnabledBtn = new QPushButton("&Enable Overlay");
+	m_overlayEnabledBtn->setCheckable(true);
+	m_overlayEnabledBtn->setEnabled(false);
+	hbox2->addWidget(m_overlayEnabledBtn);
+	
+	connect(m_overlayEnabledBtn, SIGNAL(toggled(bool)), this, SLOT(setOverlayEnabled(bool)));
+	
+	gridLayout->addLayout(hbox2,rowNbr,1);
+	
+	// row: add seperator line
+	rowNbr++;
+	QFrame * line_2 = new QFrame();
+        line_2->setFrameShape(QFrame::HLine);
+        line_2->setFrameShadow(QFrame::Sunken);
+        gridLayout->addWidget(line_2,rowNbr,0,1,2);
+	
+	
+		
 	// Row: Resize top textbox
 	rowNbr++;
 	label = new QLabel("Resize Top Textbox: ");
@@ -255,6 +266,18 @@ void OutputControl::setupAdvancedUI()
 	connect(m_textResizeBtn, SIGNAL(toggled(bool)), this, SLOT(setTextResizeEnabled(bool)));
 //	connect(m_textFilterBtn, SIGNAL(toggled(bool)), m_textResizeBtn, SLOT(setEnabled(bool)));
 	
+	// Row: Text only background
+	rowNbr++;
+	label = new QLabel("Text-only Background: ");
+	gridLayout->addWidget(label,rowNbr,0);
+	
+	m_colorPicker = new QtColorPicker();
+	m_colorPicker->setStandardColors();
+	m_colorPicker->setCurrentColor(Qt::black);
+	gridLayout->addWidget(m_colorPicker,rowNbr,1);
+	
+	connect(m_colorPicker, SIGNAL(colorChanged(const QColor &)), this, SLOT(setTextOnlyBackground(const QColor &)));
+//	connect(textFilterBtn, SIGNAL(toggled(bool)), m_colorPicker, SLOT(setEnabled(bool)));
 	
 	// Row: Text only filter on/off
 	rowNbr++;
@@ -564,6 +587,9 @@ void OutputControl::setIsOutputSynced(bool flag)
 	
 	//qDebug() << "OutputControl::setIsOutputSynced: flag:"<<flag;
 	//qDebug() << "OutputControl::setViewControl: m_ctrl:"<<POINTER_STRING(m_ctrl)<<", m_syncWidget:"<<POINTER_STRING(m_syncWidget);
+	
+	if(m_ctrl)
+		m_ctrl->setEnabled(!m_outputIsSynced);
 	
 	m_stack->setCurrentWidget( flag ? m_syncWidget : m_ctrl );
 	

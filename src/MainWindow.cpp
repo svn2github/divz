@@ -181,6 +181,12 @@ MainWindow::~MainWindow()
 	delete m_editWin;
 }
 
+void MainWindow::showEvent(QShowEvent *evt)
+{
+	evt->accept();
+	raise(); // raise above output instances
+}
+
 OutputInstance * MainWindow::liveInst() { return outputInst(AppSettings::taggedOutput("live")->id()); }
 SlideGroupViewControl * MainWindow::liveCtrl() { return viewControl(AppSettings::taggedOutput("live")->id()); }
 
@@ -672,6 +678,7 @@ void MainWindow::setupCentralWidget()
 	leftLayout3->setMargin(0);
 	
 	m_previewControl = new SlideGroupViewControl();
+	m_previewControl->setIsPreviewControl(true);
 	m_previewControl->setOutputView(m_previewInstance);
 	connect(m_previewControl, SIGNAL(slideDoubleClicked(Slide *)), this, SLOT(previewSlideDoubleClicked(Slide *)));
 	
@@ -935,6 +942,7 @@ void MainWindow::previewSlideGroup(SlideGroup *newGroup)
 			
 			
 			m_previewControl = factory->newViewControl();
+			m_previewControl->setIsPreviewControl(true);
 			m_previewControl->setOutputView(m_previewInstance);
 			m_previewControlBase->layout()->addWidget(m_previewControl);
 			
@@ -1190,6 +1198,7 @@ void MainWindow::openSlideEditor(SlideGroup *group,Slide *slide)
 	
 	m_editWin->setSlideGroup(group,slide);
 	m_editWin->show();
+	m_editWin->setSlideGroup(group,slide);
 }
 
 void MainWindow::changeEvent(QEvent *e)
