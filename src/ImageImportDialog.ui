@@ -6,16 +6,16 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>398</width>
-    <height>411</height>
+    <width>395</width>
+    <height>511</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>Image Import Tool</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <widget class="QGroupBox" name="groupBox_2">
+    <widget class="QGroupBox" name="gbImportFrom">
      <property name="title">
       <string>Import From</string>
      </property>
@@ -26,15 +26,15 @@
          <string>Import Images &amp;From:</string>
         </property>
         <property name="buddy">
-         <cstring>lineEdit</cstring>
+         <cstring>importFolder</cstring>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QLineEdit" name="lineEdit"/>
+       <widget class="QLineEdit" name="importFolder"/>
       </item>
       <item>
-       <widget class="QPushButton" name="pushButton">
+       <widget class="QPushButton" name="importBrowse">
         <property name="text">
          <string>Browse</string>
         </property>
@@ -44,13 +44,13 @@
     </widget>
    </item>
    <item>
-    <widget class="QGroupBox" name="groupBox">
+    <widget class="QGroupBox" name="gbCopyTo">
      <property name="title">
       <string>Copy Images to Another Folder</string>
      </property>
      <layout class="QGridLayout" name="gridLayout">
       <item row="0" column="0" colspan="3">
-       <widget class="QCheckBox" name="checkBox">
+       <widget class="QCheckBox" name="copyFiles">
         <property name="text">
          <string>&amp;Copy files from original folder to folder below:</string>
         </property>
@@ -62,22 +62,29 @@
          <string>Copy &amp;To:</string>
         </property>
         <property name="buddy">
-         <cstring>lineEdit_2</cstring>
+         <cstring>copyToFolder</cstring>
         </property>
        </widget>
       </item>
       <item row="1" column="1">
-       <widget class="QLineEdit" name="lineEdit_2"/>
+       <widget class="QLineEdit" name="copyToFolder"/>
       </item>
       <item row="1" column="2">
-       <widget class="QPushButton" name="pushButton_2">
+       <widget class="QPushButton" name="copyToBrowse">
         <property name="text">
          <string>Browse</string>
         </property>
        </widget>
       </item>
+      <item row="3" column="0" colspan="3">
+       <widget class="QCheckBox" name="removeOrig">
+        <property name="text">
+         <string>Remove Original File (for example, from a flash card)</string>
+        </property>
+       </widget>
+      </item>
       <item row="2" column="0" colspan="3">
-       <widget class="QCheckBox" name="checkBox_2">
+       <widget class="QCheckBox" name="renameDuplicates">
         <property name="text">
          <string>If &amp;duplicates, append date and time to make file unique</string>
         </property>
@@ -90,13 +97,13 @@
     </widget>
    </item>
    <item>
-    <widget class="QGroupBox" name="groupBox_3">
+    <widget class="QGroupBox" name="gbSlideGroup">
      <property name="title">
       <string>Slide Group</string>
      </property>
      <layout class="QGridLayout" name="gridLayout_2">
       <item row="0" column="0" rowspan="2" colspan="3">
-       <widget class="QRadioButton" name="radioButton">
+       <widget class="QRadioButton" name="createNewGroup">
         <property name="text">
          <string>Create &amp;New Slide Group for Images</string>
         </property>
@@ -106,7 +113,7 @@
        </widget>
       </item>
       <item row="3" column="0" colspan="3">
-       <widget class="QRadioButton" name="radioButton_2">
+       <widget class="QRadioButton" name="addImagesToExisting">
         <property name="text">
          <string>&amp;Add Images to Existing Slide Group</string>
         </property>
@@ -118,12 +125,12 @@
          <string>New &amp;Group Name:</string>
         </property>
         <property name="buddy">
-         <cstring>lineEdit_3</cstring>
+         <cstring>newGroupName</cstring>
         </property>
        </widget>
       </item>
       <item row="2" column="1">
-       <widget class="QLineEdit" name="lineEdit_3"/>
+       <widget class="QLineEdit" name="newGroupName"/>
       </item>
       <item row="4" column="0">
        <widget class="QLabel" name="label_4">
@@ -131,12 +138,12 @@
          <string>Add to Grou&amp;p:</string>
         </property>
         <property name="buddy">
-         <cstring>comboBox</cstring>
+         <cstring>existingGroup</cstring>
         </property>
        </widget>
       </item>
       <item row="4" column="1">
-       <widget class="QComboBox" name="comboBox"/>
+       <widget class="QComboBox" name="existingGroup"/>
       </item>
       <item row="2" column="2">
        <spacer name="horizontalSpacer">
@@ -153,6 +160,78 @@
       </item>
      </layout>
     </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupBox">
+     <property name="title">
+      <string>Slide Settings</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_3">
+      <item row="0" column="0" colspan="2">
+       <widget class="QCheckBox" name="flagAutoChange">
+        <property name="text">
+         <string>Automatically change to next photo slides after:</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QCheckBox" name="flagShowNames">
+        <property name="text">
+         <string>Show File Names on Slide</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1" colspan="2">
+       <widget class="QCheckBox" name="flagNotDefault">
+        <property name="text">
+         <string>Only if not default camera file name</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0" colspan="3">
+       <widget class="QCheckBox" name="flagLoop">
+        <property name="text">
+         <string>Automatically loop back to the start of the group when finished</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <widget class="QDoubleSpinBox" name="changeTime">
+        <property name="suffix">
+         <string> seconds</string>
+        </property>
+        <property name="value">
+         <double>2.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
    </item>
    <item>
     <widget class="QDialogButtonBox" name="buttonBox">
@@ -175,8 +254,8 @@
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>227</x>
-     <y>390</y>
+     <x>236</x>
+     <y>364</y>
     </hint>
     <hint type="destinationlabel">
      <x>157</x>
@@ -191,8 +270,8 @@
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>295</x>
-     <y>396</y>
+     <x>304</x>
+     <y>364</y>
     </hint>
     <hint type="destinationlabel">
      <x>286</x>
@@ -201,7 +280,7 @@
    </hints>
   </connection>
   <connection>
-   <sender>checkBox</sender>
+   <sender>copyFiles</sender>
    <signal>toggled(bool)</signal>
    <receiver>label</receiver>
    <slot>setEnabled(bool)</slot>
@@ -211,120 +290,136 @@
      <y>120</y>
     </hint>
     <hint type="destinationlabel">
-     <x>43</x>
-     <y>158</y>
+     <x>62</x>
+     <y>152</y>
     </hint>
    </hints>
   </connection>
   <connection>
-   <sender>checkBox</sender>
+   <sender>copyFiles</sender>
    <signal>toggled(bool)</signal>
-   <receiver>lineEdit_2</receiver>
+   <receiver>copyToFolder</receiver>
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>162</x>
-     <y>123</y>
+     <x>182</x>
+     <y>120</y>
     </hint>
     <hint type="destinationlabel">
-     <x>170</x>
-     <y>157</y>
+     <x>236</x>
+     <y>149</y>
     </hint>
    </hints>
   </connection>
   <connection>
-   <sender>checkBox</sender>
+   <sender>copyFiles</sender>
    <signal>toggled(bool)</signal>
-   <receiver>pushButton_2</receiver>
+   <receiver>copyToBrowse</receiver>
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>225</x>
-     <y>125</y>
+     <x>245</x>
+     <y>120</y>
     </hint>
     <hint type="destinationlabel">
-     <x>325</x>
-     <y>156</y>
+     <x>319</x>
+     <y>152</y>
     </hint>
    </hints>
   </connection>
   <connection>
-   <sender>checkBox</sender>
+   <sender>copyFiles</sender>
    <signal>toggled(bool)</signal>
-   <receiver>checkBox_2</receiver>
+   <receiver>renameDuplicates</receiver>
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>262</x>
-     <y>125</y>
+     <x>282</x>
+     <y>120</y>
     </hint>
     <hint type="destinationlabel">
-     <x>219</x>
-     <y>188</y>
+     <x>239</x>
+     <y>177</y>
     </hint>
    </hints>
   </connection>
   <connection>
-   <sender>radioButton</sender>
+   <sender>createNewGroup</sender>
    <signal>toggled(bool)</signal>
    <receiver>label_3</receiver>
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>72</x>
-     <y>260</y>
+     <x>92</x>
+     <y>238</y>
     </hint>
     <hint type="destinationlabel">
-     <x>108</x>
-     <y>285</y>
+     <x>106</x>
+     <y>264</y>
     </hint>
    </hints>
   </connection>
   <connection>
-   <sender>radioButton</sender>
+   <sender>createNewGroup</sender>
    <signal>toggled(bool)</signal>
-   <receiver>lineEdit_3</receiver>
+   <receiver>newGroupName</receiver>
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>151</x>
-     <y>253</y>
+     <x>171</x>
+     <y>238</y>
     </hint>
     <hint type="destinationlabel">
-     <x>183</x>
-     <y>287</y>
+     <x>222</x>
+     <y>264</y>
     </hint>
    </hints>
   </connection>
   <connection>
-   <sender>radioButton_2</sender>
+   <sender>addImagesToExisting</sender>
    <signal>toggled(bool)</signal>
-   <receiver>comboBox</receiver>
+   <receiver>existingGroup</receiver>
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>144</x>
-     <y>319</y>
+     <x>164</x>
+     <y>289</y>
     </hint>
     <hint type="destinationlabel">
-     <x>154</x>
-     <y>337</y>
+     <x>222</x>
+     <y>315</y>
     </hint>
    </hints>
   </connection>
   <connection>
-   <sender>radioButton_2</sender>
+   <sender>addImagesToExisting</sender>
    <signal>toggled(bool)</signal>
    <receiver>label_4</receiver>
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>74</x>
-     <y>317</y>
+     <x>94</x>
+     <y>289</y>
     </hint>
     <hint type="destinationlabel">
-     <x>73</x>
-     <y>336</y>
+     <x>93</x>
+     <y>315</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>accepted()</signal>
+   <receiver>ImageImportDialog</receiver>
+   <slot>accept()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>154</x>
+     <y>346</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>174</x>
+     <y>329</y>
     </hint>
    </hints>
   </connection>

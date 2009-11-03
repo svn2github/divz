@@ -29,6 +29,7 @@
 #include "SlideGroupViewer.h"
 #include "OutputViewer.h"
 #include "OutputSetupDialog.h"
+#include "ImageImportDialog.h"
 
 #include "model/ItemFactory.h"
 #include "model/SlideGroupFactory.h"
@@ -292,59 +293,10 @@ void MainWindow::actionNew()
 
 void MainWindow::imageImportTool()
 {
-	QString dirPath = QFileDialog::getExistingDirectory(this, tr("Select Images Folder to Import"),
-                                                 AppSettings::previousPath("images"),
-                                                 QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
-	
-	if(!dirPath.isEmpty())
-	{
-		QDir dir(dirPath);
-		
-		QStringList filters;
-		filters << "*.bmp";
-		filters << "*.png";
-		filters << "*.jpg";
-		filters << "*.jpeg";
-		filters << "*.xpm";
-		filters << "*.svg";
-		QStringList list = dir.entryList(filters);
-		
-		qDebug() << "list: "<<list;
-		
-		if(list.size() <= 0)
-		{
-			QMessageBox::warning(this,"No Images Found","No images found in the folder you chose.");
-		}
-		else
-		{
-			SlideGroup *group = new SlideGroup();
-			group->setAutoChangeGroup(false);
-			group->setGroupTitle(dir.dirName());
-			
-			int slideNum = 0;
-			foreach(QString file, list)
-			{
-				Slide * slide = new Slide();
-				AbstractVisualItem * bg = dynamic_cast<AbstractVisualItem*>(slide->background());
-				
-				QString path = QString("%1/%2").arg(dir.absolutePath()).arg(file);
-				qDebug() << "Making slide for:"<<path;
-				
-				bg->setFillType(AbstractVisualItem::Image);
-				bg->setFillImageFile(path);
-	
-				slide->setAutoChangeTime(2.0);
-				slide->setSlideNumber(slideNum);
-				
-				group->addSlide(slide);
-				
-				slideNum++;
-			
-			}
-			
-			m_doc->addGroup(group);
-		}
-	}
+	if(!m_doc)
+		return;
+	ImageImportDialog d(m_doc);
+	d.exec();
 }
 
 void MainWindow::textImportTool()

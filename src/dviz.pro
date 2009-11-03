@@ -44,7 +44,8 @@ FORMS += mainwindow.ui \
 	DocumentSettingsDialog.ui \
 	GridDialog.ui \
 	SlideSettingsDialog.ui \
-	SlideGroupSettingsDialog.ui
+	SlideGroupSettingsDialog.ui \
+	ImageImportDialog.ui
 	
 RESOURCES += dviz.qrc
 
@@ -72,7 +73,8 @@ HEADERS += \
 	OutputControl.h \
 	JpegServer.h \
 	DeepProgressIndicator.h \
-	OutputServer.h
+	OutputServer.h \
+	ImageImportDialog.h
 
 	
 SOURCES += \
@@ -99,7 +101,8 @@ SOURCES += \
 	OutputControl.cpp \
 	JpegServer.cpp \
 	DeepProgressIndicator.cpp \
-	OutputServer.cpp
+	OutputServer.cpp \
+	ImageImportDialog.cpp
 	
 
 QT += core \
