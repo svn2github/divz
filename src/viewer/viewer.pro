@@ -7,6 +7,26 @@ VPATH += ../
 
 CONFIG += debug
 
+
+win32 {
+	INCLUDEPATH += \
+		../external/ffmpeg/include/msinttypes \
+		../external/ffmpeg/include/libswscale \
+		../external/ffmpeg/include/libavutil \
+		../external/ffmpeg/include/libavdevice \
+		../external/ffmpeg/include/libavformat \
+		../external/ffmpeg/include/libavcodec \
+		../external/ffmpeg/include
+	
+	LIBS += -L"../external/ffmpeg/lib" \
+		-lavcodec-51 \
+		-lavformat-52 \
+		-lavutil-49 \
+		-lavdevice-52 \
+		-lswscale-0
+}
+
+
 include(../frames/frames.pri)
 include(../items/items.pri)
 include(../model/model.pri)

@@ -141,8 +141,8 @@ void MainWindow::slotReconnect()
 	
 	m_client->connectTo(m_host,m_port);
 	
-	m_ui->actionDisconnect->setEnabled(false);
-	m_ui->actionConnect_To->setEnabled(true);
+	m_ui->actionDisconnect->setEnabled(true);
+	m_ui->actionConnect_To->setEnabled(false);
 }
 
 void MainWindow::aspectChanged(double d)

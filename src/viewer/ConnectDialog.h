@@ -18,6 +18,8 @@ public:
 protected:
     void changeEvent(QEvent *e);
 
+    void accept();
+
 private:
     Ui::ConnectDialog *m_ui;
 };

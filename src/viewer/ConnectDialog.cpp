@@ -6,6 +6,20 @@ ConnectDialog::ConnectDialog(QWidget *parent) :
     m_ui(new Ui::ConnectDialog)
 {
     m_ui->setupUi(this);
+
+    QSettings s;
+    m_ui->host->setText(s.value("last-ip"));
+    m_ui->port->setText(s.value("last-port").toInt());
+    m_ui->reconnect->setChecked(s.value("last-reconnect").toBool());
+
+}
+
+void ConnectDialog::accept()
+{
+    QSetting s;
+    s.setValue("last-ip",m_ui->host->text());
+    s.setValue("last-port",m_ui->port->value());
+    s.setValue("last-reconnect",m_ui->reconnect->isChecked());
 }
 
 ConnectDialog::~ConnectDialog()

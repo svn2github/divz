@@ -83,10 +83,13 @@ void NetworkClient::dataReady()
 	m_dataBlock = m_socket->read(m_blockSize);
 	m_blockSize = 0;
 	
-	//qDebug() << "Data ("<<m_dataBlock.size()<<"/"<<m_blockSize<<"): "<<m_dataBlock;
-	//log(QString("[DEBUG] NetworkClient::dataReady(): dataBlock: %1").arg(QString(m_dataBlock)));
+	if(m_dataBlock.size() > 0)
+	{
+		//qDebug() << "Data ("<<m_dataBlock.size()<<"/"<<m_blockSize<<"): "<<m_dataBlock;
+		//log(QString("[DEBUG] NetworkClient::dataReady(): dataBlock: \n%1").arg(QString(m_dataBlock)));
 
-	processBlock();
+		processBlock();
+	}
 	
 	
 	if(m_socket->bytesAvailable())
@@ -171,8 +174,9 @@ void NetworkClient::cmdSetSlideGroup(const QVariant& var, int start)
 	QDomDocument doc;
 	if (!doc.setContent(data, false, error)) 
 	{
-		QMessageBox::critical(0, tr("Parsing error"), tr("Unable to parse file data. The error was: %2").arg(*error));
-		throw(0);
+		log(data);
+		QMessageBox::critical(0, tr("Parsing error"), tr("Unable to parse XML slide group data. The error was: %2").arg(*error));
+		//throw(0);
 		return;
 	}
 	
@@ -229,8 +233,9 @@ void NetworkClient::cmdSetOverlaySlide(const QVariant& var)
 	QDomDocument doc;
 	if (!doc.setContent(data, false, error)) 
 	{
-		QMessageBox::critical(0, tr("Parsing error"), tr("Unable to parse file data. The error was: %2").arg(*error));
-		throw(0);
+		log(data);
+		QMessageBox::critical(0, tr("Parsing error"), tr("Unable to parse XML overlay slide. The error was: %2").arg(*error));
+		//throw(0);
 		return;
 	}
 	
