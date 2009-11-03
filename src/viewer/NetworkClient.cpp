@@ -217,12 +217,16 @@ void NetworkClient::cmdSetSlideGroup(const QVariant& var, int start)
 
 void NetworkClient::cmdAddfilter(int id)
 {
-	// TODO
+	AbstractItemFilter * filter = AbstractItemFilter::filterById(id);
+	if(id && filter)
+		m_inst->addFilter(filter);
 }
 
 void NetworkClient::cmdDelFilter(int id)
 {
-	// TODO
+	AbstractItemFilter * filter = AbstractItemFilter::filterById(id);
+	if(id && filter)
+		m_inst->removeFilter(filter);
 }
 
 void NetworkClient::cmdSetOverlaySlide(const QVariant& var)

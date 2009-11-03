@@ -13,6 +13,9 @@ protected:
 public:
 	static SlideNonTextOnlyFilter * instance() { return m_staticInstance; }
 	
+	enum { FilterId = 0x04 };
+	int filterId() { return FilterId; }
+	
 	QString filterName() const { return "Non-Text Items"; }
 	QString filterDescription() const;
 	

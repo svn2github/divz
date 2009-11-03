@@ -31,7 +31,7 @@ public:
 
 	void log(const QString&, int severity=-1);
 	
-	void setLiveGroup(SlideGroup *newGroup, Slide *currentSlide);
+	void setLiveGroup(SlideGroup *newGroup, Slide *currentSlide,bool);
 	
 signals:
 // 	void documentChanged(Document*);

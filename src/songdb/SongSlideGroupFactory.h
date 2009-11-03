@@ -14,6 +14,9 @@ protected:
 public:
 	static SongFoldbackTextFilter * instance() { return m_staticInstance; }
 	
+	enum { FilterId = 0x020 };
+	int filterId() { return FilterId; }
+	
 	QString filterName() const { return "Song Foldback Text"; }
 	QString filterDescription() const { return "Adds in guitar chords and other rear-screen text, as well as the next passage preview on the last line."; }
 	

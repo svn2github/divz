@@ -3,6 +3,7 @@
 
 #include "AbstractItem.h"
 #include <QList>
+#include <QHash>
 
 class OutputInstance;
 
@@ -17,6 +18,7 @@ class AbstractItemFilter : public QObject
 	
 private:
 	static AbstractItemFilterList m_availableFilters;
+	static QHash<int,AbstractItemFilter*> m_filtersById;
 	
 public /*static*/:
 	static AbstractItemFilterList availableFilters();
@@ -24,12 +26,17 @@ public /*static*/:
 	static void registerFilterInstance(AbstractItemFilter *);
 	static void removeFilterInstance(AbstractItemFilter *);
 	
+	static AbstractItemFilter * filterById(int id);
+	
 public:
 	AbstractItemFilter();
 	virtual ~AbstractItemFilter();
 	
 	virtual QString filterName() const { return "No Filter"; }
 	virtual QString filterDescription() const { return "No filter applied"; }
+	
+	enum { FilterId = 0x01 };
+	virtual int filterId() { return FilterId; }
 	
 	virtual bool isMandatoryFor(OutputInstance * /*instance */= 0) { return false; }
 	

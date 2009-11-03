@@ -13,6 +13,9 @@ protected:
 public:
 	static SlideBackgroundOnlyFilter * instance() { return m_staticInstance; }
 	
+	enum { FilterId = 0x02 };
+	int filterId() { return FilterId; }
+	
 	QString filterName() const { return "Background Only"; }
 	QString filterDescription() const;
 	bool approve(AbstractItem *item);

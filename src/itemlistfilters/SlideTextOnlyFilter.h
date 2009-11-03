@@ -14,6 +14,9 @@ protected:
 public:
 	static SlideTextOnlyFilter * instance() { return m_staticInstance; }
 	
+	enum { FilterId = 0x05 };
+	int filterId() { return FilterId; }
+	
 	QString filterName() const { return "Text-Only"; }
 	QString filterDescription() const;
 	bool approve(AbstractItem *item);

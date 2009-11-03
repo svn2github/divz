@@ -1,5 +1,6 @@
 #include "ConnectDialog.h"
 #include "ui_ConnectDialog.h"
+#include <QSettings>
 
 ConnectDialog::ConnectDialog(QWidget *parent) :
     QDialog(parent),
@@ -8,18 +9,19 @@ ConnectDialog::ConnectDialog(QWidget *parent) :
     m_ui->setupUi(this);
 
     QSettings s;
-    m_ui->host->setText(s.value("last-ip"));
-    m_ui->port->setText(s.value("last-port").toInt());
-    m_ui->reconnect->setChecked(s.value("last-reconnect").toBool());
+    m_ui->host->setText(s.value("last-ip","localhost").toString());
+    m_ui->port->setValue(s.value("last-port",7777).toInt());
+    m_ui->reconnect->setChecked(s.value("last-reconnect",true).toBool());
 
 }
 
 void ConnectDialog::accept()
 {
-    QSetting s;
+    QSettings s;
     s.setValue("last-ip",m_ui->host->text());
     s.setValue("last-port",m_ui->port->value());
     s.setValue("last-reconnect",m_ui->reconnect->isChecked());
+    QDialog::accept();
 }
 
 ConnectDialog::~ConnectDialog()

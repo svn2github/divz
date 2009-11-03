@@ -215,7 +215,7 @@ void MainWindow::changeEvent(QEvent *e)
 	}
 }
 
-void MainWindow::setLiveGroup(SlideGroup *newGroup, Slide *currentSlide)
+void MainWindow::setLiveGroup(SlideGroup *newGroup, Slide *currentSlide,bool)
 {
 	(void)0;
 }

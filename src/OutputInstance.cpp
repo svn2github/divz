@@ -483,9 +483,7 @@ void OutputInstance::setTextOnlyFilterEnabled(bool enable)
 	}
 	else
 	{
-		// int filterId =  ...
-		//if(m_outputServer)
-		//	m_outputServer->addFilter(filterId);
+		// handled in addFilter for network
 	}
 	
 	m_textOnlyFilter = enable;
@@ -513,9 +511,8 @@ void OutputInstance::addFilter(AbstractItemFilter * filter)
 	}
 	else
 	{
-		// int filterId = ...
-		// if(m_outputServer)
-		//	m_outputServer->addFilter(filterId);
+		if(m_outputServer)
+			m_outputServer->sendCommand(OutputServer::AddFilter, filter->filterId());
 	}
 }
 
@@ -536,9 +533,8 @@ void OutputInstance::removeFilter(AbstractItemFilter *filter)
 	}
 	else
 	{
-		// int filterId = ...
-		// if(m_outputServer)
-		//	m_outputServer->removeFilter(filterId);
+		if(m_outputServer)
+			m_outputServer->sendCommand(OutputServer::DelFilter, filter->filterId());
 	}
 }
 
@@ -556,9 +552,9 @@ void OutputInstance::removeAllFilters()
 	}
 	else
 	{
-// 		foreach(AbstractFilter *filter, m_slideFilters)
-// 			// if(m_outputServer)
-//			m_outputServer->removeFilter(filterId);
+ 		 if(m_outputServer)
+			foreach(AbstractItemFilter *filter, m_slideFilters)
+ 				m_outputServer->sendCommand(OutputServer::DelFilter, filter->filterId());
 	}
 	
 	m_slideFilters.clear();
