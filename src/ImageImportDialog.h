@@ -18,6 +18,8 @@ public:
 protected:
     void changeEvent(QEvent *e);
     void accept();
+
+protected slots:
     void importDirBrowse();
     void copyToDirBrowse();
 
@@ -25,6 +27,7 @@ private:
     Ui::ImageImportDialog *m_ui;
     Document *m_doc;
     DocumentListModel *m_model;
+    int m_acceptCount;
 };
 
 #endif // IMAGEIMPORTDIALOG_H
