@@ -1035,8 +1035,8 @@ void MainWindow::setLiveGroup(SlideGroup *newGroup, Slide *currentSlide)
 				
 				SlideGroup * oldGroup = inst->slideGroup();
 				
-				if(!inst->isVisible())
-					inst->show();
+				//if(!inst->isVisible())
+				//	inst->show();
 				
 				//qDebug() << "MainWindow::setLiveGroup(): newGroup->groupType():"<<newGroup->groupType()<<", SlideGroup::Generic:"<<SlideGroup::Generic;
 				if((oldGroup && oldGroup->groupType() != newGroup->groupType()) || newGroup->groupType() != SlideGroup::Generic)
@@ -1093,8 +1093,8 @@ void MainWindow::setLiveGroup(SlideGroup *newGroup, Slide *currentSlide)
 			
 			SlideGroup * oldGroup = inst->slideGroup();
 			
-			if(!inst->isVisible())
-				inst->show();
+			//if(!inst->isVisible())
+				//inst->show();
 			
 			//qDebug() << "MainWindow::setLiveGroup(): newGroup->groupType():"<<newGroup->groupType()<<", SlideGroup::Generic:"<<SlideGroup::Generic;
 			if((oldGroup && oldGroup->groupType() != newGroup->groupType()) || newGroup->groupType() != SlideGroup::Generic)

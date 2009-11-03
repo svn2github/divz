@@ -12,10 +12,11 @@
 #include "3rdparty/qjson/parser.h"
 #include "MainWindow.h"
 
+#include "OutputServer.h" // OutputServer::Command enum is needed
+
 NetworkClient::NetworkClient(QObject *parent) 
 	: QObject(parent)
 	, m_socket(0)
-	, m_lastError("")
 	, m_log(0)
 	, m_inst(0)
 	, m_blockSize(0)
@@ -45,12 +46,14 @@ bool NetworkClient::connectTo(const QString& host, int port)
 		
 	m_socket = new QTcpSocket(this);
 	connect(m_socket, SIGNAL(readyRead()), this, SLOT(dataReady()));
-	connect(m_socket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(socketError(QAbstractSocket::SocketError)));
-	
-	log(QString("[INFO] NetworkClient: Created socket, connecting to %1:%2 ...").arg(host).arg(port));
+	connect(m_socket, SIGNAL(disconnected()), this, SIGNAL(socketDisconnected()));
+	connect(m_socket, SIGNAL(connected()), this, SIGNAL(socketConnected()));
+	connect(m_socket, SIGNAL(error(QAbstractSocket::SocketError)), this, SIGNAL(socketError(QAbstractSocket::SocketError)));
 	
 	m_blockSize = 0;
 	m_socket->connectToHost(host,port);
+	
+	return true;
 }
 
 void NetworkClient::log(const QString& str)
@@ -61,28 +64,35 @@ void NetworkClient::log(const QString& str)
 
 void NetworkClient::dataReady()
 {
-	QDataStream in(m_socket);
-	in.setVersion(QDataStream::Qt_4_0);
-	
 	if (m_blockSize == 0) 
 	{
-		if (m_socket->bytesAvailable() < (int)sizeof(quint16))
-			return;
-		in >> m_blockSize;
-		log(QString("[DEBUG] NetworkClient::dataReady(): blockSize: %1").arg(m_blockSize));
+		char data[256];
+		int bytes = m_socket->readLine((char*)&data,256);
+		
+		if(bytes == -1)
+			qDebug() << "NetworkClient::dataReady: Could not read line from socket";
+		else
+			sscanf((const char*)&data,"%d",&m_blockSize);
+		//qDebug() << "Read:["<<data<<"], size:"<<m_blockSize;
+		//log(QString("[DEBUG] NetworkClient::dataReady(): blockSize: %1 (%2)").arg(m_blockSize).arg(m_socket->bytesAvailable()));
 	}
 	
 	if (m_socket->bytesAvailable() < m_blockSize)
 		return;
 	
-	m_dataBlock.clear();
-	in >> m_dataBlock;
-	
+	m_dataBlock = m_socket->read(m_blockSize);
 	m_blockSize = 0;
 	
-	log(QString("[DEBUG] NetworkClient::dataReady(): dataBlock: %1").arg(QString(m_dataBlock)));
+	//qDebug() << "Data ("<<m_dataBlock.size()<<"/"<<m_blockSize<<"): "<<m_dataBlock;
+	//log(QString("[DEBUG] NetworkClient::dataReady(): dataBlock: %1").arg(QString(m_dataBlock)));
 
 	processBlock();
+	
+	
+	if(m_socket->bytesAvailable())
+	{
+		QTimer::singleShot(0, this, SLOT(dataReady()));
+	}
 }
 
 void NetworkClient::processBlock()
@@ -92,89 +102,65 @@ void NetworkClient::processBlock()
 	QVariant result = m_parser->parse(m_dataBlock, &ok);
 	if(!ok)
 	{
-		m_lastError = QString("Error in data at %1: %2\nData: %3").arg(m_parser->errorLine()).arg(m_parser->errorString()).arg(QString(m_dataBlock));
-		//log(QString("[ERROR] %1").arg(m_lastError));
-		emit error(m_lastError);
+		log(QString("[ERROR] Error in data at %1: %2\nData: %3").arg(m_parser->errorLine()).arg(m_parser->errorString()).arg(QString(m_dataBlock)));
 	}
 	else
 	{
 		QVariantMap map = result.toMap();
-		QString cmd = map["cmd"].toString();
-		qDebug() << "NetworkClient::processBlock: cmd:"<<cmd;
+		OutputServer::Command cmd = (OutputServer::Command)map["cmd"].toInt();
+		//qDebug() << "NetworkClient::processBlock: cmd#:"<<cmd;
 		
-		// valid commands:
-		//	setSlideGroup
-		//		args: slideGroup - XML-encoded group
-		//		      startSlide - integer slide nbr
-		//	setSlide
-		//		args: slideNum - integer slide number
-		//	addFilter
-		//		args: filterId - integer filter id
-		//	delFilter
-		//		args: filterId - integer filter id
-		//	fadeBlack
-		//		args: flag - boolean flag
-		// 	fadeClear
-		//		args: flag - boolean flag
-		//	setBackgroundColor
-		//		args: color - QString color description
-		//	setOverlaySlide
-		//		args: slide - XML encoded slide
-		//	setLiveBackground
-		//		args: fileName - QString
-		//		      wait - boolean
-		//	setAutoResizeTextEnabled
-		//		args: flag - boolean 
-		//	setFadeSpeed
-		//		args: value - integer
-		//	setFadeQuality
-		//		args: value - integer
-// // // // // // 		//	slideChanged
-// // // // // // 		//		slide - XML encoded version of the new slide
-		// 	setAspectRatio
-		//		value - double ar
-		
-		if(cmd == "setSlideGroup")
-			cmdSetSlideGroup(map["slideGroup"],map["startSlide"].toInt());
-		else 
-		if(cmd == "setSlide")
-			m_inst->setSlide(map["slideNum"].toInt());
-		else 
-		if(cmd == "addFilter")
-			cmdAddfilter(map["filterId"].toInt());
-		else 
-		if(cmd == "delFilter")
-			cmdDelFilter(map["filterId"].toInt());
-		else 
-		if(cmd == "fadeClear")
-			m_inst->fadeClearFrame(map["flag"].toBool());
-		else 
-		if(cmd == "fadeBlack")
-			m_inst->fadeBlackFrame(map["flag"].toBool());
-		else 
-		if(cmd == "setBackgroundColor")
-			m_inst->setBackground(QColor(map["color"].toString()));
-		else 
-		if(cmd == "setOverlaySlide")
-			cmdSetOverlaySlide(map["slide"]);
-		else 
-		if(cmd == "setLiveBackground")
-			cmdSetLiveBackground(map["fileName"].toString(),map["wait"].toBool());
-		else 
-		if(cmd == "setAutoResizeTextEnabled")
-			m_inst->setAutoResizeTextEnabled(map["flag"].toBool());
-		else 
-		if(cmd == "setFadeSpeed")
-			m_inst->setFadeSpeed(map["value"].toInt());
-		else 
-		if(cmd == "setFadeQuality")
-			m_inst->setFadeQuality(map["value"].toInt());
-		else 
-		if(cmd == "setAspectRatio")
-			emit aspectRatioChanged(map["value"].toDouble());
-		else
-			log(QString("[DEBUG] Unknown Command: '%1'").arg(cmd));
+		processCommand(cmd,map["v1"],map["v2"],map["v3"]);
 	}
+}
+
+void NetworkClient::processCommand(OutputServer::Command cmd, QVariant a, QVariant b, QVariant c)
+{
+	switch(cmd)
+	{
+		case OutputServer::SetSlideGroup:
+			cmdSetSlideGroup(a,b.toInt());
+			break;
+		case OutputServer::SetSlide:
+			m_inst->setSlide(a.toInt());
+			break;
+		case OutputServer::AddFilter:
+			cmdAddfilter(a.toInt());
+			break; 
+		case OutputServer::DelFilter:
+			cmdDelFilter(a.toInt());
+			break; 
+		case OutputServer::FadeClear:
+			m_inst->fadeClearFrame(a.toBool());
+			break; 
+		case OutputServer::FadeBlack:
+			m_inst->fadeBlackFrame(a.toBool());
+			break; 
+		case OutputServer::SetBackgroundColor:
+			m_inst->setBackground(QColor(a.toString()));
+			break; 
+		case OutputServer::SetOverlaySlide:
+			cmdSetOverlaySlide(a);
+			break; 
+		case OutputServer::SetLiveBackground:
+			cmdSetLiveBackground(a.toString(),b.toBool());
+			break; 
+		case OutputServer::SetTextResize:
+			m_inst->setAutoResizeTextEnabled(a.toBool());
+			break; 
+		case OutputServer::SetFadeSpeed:
+			m_inst->setFadeSpeed(a.toInt());
+			break; 
+		case OutputServer::SetFadeQuality:
+			m_inst->setFadeQuality(a.toInt());
+			break; 
+		case OutputServer::SetAspectRatio:
+			emit aspectRatioChanged(a.toDouble());
+			break; 
+		default:
+			qDebug() << "Command Not Handled: "<<(int)cmd;
+			log(QString("[DEBUG] Unknown Command: '%1'").arg(cmd));
+	}; 
 }
 
 void NetworkClient::cmdSetSlideGroup(const QVariant& var, int start)
@@ -199,12 +185,12 @@ void NetworkClient::cmdSetSlideGroup(const QVariant& var, int start)
 		
 	if (element.tagName() == "song")
 	{
-		//qDebug("Document::fromXml: Group type: Song");
+		qDebug("cmdSetSlideGroup: Group type: Song");
 		g = new SongSlideGroup();
 	}
 	else
 	{
-		//qDebug("Document::fromXml: Group type: Generic");
+		qDebug("cmdSetSlideGroup: Group type: Generic");
 		g = new SlideGroup();
 	}
 	
@@ -277,33 +263,13 @@ void NetworkClient::exit()
 	if(m_socket)
 	{
 		m_socket->abort();
+		m_socket->disconnectFromHost();
+		//m_socket->waitForDisconnected();
 		delete m_socket;
 		m_socket = 0;
 	}
 }
 
-void NetworkClient::socketError(QAbstractSocket::SocketError socketError)
-{
-	m_lastError = "";
-	switch (socketError) 
-	{
-		case QAbstractSocket::RemoteHostClosedError:
-			break;
-		case QAbstractSocket::HostNotFoundError:
-			m_lastError = tr("The host was not found. Please check the host name and port settings.");
-			break;
-		case QAbstractSocket::ConnectionRefusedError:
-			m_lastError = tr("The connection was refused by the peer. "
-					"Make sure the DViz server is running, "
-					"and check that the host name and port "
-					"settings are correct.");
-			break;
-		default:
-			m_lastError = tr("The following error occurred: %1.").arg(m_socket->errorString());
-	}
-	if(!m_lastError.isEmpty())
-		emit error(m_lastError);
-}
 /*	
 private:
 	QTcpSocket *m_socket;

@@ -13,6 +13,7 @@ public:
 
     QString host() { return m_ui->host->text(); }
     int port() { return m_ui->port->value(); }
+    bool reconnect() { return m_ui->reconnect->isChecked(); }
 
 protected:
     void changeEvent(QEvent *e);

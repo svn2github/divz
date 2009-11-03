@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>228</width>
-    <height>143</height>
+    <width>246</width>
+    <height>171</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -23,7 +23,10 @@
       <item row="0" column="0">
        <widget class="QLabel" name="label">
         <property name="text">
-         <string>Host:</string>
+         <string>&amp;Host:</string>
+        </property>
+        <property name="buddy">
+         <cstring>host</cstring>
         </property>
        </widget>
       </item>
@@ -37,7 +40,10 @@
       <item row="1" column="0">
        <widget class="QLabel" name="label_2">
         <property name="text">
-         <string>Port:</string>
+         <string>&amp;Port:</string>
+        </property>
+        <property name="buddy">
+         <cstring>port</cstring>
         </property>
        </widget>
       </item>
@@ -51,6 +57,16 @@
         </property>
         <property name="value">
          <number>7777</number>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QCheckBox" name="reconnect">
+        <property name="text">
+         <string>&amp;Automatically Reconnect</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
         </property>
        </widget>
       </item>
@@ -78,8 +94,8 @@
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>218</x>
-     <y>122</y>
+     <x>227</x>
+     <y>161</y>
     </hint>
     <hint type="destinationlabel">
      <x>157</x>
@@ -94,8 +110,8 @@
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>218</x>
-     <y>128</y>
+     <x>227</x>
+     <y>161</y>
     </hint>
     <hint type="destinationlabel">
      <x>227</x>

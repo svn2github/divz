@@ -824,7 +824,7 @@ RichTextEditorDialog::RichTextEditorDialog(QWidget *parent)  :
     //setWindowTitle(tr("Edit text"));
     setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
 
-    m_text_edit->setAcceptRichText(false);
+    m_text_edit->setAcceptRichText(true);
     ///new HtmlHighlighter(m_text_edit);
 
     connect(m_editor, SIGNAL(textChanged()), this, SLOT(richTextChanged()));

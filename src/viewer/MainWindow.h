@@ -16,6 +16,8 @@ class OutputInstance;
 class NetworkClient;
 class SlideGroup;
 class Slide;
+#include <QAbstractSocket>
+
 class MainWindow : public QMainWindow {
 	Q_OBJECT
 public:
@@ -40,22 +42,31 @@ signals:
 protected slots:
 	void slotConnect();
 	void slotDisconnect();
+	void slotReconnect();
 	void slotOutputSetup();
+	void slotConnected();
 	void slotExit();
-	void slotClientError(const QString&);
+	void socketError(QAbstractSocket::SocketError);
 	void aspectChanged(double);
 
 protected:
 	void changeEvent(QEvent *e);
 	void closeEvent(QCloseEvent *event);
-
+	
+	
 private:
+	void openOutput();
+	
 	Ui::MainWindow *m_ui;
 	
 	OutputInstance *m_inst;
 	NetworkClient *m_client;
 	
 	double m_aspect;
+	
+	QString m_host;
+	int m_port;
+	bool m_reconnect;
 	
 	/** static */
 	static MainWindow * static_mainWindow;	

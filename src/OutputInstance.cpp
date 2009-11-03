@@ -7,7 +7,8 @@
 #include <QDesktopWidget>
 #include <QApplication>
 #include <QVBoxLayout>
-
+#include <QDomDocument>
+#include <QTextStream>
 #include <QImageWriter>
 
 #include "SlideGroupViewer.h"
@@ -31,7 +32,7 @@ bool OuputInstance_slide_num_compare(Slide *a, Slide *b)
 
 
 
-OutputInstance::OutputInstance(Output *out, QWidget *parent)
+OutputInstance::OutputInstance(Output *out, bool startHidden, QWidget *parent)
 	: QWidget(parent)
 	, m_output(out)
 	, m_viewer(0)
@@ -131,7 +132,7 @@ void OutputInstance::slotGrabPixmap()
 	//qDebug("Frame: %d, Elapsed: %.02f, Avg: %.02f, FPmS: %.02f, Port: %d", frameCounter, elapsed, frameTimeSum / frameCounter, frameCounter / frameTimeSum, m_jpegServer->serverPort());
 }
 
-void OutputInstance::applyOutputSettings()
+void OutputInstance::applyOutputSettings(bool startHidden)
 {
 	Output::OutputType x = m_output->outputType();
 	if(x == Output::Screen || x == Output::Custom)
@@ -158,7 +159,10 @@ void OutputInstance::applyOutputSettings()
 		resize(geom.width(),geom.height());
 		move(geom.left(),geom.top());
 		
-		setVisible(m_output->isEnabled());
+		if(startHidden)
+			setVisible(false);
+		else
+			setVisible(m_output->isEnabled());
 		
 		setWindowTitle(QString("%1 Output - DViz").arg(m_output->name()));
 		setWindowIcon(QIcon(":/data/icon-d.png"));
@@ -179,21 +183,23 @@ void OutputInstance::applyOutputSettings()
 	else
 	if(x == Output::Network)
 	{
-		//qDebug("Warning: Output to network not supported yet. Still to be written.");
 		setVisible(false);
 			
 		if(!m_outputServer ||
 		    m_outputServer->serverPort() != m_output->port())
 		{
 			if(m_outputServer)
+			{
+				m_outputServer->close();
 				delete m_outputServer;
+			}
 			
 			m_outputServer = new OutputServer();
 			m_outputServer->setInstance(this);
 			
 			if (!m_outputServer->listen(QHostAddress::Any,m_output->port())) 
 			{
-				qDebug() << "OutputSErver could not start: "<<m_outputServer->errorString();
+				qDebug() << "OutputInstance"<<output()->name()<<": OutputServer could not start: "<<m_outputServer->errorString();
 			}
 			else
 			{
@@ -244,6 +250,8 @@ void OutputInstance::setSlideGroup(SlideGroup *group, Slide * startSlide)
 	if(x == Output::Screen || x == Output::Custom || x == Output::Preview)
 	{
 		//qDebug() << "OutputInstance::setSlideGroup: ["<<m_output->name()<<"] Calling m_viewer->setSlideGroup()";
+		//setVisible(m_output->isEnabled());
+		
 		m_viewer->setSlideGroup(group,startSlide);
 	}
 	else
@@ -255,12 +263,30 @@ void OutputInstance::setSlideGroup(SlideGroup *group, Slide * startSlide)
 		
 		if(m_outputServer)
 		{
-			qDebug() << "OutputInstance::m_outputServer: Sending group to server, num:"<<m_slideNum;
-			m_outputServer->cmdSetSlideGroup(group,m_slideNum);
+			QString xmlString;
+			QDomDocument doc;
+			QTextStream out(&xmlString);
+			
+			// This element contains all the others.
+			QDomElement rootElement = doc.createElement("group");
+		
+			group->toXml(rootElement);
+			
+			// Add the root (and all the sub-nodes) to the document
+			doc.appendChild(rootElement);
+			
+			//Add at the begining : <?xml version="1.0" ?>
+			QDomNode noeud = doc.createProcessingInstruction("xml","version=\"1.0\" ");
+			doc.insertBefore(noeud,doc.firstChild());
+			//save in the file (4 spaces indent)
+			doc.save(out, 4);
+			
+			// send it to the client
+			m_outputServer->sendCommand(OutputServer::SetSlideGroup,xmlString,m_slideNum);
 		}
 		else
 		{
-			qDebug() << "OutputInstance::m_outputSErver: No server created.";
+			qDebug() << "OutputInstance::m_outputServer: No server created.";
 		}
 	}
 	
@@ -332,7 +358,7 @@ void OutputInstance::setBackground(QColor color)
 	else
 	{
 		if(m_outputServer)
-			m_outputServer->cmdSetBackroundColor(color.name());
+			m_outputServer->sendCommand(OutputServer::SetBackgroundColor,color.name());
 	}
 }
 
@@ -374,12 +400,33 @@ void OutputInstance::setOverlaySlide(Slide * newSlide)
 	Output::OutputType x = m_output->outputType();
 	if(x == Output::Screen || x == Output::Custom || x == Output::Preview)
 	{
-		m_viewer->setOverlaySlide(newSlide);
+		m_viewer->setOverlaySlide(newSlide); 
 	}
 	else
 	{
 		if(m_outputServer)
-			m_outputServer->cmdSetOverlaySlide(newSlide);
+		{
+		
+			QString xmlString;
+			QDomDocument doc;
+			QTextStream out(&xmlString);
+			
+			// This element contains all the others.
+			QDomElement rootElement = doc.createElement("slide");
+		
+			newSlide->toXml(rootElement);
+			
+			// Add the root (and all the sub-nodes) to the document
+			doc.appendChild(rootElement);
+			
+			//Add at the begining : <?xml version="1.0" ?>
+			QDomNode noeud = doc.createProcessingInstruction("xml","version=\"1.0\" ");
+			doc.insertBefore(noeud,doc.firstChild());
+			//save in the file (4 spaces indent)
+			doc.save(out, 4);
+			
+			m_outputServer->sendCommand(OutputServer::SetOverlaySlide, xmlString);
+		}
 	}
 }
 
@@ -500,7 +547,7 @@ void OutputInstance::setAutoResizeTextEnabled(bool enable)
 	else
 	{
 		if(m_outputServer)
-			m_outputServer->cmdSetAutoResizeTextEnabled(enable);
+			m_outputServer->sendCommand(OutputServer::SetTextResize,enable);
 	}
 }
 
@@ -518,7 +565,7 @@ void OutputInstance::setFadeSpeed(int value)
 	else
 	{
 		if(m_outputServer)
-			m_outputServer->cmdSetFadeSpeed(value);
+			m_outputServer->sendCommand(OutputServer::SetFadeSpeed,value);
 	}
 }
 
@@ -536,7 +583,7 @@ void OutputInstance::setFadeQuality(int value)
 	else
 	{
 		if(m_outputServer)
-			m_outputServer->cmdSetFadeQuality(value);
+			m_outputServer->sendCommand(OutputServer::SetFadeQuality,value);
 	}
 }
 
@@ -573,6 +620,8 @@ Slide * OutputInstance::setSlide(Slide *slide)
 	if(x == Output::Screen || x == Output::Custom || x == Output::Preview)
 	{
 		//qDebug() << "OutputInstance::setSlide: ["<<m_output->name()<<"] Setting slide#"<<m_slideNum;
+		//setVisible(m_output->isEnabled());
+		
 		m_viewer->setSlide(slide);
 		
 	}
@@ -581,7 +630,7 @@ Slide * OutputInstance::setSlide(Slide *slide)
 		if(m_outputServer)
 		{
 			qDebug() << "OutputInstance::m_outputServer: Sending slide to server, num:"<<m_slideNum;
-			m_outputServer->cmdSetSlide(m_slideNum);
+			m_outputServer->sendCommand(OutputServer::SetSlide,m_slideNum);
 		}
 	}
 	
@@ -633,7 +682,7 @@ void OutputInstance::fadeBlackFrame(bool enable)
 	else
 	{
 		if(m_outputServer)
-			m_outputServer->cmdFadeBlack(enable);
+			m_outputServer->sendCommand(OutputServer::FadeBlack,enable);
 	}
 }
 
@@ -650,7 +699,7 @@ void OutputInstance::fadeClearFrame(bool enable)
 	else
 	{
 		if(m_outputServer)
-			m_outputServer->cmdFadeClear(enable);
+			m_outputServer->sendCommand(OutputServer::FadeClear,enable);
 	}
 }
 
@@ -667,6 +716,6 @@ void OutputInstance::setLiveBackground(const QFileInfo &info, bool waitForNextSl
 	else
 	{
 		if(m_outputServer)
-			m_outputServer->cmdSetLiveBackground(info.absoluteFilePath(),waitForNextSlide);
+			m_outputServer->sendCommand(OutputServer::SetLiveBackground,info.absoluteFilePath(),waitForNextSlide);
 	}
 }

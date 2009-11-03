@@ -64,6 +64,7 @@ SongEditorWindow::SongEditorWindow(SlideGroup *g, QWidget *parent) :
 	
 	m_editor = new MyQTextEdit;
 	m_editor->setFont(font);
+	//m_editor->setAcceptRichText(false);
 	
 	m_highlighter = new SongEditorHighlighter(m_editor->document());
 	

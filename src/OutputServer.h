@@ -4,6 +4,7 @@
 #include <QTcpServer>
 #include <QThread>
 #include <QTcpSocket>
+#include <QVariant>
 #include "3rdparty/qjson/serializer.h"
 
 
@@ -21,36 +22,35 @@ public:
 	void setInstance(OutputInstance *);
 	
 	QString myAddress();
+	
+	typedef enum BlockType
+	{
+		Text,
+		QImage,
+	};
+	
+	typedef enum Command
+	{
+		SetSlideGroup,
+		SetSlide,
+		AddFilter,
+		DelFilter,
+		FadeClear,
+		FadeBlack,
+		SetBackgroundColor,
+		SetOverlaySlide,
+		SetLiveBackground,
+		SetTextResize,
+		SetFadeSpeed,
+		SetFadeQuality,
+		SetAspectRatio,
+	};
 
 public slots:
-	void cmdSetSlideGroup(SlideGroup *, int);
-	void cmdSetSlide(int);
-	void cmdAddFilter(int);
-	void cmdDelFilter(int);
-	void cmdFadeClear(bool);
-	void cmdFadeBlack(bool);
-	void cmdSetBackroundColor(const QString&);
-	void cmdSetOverlaySlide(Slide*);
-	void cmdSetLiveBackground(const QString&,bool);
-	void cmdSetAutoResizeTextEnabled(bool);
-	void cmdSetFadeSpeed(int);
-	void cmdSetFadeQuality(int);
-	void cmdSetAspectRatio(double);
+	void sendCommand(Command,QVariant a= QVariant(),QVariant b= QVariant(),QVariant c= QVariant());
 
 signals:
-	void _cmdSetSlideGroup(SlideGroup *, int);
-	void _cmdSetSlide(int);
-	void _cmdAddFilter(int);
-	void _cmdDelFilter(int);
-	void _cmdFadeClear(bool);
-	void _cmdFadeBlack(bool);
-	void _cmdSetBackroundColor(const QString&);
-	void _cmdSetOverlaySlide(Slide*);
-	void _cmdSetLiveBackground(const QString&,bool);
-	void _cmdSetAutoResizeTextEnabled(bool);
-	void _cmdSetFadeSpeed(int);
-	void _cmdSetFadeQuality(int);
-	void _cmdSetAspectRatio(double);
+	void commandReady(OutputServer::Command,QVariant,QVariant,QVariant);
 
 protected:
 	void incomingConnection(int socketDescriptor);
@@ -58,6 +58,7 @@ protected:
 	OutputInstance *m_inst;
 };
 
+Q_DECLARE_METATYPE(OutputServer::Command);
 
 class OutputServerThread : public QThread
 {
@@ -73,23 +74,10 @@ signals:
 	void error(QTcpSocket::SocketError socketError);
 
 public slots:
-	void cmdSetSlideGroup(SlideGroup *, int startSlide);
-	void cmdSetSlide(int);
-	void cmdAddFilter(int);
-	void cmdDelFilter(int);
-	void cmdFadeClear(bool);
-	void cmdFadeBlack(bool);
-	void cmdSetBackroundColor(const QString&);
-	void cmdSetOverlaySlide(Slide*);
-	void cmdSetLiveBackground(const QString&,bool);
-	void cmdSetAutoResizeTextEnabled(bool);
-	void cmdSetFadeSpeed(int);
-	void cmdSetFadeQuality(int);
-	void cmdSetAspectRatio(double);
+	void sendCommand(OutputServer::Command,QVariant,QVariant,QVariant);
 
 private:
 	void sendMap(const QVariantMap &);
-	void sendCmd(const QString &cmd, const QString &arg, QVariant value, const QString &arg2="", QVariant value2= QVariant());
 	
 	QJson::Serializer * m_stringy;
 	int m_socketDescriptor;

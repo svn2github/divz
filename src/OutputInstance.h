@@ -26,7 +26,7 @@ class OutputInstance : public QWidget
 {
 	Q_OBJECT
 public:
-	OutputInstance(Output *output, QWidget *parent=0);
+	OutputInstance(Output *output, bool startHidden = false, QWidget *parent=0);
 	~OutputInstance();
 	
 	Output * output() { return m_output; }
@@ -85,7 +85,7 @@ public slots:
 private slots:
 	//void appSettingsChanged();
 	//void aspectRatioChanged(double);
-	void applyOutputSettings();
+	void applyOutputSettings(bool startHidden=false);
 	
 	void slotNextGroup();
 	

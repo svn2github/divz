@@ -8,6 +8,8 @@ class OutputInstance;
 #include <QByteArray>
 #include <QTcpSocket>
 
+#include "OutputServer.h"
+
 namespace QJson
 {
 	class Parser;
@@ -24,19 +26,21 @@ public:
 	void setLogger(MainWindow*);
 	void setInstance(OutputInstance*);
 	bool connectTo(const QString& host, int port);
-	QString errorString() { return m_lastError; }
 	void exit();
+	QString errorString(){ return m_socket->errorString(); }
 
 signals:
-	void error(const QString&msg);
 	void aspectRatioChanged(double);
+	void socketDisconnected();
+	void socketError(QAbstractSocket::SocketError);
+	void socketConnected();
 	
 private slots:
-	
-	void socketError(QAbstractSocket::SocketError socketError);
-	
 	void dataReady();
 	void processBlock();
+	void processCommand(OutputServer::Command, QVariant, QVariant, QVariant);
+	
+	
 	
 protected:
 	void cmdSetSlideGroup(const QVariant &,int);
@@ -48,8 +52,6 @@ protected:
 private:
 	void log(const QString&);
 	QTcpSocket *m_socket;
-	
-	QString m_lastError;
 	
 	MainWindow * m_log;
 	OutputInstance * m_inst;
