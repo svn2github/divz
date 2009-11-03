@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>395</width>
-    <height>511</height>
+    <width>476</width>
+    <height>566</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -254,8 +254,8 @@
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>236</x>
-     <y>364</y>
+     <x>245</x>
+     <y>556</y>
     </hint>
     <hint type="destinationlabel">
      <x>157</x>
@@ -270,8 +270,8 @@
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>304</x>
-     <y>364</y>
+     <x>313</x>
+     <y>556</y>
     </hint>
     <hint type="destinationlabel">
      <x>286</x>
@@ -322,8 +322,8 @@
      <y>120</y>
     </hint>
     <hint type="destinationlabel">
-     <x>319</x>
-     <y>152</y>
+     <x>455</x>
+     <y>166</y>
     </hint>
    </hints>
   </connection>
@@ -350,12 +350,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>92</x>
-     <y>238</y>
+     <x>112</x>
+     <y>290</y>
     </hint>
     <hint type="destinationlabel">
-     <x>106</x>
-     <y>264</y>
+     <x>126</x>
+     <y>319</y>
     </hint>
    </hints>
   </connection>
@@ -366,12 +366,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>171</x>
-     <y>238</y>
+     <x>191</x>
+     <y>290</y>
     </hint>
     <hint type="destinationlabel">
-     <x>222</x>
-     <y>264</y>
+     <x>291</x>
+     <y>319</y>
     </hint>
    </hints>
   </connection>
@@ -382,12 +382,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>164</x>
-     <y>289</y>
+     <x>184</x>
+     <y>348</y>
     </hint>
     <hint type="destinationlabel">
-     <x>222</x>
-     <y>315</y>
+     <x>291</x>
+     <y>376</y>
     </hint>
    </hints>
   </connection>
@@ -398,12 +398,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>94</x>
-     <y>289</y>
+     <x>114</x>
+     <y>348</y>
     </hint>
     <hint type="destinationlabel">
-     <x>93</x>
-     <y>315</y>
+     <x>113</x>
+     <y>376</y>
     </hint>
    </hints>
   </connection>
@@ -414,12 +414,28 @@
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>154</x>
-     <y>346</y>
+     <x>163</x>
+     <y>556</y>
     </hint>
     <hint type="destinationlabel">
      <x>174</x>
      <y>329</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>copyFiles</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>removeOrig</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>211</x>
+     <y>123</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>200</x>
+     <y>210</y>
     </hint>
    </hints>
   </connection>

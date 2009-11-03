@@ -16,6 +16,7 @@
 #include <QSortFilterProxyModel>
 #include <QtSql>
 #include <QDebug>
+#include <QHash>
 
 class Document;
 class DocumentListModel;
@@ -27,6 +28,7 @@ class SlideGroupViewControl;
 class Slide;
 class SlideGroup;
 class MediaBrowser;
+class Output;
 
 #define FALLBACK_SCREEN_RECT QRectF(0,0,1024,768)
 
@@ -65,7 +67,7 @@ signals:
 	void appSettingsChanged();
 
 public slots:
-	void setLiveGroup(SlideGroup*, Slide *slide=0);
+	void setLiveGroup(SlideGroup*, Slide *slide=0, bool allowProgressDialog=true);
 	void editGroup(SlideGroup*, Slide *slide=0);
 	void deleteGroup(SlideGroup*);
 	void previewSlideGroup(SlideGroup*);
@@ -129,6 +131,8 @@ private:
 	void setupSongList();
 	void setupMediaBrowser();
 	
+	void sendGroupToOutput(Output *output, SlideGroup *group, Slide *startSlide, bool allowProgressDialog);
+	
 	Ui::MainWindow *m_ui;
 	SlideEditorWindow * m_editWin;
 	DocumentListModel * m_docModel;
@@ -158,14 +162,15 @@ private:
 	
 	SlideGroupViewControl * m_viewControl;
 	
-	QMap<int, OutputInstance *> m_outputInstances;
-	QMap<int, SlideGroupViewControl *> m_viewControls;
-	QMap<int, OutputControl *> m_outputControls;
+	QHash<int, OutputInstance *> m_outputInstances;
+	QHash<int, SlideGroupViewControl *> m_viewControls;
+	QHash<int, OutputControl *> m_outputControls;
+	QHash<int, QDockWidget *> m_outputViewDocks;
 	
 	OutputInstance * liveInst();// { return output(AppSettings::taggedOutput("live")->id()); }
 	SlideGroupViewControl * liveCtrl();// { return viewControl(AppSettings::taggedOutput("live")->id()); }
 	
-	QMap<int,QCheckBox*>	m_outputCheckboxes;
+	QHash<int,QCheckBox*>	m_outputCheckboxes;
 	QWidget			* m_outputCheckboxBase;
 	
 	//QWidget			* m_previewControlBase;

@@ -41,6 +41,7 @@ OutputInstance::OutputInstance(Output *out, bool startHidden, QWidget *parent)
 	, m_isFoldback(false)
 	, m_jpegServer(0)
 	, m_outputServer(0)
+	, m_mirror(0)
 {
 	out->setInstance(this);
 	
@@ -80,6 +81,11 @@ OutputInstance::~OutputInstance()
 		qDeleteAll(m_imgBuffer);
 		m_imgBuffer.clear();
 	}
+}
+
+void OutputInstance::setMirrorInstance(OutputInstance *inst)
+{
+	m_mirror = inst;
 }
 
 void OutputInstance::slotGrabPixmap()
@@ -249,6 +255,9 @@ void OutputInstance::setSlideGroup(SlideGroup *group, int startSlide)
 
 void OutputInstance::setSlideGroup(SlideGroup *group, Slide * startSlide)
 {
+	emit slideGroupChanged(group,startSlide);
+	if(m_mirror)
+		m_mirror->setSlideGroup(group,startSlide);
 	Output::OutputType x = m_output->outputType();
 	if(x == Output::Screen || x == Output::Custom || x == Output::Preview)
 	{
@@ -292,6 +301,7 @@ void OutputInstance::setSlideGroup(SlideGroup *group, Slide * startSlide)
 			qDebug() << "OutputInstance::m_outputServer: No server created.";
 		}
 	}
+	
 	
 	// Replicate the OutputInstance logic internally.
 	// Right now, not needed. But for a network viewer, we'll do this to reduce network logic & trafic needed
@@ -337,6 +347,8 @@ int OutputInstance::numSlides()
 
 void OutputInstance::clear()
 {
+	if(m_mirror)
+		m_mirror->clear();
 	Output::OutputType outType = m_output->outputType();
 	if(outType == Output::Screen || outType == Output::Custom || outType == Output::Preview)
 	{
@@ -353,6 +365,8 @@ void OutputInstance::clear()
 
 void OutputInstance::setBackground(QColor color)
 {
+	if(m_mirror)
+		m_mirror->setBackground(color);
 	Output::OutputType outType = m_output->outputType();
 	if(outType == Output::Screen || outType == Output::Custom || outType == Output::Preview)
 	{
@@ -397,6 +411,8 @@ void OutputInstance::setSceneContextHint(MyGraphicsScene::ContextHint hint)
 
 void OutputInstance::setOverlaySlide(Slide * newSlide)
 {
+	if(m_mirror)
+		m_mirror->setOverlaySlide(newSlide);
 	m_overlaySlide = newSlide;
 	if(!m_output->isEnabled())
 		return;
@@ -435,6 +451,8 @@ void OutputInstance::setOverlaySlide(Slide * newSlide)
 
 void OutputInstance::setOverlayEnabled(bool enable)
 {
+	if(m_mirror)
+		m_mirror->setOverlayEnabled(enable);
 	m_overlayEnabled = enable;
 	if(!m_output->isEnabled())
 		return;
@@ -453,6 +471,8 @@ void OutputInstance::setOverlayEnabled(bool enable)
 
 void OutputInstance::setTextOnlyFilterEnabled(bool enable)
 {
+	if(m_mirror)
+		m_mirror->setTextOnlyFilterEnabled(enable);
 	m_textOnlyFilter = enable;
 	if(!m_output->isEnabled())
 		return;
@@ -477,6 +497,9 @@ void OutputInstance::setTextOnlyFilterEnabled(bool enable)
 
 void OutputInstance::addFilter(AbstractItemFilter * filter)
 {
+	if(m_mirror)
+		m_mirror->addFilter(filter);
+		
 	if(!m_slideFilters.contains(filter))
 		m_slideFilters.append(filter);
 	//applySlideFilters();
@@ -498,6 +521,9 @@ void OutputInstance::addFilter(AbstractItemFilter * filter)
 
 void OutputInstance::removeFilter(AbstractItemFilter *filter)
 {
+	if(m_mirror)
+		m_mirror->removeFilter(filter);
+		
 	m_slideFilters.removeAll(filter);
 	//applySlideFilters();
 	
@@ -518,7 +544,8 @@ void OutputInstance::removeFilter(AbstractItemFilter *filter)
 
 void OutputInstance::removeAllFilters()
 {
-	
+	if(m_mirror)
+		m_mirror->removeAllFilters();
 	
 	if(!m_output->isEnabled())
 		return;
@@ -539,6 +566,9 @@ void OutputInstance::removeAllFilters()
 
 void OutputInstance::setAutoResizeTextEnabled(bool enable)
 {
+	if(m_mirror)
+		m_mirror->setAutoResizeTextEnabled(enable);
+	
 	m_autoResizeText = enable;
 	if(!m_output->isEnabled())
 		return;
@@ -557,6 +587,9 @@ void OutputInstance::setAutoResizeTextEnabled(bool enable)
 
 void OutputInstance::setFadeSpeed(int value)
 {
+	if(m_mirror)
+		m_mirror->setFadeSpeed(value);
+	
 	m_fadeSpeed = value;
 	if(!m_output->isEnabled())
 		return;
@@ -575,6 +608,9 @@ void OutputInstance::setFadeSpeed(int value)
 
 void OutputInstance::setFadeQuality(int value)
 {
+	if(m_mirror)
+		m_mirror->setFadeQuality(value);
+	
 	m_fadeQuality = value;
 	if(!m_output->isEnabled())
 		return;
@@ -605,6 +641,9 @@ Slide * OutputInstance::setSlide(int x)
 
 Slide * OutputInstance::setSlide(Slide *slide)
 {
+	if(m_mirror)
+		m_mirror->setSlide(slide);
+		
 	if(!m_output->isEnabled())
 		return 0;
 		
@@ -671,6 +710,9 @@ Slide * OutputInstance::prevSlide()
 
 void OutputInstance::fadeBlackFrame(bool enable)
 {
+	if(m_mirror)
+		m_mirror->fadeBlackFrame(enable);
+		
 	if(!m_output->isEnabled())
 		return;
 		
@@ -691,6 +733,9 @@ void OutputInstance::fadeBlackFrame(bool enable)
 
 void OutputInstance::fadeClearFrame(bool enable)
 {
+	if(m_mirror)
+		m_mirror->fadeClearFrame(enable);
+		
 	if(!m_output->isEnabled())
 		return;
 		
@@ -708,6 +753,9 @@ void OutputInstance::fadeClearFrame(bool enable)
 
 void OutputInstance::setLiveBackground(const QFileInfo &info, bool waitForNextSlide)
 {
+	if(m_mirror)
+		m_mirror->setLiveBackground(info,waitForNextSlide);
+		
 	if(!m_output->isEnabled())
 		return;
 		

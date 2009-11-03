@@ -1,57 +1,29 @@
 #include "OutputViewer.h"
 
-#include "MainWindow.h"
-#include "AppSettings.h"
-
 #include "MyGraphicsScene.h"
 #include "model/SlideGroup.h"
-#include "SlideGroupViewer.h"
+#include "model/Slide.h"
+#include "model/Output.h"
+#include "OutputInstance.h"
 
 #include <QVBoxLayout>
-#ifndef QT_NO_OPENGL
-# include <QtOpenGL/QGLWidget>
-#endif
 
 
-OutputViewer::OutputViewer(SlideGroupViewer *output, QWidget *parent)
-	    : QWidget(parent), m_output(0), m_scene(0), m_view(0), m_usingGL(false)
+OutputViewer::OutputViewer(OutputInstance *inst, QWidget *parent)
+	    : QWidget(parent), m_inst(0)
 {
-	m_view = new QGraphicsView(this);
-	m_view->setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing | QPainter::SmoothPixmapTransform );
+	m_view = new OutputInstance(Output::previewInstance());
+	m_view->setCanZoom(true);
 	
-	// check to see if we need to set the GL viewport
-	appSettingsChanged();
-
-	if(output)
-		setViewer(output);
+	if(inst)
+		setOutputInstance(inst);
 	
-	m_view->setBackgroundBrush(Qt::gray);
+	m_view->setBackground(Qt::gray);
 
 	QVBoxLayout *layout = new QVBoxLayout();
-	layout->setContentsMargins(0,0,0,0);
+	layout->setMargin(0);
 	layout->addWidget(m_view);
 	setLayout(layout);
-	
-	if(MainWindow::mw())
-	{
-		connect(MainWindow::mw(), SIGNAL(appSettingsChanged()), this, SLOT(appSettingsChagned()));
-// 		connect(mw, SIGNAL(aspectRatioChanged(Document*)), this, SLOT(docSettingsChagned(Document*)));
-	}
-}
-
-void OutputViewer::appSettingsChanged()
-{
-	if(AppSettings::useOpenGL() && !m_usingGL)
-	{
-		m_usingGL = true;
-		m_view->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
-	}
-	else
-	if(!AppSettings::useOpenGL() && m_usingGL)
-	{
-		m_usingGL = false;
-		m_view->setViewport(new QWidget());
-	}
 }
 
 OutputViewer::~OutputViewer()
@@ -63,25 +35,14 @@ OutputViewer::~OutputViewer()
 	}
 }
 
-void OutputViewer::setViewer(SlideGroupViewer *output)
+void OutputViewer::setOutputInstance(OutputInstance *inst)
 {
-// 	m_output = output;
-// 	m_scene = output->scene();
-// 	m_view->setScene(m_scene);
-}
-
-void OutputViewer::resizeEvent(QResizeEvent *)
-{
-	adjustViewScaling();
-}
-
-void OutputViewer::adjustViewScaling()
-{
-	float sx = ((float)m_view->width()) / m_scene->width();
-	float sy = ((float)m_view->height()) / m_scene->height();
-
-	float scale = qMax(sx,sy);
-	m_view->setTransform(QTransform().scale(scale,scale));
-	//qDebug("Scaling: %.02f x %.02f = %.02f",sx,sy,scale);
-	m_view->update();
+//  	if(m_inst)
+//  		disconnect(m_inst,0,this,0);
+	if(m_inst)
+		m_inst->setMirrorInstance(0);
+ 	m_inst = inst;
+ 	m_inst->setMirrorInstance(m_view);
+ 	//connect(m_inst, SIGNAL(slideChanged(int)), m_view, SLOT(setSlide(int)));
+ 	//connect(m_inst, SIGNAL(slideGroupChanged(SlideGroup*,Slide*)), m_view, SLOT(setSlideGroup(SlideGroup*,Slide*)));
 }

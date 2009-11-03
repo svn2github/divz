@@ -776,7 +776,7 @@ void SlideEditorWindow::setCurrentSlideLive()
 			slide->setAutoChangeTime(0);
 	}
 	
-	MainWindow::mw()->setLiveGroup(m_slideGroup,slide);
+	MainWindow::mw()->setLiveGroup(m_slideGroup,slide,false); // false = dont show progress dialog
 	
 	if(changeTime > 0 && slide->autoChangeTime() == 0)
 	{

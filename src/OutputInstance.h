@@ -8,6 +8,9 @@
 #include <QTimer>
 #include <QCloseEvent>
 #include <QFileInfo>
+#include <QVBoxLayout>
+#include <QHBoxLayout>
+
 
 #include "model/AbstractItemFilter.h"
 
@@ -21,7 +24,7 @@ class Output;
 class JpegServer;
 class OutputServer;
 class QImage;
-
+class QResizeEvent; 
 class OutputInstance : public QWidget
 {
 	Q_OBJECT
@@ -31,16 +34,11 @@ public:
 	
 	Output * output() { return m_output; }
 	
-	void setSlideGroup(SlideGroup*, int startSlide);
-	void setSlideGroup(SlideGroup*, Slide *slide = 0);
 	SlideGroup * slideGroup();
 	
 	int numSlides();
-	void clear();
 	
-	void setBackground(QColor);
 	void setSceneContextHint(MyGraphicsScene::ContextHint);
-	void setCanZoom(bool);
 	
 	Slide *overlaySlide() { return m_overlaySlide; }
 	bool isOverlayEnabled() { return m_overlayEnabled; } 
@@ -48,10 +46,7 @@ public:
 	bool isTextOnlyFilterEnabled() { return m_textOnlyFilter; }
 	bool isAutoResizeTextEnabled() { return m_autoResizeText; }
 	
-	void addFilter(AbstractItemFilter *);
-	void removeFilter(AbstractItemFilter *);
 	bool hasFilter(AbstractItemFilter *filter) { return m_slideFilters.contains(filter); }
-	void removeAllFilters();
 	
 	int fadeSpeed() { return m_fadeSpeed; }
 	int fadeQuality() { return m_fadeQuality; } 
@@ -60,10 +55,24 @@ signals:
 	void nextGroup();
 	
 	void slideChanged(int);
+	void slideGroupChanged(SlideGroup*,Slide*);
 	
 	void imageReady(QImage*);
 
 public slots:
+	void setMirrorInstance(OutputInstance *);
+
+	void addFilter(AbstractItemFilter *);
+	void removeFilter(AbstractItemFilter *);
+	void removeAllFilters();
+	
+	void setSlideGroup(SlideGroup*, Slide *slide = 0);
+	void setSlideGroup(SlideGroup*, int startSlide);
+	void clear();
+	
+	void setBackground(QColor);
+	void setCanZoom(bool);
+	
 	Slide * setSlide(Slide *);
 	Slide * setSlide(int);
 	Slide * nextSlide();
@@ -95,8 +104,11 @@ private slots:
 	
 protected:
 	//void closeEvent(QCloseEvent *);
+	//void resizeEvent(QResizeEvent*);
 
 private:
+	void updateControlWidget();
+
 	Output *m_output;
 	SlideGroupViewer *m_viewer;
 	
@@ -125,6 +137,15 @@ private:
 	QList<QImage*> m_imgBuffer;
 	
 	OutputServer *m_outputServer;
+	
+	OutputInstance * m_mirror;
+	
+	QWidget * m_ctrlWidget;
+	
+	QVBoxLayout *m_vbox;
+	QHBoxLayout *m_hbox;
+	
+	bool m_lockResizeEvent;
 };
 
 #endif // SLIDEGROUPVIEWER_H

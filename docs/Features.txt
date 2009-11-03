@@ -687,27 +687,27 @@ Revised Task list for Release 1.0, 10/18/09:
 		[LATER] Video Capture (started impl, but again, performance is terrible. That may be due to the FormatOpts specified, or in ffmpeg, or the capture hardware - need to trace - later!)
 	
 	- Bugs:
-		when in editor and go live with slide(F5), progress dialog steals focus from editor sometimes
+		phc logo overlays didint draw the shadow correclty - its almost like they drew the shadow with a vertically-compressed original, and its not till i drag them from original position that the shaodw renders correctly
 		if set background color on foldback while song active, song filter disables and doesnt re-enable till song go live again
 		songfilter doesnt use background color for foldback that is already set before song golive
+		[FIXED] when in editor and go live with slide(F5), progress dialog steals focus from editor sometimes
+			added bool allowProgressDialog to SlideGroupallowProgressDialogViewControl::setSlideGroup() and made the code path leading to that function honor said flag
 		[WORKSFORME] crash: songs with per-slide template boxes cause crash when golive
 			cannot repeat on linux
-		rear song filter: for passages that contain paranethesis after the tag keyword, the "next line" part of the filter doesnt pick up any text
-		phc logo overlays didint draw the shadow correclty - its almost like they drew the shadow with a vertically-compressed original, and its not till i drag them from original position that the shaodw renders correctly
-		
 		[HOLD] crash: image import crashes while mjpeg output live
 		[HOLD] crash: open document with mjpeg client attached (not crash on first load, but when open doc after a doc already opened)
 			cannot replicate on linux
 			may be only windows - need to confirm
-		
+			
+		re-enabling an output messes up the checkboxes above the doc list
 		
 		video icons dont render the actual icon after loading if not already in disk cache
-		
 		
 		when auto-size text is enabled on foldback, foldback doesnt display correct verse all the time - sometimes displays a different verse that what it should be showing
 			cant repeat yet
 
-		need to fix the hackish method of setting slide groups on synced outputs in MainWindow - needs to be cleaner!
+		[FIXED] need to fix the hackish method of setting slide groups on synced outputs in MainWindow - needs to be cleaner!
+			added private MainWindow::sendGroupToOutput(Output *output, SlideGroup *group, Slide *startSlide, bool allowProgressDialog) method
 		
 		deleting m_doc in mainwindow::openfile causes segflt when golive with next group - why??
 				
@@ -752,6 +752,8 @@ Revised Task list for Release 1.0, 10/18/09:
 			not a show stopper right now
 			
 			
+		[FIXED] rear song filter: for passages that contain paranethesis after the tag keyword, the "next line" part of the filter doesnt pick up any text
+			updated regexp, changed after paren code, changed '.' to '[^\n]'
 		[FIXED] when dragging multiple-select items, only one item syncs back to the model - the others dont
 			as evidenced when the slide is live, drag multiple items, only one moves in live view
 			update abstractcontent - mouserelease to call synctomodel on other selected items 

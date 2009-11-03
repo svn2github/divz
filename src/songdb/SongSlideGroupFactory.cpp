@@ -87,9 +87,10 @@ AbstractItem * SongFoldbackTextFilter::mutate(const AbstractItem *sourceItem)
 				if(row+1 < list.size())
 				{
 					QString next = list[row+1];
-					next = next.replace(QRegExp("(Verse|Chorus|Tag|Bridge|End(ing)?|Intro(duction)?|B:|R:|C:|T:|G:|\\|)(\\s+\\d+)?(\\s*\\(.*\\).*)?",Qt::CaseInsensitive),""); // dont show rear text in first line of next slide
+					next = next.replace(QRegExp("(Verse|Chorus|Tag|Bridge|End(ing)?|Intro(duction)?|B:|R:|C:|T:|G:|\\|)(\\s+\\d+)?(\\s*\\([^\n]*\\)[^\n]*)?",Qt::CaseInsensitive),""); // dont show rear text in first line of next slide
+					
 					QString textBlob = next.replace("\n","/");
-					QString substring = textBlob.left(28); // TODO MAGIC NUMBER ...is 30 a good width?
+					QString substring = textBlob.left(28); // TODO MAGIC NUMBER ...is 28 a good width?
 					html << nextLinePrefix; //linePrefix;
 					html << "..."; // <br> is intentional to give it some whitespace before this line
 					html << substring;

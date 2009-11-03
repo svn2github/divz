@@ -57,7 +57,7 @@ HEADERS += \
 	SlideEditorWindow.h \
 	DocumentListModel.h \
 	SlideGroupViewer.h \
-#	OutputViewer.h \
+	OutputViewer.h \
 	OutputSetupDialog.h \
 	AppSettings.h \
 	AppSettingsDialog.h \

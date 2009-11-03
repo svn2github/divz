@@ -394,7 +394,7 @@ void SlideGroupViewControl::setOutputView(OutputInstance *v)
 		m_slideViewer->setSlideGroup(g);
 }
 	
-void SlideGroupViewControl::setSlideGroup(SlideGroup *g, Slide *curSlide)
+void SlideGroupViewControl::setSlideGroup(SlideGroup *g, Slide *curSlide, bool allowProgressDialog)
 {
 	assert(g);
 	
@@ -408,17 +408,22 @@ void SlideGroupViewControl::setSlideGroup(SlideGroup *g, Slide *curSlide)
 	
 	m_group = g;
 	
-	DeepProgressIndicator *d = new DeepProgressIndicator(m_slideModel,this);
-	d->setText(QString("Loading Group #%1...").arg(g->groupNumber()));
-	d->setTitle(QString("Loading Group #%1").arg(g->groupNumber()));
-	d->setSize(g->numSlides());
+	DeepProgressIndicator *d = 0;
+	if(allowProgressDialog)
+	{
+		d = new DeepProgressIndicator(m_slideModel,this);
+		d->setText(QString("Loading Group #%1...").arg(g->groupNumber()));
+		d->setTitle(QString("Loading Group #%1").arg(g->groupNumber()));
+		d->setSize(g->numSlides());
+	}
 	
 	m_slideModel->setSlideGroup(g);
 	
 	// reset seems to be required
 	m_listView->reset();
 	
-	d->close();
+	if(d)
+		d->close();
 	
 	
 	if(!curSlide)

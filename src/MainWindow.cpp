@@ -870,6 +870,26 @@ void MainWindow::setupOutputControls()
 				//m_outputTabs->addTab(ctrl,output->name());
 			}
 		}
+		
+		if(m_outputViewDocks.contains(output->id()))
+		{
+			QDockWidget * dock = m_outputViewDocks[output->id()];
+			dock->setVisible(output->isEnabled());
+		}
+		else
+		{
+			QDockWidget *dock = new QDockWidget(output->name() + " View", this);
+			dock->setObjectName(output->name());
+			
+			OutputInstance *inst = outputInst(output->id());
+			OutputViewer *view = new OutputViewer(inst,dock);
+			dock->setWidget(view);
+			addDockWidget(Qt::RightDockWidgetArea, dock);
+			
+			m_outputViewDocks[output->id()] = dock;
+			
+			dock->setVisible(output->isEnabled());
+		}
 	}
 }
 	
@@ -965,7 +985,7 @@ void MainWindow::previewSlideDoubleClicked(Slide *slide)
 	setLiveGroup(group,slide);
 }
 
-void MainWindow::setLiveGroup(SlideGroup *newGroup, Slide *currentSlide)
+void MainWindow::setLiveGroup(SlideGroup *newGroup, Slide *currentSlide, bool allowProgressDialog)
 {
 	QList<Output*> selectedOutputs;
 	QList<Output*> allOut = AppSettings::outputs();
@@ -979,125 +999,86 @@ void MainWindow::setLiveGroup(SlideGroup *newGroup, Slide *currentSlide)
 	
 	QList<int> alreadyConsumed;
 	
-	// HACK HACK HACK this duplicates logic in these two blocks - need to cleanup
 	foreach(OutputControl *outputCtrl, m_outputControls)
 	{
-		OutputInstance *inst = outputCtrl->outputInstance();
-		Output * output = inst->output();
+		Output * output = outputCtrl->outputInstance()->output();
 		if(selectedOutputs.contains(output))
 		{
 			if(outputCtrl->outputIsSynced())
 			{
 				qDebug() << "MainWindow::setLiveGroup: preping synced output:"<<output->name();
 				alreadyConsumed << output->id();
-			
-				SlideGroupViewControl *ctrl = viewControl(output->id());
 				
-				SlideGroup * oldGroup = inst->slideGroup();
-				
-				//if(!inst->isVisible())
-				//	inst->show();
-				
-				//qDebug() << "MainWindow::setLiveGroup(): newGroup->groupType():"<<newGroup->groupType()<<", SlideGroup::Generic:"<<SlideGroup::Generic;
-				if((oldGroup && oldGroup->groupType() != newGroup->groupType()) || newGroup->groupType() != SlideGroup::Generic)
-				{
-					SlideGroupFactory *factory = SlideGroupFactory::factoryForType(newGroup->groupType());
-					if(!factory)
-					{
-						//qDebug() << "MainWindow::setLiveGroup(): Factory fell thu for request, going to generic control";
-						factory = SlideGroupFactory::factoryForType(SlideGroup::Generic);
-					}
-					
-					if(factory)
-					{
-						//qDebug() << "MainWindow::setLiveGroup(): got new factory, initalizing";
-						//m_outputTabs->removeTab(m_outputTabs->indexOf(ctrl));
-						
-						if(ctrl)
-						{
-							delete ctrl;
-							ctrl = 0;
-						}	
-						
-						
-						ctrl = factory->newViewControl();
-						ctrl->setOutputView(inst);
-						//m_outputTabs->addTab(ctrl,output->name());
-						outputCtrl->setViewControl(ctrl);
-						outputCtrl->setCustomFilters(factory->customFiltersFor(outputCtrl->outputInstance()));
-						
-						m_viewControls[output->id()] = ctrl;
-					}
-				}
-				
-				//qDebug() << "MainWindow::setLiveGroup: Loading into view control";
-				ctrl->setSlideGroup(newGroup,currentSlide);
-				//qDebug() << "MainWindow::setLiveGroup: Loading into LIVE output";
-				inst->setSlideGroup(newGroup,currentSlide);
-				//qDebug() << "MainWindow::setLiveGroup: Loading into LIVE output (done)";
-				ctrl->setFocus(Qt::OtherFocusReason);
+				sendGroupToOutput(output, newGroup, currentSlide, allowProgressDialog);
 			}
 		}
 	}
-				
-		
+	
 	foreach(Output *output, selectedOutputs)
 	{
 		if(!alreadyConsumed.contains(output->id()))
 		{
 			qDebug() << "MainWindow::setLiveGroup: setting non-synced output:"<<output->name();
 			
-			OutputInstance *inst = outputInst(output->id());
-			OutputControl *outputCtrl = outputControl(output->id());
-			SlideGroupViewControl *ctrl = viewControl(output->id());
-			
-			SlideGroup * oldGroup = inst->slideGroup();
-			
-			//if(!inst->isVisible())
-				//inst->show();
-			
-			//qDebug() << "MainWindow::setLiveGroup(): newGroup->groupType():"<<newGroup->groupType()<<", SlideGroup::Generic:"<<SlideGroup::Generic;
-			if((oldGroup && oldGroup->groupType() != newGroup->groupType()) || newGroup->groupType() != SlideGroup::Generic)
-			{
-				SlideGroupFactory *factory = SlideGroupFactory::factoryForType(newGroup->groupType());
-				if(!factory)
-				{
-					//qDebug() << "MainWindow::setLiveGroup(): Factory fell thu for request, going to generic control";
-					factory = SlideGroupFactory::factoryForType(SlideGroup::Generic);
-				}
-				
-				if(factory)
-				{
-					//qDebug() << "MainWindow::setLiveGroup(): got new factory, initalizing";
-					//m_outputTabs->removeTab(m_outputTabs->indexOf(ctrl));
-					
-					if(ctrl)
-					{
-						delete ctrl;
-						ctrl = 0;
-					}	
-					
-					
-					ctrl = factory->newViewControl();
-					ctrl->setOutputView(inst);
-					//m_outputTabs->addTab(ctrl,output->name());
-					outputCtrl->setViewControl(ctrl);
-					outputCtrl->setCustomFilters(factory->customFiltersFor(outputCtrl->outputInstance()));
-					
-					m_viewControls[output->id()] = ctrl;
-				}
-			}
-			
-			//qDebug() << "MainWindow::setLiveGroup: Loading into view control";
-			ctrl->setSlideGroup(newGroup,currentSlide);
-			//qDebug() << "MainWindow::setLiveGroup: Loading into LIVE output";
-			inst->setSlideGroup(newGroup,currentSlide);
-			//qDebug() << "MainWindow::setLiveGroup: Loading into LIVE output (done)";
-			ctrl->setFocus(Qt::OtherFocusReason);
+			sendGroupToOutput(output, newGroup, currentSlide, allowProgressDialog);
 		}
 	}
 	
 }
+		
+	
+void MainWindow::sendGroupToOutput(Output *output, SlideGroup *newGroup, Slide *currentSlide, bool allowProgressDialog)
+{
+	
+	OutputInstance *inst = outputInst(output->id());
+	OutputControl *outputCtrl = outputControl(output->id());
+	SlideGroupViewControl *ctrl = viewControl(output->id());
+			
+	SlideGroup * oldGroup = inst->slideGroup();
+	
+	//if(!inst->isVisible())
+	//	inst->show();
+	
+	//qDebug() << "MainWindow::setLiveGroup(): newGroup->groupType():"<<newGroup->groupType()<<", SlideGroup::Generic:"<<SlideGroup::Generic;
+	if((oldGroup && oldGroup->groupType() != newGroup->groupType()) || newGroup->groupType() != SlideGroup::Generic)
+	{
+		SlideGroupFactory *factory = SlideGroupFactory::factoryForType(newGroup->groupType());
+		if(!factory)
+		{
+			//qDebug() << "MainWindow::setLiveGroup(): Factory fell thu for request, going to generic control";
+			factory = SlideGroupFactory::factoryForType(SlideGroup::Generic);
+		}
+		
+		if(factory)
+		{
+			//qDebug() << "MainWindow::setLiveGroup(): got new factory, initalizing";
+			//m_outputTabs->removeTab(m_outputTabs->indexOf(ctrl));
+			
+			if(ctrl)
+			{
+				delete ctrl;
+				ctrl = 0;
+			}	
+			
+			
+			ctrl = factory->newViewControl();
+			ctrl->setOutputView(inst);
+			//m_outputTabs->addTab(ctrl,output->name());
+			outputCtrl->setViewControl(ctrl);
+			outputCtrl->setCustomFilters(factory->customFiltersFor(outputCtrl->outputInstance()));
+			
+			m_viewControls[output->id()] = ctrl;
+		}
+	}
+	
+	//qDebug() << "MainWindow::setLiveGroup: Loading into view control";
+	ctrl->setSlideGroup(newGroup,currentSlide);
+	//qDebug() << "MainWindow::setLiveGroup: Loading into LIVE output";
+	inst->setSlideGroup(newGroup,currentSlide);
+	//qDebug() << "MainWindow::setLiveGroup: Loading into LIVE output (done)";
+	ctrl->setFocus(Qt::OtherFocusReason);
+}
+	
 
 void MainWindow::groupDoubleClicked(const QModelIndex &idx)
 {

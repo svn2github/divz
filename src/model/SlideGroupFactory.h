@@ -49,7 +49,7 @@ signals:
 	void slideSelected(Slide *);
 	
 public slots:
-	virtual void setSlideGroup(SlideGroup *g, Slide *curSlide=0);
+	virtual void setSlideGroup(SlideGroup *g, Slide *curSlide=0, bool allowProgressDialog=true);
 	virtual void releaseSlideGroup();
 	virtual void nextSlide();
 	virtual void prevSlide();
