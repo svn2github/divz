@@ -57,6 +57,7 @@ int main(int argc, char **argv)
 	AbstractItemFilter::registerFilterInstance(SlideNonTextOnlyFilter::instance());
 	AbstractItemFilter::registerFilterInstance(SlideBackgroundOnlyFilter::instance());
 	AbstractItemFilter::registerFilterInstance(SlideForegroundOnlyFilter::instance());
+	AbstractItemFilter::registerFilterInstance(SongFoldbackTextFilter::instance());
 	
 	app.setApplicationName("DViz Viewer");
 	app.setOrganizationName("Josiah Bryan");

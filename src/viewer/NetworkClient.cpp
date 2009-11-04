@@ -218,15 +218,19 @@ void NetworkClient::cmdSetSlideGroup(const QVariant& var, int start)
 void NetworkClient::cmdAddfilter(int id)
 {
 	AbstractItemFilter * filter = AbstractItemFilter::filterById(id);
-	if(id && filter)
+	if(filter)
 		m_inst->addFilter(filter);
+	else
+		log(QString("[ERROR] Add Filter: Server requested filter# %1 which is not installed in this viewer. This may mean that the server is newer than the client. You may want to check for an update to the DViz viewer on the DViz website.").arg(id));
 }
 
 void NetworkClient::cmdDelFilter(int id)
 {
 	AbstractItemFilter * filter = AbstractItemFilter::filterById(id);
-	if(id && filter)
+	if(filter)
 		m_inst->removeFilter(filter);
+	else
+		log(QString("[ERROR] Remove Filter: Server requested filter# %1 which is not installed in this viewer. This may mean that the server is newer than the client. You may want to check for an update to the DViz viewer on the DViz website.").arg(id));
 }
 
 void NetworkClient::cmdSetOverlaySlide(const QVariant& var)

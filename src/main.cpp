@@ -66,6 +66,7 @@ int main(int argc, char **argv)
 	AbstractItemFilter::registerFilterInstance(SlideNonTextOnlyFilter::instance());
 	AbstractItemFilter::registerFilterInstance(SlideBackgroundOnlyFilter::instance());
 	AbstractItemFilter::registerFilterInstance(SlideForegroundOnlyFilter::instance());
+	AbstractItemFilter::registerFilterInstance(SongFoldbackTextFilter::instance());
 	
 #if defined(VER)
 	printf("DViz Version %s\n", VER);

@@ -14,7 +14,7 @@ protected:
 public:
 	static SongFoldbackTextFilter * instance() { return m_staticInstance; }
 	
-	enum { FilterId = 0x020 };
+	enum { FilterId = 20 };
 	int filterId() { return FilterId; }
 	
 	QString filterName() const { return "Song Foldback Text"; }

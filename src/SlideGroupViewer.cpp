@@ -789,11 +789,11 @@ void SlideGroupViewer::setSlideInternal(Slide *slide)
 	//qDebug() << "SlideGroupViewer::setSlideInternal(): [app] speed:"<<speed<<", quality:"<<quality;
 	
 	// allow this viewer's cross fade settings to override app settings
-	if(m_fadeQuality > 0 || m_fadeSpeed > 0)
+	if(m_fadeQuality > -1 || m_fadeSpeed > -1)
 	{
-		if(m_fadeQuality > 0)
+		if(m_fadeQuality > -1)
 			quality = m_fadeQuality;
-		if(m_fadeSpeed > 0)
+		if(m_fadeSpeed > -1)
 			speed = m_fadeSpeed;
 		//qDebug() << "SlideGroupViewer::setSlideInternal(): [viewer] speed:"<<speed<<", quality:"<<quality;
 	}

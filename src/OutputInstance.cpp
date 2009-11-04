@@ -584,7 +584,7 @@ void OutputInstance::setAutoResizeTextEnabled(bool enable)
 void OutputInstance::setFadeSpeed(int value)
 {
 	if(m_mirror)
-		m_mirror->setFadeSpeed(value);
+		m_mirror->setFadeSpeed(m_mirror->output() == Output::previewInstance() ? 0 : value);
 	
 	m_fadeSpeed = value;
 	if(!m_output->isEnabled())
@@ -605,7 +605,7 @@ void OutputInstance::setFadeSpeed(int value)
 void OutputInstance::setFadeQuality(int value)
 {
 	if(m_mirror)
-		m_mirror->setFadeQuality(value);
+		m_mirror->setFadeQuality(m_mirror->output() == Output::previewInstance() ? 0 : value);
 	
 	m_fadeQuality = value;
 	if(!m_output->isEnabled())

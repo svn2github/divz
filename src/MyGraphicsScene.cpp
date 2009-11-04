@@ -272,7 +272,7 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans, int speed, i
 // 	//QStringList consumedItemNames;
 // 	
 	//trans = None;
-	if(trans == None)
+	if(trans == None || (speed == 0 && quality == 0))
 	{
 		clear();
 	}
@@ -303,7 +303,7 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans, int speed, i
 			//qDebug() << "MyGraphicsScene::setSlide(): Using app settings for fade speed";
 		}
 		
-		if(quality <= 0)
+		if(quality < 0)
 		{
 			quality = AppSettings::crossFadeQuality();
 			//qDebug() << "MyGraphicsScene::setSlide(): Using app settings for fade quality";

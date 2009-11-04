@@ -828,6 +828,102 @@ void MainWindow::actionAppSettingsDialog()
 	
 }
 
+
+/******************************************************************************
+** QDockWidgetTitleButtonP
+*/
+/*
+#include <qaction.h>
+#include <qdrawutil.h>
+#include <qfontmetrics.h>
+#include <qrubberband.h>
+#include <qstylepainter.h>
+#include <qfontmetrics.h>
+#include <qtoolbutton.h>
+
+class QDockWidgetTitleButtonPP : public QAbstractButton
+{
+    Q_OBJECT
+
+public:
+    QDockWidgetTitleButtonP(QDockWidget *dockWidget);
+
+    QSize sizeHint() const;
+    inline QSize minimumSizeHint() const
+    { return sizeHint(); }
+
+    void enterEvent(QEvent *event);
+    void leaveEvent(QEvent *event);
+    void paintEvent(QPaintEvent *event);
+};
+
+
+QDockWidgetTitleButtonP::QDockWidgetTitleButtonP(QDockWidget *dockWidget)
+    : QAbstractButton(dockWidget)
+{
+    setFocusPolicy(Qt::NoFocus);
+}
+
+QSize QDockWidgetTitleButtonP::sizeHint() const
+{
+    ensurePolished();
+
+    int size = 2*style()->pixelMetric(QStyle::PM_DockWidgetTitleBarButtonMargin, 0, this);
+    if (!icon().isNull()) {
+        int iconSize = style()->pixelMetric(QStyle::PM_SmallIconSize, 0, this);
+        QSize sz = icon().actualSize(QSize(iconSize, iconSize));
+        size += qMax(sz.width(), sz.height());
+    }
+
+    return QSize(size, size);
+}
+
+void QDockWidgetTitleButtonP::enterEvent(QEvent *event)
+{
+    if (isEnabled()) update();
+    QAbstractButton::enterEvent(event);
+}
+
+void QDockWidgetTitleButtonP::leaveEvent(QEvent *event)
+{
+    if (isEnabled()) update();
+    QAbstractButton::leaveEvent(event);
+}
+
+
+
+void QDockWidgetTitleButtonP::paintEvent(QPaintEvent *)
+{
+    QPainter p(this);
+
+    QRect r = rect();
+    QStyleOptionToolButton opt;
+    opt.init(this);
+    opt.state |= QStyle::State_AutoRaise;
+
+    if (style()->styleHint(QStyle::SH_DockWidget_ButtonsHaveFrame, 0, this))
+    {
+        if (isEnabled() && underMouse() && !isChecked() && !isDown())
+            opt.state |= QStyle::State_Raised;
+        if (isChecked())
+            opt.state |= QStyle::State_On;
+        if (isDown())
+            opt.state |= QStyle::State_Sunken;
+        style()->drawPrimitive(QStyle::PE_PanelButtonTool, &opt, &p, this);
+    }
+
+    opt.icon = icon();
+    opt.subControls = 0;
+    opt.activeSubControls = 0;
+    opt.features = QStyleOptionToolButton::None;
+    opt.arrowType = Qt::NoArrow;
+    int size = style()->pixelMetric(QStyle::PM_SmallIconSize, 0, this);
+    opt.iconSize = QSize(size, size);
+    style()->drawComplexControl(QStyle::CC_ToolButton, &opt, &p, this);
+}*/
+
+
+
 void MainWindow::setupOutputControls()
 {
 	QList<Output*> allOut = AppSettings::outputs();
