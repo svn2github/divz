@@ -39,7 +39,7 @@
   We use IconMode by default in the ViewControl below, but the
   SongSlideGroupViewControl uses ListMode - this allows either
   icon or list mode to change slides just by pressing up or down
-*/ 
+*/
 class MediaBrowserQListView : public QListView
 {
 public:
@@ -59,7 +59,7 @@ public:
 
 QRegExp MediaBrowser::videoRegexp = QRegExp("(wmv|mpeg|mpg|avi|wmv|flv|mov|mp4|m4a|3gp|3g2|mj2|mjpeg|ipod|m4v|gsm|gif|swf|dv|dvd|asf|mtv|roq|aac|ac3|aiff|alaw|iif)",Qt::CaseInsensitive);
 QRegExp MediaBrowser::imageRegexp = QRegExp("(png|jpg|bmp|svg|xpm)",Qt::CaseInsensitive);
-		
+
 bool MediaBrowser::isVideo(const QString &extension) { return extension.indexOf(videoRegexp) == 0; }
 bool MediaBrowser::isImage(const QString &extension) { return extension.indexOf(imageRegexp) == 0; }
 
@@ -69,7 +69,7 @@ QPixmap MediaBrowser::iconForImage(const QString & file, const QSize & size)
 	QDir path(QString("%1/%2").arg(QDir::tempPath()).arg(CACHE_DIR));
 	if(!path.exists())
 		QDir(QDir::tempPath()).mkdir(CACHE_DIR);
-		
+
 	QString cacheFile = QString("%1/%2/%3-%4x%5")
 				.arg(QDir::tempPath())
 				.arg(CACHE_DIR)
@@ -77,14 +77,14 @@ QPixmap MediaBrowser::iconForImage(const QString & file, const QSize & size)
 				.arg(size.width())
 				.arg(size.height());
 
-	
+
 	qDebug() << "MediaBrowser::iconForImage: file:"<<file<<", size:"<<size<<", cacheFile: "<<cacheFile;
 	//QPixmap orig(file);
 	//orig = orig.scaled(size,Qt::IgnoreAspectRatio,Qt::SmoothTransformation);
 	//orig.detach();
-	
+
 	//return orig;
-			
+
 	if(!QPixmapCache::find(cacheFile,cache))
 	{
 		if(QFile(cacheFile).exists())
@@ -117,9 +117,9 @@ QPixmap MediaBrowser::iconForImage(const QString & file, const QSize & size)
 	{
 		qDebug() << "MediaBrowser::iconForImage: file:"<<file<<", size:"<<size<<": hit RAM (scaled image already in ram)";
 	}
-	
-	qDebug() << "MediaBrowser::data: iconForImage: file:"<<file<<", cacheKey:"<<cache.cacheKey();
-		
+
+	//qDebug() << "MediaBrowser::data: iconForImage: file:"<<file<<", cacheKey:"<<cache.cacheKey();
+
 	return cache;
 }
 
@@ -127,14 +127,14 @@ class MyQFileIconProvider : public QFileIconProvider
 {
 public:
 	MyQFileIconProvider() : QFileIconProvider(), m_iconSize(MEDIABROWSER_LIST_ICON_SIZE)  {}
-	
+
 	QIcon icon(const QFileInfo& info) const
 	{
 		DeepProgressIndicator * d = DeepProgressIndicator::indicatorForObject(dynamic_cast<void*>(const_cast<MyQFileIconProvider*>(this)));
 		if(d)
 			d->step();
-		
-		
+
+
 		QApplication::processEvents();
 		if(MediaBrowser::isVideo(info.suffix()))
 		{
@@ -153,11 +153,11 @@ public:
 			return QFileIconProvider::icon(info);
 		}
 	}
-	
+
 	void setIconSize(QSize s) { m_iconSize = s; }
 private:
 	QSize m_iconSize;
-	
+
 };
 
 
@@ -171,16 +171,16 @@ MediaBrowser::MediaBrowser(const QString &directory, QWidget *parent)
 {
 	setObjectName("MediaBrowser");
 	setupUI();
-	
+
 	QStringList filters;
-	
+
 	filters << tr("Media Files (*.wmv *.mpeg *.mpg *.avi *.wmv *.flv *.mov *.mp4 *.m4a *.3gp *.3g2 *.mj2 *.mjpeg *.ipod *.m4v *.gsm *.gif *.swf *.dv *.dvd *.asf *.mtv *.roq *.aac *.ac3 *.aiff *.alaw *.iif *.png *.jpg *.bmp *.svg *.xpm)");
 	filters << tr("Video Files (*.wmv *.mpeg *.mpg *.avi *.wmv *.flv *.mov *.mp4 *.m4a *.3gp *.3g2 *.mj2 *.mjpeg *.ipod *.m4v *.gsm *.gif *.swf *.dv *.dvd *.asf *.mtv *.roq *.aac *.ac3 *.aiff *.alaw *.iif)");
 	filters << tr("Image Files (*.png *.jpg *.bmp *.svg *.xpm)");
 	filters << tr("Any File (*.*)");
-	
+
 	setFileTypeFilterList(filters);
-	
+
 	setDirectory(directory.isEmpty() ? AppSettings::previousPath(m_prevPathKey) : directory);
 }
 
@@ -194,137 +194,137 @@ void MediaBrowser::setupUI()
 	m_splitter = new QSplitter(this);
 	m_splitter->setOrientation(Qt::Vertical);
 	vbox0->addWidget(m_splitter);
-	
+
 	QWidget *browser = new QWidget(m_splitter);
 	QVBoxLayout *vbox = new QVBoxLayout(browser);
 	SET_MARGIN(vbox,0);
-	
+
 	// Setup filter box at the top of the widget
 	m_searchBase = new QWidget(browser);
-	
+
 	QHBoxLayout *hbox = new QHBoxLayout(m_searchBase);
 	SET_MARGIN(hbox,0);
-	
+
 	m_btnBack = new QPushButton(QIcon(":/data/stock-go-back.png"),"");
 	m_btnBack->setEnabled(false);
 	connect(m_btnBack, SIGNAL(clicked()), this, SLOT(goBack()));
-	
+
 	m_btnForward = new QPushButton(QIcon(":/data/stock-go-forward.png"),"");
 	m_btnForward->setEnabled(false);
 	connect(m_btnForward, SIGNAL(clicked()), this, SLOT(goForward()));
-	
+
 	m_btnUp = new QPushButton(QIcon(":/data/stock-go-up.png"),"");
 	m_btnUp->setEnabled(false);
 	connect(m_btnUp, SIGNAL(clicked()), this, SLOT(goUp()));
-	
+
 	QLabel *label = new QLabel("Se&arch:");
 	m_searchBox = new QLineEdit(m_searchBase);
 	label->setBuddy(m_searchBox);
-	
+
 	m_clearSearchBtn = new QPushButton(QIcon(":/data/stock-clear.png"),"");
 	m_clearSearchBtn->setVisible(false);
-	
+
 	hbox->addWidget(m_btnBack);
 	hbox->addWidget(m_btnForward);
 	hbox->addWidget(m_btnUp);
 	hbox->addWidget(label);
 	hbox->addWidget(m_searchBox);
 	hbox->addWidget(m_clearSearchBtn);
-	
+
 	connect(m_searchBox, SIGNAL(textChanged(const QString &)), this, SLOT(filterChanged(const QString &)));
 	connect(m_searchBox, SIGNAL(returnPressed()), this, SLOT(filterReturnPressed()));
 	connect(m_clearSearchBtn, SIGNAL(clicked()), this, SLOT(clearFilter()));
-	
+
 	// Now for the list itself
 	m_listView = new MediaBrowserQListView(browser);
 	m_listView->setAlternatingRowColors(true);
 	m_listView->setIconSize(m_iconSize);
-	
+
 	// below doesnt seem to be enough
 	//m_listView->setEditTriggers(QAbstractItemView::SelectedClicked | QAbstractItemView::EditKeyPressed);
-	
+
 	m_fsModel = new QFileSystemModel(browser);
 	m_fsModel->setIconProvider(new MyQFileIconProvider());
 	m_fsModel->setNameFilterDisables(false);
-	
+
 	m_listView->setModel(m_fsModel);
-	
+
 	connect(m_listView, SIGNAL(doubleClicked(const QModelIndex &)), this, SLOT(indexDoubleClicked(const QModelIndex &)));
 	connect(m_listView,       SIGNAL(clicked(const QModelIndex &)), this, SLOT(indexSingleClicked(const QModelIndex &)));
-	
+
 	// Add action buttons
 	m_btnBase = new QWidget(browser);
 	QHBoxLayout *hbox3 = new QHBoxLayout(m_btnBase);
 	SET_MARGIN(hbox3,0);
-	
+
 	m_btnSetAsBgLive = new QPushButton(QIcon(":/data/stock-apply-ffwd.png"),"");
 	m_btnSetAsBgLive->setToolTip("Set selected file as background for the current live slide");
 	hbox3->addWidget(m_btnSetAsBgLive);
-	
+
 	m_btnAddToSchedue = new QPushButton(QIcon(":/data/stock-add.png"),"");
 	m_btnAddToSchedue->setToolTip("Add selected file to schedule");
 	hbox3->addWidget(m_btnAddToSchedue);
-	
+
 	m_btnSetAsBgLater = new QPushButton(QIcon(":/data/stock-apply-next.png"),"");
 	m_btnSetAsBgLater->setToolTip("Set selected file as background for the NEXT slide to go live");
 	hbox3->addWidget(m_btnSetAsBgLater);
-	
+
 	m_btnSetAsBgCurrent = new QPushButton(QIcon(":/data/stock-apply-pause.png"),"");
 	m_btnSetAsBgCurrent->setToolTip("Set selected file as background for the selected slide group");
 	hbox3->addWidget(m_btnSetAsBgCurrent);
-	
+
 	connect(m_btnAddToSchedue, SIGNAL(clicked()), this, SLOT(slotAddToSchedule()));
 	connect(m_btnSetAsBgCurrent, SIGNAL(clicked()), this, SLOT(slotSetAsBgCurrent()));
 	connect(m_btnSetAsBgLater, SIGNAL(clicked()), this, SLOT(slotSetAsBgLater()));
 	connect(m_btnSetAsBgLive, SIGNAL(clicked()), this, SLOT(slotSetAsBgLive()));
-	
+
 	// enabled by indexSingleClicked()
 	m_btnBase->setEnabled(false);
-	
+
 	// Add the directory box and filter box at bottom
 	m_folderBoxBase = new QWidget(browser);
 	QHBoxLayout *hbox2 = new QHBoxLayout(m_folderBoxBase);
 	SET_MARGIN(hbox2,0);
-	
+
 	m_filterBox = new QComboBox(m_folderBoxBase);
 	hbox2->addWidget(m_filterBox);
-	
+
 	m_dirBox = new QLineEdit(m_folderBoxBase);
 	hbox2->addWidget(m_dirBox);
-	
+
 	connect(m_dirBox, SIGNAL(returnPressed()), this, SLOT(dirBoxReturnPressed()));
 	connect(m_filterBox, SIGNAL(currentIndexChanged(int)), this, SLOT(fileTypeChanged(int)));
-	
-	
+
+
 	vbox->addWidget(m_searchBase);
 	vbox->addWidget(m_listView);
 	vbox->addWidget(m_btnBase);
 	vbox->addWidget(m_folderBoxBase);
-	
+
 	m_splitter->addWidget(browser);
-	
-	
+
+
 	m_viewer = new SlideGroupViewer(m_splitter);
 	m_viewer->setCanZoom(true);
-	
+
 	Slide * slide = new Slide();
 	AbstractVisualItem * bg = dynamic_cast<AbstractVisualItem*>(slide->background());
 	bg->setFillType(AbstractVisualItem::Solid);
 	bg->setFillBrush(Qt::black);
-	
+
 	SlideGroup *group = new SlideGroup();
 	group->addSlide(slide);
 	m_viewer->setSlideGroup(group);
-	
+
 	m_splitter->addWidget(m_viewer);
 }
 
-QByteArray MediaBrowser::saveState() 
+QByteArray MediaBrowser::saveState()
 {
 	return m_splitter->saveState();
 }
 
-bool MediaBrowser::restoreState(const QByteArray &state) 
+bool MediaBrowser::restoreState(const QByteArray &state)
 {
 	return m_splitter->restoreState(state);
 }
@@ -355,18 +355,18 @@ void MediaBrowser::setIconSize(const QSize & size)
 	d->setText(QString("Updating Icons..."));
 	d->setTitle("Updating Icons");
 	d->setSize(100);
-	
+
 	m_listView->setIconSize(size);
 	MyQFileIconProvider * p = dynamic_cast<MyQFileIconProvider*>(m_fsModel->iconProvider());
 	if(p)
 		p->setIconSize(size);
-		
+
 	d->close();
 	//d->deleteLater();
 	d->dialog()->close();
 	d->close();
 	delete d;
-	
+
 }
 
 void MediaBrowser::setSplitterOrientation(Qt::Orientation o)
@@ -378,17 +378,17 @@ Qt::Orientation MediaBrowser::splitterOrientation()
 {
 	return m_splitter->orientation();
 }
-	
+
 void MediaBrowser::setBackgroundActionsEnabled(bool flag)
 {
 	m_btnBase->setVisible(flag);
 	m_backgroundActionsEnabled = flag;
-}	
+}
 
 void MediaBrowser::setFileTypeFilterList(QStringList list)
 {
 	static QRegExp parse1("(.*)\\s*\\(([^\\)]+)\\)");
-	
+
 	m_filterBox->clear();
 	foreach(QString string, list)
 	{
@@ -398,22 +398,22 @@ void MediaBrowser::setFileTypeFilterList(QStringList list)
 			m_filterBox->addItem(cap.at(1), cap.at(2));
 		}
 	}
-	
+
 	int idx = m_filterBox->currentIndex();
 	if(idx<0)
 		idx = 0;
-	
+
 	fileTypeChanged(idx);
 }
 
 void MediaBrowser::fileTypeChanged(int selectedIndex)
 {
 	QString type = m_filterBox->itemData(selectedIndex).toString();
-	
+
 	static QRegExp parse2("(\\*\\.\\w+)\\s*");
 
 	QString list = type;
-	
+
 	m_currentTypeFilterList.clear();
 	int pos=0;
 	int count=0;
@@ -427,7 +427,7 @@ void MediaBrowser::fileTypeChanged(int selectedIndex)
 			count ++;
 		}
 	}
-		
+
 // 		if(count == 0)
 // 		{
 // 			qDebug() << "MediaBrowser::fileTypeChanged: parse2 didnt match:"<<list;
@@ -436,10 +436,10 @@ void MediaBrowser::fileTypeChanged(int selectedIndex)
 // 		{
 // 			qDebug() << "MediaBrowser::fileTypeChanged: parse2 matched:"<<m_currentTypeFilterList;
 // 		}
-		
+
 	// re-apply the filters to the file model
 	filterChanged(m_searchBox->text());
-	
+
 }
 
 void MediaBrowser::slotAddToSchedule()
@@ -485,14 +485,14 @@ void MediaBrowser::slotSetAsBgLive()
 
 
 
-void MediaBrowser::filterReturnPressed() 
+void MediaBrowser::filterReturnPressed()
 {
  	QModelIndex idx = m_fsModel->index(0,0);
  	if(idx.isValid())
  		indexDoubleClicked(idx);
 }
 
-void MediaBrowser::dirBoxReturnPressed() 
+void MediaBrowser::dirBoxReturnPressed()
 {
  	QString dir = m_dirBox->text();
  	if(!dir.isEmpty())
@@ -514,7 +514,7 @@ void MediaBrowser::indexDoubleClicked(const QModelIndex &idx)
 			emit setLiveBackground(info,false);
 		else
 			emit fileSelected(info);
-		
+
 		emit fileDoubleClicked(info);
 	}
 }
@@ -523,12 +523,12 @@ void MediaBrowser::indexSingleClicked(const QModelIndex &idx)
 {
 	QFileInfo info = m_fsModel->fileInfo(idx);
 	m_btnBase->setEnabled(idx.isValid() && !info.isDir());
-	
+
 	if(SlideGroup::canUseBackground(info))
 		m_viewer->slideGroup()->changeBackground(info);
 	else
 		m_viewer->slideGroup()->changeBackground(AbstractVisualItem::Solid,"#000");
-	
+
 	if(!m_backgroundActionsEnabled)
 		emit fileSelected(info);
 }
@@ -536,58 +536,58 @@ void MediaBrowser::indexSingleClicked(const QModelIndex &idx)
 void MediaBrowser::setDirectory(const QString &path, bool addToHistory)
 {
 	//qDebug() << "setDirectory(): setting folder path:"<<path;
-	
+
 	QString directory = path;
 	QString file = "";
-	
+
 	QFileInfo info(path);
 	if(info.isFile())
 	{
 		directory = info.absolutePath();
 		file = info.fileName();
 	}
-	
+
 	//qDebug() << "MediaBrowser::setDirectory: path:"<<path<<", is file:"<<info.isFile()<<", directory:"<<directory<<", file:"<<file;
-	
+
 	QModelIndex idx = m_listView->currentIndex();
 	if(idx.isValid() && !m_currentDirectory.isEmpty())
 		m_lastIndexForPath[m_currentDirectory] = idx;
-			
+
 	DeepProgressIndicator *d = new DeepProgressIndicator(m_fsModel->iconProvider(),this);
 	d->setText(QString("Loading %1...").arg(path));
 	d->setTitle("Loading Folder");
 	d->setSize(100);
-	
+
 	QModelIndex root = m_fsModel->setRootPath(directory);
 	m_listView->setRootIndex(root);
-	
+
 	d->close();
 	//d->deleteLater();
 	d->dialog()->close();
 	d->close();
 	delete d;
-	
-	
+
+
 	if(m_lastIndexForPath.contains(directory))
 	{
 		QModelIndex idx = m_lastIndexForPath[directory];
 		if(idx.isValid())
 			m_listView->setCurrentIndex(idx);
 	}
-	
+
 	if(addToHistory && !m_currentDirectory.isEmpty())
 	{
 		pushBackward(m_currentDirectory);
 		clearForward();
 	}
-	
+
 	AppSettings::setPreviousPath(m_prevPathKey,directory);
-	
+
 	m_currentDirectory = directory;
 	checkCanGoUp();
-	
+
 	m_dirBox->setText(path);
-	
+
 	if(!file.isEmpty())
 	{
 		QModelIndex idx = m_fsModel->index(path);
@@ -597,7 +597,7 @@ void MediaBrowser::setDirectory(const QString &path, bool addToHistory)
 			indexSingleClicked(idx);
 		}
 	}
-	
+
 	m_listView->setFocus(Qt::OtherFocusReason);
 }
 
@@ -605,12 +605,12 @@ bool MediaBrowser::checkCanGoUp()
 {
 	QFileInfo info(m_currentDirectory);
 	QString path = info.canonicalFilePath();
-	
+
 	//QDir::separator()
 	QString sep = "/"; // even on windows, canonicalFilePath() uses '/' as the separator
 
 	QStringList folders = path.split(sep);
-	
+
 	if(folders.size() <= 1)
 	{
 		//qDebug() << "checkCanGoUp(): False, can't go up from:"<<path<<", folder list:"<<folders<<", sep:"<<QDir::separator();
@@ -629,18 +629,18 @@ void MediaBrowser::goUp()
 {
 	if(!checkCanGoUp())
 		return;
-		
+
 	QFileInfo info(m_currentDirectory);
 	QString path = info.canonicalFilePath();
-	
+
 	QString sep = "/"; // even on windows, canonicalFilePath() uses '/' as the separator
 	QStringList folders = path.split(sep); //QDir::separator());
 	folders.takeLast();
-	
+
 	QString newPath = folders.join(sep); //QDir::separator());
-	
+
 	setDirectory(newPath);
-	
+
 	//qDebug() << "goUp(): newPath:"<<newPath;
 }
 
@@ -650,7 +650,7 @@ void MediaBrowser::goBack()
 	if(!m_currentDirectory.isEmpty())
 		unshiftForward(m_currentDirectory);
 	setDirectory(path,false);
-	
+
 	//qDebug() << "goBack(): path:"<<path;
 }
 
@@ -660,7 +660,7 @@ void MediaBrowser::goForward()
 	if(!m_currentDirectory.isEmpty())
 		pushBackward(m_currentDirectory);
 	setDirectory(path,false);
-	
+
 	//qDebug() << "goForward(): path:"<<path;
 }
 
@@ -715,13 +715,13 @@ void MediaBrowser::filterChanged(const QString &text)
 QStringList MediaBrowser::makeModelFilterList(const QString& text)
 {
 	QString filter = text;
-	
+
 	QStringList list;
-	
+
 	// if user doesnt include any wildcard, start it out for them correctly
 	if(filter.indexOf("*")<0 && !filter.isEmpty())
 		filter = QString("*%1").arg(filter);
-	
+
 	// if user doesnt specify an extension, include the one from m_fileTypeFilter
 	if(filter.indexOf(".")>=0)
 	{
@@ -733,11 +733,11 @@ QStringList MediaBrowser::makeModelFilterList(const QString& text)
 		// process the list of extensions chosen in the combo box
 		if(m_currentTypeFilterList.size()<=0)
 			m_currentTypeFilterList << "*.*";
-		
+
 		foreach(QString typeFilter, m_currentTypeFilterList)
 			list << QString("%1%2").arg(filter).arg(typeFilter);
 	}
-	
+
 	//qDebug() << "MediaBrowser::makeModelFilterList: text:"<<text<<", list:"<<list;
 	return list;
 }

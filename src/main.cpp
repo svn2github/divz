@@ -34,63 +34,77 @@ QColor RenderOpts::hiColor;
 #include "songdb/SongSlideGroupFactory.h"
 #include "AppSettings.h"
 
-#include <QPixmapCache>
+#include "songdb/SongRecord.h"
 
+#include <QPixmapCache>
 
 #include "itemlistfilters/SlideTextOnlyFilter.h"
 #include "itemlistfilters/SlideNonTextOnlyFilter.h"
 #include "itemlistfilters/SlideBackgroundOnlyFilter.h"
 #include "itemlistfilters/SlideForegroundOnlyFilter.h"
-	
+
+
 int main(int argc, char **argv)
 {
-		
+
 	#if !defined(Q_OS_MAC) // raster on OSX == b0rken
 		// use the Raster GraphicsSystem as default on 4.5+
 		#if QT_VERSION >= 0x040500
 		QApplication::setGraphicsSystem("raster");
 		#endif
  	#endif
- 	
+
  	QApplication app(argc, argv);
- 	
+
+	QString pluginPath = QString("%1/plugins").arg(QDir::currentPath());
+	qDebug() << "DViz Plugin Path:"<<pluginPath;
+
+	app.addLibraryPath(pluginPath);
+
+	qDebug() << "Core Plugin Paths: "<< app.libraryPaths();
+
+	//SongRecord::db();
+
+	//return -1;
+
+
  	qsrand(QTime(0,0,0).secsTo(QTime::currentTime()));
-	
+
 	// start the cache at 256 MB of pixmaps
 	QPixmapCache::setCacheLimit(256 * 1024);
-	
+
 	int qtype1 = qRegisterMetaType<AbstractVisualItem::FillType>("FillType");
 
-	
+
 	AbstractItemFilter::registerFilterInstance(SlideTextOnlyFilter::instance());
 	AbstractItemFilter::registerFilterInstance(SlideNonTextOnlyFilter::instance());
 	AbstractItemFilter::registerFilterInstance(SlideBackgroundOnlyFilter::instance());
 	AbstractItemFilter::registerFilterInstance(SlideForegroundOnlyFilter::instance());
 	AbstractItemFilter::registerFilterInstance(SongFoldbackTextFilter::instance());
-	
+
 #if defined(VER)
 	printf("DViz Version %s\n", VER);
 	app.setApplicationVersion(VER); //"0.1.5");
 #endif
-	
+
 	app.setApplicationName("DViz");
 	app.setOrganizationName("Josiah Bryan");
 	app.setOrganizationDomain("mybryanlife.com");
-	
-	
+
+
 	SlideGroupFactory::registerFactoryForType(SlideGroup::Generic, new SlideGroupFactory());
 	SlideGroupFactory::registerFactoryForType(SlideGroup::Song,    new SongSlideGroupFactory());
 
 	RenderOpts::OxygenStyleQuirks = app.style()->objectName() == QLatin1String("oxygen");
-	
+
 	QSettings s;
 	//RenderOpts::FirstRun = s.value("fotowall/firstTime", true).toBool();
 	RenderOpts::hiColor = app.palette().color(QPalette::Highlight);
 	RenderOpts::DisableVideoProvider = app.arguments().contains("-novideo");
 	//s.setValue("fotowall/firstTime", false);
-	
+
 	bool noOpenGL = false;
-	
+
 	if(app.arguments().contains("-nogl"))
 	{
 		noOpenGL = true;
@@ -109,81 +123,16 @@ int main(int argc, char **argv)
 	noOpenGL = true;
 
 	RenderOpts::DisableOpenGL = noOpenGL;
-	
+
 	AppSettings::load();
 
 	MainWindow mw;
 	mw.show();
-
-	//SlideEditorWindow mw;
-	//mw.show();
 
 	int ret = app.exec();
 
 	AppSettings::save();
 
 	return ret;
-	
-// 	printf("\n\n");
-// 	
-// 	//printf("Thanks for the fish!\n");
-// 	if(QFile("test.xml").exists())
-// 	{
-// 		XmlRead r("test.xml");
-// 		Slide s;
-// 		r.readSlide(&s);
-// 		
-// 		QList<AbstractItem *> items = s.itemList();
-// 		AbstractItem * item = items.at(0);
-// 		
-// 		assert(item != NULL);
-// 		
-// 		printf("> Load Test:\n");
-// 		printf("Item Class: %d\n",item->itemClass());
-// 		printf("Item Name: %s\n",item->itemName().toAscii().constData());
-// 		printf("Item Id: %d\n",item->itemId());
-// 		
-// 		if(item->itemClass() == ITEM_TEXT )
-// 		{
-// 			printf("Text Item: Text: '%s'", ((TextItem *)item)->text().toAscii().constData());
-// 		}
-// 		else
-// 		{
-// 			printf("(Unknown item class)\n");
-// 		}
-// 		
-// 		
-// 	}
-// 	else
-// 	{
-// 		Slide s;
-// 		TextItem *t = s.createText(QPoint());
-// 		t->setText("Hello World!");
-// 		t->setPos(QPointF(10,10));
-// 		t->setItemName("TextItem-1");
-// 		t->setItemId(ItemFactory::nextId());
-// 		
-// 		printf("> Save Test:\n");
-// 		printf("Item Class: %d\n",t->itemClass());
-// 		printf("Item Name: %s\n",t->itemName().toAscii().constData());
-// 		printf("Item Id: %d\n",t->itemId());
-// 		
-// 		if(t->itemClass() == ITEM_TEXT )
-// 		{
-// 			printf("Text Item: Text: '%s'", t->text().toAscii().constData());
-// 		}
-// 		else
-// 		{
-// 			printf("(Unknown item class)\n");
-// 		}
-// 		
-// 		XmlSave save("test.xml");
-// 		save.saveSlide(&s);
-// 	}
-// 	
-// 	
-// 	printf("\n\n");
-// 	
-	return -1;
 }
 
