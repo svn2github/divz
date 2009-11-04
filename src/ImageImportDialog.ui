@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>476</width>
-    <height>566</height>
+    <height>576</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -214,6 +214,16 @@
         </property>
         <property name="value">
          <double>2.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0" colspan="3">
+       <widget class="QCheckBox" name="zoomImage">
+        <property name="text">
+         <string>Turn on Image Smooth-Zoom Effects</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
         </property>
        </widget>
       </item>

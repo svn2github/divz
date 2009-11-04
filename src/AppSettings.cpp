@@ -55,7 +55,7 @@ AppSettings::LiveEditMode AppSettings::m_liveEditMode = AppSettings::LiveEdit;
 
 int AppSettings::m_autosaveTime = 60; // seconds
 
-void AppSettings::initApp()
+void AppSettings::initApp(const QString& appName)
 {
 	QString pluginPath = QString("%1/plugins").arg(QDir::currentPath());
 	//qDebug() << "DViz Plugin Path:"<<pluginPath;
@@ -81,7 +81,7 @@ void AppSettings::initApp()
 	qApp->setApplicationVersion(VER); //"0.1.5");
 #endif
 
-	qApp->setApplicationName("DViz");
+	qApp->setApplicationName(appName);
 	qApp->setOrganizationName("Josiah Bryan");
 	qApp->setOrganizationDomain("mybryanlife.com");
 
@@ -127,7 +127,7 @@ void AppSettings::load()
 	QSettings s;
 	loadOutputs(&s);
 
-	m_useOpenGL = s.value("app/use-opengl").toBool();
+	m_useOpenGL = s.value("app/use-opengl",true).toBool();
 	m_gridSize = s.value("app/grid/size",m_gridSize).toSizeF();
 	m_gridEnabled = s.value("app/grid/enabled",true).toBool();
 	m_thirdGuideEnabled = s.value("app/thirdguide",true).toBool();

@@ -143,16 +143,23 @@ void OutputInstance::applyOutputSettings(bool startHidden)
 	Output::OutputType x = m_output->outputType();
 	if(x == Output::Screen || x == Output::Custom)
 	{
+		
 		QRect geom;
 		if(x == Output::Screen)
 		{
-			QDesktopWidget *d = QApplication::desktop();
-			
+			QDesktopWidget *d = QApplication::desktop();	
 			int screenNum = m_output->screenNum();
 			geom = d->screenGeometry(screenNum);
 			
-			if(d->numScreens() == 1)
-				setWindowFlags(Qt::FramelessWindowHint); 
+			int mws = d->screenNumber(MainWindow::mw());
+// 			if(m_output->isEnabled())
+// 				qDebug() <<"OutputInstance::applyOutputSettings: ["<<m_output->name()<<"] mws:"<<mws<<", screenNum:"<<screenNum;
+			if(d->numScreens() == 1 || screenNum == mws)
+			{
+				setWindowFlags(Qt::FramelessWindowHint);
+// 				if(m_output->isEnabled())
+// 					qDebug() <<"OutputInstance::applyOutputSettings: ["<<m_output->name()<<"] no tooltip!";
+			}
 			else
 				setWindowFlags(Qt::FramelessWindowHint | Qt::ToolTip);
 		}
@@ -168,6 +175,10 @@ void OutputInstance::applyOutputSettings(bool startHidden)
 		resize(geom.width(),geom.height());
 		move(geom.left(),geom.top());
 		
+// 		int ows = d->screenNumber(this);
+// 		if(m_output->isEnabled())
+// 			qDebug() <<"OutputInstance::applyOutputSettings: ["<<m_output->name()<<"] enabled: "<<m_output->isEnabled()<<", geom:"<<geom<<", mw geom:"<<MainWindow::mw()->pos()<<"-"<<MainWindow::mw()->size()<<", ows:"<<ows;
+		
 		if(startHidden)
 			setVisible(false);
 		else
@@ -176,13 +187,12 @@ void OutputInstance::applyOutputSettings(bool startHidden)
 		setWindowTitle(QString("%1 Output - DViz").arg(m_output->name()));
 		setWindowIcon(QIcon(":/data/icon-d.png"));
 		
-		
 		if(m_grabTimer->isActive())
 			m_grabTimer->stop();
 			
-		if(m_output->mjpegServerEnabled())
+		if(m_output->isEnabled() &&
+		   m_output->mjpegServerEnabled())
 			m_grabTimer->start(1000 / m_output->mjpegServerFPS());
-
 	}
 	else
 	if(x == Output::Preview)
@@ -194,8 +204,9 @@ void OutputInstance::applyOutputSettings(bool startHidden)
 	{
 		setVisible(false);
 			
-		if(!m_outputServer ||
-		    m_outputServer->serverPort() != m_output->port())
+		if(m_output->isEnabled() &&
+		  (!m_outputServer ||
+		    m_outputServer->serverPort() != m_output->port()))
 		{
 			if(m_outputServer)
 			{

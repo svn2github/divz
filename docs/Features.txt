@@ -277,6 +277,18 @@ Revised Task list for Release 1.0, 10/18/09:
 			make default text settings changable
 			add "default item settings" dialog for each item type
 			change main program config dialog to use qtoolbox		
+			image zoom in effect
+				randim thirds grid point
+			per-slidegroup aspect ratio
+			aspect ratio fitting settings on a per-slidegroup basis
+				scale in
+				scale out
+				cut
+				per-output cut
+					output "A": cut 0,0-50%,100%
+					output "B": cut 50%,0,100%,100%
+			add slide "database" of pre-built slides
+			add "quickslide" feature - slide template...
 			
 			[STARTED] would be nice: while editing slide thats live, if change, cross fade to changed version
 			

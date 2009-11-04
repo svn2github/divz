@@ -11,7 +11,7 @@ class Output;
 class AppSettings
 {
 public:
-	static void initApp();
+	static void initApp(const QString& appName="DViz");
 	static void load();
 	static void save();
 	

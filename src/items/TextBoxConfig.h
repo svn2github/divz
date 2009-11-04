@@ -34,6 +34,7 @@ private:
 	void slotOkClicked();
 	TextBoxContent * m_textContent;
 	RichTextEditorDialog * m_editor;
+	bool m_saving;
 };
 
 #endif

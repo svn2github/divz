@@ -22,6 +22,9 @@ SingleOutputSetupDialog::SingleOutputSetupDialog(QWidget *parent) :
 
 	setupScreenList();
 	
+	m_ui->cbUseOpenGL->setChecked(AppSettings::useOpenGL());
+	m_ui->cacheBox->setValue(AppSettings::pixmapCacheSize());
+	
 	connect(m_ui->tabWidget, SIGNAL(currentChanged(int)), this, SLOT(slotTabChanged(int)));
 	connect(m_ui->outputName, SIGNAL(textChanged(const QString&)), this, SLOT(slotOutputNameChanged(const QString&)));
 	
@@ -284,6 +287,8 @@ void SingleOutputSetupDialog::setupScreenList()
 
 void SingleOutputSetupDialog::accept()
 {
+	AppSettings::setPixmapCacheSize(m_ui->cacheBox->value());
+	AppSettings::setUseOpenGL(m_ui->cbUseOpenGL->isChecked());
 	AppSettings::save();
 	QDialog::accept();
 }

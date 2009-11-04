@@ -7,6 +7,7 @@
 TextBoxConfig::TextBoxConfig(TextBoxContent * textContent, QGraphicsItem * parent)
     : GenericItemConfig(textContent)
     , m_textContent(textContent)
+    , m_saving(false)
 {
 	// inject Text Editor
 	m_editor = new RichTextEditorDialog();
@@ -33,7 +34,7 @@ TextBoxConfig::TextBoxConfig(TextBoxContent * textContent, QGraphicsItem * paren
 
 void TextBoxConfig::itemChanged(QString fieldName, QVariant value, QVariant)
 {
-	if(fieldName == "text")
+	if(fieldName == "text" && !m_saving)
 	{
 		TextItem * textModel = dynamic_cast<TextItem*>(m_textContent->modelItem());
 		m_editor->setText(textModel->text());
@@ -48,5 +49,7 @@ TextBoxConfig::~TextBoxConfig()
 void TextBoxConfig::slotOkClicked()
 {
 	TextItem * textModel = dynamic_cast<TextItem*>(m_textContent->modelItem());
+	m_saving = true;
 	textModel->setText(m_editor->text(Qt::RichText));
+	m_saving = false;
 }

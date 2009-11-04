@@ -12,7 +12,7 @@ int main(int argc, char **argv)
  	#endif
 
  	QApplication app(argc, argv);
-	AppSettings::initApp();
+	AppSettings::initApp("DVizViewer");
 
 	AppSettings::load();
 

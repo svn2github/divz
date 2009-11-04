@@ -159,7 +159,6 @@ MainWindow::MainWindow(QWidget *parent) :
 	
 	connect(m_ui->actionExit,SIGNAL(triggered()), this, SLOT(close()));
 	
-	
 }
 
 
@@ -184,6 +183,11 @@ MainWindow::~MainWindow()
 void MainWindow::showEvent(QShowEvent *evt)
 {
 	evt->accept();
+	qDebug()<< "MainWindow::showEvent: pos:"<<pos()<<", size:"<<size();
+
+	emit appSettingsChanged();
+	
+	
 	raise(); // raise above output instances
 }
 
@@ -192,17 +196,20 @@ SlideGroupViewControl * MainWindow::liveCtrl() { return viewControl(AppSettings:
 
 void MainWindow::loadWindowState()
 {
+	QDesktopWidget *d = QApplication::desktop();
+	QRect primary = d->screenGeometry(d->primaryScreen());
+	
 	QSettings settings;
 	QSize sz = settings.value("mainwindow/size").toSize();
 	if(sz.isValid())
 		resize(sz);
+	
 	QPoint p = settings.value("mainwindow/pos").toPoint();
-	if(!p.isNull())
-	{
-		if(p.y() < 0)
-			p.setY(1);
-		move(p);
-	}
+	if(p.isNull())
+		p = primary.topLeft();
+	if(p.y() < 0)
+		p.setY(1);
+	move(p);
 	restoreState(settings.value("mainwindow/state").toByteArray());
 	m_splitter->restoreState(settings.value("mainwindow/splitter_state").toByteArray());
 	m_splitter2->restoreState(settings.value("mainwindow/grouplistsplitter_state").toByteArray());
@@ -716,9 +723,12 @@ void MainWindow::setupOutputList()
 {
 	foreach(QCheckBox *box, m_outputCheckboxes)
 	{
-		m_outputCheckboxBase->layout()->removeWidget(box);
-		box->setVisible(false);
-		delete box;
+		if(box)
+		{
+			box->setVisible(false);
+			m_outputCheckboxBase->layout()->removeWidget(box);
+			delete box;
+		}
 	}
 	
 	m_outputCheckboxes.clear();
