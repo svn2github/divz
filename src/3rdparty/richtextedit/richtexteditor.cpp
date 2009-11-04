@@ -101,11 +101,11 @@ public:
 
     QToolBar *createToolBar(QWidget *parent = 0);
 
-Q_SIGNALS:
-    void wheelScrolled(int steps); // +fotowall
-
-private:
-    void wheelEvent(QWheelEvent * e); // +fotowall
+// Q_SIGNALS:
+//     void wheelScrolled(int steps); // +fotowall
+// 
+// private:
+//     void wheelEvent(QWheelEvent * e); // +fotowall
 
 public slots:
     void setFontBold(bool b);
@@ -753,10 +753,10 @@ QToolBar *RichTextEditor::createToolBar(QWidget *parent)
     return new RichTextEditorToolBar(this, parent);
 }
 
-void RichTextEditor::wheelEvent(QWheelEvent * e)    // +fotowall
-{
-    emit wheelScrolled(-e->delta() / 120);
-}
+// void RichTextEditor::wheelEvent(QWheelEvent * e)    // +fotowall
+// {
+//     emit wheelScrolled(-e->delta() / 120);
+// }
 
 void RichTextEditor::setFontBold(bool b)
 {

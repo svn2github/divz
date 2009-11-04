@@ -82,6 +82,10 @@ class GenericItemConfig : public QWidget
 		QSizeF			m_origSize;
 		
 		QtColorPicker 		* m_shadowColorPicker;
+		
+		bool m_updateShadowDistanceAndDirection_changing;
+		
+		void updateShadowDistanceAndDirection();
 	
 	private Q_SLOTS:
 // 		void on_newFrame_clicked();
@@ -133,6 +137,15 @@ class GenericItemConfig : public QWidget
 		void shadowOffsetPresetTR();
 		
 		void setShadowOffsets(double x, double y);
+		
+		void zoomEffectEnabled(bool);
+		void setZoomAnchorCenter(bool);
+		void updateZoomDirection();
+		void zoomSpeedChanged(int);
+		
+		void shadowDistanceBoxChanged(int);
+		void shadowDirectionBoxChanged(int);
+	
 		
 };
 

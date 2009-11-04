@@ -44,7 +44,14 @@ class AbstractVisualItem : public AbstractItem
 	Q_PROPERTY(double	shadowOffsetY 	READ shadowOffsetY	WRITE setShadowOffsetY);
 	Q_PROPERTY(QBrush	shadowBrush 	READ shadowBrush	WRITE setShadowBrush);
 	
+	Q_PROPERTY(bool		zoomEffectEnabled READ zoomEffectEnabled	WRITE setZoomEffectEnabled);
+	Q_PROPERTY(bool		zoomAnchorCenter READ zoomEffectEnabled	WRITE setZoomAnchorCenter);
+	Q_PROPERTY(ZoomEffectDirection		zoomDirection	READ zoomDirection	WRITE setZoomDirection);
+	Q_PROPERTY(int		zoomSpeed	READ zoomSpeed		WRITE setZoomSpeed);
+	
+	
 	Q_ENUMS(FillType);
+	Q_ENUMS(ZoomEffectDirection);
 	
 	
 	// Brush has:
@@ -64,6 +71,8 @@ class AbstractVisualItem : public AbstractItem
 	
 public:
 	typedef enum FillType { None, Solid, Gradient, Image, Video };
+	
+	typedef enum ZoomEffectDirection { ZoomIn, ZoomOut, ZoomRandom };
 
 	AbstractVisualItem();
 // 	~AbstractVisualItem();
@@ -146,6 +155,11 @@ public:
 	ITEM_PROPDEF(ShadowOffsetY,	double,	shadowOffsetY);
 	ITEM_PROPDEF(ShadowBrush,	QBrush,	shadowBrush);
 	
+	ITEM_PROPDEF(ZoomEffectEnabled,	bool,	zoomEffectEnabled);
+	ITEM_PROPDEF(ZoomAnchorCenter,	bool,	zoomAnchorCenter);
+	ITEM_PROPDEF(ZoomDirection,	ZoomEffectDirection,	zoomDirection);
+	ITEM_PROPDEF(ZoomSpeed,		int,	zoomSpeed);
+	
 	
 private:
 	// Fields
@@ -182,10 +196,16 @@ private:
 	double		m_shadowOffsetY;
 	QBrush		m_shadowBrush;
 	
+	bool 		m_zoomEffectEnabled;
+	bool		m_zoomAnchorCenter;
+	ZoomEffectDirection m_zoomDirection;
+	int		m_zoomSpeed; // fps
+	
 	//Q_DECLARE_METATYPE(FillType);
 };
 
 Q_DECLARE_METATYPE(AbstractVisualItem::FillType);
+Q_DECLARE_METATYPE(AbstractVisualItem::ZoomEffectDirection);
 
 	
 	

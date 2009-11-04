@@ -183,7 +183,7 @@ MainWindow::~MainWindow()
 void MainWindow::showEvent(QShowEvent *evt)
 {
 	evt->accept();
-	qDebug()<< "MainWindow::showEvent: pos:"<<pos()<<", size:"<<size();
+	//qDebug()<< "MainWindow::showEvent: pos:"<<pos()<<", size:"<<size();
 
 	emit appSettingsChanged();
 	
@@ -234,7 +234,7 @@ void MainWindow::clearAllOutputs()
 {
 // 	m_liveView->clear();
 	//m_previewWidget->clear();
-	qDebug() << "MainWindow::clearAllOutputs: Releasing preview slides\n";
+	//qDebug() << "MainWindow::clearAllOutputs: Releasing preview slides\n";
 	
 	foreach(SlideGroupViewControl *ctrl, m_viewControls)
 		ctrl->releaseSlideGroup();
@@ -251,7 +251,7 @@ void MainWindow::actionOpen()
 		}
 		else
 		{
-			QMessageBox::critical(this,"File Does Not Exist","Sorry, but the file you chose does not exist. Please try again.");
+			QMessageBox::critical(this,tr("File Does Not Exist"),tr("Sorry, but the file you chose does not exist. Please try again."));
 		}
 	}
 }
@@ -298,7 +298,7 @@ void MainWindow::actionNew()
 	
 	m_docModel->setDocument(m_doc);
 	
-	setWindowTitle("DViz - New File");
+	setWindowTitle(tr("DViz - New File"));
 }
 
 
@@ -329,7 +329,7 @@ void MainWindow::textImportTool()
 		QFile file(fileName);
 		if(!file.open(QIODevice::ReadOnly))
 		{
-			QMessageBox::warning(this,"Can't Read File",QString("Unable to open %1").arg(fileName));
+			QMessageBox::warning(this,tr("Can't Read File"),QString(tr("Unable to open %1")).arg(fileName));
 			return;
 		}
 
@@ -461,7 +461,7 @@ bool MainWindow::openFile(const QString & file)
 	//m_doc->load(file);
 	//r.readSlide(m_slide);
 	QString fileName = QFileInfo(file).fileName();
-	setWindowTitle("DViz - " + fileName);
+	setWindowTitle(QString(tr("DViz - %1")).arg(fileName));
 	
 	//qDebug()<<"MainWindow::open(): "<<file<<", oldAspect:"<<oldAspect<<", new:"<<m_doc->aspectRatio();
 	if(oldAspect != m_doc->aspectRatio())
@@ -473,8 +473,8 @@ bool MainWindow::openFile(const QString & file)
 // 	qDebug() << "MainWindow::open(): m_docModel->setDocument() - start";
 // 	printf("MainWindow::open(): m_docModel ptr: %p\n",m_docModel);
 	DeepProgressIndicator *d = new DeepProgressIndicator(m_docModel,this);
-	d->setText(QString("Loading %1...").arg(fileName));
-	d->setTitle(QString("Loading %1").arg(fileName));
+	d->setText(QString(tr("Loading %1...")).arg(fileName));
+	d->setTitle(QString(tr("Loading %1")).arg(fileName));
 	d->setSize(m_doc->numGroups());
 	
 	m_docModel->setDocument(m_doc);
@@ -489,7 +489,7 @@ void MainWindow::saveFile(const QString & file)
 {
 	m_doc->save(file.isEmpty() ? m_doc->filename() : file);
 	
-	setWindowTitle("DViz - " + QFileInfo(m_doc->filename()).fileName());
+	setWindowTitle(QString(tr("DViz - %1")).arg(QFileInfo(m_doc->filename()).fileName()));
 	
 	saveWindowState();
 	
@@ -538,7 +538,7 @@ void MainWindow::fileSelected(const QFileInfo &info)
 {
 	if(!SlideGroup::canUseBackground(info))
 	{
-		QMessageBox::warning(this,"Unknown File Type","I'm not sure how to handle that file. Sorry!");
+		QMessageBox::warning(this,tr("Unknown File Type"),tr("I'm not sure how to handle that file. Sorry!"));
 		return;
 	}
 	
@@ -562,7 +562,7 @@ void MainWindow::setSelectedBackground(const QFileInfo &info)
 	{
 		if(!SlideGroup::canUseBackground(info))
 		{
-			QMessageBox::warning(this,"Unknown File Type","I'm not sure how to handle that file. Sorry!");
+			QMessageBox::warning(this,tr("Unknown File Type"),tr("I'm not sure how to handle that file. Sorry!"));
 			return;
 		}
 		
@@ -575,7 +575,7 @@ void MainWindow::setSelectedBackground(const QFileInfo &info)
 	}
 	else
 	{
-		QMessageBox::warning(this,"No Slide Group Selected","First, click a group in the list THEN click the 'Set Selected Background' button in the media browser!");
+		QMessageBox::warning(this,tr("No Slide Group Selected"),tr("First, click a group in the list THEN click the 'Set Selected Background' button in the media browser!"));
 	}
 }
 	
@@ -634,7 +634,7 @@ void MainWindow::setupCentralWidget()
 	setupOutputList();
 	
 	// Send to output button
-	m_btnSendOut = new QPushButton(QIcon(":/data/stock-fullscreen.png"),"Send to Output");
+	m_btnSendOut = new QPushButton(QIcon(":/data/stock-fullscreen.png"),tr("Send to Output"));
 	ouputChoiceBaseLayout->addWidget(m_btnSendOut);
 	connect(m_btnSendOut, SIGNAL(clicked()), this, SLOT(slotSendToOutputs()));
 	
@@ -755,13 +755,13 @@ void MainWindow::actionAboutDviz()
 	ver = QString(", Ver %1").arg(VER);
 #endif
 
-	QMessageBox msgBox(QMessageBox::NoIcon,"About DViz",QString("DViz%1\n\"Tasty Breakfast\" Release\n(c) 2009 Josiah Bryan").arg(ver));
+	QMessageBox msgBox(QMessageBox::NoIcon,tr("About DViz"),QString(tr("DViz%1\n\"Tasty Breakfast\" Release\n(c) 2009 Josiah Bryan")).arg(ver));
 	msgBox.exec();
 }
 
 void MainWindow::actionDvizWebsite()
 {
-	QMessageBox msgBox(QMessageBox::Information,"Visit DViz Website","For more info, go to http://code.google.com/p/dviz");
+	QMessageBox msgBox(QMessageBox::Information,tr("Visit DViz Website"),tr("For more info, go to http://code.google.com/p/dviz"));
 	msgBox.exec();
 }
 
@@ -769,7 +769,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
 {
 	if(m_doc->filename().isEmpty())
 	{
-		switch(QMessageBox::question(this,"File Not Saved","This file has not yet been saved - do you want to give it a file name? Click 'Save' to save the document to a file, click 'Discard' to continue closing and loose all changes, or click 'Cancel' to cancel closing and return to the program.",
+		switch(QMessageBox::question(this,tr("File Not Saved"),tr("This file has not yet been saved - do you want to give it a file name? Click 'Save' to save the document to a file, click 'Discard' to continue closing and loose all changes, or click 'Cancel' to cancel closing and return to the program."),
 			QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel))
 		{
 			case QMessageBox::Save:
@@ -984,7 +984,7 @@ void MainWindow::setupOutputControls()
 		}
 		else
 		{
-			QDockWidget *dock = new QDockWidget(output->name() + " View", this);
+			QDockWidget *dock = new QDockWidget(QString(tr("%1 View")).arg(output->name()), this);
 			dock->setObjectName(output->name());
 			
 			OutputInstance *inst = outputInst(output->id());
@@ -1201,7 +1201,7 @@ void MainWindow::groupDoubleClicked(const QModelIndex &idx)
 
 void MainWindow::editGroup(SlideGroup *g, Slide *slide)
 {
-	statusBar()->showMessage(QString("Loading %1...").arg(g->groupTitle().isEmpty() ? QString("Group %1").arg(g->groupNumber()) : g->groupTitle()));
+	statusBar()->showMessage(QString(tr("Loading %1...")).arg(g->groupTitle().isEmpty() ? QString(tr("Group %1")).arg(g->groupNumber()) : g->groupTitle()));
 	openSlideEditor(g,slide);
 	//m_previewWidget->clear();
 	statusBar()->clearMessage();

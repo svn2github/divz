@@ -14,6 +14,8 @@ Q_IMPORT_PLUGIN(qtiff)
 #include <QList>
 #include <QPixmapCache>
 #include <QApplication>
+#include <QTranslator>
+#include <QLocale>
 
 #include "model/Output.h"
 #include "model/SlideGroupFactory.h"
@@ -60,6 +62,15 @@ void AppSettings::initApp(const QString& appName)
 	QString pluginPath = QString("%1/plugins").arg(QDir::currentPath());
 	//qDebug() << "DViz Plugin Path:"<<pluginPath;
 
+	QTranslator * qtTranslator = new QTranslator();
+	qtTranslator->load("qt_" + QLocale::system().name());
+	qApp->installTranslator(qtTranslator);
+	
+// 	QTranslator myappTranslator;
+// 	myappTranslator.load("myapp_" + QLocale::system().name());
+// 	app.installTranslator(&myappTranslator);
+
+
 	qApp->addLibraryPath(pluginPath);
 	//qDebug() << "Core Plugin Paths: "<< app.libraryPaths();
 
@@ -69,6 +80,7 @@ void AppSettings::initApp(const QString& appName)
 	QPixmapCache::setCacheLimit(256 * 1024);
 
 	qRegisterMetaType<AbstractVisualItem::FillType>("FillType");
+	qRegisterMetaType<AbstractVisualItem::ZoomEffectDirection>("ZoomEffectDirection");
 
 	AbstractItemFilter::registerFilterInstance(SlideTextOnlyFilter::instance());
 	AbstractItemFilter::registerFilterInstance(SlideNonTextOnlyFilter::instance());

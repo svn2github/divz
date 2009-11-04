@@ -29,6 +29,10 @@
 #define MAX_SCALED_WIDTH 4500
 #define MAX_SCALED_HEIGHT 2500
 
+#define ZOOM_FACTOR 1.5
+
+#define PTR(p) (QString().sprintf("%p",p))
+
 BackgroundContent::BackgroundContent(QGraphicsScene * scene, QGraphicsItem * parent)
     : AbstractContent(scene, parent, false)
     , m_still(false)
@@ -39,6 +43,8 @@ BackgroundContent::BackgroundContent(QGraphicsScene * scene, QGraphicsItem * par
     , m_fileName("")
     , m_fileLastModified("")
     , m_lastForegroundKey("")
+    , m_zoomInit(false)
+    , m_zoomEnabled(false)
 {
 	m_dontSyncToModel = true;
 	
@@ -72,6 +78,9 @@ BackgroundContent::BackgroundContent(QGraphicsScene * scene, QGraphicsItem * par
 		delete c;
 		c =0;
 	}
+	
+	m_zoomAnimationTimer = new QTimer();
+	connect(m_zoomAnimationTimer, SIGNAL(timeout()), this, SLOT(animateZoom()));
 	
 	m_dontSyncToModel = false;
 }
@@ -127,18 +136,122 @@ void BackgroundContent::syncFromModelItem(AbstractVisualItem *model)
 	
 	
 	if(model->fillVideoFile()!="" &&
-		modelItem()->fillType() == AbstractVisualItem::Video)
+		model->fillType() == AbstractVisualItem::Video)
 		setVideoFile(model->fillVideoFile());
 		
-	if(modelItem()->fillImageFile() != "" &&
-		modelItem()->fillType() == AbstractVisualItem::Image)
-		setImageFile(modelItem()->fillImageFile());
+	if(model->fillImageFile() != "" &&
+		model->fillType() == AbstractVisualItem::Image)
+		setImageFile(model->fillImageFile());
+		
+	if(   model->zoomEffectEnabled() 
+ 	   && model->zoomSpeed() > 0 
+ 	   && sceneContextHint() == MyGraphicsScene::Live)
+	{
+		m_zoomEnabled = true;
+		
+		m_zoomAnimationTimer->start(1000 / 20); // / model->zoomSpeed());
+		
+		if(!m_zoomInit)
+		{
+			QSize size = contentsRect().size();
+			
+			double width  = size.width();
+			double height = size.height();
+			
+			double aspectRatio = m_pixmap.isNull() || m_pixmap.width() <=0 ? 0 : m_pixmap.height() / m_pixmap.width();
+			if(aspectRatio == 0 || aspectRatio == 1) 
+				aspectRatio = AppSettings::liveAspectRatio();
+				
+			//qDebug() << "aspectRatio: "<<aspectRatio;
+			
+			double startHeight = width * aspectRatio;
+			m_zoomDir = 1;
+			QPointF delta;
+			
+			m_zoomStartSize.setX(width);
+			m_zoomStartSize.setY(startHeight);
+			 
+			m_zoomEndSize.setX(width       * ZOOM_FACTOR);
+			m_zoomEndSize.setY(startHeight * ZOOM_FACTOR);
+			
+			bool zoomIn = true;
+			if(model->zoomDirection() == AbstractVisualItem::ZoomIn)
+				zoomIn = true;
+			else
+			if(model->zoomDirection() == AbstractVisualItem::ZoomOut)
+				zoomIn = false;
+			else
+			if(model->zoomDirection() == AbstractVisualItem::ZoomRandom)
+				zoomIn = qrand() < RAND_MAX/2;
+			
+			m_zoomCurSize = zoomIn ? m_zoomStartSize : m_zoomEndSize;
+			
+			delta.setX(m_zoomEndSize.x() - m_zoomCurSize.x());
+			delta.setY(m_zoomEndSize.y() - m_zoomCurSize.y());
+			//step.setX(delta.x()/ZOOM_STEPS);
+			//step.setY(delta.y()/ZOOM_STEPS);
+			m_zoomInit = true;
+		}
+		
+		// allow it to go below 1.0 for step size by using 75.0 when the max of the zoomSpeed slider in config is 100
+		m_zoomStep.setX(75.0 / (100.0 - ((double)model->zoomSpeed())));
+		m_zoomStep.setY(75.0 / (100.0 - ((double)model->zoomSpeed())));
+		
+		if(model->zoomAnchorCenter())
+			m_zoomDestPoint = QPointF(.5,.5);
+		else
+		{
+			// pick a third intersection
+			double x = qrand() < RAND_MAX/2 ? .33 : .66;
+			double y = qrand() < RAND_MAX/2 ? .33 : .66;
+			
+			// apply a fudge factor
+// 			x += 0.15 - ((double)qrand()) / ((double)RAND_MAX) * 0.075;
+// 			y += 0.15 - ((double)qrand()) / ((double)RAND_MAX) * 0.075;
+			
+			m_zoomDestPoint = QPointF(x,y);
+			
+			//qDebug() << model->itemName() << "Random zoom anchor: "<<m_zoomDestPoint;
+		}
+
+	}
+	else
+	{
+		m_zoomEnabled = false;
+		if(m_zoomAnimationTimer->isActive())
+			m_zoomAnimationTimer->stop();
+	}
 	
 	setZValue(-9999);
 	setVisible(true);
 	update();
 	
         m_dontSyncToModel = false;
+}
+
+void BackgroundContent::animateZoom()
+{
+	//elapsed = (elapsed + qobject_cast<QTimer*>(sender())->interval()) % 2000;
+	//printf("elapsed=%d\n",elapsed);
+	if(m_zoomDir > 0)
+	{
+		m_zoomCurSize.setX(m_zoomCurSize.x() + m_zoomStep.x());
+		m_zoomCurSize.setY(m_zoomCurSize.y() + m_zoomStep.y());
+		if(m_zoomCurSize.x() >= m_zoomEndSize.x() &&
+		   m_zoomCurSize.y() >= m_zoomEndSize.y())
+			m_zoomDir = -1;
+	}
+	else
+	{
+		m_zoomCurSize.setX(m_zoomCurSize.x() - m_zoomStep.x());
+		m_zoomCurSize.setY(m_zoomCurSize.y() - m_zoomStep.y());
+		if(m_zoomCurSize.x() <= m_zoomStartSize.x() &&
+		   m_zoomCurSize.y() <= m_zoomStartSize.y())
+			m_zoomDir = +1;
+	}
+	//qDebug() << "AnimateZoom: "<<PTR(this)<<modelItem()->itemName()<<": size:"<<m_zoomCurSize<<", step:"<<m_zoomStep;
+	
+	update();
 }
 
 #define BG_IMG_CACHE_DIR "dviz-backgroundimagecache"
@@ -200,6 +313,12 @@ void BackgroundContent::setImageFile(const QString &file)
 		
 		QSize size = contentsRect().size();
 		
+		if(modelItem()->zoomEffectEnabled() && ZOOM_FACTOR > 2.0)
+		{
+			size.setWidth(size.width()   * ZOOM_FACTOR);
+			size.setHeight(size.height() * ZOOM_FACTOR);
+		}
+		
 		QDir path(QString("%1/%2").arg(QDir::tempPath()).arg(BG_IMG_CACHE_DIR));
 		if(!path.exists())
 			QDir(QDir::tempPath()).mkdir(BG_IMG_CACHE_DIR);
@@ -211,6 +330,7 @@ void BackgroundContent::setImageFile(const QString &file)
 					.arg(size.width())
 					.arg(size.height())
 					.arg(sceneContextHint() == MyGraphicsScene::Preview ? "-icon" : "");
+					//.arg(modelItem()->zoomEffectEnabled() ? "-zoomed" : "");
 		
 		if(!m_lastImageKey.isEmpty() &&
 		    m_lastImageKey != cacheKey)
@@ -436,93 +556,117 @@ void BackgroundContent::paint(QPainter * painter, const QStyleOptionGraphicsItem
 			}
 			else
 			{
-				
-				// this rect describes our "model" height in terms of item coordinates
-				QRect tmpRect(0,0,cRect.width(),cRect.height());
-				
-				// This is the key to getting good looking scaled & cached pixmaps -
-				// it transforms our item coordinates into view coordinates. 
-				// What this means is that if our item is 100x100, but the view is scaled
-				// by 1.5, our final pixmap would be scaled by the painter to 150x150.
-				// That means that even though after the cache generation we tell drawPixmap()
-				// to use our 100x100 rect, it will do the same transform and figure out that
-				// it needs to scale the pixmap to 150x150. Therefore, what we are doing here
-				// is calculating what drawPixmap() will *really* need, even though we tell
-				// it something different (100x100). Then, we dont scale the pixamp to 100x100 - no,
-				// we scale it only to 150x150. And then the painter can render the pixels 1:1
-				// rather than having to scale up and make it look pixelated.
-				tmpRect = painter->combinedTransform().mapRect(tmpRect);
-				
-				QRect destRect(0,0,tmpRect.width(),tmpRect.height());
-				
-				// Limit the size of the final image inorder to prevent the user from
-				// inadvertantly killing the speed of the painting by scaling a really huge image
-				// in the media browser preview
-				if(destRect.width()  > MAX_SCALED_WIDTH || 
-				   destRect.height() > MAX_SCALED_HEIGHT)
+				if(m_zoomEnabled)
 				{
-					float sx = ((float)MAX_SCALED_WIDTH)  / ((float)destRect.width());
-					float sy = ((float)MAX_SCALED_HEIGHT) / ((float)destRect.height());
-				
-					float scale = qMin(sx,sy);
-					destRect.setWidth( destRect.width()  * sx);
-					destRect.setHeight(destRect.height() * sy);
-				}
-				
-				// cache the scaled pixmap according to the transformed size of the view
-				QString foregroundKey = QString("%1:%2:%3:%4")
-							.arg(m_fileName).arg(m_fileLastModified)
-							.arg(destRect.width()).arg(destRect.height());
-							
-				//qDebug() << "foregroundKey: "<<foregroundKey;
-				
-				if(m_lastForegroundKey != foregroundKey &&
-				  !m_lastForegroundKey.isEmpty())
-					QPixmapCache::remove(m_lastForegroundKey);
+// 					if(m_zoomedPixmapSize != m_zoomCurSize)
+// 					{
+// 						m_zoomedPixmap = m_pixmap.scaled(m_zoomCurSize.x(), m_zoomCurSize.y(), Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+// 						m_zoomedPixmapSize = m_zoomCurSize;
+// 					}
 					
-				m_lastForegroundKey = foregroundKey;
-				
-				QPixmap cache;
-				if(!QPixmapCache::find(foregroundKey,cache))
-				{
-// 					QTime t;
-// 					t.start();
-// 					qDebug() << "BackgroundContent::drawForeground: Foreground pixmap dirty, redrawing size:"<<destRect;
-					cache = QPixmap(destRect.size());
-					cache.fill(Qt::transparent);
+					painter->save();
+					painter->setRenderHint(QPainter::Antialiasing);
+					painter->setRenderHint(QPainter::SmoothPixmapTransform);
+					painter->setClipRect(cRect);
 					
-					QPainter tmpPainter(&cache);
-					tmpPainter.setRenderHint(QPainter::HighQualityAntialiasing, true);
-					tmpPainter.setRenderHint(QPainter::SmoothPixmapTransform, true);
+					double xf = (1/m_zoomDestPoint.x());
+					double yf = (1/m_zoomDestPoint.y());
+					QRectF pr(cRect.width()/xf - m_zoomCurSize.x()/xf,cRect.height()/yf - m_zoomCurSize.y()/yf,m_zoomCurSize.x(),m_zoomCurSize.y());
+					//qDebug() << PTR(this)<<": Paint at size"<<pr;
+					painter->drawPixmap(pr,m_pixmap,m_pixmap.rect());
+					//qDebug() << PTR(this)<<": End paint at size"<<pr;
+					painter->restore();
+    				}
+    				else
+    				{
 					
-					if(!sourceOffsetTL().isNull() || !sourceOffsetBR().isNull())
+					// this rect describes our "model" height in terms of item coordinates
+					QRect tmpRect(0,0,cRect.width(),cRect.height());
+					
+					// This is the key to getting good looking scaled & cached pixmaps -
+					// it transforms our item coordinates into view coordinates. 
+					// What this means is that if our item is 100x100, but the view is scaled
+					// by 1.5, our final pixmap would be scaled by the painter to 150x150.
+					// That means that even though after the cache generation we tell drawPixmap()
+					// to use our 100x100 rect, it will do the same transform and figure out that
+					// it needs to scale the pixmap to 150x150. Therefore, what we are doing here
+					// is calculating what drawPixmap() will *really* need, even though we tell
+					// it something different (100x100). Then, we dont scale the pixamp to 100x100 - no,
+					// we scale it only to 150x150. And then the painter can render the pixels 1:1
+					// rather than having to scale up and make it look pixelated.
+					tmpRect = painter->combinedTransform().mapRect(tmpRect);
+					
+					QRect destRect(0,0,tmpRect.width(),tmpRect.height());
+					
+					// Limit the size of the final image inorder to prevent the user from
+					// inadvertantly killing the speed of the painting by scaling a really huge image
+					// in the media browser preview
+					if(destRect.width()  > MAX_SCALED_WIDTH || 
+					destRect.height() > MAX_SCALED_HEIGHT)
 					{
-						QPointF tl = sourceOffsetTL();
-						QPointF br = sourceOffsetBR();
-						QRect px = m_pixmap.rect();
-						int x1 = (int)(tl.x() * px.width());
-						int y1 = (int)(tl.y() * px.height());
-						QRect source( 
-							px.x() + x1,
-							px.y() + y1,
-							px.width()  - (int)(br.x() * px.width())  + (px.x() + x1),
-							px.height() - (int)(br.y() * px.height()) + (px.y() + y1)
-						);
-							
-						qDebug() << "BackgroundContent::paint:"<<modelItem()->itemName()<<": tl:"<<tl<<", br:"<<br<<", source:"<<source;
-						tmpPainter.drawPixmap(destRect, m_pixmap, source);
+						float sx = ((float)MAX_SCALED_WIDTH)  / ((float)destRect.width());
+						float sy = ((float)MAX_SCALED_HEIGHT) / ((float)destRect.height());
+					
+						float scale = qMin(sx,sy);
+						destRect.setWidth( destRect.width()  * sx);
+						destRect.setHeight(destRect.height() * sy);
 					}
-					else
-						tmpPainter.drawPixmap(destRect, m_pixmap);
 					
-					tmpPainter.end();
-					if(!QPixmapCache::insert(foregroundKey, cache))
-						qDebug() << "BackgroundContent::paint:"<<modelItem()->itemName()<<": Can't cache the image. This will slow performance of cross fades and slide editor. Make the cache larger using the Program Settings menu.";
+					// cache the scaled pixmap according to the transformed size of the view
+					QString foregroundKey = QString("%1:%2:%3:%4")
+								.arg(m_fileName).arg(m_fileLastModified)
+								.arg(destRect.width()).arg(destRect.height());
+								
+					//qDebug() << "foregroundKey: "<<foregroundKey;
 					
-// 					qDebug() << "BackgroundContent::drawForeground: Foreground pixmap dirty, end drawing size:"<<destRect<<", elapsed: "<<t.elapsed();
+					if(m_lastForegroundKey != foregroundKey &&
+					!m_lastForegroundKey.isEmpty())
+						QPixmapCache::remove(m_lastForegroundKey);
+						
+					m_lastForegroundKey = foregroundKey;
+					
+					QPixmap cache;
+					if(!QPixmapCache::find(foregroundKey,cache))
+					{
+	// 					QTime t;
+	// 					t.start();
+	// 					qDebug() << "BackgroundContent::drawForeground: Foreground pixmap dirty, redrawing size:"<<destRect;
+						cache = QPixmap(destRect.size());
+						cache.fill(Qt::transparent);
+						
+						QPainter tmpPainter(&cache);
+						tmpPainter.setRenderHint(QPainter::HighQualityAntialiasing, true);
+						tmpPainter.setRenderHint(QPainter::SmoothPixmapTransform, true);
+						
+						if(!sourceOffsetTL().isNull() || !sourceOffsetBR().isNull())
+						{
+							QPointF tl = sourceOffsetTL();
+							QPointF br = sourceOffsetBR();
+							QRect px = m_pixmap.rect();
+							int x1 = (int)(tl.x() * px.width());
+							int y1 = (int)(tl.y() * px.height());
+							QRect source( 
+								px.x() + x1,
+								px.y() + y1,
+								px.width()  - (int)(br.x() * px.width())  + (px.x() + x1),
+								px.height() - (int)(br.y() * px.height()) + (px.y() + y1)
+							);
+								
+							qDebug() << "BackgroundContent::paint:"<<modelItem()->itemName()<<": tl:"<<tl<<", br:"<<br<<", source:"<<source;
+							tmpPainter.drawPixmap(destRect, m_pixmap, source);
+						}
+						else
+							tmpPainter.drawPixmap(destRect, m_pixmap);
+						
+						tmpPainter.end();
+						if(!QPixmapCache::insert(foregroundKey, cache))
+							qDebug() << "BackgroundContent::paint:"<<modelItem()->itemName()<<": Can't cache the image. This will slow performance of cross fades and slide editor. Make the cache larger using the Program Settings menu.";
+						
+	// 					qDebug() << "BackgroundContent::drawForeground: Foreground pixmap dirty, end drawing size:"<<destRect<<", elapsed: "<<t.elapsed();
+					}
+					
+					painter->drawPixmap(cRect,cache);
 				}
-				
-				painter->drawPixmap(cRect,cache);
 			}
 		}
 	}
@@ -536,7 +680,27 @@ void BackgroundContent::paint(QPainter * painter, const QStyleOptionGraphicsItem
 		{
 			painter->setBrush(Qt::NoBrush);
 			painter->setRenderHint(QPainter::SmoothPixmapTransform, true);
-			painter->drawPixmap(cRect, m_pixmap);
+			
+			if(m_zoomEnabled)
+			{
+				painter->save();
+				painter->setRenderHint(QPainter::Antialiasing);
+				painter->setRenderHint(QPainter::SmoothPixmapTransform);
+				painter->setClipRect(cRect);
+				
+				double xf = (1/m_zoomDestPoint.x());
+				double yf = (1/m_zoomDestPoint.y());
+				QRectF pr(cRect.width()/xf - m_zoomCurSize.x()/xf,cRect.height()/yf - m_zoomCurSize.y()/yf,m_zoomCurSize.x(),m_zoomCurSize.y());
+				//qDebug() << PTR(this)<<": Paint at size"<<pr;
+				painter->drawPixmap(pr,m_pixmap,m_pixmap.rect());
+				//qDebug() << PTR(this)<<": End paint at size"<<pr;
+				painter->restore();
+					
+			}
+			else
+			{
+				painter->drawPixmap(cRect, m_pixmap);
+			}
 		}
 	}
 	

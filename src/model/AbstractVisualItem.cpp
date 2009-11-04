@@ -60,6 +60,11 @@ AbstractVisualItem::AbstractVisualItem()
 	
 	m_sourceOffsetTL = QPointF(0,0);
 	m_sourceOffsetBR = QPointF(0,0);
+	
+	m_zoomEffectEnabled = false;
+	m_zoomAnchorCenter = false;
+	m_zoomDirection = ZoomRandom;
+	m_zoomSpeed = 30;
 }
 
 AbstractContent * AbstractVisualItem::createDelegate(QGraphicsScene*,QGraphicsItem*) {return 0;}
@@ -120,10 +125,15 @@ ITEM_PROPSET(AbstractVisualItem, ShadowEnabled,		bool,	shadowEnabled);
 // 	setChanged("shadowEnabled", flag, oldValue);
 // }
 
-ITEM_PROPSET(AbstractVisualItem, ShadowBlurRadius,		double,	shadowBlurRadius);
+ITEM_PROPSET(AbstractVisualItem, ShadowBlurRadius,	double,	shadowBlurRadius);
 ITEM_PROPSET(AbstractVisualItem, ShadowOffsetX,		double,	shadowOffsetX);
 ITEM_PROPSET(AbstractVisualItem, ShadowOffsetY,		double,	shadowOffsetY);
 ITEM_PROPSET(AbstractVisualItem, ShadowBrush,		QBrush,	shadowBrush);
+
+ITEM_PROPSET(AbstractVisualItem, ZoomEffectEnabled,	bool,	zoomEffectEnabled);
+ITEM_PROPSET(AbstractVisualItem, ZoomAnchorCenter,	bool,	zoomAnchorCenter);
+ITEM_PROPSET(AbstractVisualItem, ZoomDirection,		ZoomEffectDirection,	zoomDirection);
+ITEM_PROPSET(AbstractVisualItem, ZoomSpeed,		int,	zoomSpeed);
 
 
 bool AbstractVisualItem::fromXml(QDomElement & pe)
@@ -274,7 +284,17 @@ bool AbstractVisualItem::fromXml(QDomElement & pe)
 			setShadowBrush(fill);
 		//}
 	}
-		setBeingLoaded(false);
+	
+	domElement = pe.firstChildElement("zoom");
+	if(!domElement.isNull()) 
+	{
+		setZoomEffectEnabled(domElement.attribute("enabled").toInt());
+		setZoomAnchorCenter(domElement.attribute("anchor-center").toInt());
+		setZoomDirection((ZoomEffectDirection)domElement.attribute("direction").toInt());
+		setZoomSpeed(domElement.attribute("speed").toInt());
+	}
+	
+	setBeingLoaded(false);
 	
 	return true;
 }
@@ -391,7 +411,13 @@ void AbstractVisualItem::toXml(QDomElement & pe) const
  	domElement.setAttribute("y", shadowOffsetY());
  	brushToXml(domElement,shadowBrush());
  	pe.appendChild(domElement);
-
+ 	
+ 	domElement = doc.createElement("zoom");
+ 	domElement.setAttribute("enabled", zoomEffectEnabled());
+ 	domElement.setAttribute("anchor-center", zoomAnchorCenter());
+ 	domElement.setAttribute("direction", (int)zoomDirection());
+ 	domElement.setAttribute("speed", zoomSpeed());
+ 	pe.appendChild(domElement);
 }
 
 static inline QString qcolorToString(const QColor & color)

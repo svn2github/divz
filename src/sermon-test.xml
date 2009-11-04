@@ -3857,6 +3857,7 @@ p, li { white-space: pre-wrap; }
                 <shadow brush-style="1" x="3" y="3" enabled="0" blur="3" brush-color="0,0,0,255"/>
             </box>
         </slide>
+        <master fade-speed="250" number="-1" timeout="0" inherit-fade="1" id="0" fade-quality="15"/>
     </group>
     <group title="" fade-speed="250" number="2" icon="" inherit-fade="1" type="0" id="1" fade-quality="15" auto="0">
         <slide fade-speed="1.124657769211594e-312" number="0" timeout="0" inherit-fade="1" id="0" fade-quality="2.121996152127259e-314">
@@ -3877,5 +3878,6 @@ p, li { white-space: pre-wrap; }
                 <shadow brush-style="1" x="3" y="3" enabled="0" blur="3" brush-color="0,0,0,255"/>
             </background>
         </slide>
+        <master fade-speed="250" number="-1" timeout="0" inherit-fade="1" id="0" fade-quality="15"/>
     </group>
 </document>

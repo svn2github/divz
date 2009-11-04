@@ -106,6 +106,9 @@ void ImageImportDialog::accept()
 
 	bool removeOriginal = m_ui->removeOrig->isChecked();
 	bool renameDups = m_ui->renameDuplicates->isChecked();
+	
+	bool zoomEnabled = m_ui->zoomImage->isChecked();
+	int zoomSpeed = m_ui->zoomSpeed->value();
 
 	QStringList filters;
 	filters << "*.bmp";
@@ -205,6 +208,16 @@ void ImageImportDialog::accept()
 
 		bg->setFillType(AbstractVisualItem::Image);
 		bg->setFillImageFile(path);
+		
+		if(zoomEnabled)
+		{
+			bg->setZoomEffectEnabled(true);
+			
+			bg->setZoomSpeed(zoomSpeed);
+			bg->setZoomDirection(AbstractVisualItem::ZoomRandom);
+			bg->setZoomAnchorCenter(false);
+		}
+	
 
 		if(showNames)
 		{

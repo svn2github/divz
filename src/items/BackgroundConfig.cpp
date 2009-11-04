@@ -16,7 +16,8 @@ BackgroundConfig::BackgroundConfig(BackgroundContent * v, QWidget * parent)
 	m_commonUi->tabWidget->removeTab(m_commonUi->tabWidget->indexOf(m_commonUi->outlineTab));
 	m_commonUi->tabWidget->removeTab(m_commonUi->tabWidget->indexOf(m_commonUi->generalTab));
 	m_commonUi->tabWidget->removeTab(m_commonUi->tabWidget->indexOf(m_commonUi->shadowTab));
-	m_commonUi->tabWidget->removeTab(m_commonUi->tabWidget->indexOf(m_commonUi->reflectionTab));
+	//m_commonUi->tabWidget->removeTab(m_commonUi->tabWidget->indexOf(m_commonUi->reflectionTab));
+	m_commonUi->gbMirror->setVisible(false);
 	
 	int idx = m_commonUi->tabWidget->indexOf(m_commonUi->backgroundTab);
 	//m_commonUi->tabWidget->setTabText(idx,"Video File");

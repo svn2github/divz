@@ -425,99 +425,96 @@ void SlideEditorWindow::closeEvent(QCloseEvent *evt)
 void SlideEditorWindow::setupToolbar()
 {
 	QList<QToolBar*> toolbars;
-	QToolBar *toolbar = addToolBar("Slide Setup");
+	QToolBar *toolbar = addToolBar(tr("Slide Setup"));
 	toolbars<<toolbar;
 
 	toolbar->setObjectName("maintoolbar");
 
-	QAction  *slideProp = toolbar->addAction(QIcon(":/data/stock-properties.png"), "Slide Properties");
-	slideProp->setShortcut(QString("F2"));
+	QAction  *slideProp = toolbar->addAction(QIcon(":/data/stock-properties.png"), tr("Slide Properties"));
+	slideProp->setShortcut(QString(tr("F2")));
 	connect(slideProp, SIGNAL(triggered()), this, SLOT(slideProperties()));
 	
 	toolbar->addSeparator();
 	
-	QAction  *groupProp = toolbar->addAction(QIcon(":/data/stock-preferences.png"), "Slide Group Properties");
-	groupProp->setShortcut(QString("SHIFT+F2"));
+	QAction  *groupProp = toolbar->addAction(QIcon(":/data/stock-preferences.png"), tr("Slide Group Properties"));
+	groupProp->setShortcut(QString(tr("SHIFT+F2")));
 	connect(groupProp, SIGNAL(triggered()), this, SLOT(groupProperties()));
 	
 	//toolbar->addSeparator();
 	
-	toolbar = addToolBar("New Objects");
+	toolbar = addToolBar(tr("New Objects"));
 	toolbars<<toolbar;
 
 	
 	
-	QAction  *newAction = toolbar->addAction(QIcon(":/data/insert-text-24.png"), "New Text Item");
-	newAction->setShortcut(QString("CTRL+SHIFT+T"));
+	QAction  *newAction = toolbar->addAction(QIcon(":/data/insert-text-24.png"), tr("New Text Item"));
+	newAction->setShortcut(QString(tr("CTRL+SHIFT+T")));
 	connect(newAction, SIGNAL(triggered()), this, SLOT(newTextItem()));
 
-	QAction  *newBox = toolbar->addAction(QIcon(":/data/insert-rect-24.png"), "New Box Item");
-	newBox->setShortcut(QString("CTRL+SHIFT+B"));
+	QAction  *newBox = toolbar->addAction(QIcon(":/data/insert-rect-24.png"), tr("New Box Item"));
+	newBox->setShortcut(QString(tr("CTRL+SHIFT+B")));
 	connect(newBox, SIGNAL(triggered()), this, SLOT(newBoxItem()));
 
-	QAction  *newVideo = toolbar->addAction(QIcon(":/data/stock-panel-multimedia.png"), "New Video Item");
-	newVideo->setShortcut(QString("CTRL+SHIFT+V"));
+	QAction  *newVideo = toolbar->addAction(QIcon(":/data/stock-panel-multimedia.png"), tr("New Video Item"));
+	newVideo->setShortcut(QString(tr("CTRL+SHIFT+V")));
 	connect(newVideo, SIGNAL(triggered()), this, SLOT(newVideoItem()));
 	
-	QAction  *newImage = toolbar->addAction(QIcon(":/data/insert-image-24.png"), "New Image Item");
-	newImage->setShortcut(QString("CTRL+SHIFT+I"));
+	QAction  *newImage = toolbar->addAction(QIcon(":/data/insert-image-24.png"), tr("New Image Item"));
+	newImage->setShortcut(QString(tr("CTRL+SHIFT+I")));
 	connect(newImage, SIGNAL(triggered()), this, SLOT(newImageItem()));
 	
-	toolbar = addToolBar("Arrange Items");
+	toolbar = addToolBar(tr("Arrange Items"));
 	toolbars<<toolbar;
 
 	
-	QAction  *centerHor = toolbar->addAction(QIcon(":/data/obj-center-hor.png"), "Center Items Horizontally");
-	centerHor->setShortcut(QString("CTRL+SHIFT+H"));
+	QAction  *centerHor = toolbar->addAction(QIcon(":/data/obj-center-hor.png"), tr("Center Items Horizontally"));
+	centerHor->setShortcut(QString(tr("CTRL+SHIFT+H")));
 	connect(centerHor, SIGNAL(triggered()), this, SLOT(centerSelHorz()));
 	
-	QAction  *centerVer = toolbar->addAction(QIcon(":/data/obj-center-ver.png"), "Center Items Vertically");
-	centerVer->setShortcut(QString("CTRL+SHIFT+V"));
+	QAction  *centerVer = toolbar->addAction(QIcon(":/data/obj-center-ver.png"), tr("Center Items Vertically"));
+	centerVer->setShortcut(QString(tr("CTRL+SHIFT+V")));
 	connect(centerVer, SIGNAL(triggered()), this, SLOT(centerSelVert()));
 	
-	toolbar = addToolBar("Slide Operations");
+	toolbar = addToolBar(tr("Slide Operations"));
 	toolbars<<toolbar;
 
 	
-	QAction  *newSlide = toolbar->addAction(QIcon(":/data/stock-add.png"), "New Slide");
-	newSlide->setShortcut(QString("CTRL+M"));
+	QAction  *newSlide = toolbar->addAction(QIcon(":/data/stock-add.png"), tr("New Slide"));
+	newSlide->setShortcut(QString(tr("CTRL+M")));
 	connect(newSlide, SIGNAL(triggered()), this, SLOT(newSlide()));
 	
-	QAction  *dupSlide = toolbar->addAction(QIcon(":/data/stock-convert.png"), "Duplicate Slide");
-	dupSlide->setShortcut(QString("CTRL+D"));
+	QAction  *dupSlide = toolbar->addAction(QIcon(":/data/stock-convert.png"), tr("Duplicate Slide"));
+	dupSlide->setShortcut(QString(tr("CTRL+D")));
 	connect(dupSlide, SIGNAL(triggered()), this, SLOT(dupSlide()));
 	
 	toolbar->addSeparator();
 	
-	QAction  *configBg = toolbar->addAction(QIcon(":/data/stock-insert-image.png"), "Setup Slide Background");
-	configBg->setShortcut(QString("CTRL+SHIFT+B"));
+	QAction  *configBg = toolbar->addAction(QIcon(":/data/stock-insert-image.png"), tr("Setup Slide Background"));
+	configBg->setShortcut(QString(tr("CTRL+SHIFT+B")));
 	connect(configBg, SIGNAL(triggered()), this, SLOT(slotConfigBackground()));
 	
-	m_masterSlideAction = toolbar->addAction(QIcon(":/data/master-slide.png"), "Edit Master Slide");
-	m_masterSlideAction->setShortcut(QString("CTRL+SHIFT+M"));
+	m_masterSlideAction = toolbar->addAction(QIcon(":/data/master-slide.png"), tr("Edit Master Slide"));
+	m_masterSlideAction->setShortcut(QString(tr("CTRL+SHIFT+M")));
 	connect(m_masterSlideAction, SIGNAL(triggered()), this, SLOT(editMasterSlide()));
 	
 	
-
 	toolbar->addSeparator();
 	
-	QAction  *delSlide = toolbar->addAction(QIcon(":/data/stock-delete.png"), "Delete Slide");
+	QAction  *delSlide = toolbar->addAction(QIcon(":/data/stock-delete.png"), tr("Delete Slide"));
 	connect(delSlide, SIGNAL(triggered()), this, SLOT(delSlide()));
 	
 	
-	
-	toolbar = addToolBar("Text Size");
+	toolbar = addToolBar(tr("Text Size"));
 	toolbars<<toolbar;
-
 
 	
 	m_textBase = new QWidget(toolbar);
 	QHBoxLayout * layout = new QHBoxLayout(m_textBase);
-	QLabel * label = new QLabel("Text: ");
+	QLabel * label = new QLabel(tr("Text: "));
 	layout->addWidget(label);
 	
 	m_textSizeBox = new QDoubleSpinBox(m_textBase);
-	m_textSizeBox->setSuffix("pt");
+	m_textSizeBox->setSuffix(tr("pt"));
 	m_textSizeBox->setMinimum(1);
 	m_textSizeBox->setValue(38);
 	m_textSizeBox->setDecimals(1);
@@ -532,27 +529,27 @@ void SlideEditorWindow::setupToolbar()
 	
 	toolbar->addWidget(m_textBase);
 	
-	m_textPlusAction = toolbar->addAction(QIcon(":/data/stock-sort-descending.png"), "Increase Font Size");
-	m_textPlusAction->setShortcut(QString("CTRL+SHFIT++"));
+	m_textPlusAction = toolbar->addAction(QIcon(":/data/stock-sort-descending.png"), tr("Increase Font Size"));
+	m_textPlusAction->setShortcut(QString(tr("CTRL+SHFIT++")));
 	connect(m_textPlusAction, SIGNAL(triggered()), this, SLOT(textPlus()));
 	
-	m_textMinusAction = toolbar->addAction(QIcon(":/data/stock-sort-ascending.png"), "Decrease Font Size");
-	m_textMinusAction->setShortcut(QString("CTRL+SHFIT+-"));
+	m_textMinusAction = toolbar->addAction(QIcon(":/data/stock-sort-ascending.png"), tr("Decrease Font Size"));
+	m_textMinusAction->setShortcut(QString(tr("CTRL+SHFIT+-")));
 	connect(m_textMinusAction, SIGNAL(triggered()), this, SLOT(textMinus()));
 	
 	m_textPlusAction->setEnabled(false);
 	m_textMinusAction->setEnabled(false);
 	
-	m_textFitToSlideAction = toolbar->addAction(QIcon(":/data/stock-fit-rect.png"), "Fit Text to Slide");
-	m_textFitToSlideAction->setShortcut(QString("CTRL+SHFIT+S"));
+	m_textFitToSlideAction = toolbar->addAction(QIcon(":/data/stock-fit-rect.png"), tr("Fit Text to Slide"));
+	m_textFitToSlideAction->setShortcut(QString(tr("CTRL+SHFIT+S")));
 	connect(m_textFitToSlideAction, SIGNAL(triggered()), this, SLOT(textFitToSlide()));
 	
-	m_textFitToBoxAction = toolbar->addAction(QIcon(":/data/stock-fit-out.png"), "Fit Text to Box");
-	m_textFitToBoxAction->setShortcut(QString("CTRL+SHFIT+F"));
+	m_textFitToBoxAction = toolbar->addAction(QIcon(":/data/stock-fit-out.png"), tr("Fit Text to Box"));
+	m_textFitToBoxAction->setShortcut(QString(tr("CTRL+SHFIT+F")));
 	connect(m_textFitToBoxAction, SIGNAL(triggered()), this, SLOT(textFitToRect()));
 	
-	m_textNaturalBoxAction = toolbar->addAction(QIcon(":/data/stock-fit-in.png"), "Fit Box to Text Naturally");
-	m_textNaturalBoxAction->setShortcut(QString("CTRL+SHFIT+N"));
+	m_textNaturalBoxAction = toolbar->addAction(QIcon(":/data/stock-fit-in.png"), tr("Fit Box to Text Naturally"));
+	m_textNaturalBoxAction->setShortcut(QString(tr("CTRL+SHFIT+N")));
 	connect(m_textNaturalBoxAction, SIGNAL(triggered()), this, SLOT(textNaturalBox()));
 	
 	m_textNaturalBoxAction->setEnabled(false);
@@ -561,33 +558,33 @@ void SlideEditorWindow::setupToolbar()
 	
 	connect(m_scene, SIGNAL(selectionChanged()), this, SLOT(selectionChanged()));
 	
-	toolbar = addToolBar("Undo/Redo");
+	toolbar = addToolBar(tr("Undo/Redo"));
 	toolbars<<toolbar;
 
 	
 	QAction *action = m_undoStack->createUndoAction(this);
 	action->setIcon(QIcon(":/data/stock-undo.png"));
-	action->setShortcut(QString("CTRL+Z"));
+	action->setShortcut(QString(tr("CTRL+Z")));
 	toolbar->addAction(action);
 	
 	action = m_undoStack->createRedoAction(this);
 	action->setIcon(QIcon(":/data/stock-redo2.png"));
-	action->setShortcut(QString("CTRL+SHIFT+Z"));
+	action->setShortcut(QString(tr("CTRL+SHIFT+Z")));
 	toolbar->addAction(action);
 
 	
-	toolbar = addToolBar("Slide Timeout");
+	toolbar = addToolBar(tr("Slide Timeout"));
 	toolbars<<toolbar;
 
 	
 	QWidget * base2 = new QWidget(toolbar);
 	QHBoxLayout * layout2 = new QHBoxLayout(base2);
-	QLabel * label2 = new QLabel("Change Slides In: ");
+	QLabel * label2 = new QLabel(tr("Change Slides In: "));
 	layout2->addWidget(label2);
 	
 	m_slideTimeout = new QDoubleSpinBox(m_textBase);
-	m_slideTimeout->setSuffix(" sec");
-	m_slideTimeout->setSpecialValueText("(Never)");
+	m_slideTimeout->setSuffix(tr(" sec"));
+	m_slideTimeout->setSpecialValueText(tr("(Never)"));
 	m_slideTimeout->setMinimum(0);
 	m_slideTimeout->setValue(0);
 	m_slideTimeout->setDecimals(2);
@@ -597,32 +594,32 @@ void SlideEditorWindow::setupToolbar()
 	base2->setLayout(layout2);
 	toolbar->addWidget(base2);
 	
-	QAction * zeroTimeout = toolbar->addAction(QIcon(":/data/stock-clear.png"), "Set change time to zero (Never change)");
-	zeroTimeout->setShortcut(QString("CTRL+SHIFT+N"));
+	QAction * zeroTimeout = toolbar->addAction(QIcon(":/data/stock-clear.png"), tr("Set change time to zero (Never change)"));
+	zeroTimeout->setShortcut(QString(tr("CTRL+SHIFT+N")));
 	connect(zeroTimeout, SIGNAL(triggered()), this, SLOT(zeroSlideTimeout()));
 	
-	QAction * guessTimeout = toolbar->addAction(QIcon(":/data/stock-about.png"), "Guess an appropriate change time based on slide contents");
-	guessTimeout->setShortcut(QString("CTRL+SHIFT+G"));
+	QAction * guessTimeout = toolbar->addAction(QIcon(":/data/stock-about.png"), tr("Guess an appropriate change time based on slide contents"));
+	guessTimeout->setShortcut(QString(tr("CTRL+SHIFT+G")));
 	connect(guessTimeout, SIGNAL(triggered()), this, SLOT(guessSlideTimeout()));
 	
 	//toolbar->addSeparator();
-	toolbar = addToolBar("Live");
+	toolbar = addToolBar(tr("Live"));
 	toolbars<<toolbar;
 
-	QAction  *liveAction  = toolbar->addAction(QIcon(":/data/stock-fullscreen.png"), "Send the Current Slide to the Live Output");
-	liveAction->setShortcut(QString("F5"));
+	QAction  *liveAction  = toolbar->addAction(QIcon(":/data/stock-fullscreen.png"), tr("Send the Current Slide to the Live Output"));
+	liveAction->setShortcut(QString(tr("F5")));
 	connect(liveAction, SIGNAL(triggered()), this, SLOT(setCurrentSlideLive()));
 	
 	
 	
-	toolbar = addToolBar("Fade Speed");
+	toolbar = addToolBar(tr("Fade Speed"));
 	toolbars<<toolbar;
 
 	
 	QWidget * base3 = new QWidget(toolbar);
 	QHBoxLayout * layout3 = new QHBoxLayout(base3);
 	
-	m_fadeSliderLabel = new QLabel("Fade Speed: (+)");
+	m_fadeSliderLabel = new QLabel(tr("Fade Speed: (+)"));
 	layout3->addWidget(m_fadeSliderLabel);
 	
 	m_fadeSlider = new QSlider(Qt::Horizontal,base3);
@@ -636,11 +633,11 @@ void SlideEditorWindow::setupToolbar()
 	connect(m_fadeSlider, SIGNAL(valueChanged(int)), this, SLOT(setFadeSpeedPreset(int)));
 	layout3->addWidget(m_fadeSlider);
 	
-	m_fadeSliderLabel2 = new QLabel("(-) ");
+	m_fadeSliderLabel2 = new QLabel(tr("(-) "));
 	layout3->addWidget(m_fadeSliderLabel2);
 	
-	m_inheritFadeBox = new QCheckBox("Use Default",base3);
-	m_inheritFadeBox->setToolTip("Use the fade speed and quality settings for this slide group or application settings");
+	m_inheritFadeBox = new QCheckBox(tr("Use Default"),base3);
+	m_inheritFadeBox->setToolTip(tr("Use the fade speed and quality settings for this slide group or application settings"));
 	connect(m_inheritFadeBox, SIGNAL(toggled(bool)), this, SLOT(setInheritFade(bool)));
 	layout3->addWidget(m_inheritFadeBox);
 
@@ -648,14 +645,14 @@ void SlideEditorWindow::setupToolbar()
 	toolbar->addWidget(base3);
 	
 		
-	toolbar = addToolBar("Editor Setup");
+	toolbar = addToolBar(tr("Editor Setup"));
 	toolbars<<toolbar;
 
 	
-	QAction  *configGrid = toolbar->addAction(QIcon(":/data/config-grid.png"), "Setup Grid and Guidelines");
+	QAction  *configGrid = toolbar->addAction(QIcon(":/data/config-grid.png"), tr("Setup Grid and Guidelines"));
 	connect(configGrid, SIGNAL(triggered()), this, SLOT(slotConfigGrid()));
 	
-	QAction  *autosaveOn = toolbar->addAction(QIcon(":/data/stock-history.png"), "Enable/Disable Autosave");
+	QAction  *autosaveOn = toolbar->addAction(QIcon(":/data/stock-history.png"), tr("Enable/Disable Autosave"));
 	autosaveOn->setCheckable(true);
 	autosaveOn->setChecked(true);
 	connect(autosaveOn, SIGNAL(toggled(bool)), this, SLOT(setAutosaveOn(bool)));
@@ -683,10 +680,10 @@ void SlideEditorWindow::setupToolbar()
 
 void SlideEditorWindow::autosave()
 {
-	qDebug() << "Spawning autosave...";
+	//qDebug() << "Spawning autosave...";
 	MySaveThread * t = new MySaveThread(MainWindow::mw()->currentDocument());
 	t->start();
-	qDebug() << "Autosave started.";
+	//qDebug() << "Autosave started.";
 }
 
 void SlideEditorWindow::setInheritFade(bool flag)
@@ -712,7 +709,7 @@ void SlideEditorWindow::setFadeSpeedPreset(int value)
 	if(quality<1)
 		quality=1;
 	//qDebug() << "SlideEditorWindow::setFadeSpeedPreset: value:"<<value<<" ("<<percent<<"), speed:"<<speed<<", quality:"<<quality<<" ( qualityMax:"<<qualityMax<<")";
-	m_fadeSlider->setToolTip(QString("%1 % - %2 ms / %3 fames").arg(value).arg(speed).arg(quality));
+	m_fadeSlider->setToolTip(QString(tr("%1 % - %2 ms / %3 fames")).arg(value).arg(speed).arg(quality));
 	m_scene->slide()->setCrossFadeSpeed(speed);
 	m_scene->slide()->setCrossFadeQuality(quality);
 }
@@ -745,7 +742,7 @@ void SlideEditorWindow::slotConfigBackground()
 	}
 	else
 	{
-		QMessageBox::critical(this,"No Background","Internal Error: Could not find background object to configure!");
+		QMessageBox::critical(this,tr("No Background"),tr("Internal Error: Could not find background object to configure!"));
 	}
 }
 
@@ -769,8 +766,8 @@ void SlideEditorWindow::setCurrentSlideLive()
 	if(changeTime > 0)
 	{
 		if(QMessageBox::question(this,
-			"Allow Slide to Auto-Change?",
-			QString("This slide is set to automatically change to the next slide after %1 seconds. Do you want to ALLOW this slide to automatically change (click Yes) or do you want to CANCEL the timer, just for this viewing?").arg(changeTime),
+			tr("Allow Slide to Auto-Change?"),
+			QString(tr("This slide is set to automatically change to the next slide after %1 seconds. Do you want to ALLOW this slide to automatically change (click Yes) or do you want to CANCEL the timer, just for this viewing?")).arg(changeTime),
 			QMessageBox::Yes | QMessageBox::Cancel, QMessageBox::Yes
 			) == QMessageBox::Cancel)
 			slide->setAutoChangeTime(0);
@@ -968,7 +965,8 @@ void SlideEditorWindow::editMasterSlide()
 	{
 		m_masterSlideEditor = new SlideEditorWindow();
 		SlideGroup *tmpGroup = new SlideGroup();
-		tmpGroup->setGroupTitle(QString("Master Slide for %1").arg(m_slideGroup->groupTitle().isEmpty() ? QString("Group %1").arg(m_slideGroup->groupNumber()) : m_slideGroup->groupTitle()));
+		tmpGroup->setProperty("isMasterSlide",true);
+		tmpGroup->setGroupTitle(QString(tr("Master Slide for %1")).arg(m_slideGroup->groupTitle().isEmpty() ? QString(tr("Group %1")).arg(m_slideGroup->groupNumber()) : m_slideGroup->groupTitle()));
 		tmpGroup->addSlide(m_slideGroup->masterSlide());
 		m_masterSlideEditor->setSlideGroup(tmpGroup,m_slideGroup->masterSlide());
 		connect(m_masterSlideEditor, SIGNAL(closed()), this, SLOT(masterSlideEditorClosed()));
@@ -1010,14 +1008,14 @@ void SlideEditorWindow::updatePropDock(AbstractContent *content)
 		{
 			m_propDockEmpty = new QWidget();
 			QVBoxLayout *layout = new QVBoxLayout(m_propDockEmpty);
-			QLabel *label = new QLabel("<center><font color='gray'><b>No item selected</b></font></center>");
+			QLabel *label = new QLabel(tmpGroup"<center><font color='gray'><b>No item selected</b></font></center>"));
 			layout->addWidget(label);
 		}
 			
 		m_propDock->setWidget(m_propDockEmpty);
 		m_propDockEmpty->show();
 		
-		m_propDock->setWindowTitle("Item Settings");
+		m_propDock->setWindowTitle(tr("Item Settings"));
 	}
 	else
 	{
@@ -1069,7 +1067,7 @@ void SlideEditorWindow::updatePropDock(AbstractContent *content)
     		m_currentConfigContent = content;
     		m_currentConfig = p;
     		
-    		m_propDock->setWindowTitle(QString("Settings for %1").arg(AbstractItem::guessTitle(content->modelItem()->itemName())));
+    		m_propDock->setWindowTitle(QString(tr("Settings for %1")).arg(AbstractItem::guessTitle(content->modelItem()->itemName())));
 	}
 }
 
@@ -1079,14 +1077,14 @@ void SlideEditorWindow::appSettingsChanged()
 	{
 		m_usingGL = true;
 		m_view->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
-		qDebug("SlideEditorWindow::appSettingsChanged(): Loaded OpenGL Viewport");
+		//qDebug("SlideEditorWindow::appSettingsChanged(): Loaded OpenGL Viewport");
 	}
 	else
 	if(!AppSettings::useOpenGL() && m_usingGL)
 	{
 		m_usingGL = false;
 		m_view->setViewport(new QWidget());
-		qDebug("SlideEditorWindow::appSettingsChanged(): Loaded Non-GL Viewport");
+		//qDebug("SlideEditorWindow::appSettingsChanged(): Loaded Non-GL Viewport");
 	}
 	
 	setupViewportLines();
@@ -1102,7 +1100,7 @@ void SlideEditorWindow::appSettingsChanged()
 
 void SlideEditorWindow::aspectRatioChanged(double x)
 {
-	qDebug("SlideEditorWindow::aspectRatioChanged(): New aspect ratio: %.02f",x);
+	//qDebug("SlideEditorWindow::aspectRatioChanged(): New aspect ratio: %.02f",x);
 	if(MainWindow::mw())
 	{
 		m_scene->setSceneRect(MainWindow::mw()->standardSceneRect());
@@ -1384,7 +1382,7 @@ void SlideEditorWindow::setSlideGroup(SlideGroup *group, Slide *curSlide)
 	connect(group,SIGNAL(slideChanged(Slide *, QString, AbstractItem *, QString, QString, QVariant)),this,SLOT(slideChanged(Slide *, QString, AbstractItem *, QString, QString, QVariant)));
 	connect(group,SIGNAL(destroyed(QObject*)), this, SLOT(releaseSlideGroup()));
 	
-	setWindowTitle(QString("%1 - Slide Editor").arg(group->groupTitle().isEmpty() ? QString("Group %1").arg(group->groupNumber()) : group->groupTitle()));
+	setWindowTitle(QString(tr("%1 - Slide Editor")).arg(group->groupTitle().isEmpty() ? QString(tr("Group %1")).arg(group->groupNumber()) : group->groupTitle()));
 	setWindowIcon(QIcon(":/data/icon-d.png"));
 	//m_slideListView->setModel(m_slideModel);
 	
@@ -1504,7 +1502,7 @@ Slide * SlideEditorWindow::prevSlide()
 	UndoSlideItemChanged(SlideEditorWindow *window, AbstractItem *item, QString field, QVariant value, QVariant oldValue)
 		: m_window(window), m_item(item), m_field(field), m_value(value), m_oldValue(oldValue), redoCount(0) 
 		{ 
-			setText(QString("Change %2 of %1").arg(AbstractItem::guessTitle(item->itemName())).arg(AbstractItem::guessTitle(field)));
+			setText(QString(tr("Change %2 of %1")).arg(AbstractItem::guessTitle(item->itemName())).arg(AbstractItem::guessTitle(field)));
 		}
 	
 	virtual int id() const { return 0x001; }
@@ -1552,7 +1550,7 @@ public:
 	UndoSlideItemAdded(SlideEditorWindow *window, Slide *slide, AbstractItem *item)
 		: m_window(window), m_slide(slide), m_item(item), redoCount(0) 
 		{ 
-			setText(QString("Added %1").arg(AbstractItem::guessTitle(item->itemName().isEmpty() ? "New Item" : item->itemName())));
+			setText(QString(tr("Added %1")).arg(AbstractItem::guessTitle(item->itemName().isEmpty() ? "New Item" : item->itemName())));
 		}
 	
 	
@@ -1589,7 +1587,7 @@ private:
 	UndoSlideItemRemoved(SlideEditorWindow *window, Slide *slide, AbstractItem *item)
 		: m_window(window), m_slide(slide), m_item(item), redoCount(0) 
 		{ 
-			setText(QString("Removed %1").arg(AbstractItem::guessTitle(item->itemName())));
+			setText(QString(tr("Removed %1")).arg(AbstractItem::guessTitle(item->itemName())));
 		}
 	
 	virtual void undo() 
@@ -1621,7 +1619,7 @@ public:
 	UndoSlideAdded(SlideEditorWindow *window, Slide *slide)
 		: m_window(window), m_slide(slide), redoCount(0) 
 		{ 
-			setText(QString("Added Slide# %1").arg(slide->slideNumber()+1));
+			setText(QString(tr("Added Slide# %1")).arg(slide->slideNumber()+1));
 		}
 	
 	virtual void undo() 
@@ -1655,7 +1653,7 @@ public:
 	UndoSlideRemoved(SlideEditorWindow *window, Slide *slide)
 		: m_window(window), m_slide(slide), redoCount(0) 
 		{ 
-			setText(QString("Removed Slide# %1").arg(slide->slideNumber()+1));
+			setText(QString(tr("Removed Slide# %1")).arg(slide->slideNumber()+1));
 			//qDebug() << "UndoSlideRemoved::(): New cmd because you deleted slide#"<<m_slide->slideNumber();
 		}
 

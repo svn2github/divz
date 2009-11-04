@@ -73,8 +73,12 @@ GenericItemConfig::GenericItemConfig(AbstractContent * content, QWidget *parent)
 	, m_closeButton(0)
 	, m_okButton(0)
 	, m_frame(FrameFactory::defaultPanelFrame())
+	, m_updateShadowDistanceAndDirection_changing(false)
 {
 	m_commonUi->setupUi(this);
+	
+	AbstractVisualItem * model = m_content->modelItem();
+	
 	
 	// read other properties
 	if(m_content->mirrorEnabled())
@@ -82,29 +86,29 @@ GenericItemConfig::GenericItemConfig(AbstractContent * content, QWidget *parent)
 	else
 		m_commonUi->reflectionNone->setChecked(true);
 	
-	m_commonUi->mirrorOffset->setValue(m_content->modelItem()->mirrorOffset());
+	m_commonUi->mirrorOffset->setValue(model->mirrorOffset());
 	
-	m_origOpacity = m_content->modelItem()->opacity();
+	m_origOpacity = model->opacity();
 	m_commonUi->opacityBox->setValue((int)( m_origOpacity * 100 ));
 	
-	m_origPos = m_content->modelItem()->pos();
+	m_origPos = model->pos();
 	m_commonUi->locationX->setValue(m_origPos.x());
 	m_commonUi->locationY->setValue(m_origPos.y());
 	
-	m_origSize = m_content->modelItem()->contentsRect().size();
+	m_origSize = model->contentsRect().size();
 	m_commonUi->contentWidth->setValue((double)m_origSize.width());
 	m_commonUi->contentHeight->setValue((double)m_origSize.height());
 	
 	QtColorPicker * bgColorPicker = new QtColorPicker;
 	setupColorPicker(bgColorPicker);
-	bgColorPicker->setCurrentColor(m_content->modelItem()->fillBrush().color());
+	bgColorPicker->setCurrentColor(model->fillBrush().color());
 	connect(bgColorPicker, SIGNAL(colorChanged(const QColor &)), this, SLOT(setBgColor(const QColor &)));
 	m_commonUi->bgColorPickerLayout->addWidget(bgColorPicker);
 	
 	QBoxLayout *lineColorLayout = new QHBoxLayout;
 	QtColorPicker * lineColorPicker = new QtColorPicker;
 	setupColorPicker(lineColorPicker);
-	lineColorPicker->setCurrentColor(m_content->modelItem()->outlinePen().color());
+	lineColorPicker->setCurrentColor(model->outlinePen().color());
 	connect(lineColorPicker, SIGNAL(colorChanged(const QColor &)), this, SLOT(setLineColor(const QColor &)));
 	lineColorLayout->addWidget(lineColorPicker);
 	m_commonUi->outlineColorPlaceholder->setLayout(lineColorLayout);
@@ -112,21 +116,21 @@ GenericItemConfig::GenericItemConfig(AbstractContent * content, QWidget *parent)
 	QBoxLayout *shadowColorLayout = new QHBoxLayout;
 	m_shadowColorPicker = new QtColorPicker;
 	setupColorPicker(m_shadowColorPicker);
-	m_shadowColorPicker->setCurrentColor(m_content->modelItem()->shadowBrush().color());
+	m_shadowColorPicker->setCurrentColor(model->shadowBrush().color());
 	connect(m_shadowColorPicker, SIGNAL(colorChanged(const QColor &)), this, SLOT(setShadowColor(const QColor &)));
 	shadowColorLayout->addWidget(m_shadowColorPicker);
 	m_commonUi->shadowColorGb->setLayout(shadowColorLayout);
 	
-	if(m_content->modelItem()->shadowEnabled())
+	if(model->shadowEnabled())
 		m_commonUi->shadowSolid->setChecked(true);
 		
 	
 	connect(m_commonUi->blurBox, SIGNAL(valueChanged(int)), this, SLOT(setShadowBlur(int)));
-	m_commonUi->blurBox->setValue(m_content->modelItem()->shadowBlurRadius());
+	m_commonUi->blurBox->setValue(model->shadowBlurRadius());
 	
 	
 	
-	AbstractVisualItem::FillType t = m_content->modelItem()->fillType();
+	AbstractVisualItem::FillType t = model->fillType();
 	QAbstractButton *b = 0;
 	switch(t)
 	{
@@ -140,11 +144,11 @@ GenericItemConfig::GenericItemConfig(AbstractContent * content, QWidget *parent)
 	if(b)
 		b->setChecked(true);
 	
-	m_commonUi->videoFilenameBox->setText(m_content->modelItem()->fillVideoFile());
-	m_commonUi->imageFilenameBox->setText(m_content->modelItem()->fillImageFile());
+	m_commonUi->videoFilenameBox->setText(model->fillVideoFile());
+	m_commonUi->imageFilenameBox->setText(model->fillImageFile());
 	
 	
-	if(m_content->modelItem()->outlineEnabled())
+	if(model->outlineEnabled())
 	{
 		m_commonUi->outlineSolid->setChecked(true);
 	}
@@ -153,10 +157,44 @@ GenericItemConfig::GenericItemConfig(AbstractContent * content, QWidget *parent)
 		m_commonUi->outlineNone->setChecked(true);
 	}
 	
-	m_commonUi->outlineBox->setValue(m_content->modelItem()->outlinePen().widthF());
+	m_commonUi->outlineBox->setValue(model->outlinePen().widthF());
 	
-	m_commonUi->shadowXOffsetBox->setValue(m_content->modelItem()->shadowOffsetX());
-	m_commonUi->shadowYOffsetBox->setValue(m_content->modelItem()->shadowOffsetY());
+	m_commonUi->shadowXOffsetBox->setValue(model->shadowOffsetX());
+	m_commonUi->shadowYOffsetBox->setValue(model->shadowOffsetY());
+	
+	// foce UI update by toggeling state
+	m_commonUi->zoomEnabled->setChecked(!model->zoomEffectEnabled());
+	m_commonUi->zoomEnabled->setChecked(model->zoomEffectEnabled());
+	if(model->zoomAnchorCenter())
+		m_commonUi->anchorCenter->setChecked(true);
+	else
+		m_commonUi->anchorRandom->setChecked(true);
+		
+	if(model->zoomDirection() == AbstractVisualItem::ZoomIn)
+		m_commonUi->zoomDirIn->setChecked(true);
+	else
+	if(model->zoomDirection() == AbstractVisualItem::ZoomOut)
+		m_commonUi->zoomDirOut->setChecked(true);
+	else
+		m_commonUi->zoomDirRandom->setChecked(true);
+		
+	m_commonUi->zoomSpeedBox->setValue(model->zoomSpeed());
+	
+	updateShadowDistanceAndDirection();
+	m_commonUi->shadowDirectionBox->setVisible(false);
+	
+	
+	connect(m_commonUi->zoomEnabled, SIGNAL(toggled(bool)), this, SLOT(zoomEffectEnabled(bool)));
+	connect(m_commonUi->anchorCenter, SIGNAL(toggled(bool)), this, SLOT(setZoomAnchorCenter(bool)));
+	connect(m_commonUi->zoomDirIn, SIGNAL(clicked()), this, SLOT(updateZoomDirection()));
+	connect(m_commonUi->zoomDirOut, SIGNAL(clicked()), this, SLOT(updateZoomDirection()));
+	connect(m_commonUi->zoomDirRandom, SIGNAL(clicked()), this, SLOT(updateZoomDirection()));
+	
+	connect(m_commonUi->zoomSpeedBox, SIGNAL(valueChanged(int)), this, SLOT(zoomSpeedChanged(int)));
+	
+	
+	connect(m_commonUi->directionBox, SIGNAL(valueChanged(int)), this, SLOT(shadowDirectionBoxChanged(int)));
+	connect(m_commonUi->distanceBox, SIGNAL(valueChanged(int)), this, SLOT(shadowDistanceBoxChanged(int)));
 	
 	
 	
@@ -224,11 +262,13 @@ GenericItemConfig::GenericItemConfig(AbstractContent * content, QWidget *parent)
 	
 	connect(m_commonUi->alphaBox, SIGNAL(valueChanged(int)), this, SLOT(slotShadowAlphaChanged(int)));
 	
+	
+	
 	m_commonUi->tabWidget->setCurrentIndex(0);
 	
 	// hide till used in later revisions
 	m_commonUi->videoPlayButton->setVisible(false);
-	m_commonUi->distanceSlider->setVisible(false);
+	//m_commonUi->distanceSlider->setVisible(false);
 	
 	setShadowAlphaBox();
 }
@@ -562,11 +602,13 @@ void GenericItemConfig::slotLineSizeChanged(double d)
 void GenericItemConfig::slotShadowXOffsetChanged(double d)
 {
 	m_content->modelItem()->setShadowOffsetX(d);
+	updateShadowDistanceAndDirection();
 }
 
 void GenericItemConfig::slotShadowYOffsetChanged(double d)
 {
 	m_content->modelItem()->setShadowOffsetY(d);
+	updateShadowDistanceAndDirection();
 }
 
 void GenericItemConfig::setShadowOffsets(double x, double y)
@@ -621,4 +663,69 @@ void GenericItemConfig::shadowOffsetPresetTL()
 void GenericItemConfig::shadowOffsetPresetTR()
 {
 	setShadowOffsets(3,-3);	
+}
+
+
+void GenericItemConfig::shadowDirectionBoxChanged(int a)
+{
+	int r = m_commonUi->distanceBox->value();
+	int x = r*cos(a);
+	int y = r*sin(a);
+	m_commonUi->shadowXOffsetBox->setValue(x);
+	m_commonUi->shadowYOffsetBox->setValue(y);
+}
+
+void GenericItemConfig::shadowDistanceBoxChanged(int r)
+{
+	int a = m_commonUi->directionBox->value();
+	int x = r*cos(a);
+	int y = r*sin(a);
+	m_commonUi->shadowXOffsetBox->setValue(x);
+	m_commonUi->shadowYOffsetBox->setValue(y);
+}
+
+void GenericItemConfig::updateShadowDistanceAndDirection()
+{
+	if(m_updateShadowDistanceAndDirection_changing)
+		return;
+	m_updateShadowDistanceAndDirection_changing = true;
+	
+	double x = m_content->modelItem()->shadowOffsetX();
+	double y = m_content->modelItem()->shadowOffsetY();
+	double r = sqrt(x*x+y*y);
+	double a = atan(x/y);
+	
+	m_commonUi->directionBox->setValue((int)a);
+	m_commonUi->distanceBox->setValue((int)r);
+	
+	m_updateShadowDistanceAndDirection_changing = false;
+}
+
+void GenericItemConfig::zoomEffectEnabled(bool flag)
+{
+	m_content->modelItem()->setZoomEffectEnabled(flag);
+}
+
+void GenericItemConfig::setZoomAnchorCenter(bool flag)
+{
+	m_content->modelItem()->setZoomAnchorCenter(flag);
+}
+
+void GenericItemConfig::updateZoomDirection()
+{
+	AbstractVisualItem * model = m_content->modelItem();
+	
+			
+	if(m_commonUi->zoomDirIn->isChecked())
+		model->setZoomDirection(AbstractVisualItem::ZoomIn);
+	else
+	if(m_commonUi->zoomDirOut->isChecked())
+		model->setZoomDirection(AbstractVisualItem::ZoomOut);
+	else
+		model->setZoomDirection(AbstractVisualItem::ZoomRandom);
+}
+
+void GenericItemConfig::zoomSpeedChanged(int value)
+{
+	m_content->modelItem()->setZoomSpeed(value);
 }

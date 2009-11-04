@@ -5,6 +5,8 @@
 class QVideoProvider;
 class QSvgRenderer;
 
+#include <QTimer>
+
 /// \brief TODO
 class BackgroundContent : public AbstractContent
 {
@@ -36,6 +38,8 @@ class BackgroundContent : public AbstractContent
 	void setPixmap(const QPixmap & pixmap);
 	void sceneRectChanged(const QRectF &);
 	void renderSvg();
+	
+	void animateZoom();
 
     private:
 	void setVideoFile(const QString &name);
@@ -58,6 +62,19 @@ class BackgroundContent : public AbstractContent
 	
 	QString m_lastForegroundKey;
 	QString m_lastImageKey;
+	
+	QTimer * m_zoomAnimationTimer;
+	
+	QPointF m_zoomStep;
+	QPointF m_zoomEndSize;
+	QPointF m_zoomCurSize;
+	QPointF m_zoomStartSize;
+	QPointF m_zoomDestPoint;
+	int m_zoomDir;
+	bool m_zoomInit;
+	bool m_zoomEnabled;
+	QPixmap m_zoomedPixmap;
+	QPointF m_zoomedPixmapSize;
 };
 
 #endif

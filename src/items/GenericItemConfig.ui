@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>439</width>
-    <height>521</height>
+    <height>632</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -23,7 +23,7 @@
       <enum>QTabWidget::Rounded</enum>
      </property>
      <property name="currentIndex">
-      <number>3</number>
+      <number>4</number>
      </property>
      <property name="usesScrollButtons">
       <bool>false</bool>
@@ -695,9 +695,85 @@
         </widget>
        </item>
        <item>
+        <widget class="QGroupBox" name="shadowDirectionBox">
+         <property name="title">
+          <string>Shadow Distance and Direction</string>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout_5">
+          <item>
+           <layout class="QVBoxLayout" name="verticalLayout_23">
+            <item>
+             <widget class="QDial" name="directionDial">
+              <property name="maximum">
+               <number>360</number>
+              </property>
+              <property name="pageStep">
+               <number>22</number>
+              </property>
+              <property name="invertedAppearance">
+               <bool>false</bool>
+              </property>
+              <property name="invertedControls">
+               <bool>false</bool>
+              </property>
+              <property name="wrapping">
+               <bool>true</bool>
+              </property>
+              <property name="notchTarget">
+               <double>22.500000000000000</double>
+              </property>
+              <property name="notchesVisible">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSpinBox" name="directionBox">
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+              <property name="suffix">
+               <string> deg</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_6">
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <widget class="QLabel" name="label_7">
+              <property name="text">
+               <string>Distance:</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSlider" name="distanceSlider">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSpinBox" name="distanceBox">
+              <property name="suffix">
+               <string> px</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
         <widget class="QGroupBox" name="groupBox_6">
          <property name="title">
-          <string>Shadow Position</string>
+          <string>Shadow Position Presets</string>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_18">
           <item>
@@ -822,19 +898,6 @@
               </property>
              </widget>
             </item>
-            <item row="0" column="2">
-             <widget class="QSlider" name="distanceSlider">
-              <property name="minimum">
-               <number>0</number>
-              </property>
-              <property name="maximum">
-               <number>100</number>
-              </property>
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-             </widget>
-            </item>
            </layout>
           </item>
          </layout>
@@ -857,49 +920,196 @@
      </widget>
      <widget class="QWidget" name="reflectionTab">
       <attribute name="title">
-       <string>Mirror</string>
+       <string>Effects</string>
       </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout_12">
+      <layout class="QVBoxLayout" name="verticalLayout_20">
        <item>
-        <widget class="QRadioButton" name="reflectionNone">
-         <property name="text">
-          <string>No Reflection</string>
+        <widget class="QGroupBox" name="gbMirror">
+         <property name="title">
+          <string>Mirror</string>
          </property>
-         <property name="checked">
-          <bool>true</bool>
-         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_12">
+          <item>
+           <widget class="QRadioButton" name="reflectionNone">
+            <property name="text">
+             <string>No Reflection</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="reflectionEnabled">
+            <property name="text">
+             <string>Fancy Reflection</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_4">
+            <item>
+             <widget class="QLabel" name="label_11">
+              <property name="text">
+               <string>Mirror Offset</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QDoubleSpinBox" name="mirrorOffset">
+              <property name="minimum">
+               <double>-99.989999999999995</double>
+              </property>
+              <property name="singleStep">
+               <double>0.500000000000000</double>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </item>
+         </layout>
         </widget>
        </item>
        <item>
-        <widget class="QRadioButton" name="reflectionEnabled">
-         <property name="text">
-          <string>Fancy Reflection</string>
+        <widget class="QGroupBox" name="gbZoomEffect">
+         <property name="title">
+          <string>Zoom Effect</string>
          </property>
+         <layout class="QVBoxLayout" name="verticalLayout_19">
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_7">
+            <item>
+             <widget class="QCheckBox" name="zoomEnabled">
+              <property name="text">
+               <string>Enable Smooth Zoom Effect</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="QGroupBox" name="groupBox_9">
+            <property name="title">
+             <string>Speed</string>
+            </property>
+            <layout class="QHBoxLayout" name="horizontalLayout_9">
+             <item>
+              <widget class="QLabel" name="label_8">
+               <property name="text">
+                <string>Speed Factor:</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QSlider" name="zoomSpeedSlider">
+               <property name="minimum">
+                <number>1</number>
+               </property>
+               <property name="maximum">
+                <number>100</number>
+               </property>
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QSpinBox" name="zoomSpeedBox">
+               <property name="suffix">
+                <string>%</string>
+               </property>
+               <property name="minimum">
+                <number>1</number>
+               </property>
+               <property name="maximum">
+                <number>100</number>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item>
+           <widget class="QGroupBox" name="groupBox_10">
+            <property name="title">
+             <string>Direction</string>
+            </property>
+            <layout class="QHBoxLayout" name="horizontalLayout_8">
+             <item>
+              <widget class="QRadioButton" name="zoomDirRandom">
+               <property name="text">
+                <string>Random</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QRadioButton" name="zoomDirOut">
+               <property name="text">
+                <string>Zoom Out</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QRadioButton" name="zoomDirIn">
+               <property name="text">
+                <string>Zoom In</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item>
+           <widget class="QGroupBox" name="groupBox_11">
+            <property name="title">
+             <string>Anchor Point</string>
+            </property>
+            <layout class="QVBoxLayout" name="verticalLayout_21">
+             <item>
+              <widget class="QRadioButton" name="anchorCenter">
+               <property name="text">
+                <string>Anchor Center</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QRadioButton" name="anchorRandom">
+               <property name="text">
+                <string>Random Third-Point Anchor</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+         </layout>
         </widget>
        </item>
        <item>
-        <layout class="QFormLayout" name="formLayout_3">
-         <property name="fieldGrowthPolicy">
-          <enum>QFormLayout::ExpandingFieldsGrow</enum>
+        <spacer name="verticalSpacer_5">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
          </property>
-         <item row="0" column="0">
-          <widget class="QLabel" name="label_11">
-           <property name="text">
-            <string>Mirror Offset</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="1">
-          <widget class="QDoubleSpinBox" name="mirrorOffset">
-           <property name="minimum">
-            <double>-99.989999999999995</double>
-           </property>
-           <property name="singleStep">
-            <double>0.500000000000000</double>
-           </property>
-          </widget>
-         </item>
-        </layout>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
        </item>
       </layout>
      </widget>
@@ -1028,6 +1238,150 @@
     <hint type="destinationlabel">
      <x>142</x>
      <y>165</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>zoomEnabled</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>groupBox_10</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>243</x>
+     <y>201</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>296</x>
+     <y>313</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>zoomEnabled</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>groupBox_11</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>154</x>
+     <y>197</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>218</x>
+     <y>382</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>directionDial</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>directionBox</receiver>
+   <slot>setValue(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>85</x>
+     <y>341</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>98</x>
+     <y>356</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>directionBox</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>directionDial</receiver>
+   <slot>setValue(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>80</x>
+     <y>361</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>75</x>
+     <y>327</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>distanceSlider</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>distanceBox</receiver>
+   <slot>setValue(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>278</x>
+     <y>338</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>373</x>
+     <y>336</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>distanceBox</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>distanceSlider</receiver>
+   <slot>setValue(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>384</x>
+     <y>333</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>303</x>
+     <y>331</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>zoomSpeedSlider</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>zoomSpeedBox</receiver>
+   <slot>setValue(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>226</x>
+     <y>263</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>365</x>
+     <y>264</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>zoomSpeedBox</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>zoomSpeedSlider</receiver>
+   <slot>setValue(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>390</x>
+     <y>261</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>246</x>
+     <y>265</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>zoomEnabled</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>groupBox_9</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>102</x>
+     <y>200</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>115</x>
+     <y>252</y>
     </hint>
    </hints>
   </connection>

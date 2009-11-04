@@ -713,6 +713,12 @@ AbstractVisualItem * MyGraphicsScene::newTextItem(QString text)
 	t->setItemId(ItemFactory::nextId());
 	t->setItemName(QString("TextBoxItem%1").arg(t->itemId()));
 	t->changeFontSize(52.0);
+	t->setShadowBlurRadius(7.0);
+	t->setShadowEnabled(true);
+	t->setShadowOffsetX(1.5);
+	t->setShadowOffsetX(3.0);
+	t->setOutlinePen(QPen(Qt::black,1.5));
+	t->setOutlineEnabled(true);
 	t->setZValue(maxZValue());
 	
 	m_slide->addItem(t); //m_slide->createText();

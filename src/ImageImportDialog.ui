@@ -209,6 +209,9 @@
       </item>
       <item row="0" column="2">
        <widget class="QDoubleSpinBox" name="changeTime">
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
         <property name="suffix">
          <string> seconds</string>
         </property>
@@ -217,13 +220,35 @@
         </property>
        </widget>
       </item>
-      <item row="3" column="0" colspan="3">
+      <item row="3" column="0" colspan="2">
        <widget class="QCheckBox" name="zoomImage">
         <property name="text">
          <string>Turn on Image Smooth-Zoom Effects</string>
         </property>
         <property name="checked">
          <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="2">
+       <widget class="QSpinBox" name="zoomSpeed">
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+        <property name="suffix">
+         <string>%</string>
+        </property>
+        <property name="prefix">
+         <string>Zoom Speed: </string>
+        </property>
+        <property name="minimum">
+         <number>1</number>
+        </property>
+        <property name="maximum">
+         <number>100</number>
+        </property>
+        <property name="value">
+         <number>25</number>
         </property>
        </widget>
       </item>
@@ -333,7 +358,7 @@
     </hint>
     <hint type="destinationlabel">
      <x>455</x>
-     <y>166</y>
+     <y>160</y>
     </hint>
    </hints>
   </connection>
@@ -361,11 +386,11 @@
    <hints>
     <hint type="sourcelabel">
      <x>112</x>
-     <y>290</y>
+     <y>283</y>
     </hint>
     <hint type="destinationlabel">
      <x>126</x>
-     <y>319</y>
+     <y>309</y>
     </hint>
    </hints>
   </connection>
@@ -377,11 +402,11 @@
    <hints>
     <hint type="sourcelabel">
      <x>191</x>
-     <y>290</y>
+     <y>283</y>
     </hint>
     <hint type="destinationlabel">
      <x>291</x>
-     <y>319</y>
+     <y>309</y>
     </hint>
    </hints>
   </connection>
@@ -393,11 +418,11 @@
    <hints>
     <hint type="sourcelabel">
      <x>184</x>
-     <y>348</y>
+     <y>336</y>
     </hint>
     <hint type="destinationlabel">
      <x>291</x>
-     <y>376</y>
+     <y>363</y>
     </hint>
    </hints>
   </connection>
@@ -409,11 +434,11 @@
    <hints>
     <hint type="sourcelabel">
      <x>114</x>
-     <y>348</y>
+     <y>336</y>
     </hint>
     <hint type="destinationlabel">
      <x>113</x>
-     <y>376</y>
+     <y>363</y>
     </hint>
    </hints>
   </connection>

@@ -250,6 +250,9 @@ Revised Task list for Release 1.0, 10/18/09:
 				e.g. zoom slide list in editor
 				zoom slide list in control
 				zoom doc list in main window
+				
+			right-click on slide in LIVE or Preview to edit that slide 
+			right-click on song slide to jump editor to that verse 
 		
 			another vote for the zoomable icons in list views (slide list/doc list)
 			accept midi input for fade speed slider
@@ -260,17 +263,16 @@ Revised Task list for Release 1.0, 10/18/09:
 			findFontSize should return max not min font
 			font display in toolbar should show max not avg
 			[DONE] changing font size by typing should fit to natural size
-			scroll wheel in textt editor should scroll text content
-			change default text settings
+			[DONE] scroll wheel in textt editor should scroll text content
+				had to remove fotowall wheelevent override
+			[DONE] change default text settings
 				40pt font
 				1.5 line
 				7pt blur
-				10% shadow (?)
-					check sermon settings
 			make default text settings changable
 			add "default item settings" dialog for each item type
-			change main program config dialog to use qtoolbox		
-			image zoom in effect
+			change main program config dialog to use qtoolbox
+			[DONE image zoom in effect
 				randim thirds grid point
 			per-slidegroup aspect ratio
 			aspect ratio fitting settings on a per-slidegroup basis
