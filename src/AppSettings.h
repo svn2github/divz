@@ -11,6 +11,7 @@ class Output;
 class AppSettings
 {
 public:
+	static void initApp();
 	static void load();
 	static void save();
 	

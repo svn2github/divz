@@ -717,8 +717,8 @@ void MainWindow::setupOutputList()
 	foreach(QCheckBox *box, m_outputCheckboxes)
 	{
 		m_outputCheckboxBase->layout()->removeWidget(box);
-		//box->setVisible(false);
-		//delete box;
+		box->setVisible(false);
+		delete box;
 	}
 	
 	m_outputCheckboxes.clear();

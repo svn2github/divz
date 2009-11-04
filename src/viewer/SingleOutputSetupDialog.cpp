@@ -1,5 +1,5 @@
-#include "OutputSetupDialog.h"
-#include "ui_outputsetupdialog.h"
+#include "SingleOutputSetupDialog.h"
+#include "ui_SingleOutputSetupDialog.h"
 #include "model/Output.h"
 #include "AppSettings.h"
 #include "MainWindow.h"
@@ -9,9 +9,9 @@
 #include <QDebug>
 #include <QMessageBox>
 
-OutputSetupDialog::OutputSetupDialog(QWidget *parent) :
+SingleOutputSetupDialog::SingleOutputSetupDialog(QWidget *parent) :
 	QDialog(parent)
-	, m_ui(new Ui::OutputSetupDialog)
+	, m_ui(new Ui::SingleOutputSetupDialog)
 	, m_output(0)
 	, m_outputIdx(0)
 	
@@ -20,7 +20,6 @@ OutputSetupDialog::OutputSetupDialog(QWidget *parent) :
 	setWindowTitle(tr("Output Setup"));
 	setWindowIcon(QIcon(":/data/icon-d.png"));
 
-	setupOutputList();
 	setupScreenList();
 	
 	connect(m_ui->tabWidget, SIGNAL(currentChanged(int)), this, SLOT(slotTabChanged(int)));
@@ -52,67 +51,36 @@ OutputSetupDialog::OutputSetupDialog(QWidget *parent) :
 	connect(m_ui->cbOutputEnabled, SIGNAL(stateChanged(int)), this, SLOT(slotOutputEnabledStateChanged(int)));
 // 	connect(m_ui->rbListen, SIGNAL(toggled(bool)), this, SLOT(slotNetRoleChanged(bool)));
 	
-	/*connect(m_ui->hostname, SIGNAL(textChanged(const QString&)), this, SLOT(slotHostChanged(const QString&)));
-	connect(m_ui->connectPort, SIGNAL(valueChanged(int)), this, SLOT(slotPortChanged(int)));
-	*/
+// 	connect(m_ui->hostname, SIGNAL(textChanged(const QString&)), this, SLOT(slotHostChanged(const QString&)));
+// 	connect(m_ui->connectPort, SIGNAL(valueChanged(int)), this, SLOT(slotPortChanged(int)));
 	connect(m_ui->listenPort, SIGNAL(valueChanged(int)), this, SLOT(slotPortChanged(int)));
-	//connect(m_ui->allowMultipleIncomming, SIGNAL(stateChanged(int)), this, SLOT(slotAllowMultChanged(int)));
-	
-	connect(m_ui->btnNewOutput, SIGNAL(clicked()), this, SLOT(slotNew()));
-	connect(m_ui->btnDelOutput, SIGNAL(clicked()), this, SLOT(slotDel()));
+// 	connect(m_ui->allowMultipleIncomming, SIGNAL(stateChanged(int)), this, SLOT(slotAllowMultChanged(int)));
 	
 	m_ui->screenListView->setEnabled(false);
-	m_ui->btnDelOutput->setEnabled(false);
 	m_ui->label_2->setText("");
 
 	connect(m_ui->buttonBox, SIGNAL(accepted()), this, SLOT(accept()));
 	connect(m_ui->buttonBox, SIGNAL(rejected()), this, SLOT(reject()));
+	
+	setOutput(AppSettings::outputs().at(0));
 }
 
-void OutputSetupDialog::slotNew()
-{
-	Output *x = new Output();
-	AppSettings::addOutput(x);
-	setupOutputList();
-	setOutput(x);
-	m_ui->outputListView->selectRow(m_outputIdx);
-}
-
-void OutputSetupDialog::slotDel()
-{
-	if(!m_output)
-		return;
-	if(m_output->isSystem())
-	{
-		qDebug("slotDel: Not deleting because isSystem output");
-		return;
-	}
-	AppSettings::removeOutput(m_output);
-	setupOutputList();
-	m_output = 0;
-}
-
-void OutputSetupDialog::slotOutputListCellActivated(int row,int)
-{
-	setOutput(AppSettings::outputs().at(row));
-}
-
-void OutputSetupDialog::slotScreenListCellActivated(int row,int)
+void SingleOutputSetupDialog::slotScreenListCellActivated(int row,int)
 {
 	m_output->setScreenNum(row);
 }
 
-void OutputSetupDialog::slotOutputEnabledStateChanged(int state)
+void SingleOutputSetupDialog::slotOutputEnabledStateChanged(int state)
 {
 	if(!m_output)
 		return;
 		
 	m_output->setIsEnabled(state ? true : false);
 	
-	m_ui->outputListView->item(m_outputIdx,1)->setText(state ? "Yes" : "No");
+	//m_ui->outputListView->item(m_outputIdx,1)->setText(state ? "Yes" : "No");
 }
 
-void OutputSetupDialog::slotNetRoleChanged(bool listen)
+void SingleOutputSetupDialog::slotNetRoleChanged(bool listen)
 {
 	if(!m_output)
 		return;
@@ -121,15 +89,15 @@ void OutputSetupDialog::slotNetRoleChanged(bool listen)
 }
 
 
-void OutputSetupDialog::slotOutputNameChanged(const QString& name)
+void SingleOutputSetupDialog::slotOutputNameChanged(const QString& name)
 {
 	if(!m_output)
 		return;
 	m_output->setName(name);
-	m_ui->outputListView->item(m_outputIdx,0)->setText(name);
+	//m_ui->outputListView->item(m_outputIdx,0)->setText(name);
 }
 
-void OutputSetupDialog::slotCustX(int x)
+void SingleOutputSetupDialog::slotCustX(int x)
 {
 	if(!m_output)
 		return;
@@ -139,7 +107,7 @@ void OutputSetupDialog::slotCustX(int x)
 }
 
 
-void OutputSetupDialog::slotCustY(int x)
+void SingleOutputSetupDialog::slotCustY(int x)
 {
 	if(!m_output)
 		return;
@@ -149,7 +117,7 @@ void OutputSetupDialog::slotCustY(int x)
 }
 
 
-void OutputSetupDialog::slotCustW(int x)
+void SingleOutputSetupDialog::slotCustW(int x)
 {
 	if(!m_output)
 		return;
@@ -159,7 +127,7 @@ void OutputSetupDialog::slotCustW(int x)
 }
 
 
-void OutputSetupDialog::slotCustH(int x)
+void SingleOutputSetupDialog::slotCustH(int x)
 {
 	if(!m_output)
 		return;
@@ -168,63 +136,63 @@ void OutputSetupDialog::slotCustH(int x)
 	m_output->setCustomRect(r);
 }
 
-void OutputSetupDialog::slotHostChanged(const QString& name)
+void SingleOutputSetupDialog::slotHostChanged(const QString& name)
 {
 	if(!m_output)
 		return;
 	m_output->setHost(name);
 }
 
-void OutputSetupDialog::slotPortChanged(int x)
+void SingleOutputSetupDialog::slotPortChanged(int x)
 {
 	if(!m_output)
 		return;
 	m_output->setPort(x);
 }
 
-void OutputSetupDialog::slotAllowMultChanged(int x)
+void SingleOutputSetupDialog::slotAllowMultChanged(int x)
 {
 	if(!m_output)
 		return;
 	m_output->setAllowMultiple(x ? true : false);
 }
 
-void OutputSetupDialog::slotStayOnTop(bool x)
+void SingleOutputSetupDialog::slotStayOnTop(bool x)
 {
 	if(!m_output)
 		return;
 	m_output->setStayOnTop(x);
 }
 
-void OutputSetupDialog::slotMjpegEnabled(bool x)
+void SingleOutputSetupDialog::slotMjpegEnabled(bool x)
 {
 	if(!m_output)
 		return;
 	m_output->setMjpegServerEnabled(x);
 }
 
-void OutputSetupDialog::slotMjpegPort(int x)
+void SingleOutputSetupDialog::slotMjpegPort(int x)
 {
 	if(!m_output)
 		return;
 	m_output->setMjpegServerPort(x);
 }
 
-void OutputSetupDialog::slotMjpegFps(int x)
+void SingleOutputSetupDialog::slotMjpegFps(int x)
 {
 	if(!m_output)
 		return;
 	m_output->setMjpegServerFPS(x);
 }
 
-void OutputSetupDialog::slotTabChanged(int tab)
+void SingleOutputSetupDialog::slotTabChanged(int tab)
 {
 	if(!m_output)
 		return;
 	m_output->setOutputType((Output::OutputType)tab);
 }
 
-void OutputSetupDialog::setOutput(Output *output)
+void SingleOutputSetupDialog::setOutput(Output *output)
 {
 	m_outputIdx = AppSettings::outputs().indexOf(output);
 	m_output = output;
@@ -253,9 +221,9 @@ void OutputSetupDialog::setOutput(Output *output)
 // 	m_ui->hostname->setText(output->host());
 // 	m_ui->connectPort->setValue(output->port());
 	m_ui->listenPort->setValue(output->port());
-	//m_ui->allowMultipleIncomming->setChecked(output->allowMultiple());
+// 	m_ui->allowMultipleIncomming->setChecked(output->allowMultiple());
 	
-	m_ui->btnDelOutput->setEnabled(output->isSystem() ? false : true);
+	//m_ui->btnDelOutput->setEnabled(output->isSystem() ? false : true);
 	
 	m_ui->outputName->setEnabled(output->isSystem() ? false:true);
 	m_ui->label_2->setText( m_output->isSystem() ? "This is a system output, you cannot change the name." : "");
@@ -274,7 +242,7 @@ void OutputSetupDialog::setOutput(Output *output)
 	//setupOutputList();
 }
 
-void OutputSetupDialog::setupScreenList()
+void SingleOutputSetupDialog::setupScreenList()
 {
 	QDesktopWidget *d = QApplication::desktop();
 
@@ -314,103 +282,25 @@ void OutputSetupDialog::setupScreenList()
 	tbl->resizeRowsToContents();
 }
 
-
-void OutputSetupDialog::setupOutputList()
-{
-	QList<Output*> outputs = AppSettings::outputs();
-
-	QTableWidget * tbl = m_ui->outputListView;
-	tbl->setSelectionBehavior(QAbstractItemView::SelectRows);
-	connect(tbl, SIGNAL(cellClicked(int,int)), this, SLOT(slotOutputListCellActivated(int,int)));
-	
-	tbl->setHorizontalHeaderLabels(QStringList() << "Name" << "Enabled?" << "Type");
-
-	tbl->setRowCount(outputs.size());
-
-	QTableWidgetItem *prototype = new QTableWidgetItem();
-	// setup your prototype
-	prototype->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
-
-	int row=0;
-	foreach(Output*out, outputs)
-	{
-		QTableWidgetItem *t = prototype->clone();
-		t->setText(out->name());
-		tbl->setItem(row,0,t);
-
-		/*
-		t = prototype->clone();
-		t->setText(out->isSystem() ? "Yes" : "No");
-		tbl->setItem(row,1,t);
-		*/
-
-		t = prototype->clone();
-		t->setText(out->isEnabled() ? "Yes" : "No");
-		tbl->setItem(row,1,t);
-
-		t = prototype->clone();
-		QRect r = out->customRect();
-		t->setText(out->outputType() == Output::Screen ?
-				QString("Screen %1").arg(out->screenNum()+1) :
-			    out->outputType() == Output::Custom ?
-				QString("%1 x %2 at (%3,%4)").arg(r.width()).arg(r.height()).arg(r.x()).arg(r.y()) :
-			    out->outputType() == Output::Network ?
-				QString("Network") :
-			    "Unknown");
-		tbl->setItem(row,2,t);
-
-		row++;
-	}
-	
-	tbl->resizeColumnsToContents();
-	tbl->resizeRowsToContents();
-}
-
-void OutputSetupDialog::accept()
+void SingleOutputSetupDialog::accept()
 {
 	AppSettings::save();
-
-	Output *out = AppSettings::outputs().at(0);
-	if(out)
-	{
-		double ar = out->aspectRatio();
-
-		if(ar > -1)
-		{
-			if(MainWindow::mw()->currentDocument() &&
-			   ar != MainWindow::mw()->currentDocument()->aspectRatio())
-			{
-				if(QMessageBox::question(
-					this,
-					"Aspect Ratio Different",
-					"The output you just chose has a different aspect ratio than the current document. Do you want to set the document's aspect ratio to match the output aspect ratio?",
-					QMessageBox::Save | QMessageBox::Discard,
-					QMessageBox::Save
-				) == QMessageBox::Save)
-				{
-					MainWindow::mw()->currentDocument()->setAspectRatio(ar);
-				}
-			}
-		}
-	}
-
 	QDialog::accept();
 }
 
-void OutputSetupDialog::reject()
+void SingleOutputSetupDialog::reject()
 {
 	AppSettings::load();
-	//deleteLater();
 	QDialog::reject();
 }
 
 
-OutputSetupDialog::~OutputSetupDialog()
+SingleOutputSetupDialog::~SingleOutputSetupDialog()
 {
 	delete m_ui;
 }
 
-void OutputSetupDialog::changeEvent(QEvent *e)
+void SingleOutputSetupDialog::changeEvent(QEvent *e)
 {
 	QDialog::changeEvent(e);
 	switch (e->type()) {

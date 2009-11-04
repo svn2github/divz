@@ -1,11 +1,40 @@
 #include "AppSettings.h"
+#include "RenderOpts.h"
 
+#if defined(STATIC_LINK)
+Q_IMPORT_PLUGIN(qgif)
+Q_IMPORT_PLUGIN(qjpeg)
+Q_IMPORT_PLUGIN(qsvg)
+Q_IMPORT_PLUGIN(qtiff)
+#endif
+
+#include <QDir>
 #include <QSettings>
-
+#include <QStyle>
 #include <QList>
-#include "model/Output.h"
-
 #include <QPixmapCache>
+#include <QApplication>
+
+#include "model/Output.h"
+#include "model/SlideGroupFactory.h"
+#include "songdb/SongSlideGroupFactory.h"
+
+#include "itemlistfilters/SlideTextOnlyFilter.h"
+#include "itemlistfilters/SlideNonTextOnlyFilter.h"
+#include "itemlistfilters/SlideBackgroundOnlyFilter.h"
+#include "itemlistfilters/SlideForegroundOnlyFilter.h"
+
+// init RenderOpts defaults
+bool RenderOpts::LastMirrorEnabled = true;
+bool RenderOpts::ARGBWindow = false;
+bool RenderOpts::HQRendering = false;
+bool RenderOpts::FirstRun = false;
+bool RenderOpts::OxygenStyleQuirks = false;
+bool RenderOpts::DisableVideoProvider = false;
+bool RenderOpts::DisableOpenGL = false;
+QColor RenderOpts::hiColor;
+
+
 
 QList<Output*> AppSettings::m_outputs;
 bool AppSettings::m_useOpenGL = false;
@@ -25,6 +54,71 @@ int AppSettings::m_crossFadeQuality = 15; // frames
 AppSettings::LiveEditMode AppSettings::m_liveEditMode = AppSettings::LiveEdit; 
 
 int AppSettings::m_autosaveTime = 60; // seconds
+
+void AppSettings::initApp()
+{
+	QString pluginPath = QString("%1/plugins").arg(QDir::currentPath());
+	//qDebug() << "DViz Plugin Path:"<<pluginPath;
+
+	qApp->addLibraryPath(pluginPath);
+	//qDebug() << "Core Plugin Paths: "<< app.libraryPaths();
+
+ 	qsrand(QTime(0,0,0).secsTo(QTime::currentTime()));
+
+	// start the cache at 256 MB of pixmaps
+	QPixmapCache::setCacheLimit(256 * 1024);
+
+	qRegisterMetaType<AbstractVisualItem::FillType>("FillType");
+
+	AbstractItemFilter::registerFilterInstance(SlideTextOnlyFilter::instance());
+	AbstractItemFilter::registerFilterInstance(SlideNonTextOnlyFilter::instance());
+	AbstractItemFilter::registerFilterInstance(SlideBackgroundOnlyFilter::instance());
+	AbstractItemFilter::registerFilterInstance(SlideForegroundOnlyFilter::instance());
+	AbstractItemFilter::registerFilterInstance(SongFoldbackTextFilter::instance());
+
+#if defined(VER)
+	printf("DViz Version %s\n", VER);
+	qApp->setApplicationVersion(VER); //"0.1.5");
+#endif
+
+	qApp->setApplicationName("DViz");
+	qApp->setOrganizationName("Josiah Bryan");
+	qApp->setOrganizationDomain("mybryanlife.com");
+
+
+	SlideGroupFactory::registerFactoryForType(SlideGroup::Generic, new SlideGroupFactory());
+	SlideGroupFactory::registerFactoryForType(SlideGroup::Song,    new SongSlideGroupFactory());
+
+	RenderOpts::OxygenStyleQuirks = qApp->style()->objectName() == QLatin1String("oxygen");
+
+	QSettings s;
+	//RenderOpts::FirstRun = s.value("fotowall/firstTime", true).toBool();
+	RenderOpts::hiColor = qApp->palette().color(QPalette::Highlight);
+	RenderOpts::DisableVideoProvider = qApp->arguments().contains("-novideo");
+	//s.setValue("fotowall/firstTime", false);
+
+	bool noOpenGL = false;
+
+	if(qApp->arguments().contains("-nogl"))
+	{
+		noOpenGL = true;
+	}
+	else
+	if(qApp->arguments().contains("-usegl"))
+	{
+		noOpenGL = false;
+	}
+	else
+	{
+		noOpenGL = ! s.value("opengl/disable").toBool();
+	}
+	s.setValue("opengl/disable",noOpenGL);
+	noOpenGL = false;
+	noOpenGL = true;
+
+	RenderOpts::DisableOpenGL = noOpenGL;
+
+}
 
 void AppSettings::load()
 {

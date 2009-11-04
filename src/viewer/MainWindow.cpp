@@ -4,11 +4,12 @@
 #include "AppSettings.h"
 #include "OutputInstance.h"
 #include "ConnectDialog.h"
-#include "OutputSetupDialog.h"
+#include "SingleOutputSetupDialog.h"
 #include "NetworkClient.h"
 
 #include <QMessageBox>
 #include <QApplication>
+#include <QSettings>
 
 #define RECONNECT_WAIT_TIME 1000 * 2
 
@@ -42,6 +43,14 @@ MainWindow::MainWindow(QWidget *parent)
 	m_ui->textEdit->setReadOnly(true);
 	// pmp00750
 	log("Welcome to the DViz Network Viewer!");
+	
+	QSettings s;
+	bool flag = s.value("viewer/firstrun").toBool();
+	if(flag)
+	{
+		s.setValue("viewer/firstrun",false);
+		slotOutputSetup();
+	}
 }
 
 void MainWindow::openOutput()
@@ -179,7 +188,7 @@ void MainWindow::slotDisconnect()
 
 void MainWindow::slotOutputSetup()
 {
-	OutputSetupDialog d(this);
+	SingleOutputSetupDialog d(this);
 	if(d.exec())
 		emit appSettingsChanged();
 }

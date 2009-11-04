@@ -53,6 +53,7 @@ UI_DIR = .build
 
 FORMS += MainWindow.ui \
 	outputsetupdialog.ui \
+	SingleOutputSetupDialog.ui \
 	AppSettingsDialog.ui \
 	DocumentSettingsDialog.ui \
 	GridDialog.ui \
@@ -72,6 +73,7 @@ HEADERS += \
 	DocumentListModel.h \
 	SlideGroupViewer.h \
 	OutputSetupDialog.h \
+	SingleOutputSetupDialog.h \
 	AppSettings.h \
 	AppSettingsDialog.h \
 	DocumentSettingsDialog.h \
@@ -100,6 +102,7 @@ SOURCES += main.cpp \
 	SlideGroupViewer.cpp \
 	OutputViewer.cpp \
 	OutputSetupDialog.cpp \
+	SingleOutputSetupDialog.cpp \
 	AppSettings.cpp \
 	AppSettingsDialog.cpp \
 	DocumentSettingsDialog.cpp \

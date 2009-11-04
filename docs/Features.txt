@@ -699,7 +699,8 @@ Revised Task list for Release 1.0, 10/18/09:
 			cannot replicate on linux
 			may be only windows - need to confirm
 			
-		re-enabling an output messes up the checkboxes above the doc list
+		[FIXED] re-enabling an output messes up the checkboxes above the doc list
+			needed to hide and delete checkboxes when disabling them
 		
 		video icons dont render the actual icon after loading if not already in disk cache
 		

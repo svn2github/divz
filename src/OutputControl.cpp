@@ -266,18 +266,18 @@ void OutputControl::setupAdvancedUI()
 	connect(m_textResizeBtn, SIGNAL(toggled(bool)), this, SLOT(setTextResizeEnabled(bool)));
 //	connect(m_textFilterBtn, SIGNAL(toggled(bool)), m_textResizeBtn, SLOT(setEnabled(bool)));
 	
-	// Row: Text only background
-	rowNbr++;
-	label = new QLabel("Text-only Background: ");
-	gridLayout->addWidget(label,rowNbr,0);
-	
-	m_colorPicker = new QtColorPicker();
-	m_colorPicker->setStandardColors();
-	m_colorPicker->setCurrentColor(Qt::black);
-	gridLayout->addWidget(m_colorPicker,rowNbr,1);
-	
-	connect(m_colorPicker, SIGNAL(colorChanged(const QColor &)), this, SLOT(setTextOnlyBackground(const QColor &)));
-//	connect(textFilterBtn, SIGNAL(toggled(bool)), m_colorPicker, SLOT(setEnabled(bool)));
+// 	// Row: Text only background
+// 	rowNbr++;
+// 	label = new QLabel("Text-only Background: ");
+// 	gridLayout->addWidget(label,rowNbr,0);
+// 	
+// 	m_colorPicker = new QtColorPicker();
+// 	m_colorPicker->setStandardColors();
+// 	m_colorPicker->setCurrentColor(Qt::black);
+// 	gridLayout->addWidget(m_colorPicker,rowNbr,1);
+// 	
+// 	connect(m_colorPicker, SIGNAL(colorChanged(const QColor &)), this, SLOT(setTextOnlyBackground(const QColor &)));
+// //	connect(textFilterBtn, SIGNAL(toggled(bool)), m_colorPicker, SLOT(setEnabled(bool)));
 	
 	// Row: Text only filter on/off
 	rowNbr++;

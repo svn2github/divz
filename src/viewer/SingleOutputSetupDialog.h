@@ -1,24 +1,23 @@
-#ifndef OUTPUTSETUPDIALOG_H
-#define OUTPUTSETUPDIALOG_H
+#ifndef SingleOutputSetupDialog_H
+#define SingleOutputSetupDialog_H
 
 #include <QtGui/QDialog>
 class Output;
 
 namespace Ui {
-    class OutputSetupDialog;
+    class SingleOutputSetupDialog;
 }
 
-class OutputSetupDialog : public QDialog {
+class SingleOutputSetupDialog : public QDialog {
 	Q_OBJECT
 public:
-	OutputSetupDialog(QWidget *parent = 0);
-	~OutputSetupDialog();
+	SingleOutputSetupDialog(QWidget *parent = 0);
+	~SingleOutputSetupDialog();
 
 protected slots:
 	void accept();
 	void reject();
 	
-	void slotOutputListCellActivated(int,int);
 	void slotScreenListCellActivated(int,int);
 	void slotOutputEnabledStateChanged(int);
 	void slotTabChanged(int);
@@ -31,8 +30,6 @@ protected slots:
 	void slotHostChanged(const QString&);
 	void slotPortChanged(int);
 	void slotAllowMultChanged(int);
-	void slotNew();
-	void slotDel();
 	
 	void slotStayOnTop(bool);
 	void slotMjpegEnabled(bool);
@@ -44,13 +41,12 @@ protected:
 
 private:
 	void setupScreenList();
-	void setupOutputList();
 	void setOutput(Output*);
 
-	Ui::OutputSetupDialog *m_ui;
+	Ui::SingleOutputSetupDialog *m_ui;
 	
 	Output * m_output;
 	int m_outputIdx;
 };
 
-#endif // OUTPUTSETUPDIALOG_H
+#endif // SingleOutputSetupDialog_H
