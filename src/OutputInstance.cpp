@@ -678,7 +678,7 @@ Slide * OutputInstance::setSlide(Slide *slide)
 	{
 		if(m_outputServer)
 		{
-			qDebug() << "OutputInstance::m_outputServer: Sending slide to server, num:"<<m_slideNum;
+			//qDebug() << "OutputInstance::m_outputServer: Sending slide to server, num:"<<m_slideNum;
 			m_outputServer->sendCommand(OutputServer::SetSlide,m_slideNum);
 		}
 	}

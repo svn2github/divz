@@ -1112,7 +1112,7 @@ void MainWindow::setLiveGroup(SlideGroup *newGroup, Slide *currentSlide, bool al
 		{
 			if(outputCtrl->outputIsSynced())
 			{
-				qDebug() << "MainWindow::setLiveGroup: preping synced output:"<<output->name();
+				//qDebug() << "MainWindow::setLiveGroup: preping synced output:"<<output->name();
 				alreadyConsumed << output->id();
 				
 				sendGroupToOutput(output, newGroup, currentSlide, allowProgressDialog);
@@ -1124,7 +1124,7 @@ void MainWindow::setLiveGroup(SlideGroup *newGroup, Slide *currentSlide, bool al
 	{
 		if(!alreadyConsumed.contains(output->id()))
 		{
-			qDebug() << "MainWindow::setLiveGroup: setting non-synced output:"<<output->name();
+			//qDebug() << "MainWindow::setLiveGroup: setting non-synced output:"<<output->name();
 			
 			sendGroupToOutput(output, newGroup, currentSlide, allowProgressDialog);
 		}

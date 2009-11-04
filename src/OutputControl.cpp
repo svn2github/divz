@@ -566,7 +566,8 @@ void OutputControl::setSyncSource(OutputInstance * inst)
 	{
 		if(m_syncInst && m_inst)
 		{
-			connect(m_syncInst, SIGNAL(slideChanged(int)), m_inst, SLOT(setSlide(int)));	
+			//connect(m_syncInst, SIGNAL(slideGroupChanged(SlideGroup*,Slide*)), m_inst, SLOT(setSlideGroup(SlideGroup*,Slide*)));
+			connect(m_syncInst, SIGNAL(slideChanged(int)), m_inst, SLOT(setSlide(int)));
 			//qDebug() << "OutputControl::setSyncSource: ["<<m_inst->output()->name()<<"] connecting to "<<m_syncInst->output()->name();
 		}
 		else

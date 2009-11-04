@@ -231,8 +231,6 @@ Revised Task list for Release 1.0, 10/18/09:
 					like our existing text import tool
 				mailing list in addition to forumes
 					
-			[DONE] when setting advanced btn progamtically on output control, need to toggle btn too
-			[DONE] take key shortcuts off of preview control
 			make location of cache folder root (tempdir) a setting/option 
 				for use with network dviz viewer
 				
@@ -242,8 +240,6 @@ Revised Task list for Release 1.0, 10/18/09:
 				textbox caches
 				document list model icon caches
 				slide group icon list model caches
-			add transition (slide up) for foldback
-			add photo pipe tool for importing photo cards
 			add web newsticker item
 				can use CSV or XML file as data source
 			add countdown item
@@ -257,17 +253,14 @@ Revised Task list for Release 1.0, 10/18/09:
 		
 			another vote for the zoomable icons in list views (slide list/doc list)
 			accept midi input for fade speed slider
-			[LATER] add on-the-fly image tweaking (brightness/contrast) for backgrounds, etc
-				can't find code to do it right now
 			copy/paste entire slide groups
 			save a just a single slide group to a file / import slide group from a file
 			foldback settings should remember setetings across group changes
 				e.g. changing songs should not change fade speed
-			saving text in editor should not move cursor
-			[LATER] "fit to natural size" should fit to mininimum natural size
 			findFontSize should return max not min font
 			font display in toolbar should show max not avg
-			changing font size by typing should fit to natural size
+			[DONE] changing font size by typing should fit to natural size
+			scroll wheel in textt editor should scroll text content
 			change default text settings
 				40pt font
 				1.5 line
@@ -304,26 +297,7 @@ Revised Task list for Release 1.0, 10/18/09:
 					- generating the slides takes a LONG time in ppt once you click CREATE
 					- powerpoint does NOT automatically set the LOOP SLIDE SHOW *or* an intelligent per slide auto-change time
 			
-			add network viewer client
-				for viewer, client or server doesnt matter
-					probably should start with client and remove the :server: option from the output dialog for now
-					then Dviz control is the server
-				expected opts:
-					pretty much all public operations of SlideGroupViewer.h
-					will need a group viewer network proxy to reside in control, then proxy calls out to the client
-					no calls from client back into the control that I know of
-					** Will have to send appsetting changes over the network ...
-						or should appsettings be local to the client??
-					** Will have to send apsect ratio changes over the line
-				[DONE] need to find ops in control that rely on calling the public view() or scene() methods
-					[DONE] best way may be just to move those methods private :-)
 					
-			[LATER] make an output MJPEG-only (e.g. no need for visible widget)
-				subclass of the network output
-				no need for custom dviz viewer on other end
-				need to render that as a "viewer" widget though - could take view from that
-				right now, added stayOnTop flag to custom output and MJpeg Server settings, so could setup custom output
-					as mjpeg feed and just put it behind other windows
 			
 		
 		[LATER] add blackberry remote control interface
@@ -354,6 +328,17 @@ Revised Task list for Release 1.0, 10/18/09:
 				play
 				set group#
 				
+		[LATER] add transition (slide up) for foldback
+		[LATER] "fit to natural size" should fit to mininimum natural size
+		[LATER] add on-the-fly image tweaking (brightness/contrast) for backgrounds, etc
+			can't find code to do it right now
+		[LATER] make an output MJPEG-only (e.g. no need for visible widget)
+			subclass of the network output
+			no need for custom dviz viewer on other end
+			need to render that as a "viewer" widget though - could take view from that
+			right now, added stayOnTop flag to custom output and MJpeg Server settings, so could setup custom output
+				as mjpeg feed and just put it behind other windows
+		
 		[REJECTED] synced outputs should not show in list of "send to" outputs
 				decided that this is false
 		
@@ -455,7 +440,25 @@ Revised Task list for Release 1.0, 10/18/09:
 		
 		[FIXED] cloning text objects looses the original font size even tho we copy the html
 			
-					
+		[DONE] add network viewer client
+			for viewer, client or server doesnt matter
+				probably should start with client and remove the :server: option from the output dialog for now
+				then Dviz control is the server
+			expected opts:
+				pretty much all public operations of SlideGroupViewer.h
+				will need a group viewer network proxy to reside in control, then proxy calls out to the client
+				no calls from client back into the control that I know of
+				** Will have to send appsetting changes over the network ...
+					or should appsettings be local to the client??
+				** Will have to send apsect ratio changes over the line
+			[DONE] need to find ops in control that rely on calling the public view() or scene() methods
+				[DONE] best way may be just to move those methods private :-)
+		
+		[DONE] when setting advanced btn progamtically on output control, need to toggle btn too
+		[DONE] take key shortcuts off of preview control
+		[DONE] add photo pipe tool for importing photo cards
+			integrated to image import tool
+		[DONE] saving text in editor should not move cursor
 		[DONE] add mjpeg output feed (server) with configurable FPS / quality for compat with vidblaster
 			use widget topixmap routine?
 			or mygracphisview topixmap?

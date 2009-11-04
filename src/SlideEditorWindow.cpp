@@ -543,13 +543,13 @@ void SlideEditorWindow::setupToolbar()
 	m_textPlusAction->setEnabled(false);
 	m_textMinusAction->setEnabled(false);
 	
-	m_textFitToBoxAction = toolbar->addAction(QIcon(":/data/stock-fit-out.png"), "Fit Text to Box");
-	m_textFitToBoxAction->setShortcut(QString("CTRL+SHFIT+F"));
-	connect(m_textFitToBoxAction, SIGNAL(triggered()), this, SLOT(textFitToRect()));
-	
 	m_textFitToSlideAction = toolbar->addAction(QIcon(":/data/stock-fit-rect.png"), "Fit Text to Slide");
 	m_textFitToSlideAction->setShortcut(QString("CTRL+SHFIT+S"));
 	connect(m_textFitToSlideAction, SIGNAL(triggered()), this, SLOT(textFitToSlide()));
+	
+	m_textFitToBoxAction = toolbar->addAction(QIcon(":/data/stock-fit-out.png"), "Fit Text to Box");
+	m_textFitToBoxAction->setShortcut(QString("CTRL+SHFIT+F"));
+	connect(m_textFitToBoxAction, SIGNAL(triggered()), this, SLOT(textFitToRect()));
 	
 	m_textNaturalBoxAction = toolbar->addAction(QIcon(":/data/stock-fit-in.png"), "Fit Box to Text Naturally");
 	m_textNaturalBoxAction->setShortcut(QString("CTRL+SHFIT+N"));
@@ -873,6 +873,7 @@ void SlideEditorWindow::textPlus()
 	double value = m_textSizeBox->value();
 	value += TOOLBAR_TEXT_SIZE_INC;
 	m_textSizeBox->setValue(value);
+	textSizeBoxChanged();
 	
 }
 
@@ -884,6 +885,7 @@ void SlideEditorWindow::textMinus()
 	double value = m_textSizeBox->value();
 	value -= TOOLBAR_TEXT_SIZE_INC;
 	m_textSizeBox->setValue(value);
+	textSizeBoxChanged();
 	
 }
 	
@@ -895,6 +897,7 @@ void SlideEditorWindow::textSizeBoxChanged()
 	double pt = m_textSizeBox->value();
 	foreach(TextBoxContent *text, m_currentTextItems)
 		dynamic_cast<TextItem*>(text->modelItem())->changeFontSize(pt);
+	textNaturalBox();
 }
 
 
@@ -923,6 +926,9 @@ void SlideEditorWindow::textFitToSlide()
 		text->modelItem()->setContentsRect(QRectF(QPointF(0,0),rect.size()));
 	}
 	
+	textNaturalBox();
+	centerSelVert();
+	centerSelHorz();
 }
 
 
@@ -934,7 +940,9 @@ void SlideEditorWindow::textNaturalBox()
 	foreach(TextBoxContent *text, m_currentTextItems)
 	{
 		QSize natural = dynamic_cast<TextItem*>(text->modelItem())->findNaturalSize(m_scene->sceneRect().width());
-		text->modelItem()->setContentsRect(QRectF(text->modelItem()->contentsRect().topLeft(),QSizeF(natural)));
+		QRectF newRect = QRectF(text->modelItem()->contentsRect().topLeft(),QSizeF(natural));
+		//qDebug() << "SlideEditorWindow::textNaturalBox: "<<text->modelItem()->itemName()<<": natural:"<<natural<<", newRect:"<<newRect;
+		text->modelItem()->setContentsRect(newRect);
 	}
 }
 

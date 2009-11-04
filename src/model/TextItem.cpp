@@ -255,7 +255,35 @@ QSize TextItem::findNaturalSize(int atWidth)
 	else
 		doc.setPlainText(text());
 	
-	return doc.documentLayout()->documentSize().toSize();
+	QSize firstSize = doc.documentLayout()->documentSize().toSize();
+	QSize checkSize = firstSize;
+	
+	//qDebug() << "TextItem::findNaturalSize: atWidth:"<<atWidth<<", firstSize:"<<firstSize;
+	
+	int deInc = 10;
+	while(checkSize.height() == firstSize.height() &&
+	      checkSize.height() > 0)
+	{
+		int w = checkSize.width() - deInc;
+		doc.setTextWidth(w);
+		checkSize = doc.documentLayout()->documentSize().toSize();
+		
+		//qDebug() << "TextItem::findNaturalSize: w:"<<w<<", checkSize:"<<checkSize;
+	}
+	
+	if(checkSize.width() != firstSize.width())
+	{
+		int w = checkSize.width() + deInc;
+		doc.setTextWidth(w);
+		checkSize = doc.documentLayout()->documentSize().toSize();
+		//qDebug() << "TextItem::findNaturalSize: Final Size: w:"<<w<<", checkSize:"<<checkSize;
+		return checkSize;
+	}
+	else
+	{
+		//qDebug() << "TextItem::findNaturalSize: No Change, firstSize:"<<checkSize;
+		return firstSize;
+	}
 }
 
 
