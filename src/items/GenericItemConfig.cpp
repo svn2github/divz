@@ -179,11 +179,17 @@ GenericItemConfig::GenericItemConfig(AbstractContent * content, QWidget *parent)
 		m_commonUi->zoomDirRandom->setChecked(true);
 		
 	m_commonUi->zoomSpeedBox->setValue(model->zoomSpeed());
+	m_commonUi->zoomLoop->setChecked(model->zoomLoop());
+	m_commonUi->zoomFactor->setValue(model->zoomFactor());
+	
 	
 	updateShadowDistanceAndDirection();
 	m_commonUi->shadowDirectionBox->setVisible(false);
 	
 	
+	
+	connect(m_commonUi->zoomFactor, SIGNAL(valueChanged(double)), this, SLOT(zoomFactorChanged(double)));
+	connect(m_commonUi->zoomLoop, SIGNAL(toggled(bool)), this, SLOT(zoomLoopChanged(bool)));
 	connect(m_commonUi->zoomEnabled, SIGNAL(toggled(bool)), this, SLOT(zoomEffectEnabled(bool)));
 	connect(m_commonUi->anchorCenter, SIGNAL(toggled(bool)), this, SLOT(setZoomAnchorCenter(bool)));
 	connect(m_commonUi->zoomDirIn, SIGNAL(clicked()), this, SLOT(updateZoomDirection()));
@@ -263,6 +269,7 @@ GenericItemConfig::GenericItemConfig(AbstractContent * content, QWidget *parent)
 	connect(m_commonUi->alphaBox, SIGNAL(valueChanged(int)), this, SLOT(slotShadowAlphaChanged(int)));
 	
 	
+	m_commonUi->gbMirror->setVisible(false);
 	
 	m_commonUi->tabWidget->setCurrentIndex(0);
 	
@@ -729,3 +736,16 @@ void GenericItemConfig::zoomSpeedChanged(int value)
 {
 	m_content->modelItem()->setZoomSpeed(value);
 }
+
+void GenericItemConfig::zoomLoopChanged(bool value)
+{
+	m_content->modelItem()->setZoomLoop(value);
+}
+
+
+void GenericItemConfig::zoomFactorChanged(double value)
+{
+	m_content->modelItem()->setZoomFactor(value);
+}
+
+

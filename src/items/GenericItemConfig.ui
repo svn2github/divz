@@ -998,6 +998,41 @@
               </property>
              </widget>
             </item>
+            <item>
+             <widget class="QLabel" name="label_10">
+              <property name="text">
+               <string>Max Size:</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QDoubleSpinBox" name="zoomFactor">
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+              <property name="prefix">
+               <string/>
+              </property>
+              <property name="suffix">
+               <string>x</string>
+              </property>
+              <property name="decimals">
+               <number>2</number>
+              </property>
+              <property name="minimum">
+               <double>1.010000000000000</double>
+              </property>
+              <property name="maximum">
+               <double>10.000000000000000</double>
+              </property>
+              <property name="value">
+               <double>2.000000000000000</double>
+              </property>
+             </widget>
+            </item>
            </layout>
           </item>
           <item>
@@ -1066,6 +1101,13 @@
               <widget class="QRadioButton" name="zoomDirIn">
                <property name="text">
                 <string>Zoom In</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="zoomLoop">
+               <property name="text">
+                <string>Auto-Switch</string>
                </property>
               </widget>
              </item>

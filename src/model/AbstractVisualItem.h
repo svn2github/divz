@@ -159,6 +159,8 @@ public:
 	ITEM_PROPDEF(ZoomAnchorCenter,	bool,	zoomAnchorCenter);
 	ITEM_PROPDEF(ZoomDirection,	ZoomEffectDirection,	zoomDirection);
 	ITEM_PROPDEF(ZoomSpeed,		int,	zoomSpeed);
+	ITEM_PROPDEF(ZoomLoop,		bool,	zoomLoop);
+	ITEM_PROPDEF(ZoomFactor,	double,	zoomFactor);
 	
 	
 private:
@@ -199,7 +201,9 @@ private:
 	bool 		m_zoomEffectEnabled;
 	bool		m_zoomAnchorCenter;
 	ZoomEffectDirection m_zoomDirection;
-	int		m_zoomSpeed; // fps
+	int		m_zoomSpeed; 
+	double		m_zoomFactor;
+	bool		m_zoomLoop;
 	
 	//Q_DECLARE_METATYPE(FillType);
 };

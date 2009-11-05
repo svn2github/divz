@@ -171,8 +171,8 @@ void BackgroundContent::syncFromModelItem(AbstractVisualItem *model)
 			m_zoomStartSize.setX(startWidth);
 			m_zoomStartSize.setY(height);
 			 
-			m_zoomEndSize.setX(startWidth * ZOOM_FACTOR);
-			m_zoomEndSize.setY(height     * ZOOM_FACTOR);
+			m_zoomEndSize.setX(startWidth * model->zoomFactor());
+			m_zoomEndSize.setY(height     * model->zoomFactor());
 			
 			bool zoomIn = true;
 			if(model->zoomDirection() == AbstractVisualItem::ZoomIn)
@@ -185,6 +185,7 @@ void BackgroundContent::syncFromModelItem(AbstractVisualItem *model)
 				zoomIn = qrand() < RAND_MAX/2;
 			
 			m_zoomCurSize = zoomIn ? m_zoomStartSize : m_zoomEndSize;
+			m_zoomDir     = zoomIn ? 1 : -1;
 			
 			delta.setX(m_zoomEndSize.x() - m_zoomCurSize.x());
 			delta.setY(m_zoomEndSize.y() - m_zoomCurSize.y());
@@ -239,7 +240,12 @@ void BackgroundContent::animateZoom()
 		m_zoomCurSize.setY(m_zoomCurSize.y() + m_zoomStep.y());
 		if(m_zoomCurSize.x() >= m_zoomEndSize.x() &&
 		   m_zoomCurSize.y() >= m_zoomEndSize.y())
-			m_zoomDir = -1;
+		   	if(modelItem()->zoomLoop())
+				m_zoomDir = -1;
+			else
+				if(m_zoomAnimationTimer->isActive())
+					m_zoomAnimationTimer->stop();
+			
 	}
 	else
 	{
@@ -247,7 +253,11 @@ void BackgroundContent::animateZoom()
 		m_zoomCurSize.setY(m_zoomCurSize.y() - m_zoomStep.y());
 		if(m_zoomCurSize.x() <= m_zoomStartSize.x() &&
 		   m_zoomCurSize.y() <= m_zoomStartSize.y())
-			m_zoomDir = +1;
+			if(modelItem()->zoomLoop())
+				m_zoomDir = +1;
+			else
+				if(m_zoomAnimationTimer->isActive())
+					m_zoomAnimationTimer->stop();
 	}
 	//qDebug() << "AnimateZoom: "<<PTR(this)<<modelItem()->itemName()<<": size:"<<m_zoomCurSize<<", step:"<<m_zoomStep;
 	
@@ -313,10 +323,10 @@ void BackgroundContent::setImageFile(const QString &file)
 		
 		QSize size = contentsRect().size();
 		
-		if(modelItem()->zoomEffectEnabled() && ZOOM_FACTOR > 2.0)
+		if(modelItem()->zoomEffectEnabled() && modelItem()->zoomFactor() > 2.0)
 		{
-			size.setWidth(size.width()   * ZOOM_FACTOR);
-			size.setHeight(size.height() * ZOOM_FACTOR);
+			size.setWidth(size.width()   * modelItem()->zoomFactor());
+			size.setHeight(size.height() * modelItem()->zoomFactor());
 		}
 		
 		QDir path(QString("%1/%2").arg(QDir::tempPath()).arg(BG_IMG_CACHE_DIR));

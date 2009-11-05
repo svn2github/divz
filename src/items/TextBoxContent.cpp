@@ -34,6 +34,8 @@
 	#define qFuzzyIsNull(a) (a<0.00001)
 #endif
 
+#define ZOOM_FACTOR 4
+
 #define DEBUG_MARK() qDebug() << "mark: "<<__FILE__<<":"<<__LINE__
 #define DEBUG_TMARK() DEBUG_MARK() << ":" << t.restart() << "ms"
 #define DEBUG_TSTART() QTime total;total.start(); QTime t;t.start();
@@ -72,6 +74,9 @@ TextBoxContent::TextBoxContent(QGraphicsScene * scene, QGraphicsItem * parent)
 	for(int i=0;i<m_cornerItems.size();i++)
 		m_cornerItems.at(i)->setDefaultLeftOp(CornerItem::Scale);
 
+	m_zoomAnimationTimer = new QTimer();
+	connect(m_zoomAnimationTimer, SIGNAL(timeout()), this, SLOT(animateZoom()));
+	
 	m_dontSyncToModel = false;
 	
 	//qDebug() << "TextBoxContent(): \t \t Elapsed:"<<(((double)total.elapsed())/1000.0)<<" sec";
@@ -201,7 +206,6 @@ void TextBoxContent::syncFromModelItem(AbstractVisualItem *model)
 	//qDebug() << "TextBoxContent::      New HTML:"<<m_text->toHtml();
 	
 
-	
 	AbstractContent::syncFromModelItem(model);
 	
 	if(modelItem()->revision() != m_lastModelRev)
@@ -210,6 +214,82 @@ void TextBoxContent::syncFromModelItem(AbstractVisualItem *model)
 		
 		m_lastModelRev = modelItem()->revision();
 		dirtyCache();
+	}
+	
+	if(   model->zoomEffectEnabled() 
+ 	   && model->zoomSpeed() > 0 
+ 	   && sceneContextHint() == MyGraphicsScene::Live)
+	{
+		m_zoomEnabled = true;
+		
+		m_zoomAnimationTimer->start(1000 / 20); // / model->zoomSpeed());
+		
+		QSize size = contentsRect().size();
+			
+		double width  = size.width();
+		double height = size.height();
+		
+		double aspectRatio = height == 0 ? 1 : width/height;
+			
+// 		if(!m_zoomInit)
+// 		{
+			//qDebug() << "aspectRatio: "<<aspectRatio;
+			
+			QPointF delta;
+			
+			m_zoomStartSize.setX(width);
+			m_zoomStartSize.setY(height);
+			 
+			m_zoomEndSize.setX(width  * model->zoomFactor());
+			m_zoomEndSize.setY(height * model->zoomFactor());
+			
+			bool zoomIn = true;
+			if(model->zoomDirection() == AbstractVisualItem::ZoomIn)
+				zoomIn = true;
+			else
+			if(model->zoomDirection() == AbstractVisualItem::ZoomOut)
+				zoomIn = false;
+			else
+			if(model->zoomDirection() == AbstractVisualItem::ZoomRandom)
+				zoomIn = qrand() < RAND_MAX/2;
+			
+			m_zoomCurSize = zoomIn ? m_zoomStartSize : m_zoomEndSize;
+			m_zoomDir     = zoomIn ? 1 : -1;
+			
+			delta.setX(m_zoomEndSize.x() - m_zoomCurSize.x());
+			delta.setY(m_zoomEndSize.y() - m_zoomCurSize.y());
+			//step.setX(delta.x()/ZOOM_STEPS);
+			//step.setY(delta.y()/ZOOM_STEPS);
+// 			m_zoomInit = true;
+// 		}
+		
+		// allow it to go below 1.0 for step size by using 75.0 when the max of the zoomSpeed slider in config is 100
+		m_zoomStep.setX(8.0 / (100.01 - ((double)model->zoomSpeed())) * aspectRatio);
+		m_zoomStep.setY(8.0 / (100.01 - ((double)model->zoomSpeed())));
+		
+		if(model->zoomAnchorCenter())
+			m_zoomDestPoint = QPointF(.5,.5);
+		else
+		{
+			// pick a third intersection
+			double x = qrand() < RAND_MAX/2 ? .33 : .66;
+			double y = qrand() < RAND_MAX/2 ? .33 : .66;
+			
+			// apply a fudge factor
+// 			x += 0.15 - ((double)qrand()) / ((double)RAND_MAX) * 0.075;
+// 			y += 0.15 - ((double)qrand()) / ((double)RAND_MAX) * 0.075;
+			
+			m_zoomDestPoint = QPointF(x,y);
+			
+			//qDebug() << model->itemName() << "Random zoom anchor: "<<m_zoomDestPoint;
+		}
+
+	}
+	else
+	{
+		m_zoomEnabled = false;
+		if(m_zoomAnimationTimer->isActive())
+			m_zoomAnimationTimer->stop();
 	}
 
         m_dontSyncToModel = false;
@@ -395,7 +475,6 @@ void TextBoxWarmingThread::run()
 	QPainter textPainter(cache);
 	textPainter.fillRect(cache->rect(),Qt::transparent);
 	
-
 	QAbstractTextDocumentLayout::PaintContext pCtx;
 
 	#if QT46_SHADOW_ENAB == 0
@@ -480,6 +559,23 @@ void TextBoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * 
 		
 		QAbstractTextDocumentLayout::PaintContext pCtx;
 		
+		bool needRestore = false;
+		
+		if(m_zoomEnabled && sceneContextHint() == MyGraphicsScene::Live)
+		{
+			needRestore = true;
+			painter->save();
+			double xf = (1/m_zoomDestPoint.x());
+			double yf = (1/m_zoomDestPoint.y());
+			double sx = m_zoomCurSize.x() / m_zoomStartSize.x();
+			double sy = m_zoomCurSize.y() / m_zoomStartSize.y();
+			QRect cRect = contentsRect();
+			painter->translate(cRect.width()/xf - m_zoomCurSize.x()/xf,cRect.height()/yf - m_zoomCurSize.y()/yf);
+			painter->scale(sx,sy);
+		}
+			
+			
+	
 		if(modelItem()->shadowEnabled())
 		{
 			painter->save();
@@ -491,6 +587,10 @@ void TextBoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * 
 		}
 		
 		m_text->documentLayout()->draw(painter, pCtx);
+		
+		if(needRestore)
+			painter->restore();
+		
 	}
 	else
 	{
@@ -507,6 +607,10 @@ void TextBoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * 
 		// Update 20091015: Implemented very aggressive caching across TextBoxContent instances
 		// that share the same modelItem() (see ::cacheKey()) inorder to avoid re-rendering 
 		// potentially expensive drop shadows, below.
+		
+		
+		
+		
 		if(!QPixmapCache::find(cacheKey(),cache) && m_text->toPlainText().trimmed() != "")
 		{
 			qDebug()<<"TextBoxContent::paint(): modelItem:"<<modelItem()->itemName()<<": Cache redraw";
@@ -521,58 +625,15 @@ void TextBoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * 
 	
 			#if QT46_SHADOW_ENAB == 0
 			if(modelItem()->shadowEnabled())
-			{
-				if(qFuzzyIsNull(modelItem()->shadowBlurRadius()))
-				{
-					// render a "cheap" version of the shadow using the shadow text document
-					textPainter.save();
-		
-					textPainter.translate(modelItem()->shadowOffsetX(),modelItem()->shadowOffsetY());
-					m_shadowText->documentLayout()->draw(&textPainter, pCtx);
-		
-					textPainter.restore();
-				}
-				else
-				{
-					double radius = modelItem()->shadowBlurRadius();
-					double radiusSquared = radius*radius;
-					
-					// create temporary pixmap to hold a copy of the text
-					double blurSize = (int)(radiusSquared*2);
-					QSize shadowSize(blurSize,blurSize);
-					QPixmap tmpPx(contentsRect().size()+shadowSize);
-					tmpPx.fill(Qt::transparent);
-					
-					// render the text
-					QPainter tmpPainter(&tmpPx);
-					tmpPainter.save();
-					tmpPainter.translate(radiusSquared, radiusSquared);
-					m_text->documentLayout()->draw(&tmpPainter, pCtx);
-					tmpPainter.restore();
-					
-					// blacken the text by applying a color to the copy using a QPainter::CompositionMode_DestinationIn operation. 
-					// This produces a homogeneously-colored pixmap.
-					QRect rect = QRect(0, 0, tmpPx.width(), tmpPx.height());
-					tmpPainter.setCompositionMode(QPainter::CompositionMode_SourceIn);
-					tmpPainter.fillRect(rect, modelItem()->shadowBrush().color());
-					tmpPainter.end();
-		
-					// blur the colored text
-					QImage  orignalImage   = tmpPx.toImage();
-					QImage  blurredImage   = ImageFilters::blurred(orignalImage, rect, (int)radius);
-					QPixmap blurredPixmap  = QPixmap::fromImage(blurredImage);
-					
-					// render the blurred text at an offset into the cache
-					textPainter.save();
-					textPainter.translate(modelItem()->shadowOffsetX() - radiusSquared,
-							modelItem()->shadowOffsetY() - radiusSquared);
-					textPainter.drawPixmap(0, 0, blurredPixmap);
-					textPainter.restore();
-				}
-			}
+				renderShadow(&textPainter,&pCtx);
 			#endif
 	
-			m_text->documentLayout()->draw(&textPainter, pCtx);
+			// If we're zooming, we want to render the text straight to the painter
+			// so it can transform the raw vectors instead of scaling the bitmap.
+			// But if we're not zooming, we cache the text with the shadow since it
+			// looks better that way when we're crossfading.
+			if(!m_zoomEnabled)
+				m_text->documentLayout()->draw(&textPainter, pCtx);
 			
 			QPixmapCache::insert(cacheKey(), cache);
 		}
@@ -589,7 +650,34 @@ void TextBoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * 
 		}
 		else
 		{
-			painter->drawPixmap(0,0,cache);
+			if(m_zoomEnabled)
+			{
+				double xf = (1/m_zoomDestPoint.x());
+				double yf = (1/m_zoomDestPoint.y());
+				double sx = m_zoomCurSize.x() / m_zoomStartSize.x();
+				double sy = m_zoomCurSize.y() / m_zoomStartSize.y();
+				painter->save();
+				QRect cRect = contentsRect();
+				painter->translate(cRect.width()/xf - m_zoomCurSize.x()/xf,cRect.height()/yf - m_zoomCurSize.y()/yf);
+				painter->scale(sx,sy);
+				painter->drawPixmap(0,0,cache);
+				QAbstractTextDocumentLayout::PaintContext pCtx;
+				m_text->documentLayout()->draw(painter, pCtx);
+				painter->restore();
+				
+			}
+			else
+			{
+				painter->drawPixmap(0,0,cache);
+				if(sceneContextHint() != MyGraphicsScene::Live && modelItem()->zoomEffectEnabled())
+				{
+					// cache may not contain the actual text, just shadow, since its not live,
+					// so render the text
+					QAbstractTextDocumentLayout::PaintContext pCtx;
+					m_text->documentLayout()->draw(painter, pCtx);
+				}
+					
+			}
 		}
 	}
 
@@ -597,6 +685,93 @@ void TextBoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * 
 	painter->restore();
 	
 	//qDebug() << "TextBoxContent::paint(): \t \t Elapsed:"<<(((double)total.elapsed())/1000.0)<<" sec";
+}
+
+void TextBoxContent::animateZoom()
+{
+	//elapsed = (elapsed + qobject_cast<QTimer*>(sender())->interval()) % 2000;
+	//printf("elapsed=%d\n",elapsed);
+	if(m_zoomDir > 0)
+	{
+		m_zoomCurSize.setX(m_zoomCurSize.x() + m_zoomStep.x());
+		m_zoomCurSize.setY(m_zoomCurSize.y() + m_zoomStep.y());
+		if(m_zoomCurSize.x() >= m_zoomEndSize.x() &&
+		   m_zoomCurSize.y() >= m_zoomEndSize.y())
+		   	if(modelItem()->zoomLoop())
+				m_zoomDir = -1;
+			else
+				if(m_zoomAnimationTimer->isActive())
+					m_zoomAnimationTimer->stop();
+			
+	}
+	else
+	{
+		m_zoomCurSize.setX(m_zoomCurSize.x() - m_zoomStep.x());
+		m_zoomCurSize.setY(m_zoomCurSize.y() - m_zoomStep.y());
+		if(m_zoomCurSize.x() <= m_zoomStartSize.x() &&
+		   m_zoomCurSize.y() <= m_zoomStartSize.y())
+			if(modelItem()->zoomLoop())
+				m_zoomDir = +1;
+			else
+				if(m_zoomAnimationTimer->isActive())
+					m_zoomAnimationTimer->stop();
+	}
+	//qDebug() << "AnimateZoom: "<<PTR(this)<<modelItem()->itemName()<<": size:"<<m_zoomCurSize<<", step:"<<m_zoomStep;
+	
+	update();
+}
+
+
+void TextBoxContent::renderShadow(QPainter *painter, QAbstractTextDocumentLayout::PaintContext *pCtx)
+{
+	AbstractVisualItem *model = modelItem();
+	if(qFuzzyIsNull(model->shadowBlurRadius()))
+	{
+		// render a "cheap" version of the shadow using the shadow text document
+		painter->save();
+
+		painter->translate(model->shadowOffsetX(),model->shadowOffsetY());
+		m_shadowText->documentLayout()->draw(painter, *pCtx);
+
+		painter->restore();
+	}
+	else
+	{
+		double radius = model->shadowBlurRadius();
+		double radiusSquared = radius*radius;
+		
+		// create temporary pixmap to hold a copy of the text
+		double blurSize = (int)(radiusSquared*2);
+		QSize shadowSize(blurSize,blurSize);
+		QPixmap tmpPx(contentsRect().size()+shadowSize);
+		tmpPx.fill(Qt::transparent);
+		
+		// render the text
+		QPainter tmpPainter(&tmpPx);
+		tmpPainter.save();
+		tmpPainter.translate(radiusSquared, radiusSquared);
+		m_text->documentLayout()->draw(&tmpPainter, *pCtx);
+		tmpPainter.restore();
+		
+		// blacken the text by applying a color to the copy using a QPainter::CompositionMode_DestinationIn operation. 
+		// This produces a homogeneously-colored pixmap.
+		QRect rect = QRect(0, 0, tmpPx.width(), tmpPx.height());
+		tmpPainter.setCompositionMode(QPainter::CompositionMode_SourceIn);
+		tmpPainter.fillRect(rect, model->shadowBrush().color());
+		tmpPainter.end();
+
+		// blur the colored text
+		QImage  orignalImage   = tmpPx.toImage();
+		QImage  blurredImage   = ImageFilters::blurred(orignalImage, rect, (int)radius);
+		QPixmap blurredPixmap  = QPixmap::fromImage(blurredImage);
+		
+		// render the blurred text at an offset into the cache
+		painter->save();
+		painter->translate(model->shadowOffsetX() - radiusSquared,
+				model->shadowOffsetY() - radiusSquared);
+		painter->drawPixmap(0, 0, blurredPixmap);
+		painter->restore();
+	}
 }
 
 void TextBoxContent::updateTextConstraints(int w)

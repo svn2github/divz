@@ -216,6 +216,8 @@ void ImageImportDialog::accept()
 			bg->setZoomSpeed(zoomSpeed);
 			bg->setZoomDirection(AbstractVisualItem::ZoomRandom);
 			bg->setZoomAnchorCenter(false);
+			bg->setZoomFactor(1.5);
+			bg->setZoomLoop(false);
 		}
 	
 

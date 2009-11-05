@@ -3,6 +3,7 @@
 
 #include "AbstractContent.h"
 class QTextDocument;
+#include <QAbstractTextDocumentLayout>
 
 #include <QtGui/QTextFragment>
 #include <QPointF>
@@ -84,9 +85,13 @@ class TextBoxContent : public AbstractContent
         // ::AbstractContent
         void contentsResized();
         void delayContentsResized();
-         
+       
+       	void animateZoom();
+       	
     private:
         void updateTextConstraints(int w = -1);
+        
+        void renderShadow(QPainter *painter, QAbstractTextDocumentLayout::PaintContext *pCtx);
      
         //void updateCache();
         
@@ -103,6 +108,17 @@ class TextBoxContent : public AbstractContent
         int m_textMargin;
         
         quint32 m_lastModelRev;
+        
+        QTimer * m_zoomAnimationTimer;
+        
+        QPointF m_zoomStep;
+	QPointF m_zoomEndSize;
+	QPointF m_zoomCurSize;
+	QPointF m_zoomStartSize;
+	QPointF m_zoomDestPoint;
+	int m_zoomDir;
+	bool m_zoomInit;
+	bool m_zoomEnabled;
 
 /*        
         Qt::Alignment m_xTextAlign;

@@ -134,8 +134,9 @@ ITEM_PROPSET(AbstractVisualItem, ZoomEffectEnabled,	bool,	zoomEffectEnabled);
 ITEM_PROPSET(AbstractVisualItem, ZoomAnchorCenter,	bool,	zoomAnchorCenter);
 ITEM_PROPSET(AbstractVisualItem, ZoomDirection,		ZoomEffectDirection,	zoomDirection);
 ITEM_PROPSET(AbstractVisualItem, ZoomSpeed,		int,	zoomSpeed);
-
-
+ITEM_PROPSET(AbstractVisualItem, ZoomLoop,		bool,	zoomLoop);
+ITEM_PROPSET(AbstractVisualItem, ZoomFactor,		double,	zoomFactor);
+	
 bool AbstractVisualItem::fromXml(QDomElement & pe)
 {
 	setBeingLoaded(true);
@@ -292,6 +293,10 @@ bool AbstractVisualItem::fromXml(QDomElement & pe)
 		setZoomAnchorCenter(domElement.attribute("anchor-center").toInt());
 		setZoomDirection((ZoomEffectDirection)domElement.attribute("direction").toInt());
 		setZoomSpeed(domElement.attribute("speed").toInt());
+		QString str = domElement.attribute("loop");
+		setZoomLoop(str.isEmpty() ? true : str.toInt());
+		str = domElement.attribute("factor");
+		setZoomFactor(str.isEmpty() ? 2 : str.toDouble());
 	}
 	
 	setBeingLoaded(false);
@@ -417,6 +422,8 @@ void AbstractVisualItem::toXml(QDomElement & pe) const
  	domElement.setAttribute("anchor-center", zoomAnchorCenter());
  	domElement.setAttribute("direction", (int)zoomDirection());
  	domElement.setAttribute("speed", zoomSpeed());
+ 	domElement.setAttribute("loop", zoomLoop());
+ 	domElement.setAttribute("factor", zoomFactor());
  	pe.appendChild(domElement);
 }
 
