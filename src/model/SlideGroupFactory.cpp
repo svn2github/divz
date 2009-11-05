@@ -325,6 +325,7 @@ void SlideGroupViewControl::setIsPreviewControl(bool flag)
 	m_timeButton->setText(!flag ? "&Start" : "Start");
 	m_prevBtn->setText(!flag ? "P&rev" : "Prev");
 	m_nextBtn->setText(!flag ? "Nex&t" : "Next");
+	setQuickSlideEnabled(!flag);
 }
 
 void SlideGroupViewControl::repaintList()

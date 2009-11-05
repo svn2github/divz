@@ -60,7 +60,7 @@ public:
 
 
 QRegExp MediaBrowser::videoRegexp = QRegExp("(wmv|mpeg|mpg|avi|wmv|flv|mov|mp4|m4a|3gp|3g2|mj2|mjpeg|ipod|m4v|gsm|swf|dv|dvd|asf|mtv|roq|aac|ac3|aiff|alaw|iif)",Qt::CaseInsensitive);
-QRegExp MediaBrowser::imageRegexp = QRegExp("(png|jpg|bmp|svg|xpm)",Qt::CaseInsensitive);
+QRegExp MediaBrowser::imageRegexp = QRegExp("(png|jpg|bmp|svg|xpm|gif)",Qt::CaseInsensitive);
 
 bool MediaBrowser::isVideo(const QString &extension) { return extension.indexOf(videoRegexp) == 0; }
 bool MediaBrowser::isImage(const QString &extension) { return extension.indexOf(imageRegexp) == 0; }
@@ -191,7 +191,7 @@ MediaBrowser::MediaBrowser(const QString &directory, QWidget *parent)
 
 	filters << tr("Media Files (*.wmv *.mpeg *.mpg *.avi *.wmv *.flv *.mov *.mp4 *.m4a *.3gp *.3g2 *.mj2 *.mjpeg *.ipod *.m4v *.gsm *.gif *.swf *.dv *.dvd *.asf *.mtv *.roq *.aac *.ac3 *.aiff *.alaw *.iif *.png *.jpg *.bmp *.svg *.xpm)");
 	filters << tr("Video Files (*.wmv *.mpeg *.mpg *.avi *.wmv *.flv *.mov *.mp4 *.m4a *.3gp *.3g2 *.mj2 *.mjpeg *.ipod *.m4v *.gsm *.swf *.dv *.dvd *.asf *.mtv *.roq *.aac *.ac3 *.aiff *.alaw *.iif)");
-	filters << tr("Image Files (*.png *.jpg *.bmp *.svg *.xpm)");
+	filters << tr("Image Files (*.png *.jpg *.bmp *.svg *.xpm *.gif)");
 	filters << tr("Any File (*.*)");
 
 	setFileTypeFilterList(filters);
@@ -249,7 +249,7 @@ void MediaBrowser::setupUI()
 	connect(m_searchBox, SIGNAL(textChanged(const QString &)), this, SLOT(filterChanged(const QString &)));
 	connect(m_searchBox, SIGNAL(returnPressed()), this, SLOT(filterReturnPressed()));
 	connect(m_clearSearchBtn, SIGNAL(clicked()), this, SLOT(clearFilter()));
-
+	
 	// Now for the list itself
 	m_listView = new MediaBrowserQListView(browser);
 	m_listView->setAlternatingRowColors(true);
@@ -311,11 +311,16 @@ void MediaBrowser::setupUI()
 	connect(m_filterBox, SIGNAL(currentIndexChanged(int)), this, SLOT(fileTypeChanged(int)));
 
 
+	QFrame * line = new QFrame();
+        line->setFrameShape(QFrame::HLine);
+        line->setFrameShadow(QFrame::Sunken);
+	
 	vbox->addWidget(m_searchBase);
+	vbox->addWidget(line);
+	vbox->addWidget(m_folderBoxBase);
 	vbox->addWidget(m_listView);
 	vbox->addWidget(m_btnBase);
-	vbox->addWidget(m_folderBoxBase);
-
+	
 	m_splitter->addWidget(browser);
 
 

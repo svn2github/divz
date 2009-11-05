@@ -21,6 +21,7 @@ DirectoryListModel::DirectoryListModel(QObject *parent)
 	, m_iconProvider(0)
 	, m_lockRowcount(false)
 	, m_iconSize(32,32)
+	, m_nameLengthMax(16)
 {
 	if(!m_blankPixmap)
 	{
@@ -61,14 +62,18 @@ QVariant DirectoryListModel::data ( const QModelIndex & index, int role ) const
 	
 	if (role == Qt::DisplayRole)
 	{
+		QString file = fileInfo(index).fileName();
+		return file.left(m_nameLengthMax) + (file.length() > m_nameLengthMax ? "..." : "");
+	}
+	else
+	if (role == Qt::ToolTipRole)
+	{
 		return fileInfo(index).fileName();
 	}
 	else if(Qt::DecorationRole == role)
 	{
 		QFileInfo info = fileInfo(index);
-		QString key = cacheKey(info);
-		
-		
+		QString   key  = cacheKey(info);
 		
 		QPixmap icon;
 		if(!QPixmapCache::find(key,icon))
@@ -77,7 +82,6 @@ QVariant DirectoryListModel::data ( const QModelIndex & index, int role ) const
  			if(info.isFile())
  			{
 				self->needPixmap(info.canonicalFilePath());
-				//icon = iconProvider()->icon(info);
 				return *m_blankPixmap;
  			}
  			else

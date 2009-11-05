@@ -42,6 +42,8 @@ public:
 	void setIconSize(const QSize&);
 	QSize iconSize() { return m_iconSize; }
 	
+	void setNameLengthMax(int);
+	int nameLengthMax(){ return m_nameLengthMax; }
 	
 	// compat with QFileSystemModel API
 	QModelIndex index(int row, int) { return indexForRow(row); }
@@ -87,6 +89,8 @@ protected:
 	static QPixmap * m_blankPixmap;
 	
 	bool m_lockRowcount;
+	
+	int m_nameLengthMax;
 	
 	
 // 	QFileSystemWatcher * m_watcher;
