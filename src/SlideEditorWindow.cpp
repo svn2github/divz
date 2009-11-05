@@ -1008,7 +1008,7 @@ void SlideEditorWindow::updatePropDock(AbstractContent *content)
 		{
 			m_propDockEmpty = new QWidget();
 			QVBoxLayout *layout = new QVBoxLayout(m_propDockEmpty);
-			QLabel *label = new QLabel(tmpGroup"<center><font color='gray'><b>No item selected</b></font></center>"));
+			QLabel *label = new QLabel(tr("<center><font color='gray'><b>No item selected</b></font></center>"));
 			layout->addWidget(label);
 		}
 			
@@ -1502,7 +1502,7 @@ Slide * SlideEditorWindow::prevSlide()
 	UndoSlideItemChanged(SlideEditorWindow *window, AbstractItem *item, QString field, QVariant value, QVariant oldValue)
 		: m_window(window), m_item(item), m_field(field), m_value(value), m_oldValue(oldValue), redoCount(0) 
 		{ 
-			setText(QString(tr("Change %2 of %1")).arg(AbstractItem::guessTitle(item->itemName())).arg(AbstractItem::guessTitle(field)));
+			setText(QString(qApp->translate("SlideEditorWindow","Change %2 of %1")).arg(AbstractItem::guessTitle(item->itemName())).arg(AbstractItem::guessTitle(field)));
 		}
 	
 	virtual int id() const { return 0x001; }
@@ -1550,7 +1550,7 @@ public:
 	UndoSlideItemAdded(SlideEditorWindow *window, Slide *slide, AbstractItem *item)
 		: m_window(window), m_slide(slide), m_item(item), redoCount(0) 
 		{ 
-			setText(QString(tr("Added %1")).arg(AbstractItem::guessTitle(item->itemName().isEmpty() ? "New Item" : item->itemName())));
+			setText(QString(qApp->translate("SlideEditorWindow","Added %1")).arg(AbstractItem::guessTitle(item->itemName().isEmpty() ? "New Item" : item->itemName())));
 		}
 	
 	
@@ -1587,7 +1587,7 @@ private:
 	UndoSlideItemRemoved(SlideEditorWindow *window, Slide *slide, AbstractItem *item)
 		: m_window(window), m_slide(slide), m_item(item), redoCount(0) 
 		{ 
-			setText(QString(tr("Removed %1")).arg(AbstractItem::guessTitle(item->itemName())));
+			setText(QString(qApp->translate("SlideEditorWindow","Removed %1")).arg(AbstractItem::guessTitle(item->itemName())));
 		}
 	
 	virtual void undo() 
@@ -1619,7 +1619,7 @@ public:
 	UndoSlideAdded(SlideEditorWindow *window, Slide *slide)
 		: m_window(window), m_slide(slide), redoCount(0) 
 		{ 
-			setText(QString(tr("Added Slide# %1")).arg(slide->slideNumber()+1));
+			setText(QString(qApp->translate("SlideEditorWindow","Added Slide# %1")).arg(slide->slideNumber()+1));
 		}
 	
 	virtual void undo() 
@@ -1653,7 +1653,7 @@ public:
 	UndoSlideRemoved(SlideEditorWindow *window, Slide *slide)
 		: m_window(window), m_slide(slide), redoCount(0) 
 		{ 
-			setText(QString(tr("Removed Slide# %1")).arg(slide->slideNumber()+1));
+			setText(QString(qApp->translate("SlideEditorWindow","Removed Slide# %1")).arg(slide->slideNumber()+1));
 			//qDebug() << "UndoSlideRemoved::(): New cmd because you deleted slide#"<<m_slide->slideNumber();
 		}
 

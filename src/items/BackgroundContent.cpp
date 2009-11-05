@@ -151,28 +151,28 @@ void BackgroundContent::syncFromModelItem(AbstractVisualItem *model)
 		
 		m_zoomAnimationTimer->start(1000 / 20); // / model->zoomSpeed());
 		
+		QSize size = contentsRect().size();
+			
+		double width  = size.width();
+		double height = size.height();
+		
+		double aspectRatio = m_pixmap.isNull() || m_pixmap.height() <=0 ? 0 : m_pixmap.width() / m_pixmap.height();
+		if(aspectRatio == 0 || aspectRatio == 1) 
+			aspectRatio = AppSettings::liveAspectRatio();
+			
 		if(!m_zoomInit)
 		{
-			QSize size = contentsRect().size();
-			
-			double width  = size.width();
-			double height = size.height();
-			
-			double aspectRatio = m_pixmap.isNull() || m_pixmap.width() <=0 ? 0 : m_pixmap.height() / m_pixmap.width();
-			if(aspectRatio == 0 || aspectRatio == 1) 
-				aspectRatio = AppSettings::liveAspectRatio();
-				
 			//qDebug() << "aspectRatio: "<<aspectRatio;
 			
-			double startHeight = width * aspectRatio;
+			double startWidth = height * aspectRatio;
 			m_zoomDir = 1;
 			QPointF delta;
 			
-			m_zoomStartSize.setX(width);
-			m_zoomStartSize.setY(startHeight);
+			m_zoomStartSize.setX(startWidth);
+			m_zoomStartSize.setY(height);
 			 
-			m_zoomEndSize.setX(width       * ZOOM_FACTOR);
-			m_zoomEndSize.setY(startHeight * ZOOM_FACTOR);
+			m_zoomEndSize.setX(startWidth * ZOOM_FACTOR);
+			m_zoomEndSize.setY(height     * ZOOM_FACTOR);
 			
 			bool zoomIn = true;
 			if(model->zoomDirection() == AbstractVisualItem::ZoomIn)
@@ -194,7 +194,7 @@ void BackgroundContent::syncFromModelItem(AbstractVisualItem *model)
 		}
 		
 		// allow it to go below 1.0 for step size by using 75.0 when the max of the zoomSpeed slider in config is 100
-		m_zoomStep.setX(75.0 / (100.0 - ((double)model->zoomSpeed())));
+		m_zoomStep.setX(75.0 / (100.0 - ((double)model->zoomSpeed())) * aspectRatio);
 		m_zoomStep.setY(75.0 / (100.0 - ((double)model->zoomSpeed())));
 		
 		if(model->zoomAnchorCenter())
