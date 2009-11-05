@@ -31,6 +31,7 @@ protected:
 class QLabel;
 class QPushButton;
 class OutputInstance;
+class TextBoxItem;
 class SlideGroupViewControl : public QWidget
 {
 	Q_OBJECT
@@ -63,6 +64,10 @@ public slots:
 	virtual void setIsPreviewControl(bool);
 	virtual void setEnabled(bool);
 	
+	virtual void setQuickSlideEnabled(bool);
+	virtual void addQuickSlide();
+	virtual void showQuickSlide(bool flag=true);
+	
 protected slots:
 	virtual void slideSelected(const QModelIndex &);
 	virtual void currentChanged(const QModelIndex &, const QModelIndex &);
@@ -75,6 +80,9 @@ private slots:
 	void repaintList();
 	
 protected:
+	virtual void makeQuickSlide();
+	void fitQuickSlideText();
+	
 	QString formatTime(double);
 
 	SlideGroup * m_group;
@@ -93,6 +101,13 @@ protected:
 	TimerState m_timerState;
 	double m_currentTimeLength;
 	double m_elapsedAtPause;
+	
+	QWidget * m_quickSlideBase;
+	QLineEdit * m_quickSlideText;
+	Slide * m_quickSlide;
+	TextBoxItem * m_quickSlideTextBox;
+	QPushButton * m_showQuickSlideBtn;
+	bool m_originalQuickSlide;
 	
 // 	QPushButton * m_blackButton;
 // 	QPushButton * m_clearButton;

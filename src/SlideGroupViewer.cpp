@@ -932,6 +932,12 @@ void SlideGroupViewer::generateBlackFrame()
 
 }
 
+Slide * SlideGroupViewer::blackSlide()
+{
+	generateBlackFrame();
+	return m_blackSlide;
+}
+
 
 void SlideGroupViewer::resizeEvent(QResizeEvent *)
 {

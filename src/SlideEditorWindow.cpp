@@ -1369,7 +1369,11 @@ void SlideEditorWindow::setSlideGroup(SlideGroup *group, Slide *curSlide)
 	m_slideGroup = group;
 	m_slideModel->setSlideGroup(group);
 	
-	m_scene->setMasterSlide(m_slideGroup->masterSlide());
+	QVariant masterFlag = group->property("isMasterSlide");
+	if(masterFlag.isValid() && masterFlag.toBool())
+		m_masterSlideAction->setVisible(false);
+	else	
+		m_scene->setMasterSlide(m_slideGroup->masterSlide());
 	
 	
 	// Trigger slideItemChange slot connections, but not an undo entry

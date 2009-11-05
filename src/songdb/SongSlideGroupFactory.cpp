@@ -141,6 +141,8 @@ SongSlideGroupViewControl::SongSlideGroupViewControl(OutputInstance *g, QWidget 
 	m_listView->setViewMode(QListView::ListMode);
 	m_listView->reset();	
 	
+	//setQuickSlideEnabled(false);
+	
 }
 
 

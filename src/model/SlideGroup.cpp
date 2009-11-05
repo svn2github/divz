@@ -2,6 +2,8 @@
 
 #include <assert.h>
 #include <QFileInfo>
+#include <QDomDocument>
+#include <QMessageBox>
 
 #include "Slide.h"
 #include "MediaBrowser.h"
@@ -17,6 +19,7 @@ SlideGroup::SlideGroup() :
 	, m_crossFadeSpeed(250)
 	, m_crossFadeQuality(15)
 	, m_masterSlide(0)
+	, m_filename("")
 {
 
 }
@@ -264,4 +267,82 @@ Slide * SlideGroup::masterSlide()
 //	qDebug() << "SlideGroup::masterSlide: accessor for ptr: "<<QString().sprintf("%p",m_masterSlide);
 	
 	return m_masterSlide;
+}
+
+
+void SlideGroup::load(const QString & s)
+{
+	m_filename = s;
+	
+	// Load the file
+	QFile file(m_filename);
+	if (!file.open(QIODevice::ReadOnly)) 
+	{
+		QMessageBox::critical(0, tr("Loading error"), tr("Unable to load file %1").arg(m_filename));
+		throw(0);
+		return;
+	}
+	
+	// And create the XML document into memory (with nodes...)
+	QString *error = new QString();
+	QDomDocument doc;
+	if (!doc.setContent(&file, false, error)) 
+	{
+		QMessageBox::critical(0, tr("Parsing error"), tr("Unable to parse file %1. The error was: %2").arg(m_filename, *error));
+		file.close();
+		throw(0);
+		return;
+	}
+	file.close();
+	
+	delete error;
+	error = 0;
+	
+	QDomElement root = doc.documentElement(); // The root node
+	
+	fromXml(root);
+}
+
+
+void SlideGroup::save(const QString & filename)
+{
+	QString tmp = filename;
+	if(tmp.isEmpty())
+		tmp = m_filename;
+	else
+		m_filename = tmp;
+		
+	QDomDocument doc;
+	QFile file;
+	QTextStream out;
+	
+	// Open file
+	file.setFileName(tmp);
+	if (!file.open(QIODevice::WriteOnly)) 
+	{
+		QMessageBox::warning(0, tr("File Error"), tr("Error saving to the file '%1'").arg(tmp));
+		throw 0;
+		return;
+	}
+	
+	qDebug() << "SlideGroup::save: Writing to "<<tmp;
+	
+	out.setDevice(&file);
+	
+	// This element contains all the others.
+	QDomElement rootElement = doc.createElement("group");
+
+	toXml(rootElement);
+	
+	// Add the root (and all the sub-nodes) to the document
+	doc.appendChild(rootElement);
+	
+	//Add at the begining : <?xml version="1.0" ?>
+	QDomNode noeud = doc.createProcessingInstruction("xml","version=\"1.0\" ");
+	doc.insertBefore(noeud,doc.firstChild());
+	//save in the file (4 spaces indent)
+	doc.save(out, 4);
+	file.close();
+	
+	qDebug() << "SlideGroup::save: Done writing "<<tmp;
 }

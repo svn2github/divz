@@ -54,6 +54,12 @@ public:
 	virtual bool fromXml(QDomElement & parentElement);
 	virtual void toXml(QDomElement & parentElement) const;
 	
+	virtual void load(const QString & filename);
+	virtual void save(const QString & filename = "");
+	
+	QString filename() const { return m_filename; }
+	void setFilename(const QString& f) { m_filename=f; }
+	
 	virtual void changeBackground(AbstractVisualItem::FillType fillType, QVariant fillValue, Slide *onlyThisSlide = 0);
 	virtual bool changeBackground(const QFileInfo & info, Slide *onlyThisSlide = 0);
 	
@@ -90,6 +96,8 @@ protected:
 	double m_crossFadeQuality;
 	
 	Slide * m_masterSlide;
+	
+	QString m_filename;
 	
 
 	

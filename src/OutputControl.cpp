@@ -85,8 +85,6 @@ void OutputControl::setupUI()
 	
 	connect(m_advancedButton, SIGNAL(toggled(bool)), this, SLOT(setAdvancedWidgetVisible(bool)));
 	
-	
-
 	layout->addLayout(hbox1);
 	
 	// Setup advanced widget (shown/hidden with "advanced" button, above)

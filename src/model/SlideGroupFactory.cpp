@@ -3,9 +3,13 @@
 #include "model/SlideGroup.h"
 #include "model/Output.h"
 #include "model/Slide.h"
+#include "model/TextBoxItem.h"
+#include "model/ItemFactory.h"
+#include "MainWindow.h"
 
 #include "SlideEditorWindow.h"
 #include "OutputInstance.h"
+#include "SlideGroupViewer.h"
 
 #include "DeepProgressIndicator.h"
 
@@ -15,6 +19,7 @@
 #include <QPushButton>
 #include <QKeyEvent>
 #include <QLabel>
+#include <QLineEdit>
 #include <assert.h>
 
 /** SlideGroupViewControlListView:: **/
@@ -98,51 +103,43 @@ SlideGroupViewControl::SlideGroupViewControl(OutputInstance *g, QWidget *w )
 	m_timerWasActiveBeforeFade(0),
 	m_clearActive(false),
 	m_blackActive(false),
-	m_group(0)
+	m_group(0),
+	m_quickSlide(0),
+	m_originalQuickSlide(true)
+	
 {
 	QVBoxLayout * layout = new QVBoxLayout();
 	layout->setMargin(0);
 	
-	/** Setup top buttons */
-// 	QHBoxLayout * hbox1 = new QHBoxLayout();
-// 	
-// 	QComboBox *box = new QComboBox();
-// 	box->addItem("Live");
-// 	box->addItem("Synced");
-// 	hbox1->addWidget(box);
-// 	
-// 	//hbox1->addStretch(1);
-// 	
-// 	QLabel *label = new QLabel("Fade Speed:");
-// 	hbox1->addWidget(label);
-// 	QSlider *slider = new QSlider(Qt::Horizontal);
-// 	hbox1->addWidget(slider,1);
-// 	
-// 	QSpinBox *edit = new QSpinBox();
-// 	connect(slider, SIGNAL(valueChanged(int)), edit, SLOT(setValue(int)));
-// 	connect(edit, SIGNAL(valueChanged(int)), slider, SLOT(setValue(int)));
-// 	
-// 	edit->setSuffix("%");
-// 	edit->setValue(5);
-// 	//edit->setMaximumWidth(50);
-// 	hbox1->addWidget(edit);
-// 	
-// 	//hbox1->addStretch(1);
-// 	
-// 	QPushButton * m_blackButton = new QPushButton(QIcon(":/data/stock-media-stop.png"),"&Black");
-// 	m_blackButton->setCheckable(true);
-// 	//m_blackButton->setEnabled(false); // enable on first slide thats set on us
-// 	connect(m_blackButton, SIGNAL(toggled(bool)), this, SLOT(fadeBlackFrame(bool)));
-// 	hbox1->addWidget(m_blackButton);
-// 	
-// 	QPushButton * m_clearButton = new QPushButton(QIcon(":/data/stock-media-eject.png"),"&Clear");
-// 	m_clearButton->setCheckable(true);
-// 	//m_clearButton->setEnabled(false); // enable on first slide thats set on us
-// 	connect(m_clearButton, SIGNAL(toggled(bool)), this, SLOT(fadeClearFrame(bool)));
-// 	hbox1->addWidget(m_clearButton);
-// 	
-// 	layout->addLayout(hbox1);
-// 	
+	QPushButton *btn;
+	
+	
+	/** Setup quickslide widget */
+	m_quickSlideBase = new QWidget();
+ 	QHBoxLayout * hbox1 = new QHBoxLayout(m_quickSlideBase);
+ 	hbox1->setMargin(0);
+ 	
+ 	QLabel *label = new QLabel("Quick Slide:");
+ 	hbox1->addWidget(label);
+ 	
+ 	m_quickSlideText = new QLineEdit();
+ 	hbox1->addWidget(m_quickSlideText);
+ 	connect(m_quickSlideText, SIGNAL(returnPressed()), this, SLOT(showQuickSlide()));
+ 	
+ 	btn = new QPushButton("Show");
+ 	btn->setCheckable(true);
+ 	hbox1->addWidget(btn);
+ 	connect(btn, SIGNAL(toggled(bool)), this, SLOT(showQuickSlide(bool)));
+ 	m_showQuickSlideBtn = btn;
+ 	
+ 	btn = new QPushButton("Add");
+ 	hbox1->addWidget(btn);
+ 	connect(btn, SIGNAL(clicked()), this, SLOT(addQuickSlide()));
+ 	
+ 	
+ 	layout->addWidget(m_quickSlideBase);
+
+
 	/** Setup the list view in icon mode */
 	//m_listView = new QListView(this);
 	m_listView = new SlideGroupViewControlListView(this);
@@ -179,7 +176,6 @@ SlideGroupViewControl::SlideGroupViewControl(OutputInstance *g, QWidget *w )
 	
 	/** Setup the button controls at the bottom */
 	QHBoxLayout *hbox = new QHBoxLayout();
-	QPushButton *btn;
 	
 	//hbox->addStretch(1);
 	
@@ -228,6 +224,101 @@ SlideGroupViewControl::SlideGroupViewControl(OutputInstance *g, QWidget *w )
 	
 }
 
+
+void SlideGroupViewControl::setQuickSlideEnabled(bool flag)
+{
+	m_quickSlideBase->setVisible(flag);
+}
+
+
+void SlideGroupViewControl::addQuickSlide()
+{
+	if(!m_group)
+		return;
+		
+	if(!m_quickSlide)
+		makeQuickSlide();
+	
+	m_quickSlideTextBox->setText(m_quickSlideText->text());
+	if(m_originalQuickSlide)
+		fitQuickSlideText();
+	
+	Slide *slide = m_quickSlide->clone();
+	slide->setSlideNumber(m_group->numSlides()+1);
+	m_group->addSlide(slide);
+}
+
+void SlideGroupViewControl::makeQuickSlide()
+{
+
+	TextBoxItem * tmpText = new TextBoxItem();
+	tmpText->setItemId(ItemFactory::nextId());
+	tmpText->setItemName(QString("TextBoxItem%1").arg(tmpText->itemId()));
+	
+	Slide * slide = new Slide();
+	AbstractVisualItem * bg = dynamic_cast<AbstractVisualItem*>(slide->background());
+	
+	bg->setFillType(AbstractVisualItem::Solid);
+	bg->setFillBrush(Qt::blue);
+	
+	
+	// Outline pen for the text
+	QPen pen = QPen(Qt::black,1.5);
+	pen.setJoinStyle(Qt::MiterJoin);
+	
+	tmpText->setPos(QPointF(0,0));
+	tmpText->setOutlinePen(pen);
+	tmpText->setOutlineEnabled(true);
+	tmpText->setFillBrush(Qt::white);
+	tmpText->setFillType(AbstractVisualItem::Solid);
+	tmpText->setShadowEnabled(true);
+	tmpText->setShadowBlurRadius(6);
+	
+	slide->addItem(tmpText);
+	
+	m_quickSlideTextBox = tmpText;
+	m_quickSlide = slide;
+	m_originalQuickSlide = true;
+}
+
+void SlideGroupViewControl::fitQuickSlideText()
+{
+	QSize fitSize = MainWindow::mw()->standardSceneRect().size();
+	int realHeight = m_quickSlideTextBox->fitToSize(fitSize,48);
+
+	// Center text on screen
+	qreal y = fitSize.height()/2 - realHeight/2;
+	//qDebug() << "SongSlideGroup::textToSlides(): centering: boxHeight:"<<boxHeight<<", textRect height:"<<textRect.height()<<", centered Y:"<<y;
+	m_quickSlideTextBox->setContentsRect(QRectF(0,y,fitSize.width(),realHeight));
+}
+
+void SlideGroupViewControl::showQuickSlide(bool flag)
+{
+	if(!m_quickSlide)
+	{
+		makeQuickSlide();
+	}
+	
+	if(flag)
+	{
+		m_quickSlideTextBox->setText(m_quickSlideText->text());
+		if(m_originalQuickSlide)
+			fitQuickSlideText();
+		m_selectedSlide = m_slideModel->slideFromIndex(m_listView->currentIndex());
+		m_slideViewer->setSlide(m_quickSlide);
+	}
+	else
+	{
+		if(m_selectedSlide)
+			m_slideViewer->setSlide(m_selectedSlide);
+		else
+			m_slideViewer->setSlide(SlideGroupViewer::blackSlide());
+	}
+	
+	if(m_showQuickSlideBtn->isChecked() != flag)
+		m_showQuickSlideBtn->setChecked(flag);
+}
+	
 void SlideGroupViewControl::setIsPreviewControl(bool flag)
 {
 	m_isPreviewControl= flag;

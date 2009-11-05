@@ -52,6 +52,8 @@ public:
 	void setCanZoom(bool);
 	bool canZoom();
 	
+	static Slide * blackSlide();
+	
 signals:
 	void nextGroup();
 
@@ -73,6 +75,8 @@ public slots:
 	
 	void setFadeSpeed(int);
 	void setFadeQuality(int);
+	
+	
 	
 
 private slots:
@@ -106,7 +110,7 @@ private:
 	void applyBackground(const QFileInfo&, Slide *slide=0);
 	
 	void generateClearFrame();
-	void generateBlackFrame();
+	static void generateBlackFrame();
 	
 	bool reapplySpecialFrames();
 	
