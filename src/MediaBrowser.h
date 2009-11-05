@@ -16,6 +16,8 @@ class SlideGroupViewer;
 #include <QRegExp>
 #include <QListView>
 
+class DirectoryListModel;
+
 #define MEDIABROWSER_LIST_ICON_SIZE QSize(48,48)
 
 class MediaBrowser : public QWidget
@@ -115,7 +117,7 @@ protected:
 	QHash<QString,QModelIndex> m_lastIndexForPath;
 	
 	QListView 	* m_listView;
-	QFileSystemModel * m_fsModel;
+	DirectoryListModel * m_fsModel;
 	
 	QStringList	m_currentTypeFilterList;
 	

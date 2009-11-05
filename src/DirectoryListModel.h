@@ -7,6 +7,7 @@
 #include <QFileIconProvider>
 #include <QFileInfo>
 #include <QDir>
+#include <QHash>
 
 class DirectoryListModel : public QAbstractListModel
 {
@@ -41,6 +42,14 @@ public:
 	void setIconSize(const QSize&);
 	QSize iconSize() { return m_iconSize; }
 	
+	
+	// compat with QFileSystemModel API
+	QModelIndex index(int row, int) { return indexForRow(row); }
+	QModelIndex index(const QString& file) { return indexForFile(file); }
+	void setNameFilters(const QStringList &list) { setFilters(list); } 
+	
+	
+	
 private slots:
 	void makePixmaps();
 	
@@ -48,8 +57,8 @@ private slots:
 // 	void directoryChanged ( const QString & path );
 // 	void fileChanged ( const QString & path );
 	
-private:
-	QPixmap generatePixmap(const QFileInfo&);
+protected:
+	virtual QPixmap generatePixmap(const QFileInfo&);
 	void needPixmap(const QString&);
 	
 	QString cacheKey(const QFileInfo&) const;
@@ -57,6 +66,8 @@ private:
 	void loadEntryList();
 	
 // members:
+	QHash<int,QIcon> m_iconTypeCache;
+	
 	QDir m_dir;
 	QStringList m_filters;
 	

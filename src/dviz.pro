@@ -74,7 +74,8 @@ HEADERS += \
 	JpegServer.h \
 	DeepProgressIndicator.h \
 	OutputServer.h \
-	ImageImportDialog.h
+	ImageImportDialog.h \
+	DirectoryListModel.h
 
 	
 SOURCES += \
@@ -102,7 +103,8 @@ SOURCES += \
 	JpegServer.cpp \
 	DeepProgressIndicator.cpp \
 	OutputServer.cpp \
-	ImageImportDialog.cpp
+	ImageImportDialog.cpp \
+	DirectoryListModel.cpp
 	
 
 QT += core \

@@ -88,7 +88,7 @@
      <item>
       <widget class="QTabWidget" name="tabWidget">
        <property name="currentIndex">
-        <number>2</number>
+        <number>1</number>
        </property>
        <property name="movable">
         <bool>false</bool>
@@ -103,7 +103,7 @@
          <string>Media Files</string>
         </attribute>
        </widget>
-       <widget class="QWidget" name="tab">
+       <widget class="QWidget" name="tabSlides">
         <attribute name="title">
          <string>Slides</string>
         </attribute>

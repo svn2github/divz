@@ -27,6 +27,8 @@
 #include "model/SlideGroup.h"
 #include "model/Slide.h"
 
+#include "DirectoryListModel.h"
+
 #include "DeepProgressIndicator.h"
 
 #define CACHE_DIR "dviz-imageiconcache"
@@ -57,7 +59,7 @@ public:
 };
 
 
-QRegExp MediaBrowser::videoRegexp = QRegExp("(wmv|mpeg|mpg|avi|wmv|flv|mov|mp4|m4a|3gp|3g2|mj2|mjpeg|ipod|m4v|gsm|gif|swf|dv|dvd|asf|mtv|roq|aac|ac3|aiff|alaw|iif)",Qt::CaseInsensitive);
+QRegExp MediaBrowser::videoRegexp = QRegExp("(wmv|mpeg|mpg|avi|wmv|flv|mov|mp4|m4a|3gp|3g2|mj2|mjpeg|ipod|m4v|gsm|swf|dv|dvd|asf|mtv|roq|aac|ac3|aiff|alaw|iif)",Qt::CaseInsensitive);
 QRegExp MediaBrowser::imageRegexp = QRegExp("(png|jpg|bmp|svg|xpm)",Qt::CaseInsensitive);
 
 bool MediaBrowser::isVideo(const QString &extension) { return extension.indexOf(videoRegexp) == 0; }
@@ -159,7 +161,20 @@ private:
 	QSize m_iconSize;
 
 };
+/*
+class MediaBrowserDirectoryModel : public DirectoryListModel
+{
+public:
+	MediaBrowserDirectoryModel() : DirectoryListModel() {}
+	~MediaBrowserDirectoryModel() {}
+	
+protected:
+	QPixmap generatePixmap(const QFileInfo& info)
+	{
+	
+	}
 
+};*/
 
 
 MediaBrowser::MediaBrowser(const QString &directory, QWidget *parent)
@@ -175,7 +190,7 @@ MediaBrowser::MediaBrowser(const QString &directory, QWidget *parent)
 	QStringList filters;
 
 	filters << tr("Media Files (*.wmv *.mpeg *.mpg *.avi *.wmv *.flv *.mov *.mp4 *.m4a *.3gp *.3g2 *.mj2 *.mjpeg *.ipod *.m4v *.gsm *.gif *.swf *.dv *.dvd *.asf *.mtv *.roq *.aac *.ac3 *.aiff *.alaw *.iif *.png *.jpg *.bmp *.svg *.xpm)");
-	filters << tr("Video Files (*.wmv *.mpeg *.mpg *.avi *.wmv *.flv *.mov *.mp4 *.m4a *.3gp *.3g2 *.mj2 *.mjpeg *.ipod *.m4v *.gsm *.gif *.swf *.dv *.dvd *.asf *.mtv *.roq *.aac *.ac3 *.aiff *.alaw *.iif)");
+	filters << tr("Video Files (*.wmv *.mpeg *.mpg *.avi *.wmv *.flv *.mov *.mp4 *.m4a *.3gp *.3g2 *.mj2 *.mjpeg *.ipod *.m4v *.gsm *.swf *.dv *.dvd *.asf *.mtv *.roq *.aac *.ac3 *.aiff *.alaw *.iif)");
 	filters << tr("Image Files (*.png *.jpg *.bmp *.svg *.xpm)");
 	filters << tr("Any File (*.*)");
 
@@ -243,9 +258,9 @@ void MediaBrowser::setupUI()
 	// below doesnt seem to be enough
 	//m_listView->setEditTriggers(QAbstractItemView::SelectedClicked | QAbstractItemView::EditKeyPressed);
 
-	m_fsModel = new QFileSystemModel(browser);
+	m_fsModel = new DirectoryListModel(browser); //QFileSystemModel(browser);
 	m_fsModel->setIconProvider(new MyQFileIconProvider());
-	m_fsModel->setNameFilterDisables(false);
+	//m_fsModel->setNameFilterDisables(false);
 
 	m_listView->setModel(m_fsModel);
 
@@ -356,6 +371,7 @@ void MediaBrowser::setIconSize(const QSize & size)
 	d->setTitle("Updating Icons");
 	d->setSize(100);
 
+	m_fsModel->setIconSize(size);
 	m_listView->setIconSize(size);
 	MyQFileIconProvider * p = dynamic_cast<MyQFileIconProvider*>(m_fsModel->iconProvider());
 	if(p)
@@ -487,7 +503,7 @@ void MediaBrowser::slotSetAsBgLive()
 
 void MediaBrowser::filterReturnPressed()
 {
- 	QModelIndex idx = m_fsModel->index(0,0);
+ 	QModelIndex idx = m_fsModel->indexForRow(0); //,0);
  	if(idx.isValid())
  		indexDoubleClicked(idx);
 }
@@ -558,8 +574,9 @@ void MediaBrowser::setDirectory(const QString &path, bool addToHistory)
 	d->setTitle("Loading Folder");
 	d->setSize(100);
 
-	QModelIndex root = m_fsModel->setRootPath(directory);
-	m_listView->setRootIndex(root);
+	//QModelIndex root = 
+	m_fsModel->setDirectory(directory);
+	//m_listView->setRootIndex(root);
 
 	d->close();
 	//d->deleteLater();
@@ -590,7 +607,7 @@ void MediaBrowser::setDirectory(const QString &path, bool addToHistory)
 
 	if(!file.isEmpty())
 	{
-		QModelIndex idx = m_fsModel->index(path);
+		QModelIndex idx = m_fsModel->indexForFile(path);
 		if(idx.isValid())
 		{
 			m_listView->setCurrentIndex(idx);
@@ -705,7 +722,8 @@ void MediaBrowser::filterChanged(const QString &text)
 {
 	QStringList filter = makeModelFilterList(text);
 	//qDebug() << "filterChanged(): text:"<<text<<", filter:"<<filter;
-	m_fsModel->setNameFilters(filter);
+	//m_fsModel->setNameFilters(filter);
+	m_fsModel->setFilters(filter);
 	m_clearSearchBtn->setVisible(!text.isEmpty());
 // 	QModelIndex idx = m_fsModel->indexForRow(0);
 // 	if(idx.isValid())
