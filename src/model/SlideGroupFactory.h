@@ -82,6 +82,7 @@ private slots:
 protected:
 	virtual void makeQuickSlide();
 	void fitQuickSlideText();
+	void setQuickSlideText();
 	
 	QString formatTime(double);
 

@@ -22,6 +22,11 @@
 #include <QLineEdit>
 #include <assert.h>
 
+#include <QTextDocument>
+#include <QTextCharFormat>
+#include <QTextCursor>
+#include <QAbstractTextDocumentLayout>
+
 /** SlideGroupViewControlListView:: **/
 /* We reimplement QListView's keyPressEvent to detect
   selection changes on key press events in QListView::ListMode.
@@ -239,46 +244,102 @@ void SlideGroupViewControl::addQuickSlide()
 	if(!m_quickSlide)
 		makeQuickSlide();
 	
-	m_quickSlideTextBox->setText(m_quickSlideText->text());
-	if(m_originalQuickSlide)
-		fitQuickSlideText();
+	setQuickSlideText();
 	
 	Slide *slide = m_quickSlide->clone();
 	slide->setSlideNumber(m_group->numSlides()+1);
 	m_group->addSlide(slide);
 }
 
+
+bool SlideGroupViewControl_itemZCompare(AbstractItem *a, AbstractItem *b)
+{
+	AbstractVisualItem * va = dynamic_cast<AbstractVisualItem*>(a);
+	AbstractVisualItem * vb = dynamic_cast<AbstractVisualItem*>(b);
+
+	// Decending sort (eg. highest to lowest) because we want the highest
+	// zvalue first n the list instead of last
+	return (va && vb) ? va->zValue() > vb->zValue() : true;
+}
+
 void SlideGroupViewControl::makeQuickSlide()
 {
+	int lastRow = m_slideModel->rowCount()-1;
+	Slide * slide = 0;
+	if(lastRow > -1)
+	{
+		slide = m_slideModel->slideAt(lastRow)->clone();
+		m_originalQuickSlide = false;
+	}
+	else
+	{
+		slide = new Slide();
+		m_originalQuickSlide = true;
+	}
+		
+		
+	// Use the first textbox in the slide as the lyrics slide
+	// "first" as defined by ZValue
+	QList<AbstractItem *> items = slide->itemList();
+	qSort(items.begin(), items.end(), SlideGroupViewControl_itemZCompare);
 
-	TextBoxItem * tmpText = new TextBoxItem();
-	tmpText->setItemId(ItemFactory::nextId());
-	tmpText->setItemName(QString("TextBoxItem%1").arg(tmpText->itemId()));
+	TextBoxItem *text = 0;
+	bool textboxFromTemplate = false;
+		
+	foreach(AbstractItem * item, items)
+	{
+		AbstractVisualItem * newVisual = dynamic_cast<AbstractVisualItem*>(item);
+// 		if(DEBUG_TEXTOSLIDES)
+// 			qDebug()<<"SongSlideGroup::textToSlides(): slideNbr:"<<slideNbr<<": item list: "<<newVisual->itemName();
+		if(!text && item->itemClass() == TextBoxItem::ItemClass)
+		{
+			text = dynamic_cast<TextBoxItem*>(item);
+			textboxFromTemplate = true;
+// 			if(DEBUG_TEXTOSLIDES)
+// 				qDebug()<<"SongSlideGroup::textToSlides(): slideNbr:"<<slideNbr<<": Found textbox from template, name:"<<text->itemName();
+		}
+	}
+
+	// If no textbox, we've got to create one!
+	if(!text)
+	{
+		// Create the textbox to hold the slide lyrics
+		text = new TextBoxItem();
+		text->setItemId(ItemFactory::nextId());
+		text->setItemName(QString("TextBox%1").arg(text->itemId()));
+
+// 		if(DEBUG_TEXTOSLIDES)
+// 			qDebug()<<"SongSlideGroup::textToSlides(): slideNbr:"<<slideNbr<<": No textbox in template, adding new box.";
+			
+		// Outline pen for the text
+		QPen pen = QPen(Qt::black,1.5);
+		pen.setJoinStyle(Qt::MiterJoin);
 	
-	Slide * slide = new Slide();
+		text->setPos(QPointF(0,0));
+		text->setOutlinePen(pen);
+		text->setOutlineEnabled(true);
+		text->setFillBrush(Qt::white);
+		text->setFillType(AbstractVisualItem::Solid);
+		text->setShadowEnabled(true);
+		text->setShadowBlurRadius(6);
+	}
+
+
+
+	/*
+	
 	AbstractVisualItem * bg = dynamic_cast<AbstractVisualItem*>(slide->background());
 	
 	bg->setFillType(AbstractVisualItem::Solid);
-	bg->setFillBrush(Qt::blue);
+	bg->setFillBrush(Qt::blue);*/
 	
 	
-	// Outline pen for the text
-	QPen pen = QPen(Qt::black,1.5);
-	pen.setJoinStyle(Qt::MiterJoin);
+	if(!textboxFromTemplate)
+		slide->addItem(text);
 	
-	tmpText->setPos(QPointF(0,0));
-	tmpText->setOutlinePen(pen);
-	tmpText->setOutlineEnabled(true);
-	tmpText->setFillBrush(Qt::white);
-	tmpText->setFillType(AbstractVisualItem::Solid);
-	tmpText->setShadowEnabled(true);
-	tmpText->setShadowBlurRadius(6);
-	
-	slide->addItem(tmpText);
-	
-	m_quickSlideTextBox = tmpText;
+	m_quickSlideTextBox = text;
 	m_quickSlide = slide;
-	m_originalQuickSlide = true;
+	
 }
 
 void SlideGroupViewControl::fitQuickSlideText()
@@ -301,9 +362,7 @@ void SlideGroupViewControl::showQuickSlide(bool flag)
 	
 	if(flag)
 	{
-		m_quickSlideTextBox->setText(m_quickSlideText->text());
-		if(m_originalQuickSlide)
-			fitQuickSlideText();
+		setQuickSlideText();
 		m_selectedSlide = m_slideModel->slideFromIndex(m_listView->currentIndex());
 		m_slideViewer->setSlide(m_quickSlide);
 	}
@@ -317,6 +376,46 @@ void SlideGroupViewControl::showQuickSlide(bool flag)
 	
 	if(m_showQuickSlideBtn->isChecked() != flag)
 		m_showQuickSlideBtn->setChecked(flag);
+}
+
+void SlideGroupViewControl::setQuickSlideText()
+{
+	QString text = m_quickSlideText->text();
+	if(m_originalQuickSlide)
+	{	
+		m_quickSlideTextBox->setText(text);
+		fitQuickSlideText();
+	}
+	else
+	{
+		QTextDocument doc;
+		if (Qt::mightBeRichText(text))
+			doc.setHtml(text);
+		else
+			doc.setPlainText(text);
+	
+		QTextCursor cursor(&doc);
+		cursor.select(QTextCursor::Document);
+		
+		QTextCharFormat format = cursor.charFormat();
+ 		//if(!format.isValid())
+ 			format = cursor.blockCharFormat();
+		//qDebug() << "Format at cursor: "<<format.fontPointSize()<<", "<<format.font()<<", "<<format.fontItalic()<<", "<<format.font().rawName();
+		
+		if(format.fontPointSize() > 0)
+		{
+			cursor.insertText(text);
+			
+			cursor.mergeCharFormat(format);
+		
+			m_quickSlideTextBox->setText(doc.toHtml());
+		}
+		else
+		{
+			m_quickSlideTextBox->setText(text);
+			fitQuickSlideText();
+		}
+	}
 }
 	
 void SlideGroupViewControl::setIsPreviewControl(bool flag)
@@ -497,7 +596,7 @@ void SlideGroupViewControl::setSlideGroup(SlideGroup *g, Slide *curSlide, bool a
 // 	m_blackButton->setEnabled(true); 
 	
 	enableAnimation(0);
-	
+	m_quickSlide = 0;
 	m_group = g;
 	
 	DeepProgressIndicator *d = 0;
