@@ -274,6 +274,7 @@ Revised Task list for Release 1.0, 10/18/09:
 			change main program config dialog to use qtoolbox
 			[DONE image zoom in effect
 				randim thirds grid point
+			add easing curves
 			per-slidegroup aspect ratio
 			aspect ratio fitting settings on a per-slidegroup basis
 				scale in

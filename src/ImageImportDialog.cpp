@@ -109,6 +109,7 @@ void ImageImportDialog::accept()
 	
 	bool zoomEnabled = m_ui->zoomImage->isChecked();
 	int zoomSpeed = m_ui->zoomSpeed->value();
+	double zoomFactor = m_ui->zoomFactor->value();
 
 	QStringList filters;
 	filters << "*.bmp";
@@ -213,11 +214,11 @@ void ImageImportDialog::accept()
 		{
 			bg->setZoomEffectEnabled(true);
 			
-			bg->setZoomSpeed(zoomSpeed);
 			bg->setZoomDirection(AbstractVisualItem::ZoomRandom);
-			bg->setZoomAnchorCenter(false);
-			bg->setZoomFactor(1.5);
-			bg->setZoomLoop(false);
+			bg->setZoomLoop(false); // dont flip directions when all the way out/in
+			bg->setZoomAnchorCenter(false); // false will cause it to pick random third's-grid points
+			bg->setZoomSpeed(zoomSpeed);
+			bg->setZoomFactor(zoomFactor);
 		}
 	
 

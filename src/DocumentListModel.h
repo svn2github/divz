@@ -62,13 +62,18 @@ private slots:
  	void slideGroupChanged(SlideGroup *g, QString groupOperation, Slide *slide, QString slideOperation, AbstractItem *item, QString operation, QString fieldName, QVariant value);
  	void modelDirtyTimeout();
  	void aspectRatioChanged(double);
+ 	
+ 	void makePixmaps();
 	
 private:
 	void internalSetup();
+	void needPixmap(SlideGroup*);
 	
 	Document * m_doc;
 	QList<SlideGroup*> m_sortedGroups;
 	QList<SlideGroup*> m_dirtyGroups;
+	
+	QList<SlideGroup*> m_needPixmaps;
 	
 	QPixmap generatePixmap(SlideGroup*);
 	void adjustIconAspectRatio();
@@ -78,6 +83,9 @@ private:
 	//MyGraphicsScene * m_scene;
 	
  	QTimer * m_dirtyTimer;
+ 	
+ 	QTimer m_needPixmapTimer;
+ 	static QPixmap * m_blankPixmap;
 };
 
 #endif

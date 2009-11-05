@@ -14,7 +14,7 @@
 #include "MyGraphicsScene.h"
 #include "MainWindow.h"
 #include "DeepProgressIndicator.h"
-
+#include "AppSettings.h"
 
 #include <QPixmap>
 #include <QPixmapCache>
@@ -22,6 +22,12 @@
 #define DEBUG_MARK() qDebug() << "mark: "<<__FILE__<<":"<<__LINE__
 #define POINTER_STRING(ptr) QString().sprintf("%p",static_cast<void*>(ptr))
 
+#define NEED_PIXMAP_TIMEOUT 500
+#define NEED_PIXMAP_TIMEOUT_FAST 100
+#define DIRTY_TIMEOUT 250
+
+// blank 4x3 pixmap
+QPixmap * DocumentListModel::m_blankPixmap = 0;
 
 bool group_num_compare(SlideGroup *a, SlideGroup *b)
 {
@@ -37,6 +43,18 @@ DocumentListModel::DocumentListModel(Document *d, QObject *parent)
 			m_dirtyTimer(0), 
 			m_sceneRect(0,0,1024,768)
 {
+	if(!m_blankPixmap)
+	{
+		m_blankPixmap = new QPixmap(48,48 * (1/AppSettings::liveAspectRatio()));
+		m_blankPixmap->fill(Qt::lightGray);
+		QPainter painter(m_blankPixmap);
+		painter.setPen(QPen(Qt::black,1,Qt::DotLine));
+		painter.drawRect(m_blankPixmap->rect().adjusted(0,0,-1,-1));
+		painter.end();
+	}
+	
+	connect(&m_needPixmapTimer, SIGNAL(timeout()), this, SLOT(makePixmaps()));
+		
 	if(m_doc)
 		setDocument(d);
 		
@@ -242,7 +260,7 @@ void DocumentListModel::slideGroupChanged(SlideGroup *g, QString groupOperation,
 
 		QPixmapCache::remove(POINTER_STRING(g));
 			
-		m_dirtyTimer->start(250);
+		m_dirtyTimer->start(DIRTY_TIMEOUT);
 		if(!m_dirtyGroups.contains(g))
 			m_dirtyGroups << g;
 	}
@@ -281,18 +299,14 @@ SlideGroup * DocumentListModel::groupAt(int row)
 	return m_sortedGroups.at(row);
 }
 
-static quint32 DocumentListModel_uidCounter = 0;
-	
 QModelIndex DocumentListModel::indexForGroup(SlideGroup *g) const
 {
-	DocumentListModel_uidCounter++;
-	return createIndex(m_sortedGroups.indexOf(g),0,DocumentListModel_uidCounter);
+	return createIndex(m_sortedGroups.indexOf(g),0);
 }
 
 QModelIndex DocumentListModel::indexForRow(int row) const
 {
-	DocumentListModel_uidCounter++;
-	return createIndex(row,0,DocumentListModel_uidCounter);
+	return createIndex(row,0);
 }
 
 QVariant DocumentListModel::data(const QModelIndex &index, int role) const
@@ -319,12 +333,13 @@ QVariant DocumentListModel::data(const QModelIndex &index, int role) const
 	{
 		SlideGroup *g = m_sortedGroups.at(index.row());
 		QString cacheKey = POINTER_STRING(g);
+		
 		QPixmap icon;
 		if(!QPixmapCache::find(cacheKey,icon))
 		{
 			DocumentListModel * self = const_cast<DocumentListModel*>(this);
-			icon = self->generatePixmap(g);
-			QPixmapCache::insert(cacheKey,icon);
+			self->needPixmap(g);
+			return *m_blankPixmap;
 		}
 		
 		return icon;
@@ -384,6 +399,39 @@ QPixmap DocumentListModel::generatePixmap(SlideGroup *g)
 		
 	return icon;
 	
+}
+
+void DocumentListModel::needPixmap(SlideGroup *group)
+{
+	if(!m_needPixmaps.contains(group))
+		m_needPixmaps.append(group);
+	if(!m_needPixmapTimer.isActive())
+		m_needPixmapTimer.start(NEED_PIXMAP_TIMEOUT);
+}
+
+void DocumentListModel::makePixmaps()
+{
+	if(m_needPixmaps.isEmpty())
+	{
+		m_needPixmapTimer.stop();
+		return;
+	}
+	
+	SlideGroup *group = m_needPixmaps.takeFirst();
+	
+	QString cacheKey = POINTER_STRING(group);
+	QPixmapCache::remove(cacheKey);
+		
+	QPixmap icon = generatePixmap(group);
+	QPixmapCache::insert(cacheKey,icon);
+	
+	m_needPixmapTimer.stop();
+	
+	QModelIndex idx = indexForGroup(group);
+	dataChanged(idx,idx);
+	
+	if(!m_needPixmaps.isEmpty())
+		m_needPixmapTimer.start(NEED_PIXMAP_TIMEOUT_FAST);
 }
 
 QVariant DocumentListModel::headerData(int section, Qt::Orientation /*orientation*/, int role) const
