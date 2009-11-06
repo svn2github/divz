@@ -115,6 +115,8 @@ protected slots:
 	void slotSendToOutputs();
 	
 	void previewSlideDoubleClicked(Slide*);
+
+	void actionAddPPT();
 	
 protected:
 	void changeEvent(QEvent *e);

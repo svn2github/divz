@@ -783,6 +783,11 @@ AbstractSlideGroupEditor * SlideGroupFactory::newEditor()
 	return new SlideEditorWindow();
 }
 
+NativeViewer * SlideGroupFactory::newNativeViewer()
+{
+	return 0;
+}
+
 QPixmap	SlideGroupFactory::generatePreviewPixmap(SlideGroup *g, QSize iconSize, QRect sceneRect)
 {
 	//return QPixmap();

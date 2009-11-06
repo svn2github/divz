@@ -347,7 +347,7 @@ void BackgroundContent::setImageFile(const QString &file)
 			QPixmapCache::remove(m_lastImageKey);
 			
 		m_lastImageKey = cacheKey;
-		qDebug() << "BackgroundContent::setImageFile: file:"<<file<<", size:"<<size<<", cacheKey:"<<cacheKey;
+		//qDebug() << "BackgroundContent::setImageFile: file:"<<file<<", size:"<<size<<", cacheKey:"<<cacheKey;
 
 		if(QPixmapCache::find(cacheKey,cache))
 		{
@@ -364,7 +364,7 @@ void BackgroundContent::setImageFile(const QString &file)
 				QPixmapCache::insert(cacheKey,cache);
 				setPixmap(cache);
 				m_fileLoaded = true;
-				qDebug() << "BackgroundContent::setImageFile: file:"<<file<<", size:"<<size<<": hit DISK (loaded scaled from disk cache)";
+				//qDebug() << "BackgroundContent::setImageFile: file:"<<file<<", size:"<<size<<": hit DISK (loaded scaled from disk cache)";
 			}
 			else
 			{
@@ -376,7 +376,7 @@ void BackgroundContent::setImageFile(const QString &file)
 					setPixmap(cache);
 					m_fileLoaded = true;
 					
-					qDebug() << "BackgroundContent::setImageFile: file:"<<file<<", size:"<<size<<": loaded MediaBrowser Icon, scaled and cached";
+					//qDebug() << "BackgroundContent::setImageFile: file:"<<file<<", size:"<<size<<": loaded MediaBrowser Icon, scaled and cached";
 					
 					//qDebug() << "ImageContent::loadFile: "<<file<<": pixmap cache MISS on "<<cacheKey;
 					if(!QPixmapCache::insert(cacheKey, cache))
@@ -421,7 +421,7 @@ void BackgroundContent::setImageFile(const QString &file)
 						setPixmap(cache);
 						m_fileLoaded = true;
 						
-						qDebug() << "BackgroundContent::setImageFile: file:"<<file<<", size:"<<size<<": loaded original, scaled and cached";
+						//qDebug() << "BackgroundContent::setImageFile: file:"<<file<<", size:"<<size<<": loaded original, scaled and cached";
 						
 						//qDebug() << "ImageContent::loadFile: "<<file<<": pixmap cache MISS on "<<cacheKey;
 						if(!QPixmapCache::insert(cacheKey, cache))

@@ -34,6 +34,8 @@
 #include "model/ItemFactory.h"
 #include "model/SlideGroupFactory.h"
 
+#include "ppt/PPTSlideGroup.h"
+
 #include "songdb/SongSlideGroup.h"
 #include "songdb/SongRecord.h"
 #include "songdb/SongBrowser.h"
@@ -140,6 +142,10 @@ MainWindow::MainWindow(QWidget *parent) :
 	
 	m_ui->actionText_Import_Tool->setIcon(QIcon(":data/insert-text-24.png"));
 	connect(m_ui->actionText_Import_Tool, SIGNAL(triggered()), this, SLOT(textImportTool()));
+
+
+	connect(m_ui->actionAdd_PowerPoint_File, SIGNAL(triggered()), this, SLOT(actionAddPPT()));
+
 	
 	
 	foreach(QAction *action, actionList)
@@ -178,6 +184,25 @@ MainWindow::~MainWindow()
 	delete m_docModel;
 	delete m_doc;
 	delete m_editWin;
+}
+
+void MainWindow::actionAddPPT()
+{
+	QString lastDir = AppSettings::previousPath("ppt");
+	QString file = QFileDialog::getOpenFileName(this,"Add PowerPoint File",lastDir,"PowerPoint Files (*.ppt, *.pptx)");
+	if(!file.isEmpty())
+	{
+		AppSettings::setPreviousPath("ppt",file);
+
+		PPTSlideGroup * group = new PPTSlideGroup();
+		group->setFile(file);
+
+		m_doc->addGroup(group);
+		if(!liveInst()->slideGroup())
+			setLiveGroup(group);
+		QModelIndex idx = m_docModel->indexForGroup(group);
+		m_groupView->setCurrentIndex(idx);
+	}
 }
 
 void MainWindow::showEvent(QShowEvent *evt)

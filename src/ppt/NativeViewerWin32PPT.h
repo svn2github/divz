@@ -1,13 +1,14 @@
 #ifndef NativeViewerWin32PPT_H
 #define NativeViewerWin32PPT_H
 
-#ifdef Q_OS_WIN32
-	#include "powerpointviewer.h"
+
+#ifdef WIN32_PPT_ENABLED
+#include "powerpointviewer.h"
 #endif
 
 #include "SlideGroupViewer.h"
 
-class NativeViewerWin32PPT : NativeViewerWin32
+class NativeViewerWin32PPT : public NativeViewerWin32
 {
 	Q_OBJECT
 public:

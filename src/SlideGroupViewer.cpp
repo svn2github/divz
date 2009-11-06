@@ -19,9 +19,12 @@
 #include "model/SlideGroup.h"
 #include "model/TextBoxItem.h"
 #include "model/BackgroundItem.h"
+#include "model/SlideGroupFactory.h"
 
 #include "itemlistfilters/SlideTextOnlyFilter.h"
 #define PTRS(ptr) QString().sprintf("%p",static_cast<void*>(ptr))
+
+#include <QApplication>
 
 
 /** NativeViewer **/
@@ -44,6 +47,7 @@ void NativeViewer::setSlideGroup(SlideGroup *g)
 void NativeViewer::setSlide(Slide *slide)
 {
     int idx = m_slideGroup->indexOf(slide);
+    setSlide(idx);
 }
 
 QPixmap NativeViewer::snapshot(Slide *slide)
@@ -70,7 +74,11 @@ void NativeViewerWin32::setHwnd(HWND hwnd)
 
 void NativeViewerWin32::show()
 {
-    QTimer::singleShot(1,this,SLOT(embedHwnd()));
+	qDebug() << "NativeViewerWin32::show(): SingleShot till embedHwnd()";
+	qApp->processEvents(); // flush buffer (e.g. show any widgets)
+	QTimer::singleShot(0,this,SLOT(embedHwnd()));
+	qApp->processEvents(); // flush buffer (clear out any other show calls)
+	qApp->processEvents(); // call our singleshot
 }
 
 void NativeViewerWin32::close()
@@ -92,14 +100,34 @@ QPixmap NativeViewerWin32::snapshot()
     return QPixmap::grabWindow(hwnd());
 }
 
+QPoint NativeViewerWin32_absoluteWidgetPosition(QWidget *w)
+{
+    QPoint pos = w->geometry().topLeft();
+    if(w->parentWidget())
+    {
+	QPoint parentPos = NativeViewerWin32_absoluteWidgetPosition(w->parentWidget());
+	pos += parentPos;
+    }
+    return pos;
+}
+
+
+QWidget * getTopLevelWidget(QWidget *w)
+{
+    if(w->parentWidget())
+    	return getTopLevelWidget(w->parentWidget());
+    return w;
+}
+
 void NativeViewerWin32::embedHwnd()
 {
-	QRect frame = containerWidget()->geometry();
 	QRect rect = containerWidget()->geometry();
+	QPoint abs = NativeViewerWin32_absoluteWidgetPosition(containerWidget());
 
 #ifdef Q_OS_WIN32
 	//MoveWindow(hwnd(), rect.x(), rect.x(), rect.width(), rect.height(), 1);
-	SetWindowPos(hwnd(), 0, rect.x(), rect.y() + (rect.y() - frame.y()), rect.width(), rect.height(), SWP_SHOWWINDOW);
+	qDebug() << "NativeViewerWin32::embedHwnd(): hwnd:"<<hwnd()<<", rect:"<<rect<<", abs:"<<abs;
+	SetWindowPos(hwnd(), 0, abs.x(), abs.y(), rect.width(), rect.height(), SWP_SHOWWINDOW);
 	BringWindowToTop(hwnd());
 #endif
 }
@@ -674,6 +702,20 @@ void SlideGroupViewer::setSlideGroup(SlideGroup *g, Slide *startSlide)
 		return;
 	}
 
+	bool blackNative = false;
+	if(m_nativeViewer)
+	{
+		QWidget * topLevel = getTopLevelWidget(this);
+		topLevel->show();
+
+
+		m_nativeViewer->close();
+		delete m_nativeViewer;
+		m_nativeViewer = 0;
+
+		blackNative = true;
+	}
+
 	m_slideNum = 0;
 
 	m_clearSlideNum = -1;
@@ -690,6 +732,33 @@ void SlideGroupViewer::setSlideGroup(SlideGroup *g, Slide *startSlide)
 		connect(g,SIGNAL(slideChanged(Slide *, QString, AbstractItem *, QString, QString, QVariant)),this,SLOT(slideChanged(Slide *, QString, AbstractItem *, QString, QString, QVariant)));
 
 	m_slideGroup = g;
+
+
+	if(!m_isPreviewViewer)
+	{
+		SlideGroupFactory *factory = SlideGroupFactory::factoryForType(m_slideGroup->groupType());
+		if(factory)
+		{
+			NativeViewer *viewer = factory->newNativeViewer();
+			if(viewer)
+			{
+				viewer->setContainerWidget(this);
+				viewer->setSlideGroup(m_slideGroup);
+				viewer->show();
+
+				fadeBlackFrame(true);
+				QWidget * topLevel = getTopLevelWidget(this);
+				//topLevel->setWindowFlags(Qt::WindowStaysOnBottomHint);
+				topLevel->hide();
+
+				m_nativeViewer = viewer;
+
+				blackNative = false;
+			}
+		}
+
+
+	}
 
 	QList<Slide*> slist = g->slideList();
 	qSort(slist.begin(), slist.end(), slide_group_viewer_slide_num_compare);
@@ -719,6 +788,9 @@ void SlideGroupViewer::setSlideGroup(SlideGroup *g, Slide *startSlide)
 			qDebug("SlideGroupViewer::setSlideGroup: Group[0] has 0 slides");
 		}
 	}
+
+	if(m_blackEnabled && blackNative)
+		fadeBlackFrame(false);
 }
 
 Slide * SlideGroupViewer::setSlide(int x)
@@ -738,14 +810,21 @@ Slide * SlideGroupViewer::setSlide(Slide *slide)
 // 	if(AppSettings::liveEditMode() == AppSettings::Smooth && m_clonedSlide)
 // 		slide = m_clonedSlide;
 
-	if(!reapplySpecialFrames())
+	if(m_nativeViewer)
 	{
-		//qDebug() << "SlideGroupViewer::setSlide(): Special frames returned false, setting slide directly";
-		setSlideInternal(applySlideFilters(slide));
+		m_nativeViewer->setSlide(m_slideNum);
 	}
 	else
 	{
-		//qDebug() << "SlideGroupViewer::setSlide(): Special frames did it itself";
+		if(!reapplySpecialFrames())
+		{
+			//qDebug() << "SlideGroupViewer::setSlide(): Special frames returned false, setting slide directly";
+			setSlideInternal(applySlideFilters(slide));
+		}
+		else
+		{
+			//qDebug() << "SlideGroupViewer::setSlide(): Special frames did it itself";
+		}
 	}
 
 	return slide;

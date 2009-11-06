@@ -14,11 +14,15 @@ win32 {
 	    message("Microsoft PowerPointviewer type library not found!")
 	    REQUIRES += PowerPointViewer
 	} else {
-	    HEADERS  = powerpointviewer.h PPTLoader.h
-	    SOURCES  = powerpointviewer.cpp main.cpp PPTLoader.cpp NativeViewerWin32PPT.cpp
+	    HEADERS  += powerpointviewer.h
+	    SOURCES  += powerpointviewer.cpp
 	}
 }
 
 
-HEADERS += NativeViewerWin32PPT.h
-SOURCES += NativeViewerWin32PPT.cpp
+HEADERS += NativeViewerWin32PPT.h \
+	   PPTSlideGroup.h \
+	   PPTSlideGroupFactory.h
+SOURCES += NativeViewerWin32PPT.cpp \
+	   PPTSlideGroup.cpp \
+	   PPTSlideGroupFactory.cpp

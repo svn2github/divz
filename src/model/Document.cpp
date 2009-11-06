@@ -19,6 +19,7 @@
 #include "AppSettings.h"
 
 #include "songdb/SongSlideGroup.h"
+#include "ppt/PPTSlideGroup.h"
 
 #include <QMutex>
 #include <QMutexLocker>
@@ -131,6 +132,10 @@ bool Document::fromXml(QDomElement & pe)
 		{
 			//qDebug("Document::fromXml: Group type: Song");
 			g = new SongSlideGroup();
+		}
+		if (element.tagName() == "powerpoint")
+		{
+			g = new PPTSlideGroup();
 		}
 		else
 		{

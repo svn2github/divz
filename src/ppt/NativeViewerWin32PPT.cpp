@@ -1,5 +1,7 @@
 #include "NativeViewerWin32PPT.h"
 
+#include "PPTSlideGroup.h"
+
 NativeViewerWin32PPT::NativeViewerWin32PPT()
 	: NativeViewerWin32()
 #ifdef Q_OS_WIN32
@@ -18,18 +20,26 @@ void NativeViewerWin32PPT::setSlideGroup(SlideGroup *group)
 	destroyPpt();
 
 #ifdef Q_OS_WIN32
+	PPTSlideGroup * pptGroup = dynamic_cast<PPTSlideGroup*>(group);
+
 
 	m_ppt = new PowerPointViewer::Application();
 	connect(m_ppt, SIGNAL(exception(int,QString,QString,QString)), this, SLOT(axException(int,QString,QString,QString)));
 
-	m_show = m_ppt->NewShow(showFile, PowerPointViewer::ppViewerSlideShowManualAdvance, PowerPointViewer::ppVFalse);
+	//HWND testHwnd = FindWindow(L"screenClass",  NULL);
+	//qDebug() << "NativeViewerWin32PPT::setSlideGroup(): testHwnd:"<<testHwnd;
+
+	m_show = m_ppt->NewShow(pptGroup->file(),
+		PowerPointViewer::ppViewerSlideShowUseSlideTimings,
+		PowerPointViewer::ppVFalse
+	);
 	m_numSlides = m_show->SlidesCount();
 	connect(m_show, SIGNAL(exception(int,QString,QString,QString)), this, SLOT(axException(int,QString,QString,QString)));
 
-	//qDebug() << "Num slides in "<<showFile<<": "<<numSlides;
+	//qDebug() << "NativeViewerWin32PPT::setSlideGroup(): Num slides in "<<pptGroup->file()<<": "<<m_numSlides;
 
 	setHwnd(FindWindow(L"screenClass",  NULL));
-	//qDebug() << "HWnd:"<<hwnd();
+	//qDebug() << "NativeViewerWin32PPT::setSlideGroup(): hwnd:"<<hwnd();
 
 	hide();
 
@@ -40,8 +50,11 @@ void NativeViewerWin32PPT::setSlideGroup(SlideGroup *group)
 void NativeViewerWin32PPT::setSlide(int x)
 {
 #ifdef Q_OS_WIN32
+	qDebug() << "NativeViewerWin32PPT::setSlide(): Slide#"<<x;
 	if(m_show)
-		m_show->SetSlide(x, PowerPointViewer::ppVCTrue);
+		m_show->GotoSlide(x+1, PowerPointViewer::ppVCTrue);
+	else
+		qDebug() << "NativeViewerWin32PPT::setSlide(): 'm_show' is NULL!";
 #endif
 }
 

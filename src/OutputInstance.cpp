@@ -275,7 +275,7 @@ void OutputInstance::setSlideGroup(SlideGroup *group, Slide * startSlide)
 	{
 		//qDebug() << "OutputInstance::setSlideGroup: ["<<m_output->name()<<"] Calling m_viewer->setSlideGroup()";
 		//setVisible(m_output->isEnabled());
-		
+
 		m_viewer->setSlideGroup(group,startSlide);
 	}
 	else

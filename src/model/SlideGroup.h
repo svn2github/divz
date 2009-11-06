@@ -32,7 +32,7 @@ public:
 		Song,
 		Video,
 		Feed,
-		NativeFileView,
+		PowerPoint,
 	};
 
 	ITEM_PROPDEF(GroupId,		int,		groupId);
