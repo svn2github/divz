@@ -198,6 +198,7 @@ void OutputInstance::applyOutputSettings(bool startHidden)
 	if(x == Output::Preview)
 	{
 		m_viewer->setCursor(Qt::ArrowCursor);
+		m_viewer->setIsPreviewViewer(true);
 	}
 	else
 	if(x == Output::Network)

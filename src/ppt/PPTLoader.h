@@ -3,11 +3,6 @@
 
 #include "powerpointviewer.h"
 
-#include <QTimer>
-#include <QWidget>
-#include <QShowEvent>
-#include <QCLoseEvent>
-
 class PPTLoader : public QWidget
 {
 	Q_OBJECT

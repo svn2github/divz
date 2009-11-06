@@ -9,7 +9,7 @@ class QFileInfo;
 class SlideGroup : public QObject
 {
 	Q_OBJECT
-	
+
 	Q_PROPERTY(int groupId READ groupId WRITE setGroupId);
 	Q_PROPERTY(int groupNumber READ groupNumber WRITE setGroupNumber);
 	Q_PROPERTY(GroupType groupType READ groupType WRITE setGroupType);
@@ -19,28 +19,29 @@ class SlideGroup : public QObject
 	Q_PROPERTY(double inheritFadeSettings READ inheritFadeSettings WRITE setInheritFadeSettings);
 	Q_PROPERTY(double crossFadeSpeed READ crossFadeSpeed WRITE setCrossFadeSpeed);
 	Q_PROPERTY(double crossFadeQuality READ crossFadeQuality WRITE setCrossFadeQuality);
-	
-	
+
+
 public:
 	SlideGroup();
 	virtual ~SlideGroup();
-	
-	typedef enum GroupType 
+
+	typedef enum GroupType
 	{
 		Generic,
 		SectionHeader,
 		Song,
 		Video,
 		Feed,
+		NativeFileView,
 	};
-	
+
 	ITEM_PROPDEF(GroupId,		int,		groupId);
 	ITEM_PROPDEF(GroupNumber,	int,		groupNumber);
 	V_ITEM_PROPDEF(GroupType,	GroupType,	groupType);
 	ITEM_PROPDEF(GroupTitle,	QString,	groupTitle);
 	ITEM_PROPDEF(IconFile,		QString,	iconFile);
 	ITEM_PROPDEF(AutoChangeGroup,	bool,		autoChangeGroup);
-	ITEM_PROPDEF(InheritFadeSettings,bool,		inheritFadeSettings);  
+	ITEM_PROPDEF(InheritFadeSettings,bool,		inheritFadeSettings);
 	ITEM_PROPDEF(CrossFadeSpeed,	double,		crossFadeSpeed);    // secs
 	ITEM_PROPDEF(CrossFadeQuality,	double,		crossFadeQuality);  // frames
 
@@ -48,25 +49,26 @@ public:
 	QList<Slide *> slideList();
 	int numSlides() { return m_slides.size(); }
 	Slide * at(int sortedIdx) { return sortedIdx < m_slides.size() ? m_slides.at(sortedIdx) : 0; }
-	
+	int indexOf(Slide *slide) { return m_slides.indexOf(slide); }
+
 	void removeSlide(Slide *);
-	
+
 	virtual bool fromXml(QDomElement & parentElement);
 	virtual void toXml(QDomElement & parentElement) const;
-	
+
 	virtual void load(const QString & filename);
 	virtual void save(const QString & filename = "");
-	
+
 	QString filename() const { return m_filename; }
 	void setFilename(const QString& f) { m_filename=f; }
-	
+
 	virtual void changeBackground(AbstractVisualItem::FillType fillType, QVariant fillValue, Slide *onlyThisSlide = 0);
 	virtual bool changeBackground(const QFileInfo & info, Slide *onlyThisSlide = 0);
-	
+
 	static bool canUseBackground(const QFileInfo & info);
-	
+
 	virtual Slide * masterSlide();
-	
+
 signals:
 	// Operation = "Add", "Remove", "Change"
 	void slideChanged(Slide *slide, QString slideOperation, AbstractItem *item, QString operation, QString fieldName, QVariant value);
@@ -77,7 +79,7 @@ private slots:
 protected:
 	void loadGroupAttributes(QDomElement & parentElement);
 	void loadSlideList(QDomElement & parentElement);
-	
+
 	void saveGroupAttributes(QDomElement & parentElement) const;
 	void saveSlideList(QDomElement & parentElement) const;
 
@@ -88,19 +90,19 @@ protected:
 	QString m_groupTitle;
 	QString m_iconFile;
 	bool m_autoChangeGroup;
-	
+
 	void sortSlides();
-	
+
 	bool m_inheritFadeSettings;
 	double m_crossFadeSpeed;
 	double m_crossFadeQuality;
-	
-	Slide * m_masterSlide;
-	
-	QString m_filename;
-	
 
-	
+	Slide * m_masterSlide;
+
+	QString m_filename;
+
+
+
 };
 
 #endif

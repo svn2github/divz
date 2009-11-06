@@ -17,6 +17,67 @@ class SlideGroup;
 #include "model/AbstractItemFilter.h"
 
 class SlideGroupViewerGraphicsView;
+
+class NativeViewer : public QObject
+{
+	Q_OBJECT
+public:
+	NativeViewer();
+	virtual ~NativeViewer();
+
+	virtual void setContainerWidget(QWidget*);
+	QWidget * containerWidget() { return m_containerWidget; }
+
+	virtual void setSlideGroup(SlideGroup*);
+	SlideGroup * slideGroup() { return m_slideGroup; }
+
+	virtual void setSlide(Slide*);
+	virtual void setSlide(int) = 0;
+
+	virtual QPixmap snapshot(Slide*);
+	virtual QPixmap snapshot(int);
+	virtual QPixmap snapshot() = 0;
+
+	virtual void show()  = 0;
+	virtual void close() = 0;
+	virtual void hide()  = 0;
+
+protected:
+
+	QWidget * m_containerWidget;
+	SlideGroup * m_slideGroup;
+};
+
+#ifdef Q_OS_WIN32
+    #include <windows.h>
+#else
+    #define HWND int
+#endif
+
+class NativeViewerWin32 : public NativeViewer
+{
+	Q_OBJECT
+public:
+	NativeViewerWin32();
+
+	void setHwnd(HWND);
+	HWND hwnd() { return m_hwnd; }
+
+	virtual void show();
+	virtual void close();
+	virtual void hide();
+
+	virtual QPixmap snapshot();
+
+protected slots:
+	virtual void embedHwnd();
+
+protected:
+	HWND m_hwnd;
+
+};
+
+
 class SlideGroupViewer : public QWidget
 {
 	Q_OBJECT
@@ -46,13 +107,18 @@ public:
 	bool hasFilter(AbstractItemFilter *filter) { return m_slideFilters.contains(filter); }
 	void removeAllFilters();
 	
-	int fadeSpeed() { return m_fadeSpeed; }
+	int fadeSpeed()   { return m_fadeSpeed;   }
 	int fadeQuality() { return m_fadeQuality; } 
 	
 	void setCanZoom(bool);
 	bool canZoom();
+
+	void setIsPreviewViewer(bool);
 	
 	static Slide * blackSlide();
+
+	NativeViewer * nativeViewer() { return m_nativeViewer; }
+	void setNativeViewer(NativeViewer*);
 	
 signals:
 	void nextGroup();
@@ -159,8 +225,10 @@ private:
 	Slide * m_clonedOriginal;
 	
 	bool m_fadeInProgress;
+
+	bool m_isPreviewViewer;
 	
-	
+	NativeViewer * m_nativeViewer;
 };
 
 #endif // SLIDEGROUPVIEWER_H

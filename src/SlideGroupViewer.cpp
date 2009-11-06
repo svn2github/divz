@@ -23,6 +23,90 @@
 #include "itemlistfilters/SlideTextOnlyFilter.h"
 #define PTRS(ptr) QString().sprintf("%p",static_cast<void*>(ptr))
 
+
+/** NativeViewer **/
+NativeViewer::NativeViewer()
+{}
+
+NativeViewer::~NativeViewer()
+{}
+
+void NativeViewer::setContainerWidget(QWidget *w)
+{
+    m_containerWidget = w;
+}
+
+void NativeViewer::setSlideGroup(SlideGroup *g)
+{
+    m_slideGroup = g;
+}
+
+void NativeViewer::setSlide(Slide *slide)
+{
+    int idx = m_slideGroup->indexOf(slide);
+}
+
+QPixmap NativeViewer::snapshot(Slide *slide)
+{
+    setSlide(slide);
+    return snapshot();
+}
+
+QPixmap NativeViewer::snapshot(int x)
+{
+    setSlide(x);
+    return snapshot();
+}
+
+/** NativeViewerWin32 **/
+NativeViewerWin32::NativeViewerWin32()
+	: NativeViewer()
+{}
+
+void NativeViewerWin32::setHwnd(HWND hwnd)
+{
+    m_hwnd = hwnd;
+}
+
+void NativeViewerWin32::show()
+{
+    QTimer::singleShot(1,this,SLOT(embedHwnd()));
+}
+
+void NativeViewerWin32::close()
+{
+#ifdef Q_OS_WIN32
+    CloseWindow(hwnd());
+#endif
+}
+
+void NativeViewerWin32::hide()
+{
+#ifdef Q_OS_WIN32
+    SetWindowPos(hwnd(), 0, 0,0,0,0, SWP_HIDEWINDOW);
+#endif
+}
+
+QPixmap NativeViewerWin32::snapshot()
+{
+    return QPixmap::grabWindow(hwnd());
+}
+
+void NativeViewerWin32::embedHwnd()
+{
+	QRect frame = containerWidget()->geometry();
+	QRect rect = containerWidget()->geometry();
+
+#ifdef Q_OS_WIN32
+	//MoveWindow(hwnd(), rect.x(), rect.x(), rect.width(), rect.height(), 1);
+	SetWindowPos(hwnd(), 0, rect.x(), rect.y() + (rect.y() - frame.y()), rect.width(), rect.height(), SWP_SHOWWINDOW);
+	BringWindowToTop(hwnd());
+#endif
+}
+
+
+
+
 class SlideGroupViewerGraphicsView : public QGraphicsView
 {
 	public:
@@ -113,6 +197,7 @@ SlideGroupViewer::SlideGroupViewer(QWidget *parent)
 	    , m_clonedSlide(0)
 	    , m_clonedOriginal(0)
 	    , m_fadeInProgress(false)
+	    , m_nativeViewer(0)
 {
 	QRect sceneRect(0,0,1024,768);
 	m_blackSlideRefCount++;
@@ -158,12 +243,20 @@ SlideGroupViewer::SlideGroupViewer(QWidget *parent)
 
 bool SlideGroupViewer::canZoom() { return m_view->canZoom(); }
 
-
 void SlideGroupViewer::setCanZoom(bool flag)
 {
 	m_view->setCanZoom(flag);
 }
 
+void SlideGroupViewer::setIsPreviewViewer(bool flag)
+{
+	m_isPreviewViewer = flag;
+}
+
+void SlideGroupViewer::setNativeViewer(NativeViewer *view)
+{
+	m_nativeViewer = view;
+}
 
 void SlideGroupViewer::setOverlaySlide(Slide * newSlide)
 {
