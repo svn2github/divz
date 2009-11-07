@@ -104,28 +104,33 @@ void NativeViewerWin32PPT::embedHwnd()
 	HWND hwnd2 = FindWindowEx(hwnd(), NULL, L"paneClassDC", NULL);
 	if(hwnd2)
 	{
-	    QRect rect = containerWidget()->geometry();
-	    //QPoint abs = absoluteWidgetPosition(containerWidget());
+		QRect rect = containerWidget()->geometry();
+		//QPoint abs = absoluteWidgetPosition(containerWidget());
 
-	    int xa = ((int)(8.0/1024.0 * ((double)rect.width())));
-	    int ya = ((int)(67.0/768.0 * ((double)rect.height())));
+		// This is a "magic forumla" for the proper stretch amount -
+		// just found through trial and error. Its NOT perfect, and
+		// gets more and more inaccurate the further away from 1024x768 or 320x240
+		// the size is. But, it's "good enough" for now.
+		int xa = ((int)(8.0/1024.0 * ((double)rect.width())));
+		int ya = ((int)(67.0/768.0 * ((double)rect.height())));
 
-	    // override for known rectangle size
-	    if(rect.width() == 320 && rect.height() == 240)
-	    {
-		    xa = 8;
-		    ya = 25;
-	    }
+		// override for known rectangle size
+		if(rect.width() == 320 && rect.height() == 240)
+		{
+			xa = 8;
+			ya = 25;
+		}
 
-	    //MoveWindow(hwnd(), rect.x(), rect.x(), rect.width(), rect.height(), 1);
-	    qDebug() << "NativeViewerWin32PPT::embedHwnd(): hwnd2:"<<hwnd2<<", orig size:"<<rect.size()<<", xa:"<<xa<<",ya:"<<ya;
+		//MoveWindow(hwnd(), rect.x(), rect.x(), rect.width(), rect.height(), 1);
+		qDebug() << "NativeViewerWin32PPT::embedHwnd(): hwnd2:"<<hwnd2<<", orig size:"<<rect.size()<<", xa:"<<xa<<",ya:"<<ya;
 
 
-	    SetWindowPos(hwnd2, 0,
-			    -xa, -ya,
-			    rect.width() + xa*2, rect.height() + ya*2,
-			    SWP_SHOWWINDOW);
-	    //BringWindowToTop(hwnd());
+		SetWindowPos(hwnd2, 0,
+				-xa, -ya,
+				rect.width()  + xa*2,
+				rect.height() + ya*2,
+				SWP_SHOWWINDOW);
+		BringWindowToTop(hwnd());
 	}
 #endif
 }

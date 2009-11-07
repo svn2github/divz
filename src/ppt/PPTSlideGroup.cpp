@@ -151,7 +151,7 @@ void PPTSlideGroup::loadFile()
 		progress->setValue(i);
 		qApp->processEvents();
 
-		//QMessageBox::information(0, "Debug", QString("This is slide #%1").arg(i+1));
+		// QMessageBox::information(0, "Debug", QString("This is slide #%1").arg(i+1));
 	}
 
 	viewer->close();

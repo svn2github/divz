@@ -339,7 +339,7 @@ void BackgroundContent::setImageFile(const QString &file)
 					.arg(MD5::md5sum(file))
 					.arg(size.width())
 					.arg(size.height())
-					.arg(sceneContextHint() == MyGraphicsScene::Preview ? "-icon" : "");
+					.arg(sceneContextHint() == MyGraphicsScene::Preview ? "-icon192" : "");
 					//.arg(modelItem()->zoomEffectEnabled() ? "-zoomed" : "");
 		
 		if(!m_lastImageKey.isEmpty() &&
@@ -370,7 +370,7 @@ void BackgroundContent::setImageFile(const QString &file)
 			{
 				if(sceneContextHint() == MyGraphicsScene::Preview)
 				{
-					cache = MediaBrowser::iconForImage(file,MEDIABROWSER_LIST_ICON_SIZE);
+					cache = MediaBrowser::iconForImage(file,QSize(192,120)); // MEDIABROWSER_LIST_ICON_SIZE);
 					cache.save(cacheKey,"PNG");
 					
 					setPixmap(cache);

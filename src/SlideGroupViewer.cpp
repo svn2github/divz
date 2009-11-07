@@ -129,8 +129,8 @@ void NativeViewerWin32::embedHwnd()
 	qDebug() << "NativeViewerWin32::embedHwnd(): hwnd:"<<hwnd()<<", rect:"<<rect<<", abs:"<<abs;
 
 	SetWindowPos(hwnd(), 0,
-			abs.x() , abs.y() ,
-			rect.width() , rect.height() ,
+			abs.x(), abs.y(),
+			rect.width(), rect.height(),
 			SWP_SHOWWINDOW);
 	BringWindowToTop(hwnd());
 #endif
@@ -230,6 +230,7 @@ SlideGroupViewer::SlideGroupViewer(QWidget *parent)
 	    , m_clonedOriginal(0)
 	    , m_fadeInProgress(false)
 	    , m_nativeViewer(0)
+	    , m_isPreviewViewer(false)
 {
 	QRect sceneRect(0,0,1024,768);
 	m_blackSlideRefCount++;
@@ -698,12 +699,13 @@ void SlideGroupViewer::slideChanged(Slide *slide, QString slideOperation, Abstra
 
 void SlideGroupViewer::setSlideGroup(SlideGroup *g, Slide *startSlide)
 {
-	//qDebug() << "SlideGroupViewer::setSlideGroup: (SceneContextHint:"<<m_scene->contextHint()<<"), setting slide group:"<<g->groupNumber()<<", group ptr: "<<PTRS(g);
+	qDebug() << "SlideGroupViewer::setSlideGroup: (SceneContextHint:"<<m_scene->contextHint()<<"), setting slide group:"<<g->assumedName();
 	if(m_slideGroup == g)
 	{
-		if(startSlide)
-			setSlide(startSlide);
-		return;
+		//qDebug() << "SlideGroupViewer::setSlideGroup: Same group, setting start slide.";
+		//if(startSlide)
+		//	setSlide(startSlide);
+		//return;
 	}
 
 	bool blackNative = false;
@@ -746,22 +748,37 @@ void SlideGroupViewer::setSlideGroup(SlideGroup *g, Slide *startSlide)
 			NativeViewer *viewer = factory->newNativeViewer();
 			if(viewer)
 			{
+				qDebug() << "SlideGroupViewer::setSlideGroup: Got native viewer, setting up.";
 				viewer->setContainerWidget(this);
 				viewer->setSlideGroup(m_slideGroup);
 				viewer->show();
+
+				m_nativeViewer = viewer;
+
+				blackNative = false;
+
+				qDebug() << "SlideGroupViewer::setSlideGroup: Setup done, mudging our style and hiding ourself.";
 
 				fadeBlackFrame(true);
 				QWidget * topLevel = WidgetUtil::getTopLevelWidget(this);
 				//topLevel->setWindowFlags(Qt::WindowStaysOnBottomHint);
 				topLevel->hide();
 
-				m_nativeViewer = viewer;
-
-				blackNative = false;
+				qDebug() << "SlideGroupViewer::setSlideGroup: Setup complete.";
+			}
+			else
+			{
+				qDebug() << "SlideGroupViewer::setSlideGroup: Factory for group, but no viewer.";
 			}
 		}
-
-
+		else
+		{
+			qDebug() << "SlideGroupViewer::setSlideGroup: No Factory for group";
+		}
+	}
+	else
+	{
+		qDebug() << "SlideGroupViewer::setSlideGroup: Viewer is Preview Viewer.";
 	}
 
 	QList<Slide*> slist = g->slideList();

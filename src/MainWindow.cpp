@@ -1301,6 +1301,12 @@ void MainWindow::openSlideEditor(SlideGroup *group,Slide *slide)
 		if(factory)
 		{
 			AbstractSlideGroupEditor * editor = factory->newEditor();
+			if(!editor)
+			{
+				QMessageBox::information(this, QString(tr("Cannot Edit %1").arg(group->assumedName())), QString(tr("DViz has no way to edit slide groups with type # %1 at this time.").arg(group->groupType())));
+				return;
+			}
+
 			editor->setSlideGroup(group,slide);
 			editor->show();
 			return;

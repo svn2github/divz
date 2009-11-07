@@ -346,3 +346,8 @@ void SlideGroup::save(const QString & filename)
 	
 	qDebug() << "SlideGroup::save: Done writing "<<tmp;
 }
+
+QString SlideGroup::assumedName()
+{
+	return groupTitle().isEmpty() ? QString(tr("Group %1")).arg(groupNumber()) : groupTitle();
+}

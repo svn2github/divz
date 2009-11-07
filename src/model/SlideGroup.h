@@ -69,6 +69,8 @@ public:
 
 	virtual Slide * masterSlide();
 
+	QString assumedName();
+
 signals:
 	// Operation = "Add", "Remove", "Change"
 	void slideChanged(Slide *slide, QString slideOperation, AbstractItem *item, QString operation, QString fieldName, QVariant value);
