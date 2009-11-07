@@ -100,34 +100,38 @@ QPixmap NativeViewerWin32::snapshot()
     return QPixmap::grabWindow(hwnd());
 }
 
-QPoint NativeViewerWin32_absoluteWidgetPosition(QWidget *w)
+QPoint WidgetUtil::absoluteWidgetPosition(QWidget *w)
 {
     QPoint pos = w->geometry().topLeft();
     if(w->parentWidget())
     {
-	QPoint parentPos = NativeViewerWin32_absoluteWidgetPosition(w->parentWidget());
+	QPoint parentPos = WidgetUtil::absoluteWidgetPosition(w->parentWidget());
 	pos += parentPos;
     }
     return pos;
 }
 
 
-QWidget * getTopLevelWidget(QWidget *w)
+QWidget * WidgetUtil::getTopLevelWidget(QWidget *w)
 {
     if(w->parentWidget())
-    	return getTopLevelWidget(w->parentWidget());
+    	return WidgetUtil::getTopLevelWidget(w->parentWidget());
     return w;
 }
 
 void NativeViewerWin32::embedHwnd()
 {
 	QRect rect = containerWidget()->geometry();
-	QPoint abs = NativeViewerWin32_absoluteWidgetPosition(containerWidget());
+	QPoint abs = WidgetUtil::absoluteWidgetPosition(containerWidget());
 
 #ifdef Q_OS_WIN32
 	//MoveWindow(hwnd(), rect.x(), rect.x(), rect.width(), rect.height(), 1);
 	qDebug() << "NativeViewerWin32::embedHwnd(): hwnd:"<<hwnd()<<", rect:"<<rect<<", abs:"<<abs;
-	SetWindowPos(hwnd(), 0, abs.x(), abs.y(), rect.width(), rect.height(), SWP_SHOWWINDOW);
+
+	SetWindowPos(hwnd(), 0,
+			abs.x() , abs.y() ,
+			rect.width() , rect.height() ,
+			SWP_SHOWWINDOW);
 	BringWindowToTop(hwnd());
 #endif
 }
@@ -705,7 +709,7 @@ void SlideGroupViewer::setSlideGroup(SlideGroup *g, Slide *startSlide)
 	bool blackNative = false;
 	if(m_nativeViewer)
 	{
-		QWidget * topLevel = getTopLevelWidget(this);
+		QWidget * topLevel = WidgetUtil::getTopLevelWidget(this);
 		topLevel->show();
 
 
@@ -747,7 +751,7 @@ void SlideGroupViewer::setSlideGroup(SlideGroup *g, Slide *startSlide)
 				viewer->show();
 
 				fadeBlackFrame(true);
-				QWidget * topLevel = getTopLevelWidget(this);
+				QWidget * topLevel = WidgetUtil::getTopLevelWidget(this);
 				//topLevel->setWindowFlags(Qt::WindowStaysOnBottomHint);
 				topLevel->hide();
 

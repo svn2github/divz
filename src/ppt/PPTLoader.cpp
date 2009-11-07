@@ -2,6 +2,7 @@
 #include <windows.h>
 #include <QApplication>
 #include <QDebug>
+#include <QTimer>
 
 PPTLoader::PPTLoader()
 	: QWidget()

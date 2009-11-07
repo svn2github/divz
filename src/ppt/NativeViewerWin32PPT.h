@@ -21,6 +21,8 @@ public:
 	int numSlides() { return m_numSlides; }
 	int currentSlide();
 
+protected slots:
+	void embedHwnd();
 
 private slots:
 	void axException(int,QString,QString,QString);

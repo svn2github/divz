@@ -71,8 +71,8 @@ void PPTSlideGroup::loadFile()
 
 	double ar = 4/3 ; //MainWindow::mw() ? MainWindow::mw()->currentDocument()->aspectRatio()
 			//	    : AppSettings::liveAspectRatio();
-	int height = 400;
-	QSize pptBoxSize((int)(height * ar),height);
+	int height = 240;
+	QSize pptBoxSize(320,240); //(int)(height * ar),height);
 
 	QVBoxLayout *vbox = new QVBoxLayout(win);
 
@@ -95,6 +95,8 @@ void PPTSlideGroup::loadFile()
 
 	win->adjustSize();
 	win->show();
+
+	qDebug() << "PPTSlideGroup::loadFile(): pptBoxSize:"<<pptBoxSize<<", pptBox->geom:"<<pptBox->geometry();
 
 	viewer->show();
 

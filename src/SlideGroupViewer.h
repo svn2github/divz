@@ -72,11 +72,18 @@ public:
 protected slots:
 	virtual void embedHwnd();
 
+
 protected:
 	HWND m_hwnd;
 
 };
 
+class WidgetUtil
+{
+public:
+	static QWidget * getTopLevelWidget(QWidget*);
+	static QPoint absoluteWidgetPosition(QWidget*);
+};
 
 class SlideGroupViewer : public QWidget
 {

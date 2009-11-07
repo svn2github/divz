@@ -25,7 +25,6 @@ private slots:
 private:
 
 
-	QTimer m_timer;
 	PowerPointViewer::Application *m_ppt;
 	PowerPointViewer::SlideShowView *m_show;
 
