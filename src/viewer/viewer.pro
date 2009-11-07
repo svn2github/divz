@@ -42,6 +42,7 @@ include(../qtmultimedia/audio/audio.pri)
 include(../3rdparty/rtmidi/rtmidi.pri)
 include(../3rdparty/md5/md5.pri)
 include(../3rdparty/qjson/qjson.pri)
+include(../ppt/ppt.pri)
 
 # use the main build dir so we dont have to rebuild all shared sources
 MOC_DIR = .build
@@ -89,7 +90,8 @@ HEADERS += \
 	JpegServer.h \
 	DeepProgressIndicator.h \
 	ConnectDialog.h \
-	OutputServer.h
+	OutputServer.h \
+	DirectoryListModel.h
 	
 SOURCES += main.cpp \
 	MainWindow.cpp \
@@ -117,7 +119,8 @@ SOURCES += main.cpp \
 	OutputControl.cpp \
 	JpegServer.cpp \
 	DeepProgressIndicator.cpp \
-	OutputServer.cpp
+	OutputServer.cpp \
+	DirectoryListModel.cpp
 	
 
 QT += core \

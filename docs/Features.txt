@@ -286,6 +286,49 @@ Revised Task list for Release 1.0, 10/18/09:
 			add slide "database" of pre-built slides
 			add "quickslide" feature - slide template...
 			
+			
+			need to be able to import slide groups from other documents
+			when pressing enter in song search box, need to select all text in box
+			when move keys up/down, send to list
+			
+			change the background resolution used in preview lists to a larger sized image
+			
+			speed of sending a large song over network needs imroved
+				1 - 5 second delay before going live
+				
+			song lyric pixmaps mess up list layout first time (non cached)
+				next time layout is fine
+			
+			loading directory with videos still takes 1-5 seconds to change list
+			video icons mess up layout - not same size?
+				padd the extra size due to AR trimming?
+			take off the name length limit in media browser (was for the dialog's use)
+			change MB dialog to use list until the grid layout looks better
+			
+			need to impl "my computer" view in MB
+			
+			need to either (a) clear icon queue in MB when changing dirs or (B) show progress bar
+			
+			change default smooth zoom max size in prop dialog to 2 instead of 1.1
+			changing the size of a QListView layed out in Icon mode doesnt re-organize icons until the model is set again
+			browse dialog takes a LONG time to show - i think its because it was left on a large folder
+			
+			fit to slide btn doesnt update font size box on toolbar
+			
+			when deleting slides, entire slide list goes gray till icons regenerate - kinda anoying
+			
+			output controls should "save state" (e.g. sync mode, etc)
+			
+			songs dont appear to be loading/restoring from schedule after file open!
+			
+			check zoom factory default value in abstractitem - seems to not be getting initalized when i look at the song template in files
+			
+			dviz should remember last file loaded
+			dviz should provide "recently opened" file list
+			
+			need progress dialog for when loading file with lots of songs - the warming threads freeze UI for too long
+			
+			
 			[STARTED] would be nice: while editing slide thats live, if change, cross fade to changed version
 			
 			[STARTED] port over the song database conversion code to windows

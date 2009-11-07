@@ -122,27 +122,34 @@ void NetworkClient::processCommand(OutputServer::Command cmd, QVariant a, QVaria
 	switch(cmd)
 	{
 		case OutputServer::SetSlideGroup:
+			log("[INFO] Downloading new Slide Group from Server ...");
 			cmdSetSlideGroup(a,b.toInt());
 			break;
 		case OutputServer::SetSlide:
+			//log(QString("[INFO] Changing to Slide # %1").arg(a.toInt()));
 			m_inst->setSlide(a.toInt());
 			break;
 		case OutputServer::AddFilter:
+			//log(QString("[INFO] Added Filter # %1").arg(a.toInt()));
 			cmdAddfilter(a.toInt());
 			break; 
 		case OutputServer::DelFilter:
+			//log(QString("[INFO] Removed Filter # %1").arg(a.toInt()));
 			cmdDelFilter(a.toInt());
 			break; 
 		case OutputServer::FadeClear:
+			log(QString("[INFO] Background-Only (\"Clear\") Frame %1").arg(a.toBool() ? "On":"Off"));
 			m_inst->fadeClearFrame(a.toBool());
 			break; 
 		case OutputServer::FadeBlack:
+			log(QString("[INFO] Black Frame %1").arg(a.toBool() ? "On":"Off"));
 			m_inst->fadeBlackFrame(a.toBool());
 			break; 
 		case OutputServer::SetBackgroundColor:
 			m_inst->setBackground(QColor(a.toString()));
 			break; 
 		case OutputServer::SetOverlaySlide:
+			log(QString("[INFO] Downloading new Overlay Slide from Server..."));
 			cmdSetOverlaySlide(a);
 			break; 
 		case OutputServer::SetLiveBackground:
@@ -207,10 +214,11 @@ void NetworkClient::cmdSetSlideGroup(const QVariant& var, int start)
 	}
 	else
 	{
-	
 		if(g->groupNumber()<0)
 			g->setGroupNumber(1);
-		
+
+		log(QString("[INFO] Slide Group # %1 (\"%2\") Downloaded, Showing on Live Output").arg(g->groupNumber()).arg(g->groupTitle()));
+
 		m_inst->setSlideGroup(g,start);
 	}
 }
@@ -261,6 +269,7 @@ void NetworkClient::cmdSetOverlaySlide(const QVariant& var)
 	}
 	else
 	{
+		log(QString("[INFO] Overlay slide downloaded, showing on Live Output"));
 		m_inst->setOverlaySlide(s);
 	}
 }

@@ -1,12 +1,16 @@
 #include "MainWindow.h"
 #include ".build/ui_MainWindow.h"
-#include <QCloseEvent>
+
 #include "AppSettings.h"
 #include "OutputInstance.h"
 #include "ConnectDialog.h"
 #include "SingleOutputSetupDialog.h"
 #include "NetworkClient.h"
+#include "OutputViewer.h"
+#include "model/Output.h"
 
+#include <QCloseEvent>
+#include <QDockWidget>
 #include <QMessageBox>
 #include <QApplication>
 #include <QSettings>
@@ -21,6 +25,8 @@ MainWindow::MainWindow(QWidget *parent)
 	, m_inst(0)
 	, m_aspect(-1)
 	, m_client(0)
+	, m_preview(0)
+	, m_previewDock(0)
 {
 	static_mainWindow = this;
 	m_ui->setupUi(this);
@@ -51,6 +57,16 @@ MainWindow::MainWindow(QWidget *parent)
 		s.setValue("viewer/firstrun",false);
 		slotOutputSetup();
 	}
+
+	Output * output = AppSettings::outputs().first();
+	m_previewDock = new QDockWidget(QString(tr("%1 View")).arg(output->name()), this);
+	m_previewDock->setObjectName(output->name());
+
+	m_preview = new OutputViewer(0,m_previewDock);
+	m_previewDock->setWidget(m_preview);
+	addDockWidget(Qt::BottomDockWidgetArea, m_previewDock);
+
+	//m_previewDock->setVisible(output->isEnabled());
 }
 
 void MainWindow::openOutput()
@@ -68,6 +84,8 @@ void MainWindow::openOutput()
 	
 	// start hidden until connected
 	m_inst->setVisible(false);
+	m_previewDock->setVisible(false);
+	m_preview->setOutputInstance(m_inst);
 }
 
 void MainWindow::log(const QString& msg, int)
@@ -165,6 +183,7 @@ void MainWindow::slotConnected()
 {
 	log("[INFO] Connected!");
 	m_inst->setVisible(true);	
+	m_previewDock->setVisible(true);
 }
 
 void MainWindow::slotDisconnect()
@@ -174,7 +193,8 @@ void MainWindow::slotDisconnect()
 	m_ui->actionConnect_To->setEnabled(true);
 	
 	m_inst->setVisible(false);
-			
+	m_previewDock->setVisible(false);
+
 	if(m_client)
 	{
 		//qDebug() << "MainWindow::slotDisconnect(): Exiting client";

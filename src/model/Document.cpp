@@ -133,6 +133,7 @@ bool Document::fromXml(QDomElement & pe)
 			//qDebug("Document::fromXml: Group type: Song");
 			g = new SongSlideGroup();
 		}
+		else
 		if (element.tagName() == "powerpoint")
 		{
 			g = new PPTSlideGroup();

@@ -16,6 +16,7 @@
 #include <QVBoxLayout>
 #include <QDir>
 #include <QMessageBox>
+#include <QApplication>
 
 #define PPT_SNAPSHOT_CACHE_DIR "dviz-ppt-snapshot-cache"
 #define DEBUG_PPTSLIDEGROUP 1

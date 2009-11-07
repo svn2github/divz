@@ -16,6 +16,8 @@ class OutputInstance;
 class NetworkClient;
 class SlideGroup;
 class Slide;
+class QDockWidget;
+class OutputViewer;
 #include <QAbstractSocket>
 
 class MainWindow : public QMainWindow {
@@ -67,6 +69,9 @@ private:
 	QString m_host;
 	int m_port;
 	bool m_reconnect;
+
+	QDockWidget * m_previewDock;
+	OutputViewer * m_preview;
 	
 	/** static */
 	static MainWindow * static_mainWindow;	
