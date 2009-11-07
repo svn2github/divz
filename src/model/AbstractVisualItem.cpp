@@ -65,6 +65,7 @@ AbstractVisualItem::AbstractVisualItem()
 	m_zoomAnchorCenter = false;
 	m_zoomDirection = ZoomRandom;
 	m_zoomSpeed = 30;
+	m_zoomFactor = 1.5;
 }
 
 AbstractContent * AbstractVisualItem::createDelegate(QGraphicsScene*,QGraphicsItem*) {return 0;}

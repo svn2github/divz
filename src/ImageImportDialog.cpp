@@ -43,6 +43,10 @@ ImageImportDialog::ImageImportDialog(Document *d, QWidget *parent) :
 	// force UI Updates
 	m_ui->addImagesToExisting->setChecked(true);
 	m_ui->createNewGroup->setChecked(true);
+	
+	// force UI Updates
+	m_ui->addCustomTitle->setChecked(true);
+	m_ui->addCustomTitle->setChecked(false);
 }
 
 ImageImportDialog::~ImageImportDialog()
@@ -60,7 +64,9 @@ void ImageImportDialog::importDirBrowse()
 	{
 		AppSettings::setPreviousPath("images-import",dirPath);
 		m_ui->importFolder->setText(dirPath);
-		m_ui->newGroupName->setText(QDir(dirPath).dirName());
+		m_ui->newGroupName->setText(AbstractItem::guessTitle(QDir(dirPath).dirName()));
+		if(m_ui->customTitle->text().trimmed().isEmpty())
+			m_ui->customTitle->setText(AbstractItem::guessTitle(QDir(dirPath).dirName()));
 	}
 }
 void ImageImportDialog::copyToDirBrowse()
@@ -157,6 +163,9 @@ void ImageImportDialog::accept()
 	bool showNames = m_ui->flagShowNames->isChecked();
 	bool dontShowCameraNames = m_ui->flagNotDefault->isChecked();
 
+	QString customTitle = m_ui->customTitle->text().trimmed();
+	bool showCustomTitle = m_ui->addCustomTitle->isChecked() && ! customTitle.isEmpty();
+	
 
 	QProgressDialog progress("Importing Files", "Stop Import", 0, list.size(), this);
 	progress.setWindowTitle("Importing Files");
@@ -222,18 +231,21 @@ void ImageImportDialog::accept()
 		}
 	
 
-		if(showNames)
+		if(showNames || showCustomTitle)
 		{
 			QString baseName = QFileInfo(file).baseName();
-			bool addText = true;
+			bool addText = showNames;
 			if(dontShowCameraNames)
-				if(baseName.indexOf(QRegExp("^[a-zA-Z]{2,5}[0-9]{2,10}")) > -1)
+				if(baseName.indexOf(QRegExp("^([a-zA-Z]{2,5}\\d{2,10}|\\d{2,5}_\\d{2,5})")) > -1)
 					addText = false;
 	
-			if(addText)
+			if(addText || showCustomTitle)
 			{
 				TextBoxItem * t = new TextBoxItem();
-				t->setText(QString("<p align='center'><font family='Tahoma,Verdana,Sans-Serif'>%1</font></p>").arg(baseName));
+				t->setText(
+					(showCustomTitle ? QString("<p align='center'><font family='Tahoma,Verdana,Sans-Serif'><b>%1</b></font></p>").arg(customTitle) : "") +
+					(addText         ? QString("<p align='center'><font family='Tahoma,Verdana,Sans-Serif'>%1</font></p>").arg(baseName) : "")
+				);
 				t->setShadowEnabled(true);
 				t->setShadowBlurRadius(DEFAULT_SHADOW_RADIUS);
 				t->setOutlineEnabled(true);

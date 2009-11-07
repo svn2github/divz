@@ -22,7 +22,7 @@
 #define DEBUG_MARK() qDebug() << "mark: "<<__FILE__<<":"<<__LINE__
 #define POINTER_STRING(ptr) QString().sprintf("%p",static_cast<void*>(ptr))
 
-#define NEED_PIXMAP_TIMEOUT 500
+#define NEED_PIXMAP_TIMEOUT 150
 #define NEED_PIXMAP_TIMEOUT_FAST 100
 #define DIRTY_TIMEOUT 250
 

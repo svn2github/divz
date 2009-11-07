@@ -164,6 +164,7 @@ void SongBrowser::setPreviewEnabled(bool flag)
 
 void SongBrowser::songSearchReturnPressed() 
 {
+	m_songSearch->selectAll();
 	QModelIndex idx = m_songListModel->indexForRow(0);
 	if(idx.isValid())
 		songDoubleClicked(idx);

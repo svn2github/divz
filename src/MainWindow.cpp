@@ -143,7 +143,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	m_ui->actionText_Import_Tool->setIcon(QIcon(":data/insert-text-24.png"));
 	connect(m_ui->actionText_Import_Tool, SIGNAL(triggered()), this, SLOT(textImportTool()));
 
-	m_ui->actionAdd_PowerPoint_File->setIcon(QIcon(":data/ppt.png"));
+	m_ui->actionAdd_PowerPoint_File->setIcon(QIcon(":data/insert-ppt-24.png"));
 	connect(m_ui->actionAdd_PowerPoint_File, SIGNAL(triggered()), this, SLOT(actionAddPPT()));
 
 	

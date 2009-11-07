@@ -63,7 +63,8 @@ QVariant DirectoryListModel::data ( const QModelIndex & index, int role ) const
 	if (role == Qt::DisplayRole)
 	{
 		QString file = fileInfo(index).fileName();
-		return file.left(m_nameLengthMax) + (file.length() > m_nameLengthMax ? "..." : "");
+		return file;
+		//return file.left(m_nameLengthMax) + (file.length() > m_nameLengthMax ? "..." : "");
 	}
 	else
 	if (role == Qt::ToolTipRole)
@@ -108,6 +109,7 @@ QVariant DirectoryListModel::data ( const QModelIndex & index, int role ) const
 // DirectoryListModel::
 void DirectoryListModel::setDirectory(const QDir& d)
 {
+	m_needPixmaps.clear();
 	m_dir = d;
 	m_listLoaded = false;
 	loadEntryList();
@@ -171,8 +173,8 @@ void DirectoryListModel::setFilters(const QStringList &list)
 void DirectoryListModel::setIconSize(const QSize& size)
 {
 	m_iconSize = size;
-	foreach(QString info, m_entryList)
-		needPixmap(info);
+	//foreach(QString info, m_entryList)
+	//	needPixmap(info);
 }
 
 /** slots **/

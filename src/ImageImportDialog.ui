@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>520</width>
-    <height>662</height>
+    <width>508</width>
+    <height>718</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -210,7 +210,7 @@
         </property>
        </widget>
       </item>
-      <item row="3" column="0" colspan="2">
+      <item row="6" column="0" colspan="2">
        <widget class="QCheckBox" name="zoomImage">
         <property name="text">
          <string>Turn on Image Smooth-Zoom Effects</string>
@@ -230,7 +230,7 @@
         </property>
        </widget>
       </item>
-      <item row="4" column="2">
+      <item row="7" column="2">
        <widget class="QDoubleSpinBox" name="zoomFactor">
         <property name="alignment">
          <set>Qt::AlignCenter</set>
@@ -255,7 +255,7 @@
         </property>
        </widget>
       </item>
-      <item row="3" column="2">
+      <item row="6" column="2">
        <widget class="QSpinBox" name="zoomSpeed">
         <property name="alignment">
          <set>Qt::AlignCenter</set>
@@ -276,6 +276,16 @@
          <number>20</number>
         </property>
        </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QCheckBox" name="addCustomTitle">
+        <property name="text">
+         <string>Show Custom Title on All Slides</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="0" colspan="2">
+       <widget class="QLineEdit" name="customTitle"/>
       </item>
      </layout>
     </widget>
@@ -315,7 +325,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>245</x>
-     <y>556</y>
+     <y>698</y>
     </hint>
     <hint type="destinationlabel">
      <x>157</x>
@@ -331,7 +341,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>313</x>
-     <y>556</y>
+     <y>698</y>
     </hint>
     <hint type="destinationlabel">
      <x>286</x>
@@ -475,7 +485,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>163</x>
-     <y>556</y>
+     <y>698</y>
     </hint>
     <hint type="destinationlabel">
      <x>174</x>
@@ -496,6 +506,22 @@
     <hint type="destinationlabel">
      <x>200</x>
      <y>210</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>addCustomTitle</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>customTitle</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>137</x>
+     <y>513</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>184</x>
+     <y>548</y>
     </hint>
    </hints>
   </connection>

@@ -364,7 +364,13 @@ void SlideGroupViewControl::showQuickSlide(bool flag)
 	{
 		setQuickSlideText();
 		m_selectedSlide = m_slideModel->slideFromIndex(m_listView->currentIndex());
-		m_slideViewer->setSlide(m_quickSlide);
+		
+		// clone the slide so that it cross fades to it instead of just cutting to the slide
+		// AND so that the setQuickSlideText() doesnt set text on the live slide
+		m_slideViewer->setSlide(m_quickSlide->clone());
+		
+		// TODO this WILL leak memory. Need to update Viewer API to let viewer take ownership
+		// of disposable slides like these clones and delete when done with them.
 	}
 	else
 	{
@@ -373,6 +379,8 @@ void SlideGroupViewControl::showQuickSlide(bool flag)
 		else
 			m_slideViewer->setSlide(SlideGroupViewer::blackSlide());
 	}
+	
+	m_quickSlideText->selectAll();
 	
 	if(m_showQuickSlideBtn->isChecked() != flag)
 		m_showQuickSlideBtn->setChecked(flag);
@@ -389,16 +397,17 @@ void SlideGroupViewControl::setQuickSlideText()
 	else
 	{
 		QTextDocument doc;
-		if (Qt::mightBeRichText(text))
-			doc.setHtml(text);
+		QString origText = m_quickSlideTextBox->text();
+		if (Qt::mightBeRichText(origText))
+			doc.setHtml(origText);
 		else
-			doc.setPlainText(text);
+			doc.setPlainText(origText);
 	
 		QTextCursor cursor(&doc);
 		cursor.select(QTextCursor::Document);
 		
 		QTextCharFormat format = cursor.charFormat();
- 		//if(!format.isValid())
+ 		if(!format.isValid())
  			format = cursor.blockCharFormat();
 		//qDebug() << "Format at cursor: "<<format.fontPointSize()<<", "<<format.font()<<", "<<format.fontItalic()<<", "<<format.font().rawName();
 		
@@ -406,9 +415,11 @@ void SlideGroupViewControl::setQuickSlideText()
 		{
 			cursor.insertText(text);
 			
-			cursor.mergeCharFormat(format);
+			// doesnt seem to be needed
+			//cursor.mergeCharFormat(format);
 		
 			m_quickSlideTextBox->setText(doc.toHtml());
+			
 		}
 		else
 		{
@@ -590,7 +601,7 @@ void SlideGroupViewControl::setSlideGroup(SlideGroup *g, Slide *curSlide, bool a
 	assert(g);
 	
 	if(DEBUG_SLIDEGROUPVIEWCONTROL)
-		qDebug()<<"SlideGroupViewControl::setSlideGroup: Loading group#"<<g->groupNumber();
+		qDebug()<<"SlideGroupViewControl::setSlideGroup: Loading "<<g->assumedName();
 	
 // 	m_clearButton->setEnabled(true);
 // 	m_blackButton->setEnabled(true); 
@@ -603,8 +614,8 @@ void SlideGroupViewControl::setSlideGroup(SlideGroup *g, Slide *curSlide, bool a
 	if(allowProgressDialog)
 	{
 		d = new DeepProgressIndicator(m_slideModel,this);
-		d->setText(QString("Loading Group #%1...").arg(g->groupNumber()));
-		d->setTitle(QString("Loading Group #%1").arg(g->groupNumber()));
+		d->setText(QString(tr("Loading %1...")).arg(g->assumedName()));
+		d->setTitle(QString(tr("Loading %1")).arg(g->assumedName()));
 		d->setSize(g->numSlides());
 	}
 	

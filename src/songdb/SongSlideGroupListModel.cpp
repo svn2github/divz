@@ -6,6 +6,8 @@
 //#include "3rdparty/md5/md5.h"
 #include <QPixmapCache>
 
+#define POINTER_STRING(ptr) QString().sprintf("%p",static_cast<void*>(ptr))
+
 SongSlideGroupListModel::SongSlideGroupListModel(SlideGroup *g, QObject *parent) 
 	: SlideGroupListModel(g,parent)
 {
@@ -27,13 +29,35 @@ QVariant SongSlideGroupListModel::data(const QModelIndex &index, int role) const
 	
 	if (role == Qt::DisplayRole)
 	{
-		//return QString("Slide %1").arg(index.row()); 
+		//return QString("Passage %1").arg(index.row()); 
 		return QVariant(); 
 	}
 	else
+	if(Qt::DecorationRole == role)
 	{
-		return SlideGroupListModel::data(index,role);
+		//return SlideGroupListModel::data(index,role);
+		
+		Slide *g = m_sortedSlides.at(index.row());
+		QString cacheKey = POINTER_STRING(g);
+		QPixmap icon;
+		
+		//qDebug() << "SongSlideGroupListModel::data: "<<cacheKey<<": Decoration for row:"<<index.row();
+		
+		if(!QPixmapCache::find(cacheKey,icon))
+		{
+			// HACK - Have to remove the const'ness from 'this' so that
+			// we can cache the pixmap internally. Not sure if this is
+			// going to ruin anything - but it seems to work just fine
+			// so far!
+			SongSlideGroupListModel * self = const_cast<SongSlideGroupListModel*>(this);
+ 			icon = self->generatePixmap(g);
+ 			QPixmapCache::insert(cacheKey,icon);
+		}
+		
+		return icon;
 	}
+	else
+		return QVariant();
 }
 	
 
@@ -60,6 +84,7 @@ QPixmap SongSlideGroupListModel::generatePixmap(Slide *slide)
 	SongSlideGroup * songGroup = dynamic_cast<SongSlideGroup*>(m_slideGroup);
 	if(!songGroup)
 	{
+		qDebug() << "Not a song slide group for slide#:"<<slide->slideNumber();
 		return QPixmap();
 	}
 	

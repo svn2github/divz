@@ -21,7 +21,7 @@
 
 #define POINTER_STRING(ptr) QString().sprintf("%p",static_cast<void*>(ptr))
 
-#define NEED_PIXMAP_TIMEOUT 500
+#define NEED_PIXMAP_TIMEOUT 150
 #define NEED_PIXMAP_TIMEOUT_FAST 100
 #define DIRTY_TIMEOUT 250
 
@@ -168,6 +168,8 @@ void SlideGroupListModel::setSlideGroup(SlideGroup *g)
 	if(!g)
 		return;
 		
+	m_needPixmaps.clear();
+	
 	if(m_slideGroup)// && m_slideGroup != g)
 	{
 		disconnect(m_slideGroup,0,this,0);

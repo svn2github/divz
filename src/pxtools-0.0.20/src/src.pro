@@ -9,5 +9,5 @@ INCLUDEPATH += .
 
 # Input
 HEADERS += pxconvert.h pxparse.h pxtypes.h
-SOURCES += pxconvert.c pxparse.c  pxxmldump.c
+SOURCES += pxconvert.c pxparse.c  pxxml-text.c
 #pxsqldump.c pxcsvdump.c pxinfo.c 
