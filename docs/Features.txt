@@ -334,6 +334,43 @@ Revised Task list for Release 1.0, 10/18/09:
 			
 			adding images using import tool then editing the group erases all auto-change times
 			
+			really need to transmit over network:
+				A - quickslides
+				B - any changes to slidegroup already live
+			when net client connects, need to get current live group
+			add checkbox to output instance to sync black/clear status
+			
+			black/clear unreliable sometimes - send group live with black, then click clear, then black, then go live, then change slide - sometimes doesnt do whats expected
+				thats what it is - black, set group, click clear - it goes live with clear, click cleear again, slide goes live - even tho blacak is clicked
+			
+			quickslide doesnt crossfade from "live" group to quickslide, but crossfades between quickslides or back to live
+			
+			dont queue-generate slide list iconds (or doc list) when not in the initial setmodel phase
+			
+			net viewer - to improve performance, send md5, cache slide if not changed
+				same with setSlide via ptr - md5, if changed from cache, then send slide
+				
+			to speed up net xfer, use code based on the clone code
+			
+			slide editor - duplicate slide should insert below old slide
+			
+			song text - fit to slide - max variance not more than 10 - 20 pts between slides .. ?
+			
+			need to think about fonts missing on net viewer clients - that messes up slide layout
+			
+			move the document save code to a thread in mainwindow - update progressbar in statusbar
+			
+			image import tool - when adding to existing group, update slide nbrs to max slide nbr
+			
+			need to import/export individual slide groups
+			
+			need slide group loop control:
+				either (A) item in schedule that causes it to loop
+				(B) or slide group that plays other groups
+				(C) or slide group item 
+			
+			song slide filters stays stuck on the foldback output sometimes
+			
 			
 			[STARTED] would be nice: while editing slide thats live, if change, cross fade to changed version
 			
