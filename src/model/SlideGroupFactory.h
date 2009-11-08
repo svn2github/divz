@@ -37,6 +37,7 @@ class SlideGroupViewControl : public QWidget
 	Q_OBJECT
 public:
 	SlideGroupViewControl(OutputInstance * view=0, QWidget * parent = 0);
+	~SlideGroupViewControl();
 	
 	OutputInstance * view() { return m_slideViewer; }
 	virtual void setOutputView(OutputInstance *);

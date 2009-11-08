@@ -217,7 +217,7 @@ SongRecord * SongRecord::fromQuery(QSqlQuery q)
 
 SongRecord * SongRecord::fromSqlRecord(QSqlRecord r)
 {
-	
+	// TODO this is a memory leack unless the caller deletes this
 	SongRecord * s = new SongRecord();
 	//qDebug()<<"fromSqlRecord:"<<r<<", isEmpty? "<<r.isEmpty();
 	//qDebug()<<"fromSqlRecord: title:"<<q.value(r.indexOf("title"));

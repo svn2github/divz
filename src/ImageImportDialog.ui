@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>508</width>
-    <height>718</height>
+    <height>756</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -157,6 +157,23 @@
          </size>
         </property>
        </spacer>
+      </item>
+      <item row="5" column="0" colspan="3">
+       <widget class="Line" name="line">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="0" colspan="3">
+       <widget class="QCheckBox" name="goLive">
+        <property name="text">
+         <string>Send Group to Outputs after Importing</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
       </item>
      </layout>
     </widget>

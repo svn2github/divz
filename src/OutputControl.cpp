@@ -342,15 +342,18 @@ void OutputControl::setupFilterList(AbstractItemFilterList selected)
 		t->setText(impl->filterName());
 		t->setData(Qt::UserRole + 100, i);
 		
-		if(impl->isMandatoryFor(outputInstance()))
-		{
-			t->setCheckState(Qt::Checked);
-			t->setFlags(Qt::ItemIsSelectable|Qt::ItemIsUserCheckable);
-			m_inst->addFilter(impl);
-		}
-		else
-		if(selected.contains(impl))
-		{
+		// TODO - fix bug wherein Song filter gets "stuck" when going from a song to regular group
+		// HACK - ignore isMandatoryFor() until we can fix song filter bug
+		
+// 		if(impl->isMandatoryFor(outputInstance()))
+// 		{
+// 			t->setCheckState(Qt::Checked);
+// 			t->setFlags(Qt::ItemIsSelectable|Qt::ItemIsUserCheckable);
+// 			m_inst->addFilter(impl);
+// 		}
+// 		else
+ 		if(selected.contains(impl) || impl->isMandatoryFor(outputInstance()))
+ 		{
 			t->setCheckState(Qt::Checked);
 			m_inst->addFilter(impl);
 		}

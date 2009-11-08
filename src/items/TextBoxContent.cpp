@@ -74,7 +74,7 @@ TextBoxContent::TextBoxContent(QGraphicsScene * scene, QGraphicsItem * parent)
 	for(int i=0;i<m_cornerItems.size();i++)
 		m_cornerItems.at(i)->setDefaultLeftOp(CornerItem::Scale);
 
-	m_zoomAnimationTimer = new QTimer();
+	m_zoomAnimationTimer = new QTimer(this);
 	connect(m_zoomAnimationTimer, SIGNAL(timeout()), this, SLOT(animateZoom()));
 	
 	m_dontSyncToModel = false;
@@ -387,6 +387,7 @@ TextBoxWarmingThreadManager::TextBoxWarmingThreadManager(AbstractVisualItem *mod
 	{
 		m_thread = new TextBoxWarmingThread(model);
 		connect(m_thread, SIGNAL(renderDone(QImage*)), this, SLOT(renderDone(QImage*)));
+		connect(m_thread, SIGNAL(finished()), m_thread, SLOT(deleteLater()));
 		m_thread->start();
 	}
 	else
@@ -399,6 +400,7 @@ void TextBoxWarmingThreadManager::renderDone(QImage *image)
 {
 	QPixmapCache::insert(AbstractContent::cacheKey(m_model), QPixmap::fromImage(*image));
 	deleteLater();
+	delete image; // QPixmap::fromImage() made a copy, so we dont need to waste this memory here
 }
 
 TextBoxWarmingThread::TextBoxWarmingThread(AbstractVisualItem *model) : m_model(model) {}

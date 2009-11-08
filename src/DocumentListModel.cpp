@@ -28,6 +28,7 @@
 
 // blank 4x3 pixmap
 QPixmap * DocumentListModel::m_blankPixmap = 0;
+int DocumentListModel::m_blankPixmapRefCount = 0;
 
 bool group_num_compare(SlideGroup *a, SlideGroup *b)
 {
@@ -41,7 +42,8 @@ DocumentListModel::DocumentListModel(Document *d, QObject *parent)
 			m_doc(d),/* m_scene(0), m_view(0),*/ 
 			m_iconSize(48,0), 
 			m_dirtyTimer(0), 
-			m_sceneRect(0,0,1024,768)
+			m_sceneRect(0,0,1024,768),
+			m_queuedIconGenerationMode(false)
 {
 	if(!m_blankPixmap)
 	{
@@ -52,6 +54,7 @@ DocumentListModel::DocumentListModel(Document *d, QObject *parent)
 		painter.drawRect(m_blankPixmap->rect().adjusted(0,0,-1,-1));
 		painter.end();
 	}
+	m_blankPixmapRefCount ++;
 	
 	connect(&m_needPixmapTimer, SIGNAL(timeout()), this, SLOT(makePixmaps()));
 		
@@ -80,6 +83,13 @@ DocumentListModel::~DocumentListModel()
 // 		delete m_view;
 // 		m_view = 0;
 // 	}
+
+	m_blankPixmapRefCount --;
+	if(m_blankPixmapRefCount <= 0)
+	{
+		delete m_blankPixmap;
+		m_blankPixmap = 0;
+	}
 }
 
 void DocumentListModel::aspectRatioChanged(double /*x*/)
@@ -205,11 +215,16 @@ void DocumentListModel::setDocument(Document *doc)
 	m_doc = doc;
 	
 	int sz = m_doc->groupList().size();
+	
+	m_queuedIconGenerationMode = true;
+	
 	beginInsertRows(QModelIndex(),0,sz);
 	
 	internalSetup();
 	
 	endInsertRows();
+	
+	m_queuedIconGenerationMode = false;
 }
 
 void DocumentListModel::internalSetup()
@@ -338,14 +353,27 @@ QVariant DocumentListModel::data(const QModelIndex &index, int role) const
 		if(!QPixmapCache::find(cacheKey,icon))
 		{
 			DocumentListModel * self = const_cast<DocumentListModel*>(this);
-			self->needPixmap(g);
-			return *m_blankPixmap;
+			if(m_queuedIconGenerationMode)
+			{
+				self->needPixmap(g);
+				return *m_blankPixmap;
+			}
+			else
+			{
+				icon = self->generatePixmap(g);
+				QPixmapCache::insert(cacheKey,icon);
+			}
 		}
 		
 		return icon;
 	}
 	else
 		return QVariant();
+}
+
+void DocumentListModel::setQueuedIconGenerationMode(bool flag)
+{
+	m_queuedIconGenerationMode = flag;
 }
 
 void DocumentListModel::setSceneRect(QRect r)

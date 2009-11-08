@@ -59,6 +59,7 @@ public:
 	OutputControl * outputControl(int id) { return m_outputControls.contains(id) ? m_outputControls[id] : 0; }
 	SlideGroupViewControl * viewControl(int id) { return m_viewControls.contains(id) ? m_viewControls[id] : 0; }
 	
+	bool autosaveEnabled();
 	
 signals:
 	void documentChanged(Document*);
@@ -81,6 +82,8 @@ public slots:
 	
 	void imageImportTool();
 	void textImportTool();
+	
+	void setAutosaveEnabled(bool);
 
 protected slots:
 	void groupsDropped(QList<SlideGroup*> list);
@@ -117,6 +120,9 @@ protected slots:
 	void previewSlideDoubleClicked(Slide*);
 
 	void actionAddPPT();
+	
+	void autosave();
+	void saveFinished();
 	
 protected:
 	void changeEvent(QEvent *e);

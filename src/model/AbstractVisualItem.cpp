@@ -65,6 +65,7 @@ AbstractVisualItem::AbstractVisualItem()
 	m_zoomAnchorCenter = false;
 	m_zoomDirection = ZoomRandom;
 	m_zoomSpeed = 30;
+	m_zoomLoop = false;
 	m_zoomFactor = 1.5;
 }
 

@@ -137,7 +137,10 @@ SongSlideGroupViewControl::SongSlideGroupViewControl(OutputInstance *g, QWidget 
 		
 	//qDebug()<<"SongSlideGroupViewControl(): creating new SongSlideGroupListModel()";
 	m_slideModel = new SongSlideGroupListModel();
+	
+	delete m_listView->model();
 	m_listView->setModel(m_slideModel);
+	
 	m_listView->setViewMode(QListView::ListMode);
 	m_listView->reset();	
 	

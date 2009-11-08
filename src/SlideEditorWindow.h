@@ -131,7 +131,7 @@ private slots:
 	
 	void setCurrentSlideLive();
 	
-	void autosave();
+// 	void autosave();
 	void setAutosaveOn(bool);
 	
 	void repaintSlideList();

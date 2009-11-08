@@ -79,7 +79,7 @@ BackgroundContent::BackgroundContent(QGraphicsScene * scene, QGraphicsItem * par
 		c =0;
 	}
 	
-	m_zoomAnimationTimer = new QTimer();
+	m_zoomAnimationTimer = new QTimer(this);
 	connect(m_zoomAnimationTimer, SIGNAL(timeout()), this, SLOT(animateZoom()));
 	
 	m_dontSyncToModel = false;

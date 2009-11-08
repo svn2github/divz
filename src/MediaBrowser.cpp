@@ -199,7 +199,14 @@ MediaBrowser::MediaBrowser(const QString &directory, QWidget *parent)
 	setDirectory(directory.isEmpty() ? AppSettings::previousPath(m_prevPathKey) : directory);
 }
 
-MediaBrowser::~MediaBrowser() {}
+MediaBrowser::~MediaBrowser() 
+{
+	QFileIconProvider * p = m_fsModel->iconProvider();
+	if(dynamic_cast<MyQFileIconProvider *>(p))
+		delete p;
+	m_fsModel->setIconProvider(0);	
+	delete p;
+}
 #define SET_MARGIN(layout,margin) \
 	layout->setContentsMargins(margin,margin,margin,margin);
 

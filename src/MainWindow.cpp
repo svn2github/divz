@@ -175,6 +175,12 @@ MainWindow::~MainWindow()
 	
 	clearAllOutputs();
 	
+	foreach(OutputInstance *inst, m_outputInstances)
+		delete inst;
+		
+	delete m_previewInstance;
+		
+	m_outputInstances.clear();
 	
 	delete m_ui;
 	
@@ -184,6 +190,25 @@ MainWindow::~MainWindow()
 	delete m_docModel;
 	delete m_doc;
 	delete m_editWin;
+}
+
+
+void MainWindow::autosave()
+{
+	//qDebug() << "Spawning autosave...";
+	if(!m_doc->filename().isEmpty())
+	{
+		statusBar()->showMessage(tr("Auto-saving document..."));
+		DocumentSaveThread * thread = new DocumentSaveThread(m_doc);
+		thread->start();
+		connect(thread, SIGNAL(finished()), this, SLOT(saveFinished()));
+	}
+	//qDebug() << "Autosave started.";
+}
+
+void MainWindow::saveFinished()
+{
+	statusBar()->showMessage(QString(tr("Document saved as %1.")).arg(m_doc->filename()),1500);
 }
 
 void MainWindow::actionAddPPT()
@@ -212,7 +237,9 @@ void MainWindow::showEvent(QShowEvent *evt)
 
 	emit appSettingsChanged();
 	
-	
+	if(AppSettings::autosaveTime() > 0)
+		m_autosaveTimer->start(AppSettings::autosaveTime() * 1000);
+		
 	raise(); // raise above output instances
 }
 
@@ -478,8 +505,8 @@ bool MainWindow::openFile(const QString & file)
 
 	if(!m_autosaveTimer)
 	{
-		m_autosaveTimer = new QTimer();
-		connect(m_autosaveTimer, SIGNAL(timeout()), this, SLOT(actionSave()));
+		m_autosaveTimer = new QTimer(this);
+		connect(m_autosaveTimer, SIGNAL(timeout()), this, SLOT(autosave()));
 
 	}
 		
@@ -525,7 +552,7 @@ void MainWindow::setupSongList()
 	QVBoxLayout * baseLayout = new QVBoxLayout(m_ui->tabSongs);
 	baseLayout->setContentsMargins(0,0,0,0);
 	
-	m_songBrowser = new SongBrowser();
+	m_songBrowser = new SongBrowser(m_ui->tabSongs);
 	baseLayout->addWidget(m_songBrowser);
 	
 	connect(m_songBrowser, SIGNAL(songSelected(SongRecord*)), this, SLOT(songSelected(SongRecord*)));
@@ -548,7 +575,7 @@ void MainWindow::setupMediaBrowser()
 	QVBoxLayout * mediaBrowserLayout = new QVBoxLayout(m_ui->tabMedia);
 	mediaBrowserLayout->setContentsMargins(0,0,0,0);
 	
-	m_mediaBrowser = new MediaBrowser();
+	m_mediaBrowser = new MediaBrowser("",this);
 	mediaBrowserLayout->addWidget(m_mediaBrowser);
 	
 	foreach(OutputInstance *inst, m_outputInstances)
@@ -644,14 +671,14 @@ void MainWindow::setupCentralWidget()
 	leftLayout->setMargin(0);
 	
 	
-	QWidget * ouputChoiceBase = new QWidget();
+	QWidget * ouputChoiceBase = new QWidget(leftBase);
 	QHBoxLayout * ouputChoiceBaseLayout = new QHBoxLayout(ouputChoiceBase);
 	ouputChoiceBaseLayout->setMargin(0);
 	
 	ouputChoiceBaseLayout->addStretch(1);
 	
 	// Output checkbox list
-	m_outputCheckboxBase = new QWidget();
+	m_outputCheckboxBase = new QWidget(ouputChoiceBase);
 	QHBoxLayout * outputCheckboxBaseLayout = new QHBoxLayout(m_outputCheckboxBase);
 	outputCheckboxBaseLayout->setMargin(0);
 	ouputChoiceBaseLayout->addWidget(m_outputCheckboxBase);
@@ -659,7 +686,7 @@ void MainWindow::setupCentralWidget()
 	setupOutputList();
 	
 	// Send to output button
-	m_btnSendOut = new QPushButton(QIcon(":/data/stock-fullscreen.png"),tr("Send to Output"));
+	m_btnSendOut = new QPushButton(QIcon(":/data/stock-fullscreen.png"),tr("Send to Output"),ouputChoiceBase);
 	ouputChoiceBaseLayout->addWidget(m_btnSendOut);
 	connect(m_btnSendOut, SIGNAL(clicked()), this, SLOT(slotSendToOutputs()));
 	
@@ -705,11 +732,11 @@ void MainWindow::setupCentralWidget()
 	m_previewInstance = new OutputInstance(Output::previewInstance());
 	m_previewInstance->setCanZoom(true);
 	
-	m_previewControlBase = new QWidget();
+	m_previewControlBase = new QWidget(this);
 	QVBoxLayout * leftLayout3 = new QVBoxLayout(m_previewControlBase);
 	leftLayout3->setMargin(0);
 	
-	m_previewControl = new SlideGroupViewControl();
+	m_previewControl = new SlideGroupViewControl(0,this);
 	m_previewControl->setIsPreviewControl(true);
 	m_previewControl->setOutputView(m_previewInstance);
 	connect(m_previewControl, SIGNAL(slideDoubleClicked(Slide *)), this, SLOT(previewSlideDoubleClicked(Slide *)));
@@ -792,6 +819,8 @@ void MainWindow::actionDvizWebsite()
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
+	m_autosaveTimer->stop();
+	
 	if(m_doc->filename().isEmpty())
 	{
 		switch(QMessageBox::question(this,tr("File Not Saved"),tr("This file has not yet been saved - do you want to give it a file name? Click 'Save' to save the document to a file, click 'Discard' to continue closing and loose all changes, or click 'Cancel' to cancel closing and return to the program."),
@@ -861,7 +890,32 @@ void MainWindow::actionAppSettingsDialog()
 	setupOutputList();
 	setupOutputControls();
 	
+	
+	
+	// reapply autosave time
+	if(m_autosaveTimer && m_autosaveTimer->isActive())
+	{
+		m_autosaveTimer->stop();
+		if(AppSettings::autosaveTime() > 0)
+			m_autosaveTimer->start(AppSettings::autosaveTime() * 1000);
+	}
+	
 }
+
+void MainWindow::setAutosaveEnabled(bool flag)
+{
+	if(flag)
+	{
+		if(AppSettings::autosaveTime() > 0)
+			m_autosaveTimer->start(AppSettings::autosaveTime() * 1000);
+	}
+	else
+	{
+		if(m_autosaveTimer->isActive())
+			m_autosaveTimer->stop();
+	}
+}
+
 
 
 /******************************************************************************

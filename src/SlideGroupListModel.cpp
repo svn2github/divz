@@ -24,13 +24,21 @@
 #define NEED_PIXMAP_TIMEOUT 150
 #define NEED_PIXMAP_TIMEOUT_FAST 100
 #define DIRTY_TIMEOUT 250
+#define QUEUE_STATE_CHANGE_TIME 1000
 
 // blank 4x3 pixmap
 QPixmap * SlideGroupListModel::m_blankPixmap = 0;
-
+int SlideGroupListModel::m_blankPixmapRefCount = 0;
 
 SlideGroupListModel::SlideGroupListModel(SlideGroup *g, QObject *parent)
-		: QAbstractListModel(parent), m_slideGroup(0), m_scene(0), m_dirtyTimer(0), m_iconSize(192,0), m_sceneRect(0,0,1024,768)
+		: QAbstractListModel(parent)
+		, m_slideGroup(0)
+		, m_scene(0)
+		, m_dirtyTimer(0)
+		, m_iconSize(192,0)
+		, m_sceneRect(0,0,1024,768)
+		, m_queuedIconGenerationMode(false)
+		
 {
 		
 	m_dirtyTimer = new QTimer(this);
@@ -53,6 +61,8 @@ SlideGroupListModel::SlideGroupListModel(SlideGroup *g, QObject *parent)
 	
 	connect(&m_needPixmapTimer, SIGNAL(timeout()), this, SLOT(makePixmaps()));
 
+	connect(&m_queueStateChangeTimer, SIGNAL(timeout()), this, SLOT(turnOffQueuedIconGeneration()));
+	m_queueStateChangeTimer.setSingleShot(true);
 	
 	if(m_slideGroup)
 		setSlideGroup(g);
@@ -68,11 +78,28 @@ SlideGroupListModel::SlideGroupListModel(SlideGroup *g, QObject *parent)
 
 SlideGroupListModel::~SlideGroupListModel()
 {
+	m_blankPixmapRefCount --;
+	if(m_blankPixmapRefCount <= 0)
+	{
+		delete m_blankPixmap;
+		m_blankPixmap = 0;
+	}
+	
 	if(m_scene)
 	{
 		delete m_scene;
 		m_scene = 0;
 	}
+}
+
+void SlideGroupListModel::setQueuedIconGenerationMode(bool flag)
+{
+	m_queuedIconGenerationMode = flag;
+}
+
+void SlideGroupListModel::turnOffQueuedIconGeneration()
+{
+	setQueuedIconGenerationMode(false);
 }
 
 void SlideGroupListModel::aspectRatioChanged(double)
@@ -168,6 +195,11 @@ void SlideGroupListModel::setSlideGroup(SlideGroup *g)
 	if(!g)
 		return;
 		
+	if(m_queueStateChangeTimer.isActive())
+		m_queueStateChangeTimer.stop();
+		
+	m_queuedIconGenerationMode = true;
+	
 	m_needPixmaps.clear();
 	
 	if(m_slideGroup)// && m_slideGroup != g)
@@ -184,8 +216,17 @@ void SlideGroupListModel::setSlideGroup(SlideGroup *g)
 	
 	m_slideGroup = g;
 	
+	int sz = 0;
+	if(m_slideGroup)
+		sz = m_slideGroup->numSlides();
+	
+	//beginInsertRows(QModelIndex(),0,sz-1);
 	
 	internalSetup();
+	
+	//endInsertRows();
+	
+	m_queueStateChangeTimer.start(QUEUE_STATE_CHANGE_TIME);
 }
 
 void SlideGroupListModel::releaseSlideGroup()
@@ -373,10 +414,18 @@ QVariant SlideGroupListModel::data(const QModelIndex &index, int role) const
 			// going to ruin anything - but it seems to work just fine
 			// so far!
 			SlideGroupListModel * self = const_cast<SlideGroupListModel*>(this);
-// 			icon = self->generatePixmap(g);
-// 			QPixmapCache::insert(cacheKey,icon);
-			self->needPixmap(g);
-			return *m_blankPixmap;
+			
+			if(m_queuedIconGenerationMode)
+			{
+				self->needPixmap(g);
+				return *m_blankPixmap;
+			}
+			else
+			{
+				icon = self->generatePixmap(g);
+				QPixmapCache::insert(cacheKey,icon);
+			}
+			
 		}
 		
 		return icon;
@@ -384,6 +433,7 @@ QVariant SlideGroupListModel::data(const QModelIndex &index, int role) const
 	else
 		return QVariant();
 }
+
 
 void SlideGroupListModel::setSceneRect(QRect r)
 {

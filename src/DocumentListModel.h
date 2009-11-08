@@ -54,6 +54,9 @@ public:
 		
 	void releaseDocument();
 	
+	void setQueuedIconGenerationMode(bool flag);
+	bool queuedIconGenerationMode() { return m_queuedIconGenerationMode; }
+	
 	
 signals:
 	void groupsDropped(QList<SlideGroup*>);
@@ -85,7 +88,11 @@ private:
  	QTimer * m_dirtyTimer;
  	
  	QTimer m_needPixmapTimer;
+ 	
+ 	bool m_queuedIconGenerationMode;
+ 	
  	static QPixmap * m_blankPixmap;
+ 	static int m_blankPixmapRefCount;
 };
 
 #endif

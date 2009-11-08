@@ -23,6 +23,8 @@ private:
 
 public:
 	SongSlideGroup();
+	~SongSlideGroup();
+	
 	GroupType groupType() const { return SlideGroup::Song; }	
 	
 	SongRecord * song() { return m_song; }

@@ -90,24 +90,6 @@
 #define DEBUG_MODE 0
 
 
-class MySaveThread : public QThread
-{
-public:
-	MySaveThread(Document*doc)  : m_doc(doc) {}
-	void run()
-	{
-		if(!m_doc)
-			return;
-		if(m_doc->filename().isEmpty())
-			return;
-		m_doc->save();
-	}
-	Document *m_doc;
-	
-};
-
- 
-
 #include <QCommonStyle>
 class RubberBandStyle : public QCommonStyle 
 {
@@ -176,6 +158,8 @@ class MyGraphicsView : public QGraphicsView
 			// can't activate the cache mode by default, since it inhibits dynamical background picture changing
 			//setCacheMode(CacheBackground);
 		}
+		
+		~MyGraphicsView() { delete viewport()->style(); }
 	
 		void setMyScene(MyGraphicsScene * desk)
 		{
@@ -291,10 +275,6 @@ SlideEditorWindow::SlideEditorWindow(SlideGroup *group, QWidget * parent)
 	resize(sceneRect.width(),sceneRect.height());
 	
 
-	m_autosaveTimer = new QTimer();
-	connect(m_autosaveTimer, SIGNAL(timeout()), this, SLOT(autosave()));
-	
-
 	appSettingsChanged();
 	
         m_undoStack = new QUndoStack();
@@ -350,6 +330,8 @@ SlideEditorWindow::SlideEditorWindow(SlideGroup *group, QWidget * parent)
 
 SlideEditorWindow::~SlideEditorWindow()
 {
+	delete m_slideListView->model();
+	
  	if(DEBUG_MODE)
  	{
  		if(m_doc)
@@ -364,16 +346,8 @@ SlideEditorWindow::~SlideEditorWindow()
 
 void SlideEditorWindow::setAutosaveOn(bool flag)
 {
-	if(flag)
-	{
-		if(AppSettings::autosaveTime() > 0)
-			m_autosaveTimer->start(AppSettings::autosaveTime() * 1000);
-	}
-	else
-	{
-		if(m_autosaveTimer->isActive())
-			m_autosaveTimer->stop();
-	}
+	if(MainWindow::mw())
+		MainWindow::mw()->setAutosaveEnabled(flag);
 }
 
 void SlideEditorWindow::showEvent(QShowEvent *evt)
@@ -406,8 +380,8 @@ void SlideEditorWindow::showEvent(QShowEvent *evt)
         //qDebug("Scaling: %.02f x %.02f = %.02f",sx,sy,scale);
 	m_view->update();
 	
-	if(AppSettings::autosaveTime() > 0)
-		m_autosaveTimer->start(AppSettings::autosaveTime() * 1000);
+	//if(AppSettings::autosaveTime() > 0)
+	//	m_autosaveTimer->start(AppSettings::autosaveTime() * 1000);
 }
 
 void SlideEditorWindow::closeEvent(QCloseEvent *evt)
@@ -417,7 +391,7 @@ void SlideEditorWindow::closeEvent(QCloseEvent *evt)
 	settings.setValue("slideeditor/pos",pos());
 	settings.setValue("slideeditor/state",saveState());
 
-	m_autosaveTimer->stop();
+	//m_autosaveTimer->stop();
 	evt->accept();
 	emit closed();
 }
@@ -676,14 +650,6 @@ void SlideEditorWindow::setupToolbar()
 	
 
 
-}
-
-void SlideEditorWindow::autosave()
-{
-	//qDebug() << "Spawning autosave...";
-	MySaveThread * t = new MySaveThread(MainWindow::mw()->currentDocument());
-	t->start();
-	//qDebug() << "Autosave started.";
 }
 
 void SlideEditorWindow::setInheritFade(bool flag)
@@ -1088,14 +1054,6 @@ void SlideEditorWindow::appSettingsChanged()
 	}
 	
 	setupViewportLines();
-	
-	// reapply autosave time
-	if(m_autosaveTimer && m_autosaveTimer->isActive())
-	{
-		m_autosaveTimer->stop();
-		if(AppSettings::autosaveTime() > 0)
-			m_autosaveTimer->start(AppSettings::autosaveTime() * 1000);
-	}
 }
 
 void SlideEditorWindow::aspectRatioChanged(double x)

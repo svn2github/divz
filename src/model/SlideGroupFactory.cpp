@@ -229,6 +229,11 @@ SlideGroupViewControl::SlideGroupViewControl(OutputInstance *g, QWidget *w )
 	
 }
 
+SlideGroupViewControl::~SlideGroupViewControl()
+{
+	delete m_listView->model();
+}
+
 
 void SlideGroupViewControl::setQuickSlideEnabled(bool flag)
 {

@@ -15,6 +15,7 @@
 #define NEED_PIXMAP_TIMEOUT_FAST 50
 
 QPixmap * DirectoryListModel::m_blankPixmap = 0;
+int DirectoryListModel::m_blankPixmapRefCount = 0;
 
 DirectoryListModel::DirectoryListModel(QObject *parent)
 	: QAbstractListModel(parent)
@@ -35,6 +36,8 @@ DirectoryListModel::DirectoryListModel(QObject *parent)
 		painter.end();
 	}
 	
+	m_blankPixmapRefCount ++;
+	
 	m_iconTypeCache[QFileIconProvider::Folder] = iconProvider()->icon(QFileIconProvider::Folder);
 	m_iconTypeCache[QFileIconProvider::Drive]  = iconProvider()->icon(QFileIconProvider::Drive);
 	m_iconTypeCache[QFileIconProvider::File]   = iconProvider()->icon(QFileIconProvider::File);
@@ -44,7 +47,15 @@ DirectoryListModel::DirectoryListModel(QObject *parent)
 }
 
 DirectoryListModel::~DirectoryListModel()
-{}
+{
+	m_blankPixmapRefCount --;
+	if(m_blankPixmapRefCount <= 0)
+	{
+		delete m_blankPixmap;
+		m_blankPixmap = 0;
+	}
+
+}
 	
 // QAbstractListModel::
 int DirectoryListModel::rowCount ( const QModelIndex & /*parent */) const

@@ -4,6 +4,8 @@
 #include "model/SlideGroup.h"
 
 #include <QList>
+#include <QObject>
+
 
 class Document : public QObject
 {
@@ -53,6 +55,36 @@ private:
 	QString m_docTitle;
 	QString m_filename;
 	double m_aspectRatio;
+};
+
+#include <QThread>
+class DocumentSaveThread : public QThread
+{
+	Q_OBJECT
+public:
+	DocumentSaveThread(Document*doc, const QString &file="")  
+		: m_doc(doc)
+		, m_file(file)
+		
+	{
+		connect(this, SIGNAL(finished()), this, SLOT(deleteLater()));
+	}
+	
+	virtual ~DocumentSaveThread() {}
+	
+	void run()
+	{
+		if(!m_doc)
+			return;
+		if(m_file.isEmpty() && 
+		   m_doc->filename().isEmpty())
+			return;
+		m_doc->save(m_file);
+	}
+
+private:	
+	Document *m_doc;
+	QString m_file;
 };
 
 #endif

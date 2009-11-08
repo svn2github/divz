@@ -65,7 +65,7 @@ void ImageImportDialog::importDirBrowse()
 		AppSettings::setPreviousPath("images-import",dirPath);
 		m_ui->importFolder->setText(dirPath);
 		m_ui->newGroupName->setText(AbstractItem::guessTitle(QDir(dirPath).dirName()));
-		if(m_ui->customTitle->text().trimmed().isEmpty())
+		if(m_ui->customTitle->text().trimmed().isEmpty() || !m_ui->addCustomTitle->isChecked())
 			m_ui->customTitle->setText(AbstractItem::guessTitle(QDir(dirPath).dirName()));
 	}
 }
@@ -137,6 +137,7 @@ void ImageImportDialog::accept()
 
 	SlideGroup *group;
 
+	int baseSlideNum = 0;
 	if(m_ui->addImagesToExisting->isChecked())
 	{
 		int idx = m_ui->existingGroup->currentIndex();
@@ -148,6 +149,7 @@ void ImageImportDialog::accept()
 		}
 
 		group = m_model->groupAt(idx);
+		baseSlideNum = group->numSlides(); // append slides to end of group
 	}
 	else
 	{
@@ -262,7 +264,7 @@ void ImageImportDialog::accept()
 
 		if(autoChange)
 			slide->setAutoChangeTime(changeTime);
-		slide->setSlideNumber(slideNum);
+		slide->setSlideNumber(slideNum + baseSlideNum);
 
 		group->addSlide(slide);
 
@@ -275,8 +277,11 @@ void ImageImportDialog::accept()
 
 	progress.setValue(list.size());
 	
+	if(m_ui->goLive->isChecked())
+		MainWindow::mw()->setLiveGroup(group);
+	
 	close();
-
+	
 }
 
 void ImageImportDialog::changeEvent(QEvent *e)

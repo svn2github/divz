@@ -87,6 +87,7 @@ protected:
 	QFileIconProvider m_defaultIconProvider;
 	
 	static QPixmap * m_blankPixmap;
+	static int m_blankPixmapRefCount;
 	
 	bool m_lockRowcount;
 	

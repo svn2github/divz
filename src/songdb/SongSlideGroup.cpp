@@ -23,6 +23,12 @@ SongSlideGroup::SongSlideGroup() : SlideGroup(),
 		connect(MainWindow::mw(), SIGNAL(aspectRatioChanged(double)), this, SLOT(aspectRatioChanged(double)));
 }
 
+SongSlideGroup::~SongSlideGroup()
+{
+	if(m_song)
+		delete m_song;
+}
+
 void SongSlideGroup::setSong(SongRecord *s)
 {
 	// Pseudo code:

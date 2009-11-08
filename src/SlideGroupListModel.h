@@ -57,6 +57,9 @@ public:
 	QString itemMimeType() const { return "application/x-dviz-slidegroup-listmodel-item"; }
  	
  	
+ 	void setQueuedIconGenerationMode(bool flag);
+	bool queuedIconGenerationMode() { return m_queuedIconGenerationMode; }
+ 	
 
 signals:
 	void slidesDropped(QList<Slide*>);
@@ -72,6 +75,8 @@ private slots:
 	void aspectRatioChanged(double);
 	
 	void makePixmaps();
+	
+	void turnOffQueuedIconGeneration();
 	
 protected:
 	virtual QPixmap generatePixmap(Slide*);
@@ -103,9 +108,15 @@ protected:
 	QPixmap m_pendingPixmap;
 	
 	QHash<Slide*, MyGraphicsScene*> m_dataLoadPending;
+	
+	bool m_queuedIconGenerationMode;
 
  	QTimer m_needPixmapTimer;
+ 	
+ 	QTimer m_queueStateChangeTimer;
+ 	
  	static QPixmap * m_blankPixmap;
+ 	static int m_blankPixmapRefCount;
 
 };
 
