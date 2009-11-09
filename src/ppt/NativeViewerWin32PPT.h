@@ -7,6 +7,7 @@
 #endif
 
 #include "SlideGroupViewer.h"
+class PPTLoader;
 
 class NativeViewerWin32PPT : public NativeViewerWin32
 {
@@ -20,23 +21,27 @@ public:
 
 	int numSlides() { return m_numSlides; }
 	int currentSlide();
+	void close();
+	void hide();
+	QPixmap snapshot();
 
 protected slots:
 	void embedHwnd();
 
 private slots:
-	void axException(int,QString,QString,QString);
+	//void axException(int,QString,QString,QString);
 
 
 private:
-	void destroyPpt();
+	//void destroyPpt();
 
 	int m_numSlides;
+	PPTLoader * m_ppt;
 
-	#ifdef Q_OS_WIN32
-		PowerPointViewer::Application   *m_ppt;
-		PowerPointViewer::SlideShowView *m_show;
-	#endif
+	//#ifdef Q_OS_WIN32
+	//	PowerPointViewer::Application   *m_ppt;
+	//	PowerPointViewer::SlideShowView *m_show;
+	//#endif
 
 
 };

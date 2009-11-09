@@ -1,18 +1,15 @@
 #include <QApplication>
 #include "PPTLoader.h"
+#include <windows.h>
 
 #include <QDebug>
 int main(int argc, char ** argv)
 {
     QApplication a(argc, argv);
 
-	PPTLoader ppt;
-
-    QString showFile = "c:/test.ppt";
-    ppt.open(showFile);
-    ppt.show();
-
-
+    PPTLoader ppt;
+    ppt.openFile("c:/test3.ppt");
+    ppt.showRun(0,0,320,240);
     return a.exec();
 }
 //! [0]
