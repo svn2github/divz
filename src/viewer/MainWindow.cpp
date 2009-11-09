@@ -259,3 +259,8 @@ QRect MainWindow::standardSceneRect(double aspectRatio)
 	int height = 768;
 	return QRect(0,0,aspectRatio * height,height);
 }
+
+void MainWindow::setAutosaveEnabled(bool)
+{
+    (void)0;
+}

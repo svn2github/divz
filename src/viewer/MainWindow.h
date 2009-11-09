@@ -35,11 +35,14 @@ public:
 	
 	void setLiveGroup(SlideGroup *newGroup, Slide *currentSlide,bool);
 	
+	void setAutosaveEnabled(bool);
+
 signals:
 // 	void documentChanged(Document*);
  	void docSettingsChanged(Document*);
 	void aspectRatioChanged(double);
 	void appSettingsChanged();
+
 
 protected slots:
 	void slotConnect();
