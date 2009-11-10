@@ -24,6 +24,7 @@
 // Size of the jpeg server image buffer before it starts
 // deleting frames. 10 is just an arbitrary magic nbr.
 #define MAX_IMGBUFFER_SIZE 10
+#define OWNED_SLIDE_BUFFER 10
 
 bool OuputInstance_slide_num_compare(Slide *a, Slide *b)
 {
@@ -76,6 +77,9 @@ OutputInstance::OutputInstance(Output *out, bool startHidden, QWidget *parent)
 
 OutputInstance::~OutputInstance() 
 {
+	while(m_ownedSlides.size())
+		delete m_ownedSlides.takeFirst();
+			
 	if(!m_imgBuffer.isEmpty())
 	{
 		qDeleteAll(m_imgBuffer);
@@ -248,8 +252,27 @@ void OutputInstance::slideChanged(Slide *slide, QString slideOperation, Abstract
 		qSort(slist.begin(), slist.end(), OuputInstance_slide_num_compare);
 		m_sortedSlides = slist;
 		
+		Output::OutputType x = m_output->outputType();
+		if(x == Output::Network)
+			setSlideGroup(m_slideGroup, m_slideNum);
+		
 		if(m_slideNum >= m_sortedSlides.size())
 			m_slideNum = 0;
+	}
+	else
+	{
+		Output::OutputType x = m_output->outputType();
+		if(x == Output::Network)
+		{
+			int idx = m_sortedSlides.indexOf(slide);
+			if(idx > -1)
+			{
+				if(idx == m_slideNum)
+					setSlide(idx);
+			}
+			else
+				setSlide(slide);
+		}
 	}
 	
 }
@@ -287,26 +310,26 @@ void OutputInstance::setSlideGroup(SlideGroup *group, Slide * startSlide)
 		
 		if(m_outputServer)
 		{
-			QString xmlString;
-			QDomDocument doc;
-			QTextStream out(&xmlString);
-			
-			// This element contains all the others.
-			QDomElement rootElement = doc.createElement("group");
-		
-			group->toXml(rootElement);
-			
-			// Add the root (and all the sub-nodes) to the document
-			doc.appendChild(rootElement);
-			
-			//Add at the begining : <?xml version="1.0" ?>
-			QDomNode noeud = doc.createProcessingInstruction("xml","version=\"1.0\" ");
-			doc.insertBefore(noeud,doc.firstChild());
-			//save in the file (4 spaces indent)
-			doc.save(out, 4);
+// 			QString xmlString;
+// 			QDomDocument doc;
+// 			QTextStream out(&xmlString);
+// 			
+// 			// This element contains all the others.
+// 			QDomElement rootElement = doc.createElement("group");
+// 		
+// 			group->toXml(rootElement);
+// 			
+// 			// Add the root (and all the sub-nodes) to the document
+// 			doc.appendChild(rootElement);
+// 			
+// 			//Add at the begining : <?xml version="1.0" ?>
+// 			QDomNode noeud = doc.createProcessingInstruction("xml","version=\"1.0\" ");
+// 			doc.insertBefore(noeud,doc.firstChild());
+// 			//save in the file (4 spaces indent)
+// 			doc.save(out, 4);
 			
 			// send it to the client
-			m_outputServer->sendCommand(OutputServer::SetSlideGroup,xmlString,m_slideNum);
+			m_outputServer->sendCommand(OutputServer::SetSlideGroup,group->toByteArray(),m_slideNum);
 		}
 		else
 		{
@@ -437,7 +460,7 @@ void OutputInstance::setOverlaySlide(Slide * newSlide)
 	{
 		if(m_outputServer)
 		{
-		
+		/*
 			QString xmlString;
 			QDomDocument doc;
 			QTextStream out(&xmlString);
@@ -454,9 +477,9 @@ void OutputInstance::setOverlaySlide(Slide * newSlide)
 			QDomNode noeud = doc.createProcessingInstruction("xml","version=\"1.0\" ");
 			doc.insertBefore(noeud,doc.firstChild());
 			//save in the file (4 spaces indent)
-			doc.save(out, 4);
+			doc.save(out, 4);*/
 			
-			m_outputServer->sendCommand(OutputServer::SetOverlaySlide, xmlString);
+			m_outputServer->sendCommand(OutputServer::SetOverlaySlide, newSlide->toByteArray());
 		}
 	}
 }
@@ -647,7 +670,7 @@ Slide * OutputInstance::setSlide(int x)
 	return setSlide(m_sortedSlides.at(x));	
 }
 
-Slide * OutputInstance::setSlide(Slide *slide)
+Slide * OutputInstance::setSlide(Slide *slide, bool takeOwnership)
 {
 	if(m_mirror)
 		m_mirror->setSlide(slide);
@@ -656,15 +679,10 @@ Slide * OutputInstance::setSlide(Slide *slide)
 		return 0;
 		
 	m_slideNum = m_sortedSlides.indexOf(slide);
-	if(m_slideNum >-1 )
-	{
-		//qDebug() << "OutputInstance::setSlide: ["<<m_output->name()<<"] emit slideChanged("<<m_slideNum<<")";
+	
+	emit slideChanged(slide);
+	if(m_slideNum > -1)
 		emit slideChanged(m_slideNum);
-	}
-	else
-	{
-		//qDebug() << "OutputInstance::setSlide: ["<<m_output->name()<<"] Slide ptr given isn't in my list of m_sortedSlides!";
-	}
 	
 	Output::OutputType x = m_output->outputType();
 	if(x == Output::Screen || x == Output::Custom || x == Output::Preview)
@@ -672,16 +690,32 @@ Slide * OutputInstance::setSlide(Slide *slide)
 		//qDebug() << "OutputInstance::setSlide: ["<<m_output->name()<<"] Setting slide#"<<m_slideNum;
 		//setVisible(m_output->isEnabled());
 		
-		m_viewer->setSlide(slide);
+		m_viewer->setSlide(slide,takeOwnership);
 		
 	}
 	else
 	{
+		
 		if(m_outputServer)
 		{
 			//qDebug() << "OutputInstance::m_outputServer: Sending slide to server, num:"<<m_slideNum;
-			m_outputServer->sendCommand(OutputServer::SetSlide,m_slideNum);
+			
+			// Try to save network bandwidth and time by transmitting just the slide index if possible.
+			// If the slide is not in the slide group, then transmit it as a byte array.
+			if(m_slideNum > -1)
+				m_outputServer->sendCommand(OutputServer::SetSlide,m_slideNum);
+			else
+				m_outputServer->sendCommand(OutputServer::SetSlideObject, slide->toByteArray());
 		}
+		
+		m_ownedSlides.append(slide);
+		
+		while(m_ownedSlides.size() > OWNED_SLIDE_BUFFER)
+			delete m_ownedSlides.takeFirst();
+		
+		// TODO handle ownership of slides sent to output server
+			
+		// TODO handle slides not in slide group sent to output server			
 	}
 	
 	return slide;

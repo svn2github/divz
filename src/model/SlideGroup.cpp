@@ -4,9 +4,11 @@
 #include <QFileInfo>
 #include <QDomDocument>
 #include <QMessageBox>
+#include <QMetaProperty>
 
 #include "Slide.h"
 #include "MediaBrowser.h"
+#include "songdb/SongSlideGroup.h"
 
 SlideGroup::SlideGroup() :
 	m_groupNumber(-1)
@@ -187,6 +189,142 @@ void SlideGroup::toXml(QDomElement & pe) const
 	saveSlideList(pe);
 }
 
+QByteArray SlideGroup::toByteArray() const
+{
+	QByteArray array;
+	QDataStream stream(&array, QIODevice::WriteOnly);
+	QVariantMap map;
+	
+	
+	
+	saveProperties(map);
+	saveSlideList(map);
+	
+	map["SlideGroup.ClassName"] = metaObject()->className();
+	
+	qDebug() << "SlideGroup::toByteArray(): "<<map;
+	stream << map;
+	return array; 
+}
+
+void SlideGroup::saveProperties(QVariantMap&map) const
+{
+	// So we dont have to engineer our own method of tracking
+	// properties, just assume all inherited objects delcare the relevant
+	// properties using Q_PROPERTY macro
+	const QMetaObject *metaobject = metaObject();
+	int count = metaobject->propertyCount();
+	for (int i=0; i<count; ++i)
+	{
+		QMetaProperty metaproperty = metaobject->property(i);
+		const char *name = metaproperty.name();
+		QVariant value = property(name);
+		//qDebug() << "AbstractItem::clone():"<<itemName()<<": prop:"<<name<<", value:"<<value;
+		//item->setProperty(name,value);
+		map[name] = value;
+	}
+	
+	
+	if(m_masterSlide)
+		map["master"] = m_masterSlide->toByteArray();
+}
+
+void SlideGroup::saveSlideList(QVariantMap&map)  const
+{
+	QVariantList list;
+	foreach (Slide * slide, m_slides)
+		list << slide->toByteArray();
+	map["slides"] = list;
+
+}
+
+
+
+/* static */
+SlideGroup * SlideGroup::fromByteArray(QByteArray &array)
+{
+	QDataStream stream(&array, QIODevice::ReadOnly);
+	QVariantMap map;
+	stream >> map;
+	
+	qDebug() << "SlideGroup::fromByteArray(): "<<map;
+	
+	SlideGroup * group = 0;
+	
+	QString className = map["SlideGroup.ClassName"].toString();
+	
+	if (className == "SongSlideGroup")
+	{
+		//qDebug("cmdSetSlideGroup: Group type: Song");
+		group = new SongSlideGroup();
+	}
+	else
+	if(className == "SlideGroup")
+	{
+		//qDebug("cmdSetSlideGroup: Group type: Generic");
+		group = new SlideGroup();
+	}
+	else
+	{
+		qWarning("SlideGroup::fromByteArray: Unknown class name '%s'", qPrintable(className));
+		return 0;
+	}
+	
+	group->loadVariantMap(map);
+	
+	return group;
+	
+}
+
+void SlideGroup::loadVariantMap(QVariantMap &map)
+{
+	loadProperties(map);
+	loadSlides(map);	
+}
+	
+void SlideGroup::loadProperties(QVariantMap &map)
+{
+	// So we dont have to engineer our own method of tracking
+	// properties, just assume all inherited objects delcare the relevant
+	// properties using Q_PROPERTY macro
+	const QMetaObject *metaobject = metaObject();
+	int count = metaobject->propertyCount();
+	for (int i=0; i<count; ++i)
+	{
+		QMetaProperty metaproperty = metaobject->property(i);
+		const char *name = metaproperty.name();
+		QVariant value = map[name];
+		//qDebug() << "AbstractItem::clone():"<<itemName()<<": prop:"<<name<<", value:"<<value;
+		if(value.isValid())
+			setProperty(name,value);
+		else
+			qDebug() << "SlideGroup::loadByteArray: Unable to load property for "<<name<<", got invalid property from map";
+	}
+	
+	QVariant master = map["master"];
+	if(master.isValid())
+	{
+		m_masterSlide = new Slide();
+		QByteArray ba = master.toByteArray();
+		m_masterSlide->fromByteArray(ba);
+	}
+}
+	
+void SlideGroup::loadSlides(QVariantMap &map)
+{
+	qDeleteAll(m_slides);
+	m_slides.clear();
+
+	QVariantList items = map["slides"].toList();
+	foreach(QVariant var, items)
+	{
+		Slide * slide = new Slide();
+		QByteArray ba = var.toByteArray();
+		slide->fromByteArray(ba);
+		addSlide(slide);
+	}
+}
+
 
 bool SlideGroup_slide_num_compare(Slide *a, Slide *b)
 {
@@ -256,9 +394,9 @@ void SlideGroup::changeBackground(AbstractVisualItem::FillType fillType, QVarian
 	}
 }
 
-Slide * SlideGroup::masterSlide()
+Slide * SlideGroup::masterSlide(bool autoCreate)
 {
-	if(!m_masterSlide)
+	if(!m_masterSlide && autoCreate)
 	{
 		m_masterSlide = new Slide();
 		m_masterSlide->setSlideNumber(-1);

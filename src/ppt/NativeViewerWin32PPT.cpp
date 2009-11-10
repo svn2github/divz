@@ -92,7 +92,7 @@ void NativeViewerWin32PPT::embedHwnd()
 {
 	// adjust parent window
 	//NativeViewerWin32::embedHwnd();
-
+#ifdef Q_OS_WIN32
 	QRect rect = containerWidget()->geometry();
 	QPoint abs = WidgetUtil::absoluteWidgetPosition(containerWidget());
 	m_ppt->showRun(abs.x(), abs.y(), rect.width(), rect.height());
@@ -114,7 +114,7 @@ void NativeViewerWin32PPT::embedHwnd()
 	//qDebug() << "NativeViewerWin32PPT::embedHwnd: Num slides:"<<m_numSlides;
 	NativeViewerWin32::embedHwnd();
 	BringWindowToTop(hwnd());
-//#ifdef Q_OS_WIN32
+//
 	/*
 
 	// now find the actual widget that holds the show and stretch it out
@@ -152,6 +152,7 @@ void NativeViewerWin32PPT::embedHwnd()
 		BringWindowToTop(hwnd());
 	}
 */
+#endif
 }
 
 

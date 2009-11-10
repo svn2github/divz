@@ -2,6 +2,12 @@
 #include <QDebug>
 #include <QMetaProperty>
 
+#include "TextItem.h"
+#include "TextBoxItem.h"
+#include "BoxItem.h"
+#include "ImageItem.h"
+#include "VideoFileItem.h"
+#include "BackgroundItem.h"
 #include "ItemFactory.h"
 
 QString AbstractItem::guessTitle(QString field)
@@ -103,6 +109,95 @@ AbstractItem * AbstractItem::cloneTo(AbstractItem *item) const
 	//qDebug() << "AbstractItem::clone():"<<itemName()<<": Done cloning.";
 
 	return item;
+}
+
+QByteArray AbstractItem::toByteArray() const
+{
+	QByteArray array;
+	QDataStream stream(&array, QIODevice::WriteOnly);
+	QVariantMap map;
+	
+	// So we dont have to engineer our own method of tracking
+	// properties, just assume all inherited objects delcare the relevant
+	// properties using Q_PROPERTY macro
+	const QMetaObject *metaobject = metaObject();
+	int count = metaobject->propertyCount();
+	for (int i=0; i<count; ++i)
+	{
+		QMetaProperty metaproperty = metaobject->property(i);
+		const char *name = metaproperty.name();
+		QVariant value = property(name);
+		//qDebug() << "AbstractItem::clone():"<<itemName()<<": prop:"<<name<<", value:"<<value;
+		//item->setProperty(name,value);
+		map[name] = value;
+	}
+
+	map["AbstractItem.ClassName"] = metaobject->className();
+	stream << map;
+	return array; 
+}
+/* static */
+AbstractItem * AbstractItem::fromByteArray(QByteArray &array)
+{
+	
+	QDataStream stream(&array, QIODevice::ReadOnly);
+	QVariantMap map;
+	stream >> map;
+	
+	QString className = map["AbstractItem.ClassName"].toString();
+	
+	//qDebug("Slide::fromXml(): Found an element, tag name=%s", element.tagName().toAscii().constData());
+	// create the right kind of content
+	AbstractItem * content = 0;
+	if (className == "TextItem")
+		content = new TextItem();
+	else 
+	if (className == "TextBoxItem")
+		content = new TextBoxItem();
+	else 
+	if (className == "BoxItem")
+		content = new BoxItem();
+	else
+	if (className == "ImageItem")
+		content = new ImageItem();
+	else 
+	if (className == "VideoFileItem")
+		content = new VideoFileItem();
+	else 
+	if (className == "BackgroundItem")
+		content = new BackgroundItem();
+	else
+	{
+		qWarning("AbstractItem::fromByteArray: Unknown class name '%s'", qPrintable(className));
+		return 0;
+	}
+
+	content->setBeingLoaded(true);
+	
+	content->loadVariantMap(map);
+	
+	content->setBeingLoaded(false);
+	return content;
+}
+
+void AbstractItem::loadVariantMap(QVariantMap &map)
+{
+	// So we dont have to engineer our own method of tracking
+	// properties, just assume all inherited objects delcare the relevant
+	// properties using Q_PROPERTY macro
+	const QMetaObject *metaobject = metaObject();
+	int count = metaobject->propertyCount();
+	for (int i=0; i<count; ++i)
+	{
+		QMetaProperty metaproperty = metaobject->property(i);
+		const char *name = metaproperty.name();
+		QVariant value = map[name];
+		//qDebug() << "AbstractItem::clone():"<<itemName()<<": prop:"<<name<<", value:"<<value;
+		if(value.isValid())
+			setProperty(name,value);
+		else
+			qDebug() << "AbstractItem::loadByteArray: Unable to load property for "<<name<<", got invalid property from map";
+	}
 }
 
 quint32 AbstractItem::valueKey()

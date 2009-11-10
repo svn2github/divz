@@ -1,9 +1,16 @@
 #ifndef PPTLOADER_H
 #define PPTLOADER_H
-#include "msscriptcontrol.h"
-//PowerPoint.Application: dumpcpp {91493440-5A91-11CF-8700-00AA0060263B}
 
-class QAxScript;
+namespace MSScriptControl {
+	class ScriptControl;
+}
+
+#ifdef WIN32_PPT_ENABLED
+#include <windows.h>
+#include "msscriptcontrol.h"
+#endif
+//PowerPoint.Application: dumpcpp {91493440-5A91-11CF-8700-00AA0060263B}
+#include <QObject>
 class PPTLoader : public QObject
 {
 	Q_OBJECT

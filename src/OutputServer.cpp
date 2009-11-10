@@ -109,15 +109,21 @@ void OutputServerThread::sendCommand(OutputServer::Command cmd,QVariant v1,QVari
 
 void OutputServerThread::sendMap(const QVariantMap& map)
 {
-	QByteArray json = m_stringy->serialize(map);
+	//QByteArray json = m_stringy->serialize(map);
+	QByteArray array;
+	QDataStream stream(&array, QIODevice::WriteOnly);
+	stream << map;
+	
+	
+	
 	//qDebug() << "OutputServerThread: Send Map:"<<map<<", JSON:"<<json;
 	
 	char data[256];
-	sprintf(data, "%d\n", json.size());
+	sprintf(data, "%d\n", array.size());
 	m_socket->write((const char*)&data,strlen((const char*)data));
 	//qDebug() << "block size: "<<strlen((const char*)data)<<", data:"<<data;
 	
-	m_socket->write(json);
+	m_socket->write(array);
 	//qDebug() << "json size: "<<json.size();
 }
 

@@ -232,6 +232,8 @@ SlideGroupViewControl::SlideGroupViewControl(OutputInstance *g, QWidget *w )
 SlideGroupViewControl::~SlideGroupViewControl()
 {
 	delete m_listView->model();
+	if(m_quickSlide)
+		delete m_quickSlide;
 }
 
 
@@ -372,10 +374,7 @@ void SlideGroupViewControl::showQuickSlide(bool flag)
 		
 		// clone the slide so that it cross fades to it instead of just cutting to the slide
 		// AND so that the setQuickSlideText() doesnt set text on the live slide
-		m_slideViewer->setSlide(m_quickSlide->clone());
-		
-		// TODO this WILL leak memory. Need to update Viewer API to let viewer take ownership
-		// of disposable slides like these clones and delete when done with them.
+		m_slideViewer->setSlide(m_quickSlide->clone(),true); // true = take ownership, delete when done
 	}
 	else
 	{

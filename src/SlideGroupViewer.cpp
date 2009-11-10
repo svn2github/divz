@@ -26,6 +26,8 @@
 
 #include <QApplication>
 
+#define MAX_BYPRODUCT_SIZE 10
+
 
 /** NativeViewer **/
 NativeViewer::NativeViewer()
@@ -519,7 +521,7 @@ Slide * SlideGroupViewer::applySlideFilters(Slide * sourceSlide)
 			slide->addItem(mutated,true); // allow slide to delete our mutated backgroundd
 
 			// nitch note:
-			// since we DIDN'T origianl background (originalBg was false),
+			// since we DIDN'T find an original background (originalBg was false),
 			// that means the call to slide->background() called 'new BackgroundItem'
 			// and since we removed the newly create background item to replace it with our
 			// mutation, that means that it (the originalItem) won't get deleted when
@@ -608,6 +610,9 @@ SlideGroupViewer::~SlideGroupViewer()
 		m_clearSlide = 0;
 	}
 
+	while(!m_slideFilterByproduct.isEmpty())
+		delete m_slideFilterByproduct.takeFirst();
+
 	m_blackSlideRefCount --;
 	if(m_blackSlideRefCount <= 0 && m_blackSlide)
 	{
@@ -615,7 +620,7 @@ SlideGroupViewer::~SlideGroupViewer()
 		m_blackSlide = 0;
 		qDebug() << "SlideGroupViewer: Deleting black slide";
 	}
-
+	
 }
 
 void SlideGroupViewer::appSettingsChanged()
@@ -821,12 +826,17 @@ Slide * SlideGroupViewer::setSlide(int x)
 	return setSlide(m_sortedSlides.at(x));
 }
 
-Slide * SlideGroupViewer::setSlide(Slide *slide)
+Slide * SlideGroupViewer::setSlide(Slide *slide, bool takeOwnership)
 {
 	if(m_bgWaitingForNextSlide)
 		applyBackground(m_nextBg, slide);
+		
+	if(takeOwnership)
+		m_slideFilterByproduct << slide;
 
-	m_slideNum = m_sortedSlides.indexOf(slide);
+	int slideNum = m_sortedSlides.indexOf(slide);
+	if(slideNum > -1)
+		m_slideNum = slideNum;
 
 // 	if(AppSettings::liveEditMode() == AppSettings::Smooth && m_clonedSlide)
 // 		slide = m_clonedSlide;
@@ -888,17 +898,16 @@ void SlideGroupViewer::crossFadeFinished(Slide *oldSlide,Slide*/*newSlide*/)
 	}
 }
 
-#define MAX_BYPRODUCT_SIZE 5
 void SlideGroupViewer::slideDiscarded(Slide *oldSlide)
 {
 	m_fadeInProgress = false;
-	if(oldSlide && m_slideFilterByproduct.contains(oldSlide))
-	{
-		m_slideFilterByproduct.removeAll(oldSlide);
-		delete oldSlide;
-	}
+// // 	if(oldSlide && m_slideFilterByproduct.contains(oldSlide))
+// // 	{
+// // 		m_slideFilterByproduct.removeAll(oldSlide);
+// // 		delete oldSlide;
+// // 	}
 
-	if(m_slideFilterByproduct.size() > MAX_BYPRODUCT_SIZE)
+	while(m_slideFilterByproduct.size() > MAX_BYPRODUCT_SIZE)
 		delete m_slideFilterByproduct.takeFirst();
 }
 
@@ -1018,8 +1027,15 @@ void SlideGroupViewer::setSlideInternal(Slide *slide)
 		slide != m_clearSlide)
 	{
 		//qDebug() << "SlideGroupViewer::setSlideInternal(): Slide# "<<slide->slideNumber()<<": Have slide group, using master slide, group ptr: "<<PTRS(m_slideGroup)<<", master ptr:"<<PTRS(m_slideGroup->masterSlide());
-		//if(m_scene->masterSlide() != m_slideGroup->masterSlide())
-		m_scene->setMasterSlide(applySlideFilters(m_slideGroup->masterSlide()));
+		
+		// false = dont auto-create master slide
+		Slide * master = m_slideGroup->masterSlide(false);
+		if(master)
+			m_scene->setMasterSlide(applySlideFilters(master)); 
+		else
+			m_scene->setMasterSlide(0);
+			//  1300 - one year
+			// 250
 	}
 	else
 	{
@@ -1056,7 +1072,7 @@ void SlideGroupViewer::fadeBlackFrame(bool enable)
 				return;
 
 
-			if(m_slideNum < m_sortedSlides.size())
+			if(m_slideNum > 0 && m_slideNum < m_sortedSlides.size())
 			{
 				Slide *currentSlide = m_sortedSlides.at(m_slideNum);
 				setSlideInternal(applySlideFilters(currentSlide));

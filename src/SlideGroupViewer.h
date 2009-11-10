@@ -131,7 +131,7 @@ signals:
 	void nextGroup();
 
 public slots:
-	Slide * setSlide(Slide *);
+	Slide * setSlide(Slide *, bool takeOwnership=false);
 	Slide * setSlide(int);
 	Slide * nextSlide();
 	Slide * prevSlide();

@@ -102,19 +102,24 @@ void NetworkClient::processBlock()
 {
 	bool ok;
 	//QVariant result = m_parser->parse(m_socket,&ok);
-	QVariant result = m_parser->parse(m_dataBlock, &ok);
-	if(!ok)
-	{
-		log(QString("[ERROR] Error in data at %1: %2\nData: %3").arg(m_parser->errorLine()).arg(m_parser->errorString()).arg(QString(m_dataBlock)));
-	}
-	else
-	{
-		QVariantMap map = result.toMap();
+// 	QVariant result = m_parser->parse(m_dataBlock, &ok);
+// 	if(!ok)
+// 	{
+// 		log(QString("[ERROR] Error in data at %1: %2\nData: %3").arg(m_parser->errorLine()).arg(m_parser->errorString()).arg(QString(m_dataBlock)));
+// 	}
+// 	else
+// 	{
+// 		QVariantMap map = result.toMap();
+
+	QDataStream stream(&m_dataBlock, QIODevice::ReadOnly);
+	QVariantMap map;
+	stream >> map;
+	
 		OutputServer::Command cmd = (OutputServer::Command)map["cmd"].toInt();
 		//qDebug() << "NetworkClient::processBlock: cmd#:"<<cmd;
 		
 		processCommand(cmd,map["v1"],map["v2"],map["v3"]);
-	}
+	//}
 }
 
 void NetworkClient::processCommand(OutputServer::Command cmd, QVariant a, QVariant b, QVariant c)
@@ -166,7 +171,11 @@ void NetworkClient::processCommand(OutputServer::Command cmd, QVariant a, QVaria
 			break; 
 		case OutputServer::SetAspectRatio:
 			emit aspectRatioChanged(a.toDouble());
-			break; 
+			break;
+		case OutputServer::SetSlideObject: 
+			log(QString("[INFO] Downloading new out-of-group Slide from Server..."));
+			cmdSetSlideObject(a);
+			break;
 		default:
 			qDebug() << "Command Not Handled: "<<(int)cmd;
 			log(QString("[DEBUG] Unknown Command: '%1'").arg(cmd));
@@ -175,8 +184,9 @@ void NetworkClient::processCommand(OutputServer::Command cmd, QVariant a, QVaria
 
 void NetworkClient::cmdSetSlideGroup(const QVariant& var, int start)
 {
-	const QString & data = var.toString();
 	
+	/*
+	const QString & data = var.toString();
 	QString *error = new QString();
 	QDomDocument doc;
 	if (!doc.setContent(data, false, error)) 
@@ -207,12 +217,7 @@ void NetworkClient::cmdSetSlideGroup(const QVariant& var, int start)
 	
 	//qDebug("Document::fromXml: Converting group from xml...");
 	// restore the item, and delete it if something goes wrong
-	if (!g->fromXml(element)) 
-	{
-		qDebug("Document::fromXml: group fromXml failed, removing");
-		delete g;
-	}
-	else
+	if(g)
 	{
 		if(g->groupNumber()<0)
 			g->setGroupNumber(1);
@@ -220,6 +225,19 @@ void NetworkClient::cmdSetSlideGroup(const QVariant& var, int start)
 		log(QString("[INFO] Slide Group # %1 (\"%2\") Downloaded, Showing on Live Output").arg(g->groupNumber()).arg(g->groupTitle()));
 
 		m_inst->setSlideGroup(g,start);
+	}
+	*/
+	
+	QByteArray ba = var.toByteArray();
+	SlideGroup * group = SlideGroup::fromByteArray(ba);
+	if(group)
+	{
+		if(group->groupNumber()<0)
+			group->setGroupNumber(1);
+
+		log(QString("[INFO] Slide Group # %1 (\"%2\") Downloaded, Showing on Live Output").arg(group->groupNumber()).arg(group->groupTitle()));
+
+		m_inst->setSlideGroup(group,start);
 	}
 }
 
@@ -243,35 +261,48 @@ void NetworkClient::cmdDelFilter(int id)
 
 void NetworkClient::cmdSetOverlaySlide(const QVariant& var)
 {
-	const QString & data = var.toString();
-	
-	QString *error = new QString();
-	QDomDocument doc;
-	if (!doc.setContent(data, false, error)) 
-	{
-		log(data);
-		QMessageBox::critical(0, tr("Parsing error"), tr("Unable to parse XML overlay slide. The error was: %2").arg(*error));
-		//throw(0);
-		return;
-	}
-	
-	delete error;
-	error = 0;
-	
-	QDomElement element = doc.documentElement(); // The root node
-	
-	Slide *s = new Slide();
-	
-	// restore the item, and delete it if something goes wrong
-	if (!s->fromXml(element))
-	{
-		delete s;
-	}
-	else
-	{
-		log(QString("[INFO] Overlay slide downloaded, showing on Live Output"));
-		m_inst->setOverlaySlide(s);
-	}
+// 	const QString & data = var.toString();
+// 	
+// 	QString *error = new QString();
+// 	QDomDocument doc;
+// 	if (!doc.setContent(data, false, error)) 
+// 	{
+// 		log(data);
+// 		QMessageBox::critical(0, tr("Parsing error"), tr("Unable to parse XML overlay slide. The error was: %2").arg(*error));
+// 		//throw(0);
+// 		return;
+// 	}
+// 	
+// 	delete error;
+// 	error = 0;
+// 	
+// 	QDomElement element = doc.documentElement(); // The root node
+// 	
+// 	Slide *s = new Slide();
+// 	
+// 	// restore the item, and delete it if something goes wrong
+// 	if (!s->fromXml(element))
+// 	{
+// 		delete s;
+// 	}
+// 	else
+
+	QByteArray ba = var.toByteArray();
+	Slide * slide = new Slide();
+	slide->fromByteArray(ba);
+
+	log(QString("[INFO] Overlay slide downloaded, showing on Live Output"));
+	m_inst->setOverlaySlide(slide);
+}
+
+void NetworkClient::cmdSetSlideObject(const QVariant& var)
+{
+	QByteArray ba = var.toByteArray();
+	Slide * slide = new Slide();
+	slide->fromByteArray(ba);
+
+	log(QString("[INFO] New out-of-group slide downloaded, showing on Live Output"));
+	m_inst->setSlide(slide);
 }
 
 void NetworkClient::cmdSetLiveBackground(const QString& file, bool flag)

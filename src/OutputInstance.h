@@ -55,6 +55,7 @@ signals:
 	void nextGroup();
 	
 	void slideChanged(int);
+	void slideChanged(Slide*);
 	void slideGroupChanged(SlideGroup*,Slide*);
 	
 	void imageReady(QImage*);
@@ -73,7 +74,7 @@ public slots:
 	void setBackground(QColor);
 	void setCanZoom(bool);
 	
-	Slide * setSlide(Slide *);
+	Slide * setSlide(Slide *, bool takeOwnership=false);
 	Slide * setSlide(int);
 	Slide * nextSlide();
 	Slide * prevSlide();
@@ -116,6 +117,7 @@ private:
 
 	SlideGroup * m_slideGroup;
 	QList<Slide*> m_sortedSlides;
+	QList<Slide*> m_ownedSlides;
 //	QHash<int,QPixmap> m_pixmaps;
 
 	int m_slideNum;

@@ -32,6 +32,9 @@ public:
 	
 	bool fromXml(QDomElement & parentElement);
         void toXml(QDomElement & parentElement) const;
+        
+        virtual QByteArray toByteArray() const;
+	virtual void fromByteArray(QByteArray &);
 	
 	ITEM_PROPDEF(SlideId,		int,	slideId);
 	ITEM_PROPDEF(SlideNumber,	int,	slideNumber);
@@ -56,6 +59,8 @@ private slots:
 	void itemChanged(QString fieldName, QVariant value, QVariant);
 	
 private:
+	void loadByteArray(QByteArray &);
+	
 	QList<AbstractItem *> m_items;
 	QList<AbstractItem *> m_ownedItems;
 	int m_slideNumber;

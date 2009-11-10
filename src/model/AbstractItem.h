@@ -61,6 +61,9 @@ public:
 
 	virtual AbstractItem * clone() const;
 	
+	virtual QByteArray toByteArray() const;
+	static AbstractItem * fromByteArray(QByteArray &);
+	
 	// If any property of this model changes, the valueKey() should change,
 	// but the valueKey() should NOT change across program instances
 	// or file instances if the properties are EXACTLY the same
@@ -80,6 +83,7 @@ protected:
 	void setBeingLoaded(bool);
 
 	AbstractItem * cloneTo(AbstractItem *) const;
+	void loadVariantMap(QVariantMap &);
 
 private:
 

@@ -44,6 +44,7 @@ public:
 		SetFadeSpeed,
 		SetFadeQuality,
 		SetAspectRatio,
+		SetSlideObject, // added to the end so that viewers that havn't been recompiled can still work with old cmds
 	};
 
 public slots:

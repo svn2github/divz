@@ -55,6 +55,10 @@ public:
 
 	virtual bool fromXml(QDomElement & parentElement);
 	virtual void toXml(QDomElement & parentElement) const;
+	
+	virtual QByteArray toByteArray() const;
+	//virtual void fromByteArray(QByteArray &);
+	static SlideGroup * fromByteArray(QByteArray &);
 
 	virtual void load(const QString & filename);
 	virtual void save(const QString & filename = "");
@@ -67,7 +71,7 @@ public:
 
 	static bool canUseBackground(const QFileInfo & info);
 
-	virtual Slide * masterSlide();
+	virtual Slide * masterSlide(bool autoCreate=true);
 
 	QString assumedName();
 
@@ -79,6 +83,13 @@ private slots:
 	void slideItemChanged(AbstractItem *item, QString operation, QString fieldName, QVariant value, QVariant old);
 
 protected:
+	void loadVariantMap(QVariantMap &);
+	void loadProperties(QVariantMap &);
+	void loadSlides(QVariantMap &);
+	
+	void saveProperties(QVariantMap&) const;
+	void saveSlideList(QVariantMap&)  const;
+	
 	void loadGroupAttributes(QDomElement & parentElement);
 	void loadSlideList(QDomElement & parentElement);
 

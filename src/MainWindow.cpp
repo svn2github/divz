@@ -59,7 +59,10 @@ MainWindow::MainWindow(QWidget *parent) :
 	
 {
 	static_mainWindow = this;
-	
+		
+	m_autosaveTimer = new QTimer(this);
+	connect(m_autosaveTimer, SIGNAL(timeout()), this, SLOT(autosave()));
+
 	setWindowIcon(QIcon(":/data/icon-d.png"));
 	
 	m_ui->setupUi(this);
@@ -143,9 +146,12 @@ MainWindow::MainWindow(QWidget *parent) :
 	m_ui->actionText_Import_Tool->setIcon(QIcon(":data/insert-text-24.png"));
 	connect(m_ui->actionText_Import_Tool, SIGNAL(triggered()), this, SLOT(textImportTool()));
 
-	m_ui->actionAdd_PowerPoint_File->setIcon(QIcon(":data/insert-ppt-24.png"));
-	connect(m_ui->actionAdd_PowerPoint_File, SIGNAL(triggered()), this, SLOT(actionAddPPT()));
-
+	#ifdef WIN32_PPT_ENABLED
+		m_ui->actionAdd_PowerPoint_File->setIcon(QIcon(":data/insert-ppt-24.png"));
+		connect(m_ui->actionAdd_PowerPoint_File, SIGNAL(triggered()), this, SLOT(actionAddPPT()));
+	#else
+		m_ui->actionAdd_PowerPoint_File->setVisible(false);
+	#endif
 	
 	
 	foreach(QAction *action, actionList)
@@ -503,13 +509,6 @@ bool MainWindow::openFile(const QString & file)
 	
 	m_doc = new Document(file);
 
-	if(!m_autosaveTimer)
-	{
-		m_autosaveTimer = new QTimer(this);
-		connect(m_autosaveTimer, SIGNAL(timeout()), this, SLOT(autosave()));
-
-	}
-		
 	//m_doc->load(file);
 	//r.readSlide(m_slide);
 	QString fileName = QFileInfo(file).fileName();

@@ -218,6 +218,68 @@ void Slide::toXml(QDomElement & pe) const
 	}
 }
 
+
+QByteArray Slide::toByteArray() const
+{
+	QByteArray array;
+	QDataStream stream(&array, QIODevice::WriteOnly);
+	QVariantMap map;
+	
+	// So we dont have to engineer our own method of tracking
+	// properties, just assume all inherited objects delcare the relevant
+	// properties using Q_PROPERTY macro
+	const QMetaObject *metaobject = metaObject();
+	int count = metaobject->propertyCount();
+	for (int i=0; i<count; ++i)
+	{
+		QMetaProperty metaproperty = metaobject->property(i);
+		const char *name = metaproperty.name();
+		QVariant value = property(name);
+		//qDebug() << "AbstractItem::clone():"<<itemName()<<": prop:"<<name<<", value:"<<value;
+		//item->setProperty(name,value);
+		map[name] = value;
+	}
+	
+	QVariantList list;
+	foreach (AbstractItem * content, m_items) 
+		list << content->toByteArray();
+	map["items"] = list;
+
+	stream << map;
+	return array; 
+}
+
+void Slide::fromByteArray(QByteArray &array)
+{
+	QDataStream stream(&array, QIODevice::ReadOnly);
+	QVariantMap map;
+	stream >> map;
+	
+	// So we dont have to engineer our own method of tracking
+	// properties, just assume all inherited objects delcare the relevant
+	// properties using Q_PROPERTY macro
+	const QMetaObject *metaobject = metaObject();
+	int count = metaobject->propertyCount();
+	for (int i=0; i<count; ++i)
+	{
+		QMetaProperty metaproperty = metaobject->property(i);
+		const char *name = metaproperty.name();
+		QVariant value = map[name];
+		//qDebug() << "AbstractItem::clone():"<<itemName()<<": prop:"<<name<<", value:"<<value;
+		if(value.isValid())
+			setProperty(name,value);
+		else
+			qDebug() << "Slide::loadByteArray: Unable to load property for "<<name<<", got invalid property from map";
+	}
+	
+	QVariantList items = map["items"].toList();
+	foreach(QVariant var, items)
+	{
+		QByteArray ba = var.toByteArray();
+		addItem(AbstractItem::fromByteArray(ba));
+	}
+}
+
 double Slide::guessTimeout()
 {
 	double guess = 0;

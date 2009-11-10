@@ -48,6 +48,7 @@ protected:
 	void cmdDelFilter(int);
 	void cmdSetOverlaySlide(const QVariant &);
 	void cmdSetLiveBackground(const QString &, bool);
+	void cmdSetSlideObject(const QVariant &);
 
 private:
 	void log(const QString&);
