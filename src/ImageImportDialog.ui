@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>508</width>
-    <height>756</height>
+    <height>755</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -37,59 +37,6 @@
        <widget class="QPushButton" name="importBrowse">
         <property name="text">
          <string>Browse</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item>
-    <widget class="QGroupBox" name="gbCopyTo">
-     <property name="title">
-      <string>Copy Images to Another Folder</string>
-     </property>
-     <layout class="QGridLayout" name="gridLayout">
-      <item row="0" column="0" colspan="3">
-       <widget class="QCheckBox" name="copyFiles">
-        <property name="text">
-         <string>&amp;Copy files from original folder to folder below:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="label">
-        <property name="text">
-         <string>Copy &amp;To:</string>
-        </property>
-        <property name="buddy">
-         <cstring>copyToFolder</cstring>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="QLineEdit" name="copyToFolder"/>
-      </item>
-      <item row="1" column="2">
-       <widget class="QPushButton" name="copyToBrowse">
-        <property name="text">
-         <string>Browse</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="0" colspan="3">
-       <widget class="QCheckBox" name="removeOrig">
-        <property name="text">
-         <string>Remove Original File (for example, from a flash card)</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="0" colspan="3">
-       <widget class="QCheckBox" name="renameDuplicates">
-        <property name="text">
-         <string>If &amp;duplicates, append date and time to make file unique</string>
-        </property>
-        <property name="checked">
-         <bool>true</bool>
         </property>
        </widget>
       </item>
@@ -179,12 +126,92 @@
     </widget>
    </item>
    <item>
-    <widget class="QGroupBox" name="groupBox">
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <item>
+      <spacer name="horizontalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="advancedBtn">
+       <property name="text">
+        <string>Advanced</string>
+       </property>
+       <property name="checkable">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="gbCopyTo">
+     <property name="title">
+      <string>Copy Images to Another Folder</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout">
+      <item row="0" column="0" colspan="3">
+       <widget class="QCheckBox" name="copyFiles">
+        <property name="text">
+         <string>&amp;Copy files from original folder to folder below:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>Copy &amp;To:</string>
+        </property>
+        <property name="buddy">
+         <cstring>copyToFolder</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QLineEdit" name="copyToFolder"/>
+      </item>
+      <item row="1" column="2">
+       <widget class="QPushButton" name="copyToBrowse">
+        <property name="text">
+         <string>Browse</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0" colspan="3">
+       <widget class="QCheckBox" name="removeOrig">
+        <property name="text">
+         <string>Remove Original File (for example, from a flash card)</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0" colspan="3">
+       <widget class="QCheckBox" name="renameDuplicates">
+        <property name="text">
+         <string>If &amp;duplicates, append date and time to make file unique</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="gbSlideSettings">
      <property name="title">
       <string>Slide Settings</string>
      </property>
      <layout class="QGridLayout" name="gridLayout_3">
-      <item row="0" column="0" colspan="2">
+      <item row="1" column="0" colspan="2">
        <widget class="QCheckBox" name="flagAutoChange">
         <property name="text">
          <string>Automatically change to next photo slides after:</string>
@@ -194,7 +221,7 @@
         </property>
        </widget>
       </item>
-      <item row="2" column="0">
+      <item row="3" column="0">
        <widget class="QCheckBox" name="flagShowNames">
         <property name="text">
          <string>Show File Names on Slide</string>
@@ -204,7 +231,7 @@
         </property>
        </widget>
       </item>
-      <item row="1" column="0" colspan="3">
+      <item row="2" column="0" colspan="3">
        <widget class="QCheckBox" name="flagLoop">
         <property name="text">
          <string>Automatically loop back to the start of the group when finished</string>
@@ -214,7 +241,7 @@
         </property>
        </widget>
       </item>
-      <item row="0" column="2">
+      <item row="1" column="2">
        <widget class="QDoubleSpinBox" name="changeTime">
         <property name="alignment">
          <set>Qt::AlignCenter</set>
@@ -227,7 +254,7 @@
         </property>
        </widget>
       </item>
-      <item row="6" column="0" colspan="2">
+      <item row="7" column="0" colspan="2">
        <widget class="QCheckBox" name="zoomImage">
         <property name="text">
          <string>Turn on Image Smooth-Zoom Effects</string>
@@ -237,7 +264,7 @@
         </property>
        </widget>
       </item>
-      <item row="2" column="1" colspan="2">
+      <item row="3" column="1" colspan="2">
        <widget class="QCheckBox" name="flagNotDefault">
         <property name="text">
          <string>Only if not default camera file name</string>
@@ -247,7 +274,7 @@
         </property>
        </widget>
       </item>
-      <item row="7" column="2">
+      <item row="8" column="2">
        <widget class="QDoubleSpinBox" name="zoomFactor">
         <property name="alignment">
          <set>Qt::AlignCenter</set>
@@ -272,7 +299,7 @@
         </property>
        </widget>
       </item>
-      <item row="6" column="2">
+      <item row="7" column="2">
        <widget class="QSpinBox" name="zoomSpeed">
         <property name="alignment">
          <set>Qt::AlignCenter</set>
@@ -294,14 +321,14 @@
         </property>
        </widget>
       </item>
-      <item row="3" column="0">
+      <item row="4" column="0">
        <widget class="QCheckBox" name="addCustomTitle">
         <property name="text">
          <string>Show Custom Title on All Slides</string>
         </property>
        </widget>
       </item>
-      <item row="5" column="0" colspan="2">
+      <item row="6" column="0" colspan="2">
        <widget class="QLineEdit" name="customTitle"/>
       </item>
      </layout>
@@ -342,7 +369,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>245</x>
-     <y>698</y>
+     <y>735</y>
     </hint>
     <hint type="destinationlabel">
      <x>157</x>
@@ -358,7 +385,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>313</x>
-     <y>698</y>
+     <y>735</y>
     </hint>
     <hint type="destinationlabel">
      <x>286</x>
@@ -374,11 +401,11 @@
    <hints>
     <hint type="sourcelabel">
      <x>106</x>
-     <y>120</y>
+     <y>354</y>
     </hint>
     <hint type="destinationlabel">
      <x>62</x>
-     <y>152</y>
+     <y>386</y>
     </hint>
    </hints>
   </connection>
@@ -390,11 +417,11 @@
    <hints>
     <hint type="sourcelabel">
      <x>182</x>
-     <y>120</y>
+     <y>354</y>
     </hint>
     <hint type="destinationlabel">
      <x>236</x>
-     <y>149</y>
+     <y>383</y>
     </hint>
    </hints>
   </connection>
@@ -406,11 +433,11 @@
    <hints>
     <hint type="sourcelabel">
      <x>245</x>
-     <y>120</y>
+     <y>354</y>
     </hint>
     <hint type="destinationlabel">
      <x>455</x>
-     <y>160</y>
+     <y>394</y>
     </hint>
    </hints>
   </connection>
@@ -422,11 +449,11 @@
    <hints>
     <hint type="sourcelabel">
      <x>282</x>
-     <y>120</y>
+     <y>354</y>
     </hint>
     <hint type="destinationlabel">
      <x>239</x>
-     <y>177</y>
+     <y>411</y>
     </hint>
    </hints>
   </connection>
@@ -438,11 +465,11 @@
    <hints>
     <hint type="sourcelabel">
      <x>112</x>
-     <y>283</y>
+     <y>125</y>
     </hint>
     <hint type="destinationlabel">
      <x>126</x>
-     <y>309</y>
+     <y>151</y>
     </hint>
    </hints>
   </connection>
@@ -454,11 +481,11 @@
    <hints>
     <hint type="sourcelabel">
      <x>191</x>
-     <y>283</y>
+     <y>125</y>
     </hint>
     <hint type="destinationlabel">
      <x>291</x>
-     <y>309</y>
+     <y>151</y>
     </hint>
    </hints>
   </connection>
@@ -470,11 +497,11 @@
    <hints>
     <hint type="sourcelabel">
      <x>184</x>
-     <y>336</y>
+     <y>178</y>
     </hint>
     <hint type="destinationlabel">
      <x>291</x>
-     <y>363</y>
+     <y>205</y>
     </hint>
    </hints>
   </connection>
@@ -486,11 +513,11 @@
    <hints>
     <hint type="sourcelabel">
      <x>114</x>
-     <y>336</y>
+     <y>178</y>
     </hint>
     <hint type="destinationlabel">
      <x>113</x>
-     <y>363</y>
+     <y>205</y>
     </hint>
    </hints>
   </connection>
@@ -502,7 +529,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>163</x>
-     <y>698</y>
+     <y>735</y>
     </hint>
     <hint type="destinationlabel">
      <x>174</x>
@@ -518,11 +545,11 @@
    <hints>
     <hint type="sourcelabel">
      <x>211</x>
-     <y>123</y>
+     <y>357</y>
     </hint>
     <hint type="destinationlabel">
      <x>200</x>
-     <y>210</y>
+     <y>444</y>
     </hint>
    </hints>
   </connection>
@@ -534,11 +561,43 @@
    <hints>
     <hint type="sourcelabel">
      <x>137</x>
-     <y>513</y>
+     <y>590</y>
     </hint>
     <hint type="destinationlabel">
      <x>184</x>
-     <y>548</y>
+     <y>625</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>advancedBtn</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>gbCopyTo</receiver>
+   <slot>setVisible(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>476</x>
+     <y>289</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>383</x>
+     <y>327</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>advancedBtn</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>gbSlideSettings</receiver>
+   <slot>setVisible(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>435</x>
+     <y>298</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>425</x>
+     <y>487</y>
     </hint>
    </hints>
   </connection>

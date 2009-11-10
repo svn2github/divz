@@ -107,10 +107,13 @@ Qt::ItemFlags DocumentListModel::flags(const QModelIndex &index) const
 }
 
 
-bool DocumentListModel::dropMimeData ( const QMimeData * data, Qt::DropAction /*action*/, int /*row*/, int /*column*/, const QModelIndex & parent )
+bool DocumentListModel::dropMimeData ( const QMimeData * data, Qt::DropAction action, int /*row*/, int /*column*/, const QModelIndex & parent )
 {
 	QByteArray ba = data->data(itemMimeType());
 	QStringList list = QString(ba).split(",");
+	
+	// Invert the actions since I cant figure out how to change the action modifier keys
+	action = action == Qt::MoveAction ? Qt::CopyAction : Qt::MoveAction; 
 	
 	// convert csv list to integer list of slide numbers
 	QList<int> removed;
@@ -120,23 +123,34 @@ bool DocumentListModel::dropMimeData ( const QMimeData * data, Qt::DropAction /*
 		removed << x;
 	}
 	
+	//qDebug() << "dropMimeData: def[copy="<<Qt::CopyAction<<",move="<<Qt::MoveAction<<"], action:"<<action<<", start size: "<<m_sortedGroups.size();
+	
+// 	if(action == Qt::CopyAction)
+// 		beginInsertRows(QModelIndex(),parent.row()+1,list.size());
+	
 	// add the slides from start to parent row
 	QList<SlideGroup*> newList;
 	for(int i=0;i<parent.row()+1;i++)
-		if(!removed.contains(i))
+		if(!removed.contains(i) || action == Qt::CopyAction)
 			newList << m_sortedGroups.at(i);
 	
 	// add in the dropped slides
 	QList<SlideGroup*> dropped;
 	foreach(int x, removed)
 	{
-		newList << m_sortedGroups.at(x);
-		dropped << m_sortedGroups.at(x);;
+		SlideGroup * group = m_sortedGroups.at(x);
+		if(action == Qt::CopyAction)
+		{
+			group = group->clone();
+			m_doc->addGroup(group);
+		}
+		newList << group;
+		dropped << group;
 	}
 	
 	// add in the rest of the slides
 	for(int i=parent.row()+1;i<m_sortedGroups.size();i++)
-		if(!removed.contains(i))
+		if(!removed.contains(i) || action == Qt::CopyAction)
 			newList << m_sortedGroups.at(i);
 	
 	// renumber all the slides
@@ -149,12 +163,21 @@ bool DocumentListModel::dropMimeData ( const QMimeData * data, Qt::DropAction /*
 	
 	m_sortedGroups = newList;
 	
-	//qSort(m_sortedGroups.begin(), m_sortedGroups.end(), group_num_compare);
-	
-	QModelIndex top    = indexForGroup(m_sortedGroups.first()),
-		    bottom = indexForGroup(m_sortedGroups.last());
-	
-	dataChanged(top,bottom);
+ 	if(action == Qt::CopyAction)
+ 		internalSetup();
+ 	else
+ 	{
+ 		//endInsertRows();
+		
+		//qDebug() << "dropMimeData: end size: "<<m_sortedGroups.size();
+		
+		//qSort(m_sortedGroups.begin(), m_sortedGroups.end(), group_num_compare);
+		
+		QModelIndex top    = indexForGroup(m_sortedGroups.first()),
+			bottom = indexForGroup(m_sortedGroups.last());
+		
+		dataChanged(top,bottom);
+	}
 	
 	emit groupsDropped(dropped);
 	

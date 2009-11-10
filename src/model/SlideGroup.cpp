@@ -195,14 +195,12 @@ QByteArray SlideGroup::toByteArray() const
 	QDataStream stream(&array, QIODevice::WriteOnly);
 	QVariantMap map;
 	
-	
-	
 	saveProperties(map);
 	saveSlideList(map);
 	
 	map["SlideGroup.ClassName"] = metaObject()->className();
 	
-	qDebug() << "SlideGroup::toByteArray(): "<<map;
+	//qDebug() << "SlideGroup::toByteArray(): "<<map;
 	stream << map;
 	return array; 
 }
@@ -238,7 +236,13 @@ void SlideGroup::saveSlideList(QVariantMap&map)  const
 
 }
 
-
+SlideGroup * SlideGroup::clone()
+{
+	QByteArray ba = toByteArray();
+	SlideGroup * clone = fromByteArray(ba);
+	clone->setGroupNumber(-1);
+	return clone;
+}
 
 /* static */
 SlideGroup * SlideGroup::fromByteArray(QByteArray &array)
@@ -247,7 +251,7 @@ SlideGroup * SlideGroup::fromByteArray(QByteArray &array)
 	QVariantMap map;
 	stream >> map;
 	
-	qDebug() << "SlideGroup::fromByteArray(): "<<map;
+	//qDebug() << "SlideGroup::fromByteArray(): "<<map;
 	
 	SlideGroup * group = 0;
 	

@@ -19,6 +19,7 @@ MediaBrowserDialog::MediaBrowserDialog(const QString & prevPathKey, QWidget *par
 		vbox->setMargin(0);
 	m_browser->setBackgroundActionsEnabled(false);
 	m_browser->setViewMode(QListView::IconMode);
+	
 	//m_browser->setIconSize(QSize(64,64));
 	
 	if(!prevPathKey.isEmpty())

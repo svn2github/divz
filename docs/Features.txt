@@ -276,15 +276,8 @@ Revised Task list for Release 1.0, 10/18/09:
 					output "B": cut 50%,0,100%,100%
 			add slide "database" of pre-built slides
 			
-			QuickSlide's currently dont get sent to network viewers - need to implement that
-				due to the fact that network viewers change slides based on the integer slide#
-			
 			need to be able to import slide groups from other documents
 			when move keys up/down, send to list
-			
-			speed of sending a large song over network needs imroved
-				1 - 5 second delay before going live
-				
 			
 			loading directory with videos still takes 1-5 seconds to change list
 			video icons mess up layout - not same size?
@@ -299,13 +292,9 @@ Revised Task list for Release 1.0, 10/18/09:
 			
 			fit to slide btn doesnt update font size box on toolbar
 			
-			when deleting slides, entire slide list goes gray till icons regenerate - kinda anoying
-			
 			output controls should "save state" (e.g. sync mode, etc)
 			
-			update SlideGroupViewer/OutputInstance API to allow viewer to take ownership of disposable slides such as quickslide clones and delete when done
-			
-			dviz should remember last file loaded
+			[DONE] dviz should remember last file loaded
 			dviz should provide "recently opened" file list
 			
 			need progress dialog for when loading file with lots of songs - the warming threads freeze UI for too long
@@ -313,33 +302,20 @@ Revised Task list for Release 1.0, 10/18/09:
 			adding images using import tool then editing the group erases all auto-change times
 			
 			really need to transmit over network:
-				A - quickslides
+				[DONE] A - quickslides
 				B - any changes to slidegroup already live
 			when net client connects, need to get current live group
 			add checkbox to output instance to sync black/clear status
 			
 			black/clear unreliable sometimes - send group live with black, then click clear, then black, then go live, then change slide - sometimes doesnt do whats expected
 				thats what it is - black, set group, click clear - it goes live with clear, click cleear again, slide goes live - even tho blacak is clicked
-			
-			quickslide doesnt crossfade from "live" group to quickslide, but crossfades between quickslides or back to live
-			
-			[DONE] dont queue-generate slide list iconds (or doc list) when not in the initial setmodel phase
-				
-			net viewer - to improve performance, send md5, cache slide if not changed
-				same with setSlide via ptr - md5, if changed from cache, then send slide
-				
-			[DONE] to speed up net xfer, use code based on the clone code
+				cant reproduce this sequence
 			
 			slide editor - duplicate slide should insert below old slide
 			
 			song text - fit to slide - max variance not more than 10 - 20 pts between slides .. ?
 			
 			need to think about fonts missing on net viewer clients - that messes up slide layout
-			
-			[DONE] move the document save code to a thread in mainwindow - update progressbar in statusbar
-				no progress bar
-			
-			[DONE] image import tool - when adding to existing group, update slide nbrs to max slide nbr
 			
 			need to import/export individual slide groups
 			
@@ -353,10 +329,19 @@ Revised Task list for Release 1.0, 10/18/09:
 				with ducktape, it doesnt stick, but when its turned off, wont turn back on
 				
 			for quick slide, add a "clone from" dropdown
-			make image iport dialog have "advanced" view
+			[DONE] make image iport dialog have "advanced" view
 			make image import dialog remeber settings
 			
-			quickslide doesnt crossfade first time shown
+			[DONE] ppt: need to monitor for changes in current slide#
+			[DONE] ppt: need to impl fade to black
+			[REJECTED] ppt: disable clear btn
+				impl with set state
+			ppt: need custom view control to enable pause/play timer btn
+			
+			[DONE] quick slide needs to stop/start timer
+			[DONE] change slide while quick slide active should de-activate 'show' button
+			
+			add optional passcode to output server
 	
 			[STARTED] would be nice: while editing slide thats live, if change, cross fade to changed version
 			
@@ -503,6 +488,27 @@ Revised Task list for Release 1.0, 10/18/09:
 		
 		
 		
+		
+		
+		[DONE] QuickSlide's currently dont get sent to network viewers - need to implement that
+			due to the fact that network viewers change slides based on the integer slide#
+			updated api to send over network
+		[FIXED] speed of sending a large song over network needs imroved
+			1 - 5 second delay before going live
+			changed to use qbytearray to send
+		[FIXED] when deleting slides, entire slide list goes gray till icons regenerate - kinda anoying
+		[DONE] update SlideGroupViewer/OutputInstance API to allow viewer to take ownership of disposable slides such as quickslide clones and delete when done
+		[FIXED] quickslide doesnt crossfade from "live" group to quickslide, but crossfades between quickslides or back to live
+		[DONE] dont queue-generate slide list iconds (or doc list) when not in the initial setmodel phase
+		[REJECTED] net viewer - to improve performance, send md5, cache slide if not changed
+			same with setSlide via ptr - md5, if changed from cache, then send slide
+			changed to using qbytearray instead to speed performance
+		[DONE] to speed up net xfer, use code based on the clone code
+		[DONE] move the document save code to a thread in mainwindow - update progressbar in statusbar
+			no progress bar
+		[DONE] image import tool - when adding to existing group, update slide nbrs to max slide nbr
+		[FIXED] quickslide doesnt crossfade first time shown
+			it was due to the returnPressed() handler changing button state to match flag, causing another call to the show quick slide handler, forcing a 'jump to end of transition' for first slide quick slide shown in the returnPressed handler to begin with
 		[DONE] changing font size by typing should fit to natural size
 		[DONE] scroll wheel in textt editor should scroll text content
 			had to remove fotowall wheelevent override

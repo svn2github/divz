@@ -47,11 +47,25 @@ ImageImportDialog::ImageImportDialog(Document *d, QWidget *parent) :
 	// force UI Updates
 	m_ui->addCustomTitle->setChecked(true);
 	m_ui->addCustomTitle->setChecked(false);
+	
+	connect(m_ui->advancedBtn, SIGNAL(toggled(bool)), this, SLOT(advancedBtnToggled(bool)));
+	
+	// force UI Updates
+	m_ui->advancedBtn->setChecked(true);
+	m_ui->advancedBtn->setChecked(false);
 }
 
 ImageImportDialog::~ImageImportDialog()
 {
 	delete m_ui;
+}
+
+void ImageImportDialog::advancedBtnToggled(bool flag)
+{
+	// TODO adjustSize doesnt shrink the dialog!
+	m_ui->gbSlideSettings->setVisible(flag);
+	m_ui->gbCopyTo->setVisible(flag);
+	adjustSize();
 }
 
 void ImageImportDialog::importDirBrowse()

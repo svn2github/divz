@@ -39,7 +39,7 @@ public:
 				
 	/* Drag and Drop Support */
 	Qt::ItemFlags flags(const QModelIndex &index) const;
-	Qt::DropActions supportedDropActions() const { return Qt::MoveAction; }
+	Qt::DropActions supportedDropActions() const { return Qt::MoveAction | Qt::CopyAction; }
 
 	QStringList mimeTypes () const { QStringList x; x<<itemMimeType(); return x; }
  	QMimeData * mimeData(const QModelIndexList & indexes) const;
@@ -50,6 +50,7 @@ public:
  	
  	// Not from AbstractListModel, just for utility
 	QString itemMimeType() const { return "application/x-dviz-document-listmodel-item"; }
+	//QString interListItemMimeType() const { return "application/x-dviz-document-listmodel-item-bytearray"; }
 		
 		
 	void releaseDocument();

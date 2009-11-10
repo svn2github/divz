@@ -150,6 +150,11 @@ SlideGroupViewControl::SlideGroupViewControl(OutputInstance *g, QWidget *w )
 	m_listView = new SlideGroupViewControlListView(this);
 	m_listView->setViewMode(QListView::IconMode);
 	m_listView->setMovement(QListView::Static);
+	m_listView->setWrapping(true);
+	m_listView->setWordWrap(true);
+	m_listView->setLayoutMode(QListView::Batched);
+	m_listView->setFlow(QListView::LeftToRight);
+	m_listView->setResizeMode(QListView::Adjust);
 	m_listView->setSelectionMode(QAbstractItemView::SingleSelection);
 	setFocusProxy(m_listView);
 	setFocusPolicy(Qt::StrongFocus);
@@ -362,6 +367,14 @@ void SlideGroupViewControl::fitQuickSlideText()
 
 void SlideGroupViewControl::showQuickSlide(bool flag)
 {
+	if(m_showQuickSlideBtn->isChecked() != flag)
+	{
+		m_showQuickSlideBtn->setChecked(flag);
+		// since setChecked() will trigger a call back to this function,
+		// return here so we dont show the slide twice (triggering no cross fade)
+		return;
+	}
+		
 	if(!m_quickSlide)
 	{
 		makeQuickSlide();
@@ -375,6 +388,7 @@ void SlideGroupViewControl::showQuickSlide(bool flag)
 		// clone the slide so that it cross fades to it instead of just cutting to the slide
 		// AND so that the setQuickSlideText() doesnt set text on the live slide
 		m_slideViewer->setSlide(m_quickSlide->clone(),true); // true = take ownership, delete when done
+		
 	}
 	else
 	{
@@ -384,10 +398,19 @@ void SlideGroupViewControl::showQuickSlide(bool flag)
 			m_slideViewer->setSlide(SlideGroupViewer::blackSlide());
 	}
 	
-	m_quickSlideText->selectAll();
+	if(flag)
+	{
+		m_timerWasActiveBeforeFade = m_timerState == Running;
+		if(m_timerWasActiveBeforeFade)
+			toggleTimerState(Stopped);
+	}
+	else
+	{
+		if(m_timerWasActiveBeforeFade)
+			toggleTimerState(Running);
+	}
 	
-	if(m_showQuickSlideBtn->isChecked() != flag)
-		m_showQuickSlideBtn->setChecked(flag);
+	m_quickSlideText->selectAll();
 }
 
 void SlideGroupViewControl::setQuickSlideText()
@@ -571,6 +594,9 @@ void SlideGroupViewControl::slideSelected(const QModelIndex &idx)
 	enableAnimation(slide->autoChangeTime());
 	
 	m_selectedSlide = slide;
+	
+	if(m_showQuickSlideBtn->isChecked())
+		m_showQuickSlideBtn->setChecked(false);
 	
 	emit slideSelected(slide);
 }

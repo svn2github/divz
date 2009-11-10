@@ -47,7 +47,7 @@ public:
 
 	/* Drag and Drop Support */
 	Qt::ItemFlags flags(const QModelIndex &index) const;
-	Qt::DropActions supportedDropActions() const { return Qt::MoveAction; }
+	Qt::DropActions supportedDropActions() const { return Qt::MoveAction | Qt::CopyAction; }
 
 	QStringList mimeTypes () const { QStringList x; x<<itemMimeType(); return x; }
  	QMimeData * mimeData(const QModelIndexList & indexes) const;

@@ -261,6 +261,13 @@ void MediaBrowser::setupUI()
 	m_listView = new MediaBrowserQListView(browser);
 	m_listView->setAlternatingRowColors(true);
 	m_listView->setIconSize(m_iconSize);
+	//m_listView->setWrapping(true);
+	m_listView->setWordWrap(true);
+	//m_listView->setGridSize(MEDIABROWSER_LIST_ICON_SIZE);
+	m_listView->setLayoutMode(QListView::Batched);
+	//m_listView->setFlow(QListView::LeftToRight);
+	m_listView->setResizeMode(QListView::Adjust);
+	//m_listView->setSelectionMode(QAbstractItemView::SingleSelection);
 
 	// below doesnt seem to be enough
 	//m_listView->setEditTriggers(QAbstractItemView::SelectedClicked | QAbstractItemView::EditKeyPressed);
@@ -369,6 +376,7 @@ void MediaBrowser::setViewMode(QListView::ViewMode mode)
 		m_listView->setAlternatingRowColors(true);
 	else
 		m_listView->setAlternatingRowColors(false);
+		
 }
 
 QListView::ViewMode MediaBrowser::viewMode()

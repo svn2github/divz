@@ -117,10 +117,13 @@ Qt::ItemFlags SlideGroupListModel::flags(const QModelIndex &index) const
 }
 
 
-bool SlideGroupListModel::dropMimeData ( const QMimeData * data, Qt::DropAction /*action*/, int /*row*/, int /*column*/, const QModelIndex & parent )
+bool SlideGroupListModel::dropMimeData ( const QMimeData * data, Qt::DropAction action, int /*row*/, int /*column*/, const QModelIndex & parent )
 {
 	QByteArray ba = data->data(itemMimeType());
 	QStringList list = QString(ba).split(",");
+	
+	// Invert the actions since I cant figure out how to change the action modifier keys
+	action = action == Qt::MoveAction ? Qt::CopyAction : Qt::MoveAction; 
 	
 	// convert csv list to integer list of slide numbers
 	QList<int> removed;
@@ -133,33 +136,46 @@ bool SlideGroupListModel::dropMimeData ( const QMimeData * data, Qt::DropAction 
 	// add the slides from start to parent row
 	QList<Slide*> newList;
 	for(int i=0;i<parent.row()+1;i++)
-		if(!removed.contains(i))
+		if(!removed.contains(i) || action == Qt::CopyAction)
 			newList << m_sortedSlides.at(i);
 	
 	// add in the dropped slides
 	QList<Slide*> dropped;
 	foreach(int x, removed)
 	{
-		newList << m_sortedSlides.at(x);
-		dropped << m_sortedSlides.at(x);;
+		Slide * slide = m_sortedSlides.at(x);
+		if(action == Qt::CopyAction)
+		{
+			slide = slide->clone();
+			m_slideGroup->addSlide(slide);
+		}
+		
+		newList << slide;
+		dropped << slide;
 	}
 	
 	// add in the rest of the slides
 	for(int i=parent.row()+1;i<m_sortedSlides.size();i++)
-		if(!removed.contains(i))
+		if(!removed.contains(i) || action == Qt::CopyAction)
 			newList << m_sortedSlides.at(i);
 	
 	// renumber all the slides
 	int nbr = 0;
 	foreach(Slide *x, newList)
 		x->setSlideNumber(nbr++);
-	
+
 	m_sortedSlides = newList;
 	
-	QModelIndex top    = indexForSlide(m_sortedSlides.first()),
-		    bottom = indexForSlide(m_sortedSlides.last());
-	
-	dataChanged(top,bottom);
+	if(action == Qt::CopyAction)
+		internalSetup();
+	else
+	{
+		
+		QModelIndex top    = indexForSlide(m_sortedSlides.first()),
+			bottom = indexForSlide(m_sortedSlides.last());
+		
+		dataChanged(top,bottom);
+	}
 	
 	emit slidesDropped(dropped);
 	

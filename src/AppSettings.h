@@ -5,6 +5,12 @@
 #include <QList>
 #include <QMap>
 #include <QSizeF>
+#include <QPair>
+#include <QDir>
+
+#ifndef QStringPair
+	typedef QPair<QString,QString> QStringPair;
+#endif
 
 class MainWindow;
 class Output;
@@ -66,6 +72,14 @@ public:
 	static int autosaveTime() { return m_autosaveTime; }
 	static void setAutosaveTime(int);
 	
+	static QDir cacheDir() { return m_cacheDir; }
+	static void setCacheDir(const QDir &);
+	
+	typedef QList<QStringPair> ResourcePathTranslations;
+	
+	static void setResourcePathTranslations(ResourcePathTranslations);
+	static ResourcePathTranslations resourcePathTranslations() { return m_resourcePathTranslations; }
+	
 protected:
 	friend class MainWindow;
 // 	static double setCurrentDocumentAspectRatio(double);
@@ -95,6 +109,9 @@ private:
 	static LiveEditMode m_liveEditMode;
 	
 	static int m_autosaveTime; //seconds
+	
+	static QDir m_cacheDir;
+	static ResourcePathTranslations m_resourcePathTranslations;
 
 };
 

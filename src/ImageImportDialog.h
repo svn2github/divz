@@ -22,6 +22,7 @@ protected:
 protected slots:
     void importDirBrowse();
     void copyToDirBrowse();
+    void advancedBtnToggled(bool);
 
 private:
     Ui::ImageImportDialog *m_ui;

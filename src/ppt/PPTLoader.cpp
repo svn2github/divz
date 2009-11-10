@@ -2,7 +2,9 @@
 #include <QDebug>
 #include <QFile>
 
-#include "powerpointviewer.h"
+#ifdef WIN32_PPT_ENABLED
+	#include "powerpointviewer.h"
+#endif
 
 //MSScriptControl::ScriptControl * PPTLoader::m_script = 0;
 

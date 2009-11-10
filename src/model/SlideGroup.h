@@ -59,6 +59,8 @@ public:
 	virtual QByteArray toByteArray() const;
 	//virtual void fromByteArray(QByteArray &);
 	static SlideGroup * fromByteArray(QByteArray &);
+	
+	SlideGroup * clone();
 
 	virtual void load(const QString & filename);
 	virtual void save(const QString & filename = "");

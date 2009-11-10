@@ -69,7 +69,9 @@ MainWindow::MainWindow(QWidget *parent) :
 	
 	m_docModel = new DocumentListModel();
 	
-	if(!openFile("song-test.xml"))
+	QString lastOpenFile = AppSettings::previousPath("last-file-open");
+	
+	if(!openFile(lastOpenFile))
 		actionNew();
 		
 	// init the editor win AFTER load/new so that editor win starts out with the correct aspect ratio	
@@ -300,7 +302,11 @@ void MainWindow::clearAllOutputs()
 
 void MainWindow::actionOpen()
 {
-	QString fileName = QFileDialog::getOpenFileName(this, tr("Select DViz File"), m_doc->filename(), tr("DViz XML File (*.xml);;Any File (*.*)"));
+	QString curFile = m_doc->filename();
+	if(curFile.trimmed().isEmpty())
+		curFile = AppSettings::previousPath("last-file-open");
+	
+	QString fileName = QFileDialog::getOpenFileName(this, tr("Select DViz File"), curFile, tr("DViz XML File (*.xml);;Any File (*.*)"));
 	if(fileName != "")
 	{
 		if(openFile(fileName))
@@ -326,9 +332,14 @@ bool MainWindow::actionSave()
 
 bool MainWindow::actionSaveAs()
 {
-	QString fileName = QFileDialog::getSaveFileName(this, tr("Choose a Filename"), m_doc->filename(), tr("DViz XML File (*.xml);;Any File (*.*)"));
+	QString curFile = m_doc->filename();
+	if(curFile.trimmed().isEmpty())
+		curFile = AppSettings::previousPath("last-file-save");
+		
+	QString fileName = QFileDialog::getSaveFileName(this, tr("Choose a Filename"), curFile, tr("DViz XML File (*.xml);;Any File (*.*)"));
 	if(fileName != "")
 	{
+		AppSettings::setPreviousPath("last-file-save",fileName);
 		saveFile(fileName);
 		return true;
 	}
@@ -508,6 +519,7 @@ bool MainWindow::openFile(const QString & file)
 	}
 	
 	m_doc = new Document(file);
+	AppSettings::setPreviousPath("last-file-open",file);
 
 	//m_doc->load(file);
 	//r.readSlide(m_slide);

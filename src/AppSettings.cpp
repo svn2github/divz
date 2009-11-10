@@ -58,6 +58,9 @@ AppSettings::LiveEditMode AppSettings::m_liveEditMode = AppSettings::LiveEdit;
 
 int AppSettings::m_autosaveTime = 60; // seconds
 
+QDir AppSettings::m_cacheDir = QDir::temp();
+ResourcePathTranslations AppSettings::m_resourcePathTranslations;
+
 void AppSettings::initApp(const QString& appName)
 {
 	QString pluginPath = QString("%1/plugins").arg(QDir::currentPath());
@@ -159,6 +162,20 @@ void AppSettings::load()
 	
 	m_autosaveTime = s.value("app/autosave",60).toInt();
 	
+	m_cacheDir = QDir(s.value("app/cache-dir",QDir::temp().absolutePath()).toString());
+	
+	QVariantList pairList = s.value("app/resource-path-translations").toList();
+	
+	m_resourcePathTranslations.clear();
+	foreach(QVariant var, pairList)
+	{
+		QVariantMap pairMap = var.toMap();
+		QStringPair pair;
+		pair.first = pairMap["first"].toString();
+		pair.second = pairMap["second"].toString();
+		m_resourcePathTranslations << pair;
+	}
+	
 	QPixmapCache::setCacheLimit(m_pixmapCacheSize * 1024);
 	
 	updateLiveAspectRatio();
@@ -186,6 +203,20 @@ void AppSettings::save()
 	
 	s.setValue("app/live-edit-mode",(int)m_liveEditMode);
 	s.setValue("app/autosave",m_autosaveTime);
+	
+	s.setValue("app/cache-dir",m_cacheDir.absolutePath());
+	
+	QVariantList pairList;
+	foreach(QStringPair pair, m_resourcePathTranslations)
+	{
+		QVariantMap pairMap;
+		pairMap["first"] = pair.first;
+		pairMap["second"] = pair.second;
+		pairList << pairMap;
+	}
+	s.setValue("app/resource-path-translations",pairList);
+		
+	
 
 	saveOutputs(&s);
 
@@ -361,3 +392,11 @@ void AppSettings::updateLiveAspectRatio()
 	}
 }
 
+
+static QDir cacheDir() { return m_cacheDir; }
+static void setCacheDir(const QDir &);
+
+//typedef QList<QPair<QString,QString> > ResourcePathTranslations;
+
+static void setResourcePathTranslations(ResourcePathTranslations);
+static ResourcePathTranslations resourcePathTranslations() { return m_resourcePathTranslations; }
