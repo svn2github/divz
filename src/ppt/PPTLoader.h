@@ -11,6 +11,16 @@ namespace MSScriptControl {
 #endif
 //PowerPoint.Application: dumpcpp {91493440-5A91-11CF-8700-00AA0060263B}
 #include <QObject>
+
+class PPTLoaderTest : public QObject
+{
+	Q_OBJECT
+
+public slots:
+	void test1();
+	void test2();
+};
+
 class PPTLoader : public QObject
 {
 	Q_OBJECT
@@ -27,6 +37,7 @@ public:
 	void gotoSlide(int);
 	void showExit();
 	void closePPT();
+
 
 private slots:
 	void axException(int,QString,QString,QString);

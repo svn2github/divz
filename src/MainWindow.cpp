@@ -220,7 +220,7 @@ void MainWindow::saveFinished()
 void MainWindow::actionAddPPT()
 {
 	QString lastDir = AppSettings::previousPath("ppt");
-	QString file = QFileDialog::getOpenFileName(this,"Add PowerPoint File",lastDir,"PowerPoint Files (*.ppt, *.pptx)");
+	QString file = QFileDialog::getOpenFileName(this,"Add PowerPoint File",lastDir,"PowerPoint Files (*.ppt *.pptx)");
 	if(!file.isEmpty())
 	{
 		AppSettings::setPreviousPath("ppt",file);
@@ -229,8 +229,8 @@ void MainWindow::actionAddPPT()
 		group->setFile(file);
 
 		m_doc->addGroup(group);
-		if(!liveInst()->slideGroup())
-			setLiveGroup(group);
+		//if(!liveInst()->slideGroup())
+		//	setLiveGroup(group);
 		QModelIndex idx = m_docModel->indexForGroup(group);
 		m_groupView->setCurrentIndex(idx);
 	}

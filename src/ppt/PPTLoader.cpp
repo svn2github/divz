@@ -19,9 +19,25 @@ PPTLoader::~PPTLoader()
 	#ifdef WIN32_PPT_ENABLED
 	delete m_script;
 	#endif
+
 }
 
 
+void PPTLoaderTest::test1()
+{
+    PPTLoader *ppt = new PPTLoader();
+    ppt->openFile("c:/test3.ppt");
+    qDebug() << "Num Slides #1: "<<ppt->numSlides();
+    delete ppt;
+}
+
+void PPTLoaderTest::test2()
+{
+    PPTLoader *ppt = new PPTLoader();
+    ppt->openFile("c:/test2.ppt");
+    qDebug() << "Num Slides #2: "<<ppt->numSlides();
+    delete ppt;
+}
 
 void PPTLoader::axException(int code,QString source,QString description,QString help)
 {
@@ -162,6 +178,7 @@ int  PPTLoader::numSlides()
 	//qDebug() << "PPTLoader::numSlides";
 	return m_script->Eval("Global.numSlides()").toInt();
 #endif
+	return -1;
 }
 void PPTLoader::showRun(int x, int y, int w, int h)
 {
