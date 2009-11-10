@@ -19,7 +19,7 @@ NativeViewerWin32PPT::~NativeViewerWin32PPT()
 
 void NativeViewerWin32PPT::setSlideGroup(SlideGroup *group)
 {
-	m_ppt->showExit();
+	m_ppt->exitShow();
 
 #ifdef Q_OS_WIN32
 	PPTSlideGroup * pptGroup = dynamic_cast<PPTSlideGroup*>(group);
@@ -43,7 +43,7 @@ void NativeViewerWin32PPT::setSlideGroup(SlideGroup *group)
 void NativeViewerWin32PPT::close()
 {
 #ifdef Q_OS_WIN32
-    m_ppt->showExit();
+    m_ppt->exitShow();
     m_ppt->closeFile();
     CloseWindow(hwnd());
 #endif
@@ -79,12 +79,30 @@ int NativeViewerWin32PPT::currentSlide()
 {
 
 #ifdef Q_OS_WIN32
-	//if(m_show)
-	//	return m_show->SlideNumber();
+	if(m_ppt)
+		return m_ppt->currentSlide();
 #endif
 
 	return -1;
 }
+
+void NativeViewerWin32PPT::setState(NativeViewer::NativeShowState state)
+{
+#ifdef Q_OS_WIN32
+	if(m_ppt)
+		m_ppt->setState((PPTLoader::PpSlideShowState)((int)state));
+#endif
+}
+
+NativeViewerWin32::NativeShowState NativeViewerWin32PPT::state()
+{
+#ifdef Q_OS_WIN32
+	if(m_ppt)
+		return (NativeShowState)((int)(m_ppt->state()));
+#endif
+	return NativeViewerWin32::Done;
+}
+
 
 
 
@@ -95,7 +113,8 @@ void NativeViewerWin32PPT::embedHwnd()
 #ifdef Q_OS_WIN32
 	QRect rect = containerWidget()->geometry();
 	QPoint abs = WidgetUtil::absoluteWidgetPosition(containerWidget());
-	m_ppt->showRun(abs.x(), abs.y(), rect.width(), rect.height());
+	m_ppt->runShow();
+	m_ppt->setWindowRect(abs.x(), abs.y(), rect.width(), rect.height());
 
 	HWND ptr = NULL;
 	int count = 0;

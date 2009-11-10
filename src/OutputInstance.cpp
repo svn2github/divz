@@ -405,6 +405,24 @@ void OutputInstance::clear()
 	}
 }
 
+void OutputInstance::setViewerState(SlideGroupViewer::ViewerState state)
+{
+	if(m_mirror)
+		m_mirror->setViewerState(state);
+	Output::OutputType outType = m_output->outputType();
+	if(outType == Output::Screen || outType == Output::Custom || outType == Output::Preview)
+	{
+		m_viewer->setViewerState(state);
+
+	}
+	else
+	{
+		//if(m_outputServer)
+		//	setViewerState();
+		// TODO
+	}
+}
+
 void OutputInstance::setBackground(QColor color)
 {
 	if(m_mirror)

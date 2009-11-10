@@ -27,7 +27,7 @@
 #include <QApplication>
 
 #define MAX_BYPRODUCT_SIZE 10
-
+#define NATIVE_CHECK_TIMEOUT 500
 
 /** NativeViewer **/
 NativeViewer::NativeViewer()
@@ -96,6 +96,11 @@ void NativeViewerWin32::hide()
     SetWindowPos(hwnd(), 0, 0,0,0,0, SWP_HIDEWINDOW);
 #endif
 }
+
+int NativeViewer::currentSlide() { return -1; }
+void NativeViewer::setState(NativeShowState) {}
+NativeViewer::NativeShowState NativeViewer::state() { return NativeViewer::Done; }
+
 
 QPixmap NativeViewerWin32::snapshot()
 {
@@ -233,6 +238,7 @@ SlideGroupViewer::SlideGroupViewer(QWidget *parent)
 	    , m_fadeInProgress(false)
 	    , m_nativeViewer(0)
 	    , m_isPreviewViewer(false)
+	    , m_viewerState(SlideGroupViewer::Running)
 {
 	QRect sceneRect(0,0,1024,768);
 	m_blackSlideRefCount++;
@@ -267,6 +273,7 @@ SlideGroupViewer::SlideGroupViewer(QWidget *parent)
 	// inorder to delete any slides created during the applyFilteres phase
 	connect(m_scene, SIGNAL(slideDiscarded(Slide*)), this, SLOT(slideDiscarded(Slide*)));
 
+	connect(&m_nativeCheckTimer, SIGNAL(timeout()), this, SLOT(checkCurrentNativeSlide()));
 
 	m_view->setBackgroundBrush(Qt::gray);
 
@@ -291,6 +298,22 @@ void SlideGroupViewer::setIsPreviewViewer(bool flag)
 void SlideGroupViewer::setNativeViewer(NativeViewer *view)
 {
 	m_nativeViewer = view;
+}
+
+void SlideGroupViewer::checkCurrentNativeSlide()
+{
+	if(!m_nativeViewer)
+		return;
+
+	if(m_nativeViewer->currentSlide() != m_slideNum)
+	{
+		m_slideNum = m_nativeViewer->currentSlide();
+		emit slideChanged(m_slideNum);
+		qDebug() << "SlideGroupViewer::checkCurrentNativeSlide: Slide Changed, New Slide: "<<m_slideNum;
+
+		// if slide changed, sync state
+		m_viewerState = (ViewerState)((int)m_nativeViewer->state());
+	}
 }
 
 void SlideGroupViewer::setOverlaySlide(Slide * newSlide)
@@ -725,6 +748,9 @@ void SlideGroupViewer::setSlideGroup(SlideGroup *g, Slide *startSlide)
 		m_nativeViewer = 0;
 
 		blackNative = true;
+
+		if(m_nativeCheckTimer.isActive())
+			m_nativeCheckTimer.stop();
 	}
 
 	m_slideNum = 0;
@@ -758,8 +784,6 @@ void SlideGroupViewer::setSlideGroup(SlideGroup *g, Slide *startSlide)
 				viewer->setSlideGroup(m_slideGroup);
 				viewer->show();
 
-				m_nativeViewer = viewer;
-
 				blackNative = false;
 
 				//qDebug() << "SlideGroupViewer::setSlideGroup: Setup done, mudging our style and hiding ourself.";
@@ -768,6 +792,11 @@ void SlideGroupViewer::setSlideGroup(SlideGroup *g, Slide *startSlide)
 				QWidget * topLevel = WidgetUtil::getTopLevelWidget(this);
 				//topLevel->setWindowFlags(Qt::WindowStaysOnBottomHint);
 				topLevel->hide();
+
+				// set native viewer AFTER fadeBlackFrame() called (above) so fadeblack affects the Qt viewer, not native
+				m_nativeViewer = viewer;
+
+				m_nativeCheckTimer.start(NATIVE_CHECK_TIMEOUT);
 
 				//qDebug() << "SlideGroupViewer::setSlideGroup: Setup complete.";
 			}
@@ -817,6 +846,32 @@ void SlideGroupViewer::setSlideGroup(SlideGroup *g, Slide *startSlide)
 
 	if(m_blackEnabled && blackNative)
 		fadeBlackFrame(false);
+}
+
+void SlideGroupViewer::setViewerState(ViewerState state)
+{
+	m_viewerState = state;
+	switch(state)
+	{
+		// Black/Clear methods automatically set the native viewer state
+		// and emits the viewerStateChanged() signal (even if not native)
+		case Black:
+			fadeBlackFrame(true);
+			break;
+		case Clear:
+			fadeClearFrame(true);
+			break;
+		case Done:
+		case Running:
+		case Paused:
+			emit viewerStateChanged(m_viewerState);
+			// nothing needed to be done unless native
+			if(m_nativeViewer)
+				m_nativeViewer->setState((NativeViewer::NativeShowState)((int)state));
+			break;
+		default:
+			break;
+	};
 }
 
 Slide * SlideGroupViewer::setSlide(int x)
@@ -1050,9 +1105,13 @@ void SlideGroupViewer::setSlideInternal(Slide *slide)
 void SlideGroupViewer::fadeBlackFrame(bool enable)
 {
 	m_blackEnabled = enable;
-
 	if(enable)
 	{
+		m_viewerState = SlideGroupViewer::Black;
+		emit viewerStateChanged(m_viewerState);
+		if(m_nativeViewer)
+			m_nativeViewer->setState(NativeViewer::Black);
+
 		generateBlackFrame();
 		//qDebug() << "SlideGroupViewer::fadeBlackFrame: "<<enable;
 
@@ -1064,10 +1123,20 @@ void SlideGroupViewer::fadeBlackFrame(bool enable)
 	{
 		if(m_clearEnabled && m_clearSlide)
 		{
+			m_viewerState = SlideGroupViewer::Clear;
+			emit viewerStateChanged(m_viewerState);
+			if(m_nativeViewer)
+			    m_nativeViewer->setState(NativeViewer::White);
+
 			setSlideInternal(m_clearSlide);
 		}
 		else
 		{
+			m_viewerState = SlideGroupViewer::Running;
+			emit viewerStateChanged(m_viewerState);
+			if(m_nativeViewer)
+			    m_nativeViewer->setState(NativeViewer::Running);
+
 			if(m_sortedSlides.size() <= 0)
 				return;
 
@@ -1084,11 +1153,21 @@ void SlideGroupViewer::fadeClearFrame(bool enable)
 {
 	if(enable)
 	{
+		m_viewerState = SlideGroupViewer::Clear;
+		emit viewerStateChanged(m_viewerState);
+		if(m_nativeViewer)
+			m_nativeViewer->setState(NativeViewer::White);
+
 		generateClearFrame();
 		setSlideInternal(m_clearSlide);
 	}
 	else
 	{
+		m_viewerState = SlideGroupViewer::Running;
+		emit viewerStateChanged(m_viewerState);
+		if(m_nativeViewer)
+			m_nativeViewer->setState(NativeViewer::Running);
+
 		if(m_slideNum < m_sortedSlides.size())
 		{
 			Slide *currentSlide = m_sortedSlides.at(m_slideNum);

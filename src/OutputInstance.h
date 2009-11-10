@@ -14,9 +14,12 @@
 
 #include "model/AbstractItemFilter.h"
 
-class SlideGroupViewer;
+#include "SlideGroupViewer.h"
+
 class SlideGroup;
 class Slide;
+
+//extern typedef SlideGroupViewer::ViewerState enum;
 
 #include <QWidget>
 class Output;
@@ -53,6 +56,8 @@ public:
 	
 	int fadeSpeed() { return m_fadeSpeed; }
 	int fadeQuality() { return m_fadeQuality; } 
+
+	SlideGroupViewer::ViewerState viewerState() { return m_viewerState; }
 	
 signals:
 	void nextGroup();
@@ -84,6 +89,8 @@ public slots:
 	
 	void fadeBlackFrame(bool);
 	void fadeClearFrame(bool);
+
+	void setViewerState(SlideGroupViewer::ViewerState);
 	
 	void setLiveBackground(const QFileInfo &, bool waitForNextSlide);
 	
@@ -149,6 +156,8 @@ private:
 	
 	QVBoxLayout *m_vbox;
 	QHBoxLayout *m_hbox;
+
+	SlideGroupViewer::ViewerState m_viewerState;
 	
 	bool m_lockResizeEvent;
 };

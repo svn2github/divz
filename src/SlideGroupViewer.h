@@ -33,6 +33,19 @@ public:
 
 	virtual void setSlide(Slide*);
 	virtual void setSlide(int) = 0;
+	virtual int currentSlide();
+
+	typedef enum NativeShowState {
+		Running=1, // Offset from 1 for compat with OLE enums / PPT
+		Paused=2,
+		Black=3,
+		White=4,
+		Done=5,
+	};
+
+	virtual void setState(NativeShowState);
+	virtual NativeShowState state();
+
 
 	virtual QPixmap snapshot(Slide*);
 	virtual QPixmap snapshot(int);
@@ -126,9 +139,22 @@ public:
 
 	NativeViewer * nativeViewer() { return m_nativeViewer; }
 	void setNativeViewer(NativeViewer*);
+
+	typedef enum ViewerState
+	{
+		Black,
+		Done,
+		Paused,
+		Running,
+		Clear
+	};
+
+	ViewerState viewerState() { return m_viewerState; }
 	
 signals:
 	void nextGroup();
+	void viewerStateChanged(ViewerState);
+	void slideChanged(int);
 
 public slots:
 	Slide * setSlide(Slide *, bool takeOwnership=false);
@@ -139,6 +165,8 @@ public slots:
 	void fadeBlackFrame(bool);
 	void fadeClearFrame(bool);
 	
+	void setViewerState(ViewerState);
+
 	void setLiveBackground(const QFileInfo &, bool waitForNextSlide);
 	
 	void setOverlaySlide(Slide *);
@@ -162,6 +190,8 @@ private slots:
 	void slideDiscarded(Slide*);
 	
 	void slideChanged(Slide *slide, QString slideOperation, AbstractItem *item, QString operation, QString fieldName, QVariant value);
+
+	void checkCurrentNativeSlide();
 		
 protected:
 	void resizeEvent(QResizeEvent *);
@@ -234,6 +264,10 @@ private:
 	bool m_fadeInProgress;
 
 	bool m_isPreviewViewer;
+
+	ViewerState m_viewerState;
+
+	QTimer m_nativeCheckTimer;
 	
 	NativeViewer * m_nativeViewer;
 };

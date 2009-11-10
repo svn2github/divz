@@ -15,7 +15,7 @@ PPTLoader::PPTLoader()
 
 PPTLoader::~PPTLoader()
 {
-	showExit();
+	exitShow();
 	closeFile();
 	closePPT();
 	#ifdef WIN32_PPT_ENABLED
@@ -27,18 +27,18 @@ PPTLoader::~PPTLoader()
 
 void PPTLoaderTest::test1()
 {
-    PPTLoader *ppt = new PPTLoader();
-    ppt->openFile("c:/test3.ppt");
-    qDebug() << "Num Slides #1: "<<ppt->numSlides();
-    delete ppt;
+	PPTLoader *ppt = new PPTLoader();
+	ppt->openFile("c:/test3.ppt");
+	qDebug() << "Num Slides #1: "<<ppt->numSlides();
+	delete ppt;
 }
 
 void PPTLoaderTest::test2()
 {
-    PPTLoader *ppt = new PPTLoader();
-    ppt->openFile("c:/test2.ppt");
-    qDebug() << "Num Slides #2: "<<ppt->numSlides();
-    delete ppt;
+	PPTLoader *ppt = new PPTLoader();
+	ppt->openFile("c:/test2.ppt");
+	qDebug() << "Num Slides #2: "<<ppt->numSlides();
+	delete ppt;
 }
 
 void PPTLoader::axException(int code,QString source,QString description,QString help)
@@ -117,16 +117,19 @@ void PPTLoader::setupScripts()
 				"}");
 	
 	// showRun(int x, int y, int w, int h)
-	sm->ExecuteStatement("Global.showRun = function(x,y,w,h) { "
+	sm->ExecuteStatement("Global.runShow = function() { "
 				"if(!Global.ppPres) {throw new Error('No file open');}"
-				"if(!Global.ppShowWin) {Global.ppShowWin = Global.ppPres.SlideShowSettings.Run();}"
-				"if(x!=-1 || h!=-1 || w!=-1 || h!=-1) {"
-					"Global.ppShowWin.Top=y;"
-					"Global.ppShowWin.Left=x;"
-					"Global.ppShowWin.Width=w;"
-					"Global.ppShowWin.Height=h;"
-					"}"
+				"if(!Global.ppShowWin)"
+					"{Global.ppShowWin = Global.ppPres.SlideShowSettings.Run();}"
 				"Global.ppShowWin.Activate()"
+				"}");
+
+	// setWindowRect(int x, int y, int w, int h)
+	sm->ExecuteStatement("Global.setWindowRect = function(x,y,w,h) { "
+				"Global.ppShowWin.Top=y;"
+				"Global.ppShowWin.Left=x;"
+				"Global.ppShowWin.Width=w;"
+				"Global.ppShowWin.Height=h;"
 				"}");
 	
 	// showGotoSlide(int num)
@@ -136,8 +139,29 @@ void PPTLoader::setupScripts()
 				"Global.ppShowWin.View.GotoSlide(num);"
 				"}");
 	
-	// showExit()
-	sm->ExecuteStatement("Global.showExit = function() { "
+	// setState(PpSlideShowState state)
+	sm->ExecuteStatement("Global.setState = function(state) { "
+				"if(!Global.ppPres) {throw new Error('No file open');}"
+				"if(!Global.ppShowWin) {Global.showRun();}"
+				"Global.ppShowWin.View.State = state;"
+				"}");
+
+	// state() : PpSlideShowState
+	sm->ExecuteStatement("Global.state = function() { "
+				"if(!Global.ppPres) {throw new Error('No file open');}"
+				"if(!Global.ppShowWin) {Global.showRun();}"
+				"return Global.ppShowWin.View.State;"
+				"}");
+
+	// currentSlide() : int
+	sm->ExecuteStatement("Global.currentSlide = function() { "
+				"if(!Global.ppPres) {throw new Error('No file open');}"
+				"if(!Global.ppShowWin) {Global.showRun();}"
+				"return Global.ppShowWin.View.Slide.SlideIndex;"
+				"}");
+
+	// exitShow()
+	sm->ExecuteStatement("Global.exitShow = function() { "
 				"if(!Global.ppPres) {return;}"
 				"if(!Global.ppShowWin) {return;}"
 				"Global.ppShowWin.View.Exit();"
@@ -162,7 +186,6 @@ void PPTLoader::openPPT()
 void PPTLoader::openFile(const QString& file)
 {
 #ifdef WIN32_PPT_ENABLED
-#endif
 	qDebug() << "PPTLoader::openFile: "<<file;
 	m_script->ExecuteStatement(QString("Global.openFile('%1')").arg(file));
 
@@ -193,8 +216,7 @@ void PPTLoader::openFile(const QString& file)
 
 	show->Exit();
 	ppt.Quit();
-
-
+#endif
 }
 
 void PPTLoader::closeFile()
@@ -215,11 +237,20 @@ int  PPTLoader::numSlides()
 #endif
 	return -1;
 }
-void PPTLoader::showRun(int x, int y, int w, int h)
+
+void PPTLoader::setWindowRect(int x, int y, int w, int h)
 {
 #ifdef WIN32_PPT_ENABLED
-	//qDebug() << "PPTLoader::showRun: "<<x<<y<<w<<h;
-	m_script->ExecuteStatement(QString("Global.showRun(%1,%2,%3,%4)").arg(x).arg(y).arg(w).arg(h));
+	//qDebug() << "PPTLoader::setWindowRect: "<<x<<y<<w<<h;
+	m_script->ExecuteStatement(QString("Global.setWindowRect(%1,%2,%3,%4)").arg(x).arg(y).arg(w).arg(h));
+#endif
+}
+
+void PPTLoader::runShow()
+{
+#ifdef WIN32_PPT_ENABLED
+	//qDebug() << "PPTLoader::runShow";
+	m_script->ExecuteStatement("Global.runShow()");
 #endif
 }
 void PPTLoader::gotoSlide(int num)
@@ -229,11 +260,37 @@ void PPTLoader::gotoSlide(int num)
 	m_script->ExecuteStatement(QString("Global.gotoSlide(%1)").arg(num));
 #endif
 }
-void PPTLoader::showExit()
+void PPTLoader::setState(PpSlideShowState state)
 {
 #ifdef WIN32_PPT_ENABLED
-	qDebug() << "PPTLoader::showExit";
-	m_script->ExecuteStatement("Global.showExit()");
+	qDebug() << "PPTLoader::setState: "<<(int)state;
+	m_script->ExecuteStatement(QString("Global.setState(%1)").arg((int)state));
+#endif
+}
+
+PPTLoader::PpSlideShowState PPTLoader::state()
+{
+#ifdef WIN32_PPT_ENABLED
+	//qDebug() << "PPTLoader::state";
+	return (PpSlideShowState )(m_script->Eval("Global.numSlides()").toInt());
+#endif
+}
+
+int PPTLoader::currentSlide()
+{
+#ifdef WIN32_PPT_ENABLED
+	//qDebug() << "PPTLoader::currentSlide";
+	// subtract 1 from the value because PPT bases slide index from 1, we use index 0 as base in dviz
+	return m_script->Eval("Global.currentSlide()").toInt() - 1;
+#endif
+}
+
+
+void PPTLoader::exitShow()
+{
+#ifdef WIN32_PPT_ENABLED
+	qDebug() << "PPTLoader::exitShow";
+	m_script->ExecuteStatement("Global.exitShow()");
 #endif
 }
 void PPTLoader::closePPT()

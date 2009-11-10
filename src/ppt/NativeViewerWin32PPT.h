@@ -25,6 +25,9 @@ public:
 	void hide();
 	QPixmap snapshot();
 
+	void setState(NativeShowState);
+	NativeShowState state();
+
 protected slots:
 	void embedHwnd();
 
