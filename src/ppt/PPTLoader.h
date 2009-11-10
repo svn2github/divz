@@ -45,6 +45,8 @@ private slots:
 private:
 	void setupScripts();
 
+	int m_numSlides;
+
 	MSScriptControl::ScriptControl * m_script;
 };
 

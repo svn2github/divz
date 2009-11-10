@@ -5,8 +5,8 @@ CONFIG	+= qaxcontainer
 //DUMP_ERROR = $$system(dumpcpp {FCE18141-B12B-11d0-B06A-00AA0060271A})
 
     DEFINES += WIN32_PPT_ENABLED
-    HEADERS  = PPTLoader.h msscriptcontrol.h
-    SOURCES  = main.cpp PPTLoader.cpp msscriptcontrol.cpp
+    HEADERS  = PPTLoader.h msscriptcontrol.h powerpointviewer.h
+    SOURCES  = main.cpp PPTLoader.cpp msscriptcontrol.cpp powerpointviewer.cpp
 
 
 # install

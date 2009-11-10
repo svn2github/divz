@@ -2,11 +2,13 @@
 #include <QDebug>
 #include <QFile>
 
+#include "powerpointviewer.h"
 
 //MSScriptControl::ScriptControl * PPTLoader::m_script = 0;
 
 PPTLoader::PPTLoader()
 	: QObject()
+	, m_numSlides(-2)
 {
 	setupScripts();
 }
@@ -160,9 +162,39 @@ void PPTLoader::openPPT()
 void PPTLoader::openFile(const QString& file)
 {
 #ifdef WIN32_PPT_ENABLED
+#endif
 	qDebug() << "PPTLoader::openFile: "<<file;
 	m_script->ExecuteStatement(QString("Global.openFile('%1')").arg(file));
-#endif
+
+	m_numSlides = m_script->Eval("Global.numSlides()").toInt();;
+	if(m_numSlides > 0)
+	{
+		qDebug() << "PPTLoader::openFile: No hack needed, got num slide: "<<m_numSlides;
+		return;
+	}
+
+	// Why in the WORLD am I calling the PowerPoint*VIEWER* when I've got a perfectly good OLE connection
+	// via MSScriptControl to PowerPoint itself???
+	// Very good and VERY frustrating question. You see, in all the tests I've ran, the Global.numSlides()
+	// routine works fine - returns num slides. However, when integrated into DViz and ONLY when opening
+	// a PowerPoint file AFTER starting Dviz, the Global.numSlides() routine returns 0. WHY?? Dont know.
+	// So, if we cant get the num slides the right way, we go back door and use the viewer to tell us.
+
+	PowerPointViewer::Application ppt;
+
+	PowerPointViewer::SlideShowView * show =
+		ppt.NewShow(file,
+			PowerPointViewer::ppViewerSlideShowUseSlideTimings,
+			PowerPointViewer::ppVFalse
+		);
+
+	m_numSlides = show->SlidesCount();
+	qDebug() << "PPTLoader::openFile(): Hack needed, Num slides in "<<file<<": "<<m_numSlides;
+
+	show->Exit();
+	ppt.Quit();
+
+
 }
 
 void PPTLoader::closeFile()
@@ -176,7 +208,10 @@ int  PPTLoader::numSlides()
 {
 #ifdef WIN32_PPT_ENABLED
 	//qDebug() << "PPTLoader::numSlides";
-	return m_script->Eval("Global.numSlides()").toInt();
+	int val = m_script->Eval("Global.numSlides()").toInt();
+	if(val > 0)
+	    return val;
+	return m_numSlides;
 #endif
 	return -1;
 }
