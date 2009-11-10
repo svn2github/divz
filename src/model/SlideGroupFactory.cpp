@@ -378,7 +378,7 @@ void SlideGroupViewControl::showQuickSlide(bool flag)
 	}
 	else
 	{
-		if(m_selectedSlide)
+		if(m_selectedSlide>=0)
 			m_slideViewer->setSlide(m_selectedSlide);
 		else
 			m_slideViewer->setSlide(SlideGroupViewer::blackSlide());

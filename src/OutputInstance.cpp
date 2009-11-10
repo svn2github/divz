@@ -78,7 +78,14 @@ OutputInstance::OutputInstance(Output *out, bool startHidden, QWidget *parent)
 OutputInstance::~OutputInstance() 
 {
 	while(m_ownedSlides.size())
-		delete m_ownedSlides.takeFirst();
+	{	
+		QPointer<Slide> slide = m_ownedSlides.takeFirst();
+		if(slide)
+		{
+			Slide *slidePtr = (Slide*)slide;
+			delete slidePtr;
+		}
+	}
 			
 	if(!m_imgBuffer.isEmpty())
 	{
@@ -708,10 +715,18 @@ Slide * OutputInstance::setSlide(Slide *slide, bool takeOwnership)
 				m_outputServer->sendCommand(OutputServer::SetSlideObject, slide->toByteArray());
 		}
 		
-		m_ownedSlides.append(slide);
+		if(takeOwnership)
+			m_ownedSlides.append(QPointer<Slide>(slide));
 		
 		while(m_ownedSlides.size() > OWNED_SLIDE_BUFFER)
-			delete m_ownedSlides.takeFirst();
+		{	
+			QPointer<Slide> slide = m_ownedSlides.takeFirst();
+			if(slide)
+			{
+				Slide *slidePtr = (Slide*)slide;
+				delete slidePtr;
+			}
+		}
 		
 		// TODO handle ownership of slides sent to output server
 			

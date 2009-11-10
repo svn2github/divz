@@ -1071,8 +1071,7 @@ void SlideGroupViewer::fadeBlackFrame(bool enable)
 			if(m_sortedSlides.size() <= 0)
 				return;
 
-
-			if(m_slideNum > 0 && m_slideNum < m_sortedSlides.size())
+			if(m_slideNum >= 0 && m_slideNum < m_sortedSlides.size())
 			{
 				Slide *currentSlide = m_sortedSlides.at(m_slideNum);
 				setSlideInternal(applySlideFilters(currentSlide));

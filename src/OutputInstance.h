@@ -25,6 +25,9 @@ class JpegServer;
 class OutputServer;
 class QImage;
 class QResizeEvent; 
+
+#include <QPointer>
+
 class OutputInstance : public QWidget
 {
 	Q_OBJECT
@@ -117,7 +120,7 @@ private:
 
 	SlideGroup * m_slideGroup;
 	QList<Slide*> m_sortedSlides;
-	QList<Slide*> m_ownedSlides;
+	QList<QPointer<Slide> > m_ownedSlides;
 //	QHash<int,QPixmap> m_pixmaps;
 
 	int m_slideNum;
