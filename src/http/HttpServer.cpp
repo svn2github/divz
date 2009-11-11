@@ -7,17 +7,21 @@
 #include <QString>
 #include <QStringList>
 #include <QUrl>
+#include <QDateTime>
+#include <QFile>
+#include <QFileInfo>
+#include <QDir>
+
+#define FILE_BUFFER_SIZE 4096
 
 #define logMessage(a) qDebug() << "[INFO]"<< QDateTime::currentDateTime().toString() << a;
 
-// HttpServer is the the class that implements the simple HTTP server.
 HttpServer::HttpServer(quint16 port, QObject* parent)
 	: QTcpServer(parent)
 	, m_disabled(false)
 {
 	listen(QHostAddress::Any, port);
 	
-	//registerFor("/hello", this, "sampleResponseSlot(HttpServer*,QTcpSocket*,QStringList)");
 }
 	
 void HttpServer::incomingConnection(int socket)
@@ -46,28 +50,7 @@ void HttpServer::resume()
 {
 	m_disabled = false;
 }
-/*
-void HttpServer::registerFor(const QString& path, QObject *receiver, const char * method)
-{
-	QByteArray norm = QMetaObject::normalizedSignature(method);
-	int idx = receiver->metaObject()->indexOfMethod(norm);
-	if(idx < 0)
-	{
-		qDebug() << "Method "<<norm<<" ("<<method<<") does not exist on that object";
-		return;
-	}
-	idx = receiver->metaObject()->indexOfSlot(norm);
-	if(idx < 0)
-	{
-		qDebug() << "Method "<<norm<<" ("<<method<<") exists but IS NOT a slot!";
-	}
-	qDebug() << "Congrats! Method "<<norm<<" ("<<method<<") exists at idx "<<idx<<" and is a slot.";
 	
-	m_receivers[path] = QObjectMethodPair(receiver,method);
-}*/
-	
-typedef QPair<QByteArray, QByteArray> ByteArrayPair;
-
 void HttpServer::readClient()
 {
 	if (m_disabled)
@@ -98,7 +81,7 @@ void HttpServer::readClient()
 			QList<QPair<QByteArray, QByteArray> > encodedQuery = req.encodedQueryItems();
 			
 			QStringMap map;
-			foreach(ByteArrayPair bytePair, encodedQuery)
+			foreach(QByteArrayPair bytePair, encodedQuery)
 				map[QUrl::fromPercentEncoding(bytePair.first)] = QUrl::fromPercentEncoding(bytePair.second);
 			
 			//logMessage(map);
@@ -158,13 +141,15 @@ QString HttpServer::toPathString(const QStringList &pathElements, const QStringM
 		{
 			if(encoded)
 			{
-				list << QUrl::toPercentEncoding(key);
-				list << "=";
-				list << QUrl::toPercentEncoding(query.value(key));
+				list << QUrl::toPercentEncoding(key)
+				     << "="
+				     << QUrl::toPercentEncoding(query.value(key));
 			}
 			else
 			{
-				list << key << "=" << query.value(key);
+				list << key
+				     << "="
+				     << query.value(key);
 			}
 		}
 	}
@@ -181,76 +166,79 @@ void HttpServer::generic404(QTcpSocket *socket, const QStringList &pathElements,
 	   << "Sorry, <code>"<<toPathString(pathElements,query)<<"</code> was not found.";
 }
 
+bool HttpServer::serveFile(QTcpSocket *socket, const QString &pathStr)
+{
+	if(!pathStr.contains(".."))
+	{
+		QFileInfo fileInfo(pathStr);
+		QString abs = fileInfo.canonicalFilePath();
+		//QFile file(QDir::currentPath() + "/" + abs);
+		QFile file(abs);
+		if(!file.open(QIODevice::ReadOnly))
+		{
+			respond(socket,QString("HTTP/1.0 500 Unable to Open Resource"));
+			QTextStream os(socket);
+			os.setAutoDetectUnicode(true);
+			
+			os << "<h1>Unable to Open Resource</h1>\n"
+			   << "Unable to open resource <code>" << abs <<"</code>";
+			return false;
+		}
+		
+		logMessage(QString("[FILE] %1").arg(abs));
+		
+		QString ext = fileInfo.suffix().toLower();
+		QString contentType =	ext == "png"  ? "image/png" : 
+					ext == "jpg"  ? "image/jpg" :
+					ext == "jpeg" ? "image/jpeg" :
+					ext == "gif"  ? "image/gif" :
+					ext == "css"  ? "text/css" :
+					ext == "html" ? "text/html" :
+					ext == "js"   ? "text/javascript" :
+					"application/octet-stream";
+				
+		QHttpResponseHeader header(QString("HTTP/1.0 200 OK"));
+		header.setValue("content-type", contentType);
+	
+		respond(socket,header);
+		
+		char buffer[FILE_BUFFER_SIZE];
+		while(!file.atEnd())
+		{
+			qint64 bytesRead = file.read(buffer,FILE_BUFFER_SIZE);
+			if(bytesRead < 0)
+			{
+				return false;
+			}
+			else
+			{
+				socket->write(buffer, bytesRead);
+			}
+		}
+		
+		file.close();
+		
+		return true;
+	}
+	else
+	{
+		respond(socket,QString("HTTP/1.0 500 Invalid Resource Path"));
+		QTextStream os(socket);
+		os.setAutoDetectUnicode(true);
+		
+		os << "<h1>Invalid Resource Path</h1>\n"
+		<< "Sorry, but you cannot use '..' in a resource path.";
+		return false;
+	}
+}
+
 void HttpServer::dispatch(QTcpSocket *socket, const QStringList &pathElements, const QStringMap &query)
 {
-// 	bool consumed = false;	
-// 	for(int endElement = pathElements.size();
-// 		endElement > -1;
-// 		endElement --)
-// 	{
-// 		QStringList subList = pathElements.mid(0,endElement);
-// 		
-// 		QString path = QString("/%1")
-// 			.arg(subList.join("/"));
-// 		logMessage(QString("Position %2: Checking path '%1'...").arg(path).arg(endElement));
-// 		if(m_receivers.contains(path))
-// 		{
-// 			QObjectMethodPair slot = m_receivers[path];
-// 			
-// 			logMessage(QString("Path '%1' consumed by method '%2'").arg(path,slot.second));
-// 			
-// 			if(!QMetaObject::invokeMethod(slot.first, slot.second, 
-// 				Q_ARG(HttpServer*,this),
-// 				Q_ARG(QTcpSocket*,socket),
-// 				Q_ARG(QStringList,pathElements)
-// // 				Q_ARG(QStringMap,query)
-// 			))
-// 			{
-// 				qDebug() << this << "Unable to invoke handler method:" << slot.first << slot.second;
-// 			}
-// 			
-// 			
-// 			consumed = true;
-// 			break;
-// 		}
-// 	}
-	
-// 	if(!consumed)
-// 	{
-		generic404(socket,pathElements,query);
-		
-// 		logMessage(QString("Query string not consumed, giving default response."));
-// 		
-// 		
-// 		respond(socket,QString("HTTP/1.0 200 Ok"));
-// 		
-// 		QTextStream os(socket);
-// 		os.setAutoDetectUnicode(true);
-// 		
-// 		os <<	"<h1>Nothing to see here</h1>\n"
-// 			<< QDateTime::currentDateTime().toString() << "\n"
-// 			<< "<a href='/link?time=" << QDateTime::currentDateTime().toString() << "'>Click here to reload</a>";
-//	}
-		
+	generic404(socket,pathElements,query);
 }
 
 void HttpServer::discardClient()
 {
 	QTcpSocket* socket = (QTcpSocket*)sender();
 	socket->deleteLater();
-
-	//logMessage("Connection closed");
-}
-
-void HttpServer::sampleResponseSlot(HttpServer *server, QTcpSocket *socket, QStringList path/*, QStringMap query*/)
-{
-	qDebug() << "In sampleResponseSlot";
-	respond(socket,QString("HTTP/1.0 200 Ok"));
-	
-	QTextStream os(socket);
-	os.setAutoDetectUnicode(true);
-	
-	os <<	"<h1>Hello World!</h1>\n"
-		<< "What wonderful things God has wrought!<br>\n"
-		<< "<a href='/link?time=" << QDateTime::currentDateTime().toString() << "'>Click here to reload</a>";
 }

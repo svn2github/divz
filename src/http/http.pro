@@ -13,5 +13,5 @@ QT += core \
 	xml
 	
 # Input
-HEADERS += HttpServer.h TestServer.h
-SOURCES += HttpServer.cpp main.cpp TestServer.cpp
+HEADERS += HttpServer.h TestServer.h SimpleTemplate.h
+SOURCES += HttpServer.cpp main.cpp TestServer.cpp SimpleTemplate.cpp
