@@ -134,7 +134,7 @@ void HttpServer::respond(QTcpSocket *socket, const QHttpResponseHeader &tmp)
 		header.setValue("content-type", "text/html; charset=\"utf-8\"");
 	
 	os << header.toString();
-	os << "\r\n";
+	//os << "\r\n";
 	os.flush();
 	
 }
@@ -169,6 +169,16 @@ QString HttpServer::toPathString(const QStringList &pathElements, const QStringM
 		}
 	}
 	return list.join("");
+}
+
+void HttpServer::generic404(QTcpSocket *socket, const QStringList &pathElements, const QStringMap &query)
+{
+	respond(socket,QString("HTTP/1.0 404 Not Found"));
+	QTextStream os(socket);
+	os.setAutoDetectUnicode(true);
+	
+	os << "<h1>File Not Found</h1>\n"
+	   << "Sorry, <code>"<<toPathString(pathElements,query)<<"</code> was not found.";
 }
 
 void HttpServer::dispatch(QTcpSocket *socket, const QStringList &pathElements, const QStringMap &query)
@@ -207,12 +217,7 @@ void HttpServer::dispatch(QTcpSocket *socket, const QStringList &pathElements, c
 	
 // 	if(!consumed)
 // 	{
-		respond(socket,QString("HTTP/1.0 404 Not Found"));
-		QTextStream os(socket);
-		os.setAutoDetectUnicode(true);
-		
-		os <<	"<h1>File Not Found</h1>\n"
-			<< "Sorry, <code>"<<toPathString(pathElements,query)<<"</code> was not found.";
+		generic404(socket,pathElements,query);
 		
 // 		logMessage(QString("Query string not consumed, giving default response."));
 // 		

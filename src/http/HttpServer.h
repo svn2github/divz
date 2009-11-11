@@ -30,11 +30,13 @@ public:
 	
 	static QString toPathString(const QStringList &pathElements, const QStringMap &query, bool encoded=true);
 	
-protected slots:
+	void generic404(QTcpSocket *socket, const QStringList &path = QStringList(), const QStringMap & map = QStringMap());
+	
+protected:
 	void respond(QTcpSocket *socket, const QHttpResponseHeader &);
 	void respond(QTcpSocket *socket, const QHttpResponseHeader &,const QByteArray &);
 	
-	void dispatch(QTcpSocket *socket, const QStringList &pathElements, const QStringMap &query);
+	virtual void dispatch(QTcpSocket *socket, const QStringList &pathElements, const QStringMap &query);
 		
 private slots:
 	void readClient();
