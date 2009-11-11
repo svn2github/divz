@@ -8,6 +8,7 @@
 #include <QDesktopWidget>
 #include <QDebug>
 #include <QMessageBox>
+#include <QFileDialog>
 
 SingleOutputSetupDialog::SingleOutputSetupDialog(QWidget *parent) :
 	QDialog(parent)
@@ -71,6 +72,19 @@ SingleOutputSetupDialog::SingleOutputSetupDialog(QWidget *parent) :
 	
 	setOutput(AppSettings::outputs().at(0));
 	
+}
+
+
+void SingleOutputSetupDialog::slotDiskCacheBrowse()
+{
+	QString dirPath = QFileDialog::getExistingDirectory(this, tr("Select A Cache Location"),
+						 AppSettings::cacheDir().absolutePath(),
+						 QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
+
+	if(!dirPath.isEmpty())
+	{
+		m_ui->diskCacheBox->setText(dirPath);
+	}
 }
 
 void SingleOutputSetupDialog::slotScreenListCellActivated(int row,int)

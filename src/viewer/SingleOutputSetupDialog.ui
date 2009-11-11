@@ -580,7 +580,7 @@ resulting in slower performance.</string>
              </widget>
             </item>
             <item>
-             <widget class="QLineEdit" name="diskCacheBox_2"/>
+             <widget class="QLineEdit" name="diskCacheBox"/>
             </item>
             <item>
              <widget class="QPushButton" name="diskCacheBrowseBtn">
@@ -622,12 +622,12 @@ resulting in slower performance.</string>
                 <enum>QSlider::TicksBelow</enum>
                </property>
                <property name="tickInterval">
-                <number>128</number>
+                <number>65536</number>
                </property>
               </widget>
              </item>
              <item>
-              <widget class="QSpinBox" name="diskCacheBox">
+              <widget class="QSpinBox" name="diskCacheSizeBox">
                <property name="suffix">
                 <string> MB</string>
                </property>
