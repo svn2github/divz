@@ -241,6 +241,11 @@ SlideGroupViewControl::~SlideGroupViewControl()
 		delete m_quickSlide;
 }
 
+SlideGroupListModel * SlideGroupViewControl::slideGroupListModel()
+{
+	SlideGroupListModel * model = dynamic_cast<SlideGroupListModel*>(m_listView->model());
+	return model;
+}
 
 void SlideGroupViewControl::setQuickSlideEnabled(bool flag)
 {

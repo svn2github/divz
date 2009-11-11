@@ -29,6 +29,7 @@ class Slide;
 class SlideGroup;
 class MediaBrowser;
 class Output;
+class ControlServer;
 
 #define FALLBACK_SCREEN_RECT QRectF(0,0,1024,768)
 
@@ -58,6 +59,8 @@ public:
 	OutputInstance * outputInst(int id) { return m_outputInstances.contains(id) ? m_outputInstances[id] : 0; }
 	OutputControl * outputControl(int id) { return m_outputControls.contains(id) ? m_outputControls[id] : 0; }
 	SlideGroupViewControl * viewControl(int id) { return m_viewControls.contains(id) ? m_viewControls[id] : 0; }
+	
+	DocumentListModel * documentListModel() { return m_docModel; }
 	
 	bool autosaveEnabled();
 	
@@ -184,6 +187,8 @@ private:
 	//QWidget			* m_previewControlBase;
 	
 	MediaBrowser * m_mediaBrowser;
+	
+	ControlServer * m_controlServer;
 	
 	/** static */
 	static MainWindow * static_mainWindow;	

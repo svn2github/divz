@@ -151,6 +151,7 @@ include(3rdparty/rtmidi/rtmidi.pri)
 include(3rdparty/md5/md5.pri)
 include(3rdparty/qjson/qjson.pri)
 include(ppt/ppt.pri)
+include(http/http.pri)
 
 # deployment on Linux
 unix {

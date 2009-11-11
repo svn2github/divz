@@ -246,6 +246,10 @@ Revised Task list for Release 1.0, 10/18/09:
 			need video controls - at least in media browser preview
 				would be nice to integrate into slideviewcontrol
 			
+			embedable viewer:
+				A - output
+				B - embedded slide group
+			
 			make slide list model zoomable 
 				e.g. zoom slide list in editor
 				zoom slide list in control

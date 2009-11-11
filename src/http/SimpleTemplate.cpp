@@ -72,8 +72,6 @@ QString SimpleTemplate::toString()
 		{
 			QString endIf = QString("%%/if:%1%%").arg(key);
 			int endIdx = data.indexOf(endIf);
-			//if(endIdx < 0)
-			//	endIdx = data.length() -1;
 			if(endIdx < -1)
 			{
 				qDebug() << "SimpleTemplate: Unable to find end of IF block: "<<endIf;
@@ -82,7 +80,6 @@ QString SimpleTemplate::toString()
 				
 			ifIdx += ifKey.length();
 			QString ifBlock = data.mid(ifIdx,endIdx - ifIdx);
-			//qDebug() << "SimpleTemplate: ifBlock="<<ifBlock<<", ifIdx:"<<ifIdx<<", endIdx:"<<endIdx<<", endIf:"<<endIf;
 			
 			bool flag = m_params.value(key).toBool();
 			
@@ -103,7 +100,6 @@ QString SimpleTemplate::toString()
 			{
 				data.replace(blockIdx,blockLen, flag ? ifBlock : "");
 			}
-			
 		}
 		else
 		if(loopIdx > -1)

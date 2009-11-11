@@ -45,6 +45,8 @@
 #include "OutputInstance.h"
 #include "OutputControl.h"
 
+#include "http/ControlServer.h"
+
 MainWindow * MainWindow::static_mainWindow = 0;
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -55,7 +57,8 @@ MainWindow::MainWindow(QWidget *parent) :
 	m_doc(0),
 	m_viewControl(0),
 	m_editWin(0),
-	m_autosaveTimer(0)
+	m_autosaveTimer(0),
+	m_controlServer(0)
 	
 {
 	static_mainWindow = this;
@@ -172,6 +175,8 @@ MainWindow::MainWindow(QWidget *parent) :
 	//connect(m_groupView, SIGNAL(customContextMenuRequested(const QPoint &)), SLOT(slotListContextMenu(const QPoint &)));
 	
 	connect(m_ui->actionExit,SIGNAL(triggered()), this, SLOT(close()));
+	
+	m_controlServer = new ControlServer(8080,this);
 	
 }
 
@@ -1225,6 +1230,8 @@ void MainWindow::setLiveGroup(SlideGroup *newGroup, Slide *currentSlide, bool al
 	
 void MainWindow::sendGroupToOutput(Output *output, SlideGroup *newGroup, Slide *currentSlide, bool allowProgressDialog)
 {
+	if(!newGroup)
+		return;
 	
 	OutputInstance *inst = outputInst(output->id());
 	OutputControl *outputCtrl = outputControl(output->id());

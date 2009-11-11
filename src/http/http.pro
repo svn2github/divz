@@ -4,13 +4,12 @@
 
 TEMPLATE = app
 TARGET = 
-DEPENDPATH += .
-INCLUDEPATH += .
+DEPENDPATH += . ../
+INCLUDEPATH += . ../
 	
 
 QT += core \
-	network \
-	xml
+	network 
 	
 # Input
 HEADERS += HttpServer.h TestServer.h SimpleTemplate.h
