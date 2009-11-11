@@ -50,7 +50,9 @@ void JpegServer::incomingConnection(int socketDescriptor)
 #include <QImage>
 
 JpegServerThread::JpegServerThread(int socketDescriptor, bool deleteImage, QObject *parent)
-    : QThread(parent), m_socketDescriptor(socketDescriptor), m_deleteImage(deleteImage)
+    : QThread(parent)
+    , m_socketDescriptor(socketDescriptor)
+    , m_deleteImage(deleteImage)
 {
 	
 }
