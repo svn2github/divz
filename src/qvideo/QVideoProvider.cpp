@@ -2,6 +2,7 @@
 #include <QFileInfo>
 #include <QDebug>
 #include <QPixmapCache>
+#include "AppSettings.h"
 
 #include "3rdparty/md5/md5.h"
 
@@ -69,7 +70,7 @@ void QVideoProvider::releaseProvider(QVideoProvider *v)
 	
 // If icon in disk cache for file, returns the icon. Otherwise, returns a null 
 // pixmap and starts a QVideoIconGenerator to generate the icon so it will be 
-// in the cache for the next time (stores QDir::tempPath() + "/qvideoprovider/" + md5sum of canonical file path)
+// in the cache for the next time (stores AppSettings::cachePath() + "/qvideoprovider/" + md5sum of canonical file path)
 QPixmap QVideoProvider::iconForFile(const QString & file)
 {
 	QFileInfo info(file);
@@ -141,11 +142,11 @@ QString QVideoIconGenerator::cacheFile(QVideoProvider *p)
 QString QVideoIconGenerator::cacheFile(const QString& canonicalFilePath)
 {
 	QPixmap cache;
-	QDir path(QString("%1/%2").arg(QDir::tempPath()).arg(CACHE_DIR));
+	QDir path(QString("%1/%2").arg(AppSettings::cachePath()).arg(CACHE_DIR));
 	if(!path.exists())
-		QDir(QDir::tempPath()).mkdir(CACHE_DIR);
+		QDir(AppSettings::cachePath()).mkdir(CACHE_DIR);
 	
-	return QString("%1/%2/%3").arg(QDir::tempPath()).arg(CACHE_DIR).arg(MD5::md5sum(canonicalFilePath));
+	return QString("%1/%2/%3").arg(AppSettings::cachePath()).arg(CACHE_DIR).arg(MD5::md5sum(canonicalFilePath));
 }
 
 QVideoIconGenerator::QVideoIconGenerator(QVideoProvider* p) : QObject(), m_provider(p)

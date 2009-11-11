@@ -35,6 +35,8 @@ protected slots:
 	void slotMjpegEnabled(bool);
 	void slotMjpegPort(int);
 	void slotMjpegFps(int);
+	
+	void slotDiskCacheBrowse();
 
 protected:
 	void changeEvent(QEvent *e);

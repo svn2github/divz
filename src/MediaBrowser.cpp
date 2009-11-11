@@ -68,12 +68,12 @@ bool MediaBrowser::isImage(const QString &extension) { return extension.indexOf(
 QPixmap MediaBrowser::iconForImage(const QString & file, const QSize & size)
 {
 	QPixmap cache;
-	QDir path(QString("%1/%2").arg(QDir::tempPath()).arg(CACHE_DIR));
+	QDir path(QString("%1/%2").arg(AppSettings::cachePath()).arg(CACHE_DIR));
 	if(!path.exists())
-		QDir(QDir::tempPath()).mkdir(CACHE_DIR);
+		QDir(AppSettings::cachePath()).mkdir(CACHE_DIR);
 
 	QString cacheFile = QString("%1/%2/%3-%4x%5")
-				.arg(QDir::tempPath())
+				.arg(AppSettings::cachePath())
 				.arg(CACHE_DIR)
 				.arg(MD5::md5sum(file))
 				.arg(size.width())

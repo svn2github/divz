@@ -101,9 +101,9 @@ void PPTSlideGroup::loadFile()
 
 	viewer->show();
 
-	QDir path(QString("%1/%2").arg(QDir::tempPath()).arg(PPT_SNAPSHOT_CACHE_DIR));
+	QDir path(QString("%1/%2").arg(AppSettings::cachePath()).arg(PPT_SNAPSHOT_CACHE_DIR));
 	if(!path.exists())
-		QDir(QDir::tempPath()).mkdir(PPT_SNAPSHOT_CACHE_DIR);
+		QDir(AppSettings::cachePath()).mkdir(PPT_SNAPSHOT_CACHE_DIR);
 
 	//QMessageBox::information(0, "Debug", QString("Cache Dir: %1").arg(path.absolutePath()));
 
@@ -117,7 +117,7 @@ void PPTSlideGroup::loadFile()
 	for(int i=0; i<numSlides; i++)
 	{
 		QString cacheKey = QString("%1/%2/%3-slide%6-%4x%5.png")
-					.arg(QDir::tempPath())
+					.arg(AppSettings::cachePath())
 					.arg(PPT_SNAPSHOT_CACHE_DIR)
 					.arg(MD5::md5sum(m_file))
 					.arg(pptBoxSize.width())

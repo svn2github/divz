@@ -2,7 +2,7 @@
 #include "ui_AppSettingsDialog.h"
 #include "AppSettings.h"
 #include "OutputSetupDialog.h"
-//#include "GridDialog.h"
+#include <QFileDialog>
 
 AppSettingsDialog::AppSettingsDialog(QWidget *parent) :
     QDialog(parent),
@@ -31,6 +31,23 @@ AppSettingsDialog::AppSettingsDialog(QWidget *parent) :
 	setWindowTitle("Program Settings");
 	
 	connect(m_ui->buttonBox, SIGNAL(accepted()), this, SLOT(slotAccepted()));
+	
+	m_ui->diskCacheSizeBase->setVisible(false);
+	m_ui->diskCacheBox->setText(AppSettings::cacheDir().absolutePath());
+	connect(m_ui->diskCacheBrowseBtn, SIGNAL(clicked()), this, SLOT(slotDiskCacheBrowse()));
+	
+	
+}
+void AppSettingsDialog::slotDiskCacheBrowse()
+{
+	QString dirPath = QFileDialog::getExistingDirectory(this, tr("Select A Cache Location"),
+						 AppSettings::cacheDir().absolutePath(),
+						 QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
+
+	if(!dirPath.isEmpty())
+	{
+		m_ui->diskCacheBox->setText(dirPath);
+	}
 }
 
 void AppSettingsDialog::slotAccepted()
@@ -42,6 +59,7 @@ void AppSettingsDialog::slotAccepted()
 				     m_ui->editModeSmooth->isChecked() ? AppSettings::SmoothEdit : 
 				     					 AppSettings::LiveEdit);
 	AppSettings::setAutosaveTime(m_ui->autosaveBox->value());
+	AppSettings::setCacheDir(QDir(m_ui->diskCacheBox->text()));
 	close();
 }
 

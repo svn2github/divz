@@ -59,7 +59,7 @@ AppSettings::LiveEditMode AppSettings::m_liveEditMode = AppSettings::LiveEdit;
 int AppSettings::m_autosaveTime = 60; // seconds
 
 QDir AppSettings::m_cacheDir = QDir::temp();
-ResourcePathTranslations AppSettings::m_resourcePathTranslations;
+AppSettings::ResourcePathTranslations AppSettings::m_resourcePathTranslations;
 
 void AppSettings::initApp(const QString& appName)
 {
@@ -169,9 +169,9 @@ void AppSettings::load()
 	m_resourcePathTranslations.clear();
 	foreach(QVariant var, pairList)
 	{
-		QVariantMap pairMap = var.toMap();
 		QStringPair pair;
-		pair.first = pairMap["first"].toString();
+		QVariantMap pairMap = var.toMap();
+		pair.first  = pairMap["first"].toString();
 		pair.second = pairMap["second"].toString();
 		m_resourcePathTranslations << pair;
 	}
@@ -210,7 +210,7 @@ void AppSettings::save()
 	foreach(QStringPair pair, m_resourcePathTranslations)
 	{
 		QVariantMap pairMap;
-		pairMap["first"] = pair.first;
+		pairMap["first"]  = pair.first;
 		pairMap["second"] = pair.second;
 		pairList << pairMap;
 	}
@@ -393,10 +393,36 @@ void AppSettings::updateLiveAspectRatio()
 }
 
 
-static QDir cacheDir() { return m_cacheDir; }
-static void setCacheDir(const QDir &);
+// The Cache Dir setting is designed to be used with the Network Viewer so that multiple viewers / controllers
+// can share a central rendering cache for expensive operations, such as scaling a large image. With a shared
+// central cache, an image (for example), only needs to be scaled down once, then all the clients hit the
+// shared cache and load the scaled image, rather than each having to scale the original on their own.
+void AppSettings::setCacheDir(const QDir &dir) { m_cacheDir = dir; }
 
-//typedef QList<QPair<QString,QString> > ResourcePathTranslations;
+// The ResourcePathTranslations-related routines are designed to be used in conjunction with the Network Viewer.
+//
+// Example: 	Say the "Control" PC has mounted the shared network storage as drive G:, and adds an image to 
+// 		a slide group from G:\Images\Foobar.jpg. 
+//		However, a client running the Dviz-Viewer.exe has the same network share mounted as drive R:,
+//		and if it tried to load the original path of G:\Images..., it would fail. Therefore, the 
+//		network viewer client should use the Program Settings dialog to add a translation from
+//		"G:" to "R:". Note that this would also work for Linux or Mac clients in either direction. 
+//		(E.g. the controller PC's drive G: is accessible on the Linux rendering client as /mnt/server2/groups/,
+//		so the translation in the linux client's program settings would be "G:" to "/mnt/server2/groups".)
+void AppSettings::setResourcePathTranslations(ResourcePathTranslations r) { m_resourcePathTranslations = r; }
 
-static void setResourcePathTranslations(ResourcePathTranslations);
-static ResourcePathTranslations resourcePathTranslations() { return m_resourcePathTranslations; }
+QString AppSettings::applyResourcePathTranslations(const QString &s)
+{
+	QString copy = s;
+	foreach(QStringPair pair, m_resourcePathTranslations)
+	{
+		if(copy.startsWith(pair.first,Qt::CaseInsensitive))
+			copy.replace(0,pair.first.length(),pair.second);
+	}
+	return s;
+}
+
+QDir AppSettings::applyResourcePathTranslations(const QDir&d)
+{
+	return QDir(applyResourcePathTranslations(d.absolutePath()));
+}

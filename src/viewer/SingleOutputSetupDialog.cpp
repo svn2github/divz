@@ -65,7 +65,12 @@ SingleOutputSetupDialog::SingleOutputSetupDialog(QWidget *parent) :
 	connect(m_ui->buttonBox, SIGNAL(accepted()), this, SLOT(accept()));
 	connect(m_ui->buttonBox, SIGNAL(rejected()), this, SLOT(reject()));
 	
+	m_ui->diskCacheSizeBase->setVisible(false);
+	m_ui->diskCacheBox->setText(AppSettings::cacheDir().absolutePath());
+	connect(m_ui->diskCacheBrowseBtn, SIGNAL(clicked()), this, SLOT(slotDiskCacheBrowse()));
+	
 	setOutput(AppSettings::outputs().at(0));
+	
 }
 
 void SingleOutputSetupDialog::slotScreenListCellActivated(int row,int)
@@ -289,6 +294,7 @@ void SingleOutputSetupDialog::accept()
 {
 	AppSettings::setPixmapCacheSize(m_ui->cacheBox->value());
 	AppSettings::setUseOpenGL(m_ui->cbUseOpenGL->isChecked());
+	AppSettings::setCacheDir(QDir(m_ui->diskCacheBox->text()));
 	AppSettings::save();
 	QDialog::accept();
 }

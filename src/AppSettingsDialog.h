@@ -20,6 +20,8 @@ protected slots:
 	void slotUseOpenGLChanged(bool);
 	void slotConfigOutputs();
 	
+	void slotDiskCacheBrowse();
+	
 	void slotAccepted();
 	//void slotRejected();
 

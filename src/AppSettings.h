@@ -72,6 +72,7 @@ public:
 	static int autosaveTime() { return m_autosaveTime; }
 	static void setAutosaveTime(int);
 	
+	static QString cachePath() { return cacheDir().absolutePath(); }
 	static QDir cacheDir() { return m_cacheDir; }
 	static void setCacheDir(const QDir &);
 	
@@ -79,6 +80,8 @@ public:
 	
 	static void setResourcePathTranslations(ResourcePathTranslations);
 	static ResourcePathTranslations resourcePathTranslations() { return m_resourcePathTranslations; }
+	static QString applyResourcePathTranslations(const QString&);
+	static QDir    applyResourcePathTranslations(const QDir&);
 	
 protected:
 	friend class MainWindow;

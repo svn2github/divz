@@ -329,12 +329,12 @@ void BackgroundContent::setImageFile(const QString &file)
 			size.setHeight(size.height() * modelItem()->zoomFactor());
 		}
 		
-		QDir path(QString("%1/%2").arg(QDir::tempPath()).arg(BG_IMG_CACHE_DIR));
+		QDir path(QString("%1/%2").arg(AppSettings::cachePath()).arg(BG_IMG_CACHE_DIR));
 		if(!path.exists())
-			QDir(QDir::tempPath()).mkdir(BG_IMG_CACHE_DIR);
+			QDir(AppSettings::cachePath()).mkdir(BG_IMG_CACHE_DIR);
 			
 		QString cacheKey = QString("%1/%2/%3-%4x%5%6")
-					.arg(QDir::tempPath())
+					.arg(AppSettings::cachePath())
 					.arg(BG_IMG_CACHE_DIR)
 					.arg(MD5::md5sum(file))
 					.arg(size.width())
