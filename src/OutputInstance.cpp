@@ -31,8 +31,6 @@ bool OuputInstance_slide_num_compare(Slide *a, Slide *b)
 	return (a && b) ? a->slideNumber() < b->slideNumber() : true;
 }
 
-
-
 OutputInstance::OutputInstance(Output *out, bool startHidden, QWidget *parent)
 	: QWidget(parent)
 	, m_output(out)
@@ -42,7 +40,6 @@ OutputInstance::OutputInstance(Output *out, bool startHidden, QWidget *parent)
 	, m_isFoldback(false)
 	, m_jpegServer(0)
 	, m_outputServer(0)
-	, m_mirror(0)
 {
 	out->setInstance(this);
 	
@@ -94,9 +91,15 @@ OutputInstance::~OutputInstance()
 	}
 }
 
-void OutputInstance::setMirrorInstance(OutputInstance *inst)
+void OutputInstance::addMirror(OutputInstance *inst)
 {
-	m_mirror = inst;
+	if(!m_mirrors.contains(inst))
+		m_mirrors << inst;
+}
+
+void OutputInstance::removeMirror(OutputInstance *inst)
+{
+	m_mirrors.removeAll(inst);
 }
 
 void OutputInstance::slotGrabPixmap()
@@ -298,8 +301,8 @@ void OutputInstance::setSlideGroup(SlideGroup *group, int startSlide)
 void OutputInstance::setSlideGroup(SlideGroup *group, Slide * startSlide)
 {
 	emit slideGroupChanged(group,startSlide);
-	if(m_mirror)
-		m_mirror->setSlideGroup(group,startSlide);
+	foreach(OutputInstance *m, m_mirrors)
+		m->setSlideGroup(group,startSlide);
 	Output::OutputType x = m_output->outputType();
 	if(x == Output::Screen || x == Output::Custom || x == Output::Preview)
 	{
@@ -389,8 +392,8 @@ int OutputInstance::numSlides()
 
 void OutputInstance::clear()
 {
-	if(m_mirror)
-		m_mirror->clear();
+	foreach(OutputInstance *m, m_mirrors)
+		m->clear();
 	Output::OutputType outType = m_output->outputType();
 	if(outType == Output::Screen || outType == Output::Custom || outType == Output::Preview)
 	{
@@ -407,8 +410,8 @@ void OutputInstance::clear()
 
 void OutputInstance::setViewerState(SlideGroupViewer::ViewerState state)
 {
-	if(m_mirror)
-		m_mirror->setViewerState(state);
+	foreach(OutputInstance *m, m_mirrors)
+		m->setViewerState(state);
 	Output::OutputType outType = m_output->outputType();
 	if(outType == Output::Screen || outType == Output::Custom || outType == Output::Preview)
 	{
@@ -425,8 +428,8 @@ void OutputInstance::setViewerState(SlideGroupViewer::ViewerState state)
 
 void OutputInstance::setBackground(QColor color)
 {
-	if(m_mirror)
-		m_mirror->setBackground(color);
+	foreach(OutputInstance *m, m_mirrors)
+		m->setBackground(color);
 	Output::OutputType outType = m_output->outputType();
 	if(outType == Output::Screen || outType == Output::Custom || outType == Output::Preview)
 	{
@@ -471,8 +474,8 @@ void OutputInstance::setSceneContextHint(MyGraphicsScene::ContextHint hint)
 
 void OutputInstance::setOverlaySlide(Slide * newSlide)
 {
-	if(m_mirror)
-		m_mirror->setOverlaySlide(newSlide);
+	foreach(OutputInstance *m, m_mirrors)
+		m->setOverlaySlide(newSlide);
 	m_overlaySlide = newSlide;
 	if(!m_output->isEnabled())
 		return;
@@ -511,8 +514,8 @@ void OutputInstance::setOverlaySlide(Slide * newSlide)
 
 void OutputInstance::setOverlayEnabled(bool enable)
 {
-	if(m_mirror)
-		m_mirror->setOverlayEnabled(enable);
+	foreach(OutputInstance *m, m_mirrors)
+		m->setOverlayEnabled(enable);
 	m_overlayEnabled = enable;
 	if(!m_output->isEnabled())
 		return;
@@ -531,8 +534,8 @@ void OutputInstance::setOverlayEnabled(bool enable)
 
 void OutputInstance::setTextOnlyFilterEnabled(bool enable)
 {
-	if(m_mirror)
-		m_mirror->setTextOnlyFilterEnabled(enable);
+	foreach(OutputInstance *m, m_mirrors)
+		m->setTextOnlyFilterEnabled(enable);
 	m_textOnlyFilter = enable;
 	if(!m_output->isEnabled())
 		return;
@@ -555,8 +558,8 @@ void OutputInstance::setTextOnlyFilterEnabled(bool enable)
 
 void OutputInstance::addFilter(AbstractItemFilter * filter)
 {
-	if(m_mirror)
-		m_mirror->addFilter(filter);
+	foreach(OutputInstance *m, m_mirrors)
+		m->addFilter(filter);
 		
 	if(!m_slideFilters.contains(filter))
 		m_slideFilters.append(filter);
@@ -578,8 +581,8 @@ void OutputInstance::addFilter(AbstractItemFilter * filter)
 
 void OutputInstance::removeFilter(AbstractItemFilter *filter)
 {
-	if(m_mirror)
-		m_mirror->removeFilter(filter);
+	foreach(OutputInstance *m, m_mirrors)
+		m->removeFilter(filter);
 		
 	m_slideFilters.removeAll(filter);
 	//applySlideFilters();
@@ -600,8 +603,8 @@ void OutputInstance::removeFilter(AbstractItemFilter *filter)
 
 void OutputInstance::removeAllFilters()
 {
-	if(m_mirror)
-		m_mirror->removeAllFilters();
+	foreach(OutputInstance *m, m_mirrors)
+		m->removeAllFilters();
 	
 	if(!m_output->isEnabled())
 		return;
@@ -622,8 +625,8 @@ void OutputInstance::removeAllFilters()
 
 void OutputInstance::setAutoResizeTextEnabled(bool enable)
 {
-	if(m_mirror)
-		m_mirror->setAutoResizeTextEnabled(enable);
+	foreach(OutputInstance *m, m_mirrors)
+		m->setAutoResizeTextEnabled(enable);
 	
 	m_autoResizeText = enable;
 	if(!m_output->isEnabled())
@@ -643,8 +646,8 @@ void OutputInstance::setAutoResizeTextEnabled(bool enable)
 
 void OutputInstance::setFadeSpeed(int value)
 {
-	if(m_mirror)
-		m_mirror->setFadeSpeed(m_mirror->output() == Output::previewInstance() ? 0 : value);
+	foreach(OutputInstance *m, m_mirrors)
+		m->setFadeSpeed(m->output() == Output::previewInstance() ? 0 : value);
 	
 	m_fadeSpeed = value;
 	if(!m_output->isEnabled())
@@ -664,8 +667,8 @@ void OutputInstance::setFadeSpeed(int value)
 
 void OutputInstance::setFadeQuality(int value)
 {
-	if(m_mirror)
-		m_mirror->setFadeQuality(m_mirror->output() == Output::previewInstance() ? 0 : value);
+	foreach(OutputInstance *m, m_mirrors)
+		m->setFadeQuality(m->output() == Output::previewInstance() ? 0 : value);
 	
 	m_fadeQuality = value;
 	if(!m_output->isEnabled())
@@ -697,8 +700,8 @@ Slide * OutputInstance::setSlide(int x)
 
 Slide * OutputInstance::setSlide(Slide *slide, bool takeOwnership)
 {
-	if(m_mirror)
-		m_mirror->setSlide(slide);
+	foreach(OutputInstance *m, m_mirrors)
+		m->setSlide(slide);
 		
 	if(!m_output->isEnabled())
 		return 0;
@@ -785,8 +788,8 @@ Slide * OutputInstance::prevSlide()
 
 void OutputInstance::fadeBlackFrame(bool enable)
 {
-	if(m_mirror)
-		m_mirror->fadeBlackFrame(enable);
+	foreach(OutputInstance *m, m_mirrors)
+		m->fadeBlackFrame(enable);
 		
 	if(!m_output->isEnabled())
 		return;
@@ -808,8 +811,8 @@ void OutputInstance::fadeBlackFrame(bool enable)
 
 void OutputInstance::fadeClearFrame(bool enable)
 {
-	if(m_mirror)
-		m_mirror->fadeClearFrame(enable);
+	foreach(OutputInstance *m, m_mirrors)
+		m->fadeClearFrame(enable);
 		
 	if(!m_output->isEnabled())
 		return;
@@ -828,8 +831,8 @@ void OutputInstance::fadeClearFrame(bool enable)
 
 void OutputInstance::setLiveBackground(const QFileInfo &info, bool waitForNextSlide)
 {
-	if(m_mirror)
-		m_mirror->setLiveBackground(info,waitForNextSlide);
+	foreach(OutputInstance *m, m_mirrors)
+		m->setLiveBackground(info,waitForNextSlide);
 		
 	if(!m_output->isEnabled())
 		return;

@@ -27,7 +27,8 @@ HEADERS += \
     BackgroundConfig.h \
     BoxConfig.h \
     ImageContent.h \
-    ImageConfig.h
+    ImageConfig.h 
+    #SlideGroupContent.h
  
     
 SOURCES += \
@@ -52,3 +53,4 @@ SOURCES += \
     BoxConfig.cpp \
     ImageContent.cpp \
     ImageConfig.cpp
+    #SlideGroupContent.cpp

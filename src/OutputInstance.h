@@ -69,7 +69,8 @@ signals:
 	void imageReady(QImage*);
 
 public slots:
-	void setMirrorInstance(OutputInstance *);
+	void addMirror(OutputInstance *);
+	void removeMirror(OutputInstance *);
 
 	void addFilter(AbstractItemFilter *);
 	void removeFilter(AbstractItemFilter *);
@@ -150,8 +151,6 @@ private:
 	
 	OutputServer *m_outputServer;
 	
-	OutputInstance * m_mirror;
-	
 	QWidget * m_ctrlWidget;
 	
 	QVBoxLayout *m_vbox;
@@ -160,6 +159,8 @@ private:
 	SlideGroupViewer::ViewerState m_viewerState;
 	
 	bool m_lockResizeEvent;
+	
+	QList<OutputInstance*> m_mirrors;
 };
 
 #endif // SLIDEGROUPVIEWER_H
