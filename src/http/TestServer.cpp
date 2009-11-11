@@ -24,6 +24,20 @@ void TestServer::dispatch(QTcpSocket *socket, const QStringList &path, const QSt
 		SimpleTemplate tmpl("test.tmpl");
 		tmpl.param("time",QDateTime::currentDateTime().toString());
 		
+		QVariantList queryList;
+		foreach(QString key, query.keys())
+		{
+			QVariantMap map;
+			map["key"] = key;
+			map["value"] = query.value(key);
+			
+			queryList << map;
+		}
+		
+		tmpl.param("query", queryList);
+		
+		tmpl.param("flag", query.value("flag").toInt() == 1);
+		
 		Http_Send_Ok(socket) 
 			<< tmpl.toString();
 	}
