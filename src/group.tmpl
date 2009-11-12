@@ -1,0 +1,25 @@
+<html>
+<head>
+	<title>%%grouptitle%% - DViz</title>
+</head>
+<body>
+	<h1>%%grouptitle%%</h1>
+	
+	<table>
+		<thead>
+			<th>Icon</th>
+			<th>Slide</th>
+			<th>Live?</th>
+		</thead>
+		<tbody>
+		%%loop:list%%
+			<tr>
+				<td><a href='/group/%%groupidx%%?slide=%%slide%%'><img src='/group/%%groupidx%%/icon?slide=%%slide%%' border=0></a></td>
+				<td><a href='/group/%%groupidx%%?slide=%%slide%%'>%%text%%</a></td>
+				<td>%%if:live_flag%%<font color='red'><b>LIVE</b></font>%%/if:live_flag%%</td>
+			</tr>
+		%%/loop:list%%
+		</tbody>
+	</table>
+</body>
+</html>

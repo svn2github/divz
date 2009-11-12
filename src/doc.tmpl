@@ -1,0 +1,25 @@
+<html>
+<head>
+	<title>Current Document - DViz</title>
+</head>
+<body>
+	<h1>DViz Current Document</h1>
+	
+	<table>
+		<thead>
+			<th>Icon</th>
+			<th>Group</th>
+			<th>Live?</th>
+		</thead>
+		<tbody>
+		%%loop:list%%
+			<tr>
+				<td><a href='/group/%%group%%'><img src='/group/%%group%%/icon' border=0></a></td>
+				<td><a href='/group/%%group%%'>%%text%%</a></td>
+				<td><a href='/group/%%group%%'>%%if:live_flag%%<font color='red'><b>LIVE</b></font>%%/if:live_flag%%</a></td>
+			</tr>
+		%%/loop:list%%
+		</tbody>
+	</table>
+</body>
+</html>
