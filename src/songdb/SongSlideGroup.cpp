@@ -522,6 +522,74 @@ bool SongSlideGroup::fromXml(QDomElement & pe)
 	return true;
 }
 
+void SongSlideGroup::loadVariantMap(QVariantMap &map)
+{
+	QVariant templates = map["templates"];
+	if(templates.isValid())
+	{
+		QByteArray ba = templates.toByteArray();
+		SlideGroup *templates = SlideGroup::fromByteArray(ba);
+		setSlideTemplates(templates);
+	}
+	
+	
+	int songid = map["songid"].toInt();
+	//qDebug() << "SongSlideGroup::fromXml(): songid from xml:"<<songid;
+
+	SongRecord *song = SongRecord::retrieve(songid);
+	if(song && song->songId())
+	{
+		//qDebug() << "SongSlideGroup::fromXml(): Validated song, title: "<<song->title();
+		setSong(song);
+		//qDebug() << "SongSlideGroup::fromXml(): Set song done,  title: "<<song->title()<<", num slides:"<<numSlides();
+		//qDebug() << "SongSlideGroup::fromXml: VALIDATED SongID "<<songid<<", songTitle:"<<song->title();
+	}
+	else
+	{
+		qWarning("SongSlideGroup::fromXml: Invalid songid %d in XML!",songid);
+	}
+
+	//qDebug() << "SongSlideGroup::fromXml(): Loading text, num slides:"<<numSlides();
+	QString text = map["text"].toString();
+	setText(text);
+	//qDebug() << "SongSlideGroup::fromXml(): Text loaded,  num slides:"<<numSlides();
+
+	// load group atrributes after calling setSong() above so it can override the group title 
+	loadProperties(map);
+	
+	
+	
+}
+	
+QByteArray SongSlideGroup::toByteArray() const
+{
+	QByteArray array;
+	QDataStream stream(&array, QIODevice::WriteOnly);
+	QVariantMap map;
+	
+	saveProperties(map);
+	
+	// song specific stuff
+	if(m_song)
+	{
+		map["songid"] = m_song->songId();
+		//qDebug() << "SongSlideGroup::toXml: songId:"<<m_song->songId()<<", title: "<<m_song->title();
+	}
+	
+	map["text"] = m_text;
+	
+	if(m_slideTemplates)
+	{
+		map["templates"] = m_slideTemplates->toByteArray();
+	}
+	
+	map["SlideGroup.ClassName"] = metaObject()->className();
+	
+	//qDebug() << "SlideGroup::toByteArray(): "<<map;
+	stream << map;
+	return array; 
+}
+
 void SongSlideGroup::toXml(QDomElement & pe) const
 {
 	pe.setTagName("song");

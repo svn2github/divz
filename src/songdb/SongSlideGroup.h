@@ -43,12 +43,15 @@ public:
 	// SlideGroup::
 	virtual bool fromXml(QDomElement & parentElement);
         virtual void toXml(QDomElement & parentElement) const;
+        virtual QByteArray toByteArray() const;
 
 	void changeBackground(AbstractVisualItem::FillType fillType, QVariant fillValue, Slide *onlyThisSlide);
 protected:
 	typedef enum SongTextFilter { Standard, AllowRear, AllowAll };
 	void textToSlides(SongTextFilter filter = Standard);
 	void removeAllSlides();
+	
+	void loadVariantMap(QVariantMap &);
 	
 protected slots:
 	void aspectRatioChanged(double x);

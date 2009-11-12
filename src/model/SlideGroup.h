@@ -85,9 +85,9 @@ private slots:
 	void slideItemChanged(AbstractItem *item, QString operation, QString fieldName, QVariant value, QVariant old);
 
 protected:
-	void loadVariantMap(QVariantMap &);
-	void loadProperties(QVariantMap &);
-	void loadSlides(QVariantMap &);
+	virtual void loadVariantMap(QVariantMap &);
+	virtual void loadProperties(QVariantMap &);
+	virtual void loadSlides(QVariantMap &);
 	
 	void saveProperties(QVariantMap&) const;
 	void saveSlideList(QVariantMap&)  const;

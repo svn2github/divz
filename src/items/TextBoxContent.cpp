@@ -406,7 +406,14 @@ void TextBoxWarmingThreadManager::renderDone(QImage *image)
 TextBoxWarmingThread::TextBoxWarmingThread(AbstractVisualItem *model) : m_model(model) {}
 void TextBoxWarmingThread::run()
 {
-	TextBoxItem * model = dynamic_cast<TextBoxItem*>(m_model);
+	if(!m_model)
+	{
+		qDebug()<<"TextBoxWarmingThread::run(): m_model is null";
+		return;
+	}
+	//qDebug()<<"TextBoxWarmingThread::run(): model ptr:"<<m_model<<", attempting to dynamic cast";
+	
+	TextBoxItem * model = dynamic_cast<TextBoxItem*>((AbstractVisualItem*)m_model);
 	
 	//int sleepTime = (int)(((float)qrand()) / ((float)RAND_MAX) * 10000.0 + 2000.0);
 	

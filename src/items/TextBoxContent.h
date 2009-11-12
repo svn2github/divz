@@ -9,6 +9,7 @@ class QTextDocument;
 #include <QPointF>
 #include <QPainterPath>
 #include <QThread>
+#include <QPointer>
 
 class TextBoxWarmingThread : public QThread
 {
@@ -20,7 +21,7 @@ public:
 signals:
 	void renderDone(QImage *);
 private:
-	AbstractVisualItem * m_model;
+	QPointer<AbstractVisualItem> m_model;
 };
 
 class TextBoxWarmingThreadManager : public QObject
@@ -31,7 +32,7 @@ public:
 private slots:
 	void renderDone(QImage*);
 private:
-	AbstractVisualItem * m_model;
+	QPointer<AbstractVisualItem> m_model;
 	TextBoxWarmingThread * m_thread;
 };
 	

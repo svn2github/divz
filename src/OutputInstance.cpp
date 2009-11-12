@@ -82,8 +82,8 @@ OutputInstance::~OutputInstance()
 		QPointer<Slide> slide = m_ownedSlides.takeFirst();
 		if(slide)
 		{
-			Slide *slidePtr = (Slide*)slide;
-			delete slidePtr;
+			//Slide *slidePtr = (Slide*)slide;
+			//delete slidePtr;
 		}
 	}
 			
@@ -732,8 +732,8 @@ Slide * OutputInstance::setSlide(Slide *slide, bool takeOwnership)
 			QPointer<Slide> slide = m_ownedSlides.takeFirst();
 			if(slide)
 			{
-				Slide *slidePtr = (Slide*)slide;
-				delete slidePtr;
+				//Slide *slidePtr = (Slide*)slide;
+				//delete slidePtr;
 			}
 		}
 		

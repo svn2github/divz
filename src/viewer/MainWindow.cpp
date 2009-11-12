@@ -65,6 +65,11 @@ MainWindow::MainWindow(QWidget *parent)
 	m_preview = new OutputViewer(0,m_previewDock);
 	m_previewDock->setWidget(m_preview);
 	addDockWidget(Qt::BottomDockWidgetArea, m_previewDock);
+	
+// 	m_host = "localhost";
+// 	m_port = 7777;
+// 	m_reconnect = true;
+// 	slotReconnect();
 
 	//m_previewDock->setVisible(output->isEnabled());
 }
