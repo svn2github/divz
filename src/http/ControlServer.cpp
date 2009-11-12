@@ -188,12 +188,17 @@ void ControlServer::screenLoadGroup(QTcpSocket *socket, const QStringList &path,
 	}
 	else
 	{
+		qDebug() << "ControlServer: groupIdx:"<<groupIdx<<", groupPtr:"<<group<<", liveGroup:"<<liveGroup<<", slidePtr:"<<slide<<", liveSlide:"<<liveSlide;
 		if(liveGroup != group ||
 		   liveSlide != slide)
 			mw->setLiveGroup(liveGroup,slide);
+
+		SlideGroupViewControl *viewControl = mw->viewControl(liveId);
+		Slide * liveSlide = viewControl->selectedSlide();
+		SlideGroupListModel *model = viewControl->slideGroupListModel();
+
+		qDebug() << "ControlServer: after change, slidePtr:"<<slide<<", liveSlide:"<<liveSlide<<", model: "<<model;
 			
-		liveSlide = slide;
-		
 		if(!model)
 		{
 			Http_Send_404(socket) 

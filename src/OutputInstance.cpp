@@ -295,6 +295,7 @@ void OutputInstance::setSlideGroup(SlideGroup *group, int startSlide)
 		startSlide = 0;
 	if(startSlide > group->numSlides()-1)
 		startSlide = group->numSlides()-1;
+	//qDebug() << "OutputInstance::setSlideGroup: ["<<m_output->name()<<"] group name:"<<group->assumedName()<<", startSlide#:"<<startSlide;
 	setSlideGroup(group, group->at(startSlide));
 }
 
@@ -306,7 +307,7 @@ void OutputInstance::setSlideGroup(SlideGroup *group, Slide * startSlide)
 	Output::OutputType x = m_output->outputType();
 	if(x == Output::Screen || x == Output::Custom || x == Output::Preview)
 	{
-		//qDebug() << "OutputInstance::setSlideGroup: ["<<m_output->name()<<"] Calling m_viewer->setSlideGroup()";
+		//qDebug() << "OutputInstance::setSlideGroup: ["<<m_output->name()<<"] Calling m_viewer->setSlideGroup(), startSlide:"<<startSlide;
 		//setVisible(m_output->isEnabled());
 
 		m_viewer->setSlideGroup(group,startSlide);
@@ -320,24 +321,6 @@ void OutputInstance::setSlideGroup(SlideGroup *group, Slide * startSlide)
 		
 		if(m_outputServer)
 		{
-// 			QString xmlString;
-// 			QDomDocument doc;
-// 			QTextStream out(&xmlString);
-// 			
-// 			// This element contains all the others.
-// 			QDomElement rootElement = doc.createElement("group");
-// 		
-// 			group->toXml(rootElement);
-// 			
-// 			// Add the root (and all the sub-nodes) to the document
-// 			doc.appendChild(rootElement);
-// 			
-// 			//Add at the begining : <?xml version="1.0" ?>
-// 			QDomNode noeud = doc.createProcessingInstruction("xml","version=\"1.0\" ");
-// 			doc.insertBefore(noeud,doc.firstChild());
-// 			//save in the file (4 spaces indent)
-// 			doc.save(out, 4);
-			
 			// send it to the client
 			m_outputServer->sendCommand(OutputServer::SetSlideGroup,group->toByteArray(),m_slideNum);
 		}

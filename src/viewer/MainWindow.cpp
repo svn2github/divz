@@ -19,7 +19,7 @@
 
 MainWindow * MainWindow::static_mainWindow = 0;
 
-MainWindow::MainWindow(QWidget *parent) 
+MainWindow::MainWindow(QWidget *parent)
 	: QMainWindow(parent)
 	, m_ui(new Ui::MainWindow)
 	, m_inst(0)
@@ -30,26 +30,26 @@ MainWindow::MainWindow(QWidget *parent)
 {
 	static_mainWindow = this;
 	m_ui->setupUi(this);
-	
+
 	setWindowTitle("Network Viewer - DViz");
 	setWindowIcon(QIcon(":/data/icon-d.png"));
-	
+
 	connect(m_ui->actionConnect_To, SIGNAL(triggered()), this, SLOT(slotConnect()));
 	connect(m_ui->actionDisconnect, SIGNAL(triggered()), this, SLOT(slotDisconnect()));
 	connect(m_ui->actionSetup_Outputs, SIGNAL(triggered()), this, SLOT(slotOutputSetup()));
 	connect(m_ui->actionExit, SIGNAL(triggered()), this, SLOT(slotExit()));
-	
+
 	m_ui->actionDisconnect->setEnabled(false);
 	m_ui->actionConnect_To->setEnabled(true);
-	
+
 	m_ui->actionConnect_To->setIcon(QIcon(":/data/stock-connect.png"));
 	m_ui->actionDisconnect->setIcon(QIcon(":/data/stock-disconnect.png"));
 	m_ui->actionSetup_Outputs->setIcon(QIcon(":data/stock-preferences.png"));
-	
+
 	m_ui->textEdit->setReadOnly(true);
 	// pmp00750
 	log("Welcome to the DViz Network Viewer!");
-	
+
 	QSettings s;
 	bool flag = s.value("viewer/firstrun").toBool();
 	if(flag)
@@ -74,14 +74,14 @@ void MainWindow::openOutput()
 	//qDebug() << "MainWindow::openOutput()";
 	if(m_inst)
 		delete m_inst;
-		
+
 	QList<Output*> outputs = AppSettings::outputs();
-	
+
 	Output * out = outputs.first();
 	m_inst = new OutputInstance(out); // start hidden
 	// not going to use this signal since it should be handeled from the server
 	//connect(inst, SIGNAL(nextGroup()), this, SLOT(nextGroup()));
-	
+
 	// start hidden until connected
 	m_inst->setVisible(false);
 	m_previewDock->setVisible(false);
@@ -101,11 +101,11 @@ void MainWindow::log(const QString& msg, int)
 // 	//if(m_reconnect)
 // 	//	slotReconnect();
 // }
-// 
+//
 
 void MainWindow::socketError(QAbstractSocket::SocketError socketError)
 {
-	switch (socketError) 
+	switch (socketError)
 	{
 		case QAbstractSocket::RemoteHostClosedError:
 			break;
@@ -133,15 +133,15 @@ void MainWindow::slotConnect()
 	//qDebug() << "MainWindow::slotConnect()";
 	if(m_client)
 		slotDisconnect();
-	
+
 	ConnectDialog d;
 	if(d.exec())
 	{
 		m_host = d.host();
 		m_port = d.port();
 		m_reconnect = d.reconnect();
-		
-		
+
+
 		slotReconnect();
 	}
 }
@@ -149,25 +149,25 @@ void MainWindow::slotConnect()
 void MainWindow::slotReconnect()
 {
 	//qDebug() << "MainWindow::slotReconnect()";
-	
+
 	// reopen output inorder to reset all settings such as
 	// black frame, fade speed, etc
 	openOutput();
-	
+
 	m_client = new NetworkClient(this);
 	m_client->setInstance(m_inst);
 	m_client->setLogger(this);
 	connect(m_client, SIGNAL(socketError(QAbstractSocket::SocketError)), this, SLOT(socketError(QAbstractSocket::SocketError)));
 	connect(m_client, SIGNAL(aspectRatioChanged(double)), this, SLOT(aspectChanged(double)));
 	connect(m_client, SIGNAL(socketConnected()), this, SLOT(slotConnected()));
-	
+
 	if(m_reconnect)
 		connect(m_client, SIGNAL(socketDisconnected()), this, SLOT(slotReconnect()));
-	
+
 	log(QString("[INFO] Connecting to to %1:%2 ...").arg(m_host).arg(m_port));
-	
+
 	m_client->connectTo(m_host,m_port);
-	
+
 	m_ui->actionDisconnect->setEnabled(true);
 	m_ui->actionConnect_To->setEnabled(false);
 }
@@ -182,7 +182,7 @@ void MainWindow::aspectChanged(double d)
 void MainWindow::slotConnected()
 {
 	log("[INFO] Connected!");
-	m_inst->setVisible(true);	
+	m_inst->setVisible(true);
 	m_previewDock->setVisible(true);
 }
 
@@ -191,7 +191,7 @@ void MainWindow::slotDisconnect()
 	//qDebug() << "MainWindow::slotDisconnect()";
 	m_ui->actionDisconnect->setEnabled(false);
 	m_ui->actionConnect_To->setEnabled(true);
-	
+
 	m_inst->setVisible(false);
 	m_previewDock->setVisible(false);
 
@@ -234,7 +234,7 @@ MainWindow::~MainWindow()
 void MainWindow::changeEvent(QEvent *e)
 {
 	QMainWindow::changeEvent(e);
-	switch (e->type()) 
+	switch (e->type())
 	{
 		case QEvent::LanguageChange:
 			m_ui->retranslateUi(this);
@@ -255,7 +255,7 @@ QRect MainWindow::standardSceneRect(double aspectRatio)
 	{
 		aspectRatio = AppSettings::liveAspectRatio();
 	}
-	
+
 	int height = 768;
 	return QRect(0,0,aspectRatio * height,height);
 }

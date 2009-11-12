@@ -34,7 +34,7 @@ public:
 	void log(const QString&, int severity=-1);
 	
 	void setLiveGroup(SlideGroup *newGroup, Slide *currentSlide,bool);
-	
+
 	void setAutosaveEnabled(bool);
 
 signals:
