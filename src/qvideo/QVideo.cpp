@@ -6,12 +6,16 @@
 #include <QDebug>
 #include <QMutex>
 #include <QMutexLocker>
+
+
 //#include "QVideoEncoder.h"
 /*
 #define _WIN32_WINNT 0x0500
 #include <windows.h>
 #include <Winbase.h>*/
 QMutex qvideo_mutex;
+
+#define MAX_SKIPS_TILL_RESET 30
 
 QVideo::QVideo(const QString & filename, QObject * parent) : QObject(parent), 
 	m_frame_rate(0.0f), 
@@ -21,7 +25,8 @@ QVideo::QVideo(const QString & filename, QObject * parent) : QObject(parent),
 	m_advance_mode(QVideo::RealTime),
 	m_play_timer(0),
 	m_video_loaded(false),
-	m_status(Paused)
+	m_status(Paused),
+	m_skipFrameCount(0)
 {
 	QMutexLocker locker(&qvideo_mutex);
 	av_register_all();
@@ -39,6 +44,8 @@ QVideo::QVideo(const QString & filename, QObject * parent) : QObject(parent),
 	setAdvanceMode(QVideo::RealTime);
 
 	m_screen = new QLabel();
+	
+	m_frameTimer = (double)av_gettime() / 1000000.0;
 
 	if(QFile::exists(filename))
 		load(filename);
@@ -297,7 +304,7 @@ void QVideo::consumeFrame()
 
 		m_current_frame = m_video_decoder->getNextFrame();
 
-		static double previous_pts_delay = 0.04;
+		static double previous_pts_delay = 40e-3;
 
 		//calculate the pts delay
 		double pts_delay = m_current_frame.pts - m_current_frame.previous_pts;
@@ -305,28 +312,70 @@ void QVideo::consumeFrame()
 			pts_delay = previous_pts_delay;
 
 		previous_pts_delay = pts_delay;
+		
+		/* update delay to sync to audio */
+// 		double ref_clock = get_audio_clock(is);
+// 		double diff = vp->pts - ref_clock;
+
+		
 
 		//calculate the global delay
-		int global_delay = (m_current_frame.pts * 1000) - m_play_time.elapsed();
+		//int global_delay = (m_current_frame.pts * 1000) - m_play_time.elapsed();
+		//m_play_time.elapsed() / 1000; //
+		//double curTime = (double)(av_gettime() / 1000000.0);
+		double curTime = ((double)m_play_time.elapsed()) / 1000.0;
+		m_frameTimer += pts_delay;
+		//if(m_frameTimer > curTime)
+			//m_frameTimer = curTime;
+		double actual_delay = m_frameTimer - curTime;
+		//qDebug() << "frame timer: "<<m_frameTimer<<", curTime:"<<curTime<<", actual_delay:"<<actual_delay<<", pts_delay:"<<pts_delay<<", av_gettime():"<<av_gettime();
+		if(actual_delay < 0.010)
+		{
+			// This should just skip this frame
+			//qDebug() << "Skipping this frame, skips:"<<m_skipFrameCount;
+// 			if(status() == Running)
+// 				m_play_timer = startTimer(1);
+// 			return;
+			actual_delay = 0.0;
+			
+			m_skipFrameCount ++;
+			
+			if(m_skipFrameCount > MAX_SKIPS_TILL_RESET)
+			{
+				m_skipFrameCount = 0;
+				m_frameTimer = curTime;
+				//qDebug() << "Reset frame timer";
+			}
+		}
+		
+		
+		int acutal_delay_int = (int)(actual_delay * 1000 + 0.5);
+
 
 		//convert to milliseconds for comparison
-		pts_delay *= 1000;
+		//pts_delay *= 1000;
 
 		//we want the lesser of the two delays, so as not to fall behind, that will be our actual_delay
-		int actual_delay = (global_delay < pts_delay && global_delay > 0) ? global_delay : pts_delay;
+		//int actual_delay = (global_delay < pts_delay && global_delay > 0) ? global_delay : pts_delay;
 		//actual_delay = 15;
 		//qDebug("Sleeping %d till next frame...",actual_delay);
-		int min = 10;
-		#if !defined(Q_OS_UNIX)
-			min=33 * 2;
-		#endif
+// 		int min = 10;
+// 		#if !defined(Q_OS_UNIX)
+// 			min=33 * 2;
+// 		#endif
+
+		/*
 		
 		if(actual_delay<min)
 		{
 			actual_delay = min;
 		//qDebug("***************** Keeping out of the water: %d",min);
-		}
+		}*/
+		
+		if(acutal_delay_int < 0)
+			acutal_delay_int = 0;
 
+		
 
 		//use the actual_delay to schedule a refresh to display the current frame
 
@@ -336,13 +385,14 @@ void QVideo::consumeFrame()
 		#endif
 		
 		//printf("actual_delay=%d\n",actual_delay);
+		//qDebug() << "acutal_delay_int: "<<acutal_delay_int;
 		
 
 		m_frame_counter++;
 		//qDebug("START frame: %d",m_frame_counter);
 		m_frameDebug.start();
-		m_expectedDelay = actual_delay;
-		QTimer::singleShot(actual_delay, this, SLOT(displayFrame()));
+		m_expectedDelay = acutal_delay_int;
+		QTimer::singleShot(acutal_delay_int, this, SLOT(displayFrame()));
 		//m_nextImageTimer.start(actual_delay);
 		//displayFrame();
 		//HANDLE handle;
@@ -386,7 +436,7 @@ void QVideo::displayFrame()
         int xflag = 0;
         if(m_frameDebug.elapsed() > m_expectedDelay * 3)
         {
-            qDebug(" * * * elapsed: %d, expected: %d", m_frameDebug.elapsed(), m_expectedDelay);
+            //qDebug(" * * * %s: elapsed: %d, expected: %d", qPrintable(m_filename), m_frameDebug.elapsed(), m_expectedDelay);
             xflag ++;
         }
 

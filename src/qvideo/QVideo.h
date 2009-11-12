@@ -145,6 +145,11 @@ private:
         QTime m_frameDebug;
         int m_expectedDelay;
         
+        double m_frameTimer;
+        
+        // used to reset the elapsed time and frame timer back to in sync
+        int m_skipFrameCount;
+        
         Status m_status;
 };
 

@@ -10,6 +10,28 @@ extern "C" {
 
 #define SDL_AUDIO_BUFFER_SIZE 1024
 
+//uint64_t global_video_pkt_pts = AV_NOPTS_VALUE;
+
+/* These are called whenever we allocate a frame
+* buffer. We use this to store the global_pts in
+* a frame at the time it is allocated.
+*/
+static uint64_t global_video_pkt_pts = AV_NOPTS_VALUE;
+
+static int our_get_buffer(AVCodecContext *c, AVFrame *pic)
+{
+	int ret = avcodec_default_get_buffer(c, pic);
+	uint64_t *pts = (uint64_t*)av_malloc(sizeof(uint64_t));
+	*pts = global_video_pkt_pts;
+	pic->opaque = pts;
+	return ret;
+}
+
+static void our_release_buffer(AVCodecContext *c, AVFrame *pic)
+{
+	if(pic) av_freep(&pic->opaque);
+	avcodec_default_release_buffer(c, pic);
+}
 
 int Round(double value);
 //void audio_callback(void *userdata, Uint8 *stream, int len);
@@ -166,8 +188,8 @@ bool QVideoDecoder::load(const QString & filename)
 
 	// Get a pointer to the codec context for the video and audio streams
 	m_video_codec_context = m_av_format_context->streams[m_video_stream]->codec;
-	//m_video_codec_context->get_buffer = our_get_buffer;
-	//m_video_codec_context->release_buffer = our_release_buffer;
+// 	m_video_codec_context->get_buffer = our_get_buffer;
+// 	m_video_codec_context->release_buffer = our_release_buffer;
 
 	// Find the decoder for the video stream
 	m_video_codec =avcodec_find_decoder(m_video_codec_context->codec_id);
@@ -246,27 +268,7 @@ bool QVideoDecoder::load(const QString & filename)
 	return true;
 }
 
-//uint64_t global_video_pkt_pts = AV_NOPTS_VALUE;
 
-/* These are called whenever we allocate a frame
-* buffer. We use this to store the global_pts in
-* a frame at the time it is allocated.
-*/
-
-//int our_get_buffer(AVCodecContext *c, AVFrame *pic)
-//{
-//	int ret = avcodec_default_get_buffer(c, pic);
-//	uint64_t *pts = (uint64_t*)av_malloc(sizeof(uint64_t));
-//	*pts = global_video_pkt_pts;
-//	pic->opaque = pts;
-//	return ret;
-//}
-//
-//void our_release_buffer(AVCodecContext *c, AVFrame *pic)
-//{
-//	if(pic) av_freep(&pic->opaque);
-//	avcodec_default_release_buffer(c, pic);
-//}
 
 void QVideoDecoder::unload()
 {
@@ -408,12 +410,11 @@ void QVideoDecoder::decode()
 			// Is this a packet from the video stream?
 			if(packet->stream_index == m_video_stream)
 			{
-				//global_video_pkt_pts = packet.pts;
+				global_video_pkt_pts = packet->pts;
 
 // 				mutex.lock();
 				avcodec_decode_video(m_video_codec_context, m_av_frame, &frame_finished, packet->data, packet->size);
 // 				mutex.unlock();
-
 
 				if(packet->dts == AV_NOPTS_VALUE &&
 					      m_av_frame->opaque &&
@@ -474,6 +475,29 @@ void QVideoDecoder::decode()
 					memcpy(m_frame->bits(), m_av_rgb_frame->data[0], num_bytes);
 
 					av_free_packet(packet);
+					
+					// This block from the synchronize_video(VideoState *is, AVFrame *src_frame, double pts) : double
+					// function given at: http://www.dranger.com/ffmpeg/tutorial05.html
+					{
+						// update the frame pts 
+						double frame_delay;
+						
+						if(pts != 0) 
+						{
+							/* if we have pts, set video clock to it */
+							m_video_clock = pts;
+						} else {
+							/* if we aren't given a pts, set it to the clock */
+							pts = m_video_clock;
+						}
+						/* update the video clock */
+						frame_delay = av_q2d(m_timebase);
+						/* if we are repeating a frame, adjust clock accordingly */
+						frame_delay += m_av_frame->repeat_pict * (frame_delay * 0.5);
+						m_video_clock += frame_delay;
+						//qDebug() << "Frame Dealy: "<<frame_delay;
+					}
+					
 
 					QFFMpegVideoFrame video_frame;
 					video_frame.frame = m_frame;

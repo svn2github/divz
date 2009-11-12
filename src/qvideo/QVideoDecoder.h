@@ -110,6 +110,9 @@ private:
 	int m_decode_timer;
 	
 	bool m_killed;
+	
+	double m_video_clock; ///<pts of last decoded frame / predicted pts of next decoded frame
+
 };
 
 #endif // QVIDEODECODER_H
