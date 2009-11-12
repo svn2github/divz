@@ -30,6 +30,9 @@ public:
 	
 	bool outputIsSynced() { return m_outputIsSynced; }
 	
+	bool isClearToggled() { return m_clearButton->isChecked(); }
+	bool isBlackToggled() { return m_blackButton->isChecked(); }
+	
 public slots:
 	void setOutputInstance(OutputInstance*);
 	void setViewControl(SlideGroupViewControl*);
@@ -46,6 +49,9 @@ public slots:
 	void setTextOnlyFilterEnabled(bool);
 	void setTextResizeEnabled(bool);
 	
+	void fadeBlackFrame(bool);
+	void fadeClearFrame(bool);
+	
 	
 
 /*public*/ 
@@ -61,9 +67,6 @@ protected slots:
 	
 	// inorder to reload the list of outputs for the sync widget box
 	void setupSyncWithBox();
-	
-	void fadeBlackFrame(bool);
-	void fadeClearFrame(bool);
 	
 	// inorder to untoggle black/clear buttons
 	void slideChanged(int);

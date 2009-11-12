@@ -5,6 +5,7 @@
 #include "MainWindow.h"
 #include "DocumentListModel.h"
 #include "OutputInstance.h"
+#include "OutputControl.h"
 #include "model/Document.h"
 #include "model/Output.h"
 #include "model/SlideGroup.h"
@@ -51,9 +52,37 @@ void ControlServer::dispatch(QTcpSocket *socket, const QStringList &path, const 
 		screenLoadGroup(socket,path,query);
 	}
 	else
-	if(pathStr.startsWith("data/"))
+	if(pathStr.startsWith("data/") ||
+	   pathStr.startsWith(":/data/"))
 	{
 		serveFile(socket,pathStr);
+	}
+	else
+	if(pathStr.startsWith("favicon.ico"))
+	{
+		serveFile(socket,":/data/http/favicon.ico");
+	}
+	else
+	if(pathStr.startsWith("toggle/"))
+	{
+		QStringList pathCopy = path;
+		pathCopy.takeFirst();
+		QString control = pathCopy.isEmpty() ? "black" : pathCopy.takeFirst().toLower();
+		bool flag = pathCopy.isEmpty() ? 0 : pathCopy.takeFirst().toInt();
+		
+		// to access/set black/clear
+		int liveId = AppSettings::taggedOutput("live")->id();
+		OutputControl * outputControl = mw->outputControl(liveId);
+		
+		if(control == "black")
+			outputControl->fadeBlackFrame(flag);	
+		else
+		if(control == "clear")
+			outputControl->fadeClearFrame(flag);
+		else
+			generic404(socket,path,query);
+			
+		Http_Send_Response(socket,"HTTP/1.0 204 Toggled Control") << "";
 	}
 	else
 	{
@@ -102,8 +131,17 @@ void ControlServer::screenListGroups(QTcpSocket *socket, const QStringList &path
 		outputGroupList << row;
 	}
 	
-	SimpleTemplate tmpl("doc.tmpl");
+	SimpleTemplate tmpl(":/data/http/doc.tmpl");
 	tmpl.param("list",outputGroupList);
+	
+	OutputControl * outputControl = mw->outputControl(liveId);
+	tmpl.param("black_toggled", outputControl->isBlackToggled());
+	tmpl.param("clear_toggled", outputControl->isClearToggled());
+		
+	if(doc->filename().isEmpty())
+		tmpl.param("docfile",tr("New File"));
+	else
+		tmpl.param("docfile",QFileInfo(doc->filename()).baseName());
 	
 	Http_Send_Ok(socket) << tmpl.toString();
 }
@@ -114,7 +152,8 @@ void ControlServer::screenLoadGroup(QTcpSocket *socket, const QStringList &path,
 	QStringList pathCopy = path;
 	pathCopy.takeFirst();
 	int groupIdx = pathCopy.takeFirst().toInt();
-	
+	QString nextPathElement = pathCopy.isEmpty() ? "" : pathCopy.takeFirst().toLower();
+
 	Document * doc = mw->currentDocument();
 	if(!doc)
 	{
@@ -142,6 +181,9 @@ void ControlServer::screenLoadGroup(QTcpSocket *socket, const QStringList &path,
 	SlideGroupViewControl *viewControl = mw->viewControl(liveId);
 	Slide * liveSlide = viewControl->selectedSlide();
 	
+	// to access/set black/clear
+	OutputControl * outputControl = mw->outputControl(liveId);
+	
 	Slide * slide = 0;
 		
 	if(query.contains("slide"))
@@ -154,17 +196,41 @@ void ControlServer::screenLoadGroup(QTcpSocket *socket, const QStringList &path,
 		}
 		
 		slide = group->at(idx);
+		
+		if(liveGroup == group &&
+		   liveSlide != slide &&
+		   nextPathElement != "icon")
+		{
+			// this is JUST a change slide request
+			mw->setLiveGroup(liveGroup,slide);
+			
+			// 204 = HTTP No Content, ("...[the browser] SHOULD NOT change its document view...")
+			Http_Send_Response(socket,"HTTP/1.0 204 Changed Slide") << "";
+			
+			// BlackBerry Internet Browser doesnt honor HTTP 204, so we have to use javascript to make it not change the current document
+			
+			return;
+		}
+			
 	}
 	
 	SlideGroupListModel *model = viewControl->slideGroupListModel();
 	
-	QString nextPathElement = pathCopy.isEmpty() ? "" : pathCopy.takeFirst().toLower();
 	if(nextPathElement == "icon")
 	{
 		QVariant icon;
 		if(slide)
 		{
+			// If the slide group was just loaded to live for the first time
+			// this session, the icons could come back gray if left in 
+			// queued icon gen mode. Therefore, turn that mode off for now.
+			bool oldMode = model->queuedIconGenerationMode();
+			model->setQueuedIconGenerationMode(false);
+			
 			icon = model->data(model->indexForSlide(slide), Qt::DecorationRole);
+			
+			model->setQueuedIconGenerationMode(oldMode);
+		
 		}
 		else
 		{
@@ -188,17 +254,14 @@ void ControlServer::screenLoadGroup(QTcpSocket *socket, const QStringList &path,
 	}
 	else
 	{
-		qDebug() << "ControlServer: groupIdx:"<<groupIdx<<", groupPtr:"<<group<<", liveGroup:"<<liveGroup<<", slidePtr:"<<slide<<", liveSlide:"<<liveSlide;
 		if(liveGroup != group ||
 		   liveSlide != slide)
-			mw->setLiveGroup(liveGroup,slide);
-
+			mw->setLiveGroup(group,slide);
+		
 		SlideGroupViewControl *viewControl = mw->viewControl(liveId);
-		Slide * liveSlide = viewControl->selectedSlide();
 		SlideGroupListModel *model = viewControl->slideGroupListModel();
-
-		qDebug() << "ControlServer: after change, slidePtr:"<<slide<<", liveSlide:"<<liveSlide<<", model: "<<model;
-			
+		Slide * liveSlide = viewControl->view()->slide(); //selectedSlide();
+		
 		if(!model)
 		{
 			Http_Send_404(socket) 
@@ -212,11 +275,11 @@ void ControlServer::screenLoadGroup(QTcpSocket *socket, const QStringList &path,
 			Slide * slide = model->slideAt(idx);
 			QVariantMap row;
 			
-			QVariant tooltip = model->data(model->index(slide->slideNumber(),0), Qt::ToolTipRole);
-			QString viewText = QString(tr("Slide # %1")).arg(slide->slideNumber()+1);
+			QString viewText = model->data(model->index(slide->slideNumber(),0), Qt::DisplayRole).toString();
+			QString toolText = model->data(model->index(slide->slideNumber(),0), Qt::ToolTipRole).toString();
 			
-			if(tooltip.isValid())
-				viewText = tooltip.toString();
+			if(!toolText.trimmed().isEmpty())
+				viewText = toolText;
 			
 			row["slide"]     = idx;
 			row["text"]      = viewText;
@@ -225,10 +288,13 @@ void ControlServer::screenLoadGroup(QTcpSocket *socket, const QStringList &path,
 			outputSlideList << row;
 		}
 		
-		SimpleTemplate tmpl("group.tmpl");
+		SimpleTemplate tmpl(":/data/http/group.tmpl");
 		tmpl.param("list",outputSlideList);
 		tmpl.param("groupidx", docModel->indexForGroup(group).row());
 		tmpl.param("grouptitle", group->assumedName());
+		
+		tmpl.param("black_toggled", outputControl->isBlackToggled());
+		tmpl.param("clear_toggled", outputControl->isClearToggled());
 		
 		Http_Send_Ok(socket) << tmpl.toString();
 	}

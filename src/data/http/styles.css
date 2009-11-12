@@ -1,0 +1,4 @@
+.live{border:2px solid red;padding:1px}
+.notlive{border:2px solid white;padding:1px}
+.ctrl_enabled{font-weight:bold;color:black}
+.ctrl_disabled{color:blue}

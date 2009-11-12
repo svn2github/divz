@@ -41,6 +41,7 @@ public:
 	Output * output() { return m_output; }
 	
 	SlideGroup * slideGroup();
+	Slide * slide() { return m_slide; }
 	
 	int numSlides();
 	
@@ -58,6 +59,9 @@ public:
 	int fadeQuality() { return m_fadeQuality; } 
 
 	SlideGroupViewer::ViewerState viewerState() { return m_viewerState; }
+	
+	bool isClearEnabled() { return m_clearEnabled; }
+	bool isBlackEnabled() { return m_blackEnabled; }
 	
 signals:
 	void nextGroup();
@@ -132,6 +136,7 @@ private:
 //	QHash<int,QPixmap> m_pixmaps;
 
 	int m_slideNum;
+	Slide *m_slide;
 	
 	Slide * m_overlaySlide;
 	bool m_overlayEnabled;
@@ -161,6 +166,9 @@ private:
 	bool m_lockResizeEvent;
 	
 	QList<OutputInstance*> m_mirrors;
+	
+	bool m_clearEnabled;
+	bool m_blackEnabled;
 };
 
 #endif // SLIDEGROUPVIEWER_H

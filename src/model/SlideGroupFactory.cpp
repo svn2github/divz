@@ -370,6 +370,8 @@ void SlideGroupViewControl::fitQuickSlideText()
 	m_quickSlideTextBox->setContentsRect(QRectF(0,y,fitSize.width(),realHeight));
 }
 
+Slide * SlideGroupViewControl::selectedSlide() { return m_slideModel->slideFromIndex(m_listView->currentIndex()); }
+
 void SlideGroupViewControl::showQuickSlide(bool flag)
 {
 	if(m_showQuickSlideBtn->isChecked() != flag)

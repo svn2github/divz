@@ -643,7 +643,7 @@ void MainWindow::setSelectedBackground(const QFileInfo &info)
 		if(group)
 		{
 			group->changeBackground(info);
-			qDebug() << "Finished setting "<<abs<<" as background on group "<<group->groupTitle();
+			//qDebug() << "Finished setting "<<abs<<" as background on group "<<group->groupTitle();
 		}
 	}
 	else
@@ -1193,6 +1193,7 @@ void MainWindow::previewSlideDoubleClicked(Slide *slide)
 
 void MainWindow::setLiveGroup(SlideGroup *newGroup, Slide *currentSlide, bool allowProgressDialog)
 {
+	//qDebug() << "MainWindow::setLiveGroup: newGroup:"<<newGroup<<", slide:"<<currentSlide;
 	QList<Output*> selectedOutputs;
 	QList<Output*> allOut = AppSettings::outputs();
 
@@ -1247,7 +1248,7 @@ void MainWindow::sendGroupToOutput(Output *output, SlideGroup *newGroup, Slide *
 	//if(!inst->isVisible())
 	//	inst->show();
 
-	//qDebug() << "MainWindow::setLiveGroup(): newGroup->groupType():"<<newGroup->groupType()<<", SlideGroup::Generic:"<<SlideGroup::Generic;
+	//qDebug() << "MainWindow::sendGroupToOutput(): newGroup->groupType():"<<newGroup->groupType()<<", SlideGroup::Generic:"<<SlideGroup::Generic;
 	if((oldGroup && oldGroup->groupType() != newGroup->groupType()) || newGroup->groupType() != SlideGroup::Generic)
 	{
 		SlideGroupFactory *factory = SlideGroupFactory::factoryForType(newGroup->groupType());
@@ -1260,8 +1261,6 @@ void MainWindow::sendGroupToOutput(Output *output, SlideGroup *newGroup, Slide *
 		if(factory)
 		{
 			//qDebug() << "MainWindow::setLiveGroup(): got new factory, initalizing";
-			//m_outputTabs->removeTab(m_outputTabs->indexOf(ctrl));
-
 			if(ctrl)
 			{
 				delete ctrl;
@@ -1279,9 +1278,9 @@ void MainWindow::sendGroupToOutput(Output *output, SlideGroup *newGroup, Slide *
 		}
 	}
 
-	//qDebug() << "MainWindow::setLiveGroup: Loading into view control";
+	//qDebug() << "MainWindow::setLiveGroup: Loading into view control:"<<newGroup;
 	ctrl->setSlideGroup(newGroup,currentSlide);
-	//qDebug() << "MainWindow::setLiveGroup: Loading into LIVE output";
+	//qDebug() << "MainWindow::setLiveGroup: Loading into output instance:"<<newGroup;
 	inst->setSlideGroup(newGroup,currentSlide);
 	//qDebug() << "MainWindow::setLiveGroup: Loading into LIVE output (done)";
 	ctrl->setFocus(Qt::OtherFocusReason);

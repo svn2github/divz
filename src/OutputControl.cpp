@@ -639,12 +639,19 @@ void OutputControl::fadeBlackFrame(bool flag)
 {
 	if(m_ctrl)
 		m_ctrl->fadeBlackFrame(flag);
+		
+	if(m_blackButton->isChecked() != flag)
+		m_blackButton->setChecked(flag);
+		
 }
 
 void OutputControl::fadeClearFrame(bool flag) 
 {
 	if(m_ctrl)
 		m_ctrl->fadeClearFrame(flag);
+		
+	if(m_clearButton->isChecked() != flag)
+		m_clearButton->setChecked(flag);
 }
 
 void OutputControl::setViewControl(SlideGroupViewControl *ctrl)

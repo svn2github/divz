@@ -37,9 +37,12 @@ OutputInstance::OutputInstance(Output *out, bool startHidden, QWidget *parent)
 	, m_viewer(0)
 	, m_slideGroup(0)
 	, m_slideNum(-1)
+	, m_slide(0)
 	, m_isFoldback(false)
 	, m_jpegServer(0)
 	, m_outputServer(0)
+	, m_clearEnabled(false)
+	, m_blackEnabled(false)
 {
 	out->setInstance(this);
 	
@@ -694,6 +697,8 @@ Slide * OutputInstance::setSlide(Slide *slide, bool takeOwnership)
 	emit slideChanged(slide);
 	if(m_slideNum > -1)
 		emit slideChanged(m_slideNum);
+		
+	m_slide = slide;
 	
 	Output::OutputType x = m_output->outputType();
 	if(x == Output::Screen || x == Output::Custom || x == Output::Preview)
@@ -773,10 +778,13 @@ void OutputInstance::fadeBlackFrame(bool enable)
 {
 	foreach(OutputInstance *m, m_mirrors)
 		m->fadeBlackFrame(enable);
-		
+	
 	if(!m_output->isEnabled())
 		return;
 		
+	// set the flag only if the output is enabled inorder to reflect the true status of the output
+	m_blackEnabled = enable;
+	
 	Output::OutputType outType = m_output->outputType();
 	if(outType == Output::Screen || outType == Output::Custom || outType == Output::Preview)
 	{
@@ -799,7 +807,10 @@ void OutputInstance::fadeClearFrame(bool enable)
 		
 	if(!m_output->isEnabled())
 		return;
-		
+	
+	// set the flag only if the output is enabled inorder to reflect the true status of the output
+	m_clearEnabled = enable;
+	
 	Output::OutputType outType = m_output->outputType();
 	if(outType == Output::Screen || outType == Output::Custom || outType == Output::Preview)
 	{

@@ -142,9 +142,13 @@
         <file>data/format-text-underline.png</file>
         <file>data/ppt.png</file>
         <file>data/insert-ppt-24.png</file>
-        
-        
-        
+        <file>data/http/favicon.ico</file>
+        <file>data/http/styles.css</file>
+        <file>data/http/control-scripts.js</file>
+        <file>data/http/doc.tmpl</file>
+        <file>data/http/group.tmpl</file>
+        <file>data/http/inc-ctrl-toggles.tmpl</file>
+
         <!--
         <file>translations/fotowall_de.qm</file>
         <file>translations/fotowall_fr.qm</file>

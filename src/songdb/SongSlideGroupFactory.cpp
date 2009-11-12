@@ -142,6 +142,9 @@ SongSlideGroupViewControl::SongSlideGroupViewControl(OutputInstance *g, QWidget 
 	m_listView->setModel(m_slideModel);
 	
 	m_listView->setViewMode(QListView::ListMode);
+	m_listView->setWrapping(false);
+	m_listView->setFlow(QListView::TopToBottom);
+	
 	m_listView->reset();	
 	
 	//setQuickSlideEnabled(false);

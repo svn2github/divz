@@ -44,7 +44,7 @@ public:
 	OutputInstance * view() { return m_slideViewer; }
 	virtual void setOutputView(OutputInstance *);
 	
-	Slide * selectedSlide() { return m_selectedSlide; }
+	Slide * selectedSlide();
 	
 	typedef enum TimerState { Undefined, Running, Stopped };
 	

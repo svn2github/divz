@@ -171,8 +171,8 @@ bool HttpServer::serveFile(QTcpSocket *socket, const QString &pathStr)
 	if(!pathStr.contains(".."))
 	{
 		QFileInfo fileInfo(pathStr);
-		QString abs = fileInfo.canonicalFilePath();
-		//QFile file(QDir::currentPath() + "/" + abs);
+		// Workaround to allow serving resources by assuming the Qt resources start with ":/"
+		QString abs = pathStr.startsWith(":/") ? pathStr : fileInfo.canonicalFilePath();
 		QFile file(abs);
 		if(!file.open(QIODevice::ReadOnly))
 		{
@@ -195,10 +195,11 @@ bool HttpServer::serveFile(QTcpSocket *socket, const QString &pathStr)
 					ext == "css"  ? "text/css" :
 					ext == "html" ? "text/html" :
 					ext == "js"   ? "text/javascript" :
+					ext == "ico"  ? "image/vnd.microsoft.icon" :
 					"application/octet-stream";
 				
 		QHttpResponseHeader header(QString("HTTP/1.0 200 OK"));
-		header.setValue("content-type", contentType);
+		header.setValue("Content-Type", contentType);
 	
 		respond(socket,header);
 		
@@ -208,6 +209,7 @@ bool HttpServer::serveFile(QTcpSocket *socket, const QString &pathStr)
 			qint64 bytesRead = file.read(buffer,FILE_BUFFER_SIZE);
 			if(bytesRead < 0)
 			{
+				file.close();
 				return false;
 			}
 			else
@@ -217,7 +219,6 @@ bool HttpServer::serveFile(QTcpSocket *socket, const QString &pathStr)
 		}
 		
 		file.close();
-		
 		return true;
 	}
 	else
