@@ -773,7 +773,7 @@ accessible on the viewer.</string>
      <y>162</y>
     </hint>
     <hint type="destinationlabel">
-     <x>347</x>
+     <x>426</x>
      <y>158</y>
     </hint>
    </hints>
@@ -785,7 +785,7 @@ accessible on the viewer.</string>
    <slot>setValue(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>339</x>
+     <x>418</x>
      <y>162</y>
     </hint>
     <hint type="destinationlabel">

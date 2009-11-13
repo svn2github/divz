@@ -4,6 +4,7 @@
 #include "items/TextProperties.h"
 #include "model/BackgroundItem.h"
 #include "items/CornerItem.h"
+#include "AppSettings.h"
 // #include "CPixmap.h"
 #include "RenderOpts.h"
 #include <QDebug>
@@ -137,11 +138,11 @@ void BackgroundContent::syncFromModelItem(AbstractVisualItem *model)
 	
 	if(model->fillVideoFile()!="" &&
 		model->fillType() == AbstractVisualItem::Video)
-		setVideoFile(model->fillVideoFile());
+		setVideoFile(AppSettings::applyResourcePathTranslations(model->fillVideoFile()));
 		
 	if(model->fillImageFile() != "" &&
 		model->fillType() == AbstractVisualItem::Image)
-		setImageFile(model->fillImageFile());
+		setImageFile(AppSettings::applyResourcePathTranslations(model->fillImageFile()));
 		
 	if(   model->zoomEffectEnabled() 
  	   && model->zoomSpeed() > 0 

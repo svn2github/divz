@@ -4,6 +4,7 @@
 #include "items/TextProperties.h"
 #include "model/VideoFileItem.h"
 #include "items/CornerItem.h"
+#include "AppSettings.h"
 // #include "CPixmap.h"
 #include "RenderOpts.h"
 #include <QDebug>
@@ -124,8 +125,8 @@ void VideoFileContent::syncFromModelItem(AbstractVisualItem *model)
 	
 	if(DEBUG_VIDEOFILECONTENT)
 		qDebug() << "VideoFileContent::syncFromModel(): Got file: "<<model->fillVideoFile();
-        setFilename(model->fillVideoFile());
-	
+        setFilename(AppSettings::applyResourcePathTranslations(model->fillVideoFile()));
+        
         m_dontSyncToModel = false;
 }
 

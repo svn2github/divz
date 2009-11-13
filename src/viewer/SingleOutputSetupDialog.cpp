@@ -72,6 +72,31 @@ SingleOutputSetupDialog::SingleOutputSetupDialog(QWidget *parent) :
 	
 	setOutput(AppSettings::outputs().at(0));
 	
+	QTableWidget * tableWidget = m_ui->resourceTranslations;
+	AppSettings::ResourcePathTranslations res = AppSettings::resourcePathTranslations();
+	tableWidget->setRowCount(res.size());
+	int row = 0;
+	foreach(QStringPair pair, res)
+	{
+		tableWidget->setItem(row,0,new QTableWidgetItem(pair.first));
+		tableWidget->setItem(row,1,new QTableWidgetItem(pair.second));
+	}
+	
+	tableWidget->resizeColumnsToContents();
+	tableWidget->resizeRowsToContents();
+	
+	connect(m_ui->resourceAddBtn, SIGNAL(clicked()), this, SLOT(addResBtn()));
+	connect(m_ui->resourceDelBtn, SIGNAL(clicked()), this, SLOT(delResBtn()));
+	connect(tableWidget, SIGNAL(itemChanged(QTableWidgetItem*)), this, SLOT(adjustTableSize()));
+	
+}
+
+void SingleOutputSetupDialog::adjustTableSize()
+{
+	QTableWidget * tableWidget = m_ui->resourceTranslations;
+
+	tableWidget->resizeColumnsToContents();
+	tableWidget->resizeRowsToContents();
 }
 
 
@@ -309,9 +334,33 @@ void SingleOutputSetupDialog::accept()
 	AppSettings::setPixmapCacheSize(m_ui->cacheBox->value());
 	AppSettings::setUseOpenGL(m_ui->cbUseOpenGL->isChecked());
 	AppSettings::setCacheDir(QDir(m_ui->diskCacheBox->text()));
+	
+	QTableWidget * tableWidget = m_ui->resourceTranslations;
+	AppSettings::ResourcePathTranslations res;
+	for(int row=0; row<tableWidget->rowCount(); row++)
+		res.append(QStringPair(tableWidget->item(row,0)->text(), tableWidget->item(row,1)->text()));
+	
+	AppSettings::setResourcePathTranslations(res);
+	
 	AppSettings::save();
 	QDialog::accept();
 }
+
+void SingleOutputSetupDialog::addResBtn()
+{
+	QTableWidget * tableWidget = m_ui->resourceTranslations;
+	int row = tableWidget->rowCount();
+	tableWidget->setRowCount(row+1);
+	tableWidget->setItem(row,0,new QTableWidgetItem("C:\\"));
+	tableWidget->setItem(row,1,new QTableWidgetItem("/"));
+}
+
+void SingleOutputSetupDialog::delResBtn()
+{
+	QTableWidget * tableWidget = m_ui->resourceTranslations;
+	tableWidget->removeRow(tableWidget->currentRow());
+}
+
 
 void SingleOutputSetupDialog::reject()
 {

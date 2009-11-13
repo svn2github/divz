@@ -1,5 +1,6 @@
 #include "ImageContent.h"
 #include "model/ImageItem.h"
+#include "AppSettings.h"
 #include <QDebug>
 #include <QFileInfo>
 #include <QGraphicsScene>
@@ -62,7 +63,7 @@ void ImageContent::syncFromModelItem(AbstractVisualItem *model)
 	
 	AbstractContent::syncFromModelItem(model);
 	
-	loadFile(modelItem()->fillImageFile());
+	loadFile(AppSettings::applyResourcePathTranslations(modelItem()->fillImageFile()));
 	
 	if(modelItem()->revision() != m_lastModelRev)
 	{

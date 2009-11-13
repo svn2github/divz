@@ -72,12 +72,18 @@ MainWindow::MainWindow(QWidget *parent)
 // 	slotReconnect();
 
 	//m_previewDock->setVisible(output->isEnabled());
+	
+	connect(&m_reconnectTimer, SIGNAL(timeout()), this, SLOT(slotReconnect()));
+	
 }
 
 void MainWindow::openOutput()
 {
 	if(m_inst)
+	{
+		m_inst->setVisible(true);
 		return;
+	}
 		
 	//qDebug() << "MainWindow::openOutput()";
 	//if(m_inst)
@@ -122,7 +128,7 @@ void MainWindow::socketError(QAbstractSocket::SocketError socketError)
 			break;
 		case QAbstractSocket::ConnectionRefusedError:
 			if(m_reconnect)
-				QTimer::singleShot(RECONNECT_WAIT_TIME, this, SLOT(slotReconnect()));
+				m_reconnectTimer.start(RECONNECT_WAIT_TIME);
 			else
 				QMessageBox::critical(0,"Connection Refused",
 					tr("The connection was refused by the peer. "
@@ -198,8 +204,8 @@ void MainWindow::slotConnected()
 void MainWindow::slotDisconnect()
 {
 	//qDebug() << "MainWindow::slotDisconnect()";
-	m_ui->actionDisconnect->setEnabled(false);
-	m_ui->actionConnect_To->setEnabled(true);
+	if(m_reconnectTimer.isActive())
+		m_reconnectTimer.stop();
 
 	if(m_inst)
 		m_inst->setVisible(false);
@@ -214,6 +220,9 @@ void MainWindow::slotDisconnect()
 		m_client = 0;
 		log("[INFO] Disconnected");
 	}
+	
+	m_ui->actionDisconnect->setEnabled(false);
+	m_ui->actionConnect_To->setEnabled(true);
 }
 
 void MainWindow::slotOutputSetup()

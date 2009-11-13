@@ -5,6 +5,7 @@
 
 #define FALLBACK_SCREEN_RECT QRectF(0,0,1024,768)
 
+#include <QTimer>
 class QCloseEvent;
 
 namespace Ui {
@@ -75,6 +76,8 @@ private:
 
 	QDockWidget * m_previewDock;
 	OutputViewer * m_preview;
+	
+	QTimer m_reconnectTimer;
 	
 	/** static */
 	static MainWindow * static_mainWindow;	

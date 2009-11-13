@@ -37,6 +37,10 @@ protected slots:
 	void slotMjpegFps(int);
 	
 	void slotDiskCacheBrowse();
+	
+	void addResBtn();
+	void delResBtn();
+	void adjustTableSize();
 
 protected:
 	void changeEvent(QEvent *e);

@@ -458,8 +458,16 @@ QString AppSettings::applyResourcePathTranslations(const QString &s)
 	{
 		if(copy.startsWith(pair.first,Qt::CaseInsensitive))
 			copy.replace(0,pair.first.length(),pair.second);
+		else
+		{
+			QString firstCopy = pair.first;
+			firstCopy.replace("\\","/");
+			if(copy.startsWith(firstCopy,Qt::CaseInsensitive))
+				copy.replace(0,firstCopy.length(),pair.second);
+		}
 	}
-	return s;
+	qDebug() << "AppSettings::applyResourcePathTranslations: in:"<<s<<", out:"<<copy;
+	return copy;
 }
 
 QDir AppSettings::applyResourcePathTranslations(const QDir&d)
