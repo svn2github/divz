@@ -272,3 +272,16 @@ QString MD5::md5sum(QString val)
         output += tmp.sprintf("%02x", digest[i]);
     return output;
 }
+
+QString MD5::md5sum(QByteArray & ba)
+{
+    unsigned char digest[16];
+    MD5_CTX context;
+    MD5Init(&context);
+    MD5Update(&context, (unsigned char *)ba.data(), ba.length());
+    MD5Final(digest, &context);
+    QString output, tmp;
+    for (int i = 0; i < 16; ++i)
+        output += tmp.sprintf("%02x", digest[i]);
+    return output;
+}

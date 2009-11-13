@@ -44,13 +44,13 @@ class TextBoxContent : public AbstractContent
     Q_PROPERTY(QString html READ toHtml WRITE setHtml)
 
     public:
-        TextBoxContent(QGraphicsScene * scene, QGraphicsItem * parent = 0);
-        ~TextBoxContent();
+	TextBoxContent(QGraphicsScene * scene, QGraphicsItem * parent = 0);
+	~TextBoxContent();
 
     public Q_SLOTS:
-        QString toHtml();
-        void setHtml(const QString & htmlCode);
-        
+	QString toHtml();
+	void setHtml(const QString & htmlCode);
+	
 	static void warmVisualCache(AbstractVisualItem*);
 
 //         Qt::Alignment xTextAlign() const { return m_xTextAlign; }
@@ -60,59 +60,63 @@ class TextBoxContent : public AbstractContent
 // 	void setYTextAlign(Qt::Alignment);
 	
     Q_SIGNALS:
-        void notifyHasShape(bool);
-        void notifyShapeEditing(bool);
+	void notifyHasShape(bool);
+	void notifyShapeEditing(bool);
 
     public:
-        // ::AbstractContent
-        QString contentName() const { return tr("Text"); }
-        QWidget * createPropertyWidget();
-        bool fromXml(QDomElement & parentElement);
-        void toXml(QDomElement & parentElement) const;
-        QPixmap renderContent(const QSize & size, Qt::AspectRatioMode ratio) const;
-        int contentHeightForWidth(int width) const;
-        void selectionChanged(bool selected);
-        
-        void resizeContents(const QRect & rect, bool keepRatio = false);
-        
-        void syncFromModelItem(AbstractVisualItem*);
-        AbstractVisualItem * syncToModelItem(AbstractVisualItem*);
-
-        // ::QGraphicsItem
-        void mouseDoubleClickEvent(QGraphicsSceneMouseEvent * event);
-        void paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget = 0);
+	// ::AbstractContent
+	QString contentName() const { return tr("Text"); }
+	QWidget * createPropertyWidget();
+	bool fromXml(QDomElement & parentElement);
+	void toXml(QDomElement & parentElement) const;
+	QPixmap renderContent(const QSize & size, Qt::AspectRatioMode ratio) const;
+	int contentHeightForWidth(int width) const;
+	void selectionChanged(bool selected);
+	
+	void resizeContents(const QRect & rect, bool keepRatio = false);
+	
+	void syncFromModelItem(AbstractVisualItem*);
+	AbstractVisualItem * syncToModelItem(AbstractVisualItem*);
+	
+	// ::QGraphicsItem
+	void mouseDoubleClickEvent(QGraphicsSceneMouseEvent * event);
+	void paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget = 0);
+	
+	QString cacheKey() { return cacheKey(modelItem()); }
+	static QString cacheKey(TextBoxContent *box) { return cacheKey(box->modelItem()); }
+	static QString cacheKey(AbstractVisualItem *);
 
     private slots:
-        // ::AbstractContent
-        void contentsResized();
-        void delayContentsResized();
-       
-       	void animateZoom();
-       	
-    private:
-        void updateTextConstraints(int w = -1);
-        
-        void renderShadow(QPainter *painter, QAbstractTextDocumentLayout::PaintContext *pCtx);
-     
-        //void updateCache();
-        
-        QPixmap *m_textCache;
-        qreal m_cacheScaleX;
-        qreal m_cacheScaleY;
+	// ::AbstractContent
+	void contentsResized();
+	void delayContentsResized();
+	
+	void animateZoom();
 
-        // text document, layouting & rendering
-        QTextDocument * m_text;
-        QTextDocument * m_shadowText;
-        
-        // TODO are these still used?
-        QRect m_textRect;
-        int m_textMargin;
-        
-        quint32 m_lastModelRev;
-        
-        QTimer * m_zoomAnimationTimer;
-        
-        QPointF m_zoomStep;
+    private:
+	void updateTextConstraints(int w = -1);
+	
+	void renderShadow(QPainter *painter, QAbstractTextDocumentLayout::PaintContext *pCtx);
+	
+	//void updateCache();
+	
+	QPixmap *m_textCache;
+	qreal m_cacheScaleX;
+	qreal m_cacheScaleY;
+	
+	// text document, layouting & rendering
+	QTextDocument * m_text;
+	QTextDocument * m_shadowText;
+	
+	// TODO are these still used?
+	QRect m_textRect;
+	int m_textMargin;
+	
+	quint32 m_lastModelRev;
+	
+	QTimer * m_zoomAnimationTimer;
+	
+	QPointF m_zoomStep;
 	QPointF m_zoomEndSize;
 	QPointF m_zoomCurSize;
 	QPointF m_zoomStartSize;

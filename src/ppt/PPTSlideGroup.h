@@ -24,12 +24,16 @@ public:
 	// SlideGroup::
 	virtual bool fromXml(QDomElement & parentElement);
 	virtual void toXml(QDomElement & parentElement) const;
+	virtual QByteArray toByteArray() const;
 
 	void changeBackground(AbstractVisualItem::FillType, QVariant, Slide *);
 
 protected:
 	void loadFile();
 	void removeAllSlides();
+	
+	// SlideGroup::
+	void loadVariantMap(QVariantMap &);
 	
 protected slots:
 	void aspectRatioChanged(double x);

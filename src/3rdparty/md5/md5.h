@@ -11,6 +11,7 @@ class MD5
 public:
     MD5() {}
     static QString md5sum(QString val);
+    static QString md5sum(QByteArray & ba);
 };
  
 #endif // MD5_H

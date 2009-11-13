@@ -20,7 +20,8 @@ class SlideGroup : public QObject
 	Q_PROPERTY(double crossFadeSpeed READ crossFadeSpeed WRITE setCrossFadeSpeed);
 	Q_PROPERTY(double crossFadeQuality READ crossFadeQuality WRITE setCrossFadeQuality);
 
-
+	Q_ENUMS(GroupType);
+	
 public:
 	SlideGroup();
 	virtual ~SlideGroup();
@@ -119,5 +120,7 @@ protected:
 
 
 };
+
+Q_DECLARE_METATYPE(SlideGroup::GroupType);
 
 #endif

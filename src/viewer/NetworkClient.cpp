@@ -114,6 +114,9 @@ void NetworkClient::processBlock()
 
 void NetworkClient::processCommand(OutputServer::Command cmd, QVariant a, QVariant b, QVariant c)
 {
+	if(!m_inst)
+		return;
+		
 	switch(cmd)
 	{
 		case OutputServer::SetSlideGroup:

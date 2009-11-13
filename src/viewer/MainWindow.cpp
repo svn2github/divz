@@ -76,9 +76,12 @@ MainWindow::MainWindow(QWidget *parent)
 
 void MainWindow::openOutput()
 {
-	//qDebug() << "MainWindow::openOutput()";
 	if(m_inst)
-		delete m_inst;
+		return;
+		
+	//qDebug() << "MainWindow::openOutput()";
+	//if(m_inst)
+	//	delete m_inst;
 
 	QList<Output*> outputs = AppSettings::outputs();
 
@@ -88,8 +91,8 @@ void MainWindow::openOutput()
 	//connect(inst, SIGNAL(nextGroup()), this, SLOT(nextGroup()));
 
 	// start hidden until connected
-	m_inst->setVisible(false);
-	m_previewDock->setVisible(false);
+	//m_inst->setVisible(false);
+	//m_previewDock->setVisible(false);
 	m_preview->setOutputInstance(m_inst);
 }
 
@@ -157,10 +160,9 @@ void MainWindow::slotReconnect()
 
 	// reopen output inorder to reset all settings such as
 	// black frame, fade speed, etc
-	openOutput();
+	//openOutput();
 
 	m_client = new NetworkClient(this);
-	m_client->setInstance(m_inst);
 	m_client->setLogger(this);
 	connect(m_client, SIGNAL(socketError(QAbstractSocket::SocketError)), this, SLOT(socketError(QAbstractSocket::SocketError)));
 	connect(m_client, SIGNAL(aspectRatioChanged(double)), this, SLOT(aspectChanged(double)));
@@ -187,7 +189,9 @@ void MainWindow::aspectChanged(double d)
 void MainWindow::slotConnected()
 {
 	log("[INFO] Connected!");
-	m_inst->setVisible(true);
+	openOutput();
+	m_client->setInstance(m_inst);
+	//m_inst->setVisible(true);
 	m_previewDock->setVisible(true);
 }
 
@@ -197,7 +201,8 @@ void MainWindow::slotDisconnect()
 	m_ui->actionDisconnect->setEnabled(false);
 	m_ui->actionConnect_To->setEnabled(true);
 
-	m_inst->setVisible(false);
+	if(m_inst)
+		m_inst->setVisible(false);
 	m_previewDock->setVisible(false);
 
 	if(m_client)
@@ -226,13 +231,15 @@ void MainWindow::slotExit()
 void MainWindow::closeEvent(QCloseEvent *event)
 {
 	slotDisconnect();
-	if(m_inst)
-		m_inst->close();
+	//if(m_inst)
+	//	m_inst->close();
 }
 
 
 MainWindow::~MainWindow()
 {
+	delete m_inst;
+	m_inst = 0;
 	delete m_ui;
 }
 

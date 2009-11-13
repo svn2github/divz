@@ -85,6 +85,7 @@ void AppSettings::initApp(const QString& appName)
 
 	qRegisterMetaType<AbstractVisualItem::FillType>("FillType");
 	qRegisterMetaType<AbstractVisualItem::ZoomEffectDirection>("ZoomEffectDirection");
+	qRegisterMetaType<SlideGroup::GroupType>("GroupType");
 
 	AbstractItemFilter::registerFilterInstance(SlideTextOnlyFilter::instance());
 	AbstractItemFilter::registerFilterInstance(SlideNonTextOnlyFilter::instance());

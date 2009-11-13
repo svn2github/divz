@@ -17,12 +17,16 @@
 #include <QDebug>
 #include <QTextOption>
 #include <QTimer>
+#include <QDir>
 #include <QPainterPathStroker>
 #include "items/CornerItem.h"
 #include "model/TextBoxItem.h"
+#include "AppSettings.h"
 
 #include <QPixmapCache>
 #include "ImageFilters.h"
+
+#include "3rdparty/md5/md5.h"
 
 #define DEBUG_LAYOUT 0
 
@@ -120,7 +124,7 @@ void TextBoxContent::setHtml(const QString & htmlCode)
 	}
 
 	format.setTextOutline(p);
-	format.setForeground(modelItem() ? modelItem()->fillBrush() : Qt::white);
+	format.setForeground(modelItem() && modelItem()->fillType() == AbstractVisualItem::Solid ? modelItem()->fillBrush() : Qt::NoBrush);
 
 	
 	cursor.mergeCharFormat(format);
@@ -213,7 +217,9 @@ void TextBoxContent::syncFromModelItem(AbstractVisualItem *model)
 		//qDebug()<<"modelItem():"<<modelItem()->itemName()<<": last revision:"<<m_lastModelRev<<", this revision:"<<m_lastModelRev<<", cache dirty!";
 		
 		m_lastModelRev = modelItem()->revision();
-		dirtyCache();
+		
+		// DONT dirty cache here since we changed the cacheKey algorithm - cache key is now based on visual description, not on item identity
+		//dirtyCache();
 	}
 	
 	if(   model->zoomEffectEnabled() 
@@ -374,6 +380,73 @@ void TextBoxContent::mouseDoubleClickEvent(QGraphicsSceneMouseEvent * event)
 	QGraphicsItem::mouseDoubleClickEvent(event);
 }
 
+#define TEXT_RENDER_CACHE_DIR "dviz-text-render"
+QString TextBoxContent::cacheKey(AbstractVisualItem *abstract_model)
+{
+	TextBoxItem * model = dynamic_cast<TextBoxItem*>(abstract_model);
+	if(!model)
+		return "";
+		
+	QString key = model->property("$tb.cacheKey").toString();
+	QVariant var = model->property("$tb.cacheKeyRev");
+	int keyRev = var.isValid() ? var.toInt() : -1;
+	
+	if(key.isEmpty() || keyRev != model->revision())
+	{
+		QByteArray array;
+		QDataStream list(&array, QIODevice::WriteOnly);
+		
+		list << model->text();
+		
+		if(model && model->outlineEnabled())
+		{
+			QPen p = model->outlinePen();
+			
+			list << (int)p.color().rgba();
+			list << p.miterLimit();
+			list << p.widthF();
+			list << (int)p.style();
+			list << (int)p.capStyle();
+			list << (int)p.joinStyle();
+		}
+		
+		list << model->shadowBlurRadius();
+		list << (int)model->shadowBrush().color().rgba();
+		
+		list << model->shadowOffsetX();
+		list << model->shadowOffsetY();
+		
+		list << (int)model->fillType();
+		list << (int)model->fillBrush().color().rgba();
+		
+		list << (int)model->zoomEffectEnabled();
+		
+		QString md5key = MD5::md5sum(array);
+		
+		QDir path(QString("%1/%2").arg(AppSettings::cachePath()).arg(TEXT_RENDER_CACHE_DIR));
+		if(!path.exists())
+			QDir(AppSettings::cachePath()).mkdir(TEXT_RENDER_CACHE_DIR);
+			
+		QSizeF shadowSize = model->shadowEnabled() ? QSizeF(model->shadowOffsetX(),model->shadowOffsetY()) : QSizeF(0,0);
+		QSize renderSize = (model->contentsRect().size()+shadowSize).toSize();
+	
+		key = QString("%1/%2/%3-%4x%5")
+			.arg(AppSettings::cachePath())
+			.arg(TEXT_RENDER_CACHE_DIR)
+			.arg(md5key)
+			.arg(renderSize.width())
+			.arg(renderSize.height());
+		
+		model->setProperty("$tb.cacheKey",key);
+		model->setProperty("$tb.cacheKeyRev",model->revision());
+		
+		qDebug() << "TextBoxContent::cacheKey(): "<<model->itemName()<<": model rev:"<<model->revision()<<", key: "<<key;
+	}
+	return key;
+}
+
+
+
 void TextBoxContent::warmVisualCache(AbstractVisualItem *model)
 {
 	new TextBoxWarmingThreadManager(model);
@@ -383,24 +456,38 @@ TextBoxWarmingThreadManager::TextBoxWarmingThreadManager(AbstractVisualItem *mod
 {
 	QPixmap cache;
 
-	if(!QPixmapCache::find(AbstractContent::cacheKey(model),cache))
+	QString key = TextBoxContent::cacheKey(model);
+	if(QPixmapCache::find(key,cache))
 	{
+		qDebug()<<"TextBoxWarmingThreadManager(): modelItem:"<<model->itemName()<<": Cache HIT";
+		deleteLater();
+	}
+	else
+	if(QFile(key).exists())
+	{
+		qDebug()<<"TextBoxWarmingThreadManager(): modelItem:"<<model->itemName()<<": Cache load from"<<key;
+		cache.load(key);
+		QPixmapCache::insert(key,cache);
+		deleteLater();
+	}
+	else
+	{
+		qDebug()<<"TextBoxWarmingThreadManager(): modelItem:"<<model->itemName()<<": Cache MISS";
 		m_thread = new TextBoxWarmingThread(model);
 		connect(m_thread, SIGNAL(renderDone(QImage*)), this, SLOT(renderDone(QImage*)));
 		connect(m_thread, SIGNAL(finished()), m_thread, SLOT(deleteLater()));
 		m_thread->start();
 	}
-	else
-	{
-		deleteLater();
-	}
 }
 
 void TextBoxWarmingThreadManager::renderDone(QImage *image)
 {
-	QPixmapCache::insert(AbstractContent::cacheKey(m_model), QPixmap::fromImage(*image));
-	deleteLater();
+	QString key = TextBoxContent::cacheKey(m_model);
+	QPixmap cache = QPixmap::fromImage(*image);
+	cache.save(key,"PNG");
+	QPixmapCache::insert(key, cache);
 	delete image; // QPixmap::fromImage() made a copy, so we dont need to waste this memory here
+	deleteLater();
 }
 
 TextBoxWarmingThread::TextBoxWarmingThread(AbstractVisualItem *model) : m_model(model) {}
@@ -422,7 +509,6 @@ void TextBoxWarmingThread::run()
 	// Sleep doesnt work - if I sleep, then it seems the cache is never updated!
 	//sleep((unsigned long)sleepTime);
 	//sleep(1000);
-	
 	
 			
 	QString htmlCode = model->text();
@@ -454,7 +540,7 @@ void TextBoxWarmingThread::run()
 	}
 
 	format.setTextOutline(p);
-	format.setForeground(model ? model->fillBrush() : Qt::white);
+	format.setForeground(model && model->fillType() == AbstractVisualItem::Solid ? model->fillBrush() : Qt::NoBrush); //Qt::white);
 
 	
 	cursor.mergeCharFormat(format);
@@ -619,32 +705,42 @@ void TextBoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * 
 		
 		
 		
-		
-		if(!QPixmapCache::find(cacheKey(),cache) && m_text->toPlainText().trimmed() != "")
+		QString key = cacheKey();
+		if(!QPixmapCache::find(key,cache) && m_text->toPlainText().trimmed() != "")
 		{
-			qDebug()<<"TextBoxContent::paint(): modelItem:"<<modelItem()->itemName()<<": Cache redraw";
-			
-			QSizeF shadowSize = modelItem()->shadowEnabled() ? QSizeF(modelItem()->shadowOffsetX(),modelItem()->shadowOffsetY()) : QSizeF(0,0);
-			cache = QPixmap((contentsRect().size()+shadowSize).toSize());
-	
-			cache.fill(Qt::transparent);
-			QPainter textPainter(&cache);
-	
-			QAbstractTextDocumentLayout::PaintContext pCtx;
-	
-			#if QT46_SHADOW_ENAB == 0
-			if(modelItem()->shadowEnabled())
-				renderShadow(&textPainter,&pCtx);
-			#endif
-	
-			// If we're zooming, we want to render the text straight to the painter
-			// so it can transform the raw vectors instead of scaling the bitmap.
-			// But if we're not zooming, we cache the text with the shadow since it
-			// looks better that way when we're crossfading.
-			if(!m_zoomEnabled)
-				m_text->documentLayout()->draw(&textPainter, pCtx);
-			
-			QPixmapCache::insert(cacheKey(), cache);
+			if(QFile(key).exists())
+			{
+				cache.load(key);
+				QPixmapCache::insert(key,cache);
+				qDebug()<<"TextBoxContent::paint(): modelItem:"<<modelItem()->itemName()<<": Cache load from"<<key;
+			}	
+			else
+			{
+				qDebug()<<"TextBoxContent::paint(): modelItem:"<<modelItem()->itemName()<<": Cache redraw";
+				
+				QSizeF shadowSize = modelItem()->shadowEnabled() ? QSizeF(modelItem()->shadowOffsetX(),modelItem()->shadowOffsetY()) : QSizeF(0,0);
+				cache = QPixmap((contentsRect().size()+shadowSize).toSize());
+		
+				cache.fill(Qt::transparent);
+				QPainter textPainter(&cache);
+		
+				QAbstractTextDocumentLayout::PaintContext pCtx;
+		
+				#if QT46_SHADOW_ENAB == 0
+				if(modelItem()->shadowEnabled())
+					renderShadow(&textPainter,&pCtx);
+				#endif
+		
+				// If we're zooming, we want to render the text straight to the painter
+				// so it can transform the raw vectors instead of scaling the bitmap.
+				// But if we're not zooming, we cache the text with the shadow since it
+				// looks better that way when we're crossfading.
+				if(!m_zoomEnabled)
+					m_text->documentLayout()->draw(&textPainter, pCtx);
+				
+				cache.save(key,"PNG");
+				QPixmapCache::insert(key, cache);
+			}
 		}
 	
 		// Draw a rectangular outline in the editor inorder to visually locate empty text blocks

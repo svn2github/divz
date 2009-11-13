@@ -189,7 +189,7 @@ void Document::save(const QString & filename)
 		return;
 	}
 	
-	qDebug() << "Document::save: Writing to "<<tmp;
+	//qDebug() << "Document::save: Writing to "<<tmp;
 	
 	out.setDevice(&file);
 	
@@ -208,7 +208,7 @@ void Document::save(const QString & filename)
 	doc.save(out, 4);
 	file.close();
 	
-	qDebug() << "Document::save: Done writing "<<tmp;
+	//qDebug() << "Document::save: Done writing "<<tmp;
 }
 
 void Document::toXml(QDomElement & pe) const

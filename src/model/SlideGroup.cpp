@@ -9,6 +9,7 @@
 #include "Slide.h"
 #include "MediaBrowser.h"
 #include "songdb/SongSlideGroup.h"
+#include "ppt/PPTSlideGroup.h"
 
 SlideGroup::SlideGroup() :
 	m_groupNumber(-1)
@@ -261,6 +262,12 @@ SlideGroup * SlideGroup::fromByteArray(QByteArray &array)
 	{
 		//qDebug("cmdSetSlideGroup: Group type: Song");
 		group = new SongSlideGroup();
+	}
+	else
+	if(className == "PPTSlideGroup")
+	{
+		//qDebug("cmdSetSlideGroup: Group type: PPT");
+		group = new PPTSlideGroup();
 	}
 	else
 	if(className == "SlideGroup")

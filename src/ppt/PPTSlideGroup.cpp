@@ -184,6 +184,27 @@ void PPTSlideGroup::toXml(QDomElement & pe) const
 }
 
 
+void PPTSlideGroup::loadVariantMap(QVariantMap &map)
+{
+	loadProperties(map);
+	setFile(map["file"].toString());
+	m_mtime = map["mtime"].toInt();
+}
+	
+QByteArray PPTSlideGroup::toByteArray() const
+{
+	QByteArray array;
+	QDataStream stream(&array, QIODevice::WriteOnly);
+	QVariantMap map;
+	
+	saveProperties(map);
+	map["file"] = m_file;
+	map["mtime"] = m_mtime;
+	
+	stream << map;
+	return array; 
+}
+
 void PPTSlideGroup::changeBackground(AbstractVisualItem::FillType, QVariant, Slide* )
 {
 	// NOT IMPLEMENTED for PowerPoint files
