@@ -174,14 +174,12 @@ MainWindow::MainWindow(QWidget *parent) :
 		}
 	}
 
-
-
 	//connect(m_groupView, SIGNAL(customContextMenuRequested(const QPoint &)), SLOT(slotListContextMenu(const QPoint &)));
 
 	connect(m_ui->actionExit,SIGNAL(triggered()), this, SLOT(close()));
 
-	m_controlServer = new ControlServer(8080,this);
-
+	if(AppSettings::httpControlEnabled())
+		m_controlServer = new ControlServer(AppSettings::httpControlPort(),this);
 }
 
 
@@ -920,6 +918,13 @@ void MainWindow::actionAppSettingsDialog()
 		if(AppSettings::autosaveTime() > 0)
 			m_autosaveTimer->start(AppSettings::autosaveTime() * 1000);
 	}
+	
+	// update control server
+	if(m_controlServer)
+		delete m_controlServer;
+	
+	if(AppSettings::httpControlEnabled())
+		m_controlServer = new ControlServer(AppSettings::httpControlPort(),this);
 
 }
 

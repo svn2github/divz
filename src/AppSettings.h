@@ -83,6 +83,15 @@ public:
 	static QString applyResourcePathTranslations(const QString&);
 	static QDir    applyResourcePathTranslations(const QDir&);
 	
+	static bool httpControlEnabled() { return m_httpControlEnabled; }
+	static void setHttpControlEnabled(bool);
+	
+	static int httpControlPort() { return m_httpControlPort; }
+	static void setHttpControlPort(int);
+	
+	static QString myIpAddress();
+	
+	
 protected:
 	friend class MainWindow;
 // 	static double setCurrentDocumentAspectRatio(double);
@@ -115,6 +124,9 @@ private:
 	
 	static QDir m_cacheDir;
 	static ResourcePathTranslations m_resourcePathTranslations;
+	
+	static bool m_httpControlEnabled;
+	static int m_httpControlPort;
 
 };
 

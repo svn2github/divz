@@ -74,11 +74,20 @@ void ControlServer::dispatch(QTcpSocket *socket, const QStringList &path, const 
 		int liveId = AppSettings::taggedOutput("live")->id();
 		OutputControl * outputControl = mw->outputControl(liveId);
 		
+		// to access/set quickslide
+		SlideGroupViewControl *viewControl = mw->viewControl(liveId);
+		
 		if(control == "black")
 			outputControl->fadeBlackFrame(flag);	
 		else
 		if(control == "clear")
 			outputControl->fadeClearFrame(flag);
+		else
+		if(control == "qslide")
+		{
+			viewControl->setQuickSlideText(query["text"]);
+			viewControl->showQuickSlide(flag);
+		}
 		else
 			generic404(socket,path,query);
 			
@@ -137,6 +146,9 @@ void ControlServer::screenListGroups(QTcpSocket *socket, const QStringList &path
 	OutputControl * outputControl = mw->outputControl(liveId);
 	tmpl.param("black_toggled", outputControl->isBlackToggled());
 	tmpl.param("clear_toggled", outputControl->isClearToggled());
+	
+	SlideGroupViewControl *viewControl = mw->viewControl(liveId);
+	tmpl.param("qslide_toggled", viewControl->isQuickSlideToggled());
 		
 	if(doc->filename().isEmpty())
 		tmpl.param("docfile",tr("New File"));
@@ -295,6 +307,7 @@ void ControlServer::screenLoadGroup(QTcpSocket *socket, const QStringList &path,
 		
 		tmpl.param("black_toggled", outputControl->isBlackToggled());
 		tmpl.param("clear_toggled", outputControl->isClearToggled());
+		tmpl.param("qslide_toggled", viewControl->isQuickSlideToggled());
 		
 		Http_Send_Ok(socket) << tmpl.toString();
 	}

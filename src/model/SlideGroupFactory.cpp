@@ -399,7 +399,7 @@ void SlideGroupViewControl::showQuickSlide(bool flag)
 	}
 	else
 	{
-		if(m_selectedSlide>=0)
+		if(m_selectedSlide)
 			m_slideViewer->setSlide(m_selectedSlide);
 		else
 			m_slideViewer->setSlide(SlideGroupViewer::blackSlide());
@@ -420,9 +420,17 @@ void SlideGroupViewControl::showQuickSlide(bool flag)
 	m_quickSlideText->selectAll();
 }
 
-void SlideGroupViewControl::setQuickSlideText()
+void SlideGroupViewControl::setQuickSlideText(const QString& tmp)
 {
-	QString text = m_quickSlideText->text();
+	if(!m_quickSlide)
+		makeQuickSlide();
+
+	QString text = tmp;
+	if(text.isEmpty())
+		text = m_quickSlideText->text();
+	else
+		m_quickSlideText->setText(text);
+		
 	if(m_originalQuickSlide)
 	{	
 		m_quickSlideTextBox->setText(text);

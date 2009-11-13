@@ -387,7 +387,7 @@ QString TextBoxContent::cacheKey(AbstractVisualItem *abstract_model)
 	if(!model)
 		return "";
 		
-	QString key = model->property("$tb.cacheKey").toString();
+	QString key  = model->property("$tb.cacheKey").toString();
 	QVariant var = model->property("$tb.cacheKeyRev");
 	int keyRev = var.isValid() ? var.toInt() : -1;
 	
@@ -440,7 +440,7 @@ QString TextBoxContent::cacheKey(AbstractVisualItem *abstract_model)
 		model->setProperty("$tb.cacheKey",key);
 		model->setProperty("$tb.cacheKeyRev",model->revision());
 		
-		qDebug() << "TextBoxContent::cacheKey(): "<<model->itemName()<<": model rev:"<<model->revision()<<", key: "<<key;
+		//qDebug() << "TextBoxContent::cacheKey(): "<<model->itemName()<<": model rev:"<<model->revision()<<", key: "<<key;
 	}
 	return key;
 }
@@ -459,13 +459,13 @@ TextBoxWarmingThreadManager::TextBoxWarmingThreadManager(AbstractVisualItem *mod
 	QString key = TextBoxContent::cacheKey(model);
 	if(QPixmapCache::find(key,cache))
 	{
-		qDebug()<<"TextBoxWarmingThreadManager(): modelItem:"<<model->itemName()<<": Cache HIT";
+		//qDebug()<<"TextBoxWarmingThreadManager(): modelItem:"<<model->itemName()<<": Cache HIT";
 		deleteLater();
 	}
 	else
 	if(QFile(key).exists())
 	{
-		qDebug()<<"TextBoxWarmingThreadManager(): modelItem:"<<model->itemName()<<": Cache load from"<<key;
+		//qDebug()<<"TextBoxWarmingThreadManager(): modelItem:"<<model->itemName()<<": Cache load from"<<key;
 		cache.load(key);
 		QPixmapCache::insert(key,cache);
 		deleteLater();
@@ -504,7 +504,7 @@ void TextBoxWarmingThread::run()
 	
 	//int sleepTime = (int)(((float)qrand()) / ((float)RAND_MAX) * 10000.0 + 2000.0);
 	
-	qDebug()<<"TextBoxWarmingThread::run(): modelItem:"<<model->itemName();//<<": Cache redraw, sleep: "<<sleepTime;
+	//qDebug()<<"TextBoxWarmingThread::run(): modelItem:"<<model->itemName();//<<": Cache redraw, sleep: "<<sleepTime;
 	
 	// Sleep doesnt work - if I sleep, then it seems the cache is never updated!
 	//sleep((unsigned long)sleepTime);
@@ -712,7 +712,7 @@ void TextBoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * 
 			{
 				cache.load(key);
 				QPixmapCache::insert(key,cache);
-				qDebug()<<"TextBoxContent::paint(): modelItem:"<<modelItem()->itemName()<<": Cache load from"<<key;
+				//qDebug()<<"TextBoxContent::paint(): modelItem:"<<modelItem()->itemName()<<": Cache load from"<<key;
 			}	
 			else
 			{

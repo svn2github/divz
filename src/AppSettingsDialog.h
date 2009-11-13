@@ -23,6 +23,9 @@ protected slots:
 	void slotDiskCacheBrowse();
 	
 	void slotAccepted();
+	
+	void portChanged(int);
+	void linkActivated(const QString&);
 	//void slotRejected();
 
 private:

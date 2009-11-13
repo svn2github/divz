@@ -52,6 +52,71 @@ p, li { white-space: pre-wrap; }
         </widget>
        </item>
        <item>
+        <widget class="QGroupBox" name="groupBox_8">
+         <property name="title">
+          <string>HTTP Remote Control</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_9">
+          <item>
+           <widget class="QCheckBox" name="httpEnabled">
+            <property name="text">
+             <string>Enable HTTP Remote Control Server</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QWidget" name="widget" native="true">
+            <layout class="QHBoxLayout" name="horizontalLayout_5">
+             <property name="margin">
+              <number>0</number>
+             </property>
+             <item>
+              <widget class="QLabel" name="label_13">
+               <property name="text">
+                <string>Remote Control Port:</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QSpinBox" name="httpPort">
+               <property name="minimum">
+                <number>1025</number>
+               </property>
+               <property name="maximum">
+                <number>65536</number>
+               </property>
+               <property name="value">
+                <number>8080</number>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="horizontalSpacer">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="httpUrlLabel">
+            <property name="text">
+             <string>Control URL: http://localhost:8080/</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
         <spacer name="verticalSpacer_2">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
@@ -604,7 +669,7 @@ slower videos may display.</string>
    <hints>
     <hint type="sourcelabel">
      <x>266</x>
-     <y>328</y>
+     <y>385</y>
     </hint>
     <hint type="destinationlabel">
      <x>157</x>
@@ -620,7 +685,7 @@ slower videos may display.</string>
    <hints>
     <hint type="sourcelabel">
      <x>334</x>
-     <y>328</y>
+     <y>385</y>
     </hint>
     <hint type="destinationlabel">
      <x>286</x>
@@ -639,7 +704,7 @@ slower videos may display.</string>
      <y>130</y>
     </hint>
     <hint type="destinationlabel">
-     <x>3349</x>
+     <x>486</x>
      <y>128</y>
     </hint>
    </hints>
@@ -651,7 +716,7 @@ slower videos may display.</string>
    <slot>setValue(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>3349</x>
+     <x>486</x>
      <y>128</y>
     </hint>
     <hint type="destinationlabel">
@@ -671,7 +736,7 @@ slower videos may display.</string>
      <y>162</y>
     </hint>
     <hint type="destinationlabel">
-     <x>3349</x>
+     <x>486</x>
      <y>160</y>
     </hint>
    </hints>
@@ -683,7 +748,7 @@ slower videos may display.</string>
    <slot>setValue(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>3349</x>
+     <x>486</x>
      <y>160</y>
     </hint>
     <hint type="destinationlabel">
@@ -721,6 +786,22 @@ slower videos may display.</string>
     <hint type="destinationlabel">
      <x>413</x>
      <y>173</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>httpEnabled</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>widget</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>265</x>
+     <y>191</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>336</x>
+     <y>224</y>
     </hint>
    </hints>
   </connection>

@@ -9,3 +9,9 @@
 %%else%%
 <a href='#' onclick='toggle_clear(0,this)' class='ctrl_disabled'>Clear</a>
 %%/if:clear_toggled%%
+<br>
+Quick: <input type='text' id='qslide' lenth='10' onfocus='select()' onkeyup="if_enter(event,'toggle_qslide()')">%%if:qslide_toggled%%
+<a href='#' onclick='toggle_qslide(1,this)' class='ctrl_enabled' id='quickslide_link'>Show</a>
+%%else%%
+<a href='#' onclick='toggle_qslide(0,this)' class='ctrl_disabled' id='quickslide_link'>Show</a>
+%%/if:qslide_toggled%%

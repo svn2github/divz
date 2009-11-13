@@ -14,6 +14,7 @@ class AbstractItem;
 #include "SlideGroupListModel.h"
 #include <QListView>
 #include <QMainWindow>
+#include <QPushButton>
 
 class QListView;
 class SlideGroupViewControl;
@@ -29,7 +30,6 @@ protected:
 
 #include <QTime>
 class QLabel;
-class QPushButton;
 class OutputInstance;
 class TextBoxItem;
 class SlideGroupViewControl : public QWidget
@@ -45,6 +45,8 @@ public:
 	virtual void setOutputView(OutputInstance *);
 	
 	Slide * selectedSlide();
+	
+	bool isQuickSlideToggled() { return m_showQuickSlideBtn->isChecked(); }
 	
 	typedef enum TimerState { Undefined, Running, Stopped };
 	
@@ -70,6 +72,7 @@ public slots:
 	virtual void setQuickSlideEnabled(bool);
 	virtual void addQuickSlide();
 	virtual void showQuickSlide(bool flag=true);
+	virtual void setQuickSlideText(const QString& text = "");
 	
 protected slots:
 	virtual void slideSelected(const QModelIndex &);
@@ -85,7 +88,6 @@ private slots:
 protected:
 	virtual void makeQuickSlide();
 	void fitQuickSlideText();
-	void setQuickSlideText();
 	
 	QString formatTime(double);
 

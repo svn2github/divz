@@ -1,3 +1,11 @@
+function encode(x)
+{
+	return encodeURI(x)
+		.replace(/#/g,'%23')
+		.replace(/&/g,'%26')
+		.replace(/@/g,'%40')
+		.replace(/;/g,'%3b');
+}
 function xhttp()
 {
 	var req = undefined;
@@ -55,4 +63,30 @@ function toggle_clear(initialState,elm)
 	gotoUrl(url);
 	
 	elm.className = window.CurrentClearState ? 'ctrl_enabled' : 'ctrl_disabled';
+}
+window.CurrentQSlideState = null;
+function toggle_qslide(initialState,elm)
+{
+	if(!elm) // called from if_enter() probably
+		elm = document.getElementById('quickslide_link');
+		
+	if(window.CurrentQSlideState == null)
+		window.CurrentQSlideState = initialState;
+	
+	window.CurrentQSlideState = window.CurrentQSlideState ? 0 : 1;
+	
+	var url = '/toggle/qslide/' + window.CurrentQSlideState + '?text=' + encode(document.getElementById('qslide').value);
+	gotoUrl(url);
+	
+	elm.className = window.CurrentQSlideState ? 'ctrl_enabled' : 'ctrl_disabled';
+}
+
+function if_enter(e,js)
+{
+	if (!e) var e = window.event;
+	var code;
+	if (e.keyCode) code = e.keyCode;
+	else if (e.which) code = e.which;
+	if(code == 13)
+		eval(js);
 }

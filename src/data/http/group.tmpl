@@ -7,11 +7,11 @@
 </head>
 <body>
 	<h1>%%grouptitle%%</h1>
-	<a href='/'>&laquo; Main Screen</a> | %%include::/data/http/inc-ctrl-toggles.tmpl%%
+	<a href='/'>&laquo; Main</a> | %%include::/data/http/inc-ctrl-toggles.tmpl%%
 	<table>
 	%%loop:list%%
 		<tr>
-			<td><a name='slide%%slide%%'><a href='#slide%%slide%%'><img id='img%%slide%%' onclick='setSlide("/group/%%groupidx%%?slide=%%slide%%",this)' src='/group/%%groupidx%%/icon?slide=%%slide%%' border=0 class='%%if:live_flag%%live%%else%%notlive%%/if:live_flag%%'></a></a>
+			<td><a name='slide%%slide%%'><a href='#slide%%slide%%' onclick='return false'><img id='img%%slide%%' onclick='setSlide("/group/%%groupidx%%?slide=%%slide%%",this)' src='/group/%%groupidx%%/icon?slide=%%slide%%' border=0 class='%%if:live_flag%%live%%else%%notlive%%/if:live_flag%%'></a></a>
 			<script>window.imageElementList.push(document.getElementById('img%%slide%%'))</script>
 			</td>
 			%%if:text%%<td><a href='/group/%%groupidx%%?slide=%%slide%%#slide%%slide%%'>%%text%%</a></td>%%/if:text%%

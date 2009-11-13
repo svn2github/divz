@@ -1,4 +1,5 @@
 #include "JpegServer.h"
+#include "AppSettings.h"
 
 #include <QNetworkInterface>
 
@@ -17,20 +18,7 @@ void JpegServer::setProvider(QObject *provider, const char * signalName, bool de
 
 QString JpegServer::myAddress()
 {
-	QString ipAddress;
-	
-	QList<QHostAddress> ipAddressesList = QNetworkInterface::allAddresses();
-	// use the first non-localhost IPv4 address
-	for (int i = 0; i < ipAddressesList.size(); ++i) 
-	{
-		if (ipAddressesList.at(i) != QHostAddress::LocalHost &&
-		    ipAddressesList.at(i).toIPv4Address())
-			ipAddress = ipAddressesList.at(i).toString();
-	}
-	
-	// if we did not find one, use IPv4 localhost
-	if (ipAddress.isEmpty())
-		ipAddress = QHostAddress(QHostAddress::LocalHost).toString();
+	QString ipAddress = AppSettings::myIpAddress();
 	
 	return QString("http://%1:%2/").arg(ipAddress).arg(serverPort());
 }

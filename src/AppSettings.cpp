@@ -16,6 +16,7 @@ Q_IMPORT_PLUGIN(qtiff)
 #include <QApplication>
 #include <QTranslator>
 #include <QLocale>
+#include <QNetworkInterface>
 
 #include "model/Output.h"
 #include "model/SlideGroupFactory.h"
@@ -60,6 +61,10 @@ int AppSettings::m_autosaveTime = 60; // seconds
 
 QDir AppSettings::m_cacheDir = QDir::temp();
 AppSettings::ResourcePathTranslations AppSettings::m_resourcePathTranslations;
+
+bool AppSettings::m_httpControlEnabled = true;
+int AppSettings::m_httpControlPort = 8080;
+
 
 void AppSettings::initApp(const QString& appName)
 {
@@ -177,6 +182,9 @@ void AppSettings::load()
 		m_resourcePathTranslations << pair;
 	}
 	
+	m_httpControlEnabled = s.value("app/http-control/enabled",true).toBool();
+	m_httpControlPort = s.value("app/http-control/port",8080).toInt();
+	
 	QPixmapCache::setCacheLimit(m_pixmapCacheSize * 1024);
 	
 	updateLiveAspectRatio();
@@ -217,11 +225,42 @@ void AppSettings::save()
 	}
 	s.setValue("app/resource-path-translations",pairList);
 		
+	s.setValue("app/http-control/enabled",m_httpControlEnabled);
+	s.setValue("app/http-control/port",m_httpControlPort);
 	
-
 	saveOutputs(&s);
 
 	updateLiveAspectRatio();
+}
+
+QString AppSettings::myIpAddress()
+{
+	QString ipAddress;
+	
+	QList<QHostAddress> ipAddressesList = QNetworkInterface::allAddresses();
+	// use the first non-localhost IPv4 address
+	for (int i = 0; i < ipAddressesList.size(); ++i) 
+	{
+		if (ipAddressesList.at(i) != QHostAddress::LocalHost &&
+		    ipAddressesList.at(i).toIPv4Address())
+			ipAddress = ipAddressesList.at(i).toString();
+	}
+	
+	// if we did not find one, use IPv4 localhost
+	if (ipAddress.isEmpty())
+		ipAddress = QHostAddress(QHostAddress::LocalHost).toString(); 
+		
+	return ipAddress;
+}
+
+void AppSettings::setHttpControlPort(int x)
+{
+	m_httpControlPort = x;
+}
+
+void AppSettings::setHttpControlEnabled(bool flag)
+{
+	m_httpControlEnabled = flag;
 }
 
 void AppSettings::setLiveEditMode(LiveEditMode mode)

@@ -3,6 +3,9 @@
 #include "AppSettings.h"
 #include "OutputSetupDialog.h"
 #include <QFileDialog>
+#include <QDesktopServices>
+#include <QMessageBox>
+#include <QUrl>
 
 AppSettingsDialog::AppSettingsDialog(QWidget *parent) :
     QDialog(parent),
@@ -36,6 +39,17 @@ AppSettingsDialog::AppSettingsDialog(QWidget *parent) :
 	m_ui->diskCacheBox->setText(AppSettings::cacheDir().absolutePath());
 	connect(m_ui->diskCacheBrowseBtn, SIGNAL(clicked()), this, SLOT(slotDiskCacheBrowse()));
 	
+	// apply signal changes
+	m_ui->httpEnabled->setChecked(false);
+	m_ui->httpEnabled->setChecked(true);
+	
+	m_ui->httpEnabled->setChecked(AppSettings::httpControlEnabled());
+	m_ui->httpPort->setValue(AppSettings::httpControlPort());
+	
+	connect(m_ui->httpPort, SIGNAL(valueChanged(int)), this, SLOT(portChanged(int)));
+	connect(m_ui->httpUrlLabel, SIGNAL(linkActivated(const QString&)), this, SLOT(linkActivated(const QString&)));
+	
+	portChanged(AppSettings::httpControlPort());
 	
 }
 void AppSettingsDialog::slotDiskCacheBrowse()
@@ -50,6 +64,20 @@ void AppSettingsDialog::slotDiskCacheBrowse()
 	}
 }
 
+void AppSettingsDialog::portChanged(int port)
+{
+	QString url = QString("http://%1:%2/").arg(AppSettings::myIpAddress()).arg(port);
+	m_ui->httpUrlLabel->setText(QString("Control URL is: <a href='%1'>%1</a>").arg(url));
+}
+
+void AppSettingsDialog::linkActivated(const QString& link)
+{
+	if(!QDesktopServices::openUrl(QUrl(link)))
+	{
+		QMessageBox::critical(this, "Unable to Open Link","Sorry, I was unable to launch a web browser for the link you requested.");
+	}
+}
+
 void AppSettingsDialog::slotAccepted()
 {
 	AppSettings::setPixmapCacheSize( m_ui->cacheBox->value());
@@ -60,6 +88,10 @@ void AppSettingsDialog::slotAccepted()
 				     					 AppSettings::LiveEdit);
 	AppSettings::setAutosaveTime(m_ui->autosaveBox->value());
 	AppSettings::setCacheDir(QDir(m_ui->diskCacheBox->text()));
+	
+	AppSettings::setHttpControlEnabled(m_ui->httpEnabled->isChecked());
+	AppSettings::setHttpControlPort(m_ui->httpPort->value());
+	
 	close();
 }
 
