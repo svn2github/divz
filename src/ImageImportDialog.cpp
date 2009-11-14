@@ -23,6 +23,19 @@
 #define DEFAULT_SHADOW_RADIUS 7
 #define DEFAULT_FONT_SIZE 46
 
+#include <QDirModel>
+#include <QCompleter>
+static void ImageImportDialog_setupGenericDirectoryCompleter(QLineEdit *lineEdit)
+{
+	QCompleter *completer = new QCompleter(lineEdit);
+	QDirModel *dirModel = new QDirModel(completer);
+	completer->setModel(dirModel);
+	completer->setMaxVisibleItems(10);
+	completer->setCompletionMode(QCompleter::PopupCompletion);
+	completer->setCaseSensitivity(Qt::CaseInsensitive);
+	completer->setWrapAround(true);
+	lineEdit->setCompleter(completer);
+}
 
 ImageImportDialog::ImageImportDialog(Document *d, QWidget *parent) :
     QDialog(parent),
@@ -36,6 +49,9 @@ ImageImportDialog::ImageImportDialog(Document *d, QWidget *parent) :
 	connect(m_ui->copyToBrowse, SIGNAL(clicked()), this, SLOT(copyToDirBrowse()));
 	m_model->setDocument(d);
 	m_ui->existingGroup->setModel(m_model);
+	
+	ImageImportDialog_setupGenericDirectoryCompleter(m_ui->importFolder);
+	ImageImportDialog_setupGenericDirectoryCompleter(m_ui->copyToFolder);
 	
 	// force UI Updates
 	m_ui->copyFiles->setChecked(true);

@@ -7,6 +7,20 @@
 #include <QMessageBox>
 #include <QUrl>
 
+#include <QDirModel>
+#include <QCompleter>
+static void AppSettingsDialog_setupGenericDirectoryCompleter(QLineEdit *lineEdit)
+{
+	QCompleter *completer = new QCompleter(lineEdit);
+	QDirModel *dirModel = new QDirModel(completer);
+	completer->setModel(dirModel);
+	completer->setMaxVisibleItems(10);
+	completer->setCompletionMode(QCompleter::PopupCompletion);
+	completer->setCaseSensitivity(Qt::CaseInsensitive);
+	completer->setWrapAround(true);
+	lineEdit->setCompleter(completer);
+}
+
 AppSettingsDialog::AppSettingsDialog(QWidget *parent) :
     QDialog(parent),
     m_ui(new Ui::AppSettingsDialog)
@@ -38,6 +52,8 @@ AppSettingsDialog::AppSettingsDialog(QWidget *parent) :
 	m_ui->diskCacheSizeBase->setVisible(false);
 	m_ui->diskCacheBox->setText(AppSettings::cacheDir().absolutePath());
 	connect(m_ui->diskCacheBrowseBtn, SIGNAL(clicked()), this, SLOT(slotDiskCacheBrowse()));
+	
+	AppSettingsDialog_setupGenericDirectoryCompleter(m_ui->diskCacheBox);
 	
 	// apply signal changes
 	m_ui->httpEnabled->setChecked(false);

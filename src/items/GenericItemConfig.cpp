@@ -28,6 +28,19 @@
 
 #include "MediaBrowserDialog.h"
 
+#include <QDirModel>
+#include <QCompleter>
+static void GenericItemConfigDialog_setupGenericDirectoryCompleter(QLineEdit*lineEdit)
+{
+	QCompleter *completer = new QCompleter(lineEdit);
+	QDirModel *dirModel = new QDirModel(completer);
+	completer->setModel(dirModel);
+	completer->setMaxVisibleItems(10);
+	completer->setCompletionMode(QCompleter::PopupCompletion);
+	completer->setCaseSensitivity(Qt::CaseInsensitive);
+	completer->setWrapAround(true);
+	lineEdit->setCompleter(completer);
+}
 
 
 static void setupColorPicker(QtColorPicker*p)
@@ -229,6 +242,9 @@ GenericItemConfig::GenericItemConfig(AbstractContent * content, QWidget *parent)
 	
 	connect(m_commonUi->videoBrowseButton,  SIGNAL(clicked()), this, SLOT(slotVideoBrowse()));
 	connect(m_commonUi->imageBrowseButton,  SIGNAL(clicked()), this, SLOT(slotImageBrowse()));
+	
+	GenericItemConfigDialog_setupGenericDirectoryCompleter(m_commonUi->videoFilenameBox);
+	GenericItemConfigDialog_setupGenericDirectoryCompleter(m_commonUi->imageFilenameBox);
 	
 	
 	
