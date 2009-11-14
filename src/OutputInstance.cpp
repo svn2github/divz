@@ -65,6 +65,7 @@ OutputInstance::OutputInstance(Output *out, bool startHidden, QWidget *parent)
 	m_viewer->setBackground(Qt::black);
 	m_viewer->setCursor(Qt::BlankCursor);
 	connect(m_viewer, SIGNAL(nextGroup()), this, SLOT(slotNextGroup()));
+	connect(m_viewer, SIGNAL(jumpToGroup(int)), this, SLOT(slotJumpToGroup(int)));
 	
 	layout->addWidget(m_viewer);
 	
@@ -251,6 +252,11 @@ void OutputInstance::applyOutputSettings(bool startHidden)
 void OutputInstance::slotNextGroup()
 {
 	emit nextGroup();
+}
+
+void OutputInstance::slotJumpToGroup(int x)
+{
+	emit jumpToGroup(x);
 }
 
 
@@ -751,10 +757,17 @@ Slide * OutputInstance::nextSlide()
 	m_slideNum ++;
 	if(m_slideNum >= m_sortedSlides.size())
 	{
-		if(m_slideGroup->autoChangeGroup())
+		if(m_slideGroup->endOfGroupAction() == SlideGroup::GotoNextGroup)
 		{
 			//m_slideNum = m_sortedSlides.size() - 1;
 			emit nextGroup();
+			return 0;
+		}
+		else
+		if(m_slideGroup->endOfGroupAction() == SlideGroup::GotoGroupIndex)
+		{
+			//m_slideNum = m_sortedSlides.size() - 1;
+			emit jumpToGroup(m_slideGroup->jumpToGroupIndex());
 			return 0;
 		}
 		else

@@ -172,7 +172,7 @@ void ImageImportDialog::accept()
 		group->setGroupTitle(newGroupName.isEmpty() ? dir.dirName() : newGroupName);
 	}
 
-	group->setAutoChangeGroup(!m_ui->flagLoop->isChecked());
+	group->setEndOfGroupAction(m_ui->flagLoop->isChecked() ? SlideGroup::LoopToStart : SlideGroup::GotoNextGroup);
 	bool autoChange = m_ui->flagAutoChange->isChecked();
 	double changeTime = m_ui->changeTime->value();
 

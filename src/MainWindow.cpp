@@ -30,6 +30,7 @@
 #include "OutputViewer.h"
 #include "OutputSetupDialog.h"
 #include "ImageImportDialog.h"
+#include "ImportGroupDialog.h"
 
 #include "model/ItemFactory.h"
 #include "model/SlideGroupFactory.h"
@@ -76,7 +77,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
 	m_docModel = new DocumentListModel();
 
-	QString lastOpenFile = AppSettings::previousPath("last-file-open");
+	QString lastOpenFile = AppSettings::previousPath("last-dviz-file");
 
 	if(!openFile(lastOpenFile))
 		actionNew();
@@ -154,6 +155,10 @@ MainWindow::MainWindow(QWidget *parent) :
 
 	m_ui->actionText_Import_Tool->setIcon(QIcon(":data/insert-text-24.png"));
 	connect(m_ui->actionText_Import_Tool, SIGNAL(triggered()), this, SLOT(textImportTool()));
+	
+	//m_ui->actionImport_Slide_Group->setIcon(QIcon(":data/insert-text-24.png"));
+	connect(m_ui->actionImport_Slide_Group, SIGNAL(triggered()), this, SLOT(importSlideGroup()));
+
 
 	#ifdef WIN32_PPT_ENABLED
 		m_ui->actionAdd_PowerPoint_File->setIcon(QIcon(":data/insert-ppt-24.png"));
@@ -311,9 +316,9 @@ void MainWindow::actionOpen()
 {
 	QString curFile = m_doc->filename();
 	if(curFile.trimmed().isEmpty())
-		curFile = AppSettings::previousPath("last-file-open");
+		curFile = AppSettings::previousPath("last-dviz-file");
 
-	QString fileName = QFileDialog::getOpenFileName(this, tr("Select DViz File"), curFile, tr("DViz XML File (*.xml);;Any File (*.*)"));
+	QString fileName = QFileDialog::getOpenFileName(this, tr("Select DViz File"), curFile, tr("DViz File (*.divz, *.dvz);;DViz XML File (*.dvizx *.dvx *.xml);;Any File (*.*)"));
 	if(fileName != "")
 	{
 		if(openFile(fileName))
@@ -341,12 +346,15 @@ bool MainWindow::actionSaveAs()
 {
 	QString curFile = m_doc->filename();
 	if(curFile.trimmed().isEmpty())
-		curFile = AppSettings::previousPath("last-file-save");
+		curFile = AppSettings::previousPath("last-dviz-file");
 
-	QString fileName = QFileDialog::getSaveFileName(this, tr("Choose a Filename"), curFile, tr("DViz XML File (*.xml);;Any File (*.*)"));
+	QString fileName = QFileDialog::getSaveFileName(this, tr("Choose a Filename"), curFile, tr("DViz File (*.divz, *.dvz);;DViz XML File (*.dvizx *.dvx *.xml);;Any File (*.*)"));
 	if(fileName != "")
 	{
-		AppSettings::setPreviousPath("last-file-save",fileName);
+		QFileInfo info(fileName);
+		if(info.suffix().isEmpty())
+			fileName += ".dviz";
+		AppSettings::setPreviousPath("last-dviz-file",fileName);
 		saveFile(fileName);
 		return true;
 	}
@@ -387,6 +395,18 @@ void MainWindow::imageImportTool()
 	ImageImportDialog d(m_doc);
 	d.exec();
 }
+
+
+void MainWindow::importSlideGroup()
+{
+	if(!m_doc)
+		return;
+	ImportGroupDialog d;
+	d.exec();
+}
+
+
+
 
 void MainWindow::textImportTool()
 {
@@ -527,7 +547,7 @@ bool MainWindow::openFile(const QString & file)
 
 	m_doc = new Document(file);
 
-	AppSettings::setPreviousPath("last-file-open",file);
+	AppSettings::setPreviousPath("last-dviz-file",file);
 
 	//m_doc->load(file);
 	//r.readSlide(m_slide);
@@ -660,6 +680,7 @@ void MainWindow::setupOutputViews()
 		{
 			OutputInstance *inst = new OutputInstance(out);
 			connect(inst, SIGNAL(nextGroup()), this, SLOT(nextGroup()));
+			connect(inst, SIGNAL(jumpToGroup(int)), this, SLOT(jumpToGroup(int)));
 
 			m_outputInstances[out->id()] = inst;
 		}
@@ -1135,13 +1156,23 @@ void MainWindow::nextGroup()
 	int nextRow = idx.row() + 1;
 	if(nextRow >= m_doc->numGroups())
 		nextRow = 0;
+	qDebug() << "MainWindow::nextGroup(): nextRow:"<<nextRow;
+	jumpToGroup(nextRow);
+}
 
+void MainWindow::jumpToGroup(int nextRow)
+{
+	qDebug() << "MainWindow::jumpToGroup(): row:"<<nextRow;
 	SlideGroup *nextGroup = m_docModel->groupAt(nextRow);
+	QModelIndex nextIdx = m_docModel->indexForGroup(nextGroup);
+	//groupDoubleClicked(nextIdx);
+	
+	m_groupView->setCurrentIndex(nextIdx);	
 	setLiveGroup(nextGroup);
 
-	QModelIndex nextIdx = m_docModel->indexForGroup(nextGroup);
-	m_groupView->setCurrentIndex(nextIdx);
+	
 }
+
 
 void MainWindow::previewSlideGroup(SlideGroup *newGroup)
 {

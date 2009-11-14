@@ -66,7 +66,10 @@
     </property>
     <addaction name="actionImages_Import_Tool"/>
     <addaction name="actionText_Import_Tool"/>
+    <addaction name="separator"/>
     <addaction name="actionAdd_PowerPoint_File"/>
+    <addaction name="separator"/>
+    <addaction name="actionImport_Slide_Group"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
@@ -227,6 +230,11 @@
   <action name="actionAdd_PowerPoint_File">
    <property name="text">
     <string>Add PowerPoint File ...</string>
+   </property>
+  </action>
+  <action name="actionImport_Slide_Group">
+   <property name="text">
+    <string>Import Slide Group ...</string>
    </property>
   </action>
  </widget>

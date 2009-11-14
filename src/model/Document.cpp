@@ -55,7 +55,8 @@ void Document::addGroup(SlideGroup *g)
 {
 	assert(g != NULL);
 	m_groups.append(g);
-	g->setGroupNumber(m_groups.size());
+	if(g->groupNumber()<0)
+		g->setGroupNumber(m_groups.size());
 	emit slideGroupChanged(g, "add", 0, "", 0, "", "", QVariant());
 	connect(g,SIGNAL(slideChanged(Slide *, QString, AbstractItem *, QString, QString, QVariant)),this,SLOT(slideChanged(Slide *, QString, AbstractItem *, QString, QString, QVariant)));
 
@@ -138,9 +139,8 @@ void Document::load(const QString & s)
 		{
 			QByteArray ba = var.toByteArray();
 			SlideGroup * group = SlideGroup::fromByteArray(ba);
+			qDebug() << "Load Group: nbr:"<<group->groupNumber()<<", name:"<<group->assumedName();
 			addGroup(group);
-			if(group->groupNumber()<0)
-				group->setGroupNumber(m_groups.size());
 		}
 	}
 	

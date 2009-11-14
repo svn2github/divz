@@ -15,12 +15,14 @@ class SlideGroup : public QObject
 	Q_PROPERTY(GroupType groupType READ groupType WRITE setGroupType);
 	Q_PROPERTY(QString groupTitle READ groupTitle WRITE setGroupTitle);
 	Q_PROPERTY(QString iconFile READ iconFile WRITE setIconFile);
-	Q_PROPERTY(bool autoChangeGroup READ autoChangeGroup WRITE setAutoChangeGroup);
+	Q_PROPERTY(EndOfGroupAction endOfGroupAction READ endOfGroupAction WRITE setEndOfGroupAction);
+	Q_PROPERTY(int jumpToGroupIndex READ jumpToGroupIndex WRITE setJumpToGroupIndex);
 	Q_PROPERTY(double inheritFadeSettings READ inheritFadeSettings WRITE setInheritFadeSettings);
 	Q_PROPERTY(double crossFadeSpeed READ crossFadeSpeed WRITE setCrossFadeSpeed);
 	Q_PROPERTY(double crossFadeQuality READ crossFadeQuality WRITE setCrossFadeQuality);
 
 	Q_ENUMS(GroupType);
+	Q_ENUMS(EndOfGroupAction);
 	
 public:
 	SlideGroup();
@@ -35,13 +37,22 @@ public:
 		Feed,
 		PowerPoint,
 	};
+	
+	typedef enum EndOfGroupAction
+	{
+		LoopToStart,
+		GotoNextGroup,
+		GotoGroupIndex
+	};
 
 	ITEM_PROPDEF(GroupId,		int,		groupId);
 	ITEM_PROPDEF(GroupNumber,	int,		groupNumber);
 	V_ITEM_PROPDEF(GroupType,	GroupType,	groupType);
 	ITEM_PROPDEF(GroupTitle,	QString,	groupTitle);
 	ITEM_PROPDEF(IconFile,		QString,	iconFile);
-	ITEM_PROPDEF(AutoChangeGroup,	bool,		autoChangeGroup);
+	ITEM_PROPDEF(EndOfGroupAction,	EndOfGroupAction,	endOfGroupAction);
+	ITEM_PROPDEF(JumpToGroupIndex,	int,		jumpToGroupIndex);
+	
 	ITEM_PROPDEF(InheritFadeSettings,bool,		inheritFadeSettings);
 	ITEM_PROPDEF(CrossFadeSpeed,	double,		crossFadeSpeed);    // secs
 	ITEM_PROPDEF(CrossFadeQuality,	double,		crossFadeQuality);  // frames
@@ -105,7 +116,8 @@ protected:
 	GroupType m_groupType;
 	QString m_groupTitle;
 	QString m_iconFile;
-	bool m_autoChangeGroup;
+	EndOfGroupAction m_endOfGroupAction;
+	int m_jumpToGroupIndex;
 
 	void sortSlides();
 
@@ -122,5 +134,6 @@ protected:
 };
 
 Q_DECLARE_METATYPE(SlideGroup::GroupType);
+Q_DECLARE_METATYPE(SlideGroup::EndOfGroupAction);
 
 #endif

@@ -3,6 +3,7 @@
 
 #include <QtGui/QDialog>
 class SlideGroup;
+class DocumentListModel;
 
 namespace Ui {
     class SlideGroupSettingsDialog;
@@ -26,6 +27,7 @@ protected slots:
 private:
     Ui::SlideGroupSettingsDialog *m_ui;
     SlideGroup *m_slideGroup;
+    DocumentListModel *m_model;
 };
 
 #endif // SLIDEGROUPSETTINGSDIALOG_H

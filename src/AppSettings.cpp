@@ -91,6 +91,7 @@ void AppSettings::initApp(const QString& appName)
 	qRegisterMetaType<AbstractVisualItem::FillType>("FillType");
 	qRegisterMetaType<AbstractVisualItem::ZoomEffectDirection>("ZoomEffectDirection");
 	qRegisterMetaType<SlideGroup::GroupType>("GroupType");
+	qRegisterMetaType<SlideGroup::EndOfGroupAction>("EndOfGroupAction");
 
 	AbstractItemFilter::registerFilterInstance(SlideTextOnlyFilter::instance());
 	AbstractItemFilter::registerFilterInstance(SlideNonTextOnlyFilter::instance());
@@ -466,7 +467,7 @@ QString AppSettings::applyResourcePathTranslations(const QString &s)
 				copy.replace(0,firstCopy.length(),pair.second);
 		}
 	}
-	qDebug() << "AppSettings::applyResourcePathTranslations: in:"<<s<<", out:"<<copy;
+	//qDebug() << "AppSettings::applyResourcePathTranslations: in:"<<s<<", out:"<<copy;
 	return copy;
 }
 

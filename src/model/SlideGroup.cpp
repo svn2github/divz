@@ -17,7 +17,7 @@ SlideGroup::SlideGroup() :
 	, m_groupType(Generic)
 	, m_groupTitle("")
 	, m_iconFile("")
-	, m_autoChangeGroup(false)
+	, m_endOfGroupAction(SlideGroup::LoopToStart)
 	, m_inheritFadeSettings(true)
 	, m_crossFadeSpeed(250)
 	, m_crossFadeQuality(15)
@@ -80,7 +80,8 @@ void SlideGroup::setGroupTitle(QString s)
 	emit slideChanged(0, "change", 0, "change", "groupTitle", s);
 }
 void SlideGroup::setIconFile(QString s)    { m_iconFile = s; }
-void SlideGroup::setAutoChangeGroup(bool s){ m_autoChangeGroup = s; }
+void SlideGroup::setEndOfGroupAction(EndOfGroupAction s){ m_endOfGroupAction = s; }
+void SlideGroup::setJumpToGroupIndex(int x){ m_jumpToGroupIndex = x; }
 void SlideGroup::setInheritFadeSettings(bool x){ m_inheritFadeSettings = x; }
 void SlideGroup::setCrossFadeSpeed(double x){ m_crossFadeSpeed = x; }
 void SlideGroup::setCrossFadeQuality(double x){ m_crossFadeQuality = x; }
@@ -93,7 +94,8 @@ void SlideGroup::loadGroupAttributes(QDomElement & pe)
 	setGroupType((GroupType)pe.attribute("type").toInt());
 	setGroupTitle(pe.attribute("title"));
 	setIconFile(pe.attribute("icon"));
-	setAutoChangeGroup((bool)pe.attribute("auto").toInt());
+	setEndOfGroupAction((EndOfGroupAction)pe.attribute("end-action").toInt());
+	setJumpToGroupIndex(pe.attribute("jumpto").toInt());
 	
 	//qDebug()<<"SlideGroup::fromXml: number:"<<groupNumber()<<", title:"<<groupTitle();
 	
@@ -152,7 +154,8 @@ void SlideGroup::saveGroupAttributes(QDomElement & pe) const
 	pe.setAttribute("type",(int)groupType());
 	pe.setAttribute("title",groupTitle());
 	pe.setAttribute("icon",iconFile());
-	pe.setAttribute("auto",(int)autoChangeGroup());
+	pe.setAttribute("end-action",(int)endOfGroupAction());
+	pe.setAttribute("jumpto",jumpToGroupIndex());
 	pe.setAttribute("inherit-fade",(int)m_inheritFadeSettings);
 	pe.setAttribute("fade-speed",m_crossFadeSpeed);
 	pe.setAttribute("fade-quality",m_crossFadeQuality);

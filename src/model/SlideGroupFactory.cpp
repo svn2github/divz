@@ -695,12 +695,19 @@ void SlideGroupViewControl::nextSlide()
 {
 	if(DEBUG_SLIDEGROUPVIEWCONTROL)
 		qDebug() << "SlideGroupViewControl::nextSlide(): mark";
+		
+	SlideGroup * tmpGroup = m_group;
 	Slide *nextSlide = m_slideViewer->nextSlide();
 	if(nextSlide)
 		m_listView->setCurrentIndex(m_slideModel->indexForSlide(nextSlide));
 	else
-	if(m_timerState == Running)
+	if(m_timerState == Running && 
+	   tmpGroup == m_group) // make sure the group hasn't changed
+	{
+		//qDebug() << "SlideGroupViewControl::nextSlide(): stopping timer";
 		toggleTimerState(Stopped,true);
+		//qDebug() << "SlideGroupViewControl::nextSlide(): timer stopped";
+	}
 }
 
 void SlideGroupViewControl::prevSlide()

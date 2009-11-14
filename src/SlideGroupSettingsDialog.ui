@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>385</width>
-    <height>522</height>
+    <width>390</width>
+    <height>573</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -66,6 +66,41 @@ when that slide is finished displaying?</string>
         <property name="checked">
          <bool>true</bool>
         </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QRadioButton" name="rJump">
+        <property name="text">
+         <string>Jump to the first slide of another slide group</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QWidget" name="widget" native="true">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <layout class="QHBoxLayout" name="horizontalLayout_2">
+         <property name="margin">
+          <number>0</number>
+         </property>
+         <item>
+          <widget class="QLabel" name="label_3">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text">
+            <string>Jump to Slide Group: </string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="jumpToBox"/>
+         </item>
+        </layout>
        </widget>
       </item>
      </layout>
@@ -254,8 +289,8 @@ slower videos may display.</string>
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>257</x>
-     <y>512</y>
+     <x>266</x>
+     <y>563</y>
     </hint>
     <hint type="destinationlabel">
      <x>157</x>
@@ -270,8 +305,8 @@ slower videos may display.</string>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>325</x>
-     <y>512</y>
+     <x>334</x>
+     <y>563</y>
     </hint>
     <hint type="destinationlabel">
      <x>286</x>
@@ -286,8 +321,8 @@ slower videos may display.</string>
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>80</x>
-     <y>287</y>
+     <x>100</x>
+     <y>347</y>
     </hint>
     <hint type="destinationlabel">
      <x>356</x>
@@ -302,12 +337,12 @@ slower videos may display.</string>
    <slot>setValue(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>294</x>
-     <y>346</y>
+     <x>368</x>
+     <y>413</y>
     </hint>
     <hint type="destinationlabel">
-     <x>225</x>
-     <y>350</y>
+     <x>273</x>
+     <y>415</y>
     </hint>
    </hints>
   </connection>
@@ -318,12 +353,12 @@ slower videos may display.</string>
    <slot>setValue(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>168</x>
-     <y>352</y>
+     <x>235</x>
+     <y>415</y>
     </hint>
     <hint type="destinationlabel">
-     <x>303</x>
-     <y>353</y>
+     <x>368</x>
+     <y>413</y>
     </hint>
    </hints>
   </connection>
@@ -334,12 +369,12 @@ slower videos may display.</string>
    <slot>setValue(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>221</x>
-     <y>383</y>
+     <x>273</x>
+     <y>447</y>
     </hint>
     <hint type="destinationlabel">
-     <x>311</x>
-     <y>383</y>
+     <x>368</x>
+     <y>445</y>
     </hint>
    </hints>
   </connection>
@@ -350,12 +385,28 @@ slower videos may display.</string>
    <slot>setValue(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>296</x>
-     <y>384</y>
+     <x>368</x>
+     <y>445</y>
     </hint>
     <hint type="destinationlabel">
-     <x>216</x>
-     <y>385</y>
+     <x>273</x>
+     <y>447</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>rJump</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>widget</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>246</x>
+     <y>216</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>288</x>
+     <y>246</y>
     </hint>
    </hints>
   </connection>

@@ -65,6 +65,7 @@ public:
 	
 signals:
 	void nextGroup();
+	void jumpToGroup(int);
 	
 	void slideChanged(int);
 	void slideChanged(Slide*);
@@ -113,6 +114,7 @@ private slots:
 	void applyOutputSettings(bool startHidden=false);
 	
 	void slotNextGroup();
+	void slotJumpToGroup(int);
 	
 	void slideChanged(Slide *, QString, AbstractItem *, QString, QString, QVariant);
 	

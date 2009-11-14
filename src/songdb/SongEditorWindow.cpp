@@ -80,12 +80,12 @@ SongEditorWindow::SongEditorWindow(SlideGroup *g, QWidget *parent) :
 	
 	hbox2->addStretch();
 	
-	QCheckBox * box = new QCheckBox("S&ync Changes to Database");
-	box->setToolTip("If checked, saving changes will update the master song database as well as the copy of the song in this document");
-	box->setChecked(true);
-	connect(box, SIGNAL(toggled(bool)), this, SLOT(setSyncToDatabase(bool)));
+	m_syncBox = new QCheckBox("S&ync Changes to Database");
+	m_syncBox->setToolTip("If checked, saving changes will update the master song database as well as the copy of the song in this document");
+	m_syncBox->setChecked(true);
+	connect(m_syncBox, SIGNAL(toggled(bool)), this, SLOT(setSyncToDatabase(bool)));
 	
-	hbox2->addWidget(box);
+	hbox2->addWidget(m_syncBox);
 	
 	QPushButton *btn;
 	btn = new QPushButton("&Save Song");
@@ -104,6 +104,11 @@ SongEditorWindow::SongEditorWindow(SlideGroup *g, QWidget *parent) :
 	
 	resize(500,600);
 	
+}
+
+void SongEditorWindow::showSyncOption(bool flag)
+{
+	m_syncBox->setVisible(flag);
 }
 
 void SongEditorWindow::editSongTemplate()

@@ -153,6 +153,7 @@ public:
 	
 signals:
 	void nextGroup();
+	void jumpToGroup(int);
 	void viewerStateChanged(ViewerState);
 	void slideChanged(int);
 

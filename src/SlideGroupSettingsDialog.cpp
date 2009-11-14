@@ -1,15 +1,31 @@
 #include "SlideGroupSettingsDialog.h"
 #include "ui_SlideGroupSettingsDialog.h"
 #include "model/SlideGroup.h"
+#include "DocumentListModel.h"
+#include "MainWindow.h"
+#include <QMessageBox>
 
 SlideGroupSettingsDialog::SlideGroupSettingsDialog(SlideGroup *g, QWidget *parent) :
     QDialog(parent),
     m_ui(new Ui::SlideGroupSettingsDialog),
-    m_slideGroup(g)
+    m_slideGroup(g),
+    m_model(new DocumentListModel(MainWindow::mw()->currentDocument()))
 {
 	m_ui->setupUi(this);
-	m_ui->rNothing->setChecked(!m_slideGroup->autoChangeGroup());
-	connect(m_ui->rChange, SIGNAL(toggled(bool)), this, SLOT(autoChangeGroup(bool)));
+	
+	if(m_slideGroup->endOfGroupAction() == SlideGroup::LoopToStart)
+		m_ui->rNothing->setChecked(true);
+	else
+	if(m_slideGroup->endOfGroupAction() == SlideGroup::GotoNextGroup)
+		m_ui->rChange->setChecked(true);
+	else
+		m_ui->rJump->setChecked(true);
+		
+	m_ui->jumpToBox->setModel(m_model);
+	m_ui->jumpToBox->setCurrentIndex(m_slideGroup->jumpToGroupIndex());
+	
+	//connect(m_ui->rChange, SIGNAL(toggled(bool)), this, SLOT(autoChangeGroup(bool)));
+	
 	m_ui->title->setText(m_slideGroup->groupTitle().isEmpty() ? QString("Group %1").arg(m_slideGroup->groupNumber()+1) : m_slideGroup->groupTitle());
 	connect(m_ui->title, SIGNAL(textChanged(const QString&)), this, SLOT(titleChanged(const QString&)));
 	
@@ -34,6 +50,17 @@ SlideGroupSettingsDialog::~SlideGroupSettingsDialog()
 
 void SlideGroupSettingsDialog::slotAccepted()
 {
+	m_slideGroup->setEndOfGroupAction(m_ui->rNothing->isChecked() ? SlideGroup::LoopToStart : 
+					  m_ui->rChange->isChecked()  ? SlideGroup::GotoNextGroup :
+					  SlideGroup::GotoGroupIndex);
+	int idx = m_ui->jumpToBox->currentIndex();
+	if(m_slideGroup->endOfGroupAction() == SlideGroup::GotoGroupIndex && idx < 0)
+	{
+		QMessageBox::critical(this,"No Existing Group Selected","You must select a group to jump to if you select the option titled 'Jump to another group'");
+		return;
+	}
+	m_slideGroup->setJumpToGroupIndex(idx);
+	
 	m_slideGroup->setInheritFadeSettings(m_ui->btnUseApp->isChecked());
 	m_slideGroup->setCrossFadeSpeed(m_ui->speedBox->value());
 	m_slideGroup->setCrossFadeQuality(m_ui->qualityBox->value());
@@ -43,7 +70,7 @@ void SlideGroupSettingsDialog::slotAccepted()
 
 void SlideGroupSettingsDialog::autoChangeGroup(bool flag)
 {
-    m_slideGroup->setAutoChangeGroup(flag);
+    //m_slideGroup->setAutoChangeGroup(flag);
 }
 
 void SlideGroupSettingsDialog::titleChanged(const QString& title)

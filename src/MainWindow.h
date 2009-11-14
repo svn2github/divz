@@ -81,10 +81,12 @@ public slots:
 	
 	void clearAllOutputs();
 	void nextGroup();
+	void jumpToGroup(int);
 	
 	
 	void imageImportTool();
 	void textImportTool();
+	void importSlideGroup();
 	
 	void setAutosaveEnabled(bool);
 

@@ -36,6 +36,7 @@ class SlideEditorWindow;
 class QCloseEvent;
 class SongRecord;
 class QPushButton;
+#include <QCheckBox>
 
 class SongEditorWindow : public AbstractSlideGroupEditor 
 {
@@ -55,6 +56,9 @@ public slots:
 	void editSongTemplate();
 	
 	void setSyncToDatabase(bool);
+	
+	void showSyncOption(bool);
+	void isSyncOptionVisible() { m_syncBox->isVisible(); }
 	
 signals:
 	void songCreated(SongRecord*);
@@ -76,6 +80,8 @@ private:
 	QPushButton * m_tmplEditButton;
 	
 	bool m_syncToDatabase;
+	
+	QCheckBox * m_syncBox;
 };
 
 

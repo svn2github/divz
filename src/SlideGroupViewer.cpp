@@ -990,10 +990,17 @@ Slide * SlideGroupViewer::nextSlide()
 	m_slideNum ++;
 	if(m_slideNum >= m_sortedSlides.size())
 	{
-		if(m_slideGroup->autoChangeGroup())
+		if(m_slideGroup->endOfGroupAction() == SlideGroup::GotoNextGroup)
 		{
 			//m_slideNum = m_sortedSlides.size() - 1;
 			emit nextGroup();
+			return 0;
+		}
+		else
+		if(m_slideGroup->endOfGroupAction() == SlideGroup::GotoGroupIndex)
+		{
+			//m_slideNum = m_sortedSlides.size() - 1;
+			emit jumpToGroup(m_slideGroup->jumpToGroupIndex());
 			return 0;
 		}
 		else

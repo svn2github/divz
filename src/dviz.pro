@@ -45,7 +45,8 @@ FORMS += mainwindow.ui \
 	GridDialog.ui \
 	SlideSettingsDialog.ui \
 	SlideGroupSettingsDialog.ui \
-	ImageImportDialog.ui
+	ImageImportDialog.ui \
+	ImportGroupDialog.ui
 	
 RESOURCES += dviz.qrc
 
@@ -75,7 +76,8 @@ HEADERS += \
 	DeepProgressIndicator.h \
 	OutputServer.h \
 	ImageImportDialog.h \
-	DirectoryListModel.h
+	DirectoryListModel.h \
+	ImportGroupDialog.h
 
 	
 SOURCES += \
@@ -104,7 +106,8 @@ SOURCES += \
 	DeepProgressIndicator.cpp \
 	OutputServer.cpp \
 	ImageImportDialog.cpp \
-	DirectoryListModel.cpp
+	DirectoryListModel.cpp \
+	ImportGroupDialog.cpp
 	
 
 QT += core \
