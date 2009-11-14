@@ -93,24 +93,59 @@ void Document::load(const QString & s)
 		return;
 	}
 	
-	// And create the XML document into memory (with nodes...)
-	QString *error = new QString();
-	QDomDocument doc;
-	if (!doc.setContent(&file, false, error)) 
+	QFileInfo inf(m_filename);
+	QString ext = inf.suffix();
+	if(ext == "xml" || ext == "dvx" || ext == "dvizx")
 	{
-		QMessageBox::critical(0, tr("Parsing error"), tr("Unable to parse file %1. The error was: %2").arg(m_filename, *error));
+
+		
+		// And create the XML document into memory (with nodes...)
+		QString *error = new QString();
+		QDomDocument doc;
+		if (!doc.setContent(&file, false, error)) 
+		{
+			QMessageBox::critical(0, tr("Parsing error"), tr("Unable to parse file %1. The error was: %2").arg(m_filename, *error));
+			file.close();
+			throw(0);
+			return;
+		}
 		file.close();
-		throw(0);
+		
+		delete error;
+		error = 0;
+		
+		QDomElement root = doc.documentElement(); // The root node
+		
+		fromXml(root);
 		return;
 	}
+	else
+	if(ext == "dvz" || ext == "dviz")
+	{
+		QByteArray array = file.readAll();
+		
+		QDataStream stream(&array, QIODevice::ReadOnly);
+		QVariantMap map;
+		stream >> map;
+		
+		setDocTitle(map["title"].toString());
+		setAspectRatio(map["aspect"].toDouble());
+		
+		m_groups.clear();
+
+		QVariantList items = map["groups"].toList();
+		foreach(QVariant var, items)
+		{
+			QByteArray ba = var.toByteArray();
+			SlideGroup * group = SlideGroup::fromByteArray(ba);
+			addGroup(group);
+			if(group->groupNumber()<0)
+				group->setGroupNumber(m_groups.size());
+		}
+	}
+	
 	file.close();
 	
-	delete error;
-	error = 0;
-	
-	QDomElement root = doc.documentElement(); // The root node
-	
-	fromXml(root);
 }
 
 bool Document::fromXml(QDomElement & pe)
@@ -176,9 +211,7 @@ void Document::save(const QString & filename)
 	else
 		m_filename = tmp;
 		
-	QDomDocument doc;
 	QFile file;
-	QTextStream out;
 	
 	// Open file
 	file.setFileName(tmp);
@@ -189,23 +222,53 @@ void Document::save(const QString & filename)
 		return;
 	}
 	
-	//qDebug() << "Document::save: Writing to "<<tmp;
 	
-	out.setDevice(&file);
+	QFileInfo inf(tmp);
+	QString ext = inf.suffix();
+	if(ext == "xml" || ext == "dvx" || ext == "dvizx")
+	{
+		QDomDocument doc;
+		QTextStream out;
+		
+		//qDebug() << "Document::save: Writing to "<<tmp;
+		
+		out.setDevice(&file);
+		
+		// This element contains all the others.
+		QDomElement rootElement = doc.createElement("document");
 	
-	// This element contains all the others.
-	QDomElement rootElement = doc.createElement("document");
-
-	toXml(rootElement);
+		toXml(rootElement);
+		
+		// Add the root (and all the sub-nodes) to the document
+		doc.appendChild(rootElement);
+		
+		//Add at the begining : <?xml version="1.0" ?>
+		QDomNode noeud = doc.createProcessingInstruction("xml","version=\"1.0\" ");
+		doc.insertBefore(noeud,doc.firstChild());
+		//save in the file (4 spaces indent)
+		doc.save(out, 4);
+	}
+	else
+	if(ext == "dvz" || ext == "dviz")
+	{
+		QByteArray array;
+		QDataStream stream(&array, QIODevice::WriteOnly);
+		QVariantMap map;
+		
+		QVariantList list;
+		foreach (SlideGroup * group, m_groups)
+			list << group->toByteArray();
+		
+		map["groups"] = list;
+		map["title"] = docTitle();
+		map["aspect"] = aspectRatio();
+		
+		//qDebug() << "SlideGroup::toByteArray(): "<<map;
+		stream << map;
+		
+		file.write(array);
+	}
 	
-	// Add the root (and all the sub-nodes) to the document
-	doc.appendChild(rootElement);
-	
-	//Add at the begining : <?xml version="1.0" ?>
-	QDomNode noeud = doc.createProcessingInstruction("xml","version=\"1.0\" ");
-	doc.insertBefore(noeud,doc.firstChild());
-	//save in the file (4 spaces indent)
-	doc.save(out, 4);
 	file.close();
 	
 	//qDebug() << "Document::save: Done writing "<<tmp;
