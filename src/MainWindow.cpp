@@ -318,7 +318,7 @@ void MainWindow::actionOpen()
 	if(curFile.trimmed().isEmpty())
 		curFile = AppSettings::previousPath("last-dviz-file");
 
-	QString fileName = QFileDialog::getOpenFileName(this, tr("Select DViz File"), curFile, tr("DViz File (*.divz, *.dvz);;DViz XML File (*.dvizx *.dvx *.xml);;Any File (*.*)"));
+	QString fileName = QFileDialog::getOpenFileName(this, tr("Select DViz File"), curFile, tr("DViz File (*.dviz, *.dvz);;DViz XML File (*.dvizx *.dvx *.xml);;Any File (*.*)"));
 	if(fileName != "")
 	{
 		if(openFile(fileName))
@@ -348,7 +348,7 @@ bool MainWindow::actionSaveAs()
 	if(curFile.trimmed().isEmpty())
 		curFile = AppSettings::previousPath("last-dviz-file");
 
-	QString fileName = QFileDialog::getSaveFileName(this, tr("Choose a Filename"), curFile, tr("DViz File (*.divz *.dvz);;DViz XML File (*.dvizx *.dvx *.xml);;Any File (*.*)"));
+	QString fileName = QFileDialog::getSaveFileName(this, tr("Choose a Filename"), curFile, tr("DViz File (*.dviz *.dvz);;DViz XML File (*.dvizx *.dvx *.xml);;Any File (*.*)"));
 	if(fileName != "")
 	{
 		QFileInfo info(fileName);
