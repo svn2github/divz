@@ -73,6 +73,7 @@ MainWindow::MainWindow(QWidget *parent)
 
 	//m_previewDock->setVisible(output->isEnabled());
 	
+	m_reconnectTimer.setSingleShot(true);
 	connect(&m_reconnectTimer, SIGNAL(timeout()), this, SLOT(slotReconnect()));
 	
 }

@@ -359,18 +359,18 @@ void QVideo::consumeFrame()
 		//int actual_delay = (global_delay < pts_delay && global_delay > 0) ? global_delay : pts_delay;
 		//actual_delay = 15;
 		//qDebug("Sleeping %d till next frame...",actual_delay);
-// 		int min = 10;
-// 		#if !defined(Q_OS_UNIX)
-// 			min=33 * 2;
-// 		#endif
+		int min = 10;
+		#if !defined(Q_OS_UNIX)
+			min=33;// * 2;
+		#endif
 
-		/*
+
 		
 		if(actual_delay<min)
 		{
 			actual_delay = min;
 		//qDebug("***************** Keeping out of the water: %d",min);
-		}*/
+		}
 		
 		if(acutal_delay_int < 0)
 			acutal_delay_int = 0;

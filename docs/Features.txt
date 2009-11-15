@@ -346,6 +346,27 @@ Revised Task list for Release 1.0, 10/18/09:
 			[DONE] change slide while quick slide active should de-activate 'show' button
 			
 			add optional passcode to output server
+			
+			need to add third point chooser to effects tab
+			
+			mb takes long time to init view in dir browser on windows
+			preview viewer should start paused
+			image import dialog - "only if..." checkbox should enab/disab if "show titles" checked
+			mb doesnt seem to remember last directory when program re-opens
+			song text box centering not right - too far high
+			http rc should not reset to first slide when loading group if group already live with diff slide than 1st
+			slideeditor not showing all slides in list again 
+				as soon as slide deleted, list updates correctly
+			some zoom settings (anchor, factor, auto-switch) didnt seem to get imported from other doc using import tool
+			quickslide should regenerate each 'show'
+			quickslide should ask if recenter wanted if text falls outside window
+			quickslide needs preview button
+			idea: Add italic (//) and hr (--) formatting translation to quickslide
+			idea: Add font size inc/deinc to quickslide (like [--]1.2x smaller[++]1.2x bigger[++++]1.4x bigger, etc)
+			idea: add sequencing for groups 
+				probably needs to be dedicated group type
+			bug: black, clear, unblack, change slide - goes black again incorrectly
+				
 	
 			[STARTED] would be nice: while editing slide thats live, if change, cross fade to changed version
 			
@@ -806,6 +827,13 @@ Revised Task list for Release 1.0, 10/18/09:
 		[LATER] Video Capture (started impl, but again, performance is terrible. That may be due to the FormatOpts specified, or in ffmpeg, or the capture hardware - need to trace - later!)
 	
 	- Bugs:
+		crash: go live with song, edit, save - crash
+		crash: edit song, click bg, close editor, save - crash
+		crash: open slide, text box, clear text, save - crash
+		shadow renders too far below first time before moving
+		position on images/videso dragged doesnt always sync back to model when dragging
+		when press f2 in main window and editor already open but minimized/hidden, raise editor to front
+		
 		phc logo overlays didint draw the shadow correclty - its almost like they drew the shadow with a vertically-compressed original, and its not till i drag them from original position that the shaodw renders correctly
 		if set background color on foldback while song active, song filter disables and doesnt re-enable till song go live again
 		songfilter doesnt use background color for foldback that is already set before song golive

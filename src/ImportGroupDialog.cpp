@@ -21,7 +21,7 @@ ImportGroupDialog::ImportGroupDialog(QWidget *parent) :
 	QCompleter *completer = new QCompleter(this);
 	QDirModel *dirModel = new QDirModel(completer);
 	completer->setModel(dirModel);
-	completer->setMaxVisibleItems(10);
+	//completer->setMaxVisibleItems(10);
 	completer->setCompletionMode(QCompleter::PopupCompletion);
 	completer->setCaseSensitivity(Qt::CaseInsensitive);
 	completer->setWrapAround(true);

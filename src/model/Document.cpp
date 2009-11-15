@@ -121,7 +121,7 @@ void Document::load(const QString & s)
 		return;
 	}
 	else
-	if(ext == "dvz" || ext == "dviz")
+	//if(ext == "dvz" || ext == "dviz")
 	{
 		QByteArray array = file.readAll();
 		
@@ -249,7 +249,7 @@ void Document::save(const QString & filename)
 		doc.save(out, 4);
 	}
 	else
-	if(ext == "dvz" || ext == "dviz")
+	//if(ext == "dvz" || ext == "dviz")
 	{
 		QByteArray array;
 		QDataStream stream(&array, QIODevice::WriteOnly);

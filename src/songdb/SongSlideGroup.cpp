@@ -11,7 +11,7 @@
 #include <QTextBlock>
 #include <QTextOption>
 
-#define DEBUG_TEXTOSLIDES 0
+#define DEBUG_TEXTOSLIDES 1
 
 SongSlideGroup::SongSlideGroup() : SlideGroup(),
 	m_song(0),
@@ -65,8 +65,8 @@ void SongSlideGroup::removeAllSlides()
 		emit slideChanged(slide, "remove", 0, "", "", QVariant());
 	}
 
+	//qDeleteAll(m_slides);
 	m_slides.clear();
-	qDeleteAll(m_slides);
 }
 
 void SongSlideGroup::aspectRatioChanged(double x)
