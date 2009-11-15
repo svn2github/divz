@@ -23,7 +23,9 @@ function gotoUrl(url)
 	}
 	if(window.RequestObject)
 	{
-		window.RequestObject.open("GET",url, true);
+		if(url.indexOf('?') <= 0)
+			url += '?';
+		window.RequestObject.open("GET",url + '&date=' + (new Date().getTime()), true);
 		window.RequestObject.send(null);
 	}
 }

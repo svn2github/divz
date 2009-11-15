@@ -601,5 +601,21 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>flagShowNames</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>flagNotDefault</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>112</x>
+     <y>560</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>321</x>
+     <y>559</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
 </ui>

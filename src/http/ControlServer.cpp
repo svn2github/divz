@@ -119,7 +119,8 @@ void ControlServer::screenListGroups(QTcpSocket *socket, const QStringList &path
 	SlideGroup *liveGroup = mw->outputInst(liveId)->slideGroup();
 	
 	DocumentListModel * model = mw->documentListModel();
-		
+	
+	uint secs = QDateTime::currentDateTime().toTime_t();
 	QVariantList outputGroupList;
 	for(int idx = 0; idx < model->rowCount(); idx++)
 	{
@@ -136,6 +137,7 @@ void ControlServer::screenListGroups(QTcpSocket *socket, const QStringList &path
 		row["group"]     = idx;
 		row["text"]      = viewText;
 		row["live_flag"] = group == liveGroup;
+		row["date"]	 = secs;
 		
 		outputGroupList << row;
 	}
@@ -268,7 +270,8 @@ void ControlServer::screenLoadGroup(QTcpSocket *socket, const QStringList &path,
 	{
 		if(liveGroup != group ||
 		   liveSlide != slide)
-			mw->setLiveGroup(group,slide);
+			mw->setLiveGroup(group,
+					 ! slide ? liveSlide : slide); // prevent changing slides when loading the group page if group already live on different slide
 		
 		SlideGroupViewControl *viewControl = mw->viewControl(liveId);
 		SlideGroupListModel *model = viewControl->slideGroupListModel();
@@ -308,6 +311,8 @@ void ControlServer::screenLoadGroup(QTcpSocket *socket, const QStringList &path,
 		tmpl.param("black_toggled", outputControl->isBlackToggled());
 		tmpl.param("clear_toggled", outputControl->isClearToggled());
 		tmpl.param("qslide_toggled", viewControl->isQuickSlideToggled());
+		
+		tmpl.param("date", QDateTime::currentDateTime().toTime_t());
 		
 		Http_Send_Ok(socket) << tmpl.toString();
 	}
