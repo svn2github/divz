@@ -11,7 +11,7 @@
 #include <QTextBlock>
 #include <QTextOption>
 
-#define DEBUG_TEXTOSLIDES 1
+#define DEBUG_TEXTOSLIDES 0
 
 SongSlideGroup::SongSlideGroup() : SlideGroup(),
 	m_song(0),

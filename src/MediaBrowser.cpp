@@ -196,7 +196,7 @@ MediaBrowser::MediaBrowser(const QString &directory, QWidget *parent)
 
 	setFileTypeFilterList(filters);
 
-	setDirectory(""); //directory.isEmpty() ? AppSettings::previousPath(m_prevPathKey) : directory);
+	setDirectory(directory.isEmpty() ? AppSettings::previousPath(m_prevPathKey) : directory);
 }
 
 MediaBrowser::~MediaBrowser() 

@@ -515,7 +515,7 @@ void GenericItemConfig::slotVideoBrowse()
 			text = AppSettings::previousPath("videos");
 		}
 	
-		QString fileName = QFileDialog::getOpenFileName(this, tr("Select Video"), m_commonUi->videoFilenameBox->text(), tr("Video Files (*.wmv *.mpeg *.mpg *.avi *.wmv *.flv *.mov *.mp4 *.m4a *.3gp *.3g2 *.mj2 *.mjpeg *.ipod *.m4v *.gsm *.gif *.swf *.dv *.dvd *.asf *.mtv *.roq *.aac *.ac3 *.aiff *.alaw *.iif);;Any File (*.*)"));
+		QString fileName = QFileDialog::getOpenFileName(this, tr("Select Video"), m_commonUi->videoFilenameBox->text(), tr("Video Files (*.wmv *.mpeg *.mpg *.avi *.wmv *.flv *.mov *.mp4 *.m4a *.3gp *.3g2 *.mj2 *.mjpeg *.ipod *.m4v *.gsm *.swf *.dv *.dvd *.asf *.mtv *.roq *.aac *.ac3 *.aiff *.alaw *.iif);;Any File (*.*)"));
 		if(fileName != "")
 		{
 			slotVideoFileChanged(fileName);
@@ -567,7 +567,7 @@ void GenericItemConfig::slotImageBrowse()
 			text = AppSettings::previousPath("images");
 		}
 	
-		QString fileName = QFileDialog::getOpenFileName(this, tr("Select Image"), text, tr("Image Files (*.png *.jpg *.bmp *.svg *.xpm);;Any File (*.*)"));
+		QString fileName = QFileDialog::getOpenFileName(this, tr("Select Image"), text, tr("Image Files (*.png *.jpg *.bmp *.svg *.xpm *.gif);;Any File (*.*)"));
 		if(fileName != "")
 		{
 			slotImageFileChanged(fileName);
