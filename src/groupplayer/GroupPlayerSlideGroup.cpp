@@ -43,7 +43,8 @@ GroupPlayerSlideGroup::GroupMember GroupPlayerSlideGroup::addGroup(SlideGroup *g
 	mem.sequenceNumber 	= m_groups.size();
 	m_groups.append(mem);
 	
-	addGroupSlides(group);
+	//addGroupSlides(group);
+	setupSlides();
 	
 	return mem;
 }
@@ -65,7 +66,8 @@ void GroupPlayerSlideGroup::addGroup(GroupMember mem)
 	}
 	
 	m_groups.append(mem);
-	addGroupSlides(mem.group);
+	//addGroupSlides(mem.group);
+	setupSlides();
 	//qDebug() << "GroupPlayerSlideGroup::addGroup: Adding GroupMember seq# "<<mem.sequenceNumber<<", group name: "<<mem.group->assumedName()<<", new size: "<<m_groups.size()<<", slides:"<<numSlides();
 
 }
@@ -82,8 +84,9 @@ bool  operator<(const GroupPlayerSlideGroup::GroupMember& a, const GroupPlayerSl
 
 void GroupPlayerSlideGroup::removeGroup(GroupMember mem)
 {
-	removeGroupSlides(mem.groupId);
+	//removeGroupSlides(mem.groupId);
 	m_groups.removeAll(mem);
+	setupSlides();
 }
 
 void GroupPlayerSlideGroup::removeGroup(SlideGroup *group)
@@ -95,35 +98,55 @@ void GroupPlayerSlideGroup::removeGroup(SlideGroup *group)
 			
 	foreach(GroupMember mem, toBeRemoved)
 	{
-		removeGroupSlides(mem.groupId);
+		//removeGroupSlides(mem.groupId);
 		m_groups.removeAll(mem);
 	}
+	setupSlides();
 }
 
-void GroupPlayerSlideGroup::addGroupSlides(SlideGroup *group)
+void GroupPlayerSlideGroup::setupSlides()
 {
-	int groupId = group->groupId();
+	if(m_groups.isEmpty())
+	{
+		while(!m_slides.isEmpty())
+			removeSlide(m_slides.takeFirst());
+		return;
+	}
+	
+	SlideGroup *group = m_groups.first().group;
+	
 	QList<Slide*> slides = group->slideList();
-	foreach(Slide *slide, slides)
+	if(slides.isEmpty())
+		return;
+	if(m_slides.isEmpty() || 
+		m_slides.first() != slides.first())
 	{
-		slide->setProperty("GroupPlayerSlideGroup.groupId", groupId);
-		addSlide(slide);
+		if(!m_slides.isEmpty())
+			removeSlide(m_slides.first());
+		addSlide(slides.first());
 	}
+	
+// 	int groupId = group->groupId();
+// 	foreach(Slide *slide, slides)
+// 	{
+// 		slide->setProperty("GroupPlayerSlideGroup.groupId", groupId);
+// 		addSlide(slide);
+// 	}
 }
 
-void GroupPlayerSlideGroup::removeGroupSlides(int groupId)
-{
-	foreach(Slide *slide, m_slides)
-	{
-		QVariant id = slide->property("GroupPlayerSlideGroup.groupId");
-		if(id.toInt() == groupId)
-		{
-			disconnect(slide,0,this,0);
-			m_slides.removeAll(slide);
-			emit slideChanged(slide, "remove", 0, "", "", QVariant());
-		}
-	}
-}
+// void GroupPlayerSlideGroup::removeGroupSlides(int groupId)
+// {
+// 	foreach(Slide *slide, m_slides)
+// 	{
+// 		QVariant id = slide->property("GroupPlayerSlideGroup.groupId");
+// 		if(id.toInt() == groupId)
+// 		{
+// 			disconnect(slide,0,this,0);
+// 			m_slides.removeAll(slide);
+// 			emit slideChanged(slide, "remove", 0, "", "", QVariant());
+// 		}
+// 	}
+// }
 
 QList<SlideGroup *> GroupPlayerSlideGroup::groupList()
 {

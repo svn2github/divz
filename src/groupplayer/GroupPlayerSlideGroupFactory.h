@@ -14,6 +14,7 @@ class GroupPlayerSlideGroupViewControl : public SlideGroupViewControl
 	Q_OBJECT
 public:
 	GroupPlayerSlideGroupViewControl(OutputInstance * view=0, QWidget * parent = 0);
+	~GroupPlayerSlideGroupViewControl();
 	
 	SlideGroup * slideGroup() { return m_group; }
 	SlideGroupListModel * slideGroupListModel();

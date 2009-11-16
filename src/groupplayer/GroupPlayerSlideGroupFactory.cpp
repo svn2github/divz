@@ -25,9 +25,14 @@ AbstractSlideGroupEditor * GroupPlayerSlideGroupFactory::newEditor()
 #include <QVBoxLayout>
 #include "OutputInstance.h"
 #include "AppSettings.h"
+#include "model/Output.h"
 
-GroupPlayerSlideGroupViewControl::GroupPlayerSlideGroupViewControl(OutputInstance *g, QWidget *w )
-	: SlideGroupViewControl(g,w,false)
+#include <QSettings>
+
+#define DEBUG_GP_VIEWCONTROL 0 
+
+GroupPlayerSlideGroupViewControl::GroupPlayerSlideGroupViewControl(OutputInstance *group, QWidget *w )
+	: SlideGroupViewControl(group,w,false)
 	, m_control(0)
 	, m_group(0)
 	, m_isPreviewControl(false)
@@ -52,6 +57,8 @@ GroupPlayerSlideGroupViewControl::GroupPlayerSlideGroupViewControl(OutputInstanc
 	m_list->setFlow(QListView::LeftToRight);
 	m_list->setResizeMode(QListView::Adjust);
 	m_list->setSelectionMode(QAbstractItemView::SingleSelection);
+	m_list->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Fixed);
+	m_list->setMaximumSize(QWIDGETSIZE_MAX, 60);
 // 	setFocusProxy(m_list);
 // 	setFocusPolicy(Qt::StrongFocus);
 	
@@ -66,9 +73,17 @@ GroupPlayerSlideGroupViewControl::GroupPlayerSlideGroupViewControl(OutputInstanc
 	
 	setLayout(layout);
 	
-	if(g)
-		setOutputView(g);
+	if(group)
+		setOutputView(group);
 	
+	//QSettings s;
+	//m_splitter->restoreState(s.value("GroupPlayerSlideGroupViewControl/splitter").toByteArray());
+}
+
+GroupPlayerSlideGroupViewControl::~GroupPlayerSlideGroupViewControl()
+{
+	//QSettings s;
+	//s.setValue("GroupPlayerSlideGroupViewControl/splitter",m_splitter->saveState());
 }
 
 SlideGroupListModel * GroupPlayerSlideGroupViewControl::slideGroupListModel()
@@ -140,19 +155,23 @@ void GroupPlayerSlideGroupViewControl::toggleTimerState(TimerState state, bool r
 // 	//emit slideDoubleClicked(slide);
 // }
 
-void GroupPlayerSlideGroupViewControl::setOutputView(OutputInstance *v) 
+void GroupPlayerSlideGroupViewControl::setOutputView(OutputInstance *inst) 
 { 
-	
+	if(DEBUG_GP_VIEWCONTROL)
+		qDebug() << "GroupPlayerSlideGroupViewControl::setOutputView: Setting output instance: "<<inst->output()->name();
 	if(m_control)
-		m_control->setOutputView(v);
+		m_control->setOutputView(inst);
 	
 	if(m_slideViewer)
 		disconnect(m_slideViewer, 0, this, 0);
 	
-	m_slideViewer = v;
+	m_slideViewer = inst;
 	m_slideViewer->setEndActionOverrideEnabled(true);
 	m_slideViewer->setEndGroupAction(SlideGroup::Stop);
 	connect(m_slideViewer, SIGNAL(endOfGroup()), this, SLOT(endOfGroup()));
+	
+	if(DEBUG_GP_VIEWCONTROL)
+		qDebug() << "GroupPlayerSlideGroupViewControl::setOutputView: Instance "<<inst->output()->name()<<" set.";
 }
 
 void GroupPlayerSlideGroupViewControl::endOfGroup()
@@ -161,12 +180,17 @@ void GroupPlayerSlideGroupViewControl::endOfGroup()
 	int row = m_list->currentRow(); //(item);
 	if(row +1 >= m_list->count())
 	{
+		m_list->clearSelection();
 		m_list->setCurrentRow(0, QItemSelectionModel::Select);
+		
+		itemSelected(m_list->item(0));
 		return;
 	}
 	
 	m_list->clearSelection();
 	m_list->setCurrentRow(row+1, QItemSelectionModel::Select);
+	
+	itemSelected(m_list->item(row+1));
 }
 
 void GroupPlayerSlideGroupViewControl::itemSelected(QListWidgetItem *item)
@@ -176,24 +200,41 @@ void GroupPlayerSlideGroupViewControl::itemSelected(QListWidgetItem *item)
 
 void GroupPlayerSlideGroupViewControl::setCurrentMember(GroupPlayerSlideGroup::GroupMember mem)
 {
+	if(DEBUG_GP_VIEWCONTROL)
+		qDebug()<<"GroupPlayerSlideGroupViewControl::setCurrentMember: Member#"<<mem.sequenceNumber<<": mark1";
 	SlideGroup * group = mem.group;
 	
 	SlideGroupFactory *factory = SlideGroupFactory::factoryForType(group->groupType());
 	if(!factory)
 		factory = SlideGroupFactory::factoryForType(SlideGroup::GroupType);
 	
+// 	QSettings settings;
+// 	settings.setValue("GroupPlayerSlideGroupViewControl/splitter",m_splitter->saveState());
+	
 	if(m_control)
 	{
-		delete m_control;
+		m_control->deleteLater();
 		m_control = 0;
 	}
 	
+	if(DEBUG_GP_VIEWCONTROL)
+		qDebug()<<"GroupPlayerSlideGroupViewControl::setCurrentMember: Member#"<<mem.sequenceNumber<<": removed control, making new control";
+	
 	m_control = factory->newViewControl();
 	m_splitter->addWidget(m_control);
+	
+	//m_splitter->restoreState(settings.value("GroupPlayerSlideGroupViewControl/splitter").toByteArray());
+	
 	setOutputView(m_slideViewer);
+	
+	if(DEBUG_GP_VIEWCONTROL)
+		qDebug()<<"GroupPlayerSlideGroupViewControl::setCurrentMember: Member#"<<mem.sequenceNumber<<": output view set, sending group to control";
 	
 	m_control->setIsPreviewControl(m_isPreviewControl);
 	m_control->setSlideGroup(group);
+	
+	if(DEBUG_GP_VIEWCONTROL)
+		qDebug()<<"GroupPlayerSlideGroupViewControl::setCurrentMember: Member#"<<mem.sequenceNumber<<": done setting current member";
 	
 }
 
@@ -231,17 +272,29 @@ void GroupPlayerSlideGroupViewControl::addMemberToList(GroupPlayerSlideGroup::Gr
 	
 void GroupPlayerSlideGroupViewControl::setSlideGroup(SlideGroup *group, Slide *curSlide, bool allowProgressDialog)
 {
+	if(DEBUG_GP_VIEWCONTROL)
+		qDebug()<<"GroupPlayerSlideGroupViewControl::setSlideGroup: Loading "<<group->assumedName();
 	m_group = dynamic_cast<GroupPlayerSlideGroup *>(group);
 	
 	m_list->clear();
+	
+	if(DEBUG_GP_VIEWCONTROL)
+		qDebug()<<"GroupPlayerSlideGroupViewControl::setSlideGroup: Setting up list";
 	
 	QList<GroupPlayerSlideGroup::GroupMember> members = m_group->members();
 	
 	foreach(GroupPlayerSlideGroup::GroupMember mem, members)
 		addMemberToList(mem);
 		
+	if(DEBUG_GP_VIEWCONTROL)
+		qDebug()<<"GroupPlayerSlideGroupViewControl::setSlideGroup: Setting first group";
 	if(!members.isEmpty())
+	{
+		m_list->clearSelection();
+		m_list->setCurrentRow(0, QItemSelectionModel::Select);
+	
 		setCurrentMember(members.first());
+	}
 }
 
 void GroupPlayerSlideGroupViewControl::releaseSlideGroup()

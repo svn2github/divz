@@ -93,7 +93,7 @@ void SlideGroupViewControlListView::keyPressEvent(QKeyEvent *event)
 #include <QSlider>
 /** SlideGroupViewControl:: **/
 #define DEBUG_SLIDEGROUPVIEWCONTROL 0
-SlideGroupViewControl::SlideGroupViewControl(OutputInstance *g, QWidget *w,bool initUI )
+SlideGroupViewControl::SlideGroupViewControl(OutputInstance *group, QWidget *w,bool initUI )
 	: QWidget(w),
 	m_slideViewer(0),
 	m_slideModel(0),
@@ -232,8 +232,8 @@ SlideGroupViewControl::SlideGroupViewControl(OutputInstance *g, QWidget *w,bool 
 		layout->addLayout(hbox);
 		setLayout(layout);
 		
-		if(g)
-			setOutputView(g);
+		if(group)
+			setOutputView(group);
 	}
 	
 }
@@ -406,6 +406,8 @@ void SlideGroupViewControl::showQuickSlide(bool flag)
 		// AND so that the setQuickSlideText() doesnt set text on the live slide
 		m_slideViewer->setSlide(m_quickSlide->clone(),true); // true = take ownership, delete when done
 		
+		m_quickSlide = 0;
+		delete m_quickSlide;
 	}
 	else
 	{
@@ -623,6 +625,7 @@ void SlideGroupViewControl::slideSelected(const QModelIndex &idx)
 	
 	if(m_showQuickSlideBtn->isChecked())
 		m_showQuickSlideBtn->setChecked(false);
+		
 	
 	emit slideSelected(slide);
 }
@@ -638,44 +641,48 @@ void SlideGroupViewControl::slideDoubleClicked(const QModelIndex &idx)
 	emit slideDoubleClicked(slide);
 }
 
-void SlideGroupViewControl::setOutputView(OutputInstance *v) 
+void SlideGroupViewControl::setOutputView(OutputInstance *inst) 
 { 
-	SlideGroup *g = 0;
+	SlideGroup *currentGroup = 0;
 	if(m_slideViewer) 
-		g = m_slideViewer->slideGroup();
+		currentGroup = m_slideViewer->slideGroup();
 	
 	if(DEBUG_SLIDEGROUPVIEWCONTROL)
 		qDebug() << "SlideGroupViewControl::setOutputView()";
-	m_slideViewer = v;
+		
+	m_slideViewer = inst;
 	
-	if(g)
-		m_slideViewer->setSlideGroup(g);
+	if(currentGroup)
+	{
+		qDebug() << "SlideGroupViewControl::setOutputView(): Sending currentGroup"<<currentGroup->assumedName()<<" to output view";
+		m_slideViewer->setSlideGroup(currentGroup);
+	}
 }
 	
-void SlideGroupViewControl::setSlideGroup(SlideGroup *g, Slide *curSlide, bool allowProgressDialog)
+void SlideGroupViewControl::setSlideGroup(SlideGroup *group, Slide *curSlide, bool allowProgressDialog)
 {
-	assert(g);
+	assert(group);
 	
 	if(DEBUG_SLIDEGROUPVIEWCONTROL)
-		qDebug()<<"SlideGroupViewControl::setSlideGroup: Loading "<<g->assumedName();
+		qDebug()<<"SlideGroupViewControl::setSlideGroup: Loading "<<group->assumedName();
 	
 // 	m_clearButton->setEnabled(true);
 // 	m_blackButton->setEnabled(true); 
 	
 	enableAnimation(0);
 	m_quickSlide = 0;
-	m_group = g;
+	m_group = group;
 	
 	DeepProgressIndicator *d = 0;
 	if(allowProgressDialog)
 	{
 		d = new DeepProgressIndicator(m_slideModel,this);
-		d->setText(QString(tr("Loading %1...")).arg(g->assumedName()));
-		d->setTitle(QString(tr("Loading %1")).arg(g->assumedName()));
-		d->setSize(g->numSlides());
+		d->setText(QString(tr("Loading %1...")).arg(group->assumedName()));
+		d->setTitle(QString(tr("Loading %1")).arg(group->assumedName()));
+		d->setSize(group->numSlides());
 	}
 	
-	m_slideModel->setSlideGroup(g);
+	m_slideModel->setSlideGroup(group);
 	
 	// reset seems to be required
 	m_listView->reset();
@@ -685,12 +692,13 @@ void SlideGroupViewControl::setSlideGroup(SlideGroup *g, Slide *curSlide, bool a
 	
 	
 	if(!curSlide)
-		curSlide = g->at(0);
+		curSlide = group->at(0);
+		
 	if(curSlide)
 		m_listView->setCurrentIndex(m_slideModel->indexForSlide(curSlide));
 	
-	//if(DEBUG_SLIDEGROUPVIEWCONTROL)
-	//	qDebug()<<"SlideGroupViewControl::setSlideGroup: DONE Loading group#"<<g->groupNumber();
+	if(DEBUG_SLIDEGROUPVIEWCONTROL)
+		qDebug()<<"SlideGroupViewControl::setSlideGroup: DONE Loading group#"<<group->groupNumber();
 }
 
 void SlideGroupViewControl::releaseSlideGroup()
@@ -745,15 +753,15 @@ void SlideGroupViewControl::fadeBlackFrame(bool toggled)
 	m_blackActive = toggled;
 	
 		
-	SlideGroup *g = 0;
+	SlideGroup *group = 0;
 	if(m_slideViewer) 
-		g = m_slideViewer->slideGroup();
+		group = m_slideViewer->slideGroup();
 	
 		if(!toggled && m_clearActive)
 			m_slideViewer->fadeClearFrame(true);
 		else
 			m_slideViewer->fadeBlackFrame(toggled);
-	if(g)
+	if(group)
 	{
 		if(!m_clearActive)
 		{
@@ -776,14 +784,14 @@ void SlideGroupViewControl::fadeClearFrame(bool toggled)
 {
 	m_clearActive = toggled;
 		
-	SlideGroup *g = 0;
+	SlideGroup *group = 0;
 	if(m_slideViewer) 
-		g = m_slideViewer->slideGroup();
+		group = m_slideViewer->slideGroup();
 		
 	if(!m_blackActive)
 	{
 		m_slideViewer->fadeClearFrame(toggled);
-		if(g)
+		if(group)
 		{
 			if(toggled)
 			{
@@ -801,9 +809,9 @@ void SlideGroupViewControl::fadeClearFrame(bool toggled)
 }
 
 /** AbstractSlideGroupEditor:: **/
-AbstractSlideGroupEditor::AbstractSlideGroupEditor(SlideGroup */*g*/, QWidget *parent) : QMainWindow(parent) {}
+AbstractSlideGroupEditor::AbstractSlideGroupEditor(SlideGroup */*group*/, QWidget *parent) : QMainWindow(parent) {}
 AbstractSlideGroupEditor::~AbstractSlideGroupEditor() {}
-void AbstractSlideGroupEditor::setSlideGroup(SlideGroup */*g*/,Slide */*curSlide*/) {}
+void AbstractSlideGroupEditor::setSlideGroup(SlideGroup */*group*/,Slide */*curSlide*/) {}
 
 
 /** SlideGroupFactory:: **/
@@ -862,14 +870,14 @@ NativeViewer * SlideGroupFactory::newNativeViewer()
 	return 0;
 }
 
-QPixmap	SlideGroupFactory::generatePreviewPixmap(SlideGroup *g, QSize iconSize, QRect sceneRect)
+QPixmap	SlideGroupFactory::generatePreviewPixmap(SlideGroup *group, QSize iconSize, QRect sceneRect)
 {
 	//return QPixmap();
 	int icon_w = iconSize.width();
 	int icon_h = iconSize.height();
 
 
-	if(g->numSlides() <= 0 || g->groupTitle().startsWith("--"))
+	if(group->numSlides() <= 0 || group->groupTitle().startsWith("--"))
 	{
 		QPixmap icon(icon_w,icon_h);
 		icon.fill(Qt::white);
@@ -881,7 +889,7 @@ QPixmap	SlideGroupFactory::generatePreviewPixmap(SlideGroup *g, QSize iconSize, 
 	}
 
 
-	Slide * slide = g->at(0);
+	Slide * slide = group->at(0);
 	if(!slide)
 	{
 		qDebug("SlideGroupFactory::generatePreviewPixmap: No slide at 0");
@@ -895,7 +903,7 @@ QPixmap	SlideGroupFactory::generatePreviewPixmap(SlideGroup *g, QSize iconSize, 
 		m_scene->setSceneRect(sceneRect);
 	
 	//qDebug() << "SlideGroupFactory::generatePixmap: Loading slide";
-	m_scene->setMasterSlide(g->masterSlide());
+	m_scene->setMasterSlide(group->masterSlide());
 	m_scene->setSlide(slide);
 	
 	QPixmap icon(icon_w,icon_h);

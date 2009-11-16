@@ -41,9 +41,9 @@ void NativeViewer::setContainerWidget(QWidget *w)
     m_containerWidget = w;
 }
 
-void NativeViewer::setSlideGroup(SlideGroup *g)
+void NativeViewer::setSlideGroup(SlideGroup *group)
 {
-    m_slideGroup = g;
+    m_slideGroup = group;
 }
 
 void NativeViewer::setSlide(Slide *slide)
@@ -732,10 +732,10 @@ void SlideGroupViewer::slideChanged(Slide *slide, QString slideOperation, Abstra
 
 }
 
-void SlideGroupViewer::setSlideGroup(SlideGroup *g, Slide *startSlide)
+void SlideGroupViewer::setSlideGroup(SlideGroup *group, Slide *startSlide)
 {
-	//qDebug() << "SlideGroupViewer::setSlideGroup: (SceneContextHint:"<<m_scene->contextHint()<<"), setting slide group:"<<g->assumedName();
-	if(m_slideGroup == g)
+	//qDebug() << "SlideGroupViewer::setSlideGroup: (SceneContextHint:"<<m_scene->contextHint()<<"), setting slide group:"<<group->assumedName();
+	if(m_slideGroup == group)
 	{
 		//qDebug() << "SlideGroupViewer::setSlideGroup: Same group, setting start slide.";
 		//if(startSlide)
@@ -765,17 +765,17 @@ void SlideGroupViewer::setSlideGroup(SlideGroup *g, Slide *startSlide)
 	m_clearSlideNum = -1;
 
 
-	if(m_slideGroup && m_slideGroup != g)
+	if(m_slideGroup && m_slideGroup != group)
 	{
 		disconnect(m_slideGroup,0,this,0);
 		//qDebug() << "SlideGroupViewer::setSlideGroup: Releasing video providers due to slide change";
 		releaseVideoProvders();
 	}
 
-	if(m_slideGroup != g)
-		connect(g,SIGNAL(slideChanged(Slide *, QString, AbstractItem *, QString, QString, QVariant)),this,SLOT(slideChanged(Slide *, QString, AbstractItem *, QString, QString, QVariant)));
+	if(m_slideGroup != group)
+		connect(group,SIGNAL(slideChanged(Slide *, QString, AbstractItem *, QString, QString, QVariant)),this,SLOT(slideChanged(Slide *, QString, AbstractItem *, QString, QString, QVariant)));
 
-	m_slideGroup = g;
+	m_slideGroup = group;
 
 
 	if(!m_isPreviewViewer)
@@ -822,7 +822,7 @@ void SlideGroupViewer::setSlideGroup(SlideGroup *g, Slide *startSlide)
 		//qDebug() << "SlideGroupViewer::setSlideGroup: Viewer is Preview Viewer.";
 	}
 
-	QList<Slide*> slist = g->slideList();
+	QList<Slide*> slist = group->slideList();
 	qSort(slist.begin(), slist.end(), slide_group_viewer_slide_num_compare);
 	m_sortedSlides = slist;
 
@@ -833,15 +833,15 @@ void SlideGroupViewer::setSlideGroup(SlideGroup *g, Slide *startSlide)
 	//qDebug() << "SlideGroupViewer::setSlideGroup: Loading slide into scene";
 	if(startSlide)
 	{
-		//qDebug() << "SlideGroupViewer::setSlideGroup(): Setting slide group #"<<g->groupNumber()<<", starting at slide:"<<startSlide;
+		//qDebug() << "SlideGroupViewer::setSlideGroup(): Setting slide group #"<<group->groupNumber()<<", starting at slide:"<<startSlide;
 		setSlide(startSlide);
 	}
 	else
 	{
-		QList<Slide*> slist = g->slideList();
+		QList<Slide*> slist = group->slideList();
 		if(slist.size() > 0)
 		{
-			//qDebug() << "SlideGroupViewer::setSlideGroup(): Setting slide group #"<<g->groupNumber()<<", defaulting to slide 0";
+			//qDebug() << "SlideGroupViewer::setSlideGroup(): Setting slide group #"<<group->groupNumber()<<", defaulting to slide 0";
 			setSlide(m_sortedSlides.at(0));
 			//m_slideListView->setCurrentIndex(m_slideModel->indexForRow(0));
 		}

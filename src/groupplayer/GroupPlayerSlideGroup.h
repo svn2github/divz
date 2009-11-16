@@ -80,8 +80,9 @@ protected slots:
 //	void aspectRatioChanged(double x);
 
 protected:
-	void addGroupSlides(SlideGroup*);
-	void removeGroupSlides(int);
+// 	void addGroupSlides(SlideGroup*);
+// 	void removeGroupSlides(int);
+	void setupSlides();
 	
 	SlideGroup * loadGroupMember(GroupMember);
 	

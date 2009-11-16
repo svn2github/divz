@@ -318,13 +318,14 @@ void OutputInstance::setSlideGroup(SlideGroup *group, Slide * startSlide)
 	Output::OutputType x = m_output->outputType();
 	if(x == Output::Screen || x == Output::Custom || x == Output::Preview)
 	{
-		//qDebug() << "OutputInstance::setSlideGroup: ["<<m_output->name()<<"] Calling m_viewer->setSlideGroup(), startSlide:"<<startSlide;
+		//qDebug() << "OutputInstance::setSlideGroup: ["<<m_output->name()<<"] Calling m_viewer->setSlideGroup(), group:"<<group->assumedName()<<", startSlide:"<<startSlide;
 		//setVisible(m_output->isEnabled());
 
 		m_viewer->setSlideGroup(group,startSlide);
 	}
 	else
 	{
+		//qDebug() << "OutputInstance::setSlideGroup: ["<<m_output->name()<<"] Calling m_outputServer->sendCommand(), group:"<<group->assumedName()<<",  startSlide:"<<startSlide;
 		if(startSlide)
 			m_slideNum = m_sortedSlides.indexOf(startSlide);
 		else
