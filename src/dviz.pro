@@ -16,12 +16,12 @@ BUILDNUM = $$system(perl buildcount.pl -v)
 VERSTR = '\\"$${BUILDNUM}\\"'  # place quotes around the version string
 
 unix {
-	VERSION  = "0.8.2"
-	VERSION = "$${VERSION} (Build $${BUILDNUM})"
+	VERSION  = "0.9.3"
+	VERSION = "$${VERSION}b$${BUILDNUM}"
 	SVNREV   = $$system(svn info -r HEAD . | grep Changed\ Rev | cut -b 19-)
 	
 	!isEmpty(SVNREV) {
-		VERSION = "$${VERSION} r$${SVNREV}"
+		VERSION = "$${VERSION}r$${SVNREV}"
 	}
 	VERSTR = '\\"$${VERSION}\\"'  # place quotes around the version string
 }
@@ -156,6 +156,7 @@ include(3rdparty/qjson/qjson.pri)
 include(ppt/ppt.pri)
 include(http/http.pri)
 include(groupplayer/groupplayer.pri)
+include(bible/bible.pri)
 
 # deployment on Linux
 unix {
