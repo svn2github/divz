@@ -12,7 +12,7 @@
 
 #include "MyGraphicsScene.h"
 
-class SlideGroup;
+#include "model/SlideGroup.h"
 
 #include "model/AbstractItemFilter.h"
 
@@ -151,6 +151,9 @@ public:
 
 	ViewerState viewerState() { return m_viewerState; }
 	
+	bool isEndActionOverrideEnabled() { return m_overrideEndAction; }
+	SlideGroup::EndOfGroupAction groupEndAction() { return m_groupEndAction; }
+	
 signals:
 	void nextGroup();
 	void jumpToGroup(int);
@@ -178,7 +181,8 @@ public slots:
 	void setFadeSpeed(int);
 	void setFadeQuality(int);
 	
-	
+	void setEndActionOverrideEnabled(bool);
+	void setEndGroupAction(SlideGroup::EndOfGroupAction);
 	
 
 private slots:
@@ -271,6 +275,10 @@ private:
 	QTimer m_nativeCheckTimer;
 	
 	NativeViewer * m_nativeViewer;
+	
+	bool m_overrideEndAction;
+	SlideGroup::EndOfGroupAction m_groupEndAction;
+
 };
 
 #endif // SLIDEGROUPVIEWER_H

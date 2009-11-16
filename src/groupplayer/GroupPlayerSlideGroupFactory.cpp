@@ -13,3 +13,4 @@ AbstractSlideGroupEditor * GroupPlayerSlideGroupFactory::newEditor()
 {
 	return new GroupPlayerEditorWindow(0);
 }
+

@@ -3,6 +3,7 @@
 
 class Document;
 #include "model/SlideGroup.h"
+#include <QPointer>
 
 /// \brief: GroupPlayerSlideGroup sequences slide groups either from the current document or external documents.
 /// GroupPlayerSlideGroup allows you to specify the sequence of slide groups to play. It's a container
@@ -39,7 +40,7 @@ public:
 		int 		groupId;	// the id (stored for reference to the group when loading from disk)
 		GroupSource 	source;		// where to look for groupId
 		QString 	externalDoc;	// filename of the external source (if source == ExternalDocument)
-		SlideGroup 	*group;		// the pointer to the group (will be set when loaded from byte array or xml)
+		QPointer<SlideGroup> group;	// the pointer to the group (will be set when loaded from byte array or xml)
 		int 		sequenceNumber; // the sequence in which it should play
 	};
 	

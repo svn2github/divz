@@ -16,7 +16,7 @@
 
 #include "SlideGroupViewer.h"
 
-class SlideGroup;
+#include "model/SlideGroup.h"
 class Slide;
 
 //extern typedef SlideGroupViewer::ViewerState enum;
@@ -63,6 +63,9 @@ public:
 	bool isClearEnabled() { return m_clearEnabled; }
 	bool isBlackEnabled() { return m_blackEnabled; }
 	
+	bool isEndActionOverrideEnabled() { return m_overrideEndAction; }
+	SlideGroup::EndOfGroupAction groupEndAction() { return m_groupEndAction; }
+	
 signals:
 	void nextGroup();
 	void jumpToGroup(int);
@@ -107,6 +110,9 @@ public slots:
 	
 	void setFadeSpeed(int);
 	void setFadeQuality(int);
+	
+	void setEndActionOverrideEnabled(bool);
+	void setEndGroupAction(SlideGroup::EndOfGroupAction);
 
 private slots:
 	//void appSettingsChanged();
@@ -171,6 +177,9 @@ private:
 	
 	bool m_clearEnabled;
 	bool m_blackEnabled;
+	
+	bool m_overrideEndAction;
+	SlideGroup::EndOfGroupAction m_groupEndAction;
 };
 
 #endif // SLIDEGROUPVIEWER_H

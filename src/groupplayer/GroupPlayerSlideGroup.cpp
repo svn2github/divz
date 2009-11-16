@@ -22,21 +22,25 @@ GroupPlayerSlideGroup::GroupPlayerSlideGroup() : SlideGroup()
 GroupPlayerSlideGroup::~GroupPlayerSlideGroup()
 {
 	foreach(GroupMember mem, m_groups)
+	{
 		if(mem.source == GroupPlayerSlideGroup::ExternalDocument)
 		{
-			delete mem.group;
+			delete (SlideGroup*)mem.group;
 			mem.group = 0;
 		}
+	}
 }
 
 GroupPlayerSlideGroup::GroupMember GroupPlayerSlideGroup::addGroup(SlideGroup *group, const QString& document)
 {
 	GroupMember mem;
-	mem.groupId = group->groupId();
-	mem.source = document.isEmpty() ? GroupPlayerSlideGroup::SameDocument : GroupPlayerSlideGroup::ExternalDocument;
-	mem.externalDoc = document;
-	mem.group = mem.source == GroupPlayerSlideGroup::ExternalDocument ? group->clone() : group;
-	mem.sequenceNumber = m_groups.size();
+	mem.groupId 		= group->groupId();
+	mem.group 		= document.isEmpty() ? group->clone() : group;
+	mem.source 		= document.isEmpty() ? 
+				GroupPlayerSlideGroup::SameDocument : 
+				GroupPlayerSlideGroup::ExternalDocument;
+	mem.externalDoc 	= document;
+	mem.sequenceNumber 	= m_groups.size();
 	m_groups.append(mem);
 	
 	addGroupSlides(group);
@@ -75,7 +79,7 @@ void GroupPlayerSlideGroup::removeGroup(SlideGroup *group)
 {
 	QList<GroupMember> toBeRemoved;
 	foreach(GroupMember mem, m_groups)
-		if(mem.group == group)
+		if(((SlideGroup*)mem.group) == group)
 			toBeRemoved.append(mem);
 			
 	foreach(GroupMember mem, toBeRemoved)
@@ -114,7 +118,7 @@ QList<SlideGroup *> GroupPlayerSlideGroup::groupList()
 {
 	QList<SlideGroup *> list;
 	foreach(GroupMember mem, m_groups)
-		list.append(mem.group);
+		list.append((SlideGroup*)mem.group);
 	return list;
 }
 

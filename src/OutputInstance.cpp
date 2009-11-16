@@ -43,6 +43,8 @@ OutputInstance::OutputInstance(Output *out, bool startHidden, QWidget *parent)
 	, m_outputServer(0)
 	, m_clearEnabled(false)
 	, m_blackEnabled(false)
+	, m_overrideEndAction(false)
+	, m_groupEndAction(SlideGroup::Stop)
 {
 	out->setInstance(this);
 	
@@ -751,28 +753,46 @@ Slide * OutputInstance::setSlide(Slide *slide, bool takeOwnership)
 	return slide;
 }
 
+void OutputInstance::setEndActionOverrideEnabled(bool flag) 
+{
+	m_overrideEndAction = flag;
+}
 
+void OutputInstance::setEndGroupAction(SlideGroup::EndOfGroupAction act)
+{
+	m_groupEndAction = act;
+}
+	
 Slide * OutputInstance::nextSlide()
 {
 	m_slideNum ++;
 	if(m_slideNum >= m_sortedSlides.size())
 	{
-		if(m_slideGroup->endOfGroupAction() == SlideGroup::GotoNextGroup)
+		SlideGroup::EndOfGroupAction action = m_slideGroup->endOfGroupAction();
+		if(isEndActionOverrideEnabled())
+			action = groupEndAction();
+			
+		if(action == SlideGroup::GotoNextGroup)
 		{
 			//m_slideNum = m_sortedSlides.size() - 1;
 			emit nextGroup();
 			return 0;
 		}
 		else
-		if(m_slideGroup->endOfGroupAction() == SlideGroup::GotoGroupIndex)
+		if(action == SlideGroup::GotoGroupIndex)
 		{
 			//m_slideNum = m_sortedSlides.size() - 1;
 			emit jumpToGroup(m_slideGroup->jumpToGroupIndex());
 			return 0;
 		}
 		else
+		if(action == SlideGroup::LoopToStart)
 		{
 			m_slideNum = 0;
+		}
+		else
+		{
+			return 0;
 		}
 	}
 	

@@ -43,7 +43,8 @@ public:
 	{
 		LoopToStart,
 		GotoNextGroup,
-		GotoGroupIndex
+		GotoGroupIndex,
+		Stop,
 	};
 
 	typedef enum { GroupType = 1 };
