@@ -93,7 +93,7 @@ void SlideGroupViewControlListView::keyPressEvent(QKeyEvent *event)
 #include <QSlider>
 /** SlideGroupViewControl:: **/
 #define DEBUG_SLIDEGROUPVIEWCONTROL 0
-SlideGroupViewControl::SlideGroupViewControl(OutputInstance *g, QWidget *w )
+SlideGroupViewControl::SlideGroupViewControl(OutputInstance *g, QWidget *w,bool initUI )
 	: QWidget(w),
 	m_slideViewer(0),
 	m_slideModel(0),
@@ -110,133 +110,138 @@ SlideGroupViewControl::SlideGroupViewControl(OutputInstance *g, QWidget *w )
 	m_blackActive(false),
 	m_group(0),
 	m_quickSlide(0),
-	m_originalQuickSlide(true)
+	m_originalQuickSlide(true),
+	m_listView(0)
 	
 {
-	QVBoxLayout * layout = new QVBoxLayout();
-	layout->setMargin(0);
-	
-	QPushButton *btn;
-	
-	
-	/** Setup quickslide widget */
-	m_quickSlideBase = new QWidget();
- 	QHBoxLayout * hbox1 = new QHBoxLayout(m_quickSlideBase);
- 	hbox1->setMargin(0);
- 	
- 	QLabel *label = new QLabel("Quick Slide:");
- 	hbox1->addWidget(label);
- 	
- 	m_quickSlideText = new QLineEdit();
- 	hbox1->addWidget(m_quickSlideText);
- 	connect(m_quickSlideText, SIGNAL(returnPressed()), this, SLOT(showQuickSlide()));
- 	
- 	btn = new QPushButton("Show");
- 	btn->setCheckable(true);
- 	hbox1->addWidget(btn);
- 	connect(btn, SIGNAL(toggled(bool)), this, SLOT(showQuickSlide(bool)));
- 	m_showQuickSlideBtn = btn;
- 	
- 	btn = new QPushButton("Add");
- 	hbox1->addWidget(btn);
- 	connect(btn, SIGNAL(clicked()), this, SLOT(addQuickSlide()));
- 	
- 	
- 	layout->addWidget(m_quickSlideBase);
-
-
-	/** Setup the list view in icon mode */
-	//m_listView = new QListView(this);
-	m_listView = new SlideGroupViewControlListView(this);
-	m_listView->setViewMode(QListView::IconMode);
-	m_listView->setMovement(QListView::Static);
-	m_listView->setWrapping(true);
-	m_listView->setWordWrap(true);
-	m_listView->setLayoutMode(QListView::Batched);
-	m_listView->setFlow(QListView::LeftToRight);
-	m_listView->setResizeMode(QListView::Adjust);
-	m_listView->setSelectionMode(QAbstractItemView::SingleSelection);
-	setFocusProxy(m_listView);
-	setFocusPolicy(Qt::StrongFocus);
-	
-	connect(m_listView,SIGNAL(activated(const QModelIndex &)),this,SLOT(slideSelected(const QModelIndex &)));
-	connect(m_listView,SIGNAL(clicked(const QModelIndex &)),  this,SLOT(slideSelected(const QModelIndex &)));
-	connect(m_listView,SIGNAL(doubleClicked(const QModelIndex &)),this,SLOT(slideDoubleClicked(const QModelIndex &)));
-	//connect(m_listView,SIGNAL(entered(const QModelIndex &)),  this,SLOT(slideSelected(const QModelIndex &)));
-	
-	// deleting old selection model per http://doc.trolltech.com/4.5/qabstractitemview.html#setModel
-	QItemSelectionModel *m = m_listView->selectionModel();
-//	if(m)
-// 		disconnect(m,0,this,0);
-	
-	m_slideModel = new SlideGroupListModel();
-	m_listView->setModel(m_slideModel);
-	connect(m_slideModel, SIGNAL(repaintList()), this, SLOT(repaintList()));
-	
-	if(m)
+	if(initUI)
 	{
-		delete m;
-		m=0;
+		QVBoxLayout * layout = new QVBoxLayout();
+		layout->setMargin(0);
+		
+		QPushButton *btn;
+		
+		
+		/** Setup quickslide widget */
+		m_quickSlideBase = new QWidget();
+		QHBoxLayout * hbox1 = new QHBoxLayout(m_quickSlideBase);
+		hbox1->setMargin(0);
+		
+		QLabel *label = new QLabel("Quick Slide:");
+		hbox1->addWidget(label);
+		
+		m_quickSlideText = new QLineEdit();
+		hbox1->addWidget(m_quickSlideText);
+		connect(m_quickSlideText, SIGNAL(returnPressed()), this, SLOT(showQuickSlide()));
+		
+		btn = new QPushButton("Show");
+		btn->setCheckable(true);
+		hbox1->addWidget(btn);
+		connect(btn, SIGNAL(toggled(bool)), this, SLOT(showQuickSlide(bool)));
+		m_showQuickSlideBtn = btn;
+		
+		btn = new QPushButton("Add");
+		hbox1->addWidget(btn);
+		connect(btn, SIGNAL(clicked()), this, SLOT(addQuickSlide()));
+		
+		
+		layout->addWidget(m_quickSlideBase);
+	
+	
+		/** Setup the list view in icon mode */
+		//m_listView = new QListView(this);
+		m_listView = new SlideGroupViewControlListView(this);
+		m_listView->setViewMode(QListView::IconMode);
+		m_listView->setMovement(QListView::Static);
+		m_listView->setWrapping(true);
+		m_listView->setWordWrap(true);
+		m_listView->setLayoutMode(QListView::Batched);
+		m_listView->setFlow(QListView::LeftToRight);
+		m_listView->setResizeMode(QListView::Adjust);
+		m_listView->setSelectionMode(QAbstractItemView::SingleSelection);
+		setFocusProxy(m_listView);
+		setFocusPolicy(Qt::StrongFocus);
+		
+		connect(m_listView,SIGNAL(activated(const QModelIndex &)),this,SLOT(slideSelected(const QModelIndex &)));
+		connect(m_listView,SIGNAL(clicked(const QModelIndex &)),  this,SLOT(slideSelected(const QModelIndex &)));
+		connect(m_listView,SIGNAL(doubleClicked(const QModelIndex &)),this,SLOT(slideDoubleClicked(const QModelIndex &)));
+		//connect(m_listView,SIGNAL(entered(const QModelIndex &)),  this,SLOT(slideSelected(const QModelIndex &)));
+		
+		// deleting old selection model per http://doc.trolltech.com/4.5/qabstractitemview.html#setModel
+		QItemSelectionModel *m = m_listView->selectionModel();
+	//	if(m)
+	// 		disconnect(m,0,this,0);
+		
+		m_slideModel = new SlideGroupListModel();
+		m_listView->setModel(m_slideModel);
+		connect(m_slideModel, SIGNAL(repaintList()), this, SLOT(repaintList()));
+		
+		if(m)
+		{
+			delete m;
+			m=0;
+		}
+		
+		QItemSelectionModel *currentSelectionModel = m_listView->selectionModel();
+		connect(currentSelectionModel, SIGNAL(currentChanged(const QModelIndex &, const QModelIndex &)), this, SLOT(currentChanged(const QModelIndex &, const QModelIndex &)));
+		
+		layout->addWidget(m_listView);
+		
+		/** Setup the button controls at the bottom */
+		QHBoxLayout *hbox = new QHBoxLayout();
+		
+		//hbox->addStretch(1);
+		
+		// "Prev" button
+		m_prevBtn = new QPushButton(QIcon(":/data/control_start_blue.png"),"P&rev");
+		connect(m_prevBtn, SIGNAL(clicked()), this, SLOT(prevSlide()));
+		hbox->addWidget(m_prevBtn);
+		
+		// "Next" button
+		m_nextBtn = new QPushButton(QIcon(":/data/control_end_blue.png"),"Nex&t");
+		connect(m_nextBtn, SIGNAL(clicked()), this, SLOT(nextSlide()));
+		hbox->addWidget(m_nextBtn);
+		
+		
+		hbox->addStretch(1);
+	
+		// animation controls
+		m_timeLabel = new QLabel(this);
+		m_timeLabel->setEnabled(false);
+		m_timeLabel->setText("00:00.00");
+		m_timeLabel->setFont(QFont("Monospace",10,QFont::Bold));
+		hbox->addWidget(m_timeLabel);
+		
+		m_timeButton = new QPushButton(QIcon(":/data/action-play.png"),"&Start");
+		connect(m_timeButton, SIGNAL(clicked()), this, SLOT(toggleTimerState()));
+		m_timeButton->setEnabled(false);
+		hbox->addWidget(m_timeButton);
+	
+	
+		/** Initalize animation timers **/
+		m_elapsedTime.start();
+		
+		m_changeTimer = new QTimer(this);
+		m_changeTimer->setSingleShot(true);
+		connect(m_changeTimer, SIGNAL(timeout()), this, SLOT(nextSlide()));
+		
+		m_countTimer = new QTimer(this);
+		connect(m_countTimer, SIGNAL(timeout()), this, SLOT(updateTimeLabel()));
+		m_countTimer->setInterval(100);
+		
+		layout->addLayout(hbox);
+		setLayout(layout);
+		
+		if(g)
+			setOutputView(g);
 	}
-	
-	QItemSelectionModel *currentSelectionModel = m_listView->selectionModel();
-	connect(currentSelectionModel, SIGNAL(currentChanged(const QModelIndex &, const QModelIndex &)), this, SLOT(currentChanged(const QModelIndex &, const QModelIndex &)));
-	
-	layout->addWidget(m_listView);
-	
-	/** Setup the button controls at the bottom */
-	QHBoxLayout *hbox = new QHBoxLayout();
-	
-	//hbox->addStretch(1);
-	
-	// "Prev" button
-	m_prevBtn = new QPushButton(QIcon(":/data/control_start_blue.png"),"P&rev");
-	connect(m_prevBtn, SIGNAL(clicked()), this, SLOT(prevSlide()));
-	hbox->addWidget(m_prevBtn);
-	
-	// "Next" button
-	m_nextBtn = new QPushButton(QIcon(":/data/control_end_blue.png"),"Nex&t");
-	connect(m_nextBtn, SIGNAL(clicked()), this, SLOT(nextSlide()));
-	hbox->addWidget(m_nextBtn);
-	
-	
-	hbox->addStretch(1);
-
-	// animation controls
-	m_timeLabel = new QLabel(this);
-	m_timeLabel->setEnabled(false);
-	m_timeLabel->setText("00:00.00");
-	m_timeLabel->setFont(QFont("Monospace",10,QFont::Bold));
-	hbox->addWidget(m_timeLabel);
-	
-	m_timeButton = new QPushButton(QIcon(":/data/action-play.png"),"&Start");
-	connect(m_timeButton, SIGNAL(clicked()), this, SLOT(toggleTimerState()));
-	m_timeButton->setEnabled(false);
-	hbox->addWidget(m_timeButton);
-
-
-	/** Initalize animation timers **/
-	m_elapsedTime.start();
-	
-	m_changeTimer = new QTimer(this);
-	m_changeTimer->setSingleShot(true);
-	connect(m_changeTimer, SIGNAL(timeout()), this, SLOT(nextSlide()));
-	
-	m_countTimer = new QTimer(this);
-	connect(m_countTimer, SIGNAL(timeout()), this, SLOT(updateTimeLabel()));
-	m_countTimer->setInterval(100);
-	
-	layout->addLayout(hbox);
-	setLayout(layout);
-	
-	if(g)
-		setOutputView(g);
 	
 }
 
 SlideGroupViewControl::~SlideGroupViewControl()
 {
-	delete m_listView->model();
+	if(m_listView && m_listView->model())
+		delete m_listView->model();
 	if(m_quickSlide)
 		delete m_quickSlide;
 }
@@ -370,7 +375,12 @@ void SlideGroupViewControl::fitQuickSlideText()
 	m_quickSlideTextBox->setContentsRect(QRectF(0,y,fitSize.width(),realHeight));
 }
 
-Slide * SlideGroupViewControl::selectedSlide() { return m_slideModel->slideFromIndex(m_listView->currentIndex()); }
+Slide * SlideGroupViewControl::selectedSlide() 
+{
+	if(!m_slideModel || !m_listView)
+		return 0;
+	return m_slideModel->slideFromIndex(m_listView->currentIndex());
+}
 
 void SlideGroupViewControl::showQuickSlide(bool flag)
 {
@@ -473,7 +483,7 @@ void SlideGroupViewControl::setQuickSlideText(const QString& tmp)
 	
 void SlideGroupViewControl::setIsPreviewControl(bool flag)
 {
-	m_isPreviewControl= flag;
+	m_isPreviewControl = flag;
 	m_timeButton->setText(!flag ? "&Start" : "Start");
 	m_prevBtn->setText(!flag ? "P&rev" : "Prev");
 	m_nextBtn->setText(!flag ? "Nex&t" : "Next");
@@ -511,7 +521,8 @@ void SlideGroupViewControl::enableAnimation(double time)
 	
 	m_currentTimeLength = time;
 	
-	toggleTimerState(Running,true);
+	if(!m_isPreviewControl)
+		toggleTimerState(Running,true);
 }
 
 void SlideGroupViewControl::setEnabled(bool flag)

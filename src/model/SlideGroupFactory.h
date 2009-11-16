@@ -36,9 +36,10 @@ class SlideGroupViewControl : public QWidget
 {
 	Q_OBJECT
 public:
-	SlideGroupViewControl(OutputInstance * view=0, QWidget * parent = 0);
+	SlideGroupViewControl(OutputInstance * view=0, QWidget * parent = 0, bool initUI=true);
 	~SlideGroupViewControl();
 	
+	virtual SlideGroup * slideGroup() { return m_group; }
 	SlideGroupListModel * slideGroupListModel();
 	
 	OutputInstance * view() { return m_slideViewer; }

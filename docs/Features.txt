@@ -219,7 +219,7 @@ Revised Task list for Release 1.0, 10/18/09:
 				default background option
 				multiple database users
 					shared copy over network
-				libavcodec support :-)
+				[DONE] libavcodec support :-)
 				drag-drop background onto verses of song
 				store sequencing of songs
 				ccli chords
@@ -231,9 +231,6 @@ Revised Task list for Release 1.0, 10/18/09:
 					like our existing text import tool
 				mailing list in addition to forumes
 					
-			make location of cache folder root (tempdir) a setting/option 
-				for use with network dviz viewer
-				
 			add generic pre-render on document load 
 				loop thru every group, every slide and call Paint on every visual delegate
 			store cached data in the document as text
@@ -260,15 +257,8 @@ Revised Task list for Release 1.0, 10/18/09:
 		
 			another vote for the zoomable icons in list views (slide list/doc list)
 			accept midi input for fade speed slider
-			copy/paste entire slide groups
-			save a just a single slide group to a file / import slide group from a file
 			foldback settings should remember setetings across group changes
 				e.g. changing songs should not change fade speed
-			findFontSize should return max not min font
-			font display in toolbar should show max not avg
-			make default text settings changable
-			add "default item settings" dialog for each item type
-			change main program config dialog to use qtoolbox
 			add easing curves
 			per-slidegroup aspect ratio
 			aspect ratio fitting settings on a per-slidegroup basis
@@ -280,8 +270,7 @@ Revised Task list for Release 1.0, 10/18/09:
 					output "B": cut 50%,0,100%,100%
 			add slide "database" of pre-built slides
 			
-			need to be able to import slide groups from other documents
-			when move keys up/down, send to list
+			when move keys up/down, send to song list
 			
 			loading directory with videos still takes 1-5 seconds to change list
 			video icons mess up layout - not same size?
@@ -290,8 +279,6 @@ Revised Task list for Release 1.0, 10/18/09:
 				temporarily reverted to QFileDialog in genericitemconfig till this fixed
 			
 			need to impl "my computer" view in MB
-			
-			changing the size of a QListView layed out in Icon mode doesnt re-organize icons until the model is set again
 			browse dialog takes a LONG time to show - i think its because it was left on a large folder
 			
 			fit to slide btn doesnt update font size box on toolbar
@@ -319,7 +306,6 @@ Revised Task list for Release 1.0, 10/18/09:
 			
 			song text - fit to slide - max variance not more than 10 - 20 pts between slides .. ?
 			
-			need to think about fonts missing on net viewer clients - that messes up slide layout
 			
 			need to import/export individual slide groups
 			
@@ -333,28 +319,16 @@ Revised Task list for Release 1.0, 10/18/09:
 				with ducktape, it doesnt stick, but when its turned off, wont turn back on
 				
 			for quick slide, add a "clone from" dropdown
-			[DONE] make image iport dialog have "advanced" view
 			make image import dialog remeber settings
 			
-			[DONE] ppt: need to monitor for changes in current slide#
-			[DONE] ppt: need to impl fade to black
-			[REJECTED] ppt: disable clear btn
-				impl with set state
 			ppt: need custom view control to enable pause/play timer btn
 			
-			[DONE] quick slide needs to stop/start timer
-			[DONE] change slide while quick slide active should de-activate 'show' button
 			
 			add optional passcode to output server
 			
 			need to add third point chooser to effects tab
 			
 			mb takes long time to init view in dir browser on windows
-			preview viewer should start paused
-			image import dialog - "only if..." checkbox should enab/disab if "show titles" checked
-			mb doesnt seem to remember last directory when program re-opens
-			song text box centering not right - too far high
-			http rc should not reset to first slide when loading group if group already live with diff slide than 1st
 			slideeditor not showing all slides in list again 
 				as soon as slide deleted, list updates correctly
 			some zoom settings (anchor, factor, auto-switch) didnt seem to get imported from other doc using import tool
@@ -513,6 +487,38 @@ Revised Task list for Release 1.0, 10/18/09:
 		
 		
 		
+		[DONE] make location of cache folder root (tempdir) a setting/option 
+				for use with network dviz viewer
+				
+		[DONE] copy/paste entire slide groups
+			shift+drag group in document list to create a copy
+		[DONE] save a just a single slide group to a file / import slide group from a file
+			can import - not save single group
+		[REJECTED] findFontSize should return max not min font
+		[REJECTED] font display in toolbar should show max not avg
+		[LATER] make default text settings changable
+		[LATER] add "default item settings" dialog for each item type
+		[LATER] change main program config dialog to use qtoolbox
+		[DONE] need to be able to import slide groups from other documents
+		
+		[FIXED] changing the size of a QListView layed out in Icon mode doesnt re-organize icons until the model is set again
+		[DONE] need to think about fonts missing on net viewer clients - that messes up slide layout
+			sharing cache via network fixes 99% of the cases
+			for zoom-animated items, though, just will have to copy fonts manually from one computer's c:\windows\fonts to the other
+			maybe in the future there we can automate this - but for now, user will have to handle it
+			add note about this in the Wiki
+		[DONE] make image iport dialog have "advanced" view
+		[DONE] ppt: need to monitor for changes in current slide#
+		[DONE] ppt: need to impl fade to black
+		[REJECTED] ppt: disable clear btn
+			impl with set state
+		[DONE] quick slide needs to stop/start timer
+		[DONE] change slide while quick slide active should de-activate 'show' button
+		[DONE] preview viewer should start paused
+		[DONE] image import dialog - "only if..." checkbox should enab/disab if "show titles" checked
+		[DONE] mb doesnt seem to remember last directory when program re-opens
+		[MAYBEFIXED] song text box centering not right - too far high
+		[DONE] http rc should not reset to first slide when loading group if group already live with diff slide than 1st
 		
 		
 		[DONE] QuickSlide's currently dont get sent to network viewers - need to implement that

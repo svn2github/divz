@@ -792,6 +792,7 @@ Slide * OutputInstance::nextSlide()
 		}
 		else
 		{
+			emit endOfGroup();
 			return 0;
 		}
 	}

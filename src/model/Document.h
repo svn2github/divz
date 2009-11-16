@@ -28,6 +28,7 @@ public:
 	QList<SlideGroup *> groupList();
 	int numGroups() { return m_groups.size(); }
 	SlideGroup * at(int sortedIdx);
+	SlideGroup * groupById(int groupId);
 	
 	void removeGroup(SlideGroup *);
 	

@@ -1289,12 +1289,12 @@ void MainWindow::sendGroupToOutput(Output *output, SlideGroup *newGroup, Slide *
 	OutputControl *outputCtrl = outputControl(output->id());
 	SlideGroupViewControl *ctrl = viewControl(output->id());
 
-	SlideGroup * oldGroup = inst->slideGroup();
+	SlideGroup * oldGroup = ctrl->slideGroup();
 
 	//if(!inst->isVisible())
 	//	inst->show();
 
-	//qDebug() << "MainWindow::sendGroupToOutput(): newGroup->groupType():"<<newGroup->groupType()<<", SlideGroup::GroupType:"<<SlideGroup::GroupType;
+	//qDebug() << "MainWindow::sendGroupToOutput(): newGroup->groupType():"<<newGroup->groupType()<<", SlideGroup::GroupType:"<<SlideGroup::GroupType<<"old: "<<(oldGroup ? oldGroup->groupType() : -1);
 	if((oldGroup && oldGroup->groupType() != newGroup->groupType()) || newGroup->groupType() != SlideGroup::GroupType)
 	{
 		SlideGroupFactory *factory = SlideGroupFactory::factoryForType(newGroup->groupType());

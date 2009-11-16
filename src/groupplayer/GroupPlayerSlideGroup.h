@@ -83,7 +83,7 @@ protected:
 	void addGroupSlides(SlideGroup*);
 	void removeGroupSlides(int);
 	
-	void loadGroupMember(GroupMember);
+	SlideGroup * loadGroupMember(GroupMember);
 	
 	QVariantMap memberToVariantMap(GroupMember) const;
 	GroupMember memberFromVariantMap(QVariantMap);

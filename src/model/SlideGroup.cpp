@@ -31,6 +31,7 @@ SlideGroup::SlideGroup() :
 	QSettings s;
 	m_groupId = s.value(ID_COUNTER_KEY,0).toInt() + 1;
 	s.setValue(ID_COUNTER_KEY,m_groupId);
+	//qDebug() << "Init groupid: "<<m_groupId;
 }
 
 SlideGroup::~SlideGroup()
@@ -78,7 +79,7 @@ void SlideGroup::slideItemChanged(AbstractItem *item, QString operation, QString
 }
 
 void SlideGroup::setGroupNumber(int x)	   { m_groupNumber = x; }
-void SlideGroup::setGroupId(int x)	   { m_groupId = x; }
+void SlideGroup::setGroupId(int x)	   { m_groupId = x; }// qDebug() << "SlideGroup::setGroupId:"<<x; }
 void SlideGroup::setGroupType(int t) { m_groupType = t; }
 void SlideGroup::setGroupTitle(QString s)
 {
@@ -260,7 +261,7 @@ SlideGroup * SlideGroup::clone()
 }
 
 /* static */
-SlideGroup * SlideGroup::fromByteArray(QByteArray &array)
+SlideGroup * SlideGroup::fromByteArray(QByteArray &array, Document *context)
 {
 	QDataStream stream(&array, QIODevice::ReadOnly);
 	QVariantMap map;
@@ -299,6 +300,8 @@ SlideGroup * SlideGroup::fromByteArray(QByteArray &array)
 		qWarning("SlideGroup::fromByteArray: Unknown class name '%s'", qPrintable(className));
 		return 0;
 	}
+	
+	group->setDocument(context);
 	
 	group->fromVariantMap(map);
 	
@@ -518,4 +521,9 @@ void SlideGroup::save(const QString & filename)
 QString SlideGroup::assumedName()
 {
 	return groupTitle().isEmpty() ? QString(tr("Group %1")).arg(groupNumber()) : groupTitle();
+}
+
+void SlideGroup::setDocument(Document *doc)
+{
+	m_doc = doc;
 }

@@ -45,6 +45,14 @@ QList<SlideGroup *> Document::groupList() { return m_groups; }
 
 SlideGroup * Document::at(int x) { return m_groups.at(x); }
 
+SlideGroup * Document::groupById(int id)
+{
+	foreach(SlideGroup *group, m_groups)
+		if(group && group->groupId() == id)
+			return group;
+	return 0;
+}
+
 void Document::setAspectRatio(double f) 
 { 
 	m_aspectRatio = f; 
@@ -138,7 +146,7 @@ void Document::load(const QString & s)
 		foreach(QVariant var, items)
 		{
 			QByteArray ba = var.toByteArray();
-			SlideGroup * group = SlideGroup::fromByteArray(ba);
+			SlideGroup * group = SlideGroup::fromByteArray(ba,this);
 			qDebug() << "Load Group: nbr:"<<group->groupNumber()<<", name:"<<group->assumedName();
 			addGroup(group);
 		}

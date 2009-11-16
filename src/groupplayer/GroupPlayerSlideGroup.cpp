@@ -35,7 +35,7 @@ GroupPlayerSlideGroup::GroupMember GroupPlayerSlideGroup::addGroup(SlideGroup *g
 {
 	GroupMember mem;
 	mem.groupId 		= group->groupId();
-	mem.group 		= document.isEmpty() ? group->clone() : group;
+	mem.group 		= document.isEmpty() ? group : group->clone();
 	mem.source 		= document.isEmpty() ? 
 				GroupPlayerSlideGroup::SameDocument : 
 				GroupPlayerSlideGroup::ExternalDocument;
@@ -55,8 +55,19 @@ GroupPlayerSlideGroup::GroupMember GroupPlayerSlideGroup::addGroup(SlideGroup *g
 
 void GroupPlayerSlideGroup::addGroup(GroupMember mem)
 {
+	if(!mem.group)
+		mem.group = loadGroupMember(mem);
+		
+	if(!mem.group)
+	{
+		qDebug() << "GroupPlayerSlideGroup::addGroup: No 'group' defined in GroupMember # "<<mem.sequenceNumber<<", not adding member to player list.";
+		return;
+	}
+	
 	m_groups.append(mem);
 	addGroupSlides(mem.group);
+	//qDebug() << "GroupPlayerSlideGroup::addGroup: Adding GroupMember seq# "<<mem.sequenceNumber<<", group name: "<<mem.group->assumedName()<<", new size: "<<m_groups.size()<<", slides:"<<numSlides();
+
 }
 
 bool operator==(const GroupPlayerSlideGroup::GroupMember& a, const GroupPlayerSlideGroup::GroupMember& b)
@@ -172,7 +183,9 @@ bool GroupPlayerSlideGroup::fromXml(QDomElement & pe)
 void GroupPlayerSlideGroup::fromVariantMap(QVariantMap &map)
 {
 	loadProperties(map);
-	memberListFromVariantList(map["members"].toList());
+	QVariant var = map["members"];
+	//qDebug() << "GroupPlayerSlideGroup::fromVariantMap()";
+	memberListFromVariantList(var.toList());
 }
 	
 void GroupPlayerSlideGroup::toVariantMap(QVariantMap &map) const
@@ -180,6 +193,7 @@ void GroupPlayerSlideGroup::toVariantMap(QVariantMap &map) const
 	saveProperties(map);
 	
 	QVariantList list = memberListToVariantList();
+	//qDebug() << "GroupPlayerSlideGroup::toVariantMap(): list.size: "<<list.size();
 	map["members"] = list;
 }
 
@@ -203,6 +217,8 @@ QVariantMap GroupPlayerSlideGroup::memberToVariantMap(GroupMember mem) const
 	map["doc"]     = mem.externalDoc;
 	map["seq"]     = mem.sequenceNumber;
 	
+	//qDebug() << "GroupPlayerSlideGroup::memberToVariantMap: "<<map;
+	
 	return map;
 }
 
@@ -223,7 +239,43 @@ QVariantList GroupPlayerSlideGroup::memberListToVariantList() const
 	foreach(GroupMember mem, m_groups)
 		list.append(memberToVariantMap(mem));
 		
+	//qDebug() << "GroupPlayerSlideGroup::memberListToVariantList: m_groups.size:"<<m_groups.size()<<", list.size:"<<list.size();
+		
 	return list;
+}
+
+SlideGroup * GroupPlayerSlideGroup::loadGroupMember(GroupMember mem)
+{
+	SlideGroup * group = 0;
+	if(mem.source == GroupPlayerSlideGroup::SameDocument)
+	{
+		Document *doc = MainWindow::mw()->currentDocument();
+		if(!doc) // loading, therefore SlideGroup::document() should contain current doc
+			doc = document();
+		if(!doc)
+		{
+			qDebug() << "GroupPlayerSlideGroup::loadGroupMember(): Unable to determine current document - cannot load SameDocument group#"<<mem.groupId;
+			return 0;
+		}
+		
+		group = doc->groupById(mem.groupId);
+		if(!group)
+		{
+			qDebug() << "GroupPlayerSlideGroup::loadGroupMember(): Unable to find group#"<<mem.groupId<<"in this document!";
+		}
+	}
+	else
+	if(mem.source == GroupPlayerSlideGroup::ExternalDocument)
+	{
+		Document * doc = new Document(mem.externalDoc);
+		group = doc->groupById(mem.groupId)->clone();
+		if(!group)
+		{
+			qDebug() << "GroupPlayerSlideGroup::loadGroupMember(): Unable to find group#"<<mem.groupId<<"in external document"<<mem.externalDoc;
+		}
+	}
+	
+	return group;
 }
 
 void GroupPlayerSlideGroup::memberListFromVariantList(QVariantList varlist)
@@ -233,6 +285,8 @@ void GroupPlayerSlideGroup::memberListFromVariantList(QVariantList varlist)
 		tmpList << memberFromVariantMap(var.toMap());
 	
 	qSort(tmpList);
+	
+	//qDebug() << "GroupPlayerSlideGroup::memberListFromVariantList(): tmpList.size:"<<tmpList.size()<<", varlist.size:"<<varlist.size();
 	
 	foreach(GroupMember mem, tmpList)
 		addGroup(mem);

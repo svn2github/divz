@@ -4,6 +4,7 @@
 #include <QList>
 class Slide;
 class QFileInfo;
+class Document;
 #include "AbstractVisualItem.h"
 
 class SlideGroup : public QObject
@@ -74,7 +75,7 @@ public:
 	
 	virtual QByteArray toByteArray() const;
 	//virtual void fromByteArray(QByteArray &);
-	static SlideGroup * fromByteArray(QByteArray &);
+	static SlideGroup * fromByteArray(QByteArray &, Document *context = 0);
 	
 	SlideGroup * clone();
 
@@ -92,6 +93,9 @@ public:
 	virtual Slide * masterSlide(bool autoCreate=true);
 
 	QString assumedName();
+	
+	void setDocument(Document*);
+	Document *document() { return m_doc; }
 
 signals:
 	// Operation = "Add", "Remove", "Change"
@@ -134,6 +138,8 @@ protected:
 	Slide * m_masterSlide;
 
 	QString m_filename;
+	
+	Document * m_doc;
 
 
 

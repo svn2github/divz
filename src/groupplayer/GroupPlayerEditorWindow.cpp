@@ -69,13 +69,13 @@ void GroupPlayerEditorWindow::btnMoveUp()
 // 	GroupPlayerSlideGroup::GroupMember mem = m_groupModel->memberForIndex(m_ui->groupList->currentIndex());
 // 	m_group->resequence(mem,3);
 
-	QListWidgetItem * item = m_ui->groupList->currentItem();
-	int row = m_ui->groupList->row(item);
+	//QListWidgetItem * item = m_ui->groupList->currentItem();
+	int row = m_ui->groupList->currentRow();
 	if(row == 0)
 		return;
 		
 	m_ui->groupList->insertItem(row-1,  m_ui->groupList->takeItem(row));
-	
+	m_ui->groupList->setCurrentRow(row-1, QItemSelectionModel::Select);
 	
 	resequenceItems();
 	
@@ -83,13 +83,13 @@ void GroupPlayerEditorWindow::btnMoveUp()
 
 void GroupPlayerEditorWindow::btnMoveDown()
 {
-	QListWidgetItem * item = m_ui->groupList->currentItem();
-	int row = m_ui->groupList->row(item);
+	//QListWidgetItem * item = m_ui->groupList->currentItem();
+	int row = m_ui->groupList->currentRow(); //(item);
 	if(row +1 >= m_ui->groupList->count())
 		return;
 		
 	m_ui->groupList->insertItem(row+1,  m_ui->groupList->takeItem(row));
-	
+	m_ui->groupList->setCurrentRow(row+1, QItemSelectionModel::Select);
 	
 	resequenceItems();
 		

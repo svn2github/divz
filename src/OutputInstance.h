@@ -69,6 +69,7 @@ public:
 signals:
 	void nextGroup();
 	void jumpToGroup(int);
+	void endOfGroup();
 	
 	void slideChanged(int);
 	void slideChanged(Slide*);

@@ -363,6 +363,11 @@ void SlideGroupViewer::applySlideFilters()
 
 	if(!m_blackEnabled && !m_clearEnabled)
 	{
+		if(m_sortedSlides.isEmpty() || 
+			m_slideNum < 0 || 
+			m_slideNum >= m_sortedSlides.size())
+			return;
+			
 		Slide *currentSlide = m_sortedSlides.at(m_slideNum);
 		setSlideInternal(applySlideFilters(currentSlide));
 	}
@@ -1026,6 +1031,7 @@ Slide * SlideGroupViewer::nextSlide()
 		}
 		else
 		{
+			emit endOfGroup();
 			return 0;
 		}
 	}
