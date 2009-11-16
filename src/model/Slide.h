@@ -11,7 +11,7 @@ class Slide : public QObject
 	
 	Q_PROPERTY(int slideId READ slideId WRITE setSlideId);
 	Q_PROPERTY(int slideNumber READ slideNumber WRITE setSlideNumber);
-	Q_PROPERTY(int autoChangeTime READ autoChangeTime WRITE setAutoChangeTime);
+	Q_PROPERTY(double autoChangeTime READ autoChangeTime WRITE setAutoChangeTime);
 	
 	Q_PROPERTY(double inheritFadeSettings READ inheritFadeSettings WRITE setInheritFadeSettings);
 	Q_PROPERTY(double crossFadeSpeed READ crossFadeSpeed WRITE setCrossFadeSpeed);

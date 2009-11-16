@@ -33,6 +33,9 @@ GroupPlayerEditorWindow::GroupPlayerEditorWindow(SlideGroup *group, QWidget *par
 {
 	m_ui->setupUi(this);
 	
+	setWindowIcon(QIcon(":/data/icon-d.png"));
+	setWindowTitle("Group Player Editor");
+	
 	m_ui->docList->setModel(m_docModel);
 	
 	m_docModel->setDocument(MainWindow::mw()->currentDocument());
@@ -193,6 +196,8 @@ void GroupPlayerEditorWindow::setSlideGroup(SlideGroup *groupTmp, Slide *curSlid
 	m_group = group;
 	
 	m_ui->title->setText(group->groupTitle());
+	
+	setWindowTitle(QString(tr("%1 - Group Player Editor").arg(group->assumedName())));
 	
 	QList<GroupPlayerSlideGroup::GroupMember> members = m_group->members();
 	

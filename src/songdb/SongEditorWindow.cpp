@@ -56,6 +56,7 @@ SongEditorWindow::SongEditorWindow(SlideGroup *g, QWidget *parent) :
 	
 	vbox->addLayout(hbox1);
 	
+	setWindowIcon(QIcon(":/data/icon-d.png"));
 	
 	QFont font;
 	font.setFamily("Courier");
