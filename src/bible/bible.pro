@@ -5,6 +5,8 @@
 TEMPLATE = app
 INCLUDEPATH += .
 
+QT = core network
+
 # Input
 HEADERS += BibleGatewayConnector.h
 SOURCES += main.cpp BibleGatewayConnector.cpp

@@ -74,7 +74,10 @@ public:
 
 QDebug operator<<(QDebug dbg, const BibleVerseList &list);
 
-
+#include <QNetworkAccessManager>
+#include <QNetworkRequest>
+#include <QNetworkReply>
+#include <QByteArray>
 
 class BibleGatewayConnector : public QObject
 {
@@ -82,7 +85,28 @@ class BibleGatewayConnector : public QObject
 public:
 	BibleGatewayConnector();
 	
-	BibleVerseList download(const QString& reference);
+	bool findReference(const QString& reference);
+	
+	BibleVerseList loadReference(const QString& reference);
+	
+	void downloadReference(const QString& reference);
+	
+signals:
+	void referenceAvailable(const QString& reference, const BibleVerseList & list);
+
+private slots:
+	void downloadFinished(QNetworkReply *reply);
+	
+private:
+	BibleVerseList parseBibleGatewayReply(QByteArray &);
+	QString html2text(const QString &tmp);
+	
+	BibleVerseList loadCached(const QString& reference);
+	void cacheList(const QString& reference, const BibleVerseList &list);
+	
+	QNetworkAccessManager * m_net;
+	QHash<QString, BibleVerseList> m_cache;
+	QHash<QNetworkReply*, QString> m_inProgress;
 	
 };
 

@@ -214,10 +214,10 @@ Revised Task list for Release 1.0, 10/18/09:
 				song tags
 				background tags
 				make abs/relative include paths optional
-				video queue
+				[DONE] video queue
 					import tool?
 				default background option
-				multiple database users
+				[LATER] multiple database users
 					shared copy over network
 				[DONE] libavcodec support :-)
 				drag-drop background onto verses of song
@@ -227,6 +227,8 @@ Revised Task list for Release 1.0, 10/18/09:
 				freeze front of house but change foldback
 				nusery/mesg alert moduler (network input)
 					could be done via http server
+					should be easy to add - the http server exists
+					just need to write the alert feature
 				scripture auto seperate into slides
 					like our existing text import tool
 				mailing list in addition to forumes
