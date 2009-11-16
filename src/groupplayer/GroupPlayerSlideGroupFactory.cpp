@@ -165,6 +165,7 @@ void GroupPlayerSlideGroupViewControl::endOfGroup()
 		return;
 	}
 	
+	m_list->clearSelection();
 	m_list->setCurrentRow(row+1, QItemSelectionModel::Select);
 }
 

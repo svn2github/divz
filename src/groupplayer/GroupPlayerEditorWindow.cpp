@@ -9,6 +9,7 @@
 #include <QDirModel>
 #include <QCompleter>
 #include <QFileDialog>
+#include <QMessageBox>
 
 #define ITEM_GROUP_MEMBER(a) a ? a->data(Qt::UserRole).value<GroupPlayerSlideGroup::GroupMember>() : GroupPlayerSlideGroup::GroupMember()
 
@@ -75,6 +76,7 @@ void GroupPlayerEditorWindow::btnMoveUp()
 		return;
 		
 	m_ui->groupList->insertItem(row-1,  m_ui->groupList->takeItem(row));
+	m_ui->groupList->clearSelection();
 	m_ui->groupList->setCurrentRow(row-1, QItemSelectionModel::Select);
 	
 	resequenceItems();
@@ -89,6 +91,7 @@ void GroupPlayerEditorWindow::btnMoveDown()
 		return;
 		
 	m_ui->groupList->insertItem(row+1,  m_ui->groupList->takeItem(row));
+	m_ui->groupList->clearSelection();
 	m_ui->groupList->setCurrentRow(row+1, QItemSelectionModel::Select);
 	
 	resequenceItems();
@@ -148,7 +151,16 @@ void GroupPlayerEditorWindow::btnRemove()
 {
 	GroupPlayerSlideGroup::GroupMember mem = ITEM_GROUP_MEMBER(m_ui->groupList->currentItem());
 	if(mem.group)
+	{
 		m_group->removeGroup(mem);
+		
+		int row = m_ui->groupList->currentRow();
+		delete m_ui->groupList->takeItem(row);
+		
+		m_ui->groupList->clearSelection();
+		if(row > 0)
+			m_ui->groupList->setCurrentRow(row-1, QItemSelectionModel::Select);
+	}
 }
 
 void GroupPlayerEditorWindow::btnAdd()
@@ -156,8 +168,16 @@ void GroupPlayerEditorWindow::btnAdd()
 	SlideGroup * group = m_docModel->groupFromIndex(m_ui->docList->currentIndex());
 	if(group)
 	{
-		GroupPlayerSlideGroup::GroupMember mem = m_group->addGroup(group, m_ui->showOther->isChecked() ? m_doc : 0);
-		addMemberToList(mem);
+		if(group == m_group)
+		{
+			QMessageBox::warning(this,"Cannot Add This Group","Sorry, you cannot add the same group that you are editing to this group!");
+			return;
+		}
+		else
+		{
+			GroupPlayerSlideGroup::GroupMember mem = m_group->addGroup(group, m_ui->showOther->isChecked() ? m_doc : 0);
+			addMemberToList(mem);
+		}
 	}
 }
 

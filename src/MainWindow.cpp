@@ -1188,7 +1188,7 @@ void MainWindow::previewSlideGroup(SlideGroup *newGroup)
 {
 	//qDebug() << "MainWindow::previewSlideGroup: Loading preview slide\n";
 
-	SlideGroup * oldGroup = m_previewInstance->slideGroup();
+	SlideGroup * oldGroup = m_previewControl->slideGroup();
 
 	//qDebug() << "MainWindow::setLiveGroup(): newGroup->groupType():"<<newGroup->groupType()<<", SlideGroup::GroupType:"<<SlideGroup::GroupType;
 	if((oldGroup && oldGroup->groupType() != newGroup->groupType())
