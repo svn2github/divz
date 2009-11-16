@@ -147,12 +147,12 @@ class SlideGroupFactory
 {
 
 public /*static*/:
-	static void registerFactoryForType(SlideGroup::GroupType type, SlideGroupFactory *);
-	static void removeFactoryForType(SlideGroup::GroupType type/*, SlideGroupFactory **/);
-	static SlideGroupFactory * factoryForType(SlideGroup::GroupType type);
+	static void registerFactoryForType(int type, SlideGroupFactory *);
+	static void removeFactoryForType(int type/*, SlideGroupFactory **/);
+	static SlideGroupFactory * factoryForType(int type);
 
 private /*static*/:
-	static QMap<SlideGroup::GroupType, SlideGroupFactory*> m_factoryMap;
+	static QHash<int, SlideGroupFactory*> m_factoryMap;
 
 public:
 	SlideGroupFactory();

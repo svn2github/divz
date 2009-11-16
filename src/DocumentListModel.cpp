@@ -442,7 +442,7 @@ QPixmap DocumentListModel::generatePixmap(SlideGroup *g)
 	
 	SlideGroupFactory *factory = SlideGroupFactory::factoryForType(g->groupType());
 	if(!factory)
-		factory = SlideGroupFactory::factoryForType(SlideGroup::Generic);
+		factory = SlideGroupFactory::factoryForType(SlideGroup::GroupType);
 	
 	if(factory)
 		icon = factory->generatePreviewPixmap(g,m_iconSize,m_sceneRect);

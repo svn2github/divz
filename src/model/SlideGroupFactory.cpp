@@ -797,19 +797,19 @@ void AbstractSlideGroupEditor::setSlideGroup(SlideGroup */*g*/,Slide */*curSlide
 
 /** SlideGroupFactory:: **/
 /** Static Members **/
-QMap<SlideGroup::GroupType, SlideGroupFactory*> SlideGroupFactory::m_factoryMap;
+QHash<int, SlideGroupFactory*> SlideGroupFactory::m_factoryMap;
 
-void SlideGroupFactory::registerFactoryForType(SlideGroup::GroupType type, SlideGroupFactory *f)
+void SlideGroupFactory::registerFactoryForType(int type, SlideGroupFactory *f)
 {
 	m_factoryMap[type] = f;
 }
 	
-void SlideGroupFactory::removeFactoryForType(SlideGroup::GroupType type)
+void SlideGroupFactory::removeFactoryForType(int type)
 {
 	m_factoryMap.remove(type);
 }
 
-SlideGroupFactory * SlideGroupFactory::factoryForType(SlideGroup::GroupType type)
+SlideGroupFactory * SlideGroupFactory::factoryForType(int type)
 {
 	return m_factoryMap[type];
 }

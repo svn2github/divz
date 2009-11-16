@@ -16,7 +16,9 @@ private:
 
 public:
 	PPTSlideGroup();
-	GroupType groupType() const { return SlideGroup::PowerPoint; }
+	
+	typedef enum { GroupType = 3 };
+	int groupType() const { return GroupType; }	
 	
 	QString file() { return m_file; }
 	void setFile(const QString &);
@@ -24,7 +26,6 @@ public:
 	// SlideGroup::
 	virtual bool fromXml(QDomElement & parentElement);
 	virtual void toXml(QDomElement & parentElement) const;
-	virtual QByteArray toByteArray() const;
 
 	void changeBackground(AbstractVisualItem::FillType, QVariant, Slide *);
 
@@ -33,7 +34,8 @@ protected:
 	void removeAllSlides();
 	
 	// SlideGroup::
-	void loadVariantMap(QVariantMap &);
+	void fromVariantMap(QVariantMap &);
+	void   toVariantMap(QVariantMap &) const;
 	
 protected slots:
 	void aspectRatioChanged(double x);

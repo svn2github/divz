@@ -437,7 +437,7 @@ void OutputControl::setOverlayDocument(Document *doc)
 	
 		SlideGroupFactory *factory = SlideGroupFactory::factoryForType(g->groupType());
 		if(!factory)
-			factory = SlideGroupFactory::factoryForType(SlideGroup::Generic);
+			factory = SlideGroupFactory::factoryForType(SlideGroup::GroupType);
 		
 		double iconHeight = 64.0;
 		if(factory)

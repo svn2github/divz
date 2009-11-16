@@ -69,7 +69,7 @@ void SongSlideGroup::removeAllSlides()
 	m_slides.clear();
 }
 
-void SongSlideGroup::aspectRatioChanged(double x)
+void SongSlideGroup::aspectRatioChanged(double)
 {
 	removeAllSlides();
 	textToSlides();
@@ -522,7 +522,7 @@ bool SongSlideGroup::fromXml(QDomElement & pe)
 	return true;
 }
 
-void SongSlideGroup::loadVariantMap(QVariantMap &map)
+void SongSlideGroup::fromVariantMap(QVariantMap &map)
 {
 	QVariant templates = map["templates"];
 	if(templates.isValid())
@@ -561,33 +561,18 @@ void SongSlideGroup::loadVariantMap(QVariantMap &map)
 	
 }
 	
-QByteArray SongSlideGroup::toByteArray() const
+void SongSlideGroup::toVariantMap(QVariantMap &map) const
 {
-	QByteArray array;
-	QDataStream stream(&array, QIODevice::WriteOnly);
-	QVariantMap map;
-	
 	saveProperties(map);
 	
 	// song specific stuff
-	if(m_song)
-	{
-		map["songid"] = m_song->songId();
-		//qDebug() << "SongSlideGroup::toXml: songId:"<<m_song->songId()<<", title: "<<m_song->title();
-	}
-	
 	map["text"] = m_text;
 	
+	if(m_song)
+		map["songid"] = m_song->songId();
+	
 	if(m_slideTemplates)
-	{
 		map["templates"] = m_slideTemplates->toByteArray();
-	}
-	
-	map["SlideGroup.ClassName"] = metaObject()->className();
-	
-	//qDebug() << "SlideGroup::toByteArray(): "<<map;
-	stream << map;
-	return array; 
 }
 
 void SongSlideGroup::toXml(QDomElement & pe) const

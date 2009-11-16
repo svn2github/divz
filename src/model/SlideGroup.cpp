@@ -5,16 +5,19 @@
 #include <QDomDocument>
 #include <QMessageBox>
 #include <QMetaProperty>
+#include <QSettings>
 
 #include "Slide.h"
 #include "MediaBrowser.h"
 #include "songdb/SongSlideGroup.h"
 #include "ppt/PPTSlideGroup.h"
 
+#define ID_COUNTER_KEY "slidegroup/id-counter"
+
 SlideGroup::SlideGroup() :
 	m_groupNumber(-1)
 	, m_groupId(1)
-	, m_groupType(Generic)
+	, m_groupType(SlideGroup::GroupType)
 	, m_groupTitle("")
 	, m_iconFile("")
 	, m_endOfGroupAction(SlideGroup::LoopToStart)
@@ -24,7 +27,9 @@ SlideGroup::SlideGroup() :
 	, m_masterSlide(0)
 	, m_filename("")
 {
-
+	QSettings s;
+	m_groupId = s.value(ID_COUNTER_KEY,0).toInt() + 1;
+	s.setValue(ID_COUNTER_KEY,m_groupId);
 }
 
 SlideGroup::~SlideGroup()
@@ -73,7 +78,7 @@ void SlideGroup::slideItemChanged(AbstractItem *item, QString operation, QString
 
 void SlideGroup::setGroupNumber(int x)	   { m_groupNumber = x; }
 void SlideGroup::setGroupId(int x)	   { m_groupId = x; }
-void SlideGroup::setGroupType(GroupType t) { m_groupType = t; }
+void SlideGroup::setGroupType(int t) { m_groupType = t; }
 void SlideGroup::setGroupTitle(QString s)
 {
 	m_groupTitle = s;
@@ -91,7 +96,7 @@ void SlideGroup::loadGroupAttributes(QDomElement & pe)
 	setGroupNumber(pe.attribute("number").toInt());
 	
 	setGroupId(pe.attribute("id").toInt());
-	setGroupType((GroupType)pe.attribute("type").toInt());
+	setGroupType(pe.attribute("type").toInt());
 	setGroupTitle(pe.attribute("title"));
 	setIconFile(pe.attribute("icon"));
 	setEndOfGroupAction((EndOfGroupAction)pe.attribute("end-action").toInt());
@@ -199,8 +204,7 @@ QByteArray SlideGroup::toByteArray() const
 	QDataStream stream(&array, QIODevice::WriteOnly);
 	QVariantMap map;
 	
-	saveProperties(map);
-	saveSlideList(map);
+	toVariantMap(map);
 	
 	map["SlideGroup.ClassName"] = metaObject()->className();
 	
@@ -209,7 +213,13 @@ QByteArray SlideGroup::toByteArray() const
 	return array; 
 }
 
-void SlideGroup::saveProperties(QVariantMap&map) const
+void SlideGroup::toVariantMap(QVariantMap& map) const
+{
+	saveProperties(map);
+	saveSlideList(map);
+}
+
+void SlideGroup::saveProperties(QVariantMap& map) const
 {
 	// So we dont have to engineer our own method of tracking
 	// properties, just assume all inherited objects delcare the relevant
@@ -284,13 +294,13 @@ SlideGroup * SlideGroup::fromByteArray(QByteArray &array)
 		return 0;
 	}
 	
-	group->loadVariantMap(map);
+	group->fromVariantMap(map);
 	
 	return group;
 	
 }
 
-void SlideGroup::loadVariantMap(QVariantMap &map)
+void SlideGroup::fromVariantMap(QVariantMap &map)
 {
 	loadProperties(map);
 	loadSlides(map);	

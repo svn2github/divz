@@ -1087,7 +1087,7 @@ void MainWindow::setupOutputControls()
 
 			m_outputTabs->setTabEnabled(idx,output->isEnabled());
 
-			SlideGroupFactory *factory = SlideGroupFactory::factoryForType(SlideGroup::Generic);
+			SlideGroupFactory *factory = SlideGroupFactory::factoryForType(SlideGroup::GroupType);
 
 			if(factory)
 			{
@@ -1180,15 +1180,15 @@ void MainWindow::previewSlideGroup(SlideGroup *newGroup)
 
 	SlideGroup * oldGroup = m_previewInstance->slideGroup();
 
-	//qDebug() << "MainWindow::setLiveGroup(): newGroup->groupType():"<<newGroup->groupType()<<", SlideGroup::Generic:"<<SlideGroup::Generic;
+	//qDebug() << "MainWindow::setLiveGroup(): newGroup->groupType():"<<newGroup->groupType()<<", SlideGroup::GroupType:"<<SlideGroup::GroupType;
 	if((oldGroup && oldGroup->groupType() != newGroup->groupType())
-		|| newGroup->groupType() != SlideGroup::Generic)
+		|| newGroup->groupType() != SlideGroup::GroupType)
 	{
 		SlideGroupFactory *factory = SlideGroupFactory::factoryForType(newGroup->groupType());
 		if(!factory)
 		{
 			//qDebug() << "MainWindow::setLiveGroup(): Factory fell thu for request, going to generic control";
-			factory = SlideGroupFactory::factoryForType(SlideGroup::Generic);
+			factory = SlideGroupFactory::factoryForType(SlideGroup::GroupType);
 		}
 
 		if(factory)
@@ -1284,14 +1284,14 @@ void MainWindow::sendGroupToOutput(Output *output, SlideGroup *newGroup, Slide *
 	//if(!inst->isVisible())
 	//	inst->show();
 
-	//qDebug() << "MainWindow::sendGroupToOutput(): newGroup->groupType():"<<newGroup->groupType()<<", SlideGroup::Generic:"<<SlideGroup::Generic;
-	if((oldGroup && oldGroup->groupType() != newGroup->groupType()) || newGroup->groupType() != SlideGroup::Generic)
+	//qDebug() << "MainWindow::sendGroupToOutput(): newGroup->groupType():"<<newGroup->groupType()<<", SlideGroup::GroupType:"<<SlideGroup::GroupType;
+	if((oldGroup && oldGroup->groupType() != newGroup->groupType()) || newGroup->groupType() != SlideGroup::GroupType)
 	{
 		SlideGroupFactory *factory = SlideGroupFactory::factoryForType(newGroup->groupType());
 		if(!factory)
 		{
 			//qDebug() << "MainWindow::setLiveGroup(): Factory fell thu for request, going to generic control";
-			factory = SlideGroupFactory::factoryForType(SlideGroup::Generic);
+			factory = SlideGroupFactory::factoryForType(SlideGroup::GroupType);
 		}
 
 		if(factory)
@@ -1404,11 +1404,11 @@ void MainWindow::openSlideEditor(SlideGroup *group,Slide *slide)
 {
 	// Turn off timer for tomorrows service - just until I can make it a button option
 	//m_autosaveTimer->start(1000 * 30);
-	if(group->groupType() != SlideGroup::Generic)
+	if(group->groupType() != SlideGroup::GroupType)
 	{
 		SlideGroupFactory *factory = SlideGroupFactory::factoryForType(group->groupType());
 		if(!factory)
-			factory = SlideGroupFactory::factoryForType(SlideGroup::Generic);
+			factory = SlideGroupFactory::factoryForType(SlideGroup::GroupType);
 
 		if(factory)
 		{

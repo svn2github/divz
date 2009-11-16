@@ -21,7 +21,9 @@ Q_IMPORT_PLUGIN(qtiff)
 #include "model/Output.h"
 #include "model/SlideGroupFactory.h"
 #include "songdb/SongSlideGroupFactory.h"
+#include "songdb/SongSlideGroup.h"
 #include "ppt/PPTSlideGroupFactory.h"
+#include "ppt/PPTSlideGroup.h"
 
 #include "itemlistfilters/SlideTextOnlyFilter.h"
 #include "itemlistfilters/SlideNonTextOnlyFilter.h"
@@ -90,7 +92,7 @@ void AppSettings::initApp(const QString& appName)
 
 	qRegisterMetaType<AbstractVisualItem::FillType>("FillType");
 	qRegisterMetaType<AbstractVisualItem::ZoomEffectDirection>("ZoomEffectDirection");
-	qRegisterMetaType<SlideGroup::GroupType>("GroupType");
+	//qRegisterMetaType<SlideGroup::GroupType>("GroupType");
 	qRegisterMetaType<SlideGroup::EndOfGroupAction>("EndOfGroupAction");
 
 	AbstractItemFilter::registerFilterInstance(SlideTextOnlyFilter::instance());
@@ -109,9 +111,9 @@ void AppSettings::initApp(const QString& appName)
 	qApp->setOrganizationDomain("mybryanlife.com");
 
 
-	SlideGroupFactory::registerFactoryForType(SlideGroup::Generic,    new SlideGroupFactory());
-	SlideGroupFactory::registerFactoryForType(SlideGroup::Song,       new SongSlideGroupFactory());
-	SlideGroupFactory::registerFactoryForType(SlideGroup::PowerPoint, new PPTSlideGroupFactory());
+	SlideGroupFactory::registerFactoryForType(SlideGroup::GroupType,	new SlideGroupFactory());
+	SlideGroupFactory::registerFactoryForType(SongSlideGroup::GroupType,	new SongSlideGroupFactory());
+	SlideGroupFactory::registerFactoryForType(PPTSlideGroup::GroupType,	new PPTSlideGroupFactory());
 
 
 	RenderOpts::OxygenStyleQuirks = qApp->style()->objectName() == QLatin1String("oxygen");

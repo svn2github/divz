@@ -18,14 +18,17 @@ class SongSlideGroup : public SlideGroup
 {
 private:
 	Q_OBJECT 
-	Q_PROPERTY(QString text READ text WRITE setText);
-	Q_PROPERTY(QString isTextDiffFromDb READ isTextDiffFromDb);
+	// Removing the Q_PROP macro defs for these items because I suspect they
+	// may be causing errant behaviour for save/restore and centering text.
+	//Q_PROPERTY(QString text READ text WRITE setText);
+	//Q_PROPERTY(QString isTextDiffFromDb READ isTextDiffFromDb);
 
 public:
 	SongSlideGroup();
 	~SongSlideGroup();
 	
-	GroupType groupType() const { return SlideGroup::Song; }	
+	typedef enum { GroupType = 2 };
+	int groupType() const { return GroupType; }	
 	
 	SongRecord * song() { return m_song; }
 	void setSong(SongRecord*);
@@ -43,7 +46,6 @@ public:
 	// SlideGroup::
 	virtual bool fromXml(QDomElement & parentElement);
         virtual void toXml(QDomElement & parentElement) const;
-        virtual QByteArray toByteArray() const;
 
 	void changeBackground(AbstractVisualItem::FillType fillType, QVariant fillValue, Slide *onlyThisSlide);
 protected:
@@ -51,7 +53,8 @@ protected:
 	void textToSlides(SongTextFilter filter = Standard);
 	void removeAllSlides();
 	
-	void loadVariantMap(QVariantMap &);
+	void fromVariantMap(QVariantMap &);
+	void   toVariantMap(QVariantMap &) const;
 	
 protected slots:
 	void aspectRatioChanged(double x);

@@ -12,7 +12,7 @@ class SlideGroup : public QObject
 
 	Q_PROPERTY(int groupId READ groupId WRITE setGroupId);
 	Q_PROPERTY(int groupNumber READ groupNumber WRITE setGroupNumber);
-	Q_PROPERTY(GroupType groupType READ groupType WRITE setGroupType);
+	Q_PROPERTY(int groupType READ groupType WRITE setGroupType);
 	Q_PROPERTY(QString groupTitle READ groupTitle WRITE setGroupTitle);
 	Q_PROPERTY(QString iconFile READ iconFile WRITE setIconFile);
 	Q_PROPERTY(EndOfGroupAction endOfGroupAction READ endOfGroupAction WRITE setEndOfGroupAction);
@@ -21,22 +21,23 @@ class SlideGroup : public QObject
 	Q_PROPERTY(double crossFadeSpeed READ crossFadeSpeed WRITE setCrossFadeSpeed);
 	Q_PROPERTY(double crossFadeQuality READ crossFadeQuality WRITE setCrossFadeQuality);
 
-	Q_ENUMS(GroupType);
+// 	Q_ENUMS(GroupType);
 	Q_ENUMS(EndOfGroupAction);
 	
 public:
 	SlideGroup();
 	virtual ~SlideGroup();
 
-	typedef enum GroupType
-	{
-		Generic,
-		SectionHeader,
-		Song,
-		Video,
-		Feed,
-		PowerPoint,
-	};
+// 	typedef enum GroupType
+// 	{
+// 		Generic,
+// 		SectionHeader,
+// 		Song,
+// 		Video,
+// 		Feed,
+// 		PowerPoint,
+// 		GroupPlayer,
+// 	};
 	
 	typedef enum EndOfGroupAction
 	{
@@ -45,9 +46,11 @@ public:
 		GotoGroupIndex
 	};
 
+	typedef enum { GroupType = 1 };
+	
 	ITEM_PROPDEF(GroupId,		int,		groupId);
 	ITEM_PROPDEF(GroupNumber,	int,		groupNumber);
-	V_ITEM_PROPDEF(GroupType,	GroupType,	groupType);
+	V_ITEM_PROPDEF(GroupType,	int,		groupType);
 	ITEM_PROPDEF(GroupTitle,	QString,	groupTitle);
 	ITEM_PROPDEF(IconFile,		QString,	iconFile);
 	ITEM_PROPDEF(EndOfGroupAction,	EndOfGroupAction,	endOfGroupAction);
@@ -97,7 +100,9 @@ private slots:
 	void slideItemChanged(AbstractItem *item, QString operation, QString fieldName, QVariant value, QVariant old);
 
 protected:
-	virtual void loadVariantMap(QVariantMap &);
+	virtual void fromVariantMap(QVariantMap &);
+	virtual void toVariantMap(QVariantMap &) const;
+	
 	virtual void loadProperties(QVariantMap &);
 	virtual void loadSlides(QVariantMap &);
 	
@@ -113,7 +118,7 @@ protected:
 	QList<Slide *> m_slides;
 	int m_groupNumber;
 	int m_groupId;
-	GroupType m_groupType;
+	int m_groupType;
 	QString m_groupTitle;
 	QString m_iconFile;
 	EndOfGroupAction m_endOfGroupAction;
@@ -133,7 +138,7 @@ protected:
 
 };
 
-Q_DECLARE_METATYPE(SlideGroup::GroupType);
+// Q_DECLARE_METATYPE(SlideGroup::GroupType);
 Q_DECLARE_METATYPE(SlideGroup::EndOfGroupAction);
 
 #endif
