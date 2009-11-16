@@ -88,6 +88,8 @@ public slots:
 	void textImportTool();
 	void importSlideGroup();
 	
+	void addGroupPlayer();
+	
 	void setAutosaveEnabled(bool);
 
 protected slots:

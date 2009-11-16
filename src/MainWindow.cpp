@@ -32,6 +32,8 @@
 #include "ImageImportDialog.h"
 #include "ImportGroupDialog.h"
 
+#include "groupplayer/GroupPlayerSlideGroup.h"
+
 #include "model/ItemFactory.h"
 #include "model/SlideGroupFactory.h"
 
@@ -158,6 +160,8 @@ MainWindow::MainWindow(QWidget *parent) :
 	
 	//m_ui->actionImport_Slide_Group->setIcon(QIcon(":data/insert-text-24.png"));
 	connect(m_ui->actionImport_Slide_Group, SIGNAL(triggered()), this, SLOT(importSlideGroup()));
+	
+	connect(m_ui->actionAdd_Group_Player, SIGNAL(triggered()), this, SLOT(addGroupPlayer()));
 
 
 	#ifdef WIN32_PPT_ENABLED
@@ -405,7 +409,13 @@ void MainWindow::importSlideGroup()
 	d.exec();
 }
 
-
+void MainWindow::addGroupPlayer()
+{
+	SlideGroup *g = new GroupPlayerSlideGroup();
+	m_doc->addGroup(g);
+	
+	openSlideEditor(g);
+}
 
 
 void MainWindow::textImportTool()

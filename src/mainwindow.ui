@@ -70,6 +70,7 @@
     <addaction name="actionAdd_PowerPoint_File"/>
     <addaction name="separator"/>
     <addaction name="actionImport_Slide_Group"/>
+    <addaction name="actionAdd_Group_Player"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
@@ -235,6 +236,11 @@
   <action name="actionImport_Slide_Group">
    <property name="text">
     <string>Import Slide Group ...</string>
+   </property>
+  </action>
+  <action name="actionAdd_Group_Player">
+   <property name="text">
+    <string>Add Group Player</string>
    </property>
   </action>
  </widget>

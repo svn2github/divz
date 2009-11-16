@@ -24,6 +24,8 @@ Q_IMPORT_PLUGIN(qtiff)
 #include "songdb/SongSlideGroup.h"
 #include "ppt/PPTSlideGroupFactory.h"
 #include "ppt/PPTSlideGroup.h"
+#include "groupplayer/GroupPlayerSlideGroup.h"
+#include "groupplayer/GroupPlayerSlideGroupFactory.h"
 
 #include "itemlistfilters/SlideTextOnlyFilter.h"
 #include "itemlistfilters/SlideNonTextOnlyFilter.h"
@@ -111,9 +113,11 @@ void AppSettings::initApp(const QString& appName)
 	qApp->setOrganizationDomain("mybryanlife.com");
 
 
-	SlideGroupFactory::registerFactoryForType(SlideGroup::GroupType,	new SlideGroupFactory());
-	SlideGroupFactory::registerFactoryForType(SongSlideGroup::GroupType,	new SongSlideGroupFactory());
-	SlideGroupFactory::registerFactoryForType(PPTSlideGroup::GroupType,	new PPTSlideGroupFactory());
+	SlideGroupFactory::registerFactoryForType(SlideGroup::GroupType,		new SlideGroupFactory());
+	SlideGroupFactory::registerFactoryForType(SongSlideGroup::GroupType,		new SongSlideGroupFactory());
+	SlideGroupFactory::registerFactoryForType(PPTSlideGroup::GroupType,		new PPTSlideGroupFactory());
+	SlideGroupFactory::registerFactoryForType(GroupPlayerSlideGroup::GroupType,	new GroupPlayerSlideGroupFactory());
+	
 
 
 	RenderOpts::OxygenStyleQuirks = qApp->style()->objectName() == QLatin1String("oxygen");
