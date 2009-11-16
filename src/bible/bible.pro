@@ -8,5 +8,11 @@ INCLUDEPATH += .
 QT = core network
 
 # Input
-HEADERS += BibleGatewayConnector.h
-SOURCES += main.cpp BibleGatewayConnector.cpp
+HEADERS +=  \
+	BibleModel.h \
+	BibleConnector.h \
+	BibleGatewayConnector.h
+SOURCES += main.cpp \
+	BibleModel.cpp \
+	BibleConnector.cpp \
+	BibleGatewayConnector.cpp
