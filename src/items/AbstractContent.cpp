@@ -59,9 +59,9 @@ AbstractContent::AbstractContent(QGraphicsScene * scene, QGraphicsItem * parent,
 
 	// customize item's behavior
 	setFlags(QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsFocusable | QGraphicsItem::ItemIsSelectable);
-	#if QT46_SHADOW_ENAB
+//	#if QT_VERSION >= 0x040600
 		setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
-	#endif
+//	#endif
 	// allow some items (eg. the shape controls for text) to be shown
 	setFlag(QGraphicsItem::ItemClipsChildrenToShape, false);
 	setAcceptHoverEvents(true);

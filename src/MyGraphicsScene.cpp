@@ -66,11 +66,11 @@
 #define qSetEffectOpacity(item,opacity) { QGraphicsOpacityEffect * opac = dynamic_cast<QGraphicsOpacityEffect*>(item->graphicsEffect()); if(opac) opac->setOpacity(opacity); }
 //#define qGetEffectOpacity(item,opacity) dynamic_cast<QGraphicsOpacityEffect*>item->graphicsEffect() ? (dynamic_cast<QGraphicsOpacityEffect*>item->graphicsEffect())->opacity() : 0
 
-#if QT_VERSION >= 0x040600
-	#include <QGraphicsOpacityEffect>
-
-	#define QT46_OPAC_ENAB 0
-#endif
+// #if QT_VERSION >= 0x040600
+// 	#include <QGraphicsOpacityEffect>
+// 
+// 	#define QT46_OPAC_ENAB 0
+// #endif
 
 #define PTRS(ptr) QString().sprintf("%p",static_cast<void*>(ptr))
 
@@ -442,7 +442,7 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans, int speed, i
 // 		}
 	}
 	
-	
+/*	
 	if(m_masterSlide)
 	{
 		//qDebug() << "MyGraphicsScene::setSlide(): using master ptr:"<<PTRS(m_masterSlide);
@@ -494,8 +494,11 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans, int speed, i
 	{
 		//qDebug() << "MyGraphicsScene::setSlide(): NO MASTER SLIDE";
 	}
+*/
 	
 
+// 	m_fadeRoot->setOpacity(1);
+// 	m_liveRoot->setOpacity(0);
 	m_liveRoot->setZValue(300);
 	
 	//qDebug() << "MyGraphicsScene::setSlide(): Setting slide # "<<slide->slideNumber()<<" - DONE.";
@@ -634,6 +637,7 @@ void MyGraphicsScene::slotTransitionStep()
 		#endif
 		if(DEBUG_MYGRAPHICSSCENE)
 			qDebug()<<"MyGraphicsScene::slotTransitionStep(): step"<<m_fadeStepCounter<<"/"<<m_fadeSteps<<", inc:"<<inc<<", fade:"<<m_fadeRoot->opacity()<<", live:"<<m_liveRoot->opacity();
+		update();
 	}
 	else
 	{

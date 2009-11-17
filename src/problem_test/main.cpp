@@ -2,33 +2,36 @@
 #include <QGraphicsView>
 #include <QGraphicsItem>
 #include <QtOpenGL/QGLWidget>
+#include <QDebug>
 
 class BoxItem : public QGraphicsItem
 {
 public:
 
-	QRectF m_contentsRect;
-	QPen pen;
+	QRectF rect;
 	QBrush brush;
+	QPen pen;
 
-	BoxItem(QGraphicsScene * scene, QGraphicsItem * parent) : QGraphicsItem(parent, scene),
-		m_contentsRect(0,0,500,500), brush(QColor(255,0,0,255))
+	BoxItem(QGraphicsScene * scene, QGraphicsItem * parent) 
+		: QGraphicsItem(parent, scene)
+		, rect(0,0,500,500)
+		, brush(QColor(255,0,0,255))
+		, pen(QColor(0,0,0,255), 3.0)
 	{
-		setFlags(QGraphicsItem::ItemIsMovable);
-		pen.setWidthF(3);
-		pen.setColor(QColor(0,0,0,255));
+		
 	}
 
 	QRectF boundingRect() const
 	{
-		return m_contentsRect;
+		return rect;
 	}
 
-	void paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget)
+	void paint(QPainter * painter, const QStyleOptionGraphicsItem * /*option*/, QWidget * /*widget*/)
 	{
 		painter->setPen(pen);
+		painter->setPen(Qt::NoPen);
 		painter->setBrush(brush);
-		painter->drawRect(m_contentsRect);
+		painter->drawRect(rect);
 	}
 };
 
@@ -47,12 +50,10 @@ int main(int argc, char **argv)
 	graphicsView->resize(800,600);
 	graphicsView->setWindowTitle("Test");
 
-	for(int i=0;i<100;i++)
-	{
-		BoxItem *x = new BoxItem(scene,0);
-		x->setPos(qrand() % 800, qrand() % 600);
-	}
-
+	BoxItem *root = new BoxItem(scene,0);
+	root->setPos(10,10);
+	root->setOpacity(.5);
+	
 	graphicsView->show();
 
 	return app.exec();
