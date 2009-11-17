@@ -14,5 +14,6 @@ HEADERS +=  \
 	BibleGatewayConnector.h
 SOURCES += main.cpp \
 	BibleModel.cpp \
+	BookNameMap.cpp \
 	BibleConnector.cpp \
 	BibleGatewayConnector.cpp

@@ -3,6 +3,9 @@ DEPENDPATH += $$PWD
 
 QT += network
 
+# Generate the book name map
+$$system(perl book-abbrv-to-qt-map.pl > BookNameMap.cpp)
+
 
 # Input
 HEADERS +=  \
@@ -11,5 +14,6 @@ HEADERS +=  \
 	BibleGatewayConnector.h
 SOURCES += \
 	BibleModel.cpp \
+	BookNameMap.cpp \
 	BibleConnector.cpp \
 	BibleGatewayConnector.cpp

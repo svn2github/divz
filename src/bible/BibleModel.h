@@ -92,7 +92,7 @@ public:
 	PROP_DEF_FULL(QString, text, Text);
 	PROP_DEF_FULL(bool, valid, Valid);
 	
-	QString toString();
+	QString toString() const;
 	
 	static BibleVerseRef normalize(const QString&);
 	
@@ -102,15 +102,16 @@ public:
 	static TextTagList taggedVerseRefs(const QString&);
 		
 private:
-	void initNameMap();
 	static QRegExp normalizeRegExp;
 	static QRegExp referenceExtractRegExp;
-	static bool bookNameMap_initalized;
-	static QHash<QString,QString> BibleVerseRef::bookNameMap
 	
+	static void initNameMap();
+	static bool bookNameMap_initalized;
+	static QHash<QString,QString> bookNameMap;
 };
 
 QDebug operator<<(QDebug dbg, const BibleVerseList &list);
+QDebug operator<<(QDebug dbg, const BibleVerseRef &ref);
 
 
 #endif // BibleModel_H
