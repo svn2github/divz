@@ -72,6 +72,8 @@ public:
 	PROP_DEF_FULL(BibleChapter, chapter, Chapter);
 	PROP_DEF_FULL(int, verseNumber, VerseNumber);
 	PROP_DEF_FULL(QString, text, Text);
+	
+	BibleVerseRef verseRef() const;
 };
 
 #ifndef QIntPair
@@ -92,7 +94,11 @@ public:
 	PROP_DEF_FULL(QString, text, Text);
 	PROP_DEF_FULL(bool, valid, Valid);
 	
+	BibleVerseRef verseRef(int) const;
+	
 	QString toString() const;
+	
+	QString cacheKey() const;
 	
 	static BibleVerseRef normalize(const QString&);
 	

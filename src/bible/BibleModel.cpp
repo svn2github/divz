@@ -42,6 +42,14 @@ QDebug operator<<(QDebug dbg, const BibleVerseList &list)
 	return dbg.space();
 }
 
+
+BibleVerseRef BibleVerse::verseRef() const
+{
+	// return a ref for a single verse (hence the -1 for the range)
+	return BibleVerseRef(m_book, m_chapter, m_verseNumber, -1);
+}
+
+
 // cap 1 = book, 2 = chapter, 3 = verse, 4 = range end
 QRegExp BibleVerseRef::normalizeRegExp("((?:[1-9]\\s+)?\\w+)\\s+([0-9]+)(?:[:\\.]([0-9]+))?(?:\\s*-\\s*([0-9]+))?"); 
 
@@ -69,6 +77,20 @@ QString BibleVerseRef::toString() const
 		.arg(m_verseNumber>0? QString(":%1").arg(m_verseNumber) : QString(""))
 		.arg(m_verseRange>0 && m_verseRange!=m_verseNumber ? QString("-%1").arg(m_verseRange) : QString(""));
 }
+
+QString BibleVerseRef::toString() const
+{
+	return QString("%1 (%2)")
+		.arg(toString())
+		.arg(m_book.version().code());
+}
+
+BibleVerseRef BibleVerseRef::verseRef(int newVerseNumber) const
+{
+	// return a ref for a single verse (hence the -1 for the range)
+	return BibleVerseRef(m_book, m_chapter, newVerseNumber, -1);
+}
+
 
 #define DEBUG_NORMALIZE 0
 BibleVerseRef BibleVerseRef::normalize(const QString& tmp)

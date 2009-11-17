@@ -15,16 +15,16 @@ public:
 	BibleConnector(QObject *parent = 0);
 	virtual ~BibleConnector();
 	
-	virtual bool findReference(const QString& reference);
+	virtual bool findReference(const BibleVerseRef& reference);
 	
-	virtual BibleVerseList loadReference(const QString& reference);
+	virtual BibleVerseList loadReference(const BibleVerseRef& reference);
 	
-	virtual void downloadReference(const QString& reference);
+	virtual void downloadReference(const BibleVerseRef& reference);
 	
-	virtual QString urlForReference(const QString& reference, const BibleVersion& v= BibleVersion()) = 0;
+	virtual QString urlForReference(const BibleVerseRef& reference) = 0;
 	
 signals:
-	void referenceAvailable(const QString& reference, const BibleVerseList & list);
+	void referenceAvailable(const BibleVerseRef& reference, const BibleVerseList & list);
 
 protected slots:
 	void downloadFinished(QNetworkReply *reply);
@@ -34,11 +34,12 @@ protected:
 	
 	virtual BibleVerseList parseHtmlReply(QByteArray &) = 0;
 	
-	virtual BibleVerseList loadCached(const QString& reference);
-	virtual void cacheList(const QString& reference, const BibleVerseList &list);
+	virtual BibleVerseList loadCached(const BibleVerseRef&);
+	virtual void cacheList(const BibleVerseList &);
+	virtual void isCached(const BibleVerseRef&);
 	
 	QNetworkAccessManager * m_net;
-	QHash<QString, BibleVerseList> m_cache;
+	QHash<QString, BibleVerse> m_cache; // cache per-verse (per version)
 	QHash<QNetworkReply*, QString> m_inProgress;
 	
 };
