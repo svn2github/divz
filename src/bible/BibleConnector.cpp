@@ -6,6 +6,7 @@
 #include <QStringList>
 #include <QRegExp>
 
+
 BibleConnector::BibleConnector(QObject *parent) 
 	: QObject(parent)
 	, m_net(0)

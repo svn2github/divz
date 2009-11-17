@@ -3,6 +3,8 @@
 
 #include <QObject>
 #include <QList>
+#include <QRegExp>
+#include <QPair>
 
 #include "../PropertyUtils.h"
 
@@ -70,6 +72,42 @@ public:
 	PROP_DEF_FULL(BibleChapter, chapter, Chapter);
 	PROP_DEF_FULL(int, verseNumber, VerseNumber);
 	PROP_DEF_FULL(QString, text, Text);
+};
+
+#ifndef QIntPair
+	typedef QPair<int,int> QIntPair;
+#endif
+
+class BibleVerseRef
+{
+public:
+	BibleVerseRef(const BibleBook &book=BibleBook(), const BibleChapter &chapter=BibleChapter(), int verseNumber=1, int range=-1);
+	BibleVerseRef(const BibleChapter &chapter, int verseNumber=1, int range=-1);
+	BibleVerseRef(bool valid) : m_valid(valid) {}
+	
+	PROP_DEF_FULL(BibleBook, book, Book);
+	PROP_DEF_FULL(BibleChapter, chapter, Chapter);
+	PROP_DEF_FULL(int, verseNumber, VerseNumber);
+	PROP_DEF_FULL(int, verseRange, VerseRange);
+	PROP_DEF_FULL(QString, text, Text);
+	PROP_DEF_FULL(bool, valid, Valid);
+	
+	QString toString();
+	
+	static BibleVerseRef normalize(const QString&);
+	
+	typedef QPair<BibleVerseRef,QIntPair> TextTag;
+	typedef QList<BibleVerseRef::TextTag> TextTagList;
+	
+	static TextTagList taggedVerseRefs(const QString&);
+		
+private:
+	void initNameMap();
+	static QRegExp normalizeRegExp;
+	static QRegExp referenceExtractRegExp;
+	static bool bookNameMap_initalized;
+	static QHash<QString,QString> BibleVerseRef::bookNameMap
+	
 };
 
 QDebug operator<<(QDebug dbg, const BibleVerseList &list);

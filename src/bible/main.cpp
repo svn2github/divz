@@ -7,7 +7,12 @@ int main(int argc, char **argv)
 	
 	BibleGatewayConnector c;
 	
-	c.downloadReference("Romans 6:23");
+	//c.downloadReference("Romans 6");
+	
+	BibleVerseRef::normalize("Romans 6");
+	BibleVerseRef::normalize("Romans 6:23"); 
+	BibleVerseRef::normalize("Romans 6:23-25");
+	
 	
 // 	BibleVerseList v = c.download("John 3:16");
 // 	qDebug() << v;

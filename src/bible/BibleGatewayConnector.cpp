@@ -14,7 +14,10 @@ BibleGatewayConnector::BibleGatewayConnector(QObject *parent)
 
 QString BibleGatewayConnector::urlForReference(const QString& reference, const BibleVersion&)
 {
-	// include gen 2:7 just to generate the multipassage table
+	// Include gen 2:7 just to generate the multipassage table
+	// Note: In book_downloader.pl, gen 2:7 was used to find the 'bad server' in biblegateway.com's round robin. 
+	// However, that logic is not implemented here - but gen 2:7 (or any other additional passage) still serves 
+	// the purpose of triggering the 'multipassage-box' output from their servers.
 	return QString("%1NIV&search=Genesis 2:7; %2").arg(URL_BASE).arg(reference);
 }
 
@@ -64,10 +67,13 @@ BibleVerseList BibleGatewayConnector::parseHtmlReply(QByteArray &ba)
 	
 	//qDebug() << "normalizedReference:"<<normalizedReference;
 	
-	QRegExp rxNorm("(\\w+)\\s+(\\d+):");
+	QRegExp rxNorm("(\\w+)(?:\\s+(\\d+))?");
 	pos = rxNorm.indexIn(normalizedReference);
 	QString book    = rxNorm.cap(1);
 	QString chapter = rxNorm.cap(2);
+	
+	if(chapter.isEmpty())
+		chapter = "1";
 	
 	BibleChapter bookChapter(BibleBook(book), chapter.toInt());
 	
@@ -79,21 +85,26 @@ BibleVerseList BibleGatewayConnector::parseHtmlReply(QByteArray &ba)
 	foreach(QString raw, rawVerses)
 	{
 		QString verseNumber;
+		
 		int pos = rxVerseNum.indexIn(raw);
 		if(pos > -1)
 			verseNumber = rxVerseNum.cap(1);
+		
 		raw = raw.replace(rxVerseNum, "");
-		
-		raw = BibleGatewayConnector::html2text(raw);
-		
+		raw = html2text(raw);
 		raw = raw.trimmed();
 		
-		if(raw.isEmpty() && verseNumber.isEmpty())
+		if(raw.isEmpty() && 
+		   verseNumber.isEmpty())
 			continue;
 		
 		//qDebug() << "Parsed: "<<verseNumber<<": "<<raw;
 		
-		list << BibleVerse(bookChapter, verseNumber.toInt(), raw);
+		int intNum = verseNumber.toInt();
+		if(intNum < 1)
+			continue;
+			
+		list << BibleVerse(bookChapter, intNum, raw);
 	}
 	
 	return list;
