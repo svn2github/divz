@@ -36,11 +36,11 @@ protected:
 	
 	virtual BibleVerseList loadCached(const BibleVerseRef&);
 	virtual void cacheList(const BibleVerseList &);
-	virtual void isCached(const BibleVerseRef&);
+	virtual bool isCached(const BibleVerseRef&);
 	
 	QNetworkAccessManager * m_net;
 	QHash<QString, BibleVerse> m_cache; // cache per-verse (per version)
-	QHash<QNetworkReply*, QString> m_inProgress;
+	QHash<QNetworkReply*, BibleVerseRef> m_inProgress;
 	
 };
 

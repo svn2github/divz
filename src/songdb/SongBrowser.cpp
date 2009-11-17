@@ -241,7 +241,8 @@ void SongBrowser::editSongAccepted(/*SongRecord**/)
 void SongBrowser::songDoubleClicked(const QModelIndex &idx)
 {
 	SongRecord * song = m_songListModel->songFromIndex(idx);
-	emit songSelected(song);
+	if(song)
+		emit songSelected(song);
 }
 
 void SongBrowser::songSingleClicked(const QModelIndex &idx)

@@ -11,6 +11,7 @@
 class BibleBook;
 class BibleChapter;
 class BibleVerse;
+class BibleVerseRef;
 
 class BibleVersion 
 {
@@ -100,7 +101,7 @@ public:
 	
 	QString cacheKey() const;
 	
-	static BibleVerseRef normalize(const QString&);
+	static BibleVerseRef normalize(const QString&, const BibleVersion &version = BibleVersion());
 	
 	typedef QPair<BibleVerseRef,QIntPair> TextTag;
 	typedef QList<BibleVerseRef::TextTag> TextTagList;

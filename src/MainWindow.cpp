@@ -42,6 +42,7 @@
 #include "songdb/SongSlideGroup.h"
 #include "songdb/SongRecord.h"
 #include "songdb/SongBrowser.h"
+#include "bible/BibleBrowser.h"
 
 #include "MediaBrowser.h"
 
@@ -605,6 +606,13 @@ void MainWindow::setupSongList()
 	baseLayout->addWidget(m_songBrowser);
 
 	connect(m_songBrowser, SIGNAL(songSelected(SongRecord*)), this, SLOT(songSelected(SongRecord*)));
+	
+	
+	baseLayout = new QVBoxLayout(m_ui->tabSlides);
+	baseLayout->setContentsMargins(0,0,0,0);
+
+	BibleBrowser * bible = new BibleBrowser(m_ui->tabSlides);
+	baseLayout->addWidget(bible);
 }
 
 void MainWindow::songSelected(SongRecord *song)

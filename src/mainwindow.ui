@@ -26,7 +26,7 @@
      <x>0</x>
      <y>0</y>
      <width>807</width>
-     <height>26</height>
+     <height>25</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -93,7 +93,7 @@
      <item>
       <widget class="QTabWidget" name="tabWidget">
        <property name="currentIndex">
-        <number>0</number>
+        <number>1</number>
        </property>
        <property name="movable">
         <bool>false</bool>
@@ -103,9 +103,14 @@
          <string>Songs</string>
         </attribute>
        </widget>
+       <widget class="QWidget" name="tabBible">
+        <attribute name="title">
+         <string>Bible</string>
+        </attribute>
+       </widget>
        <widget class="QWidget" name="tabMedia">
         <attribute name="title">
-         <string>Media Files</string>
+         <string>Media</string>
         </attribute>
        </widget>
        <widget class="QWidget" name="tabSlides">

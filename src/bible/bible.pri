@@ -11,9 +11,11 @@ $$system(perl book-abbrv-to-qt-map.pl > BookNameMap.cpp)
 HEADERS +=  \
 	BibleModel.h \
 	BibleConnector.h \
-	BibleGatewayConnector.h
+	BibleGatewayConnector.h \
+	BibleBrowser.h
 SOURCES += \
 	BibleModel.cpp \
 	BookNameMap.cpp \
 	BibleConnector.cpp \
-	BibleGatewayConnector.cpp
+	BibleGatewayConnector.cpp \
+	BibleBrowser.cpp

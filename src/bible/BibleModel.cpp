@@ -1,8 +1,8 @@
 #include "BibleModel.h"
 
 BibleVersion::BibleVersion(const QString& name, const QString& code) :
-	  m_name(name)
-	, m_code(code)
+	  m_name(name.isEmpty() ? "New International Version" : name)
+	, m_code(code.isEmpty() ? "NIV" : code)
 {}
 	
 BibleBook::BibleBook(const QString& bookName, const BibleVersion& v) :
@@ -78,7 +78,7 @@ QString BibleVerseRef::toString() const
 		.arg(m_verseRange>0 && m_verseRange!=m_verseNumber ? QString("-%1").arg(m_verseRange) : QString(""));
 }
 
-QString BibleVerseRef::toString() const
+QString BibleVerseRef::cacheKey() const
 {
 	return QString("%1 (%2)")
 		.arg(toString())
@@ -93,7 +93,7 @@ BibleVerseRef BibleVerseRef::verseRef(int newVerseNumber) const
 
 
 #define DEBUG_NORMALIZE 0
-BibleVerseRef BibleVerseRef::normalize(const QString& tmp)
+BibleVerseRef BibleVerseRef::normalize(const QString& tmp, const BibleVersion &version)
 {
 	if(!bookNameMap_initalized)
 		initNameMap();
@@ -131,7 +131,7 @@ BibleVerseRef BibleVerseRef::normalize(const QString& tmp)
 	if(DEBUG_NORMALIZE)
 		qDebug() << "normalize("<<tmp<<"): step 2: norm:"<<book<<chapter<<verse<<range;
 	
-	BibleVerseRef final = BibleVerseRef(BibleChapter(BibleBook(book), chapter.toInt()), verse.toInt(), range.toInt());
+	BibleVerseRef final = BibleVerseRef(BibleChapter(BibleBook(book,version), chapter.toInt()), verse.toInt(), range.toInt());
 	
 	if(DEBUG_NORMALIZE)
 		qDebug() << "normalize("<<tmp<<"): step 3: final string: "<<final .toString();
@@ -143,7 +143,7 @@ BibleVerseRef BibleVerseRef::normalize(const QString& tmp)
 
 QDebug operator<<(QDebug dbg, const BibleVerseRef &ref)
 {
-	dbg.nospace() << qPrintable(ref.toString());
+	dbg.nospace() << qPrintable(ref.cacheKey());
 	
 	return dbg.nospace();
 }

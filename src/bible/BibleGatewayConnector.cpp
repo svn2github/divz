@@ -5,20 +5,24 @@
 #include <QStringList>
 
 
-#define URL_BASE "http://www.biblegateway.com/passage/?version="
+#define URL_BASE "http://www.biblegateway.com/passage/"
 
 BibleGatewayConnector::BibleGatewayConnector(QObject *parent) 
 	: BibleConnector(parent)
 {
 }
 
-QString BibleGatewayConnector::urlForReference(const QString& reference, const BibleVersion&)
+QString BibleGatewayConnector::urlForReference(const BibleVerseRef& reference)
 {
 	// Include gen 2:7 just to generate the multipassage table
 	// Note: In book_downloader.pl, gen 2:7 was used to find the 'bad server' in biblegateway.com's round robin. 
 	// However, that logic is not implemented here - but gen 2:7 (or any other additional passage) still serves 
 	// the purpose of triggering the 'multipassage-box' output from their servers.
-	return QString("%1NIV&search=Genesis 2:7; %2").arg(URL_BASE).arg(reference);
+	BibleVersion ver = reference.book().version();
+	return QString("%1?version=%2&search=Genesis 2:7; %3")
+		.arg(URL_BASE)
+		.arg(ver.code().isEmpty() ? "NIV" : ver.code())
+		.arg(reference.toString());
 }
 
 

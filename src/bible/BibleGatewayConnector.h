@@ -15,7 +15,7 @@ class BibleGatewayConnector : public BibleConnector
 public:
 	BibleGatewayConnector(QObject *parent = 0);
 	
-	QString urlForReference(const QString& reference, const BibleVersion& v= BibleVersion());
+	QString urlForReference(const BibleVerseRef& reference);
 	
 protected:
 	BibleVerseList parseHtmlReply(QByteArray &);
