@@ -366,11 +366,11 @@ void QVideo::consumeFrame()
 
 
 		
-		if(actual_delay<min)
-		{
-			actual_delay = min;
+		//if(actual_delay<min)
+		//{
+		//	actual_delay = min;
 		//qDebug("***************** Keeping out of the water: %d",min);
-		}
+		//}
 		
 		if(acutal_delay_int < 0)
 			acutal_delay_int = 0;
@@ -434,6 +434,8 @@ void QVideo::displayFrame()
         //qDebug("Done sleeping, showing next frame");
 
         int xflag = 0;
+	if(m_expectedDelay == 0)
+		m_expectedDelay = 10;
         if(m_frameDebug.elapsed() > m_expectedDelay * 3)
         {
             //qDebug(" * * * %s: elapsed: %d, expected: %d", qPrintable(m_filename), m_frameDebug.elapsed(), m_expectedDelay);
