@@ -78,6 +78,7 @@ QString BibleConnector::html2text(const QString &tmp)
 	text.replace("&quot;","\"");
 	text.replace("&mdash;","--");
 	text.replace("&rsquo;","'");
+	text.replace("—"," - ");
 	
 	return text;
 }

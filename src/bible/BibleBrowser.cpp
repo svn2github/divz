@@ -624,6 +624,8 @@ Slide * BibleBrowser::addSlide(SlideGroup *group, TextBoxItem *tmpText, int real
 	slide->setSlideNumber(slideNum);
 	group->addSlide(slide);
 	
+	tmpText->warmVisualCache();
+	
 	return slide;
 }
 

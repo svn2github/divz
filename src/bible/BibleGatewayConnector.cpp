@@ -82,12 +82,17 @@ BibleVerseList BibleGatewayConnector::parseHtmlReply(QByteArray &ba)
 	BibleChapter bookChapter(BibleBook(book), chapter.toInt());
 	
 	QRegExp rxVerseNum("^[^>]+>(\\d+)</sup>");
-	QRegExp rxVerseSplit("<sup.*class=\"versenum\"");
+	rxVerseNum.setMinimal(true);
+	QRegExp rxVerseSplit("class=\"versenum\"");
 	rxVerseSplit.setMinimal(true);
+	
+	QRegExp rxSupEnd("<sup\\s*$");
 	
 	QStringList rawVerses = passage.split(rxVerseSplit);
 	foreach(QString raw, rawVerses)
 	{
+		raw.replace(rxSupEnd,"");
+		
 		QString verseNumber;
 		
 		int pos = rxVerseNum.indexIn(raw);

@@ -7,7 +7,7 @@ int main(int argc, char **argv)
 	
 	BibleGatewayConnector c;
 	
-	c.downloadReference(BibleVerseRef::normalize("Romans 6:23"));
+	c.downloadReference(BibleVerseRef::normalize("John 3:13"));
 	
 // 	qDebug() << BibleVerseRef::normalize("Romans 6");
 // 	qDebug() << BibleVerseRef::normalize("Romans 6:23");
