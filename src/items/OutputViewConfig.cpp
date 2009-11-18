@@ -17,9 +17,15 @@ OutputViewConfig::OutputViewConfig(OutputViewContent * v, QGraphicsItem * parent
 	OutputViewItem * model = dynamic_cast<OutputViewItem*>(v->modelItem());
 	
 	QWidget * base = new QWidget();
-	QHBoxLayout *layout = new QHBoxLayout(base);
+	
+	QVBoxLayout *vbox = new QVBoxLayout(base);
+	
+	QHBoxLayout *layout = new QHBoxLayout();
 	QLabel *label = new QLabel("Show Output: ");
 	layout->addWidget(label);
+	
+	vbox->addLayout(layout);
+	vbox->addStretch(2);
 	
 	m_syncWithBox = new QComboBox();
 	layout->addWidget(m_syncWithBox);
@@ -33,6 +39,7 @@ OutputViewConfig::OutputViewConfig(OutputViewContent * v, QGraphicsItem * parent
 		if(out->isEnabled()) // && (m_inst ? out->id() != m_inst->output()->id() : true))
 		{
 			m_syncWithBox->addItem(out->name(), QVariant(out->id()));
+			qDebug() << "OutputViewConfig: outputId "<<out->id()<<"="<<out->name();
 		}
 	}
 	

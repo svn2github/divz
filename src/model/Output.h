@@ -38,7 +38,7 @@ public:
 	typedef enum OutputType { Screen, Custom, Network, Preview, Widget };
 
 	Output();
-	Output(OutputType type);
+	Output(OutputType type, const QString & name="");
 
 	bool isSystem() { return m_isSystem; }
 	void setIsSystem(bool);

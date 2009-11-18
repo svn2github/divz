@@ -5,14 +5,15 @@
 #include <QApplication>
 #include <QDesktopWidget>
 
-Output * Output::m_staticPreviewInstance = new Output(Output::Preview);
-Output * Output::m_staticWidgetInstance = new Output(Output::Widget);
+Output * Output::m_staticPreviewInstance = new Output(Output::Preview,"Output::Preview");
+Output * Output::m_staticWidgetInstance = new Output(Output::Widget,"Output::Widget");
 
-Output::Output(Output::OutputType type)
+Output::Output(Output::OutputType type, const QString& name)
 {
 	setupDefaults();
 	generateId();
 	setOutputType(type);
+	setName(name);
 }
 
 Output::Output()

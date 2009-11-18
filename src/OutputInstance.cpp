@@ -99,6 +99,7 @@ OutputInstance::~OutputInstance()
 
 void OutputInstance::addMirror(OutputInstance *inst)
 {
+	qDebug() << "OutputInstance::addMirror: ["<<m_output->name()<<"] Adding mirror instance ptr"<<inst<<", mirror inst output name: "<<inst->output()->name();
 	if(!m_mirrors.contains(inst))
 		m_mirrors << inst;
 }
@@ -604,8 +605,12 @@ void OutputInstance::removeFilter(AbstractItemFilter *filter)
 
 void OutputInstance::removeAllFilters()
 {
+	qDebug() << "OutputInstance::setSlide: ["<<m_output->name()<<"] Updating mirrors - remove all filters, # mirrors:"<<m_mirrors.size();
 	foreach(OutputInstance *m, m_mirrors)
+	{
+		qDebug() << "OutputInstance::setSlide: ["<<m_output->name()<<"] MirrorPtr: "<<m;
 		m->removeAllFilters();
+	}
 	
 	if(!m_output->isEnabled())
 		return;
@@ -701,6 +706,7 @@ Slide * OutputInstance::setSlide(int x)
 
 Slide * OutputInstance::setSlide(Slide *slide, bool takeOwnership)
 {
+	qDebug() << "OutputInstance::setSlide: ["<<m_output->name()<<"] Updating mirrors to slidePtr"<<slide;
 	foreach(OutputInstance *m, m_mirrors)
 		m->setSlide(slide);
 		

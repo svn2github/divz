@@ -122,6 +122,7 @@ void OutputViewContent::setOutputId(int id)
 		
 	if(inst)
 	{
+		qDebug() << "OutputViewContent::setOutputId("<<id<<"): Initalizing inst for output"<<inst->output()->name();
 		m_inst = inst;
 		m_inst->addMirror(m_viewer);
 	}
