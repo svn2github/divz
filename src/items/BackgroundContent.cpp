@@ -192,16 +192,14 @@ void BackgroundContent::syncFromModelItem(AbstractVisualItem *model)
 			delta.setY(m_zoomEndSize.y() - m_zoomCurSize.y());
 			//step.setX(delta.x()/ZOOM_STEPS);
 			//step.setY(delta.y()/ZOOM_STEPS);
-			m_zoomInit = true;
+//			m_zoomInit = true;
 		}
 		
 		// allow it to go below 1.0 for step size by using 75.0 when the max of the zoomSpeed slider in config is 100
 		m_zoomStep.setX(75.0 / (100.0 - ((double)model->zoomSpeed())) * aspectRatio);
 		m_zoomStep.setY(75.0 / (100.0 - ((double)model->zoomSpeed())));
 		
-		if(model->zoomAnchorCenter())
-			m_zoomDestPoint = QPointF(.5,.5);
-		else
+		if(model->zoomAnchorPoint() == AbstractVisualItem::ZoomAnchorRandom)
 		{
 			// pick a third intersection
 			double x = qrand() < RAND_MAX/2 ? .33 : .66;
@@ -212,8 +210,28 @@ void BackgroundContent::syncFromModelItem(AbstractVisualItem *model)
 // 			y += 0.15 - ((double)qrand()) / ((double)RAND_MAX) * 0.075;
 			
 			m_zoomDestPoint = QPointF(x,y);
+			qDebug() << "ZoomRandom:	"<<x<<","<<y;
 			
 			//qDebug() << model->itemName() << "Random zoom anchor: "<<m_zoomDestPoint;
+		}
+		else
+		{
+			double x = .0, y = .0;
+			switch(model->zoomAnchorPoint())
+			{
+				case AbstractVisualItem::ZoomTopLeft:		x = .33; y = .33; qDebug() << "ZoomTopLeft:	"<<x<<","<<y; break;
+				case AbstractVisualItem::ZoomTopMid:		x = .50; y = .25; qDebug() << "ZoomTopMid:	"<<x<<","<<y; break;
+				case AbstractVisualItem::ZoomTopRight:		x = .66; y = .33; qDebug() << "ZoomTopRight:	"<<x<<","<<y; break;
+				case AbstractVisualItem::ZoomRightMid:		x = .75; y = .50; qDebug() << "ZoomRightMid:	"<<x<<","<<y; break;
+				case AbstractVisualItem::ZoomBottomRight:	x = .66; y = .66; qDebug() << "ZoomBottomRight:	"<<x<<","<<y; break;
+				case AbstractVisualItem::ZoomBottomMid:		x = .50; y = .75; qDebug() << "ZoomBottomMid:	"<<x<<","<<y; break;
+				case AbstractVisualItem::ZoomBottomLeft:	x = .33; y = .66; qDebug() << "ZoomBottomLeft:	"<<x<<","<<y; break;
+				case AbstractVisualItem::ZoomLeftMid:		x = .25; y = .50; qDebug() << "ZoomLeftMid:	"<<x<<","<<y; break;
+				case AbstractVisualItem::ZoomCenter:
+				default:					x = .50; y = .50; qDebug() << "ZoomCenter:	"<<x<<","<<y; break;
+			};
+			
+			m_zoomDestPoint = QPointF(x,y);
 		}
 
 	}

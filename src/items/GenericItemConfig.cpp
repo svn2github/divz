@@ -178,10 +178,23 @@ GenericItemConfig::GenericItemConfig(AbstractContent * content, QWidget *parent)
 	// foce UI update by toggeling state
 	m_commonUi->zoomEnabled->setChecked(!model->zoomEffectEnabled());
 	m_commonUi->zoomEnabled->setChecked(model->zoomEffectEnabled());
-	if(model->zoomAnchorCenter())
+	if(model->zoomAnchorPoint() == AbstractVisualItem::ZoomCenter)
 		m_commonUi->anchorCenter->setChecked(true);
 	else
+	if(model->zoomAnchorPoint() == AbstractVisualItem::ZoomAnchorRandom)
 		m_commonUi->anchorRandom->setChecked(true);
+	else
+	{
+		m_commonUi->anchorOther->setChecked(true);
+		
+		int value = (int)model->zoomAnchorPoint();
+		int idx = value - 7;
+		if(idx < 0)
+			idx = idx + 9 - 1;
+		
+		qDebug() << "combo init: "<<value<<"="<<idx;
+		m_commonUi->zoomAnchorCombo->setCurrentIndex(idx);
+	}
 		
 	if(model->zoomDirection() == AbstractVisualItem::ZoomIn)
 		m_commonUi->zoomDirIn->setChecked(true);
@@ -205,6 +218,9 @@ GenericItemConfig::GenericItemConfig(AbstractContent * content, QWidget *parent)
 	connect(m_commonUi->zoomLoop, SIGNAL(toggled(bool)), this, SLOT(zoomLoopChanged(bool)));
 	connect(m_commonUi->zoomEnabled, SIGNAL(toggled(bool)), this, SLOT(zoomEffectEnabled(bool)));
 	connect(m_commonUi->anchorCenter, SIGNAL(toggled(bool)), this, SLOT(setZoomAnchorCenter(bool)));
+	connect(m_commonUi->anchorRandom, SIGNAL(toggled(bool)), this, SLOT(setZoomAnchorRandom(bool)));
+	connect(m_commonUi->zoomAnchorCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(setZoomAnchorPoint(int)));
+	
 	connect(m_commonUi->zoomDirIn, SIGNAL(clicked()), this, SLOT(updateZoomDirection()));
 	connect(m_commonUi->zoomDirOut, SIGNAL(clicked()), this, SLOT(updateZoomDirection()));
 	connect(m_commonUi->zoomDirRandom, SIGNAL(clicked()), this, SLOT(updateZoomDirection()));
@@ -766,8 +782,45 @@ void GenericItemConfig::zoomEffectEnabled(bool flag)
 
 void GenericItemConfig::setZoomAnchorCenter(bool flag)
 {
-	m_content->modelItem()->setZoomAnchorCenter(flag);
+	if(flag)
+		m_content->modelItem()->setZoomAnchorPoint(AbstractVisualItem::ZoomCenter);
 }
+
+void GenericItemConfig::setZoomAnchorRandom(bool flag)
+{
+	if(flag)
+		m_content->modelItem()->setZoomAnchorPoint(AbstractVisualItem::ZoomAnchorRandom);
+}
+
+void GenericItemConfig::setZoomAnchorPoint(int idx)
+{
+// 	0 bottom mid = 7
+// 	1 bottom left  = 8
+// 	2 left mid = 9
+// 	
+// 	3 top left = 2
+// 	4 top mid = 3
+// 	5 top right = 4
+// 	6 right mid = 5
+// 	7 bottom right = 6
+// 	
+// 	6 = 4
+// 	and
+// 	2 = 9
+// 	
+	if(idx < 0)
+		idx = 0;
+		
+	// wrap around to match the enum
+	int value = idx + 7;
+	if(value > 9)
+		value = value - 9 + 1;
+		
+	qDebug() << "GenericItemConfig::setZoomAnchorPoint("<<idx<<"): "<<value;
+	
+	m_content->modelItem()->setZoomAnchorPoint((AbstractVisualItem::ZoomAnchorPoint)value);
+}
+
 
 void GenericItemConfig::updateZoomDirection()
 {

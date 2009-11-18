@@ -140,6 +140,8 @@ class GenericItemConfig : public QWidget
 		
 		void zoomEffectEnabled(bool);
 		void setZoomAnchorCenter(bool);
+		void setZoomAnchorRandom(bool);
+		void setZoomAnchorPoint(int);
 		void updateZoomDirection();
 		void zoomSpeedChanged(int);
 		void zoomLoopChanged(bool);

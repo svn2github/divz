@@ -94,6 +94,7 @@ void AppSettings::initApp(const QString& appName)
 
 	qRegisterMetaType<AbstractVisualItem::FillType>("FillType");
 	qRegisterMetaType<AbstractVisualItem::ZoomEffectDirection>("ZoomEffectDirection");
+	qRegisterMetaType<AbstractVisualItem::ZoomAnchorPoint>("ZoomAnchorPoint");
 	//qRegisterMetaType<SlideGroup::GroupType>("GroupType");
 	qRegisterMetaType<SlideGroup::EndOfGroupAction>("EndOfGroupAction");
 

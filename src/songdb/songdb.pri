@@ -1,6 +1,8 @@
 VPATH += $$PWD
 DEPENDPATH += $$PWD
 
+FORMS += SongSearchOnlineDialog.ui
+
 HEADERS +=  \
 	SongRecord.h \
 	SongRecordListModel.h \
@@ -8,7 +10,8 @@ HEADERS +=  \
 	SongSlideGroupFactory.h \
 	SongSlideGroupListModel.h \
 	SongEditorWindow.h \
-	SongBrowser.h
+	SongBrowser.h \
+	SongSearchOnlineDialog.h
 
     
 SOURCES += \
@@ -18,4 +21,5 @@ SOURCES += \
 	SongSlideGroupFactory.cpp \
 	SongSlideGroupListModel.cpp \
 	SongEditorWindow.cpp \
-	SongBrowser.cpp
+	SongBrowser.cpp \
+	SongSearchOnlineDialog.cpp

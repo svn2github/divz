@@ -57,6 +57,8 @@ protected slots:
 	void editSongInDB();
 	void deleteCurrentSong();
 	
+	void searchOnline();
+	
 protected:
 	void setupUI();
 
@@ -72,7 +74,7 @@ protected:
 	SongRecordListModel * m_songListModel;
 	QTextEdit     * m_songTextPreview;
 	QSplitter     * m_splitter;
-
+	QPushButton   * m_onlineBtn;
 	
 
 };

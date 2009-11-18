@@ -62,7 +62,7 @@ AbstractVisualItem::AbstractVisualItem()
 	m_sourceOffsetBR = QPointF(0,0);
 	
 	m_zoomEffectEnabled = false;
-	m_zoomAnchorCenter = false;
+	m_zoomAnchorPoint = ZoomAnchorRandom;
 	m_zoomDirection = ZoomRandom;
 	m_zoomSpeed = 30;
 	m_zoomLoop = false;
@@ -133,7 +133,7 @@ ITEM_PROPSET(AbstractVisualItem, ShadowOffsetY,		double,	shadowOffsetY);
 ITEM_PROPSET(AbstractVisualItem, ShadowBrush,		QBrush,	shadowBrush);
 
 ITEM_PROPSET(AbstractVisualItem, ZoomEffectEnabled,	bool,	zoomEffectEnabled);
-ITEM_PROPSET(AbstractVisualItem, ZoomAnchorCenter,	bool,	zoomAnchorCenter);
+ITEM_PROPSET(AbstractVisualItem, ZoomAnchorPoint,	ZoomAnchorPoint,	zoomAnchorPoint);
 ITEM_PROPSET(AbstractVisualItem, ZoomDirection,		ZoomEffectDirection,	zoomDirection);
 ITEM_PROPSET(AbstractVisualItem, ZoomSpeed,		int,	zoomSpeed);
 ITEM_PROPSET(AbstractVisualItem, ZoomLoop,		bool,	zoomLoop);
@@ -292,7 +292,7 @@ bool AbstractVisualItem::fromXml(QDomElement & pe)
 	if(!domElement.isNull()) 
 	{
 		setZoomEffectEnabled(domElement.attribute("enabled").toInt());
-		setZoomAnchorCenter(domElement.attribute("anchor-center").toInt());
+		setZoomAnchorPoint((ZoomAnchorPoint)domElement.attribute("anchor-center").toInt());
 		setZoomDirection((ZoomEffectDirection)domElement.attribute("direction").toInt());
 		setZoomSpeed(domElement.attribute("speed").toInt());
 		QString str = domElement.attribute("loop");
@@ -421,7 +421,7 @@ void AbstractVisualItem::toXml(QDomElement & pe) const
  	
  	domElement = doc.createElement("zoom");
  	domElement.setAttribute("enabled", zoomEffectEnabled());
- 	domElement.setAttribute("anchor-center", zoomAnchorCenter());
+ 	domElement.setAttribute("anchor-center", zoomAnchorPoint());
  	domElement.setAttribute("direction", (int)zoomDirection());
  	domElement.setAttribute("speed", zoomSpeed());
  	domElement.setAttribute("loop", zoomLoop());

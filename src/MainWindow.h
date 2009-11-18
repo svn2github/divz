@@ -144,7 +144,9 @@ private:
 	void setupOutputControls();
 	void setupCentralWidget();
 	void setupSongList();
+	void setupBibleBrowser();
 	void setupMediaBrowser();
+	void setupSlideLibrary();
 	
 	void sendGroupToOutput(Output *output, SlideGroup *group, Slide *startSlide, bool allowProgressDialog);
 	

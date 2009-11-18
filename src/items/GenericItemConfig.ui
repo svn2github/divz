@@ -1134,6 +1134,102 @@
                </property>
               </widget>
              </item>
+             <item>
+              <widget class="QRadioButton" name="anchorOther">
+               <property name="text">
+                <string>Other Point:</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_10">
+               <item>
+                <widget class="QComboBox" name="zoomAnchorCombo">
+                 <property name="enabled">
+                  <bool>false</bool>
+                 </property>
+                 <item>
+                  <property name="text">
+                   <string>Bottom Mid</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>Bottom Left</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>Left Mid</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>Top Left</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>Top Mid</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>Top Right</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>Right Mid</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>Bottom Right</string>
+                  </property>
+                 </item>
+                </widget>
+               </item>
+               <item>
+                <widget class="QDial" name="zoomAnchorDial">
+                 <property name="enabled">
+                  <bool>false</bool>
+                 </property>
+                 <property name="maximum">
+                  <number>8</number>
+                 </property>
+                 <property name="singleStep">
+                  <number>1</number>
+                 </property>
+                 <property name="pageStep">
+                  <number>1</number>
+                 </property>
+                 <property name="wrapping">
+                  <bool>true</bool>
+                 </property>
+                 <property name="notchTarget">
+                  <double>1.000000000000000</double>
+                 </property>
+                 <property name="notchesVisible">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item>
+              <spacer name="verticalSpacer_6">
+               <property name="orientation">
+                <enum>Qt::Vertical</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>20</width>
+                 <height>40</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
             </layout>
            </widget>
           </item>
@@ -1194,12 +1290,12 @@
    <slot>setValue(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>131</x>
-     <y>317</y>
+     <x>146</x>
+     <y>312</y>
     </hint>
     <hint type="destinationlabel">
-     <x>207</x>
-     <y>320</y>
+     <x>206</x>
+     <y>315</y>
     </hint>
    </hints>
   </connection>
@@ -1210,12 +1306,12 @@
    <slot>setValue(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>207</x>
-     <y>320</y>
+     <x>206</x>
+     <y>315</y>
     </hint>
     <hint type="destinationlabel">
-     <x>131</x>
-     <y>317</y>
+     <x>146</x>
+     <y>312</y>
     </hint>
    </hints>
   </connection>
@@ -1290,8 +1386,8 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>243</x>
-     <y>201</y>
+     <x>224</x>
+     <y>207</y>
     </hint>
     <hint type="destinationlabel">
      <x>296</x>
@@ -1354,8 +1450,8 @@
    <slot>setValue(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>278</x>
-     <y>338</y>
+     <x>338</x>
+     <y>337</y>
     </hint>
     <hint type="destinationlabel">
      <x>373</x>
@@ -1406,8 +1502,8 @@
      <y>261</y>
     </hint>
     <hint type="destinationlabel">
-     <x>246</x>
-     <y>265</y>
+     <x>328</x>
+     <y>264</y>
     </hint>
    </hints>
   </connection>
@@ -1424,6 +1520,70 @@
     <hint type="destinationlabel">
      <x>115</x>
      <y>252</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>anchorOther</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>zoomAnchorCombo</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>81</x>
+     <y>438</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>150</x>
+     <y>491</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>anchorOther</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>zoomAnchorDial</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>123</x>
+     <y>436</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>302</x>
+     <y>479</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>zoomAnchorCombo</sender>
+   <signal>currentIndexChanged(int)</signal>
+   <receiver>zoomAnchorDial</receiver>
+   <slot>setValue(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>153</x>
+     <y>488</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>278</x>
+     <y>492</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>zoomAnchorDial</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>zoomAnchorCombo</receiver>
+   <slot>setCurrentIndex(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>320</x>
+     <y>509</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>89</x>
+     <y>485</y>
     </hint>
    </hints>
   </connection>

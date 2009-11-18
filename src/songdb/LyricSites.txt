@@ -1,8 +1,38 @@
 http://library.timelesstruths.org/music/Like_a_River_Glorious/
+	http://www.google.com/search?q=like+a+river+glorius&sitesearch=library.timelesstruths.org
+	http://library.timelesstruths.org/music/Like_a_River_Glorious/
+	
+	div class="document lyrics">
+				<div class="verses">
+	<ol><li class="first">Like a river glorious is God&#8217;s perfect peace,<br />Over all victorious, in its bright increase;<br />Perfect, yet it floweth fuller every day,<br />Perfect, yet it groweth deeper all the way.
+	<ul><li class="refrain"><span class="refrain">Refrain:</span><br />Stayed upon Jehovah, hearts are fully blest<br />Finding, as He promised, perfect peace and rest.</li></ul></li>
+
+	<li>Hidden in the hollow of His blessed hand,<br />Never foe can follow, never traitor stand;<br />Not a surge of worry, not a shade of care,<br />Not a blast of hurry touch the spirit there.</li>
+	<li>Every joy or trial falleth from above,<br />Traced upon our dial by the Sun of Love;<br />We may trust Him fully all for us to do;<br />They who trust Him wholly find Him wholly true.</li>
+	</ol>
+			</div>
+			</div>
+
+
 
 http://www.ez-tracks.com/SongLyrics-Lyrics-61.html
 http://www.scriptureandmusic.com/Music/Text_Files/Like_A_River_Glorious.html
-http://songsandhymns.org/hymns/detail/like-a-river-glorious
+	no search, but list: http://www.scriptureandmusic.com/Music/HTML_Files/Music_List_files/Alpha_Music_List_nf.html
+	
+X http://songsandhymns.org/hymns/detail/like-a-river-glorious
 http://www.911tabs.com/tabs/t/traditional_hymn/like_a_river_glorious_tab.htm
 http://www.musicnotes.com/sheetmusic/mtd.asp?ppn=MN0070252
 http://www.metrolyrics.com/like-a-river-glorious-lyrics-traditional-hymn.html
+
+
+http://www.hymnsite.com/cgi-bin/test.pl?field=all&list=long&match=phrase&sorting=alpha&text=how+great
+	should work, but needs POST
+	
+	<body bgcolor=fcfcfc><h3 align=center>HymnSite Search Results</h3>
+HymnSite located the following 2 results by searching for "how great":
+</center><pre>
+<dl>
+<dd>#077: <a target="top" href=/lyrics/umh077.sht>How Great Thou Art</a>
+<dd>#541: <a target="top" href=/lyrics/umh541.sht>See How Great a Flame Aspires</a>
+</dl></pre>
+<center>Try another search?</center><br><FORM method=post action=/

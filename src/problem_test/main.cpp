@@ -29,7 +29,7 @@ public:
 	void paint(QPainter * painter, const QStyleOptionGraphicsItem * /*option*/, QWidget * /*widget*/)
 	{
 		painter->setPen(pen);
-		painter->setPen(Qt::NoPen);
+		//painter->setPen(Qt::NoPen);
 		painter->setBrush(brush);
 		painter->drawRect(rect);
 	}
@@ -37,6 +37,7 @@ public:
 
 int main(int argc, char **argv)
 {
+	QGL::setPreferredPaintEngine(QPaintEngine::OpenGL);
 	QApplication app(argc, argv);
 
 	QGraphicsView *graphicsView = new QGraphicsView();

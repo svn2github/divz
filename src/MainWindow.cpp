@@ -89,13 +89,12 @@ MainWindow::MainWindow(QWidget *parent) :
 	m_editWin = new SlideEditorWindow();
 
 	setupOutputViews();
-
+	
 	setupCentralWidget();
-
 	setupSongList();
-
+	setupBibleBrowser();
 	setupMediaBrowser();
-
+	setupSlideLibrary();
 
 	// Restore state
 	loadWindowState();
@@ -606,13 +605,24 @@ void MainWindow::setupSongList()
 	baseLayout->addWidget(m_songBrowser);
 
 	connect(m_songBrowser, SIGNAL(songSelected(SongRecord*)), this, SLOT(songSelected(SongRecord*)));
+}
 	
-	
-	baseLayout = new QVBoxLayout(m_ui->tabBible);
+void MainWindow::setupBibleBrowser()
+{
+	QVBoxLayout * baseLayout = new QVBoxLayout(m_ui->tabBible);
 	baseLayout->setContentsMargins(0,0,0,0);
 
 	BibleBrowser * bible = new BibleBrowser(m_ui->tabBible);
 	baseLayout->addWidget(bible);
+}
+
+void MainWindow::setupSlideLibrary()
+{
+	QVBoxLayout * baseLayout = new QVBoxLayout(m_ui->tabSlides);
+	baseLayout->setContentsMargins(0,0,0,0);
+
+// 	SlideLibraryBrowser * browser = new SlideLibraryBrowser(m_ui->tabSlides);
+// 	baseLayout->addWidget(browser);
 }
 
 void MainWindow::songSelected(SongRecord *song)

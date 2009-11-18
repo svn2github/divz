@@ -13,7 +13,7 @@
 #include "SongSlideGroup.h"
 #include "SongEditorWindow.h"
 #include "SongRecord.h"
-
+#include "SongSearchOnlineDialog.h"
 
 class MyQListView : public QListView
 {
@@ -67,13 +67,19 @@ void SongBrowser::setupUI()
 	m_clearSearchBtn = new QPushButton("C&lear");
 	m_clearSearchBtn->setVisible(false);
 	
+	m_onlineBtn = new QPushButton(QPixmap(":/data/stock-find.png"),"");
+	m_onlineBtn->setToolTip("Search for this song title online");
+	m_onlineBtn->setVisible(false);
+	
 	hbox->addWidget(label);
 	hbox->addWidget(m_songSearch);
 	hbox->addWidget(m_clearSearchBtn);
+	hbox->addWidget(m_onlineBtn);
 	
 	connect(m_songSearch, SIGNAL(textChanged(const QString &)), this, SLOT(songFilterChanged(const QString &)));
 	connect(m_songSearch, SIGNAL(returnPressed()), this, SLOT(songSearchReturnPressed()));
 	connect(m_clearSearchBtn, SIGNAL(clicked()), this, SLOT(songFilterReset()));
+	connect(m_onlineBtn, SIGNAL(clicked()), this, SLOT(searchOnline()));
 	
 	// Now for the song list itself
 	m_songList = new MyQListView(this);
@@ -131,6 +137,13 @@ void SongBrowser::setupUI()
 	
 	connect(m_songList, SIGNAL(doubleClicked(const QModelIndex &)), this, SLOT(songDoubleClicked(const QModelIndex &)));
 	connect(m_songList,       SIGNAL(clicked(const QModelIndex &)), this, SLOT(songSingleClicked(const QModelIndex &)));
+}
+
+void SongBrowser::searchOnline()
+{
+	SongSearchOnlineDialog d;
+// 	d.setText(m_songSearch->text());
+	d.exec();
 }
 
 QByteArray SongBrowser::saveState() 
@@ -260,6 +273,7 @@ void SongBrowser::songFilterChanged(const QString &text)
 {
 	m_songListModel->filter(text);
 	m_clearSearchBtn->setVisible(!text.isEmpty());
+	//m_onlineBtn->setVisible(!text.isEmpty());
 	QModelIndex idx = m_songListModel->indexForRow(0);
 	if(idx.isValid())
 		m_songList->setCurrentIndex(idx);

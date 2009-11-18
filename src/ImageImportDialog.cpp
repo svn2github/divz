@@ -257,7 +257,7 @@ void ImageImportDialog::accept()
 			
 			bg->setZoomDirection(AbstractVisualItem::ZoomRandom);
 			bg->setZoomLoop(false); // dont flip directions when all the way out/in
-			bg->setZoomAnchorCenter(false); // false will cause it to pick random third's-grid points
+			bg->setZoomAnchorPoint(AbstractVisualItem::ZoomAnchorRandom);
 			bg->setZoomSpeed(zoomSpeed);
 			bg->setZoomFactor(zoomFactor);
 		}
