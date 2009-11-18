@@ -11,9 +11,18 @@
 #include <QStringList>
 #include <QMovie>
 #include <QComboBox>
+#include <QMessageBox>
 
 #include "BibleModel.h"
 #include "BibleGatewayConnector.h"
+
+#include "model/Slide.h"
+#include "model/SlideGroup.h"
+#include "model/Document.h"
+#include "model/TextBoxItem.h"
+#include "model/ItemFactory.h"
+#include "MainWindow.h"
+
 
 BibleBrowser::BibleBrowser(QWidget *parent)
 	: QWidget(parent)
@@ -53,27 +62,25 @@ void BibleBrowser::setupUI()
 	
 	QPushButton * btnSearch = new QPushButton(QPixmap(":/data/stock-find.png"),"");
 	
-	m_clearSearchBtn = new QPushButton(QPixmap(":/data/stock-clear.png"),"");
-	m_clearSearchBtn->setVisible(false);
+	m_addBtn = new QPushButton(QPixmap(":/data/stock-add.png"),"");
+	m_addBtn->setVisible(false);
 	
 	m_spinnerLabel = new QLabel();
 	m_spinnerLabel->setVisible(false);
 	
-	QMovie * movie = new QMovie(":/data/ajax-loader.gif",QByteArray(),this);
-	movie->start();
-	m_spinnerLabel->setMovie(movie);
+	m_spinnerLabel->setMovie(new QMovie(":/data/ajax-loader.gif",QByteArray(),this));
 	m_spinnerLabel->setToolTip("Loading Verses...");
 	
 	hbox->addWidget(label);
 	hbox->addWidget(m_search);
 	hbox->addWidget(btnSearch);
-	hbox->addWidget(m_clearSearchBtn);
+	hbox->addWidget(m_addBtn);
 	hbox->addWidget(m_spinnerLabel);
 	
 	//connect(m_search, SIGNAL(textChanged(const QString &)), this, SLOT(loadVerses(const QString &)));
 	connect(m_search, SIGNAL(returnPressed()), this, SLOT(searchReturnPressed()));
 	connect(btnSearch, SIGNAL(clicked()), this, SLOT(searchReturnPressed()));
-	connect(m_clearSearchBtn, SIGNAL(clicked()), this, SLOT(clearSearch()));
+	connect(m_addBtn, SIGNAL(clicked()), this, SLOT(createSlideGroup()));
 	
 		// add text preview
 	m_preview = new QTextEdit(this);
@@ -82,7 +89,7 @@ void BibleBrowser::setupUI()
 	QFont font;
 	font.setFamily("Courier");
 	font.setFixedPitch(true);
-	font.setPointSize(8);
+	font.setPointSize(12);
 	m_preview->setFont(font);
 
 	vbox->addWidget(m_searchBase);
@@ -104,12 +111,22 @@ void BibleBrowser::searchReturnPressed()
 void BibleBrowser::searchTextChanged(const QString &text)
 {
 	//m_songListModel->filter(text);
-	m_clearSearchBtn->setVisible(!text.isEmpty());
 	m_spinnerLabel->setVisible(!text.isEmpty());
 	if(!text.isEmpty())
 	{
+		m_spinnerLabel->movie()->start();
 		QString versionCode = m_versionCombo->itemData(m_versionCombo->currentIndex()).toString();
 		BibleVerseRef ref = BibleVerseRef::normalize(text, BibleVersion(versionCode,versionCode));
+		if(!ref.valid())
+		{
+			m_spinnerLabel->movie()->stop();
+			m_spinnerLabel->setVisible(false);
+			m_search->selectAll();
+			m_preview->setPlainText("");
+			QMessageBox::warning(this,"Invalid Reference",QString(tr("Sorry, but %1 doesn't seem to be a valid bible reference.")).arg(text));
+			return;
+		}
+		
 		if(m_bible->findReference(ref))
 		{
 			referenceAvailable(ref, m_bible->loadReference(ref));
@@ -121,7 +138,9 @@ void BibleBrowser::searchTextChanged(const QString &text)
 	}
 	else
 	{
+		m_spinnerLabel->movie()->stop();
 		m_preview->setPlainText("");
+		m_addBtn->setVisible(false);
 	}
 	
 // 	QModelIndex idx = m_songListModel->indexForRow(0);
@@ -131,6 +150,10 @@ void BibleBrowser::searchTextChanged(const QString &text)
 
 void BibleBrowser::referenceAvailable(const BibleVerseRef& reference, const BibleVerseList & list)
 {
+	m_currentList = list;
+	m_currentRef = reference;
+	
+	m_spinnerLabel->movie()->stop();
 	m_spinnerLabel->setVisible(false);
 	if(list.isEmpty())
 	{
@@ -138,13 +161,15 @@ void BibleBrowser::referenceAvailable(const BibleVerseRef& reference, const Bibl
 	}
 	else
 	{
+		m_addBtn->setVisible(true);
+		
 		QStringList listText;
 		foreach(BibleVerse verse, list)
 		{
 			listText << QString("<sup>%1</sup>%2").arg(verse.verseNumber()).arg(verse.text());
 		}
 		
-		m_preview->setHtml(QString("<h1>%1</h1><p>%2</p>").arg(reference.cacheKey(),listText.join("\n")));
+		m_preview->setHtml(QString("<h2>%1</h2><p>%2</p>").arg(reference.cacheKey(),listText.join("\n")));
 	}
 }
 
@@ -269,3 +294,130 @@ void BibleBrowser::setupVersionCombo()
 	
 	m_versionCombo->setCurrentIndex(m_versionCombo->findData("NIV"));
 }
+
+void BibleBrowser::createSlideGroup()
+{
+	BibleVerseList list = m_currentList;
+	
+	int MinTextSize = 48;
+
+	QStringList lines;
+	foreach(BibleVerse verse, list)
+		lines << verse.text();
+	
+	QString blob = lines.join(" ");
+	lines.clear();
+	
+	int pos = 0;
+	int lastPos = 0;
+	QRegExp rx("[-;,\n:\\.]");
+	while((pos = rx.indexIn(blob,pos)) != -1)
+	{
+		lines.append(blob.mid(lastPos,pos-lastPos+1));
+		pos += rx.matchedLength();
+		lastPos = pos;
+		
+	}
+	
+
+	QSize fitSize = MainWindow::mw()->standardSceneRect().size();
+
+	SlideGroup *group = new SlideGroup();
+	group->setGroupTitle(m_currentRef.toString());
+
+	int slideNum = 0;
+
+	QString blockPrefix = "<span style='font-family:Calibri,Tahoma,Arial,Sans-Serif;font-weight:800'><b>";
+	QString blockSuffix = "</b></span>";
+
+	TextBoxItem * tmpText = 0;
+	int realHeight=0;
+	QStringList tmpList;
+	for(int x=0; x<lines.size(); x++)
+	{
+		if(tmpList.isEmpty() &&
+			lines[x].trimmed().isEmpty())
+			continue;
+
+		tmpList.append(lines[x]);
+
+		if(!tmpText)
+		{
+			tmpText = new TextBoxItem();
+			tmpText->setItemId(ItemFactory::nextId());
+			tmpText->setItemName(QString("TextBoxItem%1").arg(tmpText->itemId()));
+		}
+
+		tmpText->setText(QString("%1%2%3")
+					.arg(blockPrefix)
+					.arg(tmpList.join("\n"))
+					.arg(blockSuffix));
+
+		realHeight = tmpText->fitToSize(fitSize,MinTextSize);
+		if(realHeight < 0)
+		{
+			if(tmpList.size() > 1)
+			{
+				// return last line to the file buffer
+				QString line = tmpList.takeLast();
+				lines.prepend(line);
+				
+				qDebug() << "Readding last line back into line buffer: "<<line; 
+
+				tmpText->setText(QString("%1%2%3")
+							.arg(blockPrefix)
+							.arg(tmpList.join("\n"))
+							.arg(blockSuffix));
+				realHeight = tmpText->fitToSize(fitSize,MinTextSize);
+			}
+
+			addSlide(group,tmpText,realHeight,fitSize,tmpList.join("\n"));
+			tmpText = 0;
+
+
+			tmpList.clear();
+		}
+	}
+	
+	if(realHeight>0 && tmpText)
+		addSlide(group,tmpText,realHeight,fitSize,tmpList.join("\n"));
+
+	MainWindow::mw()->currentDocument()->addGroup(group);
+
+}
+
+void BibleBrowser::addSlide(SlideGroup *group, TextBoxItem *tmpText, int realHeight, const QSize & fitSize, const QString & plain)
+{
+	Slide * slide = new Slide();
+	AbstractVisualItem * bg = dynamic_cast<AbstractVisualItem*>(slide->background());
+
+	int slideNum = group->numSlides();
+	
+	qDebug() << "Slide "<<slideNum<<": [\n"<<plain<<"\n]";;
+
+	bg->setFillType(AbstractVisualItem::Solid);
+	bg->setFillBrush(Qt::blue);
+
+	// Center text on screen
+	qreal y = fitSize.height()/2 - realHeight/2;
+	//qDebug() << "SongSlideGroup::textToSlides(): centering: boxHeight:"<<boxHeight<<", textRect height:"<<textRect.height()<<", centered Y:"<<y;
+	tmpText->setContentsRect(QRectF(0,y,fitSize.width(),realHeight));
+
+	// Outline pen for the text
+	QPen pen = QPen(Qt::black,1.5);
+	pen.setJoinStyle(Qt::MiterJoin);
+
+	tmpText->setPos(QPointF(0,0));
+	tmpText->setOutlinePen(pen);
+	tmpText->setOutlineEnabled(true);
+	tmpText->setFillBrush(Qt::white);
+	tmpText->setFillType(AbstractVisualItem::Solid);
+	tmpText->setShadowEnabled(true);
+	tmpText->setShadowBlurRadius(6);
+
+	slide->addItem(tmpText);
+	
+	slide->setSlideNumber(slideNum);
+	group->addSlide(slide);
+}
+
