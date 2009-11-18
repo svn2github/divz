@@ -6,10 +6,14 @@ open(FILE,"<book-abbrv-list.txt");
 close(FILE);
 
 my @names;
+my @proper_names;
 
 print "#include \"BibleModel.h\"\n";
-print "bool BibleVerseRef::bookNameMap_initalized = false;\nQHash<QString,QString> BibleVerseRef::bookNameMap;\n";
+print "bool BibleVerseRef::bookNameMap_initalized = false;\n";
+print "QHash<QString,QString> BibleVerseRef::bookNameMap;\n";
+print "QStringList BibleVerseRef::bookNameList;\n";
 print "void BibleVerseRef::initNameMap()\n{\n";
+print "\tif(bookNameMap_initalized)\n\treturn;\n";
 foreach my $line (@data)
 {
 	my ($book,$list) = $line =~ /^(.*?)\t(.*)$/;
@@ -18,9 +22,11 @@ foreach my $line (@data)
 	foreach my $abbrv (@list)
 	{
 		print "\tbookNameMap[\"".lc($abbrv)."\"] = \"$book\";\n";
+		print "\tbookNameList << \"$abbrv\";\n";
 		push @names, lc($abbrv);
 	}
 	print "\tbookNameMap[\"".lc($book)."\"] = \"$book\";\n";
+	print "\tbookNameList << \"$book\";\n";
 	push @names, lc($book);
 }
 print "\tbookNameMap_initalized = true;\n";

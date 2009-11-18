@@ -14,6 +14,8 @@
 #include <QMessageBox>
 #include <QAction>
 #include <QMenu>
+#include <QProgressDialog>
+#include <QCompleter>
 
 #include "BibleModel.h"
 #include "BibleGatewayConnector.h"
@@ -140,6 +142,13 @@ void BibleBrowser::setupUI()
 	m_search = new QLineEdit(m_searchBase);
 	label->setBuddy(m_search);
 	
+	// add book name completion
+	QCompleter *completer = new QCompleter(BibleVerseRef::bookCompleterList(), m_search);
+	completer->setCompletionMode(QCompleter::PopupCompletion);
+	completer->setCaseSensitivity(Qt::CaseInsensitive);
+	completer->setWrapAround(true);
+	m_search->setCompleter(completer);
+	
 	QPushButton * btnSearch = new QPushButton(QPixmap(":/data/stock-find.png"),"");
 	btnSearch->setToolTip("Seach BibleGateway.com for the verse reference entered on the left.");
 	
@@ -239,7 +248,7 @@ void BibleBrowser::referenceAvailable(const BibleVerseRef& reference, const Bibl
 	m_spinnerLabel->setVisible(false);
 	if(list.isEmpty())
 	{
-		m_preview->setHtml(QString(tr("<font color='red'>Sorry, \"<b>%1</b>\" was not found!</font>")).arg(reference.cacheKey()));
+		m_preview->setHtml(QString(tr("<font color='red'>Sorry, \"<b>%1</b>\" was not found!</font>")).arg(reference.toString(true)));
 	}
 	else
 	{
@@ -251,14 +260,9 @@ void BibleBrowser::referenceAvailable(const BibleVerseRef& reference, const Bibl
 			listText << QString("<sup>%1</sup>%2").arg(verse.verseNumber()).arg(verse.text());
 		}
 		
-		m_preview->setHtml(QString("<h2>%1</h2><p>%2</p>").arg(reference.cacheKey(),listText.join("\n")));
+		m_preview->setHtml(QString("<h2>%1</h2><p>%2</p>").arg(reference.toString(true),listText.join("\n")));
 	}
 }
-
-// void BibleBrowser::searchReset()
-// {
-// 	setFilter("");
-// }
 
 void BibleBrowser::loadVerses(const QString & filter)
 {
@@ -267,110 +271,114 @@ void BibleBrowser::loadVerses(const QString & filter)
 	m_search->setText(filter);
 }
 
+#ifndef QCharPair
+typedef QPair<QString,QString> QStringPair;
+#endif
 
 void BibleBrowser::setupVersionCombo()
 {
-	QMap<QString,QString> versionMap;
+	QList<QStringPair> list;
 	
-	versionMap["NIV"]="New International Version";
-	versionMap["NASB"]="New American Standard Bible";
-	versionMap["MSG"]="The Message";
-	versionMap["AMP"]="Amplified Bible";
-	versionMap["NLT"]="New Living Translation";
-	versionMap["KJV"]="King James Version";
-	versionMap["ESV"]="English Standard Version";
-	versionMap["CEV"]="Contemporary English Version";
+	list.append(qMakePair(QString("NIV"),QString(tr("New International Version"))));
+	list.append(qMakePair(QString("NASB"),QString(tr("New American Standard Bible"))));
+	list.append(qMakePair(QString("MSG"),QString(tr("The Message"))));
+	list.append(qMakePair(QString("AMP"),QString(tr("Amplified Bible"))));
+	list.append(qMakePair(QString("NLT"),QString(tr("New Living Translation"))));
+	list.append(qMakePair(QString("KJV"),QString(tr("King James Version"))));
+	list.append(qMakePair(QString("ESV"),QString(tr("English Standard Version"))));
+	list.append(qMakePair(QString("CEV"),QString(tr("Contemporary English Version"))));
 	
-	versionMap["NKJV"]="New King James Version";
-	versionMap["NCV"]="New Century Version";
-	versionMap["KJ21"]="21st Century King James Version";
-	versionMap["ASV"]="American Standard Version";
-	versionMap["YLT"]="Young's Literal Translation";
-	versionMap["DARBY"]="Darby Translation";
-	versionMap["HCSB"]="Holman Christian Standard Bible";
-	versionMap["NIRV"]="New International Reader's Version";
-	versionMap["WYC"]="Wycliffe New Testament";
-	
-	
-	versionMap["AMU"]="Amuzgo de Guerrero";
-	versionMap["ALAB"]="Arabic Life Application Bible";
-	versionMap["BULG"]="Bulgarian Bible";
-	versionMap["BG1940"]="1940 Bulgarian Bible";
-	versionMap["CCO"]="Chinanteco de Comaltepec";
-	versionMap["CKW"]="Cakchiquel Occidental";
-	
-	versionMap["HCV"]="Haitian Creole Version";
-	versionMap["SNC"]="Slovo na cestu";
-	versionMap["DN1933"]="Dette er Biblen pÃ¥ dansk";
-	versionMap["HOF"]="Hoffnung für Alle";
-	versionMap["LUTH1545"]="Luther Bibel 1545";
+	list.append(qMakePair(QString("NKJV"),QString(tr("New King James Version"))));
+	list.append(qMakePair(QString("NCV"),QString(tr("New Century Version"))));
+	list.append(qMakePair(QString("KJ21"),QString(tr("21st Century King James Version"))));
+	list.append(qMakePair(QString("ASV"),QString(tr("American Standard Version"))));
+	list.append(qMakePair(QString("YLT"),QString(tr("Young's Literal Translation"))));
+	list.append(qMakePair(QString("DARBY"),QString(tr("Darby Translation"))));
+	list.append(qMakePair(QString("HCSB"),QString(tr("Holman Christian Standard Bible"))));
+	list.append(qMakePair(QString("NIRV"),QString(tr("New International Reader's Version"))));
+	//list.append(qMakePair(QString("WYC"),QString(tr("Wycliffe New Testament"))));
 	
 	
-	versionMap["WE"]="Worldwide English (New Testament)";
-	versionMap["NIVUK"]="New International Version - UK";
-	versionMap["TNIV"]="Today's New International Version";
-	versionMap["RVR1960"]="Reina-Valera 1960";
-	versionMap["NVI"]="Nueva Versión Internacional";
-	versionMap["RVR1995"]="Reina-Valera 1995";
-	versionMap["CST"]="Castilian";
-	versionMap["RVA"]="Reina-Valera Antigua";
+	//list.append(qMakePair(QString("AMU"),QString(tr("Amuzgo de Guerrero"))));
+	list.append(qMakePair(QString("ALAB"),QString(tr("Arabic Life Application Bible"))));
+	list.append(qMakePair(QString("BULG"),QString(tr("Bulgarian Bible"))));
+	list.append(qMakePair(QString("BG1940"),QString(tr("1940 Bulgarian Bible"))));
+	//list.append(qMakePair(QString("CCO"),QString(tr("Chinanteco de Comaltepec"))));
+	//list.append(qMakePair(QString("CKW"),QString(tr("Cakchiquel Occidental"))));
 	
-	versionMap["BLS"]="Biblia en Lenguaje Sencillo";
-	versionMap["LBLA"]="La Biblia de las Américas";
-	versionMap["LSG"]="Louis Segond";
-	versionMap["BDS"]="La Bible du Semeur";
-	versionMap["WHNU"]="1881 Westcott-Hort New Testament";
-	versionMap["TR1550"]="1550 Stephanus New Testament";
-	versionMap["TR1894"]="1894 Scrivener New Testament";
+	list.append(qMakePair(QString("HCV"),QString(tr("Haitian Creole Version"))));
+	//list.append(qMakePair(QString("SNC"),QString(tr("Slovo na cestu"))));
+	list.append(qMakePair(QString("DN1933"),QString(tr("Dette er Biblen pÃ¥ dansk"))));
+	//list.append(qMakePair(QString("HOF"),QString(tr("Hoffnung für Alle"))));
+	list.append(qMakePair(QString("LUTH1545"),QString(tr("Luther Bibel 1545"))));
 	
-	versionMap["WLC"]="The Westminster Leningrad Codex";
-	versionMap["HLGN"]="Hiligaynon Bible";
-	versionMap["CRO"]="Croatian Bible";
-	versionMap["KAR"]="Hungarian KÃ¡roli";
 	
-	versionMap["ICELAND"]="Icelandic Bible";
-	versionMap["LND"]="La Nuova Diodati";
-	versionMap["LM"]="La Parola è Vita";
-	versionMap["JAC"]="Jacalteco, Oriental";
-	versionMap["KEK"]="Kekchi";
+	//list.append(qMakePair(QString("WE"),QString(tr("Worldwide English (New Testament)"))));
+	list.append(qMakePair(QString("NIVUK"),QString(tr("New International Version - UK"))));
+	list.append(qMakePair(QString("TNIV"),QString(tr("Today's New International Version"))));
+	list.append(qMakePair(QString("RVR1960"),QString(tr("Reina-Valera 1960"))));
+	list.append(qMakePair(QString("NVI"),QString(tr("Nueva Versión Internacional"))));
+	list.append(qMakePair(QString("RVR1995"),QString(tr("Reina-Valera 1995"))));
+	//list.append(qMakePair(QString("CST"),QString(tr("Castilian"))));
+	list.append(qMakePair(QString("RVA"),QString(tr("Reina-Valera Antigua"))));
 	
-	versionMap["KOREAN"]="Korean Bible";
-	versionMap["MAORI"]="Maori Bible";
-	versionMap["MNT"]="Macedonian New Testament";
-	versionMap["MVC"]="Mam, Central";
-	versionMap["MVJ"]="Mam de Todos Santos Chuchumatán";
+	//list.append(qMakePair(QString("BLS"),QString(tr("Biblia en Lenguaje Sencillo"))));
+	list.append(qMakePair(QString("LBLA"),QString(tr("La Biblia de las Américas"))));
+	list.append(qMakePair(QString("LSG"),QString(tr("Louis Segond"))));
+	list.append(qMakePair(QString("BDS"),QString(tr("La Bible du Semeur"))));
+	//list.append(qMakePair(QString("WHNU"),QString(tr("1881 Westcott-Hort New Testament"))));
+	//list.append(qMakePair(QString("TR1550"),QString(tr("1550 Stephanus New Testament"))));
+	//list.append(qMakePair(QString("TR1894"),QString(tr("1894 Scrivener New Testament"))));
 	
-	versionMap["REIMER"]="Reimer 2001";
-	versionMap["NGU"]="Náhuatl de Guerrero";
-	versionMap["HTB"]="Het Boek";
-	versionMap["DNB1930"]="Det Norsk Bibelselskap 1930";
-	versionMap["LB"]="Levande Bibeln";
+	//list.append(qMakePair(QString("WLC"),QString(tr("The Westminster Leningrad Codex"))));
+	//list.append(qMakePair(QString("HLGN"),QString(tr("Hiligaynon Bible"))));
+	//list.append(qMakePair(QString("CRO"),QString(tr("Croatian Bible"))));
+	list.append(qMakePair(QString("KAR"),QString(tr("Hungarian KÃ¡roli"))));
 	
-	versionMap["OL"]="O Livro";
-	versionMap["AA"]="João Ferreira de Almeida Atualizada";
-	versionMap["QUT"]="Quiché, Centro Occidental";
-	versionMap["RMNN"]="Romanian";
-	versionMap["TLCR"]="Romanian";
+	list.append(qMakePair(QString("ICELAND"),QString(tr("Icelandic Bible"))));
+	list.append(qMakePair(QString("LND"),QString(tr("La Nuova Diodati"))));
+	//list.append(qMakePair(QString("LM"),QString(tr("La Parola è Vita"))));
+	//list.append(qMakePair(QString("JAC"),QString(tr("Jacalteco, Oriental"))));
+	//list.append(qMakePair(QString("KEK"),QString(tr("Kekchi"))));
 	
-	versionMap["RUSV"]="Russian Synodal Version";
-	versionMap["SZ"]="Slovo Zhizny";
-	versionMap["NPK"]="Nádej pre kazdého";
-	versionMap["ALB"]="Albanian Bible";
-	versionMap["SVL"]="Levande Bibeln";
-	versionMap["SV1917"]="Svenska 1917";
+	list.append(qMakePair(QString("KOREAN"),QString(tr("Korean Bible"))));
+	list.append(qMakePair(QString("MAORI"),QString(tr("Maori Bible"))));
+	//list.append(qMakePair(QString("MNT"),QString(tr("Macedonian New Testament"))));
+	//list.append(qMakePair(QString("MVC"),QString(tr("Mam, Central"))));
+	//list.append(qMakePair(QString("MVJ"),QString(tr("Mam de Todos Santos Chuchumatán"))));
 	
-	versionMap["SNT"]="Swahili New Testament";
-	versionMap["SND"]="Ang Salita ng Diyos";
-	versionMap["UKR"]="Ukrainian Bible";
-	versionMap["USP"]="Uspanteco";
-	versionMap["VIET"]="1934 Vietnamese Bible";
-	versionMap["CUVS"]="Chinese Union Version (Simplified)";
-	versionMap["CUV"]="Chinese Union Version (Traditional)";
+	//list.append(qMakePair(QString("REIMER"),QString(tr("Reimer 2001"))));
+	//list.append(qMakePair(QString("NGU"),QString(tr("Náhuatl de Guerrero"))));
+	list.append(qMakePair(QString("HTB"),QString(tr("Het Boek"))));
+	list.append(qMakePair(QString("DNB1930"),QString(tr("Det Norsk Bibelselskap 1930"))));
+	//list.append(qMakePair(QString("LB"),QString(tr("Levande Bibeln"))));
+	
+	list.append(qMakePair(QString("OL"),QString(tr("O Livro"))));
+	list.append(qMakePair(QString("AA"),QString(tr("João Ferreira de Almeida Atualizada"))));
+	//list.append(qMakePair(QString("QUT"),QString(tr("Quiché, Centro Occidental"))));
+	list.append(qMakePair(QString("RMNN"),QString(tr("Romanian"))));
+	//list.append(qMakePair(QString("TLCR"),QString(tr("Romanian"))));
+	
+	list.append(qMakePair(QString("RUSV"),QString(tr("Russian Synodal Version"))));
+	//list.append(qMakePair(QString("SZ"),QString(tr("Slovo Zhizny"))));
+	//list.append(qMakePair(QString("NPK"),QString(tr("Nádej pre kazdého"))));
+	list.append(qMakePair(QString("ALB"),QString(tr("Albanian Bible"))));
+	list.append(qMakePair(QString("SVL"),QString(tr("Levande Bibeln"))));
+	list.append(qMakePair(QString("SV1917"),QString(tr("Svenska 1917"))));
+	
+	//list.append(qMakePair(QString("SNT"),QString(tr("Swahili New Testament"))));
+	//list.append(qMakePair(QString("SND"),QString(tr("Ang Salita ng Diyos"))));
+	list.append(qMakePair(QString("UKR"),QString(tr("Ukrainian Bible"))));
+	//list.append(qMakePair(QString("USP"),QString(tr("Uspanteco"))));
+	list.append(qMakePair(QString("VIET"),QString(tr("1934 Vietnamese Bible"))));
+	list.append(qMakePair(QString("CUVS"),QString(tr("Chinese Union Version (Simplified)"))));
+	list.append(qMakePair(QString("CUV"),QString(tr("Chinese Union Version (Traditional)"))));
 	
 	#define MAX_VERSION_NAME_LENGTH 32
-	foreach(QString code, versionMap.keys())
+	foreach(QStringPair pair, list)
 	{
-		QString text = versionMap.value(code);
+		QString code = pair.first;
+		QString text = pair.second;
 		m_versionCombo->addItem(QString("%1%2").arg(text.left(MAX_VERSION_NAME_LENGTH)).arg(text.length() > MAX_VERSION_NAME_LENGTH ? "..." : ""), code);
 	}
 	
@@ -397,8 +405,22 @@ void BibleBrowser::createSlideGroup()
 {
 	BibleVerseList list = m_currentList;
 	
+	if(list.isEmpty())
+	{
+		QMessageBox::warning(this,"No Verses Found","Sorry, no verses were found!");
+		return;
+	}
+	
+	// Adding entire chapters can take 10 - 30 seconds, so a progress dialog makes the UI more "friendly"
+	QProgressDialog progress;
+	progress.setWindowIcon(QIcon(":/data/icon-d.png"));
+	progress.setWindowTitle(QString(tr("Adding %1")).arg(m_currentRef.toString(true)));
+	progress.setLabelText(QString(tr("Adding %1...")).arg(m_currentRef.toString(true)));
+	
 	int MinTextSize = 48;
 
+	// Add the verse numbers here because after this point,
+	// all we have to work with is a blob of text, we loose the BibleVerse objects here.
 	QStringList lines;
 	QString prefix;
 	foreach(BibleVerse verse, list)
@@ -413,6 +435,10 @@ void BibleBrowser::createSlideGroup()
 	QString blob = lines.join(" ");
 	lines.clear();
 	
+	// Do a fancy split on various breaking points in the text so we can fit more
+	// text per slide. If we just split on line-end (\n), we potentially could get 
+	// a line that wouldn't fit on the slide, or have a lot of empty space on the
+	// end of a slide. Using a variety of break points makes the text fit better.
 	int pos = 0;
 	int lastPos = 0;
 	QRegExp rx("[-;,\n:\\.]");
@@ -423,13 +449,13 @@ void BibleBrowser::createSlideGroup()
 		lastPos = pos;
 	}
 	
+	progress.setMaximum(lines.size());
 
+	// This will be adjusted below if we were told to add responsive reading labels
 	QSize fitSize = MainWindow::mw()->standardSceneRect().size();
 
 	SlideGroup *group = new SlideGroup();
 	group->setGroupTitle(m_currentRef.toString());
-
-	int slideNum = 0;
 
 	QString blockPrefix = "<span style='font-family:Calibri,Tahoma,Arial,Sans-Serif;font-weight:800'><b>";
 	QString blockSuffix = "</b></span>";
@@ -437,6 +463,7 @@ void BibleBrowser::createSlideGroup()
 	TextBoxItem * tmpText = 0;
 	int realHeight=0;
 	
+	// If the user asked for it, add the verse reference as the first slide, centered on the screen.
 	Slide * startSlide = 0;
 	if(showFullRefAtStart())
 	{
@@ -454,6 +481,7 @@ void BibleBrowser::createSlideGroup()
 	}
 
 	
+	// Here we prep the responsive reading label object and adjust the "fitSize" (from above) to allow for space at the top of each slide
 	TextBoxItem * labelItem = 0;
 	QSize labelSize;
 	if(m_showResponsiveReadingLabels)
@@ -474,11 +502,15 @@ void BibleBrowser::createSlideGroup()
 		fitSize.setHeight(fitSize.height() - labelSize.height());
 	}
 
+	// In the future, these labels should be an option in the UI - for now, we'll hardcocde them
 	QString leaderLabel = tr("Leader:");
 	QString readingLabel = tr("Congregation:");
 	
+	// used to alternate the responsive reading labels
 	int labelCounter = 0;
 	
+	// Main logic block - loop over all the "lines" in the list (really, text fragments),
+	// and try to fit as many of them as we can on a slide
 	QStringList tmpList;
 	for(int x=0; x<lines.size(); x++)
 	{
@@ -487,6 +519,8 @@ void BibleBrowser::createSlideGroup()
 			continue;
 
 		tmpList.append(lines[x]);
+		
+		progress.setValue(x);
 
 		if(!tmpText)
 		{
@@ -501,6 +535,10 @@ void BibleBrowser::createSlideGroup()
 					.arg(blockSuffix));
 
 		realHeight = tmpText->fitToSize(fitSize,MinTextSize);
+		
+		// If the 'realHeight' is <0, it means that it didnt fit on the slide.
+		// Therefore, we've found the max # of text frags that fit on this slide
+		// so we should create a new slide, add the text, and then start searching again.
 		if(realHeight < 0)
 		{
 			if(tmpList.size() > 1)
@@ -509,8 +547,6 @@ void BibleBrowser::createSlideGroup()
 				QString line = tmpList.takeLast();
 				lines.prepend(line);
 				
-				qDebug() << "Readding last line back into line buffer: "<<line; 
-
 				tmpText->setText(QString("%1%2%3")
 							.arg(blockPrefix)
 							.arg(tmpList.join("\n"))
@@ -522,39 +558,43 @@ void BibleBrowser::createSlideGroup()
 			
 			if(m_showResponsiveReadingLabels)
 			{
-				QRectF rect = tmpText->contentsRect();
 				
-				// dont adjust rect.height here because the rect should have been sized to fitSize, who's height was already adjusted to labelSize, above
+				// Resize the main text box by "pushing it down" to allow for room for the label at the top of the slide.
+				QRectF rect = tmpText->contentsRect();
 				tmpText->setContentsRect(QRectF(rect.x(),rect.y() + labelSize.height(),rect.width(),rect.height()));
+				// dont adjust rect.height here because the rect should have been sized to fitSize, who's height was already adjusted to labelSize, above
 				
 				QString labelText = labelCounter ++ % 2 == 0 ? leaderLabel : readingLabel;
 				
+				// Clone the label so we dont have to re-create it
 				TextBoxItem * label = dynamic_cast<TextBoxItem*>(labelItem->clone());
 				label->setText(QString("<span style='font-family:Calibri,Tahoma,Arial,Sans-Serif;font-weight:800'><b>%1</b></span></center>").arg(labelText));
-				
 				label->changeFontSize(40);
 				
+				// Adjust the size of the label
 				QSize sz = label->findNaturalSize(fitSize.width());
 				label->setContentsRect(QRectF(0,0,sz.width(),sz.height()));
 				
-				qDebug() << "responsive reading: #"<<labelCounter<<", labelText:"<<labelText<<", sz:"<<sz<<", rect:"<<label->contentsRect();
-				
+				//qDebug() << "responsive reading: #"<<labelCounter<<", labelText:"<<labelText<<", sz:"<<sz<<", rect:"<<label->contentsRect();
 				
 				slide->addItem(label);
 			}
 				
+			// this will get re-created above when we set it to 0
 			tmpText = 0;
 			
-			
-
 			tmpList.clear();
 		}
 	}
 	
+	// This block handles the case where we never did hit the maximum # of text frags per slide in the search block above
+	// which would mean we have a dangling blob of text that never got added - so add it here.
  	if(realHeight>0 && tmpText)
  	{
  		Slide * slide = addSlide(group,tmpText,realHeight,fitSize,tmpList.join("\n"));
  		
+ 		// This block is just an exact duplication of the label block above - but it seems more work than necessary right now to move it into
+ 		// it's own subroutine for now.
  		if(m_showResponsiveReadingLabels)
 		{
 			QRectF rect = tmpText->contentsRect();
@@ -572,13 +612,14 @@ void BibleBrowser::createSlideGroup()
 			QSize sz = label->findNaturalSize(fitSize.width());
 			label->setContentsRect(QRectF(0,0,sz.width(),sz.height()));
 			
-			qDebug() << "responsive reading: #"<<labelCounter<<", labelText:"<<labelText<<", sz:"<<sz<<", rect:"<<label->contentsRect();
+			//qDebug() << "responsive reading: #"<<labelCounter<<", labelText:"<<labelText<<", sz:"<<sz<<", rect:"<<label->contentsRect();
 			
 			
 			slide->addItem(label);
 		}
 	}
 		
+	// Same thing as the starting slide - add an ending slide with the full text reference at the end if requested.
 	if(showFullRefAtEnd())
 	{
 		tmpText = new TextBoxItem();
@@ -595,6 +636,9 @@ void BibleBrowser::createSlideGroup()
 		
 		tmpText = 0;
 	}
+	
+	// close the dialog
+	progress.setValue(progress.maximum());
 
 	MainWindow::mw()->currentDocument()->addGroup(group);
 
@@ -607,7 +651,7 @@ Slide * BibleBrowser::addSlide(SlideGroup *group, TextBoxItem *tmpText, int real
 
 	int slideNum = group->numSlides();
 	
-	qDebug() << "Slide "<<slideNum<<": [\n"<<plain<<"\n]";;
+	//qDebug() << "Slide "<<slideNum<<": [\n"<<plain<<"\n]";
 
 	bg->setFillType(AbstractVisualItem::Solid);
 	bg->setFillBrush(Qt::blue);

@@ -52,6 +52,12 @@ void BibleConnector::downloadFinished(QNetworkReply *reply)
 		
 		qDebug() << "BibleConnector::downloadFinished(): Downloaded: "<<list;
 		
+		if(!list.isEmpty())
+		{
+			BibleVerse last = list.last();
+			reference.setVerseRange(last.verseNumber());
+		}
+	
 		emit referenceAvailable(reference,list);
 	}
 	
@@ -79,6 +85,10 @@ QString BibleConnector::html2text(const QString &tmp)
 	text.replace("&mdash;","--");
 	text.replace("&rsquo;","'");
 	text.replace("—"," - ");
+	text.replace("”","\"");
+	text.replace("“","\"");
+	text.replace("’","'");
+	
 	
 	return text;
 }

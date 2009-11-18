@@ -5,6 +5,7 @@
 #include <QList>
 #include <QRegExp>
 #include <QPair>
+#include <QStringList>
 
 #include "../PropertyUtils.h"
 
@@ -97,7 +98,7 @@ public:
 	
 	BibleVerseRef verseRef(int) const;
 	
-	QString toString() const;
+	QString toString(bool includeVersion=false) const;
 	
 	QString cacheKey() const;
 	
@@ -107,6 +108,8 @@ public:
 	typedef QList<BibleVerseRef::TextTag> TextTagList;
 	
 	static TextTagList taggedVerseRefs(const QString&);
+	
+	static QStringList bookCompleterList() { initNameMap(); return bookNameList; }
 		
 private:
 	static QRegExp normalizeRegExp;
@@ -115,6 +118,7 @@ private:
 	static void initNameMap();
 	static bool bookNameMap_initalized;
 	static QHash<QString,QString> bookNameMap;
+	static QStringList bookNameList;
 };
 
 QDebug operator<<(QDebug dbg, const BibleVerseList &list);

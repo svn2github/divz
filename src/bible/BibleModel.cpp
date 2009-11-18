@@ -69,20 +69,19 @@ BibleVerseRef::BibleVerseRef(const BibleChapter &chapter, int verseNumber, int r
 	, m_valid(true)
 {}
 
-QString BibleVerseRef::toString() const
+QString BibleVerseRef::toString(bool includeVersion) const
 {
-	return QString("%1 %2%3%4")
+	return QString("%1 %2%3%4%5")
 		.arg(m_book.name())
 		.arg(m_chapter.chapterNumber())
 		.arg(m_verseNumber>0? QString(":%1").arg(m_verseNumber) : QString(""))
-		.arg(m_verseRange>0 && m_verseRange!=m_verseNumber ? QString("-%1").arg(m_verseRange) : QString(""));
+		.arg(m_verseRange>0 && m_verseRange!=m_verseNumber ? QString("-%1").arg(m_verseRange) : QString(""))
+		.arg(includeVersion ? (m_book.version().code().isEmpty() ? "" : QString(" (%1)").arg(m_book.version().code())) : QString(""));
 }
 
 QString BibleVerseRef::cacheKey() const
 {
-	return QString("%1 (%2)")
-		.arg(toString())
-		.arg(m_book.version().code());
+	return toString(true);
 }
 
 BibleVerseRef BibleVerseRef::verseRef(int newVerseNumber) const
@@ -146,7 +145,7 @@ BibleVerseRef BibleVerseRef::normalize(const QString& tmp, const BibleVersion &v
 
 QDebug operator<<(QDebug dbg, const BibleVerseRef &ref)
 {
-	dbg.nospace() << qPrintable(ref.cacheKey());
+	dbg.nospace() << qPrintable(ref.toString(true));
 	
 	return dbg.nospace();
 }
