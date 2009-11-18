@@ -12,6 +12,8 @@
 #include <QMovie>
 #include <QComboBox>
 #include <QMessageBox>
+#include <QAction>
+#include <QMenu>
 
 #include "BibleModel.h"
 #include "BibleGatewayConnector.h"
@@ -26,32 +28,110 @@
 
 BibleBrowser::BibleBrowser(QWidget *parent)
 	: QWidget(parent)
+	, m_showVerseNumbers(true)
+	//, m_showFullRefEachSlide(false)
+	, m_showFullRefAtStart(true)
+	, m_showFullRefAtEnd(false)
+	, m_showResponsiveReadingLabels(false)
 {
 	setObjectName("BibleBrowser");
+	
+	
+	QSettings s;
+	m_showVerseNumbers	= s.value("biblebrowser/show-verse-numbers",true).toBool();
+	//m_showFullRefEachSlide	= s.value("biblebrowser/show-full-ref-eachslide",false).toBool();
+	m_showFullRefAtStart	= s.value("biblebrowser/show-full-ref-at-start",true).toBool();
+	m_showFullRefAtEnd	= s.value("biblebrowser/show-full-ref-at-end",false).toBool();
+	m_showResponsiveReadingLabels = s.value("biblebrowser/show-responsive-reading-lables",false).toBool();
+	
 	setupUI();
 	
 	m_bible = new BibleGatewayConnector();
 	connect(m_bible, SIGNAL(referenceAvailable(const BibleVerseRef& , const BibleVerseList &)), this, SLOT(referenceAvailable(const BibleVerseRef& , const BibleVerseList &)));
 }
 	
-BibleBrowser::~BibleBrowser() {}
+BibleBrowser::~BibleBrowser() 
+{
+}
+
+void BibleBrowser::saveSettings()
+{
+	qDebug() << "BibleBrowser::saveSettings()";
+	
+	QSettings s;
+	s.setValue("biblebrowser/show-verse-numbers",			m_showVerseNumbers);
+	//s.setValue("biblebrowser/show-full-ref-eachslide",		m_showFullRefEachSlide);
+	s.setValue("biblebrowser/show-full-ref-at-start",		m_showFullRefAtStart);
+	s.setValue("biblebrowser/show-full-ref-at-end",			m_showFullRefAtEnd);
+	s.setValue("biblebrowser/show-responsive-reading-lables",	m_showResponsiveReadingLabels);
+}
+
+void BibleBrowser::closeEvent(QCloseEvent*)
+{
+	
+}
+
 #define SET_MARGIN(layout,margin) \
 	layout->setContentsMargins(margin,margin,margin,margin);
+
+void BibleBrowser::setShowVerseNumbers(bool x) 			{ m_showVerseNumbers = x; saveSettings(); }
+//void BibleBrowser::setShowFullRefEachSlide(bool x) 		{  m_showFullRefEachSlide = x; saveSettings(); }
+void BibleBrowser::setShowFullRefAtStart(bool x) 		{ m_showFullRefAtStart = x; saveSettings(); }
+void BibleBrowser::setShowFullRefAtEnd(bool x) 			{ m_showFullRefAtEnd = x; saveSettings(); }
+void BibleBrowser::setShowResponsiveReadingLabels(bool x) 	{ m_showResponsiveReadingLabels = x; saveSettings(); }
 
 void BibleBrowser::setupUI()
 {
 	QVBoxLayout *vbox = new QVBoxLayout(this);
 	//SET_MARGIN(vbox,0);
 	
-	// Setup filter box at the top of the widget
-	m_searchBase = new QWidget(this);
+	
+	QHBoxLayout *hboxTop = new QHBoxLayout();
+	vbox->addLayout(hboxTop);
 	
 	m_versionCombo = new QComboBox(this);
 	setupVersionCombo();
-	vbox->addWidget(m_versionCombo);
+	hboxTop->addWidget(m_versionCombo);
 	
 	connect(m_versionCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(searchReturnPressed()));
 	
+	QPushButton *configBtn = new QPushButton(QPixmap(":/data/stock-preferences.png"),"");
+	configBtn->setToolTip("Setup Slide Creator Options");
+	
+	QMenu *configMenu = new QMenu(configBtn);
+	QAction * action;
+	
+	action = configMenu->addAction("Show Verse Numbers in Text");
+	action->setCheckable(true);
+	action->setChecked(showVerseNumbers());
+	connect(action, SIGNAL(toggled(bool)), this, SLOT(setShowVerseNumbers(bool)));
+	
+// 	action = configMenu->addAction("Show Full Verse Ref Each Slide");
+// 	action->setCheckable(true);
+// 	action->setChecked(showFullRefEachSlide());
+// 	connect(action, SIGNAL(toggled(bool)), this, SLOT(setShowFullRefEachSlide(bool)));
+// 	
+	action = configMenu->addAction("Show Full Verse Ref At Group Start");
+	action->setCheckable(true);
+	action->setChecked(showFullRefAtStart());
+	connect(action, SIGNAL(toggled(bool)), this, SLOT(setShowFullRefAtStart(bool)));
+	
+	action = configMenu->addAction("Show Full Verse Ref At Group End");
+	action->setCheckable(true);
+	action->setChecked(showFullRefAtEnd());
+	connect(action, SIGNAL(toggled(bool)), this, SLOT(setShowFullRefAtEnd(bool)));
+	
+	action = configMenu->addAction("Show Responsive Reading Labels");
+	action->setCheckable(true);
+	action->setChecked(showResponsiveReadingLabels());
+	connect(action, SIGNAL(toggled(bool)), this, SLOT(setShowResponsiveReadingLabels(bool)));
+	
+	configBtn->setMenu(configMenu);
+	hboxTop->addWidget(configBtn);
+	
+	
+	// Setup filter box at the top of the widget
+	m_searchBase = new QWidget(this);
 	
 	QHBoxLayout *hbox = new QHBoxLayout(m_searchBase);
 	SET_MARGIN(hbox,0);
@@ -61,8 +141,10 @@ void BibleBrowser::setupUI()
 	label->setBuddy(m_search);
 	
 	QPushButton * btnSearch = new QPushButton(QPixmap(":/data/stock-find.png"),"");
+	btnSearch->setToolTip("Seach BibleGateway.com for the verse reference entered on the left.");
 	
 	m_addBtn = new QPushButton(QPixmap(":/data/stock-add.png"),"");
+	m_addBtn->setToolTip("Add verses below as a slide group to current document");
 	m_addBtn->setVisible(false);
 	
 	m_spinnerLabel = new QLabel();
@@ -82,7 +164,7 @@ void BibleBrowser::setupUI()
 	connect(btnSearch, SIGNAL(clicked()), this, SLOT(searchReturnPressed()));
 	connect(m_addBtn, SIGNAL(clicked()), this, SLOT(createSlideGroup()));
 	
-		// add text preview
+	// add text preview
 	m_preview = new QTextEdit(this);
 	m_preview->setReadOnly(true);
 
@@ -295,6 +377,22 @@ void BibleBrowser::setupVersionCombo()
 	m_versionCombo->setCurrentIndex(m_versionCombo->findData("NIV"));
 }
 
+static void BibleBrowser_setupTextBox(TextBoxItem *tmpText)
+{
+
+	// Outline pen for the text
+	QPen pen = QPen(Qt::black,1.5);
+	pen.setJoinStyle(Qt::MiterJoin);
+
+	tmpText->setPos(QPointF(0,0));
+	tmpText->setOutlinePen(pen);
+	tmpText->setOutlineEnabled(true);
+	tmpText->setFillBrush(Qt::white);
+	tmpText->setFillType(AbstractVisualItem::Solid);
+	tmpText->setShadowEnabled(true);
+	tmpText->setShadowBlurRadius(6);
+}
+
 void BibleBrowser::createSlideGroup()
 {
 	BibleVerseList list = m_currentList;
@@ -302,8 +400,15 @@ void BibleBrowser::createSlideGroup()
 	int MinTextSize = 48;
 
 	QStringList lines;
+	QString prefix;
 	foreach(BibleVerse verse, list)
-		lines << verse.text();
+	{
+		prefix = m_showVerseNumbers ? 
+			prefix = QString("<sup>%1</sup>").arg(verse.verseNumber())
+			: "";
+		
+		lines << prefix + verse.text();
+	}
 	
 	QString blob = lines.join(" ");
 	lines.clear();
@@ -316,7 +421,6 @@ void BibleBrowser::createSlideGroup()
 		lines.append(blob.mid(lastPos,pos-lastPos+1));
 		pos += rx.matchedLength();
 		lastPos = pos;
-		
 	}
 	
 
@@ -329,9 +433,52 @@ void BibleBrowser::createSlideGroup()
 
 	QString blockPrefix = "<span style='font-family:Calibri,Tahoma,Arial,Sans-Serif;font-weight:800'><b>";
 	QString blockSuffix = "</b></span>";
-
+	
 	TextBoxItem * tmpText = 0;
 	int realHeight=0;
+	
+	Slide * startSlide = 0;
+	if(showFullRefAtStart())
+	{
+		tmpText = new TextBoxItem();
+		tmpText->setItemId(ItemFactory::nextId());
+		tmpText->setItemName(QString("TextBoxItem%1").arg(tmpText->itemId()));
+		
+		tmpText->setText(QString("<center><span style='font-family:Constantina,Times New Roman,Serif;font-weight:800'><b>%1</b></span></center>").arg(m_currentRef.toString()));
+		tmpText->changeFontSize(72);
+		QSize size = tmpText->findNaturalSize();
+		
+		startSlide = addSlide(group,tmpText,size.height(),fitSize,m_currentRef.toString());
+		
+		tmpText = 0;
+	}
+
+	
+	TextBoxItem * labelItem = 0;
+	QSize labelSize;
+	if(m_showResponsiveReadingLabels)
+	{
+		labelItem = new TextBoxItem();
+		labelItem->setItemId(ItemFactory::nextId());
+		labelItem->setItemName(QString("TextBoxItem%1").arg(labelItem->itemId()));
+		
+		labelItem->setText(QString("<span style='font-family:Calibri,Tahoma,Arial,Sans-Serif;font-weight:800'><b>Congregation</b></span></center>"));;
+		labelItem->changeFontSize(40);
+		
+		labelSize = labelItem->findNaturalSize();
+		
+		BibleBrowser_setupTextBox(labelItem);
+		labelItem->setFillBrush(Qt::yellow);
+	
+		// resize usable area to allow for space at top of each slide for this label
+		fitSize.setHeight(fitSize.height() - labelSize.height());
+	}
+
+	QString leaderLabel = tr("Leader:");
+	QString readingLabel = tr("Congregation:");
+	
+	int labelCounter = 0;
+	
 	QStringList tmpList;
 	for(int x=0; x<lines.size(); x++)
 	{
@@ -371,22 +518,89 @@ void BibleBrowser::createSlideGroup()
 				realHeight = tmpText->fitToSize(fitSize,MinTextSize);
 			}
 
-			addSlide(group,tmpText,realHeight,fitSize,tmpList.join("\n"));
+			Slide * slide = addSlide(group,tmpText,realHeight,fitSize,tmpList.join("\n"));
+			
+			if(m_showResponsiveReadingLabels)
+			{
+				QRectF rect = tmpText->contentsRect();
+				
+				// dont adjust rect.height here because the rect should have been sized to fitSize, who's height was already adjusted to labelSize, above
+				tmpText->setContentsRect(QRectF(rect.x(),rect.y() + labelSize.height(),rect.width(),rect.height()));
+				
+				QString labelText = labelCounter ++ % 2 == 0 ? leaderLabel : readingLabel;
+				
+				TextBoxItem * label = dynamic_cast<TextBoxItem*>(labelItem->clone());
+				label->setText(QString("<span style='font-family:Calibri,Tahoma,Arial,Sans-Serif;font-weight:800'><b>%1</b></span></center>").arg(labelText));
+				
+				label->changeFontSize(40);
+				
+				QSize sz = label->findNaturalSize(fitSize.width());
+				label->setContentsRect(QRectF(0,0,sz.width(),sz.height()));
+				
+				qDebug() << "responsive reading: #"<<labelCounter<<", labelText:"<<labelText<<", sz:"<<sz<<", rect:"<<label->contentsRect();
+				
+				
+				slide->addItem(label);
+			}
+				
 			tmpText = 0;
-
+			
+			
 
 			tmpList.clear();
 		}
 	}
 	
-	if(realHeight>0 && tmpText)
-		addSlide(group,tmpText,realHeight,fitSize,tmpList.join("\n"));
+ 	if(realHeight>0 && tmpText)
+ 	{
+ 		Slide * slide = addSlide(group,tmpText,realHeight,fitSize,tmpList.join("\n"));
+ 		
+ 		if(m_showResponsiveReadingLabels)
+		{
+			QRectF rect = tmpText->contentsRect();
+			
+			// dont adjust rect.height here because the rect should have been sized to fitSize, who's height was already adjusted to labelSize, above
+			tmpText->setContentsRect(QRectF(rect.x(),rect.y() + labelSize.height(),rect.width(),rect.height()));
+			
+			QString labelText = labelCounter ++ % 2 == 0 ? leaderLabel : readingLabel;
+			
+			TextBoxItem * label = dynamic_cast<TextBoxItem*>(labelItem->clone());
+			label->setText(QString("<span style='font-family:Calibri,Tahoma,Arial,Sans-Serif;font-weight:800'><b>%1</b></span></center>").arg(labelText));
+			
+			label->changeFontSize(40);
+			
+			QSize sz = label->findNaturalSize(fitSize.width());
+			label->setContentsRect(QRectF(0,0,sz.width(),sz.height()));
+			
+			qDebug() << "responsive reading: #"<<labelCounter<<", labelText:"<<labelText<<", sz:"<<sz<<", rect:"<<label->contentsRect();
+			
+			
+			slide->addItem(label);
+		}
+	}
+		
+	if(showFullRefAtEnd())
+	{
+		tmpText = new TextBoxItem();
+		tmpText->setItemId(ItemFactory::nextId());
+		tmpText->setItemName(QString("TextBoxItem%1").arg(tmpText->itemId()));
+	
+		tmpText->setText(QString("<center><span style='font-family:Constantina,Times New Roman,Serif;font-weight:800'><b>%1</b></span></center>").arg(m_currentRef.toString()));
+		tmpText->changeFontSize(72);
+		QSize size = tmpText->findNaturalSize();
+		
+		// get fitSize again because it may have been changed to accomodate reading labels
+		QSize fitSize = MainWindow::mw()->standardSceneRect().size();
+		addSlide(group,tmpText,size.height(),fitSize,m_currentRef.toString());
+		
+		tmpText = 0;
+	}
 
 	MainWindow::mw()->currentDocument()->addGroup(group);
 
 }
 
-void BibleBrowser::addSlide(SlideGroup *group, TextBoxItem *tmpText, int realHeight, const QSize & fitSize, const QString & plain)
+Slide * BibleBrowser::addSlide(SlideGroup *group, TextBoxItem *tmpText, int realHeight, const QSize & fitSize, const QString & plain)
 {
 	Slide * slide = new Slide();
 	AbstractVisualItem * bg = dynamic_cast<AbstractVisualItem*>(slide->background());
@@ -403,21 +617,13 @@ void BibleBrowser::addSlide(SlideGroup *group, TextBoxItem *tmpText, int realHei
 	//qDebug() << "SongSlideGroup::textToSlides(): centering: boxHeight:"<<boxHeight<<", textRect height:"<<textRect.height()<<", centered Y:"<<y;
 	tmpText->setContentsRect(QRectF(0,y,fitSize.width(),realHeight));
 
-	// Outline pen for the text
-	QPen pen = QPen(Qt::black,1.5);
-	pen.setJoinStyle(Qt::MiterJoin);
-
-	tmpText->setPos(QPointF(0,0));
-	tmpText->setOutlinePen(pen);
-	tmpText->setOutlineEnabled(true);
-	tmpText->setFillBrush(Qt::white);
-	tmpText->setFillType(AbstractVisualItem::Solid);
-	tmpText->setShadowEnabled(true);
-	tmpText->setShadowBlurRadius(6);
+	BibleBrowser_setupTextBox(tmpText);
 
 	slide->addItem(tmpText);
 	
 	slide->setSlideNumber(slideNum);
 	group->addSlide(slide);
+	
+	return slide;
 }
 
