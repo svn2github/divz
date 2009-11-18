@@ -608,10 +608,10 @@ void MainWindow::setupSongList()
 	connect(m_songBrowser, SIGNAL(songSelected(SongRecord*)), this, SLOT(songSelected(SongRecord*)));
 	
 	
-	baseLayout = new QVBoxLayout(m_ui->tabSlides);
+	baseLayout = new QVBoxLayout(m_ui->tabBible);
 	baseLayout->setContentsMargins(0,0,0,0);
 
-	BibleBrowser * bible = new BibleBrowser(m_ui->tabSlides);
+	BibleBrowser * bible = new BibleBrowser(m_ui->tabBible);
 	baseLayout->addWidget(bible);
 }
 

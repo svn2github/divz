@@ -37,17 +37,23 @@ void BibleBrowser::setupUI()
 	// Setup filter box at the top of the widget
 	m_searchBase = new QWidget(this);
 	
+	m_versionCombo = new QComboBox(this);
+	setupVersionCombo();
+	vbox->addWidget(m_versionCombo);
+	
+	connect(m_versionCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(searchReturnPressed()));
+	
+	
 	QHBoxLayout *hbox = new QHBoxLayout(m_searchBase);
 	SET_MARGIN(hbox,0);
-	
-	m_versionCombo = new QComboBox(m_searchBase);
-	setupVersionCombo();
 	
 	QLabel *label = new QLabel("Searc&h:");
 	m_search = new QLineEdit(m_searchBase);
 	label->setBuddy(m_search);
 	
-	m_clearSearchBtn = new QPushButton("C&lear");
+	QPushButton * btnSearch = new QPushButton(QPixmap(":/data/stock-find.png"),"");
+	
+	m_clearSearchBtn = new QPushButton(QPixmap(":/data/stock-clear.png"),"");
 	m_clearSearchBtn->setVisible(false);
 	
 	m_spinnerLabel = new QLabel();
@@ -58,14 +64,15 @@ void BibleBrowser::setupUI()
 	m_spinnerLabel->setMovie(movie);
 	m_spinnerLabel->setToolTip("Loading Verses...");
 	
-	hbox->addWidget(m_versionCombo);
 	hbox->addWidget(label);
 	hbox->addWidget(m_search);
+	hbox->addWidget(btnSearch);
 	hbox->addWidget(m_clearSearchBtn);
 	hbox->addWidget(m_spinnerLabel);
 	
 	//connect(m_search, SIGNAL(textChanged(const QString &)), this, SLOT(loadVerses(const QString &)));
 	connect(m_search, SIGNAL(returnPressed()), this, SLOT(searchReturnPressed()));
+	connect(btnSearch, SIGNAL(clicked()), this, SLOT(searchReturnPressed()));
 	connect(m_clearSearchBtn, SIGNAL(clicked()), this, SLOT(clearSearch()));
 	
 		// add text preview
@@ -125,13 +132,20 @@ void BibleBrowser::searchTextChanged(const QString &text)
 void BibleBrowser::referenceAvailable(const BibleVerseRef& reference, const BibleVerseList & list)
 {
 	m_spinnerLabel->setVisible(false);
-	QStringList listText;
-	foreach(BibleVerse verse, list)
+	if(list.isEmpty())
 	{
-		listText << QString("<sup>%1</sup>%2").arg(verse.verseNumber()).arg(verse.text());
+		m_preview->setHtml(QString(tr("<font color='red'>Sorry, \"<b>%1</b>\" was not found!</font>")).arg(reference.cacheKey()));
 	}
-	
-	m_preview->setHtml(QString("<h1>%1</h1><p>%2</p>").arg(reference.cacheKey(),listText.join("\n")));
+	else
+	{
+		QStringList listText;
+		foreach(BibleVerse verse, list)
+		{
+			listText << QString("<sup>%1</sup>%2").arg(verse.verseNumber()).arg(verse.text());
+		}
+		
+		m_preview->setHtml(QString("<h1>%1</h1><p>%2</p>").arg(reference.cacheKey(),listText.join("\n")));
+	}
 }
 
 // void BibleBrowser::searchReset()
@@ -149,7 +163,7 @@ void BibleBrowser::loadVerses(const QString & filter)
 
 void BibleBrowser::setupVersionCombo()
 {
-	QHash<QString,QString> versionMap;
+	QMap<QString,QString> versionMap;
 	
 	versionMap["NIV"]="New International Version";
 	versionMap["NASB"]="New American Standard Bible";
@@ -246,8 +260,12 @@ void BibleBrowser::setupVersionCombo()
 	versionMap["CUVS"]="Chinese Union Version (Simplified)";
 	versionMap["CUV"]="Chinese Union Version (Traditional)";
 	
-	foreach(QString code, versionMap)
-		m_versionCombo->addItem(versionMap.value(code), QVariant(code));
+	#define MAX_VERSION_NAME_LENGTH 32
+	foreach(QString code, versionMap.keys())
+	{
+		QString text = versionMap.value(code);
+		m_versionCombo->addItem(QString("%1%2").arg(text.left(MAX_VERSION_NAME_LENGTH)).arg(text.length() > MAX_VERSION_NAME_LENGTH ? "..." : ""), code);
+	}
 	
-	m_versionCombo->setCurrentIndex(0);
+	m_versionCombo->setCurrentIndex(m_versionCombo->findData("NIV"));
 }
