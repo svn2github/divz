@@ -6,6 +6,7 @@
 #include <QDesktopWidget>
 
 Output * Output::m_staticPreviewInstance = new Output(Output::Preview);
+Output * Output::m_staticWidgetInstance = new Output(Output::Widget);
 
 Output::Output(Output::OutputType type)
 {

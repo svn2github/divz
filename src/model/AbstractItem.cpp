@@ -8,6 +8,7 @@
 #include "ImageItem.h"
 #include "VideoFileItem.h"
 #include "BackgroundItem.h"
+#include "OutputViewItem.h"
 #include "ItemFactory.h"
 
 QString AbstractItem::guessTitle(QString field)
@@ -166,6 +167,9 @@ AbstractItem * AbstractItem::fromByteArray(QByteArray &array)
 	else 
 	if (className == "BackgroundItem")
 		content = new BackgroundItem();
+	else
+	if (className == "OutputViewItem")
+		content = new OutputViewItem();
 	else
 	{
 		qWarning("AbstractItem::fromByteArray: Unknown class name '%s'", qPrintable(className));

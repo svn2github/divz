@@ -210,7 +210,7 @@ void BackgroundContent::syncFromModelItem(AbstractVisualItem *model)
 // 			y += 0.15 - ((double)qrand()) / ((double)RAND_MAX) * 0.075;
 			
 			m_zoomDestPoint = QPointF(x,y);
-			qDebug() << "ZoomRandom:	"<<x<<","<<y;
+			//qDebug() << "ZoomRandom:	"<<x<<","<<y;
 			
 			//qDebug() << model->itemName() << "Random zoom anchor: "<<m_zoomDestPoint;
 		}
@@ -219,16 +219,16 @@ void BackgroundContent::syncFromModelItem(AbstractVisualItem *model)
 			double x = .0, y = .0;
 			switch(model->zoomAnchorPoint())
 			{
-				case AbstractVisualItem::ZoomTopLeft:		x = .33; y = .33; qDebug() << "ZoomTopLeft:	"<<x<<","<<y; break;
-				case AbstractVisualItem::ZoomTopMid:		x = .50; y = .25; qDebug() << "ZoomTopMid:	"<<x<<","<<y; break;
-				case AbstractVisualItem::ZoomTopRight:		x = .66; y = .33; qDebug() << "ZoomTopRight:	"<<x<<","<<y; break;
-				case AbstractVisualItem::ZoomRightMid:		x = .75; y = .50; qDebug() << "ZoomRightMid:	"<<x<<","<<y; break;
-				case AbstractVisualItem::ZoomBottomRight:	x = .66; y = .66; qDebug() << "ZoomBottomRight:	"<<x<<","<<y; break;
-				case AbstractVisualItem::ZoomBottomMid:		x = .50; y = .75; qDebug() << "ZoomBottomMid:	"<<x<<","<<y; break;
-				case AbstractVisualItem::ZoomBottomLeft:	x = .33; y = .66; qDebug() << "ZoomBottomLeft:	"<<x<<","<<y; break;
-				case AbstractVisualItem::ZoomLeftMid:		x = .25; y = .50; qDebug() << "ZoomLeftMid:	"<<x<<","<<y; break;
+				case AbstractVisualItem::ZoomTopLeft:		x = .33; y = .33; break;
+				case AbstractVisualItem::ZoomTopMid:		x = .50; y = .25; break;
+				case AbstractVisualItem::ZoomTopRight:		x = .66; y = .33; break;
+				case AbstractVisualItem::ZoomRightMid:		x = .75; y = .50; break;
+				case AbstractVisualItem::ZoomBottomRight:	x = .66; y = .66; break;
+				case AbstractVisualItem::ZoomBottomMid:		x = .50; y = .75; break;
+				case AbstractVisualItem::ZoomBottomLeft:	x = .33; y = .66; break;
+				case AbstractVisualItem::ZoomLeftMid:		x = .25; y = .50; break;
 				case AbstractVisualItem::ZoomCenter:
-				default:					x = .50; y = .50; qDebug() << "ZoomCenter:	"<<x<<","<<y; break;
+				default:					x = .50; y = .50; break;
 			};
 			
 			m_zoomDestPoint = QPointF(x,y);

@@ -30,10 +30,12 @@ class Output : public QObject
 	
 	
 	static Output * m_staticPreviewInstance;
+	static Output * m_staticWidgetInstance;
 public:
 	static Output * previewInstance() { return m_staticPreviewInstance; }
+	static Output * widgetInstance() { return m_staticWidgetInstance; }
 	
-	typedef enum OutputType { Screen, Custom, Network, Preview };
+	typedef enum OutputType { Screen, Custom, Network, Preview, Widget };
 
 	Output();
 	Output(OutputType type);

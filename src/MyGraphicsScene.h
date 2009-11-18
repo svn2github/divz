@@ -58,6 +58,7 @@ class MyGraphicsScene : public QGraphicsScene
 		AbstractVisualItem * newBoxItem();
 		AbstractVisualItem * newVideoItem();
 		AbstractVisualItem * newImageItem();
+		AbstractVisualItem * newOutputView();
 		
 		void clear();
 		

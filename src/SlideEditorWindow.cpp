@@ -59,7 +59,8 @@
 #include "model/SlideGroupFactory.h"
 #include "SlideGroupListModel.h"
 
-
+#include "items/OutputViewConfig.h"
+#include "items/OutputViewContent.h"
 
 #include "items/GenericItemConfig.h"
 #include "items/AbstractContent.h"
@@ -436,6 +437,10 @@ void SlideEditorWindow::setupToolbar()
 	QAction  *newImage = toolbar->addAction(QIcon(":/data/insert-image-24.png"), tr("New Image Item"));
 	newImage->setShortcut(QString(tr("CTRL+SHIFT+I")));
 	connect(newImage, SIGNAL(triggered()), this, SLOT(newImageItem()));
+	
+	QAction  *newOutputView = toolbar->addAction(QIcon(":/data/stock-execute.png"), tr("New Output Viewer Item"));
+	newOutputView->setShortcut(QString(tr("CTRL+SHIFT+O")));
+	connect(newOutputView, SIGNAL(triggered()), this, SLOT(newOutputView()));
 	
 	toolbar = addToolBar(tr("Arrange Items"));
 	toolbars<<toolbar;
@@ -1004,6 +1009,9 @@ void SlideEditorWindow::updatePropDock(AbstractContent *content)
 		
 		if (TextBoxContent * text = dynamic_cast<TextBoxContent *>(content))
 			p = new TextBoxConfig(text);
+		else
+		if (OutputViewContent * text = dynamic_cast<OutputViewContent *>(content))
+			p = new OutputViewConfig(text);
 		else
 		if (VideoFileContent * vid = dynamic_cast<VideoFileContent *>(content))
 			p = new VideoFileConfig(vid);
@@ -1883,3 +1891,10 @@ void SlideEditorWindow::newImageItem()
         m_scene->newImageItem();
         m_itemModel->setSlide(m_scene->slide());
 }
+
+void SlideEditorWindow::newOutputView()
+{
+        m_scene->newOutputView();
+        m_itemModel->setSlide(m_scene->slide());
+}
+

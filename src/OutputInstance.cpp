@@ -161,6 +161,7 @@ void OutputInstance::slotGrabPixmap()
 void OutputInstance::applyOutputSettings(bool startHidden)
 {
 	Output::OutputType x = m_output->outputType();
+	m_viewer->setIsPreviewViewer(false); // reset in case changed
 	if(x == Output::Screen || x == Output::Custom)
 	{
 		
@@ -219,6 +220,11 @@ void OutputInstance::applyOutputSettings(bool startHidden)
 	{
 		m_viewer->setCursor(Qt::ArrowCursor);
 		m_viewer->setIsPreviewViewer(true);
+	}
+	else
+	if(x == Output::Widget)
+	{
+		m_viewer->setCursor(Qt::ArrowCursor);
 	}
 	else
 	if(x == Output::Network)

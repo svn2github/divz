@@ -11,6 +11,8 @@
 #include "items/TextContent.h"
 #include "items/TextBoxConfig.h"
 #include "items/TextBoxContent.h"
+#include "items/OutputViewConfig.h"
+#include "items/OutputViewContent.h"
 #include "items/VideoFileContent.h"
 #include "items/VideoFileConfig.h"
 #include "items/BackgroundContent.h"
@@ -28,6 +30,8 @@
 #include "model/VideoFileItem.h"
 #include "model/BackgroundItem.h"
 #include "model/ImageItem.h"
+#include "model/OutputViewItem.h"
+
 
 
 #include "AppSettings.h"
@@ -786,6 +790,23 @@ AbstractVisualItem * MyGraphicsScene::newImageItem()
 	return t;
 }
 
+AbstractVisualItem * MyGraphicsScene::newOutputView()
+{
+	OutputViewItem *t = new OutputViewItem();
+	if(!m_slide)
+		return 0;
+	
+	t->setPos(nearCenter(sceneRect()));
+	t->setItemId(ItemFactory::nextId());
+	t->setItemName(QString("OutputViewItem%1").arg(t->itemId()));
+	t->setZValue(maxZValue());
+	
+	m_slide->addItem(t);
+	
+	
+	return t;
+}
+
 int MyGraphicsScene::maxZValue()
 {
 	//qDebug()<< "newImageItem: m_content.size():"<<m_content.size();
@@ -1090,6 +1111,9 @@ void MyGraphicsScene::configureContent(AbstractContent *content)
 	
 	if (TextBoxContent * text = dynamic_cast<TextBoxContent *>(content))
 		p = new TextBoxConfig(text);
+	else
+	if (OutputViewContent * text = dynamic_cast<OutputViewContent *>(content))
+		p = new OutputViewConfig(text);
 	else
 	if (VideoFileContent * vid = dynamic_cast<VideoFileContent *>(content))
 		p = new VideoFileConfig(vid);
