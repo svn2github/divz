@@ -209,7 +209,7 @@ GenericItemConfig::GenericItemConfig(AbstractContent * content, QWidget *parent)
 	m_commonUi->zoomFactor->setValue(model->zoomFactor());
 	
 	
-	updateShadowDistanceAndDirection();
+	//updateShadowDistanceAndDirection();
 	m_commonUi->shadowDirectionBox->setVisible(false);
 	
 	
@@ -229,7 +229,7 @@ GenericItemConfig::GenericItemConfig(AbstractContent * content, QWidget *parent)
 	
 	
 	connect(m_commonUi->directionBox, SIGNAL(valueChanged(int)), this, SLOT(shadowDirectionBoxChanged(int)));
-	connect(m_commonUi->distanceBox, SIGNAL(valueChanged(int)), this, SLOT(shadowDistanceBoxChanged(int)));
+ 	connect(m_commonUi->distanceBox, SIGNAL(valueChanged(int)), this, SLOT(shadowDistanceBoxChanged(int)));
 	
 	
 	
@@ -270,8 +270,8 @@ GenericItemConfig::GenericItemConfig(AbstractContent * content, QWidget *parent)
 	connect(m_commonUi->contentWidth, SIGNAL(valueChanged(double)), this, SLOT(slotSizeChanged(double)));
 	connect(m_commonUi->contentHeight, SIGNAL(valueChanged(double)), this, SLOT(slotSizeChanged(double)));
 	
-// 	connect(m_commonUi->shadowXOffsetBox, SIGNAL(valueChanged(double)), this, SLOT(slotShadowXOffsetChanged(double)));
-// 	connect(m_commonUi->shadowYOffsetBox, SIGNAL(valueChanged(double)), this, SLOT(slotShadowYOffsetChanged(double)));
+	connect(m_commonUi->shadowXOffsetBox, SIGNAL(valueChanged(double)), this, SLOT(slotShadowXOffsetChanged(double)));
+	connect(m_commonUi->shadowYOffsetBox, SIGNAL(valueChanged(double)), this, SLOT(slotShadowYOffsetChanged(double)));
 	connect(m_commonUi->outlineBox, SIGNAL(valueChanged(double)), this, SLOT(slotLineSizeChanged(double)));
 	connect(m_commonUi->mirrorOffset, SIGNAL(valueChanged(double)), this, SLOT(slotMirrorOffsetChanged(double)));
 	
@@ -676,13 +676,13 @@ void GenericItemConfig::slotLineSizeChanged(double d)
 void GenericItemConfig::slotShadowXOffsetChanged(double d)
 {
 	m_content->modelItem()->setShadowOffsetX(d);
-	updateShadowDistanceAndDirection();
+	//updateShadowDistanceAndDirection();
 }
 
 void GenericItemConfig::slotShadowYOffsetChanged(double d)
 {
 	m_content->modelItem()->setShadowOffsetY(d);
-	updateShadowDistanceAndDirection();
+	//updateShadowDistanceAndDirection();
 }
 
 void GenericItemConfig::setShadowOffsets(double x, double y)

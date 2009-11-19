@@ -838,14 +838,17 @@ Revised Task list for Release 1.0, 10/18/09:
 		[LATER] Video Capture (started impl, but again, performance is terrible. That may be due to the FormatOpts specified, or in ffmpeg, or the capture hardware - need to trace - later!)
 	
 	- Bugs:
-		crash: click quicsklide 'show' btn right after program start - e.g. no group live yet - crash
+		[WORKSFORME] crash: click quicsklide 'show' btn right after program start - e.g. no group live yet - crash
+			I suspect this was fixed during the fix for the bug right below (edit song when live)
 		[FIXED] crash: go live with song, edit, save - crash
 		[FIXED] crash: edit song, click bg, close editor, save - crash
 		[WORKSFORME] crash: open slide, text box, clear text, save - crash
 			cannot reproduce here after multiple attempts and variations
-		shadow renders too far below first time before moving
+		[WORKSFORME] shadow renders too far below first time before moving
+			cannot reproduce here - will try on system at church
 		position on images/videso dragged doesnt always sync back to model when dragging
-		when press f2 in main window and editor already open but minimized/hidden, raise editor to front
+		[FIXED] when press f2 in main window and editor already open but minimized/hidden, raise editor to front
+			added raise, activateWindow, and showNormal to MainWindow::openSlideEditor
 		
 		phc logo overlays didint draw the shadow correclty - its almost like they drew the shadow with a vertically-compressed original, and its not till i drag them from original position that the shaodw renders correctly
 		if set background color on foldback while song active, song filter disables and doesnt re-enable till song go live again
@@ -864,8 +867,9 @@ Revised Task list for Release 1.0, 10/18/09:
 		
 		video icons dont render the actual icon after loading if not already in disk cache
 		
-		when auto-size text is enabled on foldback, foldback doesnt display correct verse all the time - sometimes displays a different verse that what it should be showing
+		[WORKSFORME] when auto-size text is enabled on foldback, foldback doesnt display correct verse all the time - sometimes displays a different verse that what it should be showing
 			cant repeat yet
+			I suspect this was due to the cache key used at the time. The cache key algorithim has been changed since this time.
 
 		[FIXED] need to fix the hackish method of setting slide groups on synced outputs in MainWindow - needs to be cleaner!
 			added private MainWindow::sendGroupToOutput(Output *output, SlideGroup *group, Slide *startSlide, bool allowProgressDialog) method

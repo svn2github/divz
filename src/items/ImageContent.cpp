@@ -349,6 +349,33 @@ void ImageContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * op
 	//DEBUG_TMARK();
 	
 	
+	if(modelItem()->outlineEnabled())
+	{
+				
+		QRect cRect = contentsRect();
+		
+		QPen p = modelItem()->outlinePen();
+		p.setJoinStyle(Qt::MiterJoin);
+// 		if(sceneContextHint() == MyGraphicsScene::Preview)
+// 		{
+// 			QTransform tx = painter->transform();
+// 			qreal scale = qMax(tx.m11(),tx.m22());
+// 			p.setWidthF(1/scale * p.widthF());
+// 		}
+// 		
+		painter->setPen(p);
+		painter->setBrush(Qt::NoBrush);
+		painter->drawRect(cRect);
+		//DEBUG_TMARK();
+		
+		#if QT_VERSION >= 0x040600
+			// Qt 4.6 RC 1 FILLS the bloody rect above instead of just drawing an outline - IF the opacity of our object is < 1
+			//qDebug() << "ImageContent::paint():  opacity="<<opacity()<<", painter opacity:"<<painter->opacity();
+			if(painter->opacity() < 1.0)
+				drawForeground(painter);
+		#endif
+	}
+	
 	//qDebug() << "ImageContent::paint(): \t \t Elapsed:"<<(((double)total.elapsed())/1000.0)<<" sec";
 }
 
@@ -447,22 +474,6 @@ void ImageContent::drawForeground(QPainter *painter)
 		}
 	}
 	
-	if(modelItem()->outlineEnabled())
-	{
-		QPen p = modelItem()->outlinePen();
-		p.setJoinStyle(Qt::MiterJoin);
-// 		if(sceneContextHint() == MyGraphicsScene::Preview)
-// 		{
-// 			QTransform tx = painter->transform();
-// 			qreal scale = qMax(tx.m11(),tx.m22());
-// 			p.setWidthF(1/scale * p.widthF());
-// 		}
-// 		
-		painter->setPen(p);
-		painter->setBrush(Qt::NoBrush);
-		painter->drawRect(cRect);
-		//DEBUG_TMARK();
-	}
 	
 	painter->restore();
 	

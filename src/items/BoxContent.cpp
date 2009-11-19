@@ -284,8 +284,11 @@ void BoxContent::drawForeground(QPainter * painter)
 		// Qt 4.6RC anomaly: at less than 100% opacity, the pen is drawn as the foreground color
 		// (e.g. black pen outline, yellow bg - black rect drawn ON TOP OF yello rect)
 		#if QT_VERSION >= 0x040600
+		if(painter->opacity() < 1.0)
+		{
 			painter->setPen(Qt::NoPen);
 			painter->drawRect(cRect);
+		}
 		#endif
 	}	
 	else

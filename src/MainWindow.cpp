@@ -1452,6 +1452,13 @@ AbstractSlideGroupEditor * MainWindow::openSlideEditor(SlideGroup *group,Slide *
 	m_editWin->show();
 	m_editWin->setSlideGroup(group,slide);
 	
+	if(m_editWin->isMinimized())
+	{
+		m_editWin->showNormal();
+		m_editWin->raise();
+		m_editWin->activateWindow();
+	}
+	
 	return m_editWin;
 }
 
