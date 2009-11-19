@@ -185,6 +185,9 @@ public slots:
 	void setEndActionOverrideEnabled(bool);
 	void setEndGroupAction(SlideGroup::EndOfGroupAction);
 	
+	// Must be able to disable OpenGL inorder to embed using QGraphicsProxyWidget
+	void forceGLDisabled(bool);
+	bool isGLDisabled() { return m_forceGLDisabled; }
 
 private slots:
 	void appSettingsChanged();
@@ -280,6 +283,7 @@ private:
 	bool m_overrideEndAction;
 	SlideGroup::EndOfGroupAction m_groupEndAction;
 
+	bool m_forceGLDisabled;
 };
 
 #endif // SLIDEGROUPVIEWER_H

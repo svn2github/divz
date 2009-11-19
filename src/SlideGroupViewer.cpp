@@ -652,21 +652,27 @@ SlideGroupViewer::~SlideGroupViewer()
 	}
 	
 }
+void SlideGroupViewer::forceGLDisabled(bool flag)
+{
+	m_forceGLDisabled = flag;
+	
+	appSettingsChanged();
+}
 
 void SlideGroupViewer::appSettingsChanged()
 {
-	if(AppSettings::useOpenGL() && !m_usingGL)
+	if(!m_usingGL && !m_forceGLDisabled && AppSettings::useOpenGL())
 	{
 		m_usingGL = true;
 		m_view->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
-		//qDebug("SlideGroupViewer::appSettingsChanged(): Loaded OpenGL Viewport");
+		qDebug("SlideGroupViewer::appSettingsChanged(): Loaded OpenGL Viewport");
 	}
 	else
-	if(!AppSettings::useOpenGL() && m_usingGL)
+	if(m_usingGL && (m_forceGLDisabled || !AppSettings::useOpenGL()))
 	{
 		m_usingGL = false;
 		m_view->setViewport(new QWidget());
-		//qDebug("SlideGroupViewer::appSettingsChanged(): Loaded Non-GL Viewport");
+		qDebug("SlideGroupViewer::appSettingsChanged(): Loaded Non-GL Viewport");
 	}
 }
 

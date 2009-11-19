@@ -838,6 +838,7 @@ Revised Task list for Release 1.0, 10/18/09:
 		[LATER] Video Capture (started impl, but again, performance is terrible. That may be due to the FormatOpts specified, or in ffmpeg, or the capture hardware - need to trace - later!)
 	
 	- Bugs:
+		crash: click quicsklide 'show' btn right after program start - e.g. no group live yet - crash
 		crash: go live with song, edit, save - crash
 		crash: edit song, click bg, close editor, save - crash
 		crash: open slide, text box, clear text, save - crash

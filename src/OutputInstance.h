@@ -66,6 +66,10 @@ public:
 	bool isEndActionOverrideEnabled() { return m_overrideEndAction; }
 	SlideGroup::EndOfGroupAction groupEndAction() { return m_groupEndAction; }
 	
+	// Must be able to disable OpenGL inorder to embed using QGraphicsProxyWidget
+	void forceGLDisabled(bool);
+	bool isGLDisabled() { return m_forceGLDisabled; }
+	
 signals:
 	void nextGroup();
 	void jumpToGroup(int);
@@ -181,6 +185,8 @@ private:
 	
 	bool m_overrideEndAction;
 	SlideGroup::EndOfGroupAction m_groupEndAction;
+	
+	bool m_forceGLDisabled;
 };
 
 #endif // SLIDEGROUPVIEWER_H

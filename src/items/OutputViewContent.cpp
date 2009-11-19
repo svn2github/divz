@@ -29,6 +29,10 @@
 	#define QT46_SHADOW_ENAB 0
 #endif
 
+#include <QMovie>
+#include <QLabel>
+
+
 OutputViewContent::OutputViewContent(QGraphicsScene * scene, QGraphicsItem * parent)
     : AbstractContent(scene, parent, false)
     , m_inst(0)
@@ -44,15 +48,29 @@ OutputViewContent::OutputViewContent(QGraphicsScene * scene, QGraphicsItem * par
 
 	m_viewer = new OutputInstance(Output::widgetInstance());
 	m_viewer->setCanZoom(false);
+	m_viewer->forceGLDisabled(true);
+	
+	/*
+	m_viewer->setVisible(false);
+	QLabel * label = new QLabel();
+	label->setMovie(new QMovie(":/data/ajax-loader.gif",QByteArray(),this));
+	label->setToolTip("Loading Verses...");
+	label->movie()->start();*/
+	
 	
 	m_widgetProxy = new QGraphicsProxyWidget(this);
 	m_widgetProxy->setWidget(m_viewer);
+	//m_widgetProxy->setWidget(label);
 	
 	m_dontSyncToModel = false;
 }
 
 OutputViewContent::~OutputViewContent()
 {
+	// In the QGraphicsProxyWidget, it deletes the widget -
+	// since we're using a static global instance of the
+	// widget, we dont want it destroyed! So 'remove' it.
+	m_widgetProxy->setWidget(0);
 }
 
 QWidget * OutputViewContent::createPropertyWidget()
@@ -69,6 +87,7 @@ void OutputViewContent::syncFromModelItem(AbstractVisualItem *model)
 	
 	setOutputId(dynamic_cast<OutputViewItem*>(model)->outputId());
 	
+	m_viewer->setGeometry(contentsRect());
 }
 
 
