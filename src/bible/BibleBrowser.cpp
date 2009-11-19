@@ -471,7 +471,7 @@ void BibleBrowser::createSlideGroup()
 		tmpText->setItemId(ItemFactory::nextId());
 		tmpText->setItemName(QString("TextBoxItem%1").arg(tmpText->itemId()));
 		
-		tmpText->setText(QString("<center><span style='font-family:Constantina,Times New Roman,Serif;font-weight:800'><b>%1</b></span></center>").arg(m_currentRef.toString()));
+		tmpText->setText(QString("<center><span style='font-family:Constantia,Times New Roman,Serif;font-weight:800'><b>%1</b></span></center>").arg(m_currentRef.toString()));
 		tmpText->changeFontSize(72);
 		QSize size = tmpText->findNaturalSize();
 		
@@ -626,7 +626,7 @@ void BibleBrowser::createSlideGroup()
 		tmpText->setItemId(ItemFactory::nextId());
 		tmpText->setItemName(QString("TextBoxItem%1").arg(tmpText->itemId()));
 	
-		tmpText->setText(QString("<center><span style='font-family:Constantina,Times New Roman,Serif;font-weight:800'><b>%1</b></span></center>").arg(m_currentRef.toString()));
+		tmpText->setText(QString("<center><span style='font-family:Constantia,Times New Roman,Serif;font-weight:800'><b>%1</b></span></center>").arg(m_currentRef.toString()));
 		tmpText->changeFontSize(72);
 		QSize size = tmpText->findNaturalSize();
 		

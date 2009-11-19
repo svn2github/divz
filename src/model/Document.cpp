@@ -55,7 +55,9 @@ SlideGroup * Document::groupById(int id)
 
 void Document::setAspectRatio(double f) 
 { 
-	m_aspectRatio = f; 
+	if(f<0.1)
+		f = 1.0;
+	m_aspectRatio = f;
 	emit aspectRatioChanged(f);
 }
 
