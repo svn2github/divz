@@ -143,7 +143,7 @@ void SongEditorWindow::editSongTemplate()
 // 	m_editWin->setSlideGroup(tmpl);
 
 //	m_editWin = MainWindow::mw()->openSlideEditor(tmpl);
-	if(m_editWin = MainWindow::mw()->openSlideEditor(tmpl))
+	if((m_editWin = MainWindow::mw()->openSlideEditor(tmpl)) != 0)
 //	if(m_editWin)
 		connect(m_editWin, SIGNAL(closed()), this, SLOT(editorWindowClosed()));
 	

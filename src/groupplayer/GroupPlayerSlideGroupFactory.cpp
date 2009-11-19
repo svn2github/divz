@@ -333,12 +333,12 @@ void GroupPlayerSlideGroupViewControl::setCurrentSlide(Slide *s)
 
 void GroupPlayerSlideGroupViewControl::fadeBlackFrame(bool toggled)
 {
-	if(m_control)
-		m_control->fadeBlackFrame(toggled);
+// 	if(m_control)
+// 		m_control->fadeBlackFrame(toggled);
 }
 	
 void GroupPlayerSlideGroupViewControl::fadeClearFrame(bool toggled)
 {
-	if(m_control)
-		m_control->fadeClearFrame(toggled);
+// 	if(m_control)
+// 		m_control->fadeClearFrame(toggled);
 }

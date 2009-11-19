@@ -869,28 +869,28 @@ void OutputInstance::fadeBlackFrame(bool enable)
 // 		return;
 }
 
-void OutputInstance::fadeClearFrame(bool enable)
-{
-	foreach(OutputInstance *m, m_mirrors)
-		m->fadeClearFrame(enable);
-		
-	if(!m_output->isEnabled())
-		return;
-	
-	// set the flag only if the output is enabled inorder to reflect the true status of the output
-	m_clearEnabled = enable;
-	
-	Output::OutputType outType = m_output->outputType();
-	if(outType == Output::Screen || outType == Output::Custom || outType == Output::Preview || outType == Output::Widget)
-	{
-		m_viewer->fadeClearFrame(enable);
-	}
-	else
-	{
-		if(m_outputServer)
-			m_outputServer->sendCommand(OutputServer::FadeClear,enable);
-	}
-}
+// void OutputInstance::fadeClearFrame(bool enable)
+// {
+// 	foreach(OutputInstance *m, m_mirrors)
+// 		m->fadeClearFrame(enable);
+// 		
+// 	if(!m_output->isEnabled())
+// 		return;
+// 	
+// 	// set the flag only if the output is enabled inorder to reflect the true status of the output
+// 	m_clearEnabled = enable;
+// 	
+// 	Output::OutputType outType = m_output->outputType();
+// 	if(outType == Output::Screen || outType == Output::Custom || outType == Output::Preview || outType == Output::Widget)
+// 	{
+// 		m_viewer->fadeClearFrame(enable);
+// 	}
+// 	else
+// 	{
+// 		if(m_outputServer)
+// 			m_outputServer->sendCommand(OutputServer::FadeClear,enable);
+// 	}
+// }
 
 void OutputInstance::setLiveBackground(const QFileInfo &info, bool waitForNextSlide)
 {

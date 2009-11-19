@@ -102,7 +102,7 @@ public slots:
 	Slide * prevSlide();
 	
 	void fadeBlackFrame(bool);
-	void fadeClearFrame(bool);
+// 	void fadeClearFrame(bool);
 
 	void setViewerState(SlideGroupViewer::ViewerState);
 	

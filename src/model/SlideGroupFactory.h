@@ -51,6 +51,8 @@ public:
 	
 	typedef enum TimerState { Undefined, Running, Stopped };
 	
+	TimerState timerState() { return m_timerState; }
+	
 signals:
 	void slideDoubleClicked(Slide *);
 	void slideSelected(Slide *);
@@ -64,8 +66,8 @@ public slots:
 	virtual void setCurrentSlide(Slide*);
 	virtual void toggleTimerState(TimerState state = Undefined, bool resetTimer = false);
 	
-	virtual void fadeBlackFrame(bool);
-	virtual void fadeClearFrame(bool);
+// 	virtual void fadeBlackFrame(bool);
+// 	virtual void fadeClearFrame(bool);
 	
 	virtual void setIsPreviewControl(bool);
 	virtual void setEnabled(bool);
@@ -122,8 +124,8 @@ protected:
 	Slide * m_selectedSlide;
 	
 	bool m_timerWasActiveBeforeFade;
-	bool m_clearActive;
-	bool m_blackActive;
+// 	bool m_clearActive;
+// 	bool m_blackActive;
 	
 	bool m_isPreviewControl;
 };

@@ -168,7 +168,7 @@ public slots:
 	Slide * prevSlide();
 	
 	void fadeBlackFrame(bool);
-	void fadeClearFrame(bool);
+// 	void fadeClearFrame(bool);
 	
 	void setViewerState(ViewerState);
 
@@ -221,7 +221,7 @@ private:
 	// internal routine to apply the background to the slide group
 	void applyBackground(const QFileInfo&, Slide *slide=0);
 	
-	void generateClearFrame();
+// 	void generateClearFrame();
 	static void generateBlackFrame();
 	
 	bool reapplySpecialFrames();
@@ -245,10 +245,10 @@ private:
 	static Slide * m_blackSlide;
 	static int m_blackSlideRefCount;
 	
-	Slide * m_clearSlide;
-	int m_clearSlideNum;
+// 	Slide * m_clearSlide;
+// 	int m_clearSlideNum;
 	
-	bool m_clearEnabled;
+// 	bool m_clearEnabled;
 	bool m_blackEnabled;
 	
 	QFileInfo m_nextBg;

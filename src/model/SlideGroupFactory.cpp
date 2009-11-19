@@ -106,8 +106,8 @@ SlideGroupViewControl::SlideGroupViewControl(OutputInstance *group, QWidget *w,b
 	m_elapsedAtPause(0),
 	m_selectedSlide(0),
 	m_timerWasActiveBeforeFade(0),
-	m_clearActive(false),
-	m_blackActive(false),
+// 	m_clearActive(false),
+// 	m_blackActive(false),
 	m_group(0),
 	m_quickSlide(0),
 	m_originalQuickSlide(true),
@@ -747,66 +747,67 @@ void SlideGroupViewControl::setCurrentSlide(Slide *s)
 	m_listView->setCurrentIndex(m_slideModel->indexForSlide(s));
 }
 
-void SlideGroupViewControl::fadeBlackFrame(bool toggled)
-{
-	//m_clearButton->setEnabled(!toggled);
-	m_blackActive = toggled;
+// void SlideGroupViewControl::fadeBlackFrame(bool toggled)
+// {
+// 	//m_clearButton->setEnabled(!toggled);
+// 	m_blackActive = toggled;
+// 	
+// 		
+// 	SlideGroup *group = 0;
+// 	if(m_slideViewer) 
+// 		group = m_slideViewer->slideGroup();
+// 	
+// // 	if(!toggled && m_clearActive)
+// // 		m_slideViewer->fadeClearFrame(true);
+// // 	else
+// 		m_slideViewer->fadeBlackFrame(toggled);
+// 	
+// 	if(group)
+// 	{
+// 		if(!m_clearActive)
+// 		{
+// 			if(toggled)
+// 			{
+// 				m_timerWasActiveBeforeFade = m_timerState == Running;
+// 				if(m_timerWasActiveBeforeFade)
+// 					toggleTimerState(Stopped);
+// 			}
+// 			else
+// 			{
+// 				if(m_timerWasActiveBeforeFade)
+// 					toggleTimerState(Running);
+// 			}
+// 		}
+// 	}
+// }
 	
-		
-	SlideGroup *group = 0;
-	if(m_slideViewer) 
-		group = m_slideViewer->slideGroup();
-	
-		if(!toggled && m_clearActive)
-			m_slideViewer->fadeClearFrame(true);
-		else
-			m_slideViewer->fadeBlackFrame(toggled);
-	if(group)
-	{
-		if(!m_clearActive)
-		{
-			if(toggled)
-			{
-				m_timerWasActiveBeforeFade = m_timerState == Running;
-				if(m_timerWasActiveBeforeFade)
-					toggleTimerState(Stopped);
-			}
-			else
-			{
-				if(m_timerWasActiveBeforeFade)
-					toggleTimerState(Running);
-			}
-		}
-	}
-}
-	
-void SlideGroupViewControl::fadeClearFrame(bool toggled)
-{
-	m_clearActive = toggled;
-		
-	SlideGroup *group = 0;
-	if(m_slideViewer) 
-		group = m_slideViewer->slideGroup();
-		
-	if(!m_blackActive)
-	{
-		m_slideViewer->fadeClearFrame(toggled);
-		if(group)
-		{
-			if(toggled)
-			{
-				m_timerWasActiveBeforeFade = m_timerState == Running;
-				if(m_timerWasActiveBeforeFade)
-					toggleTimerState(Stopped);
-			}
-			else
-			{
-				if(m_timerWasActiveBeforeFade)
-					toggleTimerState(Running);
-			}
-		}
-	}
-}
+// void SlideGroupViewControl::fadeClearFrame(bool toggled)
+// {
+// 	m_clearActive = toggled;
+// 		
+// 	SlideGroup *group = 0;
+// 	if(m_slideViewer) 
+// 		group = m_slideViewer->slideGroup();
+// 		
+// 	if(!m_blackActive)
+// 	{
+// 		m_slideViewer->fadeClearFrame(toggled);
+// 		if(group)
+// 		{
+// 			if(toggled)
+// 			{
+// 				m_timerWasActiveBeforeFade = m_timerState == Running;
+// 				if(m_timerWasActiveBeforeFade)
+// 					toggleTimerState(Stopped);
+// 			}
+// 			else
+// 			{
+// 				if(m_timerWasActiveBeforeFade)
+// 					toggleTimerState(Running);
+// 			}
+// 		}
+// 	}
+// }
 
 /** AbstractSlideGroupEditor:: **/
 AbstractSlideGroupEditor::AbstractSlideGroupEditor(SlideGroup */*group*/, QWidget *parent) : QMainWindow(parent) {}

@@ -20,6 +20,7 @@
 #include "AppSettings.h"
 
 #include "itemlistfilters/SlideTextOnlyFilter.h"
+#include "itemlistfilters/SlideBackgroundOnlyFilter.h"
 
 #define POINTER_STRING(ptr) QString().sprintf("%p",static_cast<void*>(ptr))
 
@@ -514,7 +515,7 @@ void OutputControl::setTextOnlyFilterEnabled(bool flag)
 		if(enabled != flag)
 		{
 			item->setCheckState(Qt::Checked);
-			filterListItemChanged(item);
+			//filterListItemChanged(item);
 		}
 	}
 	else
@@ -637,8 +638,33 @@ void OutputControl::slideChanged(int)
 
 void OutputControl::fadeBlackFrame(bool flag) 
 {
-	if(m_ctrl)
-		m_ctrl->fadeBlackFrame(flag);
+	//if(m_ctrl)
+		//m_ctrl->fadeBlackFrame(flag);
+	if(m_inst)
+	{
+			
+		m_inst->fadeBlackFrame(flag);
+		
+		if(m_ctrl)
+		{
+			SlideGroup *group = m_inst->slideGroup();
+			
+			if(group)
+			{
+				if(flag)
+				{
+					m_timerWasActiveBeforeFade = m_ctrl->timerState() == SlideGroupViewControl::Running;
+					if(m_timerWasActiveBeforeFade)
+						m_ctrl->toggleTimerState(SlideGroupViewControl::Stopped);
+				}
+				else
+				{
+					if(m_timerWasActiveBeforeFade)
+						m_ctrl->toggleTimerState(SlideGroupViewControl::Running);
+				}
+			}
+		}
+	}
 		
 	if(m_blackButton->isChecked() != flag)
 		m_blackButton->setChecked(flag);
@@ -647,8 +673,33 @@ void OutputControl::fadeBlackFrame(bool flag)
 
 void OutputControl::fadeClearFrame(bool flag) 
 {
-	if(m_ctrl)
-		m_ctrl->fadeClearFrame(flag);
+// 	if(m_ctrl)
+// 		m_ctrl->fadeClearFrame(flag);
+
+	int idx;
+	for(int i=0;i<m_customFilterList.size();i++)
+		if(m_customFilterList[i]->inherits("SlideBackgroundOnlyFilter"))
+			idx = i, i = m_customFilterList.size();
+			//indexOf(SlideTextOnlyFilter::instance());
+	QListWidgetItem * item = m_filterList->item(idx);
+	
+	if(item)
+	{
+		bool enabled = item->checkState() == Qt::Checked;
+		if(enabled != flag)
+		{
+			item->setCheckState(flag ? Qt::Checked : Qt::Unchecked);
+			//filterListItemChanged(item);
+		}
+	}
+	else
+// 	if(m_inst)
+	{
+		if(flag)
+			m_inst->addFilter(SlideBackgroundOnlyFilter::instance());
+		else
+			m_inst->removeFilter(SlideBackgroundOnlyFilter::instance());
+	}
 		
 	if(m_clearButton->isChecked() != flag)
 		m_clearButton->setChecked(flag);
@@ -672,6 +723,16 @@ void OutputControl::setViewControl(SlideGroupViewControl *ctrl)
 	
 	// need to re-apply fade speed
 	m_fadeSlider->setValue(m_fadeSlider->value());
+	
+// 	if(m_inst)
+// 	{
+// 		if(flag)
+// 			m_inst->addFilter(SlideBackgroundOnlyFilter::instance());
+// 		else
+// 			m_inst->removeFilter(SlideBackgroundOnlyFilter::instance());
+// 	}
+// 		
+// 	if(m_clearButton->isChecked() != flag)
 }
 
 void OutputControl::setCustomFilters(AbstractItemFilterList list)

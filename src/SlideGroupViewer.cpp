@@ -220,11 +220,11 @@ SlideGroupViewer::SlideGroupViewer(QWidget *parent)
 	    , m_slideGroup(0)
 	    , m_scene(0)
 	    , m_view(0)
-	    , m_slideNum(0)
+	    , m_slideNum(-1)
 	    , m_usingGL(false)
-	    , m_clearSlide(0)
-	    , m_clearSlideNum(-1)
-	    , m_clearEnabled(false)
+// 	    , m_clearSlide(0)
+// 	    , m_clearSlideNum(-1)
+// 	    , m_clearEnabled(false)
 	    , m_blackEnabled(false)
 	    , m_bgWaitingForNextSlide(false)
 	    , m_overlaySlide(0)
@@ -362,7 +362,7 @@ void SlideGroupViewer::applySlideFilters()
 	if(!m_slideGroup)
 		return;
 
-	if(!m_blackEnabled && !m_clearEnabled)
+	if(!m_blackEnabled /*&& !m_clearEnabled*/)
 	{
 		if(m_sortedSlides.isEmpty() || 
 			m_slideNum < 0 || 
@@ -635,11 +635,11 @@ SlideGroupViewer::~SlideGroupViewer()
 		m_view = 0;
 	}
 
-	if(m_clearSlide)
-	{
-		delete m_clearSlide;
-		m_clearSlide = 0;
-	}
+// 	if(m_clearSlide)
+// 	{
+// 		delete m_clearSlide;
+// 		m_clearSlide = 0;
+// 	}
 
 	while(!m_slideFilterByproduct.isEmpty())
 		delete m_slideFilterByproduct.takeFirst();
@@ -769,7 +769,7 @@ void SlideGroupViewer::setSlideGroup(SlideGroup *group, Slide *startSlide)
 
 	m_slideNum = 0;
 
-	m_clearSlideNum = -1;
+// 	m_clearSlideNum = -1;
 
 
 	if(m_slideGroup && m_slideGroup != group)
@@ -867,14 +867,14 @@ void SlideGroupViewer::setViewerState(ViewerState state)
 	m_viewerState = state;
 	switch(state)
 	{
-		// Black/Clear methods automatically set the native viewer state
+		// Black methods automatically set the native viewer state
 		// and emits the viewerStateChanged() signal (even if not native)
 		case Black:
 			fadeBlackFrame(true);
 			break;
 		case Clear:
-			fadeClearFrame(true);
-			break;
+// 			fadeClearFrame(true);
+// 			break;
 		case Done:
 		case Running:
 		case Paused:
@@ -935,22 +935,22 @@ bool SlideGroupViewer::reapplySpecialFrames()
 	// If clear or black is enabled, then we dont want to take it off clear or black just becase we
 	// changed slides. Therefore, regenerate the clear frame with the new slide's background and fade
 	// to the clear slide (or black slide, if that's enabled)
-	if(m_clearEnabled || m_blackEnabled)
+	if(/*m_clearEnabled || */m_blackEnabled)
 	{
 		// setting it to -1 forces generateClearFrame() to re-generate the frame, even if the slide
 		// index stayed the same
-		m_clearSlideNum = -1;
-		generateClearFrame();
+// 		m_clearSlideNum = -1;
+		//generateClearFrame();
 
 		if(m_blackEnabled)
 		{
 			generateBlackFrame();
 			setSlideInternal(m_blackSlide);
 		}
-		else
-		{
-			setSlideInternal(m_clearSlide);
-		}
+// 		else
+// 		{
+// 			setSlideInternal(m_clearSlide);
+// 		}
 
 		return true;
 	}
@@ -1119,8 +1119,8 @@ void SlideGroupViewer::setSlideInternal(Slide *slide)
 	//qDebug() << "SlideGroupViewer::setSlideInternal(): [final] speed:"<<speed<<", quality:"<<quality;
 
 	if(m_slideGroup &&
-		slide != m_blackSlide &&
-		slide != m_clearSlide)
+		slide != m_blackSlide/* &&
+		slide != m_clearSlide*/)
 	{
 		//qDebug() << "SlideGroupViewer::setSlideInternal(): Slide# "<<slide->slideNumber()<<": Have slide group, using master slide, group ptr: "<<PTRS(m_slideGroup)<<", master ptr:"<<PTRS(m_slideGroup->masterSlide());
 		
@@ -1162,17 +1162,17 @@ void SlideGroupViewer::fadeBlackFrame(bool enable)
 	}
 	else
 	{
-		if(m_clearEnabled && m_clearSlide)
-		{
-			m_viewerState = SlideGroupViewer::Clear;
-			emit viewerStateChanged(m_viewerState);
-			if(m_nativeViewer)
-			    m_nativeViewer->setState(NativeViewer::White);
-
-			setSlideInternal(m_clearSlide);
-		}
-		else
-		{
+// 		if(m_clearEnabled && m_clearSlide)
+// 		{
+// 			m_viewerState = SlideGroupViewer::Clear;
+// 			emit viewerStateChanged(m_viewerState);
+// 			if(m_nativeViewer)
+// 			    m_nativeViewer->setState(NativeViewer::White);
+// 
+// 			setSlideInternal(m_clearSlide);
+// 		}
+// 		else
+// 		{
 			m_viewerState = SlideGroupViewer::Running;
 			emit viewerStateChanged(m_viewerState);
 			if(m_nativeViewer)
@@ -1186,39 +1186,44 @@ void SlideGroupViewer::fadeBlackFrame(bool enable)
 				Slide *currentSlide = m_sortedSlides.at(m_slideNum);
 				setSlideInternal(applySlideFilters(currentSlide));
 			}
-		}
+// 		}
 	}
 }
 
-void SlideGroupViewer::fadeClearFrame(bool enable)
-{
-	if(enable)
-	{
-		m_viewerState = SlideGroupViewer::Clear;
-		emit viewerStateChanged(m_viewerState);
-		if(m_nativeViewer)
-			m_nativeViewer->setState(NativeViewer::White);
-
-		generateClearFrame();
-		setSlideInternal(m_clearSlide);
-	}
-	else
-	{
-		m_viewerState = SlideGroupViewer::Running;
-		emit viewerStateChanged(m_viewerState);
-		if(m_nativeViewer)
-			m_nativeViewer->setState(NativeViewer::Running);
-
-		if(m_slideNum < m_sortedSlides.size())
-		{
-			Slide *currentSlide = m_sortedSlides.at(m_slideNum);
-			setSlideInternal(applySlideFilters(currentSlide));
-		}
-	}
-
-	m_clearEnabled = enable;
-}
-
+// void SlideGroupViewer::fadeClearFrame(bool enable)
+// {
+// 	if(enable)
+// 	{
+// 		m_viewerState = SlideGroupViewer::Clear;
+// 		emit viewerStateChanged(m_viewerState);
+// 		if(m_nativeViewer)
+// 			m_nativeViewer->setState(NativeViewer::White);
+// 
+// 		generateClearFrame();
+// 		if(m_clearSlide)
+// 			setSlideInternal(m_clearSlide);
+// 	}
+// 	else
+// 	{
+// 		m_viewerState = SlideGroupViewer::Running;
+// 		emit viewerStateChanged(m_viewerState);
+// 		if(m_nativeViewer)
+// 			m_nativeViewer->setState(NativeViewer::Running);
+// 		
+// 		if(m_sortedSlides.isEmpty() ||
+// 			m_slideNum < 0 || 
+// 			m_slideNum >= m_sortedSlides.size())
+// 			return;
+// 
+// 		Slide *currentSlide = m_sortedSlides.at(m_slideNum);
+// 		if(currentSlide)
+// 			setSlideInternal(applySlideFilters(currentSlide));
+// 		
+// 	}
+// 
+// 	m_clearEnabled = enable;
+// }
+/*
 void SlideGroupViewer::generateClearFrame()
 {
 	if(m_clearSlide &&
@@ -1240,6 +1245,15 @@ void SlideGroupViewer::generateClearFrame()
 	if(!m_clearSlide)
 	{
 		m_clearSlideNum = m_slideNum;
+		
+		if(m_sortedSlides.isEmpty() || 
+			m_slideNum < 0 ||
+			m_slideNum >= m_sortedSlides.size())
+			{
+				m_clearSlide = 0;
+				return;
+			}
+		
 
 		Slide *currentSlide = m_sortedSlides.at(m_slideNum);
 
@@ -1247,7 +1261,7 @@ void SlideGroupViewer::generateClearFrame()
 
 		m_clearSlide->addItem(currentSlide->background()->clone());
 	}
-}
+}*/
 
 void SlideGroupViewer::generateBlackFrame()
 {

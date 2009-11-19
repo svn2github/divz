@@ -116,6 +116,8 @@ protected:
 	
 	AbstractItemFilterList	m_customFilterList;
 	QListWidget		* m_filterList;
+	
+	bool			m_timerWasActiveBeforeFade;
 };
 
 
