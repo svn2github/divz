@@ -7,7 +7,7 @@
 #include <QPair>
 #include <QStringList>
 
-#include "../PropertyUtils.h"
+#include "PropertyUtils.h"
 
 class BibleBook;
 class BibleChapter;

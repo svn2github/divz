@@ -39,8 +39,8 @@
 	protected: \
 		typeName m_##memberName; \
 	public: \
-		    void set##setterName(typeName value) { m_##memberName = value; }\
-		typeName memberName() const { return m_##memberName; }
+		void set##setterName(typeName value) { m_##memberName = value; }\
+		typeName memberName() const { return m_##memberName; };
 
 /** @brief PROP_VDEF is the same as PROP_DEF, except it defines the getter/setter as virtual */
 #define PROP_VDEF(typeName,memberName,setterName) \
