@@ -241,6 +241,7 @@ SlideGroupViewer::SlideGroupViewer(QWidget *parent)
 	    , m_viewerState(SlideGroupViewer::Running)
 	    , m_overrideEndAction(false)
 	    , m_groupEndAction(SlideGroup::Stop)
+	    , m_forceGLDisabled(false)
 {
 	QRect sceneRect(0,0,1024,768);
 	m_blackSlideRefCount++;
