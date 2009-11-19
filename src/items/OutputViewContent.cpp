@@ -24,6 +24,8 @@
 #include "AppSettings.h"
 #include "MainWindow.h"
 #include "model/Output.h"
+#include "model/Slide.h"
+#include "model/SlideGroup.h"
 
 #if QT_VERSION >= 0x040600
 	#define QT46_SHADOW_ENAB 0
@@ -32,10 +34,18 @@
 #include <QMovie>
 #include <QLabel>
 
+OutputViewRootObject::OutputViewRootObject(QGraphicsItem *parent, QGraphicsScene*)
+	: QGraphicsItem(parent)
+{
+	setPos(0,0);
+}
 
 OutputViewContent::OutputViewContent(QGraphicsScene * scene, QGraphicsItem * parent)
     : AbstractContent(scene, parent, false)
     , m_inst(0)
+    , m_slide(0)
+    , m_group(0)
+    
 {
 	m_dontSyncToModel = true;
 	
@@ -46,21 +56,18 @@ OutputViewContent::OutputViewContent(QGraphicsScene * scene, QGraphicsItem * par
 // 	for(int i=0;i<m_cornerItems.size();i++)
 // 		m_cornerItems.at(i)->setDefaultLeftOp(CornerItem::Scale);
 
-	m_viewer = new OutputInstance(Output::widgetInstance());
-	m_viewer->setCanZoom(false);
-	m_viewer->forceGLDisabled(true);
+// 	m_viewer = new OutputInstance(Output::widgetInstance());
+// 	m_viewer->setCanZoom(false);
+// 	m_viewer->forceGLDisabled(true);
+// 	
+// 	m_widgetProxy = new QGraphicsProxyWidget(this);
+// 	m_widgetProxy->setWidget(m_viewer);
+
 	
-	/*
-	m_viewer->setVisible(false);
-	QLabel * label = new QLabel();
-	label->setMovie(new QMovie(":/data/ajax-loader.gif",QByteArray(),this));
-	label->setToolTip("Loading Verses...");
-	label->movie()->start();*/
+	m_fakeInst = new OutputViewInst(this);
+	m_liveRoot = new OutputViewRootObject(this,0);
+	qDebug() << "OutputViewContent:: created m_liveRoot:"<<(void*)m_liveRoot;
 	
-	
-	m_widgetProxy = new QGraphicsProxyWidget(this);
-	m_widgetProxy->setWidget(m_viewer);
-	//m_widgetProxy->setWidget(label);
 	
 	m_dontSyncToModel = false;
 }
@@ -70,7 +77,121 @@ OutputViewContent::~OutputViewContent()
 	// In the QGraphicsProxyWidget, it deletes the widget -
 	// since we're using a static global instance of the
 	// widget, we dont want it destroyed! So 'remove' it.
-	m_widgetProxy->setWidget(0);
+// 	m_widgetProxy->setWidget(0);
+}
+
+void OutputViewContent::setSlideGroup(SlideGroup *group, Slide *slide)
+{
+	m_group = group;
+	setSlide(slide);
+}
+
+
+void OutputViewContent::addContent(AbstractContent * content, bool takeOwnership) // const QPoint & pos)
+{
+	if(m_content.contains(content))
+	{
+		content->show();
+		return;
+	}
+
+	content->show();
+	
+	m_content.append(content);
+	//addItem(content);
+	
+	if(takeOwnership)
+		m_ownedContent.append(content);
+}
+
+
+#define DEBUG_OUTPUTVIEW 1
+AbstractContent * OutputViewContent::createVisualDelegate(AbstractItem *item, QGraphicsItem * parent)
+{
+// 	if(!parent)
+// 		parent = m_liveRoot;
+	if (AbstractVisualItem * visualItem = dynamic_cast<AbstractVisualItem *>(item))
+	{
+		if(DEBUG_OUTPUTVIEW)
+			qDebug() << "OutputViewContent::createVisualDelegate(): Creating new content item from:"<<visualItem->itemName()<<", root:"<<(void*)m_liveRoot;
+		AbstractContent * visual = visualItem->createDelegate(0,m_liveRoot);
+		addContent(visual, true);
+		
+		// We store the background item purely for the sake of keeping it on the bottom when 
+		// another item requests a re-ordering of the content stack
+// 		if(visualItem->itemClass() == BackgroundItem::ItemClass)
+// 			m_bg = dynamic_cast<BackgroundItem*>(visualItem);
+			
+		
+		return visual;
+	}
+	
+	return 0;
+}
+
+
+
+void OutputViewContent::setSlide(Slide *slide)
+{
+	qDebug() << "OutputViewContent::setSlide: slide:"<<slide;
+	
+// 	if(m_slide)
+// 	{
+// 		while(!m_content.isEmpty())
+// 		{
+// 			AbstractContent * content = m_content.takeFirst();
+// 			
+// 			m_content.removeAll(content);
+// 			if(content->parentItem() == m_liveRoot)
+// 				content->setParentItem(0);
+// 			//removeItem(content);
+// 			
+// 			disconnect(content, 0, 0, 0);
+// 			//qDebug() << "Disposing of content";
+// 			content->dispose(false);
+// 			//delete content;
+// 			content = 0;
+// 		}
+// 	}
+	
+	
+	m_slide = slide;
+	
+	double baseZValue = 0;
+	
+	QList<AbstractItem *> items = m_slide->itemList();
+	foreach(AbstractItem *item, items)
+	{
+		if(!item)
+			continue;
+			
+		AbstractContent * visual = createVisualDelegate(item);
+		//determine max zvalue for use in rebasing overlay items
+		if(visual && visual->zValue() > baseZValue)
+			baseZValue = visual->zValue();
+
+	}
+	
+
+	
+// 	if(!m_group)
+// 	{
+// 	
+// 	}
+// 	else
+// 	{
+// 		int idx = m_group->indexOf(slide);
+// 		if(idx < 0)
+// 		{
+// 		
+// 		}
+// 		else
+// 		{
+// 		
+// 		}
+// 	
+// 	}
+// 	
 }
 
 QWidget * OutputViewContent::createPropertyWidget()
@@ -87,7 +208,7 @@ void OutputViewContent::syncFromModelItem(AbstractVisualItem *model)
 	
 	setOutputId(dynamic_cast<OutputViewItem*>(model)->outputId());
 	
-	m_viewer->setGeometry(contentsRect());
+	//m_viewer->setGeometry(contentsRect());
 }
 
 
@@ -137,13 +258,15 @@ void OutputViewContent::setOutputId(int id)
 {
 	OutputInstance *inst = MainWindow::mw()->outputInst(id);
 	if(m_inst)
-		m_inst->removeMirror(m_viewer);
+		//m_inst->removeMirror(m_viewer);
+		m_inst->removeMirror(m_fakeInst);
 		
 	if(inst)
 	{
 		qDebug() << "OutputViewContent::setOutputId("<<id<<"): Initalizing inst for output"<<inst->output()->name();
 		m_inst = inst;
-		m_inst->addMirror(m_viewer);
+		//m_inst->addMirror(m_viewer);
+		m_inst->addMirror(m_fakeInst);
 	}
 	else
 	{
@@ -151,3 +274,87 @@ void OutputViewContent::setOutputId(int id)
 		qDebug() << "OutputViewContent::setOutputId("<<id<<"): Could not find output instance for id:"<<id;
 	}
 }
+
+
+/*******************************************************/
+
+
+OutputViewInst::OutputViewInst(OutputViewContent *impl) // /*Output *output, bool startHidden, QWidget *parent*/)
+	: OutputInstance(Output::widgetInstance(),false,0)
+	, d(impl)
+{
+}
+
+OutputViewInst::~OutputViewInst() {}
+	
+// SlideGroup * OutputViewInst::slideGroup() {}
+// int OutputViewInst::numSlides() {}
+void OutputViewInst::setSceneContextHint(MyGraphicsScene::ContextHint) {}
+void OutputViewInst::forceGLDisabled(bool) {}
+	
+// signals:
+// 	void nextGroup();
+// 	void jumpToGroup(int);
+// 	void endOfGroup();
+// 	
+// 	void slideChanged(int);
+// 	void slideChanged(Slide*);
+// 	void slideGroupChanged(SlideGroup*,Slide*);
+// 	
+// 	void imageReady(QImage*);
+
+// public slots:
+void OutputViewInst::addMirror(OutputInstance *) {}
+void OutputViewInst::removeMirror(OutputInstance *) {}
+
+void OutputViewInst::addFilter(AbstractItemFilter *) {}
+void OutputViewInst::removeFilter(AbstractItemFilter *) {}
+void OutputViewInst::removeAllFilters() {}
+
+void OutputViewInst::setSlideGroup(SlideGroup *group, Slide *slide) 
+{
+	d->setSlideGroup(group,slide);
+}
+// void OutputViewInst::setSlideGroup(SlideGroup*, int startSlide) {}
+void OutputViewInst::clear() {}
+
+void OutputViewInst::setBackground(QColor) {}
+void OutputViewInst::setCanZoom(bool) {}
+
+Slide * OutputViewInst::setSlide(Slide *slide, bool /*takeOwnership*/) 
+{
+	d->setSlide(slide);
+}
+// Slide * OutputViewInst::setSlide(int) {}
+// Slide * OutputViewInst::nextSlide() {}
+// Slide * OutputViewInst::prevSlide() {}
+
+void OutputViewInst::fadeBlackFrame(bool) {}
+
+void OutputViewInst::setViewerState(SlideGroupViewer::ViewerState) {}
+
+void OutputViewInst::setLiveBackground(const QFileInfo &, bool waitForNextSlide) {}
+
+void OutputViewInst::setOverlaySlide(Slide *) {}
+void OutputViewInst::setOverlayEnabled(bool) {}
+void OutputViewInst::setTextOnlyFilterEnabled(bool) {}
+void OutputViewInst::setAutoResizeTextEnabled(bool) {}
+
+void OutputViewInst::setFadeSpeed(int) {}
+void OutputViewInst::setFadeQuality(int) {}
+
+void OutputViewInst::setEndActionOverrideEnabled(bool) {}
+void OutputViewInst::setEndGroupAction(SlideGroup::EndOfGroupAction) {}
+
+
+// protected slots:
+void OutputViewInst::applyOutputSettings(bool startHidden) {}
+
+// proxy methods from OutputInstance.cpp - let parent handle it
+// void OutputViewInst::slotNextGroup() {}
+// void OutputViewInst::slotJumpToGroup(int) {}
+
+// handled in parent just fine
+// void OutputViewInst::slideChanged(Slide *, QString, AbstractItem *, QString, QString, QVariant) {}
+
+void OutputViewInst::slotGrabPixmap() {}

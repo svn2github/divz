@@ -82,47 +82,47 @@ signals:
 	void imageReady(QImage*);
 
 public slots:
-	void addMirror(OutputInstance *);
-	void removeMirror(OutputInstance *);
+	virtual void addMirror(OutputInstance *);
+	virtual void removeMirror(OutputInstance *);
 
-	void addFilter(AbstractItemFilter *);
-	void removeFilter(AbstractItemFilter *);
-	void removeAllFilters();
+	virtual void addFilter(AbstractItemFilter *);
+	virtual void removeFilter(AbstractItemFilter *);
+	virtual void removeAllFilters();
 	
-	void setSlideGroup(SlideGroup*, Slide *slide = 0);
-	void setSlideGroup(SlideGroup*, int startSlide);
-	void clear();
+	virtual void setSlideGroup(SlideGroup*, Slide *slide = 0);
+	virtual void setSlideGroup(SlideGroup*, int startSlide);
+	virtual void clear();
 	
 	void setBackground(QColor);
 	void setCanZoom(bool);
 	
-	Slide * setSlide(Slide *, bool takeOwnership=false);
-	Slide * setSlide(int);
-	Slide * nextSlide();
-	Slide * prevSlide();
+	virtual Slide * setSlide(Slide *, bool takeOwnership=false);
+	virtual Slide * setSlide(int);
+	virtual Slide * nextSlide();
+	virtual Slide * prevSlide();
 	
-	void fadeBlackFrame(bool);
+	virtual void fadeBlackFrame(bool);
 // 	void fadeClearFrame(bool);
 
-	void setViewerState(SlideGroupViewer::ViewerState);
+	virtual void setViewerState(SlideGroupViewer::ViewerState);
 	
-	void setLiveBackground(const QFileInfo &, bool waitForNextSlide);
+	virtual void setLiveBackground(const QFileInfo &, bool waitForNextSlide);
 	
-	void setOverlaySlide(Slide *);
-	void setOverlayEnabled(bool);
-	void setTextOnlyFilterEnabled(bool);
-	void setAutoResizeTextEnabled(bool);
+	virtual void setOverlaySlide(Slide *);
+	virtual void setOverlayEnabled(bool);
+	virtual void setTextOnlyFilterEnabled(bool);
+	virtual void setAutoResizeTextEnabled(bool);
 	
-	void setFadeSpeed(int);
-	void setFadeQuality(int);
+	virtual void setFadeSpeed(int);
+	virtual void setFadeQuality(int);
 	
-	void setEndActionOverrideEnabled(bool);
-	void setEndGroupAction(SlideGroup::EndOfGroupAction);
+	virtual void setEndActionOverrideEnabled(bool);
+	virtual void setEndGroupAction(SlideGroup::EndOfGroupAction);
 
-private slots:
+protected slots:
 	//void appSettingsChanged();
 	//void aspectRatioChanged(double);
-	void applyOutputSettings(bool startHidden=false);
+	virtual void applyOutputSettings(bool startHidden=false);
 	
 	void slotNextGroup();
 	void slotJumpToGroup(int);
@@ -135,8 +135,8 @@ protected:
 	//void closeEvent(QCloseEvent *);
 	//void resizeEvent(QResizeEvent*);
 
-private:
-	void updateControlWidget();
+protected:
+// 	void updateControlWidget();
 
 	Output *m_output;
 	SlideGroupViewer *m_viewer;
