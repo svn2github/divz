@@ -840,7 +840,7 @@ Revised Task list for Release 1.0, 10/18/09:
 	- Bugs:
 		crash: click quicsklide 'show' btn right after program start - e.g. no group live yet - crash
 		[FIXED] crash: go live with song, edit, save - crash
-		crash: edit song, click bg, close editor, save - crash
+		[FIXED] crash: edit song, click bg, close editor, save - crash
 		[WORKSFORME] crash: open slide, text box, clear text, save - crash
 			cannot reproduce here after multiple attempts and variations
 		shadow renders too far below first time before moving
@@ -871,6 +871,9 @@ Revised Task list for Release 1.0, 10/18/09:
 			added private MainWindow::sendGroupToOutput(Output *output, SlideGroup *group, Slide *startSlide, bool allowProgressDialog) method
 		
 		deleting m_doc in mainwindow::openfile causes segflt when golive with next group - why??
+		
+		
+		
 				
 		[MAYBEF IXED] cross fade on songs with video bg seems to lag
 		

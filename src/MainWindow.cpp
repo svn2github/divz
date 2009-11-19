@@ -70,10 +70,6 @@ MainWindow::MainWindow(QWidget *parent) :
 	m_autosaveTimer = new QTimer(this);
 	connect(m_autosaveTimer, SIGNAL(timeout()), this, SLOT(autosave()));
 
-
-	m_autosaveTimer = new QTimer(this);
-	connect(m_autosaveTimer, SIGNAL(timeout()), this, SLOT(autosave()));
-
 	setWindowIcon(QIcon(":/data/icon-d.png"));
 
 	m_ui->setupUi(this);
@@ -1428,10 +1424,8 @@ void MainWindow::deleteGroup(SlideGroup *s)
 }
 
 
-void MainWindow::openSlideEditor(SlideGroup *group,Slide *slide)
+AbstractSlideGroupEditor * MainWindow::openSlideEditor(SlideGroup *group,Slide *slide)
 {
-	// Turn off timer for tomorrows service - just until I can make it a button option
-	//m_autosaveTimer->start(1000 * 30);
 	if(group->groupType() != SlideGroup::GroupType)
 	{
 		SlideGroupFactory *factory = SlideGroupFactory::factoryForType(group->groupType());
@@ -1444,12 +1438,12 @@ void MainWindow::openSlideEditor(SlideGroup *group,Slide *slide)
 			if(!editor)
 			{
 				QMessageBox::information(this, QString(tr("Cannot Edit %1").arg(group->assumedName())), QString(tr("DViz has no way to edit slide groups with type # %1 at this time.").arg(group->groupType())));
-				return;
+				return 0;
 			}
 
 			editor->setSlideGroup(group,slide);
 			editor->show();
-			return;
+			return editor;
 		}
 	}
 
@@ -1457,6 +1451,8 @@ void MainWindow::openSlideEditor(SlideGroup *group,Slide *slide)
 	m_editWin->setSlideGroup(group,slide);
 	m_editWin->show();
 	m_editWin->setSlideGroup(group,slide);
+	
+	return m_editWin;
 }
 
 void MainWindow::changeEvent(QEvent *e)

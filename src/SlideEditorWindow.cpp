@@ -1256,6 +1256,8 @@ void SlideEditorWindow::addVpLineY(qreal y, qreal x1, qreal x2, bool /*in*/)
 
 void SlideEditorWindow::setupViewportLines()
 {
+	return;
+	
 	bool showThirds = AppSettings::thirdGuideEnabled();
 
 	QRectF r = m_scene->sceneRect();

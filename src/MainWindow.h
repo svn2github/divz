@@ -30,6 +30,7 @@ class SlideGroup;
 class MediaBrowser;
 class Output;
 class ControlServer;
+class AbstractSlideGroupEditor;
 
 #define FALLBACK_SCREEN_RECT QRectF(0,0,1024,768)
 
@@ -92,6 +93,8 @@ public slots:
 	
 	void setAutosaveEnabled(bool);
 
+	AbstractSlideGroupEditor * openSlideEditor(SlideGroup *g,Slide *slide=0);
+
 protected slots:
 	void groupsDropped(QList<SlideGroup*> list);
 	
@@ -135,8 +138,6 @@ protected:
 	void changeEvent(QEvent *e);
 	void closeEvent(QCloseEvent *);
 	void showEvent(QShowEvent*);
-	
-	void openSlideEditor(SlideGroup *g,Slide *slide=0);
 	
 private:
 	void setupOutputList();

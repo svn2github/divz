@@ -10,6 +10,9 @@
 #include "SlideEditorWindow.h"
 #include "SongSlideGroup.h"
 
+// Neede to access the openSlideEditor() function
+#include "MainWindow.h"
+
 class MyQTextEdit : public QTextEdit
 {
 public:
@@ -105,6 +108,11 @@ SongEditorWindow::SongEditorWindow(SlideGroup *g, QWidget *parent) :
 	
 	resize(500,600);
 	
+		
+// 	m_editWin = new SlideEditorWindow();
+// 	connect(m_editWin, SIGNAL(closed()), this, SLOT(editorWindowClosed()));
+//	}
+	
 }
 
 void SongEditorWindow::showSyncOption(bool flag)
@@ -120,12 +128,7 @@ void SongEditorWindow::editSongTemplate()
 	SongSlideGroup * songGroup = dynamic_cast<SongSlideGroup*>(m_slideGroup);
 	if(!songGroup)
 		return;
-		
-	if(!m_editWin)
-	{
-		m_editWin = new SlideEditorWindow();
-		connect(m_editWin, SIGNAL(closed()), this, SLOT(editorWindowClosed()));
-	}
+	
 	
 	SlideGroup * tmpl = songGroup->slideTemplates();
 	if(!tmpl)
@@ -135,9 +138,14 @@ void SongEditorWindow::editSongTemplate()
 	}
 	
 	// set slide group twice like MainWindow does
-	m_editWin->setSlideGroup(tmpl);
-	m_editWin->show();
-	m_editWin->setSlideGroup(tmpl);
+// 	m_editWin->setSlideGroup(tmpl);
+// 	m_editWin->show();
+// 	m_editWin->setSlideGroup(tmpl);
+
+//	m_editWin = MainWindow::mw()->openSlideEditor(tmpl);
+	if(m_editWin = MainWindow::mw()->openSlideEditor(tmpl))
+//	if(m_editWin)
+		connect(m_editWin, SIGNAL(closed()), this, SLOT(editorWindowClosed()));
 	
 }
 
@@ -151,6 +159,8 @@ void SongEditorWindow::editorWindowClosed()
 	
 // 	m_editWin->deleteLater();
 // 	m_editWin = 0;
+	if(m_editWin)
+		disconnect(m_editWin, 0, this, 0);
 	
 	//raise();
 	setFocus();
@@ -159,8 +169,8 @@ void SongEditorWindow::editorWindowClosed()
 
 SongEditorWindow::~SongEditorWindow() 
 {
-	if(m_editWin)
-		m_editWin->deleteLater();
+// 	if(m_editWin)
+// 		m_editWin->deleteLater();
 }
 
 void SongEditorWindow::setSlideGroup(SlideGroup *g,Slide */*curSlide*/) 

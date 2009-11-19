@@ -75,7 +75,7 @@ private:
 	SongEditorHighlighter *m_highlighter;
 	QLineEdit *m_title;
 	SlideGroup *m_slideGroup;
-	SlideEditorWindow *m_editWin;
+	AbstractSlideGroupEditor *m_editWin;
 	
 	QPushButton * m_tmplEditButton;
 	
