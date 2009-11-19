@@ -148,12 +148,19 @@ void SongEditorWindow::editorWindowClosed()
 		return;
 
 	songGroup->setSlideTemplates(songGroup->slideTemplates());
+	
+// 	m_editWin->deleteLater();
+// 	m_editWin = 0;
+	
+	//raise();
+	setFocus();
+	qDebug() << "SongEditorWindow::editorWindowClosed(): setting focus to self:"<<this<<", m_editWin="<<m_editWin;
 }
 
 SongEditorWindow::~SongEditorWindow() 
 {
 	if(m_editWin)
-		delete m_editWin;
+		m_editWin->deleteLater();
 }
 
 void SongEditorWindow::setSlideGroup(SlideGroup *g,Slide */*curSlide*/) 
@@ -225,15 +232,15 @@ void SongEditorWindow::accepted()
 	close();
 }
 
-void SongEditorWindow::closeEvent(QCloseEvent *evt)
-{
-// 	if(m_syncToDatabase)
-// 	{
-// 		delete songGroup->song();
-// 		delete songGroup;
-// 	}
-	evt->accept();
-}
+// void SongEditorWindow::closeEvent(QCloseEvent *evt)
+// {
+// // 	if(m_syncToDatabase)
+// // 	{
+// // 		delete songGroup->song();
+// // 		delete songGroup;
+// // 	}
+// 	evt->accept();
+// }
 
 
 

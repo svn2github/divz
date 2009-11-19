@@ -839,9 +839,10 @@ Revised Task list for Release 1.0, 10/18/09:
 	
 	- Bugs:
 		crash: click quicsklide 'show' btn right after program start - e.g. no group live yet - crash
-		crash: go live with song, edit, save - crash
+		[FIXED] crash: go live with song, edit, save - crash
 		crash: edit song, click bg, close editor, save - crash
-		crash: open slide, text box, clear text, save - crash
+		[WORKSFORME] crash: open slide, text box, clear text, save - crash
+			cannot reproduce here after multiple attempts and variations
 		shadow renders too far below first time before moving
 		position on images/videso dragged doesnt always sync back to model when dragging
 		when press f2 in main window and editor already open but minimized/hidden, raise editor to front

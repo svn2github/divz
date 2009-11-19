@@ -274,6 +274,8 @@ void OutputInstance::slideChanged(Slide *slide, QString slideOperation, Abstract
 {
 	if(!m_slideGroup)
 		return;
+	if(!slide)
+		return;
 		
 	if(slideOperation == "add" || slideOperation == "remove")
 	{
@@ -759,7 +761,10 @@ Slide * OutputInstance::setSlide(Slide *slide, bool takeOwnership)
 			if(m_slideNum > -1)
 				m_outputServer->sendCommand(OutputServer::SetSlide,m_slideNum);
 			else
+			if(slide)
 				m_outputServer->sendCommand(OutputServer::SetSlideObject, slide->toByteArray());
+			else
+				qDebug() << "OutputInstance::setSlide: ["<<m_output->name()<<"] Cannot send slide to server instance because 'slide' is NULL";
 		}
 		
 		if(takeOwnership)
