@@ -18,6 +18,7 @@
 #include <QDebug>
 #include <QPixmapCache>
 #include <QGraphicsProxyWidget>
+#include <QTimer>
 
 #include "model/OutputViewItem.h"
 #include "OutputInstance.h"
@@ -35,22 +36,31 @@
 #include <QMovie>
 #include <QLabel>
 
+#define DEBUG_OUTPUTVIEW 0
+
 OutputViewRootObject::OutputViewRootObject(QGraphicsItem *parent, QGraphicsScene*)
 	: QGraphicsItem(parent)
 {
 	setPos(0,0);
-	
-	
 }
 
+Slide * OutputViewContent::m_blackSlide = 0;
+int OutputViewContent::m_blackSlideRefCount = 0;
+
 OutputViewContent::OutputViewContent(QGraphicsScene * scene, QGraphicsItem * parent)
-    : AbstractContent(scene, parent, false)
-    , m_inst(0)
-    , m_slide(0)
-    , m_group(0)
-    
+	: AbstractContent(scene, parent, false)
+	, m_inst(0)
+	, m_slide(0)
+	, m_group(0)
+	, m_fadeTimer(0)
+	, m_slidePreBlack(0)
+	, m_fadeSpeed(-1)
+	, m_fadeQuality(-1)
+	, m_fadeBehind(false)
 {
 	m_dontSyncToModel = true;
+	
+	m_blackSlideRefCount++;
 	
 	setFrame(0);
 	setFrameTextEnabled(false);
@@ -69,7 +79,9 @@ OutputViewContent::OutputViewContent(QGraphicsScene * scene, QGraphicsItem * par
 	
 	m_fakeInst = new OutputViewInst(this);
 	m_liveRoot = new OutputViewRootObject(this,0);
-	qDebug() << "OutputViewContent:: created m_liveRoot:"<<(void*)m_liveRoot<<", this:"<<(void*)this;
+	m_fadeRoot = new OutputViewRootObject(this,0);
+	if(DEBUG_OUTPUTVIEW)
+		qDebug() << "OutputViewContent:: created m_liveRoot:"<<(void*)m_liveRoot<<", m_fadeRoot:"<<(void*)m_fadeRoot<<", this:"<<(void*)this;
 	
 	
 	m_dontSyncToModel = false;
@@ -90,6 +102,14 @@ void OutputViewContent::dispose(bool flag)
 	
 	m_fakeInst->deleteLater();
 	m_fakeInst = 0;
+	
+	m_blackSlideRefCount --;
+	if(m_blackSlideRefCount <= 0 && m_blackSlide)
+	{
+		delete m_blackSlide;
+		m_blackSlide = 0;
+		qDebug() << "OutputViewContent: Deleting black slide";
+	}
 	
 	AbstractContent::dispose(flag);
 }
@@ -120,7 +140,6 @@ void OutputViewContent::addContent(AbstractContent * content, bool takeOwnership
 }
 
 
-#define DEBUG_OUTPUTVIEW 0
 AbstractContent * OutputViewContent::createVisualDelegate(AbstractItem *item, QGraphicsItem * parent)
 {
 // 	if(!parent)
@@ -145,42 +164,245 @@ AbstractContent * OutputViewContent::createVisualDelegate(AbstractItem *item, QG
 }
 
 
-
-void OutputViewContent::setSlide(Slide *slide)
+void OutputViewContent::clearSlide()
 {
+
+//		qDebug() << "OutputViewContent::setSlide: removing existing content, size:" << m_content.size();
+	while(!m_content.isEmpty())
+	{
+		AbstractContent * content = m_content.takeFirst();
+		
+		m_content.removeAll(content);
+		if(content->parentItem() == m_liveRoot)
+			content->setParentItem(0);
+		//removeItem(content);
+		
+		disconnect(content, 0, 0, 0);
+		//qDebug() << "Disposing of content";
+		content->dispose(false);
+		//delete content;
+		content = 0;
+	}
+// 		qDebug() << "OutputViewContent::setSlide: content removed";
+	m_slide = 0;
+}
+
+
+void OutputViewContent::slideItemChanged(AbstractItem *item, QString operation, QString fieldName, QVariant value, QVariant /*oldValue*/)
+{
+	Slide * slide = dynamic_cast<Slide *>(sender());
+	
+	if(operation == "change")
+		return;
+	else
+	if(operation == "add")
+	{
+		AbstractContent * content = createVisualDelegate(item);
+		if(content)
+		{
+// 			if(slide == m_masterSlide)
+// 			{
+// 				applyMasterSlideItemFlags(content);
+// 			}
+// 			else
+// 			{
+// 				clearSelection();
+// 				content->setSelected(true);
+// 			}
+		}
+	}
+	else
+	if(operation == "remove")
+		removeVisualDelegate(item);
+}
+
+AbstractContent * OutputViewContent::findVisualDelegate(AbstractItem *item)
+{
+	foreach(AbstractContent *z, m_content)
+		if(z->modelItem() == item)
+			return z;
+	return 0;
+}
+
+void OutputViewContent::removeVisualDelegate(AbstractItem *item)
+{
+	//qDebug() << "MyGraphicsScene::removeVisualDelegate: Going to remove: "<<item->itemName();
+	AbstractContent *z = findVisualDelegate(item);
+	if(!z)
+		return;
+		
+	z->setVisible(false);
+	z->setParentItem(0);
+	//removeItem(z); // will be removed by dispose
+	
+	m_content.removeAll(z);
+	disconnect(z, 0, 0, 0);
+	z->dispose(false);
+		
+// 	qDebug() << "MyGraphicsScene::removeVisualDelegate: Couldn't find visual delegate for item requested: "<<item->itemName();
+// 	fprintf(stderr,"MyGraphicsScene::removeVisualDelegate: Can't find delegate for m_item=%p\n",item);
+}
+
+
+void OutputViewContent::setSlide(Slide *slide, MyGraphicsScene::SlideTransition trans)
+{
+	
+	
+// 	clearSlide();
+	
+	if(m_blackEnabled)//;// && slide != m_blackSlide);
+	{
+		if(DEBUG_OUTPUTVIEW)
+			qDebug() << "OutputViewContent::setSlide(): Not changing to new slide yet because black is enabled, slide="<<slide<<", m_blackEnabled:"<<m_blackEnabled;
+		
+		m_slidePreBlack = slide;
+		return;
+	}
+	
+	setSlideInternal(slide,trans);
+}
+
+void OutputViewContent::setSlideInternal(Slide *slide, MyGraphicsScene::SlideTransition trans)
+{
+	
 	if(DEBUG_OUTPUTVIEW)
 		qDebug() << "OutputViewContent::setSlide: slide:"<<slide;
+		
 	if(!slide)
 	{
-		
+		//clearSlide();
 		if(DEBUG_OUTPUTVIEW)
 			qDebug() << "OutputViewContent::setSlide: * slide is null, NoOp";
 		return;
 	}
 	
-	if(m_slide)
+	if(m_slide == slide)
 	{
-// 		qDebug() << "OutputViewContent::setSlide: removing existing content, size:" << m_content.size();
-		while(!m_content.isEmpty())
-		{
-			AbstractContent * content = m_content.takeFirst();
-			
-			m_content.removeAll(content);
-			if(content->parentItem() == m_liveRoot)
-				content->setParentItem(0);
-			//removeItem(content);
-			
-			disconnect(content, 0, 0, 0);
-			//qDebug() << "Disposing of content";
-			content->dispose(false);
-			//delete content;
-			content = 0;
-		}
-// 		qDebug() << "OutputViewContent::setSlide: content removed";
+		if(DEBUG_OUTPUTVIEW)
+			qDebug("OutputViewContent::setSlide: Not changing slide - same slide!");
+		return;
+	}
+	
+	if(m_slide)
+		disconnect(m_slide,0,this,0);
+	
+	if(slide)
+		connect(slide,SIGNAL(slideItemChanged(AbstractItem *, QString, QString, QVariant, QVariant)),this,SLOT(slideItemChanged(AbstractItem *, QString, QString, QVariant, QVariant)));
+	
+	
+	if(sceneContextHint() == MyGraphicsScene::Preview)
+		trans = MyGraphicsScene::None; 
+	
+	m_currentTransition = trans;
+	
+	if(DEBUG_OUTPUTVIEW)
+		qDebug() << "OutputViewContent::setSlide(): Setting slide # "<<slide->slideNumber();
+		
+	m_slide = slide;
+	
+	
+	// start cross fade settings with program settings
+	int speed   = AppSettings::crossFadeSpeed();
+	int quality = AppSettings::crossFadeQuality();
+	//qDebug() << "SlideGroupViewer::setSlideInternal(): [app] speed:"<<speed<<", quality:"<<quality;
+
+	// allow this viewer's cross fade settings to override app settings
+	if(m_fadeQuality > -1 || m_fadeSpeed > -1)
+	{
+		if(m_fadeQuality > -1)
+			quality = m_fadeQuality;
+		if(m_fadeSpeed > -1)
+			speed = m_fadeSpeed;
+		//qDebug() << "SlideGroupViewer::setSlideInternal(): [viewer] speed:"<<speed<<", quality:"<<quality;
+	}
+
+	// change to slide group if set
+	if(m_group && !m_group->inheritFadeSettings())
+	{
+		speed = m_group->crossFadeSpeed();
+		quality = m_group->crossFadeQuality();
+		//qDebug() << "SlideGroupViewer::setSlideInternal(): [group] speed:"<<speed<<", quality:"<<quality;
+	}
+
+	// and use slide settings if set instead of the other two sets of settings
+	if(slide && !slide->inheritFadeSettings())
+	{
+		// the 0.01 test is due to the fact that I forgot to initalize cross fade speed/quality in the Slide object constructor in
+		// older builds (fixed now.) So, if user loads file from older builds, these variables may have corrupted settings, so dont allow overide.
+		if(slide->crossFadeSpeed() > 0.01)
+			speed = slide->crossFadeSpeed();
+		if(slide->crossFadeQuality() > 0.01)
+			quality = slide->crossFadeQuality();
+		//qDebug() << "SlideGroupViewer::setSlideInternal(): [slide] speed:"<<speed<<", quality:"<<quality;
 	}
 	
 	
-	m_slide = slide;
+	if(trans == MyGraphicsScene::None || (speed == 0 && quality == 0))
+	{
+		clearSlide();
+	}
+	else
+	{	
+// 		if(DEBUG_OUTPUTVIEW)
+// 			qDebug() << "OutputViewContent::setSlide(): [final] speed:"<<speed<<", quality:"<<quality;
+		
+		if(!m_fadeTimer)
+		{
+			m_fadeTimer = new QTimer(this);
+			connect(m_fadeTimer, SIGNAL(timeout()), this, SLOT(slotTransitionStep()));
+		}
+		
+		
+		if(m_fadeTimer->isActive())
+		{
+// 			qDebug() << "OutputViewContent::setSlide(): Timer active, ending existing timer.";
+			endTransition(); 
+		}
+			
+ 		//if(DEBUG_MYGRAPHICSSCENE)
+//  			qDebug() << "OutputViewContent::setSlide(): Reparenting"<<m_content.size()<<"items";
+// 		m_staticRoot->setZValue(100);
+			
+		foreach(AbstractContent *x, m_content)
+		{
+// 			if(DEBUG_OUTPUTVIEW)
+//  				qDebug() << "OutputViewContent::setSlide(): Reparenting item:"<<x;
+			x->setParentItem(m_fadeRoot);
+			
+		}
+			
+// 		if(DEBUG_MYGRAPHICSSCENE)
+ 			//qDebug() << "OutputViewContent::setSlide(): Done reparenting.";
+
+		m_fadeRoot->setZValue(200);
+		
+		
+		// start with faderoot fully visible, and live root invisible, then cross fade between the two
+		// UPDATE: flip faderoot behind now.
+		
+		// With live root now "in front of" the fade root (stuff that should fade out)
+		// it is actually the live root that is fading in. This has the advantage of being able to 
+		// fade in a slide with nothing else behind it - which is a nice effect.
+
+		m_fadeStepCounter = 0;
+		m_fadeSteps = quality; //15;
+		//int ms = 250  / m_fadeSteps;
+		int ms = speed / m_fadeSteps;
+		m_fadeTimer->start(ms); //ms);
+
+ 		double inc = (double)1 / m_fadeSteps;
+
+		
+			
+		m_fadeRoot->setOpacity(1);
+		m_liveRoot->setOpacity(0);
+
+// 		emit crossFadeStarted(m_slide,slide);
+  		if(DEBUG_OUTPUTVIEW)
+ 			qDebug() << "OutputViewContent::setSlide(): Starting fade timer for"<<ms<<"ms"<<"/frame, inc:"<<inc<<", steps:"<<m_fadeSteps<<" ( speed:"<<speed<<", quality:"<<quality<<")";
+		
+	
+	}
 	
 	double baseZValue = 0;
 	
@@ -192,7 +414,10 @@ void OutputViewContent::setSlide(Slide *slide)
 			
 		BackgroundItem * bgTmp = dynamic_cast<BackgroundItem*>(item);
 		if(bgTmp && bgTmp->fillType() == AbstractVisualItem::None)
+		{
+			m_fadeBehind = true;
 			continue;
+		}
 				
 		AbstractContent * visual = createVisualDelegate(item);
 		//determine max zvalue for use in rebasing overlay items
@@ -201,27 +426,115 @@ void OutputViewContent::setSlide(Slide *slide)
 
 	}
 	
-
-	
-// 	if(!m_group)
-// 	{
-// 	
-// 	}
-// 	else
-// 	{
-// 		int idx = m_group->indexOf(slide);
-// 		if(idx < 0)
-// 		{
-// 		
-// 		}
-// 		else
-// 		{
-// 		
-// 		}
-// 	
-// 	}
-// 	
+	m_liveRoot->setZValue(300);
 }
+
+
+void OutputViewContent::slotTransitionStep()
+{
+	if( ++ m_fadeStepCounter < m_fadeSteps)
+	{
+		double inc = (double)1 / m_fadeSteps;
+		if(m_fadeBehind)
+			m_fadeRoot->setOpacity(m_fadeRoot->opacity() - inc);
+		
+		m_liveRoot->setOpacity(m_liveRoot->opacity() + inc);
+		
+		if(DEBUG_OUTPUTVIEW)
+			qDebug()<<"OutputViewContent::slotTransitionStep(): step"<<m_fadeStepCounter<<"/"<<m_fadeSteps<<", inc:"<<inc<<", fade:"<<m_fadeRoot->opacity()<<", live:"<<m_liveRoot->opacity();
+			
+		update();
+	}
+	else
+	{
+		endTransition();
+	}
+	
+}
+
+
+
+void OutputViewContent::endTransition()
+{
+	m_fadeTimer->stop();
+	m_fadeRoot->setOpacity(0);
+	m_liveRoot->setOpacity(1);
+	
+	QList<QGraphicsItem*> kids = m_fadeRoot->childItems();
+	foreach(QGraphicsItem *k, kids)
+	{
+		k->setVisible(false);
+		k->setParentItem(0);
+// 		removeItem(k); // will be done in dispose
+		
+		AbstractContent *z = dynamic_cast<AbstractContent*>(k);
+		if(z)
+		{
+			m_content.removeAll(z);
+			disconnect(z, 0, 0, 0);
+			z->dispose(false);
+		}
+		else
+		{
+// 			k->deleteLater();
+			delete k;
+		}
+	}
+	
+// 	emit crossFadeFinished(m_slidePrev,m_slide);
+// 	emit slideDiscarded(m_slidePrev);
+	update();
+	
+}
+
+
+void OutputViewContent::fadeBlackFrame(bool enable)
+{
+	qDebug() << "OutputViewContent::fadeBlackFrame: "<<enable; 
+	m_blackEnabled = enable;
+	if(enable)
+	{
+		m_slidePreBlack = m_slide;
+		generateBlackFrame();
+		
+ 		qDebug() << "OutputViewContent::fadeBlackFrame: preSlide:"<<m_slide<<", blackSlide:"<<m_blackSlide<<",m_blackEnabled:"<<m_blackEnabled;
+		setSlideInternal(m_blackSlide);
+ 		qDebug() << "OutputViewContent::fadeBlackFrame: done with fade init";
+	}
+	else
+	{
+ 		qDebug() << "OutputViewContent::fadeBlackFrame: RESTORIUNG preSlide:"<<m_slide<<", blackSlide:"<<m_blackSlide<<",m_blackEnabled:"<<m_blackEnabled;
+		setSlideInternal(m_slidePreBlack);
+	}
+}
+
+void OutputViewContent::generateBlackFrame()
+{
+	if(!m_blackSlide)
+	{
+		m_blackSlide = new Slide();
+		dynamic_cast<AbstractVisualItem*>(m_blackSlide->background())->setFillType(AbstractVisualItem::None);
+		//dynamic_cast<AbstractVisualItem*>(m_blackSlide->background())->setFillBrush(QBrush(Qt::black));
+	}
+}
+
+Slide * OutputViewContent::blackSlide()
+{
+	generateBlackFrame();
+	return m_blackSlide;
+}
+
+void OutputViewContent::setFadeSpeed(int value)
+{
+	m_fadeSpeed = value;
+}
+
+void OutputViewContent::setFadeQuality(int value)
+{
+	m_fadeQuality = value;
+}
+
+
 
 QWidget * OutputViewContent::createPropertyWidget()
 {
@@ -250,6 +563,9 @@ void OutputViewContent::syncFromModelItem(AbstractVisualItem *model)
 	//float scale = qMin(sx,sy);
 	m_liveRoot->setTransform(QTransform().scale(sx,sy));
 	m_liveRoot->setPos(cr.left(),cr.top());
+	
+	m_fadeRoot->setTransform(QTransform().scale(sx,sy));
+	m_fadeRoot->setPos(cr.left(),cr.top());
         //qDebug("Scaling: %.02f x %.02f",sx,sy);
         //qDebug() 
 	update();
@@ -318,13 +634,17 @@ void OutputViewContent::setOutputId(int id)
 	if(m_inst)
 	{
 		//m_inst->removeMirror(m_viewer);
-		qDebug() << "OutputViewContent::setOutputId("<<id<<"): Removing m_fakeInst from current m_inst="<<m_inst;
+		if(DEBUG_OUTPUTVIEW)
+			qDebug() << "OutputViewContent::setOutputId("<<id<<"): Removing m_fakeInst from current m_inst="<<m_inst;
+			
 		m_inst->removeMirror(m_fakeInst);
 	}
 	
 	if(!m_fakeInst)
 	{
-		qDebug() << "OutputViewContent::setOutputId("<<id<<"): Not initalizing new outputId, m_fakeInst is already dead."; 
+		if(DEBUG_OUTPUTVIEW)
+			qDebug() << "OutputViewContent::setOutputId("<<id<<"): Not initalizing new outputId, m_fakeInst is already dead.";
+			 
 		return;
 	}
 		
@@ -338,7 +658,9 @@ void OutputViewContent::setOutputId(int id)
 		}
 		else
 		{
-			qDebug() << "OutputViewContent::setOutputId("<<id<<"): Initalizing inst for output"<<name;
+			if(DEBUG_OUTPUTVIEW)
+				qDebug() << "OutputViewContent::setOutputId("<<id<<"): Initalizing inst for output"<<name;
+				
 			m_inst = inst;
 			//m_inst->addMirror(m_viewer);
 			m_inst->addMirror(m_fakeInst);
@@ -347,7 +669,9 @@ void OutputViewContent::setOutputId(int id)
 	else
 	{
 		m_inst = 0;
-		qDebug() << "OutputViewContent::setOutputId("<<id<<"): Could not find output instance for id:"<<id;
+		
+		if(DEBUG_OUTPUTVIEW)
+			qDebug() << "OutputViewContent::setOutputId("<<id<<"): Could not find output instance for id:"<<id;
 	}
 }
 
@@ -359,7 +683,8 @@ OutputViewInst::OutputViewInst(OutputViewContent *impl) // /*Output *output, boo
 	: OutputInstance(Output::widgetInstance(),false,0)
 	, d(impl)
 {
-	qDebug() << "OutputViewInst::OutputViewInst: Created instance, ptr: "<<(void*)this<<" for OutputViewContent: "<<(void*)impl;
+	if(DEBUG_OUTPUTVIEW)
+		qDebug() << "OutputViewInst::OutputViewInst: Created instance, ptr: "<<(void*)this<<" for OutputViewContent: "<<(void*)impl;
 }
 
 OutputViewInst::~OutputViewInst() {}
@@ -394,7 +719,10 @@ void OutputViewInst::setSlideGroup(SlideGroup *group, Slide *slide)
 	d->setSlideGroup(group,slide);
 }
 // void OutputViewInst::setSlideGroup(SlideGroup*, int startSlide) {}
-void OutputViewInst::clear() {}
+void OutputViewInst::clear() 
+{
+	d->clearSlide();
+}
 
 void OutputViewInst::setBackground(QColor) {}
 void OutputViewInst::setCanZoom(bool) {}
@@ -408,7 +736,10 @@ Slide * OutputViewInst::setSlide(Slide *slide, bool /*takeOwnership*/)
 // Slide * OutputViewInst::nextSlide() {}
 // Slide * OutputViewInst::prevSlide() {}
 
-void OutputViewInst::fadeBlackFrame(bool) {}
+void OutputViewInst::fadeBlackFrame(bool flag) 
+{
+	d->fadeBlackFrame(flag);
+}
 
 void OutputViewInst::setViewerState(SlideGroupViewer::ViewerState) {}
 
@@ -419,11 +750,17 @@ void OutputViewInst::setOverlayEnabled(bool) {}
 void OutputViewInst::setTextOnlyFilterEnabled(bool) {}
 void OutputViewInst::setAutoResizeTextEnabled(bool) {}
 
-void OutputViewInst::setFadeSpeed(int) {}
-void OutputViewInst::setFadeQuality(int) {}
+void OutputViewInst::setFadeSpeed(int x)
+{
+	d->setFadeSpeed(x);
+}
+void OutputViewInst::setFadeQuality(int x) 
+{
+	d->setFadeQuality(x);
+}
 
-void OutputViewInst::setEndActionOverrideEnabled(bool) {}
-void OutputViewInst::setEndGroupAction(SlideGroup::EndOfGroupAction) {}
+// void OutputViewInst::setEndActionOverrideEnabled(bool) {}
+// void OutputViewInst::setEndGroupAction(SlideGroup::EndOfGroupAction) {}
 
 
 // protected slots:

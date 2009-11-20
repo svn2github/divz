@@ -5,8 +5,10 @@
 
 class OutputInstance;
 class QGraphicsProxyWidget;
+class QTimer;
 
 #include "OutputInstance.h"
+#include "MyGraphicsScene.h"
 
 class OutputViewContent;
 class OutputViewInst : public OutputInstance 
@@ -70,8 +72,8 @@ public slots:
 	void setFadeSpeed(int);
 	void setFadeQuality(int);
 	
-	void setEndActionOverrideEnabled(bool);
-	void setEndGroupAction(SlideGroup::EndOfGroupAction);
+// 	void setEndActionOverrideEnabled(bool);
+// 	void setEndGroupAction(SlideGroup::EndOfGroupAction);
 	
 protected slots:
 	//void appSettingsChanged();
@@ -127,12 +129,36 @@ public:
 	// ::QGraphicsItem
 	void paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget = 0);
 
+	
+	int fadeSpeed()   { return m_fadeSpeed;   }
+	int fadeQuality() { return m_fadeQuality; }
+	
+	static Slide * blackSlide();
+	
+public slots:
 	void setSlideGroup(SlideGroup*, Slide *startSlide);
-	void setSlide(Slide*);
-
+	void setSlide(Slide*, MyGraphicsScene::SlideTransition trans = MyGraphicsScene::CrossFade);
+	void clearSlide();
+	
+	void fadeBlackFrame(bool);
+	
+	void setFadeSpeed(int);
+	void setFadeQuality(int);
+	
+private slots:
+	void slideItemChanged(AbstractItem *item, QString operation, QString fieldName, QVariant value, QVariant /*oldValue*/);
+	
+	void slotTransitionStep();
+	void endTransition();
+		
 private:
 	AbstractContent * createVisualDelegate(AbstractItem *item, QGraphicsItem * parent=0);
 	void addContent(AbstractContent * content, bool takeOwnership);
+	AbstractContent * findVisualDelegate(AbstractItem *item);
+	void removeVisualDelegate(AbstractItem *item);
+	void setSlideInternal(Slide*, MyGraphicsScene::SlideTransition trans = MyGraphicsScene::CrossFade);
+	
+	static void generateBlackFrame();
 	
 	OutputInstance * m_viewer;
 	OutputInstance * m_inst;
@@ -142,8 +168,27 @@ private:
 	Slide *m_slide;
 	OutputViewInst * m_fakeInst;
 	OutputViewRootObject * m_liveRoot;
+	OutputViewRootObject * m_fadeRoot;
 	QList<AbstractContent *> m_content;
 	QList<AbstractContent *> m_ownedContent;
+	
+	MyGraphicsScene::SlideTransition m_currentTransition;
+	
+	int m_fadeSteps;
+	int m_fadeStepCounter;
+	QTimer * m_fadeTimer;
+	
+	static Slide * m_blackSlide;
+	static int m_blackSlideRefCount;
+	
+	Slide * m_slidePreBlack;
+	
+	bool m_blackEnabled;
+	
+	int m_fadeSpeed;
+	int m_fadeQuality;
+	
+	bool m_fadeBehind;
 	
 
 };

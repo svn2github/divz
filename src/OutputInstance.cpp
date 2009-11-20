@@ -80,7 +80,7 @@ OutputInstance::OutputInstance(Output *out, bool startHidden, QWidget *parent)
 
 OutputInstance::~OutputInstance() 
 {
-	qDebug() << "OutputInstance::~OutputInstance: Destroying "<<(void*)this;
+// 	qDebug() << "OutputInstance::~OutputInstance: Destroying "<<(void*)this;
 	while(m_ownedSlides.size())
 	{	
 		QPointer<Slide> slide = m_ownedSlides.takeFirst();
@@ -100,7 +100,7 @@ OutputInstance::~OutputInstance()
 
 void OutputInstance::addMirror(OutputInstance *inst)
 {
-	qDebug() << "OutputInstance::addMirror: ["<<m_output->name()<<"] Adding mirror instance ptr"<<inst<<", mirror inst output name: "<<inst->output()->name();
+	//qDebug() << "OutputInstance::addMirror: ["<<m_output->name()<<"] Adding mirror instance ptr"<<inst<<", mirror inst output name: "<<inst->output()->name();
 	if(!m_mirrors.contains(inst))
 		m_mirrors << inst;
 }
@@ -109,8 +109,8 @@ void OutputInstance::removeMirror(OutputInstance *inst)
 {
 	if(!inst)
 		return;
-	if(inst->output())
-		qDebug() << "OutputInstance::removeMirror: ["<<m_output->name()<<"] Removing mirror instance ptr"<<inst<<", mirror inst output name: "<<inst->output()->name();
+// 	if(inst->output())
+// 		qDebug() << "OutputInstance::removeMirror: ["<<m_output->name()<<"] Removing mirror instance ptr"<<inst<<", mirror inst output name: "<<inst->output()->name();
 	m_mirrors.removeAll(inst);
 }
 

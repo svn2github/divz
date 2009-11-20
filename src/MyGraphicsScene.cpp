@@ -241,26 +241,17 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans, int speed, i
 		return;
 	}
 	
-	//TODO implement slide transitions
 	if(m_slide == slide)
 	{
 		//qDebug("MyGraphicsScene::setSlide: Not changing slide - same slide!");
 		return;
 	}
 	
-	if(m_slide)// && m_slideGroup != g)
-	{
+	if(m_slide)
 		disconnect(m_slide,0,this,0);
-	}
 	
 	if(slide)
-	{
-		
-		//qDebug() << "MyGraphicsScene::setSlide(): going to dump slide QObject info:";
-		//slide->dumpObjectInfo();
-		//disconnect(slide,0,this,0);
 		connect(slide,SIGNAL(slideItemChanged(AbstractItem *, QString, QString, QVariant, QVariant)),this,SLOT(slideItemChanged(AbstractItem *, QString, QString, QVariant, QVariant)));
-	}
 	
 	if(contextHint() == Preview)
 		trans = None; 
