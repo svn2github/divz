@@ -131,6 +131,9 @@ protected slots:
 	
 	void slotGrabPixmap();
 	
+	Slide * setSlideGroupInternal(SlideGroup *group, Slide * startSlide);
+	void setSlideInternal(Slide*);
+	
 protected:
 	//void closeEvent(QCloseEvent *);
 	//void resizeEvent(QResizeEvent*);

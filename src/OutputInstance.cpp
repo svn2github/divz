@@ -107,6 +107,10 @@ void OutputInstance::addMirror(OutputInstance *inst)
 
 void OutputInstance::removeMirror(OutputInstance *inst)
 {
+	if(!inst)
+		return;
+	if(inst->output())
+		qDebug() << "OutputInstance::removeMirror: ["<<m_output->name()<<"] Removing mirror instance ptr"<<inst<<", mirror inst output name: "<<inst->output()->name();
 	m_mirrors.removeAll(inst);
 }
 
@@ -356,9 +360,13 @@ void OutputInstance::setSlideGroup(SlideGroup *group, Slide * startSlide)
 	// Replicate the OutputInstance logic internally.
 	// Right now, not needed. But for a network viewer, we'll do this to reduce network logic & trafic needed
 	
-	
+	setSlideGroupInternal(group,startSlide);
+}
+
+Slide * OutputInstance::setSlideGroupInternal(SlideGroup *group, Slide * startSlide)
+{
 	if(m_slideGroup == group)
-		return;
+		return startSlide;
 		
 	m_slideNum = 0;
 
@@ -374,7 +382,10 @@ void OutputInstance::setSlideGroup(SlideGroup *group, Slide * startSlide)
 	m_sortedSlides = slist;
 	
 	if(startSlide)
+	{
 		m_slideNum = m_sortedSlides.indexOf(startSlide);
+		return startSlide;
+	}
 	else
 	{
 		QList<Slide*> slist = group->slideList();
@@ -382,8 +393,11 @@ void OutputInstance::setSlideGroup(SlideGroup *group, Slide * startSlide)
 			m_slideNum = 0;
 		else
 			qDebug("OutputInstance::setSlideGroup: Group[0] has 0 slides");
+			
+		return slist.first();
 	}
 }
+
 
 SlideGroup * OutputInstance::slideGroup()
 {
@@ -624,10 +638,10 @@ void OutputInstance::removeFilter(AbstractItemFilter *filter)
 
 void OutputInstance::removeAllFilters()
 {
-	qDebug() << "OutputInstance::setSlide: ["<<m_output->name()<<"] Updating mirrors - remove all filters, # mirrors:"<<m_mirrors.size();
+	//qDebug() << "OutputInstance::setSlide: ["<<m_output->name()<<"] Updating mirrors - remove all filters, # mirrors:"<<m_mirrors.size();
 	foreach(OutputInstance *m, m_mirrors)
 	{
-		qDebug() << "OutputInstance::setSlide: ["<<m_output->name()<<"] MirrorPtr: "<<(void*)m;
+		//qDebug() << "OutputInstance::setSlide: ["<<m_output->name()<<"] MirrorPtr: "<<(void*)m;
 		m->removeAllFilters();
 	}
 	
@@ -723,15 +737,8 @@ Slide * OutputInstance::setSlide(int x)
 	return setSlide(m_sortedSlides.at(x));	
 }
 
-Slide * OutputInstance::setSlide(Slide *slide, bool takeOwnership)
+void OutputInstance::setSlideInternal(Slide *slide)
 {
-	qDebug() << "OutputInstance::setSlide: ["<<m_output->name()<<"] Updating mirrors to slidePtr"<<slide;
-	foreach(OutputInstance *m, m_mirrors)
-		m->setSlide(slide);
-		
-	if(!m_output->isEnabled())
-		return 0;
-		
 	m_slideNum = m_sortedSlides.indexOf(slide);
 	
 	emit slideChanged(slide);
@@ -739,6 +746,18 @@ Slide * OutputInstance::setSlide(Slide *slide, bool takeOwnership)
 		emit slideChanged(m_slideNum);
 		
 	m_slide = slide;
+}
+
+Slide * OutputInstance::setSlide(Slide *slide, bool takeOwnership)
+{
+	//qDebug() << "OutputInstance::setSlide: ["<<m_output->name()<<"] Updating mirrors to slidePtr"<<slide;
+	foreach(OutputInstance *m, m_mirrors)
+		m->setSlide(slide);
+		
+	if(!m_output->isEnabled())
+		return 0;
+		
+	setSlideInternal(slide);
 	
 	Output::OutputType x = m_output->outputType();
 	if(x == Output::Screen || x == Output::Custom || x == Output::Preview || x == Output::Widget)

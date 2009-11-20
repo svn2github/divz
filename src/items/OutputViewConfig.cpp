@@ -29,23 +29,31 @@ OutputViewConfig::OutputViewConfig(OutputViewContent * v, QGraphicsItem * parent
 	
 	m_syncWithBox = new QComboBox();
 	layout->addWidget(m_syncWithBox);
-	connect(m_syncWithBox, SIGNAL(currentIndexChanged(int)), this, SLOT(slotOutputChanged(int)));
 	
 	m_syncWithBox->clear();
 	QList<Output*> allOut = AppSettings::outputs();
 	
+	int x = 0;
 	foreach(Output *out, allOut)
 	{
 		if(out->isEnabled()) // && (m_inst ? out->id() != m_inst->output()->id() : true))
 		{
 			m_syncWithBox->addItem(out->name(), QVariant(out->id()));
-			qDebug() << "OutputViewConfig: outputId "<<out->id()<<"="<<out->name();
+			qDebug() << "OutputViewConfig: outputId "<<out->id()<<"="<<out->name()<<", x:"<<x;
+			x++;
 		}
 	}
 	
 	int idx = m_syncWithBox->findData(model->outputId());
 	if(idx>-1)
+	{
 		m_syncWithBox->setCurrentIndex(idx);
+// 		qDebug() << "OutputViewConfig: setting current idx to "<<idx<<" for model->outputId():"<<model->outputId();
+	}
+	else
+// 		qDebug() << "OutputViewConfig: can't find idx for model->outputId():"<<model->outputId();
+	
+	connect(m_syncWithBox, SIGNAL(currentIndexChanged(int)), this, SLOT(slotOutputChanged(int)));
 	
 	addTab(base, tr("Output"), false, true);
 	

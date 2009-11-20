@@ -873,6 +873,7 @@ NativeViewer * SlideGroupFactory::newNativeViewer()
 
 QPixmap	SlideGroupFactory::generatePreviewPixmap(SlideGroup *group, QSize iconSize, QRect sceneRect)
 {
+// 	qDebug() << "SlideGroupFactory::generatePreviewPixmap: Generating pixmap for group "<<group;
 	//return QPixmap();
 	int icon_w = iconSize.width();
 	int icon_h = iconSize.height();
@@ -905,7 +906,10 @@ QPixmap	SlideGroupFactory::generatePreviewPixmap(SlideGroup *group, QSize iconSi
 	
 	//qDebug() << "SlideGroupFactory::generatePixmap: Loading slide";
 	m_scene->setMasterSlide(group->masterSlide());
+	
+// 	qDebug() << "SlideGroupFactory::generatePreviewPixmap: Loading slide";
 	m_scene->setSlide(slide);
+// 	qDebug() << "SlideGroupFactory::generatePreviewPixmap: Slide loaded";
 	
 	QPixmap icon(icon_w,icon_h);
 	QPainter painter(&icon);
@@ -919,11 +923,16 @@ QPixmap	SlideGroupFactory::generatePreviewPixmap(SlideGroup *group, QSize iconSi
 	painter.setBrush(Qt::NoBrush);
 	painter.drawRect(0,0,icon_w-1,icon_h-1);
 	
+	
 	// clear() so we can free memory, stop videos, etc
+// 	qDebug() << "SlideGroupFactory::generatePreviewPixmap: Clearing scene";
 	m_scene->clear();
+// 	qDebug() << "SlideGroupFactory::generatePreviewPixmap: Scene cleared";
 	// clear the master slide because it may be deleted after generating the pixmap (e.g. in OutputControl::setOverlayDocument)
 	m_scene->setMasterSlide(0);
 	//qDebug() << "SlideGroupFactory::generatePixmap: Releasing slide\n";
+	
+// 	qDebug() << "SlideGroupFactory::generatePreviewPixmap: Done with group "<<group;
 	
 	return icon;
 }

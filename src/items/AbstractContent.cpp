@@ -51,6 +51,7 @@ AbstractContent::AbstractContent(QGraphicsScene * scene, QGraphicsItem * parent,
     , m_hovering(false)
     , m_sourceOffsetTL(0,0)
     , m_sourceOffsetBR(0,0)
+    , m_contextHint(MyGraphicsScene::Live)
 {
 	// the buffered graphics changes timer
 	m_gfxChangeTimer = new QTimer(this);

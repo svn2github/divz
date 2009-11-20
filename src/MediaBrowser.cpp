@@ -80,7 +80,7 @@ QPixmap MediaBrowser::iconForImage(const QString & file, const QSize & size)
 				.arg(size.height());
 
 
-	qDebug() << "MediaBrowser::iconForImage: file:"<<file<<", size:"<<size<<", cacheFile: "<<cacheFile;
+	//qDebug() << "MediaBrowser::iconForImage: file:"<<file<<", size:"<<size<<", cacheFile: "<<cacheFile;
 	//QPixmap orig(file);
 	//orig = orig.scaled(size,Qt::IgnoreAspectRatio,Qt::SmoothTransformation);
 	//orig.detach();

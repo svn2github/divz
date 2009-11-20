@@ -164,7 +164,7 @@ void MyGraphicsScene::clear()
 		removeItem(content);
 		
 		disconnect(content, 0, 0, 0);
-		//qDebug() << "Disposing of content";
+		//qDebug() << "MyGraphicsScene::clear: Disposing of content:"<<content;
 		content->dispose(false);
 		//delete content;
 		content = 0;

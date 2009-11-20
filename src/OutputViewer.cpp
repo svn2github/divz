@@ -41,10 +41,12 @@ void OutputViewer::setOutputInstance(OutputInstance *inst)
 {
 //  	if(m_inst)
 //  		disconnect(m_inst,0,this,0);
+	
 	if(m_inst)
 		m_inst->removeMirror(m_view);
  	m_inst = inst;
  	m_inst->addMirror(m_view);
+ 	
  	//connect(m_inst, SIGNAL(slideChanged(int)), m_view, SLOT(setSlide(int)));
  	//connect(m_inst, SIGNAL(slideGroupChanged(SlideGroup*,Slide*)), m_view, SLOT(setSlideGroup(SlideGroup*,Slide*)));
 }

@@ -120,6 +120,10 @@ public:
 	
 	void setOutputId(int);
 	
+	// AbstractContent::
+	void dispose(bool);
+	
+	
 	// ::QGraphicsItem
 	void paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget = 0);
 
