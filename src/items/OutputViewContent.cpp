@@ -19,6 +19,7 @@
 #include <QPixmapCache>
 #include <QGraphicsProxyWidget>
 #include <QTimer>
+#include <QMessageBox>
 
 #include "model/OutputViewItem.h"
 #include "OutputInstance.h"
@@ -29,6 +30,8 @@
 #include "model/SlideGroup.h"
 #include "model/BackgroundItem.h"
 
+#include "viewer/NetworkClient.h"
+
 #if QT_VERSION >= 0x040600
 	#define QT46_SHADOW_ENAB 0
 #endif
@@ -38,6 +41,8 @@
 
 #define DEBUG_OUTPUTVIEW 0
 
+#define RECONNECT_WAIT_TIME 1000 * 2
+	
 OutputViewRootObject::OutputViewRootObject(QGraphicsItem *parent, QGraphicsScene*)
 	: QGraphicsItem(parent)
 {
@@ -57,6 +62,7 @@ OutputViewContent::OutputViewContent(QGraphicsScene * scene, QGraphicsItem * par
 	, m_fadeSpeed(-1)
 	, m_fadeQuality(-1)
 	, m_fadeBehind(false)
+	, m_client(0)
 {
 	m_dontSyncToModel = true;
 	
@@ -83,6 +89,9 @@ OutputViewContent::OutputViewContent(QGraphicsScene * scene, QGraphicsItem * par
 	if(DEBUG_OUTPUTVIEW)
 		qDebug() << "OutputViewContent:: created m_liveRoot:"<<(void*)m_liveRoot<<", m_fadeRoot:"<<(void*)m_fadeRoot<<", this:"<<(void*)this;
 	
+	// Used to reconnect torn sockets when viewed with a network viewer
+	m_reconnectTimer.setSingleShot(true);
+	connect(&m_reconnectTimer, SIGNAL(timeout()), this, SLOT(connectNetworkClient()));
 	
 	m_dontSyncToModel = false;
 }
@@ -628,50 +637,120 @@ void OutputViewContent::paint(QPainter * painter, const QStyleOptionGraphicsItem
 	}
 }
 
-void OutputViewContent::setOutputId(int id)
+
+void OutputViewContent::socketError(QAbstractSocket::SocketError socketError)
 {
-	OutputInstance *inst = MainWindow::mw()->outputInst(id);
-	if(m_inst)
+	switch (socketError)
 	{
-		//m_inst->removeMirror(m_viewer);
-		if(DEBUG_OUTPUTVIEW)
-			qDebug() << "OutputViewContent::setOutputId("<<id<<"): Removing m_fakeInst from current m_inst="<<m_inst;
-			
-		m_inst->removeMirror(m_fakeInst);
+		case QAbstractSocket::RemoteHostClosedError:
+			break;
+		case QAbstractSocket::HostNotFoundError:
+			QMessageBox::critical(0,"Host Not Found",tr("The host was not found. Please check the host name and port settings."));
+			break;
+		case QAbstractSocket::ConnectionRefusedError:
+			qDebug() << "OutputViewContent::connectNetworkClient: [INFO] Connection Refused:"<<m_client->errorString();
+// 			if(m_reconnect)
+				m_reconnectTimer.start(RECONNECT_WAIT_TIME);
+// 			else
+// 				QMessageBox::critical(0,"Connection Refused",
+// 					tr("The connection was refused by the peer. "
+// 						"Make sure the DViz server is running, "
+// 						"and check that the host name and port "
+// 						"settings are correct."));
+			break;
+		default:
+			QMessageBox::critical(0,"Connection Problem",tr("The following error occurred: %1.").arg(m_client->errorString()));
+	}
+}
+
+
+void OutputViewContent::connectNetworkClient()
+{
+	if(m_client)
+	{
+		//qDebug() << "MainWindow::slotDisconnect(): Exiting client";
+		m_client->exit();
+// 		disconnect(m_client,0,this,0);
+// 		delete m_client;
+		m_client->deleteLater();
+		m_client = 0;
+		qDebug() << "OutputViewContent::connectNetworkClient: [INFO] Disconnected";
 	}
 	
-	if(!m_fakeInst)
+	m_client = new NetworkClient(this);
+	//m_client->setLogger(this);
+	connect(m_client, SIGNAL(socketError(QAbstractSocket::SocketError)), this, SLOT(socketError(QAbstractSocket::SocketError)));
+	//connect(m_client, SIGNAL(aspectRatioChanged(double)), this, SLOT(aspectChanged(double)));
+	connect(m_client, SIGNAL(socketConnected()), this, SLOT(networkClientConnected()));
+	connect(m_client, SIGNAL(socketDisconnected()), this, SLOT(connectNetworkClient()));
+	m_client->setInstance(m_fakeInst);
+
+	
+	QString host = MainWindow::mw()->networkHost();
+	int port = dynamic_cast<OutputViewItem*>(modelItem())->outputPort();
+
+	qDebug() << "OutputViewContent::connectNetworkClient [INFO] Connecting to "<<host<<":"<<port;
+	
+	m_client->connectTo(host,port);
+}
+
+void OutputViewContent::networkClientConnected()
+{
+	qDebug() << "OutputViewContent::connectNetworkClient [INFO] Connected!";
+}
+
+
+void OutputViewContent::setOutputId(int id)
+{
+	if(MainWindow::mw()->isNetworkViewer())
 	{
-		if(DEBUG_OUTPUTVIEW)
-			qDebug() << "OutputViewContent::setOutputId("<<id<<"): Not initalizing new outputId, m_fakeInst is already dead.";
-			 
-		return;
-	}
-		
-	if(inst)
-	{
-		QString name = inst->output()->name();
-		if(name == "Live")
-		{
-			qDebug() << "OutputViewContent::setOutputId("<<id<<"): CANNOT EMBED PRIMARY OUTPUT IN VIEWER";
-			m_inst = 0;
-		}
-		else
-		{
-			if(DEBUG_OUTPUTVIEW)
-				qDebug() << "OutputViewContent::setOutputId("<<id<<"): Initalizing inst for output"<<name;
-				
-			m_inst = inst;
-			//m_inst->addMirror(m_viewer);
-			m_inst->addMirror(m_fakeInst);
-		}
+		connectNetworkClient();
 	}
 	else
 	{
-		m_inst = 0;
+		OutputInstance *inst = MainWindow::mw()->outputInst(id);
+		if(m_inst)
+		{
+			//m_inst->removeMirror(m_viewer);
+			if(DEBUG_OUTPUTVIEW)
+				qDebug() << "OutputViewContent::setOutputId("<<id<<"): Removing m_fakeInst from current m_inst="<<m_inst;
+				
+			m_inst->removeMirror(m_fakeInst);
+		}
 		
-		if(DEBUG_OUTPUTVIEW)
-			qDebug() << "OutputViewContent::setOutputId("<<id<<"): Could not find output instance for id:"<<id;
+		if(!m_fakeInst)
+		{
+			if(DEBUG_OUTPUTVIEW)
+				qDebug() << "OutputViewContent::setOutputId("<<id<<"): Not initalizing new outputId, m_fakeInst is already dead.";
+				
+			return;
+		}
+			
+		if(inst)
+		{
+			QString name = inst->output()->name();
+			if(name == "Live")
+			{
+				qDebug() << "OutputViewContent::setOutputId("<<id<<"): CANNOT EMBED PRIMARY OUTPUT IN VIEWER";
+				m_inst = 0;
+			}
+			else
+			{
+				if(DEBUG_OUTPUTVIEW)
+					qDebug() << "OutputViewContent::setOutputId("<<id<<"): Initalizing inst for output"<<name;
+					
+				m_inst = inst;
+				//m_inst->addMirror(m_viewer);
+				m_inst->addMirror(m_fakeInst);
+			}
+		}
+		else
+		{
+			m_inst = 0;
+			
+			if(DEBUG_OUTPUTVIEW)
+				qDebug() << "OutputViewContent::setOutputId("<<id<<"): Could not find output instance for id:"<<id;
+		}
 	}
 }
 

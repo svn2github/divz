@@ -43,8 +43,8 @@ include(../3rdparty/rtmidi/rtmidi.pri)
 include(../3rdparty/md5/md5.pri)
 include(../3rdparty/qjson/qjson.pri)
 include(../ppt/ppt.pri)
+include(../groupplayer/groupplayer.pri)
 
-# use the main build dir so we dont have to rebuild all shared sources
 MOC_DIR = .build
 OBJECTS_DIR = .build
 RCC_DIR = .build

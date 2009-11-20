@@ -10,14 +10,14 @@
 #include "model/SlideGroup.h"
 #include "songdb/SongSlideGroup.h"
 #include "3rdparty/qjson/parser.h"
-#include "MainWindow.h"
+// #include "MainWindow.h"
 
 #include "OutputServer.h" // OutputServer::Command enum is needed
 
 NetworkClient::NetworkClient(QObject *parent) 
 	: QObject(parent)
 	, m_socket(0)
-	, m_log(0)
+// 	, m_log(0)
 	, m_inst(0)
 	, m_blockSize(0)
 	, m_dataBlock("")
@@ -29,10 +29,10 @@ NetworkClient::~NetworkClient()
 	delete m_parser;
 }
 	
-void NetworkClient::setLogger(MainWindow *log)
-{
-	m_log = log;
-}
+// void NetworkClient::setLogger(MainWindow *log)
+// {
+// 	m_log = log;
+// }
 
 void NetworkClient::setInstance(OutputInstance *inst)
 {
@@ -59,8 +59,8 @@ bool NetworkClient::connectTo(const QString& host, int port)
 void NetworkClient::log(const QString& str)
 {
 	qDebug() << "NetworkClient::log(): "<<str;
-	if(m_log)
-		m_log->log(str);
+// 	if(m_log)
+// 		m_log->log(str);
 }
 
 void NetworkClient::dataReady()
@@ -135,10 +135,10 @@ void NetworkClient::processCommand(OutputServer::Command cmd, QVariant a, QVaria
 			log(QString("[INFO] Removed Filter # %1").arg(a.toInt()));
 			cmdDelFilter(a.toInt());
 			break; 
-		case OutputServer::FadeClear:
-			log(QString("[INFO] Background-Only (\"Clear\") Frame %1").arg(a.toBool() ? "On":"Off"));
-			m_inst->fadeClearFrame(a.toBool());
-			break; 
+// 		case OutputServer::FadeClear:
+// 			log(QString("[INFO] Background-Only (\"Clear\") Frame %1").arg(a.toBool() ? "On":"Off"));
+// 			m_inst->fadeClearFrame(a.toBool());
+// 			break; 
 		case OutputServer::FadeBlack:
 			log(QString("[INFO] Black Frame %1").arg(a.toBool() ? "On":"Off"));
 			m_inst->fadeBlackFrame(a.toBool());

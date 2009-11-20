@@ -157,6 +157,7 @@ include(ppt/ppt.pri)
 include(http/http.pri)
 include(groupplayer/groupplayer.pri)
 include(bible/bible.pri)
+include(viewer/client.pri)
 
 # deployment on Linux
 unix {

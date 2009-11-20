@@ -29,7 +29,7 @@ HEADERS += \
     ImageContent.h \
     ImageConfig.h \
     OutputViewContent.h \
-    OutputViewConfig.h
+    OutputViewConfig.h 
     #SlideGroupContent.h
  
     

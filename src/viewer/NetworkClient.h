@@ -14,7 +14,7 @@ namespace QJson
 {
 	class Parser;
 }
-class MainWindow;
+// class MainWindow;
 
 class NetworkClient : public QObject
 {
@@ -23,7 +23,7 @@ public:
 	NetworkClient(QObject *parent = 0);
 	~NetworkClient();
 	
-	void setLogger(MainWindow*);
+// 	void setLogger(MainWindow*);
 	void setInstance(OutputInstance*);
 	bool connectTo(const QString& host, int port);
 	void exit();
@@ -54,7 +54,7 @@ private:
 	void log(const QString&);
 	QTcpSocket *m_socket;
 	
-	MainWindow * m_log;
+// 	MainWindow * m_log;
 	OutputInstance * m_inst;
 	
 	int m_blockSize;

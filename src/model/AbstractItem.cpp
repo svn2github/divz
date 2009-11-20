@@ -128,7 +128,7 @@ QByteArray AbstractItem::toByteArray() const
 		QMetaProperty metaproperty = metaobject->property(i);
 		const char *name = metaproperty.name();
 		QVariant value = property(name);
-		//qDebug() << "AbstractItem::clone():"<<itemName()<<": prop:"<<name<<", value:"<<value;
+// 		qDebug() << "AbstractItem::toByteArray():"<<itemName()<<": prop:"<<name<<", value:"<<value;
 		//item->setProperty(name,value);
 		map[name] = value;
 	}

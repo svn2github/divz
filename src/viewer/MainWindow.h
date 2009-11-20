@@ -19,7 +19,13 @@ class SlideGroup;
 class Slide;
 class QDockWidget;
 class OutputViewer;
+
+#include "model/Output.h"
+#include "OutputInstance.h"
+
 #include <QAbstractSocket>
+
+class AbstractSlideGroupEditor;
 
 class MainWindow : public QMainWindow {
 	Q_OBJECT
@@ -37,7 +43,16 @@ public:
 	void setLiveGroup(SlideGroup *newGroup, Slide *currentSlide,bool);
 
 	void setAutosaveEnabled(bool);
+	
+	// These functions are specific to dviz-viewer
+	bool isNetworkViewer() { return true; }
+	QString networkHost() { return m_host; }
+	
+	// Here for compat with dviz MainWindow source
+	OutputInstance * outputInst(int id) { return id == m_inst->output()->id() ? m_inst : 0; }
 
+	AbstractSlideGroupEditor * openSlideEditor(SlideGroup *g,Slide *slide=0) {}
+	
 signals:
 // 	void documentChanged(Document*);
  	void docSettingsChanged(Document*);

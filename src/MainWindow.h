@@ -65,6 +65,11 @@ public:
 	
 	bool autosaveEnabled();
 	
+	// Here for compat with dviz-viewer source
+	bool isNetworkViewer() { return false; }
+	QString networkHost() { return ""; }
+	void log(const QString&, int severity=-1);
+	
 signals:
 	void documentChanged(Document*);
 	void docSettingsChanged(Document*);

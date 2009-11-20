@@ -168,9 +168,15 @@ void MainWindow::slotReconnect()
 	// reopen output inorder to reset all settings such as
 	// black frame, fade speed, etc
 	//openOutput();
+	if(m_client)
+	{
+		// prevent memory leaks when called as the reconnect handler
+		m_client->deleteLater();
+		m_client = 0;
+	}
 
 	m_client = new NetworkClient(this);
-	m_client->setLogger(this);
+// 	m_client->setLogger(this);
 	connect(m_client, SIGNAL(socketError(QAbstractSocket::SocketError)), this, SLOT(socketError(QAbstractSocket::SocketError)));
 	connect(m_client, SIGNAL(aspectRatioChanged(double)), this, SLOT(aspectChanged(double)));
 	connect(m_client, SIGNAL(socketConnected()), this, SLOT(slotConnected()));

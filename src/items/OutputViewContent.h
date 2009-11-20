@@ -6,6 +6,9 @@
 class OutputInstance;
 class QGraphicsProxyWidget;
 class QTimer;
+class NetworkClient;
+
+#include <QAbstractSocket>
 
 #include "OutputInstance.h"
 #include "MyGraphicsScene.h"
@@ -150,6 +153,10 @@ private slots:
 	
 	void slotTransitionStep();
 	void endTransition();
+	
+	void socketError(QAbstractSocket::SocketError);
+	void networkClientConnected();
+	void connectNetworkClient();
 		
 private:
 	AbstractContent * createVisualDelegate(AbstractItem *item, QGraphicsItem * parent=0);
@@ -190,6 +197,8 @@ private:
 	
 	bool m_fadeBehind;
 	
+	QTimer m_reconnectTimer;
+	NetworkClient *m_client;	
 
 };
 
