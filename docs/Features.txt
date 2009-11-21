@@ -287,12 +287,7 @@ Revised Task list for Release 1.0, 10/18/09:
 			
 			output controls should "save state" (e.g. sync mode, etc)
 			
-			[DONE] dviz should remember last file loaded
 			dviz should provide "recently opened" file list
-			
-			need progress dialog for when loading file with lots of songs - the warming threads freeze UI for too long
-			
-			adding images using import tool then editing the group erases all auto-change times
 			
 			really need to transmit over network:
 				[DONE] A - quickslides
@@ -300,21 +295,10 @@ Revised Task list for Release 1.0, 10/18/09:
 			when net client connects, need to get current live group
 			add checkbox to output instance to sync black/clear status
 			
-			black/clear unreliable sometimes - send group live with black, then click clear, then black, then go live, then change slide - sometimes doesnt do whats expected
-				thats what it is - black, set group, click clear - it goes live with clear, click cleear again, slide goes live - even tho blacak is clicked
-				cant reproduce this sequence
-			
 			slide editor - duplicate slide should insert below old slide
 			
 			song text - fit to slide - max variance not more than 10 - 20 pts between slides .. ?
 			
-			
-			need to import/export individual slide groups
-			
-			need slide group loop control:
-				either (A) item in schedule that causes it to loop
-				(B) or slide group that plays other groups
-				(C) or slide group item 
 			
 			song slide filters stays stuck on the foldback output sometimes
 				ducktape: ignore mandatory flag for now
@@ -325,10 +309,7 @@ Revised Task list for Release 1.0, 10/18/09:
 			
 			ppt: need custom view control to enable pause/play timer btn
 			
-			
 			add optional passcode to output server
-			
-			[DONE] need to add third point chooser to effects tab
 			
 			bible plugin should move version list to connector API
 			add support for connector parsing via QtScript
@@ -337,15 +318,11 @@ Revised Task list for Release 1.0, 10/18/09:
 			slideeditor not showing all slides in list again 
 				as soon as slide deleted, list updates correctly
 			some zoom settings (anchor, factor, auto-switch) didnt seem to get imported from other doc using import tool
-			[DONE] quickslide should regenerate each 'show'
 			quickslide should ask if recenter wanted if text falls outside window
 			quickslide needs preview button
 			idea: Add italic (//) and hr (--) formatting translation to quickslide
 			idea: Add font size inc/deinc to quickslide (like [--]1.2x smaller[++]1.2x bigger[++++]1.4x bigger, etc)
-			idea: add sequencing for groups 
-				probably needs to be dedicated group type
-			bug: black, clear, unblack, change slide - goes black again incorrectly
-				
+			
 				
 			[STARTED] would be nice: while editing slide thats live, if change, cross fade to changed version
 			
@@ -492,6 +469,31 @@ Revised Task list for Release 1.0, 10/18/09:
 		
 		
 		
+		[DONE] dviz should remember last file loaded
+		
+		[FIXED] need progress dialog for when loading file with lots of songs - the warming threads freeze UI for too long
+			we cache rendered text to disk now
+		
+		[WORKSFORME] adding images using import tool then editing the group erases all auto-change times
+			cannot reproduce here
+		[FIXED] black/clear unreliable sometimes - send group live with black, then click clear, then black, then go live, then change slide - sometimes doesnt do whats expected
+			thats what it is - black, set group, click clear - it goes live with clear, click cleear again, slide goes live - even tho blacak is clicked
+			cant reproduce this sequence
+			moved clear from custom code algorithm to using the BackgroundOnly itemlistfilter
+		[DONE] need to add third point chooser to effects tab
+		
+		[DONE]  need to import/export individual slide groups
+		
+		[DONE] need slide group loop control:
+			[LATER] either (A) item in schedule that causes it to loop
+			[DONE] (B) or slide group that plays other groups
+			[DONE] (C) or slide group item 
+		
+		[DONE] quickslide should regenerate each 'show'
+		[DONE] add sequencing for groups 
+			probably needs to be dedicated group type
+		[FIXED] bug: black, clear, unblack, change slide - goes black again incorrectly
+			fixed by moving clear to a filter (using Background Only filter) instead of dedicated algorthim/code path
 		[DONE] make location of cache folder root (tempdir) a setting/option 
 				for use with network dviz viewer
 				
