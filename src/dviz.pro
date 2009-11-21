@@ -10,7 +10,7 @@ OBJECTS_DIR = .build
 RCC_DIR = .build
 UI_DIR = .build
 
-QT += sql
+QT += sql phonon
 
 BUILDNUM = $$system(perl buildcount.pl -v)
 VERSTR = '\\"$${BUILDNUM}\\"'  # place quotes around the version string
@@ -77,7 +77,8 @@ HEADERS += \
 	OutputServer.h \
 	ImageImportDialog.h \
 	DirectoryListModel.h \
-	ImportGroupDialog.h
+	ImportGroupDialog.h \
+	MimeTypes.h
 
 	
 SOURCES += \
@@ -107,7 +108,8 @@ SOURCES += \
 	OutputServer.cpp \
 	ImageImportDialog.cpp \
 	DirectoryListModel.cpp \
-	ImportGroupDialog.cpp
+	ImportGroupDialog.cpp \
+	MimeTypes.cpp
 	
 
 QT += core \

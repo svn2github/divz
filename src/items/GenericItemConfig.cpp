@@ -141,6 +141,9 @@ GenericItemConfig::GenericItemConfig(AbstractContent * content, QWidget *parent)
 	connect(m_commonUi->blurBox, SIGNAL(valueChanged(int)), this, SLOT(setShadowBlur(int)));
 	m_commonUi->blurBox->setValue(model->shadowBlurRadius());
 	
+	m_commonUi->endActionCombo->setCurrentIndex((int)model->videoEndAction());
+	connect(m_commonUi->endActionCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(videoEndActionChanged(int)));
+	
 	
 	
 	AbstractVisualItem::FillType t = model->fillType();
@@ -852,4 +855,7 @@ void GenericItemConfig::zoomFactorChanged(double value)
 	m_content->modelItem()->setZoomFactor(value);
 }
 
-
+void GenericItemConfig::videoEndActionChanged(int value)
+{
+	m_content->modelItem()->setVideoEndAction((AbstractVisualItem::VideoEndAction)value);
+}

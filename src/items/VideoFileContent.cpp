@@ -24,9 +24,9 @@ VideoFileContent::VideoFileContent(QGraphicsScene * scene, QGraphicsItem * paren
     : AbstractContent(scene, parent, false)
     , m_videoProvider(0)
     , m_still(false)
-//     , m_text(0)
-//     , m_textRect(0, 0, 0, 0)
-//     , m_textMargin(4)
+    , m_proxy(0)
+    , m_player(0)
+    , m_tuplet(0)
 {
 	m_dontSyncToModel = true;
 	
@@ -34,10 +34,6 @@ VideoFileContent::VideoFileContent(QGraphicsScene * scene, QGraphicsItem * paren
 	setFrameTextEnabled(false);
         setToolTip(tr("Video - right click for options."));
 	
-// 	setText("Welcome");
-        //for(int i=0;i<m_cornerItems.size();i++)
-        //	m_cornerItems.at(i)->setDefaultLeftOp(CornerItem::Scale);
-
 //         m_video = new QVideo(this);
 //         //connect(m_video, SIGNAL(movieStateChanged(QMovie::MovieState)),
 //         //           this, SLOT(movieStateChanged(QMovie::MovieState)));
@@ -55,25 +51,27 @@ VideoFileContent::VideoFileContent(QGraphicsScene * scene, QGraphicsItem * paren
 
 VideoFileContent::~VideoFileContent()
 {
-// 	delete m_shapeEditor;
-// 	delete m_text;
-	m_videoProvider->disconnectReceiver(this);
+	if(m_videoProvider)
+		m_videoProvider->disconnectReceiver(this);
 	QVideoProvider::releaseProvider(m_videoProvider);
 }
 
 void VideoFileContent::slotTogglePlay()
 {
-	if(m_videoProvider->isPlaying())
+	if(m_videoProvider)
 	{
-		m_bSwap->setToolTip(tr("Pause Video"));
-		m_bSwap->setIcon(QIcon(":/data/action-pause.png"));
-		m_videoProvider->play();
-	}
-	else
-	{
-		m_bSwap->setToolTip(tr("Play Video"));
-		m_bSwap->setIcon(QIcon(":/data/action-play.png"));
-		m_videoProvider->pause();
+		if(m_videoProvider->isPlaying())
+		{
+			m_bSwap->setToolTip(tr("Pause Video"));
+			m_bSwap->setIcon(QIcon(":/data/action-pause.png"));
+			m_videoProvider->play();
+		}
+		else
+		{
+			m_bSwap->setToolTip(tr("Play Video"));
+			m_bSwap->setIcon(QIcon(":/data/action-play.png"));
+			m_videoProvider->pause();
+		}
 	}
 }
 
@@ -83,26 +81,7 @@ void VideoFileContent::applySceneContextHint(MyGraphicsScene::ContextHint hint)
 }
 
 QWidget * VideoFileContent::createPropertyWidget()
-{
-/*	TextProperties * p = new TextProperties();
-	
-	// common properties
-	connect(p->bFront, SIGNAL(clicked()), this, SLOT(slotStackFront()));
-	connect(p->bRaise, SIGNAL(clicked()), this, SLOT(slotStackRaise()));
-	connect(p->bLower, SIGNAL(clicked()), this, SLOT(slotStackLower()));
-	connect(p->bBack, SIGNAL(clicked()), this, SLOT(slotStackBack()));
-	connect(p->bDel, SIGNAL(clicked()), this, SIGNAL(deleteItem()), Qt::QueuedConnection);
-	
-	// shape properties
-	p->bEditShape->setChecked(isShapeEditing());
-	connect(this, SIGNAL(notifyShapeEditing(bool)), p->bEditShape, SLOT(setChecked(bool)));
-	connect(p->bEditShape, SIGNAL(toggled(bool)), this, SLOT(setShapeEditing(bool)));
-	p->bClearShape->setVisible(hasShape());
-	connect(this, SIGNAL(notifyHasShape(bool)), p->bClearShape, SLOT(setVisible(bool)));
-	connect(p->bClearShape, SIGNAL(clicked()), this, SLOT(clearShape()));
-	
-	return p;*/
-	
+{	
 	return 0;
 }
 
@@ -114,10 +93,6 @@ void VideoFileContent::syncFromModelItem(AbstractVisualItem *model)
 	
 	QFont font;
         VideoFileItem * boxmodel = dynamic_cast<VideoFileItem*>(model);
-	
-// 	font.setFamily(textModel->fontFamily());
-// 	font.setPointSize((int)textModel->fontSize());
-// 	setFont(font);
 	
 	AbstractContent::syncFromModelItem(model);
 	
@@ -153,6 +128,59 @@ AbstractVisualItem * VideoFileContent::syncToModelItem(AbstractVisualItem *model
 }
 
 
+
+void VideoFileContent::phononStateChanged(Phonon::State newState, Phonon::State /* oldState */)
+{
+	if(timeLcd)
+	{
+		switch (newState) {
+			case Phonon::ErrorState:
+			if (mediaObject->errorType() == Phonon::FatalError) {
+				QMessageBox::warning(0, tr("Fatal Error"),
+				mediaObject->errorString());
+			} else {
+				QMessageBox::warning(0, tr("Error"),
+				mediaObject->errorString());
+			}
+			break;
+		//![9]
+		//![10]
+			case Phonon::PlayingState:
+				playAction->setEnabled(false);
+				pauseAction->setEnabled(true);
+				stopAction->setEnabled(true);
+				break;
+			case Phonon::StoppedState:
+				stopAction->setEnabled(false);
+				playAction->setEnabled(true);
+				pauseAction->setEnabled(false);
+				timeLcd->display("00:00");
+				break;
+			case Phonon::PausedState:
+				pauseAction->setEnabled(false);
+				stopAction->setEnabled(true);
+				playAction->setEnabled(true);
+				break;
+		//![10]
+			case Phonon::BufferingState:
+				break;
+			default:
+			;
+		}
+	}
+}
+
+void VideoFileContent::phononTick(qint64 time)
+{
+	if(timeLcd)
+	{
+		QTime displayTime(0, (time / 60000) % 60, (time / 1000) % 60);
+		
+		timeLcd->display(displayTime.toString("mm:ss"));
+	}
+}
+
+
 void VideoFileContent::setFilename(const QString &name)
 {
 // 	if(!m_video->load(name))
@@ -160,42 +188,80 @@ void VideoFileContent::setFilename(const QString &name)
 // 		qDebug() << "VideoFileContent::setFilename(): ERROR: Unable to load video"<<name;
 // 		return;
 // 	}
-	QVideoProvider * p = QVideoProvider::providerForFile(name);
-	
-	if(DEBUG_VIDEOFILECONTENT)
-		qDebug() << "VideoFileContent::setFilename(): Loading file:"<<name;
-			
-	if(m_videoProvider && m_videoProvider == p)
-	{
-		if(DEBUG_VIDEOFILECONTENT)
-			qDebug() << "VideoFileContent::setFilename(): Provider pointer matches existing provider, nothing changed.";
-		return;
-	}
-	else
-	if(m_videoProvider)
-	{
-		if(DEBUG_VIDEOFILECONTENT)
-			qDebug() << "VideoFileContent::setFilename(): Disconnecting existing provider";
-		m_videoProvider->disconnectReceiver(this);
-		QVideoProvider::releaseProvider(m_videoProvider);
-	}
-	
-	if(DEBUG_VIDEOFILECONTENT)
-		qDebug() << "VideoFileContent::setFilename(): Loading"<<name;
-	
-	
-	m_still = false;
-	
-	m_videoProvider = p;
-	m_videoProvider->play();
-	
-	// prime the pump, so to speak
 	if(sceneContextHint() == MyGraphicsScene::Preview)
+	{
 		setPixmap(QVideoProvider::iconForFile(name));
+	}
 	else
-		setPixmap(m_videoProvider->pixmap());
+	if(modelItem()->videoEndAction() == AbstractVisualItem::VideoStop)
+	{
+		qDebug() << "VideoFileContent::setVideoFile(): Using Phonon";
+// 			if(m_proxy)
+// 				delete m_proxy;
+// 			if(m_player)
+// 				delete m_player;
+		if(m_tuplet)
+			delete m_tuplet;
+		
+		if(!m_proxy)
+			m_proxy = new QGraphicsProxyWidget(this);
+		
+		/*
+		m_tuplet = QVideoProvider::phononForFile(name);
+
+		m_proxy->setWidget(m_tuplet->video());
+		m_proxy->setGeometry(contentsRect());
 	
-	m_videoProvider->connectReceiver(this, SLOT(setPixmap(const QPixmap &)));
+		m_tuplet->media->play();
+		*/
+
+		
+		m_player = new Phonon::VideoPlayer(Phonon::VideoCategory, 0);
+// 		connect(m_player, SIGNAL(finished()), this, SLOT(phononPlayerFinished()));
+		
+		m_proxy->setWidget(m_player);
+		m_proxy->setGeometry(contentsRect());
+
+		m_player->play(name);
+		
+	}
+	else
+	{
+		
+		QVideoProvider * p = QVideoProvider::providerForFile(name);
+		
+		if(DEBUG_VIDEOFILECONTENT)
+			qDebug() << "VideoFileContent::setFilename(): Loading file:"<<name;
+				
+		if(m_videoProvider && m_videoProvider == p)
+		{
+			if(DEBUG_VIDEOFILECONTENT)
+				qDebug() << "VideoFileContent::setFilename(): Provider pointer matches existing provider, nothing changed.";
+			return;
+		}
+		else
+		if(m_videoProvider)
+		{
+			if(DEBUG_VIDEOFILECONTENT)
+				qDebug() << "VideoFileContent::setFilename(): Disconnecting existing provider";
+			m_videoProvider->disconnectReceiver(this);
+			QVideoProvider::releaseProvider(m_videoProvider);
+		}
+		
+		if(DEBUG_VIDEOFILECONTENT)
+			qDebug() << "VideoFileContent::setFilename(): Loading"<<name;
+		
+		
+		m_still = false;
+		
+		m_videoProvider = p;
+		m_videoProvider->play();
+		
+		// prime the pump, so to speak
+		setPixmap(m_videoProvider->pixmap());
+		
+		m_videoProvider->connectReceiver(this, SLOT(setPixmap(const QPixmap &)));
+	}
 }
 
 QPixmap VideoFileContent::renderContent(const QSize & size, Qt::AspectRatioMode /*ratio*/) const
@@ -331,10 +397,80 @@ void VideoFileContent::setPixmap(const QPixmap & pixmap)
 		if(DEBUG_VIDEOFILECONTENT)
 			qDebug() << "VideFileContent::setPixmap(): sceneContextHint() != Live, setting m_still true"; 
 		m_still = true;
-		m_videoProvider->pause();
+		if(m_videoProvider)
+			m_videoProvider->pause();
 	}
         //GFX_CHANGED();
 }
 
 
+QWidget * VideoFileContent::controlWidget()
+{
+	if(!m_player)
+		return 0;
+		
+	mediaObject = m_player->mediaObject();
+
+	mediaObject->setTickInterval(1000);
+
+	connect(mediaObject, SIGNAL(tick(qint64)), this, SLOT(phononTick(qint64)));
+	connect(mediaObject, SIGNAL(stateChanged(Phonon::State, Phonon::State)), this, SLOT(phononStateChanged(Phonon::State, Phonon::State)));
+	
+	QWidget * baseWidget = new QWidget;
+
+	playAction = new QAction(qApp->style()->standardIcon(QStyle::SP_MediaPlay), tr("Play"), baseWidget);
+	playAction->setShortcut(tr("Crl+P"));
+	playAction->setDisabled(true);
+	pauseAction = new QAction(qApp->style()->standardIcon(QStyle::SP_MediaPause), tr("Pause"), baseWidget);
+	pauseAction->setShortcut(tr("Ctrl+A"));
+	pauseAction->setDisabled(true);
+	stopAction = new QAction(qApp->style()->standardIcon(QStyle::SP_MediaStop), tr("Stop"), baseWidget);
+	stopAction->setShortcut(tr("Ctrl+S"));
+	stopAction->setDisabled(true);
+    
+    
+	connect(playAction, SIGNAL(triggered()), mediaObject, SLOT(play()));
+	connect(pauseAction, SIGNAL(triggered()), mediaObject, SLOT(pause()) );
+	connect(stopAction, SIGNAL(triggered()), mediaObject, SLOT(stop()));
+	
+	QToolBar *bar = new QToolBar(baseWidget);
+
+	bar->addAction(playAction);
+	bar->addAction(pauseAction);
+	bar->addAction(stopAction);
+	
+	seekSlider = new Phonon::SeekSlider(baseWidget);
+	seekSlider->setMediaObject(mediaObject);
+	
+	volumeSlider = new Phonon::VolumeSlider(baseWidget);
+	volumeSlider->setAudioOutput(m_player->audioOutput());
+	
+	volumeSlider->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
+	
+	QLabel *volumeLabel = new QLabel(baseWidget);
+	volumeLabel->setPixmap(QPixmap(":/data/stock-volume.png"));
+	
+	QPalette palette;
+	palette.setBrush(QPalette::Light, Qt::darkGray);
+	
+	timeLcd = new QLCDNumber(baseWidget);
+	timeLcd->setPalette(palette);
+	
+	QHBoxLayout *playbackLayout = new QHBoxLayout(baseWidget);
+	playbackLayout->setMargin(0);
+	
+	playbackLayout->addWidget(bar);
+// 	playbackLayout->addStretch();
+	playbackLayout->addWidget(seekSlider);
+ 	playbackLayout->addWidget(timeLcd);
+
+	playbackLayout->addWidget(volumeLabel);
+	playbackLayout->addWidget(volumeSlider);
+	
+	timeLcd->display("00:00"); 
+	
+	qDebug() << "BackgroundContent::controlWidget(): baseWidget:"<<baseWidget;
+	
+	return baseWidget;
+}
 

@@ -154,6 +154,9 @@ public:
 	bool isEndActionOverrideEnabled() { return m_overrideEndAction; }
 	SlideGroup::EndOfGroupAction groupEndAction() { return m_groupEndAction; }
 	
+	// Only relevant AFTER a slide has been set on the instance.
+	QList<QWidget*> controlWidgets(); 
+	
 signals:
 	void nextGroup();
 	void jumpToGroup(int);

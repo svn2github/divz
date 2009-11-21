@@ -4,9 +4,19 @@
 #include "AbstractContent.h"
 class QVideoProvider;
 class QSvgRenderer;
+class QGraphicsProxyWidget;
+class PhononTuplet;
+namespace Phonon {
+	class VideoPlayer;
+}
+
+#include "qvideo/QVideoProvider.h"
 
 #include <QTimer>
 
+#include <QAction>
+#include <QLCDNumber>
+	
 /// \brief TODO
 class BackgroundContent : public AbstractContent
 {
@@ -33,6 +43,8 @@ class BackgroundContent : public AbstractContent
 	
 	// ::QGraphicsItem
 	void paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget = 0);
+	
+	QWidget * controlWidget();
 
     private slots:
 	void setPixmap(const QPixmap & pixmap);
@@ -40,6 +52,11 @@ class BackgroundContent : public AbstractContent
 	void renderSvg();
 	
 	void animateZoom();
+	
+	void phononPlayerFinished();
+	
+	void phononStateChanged(Phonon::State newState, Phonon::State /* oldState */);
+	void phononTick(qint64 time);
 
     private:
 	void setVideoFile(const QString &name);
@@ -75,6 +92,21 @@ class BackgroundContent : public AbstractContent
 	bool m_zoomEnabled;
 	QPixmap m_zoomedPixmap;
 	QPointF m_zoomedPixmapSize;
+	
+	QGraphicsProxyWidget *m_proxy;
+	Phonon::VideoPlayer *m_player;
+	PhononTuplet *m_tuplet;
+	
+	
+	QAction *playAction;
+	QAction *pauseAction;
+	QAction *stopAction;
+	QAction *nextAction;
+	QLCDNumber *timeLcd;
+	Phonon::VolumeSlider *volumeSlider;
+	Phonon::SeekSlider *seekSlider;
+	Phonon::MediaObject *mediaObject;
+	
 };
 
 #endif

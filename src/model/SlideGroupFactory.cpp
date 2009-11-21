@@ -20,6 +20,7 @@
 #include <QKeyEvent>
 #include <QLabel>
 #include <QLineEdit>
+#include <QScrollArea>
 #include <assert.h>
 
 #include <QTextDocument>
@@ -230,6 +231,19 @@ SlideGroupViewControl::SlideGroupViewControl(OutputInstance *group, QWidget *w,b
 		m_countTimer->setInterval(100);
 		
 		layout->addLayout(hbox);
+		
+// 		QScrollArea * scrollArea = new QScrollArea(this);
+// 		scrollArea->setBackgroundRole(QPalette::Dark);
+// 		layout->addWidget(scrollArea);
+		
+		//m_itemControlBase = new QWidget(scrollArea);
+		m_itemControlBase = new QWidget(this);
+// 		scrollArea->setWidget(m_itemControlBase);
+		
+		QVBoxLayout *vbox = new QVBoxLayout(m_itemControlBase);
+		
+		layout->addWidget(m_itemControlBase);
+		
 		setLayout(layout);
 		
 		if(group)
@@ -645,18 +659,59 @@ void SlideGroupViewControl::setOutputView(OutputInstance *inst)
 { 
 	SlideGroup *currentGroup = 0;
 	if(m_slideViewer) 
+	{
 		currentGroup = m_slideViewer->slideGroup();
+		disconnect(m_slideViewer, 0, this, 0);
+	}
 	
-	if(DEBUG_SLIDEGROUPVIEWCONTROL)
+ 	if(DEBUG_SLIDEGROUPVIEWCONTROL)
 		qDebug() << "SlideGroupViewControl::setOutputView()";
 		
 	m_slideViewer = inst;
+	
+	connect(m_slideViewer, SIGNAL(slideChanged(Slide*)), this, SLOT(slideChanged(Slide*))); 
 	
 	if(currentGroup)
 	{
 		qDebug() << "SlideGroupViewControl::setOutputView(): Sending currentGroup"<<currentGroup->assumedName()<<" to output view";
 		m_slideViewer->setSlideGroup(currentGroup);
 	}
+}
+
+void SlideGroupViewControl::slideChanged(Slide* newSlide)
+{
+	qDebug() << "SlideGroupViewControl::slideChanged(): newSlide:"<<newSlide;
+	while(!m_controlWidgets.isEmpty())
+	{
+		QWidget * widget = m_controlWidgets.takeFirst();
+		m_itemControlBase->layout()->removeWidget(widget);
+		widget->deleteLater();
+		widget = 0;
+	}
+	
+	if(m_slideViewer->isLocal())
+	{
+		qDebug() << "SlideGroupViewControl::slideChanged(): got local viewer, looking for controls.";
+		QList<QWidget*> widgets = m_slideViewer->controlWidgets();
+		qDebug() << "SlideGroupViewControl::slideChanged(): got local viewer, got:"<<widgets.size()<<"controls";
+		
+		foreach(QWidget *widget, widgets)
+		{
+			widget->setParent(m_itemControlBase);
+			m_itemControlBase->layout()->addWidget(widget);
+			qDebug() << "SlideGroupViewControl::slideChanged(): widget:"<<widget;
+			m_controlWidgets << widget;
+		}
+		
+		qDebug() << "SlideGroupViewControl::slideChanged(): done setting up";
+	}
+	else
+	{
+		QLabel * label = new QLabel("Control widgets for this slide will appear on the network viewer client.");
+		m_controlWidgets << label;
+		m_itemControlBase->layout()->addWidget(label);
+	}
+	
 }
 	
 void SlideGroupViewControl::setSlideGroup(SlideGroup *group, Slide *curSlide, bool allowProgressDialog)

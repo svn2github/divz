@@ -149,6 +149,8 @@ class GenericItemConfig : public QWidget
 		
 		void shadowDistanceBoxChanged(int);
 		void shadowDirectionBoxChanged(int);
+		
+		void videoEndActionChanged(int);
 	
 		
 };

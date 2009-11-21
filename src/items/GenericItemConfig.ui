@@ -23,7 +23,7 @@
       <enum>QTabWidget::Rounded</enum>
      </property>
      <property name="currentIndex">
-      <number>4</number>
+      <number>2</number>
      </property>
      <property name="usesScrollButtons">
       <bool>false</bool>
@@ -540,10 +540,10 @@
               </property>
              </widget>
             </item>
-            <item row="2" column="0" rowspan="2">
+            <item row="3" column="0" rowspan="2">
              <widget class="QWidget" name="videoPreviewWidget" native="true"/>
             </item>
-            <item row="2" column="1" rowspan="2">
+            <item row="3" column="1" rowspan="2">
              <layout class="QVBoxLayout" name="verticalLayout">
               <item>
                <widget class="QPushButton" name="videoPlayButton">
@@ -569,6 +569,30 @@
             </item>
             <item row="1" column="0">
              <widget class="QLineEdit" name="videoFilenameBox"/>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="label_12">
+              <property name="text">
+               <string>Video End Action:</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QComboBox" name="endActionCombo">
+              <item>
+               <property name="text">
+                <string>Loop Video</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Stop Video</string>
+               </property>
+              </item>
+             </widget>
             </item>
            </layout>
           </item>

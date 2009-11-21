@@ -7,6 +7,8 @@
 #include "qvideo/QVideoProvider.h"
 #include "ButtonItem.h"
 
+class QGraphicsProxyWidget;
+
 
 /// \brief The VideoFileContent class plays videos from disk using the FFMPEG via QVideoProvider.
 
@@ -26,6 +28,11 @@ class VideoFileContent : public AbstractContent
     private slots:
 	void setPixmap(const QPixmap & pixmap);
 	void slotTogglePlay();
+	
+// 	void phononPlayerFinished();
+	
+	void phononStateChanged(Phonon::State newState, Phonon::State /* oldState */);
+	void phononTick(qint64 time);
 
     public:
         // ::AbstractContent
@@ -43,6 +50,8 @@ class VideoFileContent : public AbstractContent
 	// ::QGraphicsItem
 	void paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget = 0);
 	
+	virtual QWidget * controlWidget();
+	
     private:
 
 	QString m_filename;
@@ -53,6 +62,21 @@ class VideoFileContent : public AbstractContent
 	QVideoProvider * m_videoProvider;
 	ButtonItem * m_bSwap;
 	bool m_still;
+	
+	QGraphicsProxyWidget *m_proxy;
+	Phonon::VideoPlayer *m_player;
+	PhononTuplet *m_tuplet;
+	
+	
+	QAction *playAction;
+	QAction *pauseAction;
+	QAction *stopAction;
+	QAction *nextAction;
+	QLCDNumber *timeLcd;
+	Phonon::VolumeSlider *volumeSlider;
+	Phonon::SeekSlider *seekSlider;
+	Phonon::MediaObject *mediaObject;
+	
 
 };
 

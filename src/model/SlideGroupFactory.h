@@ -87,6 +87,7 @@ protected slots:
 	
 private slots:
 	void repaintList();
+	void slideChanged(Slide*);
 	
 protected:
 	virtual void makeQuickSlide();
@@ -128,6 +129,9 @@ protected:
 // 	bool m_blackActive;
 	
 	bool m_isPreviewControl;
+	
+	QWidget  * m_itemControlBase;
+	QList<QWidget*> m_controlWidgets;
 };
 
 class AbstractSlideGroupEditor : public QMainWindow

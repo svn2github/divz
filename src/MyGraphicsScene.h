@@ -75,6 +75,8 @@ class MyGraphicsScene : public QGraphicsScene
 		QList<AbstractContent *> abstractContent(bool onlyMasterItems = false);
 		
 		void configureContent(AbstractContent *content);
+		
+		QList<QWidget*> controlWidgets();
 	
 	signals:
 		void showPropertiesWidget(QWidget * widget);

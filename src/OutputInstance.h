@@ -70,6 +70,13 @@ public:
 	void forceGLDisabled(bool);
 	bool isGLDisabled() { return m_forceGLDisabled; }
 	
+	bool isLocal();
+	
+	// If not isLocal(), controlWidgets() WILL return an empty list, regardless of scene. 
+	// Control widgets will appear in the network viewer screen local to the end point.
+	// Only relevant AFTER a slide has been set on the instance.
+	QList<QWidget*> controlWidgets(); 
+	
 signals:
 	void nextGroup();
 	void jumpToGroup(int);

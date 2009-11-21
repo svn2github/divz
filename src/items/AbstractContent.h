@@ -102,6 +102,12 @@ class AbstractContent : public AbstractDisposeable
 		
 		static QString cacheKey(AbstractVisualItem *);
 		
+		
+		// Reimplment this to return a widget to be embedded in the SlideGroupViewControl inorder to control
+		// this item interactivly from the control window
+		virtual QWidget * controlWidget() { return 0; } 
+		
+		
 	Q_SIGNALS:
 		void configureMe(const QPoint & scenePoint);
 		void changeStack(int opcode);

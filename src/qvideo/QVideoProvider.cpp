@@ -16,6 +16,65 @@ QMutex icon_mutex;
 
 #define CACHE_DIR "dviz-qvideoframecache"
 	
+	
+#include "MimeTypes.h"
+
+QMap<QString,PhononTuplet*> QVideoProvider::m_phononMap;
+
+// return a PhononTuplet for the file, creating one if doesnt exist
+// inc's refCount
+bool QVideoProvider::canUsePhonon(const QString & file)
+{	
+	QString mime = MimeTypes::mimeType(file);
+	qDebug() << "QVideoProvider::canUsePhonon("<<file<<"): mime:"<<mime;
+	return Phonon::BackendCapabilities::isMimeTypeAvailable(mime);
+}
+
+PhononTuplet * QVideoProvider::phononForFile(const QString& file)
+{
+	QFileInfo inf(file);
+	QString can = inf.canonicalFilePath();
+	//qDebug() << "QVideoProvider::providerForFile: Checking file:"<<file;
+	if(m_phononMap.contains(can))
+	{
+		//qDebug() << "QVideoProvider::providerForFile: Found provider for file:"<<file<<", loading...";
+		PhononTuplet *v = m_phononMap[can];
+		v->refCount++;
+		if(DEBUG_QVIDEOPROVIDER)
+			qDebug() << "[REF +] QVideoProvider::phononForFile(): + Found existing provider for file:"<<file<<", refCount:"<<v->refCount;
+		//v->play();
+		return v;
+	}
+	else
+	{
+		if(DEBUG_QVIDEOPROVIDER)
+			qDebug() << "[REF +] QVideoProvider::phononForFile(): - Creating new provider for file:"<<file;
+		PhononTuplet *v = new PhononTuplet();
+		
+		v->media = new Phonon::MediaObject();
+		v->audio = new Phonon::AudioOutput(Phonon::VideoCategory);
+		bool goodPath = 
+			Phonon::createPath(v->media, v->audio).isValid();
+		
+		if(goodPath)
+		{
+			v->media->setCurrentSource(can);
+			
+			m_phononMap[can] = v;
+			v->refCount=1;
+			//v->play();
+	
+			return v;
+		}
+		else
+		{
+			return 0;
+		}
+	}
+}
+	
+	
+	
 QMap<QString,QVideoProvider*> QVideoProvider::m_fileProviderMap;
 
 // return a provider for the file, creating one if doesnt exist

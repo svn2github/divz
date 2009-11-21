@@ -1267,3 +1267,20 @@ void MyGraphicsScene::slotApplyLook(quint32 frameClass, bool mirrored, bool all)
 		}
 	}
 }
+
+
+	
+	
+// Only relevant AFTER a slide has been set on the instance.
+QList<QWidget*> MyGraphicsScene::controlWidgets()
+{
+	QList<QWidget*> widgets;
+	foreach(AbstractContent *item, m_content)
+	{
+		QWidget * widget = item->controlWidget();
+		if(widget)
+			widgets << widget;
+	}
+	
+	return widgets;
+}

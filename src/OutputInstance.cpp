@@ -329,8 +329,7 @@ void OutputInstance::setSlideGroup(SlideGroup *group, Slide * startSlide)
 	emit slideGroupChanged(group,startSlide);
 	foreach(OutputInstance *m, m_mirrors)
 		m->setSlideGroup(group,startSlide);
-	Output::OutputType x = m_output->outputType();
-	if(x == Output::Screen || x == Output::Custom || x == Output::Preview || x == Output::Widget)
+	if(isLocal())
 	{
 		//qDebug() << "OutputInstance::setSlideGroup: ["<<m_output->name()<<"] Calling m_viewer->setSlideGroup(), group:"<<group->assumedName()<<", startSlide:"<<startSlide;
 		//setVisible(m_output->isEnabled());
@@ -383,7 +382,8 @@ Slide * OutputInstance::setSlideGroupInternal(SlideGroup *group, Slide * startSl
 	
 	if(startSlide)
 	{
-		m_slideNum = m_sortedSlides.indexOf(startSlide);
+		setSlideInternal(startSlide);
+// 		m_slideNum = m_sortedSlides.indexOf(startSlide);
 		return startSlide;
 	}
 	else
@@ -394,7 +394,10 @@ Slide * OutputInstance::setSlideGroupInternal(SlideGroup *group, Slide * startSl
 		else
 			qDebug("OutputInstance::setSlideGroup: Group[0] has 0 slides");
 			
-		return slist.first();
+		Slide * first = slist.first();
+		setSlideInternal(first);
+		
+		return first;
 	}
 }
 
@@ -413,8 +416,7 @@ void OutputInstance::clear()
 {
 	foreach(OutputInstance *m, m_mirrors)
 		m->clear();
-	Output::OutputType outType = m_output->outputType();
-	if(outType == Output::Screen || outType == Output::Custom || outType == Output::Preview || outType == Output::Widget)
+	if(isLocal())
 	{
 		m_viewer->clear();
 		
@@ -431,8 +433,7 @@ void OutputInstance::setViewerState(SlideGroupViewer::ViewerState state)
 {
 	foreach(OutputInstance *m, m_mirrors)
 		m->setViewerState(state);
-	Output::OutputType outType = m_output->outputType();
-	if(outType == Output::Screen || outType == Output::Custom || outType == Output::Preview || outType == Output::Widget)
+	if(isLocal())
 	{
 		m_viewer->setViewerState(state);
 
@@ -449,8 +450,7 @@ void OutputInstance::setBackground(QColor color)
 {
 	foreach(OutputInstance *m, m_mirrors)
 		m->setBackground(color);
-	Output::OutputType outType = m_output->outputType();
-	if(outType == Output::Screen || outType == Output::Custom || outType == Output::Preview || outType == Output::Widget)
+	if(isLocal())
 	{
 		m_viewer->setBackground(color);
 	}
@@ -463,8 +463,7 @@ void OutputInstance::setBackground(QColor color)
 
 void OutputInstance::setCanZoom(bool flag)
 {
-	Output::OutputType outType = m_output->outputType();
-	if(outType == Output::Screen || outType == Output::Custom || outType == Output::Preview || outType == Output::Widget)
+	if(isLocal())
 	{
 		m_viewer->setCanZoom(flag);
 	}
@@ -478,8 +477,7 @@ void OutputInstance::setCanZoom(bool flag)
 
 void OutputInstance::forceGLDisabled(bool flag)
 {
-	Output::OutputType outType = m_output->outputType();
-	if(outType == Output::Screen || outType == Output::Custom || outType == Output::Preview || outType == Output::Widget)
+	if(isLocal())
 	{
 		m_viewer->forceGLDisabled(flag);
 	}
@@ -494,8 +492,7 @@ void OutputInstance::forceGLDisabled(bool flag)
 
 void OutputInstance::setSceneContextHint(MyGraphicsScene::ContextHint hint)
 {
-	Output::OutputType outType = m_output->outputType();
-	if(outType == Output::Screen || outType == Output::Custom || outType == Output::Preview || outType == Output::Widget)
+	if(isLocal())
 	{
 		m_viewer->setSceneContextHint(hint);
 	}
@@ -514,8 +511,7 @@ void OutputInstance::setOverlaySlide(Slide * newSlide)
 	m_overlaySlide = newSlide;
 	if(!m_output->isEnabled())
 		return;
-	Output::OutputType x = m_output->outputType();
-	if(x == Output::Screen || x == Output::Custom || x == Output::Preview || x == Output::Widget)
+	if(isLocal())
 	{
 		m_viewer->setOverlaySlide(newSlide); 
 	}
@@ -554,8 +550,7 @@ void OutputInstance::setOverlayEnabled(bool enable)
 	m_overlayEnabled = enable;
 	if(!m_output->isEnabled())
 		return;
-	Output::OutputType x = m_output->outputType();
-	if(x == Output::Screen || x == Output::Custom || x == Output::Preview || x == Output::Widget)
+	if(isLocal())
 	{
 		m_viewer->setOverlayEnabled(enable);
 	}
@@ -574,8 +569,7 @@ void OutputInstance::setTextOnlyFilterEnabled(bool enable)
 	m_textOnlyFilter = enable;
 	if(!m_output->isEnabled())
 		return;
-	Output::OutputType x = m_output->outputType();
-	if(x == Output::Screen || x == Output::Custom || x == Output::Preview || x == Output::Widget)
+	if(isLocal())
 	{
 		m_viewer->setTextOnlyFilterEnabled(enable);
 	}
@@ -602,8 +596,7 @@ void OutputInstance::addFilter(AbstractItemFilter * filter)
 	
 	if(!m_output->isEnabled())
 		return;
-	Output::OutputType x = m_output->outputType();
-	if(x == Output::Screen || x == Output::Custom || x == Output::Preview || x == Output::Widget)
+	if(isLocal())
 	{
 		m_viewer->addFilter(filter);
 	}
@@ -624,8 +617,7 @@ void OutputInstance::removeFilter(AbstractItemFilter *filter)
 	
 	if(!m_output->isEnabled())
 		return;
-	Output::OutputType x = m_output->outputType();
-	if(x == Output::Screen || x == Output::Custom || x == Output::Preview || x == Output::Widget)
+	if(isLocal())
 	{
 		m_viewer->removeFilter(filter);
 	}
@@ -647,8 +639,7 @@ void OutputInstance::removeAllFilters()
 	
 	if(!m_output->isEnabled())
 		return;
-	Output::OutputType x = m_output->outputType();
-	if(x == Output::Screen || x == Output::Custom || x == Output::Preview || x == Output::Widget)
+	if(isLocal())
 	{
 		m_viewer->removeAllFilters();
 	}
@@ -670,8 +661,7 @@ void OutputInstance::setAutoResizeTextEnabled(bool enable)
 	m_autoResizeText = enable;
 	if(!m_output->isEnabled())
 		return;
-	Output::OutputType x = m_output->outputType();
-	if(x == Output::Screen || x == Output::Custom || x == Output::Preview || x == Output::Widget)
+	if(isLocal())
 	{
 		m_viewer->setAutoResizeTextEnabled(enable);
 	}
@@ -691,8 +681,7 @@ void OutputInstance::setFadeSpeed(int value)
 	m_fadeSpeed = value;
 	if(!m_output->isEnabled())
 		return;
-	Output::OutputType x = m_output->outputType();
-	if(x == Output::Screen || x == Output::Custom || x == Output::Preview || x == Output::Widget)
+	if(isLocal())
 	{
 		m_viewer->setFadeSpeed(value);
 	}
@@ -712,8 +701,7 @@ void OutputInstance::setFadeQuality(int value)
 	m_fadeQuality = value;
 	if(!m_output->isEnabled())
 		return;
-	Output::OutputType x = m_output->outputType();
-	if(x == Output::Screen || x == Output::Custom || x == Output::Preview || x == Output::Widget)
+	if(isLocal())
 	{
 		m_viewer->setFadeQuality(value);
 	}
@@ -741,6 +729,7 @@ void OutputInstance::setSlideInternal(Slide *slide)
 {
 	m_slideNum = m_sortedSlides.indexOf(slide);
 	
+	qDebug() << "OutputInstance::setSlide: ["<<m_output->name()<<"] emitting slideChanged() for slide="<<slide;
 	emit slideChanged(slide);
 	if(m_slideNum > -1)
 		emit slideChanged(m_slideNum);
@@ -759,8 +748,7 @@ Slide * OutputInstance::setSlide(Slide *slide, bool takeOwnership)
 		
 	setSlideInternal(slide);
 	
-	Output::OutputType x = m_output->outputType();
-	if(x == Output::Screen || x == Output::Custom || x == Output::Preview || x == Output::Widget)
+	if(isLocal())
 	{
 		//qDebug() << "OutputInstance::setSlide: ["<<m_output->name()<<"] Setting slide#"<<m_slideNum;
 		//setVisible(m_output->isEnabled());
@@ -873,8 +861,7 @@ void OutputInstance::fadeBlackFrame(bool enable)
 	// set the flag only if the output is enabled inorder to reflect the true status of the output
 	m_blackEnabled = enable;
 	
-	Output::OutputType outType = m_output->outputType();
-	if(outType == Output::Screen || outType == Output::Custom || outType == Output::Preview || outType == Output::Widget)
+	if(isLocal())
 	{
 		m_viewer->fadeBlackFrame(enable);
 	}
@@ -919,8 +906,7 @@ void OutputInstance::setLiveBackground(const QFileInfo &info, bool waitForNextSl
 	if(!m_output->isEnabled())
 		return;
 		
-	Output::OutputType outType = m_output->outputType();
-	if(outType == Output::Screen || outType == Output::Custom || outType == Output::Preview || outType == Output::Widget)
+	if(isLocal())
 	{
 		m_viewer->setLiveBackground(info,waitForNextSlide);
 	}
@@ -929,4 +915,18 @@ void OutputInstance::setLiveBackground(const QFileInfo &info, bool waitForNextSl
 		if(m_outputServer)
 			m_outputServer->sendCommand(OutputServer::SetLiveBackground,info.absoluteFilePath(),waitForNextSlide);
 	}
+}
+
+
+bool OutputInstance::isLocal()
+{
+	Output::OutputType outType = m_output->outputType();
+	return (outType == Output::Screen || outType == Output::Custom || outType == Output::Preview || outType == Output::Widget);
+}
+
+QList<QWidget*> OutputInstance::controlWidgets()
+{
+	if(!isLocal())
+		return QList<QWidget*>();
+	return m_viewer->controlWidgets();
 }

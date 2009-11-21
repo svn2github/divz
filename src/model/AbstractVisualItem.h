@@ -31,6 +31,7 @@ class AbstractVisualItem : public AbstractItem
 	Q_PROPERTY(QBrush  	fillBrush    	READ fillBrush 		WRITE setFillBrush);
 	Q_PROPERTY(QString  	fillImageFile	READ fillImageFile	WRITE setFillImageFile);
 	Q_PROPERTY(QString	fillVideoFile	READ fillVideoFile	WRITE setFillVideoFile);
+	Q_PROPERTY(VideoEndAction videoEndAction	READ videoEndAction WRITE setVideoEndAction);
 	
 	Q_PROPERTY(bool	   	outlineEnabled 	READ outlineEnabled 	WRITE setOutlineEnabled);
 	Q_PROPERTY(QPen    	outlinePen   	READ outlinePen 	WRITE setOutlinePen);
@@ -53,6 +54,8 @@ class AbstractVisualItem : public AbstractItem
 	Q_ENUMS(FillType);
 	Q_ENUMS(ZoomEffectDirection);
 	Q_ENUMS(ZoomAnchorPoint);
+	Q_ENUMS(VideoEndAction);
+	
 	
 	
 	// Brush has:
@@ -72,6 +75,8 @@ class AbstractVisualItem : public AbstractItem
 	
 public:
 	typedef enum FillType { None, Solid, Gradient, Image, Video };
+	typedef enum VideoEndAction { VideoLoop, VideoStop };
+	
 	
 	typedef enum ZoomEffectDirection { ZoomIn, ZoomOut, ZoomRandom };
 	typedef enum ZoomAnchorPoint 
@@ -156,6 +161,7 @@ public:
 	ITEM_PROPDEF(FillBrush,		QBrush,		fillBrush);
 	ITEM_PROPDEF(FillImageFile,	QString,	fillImageFile);
 	ITEM_PROPDEF(FillVideoFile,	QString,	fillVideoFile);
+	ITEM_PROPDEF(VideoEndAction,	VideoEndAction,	videoEndAction);
 	
 	ITEM_PROPDEF(OutlineEnabled,	bool,	outlineEnabled);
 	ITEM_PROPDEF(OutlinePen,	QPen,	outlinePen);
@@ -199,6 +205,7 @@ private:
 	QBrush		m_fillBrush;
 	QString		m_fillImageFile;
 	QString		m_fillVideoFile;
+	VideoEndAction	m_videoEndAction;
 	
 	bool		m_outlineEnabled;
 	QPen		m_outlinePen;
@@ -225,6 +232,7 @@ private:
 Q_DECLARE_METATYPE(AbstractVisualItem::FillType);
 Q_DECLARE_METATYPE(AbstractVisualItem::ZoomEffectDirection);
 Q_DECLARE_METATYPE(AbstractVisualItem::ZoomAnchorPoint);
+Q_DECLARE_METATYPE(AbstractVisualItem::VideoEndAction);
 
 	
 	

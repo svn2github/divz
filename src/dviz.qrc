@@ -129,6 +129,7 @@
         <file>data/stock-fit-out.png</file>
         <file>data/stock-fit-in.png</file>
         <file>data/stock-fit-rect.png</file>
+        <file>data/stock-volume.png</file>
         <file>data/master-slide.png</file>
         <file>data/icon-next-small.png</file>
         <file>data/icon-next-large.png</file>
@@ -149,6 +150,7 @@
         <file>data/http/doc.tmpl</file>
         <file>data/http/group.tmpl</file>
         <file>data/http/inc-ctrl-toggles.tmpl</file>
+        <file>data/mime.types</file>
 
         <!--
         <file>translations/fotowall_de.qm</file>

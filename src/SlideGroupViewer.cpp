@@ -1368,3 +1368,9 @@ void SlideGroupViewer::videoStreamStarted()
 		p->pause();
 	}
 }
+
+// Only relevant AFTER a slide has been set on the instance.
+QList<QWidget*> SlideGroupViewer::controlWidgets()
+{
+	return m_scene->controlWidgets();
+}

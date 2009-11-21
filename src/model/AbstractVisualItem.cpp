@@ -44,6 +44,7 @@ AbstractVisualItem::AbstractVisualItem()
 	m_fillBrush = QBrush(Qt::white);
 	m_fillImageFile = "";
 	m_fillVideoFile = "";
+	m_videoEndAction = VideoLoop;
 	
 	m_outlineEnabled = false;
 	m_outlinePen = QPen(Qt::black,1);
@@ -111,6 +112,7 @@ ITEM_PROPSET(AbstractVisualItem, FillType,		FillType,	fillType);
 ITEM_PROPSET(AbstractVisualItem, FillBrush,		QBrush,		fillBrush);
 ITEM_PROPSET(AbstractVisualItem, FillImageFile,		QString,	fillImageFile);
 ITEM_PROPSET(AbstractVisualItem, FillVideoFile,		QString,	fillVideoFile);
+ITEM_PROPSET(AbstractVisualItem, VideoEndAction,	VideoEndAction,	videoEndAction);
 
 ITEM_PROPSET(AbstractVisualItem, OutlineEnabled,	bool,	outlineEnabled);
 ITEM_PROPSET(AbstractVisualItem, OutlinePen,		QPen,	outlinePen);
@@ -234,6 +236,11 @@ bool AbstractVisualItem::fromXml(QDomElement & pe)
 		
 		setFillImageFile(domElement.attribute("image"));
 		setFillVideoFile(domElement.attribute("video"));
+		
+		QString end = domElement.attribute("endact");
+		if(end == "" || end.isNull())
+			end = "0";
+		setVideoEndAction((VideoEndAction)end.toInt());
 		
 		//qDebug() << "fromXml: "<<itemName()<<": fillVideoFile
 	}
@@ -399,6 +406,7 @@ void AbstractVisualItem::toXml(QDomElement & pe) const
  	brushToXml(domElement,fillBrush());
  	domElement.setAttribute("image", fillImageFile());
  	domElement.setAttribute("video", fillVideoFile());
+ 	domElement.setAttribute("endact", (int)videoEndAction());
  	pe.appendChild(domElement);
  	
  	domElement = doc.createElement("outline");

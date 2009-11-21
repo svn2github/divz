@@ -5,6 +5,22 @@
 #include <QPixmap>
 #include "QVideo.h"
 
+#include <Phonon/AudioOutput>
+#include <Phonon/SeekSlider>
+#include <Phonon/MediaObject>
+#include <Phonon/VolumeSlider>
+#include <Phonon/BackendCapabilities>
+#include <Phonon/Effect>
+#include <Phonon/EffectParameter>
+#include <Phonon/ObjectDescriptionModel>
+#include <Phonon/AudioOutput>
+#include <Phonon/MediaSource>
+#include <Phonon/VideoWidget>
+#include <Phonon/VideoPlayer>
+
+
+
+
 class QVideoProvider;
 
 class QVideoIconGenerator : public QObject
@@ -31,6 +47,35 @@ private:
 	QVideoProvider * m_provider;
 };
 
+class PhononTuplet 
+{
+public:
+	PhononTuplet()
+		: media(0)
+		, audio(0) {}
+		
+	bool isValid() { return media && audio; }
+	Phonon::MediaObject *media;
+	Phonon::AudioOutput *audio;
+	
+	Phonon::VideoWidget *video() 
+	{
+		Phonon::VideoWidget * video = new Phonon::VideoWidget();
+		if(Phonon::createPath(media, video).isValid())
+		{
+			return video;
+		}
+		else
+		{
+			qDebug("PhononTuplet: Unable to create video path");
+			delete video;
+			return 0;
+		}
+	}
+	
+	int refCount;
+};
+
 class QVideoProvider : public QObject
 {
 	Q_OBJECT
@@ -45,8 +90,15 @@ public:
 	// Returns the first cached frame of the video or Qt::lightGray pixmap if no frame cached.
 	static QPixmap iconForFile(const QString &);
 	
+	// Returns true if Phonon is available and supports the mime type for the given file
+	static bool canUsePhonon(const QString&);
+	
+	// Returns the PhononTuplet for the given file 
+	static PhononTuplet * phononForFile(const QString&);
+	
 private:
 	static QMap<QString,QVideoProvider*> m_fileProviderMap;
+	static QMap<QString,PhononTuplet*> m_phononMap;
 	
 public:
 	~QVideoProvider();
