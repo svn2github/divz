@@ -48,9 +48,11 @@ BackgroundContent::BackgroundContent(QGraphicsScene * scene, QGraphicsItem * par
     , m_lastForegroundKey("")
     , m_zoomInit(false)
     , m_zoomEnabled(false)
+#if QT_VERSION >= 0x040600
     , m_proxy(0)
     , m_player(0)
     , m_tuplet(0)
+#endif
 {
 	m_dontSyncToModel = true;
 	
@@ -755,12 +757,14 @@ void BackgroundContent::paint(QPainter * painter, const QStyleOptionGraphicsItem
 	painter->restore();
 }
 
+#if QT_VERSION >= 0x040600
 void BackgroundContent::phononPlayerFinished()
 {
 	qDebug() << "VideoFileContent::phononPlayerFinished(): m_fileName="<<m_fileName;
 //  	m_player->play(m_fileName);
 	
 }
+#endif
 
 void BackgroundContent::setVideoFile(const QString &name)
 {
@@ -781,6 +785,7 @@ void BackgroundContent::setVideoFile(const QString &name)
 		{
 			setPixmap(QVideoProvider::iconForFile(name));
 		}
+		#if QT_VERSION >= 0x040600
 		else
 		if(modelItem()->videoEndAction() == AbstractVisualItem::VideoStop)
 		{
@@ -816,6 +821,7 @@ void BackgroundContent::setVideoFile(const QString &name)
 			
 		}
 		else
+		#endif
 		{
 			if(DEBUG_BACKGROUNDCONTENT)	
 				qDebug() << "BackgroundContent::setVideoFile(): Using FFMPEG";
@@ -883,7 +889,7 @@ void BackgroundContent::setPixmap(const QPixmap & pixmap)
         //GFX_CHANGED();
 }
 
-
+#if QT_VERSION >= 0x040600
 void BackgroundContent::phononStateChanged(Phonon::State newState, Phonon::State /* oldState */)
 {
 	if(timeLcd)
@@ -934,9 +940,11 @@ void BackgroundContent::phononTick(qint64 time)
 		timeLcd->display(displayTime.toString("mm:ss"));
 	}
 }
+#endif
 
 QWidget * BackgroundContent::controlWidget()
 {
+#if QT_VERSION >= 0x040600
 	if(!m_player)
 		return 0;
 		
@@ -1003,5 +1011,8 @@ QWidget * BackgroundContent::controlWidget()
 	qDebug() << "BackgroundContent::controlWidget(): baseWidget:"<<baseWidget;
 	
 	return baseWidget;
+#else
+	return 0;
+#endif
 }
 

@@ -19,6 +19,7 @@ QMutex icon_mutex;
 	
 #include "MimeTypes.h"
 
+#if QT_VERSION >= 0x040600
 QMap<QString,PhononTuplet*> QVideoProvider::m_phononMap;
 
 // return a PhononTuplet for the file, creating one if doesnt exist
@@ -73,8 +74,8 @@ PhononTuplet * QVideoProvider::phononForFile(const QString& file)
 	}
 }
 	
-	
-	
+#endif
+
 QMap<QString,QVideoProvider*> QVideoProvider::m_fileProviderMap;
 
 // return a provider for the file, creating one if doesnt exist

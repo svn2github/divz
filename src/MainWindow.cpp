@@ -1236,11 +1236,8 @@ void MainWindow::previewSlideGroup(SlideGroup *newGroup)
 		}
 	}
 
-	//qDebug() << "MainWindow::previewSlideGroup: Loading into view control";
 	m_previewControl->setSlideGroup(newGroup);
-	//qDebug() << "MainWindow::previewSlideGroup: Loading into LIVE output";
 	m_previewInstance->setSlideGroup(newGroup);
-	//qDebug() << "MainWindow::previewSlideGroup: Loading into LIVE output (done)";
 	m_previewControl->setFocus(Qt::OtherFocusReason);
 
 }

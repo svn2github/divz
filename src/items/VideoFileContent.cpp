@@ -24,9 +24,11 @@ VideoFileContent::VideoFileContent(QGraphicsScene * scene, QGraphicsItem * paren
     : AbstractContent(scene, parent, false)
     , m_videoProvider(0)
     , m_still(false)
+#if QT_VERSION >= 0x040600
     , m_proxy(0)
     , m_player(0)
     , m_tuplet(0)
+#endif
 {
 	m_dontSyncToModel = true;
 	
@@ -128,7 +130,7 @@ AbstractVisualItem * VideoFileContent::syncToModelItem(AbstractVisualItem *model
 }
 
 
-
+#if QT_VERSION >= 0x040600
 void VideoFileContent::phononStateChanged(Phonon::State newState, Phonon::State /* oldState */)
 {
 	if(timeLcd)
@@ -180,6 +182,7 @@ void VideoFileContent::phononTick(qint64 time)
 	}
 }
 
+#endif
 
 void VideoFileContent::setFilename(const QString &name)
 {
@@ -193,6 +196,7 @@ void VideoFileContent::setFilename(const QString &name)
 		setPixmap(QVideoProvider::iconForFile(name));
 	}
 	else
+#if QT_VERSION >= 0x040600
 	if(modelItem()->videoEndAction() == AbstractVisualItem::VideoStop)
 	{
 		qDebug() << "VideoFileContent::setVideoFile(): Using Phonon";
@@ -226,6 +230,7 @@ void VideoFileContent::setFilename(const QString &name)
 		
 	}
 	else
+#endif
 	{
 		
 		QVideoProvider * p = QVideoProvider::providerForFile(name);
@@ -406,6 +411,7 @@ void VideoFileContent::setPixmap(const QPixmap & pixmap)
 
 QWidget * VideoFileContent::controlWidget()
 {
+#if QT_VERSION >= 0x040600
 	if(!m_player)
 		return 0;
 		
@@ -472,5 +478,8 @@ QWidget * VideoFileContent::controlWidget()
 	qDebug() << "BackgroundContent::controlWidget(): baseWidget:"<<baseWidget;
 	
 	return baseWidget;
+#else
+	return 0;
+#endif
 }
 

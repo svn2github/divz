@@ -10,7 +10,13 @@ OBJECTS_DIR = .build
 RCC_DIR = .build
 UI_DIR = .build
 
-QT += sql phonon
+QT += sql
+
+# Disable till I find a way to test QT Version here
+#if(QT_VERSION >= 0x040600)
+#{
+#	QT += phonon
+#}
 
 BUILDNUM = $$system(perl buildcount.pl -v)
 VERSTR = '\\"$${BUILDNUM}\\"'  # place quotes around the version string
