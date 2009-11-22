@@ -16,6 +16,7 @@ QT += sql
 #if(QT_VERSION >= 0x040600)
 #{
 #	QT += phonon
+#	DEFINES += PHONON_ENABLED
 #}
 
 BUILDNUM = $$system(perl buildcount.pl -v)

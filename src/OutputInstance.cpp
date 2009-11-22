@@ -729,7 +729,7 @@ void OutputInstance::setSlideInternal(Slide *slide)
 {
 	m_slideNum = m_sortedSlides.indexOf(slide);
 	
-	qDebug() << "OutputInstance::setSlide: ["<<m_output->name()<<"] emitting slideChanged() for slide="<<slide;
+// 	qDebug() << "OutputInstance::setSlide: ["<<m_output->name()<<"] emitting slideChanged() for slide="<<slide;
 	emit slideChanged(slide);
 	if(m_slideNum > -1)
 		emit slideChanged(m_slideNum);

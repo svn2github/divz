@@ -24,7 +24,7 @@ VideoFileContent::VideoFileContent(QGraphicsScene * scene, QGraphicsItem * paren
     : AbstractContent(scene, parent, false)
     , m_videoProvider(0)
     , m_still(false)
-#if QT_VERSION >= 0x040600
+#ifdef PHONON_ENABLED
     , m_proxy(0)
     , m_player(0)
     , m_tuplet(0)
@@ -130,7 +130,7 @@ AbstractVisualItem * VideoFileContent::syncToModelItem(AbstractVisualItem *model
 }
 
 
-#if QT_VERSION >= 0x040600
+#ifdef PHONON_ENABLED
 void VideoFileContent::phononStateChanged(Phonon::State newState, Phonon::State /* oldState */)
 {
 	if(timeLcd)
@@ -196,7 +196,7 @@ void VideoFileContent::setFilename(const QString &name)
 		setPixmap(QVideoProvider::iconForFile(name));
 	}
 	else
-#if QT_VERSION >= 0x040600
+#ifdef PHONON_ENABLED
 	if(modelItem()->videoEndAction() == AbstractVisualItem::VideoStop)
 	{
 		qDebug() << "VideoFileContent::setVideoFile(): Using Phonon";
@@ -411,7 +411,7 @@ void VideoFileContent::setPixmap(const QPixmap & pixmap)
 
 QWidget * VideoFileContent::controlWidget()
 {
-#if QT_VERSION >= 0x040600
+#ifdef PHONON_ENABLED
 	if(!m_player)
 		return 0;
 		

@@ -21,6 +21,8 @@
 
 #define DEBUG_MARK() qDebug() << "mark: "<<__FILE__<<":"<<__LINE__
 
+#define DEBUG_IMAGECONTENT 0
+
 
 ImageContent::ImageContent(QGraphicsScene * scene, QGraphicsItem * parent)
     : AbstractContent(scene, parent, false)
@@ -28,6 +30,7 @@ ImageContent::ImageContent(QGraphicsScene * scene, QGraphicsItem * parent)
     , m_svgRenderer(0)
     , m_fileLoaded(false)
     , m_fileName("")
+    , m_lastModelRev(0)
 {
 	m_dontSyncToModel = true;
 	
@@ -63,15 +66,17 @@ void ImageContent::syncFromModelItem(AbstractVisualItem *model)
 	
 	AbstractContent::syncFromModelItem(model);
 	
-	loadFile(AppSettings::applyResourcePathTranslations(modelItem()->fillImageFile()));
-	
 	if(modelItem()->revision() != m_lastModelRev)
 	{
-		//qDebug()<<"modelItem():"<<modelItem()->itemName()<<": last revision:"<<m_lastModelRev<<", this revision:"<<m_lastModelRev<<", cache dirty!";
+		//if(DEBUG_IMAGECONTENT)
+			//qDebug()<<"ImageContent::syncFromModelItem: modelItem():"<<modelItem()->itemName()<<": last revision:"<<m_lastModelRev<<", this revision:"<<modelItem()->revision()<<", cache dirty!";
 		
 		m_lastModelRev = modelItem()->revision();
 		dirtyCache();
 	}
+	
+	
+	loadFile(AppSettings::applyResourcePathTranslations(modelItem()->fillImageFile()));
 	
 	m_shadowClipDirty = true;
 }
@@ -97,7 +102,7 @@ void ImageContent::loadFile(const QString &file)
 		return;
 	}
 	
-	//qDebug() << "ImageContent::loadFile: "<<file<<": (current file:"<<m_fileName<<"), fileMod:"<<fileMod<<", m_fileLastModified:"<<m_fileLastModified;
+// 	qDebug() << "ImageContent::loadFile: "<<file<<": (current file:"<<m_fileName<<"), fileMod:"<<fileMod<<", m_fileLastModified:"<<m_fileLastModified;
 	
 	m_fileName = file;
 	m_fileLastModified = fileMod;
@@ -198,6 +203,8 @@ void ImageContent::setPixmap(const QPixmap & pixmap)
 {
 	m_pixmap = pixmap;
 	//qDebug() << "ImageContent::setPixmap: Got pixmap, size:"<<pixmap.size();
+	if(DEBUG_IMAGECONTENT)
+		qDebug()<<"ImageContent::setPixmap: modelItem():"<<modelItem()->itemName()<<": got pixmap, size:"<<pixmap.size();
 	
 	checkSize();
 	update();
@@ -302,12 +309,14 @@ void ImageContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * op
 			QPixmap cache;
 			if(!QPixmapCache::find(cacheKey(),cache))
 			{
-				//qDebug()<<"ImageContent::paint(): modelItem:"<<modelItem()->itemName()<<": shadow cache redraw";
-				
-				// create temporary pixmap to hold the foreground
 				double blurSize = radiusSquared*2;
 				QSize shadowSize((int)blurSize,(int)blurSize);
-				QPixmap tmpPx(contentsRect().size()+shadowSize);
+				QSize tmpPxSize = cRect.size()+shadowSize;
+				
+				//qDebug()<<"ImageContent::paint(): modelItem:"<<modelItem()->itemName()<<": shadow cache redraw: cRect:"<<cRect<<", cRect.size():"<<cRect.size()<<", tmpPxSize:"<<tmpPxSize<<", shadowsize:"<<shadowSize<<", blurSize:"<<blurSize;
+				
+				// create temporary pixmap to hold the foreground
+				QPixmap tmpPx(tmpPxSize);
 				tmpPx.fill(Qt::transparent);
 				
 				QPainter tmpPainter(&tmpPx);
@@ -316,7 +325,7 @@ void ImageContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * op
 				// render the foreground
 				QPoint tl = cRect.topLeft();
 				tmpPainter.translate(tl.x() * -1 + radiusSquared, tl.y() * -1  + radiusSquared);
-				drawForeground(&tmpPainter);
+				drawForeground(&tmpPainter,false);
 				tmpPainter.restore();
 				
 				// blacken the text by applying a color to the copy using a QPainter::CompositionMode_DestinationIn operation. 
@@ -326,15 +335,16 @@ void ImageContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * op
 				tmpPainter.fillRect(rect, modelItem()->shadowBrush().color());
 				tmpPainter.end();
 	
-				// blur the colored text
+				// blur the colored image
 				QImage  orignalImage   = tmpPx.toImage();
 				QImage  blurredImage   = ImageFilters::blurred(orignalImage, rect, (int)radius);
 				cache = QPixmap::fromImage(blurredImage);
 				
-				QPixmapCache::insert(cacheKey(), cache);
+				if(sceneContextHint() != MyGraphicsScene::Preview)
+					QPixmapCache::insert(cacheKey(), cache);
 			}
 			
-			//qDebug() << "Drawing box shadow at offset:"<<QPoint(x,y)<<", topLeft:"<<cRect.topLeft()<<", size:"<<cache.size();
+			//qDebug()<<"ImageContent::paint(): Drawing shadow at offset:"<<QPoint(x,y)<<", topLeft:"<<cRect.topLeft()<<", size:"<<cache.size()<<", radiusSquared:"<<radiusSquared;
 			painter->translate(x - radiusSquared,y - radiusSquared);
 			painter->drawPixmap(cRect.topLeft(), cache);
 		}
@@ -380,7 +390,7 @@ void ImageContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * op
 }
 
 
-void ImageContent::drawForeground(QPainter *painter)
+void ImageContent::drawForeground(QPainter *painter, bool screenTranslation)
 {
 	QTime total;
 	total.start();
@@ -410,8 +420,8 @@ void ImageContent::drawForeground(QPainter *painter)
 		else
 		{
 			
-			//static int dbg_counter =0;
-			//dbg_counter++;
+			static int dbg_counter =0;
+			dbg_counter++;
 			
 			// this rect describes our "model" height in terms of item coordinates
 			QRect tmpRect(0,0,cRect.width(),cRect.height());
@@ -427,12 +437,15 @@ void ImageContent::drawForeground(QPainter *painter)
 			// it something different (100x100). Then, we dont scale the pixamp to 100x100 - no,
 			// we scale it only to 150x150. And then the painter can render the pixels 1:1
 			// rather than having to scale up and make it look pixelated.
-			tmpRect = painter->combinedTransform().mapRect(tmpRect);
+			if(screenTranslation)
+				tmpRect = painter->combinedTransform().mapRect(tmpRect);
 			
 			QRect destRect(0,0,tmpRect.width(),tmpRect.height());
 			
 			// cache the scaled pixmap according to the transformed size of the view
 			QString foregroundKey = QString(cacheKey()+":%1:%2").arg(destRect.width()).arg(destRect.height());
+			
+			//qDebug() << "ImageContent::drawForeground: " << dbg_counter << "cRect:"<<cRect<<", tmpRect:"<<tmpRect;
 			
 			QPixmap cache;
 			if(!QPixmapCache::find(foregroundKey,cache))
@@ -466,8 +479,9 @@ void ImageContent::drawForeground(QPainter *painter)
 					tmpPainter.drawPixmap(destRect, m_pixmap);
 				
 				tmpPainter.end();
-				if(!QPixmapCache::insert(foregroundKey, cache))
-					qDebug() << "ImageContent::drawForeground:"<<modelItem()->itemName()<<": Can't cache the image. This will slow performance of cross fades and slide editor. Make the cache larger using the Program Settings menu.";
+				if(sceneContextHint() != MyGraphicsScene::Preview)
+					if(!QPixmapCache::insert(foregroundKey, cache))
+						qDebug() << "ImageContent::drawForeground:"<<modelItem()->itemName()<<": Can't cache the image. This will slow performance of cross fades and slide editor. Make the cache larger using the Program Settings menu.";
 			}
 			
 			painter->drawPixmap(cRect,cache);

@@ -680,7 +680,7 @@ void SlideGroupViewControl::setOutputView(OutputInstance *inst)
 
 void SlideGroupViewControl::slideChanged(Slide* newSlide)
 {
-	qDebug() << "SlideGroupViewControl::slideChanged(): newSlide:"<<newSlide;
+	//qDebug() << "SlideGroupViewControl::slideChanged(): newSlide:"<<newSlide;
 	while(!m_controlWidgets.isEmpty())
 	{
 		QWidget * widget = m_controlWidgets.takeFirst();
@@ -689,27 +689,37 @@ void SlideGroupViewControl::slideChanged(Slide* newSlide)
 		widget = 0;
 	}
 	
-	if(m_slideViewer->isLocal())
+	QList<QWidget*> widgets = m_slideViewer->controlWidgets();
+	if(!widgets.isEmpty())
 	{
-		qDebug() << "SlideGroupViewControl::slideChanged(): got local viewer, looking for controls.";
-		QList<QWidget*> widgets = m_slideViewer->controlWidgets();
-		qDebug() << "SlideGroupViewControl::slideChanged(): got local viewer, got:"<<widgets.size()<<"controls";
-		
-		foreach(QWidget *widget, widgets)
+		if(m_slideViewer->isLocal())
 		{
-			widget->setParent(m_itemControlBase);
-			m_itemControlBase->layout()->addWidget(widget);
-			qDebug() << "SlideGroupViewControl::slideChanged(): widget:"<<widget;
-			m_controlWidgets << widget;
+// 			qDebug() << "SlideGroupViewControl::slideChanged(): got local viewer, looking for controls.";
+// 			qDebug() << "SlideGroupViewControl::slideChanged(): got local viewer, got:"<<widgets.size()<<"controls";
+			
+			foreach(QWidget *widget, widgets)
+			{
+				widget->setParent(m_itemControlBase);
+				m_itemControlBase->layout()->addWidget(widget);
+				qDebug() << "SlideGroupViewControl::slideChanged(): widget:"<<widget;
+				m_controlWidgets << widget;
+			}
+			
+// 			qDebug() << "SlideGroupViewControl::slideChanged(): done setting up";
 		}
-		
-		qDebug() << "SlideGroupViewControl::slideChanged(): done setting up";
-	}
-	else
-	{
-		QLabel * label = new QLabel("Control widgets for this slide will appear on the network viewer client.");
-		m_controlWidgets << label;
-		m_itemControlBase->layout()->addWidget(label);
+		else
+		{
+			QLabel * label = new QLabel("Control widgets for this slide will appear on the network viewer client.");
+			m_controlWidgets << label;
+			m_itemControlBase->layout()->addWidget(label);
+			
+			while(!widgets.isEmpty())
+			{
+				QWidget * widget = widgets.takeFirst();
+				widget->deleteLater();
+				widget = 0;
+			}
+		}
 	}
 	
 }

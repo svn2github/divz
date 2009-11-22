@@ -437,7 +437,7 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans, int speed, i
 // 		}
 	}
 	
-/*	
+
 	if(m_masterSlide)
 	{
 		//qDebug() << "MyGraphicsScene::setSlide(): using master ptr:"<<PTRS(m_masterSlide);
@@ -489,7 +489,7 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans, int speed, i
 	{
 		//qDebug() << "MyGraphicsScene::setSlide(): NO MASTER SLIDE";
 	}
-*/
+
 	
 
 // 	m_fadeRoot->setOpacity(1);

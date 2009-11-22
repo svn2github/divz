@@ -39,7 +39,7 @@ private slots:
 	void renderSvg();
 	
 private:
-	void drawForeground(QPainter *painter);
+	void drawForeground(QPainter *painter, bool screenTranslation = true);
 	
 	void loadFile(const QString&);
 	void loadSvg(const QString&);

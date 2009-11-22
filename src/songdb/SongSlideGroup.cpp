@@ -393,7 +393,12 @@ void SongSlideGroup::textToSlides(SongTextFilter filter)
 		text->setProperty("SongSlideNumber", slideNbr);
 			
 		// Finalize setup
-		if(textRect == screenRect)
+		// magic number 
+		int heightDifference = abs(screenRect.height() - textRect.height());
+		if(DEBUG_TEXTOSLIDES)
+			qDebug()<<"SongSlideGroup::textToSlides(): slideNbr:"<<slideNbr<<": textRect.height():"<<textRect.height()<<"screenRect.height():"<<screenRect.height()<<", heightDifference:"<<heightDifference;
+		
+		if(heightDifference < 15)
 		{
 			
 			// Center text on screen

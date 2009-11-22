@@ -53,12 +53,12 @@ class BackgroundContent : public AbstractContent
 	
 	void animateZoom();
 	
-	#if QT_VERSION >= 0x040600
+#ifdef PHONON_ENABLED
 	void phononPlayerFinished();
 	
 	void phononStateChanged(Phonon::State newState, Phonon::State /* oldState */);
 	void phononTick(qint64 time);
-	#endif
+#endif
 
     private:
 	void setVideoFile(const QString &name);
@@ -95,7 +95,7 @@ class BackgroundContent : public AbstractContent
 	QPixmap m_zoomedPixmap;
 	QPointF m_zoomedPixmapSize;
 	
-	#if QT_VERSION >= 0x040600
+#ifdef PHONON_ENABLED
 	QGraphicsProxyWidget *m_proxy;
 	Phonon::VideoPlayer *m_player;
 	PhononTuplet *m_tuplet;
@@ -109,7 +109,7 @@ class BackgroundContent : public AbstractContent
 	Phonon::VolumeSlider *volumeSlider;
 	Phonon::SeekSlider *seekSlider;
 	Phonon::MediaObject *mediaObject;
-	#endif
+#endif
 	
 };
 

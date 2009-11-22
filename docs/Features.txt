@@ -327,21 +327,25 @@ Revised Task list for Release 1.0, 10/18/09:
 	
 			Bible module: resposnive reading label needs to be lower Z than text
 			slides still not all showing in editor - first test good, hope stays good
-			shadow still too low in image item  **** STILL MESSES UP ***
+			[FIXED] shadow still too low in image item  **** STILL MESSES UP ***
+				had to do with the caching the shadow rendered to the mediabrowser icon version (which had different AR) 
 			images still not always syncing back on move - when moved with mouse 
-			song slides crashes when load song in preview when 2nd template slide has text box (the "per passage" template)
+			* [3] song slides crashes when load song in preview when 2nd template slide has text box (the "per passage" template)
 
-			* remember when a song UNCHECKS dont sync to DB, remember that in schedule
+			remember when a song UNCHECKS dont sync to DB, remember that in schedule
 
 			slide group settings: make stuff below title "Advanced"
-			master slides not showing up in editor or viewer??
-			song text still not being centered correctly when loaded from disk!!!
+			[FIXED] master slides not showing up in editor or viewer
+				was disabled for debugging i think - reenabled now.
+			[FIXED] song text still not being centered correctly when loaded from disk!!!
+				was comparing the textrect - screenrect absolutly - changed to use a height difference of < 15 to turn on auto centering
 			autoswitch & zoom factor not saving on the childrens church slide
 
 			when clear: black ON fades out, but black OFF "cuts"
 			changing groups with clear on CUTS the slide not fade
 
-			thirds grid guides aren't rendering anymore
+			[FIXED] thirds grid guides aren't rendering anymore
+				was disabled for debugging i think - reenabled now.
 
 			random crash when saving text sometimes
 

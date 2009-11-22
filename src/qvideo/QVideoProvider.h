@@ -5,7 +5,7 @@
 #include <QPixmap>
 #include "QVideo.h"
 
-#if QT_VERSION >= 0x040600
+#ifdef PHONON_ENABLED
 #include <Phonon/AudioOutput>
 #include <Phonon/SeekSlider>
 #include <Phonon/MediaObject>
@@ -49,7 +49,7 @@ private:
 
 };
 
-#if QT_VERSION >= 0x040600
+#ifdef PHONON_ENABLED
 class PhononTuplet 
 {
 public:
@@ -94,7 +94,7 @@ public:
 	// Returns the first cached frame of the video or Qt::lightGray pixmap if no frame cached.
 	static QPixmap iconForFile(const QString &);
 
-#if QT_VERSION >= 0x040600
+#ifdef PHONON_ENABLED
 	// Returns true if Phonon is available and supports the mime type for the given file
 	static bool canUsePhonon(const QString&);
 	
@@ -105,7 +105,7 @@ public:
 private:
 	static QMap<QString,QVideoProvider*> m_fileProviderMap;
 
-#if QT_VERSION >= 0x040600
+#ifdef PHONON_ENABLED
 	static QMap<QString,PhononTuplet*> m_phononMap;
 #endif
 

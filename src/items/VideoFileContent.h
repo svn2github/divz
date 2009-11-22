@@ -30,7 +30,7 @@ class VideoFileContent : public AbstractContent
 	void slotTogglePlay();
 	
 // 	void phononPlayerFinished();
-#if QT_VERSION >= 0x040600
+#ifdef PHONON_ENABLED
 	void phononStateChanged(Phonon::State newState, Phonon::State /* oldState */);
 	void phononTick(qint64 time);
 #endif
@@ -63,7 +63,7 @@ class VideoFileContent : public AbstractContent
 	QVideoProvider * m_videoProvider;
 	ButtonItem * m_bSwap;
 	bool m_still;
-#if QT_VERSION >= 0x040600
+#ifdef PHONON_ENABLED
 	QGraphicsProxyWidget *m_proxy;
 	Phonon::VideoPlayer *m_player;
 	PhononTuplet *m_tuplet;

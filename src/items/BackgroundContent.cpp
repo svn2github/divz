@@ -48,7 +48,7 @@ BackgroundContent::BackgroundContent(QGraphicsScene * scene, QGraphicsItem * par
     , m_lastForegroundKey("")
     , m_zoomInit(false)
     , m_zoomEnabled(false)
-#if QT_VERSION >= 0x040600
+#ifdef PHONON_ENABLED
     , m_proxy(0)
     , m_player(0)
     , m_tuplet(0)
@@ -63,7 +63,7 @@ BackgroundContent::BackgroundContent(QGraphicsScene * scene, QGraphicsItem * par
 	setFlag(QGraphicsItem::ItemIsMovable,false);
 	setFlag(QGraphicsItem::ItemIsFocusable,false);
 	setFlag(QGraphicsItem::ItemIsSelectable,true);
-	#if QT_VERSION >= 0x040600
+	#ifdef PHONON_ENABLED
 	setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
 	#endif
 	// allow some items (eg. the shape controls for text) to be shown
@@ -757,7 +757,7 @@ void BackgroundContent::paint(QPainter * painter, const QStyleOptionGraphicsItem
 	painter->restore();
 }
 
-#if QT_VERSION >= 0x040600
+#ifdef PHONON_ENABLED
 void BackgroundContent::phononPlayerFinished()
 {
 	qDebug() << "VideoFileContent::phononPlayerFinished(): m_fileName="<<m_fileName;
@@ -785,7 +785,7 @@ void BackgroundContent::setVideoFile(const QString &name)
 		{
 			setPixmap(QVideoProvider::iconForFile(name));
 		}
-		#if QT_VERSION >= 0x040600
+		#ifdef PHONON_ENABLED
 		else
 		if(modelItem()->videoEndAction() == AbstractVisualItem::VideoStop)
 		{
@@ -889,7 +889,7 @@ void BackgroundContent::setPixmap(const QPixmap & pixmap)
         //GFX_CHANGED();
 }
 
-#if QT_VERSION >= 0x040600
+#ifdef PHONON_ENABLED
 void BackgroundContent::phononStateChanged(Phonon::State newState, Phonon::State /* oldState */)
 {
 	if(timeLcd)
@@ -944,7 +944,7 @@ void BackgroundContent::phononTick(qint64 time)
 
 QWidget * BackgroundContent::controlWidget()
 {
-#if QT_VERSION >= 0x040600
+#ifdef PHONON_ENABLED
 	if(!m_player)
 		return 0;
 		
