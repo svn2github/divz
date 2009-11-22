@@ -1205,8 +1205,9 @@ void MainWindow::previewSlideGroup(SlideGroup *newGroup)
 	SlideGroup * oldGroup = m_previewControl->slideGroup();
 
 	//qDebug() << "MainWindow::setLiveGroup(): newGroup->groupType():"<<newGroup->groupType()<<", SlideGroup::GroupType:"<<SlideGroup::GroupType;
-	if((oldGroup && oldGroup->groupType() != newGroup->groupType())
-		|| newGroup->groupType() != SlideGroup::GroupType)
+// 	if((oldGroup && oldGroup->groupType() != newGroup->groupType())
+// 		|| newGroup->groupType() != SlideGroup::GroupType)
+	if(1)
 	{
 		SlideGroupFactory *factory = SlideGroupFactory::factoryForType(newGroup->groupType());
 		if(!factory)
@@ -1306,7 +1307,8 @@ void MainWindow::sendGroupToOutput(Output *output, SlideGroup *newGroup, Slide *
 	//	inst->show();
 
 	//qDebug() << "MainWindow::sendGroupToOutput(): newGroup->groupType():"<<newGroup->groupType()<<", SlideGroup::GroupType:"<<SlideGroup::GroupType<<"old: "<<(oldGroup ? oldGroup->groupType() : -1);
-	if((oldGroup && oldGroup->groupType() != newGroup->groupType()) || newGroup->groupType() != SlideGroup::GroupType)
+// 	if((oldGroup && oldGroup->groupType() != newGroup->groupType()) || newGroup->groupType() != SlideGroup::GroupType)
+	if(1)
 	{
 		SlideGroupFactory *factory = SlideGroupFactory::factoryForType(newGroup->groupType());
 		if(!factory)
