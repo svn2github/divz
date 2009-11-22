@@ -353,6 +353,17 @@ Revised Task list for Release 1.0, 10/18/09:
 			
 			--- [end] Saturday 11/21 ---
 			
+			-- Sunday, 11/22 --
+			
+			- video playback needs timestamps
+			- html R/C needs next/previous btn
+			- images with shadows need to pre-render to a single image - not render shadow+image seprately - crossfades look ugly with shadow rendered first
+			- still crashing with song templates
+			- report qt 4.6 text bug
+			- add large red stopsign button to toolb
+			
+			-- [end] Sunday, 11/22 --
+
 				
 			[STARTED] would be nice: while editing slide thats live, if change, cross fade to changed version
 			
