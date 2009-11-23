@@ -190,7 +190,7 @@ int main(int argc, char **argv)
 	mw.show();
 
 
-	exivXmpTest(argc,argv);
+	//exivXmpTest(argc,argv);
 
 
 	int ret = app.exec();

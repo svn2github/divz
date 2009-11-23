@@ -219,7 +219,7 @@ unix {
 		EXV_HAVE_LSTAT \
 		EXV_HAVE_LIBINTL_H \	#/* Define if you have the <libintl.h> header file. */
 		EXV_ENABLE_NLS \	#/* Define if translation of program messages to the user's native language is requested. */
-		EXV_HAVE_TIMEGM		#/* Define if you have the `timegm' function. */
+		EXV_HAVE_TIMEGM	\	#/* Define if you have the `timegm' function. */
 		EXV_HAVE_GMTIME_R \	#/* Define if you have the 'gmtime_r' function */		
 		EXV_HAVE_STRERROR_R \ 	# 'stderror_r' function
 		EXV_HAVE_ICONV		# 'iconv' function

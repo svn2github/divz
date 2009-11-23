@@ -1,0 +1,45 @@
+Batch Processing Tool
+	Display each photo in a batch
+	Assign: Rating, Tag(s), batch title (one batch may actually be many batches), Subject names
+	Assignment should be as quick as possible
+		as few key strokes as possible
+		ideally NO mouse needed
+		remember previous values for fields where possible/logical (not rating)
+	Flag for dicarding
+		"Delete me" flag
+		
+	For each photo, also process automatically:
+		Assign UUID (uuidgen)
+		Resize to 1024x768 and 64x64 (configurable)
+		Store datums (above) with uuid into an sqlite database
+		Other Ideas:
+			Create a color key (divide by third lines, analyze for top X colors in each region)
+			Create a softness rating (how soft/smooth/harsh is the photo)
+			
+	
+Batch Query Tool
+	Purpose: List/browse photos with minimum of distractions and as quickly as possible
+		Photos reside in arbirtrary folder structure
+		May/may not have been processed with batch processing tool
+			May need a way to list which photos may "need processing" (e.g. fields null?)
+			If photos dont have uuid, then thats dead giveaway
+	
+		Display modes:
+			Massive flat list
+				No filesystem folders
+			Timeline of batches found
+			Timeline of all photos (timeline should be zoomable)
+			Group by batches
+			Filter by ratings
+			Search by tags
+			
+		Actions on list:
+			Export list to folder/zip/tar etc
+			Generate resized photos from list
+			
+		
+Future:
+	Facial Detection/Query
+		http://www.morethantechnical.com/2009/03/05/qt-opencv-combined-for-face-detecting-qwidgets/
+		http://www.qtcentre.org/forum/p-qimage-data-via-ffmpeg-post61293/postcount7.html
+		http://www.qtcentre.org/forum/f-qt-programming-2/t-opencv-integration-11655.html
