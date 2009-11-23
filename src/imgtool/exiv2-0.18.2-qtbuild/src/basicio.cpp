@@ -241,6 +241,7 @@ namespace Exiv2 {
                 std::cerr << "Warning: " << Error(2, pf, strError(), "lstat") << "\n";
 #endif
             }
+#ifdef EXV_HAVE_S_ISLNK
             DataBuf lbuf; // So that the allocated memory is freed. Must have same scope as pf
             // In case path_ is a symlink, get the path of the linked-to file
             if (statOk && S_ISLNK(buf1.st_mode)) {
@@ -258,6 +259,7 @@ namespace Exiv2 {
 #endif
                 }
             }
+#endif // EXV_HAVE_S_ISLNK
 #else
             if (::stat(pf, &buf1) == -1) {
                 statOk = false;

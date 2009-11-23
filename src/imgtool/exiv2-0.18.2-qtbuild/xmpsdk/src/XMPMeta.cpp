@@ -10,6 +10,7 @@
 // =================================================================================================
 
 #include "XMP_Environment.h"	// ! This must be the first include!
+#include <cstdio>
 #include "XMPCore_Impl.hpp"
 
 #include "XMPMeta.hpp"
@@ -20,7 +21,6 @@
 #include "UnicodeInlines.incl_cpp"
 #include "UnicodeConversions.hpp"
 
-#include <cstdio>
 
 #if XMP_DebugBuild
 	#include <iostream>

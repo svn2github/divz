@@ -8,26 +8,13 @@
    don't. */
 #define EXV_HAVE_DECL_STRERROR_R 1
 
-/* Define to 1 if you have the `gmtime_r' function. */
-#define EXV_HAVE_GMTIME_R 1
-
 /* Define to 1 if you have the <inttypes.h> header file. */
 #define EXV_HAVE_INTTYPES_H 1
-
-/* Define to 1 if you have the <libintl.h> header file. */
-#define EXV_HAVE_LIBINTL_H 1
 
 #ifndef EXV_COMMERCIAL_VERSION
 
 /* Define to 1 to enable translation of Exif.Nikon3.LensData. */
 #define EXV_HAVE_LENSDATA 1
-
-/* Define to 1 if translation of program messages to the user's
-   native language is requested. */
-#define EXV_ENABLE_NLS 1
-
-/* Define to 1 if you have the `iconv' function. */
-#define EXV_HAVE_ICONV 1
 
 /* Define to 1 to enable conversion of UCS2 encoded Windows tags to UTF-8. */
 #define EXV_HAVE_PRINTUCS2 1
@@ -35,7 +22,7 @@
 #endif /* !EXV_COMMERCIAL_VERSION */
 
 /* Define to `const' or to empty, depending on the second argument of `iconv'. */
-#define EXV_ICONV_CONST 
+#define EXV_ICONV_CONST
 
 /* Define to 1 if you have the <libintl.h> header file. */
 #define EXV_HAVE_LIBINTL_H 1
@@ -52,9 +39,6 @@
 
 /* Define to 1 if you have the `memset' function. */
 #define EXV_HAVE_MEMSET 1
-
-/* Define to 1 if you have the `lstat' function. */
-#define EXV_HAVE_LSTAT 1
 
 /* Define to 1 if your system has a GNU libc compatible `realloc' function,
    and to 0 otherwise. */
@@ -75,9 +59,6 @@
 /* Define to 1 if you have the `strerror' function. */
 #define EXV_HAVE_STRERROR 1
 
-/* Define to 1 if you have the `strerror_r' function. */
-#define EXV_HAVE_STRERROR_R 1
-
 /* Define to 1 if you have the <strings.h> header file. */
 #define EXV_HAVE_STRINGS_H 1
 
@@ -86,12 +67,6 @@
 
 /* Define to 1 if you have the `strtol' function. */
 #define EXV_HAVE_STRTOL 1
-
-/* Define to 1 if you have the `mmap' function. */
-#define EXV_HAVE_MMAP 1
-
-/* Define to 1 if you have the `munmap' function. */
-#define EXV_HAVE_MUNMAP 1
 
 /* Define to 1 if you have the <sys/stat.h> header file. */
 #define EXV_HAVE_SYS_STAT_H 1
@@ -102,9 +77,6 @@
 /* Define to 1 if you have the <sys/types.h> header file. */
 #define EXV_HAVE_SYS_TYPES_H 1
 
-/* Define to 1 if you have the `timegm' function. */
-#define EXV_HAVE_TIMEGM 1
-
 /* Define to 1 if you have the <unistd.h> header file. */
 #define EXV_HAVE_UNISTD_H 1
 
@@ -113,10 +85,6 @@
 
 /* Define to 1 if you have the <wchar.h> header file. */
 /* #undef EXV_HAVE_WCHAR_H */
-
-/* Define to 1 if you have the <sys/mman.h> header file. */
-#define EXV_HAVE_SYS_MMAN_H 1
-
 /* Define to 1 if you have the `zlib' library. */
 #define EXV_HAVE_LIBZ 1
 
@@ -193,7 +161,7 @@
       we can rely on checking just for that macro. */
 #define __CYGWIN__  __CYGWIN32__
 #endif
-     
+
 /* File path seperator */
 #if defined WIN32 && !defined __CYGWIN__
 #define EXV_SEPERATOR_STR "\\"

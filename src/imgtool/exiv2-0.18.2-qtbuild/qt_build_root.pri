@@ -1,3 +1,6 @@
+VPATH += $$PWD
+DEPENDPATH += $$PWD
+
 MOC_DIR = .build
 OBJECTS_DIR = .build
 RCC_DIR = .build
@@ -21,8 +24,7 @@ DEFINES += EXV_LOCALEDIR=\"/usr/local/share/locale\" EXV_BUILDING_LIB=1 NDEBUG=1
 DEFINES += EXV_HAVE_STDINT_H=1
 
 # Input
-HEADERS += config/config.h \
-           src/basicio.hpp \
+HEADERS += src/basicio.hpp \
            src/bmpimage.hpp \
            src/canonmn.hpp \
            src/convert.hpp \
@@ -191,4 +193,35 @@ SOURCES += src/basicio.cpp \
 win32 {
 	HEADERS += src/getopt_win32.h 
 	SOURCES += src/getopt_win32.c 
+	DEFINES += WIN32
+	
+	INCLUDEPATH += win32/zlib123 \
+		win32/expat201/Source/lib 
+
+	DEPENDPATH += win32/zlib123 \
+		win32/zlib123dll/dll32 \
+		win32/expat201/Source/lib 
+		
+	LIBS += -L"win32/zlib123dll/dll32" \
+		-lzlibwapi \
+		-L"win32/expat201/Bin" \
+		-llibexpat \
+		-llibexpatw 
+		
+}
+
+unix {
+	DEFINES += \
+		EXV_HAVE_SYS_MMAN_H \
+		EXV_HAVE_MMAP \
+		EXV_HAVE_MUNMAP \
+		EXV_HAVE_S_ISLNK \
+		EXV_HAVE_LSTAT \
+		EXV_HAVE_LIBINTL_H \	#/* Define if you have the <libintl.h> header file. */
+		EXV_ENABLE_NLS \	#/* Define if translation of program messages to the user's native language is requested. */
+		EXV_HAVE_TIMEGM		#/* Define if you have the `timegm' function. */
+		EXV_HAVE_GMTIME_R \	#/* Define if you have the 'gmtime_r' function */		
+		EXV_HAVE_STRERROR_R \ 	# 'stderror_r' function
+		EXV_HAVE_ICONV		# 'iconv' function
+		
 }
