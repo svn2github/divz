@@ -19,6 +19,7 @@ SongSlideGroup::SongSlideGroup() : SlideGroup(),
 	m_isTextDiffFromDb(false),
 	m_slideTemplates(0)
 {
+	setEndOfGroupAction(SlideGroup::GotoNextGroup);
 	if(MainWindow::mw())
 		connect(MainWindow::mw(), SIGNAL(aspectRatioChanged(double)), this, SLOT(aspectRatioChanged(double)));
 }

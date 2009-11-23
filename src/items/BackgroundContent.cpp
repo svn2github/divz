@@ -362,7 +362,7 @@ void BackgroundContent::setImageFile(const QString &file)
 		QString cacheKey = QString("%1/%2/%3-%4x%5%6")
 					.arg(AppSettings::cachePath())
 					.arg(BG_IMG_CACHE_DIR)
-					.arg(MD5::md5sum(QFileInfo(file).fileName()))
+					.arg(MD5::md5sum(file))
 					.arg(size.width())
 					.arg(size.height())
 					.arg(sceneContextHint() == MyGraphicsScene::Preview ? "-icon192" : "");

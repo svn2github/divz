@@ -63,6 +63,27 @@ void ControlServer::dispatch(QTcpSocket *socket, const QStringList &path, const 
 		serveFile(socket,":/data/http/favicon.ico");
 	}
 	else
+	if(pathStr.startsWith("go/"))
+	{
+		QStringList pathCopy = path;
+		pathCopy.takeFirst();
+		QString dir = pathCopy.isEmpty() ? "next" : pathCopy.takeFirst().toLower();
+
+		// to access/set quickslide
+		int liveId = AppSettings::taggedOutput("live")->id();
+		SlideGroupViewControl *viewControl = mw->viewControl(liveId);
+
+		if(dir == "prev")
+			viewControl->prevSlide();
+		else
+		if(dir == "next")
+			viewControl->nextSlide();
+		else
+			generic404(socket,path,query);
+
+		Http_Send_Response(socket,"HTTP/1.0 204 Gone!") << "";
+
+	}
 	if(pathStr.startsWith("toggle/"))
 	{
 		QStringList pathCopy = path;
