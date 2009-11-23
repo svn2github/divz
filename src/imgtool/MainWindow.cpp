@@ -6,6 +6,7 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QDebug>
+#include <QImageWriter>
 
 MainWindow::MainWindow(QWidget *parent) 
 	: QMainWindow(parent)
@@ -50,10 +51,21 @@ void MainWindow::loadFile()
 		return;
 	}
 	
+	img.setText("test","hello");
+	img.save(file);
+	
+	QString fmt = "png";
+	QImageWriter writer;
+	writer.setFormat("png");
+	if (writer.supportsOption(QImageIOHandler::Description))
+		qDebug() << fmt <<" supports embedded text";
+	else
+		qDebug() << fmt <<" DOES NOT";
+
 	ui->list->clear();
 	QStringList textKeys = img.textKeys();
 	
-        qDebug() << "Text Keys in"<<file<<":"<<textKeys;
+	qDebug() << "Text Keys in"<<file<<":"<<textKeys;
 
         ui->list->setRowCount(textKeys.size());
 	for(int i=0; i<textKeys.size(); i++)
@@ -64,6 +76,7 @@ void MainWindow::loadFile()
 	
 	ui->list->resizeColumnsToContents();
 	ui->list->resizeRowsToContents();
+	
 }
 
 void MainWindow::changeEvent(QEvent *e)
