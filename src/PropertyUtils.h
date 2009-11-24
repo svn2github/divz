@@ -63,5 +63,33 @@
 		virtual typeName memberName() const { return m_##memberName; } 
 
 
+/** @brief PROP_DEF_DB_FIELD is similar to PROP_DEF_FULL - defines the setter, but includes a call to an assumed member updateDb(const char*,QVariant,const char*="") */
+#define PROP_DEF_DB_FIELD(typeName,memberName,setterName,dbField) \
+	private: \
+		Q_PROPERTY(typeName memberName READ memberName WRITE set##setterName); \
+		Q_PROPERTY(typeName "db:" dbField READ memberName WRITE set##setterName); \
+	protected: \
+		typeName m_##memberName; \
+	public: \
+		void set##setterName(typeName value) { \
+			m_##memberName = value;  \
+			updateDb(#memberName,value,dbField); \
+		} \
+		typeName memberName() const { return m_##memberName; };
+
+/** @brief PROP_DEF_DB is just PROP_DEF_DB_FIELD with one less argument. Calls updateDb() with memberName and value, assuming updateDb() will figure out the field */
+#define PROP_DEF_DB(typeName,memberName,setterName) \
+	private: \
+		Q_PROPERTY(typeName memberName READ memberName WRITE set##setterName); \
+	protected: \
+		typeName m_##memberName; \
+	public: \
+		void set##setterName(typeName value) { \
+			m_##memberName = value;  \
+			updateDb(#memberName,value); \
+		} \
+		typeName memberName() const { return m_##memberName; };
+
+
 #endif // PropertyUtils_H
 
