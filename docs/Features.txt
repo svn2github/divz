@@ -327,26 +327,17 @@ Revised Task list for Release 1.0, 10/18/09:
 	
 			Bible module: resposnive reading label needs to be lower Z than text
 			slides still not all showing in editor - first test good, hope stays good
-			[FIXED] shadow still too low in image item  **** STILL MESSES UP ***
-				had to do with the caching the shadow rendered to the mediabrowser icon version (which had different AR) 
 			images still not always syncing back on move - when moved with mouse 
 			* [3] song slides crashes when load song in preview when 2nd template slide has text box (the "per passage" template)
+				works for me now at work - does it still crash at church?
 
 			remember when a song UNCHECKS dont sync to DB, remember that in schedule
 
 			slide group settings: make stuff below title "Advanced"
-			[FIXED] master slides not showing up in editor or viewer
-				was disabled for debugging i think - reenabled now.
-			[FIXED] song text still not being centered correctly when loaded from disk!!!
-				was comparing the textrect - screenrect absolutly - changed to use a height difference of < 15 to turn on auto centering
 			autoswitch & zoom factor not saving on the childrens church slide
 
 			when clear: black ON fades out, but black OFF "cuts"
 			changing groups with clear on CUTS the slide not fade
-
-			[FIXED] thirds grid guides aren't rendering anymore
-				was disabled for debugging i think - reenabled now.
-
 			random crash when saving text sometimes
 
 			filters "forget" state when slide group is re-set on foldback
@@ -510,6 +501,15 @@ Revised Task list for Release 1.0, 10/18/09:
 		
 		
 		
+
+		[FIXED] shadow still too low in image item 
+			had to do with the caching the shadow rendered to the mediabrowser icon version (which had different AR) 
+		[FIXED] master slides not showing up in editor or viewer
+			was disabled for debugging i think - reenabled now.
+		[FIXED] song text still not being centered correctly when loaded from disk!!!
+			was comparing the textrect - screenrect absolutly - changed to use a height difference of < 15 to turn on auto centering
+		[FIXED] thirds grid guides aren't rendering anymore
+			was disabled for debugging i think - reenabled now.
 		[DONE] dviz should remember last file loaded
 		
 		[FIXED] need progress dialog for when loading file with lots of songs - the warming threads freeze UI for too long

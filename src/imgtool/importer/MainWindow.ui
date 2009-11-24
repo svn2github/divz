@@ -23,12 +23,12 @@
          <string>Batch &amp;Folder:</string>
         </property>
         <property name="buddy">
-         <cstring>folder</cstring>
+         <cstring>importFolder</cstring>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QLineEdit" name="folder"/>
+       <widget class="QLineEdit" name="importFolder"/>
       </item>
       <item>
        <widget class="QPushButton" name="browseBtn">
@@ -49,14 +49,14 @@
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout_2">
       <item>
-       <widget class="QCheckBox" name="copyFlag">
+       <widget class="QCheckBox" name="copyFiles">
         <property name="text">
          <string>&amp;Copy images to another folder</string>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QLineEdit" name="copyFolder">
+       <widget class="QLineEdit" name="copyToFolder">
         <property name="enabled">
          <bool>false</bool>
         </property>
@@ -82,6 +82,24 @@
      </widget>
     </item>
     <item>
+     <layout class="QHBoxLayout" name="horizontalLayout_5">
+      <item>
+       <widget class="QProgressBar" name="progressBar">
+        <property name="value">
+         <number>24</number>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="countLabel">
+        <property name="text">
+         <string>TextLabel</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item>
      <widget class="QGroupBox" name="groupBox">
       <property name="enabled">
        <bool>false</bool>
@@ -90,13 +108,6 @@
        <string>Batch Import</string>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout">
-       <item>
-        <widget class="QProgressBar" name="progressBar">
-         <property name="value">
-          <number>24</number>
-         </property>
-        </widget>
-       </item>
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout_4">
          <item>
@@ -129,21 +140,7 @@
         </layout>
        </item>
        <item>
-        <widget class="QScrollArea" name="scrollArea">
-         <property name="widgetResizable">
-          <bool>true</bool>
-         </property>
-         <widget class="QWidget" name="scrollAreaWidgetContents">
-          <property name="geometry">
-           <rect>
-            <x>0</x>
-            <y>0</y>
-            <width>592</width>
-            <height>200</height>
-           </rect>
-          </property>
-         </widget>
-        </widget>
+        <widget class="QGraphicsView" name="graphicsView"/>
        </item>
        <item>
         <layout class="QGridLayout" name="gridLayout">
@@ -311,14 +308,12 @@
   </action>
  </widget>
  <tabstops>
-  <tabstop>folder</tabstop>
+  <tabstop>importFolder</tabstop>
   <tabstop>browseBtn</tabstop>
   <tabstop>loadBtn</tabstop>
-  <tabstop>copyFlag</tabstop>
-  <tabstop>copyFolder</tabstop>
+  <tabstop>copyToFolder</tabstop>
   <tabstop>copyBrowseBtn</tabstop>
   <tabstop>removeFlag</tabstop>
-  <tabstop>scrollArea</tabstop>
   <tabstop>batchname</tabstop>
   <tabstop>spinBox</tabstop>
   <tabstop>tags</tabstop>
@@ -331,9 +326,9 @@
  <resources/>
  <connections>
   <connection>
-   <sender>copyFlag</sender>
+   <sender>copyFiles</sender>
    <signal>toggled(bool)</signal>
-   <receiver>copyFolder</receiver>
+   <receiver>copyToFolder</receiver>
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
@@ -347,7 +342,7 @@
    </hints>
   </connection>
   <connection>
-   <sender>copyFlag</sender>
+   <sender>copyFiles</sender>
    <signal>toggled(bool)</signal>
    <receiver>copyBrowseBtn</receiver>
    <slot>setEnabled(bool)</slot>
