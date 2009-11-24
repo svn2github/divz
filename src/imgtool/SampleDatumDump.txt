@@ -133,3 +133,8 @@
 ["XMP"]  Xmp.dc.description			lang="x-default" Night Sky and Moon shot taken at PHC Parsonage 11/22/09.
 ["XMP"]  Xmp.photoshop.Urgency			7
 	 # this is NX View field "tag #"
+	 
+	 # Not shown: ImageUniqueID - tag # 0xa420
+	 # 	http://www.awaresystems.be/imaging/tiff/tifftags/privateifd/exif/imageuniqueid.html
+	 #	128-bit length
+	 #	Can generate with QUuid - http://doc.trolltech.com/4.5/quuid.html

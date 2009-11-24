@@ -6,7 +6,7 @@ Batch Processing Tool
 		ideally NO mouse needed
 		remember previous values for fields where possible/logical (not rating)
 	Flag for dicarding
-		"Delete me" flag
+		"Delete me" flag (rating of -1)
 		
 	For each photo, also process automatically:
 		Assign UUID (uuidgen)
@@ -15,6 +15,31 @@ Batch Processing Tool
 		Other Ideas:
 			Create a color key (divide by third lines, analyze for top X colors in each region)
 			Create a softness rating (how soft/smooth/harsh is the photo)
+			
+	Technical Notes:
+		UI Fields:
+			Image ID	- 	Exif.Image.UniqueID, tag # 0xa420 - 128bit length, generate with QUuid
+			Batch Name	- 	Xmp. ??
+			Tags		- 	Xmp.dc.subject
+			Description	-	Xmp.dc.description
+			Title		-	Xmp.dc.title
+			Location	-	Xmp. ??
+			Rating		-	Xmp.xmp.Rating (1-5), Xmp.MicrosoftPhoto.Rating (%)
+		Delete Me 	- Rated -1
+		Resizing	- QtConcurrent job - example: /opt/qtsdk-2009.05/qt/examples/qtconcurrent/imagescaling
+		ColorKey	- use HSV key for each quadrant - resize each quad down to a single avg pixel using QImage.scaled ???
+		Softness Rating	- Resize each quad down to a 16 by 16 image and meausre HSV deviation ... ?
+		
+		Indexing:
+			Use SQLite - see songdb for example model
+			
+		Extract thumbnail from Exif if present:
+			Exiv2::ExifThumbC - http://www.exiv2.org/doc/classExiv2_1_1ExifThumbC.html
+			Example Code:
+				Exiv2::ExifThumb exifThumb(image->exifData());
+				std::string thumbExt = exifThumb.extension();
+				...
+		
 			
 	
 Batch Query Tool
