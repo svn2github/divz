@@ -36,6 +36,7 @@ class ImageRecord : public QObject
 /* Static */
 public:
 	static ImageRecord * retrieve(int recordid);
+	static ImageRecord * retrieveImageId(QString imageId);
 	static QList<ImageRecord*> search(QString text, bool onlyTitle = false);
 
 	static bool addRecord(ImageRecord*);

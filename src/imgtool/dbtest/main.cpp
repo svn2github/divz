@@ -2,26 +2,44 @@
 #include <QCoreApplication>
 #include <QtSql>
 #include <QDebug>
-#include <QSqlTableModel>
-#include <QTableView>
+// #include <QSqlTableModel>
+// #include <QTableView>
+#include <QListView>
 
 #include "ImageRecord.h"
-// #include "SongRecordListModel.h"
+#include "ImageRecordListModel.h"
 
 //  Q_DECLARE_METATYPE(ImageRecord*);
 
 int main(int argc, char **argv)
 {
-	//QApplication app(argc, argv);		
-	QCoreApplication app(argc, argv);
+	QApplication app(argc, argv);		
+	//QCoreApplication app(argc, argv);
 	
-	ImageRecord rec("test.jpg");
-	ImageRecord::addRecord(&rec);
+	if(0)
+	{
+		ImageRecord rec("foobar.jpg");
+		ImageRecord::addRecord(&rec);
+		qDebug() << "New Record:"<<rec;
+	}
+	if(1)
+	{
+		QListView * lv = new QListView;
+		lv->setWindowTitle(IMAGEDB_FILE);
+		lv->setModel(ImageRecordListModel::instance());
+		lv->show();
+	}
+	else
+	{
+		ImageRecord * rec = ImageRecord::retrieve(1);
+		//rec->setFile("test.jpg");
+		qDebug() << "Record#1: "<<rec;
+	}
 
-	ImageRecord::db().close();
+// 	ImageRecord::db().close();
 	
 	
-	return -1;
-	//return app.exec();
+// 	return -1;
+	return app.exec();
 }
 

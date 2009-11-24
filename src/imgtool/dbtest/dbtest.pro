@@ -12,8 +12,8 @@ QT += sql
 system(perl ../MocPropDefMacros.pl ../ImageRecord.h)
 
 # Input
-HEADERS += ImageRecord.h
-SOURCES += main.cpp ImageRecord.cpp
+HEADERS += ImageRecord.h ImageRecordListModel.h
+SOURCES += main.cpp ImageRecord.cpp ImageRecordListModel.cpp
 
 
 

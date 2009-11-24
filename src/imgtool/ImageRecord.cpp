@@ -1,5 +1,5 @@
 #include "ImageRecord.h"
-//#include "ImageRecordListModel.h"
+#include "ImageRecordListModel.h"
 #include <QDebug>
 
 bool ImageRecord::m_dbIsOpen = false;
@@ -59,13 +59,13 @@ void ImageRecord::initDatabase()
 			//	qDebug() << "ImageRecord::initDatabase(): Not using property "<<name;
 		}
 		
-		qDebug() << "ImageRecord::initDatabase(): Processed "<<count<<" properties";
+		//qDebug() << "ImageRecord::initDatabase(): Processed "<<count<<" properties";
 		
 		QString sql = QString("CREATE TABLE %1 (%2)")
 				.arg(IMAGEDB_TABLE)
 				.arg(fieldDefs.join(", "));
 		
-		qDebug() << "ImageRecord::initDatabase(): Create SQL: "<<sql;
+		//qDebug() << "ImageRecord::initDatabase(): Create SQL: "<<sql;
 		
 		QSqlQuery query;
 		query.prepare(sql);
@@ -127,6 +127,39 @@ ImageRecord * ImageRecord::retrieve(int id)
 		}
 	}
 }
+
+
+
+
+ImageRecord * ImageRecord::retrieveImageId(QString id)
+{
+	if(!m_dbIsOpen)
+		initDatabase();
+	QSqlQuery query("",m_db);
+	QString sql = QString("SELECT * FROM %1 WHERE imageid=?").arg(IMAGEDB_TABLE);
+	query.prepare(sql); 
+	query.addBindValue(id);
+	query.exec();
+	
+	if (query.lastError().isValid())
+	{
+		qDebug() << "ImageRecord::retrieveImageId():"<<query.lastError();
+		return 0;
+	}
+	else
+	{
+		if(query.size())
+		{
+			query.next();
+			return ImageRecord::fromQuery(query);
+		}
+		else
+		{
+			return 0;
+		}
+	}
+}
+
 
 QList<ImageRecord*> ImageRecord::search(QString text, bool onlyTitle)
 {
@@ -220,7 +253,7 @@ bool ImageRecord::addRecord(ImageRecord* rec)
 		.arg(fieldNames.join(", "))
 		.arg(placeholderNames.join(","));
 		
-	qDebug() << "ImageRecord::addRecord(): SQL:"<<sql;
+	//qDebug() << "ImageRecord::addRecord(): SQL:"<<sql;
 	QSqlQuery query;
 	query.prepare(sql);
 	for(int i=0; i<valueList.size(); i++)
@@ -249,7 +282,7 @@ bool ImageRecord::addRecord(ImageRecord* rec)
 		}
 	}
 
-	//ImageRecordListModel::instance()->addRecord(song);
+	ImageRecordListModel::instance()->addRecord(rec);
 
 	return true;
 }
@@ -281,7 +314,7 @@ void ImageRecord::deleteRecord(ImageRecord* rec, bool deletePtr)
 	}
 	else
 	{
-		//ImageRecordListModel::instance()->removeRecord(rec);	
+		ImageRecordListModel::instance()->removeRecord(rec);	
 		if(deletePtr)
 		{
 			delete rec;
@@ -358,7 +391,7 @@ QString ImageRecord::toString() const
 	
 	stringList << metaobject.className() << "[" << ptr << "](";
 	
-	
+	QStringList fieldList;
 	for (int i=0; i<count; ++i)
 	{
 		QMetaProperty metaproperty = metaobject.property(i);
@@ -367,10 +400,11 @@ QString ImageRecord::toString() const
 		if(name.startsWith("db_"))
 		{
 			QString field = name.right(name.length() - 3);
-			stringList << field << "='"<<value.toString()<<"'";
+			fieldList << QString("%1='%2'").arg(field).arg(value.toString());
 		}
 	}
 	
+	stringList << fieldList.join(", ");
 	stringList << ")";
 	
 	return stringList.join("");
@@ -399,7 +433,7 @@ ImageRecord::ImageRecord(QString file, QObject *parent)
 	: QObject(parent)
 	, m_recordId(-1)
 	, m_imageId("")
-	, m_file("")
+	, m_file(file)
 	, m_datestamp()
 	, m_title("")
 	, m_batchName("")
