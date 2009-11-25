@@ -8,10 +8,28 @@
 #include <QGraphicsPixmapItem>
 #include <QGraphicsScene>
 #include <QResizeEvent>
+#include <QShowEvent>
+#include <QCache>
+
+#include <QRunnable>
 
 namespace Ui {
     class MainWindow;
 }
+
+class PreloadImageTask : public QObject, public QRunnable
+{
+	Q_OBJECT
+public:
+	PreloadImageTask(QString file);
+	void run();
+	
+signals:
+	void imageLoaded(const QString&, const QImage&);
+	
+private:	
+	QString m_file;
+};
 
 class MainWindow : public QMainWindow 
 {
@@ -28,11 +46,16 @@ protected slots:
 	void prevImage();
 	void setCurrentImage(int);
 	
+	void imageLoaded(const QString&, const QImage&);
+	
 protected:
 	bool event(QEvent*);
 	void changeEvent(QEvent *e);
 	void resizeEvent(QResizeEvent *);
+	void showEvent(QShowEvent *);
 	void adjustViewScaling();
+	
+	bool queuePreload(QString file);
 	
 	QDir m_batchDir;
 	QStringList m_fileList;
@@ -49,6 +72,9 @@ protected:
 	
 	QGraphicsScene * m_scene;
 	QGraphicsPixmapItem * m_pixmapItem;
+	
+	QCache<QString, QImage> m_cache;
+	QString m_filesInProcess;
 	
 private:
 	Ui::MainWindow *m_ui;

@@ -14,6 +14,8 @@ SOURCES += main.cpp MainWindow.cpp
 
 QT += opengl
 
+CONFIG += debug
+
 
 # Database
 QT += sql

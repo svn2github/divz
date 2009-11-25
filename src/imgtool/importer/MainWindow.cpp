@@ -10,6 +10,7 @@
 #include <QDesktopServices>
 #include <QtOpenGL/QGLWidget>
 
+#include <QThreadPool>
 
 #include "ImageRecord.h"
 #include "ImageRecordListModel.h"
@@ -33,7 +34,7 @@ MainWindow::MainWindow(QWidget *parent)
 	connect(m_ui->nextBtn, SIGNAL(clicked()), this, SLOT(nextImage()));
 	connect(m_ui->prevBtn, SIGNAL(clicked()), this, SLOT(prevImage()));
 	
-	m_ui->importFolder->setText("/home/josiah/devel/dviz-root/trunk/src/imgtool/samples/nikon01/");
+	m_ui->importFolder->setText("/home/josiah/devel/dviz-root/trunk/src/imgtool/samples/003/");
 	
 	m_ui->graphicsView->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
 	m_ui->graphicsView->setRenderHint( QPainter::Antialiasing, true );
@@ -46,6 +47,12 @@ MainWindow::MainWindow(QWidget *parent)
 	m_pixmapItem = new QGraphicsPixmapItem();
 	m_pixmapItem->setPos(0,0);
 	m_scene->addItem(m_pixmapItem);
+	
+	//m_cache.setMaxCost(50 * 5); // 250 MB
+	m_cache.setMaxCost(1536); // 250 MB
+	
+	// Using similar algorithm as recommended by the manpage for make - # cpus + 1
+	QThreadPool::globalInstance()->setMaxThreadCount(QThread::idealThreadCount() + 1);
 }
 
 MainWindow::~MainWindow()
@@ -122,11 +129,14 @@ void MainWindow::loadFolder()
 // 	filters << "*.svg";
 	m_fileList = m_batchDir.entryList(filters);
 	
+	m_ui->progressBar->setMaximum(m_fileList.size());
+	
 	if(m_fileList.isEmpty())
 	{
 		QMessageBox::critical(this,tr("No JPEG Files Found"),QString(tr("I'm sorry, but no JPEG files were found in %1. Please check the folder and try again.")).arg(m_batchDir.absolutePath()));
 		return;
 	}
+	
 	
 	setCurrentImage(0);
 	
@@ -149,10 +159,39 @@ void MainWindow::prevImage()
 	setCurrentImage(m_currentFile);
 }
 
+QMutex mutex;
+static int activeThreads = 0;
+const int imageSize = 1024 * 4;
+
+PreloadImageTask::PreloadImageTask(QString file)
+	: QObject()
+	, QRunnable()
+	, m_file(file) {}
+
+void PreloadImageTask::run()
+{
+	mutex.lock();
+	activeThreads++;
+	mutex.unlock();
+	
+	//qDebug() << "Hello world from thread" << QThread::currentThread();
+	QImage image(m_file);
+	//QImage scaled = image.scaled(QSize(imageSize, imageSize), Qt::KeepAspectRatio, Qt::SmoothTransformation);
+	//, scaled:"<<(scaled.numBytes() / 1024)<<"Kb
+	qDebug() << m_file<<":"<<(image.numBytes() / 1024 / 1024) << "MB ( active:"<<activeThreads<<")";
+	
+	emit imageLoaded(m_file,image); //scaled);
+	
+	mutex.lock();
+	activeThreads--;
+	mutex.unlock();
+}
 
 void MainWindow::setCurrentImage(int num)
 {
 	m_currentFile = num;
+	m_ui->progressBar->setValue(num);
+	
 	
 	QString file = m_fileList[num];
 	QString path = QString("%1/%2").arg(m_batchDir.absolutePath()).arg(file);
@@ -163,10 +202,89 @@ void MainWindow::setCurrentImage(int num)
 	if(m_pixmap)
 		delete m_pixmap;
 		
-	QPixmap origPixmap(path);
-	//m_pixmap = new QPixmap();
-	m_pixmapItem->setPixmap(origPixmap.scaledToWidth(1024));
-	// pillow
+	QImage *img = 0;
+	if((img = m_cache.object(path)) != 0)
+	{
+		qDebug() << "MainWindow::setCurrentImage: Cache hit on "<<file;
+		QPixmap px = QPixmap::fromImage(*img);
+		m_pixmapItem->setPixmap(px);
+		m_scene->setSceneRect(px.rect());
+	}
+	else
+	{
+		qDebug() << "MainWindow::setCurrentImage: Cache MISS on "<<file;
+		setCursor(Qt::BusyCursor);
+		QPixmap origPixmap(path);
+		//m_pixmap = new QPixmap();
+		m_pixmapItem->setPixmap(origPixmap); //.scaledToWidth(1024));
+		m_scene->setSceneRect(origPixmap.rect()); //0,0,1024,768);
+		setCursor(Qt::ArrowCursor);
+	}
+	
+	adjustViewScaling();
+	
+	// This algorithm below attempts to load three ahead and two behind.
+	// Assuming the images are roughly 50 MB uncompressed, this would
+	// cache about 250 MB of data in the cache.
+	
+	int it = num;
+	int maxLookAhead = 12;
+	int numQueued = 0;
+	while(it ++ < m_fileList.size() -1 && it - num <= maxLookAhead)
+	{
+		if(queuePreload(m_fileList[it]))
+			numQueued ++;
+	}
+	
+	it = num;
+// 	numQueued = 0;
+	maxLookAhead = 4;
+	while(it -- > 0 && num - it <= maxLookAhead)
+	{
+		if(queuePreload(m_fileList[it]))
+			numQueued ++;
+	}
+	
+	qDebug() << "MainWindow::setCurrentImage: Queued"<<numQueued<<"for preload";
+}
+
+bool MainWindow::queuePreload(QString file)
+{
+	QString path = QString("%1/%2").arg(m_batchDir.absolutePath()).arg(file);
+	if(!m_cache.contains(path) && 
+	   !m_filesInProcess.contains(path))
+	{
+		m_filesInProcess.append(path);
+		
+		qDebug() << "MainWindow::queuePreload: Queueing "<<file<<" for preload";
+		PreloadImageTask *preload = new PreloadImageTask(path);
+		connect(preload, SIGNAL(imageLoaded(QString,QImage)), this, SLOT(imageLoaded(QString,QImage)));
+		
+		// QThreadPool takes ownership and deletes 'preload' automatically
+		QThreadPool::globalInstance()->start(preload);
+		
+		return true;
+	}
+	
+	return false;
+}
+
+void MainWindow::imageLoaded(const QString& file, const QImage& img)
+{
+	int mb = img.numBytes() / 1024 / 1024;
+	
+	QImage * cacheable = new QImage(img);
+	m_cache.insert(file, cacheable, mb);
+	m_filesInProcess.remove(file);
+	
+	qDebug() << "MainWindow::imageLoaded: Loaded"<<file<<" ("<<mb<<"MB )"; //<< ( m_filesInProcess.isEmpty() ? "" : QString(", still waiting on %1 images.").arg(m_filesInProcess.size()));
+	
+}
+
+
+void MainWindow::showEvent(QShowEvent*)
+{
+	adjustViewScaling();
 }
 
 /*
@@ -291,7 +409,5 @@ void MainWindow::changeEvent(QEvent *e)
 // 	}
 	
 	return QWidget::event(event);
- }
- 
- 
- 
+}
+
