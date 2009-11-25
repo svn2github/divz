@@ -13,6 +13,9 @@
 
 #include <QRunnable>
 
+#include "../exiv2-0.18.2-qtbuild/src/image.hpp"
+
+
 namespace Ui {
     class MainWindow;
 }
@@ -42,6 +45,8 @@ protected slots:
 	void showLoadDialog();
 	void loadFolder();
 	
+// 	void showRenameDialog();
+	
 	void nextImage();
 	void prevImage();
 	void setCurrentImage(int);
@@ -53,11 +58,11 @@ protected slots:
 protected:
 	bool event(QEvent*);
 	void changeEvent(QEvent *e);
-	void resizeEvent(QResizeEvent *);
-	void showEvent(QShowEvent *);
-	void adjustViewScaling();
 	
 	bool queuePreload(QString file);
+	
+	void initMetaData();
+	void writeMetaData();
 	
 	QDir m_batchDir;
 	QStringList m_fileList;
@@ -81,6 +86,7 @@ protected:
 	int m_lookBehind;
 	int m_lookAhead;
 	
+	Exiv2::Image::AutoPtr m_exivImage;
 	
 private:
 	Ui::MainWindow *m_ui;

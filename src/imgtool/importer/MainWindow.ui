@@ -20,7 +20,7 @@
       <item>
        <widget class="QPushButton" name="loadBtn">
         <property name="text">
-         <string>Load...</string>
+         <string>&amp;Load...</string>
         </property>
        </widget>
       </item>
@@ -71,7 +71,7 @@
      </layout>
     </item>
     <item>
-     <widget class="QGraphicsView" name="graphicsView"/>
+     <widget class="MainGraphicsView" name="graphicsView"/>
     </item>
    </layout>
   </widget>
@@ -130,12 +130,12 @@
              <string>&amp;Rating:</string>
             </property>
             <property name="buddy">
-             <cstring>spinBox</cstring>
+             <cstring>rating</cstring>
             </property>
            </widget>
           </item>
           <item row="1" column="3">
-           <widget class="QSpinBox" name="spinBox">
+           <widget class="QSpinBox" name="rating">
             <property name="specialValueText">
              <string>(Not Yet Rated)</string>
             </property>
@@ -231,9 +231,16 @@
    </property>
   </action>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>MainGraphicsView</class>
+   <extends>QGraphicsView</extends>
+   <header>MainGraphicsView.h</header>
+  </customwidget>
+ </customwidgets>
  <tabstops>
   <tabstop>batchname</tabstop>
-  <tabstop>spinBox</tabstop>
+  <tabstop>rating</tabstop>
   <tabstop>tags</tabstop>
   <tabstop>description</tabstop>
   <tabstop>subjects</tabstop>

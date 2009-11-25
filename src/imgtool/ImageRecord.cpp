@@ -116,7 +116,7 @@ ImageRecord * ImageRecord::retrieve(int id)
 	}
 	else
 	{
-		if(query.size())
+		if(query.size()>0)
 		{
 			query.next();
 			return ImageRecord::fromQuery(query);
@@ -136,11 +136,20 @@ ImageRecord * ImageRecord::retrieveImageId(QString id)
 	if(!m_dbIsOpen)
 		initDatabase();
 	QSqlQuery query("",m_db);
-	QString sql = QString("SELECT * FROM %1 WHERE imageid=?").arg(IMAGEDB_TABLE);
+	QString sql = QString("SELECT * FROM %1 WHERE imageid='%2'").arg(IMAGEDB_TABLE).arg(id);
 	query.prepare(sql); 
-	query.addBindValue(id);
+	
+// 	if (query.lastError().isValid())
+// 	{
+// 		qDebug() << "ImageRecord::retrieveImageId():"<<query.lastError();
+// 		return 0;
+// 	}
+// 	
+// 	query.addBindValue(id);
 	query.exec();
 	
+	qDebug() << "ImageRecord::retrieveImageId: id:"<<id<<", size:"<<query.size()<<", sql:"<<sql;
+		
 	if (query.lastError().isValid())
 	{
 		qDebug() << "ImageRecord::retrieveImageId():"<<query.lastError();
@@ -148,7 +157,7 @@ ImageRecord * ImageRecord::retrieveImageId(QString id)
 	}
 	else
 	{
-		if(query.size())
+		if(query.size()>0)
 		{
 			query.next();
 			return ImageRecord::fromQuery(query);
@@ -332,7 +341,7 @@ ImageRecord * ImageRecord::fromSqlRecord(QSqlRecord r)
 {
 	// TODO this is a memory leack unless the caller deletes this
 	ImageRecord * rec = new ImageRecord();
-	//qDebug()<<"fromSqlRecord:"<<r<<", isEmpty? "<<r.isEmpty();
+	//qDebug()<<"fromSqlRecord:"<<r<<"\n isEmpty? "<<r.isEmpty();
 	//qDebug()<<"fromSqlRecord: title:"<<q.value(r.indexOf("title"));
 	rec->m_init = true;
 	
@@ -349,6 +358,7 @@ ImageRecord * ImageRecord::fromSqlRecord(QSqlRecord r)
 			QString field = name.right(name.length() - 3);
 			QVariant value = r.value(field);
 			rec->setProperty(name.toLatin1(),value);
+			//qDebug() << "ImageRecord::fromSqlRecord: key:"<<name<<", field:"<<field<<", value:"<<value;
 		}
 	}
 	

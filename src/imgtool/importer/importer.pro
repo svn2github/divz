@@ -8,9 +8,9 @@ INCLUDEPATH += . ../
 system(perl ../MocPropDefMacros.pl ../ImageRecord.h)
 
 # Input
-HEADERS += MainWindow.h LoadDialog.h AppSettings.h
+HEADERS += MainWindow.h LoadDialog.h AppSettings.h MainGraphicsView.h
 FORMS += MainWindow.ui LoadDialog.ui 
-SOURCES += main.cpp MainWindow.cpp LoadDialog.cpp AppSettings.cpp
+SOURCES += main.cpp MainWindow.cpp LoadDialog.cpp AppSettings.cpp MainGraphicsView.cpp
 
 QT += opengl
 

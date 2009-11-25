@@ -23,7 +23,7 @@ class ImageRecord : public QObject
 	PROP_DEF_DB_FIELD(QString,	imageId,	ImageId,	"imageid"); // QUuid generated 128 bit string
 	PROP_DEF_DB_FIELD(QString,	file,		File,		"file"); // abs path + filename
 	PROP_DEF_DB_FIELD(QDateTime,	datestamp,	Datestamp,	"datestamp"); // date/time the image was taken
-	PROP_DEF_DB_FIELD(QString,	title,		title,		"title");
+	PROP_DEF_DB_FIELD(QString,	title,		Title,		"title");
 	PROP_DEF_DB_FIELD(QString,	batchName,	BatchName,	"batchname");
 	PROP_DEF_DB_FIELD(QString,	tags,		Tags,		"tags");
 	PROP_DEF_DB_FIELD(QString,	description,	Description,	"description");

@@ -17,11 +17,25 @@
 
 #include "LoadDialog.h"
 
+#include <QUuid>
 
-#include "../exiv2-0.18.2-qtbuild/src/image.hpp"
 #include <string>
 #include <iostream>
 #include <cassert>
+
+#define DEBUG_PRELOAD 0 
+
+
+namespace {
+
+	QString removeLangPrefix(const QString & orig)
+	{
+		QString copy = orig;
+		return copy.replace(QRegExp("^lang=\"[^\"]+\"\\s*"),"");
+	}
+		
+}
+
 
 MainWindow::MainWindow(QWidget *parent) 
 	: QMainWindow(parent)
@@ -36,8 +50,9 @@ MainWindow::MainWindow(QWidget *parent)
 	connect(m_ui->prevBtn, SIGNAL(clicked()), this, SLOT(prevImage()));
 	connect(m_ui->gotoBox, SIGNAL(editingFinished()), this, SLOT(loadGotoBoxValue()));
 	
-	m_ui->graphicsView->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
-	m_ui->graphicsView->setRenderHint( QPainter::Antialiasing, true );
+	connect(m_ui->graphicsView, SIGNAL(nextImage()), this, SLOT(nextImage()));
+	connect(m_ui->graphicsView, SIGNAL(prevImage()), this, SLOT(prevImage()));
+	
 
 	m_scene = new QGraphicsScene();
 
@@ -48,36 +63,22 @@ MainWindow::MainWindow(QWidget *parent)
 	m_pixmapItem->setPos(0,0);
 	m_scene->addItem(m_pixmapItem);
 	
-	//m_cache.setMaxCost(50 * 5); // 250 MB
 	m_cache.setMaxCost(1536); // 250 MB
 	
-	// Using similar algorithm as recommended by the manpage for make - # cpus + 1
+	// Using similar formula as CPAN's config for the -j option: nbr cpus + 1
 	QThreadPool::globalInstance()->setMaxThreadCount(QThread::idealThreadCount() + 1);
 }
 
 MainWindow::~MainWindow()
 {
+	writeMetaData();
+	
+	// Cleanup
+	Exiv2::XmpParser::terminate();
+
 	delete m_ui;
 	if(m_pixmap)
 		delete m_pixmap;
-}
-
-void MainWindow::resizeEvent(QResizeEvent *)
-{
-	adjustViewScaling();
-}
-
-void MainWindow::adjustViewScaling()
-{
-	float sx = ((float)m_ui->graphicsView->width()) / m_scene->width();
-	float sy = ((float)m_ui->graphicsView->height()) / m_scene->height();
-
-	float scale = qMin(sx,sy);
-	m_ui->graphicsView->setTransform(QTransform().scale(scale,scale));
-        //qDebug("Scaling: %.02f x %.02f = %.02f",sx,sy,scale);
-	m_ui->graphicsView->update();
-	//m_view->fitInView(m_scene->sceneRect(), Qt::KeepAspectRatioByExpanding);
-	//m_view->fitInView(m_scene->sceneRect(), Qt::KeepAspectRatio);
 }
 
 
@@ -150,6 +151,9 @@ void MainWindow::loadFolder()
 
 void MainWindow::nextImage()
 {
+	if(m_fileList.isEmpty())
+		return;
+		
 	m_currentFile ++;
 	if(m_currentFile >= m_fileList.size())
 		m_currentFile = 0;
@@ -158,6 +162,9 @@ void MainWindow::nextImage()
 
 void MainWindow::prevImage()
 {
+	if(m_fileList.isEmpty())
+		return;
+		
 	m_currentFile --;
 	if(m_currentFile < 0)
 		m_currentFile = m_fileList.size() - 1;
@@ -179,13 +186,12 @@ void PreloadImageTask::run()
 	activeThreads++;
 	mutex.unlock();
 	
-	//qDebug() << "Hello world from thread" << QThread::currentThread();
 	QImage image(m_file);
-	//QImage scaled = image.scaled(QSize(imageSize, imageSize), Qt::KeepAspectRatio, Qt::SmoothTransformation);
-	//, scaled:"<<(scaled.numBytes() / 1024)<<"Kb
-	qDebug() << m_file<<":"<<(image.numBytes() / 1024 / 1024) << "MB ( active:"<<activeThreads<<")";
 	
-	emit imageLoaded(m_file,image); //scaled);
+	if(DEBUG_PRELOAD)
+		qDebug() << m_file<<":"<<(image.numBytes() / 1024 / 1024) << "MB ( active:"<<activeThreads<<")";
+	
+	emit imageLoaded(m_file,image); 
 	
 	mutex.lock();
 	activeThreads--;
@@ -202,6 +208,8 @@ void MainWindow::setCurrentImage(int num)
 	if(m_ui->gotoBox->value() != num)
 		m_ui->gotoBox->setValue(num);
 		
+	writeMetaData();
+		
 	m_currentFile = num;
 	m_ui->progressBar->setValue(num);
 	
@@ -209,7 +217,11 @@ void MainWindow::setCurrentImage(int num)
 	QString path = QString("%1/%2").arg(m_batchDir.absolutePath()).arg(file);
 	//QFileInfo fileInfo(path);
 	
+	setWindowTitle(QString(tr("Image Importer - %1")).arg(file));
+	
 	m_ui->filenameLabel->setText(file);
+	
+	initMetaData();
 	
 	if(m_pixmap)
 		delete m_pixmap;
@@ -217,14 +229,16 @@ void MainWindow::setCurrentImage(int num)
 	QImage *img = 0;
 	if((img = m_cache.object(path)) != 0)
 	{
-		qDebug() << "MainWindow::setCurrentImage: Cache hit on "<<file;
+		if(DEBUG_PRELOAD)
+			qDebug() << "MainWindow::setCurrentImage: Cache hit on "<<file;
 		QPixmap px = QPixmap::fromImage(*img);
 		m_pixmapItem->setPixmap(px);
 		m_scene->setSceneRect(px.rect());
 	}
 	else
 	{
-		qDebug() << "MainWindow::setCurrentImage: Cache MISS on "<<file;
+		if(DEBUG_PRELOAD)
+			qDebug() << "MainWindow::setCurrentImage: Cache MISS on "<<file;
 		setCursor(Qt::BusyCursor);
 		QPixmap origPixmap(path);
 		//m_pixmap = new QPixmap();
@@ -235,7 +249,7 @@ void MainWindow::setCurrentImage(int num)
 		imageLoaded(path, origPixmap.toImage());
 	}
 	
-	adjustViewScaling();
+	m_ui->graphicsView->adjustViewScaling();
 	
 	int numQueued = 0;
 	
@@ -253,7 +267,8 @@ void MainWindow::setCurrentImage(int num)
 			numQueued ++;
 	}
 	
-	qDebug() << "MainWindow::setCurrentImage: Queued"<<numQueued<<"for preload";
+	if(DEBUG_PRELOAD)
+		qDebug() << "MainWindow::setCurrentImage: Queued"<<numQueued<<"for preload";
 }
 
 bool MainWindow::queuePreload(QString file)
@@ -264,7 +279,8 @@ bool MainWindow::queuePreload(QString file)
 	{
 		m_filesInProcess.append(path);
 		
-		qDebug() << "MainWindow::queuePreload: Queueing "<<file<<" for preload";
+		if(DEBUG_PRELOAD)
+			qDebug() << "MainWindow::queuePreload: Queueing "<<file<<" for preload";
 		PreloadImageTask *preload = new PreloadImageTask(path);
 		connect(preload, SIGNAL(imageLoaded(QString,QImage)), this, SLOT(imageLoaded(QString,QImage)));
 		
@@ -285,81 +301,123 @@ void MainWindow::imageLoaded(const QString& file, const QImage& img)
 	m_cache.insert(file, cacheable, mb);
 	m_filesInProcess.remove(file);
 	
-	qDebug() << "MainWindow::imageLoaded: Loaded"<<file<<" ("<<mb<<"MB )"; //<< ( m_filesInProcess.isEmpty() ? "" : QString(", still waiting on %1 images.").arg(m_filesInProcess.size()));
+	if(DEBUG_PRELOAD)
+		qDebug() << "MainWindow::imageLoaded: Loaded"<<file<<" ("<<mb<<"MB )"; //<< ( m_filesInProcess.isEmpty() ? "" : QString(", still waiting on %1 images.").arg(m_filesInProcess.size()));
 	
 }
 
-
-void MainWindow::showEvent(QShowEvent*)
+void MainWindow::initMetaData()
 {
-	adjustViewScaling();
-}
-
-/*
-	
-	QImage img;
-	if(!img.load(file))
-	{
-		QMessageBox::critical(this,tr("Problem Loading File"),QString(tr("I'm sorry, but there was a problem loading %1. Please check the file and try again.")).arg(file));
+	if(m_fileList.isEmpty())
 		return;
-	}
+		
+// 	m_ui->title->setText(file);
+	QString file = m_fileList[m_currentFile];
+	QString path = QString("%1/%2").arg(m_batchDir.absolutePath()).arg(file);
 	
-// 	img.setText("test","hello");
-// 	img.save(file);
-	
-//	QString fmt = "png";
-// 	QImageWriter writer;
-// 	writer.setFormat("png");
-// 	if (writer.supportsOption(QImageIOHandler::Description))
-// 		qDebug() << fmt <<" supports embedded text";
-// 	else
-// 		qDebug() << fmt <<" DOES NOT";
-// 
-// 	m_ui->list->clear();
-// 	QStringList textKeys = img.textKeys();
-	
-//	qDebug() << "Text Keys in"<<file<<":"<<textKeys;
+	/*
+		Image ID	- 	Exif.Image.UniqueID, tag # 0xa420 - 128bit length, generate with QUuid
+		Batch Name	- 	Xmp. ??
+		Tags		- 	Xmp.dc.subject
+		Description	-	Xmp.dc.description
+		Title		-	Xmp.dc.title
+		Location	-	Xmp. ??
+		Rating		-	Xmp.xmp.Rating (1-5), Xmp.MicrosoftPhoto.Rating (%)
+	*/
 
-	Exiv2::Image::AutoPtr image = Exiv2::ImageFactory::open(file.toStdString()); //argv[1]);
-	assert(image.get() != 0);
-	image->readMetadata();
+	m_exivImage = Exiv2::ImageFactory::open(path.toStdString()); 
+	assert(m_exivImage.get() != 0);
+	m_exivImage->readMetadata();
 	
-	QFile outputFile("output.txt");
-	if(!outputFile.open(QFile::WriteOnly | QFile::Truncate))
+// 	QFile outputFile("output.txt");
+// 	if(!outputFile.open(QFile::WriteOnly | QFile::Truncate))
+// 	{
+// 		qDebug() << "Unable to open output.txt for writing.";
+// 	}
+// 	
+// 	QTextStream outputStream(&outputFile);
+	
+// 	Exiv2::ExifData& exifData = m_exivImage->exifData();
+// 	QString imageId = exifData["Exif.Image.UniqueID"].toString().c_str();
+// 	if(imageId.isEmpty())
+// 	{
+// 		imageId = QUuid::createUuid().toString();
+// 		exifData["Exif.Image.UniqueID"] = (char *)imageId.constData();
+// 		m_exivImage->setExifData(exifData);
+// 	}
+	
+	
+	
+	Exiv2::XmpData& xmpData = m_exivImage->xmpData();
+	
+	QString imageId = xmpData["Xmp.dc.uniqueid"].toString().c_str();
+	if(imageId.isEmpty())
 	{
-		qDebug() << "Unable to open output.txt for writing.";
+		imageId = QUuid::createUuid().toString();
+		xmpData["Xmp.dc.uniqueid"] = imageId.toStdString();
+		m_exivImage->setXmpData(xmpData);
 	}
 	
-	QTextStream outputStream(&outputFile);
-	
-	QStringList textKeys;
-	QHash<QString,QString> textMap;
-	
-	Exiv2::ExifData& exifData = image->exifData();
-	for (Exiv2::ExifData::const_iterator md = exifData.begin();
-		md != exifData.end(); ++md) 
+	ImageRecord * ref = ImageRecord::retrieveImageId(imageId);
+	if(!ref)
 	{
-		ADD_DATUM("EXIF",md);
+		ref = new ImageRecord(file);
+		ImageRecord::addRecord(ref);
+		
+		Exiv2::ExifData& exifData = m_exivImage->exifData();
+		QDateTime dt = QDateTime::fromString(exifData["Exif.Photo.DateTimeOriginal"].toString().c_str(), "yyyy:MM:dd HH:mm:ss");
+		qDebug() << "MainWindow::initMetaData: "<<file<<": Date/Time taken: "<<dt.toString();
+		
+		ref->setDatestamp(dt);
+		ref->setImageId(imageId);
+		
+		ImageRecord * ref2 = ImageRecord::retrieveImageId(imageId);
+		if(!ref2)
+		{
+			qDebug() << "can't re-retrieve imageId"<<imageId;
+			abort();
+		}
 	}
-	if (exifData.empty()) 
+	else
 	{
-		qDebug() << "ExifData: No Exif data found in "<<file;
-	}
-	
-	
-	Exiv2::IptcData& iptcData = image->iptcData();
-	for (Exiv2::IptcData::const_iterator md = iptcData.begin();
-		md != iptcData.end(); ++md) 
-	{
-		ADD_DATUM("IPTC", md);
-	}
-	if (iptcData.empty()) 
-	{
-		qDebug() << "IptcData: No IPTC data found in "<<file;
+		qDebug() << "MainWindow::initMetaData: "<<file<<": Loaded record#"<<ref->recordId()<<" from database";
 	}
 	
+	QString batch		= xmpData["Xmp.dc.batch"]	.toString().c_str();
+	QString location	= xmpData["Xmp.dc.coverage"]	.toString().c_str();
+	QString tags 		= xmpData["Xmp.dc.subject"]	.toString().c_str();
+	QString description 	= xmpData["Xmp.dc.description"]	.toString().c_str();
+	QString title 		= xmpData["Xmp.dc.title"]	.toString().c_str();
+	QString rating	 	= xmpData["Xmp.xmp.rating"]	.toString().c_str();
 	
-	Exiv2::XmpData& xmpData = image->xmpData();
+	
+	
+	if(!batch.isEmpty())
+		m_ui->batchname->setText(batch);
+	
+	if(!location.isEmpty())
+		m_ui->location->setText(location);
+	
+	if(!tags.isEmpty())
+		m_ui->tags->setText(tags);
+	
+	if(!description.isEmpty())
+		m_ui->description->setText(removeLangPrefix(description));
+	else
+		m_ui->description->setText("");
+		
+	if(!title.isEmpty())
+		m_ui->title->setText(removeLangPrefix(title));
+	else
+		m_ui->title->setText("");
+		
+	if(!rating.isEmpty())
+		m_ui->rating->setValue(rating.toInt());
+	else
+		m_ui->rating->setValue(0);
+		
+	/*
+	
 	for (Exiv2::XmpData::const_iterator md = xmpData.begin();
 		md != xmpData.end(); ++md) 
 	{
@@ -369,24 +427,85 @@ void MainWindow::showEvent(QShowEvent*)
 	if (xmpData.empty()) 
 	{
 		qDebug() << "XmpData: No XMP Data found in "<<file;
-	}
+	}*/
 	
 	
-	m_ui->list->setRowCount(textKeys.size());
-	for(int i=0; i<textKeys.size(); i++)
+	
+}
+
+void MainWindow::writeMetaData()
+{
+	if(!m_exivImage.get())
+		return;
+	
+	
+	Exiv2::XmpData& xmpData = m_exivImage->xmpData();
+	QString imageId = xmpData["Xmp.dc.uniqueid"].toString().c_str();
+	
+	QString file = m_fileList[m_currentFile];
+	qDebug() << "MainWindow::writeMetaData: "<<file<<": Writing meta data for imageId: "<<imageId;
+	
+	ImageRecord * ref = ImageRecord::retrieveImageId(imageId);
+	if(!ref)
 	{
-		m_ui->list->setItem(i, 0, new QTableWidgetItem(textKeys[i]));
-		m_ui->list->setItem(i, 1, new QTableWidgetItem(textMap.value(textKeys[i])));
+		ref = new ImageRecord(file);
+		ImageRecord::addRecord(ref);
 		
-		outputStream << textKeys[i] << "\t" << textMap.value(textKeys[i]) << "\n";
+		Exiv2::ExifData& exifData = m_exivImage->exifData();
+		QDateTime dt = QDateTime::fromString(exifData["Exif.Photo.DateTimeOriginal"].toString().c_str(), "yyyy:MM:dd HH:mm:ss");
+		qDebug() << "MainWindow::writeMetaData: "<<file<<": Date/Time taken: "<<dt.toString();
+		ref->setDatestamp(dt);
+	}
+	else
+	{
+		qDebug() << "MainWindow::writeMetaData: "<<file<<": Loaded record#"<<ref->recordId()<<" from database";
 	}
 	
-	outputFile.close();
 	
-	m_ui->list->resizeColumnsToContents();
-	m_ui->list->resizeRowsToContents();
+	QString batch = m_ui->batchname->text();
+	ref->setBatchName(batch);
+	xmpData["Xmp.dc.batch"]		= batch.toStdString();
 	
-}*/
+	QString location = m_ui->location->text();
+	ref->setLocation(location);
+	xmpData["Xmp.dc.coverage"]	= location.toStdString();
+	
+	QString tags = m_ui->tags->text();
+	ref->setTags(tags);
+	
+	
+	
+	for (Exiv2::XmpData::iterator md = xmpData.begin();
+		md != xmpData.end(); ++md) 
+		if(strcmp(md->key().c_str(),"Xmp.dc.subject") == 0)
+			md = xmpData.erase(md);
+		
+	xmpData["Xmp.dc.subject"]	= tags.toStdString();
+	
+	QString description = m_ui->description->text();
+	ref->setDescription(description);
+	xmpData["Xmp.dc.description"]	= description.toStdString();
+	
+	QString title = m_ui->title->text();
+	ref->setTitle(title);
+	xmpData["Xmp.dc.title"]		= title.toStdString();
+	
+	int rating = m_ui->rating->value();
+	ref->setRating(rating);
+	QString ratingStr = QString("%1").arg(rating);
+	xmpData["Xmp.xmp.rating"]	= ratingStr.toStdString();
+	
+// 	// Serialize the XMP data and output the XMP packet
+// 	std::string xmpPacket;
+// 	if (0 != Exiv2::XmpParser::encode(xmpPacket, xmpData)) {
+// 		throw Exiv2::Error(1, "Failed to serialize XMP data");
+// 	}
+// 	//std::cout << xmpPacket << "\n";
+// 	qDebug() << "xmpPacket: "<<xmpPacket.c_str();
+
+	m_exivImage->setXmpData(xmpData);
+	m_exivImage->writeMetadata();
+}
 
 void MainWindow::changeEvent(QEvent *e)
 {
@@ -407,19 +526,30 @@ void MainWindow::changeEvent(QEvent *e)
 	if (event->type() == QEvent::KeyPress) 
 	{
 		QKeyEvent *ke = static_cast<QKeyEvent *>(event);
-// 		if (ke->key() == Qt::Key_Tab) 
+		//qDebug() << "MainWindow::event: key:"<<ke->key();
+		if(ke->key() >= 0x30 && ke->key() <= 0x35)
+		{
+			int rating = ke->key() - 0x30;
+			m_ui->rating->setValue(rating);
+			qDebug() << "MainWindow::event: key:"<<ke->key()<<", rating:"<<rating;
+		}
+		else
+		if(ke->key() >= 0x01000030 && ke->key() <= 0x01000034)
+		{
+			int rating = ke->key() - 0x01000030 + 1;
+			m_ui->rating->setValue(rating);
+			qDebug() << "MainWindow::event: key:"<<ke->key()<<", rating:"<<rating;
+		}
+		else
+// 		if(ke->key() == Qt::Key_F2)
 // 		{
-// 			// special tab handling here
-// 			return true;
+// 			showRenameDialog();
 // 		}
-		qDebug() << "MainWindow::event: key:"<<ke->key();
+// 		else
+		{
+			qDebug() << "MainWindow::event: unused key:"<<ke->key();
+		}
 	}
-// 	} else if (event->type() == MyCustomEventType) {
-// 		MyCustomEvent *myEvent = static_cast<MyCustomEvent *>(event);
-// 		// custom event handling here
-// 		return true;
-// 	}
 	
 	return QWidget::event(event);
 }
-
