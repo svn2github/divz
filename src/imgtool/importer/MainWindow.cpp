@@ -15,6 +15,8 @@
 #include "ImageRecord.h"
 #include "ImageRecordListModel.h"
 
+#include "LoadDialog.h"
+
 
 #include "../exiv2-0.18.2-qtbuild/src/image.hpp"
 #include <string>
@@ -28,13 +30,11 @@ MainWindow::MainWindow(QWidget *parent)
 {
 	m_ui->setupUi(this);
         connect(m_ui->actionExit, SIGNAL(triggered()), this, SLOT(close()));
-	connect(m_ui->browseBtn, SIGNAL(clicked()), this, SLOT(slotBrowse()));
-	connect(m_ui->loadBtn, SIGNAL(clicked()), this, SLOT(loadFolder()));
-	connect(m_ui->importFolder, SIGNAL(returnPressed()), this, SLOT(loadFolder()));
+	connect(m_ui->loadBtn, SIGNAL(clicked()), this, SLOT(showLoadDialog()));
+// 	connect(m_ui->importFolder, SIGNAL(returnPressed()), this, SLOT(loadFolder()));
 	connect(m_ui->nextBtn, SIGNAL(clicked()), this, SLOT(nextImage()));
 	connect(m_ui->prevBtn, SIGNAL(clicked()), this, SLOT(prevImage()));
-	
-	m_ui->importFolder->setText("/home/josiah/devel/dviz-root/trunk/src/imgtool/samples/003/");
+	connect(m_ui->gotoBox, SIGNAL(editingFinished()), this, SLOT(loadGotoBoxValue()));
 	
 	m_ui->graphicsView->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
 	m_ui->graphicsView->setRenderHint( QPainter::Antialiasing, true );
@@ -81,16 +81,32 @@ void MainWindow::adjustViewScaling()
 }
 
 
-void MainWindow::slotBrowse()
+void MainWindow::showLoadDialog()
 {
-        // Show a file open dialog at QDesktopServices::PicturesLocation.
-        QString dirPath = QFileDialog::getExistingDirectory(this, tr("Select Folder to Process"), 
-        		QDesktopServices::storageLocation(QDesktopServices::PicturesLocation), 
-        		QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
-
-	if(!dirPath.isEmpty())
+	LoadDialog d(this);
+	if(d.exec())
 	{
-		m_ui->importFolder->setText(dirPath);
+		QString folder = d.batchFolder();
+		
+		m_batchDir = QDir(folder);
+		if(!m_batchDir.exists())
+		{
+			QMessageBox::critical(0,"Folder Not Found","Sorry, but the folder you entered in the 'Batch Folder' box does not exist.");
+			return;
+		}
+	
+		m_copyFiles = d.copyFiles();
+		m_copyDest = QDir(d.copyFolder());
+		if(!m_copyDest.exists())
+		{
+			QMessageBox::critical(0,"Destination Folder Not Found","Sorry, but the folder you entered in the 'Copy To Folder' box does not exist.");
+			return;
+		}
+		
+		m_cache.setMaxCost(d.cacheSize());
+		m_lookBehind = d.lookBehind();
+		m_lookAhead = d.lookAhead();
+		
 		loadFolder();
 	}
 }
@@ -103,22 +119,7 @@ void MainWindow::slotBrowse()
 
 void MainWindow::loadFolder()
 {
-	QString folder = m_ui->importFolder->text();
 	
-	m_batchDir = QDir(m_ui->importFolder->text());
-	if(!m_batchDir.exists())
-	{
-		QMessageBox::critical(0,"Folder Not Found","Sorry, but the folder you entered in the 'Batch Folder' box does not exist.");
-		return;
-	}
-
-	m_copyFiles = m_ui->copyFiles->isChecked();
-	m_copyDest = QDir(m_ui->copyToFolder->text());
-	if(!m_copyDest.exists())
-	{
-		QMessageBox::critical(0,"Destination Folder Not Found","Sorry, but the folder you entered in the 'Copy To Folder' box does not exist.");
-		return;
-	}
 	
 	QStringList filters;
 // 	filters << "*.bmp";
@@ -130,6 +131,7 @@ void MainWindow::loadFolder()
 	m_fileList = m_batchDir.entryList(filters);
 	
 	m_ui->progressBar->setMaximum(m_fileList.size());
+	m_ui->gotoBox->setMaximum(m_fileList.size()-1);
 	
 	if(m_fileList.isEmpty())
 	{
@@ -140,7 +142,10 @@ void MainWindow::loadFolder()
 	
 	setCurrentImage(0);
 	
+	m_ui->progressBar->setEnabled(true);
+	m_ui->gotoBox->setEnabled(true);
 	m_ui->groupBox->setEnabled(true);
+	m_ui->nextBtn->setFocus();
 }
 
 void MainWindow::nextImage()
@@ -187,11 +192,18 @@ void PreloadImageTask::run()
 	mutex.unlock();
 }
 
+void MainWindow::loadGotoBoxValue()
+{
+	setCurrentImage(m_ui->gotoBox->value());
+}
+
 void MainWindow::setCurrentImage(int num)
 {
+	if(m_ui->gotoBox->value() != num)
+		m_ui->gotoBox->setValue(num);
+		
 	m_currentFile = num;
 	m_ui->progressBar->setValue(num);
-	
 	
 	QString file = m_fileList[num];
 	QString path = QString("%1/%2").arg(m_batchDir.absolutePath()).arg(file);
@@ -219,27 +231,23 @@ void MainWindow::setCurrentImage(int num)
 		m_pixmapItem->setPixmap(origPixmap); //.scaledToWidth(1024));
 		m_scene->setSceneRect(origPixmap.rect()); //0,0,1024,768);
 		setCursor(Qt::ArrowCursor);
+				
+		imageLoaded(path, origPixmap.toImage());
 	}
 	
 	adjustViewScaling();
 	
-	// This algorithm below attempts to load three ahead and two behind.
-	// Assuming the images are roughly 50 MB uncompressed, this would
-	// cache about 250 MB of data in the cache.
+	int numQueued = 0;
 	
 	int it = num;
-	int maxLookAhead = 12;
-	int numQueued = 0;
-	while(it ++ < m_fileList.size() -1 && it - num <= maxLookAhead)
+	while(it ++ < m_fileList.size() -1 && it - num <= m_lookAhead)
 	{
 		if(queuePreload(m_fileList[it]))
 			numQueued ++;
 	}
 	
 	it = num;
-// 	numQueued = 0;
-	maxLookAhead = 4;
-	while(it -- > 0 && num - it <= maxLookAhead)
+	while(it -- > 0 && num - it <= m_lookBehind)
 	{
 		if(queuePreload(m_fileList[it]))
 			numQueued ++;
@@ -396,12 +404,16 @@ void MainWindow::changeEvent(QEvent *e)
 
  bool MainWindow::event(QEvent *event)
  {
-// 	if (event->type() == QEvent::KeyPress) {
-// 		QKeyEvent *ke = static_cast<QKeyEvent *>(event);
-// 		if (ke->key() == Qt::Key_Tab) {
-// 		// special tab handling here
-// 		return true;
+	if (event->type() == QEvent::KeyPress) 
+	{
+		QKeyEvent *ke = static_cast<QKeyEvent *>(event);
+// 		if (ke->key() == Qt::Key_Tab) 
+// 		{
+// 			// special tab handling here
+// 			return true;
 // 		}
+		qDebug() << "MainWindow::event: key:"<<ke->key();
+	}
 // 	} else if (event->type() == MyCustomEventType) {
 // 		MyCustomEvent *myEvent = static_cast<MyCustomEvent *>(event);
 // 		// custom event handling here

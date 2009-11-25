@@ -39,12 +39,14 @@ public:
 	~MainWindow();
 
 protected slots:
-	void slotBrowse();
+	void showLoadDialog();
 	void loadFolder();
 	
 	void nextImage();
 	void prevImage();
 	void setCurrentImage(int);
+	
+	void loadGotoBoxValue();
 	
 	void imageLoaded(const QString&, const QImage&);
 	
@@ -75,6 +77,10 @@ protected:
 	
 	QCache<QString, QImage> m_cache;
 	QString m_filesInProcess;
+	
+	int m_lookBehind;
+	int m_lookAhead;
+	
 	
 private:
 	Ui::MainWindow *m_ui;
