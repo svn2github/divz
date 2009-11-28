@@ -5,6 +5,8 @@
 bool ImageRecord::m_dbIsOpen = false;
 QSqlDatabase ImageRecord::m_db;
 
+static const QString DB_PROP_PREFIX("db_");
+
 void ImageRecord::initDatabase()
 {
 	//QFile file(IMAGEDB_FILE);
@@ -27,10 +29,10 @@ void ImageRecord::initDatabase()
 		{
 			QMetaProperty metaproperty = metaobject.property(i);
 			QString name = QString(metaproperty.name());
-			if(name.startsWith("db_"))
+			if(name.startsWith(DB_PROP_PREFIX))
 			{
 				QStringList defn;
-				QString field = name.right(name.length() - 3);
+				QString field = name.right(name.length() - DB_PROP_PREFIX.length());
 				defn << field << " ";
 				
 				QVariant::Type type = metaproperty.type();
@@ -65,7 +67,7 @@ void ImageRecord::initDatabase()
 				.arg(IMAGEDB_TABLE)
 				.arg(fieldDefs.join(", "));
 		
-		//qDebug() << "ImageRecord::initDatabase(): Create SQL: "<<sql;
+		qDebug() << "ImageRecord::initDatabase(): Create SQL: "<<sql;
 		
 		QSqlQuery query;
 		query.prepare(sql);
@@ -109,17 +111,24 @@ ImageRecord * ImageRecord::retrieve(int id)
 	query.prepare(QString("SELECT * FROM %1 WHERE recordid=?").arg(IMAGEDB_TABLE)); 
 	query.addBindValue(id);
 	query.exec();
+	
 	if (query.lastError().isValid())
 	{
-		qDebug() << "ImageRecord::retrieve(): "<<query.lastError();
+		qDebug() << "ImageRecord::retrieveImageId(): "<<query.lastError();
 		return 0;
 	}
 	else
 	{
-		if(query.size()>0)
+		if(query.size())
 		{
 			query.next();
-			return ImageRecord::fromQuery(query);
+			ImageRecord * rec = ImageRecord::fromQuery(query);
+			if(rec && rec->recordId() < 0)
+			{
+				delete rec;
+				rec = 0;
+			}
+			return rec;
 		}
 		else
 		{
@@ -135,32 +144,28 @@ ImageRecord * ImageRecord::retrieveImageId(QString id)
 {
 	if(!m_dbIsOpen)
 		initDatabase();
-	QSqlQuery query("",m_db);
-	QString sql = QString("SELECT * FROM %1 WHERE imageid='%2'").arg(IMAGEDB_TABLE).arg(id);
-	query.prepare(sql); 
-	
-// 	if (query.lastError().isValid())
-// 	{
-// 		qDebug() << "ImageRecord::retrieveImageId():"<<query.lastError();
-// 		return 0;
-// 	}
-// 	
-// 	query.addBindValue(id);
+	QSqlQuery query;
+	query.prepare(QString("SELECT * FROM %1 WHERE imageid=?").arg(IMAGEDB_TABLE)); 
+	query.addBindValue(id);
 	query.exec();
 	
-	qDebug() << "ImageRecord::retrieveImageId: id:"<<id<<", size:"<<query.size()<<", sql:"<<sql;
-		
 	if (query.lastError().isValid())
 	{
-		qDebug() << "ImageRecord::retrieveImageId():"<<query.lastError();
+		qDebug() << "ImageRecord::retrieveImageId(): "<<query.lastError();
 		return 0;
 	}
 	else
 	{
-		if(query.size()>0)
+		if(query.size())
 		{
 			query.next();
-			return ImageRecord::fromQuery(query);
+			ImageRecord * rec = ImageRecord::fromQuery(query);
+			if(rec && rec->recordId() < 0)
+			{
+				delete rec;
+				rec = 0;
+			}
+			return rec;
 		}
 		else
 		{
@@ -213,24 +218,6 @@ bool ImageRecord::addRecord(ImageRecord* rec)
 	
 	if(!m_dbIsOpen)
 		initDatabase();
-	/*
-	QSqlQuery query;
-	query.prepare(QString("INSERT INTO %1 ( imageid, file, datestamp, title, batchname, tags, description, location, rating, altsizes, colorkeys, softlevel) "
-			              "VALUES (:imageid,:file,:datestamp,:title,:batchname,:tags,:description,:location,:rating,:altsizes,:colorkeys,:softlevel)").arg(IMAGEDB_TABLE));
-	
-	//query.bindValue(":recordid",	rec->recId());
-	query.bindValue(":imageid",	rec->imageId());
-	query.bindValue(":file",	rec->file());
-	query.bindValue(":datestamp",	rec->datestamp());
-	query.bindValue(":title",	rec->title());
-	query.bindValue(":batchname",	rec->batchName());
-	query.bindValue(":tags",	rec->tags());
-	query.bindValue(":description",	rec->description());
-	query.bindValue(":location",	rec->location());
-	query.bindValue(":rating",	rec->rating());
-	query.bindValue(":altsizes",	rec->altSizes());
-	query.bindValue(":colorkeys",	rec->colorKeys());
-	query.bindValue(":softlevel",	rec->softLevel());*/
 	
 	QStringList fieldNames;
 	QStringList placeholderNames;
@@ -244,16 +231,15 @@ bool ImageRecord::addRecord(ImageRecord* rec)
 		QMetaProperty metaproperty = metaobject.property(i);
 		QString name = QString(metaproperty.name());
 		QVariant value = rec->property(name.toLatin1());
-		if(name.startsWith("db_"))
+		if(name.startsWith(DB_PROP_PREFIX))
 		{
-			QString field = name.right(name.length() - 3);
+			QString field = name.right(name.length() - DB_PROP_PREFIX.length());
 			if(field == IMAGEDB_PRIKEY)
 				continue;
 				
 			fieldNames << field;
 			placeholderNames << QString(":%1").arg(field);
 			valueList << value;
-			//r.setValue(field, value);
 		}
 	}
 	
@@ -287,7 +273,7 @@ bool ImageRecord::addRecord(ImageRecord* rec)
 			rec->m_init = true;
 			rec->setRecordId(var.toInt());
 			rec->m_init = false;
-			qDebug() << "ImageRecord::addRecord(): Inserted recordid "<<rec->recordId();
+// 			qDebug() << "ImageRecord::addRecord(): Inserted recordid "<<rec->recordId();
 		}
 	}
 
@@ -353,9 +339,9 @@ ImageRecord * ImageRecord::fromSqlRecord(QSqlRecord r)
 	{
 		QMetaProperty metaproperty = metaobject.property(i);
 		QString name = QString(metaproperty.name());
-		if(name.startsWith("db_"))
+		if(name.startsWith(DB_PROP_PREFIX))
 		{
-			QString field = name.right(name.length() - 3);
+			QString field = name.right(name.length() - DB_PROP_PREFIX.length());
 			QVariant value = r.value(field);
 			rec->setProperty(name.toLatin1(),value);
 			//qDebug() << "ImageRecord::fromSqlRecord: key:"<<name<<", field:"<<field<<", value:"<<value;
@@ -378,9 +364,9 @@ QSqlRecord ImageRecord::toSqlRecord()
 		QMetaProperty metaproperty = metaobject.property(i);
 		QString name = QString(metaproperty.name());
 		QVariant value = property(name.toLatin1());
-		if(name.startsWith("db_"))
+		if(name.startsWith(DB_PROP_PREFIX))
 		{
-			QString field = name.right(name.length() - 3);
+			QString field = name.right(name.length() - DB_PROP_PREFIX.length());
 			r.setValue(field, value);
 		}
 	}
@@ -407,9 +393,9 @@ QString ImageRecord::toString() const
 		QMetaProperty metaproperty = metaobject.property(i);
 		QString name = QString(metaproperty.name());
 		QVariant value = property(name.toLatin1());
-		if(name.startsWith("db_"))
+		if(name.startsWith(DB_PROP_PREFIX))
 		{
-			QString field = name.right(name.length() - 3);
+			QString field = name.right(name.length() - DB_PROP_PREFIX.length());
 			fieldList << QString("%1='%2'").arg(field).arg(value.toString());
 		}
 	}
@@ -544,7 +530,7 @@ bool ImageRecord::updateDb(QString memberName, QVariant v, QString field)
 	
 	QSqlQuery query;
 	QString sql = QString("UPDATE %1 SET %2 = ? WHERE recordid= ?").arg(IMAGEDB_TABLE).arg(field);
-	qDebug() << "ImageRecord::updateDb():"<<sql<<", value:"<<v<<", recordid:"<<m_recordId;
+	//qDebug() << "ImageRecord::updateDb():"<<sql<<", value:"<<v<<", recordid:"<<m_recordId;
 	query.prepare(sql); 
 	query.addBindValue(v);
 	query.addBindValue(m_recordId);

@@ -10,7 +10,7 @@
 #include <QResizeEvent>
 #include <QShowEvent>
 #include <QCache>
-
+#include <QTimer>
 #include <QRunnable>
 
 #include "../exiv2-0.18.2-qtbuild/src/image.hpp"
@@ -40,28 +40,38 @@ class MainWindow : public QMainWindow
 public:
 	MainWindow(QWidget *parent = 0);
 	~MainWindow();
+	
+public slots:
+	void loadFolder(const QString& folder, bool copy=false, const QString& copyDest="");
 
-protected slots:
-	void showLoadDialog();
-	void loadFolder();
-	
-// 	void showRenameDialog();
-	
 	void nextImage();
 	void prevImage();
 	void setCurrentImage(int);
+	
+protected slots:
+	void showLoadDialog();
+	void loadFolder();
 	
 	void loadGotoBoxValue();
 	
 	void imageLoaded(const QString&, const QImage&);
 	
+	void prepQueue();
+	
+	void bufferSliderChange(int);
+	void sliderChangeFinished();
+	
+	
+// 	void showRenameDialog();
+	
+
 protected:
 	bool event(QEvent*);
 	void changeEvent(QEvent *e);
 	
 	bool queuePreload(QString file);
 	
-	void initMetaData();
+	void initMetaData(const QString& path="");
 	void writeMetaData();
 	
 	QDir m_batchDir;
@@ -87,6 +97,10 @@ protected:
 	int m_lookAhead;
 	
 	Exiv2::Image::AutoPtr m_exivImage;
+	
+	int m_rotateDegrees;
+	
+	QTimer m_sliderBufferTimer;
 	
 private:
 	Ui::MainWindow *m_ui;

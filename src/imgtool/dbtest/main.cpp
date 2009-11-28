@@ -19,10 +19,15 @@ int main(int argc, char **argv)
 	if(0)
 	{
 		ImageRecord rec("foobar.jpg");
+		rec.setImageId("abc");
 		ImageRecord::addRecord(&rec);
 		qDebug() << "New Record:"<<rec;
+		
+		ImageRecord * rec2 = ImageRecord::retrieveImageId("abc");
+		qDebug() << "Record 'ABC':"<<rec2;
 	}
-	if(1)
+	else
+	if(0)
 	{
 		QListView * lv = new QListView;
 		lv->setWindowTitle(IMAGEDB_FILE);
@@ -31,7 +36,7 @@ int main(int argc, char **argv)
 	}
 	else
 	{
-		ImageRecord * rec = ImageRecord::retrieve(1);
+		ImageRecord * rec = ImageRecord::retrieve(99);
 		//rec->setFile("test.jpg");
 		qDebug() << "Record#1: "<<rec;
 	}
@@ -39,7 +44,7 @@ int main(int argc, char **argv)
 // 	ImageRecord::db().close();
 	
 	
-// 	return -1;
+ 	return -1;
 	return app.exec();
 }
 

@@ -9,7 +9,7 @@
 #include <QImageWriter>
 #include <QDesktopServices>
 #include <QtOpenGL/QGLWidget>
-
+#include <QProgressDialog>
 #include <QThreadPool>
 
 #include "ImageRecord.h"
@@ -41,6 +41,8 @@ MainWindow::MainWindow(QWidget *parent)
 	: QMainWindow(parent)
 	, m_pixmap(0)
 	, m_ui(new Ui::MainWindow)
+	, m_lookBehind(1)
+	, m_lookAhead(4)
 {
 	m_ui->setupUi(this);
         connect(m_ui->actionExit, SIGNAL(triggered()), this, SLOT(close()));
@@ -53,6 +55,11 @@ MainWindow::MainWindow(QWidget *parent)
 	connect(m_ui->graphicsView, SIGNAL(nextImage()), this, SLOT(nextImage()));
 	connect(m_ui->graphicsView, SIGNAL(prevImage()), this, SLOT(prevImage()));
 	
+	connect(m_ui->imageSlider, SIGNAL(valueChanged(int)), this, SLOT(bufferSliderChange(int)));
+	
+	connect(&m_sliderBufferTimer, SIGNAL(timeout()), this, SLOT(sliderChangeFinished()));
+	m_sliderBufferTimer.setSingleShot(true);
+	m_sliderBufferTimer.setInterval(1000);
 
 	m_scene = new QGraphicsScene();
 
@@ -63,7 +70,7 @@ MainWindow::MainWindow(QWidget *parent)
 	m_pixmapItem->setPos(0,0);
 	m_scene->addItem(m_pixmapItem);
 	
-	m_cache.setMaxCost(1536); // 250 MB
+	m_cache.setMaxCost(512); // 250 MB
 	
 	// Using similar formula as CPAN's config for the -j option: nbr cpus + 1
 	QThreadPool::globalInstance()->setMaxThreadCount(QThread::idealThreadCount() + 1);
@@ -81,6 +88,19 @@ MainWindow::~MainWindow()
 		delete m_pixmap;
 }
 
+void MainWindow::bufferSliderChange(int value)
+{
+	m_sliderBufferTimer.stop();
+	
+	m_currentFile = value;
+	
+	m_sliderBufferTimer.start();
+}
+
+void MainWindow::sliderChangeFinished()
+{
+	setCurrentImage(m_currentFile);
+}
 
 void MainWindow::showLoadDialog()
 {
@@ -112,6 +132,26 @@ void MainWindow::showLoadDialog()
 	}
 }
 
+void MainWindow::loadFolder(const QString& folder, bool copy, const QString& copyDest)
+{
+	m_batchDir = QDir(folder);
+	if(!m_batchDir.exists())
+	{
+		QMessageBox::critical(0,"Folder Not Found","Sorry, but the folder you entered in the 'Batch Folder' box does not exist.");
+		return;
+	}
+
+	m_copyFiles = copy;
+	m_copyDest = QDir(copyDest);
+	if(!m_copyDest.exists())
+	{
+		QMessageBox::critical(0,"Destination Folder Not Found","Sorry, but the folder you entered in the 'Copy To Folder' box does not exist.");
+		return;
+	}
+	
+	loadFolder();
+}
+
 #define ADD_DATUM(prefix,md) \
 		QString key = QString("[" #prefix "] %1").arg(md->key().c_str()); \
 		QString value = md->toString().c_str(); \
@@ -129,9 +169,77 @@ void MainWindow::loadFolder()
 	filters << "*.jpeg";
 // 	filters << "*.xpm";
 // 	filters << "*.svg";
-	m_fileList = m_batchDir.entryList(filters);
 	
-	m_ui->progressBar->setMaximum(m_fileList.size());
+	m_batchDir.setNameFilters(filters);
+	
+	m_fileList.clear();
+	
+// 	QString abs = m_batchDir.absolutePath();
+// 	foreach(QString file, files) 
+// 		m_fileList << QString("%1/%2").args(abs,file);
+		
+	QProgressDialog progress(this);
+	QString progressLabel = QString(tr("Loading files from %1...")).arg(m_batchDir.absolutePath());
+	progress.setLabelText(progressLabel);
+	progress.setMinimum(0);
+	progress.setMaximum(0);
+	progress.setAutoClose(false);
+	progress.setAutoReset(false);
+	progress.setWindowTitle("Loading Folder");
+	progress.show();
+	
+	QApplication::processEvents();
+
+
+	QDirIterator it(m_batchDir, QDirIterator::Subdirectories);
+	while (it.hasNext()) 
+	{
+		if(it.filePath().isEmpty())
+		{
+			it.next();
+			continue;
+		}
+		
+		if(progress.wasCanceled())
+			break;
+		
+		QApplication::processEvents();
+		
+		
+/*
+		Exiv2::Image::AutoPtr exiv = Exiv2::ImageFactory::open(it.filePath().toStdString()); 
+		assert(exiv.get() != 0);
+		exiv->readMetadata();
+		
+		Exiv2::XmpData& xmpData = exiv->xmpData();
+		
+		QString rating = xmpData["Xmp.xmp.rating"].toString().c_str();
+// 		qDebug() << "Trying: "<<it.filePath()<<", rating:"<<rating;
+		if(rating.toInt() < 5)
+		{
+			it.next();
+			continue;
+		}*/
+		
+		
+		
+		m_fileList.append(it.filePath());
+		qDebug() << "Adding: "<<it.filePath();
+		
+		progress.setLabelText(QString("%1 (%2)").arg(progressLabel).arg(m_fileList.size()));
+		
+		it.next();
+	}
+	
+	
+	progress.close();
+	
+	qSort(m_fileList);
+	
+	
+	//m_ui->progressBar->setMaximum(m_fileList.size());
+	m_ui->imageSlider->setMaximum(m_fileList.size());
+	m_ui->gotoBox->setSuffix(QString(tr(" / %1")).arg(m_fileList.size()));
 	m_ui->gotoBox->setMaximum(m_fileList.size()-1);
 	
 	if(m_fileList.isEmpty())
@@ -143,7 +251,7 @@ void MainWindow::loadFolder()
 	
 	setCurrentImage(0);
 	
-	m_ui->progressBar->setEnabled(true);
+	m_ui->imageSlider->setEnabled(true);
 	m_ui->gotoBox->setEnabled(true);
 	m_ui->groupBox->setEnabled(true);
 	m_ui->nextBtn->setFocus();
@@ -205,17 +313,19 @@ void MainWindow::loadGotoBoxValue()
 
 void MainWindow::setCurrentImage(int num)
 {
+	if(m_fileList.isEmpty() || num < 0 || num >= m_fileList.size())
+		return;
+	
 	if(m_ui->gotoBox->value() != num)
 		m_ui->gotoBox->setValue(num);
 		
 	writeMetaData();
 		
 	m_currentFile = num;
-	m_ui->progressBar->setValue(num);
+	//m_ui->progressBar->setValue(num);
 	
-	QString file = m_fileList[num];
-	QString path = QString("%1/%2").arg(m_batchDir.absolutePath()).arg(file);
-	//QFileInfo fileInfo(path);
+	QString path = m_fileList[num];
+	QString file = QFileInfo(path).fileName();
 	
 	setWindowTitle(QString(tr("Image Importer - %1")).arg(file));
 	
@@ -226,14 +336,20 @@ void MainWindow::setCurrentImage(int num)
 	if(m_pixmap)
 		delete m_pixmap;
 		
+	QRect imgRect;
+	
 	QImage *img = 0;
 	if((img = m_cache.object(path)) != 0)
 	{
 		if(DEBUG_PRELOAD)
 			qDebug() << "MainWindow::setCurrentImage: Cache hit on "<<file;
+// 		QTime t;
+// 		t.start();
 		QPixmap px = QPixmap::fromImage(*img);
+// 		qDebug() << "MainWindow::setCurrentImage: fromImge conversion took "<<t.elapsed()<<"ms";
+		
 		m_pixmapItem->setPixmap(px);
-		m_scene->setSceneRect(px.rect());
+		imgRect = px.rect();
 	}
 	else
 	{
@@ -243,32 +359,47 @@ void MainWindow::setCurrentImage(int num)
 		QPixmap origPixmap(path);
 		//m_pixmap = new QPixmap();
 		m_pixmapItem->setPixmap(origPixmap); //.scaledToWidth(1024));
-		m_scene->setSceneRect(origPixmap.rect()); //0,0,1024,768);
+		imgRect = origPixmap.rect(); //0,0,1024,768);
 		setCursor(Qt::ArrowCursor);
 				
 		imageLoaded(path, origPixmap.toImage());
 	}
 	
+	
+	// translate it out by 1/2 width/height so it rotates around center, rather than rotating around top-left corner
+	int x = imgRect.width()  / 2;
+	int y = imgRect.height() / 2;
+	m_pixmapItem->setTransform(QTransform().translate(x, y).rotate(m_rotateDegrees).translate(-x, -y));
+	
+	// adjust width/height if rotated so that the "adjust view scaling" fits entire image in scene
+	imgRect = m_pixmapItem->transform().mapRect(imgRect);
+	
+	m_scene->setSceneRect(imgRect);
 	m_ui->graphicsView->adjustViewScaling();
 	
+	QTimer::singleShot(0, this, SLOT(prepQueue()));
+}
+
+void MainWindow::prepQueue()
+{
 	int numQueued = 0;
 	
-	int it = num;
-	while(it ++ < m_fileList.size() -1 && it - num <= m_lookAhead)
+	int it = m_currentFile;
+	while(it ++ < m_fileList.size() -1 && it - m_currentFile <= m_lookAhead)
 	{
 		if(queuePreload(m_fileList[it]))
 			numQueued ++;
 	}
 	
-	it = num;
-	while(it -- > 0 && num - it <= m_lookBehind)
+	it = m_currentFile;
+	while(it -- > 0 && m_currentFile - it <= m_lookBehind)
 	{
 		if(queuePreload(m_fileList[it]))
 			numQueued ++;
 	}
 	
-	if(DEBUG_PRELOAD)
-		qDebug() << "MainWindow::setCurrentImage: Queued"<<numQueued<<"for preload";
+	if(DEBUG_PRELOAD && numQueued>0)
+		qDebug() << "MainWindow::prepQueue: Queued"<<numQueued<<"for preload";
 }
 
 bool MainWindow::queuePreload(QString file)
@@ -306,14 +437,16 @@ void MainWindow::imageLoaded(const QString& file, const QImage& img)
 	
 }
 
-void MainWindow::initMetaData()
+void MainWindow::initMetaData(const QString &pathTmp)
 {
 	if(m_fileList.isEmpty())
 		return;
 		
 // 	m_ui->title->setText(file);
-	QString file = m_fileList[m_currentFile];
-	QString path = QString("%1/%2").arg(m_batchDir.absolutePath()).arg(file);
+	QString path = pathTmp;
+	if(path.isEmpty())
+		path = m_fileList[m_currentFile];
+	QString file = QFileInfo(path).fileName();
 	
 	/*
 		Image ID	- 	Exif.Image.UniqueID, tag # 0xa420 - 128bit length, generate with QUuid
@@ -358,30 +491,48 @@ void MainWindow::initMetaData()
 		m_exivImage->setXmpData(xmpData);
 	}
 	
+	// needed for datestamp and rotation
+	Exiv2::ExifData& exifData = m_exivImage->exifData();
+		
+	
 	ImageRecord * ref = ImageRecord::retrieveImageId(imageId);
 	if(!ref)
 	{
 		ref = new ImageRecord(file);
 		ImageRecord::addRecord(ref);
 		
-		Exiv2::ExifData& exifData = m_exivImage->exifData();
 		QDateTime dt = QDateTime::fromString(exifData["Exif.Photo.DateTimeOriginal"].toString().c_str(), "yyyy:MM:dd HH:mm:ss");
 		qDebug() << "MainWindow::initMetaData: "<<file<<": Date/Time taken: "<<dt.toString();
 		
 		ref->setDatestamp(dt);
 		ref->setImageId(imageId);
 		
-		ImageRecord * ref2 = ImageRecord::retrieveImageId(imageId);
-		if(!ref2)
-		{
-			qDebug() << "can't re-retrieve imageId"<<imageId;
-			abort();
-		}
+// 		ImageRecord * ref2 = ImageRecord::retrieveImageId(imageId);
+// 		if(!ref2)
+// 		{
+// 			qDebug() << "can't re-retrieve imageId"<<imageId;
+// 			abort();
+// 		}
 	}
 	else
 	{
-		qDebug() << "MainWindow::initMetaData: "<<file<<": Loaded record#"<<ref->recordId()<<" from database";
+		//qDebug() << "MainWindow::initMetaData: "<<file<<": Loaded record#"<<ref->recordId()<<" from database";
 	}
+	
+	
+	QString rotateSensor = exifData["Exif.Image.Orientation"].toString().c_str();
+	int rotationFlag = rotateSensor.toInt(); 
+	m_rotateDegrees = rotationFlag == 1 ||
+	 		  rotationFlag == 2 ? 0 :
+			  rotationFlag == 7 ||
+			  rotationFlag == 8 ? -90 :
+			  rotationFlag == 3 ||
+			  rotationFlag == 4 ? -180 :
+			  rotationFlag == 5 ||
+			  rotationFlag == 6 ? -270 :
+			  0;
+	
+	//qDebug() << "rotationFlag:"<<rotationFlag<<", m_rotateDegrees: "<<m_rotateDegrees;;
 	
 	QString batch		= xmpData["Xmp.dc.batch"]	.toString().c_str();
 	QString location	= xmpData["Xmp.dc.coverage"]	.toString().c_str();
@@ -439,26 +590,29 @@ void MainWindow::writeMetaData()
 		return;
 	
 	
+	if(m_fileList.isEmpty() || m_currentFile < 0 || m_currentFile >= m_fileList.size())
+		return;
+		
 	Exiv2::XmpData& xmpData = m_exivImage->xmpData();
 	QString imageId = xmpData["Xmp.dc.uniqueid"].toString().c_str();
 	
-	QString file = m_fileList[m_currentFile];
-	qDebug() << "MainWindow::writeMetaData: "<<file<<": Writing meta data for imageId: "<<imageId;
+	QString path = m_fileList[m_currentFile];
+// 	qDebug() << "MainWindow::writeMetaData: "<<file<<": Writing meta data for imageId: "<<imageId;
 	
 	ImageRecord * ref = ImageRecord::retrieveImageId(imageId);
 	if(!ref)
 	{
-		ref = new ImageRecord(file);
+		ref = new ImageRecord(path);
 		ImageRecord::addRecord(ref);
 		
 		Exiv2::ExifData& exifData = m_exivImage->exifData();
 		QDateTime dt = QDateTime::fromString(exifData["Exif.Photo.DateTimeOriginal"].toString().c_str(), "yyyy:MM:dd HH:mm:ss");
-		qDebug() << "MainWindow::writeMetaData: "<<file<<": Date/Time taken: "<<dt.toString();
+		qDebug() << "MainWindow::writeMetaData: "<<path<<": Date/Time taken: "<<dt.toString();
 		ref->setDatestamp(dt);
 	}
 	else
 	{
-		qDebug() << "MainWindow::writeMetaData: "<<file<<": Loaded record#"<<ref->recordId()<<" from database";
+// 		qDebug() << "MainWindow::writeMetaData: "<<path<<": Loaded record#"<<ref->recordId()<<" from database";
 	}
 	
 	

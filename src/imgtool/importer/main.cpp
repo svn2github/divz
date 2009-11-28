@@ -180,13 +180,25 @@ int main(int argc, char **argv)
 		QApplication::setGraphicsSystem("raster");
 		#endif
  	#endif
-
+///appcluster/dviz/src/samples/kid-photos
  	QApplication app(argc, argv);
 // 	AppSettings::initApp("DVizViewer");
 
 // 	AppSettings::load();
 
 	MainWindow mw;
+	
+	if(argc > 1)
+	{
+		qDebug() << "Loading intial folder: "<<argv[1]; 
+		mw.loadFolder(argv[1]);
+	}
+	
+	if(argc > 2)
+	{
+		mw.setCurrentImage(QString(argv[2]).toInt());
+	}
+	
 	mw.show();
 
 
