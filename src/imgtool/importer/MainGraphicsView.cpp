@@ -20,8 +20,8 @@ MainGraphicsView::MainGraphicsView(QWidget * parent)
 	setResizeAnchor(AnchorViewCenter);
 	setBackgroundBrush(Qt::lightGray);
 	setDragMode(QGraphicsView::ScrollHandDrag);
-// 	setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-// 	setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+	setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+	setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 }
 
 void MainGraphicsView::keyPressEvent(QKeyEvent *event)

@@ -118,7 +118,7 @@
           <item row="1" column="1">
            <widget class="QLineEdit" name="batchname"/>
           </item>
-          <item row="1" column="2">
+          <item row="1" column="3">
            <widget class="QLabel" name="label_8">
             <property name="text">
              <string>&amp;Rating:</string>
@@ -128,7 +128,7 @@
             </property>
            </widget>
           </item>
-          <item row="1" column="3">
+          <item row="1" column="4">
            <widget class="QSpinBox" name="rating">
             <property name="specialValueText">
              <string>(Not Yet Rated)</string>
@@ -154,7 +154,7 @@
           <item row="2" column="1">
            <widget class="QLineEdit" name="tags"/>
           </item>
-          <item row="2" column="2">
+          <item row="2" column="3">
            <widget class="QLabel" name="label_6">
             <property name="text">
              <string>&amp;Description:</string>
@@ -164,23 +164,10 @@
             </property>
            </widget>
           </item>
-          <item row="2" column="3">
+          <item row="2" column="4">
            <widget class="QLineEdit" name="description"/>
           </item>
-          <item row="3" column="0">
-           <widget class="QLabel" name="label_5">
-            <property name="text">
-             <string>&amp;Subjects:</string>
-            </property>
-            <property name="buddy">
-             <cstring>subjects</cstring>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="1">
-           <widget class="QLineEdit" name="subjects"/>
-          </item>
-          <item row="3" column="2">
+          <item row="3" column="3">
            <widget class="QLabel" name="label_7">
             <property name="text">
              <string>&amp;Location:</string>
@@ -190,19 +177,89 @@
             </property>
            </widget>
           </item>
-          <item row="3" column="3">
+          <item row="3" column="4">
            <widget class="QLineEdit" name="location"/>
           </item>
-          <item row="4" column="1" colspan="3">
-           <widget class="QLineEdit" name="title"/>
+          <item row="1" column="2">
+           <widget class="QPushButton" name="lastBatchBtn">
+            <property name="text">
+             <string>Last (F3)</string>
+            </property>
+            <property name="shortcut">
+             <string>F3</string>
+            </property>
+           </widget>
           </item>
-          <item row="4" column="0">
+          <item row="2" column="2">
+           <widget class="QPushButton" name="lastTagsBtn">
+            <property name="text">
+             <string>Last (F4)</string>
+            </property>
+            <property name="shortcut">
+             <string>F4</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="5">
+           <widget class="QPushButton" name="lastDescriptionBtn">
+            <property name="text">
+             <string>Last (F6)</string>
+            </property>
+            <property name="shortcut">
+             <string>F6</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="5">
+           <widget class="QPushButton" name="lastLocationBtn">
+            <property name="text">
+             <string>Last (F7)</string>
+            </property>
+            <property name="shortcut">
+             <string>F7</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="2" colspan="3">
+           <widget class="QLineEdit" name="highCopyFolder"/>
+          </item>
+          <item row="4" column="5">
+           <widget class="QPushButton" name="highCopyBrowseBtn">
+            <property name="text">
+             <string>Browse</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
            <widget class="QLabel" name="label_2">
             <property name="text">
              <string>Titl&amp;e:</string>
             </property>
             <property name="buddy">
              <cstring>title</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="QLineEdit" name="title"/>
+          </item>
+          <item row="4" column="0" colspan="2">
+           <widget class="QCheckBox" name="highCopyFlag">
+            <property name="text">
+             <string>Copy if rated 5 stars to folder:</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="2">
+           <widget class="QPushButton" name="lastTitleBtn">
+            <property name="text">
+             <string>Last (F3)</string>
+            </property>
+            <property name="shortcut">
+             <string>F3</string>
             </property>
            </widget>
           </item>
@@ -237,7 +294,6 @@
   <tabstop>rating</tabstop>
   <tabstop>tags</tabstop>
   <tabstop>description</tabstop>
-  <tabstop>subjects</tabstop>
   <tabstop>location</tabstop>
  </tabstops>
  <resources/>

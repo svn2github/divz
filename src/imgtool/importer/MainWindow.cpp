@@ -16,6 +16,7 @@
 #include "ImageRecordListModel.h"
 
 #include "LoadDialog.h"
+#include "AppSettings.h"
 
 #include <QUuid>
 
@@ -23,7 +24,7 @@
 #include <iostream>
 #include <cassert>
 
-#define DEBUG_PRELOAD 0 
+#define DEBUG_PRELOAD 1 
 
 
 namespace {
@@ -43,6 +44,7 @@ MainWindow::MainWindow(QWidget *parent)
 	, m_ui(new Ui::MainWindow)
 	, m_lookBehind(1)
 	, m_lookAhead(4)
+	, m_changingCombobox(false)
 {
 	m_ui->setupUi(this);
         connect(m_ui->actionExit, SIGNAL(triggered()), this, SLOT(close()));
@@ -59,7 +61,22 @@ MainWindow::MainWindow(QWidget *parent)
 	
 	connect(&m_sliderBufferTimer, SIGNAL(timeout()), this, SLOT(sliderChangeFinished()));
 	m_sliderBufferTimer.setSingleShot(true);
-	m_sliderBufferTimer.setInterval(1000);
+	m_sliderBufferTimer.setInterval(500);
+	
+	connect(&m_loadOriginalTimer, SIGNAL(timeout()), this, SLOT(loadOriginalSize()));
+	m_loadOriginalTimer.setSingleShot(true);
+	m_loadOriginalTimer.setInterval(250);
+	
+	connect(m_ui->lastBatchBtn, SIGNAL(clicked()), this, SLOT(useLastBatch()));
+	connect(m_ui->lastTagsBtn, SIGNAL(clicked()), this, SLOT(useLastTags()));
+	connect(m_ui->lastTitleBtn, SIGNAL(clicked()), this, SLOT(useLastTitle()));
+	connect(m_ui->lastDescriptionBtn, SIGNAL(clicked()), this, SLOT(useLastDescription()));
+	connect(m_ui->lastLocationBtn, SIGNAL(clicked()), this, SLOT(useLastLocation()));
+	
+	
+	connect(m_ui->highCopyBrowseBtn, SIGNAL(clicked()), this, SLOT(highCopyBrowse()));	
+	m_ui->highCopyFolder->setText(AppSettings::previousPath("highcopyfolder"));
+	
 
 	m_scene = new QGraphicsScene();
 
@@ -90,11 +107,15 @@ MainWindow::~MainWindow()
 
 void MainWindow::bufferSliderChange(int value)
 {
+	m_loadOriginalTimer.stop();
 	m_sliderBufferTimer.stop();
 	
-	m_currentFile = value;
-	
-	m_sliderBufferTimer.start();
+	if(m_currentFile != value)
+	{
+		m_currentFile = value;
+		
+		m_sliderBufferTimer.start();
+	}
 }
 
 void MainWindow::sliderChangeFinished()
@@ -299,7 +320,8 @@ void PreloadImageTask::run()
 	if(DEBUG_PRELOAD)
 		qDebug() << m_file<<":"<<(image.numBytes() / 1024 / 1024) << "MB ( active:"<<activeThreads<<")";
 	
-	emit imageLoaded(m_file,image); 
+	QImage scaled = image.scaled(QSize(1024,768),Qt::KeepAspectRatio);
+	emit imageLoaded(m_file,image,scaled); 
 	
 	mutex.lock();
 	activeThreads--;
@@ -316,12 +338,20 @@ void MainWindow::setCurrentImage(int num)
 	if(m_fileList.isEmpty() || num < 0 || num >= m_fileList.size())
 		return;
 	
+	m_currentFile = num;
+	
+	if(m_changingCombobox)
+		return;
+		
 	if(m_ui->gotoBox->value() != num)
+	{
+		m_changingCombobox = true;
 		m_ui->gotoBox->setValue(num);
+		m_changingCombobox = false;
+	}
 		
 	writeMetaData();
 		
-	m_currentFile = num;
 	//m_ui->progressBar->setValue(num);
 	
 	QString path = m_fileList[num];
@@ -338,18 +368,46 @@ void MainWindow::setCurrentImage(int num)
 		
 	QRect imgRect;
 	
+	QString smallKey = QString("%1_sm").arg(path);
+	
 	QImage *img = 0;
+	
+	if((img = m_cache.object(smallKey)) != 0)
+	{
+		m_loadOriginalTimer.stop();
+		
+		if(DEBUG_PRELOAD)
+			qDebug() << "MainWindow::setCurrentImage: Cache hit on smallKey "<<smallKey;
+		setCursor(Qt::BusyCursor);
+		
+		QTime t;
+		t.start();
+		QPixmap px = QPixmap::fromImage(*img);
+ 		qDebug() << "MainWindow::setCurrentImage: fromImge conversion took "<<t.elapsed()<<"ms";
+		
+		m_pixmapItem->setPixmap(px);
+		imgRect = px.rect();
+		
+		setCursor(Qt::ArrowCursor);
+		
+		m_loadOriginalTimer.start();
+	}
+	else
 	if((img = m_cache.object(path)) != 0)
 	{
 		if(DEBUG_PRELOAD)
 			qDebug() << "MainWindow::setCurrentImage: Cache hit on "<<file;
-// 		QTime t;
-// 		t.start();
+		setCursor(Qt::BusyCursor);
+		
+		QTime t;
+		t.start();
 		QPixmap px = QPixmap::fromImage(*img);
-// 		qDebug() << "MainWindow::setCurrentImage: fromImge conversion took "<<t.elapsed()<<"ms";
+ 		qDebug() << "MainWindow::setCurrentImage: fromImge conversion took "<<t.elapsed()<<"ms";
 		
 		m_pixmapItem->setPixmap(px);
 		imgRect = px.rect();
+		
+		setCursor(Qt::ArrowCursor);
 	}
 	else
 	{
@@ -362,7 +420,7 @@ void MainWindow::setCurrentImage(int num)
 		imgRect = origPixmap.rect(); //0,0,1024,768);
 		setCursor(Qt::ArrowCursor);
 				
-		imageLoaded(path, origPixmap.toImage());
+		imageLoaded(path, origPixmap.toImage(), origPixmap.scaled(QSize(1024,768),Qt::KeepAspectRatio).toImage());
 	}
 	
 	
@@ -378,6 +436,52 @@ void MainWindow::setCurrentImage(int num)
 	m_ui->graphicsView->adjustViewScaling();
 	
 	QTimer::singleShot(0, this, SLOT(prepQueue()));
+}
+
+void MainWindow::loadOriginalSize()
+{
+	if(m_fileList.isEmpty() || m_currentFile < 0 || m_currentFile >= m_fileList.size())
+		return;
+
+	QString path = m_fileList[m_currentFile];
+	QString file = QFileInfo(path).fileName();
+	
+	QImage *img = 0;
+	
+	if((img = m_cache.object(path)) != 0)
+	{
+		if(DEBUG_PRELOAD)
+			qDebug() << "MainWindow::loadOriginalSize: Cache hit on "<<file;
+		setCursor(Qt::BusyCursor);
+		
+		QTime t;
+		t.start();
+		QPixmap px = QPixmap::fromImage(*img);
+ 		qDebug() << "MainWindow::loadOriginalSize: fromImge conversion took "<<t.elapsed()<<"ms";
+		
+		QRect imgRect = px.rect();
+		
+		// translate it out by 1/2 width/height so it rotates around center, rather than rotating around top-left corner
+		int x = imgRect.width()  / 2;
+		int y = imgRect.height() / 2;
+		m_pixmapItem->setTransform(QTransform().translate(x, y).rotate(m_rotateDegrees).translate(-x, -y));
+		
+		// adjust width/height if rotated so that the "adjust view scaling" fits entire image in scene
+		imgRect = m_pixmapItem->transform().mapRect(imgRect);
+		
+		m_ui->graphicsView->setUpdatesEnabled(false);
+		m_scene->setSceneRect(imgRect);
+		m_pixmapItem->setPixmap(px);
+		m_ui->graphicsView->adjustViewScaling();
+		m_ui->graphicsView->setUpdatesEnabled(true);
+		
+		setCursor(Qt::ArrowCursor);
+	}
+	else
+	{
+		qDebug() << "MainWindow::loadOriginalSize: Could not find origianl size for "<<path;
+	}
+	
 }
 
 void MainWindow::prepQueue()
@@ -402,18 +506,17 @@ void MainWindow::prepQueue()
 		qDebug() << "MainWindow::prepQueue: Queued"<<numQueued<<"for preload";
 }
 
-bool MainWindow::queuePreload(QString file)
+bool MainWindow::queuePreload(QString path)
 {
-	QString path = QString("%1/%2").arg(m_batchDir.absolutePath()).arg(file);
 	if(!m_cache.contains(path) && 
 	   !m_filesInProcess.contains(path))
 	{
 		m_filesInProcess.append(path);
 		
 		if(DEBUG_PRELOAD)
-			qDebug() << "MainWindow::queuePreload: Queueing "<<file<<" for preload";
+			qDebug() << "MainWindow::queuePreload: Queueing "<<path<<" for preload";
 		PreloadImageTask *preload = new PreloadImageTask(path);
-		connect(preload, SIGNAL(imageLoaded(QString,QImage)), this, SLOT(imageLoaded(QString,QImage)));
+		connect(preload, SIGNAL(imageLoaded(QString,QImage,QImage)), this, SLOT(imageLoaded(QString,QImage,QImage)));
 		
 		// QThreadPool takes ownership and deletes 'preload' automatically
 		QThreadPool::globalInstance()->start(preload);
@@ -424,7 +527,7 @@ bool MainWindow::queuePreload(QString file)
 	return false;
 }
 
-void MainWindow::imageLoaded(const QString& file, const QImage& img)
+void MainWindow::imageLoaded(const QString& file, const QImage& img, const QImage &scaled)
 {
 	int mb = img.numBytes() / 1024 / 1024;
 	
@@ -432,8 +535,17 @@ void MainWindow::imageLoaded(const QString& file, const QImage& img)
 	m_cache.insert(file, cacheable, mb);
 	m_filesInProcess.remove(file);
 	
+	int smallMb = -1;
+	if(!scaled.isNull())
+	{
+// 		smallMb = scaled.numBytes() / 1024 / 1024;
+// 		QImage * cacheableSmall = new QImage(scaled);
+// 		m_cache.insert(QString("%1_sm").arg(file), cacheableSmall, smallMb);
+	}
+	
+	
 	if(DEBUG_PRELOAD)
-		qDebug() << "MainWindow::imageLoaded: Loaded"<<file<<" ("<<mb<<"MB )"; //<< ( m_filesInProcess.isEmpty() ? "" : QString(", still waiting on %1 images.").arg(m_filesInProcess.size()));
+		qDebug() << "MainWindow::imageLoaded: Loaded"<<file<<" ("<<mb<<"MB, smallMb:"<<smallMb<<"MB )"; //<< ( m_filesInProcess.isEmpty() ? "" : QString(", still waiting on %1 images.").arg(m_filesInProcess.size()));
 	
 }
 
@@ -542,16 +654,21 @@ void MainWindow::initMetaData(const QString &pathTmp)
 	QString rating	 	= xmpData["Xmp.xmp.rating"]	.toString().c_str();
 	
 	
-	
 	if(!batch.isEmpty())
 		m_ui->batchname->setText(batch);
+	else
+		m_ui->batchname->setText("");
 	
 	if(!location.isEmpty())
 		m_ui->location->setText(location);
-	
+	else
+		m_ui->location->setText("");
+		
 	if(!tags.isEmpty())
 		m_ui->tags->setText(tags);
-	
+	else
+		m_ui->tags->setText("");
+		
 	if(!description.isEmpty())
 		m_ui->description->setText(removeLangPrefix(description));
 	else
@@ -582,6 +699,45 @@ void MainWindow::initMetaData(const QString &pathTmp)
 	
 	
 	
+}
+
+void MainWindow::useLastTitle() 
+{
+	m_ui->title->setText(m_lastTitle);
+}
+
+void MainWindow::useLastDescription()
+{
+	m_ui->description->setText(m_lastDescription);
+}
+
+void MainWindow::useLastTags()
+{
+	m_ui->tags->setText(m_lastTags);
+}
+
+void MainWindow::useLastLocation()
+{
+	m_ui->location->setText(m_lastLocation);
+}
+
+void MainWindow::useLastBatch()
+{
+	m_ui->batchname->setText(m_lastBatch);
+}
+
+void MainWindow::highCopyBrowse()
+{
+	
+	QString dirPath = QFileDialog::getExistingDirectory(this, tr("Select Destination Folder"), 
+        		m_ui->highCopyFolder->text(), 
+        		QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
+
+	if(!dirPath.isEmpty())
+	{
+		m_ui->highCopyFolder->setText(dirPath);
+		AppSettings::setPreviousPath("highcopyfolder",dirPath);
+	}
 }
 
 void MainWindow::writeMetaData()
@@ -620,14 +776,19 @@ void MainWindow::writeMetaData()
 	ref->setBatchName(batch);
 	xmpData["Xmp.dc.batch"]		= batch.toStdString();
 	
+	m_lastBatch = batch;
+	
 	QString location = m_ui->location->text();
 	ref->setLocation(location);
 	xmpData["Xmp.dc.coverage"]	= location.toStdString();
 	
+	m_lastLocation = location;
+	
+	
 	QString tags = m_ui->tags->text();
 	ref->setTags(tags);
 	
-	
+	m_lastTags = tags;
 	
 	for (Exiv2::XmpData::iterator md = xmpData.begin();
 		md != xmpData.end(); ++md) 
@@ -640,9 +801,13 @@ void MainWindow::writeMetaData()
 	ref->setDescription(description);
 	xmpData["Xmp.dc.description"]	= description.toStdString();
 	
+	m_lastDescription = description;
+	
 	QString title = m_ui->title->text();
 	ref->setTitle(title);
 	xmpData["Xmp.dc.title"]		= title.toStdString();
+	
+	m_lastTitle = title; 
 	
 	int rating = m_ui->rating->value();
 	ref->setRating(rating);

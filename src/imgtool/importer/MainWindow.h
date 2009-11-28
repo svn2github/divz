@@ -28,7 +28,7 @@ public:
 	void run();
 	
 signals:
-	void imageLoaded(const QString&, const QImage&);
+	void imageLoaded(const QString&, const QImage&, const QImage&);
 	
 private:	
 	QString m_file;
@@ -54,15 +54,24 @@ protected slots:
 	
 	void loadGotoBoxValue();
 	
-	void imageLoaded(const QString&, const QImage&);
+	void imageLoaded(const QString&, const QImage&, const QImage&);
 	
 	void prepQueue();
 	
 	void bufferSliderChange(int);
 	void sliderChangeFinished();
 	
+	void loadOriginalSize();
 	
 // 	void showRenameDialog();
+
+	void useLastTitle();
+	void useLastDescription();
+	void useLastTags();
+	void useLastLocation();
+	void useLastBatch();
+	
+	void highCopyBrowse();
 	
 
 protected:
@@ -101,6 +110,15 @@ protected:
 	int m_rotateDegrees;
 	
 	QTimer m_sliderBufferTimer;
+	QTimer m_loadOriginalTimer;
+	
+	bool m_changingCombobox;
+	
+	QString m_lastTitle;
+	QString m_lastDescription;
+	QString m_lastTags;
+	QString m_lastLocation;
+	QString m_lastBatch;
 	
 private:
 	Ui::MainWindow *m_ui;
