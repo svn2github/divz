@@ -42,14 +42,20 @@
         <item>
          <widget class="QPushButton" name="moveUpBtn">
           <property name="text">
-           <string>Move Up</string>
+           <string>Move &amp;Up</string>
+          </property>
+          <property name="shortcut">
+           <string>Shift+S</string>
           </property>
          </widget>
         </item>
         <item>
          <widget class="QPushButton" name="moveDownBtn">
           <property name="text">
-           <string>Move Down</string>
+           <string>Move &amp;Down</string>
+          </property>
+          <property name="shortcut">
+           <string>Shift+A</string>
           </property>
          </widget>
         </item>
@@ -69,7 +75,7 @@
         <item>
          <widget class="QPushButton" name="addBtn">
           <property name="text">
-           <string>Add</string>
+           <string>&amp;Add</string>
           </property>
          </widget>
         </item>
@@ -89,7 +95,10 @@
         <item>
          <widget class="QPushButton" name="delBtn">
           <property name="text">
-           <string>Remove</string>
+           <string>&amp;Remove</string>
+          </property>
+          <property name="shortcut">
+           <string>Del</string>
           </property>
          </widget>
         </item>
@@ -161,7 +170,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>26</height>
+     <height>19</height>
     </rect>
    </property>
   </widget>

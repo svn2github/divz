@@ -222,12 +222,12 @@ win32 {
 	SOURCES += ./exiv2-0.18.2-qtbuild/src/getopt_win32.c 
 	DEFINES += WIN32
 	
-	INCLUDEPATH += ./exiv2-0.18.2-qtbuild/win32/zlib123 \
-		./exiv2-0.18.2-qtbuild/win32/expat201/Source/lib 
+	INCLUDEPATH += ../exiv2-0.18.2-qtbuild/win32/zlib123 \
+		../exiv2-0.18.2-qtbuild/win32/expat201/Source/lib 
 
-	DEPENDPATH += ./exiv2-0.18.2-qtbuild/win32/zlib123 \
-		./exiv2-0.18.2-qtbuild/win32/zlib123dll/dll32 \
-		./exiv2-0.18.2-qtbuild/win32/expat201/Source/lib 
+	DEPENDPATH += ../exiv2-0.18.2-qtbuild/win32/zlib123 \
+		../exiv2-0.18.2-qtbuild/win32/zlib123dll/dll32 \
+		../exiv2-0.18.2-qtbuild/win32/expat201/Source/lib 
 		
 	LIBS += -L"../exiv2-0.18.2-qtbuild/win32/zlib123dll/dll32" \
 		-lzlibwapi \

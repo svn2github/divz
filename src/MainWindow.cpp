@@ -159,6 +159,8 @@ MainWindow::MainWindow(QWidget *parent) :
 	
 	connect(m_ui->actionAdd_Group_Player, SIGNAL(triggered()), this, SLOT(addGroupPlayer()));
 
+	connect(m_ui->actionToggle_Live_Output, SIGNAL(triggered()), this, SLOT(actionToggleLiveOutput()));
+
 
 	#ifdef WIN32_PPT_ENABLED
 		m_ui->actionAdd_PowerPoint_File->setIcon(QIcon(":data/insert-ppt-24.png"));
@@ -229,6 +231,17 @@ void MainWindow::autosave()
 void MainWindow::saveFinished()
 {
 	statusBar()->showMessage(QString(tr("Document saved as %1.")).arg(m_doc->filename()),1500);
+}
+
+void MainWindow::actionToggleLiveOutput()
+{
+	Output * live = AppSettings::taggedOutput("live");
+	live->setIsEnabled(!live->isEnabled());
+
+	emit appSettingsChanged();
+	setupOutputViews();
+	setupOutputList();
+	setupOutputControls();
 }
 
 void MainWindow::actionAddPPT()

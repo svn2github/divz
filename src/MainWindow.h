@@ -138,6 +138,8 @@ protected slots:
 	
 	void autosave();
 	void saveFinished();
+
+	void actionToggleLiveOutput();
 	
 protected:
 	void changeEvent(QEvent *e);

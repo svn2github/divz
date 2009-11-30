@@ -147,6 +147,17 @@ void ImageImportDialog::accept()
 	int zoomSpeed = m_ui->zoomSpeed->value();
 	double zoomFactor = m_ui->zoomFactor->value();
 
+	bool resizeFiles = m_ui->resizeFlag->isChecked();
+	bool resizeSubfolder = m_ui->resizeSubfolder->isChecked();
+	double resizeSize = m_ui->resizeSize->value() / 100.0;
+
+	QString resizeDest = copyDest.absolutePath();
+	if(copyFiles && resizeSubfolder && resizeFiles)
+	{
+		copyDest.mkdir("resized");
+		resizeDest = copyDest.absolutePath() + "/resized";
+	}
+
 	QStringList filters;
 	filters << "*.bmp";
 	filters << "*.png";
@@ -239,12 +250,26 @@ void ImageImportDialog::accept()
 			if(!origFile.copy(newPath))
 				qDebug() << "Cannot copy "<<path<<" to "<<newPath;
 
+			if(resizeFiles)
+			{
+				QImage newImage(newPath);
+				QRect rect = newImage.rect();
+				QImage resized = newImage.scaled(rect.height() * resizeSize, rect.width() * resizeSize, Qt::KeepAspectRatio);
+				QFileInfo info(newPath);
+				QString newFile = QString("%1/%2").arg(resizeDest).arg(info.fileName());
+				resized.save(newFile);
+
+				newPath = newFile;
+			}
+
 			if(removeOriginal)
 			{
 				origFile.remove();
-				path = newPath;
 				qDebug() << "Removed original, new path: "<<newPath;
 			}
+
+			path = newPath;
+
 
 		}
 
