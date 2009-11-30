@@ -106,7 +106,7 @@ QPixmap MediaBrowser::iconForImage(const QString & file, const QSize & size)
 			}
 			else
 			{
-				cache = orig.scaled(size,Qt::IgnoreAspectRatio,Qt::SmoothTransformation);
+				cache = orig.scaled(size,Qt::KeepAspectRatio,Qt::SmoothTransformation);
 				cache.save(cacheFile,"PNG");
 				////qDebug() << "MyQFileIconProvider::icon(): image file: caching to:"<<cacheFile<<" for "<<file;
 				QPixmapCache::insert(cacheFile,cache);

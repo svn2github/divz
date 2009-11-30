@@ -807,6 +807,9 @@ void OutputInstance::setEndGroupAction(SlideGroup::EndOfGroupAction act)
 	
 Slide * OutputInstance::nextSlide()
 {
+	if(!m_slideGroup)
+		return 0;
+		
 	m_slideNum ++;
 	if(m_slideNum >= m_sortedSlides.size())
 	{
@@ -844,6 +847,9 @@ Slide * OutputInstance::nextSlide()
 
 Slide * OutputInstance::prevSlide()
 {
+	if(!m_slideGroup)
+		return 0;
+		
 	m_slideNum --;
 	if(m_slideNum < 0)
 		m_slideNum = 0;

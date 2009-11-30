@@ -26,7 +26,7 @@
      <x>0</x>
      <y>0</y>
      <width>942</width>
-     <height>19</height>
+     <height>25</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -62,7 +62,7 @@
    </widget>
    <widget class="QMenu" name="menuTools">
     <property name="title">
-     <string>Tools</string>
+     <string>&amp;Tools</string>
     </property>
     <addaction name="actionImages_Import_Tool"/>
     <addaction name="actionText_Import_Tool"/>
