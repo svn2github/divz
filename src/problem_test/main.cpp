@@ -51,7 +51,7 @@ public:
 
 int main(int argc, char **argv)
 {
-	//QGL::setPreferredPaintEngine(QPaintEngine::OpenGL);
+	QGL::setPreferredPaintEngine(QPaintEngine::OpenGL);
 	QApplication app(argc, argv);
 
 	QGraphicsView *graphicsView = new QGraphicsView();

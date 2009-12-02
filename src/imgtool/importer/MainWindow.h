@@ -42,7 +42,7 @@ public:
 	~MainWindow();
 	
 public slots:
-	void loadFolder(const QString& folder, bool copy=false, const QString& copyDest="");
+	void loadFolder(const QString& folder, bool copy=false, const QString& copyDest="", bool onlyShowHigh=false);
 
 	void nextImage();
 	void prevImage();
@@ -119,6 +119,8 @@ protected:
 	QString m_lastTags;
 	QString m_lastLocation;
 	QString m_lastBatch;
+	
+	bool m_onlyShowHigh;
 	
 private:
 	Ui::MainWindow *m_ui;

@@ -190,8 +190,18 @@ int main(int argc, char **argv)
 	
 	if(argc > 1)
 	{
-		qDebug() << "Loading intial folder: "<<argv[1]; 
-		mw.loadFolder(argv[1]);
+		QString folder = QString(argv[1]); 
+		qDebug() << "Loading intial folder: "<<folder;
+		QString high = ":high";
+		if(folder.endsWith(high))
+		{
+			folder = folder.left(folder.size() - high.size());
+			mw.loadFolder(folder,false,"",true);
+		}
+		else
+		{
+			mw.loadFolder(folder);
+		}
 	}
 	
 	if(argc > 2)

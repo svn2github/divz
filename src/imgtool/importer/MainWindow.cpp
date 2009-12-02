@@ -45,6 +45,7 @@ MainWindow::MainWindow(QWidget *parent)
 	, m_lookBehind(1)
 	, m_lookAhead(4)
 	, m_changingCombobox(false)
+	, m_onlyShowHigh(false)
 {
 	m_ui->setupUi(this);
         connect(m_ui->actionExit, SIGNAL(triggered()), this, SLOT(close()));
@@ -153,8 +154,10 @@ void MainWindow::showLoadDialog()
 	}
 }
 
-void MainWindow::loadFolder(const QString& folder, bool copy, const QString& copyDest)
+void MainWindow::loadFolder(const QString& folder, bool copy, const QString& copyDest, bool onlyShowHigh)
 {
+	m_onlyShowHigh = onlyShowHigh;
+	
 	m_batchDir = QDir(folder);
 	if(!m_batchDir.exists())
 	{
@@ -212,7 +215,7 @@ void MainWindow::loadFolder()
 	QApplication::processEvents();
 
 
-	QDirIterator it(m_batchDir, QDirIterator::Subdirectories);
+	QDirIterator it(m_batchDir); //, QDirIterator::Subdirectories);
 	while (it.hasNext()) 
 	{
 		if(it.filePath().isEmpty())
@@ -227,20 +230,22 @@ void MainWindow::loadFolder()
 		QApplication::processEvents();
 		
 		
-/*
-		Exiv2::Image::AutoPtr exiv = Exiv2::ImageFactory::open(it.filePath().toStdString()); 
-		assert(exiv.get() != 0);
-		exiv->readMetadata();
-		
-		Exiv2::XmpData& xmpData = exiv->xmpData();
-		
-		QString rating = xmpData["Xmp.xmp.rating"].toString().c_str();
-// 		qDebug() << "Trying: "<<it.filePath()<<", rating:"<<rating;
-		if(rating.toInt() < 5)
+		if(m_onlyShowHigh)
 		{
-			it.next();
-			continue;
-		}*/
+			Exiv2::Image::AutoPtr exiv = Exiv2::ImageFactory::open(it.filePath().toStdString()); 
+			assert(exiv.get() != 0);
+			exiv->readMetadata();
+			
+			Exiv2::XmpData& xmpData = exiv->xmpData();
+			
+			QString rating = xmpData["Xmp.xmp.rating"].toString().c_str();
+	// 		qDebug() << "Trying: "<<it.filePath()<<", rating:"<<rating;
+			if(rating.toInt() < 5)
+			{
+				it.next();
+				continue;
+			}
+		}
 		
 		
 		
@@ -402,9 +407,12 @@ void MainWindow::setCurrentImage(int num)
 		QTime t;
 		t.start();
 		QPixmap px = QPixmap::fromImage(*img);
- 		qDebug() << "MainWindow::setCurrentImage: fromImge conversion took "<<t.elapsed()<<"ms";
+ 		qDebug() << "MainWindow::setCurrentImage: fromImge took "<<t.elapsed()<<"ms";
 		
+		t.restart();
 		m_pixmapItem->setPixmap(px);
+		qDebug() << "MainWindow::setCurrentImage: setPixmap took "<<t.elapsed()<<"ms";
+		
 		imgRect = px.rect();
 		
 		setCursor(Qt::ArrowCursor);
@@ -424,6 +432,9 @@ void MainWindow::setCurrentImage(int num)
 	}
 	
 	
+	QTime t;
+	t.start();
+	
 	// translate it out by 1/2 width/height so it rotates around center, rather than rotating around top-left corner
 	int x = imgRect.width()  / 2;
 	int y = imgRect.height() / 2;
@@ -435,7 +446,10 @@ void MainWindow::setCurrentImage(int num)
 	m_scene->setSceneRect(imgRect);
 	m_ui->graphicsView->adjustViewScaling();
 	
-	QTimer::singleShot(0, this, SLOT(prepQueue()));
+	qDebug() << "MainWindow::setCurrentImage: transforming scene took "<<t.elapsed()<<"ms";
+	
+	
+	QTimer::singleShot(5, this, SLOT(prepQueue()));
 }
 
 void MainWindow::loadOriginalSize()
@@ -813,6 +827,7 @@ void MainWindow::writeMetaData()
 	ref->setRating(rating);
 	QString ratingStr = QString("%1").arg(rating);
 	xmpData["Xmp.xmp.rating"]	= ratingStr.toStdString();
+
 	
 // 	// Serialize the XMP data and output the XMP packet
 // 	std::string xmpPacket;
@@ -824,6 +839,19 @@ void MainWindow::writeMetaData()
 
 	m_exivImage->setXmpData(xmpData);
 	m_exivImage->writeMetadata();
+
+	
+	if(rating >= 5 && m_ui->highCopyFlag->isChecked())
+	{
+		QDir copyDest = QDir(m_ui->highCopyFolder->text());
+		QFile origFile(path);
+		QString file = QFileInfo(path).fileName();
+		QString newPath = QString("%1/%2").arg(copyDest.absolutePath(),file);
+		if(!origFile.copy(newPath))
+			qDebug() << "Cannot copy "<<path<<" to "<<newPath;
+		else
+			qDebug() << "Successfully copied "<<path<<" to "<<newPath;
+	}
 }
 
 void MainWindow::changeEvent(QEvent *e)
@@ -866,7 +894,7 @@ void MainWindow::changeEvent(QEvent *e)
 // 		}
 // 		else
 		{
-			qDebug() << "MainWindow::event: unused key:"<<ke->key();
+			//qDebug() << "MainWindow::event: unused key:"<<ke->key();
 		}
 	}
 	
