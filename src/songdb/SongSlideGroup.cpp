@@ -344,6 +344,7 @@ void SongSlideGroup::textToSlides(SongTextFilter filter)
 
 		int ptSize = 32;	// starting pt size (must match pt size in static html above)
 		int sizeInc = 4;	// how big of a jump to add to the ptSize each iteration
+		int maxPtSize = 72;
 
 		int count = 0;		// current loop iteration
 		int maxCount = 50; 	// max iterations of the search loop (allows font to get up to 232pt)
@@ -364,7 +365,8 @@ void SongSlideGroup::textToSlides(SongTextFilter filter)
 
 			QSizeF sz = doc.size();
 
-			if(sz.height() < textRect.height())
+			if(sz.height() < textRect.height() &&
+			   ptSize < maxPtSize)
 			{
 				lastGoodSize = ptSize;
 				lastGoodHtml = htmlCopy;

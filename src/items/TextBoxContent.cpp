@@ -725,40 +725,50 @@ void TextBoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * 
 		
 		
 		QString key = cacheKey();
-		if(!QPixmapCache::find(key,cache) && m_text->toPlainText().trimmed() != "")
+		if(m_text->toPlainText().trimmed().isEmpty())
 		{
-			if(QFile(key).exists())
+			// "<< m_text->toHtml()<<"
+			//qDebug() << modelItem()->itemName()<<": Not rendering cache because:"<< QPixmapCache::find(key,cache)<< " or ...";//plain "<<m_text->toPlainText()<<" is empty";
+			cache = QPixmap(contentsRect().size());
+			cache.fill(Qt::transparent);
+		}
+		else
+		{
+			if(!QPixmapCache::find(key,cache))
 			{
-				cache.load(key);
-				QPixmapCache::insert(key,cache);
-				//qDebug()<<"TextBoxContent::paint(): modelItem:"<<modelItem()->itemName()<<": Cache load from"<<key;
-			}	
-			else
-			{
-				qDebug()<<"TextBoxContent::paint(): modelItem:"<<modelItem()->itemName()<<": Cache redraw";
-				
-				QSizeF shadowSize = modelItem()->shadowEnabled() ? QSizeF(modelItem()->shadowOffsetX(),modelItem()->shadowOffsetY()) : QSizeF(0,0);
-				cache = QPixmap((contentsRect().size()+shadowSize).toSize());
-		
-				cache.fill(Qt::transparent);
-				QPainter textPainter(&cache);
-		
-				QAbstractTextDocumentLayout::PaintContext pCtx;
-		
-				#if QT46_SHADOW_ENAB == 0
-				if(modelItem()->shadowEnabled())
-					renderShadow(&textPainter,&pCtx);
-				#endif
-		
-				// If we're zooming, we want to render the text straight to the painter
-				// so it can transform the raw vectors instead of scaling the bitmap.
-				// But if we're not zooming, we cache the text with the shadow since it
-				// looks better that way when we're crossfading.
-				if(!m_zoomEnabled)
-					m_text->documentLayout()->draw(&textPainter, pCtx);
-				
-				cache.save(key,"PNG");
-				QPixmapCache::insert(key, cache);
+				if(QFile(key).exists())
+				{
+					cache.load(key);
+					QPixmapCache::insert(key,cache);
+					//qDebug()<<"TextBoxContent::paint(): modelItem:"<<modelItem()->itemName()<<": Cache load from"<<key;
+				}
+				else
+				{
+					qDebug()<<"TextBoxContent::paint(): modelItem:"<<modelItem()->itemName()<<": Cache redraw";
+
+					QSizeF shadowSize = modelItem()->shadowEnabled() ? QSizeF(modelItem()->shadowOffsetX(),modelItem()->shadowOffsetY()) : QSizeF(0,0);
+					cache = QPixmap((contentsRect().size()+shadowSize).toSize());
+
+					cache.fill(Qt::transparent);
+					QPainter textPainter(&cache);
+
+					QAbstractTextDocumentLayout::PaintContext pCtx;
+
+					#if QT46_SHADOW_ENAB == 0
+					if(modelItem()->shadowEnabled())
+						renderShadow(&textPainter,&pCtx);
+					#endif
+
+					// If we're zooming, we want to render the text straight to the painter
+					// so it can transform the raw vectors instead of scaling the bitmap.
+					// But if we're not zooming, we cache the text with the shadow since it
+					// looks better that way when we're crossfading.
+					if(!m_zoomEnabled)
+						m_text->documentLayout()->draw(&textPainter, pCtx);
+
+					cache.save(key,"PNG");
+					QPixmapCache::insert(key, cache);
+				}
 			}
 		}
 	

@@ -70,7 +70,7 @@ void ImportGroupDialog::browse()
 	if(curFile.trimmed().isEmpty())
 		curFile = AppSettings::previousPath("last-dviz-file");
 
-	QString fileName = QFileDialog::getOpenFileName(this, tr("Select DViz File to Import From"), curFile, tr("DViz File (*.dviz, *.dvz);;DViz XML File (*.dvizx *.dvx *.xml);;Any File (*.*)"));
+	QString fileName = QFileDialog::getOpenFileName(this, tr("Select DViz File to Import From"), curFile, tr("DViz File (*.dviz *.dvz);;DViz XML File (*.dvizx *.dvx *.xml);;Any File (*.*)"));
 	if(fileName != "")
 	{
 		AppSettings::setPreviousPath("last-dviz-file-import",fileName);

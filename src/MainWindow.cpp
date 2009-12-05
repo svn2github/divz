@@ -334,6 +334,7 @@ void MainWindow::actionOpen()
 	QString fileName = QFileDialog::getOpenFileName(this, tr("Select DViz File"), curFile, tr("DViz File (*.dviz *.dvz);;DViz XML File (*.dvizx *.dvx *.xml);;Any File (*.*)"));
 	if(fileName != "")
 	{
+		AppSettings::setPreviousPath("last-dviz-file",fileName);
 		if(openFile(fileName))
 		{
 			return;

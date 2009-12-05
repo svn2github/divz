@@ -282,6 +282,7 @@ void AppSettings::setLiveEditMode(LiveEditMode mode)
 void AppSettings::setAutosaveTime(int time)
 {
 	m_autosaveTime = time;
+	save();
 }
 
 QString AppSettings::previousPath(const QString& key)
@@ -292,6 +293,7 @@ QString AppSettings::previousPath(const QString& key)
 void AppSettings::setPreviousPath(const QString& key, const QString & path)
 {
 	m_previousPathList[key] = path;
+	save();
 }
 
 void AppSettings::setCrossFadeSpeed(int x)

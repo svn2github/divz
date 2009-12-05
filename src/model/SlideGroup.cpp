@@ -31,7 +31,7 @@ SlideGroup::SlideGroup() :
 	QSettings s;
 	m_groupId = s.value(ID_COUNTER_KEY,0).toInt() + 1;
 	s.setValue(ID_COUNTER_KEY,m_groupId);
-	//qDebug() << "Init groupid: "<<m_groupId;
+//	qDebug() << "SlideGroup: Init groupid: "<<m_groupId;
 }
 
 SlideGroup::~SlideGroup()
@@ -79,8 +79,8 @@ void SlideGroup::slideItemChanged(AbstractItem *item, QString operation, QString
 }
 
 void SlideGroup::setGroupNumber(int x)	   { m_groupNumber = x; }
-void SlideGroup::setGroupId(int x)	   { m_groupId = x; }// qDebug() << "SlideGroup::setGroupId:"<<x; }
-void SlideGroup::setGroupType(int t) { m_groupType = t; }
+void SlideGroup::setGroupId(int x)	   { m_groupId = x; }// qDebug() << "SlideGroup::setGroupId:"<<x<<" for "<<assumedName(); }
+void SlideGroup::setGroupType(int t)	   { m_groupType = t; }
 void SlideGroup::setGroupTitle(QString s)
 {
 	m_groupTitle = s;
@@ -332,6 +332,16 @@ void SlideGroup::loadProperties(QVariantMap &map)
 			setProperty(name,value);
 		else
 			qDebug() << "SlideGroup::loadByteArray: Unable to load property for "<<name<<", got invalid property from map";
+	}
+
+	if(groupId() == 1)
+	{
+		// Assume invalid - groupIds should be higher than 1
+		QSettings s;
+		m_groupId = s.value(ID_COUNTER_KEY,0).toInt() + 1;
+		s.setValue(ID_COUNTER_KEY,m_groupId);
+		//qDebug() << "SlideGroup::loadProperties(): Re-init groupid: "<<m_groupId;
+		//setGroupId(m_groupId);
 	}
 	
 	QVariant master = map["master"];

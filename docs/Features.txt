@@ -880,7 +880,7 @@ Revised Task list for Release 1.0, 10/18/09:
 				shift+enter will take a bit of work - would have to subclass QLineEdit and override keypressevent
 		[LATER] Video Capture (started impl, but again, performance is terrible. That may be due to the FormatOpts specified, or in ffmpeg, or the capture hardware - need to trace - later!)
 	
-	- Bugs:
+	- Bugs
 		[WORKSFORME] crash: click quicsklide 'show' btn right after program start - e.g. no group live yet - crash
 			I suspect this was fixed during the fix for the bug right below (edit song when live)
 		[FIXED] crash: go live with song, edit, save - crash

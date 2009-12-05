@@ -17,6 +17,16 @@ GroupPlayerSlideGroup::GroupPlayerSlideGroup() : SlideGroup()
 {
 // 	if(MainWindow::mw())
 // 		connect(MainWindow::mw(), SIGNAL(aspectRatioChanged(double)), this, SLOT(aspectRatioChanged(double)));
+
+	// This m_rescanTimer and related slot really is a bit of a "hack". You see, if you
+	// create the group player BEFORE you create the groups that you add to the group player, then when the document
+	// is loaded again from disk the next time, the member groups won't be loaded from disk till AFTER the group
+	// player. Therefore, they won't exist in the document at the time we try to find them. So, we use this timer to
+	// re-check for the member groups, assuming that in 1ms (when the event loop resumes) the member groups will have
+	// been loaded. I know it seems a bit hackish - but it seems "cleaner" than changing the SlideGroup API right now.
+	connect(&m_rescanTimer, SIGNAL(timeout()), this, SLOT(rescanGroupIds()));
+	m_rescanTimer.setSingleShot(true);
+	m_rescanTimer.setInterval(1);
 }
 
 GroupPlayerSlideGroup::~GroupPlayerSlideGroup()
@@ -29,6 +39,38 @@ GroupPlayerSlideGroup::~GroupPlayerSlideGroup()
 			mem.group = 0;
 		}
 	}
+}
+
+void GroupPlayerSlideGroup::rescanGroupIds()
+{
+	QList<GroupMember> newList;
+	bool changed = false;
+
+	foreach(GroupMember mem, m_groups)
+	{
+		if(mem.group && mem.group->groupId() != mem.groupId)
+		{
+			qDebug() << "GroupPlayerSlideGroup::rescanGroupIds(): Found mismatch in expected groupids:"<<mem.group->groupId()<<"!="<<mem.groupId;
+			SlideGroup *testGroup =  loadGroupMember(mem);
+			if(testGroup)
+			{
+				qDebug() << "GroupPlayerSlideGroup::rescanGroupIds(): Resolved mismatch, loaded group:"<<testGroup->assumedName();
+				mem.group = testGroup;
+				changed = true;
+			}
+			else
+			{
+				qDebug() << "GroupPlayerSlideGroup::rescanGroupIds(): Unable to find correct group.";
+			}
+		}
+
+		newList.append(mem);
+	}
+
+	//setupSlides();
+	if(changed)
+		setMembers(newList);
+
 }
 
 GroupPlayerSlideGroup::GroupMember GroupPlayerSlideGroup::addGroup(SlideGroup *group, const QString& document)
@@ -62,7 +104,13 @@ void GroupPlayerSlideGroup::addGroup(GroupMember mem)
 	if(!mem.group)
 	{
 		qDebug() << "GroupPlayerSlideGroup::addGroup: No 'group' defined in GroupMember # "<<mem.sequenceNumber<<", not adding member to player list.";
-		return;
+
+		// hackish method to put *something* as the group - right now, if we leave group null, then we segflt - i dont have time to trace the crash, but I can patch around it here.
+		Document *doc = MainWindow::mw()->currentDocument();
+		if(!doc) // loading, therefore SlideGroup::document() should contain current doc
+			doc = document();
+		mem.group = doc->groupList().first();
+		//return;
 	}
 	
 	m_groups.append(mem);
@@ -199,6 +247,8 @@ bool GroupPlayerSlideGroup::fromXml(QDomElement & pe)
 	memberListFromVariantList(result.toList());
 
 	loadGroupAttributes(pe);
+
+	m_rescanTimer.start();
 	
 	return true;
 }
@@ -209,6 +259,7 @@ void GroupPlayerSlideGroup::fromVariantMap(QVariantMap &map)
 	QVariant var = map["members"];
 	//qDebug() << "GroupPlayerSlideGroup::fromVariantMap()";
 	memberListFromVariantList(var.toList());
+	m_rescanTimer.start();
 }
 	
 void GroupPlayerSlideGroup::toVariantMap(QVariantMap &map) const
@@ -241,6 +292,13 @@ QVariantMap GroupPlayerSlideGroup::memberToVariantMap(GroupMember mem) const
 	map["seq"]     = mem.sequenceNumber;
 	
 	//qDebug() << "GroupPlayerSlideGroup::memberToVariantMap: "<<map;
+	//qDebug() << "GroupPlayerSlideGroup::memberToVariantMap: saved groupId:"<<map["groupId"]<<" at sequence#"<<map["seq"];
+	/*
+	if(mem.group)
+		qDebug() << "GroupPlayerSlideGroup::memberToVariantMap: actual groupId is:"<<mem.group->groupId();
+	else
+		qDebug() << "GroupPlayerSlideGroup::memberToVariantMap: no group ptr on this member, so I have no idea what the real groupid is";
+	*/
 	
 	return map;
 }
@@ -281,11 +339,13 @@ SlideGroup * GroupPlayerSlideGroup::loadGroupMember(GroupMember mem)
 			return 0;
 		}
 		
+		//qDebug() << "GroupPlayerSlideGroup::loadGroupMember(): Attempting to find group ID "<<mem.groupId<<"...";
 		group = doc->groupById(mem.groupId);
 		if(!group)
 		{
 			qDebug() << "GroupPlayerSlideGroup::loadGroupMember(): Unable to find group#"<<mem.groupId<<"in this document!";
 		}
+		//qDebug() << "GroupPlayerSlideGroup::loadGroupMember(): Received group with ID:"<<group->groupId();
 	}
 	else
 	if(mem.source == GroupPlayerSlideGroup::ExternalDocument)

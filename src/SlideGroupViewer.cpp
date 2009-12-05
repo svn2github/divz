@@ -1139,8 +1139,9 @@ void SlideGroupViewer::setSlideInternal(Slide *slide)
 		m_scene->setMasterSlide(0);
 	}
 
-	//qDebug() << "SlideGroupViewer::setSlideInternal(): Slide# "<<slide->slideNumber()<<": Have slide group, using master slide";
+	//qDebug() << "SlideGroupViewer::setSlideInternal(): Slide# "<<slide->slideNumber()<<": Have slide group, setting slide ptr:"<<slide;
 	m_scene->setSlide(slide,MyGraphicsScene::CrossFade,speed,quality);
+	//qDebug() << "SlideGroupViewer::setSlideInternal(): Slide# "<<slide->slideNumber()<<": setSlide() completed";
 }
 
 void SlideGroupViewer::fadeBlackFrame(bool enable)

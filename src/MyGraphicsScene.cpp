@@ -395,8 +395,8 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans, int speed, i
 		#endif
 
 		emit crossFadeStarted(m_slide,slide);
-// 		if(DEBUG_MYGRAPHICSSCENE)
- 			//qDebug() << "MyGraphicsScene::setSlide(): Starting fade timer for"<<ms<<"ms"<<"/frame, inc:"<<inc<<", steps:"<<m_fadeSteps<<" ( speed:"<<speed<<", quality:"<<quality<<")";
+		if(DEBUG_MYGRAPHICSSCENE)
+			qDebug() << "MyGraphicsScene::setSlide(): Starting fade timer for"<<ms<<"ms"<<"/frame, inc:"<<inc<<", steps:"<<m_fadeSteps<<" ( speed:"<<speed<<", quality:"<<quality<<")";
 		
 	}
 
@@ -583,6 +583,7 @@ void MyGraphicsScene::startTransition()
 void MyGraphicsScene::endTransition()
 {
 	m_fadeTimer->stop();
+
 	#if QT46_OPAC_ENAB > 0
 		qSetEffectOpacity(m_fadeRoot,0);
 		qSetEffectOpacity(m_liveRoot,1);
@@ -621,6 +622,8 @@ void MyGraphicsScene::slotTransitionStep()
 {
 	if( ++ m_fadeStepCounter < m_fadeSteps)
 	{
+		//if(DEBUG_MYGRAPHICSSCENE)
+		//	qDebug()<<"MyGraphicsScene::slotTransitionStep(): [STEP BEGIN] step"<<m_fadeStepCounter<<"/"<<m_fadeSteps;
 		double inc = (double)1 / m_fadeSteps;
 		//m_fadeRoot->setOpacity(m_fadeRoot->opacity() - inc);
 		#if QT46_OPAC_ENAB > 0
@@ -631,13 +634,16 @@ void MyGraphicsScene::slotTransitionStep()
 			m_liveRoot->setOpacity(m_liveRoot->opacity() + inc);
 		#endif
 		if(DEBUG_MYGRAPHICSSCENE)
-			qDebug()<<"MyGraphicsScene::slotTransitionStep(): step"<<m_fadeStepCounter<<"/"<<m_fadeSteps<<", inc:"<<inc<<", fade:"<<m_fadeRoot->opacity()<<", live:"<<m_liveRoot->opacity();
+			qDebug()<<"MyGraphicsScene::slotTransitionStep(): [STEP DONE] step"<<m_fadeStepCounter<<"/"<<m_fadeSteps<<", inc:"<<inc<<", fade:"<<m_fadeRoot->opacity()<<", live:"<<m_liveRoot->opacity();
 		update();
 	}
 	else
 	{
 		endTransition();
 	}
+
+	//if(DEBUG_MYGRAPHICSSCENE)
+	//	qDebug()<<"MyGraphicsScene::slotTransitionStep(): [FUNCTION DONE]";
 	
 }
 

@@ -4,6 +4,7 @@
 class Document;
 #include "model/SlideGroup.h"
 #include <QPointer>
+#include <QTimer>
 
 /// \brief: GroupPlayerSlideGroup sequences slide groups either from the current document or external documents.
 /// GroupPlayerSlideGroup allows you to specify the sequence of slide groups to play. It's a container
@@ -78,6 +79,7 @@ protected:
 
 protected slots:
 //	void aspectRatioChanged(double x);
+	void rescanGroupIds();
 
 protected:
 // 	void addGroupSlides(SlideGroup*);
@@ -95,6 +97,7 @@ protected:
 	
 	QList<GroupMember> m_groups;
 
+	QTimer m_rescanTimer;
 };
 
 Q_DECLARE_METATYPE(GroupPlayerSlideGroup*);
