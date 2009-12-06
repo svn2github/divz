@@ -349,6 +349,8 @@ void BackgroundContent::setImageFile(const QString &file)
 		
 		QSize size = contentsRect().size();
 		
+		// We adjust the size of the expected image if over 2.0 because over 2
+		// the pixelation is more visible.
 		if(modelItem()->zoomEffectEnabled() && modelItem()->zoomFactor() > 2.0)
 		{
 			size.setWidth(size.width()   * modelItem()->zoomFactor());
@@ -359,7 +361,7 @@ void BackgroundContent::setImageFile(const QString &file)
 		if(!path.exists())
 			QDir(AppSettings::cachePath()).mkdir(BG_IMG_CACHE_DIR);
 			
-		QString cacheKey = QString("%1/%2/%3-%4x%5%6")
+		QString cacheKey = QString("%1/%2/%3-%4x%5%6-auto_ar")
 					.arg(AppSettings::cachePath())
 					.arg(BG_IMG_CACHE_DIR)
 					.arg(MD5::md5sum(file))
@@ -441,7 +443,62 @@ void BackgroundContent::setImageFile(const QString &file)
 		
 					if(!image.isNull())
 					{
-						cache = QPixmap::fromImage(image.scaled(size,Qt::IgnoreAspectRatio,Qt::SmoothTransformation));
+						// Re-render the image if AR difference between Image and Item is greater than X%
+						// TODO: Make the handling of a mistmatched AR user-selectable a la Windows Desktop Background dialog:
+						// The options could be: If picture size different than slide, either (A) stretch - default,
+						// (B) center, or (C) auto-center if difference greater than some %
+						// The user would see 'size' but what they really mean (without knowing it) is the A/R difference.
+
+						QSize imageSize = image.size();
+						double imageAr  = (double)imageSize.width() / (double)imageSize.height();
+
+						QRect rect = contentsRect();
+						double itemAr = (double)rect.width() / (double)rect.height();
+
+						double diff = fabs(imageAr - itemAr);
+						double percentDiff = diff / imageAr;
+						if(percentDiff > 0.125) // arbitrary difference
+						{
+							// Repaint image with image centered at original ar, with field of black around it
+
+							int width, height;
+							if(imageSize.width() > imageSize.height())
+							{
+								// set width to rect.width and then scale height according to imageAr
+								width = rect.width();
+								height = width * (1/imageAr);
+							}
+							else
+							{
+								// set height to rect.height since its taller than it is wide, and scale width according to imageAr
+								height = rect.height();
+								width = height * imageAr;
+							}
+							int y = rect.height()/2 - height/2;
+							int x = rect.width()/2  - width/2;
+
+							// declar a QRect just for ease of debugging
+							QRect targetRect(x,y,width,height);
+
+							QImage newImage(rect.size(),QImage::Format_ARGB32_Premultiplied);
+
+							QPainter painter(&newImage);
+							painter.fillRect(newImage.rect(),Qt::black);
+
+							painter.drawImage(targetRect,image);
+
+							image = newImage;
+
+							//qDebug() << "Fixing AR difference, imageAr:"<<imageAr<<", itemAr:"<<itemAr<<",diff:"<<diff<<",precentDiff:"<<percentDiff<<", targetRect:"<<targetRect<<", imageSize:"<<imageSize<<",rect:"<<rect;
+
+						}
+						else
+						{
+							//qDebug() << "[NOT] Fixing AR difference, imageAr:"<<imageAr<<", itemAr:"<<itemAr<<",diff:"<<diff<<",precentDiff:"<<percentDiff;
+						}
+
+						QImage scaled = image.scaled(size,Qt::IgnoreAspectRatio,Qt::SmoothTransformation);
+						cache = QPixmap::fromImage(scaled);
 						cache.save(cacheKey,"PNG");
 						
 						setPixmap(cache);
@@ -870,6 +927,62 @@ void BackgroundContent::setPixmap(const QPixmap & pixmap)
 		return;
 		
 	m_pixmap = pixmap;
+
+	/*
+	if(modelItem()->fillType() == AbstractVisualItem::Image)
+	{
+		// Re-render the image if AR difference between Image and Item is greater than X%
+		// TODO: Make the handling of a mistmatched AR user-selectable a la Windows Desktop Background dialog:
+		// The options could be: If picture size different than slide, either (A) stretch - default,
+		// (B) center, or (C) auto-center if difference greater than some %
+		// The user would see 'size' but what they really mean (without knowing it) is the A/R difference.
+
+		QSize size = m_pixmap.size();
+		double imageAr  = (double)size.width() / (double)size.height();
+
+		QRect rect = contentsRect();
+		double itemAr = (double)rect.width() / (double)rect.height();
+
+		double diff = fabs(imageAr - itemAr);
+		double percentDiff = diff / imageAr;
+		if(percentDiff > 0.10) // arbitrary difference
+		{
+			// Repaint image with image centered at original ar, with field of black around it
+			QPixmap pixmap(rect.size());
+			pixmap.fill(Qt::black);
+			QPainter painter(&pixmap);
+
+			int width, height;
+			if(size.width() > size.height())
+			{
+				// set width to rect.width and then scale height according to imageAr
+				width = rect.width();
+				height = width * (1/imageAr);
+			}
+			else
+			{
+				// set height to rect.height since its taller than it is wide, and scale width according to imageAr
+				height = rect.height();
+				width = height * imageAr;
+			}
+			int y = rect.height()/2 - height/2;
+			int x = rect.width()/2  - width/2;
+
+			// declar a QRect just for ease of debugging
+			QRect targetRect(x,y,width,height);
+			painter.drawPixmap(targetRect,m_pixmap);
+
+			qDebug() << "Fixing AR difference, imageAr:"<<imageAr<<", itemAr:"<<itemAr<<",diff:"<<diff<<",precentDiff:"<<percentDiff<<", targetRect:"<<targetRect<<", size:"<<size<<",rect:"<<rect;
+
+		}
+		else
+		{
+			qDebug() << "[NOT] Fixing AR difference, imageAr:"<<imageAr<<", itemAr:"<<itemAr<<",diff:"<<diff<<",precentDiff:"<<percentDiff;
+		}
+
+
+	}
+	*/
 
 	if(m_imageSize != m_pixmap.size())
 		m_imageSize = m_pixmap.size();

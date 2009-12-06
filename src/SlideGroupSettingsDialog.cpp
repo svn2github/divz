@@ -27,7 +27,7 @@ SlideGroupSettingsDialog::SlideGroupSettingsDialog(SlideGroup *g, QWidget *paren
 	//connect(m_ui->rChange, SIGNAL(toggled(bool)), this, SLOT(autoChangeGroup(bool)));
 	
 	m_ui->title->setText(m_slideGroup->groupTitle().isEmpty() ? QString("Group %1").arg(m_slideGroup->groupNumber()+1) : m_slideGroup->groupTitle());
-	connect(m_ui->title, SIGNAL(textChanged(const QString&)), this, SLOT(titleChanged(const QString&)));
+	//connect(m_ui->title, SIGNAL(textChanged(const QString&)), this, SLOT(titleChanged(const QString&)));
 	
 	setWindowTitle("Slide Group Settings");
 	setWindowIcon(QIcon(":/data/icon-d.png"));
@@ -64,6 +64,7 @@ void SlideGroupSettingsDialog::slotAccepted()
 	m_slideGroup->setInheritFadeSettings(m_ui->btnUseApp->isChecked());
 	m_slideGroup->setCrossFadeSpeed(m_ui->speedBox->value());
 	m_slideGroup->setCrossFadeQuality(m_ui->qualityBox->value());
+	m_slideGroup->setGroupTitle(m_ui->title->text());
 	close();
 }
 

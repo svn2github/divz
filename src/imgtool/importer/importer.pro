@@ -234,7 +234,7 @@ win32 {
 		-L"../exiv2-0.18.2-qtbuild/win32/expat201/Bin" \
 		-llibexpat \
 		-llibexpatw 
-		
+	
 }
 
 unix {
