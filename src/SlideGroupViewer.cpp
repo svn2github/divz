@@ -1140,7 +1140,7 @@ void SlideGroupViewer::setSlideInternal(Slide *slide)
 	}
 
 	//qDebug() << "SlideGroupViewer::setSlideInternal(): Slide# "<<slide->slideNumber()<<": Have slide group, setting slide ptr:"<<slide;
-	m_scene->setSlide(slide,MyGraphicsScene::CrossFade,speed,quality);
+	m_scene->setSlide(slide,m_isPreviewViewer ? MyGraphicsScene::None : MyGraphicsScene::CrossFade,speed,quality);
 	//qDebug() << "SlideGroupViewer::setSlideInternal(): Slide# "<<slide->slideNumber()<<": setSlide() completed";
 }
 

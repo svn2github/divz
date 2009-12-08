@@ -355,7 +355,14 @@ void MainWindow::setCurrentImage(int num)
 		m_changingCombobox = false;
 	}
 		
-	writeMetaData();
+	try
+	{
+		writeMetaData();
+	}
+	catch(std::exception ex)
+	{
+		qDebug() << "Caught exception in writeMetaData(): "<<ex.what();
+	}
 		
 	//m_ui->progressBar->setValue(num);
 	
@@ -804,12 +811,13 @@ void MainWindow::writeMetaData()
 	
 	m_lastTags = tags;
 	
-	for (Exiv2::XmpData::iterator md = xmpData.begin();
-		md != xmpData.end(); ++md) 
-		if(strcmp(md->key().c_str(),"Xmp.dc.subject") == 0)
-			md = xmpData.erase(md);
-		
-	xmpData["Xmp.dc.subject"]	= tags.toStdString();
+// 	for (Exiv2::XmpData::iterator md = xmpData.begin();
+// 		md != xmpData.end(); ++md) 
+// 		if(md->key().c_str() &&
+// 		   strcmp(md->key().c_str(),"Xmp.dc.subject") == 0)
+// 			md = xmpData.erase(md);
+// 		
+// 	xmpData["Xmp.dc.subject"]	= tags.toStdString();
 	
 	QString description = m_ui->description->text();
 	ref->setDescription(description);

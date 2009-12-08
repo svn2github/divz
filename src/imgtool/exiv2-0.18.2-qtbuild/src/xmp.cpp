@@ -245,7 +245,7 @@ namespace Exiv2 {
 
     const Value& Xmpdatum::value() const
     {
-        if (p_->value_.get() == 0) throw Error(8);
+        if (p_->value_.get() == 0) throw Error(8,"Xmpdatum::value");
         return *p_->value_;
     }
 

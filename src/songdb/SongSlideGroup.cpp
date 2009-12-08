@@ -493,7 +493,8 @@ bool SongSlideGroup::fromXml(QDomElement & pe)
 		// restore the item, and delete it if something goes wrong
 		if (!templates->fromXml(slideTemplateElement))
 		{
-			qWarning("SongSlideGroup::fromXml(): Couldn't load templates from XML for some reason. Need to debug.");
+			// was qWarning
+			qDebug("SongSlideGroup::fromXml(): Couldn't load templates from XML for some reason. Need to debug.");
 			delete templates;
 		}
 		else
@@ -515,7 +516,8 @@ bool SongSlideGroup::fromXml(QDomElement & pe)
 	}
 	else
 	{
-		qWarning("SongSlideGroup::fromXml: Invalid songid %d in XML!",songid);
+		// was qWarning
+		qDebug("SongSlideGroup::fromXml: Invalid songid %d in XML!",songid);
 	}
 
 	//qDebug() << "SongSlideGroup::fromXml(): Loading text, num slides:"<<numSlides();
@@ -554,7 +556,8 @@ void SongSlideGroup::fromVariantMap(QVariantMap &map)
 	}
 	else
 	{
-		qWarning("SongSlideGroup::fromXml: Invalid songid %d in XML!",songid);
+		// was qWarning
+		qDebug("SongSlideGroup::fromXml: Invalid songid %d in XML!",songid);
 	}
 
 	//qDebug() << "SongSlideGroup::fromXml(): Loading text, num slides:"<<numSlides();

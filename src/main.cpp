@@ -2,8 +2,66 @@
 #include "AppSettings.h"
 
 #include <QtGui/QApplication>
+
+
+// I'll use this code at the church to debug some crashes.
+// However, disbaling it for now because I'm not sure
+// how well it performs in production - I don't want somebody 
+// checking out the code from svn and getting bit by this code
+// breaking something.
+//#define CUSTOM_MSG_HANDLER
+
+#if defined(CUSTOM_MSG_HANDLER)
+
+	#if defined(Q_OS_WIN) 
+	extern Q_CORE_EXPORT void qWinMsgHandler(QtMsgType t, const char* str);
+	#endif
+	
+	static QtMsgHandler qt_origMsgHandler = 0;
+	
+	void myMessageOutput(QtMsgType type, const char *msg)
+	{
+		#if defined(Q_OS_WIN) 
+		if (!qt_origMsgHandler)
+			qt_origMsgHandler = qWinMsgHandler;
+		#endif
+	
+		switch (type) 
+		{
+			case QtDebugMsg:
+				if(qt_origMsgHandler)
+					qt_origMsgHandler(type,msg);
+				else
+					fprintf(stderr, "Debug: %s\n", msg);
+				break;
+			case QtWarningMsg:
+	// 			if(qt_origMsgHandler)
+	// 				qt_origMsgHandler(type,msg);
+	// 			else
+	// 				fprintf(stderr, "Warning: %s\n", msg);
+	// 			break;
+			case QtCriticalMsg:
+	// 			if(qt_origMsgHandler)
+	// 				qt_origMsgHandler(type,msg);
+	// 			else
+	// 				fprintf(stderr, "Critical: %s\n", msg);
+	// 			break;
+			case QtFatalMsg:
+				if(qt_origMsgHandler)
+					qt_origMsgHandler(type,msg);
+				else
+					fprintf(stderr, "Fatal: %s\n", msg);
+				abort();
+		}
+	}
+#endif // CUSTOM_MSG_HANDLER
+
 int main(int argc, char **argv)
 {
+	#if defined(CUSTOM_MSG_HANDLER)
+		qt_origMsgHandler = qInstallMsgHandler(myMessageOutput);
+	#endif
+
 	#if !defined(Q_OS_MAC) // raster on OSX == b0rken
 		// use the Raster GraphicsSystem as default on 4.5+
 		#if QT_VERSION >= 0x040500
