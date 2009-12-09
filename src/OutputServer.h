@@ -15,20 +15,20 @@ class Slide;
 class OutputServer : public QTcpServer
 {
 	Q_OBJECT
-	
+
 public:
 	OutputServer(QObject *parent = 0);
-	
+
 	void setInstance(OutputInstance *);
-	
+
 	QString myAddress();
-	
+
 	typedef enum BlockType
 	{
 		Text,
 		QImage,
 	};
-	
+
 	typedef enum Command
 	{
 		SetSlideGroup,
@@ -55,11 +55,23 @@ signals:
 
 protected:
 	void incomingConnection(int socketDescriptor);
-	
+
 	OutputInstance *m_inst;
 };
 
 Q_DECLARE_METATYPE(OutputServer::Command);
+
+
+struct OutputServerCommandFrame
+{
+	OutputServer::Command cmd;
+	QVariant a;
+	QVariant b;
+	QVariant c;
+};
+
+#include <QMutex>
+#include <QTimer>
 
 class OutputServerThread : public QThread
 {
@@ -68,22 +80,30 @@ class OutputServerThread : public QThread
 public:
 	OutputServerThread(int socketDescriptor, QObject *parent = 0);
 	~OutputServerThread();
-	
+
 	void run();
 
 signals:
 	void error(QTcpSocket::SocketError socketError);
 
 public slots:
+	void queueCommand(OutputServer::Command,QVariant,QVariant,QVariant);
+
+private slots:
+	void processCommandBuffer();
 	void sendCommand(OutputServer::Command,QVariant,QVariant,QVariant);
 
 private:
 	void sendMap(const QVariantMap &);
-	
+
 	QJson::Serializer * m_stringy;
 	int m_socketDescriptor;
 	QTcpSocket * m_socket;
-	
+
+	QMutex m_bufferMutex;
+	QList<OutputServerCommandFrame> m_commandBuffer;
+	QTimer * m_dequeueTimer;
+
 };
 
 

@@ -2,31 +2,32 @@
 #include "AppSettings.h"
 
 #include <QtGui/QApplication>
+#include <QPixmapCache>
 
 
 // I'll use this code at the church to debug some crashes.
 // However, disbaling it for now because I'm not sure
-// how well it performs in production - I don't want somebody 
+// how well it performs in production - I don't want somebody
 // checking out the code from svn and getting bit by this code
 // breaking something.
-//#define CUSTOM_MSG_HANDLER
+#define CUSTOM_MSG_HANDLER
 
 #if defined(CUSTOM_MSG_HANDLER)
 
-	#if defined(Q_OS_WIN) 
+	#if defined(Q_OS_WIN)
 	extern Q_CORE_EXPORT void qWinMsgHandler(QtMsgType t, const char* str);
 	#endif
-	
+
 	static QtMsgHandler qt_origMsgHandler = 0;
-	
+
 	void myMessageOutput(QtMsgType type, const char *msg)
 	{
-		#if defined(Q_OS_WIN) 
+		#if defined(Q_OS_WIN)
 		if (!qt_origMsgHandler)
 			qt_origMsgHandler = qWinMsgHandler;
 		#endif
-	
-		switch (type) 
+
+		switch (type)
 		{
 			case QtDebugMsg:
 				if(qt_origMsgHandler)
@@ -35,11 +36,11 @@
 					fprintf(stderr, "Debug: %s\n", msg);
 				break;
 			case QtWarningMsg:
-	// 			if(qt_origMsgHandler)
-	// 				qt_origMsgHandler(type,msg);
-	// 			else
-	// 				fprintf(stderr, "Warning: %s\n", msg);
-	// 			break;
+				if(qt_origMsgHandler)
+					qt_origMsgHandler(QtDebugMsg,msg);
+				else
+					fprintf(stderr, "Warning: %s\n", msg);
+				break;
 			case QtCriticalMsg:
 	// 			if(qt_origMsgHandler)
 	// 				qt_origMsgHandler(type,msg);
@@ -48,9 +49,18 @@
 	// 			break;
 			case QtFatalMsg:
 				if(qt_origMsgHandler)
-					qt_origMsgHandler(type,msg);
+				{
+					qt_origMsgHandler(QtDebugMsg,msg);
+					//qt_origMsgHandler(type,msg);
+				}
 				else
 					fprintf(stderr, "Fatal: %s\n", msg);
+				if(strstr(msg,"out of memory, returning null image") != NULL)
+				{
+					QPixmapCache::clear();
+					qt_origMsgHandler(QtDebugMsg, "Attempted to clear QPixmapCache, continuing");
+					return;
+				}
 				abort();
 		}
 	}
