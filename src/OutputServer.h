@@ -73,7 +73,7 @@ struct OutputServerCommandFrame
 #include <QMutex>
 #include <QTimer>
 
-class OutputServerThread : public QThread
+class OutputServerThread : public QObject //QThread
 {
     Q_OBJECT
 
@@ -92,6 +92,10 @@ public slots:
 private slots:
 	void processCommandBuffer();
 	void sendCommand(OutputServer::Command,QVariant,QVariant,QVariant);
+	//void socketError(QAbstractSocket::SocketError);
+	//void socketConnected();
+	//void socketDisconnected();
+	//void socketDataReady();
 
 private:
 	void sendMap(const QVariantMap &);

@@ -17,7 +17,7 @@ ImportGroupDialog::ImportGroupDialog(QWidget *parent) :
 	m_doc(0)
 {
 	m_ui->setupUi(this);
-	
+
 	QCompleter *completer = new QCompleter(this);
 	QDirModel *dirModel = new QDirModel(completer);
 	completer->setModel(dirModel);
@@ -26,11 +26,11 @@ ImportGroupDialog::ImportGroupDialog(QWidget *parent) :
 	completer->setCaseSensitivity(Qt::CaseInsensitive);
 	completer->setWrapAround(true);
 	m_ui->file->setCompleter(completer);
-	
+
 	connect(m_ui->file, SIGNAL(returnPressed()), this, SLOT(fileSelected()));
 	connect(m_ui->browseBtn, SIGNAL(clicked()), this, SLOT(browse()));
 	connect(m_ui->buttonBox, SIGNAL(accepted()), this, SLOT(slotAccept()));
-	
+
 	m_ui->group->setModel(m_model);
 }
 
@@ -44,7 +44,7 @@ void ImportGroupDialog::fileSelected(const QString& tmp)
 	QString fileName = tmp;
 	if(fileName.isEmpty())
 		fileName = m_ui->file->text();
-		
+
 	QFileInfo info(fileName);
 	if(!info.exists() || fileName.isEmpty())
 	{
@@ -53,9 +53,13 @@ void ImportGroupDialog::fileSelected(const QString& tmp)
 	}
 	else
 	{
+
 		if(m_doc)
+		{
+			m_model->releaseDocument();
 			delete m_doc;
-			
+		}
+
 		m_doc = new Document(fileName);
 		m_model->setDocument(m_doc);
 		m_ui->groupWidget->setEnabled(true);
@@ -95,7 +99,7 @@ void ImportGroupDialog::slotAccept()
 	SlideGroup * clone = group->clone();
 	clone->setGroupNumber(MainWindow::mw()->currentDocument()->numGroups());
 	MainWindow::mw()->currentDocument()->addGroup(clone);
-	
+
 	delete m_doc;
 	delete m_model;
 	close();
@@ -105,7 +109,7 @@ void ImportGroupDialog::slotAccept()
 void ImportGroupDialog::changeEvent(QEvent *e)
 {
 	QDialog::changeEvent(e);
-	switch (e->type()) 
+	switch (e->type())
 	{
 		case QEvent::LanguageChange:
 			m_ui->retranslateUi(this);

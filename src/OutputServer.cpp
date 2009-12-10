@@ -51,7 +51,8 @@ void OutputServer::incomingConnection(int socketDescriptor)
 	connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
 	connect(this, SIGNAL(commandReady(OutputServer::Command,QVariant,QVariant,QVariant)), thread, SLOT(queueCommand(OutputServer::Command,QVariant,QVariant,QVariant))); //, Qt::QueuedConnection);
 
-	thread->start();
+	//thread->start();
+	thread->run();
 	qDebug() << "OutputServer: Client Connected, Socket Descriptor:"<<socketDescriptor;
 
 	//sendCommand(OutputServer::SetAspectRatio, MainWindow::mw()->currentDocument()->aspectRatio());
@@ -66,7 +67,9 @@ void OutputServer::sendCommand(OutputServer::Command cmd,QVariant a,QVariant b,Q
 /** Thread **/
 
 OutputServerThread::OutputServerThread(int socketDescriptor, QObject *parent)
-    : QThread(parent), m_socketDescriptor(socketDescriptor)
+    //: QThread(parent)
+    : QObject(parent)
+    , m_socketDescriptor(socketDescriptor)
 {
 	m_stringy = new QJson::Serializer;
 }
@@ -90,21 +93,31 @@ void OutputServerThread::run()
 		return;
 	}
 
+	//connect(m_socket, SIGNAL(readyRead()), 		this, SLOT(socketDataReady()));
+	connect(m_socket, SIGNAL(disconnected()), 	this, SLOT(deleteLater()));
+	//connect(m_socket, SIGNAL(connected()), 		this, SLOT(socketConnected()));
+	//connect(m_socket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(socketError(QAbstractSocket::SocketError)));
+
+	/*
 	m_dequeueTimer = new QTimer();
 	connect(m_dequeueTimer, SIGNAL(timeout()), this, SLOT(processCommandBuffer()));
 	//m_dequeueTimer->setSingleShot(true);
 	m_dequeueTimer->setInterval(5);
 	m_dequeueTimer->start();
-
+	*/
 
 	// enter event loop
-	exec();
+	//exec();
 
 	// when imageReady() signal arrives, write data with header to socket
 }
 
 void OutputServerThread::queueCommand(OutputServer::Command cmd,QVariant v1,QVariant v2,QVariant v3)
 {
+	sendCommand(cmd,v1,v2,v3);
+
+	return;
+
 	QMutexLocker lock(&m_bufferMutex);
 
 	OutputServerCommandFrame frame;
