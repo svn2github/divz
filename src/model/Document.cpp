@@ -21,6 +21,9 @@
 #include "songdb/SongSlideGroup.h"
 #include "ppt/PPTSlideGroup.h"
 
+#include <QProgressDialog>
+#include <QApplication>
+
 #include <QMutex>
 #include <QMutexLocker>
 QMutex document_saveMutex;
@@ -103,6 +106,11 @@ void Document::load(const QString & s)
 		throw(0);
 		return;
 	}
+
+	QProgressDialog progress(QString(tr("Loading %1...")).arg(m_filename),"",0,0);
+	progress.setWindowModality(Qt::WindowModal);
+	progress.show();
+	QApplication::processEvents();
 	
 	QFileInfo inf(m_filename);
 	QString ext = inf.suffix();
@@ -144,9 +152,16 @@ void Document::load(const QString & s)
 		
 		m_groups.clear();
 
+
 		QVariantList items = map["groups"].toList();
+
+		progress.setMaximum(items.size());
+		int count = 0;
 		foreach(QVariant var, items)
 		{
+			progress.setValue(count ++);
+			QApplication::processEvents();
+
 			QByteArray ba = var.toByteArray();
 			SlideGroup * group = SlideGroup::fromByteArray(ba,this);
 			qDebug() << "Load Group: nbr:"<<group->groupNumber()<<", name:"<<group->assumedName();

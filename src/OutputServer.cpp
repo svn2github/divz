@@ -48,7 +48,7 @@ QString OutputServer::myAddress()
 void OutputServer::incomingConnection(int socketDescriptor)
 {
 	OutputServerThread *thread = new OutputServerThread(socketDescriptor);
-	connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
+	//connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
 	connect(this, SIGNAL(commandReady(OutputServer::Command,QVariant,QVariant,QVariant)), thread, SLOT(queueCommand(OutputServer::Command,QVariant,QVariant,QVariant))); //, Qt::QueuedConnection);
 
 	//thread->start();
