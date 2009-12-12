@@ -370,6 +370,23 @@ void BackgroundContent::setImageFile(const QString &file)
 					.arg(sceneContextHint() == MyGraphicsScene::Preview ? "-icon192" : "");
 					//.arg(modelItem()->zoomEffectEnabled() ? "-zoomed" : "");
 		
+		if(sceneContextHint() == MyGraphicsScene::Preview)
+		{
+			QString cacheKey = QString("%1/%2/%3-%4x%5-icon192-auto_ar")
+						.arg(AppSettings::cachePath())
+						.arg(BG_IMG_CACHE_DIR)
+						.arg(MD5::md5sum(file))
+						.arg(size.width())
+						.arg(size.height());
+						//.arg(modelItem()->zoomEffectEnabled() ? "-zoomed" : "");
+			
+			QPixmap ccache;
+			if(!QPixmapCache::find(cacheKey,cache))
+			{
+				new BackgroundImageWarmingThreadManager(dynamic_cast<BackgroundItem*>(modelItem()),cacheKey,contentsRect());
+			}
+		}
+		
 		if(!m_lastImageKey.isEmpty() &&
 		    m_lastImageKey != cacheKey)
 			QPixmapCache::remove(m_lastImageKey);
@@ -386,138 +403,198 @@ void BackgroundContent::setImageFile(const QString &file)
 		}
 		else
 		{
-			if(QFile(cacheKey).exists())
+			QPixmap cache;
+			if(sceneContextHint() == MyGraphicsScene::Preview)
 			{
-				cache.load(cacheKey);
-				QPixmapCache::insert(cacheKey,cache);
-				setPixmap(cache);
-				m_fileLoaded = true;
-				//qDebug() << "BackgroundContent::setImageFile: file:"<<file<<", size:"<<size<<": hit DISK (loaded scaled from disk cache)";
+				cache = MediaBrowser::iconForImage(file,QSize(192,120)); // MEDIABROWSER_LIST_ICON_SIZE);
 			}
 			else
 			{
-				if(sceneContextHint() == MyGraphicsScene::Preview)
+				QImage * cacheImg = internalLoadFile(file,cacheKey,contentsRect());
+				if(cacheImg)
 				{
-					cache = MediaBrowser::iconForImage(file,QSize(192,120)); // MEDIABROWSER_LIST_ICON_SIZE);
-					cache.save(cacheKey,"PNG");
-					
-					setPixmap(cache);
-					m_fileLoaded = true;
-					
-					//qDebug() << "BackgroundContent::setImageFile: file:"<<file<<", size:"<<size<<": loaded MediaBrowser Icon, scaled and cached";
-					
-					//qDebug() << "ImageContent::loadFile: "<<file<<": pixmap cache MISS on "<<cacheKey;
-					if(!QPixmapCache::insert(cacheKey, cache))
-						qDebug() << "BackgroundContent::loadFile: "<<file<<": QPixmapCache::insert returned FALSE - pixmap not cached";
+					cache = QPixmap::fromImage(*cacheImg);
+					delete cacheImg;
+					cacheImg = 0;
+				}
+			}
+			
+			QPixmapCache::insert(cacheKey,cache);
+			setPixmap(cache);
+			m_fileLoaded = true;
+		}
+	}
+}
+
+QImage * BackgroundContent::internalLoadFile(QString file,QString cacheKey, QRect contentsRect)
+{
+	QImage * cache = 0;
+	if(QFile(cacheKey).exists())
+	{
+		cache = new QImage();
+		cache->load(cacheKey);
+		return cache;
+		
+		
+		//qDebug() << "BackgroundContent::setImageFile: file:"<<file<<", size:"<<size<<": hit DISK (loaded scaled from disk cache)";
+	}
+	else
+	{
+	
+		QImageReader reader(file);
+		QImage image = reader.read();
+		if(image.isNull())
+		{
+			if(reader.errorString().indexOf("Unable")>-1)
+			{
+				qDebug() << "BackgroundContent::setImageFile: Unable to read"<<file<<": "<<reader.errorString()<<", Trying to force-reset some cache space";
+				
+				QPixmapCache::setCacheLimit(10 * 1024);
+				QPixmap testPm(1024,768);
+				testPm.fill(Qt::lightGray);
+				if(QPixmapCache::insert("test",testPm))
+					qDebug() << "BackgroundContent::setImageFile: Unable to insert text pixmap into cache after shrinkage";
+				
+				//QPixmapCache::setCacheLimit(AppSettings::pixmapCacheSize() * 1024);
+
+				image = reader.read();
+				if(image.isNull())
+				{
+					qDebug() << "BackgroundContent::setImageFile: Still unable to read"<<file<<": "<<reader.errorString();
+				}
+			}
+			else
+			{
+				qDebug() << "BackgroundContent::setImageFile: Unable to read"<<file<<": "<<reader.errorString();
+			}
+
+		}
+
+		if(!image.isNull())
+		{
+			// Re-render the image if AR difference between Image and Item is greater than X%
+			// TODO: Make the handling of a mistmatched AR user-selectable a la Windows Desktop Background dialog:
+			// The options could be: If picture size different than slide, either (A) stretch - default,
+			// (B) center, or (C) auto-center if difference greater than some %
+			// The user would see 'size' but what they really mean (without knowing it) is the A/R difference.
+
+			QSize imageSize = image.size();
+			double imageAr  = (double)imageSize.width() / (double)imageSize.height();
+
+			QRect rect = contentsRect;
+			QSize size = rect.size();
+			double itemAr = (double)rect.width() / (double)rect.height();
+
+			double diff = fabs(imageAr - itemAr);
+			double percentDiff = diff / imageAr;
+			if(percentDiff > 0.125) // arbitrary difference
+			{
+				// Repaint image with image centered at original ar, with field of black around it
+
+				int width, height;
+				if(imageSize.width() > imageSize.height())
+				{
+					// set width to rect.width and then scale height according to imageAr
+					width = rect.width();
+					height = width * (1/imageAr);
 				}
 				else
 				{
-					QImageReader reader(file);
-					QImage image = reader.read();
-					if(image.isNull())
-					{
-						if(reader.errorString().indexOf("Unable")>-1)
-						{
-							qDebug() << "BackgroundContent::setImageFile: Unable to read"<<file<<": "<<reader.errorString()<<", Trying to force-reset some cache space";
-							
-							QPixmapCache::setCacheLimit(10 * 1024);
-							QPixmap testPm(1024,768);
-							testPm.fill(Qt::lightGray);
-							if(QPixmapCache::insert("test",testPm))
-								qDebug() << "BackgroundContent::setImageFile: Unable to insert text pixmap into cache after shrinkage";
-							
-							//QPixmapCache::setCacheLimit(AppSettings::pixmapCacheSize() * 1024);
-			
-							image = reader.read();
-							if(image.isNull())
-							{
-								qDebug() << "BackgroundContent::setImageFile: Still unable to read"<<file<<": "<<reader.errorString();
-							}
-						}
-						else
-						{
-							qDebug() << "BackgroundContent::setImageFile: Unable to read"<<file<<": "<<reader.errorString();
-						}
-		
-					}
-		
-					if(!image.isNull())
-					{
-						// Re-render the image if AR difference between Image and Item is greater than X%
-						// TODO: Make the handling of a mistmatched AR user-selectable a la Windows Desktop Background dialog:
-						// The options could be: If picture size different than slide, either (A) stretch - default,
-						// (B) center, or (C) auto-center if difference greater than some %
-						// The user would see 'size' but what they really mean (without knowing it) is the A/R difference.
-
-						QSize imageSize = image.size();
-						double imageAr  = (double)imageSize.width() / (double)imageSize.height();
-
-						QRect rect = contentsRect();
-						double itemAr = (double)rect.width() / (double)rect.height();
-
-						double diff = fabs(imageAr - itemAr);
-						double percentDiff = diff / imageAr;
-						if(percentDiff > 0.125) // arbitrary difference
-						{
-							// Repaint image with image centered at original ar, with field of black around it
-
-							int width, height;
-							if(imageSize.width() > imageSize.height())
-							{
-								// set width to rect.width and then scale height according to imageAr
-								width = rect.width();
-								height = width * (1/imageAr);
-							}
-							else
-							{
-								// set height to rect.height since its taller than it is wide, and scale width according to imageAr
-								height = rect.height();
-								width = height * imageAr;
-							}
-							int y = rect.height()/2 - height/2;
-							int x = rect.width()/2  - width/2;
-
-							// declar a QRect just for ease of debugging
-							QRect targetRect(x,y,width,height);
-
-							QImage newImage(rect.size(),QImage::Format_ARGB32_Premultiplied);
-
-							QPainter painter(&newImage);
-							painter.fillRect(newImage.rect(),Qt::black);
-
-							painter.drawImage(targetRect,image);
-
-							image = newImage;
-
-							//qDebug() << "Fixing AR difference, imageAr:"<<imageAr<<", itemAr:"<<itemAr<<",diff:"<<diff<<",precentDiff:"<<percentDiff<<", targetRect:"<<targetRect<<", imageSize:"<<imageSize<<",rect:"<<rect;
-
-						}
-						else
-						{
-							//qDebug() << "[NOT] Fixing AR difference, imageAr:"<<imageAr<<", itemAr:"<<itemAr<<",diff:"<<diff<<",precentDiff:"<<percentDiff;
-						}
-
-						QImage scaled = image.scaled(size,Qt::IgnoreAspectRatio,Qt::SmoothTransformation);
-						cache = QPixmap::fromImage(scaled);
-						cache.save(cacheKey,"PNG");
-						
-						setPixmap(cache);
-						m_fileLoaded = true;
-						
-						//qDebug() << "BackgroundContent::setImageFile: file:"<<file<<", size:"<<size<<": loaded original, scaled and cached";
-						
-						//qDebug() << "ImageContent::loadFile: "<<file<<": pixmap cache MISS on "<<cacheKey;
-						if(!QPixmapCache::insert(cacheKey, cache))
-							qDebug() << "BackgroundContent::loadFile: "<<file<<": QPixmapCache::insert returned FALSE - pixmap not cached";
-					}
-					else
-					{
-						qDebug() << "BackgroundContent::setImageFile: file:"<<file<<", size:"<<size<<": NOT LOADED";
-					}
+					// set height to rect.height since its taller than it is wide, and scale width according to imageAr
+					height = rect.height();
+					width = height * imageAr;
 				}
+				int y = rect.height()/2 - height/2;
+				int x = rect.width()/2  - width/2;
+
+				// declar a QRect just for ease of debugging
+				QRect targetRect(x,y,width,height);
+
+				QImage newImage(rect.size(),QImage::Format_ARGB32_Premultiplied);
+
+				QPainter painter(&newImage);
+				painter.fillRect(newImage.rect(),Qt::black);
+
+				painter.drawImage(targetRect,image);
+
+				image = newImage;
+
+				//qDebug() << "Fixing AR difference, imageAr:"<<imageAr<<", itemAr:"<<itemAr<<",diff:"<<diff<<",precentDiff:"<<percentDiff<<", targetRect:"<<targetRect<<", imageSize:"<<imageSize<<",rect:"<<rect;
+
 			}
+			else
+			{
+				//qDebug() << "[NOT] Fixing AR difference, imageAr:"<<imageAr<<", itemAr:"<<itemAr<<",diff:"<<diff<<",precentDiff:"<<percentDiff;
+			}
+
+			cache = new QImage(image.scaled(size,Qt::IgnoreAspectRatio,Qt::SmoothTransformation));
+			cache->save(cacheKey,"PNG");
+			
+			return cache;
+		}
+		else
+		{
+			qDebug() << "BackgroundContent::setImageFile: file:"<<file<<" NOT LOADED";
 		}
 	}
+		
+	return 0;
+}
+
+BackgroundImageWarmingThreadManager::BackgroundImageWarmingThreadManager(BackgroundItem *model, QString key, QRect rect) : m_model(model), m_cacheKey(key), m_rect(rect)
+{
+	QPixmap cache;
+
+	if(QPixmapCache::find(key,cache))
+	{
+		//qDebug()<<"TextBoxWarmingThreadManager(): modelItem:"<<model->itemName()<<": Cache HIT";
+		deleteLater();
+	}
+	else
+	if(QFile(key).exists())
+	{
+		//qDebug()<<"TextBoxWarmingThreadManager(): modelItem:"<<model->itemName()<<": Cache load from"<<key;
+		cache.load(key);
+		QPixmapCache::insert(key,cache);
+		deleteLater();
+	}
+	else
+	{
+		qDebug()<<"BackgroundImageWarmingThreadManager(): modelItem:"<<model->itemName()<<": Cache MISS";
+		m_thread = new BackgroundImageWarmingThread(model,key,rect);
+		connect(m_thread, SIGNAL(renderDone(QImage*)), this, SLOT(renderDone(QImage*)));
+		connect(m_thread, SIGNAL(finished()), m_thread, SLOT(deleteLater()));
+		m_thread->start();
+	}
+}
+
+void BackgroundImageWarmingThreadManager::renderDone(QImage *image)
+{
+	if(!image)
+	{
+		deleteLater();
+		return;
+	}
+		
+	QPixmap cache = QPixmap::fromImage(*image);
+	cache.save(m_cacheKey,"PNG");
+	QPixmapCache::insert(m_cacheKey, cache);
+	delete image; // QPixmap::fromImage() made a copy, so we dont need to waste this memory here
+	deleteLater();
+}
+
+BackgroundImageWarmingThread::BackgroundImageWarmingThread(BackgroundItem *model, QString key, QRect rect) : m_model(model), m_cacheKey(key), m_rect(rect) {}
+void BackgroundImageWarmingThread::run()
+{
+	if(!m_model)
+	{
+		qDebug()<<"BackgroundImageWarmingThread::run(): m_model is null";
+		return;
+	}
+	
+	QString file = AppSettings::applyResourcePathTranslations(m_model->fillImageFile());
+	QImage * image = BackgroundContent::internalLoadFile(file,m_cacheKey,m_rect);
+	emit renderDone(image);
 }
 
 void BackgroundContent::disposeSvgRenderer()
@@ -695,7 +772,7 @@ void BackgroundContent::paint(QPainter * painter, const QStyleOptionGraphicsItem
 					// inadvertantly killing the speed of the painting by scaling a really huge image
 					// in the media browser preview
 					if(destRect.width()  > MAX_SCALED_WIDTH || 
-					destRect.height() > MAX_SCALED_HEIGHT)
+					   destRect.height() > MAX_SCALED_HEIGHT)
 					{
 						float sx = ((float)MAX_SCALED_WIDTH)  / ((float)destRect.width());
 						float sy = ((float)MAX_SCALED_HEIGHT) / ((float)destRect.height());
@@ -706,56 +783,81 @@ void BackgroundContent::paint(QPainter * painter, const QStyleOptionGraphicsItem
 					}
 					
 					// cache the scaled pixmap according to the transformed size of the view
-					QString foregroundKey = QString("%1:%2:%3:%4")
+					QString foregroundTmp = QString("%1:%2:%3:%4")
 								.arg(m_fileName).arg(m_fileLastModified)
 								.arg(destRect.width()).arg(destRect.height());
+					
+					// ASSUME path exists due to using BG_IMG_CACHE_DIR in loading the image originally 
+// 					QDir path(QString("%1/%2").arg(AppSettings::cachePath()).arg(BG_IMG_CACHE_DIR));
+// 					if(!path.exists())
+// 						QDir(AppSettings::cachePath()).mkdir(BG_IMG_CACHE_DIR);
+				
+					QString foregroundKey = QString("%1/%2/%3-painter")
+								.arg(AppSettings::cachePath())
+								.arg(BG_IMG_CACHE_DIR)
+								.arg(MD5::md5sum(foregroundTmp));
 								
 					//qDebug() << "foregroundKey: "<<foregroundKey;
 					
 					if(m_lastForegroundKey != foregroundKey &&
-					!m_lastForegroundKey.isEmpty())
+					  !m_lastForegroundKey.isEmpty())
+					{
 						QPixmapCache::remove(m_lastForegroundKey);
+// 						QFile tmp(m_lastForegroundKey);
+// 						if(tmp.exists())
+// 							tmp.remove();
+					}
 						
 					m_lastForegroundKey = foregroundKey;
 					
 					QPixmap cache;
 					if(!QPixmapCache::find(foregroundKey,cache))
 					{
-	// 					QTime t;
-	// 					t.start();
-	// 					qDebug() << "BackgroundContent::drawForeground: Foreground pixmap dirty, redrawing size:"<<destRect;
-						cache = QPixmap(destRect.size());
-						cache.fill(Qt::transparent);
-						
-						QPainter tmpPainter(&cache);
-						tmpPainter.setRenderHint(QPainter::HighQualityAntialiasing, true);
-						tmpPainter.setRenderHint(QPainter::SmoothPixmapTransform, true);
-						
-						if(!sourceOffsetTL().isNull() || !sourceOffsetBR().isNull())
+// 						if(QFile(foregroundKey).exists())
+// 						{
+// 							cache.load(foregroundKey);
+// 							QPixmapCache::insert(foregroundKey,cache);
+// 							//qDebug() << "MediaBrowser::iconForImage: file:"<<file<<", size:"<<size<<": hit DISK (loaded scaled from disk cache)";
+// 						}
+// 						else
 						{
-							QPointF tl = sourceOffsetTL();
-							QPointF br = sourceOffsetBR();
-							QRect px = m_pixmap.rect();
-							int x1 = (int)(tl.x() * px.width());
-							int y1 = (int)(tl.y() * px.height());
-							QRect source( 
-								px.x() + x1,
-								px.y() + y1,
-								px.width()  - (int)(br.x() * px.width())  + (px.x() + x1),
-								px.height() - (int)(br.y() * px.height()) + (px.y() + y1)
-							);
-								
-							qDebug() << "BackgroundContent::paint:"<<modelItem()->itemName()<<": tl:"<<tl<<", br:"<<br<<", source:"<<source;
-							tmpPainter.drawPixmap(destRect, m_pixmap, source);
+							
+		// 					QTime t;
+		// 					t.start();
+		// 					qDebug() << "BackgroundContent::drawForeground: Foreground pixmap dirty, redrawing size:"<<destRect;
+							cache = QPixmap(destRect.size());
+							cache.fill(Qt::transparent);
+							
+							QPainter tmpPainter(&cache);
+							tmpPainter.setRenderHint(QPainter::HighQualityAntialiasing, true);
+							tmpPainter.setRenderHint(QPainter::SmoothPixmapTransform, true);
+							
+							if(!sourceOffsetTL().isNull() || !sourceOffsetBR().isNull())
+							{
+								QPointF tl = sourceOffsetTL();
+								QPointF br = sourceOffsetBR();
+								QRect px = m_pixmap.rect();
+								int x1 = (int)(tl.x() * px.width());
+								int y1 = (int)(tl.y() * px.height());
+								QRect source( 
+									px.x() + x1,
+									px.y() + y1,
+									px.width()  - (int)(br.x() * px.width())  + (px.x() + x1),
+									px.height() - (int)(br.y() * px.height()) + (px.y() + y1)
+								);
+									
+								qDebug() << "BackgroundContent::paint:"<<modelItem()->itemName()<<": tl:"<<tl<<", br:"<<br<<", source:"<<source;
+								tmpPainter.drawPixmap(destRect, m_pixmap, source);
+							}
+							else
+								tmpPainter.drawPixmap(destRect, m_pixmap);
+							
+							tmpPainter.end();
+							if(!QPixmapCache::insert(foregroundKey, cache))
+								qDebug() << "BackgroundContent::paint:"<<modelItem()->itemName()<<": Can't cache the image. This will slow performance of cross fades and slide editor. Make the cache larger using the Program Settings menu.";
+							
+		// 					qDebug() << "BackgroundContent::drawForeground: Foreground pixmap dirty, end drawing size:"<<destRect<<", elapsed: "<<t.elapsed();
 						}
-						else
-							tmpPainter.drawPixmap(destRect, m_pixmap);
-						
-						tmpPainter.end();
-						if(!QPixmapCache::insert(foregroundKey, cache))
-							qDebug() << "BackgroundContent::paint:"<<modelItem()->itemName()<<": Can't cache the image. This will slow performance of cross fades and slide editor. Make the cache larger using the Program Settings menu.";
-						
-	// 					qDebug() << "BackgroundContent::drawForeground: Foreground pixmap dirty, end drawing size:"<<destRect<<", elapsed: "<<t.elapsed();
 					}
 					
 					painter->drawPixmap(cRect,cache);
@@ -834,7 +936,7 @@ void BackgroundContent::setVideoFile(const QString &name)
 	if(DEBUG_BACKGROUNDCONTENT)
 		qDebug() << "BackgroundContent::setVideoFile(): name="<<name;
 	
-	bool testBeta = true;
+// 	bool testBeta = true;
 	
 	if(modelItem()->fillType() == AbstractVisualItem::Video)
 	{

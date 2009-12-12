@@ -33,6 +33,7 @@
 
 #define CACHE_DIR "dviz-imageiconcache"
 
+#include "imgtool/exiv2-0.18.2-qtbuild/src/image.hpp"
 
 /* We reimplement QListView's keyPressEvent to detect
   selection changes on key press events in QListView::ListMode.
@@ -97,21 +98,103 @@ QPixmap MediaBrowser::iconForImage(const QString & file, const QSize & size)
 		}
 		else
 		{
-			QPixmap orig(file);
-			if(orig.isNull())
+			bool gotThumb = false;
+			try
 			{
-				cache = QPixmap();
-				QPixmapCache::insert(cacheFile,cache);
-				qDebug() << "MediaBrowser::iconForImage: file:"<<file<<", size:"<<size<<": load INVALID (Can't load original)";
+				Exiv2::Image::AutoPtr exiv = Exiv2::ImageFactory::open(file.toStdString()); 
+				if(exiv.get() != 0)
+				{
+					exiv->readMetadata();
+					Exiv2::ExifData& exifData = exiv->exifData();
+					if (exifData.empty()) 
+					{
+						qDebug() << file << ": No Exif data found in the file";
+					}
+					Exiv2::ExifThumb exifThumb(exifData);
+					std::string thumbExt = exifThumb.extension();
+					if (thumbExt.empty()) 
+					{
+						qDebug() << file << ": Image does not contain an Exif thumbnail";
+					}
+					else
+					{
+						Exiv2::DataBuf buf = exifThumb.copy();
+						if (buf.size_ != 0) 
+						{
+							qDebug() << file << ": Attempting to load thumnail (" << exifThumb.mimeType() << ", "
+								<< buf.size_ << " Bytes)";
+							
+							QPixmap thumb;
+							if(!thumb.loadFromData(buf.pData_, buf.size_))
+							{
+								qDebug() << file << "QPixmap::fromData() failed";
+							}
+							else
+							{
+								QString rotateSensor = exifData["Exif.Image.Orientation"].toString().c_str();
+								int rotationFlag = rotateSensor.toInt(); 
+								int rotateDegrees = rotationFlag == 1 ||
+										rotationFlag == 2 ? 0 :
+										rotationFlag == 7 ||
+										rotationFlag == 8 ? -90 :
+										rotationFlag == 3 ||
+										rotationFlag == 4 ? -180 :
+										rotationFlag == 5 ||
+										rotationFlag == 6 ? -270 :
+										0;
+								QTransform t = QTransform().rotate(rotateDegrees);
+								thumb = thumb.transformed(t);
+										
+								cache = thumb.scaled(size,Qt::KeepAspectRatio,Qt::SmoothTransformation);
+								
+								if(abs(rotateDegrees) == 90 || abs(rotateDegrees) == 270)
+								{
+									QPixmap centeredCache(size);
+									centeredCache.fill(Qt::transparent);
+									int pos = size.width() /2 - cache.width() / 2;
+									QPainter painter(&centeredCache);
+									painter.drawPixmap(pos,0,cache);
+									cache = centeredCache;
+									qDebug() << file << " * Centered rotated pixmap in frame";
+								}
+								
+								cache.save(cacheFile,"PNG");
+								////qDebug() << "MyQFileIconProvider::icon(): image file: caching to:"<<cacheFile<<" for "<<file;
+								QPixmapCache::insert(cacheFile,cache);
+								
+								gotThumb = true;
+								
+								qDebug() << file << ": Succesfully loaded Exiv thumnail and scaled to size, wrote to: "<<cacheFile;
+							}
+						}
+					}
+				}
 			}
-			else
+			catch (Exiv2::AnyError& e) 
 			{
-				cache = orig.scaled(size,Qt::KeepAspectRatio,Qt::SmoothTransformation);
-				cache.save(cacheFile,"PNG");
-				////qDebug() << "MyQFileIconProvider::icon(): image file: caching to:"<<cacheFile<<" for "<<file;
-				QPixmapCache::insert(cacheFile,cache);
-				//qDebug() << "MediaBrowser::iconForImage: file:"<<file<<", size:"<<size<<": load GOOD (loaded original and scaled)";
-				//QApplication::processEvents();
+				//std::cout << "Caught Exiv2 exception '" << e << "'\n";
+				//return -1;
+				gotThumb = false;
+			}
+			
+			if(!gotThumb)
+			{
+				QPixmap orig(file);
+				if(orig.isNull())
+				{
+					cache = QPixmap();
+					QPixmapCache::insert(cacheFile,cache);
+					qDebug() << "MediaBrowser::iconForImage: file:"<<file<<", size:"<<size<<": load INVALID (Can't load original)";
+				}
+				else
+				{
+					cache = orig.scaled(size,Qt::KeepAspectRatio,Qt::SmoothTransformation);
+					cache.save(cacheFile,"PNG");
+					////qDebug() << "MyQFileIconProvider::icon(): image file: caching to:"<<cacheFile<<" for "<<file;
+					QPixmapCache::insert(cacheFile,cache);
+					//qDebug() << "MediaBrowser::iconForImage: file:"<<file<<", size:"<<size<<": load GOOD (loaded original and scaled)";
+					//QApplication::processEvents();
+				}
 			}
 		}
 	}

@@ -1322,39 +1322,55 @@ void MainWindow::sendGroupToOutput(Output *output, SlideGroup *newGroup, Slide *
 
 	//qDebug() << "MainWindow::sendGroupToOutput(): newGroup->groupType():"<<newGroup->groupType()<<", SlideGroup::GroupType:"<<SlideGroup::GroupType<<"old: "<<(oldGroup ? oldGroup->groupType() : -1);
 // 	if((oldGroup && oldGroup->groupType() != newGroup->groupType()) || newGroup->groupType() != SlideGroup::GroupType)
-	if(1)
+	
+	SlideGroupFactory *factory = SlideGroupFactory::factoryForType(newGroup->groupType());
+	if(!factory)
 	{
-		SlideGroupFactory *factory = SlideGroupFactory::factoryForType(newGroup->groupType());
-		if(!factory)
-		{
-			//qDebug() << "MainWindow::setLiveGroup(): Factory fell thu for request, going to generic control";
-			factory = SlideGroupFactory::factoryForType(SlideGroup::GroupType);
-		}
-
-		if(factory)
-		{
-			//qDebug() << "MainWindow::setLiveGroup(): got new factory, initalizing";
-			if(ctrl)
-			{
-				delete ctrl;
-				ctrl = 0;
-			}
-
-
-			ctrl = factory->newViewControl();
-			ctrl->setOutputView(inst);
-			//m_outputTabs->addTab(ctrl,output->name());
-			outputCtrl->setViewControl(ctrl);
-			outputCtrl->setCustomFilters(factory->customFiltersFor(outputCtrl->outputInstance()));
-
-			m_viewControls[output->id()] = ctrl;
-		}
+		//qDebug() << "MainWindow::setLiveGroup(): Factory fell thu for request, going to generic control";
+		factory = SlideGroupFactory::factoryForType(SlideGroup::GroupType);
 	}
 
-	//qDebug() << "MainWindow::setLiveGroup: Loading into view control:"<<newGroup;
-	ctrl->setSlideGroup(newGroup,currentSlide);
-	//qDebug() << "MainWindow::setLiveGroup: Loading into output instance:"<<newGroup;
-	inst->setSlideGroup(newGroup,currentSlide);
+	if(factory)
+	{
+		//qDebug() << "MainWindow::setLiveGroup(): got new factory, initalizing";
+		if(ctrl)
+		{
+			delete ctrl;
+			ctrl = 0;
+		}
+
+
+		ctrl = factory->newViewControl();
+		ctrl->setOutputView(inst);
+		//m_outputTabs->addTab(ctrl,output->name());
+		outputCtrl->setViewControl(ctrl);
+		
+		
+		//qDebug() << "MainWindow::setLiveGroup: Loading into view control:"<<newGroup;
+		ctrl->setSlideGroup(newGroup,currentSlide);
+		//qDebug() << "MainWindow::setLiveGroup: Loading into output instance:"<<newGroup;
+		inst->setSlideGroup(newGroup,currentSlide);
+		
+		
+		outputCtrl->setCustomFilters(factory->customFiltersFor(outputCtrl->outputInstance()));
+		
+		// hackish, I know - need a generic way for the slide group factory to set the text resized flag as well
+		if(newGroup->groupType() == SongSlideGroup::GroupType && 
+			(output->tags().toLower().indexOf("foldback") >= 0 ||
+				output->name().toLower().indexOf("foldback") >= 0))
+			outputCtrl->setTextResizeEnabled(true);
+
+		m_viewControls[output->id()] = ctrl;
+	}
+	else
+	{
+		//qDebug() << "MainWindow::setLiveGroup: Loading into view control:"<<newGroup;
+		ctrl->setSlideGroup(newGroup,currentSlide);
+		//qDebug() << "MainWindow::setLiveGroup: Loading into output instance:"<<newGroup;
+		inst->setSlideGroup(newGroup,currentSlide);
+			
+	}
+	
 	//qDebug() << "MainWindow::setLiveGroup: Loading into LIVE output (done)";
 	ctrl->setFocus(Qt::OtherFocusReason);
 }

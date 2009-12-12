@@ -3,9 +3,7 @@
 #include "RenderOpts.h"
 
 #include <QVBoxLayout>
-#ifndef QT_NO_OPENGL
 # include <QtOpenGL/QGLWidget>
-#endif
 
 #include "qvideo/QVideoProvider.h"
 

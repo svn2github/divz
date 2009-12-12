@@ -17,6 +17,36 @@ namespace Phonon {
 #include <QAction>
 #include <QLCDNumber>
 	
+class BackgroundItem;
+class BackgroundImageWarmingThread : public QThread
+{
+	Q_OBJECT
+public:
+	BackgroundImageWarmingThread(BackgroundItem*, QString cacheKey, QRect rect);
+	virtual ~BackgroundImageWarmingThread() {};
+	void run();
+signals:
+	void renderDone(QImage *);
+private:
+	QPointer<BackgroundItem> m_model;
+	QString m_cacheKey;
+	QRect m_rect;
+};
+
+class BackgroundImageWarmingThreadManager : public QObject
+{
+	Q_OBJECT
+public:
+	BackgroundImageWarmingThreadManager(BackgroundItem*, QString cacheKey, QRect rect);
+private slots:
+	void renderDone(QImage*);
+private:
+	QPointer<BackgroundItem> m_model;
+	QString m_cacheKey;
+	QRect m_rect;
+	BackgroundImageWarmingThread * m_thread;
+};
+
 /// \brief TODO
 class BackgroundContent : public AbstractContent
 {
@@ -45,7 +75,11 @@ class BackgroundContent : public AbstractContent
 	void paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget = 0);
 	
 	QWidget * controlWidget();
-
+	
+    protected:
+    	friend class BackgroundImageWarmingThread;
+    	static QImage * internalLoadFile(QString file,QString cacheKey, QRect rect);
+    
     private slots:
 	void setPixmap(const QPixmap & pixmap);
 	void sceneRectChanged(const QRectF &);

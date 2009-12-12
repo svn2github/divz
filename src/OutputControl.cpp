@@ -355,6 +355,7 @@ void OutputControl::setupFilterList(AbstractItemFilterList selected)
 // 		else
  		if(selected.contains(impl) || impl->isMandatoryFor(outputInstance()))
  		{
+			//qDebug() << "Enabling filter "<<impl->metaObject()->className()<<" because selected is "<<selected.contains(impl)<<" || is madatory is "<<impl->isMandatoryFor(outputInstance());
 			t->setCheckState(Qt::Checked);
 			m_inst->addFilter(impl);
 		}
@@ -504,7 +505,7 @@ void OutputControl::setTextOnlyFilterEnabled(bool flag)
 	
 	int idx;
 	for(int i=0;i<m_customFilterList.size();i++)
-		if(m_customFilterList[i]->inherits("SlideTextOnlyFilter"))
+		if(m_customFilterList[i]->metaObject()->className() == "SlideTextOnlyFilter")
 			idx = i, i = m_customFilterList.size();
 			//indexOf(SlideTextOnlyFilter::instance());
 	QListWidgetItem * item = m_filterList->item(idx);
@@ -514,6 +515,7 @@ void OutputControl::setTextOnlyFilterEnabled(bool flag)
 		bool enabled = item->checkState() == Qt::Checked;
 		if(enabled != flag)
 		{
+			//qDebug() << "Enabling text only filter!";
 			item->setCheckState(Qt::Checked);
 			//filterListItemChanged(item);
 		}
@@ -619,12 +621,15 @@ void OutputControl::setOutputInstance(OutputInstance * inst)
 
 void OutputControl::setupFoldbackSettings()
 {
-	if(m_inst->output()->tags().toLower().indexOf("foldback") >= 0 ||
-	   m_inst->output()->name().toLower().indexOf("foldback") >= 0)
+	setTextResizeEnabled(false);
+// 	if(m_inst->output()->tags().toLower().indexOf("foldback") >= 0 ||
+// 	   m_inst->output()->name().toLower().indexOf("foldback") >= 0)
+	if(m_inst->output()->tags().toLower().indexOf("live") < 0 &&
+	   m_inst->output()->name().toLower().indexOf("live") < 0)
 	{
 		setIsOutputSynced(true);
-		setTextOnlyFilterEnabled(true);
-		setTextResizeEnabled(true);
+// 		setTextOnlyFilterEnabled(true);
+// 		setTextResizeEnabled(true);
 		setAdvancedWidgetVisible(true);
 		m_fadeSlider->setValue(10);
 	}
@@ -688,6 +693,7 @@ void OutputControl::fadeClearFrame(bool flag)
 		bool enabled = item->checkState() == Qt::Checked;
 		if(enabled != flag)
 		{
+			//qDebug() << "Enabling clear frame (background only filter)";
 			item->setCheckState(flag ? Qt::Checked : Qt::Unchecked);
 			//filterListItemChanged(item);
 		}
@@ -740,8 +746,10 @@ void OutputControl::setCustomFilters(AbstractItemFilterList list)
 	AbstractItemFilterList selected;
 	for(int i=0; i<m_customFilterList.size(); i++)
 	{
+		AbstractItemFilter * impl = m_customFilterList[i];
 		QListWidgetItem * item = m_filterList->item(i);
-		if(item && item->checkState() == Qt::Checked)
+		if(item && item->checkState() == Qt::Checked
+			&& ! impl->isMandatoryFor(outputInstance()))
 			selected.append(m_customFilterList[i]);
 	}
 	

@@ -25,8 +25,14 @@ SongFoldbackTextFilter::SongFoldbackTextFilter()
 
 bool SongFoldbackTextFilter::isMandatoryFor(OutputInstance * inst)
 {
-	return inst && inst->output() && (inst->output()->name().toLower().indexOf("foldback") > -1 ||
-					  inst->output()->tags().toLower().indexOf("foldback") > -1);
+	if(!inst)
+		return false;
+		
+	SlideGroup *group = inst->slideGroup();
+	
+	return group && group->groupType() == SongSlideGroup::GroupType &&
+		inst->output() && (inst->output()->name().toLower().indexOf("foldback") > -1 ||
+				   inst->output()->tags().toLower().indexOf("foldback") > -1);
 }
 
 bool SongFoldbackTextFilter::approve(AbstractItem *) { return true; }
