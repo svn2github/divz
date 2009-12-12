@@ -36,6 +36,12 @@ AppSettingsDialog::AppSettingsDialog(QWidget *parent) :
 	m_ui->qualityBox->setValue(AppSettings::crossFadeQuality());
 	
 	m_ui->autosaveBox->setValue(AppSettings::autosaveTime());
+
+	// Yes, I'm cheating by not adding a proper accessor to AppSettings - I dont feel
+	// like waiting for the entire source tree to recompile right now. Maybe later.
+	QSettings settings;
+	int maxBackups = settings.value("max-backups","10").toInt();
+	m_ui->maxBackups->setValue(maxBackups);
 	
 	if(AppSettings::liveEditMode() == AppSettings::PublishEdit)
 		m_ui->editModePublished->setChecked(true);
@@ -107,6 +113,11 @@ void AppSettingsDialog::slotAccepted()
 	
 	AppSettings::setHttpControlEnabled(m_ui->httpEnabled->isChecked());
 	AppSettings::setHttpControlPort(m_ui->httpPort->value());
+
+	// Yes, I'm cheating by not adding a proper accessor to AppSettings - I dont feel
+	// like waiting for the entire source tree to recompile right now. Maybe later.
+	QSettings settings;
+	settings.setValue("max-backups",m_ui->maxBackups->value());
 	
 	close();
 }

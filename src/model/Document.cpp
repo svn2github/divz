@@ -236,11 +236,36 @@ void Document::save(const QString & filename)
 	else
 		m_filename = tmp;
 		
-	QFile file;
+	QFile file(tmp);
+
+	QSettings settings;
+	int maxBackups = settings.value("max-backups","10").toInt();
+	int counter = settings.value(QString("filecounts/%1").arg(tmp),"1").toInt();
+
+	//qDebug() << "MaxBackups: "<<maxBackups;
+
+	for(int idx = counter - maxBackups; idx > 0; idx--)
+	{
+		QString backup = QString("%1.%2").arg(tmp).arg(idx);
+		QFile backupFile(backup);
+		if(backupFile.exists())
+		{
+			//qDebug() << "Removing backup "<<backup;
+			backupFile.remove();
+		}
+		else
+			break;
+	}
+
+	QString backup = QString("%1.%2").arg(tmp).arg(counter);
+	file.copy(backup);
+	//qDebug() << "Copied "<<tmp<<" to "<<backup;
+
+	counter ++;
+	settings.setValue(QString("filecounts/%1").arg(tmp),counter);
 	
 	// Open file
-	file.setFileName(tmp);
-	if (!file.open(QIODevice::WriteOnly)) 
+	if (!file.open(QIODevice::WriteOnly))
 	{
 		QMessageBox::warning(0, tr("File Error"), tr("Error saving to the file '%1'").arg(tmp));
 		throw 0;
