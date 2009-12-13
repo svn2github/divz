@@ -11,7 +11,7 @@
 
 #include "XMPUtils.hpp"
 
-#include "MD5.h"
+#include "XMPMD5.h"
 
 #include <map>
 

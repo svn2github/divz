@@ -103,7 +103,7 @@ HEADERS += src/basicio.hpp \
            src/xmpsidecar.hpp \
 #           contrib/organize/helpers.hpp \
 #           contrib/organize/MD5.h \
-           xmpsdk/include/MD5.h \
+           xmpsdk/include/XMPMD5.h \
            xmpsdk/include/TXMPIterator.hpp \
            xmpsdk/include/TXMPMeta.hpp \
            xmpsdk/include/TXMPUtils.hpp \
@@ -190,7 +190,7 @@ SOURCES += src/basicio.cpp \
 #           contrib/organize/MD5.cpp \
 #           contrib/organize/organize.cpp \
            xmpsdk/src/ExpatAdapter.cpp \
-           xmpsdk/src/MD5.cpp \
+           xmpsdk/src/XMPMD5.cpp \
            xmpsdk/src/ParseRDF.cpp \
            xmpsdk/src/UnicodeConversions.cpp \
            xmpsdk/src/WXMPIterator.cpp \

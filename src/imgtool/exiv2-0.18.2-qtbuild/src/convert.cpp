@@ -51,8 +51,10 @@ EXIV2_RCSID("@(#) $Id: convert.cpp 1750 2009-02-16 14:30:51Z ahuggel $")
 #ifdef EXV_HAVE_XMP_TOOLKIT
 # define TXMP_STRING_TYPE std::string
 # include <XMPSDK.hpp>
-# include <MD5.h>
+# include <XMPMD5.h>
 #endif // EXV_HAVE_XMP_TOOLKIT
+
+#include <MD5.h>
 
 // *****************************************************************************
 // local declarations

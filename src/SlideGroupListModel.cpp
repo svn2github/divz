@@ -339,9 +339,20 @@ void SlideGroupListModel::modelDirtyTimeout()
 	QModelIndex top    = indexForSlide(m_dirtySlides.first()), 
 	            bottom = indexForSlide(m_dirtySlides.last());
 	
-	//qDebug() << "SlideGroupListModel::modelDirtyTimeout: top:"<<top<<", bottom:"<<bottom;
-	
 	m_dirtySlides.clear();
+
+	qDebug() << "SlideGroupListModel::modelDirtyTimeout: top:"<<top<<", bottom:"<<bottom;
+
+	if(!top.isValid())
+		top = bottom;
+	if(!bottom.isValid())
+		bottom = top;
+	if((!bottom.isValid() && !top.isValid())
+		|| bottom.row()< 0 || top.row() < 0)
+	{
+		qDebug() << "SlideGroupListModel::modelDirtyTimeout: Both top:"<<top<<", bottom:"<<bottom<<" are invalid.";
+		return;
+	}
 	
 	dataChanged(top,bottom);
 }
