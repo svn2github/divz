@@ -88,7 +88,7 @@ MainWindow::MainWindow(QWidget *parent)
 	m_pixmapItem->setPos(0,0);
 	m_scene->addItem(m_pixmapItem);
 	
-	m_cache.setMaxCost(512); // 250 MB
+	m_cache.setMaxCost(512); 
 	
 	// Using similar formula as CPAN's config for the -j option: nbr cpus + 1
 	QThreadPool::globalInstance()->setMaxThreadCount(QThread::idealThreadCount() + 1);

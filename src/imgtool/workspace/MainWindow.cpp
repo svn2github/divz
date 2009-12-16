@@ -90,8 +90,8 @@ QPixmap MediaBrowser::iconForImage(const QString & file, const QSize & size)
 					Exiv2::DataBuf buf = exifThumb.copy();
 					if (buf.size_ != 0) 
 					{
-						qDebug() << file << ": Attempting to load thumnail (" << exifThumb.mimeType() << ", "
-							<< buf.size_ << " Bytes)";
+// 						qDebug() << file << ": Attempting to load thumnail (" << exifThumb.mimeType() << ", "
+// 							<< buf.size_ << " Bytes)";
 						
 						QPixmap thumb;
 						if(!thumb.loadFromData(buf.pData_, buf.size_))
@@ -100,6 +100,62 @@ QPixmap MediaBrowser::iconForImage(const QString & file, const QSize & size)
 						}
 						else
 						{
+							
+							// adjust thumbnail for proper AR
+							// The code for finding the image resolution is from exiv's source - actions.cpp
+							long xdim = 0;
+							long ydim = 0;
+							Exiv2::ExifData::const_iterator md;
+							
+							md = exifData.findKey(Exiv2::ExifKey("Exif.Image.ImageWidth"));
+							if (md == exifData.end()) 
+								md = exifData.findKey(Exiv2::ExifKey("Exif.Photo.PixelXDimension"));
+							if (md != exifData.end() && md->count() > 0) 
+								xdim = md->toLong();
+							
+							md = exifData.findKey(Exiv2::ExifKey("Exif.Image.ImageLength"));
+							if (md == exifData.end()) 
+								md = exifData.findKey(Exiv2::ExifKey("Exif.Photo.PixelYDimension"));
+							if (md != exifData.end() && md->count() > 0) 
+								ydim = md->toLong();
+							
+							if (xdim != 0 && ydim != 0) 
+							{
+								// calculate AR of the actual image, and if the thumnail doesnt match
+								// AR of image, then trim top and bottom of thumb, assuming camera
+								// added black bars
+								
+								double bigAR   = (double)xdim / (double)ydim;
+								double smallAR = (double)thumb.width() / (double)thumb.height();
+								
+								// convert to an integer by moving the decimal over 2 places inorder
+								// to only compare AR's with two decimal places precision, ignoring 
+								// very small AR differences
+								int bigARi   = (int)(bigAR * 100);
+								int smallARi = (int)(smallAR * 100);
+								
+								if(bigARi != smallARi)
+								{
+									int properThumbHeight = thumb.width() / bigAR;
+									int blackBarHeight = (thumb.height() - properThumbHeight) / 2;
+									
+									// in test images, it seemed to be exactly 1 px off, hence the +/- 1(*2)
+									QRect correctRect(0,blackBarHeight + 1,thumb.width(),thumb.height() - blackBarHeight * 2 - 2);
+									thumb = thumb.copy(correctRect);
+									 
+									//qDebug() << "Adjusted thumb rect to"<<correctRect<<" ("<<bigARi<<"!="<<smallARi<<")";
+								}
+								else
+								{
+									//qDebug() << "Thumb not adjusted: bigARi:"<<bigARi<<",smallARi:"<<smallARi;
+								}
+							}
+							else
+							{
+								//qDebug() << "Unable to check thumbnail resolution because could not find exif image res of original image.";
+							}
+							
+							// adjust thumbnail for proper rotation
 							QString rotateSensor = exifData["Exif.Image.Orientation"].toString().c_str();
 							int rotationFlag = rotateSensor.toInt(); 
 							int rotateDegrees = rotationFlag == 1 ||
@@ -114,8 +170,10 @@ QPixmap MediaBrowser::iconForImage(const QString & file, const QSize & size)
 							QTransform t = QTransform().rotate(rotateDegrees);
 							thumb = thumb.transformed(t);
 									
+							// scale to desired size
 							cache = thumb.scaled(size,Qt::KeepAspectRatio,Qt::SmoothTransformation);
 							
+							// center thumb if rotated
 							if(abs(rotateDegrees) == 90 || abs(rotateDegrees) == 270)
 							{
 								QPixmap centeredCache(size);
@@ -124,7 +182,7 @@ QPixmap MediaBrowser::iconForImage(const QString & file, const QSize & size)
 								QPainter painter(&centeredCache);
 								painter.drawPixmap(pos,0,cache);
 								cache = centeredCache;
-								qDebug() << file << " * Centered rotated pixmap in frame";
+								//qDebug() << file << " * Centered rotated pixmap in frame";
 							}
 							
 							cache.save(cacheFile,"PNG");
@@ -133,7 +191,7 @@ QPixmap MediaBrowser::iconForImage(const QString & file, const QSize & size)
 							
 							gotThumb = true;
 							
-							qDebug() << file << ": Succesfully loaded Exiv thumnail and scaled to size, wrote to: "<<cacheFile;
+// 							qDebug() << file << ": Succesfully loaded Exiv thumnail and scaled to size, wrote to: "<<cacheFile;
 						}
 					}
 				}
@@ -346,9 +404,44 @@ void MainWindow::setupFileBrowser()
 	ui->mainList->setResizeMode(QListView::Adjust);
 	ui->mainList->setViewMode(QListView::IconMode);
 	
+	connect(ui->mainList, SIGNAL(clicked(QModelIndex)), m_dirModel, SLOT(prioritize(QModelIndex)));
+	
 // 	QPalette pal = ui->mainList->viewport()->palette();
 // 	pal.setColor(QPalette::Window, Qt::black);
 // 	ui->mainList->viewport()->setPalette(pal);
+
+
+	QString stylesheet =
+		" QListView {"
+		"     show-decoration-selected: 1;" /* make the selection span the entire width of the view */
+		"     background: black;"
+		" }"
+		""
+		" QListView::item:alternate {"
+		"     background: #EEEEEE;"
+		" }"
+		""
+		" QListView::item:selected {"
+		"     background: yellow;"
+		" }"
+		""
+// 		" QListView::item:selected:!active {"
+// 		"     background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,"
+// 		"                                 stop: 0 #ABAFE5, stop: 1 #8588B2);"
+// 		" }"
+// 		""
+// 		" QListView::item:selected:active {"
+// 		"     background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,"
+// 		"                                 stop: 0 #6a6ea9, stop: 1 #888dd9);"
+// 		" }"
+		""
+// 		" QListView::item:hover {"
+// 		"     background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,"
+// 		"                                 stop: 0 #FAFBFE, stop: 1 #DCDEF1);"
+// 		" }"
+		;
+
+	ui->mainList->setStyleSheet(stylesheet);
 	
 }
 

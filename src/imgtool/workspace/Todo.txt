@@ -1,0 +1,76 @@
+Picasa Strengths:
+	- Contrast, Tuning, Blemish, Crop, and Rotation Tools
+	- Display folder list as thumbnails - resizable
+	- Export folder or selection 
+	- Quick filter by stars
+	- Collage tool
+	- Export as HTML tool
+	- Context strips when viewing individual image
+	- Slideshow feature
+
+Picasa Weaknesses:
+	- No subfolder support
+	- On linux, filesystem browsing freezes program (e.g. cannot change root of where imported folders are stored)
+	- "Star" attribute is stored in an .ini file in the import folder
+	- Images are "imported" into Picasa, and copied on-disk from current location to new location (no support for in-place folder browsing)
+		- This allows Picasa to hide thumnail generation in the import code
+
+
+Single Window
+Two Panes
+
+Left:
+	Top Panel
+		Colections
+		Ratings
+		Categories
+		Color Tags?
+	Bottom Panel	
+		Folder Browser
+		Special Icons for Already Processed Folders?
+		
+Right:
+	"Folder" view
+		Virtual model to accomidate either disk folder or collections/ratings/etc (filtered)	
+		Resizable thumbnails
+		Meta-edit from the folder view (e.g. star/unstar, tag/untag)
+		All meta-ops operate on selection as well as individual images
+		Show selection list at bottom like picasa
+		Batch ops 
+			export
+			add to collection
+			
+-------------
+Must have:
+	- Large thumbnail view 
+	- 'Star' in thumbnail view
+	- View single photo large
+	- Filter by only starred/unstarred
+	- Export selection
+
+Break it down:
+	- Large thumbnail view
+		- Crop black edges off
+		- Resize larger than orig thumb using full version of photo, lazy-loaded 
+	- 'Star' in thumbnail view
+		- Store in picasa format INI file
+		- Store as 5-star rating in exif
+	- View single photo large
+		- Remember contextual thumbnail strip
+	- Filter by only starred/unstarred
+	- Export selection
+
+Add in feature:
+	- "Tag" photos
+	- "collections"
+	- Sort by date/time taken
+	- Group by time taken
+	- Facial recog
+	- Color recog
+	- Collage feature
+		- shaped collage
+		- photo-collage
+
+			
+	
+		
