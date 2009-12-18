@@ -341,7 +341,7 @@ void SlideGroupListModel::modelDirtyTimeout()
 	
 	m_dirtySlides.clear();
 
-	qDebug() << "SlideGroupListModel::modelDirtyTimeout: top:"<<top<<", bottom:"<<bottom;
+	//qDebug() << "SlideGroupListModel::modelDirtyTimeout: top:"<<top<<", bottom:"<<bottom;
 
 	if(!top.isValid())
 		top = bottom;
@@ -350,7 +350,7 @@ void SlideGroupListModel::modelDirtyTimeout()
 	if((!bottom.isValid() && !top.isValid())
 		|| bottom.row()< 0 || top.row() < 0)
 	{
-		qDebug() << "SlideGroupListModel::modelDirtyTimeout: Both top:"<<top<<", bottom:"<<bottom<<" are invalid.";
+		//qDebug() << "SlideGroupListModel::modelDirtyTimeout: Both top:"<<top<<", bottom:"<<bottom<<" are invalid.";
 		return;
 	}
 	

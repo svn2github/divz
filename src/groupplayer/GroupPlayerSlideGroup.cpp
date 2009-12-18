@@ -103,14 +103,19 @@ void GroupPlayerSlideGroup::addGroup(GroupMember mem)
 		
 	if(!mem.group)
 	{
-		qDebug() << "GroupPlayerSlideGroup::addGroup: No 'group' defined in GroupMember # "<<mem.sequenceNumber<<", not adding member to player list.";
-
 		// hackish method to put *something* as the group - right now, if we leave group null, then we segflt - i dont have time to trace the crash, but I can patch around it here.
 		Document *doc = MainWindow::mw()->currentDocument();
 		if(!doc) // loading, therefore SlideGroup::document() should contain current doc
 			doc = document();
-		mem.group = doc->groupList().first();
+		if(doc && !doc->groupList().isEmpty())
+			mem.group = doc->groupList().first();
 		//return;
+	}
+
+	if(!mem.group)
+	{
+		qDebug() << "GroupPlayerSlideGroup::addGroup: No 'group' defined in GroupMember # "<<mem.sequenceNumber<<", not adding member to player list - could not patch with hack above.";
+		return;
 	}
 	
 	m_groups.append(mem);
@@ -162,6 +167,8 @@ void GroupPlayerSlideGroup::setupSlides()
 	}
 	
 	SlideGroup *group = m_groups.first().group;
+	if(!group)
+		return;
 	
 	QList<Slide*> slides = group->slideList();
 	if(slides.isEmpty())

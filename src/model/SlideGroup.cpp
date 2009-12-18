@@ -243,11 +243,14 @@ void SlideGroup::saveProperties(QVariantMap& map) const
 		map["master"] = m_masterSlide->toByteArray();
 }
 
-void SlideGroup::saveSlideList(QVariantMap&map)  const
+void SlideGroup::saveSlideList(QVariantMap& map)  const
 {
 	QVariantList list;
+	if(m_slides.isEmpty())
+		return;
 	foreach (Slide * slide, m_slides)
-		list << slide->toByteArray();
+		if(slide)
+			list << slide->toByteArray();
 	map["slides"] = list;
 
 }
