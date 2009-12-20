@@ -1,10 +1,10 @@
 /********************************************************************************
-** Form generated from reading UI file 'DocumentSettingsDialog.ui'
+** Form generated from reading ui file 'DocumentSettingsDialog.ui'
 **
-** Created: Sat Dec 19 18:09:11 2009
-**      by: Qt User Interface Compiler version 4.6.0
+** Created: Sat Dec 19 21:06:51 2009
+**      by: Qt User Interface Compiler version 4.5.2
 **
-** WARNING! All changes made in this file will be lost when recompiling UI file!
+** WARNING! All changes made in this file will be lost when recompiling ui file!
 ********************************************************************************/
 
 #ifndef UI_DOCUMENTSETTINGSDIALOG_H
@@ -130,6 +130,7 @@ public:
         btn4x3->setText(QApplication::translate("DocumentSettingsDialog", "Use 4 x 3 (Normal)", 0, QApplication::UnicodeUTF8));
         btn16x9->setText(QApplication::translate("DocumentSettingsDialog", "Use 16 x 9 (Wide Screen)", 0, QApplication::UnicodeUTF8));
         label->setText(QApplication::translate("DocumentSettingsDialog", "Aspect Ratio is expressed as width divided by height.", 0, QApplication::UnicodeUTF8));
+        Q_UNUSED(DocumentSettingsDialog);
     } // retranslateUi
 
 };

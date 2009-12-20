@@ -1,8 +1,8 @@
 /****************************************************************************
 ** Meta object code from reading C++ file 'SlideGroupViewer.h'
 **
-** Created: Sat Dec 19 18:15:34 2009
-**      by: The Qt Meta Object Compiler version 62 (Qt 4.6.0)
+** Created: Sat Dec 19 21:08:45 2009
+**      by: The Qt Meta Object Compiler version 61 (Qt 4.5.2)
 **
 ** WARNING! All changes made in this file will be lost!
 *****************************************************************************/
@@ -10,8 +10,8 @@
 #include "../../SlideGroupViewer.h"
 #if !defined(Q_MOC_OUTPUT_REVISION)
 #error "The header file 'SlideGroupViewer.h' doesn't include <QObject>."
-#elif Q_MOC_OUTPUT_REVISION != 62
-#error "This file was generated using the moc from 4.6.0. It"
+#elif Q_MOC_OUTPUT_REVISION != 61
+#error "This file was generated using the moc from 4.5.2. It"
 #error "cannot be used with the include files from this version of Qt."
 #error "(The moc has changed too much.)"
 #endif
@@ -20,15 +20,13 @@ QT_BEGIN_MOC_NAMESPACE
 static const uint qt_meta_data_NativeViewer[] = {
 
  // content:
-       4,       // revision
+       2,       // revision
        0,       // classname
        0,    0, // classinfo
        0,    0, // methods
        0,    0, // properties
        0,    0, // enums/sets
        0,    0, // constructors
-       0,       // flags
-       0,       // signalCount
 
        0        // eod
 };
@@ -42,13 +40,9 @@ const QMetaObject NativeViewer::staticMetaObject = {
       qt_meta_data_NativeViewer, 0 }
 };
 
-#ifdef Q_NO_DATA_RELOCATION
-const QMetaObject &NativeViewer::getStaticMetaObject() { return staticMetaObject; }
-#endif //Q_NO_DATA_RELOCATION
-
 const QMetaObject *NativeViewer::metaObject() const
 {
-    return QObject::d_ptr->metaObject ? QObject::d_ptr->metaObject : &staticMetaObject;
+    return &staticMetaObject;
 }
 
 void *NativeViewer::qt_metacast(const char *_clname)
@@ -69,15 +63,13 @@ int NativeViewer::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
 static const uint qt_meta_data_NativeViewerWin32[] = {
 
  // content:
-       4,       // revision
+       2,       // revision
        0,       // classname
        0,    0, // classinfo
-       1,   14, // methods
+       1,   12, // methods
        0,    0, // properties
        0,    0, // enums/sets
        0,    0, // constructors
-       0,       // flags
-       0,       // signalCount
 
  // slots: signature, parameters, type, tag, flags
       19,   18,   18,   18, 0x09,
@@ -94,13 +86,9 @@ const QMetaObject NativeViewerWin32::staticMetaObject = {
       qt_meta_data_NativeViewerWin32, 0 }
 };
 
-#ifdef Q_NO_DATA_RELOCATION
-const QMetaObject &NativeViewerWin32::getStaticMetaObject() { return staticMetaObject; }
-#endif //Q_NO_DATA_RELOCATION
-
 const QMetaObject *NativeViewerWin32::metaObject() const
 {
-    return QObject::d_ptr->metaObject ? QObject::d_ptr->metaObject : &staticMetaObject;
+    return &staticMetaObject;
 }
 
 void *NativeViewerWin32::qt_metacast(const char *_clname)
@@ -128,15 +116,13 @@ int NativeViewerWin32::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
 static const uint qt_meta_data_SlideGroupViewer[] = {
 
  // content:
-       4,       // revision
+       2,       // revision
        0,       // classname
        0,    0, // classinfo
-      30,   14, // methods
+      30,   12, // methods
        0,    0, // properties
        0,    0, // enums/sets
        0,    0, // constructors
-       0,       // flags
-       5,       // signalCount
 
  // signals: signature, parameters, type, tag, flags
       18,   17,   17,   17, 0x05,
@@ -205,13 +191,9 @@ const QMetaObject SlideGroupViewer::staticMetaObject = {
       qt_meta_data_SlideGroupViewer, 0 }
 };
 
-#ifdef Q_NO_DATA_RELOCATION
-const QMetaObject &SlideGroupViewer::getStaticMetaObject() { return staticMetaObject; }
-#endif //Q_NO_DATA_RELOCATION
-
 const QMetaObject *SlideGroupViewer::metaObject() const
 {
-    return QObject::d_ptr->metaObject ? QObject::d_ptr->metaObject : &staticMetaObject;
+    return &staticMetaObject;
 }
 
 void *SlideGroupViewer::qt_metacast(const char *_clname)

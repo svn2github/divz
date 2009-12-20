@@ -1,10 +1,10 @@
 /********************************************************************************
-** Form generated from reading UI file 'GenericItemConfig.ui'
+** Form generated from reading ui file 'GenericItemConfig.ui'
 **
-** Created: Sat Dec 19 18:09:11 2009
-**      by: Qt User Interface Compiler version 4.6.0
+** Created: Sat Dec 19 21:06:51 2009
+**      by: Qt User Interface Compiler version 4.5.2
 **
-** WARNING! All changes made in this file will be lost when recompiling UI file!
+** WARNING! All changes made in this file will be lost when recompiling ui file!
 ********************************************************************************/
 
 #ifndef UI_GENERICITEMCONFIG_H
@@ -482,7 +482,7 @@ public:
         bgOptNoBg = new QWidget(backgroundTab);
         bgOptNoBg->setObjectName(QString::fromUtf8("bgOptNoBg"));
         verticalLayout_13 = new QVBoxLayout(bgOptNoBg);
-        verticalLayout_13->setContentsMargins(0, 0, 0, 0);
+        verticalLayout_13->setMargin(0);
         verticalLayout_13->setObjectName(QString::fromUtf8("verticalLayout_13"));
 
         verticalLayout_10->addWidget(bgOptNoBg);
@@ -501,7 +501,7 @@ public:
         bgOptColor = new QWidget(backgroundTab);
         bgOptColor->setObjectName(QString::fromUtf8("bgOptColor"));
         verticalLayout_14 = new QVBoxLayout(bgOptColor);
-        verticalLayout_14->setContentsMargins(0, 0, 0, 0);
+        verticalLayout_14->setMargin(0);
         verticalLayout_14->setObjectName(QString::fromUtf8("verticalLayout_14"));
         bgColorPickerLayout = new QHBoxLayout();
         bgColorPickerLayout->setObjectName(QString::fromUtf8("bgColorPickerLayout"));
@@ -519,7 +519,7 @@ public:
         bgOptGradient = new QWidget(backgroundTab);
         bgOptGradient->setObjectName(QString::fromUtf8("bgOptGradient"));
         verticalLayout_15 = new QVBoxLayout(bgOptGradient);
-        verticalLayout_15->setContentsMargins(0, 0, 0, 0);
+        verticalLayout_15->setMargin(0);
         verticalLayout_15->setObjectName(QString::fromUtf8("verticalLayout_15"));
         gradientSelector = new QComboBox(bgOptGradient);
         gradientSelector->setObjectName(QString::fromUtf8("gradientSelector"));
@@ -537,7 +537,7 @@ public:
         bgOptImage = new QWidget(backgroundTab);
         bgOptImage->setObjectName(QString::fromUtf8("bgOptImage"));
         verticalLayout_16 = new QVBoxLayout(bgOptImage);
-        verticalLayout_16->setContentsMargins(0, 0, 0, 0);
+        verticalLayout_16->setMargin(0);
         verticalLayout_16->setObjectName(QString::fromUtf8("verticalLayout_16"));
         gridLayout_8 = new QGridLayout();
         gridLayout_8->setObjectName(QString::fromUtf8("gridLayout_8"));
@@ -570,7 +570,7 @@ public:
         bgOptVideo = new QWidget(backgroundTab);
         bgOptVideo->setObjectName(QString::fromUtf8("bgOptVideo"));
         verticalLayout_17 = new QVBoxLayout(bgOptVideo);
-        verticalLayout_17->setContentsMargins(0, 0, 0, 0);
+        verticalLayout_17->setMargin(0);
         verticalLayout_17->setObjectName(QString::fromUtf8("verticalLayout_17"));
         gridLayout_9 = new QGridLayout();
         gridLayout_9->setObjectName(QString::fromUtf8("gridLayout_9"));
@@ -797,7 +797,7 @@ public:
         widget = new QWidget(groupBox_6);
         widget->setObjectName(QString::fromUtf8("widget"));
         horizontalLayout = new QHBoxLayout(widget);
-        horizontalLayout->setContentsMargins(0, 0, 0, 0);
+        horizontalLayout->setMargin(0);
         horizontalLayout->setObjectName(QString::fromUtf8("horizontalLayout"));
         shadowXOffsetBox = new QDoubleSpinBox(widget);
         shadowXOffsetBox->setObjectName(QString::fromUtf8("shadowXOffsetBox"));
@@ -1176,6 +1176,7 @@ public:
         );
         tabWidget->setTabText(tabWidget->indexOf(reflectionTab), QApplication::translate("GenericItemConfig", "Effects", 0, QApplication::UnicodeUTF8));
         btnSave->setText(QApplication::translate("GenericItemConfig", "&Save", 0, QApplication::UnicodeUTF8));
+        Q_UNUSED(GenericItemConfig);
     } // retranslateUi
 
 };

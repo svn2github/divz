@@ -1,10 +1,10 @@
 /********************************************************************************
-** Form generated from reading UI file 'SongSearchOnlineDialog.ui'
+** Form generated from reading ui file 'SongSearchOnlineDialog.ui'
 **
-** Created: Sat Dec 19 18:09:11 2009
-**      by: Qt User Interface Compiler version 4.6.0
+** Created: Sat Dec 19 21:06:51 2009
+**      by: Qt User Interface Compiler version 4.5.2
 **
-** WARNING! All changes made in this file will be lost when recompiling UI file!
+** WARNING! All changes made in this file will be lost when recompiling ui file!
 ********************************************************************************/
 
 #ifndef UI_SONGSEARCHONLINEDIALOG_H
@@ -113,6 +113,7 @@ public:
         SongSearchOnlineDialog->setWindowTitle(QApplication::translate("SongSearchOnlineDialog", "Song Search Online", 0, QApplication::UnicodeUTF8));
         label->setText(QApplication::translate("SongSearchOnlineDialog", "Song Title:", 0, QApplication::UnicodeUTF8));
         searchButton->setText(QApplication::translate("SongSearchOnlineDialog", "Search", 0, QApplication::UnicodeUTF8));
+        Q_UNUSED(SongSearchOnlineDialog);
     } // retranslateUi
 
 };

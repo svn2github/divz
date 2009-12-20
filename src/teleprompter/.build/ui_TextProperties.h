@@ -1,10 +1,10 @@
 /********************************************************************************
-** Form generated from reading UI file 'TextProperties.ui'
+** Form generated from reading ui file 'TextProperties.ui'
 **
-** Created: Sat Dec 19 18:09:11 2009
-**      by: Qt User Interface Compiler version 4.6.0
+** Created: Sat Dec 19 21:06:51 2009
+**      by: Qt User Interface Compiler version 4.5.2
 **
-** WARNING! All changes made in this file will be lost when recompiling UI file!
+** WARNING! All changes made in this file will be lost when recompiling ui file!
 ********************************************************************************/
 
 #ifndef UI_TEXTPROPERTIES_H
@@ -50,7 +50,7 @@ public:
         TextProperties->setStyleSheet(QString::fromUtf8(""));
         verticalLayout = new QVBoxLayout(TextProperties);
         verticalLayout->setSpacing(0);
-        verticalLayout->setContentsMargins(0, 0, 0, 0);
+        verticalLayout->setMargin(0);
         verticalLayout->setObjectName(QString::fromUtf8("verticalLayout"));
         horizontalLayout = new QHBoxLayout();
         horizontalLayout->setSpacing(0);
@@ -65,7 +65,7 @@ public:
 ""));
         horizontalLayout_3 = new QHBoxLayout(stackFrame);
         horizontalLayout_3->setSpacing(0);
-        horizontalLayout_3->setContentsMargins(0, 0, 0, 0);
+        horizontalLayout_3->setMargin(0);
         horizontalLayout_3->setObjectName(QString::fromUtf8("horizontalLayout_3"));
         bFront = new QToolButton(stackFrame);
         bFront->setObjectName(QString::fromUtf8("bFront"));

@@ -1,10 +1,10 @@
 /********************************************************************************
-** Form generated from reading UI file 'GridDialog.ui'
+** Form generated from reading ui file 'GridDialog.ui'
 **
-** Created: Sat Dec 19 18:09:11 2009
-**      by: Qt User Interface Compiler version 4.6.0
+** Created: Sat Dec 19 21:06:51 2009
+**      by: Qt User Interface Compiler version 4.5.2
 **
-** WARNING! All changes made in this file will be lost when recompiling UI file!
+** WARNING! All changes made in this file will be lost when recompiling ui file!
 ********************************************************************************/
 
 #ifndef UI_GRIDDIALOG_H
@@ -127,6 +127,7 @@ public:
 "p, li { white-space: pre-wrap; }\n"
 "</style></head><body style=\" font-family:'Sans Serif'; font-size:9pt; font-weight:400; font-style:normal;\">\n"
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:'MS Shell Dlg 2';\">For more information on the \"Rule of Thirds\", <br />see: </span><a href=\"http://en.wikipedia.org/wiki/Rule_of_thirds\"><span style=\" font-family:'MS Shell Dlg 2'; text-decoration: underline; color:#0000ff;\">http://en.wikipedia.org/wiki/Rule_of_thirds</span></a></p></body></html>", 0, QApplication::UnicodeUTF8));
+        Q_UNUSED(GridDialog);
     } // retranslateUi
 
 };

@@ -1,8 +1,8 @@
 /****************************************************************************
 ** Meta object code from reading C++ file 'Document.h'
 **
-** Created: Sat Dec 19 18:15:32 2009
-**      by: The Qt Meta Object Compiler version 62 (Qt 4.6.0)
+** Created: Sat Dec 19 21:08:43 2009
+**      by: The Qt Meta Object Compiler version 61 (Qt 4.5.2)
 **
 ** WARNING! All changes made in this file will be lost!
 *****************************************************************************/
@@ -10,8 +10,8 @@
 #include "../../model/Document.h"
 #if !defined(Q_MOC_OUTPUT_REVISION)
 #error "The header file 'Document.h' doesn't include <QObject>."
-#elif Q_MOC_OUTPUT_REVISION != 62
-#error "This file was generated using the moc from 4.6.0. It"
+#elif Q_MOC_OUTPUT_REVISION != 61
+#error "This file was generated using the moc from 4.5.2. It"
 #error "cannot be used with the include files from this version of Qt."
 #error "(The moc has changed too much.)"
 #endif
@@ -20,15 +20,13 @@ QT_BEGIN_MOC_NAMESPACE
 static const uint qt_meta_data_Document[] = {
 
  // content:
-       4,       // revision
+       2,       // revision
        0,       // classname
        0,    0, // classinfo
-       3,   14, // methods
-       3,   29, // properties
+       3,   12, // methods
+       3,   27, // properties
        0,    0, // enums/sets
        0,    0, // constructors
-       0,       // flags
-       2,       // signalCount
 
  // signals: signature, parameters, type, tag, flags
       79,   10,    9,    9, 0x05,
@@ -62,13 +60,9 @@ const QMetaObject Document::staticMetaObject = {
       qt_meta_data_Document, 0 }
 };
 
-#ifdef Q_NO_DATA_RELOCATION
-const QMetaObject &Document::getStaticMetaObject() { return staticMetaObject; }
-#endif //Q_NO_DATA_RELOCATION
-
 const QMetaObject *Document::metaObject() const
 {
-    return QObject::d_ptr->metaObject ? QObject::d_ptr->metaObject : &staticMetaObject;
+    return &staticMetaObject;
 }
 
 void *Document::qt_metacast(const char *_clname)
@@ -143,15 +137,13 @@ void Document::aspectRatioChanged(double _t1)
 static const uint qt_meta_data_DocumentSaveThread[] = {
 
  // content:
-       4,       // revision
+       2,       // revision
        0,       // classname
        0,    0, // classinfo
        0,    0, // methods
        0,    0, // properties
        0,    0, // enums/sets
        0,    0, // constructors
-       0,       // flags
-       0,       // signalCount
 
        0        // eod
 };
@@ -165,13 +157,9 @@ const QMetaObject DocumentSaveThread::staticMetaObject = {
       qt_meta_data_DocumentSaveThread, 0 }
 };
 
-#ifdef Q_NO_DATA_RELOCATION
-const QMetaObject &DocumentSaveThread::getStaticMetaObject() { return staticMetaObject; }
-#endif //Q_NO_DATA_RELOCATION
-
 const QMetaObject *DocumentSaveThread::metaObject() const
 {
-    return QObject::d_ptr->metaObject ? QObject::d_ptr->metaObject : &staticMetaObject;
+    return &staticMetaObject;
 }
 
 void *DocumentSaveThread::qt_metacast(const char *_clname)

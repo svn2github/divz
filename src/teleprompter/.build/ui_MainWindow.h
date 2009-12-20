@@ -1,10 +1,10 @@
 /********************************************************************************
-** Form generated from reading UI file 'MainWindow.ui'
+** Form generated from reading ui file 'MainWindow.ui'
 **
-** Created: Sat Dec 19 18:09:11 2009
-**      by: Qt User Interface Compiler version 4.6.0
+** Created: Sat Dec 19 21:46:44 2009
+**      by: Qt User Interface Compiler version 4.5.2
 **
-** WARNING! All changes made in this file will be lost when recompiling UI file!
+** WARNING! All changes made in this file will be lost when recompiling ui file!
 ********************************************************************************/
 
 #ifndef UI_MAINWINDOW_H
@@ -52,6 +52,7 @@ public:
     QLabel *label_2;
     QSpinBox *accelBox;
     QSlider *accelSlider;
+    QPushButton *accelResetBtn;
     QMenuBar *menubar;
     QMenu *menuFile;
     QStatusBar *statusbar;
@@ -120,22 +121,28 @@ public:
 
         accelBox = new QSpinBox(groupBox);
         accelBox->setObjectName(QString::fromUtf8("accelBox"));
-        accelBox->setMinimum(-100);
-        accelBox->setMaximum(100);
+        accelBox->setMinimum(-500);
+        accelBox->setMaximum(500);
+        accelBox->setValue(0);
 
         horizontalLayout->addWidget(accelBox);
 
         accelSlider = new QSlider(groupBox);
         accelSlider->setObjectName(QString::fromUtf8("accelSlider"));
-        accelSlider->setMinimum(-100);
-        accelSlider->setMaximum(100);
+        accelSlider->setMinimum(-500);
+        accelSlider->setMaximum(500);
         accelSlider->setSingleStep(10);
-        accelSlider->setPageStep(30);
+        accelSlider->setPageStep(50);
         accelSlider->setOrientation(Qt::Horizontal);
         accelSlider->setTickPosition(QSlider::TicksBelow);
-        accelSlider->setTickInterval(50);
+        accelSlider->setTickInterval(250);
 
         horizontalLayout->addWidget(accelSlider);
+
+        accelResetBtn = new QPushButton(groupBox);
+        accelResetBtn->setObjectName(QString::fromUtf8("accelResetBtn"));
+
+        horizontalLayout->addWidget(accelResetBtn);
 
 
         verticalLayout->addLayout(horizontalLayout);
@@ -153,6 +160,10 @@ public:
         statusbar = new QStatusBar(MainWindow);
         statusbar->setObjectName(QString::fromUtf8("statusbar"));
         MainWindow->setStatusBar(statusbar);
+#ifndef QT_NO_SHORTCUT
+        label->setBuddy(posBox);
+        label_2->setBuddy(accelBox);
+#endif // QT_NO_SHORTCUT
 
         menubar->addAction(menuFile->menuAction());
         menuFile->addAction(actionOpen_Text_File);
@@ -175,20 +186,21 @@ public:
     void retranslateUi(QMainWindow *MainWindow)
     {
         MainWindow->setWindowTitle(QApplication::translate("MainWindow", "MainWindow", 0, QApplication::UnicodeUTF8));
-        actionSetup_Outputs->setText(QApplication::translate("MainWindow", "Setup Output", 0, QApplication::UnicodeUTF8));
-        actionExit->setText(QApplication::translate("MainWindow", "Exit", 0, QApplication::UnicodeUTF8));
-        actionOpen_Text_File->setText(QApplication::translate("MainWindow", "Open Text File ...", 0, QApplication::UnicodeUTF8));
-        actionSave->setText(QApplication::translate("MainWindow", "Save", 0, QApplication::UnicodeUTF8));
-        actionSave_As->setText(QApplication::translate("MainWindow", "Save As ...", 0, QApplication::UnicodeUTF8));
+        actionSetup_Outputs->setText(QApplication::translate("MainWindow", "Setup Ou&tput", 0, QApplication::UnicodeUTF8));
+        actionExit->setText(QApplication::translate("MainWindow", "E&xit", 0, QApplication::UnicodeUTF8));
+        actionOpen_Text_File->setText(QApplication::translate("MainWindow", "&Open File ...", 0, QApplication::UnicodeUTF8));
+        actionSave->setText(QApplication::translate("MainWindow", "&Save", 0, QApplication::UnicodeUTF8));
+        actionSave_As->setText(QApplication::translate("MainWindow", "Save &As ...", 0, QApplication::UnicodeUTF8));
         groupBox->setTitle(QApplication::translate("MainWindow", "Live Control", 0, QApplication::UnicodeUTF8));
-        label->setText(QApplication::translate("MainWindow", "Position:", 0, QApplication::UnicodeUTF8));
+        label->setText(QApplication::translate("MainWindow", "Posi&tion:", 0, QApplication::UnicodeUTF8));
         posBox->setSuffix(QApplication::translate("MainWindow", "%", 0, QApplication::UnicodeUTF8));
         posBox->setPrefix(QString());
-        playBtn->setText(QApplication::translate("MainWindow", "Play", 0, QApplication::UnicodeUTF8));
-        label_2->setText(QApplication::translate("MainWindow", "Accel:", 0, QApplication::UnicodeUTF8));
+        playBtn->setText(QApplication::translate("MainWindow", "&Play", 0, QApplication::UnicodeUTF8));
+        label_2->setText(QApplication::translate("MainWindow", "A&ccel:", 0, QApplication::UnicodeUTF8));
         accelBox->setSpecialValueText(QString());
         accelBox->setSuffix(QApplication::translate("MainWindow", "%", 0, QApplication::UnicodeUTF8));
         accelBox->setPrefix(QString());
+        accelResetBtn->setText(QString());
         menuFile->setTitle(QApplication::translate("MainWindow", "&File", 0, QApplication::UnicodeUTF8));
     } // retranslateUi
 

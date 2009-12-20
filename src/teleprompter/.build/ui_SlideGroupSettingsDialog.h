@@ -1,10 +1,10 @@
 /********************************************************************************
-** Form generated from reading UI file 'SlideGroupSettingsDialog.ui'
+** Form generated from reading ui file 'SlideGroupSettingsDialog.ui'
 **
-** Created: Sat Dec 19 18:09:11 2009
-**      by: Qt User Interface Compiler version 4.6.0
+** Created: Sat Dec 19 21:06:51 2009
+**      by: Qt User Interface Compiler version 4.5.2
 **
-** WARNING! All changes made in this file will be lost when recompiling UI file!
+** WARNING! All changes made in this file will be lost when recompiling ui file!
 ********************************************************************************/
 
 #ifndef UI_SLIDEGROUPSETTINGSDIALOG_H
@@ -119,7 +119,7 @@ public:
         widget->setObjectName(QString::fromUtf8("widget"));
         widget->setEnabled(false);
         horizontalLayout_2 = new QHBoxLayout(widget);
-        horizontalLayout_2->setContentsMargins(0, 0, 0, 0);
+        horizontalLayout_2->setMargin(0);
         horizontalLayout_2->setObjectName(QString::fromUtf8("horizontalLayout_2"));
         label_3 = new QLabel(widget);
         label_3->setObjectName(QString::fromUtf8("label_3"));
@@ -161,7 +161,7 @@ public:
         fadeSettingsBase->setObjectName(QString::fromUtf8("fadeSettingsBase"));
         fadeSettingsBase->setEnabled(false);
         verticalLayout = new QVBoxLayout(fadeSettingsBase);
-        verticalLayout->setContentsMargins(0, 0, 0, 0);
+        verticalLayout->setMargin(0);
         verticalLayout->setObjectName(QString::fromUtf8("verticalLayout"));
         label_6 = new QLabel(fadeSettingsBase);
         label_6->setObjectName(QString::fromUtf8("label_6"));
@@ -286,6 +286,7 @@ public:
 "frames to show from start to end of the cross fade. \n"
 "The more frames, the slower the fade may run and the\n"
 "slower videos may display.", 0, QApplication::UnicodeUTF8));
+        Q_UNUSED(SlideGroupSettingsDialog);
     } // retranslateUi
 
 };

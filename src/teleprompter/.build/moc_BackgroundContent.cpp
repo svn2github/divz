@@ -1,8 +1,8 @@
 /****************************************************************************
 ** Meta object code from reading C++ file 'BackgroundContent.h'
 **
-** Created: Sat Dec 19 18:15:31 2009
-**      by: The Qt Meta Object Compiler version 62 (Qt 4.6.0)
+** Created: Sat Dec 19 21:08:43 2009
+**      by: The Qt Meta Object Compiler version 61 (Qt 4.5.2)
 **
 ** WARNING! All changes made in this file will be lost!
 *****************************************************************************/
@@ -10,8 +10,8 @@
 #include "../../items/BackgroundContent.h"
 #if !defined(Q_MOC_OUTPUT_REVISION)
 #error "The header file 'BackgroundContent.h' doesn't include <QObject>."
-#elif Q_MOC_OUTPUT_REVISION != 62
-#error "This file was generated using the moc from 4.6.0. It"
+#elif Q_MOC_OUTPUT_REVISION != 61
+#error "This file was generated using the moc from 4.5.2. It"
 #error "cannot be used with the include files from this version of Qt."
 #error "(The moc has changed too much.)"
 #endif
@@ -20,15 +20,13 @@ QT_BEGIN_MOC_NAMESPACE
 static const uint qt_meta_data_BackgroundImageWarmingThread[] = {
 
  // content:
-       4,       // revision
+       2,       // revision
        0,       // classname
        0,    0, // classinfo
-       1,   14, // methods
+       1,   12, // methods
        0,    0, // properties
        0,    0, // enums/sets
        0,    0, // constructors
-       0,       // flags
-       1,       // signalCount
 
  // signals: signature, parameters, type, tag, flags
       30,   29,   29,   29, 0x05,
@@ -46,13 +44,9 @@ const QMetaObject BackgroundImageWarmingThread::staticMetaObject = {
       qt_meta_data_BackgroundImageWarmingThread, 0 }
 };
 
-#ifdef Q_NO_DATA_RELOCATION
-const QMetaObject &BackgroundImageWarmingThread::getStaticMetaObject() { return staticMetaObject; }
-#endif //Q_NO_DATA_RELOCATION
-
 const QMetaObject *BackgroundImageWarmingThread::metaObject() const
 {
-    return QObject::d_ptr->metaObject ? QObject::d_ptr->metaObject : &staticMetaObject;
+    return &staticMetaObject;
 }
 
 void *BackgroundImageWarmingThread::qt_metacast(const char *_clname)
@@ -87,15 +81,13 @@ void BackgroundImageWarmingThread::renderDone(QImage * _t1)
 static const uint qt_meta_data_BackgroundImageWarmingThreadManager[] = {
 
  // content:
-       4,       // revision
+       2,       // revision
        0,       // classname
        0,    0, // classinfo
-       1,   14, // methods
+       1,   12, // methods
        0,    0, // properties
        0,    0, // enums/sets
        0,    0, // constructors
-       0,       // flags
-       0,       // signalCount
 
  // slots: signature, parameters, type, tag, flags
       37,   36,   36,   36, 0x08,
@@ -113,13 +105,9 @@ const QMetaObject BackgroundImageWarmingThreadManager::staticMetaObject = {
       qt_meta_data_BackgroundImageWarmingThreadManager, 0 }
 };
 
-#ifdef Q_NO_DATA_RELOCATION
-const QMetaObject &BackgroundImageWarmingThreadManager::getStaticMetaObject() { return staticMetaObject; }
-#endif //Q_NO_DATA_RELOCATION
-
 const QMetaObject *BackgroundImageWarmingThreadManager::metaObject() const
 {
-    return QObject::d_ptr->metaObject ? QObject::d_ptr->metaObject : &staticMetaObject;
+    return &staticMetaObject;
 }
 
 void *BackgroundImageWarmingThreadManager::qt_metacast(const char *_clname)
@@ -147,15 +135,13 @@ int BackgroundImageWarmingThreadManager::qt_metacall(QMetaObject::Call _c, int _
 static const uint qt_meta_data_BackgroundContent[] = {
 
  // content:
-       4,       // revision
+       2,       // revision
        0,       // classname
        0,    0, // classinfo
-       4,   14, // methods
+       4,   12, // methods
        0,    0, // properties
        0,    0, // enums/sets
        0,    0, // constructors
-       0,       // flags
-       0,       // signalCount
 
  // slots: signature, parameters, type, tag, flags
       26,   19,   18,   18, 0x08,
@@ -177,13 +163,9 @@ const QMetaObject BackgroundContent::staticMetaObject = {
       qt_meta_data_BackgroundContent, 0 }
 };
 
-#ifdef Q_NO_DATA_RELOCATION
-const QMetaObject &BackgroundContent::getStaticMetaObject() { return staticMetaObject; }
-#endif //Q_NO_DATA_RELOCATION
-
 const QMetaObject *BackgroundContent::metaObject() const
 {
-    return QObject::d_ptr->metaObject ? QObject::d_ptr->metaObject : &staticMetaObject;
+    return &staticMetaObject;
 }
 
 void *BackgroundContent::qt_metacast(const char *_clname)

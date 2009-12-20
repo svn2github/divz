@@ -1,8 +1,8 @@
 /****************************************************************************
 ** Meta object code from reading C++ file 'SlideGroup.h'
 **
-** Created: Sat Dec 19 18:15:32 2009
-**      by: The Qt Meta Object Compiler version 62 (Qt 4.6.0)
+** Created: Sat Dec 19 21:08:43 2009
+**      by: The Qt Meta Object Compiler version 61 (Qt 4.5.2)
 **
 ** WARNING! All changes made in this file will be lost!
 *****************************************************************************/
@@ -10,8 +10,8 @@
 #include "../../model/SlideGroup.h"
 #if !defined(Q_MOC_OUTPUT_REVISION)
 #error "The header file 'SlideGroup.h' doesn't include <QObject>."
-#elif Q_MOC_OUTPUT_REVISION != 62
-#error "This file was generated using the moc from 4.6.0. It"
+#elif Q_MOC_OUTPUT_REVISION != 61
+#error "This file was generated using the moc from 4.5.2. It"
 #error "cannot be used with the include files from this version of Qt."
 #error "(The moc has changed too much.)"
 #endif
@@ -20,15 +20,13 @@ QT_BEGIN_MOC_NAMESPACE
 static const uint qt_meta_data_SlideGroup[] = {
 
  // content:
-       4,       // revision
+       2,       // revision
        0,       // classname
        0,    0, // classinfo
-       2,   14, // methods
-      10,   24, // properties
-       1,   54, // enums/sets
+       2,   12, // methods
+      10,   22, // properties
+       1,   52, // enums/sets
        0,    0, // constructors
-       0,       // flags
-       1,       // signalCount
 
  // signals: signature, parameters, type, tag, flags
       64,   12,   11,   11, 0x05,
@@ -49,7 +47,7 @@ static const uint qt_meta_data_SlideGroup[] = {
      388,  346, 0x06095103,
 
  // enums: name, flags, count, data
-     295, 0x0,    4,   58,
+     295, 0x0,    4,   56,
 
  // enum data: key, value
      405, uint(SlideGroup::LoopToStart),
@@ -80,13 +78,9 @@ const QMetaObject SlideGroup::staticMetaObject = {
       qt_meta_data_SlideGroup, 0 }
 };
 
-#ifdef Q_NO_DATA_RELOCATION
-const QMetaObject &SlideGroup::getStaticMetaObject() { return staticMetaObject; }
-#endif //Q_NO_DATA_RELOCATION
-
 const QMetaObject *SlideGroup::metaObject() const
 {
-    return QObject::d_ptr->metaObject ? QObject::d_ptr->metaObject : &staticMetaObject;
+    return &staticMetaObject;
 }
 
 void *SlideGroup::qt_metacast(const char *_clname)

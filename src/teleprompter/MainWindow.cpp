@@ -33,6 +33,7 @@ MainWindow::MainWindow(QWidget *parent)
 	, m_posBoxLock(false)
 	, m_accelBoxLock(false)
 	, m_pos(0)
+	, m_setPosLock(false)
 {
 	static_mainWindow = this;
 	m_ui->setupUi(this);
@@ -51,6 +52,10 @@ MainWindow::MainWindow(QWidget *parent)
 	
 	connect(m_ui->posBox, SIGNAL(valueChanged(int)), this, SLOT(slotPosBoxChanged(int)));
 	connect(m_ui->accelBox, SIGNAL(valueChanged(int)), this, SLOT(slotAccelBoxChanged(int)));
+	connect(m_ui->accelResetBtn, SIGNAL(clicked()), this, SLOT(slotResetAccel()));
+	m_ui->accelResetBtn->setIcon(QIcon(":/data/stock-undo.png"));
+	m_ui->accelResetBtn->setToolTip("Reset to Normal Speed (CTRL+SHIFT+Z)");
+	m_ui->accelResetBtn->setShortcut(QString(tr("CTRL+SHIFT+Z")));
 	
 	connect(&m_animTimer, SIGNAL(timeout()), this, SLOT(animate()));
 	m_animTimer.setInterval(ANIMATE_BASE_MS);
@@ -60,12 +65,15 @@ MainWindow::MainWindow(QWidget *parent)
 	m_ui->actionSetup_Outputs->setIcon(QIcon(":data/stock-preferences.png"));
 
 	QSettings s;
-	bool flag = s.value("viewer/firstrun").toBool();
+	bool flag = s.value("teleprompter/firstrun",true).toBool();
 	if(flag)
 	{
-		s.setValue("viewer/firstrun",false);
+		s.setValue("teleprompter/firstrun",false);
 		slotOutputSetup();
 	}
+	
+	AppSettings::setGridEnabled(false);
+	
 
 	Output * output = AppSettings::outputs().first();
 	m_previewDock = new QDockWidget(QString(tr("%1 Preiew")).arg(output->name()), this);
@@ -91,7 +99,7 @@ MainWindow::MainWindow(QWidget *parent)
 // 	qDebug() << "Slide "<<slideNum<<": [\n"<<tmpList.join("\n")<<"\n]";;
 
 	bg->setFillType(AbstractVisualItem::Solid);
-	bg->setFillBrush(Qt::blue);
+	bg->setFillBrush(Qt::black);
 
 
 	// Outline pen for the text
@@ -115,6 +123,13 @@ MainWindow::MainWindow(QWidget *parent)
 	
 	m_inst->setSlideGroup(m_group);
 	
+	openTextFile("test.txt");
+	
+}
+
+void MainWindow::slotResetAccel()
+{
+	m_ui->accelBox->setValue(0);
 }
 
 void MainWindow::slotOpen()
@@ -127,26 +142,31 @@ void MainWindow::slotOpen()
 	if(!fileName.isEmpty())
 	{
 // 		int MinTextSize = 48;
-		m_filename = fileName;
-
-		AppSettings::setPreviousPath("text",fileName);
-
-		QFile file(fileName);
-		if(!file.open(QIODevice::ReadOnly))
-		{
-			QMessageBox::warning(this,tr("Can't Read File"),QString(tr("Unable to open %1")).arg(fileName));
-			return;
-		}
-
-		QStringList lines;
-		QTextStream stream(&file);
-		while( ! stream.atEnd() )
-			lines << stream.readLine();
-			
-		m_ui->textEdit->setPlainText(lines.join("\n"));
+		openTextFile(fileName);
 		
 		/*slotTextChanged();*/		
 	}	
+}
+
+void MainWindow::openTextFile(const QString& fileName)
+{
+	m_filename = fileName;
+
+	AppSettings::setPreviousPath("text",fileName);
+
+	QFile file(fileName);
+	if(!file.open(QIODevice::ReadOnly))
+	{
+		QMessageBox::warning(this,tr("Can't Read File"),QString(tr("Unable to open %1")).arg(fileName));
+		return;
+	}
+
+	QStringList lines;
+	QTextStream stream(&file);
+	while( ! stream.atEnd() )
+		lines << stream.readLine();
+		
+	m_ui->textEdit->setPlainText(lines.join("\n"));
 }
 
 void MainWindow::slotSave()
@@ -215,10 +235,13 @@ void MainWindow::slotTextChanged()
 	QSize fitSize = standardSceneRect().size();
 	int realHeight = m_textbox->fitToSize(fitSize,MinTextSize);
 	
-	// Center text on screen
-	qreal y = fitSize.height()/2 - realHeight/2;
-	//qDebug() << "SongSlideGroup::textToSlides(): centering: boxHeight:"<<boxHeight<<", textRect height:"<<textRect.height()<<", centered Y:"<<y;
-	m_textbox->setContentsRect(QRectF(0,y,fitSize.width(),realHeight));
+	//// Center text on screen
+	//qreal y = fitSize.height()/2 - realHeight/2;
+	m_textbox->setContentsRect(QRectF(0,0,fitSize.width(),realHeight));
+	
+	m_incOrig = m_inc = ANIMATE_BASE_PX / (double)realHeight;
+	qDebug() << "slotTextChanged(): fitsize:"<<fitSize<<", realHeight: "<<realHeight<<", rect: "<<m_textbox->contentsRect()<<", m_inc:"<<m_inc;
+	
 		
 }
 
@@ -227,19 +250,28 @@ void MainWindow::slotTogglePlay()
 	if(!m_animTimer.isActive())
 	{
 		m_animTimer.start();
-		m_ui->playBtn->setIcon(QIcon(":/data/action-play.png"));	
+		m_ui->playBtn->setIcon(QIcon(":/data/action-pause.png"));
+		m_ui->playBtn->setText("&Pause");	
 	}
 	else
 	{
 		m_animTimer.stop();
-		m_ui->playBtn->setIcon(QIcon(":/data/action-pause.png"));
+		m_ui->playBtn->setIcon(QIcon(":/data/action-play.png"));
+		m_ui->playBtn->setText("&Play");
 	}
 }
 
 void MainWindow::animate()
 {
-	m_pos += 1;
-	m_ui->posBox->setValue(m_pos);
+	m_pos += m_inc;
+	
+	setPos(m_pos);
+	
+	m_setPosLock = true;
+	
+	m_ui->posBox->setValue((int)m_pos);
+	
+	m_setPosLock = false;
 }
 
 void MainWindow::slotPosBoxChanged(int x)
@@ -248,25 +280,38 @@ void MainWindow::slotPosBoxChanged(int x)
 		return;
 	m_posBoxLock = true;
 	
-	setPos(x);
+	setPos((double)x);
 	
 	m_posBoxLock = false;
 }
 
-void MainWindow::setPos(int x)
+void MainWindow::setPos(double x)
 {
+	if(m_setPosLock)
+		return;
+
 	m_pos = x;
 	m_ui->posBox->setValue(x);
 	
 	QRectF rect = m_textbox->contentsRect();
 	QPointF pos = m_textbox->pos();
 	
-	double p = (double)x/100;
-	 
-	double newTop = rect.height() * p;
+	double p = (double)x/100.0;
+	
+	
+	QSize fitSize = standardSceneRect().size();
+	
+	double newTop = -1 * (rect.height() * p);
+	
+	qDebug() << "setPos(): x:"<<x<<", p:"<<p<<", newTop:"<<newTop<<", rect:"<<rect<<", m_inc:"<<m_inc; 
+	
 	
 	m_textbox->setPos(QPointF(pos.x(),newTop));
 }
+
+#ifndef qabs
+# define qabs(a) (a<0?-1*a:a)
+#endif
 
 void MainWindow::slotAccelBoxChanged(int x)
 {
@@ -274,11 +319,21 @@ void MainWindow::slotAccelBoxChanged(int x)
 		return;
 	m_accelBoxLock = true;
 	
-	double p = (double)x / 100;
+	double p = (double)x / 100.0;
 	
-	int ms = p < 0 ? 
-		ANIMATE_BASE_MS * p :
-		ANIMATE_BASE_MS * (1+p); 
+	int sign = p < 0 ? -1:1;
+	p = qabs(p);
+	
+	m_inc = m_incOrig * (1+p * 1.25);
+	if(sign < 0)
+		m_inc = qabs(m_inc)*-1;
+	else
+		m_inc = qabs(m_inc);
+	
+	if(p>1)
+		p=1;
+	int ms = ANIMATE_BASE_MS * (1-p) + 1;
+	
 		
 	qDebug() << "slotAccelBoxChanged(): p:"<<p<<", ms:"<<ms;
 	
@@ -334,8 +389,8 @@ void MainWindow::slotExit()
 void MainWindow::closeEvent(QCloseEvent *event)
 {
 // 	slotDisconnect();
-	//if(m_inst)
-	//	m_inst->close();
+	if(m_inst)
+		m_inst->close();
 }
 
 

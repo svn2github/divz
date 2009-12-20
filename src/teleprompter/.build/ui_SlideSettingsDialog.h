@@ -1,10 +1,10 @@
 /********************************************************************************
-** Form generated from reading UI file 'SlideSettingsDialog.ui'
+** Form generated from reading ui file 'SlideSettingsDialog.ui'
 **
-** Created: Sat Dec 19 18:09:11 2009
-**      by: Qt User Interface Compiler version 4.6.0
+** Created: Sat Dec 19 21:06:51 2009
+**      by: Qt User Interface Compiler version 4.5.2
 **
-** WARNING! All changes made in this file will be lost when recompiling UI file!
+** WARNING! All changes made in this file will be lost when recompiling ui file!
 ********************************************************************************/
 
 #ifndef UI_SLIDESETTINGSDIALOG_H
@@ -141,7 +141,7 @@ public:
         fadeSettingsBase->setObjectName(QString::fromUtf8("fadeSettingsBase"));
         fadeSettingsBase->setEnabled(false);
         verticalLayout = new QVBoxLayout(fadeSettingsBase);
-        verticalLayout->setContentsMargins(0, 0, 0, 0);
+        verticalLayout->setMargin(0);
         verticalLayout->setObjectName(QString::fromUtf8("verticalLayout"));
         label_6 = new QLabel(fadeSettingsBase);
         label_6->setObjectName(QString::fromUtf8("label_6"));
@@ -277,6 +277,7 @@ public:
 "The more frames, the slower the fade may run and the\n"
 "slower videos may display.", 0, QApplication::UnicodeUTF8));
         tabWidget->setTabText(tabWidget->indexOf(tab), QApplication::translate("SlideSettingsDialog", "General Settings", 0, QApplication::UnicodeUTF8));
+        Q_UNUSED(SlideSettingsDialog);
     } // retranslateUi
 
 };

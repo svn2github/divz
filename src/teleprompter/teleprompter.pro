@@ -1,5 +1,5 @@
 
-TARGET = dviz-viewer
+TARGET = teleprompter
 TEMPLATE = app
 DEPENDPATH += $$PWD ../
 INCLUDEPATH += $$PWD ../

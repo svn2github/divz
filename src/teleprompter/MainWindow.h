@@ -28,8 +28,8 @@ class TextBoxItem;
 
 #include <QAbstractSocket>
 
-#define ANIMATE_BASE_MS 300
-#define ANIMATE_BASE_PX 10
+#define ANIMATE_BASE_MS 25
+#define ANIMATE_BASE_PX 35
 
 class AbstractSlideGroupEditor;
 
@@ -75,15 +75,17 @@ protected slots:
 	void slotTogglePlay();
 	void slotPosBoxChanged(int);
 	void slotAccelBoxChanged(int);
+	void slotResetAccel();
 	
 	void aspectChanged(double);
 	
 	void animate();
-	void setPos(int);
+	void setPos(double);
 	
 	void slotTextChanged();
 	
 	void saveTextFile(const QString&);
+	void openTextFile(const QString&);
 
 protected:
 	void changeEvent(QEvent *e);
@@ -110,10 +112,13 @@ private:
 	
 	QTimer m_animTimer;
 	
-	int m_pos;
+	double m_pos;
+	double m_inc;
+	double m_incOrig;
 	
 	bool m_posBoxLock;
 	bool m_accelBoxLock;
+	bool m_setPosLock;
 	
 	/** static */
 	static MainWindow * static_mainWindow;	

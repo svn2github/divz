@@ -1,10 +1,10 @@
 /********************************************************************************
-** Form generated from reading UI file 'AppSettingsDialog.ui'
+** Form generated from reading ui file 'AppSettingsDialog.ui'
 **
-** Created: Sat Dec 19 18:09:11 2009
-**      by: Qt User Interface Compiler version 4.6.0
+** Created: Sat Dec 19 21:06:51 2009
+**      by: Qt User Interface Compiler version 4.5.2
 **
-** WARNING! All changes made in this file will be lost when recompiling UI file!
+** WARNING! All changes made in this file will be lost when recompiling ui file!
 ********************************************************************************/
 
 #ifndef UI_APPSETTINGSDIALOG_H
@@ -161,7 +161,7 @@ public:
         widget = new QWidget(groupBox_8);
         widget->setObjectName(QString::fromUtf8("widget"));
         horizontalLayout_5 = new QHBoxLayout(widget);
-        horizontalLayout_5->setContentsMargins(0, 0, 0, 0);
+        horizontalLayout_5->setMargin(0);
         horizontalLayout_5->setObjectName(QString::fromUtf8("horizontalLayout_5"));
         label_13 = new QLabel(widget);
         label_13->setObjectName(QString::fromUtf8("label_13"));
@@ -609,6 +609,7 @@ public:
 "The more frames, the slower the fade may run and the\n"
 "slower videos may display.", 0, QApplication::UnicodeUTF8));
         tabWidget->setTabText(tabWidget->indexOf(tab_5), QApplication::translate("AppSettingsDialog", "Cross Fading", 0, QApplication::UnicodeUTF8));
+        Q_UNUSED(AppSettingsDialog);
     } // retranslateUi
 
 };

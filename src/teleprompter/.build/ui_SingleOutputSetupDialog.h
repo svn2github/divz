@@ -1,10 +1,10 @@
 /********************************************************************************
-** Form generated from reading UI file 'SingleOutputSetupDialog.ui'
+** Form generated from reading ui file 'SingleOutputSetupDialog.ui'
 **
-** Created: Sat Dec 19 18:09:11 2009
-**      by: Qt User Interface Compiler version 4.6.0
+** Created: Sat Dec 19 21:06:51 2009
+**      by: Qt User Interface Compiler version 4.5.2
 **
-** WARNING! All changes made in this file will be lost when recompiling UI file!
+** WARNING! All changes made in this file will be lost when recompiling ui file!
 ********************************************************************************/
 
 #ifndef UI_SINGLEOUTPUTSETUPDIALOG_H
@@ -703,6 +703,7 @@ public:
 "to translate the folders used on the controlling computer to paths \n"
 "accessible on the viewer.", 0, QApplication::UnicodeUTF8));
         tabWidget_2->setTabText(tabWidget_2->indexOf(tab_4), QApplication::translate("SingleOutputSetupDialog", "Path Translations", 0, QApplication::UnicodeUTF8));
+        Q_UNUSED(SingleOutputSetupDialog);
     } // retranslateUi
 
 };

@@ -42,12 +42,12 @@
 */
 
 /********************************************************************************
-** Form generated from reading UI file 'qtgradienteditor.ui'
+** Form generated from reading ui file 'qtgradienteditor.ui'
 **
-** Created: Sat Dec 19 18:09:11 2009
-**      by: Qt User Interface Compiler version 4.6.0
+** Created: Sat Dec 19 21:06:51 2009
+**      by: Qt User Interface Compiler version 4.5.2
 **
-** WARNING! All changes made in this file will be lost when recompiling UI file!
+** WARNING! All changes made in this file will be lost when recompiling ui file!
 ********************************************************************************/
 
 #ifndef UI_QTGRADIENTEDITOR_H
@@ -713,6 +713,7 @@ public:
         reflectButton->setToolTip(QApplication::translate("QtGradientEditor", "Reflect Spread", 0, QApplication::UnicodeUTF8));
 #endif // QT_NO_TOOLTIP
         reflectButton->setText(QApplication::translate("QtGradientEditor", "...", 0, QApplication::UnicodeUTF8));
+        Q_UNUSED(QtGradientEditor);
     } // retranslateUi
 
 };

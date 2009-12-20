@@ -1,10 +1,10 @@
 /********************************************************************************
-** Form generated from reading UI file 'GroupPlayerEditorWindow.ui'
+** Form generated from reading ui file 'GroupPlayerEditorWindow.ui'
 **
-** Created: Sat Dec 19 18:09:11 2009
-**      by: Qt User Interface Compiler version 4.6.0
+** Created: Sat Dec 19 21:06:51 2009
+**      by: Qt User Interface Compiler version 4.5.2
 **
-** WARNING! All changes made in this file will be lost when recompiling UI file!
+** WARNING! All changes made in this file will be lost when recompiling ui file!
 ********************************************************************************/
 
 #ifndef UI_GROUPPLAYEREDITORWINDOW_H
@@ -210,6 +210,7 @@ public:
         showThis->setText(QApplication::translate("GroupPlayerEditorWindow", "Show &Groups from Current Document", 0, QApplication::UnicodeUTF8));
         showOther->setText(QApplication::translate("GroupPlayerEditorWindow", "Load &document:", 0, QApplication::UnicodeUTF8));
         browseBtn->setText(QApplication::translate("GroupPlayerEditorWindow", "Browse", 0, QApplication::UnicodeUTF8));
+        Q_UNUSED(GroupPlayerEditorWindow);
     } // retranslateUi
 
 };
