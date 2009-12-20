@@ -336,7 +336,7 @@ void MainWindow::slotAccelBoxChanged(int x)
 	int sign = p < 0 ? -1:1;
 	p = qabs(p);
 	
-	m_inc = m_incOrig * (1+p * 1.75);
+	m_inc = m_incOrig * (1+p * 35);
 	if(sign < 0)
 		m_inc = qabs(m_inc)*-1;
 	else
@@ -344,10 +344,10 @@ void MainWindow::slotAccelBoxChanged(int x)
 	
 	if(p>1)
 		p=1;
-	int ms = ANIMATE_BASE_MS * (1-p) + 1;
+	int ms = 100 * (1-p) + 30; // ANIMATE_BASE_MS
 	
 		
-	qDebug() << "slotAccelBoxChanged(): p:"<<p<<", ms:"<<ms;
+	qDebug() << "slotAccelBoxChanged(): p:"<<p<<", ms:"<<ms<<", m_inc:"<<m_inc;
 	
 	m_animTimer.setInterval(ms);
 	
