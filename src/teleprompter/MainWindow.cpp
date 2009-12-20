@@ -60,7 +60,12 @@ MainWindow::MainWindow(QWidget *parent)
 	connect(&m_animTimer, SIGNAL(timeout()), this, SLOT(animate()));
 	m_animTimer.setInterval(ANIMATE_BASE_MS);
 	
-	connect(m_ui->textEdit, SIGNAL(textChanged()), this, SLOT(slotTextChanged()));
+	m_editor = new RichTextEditorWidget(m_ui->mainWidget);
+	QLayoutItem * firstItem = m_ui->mainWidget->layout()->takeAt(0);
+	m_ui->mainWidget->layout()->addWidget(m_editor);
+	m_ui->mainWidget->layout()->addItem(firstItem);
+	
+	connect(m_editor, SIGNAL(contentsChanged()), this, SLOT(slotTextChanged()));
 	
 	m_ui->actionSetup_Outputs->setIcon(QIcon(":data/stock-preferences.png"));
 
@@ -108,11 +113,12 @@ MainWindow::MainWindow(QWidget *parent)
 
 	m_textbox->setPos(QPointF(0,0));
 	m_textbox->setOutlinePen(pen);
-	m_textbox->setOutlineEnabled(false);
+	m_textbox->setOutlineEnabled(true);
 	m_textbox->setFillBrush(Qt::white);
 	m_textbox->setFillType(AbstractVisualItem::Solid);
 	m_textbox->setShadowEnabled(false);
-// 	tmpText->setShadowBlurRadius(6);
+// 	m_textbox->setShadowBrush(Qt::red);
+//  	m_textbox->setShadowBlurRadius(3);
 
 	m_slide->addItem(m_textbox);
 	
@@ -134,9 +140,9 @@ void MainWindow::slotResetAccel()
 
 void MainWindow::slotOpen()
 {
-	QString fileName = QFileDialog::getOpenFileName(this, tr("Select Text File"),
-		AppSettings::previousPath("text"),
-		tr("Text Files (*.txt);;Any File (*.*)")
+	QString fileName = QFileDialog::getOpenFileName(this, tr("Select File"),
+		AppSettings::previousPath("html"),
+		tr("Teleprompter HTML Files (*.ths);;Text Files (*.txt);;Any File (*.*)")
 	);
 	
 	if(!fileName.isEmpty())
@@ -152,7 +158,7 @@ void MainWindow::openTextFile(const QString& fileName)
 {
 	m_filename = fileName;
 
-	AppSettings::setPreviousPath("text",fileName);
+	AppSettings::setPreviousPath("html",fileName);
 
 	QFile file(fileName);
 	if(!file.open(QIODevice::ReadOnly))
@@ -166,7 +172,12 @@ void MainWindow::openTextFile(const QString& fileName)
 	while( ! stream.atEnd() )
 		lines << stream.readLine();
 		
-	m_ui->textEdit->setPlainText(lines.join("\n"));
+	m_editor->setText(lines.join("\n"));
+	
+// 	m_editor->setVisible(true);
+	m_editor->adjustSize();
+	m_editor->focusEditor();
+	
 }
 
 void MainWindow::slotSave()
@@ -192,7 +203,7 @@ void MainWindow::saveTextFile(const QString& filename)
 
 	QStringList lines;
 	QTextStream stream(&file);
-	QString txt = m_ui->textEdit->toPlainText();
+	QString txt = m_editor->text(Qt::RichText);
 	stream << txt;
 	file.close();
 }
@@ -203,7 +214,7 @@ void MainWindow::slotSaveAs()
 	if(curFile.trimmed().isEmpty())
 		curFile = AppSettings::previousPath("text");
 
-	QString fileName = QFileDialog::getSaveFileName(this, tr("Choose a Filename"), curFile, tr("Text Files (*.txt);;Any File (*.*)"));
+	QString fileName = QFileDialog::getSaveFileName(this, tr("Choose a Filename"), curFile, tr("Teleprompter HTML Files (*.ths);;Text Files (*.txt);;Any File (*.*)"));
 	if(fileName != "")
 	{
 		QFileInfo info(fileName);
@@ -219,7 +230,8 @@ void MainWindow::slotSaveAs()
 
 void MainWindow::slotTextChanged()
 {
-	m_textbox->setText(m_ui->textEdit->toHtml());
+	QString txt = m_editor->text(Qt::RichText);
+	m_textbox->setText(txt);
 	
 	
 // 	QString blockPrefix = "<span style='font-family:Calibri,Tahoma,Arial,Sans-Serif;font-weight:800'><b>";
@@ -324,7 +336,7 @@ void MainWindow::slotAccelBoxChanged(int x)
 	int sign = p < 0 ? -1:1;
 	p = qabs(p);
 	
-	m_inc = m_incOrig * (1+p * 1.25);
+	m_inc = m_incOrig * (1+p * 1.75);
 	if(sign < 0)
 		m_inc = qabs(m_inc)*-1;
 	else

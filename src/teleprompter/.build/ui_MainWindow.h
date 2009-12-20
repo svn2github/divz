@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading ui file 'MainWindow.ui'
 **
-** Created: Sat Dec 19 21:46:44 2009
+** Created: Sat Dec 19 22:01:10 2009
 **      by: Qt User Interface Compiler version 4.5.2
 **
 ** WARNING! All changes made in this file will be lost when recompiling ui file!
@@ -25,7 +25,6 @@
 #include <QtGui/QSlider>
 #include <QtGui/QSpinBox>
 #include <QtGui/QStatusBar>
-#include <QtGui/QTextEdit>
 #include <QtGui/QVBoxLayout>
 #include <QtGui/QWidget>
 
@@ -39,9 +38,8 @@ public:
     QAction *actionOpen_Text_File;
     QAction *actionSave;
     QAction *actionSave_As;
-    QWidget *centralwidget;
+    QWidget *mainWidget;
     QVBoxLayout *verticalLayout_2;
-    QTextEdit *textEdit;
     QGroupBox *groupBox;
     QVBoxLayout *verticalLayout;
     QHBoxLayout *horizontalLayout;
@@ -72,16 +70,11 @@ public:
         actionSave->setObjectName(QString::fromUtf8("actionSave"));
         actionSave_As = new QAction(MainWindow);
         actionSave_As->setObjectName(QString::fromUtf8("actionSave_As"));
-        centralwidget = new QWidget(MainWindow);
-        centralwidget->setObjectName(QString::fromUtf8("centralwidget"));
-        verticalLayout_2 = new QVBoxLayout(centralwidget);
+        mainWidget = new QWidget(MainWindow);
+        mainWidget->setObjectName(QString::fromUtf8("mainWidget"));
+        verticalLayout_2 = new QVBoxLayout(mainWidget);
         verticalLayout_2->setObjectName(QString::fromUtf8("verticalLayout_2"));
-        textEdit = new QTextEdit(centralwidget);
-        textEdit->setObjectName(QString::fromUtf8("textEdit"));
-
-        verticalLayout_2->addWidget(textEdit);
-
-        groupBox = new QGroupBox(centralwidget);
+        groupBox = new QGroupBox(mainWidget);
         groupBox->setObjectName(QString::fromUtf8("groupBox"));
         verticalLayout = new QVBoxLayout(groupBox);
         verticalLayout->setObjectName(QString::fromUtf8("verticalLayout"));
@@ -150,7 +143,7 @@ public:
 
         verticalLayout_2->addWidget(groupBox);
 
-        MainWindow->setCentralWidget(centralwidget);
+        MainWindow->setCentralWidget(mainWidget);
         menubar = new QMenuBar(MainWindow);
         menubar->setObjectName(QString::fromUtf8("menubar"));
         menubar->setGeometry(QRect(0, 0, 547, 25));

@@ -660,6 +660,8 @@ void TextBoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * 
 
 	//TODO should we clip to the rect or FORCE resize the rect? probably clip...
 	//painter->setClipRect(contentsRect());
+	if(option)
+		painter->setClipRect(option->exposedRect);
 	painter->translate(contentsRect().topLeft()); // + QPoint(p.width(),p.width()));
 
 	if(sceneContextHint() == MyGraphicsScene::Preview || !modelItem()->shadowEnabled())

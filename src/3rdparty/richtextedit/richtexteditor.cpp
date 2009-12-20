@@ -959,11 +959,169 @@ void RichTextEditorDialog::tabIndexChanged(int newIndex)
 void RichTextEditorDialog::richTextChanged()
 {
     m_state = RichTextChanged;
+    emit contentsChanged();
 }
 
 void RichTextEditorDialog::sourceChanged()
 {
     m_state = SourceChanged;
+    emit contentsChanged();
 }
+
+//###### 
+RichTextEditorWidget::RichTextEditorWidget(QWidget *parent)  :
+    QWidget(parent),
+    m_editor(new RichTextEditor()),
+    m_text_edit(new HtmlTextEdit),
+    m_tab_widget(new QTabWidget),
+    m_state(Clean)
+{
+    //setWindowTitle(tr("Edit text"));
+    //setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
+
+    m_text_edit->setAcceptRichText(true);
+    ///new HtmlHighlighter(m_text_edit);
+
+    connect(m_editor, SIGNAL(textChanged()), this, SLOT(richTextChanged()));
+    connect(m_text_edit, SIGNAL(textChanged()), this, SLOT(sourceChanged()));
+
+    // The toolbar needs to be created after the RichTextEditor
+    m_tool_bar = m_editor->createToolBar(this);
+    m_tool_bar->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
+
+    QWidget *rich_edit = new QWidget;
+    QVBoxLayout *rich_edit_layout = new QVBoxLayout(rich_edit);
+    rich_edit_layout->setMargin(0);     // +fotowall
+    rich_edit_layout->setSpacing(0);    // +fotowall
+    rich_edit_layout->addWidget(m_tool_bar);
+    rich_edit_layout->addWidget(m_editor);
+
+    QWidget *plain_edit = new QWidget;
+    QVBoxLayout *plain_edit_layout = new QVBoxLayout(plain_edit);
+    plain_edit_layout->setMargin(0);    // +fotowall
+    plain_edit_layout->addWidget(m_text_edit);
+
+    m_tab_widget->setTabPosition(QTabWidget::South);
+#if QT_VERSION >= 0x040500
+    m_tab_widget->setDocumentMode(true); // +fotowall
+#endif
+    m_tab_widget->addTab(rich_edit, tr("Visual Editor"));
+    m_tab_widget->addTab(plain_edit, tr("Source"));
+    connect(m_tab_widget, SIGNAL(currentChanged(int)),
+                          SLOT(tabIndexChanged(int)));
+
+    /**QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, Qt::Horizontal);
+    QPushButton *ok_button = buttonBox->button(QDialogButtonBox::Ok);
+    ok_button->setText(tr("&OK"));
+    ok_button->setDefault(true);
+    buttonBox->button(QDialogButtonBox::Cancel)->setText(tr("&Cancel"));
+    connect(buttonBox, SIGNAL(accepted()), this, SLOT(accept()));
+    connect(buttonBox, SIGNAL(rejected()), this, SLOT(reject()));*/
+
+    QVBoxLayout *layout = new QVBoxLayout(this);
+    layout->setMargin(0);   // +fotowall
+    layout->addWidget(m_tab_widget);
+    ///layout->addWidget(buttonBox);
+
+    m_editor->setFrameStyle(QFrame::NoFrame);   // +fotowall
+    m_text_edit->setFrameStyle(QFrame::NoFrame);   // +fotowall
+    m_editor->setFocusPolicy(Qt::StrongFocus);
+    m_editor->setFocus();
+}
+
+RichTextEditorWidget::~RichTextEditorWidget()
+{
+}
+
+void RichTextEditorWidget::initFontSize(double d)
+{
+	m_editor->updateFontPointSize(d);
+	dynamic_cast<RichTextEditorToolBar*>(m_tool_bar)->updateFontSize(d);
+	m_editor->setFocus();
+}
+
+void RichTextEditorWidget::focusEditor()
+{
+    m_editor->selectAll();
+    m_editor->setFocus();
+}
+
+/*int RichTextEditorWidget::showDialog()
+{
+    m_tab_widget->setCurrentIndex(0);
+    m_editor->selectAll();
+    m_editor->setFocus();
+
+    return exec();
+}*/
+
+void RichTextEditorWidget::setDefaultFont(const QFont &font)
+{
+    m_editor->setDefaultFont(font);
+}
+
+void RichTextEditorWidget::setText(const QString &text)
+{
+    m_editor->setText(text);
+    m_text_edit->setPlainText(text);
+    m_state = Clean;
+
+    // move the cursor to refresh attributes
+    QTextCursor cursor = m_editor->textCursor();
+    cursor.movePosition(QTextCursor::End);
+    m_editor->setTextCursor(cursor);
+}
+
+QString RichTextEditorWidget::text(Qt::TextFormat format) const
+{
+    // In autotext mode, if the user has changed the source, use that
+    if (format == Qt::AutoText && (m_state == Clean || m_state == SourceChanged))
+        return m_text_edit->toPlainText();
+    // If the plain text HTML editor is selected, first copy its contents over
+    // to the rich text editor so that it is converted to Qt-HTML or actual
+    // plain text.
+    if (m_tab_widget->currentIndex() == SourceIndex && m_state == SourceChanged)
+        m_editor->setHtml(m_text_edit->toPlainText());
+    return m_editor->text(format);
+}
+
+void RichTextEditorWidget::tabIndexChanged(int newIndex)
+{
+    // Anything changed, is there a need for a conversion?
+    if (newIndex == SourceIndex && m_state != RichTextChanged)
+        return;
+    if (newIndex == RichTextIndex && m_state != SourceChanged)
+        return;
+    const State oldState = m_state;
+    // Remember the cursor position, since it is invalidated by setPlainText
+    QTextEdit *new_edit = (newIndex == SourceIndex) ? m_text_edit : m_editor;
+    const int position = new_edit->textCursor().position();
+
+    if (newIndex == SourceIndex)
+        m_text_edit->setPlainText(m_editor->text(Qt::RichText));
+    else
+        m_editor->setHtml(m_text_edit->toPlainText());
+
+    QTextCursor cursor = new_edit->textCursor();
+    cursor.movePosition(QTextCursor::End);
+    if (cursor.position() > position) {
+        cursor.setPosition(position);
+    }
+    new_edit->setTextCursor(cursor);
+    m_state = oldState; // Changed is triggered by setting the text
+}
+
+void RichTextEditorWidget::richTextChanged()
+{
+    m_state = RichTextChanged;
+    emit contentsChanged();
+}
+
+void RichTextEditorWidget::sourceChanged()
+{
+    m_state = SourceChanged;
+    emit contentsChanged();
+}
+
 
 #include "richtexteditor.moc"

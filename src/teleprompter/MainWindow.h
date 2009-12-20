@@ -3,6 +3,8 @@
 
 #include <QtGui/QMainWindow>
 
+#include "3rdparty/richtextedit/richtexteditor_p.h"
+
 #define FALLBACK_SCREEN_RECT QRectF(0,0,1024,768)
 
 #include <QTimer>
@@ -119,6 +121,8 @@ private:
 	bool m_posBoxLock;
 	bool m_accelBoxLock;
 	bool m_setPosLock;
+	
+	RichTextEditorWidget * m_editor;
 	
 	/** static */
 	static MainWindow * static_mainWindow;	

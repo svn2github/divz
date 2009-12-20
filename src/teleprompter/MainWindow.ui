@@ -13,11 +13,8 @@
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
-  <widget class="QWidget" name="centralwidget">
+  <widget class="QWidget" name="mainWidget">
    <layout class="QVBoxLayout" name="verticalLayout_2">
-    <item>
-     <widget class="RichTextEditorDialog" name="widget" native="true"/>
-    </item>
     <item>
      <widget class="QGroupBox" name="groupBox">
       <property name="title">
@@ -199,14 +196,6 @@
    </property>
   </action>
  </widget>
- <customwidgets>
-  <customwidget>
-   <class>RichTextEditorDialog</class>
-   <extends>QWidget</extends>
-   <header>3rdparty/richtextedit/richtexteditor_p.h</header>
-   <container>1</container>
-  </customwidget>
- </customwidgets>
  <resources/>
  <connections>
   <connection>

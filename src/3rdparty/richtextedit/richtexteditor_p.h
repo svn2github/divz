@@ -67,6 +67,43 @@ public:
 
     void initFontSize(double);
 
+signals:
+    void contentsChanged();
+
+private slots:
+    void tabIndexChanged(int newIndex);
+    void richTextChanged();
+    void sourceChanged();
+
+private:
+    enum TabIndex { RichTextIndex, SourceIndex };
+    enum State { Clean, RichTextChanged, SourceChanged };
+    RichTextEditor *m_editor;
+    QTextEdit      *m_text_edit;
+    QTabWidget     *m_tab_widget;
+    State m_state;
+    QToolBar	   *m_tool_bar;
+};
+
+class RichTextEditorWidget : public QWidget
+{
+    Q_OBJECT
+public:
+    RichTextEditorWidget(QWidget *parent = 0);
+    ~RichTextEditorWidget();
+
+    void focusEditor();
+
+    //int showDialog();
+    void setDefaultFont(const QFont &font);
+    void setText(const QString &text);
+    QString text(Qt::TextFormat format = Qt::AutoText) const;
+
+    void initFontSize(double);
+
+signals:
+    void contentsChanged();
+
 private slots:
     void tabIndexChanged(int newIndex);
     void richTextChanged();

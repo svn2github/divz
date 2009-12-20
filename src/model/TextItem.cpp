@@ -233,6 +233,7 @@ int TextItem::fitToSize(const QSize& size, int minimumFontSize)
 		setText(doc.toHtml());
 		
 		qDebug()<<"TextItem::fitToSize(): size search: caching ptsize:"<<lastGoodSize<<", count: "<<count<<"( minimum size was:"<<minimumFontSize<<")";
+		boxHeight = heightTmp;
 		//static_autoTextSizeCache[sizeKey] = lastGoodSize;
 		
 		// We are using a QCache instead of a plain QMap, so that requires a pointer value 
