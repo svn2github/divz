@@ -336,7 +336,7 @@ void MainWindow::slotAccelBoxChanged(int x)
 	int sign = p < 0 ? -1:1;
 	p = qabs(p);
 	
-	m_inc = m_incOrig * (1+p * 2.5);
+	m_inc = m_incOrig * (1+p * 50); //2.5);
 	if(sign < 0)
 		m_inc = qabs(m_inc)*-1;
 	else
