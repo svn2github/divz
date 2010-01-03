@@ -267,8 +267,8 @@ void Document::save(const QString & filename)
 	// Open file
 	if (!file.open(QIODevice::WriteOnly))
 	{
-		QMessageBox::warning(0, tr("File Error"), tr("Error saving to the file '%1'").arg(tmp));
-		throw 0;
+		//QMessageBox::warning(0, tr("File Error"), tr("Error saving to the file '%1'").arg(tmp));
+		//throw 0;
 		return;
 	}
 	

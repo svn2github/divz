@@ -1405,7 +1405,9 @@ namespace SlideEditorWindowSortFunctions {
 void SlideEditorWindow::setCurrentSlide(Slide *slide)
 {
 	m_scene->setSlide(slide);
-	m_slideListView->setCurrentIndex(m_slideModel->indexForSlide(slide));
+	QModelIndex idx = m_slideModel->indexForSlide(slide);
+	if(idx.isValid())
+		m_slideListView->setCurrentIndex(idx);
 	setupViewportLines();
 	
 	if(!slide)

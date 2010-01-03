@@ -112,7 +112,8 @@ SlideGroupViewControl::SlideGroupViewControl(OutputInstance *group, QWidget *w,b
 	m_group(0),
 	m_quickSlide(0),
 	m_originalQuickSlide(true),
-	m_listView(0)
+	m_listView(0),
+	m_isPreviewControl(false)
 	
 {
 	if(initUI)
@@ -524,7 +525,7 @@ void SlideGroupViewControl::enableAnimation(double time)
 	if(time == 0 || !isEnabled())
 	{
 		if(DEBUG_SLIDEGROUPVIEWCONTROL)
-			qDebug() << "SlideGroupViewControl::enableAnimation(): stopping all timers";
+			qDebug() << "SlideGroupViewControl::enableAnimation(): stopping all timers, isEnabled:"<<isEnabled();
 		
 		toggleTimerState(Stopped,true);
 		m_timeButton->setEnabled(false);
@@ -539,6 +540,9 @@ void SlideGroupViewControl::enableAnimation(double time)
 	
 	if(!m_isPreviewControl)
 		toggleTimerState(Running,true);
+	else
+		if(DEBUG_SLIDEGROUPVIEWCONTROL)
+			qDebug() << "SlideGroupViewControl::enableAnimation(): Not calling toggleTimerState() because m_isPreviewControl";
 }
 
 void SlideGroupViewControl::setEnabled(bool flag)

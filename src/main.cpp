@@ -3,7 +3,7 @@
 
 #include <QtGui/QApplication>
 #include <QPixmapCache>
-
+#include <QMessageBox>
 
 // I'll use this code at the church to debug some crashes.
 // However, disbaling it for now because I'm not sure
@@ -54,7 +54,11 @@
 					//qt_origMsgHandler(type,msg);
 				}
 				else
+				{
+
 					fprintf(stderr, "Fatal: %s\n", msg);
+				}
+				QMessageBox::critical(0,"Fatal Error",msg);
 				if(strstr(msg,"out of memory, returning null image") != NULL)
 				{
 					QPixmapCache::clear();

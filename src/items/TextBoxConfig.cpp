@@ -34,7 +34,7 @@ TextBoxConfig::TextBoxConfig(TextBoxContent * textContent, QGraphicsItem * paren
 
 void TextBoxConfig::itemChanged(QString fieldName, QVariant value, QVariant)
 {
-	if(fieldName == "text" && !m_saving)
+	if(fieldName == "text" && !m_saving && m_textContent)
 	{
 		TextItem * textModel = dynamic_cast<TextItem*>(m_textContent->modelItem());
 		m_editor->setText(textModel->text());
@@ -44,6 +44,7 @@ void TextBoxConfig::itemChanged(QString fieldName, QVariant value, QVariant)
 
 TextBoxConfig::~TextBoxConfig()
 {
+	m_textContent = 0;
 }
 
 void TextBoxConfig::slotOkClicked()

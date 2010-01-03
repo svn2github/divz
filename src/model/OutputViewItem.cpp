@@ -66,9 +66,15 @@ QByteArray OutputViewItem::toByteArray() const
 {
 	// we must! What does this damage though by overriding the constness? ...
 	OutputViewItem *item = const_cast<OutputViewItem*>(this);
+
+	if(item)
 	{
 		item->m_outputPort = AppSettings::outputById(m_outputId)->port();
 		qDebug() << "OutputViewItem::toByteArray(): Storing port#:"<<item->m_outputPort;
+	}
+	else
+	{
+		qDebug() << "OutputViewItem::toByteArray(): [ERROR] COULD NOT STORE PORT #:"<<item->m_outputPort <<" BECAUSE const_cast<> FAILED!";
 	}
 	
 	return AbstractItem::toByteArray();
