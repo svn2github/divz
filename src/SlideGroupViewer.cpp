@@ -996,11 +996,13 @@ void SlideGroupViewer::addFilter(AbstractItemFilter * filter)
 {
 	if(!m_slideFilters.contains(filter))
 		m_slideFilters.append(filter);
+	qDebug() << "SlideGroupViewer::addFilter: adding filter"<<filter->filterId();
 	applySlideFilters();
 }
 
 void SlideGroupViewer::removeFilter(AbstractItemFilter *filter)
 {
+	qDebug() << "SlideGroupViewer::addFilter: removing filter"<<filter->filterId();
 	m_slideFilters.removeAll(filter);
 	applySlideFilters();
 }
