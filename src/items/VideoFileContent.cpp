@@ -235,37 +235,45 @@ void VideoFileContent::setFilename(const QString &name)
 		
 		QVideoProvider * p = QVideoProvider::providerForFile(name);
 		
-		if(DEBUG_VIDEOFILECONTENT)
-			qDebug() << "VideoFileContent::setFilename(): Loading file:"<<name;
-				
-		if(m_videoProvider && m_videoProvider == p)
+		if(p)
 		{
 			if(DEBUG_VIDEOFILECONTENT)
-				qDebug() << "VideoFileContent::setFilename(): Provider pointer matches existing provider, nothing changed.";
-			return;
+				qDebug() << "VideoFileContent::setFilename(): Loading file:"<<name;
+					
+			if(m_videoProvider && m_videoProvider == p)
+			{
+				if(DEBUG_VIDEOFILECONTENT)
+					qDebug() << "VideoFileContent::setFilename(): Provider pointer matches existing provider, nothing changed.";
+				return;
+			}
+			else
+			if(m_videoProvider)
+			{
+				if(DEBUG_VIDEOFILECONTENT)
+					qDebug() << "VideoFileContent::setFilename(): Disconnecting existing provider";
+				m_videoProvider->disconnectReceiver(this);
+				QVideoProvider::releaseProvider(m_videoProvider);
+			}
+			
+			if(DEBUG_VIDEOFILECONTENT)
+				qDebug() << "VideoFileContent::setFilename(): Loading"<<name;
+			
+			
+			m_still = false;
+			
+			m_videoProvider = p;
+			m_videoProvider->play();
+			
+			// prime the pump, so to speak
+			setPixmap(m_videoProvider->pixmap());
+			
+			m_videoProvider->connectReceiver(this, SLOT(setPixmap(const QPixmap &)));
 		}
 		else
-		if(m_videoProvider)
 		{
-			if(DEBUG_VIDEOFILECONTENT)
-				qDebug() << "VideoFileContent::setFilename(): Disconnecting existing provider";
-			m_videoProvider->disconnectReceiver(this);
-			QVideoProvider::releaseProvider(m_videoProvider);
+			//if(DEBUG_VIDEOFILECONTENT)
+				qDebug() << "VideoFileContent::setFilename(): Unable to get provider for "<<name;
 		}
-		
-		if(DEBUG_VIDEOFILECONTENT)
-			qDebug() << "VideoFileContent::setFilename(): Loading"<<name;
-		
-		
-		m_still = false;
-		
-		m_videoProvider = p;
-		m_videoProvider->play();
-		
-		// prime the pump, so to speak
-		setPixmap(m_videoProvider->pixmap());
-		
-		m_videoProvider->connectReceiver(this, SLOT(setPixmap(const QPixmap &)));
 	}
 }
 

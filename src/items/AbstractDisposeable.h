@@ -38,6 +38,8 @@ class AbstractDisposeable : public QObject, public QGraphicsItem
     public:
         AbstractDisposeable(QGraphicsItem * parent = 0, bool fadeIn = false);
         virtual ~AbstractDisposeable() {}
+        
+        virtual void show();
 
         // reimplement this to add a custom deletion behavior
         virtual void dispose(bool anim=true);

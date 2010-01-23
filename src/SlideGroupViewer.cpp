@@ -604,6 +604,7 @@ void SlideGroupViewer::setLiveBackground(const QFileInfo &info, bool waitForNext
 	else
 	{
 		m_nextBg = info;
+		//qDebug() << "SlideGroupViewer::setLiveBackground: set m_bgWaitingForNextSlide to true"; 
 		m_bgWaitingForNextSlide = true;
 	}
 
@@ -896,7 +897,10 @@ Slide * SlideGroupViewer::setSlide(int x)
 Slide * SlideGroupViewer::setSlide(Slide *slide, bool takeOwnership)
 {
 	if(m_bgWaitingForNextSlide)
+	{
+		//qDebug() << "SlideGroupViewer::setSlide: Applying Background because m_bgWaitingForNextSlide is true";
 		applyBackground(m_nextBg, slide);
+	}
 		
 	if(takeOwnership)
 		m_slideFilterByproduct << slide;
@@ -958,15 +962,25 @@ bool SlideGroupViewer::reapplySpecialFrames()
 
 void SlideGroupViewer::crossFadeFinished(Slide *oldSlide,Slide*/*newSlide*/)
 {
-	if(m_bgWaitingForNextSlide)
-	{
-		m_bgWaitingForNextSlide = false;
-		applyBackground(m_nextBg);
-	}
+// 	qDebug() << "SlideGroupViewer::crossFadeFinished: mark"; 
+// 	if(m_bgWaitingForNextSlide)
+// 	{
+// 		qDebug() << "SlideGroupViewer::crossFadeFinished: set m_bgWaitingForNextSlide to false";
+// 		m_bgWaitingForNextSlide = false;
+// 		applyBackground(m_nextBg);
+// 	}
 }
 
 void SlideGroupViewer::slideDiscarded(Slide *oldSlide)
 {
+//  	qDebug() << "SlideGroupViewer::slideDiscarded: mark";
+	if(m_bgWaitingForNextSlide)
+	{
+// 		qDebug() << "SlideGroupViewer::slideDiscarded: set m_bgWaitingForNextSlide to false";
+		m_bgWaitingForNextSlide = false;
+		applyBackground(m_nextBg);
+	}
+	
 	m_fadeInProgress = false;
 // // 	if(oldSlide && m_slideFilterByproduct.contains(oldSlide))
 // // 	{
@@ -1319,20 +1333,24 @@ void SlideGroupViewer::initVideoProviders()
 				if(!videoFile.isEmpty())
 				{
 					QVideoProvider * p = QVideoProvider::providerForFile(videoFile);
-					if(m_videoProvidersOpened[p->canonicalFilePath()])
+					if(p)
 					{
-						QVideoProvider::releaseProvider(p);
-					}
-					else
-					{
-						m_videoProvidersOpened[p->canonicalFilePath()]   = true;
-						m_videoProvidersConsumed[p->canonicalFilePath()] = false;
-
-						connect(p, SIGNAL(streamStarted()), this, SLOT(videoStreamStarted()));
-
-						m_videoProviders << p;
-
-						p->play();
+						if(m_videoProvidersOpened[p->canonicalFilePath()])
+						{
+							QVideoProvider::releaseProvider(p);
+						}
+						else
+						{
+							m_videoProvidersOpened[p->canonicalFilePath()]   = true;
+							m_videoProvidersConsumed[p->canonicalFilePath()] = false;
+	
+							connect(p, SIGNAL(streamStarted()), this, SLOT(videoStreamStarted()));
+	
+							m_videoProviders << p;
+	
+							//qDebug() << "SlideGroupViewer::initVideoProviders: Playing video stream";
+							p->play();
+						}
 					}
 				}
 			}

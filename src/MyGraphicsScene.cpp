@@ -67,6 +67,8 @@
 
 #define DEBUG_KEYHANDLER 0
 
+#define DEBUG_MYGRAPHICSSCENE_ITEM_MGMT 0
+
 #define qSetEffectOpacity(item,opacity) { QGraphicsOpacityEffect * opac = dynamic_cast<QGraphicsOpacityEffect*>(item->graphicsEffect()); if(opac) opac->setOpacity(opacity); }
 //#define qGetEffectOpacity(item,opacity) dynamic_cast<QGraphicsOpacityEffect*>item->graphicsEffect() ? (dynamic_cast<QGraphicsOpacityEffect*>item->graphicsEffect())->opacity() : 0
 
@@ -165,6 +167,8 @@ void MyGraphicsScene::clear()
 		
 		disconnect(content, 0, 0, 0);
 		//qDebug() << "MyGraphicsScene::clear: Disposing of content:"<<content;
+		if(DEBUG_MYGRAPHICSSCENE_ITEM_MGMT)
+			qDebug() << "MyGraphicsScene::clear(): Disposing of item: "<<content->modelItem()->itemName();
 		content->dispose(false);
 		//delete content;
 		content = 0;
@@ -226,6 +230,8 @@ void MyGraphicsScene::removeVisualDelegate(AbstractItem *item)
 	
 	m_content.removeAll(z);
 	disconnect(z, 0, 0, 0);
+	if(DEBUG_MYGRAPHICSSCENE_ITEM_MGMT)
+		qDebug() << "MyGraphicsScene::removeVisualDelegate(): Disposing of item: "<<z->modelItem()->itemName();
 	z->dispose(false);
 		
 // 	qDebug() << "MyGraphicsScene::removeVisualDelegate: Couldn't find visual delegate for item requested: "<<item->itemName();
@@ -608,6 +614,8 @@ void MyGraphicsScene::endTransition()
 		{
 			m_content.removeAll(z);
 			disconnect(z, 0, 0, 0);
+			if(DEBUG_MYGRAPHICSSCENE_ITEM_MGMT)
+				qDebug() << "MyGraphicsScene::endTransition(): Disposing of item: "<<z->modelItem()->itemName();
 			z->dispose(false);
 		}
 	}
@@ -651,6 +659,8 @@ void MyGraphicsScene::addContent(AbstractContent * content, bool takeOwnership) 
 {
 	if(m_content.contains(content))
 	{
+		if(DEBUG_MYGRAPHICSSCENE_ITEM_MGMT)
+			qDebug() << "MyGraphicsScene::addContent(): [2] Showing item: "<<content->modelItem()->itemName();
 		content->show();
 		return;
 	}
@@ -679,6 +689,8 @@ void MyGraphicsScene::addContent(AbstractContent * content, bool takeOwnership) 
 // 		content->modelItem()->setZValue(zMax);
 // 		content->setZValue(zMax);
 // 	}
+	if(DEBUG_MYGRAPHICSSCENE_ITEM_MGMT)
+		qDebug() << "MyGraphicsScene::addContent(): [1] Showing item: "<<content->modelItem()->itemName();
 	content->show();
 	
 	m_content.append(content);
@@ -1247,6 +1259,8 @@ void MyGraphicsScene::slotDeleteContent()
 		// unlink content from lists, myself(the Scene) and memory
 		m_content.removeAll(content);
 		m_slide->removeItem(content->modelItem());
+		if(DEBUG_MYGRAPHICSSCENE_ITEM_MGMT)
+			qDebug() << "MyGraphicsScene::slotDeleteContent(): Disposing of item: "<<content->modelItem()->itemName();
 		content->dispose();
 		//delete content;
 	}

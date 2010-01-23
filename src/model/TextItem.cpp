@@ -198,7 +198,7 @@ int TextItem::fitToSize(const QSize& size, int minimumFontSize)
 			done = false;
 			sizeInc = 1;
 			
-			qDebug()<<"TextItem::fitToSize(): size search: going UP failed, now I'll try to go DOWN";
+			//qDebug()<<"TextItem::fitToSize(): size search: going UP failed, now I'll try to go DOWN";
 			
 			while(!done && count++ < maxCount)
 			{
@@ -232,7 +232,7 @@ int TextItem::fitToSize(const QSize& size, int minimumFontSize)
 		
 		setText(doc.toHtml());
 		
-		qDebug()<<"TextItem::fitToSize(): size search: caching ptsize:"<<lastGoodSize<<", count: "<<count<<"( minimum size was:"<<minimumFontSize<<")";
+		//qDebug()<<"TextItem::fitToSize(): size search: caching ptsize:"<<lastGoodSize<<", count: "<<count<<"( minimum size was:"<<minimumFontSize<<")";
 		boxHeight = heightTmp;
 		//static_autoTextSizeCache[sizeKey] = lastGoodSize;
 		

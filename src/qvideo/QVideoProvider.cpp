@@ -7,6 +7,7 @@
 #include "3rdparty/md5/md5.h"
 
 #define DEBUG_QVIDEOPROVIDER 0
+#define DEBUG_QVIDEOPROVIDER_PLAY 0
 
 #include <QMutex>
 #include <QMutexLocker>
@@ -84,6 +85,10 @@ QVideoProvider * QVideoProvider::providerForFile(const QString & file)
 {
 	QFileInfo inf(file);
 	QString can = inf.canonicalFilePath();
+	
+	if(can.isEmpty())
+		return 0;
+	
 	//qDebug() << "QVideoProvider::providerForFile: Checking file:"<<file;
 	if(m_fileProviderMap.contains(can))
 	{
@@ -177,19 +182,22 @@ QPixmap QVideoIconGenerator::iconForFile(const QString & file)
 	else
 	{
 		QVideoProvider * p = QVideoProvider::providerForFile(file);
-		
-		if(p->isPlaying())
+		if(p)
 		{
-			QPixmap pix = p->pixmap();
-			if(!pix.isNull())
+			if(p->isPlaying())
 			{
-				storePixmap(pix,p);
-				QVideoProvider::releaseProvider(p);
-				return pix;
+				QPixmap pix = p->pixmap();
+				if(!pix.isNull())
+				{
+					storePixmap(pix,p);
+					QVideoProvider::releaseProvider(p);
+					return pix;
+				}
 			}
+			
+			new QVideoIconGenerator(p);
 		}
 		
-		new QVideoIconGenerator(p);
 		return QPixmap();
 	}
 }
@@ -312,7 +320,7 @@ void QVideoProvider::stop()
 		m_video->stop();
 	}
 	
-	if(DEBUG_QVIDEOPROVIDER)
+	if(DEBUG_QVIDEOPROVIDER || DEBUG_QVIDEOPROVIDER_PLAY)
 		qDebug() << "[PLAY -] QVideoProvider::stop(): "<<m_canonicalFilePath<<" m_playCount:"<<m_playCount;
 }
 
@@ -320,19 +328,20 @@ void QVideoProvider::play()
 {
 	m_video->play();
 	m_playCount ++;
-	if(DEBUG_QVIDEOPROVIDER)
+	if(DEBUG_QVIDEOPROVIDER || DEBUG_QVIDEOPROVIDER_PLAY)
 		qDebug() << "[PLAY +] QVideoProvider::play(): "<<m_canonicalFilePath<<" m_playCount:"<<m_playCount;
+	m_playCount = m_playCount;
 }
 void QVideoProvider::pause()
 {
 	// dont pause unless all players are paused
 	if(m_playCount>0)
 		m_playCount --;
-	if(DEBUG_QVIDEOPROVIDER)
+	if(DEBUG_QVIDEOPROVIDER || DEBUG_QVIDEOPROVIDER_PLAY)
 		qDebug() << "[PLAY -] QVideoProvider::pause(): "<<m_canonicalFilePath<<" m_playCount:"<<m_playCount;
 	if(m_playCount <= 0)
 	{
-		if(DEBUG_QVIDEOPROVIDER)
+		if(DEBUG_QVIDEOPROVIDER || DEBUG_QVIDEOPROVIDER_PLAY)
 			qDebug() << "QVideoProvider::pause(): "<<m_canonicalFilePath<<" m_video->pause() hit";
 		
 		m_video->pause();

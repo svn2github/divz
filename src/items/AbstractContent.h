@@ -27,6 +27,8 @@ class AbstractContent : public AbstractDisposeable
 	public:
 		AbstractContent(QGraphicsScene * scene, QGraphicsItem * parent = 0, bool noRescale = false);
 		virtual ~AbstractContent();
+		
+		virtual void show();
 	
 		// ::AbstractDisposeable
 		void dispose(bool anim=true);

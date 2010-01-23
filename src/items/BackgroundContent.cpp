@@ -97,12 +97,40 @@ BackgroundContent::~BackgroundContent()
 {
 	if(m_videoProvider)
 	{
+// 		if(!m_still || m_videoProvider->isPlaying())
+// 			m_videoProvider->pause();
+			
 		m_videoProvider->disconnectReceiver(this);
 		QVideoProvider::releaseProvider(m_videoProvider);
 	}
 	
 	if(!m_lastForegroundKey.isEmpty())
 		QPixmapCache::remove(m_lastForegroundKey);
+}
+
+// ::AbstractDisposeable
+void BackgroundContent::dispose(bool anim)
+{
+	if(m_videoProvider) // && m_videoProvider->isPlaying())
+ 		m_videoProvider->pause();
+	
+	AbstractContent::dispose(anim);
+}
+	
+// ::QGraphicsItem
+void BackgroundContent::show()
+{
+	if(m_videoProvider) // && m_videoProvider->isPlaying())
+	{
+		//qDebug() << "BackgroundContent::show: Playing video";
+ 		m_videoProvider->play();
+ 	}
+ 	else
+ 	{
+ 		//qDebug() << "BackgroundContent::show: No provider, not playing video";
+ 	}
+ 	AbstractContent::show();
+ 	
 }
 
 QWidget * BackgroundContent::createPropertyWidget()
@@ -299,6 +327,9 @@ void BackgroundContent::setImageFile(const QString &file)
 	{
 		// TODO We ASSUME were playing the video before we got the image
 		//m_videoProvider->pause();
+// 		if(!m_still || m_videoProvider->isPlaying())
+// 			m_videoProvider->pause();
+			
 		m_videoProvider->disconnectReceiver(this);
 		QVideoProvider::releaseProvider(m_videoProvider);
 		m_videoProvider = 0;
@@ -984,33 +1015,58 @@ void BackgroundContent::setVideoFile(const QString &name)
 		{
 			if(DEBUG_BACKGROUNDCONTENT)	
 				qDebug() << "BackgroundContent::setVideoFile(): Using FFMPEG";
+				
 			QVideoProvider * p = QVideoProvider::providerForFile(name);
-			
-			if(m_videoProvider && m_videoProvider == p)
+			if(p)
 			{
-				return;
+				
+				if(m_videoProvider && m_videoProvider == p)
+				{
+					return;
+				}
+				else
+				if(m_videoProvider)
+				{
+					if(isVisible())
+	 					//if(!m_still || m_videoProvider->isPlaying())
+	 				{
+	 					//qDebug() << "BackgroundContent::setVideoFile: Visible, pausing video";
+ 						m_videoProvider->pause();
+ 					}
+						
+					m_videoProvider->disconnectReceiver(this);
+					QVideoProvider::releaseProvider(m_videoProvider);
+				}
+				
+				if(DEBUG_BACKGROUNDCONTENT)
+					qDebug() << "BackgroundContent::setVideoFile: Loading"<<name;
+				
+				m_videoProvider = p;
+				
+				//qDebug() << "BackgroundContent::setVideoFile: Playing video "<<name;
+				
+				if(isVisible())
+				{
+					//qDebug() << "BackgroundContent::setVideoFile: Visible, Playing video "<<name;
+					m_videoProvider->play();
+				}
+				else
+				{
+					//qDebug() << "BackgroundContent::setVideoFile: Not visible, not playing video";
+				} 
+				
+				m_still = false;
+				
+				// prime the pump, so to speak
+				setPixmap(m_videoProvider->pixmap());
+					
+				m_videoProvider->connectReceiver(this, SLOT(setPixmap(const QPixmap &)));
 			}
 			else
-			if(m_videoProvider)
 			{
-				m_videoProvider->disconnectReceiver(this);
-				QVideoProvider::releaseProvider(m_videoProvider);
+				//if(DEBUG_BACKGROUNDCONTENT)
+					qDebug() << "BackgroundContent::setVideoFile: Unable to get provider for "<<name;
 			}
-			
-			if(DEBUG_BACKGROUNDCONTENT)
-				qDebug() << "BackgroundContent::setVideoFile: Loading"<<name;
-			
-			m_videoProvider = p;
-			
-			
-			m_videoProvider->play();
-			
-			m_still = false;
-			
-			// prime the pump, so to speak
-			setPixmap(m_videoProvider->pixmap());
-				
-			m_videoProvider->connectReceiver(this, SLOT(setPixmap(const QPixmap &)));
 		}
 	}
 	else

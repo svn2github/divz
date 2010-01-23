@@ -35,6 +35,11 @@ AbstractDisposeable::AbstractDisposeable(QGraphicsItem * parent, bool fadeIn)
 //     }
 }
 
+void AbstractDisposeable::show()
+{
+	QGraphicsItem::show();
+}
+
 void AbstractDisposeable::dispose(bool anim)
 {
 #if QT_VERSION >= 0x040600

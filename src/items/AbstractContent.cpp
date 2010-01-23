@@ -121,6 +121,8 @@ AbstractContent::AbstractContent(QGraphicsScene * scene, QGraphicsItem * parent,
 	// display mirror
 	setMirrorEnabled(false); //RenderOpts::LastMirrorEnabled);
 
+	setVisible(false);
+	
 	m_dontSyncToModel = false;
 }
 
@@ -134,6 +136,11 @@ AbstractContent::~AbstractContent()
 	delete m_frameTextItem;
 	delete m_frame;
 	m_modelItem = 0;
+}
+
+void AbstractContent::show()
+{
+	AbstractDisposeable::show();
 }
 
 void AbstractContent::applySceneContextHint(MyGraphicsScene::ContextHint hint)

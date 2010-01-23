@@ -59,6 +59,12 @@ class BackgroundContent : public AbstractContent
     public Q_SLOTS:
 
     public:
+	// ::AbstractDisposeable
+	void dispose(bool anim=true);
+		
+	// ::QGraphicsItem
+	virtual void show();
+	
 	// ::AbstractContent
 	QString contentName() const { return tr("Background"); }
 	QWidget * createPropertyWidget();
