@@ -238,6 +238,7 @@ void MyGraphicsScene::removeVisualDelegate(AbstractItem *item)
 // 	fprintf(stderr,"MyGraphicsScene::removeVisualDelegate: Can't find delegate for m_item=%p\n",item);
 }
 
+
 void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans, int speed, int quality)
 {
 	if(m_slide && !slide)
@@ -271,7 +272,11 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans, int speed, i
 // 	QList<quint32> consumedDuplicates;
 // 	//QList<AbstractItem*> consumedItems;
 // 	//QStringList consumedItemNames;
+
+// 	QString ptr;
+// 	ptr = QString().sprintf("%p",this);
 // 	
+	//qDebug() << "MyGraphicsScene::setSlide(): "<<this<<" trans:"<<trans<<", speed:"<<speed<<", quality:"<<quality;
 	//trans = None;
 	if(trans == None || (speed == 0 && quality == 0))
 	{

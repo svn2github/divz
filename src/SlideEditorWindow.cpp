@@ -1404,14 +1404,15 @@ namespace SlideEditorWindowSortFunctions {
 
 void SlideEditorWindow::setCurrentSlide(Slide *slide)
 {
-	m_scene->setSlide(slide);
-	QModelIndex idx = m_slideModel->indexForSlide(slide);
-	if(idx.isValid())
-		m_slideListView->setCurrentIndex(idx);
-	setupViewportLines();
-	
 	if(!slide)
 		return;
+	
+	QModelIndex idx = m_slideModel->indexForSlide(slide);
+	if(idx.isValid() && idx.row() > 0)
+		m_slideListView->setCurrentIndex(idx);
+	
+	m_scene->setSlide(slide);
+	setupViewportLines();
 	
 	QList<AbstractContent *> kids = m_scene->abstractContent();
 	
@@ -1429,7 +1430,6 @@ void SlideEditorWindow::setCurrentSlide(Slide *slide)
 	m_fadeSlider->setValue((int)(crossFadeSpeed * 100));
 	m_inheritFadeBox->setChecked(slide->inheritFadeSettings());
 	setInheritFade(slide->inheritFadeSettings());
-	
 	
 	m_itemModel->setSlide(slide);
 	

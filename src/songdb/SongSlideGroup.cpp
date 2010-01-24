@@ -401,6 +401,7 @@ void SongSlideGroup::textToSlides(SongTextFilter filter)
 		if(DEBUG_TEXTOSLIDES)
 			qDebug()<<"SongSlideGroup::textToSlides(): slideNbr:"<<slideNbr<<": textRect.height():"<<textRect.height()<<"screenRect.height():"<<screenRect.height()<<", heightDifference:"<<heightDifference;
 		
+		// Arbitrary magic number to force centering for small amounts of differences
 		if(heightDifference < 15)
 		{
 			

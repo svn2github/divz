@@ -45,6 +45,9 @@ QList<quint32> FrameFactory::classes()
 
 Frame * FrameFactory::createFrame(quint32 frameClass)
 {
+// 	qWarning( "FrameFactory::createFrame: Disabling frame usage");
+ 	return 0;
+	
     if (frameClass == Frame::NoFrame)
         return 0;
     else if (frameClass == FRAME_DEF)

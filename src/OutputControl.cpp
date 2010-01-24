@@ -743,6 +743,7 @@ void OutputControl::setViewControl(SlideGroupViewControl *ctrl)
 
 void OutputControl::setCustomFilters(AbstractItemFilterList list)
 {
+// 	qDebug() << "OutputControl::setCustomFilters(): start"; 
 	AbstractItemFilterList selected;
 	for(int i=0; i<m_customFilterList.size(); i++)
 	{
@@ -772,6 +773,8 @@ void OutputControl::setCustomFilters(AbstractItemFilterList list)
 	setupFilterList(selected);
 	
 	setupFoldbackSettings();
+	
+// 	qDebug() << "OutputControl::setCustomFilters(): end";
 }
 
 void OutputControl::setCrossFadeSpeed(int value)

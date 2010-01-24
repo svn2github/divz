@@ -1348,9 +1348,9 @@ void MainWindow::sendGroupToOutput(Output *output, SlideGroup *newGroup, Slide *
 		
 		
 		
-		qDebug() << "MainWindow::setLiveGroup: Loading into view control:"<<newGroup;
+// 		qDebug() << "MainWindow::setLiveGroup: Loading into view control:"<<newGroup;
 		ctrl->setSlideGroup(newGroup,currentSlide);
-		qDebug() << "MainWindow::setLiveGroup: Loading into output instance:"<<newGroup;
+// 		qDebug() << "MainWindow::setLiveGroup: Loading into output instance:"<<newGroup;
 		inst->setSlideGroup(newGroup,currentSlide);
 		
 		

@@ -85,7 +85,7 @@ GenericItemConfig::GenericItemConfig(AbstractContent * content, QWidget *parent)
 	, m_content(content)
 	, m_closeButton(0)
 	, m_okButton(0)
-	, m_frame(FrameFactory::defaultPanelFrame())
+	//, m_frame(FrameFactory::defaultPanelFrame())
 	, m_updateShadowDistanceAndDirection_changing(false)
 {
 	m_commonUi->setupUi(this);
