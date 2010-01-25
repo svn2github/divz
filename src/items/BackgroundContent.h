@@ -48,7 +48,7 @@ private:
 };
 
 /// \brief TODO
-class BackgroundContent : public AbstractContent
+class BackgroundContent : public AbstractContent, public QVideoConsumer
 {
     Q_OBJECT
 
@@ -64,6 +64,9 @@ class BackgroundContent : public AbstractContent
 		
 	// ::QGraphicsItem
 	virtual void show();
+	
+	// :: QVideoConsumer
+	virtual bool allowMediaStop(QVideoProvider*);
 	
 	// ::AbstractContent
 	QString contentName() const { return tr("Background"); }
@@ -94,7 +97,9 @@ class BackgroundContent : public AbstractContent
 	void animateZoom();
 	
 #ifdef PHONON_ENABLED
+	void phononMediaAboutToFinish();
 	void phononPlayerFinished();
+	void phononPrefinishMarkReached(qint32);
 	
 	void phononStateChanged(Phonon::State newState, Phonon::State /* oldState */);
 	void phononTick(qint64 time);
@@ -134,6 +139,8 @@ class BackgroundContent : public AbstractContent
 	bool m_zoomEnabled;
 	QPixmap m_zoomedPixmap;
 	QPointF m_zoomedPixmapSize;
+	
+	bool m_inDestructor;
 	
 #ifdef PHONON_ENABLED
 	QGraphicsProxyWidget *m_proxy;

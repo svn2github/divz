@@ -150,6 +150,7 @@ void AbstractContent::applySceneContextHint(MyGraphicsScene::ContextHint hint)
 	switch(hint)
 	{
 		case MyGraphicsScene::Live:
+		case MyGraphicsScene::StaticPreview:
 		case MyGraphicsScene::Preview:
 		case MyGraphicsScene::Monitor:
 			// customize item's behavior

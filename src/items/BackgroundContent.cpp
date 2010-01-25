@@ -48,6 +48,7 @@ BackgroundContent::BackgroundContent(QGraphicsScene * scene, QGraphicsItem * par
     , m_lastForegroundKey("")
     , m_zoomInit(false)
     , m_zoomEnabled(false)
+    , m_inDestructor(false)
 #ifdef PHONON_ENABLED
     , m_proxy(0)
     , m_player(0)
@@ -95,11 +96,13 @@ BackgroundContent::BackgroundContent(QGraphicsScene * scene, QGraphicsItem * par
 
 BackgroundContent::~BackgroundContent()
 {
+	
+	m_inDestructor = true;
+			
 	if(m_videoProvider)
 	{
 // 		if(!m_still || m_videoProvider->isPlaying())
 // 			m_videoProvider->pause();
-			
 		m_videoProvider->disconnectReceiver(this);
 		QVideoProvider::releaseProvider(m_videoProvider);
 	}
@@ -113,9 +116,21 @@ BackgroundContent::~BackgroundContent()
 		QPixmapCache::remove(m_lastForegroundKey);
 }
 
+// :: QVideoConsumer
+bool BackgroundContent::allowMediaStop(QVideoProvider* p)
+{
+	if(!m_inDestructor && 
+	    isVisible()    &&	
+	    p == m_videoProvider)
+		return false;
+	return true;
+}
+
 // ::AbstractDisposeable
 void BackgroundContent::dispose(bool anim)
 {
+	m_inDestructor = true;
+	
 	if(m_videoProvider) // && m_videoProvider->isPlaying())
  		m_videoProvider->pause();
 	
@@ -128,7 +143,7 @@ void BackgroundContent::show()
 	if(m_videoProvider) // && m_videoProvider->isPlaying())
 	{
 		//qDebug() << "BackgroundContent::show: Playing video";
- 		m_videoProvider->play();
+		m_videoProvider->play();
  	}
  	else
  	{
@@ -953,13 +968,48 @@ void BackgroundContent::paint(QPainter * painter, const QStyleOptionGraphicsItem
 }
 
 #ifdef PHONON_ENABLED
+
+
+void BackgroundContent::phononMediaAboutToFinish()
+{
+	qDebug() << "VideoFileContent::phononMediaAboutToFinish(): m_fileName="<<m_fileName;
+//  	m_player->play(m_fileName);
+	if(modelItem()->videoEndAction() == AbstractVisualItem::VideoLoop)
+	{
+		qDebug() << "VideoFileContent::phononMediaAboutToFinish(): enqueing file "<<m_fileName<<" inorder to loop video";
+		m_player->mediaObject()->enqueue(m_fileName);
+		m_player->mediaObject()->setTransitionTime(-100);
+	}
+	
+}
 void BackgroundContent::phononPlayerFinished()
 {
 	qDebug() << "VideoFileContent::phononPlayerFinished(): m_fileName="<<m_fileName;
 //  	m_player->play(m_fileName);
-	m_player->mediaObject()->enqueue(m_fileName);
+	if(modelItem()->videoEndAction() == AbstractVisualItem::VideoLoop)
+	{
+		qDebug() << "VideoFileContent::phononPlayerFinished(): playing file again";
+		m_player->seek(0);
+		m_player->play();
+	}
 	
 }
+
+
+
+void BackgroundContent::phononPrefinishMarkReached(qint32 x)
+{
+	qDebug() << "VideoFileContent::phononPrefinishMarkReached(): m_fileName="<<m_fileName<<", x:"<<x;
+//  	m_player->play(m_fileName);
+	if(modelItem()->videoEndAction() == AbstractVisualItem::VideoLoop)
+	{
+		qDebug() << "VideoFileContent::phononPrefinishMarkReached(): playing file again";
+		m_player->seek(0);
+		m_player->play();
+	}
+	
+}
+
 #endif
 
 void BackgroundContent::setVideoFile(const QString &name)
@@ -984,7 +1034,7 @@ void BackgroundContent::setVideoFile(const QString &name)
 		}
 		#ifdef PHONON_ENABLED
 		else
-		if(modelItem()->videoEndAction() == AbstractVisualItem::VideoStop)
+// 		if(modelItem()->videoEndAction() == AbstractVisualItem::VideoStop)
 		{
 			if(DEBUG_BACKGROUNDCONTENT)
 				qDebug() << "BackgroundContent::setVideoFile(): Using Phonon";
@@ -1009,16 +1059,20 @@ void BackgroundContent::setVideoFile(const QString &name)
 
 			
 			m_player = new Phonon::VideoPlayer(Phonon::VideoCategory, 0);
-			connect(m_player, SIGNAL(aboutToFinish()), this, SLOT(phononPlayerFinished()));
+// 			connect(m_player->mediaObject(), SIGNAL(aboutToFinish()), this, SLOT(phononMediaAboutToFinish()));
+			connect(m_player, SIGNAL(finished()), this, SLOT(phononPlayerFinished()));
+			m_player->mediaObject()->setPrefinishMark(30);
+			connect(m_player->mediaObject(), SIGNAL(prefinishMarkReached(qint32)), this, SLOT(phononPrefinishMarkReached(qint32)));
 			
 			m_proxy->setWidget(m_player);
 			m_proxy->setGeometry(contentsRect());
 
-			m_player->play(name);
+			if(sceneContextHint() == MyGraphicsScene::Live)
+				m_player->play(name);
 			
 		}
-		else
-		#endif
+		#else
+ 		else
 		{
 			if(DEBUG_BACKGROUNDCONTENT)	
 				qDebug() << "BackgroundContent::setVideoFile(): Using FFMPEG";
@@ -1034,15 +1088,17 @@ void BackgroundContent::setVideoFile(const QString &name)
 				else
 				if(m_videoProvider)
 				{
+					QVideoProvider * tmp = m_videoProvider;
+					m_videoProvider = 0;
 					if(isVisible())
 	 					//if(!m_still || m_videoProvider->isPlaying())
 	 				{
 	 					//qDebug() << "BackgroundContent::setVideoFile: Visible, pausing video";
- 						m_videoProvider->pause();
+ 						tmp->pause();
  					}
 						
-					m_videoProvider->disconnectReceiver(this);
-					QVideoProvider::releaseProvider(m_videoProvider);
+					tmp->disconnectReceiver(this);
+					QVideoProvider::releaseProvider(tmp);
 				}
 				
 				if(DEBUG_BACKGROUNDCONTENT)
@@ -1075,6 +1131,7 @@ void BackgroundContent::setVideoFile(const QString &name)
 					qDebug() << "BackgroundContent::setVideoFile: Unable to get provider for "<<name;
 			}
 		}
+		#endif
 	}
 	else
 	{
@@ -1171,6 +1228,8 @@ void BackgroundContent::setPixmap(const QPixmap & pixmap)
 #ifdef PHONON_ENABLED
 void BackgroundContent::phononStateChanged(Phonon::State newState, Phonon::State /* oldState */)
 {
+	if(m_inDestructor)
+		return;
 	if(timeLcd)
 	{
 		switch (newState) {

@@ -19,6 +19,9 @@ QT += sql
 #	DEFINES += PHONON_ENABLED
 #}
 
+	QT += phonon
+	DEFINES += PHONON_ENABLED
+
 BUILDNUM = $$system(perl buildcount.pl -v)
 VERSTR = '\\"$${BUILDNUM}\\"'  # place quotes around the version string
 

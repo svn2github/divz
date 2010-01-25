@@ -299,7 +299,7 @@ void OutputViewContent::setSlideInternal(Slide *slide, MyGraphicsScene::SlideTra
 		connect(slide,SIGNAL(slideItemChanged(AbstractItem *, QString, QString, QVariant, QVariant)),this,SLOT(slideItemChanged(AbstractItem *, QString, QString, QVariant, QVariant)));
 	
 	
-	if(sceneContextHint() == MyGraphicsScene::Preview)
+	if(sceneContextHint() == MyGraphicsScene::StaticPreview)
 		trans = MyGraphicsScene::None; 
 	
 	m_currentTransition = trans;

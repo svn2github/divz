@@ -249,7 +249,7 @@ void BoxContent::drawForeground(QPainter * painter)
 	{
 		p = modelItem()->outlinePen();
 		p.setJoinStyle(Qt::MiterJoin);
-		if(sceneContextHint() == MyGraphicsScene::Preview)
+		if(sceneContextHint() == MyGraphicsScene::StaticPreview)
 		{
 // 			QTransform tx = painter->transform();
 // 			qreal scale = qMax(tx.m11(),tx.m22());

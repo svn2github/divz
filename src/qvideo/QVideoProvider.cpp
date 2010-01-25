@@ -296,6 +296,8 @@ void QVideoProvider::connectReceiver(QObject * receiver, const char * method)
 		qWarning("QVideoProvider::connectReceiver(): error connecting provider %s to %s", m_canonicalFilePath.toAscii().data(), method);
 		return;
 	}
+	
+	m_receivers.append(receiver);
 }
 
 void QVideoProvider::disconnectReceiver(QObject * receiver)
@@ -306,14 +308,18 @@ void QVideoProvider::disconnectReceiver(QObject * receiver)
 			qDebug() << "QVideoProvider::disconnectReceiver()";
 		disconnect(m_video, 0, receiver, 0);
 	}
+	
+	if(receiver)
+		m_receivers.removeAll(receiver);
 }
 //	void newPixmap(const QPixmap & pixmap);
 	
 void QVideoProvider::stop()
 {
-	if(m_playCount>0)
-		m_playCount --;
-	if(m_playCount <= 0)
+// 	if(m_playCount>0)
+// 		m_playCount --;
+// 	if(m_playCount <= 0)
+	if(stopAllowed())
 	{
 		m_streamStarted = false;
 		emit streamStopped();
@@ -335,11 +341,12 @@ void QVideoProvider::play()
 void QVideoProvider::pause()
 {
 	// dont pause unless all players are paused
-	if(m_playCount>0)
-		m_playCount --;
-	if(DEBUG_QVIDEOPROVIDER || DEBUG_QVIDEOPROVIDER_PLAY)
-		qDebug() << "[PLAY -] QVideoProvider::pause(): "<<m_canonicalFilePath<<" m_playCount:"<<m_playCount;
-	if(m_playCount <= 0)
+// 	if(m_playCount>0)
+// 		m_playCount --;
+/*	if(DEBUG_QVIDEOPROVIDER || DEBUG_QVIDEOPROVIDER_PLAY)
+		qDebug() << "[PLAY -] QVideoProvider::pause(): "<<m_canonicalFilePath<<" m_playCount:"<<m_playCount;*/
+// 	if(m_playCount <= 0)
+	if(stopAllowed())
 	{
 		if(DEBUG_QVIDEOPROVIDER || DEBUG_QVIDEOPROVIDER_PLAY)
 			qDebug() << "QVideoProvider::pause(): "<<m_canonicalFilePath<<" m_video->pause() hit";
@@ -354,4 +361,27 @@ void QVideoProvider::pause()
 void QVideoProvider::seekTo(int ms)
 {
 	m_video->seek(ms);
+}
+
+bool QVideoProvider::stopAllowed()
+{
+	foreach(QObject * obj, m_receivers)
+	{
+		if(obj)
+		{
+			QVideoConsumer * consumer = dynamic_cast<QVideoConsumer*>(obj);
+			if(consumer)
+			{
+				if(!consumer->allowMediaStop(this))
+				{
+					qDebug() << "QVideoProvider::stopAllowed(): "<<m_canonicalFilePath<<" Stop rejected by "<<obj;
+					return false;
+				}
+			
+			}
+		}
+	}
+	
+	qDebug() << "QVideoProvider::stopAllowed(): "<<m_canonicalFilePath<<" Allowing media stop";
+	return true;
 }
