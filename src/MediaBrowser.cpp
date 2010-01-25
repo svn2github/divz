@@ -423,6 +423,7 @@ void MediaBrowser::setupUI()
 
 	m_viewer = new SlideGroupViewer(m_splitter);
 	m_viewer->setCanZoom(true);
+	m_viewer->setSceneContextHint(MyGraphicsScene::Preview);
 
 	Slide * slide = new Slide();
 	AbstractVisualItem * bg = dynamic_cast<AbstractVisualItem*>(slide->background());

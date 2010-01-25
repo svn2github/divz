@@ -37,6 +37,7 @@ class MyGraphicsScene : public QGraphicsScene
                 	BackgroundPreview,
                 	Monitor,
                 	Live,
+                	StaticPreview,
                 };
 	
 		MyGraphicsScene(ContextHint hint = Editor, QObject * parent = 0);

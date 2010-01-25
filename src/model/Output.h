@@ -31,11 +31,14 @@ class Output : public QObject
 	
 	static Output * m_staticPreviewInstance;
 	static Output * m_staticWidgetInstance;
+	static Output * m_staticViewerInstance;
+	
 public:
 	static Output * previewInstance() { return m_staticPreviewInstance; }
 	static Output * widgetInstance() { return m_staticWidgetInstance; }
+	static Output * viewerInstance() { return m_staticViewerInstance; }
 	
-	typedef enum OutputType { Screen, Custom, Network, Preview, Widget };
+	typedef enum OutputType { Screen, Custom, Network, Preview, Widget, Viewer };
 
 	Output();
 	Output(OutputType type, const QString & name="");

@@ -104,6 +104,11 @@ BackgroundContent::~BackgroundContent()
 		QVideoProvider::releaseProvider(m_videoProvider);
 	}
 	
+#ifdef PHONON_ENABLED
+	if(m_proxy)
+		delete m_proxy;
+#endif
+	
 	if(!m_lastForegroundKey.isEmpty())
 		QPixmapCache::remove(m_lastForegroundKey);
 }
@@ -398,10 +403,10 @@ void BackgroundContent::setImageFile(const QString &file)
 					.arg(MD5::md5sum(file))
 					.arg(size.width())
 					.arg(size.height())
-					.arg(sceneContextHint() == MyGraphicsScene::Preview ? "-icon192" : "");
+					.arg(sceneContextHint() == MyGraphicsScene::StaticPreview ? "-icon192" : "");
 					//.arg(modelItem()->zoomEffectEnabled() ? "-zoomed" : "");
 		
-		if(sceneContextHint() == MyGraphicsScene::Preview)
+		if(sceneContextHint() == MyGraphicsScene::StaticPreview)
 		{
 			QString cacheKey = QString("%1/%2/%3-%4x%5-icon192-auto_ar")
 						.arg(AppSettings::cachePath())
@@ -435,7 +440,7 @@ void BackgroundContent::setImageFile(const QString &file)
 		else
 		{
 			QPixmap cache;
-			if(sceneContextHint() == MyGraphicsScene::Preview)
+			if(sceneContextHint() == MyGraphicsScene::StaticPreview)
 			{
 				cache = MediaBrowser::iconForImage(file,QSize(192,120)); // MEDIABROWSER_LIST_ICON_SIZE);
 			}
@@ -952,6 +957,7 @@ void BackgroundContent::phononPlayerFinished()
 {
 	qDebug() << "VideoFileContent::phononPlayerFinished(): m_fileName="<<m_fileName;
 //  	m_player->play(m_fileName);
+	m_player->mediaObject()->enqueue(m_fileName);
 	
 }
 #endif
@@ -971,7 +977,8 @@ void BackgroundContent::setVideoFile(const QString &name)
 	
 	if(modelItem()->fillType() == AbstractVisualItem::Video)
 	{
-		if(sceneContextHint() == MyGraphicsScene::Preview)
+		if(sceneContextHint() == MyGraphicsScene::StaticPreview ||
+		   sceneContextHint() == MyGraphicsScene::Monitor)
 		{
 			setPixmap(QVideoProvider::iconForFile(name));
 		}
@@ -983,8 +990,8 @@ void BackgroundContent::setVideoFile(const QString &name)
 				qDebug() << "BackgroundContent::setVideoFile(): Using Phonon";
 // 			if(m_proxy)
 // 				delete m_proxy;
-// 			if(m_player)
-// 				delete m_player;
+ 			if(m_player)
+ 				delete m_player;
 			if(m_tuplet)
 				delete m_tuplet;
 			
@@ -1002,7 +1009,7 @@ void BackgroundContent::setVideoFile(const QString &name)
 
 			
 			m_player = new Phonon::VideoPlayer(Phonon::VideoCategory, 0);
-			connect(m_player, SIGNAL(finished()), this, SLOT(phononPlayerFinished()));
+			connect(m_player, SIGNAL(aboutToFinish()), this, SLOT(phononPlayerFinished()));
 			
 			m_proxy->setWidget(m_player);
 			m_proxy->setGeometry(contentsRect());
@@ -1148,11 +1155,12 @@ void BackgroundContent::setPixmap(const QPixmap & pixmap)
 	update();
 	
 	if(sceneContextHint() != MyGraphicsScene::Live && 
+	   sceneContextHint() != MyGraphicsScene::Preview && 
 		modelItem()->fillType() == AbstractVisualItem::Video &&
 		m_imageSize.width() > 0)
 	{
 		if(DEBUG_BACKGROUNDCONTENT)
-			qDebug() << "BackgroundContent::setPixmap(): sceneContextHint() != Live, setting m_still true"; 
+			qDebug() << "BackgroundContent::setPixmap(): sceneContextHint() != Live/Preview, setting m_still true"; 
 		m_still = true;
 		if(m_videoProvider)
 			m_videoProvider->pause();

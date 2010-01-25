@@ -84,6 +84,7 @@ void ControlServer::dispatch(QTcpSocket *socket, const QStringList &path, const 
 		Http_Send_Response(socket,"HTTP/1.0 204 Gone!") << "";
 
 	}
+	else
 	if(pathStr.startsWith("toggle/"))
 	{
 		QStringList pathCopy = path;

@@ -12,7 +12,7 @@
 OutputViewer::OutputViewer(OutputInstance *inst, QWidget *parent)
 	    : QWidget(parent), m_inst(0)
 {
-	m_view = new OutputInstance(Output::previewInstance());
+	m_view = new OutputInstance(Output::viewerInstance());
 	m_view->setCanZoom(true);
 	m_view->setFadeSpeed(0);
 	m_view->setFadeQuality(0);

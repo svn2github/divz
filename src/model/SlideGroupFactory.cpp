@@ -969,7 +969,7 @@ QPixmap	SlideGroupFactory::generatePreviewPixmap(SlideGroup *group, QSize iconSi
 
 	
 	if(!m_scene)
-		m_scene = new MyGraphicsScene(MyGraphicsScene::Preview);
+		m_scene = new MyGraphicsScene(MyGraphicsScene::StaticPreview);
 	if(m_scene->sceneRect() != sceneRect)
 		m_scene->setSceneRect(sceneRect);
 	

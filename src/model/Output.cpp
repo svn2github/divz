@@ -7,6 +7,7 @@
 
 Output * Output::m_staticPreviewInstance = new Output(Output::Preview,"Output::Preview");
 Output * Output::m_staticWidgetInstance = new Output(Output::Widget,"Output::Widget");
+Output * Output::m_staticViewerInstance = new Output(Output::Viewer,"Output::Viewer");
 
 Output::Output(Output::OutputType type, const QString& name)
 {

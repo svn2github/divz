@@ -563,7 +563,7 @@ QPixmap SlideGroupListModel::generatePixmap(Slide *slide)
  	else
  	{
 		if(!m_scene)
-			m_scene = new MyGraphicsScene(MyGraphicsScene::Preview);
+			m_scene = new MyGraphicsScene(MyGraphicsScene::StaticPreview);
 		if(m_scene->sceneRect() != m_sceneRect)
 			m_scene->setSceneRect(m_sceneRect);
 		

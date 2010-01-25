@@ -191,7 +191,7 @@ void VideoFileContent::setFilename(const QString &name)
 // 		qDebug() << "VideoFileContent::setFilename(): ERROR: Unable to load video"<<name;
 // 		return;
 // 	}
-	if(sceneContextHint() == MyGraphicsScene::Preview)
+	if(sceneContextHint() == MyGraphicsScene::StaticPreview)
 	{
 		setPixmap(QVideoProvider::iconForFile(name));
 	}
@@ -341,7 +341,7 @@ void VideoFileContent::paint(QPainter * painter, const QStyleOptionGraphicsItem 
         	if(modelItem()->outlineEnabled())
         	{
 			QPen p = modelItem()->outlinePen();
-			if(sceneContextHint() == MyGraphicsScene::Preview)
+			if(sceneContextHint() == MyGraphicsScene::StaticPreview)
 			{
 				QTransform tx = painter->transform();
 				qreal scale = qMax(tx.m11(),tx.m22());
@@ -363,7 +363,7 @@ void VideoFileContent::paint(QPainter * painter, const QStyleOptionGraphicsItem 
 	{
 		QPen p = modelItem()->outlinePen();
 		p.setJoinStyle(Qt::MiterJoin);
-		if(sceneContextHint() == MyGraphicsScene::Preview)
+		if(sceneContextHint() == MyGraphicsScene::StaticPreview)
 		{
 			QTransform tx = painter->transform();
 			qreal scale = qMax(tx.m11(),tx.m22());
@@ -405,10 +405,12 @@ void VideoFileContent::setPixmap(const QPixmap & pixmap)
 
 	update();
 	
-	if(sceneContextHint() != MyGraphicsScene::Live && m_imageSize.width() > 0)
+	if(sceneContextHint() != MyGraphicsScene::Live && 
+	   sceneContextHint() != MyGraphicsScene::Preview && 
+	   m_imageSize.width() > 0)
 	{
 		if(DEBUG_VIDEOFILECONTENT)
-			qDebug() << "VideFileContent::setPixmap(): sceneContextHint() != Live, setting m_still true"; 
+			qDebug() << "VideFileContent::setPixmap(): sceneContextHint() != Live/Preview, setting m_still true"; 
 		m_still = true;
 		if(m_videoProvider)
 			m_videoProvider->pause();

@@ -83,7 +83,7 @@ void ImageContent::syncFromModelItem(AbstractVisualItem *model)
 
 void ImageContent::loadFile(const QString &file)
 {
-	if(sceneContextHint() == MyGraphicsScene::Preview)
+	if(sceneContextHint() == MyGraphicsScene::StaticPreview)
 	{
 		setPixmap(MediaBrowser::iconForImage(file,MEDIABROWSER_LIST_ICON_SIZE));
 		m_fileLoaded = true;
@@ -340,7 +340,7 @@ void ImageContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * op
 				QImage  blurredImage   = ImageFilters::blurred(orignalImage, rect, (int)radius);
 				cache = QPixmap::fromImage(blurredImage);
 				
-				if(sceneContextHint() != MyGraphicsScene::Preview)
+				if(sceneContextHint() != MyGraphicsScene::StaticPreview)
 					QPixmapCache::insert(cacheKey(), cache);
 			}
 			
@@ -479,7 +479,7 @@ void ImageContent::drawForeground(QPainter *painter, bool screenTranslation)
 					tmpPainter.drawPixmap(destRect, m_pixmap);
 				
 				tmpPainter.end();
-				if(sceneContextHint() != MyGraphicsScene::Preview)
+				if(sceneContextHint() != MyGraphicsScene::StaticPreview)
 					if(!QPixmapCache::insert(foregroundKey, cache))
 						qDebug() << "ImageContent::drawForeground:"<<modelItem()->itemName()<<": Can't cache the image. This will slow performance of cross fades and slide editor. Make the cache larger using the Program Settings menu.";
 			}

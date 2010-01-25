@@ -69,6 +69,23 @@ OutputInstance::OutputInstance(Output *out, bool startHidden, QWidget *parent)
 	connect(m_viewer, SIGNAL(nextGroup()), this, SLOT(slotNextGroup()));
 	connect(m_viewer, SIGNAL(jumpToGroup(int)), this, SLOT(slotJumpToGroup(int)));
 	
+	if(out->outputType() == Output::Preview)
+	{
+		// ::Preview is generally used for the preview widget under the slide group list or for the media browser preview widget
+		m_viewer->setSceneContextHint(MyGraphicsScene::Preview);
+	}
+	else
+	if(out->outputType() == Output::Viewer)
+	{
+		// Output::Viewer's are the dock widgets on the right that show what the live output should be showing for that widget
+		m_viewer->setSceneContextHint(MyGraphicsScene::Monitor);
+	}
+	else
+	{
+		// ::Live is, well, live...
+		m_viewer->setSceneContextHint(MyGraphicsScene::Live);
+	}
+	
 	layout->addWidget(m_viewer);
 	
 	m_grabTimer = new QTimer();
@@ -676,7 +693,8 @@ void OutputInstance::setAutoResizeTextEnabled(bool enable)
 void OutputInstance::setFadeSpeed(int value)
 {
 	foreach(OutputInstance *m, m_mirrors)
-		m->setFadeSpeed(m->output() == Output::previewInstance() ? 0 : value);
+		m->setFadeSpeed(m->output() == Output::previewInstance() ||
+		                m->output() == Output::viewerInstance()   ? 0 : value);
 	
 	m_fadeSpeed = value;
 	if(!m_output->isEnabled())
@@ -696,7 +714,8 @@ void OutputInstance::setFadeSpeed(int value)
 void OutputInstance::setFadeQuality(int value)
 {
 	foreach(OutputInstance *m, m_mirrors)
-		m->setFadeQuality(m->output() == Output::previewInstance() ? 0 : value);
+		m->setFadeQuality(m->output() == Output::previewInstance() ||
+		                  m->output() == Output::viewerInstance()   ? 0 : value);
 	
 	m_fadeQuality = value;
 	if(!m_output->isEnabled())
@@ -927,7 +946,7 @@ void OutputInstance::setLiveBackground(const QFileInfo &info, bool waitForNextSl
 bool OutputInstance::isLocal()
 {
 	Output::OutputType outType = m_output->outputType();
-	return (outType == Output::Screen || outType == Output::Custom || outType == Output::Preview || outType == Output::Widget);
+	return (outType == Output::Screen || outType == Output::Custom || outType == Output::Preview || outType == Output::Widget || outType == Output::Viewer);
 }
 
 QList<QWidget*> OutputInstance::controlWidgets()

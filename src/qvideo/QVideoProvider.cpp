@@ -7,7 +7,7 @@
 #include "3rdparty/md5/md5.h"
 
 #define DEBUG_QVIDEOPROVIDER 0
-#define DEBUG_QVIDEOPROVIDER_PLAY 0
+#define DEBUG_QVIDEOPROVIDER_PLAY 1
 
 #include <QMutex>
 #include <QMutexLocker>
