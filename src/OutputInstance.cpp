@@ -906,8 +906,8 @@ void OutputInstance::fadeBlackFrame(bool enable)
 
 void OutputInstance::setLiveBackground(const QFileInfo &info, bool waitForNextSlide)
 {
-	foreach(OutputInstance *m, m_mirrors)
-		m->setLiveBackground(info,waitForNextSlide);
+// 	foreach(OutputInstance *m, m_mirrors)
+// 		m->setLiveBackground(info,waitForNextSlide);
 		
 	if(!m_output->isEnabled())
 		return;

@@ -962,7 +962,7 @@ bool SlideGroupViewer::reapplySpecialFrames()
 
 void SlideGroupViewer::crossFadeFinished(Slide *oldSlide,Slide*/*newSlide*/)
 {
-// 	qDebug() << "SlideGroupViewer::crossFadeFinished: mark"; 
+//  	qDebug() << "SlideGroupViewer::crossFadeFinished: mark"; 
 // 	if(m_bgWaitingForNextSlide)
 // 	{
 // 		qDebug() << "SlideGroupViewer::crossFadeFinished: set m_bgWaitingForNextSlide to false";
@@ -973,10 +973,10 @@ void SlideGroupViewer::crossFadeFinished(Slide *oldSlide,Slide*/*newSlide*/)
 
 void SlideGroupViewer::slideDiscarded(Slide *oldSlide)
 {
-//  	qDebug() << "SlideGroupViewer::slideDiscarded: mark";
+// 	qDebug() << "SlideGroupViewer::slideDiscarded: mark";
 	if(m_bgWaitingForNextSlide)
 	{
-// 		qDebug() << "SlideGroupViewer::slideDiscarded: set m_bgWaitingForNextSlide to false";
+ 		qDebug() << "SlideGroupViewer::slideDiscarded: set m_bgWaitingForNextSlide to false";
 		m_bgWaitingForNextSlide = false;
 		applyBackground(m_nextBg);
 	}
