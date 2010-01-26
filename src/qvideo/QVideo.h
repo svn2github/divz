@@ -61,6 +61,7 @@ public:
 	int duration()								{ return m_duration * 1000; } //in milliseconds
 	int fps()								{ return m_frame_rate; }
 	bool loaded()								{ return m_video_loaded; }
+	double videoClock();
 	
 	bool readyToPlay()							{ return m_ready_to_play; }
 	void setLooped(bool looped)						{ m_looped = looped; }
@@ -81,7 +82,7 @@ public:
 
 public slots:
 	void play();
-	void seek(int ms);
+	void seek(int ms, int flags=0);
 	void pause();
 	void stop();
 

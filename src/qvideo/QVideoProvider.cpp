@@ -362,9 +362,21 @@ void QVideoProvider::pause()
 	}
 	
 }
-void QVideoProvider::seekTo(int ms)
+void QVideoProvider::seekTo(int ms, int flags)
 {
-	m_video->seek(ms);
+	if(!m_video)
+		return;
+	m_video->seek(ms,flags);
+}
+
+double QVideoProvider::videoClock()
+{
+	return m_video ? m_video->videoClock() : 0;
+}
+
+int QVideoProvider::duration()
+{	
+	return m_video ? m_video->duration() : 0;
 }
 
 bool QVideoProvider::stopAllowed()

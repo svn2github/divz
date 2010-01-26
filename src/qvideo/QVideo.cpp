@@ -112,6 +112,11 @@ bool QVideo::load(const QString & filename)
 	return flag;
 }
 
+double QVideo::videoClock()
+{
+	return m_video_decoder ? m_video_decoder->videoClock() : 0;
+}
+
 void QVideo::unload()
 {
 	if(m_video_decoder)
@@ -191,10 +196,10 @@ void QVideo::play()
 	emit movieStateChanged(QMovie::Running);
 }
 
-void QVideo::seek(int ms)
+void QVideo::seek(int ms, int flags)
 {
 	if(m_video_decoder)
-		m_video_decoder->seek(ms);
+		m_video_decoder->seek(ms, flags);
 }
 
 void QVideo::pause()

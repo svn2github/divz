@@ -136,6 +136,9 @@ public:
 	
 	bool isStreamStarted() { return m_streamStarted; }
 	
+	int duration();
+	double videoClock();
+	
 signals:
 	void streamStarted();
 	void streamStopped();	
@@ -144,7 +147,7 @@ public slots:
 	void stop();
 	void play();
 	void pause();
-	void seekTo(int ms);
+	void seekTo(int ms, int flags=0);
 	
 private slots:
 	void newPixmap(const QPixmap & pixmap);

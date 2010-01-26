@@ -13,7 +13,7 @@ namespace Phonon {
 #include "qvideo/QVideoProvider.h"
 
 #include <QTimer>
-
+#include <QSlider>
 #include <QAction>
 #include <QLCDNumber>
 	
@@ -105,6 +105,9 @@ class BackgroundContent : public AbstractContent, public QVideoConsumer
 	void phononTick(qint64 time);
 #endif
 
+	void pollVideoClock();
+	void seek(int);
+
     private:
 	void setVideoFile(const QString &name);
 	void setImageFile(const QString&);
@@ -143,6 +146,11 @@ class BackgroundContent : public AbstractContent, public QVideoConsumer
 	bool m_videoPlaying;
 	
 	bool m_inDestructor;
+	
+	QWidget * m_controlBase;
+	QSlider * m_slider;
+	QTimer m_videoPollTimer;
+	bool m_lockSeekValueChanging;
 	
 #ifdef PHONON_ENABLED
 	QGraphicsProxyWidget *m_proxy;

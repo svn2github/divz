@@ -37,6 +37,8 @@ public:
 
 	void seek(int ms, int flags = 0);
 	void restart();
+	
+	double videoClock() { return m_video_clock * 1000; }
 
 	QFFMpegVideoFrame seekToFrame(int ms);
 

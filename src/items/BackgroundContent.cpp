@@ -50,6 +50,9 @@ BackgroundContent::BackgroundContent(QGraphicsScene * scene, QGraphicsItem * par
     , m_zoomEnabled(false)
     , m_videoPlaying(false)
     , m_inDestructor(false)
+    , m_controlBase(0)
+    , m_slider(0)
+    , m_lockSeekValueChanging(false)
 #ifdef PHONON_ENABLED
     , m_proxy(0)
     , m_player(0)
@@ -98,6 +101,8 @@ BackgroundContent::BackgroundContent(QGraphicsScene * scene, QGraphicsItem * par
 BackgroundContent::~BackgroundContent()
 {
 	
+// 	qDebug() << "BackgroundContent::~BackgroundContent(): hit "<<this;
+	
 	m_inDestructor = true;
 			
 	if(m_videoProvider)
@@ -106,6 +111,18 @@ BackgroundContent::~BackgroundContent()
  			m_videoProvider->pause();
 		m_videoProvider->disconnectReceiver(this);
 		QVideoProvider::releaseProvider(m_videoProvider);
+	}
+	
+	if(m_controlBase)
+	{
+// 		m_controlBase->deleteLater();
+ 		m_controlBase = 0;
+// 	
+	}	
+	if(m_slider)
+	{
+// 		m_slider->deleteLater();
+ 		m_slider = 0;
 	}
 	
 #ifdef PHONON_ENABLED
@@ -132,11 +149,18 @@ void BackgroundContent::dispose(bool anim)
 {
 	m_inDestructor = true;
 	
+	if(m_videoPollTimer.isActive())
+	{
+		m_videoPollTimer.stop();
+	}
+	
 	if(m_videoProvider) // && m_videoProvider->isPlaying())
 	{
 		m_videoPlaying = false;
  		m_videoProvider->pause();
  	}
+ 	
+//  	qDebug() << "BackgroundContent::dispose(): hit "<<this;
 	
 	AbstractContent::dispose(anim);
 }
@@ -1296,77 +1320,151 @@ void BackgroundContent::phononTick(qint64 time)
 }
 #endif
 
+void BackgroundContent::pollVideoClock()
+{
+	if(!m_slider)
+		return;
+		
+	if(m_inDestructor)
+		return;
+		
+	if(m_lockSeekValueChanging)
+		return;
+		
+	m_lockSeekValueChanging = true;
+	
+// 	qDebug() << "BackgroundContent::pollVideoClock(): hit "<<this<<", controlBase: "<<m_controlBase;
+	
+	if(m_slider &&
+	   m_videoProvider &&
+	   m_videoPlaying &&
+	   modelItem()->fillVideoFile() != "" &&
+	   modelItem()->fillType() == AbstractVisualItem::Video)
+	{
+// 		if(m_slider->maximum() != m_videoProvider->duration())
+// 			m_slider->setMaximum(m_videoProvider->duration());
+// 		m_slider->setValue(m_videoProvider->videoClock());
+// 		qDebug() << "BackgroundContent::pollVideoClock(): Clock at "<<m_videoProvider->videoClock()<<" / "<<m_videoProvider->duration();
+	}
+	
+	m_lockSeekValueChanging = false;
+}	
+
+void BackgroundContent::seek(int x)
+{
+	if(m_lockSeekValueChanging)
+		return;
+		
+	int delta = x; // - m_videoProvider->videoClock();
+	m_videoProvider->seekTo(abs(delta), delta < 0 ? AVSEEK_FLAG_BACKWARD : 0);
+// 	qDebug() << "BackgroundContent::seek(): x:"<<x<<", delta:"<<delta<<", AVSEEK_FLAG_BACKWARD:"<<AVSEEK_FLAG_BACKWARD;
+}
+
 QWidget * BackgroundContent::controlWidget()
 {
-#ifdef PHONON_ENABLED
-	if(!m_player)
-		return 0;
+ 	return 0;
+	
+	if(modelItem()->fillVideoFile() != "" &&
+	   modelItem()->fillType() == AbstractVisualItem::Video)
+	{
+// 		if(m_controlBase)
+// 			return m_controlBase;
+			
+		if(!m_videoProvider)
+			return 0;
 		
-	mediaObject = m_player->mediaObject();
-
-	mediaObject->setTickInterval(1000);
-
-	connect(mediaObject, SIGNAL(tick(qint64)), this, SLOT(phononTick(qint64)));
-	connect(mediaObject, SIGNAL(stateChanged(Phonon::State, Phonon::State)), this, SLOT(phononStateChanged(Phonon::State, Phonon::State)));
+		m_controlBase = new QWidget();
+		
+		m_slider = new QSlider();
+		m_slider->setOrientation(Qt::Horizontal);
+		m_slider->setMaximum(m_videoProvider->duration());
+		//connect(m_slider, SIGNAL(valueChanged(int)), m_videoProvider, SLOT(seekTo(int)));
+		connect(m_slider, SIGNAL(valueChanged(int)), this, SLOT(seek(int)));
+		
+		m_videoPollTimer.setInterval(250);
+		connect(&m_videoPollTimer, SIGNAL(timeout()), this, SLOT(pollVideoClock()), Qt::QueuedConnection);
+		m_videoPollTimer.start();
+		
+		QHBoxLayout *layout = new QHBoxLayout(m_controlBase);
+		layout->setMargin(0);
+		
+		layout->addWidget(m_slider);
+		
+		return m_controlBase;
+		
+	}
+	else
+	{
+#ifdef PHONON_ENABLED
+		if(!m_player)
+			return 0;
+			
+		mediaObject = m_player->mediaObject();
 	
-	QWidget * baseWidget = new QWidget;
-
-	playAction = new QAction(qApp->style()->standardIcon(QStyle::SP_MediaPlay), tr("Play"), baseWidget);
-	playAction->setShortcut(tr("Crl+P"));
-	playAction->setDisabled(true);
-	pauseAction = new QAction(qApp->style()->standardIcon(QStyle::SP_MediaPause), tr("Pause"), baseWidget);
-	pauseAction->setShortcut(tr("Ctrl+A"));
-	pauseAction->setDisabled(true);
-	stopAction = new QAction(qApp->style()->standardIcon(QStyle::SP_MediaStop), tr("Stop"), baseWidget);
-	stopAction->setShortcut(tr("Ctrl+S"));
-	stopAction->setDisabled(true);
-    
-    
-	connect(playAction, SIGNAL(triggered()), mediaObject, SLOT(play()));
-	connect(pauseAction, SIGNAL(triggered()), mediaObject, SLOT(pause()) );
-	connect(stopAction, SIGNAL(triggered()), mediaObject, SLOT(stop()));
+		mediaObject->setTickInterval(1000);
 	
-	QToolBar *bar = new QToolBar(baseWidget);
-
-	bar->addAction(playAction);
-	bar->addAction(pauseAction);
-	bar->addAction(stopAction);
+		connect(mediaObject, SIGNAL(tick(qint64)), this, SLOT(phononTick(qint64)));
+		connect(mediaObject, SIGNAL(stateChanged(Phonon::State, Phonon::State)), this, SLOT(phononStateChanged(Phonon::State, Phonon::State)));
+		
+		QWidget * baseWidget = new QWidget;
 	
-	seekSlider = new Phonon::SeekSlider(baseWidget);
-	seekSlider->setMediaObject(mediaObject);
+		playAction = new QAction(qApp->style()->standardIcon(QStyle::SP_MediaPlay), tr("Play"), baseWidget);
+		playAction->setShortcut(tr("Crl+P"));
+		playAction->setDisabled(true);
+		pauseAction = new QAction(qApp->style()->standardIcon(QStyle::SP_MediaPause), tr("Pause"), baseWidget);
+		pauseAction->setShortcut(tr("Ctrl+A"));
+		pauseAction->setDisabled(true);
+		stopAction = new QAction(qApp->style()->standardIcon(QStyle::SP_MediaStop), tr("Stop"), baseWidget);
+		stopAction->setShortcut(tr("Ctrl+S"));
+		stopAction->setDisabled(true);
 	
-	volumeSlider = new Phonon::VolumeSlider(baseWidget);
-	volumeSlider->setAudioOutput(m_player->audioOutput());
 	
-	volumeSlider->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
+		connect(playAction, SIGNAL(triggered()), mediaObject, SLOT(play()));
+		connect(pauseAction, SIGNAL(triggered()), mediaObject, SLOT(pause()) );
+		connect(stopAction, SIGNAL(triggered()), mediaObject, SLOT(stop()));
+		
+		QToolBar *bar = new QToolBar(baseWidget);
 	
-	QLabel *volumeLabel = new QLabel(baseWidget);
-	volumeLabel->setPixmap(QPixmap(":/data/stock-volume.png"));
+		bar->addAction(playAction);
+		bar->addAction(pauseAction);
+		bar->addAction(stopAction);
+		
+		seekSlider = new Phonon::SeekSlider(baseWidget);
+		seekSlider->setMediaObject(mediaObject);
+		
+		volumeSlider = new Phonon::VolumeSlider(baseWidget);
+		volumeSlider->setAudioOutput(m_player->audioOutput());
+		
+		volumeSlider->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
+		
+		QLabel *volumeLabel = new QLabel(baseWidget);
+		volumeLabel->setPixmap(QPixmap(":/data/stock-volume.png"));
+		
+		QPalette palette;
+		palette.setBrush(QPalette::Light, Qt::darkGray);
+		
+		timeLcd = new QLCDNumber(baseWidget);
+		timeLcd->setPalette(palette);
+		
+		QHBoxLayout *playbackLayout = new QHBoxLayout(baseWidget);
+		playbackLayout->setMargin(0);
+		
+		playbackLayout->addWidget(bar);
+	// 	playbackLayout->addStretch();
+		playbackLayout->addWidget(seekSlider);
+		playbackLayout->addWidget(timeLcd);
 	
-	QPalette palette;
-	palette.setBrush(QPalette::Light, Qt::darkGray);
-	
-	timeLcd = new QLCDNumber(baseWidget);
-	timeLcd->setPalette(palette);
-	
-	QHBoxLayout *playbackLayout = new QHBoxLayout(baseWidget);
-	playbackLayout->setMargin(0);
-	
-	playbackLayout->addWidget(bar);
-// 	playbackLayout->addStretch();
-	playbackLayout->addWidget(seekSlider);
- 	playbackLayout->addWidget(timeLcd);
-
-	playbackLayout->addWidget(volumeLabel);
-	playbackLayout->addWidget(volumeSlider);
-	
-	timeLcd->display("00:00"); 
-	
-	qDebug() << "BackgroundContent::controlWidget(): baseWidget:"<<baseWidget;
-	
-	return baseWidget;
+		playbackLayout->addWidget(volumeLabel);
+		playbackLayout->addWidget(volumeSlider);
+		
+		timeLcd->display("00:00"); 
+		
+		qDebug() << "BackgroundContent::controlWidget(): baseWidget:"<<baseWidget;
+		
+		return baseWidget;
 #else
-	return 0;
+		return 0;
 #endif
+	}
 }
 

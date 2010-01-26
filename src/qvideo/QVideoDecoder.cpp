@@ -53,7 +53,8 @@ QVideoDecoder::QVideoDecoder(QVideo * video, QObject * parent) : QThread(parent)
 	m_start_timestamp(0),
 	m_initial_decode(true),
 	m_previous_pts(0.0),
-	m_killed(false)
+	m_killed(false),
+	m_video_clock(0)
 {
 	m_video = video;
 
@@ -79,7 +80,6 @@ QVideoDecoder::~QVideoDecoder()
 	if(m_video->m_video_loaded)
 	{
 		freeResources();
-
 	}
 
 	if(m_sws_context != NULL)
