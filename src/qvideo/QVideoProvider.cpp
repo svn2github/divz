@@ -7,7 +7,7 @@
 #include "3rdparty/md5/md5.h"
 
 #define DEBUG_QVIDEOPROVIDER 0
-#define DEBUG_QVIDEOPROVIDER_PLAY 1
+#define DEBUG_QVIDEOPROVIDER_PLAY 0
 
 #include <QMutex>
 #include <QMutexLocker>
@@ -316,18 +316,22 @@ void QVideoProvider::disconnectReceiver(QObject * receiver)
 	
 void QVideoProvider::stop()
 {
-// 	if(m_playCount>0)
-// 		m_playCount --;
-// 	if(m_playCount <= 0)
-	if(stopAllowed())
+	if(m_playCount>0)
+		m_playCount --;
+	if(DEBUG_QVIDEOPROVIDER || DEBUG_QVIDEOPROVIDER_PLAY)
+		qDebug() << "[PLAY -] "<<this<<" QVideoProvider::stop(): "<<m_canonicalFilePath<<" m_playCount:"<<m_playCount;
+	if(m_playCount <= 0)
+// 	if(stopAllowed())
 	{
+		if(DEBUG_QVIDEOPROVIDER || DEBUG_QVIDEOPROVIDER_PLAY)
+			qDebug() << "[PLAY -] "<<this<<" QVideoProvider::stop(): "<<m_canonicalFilePath<<" m_video->stop() hit";
+			
+		m_video->stop();
+		
 		m_streamStarted = false;
 		emit streamStopped();
-		m_video->stop();
 	}
 	
-	if(DEBUG_QVIDEOPROVIDER || DEBUG_QVIDEOPROVIDER_PLAY)
-		qDebug() << "[PLAY -] QVideoProvider::stop(): "<<m_canonicalFilePath<<" m_playCount:"<<m_playCount;
 }
 
 void QVideoProvider::play()
@@ -335,21 +339,21 @@ void QVideoProvider::play()
 	m_video->play();
 	m_playCount ++;
 	if(DEBUG_QVIDEOPROVIDER || DEBUG_QVIDEOPROVIDER_PLAY)
-		qDebug() << "[PLAY +] QVideoProvider::play(): "<<m_canonicalFilePath<<" m_playCount:"<<m_playCount;
+		qDebug() << "[PLAY +] "<<this<<" QVideoProvider::play(): "<<m_canonicalFilePath<<" m_playCount:"<<m_playCount;
 	m_playCount = m_playCount;
 }
 void QVideoProvider::pause()
 {
-	// dont pause unless all players are paused
-// 	if(m_playCount>0)
-// 		m_playCount --;
-/*	if(DEBUG_QVIDEOPROVIDER || DEBUG_QVIDEOPROVIDER_PLAY)
-		qDebug() << "[PLAY -] QVideoProvider::pause(): "<<m_canonicalFilePath<<" m_playCount:"<<m_playCount;*/
-// 	if(m_playCount <= 0)
-	if(stopAllowed())
+//	dont pause unless all players are paused
+	if(m_playCount>0)
+		m_playCount --;
+	if(DEBUG_QVIDEOPROVIDER || DEBUG_QVIDEOPROVIDER_PLAY)
+		qDebug() << "[PLAY -] "<<this<<" QVideoProvider::pause(): "<<m_canonicalFilePath<<" m_playCount:"<<m_playCount;
+	if(m_playCount <= 0)
+//	if(stopAllowed())
 	{
 		if(DEBUG_QVIDEOPROVIDER || DEBUG_QVIDEOPROVIDER_PLAY)
-			qDebug() << "QVideoProvider::pause(): "<<m_canonicalFilePath<<" m_video->pause() hit";
+			qDebug() << "[PLAY -] "<<this<<" QVideoProvider::pause(): "<<m_canonicalFilePath<<" m_video->pause() hit";
 		
 		m_video->pause();
 		

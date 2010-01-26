@@ -134,6 +134,8 @@ public:
 	
 	QString canonicalFilePath() { return m_canonicalFilePath; }
 	
+	bool isStreamStarted() { return m_streamStarted; }
+	
 signals:
 	void streamStarted();
 	void streamStopped();	

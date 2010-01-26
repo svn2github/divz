@@ -48,6 +48,7 @@ BackgroundContent::BackgroundContent(QGraphicsScene * scene, QGraphicsItem * par
     , m_lastForegroundKey("")
     , m_zoomInit(false)
     , m_zoomEnabled(false)
+    , m_videoPlaying(false)
     , m_inDestructor(false)
 #ifdef PHONON_ENABLED
     , m_proxy(0)
@@ -101,8 +102,8 @@ BackgroundContent::~BackgroundContent()
 			
 	if(m_videoProvider)
 	{
-// 		if(!m_still || m_videoProvider->isPlaying())
-// 			m_videoProvider->pause();
+ 		if(m_videoPlaying)
+ 			m_videoProvider->pause();
 		m_videoProvider->disconnectReceiver(this);
 		QVideoProvider::releaseProvider(m_videoProvider);
 	}
@@ -132,7 +133,10 @@ void BackgroundContent::dispose(bool anim)
 	m_inDestructor = true;
 	
 	if(m_videoProvider) // && m_videoProvider->isPlaying())
+	{
+		m_videoPlaying = false;
  		m_videoProvider->pause();
+ 	}
 	
 	AbstractContent::dispose(anim);
 }
@@ -140,9 +144,10 @@ void BackgroundContent::dispose(bool anim)
 // ::QGraphicsItem
 void BackgroundContent::show()
 {
-	if(m_videoProvider) // && m_videoProvider->isPlaying())
+	if(m_videoProvider && !m_videoPlaying) // && m_videoProvider->isPlaying())
 	{
 		//qDebug() << "BackgroundContent::show: Playing video";
+		m_videoPlaying = true;
 		m_videoProvider->play();
  	}
  	else
@@ -191,7 +196,7 @@ void BackgroundContent::syncFromModelItem(AbstractVisualItem *model)
 	}
 	
 	
-	if(model->fillVideoFile()!="" &&
+	if(model->fillVideoFile() != "" &&
 		model->fillType() == AbstractVisualItem::Video)
 		setVideoFile(AppSettings::applyResourcePathTranslations(model->fillVideoFile()));
 		
@@ -347,8 +352,11 @@ void BackgroundContent::setImageFile(const QString &file)
 	{
 		// TODO We ASSUME were playing the video before we got the image
 		//m_videoProvider->pause();
-// 		if(!m_still || m_videoProvider->isPlaying())
-// 			m_videoProvider->pause();
+ 		if(m_videoPlaying)
+ 		{
+ 			m_videoPlaying = false;
+ 			m_videoProvider->pause();
+ 		}
 			
 		m_videoProvider->disconnectReceiver(this);
 		QVideoProvider::releaseProvider(m_videoProvider);
@@ -1061,8 +1069,8 @@ void BackgroundContent::setVideoFile(const QString &name)
 			m_player = new Phonon::VideoPlayer(Phonon::VideoCategory, 0);
 // 			connect(m_player->mediaObject(), SIGNAL(aboutToFinish()), this, SLOT(phononMediaAboutToFinish()));
 			connect(m_player, SIGNAL(finished()), this, SLOT(phononPlayerFinished()));
-			m_player->mediaObject()->setPrefinishMark(30);
-			connect(m_player->mediaObject(), SIGNAL(prefinishMarkReached(qint32)), this, SLOT(phononPrefinishMarkReached(qint32)));
+// 			m_player->mediaObject()->setPrefinishMark(30);
+// 			connect(m_player->mediaObject(), SIGNAL(prefinishMarkReached(qint32)), this, SLOT(phononPrefinishMarkReached(qint32)));
 			
 			m_proxy->setWidget(m_player);
 			m_proxy->setGeometry(contentsRect());
@@ -1088,12 +1096,15 @@ void BackgroundContent::setVideoFile(const QString &name)
 				else
 				if(m_videoProvider)
 				{
+					// Copy the pointer and set m_vid.. to 0 for use in allowMediaStop(), etc.
 					QVideoProvider * tmp = m_videoProvider;
 					m_videoProvider = 0;
-					if(isVisible())
+					
+					if(m_videoPlaying)
 	 					//if(!m_still || m_videoProvider->isPlaying())
 	 				{
 	 					//qDebug() << "BackgroundContent::setVideoFile: Visible, pausing video";
+	 					m_videoPlaying = false;
  						tmp->pause();
  					}
 						
@@ -1108,9 +1119,10 @@ void BackgroundContent::setVideoFile(const QString &name)
 				
 				//qDebug() << "BackgroundContent::setVideoFile: Playing video "<<name;
 				
-				if(isVisible())
+				if(!m_videoPlaying)
 				{
 					//qDebug() << "BackgroundContent::setVideoFile: Visible, Playing video "<<name;
+					m_videoPlaying = true;
 					m_videoProvider->play();
 				}
 				else
@@ -1219,8 +1231,12 @@ void BackgroundContent::setPixmap(const QPixmap & pixmap)
 		if(DEBUG_BACKGROUNDCONTENT)
 			qDebug() << "BackgroundContent::setPixmap(): sceneContextHint() != Live/Preview, setting m_still true"; 
 		m_still = true;
-		if(m_videoProvider)
+// 		qDebug() << "BackgroundContent::setPixmap(): m_videoPlaying:"<<m_videoPlaying<<", provider:"<<m_videoProvider; 
+		if(m_videoProvider && m_videoPlaying)
+		{
+			m_videoPlaying = false;
 			m_videoProvider->pause();
+		}
 	}
         //GFX_CHANGED();
 }

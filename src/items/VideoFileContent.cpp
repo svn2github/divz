@@ -19,7 +19,7 @@
 #include <QDebug>
 
 #define DEBUG_VIDEOFILECONTENT 0
-
+  
 VideoFileContent::VideoFileContent(QGraphicsScene * scene, QGraphicsItem * parent)
     : AbstractContent(scene, parent, false)
     , m_videoProvider(0)

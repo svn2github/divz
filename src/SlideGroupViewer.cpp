@@ -1323,6 +1323,10 @@ void SlideGroupViewer::initVideoProviders()
 	if(!m_slideGroup)
 		return;
 
+	if(scene()->contextHint() != MyGraphicsScene::Live && 
+	   scene()->contextHint() != MyGraphicsScene::Preview)
+	   return;
+		
 	QList<Slide*> slist = m_slideGroup->slideList();
 	foreach(Slide *slide, slist)
 	{
@@ -1332,12 +1336,14 @@ void SlideGroupViewer::initVideoProviders()
 			if (AbstractVisualItem * visualItem = dynamic_cast<AbstractVisualItem *>(item))
 			{
 				QString videoFile = visualItem->fillVideoFile();
-				if(!videoFile.isEmpty())
+				if(visualItem->fillType() == AbstractVisualItem::Video &&
+				  !videoFile.isEmpty())
 				{
 					QVideoProvider * p = QVideoProvider::providerForFile(videoFile);
 					if(p)
 					{
-						if(m_videoProvidersOpened[p->canonicalFilePath()])
+						if(m_videoProvidersOpened[p->canonicalFilePath()] ||
+						   p->isStreamStarted())
 						{
 							QVideoProvider::releaseProvider(p);
 						}
@@ -1347,11 +1353,11 @@ void SlideGroupViewer::initVideoProviders()
 							m_videoProvidersConsumed[p->canonicalFilePath()] = false;
 	
 							connect(p, SIGNAL(streamStarted()), this, SLOT(videoStreamStarted()));
+							//qDebug() << "SlideGroupViewer::initVideoProviders: Playing video stream";
+							p->play();
 	
 							m_videoProviders << p;
 	
-							//qDebug() << "SlideGroupViewer::initVideoProviders: Playing video stream";
-							p->play();
 						}
 					}
 				}
@@ -1362,8 +1368,13 @@ void SlideGroupViewer::initVideoProviders()
 
 void SlideGroupViewer::releaseVideoProvders()
 {
+	if(scene()->contextHint() != MyGraphicsScene::Live && 
+	   scene()->contextHint() != MyGraphicsScene::Preview)
+	   return;
+	
 	foreach(QVideoProvider *p, m_videoProviders)
 	{
+// 		p->pause();
 		p->disconnectReceiver(this);
 		QVideoProvider::releaseProvider(p);
 	}

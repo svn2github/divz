@@ -140,6 +140,8 @@ class BackgroundContent : public AbstractContent, public QVideoConsumer
 	QPixmap m_zoomedPixmap;
 	QPointF m_zoomedPixmapSize;
 	
+	bool m_videoPlaying;
+	
 	bool m_inDestructor;
 	
 #ifdef PHONON_ENABLED
