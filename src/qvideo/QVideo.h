@@ -133,7 +133,8 @@ private:
 
 	int m_play_timer;
 
-	QTime m_play_time;
+	QTime m_run_time;
+	int m_total_runtime;
 
 	QFFMpegVideoFrame m_current_frame;
 

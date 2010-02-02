@@ -24,6 +24,7 @@ QVideo::QVideo(const QString & filename, QObject * parent) : QObject(parent),
 	m_ready_to_play(false),
 	m_advance_mode(QVideo::RealTime),
 	m_play_timer(0),
+	m_total_runtime(0),
 	m_video_loaded(false),
 	m_status(Paused),
 	m_skipFrameCount(0)
@@ -58,6 +59,8 @@ QVideo::QVideo(QObject *parent) : QObject(parent),
 	m_ready_to_play(false),
 	m_advance_mode(QVideo::RealTime),
 	m_play_timer(0),
+	m_total_runtime(0),
+	m_frameTimer(0),
 	m_video_loaded(false),
 	m_status(Paused)
 {
@@ -73,8 +76,8 @@ QVideo::QVideo(QObject *parent) : QObject(parent),
         connect(m_video_decoder, SIGNAL(ready(bool)), this, SLOT(setReady(bool)));
         
 
-        //connect(&m_nextImageTimer, SIGNAL(timeout()), this, SLOT(displayFrame()));
-        //m_nextImageTimer.setSingleShot(true);
+        connect(&m_nextImageTimer, SIGNAL(timeout()), this, SLOT(displayFrame()));
+        m_nextImageTimer.setSingleShot(true);
 
 
 	setAdvanceMode(QVideo::RealTime);
@@ -182,15 +185,17 @@ void QVideo::setOutputSize(QSize size)
 void QVideo::play()
 {
 	m_status = Running;
-	if(!m_play_timer)
-	{
-		m_play_time.start();
-		//m_play_timer = startTimer(1);
+	
+	if(m_play_timer)
+ 	{
+ 		m_total_runtime += m_run_time.restart();
+		killTimer(m_play_timer);
 	}
 	else
 	{
-		killTimer(m_play_timer);
+		m_run_time.start();
 	}
+	
 	m_play_timer = startTimer(1);
 	//m_video_decoder->decode(); // start decoding again
 	emit movieStateChanged(QMovie::Running);
@@ -198,6 +203,9 @@ void QVideo::play()
 
 void QVideo::seek(int ms, int flags)
 {
+	m_total_runtime = ms;
+	m_run_time.start();
+	
 	if(m_video_decoder)
 		m_video_decoder->seek(ms, flags);
 }
@@ -205,6 +213,9 @@ void QVideo::seek(int ms, int flags)
 void QVideo::pause()
 {
 	m_status = Paused;
+	m_total_runtime += m_run_time.elapsed();
+	//qDebug() << "QVideo::pause(): m_total_runtime:"<<m_total_runtime;
+	
 	//emit startDecode();
 	killTimer(m_play_timer);
 	m_play_timer = 0;
@@ -216,8 +227,9 @@ void QVideo::stop()
 	m_status = NotRunning;
 	killTimer(m_play_timer);
 	m_play_timer = 0;
-
-// 	m_screen->clear();
+	
+	// Since there is no stop() or pause(), we dont need to touch m_run_time right now - it will be reset in play()
+	m_total_runtime = 0;
 
 	if(m_video_decoder && m_video_loaded)
 	{
@@ -325,22 +337,23 @@ void QVideo::consumeFrame()
 		
 
 		//calculate the global delay
-		//int global_delay = (m_current_frame.pts * 1000) - m_play_time.elapsed();
-		//m_play_time.elapsed() / 1000; //
+		//int global_delay = (m_current_frame.pts * 1000) - m_run_time.elapsed();
+		//m_run_time.elapsed() / 1000; //
 		//double curTime = (double)(av_gettime() / 1000000.0);
-		double curTime = ((double)m_play_time.elapsed()) / 1000.0;
+		double curTime = ((double)m_run_time.elapsed() + m_total_runtime) / 1000.0;
 		m_frameTimer += pts_delay;
 		//if(m_frameTimer > curTime)
 			//m_frameTimer = curTime;
 		double actual_delay = m_frameTimer - curTime;
-		//qDebug() << "frame timer: "<<m_frameTimer<<", curTime:"<<curTime<<", actual_delay:"<<actual_delay<<", pts_delay:"<<pts_delay<<", av_gettime():"<<av_gettime();
-		if(actual_delay < 0.010)
+		//qDebug() << "frame timer: "<<m_frameTimer<<", curTime:"<<curTime<<", \t actual_delay:"<<((int)(actual_delay*1000))<<", pts_delay:"<<((int)(pts_delay*1000))<<", m_run_time:"<<m_run_time.elapsed()<<", m_total_runtime:"<<m_total_runtime;
+		if(actual_delay < 0.005)
 		{
 			// This should just skip this frame
-			//qDebug() << "Skipping this frame, skips:"<<m_skipFrameCount;
+// 			qDebug() << "Skipping this frame, skips:"<<m_skipFrameCount;
 // 			if(status() == Running)
-// 				m_play_timer = startTimer(1);
+// 				m_play_timer = startTimer(0);
 // 			return;
+			
 			actual_delay = 0.0;
 			
 			m_skipFrameCount ++;
@@ -348,8 +361,8 @@ void QVideo::consumeFrame()
 			if(m_skipFrameCount > MAX_SKIPS_TILL_RESET)
 			{
 				m_skipFrameCount = 0;
-				m_frameTimer = curTime;
-				//qDebug() << "Reset frame timer";
+				m_frameTimer = curTime - pts_delay;
+// 				qDebug() << "Reset frame timer";
 			}
 		}
 		
@@ -377,8 +390,8 @@ void QVideo::consumeFrame()
 		//qDebug("***************** Keeping out of the water: %d",min);
 		//}
 		
-		if(acutal_delay_int < 0)
-			acutal_delay_int = 0;
+		if(acutal_delay_int <= 0)
+			acutal_delay_int = 1;
 
 		
 
@@ -397,8 +410,8 @@ void QVideo::consumeFrame()
 		//qDebug("START frame: %d",m_frame_counter);
 		m_frameDebug.start();
 		m_expectedDelay = acutal_delay_int;
-		QTimer::singleShot(acutal_delay_int, this, SLOT(displayFrame()));
-		//m_nextImageTimer.start(actual_delay);
+		//QTimer::singleShot(acutal_delay_int, this, SLOT(displayFrame()));
+		m_nextImageTimer.start(acutal_delay_int);
 		//displayFrame();
 		//HANDLE handle;
 /*

@@ -809,6 +809,7 @@ void MainWindow::setupCentralWidget()
 
 	m_previewInstance = new OutputInstance(Output::previewInstance());
 	m_previewInstance->setCanZoom(true);
+	m_previewInstance->setSceneContextHint(MyGraphicsScene::StaticPreview);
 
 	m_previewControlBase = new QWidget(this);
 	QVBoxLayout * leftLayout3 = new QVBoxLayout(m_previewControlBase);
