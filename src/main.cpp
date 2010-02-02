@@ -58,13 +58,16 @@
 
 					fprintf(stderr, "Fatal: %s\n", msg);
 				}
-				QMessageBox::critical(0,"Fatal Error",msg);
+				//QMessageBox::critical(0,"Fatal Error",msg);
+				//qt_origMsgHandler(QtDebugMsg,msg);
+				/*
 				if(strstr(msg,"out of memory, returning null image") != NULL)
 				{
 					QPixmapCache::clear();
 					qt_origMsgHandler(QtDebugMsg, "Attempted to clear QPixmapCache, continuing");
 					return;
 				}
+				*/
 				abort();
 		}
 	}

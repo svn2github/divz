@@ -13,9 +13,9 @@ TextBoxConfig::TextBoxConfig(TextBoxContent * textContent, QGraphicsItem * paren
 	m_editor = new RichTextEditorDialog();
 	//m_editor->setMinimumSize(425, 400);
 	
-	TextItem * textModel = dynamic_cast<TextItem*>(m_textContent->modelItem());
-	m_editor->setText(textModel->text());
-	m_editor->initFontSize(textModel->findFontSize());
+	m_model = dynamic_cast<TextItem*>(m_textContent->modelItem());
+	m_editor->setText(m_model->text());
+	m_editor->initFontSize(m_model->findFontSize());
 	
 	m_editor->adjustSize();
 	addTab(m_editor, tr("Text"), false, true);
@@ -29,16 +29,15 @@ TextBoxConfig::TextBoxConfig(TextBoxContent * textContent, QGraphicsItem * paren
 	
 	
 	//resize(640,300);
-	connect(textContent->modelItem(), SIGNAL(itemChanged(QString, QVariant, QVariant)), this, SLOT(itemChanged(QString, QVariant, QVariant)));
+	connect(m_model, SIGNAL(itemChanged(QString, QVariant, QVariant)), this, SLOT(itemChanged(QString, QVariant, QVariant)));
 }
 
 void TextBoxConfig::itemChanged(QString fieldName, QVariant value, QVariant)
 {
-	if(fieldName == "text" && !m_saving && m_textContent)
+	if(fieldName == "text" && !m_saving && m_model)
 	{
-		TextItem * textModel = dynamic_cast<TextItem*>(m_textContent->modelItem());
-		m_editor->setText(textModel->text());
-		m_editor->initFontSize(textModel->findFontSize());
+		m_editor->setText(m_model->text());
+		m_editor->initFontSize(m_model->findFontSize());
 	}
 }
 
