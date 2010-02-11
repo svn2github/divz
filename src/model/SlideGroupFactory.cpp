@@ -561,7 +561,7 @@ void SlideGroupViewControl::toggleTimerState(TimerState state, bool resetTimer)
 	bool flag = state == Running;
 	
 	if(DEBUG_SLIDEGROUPVIEWCONTROL)
-		qDebug() << "SlideGroupViewControl::toggleTimerState: state:"<<state<<", resetTimer:"<<resetTimer<<", flag:"<<flag;
+		qDebug() << "SlideGroupViewControl::toggleTimerState(): state:"<<state<<", resetTimer:"<<resetTimer<<", flag:"<<flag<<" (s:Running:"<<Running<<",s:Stopped:"<<Stopped<<")";
 	
 	m_timeButton->setIcon(flag ? QIcon(":/data/action-pause.png") : QIcon(":/data/action-play.png"));
 	m_timeButton->setText(m_isPreviewControl ? (flag ? "Pause" : "Start") : (flag ? "&Pause" : "&Start"));
@@ -570,7 +570,11 @@ void SlideGroupViewControl::toggleTimerState(TimerState state, bool resetTimer)
 	if(flag)
 	{
 		if(!resetTimer)
+		{
 			m_currentTimeLength -= m_elapsedAtPause/1000;
+			if(m_currentTimeLength < 0)
+				m_currentTimeLength = 0;
+		}
 			
 		if(DEBUG_SLIDEGROUPVIEWCONTROL)
 			qDebug() << "SlideGroupViewControl::toggleTimerState(): starting timer at:"<<m_currentTimeLength;
@@ -766,7 +770,7 @@ void SlideGroupViewControl::setSlideGroup(SlideGroup *group, Slide *curSlide, bo
 		curSlide = group->at(0);
 		
 	if(curSlide)
-		m_listView->setCurrentIndex(m_slideModel->indexForSlide(curSlide));
+		setCurrentSlide(curSlide);
 	
 	if(DEBUG_SLIDEGROUPVIEWCONTROL)
 		qDebug()<<"SlideGroupViewControl::setSlideGroup: DONE Loading group#"<<group->groupNumber();
@@ -789,7 +793,8 @@ void SlideGroupViewControl::nextSlide()
 	SlideGroup * tmpGroup = m_group;
 	Slide *nextSlide = m_slideViewer->nextSlide();
 	if(nextSlide)
-		m_listView->setCurrentIndex(m_slideModel->indexForSlide(nextSlide));
+		//m_listView->setCurrentIndex(m_slideModel->indexForSlide(nextSlide));
+		setCurrentSlide(nextSlide);
 	else
 	if(m_timerState == Running && 
 	   tmpGroup == m_group) // make sure the group hasn't changed
@@ -803,19 +808,21 @@ void SlideGroupViewControl::nextSlide()
 void SlideGroupViewControl::prevSlide()
 {
 	Slide *s = m_slideViewer->prevSlide();
-	m_listView->setCurrentIndex(m_slideModel->indexForSlide(s));
+	setCurrentSlide(s);
 }
 
 void SlideGroupViewControl::setCurrentSlide(int x)
 {
 	Slide *s = m_slideViewer->setSlide(x);
-	m_listView->setCurrentIndex(m_slideModel->indexForSlide(s));
+	setCurrentSlide(s);
 }
 
 void SlideGroupViewControl::setCurrentSlide(Slide *s)
 {
 	m_slideViewer->setSlide(s);
-	m_listView->setCurrentIndex(m_slideModel->indexForSlide(s));
+	QModelIndex idx = m_slideModel->indexForSlide(s);
+	m_listView->setCurrentIndex(idx);
+	slideSelected(idx);
 }
 
 // void SlideGroupViewControl::fadeBlackFrame(bool toggled)
