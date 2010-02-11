@@ -259,17 +259,22 @@ QSize TextItem::findNaturalSize(int atWidth)
 	QSize firstSize = doc.documentLayout()->documentSize().toSize();
 	QSize checkSize = firstSize;
 	
-	//qDebug() << "TextItem::findNaturalSize: atWidth:"<<atWidth<<", firstSize:"<<firstSize;
+// 	qDebug() << "TextItem::findNaturalSize: atWidth:"<<atWidth<<", firstSize:"<<firstSize;
 	
+	#define RUNAWAY_LIMIT 500
+	
+	int counter = 0;
 	int deInc = 10;
 	while(checkSize.height() == firstSize.height() &&
-	      checkSize.height() > 0)
+	      checkSize.height() > 0 &&
+	      counter < RUNAWAY_LIMIT)
 	{
 		int w = checkSize.width() - deInc;
 		doc.setTextWidth(w);
 		checkSize = doc.documentLayout()->documentSize().toSize();
 		
-		//qDebug() << "TextItem::findNaturalSize: w:"<<w<<", checkSize:"<<checkSize;
+// 		qDebug() << "TextItem::findNaturalSize: w:"<<w<<", checkSize:"<<checkSize<<", counter:"<<counter;
+		counter ++;
 	}
 	
 	if(checkSize.width() != firstSize.width())
@@ -277,12 +282,12 @@ QSize TextItem::findNaturalSize(int atWidth)
 		int w = checkSize.width() + deInc;
 		doc.setTextWidth(w);
 		checkSize = doc.documentLayout()->documentSize().toSize();
-		//qDebug() << "TextItem::findNaturalSize: Final Size: w:"<<w<<", checkSize:"<<checkSize;
+// 		qDebug() << "TextItem::findNaturalSize: Final Size: w:"<<w<<", checkSize:"<<checkSize;
 		return checkSize;
 	}
 	else
 	{
-		//qDebug() << "TextItem::findNaturalSize: No Change, firstSize:"<<checkSize;
+// 		qDebug() << "TextItem::findNaturalSize: No Change, firstSize:"<<checkSize;
 		return firstSize;
 	}
 }
