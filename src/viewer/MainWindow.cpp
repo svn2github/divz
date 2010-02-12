@@ -47,7 +47,7 @@ MainWindow::MainWindow(QWidget *parent)
 	m_ui->actionSetup_Outputs->setIcon(QIcon(":data/stock-preferences.png"));
 
 	m_ui->textEdit->setReadOnly(true);
-	// pmp00750
+	
 	log("Welcome to the DViz Network Viewer!");
 
 	QSettings s;
@@ -71,6 +71,13 @@ MainWindow::MainWindow(QWidget *parent)
 // 	m_reconnect = true;
 // 	slotReconnect();
 
+	m_host = s.value("last-ip","localhost").toString();
+	m_port = s.value("last-port",7777).toInt();
+	m_reconnect = s.value("last-reconnect",true).toBool();
+	
+	if(m_reconnect)
+		slotReconnect();
+	
 	//m_previewDock->setVisible(output->isEnabled());
 	
 	m_reconnectTimer.setSingleShot(true);
