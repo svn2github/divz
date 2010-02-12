@@ -35,12 +35,6 @@ VideoFileContent::VideoFileContent(QGraphicsScene * scene, QGraphicsItem * paren
 	setFrame(0);
 	setFrameTextEnabled(false);
         setToolTip(tr("Video - right click for options."));
-	
-//         m_video = new QVideo(this);
-//         //connect(m_video, SIGNAL(movieStateChanged(QMovie::MovieState)),
-//         //           this, SLOT(movieStateChanged(QMovie::MovieState)));
-//         connect(m_video, SIGNAL(currentFrame(QFFMpegVideoFrame)),
-//                      this, SLOT(setVideoFrame(QFFMpegVideoFrame)));
 
 	// add play/pause button
 	m_bSwap = new ButtonItem(ButtonItem::Control, Qt::blue, QIcon(":/data/action-pause.png"), this);
@@ -103,7 +97,7 @@ void VideoFileContent::syncFromModelItem(AbstractVisualItem *model)
 	if(DEBUG_VIDEOFILECONTENT)
 		qDebug() << "VideoFileContent::syncFromModel(): Got file: "<<model->fillVideoFile();
         setFilename(AppSettings::applyResourcePathTranslations(model->fillVideoFile()));
-        
+
         m_dontSyncToModel = false;
 }
 
@@ -321,25 +315,25 @@ void VideoFileContent::paint(QPainter * painter, const QStyleOptionGraphicsItem 
 	painter->save();
 	painter->translate(cRect.topLeft());
 	if (sRect.width() > 0 && sRect.height() > 0)
-        {
-                qreal xScale = (qreal)cRect.width() / (qreal)sRect.width();
-                qreal yScale = (qreal)cRect.height() / (qreal)sRect.height();
-                 if (!qFuzzyCompare(xScale, 1.0) || !qFuzzyCompare(yScale, 1.0))
-                     painter->scale(xScale, yScale);
-        }
+	{
+		qreal xScale = (qreal)cRect.width() / (qreal)sRect.width();
+		qreal yScale = (qreal)cRect.height() / (qreal)sRect.height();
+			if (!qFuzzyCompare(xScale, 1.0) || !qFuzzyCompare(yScale, 1.0))
+			painter->scale(xScale, yScale);
+	}
+	
+	painter->drawPixmap(0,0, m_pixmap);
 
-        painter->drawPixmap(0,0, m_pixmap);
-        
         painter->restore();
 	painter->save();
 	
 	// Draw a blank gray frame if no video frame present
         if(m_imageSize.width() <= 0)
-        {
-        	QRect fillRect = cRect;
-        	
+	{
+		QRect fillRect = cRect;
+		
         	if(modelItem()->outlineEnabled())
-        	{
+		{
 			QPen p = modelItem()->outlinePen();
 			if(sceneContextHint() == MyGraphicsScene::StaticPreview)
 			{
@@ -357,7 +351,7 @@ void VideoFileContent::paint(QPainter * painter, const QStyleOptionGraphicsItem 
 		
 		painter->fillRect(fillRect,QBrush(Qt::gray));
         }
-        
+	
 	// Draw an outline around the frame if requested
 	if(modelItem()->outlineEnabled())
 	{
@@ -394,10 +388,13 @@ void VideoFileContent::setPixmap(const QPixmap & pixmap)
 	
 	if(m_imageSize != m_pixmap.size())
 	{
+		QSize oldSize = m_imageSize;
 		m_imageSize = m_pixmap.size();
 
-	        // Adjust scaling while maintaining aspect ratio
+		// Adjust scaling while maintaining aspect ratio
+// 		qDebug() << "VideoFileContent::setPixmap(): Got new size: "<<m_pixmap.size()<<", old:"<<oldSize<<", OLD contentsRect():"<<contentsRect()<<", pos:"<<pos();
 		resizeContents(contentsRect(),true);
+// 		qDebug() << "VideoFileContent::setPixmap(): Got new size: "<<m_pixmap.size()<<", old:"<<oldSize<<", NEW contentsRect():"<<contentsRect()<<", pos:"<<pos();
 		
 		//if(DEBUG_VIDEOFILECONTENT)
 		//	qDebug() << "VideFileContent::setPixmap(): new frame size:"<<m_imageSize; 

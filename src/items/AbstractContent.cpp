@@ -208,7 +208,7 @@ void AbstractContent::resizeContents(const QRect & rect, bool keepRatio)
 		int hfw = contentHeightForWidth(rect.width());
 		if (hfw > 1)
 		{
-			m_contentsRect.setTop(-hfw / 2);
+			//m_contentsRect.setTop(-hfw / 2);
 			m_contentsRect.setHeight(hfw);
 		}
 	}
