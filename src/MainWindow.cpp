@@ -85,7 +85,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	m_editWin = new SlideEditorWindow();
 
 	setupOutputViews();
-	
+	setupHotkeys();
 	setupCentralWidget();
 	setupSongList();
 	setupBibleBrowser();
@@ -960,7 +960,6 @@ void MainWindow::slotListContextMenu(const QPoint &pos)
 
 void MainWindow::actionAppSettingsDialog()
 {
-	//OutputSetupDialog *d = new OutputSetupDialog(this);
 	AppSettingsDialog *d = new AppSettingsDialog(this);
 	d->exec();
 
@@ -968,7 +967,7 @@ void MainWindow::actionAppSettingsDialog()
 	setupOutputViews();
 	setupOutputList();
 	setupOutputControls();
-
+	setupHotkeys();
 
 
 	// reapply autosave time
@@ -986,6 +985,113 @@ void MainWindow::actionAppSettingsDialog()
 	if(AppSettings::httpControlEnabled())
 		m_controlServer = new ControlServer(AppSettings::httpControlPort(),this);
 
+}
+
+void MainWindow::setupHotkeys()
+{
+	if(!m_hotkeyActions.contains("black"))
+	{
+		QAction * action = new QAction("Enable/Disable Black",this);
+		action->setShortcutContext(Qt::ApplicationShortcut);
+		addAction(action);
+		connect(action, SIGNAL(triggered()), this, SLOT(hotkeyBlack()));
+		m_hotkeyActions.insert("black",action);
+	}
+	m_hotkeyActions["black"]->setShortcut(AppSettings::hotkeySequence("black"));
+	
+	if(!m_hotkeyActions.contains("clear"))
+	{
+		QAction * action = new QAction("Enable/Disable Clear",this);
+		action->setShortcutContext(Qt::ApplicationShortcut);
+		addAction(action);
+		connect(action, SIGNAL(triggered()), this, SLOT(hotkeyClear()));
+		m_hotkeyActions.insert("clear",action);
+	}
+	m_hotkeyActions["clear"]->setShortcut(AppSettings::hotkeySequence("clear"));	
+	
+	if(!m_hotkeyActions.contains("logo"))
+	{
+		QAction * action = new QAction("Enable/Disable Logo",this);
+		action->setShortcutContext(Qt::ApplicationShortcut);
+		addAction(action);
+		connect(action, SIGNAL(triggered()), this, SLOT(hotkeyLogo()));
+		m_hotkeyActions.insert("logo",action);
+	}
+	
+	m_hotkeyActions["logo"]->setShortcut(AppSettings::hotkeySequence("logo"));
+	
+	if(!m_hotkeyActions.contains("next-slide"))
+	{
+		QAction * action = new QAction("Goto Next Slide",this);
+		action->setShortcutContext(Qt::ApplicationShortcut);
+		addAction(action);
+		connect(action, SIGNAL(triggered()), this, SLOT(hotkeyNextSlide()));
+		m_hotkeyActions.insert("next-slide",action);
+	}
+	m_hotkeyActions["next-slide"]->setShortcut(AppSettings::hotkeySequence("next-slide"));	
+	
+	if(!m_hotkeyActions.contains("prev-slide"))
+	{
+		QAction * action = new QAction("Goto Previous Slide",this);
+		action->setShortcutContext(Qt::ApplicationShortcut);
+		addAction(action);
+		connect(action, SIGNAL(triggered()), this, SLOT(hotkeyPrevSlide()));
+		m_hotkeyActions.insert("prev-slide",action);
+	}
+	m_hotkeyActions["prev-slide"]->setShortcut(AppSettings::hotkeySequence("prev-slide"));	
+	
+	if(!m_hotkeyActions.contains("next-group"))
+	{
+		QAction * action = new QAction("Goto Next Group",this);
+		action->setShortcutContext(Qt::ApplicationShortcut);
+		addAction(action);
+		connect(action, SIGNAL(triggered()), this, SLOT(nextGroup()));
+		m_hotkeyActions.insert("next-group",action);
+	}
+	m_hotkeyActions["next-group"]->setShortcut(AppSettings::hotkeySequence("next-group"));
+	
+	if(!m_hotkeyActions.contains("prev-group"))
+	{
+		QAction * action = new QAction("Goto Prev Group",this);
+		action->setShortcutContext(Qt::ApplicationShortcut);
+		addAction(action);
+		connect(action, SIGNAL(triggered()), this, SLOT(prevGroup()));
+		m_hotkeyActions.insert("prev-group",action);
+	}	
+	m_hotkeyActions["prev-group"]->setShortcut(AppSettings::hotkeySequence("prev-group"));
+}
+
+void MainWindow::hotkeyBlack()
+{
+	int liveId = AppSettings::taggedOutput("live")->id();
+	OutputControl * ctrl = outputControl(liveId);
+	ctrl->fadeBlackFrame(!ctrl->isBlackToggled());
+}
+
+void MainWindow::hotkeyClear()
+{
+	int liveId = AppSettings::taggedOutput("live")->id();
+	OutputControl * ctrl = outputControl(liveId);
+	ctrl->fadeClearFrame(!ctrl->isClearToggled());
+}
+
+void MainWindow::hotkeyLogo()
+{
+	QMessageBox::information(this,"Not Implemented Yet","Sorry, the logo feature isn't implemented yet.");
+}
+
+void MainWindow::hotkeyNextSlide()
+{
+	int liveId = AppSettings::taggedOutput("live")->id();
+	SlideGroupViewControl *ctrl = viewControl(liveId);
+	ctrl->nextSlide();
+}
+
+void MainWindow::hotkeyPrevSlide()
+{
+	int liveId = AppSettings::taggedOutput("live")->id();
+	SlideGroupViewControl *ctrl = viewControl(liveId);
+	ctrl->prevSlide();
 }
 
 void MainWindow::setAutosaveEnabled(bool flag)
@@ -1167,7 +1273,6 @@ void MainWindow::setupOutputControls()
 
 void MainWindow::actionDocSettingsDialog()
 {
-	//OutputSetupDialog *d = new OutputSetupDialog(this);
 	double ar = m_doc->aspectRatio();
 	DocumentSettingsDialog *d = new DocumentSettingsDialog(m_doc,this);
 	d->exec();
@@ -1187,6 +1292,16 @@ void MainWindow::groupSelected(const QModelIndex &idx)
 	m_ui->actionDelete_Slide_Group->setEnabled(true);
 	m_ui->actionSlide_Group_Properties->setEnabled(true);
 
+}
+
+void MainWindow::prevGroup()
+{
+	QModelIndex idx = m_groupView->currentIndex();
+	int nextRow = idx.row() - 1;
+	if(nextRow < 0)
+		nextRow = m_doc->numGroups() - 1;
+	qDebug() << "MainWindow::prevGroup(): nextRow:"<<nextRow;
+	jumpToGroup(nextRow);
 }
 
 void MainWindow::nextGroup()

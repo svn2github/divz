@@ -21,7 +21,7 @@ public:
 	MjpegClient(QObject *parent = 0);
 	~MjpegClient();
 	
-	bool connectTo(const QString& host, int port, QString url = "/");
+	bool connectTo(const QString& host, int port=-1, QString url = "/");
 	void exit();
 	QString errorString(){ return m_socket->errorString(); }
 	

@@ -31,7 +31,7 @@ bool MjpegClient::connectTo(const QString& host, int port, QString url)
 		url = "/";
 		
 	m_host = host;
-	m_port = port;
+	m_port = port > 0 ? port : 80;
 	m_url = url;
 	
 	if(m_socket)

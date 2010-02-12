@@ -17,6 +17,7 @@ Q_IMPORT_PLUGIN(qtiff)
 #include <QTranslator>
 #include <QLocale>
 #include <QNetworkInterface>
+#include <QHash>
 
 #include "model/Output.h"
 #include "model/SlideGroupFactory.h"
@@ -69,6 +70,8 @@ AppSettings::ResourcePathTranslations AppSettings::m_resourcePathTranslations;
 bool AppSettings::m_httpControlEnabled = true;
 int AppSettings::m_httpControlPort = 8080;
 
+
+QHash<QString,QString> AppSettings::m_hotkeys;
 
 void AppSettings::initApp(const QString& appName)
 {
@@ -170,6 +173,11 @@ void AppSettings::load()
 	QList<QString> keys = map.keys();
 	foreach(QString key, keys)
 		m_previousPathList[key] = map[key].toString();
+		
+	QHash<QString,QVariant> hash = s.value("app/hotkeys").toHash();
+	keys = hash.keys();
+	foreach(QString key, keys)
+		m_hotkeys[key] = hash[key].toString();
 	
 	m_pixmapCacheSize  = s.value("app/cache-size",256).toInt();
 	m_crossFadeSpeed   = s.value("app/fade-speed",250).toInt();
@@ -216,6 +224,13 @@ void AppSettings::save()
 	foreach(QString key, keys)
 		map[key] = QVariant(m_previousPathList[key]);
 	s.setValue("app/previous-path-list",map);
+	
+	QHash<QString,QVariant> hash;
+	keys = m_hotkeys.keys();
+	foreach(QString key, keys)
+		hash[key] = QVariant(m_hotkeys[key]);
+	s.setValue("app/hotkeys",hash);
+	
 	
 	s.setValue("app/cache-size",m_pixmapCacheSize);
 	s.setValue("app/fade-speed",m_crossFadeSpeed);
@@ -295,6 +310,44 @@ void AppSettings::setPreviousPath(const QString& key, const QString & path)
 	m_previousPathList[key] = path;
 	save();
 }
+
+QString AppSettings::hotkeySequence(const QString& key)
+{
+	QString value = m_hotkeys[key];
+	if(value.isEmpty())
+	{
+		if(key == "black")
+			value = "CTRL+B";
+		else
+		if(key == "clear")
+			value = "CTRL+W";
+		else
+		if(key == "logo")
+			value = "CTRL+L";
+		else
+		if(key == "next-slide")
+			value = "CTRL+ALT+S";
+		else
+		if(key == "prev-slide")
+			value = "CTRL+ALT+S";
+		else
+		if(key == "next-group")
+			value = "CTRL+SHIFT+N";
+		else
+		if(key == "prev-group")
+			value = "CTRL+SHIFT+P";
+		
+		setHotkeySequence(key,value);
+	}
+	return value;
+}
+
+void AppSettings::setHotkeySequence(const QString& key, const QString & sequence)
+{
+	m_hotkeys[key] = sequence;
+	save();
+}
+
 
 void AppSettings::setCrossFadeSpeed(int x)
 {

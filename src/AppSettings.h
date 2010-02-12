@@ -91,6 +91,9 @@ public:
 	
 	static QString myIpAddress();
 	
+	static void setHotkeySequence(const QString& actionName, const QString& keySequence);
+	static QString hotkeySequence(const QString& actionName);
+	
 	
 protected:
 	friend class MainWindow;
@@ -127,6 +130,8 @@ private:
 	
 	static bool m_httpControlEnabled;
 	static int m_httpControlPort;
+	
+	static QHash<QString,QString> m_hotkeys;
 
 };
 

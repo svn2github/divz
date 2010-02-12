@@ -71,6 +71,16 @@ AppSettingsDialog::AppSettingsDialog(QWidget *parent) :
 	connect(m_ui->httpPort, SIGNAL(valueChanged(int)), this, SLOT(portChanged(int)));
 	connect(m_ui->httpUrlLabel, SIGNAL(linkActivated(const QString&)), this, SLOT(linkActivated(const QString&)));
 	
+	m_ui->hotkeyBlack->setText(AppSettings::hotkeySequence("black"));
+	m_ui->hotkeyClear->setText(AppSettings::hotkeySequence("clear"));
+	m_ui->hotkeyLogo->setText(AppSettings::hotkeySequence("logo"));
+	
+	m_ui->hotkeyNextSlide->setText(AppSettings::hotkeySequence("next-slide"));
+	m_ui->hotkeyNextGroup->setText(AppSettings::hotkeySequence("next-group"));
+	m_ui->hotkeyPrevSlide->setText(AppSettings::hotkeySequence("prev-slide"));
+	m_ui->hotkeyPrevGroup->setText(AppSettings::hotkeySequence("prev-group"));
+
+	
 	portChanged(AppSettings::httpControlPort());
 	
 }
@@ -113,6 +123,15 @@ void AppSettingsDialog::slotAccepted()
 	
 	AppSettings::setHttpControlEnabled(m_ui->httpEnabled->isChecked());
 	AppSettings::setHttpControlPort(m_ui->httpPort->value());
+	
+	AppSettings::setHotkeySequence("black",m_ui->hotkeyBlack->text());
+	AppSettings::setHotkeySequence("clear",m_ui->hotkeyClear->text());
+	AppSettings::setHotkeySequence("logo",m_ui->hotkeyLogo->text());
+	
+	AppSettings::setHotkeySequence("next-slide",m_ui->hotkeyNextSlide->text());
+	AppSettings::setHotkeySequence("next-group",m_ui->hotkeyNextGroup->text());
+	AppSettings::setHotkeySequence("prev-slide",m_ui->hotkeyPrevSlide->text());
+	AppSettings::setHotkeySequence("prev-group",m_ui->hotkeyPrevGroup->text());
 
 	// Yes, I'm cheating by not adding a proper accessor to AppSettings - I dont feel
 	// like waiting for the entire source tree to recompile right now. Maybe later.

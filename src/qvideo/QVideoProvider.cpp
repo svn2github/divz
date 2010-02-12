@@ -262,7 +262,10 @@ QVideoProvider::QVideoProvider(const QString &f) :
 	{
 		m_mjpeg = new MjpegClient();
 		QUrl url(f);
-		m_mjpeg->connectTo(url.host(),url.port(),url.path());
+		QString path = url.path();
+		if(url.hasQuery())
+			path += QString("?%1").arg(QString(url.encodedQuery()));
+		m_mjpeg->connectTo(url.host(),url.port(),path);
 		m_mjpeg->start();
 		connect(m_mjpeg, SIGNAL(newImage(QImage)), this, SLOT(newImage(QImage)));
 	}

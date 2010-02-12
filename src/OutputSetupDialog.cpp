@@ -65,7 +65,7 @@ OutputSetupDialog::OutputSetupDialog(QWidget *parent) :
 	m_ui->btnDelOutput->setEnabled(false);
 	m_ui->label_2->setText("");
 
-	connect(m_ui->buttonBox, SIGNAL(accepted()), this, SLOT(accept()));
+	//connect(m_ui->buttonBox, SIGNAL(accepted()), this, SLOT(accept()));
 	connect(m_ui->buttonBox, SIGNAL(rejected()), this, SLOT(reject()));
 }
 

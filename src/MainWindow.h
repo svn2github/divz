@@ -86,6 +86,7 @@ public slots:
 	void saveFile(const QString &file = "");
 	
 	void clearAllOutputs();
+	void prevGroup();
 	void nextGroup();
 	void jumpToGroup(int);
 	
@@ -99,6 +100,14 @@ public slots:
 	void setAutosaveEnabled(bool);
 
 	AbstractSlideGroupEditor * openSlideEditor(SlideGroup *g,Slide *slide=0);
+	
+	void setupHotkeys();
+	
+	void hotkeyBlack();
+	void hotkeyClear();
+	void hotkeyLogo();
+	void hotkeyNextSlide();
+	void hotkeyPrevSlide();
 
 protected slots:
 	void groupsDropped(QList<SlideGroup*> list);
@@ -198,6 +207,9 @@ private:
 	QHash<int,QCheckBox*>	m_outputCheckboxes;
 	QWidget			* m_outputCheckboxBase;
 	
+	
+	QHash<QString,QAction*> m_hotkeyActions;
+	
 	//QWidget			* m_previewControlBase;
 	
 	MediaBrowser * m_mediaBrowser;
@@ -206,7 +218,6 @@ private:
 	
 	/** static */
 	static MainWindow * static_mainWindow;	
-
 
 };
 
