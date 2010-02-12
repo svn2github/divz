@@ -143,7 +143,7 @@ void OutputInstance::slotGrabPixmap()
 			delete m_jpegServer;
 		
 		m_jpegServer = new JpegServer();
-		m_jpegServer->setProvider(this, SIGNAL(imageReady(QImage*)), false); // false = dont delete the image
+		m_jpegServer->setProvider(this, SIGNAL(imageReady(QImage*)));
 		
 		if (!m_jpegServer->listen(QHostAddress::Any,m_output->mjpegServerPort())) 
 		{
@@ -151,7 +151,7 @@ void OutputInstance::slotGrabPixmap()
 		}
 		else
 		{
-			qDebug() << "OutputInstance"<<output()->name()<<": JpegServer listening on "<<m_jpegServer->myAddress();
+			//qDebug() << "OutputInstance"<<output()->name()<<": JpegServer listening on "<<m_jpegServer->myAddress();
 		}
 	}
 	

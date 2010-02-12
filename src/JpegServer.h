@@ -4,6 +4,7 @@
 #include <QTcpServer>
 #include <QThread>
 #include <QTcpSocket>
+#include <QImageWriter>
 
 class JpegServer : public QTcpServer
 {
@@ -12,9 +13,12 @@ class JpegServer : public QTcpServer
 public:
 	JpegServer(QObject *parent = 0);
 	
-	void setProvider(QObject *provider, const char * signalName, bool deleteImage = true);
+	void setAdaptiveWriteEnabled(bool flag) { m_adaptiveWriteEnabled = flag; }
+	bool adaptiveWriteEnabled() { return m_adaptiveWriteEnabled; }
 	
-	QString myAddress();
+	void setProvider(QObject *provider, const char * signalName);
+	
+// 	QString myAddress();
 
 protected:
 	void incomingConnection(int socketDescriptor);
@@ -22,7 +26,7 @@ protected:
 private:
 	QObject * m_imageProvider;
 	const char * m_signalName;
-	bool m_deleteImage;
+	bool m_adaptiveWriteEnabled;
 
 };
 
@@ -33,7 +37,7 @@ class JpegServerThread : public QThread
     Q_OBJECT
 
 public:
-	JpegServerThread(int socketDescriptor, bool deleteImage, QObject *parent = 0);
+	JpegServerThread(int socketDescriptor, bool adaptiveWriteEnabled, QObject *parent = 0);
 	~JpegServerThread();
 	
 	void run();
@@ -48,10 +52,11 @@ private:
 	void writeHeaders();
 	
 	int m_socketDescriptor;
-	bool m_deleteImage;
 	QTcpSocket * m_socket;
 	
 	QByteArray m_boundary;
+	QImageWriter m_writer;
+	bool m_adaptiveWriteEnabled;
 	
 };
 

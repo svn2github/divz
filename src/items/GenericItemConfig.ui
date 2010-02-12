@@ -521,7 +521,7 @@
        <item>
         <widget class="QRadioButton" name="bgVideo">
          <property name="text">
-          <string>Video from File</string>
+          <string>Video from File or MJPEG URL</string>
          </property>
         </widget>
        </item>

@@ -1,31 +1,24 @@
 #include "JpegServer.h"
-#include "AppSettings.h"
 
 #include <QNetworkInterface>
 
 JpegServer::JpegServer(QObject *parent)
 	: QTcpServer(parent)
+	, m_imageProvider(0)
+	, m_signalName(0)
+	, m_adaptiveWriteEnabled(true)
 {
 }
 	
-void JpegServer::setProvider(QObject *provider, const char * signalName, bool deleteImage)
+void JpegServer::setProvider(QObject *provider, const char * signalName)
 {
 	m_imageProvider = provider;
 	m_signalName    = signalName;
-	m_deleteImage   = deleteImage;
-}
-
-
-QString JpegServer::myAddress()
-{
-	QString ipAddress = AppSettings::myIpAddress();
-	
-	return QString("http://%1:%2/").arg(ipAddress).arg(serverPort());
 }
 
 void JpegServer::incomingConnection(int socketDescriptor)
 {
-	JpegServerThread *thread = new JpegServerThread(socketDescriptor, m_deleteImage);
+	JpegServerThread *thread = new JpegServerThread(socketDescriptor, m_adaptiveWriteEnabled);
 	connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
 	connect(m_imageProvider, m_signalName, thread, SLOT(imageReady(QImage*)), Qt::QueuedConnection);
 	thread->start();
@@ -37,16 +30,17 @@ void JpegServer::incomingConnection(int socketDescriptor)
 #include <QImageWriter>
 #include <QImage>
 
-JpegServerThread::JpegServerThread(int socketDescriptor, bool deleteImage, QObject *parent)
+JpegServerThread::JpegServerThread(int socketDescriptor, bool adaptiveWriteEnabled, QObject *parent)
     : QThread(parent)
     , m_socketDescriptor(socketDescriptor)
-    , m_deleteImage(deleteImage)
+    , m_adaptiveWriteEnabled(adaptiveWriteEnabled)
 {
 	
 }
 
 JpegServerThread::~JpegServerThread()
 {
+	m_socket->abort();
 	delete m_socket;
 }
 
@@ -61,6 +55,10 @@ void JpegServerThread::run()
 	}
 	
 	writeHeaders();
+	
+	m_writer.setDevice(m_socket);
+	m_writer.setFormat("jpg");
+	//m_writer.setQuality(80);
 	
 	// enter event loop
 	exec();
@@ -77,50 +75,35 @@ void JpegServerThread::writeHeaders()
 	m_socket->write("--" BOUNDARY "\r\n");
 }
 
-void JpegServerThread::imageReady(QImage *image)
+void JpegServerThread::imageReady(QImage *tmp)
 {
-	if(!image)
-		return;
-	
- 	static int frameCounter = 0;
+	QImage image = *tmp;
+	static int frameCounter = 0;
  	frameCounter++;
- 	//qDebug() << "JpegServerThread: [START] Writing Frame#:"<<frameCounter;
+//  	qDebug() << "JpegServerThread: [START] Writing Frame#:"<<frameCounter;
 	
-	QImage tmp = *image;
-	
-	if(tmp.format() != QImage::Format_RGB32)
-		tmp = tmp.convertToFormat(QImage::Format_RGB32);
-		
-	
-	
-	m_socket->write("Content-type: image/jpeg\r\n\r\n");
-	
-	QImageWriter writer(m_socket, "jpg");
-	if(!writer.canWrite())
+	if(m_adaptiveWriteEnabled && m_socket->bytesToWrite() > 0)
 	{
-		qDebug() << "ImageWriter can't write!";
+		qDebug() << "JpegServerThread::imageReady():"<<m_socket->bytesToWrite()<<"bytes pending write on socket, not sending image"<<frameCounter;
 	}
 	else
-	if(!writer.write(tmp))
 	{
-		qDebug() << "ImageWriter reported error:"<<writer.errorString();
-		quit();
+		if(image.format() != QImage::Format_RGB32)
+			image = image.convertToFormat(QImage::Format_RGB32);
+		
+		if(m_socket->state() == QAbstractSocket::ConnectedState)
+		{
+			m_socket->write("Content-type: image/jpeg\r\n\r\n");
+		}
+		
+		if(!m_writer.write(image))
+		{
+			qDebug() << "ImageWriter reported error:"<<m_writer.errorString();
+			quit();
+		}
+		
+		m_socket->write("--" BOUNDARY "\r\n");
 	}
-	
-	m_socket->write("--" BOUNDARY "\r\n");
-	
-	if(m_deleteImage)
-	{
-		delete image;
-		image = 0;
-	}
-	
-	//qDebug() << "JpegServerThread: [END] Writing Frame#:"<<frameCounter;
+
 }
 
-
-
-//    m_socket->write(block);
-/*    m_socket->disconnectFromHost();
-    m_socket->waitForDisconnected();*/
-//! [4]

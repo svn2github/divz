@@ -538,7 +538,9 @@ void GenericItemConfig::slotVideoBrowse()
 		if(fileName != "")
 		{
 			slotVideoFileChanged(fileName);
-			AppSettings::setPreviousPath("videos",QFileInfo(fileName).absolutePath());
+			QString abs = fileName.startsWith("http://") ? fileName : QFileInfo(fileName).absolutePath();
+			m_commonUi->videoFilenameBox->setText(abs);
+			AppSettings::setPreviousPath("videos",abs);
 		}
 	}
 	else
@@ -563,14 +565,16 @@ void GenericItemConfig::slotVideoBrowse()
 
 void GenericItemConfig::slotVideoDblClicked(const QFileInfo&info)
 {
-	slotVideoFileChanged(info.absoluteFilePath());
+	QString abs = info.absoluteFilePath();
+	slotVideoFileChanged(abs);
+	m_commonUi->videoFilenameBox->setText(abs);
 }
 
 void GenericItemConfig::slotVideoFileChanged(const QString& fileName)
 {
 	QDir current = QDir::current();
-	QString relative = current.absoluteFilePath(fileName);
-	m_commonUi->videoFilenameBox->setText(relative);
+	QString relative = fileName.startsWith("http://") ? fileName : current.absoluteFilePath(fileName);
+	//m_commonUi->videoFilenameBox->setText(relative);
 	m_commonUi->bgVideo->setChecked(true);
 	m_content->modelItem()->setFillVideoFile(relative);
 	m_content->modelItem()->setFillType(AbstractVisualItem::Video);

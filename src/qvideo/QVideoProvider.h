@@ -20,6 +20,7 @@
 #include <phonon/VideoPlayer>
 #endif
 
+class MjpegClient;
 
 
 class QVideoProvider;
@@ -27,6 +28,7 @@ class QVideoProvider;
 class QVideoConsumer
 {
 public:
+	virtual ~QVideoConsumer() {};
 // 	bool isMediaInUse();
 // 	bool allowMediaPause();
 	virtual bool allowMediaStop(QVideoProvider*) { return true; }
@@ -141,7 +143,9 @@ public:
 	
 signals:
 	void streamStarted();
-	void streamStopped();	
+	void streamStopped();
+	
+	void newMjpegPixmap(const QPixmap & pixmap);	
 
 public slots:
 	void stop();
@@ -151,6 +155,7 @@ public slots:
 	
 private slots:
 	void newPixmap(const QPixmap & pixmap);
+	void newImage(QImage);
 	
 private:
 	QVideoProvider(const QString &);
@@ -169,6 +174,8 @@ private:
 	
 	bool stopAllowed();
 	QList<QObject*> m_receivers;
+	
+	MjpegClient * m_mjpeg;
 	
 };
 

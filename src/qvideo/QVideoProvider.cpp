@@ -17,7 +17,8 @@ QMutex icon_mutex;
 
 #define CACHE_DIR "dviz-qvideoframecache"
 	
-	
+#include "MjpegClient.h"
+
 #include "MimeTypes.h"
 
 #ifdef PHONON_ENABLED
@@ -35,7 +36,7 @@ bool QVideoProvider::canUsePhonon(const QString & file)
 PhononTuplet * QVideoProvider::phononForFile(const QString& file)
 {
 	QFileInfo inf(file);
-	QString can = inf.canonicalFilePath();
+	QString can = file.startsWith("http://") ? file : inf.canonicalFilePath();
 	//qDebug() << "QVideoProvider::providerForFile: Checking file:"<<file;
 	if(m_phononMap.contains(can))
 	{
@@ -84,7 +85,7 @@ QMap<QString,QVideoProvider*> QVideoProvider::m_fileProviderMap;
 QVideoProvider * QVideoProvider::providerForFile(const QString & file)
 {
 	QFileInfo inf(file);
-	QString can = inf.canonicalFilePath();
+	QString can = file.startsWith("http://") ? file : inf.canonicalFilePath();
 	
 	if(can.isEmpty())
 		return 0;
@@ -174,7 +175,7 @@ QPixmap QVideoIconGenerator::iconForFile(const QString & file)
 {
 	QFileInfo info(file);
 	
-	QString cacheFiename = cacheFile(info.canonicalFilePath());
+	QString cacheFiename = cacheFile(file.startsWith("http://") ? file : info.canonicalFilePath());
 	if(QFile(cacheFiename).exists())
 	{
 		return QPixmap(cacheFiename);
@@ -254,20 +255,32 @@ QVideoProvider::QVideoProvider(const QString &f) :
 	m_refCount(0),
 	m_isValid(true),
 	m_playCount(0),
-	m_streamStarted(false)
+	m_streamStarted(false),
+	m_mjpeg(0)
 {
-	if(!m_video->load(f))
+	if(f.startsWith("http://"))
 	{
-		if(DEBUG_QVIDEOPROVIDER)
-			qDebug() << "QVideoProvider: ERROR: Unable to load video"<<f;
-		m_isValid = false;
+		m_mjpeg = new MjpegClient();
+		QUrl url(f);
+		m_mjpeg->connectTo(url.host(),url.port(),url.path());
+		m_mjpeg->start();
+		connect(m_mjpeg, SIGNAL(newImage(QImage)), this, SLOT(newImage(QImage)));
 	}
-	if(m_isValid)
+	else
 	{
-		connect(m_video, SIGNAL(newPixmap(QPixmap)), this, SLOT(newPixmap(QPixmap)));
-		m_video->setAdvanceMode(QVideo::Manual);
-		m_video->setLooped(true);
-		//m_video->play();
+		if(!m_video->load(f))
+		{
+			if(DEBUG_QVIDEOPROVIDER)
+				qDebug() << "QVideoProvider: ERROR: Unable to load video"<<f;
+			m_isValid = false;
+		}
+		if(m_isValid)
+		{
+			connect(m_video, SIGNAL(newPixmap(QPixmap)), this, SLOT(newPixmap(QPixmap)));
+			m_video->setAdvanceMode(QVideo::Manual);
+			m_video->setLooped(true);
+			//m_video->play();
+		}
 	}
 }
 
@@ -277,6 +290,14 @@ QVideoProvider::~QVideoProvider()
 	m_video->stop();
 	m_video->deleteLater();
 	m_video = 0;
+	
+	if(m_mjpeg)
+	{
+		m_mjpeg->quit();
+		m_mjpeg->wait();
+		m_mjpeg->deleteLater();
+		m_mjpeg = 0;
+	}
 }
 
 void QVideoProvider::newPixmap(const QPixmap & pix)
@@ -289,12 +310,31 @@ void QVideoProvider::newPixmap(const QPixmap & pix)
 	}
 }
 
+void QVideoProvider::newImage(QImage image)
+{
+// 	qDebug() << "QVideoProvider::newImage(): Received new mjpeg image, size:"<<image.size();
+	QPixmap pix = QPixmap::fromImage(image);
+	newPixmap(pix);
+	emit newMjpegPixmap(pix);
+}
+
 void QVideoProvider::connectReceiver(QObject * receiver, const char * method)
 {
-	if (!connect(m_video, SIGNAL(newPixmap(QPixmap)), receiver, method))
+	if(m_mjpeg)
 	{
-		qWarning("QVideoProvider::connectReceiver(): error connecting provider %s to %s", m_canonicalFilePath.toAscii().data(), method);
-		return;
+		if (!connect(this, SIGNAL(newMjpegPixmap(QPixmap)), receiver, method))
+		{
+			qWarning("QVideoProvider::connectReceiver(): error connecting provider %s to %s", m_canonicalFilePath.toAscii().data(), method);
+			return;
+		}
+	}
+	else
+	{
+		if (!connect(m_video, SIGNAL(newPixmap(QPixmap)), receiver, method))
+		{
+			qWarning("QVideoProvider::connectReceiver(): error connecting provider %s to %s", m_canonicalFilePath.toAscii().data(), method);
+			return;
+		}
 	}
 	
 	m_receivers.append(receiver);
@@ -302,11 +342,15 @@ void QVideoProvider::connectReceiver(QObject * receiver, const char * method)
 
 void QVideoProvider::disconnectReceiver(QObject * receiver)
 {
-	if(receiver && m_video)
+	if(receiver)
 	{
 		if(DEBUG_QVIDEOPROVIDER)
 			qDebug() << "QVideoProvider::disconnectReceiver()";
-		disconnect(m_video, 0, receiver, 0);
+		if(m_mjpeg)
+			disconnect(m_mjpeg, 0, receiver, 0);
+		else
+		if(m_video)
+			disconnect(m_video, 0, receiver, 0);
 	}
 	
 	if(receiver)

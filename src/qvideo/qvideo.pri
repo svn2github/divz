@@ -6,11 +6,13 @@ HEADERS +=  \
 	QVideoBuffer.h \
 	QVideoDecoder.h \
 	QVideoEncoder.h \ 
-	QVideoProvider.h
+	QVideoProvider.h \
+	../MjpegClient.h
 
 SOURCES += \
     QVideo.cpp \
     QVideoBuffer.cpp \
     QVideoDecoder.cpp \
     QVideoEncoder.cpp \
-    QVideoProvider.cpp
+    QVideoProvider.cpp \
+    ../MjpegClient.cpp
