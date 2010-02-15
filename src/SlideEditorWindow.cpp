@@ -828,8 +828,9 @@ void SlideEditorWindow::selectionChanged()
 
 	if(firstContent && m_itemListView)
 	{
-		QModelIndex idx = m_itemModel->indexForItem(firstContent->modelItem());
-		m_itemListView->setCurrentIndex(idx);
+//		QModelIndex idx = m_itemModel->indexForItem(firstContent->modelItem());
+//		if(idx.isValid())
+//			m_itemListView->setCurrentIndex(idx);
 	}
 }
 
