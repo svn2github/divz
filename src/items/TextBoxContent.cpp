@@ -532,7 +532,7 @@ void TextBoxWarmingThread::run()
 	
 			
 	QString htmlCode = model->text();
-	qDebug()<<model->itemName()<<"TextBoxWarmingThread::run(): htmlCode:"<<htmlCode;
+// 	qDebug()<<model->itemName()<<"TextBoxWarmingThread::run(): htmlCode:"<<htmlCode;
 	
 	QTextDocument doc;
 	QTextDocument shadowDoc;

@@ -276,7 +276,8 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans, int speed, i
 // 	QString ptr;
 // 	ptr = QString().sprintf("%p",this);
 // 	
-	//qDebug() << "MyGraphicsScene::setSlide(): "<<this<<" trans:"<<trans<<", speed:"<<speed<<", quality:"<<quality;
+	if(DEBUG_MYGRAPHICSSCENE)
+		qDebug() << "MyGraphicsScene::setSlide(): "<<this<<" trans:"<<trans<<", speed:"<<speed<<", quality:"<<quality;
 	//trans = None;
 	if(trans == None || (speed == 0 && quality == 0))
 	{
@@ -315,7 +316,8 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans, int speed, i
 			//qDebug() << "MyGraphicsScene::setSlide(): Using app settings for fade quality";
 		}
 			
-		//qDebug() << "MyGraphicsScene::setSlide(): [final] speed:"<<speed<<", quality:"<<quality;
+		if(DEBUG_MYGRAPHICSSCENE)
+			qDebug() << "MyGraphicsScene::setSlide(): [final] speed:"<<speed<<", quality:"<<quality;
 		
 		if(!m_fadeTimer)
 		{
@@ -507,7 +509,8 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans, int speed, i
 // 	m_liveRoot->setOpacity(0);
 	m_liveRoot->setZValue(300);
 	
-	//qDebug() << "MyGraphicsScene::setSlide(): Setting slide # "<<slide->slideNumber()<<" - DONE.";
+	if(DEBUG_MYGRAPHICSSCENE)
+		qDebug() << "MyGraphicsScene::setSlide(): Setting slide # "<<slide->slideNumber()<<" - DONE.";
 }
 
 QList<AbstractContent *> MyGraphicsScene::abstractContent(bool onlyMasterItems)
@@ -568,7 +571,7 @@ AbstractContent * MyGraphicsScene::createVisualDelegate(AbstractItem *item, QGra
 	if (AbstractVisualItem * visualItem = dynamic_cast<AbstractVisualItem *>(item))
 	{
 		if(DEBUG_MYGRAPHICSSCENE)
-			qDebug() << "MyGraphicsScene::setSlide(): Creating new content item from:"<<visualItem->itemName();
+			qDebug() << "MyGraphicsScene::createVisualDelegate(): Creating new content item from:"<<visualItem->itemName();
 		AbstractContent * visual = visualItem->createDelegate(this,m_liveRoot);
 		addContent(visual, true);
 		
@@ -591,9 +594,17 @@ void MyGraphicsScene::startTransition()
 {
 }
 
+bool MyGraphicsScene::isTransitionActive()
+{
+	return m_fadeTimer ? m_fadeTimer->isActive() : false;
+}
+
 void MyGraphicsScene::endTransition()
 {
 	m_fadeTimer->stop();
+	
+	if(DEBUG_MYGRAPHICSSCENE)
+		qDebug() << "MyGraphicsScene::endTransition(): mark";
 
 	#if QT46_OPAC_ENAB > 0
 		qSetEffectOpacity(m_fadeRoot,0);

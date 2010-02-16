@@ -157,6 +157,8 @@ public:
 	// Only relevant AFTER a slide has been set on the instance.
 	QList<QWidget*> controlWidgets(); 
 	
+	bool isTransitionActive();
+	
 signals:
 	void nextGroup();
 	void jumpToGroup(int);

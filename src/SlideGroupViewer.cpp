@@ -620,6 +620,11 @@ void SlideGroupViewer::setSceneContextHint(MyGraphicsScene::ContextHint hint)
 	scene()->setContextHint(hint);
 }
 
+bool SlideGroupViewer::isTransitionActive()
+{
+	return scene()->isTransitionActive();
+}
+
 SlideGroupViewer::~SlideGroupViewer()
 {
 	if(m_scene)

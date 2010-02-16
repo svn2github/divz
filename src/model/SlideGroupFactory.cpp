@@ -819,7 +819,7 @@ void SlideGroupViewControl::setCurrentSlide(int x)
 
 void SlideGroupViewControl::setCurrentSlide(Slide *s)
 {
-	m_slideViewer->setSlide(s);
+	//m_slideViewer->setSlide(s);
 	QModelIndex idx = m_slideModel->indexForSlide(s);
 	m_listView->setCurrentIndex(idx);
 	slideSelected(idx);

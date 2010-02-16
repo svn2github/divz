@@ -72,6 +72,9 @@ public:
 	
 	bool isLocal();
 	
+	// Will always return false if isLocal() is false
+	bool isTransitionActive();
+	
 	// If not isLocal(), controlWidgets() WILL return an empty list, regardless of scene. 
 	// Control widgets will appear in the network viewer screen local to the end point.
 	// Only relevant AFTER a slide has been set on the instance.

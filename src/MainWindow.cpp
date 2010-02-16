@@ -725,6 +725,13 @@ void MainWindow::setupOutputViews()
 	}
 }
 
+bool MainWindow::isTransitionActive()
+{
+	foreach(OutputInstance *inst, m_outputInstances)
+		if(inst->isTransitionActive())
+			return true;
+	return false;
+}
 
 void MainWindow::groupsDropped(QList<SlideGroup*> list)
 {
@@ -1110,101 +1117,6 @@ void MainWindow::setAutosaveEnabled(bool flag)
 
 
 
-/******************************************************************************
-** QDockWidgetTitleButtonP
-*/
-/*
-#include <qaction.h>
-#include <qdrawutil.h>
-#include <qfontmetrics.h>
-#include <qrubberband.h>
-#include <qstylepainter.h>
-#include <qfontmetrics.h>
-#include <qtoolbutton.h>
-
-class QDockWidgetTitleButtonPP : public QAbstractButton
-{
-    Q_OBJECT
-
-public:
-    QDockWidgetTitleButtonP(QDockWidget *dockWidget);
-
-    QSize sizeHint() const;
-    inline QSize minimumSizeHint() const
-    { return sizeHint(); }
-
-    void enterEvent(QEvent *event);
-    void leaveEvent(QEvent *event);
-    void paintEvent(QPaintEvent *event);
-};
-
-
-QDockWidgetTitleButtonP::QDockWidgetTitleButtonP(QDockWidget *dockWidget)
-    : QAbstractButton(dockWidget)
-{
-    setFocusPolicy(Qt::NoFocus);
-}
-
-QSize QDockWidgetTitleButtonP::sizeHint() const
-{
-    ensurePolished();
-
-    int size = 2*style()->pixelMetric(QStyle::PM_DockWidgetTitleBarButtonMargin, 0, this);
-    if (!icon().isNull()) {
-        int iconSize = style()->pixelMetric(QStyle::PM_SmallIconSize, 0, this);
-        QSize sz = icon().actualSize(QSize(iconSize, iconSize));
-        size += qMax(sz.width(), sz.height());
-    }
-
-    return QSize(size, size);
-}
-
-void QDockWidgetTitleButtonP::enterEvent(QEvent *event)
-{
-    if (isEnabled()) update();
-    QAbstractButton::enterEvent(event);
-}
-
-void QDockWidgetTitleButtonP::leaveEvent(QEvent *event)
-{
-    if (isEnabled()) update();
-    QAbstractButton::leaveEvent(event);
-}
-
-
-
-void QDockWidgetTitleButtonP::paintEvent(QPaintEvent *)
-{
-    QPainter p(this);
-
-    QRect r = rect();
-    QStyleOptionToolButton opt;
-    opt.init(this);
-    opt.state |= QStyle::State_AutoRaise;
-
-    if (style()->styleHint(QStyle::SH_DockWidget_ButtonsHaveFrame, 0, this))
-    {
-        if (isEnabled() && underMouse() && !isChecked() && !isDown())
-            opt.state |= QStyle::State_Raised;
-        if (isChecked())
-            opt.state |= QStyle::State_On;
-        if (isDown())
-            opt.state |= QStyle::State_Sunken;
-        style()->drawPrimitive(QStyle::PE_PanelButtonTool, &opt, &p, this);
-    }
-
-    opt.icon = icon();
-    opt.subControls = 0;
-    opt.activeSubControls = 0;
-    opt.features = QStyleOptionToolButton::None;
-    opt.arrowType = Qt::NoArrow;
-    int size = style()->pixelMetric(QStyle::PM_SmallIconSize, 0, this);
-    opt.iconSize = QSize(size, size);
-    style()->drawComplexControl(QStyle::CC_ToolButton, &opt, &p, this);
-}*/
-
-
-
 void MainWindow::setupOutputControls()
 {
 	QList<Output*> allOut = AppSettings::outputs();
@@ -1286,7 +1198,6 @@ void MainWindow::groupSelected(const QModelIndex &idx)
 {
 	SlideGroup *s = m_docModel->groupFromIndex(idx);
         //qDebug() << "MainWindow::groupSelected(): selected group#:"<<s->groupNumber()<<", title:"<<s->groupTitle();
-	//openSlideEditor(s);
 	previewSlideGroup(s);
 	m_ui->actionEdit_Slide_Group->setEnabled(true);
 	m_ui->actionDelete_Slide_Group->setEnabled(true);
@@ -1300,7 +1211,7 @@ void MainWindow::prevGroup()
 	int nextRow = idx.row() - 1;
 	if(nextRow < 0)
 		nextRow = m_doc->numGroups() - 1;
-	qDebug() << "MainWindow::prevGroup(): nextRow:"<<nextRow;
+// 	qDebug() << "MainWindow::prevGroup(): nextRow:"<<nextRow;
 	jumpToGroup(nextRow);
 }
 
@@ -1310,13 +1221,13 @@ void MainWindow::nextGroup()
 	int nextRow = idx.row() + 1;
 	if(nextRow >= m_doc->numGroups())
 		nextRow = 0;
-	qDebug() << "MainWindow::nextGroup(): nextRow:"<<nextRow;
+// 	qDebug() << "MainWindow::nextGroup(): nextRow:"<<nextRow;
 	jumpToGroup(nextRow);
 }
 
 void MainWindow::jumpToGroup(int nextRow)
 {
-	qDebug() << "MainWindow::jumpToGroup(): row:"<<nextRow;
+// 	qDebug() << "MainWindow::jumpToGroup(): row:"<<nextRow;
 	SlideGroup *nextGroup = m_docModel->groupAt(nextRow);
 	QModelIndex nextIdx = m_docModel->indexForGroup(nextGroup);
 	//groupDoubleClicked(nextIdx);
@@ -1367,8 +1278,12 @@ void MainWindow::previewSlideGroup(SlideGroup *newGroup)
 		}
 	}
 
+	// I think I've coded my own API under an incorrect assumption - that is, that I need to set the slide group on the instance
+	// instead of just letting the SlideGroupViewControl set the slide group - which now seems the more logical method.
+	// Therefore, I've removed direct calls to OutputInstance::setSlideGroup() from MainWindow::* methods, and instead
+	// will rely on SlideGroupViewControl to set the slide group on the outpuTInstance that it is responsible for managing.
 	m_previewControl->setSlideGroup(newGroup);
-	m_previewInstance->setSlideGroup(newGroup);
+	//m_previewInstance->setSlideGroup(newGroup);
 	m_previewControl->setFocus(Qt::OtherFocusReason);
 
 }
@@ -1465,8 +1380,13 @@ void MainWindow::sendGroupToOutput(Output *output, SlideGroup *newGroup, Slide *
 // 		qDebug() << "MainWindow::setLiveGroup: Loading into view control:"<<newGroup;
 		ctrl->setSlideGroup(newGroup,currentSlide);
 // 		qDebug() << "MainWindow::setLiveGroup: Loading into output instance:"<<newGroup;
-		inst->setSlideGroup(newGroup,currentSlide);
-		
+
+		// I think I've coded my own API under an incorrect assumption - that is, that I need to set the slide group on the instance
+		// instead of just letting the SlideGroupViewControl set the slide group - which now seems the more logical method.
+		// Therefore, I've removed direct calls to OutputInstance::setSlideGroup() from MainWindow::* methods, and instead
+		// will rely on SlideGroupViewControl to set the slide group on the outpuTInstance that it is responsible for managing.
+		//inst->setSlideGroup(newGroup,currentSlide);
+		 
 		// hackish, I know - need a generic way for the slide group factory to set the text resized flag as well
 		if(newGroup->groupType() == SongSlideGroup::GroupType && 
 			(output->tags().toLower().indexOf("foldback") >= 0 ||
@@ -1480,7 +1400,7 @@ void MainWindow::sendGroupToOutput(Output *output, SlideGroup *newGroup, Slide *
 		qDebug() << "MainWindow::setLiveGroup: [2] Loading into view control:"<<newGroup;
 		ctrl->setSlideGroup(newGroup,currentSlide);
 		qDebug() << "MainWindow::setLiveGroup: [2] Loading into output instance:"<<newGroup;
-		inst->setSlideGroup(newGroup,currentSlide);
+		//inst->setSlideGroup(newGroup,currentSlide);
 			
 	}
 	

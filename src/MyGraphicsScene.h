@@ -78,6 +78,8 @@ class MyGraphicsScene : public QGraphicsScene
 		void configureContent(AbstractContent *content);
 		
 		QList<QWidget*> controlWidgets();
+		
+		bool isTransitionActive();
 	
 	signals:
 		void showPropertiesWidget(QWidget * widget);

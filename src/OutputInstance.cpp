@@ -277,6 +277,13 @@ void OutputInstance::applyOutputSettings(bool startHidden)
 			}
 		}
 	}
+	
+	if((x != Output::Network || !m_output->isEnabled())
+	    && m_outputServer)
+	{
+		m_outputServer->close();
+		delete m_outputServer;
+	}
 }
 
 // proxy methods
@@ -343,12 +350,13 @@ void OutputInstance::setSlideGroup(SlideGroup *group, int startSlide)
 
 void OutputInstance::setSlideGroup(SlideGroup *group, Slide * startSlide)
 {
+// 	qDebug() << "OutputInstance::setSlideGroup: ["<<m_output->name()<<"] emitting slideGroupChanged(), group:"<<group->assumedName();
 	emit slideGroupChanged(group,startSlide);
 	foreach(OutputInstance *m, m_mirrors)
 		m->setSlideGroup(group,startSlide);
 	if(isLocal())
 	{
-		//qDebug() << "OutputInstance::setSlideGroup: ["<<m_output->name()<<"] Calling m_viewer->setSlideGroup(), group:"<<group->assumedName()<<", startSlide:"<<startSlide;
+// 		qDebug() << "OutputInstance::setSlideGroup: ["<<m_output->name()<<"] Calling m_viewer->setSlideGroup(), group:"<<group->assumedName()<<", startSlide:"<<startSlide;
 		//setVisible(m_output->isEnabled());
 
 		m_viewer->setSlideGroup(group,startSlide);
@@ -506,6 +514,13 @@ void OutputInstance::forceGLDisabled(bool flag)
 	}
 }
 
+bool OutputInstance::isTransitionActive()
+{
+	if(!isLocal())
+		return false;
+		
+	return m_viewer->isTransitionActive();
+}
 
 void OutputInstance::setSceneContextHint(MyGraphicsScene::ContextHint hint)
 {

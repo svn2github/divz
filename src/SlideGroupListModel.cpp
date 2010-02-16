@@ -644,6 +644,14 @@ void SlideGroupListModel::needPixmap(Slide *group)
 
 void SlideGroupListModel::makePixmaps()
 {
+	// Avoid generating a pixmap while the transiton is active because
+	// the pixmap rendering is a potentially CPU-intensive and time-costly
+	// routine which would likely cause the transition to stutter and not
+	// render smoothly.
+	if(MainWindow::mw() &&
+	   MainWindow::mw()->isTransitionActive())
+	   return;
+	
 	if(m_needPixmaps.isEmpty())
 	{
 		m_needPixmapTimer.stop();

@@ -10,6 +10,9 @@
 #include <QPixmapCache>
 #include <QDebug>
 
+// Just so we can access MainWindow::isTransitionActive() through the MainWindow::mw() pointer
+#include "MainWindow.h"
+
 
 #define NEED_PIXMAP_TIMEOUT 100
 #define NEED_PIXMAP_TIMEOUT_FAST 50
@@ -190,7 +193,15 @@ void DirectoryListModel::setIconSize(const QSize& size)
 
 /** slots **/
 void DirectoryListModel::makePixmaps()
-{
+{	
+	// Avoid generating a pixmap while the transiton is active because
+	// the pixmap rendering is a potentially CPU-intensive and time-costly
+	// routine which would likely cause the transition to stutter and not
+	// render smoothly.
+	if(MainWindow::mw() &&
+	   MainWindow::mw()->isTransitionActive())
+	   return;
+	
 	if(m_needPixmaps.isEmpty())
 	{
 		m_needPixmapTimer.stop();

@@ -70,6 +70,9 @@ public:
 	QString networkHost() { return ""; }
 	void log(const QString&, int severity=-1);
 	
+	// returns true if ANY OutputInstance currently open returns true for isTransitionActive
+	bool isTransitionActive();
+	
 signals:
 	void documentChanged(Document*);
 	void docSettingsChanged(Document*);
