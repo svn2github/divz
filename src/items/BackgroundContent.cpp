@@ -115,16 +115,18 @@ BackgroundContent::~BackgroundContent()
 	
 	if(m_controlBase)
 	{
-// 		m_controlBase->deleteLater();
+ 		m_controlBase->deleteLater();
  		m_controlBase = 0;
 // 	
 	}	
 	if(m_slider)
 	{
-// 		m_slider->deleteLater();
+ 		m_slider->deleteLater();
  		m_slider = 0;
 	}
 	
+	if(m_videoPollTimer.isActive())
+		m_videoPollTimer.stop();
 #ifdef PHONON_ENABLED
 	if(m_proxy)
 		delete m_proxy;
@@ -1333,7 +1335,7 @@ void BackgroundContent::pollVideoClock()
 		
 	m_lockSeekValueChanging = true;
 	
-// 	qDebug() << "BackgroundContent::pollVideoClock(): hit "<<this<<", controlBase: "<<m_controlBase;
+//  	qDebug() << "BackgroundContent::pollVideoClock(): hit controlBase: "<<m_controlBase;
 	
 	if(m_slider &&
 	   m_videoProvider &&
@@ -1341,10 +1343,14 @@ void BackgroundContent::pollVideoClock()
 	   modelItem()->fillVideoFile() != "" &&
 	   modelItem()->fillType() == AbstractVisualItem::Video)
 	{
-// 		if(m_slider->maximum() != m_videoProvider->duration())
-// 			m_slider->setMaximum(m_videoProvider->duration());
-// 		m_slider->setValue(m_videoProvider->videoClock());
-// 		qDebug() << "BackgroundContent::pollVideoClock(): Clock at "<<m_videoProvider->videoClock()<<" / "<<m_videoProvider->duration();
+		if(m_slider->maximum() != m_videoProvider->duration())
+ 		{
+ 			//qDebug() << "BackgroundContent::pollVideoClock(): Updating maximum to "<<m_videoProvider->duration();
+ 			m_slider->setMaximum(m_videoProvider->duration());
+ 		}
+ 		double clock = m_videoProvider->videoClock();
+ 		m_slider->setValue(clock);
+ 		//qDebug() << "BackgroundContent::pollVideoClock(): Clock at "<<((int)clock)<<" / "<<m_videoProvider->duration()<<", time used:"<<t.elapsed();
 	}
 	
 	m_lockSeekValueChanging = false;
@@ -1357,12 +1363,19 @@ void BackgroundContent::seek(int x)
 		
 	int delta = x; // - m_videoProvider->videoClock();
 	m_videoProvider->seekTo(abs(delta), delta < 0 ? AVSEEK_FLAG_BACKWARD : 0);
-// 	qDebug() << "BackgroundContent::seek(): x:"<<x<<", delta:"<<delta<<", AVSEEK_FLAG_BACKWARD:"<<AVSEEK_FLAG_BACKWARD;
+ 	qDebug() << "BackgroundContent::seek(): x:"<<x<<", delta:"<<delta<<", AVSEEK_FLAG_BACKWARD:"<<AVSEEK_FLAG_BACKWARD;
+}
+
+void BackgroundContent::controlWidgetDestroyed()
+{
+	m_videoPollTimer.stop();
+	m_slider = 0;
+	m_controlBase = 0;
 }
 
 QWidget * BackgroundContent::controlWidget()
 {
- 	return 0;
+  	return 0;
 	
 	if(modelItem()->fillVideoFile() != "" &&
 	   modelItem()->fillType() == AbstractVisualItem::Video)
@@ -1389,6 +1402,8 @@ QWidget * BackgroundContent::controlWidget()
 		layout->setMargin(0);
 		
 		layout->addWidget(m_slider);
+		
+		connect(m_controlBase, SIGNAL(destroyed()), this, SLOT(controlWidgetDestroyed()));
 		
 		return m_controlBase;
 		

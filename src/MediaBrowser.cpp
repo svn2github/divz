@@ -362,6 +362,7 @@ void MediaBrowser::setupUI()
 	m_listView->setModel(m_fsModel);
 
 	connect(m_listView, SIGNAL(doubleClicked(const QModelIndex &)), this, SLOT(indexDoubleClicked(const QModelIndex &)));
+	connect(m_listView,     SIGNAL(activated(const QModelIndex &)), this, SLOT(indexDoubleClicked(const QModelIndex &)));
 	connect(m_listView,       SIGNAL(clicked(const QModelIndex &)), this, SLOT(indexSingleClicked(const QModelIndex &)));
 
 	// Add action buttons

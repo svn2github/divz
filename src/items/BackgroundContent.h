@@ -94,6 +94,8 @@ class BackgroundContent : public AbstractContent, public QVideoConsumer
 	void sceneRectChanged(const QRectF &);
 	void renderSvg();
 	
+	void controlWidgetDestroyed();
+	
 	void animateZoom();
 	
 #ifdef PHONON_ENABLED

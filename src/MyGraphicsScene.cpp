@@ -1313,9 +1313,13 @@ QList<QWidget*> MyGraphicsScene::controlWidgets()
 	QList<QWidget*> widgets;
 	foreach(AbstractContent *item, m_content)
 	{
-		QWidget * widget = item->controlWidget();
-		if(widget)
-			widgets << widget;
+		if(item->parentItem() == m_liveRoot)
+		{
+			QWidget * widget = item->controlWidget();
+			
+			if(widget)
+				widgets << widget;
+		}
 	}
 	
 	return widgets;

@@ -20,7 +20,7 @@
 bool SlideItemListModel_item_zval_compare(AbstractItem *a, AbstractItem *b)
 {
 	AbstractVisualItem * va = dynamic_cast<AbstractVisualItem*>(a);
-	AbstractVisualItem * vb = dynamic_cast<AbstractVisualItem*>(a);
+	AbstractVisualItem * vb = dynamic_cast<AbstractVisualItem*>(b);
 	if(va && vb) 
 		return va->zValue() > vb->zValue();
 	if(!va && vb)
@@ -160,20 +160,18 @@ QMimeData * SlideItemListModel::mimeData(const QModelIndexList & list) const
 	return data;
 }
 
-void SlideItemListModel::setSlide(Slide *g)
+void SlideItemListModel::setSlide(Slide *slide)
 {
-	if(!g)
+	if(!slide)
 		return;
 		
-	if(m_slide)// && m_slide != g)
-	{
+	if(m_slide)
 		disconnect(m_slide,0,this,0);
-	}
 	
-	connect(g,SIGNAL(slideItemChanged(AbstractItem *, QString, QString, QVariant, QVariant)),this,SLOT(itemChanged(AbstractItem *, QString, QString, QVariant)));
-	connect(g,SIGNAL(destroyed(QObject*)), this, SLOT(releaseSlide()));
+	connect(slide,SIGNAL(slideItemChanged(AbstractItem *, QString, QString, QVariant, QVariant)),this,SLOT(itemChanged(AbstractItem *, QString, QString, QVariant)));
+	connect(slide,SIGNAL(destroyed(QObject*)), this, SLOT(releaseSlide()));
 	
-	m_slide = g;
+	m_slide = slide;
 	
 	internalSetup();
 }
@@ -208,6 +206,13 @@ void SlideItemListModel::internalSetup()
 	m_pixmaps.clear();
 	
 	dataChanged(top,bottom);
+	
+// 	qDebug() << "SlideItemListModel::internalSetup(): Dump of m_sortedItems:";
+// 	foreach(AbstractItem * item, m_sortedItems)
+// 	{
+// 		qDebug() << "\t "<<item->itemName(); //<<" | "<<item->zValue();
+// 	}
+// 	qDebug() << "SlideItemListModel::internalSetup(): Done.";
 	
 }
 

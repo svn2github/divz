@@ -780,8 +780,6 @@ Slide * OutputInstance::setSlide(Slide *slide, bool takeOwnership)
 	if(!m_output->isEnabled())
 		return 0;
 		
-	setSlideInternal(slide);
-	
 	if(isLocal())
 	{
 		//qDebug() << "OutputInstance::setSlide: ["<<m_output->name()<<"] Setting slide#"<<m_slideNum;
@@ -789,10 +787,18 @@ Slide * OutputInstance::setSlide(Slide *slide, bool takeOwnership)
 		
 		m_viewer->setSlide(slide,takeOwnership);
 		
+		// 20100216: Moved setSlideInternal() to AFTER the call to m_viewer inorder for proper controlWidgets()
+		// functionality. In MyGraphicsScene, the parentItem() is checked and only items with the "live root"
+		// as the parent are queried for control widgets. By placing setSlideInternal() after m_viewer->setSlide()
+		// this ensures that the slideChanged() signal will be emitted, well, *after* the slide is changed, ensuring
+		// that the parentItem has had a change to be changed before controlWidgets() is queried for each item 
+		// in the scene.
+		setSlideInternal(slide);
 	}
 	else
 	{
-		
+		setSlideInternal(slide);
+	
 		if(m_outputServer)
 		{
 			//qDebug() << "OutputInstance::m_outputServer: Sending slide to server, num:"<<m_slideNum;

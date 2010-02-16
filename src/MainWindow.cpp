@@ -1167,6 +1167,7 @@ void MainWindow::setupOutputControls()
 		}
 		else
 		{
+			/*
 			QDockWidget *dock = new QDockWidget(QString(tr("%1 View")).arg(output->name()), this);
 			dock->setObjectName(output->name());
 
@@ -1178,6 +1179,7 @@ void MainWindow::setupOutputControls()
 			m_outputViewDocks[output->id()] = dock;
 
 			dock->setVisible(output->isEnabled());
+			*/
 		}
 	}
 }
@@ -1198,7 +1200,7 @@ void MainWindow::groupSelected(const QModelIndex &idx)
 {
 	SlideGroup *s = m_docModel->groupFromIndex(idx);
         //qDebug() << "MainWindow::groupSelected(): selected group#:"<<s->groupNumber()<<", title:"<<s->groupTitle();
-	previewSlideGroup(s);
+	//previewSlideGroup(s);
 	m_ui->actionEdit_Slide_Group->setEnabled(true);
 	m_ui->actionDelete_Slide_Group->setEnabled(true);
 	m_ui->actionSlide_Group_Properties->setEnabled(true);
