@@ -1460,15 +1460,12 @@ void MainWindow::sendGroupToOutput(Output *output, SlideGroup *newGroup, Slide *
 		ctrl->setOutputView(inst);
 		//m_outputTabs->addTab(ctrl,output->name());
 		outputCtrl->setViewControl(ctrl);
-		outputCtrl->setCustomFilters(factory->customFiltersFor(outputCtrl->outputInstance()));
-		
-		
+		outputCtrl->setCustomFilters(factory->customFiltersFor(outputCtrl->outputInstance(),newGroup));
 		
 // 		qDebug() << "MainWindow::setLiveGroup: Loading into view control:"<<newGroup;
 		ctrl->setSlideGroup(newGroup,currentSlide);
 // 		qDebug() << "MainWindow::setLiveGroup: Loading into output instance:"<<newGroup;
 		inst->setSlideGroup(newGroup,currentSlide);
-		
 		
 		// hackish, I know - need a generic way for the slide group factory to set the text resized flag as well
 		if(newGroup->groupType() == SongSlideGroup::GroupType && 

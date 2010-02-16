@@ -61,7 +61,7 @@ public:
 	
 	SlideGroup * newSlideGroup();
 	
-	AbstractItemFilterList customFiltersFor(OutputInstance *instace = 0);
+	AbstractItemFilterList customFiltersFor(OutputInstance *instace = 0, SlideGroup *group = 0);
 	SlideGroupViewControl * newViewControl();
 	AbstractSlideGroupEditor   * newEditor();
 	

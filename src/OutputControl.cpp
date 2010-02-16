@@ -329,7 +329,7 @@ void OutputControl::setupSyncWithBox()
 	}
 }
 
-void OutputControl::setupFilterList(AbstractItemFilterList selected)
+void OutputControl::setupFilterList(AbstractItemFilterList selected, AbstractItemFilterList defaultEnabled)
 {
 	m_filterList->clear();
 
@@ -346,6 +346,9 @@ void OutputControl::setupFilterList(AbstractItemFilterList selected)
 		// TODO - fix bug wherein Song filter gets "stuck" when going from a song to regular group
 		// HACK - ignore isMandatoryFor() until we can fix song filter bug
 		
+		// TODO - maybe? isMandatoryFor() is now officially buggy by design - not sure if it should be *fixed* or if the API should be changed.
+		// See, right now, if isMandatoryFor() checks the outputInstance()->slideGroup() - it will be using the PREVIOUS slide group, not the new one.
+		
 // 		if(impl->isMandatoryFor(outputInstance()))
 // 		{
 // 			t->setCheckState(Qt::Checked);
@@ -353,11 +356,26 @@ void OutputControl::setupFilterList(AbstractItemFilterList selected)
 // 			m_inst->addFilter(impl);
 // 		}
 // 		else
- 		if(selected.contains(impl) || impl->isMandatoryFor(outputInstance()))
+ 		if(selected.contains(impl) 
+//  			|| impl->isMandatoryFor(outputInstance()) 
+ 			|| defaultEnabled.contains(impl))
  		{
-			//qDebug() << "Enabling filter "<<impl->metaObject()->className()<<" because selected is "<<selected.contains(impl)<<" || is madatory is "<<impl->isMandatoryFor(outputInstance());
+// 			qDebug() << "Enabling filter "<<impl->metaObject()->className()<<" because selected is "<<selected.contains(impl)
+// 				//<<" || is madatory is "<<impl->isMandatoryFor(outputInstance())
+// 				<<" || defaultEnabled contains is "<<defaultEnabled.contains(impl);
+			
 			t->setCheckState(Qt::Checked);
 			m_inst->addFilter(impl);
+			
+			if(defaultEnabled.contains(impl))
+			{
+// 				qDebug()<<"Updating userRole+101";
+				t->setData(Qt::UserRole + 101, true);
+			}
+		}
+		else
+		{
+			//qDebug() << "**NOT** Enabling filter "<<impl->metaObject()->className()<<" for output "<< (outputInstance() ? outputInstance()->output()->name() : QString("[null outputInstance()]"))<<" because selected is "<<selected.contains(impl)<<" || is madatory is "<<impl->isMandatoryFor(outputInstance());
 		}
 		
 		m_filterList->addItem(t);
@@ -749,8 +767,17 @@ void OutputControl::setCustomFilters(AbstractItemFilterList list)
 	{
 		AbstractItemFilter * impl = m_customFilterList[i];
 		QListWidgetItem * item = m_filterList->item(i);
+		
+		QVariant var = item->data(Qt::UserRole + 101);
+		bool defaultEnabled = false;
+		if(var.isValid())
+			defaultEnabled = var.toBool();
+// 		else
+// 			qDebug() << "* Note: userRole+101 is not valid for classname "<<impl->metaObject()->className();
+		
 		if(item && item->checkState() == Qt::Checked
-			&& ! impl->isMandatoryFor(outputInstance()))
+			//&& ! impl->isMandatoryFor(outputInstance())
+			&& ! defaultEnabled)
 			selected.append(m_customFilterList[i]);
 	}
 	
@@ -770,7 +797,14 @@ void OutputControl::setCustomFilters(AbstractItemFilterList list)
 			m_customFilterList.append(filter);
 	}
 	
-	setupFilterList(selected);
+	
+	// The API has been changed for setupFilterList() to add a 2nd param with the list of
+	// filters to be enabled by default.
+	// This is because we are making the assumption that the list given to this method ('list'),
+	// is desired (by the programmer) to default to 'enabled', rather than just options 
+	// for the user to pick from. Note that we are not enabling ALL availableFilters() (below),
+	// just the ones in the list passed in the argument variable called 'list'
+	setupFilterList(selected,list);
 	
 	setupFoldbackSettings();
 	

@@ -167,7 +167,7 @@ public:
 	
 	virtual SlideGroup * newSlideGroup();
 	
-	virtual AbstractItemFilterList customFiltersFor(OutputInstance *instace = 0);
+	virtual AbstractItemFilterList customFiltersFor(OutputInstance *instace = 0, SlideGroup *group = 0);
 	virtual SlideGroupViewControl * newViewControl();
 	virtual AbstractSlideGroupEditor   * newEditor();
 	virtual NativeViewer * newNativeViewer();

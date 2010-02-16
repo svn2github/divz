@@ -79,7 +79,7 @@ protected:
 	void setupUI();
 	void setupSyncWidgetUI();
 	void setupAdvancedUI();
-	void setupFilterList(AbstractItemFilterList selected = AbstractItemFilterList());
+	void setupFilterList(AbstractItemFilterList selected = AbstractItemFilterList(), AbstractItemFilterList defaultEnabled = AbstractItemFilterList());
 	
 	void setupFoldbackSettings();
 	

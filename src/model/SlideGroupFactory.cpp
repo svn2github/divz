@@ -924,7 +924,7 @@ SlideGroupFactory::~SlideGroupFactory()
 	}
 }
 
-AbstractItemFilterList SlideGroupFactory::customFiltersFor(OutputInstance *instace)
+AbstractItemFilterList SlideGroupFactory::customFiltersFor(OutputInstance *,SlideGroup *)
 {
 	return AbstractItemFilterList();
 }

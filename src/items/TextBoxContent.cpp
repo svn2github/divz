@@ -104,6 +104,7 @@ void TextBoxContent::setHtml(const QString & htmlCode)
 {
         DEBUG_TSTART();
 	
+	//qDebug()<<modelItem()->itemName()<<"TextBoxContent::setHtml(): htmlCode:"<<htmlCode;
 	m_text->setHtml(htmlCode);
 	m_shadowText->setHtml(htmlCode);
 	
@@ -198,7 +199,7 @@ void TextBoxContent::syncFromModelItem(AbstractVisualItem *model)
 	
 	
 
-	if(textModel->text().indexOf('<') < 0)
+	if (!Qt::mightBeRichText(textModel->text()))
 	{
 		qDebug() << "TextBoxContent:: converting plain text from model item to html";
 		m_text->setPlainText(textModel->text());
@@ -531,6 +532,7 @@ void TextBoxWarmingThread::run()
 	
 			
 	QString htmlCode = model->text();
+	qDebug()<<model->itemName()<<"TextBoxWarmingThread::run(): htmlCode:"<<htmlCode;
 	
 	QTextDocument doc;
 	QTextDocument shadowDoc;
@@ -671,11 +673,14 @@ void TextBoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * 
 		// to scale the text glyphs directly (vector scaling), rather than scaling bits 
 		// in a pixmap (bitmap scaling), producing more legible results at lower scalings
 		
-		//qDebug() << "TextBoxContent::paint: Rendering either preview or no shadow";
+// 		qDebug() << modelItem()->itemName()<<"TextBoxContent::paint: Rendering either preview or no shadow";
 		
 		QAbstractTextDocumentLayout::PaintContext pCtx;
 
-		pCtx.clip = option->exposedRect;
+		// What was this for - improving performance?
+		// I've removed it because it seems to be causing the issue reported in Issue #51 on the google code issues tracker.
+		// I'll keep an eye on performance to see if it suffers at all. For now, closing issue #51.
+		//pCtx.clip = option->exposedRect;
 		
 		bool needRestore = false;
 		
@@ -690,12 +695,16 @@ void TextBoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * 
 			QRect cRect = contentsRect();
 			painter->translate(cRect.width()/xf - m_zoomCurSize.x()/xf,cRect.height()/yf - m_zoomCurSize.y()/yf);
 			painter->scale(sx,sy);
+			
+// 			qDebug() << modelItem()->itemName()<<"TextBoxContent::paint: Enabling tranlate & scale. Scale:"<<sx<<","<<sy<<". xf/yf:"<<xf<<","<<yf;
 		}
 			
 			
 	
 		if(modelItem()->shadowEnabled())
 		{
+// 			qDebug() << modelItem()->itemName()<<"TextBoxContent::paint: Drawing m_shadowText";
+							
 			painter->save();
 			
 			painter->translate(modelItem()->shadowOffsetX(),modelItem()->shadowOffsetY());
@@ -713,7 +722,7 @@ void TextBoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * 
 	else
 	{
 		QPixmap cache;
-		//qDebug() << "TextBoxContent::paint: Rendering either live or with shadow";
+// 		qDebug() << modelItem()->itemName()<<"TextBoxContent::paint: Rendering either live or with shadow";
 		
 		// The primary and only reason we cache the text rendering is inorder
 		// to paint the text and shadow as a single unit (e.g. composite the

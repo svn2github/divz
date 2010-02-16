@@ -391,7 +391,7 @@ Slide * OutputInstance::setSlideGroupInternal(SlideGroup *group, Slide * startSl
 	
 	connect(group,SIGNAL(slideChanged(Slide *, QString, AbstractItem *, QString, QString, QVariant)),this,SLOT(slideChanged(Slide *, QString, AbstractItem *, QString, QString, QVariant)));
 
-	m_slideGroup  = group;
+	m_slideGroup = group;
 	
 	QList<Slide*> slist = group->slideList();
 	qSort(slist.begin(), slist.end(), OuputInstance_slide_num_compare);

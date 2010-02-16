@@ -25,10 +25,18 @@ SongFoldbackTextFilter::SongFoldbackTextFilter()
 
 bool SongFoldbackTextFilter::isMandatoryFor(OutputInstance * inst)
 {
+// 	qDebug() << "SongFoldbackTextFilter::isMandatoryFor(): inst:"<<inst;
 	if(!inst)
 		return false;
 		
+// 	qDebug() << "SongFoldbackTextFilter::isMandatoryFor(): inst name:"<<inst->output()->name();
 	SlideGroup *group = inst->slideGroup();
+	
+// 	qDebug() << "SongFoldbackTextFilter::isMandatoryFor(): group:"<<group;
+	if(group)
+	{
+// 		qDebug() << "SongFoldbackTextFilter::isMandatoryFor(): group type:"<<group->groupType()<<", SongSlideGroup::GroupType:"<<SongSlideGroup::GroupType;
+	}
 	
 	return group && group->groupType() == SongSlideGroup::GroupType &&
 		inst->output() && (inst->output()->name().toLower().indexOf("foldback") > -1 ||
@@ -70,9 +78,10 @@ AbstractItem * SongFoldbackTextFilter::mutate(const AbstractItem *sourceItem)
 				int row = slideNumber.toInt();
 				QString passage = row >= list.size() ? "" : list[row];
 				
-				
+				//qDebug() << "SongFoldbackTextFilter: processing row:"<<row;
 				// Create the HTML for the lyrics
 				QStringList lines = passage.split("\n");
+				//qDebug() << "SongFoldbackTextFilter: lines:"<<lines;
 				QStringList html;
 				html << slideHeader;
 				foreach(QString line, lines)
@@ -98,7 +107,7 @@ AbstractItem * SongFoldbackTextFilter::mutate(const AbstractItem *sourceItem)
 					QString textBlob = next.replace("\n","/");
 					QString substring = textBlob.left(28); // TODO MAGIC NUMBER ...is 28 a good width?
 					html << nextLinePrefix; //linePrefix;
-					html << "..."; // <br> is intentional to give it some whitespace before this line
+					html << "...";
 					html << substring;
 					html << lineSuffix;
 				}
@@ -120,6 +129,7 @@ AbstractItem * SongFoldbackTextFilter::mutate(const AbstractItem *sourceItem)
 			{
 				// no way to ID which passage of the song this textbox is for,
 				// therefore no way to find the original text
+				return SlideTextOnlyFilter::mutate(sourceItem);
 			}
 		
 		}
@@ -171,10 +181,22 @@ SlideGroup * SongSlideGroupFactory::newSlideGroup()
 	return dynamic_cast<SlideGroup*>(new SongSlideGroup());
 }
 	
-AbstractItemFilterList SongSlideGroupFactory::customFiltersFor(OutputInstance */*instace*/)
+AbstractItemFilterList SongSlideGroupFactory::customFiltersFor(OutputInstance *inst, SlideGroup *group)
 {
+	
+// 	qDebug() << "SongSlideGroupFactory::customFiltersFor(): group:"<<group;
+	if(group)
+	{
+// 		qDebug() << "SongSlideGroupFactory::customFiltersFor(): group type:"<<group->groupType()<<", SongSlideGroup::GroupType:"<<SongSlideGroup::GroupType;
+	}
+	
 	AbstractItemFilterList list;
-	list << SongFoldbackTextFilter::instance();
+	
+	if(group && group->groupType() == SongSlideGroup::GroupType &&
+		inst->output() && (inst->output()->name().toLower().indexOf("foldback") > -1 ||
+				   inst->output()->tags().toLower().indexOf("foldback") > -1))
+		list << SongFoldbackTextFilter::instance();
+	
 	return list;
 }
 
