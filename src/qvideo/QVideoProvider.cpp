@@ -156,7 +156,7 @@ QPixmap QVideoProvider::iconForFile(const QString & file)
 	if(!cache.isNull())
 		return cache;
 	
-	// Dont insert the gray pixmap into cache in case we actually get 
+	// Dont insert the gray pixmap into cache in case we actually get
 	// a pixmap on the next call to the generator for the same file
 	QPixmap grayPixmap(48,48);
 	grayPixmap.fill(Qt::lightGray);

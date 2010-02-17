@@ -67,6 +67,10 @@ protected:
 	
 	void loadEntryList();
 	
+	QString cacheFile(const QString& file) const;
+	
+	QHash<QString,QPixmap> m_pixmapCache;
+	
 // members:
 	QHash<int,QIcon> m_iconTypeCache;
 	
@@ -92,6 +96,7 @@ protected:
 	bool m_lockRowcount;
 	
 	int m_nameLengthMax;
+	
 	
 	
 // 	QFileSystemWatcher * m_watcher;

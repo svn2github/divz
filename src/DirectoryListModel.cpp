@@ -6,6 +6,10 @@
 // #include <QFileIconProvider>
 // #include <QFileInfo>
 
+#include "AppSettings.h"
+
+#include "3rdparty/md5/md5.h"
+
 #include <QPainter>
 #include <QPixmapCache>
 #include <QDebug>
@@ -13,6 +17,7 @@
 // Just so we can access MainWindow::isTransitionActive() through the MainWindow::mw() pointer
 #include "MainWindow.h"
 
+#define CACHE_DIR "dviz-directorylist"
 
 #define NEED_PIXMAP_TIMEOUT 100
 #define NEED_PIXMAP_TIMEOUT_FAST 50
@@ -66,6 +71,16 @@ int DirectoryListModel::rowCount ( const QModelIndex & /*parent */) const
 	return m_entryList.size();
 }
 
+QString DirectoryListModel::cacheFile(const QString& file) const
+{
+	QPixmap cache;
+	QDir path(QString("%1/%2").arg(AppSettings::cachePath()).arg(CACHE_DIR));
+	if(!path.exists())
+		QDir(AppSettings::cachePath()).mkdir(CACHE_DIR);
+	
+	return QString("%1/%2/%3").arg(AppSettings::cachePath()).arg(CACHE_DIR).arg(MD5::md5sum(file));
+}
+
 QVariant DirectoryListModel::data ( const QModelIndex & index, int role ) const
 {
 	if (!index.isValid())
@@ -96,7 +111,13 @@ QVariant DirectoryListModel::data ( const QModelIndex & index, int role ) const
 			DirectoryListModel * self = const_cast<DirectoryListModel*>(this);
  			if(info.isFile())
  			{
-				self->needPixmap(info.canonicalFilePath());
+ 				QString file = info.canonicalFilePath();
+ 				QString cache = cacheFile(file);
+ 				if(m_pixmapCache.contains(cache))
+ 					return m_pixmapCache[cache];
+ 				if(QFile(cache).exists())
+ 					return QPixmap(cache);
+ 				self->needPixmap(file);
 				return *m_blankPixmap;
  			}
  			else
@@ -123,6 +144,7 @@ QVariant DirectoryListModel::data ( const QModelIndex & index, int role ) const
 // DirectoryListModel::
 void DirectoryListModel::setDirectory(const QDir& d)
 {
+	m_pixmapCache.clear();
 	m_needPixmaps.clear();
 	m_dir = d;
 	m_listLoaded = false;
@@ -218,9 +240,16 @@ void DirectoryListModel::makePixmaps()
 	
 	QString key = cacheKey(info);
 	QPixmapCache::remove(key);
+	
+	QString file = info.canonicalFilePath();
+	QString cacheFilename = cacheFile(file);
 		
 	QPixmap icon = generatePixmap(info);
 	QPixmapCache::insert(key,icon);
+	
+	m_pixmapCache[cacheFilename] = icon;
+	icon.save(cacheFilename,"PNG");
+	
 	
 	m_needPixmapTimer.stop();
 	

@@ -219,7 +219,6 @@ public:
 		if(d)
 			d->step();
 
-
 		QApplication::processEvents();
 		if(MediaBrowser::isVideo(info.suffix()))
 		{
