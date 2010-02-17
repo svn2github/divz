@@ -1154,7 +1154,7 @@ void BackgroundContent::setVideoFile(const QString &name)
 				
 				//qDebug() << "BackgroundContent::setVideoFile: Playing video "<<name;
 				
-				m_startVideoPausedInPreview = true;
+				//m_startVideoPausedInPreview = true;
 				m_videoPauseEventCompleted = false;
 				
 // 				if(sceneContextHint() == MyGraphicsScene::Preview && 
@@ -1282,7 +1282,7 @@ void BackgroundContent::setPixmap(const QPixmap & pixmap)
 		modelItem()->fillType() == AbstractVisualItem::Video &&
 		m_imageSize.width() > 0)
 	{
-		//if(DEBUG_BACKGROUNDCONTENT)
+		if(DEBUG_BACKGROUNDCONTENT)
 			qDebug() << "BackgroundContent::setPixmap(): sceneContextHint() != Live/Preview, setting m_still true"; 
 // 		qDebug() << "BackgroundContent::setPixmap(): m_videoPlaying:"<<m_videoPlaying<<", provider:"<<m_videoProvider; 
 		m_still = true;
@@ -1425,13 +1425,13 @@ void BackgroundContent::controlWidgetDestroyed()
 
 void BackgroundContent::movieStateChanged(QMovie::MovieState state)
 {
-	qDebug() << "BackgroundContent::moveStateChanged: m_startVideoPausedInPreview:"<<m_startVideoPausedInPreview<<",m_still:"<<m_still<<",state:"<<state<<"==QMovie::Running:"<<QMovie::Running<<",m_videoPauseEventCompleted:"<<m_videoPauseEventCompleted;
+// 	qDebug() << "BackgroundContent::moveStateChanged: m_startVideoPausedInPreview:"<<m_startVideoPausedInPreview<<",m_still:"<<m_still<<",state:"<<state<<"==QMovie::Running:"<<QMovie::Running<<",m_videoPauseEventCompleted:"<<m_videoPauseEventCompleted;
 	if(m_startVideoPausedInPreview && 
 	   m_still && 
 	   state == QMovie::Running &&
 	   m_videoPauseEventCompleted)
 	{
-		qDebug() << "BackgroundContent::moveStateChanged: Set m_still false";
+// 		qDebug() << "BackgroundContent::moveStateChanged: Set m_still false";
 		m_still = false; 
 		m_startVideoPausedInPreview = false;
 	}
@@ -1439,7 +1439,7 @@ void BackgroundContent::movieStateChanged(QMovie::MovieState state)
 	if(!m_playBtn || 
 	   !m_pauseBtn)
 	{
-		qDebug() << "BackgroundContent::moveStateChanged: Buttons destroyed/non existant, not updating";
+// 		qDebug() << "BackgroundContent::moveStateChanged: Buttons destroyed/non existant, not updating";
 		return;
 	}
 		

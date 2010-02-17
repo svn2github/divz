@@ -12,6 +12,7 @@ class QComboBox;
 class QSplitter;
 class SlideGroupViewer;
 class QVBoxLayout;
+class QCheckBox;
 #include <QHash>
 #include <QStringList>
 #include <QRegExp>
@@ -55,6 +56,8 @@ public:
 	void setIconSize(const QSize &);
 	QSize iconSize() { return m_iconSize; }
 	
+	bool autoPlayVideo() { return m_autoPlayVideo; }
+	
 signals:
 	void fileSelected(const QFileInfo&);
 	void fileDoubleClicked(const QFileInfo&);
@@ -72,6 +75,8 @@ public slots:
 	void goUp();
 	
 	void setFileTypeFilterList(QStringList);
+	
+	void setAutoPlayVideo(bool);
 	
 protected slots:
 	void indexDoubleClicked(const QModelIndex&);
@@ -149,6 +154,8 @@ protected:
 	QVBoxLayout	* m_viewerLayout;
 	//QList<QWidget*>	m_controlWidgets;
 	QWidget		* m_controlWidget;
+	bool		m_autoPlayVideo;
+	QCheckBox	* m_autoPlayCheckbox;
 	
 };
 

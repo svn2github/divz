@@ -267,6 +267,8 @@ MediaBrowser::MediaBrowser(const QString &directory, QWidget *parent)
 	, m_backgroundActionsEnabled(true)
 	, m_iconSize(MEDIABROWSER_LIST_ICON_SIZE)
 	, m_controlWidget(0)
+	, m_autoPlayVideo(true)
+	, m_autoPlayCheckbox(0)
 {
 	setObjectName("MediaBrowser");
 	setupUI();
@@ -446,12 +448,30 @@ void MediaBrowser::setupUI()
 
 QByteArray MediaBrowser::saveState()
 {
-	return m_splitter->saveState();
+	QVariantMap map;
+	map["splitter"] = m_splitter->saveState();
+	map["auto-play"] = m_autoPlayVideo;
+	
+	QByteArray array;
+	QDataStream b(&array, QIODevice::WriteOnly);
+	b << map;
+	return array;
 }
 
-bool MediaBrowser::restoreState(const QByteArray &state)
+bool MediaBrowser::restoreState(const QByteArray &array)
 {
-	return m_splitter->restoreState(state);
+	QByteArray copy = array;
+	QDataStream b(&copy, QIODevice::ReadOnly);
+	QVariantMap map;
+	b >> map;
+	
+	QVariant state = map["splitter"];
+	if(state.isValid())
+		m_splitter->restoreState(map["splitter"].toByteArray());
+	
+	QVariant flag = map["auto-play"];
+	if(flag.isValid())
+		setAutoPlayVideo(flag.toBool());
 }
 
 void MediaBrowser::setPreviousPathKey(const QString& key)
@@ -649,12 +669,21 @@ void MediaBrowser::indexDoubleClicked(const QModelIndex &idx)
 	}
 }
 
+void MediaBrowser::setAutoPlayVideo(bool flag)
+{
+	m_autoPlayVideo = flag;
+	
+	if(m_autoPlayCheckbox &&
+	   m_autoPlayCheckbox->isChecked() != flag)
+		m_autoPlayCheckbox->setChecked(flag);
+}
+
 void MediaBrowser::indexSingleClicked(const QModelIndex &idx)
 {
 	QFileInfo info = m_fsModel->fileInfo(idx);
 	m_btnBase->setEnabled(idx.isValid() && !info.isDir());
 
-	m_viewer->setStartBackgroundVideoPausedInPreview(true);
+	m_viewer->setStartBackgroundVideoPausedInPreview(!m_autoPlayVideo);
 	if(SlideGroup::canUseBackground(info))
 		m_viewer->slideGroup()->changeBackground(info);
 	else
@@ -663,7 +692,7 @@ void MediaBrowser::indexSingleClicked(const QModelIndex &idx)
 	if(m_controlWidget)
 	{
 		m_viewerLayout->removeWidget(m_controlWidget);
-		m_controlWidget->deleteLater();
+		delete m_controlWidget; //->deleteLater();
 		m_controlWidget = 0;
 	}
 	
@@ -673,6 +702,22 @@ void MediaBrowser::indexSingleClicked(const QModelIndex &idx)
 		if(!widgets.isEmpty())
 		{
 			m_controlWidget = widgets.takeFirst();
+			
+			m_autoPlayCheckbox = new QCheckBox(m_controlWidget);
+			m_autoPlayCheckbox->setChecked(m_autoPlayVideo);
+			
+			QLabel *label = new QLabel("Auto-play",m_controlWidget);
+			label->setBuddy(m_autoPlayCheckbox);
+			connect(m_autoPlayCheckbox, SIGNAL(toggled(bool)), this, SLOT(setAutoPlayVideo(bool)));
+			
+			QHBoxLayout *layout = dynamic_cast<QHBoxLayout*>(m_controlWidget->layout());
+			if(layout)
+			{
+				layout->addStretch(1);
+				layout->addWidget(m_autoPlayCheckbox);
+				layout->addWidget(label);
+			}
+			
 			m_controlWidget->setParent(m_viewerBase);
 			m_viewerLayout->addWidget(m_controlWidget);
 		}

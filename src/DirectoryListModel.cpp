@@ -157,7 +157,12 @@ QString DirectoryListModel::cacheKey(const QFileInfo& info) const
 
 QFileInfo DirectoryListModel::fileInfo(int row) const
 {
-	return row < m_entryList.size() ? 
+// 	if(row < 0)
+// 	{
+// 		qDebug() << "DirectoryListModel::fileInfo: row less than zero!";
+// 	}
+	
+	return row >= 0 && row < m_entryList.size() ? 
 		QFileInfo(m_entryList.at(row)) : 
 		QFileInfo();
 }
@@ -234,7 +239,7 @@ void DirectoryListModel::makePixmaps()
 /** private **/
 QPixmap DirectoryListModel::generatePixmap(const QFileInfo& info)
 {
-	qDebug() << "DirectoryListModel::generatePixmap: file:"<<info.canonicalFilePath();
+	//qDebug() << "DirectoryListModel::generatePixmap: file:"<<info.canonicalFilePath();
 	
 	QIcon icon = iconProvider()->icon(info);
 	if(icon.isNull())
@@ -260,7 +265,7 @@ QPixmap DirectoryListModel::generatePixmap(const QFileInfo& info)
 
 void DirectoryListModel::needPixmap(const QString& file)
 {
-	qDebug() << "DirectoryListModel::needPixmap: file:"<<file;
+	//qDebug() << "DirectoryListModel::needPixmap: file:"<<file;
 	if(!m_needPixmaps.contains(file))
 		m_needPixmaps.append(file);
 	if(!m_needPixmapTimer.isActive())
