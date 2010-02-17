@@ -80,6 +80,9 @@ class MyGraphicsScene : public QGraphicsScene
 		QList<QWidget*> controlWidgets();
 		
 		bool isTransitionActive();
+		
+		bool startBackgroundVideoPausedInPreview();
+		void setStartBackgroundVideoPausedInPreview(bool flag);
 	
 	signals:
 		void showPropertiesWidget(QWidget * widget);

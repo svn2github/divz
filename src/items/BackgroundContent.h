@@ -16,6 +16,8 @@ namespace Phonon {
 #include <QSlider>
 #include <QAction>
 #include <QLCDNumber>
+
+class QPushButton;
 	
 class BackgroundItem;
 class BackgroundImageWarmingThread : public QThread
@@ -85,6 +87,9 @@ class BackgroundContent : public AbstractContent, public QVideoConsumer
 	
 	QWidget * controlWidget();
 	
+	bool startVideoPausedInPreview() { return m_startVideoPausedInPreview; }
+	void setStartVideoPausedInPreview(bool flag) { m_startVideoPausedInPreview = flag; }
+	
     protected:
     	friend class BackgroundImageWarmingThread;
     	static QImage * internalLoadFile(QString file,QString cacheKey, QRect rect);
@@ -106,6 +111,8 @@ class BackgroundContent : public AbstractContent, public QVideoConsumer
 	void phononStateChanged(Phonon::State newState, Phonon::State /* oldState */);
 	void phononTick(qint64 time);
 #endif
+
+	void movieStateChanged(QMovie::MovieState);
 
 	void pollVideoClock();
 	void seek(int);
@@ -154,17 +161,24 @@ class BackgroundContent : public AbstractContent, public QVideoConsumer
 	QTimer m_videoPollTimer;
 	bool m_lockSeekValueChanging;
 	
+	QAction *m_playAction;
+	QAction *m_pauseAction;
+	QAction *m_stopAction;
+// 	QAction *m_nextAction;
+	QLCDNumber *m_timeLcd;
+	
+	QPushButton * m_playBtn;
+	QPushButton * m_pauseBtn;
+	
+	bool m_startVideoPausedInPreview;
+	bool m_videoPauseEventCompleted;
+	
 #ifdef PHONON_ENABLED
 	QGraphicsProxyWidget *m_proxy;
 	Phonon::VideoPlayer *m_player;
 	PhononTuplet *m_tuplet;
 	
 	
-	QAction *playAction;
-	QAction *pauseAction;
-	QAction *stopAction;
-	QAction *nextAction;
-	QLCDNumber *timeLcd;
 	Phonon::VolumeSlider *volumeSlider;
 	Phonon::SeekSlider *seekSlider;
 	Phonon::MediaObject *mediaObject;

@@ -101,6 +101,7 @@ MyGraphicsScene::MyGraphicsScene(ContextHint hint, QObject * parent)
     , m_fadeTimer(0)
     , m_contextHint(hint)
     , m_masterSlide(0)
+    , m_bg(0)
 {
 	m_staticRoot = new RootObject(this);
 	m_staticRoot->setPos(0,0);
@@ -1323,4 +1324,31 @@ QList<QWidget*> MyGraphicsScene::controlWidgets()
 	}
 	
 	return widgets;
+}
+
+
+bool MyGraphicsScene::startBackgroundVideoPausedInPreview()
+{
+	if(!m_bg)
+		return false;
+	AbstractContent * content = findVisualDelegate(m_bg);
+	if(!content)
+		return false;
+	BackgroundContent * background = dynamic_cast<BackgroundContent*>(content);
+	if(!background)
+		return false;
+	return background->startVideoPausedInPreview();
+}
+
+void MyGraphicsScene::setStartBackgroundVideoPausedInPreview(bool flag)
+{
+	if(!m_bg)
+		return;
+	AbstractContent * content = findVisualDelegate(m_bg);
+	if(!content)
+		return;
+	BackgroundContent * background = dynamic_cast<BackgroundContent*>(content);
+	if(!background)
+		return;
+	background->setStartVideoPausedInPreview(flag);
 }

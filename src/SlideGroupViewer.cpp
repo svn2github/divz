@@ -1399,7 +1399,7 @@ void SlideGroupViewer::videoStreamStarted()
 	if(!m_videoProvidersConsumed[p->canonicalFilePath()])
 	{
 		m_videoProvidersConsumed[p->canonicalFilePath()] = true;
-		//qDebug() << "SlideGroupViewer::videoStreamStarted: Consuming video stream and requesting pause";
+// 		qDebug() << "SlideGroupViewer::videoStreamStarted: "<<this<<" Consuming video stream "<<p->canonicalFilePath()<<" and requesting pause";
 		p->pause();
 	}
 }
@@ -1408,4 +1408,14 @@ void SlideGroupViewer::videoStreamStarted()
 QList<QWidget*> SlideGroupViewer::controlWidgets()
 {
 	return m_scene->controlWidgets();
+}
+
+bool SlideGroupViewer::startBackgroundVideoPausedInPreview()
+{
+	return m_scene->startBackgroundVideoPausedInPreview();
+}
+
+void SlideGroupViewer::setStartBackgroundVideoPausedInPreview(bool flag)
+{
+	m_scene->setStartBackgroundVideoPausedInPreview(flag);
 }

@@ -159,6 +159,9 @@ public:
 	
 	bool isTransitionActive();
 	
+	bool startBackgroundVideoPausedInPreview();
+	void setStartBackgroundVideoPausedInPreview(bool flag);
+	
 signals:
 	void nextGroup();
 	void jumpToGroup(int);

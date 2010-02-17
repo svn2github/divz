@@ -11,6 +11,7 @@ class QLineEdit;
 class QComboBox;
 class QSplitter;
 class SlideGroupViewer;
+class QVBoxLayout;
 #include <QHash>
 #include <QStringList>
 #include <QRegExp>
@@ -143,6 +144,11 @@ protected:
 	bool		m_backgroundActionsEnabled;
 	
 	QSize		m_iconSize;
+	
+	QWidget 	* m_viewerBase;
+	QVBoxLayout	* m_viewerLayout;
+	//QList<QWidget*>	m_controlWidgets;
+	QWidget		* m_controlWidget;
 	
 };
 

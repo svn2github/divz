@@ -816,7 +816,7 @@ void MainWindow::setupCentralWidget()
 
 	m_previewInstance = new OutputInstance(Output::previewInstance());
 	m_previewInstance->setCanZoom(true);
-	m_previewInstance->setSceneContextHint(MyGraphicsScene::StaticPreview);
+	m_previewInstance->setSceneContextHint(MyGraphicsScene::Preview);
 
 	m_previewControlBase = new QWidget(this);
 	QVBoxLayout * leftLayout3 = new QVBoxLayout(m_previewControlBase);
@@ -1200,7 +1200,7 @@ void MainWindow::groupSelected(const QModelIndex &idx)
 {
 	SlideGroup *s = m_docModel->groupFromIndex(idx);
         //qDebug() << "MainWindow::groupSelected(): selected group#:"<<s->groupNumber()<<", title:"<<s->groupTitle();
-	//previewSlideGroup(s);
+	previewSlideGroup(s);
 	m_ui->actionEdit_Slide_Group->setEnabled(true);
 	m_ui->actionDelete_Slide_Group->setEnabled(true);
 	m_ui->actionSlide_Group_Properties->setEnabled(true);

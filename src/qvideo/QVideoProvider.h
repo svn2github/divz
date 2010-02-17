@@ -141,6 +141,14 @@ public:
 	int duration();
 	double videoClock();
 	
+	QVideo * videoObject() { return m_video; }
+	
+	bool canPlayPause() { return ! m_mjpeg; }
+	
+	bool stopAllowed();
+	
+	int numConsumers(){ return m_receivers.size(); }
+	
 signals:
 	void streamStarted();
 	void streamStopped();
@@ -172,7 +180,6 @@ private:
 	
 	bool m_streamStarted;
 	
-	bool stopAllowed();
 	QList<QObject*> m_receivers;
 	
 	MjpegClient * m_mjpeg;

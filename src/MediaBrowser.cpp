@@ -266,6 +266,7 @@ MediaBrowser::MediaBrowser(const QString &directory, QWidget *parent)
 	, m_prevPathKey("media")
 	, m_backgroundActionsEnabled(true)
 	, m_iconSize(MEDIABROWSER_LIST_ICON_SIZE)
+	, m_controlWidget(0)
 {
 	setObjectName("MediaBrowser");
 	setupUI();
@@ -421,8 +422,11 @@ void MediaBrowser::setupUI()
 	
 	m_splitter->addWidget(browser);
 
-
-	m_viewer = new SlideGroupViewer(m_splitter);
+	m_viewerBase = new QWidget(m_splitter);
+	m_viewerLayout = new QVBoxLayout(m_viewerBase);
+	m_viewerLayout->setContentsMargins(0,0,0,0);
+	 
+	m_viewer = new SlideGroupViewer(m_viewerBase);
 	m_viewer->setCanZoom(true);
 	m_viewer->setSceneContextHint(MyGraphicsScene::Preview);
 
@@ -434,8 +438,10 @@ void MediaBrowser::setupUI()
 	SlideGroup *group = new SlideGroup();
 	group->addSlide(slide);
 	m_viewer->setSlideGroup(group);
-
-	m_splitter->addWidget(m_viewer);
+	
+	m_viewerLayout->addWidget(m_viewer);
+	
+	m_splitter->addWidget(m_viewerBase);
 }
 
 QByteArray MediaBrowser::saveState()
@@ -623,6 +629,9 @@ void MediaBrowser::dirBoxReturnPressed()
 
 void MediaBrowser::indexDoubleClicked(const QModelIndex &idx)
 {
+	if(!idx.isValid())
+		return;
+		
 	QFileInfo info = m_fsModel->fileInfo(idx);
 	if(info.isDir())
 	{
@@ -645,10 +654,30 @@ void MediaBrowser::indexSingleClicked(const QModelIndex &idx)
 	QFileInfo info = m_fsModel->fileInfo(idx);
 	m_btnBase->setEnabled(idx.isValid() && !info.isDir());
 
+	m_viewer->setStartBackgroundVideoPausedInPreview(true);
 	if(SlideGroup::canUseBackground(info))
 		m_viewer->slideGroup()->changeBackground(info);
 	else
 		m_viewer->slideGroup()->changeBackground(AbstractVisualItem::Solid,"#000");
+		
+	if(m_controlWidget)
+	{
+		m_viewerLayout->removeWidget(m_controlWidget);
+		m_controlWidget->deleteLater();
+		m_controlWidget = 0;
+	}
+	
+	if(MediaBrowser::isVideo(info.suffix()))
+	{
+		QList<QWidget*> widgets = m_viewer->controlWidgets();
+		if(!widgets.isEmpty())
+		{
+			m_controlWidget = widgets.takeFirst();
+			m_controlWidget->setParent(m_viewerBase);
+			m_viewerLayout->addWidget(m_controlWidget);
+		}
+	}
+	
 
 	if(!m_backgroundActionsEnabled)
 		emit fileSelected(info);

@@ -53,6 +53,10 @@ BackgroundContent::BackgroundContent(QGraphicsScene * scene, QGraphicsItem * par
     , m_controlBase(0)
     , m_slider(0)
     , m_lockSeekValueChanging(false)
+    , m_startVideoPausedInPreview(false)
+    , m_playBtn(0)
+    , m_pauseBtn(0)
+    , m_videoPauseEventCompleted(false)
 #ifdef PHONON_ENABLED
     , m_proxy(0)
     , m_player(0)
@@ -156,11 +160,11 @@ void BackgroundContent::dispose(bool anim)
 		m_videoPollTimer.stop();
 	}
 	
-	if(m_videoProvider) // && m_videoProvider->isPlaying())
+	if(m_videoProvider && m_videoPlaying)
 	{
 		m_videoPlaying = false;
- 		m_videoProvider->pause();
- 	}
+		m_videoProvider->pause();
+	}
  	
 //  	qDebug() << "BackgroundContent::dispose(): hit "<<this;
 	
@@ -170,7 +174,7 @@ void BackgroundContent::dispose(bool anim)
 // ::QGraphicsItem
 void BackgroundContent::show()
 {
-	if(m_videoProvider && !m_videoPlaying) // && m_videoProvider->isPlaying())
+	if(m_videoProvider && !m_videoPlaying) // && (sceneContextHint() != MyGraphicsScene::Preview || !m_startVideoPausedInPreview))
 	{
 		//qDebug() << "BackgroundContent::show: Playing video";
 		m_videoPlaying = true;
@@ -1133,7 +1137,10 @@ void BackgroundContent::setVideoFile(const QString &name)
 	 					m_videoPlaying = false;
  						tmp->pause();
  					}
-						
+ 					
+ 					
+					disconnect(tmp->videoObject(), 0, this, 0);
+					
 					tmp->disconnectReceiver(this);
 					QVideoProvider::releaseProvider(tmp);
 				}
@@ -1143,18 +1150,37 @@ void BackgroundContent::setVideoFile(const QString &name)
 				
 				m_videoProvider = p;
 				
+				connect(m_videoProvider->videoObject(), SIGNAL(movieStateChanged(QMovie::MovieState)), this, SLOT(movieStateChanged(QMovie::MovieState)));
+				
 				//qDebug() << "BackgroundContent::setVideoFile: Playing video "<<name;
 				
-				if(!m_videoPlaying)
-				{
-					//qDebug() << "BackgroundContent::setVideoFile: Visible, Playing video "<<name;
-					m_videoPlaying = true;
-					m_videoProvider->play();
-				}
-				else
-				{
-					//qDebug() << "BackgroundContent::setVideoFile: Not visible, not playing video";
-				} 
+				m_startVideoPausedInPreview = true;
+				m_videoPauseEventCompleted = false;
+				
+// 				if(sceneContextHint() == MyGraphicsScene::Preview && 
+// 				   m_startVideoPausedInPreview)
+// 				{
+// 					// Only really pause the video in preview if no other streams
+// 					// are connected to it 
+// 					if(m_videoProvider->stopAllowed())
+// 					{
+// 						m_videoPlaying = false;
+// 						m_videoProvider->pause();
+// 					}
+// 				}
+// 				else
+// 				{
+					if(!m_videoPlaying)
+					{
+						//qDebug() << "BackgroundContent::setVideoFile: Visible, Playing video "<<name;
+						m_videoProvider->play();
+						m_videoPlaying = true;
+					}
+					else
+					{
+						//qDebug() << "BackgroundContent::setVideoFile: Not visible, not playing video";
+					} 
+//				}
 				
 				m_still = false;
 				
@@ -1173,6 +1199,7 @@ void BackgroundContent::setVideoFile(const QString &name)
 	}
 	else
 	{
+		qDebug() << "BackgroundContent::setVideoFile: Set m_still true";
 		m_still = true;
 	}
 	
@@ -1249,20 +1276,22 @@ void BackgroundContent::setPixmap(const QPixmap & pixmap)
 
 	update();
 	
-	if(sceneContextHint() != MyGraphicsScene::Live && 
-	   sceneContextHint() != MyGraphicsScene::Preview && 
+	if(((sceneContextHint() != MyGraphicsScene::Live && 
+	     sceneContextHint() != MyGraphicsScene::Preview)
+	     || (sceneContextHint() == MyGraphicsScene::Preview && m_startVideoPausedInPreview)) && 
 		modelItem()->fillType() == AbstractVisualItem::Video &&
 		m_imageSize.width() > 0)
 	{
-		if(DEBUG_BACKGROUNDCONTENT)
+		//if(DEBUG_BACKGROUNDCONTENT)
 			qDebug() << "BackgroundContent::setPixmap(): sceneContextHint() != Live/Preview, setting m_still true"; 
-		m_still = true;
 // 		qDebug() << "BackgroundContent::setPixmap(): m_videoPlaying:"<<m_videoPlaying<<", provider:"<<m_videoProvider; 
+		m_still = true;
 		if(m_videoProvider && m_videoPlaying)
 		{
 			m_videoPlaying = false;
 			m_videoProvider->pause();
 		}
+		m_videoPauseEventCompleted = true;
 	}
         //GFX_CHANGED();
 }
@@ -1272,7 +1301,7 @@ void BackgroundContent::phononStateChanged(Phonon::State newState, Phonon::State
 {
 	if(m_inDestructor)
 		return;
-	if(timeLcd)
+	if(m_timeLcd)
 	{
 		switch (newState) {
 			case Phonon::ErrorState:
@@ -1287,20 +1316,20 @@ void BackgroundContent::phononStateChanged(Phonon::State newState, Phonon::State
 		//![9]
 		//![10]
 			case Phonon::PlayingState:
-				playAction->setEnabled(false);
-				pauseAction->setEnabled(true);
-				stopAction->setEnabled(true);
+				m_playAction->setEnabled(false);
+				m_pauseAction->setEnabled(true);
+				m_stopAction->setEnabled(true);
 				break;
 			case Phonon::StoppedState:
-				stopAction->setEnabled(false);
-				playAction->setEnabled(true);
-				pauseAction->setEnabled(false);
-				timeLcd->display("00:00");
+				m_stopAction->setEnabled(false);
+				m_playAction->setEnabled(true);
+				m_pauseAction->setEnabled(false);
+				m_timeLcd->display("00:00");
 				break;
 			case Phonon::PausedState:
-				pauseAction->setEnabled(false);
-				stopAction->setEnabled(true);
-				playAction->setEnabled(true);
+				m_pauseAction->setEnabled(false);
+				m_stopAction->setEnabled(true);
+				m_playAction->setEnabled(true);
 				break;
 		//![10]
 			case Phonon::BufferingState:
@@ -1313,19 +1342,19 @@ void BackgroundContent::phononStateChanged(Phonon::State newState, Phonon::State
 
 void BackgroundContent::phononTick(qint64 time)
 {
-	if(timeLcd)
+	if(m_timeLcd)
 	{
 		QTime displayTime(0, (time / 60000) % 60, (time / 1000) % 60);
 		
-		timeLcd->display(displayTime.toString("mm:ss"));
+		m_timeLcd->display(displayTime.toString("mm:ss"));
 	}
 }
 #endif
 
 void BackgroundContent::pollVideoClock()
 {
-	if(!m_slider)
-		return;
+// 	if(!m_slider)
+// 		return;
 		
 	if(m_inDestructor)
 		return;
@@ -1335,22 +1364,41 @@ void BackgroundContent::pollVideoClock()
 		
 	m_lockSeekValueChanging = true;
 	
-//  	qDebug() << "BackgroundContent::pollVideoClock(): hit controlBase: "<<m_controlBase;
+  	qDebug() << "BackgroundContent::pollVideoClock(): hit controlBase: "<<m_controlBase;
 	
-	if(m_slider &&
-	   m_videoProvider &&
+	if(m_videoProvider &&
 	   m_videoPlaying &&
 	   modelItem()->fillVideoFile() != "" &&
 	   modelItem()->fillType() == AbstractVisualItem::Video)
 	{
-		if(m_slider->maximum() != m_videoProvider->duration())
- 		{
- 			//qDebug() << "BackgroundContent::pollVideoClock(): Updating maximum to "<<m_videoProvider->duration();
- 			m_slider->setMaximum(m_videoProvider->duration());
- 		}
- 		double clock = m_videoProvider->videoClock();
- 		m_slider->setValue(clock);
- 		//qDebug() << "BackgroundContent::pollVideoClock(): Clock at "<<((int)clock)<<" / "<<m_videoProvider->duration()<<", time used:"<<t.elapsed();
+		int clock = (int)m_videoProvider->videoClock();
+	  	
+	  	if(m_slider)
+		{
+			if(m_slider->maximum() != m_videoProvider->duration())
+			{
+				//qDebug() << "BackgroundContent::pollVideoClock(): Updating maximum to "<<m_videoProvider->duration();
+				m_slider->setMaximum(m_videoProvider->duration());
+			}
+ 			m_slider->setValue(clock);
+	  	}
+
+		if(m_timeLcd)
+		{
+// 			QTime displayTime(0, (clock / 60000) % 60, (clock / 1000) % 60);
+
+			double time = (double)clock / 1000.0;
+			double min = time/60;
+			double sec = (min - (int)(min)) * 60;
+			double ms  = (sec - (int)(sec)) * 60;
+			QString str  =  (min<10? "0":"") + QString::number((int)min) + ":" +
+					(sec<10? "0":"") + QString::number((int)sec) + "." +
+					(ms <10? "0":"") + QString::number((int)ms );
+			
+			m_timeLcd->display(str);
+		}
+		
+ 		//qDebug() << "BackgroundContent::pollVideoClock(): Clock at "<<((int)clock)<<" / "<<m_videoProvider->duration(); //<<", time used:"<<t.elapsed();
 	}
 	
 	m_lockSeekValueChanging = false;
@@ -1371,11 +1419,45 @@ void BackgroundContent::controlWidgetDestroyed()
 	m_videoPollTimer.stop();
 	m_slider = 0;
 	m_controlBase = 0;
+	m_pauseBtn = 0;
+	m_playBtn = 0;
+}
+
+void BackgroundContent::movieStateChanged(QMovie::MovieState state)
+{
+	qDebug() << "BackgroundContent::moveStateChanged: m_startVideoPausedInPreview:"<<m_startVideoPausedInPreview<<",m_still:"<<m_still<<",state:"<<state<<"==QMovie::Running:"<<QMovie::Running<<",m_videoPauseEventCompleted:"<<m_videoPauseEventCompleted;
+	if(m_startVideoPausedInPreview && 
+	   m_still && 
+	   state == QMovie::Running &&
+	   m_videoPauseEventCompleted)
+	{
+		qDebug() << "BackgroundContent::moveStateChanged: Set m_still false";
+		m_still = false; 
+		m_startVideoPausedInPreview = false;
+	}
+		
+	if(!m_playBtn || 
+	   !m_pauseBtn)
+	{
+		qDebug() << "BackgroundContent::moveStateChanged: Buttons destroyed/non existant, not updating";
+		return;
+	}
+		
+	if(state == QMovie::Running)
+	{
+		m_playBtn->setEnabled(false);
+		m_pauseBtn->setEnabled(true);
+	}
+	else
+	{
+		m_playBtn->setEnabled(true);
+		m_pauseBtn->setEnabled(false);
+	}
 }
 
 QWidget * BackgroundContent::controlWidget()
 {
-  	return 0;
+//  	return 0;
 	
 	if(modelItem()->fillVideoFile() != "" &&
 	   modelItem()->fillType() == AbstractVisualItem::Video)
@@ -1385,23 +1467,65 @@ QWidget * BackgroundContent::controlWidget()
 			
 		if(!m_videoProvider)
 			return 0;
+			
+		if(!m_videoProvider->canPlayPause())
+			return 0;
 		
 		m_controlBase = new QWidget();
 		
-		m_slider = new QSlider();
-		m_slider->setOrientation(Qt::Horizontal);
-		m_slider->setMaximum(m_videoProvider->duration());
-		//connect(m_slider, SIGNAL(valueChanged(int)), m_videoProvider, SLOT(seekTo(int)));
-		connect(m_slider, SIGNAL(valueChanged(int)), this, SLOT(seek(int)));
+// 		m_slider = new QSlider();
+// 		m_slider->setOrientation(Qt::Horizontal);
+// 		m_slider->setMaximum(m_videoProvider->duration());
+// 		connect(m_slider, SIGNAL(valueChanged(int)), this, SLOT(seek(int)));
 		
-		m_videoPollTimer.setInterval(250);
-		connect(&m_videoPollTimer, SIGNAL(timeout()), this, SLOT(pollVideoClock()), Qt::QueuedConnection);
-		m_videoPollTimer.start();
+// 		m_videoPollTimer.setInterval(250);
+// 		connect(&m_videoPollTimer, SIGNAL(timeout()), this, SLOT(pollVideoClock())); //, Qt::QueuedConnection);
+// 		m_videoPollTimer.start();
 		
 		QHBoxLayout *layout = new QHBoxLayout(m_controlBase);
 		layout->setMargin(0);
 		
-		layout->addWidget(m_slider);
+		
+		m_playBtn = new QPushButton(qApp->style()->standardIcon(QStyle::SP_MediaPlay),"",m_controlBase);
+		//m_playBtn->setEnabled(false);
+// 		m_playAction = new QAction(qApp->style()->standardIcon(QStyle::SP_MediaPlay), tr("Play"), m_controlBase);
+// 		m_playAction->setShortcut(tr("Crl+P"));
+		
+		m_pauseBtn = new QPushButton(qApp->style()->standardIcon(QStyle::SP_MediaPause),"",m_controlBase);
+		//m_pauseBtn->setEnabled(true);
+		//m_pauseAction = new QAction(qApp->style()->standardIcon(QStyle::SP_MediaPause), tr("Pause"), m_controlBase);
+// 		m_pauseAction->setShortcut(tr("Ctrl+A"));
+
+		m_playBtn->setEnabled(!m_videoPlaying);
+		m_pauseBtn->setEnabled(m_videoPlaying);
+		
+		/// NOT showing Stop action right now because QVideo / QVideoDecoder have a "hard time" restarting playing after
+		// stop() is called. After stop() is called, then play(), then there is a large delay before video starts flowing
+		// again. 
+		
+// 		m_stopAction = new QAction(qApp->style()->standardIcon(QStyle::SP_MediaStop), tr("Stop"), m_controlBase);
+// 		m_stopAction->setShortcut(tr("Ctrl+S"));
+		
+// 		m_timeLcd = new QLCDNumber(m_controlBase);
+		
+		connect(m_playBtn,  SIGNAL(clicked()), m_videoProvider->videoObject(), SLOT(play()));
+		connect(m_pauseBtn, SIGNAL(clicked()), m_videoProvider->videoObject(), SLOT(pause()));
+// 		connect(m_stopAction,  SIGNAL(triggered()), m_videoProvider->videoObject(), SLOT(stop()));
+		
+// 		QToolBar *bar = new QToolBar(m_controlBase);
+// 	
+// 		bar->addAction(m_playAction);
+// 		bar->addAction(m_pauseAction);
+// 		bar->addAction(m_stopAction);
+		
+// 		layout->addWidget(bar);
+		layout->addWidget(m_playBtn);
+		layout->addWidget(m_pauseBtn);
+// 		layout->addWidget(m_slider);
+// 		layout->addWidget(m_timeLcd);
+		
+		
+		
 		
 		connect(m_controlBase, SIGNAL(destroyed()), this, SLOT(controlWidgetDestroyed()));
 		
@@ -1423,20 +1547,20 @@ QWidget * BackgroundContent::controlWidget()
 		
 		QWidget * baseWidget = new QWidget;
 	
-		playAction = new QAction(qApp->style()->standardIcon(QStyle::SP_MediaPlay), tr("Play"), baseWidget);
-		playAction->setShortcut(tr("Crl+P"));
-		playAction->setDisabled(true);
-		pauseAction = new QAction(qApp->style()->standardIcon(QStyle::SP_MediaPause), tr("Pause"), baseWidget);
-		pauseAction->setShortcut(tr("Ctrl+A"));
-		pauseAction->setDisabled(true);
-		stopAction = new QAction(qApp->style()->standardIcon(QStyle::SP_MediaStop), tr("Stop"), baseWidget);
-		stopAction->setShortcut(tr("Ctrl+S"));
-		stopAction->setDisabled(true);
+		m_playAction = new QAction(qApp->style()->standardIcon(QStyle::SP_MediaPlay), tr("Play"), baseWidget);
+		m_playAction->setShortcut(tr("Crl+P"));
+		m_playAction->setDisabled(true);
+		m_pauseAction = new QAction(qApp->style()->standardIcon(QStyle::SP_MediaPause), tr("Pause"), baseWidget);
+		m_pauseAction->setShortcut(tr("Ctrl+A"));
+		m_pauseAction->setDisabled(true);
+		m_stopAction = new QAction(qApp->style()->standardIcon(QStyle::SP_MediaStop), tr("Stop"), baseWidget);
+		m_stopAction->setShortcut(tr("Ctrl+S"));
+		m_stopAction->setDisabled(true);
 	
 	
-		connect(playAction, SIGNAL(triggered()), mediaObject, SLOT(play()));
-		connect(pauseAction, SIGNAL(triggered()), mediaObject, SLOT(pause()) );
-		connect(stopAction, SIGNAL(triggered()), mediaObject, SLOT(stop()));
+		connect(m_playAction, SIGNAL(triggered()), mediaObject, SLOT(play()));
+		connect(m_pauseAction, SIGNAL(triggered()), mediaObject, SLOT(pause()) );
+		connect(m_stopAction, SIGNAL(triggered()), mediaObject, SLOT(stop()));
 		
 		QToolBar *bar = new QToolBar(baseWidget);
 	
@@ -1458,8 +1582,8 @@ QWidget * BackgroundContent::controlWidget()
 		QPalette palette;
 		palette.setBrush(QPalette::Light, Qt::darkGray);
 		
-		timeLcd = new QLCDNumber(baseWidget);
-		timeLcd->setPalette(palette);
+		m_timeLcd = new QLCDNumber(baseWidget);
+		m_timeLcd->setPalette(palette);
 		
 		QHBoxLayout *playbackLayout = new QHBoxLayout(baseWidget);
 		playbackLayout->setMargin(0);
@@ -1467,12 +1591,12 @@ QWidget * BackgroundContent::controlWidget()
 		playbackLayout->addWidget(bar);
 	// 	playbackLayout->addStretch();
 		playbackLayout->addWidget(seekSlider);
-		playbackLayout->addWidget(timeLcd);
+		playbackLayout->addWidget(m_timeLcd);
 	
 		playbackLayout->addWidget(volumeLabel);
 		playbackLayout->addWidget(volumeSlider);
 		
-		timeLcd->display("00:00"); 
+		m_timeLcd->display("00:00"); 
 		
 		qDebug() << "BackgroundContent::controlWidget(): baseWidget:"<<baseWidget;
 		

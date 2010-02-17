@@ -693,7 +693,7 @@ void SlideGroupViewControl::slideChanged(Slide* newSlide)
 	{
 		QWidget * widget = m_controlWidgets.takeFirst();
 		m_itemControlBase->layout()->removeWidget(widget);
-		qDebug() << "SlideGroupViewControl::slideChanged(): removing widget:"<<widget;
+// 		qDebug() << "SlideGroupViewControl::slideChanged(): removing widget:"<<widget;
 		widget->deleteLater();
 		widget = 0;
 	}
@@ -710,7 +710,7 @@ void SlideGroupViewControl::slideChanged(Slide* newSlide)
 			{
 				widget->setParent(m_itemControlBase);
 				m_itemControlBase->layout()->addWidget(widget);
-				qDebug() << "SlideGroupViewControl::slideChanged(): adding widget:"<<widget;
+// 				qDebug() << "SlideGroupViewControl::slideChanged(): adding widget:"<<widget;
 				m_controlWidgets << widget;
 			}
 			
