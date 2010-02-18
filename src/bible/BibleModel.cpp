@@ -127,8 +127,11 @@ BibleVerseRef BibleVerseRef::normalize(const QString& tmp, const BibleVersion &v
 	if(bookNameMap.contains(bookTmp))
 		book = bookNameMap.value(bookTmp);
 		
-	if(book.isEmpty() || chapter.isEmpty() || verse.isEmpty())
+	if(book.isEmpty() || chapter.isEmpty())
 		return BibleVerseRef(false);
+		
+	if(verse.isEmpty())
+		verse = "-1";
 	
 	if(DEBUG_NORMALIZE)
 		qDebug() << "normalize("<<tmp<<"): step 2: norm:"<<book<<chapter<<verse<<range;
@@ -136,7 +139,7 @@ BibleVerseRef BibleVerseRef::normalize(const QString& tmp, const BibleVersion &v
 	BibleVerseRef final = BibleVerseRef(BibleChapter(BibleBook(book,version), chapter.toInt()), verse.toInt(), range.toInt());
 	
 	if(DEBUG_NORMALIZE)
-		qDebug() << "normalize("<<tmp<<"): step 3: final string: "<<final .toString();
+		qDebug() << "normalize("<<tmp<<"): step 3: final string: "<<final.toString();
 	
 	return final;
 	

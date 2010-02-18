@@ -55,6 +55,8 @@ void BibleConnector::downloadFinished(QNetworkReply *reply)
 		if(!list.isEmpty())
 		{
 			BibleVerse last = list.last();
+			if(reference.verseNumber() < 1)
+				reference.setVerseNumber(1);
 			reference.setVerseRange(last.verseNumber());
 		}
 	
@@ -138,7 +140,7 @@ BibleVerseList BibleConnector::loadCached(const BibleVerseRef& ref)
 	else
 	{
 		BibleVerseList list;
-		for(int i=ref.verseNumber(); i<ref.verseRange(); i++)
+		for(int i=ref.verseNumber(); i<ref.verseRange()+1; i++)
 			list << m_cache.value(ref.verseRef(i).cacheKey());
 			
 		return list;
@@ -164,7 +166,7 @@ bool BibleConnector::isCached(const BibleVerseRef& ref)
 	}
 	else
 	{
-		for(int i=ref.verseNumber(); i<ref.verseRange(); i++)
+		for(int i=ref.verseNumber(); i<ref.verseRange()+1; i++)
 			if(!m_cache.contains(ref.verseRef(i).cacheKey()))
 				return false;
 		return true;

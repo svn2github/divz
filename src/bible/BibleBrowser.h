@@ -45,15 +45,24 @@ public slots:
 	void setShowFullRefAtEnd(bool);
 	void setShowResponsiveReadingLabels(bool);
 
+	void addVersesToDocument();
+	void sendVersesLive();
+	
+	void addAnotherVerse();
+	void getChapter();
+	void prevChapter();
+	void nextChapter();
+
 protected slots:
 	void searchReturnPressed();
 	void searchTextChanged(const QString&);
 	void referenceAvailable(const BibleVerseRef&, const BibleVerseList&);
 	
-	void createSlideGroup();
 	void saveSettings();
 	
 protected:
+	SlideGroup * createSlideGroup();
+	
 	void closeEvent(QCloseEvent *);
 	
 	Slide * addSlide(SlideGroup *, TextBoxItem *, int height, const QSize & fitSize, const QString & plain);
@@ -64,8 +73,15 @@ protected:
 	QWidget	      * m_searchBase;
 	QComboBox     * m_versionCombo;
 	QLineEdit     * m_search;
+	QPushButton   * m_liveBtn;
 	QPushButton   * m_addBtn;
 	QLabel        * m_spinnerLabel;
+	QWidget       * m_refBase;
+	QLabel        * m_referenceLabel;
+	QPushButton   * m_addAnotherVerseBtn;
+	QPushButton   * m_getChapterBtn;
+	QPushButton   * m_prevChapterBtn;
+	QPushButton   * m_nextChapterBtn;
 	QTextEdit     * m_preview;
 	BibleGatewayConnector * m_bible;
 	BibleVerseList	m_currentList;
@@ -76,6 +92,13 @@ protected:
 	bool m_showFullRefAtStart;
 	bool m_showFullRefAtEnd;
 	bool m_showResponsiveReadingLabels;
+	
+	QList<SlideGroup*> m_generatedGroups;
+	void cullGeneratedGroups();
+	bool isGroupLive(SlideGroup*);
+	
+	bool m_attemptAutoLive;
+	bool isLastGeneratedGroupStillLive();
 };
 
 

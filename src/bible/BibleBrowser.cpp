@@ -26,7 +26,9 @@
 #include "model/TextBoxItem.h"
 #include "model/ItemFactory.h"
 #include "MainWindow.h"
-
+#include "AppSettings.h"
+#include "model/Output.h"
+#include "OutputInstance.h"
 
 BibleBrowser::BibleBrowser(QWidget *parent)
 	: QWidget(parent)
@@ -35,6 +37,7 @@ BibleBrowser::BibleBrowser(QWidget *parent)
 	, m_showFullRefAtStart(true)
 	, m_showFullRefAtEnd(false)
 	, m_showResponsiveReadingLabels(false)
+	, m_attemptAutoLive(false)
 {
 	setObjectName("BibleBrowser");
 	
@@ -48,17 +51,24 @@ BibleBrowser::BibleBrowser(QWidget *parent)
 	
 	setupUI();
 	
+	// Set version index AFTER setupUI so m_versionCombo can get created
+	m_versionCombo->setCurrentIndex(s.value("biblebrowser/current-version",0).toInt());
+	
+	m_search->setText(s.value("biblebrowser/last-reference","John 3:16").toString());
+	m_search->selectAll();
+	
 	m_bible = new BibleGatewayConnector();
 	connect(m_bible, SIGNAL(referenceAvailable(const BibleVerseRef& , const BibleVerseList &)), this, SLOT(referenceAvailable(const BibleVerseRef& , const BibleVerseList &)));
 }
 	
 BibleBrowser::~BibleBrowser() 
 {
+	saveSettings();
 }
 
 void BibleBrowser::saveSettings()
 {
-	qDebug() << "BibleBrowser::saveSettings()";
+//	qDebug() << "BibleBrowser::saveSettings()";
 	
 	QSettings s;
 	s.setValue("biblebrowser/show-verse-numbers",			m_showVerseNumbers);
@@ -66,11 +76,12 @@ void BibleBrowser::saveSettings()
 	s.setValue("biblebrowser/show-full-ref-at-start",		m_showFullRefAtStart);
 	s.setValue("biblebrowser/show-full-ref-at-end",			m_showFullRefAtEnd);
 	s.setValue("biblebrowser/show-responsive-reading-lables",	m_showResponsiveReadingLabels);
+	s.setValue("biblebrowser/current-version",			m_versionCombo->currentIndex());
+	s.setValue("biblebrowser/last-reference",			m_search->text());
 }
 
 void BibleBrowser::closeEvent(QCloseEvent*)
 {
-	
 }
 
 #define SET_MARGIN(layout,margin) \
@@ -152,6 +163,10 @@ void BibleBrowser::setupUI()
 	QPushButton * btnSearch = new QPushButton(QPixmap(":/data/stock-find.png"),"");
 	btnSearch->setToolTip("Seach BibleGateway.com for the verse reference entered on the left.");
 	
+	m_liveBtn = new QPushButton(QPixmap(":/data/stock-fullscreen.png"),"");
+	m_liveBtn->setToolTip("Send the selected verses to the output without adding to the document.");
+	m_liveBtn->setVisible(false);
+	
 	m_addBtn = new QPushButton(QPixmap(":/data/stock-add.png"),"");
 	m_addBtn->setToolTip("Add verses below as a slide group to current document");
 	m_addBtn->setVisible(false);
@@ -165,13 +180,49 @@ void BibleBrowser::setupUI()
 	hbox->addWidget(label);
 	hbox->addWidget(m_search);
 	hbox->addWidget(btnSearch);
+	hbox->addWidget(m_liveBtn);
 	hbox->addWidget(m_addBtn);
 	hbox->addWidget(m_spinnerLabel);
 	
 	//connect(m_search, SIGNAL(textChanged(const QString &)), this, SLOT(loadVerses(const QString &)));
 	connect(m_search, SIGNAL(returnPressed()), this, SLOT(searchReturnPressed()));
 	connect(btnSearch, SIGNAL(clicked()), this, SLOT(searchReturnPressed()));
-	connect(m_addBtn, SIGNAL(clicked()), this, SLOT(createSlideGroup()));
+	connect(m_liveBtn, SIGNAL(clicked()), this, SLOT(sendVersesLive()));
+	connect(m_addBtn, SIGNAL(clicked()), this, SLOT(addVersesToDocument()));
+	
+	// Add reference controls (btns to expand selection, etc)
+	
+	m_refBase = new QWidget(this);
+	m_refBase->setVisible(false);
+
+	QHBoxLayout *hbox2 = new QHBoxLayout(m_refBase);
+	SET_MARGIN(hbox2,0);
+	
+	m_referenceLabel = new QLabel(m_refBase);
+	
+	m_addAnotherVerseBtn = new QPushButton(QPixmap(":/data/stock-go-forward.png"),"");
+	m_addAnotherVerseBtn->setToolTip(tr("Add next verse from this chapter"));
+	
+	m_getChapterBtn = new QPushButton(QPixmap(":/data/stock-goto-top.png"),"");
+	m_getChapterBtn->setToolTip(tr("Get entire chapter"));
+	
+	m_prevChapterBtn = new QPushButton(QPixmap(":/data/stock-goto-first.png"),"");
+	m_prevChapterBtn->setToolTip(tr("Get previous chapter"));
+	
+	m_nextChapterBtn = new QPushButton(QPixmap(":/data/stock-goto-last.png"),"");
+	m_nextChapterBtn ->setToolTip(tr("Get next chapter"));
+	
+	hbox2->addWidget(m_referenceLabel);
+	hbox2->addWidget(m_addAnotherVerseBtn);
+	hbox2->addWidget(m_getChapterBtn);
+	hbox2->addWidget(m_prevChapterBtn);
+	hbox2->addWidget(m_nextChapterBtn);
+	
+	
+	connect(m_addAnotherVerseBtn, SIGNAL(clicked()), this, SLOT(addAnotherVerse()));
+	connect(m_getChapterBtn, SIGNAL(clicked()), this, SLOT(getChapter()));
+	connect(m_prevChapterBtn, SIGNAL(clicked()), this, SLOT(prevChapter()));
+	connect(m_nextChapterBtn, SIGNAL(clicked()), this, SLOT(nextChapter()));
 	
 	// add text preview
 	m_preview = new QTextEdit(this);
@@ -182,8 +233,14 @@ void BibleBrowser::setupUI()
 	font.setFixedPitch(true);
 	font.setPointSize(12);
 	m_preview->setFont(font);
+	
+	QFrame * line = new QFrame();
+        line->setFrameShape(QFrame::HLine);
+        line->setFrameShadow(QFrame::Sunken);
 
 	vbox->addWidget(m_searchBase);
+	vbox->addWidget(line);
+	vbox->addWidget(m_refBase);
 	vbox->addWidget(m_preview);
 	
 	
@@ -202,6 +259,8 @@ void BibleBrowser::searchReturnPressed()
 void BibleBrowser::searchTextChanged(const QString &text)
 {
 	//m_songListModel->filter(text);
+	saveSettings();
+	
 	m_spinnerLabel->setVisible(!text.isEmpty());
 	if(!text.isEmpty())
 	{
@@ -217,7 +276,7 @@ void BibleBrowser::searchTextChanged(const QString &text)
 			QMessageBox::warning(this,"Invalid Reference",QString(tr("Sorry, but %1 doesn't seem to be a valid bible reference.")).arg(text));
 			return;
 		}
-		
+		qDebug() << "BibleBrowser::searchTextChanged: "<<text;
 		if(m_bible->findReference(ref))
 		{
 			referenceAvailable(ref, m_bible->loadReference(ref));
@@ -232,6 +291,10 @@ void BibleBrowser::searchTextChanged(const QString &text)
 		m_spinnerLabel->movie()->stop();
 		m_preview->setPlainText("");
 		m_addBtn->setVisible(false);
+		m_liveBtn->setVisible(false);
+		m_refBase->setVisible(false);
+	
+
 	}
 	
 // 	QModelIndex idx = m_songListModel->indexForRow(0);
@@ -253,6 +316,8 @@ void BibleBrowser::referenceAvailable(const BibleVerseRef& reference, const Bibl
 	else
 	{
 		m_addBtn->setVisible(true);
+		m_liveBtn->setVisible(true);
+		m_refBase->setVisible(true);
 		
 		QStringList listText;
 		foreach(BibleVerse verse, list)
@@ -260,18 +325,115 @@ void BibleBrowser::referenceAvailable(const BibleVerseRef& reference, const Bibl
 			listText << QString("<sup>%1</sup>%2").arg(verse.verseNumber()).arg(verse.text());
 		}
 		
-		m_preview->setHtml(QString("<h2>%1</h2><p>%2</p>").arg(reference.toString(true),listText.join("\n")));
+		m_referenceLabel->setText(QString("<h2>%1</h2>").arg(reference.toString()));
+		
+		m_preview->setHtml(QString("<p>%2</p>").arg(listText.join("\n")));
 	}
+	
+	if(isLastGeneratedGroupStillLive())
+		sendVersesLive();
 }
 
 void BibleBrowser::loadVerses(const QString & filter)
 {
-
 	searchTextChanged(filter);
 	m_search->setText(filter);
 }
 
-#ifndef QCharPair
+void BibleBrowser::addVersesToDocument()
+{
+	SlideGroup *group = createSlideGroup();
+	if(group)
+		MainWindow::mw()->currentDocument()->addGroup(group);
+}
+
+void BibleBrowser::sendVersesLive()
+{
+	SlideGroup *group = createSlideGroup();
+	if(group)
+	{
+		MainWindow::mw()->setLiveGroup(group);
+		cullGeneratedGroups();
+		m_generatedGroups << group;
+	}
+}
+	
+void BibleBrowser::addAnotherVerse()
+{
+	//qDebug() << "m_currentRef.verseNumber():"<<m_currentRef.verseNumber()<<", m_currentRef.verseRange(): "<<m_currentRef.verseRange();
+	if(m_currentRef.verseRange() > 0 && m_currentRef.verseRange() != m_currentRef.verseNumber())
+		m_currentRef.setVerseRange(m_currentRef.verseRange() + 1);
+	else
+	{
+		m_currentRef.setVerseNumber(m_currentRef.verseNumber() + 1);
+		m_currentRef.setVerseRange(-1);
+	}
+	m_attemptAutoLive = true;
+	loadVerses(m_currentRef.toString());
+}
+
+void BibleBrowser::getChapter()
+{
+	QString versionCode = m_versionCombo->itemData(m_versionCombo->currentIndex()).toString();
+	loadVerses(QString("%1 %2").arg(m_currentRef.book().name()).arg(m_currentRef.chapter().chapterNumber()));
+}
+
+void BibleBrowser::prevChapter()
+{
+	QString versionCode = m_versionCombo->itemData(m_versionCombo->currentIndex()).toString();
+	int prev = m_currentRef.chapter().chapterNumber()-1;
+	if(prev > 0)
+		loadVerses(QString("%1 %2").arg(m_currentRef.book().name()).arg(prev));
+}
+
+void BibleBrowser::nextChapter()
+{
+	QString versionCode = m_versionCombo->itemData(m_versionCombo->currentIndex()).toString();
+	int next = m_currentRef.chapter().chapterNumber()+1;
+	loadVerses(QString("%1 %2").arg(m_currentRef.book().name()).arg(next));
+}
+
+bool BibleBrowser::isLastGeneratedGroupStillLive()
+{
+	if(m_generatedGroups.isEmpty())
+		return false;
+	return isGroupLive(m_generatedGroups.last());
+}
+
+void BibleBrowser::cullGeneratedGroups()
+{
+	QList<SlideGroup*> deleted;
+	
+	// This arbitrary number (5) below is here for this reason:
+	// Even though isGroupLive() may be false, this only indicates
+	// the group is not the LIVE group - the group still may be the "Fade out" group in a transition.
+	// Therefore, we leave a buffer of 5 groups sitting around till we go and delete them.
+	
+		
+	foreach(SlideGroup * group, m_generatedGroups)
+		if(!isGroupLive(group))
+			deleted << group;
+	foreach(SlideGroup * group, deleted)
+	{
+		if(m_generatedGroups.size() < 5)
+			return;
+			
+		group->deleteLater();
+		m_generatedGroups.removeAll(group);
+	}
+}
+
+bool BibleBrowser::isGroupLive(SlideGroup* group)
+{
+	QList<Output*> outputs = AppSettings::outputs();
+	foreach(Output* output, outputs)
+		if(MainWindow::mw()->outputInst(output->id())->slideGroup() == group)
+			return true;	
+	return false;
+}
+
+
+#ifndef QStringPair
 typedef QPair<QString,QString> QStringPair;
 #endif
 
@@ -401,21 +563,22 @@ static void BibleBrowser_setupTextBox(TextBoxItem *tmpText)
 	tmpText->setShadowBlurRadius(6);
 }
 
-void BibleBrowser::createSlideGroup()
+SlideGroup * BibleBrowser::createSlideGroup()
 {
 	BibleVerseList list = m_currentList;
 	
 	if(list.isEmpty())
 	{
 		QMessageBox::warning(this,"No Verses Found","Sorry, no verses were found!");
-		return;
+		return 0;
 	}
 	
 	// Adding entire chapters can take 10 - 30 seconds, so a progress dialog makes the UI more "friendly"
 	QProgressDialog progress;
 	progress.setWindowIcon(QIcon(":/data/icon-d.png"));
-	progress.setWindowTitle(QString(tr("Adding %1")).arg(m_currentRef.toString(true)));
-	progress.setLabelText(QString(tr("Adding %1...")).arg(m_currentRef.toString(true)));
+	//.arg(m_currentRef.toString(true)
+	progress.setWindowTitle(QString(tr("Creating Slides")));
+	progress.setLabelText(QString(tr("Setting up %1...")).arg(m_currentRef.toString(true)));
 	
 	int MinTextSize = 48;
 
@@ -640,7 +803,7 @@ void BibleBrowser::createSlideGroup()
 	// close the dialog
 	progress.setValue(progress.maximum());
 
-	MainWindow::mw()->currentDocument()->addGroup(group);
+	return group;
 
 }
 
