@@ -9,6 +9,8 @@
 #include <QDir>
 #include <QHash>
 
+#define MY_COMPUTER "My Computer"
+
 class DirectoryListModel : public QAbstractListModel
 {
 	Q_OBJECT
@@ -96,6 +98,8 @@ protected:
 	bool m_lockRowcount;
 	
 	int m_nameLengthMax;
+
+	bool m_isMyComputer;
 	
 	
 	

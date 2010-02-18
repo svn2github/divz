@@ -1167,7 +1167,6 @@ void MainWindow::setupOutputControls()
 		}
 		else
 		{
-			/*
 			QDockWidget *dock = new QDockWidget(QString(tr("%1 View")).arg(output->name()), this);
 			dock->setObjectName(output->name());
 
@@ -1179,7 +1178,6 @@ void MainWindow::setupOutputControls()
 			m_outputViewDocks[output->id()] = dock;
 
 			dock->setVisible(output->isEnabled());
-			*/
 		}
 	}
 }

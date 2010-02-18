@@ -735,7 +735,7 @@ void MediaBrowser::setDirectory(const QString &path, bool addToHistory)
 	QString file = "";
 
 	QFileInfo info(path);
-	if(info.isFile())
+	if(path != MY_COMPUTER && info.isFile())
 	{
 		directory = info.absolutePath();
 		file = info.fileName();
@@ -808,6 +808,13 @@ bool MediaBrowser::checkCanGoUp()
 
 	if(folders.size() <= 1)
 	{
+#ifdef Q_WS_WIN
+		if(m_currentDirectory != MY_COMPUTER)
+		{
+			m_btnUp->setEnabled(true);
+			return true;
+		}
+#endif
 		//qDebug() << "checkCanGoUp(): False, can't go up from:"<<path<<", folder list:"<<folders<<", sep:"<<QDir::separator();
 		m_btnUp->setEnabled(false);
 		return false;
@@ -830,11 +837,18 @@ void MediaBrowser::goUp()
 
 	QString sep = "/"; // even on windows, canonicalFilePath() uses '/' as the separator
 	QStringList folders = path.split(sep); //QDir::separator());
-	folders.takeLast();
+	if(folders.size() > 1)
+	{
+		folders.takeLast();
 
-	QString newPath = folders.join(sep); //QDir::separator());
+		QString newPath = folders.join(sep); //QDir::separator());
 
-	setDirectory(newPath);
+		setDirectory(newPath);
+	}
+	else
+	{
+		setDirectory(MY_COMPUTER);
+	}
 
 	//qDebug() << "goUp(): newPath:"<<newPath;
 }

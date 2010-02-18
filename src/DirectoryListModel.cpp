@@ -6,6 +6,8 @@
 // #include <QFileIconProvider>
 // #include <QFileInfo>
 
+#include <QFSFileEngine>
+
 #include "AppSettings.h"
 
 #include "3rdparty/md5/md5.h"
@@ -31,6 +33,7 @@ DirectoryListModel::DirectoryListModel(QObject *parent)
 	, m_lockRowcount(false)
 	, m_iconSize(32,32)
 	, m_nameLengthMax(16)
+	, m_isMyComputer(false)
 {
 	if(!m_blankPixmap)
 	{
@@ -91,7 +94,11 @@ QVariant DirectoryListModel::data ( const QModelIndex & index, int role ) const
 	
 	if (role == Qt::DisplayRole)
 	{
-		QString file = fileInfo(index).fileName();
+		QFileInfo info = fileInfo(index);
+		if(m_isMyComputer)
+			return info.absoluteFilePath();
+
+		QString file = info.fileName();
 		return file;
 		//return file.left(m_nameLengthMax) + (file.length() > m_nameLengthMax ? "..." : "");
 	}
@@ -112,20 +119,21 @@ QVariant DirectoryListModel::data ( const QModelIndex & index, int role ) const
  			if(info.isFile())
  			{
  				QString file = info.canonicalFilePath();
- 				QString cache = cacheFile(file);
- 				if(m_pixmapCache.contains(cache))
- 					return m_pixmapCache[cache];
- 				if(QFile(cache).exists())
- 					return QPixmap(cache);
- 				self->needPixmap(file);
+				if(m_pixmapCache.contains(file))
+				{
+					qDebug() << "Pixmaps pre-cached for "<<file;
+					return m_pixmapCache[file];
+				}
+
+				self->needPixmap(file);
 				return *m_blankPixmap;
  			}
  			else
  			{
  				QFileIconProvider::IconType type = 
+					    m_isMyComputer || info.isRoot() ? QFileIconProvider::Drive :
 					    info.isDir() ?  QFileIconProvider::Folder:
 					    info.isFile() ? QFileIconProvider::File  :
-					    info.isRoot() ? QFileIconProvider::Drive :
 					    QFileIconProvider::File;
 				
 				QIcon iconObject = m_iconTypeCache[type];
@@ -153,6 +161,10 @@ void DirectoryListModel::setDirectory(const QDir& d)
 
 void DirectoryListModel::setDirectory(const QString& str)
 {
+	if(str == MY_COMPUTER)
+		m_isMyComputer = true;
+	else
+		m_isMyComputer = false;
 	setDirectory(QDir(str));
 }
 
@@ -243,13 +255,21 @@ void DirectoryListModel::makePixmaps()
 	
 	QString file = info.canonicalFilePath();
 	QString cacheFilename = cacheFile(file);
-		
-	QPixmap icon = generatePixmap(info);
+
+	QPixmap icon;
+
+	if(QFile(cacheFilename).exists())
+		icon = QPixmap(cacheFilename);
+	else
+	{
+
+		icon = generatePixmap(info);
+		icon.save(cacheFilename,"PNG");
+	}
+
 	QPixmapCache::insert(key,icon);
-	
-	m_pixmapCache[cacheFilename] = icon;
-	icon.save(cacheFilename,"PNG");
-	
+	m_pixmapCache[file] = icon;
+
 	
 	m_needPixmapTimer.stop();
 	
@@ -274,9 +294,9 @@ QPixmap DirectoryListModel::generatePixmap(const QFileInfo& info)
 	if(icon.isNull())
 	{
 		QFileIconProvider::IconType type = 
+					    info.isRoot() ? QFileIconProvider::Drive :
 					    info.isDir() ? QFileIconProvider::Folder :
 					    info.isFile() ? QFileIconProvider::File  :
-					    info.isRoot() ? QFileIconProvider::Drive :
 					    QFileIconProvider::File;
 		icon = iconProvider()->icon(type);
 		//qDebug() << "DirectoryListModel::generatePixmap: file:"<<info.canonicalFilePath()<<", type:"<<type<<", null?"<<icon.isNull();
@@ -327,18 +347,41 @@ void DirectoryListModel::loadEntryList()
 		endRemoveRows();
 	}
 	
-	QStringList entries = m_dir.entryList(m_filters, 
-		QDir::AllDirs | 
-		QDir::Drives  | 
-		QDir::NoDotAndDotDot |
-		QDir::Files
-		);
-	QString path = m_dir.absolutePath();
+	QStringList entries;
+	QString path = "";
+
+	if(m_isMyComputer)
+	{
+		QFileInfoList drives = QFSFileEngine::drives();
+		foreach(QFileInfo info, drives)
+		{
+			QString str = info.absoluteFilePath();
+			str = str.left(str.length() - 1);
+			entries << str;
+			qDebug()<<"Drive:"<<str;
+		}
+	}
+	else
+	{
+		entries = m_dir.entryList(m_filters,
+			QDir::AllDirs |
+			QDir::Drives  |
+			QDir::NoDotAndDotDot |
+			QDir::Files
+			);
+		path = m_dir.absolutePath();
+	}
 	
 	beginInsertRows(QModelIndex(),0,entries.size());
 	foreach(QString file, entries)
 	{
-		m_entryList << QFileInfo(QString("%1/%2").arg(path,file)).canonicalFilePath();
+		if(m_isMyComputer)
+		{
+			if(QFileInfo(file).isDir())
+				m_entryList << file;
+		}
+		else
+			m_entryList << QFileInfo(QString("%1/%2").arg(path,file)).canonicalFilePath();
 		//needPixmap(file);
 	}
 	qSort(m_entryList.begin(),m_entryList.end(),DirectoryListModel_sortFileList);

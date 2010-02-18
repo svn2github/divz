@@ -110,6 +110,8 @@ void Document::load(const QString & s)
 	QProgressDialog progress(QString(tr("Loading %1...")).arg(m_filename),"",0,0);
 	progress.setWindowModality(Qt::WindowModal);
 	progress.setCancelButton(0); // hide cancel button
+	progress.setWindowIcon(QIcon(":/data/icon-d.png"));
+	progress.setWindowTitle(QString(tr("Loading %1")).arg(m_filename));
 	progress.show();
 	QApplication::processEvents();
 	
