@@ -17,7 +17,8 @@ HEADERS +=  \
         BackgroundItem.h \
         ImageItem.h \
         AbstractItemFilter.h \
-        OutputViewItem.h
+        OutputViewItem.h \
+        SlideTemplateManager.h
 
     
 SOURCES += \
@@ -36,4 +37,5 @@ SOURCES += \
         BackgroundItem.cpp \
         ImageItem.cpp \
         AbstractItemFilter.cpp \
-        OutputViewItem.cpp
+        OutputViewItem.cpp \
+        SlideTemplateManager.cpp

@@ -29,25 +29,45 @@
 #include "AppSettings.h"
 #include "model/Output.h"
 #include "OutputInstance.h"
+#include "model/SlideTemplateManager.h"
+
 
 BibleBrowser::BibleBrowser(QWidget *parent)
 	: QWidget(parent)
+	, m_showEachVerseOnSeperateSlide(false)
 	, m_showVerseNumbers(true)
-	//, m_showFullRefEachSlide(false)
-	, m_showFullRefAtStart(true)
+	, m_showRefTopEachSlide(false)
+ 	, m_showRefBottomEachSlide(false)
+ 	, m_showFullRefAtFirstTop(false)
+ 	, m_showFullRefAtBottomLast(false)
+ 	, m_showFullRefAtStart(true)
 	, m_showFullRefAtEnd(false)
 	, m_showResponsiveReadingLabels(false)
 	, m_attemptAutoLive(false)
+	, m_template(0)
 {
 	setObjectName("BibleBrowser");
 	
 	
 	QSettings s;
+	
+	m_showEachVerseOnSeperateSlide = s.value("biblebrowser/show-each-verse-on-seperate-slide",false).toBool();
+	
 	m_showVerseNumbers	= s.value("biblebrowser/show-verse-numbers",true).toBool();
-	//m_showFullRefEachSlide	= s.value("biblebrowser/show-full-ref-eachslide",false).toBool();
+	
+	m_showRefTopEachSlide		= s.value("biblebrowser/show-ref-top-each-slide",false).toBool();
+ 	m_showRefBottomEachSlide	= s.value("biblebrowser/show-ref-bottom-each-slide",false).toBool();
+ 	
+ 	m_showFullRefAtFirstTop	= s.value("biblebrowser/show-full-ref-at-first-top",false).toBool();
+ 	m_showFullRefAtBottomLast = s.value("biblebrowser/show-full-ref-at-bottom-last",false).toBool();
+ 	
 	m_showFullRefAtStart	= s.value("biblebrowser/show-full-ref-at-start",true).toBool();
 	m_showFullRefAtEnd	= s.value("biblebrowser/show-full-ref-at-end",false).toBool();
 	m_showResponsiveReadingLabels = s.value("biblebrowser/show-responsive-reading-lables",false).toBool();
+	
+	int templateId = s.value("biblebrowser/template-id",0).toInt();
+	if(templateId > 0)
+		m_template = SlideTemplateManager::instance()->findTemplate(SlideTemplateManager::Bible,templateId);
 	
 	setupUI();
 	
@@ -71,13 +91,23 @@ void BibleBrowser::saveSettings()
 //	qDebug() << "BibleBrowser::saveSettings()";
 	
 	QSettings s;
+	
+	s.setValue("biblebrowser/show-each-verse-on-seperate-slide",m_showEachVerseOnSeperateSlide);
+	
 	s.setValue("biblebrowser/show-verse-numbers",			m_showVerseNumbers);
-	//s.setValue("biblebrowser/show-full-ref-eachslide",		m_showFullRefEachSlide);
+	
+	s.setValue("biblebrowser/show-ref-top-each-slide",		m_showRefTopEachSlide);
+ 	s.setValue("biblebrowser/show-ref-bottom-each-slide",		m_showRefBottomEachSlide);
+ 	
+ 	s.setValue("biblebrowser/show-full-ref-at-first-top",		m_showFullRefAtFirstTop);
+ 	s.setValue("biblebrowser/show-full-ref-at-bottom-last",		m_showFullRefAtBottomLast);
+ 	
 	s.setValue("biblebrowser/show-full-ref-at-start",		m_showFullRefAtStart);
 	s.setValue("biblebrowser/show-full-ref-at-end",			m_showFullRefAtEnd);
 	s.setValue("biblebrowser/show-responsive-reading-lables",	m_showResponsiveReadingLabels);
 	s.setValue("biblebrowser/current-version",			m_versionCombo->currentIndex());
 	s.setValue("biblebrowser/last-reference",			m_search->text());
+	s.setValue("biblebrowser/template-id",				m_template ? m_template->groupId() : 0);
 }
 
 void BibleBrowser::closeEvent(QCloseEvent*)
@@ -87,8 +117,15 @@ void BibleBrowser::closeEvent(QCloseEvent*)
 #define SET_MARGIN(layout,margin) \
 	layout->setContentsMargins(margin,margin,margin,margin);
 
+void BibleBrowser::setShowEachVerseOnSeperateSlide(bool x)	{ m_showEachVerseOnSeperateSlide = x; saveSettings(); }
+
 void BibleBrowser::setShowVerseNumbers(bool x) 			{ m_showVerseNumbers = x; saveSettings(); }
-//void BibleBrowser::setShowFullRefEachSlide(bool x) 		{  m_showFullRefEachSlide = x; saveSettings(); }
+void BibleBrowser::setShowRefTopEachSlide(bool x) 		{ m_showRefTopEachSlide = x; saveSettings(); }
+void BibleBrowser::setShowRefBottomEachSlide(bool x)		{ m_showRefBottomEachSlide = x; saveSettings(); }
+void BibleBrowser::setShowFullRefAtFirstTop(bool x)		{ m_showFullRefAtFirstTop = x; saveSettings(); }
+void BibleBrowser::setShowFullRefAtBottomLast(bool x)		{ m_showFullRefAtBottomLast = x; saveSettings(); }
+
+
 void BibleBrowser::setShowFullRefAtStart(bool x) 		{ m_showFullRefAtStart = x; saveSettings(); }
 void BibleBrowser::setShowFullRefAtEnd(bool x) 			{ m_showFullRefAtEnd = x; saveSettings(); }
 void BibleBrowser::setShowResponsiveReadingLabels(bool x) 	{ m_showResponsiveReadingLabels = x; saveSettings(); }
@@ -119,25 +156,53 @@ void BibleBrowser::setupUI()
 	action->setChecked(showVerseNumbers());
 	connect(action, SIGNAL(toggled(bool)), this, SLOT(setShowVerseNumbers(bool)));
 	
-// 	action = configMenu->addAction("Show Full Verse Ref Each Slide");
-// 	action->setCheckable(true);
-// 	action->setChecked(showFullRefEachSlide());
-// 	connect(action, SIGNAL(toggled(bool)), this, SLOT(setShowFullRefEachSlide(bool)));
-// 	
-	action = configMenu->addAction("Show Full Verse Ref At Group Start");
+	action = configMenu->addAction("Show Each Verse on a Seperate Slide");
 	action->setCheckable(true);
-	action->setChecked(showFullRefAtStart());
-	connect(action, SIGNAL(toggled(bool)), this, SLOT(setShowFullRefAtStart(bool)));
+	action->setChecked(showEachVerseOnSeperateSlide());
+	connect(action, SIGNAL(toggled(bool)), this, SLOT(setShowEachVerseOnSeperateSlide(bool)));
 	
-	action = configMenu->addAction("Show Full Verse Ref At Group End");
-	action->setCheckable(true);
-	action->setChecked(showFullRefAtEnd());
-	connect(action, SIGNAL(toggled(bool)), this, SLOT(setShowFullRefAtEnd(bool)));
+	configMenu->addSeparator();
 	
 	action = configMenu->addAction("Show Responsive Reading Labels");
 	action->setCheckable(true);
 	action->setChecked(showResponsiveReadingLabels());
 	connect(action, SIGNAL(toggled(bool)), this, SLOT(setShowResponsiveReadingLabels(bool)));
+	
+	configMenu->addSeparator()->setText("Reference Location");
+	
+	action = configMenu->addAction("Show Verse Refs at Top of Each Slide");
+	action->setCheckable(true);
+	action->setChecked(showRefTopEachSlide());
+	connect(action, SIGNAL(toggled(bool)), this, SLOT(setShowRefTopEachSlide(bool)));
+	
+	action = configMenu->addAction("Show Verse Refs at Bottom of Each Slide");
+	action->setCheckable(true);
+	action->setChecked(showRefBottomEachSlide());
+	connect(action, SIGNAL(toggled(bool)), this, SLOT(setShowRefBottomEachSlide(bool)));
+ 	
+ 	configMenu->addSeparator();
+ 	
+ 	action = configMenu->addAction("Show Full Passage Ref at Top of First Slide");
+	action->setCheckable(true);
+	action->setChecked(showFullRefAtFirstTop());
+	connect(action, SIGNAL(toggled(bool)), this, SLOT(setShowFullRefAtFirstTop(bool)));
+	
+	action = configMenu->addAction("Show Full Passage Ref at Bottom of Last Slide");
+	action->setCheckable(true);
+	action->setChecked(showFullRefAtBottomLast());
+	connect(action, SIGNAL(toggled(bool)), this, SLOT(setShowFullRefAtBottomLast(bool)));
+ 	
+ 	configMenu->addSeparator();
+ 	
+	action = configMenu->addAction("Show Full Passage Ref at Group Start");
+	action->setCheckable(true);
+	action->setChecked(showFullRefAtStart());
+	connect(action, SIGNAL(toggled(bool)), this, SLOT(setShowFullRefAtStart(bool)));
+	
+	action = configMenu->addAction("Show Full Passage Ref at Group End");
+	action->setCheckable(true);
+	action->setChecked(showFullRefAtEnd());
+	connect(action, SIGNAL(toggled(bool)), this, SLOT(setShowFullRefAtEnd(bool)));
 	
 	configBtn->setMenu(configMenu);
 	hboxTop->addWidget(configBtn);
@@ -235,17 +300,32 @@ void BibleBrowser::setupUI()
 	m_preview->setFont(font);
 	
 	QFrame * line = new QFrame();
-        line->setFrameShape(QFrame::HLine);
-        line->setFrameShadow(QFrame::Sunken);
+	line->setFrameShape(QFrame::HLine);
+	line->setFrameShadow(QFrame::Sunken);
 
+
+	m_tmplWidget = new TemplateSelectorWidget(SlideTemplateManager::Bible,"Template:",this);
+	if(m_template)
+		m_tmplWidget->setSelectedGroup(m_template);
+	else
+		m_template = m_tmplWidget->selectedGroup();
+		
+	connect(m_tmplWidget, SIGNAL(currentGroupChanged(SlideGroup*)), this, SLOT(templateChanged(SlideGroup*)));
+	
 	vbox->addWidget(m_searchBase);
 	vbox->addWidget(line);
 	vbox->addWidget(m_refBase);
 	vbox->addWidget(m_preview);
+	vbox->addWidget(m_tmplWidget);
 	
 	
 }
 
+void BibleBrowser::templateChanged(SlideGroup* group)
+{
+	m_template = group;
+	saveSettings();
+}
 
 void BibleBrowser::searchReturnPressed() 
 {

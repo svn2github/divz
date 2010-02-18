@@ -46,7 +46,12 @@ Document::~Document()
 
 QList<SlideGroup *> Document::groupList() { return m_groups; }
 
-SlideGroup * Document::at(int x) { return m_groups.at(x); }
+SlideGroup * Document::at(int x)
+{
+	if(x<0 || x>=m_groups.size())
+		return 0;
+	return m_groups.at(x);
+}
 
 SlideGroup * Document::groupById(int id)
 {

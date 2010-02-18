@@ -61,6 +61,11 @@ AppSettingsDialog::AppSettingsDialog(QWidget *parent) :
 	
 	AppSettingsDialog_setupGenericDirectoryCompleter(m_ui->diskCacheBox);
 	
+	m_ui->templateFolder->setText(AppSettings::templateStorageFolder());
+	connect(m_ui->templateFolderBrowse, SIGNAL(clicked()), this, SLOT(slotTemplateFolderBrowse()));
+	
+	AppSettingsDialog_setupGenericDirectoryCompleter(m_ui->templateFolder);
+	
 	// apply signal changes
 	m_ui->httpEnabled->setChecked(false);
 	m_ui->httpEnabled->setChecked(true);
@@ -96,6 +101,19 @@ void AppSettingsDialog::slotDiskCacheBrowse()
 	}
 }
 
+void AppSettingsDialog::slotTemplateFolderBrowse()
+{
+	QString dirPath = QFileDialog::getExistingDirectory(this, tr("Select A Template Storage Location"),
+						 AppSettings::templateStorageFolder(),
+						 QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
+
+	if(!dirPath.isEmpty())
+	{
+		m_ui->templateFolder->setText(dirPath);
+	}
+}
+
+
 void AppSettingsDialog::portChanged(int port)
 {
 	QString url = QString("http://%1:%2/").arg(AppSettings::myIpAddress()).arg(port);
@@ -120,6 +138,7 @@ void AppSettingsDialog::slotAccepted()
 				     					 AppSettings::LiveEdit);
 	AppSettings::setAutosaveTime(m_ui->autosaveBox->value());
 	AppSettings::setCacheDir(QDir(m_ui->diskCacheBox->text()));
+	AppSettings::setTemplateStorageFolder(m_ui->templateFolder->text());
 	
 	AppSettings::setHttpControlEnabled(m_ui->httpEnabled->isChecked());
 	AppSettings::setHttpControlPort(m_ui->httpPort->value());

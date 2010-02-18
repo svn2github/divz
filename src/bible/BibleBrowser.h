@@ -16,6 +16,9 @@ class SlideGroup;
 class Slide;
 	
 class BibleGatewayConnector;
+
+class TemplateSelectorWidget;
+
 #include "BibleModel.h"
 
 class BibleBrowser : public QWidget
@@ -26,11 +29,20 @@ public:
 	BibleBrowser(QWidget *parent=0);
 	~BibleBrowser();
 	
+	bool showEachVerseOnSeperateSlide() { return m_showEachVerseOnSeperateSlide; }
 	bool showVerseNumbers() 	{ return m_showVerseNumbers; }
-// 	bool showFullRefEachSlide() 	{ return m_showFullRefEachSlide; }
+	
+	bool showRefTopEachSlide() 	{ return m_showRefTopEachSlide; }
+ 	bool showRefBottomEachSlide()	{ return m_showRefBottomEachSlide; }
+ 	bool showFullRefAtFirstTop()	{ return m_showFullRefAtFirstTop; }
+ 	bool showFullRefAtBottomLast()	{ return m_showFullRefAtBottomLast; }
+
 	bool showFullRefAtStart() 	{ return m_showFullRefAtStart; }
 	bool showFullRefAtEnd() 	{ return m_showFullRefAtEnd; }
+	
 	bool showResponsiveReadingLabels() { return m_showResponsiveReadingLabels; }
+	
+ 	
 	
 signals:
 	void verseListSelected(const BibleVerseList &);
@@ -39,11 +51,21 @@ public slots:
 	void loadVerses(const QString& ref="");
 	void clearSearch() { loadVerses(); }
 	
+	void setShowEachVerseOnSeperateSlide(bool);
+	
 	void setShowVerseNumbers(bool);
-// 	void setShowFullRefEachSlide(bool);
+	
+	void setShowRefTopEachSlide(bool); 
+ 	void setShowRefBottomEachSlide(bool);
+ 	void setShowFullRefAtFirstTop(bool);
+ 	void setShowFullRefAtBottomLast(bool);
+
+
 	void setShowFullRefAtStart(bool);
 	void setShowFullRefAtEnd(bool);
 	void setShowResponsiveReadingLabels(bool);
+	
+ 	
 
 	void addVersesToDocument();
 	void sendVersesLive();
@@ -59,6 +81,8 @@ protected slots:
 	void referenceAvailable(const BibleVerseRef&, const BibleVerseList&);
 	
 	void saveSettings();
+	
+	void templateChanged(SlideGroup*);
 	
 protected:
 	SlideGroup * createSlideGroup();
@@ -87,10 +111,18 @@ protected:
 	BibleVerseList	m_currentList;
 	BibleVerseRef	m_currentRef;
 	
+	bool m_showEachVerseOnSeperateSlide;
+	
 	bool m_showVerseNumbers;
-// 	bool m_showFullRefEachSlide;
-	bool m_showFullRefAtStart;
+	
+ 	bool m_showRefTopEachSlide;
+ 	bool m_showRefBottomEachSlide;
+ 	bool m_showFullRefAtFirstTop;
+ 	bool m_showFullRefAtBottomLast;
+ 	
+ 	bool m_showFullRefAtStart;
 	bool m_showFullRefAtEnd;
+	
 	bool m_showResponsiveReadingLabels;
 	
 	QList<SlideGroup*> m_generatedGroups;
@@ -99,6 +131,9 @@ protected:
 	
 	bool m_attemptAutoLive;
 	bool isLastGeneratedGroupStillLive();
+	
+	SlideGroup	* m_template;
+	TemplateSelectorWidget * m_tmplWidget;
 };
 
 

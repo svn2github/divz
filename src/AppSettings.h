@@ -94,6 +94,8 @@ public:
 	static void setHotkeySequence(const QString& actionName, const QString& keySequence);
 	static QString hotkeySequence(const QString& actionName);
 	
+	static void setTemplateStorageFolder(const QString& dir);
+	static QString templateStorageFolder() { return m_templateStorageFolder; }
 	
 protected:
 	friend class MainWindow;
@@ -132,6 +134,8 @@ private:
 	static int m_httpControlPort;
 	
 	static QHash<QString,QString> m_hotkeys;
+	
+	static QString m_templateStorageFolder;
 
 };
 

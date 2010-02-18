@@ -33,6 +33,8 @@ Q_IMPORT_PLUGIN(qtiff)
 #include "itemlistfilters/SlideBackgroundOnlyFilter.h"
 #include "itemlistfilters/SlideForegroundOnlyFilter.h"
 
+#include "model/SlideTemplateManager.h"
+
 // init RenderOpts defaults
 bool RenderOpts::LastMirrorEnabled = true;
 bool RenderOpts::ARGBWindow = false;
@@ -73,6 +75,7 @@ int AppSettings::m_httpControlPort = 8080;
 
 QHash<QString,QString> AppSettings::m_hotkeys;
 
+QString AppSettings::m_templateStorageFolder;
 
 // I'll use this code at the church to debug some crashes.
 // However, disbaling it for now because I'm not sure
@@ -229,7 +232,6 @@ void AppSettings::initApp(const QString& appName)
 	noOpenGL = true;
 
 	RenderOpts::DisableOpenGL = noOpenGL;
-
 }
 
 void AppSettings::load()
@@ -262,6 +264,7 @@ void AppSettings::load()
 	m_autosaveTime = s.value("app/autosave",60).toInt();
 	
 	m_cacheDir = QDir(s.value("app/cache-dir",QDir::temp().absolutePath()).toString());
+	m_templateStorageFolder = s.value("app/template-folder",QDir::homePath()).toString();
 	
 	QVariantList pairList = s.value("app/resource-path-translations").toList();
 	
@@ -281,6 +284,7 @@ void AppSettings::load()
 	QPixmapCache::setCacheLimit(m_pixmapCacheSize * 1024);
 	
 	updateLiveAspectRatio();
+	SlideTemplateManager::setupTemplateManager();
 }
 
 void AppSettings::save()
@@ -314,6 +318,7 @@ void AppSettings::save()
 	s.setValue("app/autosave",m_autosaveTime);
 	
 	s.setValue("app/cache-dir",m_cacheDir.absolutePath());
+	s.setValue("app/template-folder",m_templateStorageFolder);
 	
 	QVariantList pairList;
 	foreach(QStringPair pair, m_resourcePathTranslations)
@@ -614,3 +619,9 @@ QDir AppSettings::applyResourcePathTranslations(const QDir&d)
 {
 	return QDir(applyResourcePathTranslations(d.absolutePath()));
 }
+
+void AppSettings::setTemplateStorageFolder(const QString& folder)
+{
+	m_templateStorageFolder = folder;
+}
+

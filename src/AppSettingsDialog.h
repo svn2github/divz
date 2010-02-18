@@ -21,6 +21,7 @@ protected slots:
 	void slotConfigOutputs();
 	
 	void slotDiskCacheBrowse();
+	void slotTemplateFolderBrowse();
 	
 	void slotAccepted();
 	
