@@ -32,8 +32,8 @@ public:
 	bool showEachVerseOnSeperateSlide() { return m_showEachVerseOnSeperateSlide; }
 	bool showVerseNumbers() 	{ return m_showVerseNumbers; }
 	
-	bool showRefTopEachSlide() 	{ return m_showRefTopEachSlide; }
- 	bool showRefBottomEachSlide()	{ return m_showRefBottomEachSlide; }
+	bool showFullRefTopEachSlide() 	{ return m_showFullRefTopEachSlide; }
+ 	bool showFullRefBottomEachSlide() { return m_showFullRefBottomEachSlide; }
  	bool showFullRefAtFirstTop()	{ return m_showFullRefAtFirstTop; }
  	bool showFullRefAtBottomLast()	{ return m_showFullRefAtBottomLast; }
 
@@ -55,8 +55,8 @@ public slots:
 	
 	void setShowVerseNumbers(bool);
 	
-	void setShowRefTopEachSlide(bool); 
- 	void setShowRefBottomEachSlide(bool);
+	void setShowFullRefTopEachSlide(bool); 
+ 	void setShowFullRefBottomEachSlide(bool);
  	void setShowFullRefAtFirstTop(bool);
  	void setShowFullRefAtBottomLast(bool);
 
@@ -89,11 +89,13 @@ protected:
 	
 	void closeEvent(QCloseEvent *);
 	
+	void setupTextBox(TextBoxItem *);
 	Slide * addSlide(SlideGroup *, TextBoxItem *, int height, const QSize & fitSize, const QString & plain);
 	
 	void setupUI();
 	void setupVersionCombo();
-
+	
+	
 	QWidget	      * m_searchBase;
 	QComboBox     * m_versionCombo;
 	QLineEdit     * m_search;
@@ -115,8 +117,8 @@ protected:
 	
 	bool m_showVerseNumbers;
 	
- 	bool m_showRefTopEachSlide;
- 	bool m_showRefBottomEachSlide;
+ 	bool m_showFullRefTopEachSlide;
+ 	bool m_showFullRefBottomEachSlide;
  	bool m_showFullRefAtFirstTop;
  	bool m_showFullRefAtBottomLast;
  	

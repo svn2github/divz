@@ -401,7 +401,10 @@ void SongSlideGroup::textToSlides(SongTextFilter filter)
 		if(DEBUG_TEXTOSLIDES)
 			qDebug()<<"SongSlideGroup::textToSlides(): slideNbr:"<<slideNbr<<": textRect.height():"<<textRect.height()<<"screenRect.height():"<<screenRect.height()<<", heightDifference:"<<heightDifference;
 		
-		// Arbitrary magic number to force centering for small amounts of differences
+		// Arbitrary magic number to force centering for small amounts of differences.
+		// We test the difference here because don't want to force-center the textbox if it came from the template
+		// and was intentionally located off-center. But if the user tried to get it to fill the screen and missed
+		// by a few pixels (<15), then go ahead and center it for the user.
 		if(heightDifference < 15)
 		{
 			

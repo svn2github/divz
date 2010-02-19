@@ -341,6 +341,13 @@ SlideEditorWindow::~SlideEditorWindow()
  			delete m_doc;
  		}
 	}
+	
+	if(m_masterSlideEditor)
+	{
+		m_masterSlideEditor->close();
+		delete m_masterSlideEditor;
+		m_masterSlideEditor = 0;
+	}
 
 	delete m_undoStack;
 }
@@ -935,7 +942,7 @@ void SlideEditorWindow::editMasterSlide()
 	}
 	else
 	{
-		m_masterSlideEditor = new SlideEditorWindow();
+		m_masterSlideEditor = new SlideEditorWindow(0,this);
 		SlideGroup *tmpGroup = new SlideGroup();
 		tmpGroup->setProperty("isMasterSlide",true);
 		tmpGroup->setGroupTitle(QString(tr("Master Slide for %1")).arg(m_slideGroup->groupTitle().isEmpty() ? QString(tr("Group %1")).arg(m_slideGroup->groupNumber()) : m_slideGroup->groupTitle()));

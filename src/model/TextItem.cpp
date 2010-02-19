@@ -96,7 +96,7 @@ double TextItem::findFontSize()
 	return format.fontPointSize();
 }
 
-int TextItem::fitToSize(const QSize& size, int minimumFontSize)
+int TextItem::fitToSize(const QSize& size, int minimumFontSize, int maximumFontSize)
 {
 	int width = size.width();
 	int height = size.height();
@@ -172,7 +172,8 @@ int TextItem::fitToSize(const QSize& size, int minimumFontSize)
 			
 			heightTmp = doc.documentLayout()->documentSize().height();
 			
-			if(heightTmp < height)
+			if(heightTmp < height &&
+			      ptSize < maximumFontSize)
 			{
 				lastGoodSize = ptSize;
 				//lastGoodHtml = text();

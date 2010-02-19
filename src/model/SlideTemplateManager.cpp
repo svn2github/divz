@@ -38,32 +38,25 @@ Document * SlideTemplateManager::loadOrCreate(TemplateType type)
 	QString file = typeToFile(type);
 	qDebug() << "SlideTemplateManager::loadOrCreate("<<type<<"): file:"<<file;
 	if(QFile(file).exists())
-	{
-		qDebug() << "\t "<<file<<" exists, returning new document";
 		return new Document(file);
-	}
 	else
-	{
-		qDebug() << "\t "<<file<<" non-existant, trying to do new";
 		return templateDocument(type); // auto-creates document and saves
-	}
 }
 
 Document * SlideTemplateManager::templateDocument(TemplateType type)
 {
 	if(m_docHash[type])
 	{
-		qDebug() << "SlideTemplateManager::templateDocument("<<type<<"): m_docHash has type, returning doc ptr";
+// 		qDebug() << "SlideTemplateManager::templateDocument("<<type<<"): m_docHash has type, returning doc ptr";
 		return m_docHash[type];
 	}
 	
-	qDebug() << "SlideTemplateManager::templateDocument("<<type<<"): doc not loaded, creating new document";
+// 	qDebug() << "SlideTemplateManager::templateDocument("<<type<<"): doc not loaded, creating new document";
 	Document * doc = new Document();
 	QString file = typeToFile(type);
 	doc->save(file);
-	qDebug() << "\t saving new document to "<<file;
+// 	qDebug() << "\t saving new document to "<<file;
 	m_docHash[type] = doc;
-	qDebug() << "\t returning ptr "<<doc;
 	return doc;
 }
 
@@ -94,6 +87,7 @@ TemplateSelectorWidget::TemplateSelectorWidget(SlideTemplateManager::TemplateTyp
 	, m_doc(0)
 	, m_model(new DocumentListModel)
 	, m_selected(0)
+	, m_editWin(0)
 {
 	m_doc = SlideTemplateManager::instance()->templateDocument(type);
 	m_model->setDocument(m_doc);
@@ -145,6 +139,13 @@ void TemplateSelectorWidget::editTemplate()
  		
  	MainWindow::mw()->editGroup(selectedGroup());
 	
+	if(m_editWin)
+	{
+		m_editWin->show();
+		m_editWin->raise();
+		m_editWin->setSlideGroup(tmpl);
+	}
+	else
 	if((m_editWin = MainWindow::mw()->openSlideEditor(tmpl)) != 0)
 		connect(m_editWin, SIGNAL(closed()), this, SLOT(editorWindowClosed()));
 }
@@ -153,15 +154,17 @@ void TemplateSelectorWidget::editTemplate()
 void TemplateSelectorWidget::editorWindowClosed()
 {
 	
-// 	m_editWin->deleteLater();
-// 	m_editWin = 0;
-	if(m_editWin)
-		disconnect(m_editWin, 0, this, 0);
+// 	if(m_editWin)
+// 		disconnect(m_editWin, 0, this, 0);
 	
 	SlideTemplateManager::instance()->templateDocument(m_type)->save();
 	
+  	//QTimer::singleShot(1000,m_editWin,SLOT(deleteLater()));
+  	//m_editWin->deleteL
+//  	m_editWin = 0;
+	
 	//raise();
-	setFocus();
+	//setFocus();
 	//qDebug() << "SongEditorWindow::editorWindowClosed(): setting focus to self:"<<this<<", m_editWin="<<m_editWin;
 }
 
