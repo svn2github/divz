@@ -136,8 +136,6 @@ protected:
 	void setupLogoMenu();
 	
 	AbstractSlideGroupEditor *m_editWin;
-	
-	SlideGroup * m_prevGroup;
 };
 
 

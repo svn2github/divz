@@ -37,7 +37,6 @@ OutputControl::OutputControl(QWidget *parent)
 	, m_outputIsSynced(false)
 	, m_logoMenu(0)
 	, m_editWin(0)
-	, m_prevGroup(0)
 	, m_selectedLogo(0)
 {
 	setupUI();
@@ -195,7 +194,7 @@ void OutputControl::setupLogoMenu()
 		//connect(action, SIGNAL(toggled(bool)), this, SLOT(setShowVerseNumbers(bool)));
 		action->setData(group->groupId());
 		
-		if(!logoNotSet)
+		if(logoNotSet)
 		{
 			m_selectedLogo = group;
 			selectedAction = action;
@@ -875,13 +874,14 @@ void OutputControl::fadeLogoFrame(bool flag)
 		
 	if(flag)
 	{
-		m_prevGroup = m_inst->slideGroup();
+		SlideGroup * group = m_inst->slideGroup();
+		
 		m_inst->setSlideGroup(m_selectedLogo);
 	}
 	else
 	{
-		if(m_prevGroup)
-			m_inst->setSlideGroup(m_prevGroup);
+		if(m_ctrl && m_ctrl->slideGroup())
+			m_inst->setSlideGroup(m_ctrl->slideGroup());
 		else
 			fadeBlackFrame(true);
 	}
