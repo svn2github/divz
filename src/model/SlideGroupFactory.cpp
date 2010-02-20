@@ -154,6 +154,7 @@ SlideGroupViewControl::SlideGroupViewControl(OutputInstance *group, QWidget *w,b
 		//m_listView = new QListView(this);
 		m_listView = new SlideGroupViewControlListView(this);
 		m_listView->setViewMode(QListView::IconMode);
+		//m_listView->setViewMode(QListView::ListMode);
 		m_listView->setMovement(QListView::Static);
 		m_listView->setWrapping(true);
 		m_listView->setWordWrap(true);

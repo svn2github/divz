@@ -180,13 +180,13 @@ int TextItem::fitToSize(const QSize& size, int minimumFontSize, int maximumFontS
 				boxHeight = heightTmp;
 
 				sizeInc *= 1.1;
-				//qDebug()<<"size search: "<<ptSize<<"pt was good, trying higher, inc:"<<sizeInc<<"pt";
+// 				qDebug()<<"size search: "<<ptSize<<"pt was good, trying higher, inc:"<<sizeInc<<"pt";
 				ptSize += sizeInc;
 
 			}
 			else
 			{
-				//qDebug()<<"SongSlideGroup::textToSlides(): size search: last good ptsize:"<<lastGoodSize<<", stopping search";
+// 				qDebug()<<"fitToSize: size search: last good ptsize:"<<lastGoodSize<<", stopping search";
 				done = true;
 			}
 		}

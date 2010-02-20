@@ -24,6 +24,7 @@ SlideTemplateManager::SlideTemplateManager()
 	m_docHash[Generic] = loadOrCreate(Generic);
 	m_docHash[Bible]   = loadOrCreate(Bible);
 	m_docHash[Songs]   = loadOrCreate(Songs);
+	m_docHash[Logo]   = loadOrCreate(Logo);
 }
 
 SlideTemplateManager::~SlideTemplateManager()
@@ -31,6 +32,7 @@ SlideTemplateManager::~SlideTemplateManager()
 	templateDocument(Generic)->save();
 	templateDocument(Bible)->save();
 	templateDocument(Songs)->save();
+	templateDocument(Logo)->save();
 }
 
 Document * SlideTemplateManager::loadOrCreate(TemplateType type)
@@ -73,6 +75,7 @@ QString SlideTemplateManager::typeToFile(TemplateType type)
 		.arg(
 			type == Bible ? "DVizBibleTemplates.dviz" :
 			type == Songs ? "DVizSongTemplates.dviz"  :
+			type == Logo  ? "DVizLogoTemplates.dviz"  :
 			"DVizUserTemplates.dviz"
 		);
 }

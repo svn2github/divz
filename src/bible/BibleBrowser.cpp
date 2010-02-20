@@ -806,11 +806,12 @@ SlideGroup * BibleBrowser::createSlideGroup()
 			currentFitSize.setHeight( currentFitSize.height() - labelSize.height());
 		//realHeight = tmpText->fitToSize(fitSize,MinTextSize,MaxTextSize);
 		realHeight = tmpText->fitToSize(currentFitSize,MinTextSize,MaxTextSize);
+// 		qDebug() << "x:"<<x<<", realHeight:"<<realHeight<<", currentFitSize:"<<currentFitSize;
 		
 		// If the 'realHeight' is <0, it means that it didnt fit on the slide.
 		// Therefore, we've found the max # of text frags that fit on this slide
 		// so we should create a new slide, add the text, and then start searching again.
-		if(realHeight < 0 || showEachVerseOnSeperateSlide())
+		if(realHeight < 0 || realHeight > currentFitSize.height() || showEachVerseOnSeperateSlide())
 		{
 			// More than one line, so the last line is the line that made the slide overflow the screen - 
 			// therefore take it off and return it to the buffer for the next slide to use.
@@ -916,7 +917,7 @@ SlideGroup * BibleBrowser::createSlideGroup()
 	
 	// This block handles the case where we never did hit the maximum # of text frags per slide in the search block above
 	// which would mean we have a dangling blob of text that never got added - so add it here. (Such as the last slide in a long list of slides)
- 	if(realHeight>0 && !recreateTextBox)
+ 	if(realHeight>0 && recreateTextBox)
  	{
  		currentSlide = addSlide(group,tmpText,realHeight,fitSize,tmpList.join("\n"));
  		
@@ -1049,24 +1050,92 @@ SlideGroup * BibleBrowser::createSlideGroup()
 
 Slide * BibleBrowser::addSlide(SlideGroup *group, TextBoxItem *tmpText, int realHeight, const QSize & fitSize, const QString & plain)
 {
-	Slide * slide = new Slide();
-	AbstractVisualItem * bg = dynamic_cast<AbstractVisualItem*>(slide->background());
-
+	Slide *slide = 0;
+	
 	int slideNum = group->numSlides();
 	
+	bool textboxFromTemplate = false;;
+	
 	//qDebug() << "Slide "<<slideNum<<": [\n"<<plain<<"\n]";
+	if(m_template && m_template->numSlides() > 0)
+	{
+		slide = m_template->at(0)->clone();
+		
+		// Use the first textbox in the slide as the lyrics slide
+		// "first" as defined by ZValue
+		QList<AbstractItem *> items = slide->itemList();
+		
+		TextBoxItem * text = 0;
+	
+		QTextDocument doc;
+				
+		foreach(AbstractItem * item, items)
+		{
+			AbstractVisualItem * newVisual = dynamic_cast<AbstractVisualItem*>(item);
+			//if(DEBUG_TEXTOSLIDES)
+				qDebug()<<"BibleBrowser::addSlide(): item list: "<<newVisual->itemName();
+			if(!text && item->itemClass() == TextBoxItem::ItemClass)
+			{
+				text = dynamic_cast<TextBoxItem*>(item);
+				
+				if (Qt::mightBeRichText(text->text()))
+					doc.setHtml(text->text());
+				else
+					doc.setPlainText(text->text());
+				if(doc.toPlainText().indexOf("#verses") >= 0)
+				{
+					textboxFromTemplate = true;
+					//if(DEBUG_TEXTOSLIDES)
+						qDebug()<<"BibleBrowser::addSlide(): Found textbox from template, name:"<<text->itemName();
+				}
+			}
+		}
+		
+		// copy format from template to text box passed in, then use the resulting html in the template text box
+		if(textboxFromTemplate)
+		{
+			QTextCursor cursor(&doc);
+			cursor.select(QTextCursor::Document);
+			QTextCharFormat format = cursor.charFormat();
+			
+			QTextDocument doc2;
+			if (Qt::mightBeRichText(tmpText->text()))
+				doc2.setHtml(tmpText->text());
+			else
+				doc2.setPlainText(tmpText->text());
+				
+			QTextCursor cursor2(&doc2);
+			cursor2.select(QTextCursor::Document);
+			
+			cursor2.mergeCharFormat(format);
+			cursor2.mergeBlockCharFormat(format);
+			
+			text->setText(doc2.toHtml());
+		}
+	}
+	else
+	{
+		slide = new Slide();
+	
+		AbstractVisualItem * bg = dynamic_cast<AbstractVisualItem*>(slide->background());
 
-	bg->setFillType(AbstractVisualItem::Solid);
-	bg->setFillBrush(Qt::blue);
+		bg->setFillType(AbstractVisualItem::Solid);
+		bg->setFillBrush(Qt::blue);
+
+	}
+	
 
 	// Center text on screen
 	qreal y = fitSize.height()/2 - realHeight/2;
 	//qDebug() << "SongSlideGroup::textToSlides(): centering: boxHeight:"<<boxHeight<<", textRect height:"<<textRect.height()<<", centered Y:"<<y;
 	tmpText->setContentsRect(QRectF(0,y,fitSize.width(),realHeight));
 
-	setupTextBox(tmpText);
-
-	slide->addItem(tmpText);
+	if(!textboxFromTemplate)
+	{
+		setupTextBox(tmpText);
+	
+		slide->addItem(tmpText);
+	}
 	
 	slide->setSlideNumber(slideNum);
 	group->addSlide(slide);

@@ -15,6 +15,8 @@ class OutputInstance;
 class SlideGroupViewControl;
 class Document;
 class Slide;
+class SlideGroup;
+class AbstractSlideGroupEditor;
 
 #include "model/AbstractItemFilter.h"
 
@@ -51,6 +53,7 @@ public slots:
 	
 	void fadeBlackFrame(bool);
 	void fadeClearFrame(bool);
+	void fadeLogoFrame(bool);
 	
 	
 
@@ -74,6 +77,11 @@ protected slots:
 	void filterListItemChanged(QListWidgetItem * item);
 	
 	void setAdvancedWidgetVisible(bool);
+	
+	void newLogo();
+	void editLogo();
+	void logoActionTriggered(QAction*);
+	void logoEditorClosed();
 
 protected:
 	void setupUI();
@@ -118,6 +126,18 @@ protected:
 	QListWidget		* m_filterList;
 	
 	bool			m_timerWasActiveBeforeFade;
+	
+	QPushButton *m_logoButton;
+	QPushButton *m_configLogo;
+	SlideGroup *m_selectedLogo;
+	
+	QMenu * m_logoMenu;
+	
+	void setupLogoMenu();
+	
+	AbstractSlideGroupEditor *m_editWin;
+	
+	SlideGroup * m_prevGroup;
 };
 
 

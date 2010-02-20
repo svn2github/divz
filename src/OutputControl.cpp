@@ -8,7 +8,10 @@
 #include <QHBoxLayout>
 #include <QGridLayout>
 #include <QFileDialog>
+#include <QActionGroup>
+#include <QMenu>
 
+#include "model/SlideTemplateManager.h"
 #include "model/SlideGroupFactory.h"
 #include "model/Document.h"
 #include "model/SlideGroup.h"
@@ -32,6 +35,10 @@ OutputControl::OutputControl(QWidget *parent)
 	, m_overlayDoc(0)
 	, m_overlaySlide(0)
 	, m_outputIsSynced(false)
+	, m_logoMenu(0)
+	, m_editWin(0)
+	, m_prevGroup(0)
+	, m_selectedLogo(0)
 {
 	setupUI();
 }
@@ -58,27 +65,23 @@ void OutputControl::setupUI()
 	
 	connect(m_clearButton, SIGNAL(toggled(bool)), this, SLOT(fadeClearFrame(bool)));
 	
+	m_logoButton = new QPushButton(QIcon(":/data/stock-media-pause.png"),"&Logo");
+	m_logoButton->setCheckable(true);
+	//m_logoButton->setEnabled(false); 
+	hbox1->addWidget(m_logoButton);
 	
-	QLabel *label = new QLabel("Fade Speed:");
-	hbox1->addWidget(label);
-	m_fadeSlider = new QSlider(Qt::Horizontal);
-	m_fadeSlider->setMinimum(0);
-	m_fadeSlider->setValue(1);
-	m_fadeSlider->setMaximum(100);
-	m_fadeSlider->setTickInterval(10);
-	//m_fadeSlider->setSingleStep(5);
-	m_fadeSlider->setTickPosition(QSlider::TicksBelow);
-	hbox1->addWidget(m_fadeSlider,1);
+	connect(m_logoButton, SIGNAL(toggled(bool)), this, SLOT(fadeLogoFrame(bool)));
 	
-	QSpinBox *edit = new QSpinBox();
-	edit->setSuffix("%");
-	edit->setValue(5);
-	hbox1->addWidget(edit);
+	m_configLogo = new QPushButton(QIcon(":/data/stock-foo.png"),"");
+	m_configLogo->setToolTip(tr("Setup Logos"));
 	
-	connect(edit, SIGNAL(valueChanged(int)), m_fadeSlider, SLOT(setValue(int)));
-	connect(m_fadeSlider, SIGNAL(valueChanged(int)), edit, SLOT(setValue(int)));
-	connect(m_fadeSlider, SIGNAL(valueChanged(int)), this, SLOT(setCrossFadeSpeed(int)));
-
+	setupLogoMenu();
+	
+	//m_configLogo->setEnabled(false); 
+	hbox1->addWidget(m_configLogo);
+	
+	hbox1->addStretch(1);
+	
 	
 	m_advancedButton = new QPushButton(QIcon(":/data/stock-go-down.png"), "Advanced");
 	m_advancedButton->setCheckable(true);
@@ -88,6 +91,33 @@ void OutputControl::setupUI()
 	
 	layout->addLayout(hbox1);
 	
+	
+	// fade speed row
+	QHBoxLayout * hbox2 = new QHBoxLayout();
+	
+	QLabel *label = new QLabel("Fade Speed:");
+	hbox2->addWidget(label);
+	m_fadeSlider = new QSlider(Qt::Horizontal);
+	m_fadeSlider->setMinimum(0);
+	m_fadeSlider->setValue(1);
+	m_fadeSlider->setMaximum(100);
+	m_fadeSlider->setTickInterval(10);
+	//m_fadeSlider->setSingleStep(5);
+	m_fadeSlider->setTickPosition(QSlider::TicksBelow);
+	hbox2->addWidget(m_fadeSlider,1);
+	
+	QSpinBox *edit = new QSpinBox();
+	edit->setSuffix("%");
+	edit->setValue(5);
+	hbox2->addWidget(edit);
+	
+	connect(edit, SIGNAL(valueChanged(int)), m_fadeSlider, SLOT(setValue(int)));
+	connect(m_fadeSlider, SIGNAL(valueChanged(int)), edit, SLOT(setValue(int)));
+	connect(m_fadeSlider, SIGNAL(valueChanged(int)), this, SLOT(setCrossFadeSpeed(int)));
+
+	layout->addLayout(hbox2);
+	
+	
 	// Setup advanced widget (shown/hidden with "advanced" button, above)
 	m_advancedWidget = new QWidget(this);
 	setupAdvancedUI();
@@ -96,9 +126,18 @@ void OutputControl::setupUI()
 	m_advancedWidget->setVisible(false);
 	
 	
+	// line right between "quick slide" and fade slider
+	QFrame * line = new QFrame();
+	line->setFrameShape(QFrame::HLine);
+	line->setFrameShadow(QFrame::Sunken);
+	
+	layout->addWidget(line);
+	
+	
 	// setup stacked widget
 	m_stack = new QStackedWidget(this);
 	layout->addWidget(m_stack);
+	
 	
 	// first widget is the live control, to be set by user of this widget
 	// ... nothing to do here till setViewControl() called...
@@ -113,6 +152,141 @@ void OutputControl::setupUI()
 	
 
 }
+
+void OutputControl::setupLogoMenu()
+{
+	if(m_logoMenu)
+		delete m_logoMenu;
+		
+	m_logoMenu = new QMenu();
+	
+	
+	QActionGroup * actionGroup = new QActionGroup(this);
+	QAction * action;
+	QAction * selectedAction = 0;
+	
+	QSize iconSize(48,0);
+	QRect scene = MainWindow::mw()->standardSceneRect();
+	qreal a = (qreal)scene.height() / (qreal)scene.width();
+	iconSize.setHeight((int)(iconSize.width() * a));
+	
+	bool logoNotSet = !m_selectedLogo; 
+	
+	Document * doc = SlideTemplateManager::instance()->templateDocument(SlideTemplateManager::Logo);
+	for(int i=0;i<doc->numGroups();i++)
+	{
+	
+		SlideGroup * group = doc->at(i);
+		action = m_logoMenu->addAction(group->assumedName());
+			
+		QPixmap icon;
+	
+		SlideGroupFactory *factory = SlideGroupFactory::factoryForType(group->groupType());
+		if(!factory)
+			factory = SlideGroupFactory::factoryForType(SlideGroup::GroupType);
+		
+		if(factory)
+		{
+			icon = factory->generatePreviewPixmap(group,iconSize,scene);
+			action->setIcon(icon);
+		}
+		action->setCheckable(true);
+		//action->setChecked(showVerseNumbers());
+		//connect(action, SIGNAL(toggled(bool)), this, SLOT(setShowVerseNumbers(bool)));
+		action->setData(group->groupId());
+		
+		if(!logoNotSet)
+		{
+			m_selectedLogo = group;
+			selectedAction = action;
+		}
+		else
+		if(m_selectedLogo == group)
+			selectedAction = action;
+		
+		
+		actionGroup->addAction(action);
+	}
+	
+	connect(actionGroup, SIGNAL(triggered(QAction*)), this, SLOT(logoActionTriggered(QAction*)));
+	
+	if(selectedAction)
+		selectedAction->setChecked(true);
+	
+	m_logoMenu->addSeparator();
+	
+	action = m_logoMenu->addAction("Edit Selected Logo...");
+	connect(action, SIGNAL(triggered()), this, SLOT(editLogo()));
+	
+	action = m_logoMenu->addAction("Add New Logo...");
+	connect(action, SIGNAL(triggered()), this, SLOT(newLogo()));
+	
+	m_configLogo->setMenu(m_logoMenu);
+}
+
+
+void OutputControl::editLogo()
+{
+// 	if(selectedGroup())
+// 		MainWindow::mw()->editGroup(selectedGroup());
+		
+ 	SlideGroup * tmpl = m_selectedLogo;
+ 	if(!tmpl)
+ 		return;
+ 		
+ 	//MainWindow::mw()->editGroup(tmpl);
+	
+	if(m_editWin)
+	{
+		m_editWin->show();
+		m_editWin->raise();
+		m_editWin->setSlideGroup(tmpl);
+	}
+	else
+	if((m_editWin = MainWindow::mw()->openSlideEditor(tmpl)) != 0)
+		connect(m_editWin, SIGNAL(closed()), this, SLOT(logoEditorClosed()));
+		
+}
+
+
+void OutputControl::logoEditorClosed()
+{
+	
+// 	if(m_editWin)
+// 		disconnect(m_editWin, 0, this, 0);
+	
+	SlideTemplateManager::instance()->templateDocument(SlideTemplateManager::Logo)->save();
+	
+  	//QTimer::singleShot(1000,m_editWin,SLOT(deleteLater()));
+  	//m_editWin->deleteL
+//  	m_editWin = 0;
+	
+	
+	setupLogoMenu();
+	
+	//raise();
+	//setFocus();
+	//qDebug() << "SongEditorWindow::editorWindowClosed(): setting focus to self:"<<this<<", m_editWin="<<m_editWin;
+}
+
+
+void OutputControl::newLogo()
+{
+	Slide * slide = new Slide();
+	SlideGroup *g = new SlideGroup();
+	g->addSlide(slide);
+	SlideTemplateManager::instance()->templateDocument(SlideTemplateManager::Logo)->addGroup(g);
+	
+	m_selectedLogo = g;
+	editLogo();
+}
+
+void OutputControl::logoActionTriggered(QAction *action)
+{
+	int id = action->data().toInt();
+	m_selectedLogo = SlideTemplateManager::instance()->findTemplate(SlideTemplateManager::Logo,id);
+}
+
 
 
 void OutputControl::setAdvancedWidgetVisible(bool flag)
@@ -692,6 +866,28 @@ void OutputControl::fadeBlackFrame(bool flag)
 	if(m_blackButton->isChecked() != flag)
 		m_blackButton->setChecked(flag);
 		
+}
+
+void OutputControl::fadeLogoFrame(bool flag)
+{
+	if(!m_selectedLogo)
+		return;
+		
+	if(flag)
+	{
+		m_prevGroup = m_inst->slideGroup();
+		m_inst->setSlideGroup(m_selectedLogo);
+	}
+	else
+	{
+		if(m_prevGroup)
+			m_inst->setSlideGroup(m_prevGroup);
+		else
+			fadeBlackFrame(true);
+	}
+	
+	if(m_logoButton->isChecked() != flag)
+		m_logoButton->setChecked(flag);
 }
 
 void OutputControl::fadeClearFrame(bool flag) 

@@ -31,7 +31,8 @@ public:
 	{
 		Generic,
 		Bible,
-		Songs
+		Songs,
+		Logo
 	};
 
 	Document * templateDocument(TemplateType);
