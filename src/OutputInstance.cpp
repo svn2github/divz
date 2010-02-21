@@ -239,7 +239,7 @@ void OutputInstance::applyOutputSettings(bool startHidden)
 			m_grabTimer->start(1000 / m_output->mjpegServerFPS());
 	}
 	else
-	if(x == Output::Preview)
+	if(x == Output::Preview || x == Output::Viewer)
 	{
 		m_viewer->setCursor(Qt::ArrowCursor);
 		m_viewer->setIsPreviewViewer(true);

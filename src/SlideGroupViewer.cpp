@@ -757,8 +757,9 @@ void SlideGroupViewer::setSlideGroup(SlideGroup *group, Slide *startSlide)
 	bool blackNative = false;
 	if(m_nativeViewer)
 	{
-		QWidget * topLevel = WidgetUtil::getTopLevelWidget(this);
-		topLevel->show();
+		//QWidget * topLevel = WidgetUtil::getTopLevelWidget(this);
+		//topLevel->show();
+		parentWidget()->show();
 
 
 		m_nativeViewer->close();
@@ -801,21 +802,29 @@ void SlideGroupViewer::setSlideGroup(SlideGroup *group, Slide *startSlide)
 				viewer->setContainerWidget(this);
 				viewer->setSlideGroup(m_slideGroup);
 				viewer->show();
+				
+				// copy current 'black' state to viewer
+				if(m_blackEnabled)
+					viewer->setState(NativeViewer::Black);
 
 				blackNative = false;
 
 				//qDebug() << "SlideGroupViewer::setSlideGroup: Setup done, mudging our style and hiding ourself.";
 
-				fadeBlackFrame(true);
-				QWidget * topLevel = WidgetUtil::getTopLevelWidget(this);
+				//fadeBlackFrame(true);
+				
+				//QWidget * topLevel = WidgetUtil::getTopLevelWidget(this);
 				//topLevel->setWindowFlags(Qt::WindowStaysOnBottomHint);
-				topLevel->hide();
-
+				
+				//topLevel->hide();
+				parentWidget()->hide();
+				
 				// set native viewer AFTER fadeBlackFrame() called (above) so fadeblack affects the Qt viewer, not native
 				m_nativeViewer = viewer;
 
 				m_nativeCheckTimer.start(NATIVE_CHECK_TIMEOUT);
-
+				
+				
 				//qDebug() << "SlideGroupViewer::setSlideGroup: Setup complete.";
 			}
 			else
@@ -862,8 +871,8 @@ void SlideGroupViewer::setSlideGroup(SlideGroup *group, Slide *startSlide)
 		}
 	}
 
-	if(m_blackEnabled && blackNative)
-		fadeBlackFrame(false);
+// 	if(m_blackEnabled && blackNative)
+// 		fadeBlackFrame(false);
 }
 
 void SlideGroupViewer::setViewerState(ViewerState state)

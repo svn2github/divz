@@ -17,7 +17,7 @@ private:
 public:
 	VideoSlideGroup();
 	
-	typedef enum { GroupType = 4 };
+	typedef enum { GroupType = 5 };
 	int groupType() const { return GroupType; }	
 	
 	QString file() { return m_file; }

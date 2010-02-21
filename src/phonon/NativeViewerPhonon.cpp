@@ -27,6 +27,9 @@ void NativeViewerPhonon::setSlideGroup(SlideGroup *group)
 {
 	m_slideGroup = group;
 	m_videoGroup = dynamic_cast<VideoSlideGroup*>(group);
+#ifdef PHONON_ENABLED
+	m_player->load(m_videoGroup->file());	
+#endif
 }
 
 void NativeViewerPhonon::show()
@@ -38,6 +41,13 @@ void NativeViewerPhonon::show()
 	m_player->resize(rect.size());
 	m_player->move(abs);
 	m_player->show();
+	// the second 'move' is required to move it to an 'odd' 
+	// place, at least on X11 systems that I've tested.
+	// For example, over a task bar or halfway off screen, etc.
+	// And yes, 2 moves are required - before AND after the show()
+	// - I have no idea why both are required, but it doesn't 
+	// work without both.
+	m_player->move(abs);
 #endif
 }
 

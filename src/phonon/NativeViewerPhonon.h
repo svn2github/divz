@@ -17,6 +17,7 @@ class VideoSlideGroup;
 #include <phonon/VideoWidget>
 #include <phonon/VideoPlayer>
 
+#define PHONON_ENABLED 1
 
 class NativeViewerPhonon : public NativeViewer
 {
