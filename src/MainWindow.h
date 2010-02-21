@@ -147,6 +147,7 @@ protected slots:
 	void previewSlideDoubleClicked(Slide*);
 
 	void actionAddPPT();
+	void actionAddVideo();
 	
 	void autosave();
 	void saveFinished();

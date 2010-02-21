@@ -26,7 +26,7 @@
      <x>0</x>
      <y>0</y>
      <width>942</width>
-     <height>25</height>
+     <height>19</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -75,6 +75,7 @@
     <addaction name="actionImport_Slide_Group"/>
     <addaction name="actionAdd_PowerPoint_File"/>
     <addaction name="actionAdd_Group_Player"/>
+    <addaction name="actionAdd_Video_File"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
@@ -265,6 +266,11 @@
    </property>
    <property name="text">
     <string>Toggle Live Output</string>
+   </property>
+  </action>
+  <action name="actionAdd_Video_File">
+   <property name="text">
+    <string>Add Video File...</string>
    </property>
   </action>
  </widget>

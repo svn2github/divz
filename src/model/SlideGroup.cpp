@@ -11,6 +11,7 @@
 #include "MediaBrowser.h"
 #include "songdb/SongSlideGroup.h"
 #include "ppt/PPTSlideGroup.h"
+#include "phonon/VideoSlideGroup.h"
 #include "groupplayer/GroupPlayerSlideGroup.h"
 
 #define ID_COUNTER_KEY "slidegroup/id-counter"
@@ -286,6 +287,12 @@ SlideGroup * SlideGroup::fromByteArray(QByteArray &array, Document *context)
 	{
 		//qDebug("cmdSetSlideGroup: Group type: PPT");
 		group = new PPTSlideGroup();
+	}
+	else
+	if(className == "VideoSlideGroup")
+	{
+		//qDebug("cmdSetSlideGroup: Group type: PPT");
+		group = new VideoSlideGroup();
 	}
 	else
 	if(className == "GroupPlayerSlideGroup")

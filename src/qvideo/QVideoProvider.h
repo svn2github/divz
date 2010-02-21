@@ -44,9 +44,12 @@ public /*static*/:
 	// in the cache for the next time (stores QDir::tempPath() + "/qvideoprovider/" + md5sum of canonical file path)
 	static QPixmap iconForFile(const QString&);
 	
-private:
+	// Moved these methods public because there is some value in allowing users of this class to find out
+	// where the cache file is actually stored, such as in the phonon/VideoSlideGroup
 	static QString cacheFile(QVideoProvider *);
 	static QString cacheFile(const QString&);
+
+private:
 	static void storePixmap(const QPixmap&, QVideoProvider *);
 
 	QVideoIconGenerator(QVideoProvider*);

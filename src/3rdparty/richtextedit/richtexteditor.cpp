@@ -442,7 +442,7 @@ RichTextEditorToolBar::RichTextEditorToolBar(RichTextEditor *editor,
             tr("Underline"), editor, SLOT(setFontUnderline(bool)), this);
     m_underline_action->setShortcut(tr("CTRL+U"));
     addAction(m_underline_action);
-    m_underline_action->setVisible(false);
+    //m_underline_action->setVisible(false);
 
     addSeparator();
     

@@ -25,6 +25,8 @@ Q_IMPORT_PLUGIN(qtiff)
 #include "songdb/SongSlideGroup.h"
 #include "ppt/PPTSlideGroupFactory.h"
 #include "ppt/PPTSlideGroup.h"
+#include "phonon/VideoSlideGroupFactory.h"
+#include "phonon/VideoSlideGroup.h"
 #include "groupplayer/GroupPlayerSlideGroup.h"
 #include "groupplayer/GroupPlayerSlideGroupFactory.h"
 
@@ -200,6 +202,7 @@ void AppSettings::initApp(const QString& appName)
 	SlideGroupFactory::registerFactoryForType(SlideGroup::GroupType,		new SlideGroupFactory());
 	SlideGroupFactory::registerFactoryForType(SongSlideGroup::GroupType,		new SongSlideGroupFactory());
 	SlideGroupFactory::registerFactoryForType(PPTSlideGroup::GroupType,		new PPTSlideGroupFactory());
+	SlideGroupFactory::registerFactoryForType(VideoSlideGroup::GroupType,		new VideoSlideGroupFactory());
 	SlideGroupFactory::registerFactoryForType(GroupPlayerSlideGroup::GroupType,	new GroupPlayerSlideGroupFactory());
 	
 

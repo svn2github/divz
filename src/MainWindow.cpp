@@ -38,6 +38,7 @@
 #include "model/SlideGroupFactory.h"
 
 #include "ppt/PPTSlideGroup.h"
+#include "phonon/VideoSlideGroup.h"
 
 #include "songdb/SongSlideGroup.h"
 #include "songdb/SongRecord.h"
@@ -168,6 +169,8 @@ MainWindow::MainWindow(QWidget *parent) :
 	#else
 		m_ui->actionAdd_PowerPoint_File->setVisible(false);
 	#endif
+	
+	connect(m_ui->actionAdd_Video_File, SIGNAL(triggered()), this, SLOT(actionAddVideo()));
 
 
 	foreach(QAction *action, actionList)
@@ -253,6 +256,25 @@ void MainWindow::actionAddPPT()
 		AppSettings::setPreviousPath("ppt",file);
 
 		PPTSlideGroup * group = new PPTSlideGroup();
+		group->setFile(file);
+
+		m_doc->addGroup(group);
+		//if(!liveInst()->slideGroup())
+		//	setLiveGroup(group);
+		QModelIndex idx = m_docModel->indexForGroup(group);
+		m_groupView->setCurrentIndex(idx);
+	}
+}
+
+void MainWindow::actionAddVideo()
+{
+	QString lastDir = AppSettings::previousPath("video");
+	QString file = QFileDialog::getOpenFileName(this,"Add Video File",lastDir,tr("Video Files (*.wmv *.mpeg *.mpg *.avi *.wmv *.flv *.mov *.mp4 *.m4a *.3gp *.3g2 *.mj2 *.mjpeg *.ipod *.m4v *.gsm *.swf *.dv *.dvd *.asf *.mtv *.roq *.aac *.ac3 *.aiff *.alaw *.iif);;Any File (*.*)"));
+	if(!file.isEmpty())
+	{
+		AppSettings::setPreviousPath("video",file);
+
+		VideoSlideGroup * group = new VideoSlideGroup();
 		group->setFile(file);
 
 		m_doc->addGroup(group);
