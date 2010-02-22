@@ -7,7 +7,7 @@
 #include "MainWindow.h"
 #include "AppSettings.h"
 
-#include "3rdparty/md5/md5.h"
+#include "3rdparty/md5/qtmd5.h"
 
 #include "NativeViewerWin32PPT.h"
 

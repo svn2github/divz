@@ -2,6 +2,6 @@
 INCLUDEPATH += $$PWD
 DEPENDPATH += $$PWD
 
-HEADERS += md5.h
-SOURCES += md5.cpp
+HEADERS += qtmd5.h
+SOURCES += qtmd5.cpp
 

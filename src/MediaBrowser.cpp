@@ -20,7 +20,7 @@
 #include <QSplitter>
 
 #include "qvideo/QVideoProvider.h"
-#include "3rdparty/md5/md5.h"
+#include "3rdparty/md5/qtmd5.h"
 #include "AppSettings.h"
 
 #include "SlideGroupViewer.h"

@@ -26,7 +26,7 @@
 #include <QPixmapCache>
 #include "ImageFilters.h"
 
-#include "3rdparty/md5/md5.h"
+#include "3rdparty/md5/qtmd5.h"
 
 #define DEBUG_LAYOUT 0
 

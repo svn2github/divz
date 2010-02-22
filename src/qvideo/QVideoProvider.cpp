@@ -4,7 +4,7 @@
 #include <QPixmapCache>
 #include "AppSettings.h"
 
-#include "3rdparty/md5/md5.h"
+#include "3rdparty/md5/qtmd5.h"
 
 #define DEBUG_QVIDEOPROVIDER 0
 #define DEBUG_QVIDEOPROVIDER_PLAY 0

@@ -9,7 +9,7 @@
 #include <QPixmapCache>
 #include <QPainter>
 
-#include "md5.h"
+#include "3rdparty/md5/qtmd5.h"
 #include "AppSettings.h"
 #include "DirectoryListModel.h"
 #include "../exiv2-0.18.2-qtbuild/src/image.hpp"

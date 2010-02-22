@@ -7,18 +7,18 @@ RCC_DIR = .build
 UI_DIR = .build
 
 DEPENDPATH += . \
-              config \
-              src \
+              $$PWD/config \
+              $$PWD/src \
 #              contrib/organize \
-              xmpsdk/include \
-              xmpsdk/src \
-              xmpsdk/include/client-glue
+              $$PWD/xmpsdk/include \
+              $$PWD/xmpsdk/src \
+              $$PWD/xmpsdk/include/client-glue
 INCLUDEPATH += . \
-               src \
-               xmpsdk/include \
-               xmpsdk/include/client-glue \
+               $$PWD/src \
+               $$PWD/xmpsdk/include \
+               $$PWD/xmpsdk/include/client-glue \
 #               contrib/organize \
-               xmpsdk/src
+               $$PWD/xmpsdk/src
 
 DEFINES += EXV_LOCALEDIR=\"/usr/local/share/locale\" EXV_BUILDING_LIB=1 NDEBUG=1
 DEFINES += EXV_HAVE_STDINT_H=1
@@ -191,20 +191,20 @@ SOURCES += src/basicio.cpp \
            xmpsdk/src/XMPUtils.cpp
 
 win32 {
-	HEADERS += src/getopt_win32.h 
-	SOURCES += src/getopt_win32.c 
+        HEADERS += $$PWD/src/getopt_win32.h
+        SOURCES += $$PWD/src/getopt_win32.c
 	DEFINES += WIN32
 	
-	INCLUDEPATH += win32/zlib123 \
-		win32/expat201/Source/lib 
+        INCLUDEPATH += $$PWD/win32/zlib123 \
+                $$PWD/win32/expat201/Source/lib
 
-	DEPENDPATH += win32/zlib123 \
-		win32/zlib123dll/dll32 \
-		win32/expat201/Source/lib 
+        DEPENDPATH += $$PWD/win32/zlib123 \
+                $$PWD/win32/zlib123dll/dll32 \
+                $$PWD/win32/expat201/Source/lib
 		
-	LIBS += -L"win32/zlib123dll/dll32" \
+        LIBS += -L"$$PWD/win32/zlib123dll/dll32" \
 		-lzlibwapi \
-		-L"win32/expat201/Bin" \
+                -L"$$PWD/win32/expat201/Bin" \
 		-llibexpat \
 		-llibexpatw 
 		

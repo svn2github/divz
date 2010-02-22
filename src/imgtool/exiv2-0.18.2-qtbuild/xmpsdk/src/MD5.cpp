@@ -22,7 +22,7 @@
 
 #include <cstring>
 
-#include "MD5.h"
+#include "../include/MD5.h"
 
 using namespace std;
 
