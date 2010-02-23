@@ -656,6 +656,13 @@ SlideGroupViewer::~SlideGroupViewer()
 		qDebug() << "SlideGroupViewer: Deleting black slide";
 	}
 	
+	if(m_nativeViewer)
+	{
+		m_nativeViewer->close();
+		delete m_nativeViewer;
+		m_nativeViewer = 0;
+	}
+	
 }
 void SlideGroupViewer::forceGLDisabled(bool flag)
 {
@@ -694,6 +701,14 @@ void SlideGroupViewer::closeEvent(QCloseEvent *event)
 	event->accept();
 	m_scene->clear();
 	close();
+	
+	if(m_nativeViewer)
+	{
+		m_nativeViewer->close();
+		delete m_nativeViewer;
+		m_nativeViewer = 0;
+	}
+	
 	deleteLater();
 }
 
@@ -707,6 +722,13 @@ void SlideGroupViewer::clear()
 	releaseVideoProvders();
 	m_scene->clear();
 	m_slideGroup = 0;
+	
+	if(m_nativeViewer)
+	{
+		m_nativeViewer->close();
+		delete m_nativeViewer;
+		m_nativeViewer = 0;
+	}
 }
 
 void SlideGroupViewer::slideChanged(Slide *slide, QString slideOperation, AbstractItem *item, QString /*operation*/, QString /*fieldName*/, QVariant /*value*/)

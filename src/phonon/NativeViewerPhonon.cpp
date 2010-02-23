@@ -23,7 +23,9 @@ NativeViewerPhonon::NativeViewerPhonon()
 
 NativeViewerPhonon::~NativeViewerPhonon()
 {
-#ifdef PHONON_ENABLED
+#ifdef PHONON_ENABLED>
+	if(m_videoGroup)
+		m_videoGroup->setNativeViewer(0);
 	delete m_widget;
 #endif
 }

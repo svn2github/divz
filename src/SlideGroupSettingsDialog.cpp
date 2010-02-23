@@ -19,7 +19,10 @@ SlideGroupSettingsDialog::SlideGroupSettingsDialog(SlideGroup *g, QWidget *paren
 	if(m_slideGroup->endOfGroupAction() == SlideGroup::GotoNextGroup)
 		m_ui->rChange->setChecked(true);
 	else
+	if(m_slideGroup->endOfGroupAction() == SlideGroup::GotoGroupIndex)
 		m_ui->rJump->setChecked(true);
+	else
+		m_ui->rStop->setChecked(true);
 		
 	m_ui->jumpToBox->setModel(m_model);
 	m_ui->jumpToBox->setCurrentIndex(m_slideGroup->jumpToGroupIndex());
@@ -52,7 +55,9 @@ void SlideGroupSettingsDialog::slotAccepted()
 {
 	m_slideGroup->setEndOfGroupAction(m_ui->rNothing->isChecked() ? SlideGroup::LoopToStart : 
 					  m_ui->rChange->isChecked()  ? SlideGroup::GotoNextGroup :
-					  SlideGroup::GotoGroupIndex);
+					  m_ui->rJump->isChecked()    ? SlideGroup::GotoGroupIndex :
+					  SlideGroup::Stop);
+
 	int idx = m_ui->jumpToBox->currentIndex();
 	if(m_slideGroup->endOfGroupAction() == SlideGroup::GotoGroupIndex && idx < 0)
 	{

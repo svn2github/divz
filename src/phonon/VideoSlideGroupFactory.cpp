@@ -62,6 +62,10 @@ VideoSlideGroupViewControl::VideoSlideGroupViewControl(OutputInstance *inst, QWi
 	QVBoxLayout * layout = new QVBoxLayout(this);
 
 	QWidget * baseWidget = new QWidget;
+	
+	m_playingLabel = new QLabel(this);
+	
+	layout->addWidget(m_playingLabel);
 	layout->addWidget(baseWidget);
 	layout->addStretch(1);
 
@@ -74,26 +78,27 @@ VideoSlideGroupViewControl::VideoSlideGroupViewControl(OutputInstance *inst, QWi
 	m_stopAction = new QAction(qApp->style()->standardIcon(QStyle::SP_MediaStop), tr("Stop"), baseWidget);
 	m_stopAction->setShortcut(tr("Ctrl+S"));
 	m_stopAction->setDisabled(true);
+	
+	m_loopAction = new QAction(QPixmap(":/data/stock-redo.png"), tr("Loop"), baseWidget);
+	m_loopAction->setShortcut(tr("Ctrl+L"));
+	m_loopAction->setCheckable(true);
+	
+	connect(m_loopAction, SIGNAL(toggled(bool)), this, SLOT(loopActionToggled(bool)));
 
 	QToolBar *bar = new QToolBar(baseWidget);
 
 	bar->addAction(m_playAction);
 	bar->addAction(m_pauseAction);
 	bar->addAction(m_stopAction);
+	bar->addAction(m_loopAction);
 
-	m_seekSlider = new Phonon::SeekSlider(baseWidget);
-
-	///******
-	///seekSlider->setMediaObject(mediaObject);
-
+	m_seekSlider   = new Phonon::SeekSlider(baseWidget);
 	m_volumeSlider = new Phonon::VolumeSlider(baseWidget);
-	///******
-	///volumeSlider->setAudioOutput(m_player->audioOutput());
 
-	m_volumeSlider->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
+	//m_volumeSlider->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
 
-	QLabel *volumeLabel = new QLabel(baseWidget);
-	volumeLabel->setPixmap(QPixmap(":/data/stock-volume.png"));
+// 	QLabel *volumeLabel = new QLabel(baseWidget);
+// 	volumeLabel->setPixmap(QPixmap(":/data/stock-volume.png"));
 
 	QPalette palette;
 	palette.setBrush(QPalette::Light, Qt::darkGray);
@@ -109,7 +114,7 @@ VideoSlideGroupViewControl::VideoSlideGroupViewControl(OutputInstance *inst, QWi
 	playbackLayout->addWidget(m_seekSlider);
 	playbackLayout->addWidget(m_timeLcd);
 
-	playbackLayout->addWidget(volumeLabel);
+// 	playbackLayout->addWidget(volumeLabel);
 	playbackLayout->addWidget(m_volumeSlider);
 
 	m_timeLcd->display("00:00");
@@ -133,7 +138,7 @@ void VideoSlideGroupViewControl::setSlideGroup(SlideGroup *g, Slide *curSlide, b
 		return;
 
 	m_slideViewer->setSlideGroup(m_group);
-
+	
 	m_videoGroup = dynamic_cast<VideoSlideGroup*>(g);
 	m_mediaObject = 0;
 	if(!m_videoGroup)
@@ -147,19 +152,70 @@ void VideoSlideGroupViewControl::setSlideGroup(SlideGroup *g, Slide *curSlide, b
 		qDebug() << "VideoSlideGroupViewControl::setSlideGroup(): No native viewer on video group yet, cannot init slots";
 		return;
 	}
+	
+	m_playingLabel->setText(QString("Video: <b>%1</b>").arg(QFileInfo(m_videoGroup->file()).fileName()));
+	
 	m_mediaObject = m_videoGroup->nativeViewer()->mediaObject();
 	m_mediaObject->setTickInterval(1000);
 
 	connect(m_mediaObject, SIGNAL(tick(qint64)), this, SLOT(phononTick(qint64)));
 	connect(m_mediaObject, SIGNAL(stateChanged(Phonon::State, Phonon::State)), this, SLOT(phononStateChanged(Phonon::State, Phonon::State)));
+	connect(m_mediaObject, SIGNAL(finished()), this, SLOT(phononPlayerFinished()));
 
 	connect(m_playAction, SIGNAL(triggered()), m_mediaObject, SLOT(play()));
 	connect(m_pauseAction, SIGNAL(triggered()), m_mediaObject, SLOT(pause()) );
 	connect(m_stopAction, SIGNAL(triggered()), m_mediaObject, SLOT(stop()));
-
+	
 	m_seekSlider->setMediaObject(m_mediaObject);
 	m_volumeSlider->setAudioOutput(m_videoGroup->nativeViewer()->audioOutput());
+	
+	m_loopAction->setChecked(m_videoGroup->endOfGroupAction() == SlideGroup::LoopToStart);
+	
+	connect(m_videoGroup, SIGNAL(slideChanged(Slide *, QString, AbstractItem *, QString, QString, QVariant)), this, SLOT(slideChanged(Slide *, QString, AbstractItem *, QString, QString, QVariant)));
 }
+
+void VideoSlideGroupViewControl::slideChanged(Slide *slide, QString slideOperation, AbstractItem *item, QString operation, QString fieldName, QVariant value)
+{
+	if(fieldName == "endOfGroupAction")
+	{
+		m_loopAction->setChecked(m_videoGroup->endOfGroupAction() == SlideGroup::LoopToStart);
+	}
+}
+
+void VideoSlideGroupViewControl::phononPlayerFinished()
+{
+	if(!m_videoGroup)
+		return;
+		
+	SlideGroup::EndOfGroupAction action = m_videoGroup->endOfGroupAction();
+	if(action == SlideGroup::LoopToStart)
+	{
+		if(m_videoGroup && m_videoGroup->nativeViewer())
+		{
+			Phonon::MediaObject * media = m_videoGroup->nativeViewer()->mediaObject();
+			qDebug() << "VideoSlideGroupViewControl::phononPlayerFinished(): playing file again";
+			media->seek(0);
+			media->play();
+		}
+	}
+	else
+	{
+		// This will allow the signals that trigger going to the next group to be emitted 
+		// if 'action' requires it.
+		m_slideViewer->nextSlide();
+	}
+	
+}
+
+void VideoSlideGroupViewControl::loopActionToggled(bool flag)
+{
+	if(!m_videoGroup)
+		return;
+	
+	m_videoGroup->setEndOfGroupAction(flag ? SlideGroup::LoopToStart : SlideGroup::Stop);
+}
+
+
 
 void VideoSlideGroupViewControl::phononStateChanged(Phonon::State newState, Phonon::State /* oldState */)
 {

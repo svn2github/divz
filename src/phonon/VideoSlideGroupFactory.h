@@ -3,11 +3,12 @@
 
 #include "model/SlideGroupFactory.h"
 
-#include <Phonon/VolumeSlider>
-#include <Phonon/SeekSlider>
-#include <Phonon/MediaObject>
+#include <phonon/Phonon/VolumeSlider>
+#include <phonon/Phonon/SeekSlider>
+#include <phonon/Phonon/MediaObject>
 #include <QAction>
 #include <QLCDNumber>
+#include <QLabel>
 
 class VideoSlideGroup;
 class VideoSlideGroupViewControl : public SlideGroupViewControl
@@ -23,6 +24,12 @@ public slots:
 protected slots:
 	void phononStateChanged(Phonon::State newState, Phonon::State /* oldState */);
 	void phononTick(qint64 time);
+	void phononPlayerFinished();
+	
+	void loopActionToggled(bool);
+	
+	// to catch changes to SlideGroup::endOfGroupAction property
+	void slideChanged(Slide *slide, QString slideOperation, AbstractItem *item, QString operation, QString fieldName, QVariant value);
 
 private:
 	VideoSlideGroup * m_videoGroup;
@@ -34,9 +41,11 @@ private:
 	QAction *m_playAction;
 	QAction *m_pauseAction;
 	QAction *m_stopAction;
+	QAction *m_loopAction;
 // 	QAction *m_nextAction;
 	QLCDNumber *m_timeLcd;
 	QWidget * m_controlBase;
+	QLabel * m_playingLabel;
 
 
 };

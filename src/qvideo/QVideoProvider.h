@@ -6,18 +6,32 @@
 #include "QVideo.h"
 
 #ifdef PHONON_ENABLED
-#include <phonon/AudioOutput>
-#include <phonon/SeekSlider>
-#include <phonon/MediaObject>
-#include <phonon/VolumeSlider>
-#include <phonon/BackendCapabilities>
-#include <phonon/Effect>
-#include <phonon/EffectParameter>
-#include <phonon/ObjectDescriptionModel>
-#include <phonon/AudioOutput>
-#include <phonon/MediaSource>
-#include <phonon/VideoWidget>
-#include <phonon/VideoPlayer>
+// #include <phonon/AudioOutput>
+// #include <phonon/SeekSlider>
+// #include <phonon/MediaObject>
+// #include <phonon/VolumeSlider>
+// #include <phonon/BackendCapabilities>
+// #include <phonon/Effect>
+// #include <phonon/EffectParameter>
+// #include <phonon/ObjectDescriptionModel>
+// #include <phonon/AudioOutput>
+// #include <phonon/MediaSource>
+// #include <phonon/VideoWidget>
+// #include <phonon/VideoPlayer>
+
+#include <phonon/Phonon/AudioOutput>
+#include <phonon/Phonon/SeekSlider>
+#include <phonon/Phonon/MediaObject>
+#include <phonon/Phonon/VolumeSlider>
+#include <phonon/Phonon/BackendCapabilities>
+#include <phonon/Phonon/Effect>
+#include <phonon/Phonon/EffectParameter>
+#include <phonon/Phonon/ObjectDescriptionModel>
+#include <phonon/Phonon/AudioOutput>
+#include <phonon/Phonon/MediaSource>
+#include <phonon/Phonon/VideoWidget>
+#include <phonon/Phonon/VideoPlayer>
+
 #endif
 
 class MjpegClient;

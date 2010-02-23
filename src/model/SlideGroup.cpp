@@ -88,7 +88,11 @@ void SlideGroup::setGroupTitle(QString s)
 	emit slideChanged(0, "change", 0, "change", "groupTitle", s);
 }
 void SlideGroup::setIconFile(QString s)    { m_iconFile = s; }
-void SlideGroup::setEndOfGroupAction(EndOfGroupAction s){ m_endOfGroupAction = s; }
+void SlideGroup::setEndOfGroupAction(EndOfGroupAction s)
+{
+	m_endOfGroupAction = s; 
+	emit slideChanged(0, "change", 0, "change", "endOfGroupAction", s);
+}
 void SlideGroup::setJumpToGroupIndex(int x){ m_jumpToGroupIndex = x; }
 void SlideGroup::setInheritFadeSettings(bool x){ m_inheritFadeSettings = x; }
 void SlideGroup::setCrossFadeSpeed(double x){ m_crossFadeSpeed = x; }

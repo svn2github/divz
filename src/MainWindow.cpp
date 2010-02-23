@@ -276,6 +276,7 @@ void MainWindow::actionAddVideo()
 
 		VideoSlideGroup * group = new VideoSlideGroup();
 		group->setFile(file);
+		group->setGroupTitle(QFileInfo(file).fileName());
 
 		m_doc->addGroup(group);
 		//if(!liveInst()->slideGroup())
