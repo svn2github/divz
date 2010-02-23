@@ -113,7 +113,11 @@ SlideGroupViewControl::SlideGroupViewControl(OutputInstance *group, QWidget *w,b
 	m_quickSlide(0),
 	m_originalQuickSlide(true),
 	m_listView(0),
-	m_isPreviewControl(false)
+	m_isPreviewControl(false),
+	m_quickSlideBase(0),
+	m_timeButton(0),
+	m_showQuickSlideBtn(0)
+
 	
 {
 	if(initUI)
@@ -245,7 +249,7 @@ SlideGroupViewControl::SlideGroupViewControl(OutputInstance *group, QWidget *w,b
 		QVBoxLayout *vbox = new QVBoxLayout(m_itemControlBase);
 		
 		layout->addWidget(m_itemControlBase);
-		
+		//m_itemControlBase->setVisible(false);
 		setLayout(layout);
 		
 		if(group)
@@ -270,12 +274,16 @@ SlideGroupListModel * SlideGroupViewControl::slideGroupListModel()
 
 void SlideGroupViewControl::setQuickSlideEnabled(bool flag)
 {
-	m_quickSlideBase->setVisible(flag);
+	if(m_quickSlideBase)
+	    m_quickSlideBase->setVisible(flag);
 }
 
 
 void SlideGroupViewControl::addQuickSlide()
 {
+	if(!m_quickSlideBase)
+	    return;
+
 	if(!m_group)
 		return;
 		
@@ -502,6 +510,9 @@ void SlideGroupViewControl::setQuickSlideText(const QString& tmp)
 void SlideGroupViewControl::setIsPreviewControl(bool flag)
 {
 	m_isPreviewControl = flag;
+	if(!m_timeButton)
+	    return;
+
 	m_timeButton->setText(!flag ? "&Start" : "Start");
 	m_prevBtn->setText(!flag ? "P&rev" : "Prev");
 	m_nextBtn->setText(!flag ? "Nex&t" : "Next");
@@ -511,6 +522,8 @@ void SlideGroupViewControl::setIsPreviewControl(bool flag)
 void SlideGroupViewControl::repaintList()
 {
 	//qDebug() << "SlideGroupViewControl::repaintList(): mark";
+	if(!m_listView)
+	    return;
  	m_listView->clearFocus();
  	m_listView->setFocus();
 	m_listView->repaint();
@@ -520,6 +533,9 @@ void SlideGroupViewControl::repaintList()
 
 void SlideGroupViewControl::enableAnimation(double time)
 {
+	if(!m_timeButton)
+		return;
+
 	if(DEBUG_SLIDEGROUPVIEWCONTROL)
 		qDebug() << "SlideGroupViewControl::enableAnimation(): time:"<<time;
 		
@@ -555,6 +571,9 @@ void SlideGroupViewControl::setEnabled(bool flag)
 
 void SlideGroupViewControl::toggleTimerState(TimerState state, bool resetTimer)
 {
+	if(!m_timeButton)
+		return;
+
 	if(state == Undefined)
 		state = m_timerState == Running ? Stopped : Running;
 	m_timerState = state;
@@ -619,6 +638,9 @@ QString SlideGroupViewControl::formatTime(double time)
 
 void SlideGroupViewControl::updateTimeLabel()
 {
+	if(!m_timeLabel)
+		return;
+
 	double time = ((double)m_currentTimeLength) - ((double)m_elapsedTime.elapsed())/1000;
 	m_timeLabel->setText(QString("<font color='%1'>%2</font>").arg(time <= 3 ? "red" : "black").arg(formatTime(time)));
 }
@@ -646,7 +668,7 @@ void SlideGroupViewControl::slideSelected(const QModelIndex &idx)
 	
 	m_selectedSlide = slide;
 	
-	if(m_showQuickSlideBtn->isChecked())
+	if(m_showQuickSlideBtn && m_showQuickSlideBtn->isChecked())
 		m_showQuickSlideBtn->setChecked(false);
 		
 	
@@ -704,9 +726,11 @@ void SlideGroupViewControl::slideChanged(Slide* newSlide)
 	{
 		if(m_slideViewer->isLocal())
 		{
+		    
 // 			qDebug() << "SlideGroupViewControl::slideChanged(): got local viewer, looking for controls.";
 // 			qDebug() << "SlideGroupViewControl::slideChanged(): got local viewer, got:"<<widgets.size()<<"controls";
-			
+			//if(m_itemControlBase)
+			  //  m_itemControlBase->setVisible(true);
 			foreach(QWidget *widget, widgets)
 			{
 				widget->setParent(m_itemControlBase);
@@ -732,7 +756,11 @@ void SlideGroupViewControl::slideChanged(Slide* newSlide)
 			}
 		}
 	}
-	
+	else
+	{
+	    //if(m_itemControlBase)
+		//m_itemControlBase->setVisible(false);
+	}
 }
 	
 void SlideGroupViewControl::setSlideGroup(SlideGroup *group, Slide *curSlide, bool allowProgressDialog)
@@ -758,10 +786,13 @@ void SlideGroupViewControl::setSlideGroup(SlideGroup *group, Slide *curSlide, bo
 		d->setSize(group->numSlides());
 	}
 	
-	m_slideModel->setSlideGroup(group);
-	
-	// reset seems to be required
-	m_listView->reset();
+	if(m_listView)
+	{
+	    m_slideModel->setSlideGroup(group);
+
+	    // reset seems to be required
+	    m_listView->reset();
+	}
 	
 	if(d)
 		d->close();
@@ -781,8 +812,11 @@ void SlideGroupViewControl::releaseSlideGroup()
 {
 	m_releasingSlideGroup = true;
 	m_group = 0;
-	m_slideModel->releaseSlideGroup();
-	m_listView->reset();
+	if(m_listView)
+	{
+	    m_slideModel->releaseSlideGroup();
+	    m_listView->reset();
+	}
 	m_releasingSlideGroup = false;
 }
 
@@ -820,10 +854,13 @@ void SlideGroupViewControl::setCurrentSlide(int x)
 
 void SlideGroupViewControl::setCurrentSlide(Slide *s)
 {
-	//m_slideViewer->setSlide(s);
-	QModelIndex idx = m_slideModel->indexForSlide(s);
-	m_listView->setCurrentIndex(idx);
-	slideSelected(idx);
+	if(m_listView)
+	{
+		//m_slideViewer->setSlide(s);
+		QModelIndex idx = m_slideModel->indexForSlide(s);
+		m_listView->setCurrentIndex(idx);
+		slideSelected(idx);
+	}
 }
 
 // void SlideGroupViewControl::fadeBlackFrame(bool toggled)

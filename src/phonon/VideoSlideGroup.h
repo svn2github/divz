@@ -2,7 +2,7 @@
 #define VIDEOSLIDEGROUP_H
 
 #include "model/SlideGroup.h"
-//#include "NativeViewerPhonon.h"
+#include "NativeViewerPhonon.h"
 
 #include <QHash>
 #include <QPixmap>
@@ -29,6 +29,9 @@ public:
 
 	void changeBackground(AbstractVisualItem::FillType, QVariant, Slide *);
 
+	NativeViewerPhonon * nativeViewer() { return m_native; }
+	void setNativeViewer(NativeViewerPhonon* viewer) { m_native=viewer; }
+
 protected:
 	void loadFile();
 	void removeAllSlides();
@@ -45,6 +48,7 @@ private:
 	int m_mtime;
 
 	QHash<int,QPixmap> m_slidePixmapCache;
+	NativeViewerPhonon * m_native;
 };
 Q_DECLARE_METATYPE(VideoSlideGroup*);
 

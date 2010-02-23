@@ -40,12 +40,19 @@ public:
 
 	void setState(NativeShowState);
 	NativeShowState state() {  return m_state; }
+
+	Phonon::MediaObject * mediaObject() { return m_media; }
+	Phonon::AudioOutput * audioOutput() { return m_audio; }
+	Phonon::VideoWidget * videoWidget() { return m_widget; }
 	
 private:
 	NativeShowState m_state;
 	VideoSlideGroup * m_videoGroup;
 #ifdef PHONON_ENABLED
-	Phonon::VideoPlayer * m_player;
+	//Phonon::VideoPlayer * m_player;
+	Phonon::MediaObject * m_media;
+	Phonon::VideoWidget * m_widget;
+	Phonon::AudioOutput * m_audio;
 #endif
 };
 

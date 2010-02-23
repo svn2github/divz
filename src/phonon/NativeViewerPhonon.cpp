@@ -11,15 +11,20 @@ NativeViewerPhonon::NativeViewerPhonon()
 	, m_videoGroup(0)
 {
 #ifdef PHONON_ENABLED
-	m_player = new Phonon::VideoPlayer(Phonon::VideoCategory, 0);
-	m_player->setWindowFlags(Qt::WindowStaysOnTopHint | Qt::FramelessWindowHint);
+	m_media  = new Phonon::MediaObject(this);
+	m_audio  = new Phonon::AudioOutput(Phonon::MusicCategory, this);
+	m_widget = new Phonon::VideoWidget(0);
+	Phonon::createPath(m_media, m_audio);
+	Phonon::createPath(m_media, m_widget);
+
+	m_widget->setWindowFlags(Qt::WindowStaysOnTopHint | Qt::FramelessWindowHint);
 #endif 
 }
 
 NativeViewerPhonon::~NativeViewerPhonon()
 {
 #ifdef PHONON_ENABLED
-	delete m_player;
+	delete m_widget;
 #endif
 }
 
@@ -27,8 +32,11 @@ void NativeViewerPhonon::setSlideGroup(SlideGroup *group)
 {
 	m_slideGroup = group;
 	m_videoGroup = dynamic_cast<VideoSlideGroup*>(group);
+	m_videoGroup->setNativeViewer(this);
 #ifdef PHONON_ENABLED
-	m_player->load(m_videoGroup->file());	
+	//qDebug() << "NativeViewerPhonon::setSlideGroup: Loading file:"<<m_videoGroup->file();
+	m_media->enqueue(m_videoGroup->file());
+	//qDebug() << "NativeViewerPhonon::setSlideGroup: File loaded";
 #endif
 }
 
@@ -36,19 +44,22 @@ void NativeViewerPhonon::show()
 {
 	QRect rect = containerWidget()->geometry();
 	QPoint abs = WidgetUtil::absoluteWidgetPosition(containerWidget());
+	//qDebug() << "NativeViewerPhonon::show: Showing at "<<abs<<", size:"<<rect.size();
 #ifdef PHONON_ENABLED
-	m_player->play();
-	m_player->resize(rect.size());
-	m_player->move(abs);
-	m_player->show();
+	m_media->play();
+	m_widget->resize(rect.size());
+	m_widget->move(abs);
+	m_widget->show();
 	// the second 'move' is required to move it to an 'odd' 
 	// place, at least on X11 systems that I've tested.
 	// For example, over a task bar or halfway off screen, etc.
 	// And yes, 2 moves are required - before AND after the show()
 	// - I have no idea why both are required, but it doesn't 
 	// work without both.
-	m_player->move(abs);
+	m_widget->move(abs);
 #endif
+
+	//qDebug() << "NativeViewerPhonon::show: done.";
 }
 
 void NativeViewerPhonon::close()
@@ -58,10 +69,12 @@ void NativeViewerPhonon::close()
 
 void NativeViewerPhonon::hide()
 {
+	//qDebug() << "NativeViewerPhonon::close: mark start";
 #ifdef PHONON_ENABLED
-	m_player->hide();
-	m_player->pause();
+	m_widget->hide();
+	m_media->pause();
 #endif
+	//qDebug() << "NativeViewerPhonon::close: mark end";
 }
 
 QPixmap NativeViewerPhonon::snapshot()
@@ -83,6 +96,7 @@ void NativeViewerPhonon::setSlide(int x)
 
 void NativeViewerPhonon::setState(NativeViewer::NativeShowState state)
 {
+	//qDebug() << "NativeViewerPhonon::setState: state:"<<state<<", start";
 	m_state = state;
 #ifdef PHONON_ENABLED
 	switch(state)
@@ -91,7 +105,7 @@ void NativeViewerPhonon::setState(NativeViewer::NativeShowState state)
 			show();
 			break;
 		case NativeViewer::Paused:
-			m_player->pause();
+			m_media->pause();
 			break;
 		case NativeViewer::Black:
 		case NativeViewer::White:
@@ -102,5 +116,6 @@ void NativeViewerPhonon::setState(NativeViewer::NativeShowState state)
 			break;
 	}
 #endif
+	//qDebug() << "NativeViewerPhonon::setState: state:"<<state<<", done";
 }
 
