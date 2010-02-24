@@ -607,7 +607,8 @@ void OutputControl::syncOutputChanged(int idx)
 	
 	if(!inst)
 	{
-		qDebug() << "OutputControl::syncOutputChanged(): idx:"<<idx<<", outputId:"<<outputId<<": output doesnt exist.";
+		if(idx>0)
+			qDebug() << "OutputControl::syncOutputChanged(): idx:"<<idx<<", outputId:"<<outputId<<": output doesnt exist.";
 	}
 	else
 	{

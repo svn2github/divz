@@ -29,6 +29,8 @@
 
 /** NativeViewer **/
 NativeViewer::NativeViewer()
+	: QObject()
+	, m_slideGroup(0)
 {}
 
 NativeViewer::~NativeViewer()
@@ -48,6 +50,16 @@ void NativeViewer::setSlide(Slide *slide)
 {
     int idx = m_slideGroup->indexOf(slide);
     setSlide(idx);
+}
+
+void NativeViewer::setFadeSpeed(int value)
+{
+	m_fadeSpeed = value;
+}
+
+void NativeViewer::setFadeQuality(int value)
+{
+	m_fadeQuality = value;
 }
 
 QPixmap NativeViewer::snapshot(Slide *slide)
@@ -348,11 +360,15 @@ void SlideGroupViewer::setAutoResizeTextEnabled(bool enable)
 void SlideGroupViewer::setFadeSpeed(int value)
 {
 	m_fadeSpeed = value;
+	if(m_nativeViewer)
+		m_nativeViewer->setFadeSpeed(value);
 }
 
 void SlideGroupViewer::setFadeQuality(int value)
 {
 	m_fadeQuality = value;
+	if(m_nativeViewer)
+		m_nativeViewer->setFadeQuality(value);
 }
 
 void SlideGroupViewer::applySlideFilters()
@@ -820,15 +836,19 @@ void SlideGroupViewer::setSlideGroup(SlideGroup *group, Slide *startSlide)
 			NativeViewer *viewer = factory->newNativeViewer();
 			if(viewer)
 			{
-				//qDebug() << "SlideGroupViewer::setSlideGroup: Got native viewer, setting up.";
+				if(m_blackEnabled)
+				{
+					qDebug() << "SlideGroupViewer::setSlideGroup: Native viewer with black - starting off as black";
+					viewer->setState(NativeViewer::Black);
+				}
+				
+				qDebug() << "SlideGroupViewer::setSlideGroup: Got native viewer, setting up.";
 				viewer->setContainerWidget(this);
 				viewer->setSlideGroup(m_slideGroup);
 				viewer->show();
 				
 				// copy current 'black' state to viewer
-				if(m_blackEnabled)
-					viewer->setState(NativeViewer::Black);
-
+				
 				blackNative = false;
 
 				//qDebug() << "SlideGroupViewer::setSlideGroup: Setup done, mudging our style and hiding ourself.";
@@ -843,6 +863,8 @@ void SlideGroupViewer::setSlideGroup(SlideGroup *group, Slide *startSlide)
 				
 				// set native viewer AFTER fadeBlackFrame() called (above) so fadeblack affects the Qt viewer, not native
 				m_nativeViewer = viewer;
+				m_nativeViewer->setFadeSpeed(m_fadeSpeed);
+				m_nativeViewer->setFadeQuality(m_fadeQuality);
 
 				m_nativeCheckTimer.start(NATIVE_CHECK_TIMEOUT);
 				

@@ -81,20 +81,22 @@ QPixmap MediaBrowser::iconForImage(const QString & file, const QSize & size)
 				.arg(size.height());
 
 
-	//qDebug() << "MediaBrowser::iconForImage: file:"<<file<<", size:"<<size<<", cacheFile: "<<cacheFile;
 	//QPixmap orig(file);
 	//orig = orig.scaled(size,Qt::IgnoreAspectRatio,Qt::SmoothTransformation);
 	//orig.detach();
 
 	//return orig;
 
-	if(!QPixmapCache::find(cacheFile,cache))
+	bool cacheFileModified = !QFile(cacheFile).exists() || QFileInfo(file).lastModified() >= QFileInfo(cacheFile).lastModified();
+// 	qDebug() << "MediaBrowser::iconForImage: file:"<<file<<", size:"<<size<<", cacheFile: "<<cacheFile<<", cacheModified:"<<cacheFileModified;
+	
+	if(!QPixmapCache::find(cacheFile,cache) || cacheFileModified)
 	{
-		if(QFile(cacheFile).exists())
+		if(QFile(cacheFile).exists() && !cacheFileModified)
 		{
 			cache.load(cacheFile);
 			QPixmapCache::insert(cacheFile,cache);
-			//qDebug() << "MediaBrowser::iconForImage: file:"<<file<<", size:"<<size<<": hit DISK (loaded scaled from disk cache)";
+// 			qDebug() << "MediaBrowser::iconForImage: file:"<<file<<", size:"<<size<<": hit DISK (loaded scaled from disk cache)";
 		}
 		else
 		{
@@ -108,13 +110,13 @@ QPixmap MediaBrowser::iconForImage(const QString & file, const QSize & size)
 					Exiv2::ExifData& exifData = exiv->exifData();
 					if (exifData.empty()) 
 					{
-						qDebug() << file << ": No Exif data found in the file";
+// 						qDebug() << file << ": No Exif data found in the file";
 					}
 					Exiv2::ExifThumb exifThumb(exifData);
 					std::string thumbExt = exifThumb.extension();
 					if (thumbExt.empty()) 
 					{
-						qDebug() << file << ": Image does not contain an Exif thumbnail";
+// 						qDebug() << file << ": Image does not contain an Exif thumbnail";
 					}
 					else
 					{
@@ -159,12 +161,12 @@ QPixmap MediaBrowser::iconForImage(const QString & file, const QSize & size)
 								}
 								
 								cache.save(cacheFile,"PNG");
-								////qDebug() << "MyQFileIconProvider::icon(): image file: caching to:"<<cacheFile<<" for "<<file;
+								//qDebug() << "MediaBrowser::iconForImage: file:"<<file<<", image file: caching to:"<<cacheFile<<" for "<<file;
 								QPixmapCache::insert(cacheFile,cache);
 								
 								gotThumb = true;
 								
-								qDebug() << file << ": Succesfully loaded Exiv thumnail and scaled to size, wrote to: "<<cacheFile;
+// 								qDebug() << file << ": Succesfully loaded Exiv thumnail and scaled to size, wrote to: "<<cacheFile;
 							}
 						}
 					}
@@ -192,7 +194,7 @@ QPixmap MediaBrowser::iconForImage(const QString & file, const QSize & size)
 					cache.save(cacheFile,"PNG");
 					////qDebug() << "MyQFileIconProvider::icon(): image file: caching to:"<<cacheFile<<" for "<<file;
 					QPixmapCache::insert(cacheFile,cache);
-					//qDebug() << "MediaBrowser::iconForImage: file:"<<file<<", size:"<<size<<": load GOOD (loaded original and scaled)";
+// 					qDebug() << "MediaBrowser::iconForImage: file:"<<file<<", size:"<<size<<": load GOOD (loaded original and scaled)";
 					//QApplication::processEvents();
 				}
 			}

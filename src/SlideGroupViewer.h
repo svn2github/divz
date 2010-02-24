@@ -54,11 +54,19 @@ public:
 	virtual void show()  = 0;
 	virtual void close() = 0;
 	virtual void hide()  = 0;
+	
+	virtual void setFadeSpeed(int);
+	virtual void setFadeQuality(int);
+	
+	int fadeSpeed() { return m_fadeSpeed; }
+	int fadeQuality() { return m_fadeQuality; }
 
 protected:
 
 	QWidget * m_containerWidget;
 	SlideGroup * m_slideGroup;
+	int m_fadeQuality;
+	int m_fadeSpeed;
 };
 
 #ifdef Q_OS_WIN32

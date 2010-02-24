@@ -27,18 +27,16 @@
 #define QUEUE_STATE_CHANGE_TIME 1000
 
 // blank 4x3 pixmap
-QPixmap * SlideGroupListModel::m_blankPixmap = 0;
-int SlideGroupListModel::m_blankPixmapRefCount = 0;
 
 SlideGroupListModel::SlideGroupListModel(SlideGroup *g, QObject *parent)
-		: QAbstractListModel(parent)
-		, m_slideGroup(0)
-		, m_scene(0)
-		, m_dirtyTimer(0)
-		, m_iconSize(192,0)
-		, m_sceneRect(0,0,1024,768)
-		, m_queuedIconGenerationMode(false)
-		
+	: QAbstractListModel(parent)
+	, m_slideGroup(0)
+	, m_scene(0)
+	, m_dirtyTimer(0)
+	, m_iconSize(192,0)
+	, m_sceneRect(0,0,1024,768)
+	, m_queuedIconGenerationMode(false)
+	, m_blankPixmap(0)
 {
 		
 	m_dirtyTimer = new QTimer(this);
@@ -51,12 +49,7 @@ SlideGroupListModel::SlideGroupListModel(SlideGroup *g, QObject *parent)
 	
 	if(!m_blankPixmap)
 	{
-		m_blankPixmap = new QPixmap(192,192 * (1/AppSettings::liveAspectRatio()));
-		m_blankPixmap->fill(Qt::lightGray);
-		QPainter painter(m_blankPixmap);
-		painter.setPen(QPen(Qt::black,1,Qt::DotLine));
-		painter.drawRect(m_blankPixmap->rect().adjusted(0,0,-1,-1));
-		painter.end();
+		regenerateBlankPixmap();
 	}
 	
 	connect(&m_needPixmapTimer, SIGNAL(timeout()), this, SLOT(makePixmaps()));
@@ -78,8 +71,7 @@ SlideGroupListModel::SlideGroupListModel(SlideGroup *g, QObject *parent)
 
 SlideGroupListModel::~SlideGroupListModel()
 {
-	m_blankPixmapRefCount --;
-	if(m_blankPixmapRefCount <= 0)
+	if(m_blankPixmap)
 	{
 		delete m_blankPixmap;
 		m_blankPixmap = 0;
@@ -90,6 +82,19 @@ SlideGroupListModel::~SlideGroupListModel()
 		delete m_scene;
 		m_scene = 0;
 	}
+}
+
+void SlideGroupListModel::regenerateBlankPixmap()
+{
+	if(m_blankPixmap)
+		delete m_blankPixmap;
+		
+	m_blankPixmap = new QPixmap(m_iconSize.width(),m_iconSize.width() * (1/AppSettings::liveAspectRatio()));
+	m_blankPixmap->fill(Qt::lightGray);
+	QPainter painter(m_blankPixmap);
+	painter.setPen(QPen(Qt::black,1,Qt::DotLine));
+	painter.drawRect(m_blankPixmap->rect().adjusted(0,0,-1,-1));
+	painter.end();
 }
 
 void SlideGroupListModel::setQueuedIconGenerationMode(bool flag)
@@ -334,7 +339,7 @@ void SlideGroupListModel::modelDirtyTimeout()
 		return;
 	
 	foreach(Slide *slide, m_dirtySlides)
-		QPixmapCache::remove(POINTER_STRING(slide));
+		QPixmapCache::remove(QString("%1-%2").arg(POINTER_STRING(slide)).arg(m_iconSize.width()));
 	
 	QModelIndex top    = indexForSlide(m_dirtySlides.first()), 
 	            bottom = indexForSlide(m_dirtySlides.last());
@@ -429,7 +434,7 @@ QVariant SlideGroupListModel::data(const QModelIndex &index, int role) const
 	else if(Qt::DecorationRole == role)
 	{
 		Slide *g = m_sortedSlides.at(index.row());
-		QString cacheKey = POINTER_STRING(g);
+		QString cacheKey = QString("%1-%2").arg(POINTER_STRING(g)).arg(m_iconSize.width());
 		QPixmap icon;
 		
 		//qDebug() << "SlideGroupListModel::data: Decoration for row:"<<index.row();
@@ -474,10 +479,10 @@ void SlideGroupListModel::setSceneRect(QRect r)
 	{
 		QModelIndex top    = indexForSlide(m_sortedSlides.first()),
 			    bottom = indexForSlide(m_sortedSlides.last());
-		//qDebug() << "DocumentListModel::modelDirtyTimeout: top:"<<top<<", bottom:"<<bottom;
+// 		qDebug() << "SlideGroupListModel::setSceneRect: top:"<<top<<", bottom:"<<bottom;
 		
 		foreach(Slide *slide, m_sortedSlides)
-			QPixmapCache::remove(POINTER_STRING(slide));
+			QPixmapCache::remove(QString("%1-%2").arg(POINTER_STRING(slide)).arg(m_iconSize.width()));
 
 		dataChanged(top,bottom);
 	}
@@ -489,12 +494,24 @@ void SlideGroupListModel::adjustIconAspectRatio()
 	qreal a = (qreal)r.height() / (qreal)r.width();
 	
 	m_iconSize.setHeight((int)(m_iconSize.width() * a));
+	
+	regenerateBlankPixmap();
+	
+// 	qDebug() << "SlideGroupListModel::adjustIconAspectRatio(): New adjusted size:"<<m_iconSize;
 }
 
 void SlideGroupListModel::setIconSize(QSize sz)
 {
+	// the height is aspect ratio-corrected,
+	// so if the widths match, dont bother re-generating
+	// all the icons.
+	if(m_iconSize.width() == sz.width())
+		return;
+	
+// 	qDebug() << "SlideGroupListModel::setIconSize(): New raw size:"<<sz;
 	m_iconSize = sz;
-	adjustIconAspectRatio();
+	// cause all icons to be re-generated
+	setSceneRect(m_sceneRect);
 }
 
 
@@ -591,8 +608,9 @@ QPixmap SlideGroupListModel::generatePixmap(Slide *slide)
 
 QPixmap SlideGroupListModel::defaultPendingPixmap()
 {
-	if(m_pendingPixmap.isNull())
+	if(m_pendingPixmap.isNull() || m_pendingPixmap.size() != m_iconSize)
 	{
+		qDebug() << "SlideGroupListModel::defaultPendingPixmap(): Pixmap regen, new size:"<<m_iconSize;
 		int icon_w = m_iconSize.width();
 		int icon_h = m_iconSize.height();
 			
@@ -606,6 +624,10 @@ QPixmap SlideGroupListModel::defaultPendingPixmap()
 		painter.drawRect(0,0,icon_w-1,icon_h-1);
 		
 		painter.end();
+	}
+	else
+	{
+		qDebug() << "SlideGroupListModel::defaultPendingPixmap(): Size is good, using current pixmap";
 	}
 	
 	return m_pendingPixmap;
@@ -660,7 +682,7 @@ void SlideGroupListModel::makePixmaps()
 	
 	Slide *group = m_needPixmaps.takeFirst();
 	
-	QString cacheKey = POINTER_STRING(group);
+	QString cacheKey = QString("%1-%2").arg(POINTER_STRING(group)).arg(m_iconSize.width());
 	QPixmapCache::remove(cacheKey);
 		
 	QPixmap icon = generatePixmap(group);
@@ -673,6 +695,8 @@ void SlideGroupListModel::makePixmaps()
 	
 	if(!m_needPixmaps.isEmpty())
 		m_needPixmapTimer.start(NEED_PIXMAP_TIMEOUT_FAST);
+	else
+		emit repaintList();
 }
  
 QVariant SlideGroupListModel::headerData(int section, Qt::Orientation orientation, int role) const

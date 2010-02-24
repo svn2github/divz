@@ -116,7 +116,10 @@ SlideGroupViewControl::SlideGroupViewControl(OutputInstance *group, QWidget *w,b
 	m_isPreviewControl(false),
 	m_quickSlideBase(0),
 	m_timeButton(0),
-	m_showQuickSlideBtn(0)
+	m_showQuickSlideBtn(0),
+	m_iconSize(192),
+	m_iconSizeSlider(0),
+	m_lockIconSizeSetter(false)
 
 	
 {
@@ -209,8 +212,35 @@ SlideGroupViewControl::SlideGroupViewControl(OutputInstance *group, QWidget *w,b
 		connect(m_nextBtn, SIGNAL(clicked()), this, SLOT(nextSlide()));
 		hbox->addWidget(m_nextBtn);
 		
+		label = new QLabel("Icon Size:");
+		hbox->addWidget(label);
 		
-		hbox->addStretch(1);
+		m_iconSizeSlider= new QSlider(Qt::Horizontal);
+		m_iconSizeSlider->setMinimum(16);
+		m_iconSizeSlider->setMaximum(480);
+		m_iconSizeSlider->setTickInterval(16);
+		m_iconSizeSlider->setSingleStep(16);
+		m_iconSizeSlider->setPageStep(32);
+		m_iconSizeSlider->setTickPosition(QSlider::TicksBelow);
+		hbox->addWidget(m_iconSizeSlider,1); 
+		
+		connect(m_iconSizeSlider, SIGNAL(valueChanged(int)), this, SLOT(setIconSize(int)));
+		
+		m_spinBox = new QSpinBox(this);
+		m_spinBox->setMinimum(16);
+		m_spinBox->setMaximum(480);
+		m_spinBox->setSingleStep(16);
+		//spin->setPageStep(32);
+		hbox->addWidget(m_spinBox);
+		
+		connect(m_spinBox, SIGNAL(valueChanged(int)), this, SLOT(setIconSize(int)));
+		
+		
+		QSettings s;
+		setIconSize(s.value(QString("slideviewcontrol/%1").arg(m_isPreviewControl ? "preview-icon-size" : "icon-size"),m_iconSize).toInt());
+		
+		
+		//hbox->addStretch(1);
 	
 		// animation controls
 		m_timeLabel = new QLabel(this);
@@ -266,10 +296,35 @@ SlideGroupViewControl::~SlideGroupViewControl()
 		delete m_quickSlide;
 }
 
+void SlideGroupViewControl::setIconSize(int size)
+{
+	if(m_lockIconSizeSetter)
+		return;
+	m_lockIconSizeSetter = true;
+	int old = size;
+	size = (int)(size / 16) * 16;
+	//qDebug() << "setIconSize: old:"<<old<<", size:"<<size;
+	if(m_iconSizeSlider->value() != size)
+		m_iconSizeSlider->setValue(size);
+	if(m_spinBox->value() != size)
+		m_spinBox->setValue(size);
+		
+	QSettings s;
+	s.setValue(QString("slideviewcontrol/%1").arg(m_isPreviewControl ? "preview-icon-size" : "icon-size"),size);
+	m_iconSize = size;
+		
+	// the model will automatically correct aspect ratio as needed
+	m_slideModel->setIconSize(QSize(size,size));
+	m_listView->reset();
+	m_lockIconSizeSetter = false;
+}
+
 SlideGroupListModel * SlideGroupViewControl::slideGroupListModel()
 {
-	SlideGroupListModel * model = dynamic_cast<SlideGroupListModel*>(m_listView->model());
-	return model;
+	//SlideGroupListModel * model = dynamic_cast<SlideGroupListModel*>(m_listView->model());
+	if(!m_slideModel || !m_listView)
+		return 0;
+	return m_slideModel;
 }
 
 void SlideGroupViewControl::setQuickSlideEnabled(bool flag)
@@ -512,6 +567,9 @@ void SlideGroupViewControl::setIsPreviewControl(bool flag)
 	m_isPreviewControl = flag;
 	if(!m_timeButton)
 	    return;
+	
+	QSettings s;
+	setIconSize(s.value(QString("slideviewcontrol/%1").arg(m_isPreviewControl ? "preview-icon-size" : "icon-size"),m_iconSize).toInt());
 
 	m_timeButton->setText(!flag ? "&Start" : "Start");
 	m_prevBtn->setText(!flag ? "P&rev" : "Prev");
@@ -521,12 +579,14 @@ void SlideGroupViewControl::setIsPreviewControl(bool flag)
 
 void SlideGroupViewControl::repaintList()
 {
-	//qDebug() << "SlideGroupViewControl::repaintList(): mark";
+// 	qDebug() << "SlideGroupViewControl::repaintList(): mark";
 	if(!m_listView)
 	    return;
  	m_listView->clearFocus();
  	m_listView->setFocus();
+	m_listView->reset();
 	m_listView->repaint();
+	
 	
 	//qDebug() << "SlideGroupViewControl::repaintList(): mark done";
 }

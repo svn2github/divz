@@ -32,6 +32,7 @@ protected:
 class QLabel;
 class OutputInstance;
 class TextBoxItem;
+class QSpinBox;
 class SlideGroupViewControl : public QWidget
 {
 	Q_OBJECT
@@ -52,6 +53,8 @@ public:
 	typedef enum TimerState { Undefined, Running, Stopped };
 	
 	TimerState timerState() { return m_timerState; }
+	
+	int iconSize() { return m_iconSize; }
 	
 signals:
 	void slideDoubleClicked(Slide *);
@@ -84,6 +87,8 @@ protected slots:
 	
 	virtual void updateTimeLabel();
 	virtual void enableAnimation(double time = 0);
+	
+	virtual void setIconSize(int);
 	
 private slots:
 	void repaintList();
@@ -132,6 +137,11 @@ protected:
 	
 	QWidget  * m_itemControlBase;
 	QList<QWidget*> m_controlWidgets;
+	
+	int m_iconSize;
+	QSlider * m_iconSizeSlider;
+	bool m_lockIconSizeSetter;
+	QSpinBox * m_spinBox;
 };
 
 class AbstractSlideGroupEditor : public QMainWindow

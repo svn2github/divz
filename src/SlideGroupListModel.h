@@ -84,6 +84,8 @@ protected:
 	QPixmap defaultPendingPixmap();
 	void markSlideDirty(Slide*);
 	
+	void regenerateBlankPixmap();
+	
 	void needPixmap(Slide*);
 	
 	void internalSetup();
@@ -115,8 +117,7 @@ protected:
  	
  	QTimer m_queueStateChangeTimer;
  	
- 	static QPixmap * m_blankPixmap;
- 	static int m_blankPixmapRefCount;
+ 	QPixmap * m_blankPixmap;
 
 };
 

@@ -401,11 +401,11 @@ void BackgroundContent::setImageFile(const QString &file)
 	QString fileMod = QFileInfo(file).lastModified().toString();
 	if(file == m_fileName && fileMod == m_fileLastModified)
 	{
-		//qDebug() << "ImageContent::loadFile: "<<file<<": no change, not reloading";
+		qDebug() << "BackgroundContent::setImageFile: "<<file<<": no change, not reloading";
 		return;
 	}
 	
-	//qDebug() << "ImageContent::loadFile: "<<file<<": (current file:"<<m_fileName<<"), fileMod:"<<fileMod<<", m_fileLastModified:"<<m_fileLastModified;
+// 	qDebug() << "BackgroundContent::setImageFile: "<<file<<": (current file:"<<m_fileName<<"), fileMod:"<<fileMod<<", m_fileLastModified:"<<m_fileLastModified;
 	
 	m_fileName = file;
 	m_fileLastModified = fileMod;
@@ -461,6 +461,8 @@ void BackgroundContent::setImageFile(const QString &file)
 		
 		if(sceneContextHint() == MyGraphicsScene::StaticPreview)
 		{
+// 			qDebug() << "BackgroundContent::setImageFile: "<<file<<": static preview, warming";
+			
 			QString cacheKey = QString("%1/%2/%3-%4x%5-icon192-auto_ar")
 						.arg(AppSettings::cachePath())
 						.arg(BG_IMG_CACHE_DIR)
@@ -469,9 +471,9 @@ void BackgroundContent::setImageFile(const QString &file)
 						.arg(size.height());
 						//.arg(modelItem()->zoomEffectEnabled() ? "-zoomed" : "");
 			
-			QPixmap ccache;
 			if(!QPixmapCache::find(cacheKey,cache))
 			{
+// 				qDebug() << "BackgroundContent::setImageFile: "<<file<<": static preview, not in QPixmapCache, starting thread";
 				new BackgroundImageWarmingThreadManager(dynamic_cast<BackgroundItem*>(modelItem()),cacheKey,contentsRect());
 			}
 		}
@@ -483,22 +485,25 @@ void BackgroundContent::setImageFile(const QString &file)
 		m_lastImageKey = cacheKey;
 		//qDebug() << "BackgroundContent::setImageFile: file:"<<file<<", size:"<<size<<", cacheKey:"<<cacheKey;
 
-		if(QPixmapCache::find(cacheKey,cache))
+		if(QPixmapCache::find(cacheKey,cache) && QFileInfo(file).lastModified() <= QFileInfo(cacheKey).lastModified())
 		{
 			setPixmap(cache);
 			m_fileLoaded = true;
 			//qDebug() << "ImageContent::loadFile: "<<file<<": pixmap cache hit on "<<cacheKey;
-			//qDebug() << "BackgroundContent::setImageFile: file:"<<file<<", size:"<<size<<": hit RAM (loaded scaled from memory)";
+// 			qDebug() << "BackgroundContent::setImageFile: file:"<<file<<", size:"<<size<<": hit RAM (loaded scaled from memory)";
 		}
 		else
 		{
+// 			qDebug() << "BackgroundContent::setImageFile: "<<file<<": Not in RAM";
 			QPixmap cache;
 			if(sceneContextHint() == MyGraphicsScene::StaticPreview)
 			{
+// 				qDebug() << "BackgroundContent::setImageFile: "<<file<<": static preview, using MB";
 				cache = MediaBrowser::iconForImage(file,QSize(192,120)); // MEDIABROWSER_LIST_ICON_SIZE);
 			}
 			else
 			{
+// 				qDebug() << "BackgroundContent::setImageFile: "<<file<<": using internal load file";
 				QImage * cacheImg = internalLoadFile(file,cacheKey,contentsRect());
 				if(cacheImg)
 				{
@@ -518,7 +523,7 @@ void BackgroundContent::setImageFile(const QString &file)
 QImage * BackgroundContent::internalLoadFile(QString file,QString cacheKey, QRect contentsRect)
 {
 	QImage * cache = 0;
-	if(QFile(cacheKey).exists())
+	if(QFile(cacheKey).exists() && QFileInfo(file).lastModified() <= QFileInfo(cacheKey).lastModified())
 	{
 		cache = new QImage();
 		cache->load(cacheKey);
@@ -640,7 +645,7 @@ BackgroundImageWarmingThreadManager::BackgroundImageWarmingThreadManager(Backgro
 		deleteLater();
 	}
 	else
-	if(QFile(key).exists())
+	if(QFile(key).exists() && QFileInfo(model->fillImageFile()).lastModified() <= QFileInfo(key).lastModified())
 	{
 		//qDebug()<<"TextBoxWarmingThreadManager(): modelItem:"<<model->itemName()<<": Cache load from"<<key;
 		cache.load(key);
@@ -649,7 +654,7 @@ BackgroundImageWarmingThreadManager::BackgroundImageWarmingThreadManager(Backgro
 	}
 	else
 	{
-		qDebug()<<"BackgroundImageWarmingThreadManager(): modelItem:"<<model->itemName()<<": Cache MISS";
+		//qDebug()<<"BackgroundImageWarmingThreadManager(): modelItem:"<<model->itemName()<<": Cache MISS";
 		m_thread = new BackgroundImageWarmingThread(model,key,rect);
 		connect(m_thread, SIGNAL(renderDone(QImage*)), this, SLOT(renderDone(QImage*)));
 		connect(m_thread, SIGNAL(finished()), m_thread, SLOT(deleteLater()));
