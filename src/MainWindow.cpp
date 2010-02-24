@@ -13,6 +13,7 @@
 #include <QCheckBox>
 #include <QFile>
 #include <QTextStream>
+#include <QInputDialog>
 
 #include "DeepProgressIndicator.h"
 #include "AppSettings.h"
@@ -39,6 +40,7 @@
 
 #include "ppt/PPTSlideGroup.h"
 #include "phonon/VideoSlideGroup.h"
+#include "webgroup/WebSlideGroup.h"
 
 #include "songdb/SongSlideGroup.h"
 #include "songdb/SongRecord.h"
@@ -171,6 +173,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	#endif
 	
 	connect(m_ui->actionAdd_Video_File, SIGNAL(triggered()), this, SLOT(actionAddVideo()));
+	connect(m_ui->actionAdd_Web_Page, SIGNAL(triggered()), this, SLOT(actionAddWeb()));
 
 
 	foreach(QAction *action, actionList)
@@ -277,6 +280,34 @@ void MainWindow::actionAddVideo()
 		VideoSlideGroup * group = new VideoSlideGroup();
 		group->setFile(file);
 		group->setGroupTitle(QFileInfo(file).fileName());
+
+		m_doc->addGroup(group);
+		//if(!liveInst()->slideGroup())
+		//	setLiveGroup(group);
+		QModelIndex idx = m_docModel->indexForGroup(group);
+		m_groupView->setCurrentIndex(idx);
+	}
+}
+
+void MainWindow::actionAddWeb()
+{
+	QString lastDir = AppSettings::previousPath("webgroup");
+	bool ok;
+	QString text = QInputDialog::getText(this, tr("Add Web Page"),
+						tr("Copy or Paste URL:"), QLineEdit::Normal,
+						lastDir.isEmpty() ? "http://www.google.com/" : lastDir, &ok);
+	if (ok && !text.isEmpty())
+	{
+		AppSettings::setPreviousPath("webgroup",text);
+
+		WebSlideGroup * group = new WebSlideGroup();
+		group->setUrl(text);
+		
+		QString title = QInputDialog::getText(this, tr("Add Web Page"),
+						tr("Slide Group Title:"), QLineEdit::Normal,
+						text.isEmpty() ? "http://www.google.com/" : text, &ok);
+						
+		group->setGroupTitle(title.isEmpty() ? text : title);
 
 		m_doc->addGroup(group);
 		//if(!liveInst()->slideGroup())
@@ -694,11 +725,12 @@ void MainWindow::fileSelected(const QFileInfo &info)
 		return;
 	}
 
-	Slide * slide = new Slide();
-	SlideGroup *group = new SlideGroup();
-	group->addSlide(slide);
+	//Slide * slide = new Slide();
+	VideoSlideGroup *group = new VideoSlideGroup();
+	group->setFile(info.canonicalFilePath());
+	//group->addSlide(slide);
 
-	group->changeBackground(info);
+	//group->changeBackground(info);
 
 	m_doc->addGroup(group);
 	if(!liveInst()->slideGroup())

@@ -79,7 +79,31 @@ void OutputControl::setupUI()
 	//m_configLogo->setEnabled(false); 
 	hbox1->addWidget(m_configLogo);
 	
-	hbox1->addStretch(1);
+// 	hbox1->addStretch(1);
+
+// // 	// fade speed 
+	
+	QLabel *label = new QLabel("Fade Speed:");
+	hbox1->addWidget(label);
+	m_fadeSlider = new QSlider(Qt::Horizontal);
+	m_fadeSlider->setMinimum(0);
+	m_fadeSlider->setValue(1);
+	m_fadeSlider->setMaximum(100);
+	m_fadeSlider->setTickInterval(10);
+	//m_fadeSlider->setSingleStep(5);
+	m_fadeSlider->setTickPosition(QSlider::TicksBelow);
+	hbox1->addWidget(m_fadeSlider,1);
+	
+	QSpinBox *edit = new QSpinBox();
+	edit->setSuffix("%");
+	edit->setValue(5);
+	hbox1->addWidget(edit);
+	
+	connect(edit, SIGNAL(valueChanged(int)), m_fadeSlider, SLOT(setValue(int)));
+	connect(m_fadeSlider, SIGNAL(valueChanged(int)), edit, SLOT(setValue(int)));
+	connect(m_fadeSlider, SIGNAL(valueChanged(int)), this, SLOT(setCrossFadeSpeed(int)));
+
+	
 	
 	
 	m_advancedButton = new QPushButton(QIcon(":/data/stock-go-down.png"), "Advanced");
@@ -91,30 +115,30 @@ void OutputControl::setupUI()
 	layout->addLayout(hbox1);
 	
 	
-	// fade speed row
-	QHBoxLayout * hbox2 = new QHBoxLayout();
-	
-	QLabel *label = new QLabel("Fade Speed:");
-	hbox2->addWidget(label);
-	m_fadeSlider = new QSlider(Qt::Horizontal);
-	m_fadeSlider->setMinimum(0);
-	m_fadeSlider->setValue(1);
-	m_fadeSlider->setMaximum(100);
-	m_fadeSlider->setTickInterval(10);
-	//m_fadeSlider->setSingleStep(5);
-	m_fadeSlider->setTickPosition(QSlider::TicksBelow);
-	hbox2->addWidget(m_fadeSlider,1);
-	
-	QSpinBox *edit = new QSpinBox();
-	edit->setSuffix("%");
-	edit->setValue(5);
-	hbox2->addWidget(edit);
-	
-	connect(edit, SIGNAL(valueChanged(int)), m_fadeSlider, SLOT(setValue(int)));
-	connect(m_fadeSlider, SIGNAL(valueChanged(int)), edit, SLOT(setValue(int)));
-	connect(m_fadeSlider, SIGNAL(valueChanged(int)), this, SLOT(setCrossFadeSpeed(int)));
-
-	layout->addLayout(hbox2);
+// // 	// fade speed row
+// // 	QHBoxLayout * hbox2 = new QHBoxLayout();
+// 	
+// 	QLabel *label = new QLabel("Fade Speed:");
+// 	hbox2->addWidget(label);
+// 	m_fadeSlider = new QSlider(Qt::Horizontal);
+// 	m_fadeSlider->setMinimum(0);
+// 	m_fadeSlider->setValue(1);
+// 	m_fadeSlider->setMaximum(100);
+// 	m_fadeSlider->setTickInterval(10);
+// 	//m_fadeSlider->setSingleStep(5);
+// 	m_fadeSlider->setTickPosition(QSlider::TicksBelow);
+// 	hbox2->addWidget(m_fadeSlider,1);
+// 	
+// 	QSpinBox *edit = new QSpinBox();
+// 	edit->setSuffix("%");
+// 	edit->setValue(5);
+// 	hbox2->addWidget(edit);
+// 	
+// 	connect(edit, SIGNAL(valueChanged(int)), m_fadeSlider, SLOT(setValue(int)));
+// 	connect(m_fadeSlider, SIGNAL(valueChanged(int)), edit, SLOT(setValue(int)));
+// 	connect(m_fadeSlider, SIGNAL(valueChanged(int)), this, SLOT(setCrossFadeSpeed(int)));
+// 
+// 	layout->addLayout(hbox2);
 	
 	
 	// Setup advanced widget (shown/hidden with "advanced" button, above)

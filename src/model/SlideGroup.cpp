@@ -12,6 +12,7 @@
 #include "songdb/SongSlideGroup.h"
 #include "ppt/PPTSlideGroup.h"
 #include "phonon/VideoSlideGroup.h"
+#include "webgroup/WebSlideGroup.h"
 #include "groupplayer/GroupPlayerSlideGroup.h"
 
 #define ID_COUNTER_KEY "slidegroup/id-counter"
@@ -302,6 +303,11 @@ SlideGroup * SlideGroup::fromByteArray(QByteArray &array, Document *context)
 	if(className == "GroupPlayerSlideGroup")
 	{
 		group = new GroupPlayerSlideGroup();
+	}
+	else
+	if(className == "WebSlideGroup")
+	{
+		group = new WebSlideGroup();
 	}
 	else
 	if(className == "SlideGroup")

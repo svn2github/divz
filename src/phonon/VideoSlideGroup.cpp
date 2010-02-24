@@ -21,7 +21,7 @@
 #include <QApplication>
 
 //#define PPT_SNAPSHOT_CACHE_DIR "dviz-ppt-snapshot-cache"
-#define DEBUG_VIDEOSLIDEGROUP 1
+#define DEBUG_VIDEOSLIDEGROUP 0
 
 VideoSlideGroup::VideoSlideGroup() : SlideGroup(),
 	m_file(""),
@@ -98,7 +98,7 @@ bool VideoSlideGroup::fromXml(QDomElement & pe)
 
 void VideoSlideGroup::toXml(QDomElement & pe) const
 {
-	pe.setTagName("powerpoint");
+	pe.setTagName("video");
 
 	saveGroupAttributes(pe);
 	pe.setAttribute("file",m_file);

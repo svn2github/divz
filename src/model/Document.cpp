@@ -21,6 +21,7 @@
 #include "songdb/SongSlideGroup.h"
 #include "ppt/PPTSlideGroup.h"
 #include "phonon/VideoSlideGroup.h"
+#include "webgroup/WebSlideGroup.h"
 
 #include <QProgressDialog>
 #include <QApplication>
@@ -210,6 +211,10 @@ bool Document::fromXml(QDomElement & pe)
 		if (element.tagName() == "video")
 		{
 			g = new VideoSlideGroup();
+		}
+		if (element.tagName() == "web")
+		{
+			g = new WebSlideGroup();
 		}
 		else
 		{

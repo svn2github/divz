@@ -169,6 +169,7 @@ include(groupplayer/groupplayer.pri)
 include(bible/bible.pri)
 include(viewer/client.pri)
 include(imgtool/exiv2-0.18.2-qtbuild/qt_build_root.pri)
+include(webgroup/webgroup.pri)
 
 # deployment on Linux
 unix {

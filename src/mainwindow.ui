@@ -26,7 +26,7 @@
      <x>0</x>
      <y>0</y>
      <width>942</width>
-     <height>19</height>
+     <height>25</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -76,6 +76,7 @@
     <addaction name="actionAdd_PowerPoint_File"/>
     <addaction name="actionAdd_Group_Player"/>
     <addaction name="actionAdd_Video_File"/>
+    <addaction name="actionAdd_Web_Page"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
@@ -271,6 +272,11 @@
   <action name="actionAdd_Video_File">
    <property name="text">
     <string>Add Video File...</string>
+   </property>
+  </action>
+  <action name="actionAdd_Web_Page">
+   <property name="text">
+    <string>Add Web Page...</string>
    </property>
   </action>
  </widget>

@@ -151,6 +151,7 @@
         <file>data/http/group.tmpl</file>
         <file>data/http/inc-ctrl-toggles.tmpl</file>
         <file>data/mime.types</file>
+        <file>data/url-icon.png</file>
 
         <!--
         <file>translations/fotowall_de.qm</file>

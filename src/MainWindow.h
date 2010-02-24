@@ -148,6 +148,7 @@ protected slots:
 
 	void actionAddPPT();
 	void actionAddVideo();
+	void actionAddWeb();
 	
 	void autosave();
 	void saveFinished();
