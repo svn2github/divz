@@ -407,27 +407,12 @@ void SlideEditorWindow::closeEvent(QCloseEvent *evt)
 void SlideEditorWindow::setupToolbar()
 {
 	QList<QToolBar*> toolbars;
-	QToolBar *toolbar = addToolBar(tr("Slide Setup"));
-	toolbars<<toolbar;
-
-	toolbar->setObjectName("maintoolbar");
-
-	QAction  *slideProp = toolbar->addAction(QIcon(":/data/stock-properties.png"), tr("Slide Properties"));
-	slideProp->setShortcut(QString(tr("F2")));
-	connect(slideProp, SIGNAL(triggered()), this, SLOT(slideProperties()));
-
-	toolbar->addSeparator();
-
-	QAction  *groupProp = toolbar->addAction(QIcon(":/data/stock-preferences.png"), tr("Slide Group Properties"));
-	groupProp->setShortcut(QString(tr("SHIFT+F2")));
-	connect(groupProp, SIGNAL(triggered()), this, SLOT(groupProperties()));
-
-	//toolbar->addSeparator();
-
+	
+	QToolBar *toolbar;
+	 
+	/// New Objects Toolbar
 	toolbar = addToolBar(tr("New Objects"));
 	toolbars<<toolbar;
-
-
 
 	QAction  *newAction = toolbar->addAction(QIcon(":/data/insert-text-24.png"), tr("New Text Item"));
 	newAction->setShortcut(QString(tr("CTRL+SHIFT+T")));
@@ -449,9 +434,9 @@ void SlideEditorWindow::setupToolbar()
 	newOutputView->setShortcut(QString(tr("CTRL+SHIFT+O")));
 	connect(newOutputView, SIGNAL(triggered()), this, SLOT(newOutputView()));
 
+	/// Arrange Items
 	toolbar = addToolBar(tr("Arrange Items"));
 	toolbars<<toolbar;
-
 
 	QAction  *centerHor = toolbar->addAction(QIcon(":/data/obj-center-hor.png"), tr("Center Items Horizontally"));
 	centerHor->setShortcut(QString(tr("CTRL+SHIFT+H")));
@@ -461,9 +446,9 @@ void SlideEditorWindow::setupToolbar()
 	centerVer->setShortcut(QString(tr("CTRL+SHIFT+V")));
 	connect(centerVer, SIGNAL(triggered()), this, SLOT(centerSelVert()));
 
+	/// Slide Operations
 	toolbar = addToolBar(tr("Slide Operations"));
 	toolbars<<toolbar;
-
 
 	QAction  *newSlide = toolbar->addAction(QIcon(":/data/stock-add.png"), tr("New Slide"));
 	newSlide->setShortcut(QString(tr("CTRL+M")));
@@ -483,13 +468,13 @@ void SlideEditorWindow::setupToolbar()
 	m_masterSlideAction->setShortcut(QString(tr("CTRL+SHIFT+M")));
 	connect(m_masterSlideAction, SIGNAL(triggered()), this, SLOT(editMasterSlide()));
 
-
 	toolbar->addSeparator();
 
 	QAction  *delSlide = toolbar->addAction(QIcon(":/data/stock-delete.png"), tr("Delete Slide"));
 	connect(delSlide, SIGNAL(triggered()), this, SLOT(delSlide()));
 
 
+	/// Text Size Toolbar
 	toolbar = addToolBar(tr("Text Size"));
 	toolbars<<toolbar;
 
@@ -544,9 +529,9 @@ void SlideEditorWindow::setupToolbar()
 
 	connect(m_scene, SIGNAL(selectionChanged()), this, SLOT(selectionChanged()));
 
+	/// Undo/Redo
 	toolbar = addToolBar(tr("Undo/Redo"));
 	toolbars<<toolbar;
-
 
 	QAction *action = m_undoStack->createUndoAction(this);
 	action->setIcon(QIcon(":/data/stock-undo.png"));
@@ -559,9 +544,9 @@ void SlideEditorWindow::setupToolbar()
 	toolbar->addAction(action);
 
 
+	/// Slide Timeout Toolbar
 	toolbar = addToolBar(tr("Slide Timeout"));
 	toolbars<<toolbar;
-
 
 	QWidget * base2 = new QWidget(toolbar);
 	QHBoxLayout * layout2 = new QHBoxLayout(base2);
@@ -598,39 +583,53 @@ void SlideEditorWindow::setupToolbar()
 
 
 
-	toolbar = addToolBar(tr("Fade Speed"));
-	toolbars<<toolbar;
+// 	toolbar = addToolBar(tr("Fade Speed"));
+// 	toolbars<<toolbar;
+// 
+// 
+// 	QWidget * base3 = new QWidget(toolbar);
+// 	QHBoxLayout * layout3 = new QHBoxLayout(base3);
+// 
+// 	m_fadeSliderLabel = new QLabel(tr("Fade Speed: (+)"));
+// 	layout3->addWidget(m_fadeSliderLabel);
+// 
+// 	m_fadeSlider = new QSlider(Qt::Horizontal,base3);
+// 	m_fadeSlider->setMinimum(0);
+// 	m_fadeSlider->setValue(1);
+// 	m_fadeSlider->setMaximum(100);
+// 	m_fadeSlider->setMaximum(100);
+// 	m_fadeSlider->setSingleStep(5);
+// 	m_fadeSlider->setTickInterval(5);
+// 	m_fadeSlider->setTickPosition(QSlider::TicksBelow);
+// 	connect(m_fadeSlider, SIGNAL(valueChanged(int)), this, SLOT(setFadeSpeedPreset(int)));
+// 	layout3->addWidget(m_fadeSlider);
+// 
+// 	m_fadeSliderLabel2 = new QLabel(tr("(-) "));
+// 	layout3->addWidget(m_fadeSliderLabel2);
+// 
+// 	m_inheritFadeBox = new QCheckBox(tr("Use Default"),base3);
+// 	m_inheritFadeBox->setToolTip(tr("Use the fade speed and quality settings for this slide group or application settings"));
+// 	connect(m_inheritFadeBox, SIGNAL(toggled(bool)), this, SLOT(setInheritFade(bool)));
+// 	layout3->addWidget(m_inheritFadeBox);
+// 
+// 	base3->setLayout(layout3);
+// 	toolbar->addWidget(base3);
 
+	/// Slide Setup toolbar
+	toolbar = addToolBar(tr("Slide Setup"));
+	toolbars << toolbar;
 
-	QWidget * base3 = new QWidget(toolbar);
-	QHBoxLayout * layout3 = new QHBoxLayout(base3);
+	QAction  *slideProp = toolbar->addAction(QIcon(":/data/stock-properties.png"), tr("Slide Properties"));
+	slideProp->setShortcut(QString(tr("F2")));
+	connect(slideProp, SIGNAL(triggered()), this, SLOT(slideProperties()));
 
-	m_fadeSliderLabel = new QLabel(tr("Fade Speed: (+)"));
-	layout3->addWidget(m_fadeSliderLabel);
+	toolbar->addSeparator();
 
-	m_fadeSlider = new QSlider(Qt::Horizontal,base3);
-	m_fadeSlider->setMinimum(0);
-	m_fadeSlider->setValue(1);
-	m_fadeSlider->setMaximum(100);
-	m_fadeSlider->setMaximum(100);
-	m_fadeSlider->setSingleStep(5);
-	m_fadeSlider->setTickInterval(5);
-	m_fadeSlider->setTickPosition(QSlider::TicksBelow);
-	connect(m_fadeSlider, SIGNAL(valueChanged(int)), this, SLOT(setFadeSpeedPreset(int)));
-	layout3->addWidget(m_fadeSlider);
+	QAction  *groupProp = toolbar->addAction(QIcon(":/data/stock-preferences.png"), tr("Slide Group Properties"));
+	groupProp->setShortcut(QString(tr("SHIFT+F2")));
+	connect(groupProp, SIGNAL(triggered()), this, SLOT(groupProperties()));
 
-	m_fadeSliderLabel2 = new QLabel(tr("(-) "));
-	layout3->addWidget(m_fadeSliderLabel2);
-
-	m_inheritFadeBox = new QCheckBox(tr("Use Default"),base3);
-	m_inheritFadeBox->setToolTip(tr("Use the fade speed and quality settings for this slide group or application settings"));
-	connect(m_inheritFadeBox, SIGNAL(toggled(bool)), this, SLOT(setInheritFade(bool)));
-	layout3->addWidget(m_inheritFadeBox);
-
-	base3->setLayout(layout3);
-	toolbar->addWidget(base3);
-
-
+	/// Editor Setup Toolbar
 	toolbar = addToolBar(tr("Editor Setup"));
 	toolbars<<toolbar;
 
@@ -644,7 +643,7 @@ void SlideEditorWindow::setupToolbar()
 	connect(autosaveOn, SIGNAL(toggled(bool)), this, SLOT(setAutosaveOn(bool)));
 
 
-
+	// Yes, this seems a bit hackish - anybody know a better way to update the action text with the shortcut description
 	foreach(QToolBar *tb, toolbars)
 	{
 		tb->setObjectName((char*)tb->windowTitle().constData());
@@ -666,30 +665,30 @@ void SlideEditorWindow::setupToolbar()
 
 void SlideEditorWindow::setInheritFade(bool flag)
 {
-	m_scene->slide()->setInheritFadeSettings(flag);
-	m_fadeSlider->setEnabled(!flag);
-	m_fadeSliderLabel->setEnabled(!flag);
-	m_fadeSliderLabel2->setEnabled(!flag);
+// 	m_scene->slide()->setInheritFadeSettings(flag);
+// 	m_fadeSlider->setEnabled(!flag);
+// 	m_fadeSliderLabel->setEnabled(!flag);
+// 	m_fadeSliderLabel2->setEnabled(!flag);
 }
 
 void SlideEditorWindow::setFadeSpeedPreset(int value)
 {
-	double percent = ((double)value) / 100.0;
-	double speed = 3000.0 * percent;
-	if(speed<1)
-		speed = 1;
-	double quality = 0.04*speed; // "standard" quality is 10 frames every 250 ms
-	double qualityMax = speed<500 ? 20 :
-			    speed<1000 ? 30 :
-			    speed<2000 ? 45 :
-			    speed<=3000 ? 60 : 30;
-	quality = qMin(qualityMax,quality);
-	if(quality<1)
-		quality=1;
-	//qDebug() << "SlideEditorWindow::setFadeSpeedPreset: value:"<<value<<" ("<<percent<<"), speed:"<<speed<<", quality:"<<quality<<" ( qualityMax:"<<qualityMax<<")";
-	m_fadeSlider->setToolTip(QString(tr("%1 % - %2 ms / %3 fames")).arg(value).arg(speed).arg(quality));
-	m_scene->slide()->setCrossFadeSpeed(speed);
-	m_scene->slide()->setCrossFadeQuality(quality);
+// 	double percent = ((double)value) / 100.0;
+// 	double speed = 3000.0 * percent;
+// 	if(speed<1)
+// 		speed = 1;
+// 	double quality = 0.04*speed; // "standard" quality is 10 frames every 250 ms
+// 	double qualityMax = speed<500 ? 20 :
+// 			    speed<1000 ? 30 :
+// 			    speed<2000 ? 45 :
+// 			    speed<=3000 ? 60 : 30;
+// 	quality = qMin(qualityMax,quality);
+// 	if(quality<1)
+// 		quality=1;
+// 	//qDebug() << "SlideEditorWindow::setFadeSpeedPreset: value:"<<value<<" ("<<percent<<"), speed:"<<speed<<", quality:"<<quality<<" ( qualityMax:"<<qualityMax<<")";
+// 	m_fadeSlider->setToolTip(QString(tr("%1 % - %2 ms / %3 fames")).arg(value).arg(speed).arg(quality));
+// 	m_scene->slide()->setCrossFadeSpeed(speed);
+// 	m_scene->slide()->setCrossFadeQuality(quality);
 }
 
 void SlideEditorWindow::guessSlideTimeout()
@@ -1435,8 +1434,8 @@ void SlideEditorWindow::setCurrentSlide(Slide *slide)
 	if(crossFadeSpeed>1)
 		crossFadeSpeed = 1;
 
-	m_fadeSlider->setValue((int)(crossFadeSpeed * 100));
-	m_inheritFadeBox->setChecked(slide->inheritFadeSettings());
+// 	m_fadeSlider->setValue((int)(crossFadeSpeed * 100));
+// 	m_inheritFadeBox->setChecked(slide->inheritFadeSettings());
 	setInheritFade(slide->inheritFadeSettings());
 
 	m_itemModel->setSlide(slide);

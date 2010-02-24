@@ -123,6 +123,8 @@ protected slots:
 	void fileSelected(const QFileInfo&);
 	void setSelectedBackground(const QFileInfo&);
 	
+	void slideLibraryGroupSelected(const QModelIndex&);
+	
 	void actionEditGroup();
 	void actionNewGroup();
 	void actionDelGroup();

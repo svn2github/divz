@@ -52,6 +52,8 @@
 #include "OutputInstance.h"
 #include "OutputControl.h"
 
+#include "model/SlideTemplateManager.h"
+
 #include "http/ControlServer.h"
 
 MainWindow * MainWindow::static_mainWindow = 0;
@@ -687,6 +689,42 @@ void MainWindow::setupSlideLibrary()
 
 // 	SlideLibraryBrowser * browser = new SlideLibraryBrowser(m_ui->tabSlides);
 // 	baseLayout->addWidget(browser);
+
+// List of groups
+	QListView * m_slideLibraryView = new QListView(m_ui->tabSlides);
+
+	m_groupView->setViewMode(QListView::ListMode);
+	//m_slideLibraryView->setViewMode(QListView::IconMode);
+	m_slideLibraryView->setMovement(QListView::Free);
+	m_slideLibraryView->setWordWrap(true);
+	m_slideLibraryView->setSelectionMode(QAbstractItemView::ExtendedSelection);
+	m_slideLibraryView->setDragEnabled(true);
+	m_slideLibraryView->setAcceptDrops(true);
+	m_slideLibraryView->setDropIndicatorShown(true);
+	m_slideLibraryView->setEditTriggers(QAbstractItemView::EditKeyPressed);
+
+	DocumentListModel * m_libModel = new DocumentListModel();
+	Document * doc = SlideTemplateManager::instance()->templateDocument(SlideTemplateManager::Logo);
+
+	m_slideLibraryView->setModel(m_libModel);
+	m_slideLibraryView->setContextMenuPolicy(Qt::ActionsContextMenu);
+	
+// 	m_slideLibraryView->insertAction(0,m_ui->actionEdit_Slide_Group);
+// 	m_slideLibraryView->insertAction(0,m_ui->actionSlide_Group_Properties);
+// 	m_slideLibraryView->insertAction(0,m_ui->actionNew_Slide_Group);
+// 	m_slideLibraryView->insertAction(0,m_ui->actionDelete_Slide_Group);
+	
+	baseLayout->addWidget(m_slideLibraryView);
+
+// 	connect(m_libModel, SIGNAL(groupsDropped(QList<SlideGroup*>)), this, SLOT(groupsDropped(QList<SlideGroup*>)));
+
+	//connect(m_slideLibraryView, SIGNAL(clicked(const QModelIndex &)),this,SLOT(groupSelected(const QModelIndex &)));
+	connect(m_slideLibraryView, SIGNAL(doubleClicked(const QModelIndex &)), this, SLOT(slideLibraryGroupSelected(const QModelIndex &)));
+}
+
+void MainWindow::slideLibraryGroupSelected(const QModelIndex&)
+{
+
 }
 
 void MainWindow::songSelected(SongRecord *song)
