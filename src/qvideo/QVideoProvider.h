@@ -19,18 +19,18 @@
 // #include <phonon/VideoWidget>
 // #include <phonon/VideoPlayer>
 
-#include <phonon/Phonon/AudioOutput>
-#include <phonon/Phonon/SeekSlider>
-#include <phonon/Phonon/MediaObject>
-#include <phonon/Phonon/VolumeSlider>
-#include <phonon/Phonon/BackendCapabilities>
-#include <phonon/Phonon/Effect>
-#include <phonon/Phonon/EffectParameter>
-#include <phonon/Phonon/ObjectDescriptionModel>
-#include <phonon/Phonon/AudioOutput>
-#include <phonon/Phonon/MediaSource>
-#include <phonon/Phonon/VideoWidget>
-#include <phonon/Phonon/VideoPlayer>
+#include <Phonon/AudioOutput>
+#include <Phonon/SeekSlider>
+#include <Phonon/MediaObject>
+#include <Phonon/VolumeSlider>
+#include <Phonon/BackendCapabilities>
+#include <Phonon/Effect>
+#include <Phonon/EffectParameter>
+#include <Phonon/ObjectDescriptionModel>
+#include <Phonon/AudioOutput>
+#include <Phonon/MediaSource>
+#include <Phonon/VideoWidget>
+#include <Phonon/VideoPlayer>
 
 #endif
 

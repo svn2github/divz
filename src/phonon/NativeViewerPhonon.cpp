@@ -9,6 +9,7 @@
 NativeViewerPhonon::NativeViewerPhonon()
 	: NativeViewer()
 	, m_videoGroup(0)
+	, m_state(NativeViewer::Running)
 {
 #ifdef PHONON_ENABLED
 	m_media  = new Phonon::MediaObject(this);
@@ -17,7 +18,7 @@ NativeViewerPhonon::NativeViewerPhonon()
 	Phonon::createPath(m_media, m_audio);
 	Phonon::createPath(m_media, m_widget);
 
-	m_widget->setWindowFlags(Qt::WindowStaysOnTopHint | Qt::FramelessWindowHint);
+	m_widget->setWindowFlags(Qt::WindowStaysOnTopHint | Qt::FramelessWindowHint | Qt::ToolTip);
 #endif 
 }
 
@@ -44,6 +45,9 @@ void NativeViewerPhonon::setSlideGroup(SlideGroup *group)
 
 void NativeViewerPhonon::show()
 {
+	if(state() != NativeViewer::Running)
+		return;
+
 	QRect rect = containerWidget()->geometry();
 	QPoint abs = WidgetUtil::absoluteWidgetPosition(containerWidget());
 	//qDebug() << "NativeViewerPhonon::show: Showing at "<<abs<<", size:"<<rect.size();

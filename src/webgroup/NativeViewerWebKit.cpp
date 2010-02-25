@@ -11,7 +11,7 @@ NativeViewerWebKit::NativeViewerWebKit()
 	, m_webGroup(0)
 {
 	m_widget = new GLFrameRenderWidget(QGLFormat(QGL::SampleBuffers));
-	m_widget->setWindowFlags(Qt::WindowStaysOnTopHint | Qt::FramelessWindowHint);
+	m_widget->setWindowFlags(Qt::WindowStaysOnTopHint | Qt::FramelessWindowHint | Qt::ToolTip);
 	m_widget->setParentViewer(this);
 }
 
@@ -113,7 +113,7 @@ void NativeViewerWebKit::setState(NativeViewer::NativeShowState state)
 
 /// GLFrameRenderWidget
 GLFrameRenderWidget::GLFrameRenderWidget(const QGLFormat &format, QWidget *parent)
-	: QGLWidget(format,parent)
+	: QWidget(parent)//format
 	, m_blackOpacity(0)
 	, m_fadeInc(0)
 	, m_fadeDir(1)
@@ -162,8 +162,9 @@ void GLFrameRenderWidget::fadeBlack(bool flag)
 
 void GLFrameRenderWidget::fadeStart()
 {
-	// Reduce requested quality by half to put less of a load on the cpu
-	int frames = m_viewer ? m_viewer->fadeQuality() / 2 : 10;
+	// Reduce requested quality by 4 to put less of a load on the cpu
+	// - especially helpful since no longer based on QGLWidget
+	int frames = m_viewer ? m_viewer->fadeQuality() / 4 : 10;
 	if(frames <= 0)
 		frames = 10;
 	m_fadeTimer.setInterval((m_viewer ? m_viewer->fadeSpeed() : 1000) / frames);

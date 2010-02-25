@@ -3,9 +3,10 @@
 
 #include "model/SlideGroupFactory.h"
 
-#include <phonon/Phonon/VolumeSlider>
-#include <phonon/Phonon/SeekSlider>
-#include <phonon/Phonon/MediaObject>
+#include <Phonon/SeekSlider>
+#include <Phonon/MediaObject>
+#include <Phonon/VolumeSlider>
+
 #include <QAction>
 #include <QLCDNumber>
 #include <QLabel>

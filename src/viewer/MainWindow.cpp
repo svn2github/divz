@@ -125,6 +125,8 @@ void MainWindow::log(const QString& msg, int)
 // }
 //
 
+bool MainWindow::isTransitionActive() { return false; }
+
 void MainWindow::socketError(QAbstractSocket::SocketError socketError)
 {
 	switch (socketError)

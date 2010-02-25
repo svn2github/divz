@@ -21,6 +21,7 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QScrollArea>
+#include <QSettings>
 #include <assert.h>
 
 #include <QTextDocument>

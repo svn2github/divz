@@ -52,6 +52,9 @@ public:
 	OutputInstance * outputInst(int id) { return id == m_inst->output()->id() ? m_inst : 0; }
 
 	AbstractSlideGroupEditor * openSlideEditor(SlideGroup *g,Slide *slide=0) {}
+
+	bool isTransitionActive();
+	void editGroup(SlideGroup*, Slide *slide=0) {}
 	
 signals:
 // 	void documentChanged(Document*);

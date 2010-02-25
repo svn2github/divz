@@ -41,7 +41,7 @@ private:
 #include <QGLWidget>
 
 // Based on the GLRenderWidgetImplementation in Qt's /src/3rdparty/phonon/gstreamer/glrenderer.h 
-class GLFrameRenderWidget : public QGLWidget
+class GLFrameRenderWidget : public QWidget
 {
     	Q_OBJECT
 public:
