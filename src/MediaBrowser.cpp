@@ -714,6 +714,7 @@ void MediaBrowser::indexSingleClicked(const QModelIndex &idx)
 			QHBoxLayout *layout = dynamic_cast<QHBoxLayout*>(m_controlWidget->layout());
 			if(layout)
 			{
+				layout->takeAt(0); // remove the textual label
 				layout->addStretch(1);
 				layout->addWidget(m_autoPlayCheckbox);
 				layout->addWidget(label);

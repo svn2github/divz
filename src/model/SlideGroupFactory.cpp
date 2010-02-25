@@ -120,7 +120,8 @@ SlideGroupViewControl::SlideGroupViewControl(OutputInstance *group, QWidget *w,b
 	m_showQuickSlideBtn(0),
 	m_iconSize(192),
 	m_iconSizeSlider(0),
-	m_lockIconSizeSetter(false)
+	m_lockIconSizeSetter(false),
+	m_itemControlBase(0)
 
 	
 {
@@ -204,16 +205,16 @@ SlideGroupViewControl::SlideGroupViewControl(OutputInstance *group, QWidget *w,b
 		//hbox->addStretch(1);
 		
 		// "Prev" button
-		m_prevBtn = new QPushButton(QIcon(":/data/control_start_blue.png"),"P&rev");
+		m_prevBtn = new QPushButton(QIcon(":/data/control_start_blue.png"),"");
 		connect(m_prevBtn, SIGNAL(clicked()), this, SLOT(prevSlide()));
 		hbox->addWidget(m_prevBtn);
 		
 		// "Next" button
-		m_nextBtn = new QPushButton(QIcon(":/data/control_end_blue.png"),"Nex&t");
+		m_nextBtn = new QPushButton(QIcon(":/data/control_end_blue.png"),"");
 		connect(m_nextBtn, SIGNAL(clicked()), this, SLOT(nextSlide()));
 		hbox->addWidget(m_nextBtn);
 		
-		label = new QLabel("Icon Size:");
+		label = new QLabel("Zoom:");
 		hbox->addWidget(label);
 		
 		m_iconSizeSlider= new QSlider(Qt::Horizontal);
@@ -227,14 +228,14 @@ SlideGroupViewControl::SlideGroupViewControl(OutputInstance *group, QWidget *w,b
 		
 		connect(m_iconSizeSlider, SIGNAL(valueChanged(int)), this, SLOT(setIconSize(int)));
 		
-		m_spinBox = new QSpinBox(this);
-		m_spinBox->setMinimum(16);
-		m_spinBox->setMaximum(480);
-		m_spinBox->setSingleStep(16);
-		//spin->setPageStep(32);
-		hbox->addWidget(m_spinBox);
-		
-		connect(m_spinBox, SIGNAL(valueChanged(int)), this, SLOT(setIconSize(int)));
+// 		m_spinBox = new QSpinBox(this);
+// 		m_spinBox->setMinimum(16);
+// 		m_spinBox->setMaximum(480);
+// 		m_spinBox->setSingleStep(16);
+// 		//spin->setPageStep(32);
+// 		hbox->addWidget(m_spinBox);
+// 		
+// 		connect(m_spinBox, SIGNAL(valueChanged(int)), this, SLOT(setIconSize(int)));
 		
 		
 		QSettings s;
@@ -250,7 +251,7 @@ SlideGroupViewControl::SlideGroupViewControl(OutputInstance *group, QWidget *w,b
 		m_timeLabel->setFont(QFont("Monospace",10,QFont::Bold));
 		hbox->addWidget(m_timeLabel);
 		
-		m_timeButton = new QPushButton(QIcon(":/data/action-play.png"),"&Start");
+		m_timeButton = new QPushButton(QIcon(":/data/action-play.png"),"");
 		connect(m_timeButton, SIGNAL(clicked()), this, SLOT(toggleTimerState()));
 		m_timeButton->setEnabled(false);
 		hbox->addWidget(m_timeButton);
@@ -280,7 +281,7 @@ SlideGroupViewControl::SlideGroupViewControl(OutputInstance *group, QWidget *w,b
 		QVBoxLayout *vbox = new QVBoxLayout(m_itemControlBase);
 		
 		layout->addWidget(m_itemControlBase);
-		//m_itemControlBase->setVisible(false);
+		m_itemControlBase->setVisible(false);
 		setLayout(layout);
 		
 		if(group)
@@ -307,8 +308,8 @@ void SlideGroupViewControl::setIconSize(int size)
 	//qDebug() << "setIconSize: old:"<<old<<", size:"<<size;
 	if(m_iconSizeSlider->value() != size)
 		m_iconSizeSlider->setValue(size);
-	if(m_spinBox->value() != size)
-		m_spinBox->setValue(size);
+// 	if(m_spinBox->value() != size)
+// 		m_spinBox->setValue(size);
 		
 	QSettings s;
 	s.setValue(QString("slideviewcontrol/%1").arg(m_isPreviewControl ? "preview-icon-size" : "icon-size"),size);
@@ -572,9 +573,9 @@ void SlideGroupViewControl::setIsPreviewControl(bool flag)
 	QSettings s;
 	setIconSize(s.value(QString("slideviewcontrol/%1").arg(m_isPreviewControl ? "preview-icon-size" : "icon-size"),m_iconSize).toInt());
 
-	m_timeButton->setText(!flag ? "&Start" : "Start");
-	m_prevBtn->setText(!flag ? "P&rev" : "Prev");
-	m_nextBtn->setText(!flag ? "Nex&t" : "Next");
+// 	m_timeButton->setText(!flag ? "&Start" : "Start");
+// 	m_prevBtn->setText(!flag ? "P&rev" : "Prev");
+// 	m_nextBtn->setText(!flag ? "Nex&t" : "Next");
 	setQuickSlideEnabled(!flag);
 }
 
@@ -772,12 +773,15 @@ void SlideGroupViewControl::setOutputView(OutputInstance *inst)
 
 void SlideGroupViewControl::slideChanged(Slide* newSlide)
 {
+	if(!m_itemControlBase)
+		return;
+		
 	//qDebug() << "SlideGroupViewControl::slideChanged(): newSlide:"<<newSlide;
 	while(!m_controlWidgets.isEmpty())
 	{
 		QWidget * widget = m_controlWidgets.takeFirst();
+//  		qDebug() << "SlideGroupViewControl::slideChanged(): removing widget:"<<widget;
 		m_itemControlBase->layout()->removeWidget(widget);
-// 		qDebug() << "SlideGroupViewControl::slideChanged(): removing widget:"<<widget;
 		widget->deleteLater();
 		widget = 0;
 	}
@@ -790,13 +794,13 @@ void SlideGroupViewControl::slideChanged(Slide* newSlide)
 		    
 // 			qDebug() << "SlideGroupViewControl::slideChanged(): got local viewer, looking for controls.";
 // 			qDebug() << "SlideGroupViewControl::slideChanged(): got local viewer, got:"<<widgets.size()<<"controls";
-			//if(m_itemControlBase)
-			  //  m_itemControlBase->setVisible(true);
+			if(m_itemControlBase)
+			    m_itemControlBase->setVisible(true);
 			foreach(QWidget *widget, widgets)
 			{
+//  				qDebug() << "SlideGroupViewControl::slideChanged(): adding widget:"<<widget;
 				widget->setParent(m_itemControlBase);
 				m_itemControlBase->layout()->addWidget(widget);
-// 				qDebug() << "SlideGroupViewControl::slideChanged(): adding widget:"<<widget;
 				m_controlWidgets << widget;
 			}
 			
@@ -819,8 +823,8 @@ void SlideGroupViewControl::slideChanged(Slide* newSlide)
 	}
 	else
 	{
-	    //if(m_itemControlBase)
-		//m_itemControlBase->setVisible(false);
+	    if(m_itemControlBase)
+		m_itemControlBase->setVisible(false);
 	}
 }
 	

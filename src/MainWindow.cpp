@@ -1185,7 +1185,9 @@ void MainWindow::hotkeyClear()
 
 void MainWindow::hotkeyLogo()
 {
-	QMessageBox::information(this,"Not Implemented Yet","Sorry, the logo feature isn't implemented yet.");
+	int liveId = AppSettings::taggedOutput("live")->id();
+	OutputControl * ctrl = outputControl(liveId);
+	ctrl->fadeLogoFrame(!ctrl->isLogoToggled());
 }
 
 void MainWindow::hotkeyNextSlide()

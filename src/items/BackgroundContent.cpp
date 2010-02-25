@@ -1524,8 +1524,12 @@ QWidget * BackgroundContent::controlWidget()
 // 		bar->addAction(m_stopAction);
 		
 // 		layout->addWidget(bar);
+		
+		layout->addWidget(new QLabel(QString("Background: <b>%1</b>").arg(QFileInfo(m_videoProvider->canonicalFilePath()).fileName())));
 		layout->addWidget(m_playBtn);
 		layout->addWidget(m_pauseBtn);
+		layout->addStretch(1);
+		
 // 		layout->addWidget(m_slider);
 // 		layout->addWidget(m_timeLcd);
 		

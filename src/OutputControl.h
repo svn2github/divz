@@ -34,6 +34,7 @@ public:
 	
 	bool isClearToggled() { return m_clearButton->isChecked(); }
 	bool isBlackToggled() { return m_blackButton->isChecked(); }
+	bool isLogoToggled() { return m_logoButton->isChecked(); }
 	
 public slots:
 	void setOutputInstance(OutputInstance*);

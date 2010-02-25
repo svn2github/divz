@@ -264,7 +264,7 @@ void BibleBrowser::setupUI()
 	QHBoxLayout *hbox2 = new QHBoxLayout(m_refBase);
 	SET_MARGIN(hbox2,0);
 	
-	m_referenceLabel = new QLabel(m_refBase);
+	//m_referenceLabel = new QLabel(m_refBase);
 	
 	m_addAnotherVerseBtn = new QPushButton(QPixmap(":/data/stock-go-forward.png"),"");
 	m_addAnotherVerseBtn->setToolTip(tr("Add next verse from this chapter"));
@@ -278,11 +278,12 @@ void BibleBrowser::setupUI()
 	m_nextChapterBtn = new QPushButton(QPixmap(":/data/stock-goto-last.png"),"");
 	m_nextChapterBtn ->setToolTip(tr("Get next chapter"));
 	
-	hbox2->addWidget(m_referenceLabel);
+	//hbox2->addWidget(m_referenceLabel);
 	hbox2->addWidget(m_addAnotherVerseBtn);
 	hbox2->addWidget(m_getChapterBtn);
 	hbox2->addWidget(m_prevChapterBtn);
 	hbox2->addWidget(m_nextChapterBtn);
+	hbox2->addStretch(1);
 	
 	
 	connect(m_addAnotherVerseBtn, SIGNAL(clicked()), this, SLOT(addAnotherVerse()));
@@ -408,9 +409,10 @@ void BibleBrowser::referenceAvailable(const BibleVerseRef& reference, const Bibl
 			listText << QString("<sup>%1</sup>%2").arg(verse.verseNumber()).arg(verse.text());
 		}
 		
-		m_referenceLabel->setText(QString("<h2>%1</h2>").arg(reference.toString()));
+		//m_referenceLabel->setText(QString("<h2>%1</h2>").arg(reference.toString()));
 		
-		m_preview->setHtml(QString("<p>%2</p>").arg(listText.join("\n")));
+		//m_preview->setHtml(QString("<p>%2</p>").arg(listText.join("\n")));
+		m_preview->setHtml(QString("<h2>%1</h2><p>%2</p>").arg(reference.toString()).arg(listText.join("\n")));
 	}
 	
 	if(isLastGeneratedGroupStillLive())
