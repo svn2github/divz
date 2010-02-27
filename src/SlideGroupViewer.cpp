@@ -31,6 +31,8 @@
 NativeViewer::NativeViewer()
 	: QObject()
 	, m_slideGroup(0)
+	//, m_contextHint(MyGraphicsScene::Live)
+	, m_outputId(0)
 {}
 
 NativeViewer::~NativeViewer()
@@ -252,6 +254,8 @@ SlideGroupViewer::SlideGroupViewer(QWidget *parent)
 	    , m_overrideEndAction(false)
 	    , m_groupEndAction(SlideGroup::Stop)
 	    , m_forceGLDisabled(false)
+	    , m_outputId(0)
+	    , m_contextHint(MyGraphicsScene::Live)
 {
 	QRect sceneRect(0,0,1024,768);
 	m_blackSlideRefCount++;
@@ -801,9 +805,18 @@ void SlideGroupViewer::setSlideGroup(SlideGroup *group, Slide *startSlide)
 	{
 		//QWidget * topLevel = WidgetUtil::getTopLevelWidget(this);
 		//topLevel->show();
-		parentWidget()->show();
+		
 
-
+		if(m_nativeViewer->isEmbeddable())
+		{
+			m_view->setVisible(true);
+			layout()->removeWidget(m_nativeViewer->renderWidget());
+		}
+		else
+		{
+			parentWidget()->show();
+		}
+		
 		m_nativeViewer->close();
 		delete m_nativeViewer;
 		m_nativeViewer = 0;
@@ -832,44 +845,53 @@ void SlideGroupViewer::setSlideGroup(SlideGroup *group, Slide *startSlide)
 	m_slideGroup = group;
 
 
-	if(!m_isPreviewViewer)
+	if(!m_isPreviewViewer || m_contextHint == MyGraphicsScene::Preview)
 	{
 		SlideGroupFactory *factory = SlideGroupFactory::factoryForType(m_slideGroup->groupType());
 		if(factory)
 		{
-			NativeViewer *viewer = factory->newNativeViewer();
-			if(viewer)
+			NativeViewer *native = factory->newNativeViewer();
+			if(native)
 			{
 				if(m_blackEnabled)
 				{
 					qDebug() << "SlideGroupViewer::setSlideGroup: Native viewer with black - starting off as black";
-					viewer->setState(NativeViewer::Black);
+					native->setState(NativeViewer::Black);
 				}
 				
 				qDebug() << "SlideGroupViewer::setSlideGroup: Got native viewer, setting up.";
-				viewer->setFadeSpeed(m_fadeSpeed);
-				viewer->setFadeQuality(m_fadeQuality);
-				viewer->setSceneContextHint(m_contextHint);
-				viewer->setContainerWidget(this);
-				viewer->setSlideGroup(m_slideGroup);
-				viewer->show();
+				native->setFadeSpeed(m_fadeSpeed);
+				native->setFadeQuality(m_fadeQuality);
+				native->setSceneContextHint(m_contextHint);
+				native->setContainerWidget(this);
+				native->setSlideGroup(m_slideGroup);
+				
+				if(native->isEmbeddable())
+				{
+					m_view->setVisible(false);
+					layout()->addWidget(native->renderWidget());
+				}
+				
+				
+				native->show();
 				
 				// copy current 'black' state to viewer
 				
 				blackNative = false;
-
+	
 				//qDebug() << "SlideGroupViewer::setSlideGroup: Setup done, mudging our style and hiding ourself.";
-
+	
 				//fadeBlackFrame(true);
 				
 				//QWidget * topLevel = WidgetUtil::getTopLevelWidget(this);
 				//topLevel->setWindowFlags(Qt::WindowStaysOnBottomHint);
 				
 				//topLevel->hide();
-				parentWidget()->hide();
+				if(!native->isEmbeddable())
+					parentWidget()->hide();
 				
 				// set native viewer AFTER fadeBlackFrame() called (above) so fadeblack affects the Qt viewer, not native
-				m_nativeViewer = viewer;
+				m_nativeViewer = native;
 				
 				m_nativeCheckTimer.start(NATIVE_CHECK_TIMEOUT);
 				
@@ -885,10 +907,6 @@ void SlideGroupViewer::setSlideGroup(SlideGroup *group, Slide *startSlide)
 		{
 			//qDebug() << "SlideGroupViewer::setSlideGroup: No Factory for group";
 		}
-	}
-	else
-	{
-		//qDebug() << "SlideGroupViewer::setSlideGroup: Viewer is Preview Viewer.";
 	}
 
 	QList<Slide*> slist = group->slideList();

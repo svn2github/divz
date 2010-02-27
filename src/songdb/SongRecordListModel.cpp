@@ -46,7 +46,7 @@ void SongRecordListModel::populateSongList()
 	
 	QString clause = "";
 	if(!m_filter.trimmed().isEmpty())
-		clause = "WHERE title like ?";
+		clause = "WHERE title like ? OR text like ?";
 	
 	QSqlQuery query;
 	QString sql = QString("SELECT * FROM %1 %2 ORDER BY title").arg(SONG_TABLE).arg(clause);
@@ -56,6 +56,9 @@ void SongRecordListModel::populateSongList()
 	if(!m_filter.trimmed().isEmpty())
 	{
 		QString filter = QString("%%1%").arg(m_filter.trimmed());
+		query.addBindValue(filter);
+		
+		filter = QString("%%1%").arg(m_filter.trimmed().replace(QRegExp("\\s{2,}")," "));
 		query.addBindValue(filter);
 		//qDebug() << "SongRecordListModel::populateSongList(): filter:"<<filter;
 	}

@@ -145,7 +145,7 @@ void WebSlideGroupViewControl::setSlideGroup(SlideGroup *g, Slide *curSlide, boo
 	}
 	
 	if(!m_isPreviewControl)
-		m_webGroup->nativeViewer()->renderWidget()->setWidget(m_view);
+		dynamic_cast<GLFrameRenderWidget*>(m_webGroup->nativeViewer()->renderWidget())->setWidget(m_view);
 	
 }
 

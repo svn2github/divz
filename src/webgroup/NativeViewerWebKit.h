@@ -4,41 +4,13 @@
 
 #include "SlideGroupViewer.h"
 class WebSlideGroup;
-class GLFrameRenderWidget;
-class NativeViewerWebKit : public NativeViewer
-{
-	Q_OBJECT
-public:
-	NativeViewerWebKit();
-	~NativeViewerWebKit();
 
-	void setSlideGroup(SlideGroup*);
-	void setSlide(int);
 
-	int numSlides() { return 1; }
-	int currentSlide() { return 0; }
-	
-	void show();
-	void close();
-	void hide();
-	
-	QPixmap snapshot();
-
-	void setState(NativeShowState);
-	NativeShowState state() {  return m_state; }
-	
-	GLFrameRenderWidget * renderWidget() { return m_widget; }
-	
-private:
-	NativeShowState m_state;
-	WebSlideGroup * m_webGroup;
-	GLFrameRenderWidget * m_widget;
-
-};
 
 // TODO - do we need to code a non-OpenGL version for compat with non-GL systems?
 #include <QtGui>
 #include <QGLWidget>
+class NativeViewerWebKit;
 
 // Based on the GLRenderWidgetImplementation in Qt's /src/3rdparty/phonon/gstreamer/glrenderer.h 
 class GLFrameRenderWidget : public QWidget
@@ -94,6 +66,39 @@ private:
 	NativeViewerWebKit * m_viewer;
 	
 	bool m_blackFlag;
+};
+
+
+
+class NativeViewerWebKit : public NativeViewer
+{
+	Q_OBJECT
+public:
+	NativeViewerWebKit();
+	~NativeViewerWebKit();
+
+	void setSlideGroup(SlideGroup*);
+	void setSlide(int);
+
+	int numSlides() { return 1; }
+	int currentSlide() { return 0; }
+	
+	void show();
+	void close();
+	void hide();
+	
+	QPixmap snapshot();
+
+	void setState(NativeShowState);
+	NativeShowState state() {  return m_state; }
+	
+	QWidget * renderWidget() { return (QWidget*)m_widget; }
+	
+private:
+	NativeShowState m_state;
+	WebSlideGroup * m_webGroup;
+	GLFrameRenderWidget * m_widget;
+
 };
 
 #endif

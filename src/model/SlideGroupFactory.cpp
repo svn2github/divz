@@ -279,6 +279,7 @@ SlideGroupViewControl::SlideGroupViewControl(OutputInstance *group, QWidget *w,b
 // 		scrollArea->setWidget(m_itemControlBase);
 		
 		QVBoxLayout *vbox = new QVBoxLayout(m_itemControlBase);
+		vbox->setMargin(0);
 		
 		layout->addWidget(m_itemControlBase);
 		m_itemControlBase->setVisible(false);

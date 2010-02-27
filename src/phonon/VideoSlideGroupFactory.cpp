@@ -7,7 +7,7 @@
 //#include "model/TextBoxItem.h"
 
 #include "NativeViewerPhonon.h"
-
+#include "model/Output.h"
 /*
 #include <QListView>
 #include <QVBoxLayout>
@@ -147,7 +147,8 @@ void VideoSlideGroupViewControl::setSlideGroup(SlideGroup *g, Slide *curSlide, b
 		return;
 	}
 
-	if(!m_videoGroup->nativeViewer())
+	NativeViewerPhonon * native = m_videoGroup->nativeViewer(view()->output()->id());
+	if(!native)
 	{
 		qDebug() << "VideoSlideGroupViewControl::setSlideGroup(): No native viewer on video group yet, cannot init slots";
 		return;
@@ -155,7 +156,7 @@ void VideoSlideGroupViewControl::setSlideGroup(SlideGroup *g, Slide *curSlide, b
 	
 	m_playingLabel->setText(QString("Video: <b>%1</b>").arg(QFileInfo(m_videoGroup->file()).fileName()));
 	
-	m_mediaObject = m_videoGroup->nativeViewer()->mediaObject();
+	m_mediaObject = native->mediaObject();
 	m_mediaObject->setTickInterval(1000);
 
 	connect(m_mediaObject, SIGNAL(tick(qint64)), this, SLOT(phononTick(qint64)));
@@ -167,7 +168,7 @@ void VideoSlideGroupViewControl::setSlideGroup(SlideGroup *g, Slide *curSlide, b
 	connect(m_stopAction, SIGNAL(triggered()), m_mediaObject, SLOT(stop()));
 	
 	m_seekSlider->setMediaObject(m_mediaObject);
-	m_volumeSlider->setAudioOutput(m_videoGroup->nativeViewer()->audioOutput());
+	m_volumeSlider->setAudioOutput(native->audioOutput());
 	
 	m_loopAction->setChecked(m_videoGroup->endOfGroupAction() == SlideGroup::LoopToStart);
 	
@@ -190,9 +191,9 @@ void VideoSlideGroupViewControl::phononPlayerFinished()
 	SlideGroup::EndOfGroupAction action = m_videoGroup->endOfGroupAction();
 	if(action == SlideGroup::LoopToStart)
 	{
-		if(m_videoGroup && m_videoGroup->nativeViewer())
+		if(m_videoGroup && m_videoGroup->nativeViewer(view()->output()->id()))
 		{
-			Phonon::MediaObject * media = m_videoGroup->nativeViewer()->mediaObject();
+			Phonon::MediaObject * media = m_videoGroup->nativeViewer(view()->output()->id())->mediaObject();
 			qDebug() << "VideoSlideGroupViewControl::phononPlayerFinished(): playing file again";
 			media->seek(0);
 			media->play();

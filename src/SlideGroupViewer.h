@@ -32,6 +32,9 @@ public:
 	virtual QWidget *renderWidget() { return 0; } // SlideGroupViewer will embed your renderWidget() inside itself
 	
 	virtual void setSceneContextHint(MyGraphicsScene::ContextHint) {}
+	
+	virtual void setOutputId(int id) { m_outputId=id; }
+	int outputId() { return m_outputId; }
 
 	virtual void setSlideGroup(SlideGroup*);
 	SlideGroup * slideGroup() { return m_slideGroup; }
@@ -72,6 +75,7 @@ protected:
 	SlideGroup * m_slideGroup;
 	int m_fadeQuality;
 	int m_fadeSpeed;
+	int m_outputId;
 };
 
 #ifdef Q_OS_WIN32
@@ -175,6 +179,9 @@ public:
 	bool startBackgroundVideoPausedInPreview();
 	void setStartBackgroundVideoPausedInPreview(bool flag);
 	
+	
+	int outputId() { return m_outputId; }
+
 signals:
 	void nextGroup();
 	void jumpToGroup(int);
@@ -183,6 +190,7 @@ signals:
 	void slideChanged(int);
 
 public slots:
+	void setOutputId(int id) { m_outputId=id; }
 	Slide * setSlide(Slide *, bool takeOwnership=false);
 	Slide * setSlide(int);
 	Slide * nextSlide();
@@ -307,6 +315,8 @@ private:
 	bool m_forceGLDisabled;
 	
 	MyGraphicsScene::ContextHint m_contextHint;
+	
+	int m_outputId;
 };
 
 #endif // SLIDEGROUPVIEWER_H

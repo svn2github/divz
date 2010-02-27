@@ -25,7 +25,7 @@
 
 VideoSlideGroup::VideoSlideGroup() : SlideGroup(),
 	m_file(""),
-	m_mtime(0),
+	m_mtime(0)
 	//m_native(0)
 {
 	if(MainWindow::mw())
