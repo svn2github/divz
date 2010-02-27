@@ -29,8 +29,9 @@ public:
 
 	void changeBackground(AbstractVisualItem::FillType, QVariant, Slide *);
 
-	NativeViewerPhonon * nativeViewer() { return m_native; }
-	void setNativeViewer(NativeViewerPhonon* viewer) { m_native=viewer; }
+	NativeViewerPhonon * nativeViewer(OutputInstance *key) { return m_viewers[key]; }
+	void addNativeViewer(OutputInstance *key, NativeViewerPhonon* viewer) { m_viewers[key]=viewer; }
+	QHash<OutputInstance*,NativeViewerPhonon*> nativeViewers() { return m_viewers; }
 
 protected:
 	void loadFile();
@@ -48,7 +49,8 @@ private:
 	int m_mtime;
 
 	QHash<int,QPixmap> m_slidePixmapCache;
-	NativeViewerPhonon * m_native;
+	//NativeViewerPhonon * m_native;
+	QHash<OutputInstance*,NativeViewerPhonon*> m_viewers;
 };
 Q_DECLARE_METATYPE(VideoSlideGroup*);
 

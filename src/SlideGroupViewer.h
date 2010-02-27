@@ -27,6 +27,11 @@ public:
 
 	virtual void setContainerWidget(QWidget*);
 	QWidget * containerWidget() { return m_containerWidget; }
+	
+	virtual bool isEmbeddable() { return false; } // If you return true, 
+	virtual QWidget *renderWidget() { return 0; } // SlideGroupViewer will embed your renderWidget() inside itself
+	
+	virtual void setSceneContextHint(MyGraphicsScene::ContextHint) {}
 
 	virtual void setSlideGroup(SlideGroup*);
 	SlideGroup * slideGroup() { return m_slideGroup; }
@@ -300,6 +305,8 @@ private:
 	SlideGroup::EndOfGroupAction m_groupEndAction;
 
 	bool m_forceGLDisabled;
+	
+	MyGraphicsScene::ContextHint m_contextHint;
 };
 
 #endif // SLIDEGROUPVIEWER_H

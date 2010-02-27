@@ -24,9 +24,9 @@ NativeViewerPhonon::NativeViewerPhonon()
 
 NativeViewerPhonon::~NativeViewerPhonon()
 {
-#ifdef PHONON_ENABLED>
+#ifdef PHONON_ENABLED
 	if(m_videoGroup)
-		m_videoGroup->setNativeViewer(0);
+		m_videoGroup->removeNativeViewer(0);
 	delete m_widget;
 #endif
 }
@@ -35,7 +35,7 @@ void NativeViewerPhonon::setSlideGroup(SlideGroup *group)
 {
 	m_slideGroup = group;
 	m_videoGroup = dynamic_cast<VideoSlideGroup*>(group);
-	m_videoGroup->setNativeViewer(this);
+	m_videoGroup->addNativeViewer(this);
 #ifdef PHONON_ENABLED
 	//qDebug() << "NativeViewerPhonon::setSlideGroup: Loading file:"<<m_videoGroup->file();
 	m_media->enqueue(m_videoGroup->file());

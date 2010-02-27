@@ -67,6 +67,7 @@ private:
 	Phonon::MediaObject * m_media;
 	Phonon::VideoWidget * m_widget;
 	Phonon::AudioOutput * m_audio;
+	Phonon::Path m_audioPath; // store for disconnection if needed
 #endif
 };
 

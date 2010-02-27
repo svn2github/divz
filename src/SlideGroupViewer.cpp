@@ -276,7 +276,8 @@ SlideGroupViewer::SlideGroupViewer(QWidget *parent)
 	appSettingsChanged();
 	//qDebug("SlideGroupViewer: Loaded OpenGL viewport.");
 
-	m_scene = new MyGraphicsScene(MyGraphicsScene::Live);
+	m_contextHint = MyGraphicsScene::Live;
+	m_scene = new MyGraphicsScene(m_contextHint);
 	m_scene->setSceneRect(sceneRect);
 	m_view->setScene(m_scene);
 
@@ -633,7 +634,10 @@ void SlideGroupViewer::setBackground(QColor c)
 
 void SlideGroupViewer::setSceneContextHint(MyGraphicsScene::ContextHint hint)
 {
+	m_contextHint = hint;
 	scene()->setContextHint(hint);
+	if(m_nativeViewer)
+		m_nativeViewer->setSceneContextHint(hint);
 }
 
 bool SlideGroupViewer::isTransitionActive()
@@ -843,6 +847,9 @@ void SlideGroupViewer::setSlideGroup(SlideGroup *group, Slide *startSlide)
 				}
 				
 				qDebug() << "SlideGroupViewer::setSlideGroup: Got native viewer, setting up.";
+				viewer->setFadeSpeed(m_fadeSpeed);
+				viewer->setFadeQuality(m_fadeQuality);
+				viewer->setSceneContextHint(m_contextHint);
 				viewer->setContainerWidget(this);
 				viewer->setSlideGroup(m_slideGroup);
 				viewer->show();
@@ -863,9 +870,7 @@ void SlideGroupViewer::setSlideGroup(SlideGroup *group, Slide *startSlide)
 				
 				// set native viewer AFTER fadeBlackFrame() called (above) so fadeblack affects the Qt viewer, not native
 				m_nativeViewer = viewer;
-				m_nativeViewer->setFadeSpeed(m_fadeSpeed);
-				m_nativeViewer->setFadeQuality(m_fadeQuality);
-
+				
 				m_nativeCheckTimer.start(NATIVE_CHECK_TIMEOUT);
 				
 				
