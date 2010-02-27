@@ -1,5 +1,42 @@
 Directed Visual System (DViz)
 
+
+----
+
+Brainstorm for Working Items
+
+Video syncd clock across outputs and network
+	if another output synced with output that has video (eg. folback sync live),
+		the video on foldback should sync clock with live - if not, video and audio can run seperate
+	Need to have an audio output associated with a specific video output
+		for the case where videos are sent to diff outputs that aren't synced but running on same computer
+			e.g outputs aren't network viewers
+Develop networked frame streamer
+	for use with webpages
+	This is similar to video clock sync
+		if webpage is shown on output synced with another (e.g. main),
+		then it should not show the frames from the output control for the synced output,
+		instead shsould connect to frame grab/gen for live output
+	The network part would be needed for network viewers
+		.e.g if the live output is over the network, need a stub grab/gen on pc, that then streams frames to dummy viewer on network
+		also foldback network viewers would need to connect to a network stub point to grab frames
+	So, two cases where stub grab/feed to net is needed:
+		- primary view for output is on network
+		- view for synced output is on network (even if primary is local)
+		both cases would require a stub and server, regardless of local output
+Test live video again
+	Tried it once but lag was HORRIBLE
+	Need to issolate and see where the lag came from
+	Possible use the lessons learned with discarding frames till current frame is drawn (a la adaptive send mode in JpegServer.cpp)
+	If can get this working, would be good to integrate this as another background option
+	Will need to stream frames over the network as well
+Add message overlay
+	
+		
+
+
+----
+
 Release 1.0 Feature Target List
 ----
 
@@ -209,7 +246,7 @@ Revised Task list for Release 1.0, 10/18/09:
 				printing
 				time-based group changes (wall clock time)
 				song folders
-				search by any word in song
+				[DONE] search by any word in song
 				search by hymn
 				song tags
 				background tags
@@ -223,15 +260,16 @@ Revised Task list for Release 1.0, 10/18/09:
 				drag-drop background onto verses of song
 				store sequencing of songs
 				ccli chords
-				logo feature
-				freeze front of house but change foldback
+				[DONE] logo feature
+				[DONE] freeze front of house but change foldback
+					just un-sync foldback 
 				nusery/mesg alert moduler (network input)
 					could be done via http server
 					should be easy to add - the http server exists
 					just need to write the alert feature
-				scripture auto seperate into slides
+				[DONE] scripture auto seperate into slides
 					like our existing text import tool
-				mailing list in addition to forumes
+				[DONE] mailing list in addition to forumes
 					
 			add generic pre-render on document load 
 				loop thru every group, every slide and call Paint on every visual delegate
@@ -249,7 +287,7 @@ Revised Task list for Release 1.0, 10/18/09:
 				A - output
 				B - embedded slide group
 			
-			make slide list model zoomable 
+			[DONE] make slide list model zoomable 
 				e.g. zoom slide list in editor
 				zoom slide list in control
 				zoom doc list in main window
@@ -257,7 +295,7 @@ Revised Task list for Release 1.0, 10/18/09:
 			right-click on slide in LIVE or Preview to edit that slide 
 			right-click on song slide to jump editor to that verse 
 		
-			another vote for the zoomable icons in list views (slide list/doc list)
+			[DONE] another vote for the zoomable icons in list views (slide list/doc list)
 			accept midi input for fade speed slider
 			foldback settings should remember setetings across group changes
 				e.g. changing songs should not change fade speed
@@ -280,10 +318,10 @@ Revised Task list for Release 1.0, 10/18/09:
 			change MB dialog to use list until the grid layout looks better
 				temporarily reverted to QFileDialog in genericitemconfig till this fixed
 			
-			need to impl "my computer" view in MB
+			[DONE] need to impl "my computer" view in MB
 			browse dialog takes a LONG time to show - i think its because it was left on a large folder
 			
-			fit to slide btn doesnt update font size box on toolbar
+			[DONE] fit to slide btn doesnt update font size box on toolbar
 			
 			output controls should "save state" (e.g. sync mode, etc)
 			
@@ -297,10 +335,10 @@ Revised Task list for Release 1.0, 10/18/09:
 			
 			slide editor - duplicate slide should insert below old slide
 			
-			song text - fit to slide - max variance not more than 10 - 20 pts between slides .. ?
+			[DONE] song text - fit to slide - max variance not more than 10 - 20 pts between slides .. ?
 			
 			
-			song slide filters stays stuck on the foldback output sometimes
+			[DONE] song slide filters stays stuck on the foldback output sometimes
 				ducktape: ignore mandatory flag for now
 				with ducktape, it doesnt stick, but when its turned off, wont turn back on
 				

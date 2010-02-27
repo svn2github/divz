@@ -18,11 +18,16 @@ class VideoSlideGroupViewControl : public SlideGroupViewControl
 public:
 	VideoSlideGroupViewControl(OutputInstance * view=0, QWidget * parent = 0);
 
+	Phonon::MediaObject * mediaObject() { return m_mediaObject; }
+	
 public slots:
 	virtual void setSlideGroup(SlideGroup *g, Slide *curSlide=0, bool allowProgressDialog=true);
 	virtual void setIsPreviewControl(bool);
 
 protected slots:
+	void outputIsSyncedChanged();
+	void syncedPhononStateChanged(Phonon::State, Phonon::State);
+	
 	void phononStateChanged(Phonon::State newState, Phonon::State /* oldState */);
 	void phononTick(qint64 time);
 	void phononPlayerFinished();
@@ -38,6 +43,7 @@ private:
 	Phonon::VolumeSlider *m_volumeSlider;
 	Phonon::SeekSlider *m_seekSlider;
 	Phonon::MediaObject *m_mediaObject;
+	Phonon::MediaObject *m_syncedMediaObject;
 
 	QAction *m_playAction;
 	QAction *m_pauseAction;

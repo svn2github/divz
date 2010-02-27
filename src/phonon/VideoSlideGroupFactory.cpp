@@ -8,11 +8,8 @@
 
 #include "NativeViewerPhonon.h"
 #include "model/Output.h"
-/*
-#include <QListView>
-#include <QVBoxLayout>
-#include <QHBoxLayout>
-#include <QPushButton>*/
+#include "OutputControl.h"
+#include "MainWindow.h" // to access MainWindow::outputControl(...)
 
 #include "OutputInstance.h"
 #include <QMessageBox>
@@ -58,6 +55,7 @@ SlideGroupViewControl * VideoSlideGroupFactory::newViewControl()
 VideoSlideGroupViewControl::VideoSlideGroupViewControl(OutputInstance *inst, QWidget *parent)
     : SlideGroupViewControl(inst,parent,false)
     , m_mediaObject(0)
+    , m_syncedMediaObject(0)
 {
 	QVBoxLayout * layout = new QVBoxLayout(this);
 
@@ -125,9 +123,9 @@ VideoSlideGroupViewControl::VideoSlideGroupViewControl(OutputInstance *inst, QWi
 void VideoSlideGroupViewControl::setIsPreviewControl(bool flag)
 {
 	SlideGroupViewControl::setIsPreviewControl(flag);
-	m_controlBase->setVisible(!flag);
-	if(flag)
-	    setMaximumHeight(0);
+// 	m_controlBase->setVisible(!flag);
+// 	if(flag)
+// 	    setMaximumHeight(0);
 }
 
 void VideoSlideGroupViewControl::setSlideGroup(SlideGroup *g, Slide *curSlide, bool allowProgressDialog)
@@ -158,7 +156,21 @@ void VideoSlideGroupViewControl::setSlideGroup(SlideGroup *g, Slide *curSlide, b
 	
 	m_mediaObject = native->mediaObject();
 	m_mediaObject->setTickInterval(1000);
-
+	
+	// HACK this connecting to the output control, setting sync connectiosn, etc, really should be done in a 
+	// specific function - such as setOutputControl(), etc - for now, this can be here, because we "know"
+	// that setSlideGroup will only be called once in the life of this view control due to program design
+	
+	OutputControl * ctrl = MainWindow::mw()->outputControl(view()->output()->id());
+	if(ctrl)
+	{
+		// we have control, connect to sync changed signal
+		connect(ctrl, SIGNAL(outputIsSyncedChanged(bool)), this, SLOT(outputIsSyncedChanged()));
+		// trigger the connection
+		outputIsSyncedChanged();
+	}
+	
+	
 	connect(m_mediaObject, SIGNAL(tick(qint64)), this, SLOT(phononTick(qint64)));
 	connect(m_mediaObject, SIGNAL(stateChanged(Phonon::State, Phonon::State)), this, SLOT(phononStateChanged(Phonon::State, Phonon::State)));
 	connect(m_mediaObject, SIGNAL(finished()), this, SLOT(phononPlayerFinished()));
@@ -170,9 +182,91 @@ void VideoSlideGroupViewControl::setSlideGroup(SlideGroup *g, Slide *curSlide, b
 	m_seekSlider->setMediaObject(m_mediaObject);
 	m_volumeSlider->setAudioOutput(native->audioOutput());
 	
+	if(m_isPreviewControl)
+	{
+		native->setAutoPlay(false);
+		native->audioOutput()->setMuted(true);
+		m_mediaObject->pause();
+	}
+	
+	
+	
+	
 	m_loopAction->setChecked(m_videoGroup->endOfGroupAction() == SlideGroup::LoopToStart);
 	
 	connect(m_videoGroup, SIGNAL(slideChanged(Slide *, QString, AbstractItem *, QString, QString, QVariant)), this, SLOT(slideChanged(Slide *, QString, AbstractItem *, QString, QString, QVariant)));
+}
+
+void VideoSlideGroupViewControl::outputIsSyncedChanged()
+{
+	// check sync status
+	// if synced,
+	// get sync source and connect to the state changed and tick signals to update/sync our media object
+	OutputControl * ctrl = MainWindow::mw()->outputControl(view()->output()->id());
+	if(!ctrl)
+	{
+		qDebug() << "VideoSlideGroupViewControl::outputIsSyncedChanged(): No OutputControl for output ID"<<view()->output()->id();
+		return;
+	}
+	
+	if(!ctrl->outputIsSynced())
+	{
+		if(m_syncedMediaObject)
+		{
+			if(m_mediaObject)
+				disconnect(m_syncedMediaObject,0,m_mediaObject,0);
+			disconnect(m_syncedMediaObject,0,this,0);
+			qDebug() << "VideoSlideGroupViewControl::outputIsSyncedChanged(): Disconnected from synced output";
+			m_syncedMediaObject = 0; 
+		}
+		
+		return;
+	}
+	
+	OutputInstance * syncSource = ctrl->syncSource();
+	if(!syncSource)
+	{
+		qDebug() << "VideoSlideGroupViewControl::outputIsSyncedChanged(): Cant get sync source";
+		return;
+	}
+	
+	OutputControl * syncedCtrl = MainWindow::mw()->outputControl(syncSource->output()->id());
+	if(!syncedCtrl)
+	{
+		qDebug() << "VideoSlideGroupViewControl::outputIsSyncedChanged(): Cant get output control for sync source";
+		return;
+	}
+	
+	SlideGroupViewControl * slideVideCtrl = syncedCtrl->viewControl();
+	if(!slideVideCtrl)
+	{
+		qDebug() << "VideoSlideGroupViewControl::outputIsSyncedChanged(): OutputControl::viewControl() is null";
+		return;
+	}
+	
+	VideoSlideGroupViewControl * videoCtrl = dynamic_cast<VideoSlideGroupViewControl*>(slideVideCtrl);
+	if(!videoCtrl)
+	{
+		qDebug() << "VideoSlideGroupViewControl::outputIsSyncedChanged(): Cannot cast slideVideCtrl to VideoSlideGroupViewControl";
+		return;
+	}
+		
+	if(!videoCtrl->mediaObject())
+	{
+		qDebug() << "VideoSlideGroupViewControl::outputIsSyncedChanged(): videoCtrl->mediaObject() is NULL";
+		return;
+	}
+		
+	m_syncedMediaObject = videoCtrl->mediaObject();
+		
+	if(m_mediaObject)
+		connect(m_syncedMediaObject, SIGNAL(tick(qint64)), m_mediaObject, SLOT(seek(qint64)));
+	else
+		qDebug() << "VideoSlideGroupViewControl::outputIsSyncedChanged(): Our own m_mediaObject is null, cannot sync ticks";
+		
+	connect(m_syncedMediaObject, SIGNAL(stateChanged(Phonon::State, Phonon::State)), this, SLOT(syncedPhononStateChanged(Phonon::State, Phonon::State)));
+	
+	qDebug() << "VideoSlideGroupViewControl::outputIsSyncedChanged(): Connected to main output";
 }
 
 void VideoSlideGroupViewControl::slideChanged(Slide *slide, QString slideOperation, AbstractItem *item, QString operation, QString fieldName, QVariant value)
@@ -217,9 +311,34 @@ void VideoSlideGroupViewControl::loopActionToggled(bool flag)
 }
 
 
+void VideoSlideGroupViewControl::syncedPhononStateChanged(Phonon::State newState, Phonon::State /* oldState */)
+{
+	qDebug() << "VideoSlideGroupViewControl::syncedPhononStateChanged: newState:"<<newState;
+	if(!m_mediaObject)
+		return;
+	switch (newState) 
+	{
+		case Phonon::ErrorState:
+		break;
+		case Phonon::PlayingState:
+			m_mediaObject->play();
+			break;
+		case Phonon::StoppedState:
+			m_mediaObject->stop();
+			break;
+		case Phonon::PausedState:
+			m_mediaObject->pause();
+			break;
+		case Phonon::BufferingState:
+			break;
+		default:
+		;
+	}
+}
 
 void VideoSlideGroupViewControl::phononStateChanged(Phonon::State newState, Phonon::State /* oldState */)
 {
+	qDebug() << "VideoSlideGroupViewControl::phononStateChanged: newState:"<<newState;
 	if(!m_mediaObject)
 		return;
 	if(m_timeLcd)

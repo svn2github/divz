@@ -59,6 +59,12 @@ public:
 	Phonon::AudioOutput * audioOutput() { return m_audio; }
 	Phonon::VideoWidget * videoWidget() { return m_widget; }
 	
+	bool autoPlay() { return m_autoPlay; }
+	void setAutoPlay(bool flag) { m_autoPlay = flag; }
+	
+// 	bool isEmbeddable() { return true; }
+// 	QWidget * renderWidget() { return m_widget; }
+	
 private:
 	NativeShowState m_state;
 	VideoSlideGroup * m_videoGroup;
@@ -69,6 +75,7 @@ private:
 	Phonon::AudioOutput * m_audio;
 	Phonon::Path m_audioPath; // store for disconnection if needed
 #endif
+	bool m_autoPlay;
 };
 
 #endif

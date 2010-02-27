@@ -10,6 +10,7 @@ NativeViewerPhonon::NativeViewerPhonon()
 	: NativeViewer()
 	, m_videoGroup(0)
 	, m_state(NativeViewer::Running)
+	, m_autoPlay(true)
 {
 #ifdef PHONON_ENABLED
 	m_media  = new Phonon::MediaObject(this);
@@ -52,7 +53,8 @@ void NativeViewerPhonon::show()
 	QPoint abs = WidgetUtil::absoluteWidgetPosition(containerWidget());
 	//qDebug() << "NativeViewerPhonon::show: Showing at "<<abs<<", size:"<<rect.size();
 #ifdef PHONON_ENABLED
-	m_media->play();
+	if(m_autoPlay)
+		m_media->play();
 	m_widget->resize(rect.size());
 	m_widget->move(abs);
 	m_widget->show();

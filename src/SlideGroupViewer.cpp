@@ -860,6 +860,7 @@ void SlideGroupViewer::setSlideGroup(SlideGroup *group, Slide *startSlide)
 				}
 				
 				qDebug() << "SlideGroupViewer::setSlideGroup: Got native viewer, setting up.";
+				native->setOutputId(outputId());
 				native->setFadeSpeed(m_fadeSpeed);
 				native->setFadeQuality(m_fadeQuality);
 				native->setSceneContextHint(m_contextHint);
@@ -868,8 +869,8 @@ void SlideGroupViewer::setSlideGroup(SlideGroup *group, Slide *startSlide)
 				
 				if(native->isEmbeddable())
 				{
-					m_view->setVisible(false);
 					layout()->addWidget(native->renderWidget());
+					m_view->setVisible(false);
 				}
 				
 				

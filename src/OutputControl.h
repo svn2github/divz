@@ -36,6 +36,8 @@ public:
 	bool isBlackToggled() { return m_blackButton->isChecked(); }
 	bool isLogoToggled() { return m_logoButton->isChecked(); }
 	
+	OutputInstance * syncSource() { return m_syncInst; }
+	
 public slots:
 	void setOutputInstance(OutputInstance*);
 	void setViewControl(SlideGroupViewControl*);
