@@ -956,6 +956,7 @@ void BackgroundContent::paint(QPainter * painter, const QStyleOptionGraphicsItem
 						}
 					}
 					
+					painter->setClipRect(option->exposedRect);
 					painter->drawPixmap(cRect,cache);
 				}
 			}
@@ -990,6 +991,7 @@ void BackgroundContent::paint(QPainter * painter, const QStyleOptionGraphicsItem
 			}
 			else
 			{
+				painter->setClipRect(option->exposedRect);
 				painter->drawPixmap(cRect, m_pixmap);
 			}
 		}

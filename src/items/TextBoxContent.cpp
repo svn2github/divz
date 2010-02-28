@@ -658,8 +658,9 @@ void TextBoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * 
 	// paint parent
 	AbstractContent::paint(painter, option, widget);
 
+	
 	painter->save();
-
+	
 	//TODO should we clip to the rect or FORCE resize the rect? probably clip...
 	//painter->setClipRect(contentsRect());
 	//if(option)
