@@ -53,7 +53,7 @@ BackgroundContent::BackgroundContent(QGraphicsScene * scene, QGraphicsItem * par
     , m_controlBase(0)
     , m_slider(0)
     , m_lockSeekValueChanging(false)
-    , m_startVideoPausedInPreview(false)
+    , m_startVideoPausedInPreview(true)
     , m_playBtn(0)
     , m_pauseBtn(0)
     , m_videoPauseEventCompleted(false)
@@ -62,6 +62,8 @@ BackgroundContent::BackgroundContent(QGraphicsScene * scene, QGraphicsItem * par
     , m_player(0)
     , m_tuplet(0)
 #endif
+    , m_isUserPlaying(false)
+    , m_isUserPaused(false)
 {
 	m_dontSyncToModel = true;
 	
@@ -1283,7 +1285,7 @@ void BackgroundContent::setPixmap(const QPixmap & pixmap)
 	
 	if(((sceneContextHint() != MyGraphicsScene::Live && 
 	     sceneContextHint() != MyGraphicsScene::Preview)
-	     || (sceneContextHint() == MyGraphicsScene::Preview && m_startVideoPausedInPreview)) && 
+	     || (sceneContextHint() == MyGraphicsScene::Preview && m_startVideoPausedInPreview && !m_isUserPlaying)) &&
 		modelItem()->fillType() == AbstractVisualItem::Video &&
 		m_imageSize.width() > 0)
 	{
@@ -1434,12 +1436,15 @@ void BackgroundContent::movieStateChanged(QMovie::MovieState state)
 	if(m_startVideoPausedInPreview && 
 	   m_still && 
 	   state == QMovie::Running &&
-	   m_videoPauseEventCompleted)
+	   m_isUserPlaying)
 	{
 // 		qDebug() << "BackgroundContent::moveStateChanged: Set m_still false";
 		m_still = false; 
-		m_startVideoPausedInPreview = false;
+		//m_startVideoPausedInPreview = false;
 	}
+
+	if(!m_isUserPlaying || !m_isUserPaused)
+		return;
 		
 	if(!m_playBtn || 
 	   !m_pauseBtn)
@@ -1501,8 +1506,9 @@ QWidget * BackgroundContent::controlWidget()
 		//m_pauseAction = new QAction(qApp->style()->standardIcon(QStyle::SP_MediaPause), tr("Pause"), m_controlBase);
 // 		m_pauseAction->setShortcut(tr("Ctrl+A"));
 
-		m_playBtn->setEnabled(!m_videoPlaying);
-		m_pauseBtn->setEnabled(m_videoPlaying);
+
+		//m_playBtn->setEnabled(!m_startVideoPausedInPreview && !m_videoPlaying);
+		m_pauseBtn->setEnabled(m_startVideoPausedInPreview && m_videoPlaying);
 		
 		/// NOT showing Stop action right now because QVideo / QVideoDecoder have a "hard time" restarting playing after
 		// stop() is called. After stop() is called, then play(), then there is a large delay before video starts flowing
@@ -1513,8 +1519,8 @@ QWidget * BackgroundContent::controlWidget()
 		
 // 		m_timeLcd = new QLCDNumber(m_controlBase);
 		
-		connect(m_playBtn,  SIGNAL(clicked()), m_videoProvider->videoObject(), SLOT(play()));
-		connect(m_pauseBtn, SIGNAL(clicked()), m_videoProvider->videoObject(), SLOT(pause()));
+		connect(m_playBtn,  SIGNAL(clicked()), this, SLOT(playBtnClicked()));
+		connect(m_pauseBtn, SIGNAL(clicked()), this, SLOT(pauseBtnClicked()));
 // 		connect(m_stopAction,  SIGNAL(triggered()), m_videoProvider->videoObject(), SLOT(stop()));
 		
 // 		QToolBar *bar = new QToolBar(m_controlBase);
@@ -1616,3 +1622,16 @@ QWidget * BackgroundContent::controlWidget()
 	}
 }
 
+void BackgroundContent::playBtnClicked()
+{
+	m_isUserPlaying = true;
+	m_isUserPaused = false;
+	m_videoProvider->videoObject()->play();
+}
+
+void BackgroundContent::pauseBtnClicked()
+{
+	m_isUserPlaying = false;
+	m_isUserPaused = true;
+	m_videoProvider->videoObject()->pause();
+}

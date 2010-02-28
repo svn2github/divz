@@ -338,7 +338,7 @@ void VideoSlideGroupViewControl::syncedPhononStateChanged(Phonon::State newState
 
 void VideoSlideGroupViewControl::phononStateChanged(Phonon::State newState, Phonon::State /* oldState */)
 {
-	qDebug() << "VideoSlideGroupViewControl::phononStateChanged: newState:"<<newState;
+	//qDebug() << "VideoSlideGroupViewControl::phononStateChanged: newState:"<<newState;
 	if(!m_mediaObject)
 		return;
 	if(m_timeLcd)

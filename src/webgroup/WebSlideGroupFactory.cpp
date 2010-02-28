@@ -67,7 +67,7 @@ WebSlideGroupViewControl::WebSlideGroupViewControl(OutputInstance *inst, QWidget
 	//m_view->load(QUrl("http://www.google.com/"));
 	
 	connect(m_view, SIGNAL(loadFinished(bool)),    SLOT(adjustLocation()));
-	//connect(m_view, SIGNAL(titleChanged(QString)), SLOT(adjustTitle()));
+	connect(m_view, SIGNAL(titleChanged(QString)), SLOT(adjustTitle()));
 	connect(m_view, SIGNAL(loadProgress(int)),     SLOT(setProgress(int)));
 	connect(m_view, SIGNAL(loadFinished(bool)),    SLOT(finishLoading(bool)));
 	
@@ -81,6 +81,7 @@ WebSlideGroupViewControl::WebSlideGroupViewControl(OutputInstance *inst, QWidget
 	m_toolBar->addAction(m_view->pageAction(QWebPage::Reload));
 	m_toolBar->addAction(m_view->pageAction(QWebPage::Stop));
 	m_toolBar->addWidget(m_locationEdit);
+	m_popAction = m_toolBar->addAction(QIcon(":/data/stock-fit-out.png"),"Pop Out", this, SLOT(popWidget()));
 	
 	m_progress = new QProgressBar(baseWidget);
 	
@@ -100,6 +101,32 @@ WebSlideGroupViewControl::~WebSlideGroupViewControl()
 {
 // 	if(m_webGroup && m_webGroup->nativeViewer())
 // 		m_webGroup->nativeViewer()->renderWidget()->setWidget(0);
+}
+
+void WebSlideGroupViewControl::popWidget()
+{
+	if(m_controlBase->parentWidget())
+	{
+		m_controlBase->setParent(0);
+		m_controlBase->setWindowIcon(QIcon(":/data/icon-d.png"));
+		m_controlBase->show();
+		m_controlBase->setGeometry(10,10,1024,768);
+		adjustTitle();
+
+		m_popAction->setIcon(QIcon(":/data/stock-fit-in.png"));
+		m_popAction->setText("Pop-out widget");
+	}
+	else
+	{
+		m_splitter->insertWidget(0,m_controlBase);
+		m_popAction->setIcon(QIcon(":/data/stock-fit-out.png"));
+		m_popAction->setText("Pop-in widget");
+	}
+}
+
+void WebSlideGroupViewControl::adjustTitle()
+{
+	setWindowTitle(QString("%1 - DViz").arg(m_view->title()));
 }
 
 void WebSlideGroupViewControl::resizeEvent(QResizeEvent*)

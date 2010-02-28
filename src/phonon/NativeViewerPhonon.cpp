@@ -55,8 +55,11 @@ void NativeViewerPhonon::show()
 #ifdef PHONON_ENABLED
 	if(m_autoPlay)
 		m_media->play();
-	m_widget->resize(rect.size());
-	m_widget->move(abs);
+	if(!m_widget->parentWidget())
+	{
+		m_widget->resize(rect.size());
+		m_widget->move(abs);
+	}
 	m_widget->show();
 	// the second 'move' is required to move it to an 'odd' 
 	// place, at least on X11 systems that I've tested.
@@ -64,7 +67,8 @@ void NativeViewerPhonon::show()
 	// And yes, 2 moves are required - before AND after the show()
 	// - I have no idea why both are required, but it doesn't 
 	// work without both.
-	m_widget->move(abs);
+	if(!m_widget->parentWidget())
+		m_widget->move(abs);
 #endif
 
 	//qDebug() << "NativeViewerPhonon::show: done.";

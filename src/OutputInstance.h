@@ -200,6 +200,7 @@ protected:
 	SlideGroup::EndOfGroupAction m_groupEndAction;
 	
 	bool m_forceGLDisabled;
+	bool m_forceTransmitRawSlide;
 };
 
 #endif // SLIDEGROUPVIEWER_H

@@ -293,12 +293,16 @@ SlideGroupViewer::SlideGroupViewer(QWidget *parent)
 
 	connect(&m_nativeCheckTimer, SIGNAL(timeout()), this, SLOT(checkCurrentNativeSlide()));
 
-	m_view->setBackgroundBrush(Qt::gray);
+	m_view->setBackgroundBrush(Qt::black);
 
 	QVBoxLayout *layout = new QVBoxLayout();
 	layout->setContentsMargins(0,0,0,0);
 	layout->addWidget(m_view);
 	setLayout(layout);
+
+	QPalette p;
+	p.setColor(QPalette::Window, Qt::black);
+	setPalette(p);
 }
 
 bool SlideGroupViewer::canZoom() { return m_view->canZoom(); }
@@ -869,6 +873,7 @@ void SlideGroupViewer::setSlideGroup(SlideGroup *group, Slide *startSlide)
 				
 				if(native->isEmbeddable())
 				{
+					native->renderWidget()->setParent(this);
 					layout()->addWidget(native->renderWidget());
 					m_view->setVisible(false);
 				}

@@ -111,6 +111,8 @@ class BackgroundContent : public AbstractContent, public QVideoConsumer
 	void phononStateChanged(Phonon::State newState, Phonon::State /* oldState */);
 	void phononTick(qint64 time);
 #endif
+	void pauseBtnClicked();
+	void playBtnClicked();
 
 	void movieStateChanged(QMovie::MovieState);
 
@@ -183,6 +185,8 @@ class BackgroundContent : public AbstractContent, public QVideoConsumer
 	Phonon::SeekSlider *seekSlider;
 	Phonon::MediaObject *mediaObject;
 #endif
+	bool m_isUserPlaying;
+	bool m_isUserPaused;
 	
 };
 

@@ -45,6 +45,7 @@ OutputInstance::OutputInstance(Output *out, bool startHidden, QWidget *parent)
 	, m_blackEnabled(false)
 	, m_overrideEndAction(false)
 	, m_groupEndAction(SlideGroup::Stop)
+	, m_forceTransmitRawSlide(false)
 {
 	out->setInstance(this);
 	
@@ -88,6 +89,10 @@ OutputInstance::OutputInstance(Output *out, bool startHidden, QWidget *parent)
 	}
 	
 	layout->addWidget(m_viewer);
+
+	QPalette p;
+	p.setColor(QPalette::Window, Qt::black);
+	setPalette(p);
 	
 	m_grabTimer = new QTimer();
 	connect(m_grabTimer, SIGNAL(timeout()), this, SLOT(slotGrabPixmap()));
@@ -301,6 +306,7 @@ void OutputInstance::slotJumpToGroup(int x)
 
 void OutputInstance::slideChanged(Slide *slide, QString slideOperation, AbstractItem */*item*/, QString /*operation*/, QString /*fieldName*/, QVariant /*value*/)
 {
+	//qDebug() << "OutputInstance::slideChanged: ["<<m_output->name()<<"] slideOperation:"<<slideOperation;
 	if(!m_slideGroup)
 		return;
 	if(!slide)
@@ -314,7 +320,12 @@ void OutputInstance::slideChanged(Slide *slide, QString slideOperation, Abstract
 		
 		Output::OutputType x = m_output->outputType();
 		if(x == Output::Network)
+		{
 			setSlideGroup(m_slideGroup, m_slideNum);
+			m_forceTransmitRawSlide = true;
+			setSlide(slide);
+			m_forceTransmitRawSlide = false;
+		}
 		
 		if(m_slideNum >= m_sortedSlides.size())
 			m_slideNum = 0;
@@ -324,6 +335,7 @@ void OutputInstance::slideChanged(Slide *slide, QString slideOperation, Abstract
 		Output::OutputType x = m_output->outputType();
 		if(x == Output::Network)
 		{
+			/*
 			int idx = m_sortedSlides.indexOf(slide);
 			if(idx > -1)
 			{
@@ -331,7 +343,11 @@ void OutputInstance::slideChanged(Slide *slide, QString slideOperation, Abstract
 					setSlide(idx);
 			}
 			else
-				setSlide(slide);
+			*/
+			//qDebug() << "OutputInstance::slideChanged: ["<<m_output->name()<<"] setting slide ptr";
+			m_forceTransmitRawSlide = true;
+			setSlide(slide);
+			m_forceTransmitRawSlide = false;
 		}
 	}
 	
@@ -806,13 +822,12 @@ Slide * OutputInstance::setSlide(Slide *slide, bool takeOwnership)
 			
 			// Try to save network bandwidth and time by transmitting just the slide index if possible.
 			// If the slide is not in the slide group, then transmit it as a byte array.
-			if(m_slideNum > -1)
-				m_outputServer->sendCommand(OutputServer::SetSlide,m_slideNum);
-			else
-			if(slide)
+			if(slide && (m_slideNum < 0 || m_forceTransmitRawSlide))
 				m_outputServer->sendCommand(OutputServer::SetSlideObject, slide->toByteArray());
 			else
-				qDebug() << "OutputInstance::setSlide: ["<<m_output->name()<<"] Cannot send slide to server instance because 'slide' is NULL";
+				m_outputServer->sendCommand(OutputServer::SetSlide,m_slideNum);
+			//else
+			//	qDebug() << "OutputInstance::setSlide: ["<<m_output->name()<<"] Cannot send slide to server instance because 'slide' is NULL";
 		}
 		
 		if(takeOwnership)

@@ -1812,8 +1812,13 @@ void SlideEditorWindow::dupSlide()
 	Slide * oldSlide = m_scene->slide();
 	Slide * slide = oldSlide->clone();
 
-	slide->setSlideNumber(m_slideGroup->numSlides());
+	slide->setSlideNumber(oldSlide->slideNumber() + 1);
 	slide->setSlideId(m_slideGroup->numSlides());
+
+	int oldIdx = m_slideGroup->indexOf(oldSlide);
+	if(oldIdx > -1)
+		for(int i=oldIdx; i<m_slideGroup->numSlides(); i++)
+			m_slideGroup->at(i)->setSlideNumber(i+1);
 
 	m_slideGroup->addSlide(slide);
 

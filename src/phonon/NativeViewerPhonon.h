@@ -62,8 +62,8 @@ public:
 	bool autoPlay() { return m_autoPlay; }
 	void setAutoPlay(bool flag) { m_autoPlay = flag; }
 	
-// 	bool isEmbeddable() { return true; }
-// 	QWidget * renderWidget() { return m_widget; }
+	bool isEmbeddable() { return true; }
+	QWidget * renderWidget() { return m_widget; }
 	
 private:
 	NativeShowState m_state;

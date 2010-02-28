@@ -30,6 +30,8 @@ protected slots:
 	void changeLocation();
 	void setProgress(int);
 	void finishLoading(bool);
+	void popWidget();
+	void adjustTitle();
 
 private:
 	WebSlideGroup * m_webGroup;
@@ -39,6 +41,7 @@ private:
 	QWidget * m_controlBase;
 	QSplitter * m_splitter;
 	QToolBar * m_toolBar;
+	QAction * m_popAction;
 
 };
 
