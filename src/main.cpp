@@ -5,6 +5,10 @@
 #include <QPixmapCache>
 #include <QMessageBox>
 
+#if defined(Q_OS_WIN)
+	#include <qtdotnetstyle.h>
+#endif
+
 int main(int argc, char **argv)
 {
 
@@ -13,6 +17,10 @@ int main(int argc, char **argv)
 		#if QT_VERSION >= 0x040500
 		QApplication::setGraphicsSystem("raster");
 		#endif
+ 	#endif
+
+ 	#if defined(Q_OS_WIN)
+		QApplication::setStyle(new QtDotNetStyle()); //QtDotNetStyle::Office));
  	#endif
 
  	QApplication app(argc, argv);

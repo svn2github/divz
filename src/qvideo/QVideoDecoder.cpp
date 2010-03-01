@@ -472,17 +472,60 @@ void QVideoDecoder::decode()
 					}
 
 					//QImage * frame = new QImage(m_video_codec_context->width, m_video_codec_context->height, QImage::Format_RGB32);
-					memcpy(m_frame->bits(), m_av_rgb_frame->data[0], num_bytes);
+					//memcpy(m_frame->bits(), m_av_rgb_frame->data[0], num_bytes);
+					//QImage * frameCopy = new QImage(m_video_codec_context->width, m_video_codec_context->height, QImage::Format_RGB32);
+					//memcpy(frameCopy->bits(), m_av_rgb_frame->data[0], num_bytes);
+
+
+					int x, y;
+					int *src = (int*)m_av_rgb_frame->data[0]; //pFrame->data[0];
+
+					for (y = 0; y < m_video_codec_context->height; y++)
+					{
+						for (x = 0; x < m_video_codec_context->width; x++)
+						{
+							m_frame->setPixel(x, y, src[x] & 0x00ffffff);
+						}
+						src += m_video_codec_context->width;
+					}
+
+					//int *src = (int*)m_av_rgb_frame->data[0]; //pFrame->data[0];
+					//for(int i=0;i<num_bytes;i++)
+					//	src[i] = src[i] & 0x00ffffff;
+
+					//memcpy(frameCopy->bits(), m_av_rgb_frame->data[0], num_bytes);
+
+
+					//static int counter = 0;
+					//static bool color = false;
+
+					//frameCopy->invertPixels();
+					/*
+					for(int x=0;x<frameCopy->width();x++)
+						for(int y=0;y<frameCopy->height();y++)
+							frameCopy->setPixel(x,y,QColor((y+counter) % 255,(y+counter) % 255,(x+y+counter) % 255).rgb());
+					*/
+					/*
+					counter++;
+					if(counter % 10 == 0)
+						color = !color;
+					QPainter painter(m_frame);
+					painter.fillRect(m_frame->rect(), Qt::green); //color ? Qt::white : Qt::gray);
+					painter.drawImage(QRect(0,0,400,300),*frameCopy,frameCopy->rect());
+					painter.end();
+
+					delete frameCopy;
+					*/
 
 					av_free_packet(packet);
-					
+
 					// This block from the synchronize_video(VideoState *is, AVFrame *src_frame, double pts) : double
 					// function given at: http://www.dranger.com/ffmpeg/tutorial05.html
 					{
-						// update the frame pts 
+						// update the frame pts
 						double frame_delay;
-						
-						if(pts != 0) 
+
+						if(pts != 0)
 						{
 							/* if we have pts, set video clock to it */
 							m_video_clock = pts;
@@ -497,7 +540,7 @@ void QVideoDecoder::decode()
 						m_video_clock += frame_delay;
 						//qDebug() << "Frame Dealy: "<<frame_delay;
 					}
-					
+
 
 					QFFMpegVideoFrame video_frame;
 					video_frame.frame = m_frame;

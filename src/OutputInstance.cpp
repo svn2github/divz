@@ -335,7 +335,7 @@ void OutputInstance::slideChanged(Slide *slide, QString slideOperation, Abstract
 		Output::OutputType x = m_output->outputType();
 		if(x == Output::Network)
 		{
-			/*
+
 			int idx = m_sortedSlides.indexOf(slide);
 			if(idx > -1)
 			{
@@ -343,11 +343,10 @@ void OutputInstance::slideChanged(Slide *slide, QString slideOperation, Abstract
 					setSlide(idx);
 			}
 			else
-			*/
-			//qDebug() << "OutputInstance::slideChanged: ["<<m_output->name()<<"] setting slide ptr";
-			m_forceTransmitRawSlide = true;
-			setSlide(slide);
-			m_forceTransmitRawSlide = false;
+				//qDebug() << "OutputInstance::slideChanged: ["<<m_output->name()<<"] setting slide ptr";
+			//m_forceTransmitRawSlide = true;
+				setSlide(slide);
+			//m_forceTransmitRawSlide = false;
 		}
 	}
 	

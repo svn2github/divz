@@ -66,11 +66,11 @@ BackgroundContent::BackgroundContent(QGraphicsScene * scene, QGraphicsItem * par
     , m_isUserPaused(false)
 {
 	m_dontSyncToModel = true;
-	
+
 	setFrame(0);
 	setFrameTextEnabled(false);
 	setToolTip(tr("Background - right click for options."));
-	
+
 	setFlag(QGraphicsItem::ItemIsMovable,false);
 	setFlag(QGraphicsItem::ItemIsFocusable,false);
 	setFlag(QGraphicsItem::ItemIsSelectable,true);
@@ -81,7 +81,7 @@ BackgroundContent::BackgroundContent(QGraphicsScene * scene, QGraphicsItem * par
 	// TODO reconsider setting this to true for background, maybe conditional on scene context hint
 	setFlag(QGraphicsItem::ItemClipsChildrenToShape, false);
 	setAcceptHoverEvents(false);
-	
+
 	foreach(CornerItem *c, m_cornerItems)
 	{
 		//c->dispose(false);
@@ -89,7 +89,7 @@ BackgroundContent::BackgroundContent(QGraphicsScene * scene, QGraphicsItem * par
 		delete c;
 		c =0;
 	}
-	
+
 	foreach(ButtonItem *c, m_controlItems)
 	{
 		//c->dispose(false);
@@ -97,20 +97,20 @@ BackgroundContent::BackgroundContent(QGraphicsScene * scene, QGraphicsItem * par
 		delete c;
 		c =0;
 	}
-	
+
 	m_zoomAnimationTimer = new QTimer(this);
 	connect(m_zoomAnimationTimer, SIGNAL(timeout()), this, SLOT(animateZoom()));
-	
+
 	m_dontSyncToModel = false;
 }
 
 BackgroundContent::~BackgroundContent()
 {
-	
+
 // 	qDebug() << "BackgroundContent::~BackgroundContent(): hit "<<this;
-	
+
 	m_inDestructor = true;
-			
+
 	if(m_videoProvider)
 	{
  		if(m_videoPlaying)
@@ -118,26 +118,26 @@ BackgroundContent::~BackgroundContent()
 		m_videoProvider->disconnectReceiver(this);
 		QVideoProvider::releaseProvider(m_videoProvider);
 	}
-	
+
 	if(m_controlBase)
 	{
  		m_controlBase->deleteLater();
  		m_controlBase = 0;
-// 	
-	}	
+//
+	}
 	if(m_slider)
 	{
  		m_slider->deleteLater();
  		m_slider = 0;
 	}
-	
+
 	if(m_videoPollTimer.isActive())
 		m_videoPollTimer.stop();
 #ifdef PHONON_ENABLED
 	if(m_proxy)
 		delete m_proxy;
 #endif
-	
+
 	if(!m_lastForegroundKey.isEmpty())
 		QPixmapCache::remove(m_lastForegroundKey);
 }
@@ -145,8 +145,8 @@ BackgroundContent::~BackgroundContent()
 // :: QVideoConsumer
 bool BackgroundContent::allowMediaStop(QVideoProvider* p)
 {
-	if(!m_inDestructor && 
-	    isVisible()    &&	
+	if(!m_inDestructor &&
+	    isVisible()    &&
 	    p == m_videoProvider)
 		return false;
 	return true;
@@ -156,23 +156,23 @@ bool BackgroundContent::allowMediaStop(QVideoProvider* p)
 void BackgroundContent::dispose(bool anim)
 {
 	m_inDestructor = true;
-	
+
 	if(m_videoPollTimer.isActive())
 	{
 		m_videoPollTimer.stop();
 	}
-	
+
 	if(m_videoProvider && m_videoPlaying)
 	{
 		m_videoPlaying = false;
 		m_videoProvider->pause();
 	}
- 	
+
 //  	qDebug() << "BackgroundContent::dispose(): hit "<<this;
-	
+
 	AbstractContent::dispose(anim);
 }
-	
+
 // ::QGraphicsItem
 void BackgroundContent::show()
 {
@@ -187,7 +187,7 @@ void BackgroundContent::show()
  		//qDebug() << "BackgroundContent::show: No provider, not playing video";
  	}
  	AbstractContent::show();
- 	
+
 }
 
 QWidget * BackgroundContent::createPropertyWidget()
@@ -199,74 +199,74 @@ void BackgroundContent::syncFromModelItem(AbstractVisualItem *model)
 {
         m_dontSyncToModel = true;
 	setModelItem(model);
-	
+
 	//QFont font;
 	//Item * boxmodel = dynamic_cast<BoxItem*>(model);
-	
+
 // 	setText(textModel->text());
-// 	
+//
 // 	font.setFamily(textModel->fontFamily());
 // 	font.setPointSize((int)textModel->fontSize());
 // 	setFont(font);
-	
+
 	AbstractContent::syncFromModelItem(model);
 	m_dontSyncToModel = true;
-	
+
 	setPos(0,0);
 	if(scene())
 	{
 		QRect r = scene()->sceneRect().toRect();
 		//qDebug() << "BackgroundContent::syncFromModelItem(): Setting rect:"<<r;
 		resizeContents(r);
-		
+
 		if(!m_sceneSignalConnected)
 		{
 			connect(dynamic_cast<MyGraphicsScene*>(scene()), SIGNAL(sceneRectChanged(const QRectF&)), this, SLOT(sceneRectChanged(const QRectF&)));
 			m_sceneSignalConnected = true;
 		}
-			
+
 	}
-	
-	
+
+
 	if(model->fillVideoFile() != "" &&
 		model->fillType() == AbstractVisualItem::Video)
 		setVideoFile(AppSettings::applyResourcePathTranslations(model->fillVideoFile()));
-		
+
 	if(model->fillImageFile() != "" &&
 		model->fillType() == AbstractVisualItem::Image)
 		setImageFile(AppSettings::applyResourcePathTranslations(model->fillImageFile()));
-		
-	if(   model->zoomEffectEnabled() 
- 	   && model->zoomSpeed() > 0 
+
+	if(   model->zoomEffectEnabled()
+ 	   && model->zoomSpeed() > 0
  	   && sceneContextHint() == MyGraphicsScene::Live)
 	{
 		m_zoomEnabled = true;
-		
+
 		m_zoomAnimationTimer->start(1000 / 20); // / model->zoomSpeed());
-		
+
 		QSize size = contentsRect().size();
-			
+
 		double width  = size.width();
 		double height = size.height();
-		
+
 		double aspectRatio = m_pixmap.isNull() || m_pixmap.height() <=0 ? 0 : m_pixmap.width() / m_pixmap.height();
-		if(aspectRatio == 0 || aspectRatio == 1) 
+		if(aspectRatio == 0 || aspectRatio == 1)
 			aspectRatio = AppSettings::liveAspectRatio();
-			
+
 		if(!m_zoomInit)
 		{
 			//qDebug() << "aspectRatio: "<<aspectRatio;
-			
+
 			double startWidth = height * aspectRatio;
 			m_zoomDir = 1;
 			QPointF delta;
-			
+
 			m_zoomStartSize.setX(startWidth);
 			m_zoomStartSize.setY(height);
-			 
+
 			m_zoomEndSize.setX(startWidth * model->zoomFactor());
 			m_zoomEndSize.setY(height     * model->zoomFactor());
-			
+
 			bool zoomIn = true;
 			if(model->zoomDirection() == AbstractVisualItem::ZoomIn)
 				zoomIn = true;
@@ -276,34 +276,34 @@ void BackgroundContent::syncFromModelItem(AbstractVisualItem *model)
 			else
 			if(model->zoomDirection() == AbstractVisualItem::ZoomRandom)
 				zoomIn = qrand() < RAND_MAX/2;
-			
+
 			m_zoomCurSize = zoomIn ? m_zoomStartSize : m_zoomEndSize;
 			m_zoomDir     = zoomIn ? 1 : -1;
-			
+
 			delta.setX(m_zoomEndSize.x() - m_zoomCurSize.x());
 			delta.setY(m_zoomEndSize.y() - m_zoomCurSize.y());
 			//step.setX(delta.x()/ZOOM_STEPS);
 			//step.setY(delta.y()/ZOOM_STEPS);
 //			m_zoomInit = true;
 		}
-		
+
 		// allow it to go below 1.0 for step size by using 75.0 when the max of the zoomSpeed slider in config is 100
 		m_zoomStep.setX(75.0 / (100.0 - ((double)model->zoomSpeed())) * aspectRatio);
 		m_zoomStep.setY(75.0 / (100.0 - ((double)model->zoomSpeed())));
-		
+
 		if(model->zoomAnchorPoint() == AbstractVisualItem::ZoomAnchorRandom)
 		{
 			// pick a third intersection
 			double x = qrand() < RAND_MAX/2 ? .33 : .66;
 			double y = qrand() < RAND_MAX/2 ? .33 : .66;
-			
+
 			// apply a fudge factor
 // 			x += 0.15 - ((double)qrand()) / ((double)RAND_MAX) * 0.075;
 // 			y += 0.15 - ((double)qrand()) / ((double)RAND_MAX) * 0.075;
-			
+
 			m_zoomDestPoint = QPointF(x,y);
 			//qDebug() << "ZoomRandom:	"<<x<<","<<y;
-			
+
 			//qDebug() << model->itemName() << "Random zoom anchor: "<<m_zoomDestPoint;
 		}
 		else
@@ -322,7 +322,7 @@ void BackgroundContent::syncFromModelItem(AbstractVisualItem *model)
 				case AbstractVisualItem::ZoomCenter:
 				default:					x = .50; y = .50; break;
 			};
-			
+
 			m_zoomDestPoint = QPointF(x,y);
 		}
 
@@ -333,11 +333,11 @@ void BackgroundContent::syncFromModelItem(AbstractVisualItem *model)
 		if(m_zoomAnimationTimer->isActive())
 			m_zoomAnimationTimer->stop();
 	}
-	
+
 	setZValue(-9999);
 	setVisible(true);
 	update();
-	
+
         m_dontSyncToModel = false;
 }
 
@@ -356,7 +356,7 @@ void BackgroundContent::animateZoom()
 			else
 				if(m_zoomAnimationTimer->isActive())
 					m_zoomAnimationTimer->stop();
-			
+
 	}
 	else
 	{
@@ -371,15 +371,15 @@ void BackgroundContent::animateZoom()
 					m_zoomAnimationTimer->stop();
 	}
 	//qDebug() << "AnimateZoom: "<<PTR(this)<<modelItem()->itemName()<<": size:"<<m_zoomCurSize<<", step:"<<m_zoomStep;
-	
+
 	update();
 }
 
 #define BG_IMG_CACHE_DIR "dviz-backgroundimagecache"
 void BackgroundContent::setImageFile(const QString &file)
 {
-	
-	
+
+
 	if(m_videoProvider)
 	{
 		// TODO We ASSUME were playing the video before we got the image
@@ -389,15 +389,15 @@ void BackgroundContent::setImageFile(const QString &file)
  			m_videoPlaying = false;
  			m_videoProvider->pause();
  		}
-			
+
 		m_videoProvider->disconnectReceiver(this);
 		QVideoProvider::releaseProvider(m_videoProvider);
 		m_videoProvider = 0;
 	}
-			
+
 	// JPEGs, especially large ones (e.g. file on disk is > 2MB, etc) take a long time to load, decode, and convert to pixmap.
 	// (Long by UI standards anyway, e.g. > .2sec). So, we optimize away extreneous loadings by not reloading if the file & mtime
-	// has not changed. If we're a new item, we also check the global pixmap cache for an already-loaded copy of this image, 
+	// has not changed. If we're a new item, we also check the global pixmap cache for an already-loaded copy of this image,
 	// again keyed by file name + mtime. For SVG files, though, we only perform the first check (dont reload if not changed),
 	// but we dont cache a pixmap copy of them for scaling reasons (so we can have clean scaling.)
 	QString fileMod = QFileInfo(file).lastModified().toString();
@@ -406,12 +406,12 @@ void BackgroundContent::setImageFile(const QString &file)
 		qDebug() << "BackgroundContent::setImageFile: "<<file<<": no change, not reloading";
 		return;
 	}
-	
+
 // 	qDebug() << "BackgroundContent::setImageFile: "<<file<<": (current file:"<<m_fileName<<"), fileMod:"<<fileMod<<", m_fileLastModified:"<<m_fileLastModified;
-	
+
 	m_fileName = file;
 	m_fileLastModified = fileMod;
-	
+
 	if(file.isEmpty())
 	{
 		m_fileLoaded = false;
@@ -419,14 +419,14 @@ void BackgroundContent::setImageFile(const QString &file)
 		m_pixmap = QPixmap();
 		return;
 	}
-	
+
 /*	if()
 	{
 		setPixmap(MediaBrowser::iconForImage(file,MEDIABROWSER_LIST_ICON_SIZE));
 		m_fileLoaded = true;
 		return;
 	}*/
-	
+
 	if(file.endsWith(".svg",Qt::CaseInsensitive))
 	{
 		loadSvg(file);
@@ -435,11 +435,11 @@ void BackgroundContent::setImageFile(const QString &file)
 	{
 		disposeSvgRenderer();
 		//QString cacheKey = QString("%1:%2:%3x%4").arg(file).arg(fileMod);
-		
+
 		QPixmap cache;
-		
+
 		QSize size = contentsRect().size();
-		
+
 		// We adjust the size of the expected image if over 2.0 because over 2
 		// the pixelation is more visible.
 		if(modelItem()->zoomEffectEnabled() && modelItem()->zoomFactor() > 2.0)
@@ -447,11 +447,11 @@ void BackgroundContent::setImageFile(const QString &file)
 			size.setWidth(size.width()   * modelItem()->zoomFactor());
 			size.setHeight(size.height() * modelItem()->zoomFactor());
 		}
-		
+
 		QDir path(QString("%1/%2").arg(AppSettings::cachePath()).arg(BG_IMG_CACHE_DIR));
 		if(!path.exists())
 			QDir(AppSettings::cachePath()).mkdir(BG_IMG_CACHE_DIR);
-			
+
 		QString cacheKey = QString("%1/%2/%3-%4x%5%6-auto_ar")
 					.arg(AppSettings::cachePath())
 					.arg(BG_IMG_CACHE_DIR)
@@ -460,11 +460,11 @@ void BackgroundContent::setImageFile(const QString &file)
 					.arg(size.height())
 					.arg(sceneContextHint() == MyGraphicsScene::StaticPreview ? "-icon192" : "");
 					//.arg(modelItem()->zoomEffectEnabled() ? "-zoomed" : "");
-		
+
 		if(sceneContextHint() == MyGraphicsScene::StaticPreview)
 		{
 // 			qDebug() << "BackgroundContent::setImageFile: "<<file<<": static preview, warming";
-			
+
 			QString cacheKey = QString("%1/%2/%3-%4x%5-icon192-auto_ar")
 						.arg(AppSettings::cachePath())
 						.arg(BG_IMG_CACHE_DIR)
@@ -472,18 +472,18 @@ void BackgroundContent::setImageFile(const QString &file)
 						.arg(size.width())
 						.arg(size.height());
 						//.arg(modelItem()->zoomEffectEnabled() ? "-zoomed" : "");
-			
+
 			if(!QPixmapCache::find(cacheKey,cache))
 			{
 // 				qDebug() << "BackgroundContent::setImageFile: "<<file<<": static preview, not in QPixmapCache, starting thread";
 				new BackgroundImageWarmingThreadManager(dynamic_cast<BackgroundItem*>(modelItem()),cacheKey,contentsRect());
 			}
 		}
-		
+
 		if(!m_lastImageKey.isEmpty() &&
 		    m_lastImageKey != cacheKey)
 			QPixmapCache::remove(m_lastImageKey);
-			
+
 		m_lastImageKey = cacheKey;
 		//qDebug() << "BackgroundContent::setImageFile: file:"<<file<<", size:"<<size<<", cacheKey:"<<cacheKey;
 
@@ -514,7 +514,7 @@ void BackgroundContent::setImageFile(const QString &file)
 					cacheImg = 0;
 				}
 			}
-			
+
 			QPixmapCache::insert(cacheKey,cache);
 			setPixmap(cache);
 			m_fileLoaded = true;
@@ -530,13 +530,13 @@ QImage * BackgroundContent::internalLoadFile(QString file,QString cacheKey, QRec
 		cache = new QImage();
 		cache->load(cacheKey);
 		return cache;
-		
-		
+
+
 		//qDebug() << "BackgroundContent::setImageFile: file:"<<file<<", size:"<<size<<": hit DISK (loaded scaled from disk cache)";
 	}
 	else
 	{
-	
+
 		QImageReader reader(file);
 		QImage image = reader.read();
 		if(image.isNull())
@@ -544,13 +544,13 @@ QImage * BackgroundContent::internalLoadFile(QString file,QString cacheKey, QRec
 			if(reader.errorString().indexOf("Unable")>-1)
 			{
 				qDebug() << "BackgroundContent::setImageFile: Unable to read"<<file<<": "<<reader.errorString()<<", Trying to force-reset some cache space";
-				
+
 				QPixmapCache::setCacheLimit(10 * 1024);
 				QPixmap testPm(1024,768);
 				testPm.fill(Qt::lightGray);
 				if(QPixmapCache::insert("test",testPm))
 					qDebug() << "BackgroundContent::setImageFile: Unable to insert text pixmap into cache after shrinkage";
-				
+
 				//QPixmapCache::setCacheLimit(AppSettings::pixmapCacheSize() * 1024);
 
 				image = reader.read();
@@ -625,7 +625,7 @@ QImage * BackgroundContent::internalLoadFile(QString file,QString cacheKey, QRec
 
 			cache = new QImage(image.scaled(size,Qt::IgnoreAspectRatio,Qt::SmoothTransformation));
 			cache->save(cacheKey,"PNG");
-			
+
 			return cache;
 		}
 		else
@@ -633,7 +633,7 @@ QImage * BackgroundContent::internalLoadFile(QString file,QString cacheKey, QRec
 			qDebug() << "BackgroundContent::setImageFile: file:"<<file<<" NOT LOADED";
 		}
 	}
-		
+
 	return 0;
 }
 
@@ -671,7 +671,7 @@ void BackgroundImageWarmingThreadManager::renderDone(QImage *image)
 		deleteLater();
 		return;
 	}
-		
+
 	QPixmap cache = QPixmap::fromImage(*image);
 	cache.save(m_cacheKey,"PNG");
 	QPixmapCache::insert(m_cacheKey, cache);
@@ -687,7 +687,7 @@ void BackgroundImageWarmingThread::run()
 		qDebug()<<"BackgroundImageWarmingThread::run(): m_model is null";
 		return;
 	}
-	
+
 	QString file = AppSettings::applyResourcePathTranslations(m_model->fillImageFile());
 	QImage * image = BackgroundContent::internalLoadFile(file,m_cacheKey,m_rect);
 	emit renderDone(image);
@@ -706,17 +706,17 @@ void BackgroundContent::disposeSvgRenderer()
 void BackgroundContent::loadSvg(const QString &file)
 {
 	disposeSvgRenderer();
-	
+
 	m_svgRenderer = new QSvgRenderer(file);
 	m_fileLoaded = true;
-	
+
 	m_pixmap = QPixmap(m_svgRenderer->viewBox().size());
-	
+
 	if(m_imageSize != m_pixmap.size())
 		m_imageSize = m_pixmap.size();
-	
+
 	connect(m_svgRenderer, SIGNAL(repaintNeeded()), this, SLOT(renderSvg()));
-	renderSvg();	
+	renderSvg();
 }
 
 void BackgroundContent::renderSvg()
@@ -735,12 +735,12 @@ void BackgroundContent::sceneRectChanged(const QRectF& rect)
 AbstractVisualItem * BackgroundContent::syncToModelItem(AbstractVisualItem *model)
 {
 	BackgroundItem * boxModel = dynamic_cast<BackgroundItem*>(AbstractContent::syncToModelItem(model));
-	
+
 	if(!boxModel)
 	{
 		return 0;
 	}
-	
+
 	return model;
 }
 
@@ -754,7 +754,7 @@ QPixmap BackgroundContent::renderContent(const QSize & size, Qt::AspectRatioMode
 			th = textSize.height();
 	if (w < 2 || h < 2 || tw < 2 || th < 2)
 		return QPixmap();
-	
+
 	// draw text (centered, maximized keeping aspect ratio)
 	float scale = qMin(w / (tw + 16), h / (th + 16));
 	QPixmap pix(size);
@@ -777,7 +777,7 @@ int BackgroundContent::contentHeightForWidth(int width) const
 }
 
 
-QRectF BackgroundContent::boundingRect() const 
+QRectF BackgroundContent::boundingRect() const
 {
 	//qreal penWidth = m_modelItem ? m_modelItem->outlinePen().widthF() : 1.0;
 	return AbstractContent::boundingRect();//.adjusted(-penWidth/2,-penWidth/2,penWidth,penWidth);
@@ -788,11 +788,11 @@ void BackgroundContent::paint(QPainter * painter, const QStyleOptionGraphicsItem
 {
 	// paint parent
 	AbstractContent::paint(painter, option, widget);
-	
+
 	QRect cRect = contentsRect();
-	
+
 	painter->save();
-		
+
 	painter->setPen(Qt::NoPen);
 	AbstractVisualItem::FillType fill = modelItem()->fillType();
 	if(fill == AbstractVisualItem::Solid)
@@ -829,12 +829,12 @@ void BackgroundContent::paint(QPainter * painter, const QStyleOptionGraphicsItem
 // 						m_zoomedPixmap = m_pixmap.scaled(m_zoomCurSize.x(), m_zoomCurSize.y(), Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
 // 						m_zoomedPixmapSize = m_zoomCurSize;
 // 					}
-					
+
 					painter->save();
 					painter->setRenderHint(QPainter::Antialiasing);
 					painter->setRenderHint(QPainter::SmoothPixmapTransform);
 					painter->setClipRect(cRect);
-					
+
 					double xf = (1/m_zoomDestPoint.x());
 					double yf = (1/m_zoomDestPoint.y());
 					QRectF pr(cRect.width()/xf - m_zoomCurSize.x()/xf,cRect.height()/yf - m_zoomCurSize.y()/yf,m_zoomCurSize.x(),m_zoomCurSize.y());
@@ -845,12 +845,12 @@ void BackgroundContent::paint(QPainter * painter, const QStyleOptionGraphicsItem
     				}
     				else
     				{
-					
+
 					// this rect describes our "model" height in terms of item coordinates
 					QRect tmpRect(0,0,cRect.width(),cRect.height());
-					
+
 					// This is the key to getting good looking scaled & cached pixmaps -
-					// it transforms our item coordinates into view coordinates. 
+					// it transforms our item coordinates into view coordinates.
 					// What this means is that if our item is 100x100, but the view is scaled
 					// by 1.5, our final pixmap would be scaled by the painter to 150x150.
 					// That means that even though after the cache generation we tell drawPixmap()
@@ -861,40 +861,40 @@ void BackgroundContent::paint(QPainter * painter, const QStyleOptionGraphicsItem
 					// we scale it only to 150x150. And then the painter can render the pixels 1:1
 					// rather than having to scale up and make it look pixelated.
 					tmpRect = painter->combinedTransform().mapRect(tmpRect);
-					
+
 					QRect destRect(0,0,tmpRect.width(),tmpRect.height());
-					
+
 					// Limit the size of the final image inorder to prevent the user from
 					// inadvertantly killing the speed of the painting by scaling a really huge image
 					// in the media browser preview
-					if(destRect.width()  > MAX_SCALED_WIDTH || 
+					if(destRect.width()  > MAX_SCALED_WIDTH ||
 					   destRect.height() > MAX_SCALED_HEIGHT)
 					{
 						float sx = ((float)MAX_SCALED_WIDTH)  / ((float)destRect.width());
 						float sy = ((float)MAX_SCALED_HEIGHT) / ((float)destRect.height());
-					
+
 						float scale = qMin(sx,sy);
 						destRect.setWidth( destRect.width()  * sx);
 						destRect.setHeight(destRect.height() * sy);
 					}
-					
+
 					// cache the scaled pixmap according to the transformed size of the view
 					QString foregroundTmp = QString("%1:%2:%3:%4")
 								.arg(m_fileName).arg(m_fileLastModified)
 								.arg(destRect.width()).arg(destRect.height());
-					
-					// ASSUME path exists due to using BG_IMG_CACHE_DIR in loading the image originally 
+
+					// ASSUME path exists due to using BG_IMG_CACHE_DIR in loading the image originally
 // 					QDir path(QString("%1/%2").arg(AppSettings::cachePath()).arg(BG_IMG_CACHE_DIR));
 // 					if(!path.exists())
 // 						QDir(AppSettings::cachePath()).mkdir(BG_IMG_CACHE_DIR);
-				
+
 					QString foregroundKey = QString("%1/%2/%3-painter")
 								.arg(AppSettings::cachePath())
 								.arg(BG_IMG_CACHE_DIR)
 								.arg(MD5::md5sum(foregroundTmp));
-								
+
 					//qDebug() << "foregroundKey: "<<foregroundKey;
-					
+
 					if(m_lastForegroundKey != foregroundKey &&
 					  !m_lastForegroundKey.isEmpty())
 					{
@@ -903,9 +903,9 @@ void BackgroundContent::paint(QPainter * painter, const QStyleOptionGraphicsItem
 // 						if(tmp.exists())
 // 							tmp.remove();
 					}
-						
+
 					m_lastForegroundKey = foregroundKey;
-					
+
 					QPixmap cache;
 					if(!QPixmapCache::find(foregroundKey,cache))
 					{
@@ -917,17 +917,17 @@ void BackgroundContent::paint(QPainter * painter, const QStyleOptionGraphicsItem
 // 						}
 // 						else
 						{
-							
+
 		// 					QTime t;
 		// 					t.start();
 		// 					qDebug() << "BackgroundContent::drawForeground: Foreground pixmap dirty, redrawing size:"<<destRect;
 							cache = QPixmap(destRect.size());
 							cache.fill(Qt::transparent);
-							
+
 							QPainter tmpPainter(&cache);
 							tmpPainter.setRenderHint(QPainter::HighQualityAntialiasing, true);
 							tmpPainter.setRenderHint(QPainter::SmoothPixmapTransform, true);
-							
+
 							if(!sourceOffsetTL().isNull() || !sourceOffsetBR().isNull())
 							{
 								QPointF tl = sourceOffsetTL();
@@ -935,34 +935,34 @@ void BackgroundContent::paint(QPainter * painter, const QStyleOptionGraphicsItem
 								QRect px = m_pixmap.rect();
 								int x1 = (int)(tl.x() * px.width());
 								int y1 = (int)(tl.y() * px.height());
-								QRect source( 
+								QRect source(
 									px.x() + x1,
 									px.y() + y1,
 									px.width()  - (int)(br.x() * px.width())  + (px.x() + x1),
 									px.height() - (int)(br.y() * px.height()) + (px.y() + y1)
 								);
-									
+
 								qDebug() << "BackgroundContent::paint:"<<modelItem()->itemName()<<": tl:"<<tl<<", br:"<<br<<", source:"<<source;
 								tmpPainter.drawPixmap(destRect, m_pixmap, source);
 							}
 							else
 								tmpPainter.drawPixmap(destRect, m_pixmap);
-							
+
 							tmpPainter.end();
 							if(!QPixmapCache::insert(foregroundKey, cache))
 								qDebug() << "BackgroundContent::paint:"<<modelItem()->itemName()<<": Can't cache the image. This will slow performance of cross fades and slide editor. Make the cache larger using the Program Settings menu.";
-							
+
 		// 					qDebug() << "BackgroundContent::drawForeground: Foreground pixmap dirty, end drawing size:"<<destRect<<", elapsed: "<<t.elapsed();
 						}
 					}
-					
+
 					painter->setClipRect(option->exposedRect);
 					painter->drawPixmap(cRect,cache);
 				}
 			}
 		}
 	}
-	else
+	else // Video
 	{
 		if(m_imageSize.width() <= 0)
 		{
@@ -970,16 +970,16 @@ void BackgroundContent::paint(QPainter * painter, const QStyleOptionGraphicsItem
 		}
 		else
 		{
-			painter->setBrush(Qt::NoBrush);
-			painter->setRenderHint(QPainter::SmoothPixmapTransform, true);
-			
+			//painter->setBrush(Qt::NoBrush);
+			//painter->setRenderHint(QPainter::SmoothPixmapTransform, true);
+
 			if(m_zoomEnabled)
 			{
 				painter->save();
 				painter->setRenderHint(QPainter::Antialiasing);
 				painter->setRenderHint(QPainter::SmoothPixmapTransform);
 				painter->setClipRect(cRect);
-				
+
 				double xf = (1/m_zoomDestPoint.x());
 				double yf = (1/m_zoomDestPoint.y());
 				QRectF pr(cRect.width()/xf - m_zoomCurSize.x()/xf,cRect.height()/yf - m_zoomCurSize.y()/yf,m_zoomCurSize.x(),m_zoomCurSize.y());
@@ -987,22 +987,34 @@ void BackgroundContent::paint(QPainter * painter, const QStyleOptionGraphicsItem
 				painter->drawPixmap(pr,m_pixmap,m_pixmap.rect());
 				//qDebug() << PTR(this)<<": End paint at size"<<pr;
 				painter->restore();
-					
+
 			}
 			else
 			{
-				painter->setClipRect(option->exposedRect);
+				//qDebug() << "BackgroundContent::paint:"<<modelItem()->itemName()<<": Painting video frame";
+				painter->save();
+				//painter->setCompositionMode(QPainter::CompositionMode_DestinationOver);
+				//painter->setClipRect(option->exposedRect);
+
+				/*
+				QPixmap pm(m_pixmap.size());
+				pm.fill(Qt::blue);
+				painter->drawPixmap(cRect, pm);
+				*/
+
 				painter->drawPixmap(cRect, m_pixmap);
+				painter->restore();
+
 			}
 		}
 	}
-	
-	
+
+
 // 	//const bool opaqueContent = contentOpaque();
 // 	const bool drawSelection = RenderOpts::HQRendering ? false : isSelected();
-// 	
+//
 // 	// draw the selection only as done in EmptyFrame.cpp
-// 	if (drawSelection) 
+// 	if (drawSelection)
 // 	{
 // 		painter->setRenderHint(QPainter::Antialiasing, true);
 // 		//painter->setCompositionMode(QPainter::CompositionMode_Xor);
@@ -1010,7 +1022,7 @@ void BackgroundContent::paint(QPainter * painter, const QStyleOptionGraphicsItem
 // 		// FIXME: this draws OUTSIDE (but inside the safe 2px area)
 // 		painter->drawRect(cRect); //QRectF(cRect).adjusted(-1.0, -1.0, +1.0, +1.0));
 // 	}
-// 			
+//
 	painter->restore();
 }
 
@@ -1027,7 +1039,7 @@ void BackgroundContent::phononMediaAboutToFinish()
 		m_player->mediaObject()->enqueue(m_fileName);
 		m_player->mediaObject()->setTransitionTime(-100);
 	}
-	
+
 }
 void BackgroundContent::phononPlayerFinished()
 {
@@ -1039,7 +1051,7 @@ void BackgroundContent::phononPlayerFinished()
 		m_player->seek(0);
 		m_player->play();
 	}
-	
+
 }
 
 
@@ -1054,7 +1066,7 @@ void BackgroundContent::phononPrefinishMarkReached(qint32 x)
 		m_player->seek(0);
 		m_player->play();
 	}
-	
+
 }
 
 #endif
@@ -1069,9 +1081,9 @@ void BackgroundContent::setVideoFile(const QString &name)
 	m_fileName = name;
 	if(DEBUG_BACKGROUNDCONTENT)
 		qDebug() << "BackgroundContent::setVideoFile(): name="<<name;
-	
+
 // 	bool testBeta = true;
-	
+
 	if(modelItem()->fillType() == AbstractVisualItem::Video)
 	{
 		if(sceneContextHint() == MyGraphicsScene::StaticPreview ||
@@ -1091,43 +1103,43 @@ void BackgroundContent::setVideoFile(const QString &name)
  				delete m_player;
 			if(m_tuplet)
 				delete m_tuplet;
-			
+
 			if(!m_proxy)
 				m_proxy = new QGraphicsProxyWidget(this);
-			
+
 			/*
 			m_tuplet = QVideoProvider::phononForFile(name);
 
 			m_proxy->setWidget(m_tuplet->video());
 			m_proxy->setGeometry(contentsRect());
-		
+
 			m_tuplet->media->play();
 			*/
 
-			
+
 			m_player = new Phonon::VideoPlayer(Phonon::VideoCategory, 0);
 // 			connect(m_player->mediaObject(), SIGNAL(aboutToFinish()), this, SLOT(phononMediaAboutToFinish()));
 			connect(m_player, SIGNAL(finished()), this, SLOT(phononPlayerFinished()));
 // 			m_player->mediaObject()->setPrefinishMark(30);
 // 			connect(m_player->mediaObject(), SIGNAL(prefinishMarkReached(qint32)), this, SLOT(phononPrefinishMarkReached(qint32)));
-			
+
 			m_proxy->setWidget(m_player);
 			m_proxy->setGeometry(contentsRect());
 
 			if(sceneContextHint() == MyGraphicsScene::Live)
 				m_player->play(name);
-			
+
 		}
 		#else
  		else
 		{
-			if(DEBUG_BACKGROUNDCONTENT)	
+			if(DEBUG_BACKGROUNDCONTENT)
 				qDebug() << "BackgroundContent::setVideoFile(): Using FFMPEG";
-				
+
 			QVideoProvider * p = QVideoProvider::providerForFile(name);
 			if(p)
 			{
-				
+
 				if(m_videoProvider && m_videoProvider == p)
 				{
 					return;
@@ -1138,7 +1150,7 @@ void BackgroundContent::setVideoFile(const QString &name)
 					// Copy the pointer and set m_vid.. to 0 for use in allowMediaStop(), etc.
 					QVideoProvider * tmp = m_videoProvider;
 					m_videoProvider = 0;
-					
+
 					if(m_videoPlaying)
 	 					//if(!m_still || m_videoProvider->isPlaying())
 	 				{
@@ -1146,31 +1158,31 @@ void BackgroundContent::setVideoFile(const QString &name)
 	 					m_videoPlaying = false;
  						tmp->pause();
  					}
- 					
- 					
+
+
 					disconnect(tmp->videoObject(), 0, this, 0);
-					
+
 					tmp->disconnectReceiver(this);
 					QVideoProvider::releaseProvider(tmp);
 				}
-				
+
 				if(DEBUG_BACKGROUNDCONTENT)
 					qDebug() << "BackgroundContent::setVideoFile: Loading"<<name;
-				
+
 				m_videoProvider = p;
-				
+
 				connect(m_videoProvider->videoObject(), SIGNAL(movieStateChanged(QMovie::MovieState)), this, SLOT(movieStateChanged(QMovie::MovieState)));
-				
+
 				//qDebug() << "BackgroundContent::setVideoFile: Playing video "<<name;
-				
+
 				//m_startVideoPausedInPreview = true;
 				m_videoPauseEventCompleted = false;
-				
-// 				if(sceneContextHint() == MyGraphicsScene::Preview && 
+
+// 				if(sceneContextHint() == MyGraphicsScene::Preview &&
 // 				   m_startVideoPausedInPreview)
 // 				{
 // 					// Only really pause the video in preview if no other streams
-// 					// are connected to it 
+// 					// are connected to it
 // 					if(m_videoProvider->stopAllowed())
 // 					{
 // 						m_videoPlaying = false;
@@ -1188,14 +1200,14 @@ void BackgroundContent::setVideoFile(const QString &name)
 					else
 					{
 						//qDebug() << "BackgroundContent::setVideoFile: Not visible, not playing video";
-					} 
+					}
 //				}
-				
+
 				m_still = false;
-				
+
 				// prime the pump, so to speak
 				setPixmap(m_videoProvider->pixmap());
-					
+
 				m_videoProvider->connectReceiver(this, SLOT(setPixmap(const QPixmap &)));
 			}
 			else
@@ -1211,9 +1223,9 @@ void BackgroundContent::setVideoFile(const QString &name)
 		qDebug() << "BackgroundContent::setVideoFile: Set m_still true";
 		m_still = true;
 	}
-	
-	
-	
+
+
+
 }
 
 
@@ -1221,7 +1233,7 @@ void BackgroundContent::setPixmap(const QPixmap & pixmap)
 {
 	if(m_still && m_imageSize.width() > 0)
 		return;
-		
+
 	m_pixmap = pixmap;
 
 	/*
@@ -1284,16 +1296,16 @@ void BackgroundContent::setPixmap(const QPixmap & pixmap)
 		m_imageSize = m_pixmap.size();
 
 	update();
-	
-	if(((sceneContextHint() != MyGraphicsScene::Live && 
+
+	if(((sceneContextHint() != MyGraphicsScene::Live &&
 	     sceneContextHint() != MyGraphicsScene::Preview)
 	     || (sceneContextHint() == MyGraphicsScene::Preview && m_startVideoPausedInPreview && !m_isUserPlaying)) &&
 		modelItem()->fillType() == AbstractVisualItem::Video &&
 		m_imageSize.width() > 0)
 	{
 		if(DEBUG_BACKGROUNDCONTENT)
-			qDebug() << "BackgroundContent::setPixmap(): sceneContextHint() != Live/Preview, setting m_still true"; 
-// 		qDebug() << "BackgroundContent::setPixmap(): m_videoPlaying:"<<m_videoPlaying<<", provider:"<<m_videoProvider; 
+			qDebug() << "BackgroundContent::setPixmap(): sceneContextHint() != Live/Preview, setting m_still true";
+// 		qDebug() << "BackgroundContent::setPixmap(): m_videoPlaying:"<<m_videoPlaying<<", provider:"<<m_videoProvider;
 		m_still = true;
 		if(m_videoProvider && m_videoPlaying)
 		{
@@ -1354,7 +1366,7 @@ void BackgroundContent::phononTick(qint64 time)
 	if(m_timeLcd)
 	{
 		QTime displayTime(0, (time / 60000) % 60, (time / 1000) % 60);
-		
+
 		m_timeLcd->display(displayTime.toString("mm:ss"));
 	}
 }
@@ -1364,24 +1376,24 @@ void BackgroundContent::pollVideoClock()
 {
 // 	if(!m_slider)
 // 		return;
-		
+
 	if(m_inDestructor)
 		return;
-		
+
 	if(m_lockSeekValueChanging)
 		return;
-		
+
 	m_lockSeekValueChanging = true;
-	
+
   	qDebug() << "BackgroundContent::pollVideoClock(): hit controlBase: "<<m_controlBase;
-	
+
 	if(m_videoProvider &&
 	   m_videoPlaying &&
 	   modelItem()->fillVideoFile() != "" &&
 	   modelItem()->fillType() == AbstractVisualItem::Video)
 	{
 		int clock = (int)m_videoProvider->videoClock();
-	  	
+
 	  	if(m_slider)
 		{
 			if(m_slider->maximum() != m_videoProvider->duration())
@@ -1403,21 +1415,21 @@ void BackgroundContent::pollVideoClock()
 			QString str  =  (min<10? "0":"") + QString::number((int)min) + ":" +
 					(sec<10? "0":"") + QString::number((int)sec) + "." +
 					(ms <10? "0":"") + QString::number((int)ms );
-			
+
 			m_timeLcd->display(str);
 		}
-		
+
  		//qDebug() << "BackgroundContent::pollVideoClock(): Clock at "<<((int)clock)<<" / "<<m_videoProvider->duration(); //<<", time used:"<<t.elapsed();
 	}
-	
+
 	m_lockSeekValueChanging = false;
-}	
+}
 
 void BackgroundContent::seek(int x)
 {
 	if(m_lockSeekValueChanging)
 		return;
-		
+
 	int delta = x; // - m_videoProvider->videoClock();
 	m_videoProvider->seekTo(abs(delta), delta < 0 ? AVSEEK_FLAG_BACKWARD : 0);
  	qDebug() << "BackgroundContent::seek(): x:"<<x<<", delta:"<<delta<<", AVSEEK_FLAG_BACKWARD:"<<AVSEEK_FLAG_BACKWARD;
@@ -1435,26 +1447,26 @@ void BackgroundContent::controlWidgetDestroyed()
 void BackgroundContent::movieStateChanged(QMovie::MovieState state)
 {
 // 	qDebug() << "BackgroundContent::moveStateChanged: m_startVideoPausedInPreview:"<<m_startVideoPausedInPreview<<",m_still:"<<m_still<<",state:"<<state<<"==QMovie::Running:"<<QMovie::Running<<",m_videoPauseEventCompleted:"<<m_videoPauseEventCompleted;
-	if(m_startVideoPausedInPreview && 
-	   m_still && 
+	if(m_startVideoPausedInPreview &&
+	   m_still &&
 	   state == QMovie::Running &&
 	   m_isUserPlaying)
 	{
 // 		qDebug() << "BackgroundContent::moveStateChanged: Set m_still false";
-		m_still = false; 
+		m_still = false;
 		//m_startVideoPausedInPreview = false;
 	}
 
 	if(!m_isUserPlaying || !m_isUserPaused)
 		return;
-		
-	if(!m_playBtn || 
+
+	if(!m_playBtn ||
 	   !m_pauseBtn)
 	{
 // 		qDebug() << "BackgroundContent::moveStateChanged: Buttons destroyed/non existant, not updating";
 		return;
 	}
-		
+
 	if(state == QMovie::Running)
 	{
 		m_playBtn->setEnabled(false);
@@ -1470,39 +1482,39 @@ void BackgroundContent::movieStateChanged(QMovie::MovieState state)
 QWidget * BackgroundContent::controlWidget()
 {
 //  	return 0;
-	
+
 	if(modelItem()->fillVideoFile() != "" &&
 	   modelItem()->fillType() == AbstractVisualItem::Video)
 	{
 // 		if(m_controlBase)
 // 			return m_controlBase;
-			
+
 		if(!m_videoProvider)
 			return 0;
-			
+
 		if(!m_videoProvider->canPlayPause())
 			return 0;
-		
+
 		m_controlBase = new QWidget();
-		
+
 // 		m_slider = new QSlider();
 // 		m_slider->setOrientation(Qt::Horizontal);
 // 		m_slider->setMaximum(m_videoProvider->duration());
 // 		connect(m_slider, SIGNAL(valueChanged(int)), this, SLOT(seek(int)));
-		
+
 // 		m_videoPollTimer.setInterval(250);
 // 		connect(&m_videoPollTimer, SIGNAL(timeout()), this, SLOT(pollVideoClock())); //, Qt::QueuedConnection);
 // 		m_videoPollTimer.start();
-		
+
 		QHBoxLayout *layout = new QHBoxLayout(m_controlBase);
 		layout->setMargin(0);
-		
-		
+
+
 		m_playBtn = new QPushButton(qApp->style()->standardIcon(QStyle::SP_MediaPlay),"",m_controlBase);
 		//m_playBtn->setEnabled(false);
 // 		m_playAction = new QAction(qApp->style()->standardIcon(QStyle::SP_MediaPlay), tr("Play"), m_controlBase);
 // 		m_playAction->setShortcut(tr("Crl+P"));
-		
+
 		m_pauseBtn = new QPushButton(qApp->style()->standardIcon(QStyle::SP_MediaPause),"",m_controlBase);
 		//m_pauseBtn->setEnabled(true);
 		//m_pauseAction = new QAction(qApp->style()->standardIcon(QStyle::SP_MediaPause), tr("Pause"), m_controlBase);
@@ -1511,59 +1523,59 @@ QWidget * BackgroundContent::controlWidget()
 
 		//m_playBtn->setEnabled(!m_startVideoPausedInPreview && !m_videoPlaying);
 		m_pauseBtn->setEnabled(m_startVideoPausedInPreview && m_videoPlaying);
-		
+
 		/// NOT showing Stop action right now because QVideo / QVideoDecoder have a "hard time" restarting playing after
 		// stop() is called. After stop() is called, then play(), then there is a large delay before video starts flowing
-		// again. 
-		
+		// again.
+
 // 		m_stopAction = new QAction(qApp->style()->standardIcon(QStyle::SP_MediaStop), tr("Stop"), m_controlBase);
 // 		m_stopAction->setShortcut(tr("Ctrl+S"));
-		
+
 // 		m_timeLcd = new QLCDNumber(m_controlBase);
-		
+
 		connect(m_playBtn,  SIGNAL(clicked()), this, SLOT(playBtnClicked()));
 		connect(m_pauseBtn, SIGNAL(clicked()), this, SLOT(pauseBtnClicked()));
 // 		connect(m_stopAction,  SIGNAL(triggered()), m_videoProvider->videoObject(), SLOT(stop()));
-		
+
 // 		QToolBar *bar = new QToolBar(m_controlBase);
-// 	
+//
 // 		bar->addAction(m_playAction);
 // 		bar->addAction(m_pauseAction);
 // 		bar->addAction(m_stopAction);
-		
+
 // 		layout->addWidget(bar);
-		
+
 		layout->addWidget(new QLabel(QString("Background: <b>%1</b>").arg(QFileInfo(m_videoProvider->canonicalFilePath()).fileName())));
 		layout->addWidget(m_playBtn);
 		layout->addWidget(m_pauseBtn);
 		layout->addStretch(1);
-		
+
 // 		layout->addWidget(m_slider);
 // 		layout->addWidget(m_timeLcd);
-		
-		
-		
-		
+
+
+
+
 		connect(m_controlBase, SIGNAL(destroyed()), this, SLOT(controlWidgetDestroyed()));
-		
+
 		return m_controlBase;
-		
+
 	}
 	else
 	{
 #ifdef PHONON_ENABLED
 		if(!m_player)
 			return 0;
-			
+
 		mediaObject = m_player->mediaObject();
-	
+
 		mediaObject->setTickInterval(1000);
-	
+
 		connect(mediaObject, SIGNAL(tick(qint64)), this, SLOT(phononTick(qint64)));
 		connect(mediaObject, SIGNAL(stateChanged(Phonon::State, Phonon::State)), this, SLOT(phononStateChanged(Phonon::State, Phonon::State)));
-		
+
 		QWidget * baseWidget = new QWidget;
-	
+
 		m_playAction = new QAction(qApp->style()->standardIcon(QStyle::SP_MediaPlay), tr("Play"), baseWidget);
 		m_playAction->setShortcut(tr("Crl+P"));
 		m_playAction->setDisabled(true);
@@ -1573,50 +1585,50 @@ QWidget * BackgroundContent::controlWidget()
 		m_stopAction = new QAction(qApp->style()->standardIcon(QStyle::SP_MediaStop), tr("Stop"), baseWidget);
 		m_stopAction->setShortcut(tr("Ctrl+S"));
 		m_stopAction->setDisabled(true);
-	
-	
+
+
 		connect(m_playAction, SIGNAL(triggered()), mediaObject, SLOT(play()));
 		connect(m_pauseAction, SIGNAL(triggered()), mediaObject, SLOT(pause()) );
 		connect(m_stopAction, SIGNAL(triggered()), mediaObject, SLOT(stop()));
-		
+
 		QToolBar *bar = new QToolBar(baseWidget);
-	
+
 		bar->addAction(playAction);
 		bar->addAction(pauseAction);
 		bar->addAction(stopAction);
-		
+
 		seekSlider = new Phonon::SeekSlider(baseWidget);
 		seekSlider->setMediaObject(mediaObject);
-		
+
 		volumeSlider = new Phonon::VolumeSlider(baseWidget);
 		volumeSlider->setAudioOutput(m_player->audioOutput());
-		
+
 		volumeSlider->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
-		
+
 		QLabel *volumeLabel = new QLabel(baseWidget);
 		volumeLabel->setPixmap(QPixmap(":/data/stock-volume.png"));
-		
+
 		QPalette palette;
 		palette.setBrush(QPalette::Light, Qt::darkGray);
-		
+
 		m_timeLcd = new QLCDNumber(baseWidget);
 		m_timeLcd->setPalette(palette);
-		
+
 		QHBoxLayout *playbackLayout = new QHBoxLayout(baseWidget);
 		playbackLayout->setMargin(0);
-		
+
 		playbackLayout->addWidget(bar);
 	// 	playbackLayout->addStretch();
 		playbackLayout->addWidget(seekSlider);
 		playbackLayout->addWidget(m_timeLcd);
-	
+
 		playbackLayout->addWidget(volumeLabel);
 		playbackLayout->addWidget(volumeSlider);
-		
-		m_timeLcd->display("00:00"); 
-		
+
+		m_timeLcd->display("00:00");
+
 		qDebug() << "BackgroundContent::controlWidget(): baseWidget:"<<baseWidget;
-		
+
 		return baseWidget;
 #else
 		return 0;

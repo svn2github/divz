@@ -189,6 +189,7 @@ unix {
 
 # static builds
 win32|macx {
+	include(3rdparty/qtdotnetstyle-2.3_1/qtdotnetstyle.pri)
 	contains(CONFIG, static)|contains(CONFIG, qt_no_framework) {
 		DEFINES  += STATIC_LINK
 		QTPLUGIN += qgif \
