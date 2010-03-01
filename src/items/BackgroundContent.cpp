@@ -992,7 +992,7 @@ void BackgroundContent::paint(QPainter * painter, const QStyleOptionGraphicsItem
 			else
 			{
 				//qDebug() << "BackgroundContent::paint:"<<modelItem()->itemName()<<": Painting video frame";
-				painter->save();
+				//painter->save();
 				//painter->setCompositionMode(QPainter::CompositionMode_DestinationOver);
 				//painter->setClipRect(option->exposedRect);
 
@@ -1003,7 +1003,7 @@ void BackgroundContent::paint(QPainter * painter, const QStyleOptionGraphicsItem
 				*/
 
 				painter->drawPixmap(cRect, m_pixmap);
-				painter->restore();
+				//painter->restore();
 
 			}
 		}

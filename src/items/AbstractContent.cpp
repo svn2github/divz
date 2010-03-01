@@ -663,7 +663,7 @@ void AbstractContent::paint(QPainter * painter, const QStyleOptionGraphicsItem *
 	const bool drawSelection = RenderOpts::HQRendering ? false : isSelected();
 	const QRect frameRect = m_frameRect.toRect();
 	
-	painter->setCompositionMode(QPainter::CompositionMode_SourceOver);
+// 	painter->setCompositionMode(QPainter::CompositionMode_SourceOver);
 
 	if (!m_frame)
 	{
