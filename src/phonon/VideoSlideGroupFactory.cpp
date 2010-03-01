@@ -161,14 +161,14 @@ void VideoSlideGroupViewControl::setSlideGroup(SlideGroup *g, Slide *curSlide, b
 	// specific function - such as setOutputControl(), etc - for now, this can be here, because we "know"
 	// that setSlideGroup will only be called once in the life of this view control due to program design
 	
-	OutputControl * ctrl = MainWindow::mw()->outputControl(view()->output()->id());
-	if(ctrl)
-	{
-		// we have control, connect to sync changed signal
-		connect(ctrl, SIGNAL(outputIsSyncedChanged(bool)), this, SLOT(outputIsSyncedChanged()));
-		// trigger the connection
-		outputIsSyncedChanged();
-	}
+// 	OutputControl * ctrl = MainWindow::mw()->outputControl(view()->output()->id());
+// 	if(ctrl)
+// 	{
+// 		// we have control, connect to sync changed signal
+// 		connect(ctrl, SIGNAL(outputIsSyncedChanged(bool)), this, SLOT(outputIsSyncedChanged()));
+// 		// trigger the connection
+// 		outputIsSyncedChanged();
+// 	}
 	
 	
 	connect(m_mediaObject, SIGNAL(tick(qint64)), this, SLOT(phononTick(qint64)));

@@ -136,7 +136,7 @@ protected:
 	bool m_isPreviewControl;
 	
 	QWidget  * m_itemControlBase;
-	QList<QWidget*> m_controlWidgets;
+	QList<QPointer<QWidget> > m_controlWidgets;
 	
 	int m_iconSize;
 	QSlider * m_iconSizeSlider;

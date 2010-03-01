@@ -780,11 +780,14 @@ void SlideGroupViewControl::slideChanged(Slide* newSlide)
 	//qDebug() << "SlideGroupViewControl::slideChanged(): newSlide:"<<newSlide;
 	while(!m_controlWidgets.isEmpty())
 	{
-		QWidget * widget = m_controlWidgets.takeFirst();
-//  		qDebug() << "SlideGroupViewControl::slideChanged(): removing widget:"<<widget;
-		m_itemControlBase->layout()->removeWidget(widget);
-		widget->deleteLater();
-		widget = 0;
+		QPointer<QWidget> widget = m_controlWidgets.takeFirst();
+		if(widget)
+		{
+	//  		qDebug() << "SlideGroupViewControl::slideChanged(): removing widget:"<<widget;
+			m_itemControlBase->layout()->removeWidget(widget);
+			widget->deleteLater();
+			widget = 0;
+		}
 	}
 	
 	QList<QWidget*> widgets = m_slideViewer->controlWidgets();
