@@ -1,5 +1,5 @@
-#ifndef CameraTest_h
-#define CameraTest_h
+#ifndef VideoTest_h
+#define VideoTest_h
 
 #include <QWidget>
 #include <QImage>
@@ -8,14 +8,15 @@
 
 #include <QGLWidget>
 
-class CameraThread;
-class CameraServer;
-class CameraTest : public QGLWidget
+class VideoThread;
+class CameraClient;
+
+class VideoTest : public QGLWidget
 {
 	Q_OBJECT
 public:
-	CameraTest();
-	~CameraTest();
+	VideoTest();
+	~VideoTest();
 
 public slots:
 	void newFrame(QImage);
@@ -27,11 +28,11 @@ protected:
 	void paintEvent(QPaintEvent*);
 
 private:
-	CameraThread * m_thread;
+	//VideoThread * m_thread;
+	CameraClient * m_client;
 	QImage m_frame;
-	CameraServer * m_server;
 };
 
 
 
-#endif //CameraTest_h
+#endif //VideoTest_h

@@ -4,6 +4,8 @@
 
 #include "CameraTest.h"
 #include "CameraThread.h"
+#include "CameraServer.h"
+#include <QPainter>
 
 CameraTest::CameraTest()
 	: QGLWidget()
@@ -16,6 +18,14 @@ CameraTest::CameraTest()
 
 	m_thread->setCamera("vfwcap://0");
 	m_thread->start();
+	
+	m_server = new CameraServer();
+	m_server->setProvider(m_thread, SIGNAL(newImage(QImage)));
+		
+	if (!m_server->listen(QHostAddress::Any,8088)) 
+	{
+		qDebug() << "CameraServer could not start: "<<m_server->errorString();
+	}
 
 	resize(320,240);
 
@@ -28,6 +38,9 @@ CameraTest::~CameraTest()
 	m_thread->wait();
 	delete m_thread;
 	m_thread = 0;
+	
+	delete m_server;
+	m_server = 0;
 }
 
 void CameraTest::newFrame(QImage frame)

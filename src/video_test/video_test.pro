@@ -1,20 +1,20 @@
 TEMPLATE = app
-TARGET = camera_test
+TARGET = video_test
 DEPENDPATH += .
 INCLUDEPATH += .
-QT += opengl  network
+QT += opengl network
 
 
 # Input
-HEADERS += CameraTest.h \
-	CameraThread.h \
-	CameraServer.h
+HEADERS += VideoTest.h \
+	VideoThread.h \
+	CameraClient.h
 	
 	
 SOURCES += main.cpp \
-	CameraTest.cpp \
-	CameraThread.cpp \
-	CameraServer.cpp
+	VideoTest.cpp \
+	VideoThread.cpp \
+	CameraClient.cpp
 
 
 unix {
