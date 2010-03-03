@@ -58,6 +58,8 @@ void CameraServerThread::run()
 	
 	//m_stream = new QDataStream(&m_buffer, QIODevice::WriteOnly);
 	m_buffer.setBuffer(&m_array);
+	m_buffer.open(QIODevice::WriteOnly);
+
 	
 	m_writer.setDevice(&m_buffer);
 	m_writer.setFormat("jpg");
@@ -73,7 +75,7 @@ void CameraServerThread::imageReady(QImage image)
 {
 	static int frameCounter=0;
 	frameCounter ++;
-	if(m_adaptiveWriteEnabled && m_socket->bytesToWrite() > 0)
+	if(m_adaptiveWriteEnabled && m_socket->bytesToWrite() > 100)
 	{
 		qDebug() << "CameraServerThread::imageReady():"<<m_socket->bytesToWrite()<<"bytes pending write on socket, not sending image"<<frameCounter;
 	}
@@ -84,7 +86,7 @@ void CameraServerThread::imageReady(QImage image)
 		
 		if(m_socket->state() == QAbstractSocket::ConnectedState)
 		{
-			m_socket->write("Content-type: image/jpeg\r\n\r\n");
+			//m_socket->write("Content-type: image/jpeg\r\n\r\n");
 		}
 		
 		if(!m_writer.write(image))
@@ -97,9 +99,11 @@ void CameraServerThread::imageReady(QImage image)
 		sprintf(data, "%d\n", m_array.size());
 		m_socket->write((const char*)&data,strlen((const char*)data));
 		//qDebug() << "block size: "<<strlen((const char*)data)<<", data:"<<data;
+		qDebug() << "frame size:"<<m_array.size();
 	
 		m_socket->write(m_array);
 		m_array.clear();
+		m_buffer.seek(0);
 	}
 
 }

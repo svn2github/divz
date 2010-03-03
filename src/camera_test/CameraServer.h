@@ -6,6 +6,7 @@
 #include <QTcpSocket>
 #include <QImageWriter>
 #include <QBuffer>
+#include <QImage>
 
 class CameraServer : public QTcpServer
 {
