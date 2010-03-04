@@ -9,12 +9,15 @@
 #include <QCloseEvent>
 #include <QFileInfo>
 #include <QCache>
+#include <QGLWidget>
 
 #include "MyGraphicsScene.h"
 
 #include "model/SlideGroup.h"
 
 #include "model/AbstractItemFilter.h"
+
+class BackgroundContent;
 
 class SlideGroupViewerGraphicsView;
 
@@ -318,6 +321,8 @@ private:
 	MyGraphicsScene::ContextHint m_contextHint;
 	
 	int m_outputId;
+	
+	BackgroundContent * m_bgContent;
 };
 
 #endif // SLIDEGROUPVIEWER_H

@@ -806,7 +806,7 @@ void OutputControl::setIsOutputSynced(bool flag)
 		setSyncSource(m_syncInst);
 	
 	
-	qDebug() << "OutputControl::setIsOutputSynced: flag:"<<flag;
+// 	qDebug() << "OutputControl::setIsOutputSynced: flag:"<<flag;
 	//qDebug() << "OutputControl::setViewControl: m_ctrl:"<<POINTER_STRING(m_ctrl)<<", m_syncWidget:"<<POINTER_STRING(m_syncWidget);
 	
 	if(m_ctrl)

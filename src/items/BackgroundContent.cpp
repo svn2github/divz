@@ -22,6 +22,8 @@
 #include <QMessageBox>
 #include <QApplication>
 
+#include "SlideGroupViewer.h"
+
 #include "qvideo/QVideoProvider.h"
 #include "3rdparty/md5/qtmd5.h"
 #include "MediaBrowser.h"
@@ -64,6 +66,7 @@ BackgroundContent::BackgroundContent(QGraphicsScene * scene, QGraphicsItem * par
 #endif
     , m_isUserPlaying(false)
     , m_isUserPaused(false)
+    , m_viewerWidget(0)
 {
 	m_dontSyncToModel = true;
 
@@ -336,7 +339,10 @@ void BackgroundContent::syncFromModelItem(AbstractVisualItem *model)
 
 	setZValue(-9999);
 	setVisible(true);
-	update();
+	if(m_viewerWidget)
+		m_viewerWidget->update();
+	else
+		update();
 
         m_dontSyncToModel = false;
 }
@@ -372,7 +378,10 @@ void BackgroundContent::animateZoom()
 	}
 	//qDebug() << "AnimateZoom: "<<PTR(this)<<modelItem()->itemName()<<": size:"<<m_zoomCurSize<<", step:"<<m_zoomStep;
 
-	update();
+	if(m_viewerWidget)
+		m_viewerWidget->update();
+	else
+		update();
 }
 
 #define BG_IMG_CACHE_DIR "dviz-backgroundimagecache"
@@ -723,7 +732,10 @@ void BackgroundContent::renderSvg()
 {
 	// not needed since we dont cache render or shadow in the background
 	//dirtyCache();
-	update();
+	if(m_viewerWidget)
+		m_viewerWidget->update();
+	else
+		update();
 }
 
 
@@ -784,11 +796,27 @@ QRectF BackgroundContent::boundingRect() const
 }
 
 
+void BackgroundContent::setViewerWidget(SlideGroupViewer *viewer)
+{
+	m_viewerWidget = viewer;
+}
+
 void BackgroundContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget)
 {
-	// paint parent
-	AbstractContent::paint(painter, option, widget);
+	if(m_viewerWidget && m_viewerWidget!=widget)
+	{
+		return;	
+	}
+	else
+	{
+		// paint parent
+		AbstractContent::paint(painter, option, widget);
+		paintBackground(painter,option->exposedRect.toRect());
+	}
+}
 
+void BackgroundContent::paintBackground(QPainter *painter, const QRect & exposedRect)
+{
 	QRect cRect = contentsRect();
 
 	painter->save();
@@ -956,7 +984,7 @@ void BackgroundContent::paint(QPainter * painter, const QStyleOptionGraphicsItem
 						}
 					}
 
-					painter->setClipRect(option->exposedRect);
+					painter->setClipRect(exposedRect);
 					painter->drawPixmap(cRect,cache);
 				}
 			}
@@ -996,7 +1024,7 @@ void BackgroundContent::paint(QPainter * painter, const QStyleOptionGraphicsItem
 				//qDebug() << "BackgroundContent::paint:"<<modelItem()->itemName()<<": Painting video frame";
 				//painter->save();
 				//painter->setCompositionMode(QPainter::CompositionMode_DestinationOver);
-				//painter->setClipRect(option->exposedRect);
+				//painter->setClipRect(exposedRect);
 
 				/*
 				QPixmap pm(m_pixmap.size());
@@ -1297,7 +1325,10 @@ void BackgroundContent::setPixmap(const QPixmap & pixmap)
 	if(m_imageSize != m_pixmap.size())
 		m_imageSize = m_pixmap.size();
 
-	update();
+	if(m_viewerWidget)
+		m_viewerWidget->update();
+	else
+		update();
 
 	if(((sceneContextHint() != MyGraphicsScene::Live &&
 	     sceneContextHint() != MyGraphicsScene::Preview)

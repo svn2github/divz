@@ -476,11 +476,11 @@ void QVideo::displayFrame()
 		//delete m_current_frame.frame;
 		//m_current_frame.frame = 0;
 	
-		//resume playing
-		if(status() == Running)
-			m_play_timer = startTimer(1);
 		//consumeFrame();
 	}
+	//resume playing
+	if(status() == Running)
+		m_play_timer = startTimer(1);
 }
 
 void QVideo::makeMovie()

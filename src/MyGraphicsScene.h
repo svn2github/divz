@@ -73,6 +73,8 @@ class MyGraphicsScene : public QGraphicsScene
 		AbstractContent * findVisualDelegate(AbstractItem *item);
 		QList<AbstractItem *> copyBuffer();
 		
+		BackgroundItem * backgroundItem() { return m_bg; }
+		
 		QList<AbstractContent *> abstractContent(bool onlyMasterItems = false);
 		
 		void configureContent(AbstractContent *content);

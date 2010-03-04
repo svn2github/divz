@@ -18,7 +18,7 @@
 #include "model/TextBoxItem.h"
 #include "model/BackgroundItem.h"
 #include "model/SlideGroupFactory.h"
-
+#include "items/BackgroundContent.h"
 #include "itemlistfilters/SlideTextOnlyFilter.h"
 #define PTRS(ptr) QString().sprintf("%p",static_cast<void*>(ptr))
 
@@ -229,6 +229,7 @@ int SlideGroupViewer::m_blackSlideRefCount = 0;
 
 SlideGroupViewer::SlideGroupViewer(QWidget *parent)
 	    : QWidget(parent)
+	    //: QGLWidget(QGLFormat(QGL::SampleBuffers), parent)
 	    , m_slideGroup(0)
 	    , m_scene(0)
 	    , m_view(0)
@@ -256,6 +257,7 @@ SlideGroupViewer::SlideGroupViewer(QWidget *parent)
 	    , m_forceGLDisabled(false)
 	    , m_outputId(0)
 	    , m_contextHint(MyGraphicsScene::Live)
+	    , m_bgContent(0)
 {
 	QRect sceneRect(0,0,1024,768);
 	m_blackSlideRefCount++;
@@ -316,6 +318,15 @@ void SlideGroupViewer::paintEvent(QPaintEvent *)
 {
 	QPainter p(this);
 	p.fillRect(rect(), Qt::yellow);
+	p.save();
+	QRect bgRect = m_view->mapFromScene(m_scene->sceneRect()).boundingRect();
+	p.setTransform(m_view->transform());
+	if(m_bgContent)
+	{
+		//const QRectF sr = ;
+		m_bgContent->paintBackground(&p,m_scene->sceneRect().toRect());
+	}
+	p.restore();
 	static int cnt =0;
 	cnt++;
 	p.drawText(10,10,QString::number(cnt));
@@ -1260,6 +1271,14 @@ void SlideGroupViewer::setSlideInternal(Slide *slide)
 	//qDebug() << "SlideGroupViewer::setSlideInternal(): Slide# "<<slide->slideNumber()<<": Have slide group, setting slide ptr:"<<slide;
 	m_scene->setSlide(slide,m_isPreviewViewer ? MyGraphicsScene::None : MyGraphicsScene::CrossFade,speed,quality);
 	//qDebug() << "SlideGroupViewer::setSlideInternal(): Slide# "<<slide->slideNumber()<<": setSlide() completed";
+	
+	AbstractContent * absBg = m_scene->findVisualDelegate(m_scene->backgroundItem());
+	if(absBg)
+	{
+		
+// 		m_bgContent = dynamic_cast<BackgroundContent *>(absBg);
+// 		m_bgContent->setViewerWidget(this);
+	}
 }
 
 void SlideGroupViewer::fadeBlackFrame(bool enable)

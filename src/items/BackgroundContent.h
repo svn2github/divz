@@ -18,6 +18,7 @@ namespace Phonon {
 #include <QLCDNumber>
 
 class QPushButton;
+class SlideGroupViewer;
 	
 class BackgroundItem;
 class BackgroundImageWarmingThread : public QThread
@@ -84,11 +85,15 @@ class BackgroundContent : public AbstractContent, public QVideoConsumer
 	
 	// ::QGraphicsItem
 	void paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget = 0);
+	void paintBackground(QPainter *, const QRect & exposedRect = QRect());
 	
 	QWidget * controlWidget();
 	
 	bool startVideoPausedInPreview() { return m_startVideoPausedInPreview; }
 	void setStartVideoPausedInPreview(bool flag) { m_startVideoPausedInPreview = flag; }
+	
+	void setViewerWidget(SlideGroupViewer*);
+	SlideGroupViewer * viewerWidget() { return m_viewerWidget; }
 	
     protected:
     	friend class BackgroundImageWarmingThread;
@@ -187,6 +192,8 @@ class BackgroundContent : public AbstractContent, public QVideoConsumer
 #endif
 	bool m_isUserPlaying;
 	bool m_isUserPaused;
+	
+	SlideGroupViewer *m_viewerWidget;
 	
 };
 
