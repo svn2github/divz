@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>942</width>
+    <width>822</width>
     <height>465</height>
    </rect>
   </property>
@@ -25,7 +25,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>942</width>
+     <width>822</width>
      <height>25</height>
     </rect>
    </property>
@@ -149,9 +149,11 @@
    <addaction name="actionSlide_Group_Properties"/>
    <addaction name="actionDelete_Slide_Group"/>
    <addaction name="separator"/>
-   <addaction name="actionImages_Import_Tool"/>
-   <addaction name="actionText_Import_Tool"/>
+   <addaction name="actionImport_Slide_Group"/>
    <addaction name="actionAdd_PowerPoint_File"/>
+   <addaction name="actionAdd_Group_Player"/>
+   <addaction name="actionAdd_Video_File"/>
+   <addaction name="actionAdd_Web_Page"/>
    <addaction name="separator"/>
    <addaction name="actionToggle_Live_Output"/>
   </widget>

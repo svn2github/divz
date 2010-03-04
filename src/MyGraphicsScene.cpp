@@ -650,7 +650,8 @@ void MyGraphicsScene::slotTransitionStep()
 		//if(DEBUG_MYGRAPHICSSCENE)
 		//	qDebug()<<"MyGraphicsScene::slotTransitionStep(): [STEP BEGIN] step"<<m_fadeStepCounter<<"/"<<m_fadeSteps;
 		double inc = (double)1 / m_fadeSteps;
-		//m_fadeRoot->setOpacity(m_fadeRoot->opacity() - inc);
+		if(!m_bg || m_bg->fillType() == AbstractVisualItem::None)
+			m_fadeRoot->setOpacity(m_fadeRoot->opacity() - inc);
 		#if QT46_OPAC_ENAB > 0
 			QGraphicsOpacityEffect * opac = dynamic_cast<QGraphicsOpacityEffect*>(m_liveRoot->graphicsEffect()); 
 			if(opac) 

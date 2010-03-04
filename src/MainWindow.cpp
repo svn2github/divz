@@ -161,8 +161,10 @@ MainWindow::MainWindow(QWidget *parent) :
 	
 	//m_ui->actionImport_Slide_Group->setIcon(QIcon(":data/insert-text-24.png"));
 	connect(m_ui->actionImport_Slide_Group, SIGNAL(triggered()), this, SLOT(importSlideGroup()));
+	m_ui->actionImport_Slide_Group->setIcon(QIcon(":/data/stock-download.png"));
 	
 	connect(m_ui->actionAdd_Group_Player, SIGNAL(triggered()), this, SLOT(addGroupPlayer()));
+	m_ui->actionAdd_Group_Player->setIcon(QIcon(":/data/stock-history.png"));
 
 	connect(m_ui->actionToggle_Live_Output, SIGNAL(triggered()), this, SLOT(actionToggleLiveOutput()));
 
@@ -173,13 +175,17 @@ MainWindow::MainWindow(QWidget *parent) :
 	#else
 		m_ui->actionAdd_PowerPoint_File->setVisible(false);
 	#endif
+	
+	
 
 	// Disabling PPT for now till bugs can be fixed
 	//m_ui->actionAdd_PowerPoint_File->setVisible(false);
 	
 	connect(m_ui->actionAdd_Video_File, SIGNAL(triggered()), this, SLOT(actionAddVideo()));
 	connect(m_ui->actionAdd_Web_Page, SIGNAL(triggered()), this, SLOT(actionAddWeb()));
-
+	
+	m_ui->actionAdd_Video_File->setIcon(QIcon(":/data/stock-panel-multimedia.png"));
+	m_ui->actionAdd_Web_Page->setIcon(QIcon(":/data/url-icon.png"));
 
 	foreach(QAction *action, actionList)
 	{
@@ -1278,17 +1284,17 @@ void MainWindow::setupOutputControls()
 		}
 		else
 		{
-// 			QDockWidget *dock = new QDockWidget(QString(tr("%1 View")).arg(output->name()), this);
-// 			dock->setObjectName(output->name());
-// 
-// 			OutputInstance *inst = outputInst(output->id());
-// 			OutputViewer *view = new OutputViewer(inst,dock);
-// 			dock->setWidget(view);
-// 			addDockWidget(Qt::RightDockWidgetArea, dock);
-// 
-// 			m_outputViewDocks[output->id()] = dock;
-// 
-// 			dock->setVisible(output->isEnabled());
+			QDockWidget *dock = new QDockWidget(QString(tr("%1 View")).arg(output->name()), this);
+			dock->setObjectName(output->name());
+
+			OutputInstance *inst = outputInst(output->id());
+			OutputViewer *view = new OutputViewer(inst,dock);
+			dock->setWidget(view);
+			addDockWidget(Qt::RightDockWidgetArea, dock);
+
+			m_outputViewDocks[output->id()] = dock;
+
+			dock->setVisible(output->isEnabled());
 		}
 	}
 }
@@ -1309,7 +1315,7 @@ void MainWindow::groupSelected(const QModelIndex &idx)
 {
 	SlideGroup *s = m_docModel->groupFromIndex(idx);
         //qDebug() << "MainWindow::groupSelected(): selected group#:"<<s->groupNumber()<<", title:"<<s->groupTitle();
-	//previewSlideGroup(s);
+	previewSlideGroup(s);
 	m_ui->actionEdit_Slide_Group->setEnabled(true);
 	m_ui->actionDelete_Slide_Group->setEnabled(true);
 	m_ui->actionSlide_Group_Properties->setEnabled(true);

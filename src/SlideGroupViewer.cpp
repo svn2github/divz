@@ -18,7 +18,7 @@
 #include "model/TextBoxItem.h"
 #include "model/BackgroundItem.h"
 #include "model/SlideGroupFactory.h"
-#include "items/BackgroundContent.h"
+
 #include "itemlistfilters/SlideTextOnlyFilter.h"
 #define PTRS(ptr) QString().sprintf("%p",static_cast<void*>(ptr))
 
@@ -229,7 +229,6 @@ int SlideGroupViewer::m_blackSlideRefCount = 0;
 
 SlideGroupViewer::SlideGroupViewer(QWidget *parent)
 	    : QWidget(parent)
-	    //: QGLWidget(QGLFormat(QGL::SampleBuffers), parent)
 	    , m_slideGroup(0)
 	    , m_scene(0)
 	    , m_view(0)
@@ -257,7 +256,6 @@ SlideGroupViewer::SlideGroupViewer(QWidget *parent)
 	    , m_forceGLDisabled(false)
 	    , m_outputId(0)
 	    , m_contextHint(MyGraphicsScene::Live)
-	    , m_bgContent(0)
 {
 	QRect sceneRect(0,0,1024,768);
 	m_blackSlideRefCount++;
@@ -286,15 +284,6 @@ SlideGroupViewer::SlideGroupViewer(QWidget *parent)
 	m_scene = new MyGraphicsScene(m_contextHint);
 	m_scene->setSceneRect(sceneRect);
 	m_view->setScene(m_scene);
-	
-	//m_scene->setBackgroundBrush(Qt::NoBrush);
-	QBrush brBrush;
-	QPalette palette(brBrush,brBrush,brBrush,brBrush,brBrush,brBrush,brBrush,brBrush,brBrush);
-	m_view->viewport()->setPalette(palette);
-	//m_view->viewport()->setWindowFlags(Qt::FramelessWindowHint | Qt::WindowSystemMenuHint);
-	//m_view->viewport()->setAttribute(Qt::WA_TranslucentBackground);
-	//m_view->viewport()->setFrameShape(QFrame::NoFrame);
-
 
 	// inorder to set the background on the rest of the slides if asked to set background on next live slide
 	connect(m_scene, SIGNAL(crossFadeFinished(Slide*,Slide*)), this, SLOT(crossFadeFinished(Slide*,Slide*)));
@@ -304,33 +293,16 @@ SlideGroupViewer::SlideGroupViewer(QWidget *parent)
 
 	connect(&m_nativeCheckTimer, SIGNAL(timeout()), this, SLOT(checkCurrentNativeSlide()));
 
+// 	m_view->setBackgroundBrush(Qt::green); 
+
 	QVBoxLayout *layout = new QVBoxLayout();
 	layout->setContentsMargins(0,0,0,0);
 	layout->addWidget(m_view);
 	setLayout(layout);
 
-	QPalette p;
-	p.setColor(QPalette::Window, Qt::black);
-	setPalette(p);
-}
-
-void SlideGroupViewer::paintEvent(QPaintEvent *)
-{
-	QPainter p(this);
-	p.fillRect(rect(), Qt::yellow);
-	p.save();
-	QRect bgRect = m_view->mapFromScene(m_scene->sceneRect()).boundingRect();
-	p.setTransform(m_view->transform());
-	if(m_bgContent)
-	{
-		//const QRectF sr = ;
-		m_bgContent->paintBackground(&p,m_scene->sceneRect().toRect());
-	}
-	p.restore();
-	static int cnt =0;
-	cnt++;
-	p.drawText(10,10,QString::number(cnt));
-	update();
+// 	QPalette p;
+// 	p.setColor(QPalette::Window, Qt::black);
+// 	setPalette(p);
 }
 
 bool SlideGroupViewer::canZoom() { return m_view->canZoom(); }
@@ -732,16 +704,22 @@ void SlideGroupViewer::appSettingsChanged()
 	if(!m_usingGL && !m_forceGLDisabled && AppSettings::useOpenGL())
 	{
 		m_usingGL = true;
-		//m_view->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
+		m_view->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
 		//qDebug("SlideGroupViewer::appSettingsChanged(): Loaded OpenGL Viewport");
 	}
 	else
 	if(m_usingGL && (m_forceGLDisabled || !AppSettings::useOpenGL()))
 	{
 		m_usingGL = false;
-		//m_view->setViewport(new QWidget());
+		m_view->setViewport(new QWidget());
 		//qDebug("SlideGroupViewer::appSettingsChanged(): Loaded Non-GL Viewport");
 	}
+	
+	//QBrush brBrush;
+	//QPalette palette(brBrush,brBrush,brBrush,brBrush,brBrush,brBrush,brBrush,brBrush,brBrush);
+	QPalette p;
+	p.setBrush(QPalette::Window, QBrush());
+	m_view->viewport()->setPalette(p);
 }
 
 void SlideGroupViewer::aspectRatioChanged(double x)
@@ -1271,14 +1249,6 @@ void SlideGroupViewer::setSlideInternal(Slide *slide)
 	//qDebug() << "SlideGroupViewer::setSlideInternal(): Slide# "<<slide->slideNumber()<<": Have slide group, setting slide ptr:"<<slide;
 	m_scene->setSlide(slide,m_isPreviewViewer ? MyGraphicsScene::None : MyGraphicsScene::CrossFade,speed,quality);
 	//qDebug() << "SlideGroupViewer::setSlideInternal(): Slide# "<<slide->slideNumber()<<": setSlide() completed";
-	
-	AbstractContent * absBg = m_scene->findVisualDelegate(m_scene->backgroundItem());
-	if(absBg)
-	{
-		
-// 		m_bgContent = dynamic_cast<BackgroundContent *>(absBg);
-// 		m_bgContent->setViewerWidget(this);
-	}
 }
 
 void SlideGroupViewer::fadeBlackFrame(bool enable)
