@@ -166,7 +166,7 @@ class SlideGroupViewerGraphicsView : public QGraphicsView
 			, m_canZoom(false)
 		{
 			setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing | QPainter::SmoothPixmapTransform );
-			setCacheMode(QGraphicsView::CacheBackground);
+			//setCacheMode(QGraphicsView::CacheBackground);
 			setViewportUpdateMode(QGraphicsView::BoundingRectViewportUpdate);
 			setOptimizationFlags(QGraphicsView::DontSavePainterState);
 			setViewportUpdateMode(QGraphicsView::SmartViewportUpdate);
@@ -284,6 +284,15 @@ SlideGroupViewer::SlideGroupViewer(QWidget *parent)
 	m_scene = new MyGraphicsScene(m_contextHint);
 	m_scene->setSceneRect(sceneRect);
 	m_view->setScene(m_scene);
+	
+	//m_scene->setBackgroundBrush(Qt::NoBrush);
+	QBrush brBrush;
+	QPalette palette(brBrush,brBrush,brBrush,brBrush,brBrush,brBrush,brBrush,brBrush,brBrush);
+	m_view->viewport()->setPalette(palette);
+	//m_view->viewport()->setWindowFlags(Qt::FramelessWindowHint | Qt::WindowSystemMenuHint);
+	//m_view->viewport()->setAttribute(Qt::WA_TranslucentBackground);
+	//m_view->viewport()->setFrameShape(QFrame::NoFrame);
+
 
 	// inorder to set the background on the rest of the slides if asked to set background on next live slide
 	connect(m_scene, SIGNAL(crossFadeFinished(Slide*,Slide*)), this, SLOT(crossFadeFinished(Slide*,Slide*)));
@@ -293,8 +302,6 @@ SlideGroupViewer::SlideGroupViewer(QWidget *parent)
 
 	connect(&m_nativeCheckTimer, SIGNAL(timeout()), this, SLOT(checkCurrentNativeSlide()));
 
-	//m_view->setBackgroundBrush(Qt::black);
-
 	QVBoxLayout *layout = new QVBoxLayout();
 	layout->setContentsMargins(0,0,0,0);
 	layout->addWidget(m_view);
@@ -303,6 +310,16 @@ SlideGroupViewer::SlideGroupViewer(QWidget *parent)
 	QPalette p;
 	p.setColor(QPalette::Window, Qt::black);
 	setPalette(p);
+}
+
+void SlideGroupViewer::paintEvent(QPaintEvent *)
+{
+	QPainter p(this);
+	p.fillRect(rect(), Qt::yellow);
+	static int cnt =0;
+	cnt++;
+	p.drawText(10,10,QString::number(cnt));
+	update();
 }
 
 bool SlideGroupViewer::canZoom() { return m_view->canZoom(); }
@@ -704,14 +721,14 @@ void SlideGroupViewer::appSettingsChanged()
 	if(!m_usingGL && !m_forceGLDisabled && AppSettings::useOpenGL())
 	{
 		m_usingGL = true;
-		m_view->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
+		//m_view->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
 		//qDebug("SlideGroupViewer::appSettingsChanged(): Loaded OpenGL Viewport");
 	}
 	else
 	if(m_usingGL && (m_forceGLDisabled || !AppSettings::useOpenGL()))
 	{
 		m_usingGL = false;
-		m_view->setViewport(new QWidget());
+		//m_view->setViewport(new QWidget());
 		//qDebug("SlideGroupViewer::appSettingsChanged(): Loaded Non-GL Viewport");
 	}
 }

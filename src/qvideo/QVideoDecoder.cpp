@@ -10,6 +10,12 @@ extern "C" {
 
 #define SDL_AUDIO_BUFFER_SIZE 1024
 
+#if defined(Q_OS_WIN)
+	#define RAW_PIX_FMT PIX_FMT_BGR565
+#else 
+	#define RAW_PIX_FMT PIX_FMT_RGB565
+#endif
+
 //uint64_t global_video_pkt_pts = AV_NOPTS_VALUE;
 
 /* These are called whenever we allocate a frame
@@ -219,7 +225,7 @@ bool QVideoDecoder::load(const QString & filename)
 
 	// Determine required buffer size and allocate buffer
 	//int num_bytes = avpicture_get_size(PIX_FMT_RGB32, m_video_codec_context->width, m_video_codec_context->height);
-	int num_bytes = avpicture_get_size(PIX_FMT_BGR565, m_video_codec_context->width, m_video_codec_context->height);
+	int num_bytes = avpicture_get_size(RAW_PIX_FMT, m_video_codec_context->width, m_video_codec_context->height);
 
 
 	m_buffer = (uint8_t *)av_malloc(num_bytes * sizeof(uint8_t));
@@ -227,7 +233,7 @@ bool QVideoDecoder::load(const QString & filename)
 	// Assign appropriate parts of buffer to image planes in pFrameRGB
 	// Note that pFrameRGB is an AVFrame, but AVFrame is a superset of AVPicture
 	//avpicture_fill((AVPicture *)m_av_rgb_frame, m_buffer, PIX_FMT_RGB32, m_video_codec_context->width, m_video_codec_context->height);
-	avpicture_fill((AVPicture *)m_av_rgb_frame, m_buffer, PIX_FMT_BGR565, m_video_codec_context->width, m_video_codec_context->height);
+	avpicture_fill((AVPicture *)m_av_rgb_frame, m_buffer, RAW_PIX_FMT, m_video_codec_context->width, m_video_codec_context->height);
 
 	if(m_audio_stream != -1)
 	{
@@ -450,7 +456,7 @@ void QVideoDecoder::decode()
 							m_video_codec_context->pix_fmt,
 							m_video_codec_context->width, m_video_codec_context->height,
 							//PIX_FMT_RGB32,SWS_BICUBIC,
-							PIX_FMT_BGR565, SWS_FAST_BILINEAR,
+							RAW_PIX_FMT, SWS_FAST_BILINEAR,
 							NULL, NULL, NULL); //SWS_PRINT_INFO
 						mutex.unlock();
 						//printf("decode(): created m_sws_context\n");

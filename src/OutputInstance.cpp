@@ -65,7 +65,7 @@ OutputInstance::OutputInstance(Output *out, bool startHidden, QWidget *parent)
 	layout->setContentsMargins(0,0,0,0);
 	
 	m_viewer = new SlideGroupViewer(this);
-	m_viewer->setBackground(Qt::black);
+// 	m_viewer->setBackground(Qt::black);
 	m_viewer->setCursor(Qt::BlankCursor);
 	m_viewer->setOutputId(out->id());
 	connect(m_viewer, SIGNAL(nextGroup()), this, SLOT(slotNextGroup()));

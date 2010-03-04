@@ -468,16 +468,19 @@ void QVideo::displayFrame()
 //         }
 
         m_last_frame_shown = m_frame_counter;
-        QImage img = *m_current_frame.frame;
-	emit newPixmap(QPixmap::fromImage(img));
-
- 	//delete m_current_frame.frame;
- 	//m_current_frame.frame = 0;
-
-	//resume playing
-	if(status() == Running)
-		m_play_timer = startTimer(1);
-        //consumeFrame();
+        if(m_current_frame.frame)
+        {
+		QImage img = *m_current_frame.frame;
+		emit newPixmap(QPixmap::fromImage(img));
+	
+		//delete m_current_frame.frame;
+		//m_current_frame.frame = 0;
+	
+		//resume playing
+		if(status() == Running)
+			m_play_timer = startTimer(1);
+		//consumeFrame();
+	}
 }
 
 void QVideo::makeMovie()

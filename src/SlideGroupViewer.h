@@ -234,6 +234,7 @@ private slots:
 protected:
 	void resizeEvent(QResizeEvent *);
 	void closeEvent(QCloseEvent *);
+	void paintEvent(QPaintEvent *);
  
 	void adjustViewScaling();
 

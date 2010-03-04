@@ -966,7 +966,9 @@ void BackgroundContent::paint(QPainter * painter, const QStyleOptionGraphicsItem
 	{
 		if(m_imageSize.width() <= 0)
 		{
-			painter->fillRect(cRect,QBrush(Qt::gray));
+// 			painter->fillRect(cRect,QBrush(Qt::gray));
+
+// 			painter->fillRect(QRect(0,0,1024/2,768/2),QBrush(Qt::gray));
 		}
 		else
 		{

@@ -198,6 +198,14 @@ MainWindow::MainWindow(QWidget *parent) :
 
 	if(AppSettings::httpControlEnabled())
 		m_controlServer = new ControlServer(AppSettings::httpControlPort(),this);
+		
+// 	SlideGroupViewer *sg = new SlideGroupViewer();
+// 	QRect geom(450,0,640,480);
+// 	sg->resize(geom.width(),geom.height());
+// 	sg->move(geom.left(),geom.top());
+// 	sg->show();
+//  	if(m_doc->at(0))
+//  		sg->setSlideGroup(m_doc->at(0));
 }
 
 
