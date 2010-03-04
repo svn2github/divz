@@ -166,16 +166,16 @@ MainWindow::MainWindow(QWidget *parent) :
 
 	connect(m_ui->actionToggle_Live_Output, SIGNAL(triggered()), this, SLOT(actionToggleLiveOutput()));
 
-	/*
+
 	#ifdef WIN32_PPT_ENABLED
 		m_ui->actionAdd_PowerPoint_File->setIcon(QIcon(":data/insert-ppt-24.png"));
 		connect(m_ui->actionAdd_PowerPoint_File, SIGNAL(triggered()), this, SLOT(actionAddPPT()));
 	#else
 		m_ui->actionAdd_PowerPoint_File->setVisible(false);
 	#endif
-	*/
+
 	// Disabling PPT for now till bugs can be fixed
-	m_ui->actionAdd_PowerPoint_File->setVisible(false);
+	//m_ui->actionAdd_PowerPoint_File->setVisible(false);
 	
 	connect(m_ui->actionAdd_Video_File, SIGNAL(triggered()), this, SLOT(actionAddVideo()));
 	connect(m_ui->actionAdd_Web_Page, SIGNAL(triggered()), this, SLOT(actionAddWeb()));

@@ -6,6 +6,7 @@
 #include "CameraThread.h"
 #include "CameraServer.h"
 #include <QPainter>
+#include <QApplication>
 
 CameraTest::CameraTest()
 	: QGLWidget()
@@ -27,7 +28,7 @@ CameraTest::CameraTest()
 		qDebug() << "CameraServer could not start: "<<m_server->errorString();
 	}
 
-	resize(320,240);
+	resize(100,100);
 
 	emit readyForNextFrame();
 }
@@ -48,7 +49,11 @@ void CameraTest::newFrame(QImage frame)
 	m_frame = frame;
 	if(frame.size().width() > size().width() ||
 	    frame.size().height() > size().height() )
-		resize(frame.size());
+	{
+		//qDebug() << "Frame Size:"<<frame.size();
+		//resize(frame.size());
+		resize(QSize(1024,768));
+	}
 	repaint();
 	QTimer::singleShot(0,this,SIGNAL(readyForNextFrame()));
 }
@@ -56,5 +61,7 @@ void CameraTest::newFrame(QImage frame)
 void CameraTest::paintEvent(QPaintEvent*)
 {
 	QPainter p(this);
+	p.setRenderHint(QPainter::SmoothPixmapTransform);
+	p.setRenderHint(QPainter::Antialiasing);
 	p.drawImage(rect(),m_frame);
 }

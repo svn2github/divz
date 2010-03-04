@@ -54,7 +54,7 @@ public:
 
 private slots:
 	void axException(int,QString,QString,QString);
-
+	void recheckNumSlides();
 private:
 	void setupScripts();
 

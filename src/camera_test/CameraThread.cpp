@@ -63,7 +63,10 @@ int CameraThread::initCamera()
 
 	formatParams.time_base.num = 1;
 	formatParams.time_base.den = 35; //25;
-
+	//formatParams.width = 352;
+	//formatParams.height = 288;
+	//formatParams.channel = 0;
+	//formatParams.pix_fmt = PIX_FMT_RGB24 ;
 
 
 	// Open video file
@@ -74,6 +77,9 @@ int CameraThread::initCamera()
 		qDebug() << "[WARN] CameraThread::load(): av_open_input_file() failed, fileTmp:"<<fileTmp;
 		return false;
 	}
+
+	//dump_format(m_av_format_context, 0, qPrintable(m_cameraFile), 0);
+
 
 	uint i;
 
@@ -127,6 +133,8 @@ int CameraThread::initCamera()
 		qDebug() << "[WARN] CameraThread::load(): avcodec_alloc_frame() failed.";
 		return false;
 	}
+
+	qDebug() << "[DEBUG] codec context size:"<<m_video_codec_context->width<<"x"<<m_video_codec_context->height;
 
 	// Determine required buffer size and allocate buffer
 	int num_bytes = avpicture_get_size(PIX_FMT_BGR565, m_video_codec_context->width, m_video_codec_context->height);

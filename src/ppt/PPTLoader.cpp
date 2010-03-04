@@ -1,6 +1,7 @@
 #include "PPTLoader.h"
 #include <QDebug>
 #include <QFile>
+#include <QTimer>
 
 #ifdef WIN32_PPT_ENABLED
 	#include "powerpointviewer.h"
@@ -185,18 +186,45 @@ void PPTLoader::openPPT()
 #endif
 }
 
+void PPTLoader::recheckNumSlides()
+{
+#ifdef WIN32_PPT_ENABLED
+	qDebug() << "PPTLoader::recheckNumSlides ...";
+	m_numSlides = m_script->Eval("Global.numSlides()").toInt();;
+	if(m_numSlides > 0)
+	{
+		qDebug() << "PPTLoader::recheckNumSlides: No more checks needed, got num slide: "<<m_numSlides;
+		return;
+	}
+	else
+	{
+		qDebug() << "PPTLoader::recheckNumSlides: num slides STILL not good, setting timeout";
+		QTimer::singleShot(1000,this,SLOT(recheckNumSlides()));
+	}
+#endif
+}
+
 void PPTLoader::openFile(const QString& file)
 {
 #ifdef WIN32_PPT_ENABLED
 	qDebug() << "PPTLoader::openFile: "<<file;
 	m_script->ExecuteStatement(QString("Global.openFile('%1')").arg(file));
-
+	recheckNumSlides();
+	/*
 	m_numSlides = m_script->Eval("Global.numSlides()").toInt();;
 	if(m_numSlides > 0)
 	{
 		qDebug() << "PPTLoader::openFile: No hack needed, got num slide: "<<m_numSlides;
 		return;
 	}
+	else
+	{
+		qDebug() << "PPTLoader::openFile: num slides no good, setting timeout";
+		QTimer::singleShot(1000,this,SLOT(recheckNumSlides()));
+	}
+	*/
+	/*
+	qDebug() << "PPTLoader::openFile: File open, loading viewer to get slides.";
 
 	// Why in the WORLD am I calling the PowerPoint*VIEWER* when I've got a perfectly good OLE connection
 	// via MSScriptControl to PowerPoint itself???
@@ -218,6 +246,7 @@ void PPTLoader::openFile(const QString& file)
 
 	show->Exit();
 	ppt.Quit();
+	*/
 #endif
 }
 
