@@ -13,6 +13,9 @@
 class VideoThread;
 class CameraClient;
 
+#include "QPainterVideoSurface.h"
+#include <QtMultimedia/qvideosurfaceformat.h>
+
 
 class QGraphicsView2 : public QGraphicsView
 {
@@ -43,18 +46,28 @@ public:
 
 public slots:
 	void newFrame(QImage);
+	void formatChanged(const QVideoSurfaceFormat &);
 
 signals:
 	void readyForNextFrame();
 
 protected:
 	void paintEvent(QPaintEvent*);
+	void resizeEvent(QResizeEvent*) { updateRects(); } // HACK
 
 private:
+	void updateRects();
+	
 	VideoThread * m_thread;
 	CameraClient * m_client;
 	QImage m_frame;
 	QGraphicsView2 *m_view;
+	QPainterVideoSurface *m_surface;
+	QRectF m_boundingRect;
+	QRectF m_sourceRect;
+	bool m_updatePaintDevice;
+	QSize m_videoNativeSize;
+	Qt::AspectRatioMode m_aspectRatioMode;
 };
 
 
