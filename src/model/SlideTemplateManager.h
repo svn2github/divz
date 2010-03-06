@@ -26,7 +26,7 @@ private:
 	
 public:
 	static SlideTemplateManager * instance() { return m_staticInstance; }
-
+	
 	typedef enum TemplateType
 	{
 		Generic,
@@ -34,6 +34,8 @@ public:
 		Songs,
 		Logo
 	};
+
+	static QString typeToString(TemplateType);
 
 	Document * templateDocument(TemplateType);
 	SlideGroup * findTemplate(TemplateType type, int groupId);
@@ -52,7 +54,7 @@ class TemplateSelectorWidget : public QWidget
 {
 	Q_OBJECT
 public:
-	TemplateSelectorWidget(SlideTemplateManager::TemplateType type = SlideTemplateManager::Generic, const QString& labelText = "Template:", QWidget *parent=0);
+	TemplateSelectorWidget(SlideTemplateManager::TemplateType type = SlideTemplateManager::Generic, const QString& labelText = "Style:", QWidget *parent=0);
 	~TemplateSelectorWidget();
 	
 	SlideGroup * selectedGroup();

@@ -577,6 +577,7 @@ QImage * BackgroundContent::internalLoadFile(QString file,QString cacheKey, QRec
 
 		if(!image.isNull())
 		{
+// 			qDebug() << "BackgroundContent::setImageFile: file:"<<file<<": loading from DISK";
 			// Re-render the image if AR difference between Image and Item is greater than X%
 			// TODO: Make the handling of a mistmatched AR user-selectable a la Windows Desktop Background dialog:
 			// The options could be: If picture size different than slide, either (A) stretch - default,
@@ -592,7 +593,7 @@ QImage * BackgroundContent::internalLoadFile(QString file,QString cacheKey, QRec
 
 			double diff = fabs(imageAr - itemAr);
 			double percentDiff = diff / imageAr;
-			if(percentDiff > 0.125) // arbitrary difference
+			if(percentDiff > 0.05) //0.125) // arbitrary difference
 			{
 				// Repaint image with image centered at original ar, with field of black around it
 
@@ -624,12 +625,12 @@ QImage * BackgroundContent::internalLoadFile(QString file,QString cacheKey, QRec
 
 				image = newImage;
 
-				//qDebug() << "Fixing AR difference, imageAr:"<<imageAr<<", itemAr:"<<itemAr<<",diff:"<<diff<<",precentDiff:"<<percentDiff<<", targetRect:"<<targetRect<<", imageSize:"<<imageSize<<",rect:"<<rect;
+// 				qDebug() << "Fixing AR difference, imageAr:"<<imageAr<<", itemAr:"<<itemAr<<",diff:"<<diff<<",precentDiff:"<<percentDiff<<", targetRect:"<<targetRect<<", imageSize:"<<imageSize<<",rect:"<<rect;
 
 			}
 			else
 			{
-				//qDebug() << "[NOT] Fixing AR difference, imageAr:"<<imageAr<<", itemAr:"<<itemAr<<",diff:"<<diff<<",precentDiff:"<<percentDiff;
+// 				qDebug() << "[NOT] Fixing AR difference, imageAr:"<<imageAr<<", itemAr:"<<itemAr<<",diff:"<<diff<<",precentDiff:"<<percentDiff;
 			}
 
 			cache = new QImage(image.scaled(size,Qt::IgnoreAspectRatio,Qt::SmoothTransformation));

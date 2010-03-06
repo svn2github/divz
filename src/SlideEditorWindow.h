@@ -56,6 +56,8 @@ public:
 	MyGraphicsScene * scene() { return m_scene; }
 	SlideGroup * slideGroup() { return m_slideGroup; } 
 	
+	int iconSize() { return m_iconSize; }
+	
 public slots:
 	void setSlideGroup(SlideGroup*g,Slide *curSlide=0);
 	void setCurrentSlide(Slide *slide);
@@ -137,6 +139,8 @@ private slots:
 	
 	void repaintSlideList();
 	
+	void setIconSize(int);
+	
 private:
 	void setupSlideList();
 	void setupViewportLines();
@@ -205,6 +209,10 @@ private:
 	QAction * m_masterSlideAction;
 	
 	SlideEditorWindow * m_masterSlideEditor;
+	
+	int m_iconSize;
+	QSlider * m_iconSizeSlider;
+	bool m_lockIconSizeSetter;
 
 };
 

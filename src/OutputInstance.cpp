@@ -318,14 +318,14 @@ void OutputInstance::slideChanged(Slide *slide, QString slideOperation, Abstract
 		qSort(slist.begin(), slist.end(), OuputInstance_slide_num_compare);
 		m_sortedSlides = slist;
 		
-		Output::OutputType x = m_output->outputType();
-		if(x == Output::Network)
-		{
-			setSlideGroup(m_slideGroup, m_slideNum);
-			m_forceTransmitRawSlide = true;
-			setSlide(slide);
-			m_forceTransmitRawSlide = false;
-		}
+// 		Output::OutputType x = m_output->outputType();
+// 		if(x == Output::Network)
+// 		{
+// 			setSlideGroup(m_slideGroup, m_slideNum);
+// 			m_forceTransmitRawSlide = true;
+// 			setSlide(slide);
+// 			m_forceTransmitRawSlide = false;
+// 		}
 		
 		if(m_slideNum >= m_sortedSlides.size())
 			m_slideNum = 0;
@@ -337,15 +337,20 @@ void OutputInstance::slideChanged(Slide *slide, QString slideOperation, Abstract
 		{
 
 			int idx = m_sortedSlides.indexOf(slide);
-			if(idx > -1)
-			{
-				if(idx == m_slideNum)
+			//if(idx > -1)
+// 			{
+				// TODO do we need to support idx<0, e.g. changes to a slide not in slide group - rather, should changes to slide not in group make slide live - becausae slide wouldnt be live right now,.....would it?
+				if(/*idx < 0 || */idx == m_slideNum)
+				{
+					m_forceTransmitRawSlide = true;
 					setSlide(idx);
-			}
-			else
+					m_forceTransmitRawSlide = false;
+				}
+// 			}
+// 			else
 				//qDebug() << "OutputInstance::slideChanged: ["<<m_output->name()<<"] setting slide ptr";
 			//m_forceTransmitRawSlide = true;
-				setSlide(slide);
+// 				setSlide(slide);
 			//m_forceTransmitRawSlide = false;
 		}
 	}

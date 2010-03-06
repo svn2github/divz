@@ -63,6 +63,7 @@ void SongBrowser::setupUI()
 	QLabel *label = new QLabel("Searc&h:");
 	m_songSearch = new QLineEdit(m_searchBase);
 	label->setBuddy(m_songSearch);
+	setFocusProxy(m_songSearch);
 	
 	m_clearSearchBtn = new QPushButton("C&lear");
 	m_clearSearchBtn->setVisible(false);

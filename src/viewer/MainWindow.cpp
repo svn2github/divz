@@ -299,5 +299,10 @@ QRect MainWindow::standardSceneRect(double aspectRatio)
 
 void MainWindow::setAutosaveEnabled(bool)
 {
-    (void)0;
+	(void)0;
+}
+
+AbstractSlideGroupEditor * MainWindow::openSlideEditor(SlideGroup *g,Slide *slide)
+{
+	(void)0;
 }

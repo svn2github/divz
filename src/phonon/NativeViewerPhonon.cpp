@@ -19,6 +19,7 @@ NativeViewerPhonon::NativeViewerPhonon()
 	Phonon::createPath(m_media, m_audio);
 	Phonon::createPath(m_media, m_widget);
 
+	m_widget->setCursor(Qt::BlankCursor);
 	m_widget->setWindowFlags(Qt::WindowStaysOnTopHint | Qt::FramelessWindowHint | Qt::ToolTip);
 #endif 
 }

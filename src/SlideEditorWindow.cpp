@@ -251,7 +251,10 @@ SlideEditorWindow::SlideEditorWindow(SlideGroup *group, QWidget * parent)
     m_currentConfigContent(0),
     m_currentConfig(0),
     m_itemListView(0),
-    m_masterSlideEditor(0)
+    m_masterSlideEditor(0),
+    m_iconSize(192),
+    m_iconSizeSlider(0),
+    m_lockIconSizeSetter(false)
 {
 
 	m_scene = new MyGraphicsScene(MyGraphicsScene::Editor,this);
@@ -1102,7 +1105,12 @@ void SlideEditorWindow::setupSlideList()
 {
 	QDockWidget *dock = new QDockWidget(tr("Slide List"), this);
 	dock->setObjectName("slideListDock");
-	m_slideListView = new SlideEditorWindowListView(this,dock);
+	
+	QWidget * base = new QWidget(dock);
+	QVBoxLayout * layout = new QVBoxLayout(base);
+	layout->setMargin(0);
+	
+	m_slideListView = new SlideEditorWindowListView(this,base);
 	m_slideListView->setViewMode(QListView::ListMode);
 	//m_slideListView->setViewMode(QListView::IconMode);
 	m_slideListView->setMovement(QListView::Free);
@@ -1131,11 +1139,64 @@ void SlideEditorWindow::setupSlideList()
 
 	QItemSelectionModel *currentSelectionModel = m_slideListView->selectionModel();
 	connect(currentSelectionModel, SIGNAL(currentChanged(const QModelIndex &, const QModelIndex &)), this, SLOT(currentChanged(const QModelIndex &, const QModelIndex &)));
+	
+	layout->addWidget(m_slideListView);
+	
+	QWidget *hboxBase = new QWidget(base);
 
-	dock->setWidget(m_slideListView);
+	QHBoxLayout *hbox = new QHBoxLayout(hboxBase);
+	
+	QLabel * label = new QLabel("Zoom:");
+	hbox->addWidget(label);
+	
+	m_iconSizeSlider= new QSlider(Qt::Horizontal);
+	m_iconSizeSlider->setMinimum(16);
+	m_iconSizeSlider->setMaximum(480);
+	m_iconSizeSlider->setTickInterval(16);
+	m_iconSizeSlider->setSingleStep(16);
+	m_iconSizeSlider->setPageStep(32);
+	m_iconSizeSlider->setTickPosition(QSlider::TicksBelow);
+	hbox->addWidget(m_iconSizeSlider,1); 
+	
+	connect(m_iconSizeSlider, SIGNAL(valueChanged(int)), this, SLOT(setIconSize(int)));
+	
+	QSettings s;
+	setIconSize(s.value(QString("slideeditorwindow/icon-size"),m_iconSize).toInt());
+	
+	layout->addWidget(hboxBase);
+
+
+	//dock->setWidget(m_slideListView);
+	dock->setWidget(base);
 	addDockWidget(Qt::LeftDockWidgetArea, dock);
 	//viewMenu->addAction(dock->toggleViewAction());
 }
+
+
+void SlideEditorWindow::setIconSize(int size)
+{
+	if(m_lockIconSizeSetter)
+		return;
+	m_lockIconSizeSetter = true;
+	int old = size;
+	size = (int)(size / 16) * 16;
+	//qDebug() << "setIconSize: old:"<<old<<", size:"<<size;
+	if(m_iconSizeSlider->value() != size)
+		m_iconSizeSlider->setValue(size);
+// 	if(m_spinBox->value() != size)
+// 		m_spinBox->setValue(size);
+		
+	QSettings s;
+	s.setValue(QString("slideeditorwindow/icon-size"),size);
+	m_iconSize = size;
+		
+	// the model will automatically correct aspect ratio as needed
+	m_slideModel->setIconSize(QSize(size,size));
+	m_slideListView->reset();
+	m_lockIconSizeSetter = false;
+}
+
+
 
 void SlideEditorWindow::repaintSlideList()
 {

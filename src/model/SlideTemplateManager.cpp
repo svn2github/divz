@@ -80,6 +80,15 @@ QString SlideTemplateManager::typeToFile(TemplateType type)
 		);
 }
 
+QString SlideTemplateManager::typeToString(TemplateType type)
+{
+	return  type == Bible ? "Bible": 
+		type == Songs ? "Song" :
+		type == Logo ? "Logo" : 
+		"User";
+	
+}
+
 /// TemplateSelectorWidget
 #include <QHBoxLayout>
 #include <QLabel>
@@ -176,6 +185,7 @@ void TemplateSelectorWidget::newTemplate()
 {
 	Slide * slide = new Slide();
 	SlideGroup *g = new SlideGroup();
+	g->setGroupTitle(QString("%2 %1").arg(m_doc->numGroups()).arg(SlideTemplateManager::typeToString(m_type)));
 	g->addSlide(slide);
 	m_doc->addGroup(g);
 	
@@ -212,6 +222,8 @@ void TemplateSelectorWidget::setupUI()
 	m_newButton->setToolTip("Create a new template");
 	connect(m_newButton, SIGNAL(clicked()), this, SLOT(newTemplate()));
 	hbox->addWidget(m_newButton);
+	
+	hbox->addStretch(1);
 	
 }
 

@@ -218,6 +218,7 @@ void BibleBrowser::setupUI()
 	QLabel *label = new QLabel("Searc&h:");
 	m_search = new QLineEdit(m_searchBase);
 	label->setBuddy(m_search);
+	setFocusProxy(m_search);
 	
 	// add book name completion
 	QCompleter *completer = new QCompleter(BibleVerseRef::bookCompleterList(), m_search);
@@ -266,6 +267,9 @@ void BibleBrowser::setupUI()
 	
 	//m_referenceLabel = new QLabel(m_refBase);
 	
+	m_addPrevVerseBtn = new QPushButton(QPixmap(":/data/stock-go-back.png"),"");
+	m_addPrevVerseBtn->setToolTip(tr("Add previous verse from this chapter"));
+	
 	m_addAnotherVerseBtn = new QPushButton(QPixmap(":/data/stock-go-forward.png"),"");
 	m_addAnotherVerseBtn->setToolTip(tr("Add next verse from this chapter"));
 	
@@ -279,6 +283,7 @@ void BibleBrowser::setupUI()
 	m_nextChapterBtn ->setToolTip(tr("Get next chapter"));
 	
 	//hbox2->addWidget(m_referenceLabel);
+	hbox2->addWidget(m_addPrevVerseBtn);
 	hbox2->addWidget(m_addAnotherVerseBtn);
 	hbox2->addWidget(m_getChapterBtn);
 	hbox2->addWidget(m_prevChapterBtn);
@@ -286,6 +291,7 @@ void BibleBrowser::setupUI()
 	hbox2->addStretch(1);
 	
 	
+	connect(m_addPrevVerseBtn, SIGNAL(clicked()), this, SLOT(addPrevVerse()));
 	connect(m_addAnotherVerseBtn, SIGNAL(clicked()), this, SLOT(addAnotherVerse()));
 	connect(m_getChapterBtn, SIGNAL(clicked()), this, SLOT(getChapter()));
 	connect(m_prevChapterBtn, SIGNAL(clicked()), this, SLOT(prevChapter()));
@@ -307,7 +313,7 @@ void BibleBrowser::setupUI()
 	line->setFrameShadow(QFrame::Sunken);
 
 	// Setup the template selector widget
-	m_tmplWidget = new TemplateSelectorWidget(SlideTemplateManager::Bible,"Template:",this);
+	m_tmplWidget = new TemplateSelectorWidget(SlideTemplateManager::Bible,"Style:",this);
 	if(m_template)
 		m_tmplWidget->setSelectedGroup(m_template);
 	else
@@ -443,6 +449,22 @@ void BibleBrowser::sendVersesLive()
 	}
 }
 	
+void BibleBrowser::addPrevVerse()
+{
+	//qDebug() << "m_currentRef.verseNumber():"<<m_currentRef.verseNumber()<<", m_currentRef.verseRange(): "<<m_currentRef.verseRange();
+	if(m_currentRef.verseRange() > 0 && m_currentRef.verseRange() != m_currentRef.verseNumber())
+		m_currentRef.setVerseNumber(m_currentRef.verseNumber() - 1);
+	else
+	{
+		m_currentRef.setVerseNumber(m_currentRef.verseNumber() - 1);
+		m_currentRef.setVerseRange(-1);
+	}
+	if(m_currentRef.verseNumber() < 1)
+		m_currentRef.setVerseNumber(1);
+	m_attemptAutoLive = true;
+	loadVerses(m_currentRef.toString());
+}
+
 void BibleBrowser::addAnotherVerse()
 {
 	//qDebug() << "m_currentRef.verseNumber():"<<m_currentRef.verseNumber()<<", m_currentRef.verseRange(): "<<m_currentRef.verseRange();

@@ -100,14 +100,15 @@ MainWindow::MainWindow(QWidget *parent) :
 	// Restore state
 	loadWindowState();
 
-
+	connect(m_ui->tabWidget, SIGNAL(currentChanged(int)), this, SLOT(currentTabChanged(int)));
+	
 
 	//m_ui->actionEdit_Slide_Group->setEnabled(false);
 	QList<QAction*> actionList;
 
 	m_ui->actionOpen->setIcon(QIcon(":data/stock-open.png"));
 	actionList << m_ui->actionOpen;
-	m_ui->actionOpen->setToolTip(m_ui->actionOpen->text() + "(" + m_ui->actionOpen->shortcut().toString() + ")");
+	//m_ui->actionOpen->setToolTip(m_ui->actionOpen->text() + "(" + m_ui->actionOpen->shortcut().toString() + ")");
 	connect(m_ui->actionOpen, SIGNAL(triggered()), this, SLOT(actionOpen()));
 
 	m_ui->actionSave->setIcon(QIcon(":data/stock-save.png"));
@@ -239,6 +240,16 @@ MainWindow::~MainWindow()
 	delete m_editWin;
 }
 
+void MainWindow::currentTabChanged(int idx)
+{
+	QWidget *widget = m_ui->tabWidget->widget(idx); //(m_ui->tabWidget->indexOf(m_ui->tabSlides));
+	if(widget)
+	{
+		qDebug() << "Focusing on tab idx "<<idx;
+		widget->setFocus(Qt::OtherFocusReason);
+	}
+}
+
 
 void MainWindow::autosave()
 {
@@ -347,6 +358,9 @@ void MainWindow::showEvent(QShowEvent *evt)
 		m_autosaveTimer->start(AppSettings::autosaveTime() * 1000);
 
 	raise(); // raise above output instances
+	
+	m_ui->tabWidget->setCurrentIndex(0);
+
 }
 
 OutputInstance * MainWindow::liveInst() { return outputInst(AppSettings::taggedOutput("live")->id()); }
@@ -686,6 +700,8 @@ void MainWindow::setupSongList()
 
 	m_songBrowser = new SongBrowser(m_ui->tabSongs);
 	baseLayout->addWidget(m_songBrowser);
+	
+	m_ui->tabSongs->setFocusProxy(m_songBrowser);
 
 	connect(m_songBrowser, SIGNAL(songSelected(SongRecord*)), this, SLOT(songSelected(SongRecord*)));
 }
@@ -697,6 +713,7 @@ void MainWindow::setupBibleBrowser()
 
 	BibleBrowser * bible = new BibleBrowser(m_ui->tabBible);
 	baseLayout->addWidget(bible);
+	m_ui->tabBible->setFocusProxy(bible);
 }
 
 void MainWindow::setupSlideLibrary()
@@ -788,6 +805,7 @@ void MainWindow::fileSelected(const QFileInfo &info)
 	//Slide * slide = new Slide();
 	VideoSlideGroup *group = new VideoSlideGroup();
 	group->setFile(info.canonicalFilePath());
+	group->setGroupTitle(info.completeBaseName());
 	//group->addSlide(slide);
 
 	//group->changeBackground(info);

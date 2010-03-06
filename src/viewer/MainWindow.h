@@ -19,6 +19,8 @@ class SlideGroup;
 class Slide;
 class QDockWidget;
 class OutputViewer;
+class OutputControl;
+class SlideGroupViewControl;
 
 #include "model/Output.h"
 #include "OutputInstance.h"
@@ -31,6 +33,7 @@ class MainWindow : public QMainWindow {
 	Q_OBJECT
 public:
 	static MainWindow * mw() { return static_mainWindow; }
+	
 	
 	MainWindow(QWidget *parent = 0);
 	~MainWindow();
@@ -50,8 +53,10 @@ public:
 	
 	// Here for compat with dviz MainWindow source
 	OutputInstance * outputInst(int id) { return id == m_inst->output()->id() ? m_inst : 0; }
-
-	AbstractSlideGroupEditor * openSlideEditor(SlideGroup *g,Slide *slide=0) {}
+	OutputControl * outputControl(int id) { return 0; } // network viewer does not use an output control
+	SlideGroupViewControl * viewControl(int id) { return 0; } // therefore, nv does not use a view control
+	
+	AbstractSlideGroupEditor * openSlideEditor(SlideGroup *g,Slide *slide=0);
 
 	bool isTransitionActive();
 	void editGroup(SlideGroup*, Slide *slide=0) {}

@@ -70,6 +70,7 @@ public slots:
 	void addVersesToDocument();
 	void sendVersesLive();
 	
+	void addPrevVerse();
 	void addAnotherVerse();
 	void getChapter();
 	void prevChapter();
@@ -104,6 +105,7 @@ protected:
 	QLabel        * m_spinnerLabel;
 	QWidget       * m_refBase;
 	QLabel        * m_referenceLabel;
+	QPushButton   * m_addPrevVerseBtn;
 	QPushButton   * m_addAnotherVerseBtn;
 	QPushButton   * m_getChapterBtn;
 	QPushButton   * m_prevChapterBtn;

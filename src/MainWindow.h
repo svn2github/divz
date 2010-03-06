@@ -113,6 +113,8 @@ public slots:
 	void hotkeyPrevSlide();
 
 protected slots:
+	void currentTabChanged(int);
+	
 	void groupsDropped(QList<SlideGroup*> list);
 	
 	void groupSelected(const QModelIndex &);

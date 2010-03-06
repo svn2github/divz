@@ -12,6 +12,7 @@ NativeViewerWebKit::NativeViewerWebKit()
 {
 	m_widget = new GLFrameRenderWidget(QGLFormat(QGL::SampleBuffers));
 	m_widget->setWindowFlags(Qt::WindowStaysOnTopHint | Qt::FramelessWindowHint | Qt::ToolTip);
+	m_widget->setCursor(Qt::BlankCursor);
 	m_widget->setParentViewer(this);
 }
 
