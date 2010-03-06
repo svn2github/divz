@@ -134,7 +134,7 @@ private:
 	bool m_needCpuConversion;
 	int m_raw_num_bytes;
 	int m_conv_num_bytes;
-	QVideoFrame m_videoFrame;
+	QVideoFrame *m_videoFrame;
 };
 
 

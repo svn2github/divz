@@ -27,6 +27,7 @@ VideoThread::VideoThread(QObject *parent)
 	, m_inited(false)
 	, m_videoFile()
 	, m_surface(0)
+	, m_videoFrame(0)
 {
 	m_killed = false;
 	m_time_base_rational.num = 1;
@@ -41,48 +42,48 @@ VideoThread::VideoThread(QObject *parent)
 // 	m_frame = NULL;
 
 
-	m_formatMap[PIX_FMT_NONE]	= QVideoFrame::Format_Invalid;
-	m_formatMap[PIX_FMT_YUV420P]	= QVideoFrame::Format_YUV420P;
-	m_formatMap[PIX_FMT_YUYV422]	= QVideoFrame::Format_Invalid;
-	m_formatMap[PIX_FMT_RGB24]	= QVideoFrame::Format_RGB24;
-	m_formatMap[PIX_FMT_BGR24]	= QVideoFrame::Format_BGR24;
-	m_formatMap[PIX_FMT_YUV422P]	= QVideoFrame::Format_Invalid;
-	m_formatMap[PIX_FMT_YUV444P]	= QVideoFrame::Format_YUV444;
-	m_formatMap[PIX_FMT_RGB32]	= QVideoFrame::Format_RGB32;
-	m_formatMap[PIX_FMT_YUV410P]	= QVideoFrame::Format_Invalid;
-	m_formatMap[PIX_FMT_YUV411P]	= QVideoFrame::Format_Invalid;
-	m_formatMap[PIX_FMT_RGB565 ]	= QVideoFrame::Format_RGB565;
-	m_formatMap[PIX_FMT_RGB555]	= QVideoFrame::Format_RGB555;
-	m_formatMap[PIX_FMT_GRAY8]	= QVideoFrame::Format_Y8;
-	m_formatMap[PIX_FMT_MONOWHITE]	= QVideoFrame::Format_Invalid;
-	m_formatMap[PIX_FMT_MONOBLACK]	= QVideoFrame::Format_Invalid;
-	m_formatMap[PIX_FMT_PAL8]	= QVideoFrame::Format_Invalid;
-	m_formatMap[PIX_FMT_YUVJ420P]	= QVideoFrame::Format_Invalid;
-	m_formatMap[PIX_FMT_YUVJ422P]	= QVideoFrame::Format_Invalid;
-	m_formatMap[PIX_FMT_YUVJ444P]	= QVideoFrame::Format_Invalid;
-	m_formatMap[PIX_FMT_XVMC_MPEG2_MC]	= QVideoFrame::Format_Invalid;
-	m_formatMap[PIX_FMT_XVMC_MPEG2_IDCT]	= QVideoFrame::Format_Invalid;
-	m_formatMap[PIX_FMT_UYVY422]	= QVideoFrame::Format_Invalid;
-	m_formatMap[PIX_FMT_UYYVYY411]	= QVideoFrame::Format_Invalid;
-	m_formatMap[PIX_FMT_BGR32]	= QVideoFrame::Format_BGR32;
-	m_formatMap[PIX_FMT_BGR565]	= QVideoFrame::Format_BGR565;
-	m_formatMap[PIX_FMT_BGR555]	= QVideoFrame::Format_BGR555;
-	m_formatMap[PIX_FMT_BGR8]	= QVideoFrame::Format_Invalid;
-	m_formatMap[PIX_FMT_BGR4]	= QVideoFrame::Format_Invalid;
-	m_formatMap[PIX_FMT_BGR4_BYTE]	= QVideoFrame::Format_Invalid;
-	m_formatMap[PIX_FMT_RGB8]	= QVideoFrame::Format_Invalid;
-	m_formatMap[PIX_FMT_RGB4]	= QVideoFrame::Format_Invalid;
-	m_formatMap[PIX_FMT_RGB4_BYTE]	= QVideoFrame::Format_Invalid;
-	m_formatMap[PIX_FMT_NV12]	= QVideoFrame::Format_NV12;
-	m_formatMap[PIX_FMT_NV21]	= QVideoFrame::Format_NV21;
-	m_formatMap[PIX_FMT_RGB32_1]	= QVideoFrame::Format_Invalid;
-	m_formatMap[PIX_FMT_BGR32_1]	= QVideoFrame::Format_BGRA32;
-	m_formatMap[PIX_FMT_GRAY16BE]	= QVideoFrame::Format_Invalid;
-	m_formatMap[PIX_FMT_GRAY16LE]	= QVideoFrame::Format_Invalid;
-	m_formatMap[PIX_FMT_YUV440P]	= QVideoFrame::Format_Invalid;
-	m_formatMap[PIX_FMT_YUVJ440P]	= QVideoFrame::Format_Invalid;
-	m_formatMap[PIX_FMT_YUVA420P]	= QVideoFrame::Format_Invalid;
-	m_formatMap[PIX_FMT_NB] 	= QVideoFrame::Format_Invalid;
+	m_formatMap[PIX_FMT_NONE]	= QVideoFrame::Format_Invalid;	//-1
+	m_formatMap[PIX_FMT_YUV420P]	= QVideoFrame::Format_YUV420P;	//0 
+	m_formatMap[PIX_FMT_YUYV422]	= QVideoFrame::Format_Invalid;	//1
+	m_formatMap[PIX_FMT_RGB24]	= QVideoFrame::Format_RGB24;	//2
+	m_formatMap[PIX_FMT_BGR24]	= QVideoFrame::Format_BGR24;	//3
+	m_formatMap[PIX_FMT_YUV422P]	= QVideoFrame::Format_Invalid;	//4
+	m_formatMap[PIX_FMT_YUV444P]	= QVideoFrame::Format_YUV444;	//5
+	m_formatMap[PIX_FMT_RGB32]	= QVideoFrame::Format_RGB32;	//6
+	m_formatMap[PIX_FMT_YUV410P]	= QVideoFrame::Format_Invalid;	//7
+	m_formatMap[PIX_FMT_YUV411P]	= QVideoFrame::Format_Invalid;	//8
+	m_formatMap[PIX_FMT_RGB565 ]	= QVideoFrame::Format_RGB565;	//9
+	m_formatMap[PIX_FMT_RGB555]	= QVideoFrame::Format_RGB555;	//10
+	m_formatMap[PIX_FMT_GRAY8]	= QVideoFrame::Format_Y8;	//11
+	m_formatMap[PIX_FMT_MONOWHITE]	= QVideoFrame::Format_Invalid;	//12
+	m_formatMap[PIX_FMT_MONOBLACK]	= QVideoFrame::Format_Invalid;	//13
+	m_formatMap[PIX_FMT_PAL8]	= QVideoFrame::Format_Invalid;	//14
+	m_formatMap[PIX_FMT_YUVJ420P]	= QVideoFrame::Format_YUV420P; //QVideoFrame::Format_Invalid;	//15
+	m_formatMap[PIX_FMT_YUVJ422P]	= QVideoFrame::Format_Invalid;	//16
+	m_formatMap[PIX_FMT_YUVJ444P]	= QVideoFrame::Format_YUV444; //QVideoFrame::Format_Invalid;	//17
+	m_formatMap[PIX_FMT_XVMC_MPEG2_MC]	= QVideoFrame::Format_Invalid;	//18
+	m_formatMap[PIX_FMT_XVMC_MPEG2_IDCT]	= QVideoFrame::Format_Invalid;	//19
+	m_formatMap[PIX_FMT_UYVY422]	= QVideoFrame::Format_Invalid;	//20
+	m_formatMap[PIX_FMT_UYYVYY411]	= QVideoFrame::Format_Invalid;	//21
+	m_formatMap[PIX_FMT_BGR32]	= QVideoFrame::Format_BGR32;	//22
+	m_formatMap[PIX_FMT_BGR565]	= QVideoFrame::Format_BGR565;	//23
+	m_formatMap[PIX_FMT_BGR555]	= QVideoFrame::Format_BGR555;	//24
+	m_formatMap[PIX_FMT_BGR8]	= QVideoFrame::Format_Invalid;	//25
+	m_formatMap[PIX_FMT_BGR4]	= QVideoFrame::Format_Invalid;	//26
+	m_formatMap[PIX_FMT_BGR4_BYTE]	= QVideoFrame::Format_Invalid;	//27
+	m_formatMap[PIX_FMT_RGB8]	= QVideoFrame::Format_Invalid;	//28
+	m_formatMap[PIX_FMT_RGB4]	= QVideoFrame::Format_Invalid;	//29
+	m_formatMap[PIX_FMT_RGB4_BYTE]	= QVideoFrame::Format_Invalid;	//30
+	m_formatMap[PIX_FMT_NV12]	= QVideoFrame::Format_NV12;	//31
+	m_formatMap[PIX_FMT_NV21]	= QVideoFrame::Format_NV21;	//32
+	m_formatMap[PIX_FMT_RGB32_1]	= QVideoFrame::Format_Invalid;	//33
+	m_formatMap[PIX_FMT_BGR32_1]	= QVideoFrame::Format_BGRA32;	//34
+	m_formatMap[PIX_FMT_GRAY16BE]	= QVideoFrame::Format_Invalid;	//35
+	m_formatMap[PIX_FMT_GRAY16LE]	= QVideoFrame::Format_Invalid;	//36
+	m_formatMap[PIX_FMT_YUV440P]	= QVideoFrame::Format_Invalid;	//37
+	m_formatMap[PIX_FMT_YUVJ440P]	= QVideoFrame::Format_Invalid;	//38
+	m_formatMap[PIX_FMT_YUVA420P]	= QVideoFrame::Format_Invalid;	//39
+	m_formatMap[PIX_FMT_NB] 	= QVideoFrame::Format_Invalid;	//40
 
 
 }
@@ -504,26 +505,27 @@ void VideoThread::readFrame()
 							m_av_rgb_frame->data,
 							m_av_rgb_frame->linesize);
 	
-// 						m_frame = QImage(m_av_rgb_frame->data[0],
-// 									m_video_codec_context->width,
-// 									m_video_codec_context->height,
-// 									QImage::Format_RGB16);
+						m_frame = QImage(m_av_rgb_frame->data[0],
+									m_video_codec_context->width,
+									m_video_codec_context->height,
+									QImage::Format_RGB16);
 						
-						m_videoFrame = QVideoFrame(m_conv_num_bytes, m_frame_size, m_av_rgb_frame->linesize[0], m_format.pixelFormat());
-// 						
-						m_videoFrame.map(QAbstractVideoBuffer::WriteOnly);
-						memcpy(m_videoFrame.bits(), m_av_rgb_frame->data[0], m_videoFrame.mappedBytes());
-						m_videoFrame.unmap();
+						m_videoFrame = new QVideoFrame(m_frame);
+// 						m_videoFrame = new QVideoFrame(m_conv_num_bytes, m_frame_size, m_av_rgb_frame->linesize[0], m_format.pixelFormat());
+// // 						
+// 						m_videoFrame->map(QAbstractVideoBuffer::WriteOnly);
+// 						memcpy(m_videoFrame->bits(), m_av_rgb_frame->data[0], m_videoFrame->mappedBytes());
+// 						m_videoFrame->unmap();
 						
 						//m_surface->present(frame);
 					}
 					else
 					{
-						m_videoFrame = QVideoFrame(m_raw_num_bytes, m_frame_size, m_av_frame->linesize[0], m_format.pixelFormat());
+						m_videoFrame = new QVideoFrame(m_raw_num_bytes, m_frame_size, m_av_frame->linesize[0], m_format.pixelFormat());
 						
-						m_videoFrame.map(QAbstractVideoBuffer::WriteOnly);
-						memcpy(m_videoFrame.bits(), m_av_frame->data[0], m_videoFrame.mappedBytes());
-						m_videoFrame.unmap();
+						m_videoFrame->map(QAbstractVideoBuffer::WriteOnly);
+						memcpy(m_videoFrame->bits(), m_av_frame->data[0], m_videoFrame->mappedBytes());
+						m_videoFrame->unmap();
 						
 						//m_surface->present(frame);
 						
@@ -667,7 +669,11 @@ void VideoThread::releaseCurrentFrame()
 // 	if(m_surface->isActive())
 	{
 // 		qDebug() << "VideoThread::releaseCurrentFrame(): present calling";
-		m_surface->present(m_videoFrame);
+		if(m_videoFrame)
+		{
+			m_surface->present(*m_videoFrame);
+			delete m_videoFrame;
+		}
 	}
 // 	else
 // 		qDebug() << "VideoThread::releaseCurrentFrame(): Unable to present frame to surface because m_surface is not active.";

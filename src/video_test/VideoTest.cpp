@@ -34,12 +34,12 @@ VideoTest::VideoTest()
 // 	m_client = new CameraClient(this);
 // 	connect(m_client, SIGNAL(newImage(QImage)), this, SLOT(newFrame(QImage)));
 
- 	//m_thread->setVideo("085_JumpBack.mov");
- 	m_thread->setVideo("/home/josiah/Download/qt-master/qt-qt/examples/dviz/src/samples/jumpbacks/105_JumpBack.mov");
- 	m_thread->start();
+ 	m_thread->setVideo("105_JumpBack.mov");
+ 	//m_thread->setVideo("/home/josiah/Download/qt-master/qt-qt/examples/dviz/src/samples/jumpbacks/105_JumpBack.mov");
+ 	m_thread->start(false);
 	//m_client->connectTo("10.1.5.68",8088);
 
-	resize(320,240);
+// 	resize(320,240);
 
 	emit readyForNextFrame();
 
@@ -91,6 +91,8 @@ void VideoTest::updateRects()
 			0, 0, size.width() / m_videoNativeSize.width(), size.height() / m_videoNativeSize.height());
 		m_sourceRect.moveCenter(QPointF(0.5, 0.5));
 	}
+	
+	qDebug() << "VideoTest::updateRects: m_sourceRect: "<<m_sourceRect<<", m_boundingRect:"<<m_boundingRect<<", size:"<<m_videoNativeSize;
 }
 
 
@@ -130,11 +132,18 @@ void VideoTest::paintEvent(QPaintEvent*)
  	QPainter painter(this);
 // 	p.drawImage(rect(),m_frame);
 
-	if (m_updatePaintDevice && 
+	
+	if (m_surface && m_surface->isActive()) 
+	{
+		m_surface->paint(&painter, m_boundingRect, m_sourceRect);
+		m_surface->setReady(true);
+	}
+	else if (m_updatePaintDevice && 
 		(painter.paintEngine()->type() == QPaintEngine::OpenGL ||
 		 painter.paintEngine()->type() == QPaintEngine::OpenGL2)
 	   ) 
 	{
+		qDebug() << "VideoTest::paintEvent: Updating paint device";
 		m_updatePaintDevice = false;
 	
 		m_surface->setGLContext(const_cast<QGLContext *>(QGLContext::currentContext()));
@@ -147,12 +156,6 @@ void VideoTest::paintEvent(QPaintEvent*)
 		{
 			m_surface->setShaderType(QPainterVideoSurface::FragmentProgramShader);
 		}
-	}
-	
-	if (m_surface && m_surface->isActive()) 
-	{
-		m_surface->paint(&painter, m_boundingRect, m_sourceRect);
-		m_surface->setReady(true);
 	}
 }
 
