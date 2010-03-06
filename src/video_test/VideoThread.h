@@ -20,10 +20,6 @@ extern "C" {
 #include <QTime>
 #include <QMovie>
 
-#include <QAbstractVideoSurface>
-#include <QHash>
-#include <QVideoSurfaceFormat> 
-
 class VideoThread: public QThread
 {
 	Q_OBJECT
@@ -37,13 +33,8 @@ public:
 	typedef enum Status {Running, NotRunning, Paused};
 	Status status() { return m_status; }
 	
-	void setSurface(QAbstractVideoSurface *);
-	QAbstractVideoSurface * surface() { return m_surface; }
-	
-	void start(bool asThread = false);
-	
 signals:
-	void newImage(QImage);
+	void newImage(QImage,QTime);
 	void movieStateChanged(QMovie::MovieState);
 
 public slots:
@@ -57,14 +48,12 @@ public slots:
 protected slots:
 	void readFrame();
 	void releaseCurrentFrame();
-	
+
 protected:
 	void run();
 
 	void freeResources();
 	int initVideo();
-	
-	void initSurface();
 
 
 	void calculateVideoProperties();
@@ -127,14 +116,7 @@ private:
 	
 	double m_frameTimer;
 	int m_skipFrameCount;
-	
-	QHash<PixelFormat,QVideoFrame::PixelFormat> m_formatMap;
-	QAbstractVideoSurface * m_surface;
-	QVideoSurfaceFormat m_format;
-	bool m_needCpuConversion;
-	int m_raw_num_bytes;
-	int m_conv_num_bytes;
-	QVideoFrame *m_videoFrame;
+	QTime m_time;
 };
 
 

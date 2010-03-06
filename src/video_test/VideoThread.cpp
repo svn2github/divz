@@ -10,9 +10,6 @@ extern "C" {
 #include "libavdevice/avdevice.h"
 }
 
-#include <QVideoFrame>
-#include <QVideoSurfaceFormat>
-
 #include "VideoThread.h"
 
 #define MAX_SKIPS_TILL_RESET 30
@@ -26,10 +23,7 @@ VideoThread::VideoThread(QObject *parent)
 	: QThread(parent)
 	, m_inited(false)
 	, m_videoFile()
-	, m_surface(0)
-	, m_videoFrame(0)
 {
-	m_killed = false;
 	m_time_base_rational.num = 1;
 	m_time_base_rational.den = AV_TIME_BASE;
 	m_previous_pts_delay = 40e-3;
@@ -41,78 +35,12 @@ VideoThread::VideoThread(QObject *parent)
 	m_sws_context = NULL;
 // 	m_frame = NULL;
 
-
-	m_formatMap[PIX_FMT_NONE]	= QVideoFrame::Format_Invalid;	//-1
-	m_formatMap[PIX_FMT_YUV420P]	= QVideoFrame::Format_YUV420P;	//0 
-	m_formatMap[PIX_FMT_YUYV422]	= QVideoFrame::Format_Invalid;	//1
-	m_formatMap[PIX_FMT_RGB24]	= QVideoFrame::Format_RGB24;	//2
-	m_formatMap[PIX_FMT_BGR24]	= QVideoFrame::Format_BGR24;	//3
-	m_formatMap[PIX_FMT_YUV422P]	= QVideoFrame::Format_Invalid;	//4
-	m_formatMap[PIX_FMT_YUV444P]	= QVideoFrame::Format_YUV444;	//5
-	m_formatMap[PIX_FMT_RGB32]	= QVideoFrame::Format_RGB32;	//6
-	m_formatMap[PIX_FMT_YUV410P]	= QVideoFrame::Format_Invalid;	//7
-	m_formatMap[PIX_FMT_YUV411P]	= QVideoFrame::Format_Invalid;	//8
-	m_formatMap[PIX_FMT_RGB565 ]	= QVideoFrame::Format_RGB565;	//9
-	m_formatMap[PIX_FMT_RGB555]	= QVideoFrame::Format_RGB555;	//10
-	m_formatMap[PIX_FMT_GRAY8]	= QVideoFrame::Format_Y8;	//11
-	m_formatMap[PIX_FMT_MONOWHITE]	= QVideoFrame::Format_Invalid;	//12
-	m_formatMap[PIX_FMT_MONOBLACK]	= QVideoFrame::Format_Invalid;	//13
-	m_formatMap[PIX_FMT_PAL8]	= QVideoFrame::Format_Invalid;	//14
-	m_formatMap[PIX_FMT_YUVJ420P]	= QVideoFrame::Format_YUV420P; //QVideoFrame::Format_Invalid;	//15
-	m_formatMap[PIX_FMT_YUVJ422P]	= QVideoFrame::Format_Invalid;	//16
-	m_formatMap[PIX_FMT_YUVJ444P]	= QVideoFrame::Format_YUV444; //QVideoFrame::Format_Invalid;	//17
-	m_formatMap[PIX_FMT_XVMC_MPEG2_MC]	= QVideoFrame::Format_Invalid;	//18
-	m_formatMap[PIX_FMT_XVMC_MPEG2_IDCT]	= QVideoFrame::Format_Invalid;	//19
-	m_formatMap[PIX_FMT_UYVY422]	= QVideoFrame::Format_Invalid;	//20
-	m_formatMap[PIX_FMT_UYYVYY411]	= QVideoFrame::Format_Invalid;	//21
-	m_formatMap[PIX_FMT_BGR32]	= QVideoFrame::Format_BGR32;	//22
-	m_formatMap[PIX_FMT_BGR565]	= QVideoFrame::Format_BGR565;	//23
-	m_formatMap[PIX_FMT_BGR555]	= QVideoFrame::Format_BGR555;	//24
-	m_formatMap[PIX_FMT_BGR8]	= QVideoFrame::Format_Invalid;	//25
-	m_formatMap[PIX_FMT_BGR4]	= QVideoFrame::Format_Invalid;	//26
-	m_formatMap[PIX_FMT_BGR4_BYTE]	= QVideoFrame::Format_Invalid;	//27
-	m_formatMap[PIX_FMT_RGB8]	= QVideoFrame::Format_Invalid;	//28
-	m_formatMap[PIX_FMT_RGB4]	= QVideoFrame::Format_Invalid;	//29
-	m_formatMap[PIX_FMT_RGB4_BYTE]	= QVideoFrame::Format_Invalid;	//30
-	m_formatMap[PIX_FMT_NV12]	= QVideoFrame::Format_NV12;	//31
-	m_formatMap[PIX_FMT_NV21]	= QVideoFrame::Format_NV21;	//32
-	m_formatMap[PIX_FMT_RGB32_1]	= QVideoFrame::Format_Invalid;	//33
-	m_formatMap[PIX_FMT_BGR32_1]	= QVideoFrame::Format_BGRA32;	//34
-	m_formatMap[PIX_FMT_GRAY16BE]	= QVideoFrame::Format_Invalid;	//35
-	m_formatMap[PIX_FMT_GRAY16LE]	= QVideoFrame::Format_Invalid;	//36
-	m_formatMap[PIX_FMT_YUV440P]	= QVideoFrame::Format_Invalid;	//37
-	m_formatMap[PIX_FMT_YUVJ440P]	= QVideoFrame::Format_Invalid;	//38
-	m_formatMap[PIX_FMT_YUVA420P]	= QVideoFrame::Format_Invalid;	//39
-	m_formatMap[PIX_FMT_NB] 	= QVideoFrame::Format_Invalid;	//40
-
-
 }
 
 void VideoThread::setVideo(const QString& name)
 {
 	m_videoFile = name;
 }
-
-
-void VideoThread::setSurface(QAbstractVideoSurface *surface)
-{
-	if (m_surface)
-		m_surface->stop();
-	
-	m_surface = surface;
-	
-	if(m_inited)
-		initSurface();
-
-//     if (m_surface && !m_image.isNull()) {
-//         QVideoSurfaceFormat format(
-//                 m_image.size(), QVideoFrame::pixelFormatFromImageFormat(m_image.format()));
-// 
-//         if (surface->start(format))
-//             surface->present(QVideoFrame(m_image));
-//     }
-}
-
 
 int VideoThread::initVideo()
 {
@@ -200,12 +128,10 @@ int VideoThread::initVideo()
 		return false;
 	}
 
-	m_raw_num_bytes = avpicture_get_size(m_video_codec_context->pix_fmt, m_video_codec_context->width, m_video_codec_context->height);
-
 	// Determine required buffer size and allocate buffer
-	m_conv_num_bytes = avpicture_get_size(PIX_FMT_RGB565, m_video_codec_context->width, m_video_codec_context->height);
-	
-	m_buffer = (uint8_t *)av_malloc(m_conv_num_bytes * sizeof(uint8_t));
+	int num_bytes = avpicture_get_size(PIX_FMT_RGB565, m_video_codec_context->width, m_video_codec_context->height);
+
+	m_buffer = (uint8_t *)av_malloc(num_bytes * sizeof(uint8_t));
 
 	// Assign appropriate parts of buffer to image planes in pFrameRGB
 	// Note that pFrameRGB is an AVFrame, but AVFrame is a superset of AVPicture
@@ -229,17 +155,13 @@ int VideoThread::initVideo()
 
 	m_readTimer = new QTimer();
 	connect(m_readTimer, SIGNAL(timeout()), this, SLOT(readFrame()));
-	int ts = 1000/(m_timebase.den+1);
-	qDebug() << "VideoThread::initVideo: setting interval to "<<ts;
+	int ts = 1000/(m_timebase.den);
+	//qDebug() << "VideoThread::initVideo: setting interval to "<<ts;
 	m_readTimer->setInterval(ts);
 	
 	calculateVideoProperties();
 
 	m_inited = true;
-	
-	if(m_surface)
-		initSurface();
-		
 	return 0;
 }
 
@@ -249,51 +171,6 @@ void VideoThread::run()
 	//m_readTimer->start();
 	play();
 	exec();
-}
-
-void VideoThread::start(bool asThread)
-{
-	if(asThread)
-	{
-		QThread::start();
-	}
-	else
-	{
-		initVideo();
-		play();
-	}
-}
-
-void VideoThread::initSurface()
-{
-// 	if(m_surface->isActive())
-	if(m_surface)
-		m_surface->stop();
-	else
-		return;
-	
-	m_needCpuConversion = false;
-	PixelFormat vidPix = m_video_codec_context->pix_fmt;
-	QVideoFrame::PixelFormat qtPix = m_formatMap[vidPix];
-	if(qtPix == QVideoFrame::Format_Invalid)
-	{
-		qtPix = QVideoFrame::Format_RGB565;
-		m_needCpuConversion = true;
-	}
-	
-	m_format = QVideoSurfaceFormat( m_frame_size, qtPix );
-	if(!m_surface->start(m_format))
-	{
-// 		m_format = m_surface->nearestFormat(format);
-// 		if(!m_surface->start(m_format))
-// 		{
-			qDebug() << "VideoThread::initSurface: Unable to init surface.";
-// 		}
-	}
-	else
-	{
-		qDebug() << "VideoThread::initSurface: Surface started with format"<<m_format<<", m_needCpuConversion="<<m_needCpuConversion<<", vidPix:"<<vidPix<<", qtPix:"<<qtPix;
-	}
 }
 
 
@@ -441,13 +318,12 @@ void VideoThread::readFrame()
 {
 	if(!m_inited)
 	{
-		emit newImage(QImage());
+		emit newImage(QImage(),QTime::currentTime());
 		return;
 	}
 	AVPacket pkt1, *packet = &pkt1;
 	double pts;
 
-// 	qDebug() << "VideoThread::readFrame: mark start";
 	int frame_finished = 0;
 	while(!frame_finished && !m_killed)
 	{
@@ -480,71 +356,34 @@ void VideoThread::readFrame()
 				// Did we get a video frame?
 				if(frame_finished)
 				{
-					if(m_needCpuConversion)
+
+					// Convert the image from its native format to RGB, then copy the image data to a QImage
+					if(m_sws_context == NULL)
 					{
-						// Convert the image from its native format to RGB, then copy the image data to a QImage
-						if(m_sws_context == NULL)
-						{
-							//mutex.lock();
-							m_sws_context = sws_getContext(
-								m_video_codec_context->width, m_video_codec_context->height,
-								m_video_codec_context->pix_fmt,
-								m_video_codec_context->width, m_video_codec_context->height,
-								//PIX_FMT_RGB32,SWS_BICUBIC,
-								PIX_FMT_RGB565, SWS_FAST_BILINEAR,
-								NULL, NULL, NULL); //SWS_PRINT_INFO
-							//mutex.unlock();
-							//printf("decode(): created m_sws_context\n");
-						}
-						//printf("decode(): got frame\n");
-	
-						sws_scale(m_sws_context,
-							m_av_frame->data,
-							m_av_frame->linesize, 0,
-							m_video_codec_context->height,
-							m_av_rgb_frame->data,
-							m_av_rgb_frame->linesize);
-	
-						m_frame = QImage(m_av_rgb_frame->data[0],
-									m_video_codec_context->width,
-									m_video_codec_context->height,
-									QImage::Format_RGB16);
-						
-						m_videoFrame = new QVideoFrame(m_frame);
-// 						m_videoFrame = new QVideoFrame(m_conv_num_bytes, m_frame_size, m_av_rgb_frame->linesize[0], m_format.pixelFormat());
-// // 						
-// 						m_videoFrame->map(QAbstractVideoBuffer::WriteOnly);
-// 						memcpy(m_videoFrame->bits(), m_av_rgb_frame->data[0], m_videoFrame->mappedBytes());
-// 						m_videoFrame->unmap();
-						
-						//m_surface->present(frame);
+						//mutex.lock();
+						m_sws_context = sws_getContext(
+							m_video_codec_context->width, m_video_codec_context->height,
+							m_video_codec_context->pix_fmt,
+							m_video_codec_context->width, m_video_codec_context->height,
+							//PIX_FMT_RGB32,SWS_BICUBIC,
+							PIX_FMT_RGB565, SWS_FAST_BILINEAR,
+							NULL, NULL, NULL); //SWS_PRINT_INFO
+						//mutex.unlock();
+						//printf("decode(): created m_sws_context\n");
 					}
-					else
-					{
-						m_videoFrame = new QVideoFrame(m_raw_num_bytes, m_frame_size, m_av_frame->linesize[0], m_format.pixelFormat());
-						
-						m_videoFrame->map(QAbstractVideoBuffer::WriteOnly);
-						memcpy(m_videoFrame->bits(), m_av_frame->data[0], m_videoFrame->mappedBytes());
-						m_videoFrame->unmap();
-						
-						//m_surface->present(frame);
-						
-// 						switch(m_format.pixelFormat())
-// 						{
-// 					 		case QVideoFrame::Format_YUV420P:
-// 								frame = QVideoFrame( QVideoFrame::Format_YUV420P,
-// 									m_frame_size,
-// 									m_av_frame->data[0], // y
-// 									m_av_frame->data[1], // u, 
-// 									m_av_frame->data[2], // v 
-// 									m_av_frame->linesize[0],
-// 									m_av_frame->linesize[1],
-// 									m_av_frame->linesize[2]);
-						
-					}
-				
-					
-					
+					//printf("decode(): got frame\n");
+
+					sws_scale(m_sws_context,
+						  m_av_frame->data,
+						  m_av_frame->linesize, 0,
+						  m_video_codec_context->height,
+						  m_av_rgb_frame->data,
+						  m_av_rgb_frame->linesize);
+
+					m_frame = QImage(m_av_rgb_frame->data[0],
+								m_video_codec_context->width,
+								m_video_codec_context->height,
+								QImage::Format_RGB16);
 
 					av_free_packet(packet);
 
@@ -627,10 +466,11 @@ void VideoThread::readFrame()
 					}
 					
 					int frameDelay = (int)(actual_delay * 1000 + 0.5);
-					//qDebug() << "VideoThread::readVideo: frameDelay:"<<frameDelay;
+					qDebug() << "VideoThread::readVideo: frameDelay:"<<frameDelay;
 					if(frameDelay < 0)
 						frameDelay = 5;
 
+					m_time = QTime::currentTime(); 
 					QTimer::singleShot(frameDelay, this, SLOT(releaseCurrentFrame()));
 					
 					m_previous_pts = pts;
@@ -665,19 +505,7 @@ void VideoThread::readFrame()
 
 void VideoThread::releaseCurrentFrame()
 {
-	//emit newImage(m_frame);
-// 	if(m_surface->isActive())
-	{
-// 		qDebug() << "VideoThread::releaseCurrentFrame(): present calling";
-		if(m_videoFrame)
-		{
-			m_surface->present(*m_videoFrame);
-			delete m_videoFrame;
-		}
-	}
-// 	else
-// 		qDebug() << "VideoThread::releaseCurrentFrame(): Unable to present frame to surface because m_surface is not active.";
-		
+	emit newImage(m_frame,m_time);
 }
 
 

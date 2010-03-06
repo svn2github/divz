@@ -2,21 +2,19 @@ TEMPLATE = app
 TARGET = video_test
 DEPENDPATH += .
 INCLUDEPATH += .
-QT += opengl network multimedia
+QT += opengl network
 
 
 # Input
 HEADERS += VideoTest.h \
 	VideoThread.h \
-	CameraClient.h \
-	QPainterVideoSurface.h
+	CameraClient.h
 	
 	
 SOURCES += main.cpp \
 	VideoTest.cpp \
 	VideoThread.cpp \
-	CameraClient.cpp \
-	QPainterVideoSurface.cpp 
+	CameraClient.cpp
 
 
 unix {

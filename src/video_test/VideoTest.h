@@ -5,6 +5,7 @@
 #include <QImage>
 #include <QTimer>
 #include <QDebug>
+#include <QTime>
 
 #include <QGLWidget>
 
@@ -13,16 +14,23 @@
 class VideoThread;
 class CameraClient;
 
-#include "QPainterVideoSurface.h"
-#include <QtMultimedia/qvideosurfaceformat.h>
-
 
 class QGraphicsView2 : public QGraphicsView
 {
+public:
+	QGraphicsView2() 
+	{
+		m_frames=0;
+		m_timeTotal  =0;
+	};
+	
 
 protected:
 	friend class VideoTest;
 	QImage m_bg;
+	QTime m_time;
+	int m_timeTotal;
+	int m_frames;
 	
 	void drawBackground(QPainter* p, const QRectF &er)
 	{
@@ -45,29 +53,19 @@ public:
 	void setView(QGraphicsView2*v) { m_view=v; }
 
 public slots:
-	void newFrame(QImage);
-	void formatChanged(const QVideoSurfaceFormat &);
+	void newFrame(QImage,QTime);
 
 signals:
 	void readyForNextFrame();
 
 protected:
 	void paintEvent(QPaintEvent*);
-	void resizeEvent(QResizeEvent*) { updateRects(); } // HACK
 
 private:
-	void updateRects();
-	
 	VideoThread * m_thread;
 	CameraClient * m_client;
 	QImage m_frame;
 	QGraphicsView2 *m_view;
-	QPainterVideoSurface *m_surface;
-	QRectF m_boundingRect;
-	QRectF m_sourceRect;
-	bool m_updatePaintDevice;
-	QSize m_videoNativeSize;
-	Qt::AspectRatioMode m_aspectRatioMode;
 };
 
 

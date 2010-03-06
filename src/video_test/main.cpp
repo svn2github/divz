@@ -16,9 +16,9 @@ int main(int argc, char **argv)
 
 	VideoTest t;
 	t.setAttribute(Qt::WA_OpaquePaintEvent );
- 	t.show();
+// 	t.show();
 
-/*
+
  	QGraphicsScene *scene = new QGraphicsScene;
 	scene->addText("Hello, world!");
 // 	scene->setBackgroundBrush(Qt::NoBrush);
@@ -38,7 +38,7 @@ int main(int argc, char **argv)
 // 	t.setPalette(p);
 
 	t.setView(view);
-	*/
+	
 	return app.exec();
 }
 

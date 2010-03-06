@@ -10,25 +10,14 @@
 #include "VideoThread.h"
 #include "CameraClient.h"
 
-
 VideoTest::VideoTest()
 	: QGLWidget()
 {
 	setWindowTitle("Video Test");
 	
-	m_aspectRatioMode = Qt::KeepAspectRatio;
-	m_updatePaintDevice = true;	
+	
 	m_thread = new VideoThread(this);
-	
-	//connect(m_thread, SIGNAL(newImage(QImage)), this, SLOT(newFrame(QImage)));
-	
-	m_surface = new QPainterVideoSurface;
-	
-	connect(m_surface, SIGNAL(frameChanged()), this, SLOT(repaint()));
-	connect(m_surface, SIGNAL(surfaceFormatChanged(QVideoSurfaceFormat)), this, SLOT(formatChanged(QVideoSurfaceFormat)));
-	
-	m_thread->setSurface(m_surface);
-	
+	connect(m_thread, SIGNAL(newImage(QImage,QTime)), this, SLOT(newFrame(QImage,QTime)));
 // 	connect(this, SIGNAL(readyForNextFrame()), m_thread, SLOT(readFrame()));
 	
 // 	m_client = new CameraClient(this);
@@ -36,65 +25,16 @@ VideoTest::VideoTest()
 
  	m_thread->setVideo("105_JumpBack.mov");
  	//m_thread->setVideo("/home/josiah/Download/qt-master/qt-qt/examples/dviz/src/samples/jumpbacks/105_JumpBack.mov");
- 	m_thread->start(false);
+ 	m_thread->start();
 	//m_client->connectTo("10.1.5.68",8088);
 
-// 	resize(320,240);
+	resize(320,240);
 
 	emit readyForNextFrame();
 
 
 
 }
-
-void VideoTest::formatChanged(const QVideoSurfaceFormat &format)
-{
-	m_videoNativeSize = format.sizeHint();
-
-	updateRects();
-}
-
-void VideoTest::updateRects()
-{
-//     q_ptr->prepareGeometryChange();
-
-	if (m_videoNativeSize.isEmpty()) 
-	{
-		m_boundingRect = QRectF();
-	} 
-	else 
-	if (m_aspectRatioMode == Qt::IgnoreAspectRatio) 
-	{
-		m_boundingRect = rect();
-		m_sourceRect = QRectF(0, 0, 1, 1);
-	} 
-	else 
-	if (m_aspectRatioMode == Qt::KeepAspectRatio) 
-	{
-		QSizeF size = m_videoNativeSize;
-		size.scale(rect().size(), Qt::KeepAspectRatio);
-	
-		m_boundingRect = QRectF(0, 0, size.width(), size.height());
-		m_boundingRect.moveCenter(rect().center());
-	
-		m_sourceRect = QRectF(0, 0, 1, 1);
-	} 
-	else 
-	if (m_aspectRatioMode == Qt::KeepAspectRatioByExpanding) 
-	{
-		m_boundingRect = rect();
-	
-		QSizeF size = rect().size();
-		size.scale(m_videoNativeSize, Qt::KeepAspectRatio);
-	
-		m_sourceRect = QRectF(
-			0, 0, size.width() / m_videoNativeSize.width(), size.height() / m_videoNativeSize.height());
-		m_sourceRect.moveCenter(QPointF(0.5, 0.5));
-	}
-	
-	qDebug() << "VideoTest::updateRects: m_sourceRect: "<<m_sourceRect<<", m_boundingRect:"<<m_boundingRect<<", size:"<<m_videoNativeSize;
-}
-
 
 VideoTest::~VideoTest()
 {
@@ -105,7 +45,7 @@ VideoTest::~VideoTest()
 // 	delete m_client;
 }
 
-void VideoTest::newFrame(QImage frame)
+void VideoTest::newFrame(QImage frame,QTime time)
 {
 // 	m_frame = frame;
 // 	if(frame.size().width() > size().width() ||
@@ -118,10 +58,16 @@ void VideoTest::newFrame(QImage frame)
 //   	p.drawImage(rect(),m_frame);
   	
  	m_view->m_bg = frame;
+ 	m_view->m_time = time;
   	m_view->render(&p);
   	
 //  	m_view->repaint();
 	
+	int ms = m_view->m_time.msecsTo(QTime::currentTime());
+	m_view->m_frames++;
+	m_view->m_timeTotal += ms;
+	int avg = m_view->m_timeTotal / m_view->m_frames;
+	qDebug() << "Time: inst:"<<ms<<", avg:"<<avg;
 	
 	QTimer::singleShot(0,this,SIGNAL(readyForNextFrame()));
 }
@@ -129,34 +75,8 @@ void VideoTest::newFrame(QImage frame)
 void VideoTest::paintEvent(QPaintEvent*)
 {
 // 	qDebug() << "paint event";
- 	QPainter painter(this);
+// 	QPainter p(this);
 // 	p.drawImage(rect(),m_frame);
-
-	
-	if (m_surface && m_surface->isActive()) 
-	{
-		m_surface->paint(&painter, m_boundingRect, m_sourceRect);
-		m_surface->setReady(true);
-	}
-	else if (m_updatePaintDevice && 
-		(painter.paintEngine()->type() == QPaintEngine::OpenGL ||
-		 painter.paintEngine()->type() == QPaintEngine::OpenGL2)
-	   ) 
-	{
-		qDebug() << "VideoTest::paintEvent: Updating paint device";
-		m_updatePaintDevice = false;
-	
-		m_surface->setGLContext(const_cast<QGLContext *>(QGLContext::currentContext()));
-		
-		if(m_surface->supportedShaderTypes() & QPainterVideoSurface::GlslShader)
-		{
-			m_surface->setShaderType(QPainterVideoSurface::GlslShader);
-		} 
-		else 
-		{
-			m_surface->setShaderType(QPainterVideoSurface::FragmentProgramShader);
-		}
-	}
 }
 
 
