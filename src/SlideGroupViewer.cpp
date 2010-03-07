@@ -166,7 +166,7 @@ class SlideGroupViewerGraphicsView : public QGraphicsView
 			, m_canZoom(false)
 		{
 			setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing | QPainter::SmoothPixmapTransform );
-			//setCacheMode(QGraphicsView::CacheBackground);
+			setCacheMode(QGraphicsView::CacheBackground);
 			setViewportUpdateMode(QGraphicsView::BoundingRectViewportUpdate);
 			setOptimizationFlags(QGraphicsView::DontSavePainterState);
 			setViewportUpdateMode(QGraphicsView::SmartViewportUpdate);
