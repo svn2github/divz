@@ -15,6 +15,7 @@ class AbstractItem;
 #include <QListView>
 #include <QMainWindow>
 #include <QPushButton>
+#include <QPointer>
 
 class QListView;
 class SlideGroupViewControl;
@@ -25,7 +26,7 @@ public:
 	SlideGroupViewControlListView(SlideGroupViewControl * ctrl);
 protected:
 	void keyPressEvent(QKeyEvent *event);	
-	SlideGroupViewControl *ctrl;
+	QPointer<SlideGroupViewControl> ctrl;
 };
 
 #include <QTime>

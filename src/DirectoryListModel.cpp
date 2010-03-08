@@ -240,6 +240,9 @@ void DirectoryListModel::makePixmaps()
 	if(MainWindow::mw() &&
 	   MainWindow::mw()->isTransitionActive())
 	   return;
+
+	QTime t2;
+	t2.start();
 	
 	if(m_needPixmaps.isEmpty())
 	{
@@ -259,10 +262,14 @@ void DirectoryListModel::makePixmaps()
 	QPixmap icon;
 
 	if(QFile(cacheFilename).exists())
+	{
+		QTime t;
+		t.start();
 		icon = QPixmap(cacheFilename);
+		qDebug() << "::makePixmaps, load from disk, elapsed:"<<t.elapsed();
+	}
 	else
 	{
-
 		icon = generatePixmap(info);
 		icon.save(cacheFilename,"PNG");
 	}
@@ -278,6 +285,7 @@ void DirectoryListModel::makePixmaps()
 	
 	if(!m_needPixmaps.isEmpty())
 		m_needPixmapTimer.start(NEED_PIXMAP_TIMEOUT_FAST);
+	qDebug() << "::makePixmaps, end, elapsed:"<<t2.elapsed();
 }
 	
 	// for QFileSystemWatcher
@@ -288,7 +296,9 @@ void DirectoryListModel::makePixmaps()
 /** private **/
 QPixmap DirectoryListModel::generatePixmap(const QFileInfo& info)
 {
-	//qDebug() << "DirectoryListModel::generatePixmap: file:"<<info.canonicalFilePath();
+	qDebug() << "DirectoryListModel::generatePixmap: file:"<<info.canonicalFilePath();
+	QTime timer;
+	timer.start();
 	
 	QIcon icon = iconProvider()->icon(info);
 	if(icon.isNull())
@@ -303,11 +313,19 @@ QPixmap DirectoryListModel::generatePixmap(const QFileInfo& info)
 	}
 	
 	if(icon.isNull())
+	{
+		qDebug() << "DirectoryList::generatePixmap: icon is null, time:"<<timer.elapsed();
 		return *m_blankPixmap;
+	}
 		
 	QPixmap pixmap = icon.pixmap(m_iconSize);
 	if(pixmap.isNull())
+	{
+		qDebug() << "DirectoryList::generatePixmap: pixmap is null, time:"<<timer.elapsed();
 		return *m_blankPixmap;
+	}
+
+	qDebug() << "DirectoryList::generatePixmap: finished, time:"<<timer.elapsed();
 	
 	return pixmap;
 }

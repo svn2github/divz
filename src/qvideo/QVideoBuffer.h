@@ -10,8 +10,14 @@ extern "C" {
 
 class QVideo;
 
-struct QFFMpegVideoFrame
+class QFFMpegVideoFrame
 {
+public:
+	QFFMpegVideoFrame()
+		: frame(0)
+		, pts(0)
+		, previous_pts(0)
+			       {}
 	QImage * frame;
 	double pts;
 

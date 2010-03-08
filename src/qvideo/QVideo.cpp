@@ -470,8 +470,12 @@ void QVideo::displayFrame()
         m_last_frame_shown = m_frame_counter;
         if(m_current_frame.frame)
         {
+		qDebug() << "m_current_frame.frame:"<<m_current_frame.frame;
 		QImage img = *m_current_frame.frame;
-		emit newPixmap(QPixmap::fromImage(img));
+		if(img.height() > 0 && img.width() > 0)
+		{
+			emit newPixmap(QPixmap::fromImage(img));
+		}
 	
 		//delete m_current_frame.frame;
 		//m_current_frame.frame = 0;

@@ -38,9 +38,9 @@
   SongSlideGroupViewControl uses ListMode - this allows either
   icon or list mode to change slides just by pressing up or down
 */ 
-SlideGroupViewControlListView::SlideGroupViewControlListView(SlideGroupViewControl * ctrl)
-	: QListView(ctrl)
-	, ctrl(ctrl)
+SlideGroupViewControlListView::SlideGroupViewControlListView(SlideGroupViewControl * parentControl)
+	: QListView(parentControl)
+	, ctrl(parentControl)
 {
 
 	QString stylesheet =
@@ -75,6 +75,9 @@ SlideGroupViewControlListView::SlideGroupViewControlListView(SlideGroupViewContr
 }
 void SlideGroupViewControlListView::keyPressEvent(QKeyEvent *event)
 {
+	if(!ctrl)
+		return;
+
 	if(event->key() == Qt::Key_Space)
 	{
 		ctrl->nextSlide();

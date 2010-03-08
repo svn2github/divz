@@ -88,7 +88,7 @@ QPixmap MediaBrowser::iconForImage(const QString & file, const QSize & size)
 	//return orig;
 
 	bool cacheFileModified = !QFile(cacheFile).exists() || QFileInfo(file).lastModified() >= QFileInfo(cacheFile).lastModified();
-// 	qDebug() << "MediaBrowser::iconForImage: file:"<<file<<", size:"<<size<<", cacheFile: "<<cacheFile<<", cacheModified:"<<cacheFileModified;
+	//qDebug() << "MediaBrowser::iconForImage: file:"<<file<<", size:"<<size<<", cacheFile: "<<cacheFile<<", cacheModified:"<<cacheFileModified;
 	
 	if(!QPixmapCache::find(cacheFile,cache) || cacheFileModified)
 	{
@@ -432,6 +432,7 @@ void MediaBrowser::setupUI()
 	m_viewer = new SlideGroupViewer(m_viewerBase);
 	m_viewer->setCanZoom(true);
 	m_viewer->setSceneContextHint(MyGraphicsScene::Preview);
+	m_viewer->setBackground(Qt::black);
 
 	Slide * slide = new Slide();
 	AbstractVisualItem * bg = dynamic_cast<AbstractVisualItem*>(slide->background());
