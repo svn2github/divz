@@ -59,7 +59,6 @@ public slots:
 	void fadeLogoFrame(bool);
 	
 	
-
 /*public*/ 
 signals:
 	void outputIsSyncedChanged(bool);
@@ -139,6 +138,8 @@ protected:
 	void setupLogoMenu();
 	
 	AbstractSlideGroupEditor *m_editWin;
+	
+	QSlider			* m_zoomSlider;
 };
 
 

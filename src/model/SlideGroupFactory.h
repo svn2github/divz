@@ -57,9 +57,13 @@ public:
 	
 	int iconSize() { return m_iconSize; }
 	
+	// reimplement in sub-classes for those that don't use the icon size
+	virtual bool canSetIconSize() { return true; }
+	
 signals:
 	void slideDoubleClicked(Slide *);
 	void slideSelected(Slide *);
+	void iconSizeChanged(int);
 	
 public slots:
 	virtual void setSlideGroup(SlideGroup *g, Slide *curSlide=0, bool allowProgressDialog=true);
@@ -81,15 +85,15 @@ public slots:
 	virtual void showQuickSlide(bool flag=true);
 	virtual void setQuickSlideText(const QString& text = "");
 	
+	virtual void setIconSize(int);
+
 protected slots:
 	virtual void slideSelected(const QModelIndex &);
 	virtual void currentChanged(const QModelIndex &, const QModelIndex &);
 	virtual void slideDoubleClicked(const QModelIndex &);
 	
 	virtual void updateTimeLabel();
-	virtual void enableAnimation(double time = 0);
-	
-	virtual void setIconSize(int);
+	virtual void enableAnimation(double time = 0, bool startPaused=false);
 	
 private slots:
 	void repaintList();

@@ -122,7 +122,7 @@ SlideGroupViewControl::SlideGroupViewControl(OutputInstance *group, QWidget *w,b
 	m_timeButton(0),
 	m_showQuickSlideBtn(0),
 	m_iconSize(192),
-	m_iconSizeSlider(0),
+// 	m_iconSizeSlider(0),
 	m_lockIconSizeSetter(false),
 	m_itemControlBase(0)
 
@@ -217,19 +217,19 @@ SlideGroupViewControl::SlideGroupViewControl(OutputInstance *group, QWidget *w,b
 		connect(m_nextBtn, SIGNAL(clicked()), this, SLOT(nextSlide()));
 		hbox->addWidget(m_nextBtn);
 		
-		label = new QLabel("Zoom:");
-		hbox->addWidget(label);
+// 		label = new QLabel("Zoom:");
+// 		hbox->addWidget(label);
 		
-		m_iconSizeSlider= new QSlider(Qt::Horizontal);
-		m_iconSizeSlider->setMinimum(16);
-		m_iconSizeSlider->setMaximum(480);
-		m_iconSizeSlider->setTickInterval(16);
-		m_iconSizeSlider->setSingleStep(16);
-		m_iconSizeSlider->setPageStep(32);
-		m_iconSizeSlider->setTickPosition(QSlider::TicksBelow);
-		hbox->addWidget(m_iconSizeSlider,1); 
-		
-		connect(m_iconSizeSlider, SIGNAL(valueChanged(int)), this, SLOT(setIconSize(int)));
+// 		m_iconSizeSlider= new QSlider(Qt::Horizontal);
+// 		m_iconSizeSlider->setMinimum(16);
+// 		m_iconSizeSlider->setMaximum(480);
+// 		m_iconSizeSlider->setTickInterval(16);
+// 		m_iconSizeSlider->setSingleStep(16);
+// 		m_iconSizeSlider->setPageStep(32);
+// 		m_iconSizeSlider->setTickPosition(QSlider::TicksBelow);
+// 		hbox->addWidget(m_iconSizeSlider,1); 
+// 		
+// 		connect(m_iconSizeSlider, SIGNAL(valueChanged(int)), this, SLOT(setIconSize(int)));
 		
 // 		m_spinBox = new QSpinBox(this);
 // 		m_spinBox->setMinimum(16);
@@ -245,7 +245,7 @@ SlideGroupViewControl::SlideGroupViewControl(OutputInstance *group, QWidget *w,b
 		setIconSize(s.value(QString("slideviewcontrol/%1").arg(m_isPreviewControl ? "preview-icon-size" : "icon-size"),m_iconSize).toInt());
 		
 		
-		//hbox->addStretch(1);
+		hbox->addStretch(1);
 	
 		// animation controls
 		m_timeLabel = new QLabel(this);
@@ -310,8 +310,9 @@ void SlideGroupViewControl::setIconSize(int size)
 	int old = size;
 	size = (int)(size / 16) * 16;
 	//qDebug() << "setIconSize: old:"<<old<<", size:"<<size;
-	if(m_iconSizeSlider->value() != size)
-		m_iconSizeSlider->setValue(size);
+	if(m_iconSize != size)
+		//m_iconSizeSlider->setValue(size);
+		emit iconSizeChanged(size);
 // 	if(m_spinBox->value() != size)
 // 		m_spinBox->setValue(size);
 		
@@ -597,7 +598,7 @@ void SlideGroupViewControl::repaintList()
 	//qDebug() << "SlideGroupViewControl::repaintList(): mark done";
 }
 
-void SlideGroupViewControl::enableAnimation(double time)
+void SlideGroupViewControl::enableAnimation(double time, bool startPaused)
 {
 	if(!m_timeButton)
 		return;
@@ -621,7 +622,7 @@ void SlideGroupViewControl::enableAnimation(double time)
 	
 	m_currentTimeLength = time;
 	
-	if(!m_isPreviewControl)
+	if(!m_isPreviewControl && !startPaused)
 		toggleTimerState(Running,true);
 	else
 		if(DEBUG_SLIDEGROUPVIEWCONTROL)
@@ -730,7 +731,7 @@ void SlideGroupViewControl::slideSelected(const QModelIndex &idx)
 		m_slideViewer->setSlideGroup(m_group,slide);
 	else
 		m_slideViewer->setSlide(slide);
-	enableAnimation(slide->autoChangeTime());
+	enableAnimation(slide->autoChangeTime(), m_timerState != Running);
 	
 	m_selectedSlide = slide;
 	

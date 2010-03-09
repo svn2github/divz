@@ -38,6 +38,7 @@ OutputControl::OutputControl(QWidget *parent)
 	, m_logoMenu(0)
 	, m_editWin(0)
 	, m_selectedLogo(0)
+	, m_zoomSlider(0)
 {
 	setupUI();
 }
@@ -390,10 +391,10 @@ void OutputControl::setupAdvancedUI()
 	
 	// row: add seperator line
 	rowNbr++;
-	QFrame * line_1 = new QFrame();
-        line_1->setFrameShape(QFrame::HLine);
-        line_1->setFrameShadow(QFrame::Sunken);
-        gridLayout->addWidget(line_1,rowNbr,0,1,2);
+	QFrame * line = new QFrame();
+        line->setFrameShape(QFrame::HLine);
+        line->setFrameShadow(QFrame::Sunken);
+        gridLayout->addWidget(line,rowNbr,0,1,2);
         
         // row: add overlay
 	rowNbr++;
@@ -442,10 +443,10 @@ void OutputControl::setupAdvancedUI()
 	
 	// row: add seperator line
 	rowNbr++;
-	QFrame * line_2 = new QFrame();
-        line_2->setFrameShape(QFrame::HLine);
-        line_2->setFrameShadow(QFrame::Sunken);
-        gridLayout->addWidget(line_2,rowNbr,0,1,2);
+	line = new QFrame();
+        line->setFrameShape(QFrame::HLine);
+        line->setFrameShadow(QFrame::Sunken);
+        gridLayout->addWidget(line,rowNbr,0,1,2);
 	
 	
 		
@@ -498,10 +499,35 @@ void OutputControl::setupAdvancedUI()
 	
 	connect(m_filterList, SIGNAL(itemChanged(QListWidgetItem *)), this, SLOT(filterListItemChanged(QListWidgetItem *)));
 	
+	// row: add seperator line
+	rowNbr++;
+	line = new QFrame();
+        line->setFrameShape(QFrame::HLine);
+        line->setFrameShadow(QFrame::Sunken);
+        gridLayout->addWidget(line,rowNbr,0,1,2);
 	
+	// Zoom / icon size
+	rowNbr++;
 	
+	label = new QLabel("Icon Size:");
+	gridLayout->addWidget(label,rowNbr,0);
+	
+	m_zoomSlider = new QSlider(Qt::Horizontal);
+	m_zoomSlider->setMinimum(16);
+	m_zoomSlider->setMaximum(480);
+	m_zoomSlider->setTickInterval(16);
+	m_zoomSlider->setSingleStep(16);
+	m_zoomSlider->setPageStep(32);
+	m_zoomSlider->setTickPosition(QSlider::TicksBelow);
+	/*hbox->addWidget(m_zoomSlider,1);*/
+	gridLayout->addWidget(m_zoomSlider,rowNbr,1);
 	
 	layout->addLayout(gridLayout);
+// 	
+// 	connect(m_zoomSlider, SIGNAL(valueChanged(int)), this, SLOT(setIconSize(int)));
+	
+	
+// 	gridLayout->addWidget(label,rowNbr,1);
 	//layout->addStretch(1);
 	
 	
@@ -954,7 +980,14 @@ void OutputControl::setViewControl(SlideGroupViewControl *ctrl)
 {
 	//qDebug() << "OutputControl::setViewControl: ["<<m_inst->output()->name()<<"]: old ctrl:"<<POINTER_STRING(m_ctrl)<<", new ctrl:"<<POINTER_STRING(ctrl)<<", btns:"<<POINTER_STRING(m_blackButton)<<","<<POINTER_STRING(m_clearButton);
 	if(m_ctrl)
+	{
+// 		if(m_zoomSlider)
+// 		{
+// 			disconnect(m_zoomSlider,0,m_ctrl,0);
+// 			disconnect(m_ctrl,0,m_zoomSlider,0);
+// 		}
 		m_stack->removeWidget(m_ctrl);
+	}
 	
 	m_ctrl = ctrl;
 	
@@ -968,6 +1001,14 @@ void OutputControl::setViewControl(SlideGroupViewControl *ctrl)
 	
 	// need to re-apply fade speed
 	m_fadeSlider->setValue(m_fadeSlider->value());
+	
+	if(m_zoomSlider)
+	{
+		connect(m_zoomSlider, SIGNAL(valueChanged(int)), ctrl, SLOT(setIconSize(int)));
+		connect(ctrl, SIGNAL(iconSizeChanged(int)), m_zoomSlider, SLOT(setValue(int)));
+	
+		m_zoomSlider->setEnabled(ctrl->canSetIconSize());
+	}
 	
 // 	if(m_inst)
 // 	{
