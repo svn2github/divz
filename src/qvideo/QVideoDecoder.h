@@ -92,7 +92,7 @@ private:
 	QVideoBuffer * m_video_buffer;
 	QVideoBuffer * m_audio_buffer;
 	
-	QImage * m_frame;
+	QImage m_frame;
 
 // 	SDL_AudioSpec wanted_spec;
 // 	SDL_AudioSpec spec;

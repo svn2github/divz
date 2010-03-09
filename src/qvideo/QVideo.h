@@ -137,6 +137,7 @@ private:
 	int m_total_runtime;
 
 	QFFMpegVideoFrame m_current_frame;
+	QImage m_curImage;
 
         int m_frame_counter;
         int m_last_frame_shown;

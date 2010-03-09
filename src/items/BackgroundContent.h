@@ -16,6 +16,9 @@ namespace Phonon {
 #include <QSlider>
 #include <QAction>
 #include <QLCDNumber>
+#include <QPointer>
+#include <QMovie>
+#include <QThread>
 
 class QPushButton;
 class SlideGroupViewer;

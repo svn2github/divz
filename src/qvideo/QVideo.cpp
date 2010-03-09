@@ -322,6 +322,7 @@ void QVideo::consumeFrame()
 		killTimer(m_play_timer);
 
 		m_current_frame = m_video_decoder->getNextFrame();
+		m_curImage = *m_current_frame.frame;
 
 		static double previous_pts_delay = 40e-3;
 
@@ -468,20 +469,20 @@ void QVideo::displayFrame()
 //         }
 
         m_last_frame_shown = m_frame_counter;
-        if(m_current_frame.frame)
-        {
-		qDebug() << "m_current_frame.frame:"<<m_current_frame.frame;
-		QImage img = *m_current_frame.frame;
-		if(img.height() > 0 && img.width() > 0)
+/*        if(m_curImage)
+        {*/
+// 		qDebug() << "m_current_frame.frame:"<<m_current_frame.frame;
+// 		QImage img = *m_current_frame.frame;
+		if(m_curImage.height() > 0 && m_curImage.width() > 0)
 		{
-			emit newPixmap(QPixmap::fromImage(img));
+			emit newPixmap(QPixmap::fromImage(m_curImage));
 		}
 	
 		//delete m_current_frame.frame;
 		//m_current_frame.frame = 0;
 	
 		//consumeFrame();
-	}
+// 	}
 	//resume playing
 	if(status() == Running)
 		m_play_timer = startTimer(1);

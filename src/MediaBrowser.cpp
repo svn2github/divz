@@ -18,6 +18,8 @@
 #include <QDir>
 #include <QGraphicsView>
 #include <QSplitter>
+#include <QApplication>
+#include <QCheckBox>
 
 #include "qvideo/QVideoProvider.h"
 #include "3rdparty/md5/qtmd5.h"

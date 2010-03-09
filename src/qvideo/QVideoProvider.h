@@ -3,7 +3,7 @@
 #include <QObject>
 #include <QMap>
 #include <QPixmap>
-#include "QVideo.h"
+class QVideo;
 
 #ifdef PHONON_ENABLED
 // #include <phonon/AudioOutput>
@@ -140,7 +140,7 @@ private:
 public:
 	~QVideoProvider();
 	
-	bool isPlaying() { return m_video->status() == QVideo::Running; }
+	bool isPlaying();
 	
 	void connectReceiver(QObject * receiver, const char * method);
 	void disconnectReceiver(QObject * receiver);

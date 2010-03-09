@@ -21,10 +21,12 @@
 #include <QFile>
 #include <QMessageBox>
 #include <QApplication>
+#include <QPushButton>
 
 #include "SlideGroupViewer.h"
 
 #include "qvideo/QVideoProvider.h"
+#include "qvideo/QVideo.h"
 #include "3rdparty/md5/qtmd5.h"
 #include "MediaBrowser.h"
 #include "AppSettings.h"

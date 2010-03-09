@@ -68,7 +68,7 @@ QVideoDecoder::QVideoDecoder(QVideo * video, QObject * parent) : QThread(parent)
 	m_time_base_rational.den = AV_TIME_BASE;
 
 	m_sws_context = NULL;
-	m_frame = NULL;
+// 	m_frame = NULL;
 
 	m_video_buffer = new QVideoBuffer(this);
 	connect(m_video_buffer, SIGNAL(nowEmpty()), this, SLOT(decode()));
@@ -94,11 +94,11 @@ QVideoDecoder::~QVideoDecoder()
 		m_sws_context = NULL;
 	}
 
-	if(m_frame != NULL)
-	{
-		delete m_frame;
-		m_frame = 0;
-	}
+// 	if(m_frame != NULL)
+// 	{
+// 		delete m_frame;
+// 		m_frame = 0;
+// 	}
 }
 
 bool QVideoDecoder::load(const QString & filename)
@@ -474,10 +474,10 @@ void QVideoDecoder::decode()
 
 // 					size_t num_bytes = m_av_rgb_frame->linesize[0] * m_video_codec_context->height;
 
-					if(m_frame)
-						delete m_frame;
+// 					if(m_frame)
+// 						delete m_frame;
 
-					m_frame = new QImage(m_av_rgb_frame->data[0],
+					m_frame = QImage(m_av_rgb_frame->data[0],
 								m_video_codec_context->width,
 								m_video_codec_context->height,
 								QImage::Format_RGB16);
@@ -508,7 +508,7 @@ void QVideoDecoder::decode()
 
 
 					QFFMpegVideoFrame video_frame;
-					video_frame.frame = m_frame;
+					video_frame.frame = &m_frame;
 					video_frame.pts = pts;
 					video_frame.previous_pts = m_previous_pts;
 

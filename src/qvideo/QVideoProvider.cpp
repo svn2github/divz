@@ -1,9 +1,10 @@
 #include "QVideoProvider.h"
+#include "QVideo.h"
+
 #include <QFileInfo>
 #include <QDebug>
 #include <QPixmapCache>
 #include "AppSettings.h"
-
 #include "3rdparty/md5/qtmd5.h"
 
 #define DEBUG_QVIDEOPROVIDER 0
@@ -302,6 +303,8 @@ QVideoProvider::~QVideoProvider()
 		m_mjpeg = 0;
 	}
 }
+
+bool QVideoProvider::isPlaying() { return m_video->status() == QVideo::Running; }
 
 void QVideoProvider::newPixmap(const QPixmap & pix)
 {

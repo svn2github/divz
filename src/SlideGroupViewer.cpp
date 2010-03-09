@@ -22,6 +22,7 @@
 #include "itemlistfilters/SlideTextOnlyFilter.h"
 #define PTRS(ptr) QString().sprintf("%p",static_cast<void*>(ptr))
 
+#include <QMessageBox>
 #include <QApplication>
 
 #define MAX_BYPRODUCT_SIZE 10
@@ -620,7 +621,8 @@ void SlideGroupViewer::setLiveBackground(const QFileInfo &info, bool waitForNext
 	if(!MediaBrowser::isVideo(ext) &&
 	   !MediaBrowser::isImage(ext))
 	{
-		QMessageBox::warning(this,"Unknown File Type","I'm not sure how to handle that file. Sorry!");
+		if(!MainWindow::mw()->isNetworkViewer())
+			QMessageBox::warning(this,"Unknown File Type","I'm not sure how to handle that file. Sorry!");
 		return;
 	}
 
