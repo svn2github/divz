@@ -51,7 +51,7 @@ public:
 	
 	bool isQuickSlideToggled() { return m_showQuickSlideBtn->isChecked(); }
 	
-	typedef enum TimerState { Undefined, Running, Stopped };
+	typedef enum TimerState { Undefined, Running, Stopped, Paused };
 	
 	TimerState timerState() { return m_timerState; }
 	

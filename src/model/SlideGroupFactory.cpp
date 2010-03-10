@@ -604,12 +604,12 @@ void SlideGroupViewControl::enableAnimation(double time, bool startPaused)
 		return;
 
 	if(DEBUG_SLIDEGROUPVIEWCONTROL)
-		qDebug() << "SlideGroupViewControl::enableAnimation(): time:"<<time;
+		qDebug() << this << "SlideGroupViewControl::enableAnimation(): time:"<<time;
 		
 	if(time == 0 || !isEnabled())
 	{
 		if(DEBUG_SLIDEGROUPVIEWCONTROL)
-			qDebug() << "SlideGroupViewControl::enableAnimation(): stopping all timers, isEnabled:"<<isEnabled();
+			qDebug() << this << "SlideGroupViewControl::enableAnimation(): stopping all timers, isEnabled:"<<isEnabled();
 		
 		toggleTimerState(Stopped,true);
 		m_timeButton->setEnabled(false);
@@ -626,7 +626,7 @@ void SlideGroupViewControl::enableAnimation(double time, bool startPaused)
 		toggleTimerState(Running,true);
 	else
 		if(DEBUG_SLIDEGROUPVIEWCONTROL)
-			qDebug() << "SlideGroupViewControl::enableAnimation(): Not calling toggleTimerState() because m_isPreviewControl";
+			qDebug() << this << "SlideGroupViewControl::enableAnimation(): Not calling toggleTimerState() because m_isPreviewControl";
 }
 
 void SlideGroupViewControl::setEnabled(bool flag)
@@ -642,13 +642,13 @@ void SlideGroupViewControl::toggleTimerState(TimerState state, bool resetTimer)
 		return;
 
 	if(state == Undefined)
-		state = m_timerState == Running ? Stopped : Running;
+		state = m_timerState == Running ? Paused : Running;
 	m_timerState = state;
 		
 	bool flag = state == Running;
 	
 	if(DEBUG_SLIDEGROUPVIEWCONTROL)
-		qDebug() << "SlideGroupViewControl::toggleTimerState(): state:"<<state<<", resetTimer:"<<resetTimer<<", flag:"<<flag<<" (s:Running:"<<Running<<",s:Stopped:"<<Stopped<<")";
+		qDebug() << this << "SlideGroupViewControl::toggleTimerState(): state:"<<state<<", resetTimer:"<<resetTimer<<", flag:"<<flag<<" (s:Running:"<<Running<<",s:Stopped:"<<Stopped<<")";
 	
 	m_timeButton->setIcon(flag ? QIcon(":/data/action-pause.png") : QIcon(":/data/action-play.png"));
 	m_timeButton->setText(m_isPreviewControl ? (flag ? "Pause" : "Start") : (flag ? "&Pause" : "&Start"));
@@ -664,7 +664,7 @@ void SlideGroupViewControl::toggleTimerState(TimerState state, bool resetTimer)
 		}
 			
 		if(DEBUG_SLIDEGROUPVIEWCONTROL)
-			qDebug() << "SlideGroupViewControl::toggleTimerState(): starting timer at:"<<m_currentTimeLength;
+			qDebug() << this << "SlideGroupViewControl::toggleTimerState(): starting timer at:"<<m_currentTimeLength;
 		
 		if(m_currentTimeLength <= 0)
 		{
@@ -684,7 +684,7 @@ void SlideGroupViewControl::toggleTimerState(TimerState state, bool resetTimer)
 		m_elapsedAtPause = m_elapsedTime.elapsed();
 		
 		if(DEBUG_SLIDEGROUPVIEWCONTROL)
-			qDebug() << "SlideGroupViewControl::toggleTimerState(): stopping timer at:"<<(m_elapsedAtPause/1000);
+			qDebug() << this << "SlideGroupViewControl::toggleTimerState(): stopping timer at:"<<(m_elapsedAtPause/1000);
 		
 		if(resetTimer)
 			m_timeLabel->setText(formatTime(0));
@@ -726,12 +726,12 @@ void SlideGroupViewControl::slideSelected(const QModelIndex &idx)
 	if(!slide)
 		return;
 	if(DEBUG_SLIDEGROUPVIEWCONTROL)
-		qDebug() << "SlideGroupViewControl::slideSelected(): selected slide#:"<<slide->slideNumber();
+		qDebug() << this << "SlideGroupViewControl::slideSelected(): selected slide#:"<<slide->slideNumber();
 	if(m_slideViewer->slideGroup() != m_group)
 		m_slideViewer->setSlideGroup(m_group,slide);
 	else
 		m_slideViewer->setSlide(slide);
-	enableAnimation(slide->autoChangeTime(), m_timerState != Running);
+	enableAnimation(slide->autoChangeTime(), m_timerState == Paused);
 	
 	m_selectedSlide = slide;
 	
@@ -763,7 +763,7 @@ void SlideGroupViewControl::setOutputView(OutputInstance *inst)
 	}
 	
  	if(DEBUG_SLIDEGROUPVIEWCONTROL)
-		qDebug() << "SlideGroupViewControl::setOutputView()";
+		qDebug() << this << "SlideGroupViewControl::setOutputView()";
 		
 	m_slideViewer = inst;
 	
@@ -841,7 +841,7 @@ void SlideGroupViewControl::setSlideGroup(SlideGroup *group, Slide *curSlide, bo
 	assert(group);
 	
 	if(DEBUG_SLIDEGROUPVIEWCONTROL)
-		qDebug()<<"SlideGroupViewControl::setSlideGroup: Loading "<<group->assumedName();
+		qDebug() << this << "SlideGroupViewControl::setSlideGroup: Loading "<<group->assumedName();
 	
 // 	m_clearButton->setEnabled(true);
 // 	m_blackButton->setEnabled(true); 
@@ -859,12 +859,14 @@ void SlideGroupViewControl::setSlideGroup(SlideGroup *group, Slide *curSlide, bo
 		d->setSize(group->numSlides());
 	}
 	
+	// test for this UI member because the ctor could have been called with init ui = false
+	// because the subclass was going to init its own UI
 	if(m_listView)
 	{
-	    m_slideModel->setSlideGroup(group);
-
-	    // reset seems to be required
-	    m_listView->reset();
+		m_slideModel->setSlideGroup(group);
+	
+		// reset seems to be required
+		m_listView->reset();
 	}
 	
 	if(d)
@@ -878,7 +880,7 @@ void SlideGroupViewControl::setSlideGroup(SlideGroup *group, Slide *curSlide, bo
 		setCurrentSlide(curSlide);
 	
 	if(DEBUG_SLIDEGROUPVIEWCONTROL)
-		qDebug()<<"SlideGroupViewControl::setSlideGroup: DONE Loading group#"<<group->groupNumber();
+		qDebug() << this << "SlideGroupViewControl::setSlideGroup: DONE Loading group#"<<group->groupNumber();
 }
 
 void SlideGroupViewControl::releaseSlideGroup()
@@ -896,7 +898,7 @@ void SlideGroupViewControl::releaseSlideGroup()
 void SlideGroupViewControl::nextSlide()
 {
 	if(DEBUG_SLIDEGROUPVIEWCONTROL)
-		qDebug() << "SlideGroupViewControl::nextSlide(): mark";
+		qDebug() << this << "SlideGroupViewControl::nextSlide(): mark";
 		
 	SlideGroup * tmpGroup = m_group;
 	Slide *nextSlide = m_slideViewer->nextSlide();

@@ -293,7 +293,7 @@ void ImageImportDialog::accept()
 			QString baseName = QFileInfo(file).completeBaseName();
 			bool addText = showNames;
 			if(dontShowCameraNames)
-				if(baseName.indexOf(QRegExp("^([a-zA-Z]{2,5}\\d{2,10}|\\d{2,5}_\\d{2,5})")) > -1)
+				if(baseName.indexOf(QRegExp("^([a-zA-Z]{2,5}_?\\d{2,10}|\\d{2,5}_\\d{2,5})")) > -1)
 					addText = false;
 	
 			if(addText || showCustomTitle)
