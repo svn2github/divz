@@ -79,6 +79,7 @@ public:
 	Status status() { return m_status; }
 	void setStatus(Status);
 	
+	double videoSpeedMultiplier() { return m_videoSpeedMultiplier; }
 
 public slots:
 	void play();
@@ -96,6 +97,8 @@ public slots:
 	void displayFrame();
 
 	void makeMovie();
+	
+	void setVideoSpeedMultiplier(double);
 
 signals:
 	void startDecode();
@@ -138,22 +141,24 @@ private:
 
 	QFFMpegVideoFrame m_current_frame;
 	QImage m_curImage;
-
-        int m_frame_counter;
-        int m_last_frame_shown;
-
-        void consumeFrame();
-
-        QTimer m_nextImageTimer;
-        QTime m_frameDebug;
-        int m_expectedDelay;
-        
-        double m_frameTimer;
-        
-        // used to reset the elapsed time and frame timer back to in sync
-        int m_skipFrameCount;
-        
-        Status m_status;
+	
+	int m_frame_counter;
+	int m_last_frame_shown;
+	
+	void consumeFrame();
+	
+	QTimer m_nextImageTimer;
+	QTime m_frameDebug;
+	int m_expectedDelay;
+	
+	double m_frameTimer;
+	
+	// used to reset the elapsed time and frame timer back to in sync
+	int m_skipFrameCount;
+	
+	Status m_status;
+	
+	double m_videoSpeedMultiplier;
 };
 
 #endif // _QVIDEO_H

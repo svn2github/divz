@@ -32,6 +32,7 @@ class AbstractVisualItem : public AbstractItem
 	Q_PROPERTY(QString  	fillImageFile	READ fillImageFile	WRITE setFillImageFile);
 	Q_PROPERTY(QString	fillVideoFile	READ fillVideoFile	WRITE setFillVideoFile);
 	Q_PROPERTY(VideoEndAction videoEndAction	READ videoEndAction WRITE setVideoEndAction);
+	Q_PROPERTY(double	videoSpeedMultiplier READ videoSpeedMultiplier WRITE setVideoSpeedMultiplier);
 	
 	Q_PROPERTY(bool	   	outlineEnabled 	READ outlineEnabled 	WRITE setOutlineEnabled);
 	Q_PROPERTY(QPen    	outlinePen   	READ outlinePen 	WRITE setOutlinePen);
@@ -162,6 +163,7 @@ public:
 	ITEM_PROPDEF(FillImageFile,	QString,	fillImageFile);
 	ITEM_PROPDEF(FillVideoFile,	QString,	fillVideoFile);
 	ITEM_PROPDEF(VideoEndAction,	VideoEndAction,	videoEndAction);
+	ITEM_PROPDEF(VideoSpeedMultiplier,	double,	videoSpeedMultiplier);
 	
 	ITEM_PROPDEF(OutlineEnabled,	bool,	outlineEnabled);
 	ITEM_PROPDEF(OutlinePen,	QPen,	outlinePen);
@@ -206,6 +208,7 @@ private:
 	QString		m_fillImageFile;
 	QString		m_fillVideoFile;
 	VideoEndAction	m_videoEndAction;
+	double		m_videoSpeedMultiplier;
 	
 	bool		m_outlineEnabled;
 	QPen		m_outlinePen;

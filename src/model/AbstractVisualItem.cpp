@@ -45,6 +45,7 @@ AbstractVisualItem::AbstractVisualItem()
 	m_fillImageFile = "";
 	m_fillVideoFile = "";
 	m_videoEndAction = VideoLoop;
+	m_videoSpeedMultiplier = 1;
 	
 	m_outlineEnabled = false;
 	m_outlinePen = QPen(Qt::black,1);
@@ -113,6 +114,20 @@ ITEM_PROPSET(AbstractVisualItem, FillBrush,		QBrush,		fillBrush);
 ITEM_PROPSET(AbstractVisualItem, FillImageFile,		QString,	fillImageFile);
 ITEM_PROPSET(AbstractVisualItem, FillVideoFile,		QString,	fillVideoFile);
 ITEM_PROPSET(AbstractVisualItem, VideoEndAction,	VideoEndAction,	videoEndAction);
+// ITEM_PROPSET(AbstractVisualItem, VideoSpeedMultiplier,	double,		videoSpeedMultiplier);
+void AbstractVisualItem::setVideoSpeedMultiplier(double x)
+{
+	if(x != x) // NaN
+		return;
+	if(x < 0.1) // to low
+		return; 
+	if(x > 100) // to slow
+		return;
+// 	qDebug() << "AbstractVisualItem::setVideoSpeedMultiplier: x="<<x;
+	double oldValue = m_videoSpeedMultiplier;
+	m_videoSpeedMultiplier = x;
+	setChanged("videoSpeedMultiplier",x,oldValue);
+}
 
 ITEM_PROPSET(AbstractVisualItem, OutlineEnabled,	bool,	outlineEnabled);
 ITEM_PROPSET(AbstractVisualItem, OutlinePen,		QPen,	outlinePen);
@@ -241,6 +256,7 @@ bool AbstractVisualItem::fromXml(QDomElement & pe)
 		if(end == "" || end.isNull())
 			end = "0";
 		setVideoEndAction((VideoEndAction)end.toInt());
+		setVideoSpeedMultiplier(domElement.attribute("speed-multiplier").toDouble());
 		
 		//qDebug() << "fromXml: "<<itemName()<<": fillVideoFile
 	}
@@ -407,6 +423,7 @@ void AbstractVisualItem::toXml(QDomElement & pe) const
  	domElement.setAttribute("image", fillImageFile());
  	domElement.setAttribute("video", fillVideoFile());
  	domElement.setAttribute("endact", (int)videoEndAction());
+ 	domElement.setAttribute("speed-multiplier", (double)videoSpeedMultiplier());
  	pe.appendChild(domElement);
  	
  	domElement = doc.createElement("outline");

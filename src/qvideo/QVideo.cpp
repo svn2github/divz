@@ -27,7 +27,8 @@ QVideo::QVideo(const QString & filename, QObject * parent) : QObject(parent),
 	m_total_runtime(0),
 	m_video_loaded(false),
 	m_status(Paused),
-	m_skipFrameCount(0)
+	m_skipFrameCount(0),
+	m_videoSpeedMultiplier(1)
 {
 	QMutexLocker locker(&qvideo_mutex);
 	av_register_all();
@@ -62,7 +63,8 @@ QVideo::QVideo(QObject *parent) : QObject(parent),
 	m_total_runtime(0),
 	m_frameTimer(0),
 	m_video_loaded(false),
-	m_status(Paused)
+	m_status(Paused),
+	m_videoSpeedMultiplier(1)
 {
 	QMutexLocker locker(&qvideo_mutex);
 	av_register_all();
@@ -343,8 +345,8 @@ void QVideo::consumeFrame()
 		//int global_delay = (m_current_frame.pts * 1000) - m_run_time.elapsed();
 		//m_run_time.elapsed() / 1000; //
 		//double curTime = (double)(av_gettime() / 1000000.0);
-		double curTime = ((double)m_run_time.elapsed() + m_total_runtime) / 1000.0;
-		m_frameTimer += pts_delay;
+		double curTime = ((double)m_run_time.elapsed() + m_total_runtime * m_videoSpeedMultiplier) / 1000.0;
+		m_frameTimer += pts_delay * (1/m_videoSpeedMultiplier);
 		//if(m_frameTimer > curTime)
 			//m_frameTimer = curTime;
 		double actual_delay = m_frameTimer - curTime;
@@ -370,7 +372,9 @@ void QVideo::consumeFrame()
 		}
 		
 		
-		int acutal_delay_int = (int)(actual_delay * 1000 + 0.5);
+		int acutal_delay_int = (int)(actual_delay * 1000 * 0.5);
+		if(m_videoSpeedMultiplier > 0)
+			acutal_delay_int = (int)( (double)acutal_delay_int * m_videoSpeedMultiplier );
 
 
 		//convert to milliseconds for comparison
@@ -406,7 +410,7 @@ void QVideo::consumeFrame()
 		#endif
 		
 		//printf("actual_delay=%d\n",actual_delay);
-		//qDebug() << "acutal_delay_int: "<<acutal_delay_int;
+		//qDebug() << "acutal_delay_int: "<<acutal_delay_int<<", m_videoSpeedMultiplier:"<<m_videoSpeedMultiplier;
 		
 
 		m_frame_counter++;
@@ -491,4 +495,9 @@ void QVideo::displayFrame()
 void QVideo::makeMovie()
 {
 	//m_video_encoder->start();
+}
+
+void QVideo::setVideoSpeedMultiplier(double d)
+{
+	m_videoSpeedMultiplier = d;
 }

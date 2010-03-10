@@ -69,6 +69,7 @@ BackgroundContent::BackgroundContent(QGraphicsScene * scene, QGraphicsItem * par
     , m_isUserPlaying(false)
     , m_isUserPaused(false)
     , m_viewerWidget(0)
+    , m_speedSlider(0)
 {
 	m_dontSyncToModel = true;
 
@@ -1515,6 +1516,39 @@ void BackgroundContent::movieStateChanged(QMovie::MovieState state)
 	}
 }
 
+void BackgroundContent::setVideoSpeed1(int speed)
+{
+// 	qDebug() << "BackgroundContent::setVideoSpeed1: speed:"<<speed;
+	if(m_speedSlider->value() != speed)
+		m_speedSlider->setValue(speed);
+	double d = (double)speed / 10.0;
+//  	qDebug() << "BackgroundContent::setVideoSpeed1:     d:"<<d;
+	if(m_speedSpinBox->value() != d)
+		m_speedSpinBox->setValue(d);
+		
+	if(m_videoProvider)
+		m_videoProvider->videoObject()->setVideoSpeedMultiplier(d);
+	modelItem()->setVideoSpeedMultiplier(d);
+}
+
+void BackgroundContent::setVideoSpeed2(double speed)
+{
+// 	qDebug() << "BackgroundContent::setVideoSpeed2: speed:"<<speed;
+	if(m_speedSpinBox->value() != speed)
+		m_speedSpinBox->setValue(speed);
+		
+	//m_speedSlider->setValue(speed * 10);
+	double d = speed * 10.0;
+//  	qDebug() << "BackgroundContent::setVideoSpeed2:     d:"<<d;
+// 	setVideoSpeed1(d);
+	if(m_speedSlider->value() != d)
+		m_speedSlider->setValue(d);
+	
+	if(m_videoProvider)
+		m_videoProvider->videoObject()->setVideoSpeedMultiplier(speed);
+	modelItem()->setVideoSpeedMultiplier(speed);
+}
+
 QWidget * BackgroundContent::controlWidget()
 {
 //  	return 0;
@@ -1542,6 +1576,21 @@ QWidget * BackgroundContent::controlWidget()
 // 		connect(&m_videoPollTimer, SIGNAL(timeout()), this, SLOT(pollVideoClock())); //, Qt::QueuedConnection);
 // 		m_videoPollTimer.start();
 
+		m_speedSlider = new QSlider(m_controlBase);
+		m_speedSlider->setOrientation(Qt::Horizontal);
+		m_speedSlider->setMinimum(1);
+		m_speedSlider->setMaximum(20);
+		connect(m_speedSlider, SIGNAL(valueChanged(int)), this, SLOT(setVideoSpeed1(int)));
+		
+		m_speedSpinBox = new QDoubleSpinBox(m_controlBase);
+		m_speedSpinBox->setMinimum(0.1);
+		m_speedSpinBox->setMaximum(2);
+		m_speedSpinBox->setSingleStep(0.1);
+// 		m_speedSpinBox->setPageStep(0.3);
+		connect(m_speedSpinBox, SIGNAL(valueChanged(double)), this, SLOT(setVideoSpeed2(double)));
+		
+		setVideoSpeed2(modelItem()->videoSpeedMultiplier());
+		
 		QHBoxLayout *layout = new QHBoxLayout(m_controlBase);
 		layout->setMargin(0);
 
@@ -1581,9 +1630,12 @@ QWidget * BackgroundContent::controlWidget()
 
 // 		layout->addWidget(bar);
 
-		layout->addWidget(new QLabel(QString("Background: <b>%1</b>").arg(QFileInfo(m_videoProvider->canonicalFilePath()).fileName())));
+		layout->addWidget(new QLabel(QString("<b>%1</b>").arg(QFileInfo(m_videoProvider->canonicalFilePath()).fileName())));
 		layout->addWidget(m_playBtn);
 		layout->addWidget(m_pauseBtn);
+		layout->addWidget(new QLabel("Speed:"));
+		layout->addWidget(m_speedSlider);
+		layout->addWidget(m_speedSpinBox);
 		layout->addStretch(1);
 
 // 		layout->addWidget(m_slider);

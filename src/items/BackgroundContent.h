@@ -22,6 +22,7 @@ namespace Phonon {
 
 class QPushButton;
 class SlideGroupViewer;
+class QDoubleSpinBox;
 	
 class BackgroundItem;
 class BackgroundImageWarmingThread : public QThread
@@ -126,6 +127,9 @@ class BackgroundContent : public AbstractContent, public QVideoConsumer
 
 	void pollVideoClock();
 	void seek(int);
+	
+	void setVideoSpeed1(int);
+	void setVideoSpeed2(double);
 
     private:
 	void setVideoFile(const QString &name);
@@ -170,6 +174,9 @@ class BackgroundContent : public AbstractContent, public QVideoConsumer
 	QSlider * m_slider;
 	QTimer m_videoPollTimer;
 	bool m_lockSeekValueChanging;
+	
+	QSlider * m_speedSlider;
+	QDoubleSpinBox * m_speedSpinBox;
 	
 	QAction *m_playAction;
 	QAction *m_pauseAction;
