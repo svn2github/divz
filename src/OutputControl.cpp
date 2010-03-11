@@ -1004,10 +1004,15 @@ void OutputControl::setViewControl(SlideGroupViewControl *ctrl)
 	
 	if(m_zoomSlider)
 	{
-		connect(m_zoomSlider, SIGNAL(valueChanged(int)), ctrl, SLOT(setIconSize(int)));
-		connect(ctrl, SIGNAL(iconSizeChanged(int)), m_zoomSlider, SLOT(setValue(int)));
-	
+		if(ctrl->canSetIconSize())
+		{
+			connect(m_zoomSlider, SIGNAL(valueChanged(int)), ctrl, SLOT(setIconSize(int)));
+			connect(ctrl, SIGNAL(iconSizeChanged(int)), m_zoomSlider, SLOT(setValue(int)));
+		
+			m_zoomSlider->setValue(ctrl->iconSize());
+		}
 		m_zoomSlider->setEnabled(ctrl->canSetIconSize());
+		
 	}
 	
 // 	if(m_inst)

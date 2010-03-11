@@ -18,6 +18,8 @@ public:
 	WebSlideGroupViewControl(OutputInstance * view=0, QWidget * parent = 0);
 	~WebSlideGroupViewControl();
 
+	bool canSetIconSize() { return false; }
+	
 protected:
 	void resizeEvent(QResizeEvent*);
 

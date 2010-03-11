@@ -20,6 +20,8 @@ public:
 
 	Phonon::MediaObject * mediaObject() { return m_mediaObject; }
 	
+	bool canSetIconSize() { return false; }
+	
 public slots:
 	virtual void setSlideGroup(SlideGroup *g, Slide *curSlide=0, bool allowProgressDialog=true);
 	virtual void setIsPreviewControl(bool);

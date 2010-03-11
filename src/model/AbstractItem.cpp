@@ -11,6 +11,8 @@
 #include "OutputViewItem.h"
 #include "ItemFactory.h"
 
+// Translated from a perl function I wrote to do basically
+// the same thing for an ERP project a few years back.
 QString AbstractItem::guessTitle(QString field)
 {
 	static QRegExp rUpperCase = QRegExp("([a-z])([A-Z])");

@@ -31,6 +31,7 @@ class SongSlideGroupViewControl : public SlideGroupViewControl
 	Q_OBJECT
 public:
 	SongSlideGroupViewControl(OutputInstance * view=0, QWidget * parent = 0);
+	bool canSetIconSize() { return false; }
 	
 	//SlideGroupViewer * view() { return m_slideViewer; }
 	//virtual void setOutputView(SlideGroupViewer *);
