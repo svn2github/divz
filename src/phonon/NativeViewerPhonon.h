@@ -4,31 +4,19 @@
 
 #include "SlideGroupViewer.h"
 class VideoSlideGroup;
-// #include <phonon/AudioOutput>
-// #include <phonon/SeekSlider>
-// #include <phonon/MediaObject>
-// #include <phonon/VolumeSlider>
-// #include <phonon/BackendCapabilities>
-// #include <phonon/Effect>
-// #include <phonon/EffectParameter>
-// #include <phonon/ObjectDescriptionModel>
-// #include <phonon/AudioOutput>
-// #include <phonon/MediaSource>
-// #include <phonon/VideoWidget>
-// #include <phonon/VideoPlayer>
 
-#include <Phonon/AudioOutput>
-#include <Phonon/SeekSlider>
-#include <Phonon/MediaObject>
-#include <Phonon/VolumeSlider>
-#include <Phonon/BackendCapabilities>
-#include <Phonon/Effect>
-#include <Phonon/EffectParameter>
-#include <Phonon/ObjectDescriptionModel>
-#include <Phonon/AudioOutput>
-#include <Phonon/MediaSource>
-#include <Phonon/VideoWidget>
-#include <Phonon/VideoPlayer>
+#include <phonon/AudioOutput>
+#include <phonon/SeekSlider>
+#include <phonon/MediaObject>
+#include <phonon/VolumeSlider>
+#include <phonon/BackendCapabilities>
+#include <phonon/Effect>
+#include <phonon/EffectParameter>
+#include <phonon/ObjectDescriptionModel>
+#include <phonon/AudioOutput>
+#include <phonon/MediaSource>
+#include <phonon/VideoWidget>
+#include <phonon/VideoPlayer>
 
 
 #define PHONON_ENABLED 1

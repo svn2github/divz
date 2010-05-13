@@ -717,11 +717,11 @@ void SlideGroupViewer::appSettingsChanged()
 		//qDebug("SlideGroupViewer::appSettingsChanged(): Loaded Non-GL Viewport");
 	}
 	
-	//QBrush brBrush;
-	//QPalette palette(brBrush,brBrush,brBrush,brBrush,brBrush,brBrush,brBrush,brBrush,brBrush);
-	QPalette p;
-	p.setBrush(QPalette::Window, QBrush());
-	m_view->viewport()->setPalette(p);
+// 	QBrush brBrush;
+// 	QPalette p(brBrush,brBrush,brBrush,brBrush,brBrush,brBrush,brBrush,brBrush,brBrush);
+// // 	QPalette p;
+// // 	p.setBrush(QPalette::Window, QBrush());
+// 	m_view->viewport()->setPalette(p);
 }
 
 void SlideGroupViewer::aspectRatioChanged(double x)
@@ -1251,7 +1251,20 @@ void SlideGroupViewer::setSlideInternal(Slide *slide)
 	//qDebug() << "SlideGroupViewer::setSlideInternal(): Slide# "<<slide->slideNumber()<<": Have slide group, setting slide ptr:"<<slide;
 	m_scene->setSlide(slide,m_isPreviewViewer ? MyGraphicsScene::None : MyGraphicsScene::CrossFade,speed,quality);
 	//qDebug() << "SlideGroupViewer::setSlideInternal(): Slide# "<<slide->slideNumber()<<": setSlide() completed";
+	
+	AbstractContent * absBg = m_scene->findVisualDelegate(m_scene->backgroundItem());
+	if(absBg)
+	{
+// 		m_bgContent = dynamic_cast<BackgroundContent *>(absBg);
+// 		m_bgContent->setViewerWidget(this);
+	}
 }
+
+// void SlideGroupViewer::paintEvent(QPaintEvent*)
+// {
+// 	QPainter p(this);
+// 	p.fillRect(rect(),Qt::yellow);
+// }
 
 void SlideGroupViewer::fadeBlackFrame(bool enable)
 {
