@@ -96,7 +96,7 @@ AbstractItem * AbstractItem::cloneTo(AbstractItem *item) const
 		QMetaProperty metaproperty = metaobject->property(i);
 		const char *name = metaproperty.name();
 		QVariant value = property(name);
-		//qDebug() << "AbstractItem::clone():"<<itemName()<<": prop:"<<name<<", value:"<<value;
+// 		qDebug() << "AbstractItem::clone():"<<itemName()<<": prop:"<<name<<", value:"<<value;
 		item->setProperty(name,value);
 	}
 
@@ -130,13 +130,15 @@ QByteArray AbstractItem::toByteArray() const
 		QMetaProperty metaproperty = metaobject->property(i);
 		const char *name = metaproperty.name();
 		QVariant value = property(name);
-// 		qDebug() << "AbstractItem::toByteArray():"<<itemName()<<": prop:"<<name<<", value:"<<value;
+ 		//qDebug() << "AbstractItem::toByteArray():"<<itemName()<<": prop:"<<name<<", value:"<<value;
 		//item->setProperty(name,value);
 		map[name] = value;
 	}
 
 	map["AbstractItem.ClassName"] = metaobject->className();
 	stream << map;
+	
+	//qDebug() << "AbstractItem::toByteArray(): Done with "<<itemName()<<", map: "<<map;
 	return array; 
 }
 /* static */
@@ -198,7 +200,7 @@ void AbstractItem::loadVariantMap(QVariantMap &map)
 		QMetaProperty metaproperty = metaobject->property(i);
 		const char *name = metaproperty.name();
 		QVariant value = map[name];
-		//qDebug() << "AbstractItem::clone():"<<itemName()<<": prop:"<<name<<", value:"<<value;
+		//qDebug() << "AbstractItem::loadVariantMap():"<<itemName()<<": prop:"<<name<<", value:"<<value;
 		if(value.isValid())
 			setProperty(name,value);
 		else

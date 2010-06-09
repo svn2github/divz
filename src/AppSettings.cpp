@@ -176,14 +176,15 @@ void AppSettings::initApp(const QString& appName)
 	// start the cache at 256 MB of pixmaps
 	QPixmapCache::setCacheLimit(256 * 1024);
 
-	qRegisterMetaType<AbstractVisualItem::FillType>("FillType");
-	qRegisterMetaType<AbstractVisualItem::ZoomEffectDirection>("ZoomEffectDirection");
-	qRegisterMetaType<AbstractVisualItem::ZoomAnchorPoint>("ZoomAnchorPoint");
-	qRegisterMetaType<AbstractVisualItem::VideoEndAction>("VideoEndAction");
+// 	qDebug() << "QVariant ID: AbstractVisualItem::FillType: 		" << qRegisterMetaType<AbstractVisualItem::FillType>("AbstractVisualItem::FillType");
+// 	qDebug() << "QVariant ID: AbstractVisualItem::ZoomEffectDirection:	" << qRegisterMetaType<AbstractVisualItem::ZoomEffectDirection>("AbstractVisualItem::ZoomEffectDirection");
+// 	qDebug() << "QVariant ID: AbstractVisualItem::ZoomAnchorPoint:		" << qRegisterMetaType<AbstractVisualItem::ZoomAnchorPoint>("AbstractVisualItem::ZoomAnchorPoint");
+// 	qDebug() << "QVariant ID: AbstractVisualItem::VideoEndAction: 		" << qRegisterMetaType<AbstractVisualItem::VideoEndAction>("AbstractVisualItem::VideoEndAction");
+// 	
 	//qRegisterMetaType<SlideGroup::GroupType>("GroupType");
 	
 	
-	qRegisterMetaType<SlideGroup::EndOfGroupAction>("EndOfGroupAction");
+// 	qDebug() << "QVariant ID: SlideGroup::EndOfGroupAction:	" << qRegisterMetaType<SlideGroup::EndOfGroupAction>("SlideGroup::EndOfGroupAction");
 
 	AbstractItemFilter::registerFilterInstance(SlideTextOnlyFilter::instance());
 	AbstractItemFilter::registerFilterInstance(SlideNonTextOnlyFilter::instance());
@@ -213,11 +214,9 @@ void AppSettings::initApp(const QString& appName)
 	RenderOpts::OxygenStyleQuirks = qApp->style()->objectName() == QLatin1String("oxygen");
 
 	QSettings s;
-	//RenderOpts::FirstRun = s.value("fotowall/firstTime", true).toBool();
 	RenderOpts::hiColor = qApp->palette().color(QPalette::Highlight);
 	RenderOpts::DisableVideoProvider = qApp->arguments().contains("-novideo");
-	//s.setValue("fotowall/firstTime", false);
-
+	
 	bool noOpenGL = false;
 
 	if(qApp->arguments().contains("-nogl"))

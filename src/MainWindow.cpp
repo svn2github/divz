@@ -651,6 +651,8 @@ bool MainWindow::openFile(const QString & file)
 		// HACK this causes segflt if deleted - WHY???
 		//delete m_doc;
 	}
+	
+	qDebug() << "MainWindow::open(): Opening "<<file;
 
 	m_doc = new Document(file);
 

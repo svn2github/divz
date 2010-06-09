@@ -277,6 +277,11 @@ SlideGroup * SlideGroup::fromByteArray(QByteArray &array, Document *context)
 	stream >> map;
 	
 	//qDebug() << "SlideGroup::fromByteArray(): "<<map;
+	if(map.isEmpty())
+	{
+		qDebug() << "Error: SlideGroup::fromByteArray(): Map is empty, not loading group.";
+		return 0;
+	}
 	
 	SlideGroup * group = 0;
 	

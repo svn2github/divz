@@ -18,7 +18,7 @@
 
 SimpleTextContent::SimpleTextContent(QGraphicsScene * scene, QGraphicsItem * parent)
     : AbstractContent(scene, parent, false)
-    , m_text(0)
+    , m_text("")
     , m_textRect(0, 0, 0, 0)
     , m_textMargin(4)
 {
