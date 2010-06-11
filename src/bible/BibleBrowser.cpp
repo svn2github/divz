@@ -672,9 +672,9 @@ void BibleBrowser::setupTextBox(TextBoxItem *tmpText)
 
 SlideGroup * BibleBrowser::createSlideGroup()
 {
-	BibleVerseList list = m_currentList;
+	BibleVerseList verseList = m_currentList;
 	
-	if(list.isEmpty())
+	if(verseList.isEmpty())
 	{
 		QMessageBox::warning(this,"No Verses Found","Sorry, no verses were found!");
 		return 0;
@@ -694,7 +694,7 @@ SlideGroup * BibleBrowser::createSlideGroup()
 	// all we have to work with is a blob of text, we loose the BibleVerse objects here.
 	QStringList lines;
 	QString prefix;
-	foreach(BibleVerse verse, list)
+	foreach(BibleVerse verse, verseList)
 	{
 		prefix = m_showVerseNumbers ? 
 			prefix = QString("<sup>%1</sup>").arg(verse.verseNumber())
@@ -753,6 +753,7 @@ SlideGroup * BibleBrowser::createSlideGroup()
 		QSize size = tmpText->findNaturalSize();
 		
 		startSlide = addSlide(group,tmpText,size.height(),fitSize,m_currentRef.toString());
+		startSlide->setSlideName(m_currentRef.toString());
 		
 		tmpText = 0;
 	}
@@ -792,7 +793,7 @@ SlideGroup * BibleBrowser::createSlideGroup()
 	// so that at the end of the loop we can add the reference to the bottom if showFullRefAtBottomLast() is enabled
 	Slide * currentSlide = 0;
 	
-	// Main logic block - loop over all the "lines" in the list (really, text fragments),
+	// Main logic block - loop over all the "lines" in the verseList (really, text fragments),
 	// and try to fit as many of them as we can on a slide
 	QStringList tmpList;
 	
@@ -854,6 +855,11 @@ SlideGroup * BibleBrowser::createSlideGroup()
 			}
 
 			currentSlide = addSlide(group,tmpText,realHeight,fitSize,tmpList.join("\n"));
+			if(showEachVerseOnSeperateSlide())
+			{
+				currentSlide->setSlideName(QString("v %1").arg(verseList[x].verseNumber()));
+			}
+			
 			slideNumber++;
 			
 			if(m_showResponsiveReadingLabels || showFullRefAtFirstTop() || showFullRefTopEachSlide())
@@ -934,6 +940,7 @@ SlideGroup * BibleBrowser::createSlideGroup()
 			// this will get re-created above when we set it to 0
 			//tmpText = 0;
 			recreateTextBox = true;
+			realHeight = 0;
 			
 			tmpList.clear();
 		}
@@ -1150,7 +1157,7 @@ Slide * BibleBrowser::addSlide(SlideGroup *group, TextBoxItem *tmpText, int real
 	
 
 	// Center text on screen
-	qreal y = fitSize.height()/2 - realHeight/2;
+	qreal y = qMax(0, fitSize.height()/2 - realHeight/2);
 	//qDebug() << "SongSlideGroup::textToSlides(): centering: boxHeight:"<<boxHeight<<", textRect height:"<<textRect.height()<<", centered Y:"<<y;
 	tmpText->setContentsRect(QRectF(0,y,fitSize.width(),realHeight));
 
