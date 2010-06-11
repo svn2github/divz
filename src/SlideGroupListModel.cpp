@@ -116,9 +116,9 @@ void SlideGroupListModel::aspectRatioChanged(double)
 Qt::ItemFlags SlideGroupListModel::flags(const QModelIndex &index) const
 {
 	if (index.isValid())	
-		return Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsDragEnabled | Qt::ItemIsDropEnabled;
+		return Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsDragEnabled | Qt::ItemIsDropEnabled | Qt::ItemIsEditable;
 	
-	return Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsDropEnabled;
+	return Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsDropEnabled | Qt::ItemIsEditable;
 }
 
 
@@ -167,20 +167,23 @@ bool SlideGroupListModel::dropMimeData ( const QMimeData * data, Qt::DropAction 
 	// renumber all the slides
 	int nbr = 0;
 	foreach(Slide *x, newList)
+// 	{
+// 		qDebug() << "SlideGroupListModel::dropMimeData: set slide # "<<nbr;
 		x->setSlideNumber(nbr++);
+// 	}
 
 	m_sortedSlides = newList;
 	
-	if(action == Qt::CopyAction)
-		internalSetup();
-	else
-	{
+// 	if(action == Qt::CopyAction)
+// 		internalSetup();
+// 	else
+// 	{
 		
-		QModelIndex top    = indexForSlide(m_sortedSlides.first()),
-			bottom = indexForSlide(m_sortedSlides.last());
+		QModelIndex top = indexForSlide(m_sortedSlides.first()),
+			 bottom = indexForSlide(m_sortedSlides.last());
 		
 		dataChanged(top,bottom);
-	}
+	//}
 	
 	emit slidesDropped(dropped);
 	
@@ -428,8 +431,14 @@ QVariant SlideGroupListModel::data(const QModelIndex &index, int role) const
 		//qDebug() << "SlideGroupListModel::data: VALID:"<<index.row();
 		
 		Slide *slide = m_sortedSlides.at(index.row());
-		return QString("Slide %1").arg(slide->slideNumber()+1) +
+		//QString("Slide %1").arg(slide->slideNumber()+1) +
+		return slide->assumedName() + 
 			(slide->autoChangeTime() > 0 ? QString("\n%1 secs").arg(slide->autoChangeTime()) : QString());
+	}
+	else if(Qt::EditRole == role)
+	{
+		Slide *slide = m_sortedSlides.at(index.row());
+		return slide->slideName();
 	}
 	else if(Qt::DecorationRole == role)
 	{
@@ -464,6 +473,27 @@ QVariant SlideGroupListModel::data(const QModelIndex &index, int role) const
 	}
 	else
 		return QVariant();
+}
+
+bool SlideGroupListModel::setData(const QModelIndex &index, const QVariant & value, int role) 
+{
+	if (!index.isValid())
+		return false;
+	
+	if (index.row() >= m_sortedSlides.size())
+		return false;
+	
+	Slide *slide = m_sortedSlides.at(index.row());
+	qDebug() << "SlideGroupListModel::setData: index:"<<index<<", value:"<<value; 
+	if(value.isValid() && !value.isNull())
+	{
+		slide->setSlideName(value.toString());
+		//SlideGroupListModel * model = const_cast<SlideGroupListModel *>(this);
+		//model->
+		dataChanged(index,index);
+		return true;
+	}
+	return false;
 }
 
 

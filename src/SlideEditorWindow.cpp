@@ -1477,7 +1477,10 @@ void SlideEditorWindow::setCurrentSlide(Slide *slide)
 
 	QModelIndex idx = m_slideModel->indexForSlide(slide);
 	if(idx.isValid() && idx.row() != m_slideListView->currentIndex().row())
+	{
+		m_slideListView->clearSelection();
 		m_slideListView->setCurrentIndex(idx);
+	}
 
 	m_scene->setSlide(slide);
 	setupViewportLines();
@@ -1878,7 +1881,7 @@ void SlideEditorWindow::dupSlide()
 
 	int oldIdx = m_slideGroup->indexOf(oldSlide);
 	if(oldIdx > -1)
-		for(int i=oldIdx; i<m_slideGroup->numSlides(); i++)
+		for(int i=oldIdx + 1; i<m_slideGroup->numSlides(); i++)
 			m_slideGroup->at(i)->setSlideNumber(i+1);
 
 	m_slideGroup->addSlide(slide);

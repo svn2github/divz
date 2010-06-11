@@ -11,6 +11,7 @@ class Slide : public QObject
 	
 	Q_PROPERTY(int slideId READ slideId WRITE setSlideId);
 	Q_PROPERTY(int slideNumber READ slideNumber WRITE setSlideNumber);
+	Q_PROPERTY(QString slideName READ slideName WRITE setSlideName);
 	Q_PROPERTY(double autoChangeTime READ autoChangeTime WRITE setAutoChangeTime);
 	
 	Q_PROPERTY(double inheritFadeSettings READ inheritFadeSettings WRITE setInheritFadeSettings);
@@ -38,6 +39,9 @@ public:
 	
 	ITEM_PROPDEF(SlideId,		int,	slideId);
 	ITEM_PROPDEF(SlideNumber,	int,	slideNumber);
+	ITEM_PROPDEF(SlideName,		QString,	slideName);
+	
+	QString assumedName();
 	
 	// A value of 0 means never change automatically
 	ITEM_PROPDEF(AutoChangeTime,	double,	autoChangeTime);
@@ -65,6 +69,7 @@ private:
 	QList<AbstractItem *> m_ownedItems;
 	int m_slideNumber;
 	int m_slideId;
+	QString m_slideName;
 	double m_autoChangeTime;
 	bool m_inheritFadeSettings;
 	double m_crossFadeSpeed;

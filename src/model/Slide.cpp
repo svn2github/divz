@@ -38,6 +38,13 @@ void Slide::setSlideNumber(int x)
 	emit slideItemChanged(0,"change","slideNumber",x,old);
 }
 
+void Slide::setSlideName(QString x)
+{
+	QString old = m_slideName;
+	m_slideName = x; 
+	emit slideItemChanged(0,"change","slideName",x,old);
+}
+
 void Slide::setAutoChangeTime(double x) 
 { 
 	double old = m_autoChangeTime;
@@ -145,6 +152,7 @@ bool Slide::fromXml(QDomElement & pe)
 	m_items.clear();
 	
 	m_slideNumber = pe.attribute("number").toInt();
+	m_slideName = pe.attribute("name");
 	m_slideId = pe.attribute("id").toInt();
 	m_autoChangeTime = pe.attribute("timeout").toInt();
 	
@@ -207,6 +215,7 @@ void Slide::toXml(QDomElement & pe) const
 	QDomDocument doc = pe.ownerDocument();
 	
 	pe.setAttribute("number",m_slideNumber);
+	pe.setAttribute("name",m_slideName);
 	pe.setAttribute("id",m_slideId);
 	pe.setAttribute("timeout",m_autoChangeTime);
 	pe.setAttribute("inherit-fade",(int)m_inheritFadeSettings);
@@ -220,6 +229,12 @@ void Slide::toXml(QDomElement & pe) const
 		content->toXml(element);
 	}
 }
+
+QString Slide::assumedName()
+{
+	return slideName().isEmpty() ? QString(tr("Slide %1")).arg(slideNumber() + 1) : slideName();
+}
+
 
 
 QByteArray Slide::toByteArray() const

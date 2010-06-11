@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>407</width>
-    <height>480</height>
+    <height>506</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -24,6 +24,20 @@
        <string>General Settings</string>
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_3">
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_3">
+         <item>
+          <widget class="QLabel" name="label_2">
+           <property name="text">
+            <string>Slide Name:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="slideName"/>
+         </item>
+        </layout>
+       </item>
        <item>
         <widget class="QGroupBox" name="groupBox">
          <property name="title">

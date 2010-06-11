@@ -40,6 +40,9 @@ SlideSettingsDialog::SlideSettingsDialog(Slide *slide, QWidget *parent) :
 	
 	m_ui->speedBox->setValue(m_slide->crossFadeSpeed());
 	m_ui->qualityBox->setValue(m_slide->crossFadeQuality());
+	m_ui->slideName->setText(m_slide->slideName());
+	
+	m_ui->slideName->setFocus();
 	
 	connect(m_ui->buttonBox, SIGNAL(accepted()), this, SLOT(slotAccepted()));
 }
@@ -49,6 +52,7 @@ void SlideSettingsDialog::slotAccepted()
 	m_slide->setInheritFadeSettings(m_ui->btnUseGroup->isChecked());
 	m_slide->setCrossFadeSpeed(m_ui->speedBox->value());
 	m_slide->setCrossFadeQuality(m_ui->qualityBox->value());
+	m_slide->setSlideName(m_ui->slideName->text());
 	
 	close();
 }
