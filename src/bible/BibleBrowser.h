@@ -42,6 +42,8 @@ public:
 	
 	bool showResponsiveReadingLabels() { return m_showResponsiveReadingLabels; }
 	
+	bool appendToExistingGroup() { return m_appendToExistingGroup; }
+	
  	
 	
 signals:
@@ -65,7 +67,7 @@ public slots:
 	void setShowFullRefAtEnd(bool);
 	void setShowResponsiveReadingLabels(bool);
 	
- 	
+ 	void setAppendToExistingGroup(bool);
 
 	void addVersesToDocument();
 	void sendVersesLive();
@@ -86,7 +88,7 @@ protected slots:
 	void templateChanged(SlideGroup*);
 	
 protected:
-	SlideGroup * createSlideGroup();
+	SlideGroup * createSlideGroup(bool allowAppend=false);
 	
 	void closeEvent(QCloseEvent *);
 	
@@ -128,6 +130,8 @@ protected:
 	bool m_showFullRefAtEnd;
 	
 	bool m_showResponsiveReadingLabels;
+	
+	bool m_appendToExistingGroup;
 	
 	QList<SlideGroup*> m_generatedGroups;
 	void cullGeneratedGroups();

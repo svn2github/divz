@@ -30,6 +30,7 @@
 #include "model/Output.h"
 #include "OutputInstance.h"
 #include "model/SlideTemplateManager.h"
+#include "ChooseGroupDialog.h"
 
 
 BibleBrowser::BibleBrowser(QWidget *parent)
@@ -43,6 +44,7 @@ BibleBrowser::BibleBrowser(QWidget *parent)
  	, m_showFullRefAtStart(true)
 	, m_showFullRefAtEnd(false)
 	, m_showResponsiveReadingLabels(false)
+	, m_appendToExistingGroup(false)
 	, m_attemptAutoLive(false)
 	, m_template(0)
 {
@@ -64,6 +66,8 @@ BibleBrowser::BibleBrowser(QWidget *parent)
 	m_showFullRefAtStart		= s.value("biblebrowser/show-full-ref-at-start",true).toBool();
 	m_showFullRefAtEnd		= s.value("biblebrowser/show-full-ref-at-end",false).toBool();
 	m_showResponsiveReadingLabels	= s.value("biblebrowser/show-responsive-reading-lables",false).toBool();
+	
+	m_appendToExistingGroup		= s.value("biblebrowser/append-to-existing-group",false).toBool();
 	
 	int templateId = s.value("biblebrowser/template-id",0).toInt();
 	if(templateId > 0)
@@ -109,6 +113,8 @@ void BibleBrowser::saveSettings()
 	s.setValue("biblebrowser/current-version",			m_versionCombo->currentIndex());
 	s.setValue("biblebrowser/last-reference",			m_search->text());
 	s.setValue("biblebrowser/template-id",				m_template ? m_template->groupId() : 0);
+	
+	s.setValue("biblebrowser/append-to-existing-group",		m_appendToExistingGroup);
 }
 
 void BibleBrowser::closeEvent(QCloseEvent*)
@@ -130,6 +136,8 @@ void BibleBrowser::setShowFullRefAtBottomLast(bool x)		{ m_showFullRefAtBottomLa
 void BibleBrowser::setShowFullRefAtStart(bool x) 		{ m_showFullRefAtStart = x; saveSettings(); }
 void BibleBrowser::setShowFullRefAtEnd(bool x) 			{ m_showFullRefAtEnd = x; saveSettings(); }
 void BibleBrowser::setShowResponsiveReadingLabels(bool x) 	{ m_showResponsiveReadingLabels = x; saveSettings(); }
+
+void BibleBrowser::setAppendToExistingGroup(bool x) 		{ m_appendToExistingGroup = x; saveSettings(); }
 
 void BibleBrowser::setupUI()
 {
@@ -204,6 +212,13 @@ void BibleBrowser::setupUI()
 	action->setCheckable(true);
 	action->setChecked(showFullRefAtEnd());
 	connect(action, SIGNAL(toggled(bool)), this, SLOT(setShowFullRefAtEnd(bool)));
+	
+	configMenu->addSeparator();
+ 	
+	action = configMenu->addAction("Append Slides to Existing Group");
+	action->setCheckable(true);
+	action->setChecked(appendToExistingGroup());
+	connect(action, SIGNAL(toggled(bool)), this, SLOT(setAppendToExistingGroup(bool)));
 	
 	configBtn->setMenu(configMenu);
 	hboxTop->addWidget(configBtn);
@@ -433,8 +448,8 @@ void BibleBrowser::loadVerses(const QString & filter)
 
 void BibleBrowser::addVersesToDocument()
 {
-	SlideGroup *group = createSlideGroup();
-	if(group)
+	SlideGroup *group = createSlideGroup(true);
+	if(group && !appendToExistingGroup())
 		MainWindow::mw()->currentDocument()->addGroup(group);
 }
 
@@ -670,7 +685,7 @@ void BibleBrowser::setupTextBox(TextBoxItem *tmpText)
 	tmpText->setShadowBlurRadius(6);
 }
 
-SlideGroup * BibleBrowser::createSlideGroup()
+SlideGroup * BibleBrowser::createSlideGroup(bool allowAppend)
 {
 	BibleVerseList verseList = m_currentList;
 	
@@ -731,8 +746,22 @@ SlideGroup * BibleBrowser::createSlideGroup()
 	// This will be adjusted below if we were told to add responsive reading labels
 	QSize fitSize = MainWindow::mw()->standardSceneRect().size();
 
-	SlideGroup *group = new SlideGroup();
-	group->setGroupTitle(m_currentRef.toString());
+	SlideGroup *group;
+	 
+	if(allowAppend && appendToExistingGroup())
+	{
+		ChooseGroupDialog d;
+		d.exec();
+		group = d.selectedGroup();
+		if(!group)
+			return 0;
+	}
+	else
+	{
+		group = new SlideGroup();
+		group->setGroupTitle(m_currentRef.toString());
+	}
+	
 
 	QString blockPrefix = "<span style='font-family:Calibri,Tahoma,Arial,Sans-Serif;font-weight:800'><b>";
 	QString blockSuffix = "</b></span>";
