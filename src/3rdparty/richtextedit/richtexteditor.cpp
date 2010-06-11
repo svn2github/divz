@@ -335,6 +335,8 @@ private slots:
     ///void insertLink();
     ///void insertImage();
     void pastePlain();
+    void zoomOut();
+    void zoomIn();
     void slotWheelScrolled(int steps);    // +fotowall
     
 
@@ -354,6 +356,8 @@ private:
     //QAction *m_link_action;
     //QAction *m_image_action;
     QAction *m_paste_plain_action;
+    QAction *m_zoomIn;
+    QAction *m_zoomOut;
     ColorAction *m_color_action;
     QComboBox *m_font_size_input;
     
@@ -384,6 +388,8 @@ RichTextEditorToolBar::RichTextEditorToolBar(RichTextEditor *editor,
     ///m_link_action(new QAction(this)),
     ///m_image_action(new QAction(this)),
     m_paste_plain_action(new QAction(this)),
+    m_zoomIn(new QAction(this)),
+    m_zoomOut(new QAction(this)),
     m_color_action(new ColorAction(this)),
     m_font_size_input(new QComboBox),
     m_font_face_input(new QFontComboBox(this)), // +fotowall
@@ -448,11 +454,25 @@ RichTextEditorToolBar::RichTextEditorToolBar(RichTextEditor *editor,
     
     
     
-    m_paste_plain_action->setIcon(createIconSet(QLatin1String("stock-attach.png")));
-    m_paste_plain_action->setText(tr("Paste Plain Text"));
-    connect(m_paste_plain_action, SIGNAL(triggered()), SLOT(pastePlain()));
-    m_paste_plain_action->setShortcut(QString("CTRL+SHIFT+V"));
-    addAction(m_paste_plain_action);
+	m_paste_plain_action->setIcon(createIconSet(QLatin1String("stock-attach.png")));
+	m_paste_plain_action->setText(tr("Paste Plain Text"));
+	connect(m_paste_plain_action, SIGNAL(triggered()), SLOT(pastePlain()));
+	m_paste_plain_action->setShortcut(QString("CTRL+SHIFT+V"));
+	addAction(m_paste_plain_action);
+	
+// 	m_zoomOut->setIcon(createIconSet(QLatin1String("stock-zoom-out.png")));
+// 	m_zoomOut->setText(tr("Zoom Out"));
+// 	connect(m_zoomOut, SIGNAL(triggered()), SLOT(zoomOut()));
+// 	m_zoomOut->setShortcut(QString("CTRL+SHIFT+-"));
+// 	addAction(m_zoomOut);
+// 	
+// 	m_zoomIn->setIcon(createIconSet(QLatin1String("stock-zoom-in.png")));
+// 	m_zoomIn->setText(tr("Zoom In"));
+// 	connect(m_zoomIn, SIGNAL(triggered()), SLOT(zoomIn()));
+// 	m_zoomIn->setShortcut(QString("CTRL+SHIFT++"));
+// 	addAction(m_zoomIn);
+	
+	
     
 //      m_shortcut = new QShortcut(QKeySequence(tr("Ctrl+SHIFT+V")),this);
 //      connect(m_shortcut, SIGNAL(activated()), this, SLOT(pastePlain()));
@@ -630,6 +650,18 @@ void RichTextEditorToolBar::pastePlain()
 		//qDebug() << "RichTextEditorToolBar::pastePlain(): no plain text avail";
 	}
 	
+}
+
+void RichTextEditorToolBar::zoomIn()
+{
+	qDebug() << "zoom in";
+	m_editor->zoomIn();
+}
+
+void RichTextEditorToolBar::zoomOut()
+{
+	qDebug() << "zoom out";
+	m_editor->zoomOut();
 }
 
 void RichTextEditorToolBar::slotWheelScrolled(int steps)    // +fotowall
