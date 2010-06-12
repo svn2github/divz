@@ -20,6 +20,7 @@
 #include <QSplitter>
 #include <QApplication>
 #include <QCheckBox>
+#include <QInputDialog>
 
 #include "qvideo/QVideoProvider.h"
 #include "3rdparty/md5/qtmd5.h"
@@ -272,6 +273,7 @@ MediaBrowser::MediaBrowser(const QString &directory, QWidget *parent)
 	, m_controlWidget(0)
 	, m_autoPlayVideo(true)
 	, m_autoPlayCheckbox(0)
+	, m_ignoreBookmarkIdxChange(false)
 {
 	setObjectName("MediaBrowser");
 	setupUI();
@@ -328,7 +330,7 @@ void MediaBrowser::setupUI()
 	m_btnUp->setEnabled(false);
 	connect(m_btnUp, SIGNAL(clicked()), this, SLOT(goUp()));
 
-	QLabel *label = new QLabel("Se&arch:");
+	QLabel *label = new QLabel("Fil&ter:");
 	m_searchBox = new QLineEdit(m_searchBase);
 	label->setBuddy(m_searchBox);
 
@@ -371,6 +373,8 @@ void MediaBrowser::setupUI()
 	connect(m_listView,     SIGNAL(activated(const QModelIndex &)), this, SLOT(indexDoubleClicked(const QModelIndex &)));
 	connect(m_listView,       SIGNAL(clicked(const QModelIndex &)), this, SLOT(indexSingleClicked(const QModelIndex &)));
 
+	////////////////////////
+	
 	// Add action buttons
 	m_btnBase = new QWidget(browser);
 	QHBoxLayout *hbox3 = new QHBoxLayout(m_btnBase);
@@ -399,20 +403,49 @@ void MediaBrowser::setupUI()
 
 	// enabled by indexSingleClicked()
 	m_btnBase->setEnabled(false);
+	
+	/////////////////
 
 	// Add the directory box and filter box at bottom
 	m_folderBoxBase = new QWidget(browser);
 	QHBoxLayout *hbox2 = new QHBoxLayout(m_folderBoxBase);
 	SET_MARGIN(hbox2,0);
-
+	
+	m_dirBox = new QLineEdit(m_folderBoxBase);
+	hbox2->addWidget(m_dirBox);
+	
 	m_filterBox = new QComboBox(m_folderBoxBase);
 	hbox2->addWidget(m_filterBox);
 
-	m_dirBox = new QLineEdit(m_folderBoxBase);
-	hbox2->addWidget(m_dirBox);
-
 	connect(m_dirBox, SIGNAL(returnPressed()), this, SLOT(dirBoxReturnPressed()));
 	connect(m_filterBox, SIGNAL(currentIndexChanged(int)), this, SLOT(fileTypeChanged(int)));
+	
+	//#######################################333
+	
+	
+	m_bookmarkBase = new QWidget(browser);
+	
+	QHBoxLayout *hbox4 = new QHBoxLayout(m_bookmarkBase);
+	SET_MARGIN(hbox4,0);
+	
+	m_bookmarkBox = new QComboBox(m_bookmarkBase);
+	hbox4->addWidget(m_bookmarkBox,2);
+
+	m_btnBookmark = new QPushButton(QIcon(":/data/stock-new.png"),"");
+	m_btnBookmark->setToolTip("Bookmark current folder");
+	hbox4->addWidget(m_btnBookmark);
+	
+	m_btnDelBookmark = new QPushButton(QIcon(":/data/stock-remove.png"),"");
+	m_btnDelBookmark->setToolTip("Delete current bookmark");
+	hbox4->addWidget(m_btnDelBookmark);
+	
+	connect(m_bookmarkBox, SIGNAL(currentIndexChanged(int)), this, SLOT(loadBookmarkIndex(int)));
+	connect(m_btnBookmark, SIGNAL(clicked()), this, SLOT(slotBookmarkFolder()));
+	connect(m_btnDelBookmark, SIGNAL(clicked()), this, SLOT(slotDelBookmark()));
+	
+	
+	//#######################################333
+	
 
 
 	QFrame * line = new QFrame();
@@ -420,8 +453,9 @@ void MediaBrowser::setupUI()
         line->setFrameShadow(QFrame::Sunken);
 	
 	vbox->addWidget(m_searchBase);
-	vbox->addWidget(line);
 	vbox->addWidget(m_folderBoxBase);
+	vbox->addWidget(line);
+	vbox->addWidget(m_bookmarkBase);
 	vbox->addWidget(m_listView);
 	vbox->addWidget(m_btnBase);
 	
@@ -448,6 +482,112 @@ void MediaBrowser::setupUI()
 	m_viewerLayout->addWidget(m_viewer);
 	
 	m_splitter->addWidget(m_viewerBase);
+	
+	loadBookmarks();
+}
+
+void MediaBrowser::slotBookmarkFolder()
+{
+	QString dir = m_currentDirectory;
+	QString title = QDir(dir).dirName();
+	
+	bool ok;
+	QString text = QInputDialog::getText(this, "Bookmark title",
+		QString("Please enter a title for this folder:"),
+		QLineEdit::Normal,
+		title, &ok);
+		
+	if(ok && !text.isEmpty())
+		title = text;
+		
+	
+	m_bookmarkList << QPair<QString,QString>(dir,title);
+	
+	m_ignoreBookmarkIdxChange = true;
+	saveBookmarks(); // Write to qsettings
+	loadBookmarks(); // Read back from qsettings and update combo box
+	m_ignoreBookmarkIdxChange = false;
+	
+	m_bookmarkBox->setCurrentIndex(m_bookmarkList.size() - 1);
+}
+
+void MediaBrowser::slotDelBookmark()
+{
+	int idx = m_bookmarkBox->currentIndex();
+	if(idx >= 0)
+	{
+		if(QMessageBox::question(this,"Delete Bookmark?",QString("Are you sure you want to delete this bookmark?")) == QMessageBox::Ok)
+		{
+			m_bookmarkList.removeAt(idx);
+			m_ignoreBookmarkIdxChange = true;
+			saveBookmarks(); // Write to qsettings
+			loadBookmarks(); // Read back from qsettings and update combo box
+			m_ignoreBookmarkIdxChange = false;
+		}
+	}
+}
+
+void MediaBrowser::loadBookmarkIndex(int idx)
+{
+	if(m_ignoreBookmarkIdxChange)
+		return;
+		
+	if(idx < 0 || idx >= m_bookmarkList.size())
+		return;
+	
+	setDirectory(m_bookmarkList[idx].first);
+}
+
+void MediaBrowser::loadBookmarks()
+{
+	QSettings s;
+	s.beginGroup("mediabrowser-bookmarks");
+	int count = s.value("count",0).toInt();
+	
+	m_bookmarkList.clear();
+	m_bookmarkBox->clear();
+	
+	if(count > 0)
+	{
+		for(int i=0;i<count;i++)
+		{
+			s.beginGroup(QString("bookmark%1").arg(i));
+			
+			QString dir = s.value("dir","").toString();
+			QString title = s.value("title","").toString();
+			
+			if(!dir.isEmpty() && !title.isEmpty())
+			{
+				m_bookmarkList << QPair<QString,QString>(dir,title);
+				m_bookmarkBox->addItem(title);
+			}
+			
+			s.endGroup();
+		}
+	}
+	
+	s.endGroup();
+	
+}
+
+void MediaBrowser::saveBookmarks()
+{
+	QSettings s;
+	s.beginGroup("mediabrowser-bookmarks");
+	s.setValue("count",m_bookmarkList.size());
+	
+	for(int i=0;i<m_bookmarkList.size();i++)
+	{
+		s.beginGroup(QString("bookmark%1").arg(i));
+		
+		s.setValue("dir",m_bookmarkList[i].first);
+		s.setValue("title",m_bookmarkList[i].second);
+		
+		s.endGroup();
+	}
+	
+	s.endGroup();
+	
 }
 
 QByteArray MediaBrowser::saveState()
@@ -476,6 +616,8 @@ bool MediaBrowser::restoreState(const QByteArray &array)
 	QVariant flag = map["auto-play"];
 	if(flag.isValid())
 		setAutoPlayVideo(flag.toBool());
+	
+	return true;
 }
 
 void MediaBrowser::setPreviousPathKey(const QString& key)

@@ -92,6 +92,13 @@ protected slots:
 	void slotSetAsBgCurrent();
 	void slotSetAsBgLater();
 	void slotSetAsBgLive();
+	
+	void slotBookmarkFolder();
+	void slotDelBookmark();
+	void loadBookmarkIndex(int);
+	void loadBookmarks();
+	void saveBookmarks();
+	
 
 protected:
 	void setupUI();
@@ -156,6 +163,16 @@ protected:
 	QWidget		* m_controlWidget;
 	bool		m_autoPlayVideo;
 	QCheckBox	* m_autoPlayCheckbox;
+	
+	QWidget 	* m_bookmarkBase;
+	QComboBox	* m_bookmarkBox;
+	QPushButton	* m_btnBookmark;
+	QPushButton	* m_btnDelBookmark;
+	bool		m_ignoreBookmarkIdxChange;
+	
+	QList<QPair<QString,QString> > m_bookmarkList;
+	
+	
 	
 };
 

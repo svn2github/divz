@@ -314,6 +314,9 @@ void ImageImportDialog::accept()
 				QSize size = t->findNaturalSize(sceneRect.width()); // std width scene
 				t->setContentsRect(QRect(0,sceneRect.height() - size.height() - DEFAULT_TITLE_BOTTOM_PADDING, sceneRect.width(), size.height()));
 				slide->addItem(t);
+				
+				if(addText)
+					slide->setSlideName(baseName);
 			}
 		}
 
