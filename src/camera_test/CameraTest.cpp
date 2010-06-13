@@ -7,6 +7,7 @@
 #include "CameraServer.h"
 #include <QPainter>
 #include <QApplication>
+#include <QMessageBox>
 
 CameraTest::CameraTest()
 	: QGLWidget()
@@ -51,6 +52,7 @@ void CameraTest::newFrame(QImage frame)
 	    frame.size().height() > size().height() )
 	{
 		//qDebug() << "Frame Size:"<<frame.size();
+		//QMessageBox::information(this, "Debug", QString("Frame: %1 x %2").arg(frame.size().width()).arg(frame.size().height()));
 		//resize(frame.size());
 		resize(QSize(1024,768));
 	}

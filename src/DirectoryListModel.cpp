@@ -81,7 +81,7 @@ QString DirectoryListModel::cacheFile(const QString& file) const
 	if(!path.exists())
 		QDir(AppSettings::cachePath()).mkdir(CACHE_DIR);
 	
-	return QString("%1/%2/%3").arg(AppSettings::cachePath()).arg(CACHE_DIR).arg(MD5::md5sum(file));
+	return QString("%1/%2/%3.gif").arg(AppSettings::cachePath()).arg(CACHE_DIR).arg(MD5::md5sum(file));
 }
 
 QVariant DirectoryListModel::data ( const QModelIndex & index, int role ) const
@@ -126,7 +126,9 @@ QVariant DirectoryListModel::data ( const QModelIndex & index, int role ) const
 				}
 
 				self->needPixmap(file);
-				return *m_blankPixmap;
+				//return *m_blankPixmap;
+				QIcon iconObject = m_iconTypeCache[QFileIconProvider::File];
+				return iconObject.pixmap(m_iconSize);
  			}
  			else
  			{
@@ -152,6 +154,7 @@ QVariant DirectoryListModel::data ( const QModelIndex & index, int role ) const
 // DirectoryListModel::
 void DirectoryListModel::setDirectory(const QDir& d)
 {
+	m_needPixmapTimer.stop();
 	m_pixmapCache.clear();
 	m_needPixmaps.clear();
 	m_dir = d;
@@ -271,7 +274,7 @@ void DirectoryListModel::makePixmaps()
 	else
 	{
 		icon = generatePixmap(info);
-		icon.save(cacheFilename,"PNG");
+		icon.save(cacheFilename,"GIF");
 	}
 
 	QPixmapCache::insert(key,icon);
@@ -280,11 +283,14 @@ void DirectoryListModel::makePixmaps()
 	
 	m_needPixmapTimer.stop();
 	
-	QModelIndex idx = indexForFile(info);
-	dataChanged(idx,idx);
-	
 	if(!m_needPixmaps.isEmpty())
 		m_needPixmapTimer.start(NEED_PIXMAP_TIMEOUT_FAST);
+	else
+	{
+		QModelIndex first = indexForFile(m_entryList.first());
+		QModelIndex last = indexForFile(m_entryList.last());
+		dataChanged(first,last);
+	}
 	qDebug() << "::makePixmaps, end, elapsed:"<<t2.elapsed();
 }
 	
@@ -399,7 +405,7 @@ void DirectoryListModel::loadEntryList()
 				m_entryList << file;
 		}
 		else
-			m_entryList << QFileInfo(QString("%1/%2").arg(path,file)).canonicalFilePath();
+			m_entryList << QString("%1/%2").arg(path,file); // QFileInfo(QString("%1/%2").arg(path,file)).canonicalFilePath();
 		//needPixmap(file);
 	}
 	qSort(m_entryList.begin(),m_entryList.end(),DirectoryListModel_sortFileList);

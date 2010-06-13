@@ -5,49 +5,6 @@ DEPENDPATH += $$PWD ../
 INCLUDEPATH += $$PWD ../
 VPATH += ../
 
-
-
-win32 {
-	INCLUDEPATH += \
-		../external/ffmpeg/include/msinttypes \
-		../external/ffmpeg/include/libswscale \
-		../external/ffmpeg/include/libavutil \
-		../external/ffmpeg/include/libavdevice \
-		../external/ffmpeg/include/libavformat \
-		../external/ffmpeg/include/libavcodec \
-		../external/ffmpeg/include
-	
-	LIBS += -L"../external/ffmpeg/lib" \
-		-lavcodec-51 \
-		-lavformat-52 \
-		-lavutil-49 \
-		-lavdevice-52 \
-		-lswscale-0
-}
-
-
-include(../frames/frames.pri)
-include(../items/items.pri)
-include(../model/model.pri)
-include(../songdb/songdb.pri)
-include(../itemlistfilters/itemlistfilters.pri)
-include(../3rdparty/richtextedit/richtextedit.pri)
-include(../3rdparty/qtgradienteditor/qtgradienteditor.pri)
-include(../3rdparty/videocapture/videocapture.pri)
-include(../3rdparty/analyzers/analyzers.pri)
-include(../qvideo/qvideo.pri)
-include(../qtcolorpicker/qtcolorpicker.pri)
-include(../qtmultimedia/audio/audio.pri)
-include(../3rdparty/rtmidi/rtmidi.pri)
-include(../3rdparty/md5/md5.pri)
-include(../3rdparty/qjson/qjson.pri)
-include(../ppt/ppt.pri)
-include(../groupplayer/groupplayer.pri)
-include(../imgtool/exiv2-0.18.2-qtbuild/qt_build_root.pri)
-include(../webgroup/webgroup.pri)
-include(../phonon/phonon.pri)
-
-
 MOC_DIR = .build
 OBJECTS_DIR = .build
 RCC_DIR = .build
@@ -137,6 +94,59 @@ QT += core \
 unix {
 	LIBS += -lavdevice -lavformat -lavcodec -lavutil -lswscale -lbz2
 }
+
+
+
+
+win32 {
+	INCLUDEPATH += \
+		../external/ffmpeg/include/msinttypes \
+		../external/ffmpeg/include/libswscale \
+		../external/ffmpeg/include/libavutil \
+		../external/ffmpeg/include/libavdevice \
+		../external/ffmpeg/include/libavformat \
+		../external/ffmpeg/include/libavcodec \
+		../external/ffmpeg/include
+	
+	LIBS += -L"../external/ffmpeg/lib" \
+		-lavcodec-51 \
+		-lavformat-52 \
+		-lavutil-49 \
+		-lavdevice-52 \
+		-lswscale-0
+}
+
+
+include(../frames/frames.pri)
+include(../items/items.pri)
+include(../model/model.pri)
+include(../songdb/songdb.pri)
+include(../itemlistfilters/itemlistfilters.pri)
+include(../3rdparty/richtextedit/richtextedit.pri)
+include(../3rdparty/qtgradienteditor/qtgradienteditor.pri)
+include(../3rdparty/videocapture/videocapture.pri)
+include(../3rdparty/analyzers/analyzers.pri)
+include(../qvideo/qvideo.pri)
+include(../qtcolorpicker/qtcolorpicker.pri)
+#include(../qtmultimedia/audio/audio.pri)
+include(../3rdparty/rtmidi/rtmidi.pri)
+include(../3rdparty/md5/md5.pri)
+include(../3rdparty/qjson/qjson.pri)
+#include(../ppt/ppt.pri)
+#include(../groupplayer/groupplayer.pri)
+#include(../imgtool/exiv2-0.18.2-qtbuild/qt_build_root.pri)
+#include(../webgroup/webgroup.pri)
+#include(../phonon/phonon.pri)
+
+include(../ppt/ppt.pri)
+include(../phonon/phonon.pri)
+#include(../http/http.pri)
+include(../groupplayer/groupplayer.pri)
+#include(../bible/bible.pri)
+#include(../viewer/client.pri)
+include(../imgtool/exiv2-0.18.2-qtbuild/qt_build_root.pri)
+include(../webgroup/webgroup.pri)
+
 
 
 # deployment on Linux
