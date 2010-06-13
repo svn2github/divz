@@ -639,7 +639,7 @@ void TextBoxWarmingThread::run()
 			textPainter.save();
 			textPainter.translate(model->shadowOffsetX() - radiusSquared,
 					model->shadowOffsetY() - radiusSquared);
-			textPainter.drawImage(0, 0, blurredImage);
+			textPainter.drawImage(0, 0, blurredImage.copy(blurredImage.rect()));
 			textPainter.restore();
 		}
 	}
