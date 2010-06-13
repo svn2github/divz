@@ -72,6 +72,7 @@ protected:
 	QString cacheFile(const QString& file) const;
 	
 	QHash<QString,QPixmap> m_pixmapCache;
+	QHash<QString,bool> m_isDir;
 	
 // members:
 	QHash<int,QIcon> m_iconTypeCache;

@@ -113,7 +113,9 @@ protected:
 	//void clearBackward();
 	
 	bool checkCanGoUp();
-	
+		
+	void matchCurrentDirToBookmark();
+		
 	QStringList makeModelFilterList(const QString &userFilter);
 
 	QWidget		* m_searchBase;

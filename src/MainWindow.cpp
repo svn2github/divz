@@ -804,14 +804,23 @@ void MainWindow::fileSelected(const QFileInfo &info)
 		return;
 	}
 
-	//Slide * slide = new Slide();
-	VideoSlideGroup *group = new VideoSlideGroup();
-	group->setFile(info.canonicalFilePath());
-	group->setGroupTitle(info.completeBaseName());
-	//group->addSlide(slide);
-
-	//group->changeBackground(info);
-
+	
+	SlideGroup * group = 0;
+	if(MediaBrowser::isVideo(info.suffix()))
+	{
+		VideoSlideGroup *videoGroup= new VideoSlideGroup();
+		videoGroup->setFile(info.canonicalFilePath());
+		videoGroup->setGroupTitle(info.completeBaseName());
+		group = videoGroup;
+	}
+	else
+	{
+		Slide * slide = new Slide();
+		group = new SlideGroup();
+		group->addSlide(slide);
+		group->changeBackground(info);
+	}
+	
 	m_doc->addGroup(group);
 	if(!liveInst()->slideGroup())
 		setLiveGroup(group);

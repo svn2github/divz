@@ -269,7 +269,7 @@ void DirectoryListModel::makePixmaps()
 		QTime t;
 		t.start();
 		icon = QPixmap(cacheFilename);
-		qDebug() << "::makePixmaps, load from disk, elapsed:"<<t.elapsed();
+		//qDebug() << "::makePixmaps, load from disk, elapsed:"<<t.elapsed();
 	}
 	else
 	{
@@ -291,7 +291,8 @@ void DirectoryListModel::makePixmaps()
 		QModelIndex last = indexForFile(m_entryList.last());
 		dataChanged(first,last);
 	}
-	qDebug() << "::makePixmaps, end, elapsed:"<<t2.elapsed();
+	
+	//qDebug() << "::makePixmaps, end, elapsed:"<<t2.elapsed();
 }
 	
 	// for QFileSystemWatcher
@@ -347,6 +348,7 @@ void DirectoryListModel::needPixmap(const QString& file)
 
 bool DirectoryListModel_sortFileList(QString a, QString b)
 {
+	//QFileInfo ia(a), ib(b);
 	QFileInfo ia(a), ib(b);
 	if((ia.isDir() && ib.isDir()) ||
 	   (ia.isFile() && ib.isFile()))
@@ -356,6 +358,17 @@ bool DirectoryListModel_sortFileList(QString a, QString b)
 		return true;
 	else
 		return false;
+
+
+	
+/*	if((m_isDir[a] && m_isDir[b]) ||
+	   (!m_isDir[a] && !m_isDir[b]))
+		return a.toLower() < b.toLower();
+	else
+	if(m_isDir[a] && !m_isDir[b])
+		return true;
+	else
+		return false;*/
 }
 	
 void DirectoryListModel::loadEntryList()
@@ -399,16 +412,34 @@ void DirectoryListModel::loadEntryList()
 	beginInsertRows(QModelIndex(),0,entries.size());
 	foreach(QString file, entries)
 	{
+		 
 		if(m_isMyComputer)
 		{
 			if(QFileInfo(file).isDir())
+			{
+				m_isDir[file] = true;
 				m_entryList << file;
+			}
 		}
 		else
-			m_entryList << QString("%1/%2").arg(path,file); // QFileInfo(QString("%1/%2").arg(path,file)).canonicalFilePath();
+		{
+			//QFileInfo info(file);
+			QFileInfo info(QString("%1/%2").arg(path,file));
+			QString entry = info.canonicalFilePath();
+			m_isDir[entry] = info.isDir();
+			m_entryList << entry;
+		}
 		//needPixmap(file);
 	}
+	QTime t2;
+	t2.start();
+	
 	qSort(m_entryList.begin(),m_entryList.end(),DirectoryListModel_sortFileList);
+	
+	qDebug() << "qSort entry list elapsed:"<<t2.elapsed();
+	
 	endInsertRows();
+	
+	
 }
 

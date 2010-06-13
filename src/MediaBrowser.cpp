@@ -411,6 +411,8 @@ void MediaBrowser::setupUI()
 	QHBoxLayout *hbox2 = new QHBoxLayout(m_folderBoxBase);
 	SET_MARGIN(hbox2,0);
 	
+	hbox2->addWidget(new QLabel("Folder:"));
+	
 	m_dirBox = new QLineEdit(m_folderBoxBase);
 	hbox2->addWidget(m_dirBox);
 	
@@ -428,6 +430,8 @@ void MediaBrowser::setupUI()
 	QHBoxLayout *hbox4 = new QHBoxLayout(m_bookmarkBase);
 	SET_MARGIN(hbox4,0);
 	
+	hbox4->addWidget(new QLabel("Saved:"));
+	
 	m_bookmarkBox = new QComboBox(m_bookmarkBase);
 	hbox4->addWidget(m_bookmarkBox,2);
 
@@ -439,7 +443,7 @@ void MediaBrowser::setupUI()
 	m_btnDelBookmark->setToolTip("Delete current bookmark");
 	hbox4->addWidget(m_btnDelBookmark);
 	
-	connect(m_bookmarkBox, SIGNAL(currentIndexChanged(int)), this, SLOT(loadBookmarkIndex(int)));
+	connect(m_bookmarkBox, SIGNAL(activated(int)), this, SLOT(loadBookmarkIndex(int)));
 	connect(m_btnBookmark, SIGNAL(clicked()), this, SLOT(slotBookmarkFolder()));
 	connect(m_btnDelBookmark, SIGNAL(clicked()), this, SLOT(slotDelBookmark()));
 	
@@ -508,13 +512,33 @@ void MediaBrowser::slotBookmarkFolder()
 	loadBookmarks(); // Read back from qsettings and update combo box
 	m_ignoreBookmarkIdxChange = false;
 	
-	m_bookmarkBox->setCurrentIndex(m_bookmarkList.size() - 1);
+	m_bookmarkBox->setCurrentIndex(m_bookmarkList.size() - 2); // -2 because last item in combobox is a "placeholder" entry
+}
+
+void MediaBrowser::matchCurrentDirToBookmark()
+{
+	for(int idx=0; idx<m_bookmarkList.size(); idx++)
+	{ 
+		QPair<QString,QString> pair = m_bookmarkList[idx];
+		
+		if(pair.first ==  m_currentDirectory)
+		{
+// 			qDebug() << "MediaBrowser::matchCurrentDirToBookmark("<< m_currentDirectory<<"): Found "<<pair.first<<" at idx: "<<idx;
+			m_bookmarkBox->setCurrentIndex(idx);
+			return;
+		}
+		else
+		{
+// 			qDebug() << "MediaBrowser::matchCurrentDirToBookmark("<< m_currentDirectory<<"): Not matched: "<<pair.first;
+		}
+	}
+	m_bookmarkBox->setCurrentIndex(m_bookmarkList.size()); // yes, use size, not size-1 bc last item in combobox is a placeholder entry
 }
 
 void MediaBrowser::slotDelBookmark()
 {
 	int idx = m_bookmarkBox->currentIndex();
-	if(idx >= 0)
+	if(idx >= 0 && idx <= m_bookmarkList.size()-1)
 	{
 		if(QMessageBox::question(this,"Delete Bookmark?",QString("Are you sure you want to delete this bookmark?")) == QMessageBox::Ok)
 		{
@@ -559,13 +583,15 @@ void MediaBrowser::loadBookmarks()
 			if(!dir.isEmpty() && !title.isEmpty())
 			{
 				m_bookmarkList << QPair<QString,QString>(dir,title);
-				m_bookmarkBox->addItem(title);
+				m_bookmarkBox->addItem(title,dir);
 			}
 			
 			s.endGroup();
 		}
 	}
 	
+	m_bookmarkBox->addItem("(No Bookmark)","");
+
 	s.endGroup();
 	
 }
@@ -940,8 +966,12 @@ void MediaBrowser::setDirectory(const QString &path, bool addToHistory)
 			indexSingleClicked(idx);
 		}
 	}
+	
+	matchCurrentDirToBookmark();
 
 	m_listView->setFocus(Qt::OtherFocusReason);
+	
+	
 }
 
 bool MediaBrowser::checkCanGoUp()
