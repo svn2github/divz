@@ -593,6 +593,8 @@ void MediaBrowser::loadBookmarks()
 	m_bookmarkBox->addItem("(No Bookmark)","");
 
 	s.endGroup();
+
+	matchCurrentDirToBookmark();
 	
 }
 

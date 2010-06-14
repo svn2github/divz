@@ -59,6 +59,8 @@ void JpegServerThread::run()
 	m_writer.setDevice(m_socket);
 	m_writer.setFormat("jpg");
 	//m_writer.setQuality(80);
+
+	m_adaptiveIgnore = 0;
 	
 	// enter event loop
 	exec();
@@ -82,12 +84,15 @@ void JpegServerThread::imageReady(QImage *tmp)
  	frameCounter++;
 //  	qDebug() << "JpegServerThread: [START] Writing Frame#:"<<frameCounter;
 	
-	if(m_adaptiveWriteEnabled && m_socket->bytesToWrite() > 0)
+	if(m_adaptiveWriteEnabled && m_socket->bytesToWrite() > 0 && m_adaptiveIgnore < 30)
 	{
 		qDebug() << "JpegServerThread::imageReady():"<<m_socket->bytesToWrite()<<"bytes pending write on socket, not sending image"<<frameCounter;
+		m_adaptiveIgnore ++;
 	}
 	else
 	{
+		qDebug() << "JpegServerThread::imageReady(): Sending image"<<frameCounter;
+		m_adaptiveIgnore = 0;
 		if(image.format() != QImage::Format_RGB32)
 			image = image.convertToFormat(QImage::Format_RGB32);
 		

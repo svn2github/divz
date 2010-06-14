@@ -370,7 +370,27 @@ bool DirectoryListModel_sortFileList(QString a, QString b)
 	else
 		return false;*/
 }
-	
+
+
+typedef struct FileFlag
+{
+	QString file;
+	bool isDir;
+};
+
+bool DirectoryListModel_sortFileFlags(FileFlag a, FileFlag b)
+{
+	if((a.isDir && b.isDir) ||
+	   (!a.isDir && !b.isDir))
+		return a.file.toLower() < b.file.toLower();
+	else
+	if(a.isDir && !b.isDir)
+		return true;
+	else
+		return false;
+}
+
+
 void DirectoryListModel::loadEntryList()
 {
 	if(m_listLoaded)
@@ -410,6 +430,8 @@ void DirectoryListModel::loadEntryList()
 	}
 	
 	beginInsertRows(QModelIndex(),0,entries.size());
+
+	QList<FileFlag> files;
 	foreach(QString file, entries)
 	{
 		 
@@ -417,8 +439,13 @@ void DirectoryListModel::loadEntryList()
 		{
 			if(QFileInfo(file).isDir())
 			{
-				m_isDir[file] = true;
-				m_entryList << file;
+				//m_isDir[file] = true;
+				//m_entryList << file;
+
+				FileFlag flag;
+				flag.file = file;
+				flag.isDir = true;
+				files << flag;
 			}
 		}
 		else
@@ -426,15 +453,23 @@ void DirectoryListModel::loadEntryList()
 			//QFileInfo info(file);
 			QFileInfo info(QString("%1/%2").arg(path,file));
 			QString entry = info.canonicalFilePath();
-			m_isDir[entry] = info.isDir();
-			m_entryList << entry;
+			//m_isDir[entry] = info.isDir();
+			//m_entryList << entry;
+			FileFlag flag;
+			flag.file = entry;
+			flag.isDir = info.isDir();
+			files << flag;
 		}
 		//needPixmap(file);
 	}
 	QTime t2;
 	t2.start();
 	
-	qSort(m_entryList.begin(),m_entryList.end(),DirectoryListModel_sortFileList);
+	//qSort(m_entryList.begin(),m_entryList.end(),DirectoryListModel_sortFileList);
+	qSort(files.begin(),files.end(),DirectoryListModel_sortFileFlags);
+
+	foreach(FileFlag data, files)
+	    m_entryList << data.file;
 	
 	qDebug() << "qSort entry list elapsed:"<<t2.elapsed();
 	

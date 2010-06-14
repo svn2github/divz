@@ -57,7 +57,7 @@ private:
 	QByteArray m_boundary;
 	QImageWriter m_writer;
 	bool m_adaptiveWriteEnabled;
-	
+	int m_adaptiveIgnore;
 };
 
 
