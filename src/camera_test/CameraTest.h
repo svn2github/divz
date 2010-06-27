@@ -5,6 +5,7 @@
 #include <QImage>
 #include <QTimer>
 #include <QDebug>
+#include <QTime>
 
 #include <QGLWidget>
 
@@ -30,6 +31,8 @@ private:
 	CameraThread * m_thread;
 	QImage m_frame;
 	CameraServer * m_server;
+	QTime m_elapsedTime;
+	long m_frameCount;
 };
 
 

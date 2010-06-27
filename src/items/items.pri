@@ -29,7 +29,8 @@ HEADERS += \
     ImageContent.h \
     ImageConfig.h \
     OutputViewContent.h \
-    OutputViewConfig.h 
+    OutputViewConfig.h \
+    ../camera_test/CameraThread.h
     #SlideGroupContent.h
  
     
@@ -56,5 +57,6 @@ SOURCES += \
     ImageContent.cpp \
     ImageConfig.cpp \
     OutputViewContent.cpp \
-    OutputViewConfig.cpp
+    OutputViewConfig.cpp \
+    ../camera_test/CameraThread.cpp
     #SlideGroupContent.cpp

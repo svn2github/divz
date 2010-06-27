@@ -11,6 +11,7 @@
 
 CameraTest::CameraTest()
 	: QGLWidget()
+	, m_frameCount(0)
 {
 	setWindowTitle("Camera Test");
 
@@ -20,6 +21,7 @@ CameraTest::CameraTest()
 
 	m_thread->setCamera("vfwcap://0");
 	m_thread->start();
+	m_elapsedTime.start();
 	
 	m_server = new CameraServer();
 	m_server->setProvider(m_thread, SIGNAL(newImage(QImage)));
@@ -66,4 +68,10 @@ void CameraTest::paintEvent(QPaintEvent*)
 	p.setRenderHint(QPainter::SmoothPixmapTransform);
 	p.setRenderHint(QPainter::Antialiasing);
 	p.drawImage(rect(),m_frame);
+
+	int sec = (m_elapsedTime.elapsed() / 1000);
+
+	m_frameCount ++;
+	int fps = (m_frameCount <= 0 ? 1 : m_frameCount) / (sec <= 0 ? 1 : sec);
+	p.drawText(5,15,QString("fps: %1, frames: %3, time: %2").arg(fps).arg(sec).arg(m_frameCount));
 }
