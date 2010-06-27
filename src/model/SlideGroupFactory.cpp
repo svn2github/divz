@@ -230,6 +230,9 @@ SlideGroupViewControl::SlideGroupViewControl(OutputInstance *group, QWidget *w,b
  		hbox->addWidget(m_iconSizeSlider,1);
 
  		connect(m_iconSizeSlider, SIGNAL(valueChanged(int)), this, SLOT(setIconSize(int)));
+ 		
+ 		QSettings s;
+		setIconSize(s.value(QString("slideviewcontrol/%1").arg(m_isPreviewControl ? "preview-icon-size" : "icon-size"),m_iconSize).toInt());
 
 // 		m_spinBox = new QSpinBox(this);
 // 		m_spinBox->setMinimum(16);
@@ -241,8 +244,8 @@ SlideGroupViewControl::SlideGroupViewControl(OutputInstance *group, QWidget *w,b
 // 		connect(m_spinBox, SIGNAL(valueChanged(int)), this, SLOT(setIconSize(int)));
 
 
-		QSettings s;
-		setIconSize(s.value(QString("slideviewcontrol/%1").arg(m_isPreviewControl ? "preview-icon-size" : "icon-size"),m_iconSize).toInt());
+// 		QSettings s;
+// 		setIconSize(s.value(QString("slideviewcontrol/%1").arg(m_isPreviewControl ? "preview-icon-size" : "icon-size"),m_iconSize).toInt());
 
 
 		hbox->addStretch(1);
@@ -312,7 +315,7 @@ void SlideGroupViewControl::setIconSize(int size)
 	//qDebug() << "setIconSize: old:"<<old<<", size:"<<size;
 	if(m_iconSize != size)
 		emit iconSizeChanged(size);
-	if(m_isPreviewControl &&
+	if(//m_isPreviewControl &&
 		m_iconSizeSlider->value() != size)
 		m_iconSizeSlider->setValue(size);
 

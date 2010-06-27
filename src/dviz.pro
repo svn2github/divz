@@ -159,6 +159,7 @@ include(3rdparty/analyzers/analyzers.pri)
 include(qvideo/qvideo.pri)
 include(qtcolorpicker/qtcolorpicker.pri)
 #include(qtmultimedia/audio/audio.pri)
+#include(camera/camera.pri)
 include(3rdparty/rtmidi/rtmidi.pri)
 include(3rdparty/md5/md5.pri)
 include(3rdparty/qjson/qjson.pri)
@@ -170,6 +171,7 @@ include(bible/bible.pri)
 include(viewer/client.pri)
 include(imgtool/exiv2-0.18.2-qtbuild/qt_build_root.pri)
 include(webgroup/webgroup.pri)
+
 
 # deployment on Linux
 unix {

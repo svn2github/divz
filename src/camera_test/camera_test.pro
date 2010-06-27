@@ -8,13 +8,15 @@ QT += opengl  network
 # Input
 HEADERS += CameraTest.h \
 	CameraThread.h \
-	CameraServer.h
+	CameraServer.h \
+	CameraViewerWidget.h
 	
 	
 SOURCES += main.cpp \
 	CameraTest.cpp \
 	CameraThread.cpp \
-	CameraServer.cpp
+	CameraServer.cpp \
+	CameraViewerWidget.cpp
 
 
 unix {
