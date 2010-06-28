@@ -77,6 +77,7 @@
     <addaction name="actionAdd_Group_Player"/>
     <addaction name="actionAdd_Video_File"/>
     <addaction name="actionAdd_Web_Page"/>
+    <addaction name="actionAdd_Camera_Viewer"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
@@ -279,6 +280,15 @@
   <action name="actionAdd_Web_Page">
    <property name="text">
     <string>Add Web Page...</string>
+   </property>
+  </action>
+  <action name="actionAdd_Camera_Viewer">
+   <property name="icon">
+    <iconset resource="dviz.qrc">
+     <normaloff>:/data/stock-panel-screenshot.png</normaloff>:/data/stock-panel-screenshot.png</iconset>
+   </property>
+   <property name="text">
+    <string>Add Camera Viewer</string>
    </property>
   </action>
  </widget>

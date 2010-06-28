@@ -30,6 +30,72 @@ void CameraThread::setCamera(const QString& name)
 	m_cameraFile = name;
 }
 
+QStringList CameraThread::enumerateDevices()
+{
+	#ifdef Q_OS_WIN32
+	QString deviceBase = "vfwcap://";
+	#else
+	QString deviceBase = "/dev/video";
+	#endif
+	QStringList list;
+	
+	avdevice_register_all();
+
+	avcodec_init();
+	avcodec_register_all();
+	
+	
+	AVInputFormat *inFmt = NULL;
+	AVFormatParameters formatParams;
+	
+	for(int i=0; i<10; i++)
+	{
+		memset(&formatParams, 0, sizeof(AVFormatParameters));
+
+		#ifdef Q_OS_WIN32
+		QString fmt = "vfwcap";
+		QString file = QString::number(i);
+		#else
+		QString fmt = "video4linux";
+		QString file = QString("/dev/video%1").arg(i);
+		#endif
+
+		inFmt = av_find_input_format(qPrintable(fmt));
+		if( !inFmt )
+		{
+			qDebug() << "[ERROR] CameraThread::load(): Unable to find input format:"<<list[0];
+			break;
+		}
+
+		formatParams.time_base.num = 1;
+		formatParams.time_base.den = 35; //25;
+		//formatParams.width = 352;
+		//formatParams.height = 288;
+		//formatParams.channel = 0;
+		//formatParams.pix_fmt = PIX_FMT_RGB24 ;
+	
+	
+		// Open video file
+		//
+		AVFormatContext * formatCtx;
+		if(av_open_input_file(&formatCtx, qPrintable(file), inFmt, 0, &formatParams) != 0)
+		//if(av_open_input_file(&m_av_format_context, "1", inFmt, 0, NULL) != 0)
+		{
+			qDebug() << "[WARN] CameraThread::load(): av_open_input_file() failed, file:"<<file;
+			break;
+		}
+		else
+		{
+			list << QString("%1%2").arg(deviceBase).arg(i);
+			av_close_input_file(formatCtx);
+		}
+	}
+	
+	qDebug() << "enumerateDevices: Found: "<<list;
+	return list;
+}
+
+
 int CameraThread::initCamera()
 {
 	avdevice_register_all();
@@ -200,19 +266,26 @@ CameraThread::~CameraThread()
 
 void CameraThread::freeResources()
 {
+	if(!m_inited)
+		return;
+		
 	// Free the RGB image
-	av_free(m_buffer);
-	av_free(m_av_rgb_frame);
+	if(m_buffer != NULL)
+		av_free(m_buffer);
+	if(m_av_rgb_frame != NULL)
+		av_free(m_av_rgb_frame);
 
 	// Free the YUV frame
 	//av_free(m_av_frame);
 	//mutex.unlock();
 
 	// Close the codec
-	avcodec_close(m_video_codec_context);
+	if(m_video_codec_context != NULL) 
+		avcodec_close(m_video_codec_context);
 
 	// Close the video file
-	av_close_input_file(m_av_format_context);
+	if(m_av_format_context != NULL)
+		av_close_input_file(m_av_format_context);
 }
 
 void CameraThread::readFrame()

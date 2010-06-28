@@ -36,7 +36,7 @@ AbstractSlideGroupEditor * CameraSlideGroupFactory::newEditor()
 
 NativeViewer * CameraSlideGroupFactory::newNativeViewer()
 {
-	return new NativeViewerPhonon();
+	return new NativeViewerCamera();
 }
 
 SlideGroupViewControl * CameraSlideGroupFactory::newViewControl()
@@ -70,9 +70,9 @@ CameraSlideGroupViewControl::CameraSlideGroupViewControl(OutputInstance *inst, Q
 
 	m_overlayText = new QLineEdit();
 	hbox1->addWidget(m_overlayText);
-	connect(m_quickSlideText, SIGNAL(returnPressed()), this, SLOT(showOverlayText()));
+	connect(m_overlayText, SIGNAL(returnPressed()), this, SLOT(showOverlayText()));
 
-	btn = new QPushButton("Show");
+	QPushButton * btn = new QPushButton("Show");
 	btn->setCheckable(true);
 	hbox1->addWidget(btn);
 	connect(btn, SIGNAL(toggled(bool)), this, SLOT(showOverlayText(bool)));
@@ -134,7 +134,7 @@ CameraSlideGroupViewControl::CameraSlideGroupViewControl(OutputInstance *inst, Q
 // 
 // 	m_timeLcd->display("00:00");
 
-	m_controlBase = baseWidget;
+	//m_controlBase = baseWidget;
 }
 
 void CameraSlideGroupViewControl::setIsPreviewControl(bool flag)
@@ -152,11 +152,11 @@ void CameraSlideGroupViewControl::showOverlayText(bool flag)
 		
 	if(flag)
 	{
-		m_native->setOverlayText(m_overlayText->text());
-		m_native->showOverlayText(true);
+		m_native->cameraViewer()->setOverlayText(m_overlayText->text());
+		m_native->cameraViewer()->showOverlayText(true);
 	}
 	else
-		m_native->showOverlayText(false);
+		m_native->cameraViewer()->showOverlayText(false);
 }
 
 void CameraSlideGroupViewControl::setSlideGroup(SlideGroup *g, Slide *curSlide, bool allowProgressDialog)
@@ -184,7 +184,7 @@ void CameraSlideGroupViewControl::setSlideGroup(SlideGroup *g, Slide *curSlide, 
 	}
 	
 	//m_playingLabel->setText(QString("Camera: <b>%1</b>").arg(QFileInfo(m_cameraGroup->device()).fileName()));
-	m_playingLabel->setText(QString("Camera: <b>%1</b>").arg(m_cameraGroup->device());
+	m_playingLabel->setText(QString("Camera: <b>%1</b>").arg(m_cameraGroup->device()));
 	
 // 	m_mediaObject = native->mediaObject();
 // 	m_mediaObject->setTickInterval(1000);

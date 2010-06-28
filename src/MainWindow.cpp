@@ -41,6 +41,8 @@
 #include "ppt/PPTSlideGroup.h"
 #include "phonon/VideoSlideGroup.h"
 #include "webgroup/WebSlideGroup.h"
+#include "camera/CameraSlideGroup.h"
+#include "camera_test/CameraThread.h"
 
 #include "songdb/SongSlideGroup.h"
 #include "songdb/SongRecord.h"
@@ -184,6 +186,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	
 	connect(m_ui->actionAdd_Video_File, SIGNAL(triggered()), this, SLOT(actionAddVideo()));
 	connect(m_ui->actionAdd_Web_Page, SIGNAL(triggered()), this, SLOT(actionAddWeb()));
+	connect(m_ui->actionAdd_Camera_Viewer, SIGNAL(triggered()), this, SLOT(actionAddCamera()));
 	
 	m_ui->actionAdd_Video_File->setIcon(QIcon(":/data/stock-panel-multimedia.png"));
 	m_ui->actionAdd_Web_Page->setIcon(QIcon(":/data/url-icon.png"));
@@ -338,6 +341,49 @@ void MainWindow::actionAddWeb()
 						text.isEmpty() ? "http://www.google.com/" : text, &ok);
 						
 		group->setGroupTitle(title.isEmpty() ? text : title);
+
+		m_doc->addGroup(group);
+		//if(!liveInst()->slideGroup())
+		//	setLiveGroup(group);
+		QModelIndex idx = m_docModel->indexForGroup(group);
+		m_groupView->setCurrentIndex(idx);
+	}
+}
+
+void MainWindow::actionAddCamera()
+{
+ 	QString lastCamera = AppSettings::previousPath("camera");
+ 	
+ 	QStringList cameras = CameraThread::enumerateDevices();
+ 	if(!cameras.size())
+ 	{
+ 		QMessageBox::critical(this,tr("No Cameras Found"),tr("Sorry, but no camera devices were found attached to this computer."));
+ 		return;
+ 	}
+
+	QStringList items;
+	int counter = 1;
+	foreach(QString dev, cameras)
+		items << QString("Camera # %1").arg(counter);
+	
+	bool ok;
+	QString item = QInputDialog::getItem(this, tr("Camera"),
+						tr("Select a Camera:"), items, 0, false, &ok);
+	if (ok && !item.isEmpty())
+	{
+		int camIdx = items.indexOf(item);
+		QString text = cameras[camIdx];
+
+ 		AppSettings::setPreviousPath("camera",text);
+
+		CameraSlideGroup * group = new CameraSlideGroup();
+ 		group->setDevice(text);
+// 		
+// 		QString title = QInputDialog::getText(this, tr("Add Web Page"),
+// 						tr("Slide Group Title:"), QLineEdit::Normal,
+// 						text.isEmpty() ? "http://www.google.com/" : text, &ok);
+// 						
+ 		group->setGroupTitle(item);
 
 		m_doc->addGroup(group);
 		//if(!liveInst()->slideGroup())

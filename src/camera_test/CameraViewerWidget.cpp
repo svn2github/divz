@@ -58,8 +58,8 @@ CameraViewerWidget::~CameraViewerWidget()
 	delete m_thread;
 	m_thread = 0;
 	
-	delete m_server;
-	m_server = 0;
+// 	delete m_server;
+// 	m_server = 0;
 }
 
 void CameraViewerWidget::newFrame(QImage frame)

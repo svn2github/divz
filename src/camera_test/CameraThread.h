@@ -27,6 +27,8 @@ public:
 	~CameraThread();
 
 	void setCamera(const QString&);
+	
+	static QStringList enumerateDevices();
 
 signals:
 	void newImage(QImage);

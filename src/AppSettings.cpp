@@ -31,6 +31,8 @@ Q_IMPORT_PLUGIN(qtiff)
 #include "webgroup/WebSlideGroup.h"
 #include "groupplayer/GroupPlayerSlideGroup.h"
 #include "groupplayer/GroupPlayerSlideGroupFactory.h"
+#include "camera/CameraSlideGroup.h"
+#include "camera/CameraSlideGroupFactory.h"
 
 #include "itemlistfilters/SlideTextOnlyFilter.h"
 #include "itemlistfilters/SlideNonTextOnlyFilter.h"
@@ -208,9 +210,8 @@ void AppSettings::initApp(const QString& appName)
 	SlideGroupFactory::registerFactoryForType(GroupPlayerSlideGroup::GroupType,	new GroupPlayerSlideGroupFactory());
 	SlideGroupFactory::registerFactoryForType(VideoSlideGroup::GroupType,		new VideoSlideGroupFactory());
 	SlideGroupFactory::registerFactoryForType(WebSlideGroup::GroupType,		new WebSlideGroupFactory());
+	SlideGroupFactory::registerFactoryForType(CameraSlideGroup::GroupType,		new CameraSlideGroupFactory());
 	
-
-
 	RenderOpts::OxygenStyleQuirks = qApp->style()->objectName() == QLatin1String("oxygen");
 
 	QSettings s;

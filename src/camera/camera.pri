@@ -10,7 +10,9 @@ DEPENDPATH += $$PWD
 
 HEADERS += NativeViewerCamera.h \
 	   CameraSlideGroup.h \
-	   CameraSlideGroupFactory.h
+	   CameraSlideGroupFactory.h \
+	   ../camera_test/CameraViewerWidget.h
 SOURCES += NativeViewerCamera.cpp \ 
 	   CameraSlideGroup.cpp \
-	   CameraSlideGroupFactory.cpp
+	   CameraSlideGroupFactory.cpp \
+	   ../camera_test/CameraViewerWidget.cpp

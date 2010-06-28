@@ -18,7 +18,7 @@ private:
 public:
 	CameraSlideGroup();
 	
-	typedef enum { GroupType = 6 };
+	typedef enum { GroupType = 7 };
 	int groupType() const { return GroupType; }	
 	
 	QString device() { return m_device; }

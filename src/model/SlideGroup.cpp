@@ -12,6 +12,7 @@
 #include "songdb/SongSlideGroup.h"
 #include "ppt/PPTSlideGroup.h"
 #include "phonon/VideoSlideGroup.h"
+#include "camera/CameraSlideGroup.h"
 #include "webgroup/WebSlideGroup.h"
 #include "groupplayer/GroupPlayerSlideGroup.h"
 
@@ -301,8 +302,14 @@ SlideGroup * SlideGroup::fromByteArray(QByteArray &array, Document *context)
 	else
 	if(className == "VideoSlideGroup")
 	{
-		//qDebug("cmdSetSlideGroup: Group type: PPT");
+		//qDebug("cmdSetSlideGroup: Group type: Video");
 		group = new VideoSlideGroup();
+	}
+	else
+	if(className == "CameraSlideGroup")
+	{
+		//qDebug("cmdSetSlideGroup: Group type: Camera");
+		group = new CameraSlideGroup();
 	}
 	else
 	if(className == "GroupPlayerSlideGroup")

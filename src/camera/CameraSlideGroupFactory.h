@@ -3,9 +3,10 @@
 
 #include "model/SlideGroupFactory.h"
 
-#include <phonon/SeekSlider>
-#include <phonon/MediaObject>
-#include <phonon/VolumeSlider>
+// #include <phonon/SeekSlider>
+// #include <phonon/MediaObject>
+// #include <phonon/VolumeSlider>
+#include "NativeViewerCamera.h"
 
 #include <QAction>
 #include <QLCDNumber>

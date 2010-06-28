@@ -25,7 +25,7 @@
 #define DEBUG_CAMERASLIDEGROUP 0
 
 CameraSlideGroup::CameraSlideGroup() : SlideGroup(),
-	m_device("vfwcap://0"),
+	m_device(""),
 	m_mtime(0)
 	//m_native(0)
 {
