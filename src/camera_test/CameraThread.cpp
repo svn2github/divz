@@ -62,6 +62,17 @@ CameraThread * CameraThread::threadForCamera(const QString& camera)
 	}
 }
 
+void CameraThread::release()
+{
+	m_refCount --;
+	if(m_refCount <= 0)
+	{
+		quit();
+		wait();
+		deleteLater();
+	}
+}
+
 QStringList CameraThread::enumerateDevices(bool forceReenum)
 {
 	if(!forceReenum && m_devicesEnumerated)

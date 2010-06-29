@@ -8,8 +8,8 @@
 
 NativeViewerCamera::NativeViewerCamera()
 	: NativeViewer()
-	, m_cameraGroup(0)
 	, m_state(NativeViewer::Running)
+	, m_cameraGroup(0)
 // 	, m_autoPlay(true)
 {
 
@@ -17,6 +17,8 @@ NativeViewerCamera::NativeViewerCamera()
 	m_widget->setCursor(Qt::BlankCursor);
 	m_widget->setWindowFlags(Qt::WindowStaysOnTopHint | Qt::FramelessWindowHint | Qt::ToolTip);
 
+	connect(&m_fadeTimer, SIGNAL(timeout()), this, SLOT(fadeStep()));
+	m_fadeTimer.setInterval(1000/15);
 }
 
 NativeViewerCamera::~NativeViewerCamera()
@@ -73,10 +75,8 @@ void NativeViewerCamera::close()
 void NativeViewerCamera::hide()
 {
 	//qDebug() << "NativeViewerCamera::close: mark start";
-#ifdef PHONON_ENABLED
 	m_widget->hide();
 // 	m_media->pause();
-#endif
 	//qDebug() << "NativeViewerCamera::close: mark end";
 }
 
@@ -96,21 +96,43 @@ void NativeViewerCamera::setSlide(int x)
 	// irrelevant 
 }
 
+void NativeViewerCamera::fadeBlack(bool flag)
+{
+	m_fadeDirection = flag ? -1 : 1;
+	m_fadeOpacity = flag ? .999 : 0.001;
+	
+	m_fadeTimer.start();
+	// 760-733-9969
+}
+
+void NativeViewerCamera::fadeStep()
+{
+	qreal inc = (qreal)1/15 * (qreal)m_fadeDirection;
+	m_fadeOpacity += inc;
+// 	qDebug() << "fadeStep: "<<m_fadeOpacity<<","<<m_fadeDirection<<","<<inc;
+	
+	if(m_fadeOpacity <= 0 || m_fadeOpacity >=1)
+		m_fadeTimer.stop();
+	else
+		m_widget->setOpacity(m_fadeOpacity);
+}
 
 void NativeViewerCamera::setState(NativeViewer::NativeShowState state)
 {
-	//qDebug() << "NativeViewerCamera::setState: state:"<<state<<", start";
+// 	qDebug() << "NativeViewerCamera::setState: state:"<<state;
 	m_state = state;
-#ifdef PHONON_ENABLED
 	switch(state)
 	{
 		case NativeViewer::Running:
 			show();
+			fadeBlack(false);
 			break;
 		case NativeViewer::Paused:
 // 			m_media->pause();
 			break;
 		case NativeViewer::Black:
+			fadeBlack(true);
+			break;
 		case NativeViewer::White:
 		case NativeViewer::Done:
 			hide();
@@ -118,7 +140,6 @@ void NativeViewerCamera::setState(NativeViewer::NativeShowState state)
 		default:
 			break;
 	}
-#endif
 	//qDebug() << "NativeViewerCamera::setState: state:"<<state<<", done";
 }
 

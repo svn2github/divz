@@ -39,6 +39,8 @@ public:
 	void close();
 	void hide();
 	
+	void fadeBlack(bool enable=true);
+	
 	QPixmap snapshot();
 
 	void setState(NativeShowState);
@@ -56,7 +58,14 @@ public:
 	
 	CameraViewerWidget * cameraViewer() { return m_widget; }
 	
+private slots:
+	void fadeStep();
+
 private:
+	int m_fadeDirection;
+	qreal m_fadeOpacity;
+	QTimer m_fadeTimer;
+	
 	NativeShowState m_state;
 	CameraSlideGroup * m_cameraGroup;
 	CameraViewerWidget * m_widget;

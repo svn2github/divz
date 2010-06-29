@@ -21,6 +21,8 @@ public:
 	void setCamera(const QString& camera);
 	void setOverlayText(const QString& text);
 	void showOverlayText(bool flag=true);
+	
+	void setOpacity(qreal opacity);
 
 public slots:
 	void newFrame(QImage);
@@ -32,6 +34,8 @@ protected:
 	void paintEvent(QPaintEvent*);
 
 private:
+	qreal m_opacity;
+	QString m_camera;
 	CameraThread * m_thread;
 	QImage m_frame;
 	CameraServer * m_server;

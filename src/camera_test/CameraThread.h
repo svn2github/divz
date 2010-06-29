@@ -36,6 +36,7 @@ public:
 	static QStringList enumerateDevices(bool forceReenum=false);
 
 	int refCount() { return m_refCount; }
+	void release();
 	
 signals:
 	void newImage(QImage);
