@@ -12,26 +12,64 @@ extern "C" {
 
 #include "CameraThread.h"
 
-CameraThread::CameraThread(QObject *parent)
+QMap<QString,CameraThread *> CameraThread::m_threadMap;
+QStringList CameraThread::m_enumeratedDevices;
+bool CameraThread::m_devicesEnumerated = false;
+
+CameraThread::CameraThread(const QString& camera, QObject *parent)
 	: QThread(parent)
 	, m_inited(false)
-	, m_cameraFile("vfwcap://0")
+	, m_cameraFile(camera)
 {
 	m_time_base_rational.num = 1;
 	m_time_base_rational.den = AV_TIME_BASE;
 
 	m_sws_context = NULL;
 	m_frame = NULL;
-
 }
 
-void CameraThread::setCamera(const QString& name)
+CameraThread * CameraThread::threadForCamera(const QString& camera)
 {
-	m_cameraFile = name;
+	if(camera.isEmpty())
+		return 0;
+		
+	enumerateDevices();
+	
+	if(!m_enumeratedDevices.contains(camera))
+		return 0;
+	
+	if(m_threadMap.contains(camera))
+	{
+		//qDebug() << "QVideoProvider::providerForFile: Found provider for file:"<<file<<", loading...";
+		CameraThread *v = m_threadMap[camera];
+		v->m_refCount++;
+// 		if(DEBUG_QVIDEOPROVIDER)
+// 			qDebug() << "[REF +] QVideoProvider::providerForFile(): + Found existing provider for file:"<<file<<", refCount:"<<v->m_refCount;
+		//v->play();
+		return v;
+	}
+	else
+	{
+// 		if(DEBUG_QVIDEOPROVIDER)
+// 			qDebug() << "[REF +] QVideoProvider::providerForFile(): - Creating new provider for file:"<<file;
+		CameraThread *v = new CameraThread(camera);
+		m_threadMap[camera] = v;
+		v->m_refCount=1;
+		v->start();
+		//v->play();
+
+		return v;
+	}
 }
 
-QStringList CameraThread::enumerateDevices()
+QStringList CameraThread::enumerateDevices(bool forceReenum)
 {
+	if(!forceReenum && m_devicesEnumerated)
+		return m_enumeratedDevices;
+		
+	m_enumeratedDevices.clear();
+	m_devicesEnumerated = true;
+	
 	#ifdef Q_OS_WIN32
 	QString deviceBase = "vfwcap://";
 	#else
@@ -92,6 +130,8 @@ QStringList CameraThread::enumerateDevices()
 	}
 	
 	qDebug() << "enumerateDevices: Found: "<<list;
+	
+	m_enumeratedDevices = list;
 	return list;
 }
 

@@ -22,14 +22,21 @@ class CameraThread: public QThread
 {
 	Q_OBJECT
 
+private:
+	CameraThread(const QString& device, QObject *parent=0);
+	static QMap<QString,CameraThread *> m_threadMap;
+	static QStringList m_enumeratedDevices;
+	static bool m_devicesEnumerated;
+	
 public:
-	CameraThread(QObject *parent=0);
 	~CameraThread();
 
-	void setCamera(const QString&);
+	static CameraThread * threadForCamera(const QString& camera);
 	
-	static QStringList enumerateDevices();
+	static QStringList enumerateDevices(bool forceReenum=false);
 
+	int refCount() { return m_refCount; }
+	
 signals:
 	void newImage(QImage);
 
@@ -87,6 +94,8 @@ private:
 	bool m_inited;
 
 	QString m_cameraFile;
+	
+	int m_refCount;	
 
 };
 
