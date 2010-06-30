@@ -98,6 +98,8 @@ private:
 	
 	int m_refCount;	
 
+	bool m_lockRead;
+
 };
 
 

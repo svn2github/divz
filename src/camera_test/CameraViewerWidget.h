@@ -17,11 +17,11 @@ class CameraViewerWidget : public QGLWidget
 public:
 	CameraViewerWidget();
 	~CameraViewerWidget();
-	
+
 	void setCamera(const QString& camera);
 	void setOverlayText(const QString& text);
 	void showOverlayText(bool flag=true);
-	
+
 	void setOpacity(qreal opacity);
 
 public slots:
@@ -34,6 +34,8 @@ protected:
 	void paintEvent(QPaintEvent*);
 
 private:
+	void updateOverlay();
+
 	qreal m_opacity;
 	QString m_camera;
 	CameraThread * m_thread;
@@ -41,9 +43,15 @@ private:
 	CameraServer * m_server;
 	QTime m_elapsedTime;
 	long m_frameCount;
-	
+
 	QString m_overlayText;
 	bool m_showOverlayText;
+
+	QPixmap m_overlay;
+
+	QRect m_targetRect;
+	QRect m_sourceRect;
+	QRect m_cachedFrameRect;
 };
 
 

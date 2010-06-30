@@ -6,14 +6,12 @@ QT += opengl  network
 
 
 # Input
-HEADERS += CameraTest.h \
-	CameraThread.h \
+HEADERS += CameraThread.h \
 	CameraServer.h \
 	CameraViewerWidget.h
 	
 	
 SOURCES += main.cpp \
-	CameraTest.cpp \
 	CameraThread.cpp \
 	CameraServer.cpp \
 	CameraViewerWidget.cpp

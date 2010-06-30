@@ -33,30 +33,23 @@ CameraThread * CameraThread::threadForCamera(const QString& camera)
 	if(camera.isEmpty())
 		return 0;
 		
-	enumerateDevices();
+	QStringList devices = enumerateDevices();
 	
-	if(!m_enumeratedDevices.contains(camera))
+	if(!devices.contains(camera))
 		return 0;
 	
 	if(m_threadMap.contains(camera))
 	{
-		//qDebug() << "QVideoProvider::providerForFile: Found provider for file:"<<file<<", loading...";
 		CameraThread *v = m_threadMap[camera];
 		v->m_refCount++;
-// 		if(DEBUG_QVIDEOPROVIDER)
-// 			qDebug() << "[REF +] QVideoProvider::providerForFile(): + Found existing provider for file:"<<file<<", refCount:"<<v->m_refCount;
-		//v->play();
 		return v;
 	}
 	else
 	{
-// 		if(DEBUG_QVIDEOPROVIDER)
-// 			qDebug() << "[REF +] QVideoProvider::providerForFile(): - Creating new provider for file:"<<file;
 		CameraThread *v = new CameraThread(camera);
 		m_threadMap[camera] = v;
 		v->m_refCount=1;
 		v->start();
-		//v->play();
 
 		return v;
 	}

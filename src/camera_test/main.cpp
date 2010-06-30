@@ -17,8 +17,9 @@ int main(int argc, char **argv)
 
 // 	CameraTest t;
 	CameraViewerWidget t;
+	t.setCamera("vfwcap://0");
 	t.show();
-	t.resize(100,100);
+	t.resize(320,240);
 
 	return app.exec();
 }
