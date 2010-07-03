@@ -10,6 +10,7 @@
 #include "model/Output.h"
 #include "OutputControl.h"
 #include "MainWindow.h" // to access MainWindow::outputControl(...)
+#include "AppSettings.h"
 
 #include "OutputInstance.h"
 #include <QMessageBox>
@@ -18,7 +19,41 @@
 
 /** VideoSlideGroupFactory:: **/
 
-VideoSlideGroupFactory::VideoSlideGroupFactory() : SlideGroupFactory() {}
+VideoSlideGroupFactory::VideoSlideGroupFactory() 
+	: SlideGroupFactory()
+	, m_mainWindowConnected(false) 
+{
+	// enumerate outputs
+	// for each output id, create native viewer for that ID and cache
+	
+	// delay call till after app and mainwindow are initalized, 
+	// since this constructor is called before the Qt event loop is even started.
+	QTimer::singleShot(50,this,SLOT(setupNativeViewers()));
+}
+
+void VideoSlideGroupFactory::setupNativeViewers()
+{
+	QList<Output*> outputs = AppSettings::outputs();
+	
+	foreach(Output * out, outputs)
+	{
+		if(!m_nativeViewers.contains(out->id()))
+		{
+			NativeViewer *viewer = new NativeViewerPhonon(true); // true = reusable, e.g. dont delete in the NativeViewer::dispose() call
+			m_nativeViewers[out->id()] = viewer;
+			qDebug() << "VideoSlideGroupFactory::setupNativeViewers(): Creating NativeViewerPhonon object for Output ID "<<out->id();
+		}
+	}
+	
+	if(!m_mainWindowConnected &&
+	   MainWindow::mw())
+	{
+		m_mainWindowConnected = true;
+		connect(MainWindow::mw(), SIGNAL(appSettingsChanged()), this, SLOT(setupNativeViewers()));
+	}
+	
+}
+
 /*VideoSlideGroupFactory::~VideoSlideGroupFactory()
 {
 }*/
@@ -34,9 +69,19 @@ AbstractSlideGroupEditor * VideoSlideGroupFactory::newEditor()
 	return 0;
 }
 
-NativeViewer * VideoSlideGroupFactory::newNativeViewer()
+NativeViewer * VideoSlideGroupFactory::newNativeViewer(OutputInstance *instance)
 {
-	return new NativeViewerPhonon();
+	if(!instance)
+		return new NativeViewerPhonon();
+	
+	if(!m_nativeViewers.contains(instance->output()->id()))
+	{
+		qDebug() << "VideoSlideGroupFactory::newNativeViewer(): Cache miss on output ID "<<instance->output()->id()<<", but stored a new one for later";
+		NativeViewer *viewer = new NativeViewerPhonon(true); // true = reusable, e.g. dont delete in the NativeViewer::dispose() call
+		m_nativeViewers[instance->output()->id()] = viewer;
+	}
+	
+	return m_nativeViewers[instance->output()->id()];
 }
 
 SlideGroupViewControl * VideoSlideGroupFactory::newViewControl()

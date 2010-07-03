@@ -6,11 +6,12 @@
 
 #include "qvideo/QVideoProvider.h"
 
-NativeViewerPhonon::NativeViewerPhonon()
+NativeViewerPhonon::NativeViewerPhonon(bool makeReusable)
 	: NativeViewer()
 	, m_videoGroup(0)
 	, m_state(NativeViewer::Running)
 	, m_autoPlay(true)
+	, m_isReusable(makeReusable)
 {
 #ifdef PHONON_ENABLED
 	m_media  = new Phonon::MediaObject(this);
@@ -31,6 +32,14 @@ NativeViewerPhonon::~NativeViewerPhonon()
 		m_videoGroup->removeNativeViewer(outputId());
 	delete m_widget;
 #endif
+}
+
+void NativeViewerPhonon::dispose()
+{
+	if(!m_isReusable)
+		NativeViewer::dispose();
+	else
+		close();
 }
 
 void NativeViewerPhonon::setSlideGroup(SlideGroup *group)

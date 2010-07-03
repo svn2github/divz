@@ -60,8 +60,10 @@ private:
 };
 
 
-class VideoSlideGroupFactory : public SlideGroupFactory
+class VideoSlideGroupFactory : public QObject, 
+			       public SlideGroupFactory 
 {
+	Q_OBJECT
 public:
 	VideoSlideGroupFactory();
 	
@@ -70,7 +72,14 @@ public:
 	//AbstractItemFilterList customFiltersFor(OutputInstance *instace = 0);
 	SlideGroupViewControl * newViewControl();
 	AbstractSlideGroupEditor   * newEditor();
-	NativeViewer * newNativeViewer();
+	NativeViewer * newNativeViewer(OutputInstance *instance = 0);
+	
+private slots:
+	void setupNativeViewers();
+	
+private:
+	QHash<int, NativeViewer *> m_nativeViewers;
+	bool m_mainWindowConnected;
 	
 // 	QPixmap generatePreviewPixmap(SlideGroup*, QSize iconSize, QRect sceneRect);
 };

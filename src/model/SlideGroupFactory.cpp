@@ -1063,7 +1063,7 @@ AbstractSlideGroupEditor * SlideGroupFactory::newEditor()
 	return new SlideEditorWindow();
 }
 
-NativeViewer * SlideGroupFactory::newNativeViewer()
+NativeViewer * SlideGroupFactory::newNativeViewer(OutputInstance *)
 {
 	return 0;
 }

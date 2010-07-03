@@ -25,8 +25,10 @@ class NativeViewerPhonon : public NativeViewer
 {
 	Q_OBJECT
 public:
-	NativeViewerPhonon();
+	NativeViewerPhonon(bool makeReusable = false);
 	~NativeViewerPhonon();
+	
+	void dispose();
 
 	void setSlideGroup(SlideGroup*);
 	void setSlide(int);
@@ -64,6 +66,7 @@ private:
 	Phonon::Path m_audioPath; // store for disconnection if needed
 #endif
 	bool m_autoPlay;
+	bool m_isReusable;
 };
 
 #endif

@@ -58,7 +58,7 @@ public:
 	//AbstractItemFilterList customFiltersFor(OutputInstance *instace = 0);
 	SlideGroupViewControl * newViewControl();
 	AbstractSlideGroupEditor   * newEditor();
-	NativeViewer * newNativeViewer();
+	NativeViewer * newNativeViewer(OutputInstance *instance = 0);
 	
 // 	QPixmap generatePreviewPixmap(SlideGroup*, QSize iconSize, QRect sceneRect);
 };

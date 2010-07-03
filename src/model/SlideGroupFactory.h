@@ -185,7 +185,7 @@ public:
 	virtual AbstractItemFilterList customFiltersFor(OutputInstance *instace = 0, SlideGroup *group = 0);
 	virtual SlideGroupViewControl * newViewControl();
 	virtual AbstractSlideGroupEditor   * newEditor();
-	virtual NativeViewer * newNativeViewer();
+	virtual NativeViewer * newNativeViewer(OutputInstance *instance = 0);
 	
 	virtual QPixmap generatePreviewPixmap(SlideGroup*, QSize iconSize, QRect sceneRect);
 

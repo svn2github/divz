@@ -34,7 +34,7 @@ AbstractSlideGroupEditor * PPTSlideGroupFactory::newEditor()
 	return 0;
 }
 
-NativeViewer * PPTSlideGroupFactory::newNativeViewer()
+NativeViewer * PPTSlideGroupFactory::newNativeViewer(OutputInstance */*instance*/)
 {
 	return new NativeViewerWin32PPT();
 }

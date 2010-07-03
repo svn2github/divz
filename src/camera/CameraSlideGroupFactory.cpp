@@ -34,7 +34,7 @@ AbstractSlideGroupEditor * CameraSlideGroupFactory::newEditor()
 	return 0;
 }
 
-NativeViewer * CameraSlideGroupFactory::newNativeViewer()
+NativeViewer * CameraSlideGroupFactory::newNativeViewer(OutputInstance */*instance*/)
 {
 	return new NativeViewerCamera();
 }

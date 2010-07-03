@@ -39,6 +39,12 @@ NativeViewer::NativeViewer()
 NativeViewer::~NativeViewer()
 {}
 
+void NativeViewer::dispose()
+{
+	close();
+	deleteLater();
+}
+	
 void NativeViewer::setContainerWidget(QWidget *w)
 {
     m_containerWidget = w;
@@ -688,8 +694,7 @@ SlideGroupViewer::~SlideGroupViewer()
 	
 	if(m_nativeViewer)
 	{
-		m_nativeViewer->close();
-		delete m_nativeViewer;
+		m_nativeViewer->dispose();
 		m_nativeViewer = 0;
 	}
 	
@@ -740,8 +745,7 @@ void SlideGroupViewer::closeEvent(QCloseEvent *event)
 	
 	if(m_nativeViewer)
 	{
-		m_nativeViewer->close();
-		delete m_nativeViewer;
+		m_nativeViewer->dispose();
 		m_nativeViewer = 0;
 	}
 	
@@ -761,8 +765,7 @@ void SlideGroupViewer::clear()
 	
 	if(m_nativeViewer)
 	{
-		m_nativeViewer->close();
-		delete m_nativeViewer;
+		m_nativeViewer->dispose();
 		m_nativeViewer = 0;
 	}
 }

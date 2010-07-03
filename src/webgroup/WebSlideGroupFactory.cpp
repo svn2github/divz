@@ -28,7 +28,7 @@ AbstractSlideGroupEditor * WebSlideGroupFactory::newEditor()
 	return 0;
 }
 
-NativeViewer * WebSlideGroupFactory::newNativeViewer()
+NativeViewer * WebSlideGroupFactory::newNativeViewer(OutputInstance */*instance*/)
 {
 	return new NativeViewerWebKit();
 }

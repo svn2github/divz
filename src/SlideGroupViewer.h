@@ -27,6 +27,9 @@ class NativeViewer : public QObject
 public:
 	NativeViewer();
 	virtual ~NativeViewer();
+	
+	// default impl calls 'close()' and deletes object
+	virtual void dispose();
 
 	virtual void setContainerWidget(QWidget*);
 	QWidget * containerWidget() { return m_containerWidget; }
