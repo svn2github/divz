@@ -10,6 +10,8 @@ NativeViewerCamera::NativeViewerCamera()
 	: NativeViewer()
 	, m_state(NativeViewer::Running)
 	, m_cameraGroup(0)
+	, m_fadeSpeed(1000)
+	, m_fadeSteps(15)
 // 	, m_autoPlay(true)
 {
 
@@ -18,7 +20,7 @@ NativeViewerCamera::NativeViewerCamera()
 	m_widget->setWindowFlags(Qt::WindowStaysOnTopHint | Qt::FramelessWindowHint | Qt::ToolTip);
 
 	connect(&m_fadeTimer, SIGNAL(timeout()), this, SLOT(fadeStep()));
-	m_fadeTimer.setInterval(1000/15);
+	m_fadeTimer.setInterval(m_fadeSpeed/m_fadeSteps);
 }
 
 NativeViewerCamera::~NativeViewerCamera()
@@ -26,6 +28,18 @@ NativeViewerCamera::~NativeViewerCamera()
 	if(m_cameraGroup)
 		m_cameraGroup->removeNativeViewer(outputId());
 	delete m_widget;
+}
+
+void NativeViewerCamera::setFadeSpeed(int val)
+{
+	m_fadeSpeed = val;
+	m_fadeTimer.setInterval(m_fadeSpeed/m_fadeSteps);
+}
+
+void NativeViewerCamera::setFadeQuality(int val)
+{
+	m_fadeSteps = val;
+	m_fadeTimer.setInterval(m_fadeSpeed/m_fadeSteps);
 }
 
 void NativeViewerCamera::setSlideGroup(SlideGroup *group)
@@ -107,7 +121,7 @@ void NativeViewerCamera::fadeBlack(bool flag)
 
 void NativeViewerCamera::fadeStep()
 {
-	qreal inc = (qreal)1/15 * (qreal)m_fadeDirection;
+	qreal inc = (qreal)1/m_fadeSteps * (qreal)m_fadeDirection;
 	m_fadeOpacity += inc;
 // 	qDebug() << "fadeStep: "<<m_fadeOpacity<<","<<m_fadeDirection<<","<<inc;
 	

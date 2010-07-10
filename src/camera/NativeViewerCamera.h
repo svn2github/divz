@@ -57,6 +57,9 @@ public:
 	QWidget * renderWidget() { return m_widget; }
 	
 	CameraViewerWidget * cameraViewer() { return m_widget; }
+
+	void setFadeSpeed(int);
+	void setFadeQuality(int);
 	
 private slots:
 	void fadeStep();
@@ -65,6 +68,9 @@ private:
 	int m_fadeDirection;
 	qreal m_fadeOpacity;
 	QTimer m_fadeTimer;
+	
+	int m_fadeSpeed;
+	int m_fadeSteps;
 	
 	NativeShowState m_state;
 	CameraSlideGroup * m_cameraGroup;

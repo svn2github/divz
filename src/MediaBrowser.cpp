@@ -468,12 +468,15 @@ void MediaBrowser::setupUI()
 	m_viewerBase = new QWidget(m_splitter);
 	m_viewerLayout = new QVBoxLayout(m_viewerBase);
 	m_viewerLayout->setContentsMargins(0,0,0,0);
-	 
+	
+	// Setup the slide group viewer
 	m_viewer = new SlideGroupViewer(m_viewerBase);
 	m_viewer->setCanZoom(true);
 	m_viewer->setSceneContextHint(MyGraphicsScene::Preview);
 	m_viewer->setBackground(Qt::black);
 
+	// Create the slide and slide group that we'll reuse to preview the 
+	// selected media items
 	Slide * slide = new Slide();
 	AbstractVisualItem * bg = dynamic_cast<AbstractVisualItem*>(slide->background());
 	bg->setFillType(AbstractVisualItem::Solid);
@@ -484,7 +487,6 @@ void MediaBrowser::setupUI()
 	m_viewer->setSlideGroup(group);
 	
 	m_viewerLayout->addWidget(m_viewer);
-	
 	m_splitter->addWidget(m_viewerBase);
 	
 	loadBookmarks();
@@ -877,6 +879,7 @@ void MediaBrowser::indexSingleClicked(const QModelIndex &idx)
 		{
 			m_controlWidget = widgets.takeFirst();
 			
+			
 			m_autoPlayCheckbox = new QCheckBox(m_controlWidget);
 			m_autoPlayCheckbox->setChecked(m_autoPlayVideo);
 			
@@ -884,10 +887,12 @@ void MediaBrowser::indexSingleClicked(const QModelIndex &idx)
 			label->setBuddy(m_autoPlayCheckbox);
 			connect(m_autoPlayCheckbox, SIGNAL(toggled(bool)), this, SLOT(setAutoPlayVideo(bool)));
 			
+			
 			QHBoxLayout *layout = dynamic_cast<QHBoxLayout*>(m_controlWidget->layout());
 			if(layout)
 			{
-				layout->takeAt(0); // remove the textual label
+				//m_controlWidget->setStyleSheet("QLabel{display:none}"
+				layout->itemAt(0)->widget()->setVisible(false);
 				layout->addStretch(1);
 				layout->addWidget(m_autoPlayCheckbox);
 				layout->addWidget(label);

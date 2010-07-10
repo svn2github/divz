@@ -834,6 +834,9 @@ void SlideGroupViewControl::slideChanged(Slide* newSlide)
 				widget = 0;
 			}
 		}
+		
+/*		m_itemControlBase->adjustSize();
+		m_itemControlBase->resize(10,10);*/
 	}
 	else
 	{

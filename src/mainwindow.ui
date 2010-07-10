@@ -64,6 +64,7 @@
     <property name="title">
      <string>&amp;Tools</string>
     </property>
+    <addaction name="actionImport_Slide_Group"/>
     <addaction name="actionImages_Import_Tool"/>
     <addaction name="actionText_Import_Tool"/>
     <addaction name="separator"/>
@@ -72,7 +73,6 @@
     <property name="title">
      <string>&amp;Insert</string>
     </property>
-    <addaction name="actionImport_Slide_Group"/>
     <addaction name="actionAdd_PowerPoint_File"/>
     <addaction name="actionAdd_Group_Player"/>
     <addaction name="actionAdd_Video_File"/>
