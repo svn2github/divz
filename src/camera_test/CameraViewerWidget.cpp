@@ -13,6 +13,10 @@ CameraViewerWidget::CameraViewerWidget()
 	: QGLWidget()
 	, m_frameCount(0)
 	, m_opacity(1)
+	, m_readFrameCount(0)
+	, m_lockRepaint(false)
+	, m_isPrimaryConsumer(false)
+
 {
 	//setWindowTitle("Camera Test");
 
@@ -29,13 +33,33 @@ void CameraViewerWidget::setCamera(const QString& camera)
 	}
 
 	connect(m_thread, SIGNAL(newImage(QImage)), this, SLOT(newFrame(QImage)));
-	connect(this, SIGNAL(readyForNextFrame()), m_thread, SLOT(readFrame()));
+
+	m_thread->registerConsumer(this);
 
 	m_elapsedTime.start();
+
+	connect(&m_paintTimer, SIGNAL(timeout()), this, SLOT(repaint()));
+	m_paintTimer.setInterval(1000/30);
 
 	updateOverlay();
 
 	emit readyForNextFrame();
+	//m_paintTimer.start();
+}
+
+void CameraViewerWidget::setPrimaryConsumer(bool flag)
+{
+	m_isPrimaryConsumer = flag;
+	qDebug() << "CameraViewerWidget::setPrimaryConsumer: "<<this<<": flag:"<<flag;
+
+	if(flag)
+	{
+		connect(this, SIGNAL(readyForNextFrame()), m_thread, SLOT(readFrame()));
+	}
+	else
+	{
+		disconnect(this, SIGNAL(readyForNextFrame()), m_thread, SLOT(readFrame()));
+	}
 }
 
 void CameraViewerWidget::setOverlayText(const QString& text)
@@ -67,7 +91,7 @@ void CameraViewerWidget::updateOverlay()
 CameraViewerWidget::~CameraViewerWidget()
 {
 	if(m_thread)
-		m_thread->release();
+		m_thread->release(this);
 // 	m_thread->quit();
 // 	m_thread->wait();
 // 	delete m_thread;
@@ -126,16 +150,35 @@ void CameraViewerWidget::newFrame(QImage frame)
 		}
 
 	}
+	//qDebug() << "CameraViewerWidget::newFrame(): My Frame Count #: "<<m_readFrameCount ++;
+
+	//if(m_lockRepaint)
+	//    return;
+	//m_lockRepaint = true;
+
 	//repaint();
-	update();
-	QTimer::singleShot(0,this,SIGNAL(readyForNextFrame()));
+	//update();
+	if(m_isPrimaryConsumer)
+	{
+		QTimer::singleShot(0,this,SIGNAL(readyForNextFrame()));
+		repaint();
+	}
+	else
+		update();
 }
 
 void CameraViewerWidget::paintEvent(QPaintEvent*)
 {
+	m_lockRepaint = true;
+
+	//if(m_thread)
+	//	newFrame(m_thread->getImage());
+
 	QPainter p(this);
 	p.setRenderHint(QPainter::SmoothPixmapTransform);
 	p.setRenderHint(QPainter::Antialiasing);
+
+	//qDebug() << "CameraViewerWidget::paintEvent(): My Frame Count #: "<<m_frameCount ++;
 
 	if(m_opacity <= 0)
 		return;
@@ -157,12 +200,12 @@ void CameraViewerWidget::paintEvent(QPaintEvent*)
 
 		p.drawImage(m_targetRect,m_frame,m_sourceRect);
 
-	// 	int sec = (m_elapsedTime.elapsed() / 1000);
-	//
-	// 	m_frameCount ++;
-	// 	int fps = (m_frameCount <= 0 ? 1 : m_frameCount) / (sec <= 0 ? 1 : sec);
-	// 	p.drawText(5,15,QString("fps: %1, frames: %3, time: %2").arg(fps).arg(sec).arg(m_frameCount));
-	//
+		int sec = (m_elapsedTime.elapsed() / 1000);
+
+		m_frameCount ++;
+		int fps = (m_frameCount <= 0 ? 1 : m_frameCount) / (sec <= 0 ? 1 : sec);
+		p.drawText(5,15,QString("fps: %1, frames: %3, time: %2").arg(fps).arg(sec).arg(m_frameCount));
+
 		if(m_showOverlayText)
 		{
 			// render m_overlayText neatly and nicely
@@ -170,4 +213,6 @@ void CameraViewerWidget::paintEvent(QPaintEvent*)
 
 		//p.drawPixmap(rect(),m_overlay);
 	}
+
+	m_lockRepaint = false;
 }

@@ -24,6 +24,9 @@ public:
 
 	void setOpacity(qreal opacity);
 
+	void setPrimaryConsumer(bool flag=true);
+	bool isPrimaryConsumer() { return m_isPrimaryConsumer; }
+
 public slots:
 	void newFrame(QImage);
 
@@ -52,6 +55,12 @@ private:
 	QRect m_targetRect;
 	QRect m_sourceRect;
 	QRect m_cachedFrameRect;
+
+	int m_readFrameCount;
+	bool m_lockRepaint;
+	QTimer m_paintTimer;
+
+	bool m_isPrimaryConsumer;
 };
 
 

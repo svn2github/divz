@@ -17,7 +17,9 @@ extern "C" {
 
 #include <QImage>
 #include <QTimer>
+#include <QMutex>
 
+class CameraViewerWidget;
 class CameraThread: public QThread
 {
 	Q_OBJECT
@@ -36,7 +38,10 @@ public:
 	static QStringList enumerateDevices(bool forceReenum=false);
 
 	int refCount() { return m_refCount; }
-	void release();
+	void registerConsumer(CameraViewerWidget *consumer);
+	void release(CameraViewerWidget *consumer=0);
+
+	QImage getImage();
 	
 signals:
 	void newImage(QImage);
@@ -49,6 +54,8 @@ protected:
 
 	void freeResources();
 	int initCamera();
+
+	void pickPrimaryConsumer();
 
 private:
 	QTimer *m_readTimer;
@@ -98,8 +105,12 @@ private:
 	
 	int m_refCount;	
 
-	bool m_lockRead;
+	int m_frameCount;
 
+	QMutex m_bufferMutex;
+	QImage m_bufferImage;
+
+	QList<CameraViewerWidget*> m_consumerList;
 };
 
 

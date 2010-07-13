@@ -11,6 +11,7 @@ extern "C" {
 }
 
 #include "CameraThread.h"
+#include "CameraViewerWidget.h"
 
 QMap<QString,CameraThread *> CameraThread::m_threadMap;
 QStringList CameraThread::m_enumeratedDevices;
@@ -20,6 +21,7 @@ CameraThread::CameraThread(const QString& camera, QObject *parent)
 	: QThread(parent)
 	, m_inited(false)
 	, m_cameraFile(camera)
+	, m_frameCount(0)
 {
 	m_time_base_rational.num = 1;
 	m_time_base_rational.den = AV_TIME_BASE;
@@ -55,8 +57,35 @@ CameraThread * CameraThread::threadForCamera(const QString& camera)
 	}
 }
 
-void CameraThread::release()
+void CameraThread::registerConsumer(CameraViewerWidget *consumer)
 {
+	m_consumerList.append(consumer);
+	pickPrimaryConsumer();
+}
+
+void CameraThread::pickPrimaryConsumer()
+{
+	if(m_consumerList.isEmpty())
+		return;
+
+	CameraViewerWidget *primary = m_consumerList.last();
+
+	foreach(CameraViewerWidget *consumer, m_consumerList)
+		if(consumer->isPrimaryConsumer() &&
+		   consumer != primary)
+			consumer->setPrimaryConsumer(false);
+
+	primary->setPrimaryConsumer(true);
+}
+
+void CameraThread::release(CameraViewerWidget *consumer)
+{
+	if(consumer)
+	{
+		m_consumerList.removeAll(consumer);
+		pickPrimaryConsumer();
+	}
+
 	m_refCount --;
 	if(m_refCount <= 0)
 	{
@@ -273,7 +302,7 @@ int CameraThread::initCamera()
 
 	m_readTimer = new QTimer();
 	connect(m_readTimer, SIGNAL(timeout()), this, SLOT(readFrame()));
-	m_readTimer->setInterval(1000/(formatParams.time_base.den+5));
+	m_readTimer->setInterval(1000/30); //(formatParams.time_base.den+5));
 
 	m_inited = true;
 	return 0;
@@ -341,6 +370,8 @@ void CameraThread::readFrame()
 	}
 	AVPacket pkt1, *packet = &pkt1;
 	double pts;
+
+	//qDebug() << "CameraThread::readFrame(): My Frame Count # "<<m_frameCount ++;
 
 	int frame_finished = 0;
 	while(!frame_finished && !m_killed)
@@ -440,11 +471,16 @@ void CameraThread::readFrame()
 
 					//emit newFrame(video_frame);
 					//qDebug() << "emit newImage(), frameSize:"<<frame.size();
+
+					m_bufferMutex.lock();
+					m_bufferImage = frame;
+					m_bufferMutex.unlock();
+
 					emit newImage(frame);
 
 					m_previous_pts = pts;
 
-										//QTimer::singleShot(5, this, SLOT(decode()));
+					//QTimer::singleShot(5, this, SLOT(decode()));
 				}
 
 			}
@@ -472,4 +508,11 @@ void CameraThread::readFrame()
 	}
 }
 
-
+QImage CameraThread::getImage()
+{
+	QImage ref;
+	m_bufferMutex.lock();
+	ref = m_bufferImage;
+	m_bufferMutex.unlock();
+	return ref;
+}

@@ -131,15 +131,15 @@ unix {
 
 win32 {
 	INCLUDEPATH += \
-		./external/ffmpeg/include/msinttypes \
-		./external/ffmpeg/include/libswscale \
-		./external/ffmpeg/include/libavutil \
-		./external/ffmpeg/include/libavdevice \
-		./external/ffmpeg/include/libavformat \
-		./external/ffmpeg/include/libavcodec \
-		./external/ffmpeg/include
+		$$PWD/external/ffmpeg/include/msinttypes \
+		$$PWD/external/ffmpeg/include/libswscale \
+		$$PWD/external/ffmpeg/include/libavutil \
+		$$PWD/external/ffmpeg/include/libavdevice \
+		$$PWD/external/ffmpeg/include/libavformat \
+		$$PWD/external/ffmpeg/include/libavcodec \
+		$$PWD/external/ffmpeg/include
 	
-	LIBS += -L"./external/ffmpeg/lib" \
+	LIBS += -L"$$PWD/external/ffmpeg/lib" \
 		-lavcodec-51 \
 		-lavformat-52 \
 		-lavutil-49 \

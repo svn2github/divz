@@ -21,6 +21,21 @@ int main(int argc, char **argv)
 	t.show();
 	t.resize(320,240);
 
+	CameraViewerWidget t2;
+	t2.setCamera("vfwcap://0");
+	t2.show();
+	t2.resize(320,240);
+
+	CameraViewerWidget t3;
+	t3.setCamera("vfwcap://0");
+	t3.show();
+	t3.resize(320,240);
+
+	CameraViewerWidget t4;
+	t4.setCamera("vfwcap://0");
+	t4.show();
+	t4.resize(320,240);
+
 	return app.exec();
 }
 
