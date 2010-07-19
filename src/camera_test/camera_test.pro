@@ -15,7 +15,7 @@ SOURCES += main.cpp \
 	CameraThread.cpp \
 	CameraServer.cpp \
 	CameraViewerWidget.cpp \
-	ccvt/ccvt_mmx.S
+#	ccvt/ccvt_mmx.S
 
 
 unix {

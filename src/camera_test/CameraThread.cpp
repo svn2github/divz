@@ -11,7 +11,7 @@ extern "C" {
 #include "libavdevice/avdevice.h"
 }
 
-#include "ccvt/ccvt.h"
+//#include "ccvt/ccvt.h"
 
 #include "CameraThread.h"
 #include "CameraViewerWidget.h"
