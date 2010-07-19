@@ -21,12 +21,14 @@ int main(int argc, char **argv)
 	
 	
 	CameraViewerWidget t;
+	t.setSourceRectAdjust(11,0,-6,-3);
 	t.setObjectName("v1");
 	t.setWindowTitle("v1");
 	//t.setCamera("vfwcap://0");
 	t.setCamera("/dev/video0",30);
-	t.show();
 	t.resize(320,240);
+	t.setOverlayText("/dev/video0");
+	t.show();
 	
 	
 	
@@ -34,8 +36,8 @@ int main(int argc, char **argv)
 	t2.setObjectName("v2");
 	t2.setWindowTitle("v2");
 	t2.setCamera("/dev/video0",10);
-	t2.show();
 	t2.resize(320,240);
+	t2.show();
 // 	
 // 	CameraViewerWidget t3;
 // 	t3.setObjectName("v3");

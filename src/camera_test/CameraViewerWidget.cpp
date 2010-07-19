@@ -11,26 +11,33 @@
 
 CameraViewerWidget::CameraViewerWidget()
 	: QGLWidget()
+	, m_thread(0)
 	, m_frameCount(0)
 	, m_opacity(1)
 	, m_readFrameCount(0)
 	, m_lockRepaint(false)
-	, m_isPrimaryConsumer(false)
-
+	, m_aspectRatioMode(Qt::KeepAspectRatio)
+	, m_adjustDx1(0)
+	, m_adjustDy1(0)
+	, m_adjustDx2(0)
+	, m_adjustDy2(0)
+	, m_showOverlayText(true)
+	, m_overlayText("")
 {
 	//setAttribute(Qt::WA_PaintOnScreen, true);
 	//setAttribute(Qt::WA_OpaquePaintEvent, true);
 	//setAttribute(Qt::WA_PaintOutsidePaintEvent);
-	
-	//setWindowTitle("Camera Test");
 	srand ( time(NULL) );
-	
-
+	connect(&m_paintTimer, SIGNAL(timeout()), this, SLOT(callUpdate()));
 }
 
 void CameraViewerWidget::closeEvent(QCloseEvent*)
 {
-	//deleteLater();
+	disconnectCamera();
+}
+
+void CameraViewerWidget::disconnectCamera()
+{
 	m_paintTimer.stop();
 	m_thread->release(this);
 	disconnect(m_thread,0,this,0);
@@ -39,22 +46,26 @@ void CameraViewerWidget::closeEvent(QCloseEvent*)
 
 void CameraViewerWidget::showEvent(QShowEvent*)
 {
-	//deleteLater();
 	if(!m_paintTimer.isActive())
 	{
-		m_thread = CameraThread::threadForCamera(m_camera);
-		connect(m_thread, SIGNAL(frameReady()), this, SLOT(frameReady()), Qt::QueuedConnection);
-		m_thread->registerConsumer(this);
-		m_paintTimer.start();
+		setCamera(m_camera,fps());
 		
-		m_elapsedTime.start();
+// 		m_thread = CameraThread::threadForCamera(m_camera);
+// 		connect(m_thread, SIGNAL(frameReady()), this, SLOT(frameReady()), Qt::QueuedConnection);
+// 		m_thread->registerConsumer(this);
+// 		m_paintTimer.start();
+// 		
+// 		m_elapsedTime.start();
 	}
 }
 
 void CameraViewerWidget::setCamera(const QString& camera, int fps)
 {
+	if(m_thread)
+		disconnectCamera();
+		
 	m_camera = camera;
-	qDebug() << "CameraViewerWidget::setCamera: In Thread ID "<<QThread::currentThreadId();
+	//qDebug() << "CameraViewerWidget::setCamera: In Thread ID "<<QThread::currentThreadId();
 	m_thread = CameraThread::threadForCamera(camera);
 	if(!m_thread)
 	{
@@ -62,21 +73,12 @@ void CameraViewerWidget::setCamera(const QString& camera, int fps)
 		return;
 	}
 
-	//connect(m_thread, SIGNAL(newImage(QImage)), this, SLOT(newFrame(QImage)));
 	connect(m_thread, SIGNAL(frameReady()), this, SLOT(frameReady()), Qt::QueuedConnection);
-
 	m_thread->registerConsumer(this);
-
+	
 	m_elapsedTime.start();
 
-
-	updateOverlay();
-
-	//emit readyForNextFrame();
-
-	connect(&m_paintTimer, SIGNAL(timeout()), this, SLOT(callUpdate()));
-	m_paintTimer.setInterval(1000/fps);
- 	m_paintTimer.start();
+	setFps(fps);
 }
 
 void CameraViewerWidget::callUpdate()
@@ -92,22 +94,6 @@ void CameraViewerWidget::setFps(int fps)
 	m_paintTimer.start();
 }
 
-
-void CameraViewerWidget::setPrimaryConsumer(bool flag)
-{
-	m_isPrimaryConsumer = flag;
-	qDebug() << "CameraViewerWidget::setPrimaryConsumer: "<<objectName()<<": flag:"<<flag;
-	return;
-	if(flag)
-	{
-		connect(this, SIGNAL(readyForNextFrame()), m_thread, SLOT(readFrame()));
-	}
-	else
-	{
-		disconnect(this, SIGNAL(readyForNextFrame()), m_thread, SLOT(readFrame()));
-	}
-}
-
 void CameraViewerWidget::setOverlayText(const QString& text)
 {
 	m_overlayText = text;
@@ -120,16 +106,68 @@ void CameraViewerWidget::showOverlayText(bool flag)
 
 void CameraViewerWidget::updateOverlay()
 {
-	if(m_overlay.rect() != rect())
-	    m_overlay = QPixmap(rect().width(), rect().height());
+	if(m_sourceRect.isEmpty())
+		return;
+
+	if(m_overlay.size() != m_targetRect.size())
+	    m_overlay = QPixmap(m_targetRect.width(), m_targetRect.height());
 
 	m_overlay.fill(QColor(0,0,0,0));
 	QPainter painter(&m_overlay);
-
+	
+	QRect window = QRect(0,0,m_sourceRect.size().width(),m_sourceRect.size().height());
+	painter.setWindow(window);
+	
 	painter.setRenderHint(QPainter::Antialiasing, true);
-	//painter.setPen(QPen(Qt::black, 12, Qt.ashDotLine, Qt::RoundCap));
-	//painter.setBrush(QBrush(Qt::green, Qt::SolidPattern));
-	//painter.drawEllipse(80, 80, 400, 240);
+// 	painter.setPen(QPen(Qt::black, 12, Qt::DashDotLine, Qt::RoundCap));
+// 	painter.setBrush(QBrush(Qt::green, Qt::SolidPattern));
+// 	painter.drawEllipse(80, 80, 400, 240);
+	
+	if(!m_overlayText.isEmpty() &&
+	   m_showOverlayText)
+	{
+		int rectHeight = window.height() / 4;
+		QRect target(0,rectHeight * 3, window.width(), rectHeight);
+		int size = 12;
+		QSize textSize(0,0);
+		QFont font;
+		while(  textSize.width()  < target.width() * .9 &&
+			textSize.height() < target.height() * .9)
+		{
+			size += 4;
+			font = QFont("Sans-Serif",size,QFont::Bold);
+			textSize = QFontMetrics(font).size(Qt::TextSingleLine, m_overlayText);
+		}
+		
+		QRect textRect(target.x() + target.width() / 2  - textSize.width() / 2,
+			       target.y() + target.height() / 2 - textSize.height () / 2 + size, 
+			       textSize.width(), textSize.height());
+		
+		QPainterPath path;
+		path.addText(textRect.topLeft(),font,m_overlayText);
+		
+		painter.setPen(QPen(Qt::black,3));
+		painter.setBrush(Qt::white);
+		painter.drawPath(path);
+		
+		/*painter.setFont(font);
+		
+		painter.setPen(Qt::black);
+		painter.drawText( target.x() + target.width() / 2  - textSize.width() / 2 - 2,
+				  target.y() + target.height() / 2 - textSize.height () / 2 + size - 2,
+				  m_overlayText);
+		
+		painter.setPen(Qt::black);
+		painter.drawText( target.x() + target.width() / 2  - textSize.width() / 2 + 2,
+				  target.y() + target.height() / 2 - textSize.height () / 2 + size + 2,
+				  m_overlayText);
+		
+		painter.setPen(Qt::white);
+		painter.drawText( target.x() + target.width() / 2  - textSize.width() / 2,
+				  target.y() + target.height() / 2 - textSize.height () / 2 + size,
+				  m_overlayText);*/ 
+		
+	}
 
 }
 
@@ -138,13 +176,6 @@ CameraViewerWidget::~CameraViewerWidget()
 {
 	if(m_thread)
 		m_thread->release(this);
-// 	m_thread->quit();
-// 	m_thread->wait();
-// 	delete m_thread;
-// 	m_thread = 0;
-
-// 	delete m_server;
-// 	m_server = 0;
 }
 
 void CameraViewerWidget::setOpacity(qreal opac)
@@ -153,82 +184,75 @@ void CameraViewerWidget::setOpacity(qreal opac)
 	update();
 }
 
+void CameraViewerWidget::resizeEvent(QResizeEvent*) 
+{ 
+	updateRects();
+}
+
+void CameraViewerWidget::setSourceRectAdjust( int dx1, int dy1, int dx2, int dy2 )
+{
+	m_adjustDx1 = dx1;
+	m_adjustDy1 = dy1;
+	m_adjustDx2 = dx2;
+	m_adjustDy2 = dy2;
+}	
+
+void CameraViewerWidget::updateRects()
+{
+	m_sourceRect = m_frame.rect();
+	m_origSourceRect = m_sourceRect; 
+	
+	m_sourceRect.adjust(m_adjustDx1,m_adjustDy1,m_adjustDx2,m_adjustDy2);
+	
+	QSize nativeSize = m_frame.size();
+	
+	if (nativeSize.isEmpty()) 
+	{
+		m_targetRect = QRect();
+	} 
+	else 
+	if (m_aspectRatioMode == Qt::IgnoreAspectRatio) 
+	{
+		m_targetRect = rect();
+	} 
+	else 
+	if (m_aspectRatioMode == Qt::KeepAspectRatio) 
+	{
+		QSizeF size = nativeSize;
+		size.scale(rect().size(), Qt::KeepAspectRatio);
+	
+		m_targetRect = QRect(0, 0, size.width(), size.height());
+		m_targetRect.moveCenter(rect().center());
+	} 
+	else 
+	if (m_aspectRatioMode == Qt::KeepAspectRatioByExpanding) 
+	{
+		m_targetRect = rect();
+	
+		QSize size = rect().size();
+		size.scale(nativeSize, Qt::KeepAspectRatio);
+	
+		m_sourceRect = QRect(QPoint(0,0),size); 
+		m_sourceRect.moveCenter(QPoint(size.width() / 2, size.height() / 2));
+	}
+	
+	//qDebug() << "updateRects(): source: "<<m_sourceRect<<", target:" <<m_targetRect;
+	updateOverlay();
+
+	
+}
+
+
 void CameraViewerWidget::frameReady()
 {
-	//qDebug() << "CameraViewerWidget::frameReady(): thread:"<<QThread::currentThread()<<", main:"<<QApplication::instance()->thread()<<", in main?" << ( QApplication::instance()->thread() == QThread::currentThread() ? true:false);
 	if(!m_thread)
 		return;
 		
-		
 	m_frame = m_thread->getImage();
-	if(m_frame.size() != m_sourceRect.size() ||
-	   rect().size() != m_cachedFrameRect.size())
-	{
-		m_cachedFrameRect = rect();
-		//qDebug() << "Frame Size:"<<m_frame.size();
-		//QMessageBox::information(this, "Debug", QString("Frame: %1 x %2").arg(m_frame.size().width()).arg(m_frame.size().height()));
-		//resize(m_frame.size());
-
-		//resize(QSize(1024,768));
-		m_sourceRect = m_frame.rect();
-		m_targetRect = QRect(0,0,0,0);
-		if(m_sourceRect.height() > m_sourceRect.width())
-		{
-			qreal ar = (qreal)m_sourceRect.width() / (qreal)m_sourceRect.height();
-			int width = (int)((qreal)rect().height() * ar);
-			if(width > rect().width())
-			{
-				int height = (int)((qreal)rect().width() / .75);
-				m_targetRect = QRect(0, rect().height()/2 - height/2, rect().width(), height);
-			}
-			else
-				m_targetRect = QRect(rect().width()/2 - width/2, 0, width, rect().height());
-		}
-		else
-		{
-			qreal ar = (qreal)m_sourceRect.height() / (qreal)m_sourceRect.width();
-			int height = (int)((qreal)rect().width() * ar);
-			if(height > rect().height())
-			{
-				int width = (int)((qreal)rect().height() / .75);
-				m_targetRect = QRect(rect().width()/2 - width/2, 0, width, rect().height());
-			}
-			else
-				m_targetRect = QRect(0, rect().height()/2 - height/2, rect().width(), height);
-
-
-			//qDebug() << "WIDE: m_sourceRect:"<<m_sourceRect<<", m_targetRect:"<<m_targetRect<<", ar:"<<ar<<", rect:"<<rect()<<", height: "<<height;
-		}
-
-	}
-	//qDebug() << "CameraViewerWidget::newFrame(): My Frame Count #: "<<m_readFrameCount ++;
-
-	//if(m_lockRepaint)
-	//    return;
-	//m_lockRepaint = true;
-	//qDebug() << "CameraViewerWidget::newFrame: In ID "<<QThread::currentThreadId();
-		
-
-	//update();
-	//repaint();
-// 	if(m_isPrimaryConsumer)
-// 	{
-// 		//QTimer::singleShot(0,this,SIGNAL(readyForNextFrame()));
-// 	}
-// 	
-	//QTimer::singleShot(0,this,SIGNAL(repaint()));
-	//repaint();
-	//update();
-	//QPainter p(this);
-	//p.drawImage(m_targetRect,m_frame,m_sourceRect);
-// 	}
-// 	else
-// 		update();
-	//QTimer::singleShot(1000/30, this, SLOT(callUpdate()));
 	
-// 	m_paintTimer.stop();
-// 	m_paintTimer.setInterval(1000/30);
-// 	m_paintTimer.start();
+	if(m_frame.size() != m_origSourceRect.size())
+		updateRects();
+		
 	QTimer::singleShot(0, this, SLOT(updateTimer()));
 }
 
@@ -245,9 +269,6 @@ void CameraViewerWidget::paintEvent(QPaintEvent*)
 {
 
 	m_lockRepaint = true;
-
-	//if(m_thread)
-	//	newFrame(m_thread->getImage());
 
 	QPainter p(this);
 	//p.setRenderHint(QPainter::SmoothPixmapTransform);
@@ -273,14 +294,13 @@ void CameraViewerWidget::paintEvent(QPaintEvent*)
 	}
 	else
 	{
-
 		p.drawImage(m_targetRect,m_frame,m_sourceRect);
 
 		int sec = (m_elapsedTime.elapsed() / 1000);
 
 		m_frameCount ++;
 		int fps = (m_frameCount <= 0 ? 1 : m_frameCount) / (sec <= 0 ? 1 : sec);
-		p.drawText(5,15,QString("fps: %1, frames: %3, time: %2").arg(fps).arg(sec).arg(m_frameCount));
+		p.drawText(m_targetRect.x() + 5,m_targetRect.y() + 15,QString("fps: %1, frames: %3, time: %2").arg(fps).arg(sec).arg(m_frameCount));
 		//qDebug() << QString("fps: %1, frames: %3, time: %2").arg(fps).arg(sec).arg(m_frameCount);
 
 		if(m_showOverlayText)
@@ -288,7 +308,9 @@ void CameraViewerWidget::paintEvent(QPaintEvent*)
 			// render m_overlayText neatly and nicely
 		}
 
-		//p.drawPixmap(rect(),m_overlay);
+		//p.drawPixmap(0,0,m_overlay);
+		p.drawPixmap(m_targetRect.topLeft(),m_overlay);
+		//p.drawPixmap(m_targetRect, m_overlay);
 	}
 
 	m_lockRepaint = false;

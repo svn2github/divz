@@ -72,23 +72,8 @@ CameraThread * CameraThread::threadForCamera(const QString& camera)
 void CameraThread::registerConsumer(CameraViewerWidget *consumer)
 {
 	m_consumerList.append(consumer);
-	pickPrimaryConsumer();
 }
 
-void CameraThread::pickPrimaryConsumer()
-{
-	if(m_consumerList.isEmpty())
-		return;
-
-	CameraViewerWidget *primary = m_consumerList.last();
-
-	foreach(CameraViewerWidget *consumer, m_consumerList)
-		if(consumer->isPrimaryConsumer() &&
-		   consumer != primary)
-			consumer->setPrimaryConsumer(false);
-
-	primary->setPrimaryConsumer(true);
-}
 
 void CameraThread::release(CameraViewerWidget *consumer)
 {
@@ -98,9 +83,7 @@ void CameraThread::release(CameraViewerWidget *consumer)
 	if(!m_consumerList.contains(consumer))
 		return;
 		
-	
 	m_consumerList.removeAll(consumer);
-	pickPrimaryConsumer();
 	
 	m_refCount --;
 	//qDebug() << "CameraThread::release: m_refCount:"<<m_refCount;

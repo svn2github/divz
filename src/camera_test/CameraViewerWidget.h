@@ -19,6 +19,7 @@ public:
 	~CameraViewerWidget();
 
 	void setCamera(const QString& camera, int fps=30);
+	void disconnectCamera();
 	void setFps(int fps);
 	int fps() { return m_fps; }
 	
@@ -26,10 +27,9 @@ public:
 	void showOverlayText(bool flag=true);
 
 	void setOpacity(qreal opacity);
-
-	void setPrimaryConsumer(bool flag=true);
-	bool isPrimaryConsumer() { return m_isPrimaryConsumer; }
-
+	
+	void setSourceRectAdjust( int dx1, int dy1, int dx2, int dy2 );
+	
 public slots:
 	//void newFrame(QImage);
 	void frameReady();
@@ -42,9 +42,11 @@ protected:
 	void paintEvent(QPaintEvent*);
 	void closeEvent(QCloseEvent*);
 	void showEvent(QShowEvent*);
-
+        void resizeEvent(QResizeEvent*);
+        
 private:
 	void updateOverlay();
+	void updateRects();
 
 	qreal m_opacity;
 	QString m_camera;
@@ -61,15 +63,20 @@ private:
 
 	QRect m_targetRect;
 	QRect m_sourceRect;
-	QRect m_cachedFrameRect;
-
+	QRect m_origSourceRect;
+	int m_adjustDx1;
+	int m_adjustDy1;
+	int m_adjustDx2;
+	int m_adjustDy2;
+	
 	int m_readFrameCount;
 	bool m_lockRepaint;
 	QTimer m_paintTimer;
 
-	bool m_isPrimaryConsumer;
-	
 	int m_fps;
+	
+	Qt::AspectRatioMode m_aspectRatioMode;
+
 };
 
 
