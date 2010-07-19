@@ -18,13 +18,43 @@ CameraViewerWidget::CameraViewerWidget()
 	, m_isPrimaryConsumer(false)
 
 {
+	//setAttribute(Qt::WA_PaintOnScreen, true);
+	//setAttribute(Qt::WA_OpaquePaintEvent, true);
+	//setAttribute(Qt::WA_PaintOutsidePaintEvent);
+	
 	//setWindowTitle("Camera Test");
+	srand ( time(NULL) );
+	
 
 }
 
-void CameraViewerWidget::setCamera(const QString& camera)
+void CameraViewerWidget::closeEvent(QCloseEvent*)
+{
+	//deleteLater();
+	m_paintTimer.stop();
+	m_thread->release(this);
+	disconnect(m_thread,0,this,0);
+}
+
+
+void CameraViewerWidget::showEvent(QShowEvent*)
+{
+	//deleteLater();
+	if(!m_paintTimer.isActive())
+	{
+		m_thread = CameraThread::threadForCamera(m_camera);
+		connect(m_thread, SIGNAL(frameReady()), this, SLOT(frameReady()), Qt::QueuedConnection);
+		m_thread->registerConsumer(this);
+		m_paintTimer.start();
+		
+		m_elapsedTime.start();
+	}
+}
+
+void CameraViewerWidget::setCamera(const QString& camera, int fps)
 {
 	m_camera = camera;
+	qDebug() << "CameraViewerWidget::setCamera: In Thread ID "<<QThread::currentThreadId();
 	m_thread = CameraThread::threadForCamera(camera);
 	if(!m_thread)
 	{
@@ -32,26 +62,42 @@ void CameraViewerWidget::setCamera(const QString& camera)
 		return;
 	}
 
-	connect(m_thread, SIGNAL(newImage(QImage)), this, SLOT(newFrame(QImage)));
+	//connect(m_thread, SIGNAL(newImage(QImage)), this, SLOT(newFrame(QImage)));
+	connect(m_thread, SIGNAL(frameReady()), this, SLOT(frameReady()), Qt::QueuedConnection);
 
 	m_thread->registerConsumer(this);
 
 	m_elapsedTime.start();
 
-	connect(&m_paintTimer, SIGNAL(timeout()), this, SLOT(repaint()));
-	m_paintTimer.setInterval(1000/30);
 
 	updateOverlay();
 
-	emit readyForNextFrame();
-	//m_paintTimer.start();
+	//emit readyForNextFrame();
+
+	connect(&m_paintTimer, SIGNAL(timeout()), this, SLOT(callUpdate()));
+	m_paintTimer.setInterval(1000/fps);
+ 	m_paintTimer.start();
 }
+
+void CameraViewerWidget::callUpdate()
+{
+	update();
+}
+
+void CameraViewerWidget::setFps(int fps)
+{
+	m_fps = fps;
+	m_paintTimer.stop();
+	m_paintTimer.setInterval(1000/fps);
+	m_paintTimer.start();
+}
+
 
 void CameraViewerWidget::setPrimaryConsumer(bool flag)
 {
 	m_isPrimaryConsumer = flag;
-	qDebug() << "CameraViewerWidget::setPrimaryConsumer: "<<this<<": flag:"<<flag;
-
+	qDebug() << "CameraViewerWidget::setPrimaryConsumer: "<<objectName()<<": flag:"<<flag;
+	return;
 	if(flag)
 	{
 		connect(this, SIGNAL(readyForNextFrame()), m_thread, SLOT(readFrame()));
@@ -107,19 +153,24 @@ void CameraViewerWidget::setOpacity(qreal opac)
 	update();
 }
 
-void CameraViewerWidget::newFrame(QImage frame)
+void CameraViewerWidget::frameReady()
 {
-	m_frame = frame;
-	if(frame.size() != m_sourceRect.size() ||
+	//qDebug() << "CameraViewerWidget::frameReady(): thread:"<<QThread::currentThread()<<", main:"<<QApplication::instance()->thread()<<", in main?" << ( QApplication::instance()->thread() == QThread::currentThread() ? true:false);
+	if(!m_thread)
+		return;
+		
+		
+	m_frame = m_thread->getImage();
+	if(m_frame.size() != m_sourceRect.size() ||
 	   rect().size() != m_cachedFrameRect.size())
 	{
 		m_cachedFrameRect = rect();
-		//qDebug() << "Frame Size:"<<frame.size();
-		//QMessageBox::information(this, "Debug", QString("Frame: %1 x %2").arg(frame.size().width()).arg(frame.size().height()));
-		//resize(frame.size());
+		//qDebug() << "Frame Size:"<<m_frame.size();
+		//QMessageBox::information(this, "Debug", QString("Frame: %1 x %2").arg(m_frame.size().width()).arg(m_frame.size().height()));
+		//resize(m_frame.size());
 
 		//resize(QSize(1024,768));
-		m_sourceRect = frame.rect();
+		m_sourceRect = m_frame.rect();
 		m_targetRect = QRect(0,0,0,0);
 		if(m_sourceRect.height() > m_sourceRect.width())
 		{
@@ -155,29 +206,54 @@ void CameraViewerWidget::newFrame(QImage frame)
 	//if(m_lockRepaint)
 	//    return;
 	//m_lockRepaint = true;
+	//qDebug() << "CameraViewerWidget::newFrame: In ID "<<QThread::currentThreadId();
+		
 
+	//update();
+	//repaint();
+// 	if(m_isPrimaryConsumer)
+// 	{
+// 		//QTimer::singleShot(0,this,SIGNAL(readyForNextFrame()));
+// 	}
+// 	
+	//QTimer::singleShot(0,this,SIGNAL(repaint()));
 	//repaint();
 	//update();
-	if(m_isPrimaryConsumer)
-	{
-		QTimer::singleShot(0,this,SIGNAL(readyForNextFrame()));
-		repaint();
-	}
-	else
-		update();
+	//QPainter p(this);
+	//p.drawImage(m_targetRect,m_frame,m_sourceRect);
+// 	}
+// 	else
+// 		update();
+	//QTimer::singleShot(1000/30, this, SLOT(callUpdate()));
+	
+// 	m_paintTimer.stop();
+// 	m_paintTimer.setInterval(1000/30);
+// 	m_paintTimer.start();
+	QTimer::singleShot(0, this, SLOT(updateTimer()));
+}
+
+void CameraViewerWidget::updateTimer()
+{
+	//m_paintTimer.stop();
+// 	int fps =( rand() % 30 + 25 );
+// 	m_paintTimer.setInterval(1000/30);
+	//m_paintTimer.start();
+	//qDebug() << "CameraViewerWidget::updateTimer: fps:"<<fps; //In ID "<<QThread::currentThreadId();
 }
 
 void CameraViewerWidget::paintEvent(QPaintEvent*)
 {
+
 	m_lockRepaint = true;
 
 	//if(m_thread)
 	//	newFrame(m_thread->getImage());
 
 	QPainter p(this);
-	p.setRenderHint(QPainter::SmoothPixmapTransform);
-	p.setRenderHint(QPainter::Antialiasing);
+	//p.setRenderHint(QPainter::SmoothPixmapTransform);
+	//p.setRenderHint(QPainter::Antialiasing);
 
+	//qDebug() << "CameraViewerWidget::paintEvent(): "<<objectName()<<", thread:"<<thread()<<", main:"<<QApplication::instance()->thread();
 	//qDebug() << "CameraViewerWidget::paintEvent(): My Frame Count #: "<<m_frameCount ++;
 
 	if(m_opacity <= 0)
@@ -205,6 +281,7 @@ void CameraViewerWidget::paintEvent(QPaintEvent*)
 		m_frameCount ++;
 		int fps = (m_frameCount <= 0 ? 1 : m_frameCount) / (sec <= 0 ? 1 : sec);
 		p.drawText(5,15,QString("fps: %1, frames: %3, time: %2").arg(fps).arg(sec).arg(m_frameCount));
+		//qDebug() << QString("fps: %1, frames: %3, time: %2").arg(fps).arg(sec).arg(m_frameCount);
 
 		if(m_showOverlayText)
 		{

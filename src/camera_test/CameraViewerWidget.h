@@ -18,7 +18,10 @@ public:
 	CameraViewerWidget();
 	~CameraViewerWidget();
 
-	void setCamera(const QString& camera);
+	void setCamera(const QString& camera, int fps=30);
+	void setFps(int fps);
+	int fps() { return m_fps; }
+	
 	void setOverlayText(const QString& text);
 	void showOverlayText(bool flag=true);
 
@@ -28,13 +31,17 @@ public:
 	bool isPrimaryConsumer() { return m_isPrimaryConsumer; }
 
 public slots:
-	void newFrame(QImage);
+	//void newFrame(QImage);
+	void frameReady();
 
-signals:
-	void readyForNextFrame();
-
+private slots:
+	void callUpdate();
+	void updateTimer();
+	
 protected:
 	void paintEvent(QPaintEvent*);
+	void closeEvent(QCloseEvent*);
+	void showEvent(QShowEvent*);
 
 private:
 	void updateOverlay();
@@ -61,6 +68,8 @@ private:
 	QTimer m_paintTimer;
 
 	bool m_isPrimaryConsumer;
+	
+	int m_fps;
 };
 
 

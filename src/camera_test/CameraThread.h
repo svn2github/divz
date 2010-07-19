@@ -44,7 +44,8 @@ public:
 	QImage getImage();
 	
 signals:
-	void newImage(QImage);
+	//void newImage(QImage);
+	void frameReady();
 
 protected slots:
 	void readFrame();
@@ -111,6 +112,8 @@ private:
 	QImage m_bufferImage;
 
 	QList<CameraViewerWidget*> m_consumerList;
+
+	uchar * m_yuvBuffer;
 };
 
 

@@ -4,14 +4,24 @@
 #include <QMutexLocker>
 #include <QStringList>
 #include <QDebug>
+#include <QApplication>
 
 extern "C" {
 #include "libswscale/swscale.h"
 #include "libavdevice/avdevice.h"
 }
 
+#include "ccvt/ccvt.h"
+
 #include "CameraThread.h"
 #include "CameraViewerWidget.h"
+
+#if defined(Q_OS_WIN)
+	#define RAW_PIX_FMT PIX_FMT_BGR565
+#else 
+	#define RAW_PIX_FMT PIX_FMT_RGB565
+#endif
+
 
 QMap<QString,CameraThread *> CameraThread::m_threadMap;
 QStringList CameraThread::m_enumeratedDevices;
@@ -22,6 +32,8 @@ CameraThread::CameraThread(const QString& camera, QObject *parent)
 	, m_inited(false)
 	, m_cameraFile(camera)
 	, m_frameCount(0)
+	, m_yuvBuffer(0)
+	, m_killed(false)
 {
 	m_time_base_rational.num = 1;
 	m_time_base_rational.den = AV_TIME_BASE;
@@ -51,7 +63,7 @@ CameraThread * CameraThread::threadForCamera(const QString& camera)
 		CameraThread *v = new CameraThread(camera);
 		m_threadMap[camera] = v;
 		v->m_refCount=1;
-		v->start();
+		v->start(QThread::HighPriority);
 
 		return v;
 	}
@@ -80,15 +92,21 @@ void CameraThread::pickPrimaryConsumer()
 
 void CameraThread::release(CameraViewerWidget *consumer)
 {
-	if(consumer)
-	{
-		m_consumerList.removeAll(consumer);
-		pickPrimaryConsumer();
-	}
-
+	if(!consumer)
+		return;
+		
+	if(!m_consumerList.contains(consumer))
+		return;
+		
+	
+	m_consumerList.removeAll(consumer);
+	pickPrimaryConsumer();
+	
 	m_refCount --;
+	//qDebug() << "CameraThread::release: m_refCount:"<<m_refCount;
 	if(m_refCount <= 0)
 	{
+		m_killed = true;
 		quit();
 		wait();
 		deleteLater();
@@ -104,9 +122,9 @@ QStringList CameraThread::enumerateDevices(bool forceReenum)
 	m_devicesEnumerated = true;
 	
 	#ifdef Q_OS_WIN32
-	QString deviceBase = "vfwcap://";
+		QString deviceBase = "vfwcap://";
 	#else
-	QString deviceBase = "/dev/video";
+		QString deviceBase = "/dev/video";
 	#endif
 	QStringList list;
 	
@@ -181,30 +199,31 @@ int CameraThread::initCamera()
 	memset(&formatParams, 0, sizeof(AVFormatParameters));
 
 	QString fileTmp = m_cameraFile;
-	QStringList list = fileTmp.split("://");
-	qDebug() << "[DEBUG] CameraThread::load(): input format args:"<<list;
 
-	fileTmp = list[1];
-	if(fileTmp.isEmpty())
-		fileTmp = "0";
+	#ifdef Q_OS_WIN32
+	QString fmt = "vfwcap";
+	if(fileTmp.startsWith("vfwcap://"))
+		fileTmp = fileTmp.replace("vfwcap://","");
+	#else
+	QString fmt = "video4linux";
+	#endif
 
-	QString fmt = list[0];
+	qDebug() << "[DEBUG] CameraThread::load(): fmt:"<<fmt<<", filetmp:"<<fileTmp;
 
-	if(fmt == "cap")
-		fmt = "vfwcap";
-
-	inFmt = av_find_input_format(qPrintable(list[0]));
+	inFmt = av_find_input_format(qPrintable(fmt));
 	if( !inFmt )
 	{
-		qDebug() << "[ERROR] CameraThread::load(): Unable to find input format:"<<list[0];
+		qDebug() << "[ERROR] CameraThread::load(): Unable to find input format:"<<fmt;
 		return -1;
 	}
 
 	formatParams.time_base.num = 1;
 	formatParams.time_base.den = 35; //25;
-	//formatParams.width = 352;
-	//formatParams.height = 288;
-	//formatParams.channel = 0;
+// 	formatParams.width = 352;
+// 	formatParams.height = 288;
+	formatParams.width = 640;
+	formatParams.height = 480;
+// 	formatParams.channel = 1;
 	//formatParams.pix_fmt = PIX_FMT_RGB24 ;
 
 
@@ -218,6 +237,8 @@ int CameraThread::initCamera()
 	}
 
 	//dump_format(m_av_format_context, 0, qPrintable(m_cameraFile), 0);
+	qDebug() << "[DEBUG] dump_format():";
+	dump_format(m_av_format_context, 0, qPrintable(fileTmp), false);
 
 
 	uint i;
@@ -276,15 +297,15 @@ int CameraThread::initCamera()
 	qDebug() << "[DEBUG] codec context size:"<<m_video_codec_context->width<<"x"<<m_video_codec_context->height;
 
 	// Determine required buffer size and allocate buffer
-	int num_bytes = avpicture_get_size(PIX_FMT_BGR565, m_video_codec_context->width, m_video_codec_context->height);
+	int num_bytes = avpicture_get_size(RAW_PIX_FMT, m_video_codec_context->width, m_video_codec_context->height);
 
 	m_buffer = (uint8_t *)av_malloc(num_bytes * sizeof(uint8_t));
 
 	// Assign appropriate parts of buffer to image planes in pFrameRGB
 	// Note that pFrameRGB is an AVFrame, but AVFrame is a superset of AVPicture
-	avpicture_fill((AVPicture *)m_av_rgb_frame, m_buffer, PIX_FMT_BGR565,
+	avpicture_fill((AVPicture *)m_av_rgb_frame, m_buffer, RAW_PIX_FMT,
 					m_video_codec_context->width, m_video_codec_context->height);
-
+	
 	if(m_audio_stream != -1)
 	{
 		m_audio_codec_context = m_av_format_context->streams[m_audio_stream]->codec;
@@ -300,10 +321,6 @@ int CameraThread::initCamera()
 
 	m_timebase = m_av_format_context->streams[m_video_stream]->time_base;
 
-	m_readTimer = new QTimer();
-	connect(m_readTimer, SIGNAL(timeout()), this, SLOT(readFrame()));
-	m_readTimer->setInterval(1000/30); //(formatParams.time_base.den+5));
-
 	m_inited = true;
 	return 0;
 }
@@ -311,8 +328,23 @@ int CameraThread::initCamera()
 void CameraThread::run()
 {
 	initCamera();
+	
+	
+	//moveToThread(currentThread());
+	//qDebug() << "CameraThread::run(): thread:"<<thread()<<", main:"<<QApplication::instance()->thread()<<", running?"<<isRunning()<<", in main?" << ( QApplication::instance()->thread() == currentThread() ? true:false);
+	qDebug() << "CameraThread::run: In Thread ID "<<QThread::currentThreadId(); 
+	
+	//m_readTimer = new QTimer();
+	//connect(m_readTimer, SIGNAL(timeout()), this, SLOT(readFrame()));
+	//m_readTimer->setInterval(1000/30); //(formatParams.time_base.den+5));
+
 	//m_readTimer->start();
-	exec();
+	//exec();
+	while(!m_killed)
+	{
+		readFrame();
+		usleep(1000000 / 30 / 1.5);
+	};
 }
 
 
@@ -334,6 +366,12 @@ CameraThread::~CameraThread()
 	{
 		delete m_frame;
 		m_frame = 0;
+	}
+	
+	if(m_yuvBuffer)
+	{
+		delete m_yuvBuffer;
+		m_yuvBuffer = 0;
 	}
 }
 
@@ -365,7 +403,8 @@ void CameraThread::readFrame()
 {
 	if(!m_inited)
 	{
-	    emit newImage(QImage());
+	    //emit newImage(QImage());
+	    emit frameReady();
 	    return;
 	}
 	AVPacket pkt1, *packet = &pkt1;
@@ -405,7 +444,6 @@ void CameraThread::readFrame()
 				pts *= av_q2d(m_timebase);
 
 				// Did we get a video frame?
-				// Did we get a video frame?
 				if(frame_finished)
 				{
 
@@ -413,29 +451,53 @@ void CameraThread::readFrame()
 					if(m_sws_context == NULL)
 					{
 						//mutex.lock();
+						//qDebug() << "Creating software scaler for pix_fmt: "<<m_video_codec_context->pix_fmt;
 						m_sws_context = sws_getContext(
 							m_video_codec_context->width, m_video_codec_context->height,
 							m_video_codec_context->pix_fmt,
 							m_video_codec_context->width, m_video_codec_context->height,
 							//PIX_FMT_RGB32,SWS_BICUBIC,
-							PIX_FMT_BGR565, SWS_FAST_BILINEAR,
+							RAW_PIX_FMT, SWS_FAST_BILINEAR,
 							NULL, NULL, NULL); //SWS_PRINT_INFO
 						//mutex.unlock();
 						//printf("decode(): created m_sws_context\n");
 					}
 					//printf("decode(): got frame\n");
-
-					sws_scale(m_sws_context,
-						  m_av_frame->data,
-						  m_av_frame->linesize, 0,
-						  m_video_codec_context->height,
-						  m_av_rgb_frame->data,
-						  m_av_rgb_frame->linesize);
-
-					QImage frame(m_av_rgb_frame->data[0],
-								m_video_codec_context->width,
-								m_video_codec_context->height,
-								QImage::Format_RGB16);
+					
+// 						int w = m_video_codec_context->width;
+// 						int h = m_video_codec_context->height;
+// 						int sz0 = w * h;//m_av_frame->linesize[0] * h;
+// 						//int sz1 = m_av_frame->linesize[1]/2 * h/2;
+// 						int sz1 = w/2 * h/2;
+// 						
+// 						if(m_yuvBuffer == 0)
+// 							m_yuvBuffer = (uchar*)malloc(sizeof(uchar) * (sz0 + 2 * sz1));
+// 							
+// 						unsigned char Output[4 * w * h];
+// 						
+// 						memcpy(m_yuvBuffer,             m_av_frame->data[0], sz0);
+// 						memcpy(m_yuvBuffer + sz0,       m_av_frame->data[1], sz1);
+// 						memcpy(m_yuvBuffer + sz0 + sz1, m_av_frame->data[2], sz1);
+// 						
+// 						ccvt_420p_rgb32(w, h, m_yuvBuffer, &Output);
+// 						
+// 						QImage frame((uchar*)&Output, w, h, QImage::Format_RGB16);
+						
+					
+						sws_scale(m_sws_context,
+							m_av_frame->data,
+							m_av_frame->linesize, 0,
+							m_video_codec_context->height,
+							m_av_rgb_frame->data,
+							m_av_rgb_frame->linesize);
+	
+						
+	
+						QImage frame(m_av_rgb_frame->data[0],
+							m_video_codec_context->width,
+							m_video_codec_context->height,
+							QImage::Format_RGB16);
+					
 
 					av_free_packet(packet);
 
@@ -470,13 +532,15 @@ void CameraThread::readFrame()
 					//m_current_frame = video_frame;
 
 					//emit newFrame(video_frame);
-					//qDebug() << "emit newImage(), frameSize:"<<frame.size();
+					//qDebug() << "emit newImage(), frameSize:"<<frame.size()<<", thread:"<<thread();
+					//qDebug() << "CameraThread::readFrame: In Thread ID "<<QThread::currentThreadId();
 
 					m_bufferMutex.lock();
 					m_bufferImage = frame;
 					m_bufferMutex.unlock();
 
-					emit newImage(frame);
+					//emit newImage(frame);
+					emit frameReady();
 
 					m_previous_pts = pts;
 
@@ -512,7 +576,7 @@ QImage CameraThread::getImage()
 {
 	QImage ref;
 	m_bufferMutex.lock();
-	ref = m_bufferImage;
+	ref = m_bufferImage.copy();
 	m_bufferMutex.unlock();
 	return ref;
 }

@@ -14,11 +14,15 @@ HEADERS += CameraThread.h \
 SOURCES += main.cpp \
 	CameraThread.cpp \
 	CameraServer.cpp \
-	CameraViewerWidget.cpp
+	CameraViewerWidget.cpp \
+	ccvt/ccvt_mmx.S
 
 
 unix {
-	LIBS += -lavdevice -lavformat -lavcodec -lavutil -lswscale -lbz2
+#	INCLUDEPATH += "$$PWD/ccvt"
+	LIBS += -lavdevice -lavformat -lavcodec -lavutil -lswscale -lbz2 
+#-L"$$PWD/ccvt" -lccvt 
+#ccvt/ccvt_mmx.S
 }
 
 win32 {
