@@ -50,7 +50,7 @@ public:
 	VideoTest();
 	~VideoTest();
 	
-	void setView(QGraphicsView2*v) { m_view=v; }
+	//void setView(QGraphicsView2*v) { m_view=v; }
 
 public slots:
 	void newFrame(QImage,QTime);
@@ -65,7 +65,13 @@ private:
 	VideoThread * m_thread;
 	CameraClient * m_client;
 	QImage m_frame;
-	QGraphicsView2 *m_view;
+// 	QTime m_time;
+// 	int m_timeTotal;
+// 	int m_frames;
+	
+	QTime m_elapsedTime;
+	long m_frameCount;
+	
 };
 
 

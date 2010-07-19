@@ -16,19 +16,19 @@ int main(int argc, char **argv)
 
 	VideoTest t;
 	t.setAttribute(Qt::WA_OpaquePaintEvent );
-// 	t.show();
+ 	t.show();
 
 
- 	QGraphicsScene *scene = new QGraphicsScene;
-	scene->addText("Hello, world!");
-// 	scene->setBackgroundBrush(Qt::NoBrush);
-	
-	QGraphicsView2 * view = new QGraphicsView2;
-	view->setScene(scene);
- 	view->setAttribute(Qt::WA_OpaquePaintEvent);
-	view->setViewport(&t);
-// 	view->setBackgroundBrush(QColor(255,0,0,128));
-	view->show();
+//  	QGraphicsScene *scene = new QGraphicsScene;
+// 	scene->addText("Hello, world!");
+// // 	scene->setBackgroundBrush(Qt::NoBrush);
+// 	
+// 	QGraphicsView2 * view = new QGraphicsView2;
+// 	view->setScene(scene);
+//  	view->setAttribute(Qt::WA_OpaquePaintEvent);
+// 	view->setViewport(&t);
+// // 	view->setBackgroundBrush(QColor(255,0,0,128));
+// 	view->show();
 	
 //  	QBrush brBrush(Qt::NoBrush); //QColor(0,255,0,128));
 // 	QPalette p(brBrush,brBrush,brBrush,brBrush,brBrush,brBrush,brBrush,brBrush,brBrush);
@@ -37,7 +37,7 @@ int main(int argc, char **argv)
 // 	view->setPalette(p);
 // 	t.setPalette(p);
 
-	t.setView(view);
+	//t.setView(view);
 	
 	return app.exec();
 }

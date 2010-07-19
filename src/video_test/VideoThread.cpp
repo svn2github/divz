@@ -155,8 +155,8 @@ int VideoThread::initVideo()
 
 	m_readTimer = new QTimer();
 	connect(m_readTimer, SIGNAL(timeout()), this, SLOT(readFrame()));
-	int ts = 1000/(m_timebase.den);
-	//qDebug() << "VideoThread::initVideo: setting interval to "<<ts;
+	int ts = 1000/30; //int(m_timebase.den);
+	qDebug() << "VideoThread::initVideo: setting interval to "<<ts<<", den:"<<m_timebase.den<<", num:"<<m_timebase.num;
 	m_readTimer->setInterval(ts);
 	
 	calculateVideoProperties();
@@ -261,6 +261,9 @@ void VideoThread::restart()
 
 void VideoThread::play()
 {
+	if(!m_inited)
+		return;
+		
 	m_status = Running;
 	
 	if(m_readTimer->isActive())
@@ -406,7 +409,7 @@ void VideoThread::readFrame()
 						/* if we are repeating a frame, adjust clock accordingly */
 						frame_delay += m_av_frame->repeat_pict * (frame_delay * 0.5);
 						m_video_clock += frame_delay;
-						//qDebug() << "Frame Dealy: "<<frame_delay;
+						qDebug() << "Frame Dealy: "<<frame_delay<<", avq2d:"<<av_q2d(m_timebase)<<", repeat:"<<(m_av_frame->repeat_pict * (frame_delay * 0.5))<<", vidclock: "<<m_video_clock; 
 					}
 
 
@@ -466,10 +469,12 @@ void VideoThread::readFrame()
 					}
 					
 					int frameDelay = (int)(actual_delay * 1000 + 0.5);
-					qDebug() << "VideoThread::readVideo: frameDelay:"<<frameDelay;
 					if(frameDelay < 0)
 						frameDelay = 5;
-
+					//if(frameDelay > 123)
+					//	frameDelay = 123;
+					qDebug() << "VideoThread::readVideo: frameDelay:"<<frameDelay;
+					
 					m_time = QTime::currentTime(); 
 					QTimer::singleShot(frameDelay, this, SLOT(releaseCurrentFrame()));
 					

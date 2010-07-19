@@ -31,6 +31,13 @@ unix {
 		VERSION = "$${VERSION}-r$${SVNREV}"
 	}
 	VERSTR = '\\"$${VERSION}\\"'  # place quotes around the version string
+
+	# On Centos 5.2 and up, it seems the FC version has an incompatible symbol with Qt. 
+	# Following the instructions at the following URL puts an updated FC version in
+	# /opt/fontconfig... - here we include the lib dir just incase. This should not affect
+	# anything on other Unix versions.
+	# http://theitdepartment.wordpress.com/2009/03/15/centos-qt-fcfreetypequeryface/
+	LIBS += -L/opt/fontconfig-2.4.2/lib/
 }
 
 DEFINES += VER=\"$${VERSTR}\" # create a VER macro containing the version string
@@ -80,6 +87,7 @@ HEADERS += \
 	OutputInstance.h \
 	OutputControl.h \
 	JpegServer.h \
+	camera_test/CameraServer.h \
 	DeepProgressIndicator.h \
 	OutputServer.h \
 	ImageImportDialog.h \
@@ -111,6 +119,7 @@ SOURCES += \
 	OutputInstance.cpp \
 	OutputControl.cpp \
 	JpegServer.cpp \
+	camera_test/CameraServer.cpp \
 	DeepProgressIndicator.cpp \
 	OutputServer.cpp \
 	ImageImportDialog.cpp \

@@ -24,20 +24,29 @@ int main(int argc, char **argv)
 	t.setSourceRectAdjust(11,0,-6,-3);
 	t.setObjectName("v1");
 	t.setWindowTitle("v1");
-	//t.setCamera("vfwcap://0");
+	#ifdef Q_OS_WIN
+	t.setCamera("vfwcap://0",30);
+	#else
 	t.setCamera("/dev/video0",30);
+	#endif
 	t.resize(320,240);
 	t.setOverlayText("/dev/video0");
 	t.show();
 	
 	
-	
+	/*
 	CameraViewerWidget t2;
 	t2.setObjectName("v2");
 	t2.setWindowTitle("v2");
+	#ifdef Q_OS_WIN
+	t2.setCamera("vfwcap://0",10);
+	#else
 	t2.setCamera("/dev/video0",10);
+	#endif
 	t2.resize(320,240);
-	t2.show();
+	t2.show();*/
+	
+	
 // 	
 // 	CameraViewerWidget t3;
 // 	t3.setObjectName("v3");

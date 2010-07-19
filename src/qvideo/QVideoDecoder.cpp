@@ -296,6 +296,12 @@ void QVideoDecoder::run()
 	//		decodeVideoFrame();
 	//	}
 	//}
+// 	forever
+// 	{
+// 		qApp->processEvents();
+// 		decode();
+// 	}
+	
 	exec();
 }
 
