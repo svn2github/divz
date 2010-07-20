@@ -57,7 +57,8 @@ public slots:
 
 protected slots:
 	void readFrame();
-// 	void releaseCurrentFrame();
+ 	void releaseCurrentFrame();
+ 	void updateTimer();
 
 protected:
 	void run();
@@ -129,6 +130,7 @@ private:
 	QTime m_time;
 	
 	QMutex m_bufferMutex;
+	int m_nextDelay;
 };
 
 

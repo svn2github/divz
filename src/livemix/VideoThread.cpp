@@ -23,6 +23,7 @@ VideoThread::VideoThread(QObject *parent)
 	: VideoSource(parent)
 	, m_inited(false)
 	, m_videoFile()
+	, m_nextDelay(0)
 {
 	m_time_base_rational.num = 1;
 	m_time_base_rational.den = AV_TIME_BASE;
@@ -75,6 +76,10 @@ int VideoThread::initVideo()
 		return false;
 	}
 	
+	//dump_format(m_av_format_context, 0, qPrintable(m_cameraFile), 0);
+	qDebug() << "[DEBUG] dump_format():";
+	dump_format(m_av_format_context, 0, qPrintable(fileTmp), false);
+
 	uint i;
 
 	// Find the first video stream
@@ -156,7 +161,7 @@ int VideoThread::initVideo()
 	m_readTimer = new QTimer();
 	connect(m_readTimer, SIGNAL(timeout()), this, SLOT(readFrame()));
 	int ts = 1000/30; //int(m_timebase.den);
-	qDebug() << "VideoThread::initVideo: setting interval to "<<ts<<", den:"<<m_timebase.den<<", num:"<<m_timebase.num;
+	//qDebug() << "VideoThread::initVideo: setting interval to "<<ts<<", den:"<<m_timebase.den<<", num:"<<m_timebase.num;
 	m_readTimer->setInterval(ts);
 	
 	calculateVideoProperties();
@@ -167,6 +172,8 @@ int VideoThread::initVideo()
 
 void VideoThread::run()
 {
+	//qDebug() << "VideoThread::run()";
+	m_killed = false;
 	initVideo();
 	//m_readTimer->start();
 	play();
@@ -262,16 +269,23 @@ void VideoThread::restart()
 void VideoThread::play()
 {
 	if(!m_inited)
+	{
+		qDebug() << "VideoThread::play(): not inited";
 		return;
+	}
 		
 	m_status = Running;
 	
 	if(m_readTimer->isActive())
+	{
+		qDebug() << "VideoThread::play(): timer active";
  		m_total_runtime += m_run_time.restart();
+ 	}
 	else
 	{
 		m_readTimer->start();
 		m_run_time.start();
+		qDebug() << "VideoThread::play(): starting timer";
 	}
 	//m_readTimer->start();
 	//m_video_decoder->decode(); // start decoding again
@@ -321,11 +335,14 @@ void VideoThread::readFrame()
 {
 	if(!m_inited)
 	{
+		//qDebug() << "VideoThread::readFrame(): not inited";
 		emit frameReady(1000/30);
 		return;
 	}
 	AVPacket pkt1, *packet = &pkt1;
 	double pts;
+	
+	//qDebug() << "VideoThread::readFrame(): killed: "<<m_killed;
 
 	int frame_finished = 0;
 	while(!frame_finished && !m_killed)
@@ -411,7 +428,7 @@ void VideoThread::readFrame()
 						/* if we are repeating a frame, adjust clock accordingly */
 						frame_delay += m_av_frame->repeat_pict * (frame_delay * 0.5);
 						m_video_clock += frame_delay;
-						qDebug() << "Frame Dealy: "<<frame_delay<<", avq2d:"<<av_q2d(m_timebase)<<", repeat:"<<(m_av_frame->repeat_pict * (frame_delay * 0.5))<<", vidclock: "<<m_video_clock; 
+						//qDebug() << "Frame Dealy: "<<frame_delay<<", avq2d:"<<av_q2d(m_timebase)<<", repeat:"<<(m_av_frame->repeat_pict * (frame_delay * 0.5))<<", vidclock: "<<m_video_clock; 
 					}
 
 
@@ -471,15 +488,19 @@ void VideoThread::readFrame()
 					}
 					
 					int frameDelay = (int)(actual_delay * 1000 + 0.5);
-					if(frameDelay < 0)
-						frameDelay = 5;
-					//if(frameDelay > 123)
-					//	frameDelay = 123;
-					qDebug() << "VideoThread::readVideo: frameDelay:"<<frameDelay;
+					if(frameDelay < 10)
+						frameDelay = 10;
+					if(frameDelay > 100)
+						frameDelay = 100;
+					//qDebug() << "VideoThread::readVideo: frameDelay:"<<frameDelay;
 					
 					//m_time = QTime::currentTime(); 
 					//QTimer::singleShot(frameDelay, this, SLOT(releaseCurrentFrame()));
 					emit frameReady(frameDelay);
+					
+					m_nextDelay = frameDelay;
+					//QTimer::singleShot(0, this, SLOT(updateTimer()));
+					updateTimer();
 					
 					m_previous_pts = pts;
 				}
@@ -521,9 +542,15 @@ QImage VideoThread::frame()
 	return ref;
 }
 
-// void VideoThread::releaseCurrentFrame()
-// {
-// 	//emit newImage(m_frame,m_time);
-// }
-// 
+void VideoThread::releaseCurrentFrame()
+{
+	emit frameReady(1000/30);
+}
+
+void VideoThread::updateTimer()
+{
+	m_readTimer->setInterval(qMax(m_nextDelay,10));
+	//qDebug() << "VideoThread::updateTimer: m_nextDelay:"<<m_nextDelay;
+}
+
 // 

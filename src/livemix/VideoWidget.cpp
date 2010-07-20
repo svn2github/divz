@@ -251,7 +251,7 @@ void VideoWidget::frameReady(int holdTime)
 	if(m_frame.size() != m_origSourceRect.size())
 		updateRects();
 		
-	QTimer::singleShot(0, this, SLOT(updateTimer()));
+	//QTimer::singleShot(0, this, SLOT(updateTimer()));
 }
 
 void VideoWidget::updateTimer()
@@ -259,7 +259,7 @@ void VideoWidget::updateTimer()
 	
 	if(m_paintTimer.interval() != m_frameHoldTime)
 	{
-		qDebug() << "VideoWidget::updateTimer: new hold time: "<<m_frameHoldTime;
+		//qDebug() << "VideoWidget::updateTimer: new hold time: "<<m_frameHoldTime;
 		m_paintTimer.setInterval(m_frameHoldTime);
 	}
 }
@@ -289,7 +289,7 @@ void VideoWidget::paintEvent(QPaintEvent*)
 	{
 		p.fillRect(rect(),Qt::black);
 		p.setPen(Qt::white);
-		p.drawText(5,15,QString("Error: Cannot find camera \"%1\"").arg(m_camera));
+		p.drawText(5,15,QString("Error: Invalid Video Source"));
 	}
 	else
 	{
@@ -299,6 +299,9 @@ void VideoWidget::paintEvent(QPaintEvent*)
 
 		m_frameCount ++;
 		int fps = (m_frameCount <= 0 ? 1 : m_frameCount) / (sec <= 0 ? 1 : sec);
+		p.setPen(Qt::black);
+		p.drawText(m_targetRect.x() + 6,m_targetRect.y() + 16,QString("fps: %1, frames: %3, time: %2").arg(fps).arg(sec).arg(m_frameCount));
+		p.setPen(Qt::white);
 		p.drawText(m_targetRect.x() + 5,m_targetRect.y() + 15,QString("fps: %1, frames: %3, time: %2").arg(fps).arg(sec).arg(m_frameCount));
 		//qDebug() << QString("fps: %1, frames: %3, time: %2").arg(fps).arg(sec).arg(m_frameCount);
 
@@ -313,4 +316,6 @@ void VideoWidget::paintEvent(QPaintEvent*)
 	}
 
 	m_lockRepaint = false;
+	
+	updateTimer();
 }
