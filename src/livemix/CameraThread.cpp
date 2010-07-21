@@ -31,13 +31,14 @@ CameraThread::CameraThread(const QString& camera, QObject *parent)
 	, m_inited(false)
 	, m_cameraFile(camera)
 	, m_frameCount(0)
-	, m_yuvBuffer(0)
 {
 	m_time_base_rational.num = 1;
 	m_time_base_rational.den = AV_TIME_BASE;
 
 	m_sws_context = NULL;
 	m_frame = NULL;
+	
+	setIsBuffered(false);
 }
 
 CameraThread * CameraThread::threadForCamera(const QString& camera)
@@ -83,11 +84,11 @@ QStringList CameraThread::enumerateDevices(bool forceReenum)
 	#endif
 	QStringList list;
 	
-	avdevice_register_all();
-
-	avcodec_init();
-	avcodec_register_all();
-	
+// 	avdevice_register_all();
+// 
+// 	avcodec_init();
+// 	avcodec_register_all();
+// 	
 	
 	AVInputFormat *inFmt = NULL;
 	AVFormatParameters formatParams;
@@ -144,10 +145,10 @@ QStringList CameraThread::enumerateDevices(bool forceReenum)
 
 int CameraThread::initCamera()
 {
-	avdevice_register_all();
-
-	avcodec_init();
-	avcodec_register_all();
+// 	avdevice_register_all();
+// 
+// 	avcodec_init();
+// 	avcodec_register_all();
 
 	AVInputFormat *inFmt = NULL;
 	AVFormatParameters formatParams;
@@ -317,12 +318,6 @@ CameraThread::~CameraThread()
 		delete m_frame;
 		m_frame = 0;
 	}
-	
-	if(m_yuvBuffer)
-	{
-		delete m_yuvBuffer;
-		m_yuvBuffer = 0;
-	}
 }
 
 void CameraThread::freeResources()
@@ -354,7 +349,7 @@ void CameraThread::readFrame()
 	if(!m_inited)
 	{
 		//emit newImage(QImage());
-		emit frameReady(1000/m_fps);
+		//emit frameReady(1000/m_fps);
 		return;
 	}
 	AVPacket pkt1, *packet = &pkt1;
@@ -452,12 +447,13 @@ void CameraThread::readFrame()
 // 						//qDebug() << "Frame Dealy: "<<frame_delay;
 // 					}
 
-					m_bufferMutex.lock();
-					m_bufferImage = frame;
-					m_bufferMutex.unlock();
+// 					m_bufferMutex.lock();
+// 					m_bufferImage = frame;
+// 					m_bufferMutex.unlock();
 
 					//emit newImage(frame);
-					emit frameReady(1000/m_fps);
+					//emit frameReady(1000/m_fps);
+					enqueue(VideoFrame(frame,1000/m_fps));
 
 					m_previous_pts = pts;
 				}
@@ -481,11 +477,11 @@ void CameraThread::readFrame()
 	}
 }
 
-QImage CameraThread::frame()
-{
-	QImage ref;
-	m_bufferMutex.lock();
-	ref = m_bufferImage.copy();
-	m_bufferMutex.unlock();
-	return ref;
-}
+// QImage CameraThread::frame()
+// {
+// 	QImage ref;
+// 	m_bufferMutex.lock();
+// 	ref = m_bufferImage.copy();
+// 	m_bufferMutex.unlock();
+// 	return ref;
+// }

@@ -40,11 +40,11 @@ public:
 	void registerConsumer(VideoWidget */*consumer*/) {}
 	void release(VideoWidget */*consumer*/=0) {}
 	
-	QImage frame();
+	//QImage frame();
 	
 signals:
 	//void newImage(QImage,QTime);
-	void frameReady(int frameHoldTime);
+	//void frameReady(int frameHoldTime);
 	void movieStateChanged(QMovie::MovieState);
 
 public slots:
@@ -131,6 +131,8 @@ private:
 	
 	QMutex m_bufferMutex;
 	int m_nextDelay;
+	bool m_frameConsumed;
+	int m_frameLockCount;
 };
 
 

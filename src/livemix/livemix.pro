@@ -10,7 +10,8 @@ HEADERS += CameraThread.h \
 	CameraServer.h \
 	VideoWidget.h \
 	VideoSource.h \
-	VideoThread.h
+	VideoThread.h \
+	VideoFrame.h
 	
 	
 SOURCES += main.cpp \
@@ -18,7 +19,8 @@ SOURCES += main.cpp \
 	CameraServer.cpp \
 	VideoWidget.cpp \
 	VideoSource.cpp \
-	VideoThread.cpp 
+	VideoThread.cpp \
+	videoFrame.cpp 
 
 unix {
 	LIBS += -lavdevice -lavformat -lavcodec -lavutil -lswscale -lbz2 

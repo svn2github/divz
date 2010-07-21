@@ -12,6 +12,11 @@
 #include "CameraThread.h"
 #include "VideoThread.h"
 
+extern "C" {
+#include "libswscale/swscale.h"
+#include "libavdevice/avdevice.h"
+}
+
 int main(int argc, char **argv)
 {
 	//QGL::setPreferredPaintEngine(QPaintEngine::OpenGL);
@@ -20,6 +25,11 @@ int main(int argc, char **argv)
 //  	CameraTest t;
 //  	t.resize(320,240);
 //  	t.show();
+
+	avcodec_init();
+	avcodec_register_all();
+	avdevice_register_all();
+	av_register_all();
 	
 	#ifdef Q_OS_WIN
 	QString defaultCamera = "vfwcap://0";
@@ -37,7 +47,7 @@ int main(int argc, char **argv)
 	viewer1.setSourceRectAdjust(11,0,-6,-3);
 	viewer1.setWindowTitle("Camera");
 	viewer1.resize(320,240);
-	viewer1.setOverlayText("Hello, World!");
+	viewer1.setOverlayText("Camera 01");
 	viewer1.show();
 	
 	VideoThread *videoSource = new VideoThread();
@@ -48,7 +58,7 @@ int main(int argc, char **argv)
 	viewer2.setVideoSource(videoSource);
 	viewer2.setWindowTitle("Video");
 	viewer2.resize(320,240);
-	viewer2.setOverlayText("Hello, World!");
+	viewer2.setOverlayText("Welcome to PCI");
 	viewer2.show();
 	
 	

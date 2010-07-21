@@ -36,14 +36,14 @@ public:
 	
 	static QStringList enumerateDevices(bool forceReenum=false);
 
-	QImage frame();
+	//QImage frame();
 	
 	void setFps(int fps=30);
 	int fps() { return m_fps; }
 	
 signals:
 	//void newImage(QImage);
-	void frameReady(int frameHoldTime);
+	//void frameReady(int frameHoldTime);
 
 protected:
 	void run();
@@ -104,10 +104,6 @@ private:
 
 	QMutex m_bufferMutex;
 	QImage m_bufferImage;
-
-	
-
-	uchar * m_yuvBuffer;
 };
 
 

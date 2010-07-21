@@ -14,8 +14,6 @@ VideoWidget::VideoWidget()
 	, m_thread(0)
 	, m_frameCount(0)
 	, m_opacity(1)
-	, m_readFrameCount(0)
-	, m_lockRepaint(false)
 	, m_aspectRatioMode(Qt::KeepAspectRatio)
 	, m_adjustDx1(0)
 	, m_adjustDy1(0)
@@ -23,15 +21,13 @@ VideoWidget::VideoWidget()
 	, m_adjustDy2(0)
 	, m_showOverlayText(true)
 	, m_overlayText("")
-	, m_frameHoldTime(1000/30)
 {
 	//setAttribute(Qt::WA_PaintOnScreen, true);
 	//setAttribute(Qt::WA_OpaquePaintEvent, true);
 	//setAttribute(Qt::WA_PaintOutsidePaintEvent);
 	srand ( time(NULL) );
 	connect(&m_paintTimer, SIGNAL(timeout()), this, SLOT(callUpdate()));
-	//qDebug() << "Default hold time: "<<m_frameHoldTime;
-	m_paintTimer.setInterval(m_frameHoldTime);
+	m_paintTimer.setInterval(1000/30);
 }
 
 void VideoWidget::closeEvent(QCloseEvent*)
@@ -78,7 +74,7 @@ void VideoWidget::setVideoSource(VideoSource *source)
 		return;
 	}
 
-	connect(m_thread, SIGNAL(frameReady(int)), this, SLOT(frameReady(int)), Qt::QueuedConnection);
+	connect(m_thread, SIGNAL(frameReady()), this, SLOT(frameReady()), Qt::QueuedConnection);
 	m_thread->registerConsumer(this);
 	
 	m_elapsedTime.start();
@@ -196,12 +192,12 @@ void VideoWidget::setSourceRectAdjust( int dx1, int dy1, int dx2, int dy2 )
 
 void VideoWidget::updateRects()
 {
-	m_sourceRect = m_frame.rect();
+	m_sourceRect = m_frame.image.rect();
 	m_origSourceRect = m_sourceRect; 
 	
 	m_sourceRect.adjust(m_adjustDx1,m_adjustDy1,m_adjustDx2,m_adjustDy2);
 	
-	QSize nativeSize = m_frame.size();
+	QSize nativeSize = m_frame.image.size();
 	
 	if (nativeSize.isEmpty()) 
 	{
@@ -215,7 +211,7 @@ void VideoWidget::updateRects()
 	else 
 	if (m_aspectRatioMode == Qt::KeepAspectRatio) 
 	{
-		QSizeF size = nativeSize;
+		QSize size = nativeSize;
 		size.scale(rect().size(), Qt::KeepAspectRatio);
 	
 		m_targetRect = QRect(0, 0, size.width(), size.height());
@@ -240,15 +236,16 @@ void VideoWidget::updateRects()
 }
 
 
-void VideoWidget::frameReady(int holdTime)
+void VideoWidget::frameReady()
 {
 	if(!m_thread)
 		return;
 		
-	m_frameHoldTime = holdTime;
-	m_frame = m_thread->frame();
+	VideoFrame frame = m_thread->frame();
+	if(!frame.isEmpty())
+		m_frame = frame;
 	
-	if(m_frame.size() != m_origSourceRect.size())
+	if(m_frame.image.size() != m_origSourceRect.size())
 		updateRects();
 		
 	//QTimer::singleShot(0, this, SLOT(updateTimer()));
@@ -257,18 +254,16 @@ void VideoWidget::frameReady(int holdTime)
 void VideoWidget::updateTimer()
 {
 	
-	if(m_paintTimer.interval() != m_frameHoldTime)
+	if(m_paintTimer.interval() != m_frame.holdTime)
 	{
-		//qDebug() << "VideoWidget::updateTimer: new hold time: "<<m_frameHoldTime;
-		m_paintTimer.setInterval(m_frameHoldTime);
+		//qDebug() << "VideoWidget::updateTimer: new hold time: "<<m_frame.holdTime();
+		
+		m_paintTimer.setInterval(qMax(m_frame.holdTime,10));
 	}
 }
 
 void VideoWidget::paintEvent(QPaintEvent*)
 {
-
-	m_lockRepaint = true;
-
 	QPainter p(this);
 	//p.setRenderHint(QPainter::SmoothPixmapTransform);
 	//p.setRenderHint(QPainter::Antialiasing);
@@ -293,7 +288,7 @@ void VideoWidget::paintEvent(QPaintEvent*)
 	}
 	else
 	{
-		p.drawImage(m_targetRect,m_frame,m_sourceRect);
+		p.drawImage(m_targetRect,m_frame.image,m_sourceRect);
 
 		int sec = (m_elapsedTime.elapsed() / 1000);
 
@@ -315,7 +310,5 @@ void VideoWidget::paintEvent(QPaintEvent*)
 		//p.drawPixmap(m_targetRect, m_overlay);
 	}
 
-	m_lockRepaint = false;
-	
 	updateTimer();
 }

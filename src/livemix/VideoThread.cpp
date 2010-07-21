@@ -23,7 +23,9 @@ VideoThread::VideoThread(QObject *parent)
 	: VideoSource(parent)
 	, m_inited(false)
 	, m_videoFile()
-	, m_nextDelay(0)
+	, m_nextDelay(1000/30)
+	, m_frameConsumed(true)
+	, m_frameLockCount(0)
 {
 	m_time_base_rational.num = 1;
 	m_time_base_rational.den = AV_TIME_BASE;
@@ -45,10 +47,11 @@ void VideoThread::setVideo(const QString& name)
 
 int VideoThread::initVideo()
 {
-	avcodec_init();
-	avcodec_register_all();
-	avdevice_register_all();
-	av_register_all();
+	//qDebug() << "VideoThread::initVideo()";
+// 	avcodec_init();
+// 	avcodec_register_all();
+// 	avdevice_register_all();
+// 	av_register_all();
 
 	QString fileTmp = m_videoFile;
 ////	qDebug() << "[DEBUG] VideoThread::load(): input file:"<<fileTmp;
@@ -159,7 +162,7 @@ int VideoThread::initVideo()
 	m_timebase = m_av_format_context->streams[m_video_stream]->time_base;
 
 	m_readTimer = new QTimer();
-	connect(m_readTimer, SIGNAL(timeout()), this, SLOT(readFrame()));
+	//connect(m_readTimer, SIGNAL(timeout()), this, SLOT(readFrame()));
 	int ts = 1000/30; //int(m_timebase.den);
 	//qDebug() << "VideoThread::initVideo: setting interval to "<<ts<<", den:"<<m_timebase.den<<", num:"<<m_timebase.num;
 	m_readTimer->setInterval(ts);
@@ -177,7 +180,14 @@ void VideoThread::run()
 	initVideo();
 	//m_readTimer->start();
 	play();
-	exec();
+	//exec();
+	while(!m_killed)
+	{
+		if(m_status == Running)
+			readFrame();
+			
+		usleep(qMax(m_nextDelay,10) * 1000);
+	}
 }
 
 
@@ -240,6 +250,7 @@ void VideoThread::freeResources()
 
 void VideoThread::seek(int ms, int flags)
 {
+	//qDebug() << "VideoThread::seek()";
 // 	QMutexLocker locker(&mutex);
 	m_total_runtime = ms;
 	m_run_time.start();
@@ -262,6 +273,7 @@ void VideoThread::restart()
 {
 // if(!m_video->m_video_loaded)
 // 		return;
+	//qDebug() << "VideoThread::restart()";
 	
 	seek(0, AVSEEK_FLAG_BACKWARD);
 }
@@ -270,7 +282,7 @@ void VideoThread::play()
 {
 	if(!m_inited)
 	{
-		qDebug() << "VideoThread::play(): not inited";
+		//qDebug() << "VideoThread::play(): not inited";
 		return;
 	}
 		
@@ -278,14 +290,14 @@ void VideoThread::play()
 	
 	if(m_readTimer->isActive())
 	{
-		qDebug() << "VideoThread::play(): timer active";
+		//qDebug() << "VideoThread::play(): timer active";
  		m_total_runtime += m_run_time.restart();
  	}
 	else
 	{
 		m_readTimer->start();
 		m_run_time.start();
-		qDebug() << "VideoThread::play(): starting timer";
+		//qDebug() << "VideoThread::play(): starting timer";
 	}
 	//m_readTimer->start();
 	//m_video_decoder->decode(); // start decoding again
@@ -294,6 +306,7 @@ void VideoThread::play()
 
 void VideoThread::pause()
 {
+	//qDebug() << "VideoThread::pause()";
 	m_status = Paused;
 	m_total_runtime += m_run_time.elapsed();
 	//qDebug() << "QVideo::pause(): m_total_runtime:"<<m_total_runtime;
@@ -305,6 +318,7 @@ void VideoThread::pause()
 
 void VideoThread::stop()
 {
+	//qDebug() << "VideoThread::stop()";
 	seek(0, AVSEEK_FLAG_BACKWARD);
 	
 	m_status = NotRunning;
@@ -319,6 +333,7 @@ void VideoThread::stop()
 
 void VideoThread::setStatus(Status s)
 {
+	//qDebug() << "VideoThread::setStatus(): "<<s;
 	m_status = s;
 	if(s == NotRunning)
 		stop();
@@ -333,16 +348,20 @@ void VideoThread::setStatus(Status s)
 
 void VideoThread::readFrame()
 {
+// 	qDebug() << "VideoThread::readFrame(): start of function";
 	if(!m_inited)
 	{
-		//qDebug() << "VideoThread::readFrame(): not inited";
-		emit frameReady(1000/30);
+// 		qDebug() << "VideoThread::readFrame(): not inited";
+		//emit frameReady(m_nextDelay);
 		return;
 	}
+	
+	
+	
 	AVPacket pkt1, *packet = &pkt1;
 	double pts;
 	
-	//qDebug() << "VideoThread::readFrame(): killed: "<<m_killed;
+// 	qDebug() << "VideoThread::readFrame(): killed: "<<m_killed;
 
 	int frame_finished = 0;
 	while(!frame_finished && !m_killed)
@@ -376,7 +395,7 @@ void VideoThread::readFrame()
 				// Did we get a video frame?
 				if(frame_finished)
 				{
-
+					
 					// Convert the image from its native format to RGB, then copy the image data to a QImage
 					if(m_sws_context == NULL)
 					{
@@ -401,12 +420,12 @@ void VideoThread::readFrame()
 						  m_av_rgb_frame->linesize);
 
 					m_bufferMutex.lock();
-					m_frame = QImage(m_av_rgb_frame->data[0],
+					QImage frame = QImage(m_av_rgb_frame->data[0],
 								m_video_codec_context->width,
 								m_video_codec_context->height,
 								QImage::Format_RGB16);
 					m_bufferMutex.unlock();
-
+					
 					av_free_packet(packet);
 
 					// This block from the synchronize_video(VideoState *is, AVFrame *src_frame, double pts) : double
@@ -466,7 +485,7 @@ void VideoThread::readFrame()
 					//if(m_frameTimer > curTime)
 						//m_frameTimer = curTime;
 					double actual_delay = m_frameTimer - curTime;
-					//qDebug() << "frame timer: "<<m_frameTimer<<", curTime:"<<curTime<<", \t actual_delay:"<<((int)(actual_delay*1000))<<", pts_delay:"<<((int)(pts_delay*1000))<<", m_run_time:"<<m_run_time.elapsed()<<", m_total_runtime:"<<m_total_runtime;
+					//qDebug() << "VideoThread::readFrame(): frame timer: "<<m_frameTimer<<", curTime:"<<curTime<<", \t actual_delay:"<<((int)(actual_delay*1000))<<", pts_delay:"<<((int)(pts_delay*1000))<<", m_run_time:"<<m_run_time.elapsed()<<", m_total_runtime:"<<m_total_runtime;
 					if(actual_delay < 0.010)
 					{
 						// This should just skip this frame
@@ -492,15 +511,25 @@ void VideoThread::readFrame()
 						frameDelay = 10;
 					if(frameDelay > 100)
 						frameDelay = 100;
-					//qDebug() << "VideoThread::readVideo: frameDelay:"<<frameDelay;
+					//qDebug() << "VideoThread::readFrame(): frameDelay:"<<frameDelay;
 					
-					//m_time = QTime::currentTime(); 
-					//QTimer::singleShot(frameDelay, this, SLOT(releaseCurrentFrame()));
-					emit frameReady(frameDelay);
-					
-					m_nextDelay = frameDelay;
+// 					if(m_frameConsumed || (!m_frameConsumed && ++m_frameLockCount > 10))
+// 					{
+// 						m_frameLockCount = 0;
+// 						m_frameConsumed = false;
+
+						//m_time = QTime::currentTime(); 
+						//QTimer::singleShot(frameDelay, this, SLOT(releaseCurrentFrame()));
+						//emit frameReady((int)(pts_delay*1000));
+						
+						//enqueue(VideoFrame(m_frame,frameDelay));
+						enqueue(VideoFrame(frame,pts_delay*1000));
+						//emit frameReady();
+					//}
+						
+					m_nextDelay = frameDelay; //frameDelay * .5;
 					//QTimer::singleShot(0, this, SLOT(updateTimer()));
-					updateTimer();
+					//updateTimer();
 					
 					m_previous_pts = pts;
 				}
@@ -530,27 +559,32 @@ void VideoThread::readFrame()
 			
 		}
 	}
+	//qDebug() << "VideoThread::readFrame(): end of function";
 }
 
-
+/*
 QImage VideoThread::frame()
 {
+	qDebug() << "VideoThread::frame()";
 	QImage ref;
 	m_bufferMutex.lock();
 	ref = m_frame.copy();
 	m_bufferMutex.unlock();
+	m_frameConsumed = true;
 	return ref;
-}
+	//return m_frame;
+}*/
 
 void VideoThread::releaseCurrentFrame()
 {
-	emit frameReady(1000/30);
+	//emit frameReady(1000/30);
 }
 
 void VideoThread::updateTimer()
 {
-	m_readTimer->setInterval(qMax(m_nextDelay,10));
-	//qDebug() << "VideoThread::updateTimer: m_nextDelay:"<<m_nextDelay;
+	int delay = qMax(m_nextDelay,10);
+	m_readTimer->setInterval(delay);
+	//qDebug() << "VideoThread::updateTimer(): delay:"<<delay;
 }
 
 // 
