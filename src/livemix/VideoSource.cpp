@@ -17,8 +17,15 @@ void VideoSource::registerConsumer(VideoWidget *consumer)
 
 VideoSource::~VideoSource() {}
 
+void VideoSource::run()
+{
+	exec();
+}
+
 VideoFrame VideoSource::frame()
 {
+	if(!m_isBuffered)
+		return m_singleFrame;
 	if(m_frameQueue.isEmpty())
 		return VideoFrame();
 	//qDebug() << "VideoSource::frame(): Queue size: "<<m_frameQueue.size();
@@ -28,8 +35,9 @@ VideoFrame VideoSource::frame()
 void VideoSource::enqueue(VideoFrame frame)
 {
 	if(!m_isBuffered)
-		m_frameQueue.clear();
-	m_frameQueue.enqueue(frame);
+		m_singleFrame = frame;
+	else
+		m_frameQueue.enqueue(frame);
 	
 	emit frameReady();
 }

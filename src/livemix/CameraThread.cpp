@@ -113,7 +113,10 @@ QStringList CameraThread::enumerateDevices(bool forceReenum)
 		}
 
 		formatParams.time_base.num = 1;
-		formatParams.time_base.den = 35; //25;
+		formatParams.time_base.den = 29; //25;
+		formatParams.channel = 0;
+		formatParams.standard = "ntsc";
+		
 		//formatParams.width = 352;
 		//formatParams.height = 288;
 		//formatParams.channel = 0;

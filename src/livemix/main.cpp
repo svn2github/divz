@@ -11,6 +11,12 @@
 #include "VideoWidget.h"
 #include "CameraThread.h"
 #include "VideoThread.h"
+#include "MjpegThread.h"
+
+#include "MainWindow.h"
+
+#include "MdiCamera.h"
+
 
 extern "C" {
 #include "libswscale/swscale.h"
@@ -21,7 +27,11 @@ int main(int argc, char **argv)
 {
 	//QGL::setPreferredPaintEngine(QPaintEngine::OpenGL);
 	QApplication app(argc, argv);
-
+	qApp->setApplicationName("LiveMix");
+	qApp->setOrganizationName("Josiah Bryan");
+	qApp->setOrganizationDomain("mybryanlife.com");
+	
+	
 //  	CameraTest t;
 //  	t.resize(320,240);
 //  	t.show();
@@ -30,7 +40,17 @@ int main(int argc, char **argv)
 	avcodec_register_all();
 	avdevice_register_all();
 	av_register_all();
+
+	MainWindow mw;
+	mw.show();
 	
+/*
+	MdiCamera a;
+	MdiCamera b;
+	a.show();
+	b.show();*/
+	
+/*	
 	#ifdef Q_OS_WIN
 	QString defaultCamera = "vfwcap://0";
 	#else
@@ -50,16 +70,36 @@ int main(int argc, char **argv)
 	viewer1.setOverlayText("Camera 01");
 	viewer1.show();
 	
-	VideoThread *videoSource = new VideoThread();
-	videoSource->setVideo("../data/Seasons_Loop_3_SD.mpg");
-	videoSource->start();
+// 	VideoThread *videoSource = new VideoThread();
+// 	videoSource->setVideo("../data/Seasons_Loop_3_SD.mpg");
+// 	videoSource->start();
+
+	CameraThread *cameraSource2 = CameraThread::threadForCamera(defaultCamera);
+	if(cameraSource2)
+		cameraSource2->setFps(30);
 	
 	VideoWidget viewer2;
-	viewer2.setVideoSource(videoSource);
+	viewer2.setVideoSource(cameraSource2);
 	viewer2.setWindowTitle("Video");
 	viewer2.resize(320,240);
-	viewer2.setOverlayText("Welcome to PCI");
-	viewer2.show();
+	viewer2.setOverlayText("Video loop");
+	viewer2.setFps(-1);
+	viewer2.show();*/
+	
+/*
+	MjpegThread * mjpeg = new MjpegThread();
+	//mjpeg->connectTo("cameras",8082);
+	mjpeg->connectTo("192.168.0.44",80,"/videostream.cgi","admin","lugubrious");
+	mjpeg->start();
+	
+	VideoWidget viewer3;
+	//viewer2.setVideoSource(videoSource);
+	viewer3.setVideoSource(mjpeg);
+	viewer3.setWindowTitle("Video");
+	viewer3.resize(320,240);
+	viewer3.setOverlayText("Webcam");
+	viewer3.setFps(5);
+	viewer3.show();*/
 	
 	
 	/*

@@ -30,7 +30,7 @@ signals:
 	void frameReady();
 
 protected:
-	virtual void run() = 0;
+	virtual void run();
 	virtual void enqueue(VideoFrame);
 	
 	bool m_killed;
@@ -40,6 +40,7 @@ private:
 	QList<VideoWidget*> m_consumerList;
 	QQueue<VideoFrame> m_frameQueue;
 	bool m_isBuffered;
+	VideoFrame m_singleFrame;
 };
 
 

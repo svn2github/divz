@@ -21,6 +21,8 @@ VideoWidget::VideoWidget()
 	, m_adjustDy2(0)
 	, m_showOverlayText(true)
 	, m_overlayText("")
+	, m_forceFps(-1)
+	, m_renderFps(true)
 {
 	//setAttribute(Qt::WA_PaintOnScreen, true);
 	//setAttribute(Qt::WA_OpaquePaintEvent, true);
@@ -28,8 +30,18 @@ VideoWidget::VideoWidget()
 	srand ( time(NULL) );
 	connect(&m_paintTimer, SIGNAL(timeout()), this, SLOT(callUpdate()));
 	m_paintTimer.setInterval(1000/30);
+	
+	setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Expanding);
 }
 
+QSize VideoWidget::sizeHint () const { return QSize(160,120); }
+
+
+void VideoWidget::mouseReleaseEvent(QMouseEvent*)
+{
+ 	emit clicked();
+}
+ 
 void VideoWidget::closeEvent(QCloseEvent*)
 {
 // 	disconnectCamera();
@@ -67,6 +79,7 @@ void VideoWidget::setVideoSource(VideoSource *source)
 		disconnectVideoSource();
 		
 	//qDebug() << "VideoWidget::setCamera: In Thread ID "<<QThread::currentThreadId();
+	qDebug() << "VideoWidget::setCamera: source: "<<source;
 	m_thread = source;
 	if(!m_thread)
 	{
@@ -90,11 +103,13 @@ void VideoWidget::callUpdate()
 void VideoWidget::setOverlayText(const QString& text)
 {
 	m_overlayText = text;
+	updateOverlay();
 }
 
 void VideoWidget::showOverlayText(bool flag)
 {
 	m_showOverlayText = flag;
+	updateOverlay();
 }
 
 void VideoWidget::updateOverlay()
@@ -106,6 +121,10 @@ void VideoWidget::updateOverlay()
 	    m_overlay = QPixmap(m_targetRect.width(), m_targetRect.height());
 
 	m_overlay.fill(QColor(0,0,0,0));
+	
+	if(!m_showOverlayText)
+		return;
+		
 	QPainter painter(&m_overlay);
 	
 	QRect window = QRect(0,0,m_sourceRect.size().width(),m_sourceRect.size().height());
@@ -177,6 +196,12 @@ void VideoWidget::setOpacity(qreal opac)
 	update();
 }
 
+void VideoWidget::setRenderFps(bool flag)
+{
+	m_renderFps = flag;
+	update();
+}
+
 void VideoWidget::resizeEvent(QResizeEvent*) 
 { 
 	updateRects();
@@ -242,6 +267,8 @@ void VideoWidget::frameReady()
 		return;
 		
 	VideoFrame frame = m_thread->frame();
+	//qDebug() << "VideoWidget::frameReady: isEmpty: "<<frame.isEmpty();
+	
 	if(!frame.isEmpty())
 		m_frame = frame;
 	
@@ -253,13 +280,33 @@ void VideoWidget::frameReady()
 
 void VideoWidget::updateTimer()
 {
-	
-	if(m_paintTimer.interval() != m_frame.holdTime)
-	{
-		//qDebug() << "VideoWidget::updateTimer: new hold time: "<<m_frame.holdTime();
+	// user has forced a different fps than the video stream has requested
+	// typically this is to increase performance of another video stream
+	if(m_forceFps > 0)
+		return; 
 		
-		m_paintTimer.setInterval(qMax(m_frame.holdTime,10));
+	int fps = qMax(m_frame.holdTime,10);
+		
+	if(m_paintTimer.interval() != fps)
+	{
+		//qDebug() << "VideoWidget::updateTimer: new hold time: "<<fps;
+		
+		m_paintTimer.setInterval(fps);
 	}
+}
+
+void VideoWidget::setFps(int fps)
+{
+	m_forceFps = fps;
+	if(m_forceFps > 0)
+	{
+		m_paintTimer.setInterval(1000/m_forceFps);
+		
+	}
+	
+	// If we use a different fps, dont use buffered frames, just take the last frame as it comes
+	if(m_thread)
+		m_thread->setIsBuffered(m_forceFps < 0);
 }
 
 void VideoWidget::paintEvent(QPaintEvent*)
@@ -294,20 +341,16 @@ void VideoWidget::paintEvent(QPaintEvent*)
 
 		m_frameCount ++;
 		int fps = (m_frameCount <= 0 ? 1 : m_frameCount) / (sec <= 0 ? 1 : sec);
-		p.setPen(Qt::black);
-		p.drawText(m_targetRect.x() + 6,m_targetRect.y() + 16,QString("fps: %1, frames: %3, time: %2").arg(fps).arg(sec).arg(m_frameCount));
-		p.setPen(Qt::white);
-		p.drawText(m_targetRect.x() + 5,m_targetRect.y() + 15,QString("fps: %1, frames: %3, time: %2").arg(fps).arg(sec).arg(m_frameCount));
-		//qDebug() << QString("fps: %1, frames: %3, time: %2").arg(fps).arg(sec).arg(m_frameCount);
-
-		if(m_showOverlayText)
+		if(m_renderFps)
 		{
-			// render m_overlayText neatly and nicely
+			p.setPen(Qt::black);
+			p.drawText(m_targetRect.x() + 6,m_targetRect.y() + 16,QString("%1 fps").arg(fps));
+			p.setPen(Qt::white);
+			p.drawText(m_targetRect.x() + 5,m_targetRect.y() + 15,QString("%1 fps").arg(fps));
 		}
-
+		
 		//p.drawPixmap(0,0,m_overlay);
 		p.drawPixmap(m_targetRect.topLeft(),m_overlay);
-		//p.drawPixmap(m_targetRect, m_overlay);
 	}
 
 	updateTimer();

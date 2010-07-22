@@ -7,6 +7,7 @@
 #include <QDebug>
 #include <QTime>
 
+#include <QMouseEvent>
 #include <QGLWidget>
 
 #include "VideoFrame.h"
@@ -23,6 +24,18 @@ public:
 
 	void setVideoSource(VideoSource *);
 	void disconnectVideoSource();
+	int fps() { return m_forceFps; }
+	QString overlayText() { return m_overlayText; }
+	
+	virtual QSize sizeHint () const;
+	
+	bool renderFps() { return m_renderFps; }
+	
+signals:
+	void clicked();
+	
+public slots:
+	//void newFrame(QImage);
 	
 	void setOverlayText(const QString& text);
 	void showOverlayText(bool flag=true);
@@ -31,15 +44,18 @@ public:
 	
 	void setSourceRectAdjust( int dx1, int dy1, int dx2, int dy2 );
 	
-public slots:
-	//void newFrame(QImage);
+	void setFps(int fps=-1);
+	
+	void setRenderFps(bool);
+	
+protected slots:
 	void frameReady();
-
-private slots:
+	
 	void callUpdate();
 	void updateTimer();
 	
 protected:
+	void mouseReleaseEvent(QMouseEvent*); 
 	void paintEvent(QPaintEvent*);
 	void closeEvent(QCloseEvent*);
 	void showEvent(QShowEvent*);
@@ -74,6 +90,10 @@ private:
 	QRect m_origSourceRect;
 	
 	QTimer m_paintTimer;
+	
+	int m_forceFps;
+	
+	bool m_renderFps;
 };
 
 

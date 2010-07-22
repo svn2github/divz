@@ -11,7 +11,18 @@ HEADERS += CameraThread.h \
 	VideoWidget.h \
 	VideoSource.h \
 	VideoThread.h \
-	VideoFrame.h
+	VideoFrame.h \
+	MjpegThread.h \
+	MainWindow.h \
+	MdiChild.h \
+	MdiCamera.h \
+	MdiMjpeg.h \
+	MdiVideoSource.h 
+	#\
+	#MdiVideo.h \
+	#MdiProgram.h
+	
+	
 	
 	
 SOURCES += main.cpp \
@@ -20,7 +31,19 @@ SOURCES += main.cpp \
 	VideoWidget.cpp \
 	VideoSource.cpp \
 	VideoThread.cpp \
-	videoFrame.cpp 
+	VideoFrame.cpp \
+	MjpegThread.cpp \
+	MainWindow.cpp \
+	MdiChild.cpp \
+	MdiCamera.cpp \
+	MdiMjpeg.cpp \
+	MdiVideoSource.cpp
+	 
+	 #\
+	#MdiProgram.cpp
+	 
+#	 MdiVideo.cpp \
+	
 
 unix {
 	LIBS += -lavdevice -lavformat -lavcodec -lavutil -lswscale -lbz2 
