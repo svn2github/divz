@@ -32,12 +32,12 @@ private slots:
 	void about();
 	void updateMenus();
 	void updateWindowMenu();
-	MdiChild *createMdiChild();
+	void addNewWindow(QWidget *window);
 	void setActiveSubWindow(QWidget *window);
 	
-	//void newProgram();
+	void newProgram();
 	void newCamera();
-	//void newVideo();
+	void newVideo();
 	void newMjpeg();
 
 private:

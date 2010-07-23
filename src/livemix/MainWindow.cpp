@@ -4,6 +4,7 @@
 #include "MdiChild.h"
 #include "MdiMjpeg.h"
 #include "MdiCamera.h"
+#include <QCDEStyle>
 
 MainWindow::MainWindow()
 {
@@ -31,25 +32,36 @@ MainWindow::MainWindow()
 
 void MainWindow::newCamera()
 {
-	MdiCamera *child = new MdiCamera;
-	mdiArea->addSubWindow(child);
+	addNewWindow(new MdiCamera);
+}
+
+void MainWindow::addNewWindow(QWidget *child)
+{
+	QMdiSubWindow *window = new QMdiSubWindow;
+	window->setStyle(new QCDEStyle());
+	child->setStyle(QApplication::style());
+	window->setWidget(child);
+	window->setAttribute(Qt::WA_DeleteOnClose);
+	window->resize(child->sizeHint()); 
+	mdiArea->addSubWindow(window);
 	
 	child->show();
+// 	MdiVideoSource *vid = dynamic_cast<MdiVideoSource*>(child);
+// 	if(vid)
+// 		vid->videoWidget()->resize(160,120);
+//	child->adjustSize();
 }
 
 void MainWindow::newMjpeg()
 {
-	MdiMjpeg *child = new MdiMjpeg;
-	mdiArea->addSubWindow(child);
-	
-	child->show();
+	addNewWindow(new MdiMjpeg);
 }
-// void MainWindow::newProgram()
-// {
-// }
-// void MainWindow::newVideo()
-// {
-// }
+void MainWindow::newProgram()
+{
+}
+void MainWindow::newVideo()
+{
+}
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
@@ -188,19 +200,6 @@ void MainWindow::updateWindowMenu()
 		connect(action, SIGNAL(triggered()), windowMapper, SLOT(map()));
 		windowMapper->setMapping(action, windows.at(i));
 	}
-}
-
-MdiChild *MainWindow::createMdiChild()
-{
-// 	MdiChild *child = new MdiChild;
-// 	mdiArea->addSubWindow(child);
-// 	
-// 	connect(child, SIGNAL(copyAvailable(bool)),
-// 		cutAct, SLOT(setEnabled(bool)));
-// 	connect(child, SIGNAL(copyAvailable(bool)),
-// 		copyAct, SLOT(setEnabled(bool)));
-// 	
-	return 0;
 }
 
 void MainWindow::createActions()

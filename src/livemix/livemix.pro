@@ -1,9 +1,15 @@
 TEMPLATE = app
 TARGET = livemix
+
 DEPENDPATH += .
 INCLUDEPATH += .
-QT += opengl network
 
+MOC_DIR = .build
+OBJECTS_DIR = .build
+RCC_DIR = .build
+UI_DIR = .build
+
+QT += opengl network
 
 # Input
 HEADERS += CameraThread.h \
