@@ -1,7 +1,8 @@
 
-#ifndef MdiVideoSource_h
-#define MdiVideoSource_h
+#ifndef MdiVideoChild_H
+#define MdiVideoChild_H
 
+#include <QWidget>
 #include "MdiChild.h"
 #include "VideoSource.h"
 #include "VideoWidget.h"
@@ -9,12 +10,12 @@
 #include <QVBoxLayout>
 #include <QMouseEvent>
 
-class MdiVideoSource : public MdiChild
+class MdiVideoChild : public MdiChild
 {
 	Q_OBJECT
 
 public:
-	MdiVideoSource(QWidget *parent=0);
+	MdiVideoChild(QWidget *parent=0);
 	
 	VideoSource *videoSource() { return m_videoSource; }
 	VideoWidget *videoWidget() { return m_videoWidget; }
@@ -28,7 +29,6 @@ protected slots:
 	void textReturnPressed();
 	
 protected:
-	virtual void setupGui();
 	void setupDefaultGui();
 	
 	QVBoxLayout *m_layout;

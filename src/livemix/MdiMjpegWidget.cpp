@@ -1,18 +1,15 @@
-#include "MdiMjpeg.h"
+#include "MdiMjpegWidget.h"
 
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QUrl>
 #include <QMessageBox>
 
-MdiMjpeg::MdiMjpeg(QWidget *parent)
-	: MdiVideoSource(parent)
+MdiMjpegWidget::MdiMjpegWidget(QWidget *parent)
+	: MdiVideoChild(parent)
 {
 	m_thread = new MjpegThread();
 	setVideoSource(m_thread);
-	
-	//qDebug() << "MdiMjpeg::ctor()";
-	//setupDefaultGui();
 	
 	QHBoxLayout *layout = new QHBoxLayout();
 	
@@ -26,23 +23,7 @@ MdiMjpeg::MdiMjpeg(QWidget *parent)
 	setWindowTitle("MJPEG");	
 }
 
-// void MdiMjpeg::setupGui()
-// {
-// 	qDebug() << "MdiMjpeg::setupGui()";
-// 	setupDefaultGui();
-// 	
-// 	QHBoxLayout *layout = new QHBoxLayout();
-// 	
-// 	m_urlInput = new QLineEdit();
-// 	connect(m_urlInput, SIGNAL(returnPressed()), this, SLOT(urlReturnPressed()));
-// 		
-// 	layout->addWidget(new QLabel("URL:"));
-// 	layout->addWidget(m_urlInput);
-// 	m_layout->addLayout(layout);
-// 	
-// }
-
-void MdiMjpeg::urlReturnPressed()
+void MdiMjpegWidget::urlReturnPressed()
 {
 	qDebug() << "MdiMjpeg::urlReturnPressed(): "<<m_urlInput->text(); 
 	

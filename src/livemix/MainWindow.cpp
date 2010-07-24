@@ -2,8 +2,9 @@
 
 #include "MainWindow.h"
 #include "MdiChild.h"
-#include "MdiMjpeg.h"
-#include "MdiCamera.h"
+#include "MdiMjpegWidget.h"
+#include "MdiCameraWidget.h"
+#include "MdiVideoWidget.h"
 #include <QCDEStyle>
 
 MainWindow::MainWindow()
@@ -32,7 +33,7 @@ MainWindow::MainWindow()
 
 void MainWindow::newCamera()
 {
-	addNewWindow(new MdiCamera);
+	addNewWindow(new MdiCameraWidget);
 }
 
 void MainWindow::addNewWindow(QWidget *child)
@@ -54,13 +55,14 @@ void MainWindow::addNewWindow(QWidget *child)
 
 void MainWindow::newMjpeg()
 {
-	addNewWindow(new MdiMjpeg);
+	addNewWindow(new MdiMjpegWidget);
 }
 void MainWindow::newProgram()
 {
 }
 void MainWindow::newVideo()
 {
+	addNewWindow(new MdiVideoWidget);
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)

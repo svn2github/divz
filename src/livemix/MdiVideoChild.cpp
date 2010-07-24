@@ -1,7 +1,7 @@
 
-#include "MdiVideoSource.h"
+#include "MdiVideoChild.h"
 
-MdiVideoSource::MdiVideoSource(QWidget *parent)
+MdiVideoChild::MdiVideoChild(QWidget *parent)
 	: MdiChild(parent)
 	, m_layout(new QVBoxLayout(this))
 	, m_textInput(new QLineEdit(this))
@@ -10,26 +10,23 @@ MdiVideoSource::MdiVideoSource(QWidget *parent)
 {
 	connect(m_videoWidget, SIGNAL(clicked()), this, SIGNAL(clicked()));
 	connect(m_textInput, SIGNAL(returnPressed()), this, SLOT(textReturnPressed()));
-	setupGui();
+	setupDefaultGui();
 }
 	
-void MdiVideoSource::setVideoSource(VideoSource* source)
+void MdiVideoChild::setVideoSource(VideoSource* source)
 {
 	m_videoSource = source;
 	m_videoWidget->setVideoSource(source);
 }
 	
-void MdiVideoSource::textReturnPressed()
+void MdiVideoChild::textReturnPressed()
 {
 	m_videoWidget->setOverlayText(m_textInput->text());
+	m_textInput->selectAll();
 }
 
-void MdiVideoSource::setupGui()
-{
-	setupDefaultGui();
-}
 
-void MdiVideoSource::setupDefaultGui()
+void MdiVideoChild::setupDefaultGui()
 {
 	m_layout->setContentsMargins(3,3,3,3);
 	m_layout->addWidget(m_videoWidget);

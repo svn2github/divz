@@ -21,9 +21,11 @@ HEADERS += CameraThread.h \
 	MjpegThread.h \
 	MainWindow.h \
 	MdiChild.h \
-	MdiCamera.h \
-	MdiMjpeg.h \
-	MdiVideoSource.h 
+	MdiVideoChild.h \
+	MdiVideoWidget.h \
+	MdiCameraWidget.h \
+	MdiMjpegWidget.h 
+	
 	#\
 	#MdiVideo.h \
 	#MdiProgram.h
@@ -41,9 +43,10 @@ SOURCES += main.cpp \
 	MjpegThread.cpp \
 	MainWindow.cpp \
 	MdiChild.cpp \
-	MdiCamera.cpp \
-	MdiMjpeg.cpp \
-	MdiVideoSource.cpp
+	MdiVideoChild.cpp \
+	MdiVideoWidget.cpp \
+	MdiCameraWidget.cpp \
+	MdiMjpegWidget.cpp \
 	 
 	 #\
 	#MdiProgram.cpp

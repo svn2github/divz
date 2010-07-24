@@ -24,19 +24,18 @@ void VideoSource::run()
 
 VideoFrame VideoSource::frame()
 {
-	if(!m_isBuffered)
+	if(!m_isBuffered ||
+	    m_frameQueue.isEmpty())
 		return m_singleFrame;
-	if(m_frameQueue.isEmpty())
-		return VideoFrame();
 	//qDebug() << "VideoSource::frame(): Queue size: "<<m_frameQueue.size();
 	return m_frameQueue.dequeue();
 }
 
 void VideoSource::enqueue(VideoFrame frame)
 {
-	if(!m_isBuffered)
-		m_singleFrame = frame;
-	else
+	m_singleFrame = frame;
+	
+	if(m_isBuffered)
 		m_frameQueue.enqueue(frame);
 	
 	emit frameReady();

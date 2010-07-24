@@ -15,7 +15,7 @@
 
 #include "MainWindow.h"
 
-#include "MdiCamera.h"
+//#include "MdiCamera.h"
 
 
 extern "C" {

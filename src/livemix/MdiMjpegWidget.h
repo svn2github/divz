@@ -1,20 +1,20 @@
 #ifndef MdiMjpeg_H
 #define MdiMjpeg_H
 
-#include "MdiVideoSource.h"
+#include "MdiVideoChild.h"
 #include "MjpegThread.h"
 
-class MdiMjpeg : public MdiVideoSource
+class MdiMjpegWidget : public MdiVideoChild
 {
 	Q_OBJECT
 public:
-	MdiMjpeg(QWidget*parent=0);
+	MdiMjpegWidget(QWidget*parent=0);
 	
 protected slots:
 	void urlReturnPressed();
 	
 protected:
-// 	virtual void setupGui();
+	void setupDefaultGui();
 
 	QLineEdit *m_urlInput;
 	MjpegThread *m_thread;
