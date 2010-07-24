@@ -11,6 +11,8 @@
 #include "OutputControl.h"
 #include "MainWindow.h" // to access MainWindow::outputControl(...)
 
+#include "livemix/VideoWidget.h"
+
 #include "OutputInstance.h"
 #include <QMessageBox>
 

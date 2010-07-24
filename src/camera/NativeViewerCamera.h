@@ -4,7 +4,9 @@
 
 #include "SlideGroupViewer.h"
 class CameraSlideGroup;
-#include "../camera_test/CameraViewerWidget.h"
+//#include "../camera_test/CameraViewerWidget.h"
+class VideoWidget;
+class CameraThread;
 /*
 #include <phonon/AudioOutput>
 #include <phonon/SeekSlider>
@@ -54,9 +56,9 @@ public:
 // 	void setAutoPlay(bool flag) { m_autoPlay = flag; }
 	
 	bool isEmbeddable() { return true; }
-	QWidget * renderWidget() { return m_widget; }
+	QWidget * renderWidget() { return (QWidget*)m_widget; }
 	
-	CameraViewerWidget * cameraViewer() { return m_widget; }
+	VideoWidget * cameraViewer() { return m_widget; }
 
 	void setFadeSpeed(int);
 	void setFadeQuality(int);
@@ -74,7 +76,8 @@ private:
 	
 	NativeShowState m_state;
 	CameraSlideGroup * m_cameraGroup;
-	CameraViewerWidget * m_widget;
+	VideoWidget * m_widget;
+	CameraThread * m_camera;
 /*#ifdef PHONON_ENABLED
 	//Phonon::VideoPlayer * m_player;
 	Phonon::MediaObject * m_media;

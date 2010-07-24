@@ -3,8 +3,8 @@ DEPENDPATH += $$PWD
 
 QT += network
 
-# Generate the book name map
-system(perl book-abbrv-to-qt-map.pl > BookNameMap.cpp)
+# Generate the book name map file, BookNameMap.cpp
+system(perl book-abbrv-to-qt-map.pl)
 
 
 # Input

@@ -2,7 +2,8 @@ TEMPLATE = app
 TARGET = 
 DEPENDPATH += .
 INCLUDEPATH += .
-QT += opengl
+#QT += opengl
 
 # Input
+HEADERS += problem.h
 SOURCES += main.cpp

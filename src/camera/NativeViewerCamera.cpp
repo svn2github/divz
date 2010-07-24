@@ -4,6 +4,9 @@
 
 #include "CameraSlideGroup.h"
 
+#include "livemix/VideoWidget.h"
+#include "livemix/CameraThread.h"
+
 #include "qvideo/QVideoProvider.h"
 
 NativeViewerCamera::NativeViewerCamera()
@@ -15,7 +18,7 @@ NativeViewerCamera::NativeViewerCamera()
 // 	, m_autoPlay(true)
 {
 
-	m_widget = new CameraViewerWidget();
+	m_widget = new VideoWidget();
 	m_widget->setCursor(Qt::BlankCursor);
 	m_widget->setWindowFlags(Qt::WindowStaysOnTopHint | Qt::FramelessWindowHint | Qt::ToolTip);
 
@@ -48,7 +51,9 @@ void NativeViewerCamera::setSlideGroup(SlideGroup *group)
 	m_cameraGroup = dynamic_cast<CameraSlideGroup*>(group);
 	m_cameraGroup->addNativeViewer(outputId(),this);
 	
-	m_widget->setCamera(m_cameraGroup->device());
+	m_camera = CameraThread::threadForCamera(m_cameraGroup->device());
+	m_widget->setVideoSource(m_camera);
+	//m_widget->setCamera(m_cameraGroup->device());
 }
 
 void NativeViewerCamera::show()

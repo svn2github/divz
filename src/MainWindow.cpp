@@ -57,6 +57,7 @@
 #include "model/SlideTemplateManager.h"
 
 #include "http/ControlServer.h"
+#include "http/ViewServer.h"
 
 MainWindow * MainWindow::static_mainWindow = 0;
 
@@ -69,7 +70,8 @@ MainWindow::MainWindow(QWidget *parent) :
 	m_viewControl(0),
 	m_editWin(0),
 	m_autosaveTimer(0),
-	m_controlServer(0)
+	m_controlServer(0)//,
+	//m_viewServer(0)
 
 {
 	static_mainWindow = this;
@@ -208,6 +210,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
 	if(AppSettings::httpControlEnabled())
 		m_controlServer = new ControlServer(AppSettings::httpControlPort(),this);
+	
+	ViewServer *viewServer = new ViewServer(9091,this);
 		
 // 	SlideGroupViewer *sg = new SlideGroupViewer();
 // 	QRect geom(450,0,640,480);

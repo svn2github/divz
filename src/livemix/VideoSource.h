@@ -34,6 +34,9 @@ protected:
 	virtual void enqueue(VideoFrame);
 	
 	bool m_killed;
+	
+	static void initAV();
+	static bool isLibAVInit;
 
 private:
 	int m_refCount;

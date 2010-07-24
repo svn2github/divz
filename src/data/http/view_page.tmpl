@@ -1,0 +1,20 @@
+<html>
+<head>
+	<title>DViz Web Viewer</title>
+	<link rel="shortcut icon" type="image/x-icon" href="/:/data/http/favicon.ico">
+	<link rel="stylesheet" type="text/css" href='/:/data/http/styles.css' />
+	<script src="/:/data/http/view-scripts.js"></script>
+</head>
+<body>
+	<h1 id='doc_name'>%%doc_name%%</h1>
+	<h2 id='group_name'>%%group_name%%</h2>
+	<h3 id='slide_name'>%%slide_name%%</h3>
+	
+	<img src='/image' id='view_image'>
+	
+	<script>
+		window.CurrentSlideID = "%%slide_id%%";
+		startPolling();
+	</script>
+</body>
+</html>

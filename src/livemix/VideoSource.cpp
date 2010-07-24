@@ -4,11 +4,36 @@
 
 //////////////
 
+extern "C" {
+#include "libswscale/swscale.h"
+#include "libavdevice/avdevice.h"
+#include "libavcodec/avcodec.h"
+#include "libavformat/avformat.h"
+}
+
+bool VideoSource::isLibAVInit = false;
+
+void VideoSource::initAV()
+{
+	if(isLibAVInit)
+		return;
+	isLibAVInit = true;
+	
+	avcodec_init();
+	avcodec_register_all();
+	avdevice_register_all();
+	av_register_all();
+}
+
+//////////////
+
 VideoSource::VideoSource(QObject *parent)
 	: QThread(parent)
 	, m_killed(false)
 	, m_isBuffered(true)
-{}
+{
+	initAV();
+}
 
 void VideoSource::registerConsumer(VideoWidget *consumer)
 {

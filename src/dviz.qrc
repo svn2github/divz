@@ -147,6 +147,8 @@
         <file>data/http/favicon.ico</file>
         <file>data/http/styles.css</file>
         <file>data/http/control-scripts.js</file>
+        <file>data/http/view-scripts.js</file>
+        <file>data/http/view_page.tmpl</file>
         <file>data/http/doc.tmpl</file>
         <file>data/http/group.tmpl</file>
         <file>data/http/inc-ctrl-toggles.tmpl</file>

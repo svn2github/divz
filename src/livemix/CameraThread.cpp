@@ -98,17 +98,17 @@ QStringList CameraThread::enumerateDevices(bool forceReenum)
 		memset(&formatParams, 0, sizeof(AVFormatParameters));
 
 		#ifdef Q_OS_WIN32
-		QString fmt = "vfwcap";
-		QString file = QString::number(i);
+			QString fmt = "vfwcap";
+			QString file = QString::number(i);
 		#else
-		QString fmt = "video4linux";
-		QString file = QString("/dev/video%1").arg(i);
+			QString fmt = "video4linux";
+			QString file = QString("/dev/video%1").arg(i);
 		#endif
 
 		inFmt = av_find_input_format(qPrintable(fmt));
 		if( !inFmt )
 		{
-			qDebug() << "[ERROR] CameraThread::load(): Unable to find input format:"<<list[0];
+			qDebug() << "[ERROR] CameraThread::load(): Unable to find input format:"<<fmt;
 			break;
 		}
 

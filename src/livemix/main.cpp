@@ -18,11 +18,6 @@
 //#include "MdiCamera.h"
 
 
-extern "C" {
-#include "libswscale/swscale.h"
-#include "libavdevice/avdevice.h"
-}
-
 int main(int argc, char **argv)
 {
 	//QGL::setPreferredPaintEngine(QPaintEngine::OpenGL);
@@ -36,10 +31,6 @@ int main(int argc, char **argv)
 //  	t.resize(320,240);
 //  	t.show();
 
-	avcodec_init();
-	avcodec_register_all();
-	avdevice_register_all();
-	av_register_all();
 
 	MainWindow mw;
 	mw.show();

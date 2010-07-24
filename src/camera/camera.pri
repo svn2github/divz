@@ -11,8 +11,14 @@ DEPENDPATH += $$PWD
 HEADERS += NativeViewerCamera.h \
 	   CameraSlideGroup.h \
 	   CameraSlideGroupFactory.h \
-	   ../camera_test/CameraViewerWidget.h
+	   #../camera_test/CameraViewerWidget.h
+		../livemix/VideoWidget.h \
+		../livemix/CameraThread.h \
+		../livemix/VideoSource.h
 SOURCES += NativeViewerCamera.cpp \ 
 	   CameraSlideGroup.cpp \
 	   CameraSlideGroupFactory.cpp \
-	   ../camera_test/CameraViewerWidget.cpp
+#	   ../camera_test/CameraViewerWidget.cpp
+		../livemix/VideoWidget.cpp \
+		../livemix/CameraThread.cpp \
+		../livemix/VideoSource.cpp
