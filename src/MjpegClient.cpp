@@ -25,7 +25,7 @@ MjpegClient::~MjpegClient()
 {
 }
   
-bool MjpegClient::connectTo(const QString& host, int port, QString url)
+bool MjpegClient::connectTo(const QString& host, int port, QString url, const QString& user, const QString& pass)
 {
 	if(url.isEmpty())
 		url = "/";
@@ -33,6 +33,8 @@ bool MjpegClient::connectTo(const QString& host, int port, QString url)
 	m_host = host;
 	m_port = port > 0 ? port : 80;
 	m_url = url;
+	m_user = user;
+	m_pass = pass;
 	
 	if(m_socket)
 	{
@@ -58,8 +60,22 @@ bool MjpegClient::connectTo(const QString& host, int port, QString url)
 
 void MjpegClient::connectionReady()
 {
-	char data[256];
-	sprintf(data, "GET %s HTTP/1.0\r\n\r\n",qPrintable(m_url));
+	char data[1024];
+	sprintf(data, "GET %s HTTP/1.0\r\n",qPrintable(m_url));
+	m_socket->write((const char*)&data,strlen((const char*)data));
+	
+	sprintf(data, "Host: %s\r\n",qPrintable(m_host));
+	m_socket->write((const char*)&data,strlen((const char*)data));
+	
+	if(!m_user.isEmpty() || !m_pass.isEmpty())
+	{
+		sprintf(data, "%s:%s",qPrintable(m_user),qPrintable(m_pass));
+		QByteArray auth = QByteArray((const char*)&data).toBase64();
+		sprintf(data, "Authorization: Basic %s\r\n",auth.constData());
+		m_socket->write((const char*)&data,strlen((const char*)data));
+	}
+	
+	sprintf(data, "\r\n");
 	m_socket->write((const char*)&data,strlen((const char*)data));
 }
 

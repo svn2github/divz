@@ -19,6 +19,8 @@ void VideoSource::initAV()
 		return;
 	isLibAVInit = true;
 	
+	//qDebug() << "VideoSource::initAV()";
+	
 	avcodec_init();
 	avcodec_register_all();
 	avdevice_register_all();

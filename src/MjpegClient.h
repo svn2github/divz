@@ -21,7 +21,7 @@ public:
 	MjpegClient(QObject *parent = 0);
 	~MjpegClient();
 	
-	bool connectTo(const QString& host, int port=-1, QString url = "/");
+	bool connectTo(const QString& host, int port=-1, QString url = "/", const QString& user="", const QString& pass="");
 	void exit();
 	QString errorString(){ return m_socket->errorString(); }
 	
@@ -65,6 +65,8 @@ private:
 	QString m_host;
 	int m_port;
 	QString m_url;
+	QString m_user;
+	QString m_pass;
 	
 #ifdef MJPEG_TEST
 	QLabel *m_label;

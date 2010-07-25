@@ -23,7 +23,7 @@
       <attribute name="title">
        <string>Outputs</string>
       </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout_14">
+      <layout class="QVBoxLayout" name="verticalLayout_18">
        <item>
         <widget class="QGroupBox" name="groupBox_2">
          <property name="title">
@@ -58,7 +58,7 @@ p, li { white-space: pre-wrap; }
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_9">
           <item>
-           <widget class="QCheckBox" name="httpEnabled">
+           <widget class="QCheckBox" name="httpControlEnabled">
             <property name="text">
              <string>Enable HTTP Remote Control Server</string>
             </property>
@@ -78,7 +78,7 @@ p, li { white-space: pre-wrap; }
               </widget>
              </item>
              <item>
-              <widget class="QSpinBox" name="httpPort">
+              <widget class="QSpinBox" name="httpControlPort">
                <property name="minimum">
                 <number>1025</number>
                </property>
@@ -107,7 +107,7 @@ p, li { white-space: pre-wrap; }
            </widget>
           </item>
           <item>
-           <widget class="QLabel" name="httpUrlLabel">
+           <widget class="QLabel" name="httpControlUrlLabel">
             <property name="text">
              <string>Control URL: http://localhost:8080/</string>
             </property>
@@ -117,17 +117,69 @@ p, li { white-space: pre-wrap; }
         </widget>
        </item>
        <item>
-        <spacer name="verticalSpacer_2">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
+        <widget class="QGroupBox" name="groupBox_11">
+         <property name="title">
+          <string>HTTP Viewing Server</string>
          </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>40</height>
-          </size>
-         </property>
-        </spacer>
+         <layout class="QVBoxLayout" name="verticalLayout_14">
+          <item>
+           <widget class="QCheckBox" name="httpViewerEnabled">
+            <property name="text">
+             <string>Enable HTTP Viewing Server</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QWidget" name="widget_2" native="true">
+            <layout class="QHBoxLayout" name="horizontalLayout_9">
+             <property name="margin">
+              <number>0</number>
+             </property>
+             <item>
+              <widget class="QLabel" name="label_24">
+               <property name="text">
+                <string>Viewer Port:</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QSpinBox" name="httpViewerPort">
+               <property name="minimum">
+                <number>1025</number>
+               </property>
+               <property name="maximum">
+                <number>65536</number>
+               </property>
+               <property name="value">
+                <number>8081</number>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="horizontalSpacer_5">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="httpViewerUrlLabel">
+            <property name="text">
+             <string>Control URL: http://localhost:8081/</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
        </item>
       </layout>
      </widget>
@@ -161,7 +213,7 @@ p, li { white-space: pre-wrap; }
             <x>0</x>
             <y>0</y>
             <width>475</width>
-            <height>240</height>
+            <height>244</height>
            </rect>
           </property>
           <layout class="QFormLayout" name="formLayout">
@@ -668,7 +720,7 @@ p, li { white-space: pre-wrap; }
      </widget>
      <widget class="QWidget" name="tab_5">
       <attribute name="title">
-       <string>Cross Fading</string>
+       <string>Fading</string>
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_10">
        <item>
@@ -833,6 +885,67 @@ p, li { white-space: pre-wrap; }
        </item>
       </layout>
      </widget>
+     <widget class="QWidget" name="tab_7">
+      <attribute name="title">
+       <string>Path Translation</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_17">
+       <item>
+        <widget class="QGroupBox" name="groupBox_10">
+         <property name="title">
+          <string>Resource Path Translations</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_16">
+          <item>
+           <widget class="QTableWidget" name="resourceTranslations">
+            <column>
+             <property name="text">
+              <string>From</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>To</string>
+             </property>
+            </column>
+           </widget>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_8">
+            <item>
+             <widget class="QPushButton" name="resourceAddBtn">
+              <property name="text">
+               <string>Add</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="resourceDelBtn">
+              <property name="text">
+               <string>Remove</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer_4">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+       </item>
+      </layout>
+     </widget>
     </widget>
    </item>
    <item>
@@ -869,8 +982,8 @@ p, li { white-space: pre-wrap; }
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>266</x>
-     <y>385</y>
+     <x>275</x>
+     <y>423</y>
     </hint>
     <hint type="destinationlabel">
      <x>157</x>
@@ -885,8 +998,8 @@ p, li { white-space: pre-wrap; }
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>334</x>
-     <y>385</y>
+     <x>343</x>
+     <y>423</y>
     </hint>
     <hint type="destinationlabel">
      <x>286</x>
@@ -901,12 +1014,12 @@ p, li { white-space: pre-wrap; }
    <slot>setValue(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>193</x>
-     <y>130</y>
+     <x>261</x>
+     <y>123</y>
     </hint>
     <hint type="destinationlabel">
      <x>486</x>
-     <y>128</y>
+     <y>120</y>
     </hint>
    </hints>
   </connection>
@@ -918,11 +1031,11 @@ p, li { white-space: pre-wrap; }
    <hints>
     <hint type="sourcelabel">
      <x>486</x>
-     <y>128</y>
+     <y>120</y>
     </hint>
     <hint type="destinationlabel">
-     <x>257</x>
-     <y>130</y>
+     <x>325</x>
+     <y>123</y>
     </hint>
    </hints>
   </connection>
@@ -933,12 +1046,12 @@ p, li { white-space: pre-wrap; }
    <slot>setValue(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>276</x>
-     <y>162</y>
+     <x>344</x>
+     <y>155</y>
     </hint>
     <hint type="destinationlabel">
      <x>486</x>
-     <y>160</y>
+     <y>152</y>
     </hint>
    </hints>
   </connection>
@@ -950,11 +1063,11 @@ p, li { white-space: pre-wrap; }
    <hints>
     <hint type="sourcelabel">
      <x>486</x>
-     <y>160</y>
+     <y>152</y>
     </hint>
     <hint type="destinationlabel">
-     <x>266</x>
-     <y>162</y>
+     <x>334</x>
+     <y>155</y>
     </hint>
    </hints>
   </connection>
@@ -965,12 +1078,12 @@ p, li { white-space: pre-wrap; }
    <slot>setValue(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>413</x>
-     <y>173</y>
+     <x>486</x>
+     <y>162</y>
     </hint>
     <hint type="destinationlabel">
-     <x>326</x>
-     <y>175</y>
+     <x>407</x>
+     <y>165</y>
     </hint>
    </hints>
   </connection>
@@ -981,17 +1094,17 @@ p, li { white-space: pre-wrap; }
    <slot>setValue(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>326</x>
-     <y>175</y>
+     <x>407</x>
+     <y>165</y>
     </hint>
     <hint type="destinationlabel">
-     <x>413</x>
-     <y>173</y>
+     <x>486</x>
+     <y>162</y>
     </hint>
    </hints>
   </connection>
   <connection>
-   <sender>httpEnabled</sender>
+   <sender>httpControlEnabled</sender>
    <signal>toggled(bool)</signal>
    <receiver>widget</receiver>
    <slot>setEnabled(bool)</slot>
@@ -1001,8 +1114,24 @@ p, li { white-space: pre-wrap; }
      <y>191</y>
     </hint>
     <hint type="destinationlabel">
-     <x>336</x>
-     <y>224</y>
+     <x>358</x>
+     <y>219</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>httpViewerEnabled</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>widget_2</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>223</x>
+     <y>297</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>255</x>
+     <y>320</y>
     </hint>
    </hints>
   </connection>

@@ -89,6 +89,12 @@ public:
 	static int httpControlPort() { return m_httpControlPort; }
 	static void setHttpControlPort(int);
 	
+	static bool httpViewerEnabled() { return m_httpViewerEnabled; }
+	static void setHttpViewerEnabled(bool);
+	
+	static int httpViewerPort() { return m_httpViewerPort; }
+	static void setHttpViewerPort(int);
+	
 	static QString myIpAddress();
 	
 	static void setHotkeySequence(const QString& actionName, const QString& keySequence);
@@ -132,6 +138,9 @@ private:
 	
 	static bool m_httpControlEnabled;
 	static int m_httpControlPort;
+	
+	static bool m_httpViewerEnabled;
+	static int m_httpViewerPort;
 	
 	static QHash<QString,QString> m_hotkeys;
 	

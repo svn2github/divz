@@ -22,8 +22,8 @@ static void AppSettingsDialog_setupGenericDirectoryCompleter(QLineEdit *lineEdit
 }
 
 AppSettingsDialog::AppSettingsDialog(QWidget *parent) :
-    QDialog(parent),
-    m_ui(new Ui::AppSettingsDialog)
+	QDialog(parent),
+	m_ui(new Ui::AppSettingsDialog)
 {
 	m_ui->setupUi(this);
 	m_ui->cbUseOpenGL->setChecked(AppSettings::useOpenGL());
@@ -67,14 +67,24 @@ AppSettingsDialog::AppSettingsDialog(QWidget *parent) :
 	AppSettingsDialog_setupGenericDirectoryCompleter(m_ui->templateFolder);
 	
 	// apply signal changes
-	m_ui->httpEnabled->setChecked(false);
-	m_ui->httpEnabled->setChecked(true);
+	m_ui->httpControlEnabled->setChecked(false);
+	m_ui->httpControlEnabled->setChecked(true);
 	
-	m_ui->httpEnabled->setChecked(AppSettings::httpControlEnabled());
-	m_ui->httpPort->setValue(AppSettings::httpControlPort());
+	m_ui->httpControlEnabled->setChecked(AppSettings::httpControlEnabled());
+	m_ui->httpControlPort->setValue(AppSettings::httpControlPort());
 	
-	connect(m_ui->httpPort, SIGNAL(valueChanged(int)), this, SLOT(portChanged(int)));
-	connect(m_ui->httpUrlLabel, SIGNAL(linkActivated(const QString&)), this, SLOT(linkActivated(const QString&)));
+	// apply signal changes
+	m_ui->httpViewerEnabled->setChecked(false);
+	m_ui->httpViewerEnabled->setChecked(true);
+	
+	m_ui->httpViewerEnabled->setChecked(AppSettings::httpViewerEnabled());
+	m_ui->httpViewerPort->setValue(AppSettings::httpViewerPort());
+	
+	connect(m_ui->httpControlPort, SIGNAL(valueChanged(int)), this, SLOT(controlPortChanged(int)));
+	connect(m_ui->httpControlUrlLabel, SIGNAL(linkActivated(const QString&)), this, SLOT(linkActivated(const QString&)));
+	
+	connect(m_ui->httpViewerPort, SIGNAL(valueChanged(int)), this, SLOT(viewerPortChanged(int)));
+	connect(m_ui->httpViewerUrlLabel, SIGNAL(linkActivated(const QString&)), this, SLOT(linkActivated(const QString&)));
 	
 	m_ui->hotkeyBlack->setText(AppSettings::hotkeySequence("black"));
 	m_ui->hotkeyClear->setText(AppSettings::hotkeySequence("clear"));
@@ -86,9 +96,38 @@ AppSettingsDialog::AppSettingsDialog(QWidget *parent) :
 	m_ui->hotkeyPrevGroup->setText(AppSettings::hotkeySequence("prev-group"));
 
 	
-	portChanged(AppSettings::httpControlPort());
+	controlPortChanged(AppSettings::httpControlPort());
+	viewerPortChanged(AppSettings::httpViewerPort());
+	
+	
+	QTableWidget * tableWidget = m_ui->resourceTranslations;
+	AppSettings::ResourcePathTranslations res = AppSettings::resourcePathTranslations();
+	tableWidget->setRowCount(res.size());
+	int row = 0;
+	foreach(QStringPair pair, res)
+	{
+		tableWidget->setItem(row,0,new QTableWidgetItem(pair.first));
+		tableWidget->setItem(row,1,new QTableWidgetItem(pair.second));
+	}
+	
+	tableWidget->resizeColumnsToContents();
+	tableWidget->resizeRowsToContents();
+	
+	connect(m_ui->resourceAddBtn, SIGNAL(clicked()), this, SLOT(addResBtn()));
+	connect(m_ui->resourceDelBtn, SIGNAL(clicked()), this, SLOT(delResBtn()));
+	connect(tableWidget, SIGNAL(itemChanged(QTableWidgetItem*)), this, SLOT(adjustTableSize()));
 	
 }
+
+void AppSettingsDialog::adjustTableSize()
+{
+	QTableWidget * tableWidget = m_ui->resourceTranslations;
+
+	tableWidget->resizeColumnsToContents();
+	tableWidget->resizeRowsToContents();
+}
+
+
 void AppSettingsDialog::slotDiskCacheBrowse()
 {
 	QString dirPath = QFileDialog::getExistingDirectory(this, tr("Select A Cache Location"),
@@ -114,10 +153,16 @@ void AppSettingsDialog::slotTemplateFolderBrowse()
 }
 
 
-void AppSettingsDialog::portChanged(int port)
+void AppSettingsDialog::controlPortChanged(int port)
 {
 	QString url = QString("http://%1:%2/").arg(AppSettings::myIpAddress()).arg(port);
-	m_ui->httpUrlLabel->setText(QString("Control URL is: <a href='%1'>%1</a>").arg(url));
+	m_ui->httpControlUrlLabel->setText(QString("Control URL is: <a href='%1'>%1</a>").arg(url));
+}
+
+void AppSettingsDialog::viewerPortChanged(int port)
+{
+	QString url = QString("http://%1:%2/").arg(AppSettings::myIpAddress()).arg(port);
+	m_ui->httpViewerUrlLabel->setText(QString("Viewer URL is: <a href='%1'>%1</a>").arg(url));
 }
 
 void AppSettingsDialog::linkActivated(const QString& link)
@@ -140,8 +185,11 @@ void AppSettingsDialog::slotAccepted()
 	AppSettings::setCacheDir(QDir(m_ui->diskCacheBox->text()));
 	AppSettings::setTemplateStorageFolder(m_ui->templateFolder->text());
 	
-	AppSettings::setHttpControlEnabled(m_ui->httpEnabled->isChecked());
-	AppSettings::setHttpControlPort(m_ui->httpPort->value());
+	AppSettings::setHttpControlEnabled(m_ui->httpControlEnabled->isChecked());
+	AppSettings::setHttpControlPort(m_ui->httpControlPort->value());
+	
+	AppSettings::setHttpViewerEnabled(m_ui->httpViewerEnabled->isChecked());
+	AppSettings::setHttpViewerPort(m_ui->httpViewerPort->value());
 	
 	AppSettings::setHotkeySequence("black",m_ui->hotkeyBlack->text());
 	AppSettings::setHotkeySequence("clear",m_ui->hotkeyClear->text());
@@ -152,10 +200,19 @@ void AppSettingsDialog::slotAccepted()
 	AppSettings::setHotkeySequence("prev-slide",m_ui->hotkeyPrevSlide->text());
 	AppSettings::setHotkeySequence("prev-group",m_ui->hotkeyPrevGroup->text());
 
+	QTableWidget * tableWidget = m_ui->resourceTranslations;
+	AppSettings::ResourcePathTranslations res;
+	for(int row=0; row<tableWidget->rowCount(); row++)
+		res.append(QStringPair(tableWidget->item(row,0)->text(), tableWidget->item(row,1)->text()));
+	
+	AppSettings::setResourcePathTranslations(res);
+	
 	// Yes, I'm cheating by not adding a proper accessor to AppSettings - I dont feel
 	// like waiting for the entire source tree to recompile right now. Maybe later.
 	QSettings settings;
 	settings.setValue("max-backups",m_ui->maxBackups->value());
+	
+	
 	
 	close();
 }
@@ -177,6 +234,24 @@ void AppSettingsDialog::slotConfigOutputs()
 // 	GridDialog d(this);
 // 	d.exec();
 // }
+
+
+void AppSettingsDialog::addResBtn()
+{
+	QTableWidget * tableWidget = m_ui->resourceTranslations;
+	int row = tableWidget->rowCount();
+	tableWidget->setRowCount(row+1);
+	tableWidget->setItem(row,0,new QTableWidgetItem("C:\\"));
+	tableWidget->setItem(row,1,new QTableWidgetItem("/"));
+}
+
+void AppSettingsDialog::delResBtn()
+{
+	QTableWidget * tableWidget = m_ui->resourceTranslations;
+	tableWidget->removeRow(tableWidget->currentRow());
+}
+
+
 
 AppSettingsDialog::~AppSettingsDialog()
 {

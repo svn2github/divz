@@ -31,6 +31,7 @@ CameraThread::CameraThread(const QString& camera, QObject *parent)
 	, m_inited(false)
 	, m_cameraFile(camera)
 	, m_frameCount(0)
+	, m_fps(30)
 {
 	m_time_base_rational.num = 1;
 	m_time_base_rational.den = AV_TIME_BASE;
@@ -71,6 +72,8 @@ CameraThread * CameraThread::threadForCamera(const QString& camera)
 
 QStringList CameraThread::enumerateDevices(bool forceReenum)
 {
+	VideoSource::initAV();
+	
 	if(!forceReenum && m_devicesEnumerated)
 		return m_enumeratedDevices;
 		

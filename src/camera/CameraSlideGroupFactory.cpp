@@ -84,7 +84,7 @@ CameraSlideGroupViewControl::CameraSlideGroupViewControl(OutputInstance *inst, Q
 // 	
  	layout->addWidget(m_playingLabel);
  	layout->addWidget(baseWidget);
-// 	layout->addStretch(1);
+ 	layout->addStretch(1);
 // 
 // 	m_playAction = new QAction(qApp->style()->standardIcon(QStyle::SP_MediaPlay), tr("Play"), baseWidget);
 // 	m_playAction->setShortcut(tr("Crl+P"));
@@ -155,6 +155,7 @@ void CameraSlideGroupViewControl::showOverlayText(bool flag)
 	if(flag)
 	{
 		m_native->cameraViewer()->setOverlayText(m_overlayText->text());
+		m_overlayText->selectAll();
 		m_native->cameraViewer()->showOverlayText(true);
 	}
 	else

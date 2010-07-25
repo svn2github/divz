@@ -78,6 +78,9 @@ AppSettings::ResourcePathTranslations AppSettings::m_resourcePathTranslations;
 bool AppSettings::m_httpControlEnabled = true;
 int AppSettings::m_httpControlPort = 8080;
 
+bool AppSettings::m_httpViewerEnabled = true;
+int AppSettings::m_httpViewerPort = 8081;
+
 
 QHash<QString,QString> AppSettings::m_hotkeys;
 
@@ -287,6 +290,9 @@ void AppSettings::load()
 	m_httpControlEnabled = s.value("app/http-control/enabled",true).toBool();
 	m_httpControlPort = s.value("app/http-control/port",8080).toInt();
 	
+	m_httpViewerEnabled = s.value("app/http-viewer/enabled",true).toBool();
+	m_httpViewerPort = s.value("app/http-viewer/port",8081).toInt();
+	
 	QPixmapCache::setCacheLimit(m_pixmapCacheSize * 1024);
 	
 	updateLiveAspectRatio();
@@ -339,6 +345,9 @@ void AppSettings::save()
 	s.setValue("app/http-control/enabled",m_httpControlEnabled);
 	s.setValue("app/http-control/port",m_httpControlPort);
 	
+	s.setValue("app/http-viewer/enabled",m_httpViewerEnabled);
+	s.setValue("app/http-viewer/port",m_httpViewerPort);
+	
 	saveOutputs(&s);
 
 	updateLiveAspectRatio();
@@ -372,6 +381,16 @@ void AppSettings::setHttpControlPort(int x)
 void AppSettings::setHttpControlEnabled(bool flag)
 {
 	m_httpControlEnabled = flag;
+}
+
+void AppSettings::setHttpViewerPort(int x)
+{
+	m_httpViewerPort = x;
+}
+
+void AppSettings::setHttpViewerEnabled(bool flag)
+{
+	m_httpViewerEnabled = flag;
 }
 
 void AppSettings::setLiveEditMode(LiveEditMode mode)

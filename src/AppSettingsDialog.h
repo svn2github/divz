@@ -25,9 +25,15 @@ protected slots:
 	
 	void slotAccepted();
 	
-	void portChanged(int);
+	void controlPortChanged(int);
 	void linkActivated(const QString&);
+	
+	void viewerPortChanged(int);
 	//void slotRejected();
+	
+	void addResBtn();
+	void delResBtn();
+	void adjustTableSize();
 
 private:
 	Ui::AppSettingsDialog *m_ui;

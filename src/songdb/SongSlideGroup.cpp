@@ -138,9 +138,9 @@ void SongSlideGroup::textToSlides(SongTextFilter filter)
 				     "<head><meta name=\"qrichtext\" content=\"1\" />"
 				     "<style type=\"text/css\">p, li { white-space: pre-wrap; }</style>"
 				     "</head>"
-				     "<body style=\"font-family:'Tahoma, Sans Serif'; font-size:9pt; font-weight:400; font-style:normal;\">";
+				     "<body style=\"font-family:'Sans Serif'; font-size:9pt; font-weight:400; font-style:normal;\">";
 	static QString linePrefix  = "<p align=\"center\" style=\"margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">"
-				     "<span style=\" font-family:'Tahoma, Sans-Serif'; font-size:32pt; font-weight:800;\">";
+				     "<span style=\" font-family:'Sans-Serif'; font-size:32pt; font-weight:800;\">";
 	static QString lineSuffix =  "</span>"
 				     "</p>";
 	static QString slideFooter = "</body></html>";
