@@ -30,17 +30,56 @@ void GLThread::resizeViewport(const QSize &size)
 void GLThread::run()
 {
 	srand(QTime::currentTime().msec());
-	rotAngle = rand() % 360;
+	xrot = 0; //rand() % 360;
+	yrot = 0; //rand() % 360;
+	zrot = 0; //rand() % 360;
+	
+	xscale = 1;
+	yscale = 1;
+	zscale = 1;
+	
+	xscaleInc = 0.1;
+	yscaleInc = 0.2;
+	zscaleInc = 0.4;
 	
 	glw->makeCurrent();
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();        
-	glOrtho(-5.0, 5.0, -5.0, 5.0, 1.0, 100.0);
-	glMatrixMode(GL_MODELVIEW);
-	glViewport(0, 0, 200, 200);
-	glClearColor(0.0, 0.0, 0.0, 1.0);
-	glShadeModel(GL_SMOOTH);
-	glEnable(GL_DEPTH_TEST);
+	
+// 	glMatrixMode(GL_PROJECTION);
+// 	glLoadIdentity();
+// 	glOrtho(-5.0, 5.0, -5.0, 5.0, 1.0, 100.0);
+// 	glMatrixMode(GL_MODELVIEW);
+// 	glViewport(0, 0, 100, 100);
+// 	glClearColor(0.0, 0.0, 0.0, 1.0);
+// 	glShadeModel(GL_SMOOTH);
+// 	glEnable(GL_DEPTH_TEST);
+// 	glEnable(GL_TEXTURE_2D);
+	
+	QImage texOrig, texGL;
+	if ( !texOrig.load( "me2.jpg" ) )
+	{
+		texOrig = QImage( 16, 16, QImage::Format_RGB32 );
+		texOrig.fill( Qt::green );
+	}
+	
+// 	if(texOrig.format() != QImage::Format_RGB32)
+// 		texOrig = texOrig.convertToFormat(QImage::Format_RGB32);
+	
+	texGL = QGLWidget::convertToGLFormat( texOrig );
+	glGenTextures( 1, &texture[0] );
+	glBindTexture( GL_TEXTURE_2D, texture[0] );
+	glTexImage2D( GL_TEXTURE_2D, 0, 3, texGL.width(), texGL.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, texGL.bits() );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+	
+	
+	glEnable(GL_TEXTURE_2D);							// Enable Texture Mapping ( NEW )
+	glShadeModel(GL_SMOOTH);							// Enable Smooth Shading
+	glClearColor(0.0f, 0.0f, 0.0f, 0.5f);				// Black Background
+	glClearDepth(1.0f);									// Depth Buffer Setup
+	glEnable(GL_DEPTH_TEST);							// Enables Depth Testing
+	glDepthFunc(GL_LEQUAL);								// The Type Of Depth Testing To Do
+	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);	// Really Nice Perspective Calculations
+	glViewport(0, 0, 320,240);
 
 	while (doRendering) 
 	{
@@ -48,29 +87,91 @@ void GLThread::run()
 		{
 			glViewport(0, 0, w, h);
 			doResize = false;
+			
+			if(h == 0)
+			{
+				h == 1;
+			}
+			
+			glMatrixMode(GL_PROJECTION);						// Select The Projection Matrix
+			glLoadIdentity();							// Reset The Projection Matrix
+		
+			// Calculate The Aspect Ratio Of The Window
+			gluPerspective(45.0f,(GLfloat)w/(GLfloat)h,0.1f,100.0f);
+		
+			glMatrixMode(GL_MODELVIEW);						// Select The Modelview Matrix
+			glLoadIdentity();							// Reset The Modelview Matrix
+			qDebug() << "Resized: "<<w<<"x"<<h;
 		}
 		// Rendering code goes here
 		
-		glRotatef(rotAngle / 16.0, 1.0, 0.0, 0.0);
-		glRotatef(rotAngle / 16.0, 0.0, 1.0, 0.0);
-    		glRotatef(rotAngle / 16.0, 0.0, 0.0, 1.0);
+		//qDebug() << "rot:"<<xrot<<yrot<<zrot;
+	
+ 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);	// Clear The Screen And The Depth Buffer
+		glLoadIdentity();									// Reset The View
+		glTranslatef(0.0f,0.0f,-5.0f);
+	
+		glRotatef(xrot,1.0f,0.0f,0.0f);
+		glRotatef(yrot,0.0f,1.0f,0.0f);
+		glRotatef(zrot,0.0f,0.0f,1.0f);
+	
+		//glScalef(xscale, yscale, zscale);
+	
+		glBindTexture(GL_TEXTURE_2D, texture[0]);
 		
-		//qglClearColor(QColor::fromCmykF(0.39, 0.39, 0.0, 0.0).dark());
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		
-		glBegin(GL_POLYGON);
-// 		glTexCoord2f(1.0, 1.0);
-		glVertex3f(0.8, 0.8, -2.0);
-// 		glTexCoord2f(0.0, 1.0);
-		glVertex3f(0.2, 0.8, -100.0);
-// 		glTexCoord2f(0.0, 0.0);
-		glVertex3f(0.2, 0.2, -100.0);
-// 		glTexCoord2f(1.0, 0.0);
-		glVertex3f(0.8, 0.2, -2.0);
+		glBegin(GL_QUADS);
+			// Front Face
+			glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0f, -1.0f,  1.0f);
+			glTexCoord2f(1.0f, 0.0f); glVertex3f( 1.0f, -1.0f,  1.0f);
+			glTexCoord2f(1.0f, 1.0f); glVertex3f( 1.0f,  1.0f,  1.0f);
+			glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0f,  1.0f,  1.0f);
+			// Back Face
+			glTexCoord2f(1.0f, 0.0f); glVertex3f(-1.0f, -1.0f, -1.0f);
+			glTexCoord2f(1.0f, 1.0f); glVertex3f(-1.0f,  1.0f, -1.0f);
+			glTexCoord2f(0.0f, 1.0f); glVertex3f( 1.0f,  1.0f, -1.0f);
+			glTexCoord2f(0.0f, 0.0f); glVertex3f( 1.0f, -1.0f, -1.0f);
+			// Top Face
+			glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0f,  1.0f, -1.0f);
+			glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0f,  1.0f,  1.0f);
+			glTexCoord2f(1.0f, 0.0f); glVertex3f( 1.0f,  1.0f,  1.0f);
+			glTexCoord2f(1.0f, 1.0f); glVertex3f( 1.0f,  1.0f, -1.0f);
+			// Bottom Face
+			glTexCoord2f(1.0f, 1.0f); glVertex3f(-1.0f, -1.0f, -1.0f);
+			glTexCoord2f(0.0f, 1.0f); glVertex3f( 1.0f, -1.0f, -1.0f);
+			glTexCoord2f(0.0f, 0.0f); glVertex3f( 1.0f, -1.0f,  1.0f);
+			glTexCoord2f(1.0f, 0.0f); glVertex3f(-1.0f, -1.0f,  1.0f);
+			// Right face
+			glTexCoord2f(1.0f, 0.0f); glVertex3f( 1.0f, -1.0f, -1.0f);
+			glTexCoord2f(1.0f, 1.0f); glVertex3f( 1.0f,  1.0f, -1.0f);
+			glTexCoord2f(0.0f, 1.0f); glVertex3f( 1.0f,  1.0f,  1.0f);
+			glTexCoord2f(0.0f, 0.0f); glVertex3f( 1.0f, -1.0f,  1.0f);
+			// Left Face
+			glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0f, -1.0f, -1.0f);
+			glTexCoord2f(1.0f, 0.0f); glVertex3f(-1.0f, -1.0f,  1.0f);
+			glTexCoord2f(1.0f, 1.0f); glVertex3f(-1.0f,  1.0f,  1.0f);
+			glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0f,  1.0f, -1.0f);
 		glEnd();
+	
+		xrot+=0.3f;
+		yrot+=0.2f;
+		zrot+=0.4f;
+		
+// 		xscale += xscaleInc;
+// 		yscale += yscaleInc;
+// 		zscale += zscaleInc;
+// 		
+// 		if(xscale < 0.1 || xscale >= 10);
+// 			xscaleInc *= -1;
+// 			
+// 		if(yscale < 0.1 || yscale >= 10);
+// 			yscaleInc *= -1;
+// 			
+// 		if(zscale < 0.1 || zscale >= 10);
+// 			zscaleInc *= -1;
+		
 
 		glw->swapBuffers();
-		msleep(40);
+		msleep(1000/60);
 	}
 }
 

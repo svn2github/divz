@@ -19,6 +19,9 @@ AppWindow::AppWindow()
 	
 	ws = new QWorkspace(this);
 	setCentralWidget(ws);
+	
+	//reszie(100,100);
+	//newThread();
 }
 
 void AppWindow::closeEvent(QCloseEvent *evt)

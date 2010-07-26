@@ -3,6 +3,9 @@
  
 #include <QThread>
 #include <QSize>
+#include <QtGui>
+#include <QtOpenGL>
+
 
 class GLWidget;
 
@@ -21,6 +24,16 @@ private:
 	int h;
 	int rotAngle;
 	GLWidget *glw;
+	
+	GLuint	texture[1]; // Storage For One Texture
+	
+	float xrot, yrot, zrot;
+	float xscale, yscale, zscale;
+	float xscaleInc, yscaleInc, zscaleInc;
+// 	GLfloat	xrot;				// X Rotation ( NEW )
+// 	GLfloat	yrot;				// Y Rotation ( NEW )
+// 	GLfloat	zrot;				// Z Rotation ( NEW )
+
 };
 
 #endif
