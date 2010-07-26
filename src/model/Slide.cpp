@@ -10,14 +10,18 @@
 #include "BackgroundItem.h"
 #include "ItemFactory.h"
 
-
+#define ID_COUNTER_KEY "slide/id-counter"
+#include <QSettings>
 
 #include <assert.h>
 #include <QMetaProperty>
 
 Slide::Slide()  
 {
-	m_slideId = 0;
+	QSettings s;
+	m_slideId = s.value(ID_COUNTER_KEY,0).toInt() + 1;
+	s.setValue(ID_COUNTER_KEY,m_slideId);
+	
 	m_slideNumber = 0;
 	m_autoChangeTime = 0;
 	m_inheritFadeSettings = true;
@@ -30,7 +34,12 @@ Slide::~Slide()
 	qDeleteAll(m_ownedItems);
 }
 
-void Slide::setSlideId(int x)     { m_slideId = x; }
+void Slide::setSlideId(int x)     
+{ 
+	if(x > 0)
+		m_slideId = x; 
+}
+
 void Slide::setSlideNumber(int x)
 {
 	int old = m_slideNumber;

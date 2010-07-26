@@ -70,8 +70,8 @@ MainWindow::MainWindow(QWidget *parent) :
 	m_viewControl(0),
 	m_editWin(0),
 	m_autosaveTimer(0),
-	m_controlServer(0)//,
-	//m_viewServer(0)
+	m_controlServer(0),
+	m_viewServer(0)
 
 {
 	static_mainWindow = this;
@@ -211,7 +211,8 @@ MainWindow::MainWindow(QWidget *parent) :
 	if(AppSettings::httpControlEnabled())
 		m_controlServer = new ControlServer(AppSettings::httpControlPort(),this);
 	
-	ViewServer *viewServer = new ViewServer(9091,this);
+	if(AppSettings::httpViewerEnabled())
+		m_viewServer = new ViewServer(AppSettings::httpViewerPort(),this);
 		
 // 	SlideGroupViewer *sg = new SlideGroupViewer();
 // 	QRect geom(450,0,640,480);
@@ -1185,6 +1186,12 @@ void MainWindow::actionAppSettingsDialog()
 	
 	if(AppSettings::httpControlEnabled())
 		m_controlServer = new ControlServer(AppSettings::httpControlPort(),this);
+		
+	if(m_viewServer)
+		delete m_viewServer;
+		
+	if(AppSettings::httpViewerEnabled())
+		m_viewServer = new ViewServer(AppSettings::httpViewerPort(),this);
 
 }
 

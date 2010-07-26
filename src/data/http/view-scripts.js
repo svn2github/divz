@@ -29,44 +29,53 @@ function gotoUrl(url)
 	}
 }
 
+function serverResponse()
+{
+	if(window.RequestObject &&
+	   window.RequestObject.readyState == 4 &&
+	   window.RequestObject.status     == 200)
+	{
+		var response;
+		eval('response=' + window.RequestObject.responseText);
+		//alert(response+'|' + window.RequestObject.responseText);
+		if(response.no_change)
+		{
+			// do nothing
+		}
+		else
+		{
+			window.CurrentSlideID = response.slide_id;
+			window.CurrentSlideName = response.slide_name;
+			
+			var elm = document.getElementById('doc_title');
+			if(elm) elm.innerHTML = response.doc_name;
+			
+			var elm = document.getElementById('slide_name');
+			if(elm) elm.innerHTML = response.slide_name;
+			
+			var elm = document.getElementById('group_name');
+			if(elm) elm.innerHTML = response.group_name;
+			
+			var elm = document.getElementById('view_image');
+			if(elm) elm.src = '/image?date=' + (new Date().getTime());
+			
+		}
+	}
+}
+
 function pollServer()
 {
 	if(window.RequestObject == null) 
 	{
 		window.RequestObject = xhttp();
-		window.RequestObject.onreadystatechange = function()
-		{
-			if(window.RequestObject.readyState == 4 &&
-			   window.RequestObject.status     == 200)
-			{
-				var response;
-				eval('response=' + window.RequestObject.responseText);
-				if(response.no_change)
-				{
-					// do nothing
-				}
-				else
-				{
-					window.CurrentSlideID = response.slide_id;
-					var elm = document.getElementById('doc_title');
-					if(elm) elm.innerHTML = response.doc_name;
-					
-					var elm = document.getElementById('slide_name');
-					if(elm) elm.innerHTML = response.slide_name;
-					
-					var elm = document.getElementById('group_name');
-					if(elm) elm.innerHTML = response.group_name;
-					
-					var elm = document.getElementById('view_image');
-					if(elm) elm.src = '/image?date=' + (new Date().getTime());
-					
-				}
-			}
-		}
 	}
+		
 	if(window.RequestObject)
 	{
-		window.RequestObject.open("GET",'/poll?slide_id=' + window.CurrentSlideID + '&date=' + (new Date().getTime()), true);
+		window.RequestObject.onreadystatechange = serverResponse;
+		window.RequestObject.open("GET",'/poll?slide_id=' + window.CurrentSlideID + 
+							'&slide_name=' + encode(window.CurrentSlideName) + 
+							'&date=' + (new Date().getTime()), true);
 		window.RequestObject.send(null);
 	}
 }

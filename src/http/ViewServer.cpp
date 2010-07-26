@@ -54,7 +54,7 @@ void ViewServer::dispatch(QTcpSocket *socket, const QStringList &path, const QSt
 	
 	//generic404(socket,path,query);
 	QString pathStr = path.join("/");
-	//qDebug() << "pathStr: "<<pathStr;
+// 	qDebug() << "ViewServer::dispatch(): pathStr: "<<pathStr;
 	
 	if(pathStr.isEmpty())
 	{
@@ -170,15 +170,21 @@ void ViewServer::reqCheckForChange(QTcpSocket *socket, const QStringList &path, 
 	}
 	
 	int id = query["slide_id"].toInt();
-	if(id != slideId)
+	QString name = query["slide_name"];
+	if(id != slideId ||
+	   name != slideName)
 	{
+// 		qDebug() << "ViewServer::reqCheckForchange: Changed!";
 		Http_Send_Response(socket,"HTTP/1.0 200 Slide Changed") << "{slide_id:"<<id<<","<<
 									    "slide_name:\""<<slideName<<"\","<<
 									    "group_name:\""<<groupName<<"\","<<
 									    "doc_name:\""<<docName<<"\"};";
 	}
 	else
+	{
+// 		qDebug() << "ViewServer::reqCheckForchange: No Change!";
 		Http_Send_Response(socket,"HTTP/1.0 200 No Change") << "{no_change:true};";
+	}
 	
 }
 

@@ -30,6 +30,7 @@ class SlideGroup;
 class MediaBrowser;
 class Output;
 class ControlServer;
+class ViewServer;
 class AbstractSlideGroupEditor;
 
 #define FALLBACK_SCREEN_RECT QRectF(0,0,1024,768)
@@ -225,6 +226,7 @@ private:
 	MediaBrowser * m_mediaBrowser;
 	
 	ControlServer * m_controlServer;
+	ViewServer * m_viewServer;
 	
 	/** static */
 	static MainWindow * static_mainWindow;	
