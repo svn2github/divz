@@ -595,10 +595,15 @@ void SlideGroupViewControl::repaintList()
 // 	qDebug() << "SlideGroupViewControl::repaintList(): mark";
 	if(!m_listView)
 	    return;
+
+	QModelIndex idx = m_listView->currentIndex();
+
  	m_listView->clearFocus();
  	m_listView->setFocus();
 	m_listView->reset();
 	m_listView->repaint();
+
+	m_listView->setCurrentIndex(idx);
 
 
 	//qDebug() << "SlideGroupViewControl::repaintList(): mark done";

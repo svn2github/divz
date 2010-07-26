@@ -213,6 +213,8 @@ MainWindow::MainWindow(QWidget *parent) :
 	
 	if(AppSettings::httpViewerEnabled())
 		m_viewServer = new ViewServer(AppSettings::httpViewerPort(),this);
+	//else
+	//	qDebug() << "MainWindow: HTTP Viewer Server not Enabled";
 		
 // 	SlideGroupViewer *sg = new SlideGroupViewer();
 // 	QRect geom(450,0,640,480);

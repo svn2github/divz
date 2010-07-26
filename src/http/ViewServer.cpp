@@ -28,6 +28,7 @@ ViewServer::ViewServer(quint16 port, QObject* parent)
 	, m_sceneRect(0,0,1024,768)
 	
 {
+	//qDebug() << "ViewServer: using port: "<<port;
 	mw = MainWindow::mw();
 	
 	// TODO: This code should be in a slot to listen for changes to aspect ration in real time.

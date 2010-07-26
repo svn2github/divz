@@ -2,3 +2,36 @@
 .notlive{border:2px solid white;padding:1px}
 .ctrl_enabled{font-weight:bold;color:black}
 .ctrl_disabled{color:blue}
+
+body.viewer 
+{
+	font-family: Sans-Serif;
+}
+
+body.viewer #doc_name
+{
+	border-bottom: 1px solid black;
+}
+
+body.viewer #group_name,
+body.viewer #slide_name
+{
+	background: rgb(220,220,220);
+	padding: .5em;
+	margin: .25em 0 .25em 0;
+	font-size: 1.25em;
+	font-weight: bold;
+}
+
+body.viewer #slide_name
+{
+	font-size: 1em;
+}
+
+body.viewer #dviz-link
+{
+	margin-top: 1em;
+	border-top: 1px solid black;
+	padding: .5em;
+	font-size: .75em;
+}

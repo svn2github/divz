@@ -364,7 +364,7 @@ QVariant DocumentListModel::data(const QModelIndex &index, int role) const
 		}
 		else
 		{
-			return QString("Group %1").arg(g->groupNumber()+1);
+			return QString("Group %1").arg(g->groupNumber());
 		}
 	}
 	else if(Qt::DecorationRole == role)

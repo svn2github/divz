@@ -5,17 +5,28 @@
 	<link rel="stylesheet" type="text/css" href='/:/data/http/styles.css' />
 	<script src="/:/data/http/view-scripts.js"></script>
 </head>
-<body>
+<body class='viewer'>
 	<h1 id='doc_name'>%%doc_name%%</h1>
-	<h2 id='group_name'>%%group_name%%</h2>
-	<h3 id='slide_name'>%%slide_name%%</h3>
 	
-	<img src='/image' id='view_image'>
+	<table border='0'>
+		<tr>
+			<td align='center'>
+				<div id='group_name'>%%group_name%%</div>
+				<img src='/image' id='view_image'>
+				<div id='slide_name'>%%slide_name%%</div>
+			</td>
+		</tr>
+	</table>
 	
 	<script>
 		window.CurrentSlideID = "%%slide_id%%";
 		window.CurrentSlideName = "%%slide_name%%";
 		startPolling();
 	</script>
+	
+	<div id='dviz-link'>
+		<a href="http://code.google.com/p/dviz"><img src="/:/data/icon-d.png" align="left" width='16' height='16' border='0'> 
+		Powered by <a href="http://code.google.com/p/dviz"><b>DViz</b></a>, &copy; 2010 Josiah Bryan
+	</div>
 </body>
 </html>
