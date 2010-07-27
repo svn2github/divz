@@ -9,6 +9,7 @@
 #include "GLWidget.h"
 
 #include "../livemix/VideoThread.h"
+#include "../livemix/CameraThread.h"
 
 GLThread::GLThread(GLWidget *gl) 
 	: QThread(), glw(gl)
@@ -22,10 +23,22 @@ GLThread::GLThread(GLWidget *gl)
 	frame.image = QImage( 16, 16, QImage::Format_RGB32 );
 	frame.image.fill( Qt::green );
 		
-	videoSource = new VideoThread();
-	videoSource->setVideo("../data/Seasons_Loop_3_SD.mpg");
-	videoSource->start();
-	connect(videoSource, SIGNAL(frameReady()), this, SLOT(frameReady()), Qt::QueuedConnection);
+// 	videoSource = new VideoThread();
+//	videoSource->setVideo("../data/Seasons_Loop_3_SD.mpg");
+	
+	#ifdef Q_OS_WIN
+	QString defaultCamera = "vfwcap://0";
+	#else
+	QString defaultCamera = "/dev/video0";
+	#endif
+	videoSource = CameraThread::threadForCamera(defaultCamera);
+	
+	if(videoSource)
+	{
+		videoSource->setFps(30);
+		videoSource->start();
+		connect(videoSource, SIGNAL(frameReady()), this, SLOT(frameReady()), Qt::QueuedConnection);
+	}
 }
 
 void GLThread::stop()

@@ -12,6 +12,7 @@
 #include "../livemix/VideoFrame.h"
 class GLWidget;
 class VideoThread;
+class CameraThread;
 
 class GLThread : public QThread
 {
@@ -39,7 +40,7 @@ private:
 	float xscale, yscale, zscale;
 	float xscaleInc, yscaleInc, zscaleInc;
 	
-	VideoThread *videoSource;
+	CameraThread *videoSource;
 	QMutex videoMutex;
 	QMutex resizeMutex;
 	

@@ -16,8 +16,8 @@ UI_DIR = .build
 
 
 # Input
-HEADERS += AppWindow.h GLThread.h GLWidget.h ../livemix/VideoSource.h ../livemix/VideoThread.h ../livemix/VideoFrame.h
-SOURCES += AppWindow.cpp GLThread.cpp GLWidget.cpp main.cpp ../livemix/VideoSource.cpp ../livemix/VideoThread.cpp ../livemix/VideoFrame.cpp
+HEADERS += AppWindow.h GLThread.h GLWidget.h ../livemix/VideoSource.h ../livemix/VideoThread.h ../livemix/VideoFrame.h ../livemix/CameraThread.h
+SOURCES += AppWindow.cpp GLThread.cpp GLWidget.cpp main.cpp ../livemix/VideoSource.cpp ../livemix/VideoThread.cpp ../livemix/VideoFrame.cpp ../livemix/CameraThread.cpp
 
 
 unix {
