@@ -5,14 +5,27 @@
 #include <QtOpenGL>
 #include <QColor>
 
+
 #include "GLWidget.h"
 
+#include "../livemix/VideoThread.h"
 
 GLThread::GLThread(GLWidget *gl) 
 	: QThread(), glw(gl)
 {
 	doRendering = true;
 	doResize = false;
+	newFrame = false;
+	lastFrameTime = 0;
+	time.start();
+	
+	frame.image = QImage( 16, 16, QImage::Format_RGB32 );
+	frame.image.fill( Qt::green );
+		
+	videoSource = new VideoThread();
+	videoSource->setVideo("../data/Seasons_Loop_3_SD.mpg");
+	videoSource->start();
+	connect(videoSource, SIGNAL(frameReady()), this, SLOT(frameReady()), Qt::QueuedConnection);
 }
 
 void GLThread::stop()
@@ -22,10 +35,18 @@ void GLThread::stop()
 
 void GLThread::resizeViewport(const QSize &size)
 {
+	QMutexLocker lock(&resizeMutex);
 	w = size.width();
 	h = size.height();
 	doResize = true;
 }    
+
+void GLThread::frameReady()
+{
+	//QMutexLocker lock(&videoMutex);
+	frame = videoSource->frame();
+	newFrame = true;
+}
 
 void GLThread::run()
 {
@@ -71,18 +92,30 @@ void GLThread::run()
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
 	
+	QSize textureSize = texGL.size();
 	
-	glEnable(GL_TEXTURE_2D);							// Enable Texture Mapping ( NEW )
-	glShadeModel(GL_SMOOTH);							// Enable Smooth Shading
-	glClearColor(0.0f, 0.0f, 0.0f, 0.5f);				// Black Background
-	glClearDepth(1.0f);									// Depth Buffer Setup
-	glEnable(GL_DEPTH_TEST);							// Enables Depth Testing
-	glDepthFunc(GL_LEQUAL);								// The Type Of Depth Testing To Do
-	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);	// Really Nice Perspective Calculations
+	
+	glEnable(GL_TEXTURE_2D);					// Enable Texture Mapping ( NEW )
+	glShadeModel(GL_SMOOTH);					// Enable Smooth Shading
+	glClearColor(0.0f, 0.0f, 1.0f, 1.0f);				// Black Background
+	glClearDepth(1.0f);						// Depth Buffer Setup
+	glEnable(GL_DEPTH_TEST);					// Enables Depth Testing
+	glDepthFunc(GL_LEQUAL);						// The Type Of Depth Testing To Do
+	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);		// Really Nice Perspective Calculations
 	glViewport(0, 0, 320,240);
+	
+	float opacity = 1; //0.85;
+	glColor4f(opacity,opacity,opacity,opacity);			// Full Brightness, 50% Alpha ( NEW )
+	//glBlendFunc(GL_SRC_ALPHA,GL_ONE);				// Blending Function For Translucency Based On Source Alpha Value ( NEW )
+	glEnable (GL_BLEND); 
+	glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	//glBlendFunc(GL_ONE, GL_ZERO);
+	//glDisable(GL_DEPTH_TEST);
 
+	int sleep = 1000/60;
 	while (doRendering) 
 	{
+		resizeMutex.lock();
 		if (doResize) 
 		{
 			glViewport(0, 0, w, h);
@@ -90,7 +123,7 @@ void GLThread::run()
 			
 			if(h == 0)
 			{
-				h == 1;
+				h = 1;
 			}
 			
 			glMatrixMode(GL_PROJECTION);						// Select The Projection Matrix
@@ -103,6 +136,9 @@ void GLThread::run()
 			glLoadIdentity();							// Reset The Modelview Matrix
 			qDebug() << "Resized: "<<w<<"x"<<h;
 		}
+		resizeMutex.unlock();
+		
+		
 		// Rendering code goes here
 		
 		//qDebug() << "rot:"<<xrot<<yrot<<zrot;
@@ -111,13 +147,40 @@ void GLThread::run()
 		glLoadIdentity();									// Reset The View
 		glTranslatef(0.0f,0.0f,-5.0f);
 	
-		glRotatef(xrot,1.0f,0.0f,0.0f);
-		glRotatef(yrot,0.0f,1.0f,0.0f);
-		glRotatef(zrot,0.0f,0.0f,1.0f);
+// 		glRotatef(xrot,1.0f,0.0f,0.0f);
+// 		glRotatef(yrot,0.0f,1.0f,0.0f);
+// 		glRotatef(zrot,0.0f,0.0f,1.0f);
 	
 		//glScalef(xscale, yscale, zscale);
 	
 		glBindTexture(GL_TEXTURE_2D, texture[0]);
+		
+		
+		if(newFrame)// && (time.elapsed() - lastFrameTime) >= frame.holdTime)
+		{
+			lastFrameTime = time.elapsed();
+			//QMutexLocker lock(&resizeMutex);
+			sleep = qMax(1000/60, frame.holdTime);
+			
+			texGL = QGLWidget::convertToGLFormat( frame.image );
+			
+			if(textureSize != texGL.size())
+			{
+				glTexImage2D( GL_TEXTURE_2D, 0, 3, texGL.width(), texGL.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, texGL.bits() );
+				glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+				glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+				qDebug() << "Texutre resized from "<<textureSize<<" to "<<texGL.size();
+				
+				textureSize = texGL.size();
+			}
+			else
+			{
+				glTexSubImage2D (GL_TEXTURE_2D, 0, 0, 0, texGL.width(), texGL.height(), GL_RGBA, GL_UNSIGNED_BYTE, texGL.bits());
+				
+			}
+			
+			// update texture
+		}
 		
 		glBegin(GL_QUADS);
 			// Front Face
@@ -171,7 +234,8 @@ void GLThread::run()
 		
 
 		glw->swapBuffers();
-		msleep(1000/60);
+		msleep(60);
+		//msleep(sleep);
 	}
 }
 

@@ -5,17 +5,25 @@
 #include <QSize>
 #include <QtGui>
 #include <QtOpenGL>
+#include <QMutex>
+#include <QMutexLocker>
+#include <QTime>
 
-
+#include "../livemix/VideoFrame.h"
 class GLWidget;
+class VideoThread;
 
 class GLThread : public QThread
 {
+	Q_OBJECT
 public:
 	GLThread(GLWidget *glWidget);
 	void resizeViewport(const QSize &size);
 	void run();
 	void stop();
+
+private slots:
+	void frameReady();
 
 private:
 	bool doRendering;
@@ -30,6 +38,16 @@ private:
 	float xrot, yrot, zrot;
 	float xscale, yscale, zscale;
 	float xscaleInc, yscaleInc, zscaleInc;
+	
+	VideoThread *videoSource;
+	QMutex videoMutex;
+	QMutex resizeMutex;
+	
+	VideoFrame frame;
+	int lastFrameTime;
+	bool newFrame;
+	QTime time;
+	
 // 	GLfloat	xrot;				// X Rotation ( NEW )
 // 	GLfloat	yrot;				// Y Rotation ( NEW )
 // 	GLfloat	zrot;				// Z Rotation ( NEW )

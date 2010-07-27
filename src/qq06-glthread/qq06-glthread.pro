@@ -9,6 +9,36 @@ INCLUDEPATH += .
 
 QT += opengl
 
+MOC_DIR = .build
+OBJECTS_DIR = .build
+RCC_DIR = .build
+UI_DIR = .build
+
+
 # Input
-HEADERS += AppWindow.h GLThread.h GLWidget.h
-SOURCES += AppWindow.cpp GLThread.cpp GLWidget.cpp main.cpp
+HEADERS += AppWindow.h GLThread.h GLWidget.h ../livemix/VideoSource.h ../livemix/VideoThread.h ../livemix/VideoFrame.h
+SOURCES += AppWindow.cpp GLThread.cpp GLWidget.cpp main.cpp ../livemix/VideoSource.cpp ../livemix/VideoThread.cpp ../livemix/VideoFrame.cpp
+
+
+unix {
+	LIBS += -lavdevice -lavformat -lavcodec -lavutil -lswscale -lbz2 
+}
+
+win32 {
+	INCLUDEPATH += \
+		../external/ffmpeg/include/msinttypes \
+		../external/ffmpeg/include/libswscale \
+		../external/ffmpeg/include/libavutil \
+		../external/ffmpeg/include/libavdevice \
+		../external/ffmpeg/include/libavformat \
+		../external/ffmpeg/include/libavcodec \
+		../external/ffmpeg/include
+	
+	LIBS += -L"../external/ffmpeg/lib" \
+		-lavcodec-51 \
+		-lavformat-52 \
+		-lavutil-49 \
+		-lavdevice-52 \
+		-lswscale-0
+}
+
