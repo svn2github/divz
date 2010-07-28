@@ -285,7 +285,7 @@ void VideoWidget::updateTimer()
 	if(m_forceFps > 0)
 		return;
 
-	int fps = 1; //qMax(m_frame.holdTime * .75,1.0);
+	int fps = qMax(m_frame.holdTime * .75,5.0);
 
 	if(m_paintTimer.interval() != fps)
 	{
@@ -337,28 +337,26 @@ void VideoWidget::paintEvent(QPaintEvent*)
 	{
 		p.drawImage(m_targetRect,m_frame.image,m_sourceRect);
 
+		p.drawPixmap(m_targetRect.topLeft(),m_overlay);
+	
 		m_frameCount ++;
-
-		QString framesPerSecond;
-		framesPerSecond.setNum(m_frameCount /(m_elapsedTime.elapsed() / 1000.0), 'f', 2);
-
 		if(m_renderFps)
 		{
+			QString framesPerSecond;
+			framesPerSecond.setNum(m_frameCount /(m_elapsedTime.elapsed() / 1000.0), 'f', 2);
+
 			p.setPen(Qt::black);
 			p.drawText(m_targetRect.x() + 6,m_targetRect.y() + 16,QString("%1 fps").arg(framesPerSecond));
 			p.setPen(Qt::white);
 			p.drawText(m_targetRect.x() + 5,m_targetRect.y() + 15,QString("%1 fps").arg(framesPerSecond));
+			
+			if(!(m_frameCount % 100))
+			{
+				m_elapsedTime.start();
+				m_frameCount = 0;
+				qDebug() << "FPS: "<<framesPerSecond;
+			}
 		}
-
-		if(!(m_frameCount % 100))
-		{
-			m_elapsedTime.start();
-			m_frameCount = 0;
-			qDebug() << "FPS: "<<framesPerSecond;
-		}
-
-		//p.drawPixmap(0,0,m_overlay);
-		p.drawPixmap(m_targetRect.topLeft(),m_overlay);
 	}
 
 	updateTimer();

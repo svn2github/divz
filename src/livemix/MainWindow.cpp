@@ -5,6 +5,7 @@
 #include "MdiMjpegWidget.h"
 #include "MdiCameraWidget.h"
 #include "MdiVideoWidget.h"
+#include "MdiPreviewWidget.h"
 #include <QCDEStyle>
 
 MainWindow::MainWindow()
@@ -47,18 +48,40 @@ void MainWindow::addNewWindow(QWidget *child)
 	mdiArea->addSubWindow(window);
 	
 	child->show();
+	
+	MdiVideoChild * videoChild = dynamic_cast<MdiVideoChild*>(child);
+	if(videoChild)
+		connect(videoChild, SIGNAL(clicked()), this, SLOT(mdiChildClicked()));
+	
 // 	MdiVideoSource *vid = dynamic_cast<MdiVideoSource*>(child);
 // 	if(vid)
 // 		vid->videoWidget()->resize(160,120);
 //	child->adjustSize();
 }
 
+void MainWindow::mdiChildClicked()
+{
+	MdiVideoChild * child = dynamic_cast<MdiVideoChild*>(sender());
+	
+	if(child) // if it is a video child 
+		  // go thru all preview widgets
+		foreach(MdiPreviewWidget *out, m_previewWidgets)
+			// and connect the child to the preview widget, 
+			if(out != dynamic_cast<MdiPreviewWidget*>(child))
+				// only if the source of the click was not the preview widget itself
+				out->takeSource(child);	
+}
+
 void MainWindow::newMjpeg()
 {
 	addNewWindow(new MdiMjpegWidget);
 }
-void MainWindow::newProgram()
+void MainWindow::newOutput()
 {
+	MdiPreviewWidget * preview = new MdiPreviewWidget;
+	addNewWindow(preview);
+	
+	m_previewWidgets << preview;
 }
 void MainWindow::newVideo()
 {
@@ -302,8 +325,8 @@ void MainWindow::createActions()
 	m_actNewMjpeg = new QAction(tr("New MJPEG"), this);
 	connect(m_actNewMjpeg, SIGNAL(triggered()), this, SLOT(newMjpeg()));
 	
-	m_actNewProgram = new QAction(tr("New Program"), this);
-	connect(m_actNewProgram, SIGNAL(triggered()), this, SLOT(newProgram()));
+	m_actNewOutput = new QAction(tr("New Output"), this);
+	connect(m_actNewOutput, SIGNAL(triggered()), this, SLOT(newOutput()));
 }
 
 void MainWindow::createMenus()
@@ -317,7 +340,7 @@ void MainWindow::createMenus()
 	fileMenu->addAction(m_actNewCamera);
 	fileMenu->addAction(m_actNewVideo);
 	fileMenu->addAction(m_actNewMjpeg);
-	fileMenu->addAction(m_actNewProgram);
+	fileMenu->addAction(m_actNewOutput);
 	fileMenu->addSeparator();
 	
 	fileMenu->addAction(exitAct);
@@ -344,7 +367,7 @@ void MainWindow::createToolBars()
 	fileToolBar->addAction(m_actNewCamera);
 	fileToolBar->addAction(m_actNewVideo);
 	fileToolBar->addAction(m_actNewMjpeg);
-	fileToolBar->addAction(m_actNewProgram);
+	fileToolBar->addAction(m_actNewOutput);
 	
 // 	editToolBar = addToolBar(tr("Edit"));
 // 	editToolBar->addAction(cutAct);

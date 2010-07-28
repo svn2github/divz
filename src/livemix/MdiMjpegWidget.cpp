@@ -21,6 +21,8 @@ MdiMjpegWidget::MdiMjpegWidget(QWidget *parent)
 	m_layout->addLayout(layout);
 	
 	setWindowTitle("MJPEG");	
+	
+	videoWidget()->setFps(15);
 }
 
 void MdiMjpegWidget::urlReturnPressed()

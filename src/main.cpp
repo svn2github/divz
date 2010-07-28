@@ -5,13 +5,21 @@
 #include <QPixmapCache>
 #include <QMessageBox>
 
+#ifdef Q_WS_X11
+	#include <X11/Xlib.h>
+#endif
+
+
 #if defined(Q_OS_WIN)
 	#include <qtdotnetstyle.h>
 #endif
 
 int main(int argc, char **argv)
 {
-
+	#ifdef Q_WS_X11
+		XInitThreads();
+	#endif
+	
 	#if !defined(Q_OS_MAC) // raster on OSX == b0rken
 		// use the Raster GraphicsSystem as default on 4.5+
 		#if QT_VERSION >= 0x040500

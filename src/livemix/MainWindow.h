@@ -11,6 +11,8 @@ class QMdiArea;
 class QMdiSubWindow;
 class QSignalMapper;
 
+class MdiPreviewWidget;
+
 class MainWindow : public QMainWindow
 {
 	Q_OBJECT
@@ -35,10 +37,12 @@ private slots:
 	void addNewWindow(QWidget *window);
 	void setActiveSubWindow(QWidget *window);
 	
-	void newProgram();
+	void newOutput();
 	void newCamera();
 	void newVideo();
 	void newMjpeg();
+	
+	void mdiChildClicked();
 
 private:
 	void createActions();
@@ -80,7 +84,9 @@ private:
 	QAction * m_actNewCamera;
 	QAction * m_actNewVideo;
 	QAction * m_actNewMjpeg;
-	QAction * m_actNewProgram;
+	QAction * m_actNewOutput;
+	
+	QList<MdiPreviewWidget*> m_previewWidgets;
 	
 };
 

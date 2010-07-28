@@ -13,14 +13,18 @@
 MdiVideoWidget::MdiVideoWidget(QWidget *parent)
 	: MdiVideoChild(parent)
 {
+	// MdiVideoChild adds the default VideoWidget and titler box, 
+	// so here we just need to add our video browser box
 	
 	QHBoxLayout *layout = new QHBoxLayout();
 	
+	// Crate the line edit
 	m_fileInput = new QLineEdit(this);
 	connect(m_fileInput, SIGNAL(returnPressed()), this, SLOT(returnPressed()));
 		
 	layout->addWidget(m_fileInput);
 	
+	// Add the filename completor to the line edit
 	QCompleter *completer = new QCompleter(m_fileInput);
 	QDirModel *dirModel = new QDirModel(completer);
 	completer->setModel(dirModel);
@@ -29,17 +33,28 @@ MdiVideoWidget::MdiVideoWidget(QWidget *parent)
 	completer->setWrapAround(true);
 	m_fileInput->setCompleter(completer);
 	
+	// Create the 'browse' button at the end of the line edit
 	QPushButton *btn = new QPushButton("...",this);
 	connect(btn, SIGNAL(clicked()), this, SLOT(browseButtonClicked()));
 	layout->addWidget(btn);
 	
+	// Use CDE style to minimize the space used by the button
+	// (Could use a custom stylesheet I suppose - later.)
 	btn->setStyle(new QCDEStyle());
 	
+	// Add it to the default layout
 	m_layout->addLayout(layout);
 	
+	// Retain the default width if possible
 	resize(200,sizeHint().height());
 	
+	setWindowTitle("No Video");
 	
+	// For debugging/development, load a default video known to be 
+	// in ../data and included subversion (as of r571 anyway)
+	setVideoFile("../data/Seasons_Loop_3_SD.mpg");
+	
+	videoWidget()->setFps(15);
 }
 	
 void MdiVideoWidget::setVideoFile(const QString& file)
@@ -62,6 +77,8 @@ void MdiVideoWidget::setVideoFile(const QString& file)
 	//videoSource->pause();
 	
 	setVideoSource(videoSource);
+	
+	setWindowTitle(QFileInfo(file).baseName());
 }
 
 void MdiVideoWidget::browseButtonClicked()

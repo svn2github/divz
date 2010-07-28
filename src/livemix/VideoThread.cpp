@@ -519,7 +519,7 @@ void VideoThread::readFrame()
 					frameDelay = m_frameSmoothAccum / m_frameSmoothCount;
 					
 					// Reset the averaging every 15 sec (approx)
-					if( m_frameSmoothCount % ( 30 * 15 ) == 0)
+					if( m_frameSmoothCount % 100 == 0)
 					{
 						m_frameSmoothCount = 0;
 						m_frameSmoothAccum = 0;
@@ -528,8 +528,8 @@ void VideoThread::readFrame()
 					
 					if(frameDelay < 10)
 						frameDelay = 10;
-					if(frameDelay > 50)
-						frameDelay = 50;
+					if(frameDelay > 100)
+						frameDelay = 100;
 					//qDebug() << "VideoThread::readFrame(): frameDelay:"<<frameDelay;
 					
 // 					if(m_frameConsumed || (!m_frameConsumed && ++m_frameLockCount > 10))

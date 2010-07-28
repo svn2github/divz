@@ -1,3 +1,5 @@
+#include "../qq06-glthread/GLWidget.h"
+
 #include <QtGui/QApplication>
 #include <QGraphicsView>
 #include <QGraphicsItem>
@@ -17,16 +19,32 @@
 
 //#include "MdiCamera.h"
 
+#ifdef Q_WS_X11
+#include <X11/Xlib.h>
+#endif
+
+
 
 int main(int argc, char **argv)
 {
+	#ifdef Q_WS_X11
+		qDebug() << "Setting up multithreaded X11 library calls";
+		XInitThreads();
+	#endif
+	
 	//QGL::setPreferredPaintEngine(QPaintEngine::OpenGL);
 	QApplication app(argc, argv);
 	qApp->setApplicationName("LiveMix");
 	qApp->setOrganizationName("Josiah Bryan");
 	qApp->setOrganizationDomain("mybryanlife.com");
 
-
+	
+// 	GLWidget widget(0);
+// 	widget.setWindowTitle("Thread0");
+// 	widget.show();
+//  	widget.startRendering();
+// 	
+	
 //  	CameraTest t;
 //  	t.resize(320,240);
 //  	t.show();

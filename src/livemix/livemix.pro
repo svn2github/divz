@@ -24,14 +24,12 @@ HEADERS += CameraThread.h \
 	MdiVideoChild.h \
 	MdiVideoWidget.h \
 	MdiCameraWidget.h \
-	MdiMjpegWidget.h 
-	
-	#\
-	#MdiVideo.h \
-	#MdiProgram.h
-	
-	
-	
+	MdiMjpegWidget.h \
+	MdiPreviewWidget.h \
+	VideoOutputWidget.h \
+	GLVideoThread.h \
+	../qq06-glthread/GLWidget.h \
+	../qq06-glthread/GLThread.h
 	
 SOURCES += main.cpp \
 	CameraThread.cpp \
@@ -47,12 +45,11 @@ SOURCES += main.cpp \
 	MdiVideoWidget.cpp \
 	MdiCameraWidget.cpp \
 	MdiMjpegWidget.cpp \
-	 
-	 #\
-	#MdiProgram.cpp
-	 
-#	 MdiVideo.cpp \
-	
+	MdiPreviewWidget.cpp \
+	VideoOutputWidget.cpp \
+	GLVideoThread.cpp \
+	../qq06-glthread/GLWidget.cpp \
+	../qq06-glthread/GLThread.cpp
 
 unix {
 	LIBS += -lavdevice -lavformat -lavcodec -lavutil -lswscale -lbz2 
