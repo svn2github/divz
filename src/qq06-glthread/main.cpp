@@ -11,13 +11,13 @@ int main(int argc, char *argv[])
 		XInitThreads();
 	#endif
 	QApplication app(argc, argv);
-// 	AppWindow aw;
-// 	aw.show();
-
+	AppWindow aw;
+	aw.show();
+/*
 	GLWidget widget(0);
 	widget.setWindowTitle("Thread0");
 	widget.show();
  	widget.startRendering();
- 	
+*/
 	return app.exec();
 }

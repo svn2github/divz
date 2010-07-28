@@ -125,7 +125,7 @@ void GLThread::run()
 	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);		// Really Nice Perspective Calculations
 	glViewport(0, 0, 320,240);
 	
-	float opacity = 0.75;
+	float opacity = 0.90;
 	glColor4f(opacity,opacity,opacity,opacity);			// Full Brightness, 50% Alpha ( NEW )
 	//glBlendFunc(GL_SRC_ALPHA,GL_ONE);				// Blending Function For Translucency Based On Source Alpha Value ( NEW )
 	glEnable (GL_BLEND); 
@@ -259,13 +259,15 @@ void GLThread::run()
 // 		if(zscale < 0.1 || zscale >= 10);
 // 			zscaleInc *= -1;
 		
-		QString framesPerSecond;
-    		framesPerSecond.setNum(frames /(time.elapsed() / 1000.0), 'f', 2);
-    
-    		glw->renderText(10, 10, qPrintable(QString("%1 fps").arg(framesPerSecond)));
+		//glw->renderText(10, 10, qPrintable(QString("%1 fps").arg(framesPerSecond)));
     		
     		if (!(frames % 100)) 
     		{
+			QString framesPerSecond;
+			framesPerSecond.setNum(frames /(time.elapsed() / 1000.0), 'f', 2);
+
+			qDebug() << "FPS: "<<framesPerSecond;
+
 			time.start();
 			frames = 0;
 			
@@ -275,7 +277,7 @@ void GLThread::run()
 		frames ++;
 
 		glw->swapBuffers();
-		msleep(1000/80);
+		//msleep(1000/80);
 		//msleep(sleep);
 	}
 }

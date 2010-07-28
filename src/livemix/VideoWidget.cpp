@@ -30,7 +30,7 @@ VideoWidget::VideoWidget()
 	srand ( time(NULL) );
 	connect(&m_paintTimer, SIGNAL(timeout()), this, SLOT(callUpdate()));
 	m_paintTimer.setInterval(1000/30);
-	
+
 	setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Expanding);
 }
 
@@ -41,7 +41,7 @@ void VideoWidget::mouseReleaseEvent(QMouseEvent*)
 {
  	emit clicked();
 }
- 
+
 void VideoWidget::closeEvent(QCloseEvent*)
 {
 // 	disconnectCamera();
@@ -63,12 +63,12 @@ void VideoWidget::showEvent(QShowEvent*)
 	if(!m_paintTimer.isActive())
 	{
 // 		setVideoSource(m_thread);
-		
+
 // 		m_thread = CameraThread::threadForCamera(m_camera);
 // 		connect(m_thread, SIGNAL(frameReady()), this, SLOT(frameReady()), Qt::QueuedConnection);
 // 		m_thread->registerConsumer(this);
 // 		m_paintTimer.start();
-// 		
+//
 // 		m_elapsedTime.start();
 	}
 }
@@ -77,7 +77,7 @@ void VideoWidget::setVideoSource(VideoSource *source)
 {
 	if(m_thread)
 		disconnectVideoSource();
-		
+
 	//qDebug() << "VideoWidget::setCamera: In Thread ID "<<QThread::currentThreadId();
 	qDebug() << "VideoWidget::setCamera: source: "<<source;
 	m_thread = source;
@@ -89,7 +89,7 @@ void VideoWidget::setVideoSource(VideoSource *source)
 
 	connect(m_thread, SIGNAL(frameReady()), this, SLOT(frameReady()), Qt::QueuedConnection);
 	m_thread->registerConsumer(this);
-	
+
 	m_elapsedTime.start();
 	m_paintTimer.start();
 }
@@ -121,20 +121,20 @@ void VideoWidget::updateOverlay()
 	    m_overlay = QPixmap(m_targetRect.width(), m_targetRect.height());
 
 	m_overlay.fill(QColor(0,0,0,0));
-	
+
 	if(!m_showOverlayText)
 		return;
-		
+
 	QPainter painter(&m_overlay);
-	
+
 	QRect window = QRect(0,0,m_sourceRect.size().width(),m_sourceRect.size().height());
 	painter.setWindow(window);
-	
+
 	painter.setRenderHint(QPainter::Antialiasing, true);
 // 	painter.setPen(QPen(Qt::black, 12, Qt::DashDotLine, Qt::RoundCap));
 // 	painter.setBrush(QBrush(Qt::green, Qt::SolidPattern));
 // 	painter.drawEllipse(80, 80, 400, 240);
-	
+
 	if(!m_overlayText.isEmpty() &&
 	    m_showOverlayText)
 	{
@@ -150,35 +150,35 @@ void VideoWidget::updateOverlay()
 			font = QFont("Sans-Serif",size,QFont::Bold);
 			textSize = QFontMetrics(font).size(Qt::TextSingleLine, m_overlayText);
 		}
-		
+
 		QRect textRect(target.x() + target.width() / 2  - textSize.width() / 2,
-			       target.y() + target.height() / 2 - textSize.height () / 2 + size, 
+			       target.y() + target.height() / 2 - textSize.height () / 2 + size,
 			       textSize.width(), textSize.height());
-		
+
 		QPainterPath path;
 		path.addText(textRect.topLeft(),font,m_overlayText);
-		
+
 		painter.setPen(QPen(Qt::black,3));
 		painter.setBrush(Qt::white);
 		painter.drawPath(path);
-		
+
 		/*painter.setFont(font);
-		
+
 		painter.setPen(Qt::black);
 		painter.drawText( target.x() + target.width() / 2  - textSize.width() / 2 - 2,
 				  target.y() + target.height() / 2 - textSize.height () / 2 + size - 2,
 				  m_overlayText);
-		
+
 		painter.setPen(Qt::black);
 		painter.drawText( target.x() + target.width() / 2  - textSize.width() / 2 + 2,
 				  target.y() + target.height() / 2 - textSize.height () / 2 + size + 2,
 				  m_overlayText);
-		
+
 		painter.setPen(Qt::white);
 		painter.drawText( target.x() + target.width() / 2  - textSize.width() / 2,
 				  target.y() + target.height() / 2 - textSize.height () / 2 + size,
-				  m_overlayText);*/ 
-		
+				  m_overlayText);*/
+
 	}
 
 }
@@ -202,8 +202,8 @@ void VideoWidget::setRenderFps(bool flag)
 	update();
 }
 
-void VideoWidget::resizeEvent(QResizeEvent*) 
-{ 
+void VideoWidget::resizeEvent(QResizeEvent*)
+{
 	updateRects();
 }
 
@@ -213,51 +213,51 @@ void VideoWidget::setSourceRectAdjust( int dx1, int dy1, int dx2, int dy2 )
 	m_adjustDy1 = dy1;
 	m_adjustDx2 = dx2;
 	m_adjustDy2 = dy2;
-}	
+}
 
 void VideoWidget::updateRects()
 {
 	m_sourceRect = m_frame.image.rect();
-	m_origSourceRect = m_sourceRect; 
-	
+	m_origSourceRect = m_sourceRect;
+
 	m_sourceRect.adjust(m_adjustDx1,m_adjustDy1,m_adjustDx2,m_adjustDy2);
-	
+
 	QSize nativeSize = m_frame.image.size();
-	
-	if (nativeSize.isEmpty()) 
+
+	if (nativeSize.isEmpty())
 	{
 		m_targetRect = QRect();
-	} 
-	else 
-	if (m_aspectRatioMode == Qt::IgnoreAspectRatio) 
+	}
+	else
+	if (m_aspectRatioMode == Qt::IgnoreAspectRatio)
 	{
 		m_targetRect = rect();
-	} 
-	else 
-	if (m_aspectRatioMode == Qt::KeepAspectRatio) 
+	}
+	else
+	if (m_aspectRatioMode == Qt::KeepAspectRatio)
 	{
 		QSize size = nativeSize;
 		size.scale(rect().size(), Qt::KeepAspectRatio);
-	
+
 		m_targetRect = QRect(0, 0, size.width(), size.height());
 		m_targetRect.moveCenter(rect().center());
-	} 
-	else 
-	if (m_aspectRatioMode == Qt::KeepAspectRatioByExpanding) 
+	}
+	else
+	if (m_aspectRatioMode == Qt::KeepAspectRatioByExpanding)
 	{
 		m_targetRect = rect();
-	
+
 		QSize size = rect().size();
 		size.scale(nativeSize, Qt::KeepAspectRatio);
-	
-		m_sourceRect = QRect(QPoint(0,0),size); 
+
+		m_sourceRect = QRect(QPoint(0,0),size);
 		m_sourceRect.moveCenter(QPoint(size.width() / 2, size.height() / 2));
 	}
-	
+
 	//qDebug() << "updateRects(): source: "<<m_sourceRect<<", target:" <<m_targetRect;
 	updateOverlay();
 
-	
+
 }
 
 
@@ -265,16 +265,16 @@ void VideoWidget::frameReady()
 {
 	if(!m_thread)
 		return;
-		
+
 	VideoFrame frame = m_thread->frame();
 	//qDebug() << "VideoWidget::frameReady: isEmpty: "<<frame.isEmpty();
-	
+
 	if(!frame.isEmpty())
 		m_frame = frame;
-	
+
 	if(m_frame.image.size() != m_origSourceRect.size())
 		updateRects();
-		
+
 	//QTimer::singleShot(0, this, SLOT(updateTimer()));
 }
 
@@ -283,14 +283,14 @@ void VideoWidget::updateTimer()
 	// user has forced a different fps than the video stream has requested
 	// typically this is to increase performance of another video stream
 	if(m_forceFps > 0)
-		return; 
-		
-	int fps = qMax(m_frame.holdTime,10);
-		
+		return;
+
+	int fps = 1; //qMax(m_frame.holdTime * .75,1.0);
+
 	if(m_paintTimer.interval() != fps)
 	{
-		//qDebug() << "VideoWidget::updateTimer: new hold time: "<<fps;
-		
+		qDebug() << "VideoWidget::updateTimer: new hold time: "<<fps;
+
 		m_paintTimer.setInterval(fps);
 	}
 }
@@ -301,9 +301,9 @@ void VideoWidget::setFps(int fps)
 	if(m_forceFps > 0)
 	{
 		m_paintTimer.setInterval(1000/m_forceFps);
-		
+
 	}
-	
+
 	// If we use a different fps, dont use buffered frames, just take the last frame as it comes
 	if(m_thread)
 		m_thread->setIsBuffered(m_forceFps < 0);
@@ -337,18 +337,26 @@ void VideoWidget::paintEvent(QPaintEvent*)
 	{
 		p.drawImage(m_targetRect,m_frame.image,m_sourceRect);
 
-		int sec = (m_elapsedTime.elapsed() / 1000);
-
 		m_frameCount ++;
-		int fps = (m_frameCount <= 0 ? 1 : m_frameCount) / (sec <= 0 ? 1 : sec);
+
+		QString framesPerSecond;
+		framesPerSecond.setNum(m_frameCount /(m_elapsedTime.elapsed() / 1000.0), 'f', 2);
+
 		if(m_renderFps)
 		{
 			p.setPen(Qt::black);
-			p.drawText(m_targetRect.x() + 6,m_targetRect.y() + 16,QString("%1 fps").arg(fps));
+			p.drawText(m_targetRect.x() + 6,m_targetRect.y() + 16,QString("%1 fps").arg(framesPerSecond));
 			p.setPen(Qt::white);
-			p.drawText(m_targetRect.x() + 5,m_targetRect.y() + 15,QString("%1 fps").arg(fps));
+			p.drawText(m_targetRect.x() + 5,m_targetRect.y() + 15,QString("%1 fps").arg(framesPerSecond));
 		}
-		
+
+		if(!(m_frameCount % 100))
+		{
+			m_elapsedTime.start();
+			m_frameCount = 0;
+			qDebug() << "FPS: "<<framesPerSecond;
+		}
+
 		//p.drawPixmap(0,0,m_overlay);
 		p.drawPixmap(m_targetRect.topLeft(),m_overlay);
 	}

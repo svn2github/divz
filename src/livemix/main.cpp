@@ -25,8 +25,8 @@ int main(int argc, char **argv)
 	qApp->setApplicationName("LiveMix");
 	qApp->setOrganizationName("Josiah Bryan");
 	qApp->setOrganizationDomain("mybryanlife.com");
-	
-	
+
+
 //  	CameraTest t;
 //  	t.resize(320,240);
 //  	t.show();
@@ -34,33 +34,35 @@ int main(int argc, char **argv)
 
 	MainWindow mw;
 	mw.show();
-	
+
 /*
 	MdiCamera a;
 	MdiCamera b;
 	a.show();
 	b.show();*/
-	
-/*	
+/*
+
 	#ifdef Q_OS_WIN
 	QString defaultCamera = "vfwcap://0";
 	#else
 	QString defaultCamera = "/dev/video0";
 	#endif
-	
-	
+
+
 	CameraThread *cameraSource = CameraThread::threadForCamera(defaultCamera);
 	if(cameraSource)
 		cameraSource->setFps(30);
-	
+
 	VideoWidget viewer1;
 	viewer1.setVideoSource(cameraSource);
 	viewer1.setSourceRectAdjust(11,0,-6,-3);
 	viewer1.setWindowTitle("Camera");
 	viewer1.resize(320,240);
-	viewer1.setOverlayText("Camera 01");
+//	viewer1.setOverlayText("Camera 01");
 	viewer1.show();
-	
+*/
+/*
+
 // 	VideoThread *videoSource = new VideoThread();
 // 	videoSource->setVideo("../data/Seasons_Loop_3_SD.mpg");
 // 	videoSource->start();
@@ -68,7 +70,7 @@ int main(int argc, char **argv)
 	CameraThread *cameraSource2 = CameraThread::threadForCamera(defaultCamera);
 	if(cameraSource2)
 		cameraSource2->setFps(30);
-	
+
 	VideoWidget viewer2;
 	viewer2.setVideoSource(cameraSource2);
 	viewer2.setWindowTitle("Video");
@@ -76,13 +78,13 @@ int main(int argc, char **argv)
 	viewer2.setOverlayText("Video loop");
 	viewer2.setFps(-1);
 	viewer2.show();*/
-	
+
 /*
 	MjpegThread * mjpeg = new MjpegThread();
 	//mjpeg->connectTo("cameras",8082);
 	mjpeg->connectTo("192.168.0.44",80,"/videostream.cgi","admin","lugubrious");
 	mjpeg->start();
-	
+
 	VideoWidget viewer3;
 	//viewer2.setVideoSource(videoSource);
 	viewer3.setVideoSource(mjpeg);
@@ -91,8 +93,8 @@ int main(int argc, char **argv)
 	viewer3.setOverlayText("Webcam");
 	viewer3.setFps(5);
 	viewer3.show();*/
-	
-	
+
+
 	/*
 	CameraViewerWidget t2;
 	t2.setObjectName("v2");
@@ -104,16 +106,16 @@ int main(int argc, char **argv)
 	#endif
 	t2.resize(320,240);
 	t2.show();*/
-	
-	
-// 	
+
+
+//
 // 	CameraViewerWidget t3;
 // 	t3.setObjectName("v3");
 // 	t3.setWindowTitle("v3");
 // 	t3.setCamera("/dev/video0",10);
 // 	t3.show();
 // 	t3.resize(320,240);
-// 	
+//
 
 /*
 	CameraViewerWidget t3;
