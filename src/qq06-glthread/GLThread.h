@@ -11,8 +11,7 @@
 
 #include "../livemix/VideoFrame.h"
 class GLWidget;
-class VideoThread;
-class CameraThread;
+class VideoSource;
 
 class GLThread : public QThread
 {
@@ -40,7 +39,7 @@ private:
 	float xscale, yscale, zscale;
 	float xscaleInc, yscaleInc, zscaleInc;
 	
-	CameraThread *videoSource;
+	VideoSource *videoSource;
 	QMutex videoMutex;
 	QMutex resizeMutex;
 	
@@ -48,6 +47,7 @@ private:
 	int lastFrameTime;
 	bool newFrame;
 	QTime time;
+	int frames;
 	
 // 	GLfloat	xrot;				// X Rotation ( NEW )
 // 	GLfloat	yrot;				// Y Rotation ( NEW )

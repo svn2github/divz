@@ -296,7 +296,7 @@ void CameraThread::run()
 	while(!m_killed)
 	{
 		readFrame();
-		usleep(1000000 / m_fps / 1.5);
+		msleep(1000 / m_fps / 1.5);
 	};
 }
 

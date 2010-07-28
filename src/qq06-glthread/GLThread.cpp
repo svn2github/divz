@@ -5,7 +5,6 @@
 #include <QtOpenGL>
 #include <QColor>
 
-
 #include "GLWidget.h"
 
 #include "../livemix/VideoThread.h"
@@ -20,25 +19,32 @@ GLThread::GLThread(GLWidget *gl)
 	lastFrameTime = 0;
 	time.start();
 	
+	frames = 0;
+	
 	frame.image = QImage( 16, 16, QImage::Format_RGB32 );
 	frame.image.fill( Qt::green );
 		
-// 	videoSource = new VideoThread();
-//	videoSource->setVideo("../data/Seasons_Loop_3_SD.mpg");
-	
 	#ifdef Q_OS_WIN
-	QString defaultCamera = "vfwcap://0";
+		QString defaultCamera = "vfwcap://0";
 	#else
-	QString defaultCamera = "/dev/video0";
+		QString defaultCamera = "/dev/video0";
 	#endif
+	
 	videoSource = CameraThread::threadForCamera(defaultCamera);
 	
 	if(videoSource)
 	{
-		videoSource->setFps(30);
-		videoSource->start();
-		connect(videoSource, SIGNAL(frameReady()), this, SLOT(frameReady()), Qt::QueuedConnection);
+		CameraThread *camera = dynamic_cast<CameraThread*>(videoSource);
+		camera->setFps(30);
 	}
+	else
+	{
+	 	videoSource = new VideoThread();
+		dynamic_cast<VideoThread*>(videoSource)->setVideo("../data/Seasons_Loop_3_SD.mpg");
+	}
+	
+	videoSource->start();
+	connect(videoSource, SIGNAL(frameReady()), this, SLOT(frameReady()), Qt::QueuedConnection);
 }
 
 void GLThread::stop()
@@ -60,6 +66,7 @@ void GLThread::frameReady()
 	frame = videoSource->frame();
 	newFrame = true;
 }
+
 
 void GLThread::run()
 {
@@ -110,34 +117,36 @@ void GLThread::run()
 	
 	glEnable(GL_TEXTURE_2D);					// Enable Texture Mapping ( NEW )
 	glShadeModel(GL_SMOOTH);					// Enable Smooth Shading
-	glClearColor(0.0f, 0.0f, 1.0f, 1.0f);				// Black Background
+	//glClearColor(0.0f, 0.0f, 1.0f, 1.0f);				// Black Background
+	glClearColor(0.1f, 0.1f, 0.2f, 1.0f);
 	glClearDepth(1.0f);						// Depth Buffer Setup
 	glEnable(GL_DEPTH_TEST);					// Enables Depth Testing
 	glDepthFunc(GL_LEQUAL);						// The Type Of Depth Testing To Do
 	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);		// Really Nice Perspective Calculations
 	glViewport(0, 0, 320,240);
 	
-	float opacity = 1; //0.85;
+	float opacity = 0.75;
 	glColor4f(opacity,opacity,opacity,opacity);			// Full Brightness, 50% Alpha ( NEW )
 	//glBlendFunc(GL_SRC_ALPHA,GL_ONE);				// Blending Function For Translucency Based On Source Alpha Value ( NEW )
 	glEnable (GL_BLEND); 
 	glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	//glBlendFunc(GL_ONE, GL_ZERO);
 	//glDisable(GL_DEPTH_TEST);
+	glEnable(GL_LINE_SMOOTH);
+
 
 	int sleep = 1000/60;
 	while (doRendering) 
 	{
-		resizeMutex.lock();
+		
 		if (doResize) 
 		{
+			resizeMutex.lock();
 			glViewport(0, 0, w, h);
 			doResize = false;
 			
 			if(h == 0)
-			{
 				h = 1;
-			}
 			
 			glMatrixMode(GL_PROJECTION);						// Select The Projection Matrix
 			glLoadIdentity();							// Reset The Projection Matrix
@@ -148,8 +157,9 @@ void GLThread::run()
 			glMatrixMode(GL_MODELVIEW);						// Select The Modelview Matrix
 			glLoadIdentity();							// Reset The Modelview Matrix
 			qDebug() << "Resized: "<<w<<"x"<<h;
+			resizeMutex.unlock();
 		}
-		resizeMutex.unlock();
+		
 		
 		
 		// Rendering code goes here
@@ -160,28 +170,30 @@ void GLThread::run()
 		glLoadIdentity();									// Reset The View
 		glTranslatef(0.0f,0.0f,-5.0f);
 	
-// 		glRotatef(xrot,1.0f,0.0f,0.0f);
-// 		glRotatef(yrot,0.0f,1.0f,0.0f);
-// 		glRotatef(zrot,0.0f,0.0f,1.0f);
+ 		glRotatef(xrot,1.0f,0.0f,0.0f);
+ 		glRotatef(yrot,0.0f,1.0f,0.0f);
+ 		glRotatef(zrot,0.0f,0.0f,1.0f);
 	
 		//glScalef(xscale, yscale, zscale);
 	
-		glBindTexture(GL_TEXTURE_2D, texture[0]);
 		
 		
-		if(newFrame)// && (time.elapsed() - lastFrameTime) >= frame.holdTime)
+		
+		if(newFrame) // && (time.elapsed() - lastFrameTime) >= frame.holdTime)
 		{
 			lastFrameTime = time.elapsed();
 			//QMutexLocker lock(&resizeMutex);
 			sleep = qMax(1000/60, frame.holdTime);
 			
-			texGL = QGLWidget::convertToGLFormat( frame.image );
 			
+			//texture[0] = glw->bindTexture( frame.image );
+			
+			texGL = QGLWidget::convertToGLFormat( frame.image );
 			if(textureSize != texGL.size())
 			{
 				glTexImage2D( GL_TEXTURE_2D, 0, 3, texGL.width(), texGL.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, texGL.bits() );
-				glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
-				glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+				glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+				glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
 				qDebug() << "Texutre resized from "<<textureSize<<" to "<<texGL.size();
 				
 				textureSize = texGL.size();
@@ -194,6 +206,8 @@ void GLThread::run()
 			
 			// update texture
 		}
+		
+		glBindTexture(GL_TEXTURE_2D, texture[0]);
 		
 		glBegin(GL_QUADS);
 			// Front Face
@@ -245,9 +259,23 @@ void GLThread::run()
 // 		if(zscale < 0.1 || zscale >= 10);
 // 			zscaleInc *= -1;
 		
+		QString framesPerSecond;
+    		framesPerSecond.setNum(frames /(time.elapsed() / 1000.0), 'f', 2);
+    
+    		glw->renderText(10, 10, qPrintable(QString("%1 fps").arg(framesPerSecond)));
+    		
+    		if (!(frames % 100)) 
+    		{
+			time.start();
+			frames = 0;
+			
+			lastFrameTime = time.elapsed();
+		}
+		
+		frames ++;
 
 		glw->swapBuffers();
-		msleep(60);
+		msleep(1000/80);
 		//msleep(sleep);
 	}
 }

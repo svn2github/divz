@@ -133,6 +133,9 @@ private:
 	int m_nextDelay;
 	bool m_frameConsumed;
 	int m_frameLockCount;
+	
+	int m_frameSmoothCount;
+	int m_frameSmoothAccum;
 };
 
 

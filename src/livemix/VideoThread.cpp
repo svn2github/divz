@@ -26,6 +26,8 @@ VideoThread::VideoThread(QObject *parent)
 	, m_nextDelay(1000/30)
 	, m_frameConsumed(true)
 	, m_frameLockCount(0)
+	, m_frameSmoothAccum(0)
+	, m_frameSmoothCount(0)
 {
 	m_time_base_rational.num = 1;
 	m_time_base_rational.den = AV_TIME_BASE;
@@ -186,7 +188,7 @@ void VideoThread::run()
 		if(m_status == Running)
 			readFrame();
 			
-		usleep(qMax(m_nextDelay,10) * 1000);
+		msleep(qMax(m_nextDelay,10));
 	}
 }
 
@@ -507,10 +509,27 @@ void VideoThread::readFrame()
 					}
 					
 					int frameDelay = (int)(actual_delay * 1000 + 0.5);
+					
+					// The count/accum pair is designed to average out sharp
+					// jumps in frameDelay to make the resulting output appear
+					// smoother
+					m_frameSmoothCount ++;
+					m_frameSmoothAccum += frameDelay;
+					
+					frameDelay = m_frameSmoothAccum / m_frameSmoothCount;
+					
+					// Reset the averaging every 15 sec (approx)
+					if( m_frameSmoothCount % ( 30 * 15 ) == 0)
+					{
+						m_frameSmoothCount = 0;
+						m_frameSmoothAccum = 0;
+						//qDebug() << "VideoThread::readFrame(): frame smoother reset";
+					}
+					
 					if(frameDelay < 10)
 						frameDelay = 10;
-					if(frameDelay > 100)
-						frameDelay = 100;
+					if(frameDelay > 50)
+						frameDelay = 50;
 					//qDebug() << "VideoThread::readFrame(): frameDelay:"<<frameDelay;
 					
 // 					if(m_frameConsumed || (!m_frameConsumed && ++m_frameLockCount > 10))
