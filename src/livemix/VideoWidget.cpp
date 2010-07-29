@@ -23,6 +23,7 @@ VideoWidget::VideoWidget()
 	, m_overlayText("")
 	, m_forceFps(-1)
 	, m_renderFps(true)
+	, m_fadeLength(0)
 {
 	//setAttribute(Qt::WA_PaintOnScreen, true);
 	//setAttribute(Qt::WA_OpaquePaintEvent, true);
@@ -30,12 +31,18 @@ VideoWidget::VideoWidget()
 	srand ( time(NULL) );
 	connect(&m_paintTimer, SIGNAL(timeout()), this, SLOT(callUpdate()));
 	m_paintTimer.setInterval(1000/30);
-
+	
+	connect(&m_fadeTimer, SIGNAL(timeout()), this, SLOT(fadeAdvance()));
+	
 	setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Expanding);
 }
 
 QSize VideoWidget::sizeHint () const { return QSize(160,120); }
 
+void VideoWidget::setFadeLength(int ms)
+{
+	m_fadeLength = ms;
+}
 
 void VideoWidget::mouseReleaseEvent(QMouseEvent*)
 {
@@ -53,9 +60,20 @@ void VideoWidget::disconnectVideoSource()
 	m_paintTimer.stop();
 	m_thread->release(this);
 	disconnect(m_thread,0,this,0);
+	emit sourceDiscarded(m_thread);
 	m_thread = 0;
 }
 
+void VideoWidget::sourceDestroyed()
+{
+	if(m_thread)
+	{
+		//qDebug() << "VideoWidget::sourceDestroyed() - destroyed source before disconnecting.";
+		m_paintTimer.stop();
+		m_thread = 0;
+		update();
+	}
+}
 
 void VideoWidget::showEvent(QShowEvent*)
 {
@@ -75,11 +93,17 @@ void VideoWidget::showEvent(QShowEvent*)
 
 void VideoWidget::setVideoSource(VideoSource *source)
 {
+	if(source == m_thread)
+		return;
+		
 	if(m_thread)
-		disconnectVideoSource();
+		if(m_fadeLength > 33)
+			fadeStart();
+		else
+			disconnectVideoSource();
 
-	//qDebug() << "VideoWidget::setCamera: In Thread ID "<<QThread::currentThreadId();
-	qDebug() << "VideoWidget::setCamera: source: "<<source;
+	//qDebug() << "VideoWidget::setVideoSource: In Thread ID "<<QThread::currentThreadId();
+	//qDebug() << "VideoWidget::setVideoSource: source: "<<source;
 	m_thread = source;
 	if(!m_thread)
 	{
@@ -88,11 +112,79 @@ void VideoWidget::setVideoSource(VideoSource *source)
 	}
 
 	connect(m_thread, SIGNAL(frameReady()), this, SLOT(frameReady()), Qt::QueuedConnection);
+	connect(m_thread, SIGNAL(destroyed()), this, SLOT(sourceDestroyed()));
 	m_thread->registerConsumer(this);
 
 	m_elapsedTime.start();
 	m_paintTimer.start();
+	
+	frameReady(); // prime the pump
 }
+
+void VideoWidget::fadeStart()
+{
+	disconnect(m_thread, 0, this, 0);
+	m_oldThread = m_thread;
+	m_thread = 0;
+	
+	connect(m_oldThread, SIGNAL(frameReady()), this, SLOT(oldFrameReady()));
+	
+	m_opacity = 0.0;
+	qreal fps = m_forceFps > 0.0 ? m_forceFps : 30.0;
+	qreal sec = (m_fadeLength > 0 ? m_fadeLength : 1000.0) / 1000.0;
+	m_opacityInc = 1.0 / (sec * fps);
+	
+	
+	//qDebug() << "VideoWidget::fadeStart(): m_fadeLength:"<<m_fadeLength<<", m_opacityInc:"<<m_opacityInc<<", sec:"<<sec<<", fps:"<<fps;
+	
+	m_fadeTimer.setInterval(sec / fps * 1000.0);
+	m_fadeTimer.start();
+	
+	oldFrameReady();
+}
+
+void VideoWidget::oldFrameReady()
+{
+	if(!m_oldThread)
+		return;
+
+	VideoFrame frame = m_oldThread->frame();
+	if(frame.isEmpty())
+		qDebug() << "VideoWidget::oldFrameReady(): isEmpty: "<<frame.isEmpty();
+
+	if(!frame.isEmpty())
+		m_oldFrame = frame;
+
+// 	if(m_frame.image.size() != m_origSourceRect.size())
+// 		updateRects();
+}
+
+void VideoWidget::fadeAdvance()
+{
+	m_opacity += m_opacityInc;
+	//qDebug() << "VideoWidget::fadeAdvanced(): m_opacity:"<<m_opacity;
+	if(m_opacity >= 1.0)
+		fadeStop();
+	update();
+}
+
+void VideoWidget::fadeStop()
+{
+	//qDebug() << "VideoWidget::fadeStop(): m_oldThread:"<<m_oldThread;
+	m_opacity = 1.0;
+	m_fadeTimer.stop();
+	discardOldThread();
+}
+
+void VideoWidget::discardOldThread()
+{	
+	m_oldThread->release(this);
+	disconnect(m_oldThread,0,this,0);
+	m_oldThread = 0;
+	
+	emit sourceDiscarded(m_oldThread);
+}
+
 
 void VideoWidget::callUpdate()
 {
@@ -267,7 +359,8 @@ void VideoWidget::frameReady()
 		return;
 
 	VideoFrame frame = m_thread->frame();
-	//qDebug() << "VideoWidget::frameReady: isEmpty: "<<frame.isEmpty();
+	if(frame.isEmpty())
+		qDebug() << "VideoWidget::frameReady(): isEmpty: "<<frame.isEmpty();
 
 	if(!frame.isEmpty())
 		m_frame = frame;
@@ -285,7 +378,7 @@ void VideoWidget::updateTimer()
 	if(m_forceFps > 0)
 		return;
 
-	int fps = qMax(m_frame.holdTime * .75,5.0);
+	int fps = qMax((!m_frame.holdTime ? 33 : m_frame.holdTime) * .75,5.0);
 
 	if(m_paintTimer.interval() != fps)
 	{
@@ -335,9 +428,16 @@ void VideoWidget::paintEvent(QPaintEvent*)
 	}
 	else
 	{
+		if(m_oldThread)
+		{
+			p.setOpacity(1.0);
+			p.drawImage(m_targetRect,m_oldFrame.image,m_sourceRect);
+			p.setOpacity(m_opacity);
+		}
 		p.drawImage(m_targetRect,m_frame.image,m_sourceRect);
 
 		p.drawPixmap(m_targetRect.topLeft(),m_overlay);
+		
 	
 		m_frameCount ++;
 		if(m_renderFps)
@@ -354,7 +454,7 @@ void VideoWidget::paintEvent(QPaintEvent*)
 			{
 				m_elapsedTime.start();
 				m_frameCount = 0;
-				qDebug() << "FPS: "<<framesPerSecond;
+				//qDebug() << "FPS: "<<framesPerSecond;
 			}
 		}
 	}

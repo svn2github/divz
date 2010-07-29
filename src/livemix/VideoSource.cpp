@@ -40,6 +40,7 @@ VideoSource::VideoSource(QObject *parent)
 void VideoSource::registerConsumer(VideoWidget *consumer)
 {
 	m_consumerList.append(consumer);
+	//qDebug() << "VideoSource::registerConsumer(): "<<this<<": consumer list:"<<m_consumerList.size(); //m_refCount:"<<m_refCount;
 }
 
 VideoSource::~VideoSource() {}
@@ -85,13 +86,20 @@ void VideoSource::release(VideoWidget *consumer)
 		
 	m_consumerList.removeAll(consumer);
 	
-	m_refCount --;
-	//qDebug() << "CameraThread::release: m_refCount:"<<m_refCount;
-	if(m_refCount <= 0)
+	//m_refCount --;
+	//qDebug() << "VideoSource::release(): "<<this<<": consumer list:"<<m_consumerList.size(); //m_refCount:"<<m_refCount;
+	//if(m_refCount <= 0)
+	if(m_consumerList.isEmpty())
 	{
-		m_killed = true;
-		quit();
-		wait();
-		deleteLater();
+		destroySource();
 	}
+}
+
+void VideoSource::destroySource()
+{
+	//qDebug() << "VideoSource::destroySource(): "<<this;
+	m_killed = true;
+	quit();
+	wait();
+	deleteLater();
 }

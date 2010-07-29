@@ -19,7 +19,7 @@ MdiCameraWidget::MdiCameraWidget(QWidget *parent)
 	QStringList items;
 	int counter = 1;
 	foreach(QString dev, m_cameras)
-		items << QString("Camera # %1").arg(counter);
+		items << QString("Camera # %1").arg(counter++);
 	
 	m_deviceBox->addItems(items);
 	

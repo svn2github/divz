@@ -25,14 +25,10 @@ public:
 signals:
 	void clicked();
 	
-protected slots:
-	void textReturnPressed();
-	
 protected:
 	void setupDefaultGui();
 	
 	QVBoxLayout *m_layout;
-	QLineEdit *m_textInput;
 	VideoSource *m_videoSource;
 	VideoWidget *m_videoWidget;
 	

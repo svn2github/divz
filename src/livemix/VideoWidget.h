@@ -30,9 +30,11 @@ public:
 	virtual QSize sizeHint () const;
 	
 	bool renderFps() { return m_renderFps; }
+	int fadeLength() { return m_fadeLength; }
 	
 signals:
 	void clicked();
+	void sourceDiscarded(VideoSource*);
 	
 public slots:
 	//void newFrame(QImage);
@@ -48,28 +50,47 @@ public slots:
 	
 	void setRenderFps(bool);
 	
+	void setFadeLength(int ms);
+	
+	
+	
 protected slots:
 	void frameReady();
+	void oldFrameReady();
 	
 	void callUpdate();
 	void updateTimer();
+	
+	void sourceDestroyed();
+	
+	void fadeStart();
+	void fadeAdvance();
+	void fadeStop();
+	void discardOldThread();
+
 	
 protected:
 	void mouseReleaseEvent(QMouseEvent*); 
 	void paintEvent(QPaintEvent*);
 	void closeEvent(QCloseEvent*);
 	void showEvent(QShowEvent*);
-        void resizeEvent(QResizeEvent*);
-        
+	void resizeEvent(QResizeEvent*);
+
 private:
 	void updateOverlay();
 	void updateRects();
 
 	VideoSource * m_thread;
+	VideoSource * m_oldThread;
 	long m_frameCount;
 
-	qreal m_opacity;
+	qreal  m_opacity;
+	qreal  m_opacityInc;
+	int    m_fadeLength;
+	QTimer m_fadeTimer;
+	
 	VideoFrame m_frame;
+	VideoFrame m_oldFrame;
 	
 	Qt::AspectRatioMode m_aspectRatioMode;
 	int m_adjustDx1;

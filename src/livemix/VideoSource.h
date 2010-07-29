@@ -32,16 +32,16 @@ signals:
 protected:
 	virtual void run();
 	virtual void enqueue(VideoFrame);
+	virtual void destroySource();
 	
 	bool m_killed;
 	
 	static void initAV();
 	static bool isLibAVInit;
 
-private:
-	int m_refCount;
-	QList<VideoWidget*> m_consumerList;
 	QQueue<VideoFrame> m_frameQueue;
+	QList<VideoWidget*> m_consumerList;
+	int m_refCount;
 	bool m_isBuffered;
 	VideoFrame m_singleFrame;
 };

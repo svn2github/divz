@@ -5,6 +5,7 @@
 #include <QStringList>
 #include <QDebug>
 #include <QApplication>
+#include <QImageWriter>
 
 extern "C" {
 #include "libswscale/swscale.h"
@@ -25,6 +26,7 @@ extern "C" {
 QMap<QString,CameraThread *> CameraThread::m_threadMap;
 QStringList CameraThread::m_enumeratedDevices;
 bool CameraThread::m_devicesEnumerated = false;
+QMutex CameraThread::threadCacheMutex;
 
 CameraThread::CameraThread(const QString& camera, QObject *parent)
 	: VideoSource(parent)
@@ -42,6 +44,15 @@ CameraThread::CameraThread(const QString& camera, QObject *parent)
 	setIsBuffered(false);
 }
 
+void CameraThread::destroySource()
+{
+	qDebug() << "CameraThread::destroySource(): "<<this;
+	QMutexLocker lock(&threadCacheMutex);
+	m_threadMap.remove(m_cameraFile);
+	
+	VideoSource::destroySource();
+}
+
 CameraThread * CameraThread::threadForCamera(const QString& camera)
 {
 	if(camera.isEmpty())
@@ -51,11 +62,14 @@ CameraThread * CameraThread::threadForCamera(const QString& camera)
 	
 	if(!devices.contains(camera))
 		return 0;
+		
+	QMutexLocker lock(&threadCacheMutex);
 	
 	if(m_threadMap.contains(camera))
 	{
 		CameraThread *v = m_threadMap[camera];
 		v->m_refCount++;
+ 		qDebug() << "CameraThread::threadForCamera(): "<<v<<": "<<camera<<": [CACHE HIT] +";
 		return v;
 	}
 	else
@@ -63,6 +77,7 @@ CameraThread * CameraThread::threadForCamera(const QString& camera)
 		CameraThread *v = new CameraThread(camera);
 		m_threadMap[camera] = v;
 		v->m_refCount=1;
+ 		qDebug() << "CameraThread::threadForCamera(): "<<v<<": "<<camera<<": [CACHE MISS] -";
 		v->start(QThread::HighPriority);
 
 		return v;
@@ -82,16 +97,13 @@ QStringList CameraThread::enumerateDevices(bool forceReenum)
 	
 	#ifdef Q_OS_WIN32
 		QString deviceBase = "vfwcap://";
+		QString formatName = "vfwcap";
 	#else
 		QString deviceBase = "/dev/video";
+		QString formatName = "video4linux";
 	#endif
 	QStringList list;
 	
-// 	avdevice_register_all();
-// 
-// 	avcodec_init();
-// 	avcodec_register_all();
-// 	
 	
 	AVInputFormat *inFmt = NULL;
 	AVFormatParameters formatParams;
@@ -101,17 +113,15 @@ QStringList CameraThread::enumerateDevices(bool forceReenum)
 		memset(&formatParams, 0, sizeof(AVFormatParameters));
 
 		#ifdef Q_OS_WIN32
-			QString fmt = "vfwcap";
 			QString file = QString::number(i);
 		#else
-			QString fmt = "video4linux";
 			QString file = QString("/dev/video%1").arg(i);
 		#endif
 
-		inFmt = av_find_input_format(qPrintable(fmt));
+		inFmt = av_find_input_format(qPrintable(formatName));
 		if( !inFmt )
 		{
-			qDebug() << "[ERROR] CameraThread::load(): Unable to find input format:"<<fmt;
+			qDebug() << "[ERROR] CameraThread::load(): Unable to find input format:"<<formatName;
 			break;
 		}
 
@@ -124,7 +134,6 @@ QStringList CameraThread::enumerateDevices(bool forceReenum)
 		//formatParams.height = 288;
 		//formatParams.channel = 0;
 		//formatParams.pix_fmt = PIX_FMT_RGB24 ;
-	
 	
 		// Open video file
 		//
@@ -151,11 +160,6 @@ QStringList CameraThread::enumerateDevices(bool forceReenum)
 
 int CameraThread::initCamera()
 {
-// 	avdevice_register_all();
-// 
-// 	avcodec_init();
-// 	avcodec_register_all();
-
 	AVInputFormat *inFmt = NULL;
 	AVFormatParameters formatParams;
 	memset(&formatParams, 0, sizeof(AVFormatParameters));
@@ -292,10 +296,20 @@ void CameraThread::run()
 	initCamera();
 	
 	//qDebug() << "CameraThread::run: In Thread ID "<<QThread::currentThreadId(); 
-	
+	int counter = 0;
 	while(!m_killed)
 	{
 		readFrame();
+		
+// 		counter ++;
+// 		if(m_singleFrame.holdTime>0)
+// 		{
+// 			QString file = QString("frame-%1.jpg").arg(counter %2 == 0?"even":"odd");
+// 			qDebug() << "CameraThread::run(): frame:"<<counter<<", writing to file:"<<file;
+// 			QImageWriter writer(file, "jpg");
+// 			writer.write(m_singleFrame.image);
+// 		}
+		
 		msleep(1000 / m_fps / 1.5);
 	};
 }
@@ -427,6 +441,10 @@ void CameraThread::readFrame()
 						m_video_codec_context->width,
 						m_video_codec_context->height,
 						QImage::Format_RGB16);
+						
+					// lame attempt to de-interlace
+					//frame = frame.scaled(m_video_codec_context->width, m_video_codec_context->height/2)
+					//	     .scaled(m_video_codec_context->width,m_video_codec_context->height);
 				
 
 					av_free_packet(packet);

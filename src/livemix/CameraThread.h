@@ -52,6 +52,8 @@ protected:
 	void freeResources();
 	int initCamera();
 	
+	void destroySource();
+	
 private:
 	int m_fps;
 	
@@ -104,6 +106,8 @@ private:
 
 	QMutex m_bufferMutex;
 	QImage m_bufferImage;
+	
+	static QMutex threadCacheMutex;
 };
 
 

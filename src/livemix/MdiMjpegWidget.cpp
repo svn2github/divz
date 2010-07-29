@@ -4,6 +4,7 @@
 #include <QLabel>
 #include <QUrl>
 #include <QMessageBox>
+#include <QSettings>
 
 MdiMjpegWidget::MdiMjpegWidget(QWidget *parent)
 	: MdiVideoChild(parent)
@@ -23,6 +24,14 @@ MdiMjpegWidget::MdiMjpegWidget(QWidget *parent)
 	setWindowTitle("MJPEG");	
 	
 	videoWidget()->setFps(15);
+	
+	QSettings settings;
+	QString lastUrl = settings.value("mdimjpegwidget/last-url","").toString();
+	if(!lastUrl.isEmpty())
+	{
+		m_urlInput->setText(lastUrl);
+		urlReturnPressed();
+	}
 }
 
 void MdiMjpegWidget::urlReturnPressed()
@@ -31,6 +40,9 @@ void MdiMjpegWidget::urlReturnPressed()
 	
 	setWindowTitle(m_urlInput->text());
 	QUrl url(m_urlInput->text());
+	
+	QSettings settings;
+	settings.setValue("mdimjpegwidget/last-url",m_urlInput->text());
 	
 	if(!url.isValid())
 	{

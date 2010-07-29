@@ -22,10 +22,13 @@ public slots:
 	
 protected slots:
 	void screenBoxChanged(int);	
-
+	void textReturnPressed();
+	
 protected:
 	QComboBox *m_screenBox;
 	QList<QRect> m_screenList;
+	
+	QLineEdit *m_textInput;
 	
 	VideoWidget *m_outputWidget;
 	//VideoOutputWidget * m_outputWidget;

@@ -195,6 +195,7 @@ void VideoThread::run()
 
 VideoThread::~VideoThread()
 {
+// 	qDebug() << "VideoThread::~VideoThread(): Deleting!";
 	m_killed = true;
 	quit();
 	wait();

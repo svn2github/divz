@@ -40,7 +40,8 @@ MdiVideoWidget::MdiVideoWidget(QWidget *parent)
 	
 	// Use CDE style to minimize the space used by the button
 	// (Could use a custom stylesheet I suppose - later.)
-	btn->setStyle(new QCDEStyle());
+	//btn->setStyle(new QCDEStyle());
+	btn->setStyleSheet("border:1px solid black; padding:0; width: 1em; margin:0");
 	
 	// Add it to the default layout
 	m_layout->addLayout(layout);
