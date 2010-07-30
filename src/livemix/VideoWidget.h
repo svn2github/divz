@@ -37,6 +37,8 @@ signals:
 	void sourceDiscarded(VideoSource*);
 	
 public slots:
+	void fadeToBlack(bool flag);
+	
 	//void newFrame(QImage);
 	
 	void setOverlayText(const QString& text);
@@ -63,7 +65,7 @@ protected slots:
 	
 	void sourceDestroyed();
 	
-	void fadeStart();
+	void fadeStart(bool switchThreads=true);
 	void fadeAdvance();
 	void fadeStop();
 	void discardOldThread();
@@ -115,6 +117,11 @@ private:
 	int m_forceFps;
 	
 	bool m_renderFps;
+	bool m_fadeToBlack;
+	
+	QTime m_fadeElapsed;
+	double m_predictedFadeClock;
+	double m_predictedClockInc;
 };
 
 

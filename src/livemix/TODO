@@ -1,0 +1,3 @@
+
+- CameraThread: Integrate more advanced deinterlacing methods, such as those in http://tvtime.sourceforge.net/
+- VideoWidget: Adaptivly adjust fade speed during fading to make the predicted clock alight with the real speed (either speed up/slow down)

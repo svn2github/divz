@@ -8,18 +8,76 @@
 
 #include <QApplication>
 #include <QSettings>
+#include <QHBoxLayout>
+#include <QLabel>
+#include <QPushButton>
+#include <QCDEStyle>
 
 #include "VideoWidget.h"
+
+void MdiPreviewWidget::setFadeTimef(double secs)
+{
+	int ms = (int)(secs * 1000.0);
+	if(m_fadeSlider->value() != ms)
+		m_fadeSlider->setValue(ms);
+	// this will trigger setFadeTime(int) if value is different
+}
+
+void MdiPreviewWidget::setFadeTime(int ms)
+{
+	double sec = ((double)ms) / 1000;
+	if(m_timeBox->value() != ms)
+		m_timeBox->setValue(sec);
+	
+	m_outputWidget->setFadeLength(ms);
+}
 
 MdiPreviewWidget::MdiPreviewWidget(QWidget *parent)
 	: MdiVideoChild(parent)
 	, m_textInput(new QLineEdit(this))
 {
 	m_outputWidget = new VideoWidget();
-	m_outputWidget->setFadeLength(2000);
+	m_outputWidget->setFadeLength(1000);
 		
 	m_layout->addWidget(m_textInput);
 	connect(m_textInput, SIGNAL(returnPressed()), this, SLOT(textReturnPressed()));
+	
+	QHBoxLayout *hbox1 = new QHBoxLayout();
+	m_layout->addLayout(hbox1);
+	
+	QLabel *label = new QLabel("X Speed:");
+	hbox1->addWidget(label);
+	m_fadeSlider = new QSlider(Qt::Horizontal);
+	m_fadeSlider->setMinimum(1);
+	m_fadeSlider->setMaximum(10000);
+	m_fadeSlider->setTickInterval(500);
+	m_fadeSlider->setSingleStep(500);
+	m_fadeSlider->setPageStep(500);
+	m_fadeSlider->setValue(1500);
+	m_fadeSlider->setTickPosition(QSlider::TicksBelow);
+	hbox1->addWidget(m_fadeSlider,1);
+	
+	m_timeBox = new QDoubleSpinBox();
+	m_timeBox->setSuffix("s");
+	m_timeBox->setMinimum(1/1000);
+	m_timeBox->setMaximum(10.0);
+	//m_timeBox->setPageStep(0.5);
+	m_timeBox->setSingleStep(0.5);
+	m_timeBox->setValue(1.5);
+	//m_timeBox->setStyle(new QCDEStyle());
+	hbox1->addWidget(m_timeBox);
+	
+	QPushButton *blackBtn = new QPushButton(this);
+	blackBtn->setIcon(QIcon("../data/stock-media-stop.png")/*,"&Black"*/);
+	blackBtn->setCheckable(true);
+	blackBtn->setStyle(new QCDEStyle());
+	hbox1->addWidget(blackBtn);
+	
+	connect(blackBtn, SIGNAL(toggled(bool)), m_outputWidget, SLOT(fadeToBlack(bool)));
+	
+	
+	connect(m_timeBox, SIGNAL(valueChanged(double)), this, SLOT(setFadeTimef(double)));
+	connect(m_fadeSlider, SIGNAL(valueChanged(int)), this, SLOT(setFadeTime(int)));
 
 	
 /*	m_outputWidget = new GLWidget(0);

@@ -24,6 +24,7 @@ VideoWidget::VideoWidget()
 	, m_forceFps(-1)
 	, m_renderFps(true)
 	, m_fadeLength(0)
+	, m_fadeToBlack(false)
 {
 	//setAttribute(Qt::WA_PaintOnScreen, true);
 	//setAttribute(Qt::WA_OpaquePaintEvent, true);
@@ -39,9 +40,23 @@ VideoWidget::VideoWidget()
 
 QSize VideoWidget::sizeHint () const { return QSize(160,120); }
 
+void VideoWidget::fadeToBlack(bool flag)
+{
+	m_fadeToBlack = flag;
+	fadeStart(false); // dont move current thread to oldThread
+}
+
 void VideoWidget::setFadeLength(int ms)
 {
 	m_fadeLength = ms;
+	
+	qreal fps = m_forceFps > 0.0 ? m_forceFps : 30.0;
+	qreal sec = (m_fadeLength > 0 ? m_fadeLength : 1000.0) / 1000.0;
+	m_opacityInc = 1.0 / (sec * fps);
+	
+	//qDebug() << "VideoWidget::setFadeLength(): m_fadeLength:"<<m_fadeLength<<", m_opacityInc:"<<m_opacityInc<<", sec:"<<sec<<", fps:"<<fps;
+	
+	m_fadeTimer.setInterval(sec / fps * 1000.0);
 }
 
 void VideoWidget::mouseReleaseEvent(QMouseEvent*)
@@ -96,11 +111,11 @@ void VideoWidget::setVideoSource(VideoSource *source)
 	if(source == m_thread)
 		return;
 		
-	if(m_thread)
-		if(m_fadeLength > 33)
-			fadeStart();
-		else
-			disconnectVideoSource();
+	if(m_fadeLength > 33)
+		fadeStart();
+		
+	if(m_thread && m_fadeLength < 33)
+		disconnectVideoSource();
 
 	//qDebug() << "VideoWidget::setVideoSource: In Thread ID "<<QThread::currentThreadId();
 	//qDebug() << "VideoWidget::setVideoSource: source: "<<source;
@@ -121,26 +136,40 @@ void VideoWidget::setVideoSource(VideoSource *source)
 	frameReady(); // prime the pump
 }
 
-void VideoWidget::fadeStart()
+void VideoWidget::fadeStart(bool switchThreads)
 {
-	disconnect(m_thread, 0, this, 0);
-	m_oldThread = m_thread;
-	m_thread = 0;
+	// If we're fading in with no thread to start with,
+	// then we can't very well use the m_oldThread ptr now can we? :-)
+	if(m_thread && switchThreads)
+	{
+		disconnect(m_thread, 0, this, 0);
+		m_oldThread = m_thread;
+		m_thread = 0;
+		
+		connect(m_oldThread, SIGNAL(frameReady()), this, SLOT(oldFrameReady()));
+	}
 	
-	connect(m_oldThread, SIGNAL(frameReady()), this, SLOT(oldFrameReady()));
+	// Allow starting another cross fade during the middle of the same CF
+	if(!m_fadeToBlack)
+		//if(m_opacity >= 1)
+			m_opacity = 0.0;
+	else
+		//if(m_opacity <= 0)
+			m_opacity = 1.0;
 	
-	m_opacity = 0.0;
-	qreal fps = m_forceFps > 0.0 ? m_forceFps : 30.0;
-	qreal sec = (m_fadeLength > 0 ? m_fadeLength : 1000.0) / 1000.0;
-	m_opacityInc = 1.0 / (sec * fps);
-	
-	
-	//qDebug() << "VideoWidget::fadeStart(): m_fadeLength:"<<m_fadeLength<<", m_opacityInc:"<<m_opacityInc<<", sec:"<<sec<<", fps:"<<fps;
-	
-	m_fadeTimer.setInterval(sec / fps * 1000.0);
+// 	qDebug() << "VideoWidget::fadeStart("<<switchThreads<<"): m_opacity:"<<m_opacity;
 	m_fadeTimer.start();
 	
-	oldFrameReady();
+	m_fadeElapsed.start();
+	m_predictedFadeClock = 0;
+	
+	double fps = m_forceFps > 0.0 ? m_forceFps : 30.0;
+	//double sec = (m_fadeLength > 0 ? m_fadeLength : 1000.0) / 1000.0;
+	m_predictedClockInc = 1000.0 / fps;
+	
+	
+	if(m_oldThread)
+		oldFrameReady();
 }
 
 void VideoWidget::oldFrameReady()
@@ -161,23 +190,50 @@ void VideoWidget::oldFrameReady()
 
 void VideoWidget::fadeAdvance()
 {
-	m_opacity += m_opacityInc;
-	//qDebug() << "VideoWidget::fadeAdvanced(): m_opacity:"<<m_opacity;
-	if(m_opacity >= 1.0)
-		fadeStop();
+	if(m_fadeToBlack)
+	{
+		m_opacity -= m_opacityInc;
+		if(m_opacity <= 0.0)
+			fadeStop();
+	}
+	else
+	{
+		m_opacity += m_opacityInc;
+		if(m_opacity >= 1.0)
+			fadeStop();
+	}	
+		
+	m_predictedFadeClock += m_predictedClockInc;
+	
+	int fakeMs = (int)m_predictedFadeClock;
+	int realMs = m_fadeElapsed.elapsed();
+	int diff = realMs - fakeMs;
+	bool behind = diff > 10;
+	
+	//qDebug() << "VideoWidget::fadeAdvanced(): m_opacity:"<<m_opacity<<", fakeMs: "<<fakeMs<<", realMs: "<<realMs<<", diff:"<<diff<<", behind?"<<behind;
 	update();
 }
 
 void VideoWidget::fadeStop()
 {
 	//qDebug() << "VideoWidget::fadeStop(): m_oldThread:"<<m_oldThread;
-	m_opacity = 1.0;
+	if(m_fadeToBlack)
+		m_opacity = 0.0;
+	else
+		m_opacity = 1.0;
+	
+// 	qDebug() << "VideoWidget::fadeStop(): m_opacity:"<<m_opacity;
+		
 	m_fadeTimer.stop();
+	
 	discardOldThread();
 }
 
 void VideoWidget::discardOldThread()
 {	
+	if(!m_oldThread)
+		return;
+	
 	m_oldThread->release(this);
 	disconnect(m_oldThread,0,this,0);
 	m_oldThread = 0;
@@ -250,7 +306,7 @@ void VideoWidget::updateOverlay()
 		QPainterPath path;
 		path.addText(textRect.topLeft(),font,m_overlayText);
 
-		painter.setPen(QPen(Qt::black,3));
+		painter.setPen(QPen(Qt::black,1.5));
 		painter.setBrush(Qt::white);
 		painter.drawPath(path);
 
@@ -411,31 +467,37 @@ void VideoWidget::paintEvent(QPaintEvent*)
 	//qDebug() << "VideoWidget::paintEvent(): "<<objectName()<<", thread:"<<thread()<<", main:"<<QApplication::instance()->thread();
 	//qDebug() << "VideoWidget::paintEvent(): My Frame Count #: "<<m_frameCount ++;
 
-	if(m_opacity <= 0)
-		return;
+	//if(m_opacity <= 0)
+	//	return;
 
-	if(m_opacity < 1 || m_targetRect != rect())
+	//if(m_opacity < 1 || m_targetRect != rect())
 		p.fillRect(rect(),Qt::black);
 
-	if(m_opacity>0 && m_opacity<1)
-		p.setOpacity(m_opacity);
+	//if(m_opacity>0 && m_opacity<1)
+	//	p.setOpacity(m_opacity);
 
 	if(!m_thread)
 	{
 		p.fillRect(rect(),Qt::black);
 		p.setPen(Qt::white);
-		p.drawText(5,15,QString("Error: Invalid Video Source"));
+		p.drawText(5,15,QString("No Video Input"));
 	}
 	else
 	{
 		if(m_oldThread)
 		{
+			//p.setOpacity(1.0-m_opacity);
 			p.setOpacity(1.0);
 			p.drawImage(m_targetRect,m_oldFrame.image,m_sourceRect);
-			p.setOpacity(m_opacity);
 		}
+		
+		p.setOpacity(m_opacity);
+			
 		p.drawImage(m_targetRect,m_frame.image,m_sourceRect);
 
+		// If fading in from black (e.g. no old thread)
+		// then fade in the overlay with the frame, otherwise during
+		// crossfades, dont fade the overlay
 		if(m_oldThread)
 			p.setOpacity(1.0);
 			

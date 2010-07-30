@@ -7,6 +7,8 @@
 #include <QComboBox>
 #include <QList>
 #include <QRect>
+#include <QSlider>
+#include <QDoubleSpinBox>
 
 class VideoOutputWidget;
 class GLWidget;
@@ -23,12 +25,17 @@ public slots:
 protected slots:
 	void screenBoxChanged(int);	
 	void textReturnPressed();
+	void setFadeTimef(double);
+	void setFadeTime(int);
 	
 protected:
 	QComboBox *m_screenBox;
 	QList<QRect> m_screenList;
 	
 	QLineEdit *m_textInput;
+	
+	QSlider *m_fadeSlider;
+	QDoubleSpinBox *m_timeBox;
 	
 	VideoWidget *m_outputWidget;
 	//VideoOutputWidget * m_outputWidget;
