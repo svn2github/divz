@@ -122,6 +122,9 @@ private:
 	QTime m_fadeElapsed;
 	double m_predictedFadeClock;
 	double m_predictedClockInc;
+	
+	long m_latencyAccum;
+	
 };
 
 

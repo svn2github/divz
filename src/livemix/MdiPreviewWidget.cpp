@@ -63,7 +63,9 @@ MdiPreviewWidget::MdiPreviewWidget(QWidget *parent)
 	m_timeBox->setMaximum(10.0);
 	//m_timeBox->setPageStep(0.5);
 	m_timeBox->setSingleStep(0.5);
-	m_timeBox->setValue(1.5);
+	m_timeBox->setValue(1.0);
+	m_timeBox->setDecimals(1);
+	m_timeBox->setStyleSheet("font-size:.85em");
 	//m_timeBox->setStyle(new QCDEStyle());
 	hbox1->addWidget(m_timeBox);
 	
@@ -94,52 +96,52 @@ MdiPreviewWidget::MdiPreviewWidget(QWidget *parent)
 // 	m_outputWidget->applyGeometry(QRect(0,0,320,240));
 
 
-	m_screenBox = new QComboBox(this);
-	m_layout->addWidget(m_screenBox);
-
 	QDesktopWidget *desktopWidget = QApplication::desktop();
 	
-	QStringList items;
+	QSettings settings;
+	int idx = settings.value("mdipreviewwidget/last-screen-index",0).toInt();
+		
+	m_configMenu = new QMenu(this);
+	m_configMenu->addSeparator()->setText(tr("Output"));
 	
-	items << "No Output";
-	m_screenList << QRect(0,0,320,240);
+	QActionGroup *screenGroup = new QActionGroup(this);
+	connect(screenGroup, SIGNAL(triggered(QAction*)), this, SLOT(outputActionTriggered(QAction*)));
+	QAction *action;
 	
-	int ourScreen = desktopWidget->screenNumber(this);
-			
+	m_screenList << QRect(0,0,1,1);
+	
+	action = m_configMenu->addAction("No Output");
+	action->setCheckable(true);
+	action->setChecked(idx == 0);
+	action->setData(0);
+	screenGroup->addAction(action);
+	
+	if(action->isChecked())
+		outputActionTriggered(action);
+	
+	
 	int numScreens = desktopWidget->numScreens();
 	for(int screenNum = 0; screenNum < numScreens; screenNum ++)
 	{
-// 		if(screenNum != ourScreen)
-		{
-			QRect geom = desktopWidget->screenGeometry(screenNum);
-	// 		QString geomStr = QString("%1 x %2 at (%3,%4)")
-	// 					.arg(geom.width())
-	// 					.arg(geom.height())
-	// 					.arg(geom.left())
-	// 					.arg(geom.top());
-			
-			items << QString("Screen %1 at (%2 x %3)")
-				.arg(screenNum + 1)
-				.arg(geom.left())
-				.arg(geom.top());
-			
-			m_screenList << geom;
-		}
-	}
-	
-	m_screenBox->addItems(items);
-	
-	connect(m_screenBox, SIGNAL(currentIndexChanged(int)), this, SLOT(screenBoxChanged(int)));
-	if(numScreens == 1)
-		m_screenBox->setEnabled(false);
-	else
-	{
-		QSettings settings;
-		int idx = settings.value("mdipreviewwidget/last-screen-index",0).toInt();
-		//screenBoxChanged(0);
-		m_screenBox->setCurrentIndex(idx);
-	}
+		QRect geom = desktopWidget->screenGeometry(screenNum);
 		
+		QString text = QString("Screen %1 at (%2 x %3)")
+			.arg(screenNum + 1)
+			.arg(geom.left())
+			.arg(geom.top());
+		
+		action = m_configMenu->addAction(text);
+		action->setCheckable(true);
+		action->setChecked(idx == m_screenList.size());
+		action->setData(m_screenList.size());
+		screenGroup->addAction(action);
+		
+		m_screenList << geom;
+		
+		if(action->isChecked())
+			outputActionTriggered(action);
+	}
+	
 	setWindowTitle("Output Preview");
 	
 	videoWidget()->setFps(15);
@@ -154,9 +156,13 @@ void MdiPreviewWidget::textReturnPressed()
 }
 
 
-void MdiPreviewWidget::screenBoxChanged(int idx)
+void MdiPreviewWidget::outputActionTriggered(QAction *action)
 {
-	QDesktopWidget *desktopWidget = QApplication::desktop();
+	if(!action)
+		return;
+		
+	int idx = action->data().toInt();
+	
 	if(idx < 0 || idx >= m_screenList.size())
 		return;
 		

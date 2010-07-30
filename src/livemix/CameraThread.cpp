@@ -502,6 +502,7 @@ void CameraThread::readFrame()
 			if(packet->stream_index == m_video_stream)
 			{
 				//global_video_pkt_pts = packet->pts;
+				QTime capTime = QTime::currentTime();
 
 // 				mutex.lock();
 				avcodec_decode_video(m_video_codec_context, m_av_frame, &frame_finished, packet->data, packet->size);
@@ -579,7 +580,7 @@ void CameraThread::readFrame()
 							//QImage::Format_RGB16);
 							QImage::Format_ARGB32_Premultiplied);
 							
-						enqueue(VideoFrame(frame,1000/m_fps));
+						enqueue(VideoFrame(frame,1000/m_fps,capTime));
 					}
 					
 					

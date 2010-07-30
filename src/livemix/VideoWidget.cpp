@@ -25,6 +25,7 @@ VideoWidget::VideoWidget()
 	, m_renderFps(true)
 	, m_fadeLength(0)
 	, m_fadeToBlack(false)
+	, m_latencyAccum(0)
 {
 	//setAttribute(Qt::WA_PaintOnScreen, true);
 	//setAttribute(Qt::WA_OpaquePaintEvent, true);
@@ -508,16 +509,33 @@ void VideoWidget::paintEvent(QPaintEvent*)
 		{
 			QString framesPerSecond;
 			framesPerSecond.setNum(m_frameCount /(m_elapsedTime.elapsed() / 1000.0), 'f', 2);
+			
+			
+			QString latencyString;
+			if(!m_frame.captureTime.isNull())
+			{
+				int msecLatency = m_frame.captureTime.msecsTo(QTime::currentTime());
+				
+				m_latencyAccum += msecLatency;
+				
+				QString latencyPerFrame;
+				latencyPerFrame.setNum((((double)m_latencyAccum) / ((double)m_frameCount) / 1000.0), 'f', 3);
+				
+				latencyString = QString("| %1s latency").arg(latencyPerFrame);
+			}
+				
+				
 
 			p.setPen(Qt::black);
-			p.drawText(m_targetRect.x() + 6,m_targetRect.y() + 16,QString("%1 fps").arg(framesPerSecond));
+			p.drawText(m_targetRect.x() + 6,m_targetRect.y() + 16,QString("%1 fps %2").arg(framesPerSecond).arg(latencyString));
 			p.setPen(Qt::white);
-			p.drawText(m_targetRect.x() + 5,m_targetRect.y() + 15,QString("%1 fps").arg(framesPerSecond));
+			p.drawText(m_targetRect.x() + 5,m_targetRect.y() + 15,QString("%1 fps %2").arg(framesPerSecond).arg(latencyString));
 			
 			if(!(m_frameCount % 100))
 			{
 				m_elapsedTime.start();
 				m_frameCount = 0;
+				m_latencyAccum = 0;
 				//qDebug() << "FPS: "<<framesPerSecond;
 			}
 		}

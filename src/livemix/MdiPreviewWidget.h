@@ -23,7 +23,7 @@ public slots:
 	void takeSource(VideoSource *);
 	
 protected slots:
-	void screenBoxChanged(int);	
+	void outputActionTriggered(QAction*);
 	void textReturnPressed();
 	void setFadeTimef(double);
 	void setFadeTime(int);
