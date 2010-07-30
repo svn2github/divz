@@ -3,12 +3,15 @@
 #define MdiVideoChild_H
 
 #include <QWidget>
-#include "MdiChild.h"
-#include "VideoSource.h"
-#include "VideoWidget.h"
 #include <QLineEdit>
 #include <QVBoxLayout>
 #include <QMouseEvent>
+#include <QMenu>
+
+#include "MdiChild.h"
+
+class VideoSource;
+class VideoWidget;
 
 class MdiVideoChild : public MdiChild
 {
@@ -27,11 +30,14 @@ signals:
 	
 protected:
 	void setupDefaultGui();
+	void contextMenuEvent(QContextMenuEvent *);
+
 	
 	QVBoxLayout *m_layout;
 	VideoSource *m_videoSource;
 	VideoWidget *m_videoWidget;
 	
+	QMenu *m_configMenu;
 	
 	
 };

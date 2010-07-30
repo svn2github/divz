@@ -436,8 +436,10 @@ void VideoWidget::paintEvent(QPaintEvent*)
 		}
 		p.drawImage(m_targetRect,m_frame.image,m_sourceRect);
 
+		if(m_oldThread)
+			p.setOpacity(1.0);
+			
 		p.drawPixmap(m_targetRect.topLeft(),m_overlay);
-		
 	
 		m_frameCount ++;
 		if(m_renderFps)

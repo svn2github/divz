@@ -6,6 +6,8 @@
 #include <QMessageBox>
 #include <QSettings>
 
+#include "VideoWidget.h"
+
 MdiMjpegWidget::MdiMjpegWidget(QWidget *parent)
 	: MdiVideoChild(parent)
 {

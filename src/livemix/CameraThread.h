@@ -41,6 +41,11 @@ public:
 	void setFps(int fps=30);
 	int fps() { return m_fps; }
 	
+	bool deinterlace() { return m_deinterlace; }
+
+public slots:
+	void setDeinterlace(bool);
+	
 signals:
 	//void newImage(QImage);
 	//void frameReady(int frameHoldTime);
@@ -106,6 +111,8 @@ private:
 
 	QMutex m_bufferMutex;
 	QImage m_bufferImage;
+	
+	bool m_deinterlace;
 	
 	static QMutex threadCacheMutex;
 };

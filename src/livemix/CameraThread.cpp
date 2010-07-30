@@ -5,6 +5,9 @@
 #include <QStringList>
 #include <QDebug>
 #include <QApplication>
+
+#include <assert.h>
+
 #include <QImageWriter>
 
 extern "C" {
@@ -16,11 +19,117 @@ extern "C" {
 
 #include "CameraThread.h"
 
+//#define DEINTERLACE 1
+
 #if defined(Q_OS_WIN)
-	#define RAW_PIX_FMT PIX_FMT_BGR565
+// 	#ifdef DEINTERLACE
+		#define RAW_PIX_FMT PIX_FMT_BGR32
+// 	#else
+// 		#define RAW_PIX_FMT PIX_FMT_BGR565
+// 	#endif
 #else 
-	#define RAW_PIX_FMT PIX_FMT_RGB565
+// 	#ifdef DEINTERLACE
+		#define RAW_PIX_FMT PIX_FMT_RGB32
+// 	#else
+// 		#define RAW_PIX_FMT PIX_FMT_RGB565
+// 	#endif
 #endif
+
+namespace
+{
+void bobDeinterlace(const uchar* src, const uchar* const srcend,
+		    uchar* dest, uchar* const destend,
+		    const int height, const int stride,
+		    const bool in_bottom_field)
+{
+	// NOTE: this deinterlacing code was derived from and/or inspired by
+	// code from tvtime (http://tvtime.sourceforge.net/); original
+	// copyright notice here:
+	
+	/**
+	* Copyright (c) 2001, 2002, 2003 Billy Biggs <vektor@dumbterm.net>.
+	*
+	* This program is free software; you can redistribute it and/or modify
+	* it under the terms of the GNU General Public License as published by
+	* the Free Software Foundation; either version 2, or (at your option)
+	* any later version.
+	*
+	* This program is distributed in the hope that it will be useful,
+	* but WITHOUT ANY WARRANTY; without even the implied warranty of
+	* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	* GNU General Public License for more details.
+	*
+	* You should have received a copy of the GNU General Public License
+	* along with this program; if not, write to the Free Software Foundation,
+	* Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+	*/
+	
+	assert(height > 0);
+	assert(stride > 0);
+	
+	// NOTE: on x86 machines with glibc 2.3.6 and g++ 3.4.4, it looks
+	// like std::copy is faster than memcpy, so we use that to do the
+	// copying here:
+
+#if 1
+#  define DOCOPY(dst,src,n) std::copy((src),(src)+(n),(dst))
+#else
+#  define DOCOPY(dst,src,n) memcpy((dst),(src),(n))
+#endif
+
+	if (in_bottom_field)
+	{
+		src += stride;
+	
+		DOCOPY(dest, src, stride);
+	
+		dest += stride;
+	}
+	
+	DOCOPY(dest, src, stride);
+	
+	dest += stride;
+	
+	const int N = (height / 2) - 1;
+	for (int i = 0; i < N; ++i)
+	{
+		const uchar* const src2 = src + (stride*2);
+	
+		for (int k = 0; k < stride; ++k)
+			dest[k] = (src[k] + src2[k]) / 2;
+	
+		dest += stride;
+	
+		DOCOPY(dest, src2, stride);
+	
+		src += stride*2;
+		dest += stride;
+	}
+	
+	if (!in_bottom_field)
+	{
+		DOCOPY(dest, src, stride);
+	
+		src += stride*2;
+		dest += stride;
+	}
+	else
+		src += stride;
+	
+	// consistency check: make sure we've done all our counting right:
+	
+	if (src != srcend)
+		qFatal("deinterlacing consistency check failed: %d src %p-%p=%d",
+			int(in_bottom_field), src, srcend, int(src-srcend));
+	
+	if (dest != destend)
+		qFatal("deinterlacing consistency check failed: %d dst %p-%p=%d",
+			int(in_bottom_field), dest, destend, int(dest-destend));
+}
+
+#undef DOCOPY
+
+}
 
 
 QMap<QString,CameraThread *> CameraThread::m_threadMap;
@@ -34,6 +143,7 @@ CameraThread::CameraThread(const QString& camera, QObject *parent)
 	, m_cameraFile(camera)
 	, m_frameCount(0)
 	, m_fps(30)
+	, m_deinterlace(false)
 {
 	m_time_base_rational.num = 1;
 	m_time_base_rational.den = AV_TIME_BASE;
@@ -310,8 +420,13 @@ void CameraThread::run()
 // 			writer.write(m_singleFrame.image);
 // 		}
 		
-		msleep(1000 / m_fps / 1.5);
+		msleep(1000 / m_fps / 1.5 / (m_deinterlace ? 1 : 2));
 	};
+}
+
+void CameraThread::setDeinterlace(bool flag)
+{
+	m_deinterlace = flag;
 }
 
 void CameraThread::setFps(int fps)
@@ -376,7 +491,8 @@ void CameraThread::readFrame()
 	double pts;
 
 	//qDebug() << "CameraThread::readFrame(): My Frame Count # "<<m_frameCount ++;
-
+	m_frameCount ++;
+	
 	int frame_finished = 0;
 	while(!frame_finished && !m_killed)
 	{
@@ -435,51 +551,45 @@ void CameraThread::readFrame()
 						m_av_rgb_frame->data,
 						m_av_rgb_frame->linesize);
 
-					
-
-					QImage frame(m_av_rgb_frame->data[0],
-						m_video_codec_context->width,
-						m_video_codec_context->height,
-						QImage::Format_RGB16);
+					if(m_deinterlace)
+					{
+						QImage frame(m_video_codec_context->width,
+							     m_video_codec_context->height,
+							     QImage::Format_ARGB32_Premultiplied);
+						// I can cheat and claim premul because I know the video (should) never have alpha
 						
+						bool bottomFrame = m_frameCount % 2 == 0;
+						
+						uchar * dest = frame.scanLine(0); // use scanLine() instead of bits() to prevent deep copy
+						uchar * src  = (uchar*)m_av_rgb_frame->data[0];
+						const int h  = m_video_codec_context->height;
+						const int stride = frame.bytesPerLine();
+						
+						bobDeinterlace(src,  src +h*stride, 
+							dest, dest+h*stride,
+							h, stride, bottomFrame);
+							
+						enqueue(VideoFrame(frame,1000/m_fps));
+					}
+					else
+					{
+						QImage frame(m_av_rgb_frame->data[0],
+							m_video_codec_context->width,
+							m_video_codec_context->height,
+							//QImage::Format_RGB16);
+							QImage::Format_ARGB32_Premultiplied);
+							
+						enqueue(VideoFrame(frame,1000/m_fps));
+					}
+					
+					
 					// lame attempt to de-interlace
 					//frame = frame.scaled(m_video_codec_context->width, m_video_codec_context->height/2)
 					//	     .scaled(m_video_codec_context->width,m_video_codec_context->height);
 				
-
 					av_free_packet(packet);
-
-// 					// This block from the synchronize_video(VideoState *is, AVFrame *src_frame, double pts) : double
-// 					// function given at: http://www.dranger.com/ffmpeg/tutorial05.html
-// 					{
-// 						// update the frame pts
-// 						double frame_delay;
-// 
-// 						if(pts != 0)
-// 						{
-// 							/* if we have pts, set video clock to it */
-// 							m_video_clock = pts;
-// 						} else {
-// 							/* if we aren't given a pts, set it to the clock */
-// 							pts = m_video_clock;
-// 						}
-// 						/* update the video clock */
-// 						frame_delay = av_q2d(m_timebase);
-// 						/* if we are repeating a frame, adjust clock accordingly */
-// 						frame_delay += m_av_frame->repeat_pict * (frame_delay * 0.5);
-// 						m_video_clock += frame_delay;
-// 						//qDebug() << "Frame Dealy: "<<frame_delay;
-// 					}
-
-// 					m_bufferMutex.lock();
-// 					m_bufferImage = frame;
-// 					m_bufferMutex.unlock();
-
-					//emit newImage(frame);
-					//emit frameReady(1000/m_fps);
-					enqueue(VideoFrame(frame,1000/m_fps));
-
-					m_previous_pts = pts;
+					
+					
 				}
 
 			}
