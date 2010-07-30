@@ -81,10 +81,6 @@ void MdiCameraWidget::deviceBoxChanged(int idx)
 	// Default clip rect to compensate for oft-seen video capture 'bugs' (esp. on hauppauge/bttv)
 	m_videoWidget->setSourceRectAdjust(11,0,-6,-3);
 	
-	// Reduce the video widgets FPS (not the camera threads fps)
-	// inorder to make a more responsive UI
-	m_videoWidget->setFps(15);
-	
 	m_thread->setDeinterlace(m_deinterlace);
 	
 	setWindowTitle(camera);

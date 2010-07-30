@@ -6,6 +6,10 @@
 #include <QTimer>
 #include <QGraphicsScene>
 
+#define FRAME_WIDTH 1024
+#define FRAME_HEIGHT 768
+
+
 class SharedMemoryImageWriter : public QObject
 {
 	Q_OBJECT

@@ -23,9 +23,9 @@ MdiMjpegWidget::MdiMjpegWidget(QWidget *parent)
 	layout->addWidget(m_urlInput);
 	m_layout->addLayout(layout);
 	
-	setWindowTitle("MJPEG");	
+	setWindowTitle("MJPEG");
 	
-	videoWidget()->setFps(15);
+	videoWidget()->setFps(7);
 	
 	QSettings settings;
 	QString lastUrl = settings.value("mdimjpegwidget/last-url","").toString();

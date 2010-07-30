@@ -55,8 +55,6 @@ MdiVideoWidget::MdiVideoWidget(QWidget *parent)
 	// For debugging/development, load a default video known to be 
 	// in ../data and included subversion (as of r571 anyway)
 	setVideoFile("../data/Seasons_Loop_3_SD.mpg");
-	
-	videoWidget()->setFps(15);
 }
 	
 void MdiVideoWidget::setVideoFile(const QString& file)

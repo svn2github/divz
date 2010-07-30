@@ -8,9 +8,7 @@
 #include <QImage>
 #include <QTime>
 
-#define WRITER_FPS 20
-#define FRAME_WIDTH 640
-#define FRAME_HEIGHT 480
+#define WRITER_FPS 19
 #define BYTES_PER_PIXEL 4
 
 SharedMemoryImageWriter::SharedMemoryImageWriter(QObject *parent)
@@ -124,13 +122,13 @@ void SharedMemoryImageWriter::generateFrame()
 	QString msPerFrame;
 	msPerFrame.setNum(((double)m_timeAccum) / ((double)m_frameCount), 'f', 2);
 	
-	if(m_frameCount % 30 == 0)
+	if(m_frameCount % (WRITER_FPS * 10) == 0)
 	{
 		m_timeAccum = 0;
 		m_timeAccum = 0;
 	}
 	
-	if(m_frameCount % 4 == 0)
+	if(m_frameCount % WRITER_FPS == 0)
 	{
 		//qDebug() << "SharedMemoryImageWriter::generateFrame(): Avg MS per Frame:"<<msPerFrame;
 	}

@@ -112,6 +112,9 @@ private:
 	QRect m_sourceRect;
 	QRect m_origSourceRect;
 	
+	QRect m_oldTargetRect;
+	QRect m_oldSourceRect;
+	
 	QTimer m_paintTimer;
 	
 	int m_forceFps;

@@ -12,6 +12,7 @@ MdiVideoChild::MdiVideoChild(QWidget *parent)
 	, m_videoWidget(new VideoWidget())
 	, m_configMenu(0)
 {
+	m_videoWidget->setFps(10);
 	connect(m_videoWidget, SIGNAL(clicked()), this, SIGNAL(clicked()));
 	setupDefaultGui();
 }

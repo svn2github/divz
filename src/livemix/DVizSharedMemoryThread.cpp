@@ -10,17 +10,15 @@
 
 #include "DVizSharedMemoryThread.h"
 
-
-#define FRAME_WIDTH 640
-#define FRAME_HEIGHT 480
-
+// For defenition of FRAME_WIDTH/_HEIGHT
+#include "../SharedMemoryImageWriter.h"
 
 QMap<QString,DVizSharedMemoryThread *> DVizSharedMemoryThread::m_threadMap;
 QMutex DVizSharedMemoryThread::threadCacheMutex;
 
 DVizSharedMemoryThread::DVizSharedMemoryThread(const QString& key, QObject *parent)
 	: VideoSource(parent)
-	, m_fps(30)
+	, m_fps(25)
 	, m_key(key)
 	, m_timeAccum(0)
 	, m_frameCount(0)
@@ -76,7 +74,8 @@ void DVizSharedMemoryThread::run()
 			m_sharedMemory.attach(QSharedMemory::ReadWrite);
 		else
 		{
-			QImage image(FRAME_WIDTH,FRAME_HEIGHT,
+			QImage image(FRAME_WIDTH,
+			             FRAME_HEIGHT,
 				QImage::Format_ARGB32_Premultiplied);
 				
 			m_sharedMemory.lock();
@@ -86,6 +85,7 @@ void DVizSharedMemoryThread::run()
 		
 			m_sharedMemory.unlock();
 				
+			//qDebug() << "DVizSharedMemoryThread::run(): image.size:"<<image.size();
 				
 			enqueue(VideoFrame(image,1000/m_fps));
 		}

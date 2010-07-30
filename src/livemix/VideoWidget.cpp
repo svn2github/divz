@@ -153,7 +153,11 @@ void VideoWidget::fadeStart(bool switchThreads)
 	if(m_thread && switchThreads)
 	{
 		disconnect(m_thread, 0, this, 0);
+		
 		m_oldThread = m_thread;
+		m_oldSourceRect = m_sourceRect;
+		m_oldTargetRect = m_targetRect;
+		
 		m_thread = 0;
 		
 		connect(m_oldThread, SIGNAL(frameReady()), this, SLOT(oldFrameReady()));
@@ -505,7 +509,7 @@ void VideoWidget::paintEvent(QPaintEvent*)
 		{
 			//p.setOpacity(1.0-m_opacity);
 			p.setOpacity(1.0);
-			p.drawImage(m_targetRect,m_oldFrame.image,m_sourceRect);
+			p.drawImage(m_oldTargetRect,m_oldFrame.image,m_oldSourceRect);
 		}
 		
 		p.setOpacity(m_opacity);

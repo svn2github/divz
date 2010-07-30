@@ -109,7 +109,7 @@ MdiPreviewWidget::MdiPreviewWidget(QWidget *parent)
 	connect(screenGroup, SIGNAL(triggered(QAction*)), this, SLOT(outputActionTriggered(QAction*)));
 	QAction *action;
 	
-	m_screenList << QRect(0,0,1,1);
+	m_screenList << QRect(0,0,1024,768);
 	
 	action = m_configMenu->addAction("No Output");
 	action->setCheckable(true);
