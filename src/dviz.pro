@@ -93,7 +93,8 @@ HEADERS += \
 	ImageImportDialog.h \
 	DirectoryListModel.h \
 	ImportGroupDialog.h \
-	MimeTypes.h
+	MimeTypes.h \
+	SharedMemoryImageWriter.h
 
 	
 SOURCES += \
@@ -125,7 +126,8 @@ SOURCES += \
 	ImageImportDialog.cpp \
 	DirectoryListModel.cpp \
 	ImportGroupDialog.cpp \
-	MimeTypes.cpp
+	MimeTypes.cpp \
+	SharedMemoryImageWriter.cpp
 	
 
 QT += core \

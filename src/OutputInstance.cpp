@@ -96,6 +96,10 @@ OutputInstance::OutputInstance(Output *out, bool startHidden, QWidget *parent)
 	
 	m_grabTimer = new QTimer();
 	connect(m_grabTimer, SIGNAL(timeout()), this, SLOT(slotGrabPixmap()));
+	
+	if(out->tags().toLower().indexOf("live") >= 0 ||
+	   out->name().toLower().indexOf("live") >= 0)
+		m_viewer->setSharedMemoryImageWriterEnabled(true,"dviz/live");
 			
 	applyOutputSettings();
 	

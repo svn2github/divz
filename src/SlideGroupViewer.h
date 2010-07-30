@@ -20,6 +20,7 @@
 class BackgroundContent;
 
 class SlideGroupViewerGraphicsView;
+class SharedMemoryImageWriter;
 
 class NativeViewer : public QObject
 {
@@ -185,6 +186,7 @@ public:
 	bool startBackgroundVideoPausedInPreview();
 	void setStartBackgroundVideoPausedInPreview(bool flag);
 	
+	bool sharedMemoryImageWriterEnabled() { return m_sharedMemoryImageWriterEnabled; }
 	
 	int outputId() { return m_outputId; }
 
@@ -223,6 +225,8 @@ public slots:
 	// Must be able to disable OpenGL inorder to embed using QGraphicsProxyWidget
 	void forceGLDisabled(bool);
 	bool isGLDisabled() { return m_forceGLDisabled; }
+	
+	void setSharedMemoryImageWriterEnabled(bool enable, const QString& key="");
 
 private slots:
 	void appSettingsChanged();
@@ -326,6 +330,9 @@ private:
 	int m_outputId;
 	
 	BackgroundContent * m_bgContent;
+	
+	SharedMemoryImageWriter * m_shmemWriter;
+	bool m_sharedMemoryImageWriterEnabled;
 };
 
 #endif // SLIDEGROUPVIEWER_H

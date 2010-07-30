@@ -29,6 +29,8 @@ class OutputServer;
 class QImage;
 class QResizeEvent; 
 
+class SharedMemoryImageWriter;
+
 #include <QPointer>
 
 class OutputInstance : public QWidget

@@ -6,6 +6,7 @@
 #include "MdiCameraWidget.h"
 #include "MdiVideoWidget.h"
 #include "MdiPreviewWidget.h"
+#include "MdiDVizWidget.h"
 #include <QCDEStyle>
 
 MainWindow::MainWindow()
@@ -76,6 +77,12 @@ void MainWindow::newMjpeg()
 {
 	addNewWindow(new MdiMjpegWidget);
 }
+
+void MainWindow::newDViz()
+{
+	addNewWindow(new MdiDVizWidget);
+}
+
 void MainWindow::newOutput()
 {
 	MdiPreviewWidget * preview = new MdiPreviewWidget;
@@ -325,6 +332,9 @@ void MainWindow::createActions()
 	m_actNewMjpeg = new QAction(tr("New MJPEG"), this);
 	connect(m_actNewMjpeg, SIGNAL(triggered()), this, SLOT(newMjpeg()));
 	
+	m_actNewDViz = new QAction(tr("New DViz"), this);
+	connect(m_actNewDViz, SIGNAL(triggered()), this, SLOT(newDViz()));
+	
 	m_actNewOutput = new QAction(tr("New Output"), this);
 	connect(m_actNewOutput, SIGNAL(triggered()), this, SLOT(newOutput()));
 }
@@ -340,6 +350,7 @@ void MainWindow::createMenus()
 	fileMenu->addAction(m_actNewCamera);
 	fileMenu->addAction(m_actNewVideo);
 	fileMenu->addAction(m_actNewMjpeg);
+	fileMenu->addAction(m_actNewDViz);
 	fileMenu->addAction(m_actNewOutput);
 	fileMenu->addSeparator();
 	
@@ -367,6 +378,7 @@ void MainWindow::createToolBars()
 	fileToolBar->addAction(m_actNewCamera);
 	fileToolBar->addAction(m_actNewVideo);
 	fileToolBar->addAction(m_actNewMjpeg);
+	fileToolBar->addAction(m_actNewDViz);
 	fileToolBar->addAction(m_actNewOutput);
 	
 // 	editToolBar = addToolBar(tr("Edit"));

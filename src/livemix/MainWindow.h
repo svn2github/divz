@@ -41,6 +41,7 @@ private slots:
 	void newCamera();
 	void newVideo();
 	void newMjpeg();
+	void newDViz();
 	
 	void mdiChildClicked();
 
@@ -85,6 +86,7 @@ private:
 	QAction * m_actNewVideo;
 	QAction * m_actNewMjpeg;
 	QAction * m_actNewOutput;
+	QAction * m_actNewDViz;
 	
 	QList<MdiPreviewWidget*> m_previewWidgets;
 	

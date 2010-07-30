@@ -29,7 +29,9 @@ HEADERS += CameraThread.h \
 	VideoOutputWidget.h \
 	GLVideoThread.h \
 	../qq06-glthread/GLWidget.h \
-	../qq06-glthread/GLThread.h
+	../qq06-glthread/GLThread.h \
+	DVizSharedMemoryThread.h \
+	MdiDVizWidget.h
 	
 SOURCES += main.cpp \
 	CameraThread.cpp \
@@ -49,7 +51,9 @@ SOURCES += main.cpp \
 	VideoOutputWidget.cpp \
 	GLVideoThread.cpp \
 	../qq06-glthread/GLWidget.cpp \
-	../qq06-glthread/GLThread.cpp
+	../qq06-glthread/GLThread.cpp \
+	DVizSharedMemoryThread.cpp \
+	MdiDVizWidget.cpp
 
 unix {
 	LIBS += -lavdevice -lavformat -lavcodec -lavutil -lswscale -lbz2 

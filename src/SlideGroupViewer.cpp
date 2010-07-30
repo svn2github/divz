@@ -20,6 +20,9 @@
 #include "model/SlideGroupFactory.h"
 
 #include "itemlistfilters/SlideTextOnlyFilter.h"
+
+#include "SharedMemoryImageWriter.h"
+
 #define PTRS(ptr) QString().sprintf("%p",static_cast<void*>(ptr))
 
 #include <QMessageBox>
@@ -263,6 +266,8 @@ SlideGroupViewer::SlideGroupViewer(QWidget *parent)
 	    , m_forceGLDisabled(false)
 	    , m_outputId(0)
 	    , m_contextHint(MyGraphicsScene::Live)
+	    , m_shmemWriter(0)
+	    , m_sharedMemoryImageWriterEnabled(false)
 {
 	QRect sceneRect(0,0,1024,768);
 	m_blackSlideRefCount++;
@@ -310,6 +315,17 @@ SlideGroupViewer::SlideGroupViewer(QWidget *parent)
 // 	QPalette p;
 // 	p.setColor(QPalette::Window, Qt::black);
 // 	setPalette(p);
+}
+
+void SlideGroupViewer::setSharedMemoryImageWriterEnabled(bool enable, const QString& key)
+{
+	m_sharedMemoryImageWriterEnabled = enable;
+	if(!m_shmemWriter)
+		m_shmemWriter = new SharedMemoryImageWriter(this);
+	if(enable)
+		m_shmemWriter->enable(key,m_scene);
+	else
+		m_shmemWriter->disable();
 }
 
 bool SlideGroupViewer::canZoom() { return m_view->canZoom(); }
@@ -654,6 +670,7 @@ void SlideGroupViewer::setSceneContextHint(MyGraphicsScene::ContextHint hint)
 	scene()->setContextHint(hint);
 	if(m_nativeViewer)
 		m_nativeViewer->setSceneContextHint(hint);
+	//qDebug() << "SlideGroupViewer::setSceneContextHint(): "<<this<<": hint:"<<hint;
 }
 
 bool SlideGroupViewer::isTransitionActive()

@@ -547,7 +547,7 @@ void VideoWidget::paintEvent(QPaintEvent*)
 			p.setPen(Qt::white);
 			p.drawText(m_targetRect.x() + 5,m_targetRect.y() + 15,QString("%1 fps %2").arg(framesPerSecond).arg(latencyString));
 			
-			if(!(m_frameCount % 100))
+			if(!(m_frameCount % 30))
 			{
 				m_elapsedTime.start();
 				m_frameCount = 0;
