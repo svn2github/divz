@@ -15,6 +15,8 @@
 
 #include "VideoWidget.h"
 
+#define DEFAULT_FADE_LENGTH 1000
+
 void MdiPreviewWidget::setFadeTimef(double secs)
 {
 	int ms = (int)(secs * 1000.0);
@@ -25,7 +27,7 @@ void MdiPreviewWidget::setFadeTimef(double secs)
 
 void MdiPreviewWidget::setFadeTime(int ms)
 {
-	double sec = ((double)ms) / 1000;
+	double sec = ((double)ms) / 1000.0;
 	if(m_timeBox->value() != ms)
 		m_timeBox->setValue(sec);
 	
@@ -37,7 +39,7 @@ MdiPreviewWidget::MdiPreviewWidget(QWidget *parent)
 	, m_textInput(new QLineEdit(this))
 {
 	m_outputWidget = new VideoWidget();
-	m_outputWidget->setFadeLength(1000);
+	m_outputWidget->setFadeLength(DEFAULT_FADE_LENGTH);
 		
 	m_layout->addWidget(m_textInput);
 	connect(m_textInput, SIGNAL(returnPressed()), this, SLOT(textReturnPressed()));
@@ -53,7 +55,7 @@ MdiPreviewWidget::MdiPreviewWidget(QWidget *parent)
 	m_fadeSlider->setTickInterval(500);
 	m_fadeSlider->setSingleStep(500);
 	m_fadeSlider->setPageStep(500);
-	m_fadeSlider->setValue(1500);
+	m_fadeSlider->setValue(DEFAULT_FADE_LENGTH);
 	m_fadeSlider->setTickPosition(QSlider::TicksBelow);
 	hbox1->addWidget(m_fadeSlider,1);
 	
@@ -63,7 +65,7 @@ MdiPreviewWidget::MdiPreviewWidget(QWidget *parent)
 	m_timeBox->setMaximum(10.0);
 	//m_timeBox->setPageStep(0.5);
 	m_timeBox->setSingleStep(0.5);
-	m_timeBox->setValue(1.0);
+	m_timeBox->setValue(DEFAULT_FADE_LENGTH / 1000.0);
 	m_timeBox->setDecimals(1);
 	m_timeBox->setStyleSheet("font-size:.85em");
 	//m_timeBox->setStyle(new QCDEStyle());
@@ -101,7 +103,6 @@ MdiPreviewWidget::MdiPreviewWidget(QWidget *parent)
 	QSettings settings;
 	int idx = settings.value("mdipreviewwidget/last-screen-index",0).toInt();
 		
-	m_configMenu = new QMenu(this);
 	m_configMenu->addSeparator()->setText(tr("Output"));
 	
 	QActionGroup *screenGroup = new QActionGroup(this);
@@ -201,4 +202,10 @@ void MdiPreviewWidget::takeSource(VideoSource *source)
 {
 	m_outputWidget->setVideoSource(source);
 	setVideoSource(source);
+}
+
+void MdiPreviewWidget::setRenderFps(bool flag)
+{
+	m_outputWidget->setRenderFps(flag);
+	MdiVideoChild::setRenderFps(flag);
 }

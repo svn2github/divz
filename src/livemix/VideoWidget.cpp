@@ -22,10 +22,12 @@ VideoWidget::VideoWidget()
 	, m_showOverlayText(true)
 	, m_overlayText("")
 	, m_forceFps(-1)
-	, m_renderFps(true)
+	, m_renderFps(false)
 	, m_fadeLength(0)
 	, m_fadeToBlack(false)
 	, m_latencyAccum(0)
+	, m_queuedSource(0)
+	, m_oldThread(0)
 {
 	//setAttribute(Qt::WA_PaintOnScreen, true);
 	//setAttribute(Qt::WA_OpaquePaintEvent, true);
@@ -111,6 +113,12 @@ void VideoWidget::setVideoSource(VideoSource *source)
 {
 	if(source == m_thread)
 		return;
+	
+	if(m_fadeTimer.isActive())
+	{
+		m_queuedSource = source;
+		return;
+	}
 		
 	if(m_fadeLength > 33)
 		fadeStart();
@@ -120,6 +128,7 @@ void VideoWidget::setVideoSource(VideoSource *source)
 
 	//qDebug() << "VideoWidget::setVideoSource: In Thread ID "<<QThread::currentThreadId();
 	//qDebug() << "VideoWidget::setVideoSource: source: "<<source;
+	
 	m_thread = source;
 	if(!m_thread)
 	{
@@ -150,13 +159,13 @@ void VideoWidget::fadeStart(bool switchThreads)
 		connect(m_oldThread, SIGNAL(frameReady()), this, SLOT(oldFrameReady()));
 	}
 	
-	// Allow starting another cross fade during the middle of the same CF
 	if(!m_fadeToBlack)
-		//if(m_opacity >= 1)
-			m_opacity = 0.0;
+		m_opacity = 0.0;
 	else
-		//if(m_opacity <= 0)
-			m_opacity = 1.0;
+		m_opacity = 1.0;
+
+		
+	// draw the old thread in the current threads place - see drawing code
 	
 // 	qDebug() << "VideoWidget::fadeStart("<<switchThreads<<"): m_opacity:"<<m_opacity;
 	m_fadeTimer.start();
@@ -228,6 +237,13 @@ void VideoWidget::fadeStop()
 	m_fadeTimer.stop();
 	
 	discardOldThread();
+	
+	if(m_queuedSource)
+	{
+		// this will start a cross fade to this source now
+		setVideoSource(m_queuedSource);
+		m_queuedSource = 0;
+	}
 }
 
 void VideoWidget::discardOldThread()

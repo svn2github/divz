@@ -3,6 +3,8 @@
 
 #include "VideoWidget.h"
 
+#include <QSettings>
+
 MdiVideoChild::MdiVideoChild(QWidget *parent)
 	: MdiChild(parent)
 	, m_layout(new QVBoxLayout(this))
@@ -24,6 +26,32 @@ void MdiVideoChild::setupDefaultGui()
 {
 	m_layout->setContentsMargins(3,3,3,3);
 	m_layout->addWidget(m_videoWidget);
+	
+	m_configMenu = new QMenu(this);
+	m_configMenu->addSeparator()->setText(tr("FPS"));
+	
+	QAction * action;
+	QSettings settings;
+	
+	// FPS option
+	bool flag = settings.value(QString("%1/fps").arg(metaObject()->className()),false).toInt();
+	
+	action = m_configMenu->addAction("Show FPS");
+	action->setCheckable(true);
+	action->setChecked(flag);
+	connect(action, SIGNAL(toggled(bool)), this, SLOT(setRenderFps(bool)));
+	
+	setRenderFps(flag);
+	
+	
+}
+
+void MdiVideoChild::setRenderFps(bool flag)
+{
+	QSettings settings;
+	settings.setValue(QString("%1/fps").arg(metaObject()->className()),flag);
+	
+	m_videoWidget->setRenderFps(flag);
 }
 
 

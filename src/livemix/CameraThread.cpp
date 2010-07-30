@@ -37,11 +37,17 @@ extern "C" {
 
 namespace
 {
+	// NOTE: This code was copied from the iLab saliency project by USC
+	// found at http://ilab.usc.edu/source/. The note following is from
+	// the USC code base. I've just converted it to use uchar* instead of
+	// the iLab (I assume) specific typedef 'byte'. - Josiah 20100730
+	
 void bobDeinterlace(const uchar* src, const uchar* const srcend,
 		    uchar* dest, uchar* const destend,
 		    const int height, const int stride,
 		    const bool in_bottom_field)
 {
+
 	// NOTE: this deinterlacing code was derived from and/or inspired by
 	// code from tvtime (http://tvtime.sourceforge.net/); original
 	// copyright notice here:
@@ -559,18 +565,18 @@ void CameraThread::readFrame()
 							     QImage::Format_ARGB32_Premultiplied);
 						// I can cheat and claim premul because I know the video (should) never have alpha
 						
-						bool bottomFrame = m_frameCount % 2 == 0;
+						bool bottomFrame = m_frameCount % 2 == 1;
 						
 						uchar * dest = frame.scanLine(0); // use scanLine() instead of bits() to prevent deep copy
 						uchar * src  = (uchar*)m_av_rgb_frame->data[0];
 						const int h  = m_video_codec_context->height;
 						const int stride = frame.bytesPerLine();
 						
-						bobDeinterlace(src,  src +h*stride, 
-							dest, dest+h*stride,
-							h, stride, bottomFrame);
+						bobDeinterlace( src,  src +h*stride, 
+								dest, dest+h*stride,
+								h, stride, bottomFrame);
 							
-						enqueue(VideoFrame(frame,1000/m_fps));
+						enqueue(VideoFrame(frame,1000/m_fps,capTime));
 					}
 					else
 					{

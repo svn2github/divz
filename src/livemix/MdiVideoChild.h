@@ -28,6 +28,9 @@ public:
 signals:
 	void clicked();
 	
+public slots:
+	virtual void setRenderFps(bool);
+	
 protected:
 	void setupDefaultGui();
 	void contextMenuEvent(QContextMenuEvent *);

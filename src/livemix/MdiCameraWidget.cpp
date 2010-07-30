@@ -48,8 +48,6 @@ MdiCameraWidget::MdiCameraWidget(QWidget *parent)
 	configBtn->setStyle(new QCDEStyle());
 	//configBtn->setStyleSheet("border:1px solid black; padding:0; width: 1em; margin:0");
 	
-	m_configMenu = new QMenu(configBtn);
-	
 	QAction * action;
 	
 	// Deinterlace option

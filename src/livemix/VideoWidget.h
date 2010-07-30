@@ -125,6 +125,8 @@ private:
 	
 	long m_latencyAccum;
 	
+	// If setVideoSource called while cross fade is active, the source is changed AFTER the fade is complete
+	VideoSource * m_queuedSource; 
 };
 
 

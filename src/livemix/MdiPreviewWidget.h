@@ -21,6 +21,7 @@ public:
 public slots:
 	void takeSource(MdiVideoChild *);
 	void takeSource(VideoSource *);
+	void setRenderFps(bool flag);
 	
 protected slots:
 	void outputActionTriggered(QAction*);
