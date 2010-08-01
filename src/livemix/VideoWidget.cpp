@@ -113,6 +113,12 @@ void VideoWidget::setVideoSource(VideoSource *source)
 {
 	if(source == m_thread)
 		return;
+		
+	if(m_fadeToBlack)
+	{
+		disconnectVideoSource();
+		connectVideoSource(source);
+	}
 	
 	if(m_fadeTimer.isActive())
 	{
@@ -129,6 +135,11 @@ void VideoWidget::setVideoSource(VideoSource *source)
 	//qDebug() << "VideoWidget::setVideoSource: In Thread ID "<<QThread::currentThreadId();
 	//qDebug() << "VideoWidget::setVideoSource: source: "<<source;
 	
+	connectVideoSource(source);
+}
+
+void VideoWidget::connectVideoSource(VideoSource *source)
+{
 	m_thread = source;
 	if(!m_thread)
 	{
@@ -145,6 +156,7 @@ void VideoWidget::setVideoSource(VideoSource *source)
 	
 	frameReady(); // prime the pump
 }
+
 
 void VideoWidget::fadeStart(bool switchThreads)
 {
@@ -485,17 +497,7 @@ void VideoWidget::paintEvent(QPaintEvent*)
 	//p.setRenderHint(QPainter::SmoothPixmapTransform);
 	//p.setRenderHint(QPainter::Antialiasing);
 
-	//qDebug() << "VideoWidget::paintEvent(): "<<objectName()<<", thread:"<<thread()<<", main:"<<QApplication::instance()->thread();
-	//qDebug() << "VideoWidget::paintEvent(): My Frame Count #: "<<m_frameCount ++;
-
-	//if(m_opacity <= 0)
-	//	return;
-
-	//if(m_opacity < 1 || m_targetRect != rect())
-		p.fillRect(rect(),Qt::black);
-
-	//if(m_opacity>0 && m_opacity<1)
-	//	p.setOpacity(m_opacity);
+	p.fillRect(rect(),Qt::black);
 
 	if(!m_thread)
 	{
@@ -512,51 +514,54 @@ void VideoWidget::paintEvent(QPaintEvent*)
 			p.drawImage(m_oldTargetRect,m_oldFrame.image,m_oldSourceRect);
 		}
 		
-		p.setOpacity(m_opacity);
-			
-		p.drawImage(m_targetRect,m_frame.image,m_sourceRect);
-
-		// If fading in from black (e.g. no old thread)
-		// then fade in the overlay with the frame, otherwise during
-		// crossfades, dont fade the overlay
-		if(m_oldThread)
-			p.setOpacity(1.0);
-			
-		p.drawPixmap(m_targetRect.topLeft(),m_overlay);
+		if(m_opacity > 0.0)
+		{ 
+			p.setOpacity(m_opacity);
+				
+			p.drawImage(m_targetRect,m_frame.image,m_sourceRect);
 	
-		m_frameCount ++;
-		if(m_renderFps)
-		{
-			QString framesPerSecond;
-			framesPerSecond.setNum(m_frameCount /(m_elapsedTime.elapsed() / 1000.0), 'f', 2);
-			
-			
-			QString latencyString;
-			if(!m_frame.captureTime.isNull())
+			// If fading in from black (e.g. no old thread)
+			// then fade in the overlay with the frame, otherwise during
+			// crossfades, dont fade the overlay
+			if(m_oldThread)
+				p.setOpacity(1.0);
+				
+			p.drawPixmap(m_targetRect.topLeft(),m_overlay);
+		
+			m_frameCount ++;
+			if(m_renderFps)
 			{
-				int msecLatency = m_frame.captureTime.msecsTo(QTime::currentTime());
-				
-				m_latencyAccum += msecLatency;
-				
-				QString latencyPerFrame;
-				latencyPerFrame.setNum((((double)m_latencyAccum) / ((double)m_frameCount) / 1000.0), 'f', 3);
-				
-				latencyString = QString("| %1s latency").arg(latencyPerFrame);
-			}
+				QString framesPerSecond;
+				framesPerSecond.setNum(m_frameCount /(m_elapsedTime.elapsed() / 1000.0), 'f', 2);
 				
 				
-
-			p.setPen(Qt::black);
-			p.drawText(m_targetRect.x() + 6,m_targetRect.y() + 16,QString("%1 fps %2").arg(framesPerSecond).arg(latencyString));
-			p.setPen(Qt::white);
-			p.drawText(m_targetRect.x() + 5,m_targetRect.y() + 15,QString("%1 fps %2").arg(framesPerSecond).arg(latencyString));
-			
-			if(!(m_frameCount % 30))
-			{
-				m_elapsedTime.start();
-				m_frameCount = 0;
-				m_latencyAccum = 0;
-				//qDebug() << "FPS: "<<framesPerSecond;
+				QString latencyString;
+				if(!m_frame.captureTime.isNull())
+				{
+					int msecLatency = m_frame.captureTime.msecsTo(QTime::currentTime());
+					
+					m_latencyAccum += msecLatency;
+					
+					QString latencyPerFrame;
+					latencyPerFrame.setNum((((double)m_latencyAccum) / ((double)m_frameCount) / 1000.0), 'f', 3);
+					
+					latencyString = QString("| %1s latency").arg(latencyPerFrame);
+				}
+					
+					
+	
+				p.setPen(Qt::black);
+				p.drawText(m_targetRect.x() + 6,m_targetRect.y() + 16,QString("%1 fps %2").arg(framesPerSecond).arg(latencyString));
+				p.setPen(Qt::white);
+				p.drawText(m_targetRect.x() + 5,m_targetRect.y() + 15,QString("%1 fps %2").arg(framesPerSecond).arg(latencyString));
+				
+				if(!(m_frameCount % 30))
+				{
+					m_elapsedTime.start();
+					m_frameCount = 0;
+					m_latencyAccum = 0;
+					//qDebug() << "FPS: "<<framesPerSecond;
+				}
 			}
 		}
 	}

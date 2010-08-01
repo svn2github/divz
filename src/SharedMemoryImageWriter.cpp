@@ -8,7 +8,7 @@
 #include <QImage>
 #include <QTime>
 
-#define WRITER_FPS 19
+#define WRITER_FPS 10
 #define BYTES_PER_PIXEL 4
 
 SharedMemoryImageWriter::SharedMemoryImageWriter(QObject *parent)
@@ -18,12 +18,10 @@ SharedMemoryImageWriter::SharedMemoryImageWriter(QObject *parent)
 	connect(&m_frameTimer, SIGNAL(timeout()), this, SLOT(generateFrame()));
 	m_frameTimer.setInterval(1000/WRITER_FPS);
 	
-	//m_memorySize = FRAME_WIDTH * FRAME_HEIGHT * BYTES_PER_PIXEL; 
-	
-	m_image = QImage(FRAME_WIDTH,FRAME_HEIGHT,
-		QImage::Format_ARGB32_Premultiplied);
-		//QImage::Format_ARGB4444_Premultiplied);
-	m_memorySize = m_image.byteCount();	
+	QImage testImage(FRAME_WIDTH,
+			 FRAME_HEIGHT,
+			 FRAME_FORMAT);
+	m_memorySize = testImage.byteCount();	
 	
 	m_timeAccum = 0;
 	m_frameCount = 0;
@@ -70,11 +68,12 @@ void SharedMemoryImageWriter::disable()
 
 void SharedMemoryImageWriter::updateRects()
 {
+	QRect targetFrame(0,0, FRAME_WIDTH, FRAME_HEIGHT);
 	QSize nativeSize = m_sourceRect.size();
-	nativeSize.scale(m_image.size(), Qt::KeepAspectRatio);
+	nativeSize.scale(targetFrame.size(), Qt::KeepAspectRatio);
 	
 	m_targetRect = QRect(0, 0, nativeSize.width(), nativeSize.height());
-	m_targetRect.moveCenter(m_image.rect().center());
+	m_targetRect.moveCenter(targetFrame.center());
 }
 
 void SharedMemoryImageWriter::generateFrame()
@@ -84,8 +83,13 @@ void SharedMemoryImageWriter::generateFrame()
 	QTime time;
 	time.start();
 	
-	QPainter painter(&m_image);
-	painter.fillRect(0,0,FRAME_WIDTH,FRAME_HEIGHT,QColor(0,0,0,0)); // fully transparent background
+	QImage image(FRAME_WIDTH,
+	             FRAME_HEIGHT,
+		     FRAME_FORMAT);
+	memset(image.scanLine(0), 0, image.byteCount());
+	
+	QPainter painter(&image);
+	painter.fillRect(image.rect(),Qt::transparent);
 	painter.setRenderHint(QPainter::SmoothPixmapTransform, false);
 	painter.setRenderHint(QPainter::Antialiasing, false);
 	painter.setRenderHint(QPainter::TextAntialiasing, false);
@@ -97,42 +101,36 @@ void SharedMemoryImageWriter::generateFrame()
 		updateRects();
 	
 	m_scene->render(&painter,
-		//QRectF(0,0,FRAME_WIDTH,FRAME_HEIGHT),
 		m_targetRect,
 		m_sourceRect);
 	
 	painter.end();
 	
-// 	QBuffer buffer;
-// 	buffer.open(QBuffer::ReadWrite);
-// 	QDataStream out(&buffer);
-// 	out << m_image;
-// 	int size = buffer.size();
-// 	
- 	int size = m_image.byteCount();
+ 	int size = image.byteCount();
+ 	const uchar *from = image.scanLine(0);
+ 	
  	m_sharedMemory.lock();
  	uchar *to = (uchar*)m_sharedMemory.data();
- 	const uchar *from = m_image.scanLine(0);
  	memcpy(to, from, qMin(m_sharedMemory.size(), size));
  	m_sharedMemory.unlock();
 	
 	m_frameCount ++;
-	m_timeAccum += time.elapsed();
-	
-	QString msPerFrame;
-	msPerFrame.setNum(((double)m_timeAccum) / ((double)m_frameCount), 'f', 2);
-	
-	if(m_frameCount % (WRITER_FPS * 10) == 0)
-	{
-		m_timeAccum = 0;
-		m_timeAccum = 0;
-	}
+	m_timeAccum  += time.elapsed();
 	
 	if(m_frameCount % WRITER_FPS == 0)
 	{
+		QString msPerFrame;
+		msPerFrame.setNum(((double)m_timeAccum) / ((double)m_frameCount), 'f', 2);
+	
 		//qDebug() << "SharedMemoryImageWriter::generateFrame(): Avg MS per Frame:"<<msPerFrame;
 	}
 			
+	if(m_frameCount % (WRITER_FPS * 10) == 0)
+	{
+		m_timeAccum  = 0;
+		m_frameCount = 0;
+	}
+	
 	//qDebug() << "SharedMemoryImageWriter::generateFrame(): frame time:"<<time.elapsed()<<", avg:"<<msPerFrame;
 }
 	

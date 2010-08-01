@@ -79,6 +79,7 @@ protected:
 	void resizeEvent(QResizeEvent*);
 
 private:
+	void connectVideoSource(VideoSource *source);
 	void updateOverlay();
 	void updateRects();
 

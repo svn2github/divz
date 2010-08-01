@@ -18,7 +18,7 @@ QMutex DVizSharedMemoryThread::threadCacheMutex;
 
 DVizSharedMemoryThread::DVizSharedMemoryThread(const QString& key, QObject *parent)
 	: VideoSource(parent)
-	, m_fps(25)
+	, m_fps(10)
 	, m_key(key)
 	, m_timeAccum(0)
 	, m_frameCount(0)
@@ -67,19 +67,26 @@ void DVizSharedMemoryThread::run()
 		
 	m_sharedMemory.attach(QSharedMemory::ReadWrite);
 	
+	int frameCount = 0;
+	int timeAccum = 0;
+	QTime time;
+	
 	int counter = 0;
 	while(!m_killed)
 	{
+		time.restart();
+		
 		if(!m_sharedMemory.isAttached())
 			m_sharedMemory.attach(QSharedMemory::ReadWrite);
 		else
 		{
 			QImage image(FRAME_WIDTH,
 			             FRAME_HEIGHT,
-				QImage::Format_ARGB32_Premultiplied);
+				     FRAME_FORMAT);
 				
-			m_sharedMemory.lock();
 			uchar *to = image.scanLine(0);
+			
+			m_sharedMemory.lock();
 			const uchar *from = (uchar*)m_sharedMemory.data();
 			memcpy(to, from, qMin(m_sharedMemory.size(), image.byteCount()));
 		
@@ -88,6 +95,24 @@ void DVizSharedMemoryThread::run()
 			//qDebug() << "DVizSharedMemoryThread::run(): image.size:"<<image.size();
 				
 			enqueue(VideoFrame(image,1000/m_fps));
+		}
+		
+		
+		frameCount ++;
+		timeAccum  += time.elapsed();
+	
+		if(frameCount % m_fps == 0)
+		{
+			QString msPerFrame;
+			msPerFrame.setNum(((double)timeAccum) / ((double)frameCount), 'f', 2);
+		
+			//qDebug() << "DVizSharedMemoryThread::run(): Avg MS per Frame:"<<msPerFrame;
+		}
+				
+		if(frameCount % (m_fps * 10) == 0)
+		{
+			timeAccum  = 0;
+			frameCount = 0;
 		}
 		
 		msleep(1000 / m_fps / 1.5); // / (m_deinterlace ? 1 : 2));

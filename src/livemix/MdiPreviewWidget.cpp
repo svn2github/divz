@@ -109,7 +109,8 @@ MdiPreviewWidget::MdiPreviewWidget(QWidget *parent)
 	connect(screenGroup, SIGNAL(triggered(QAction*)), this, SLOT(outputActionTriggered(QAction*)));
 	QAction *action;
 	
-	m_screenList << QRect(0,0,1024,768);
+	//m_screenList << QRect(0,0,1024,768);
+	m_screenList << QRect(-1,-1,1,1);
 	
 	action = m_configMenu->addAction("No Output");
 	action->setCheckable(true);
@@ -119,6 +120,8 @@ MdiPreviewWidget::MdiPreviewWidget(QWidget *parent)
 	
 	if(action->isChecked())
 		outputActionTriggered(action);
+		
+	m_configMenu->addSeparator();
 	
 	
 	int numScreens = desktopWidget->numScreens();

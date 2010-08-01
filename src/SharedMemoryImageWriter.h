@@ -8,7 +8,7 @@
 
 #define FRAME_WIDTH 1024
 #define FRAME_HEIGHT 768
-
+#define FRAME_FORMAT QImage::Format_ARGB32_Premultiplied
 
 class SharedMemoryImageWriter : public QObject
 {
