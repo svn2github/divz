@@ -94,8 +94,8 @@ OutputInstance::OutputInstance(Output *out, bool startHidden, QWidget *parent)
 	p.setColor(QPalette::Window, Qt::black);
 	setPalette(p);
 	
-	m_grabTimer = new QTimer();
-	connect(m_grabTimer, SIGNAL(timeout()), this, SLOT(slotGrabPixmap()));
+	//m_grabTimer = new QTimer();
+	//connect(m_grabTimer, SIGNAL(timeout()), this, SLOT(slotGrabPixmap()));
 	
 	if(out->tags().toLower().indexOf("live") >= 0 ||
 	   out->name().toLower().indexOf("live") >= 0)
@@ -143,7 +143,7 @@ void OutputInstance::removeMirror(OutputInstance *inst)
 
 void OutputInstance::slotGrabPixmap()
 {
-	if(!m_output->mjpegServerEnabled())
+/*	if(!m_output->mjpegServerEnabled())
 		return;
 		
 	if(!m_jpegServer ||
@@ -188,7 +188,7 @@ void OutputInstance::slotGrabPixmap()
 	if(m_imgBuffer.size() >= MAX_IMGBUFFER_SIZE)
 		delete m_imgBuffer.takeFirst();
 	
-	//qDebug("Frame: %d, Elapsed: %.02f, Avg: %.02f, FPmS: %.02f, Port: %d", frameCounter, elapsed, frameTimeSum / frameCounter, frameCounter / frameTimeSum, m_jpegServer->serverPort());
+	//qDebug("Frame: %d, Elapsed: %.02f, Avg: %.02f, FPmS: %.02f, Port: %d", frameCounter, elapsed, frameTimeSum / frameCounter, frameCounter / frameTimeSum, m_jpegServer->serverPort());*/
 }
 
 void OutputInstance::applyOutputSettings(bool startHidden)
@@ -241,12 +241,33 @@ void OutputInstance::applyOutputSettings(bool startHidden)
 		setWindowTitle(QString("%1 Output - DViz").arg(m_output->name()));
 		setWindowIcon(QIcon(":/data/icon-d.png"));
 		
-		if(m_grabTimer->isActive())
-			m_grabTimer->stop();
+// 		if(m_grabTimer->isActive())
+// 			m_grabTimer->stop();
 			
-		if(m_output->isEnabled() &&
-		   m_output->mjpegServerEnabled())
-			m_grabTimer->start(1000 / m_output->mjpegServerFPS());
+// 		if(m_output->isEnabled() &&
+// 		   m_output->mjpegServerEnabled())
+// 			m_grabTimer->start(1000 / m_output->mjpegServerFPS());
+		
+		m_viewer->setMjpegServerEnabled(m_output->mjpegServerEnabled(), m_output->mjpegServerPort(), m_output->mjpegServerFPS()); 
+
+// 		if(!m_jpegServer ||
+// 		m_jpegServer->serverPort() != m_output->mjpegServerPort())
+// 		{
+// 			if(m_jpegServer)
+// 				delete m_jpegServer;
+// 			
+// 			m_jpegServer = new JpegServer();
+// 			m_jpegServer->setProvider(this, SIGNAL(imageReady(QImage*)));
+// 			
+// 			if (!m_jpegServer->listen(QHostAddress::Any,m_output->mjpegServerPort())) 
+// 			{
+// 				qDebug() << "JpegServer could not start: "<<m_jpegServer->errorString();
+// 			}
+// 			else
+// 			{
+// 				//qDebug() << "OutputInstance"<<output()->name()<<": JpegServer listening on "<<m_jpegServer->myAddress();
+// 			}
+// 		}
 	}
 	else
 	if(x == Output::Preview || x == Output::Viewer)

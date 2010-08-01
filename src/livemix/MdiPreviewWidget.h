@@ -10,6 +10,7 @@
 #include <QSlider>
 #include <QDoubleSpinBox>
 
+class MainWindow;
 class VideoOutputWidget;
 class GLWidget;
 class MdiPreviewWidget : public MdiVideoChild
@@ -22,6 +23,7 @@ public slots:
 	void takeSource(MdiVideoChild *);
 	void takeSource(VideoSource *);
 	void setRenderFps(bool flag);
+	void setMainWindow(MainWindow*);
 	
 protected slots:
 	void outputActionTriggered(QAction*);
@@ -29,8 +31,14 @@ protected slots:
 	void setFadeTimef(double);
 	void setFadeTime(int);
 	
+	void videoChildAdded(MdiVideoChild*);
+	void videoChildDestroyed();
+	void overlayBoxIndexChanged(int);
+	
 protected:
-	QComboBox *m_screenBox;
+	void setupOverlayBox();
+	
+	QComboBox *m_overlayBox;
 	QList<QRect> m_screenList;
 	
 	QLineEdit *m_textInput;
@@ -41,6 +49,10 @@ protected:
 	VideoWidget *m_outputWidget;
 	//VideoOutputWidget * m_outputWidget;
 	//GLWidget *m_outputWidget;
+	
+	MainWindow *m_mainWindow;
+	
+	QList<MdiVideoChild*> m_overlayChilds;
 };
 
 #endif

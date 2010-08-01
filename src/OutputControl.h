@@ -140,6 +140,8 @@ protected:
 	AbstractSlideGroupEditor *m_editWin;
 	
 	QSlider			* m_zoomSlider;
+	
+	bool m_firstRun;
 };
 
 

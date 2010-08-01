@@ -28,6 +28,7 @@ VideoWidget::VideoWidget()
 	, m_latencyAccum(0)
 	, m_queuedSource(0)
 	, m_oldThread(0)
+	, m_overlaySource(0)
 {
 	//setAttribute(Qt::WA_PaintOnScreen, true);
 	//setAttribute(Qt::WA_OpaquePaintEvent, true);
@@ -396,6 +397,9 @@ void VideoWidget::setSourceRectAdjust( int dx1, int dy1, int dx2, int dy2 )
 	m_adjustDy2 = dy2;
 }
 
+
+
+
 void VideoWidget::updateRects()
 {
 	m_sourceRect = m_frame.image.rect();
@@ -525,6 +529,9 @@ void VideoWidget::paintEvent(QPaintEvent*)
 			// crossfades, dont fade the overlay
 			if(m_oldThread)
 				p.setOpacity(1.0);
+			
+			if(m_overlaySource && !m_overlayFrame.image.isNull())
+				p.drawImage(m_overlayTargetRect,m_overlayFrame.image,m_overlaySourceRect);
 				
 			p.drawPixmap(m_targetRect.topLeft(),m_overlay);
 		
@@ -567,4 +574,89 @@ void VideoWidget::paintEvent(QPaintEvent*)
 	}
 
 	updateTimer();
+}
+
+void VideoWidget::setOverlaySource(VideoSource *source)
+{
+	if(m_overlaySource)
+		disconnectOverlaySource();
+		
+	m_overlaySource = source;
+	
+	if(source)
+	{
+		connect(m_overlaySource, SIGNAL(frameReady()), this, SLOT(overlayFrameReady()), Qt::QueuedConnection);
+		connect(m_overlaySource, SIGNAL(destroyed()), this, SLOT(sourceDestroyed()));
+		m_overlaySource->registerConsumer(this);
+		
+		overlayFrameReady();
+	}
+}
+
+void VideoWidget::disconnectOverlaySource()
+{
+	if(!m_overlaySource)
+		return;
+	m_overlaySource->release(this);
+	disconnect(m_overlaySource,0,this,0);
+	emit sourceDiscarded(m_overlaySource);
+	m_overlaySource = 0;
+}
+
+void VideoWidget::overlayFrameReady()
+{
+	if(!m_overlaySource)
+		return;
+
+	VideoFrame frame = m_overlaySource->frame();
+	if(frame.isEmpty())
+		qDebug() << "VideoWidget::overlayFrameReady(): isEmpty: "<<frame.isEmpty();
+
+	if(!frame.isEmpty())
+		m_overlayFrame = frame;
+		
+	if(m_overlayFrame.image.size() != m_overlaySourceRect.size())
+		updateOverlaySourceRects();
+}
+
+void VideoWidget::updateOverlaySourceRects()
+{
+	m_overlaySourceRect = m_overlayFrame.image.rect();
+	
+	QSize nativeSize = m_overlayFrame.image.size();
+
+	if (nativeSize.isEmpty())
+	{
+		m_overlayTargetRect = QRect();
+	}
+	else
+	if (m_aspectRatioMode == Qt::IgnoreAspectRatio)
+	{
+		m_overlayTargetRect = rect();
+	}
+	else
+	if (m_aspectRatioMode == Qt::KeepAspectRatio)
+	{
+		QSize size = nativeSize;
+		size.scale(rect().size(), Qt::KeepAspectRatio);
+
+		m_overlayTargetRect = QRect(0, 0, size.width(), size.height());
+		m_overlayTargetRect.moveCenter(rect().center());
+	}
+	else
+	if (m_aspectRatioMode == Qt::KeepAspectRatioByExpanding)
+	{
+		m_overlayTargetRect = rect();
+
+		QSize size = rect().size();
+		size.scale(nativeSize, Qt::KeepAspectRatio);
+
+		m_overlaySourceRect = QRect(QPoint(0,0),size);
+		m_overlaySourceRect.moveCenter(QPoint(size.width() / 2, size.height() / 2));
+	}
+
+	//qDebug() << "updateRects(): source: "<<m_sourceRect<<", target:" <<m_targetRect;
+	//updateOverlay();
+
+
 }

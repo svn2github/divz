@@ -12,6 +12,7 @@ class QMdiSubWindow;
 class QSignalMapper;
 
 class MdiPreviewWidget;
+class MdiVideoChild;
 
 class MainWindow : public QMainWindow
 {
@@ -19,6 +20,9 @@ class MainWindow : public QMainWindow
 
 public:
 	MainWindow();
+
+signals:
+	void videoChildAdded(MdiVideoChild*);
 
 protected:
 	void closeEvent(QCloseEvent *event);

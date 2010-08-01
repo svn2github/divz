@@ -21,6 +21,7 @@ class BackgroundContent;
 
 class SlideGroupViewerGraphicsView;
 class SharedMemoryImageWriter;
+class JpegServer;
 
 class NativeViewer : public QObject
 {
@@ -187,6 +188,7 @@ public:
 	void setStartBackgroundVideoPausedInPreview(bool flag);
 	
 	bool sharedMemoryImageWriterEnabled() { return m_sharedMemoryImageWriterEnabled; }
+	bool mjpegServerEnabled() { return m_jpegServerEnabled; }
 	
 	int outputId() { return m_outputId; }
 
@@ -227,6 +229,7 @@ public slots:
 	bool isGLDisabled() { return m_forceGLDisabled; }
 	
 	void setSharedMemoryImageWriterEnabled(bool enable, const QString& key="");
+	void setMjpegServerEnabled(bool enable, int port=8080, int fps=15);
 
 private slots:
 	void appSettingsChanged();
@@ -333,6 +336,9 @@ private:
 	
 	SharedMemoryImageWriter * m_shmemWriter;
 	bool m_sharedMemoryImageWriterEnabled;
+	
+	JpegServer *m_jpegServer;
+	bool m_jpegServerEnabled;
 };
 
 #endif // SLIDEGROUPVIEWER_H

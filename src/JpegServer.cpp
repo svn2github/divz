@@ -1,28 +1,112 @@
 #include "JpegServer.h"
 
+#include "MainWindow.h"
 #include <QNetworkInterface>
+
+#include <QPainter>
+
+#define FRAME_WIDTH  1024
+#define FRAME_HEIGHT 768
+#define FRAME_FORMAT QImage::Format_ARGB32_Premultiplied
 
 JpegServer::JpegServer(QObject *parent)
 	: QTcpServer(parent)
-	, m_imageProvider(0)
-	, m_signalName(0)
+	, m_scene(0)
+	, m_fps(10)
 	, m_adaptiveWriteEnabled(true)
+	, m_timeAccum(0)
+	, m_frameCount(0)
 {
+	connect(&m_timer, SIGNAL(timeout()), this, SLOT(generateNextFrame()));
+	setFps(m_fps);
+}
+
+void JpegServer::setFps(int fps)
+{
+	m_timer.setInterval(1000/fps);
 }
 	
-void JpegServer::setProvider(QObject *provider, const char * signalName)
+void JpegServer::setScene(QGraphicsScene *scene)
 {
-	m_imageProvider = provider;
-	m_signalName    = signalName;
+	m_scene = scene;
 }
 
 void JpegServer::incomingConnection(int socketDescriptor)
 {
 	JpegServerThread *thread = new JpegServerThread(socketDescriptor, m_adaptiveWriteEnabled);
 	connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
-	connect(m_imageProvider, m_signalName, thread, SLOT(imageReady(QImage*)), Qt::QueuedConnection);
+	connect(this, SIGNAL(frameReady(QImage)), thread, SLOT(imageReady(QImage)), Qt::QueuedConnection);
 	thread->start();
 	qDebug() << "JpegServer: Client Connected, Socket Descriptor:"<<socketDescriptor;
+	
+	
+	thread->moveToThread(thread);
+	
+	if(!m_timer.isActive())
+		m_timer.start();
+}
+
+void JpegServer::updateRects()
+{
+	QRect targetFrame(0,0, FRAME_WIDTH, FRAME_HEIGHT);
+	QSize nativeSize = m_sourceRect.size();
+	nativeSize.scale(targetFrame.size(), Qt::KeepAspectRatio);
+	
+	m_targetRect = QRect(0, 0, nativeSize.width(), nativeSize.height());
+	m_targetRect.moveCenter(targetFrame.center());
+}
+
+void JpegServer::generateNextFrame()
+{
+	if(!m_scene || !MainWindow::mw())
+		return;
+		
+	m_time.start();
+	
+	QImage image(FRAME_WIDTH,
+	             FRAME_HEIGHT,
+		     FRAME_FORMAT);
+	memset(image.scanLine(0), 0, image.byteCount());
+	
+	QPainter painter(&image);
+	painter.fillRect(image.rect(),Qt::transparent);
+	painter.setRenderHint(QPainter::SmoothPixmapTransform, false);
+	painter.setRenderHint(QPainter::Antialiasing, false);
+	painter.setRenderHint(QPainter::TextAntialiasing, false);
+	
+	if(!m_sourceRect.isValid())
+		m_sourceRect = MainWindow::mw()->standardSceneRect();
+		
+	if(m_sourceRect != m_targetRect)
+		updateRects();
+	
+	m_scene->render(&painter,
+		m_targetRect,
+		m_sourceRect);
+	
+	painter.end();
+	
+ 	emit frameReady(image);
+	
+// 	QImageWriter writer("frame.png", "png");
+// 	writer.write(image);
+
+	m_frameCount ++;
+	m_timeAccum  += m_time.elapsed();
+	
+	if(m_frameCount % m_fps == 0)
+	{
+		QString msPerFrame;
+		msPerFrame.setNum(((double)m_timeAccum) / ((double)m_frameCount), 'f', 2);
+	
+		qDebug() << "JpegServer::generateNextFrame(): Avg MS per Frame:"<<msPerFrame<<", threadId:"<<QThread::currentThreadId();
+	}
+			
+	if(m_frameCount % (m_fps * 10) == 0)
+	{
+		m_timeAccum  = 0;
+		m_frameCount = 0;
+	}
 }
 
 /** Thread **/
@@ -57,8 +141,8 @@ void JpegServerThread::run()
 	writeHeaders();
 	
 	m_writer.setDevice(m_socket);
-	m_writer.setFormat("jpg");
-	//m_writer.setQuality(80);
+	m_writer.setFormat("png");
+	m_writer.setQuality(50);
 
 	m_adaptiveIgnore = 0;
 	
@@ -77,9 +161,8 @@ void JpegServerThread::writeHeaders()
 	m_socket->write("--" BOUNDARY "\r\n");
 }
 
-void JpegServerThread::imageReady(QImage *tmp)
+void JpegServerThread::imageReady(QImage image)
 {
-	QImage image = *tmp;
 	static int frameCounter = 0;
  	frameCounter++;
 //  	qDebug() << "JpegServerThread: [START] Writing Frame#:"<<frameCounter;
@@ -91,16 +174,20 @@ void JpegServerThread::imageReady(QImage *tmp)
 	}
 	else
 	{
-		qDebug() << "JpegServerThread::imageReady(): Sending image"<<frameCounter;
+		qDebug() << "JpegServerThread::imageReady(): Sending image"<<frameCounter<<", threadId:"<<QThread::currentThreadId();
 		m_adaptiveIgnore = 0;
-		if(image.format() != QImage::Format_RGB32)
-			image = image.convertToFormat(QImage::Format_RGB32);
+		//if(image.format() != QImage::Format_RGB32)
+		//	image = image.convertToFormat(QImage::Format_RGB32);
 		
 		if(m_socket->state() == QAbstractSocket::ConnectedState)
 		{
-			m_socket->write("Content-type: image/jpeg\r\n\r\n");
+			//m_socket->write("Content-type: image/jpeg\r\n\r\n");
+			m_socket->write("Content-type: image/png\r\n\r\n");
 		}
 		
+		//QImageWriter writer(m_socket, "png");
+		//writer.write(image);
+	
 		if(!m_writer.write(image))
 		{
 			qDebug() << "ImageWriter reported error:"<<m_writer.errorString();

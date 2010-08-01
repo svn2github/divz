@@ -111,6 +111,7 @@ void SharedMemoryImageWriter::generateFrame()
  	
  	m_sharedMemory.lock();
  	uchar *to = (uchar*)m_sharedMemory.data();
+ 	memset(to, 0, m_sharedMemory.size());
  	memcpy(to, from, qMin(m_sharedMemory.size(), size));
  	m_sharedMemory.unlock();
 	

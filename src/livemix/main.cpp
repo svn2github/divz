@@ -27,10 +27,10 @@
 
 int main(int argc, char **argv)
 {
-	#ifdef Q_WS_X11
+/*	#ifdef Q_WS_X11
 		qDebug() << "Setting up multithreaded X11 library calls";
 		XInitThreads();
-	#endif
+	#endif*/
 	
 	//QGL::setPreferredPaintEngine(QPaintEngine::OpenGL);
 	QApplication app(argc, argv);

@@ -52,7 +52,10 @@ void MainWindow::addNewWindow(QWidget *child)
 	
 	MdiVideoChild * videoChild = dynamic_cast<MdiVideoChild*>(child);
 	if(videoChild)
+	{
+		emit videoChildAdded(videoChild);
 		connect(videoChild, SIGNAL(clicked()), this, SLOT(mdiChildClicked()));
+	}
 	
 // 	MdiVideoSource *vid = dynamic_cast<MdiVideoSource*>(child);
 // 	if(vid)
@@ -87,7 +90,7 @@ void MainWindow::newOutput()
 {
 	MdiPreviewWidget * preview = new MdiPreviewWidget;
 	addNewWindow(preview);
-	
+	preview->setMainWindow(this);
 	m_previewWidgets << preview;
 }
 void MainWindow::newVideo()

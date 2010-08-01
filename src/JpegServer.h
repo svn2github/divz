@@ -5,6 +5,9 @@
 #include <QThread>
 #include <QTcpSocket>
 #include <QImageWriter>
+#include <QGraphicsScene>
+#include <QTimer>
+#include <QTime>
 
 class JpegServer : public QTcpServer
 {
@@ -16,17 +19,38 @@ public:
 	void setAdaptiveWriteEnabled(bool flag) { m_adaptiveWriteEnabled = flag; }
 	bool adaptiveWriteEnabled() { return m_adaptiveWriteEnabled; }
 	
-	void setProvider(QObject *provider, const char * signalName);
+	void setScene(QGraphicsScene *scene);
+	QGraphicsScene *scene() { return m_scene; }
+	
+	void setFps(int fps);
+	int fps() { return m_fps; }
 	
 // 	QString myAddress();
+
+private slots:
+	void generateNextFrame();
+	
+signals:
+	void frameReady(QImage);
 
 protected:
 	void incomingConnection(int socketDescriptor);
 
 private:
-	QObject * m_imageProvider;
-	const char * m_signalName;
+	void updateRects();
+	
+	QGraphicsScene *m_scene;
+	int m_fps;
+	QTimer m_timer;
 	bool m_adaptiveWriteEnabled;
+	
+	QRect m_targetRect;
+	QRect m_sourceRect;
+	
+	int m_timeAccum;
+	int m_frameCount;
+	
+	QTime m_time;
 
 };
 
@@ -46,7 +70,7 @@ signals:
 	void error(QTcpSocket::SocketError socketError);
 
 public slots:
-	void imageReady(QImage*);
+	void imageReady(QImage);
 
 private:
 	void writeHeaders();

@@ -39,6 +39,7 @@ OutputControl::OutputControl(QWidget *parent)
 	, m_editWin(0)
 	, m_selectedLogo(0)
 	, m_zoomSlider(0)
+	, m_firstRun(true)
 {
 	setupUI();
 }
@@ -869,11 +870,16 @@ void OutputControl::setupFoldbackSettings()
 	if(m_inst->output()->tags().toLower().indexOf("live") < 0 &&
 	   m_inst->output()->name().toLower().indexOf("live") < 0)
 	{
-		setIsOutputSynced(true);
-// 		setTextOnlyFilterEnabled(true);
-// 		setTextResizeEnabled(true);
-		setAdvancedWidgetVisible(true);
-		m_fadeSlider->setValue(10);
+		//setIsOutputSynced(true);
+		if(m_outputIsSynced || m_firstRun)
+		{
+			m_firstRun = false;
+			setIsOutputSynced(true);
+	// 		setTextOnlyFilterEnabled(true);
+	// 		setTextResizeEnabled(true);
+			setAdvancedWidgetVisible(true);
+			m_fadeSlider->setValue(0);
+		}
 	}
 }
 

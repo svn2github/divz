@@ -14,6 +14,10 @@
 #include <QCDEStyle>
 
 #include "VideoWidget.h"
+#include "MainWindow.h"
+
+// #include "MdiDVizWidget.h"
+// #include "MdiMjpegwidget.h"
 
 #define DEFAULT_FADE_LENGTH 1000
 
@@ -149,6 +153,18 @@ MdiPreviewWidget::MdiPreviewWidget(QWidget *parent)
 	setWindowTitle("Output Preview");
 	
 	videoWidget()->setFps(15);
+	
+	QHBoxLayout *hbox2 = new QHBoxLayout();
+	m_layout->addLayout(hbox2);
+	hbox2->addWidget(new QLabel("Overlay:"));
+	
+	m_overlayBox = new QComboBox();
+	hbox2->addWidget(m_overlayBox);
+	
+	connect(m_overlayBox, SIGNAL(currentIndexChanged(int)), this, SLOT(overlayBoxIndexChanged(int)));
+	m_overlayChilds << (MdiVideoChild*)NULL;
+	
+	setupOverlayBox();
 }
 
 	
@@ -211,4 +227,70 @@ void MdiPreviewWidget::setRenderFps(bool flag)
 {
 	m_outputWidget->setRenderFps(flag);
 	MdiVideoChild::setRenderFps(flag);
+}
+
+void MdiPreviewWidget::setMainWindow(MainWindow *mw)
+{
+	m_mainWindow = mw;
+	connect(mw, SIGNAL(videoChildAdded(MdiVideoChild*)), this, SLOT(videoChildAdded(MdiVideoChild*)));
+}
+
+void MdiPreviewWidget::videoChildAdded(MdiVideoChild* child)
+{
+// 	MdiMjpegWidget *jpeg = dynamic_cast<MdiMjpegWidget*>(child);
+// 	MdiDVizWidget *dviz = dynamic_cast<MdiDVizWidget*>(child);
+	if(!child)
+		return;
+		
+	QString className(child->metaObject()->className());
+	if(className == "MdiMjpegWidget" ||
+	   className == "MdiDVizWidget")
+	{
+		m_overlayChilds << child;
+		setupOverlayBox();
+		connect(child, SIGNAL(destroyed()), this, SLOT(videoChildDestroyed()));
+	}
+	else
+	{
+		qDebug() << "MdiPreviewWidget::videoChildAdded("<<child<<"): Not using child as overlay because className:"<<className;
+	}
+}
+
+void MdiPreviewWidget::videoChildDestroyed()
+{
+	MdiVideoChild *child = dynamic_cast<MdiVideoChild*>(sender());
+	if(child)
+	{
+		m_overlayChilds.removeAll(child);
+		setupOverlayBox();
+	}
+}
+
+void MdiPreviewWidget::setupOverlayBox()
+{
+	m_overlayBox->clear();
+	
+	m_overlayBox->addItem("(No Overlay)");
+	
+	foreach(MdiVideoChild *child, m_overlayChilds)
+		if(child)
+			m_overlayBox->addItem(child->windowTitle());
+}
+
+void MdiPreviewWidget::overlayBoxIndexChanged(int idx)
+{
+	if(idx < 0 || idx >= m_overlayChilds.size())
+		return;
+		
+	MdiVideoChild *child = m_overlayChilds[idx];
+	if(child)
+	{
+		videoWidget()->setOverlaySource(child->videoSource());
+		m_outputWidget->setOverlaySource(child->videoSource());
+	}
+	else
+	{
+		videoWidget()->disconnectOverlaySource();
+		m_outputWidget->disconnectOverlaySource();
+	}
 }

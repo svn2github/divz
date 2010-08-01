@@ -32,6 +32,8 @@ public:
 	bool renderFps() { return m_renderFps; }
 	int fadeLength() { return m_fadeLength; }
 	
+	VideoSource *overlaySource() { return m_overlaySource; }
+	
 signals:
 	void clicked();
 	void sourceDiscarded(VideoSource*);
@@ -54,6 +56,9 @@ public slots:
 	
 	void setFadeLength(int ms);
 	
+	void setOverlaySource(VideoSource*);
+	void disconnectOverlaySource();
+
 	
 	
 protected slots:
@@ -69,7 +74,9 @@ protected slots:
 	void fadeAdvance();
 	void fadeStop();
 	void discardOldThread();
-
+	
+	void overlayFrameReady();
+	
 	
 protected:
 	void mouseReleaseEvent(QMouseEvent*); 
@@ -82,6 +89,7 @@ private:
 	void connectVideoSource(VideoSource *source);
 	void updateOverlay();
 	void updateRects();
+	void updateOverlaySourceRects();
 
 	VideoSource * m_thread;
 	VideoSource * m_oldThread;
@@ -130,7 +138,13 @@ private:
 	long m_latencyAccum;
 	
 	// If setVideoSource called while cross fade is active, the source is changed AFTER the fade is complete
-	VideoSource * m_queuedSource; 
+	VideoSource * m_queuedSource;
+	 
+	VideoFrame  m_overlayFrame;
+	VideoSource * m_overlaySource;
+	
+	QRect m_overlayTargetRect;
+	QRect m_overlaySourceRect;
 };
 
 

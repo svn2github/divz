@@ -158,7 +158,7 @@ void MjpegThread::processBlock()
 			int boundaryStartIdx = m_dataBlock.indexOf(boundaryMarker,ctypeIdx);
 			if(boundaryStartIdx < 0)
 			{
-				qDebug() << "Error: Can't find boundary index after the first content-type index in data block, exiting.";
+				qDebug() << "Error: Can't find boundary index after the first content-type index in data block, exiting.";//: "<<ctypeIdx<<","<<ctypeString<<","<<m_dataBlock;
 				exit();
 				return;
 			}
@@ -231,7 +231,7 @@ void MjpegThread::processBlock()
 							
 // 							qDebug() << "processBlock(): Emitting new image, size:"<<frame.size();
 							emit newImage(frame);
-							enqueue(VideoFrame(frame,1000/30));
+							enqueue(VideoFrame(frame,1000/20));
 						}	
 						
 						#ifdef MJPEG_TEST

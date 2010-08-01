@@ -23,6 +23,8 @@
 
 #include "SharedMemoryImageWriter.h"
 
+#include "JpegServer.h"
+
 #define PTRS(ptr) QString().sprintf("%p",static_cast<void*>(ptr))
 
 #include <QMessageBox>
@@ -268,6 +270,7 @@ SlideGroupViewer::SlideGroupViewer(QWidget *parent)
 	    , m_contextHint(MyGraphicsScene::Live)
 	    , m_shmemWriter(0)
 	    , m_sharedMemoryImageWriterEnabled(false)
+	    , m_jpegServer(0)
 {
 	QRect sceneRect(0,0,1024,768);
 	m_blackSlideRefCount++;
@@ -1541,4 +1544,36 @@ bool SlideGroupViewer::startBackgroundVideoPausedInPreview()
 void SlideGroupViewer::setStartBackgroundVideoPausedInPreview(bool flag)
 {
 	m_scene->setStartBackgroundVideoPausedInPreview(flag);
+}
+
+void SlideGroupViewer::setMjpegServerEnabled(bool enable, int port, int fps)
+{
+	if(enable)
+	{
+		if(!m_jpegServer ||
+		    m_jpegServer->serverPort() != port)
+		{
+			if(m_jpegServer)
+				delete m_jpegServer;
+			
+			m_jpegServer = new JpegServer();
+			m_jpegServer->setScene(m_scene);
+			m_jpegServer->setFps(fps);
+			
+			if (!m_jpegServer->listen(QHostAddress::Any,port)) 
+			{
+				qDebug() << "JpegServer could not start: "<<m_jpegServer->errorString();
+			}
+			else
+			{
+				//qDebug() << "OutputInstance"<<output()->name()<<": JpegServer listening on "<<m_jpegServer->myAddress();
+			}
+		}
+	}
+	else
+	{
+		delete m_jpegServer;
+		m_jpegServer = 0;
+	}
+
 }
