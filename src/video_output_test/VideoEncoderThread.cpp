@@ -3,6 +3,19 @@
 #include <string.h>
 #include <math.h>
 
+// Defn from http://gcc.gnu.org/ml/gcc-bugs/2002-10/msg00259.html
+#ifndef INT64_C
+# define INT64_C(c) c ## LL
+#endif
+
+#ifndef AV_PKT_FLAG_KEY
+# define AV_PKT_FLAG_KEY   0x0001
+# if LIBAVCODEC_VERSION_MAJOR < 53
+#   define PKT_FLAG_KEY AV_PKT_FLAG_KEY
+# endif
+#endif
+
+
 #include "VideoEncoderThread.h"
 
 /**************************************************************/
@@ -125,7 +138,8 @@ void VideoEncoderThread::writeAudioFrame(AVFormatContext *oc, AVStream *st)
 	
 	pkt.size = avcodec_encode_audio(c, m_audioData.audio_outbuf, m_audioData.audio_outbuf_size, m_audioData.samples);
 	
-	if (c->coded_frame && c->coded_frame->pts != AV_NOPTS_VALUE)
+	if (c->coded_frame && 
+	    c->coded_frame->pts != (int)AV_NOPTS_VALUE)
 		pkt.pts = av_rescale_q(c->coded_frame->pts, c->time_base, st->time_base);
 		
 	pkt.flags |= AV_PKT_FLAG_KEY;
@@ -376,7 +390,7 @@ void VideoEncoderThread::writeVideoFrame(AVFormatContext *oc, AVStream *st)
 			AVPacket pkt;
 			av_init_packet(&pkt);
 		
-			if (c->coded_frame->pts != AV_NOPTS_VALUE)
+			if (c->coded_frame->pts != (int)AV_NOPTS_VALUE)
 				pkt.pts = av_rescale_q(c->coded_frame->pts, c->time_base, st->time_base);
 			if(c->coded_frame->key_frame)
 				pkt.flags |= AV_PKT_FLAG_KEY;
