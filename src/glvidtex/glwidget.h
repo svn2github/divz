@@ -5,6 +5,9 @@
 #include <QGLWidget>
 #include <QVideoSurfaceFormat>
 #include <QGLShaderProgram>
+#include "../livemix/VideoFrame.h"
+#include "../livemix/VideoSource.h"
+
 
 class QGLShaderProgram;
 
@@ -37,6 +40,9 @@ protected:
 	void initRgbTextureInfo(GLenum internalFormat, GLuint format, GLenum type, const QSize &size);
         void updateColors(int brightness, int contrast, int hue, int saturation);
 
+protected slots:
+	void frameReady();
+
 private:
 	void makeObject();
 	
@@ -56,7 +62,7 @@ private:
 	QList<QVideoFrame::PixelFormat> m_imagePixelFormats;
 	QList<QVideoFrame::PixelFormat> m_glPixelFormats;
 	QMatrix4x4 m_colorMatrix;
-	QVideoFrame m_frame;
+	//QVideoFrame m_frame;
 	
 	//QGLContext *m_context;
 	//QAbstractVideoBuffer::HandleType m_handleType;
@@ -89,6 +95,9 @@ private:
 	typedef void (APIENTRY *_glActiveTexture) (GLenum);
 	_glActiveTexture glActiveTexture;
 	#endif
+	
+	VideoFrame m_frame;
+	VideoSource *m_source;
 	
 };
 

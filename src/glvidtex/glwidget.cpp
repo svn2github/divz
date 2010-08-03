@@ -3,7 +3,7 @@
 #include <QVideoFrame>
 #include <QAbstractVideoSurface>
 #include "glwidget.h"
-
+#include "../livemix/VideoThread.h"
 
 #if !defined(QT_NO_OPENGL) && !defined(QT_OPENGL_ES_1_CL) && !defined(QT_OPENGL_ES_1)
 
@@ -119,11 +119,27 @@ GLWidget::GLWidget(QWidget *parent, QGLWidget *shareWidget)
 	#ifndef QT_OPENGL_ES
 	glActiveTexture = (_glActiveTexture)context()->getProcAddress(QLatin1String("glActiveTexture"));
 	#endif
+	
+	VideoThread * thread = new VideoThread();
+	thread->setVideo("../data/Seasons_Loop_3_SD.mpg");
+	thread->start();
+	m_source = thread;
+	
+	connect(thread, SIGNAL(frameReady()), this, SLOT(frameReady()));
 
 }
 
 GLWidget::~GLWidget()
 {
+}
+
+void GLWidget::frameReady()
+{
+	if(!m_source)
+		return;
+		
+	m_frame = m_source->frame();
+	updateGL();
 }
 
 QSize GLWidget::minimumSizeHint() const
@@ -464,7 +480,7 @@ void GLWidget::paintGL()
 			m_textureFormat,
 			m_textureType,
 			//m_frame.bits() + m_textureOffsets[i]
-			m_sampleTexture.scanLine(0) + m_textureOffsets[i]
+			(m_frame.isValid() ? m_frame.image.convertToFormat(QImage::Format_ARGB32).scanLine(0) : m_sampleTexture.scanLine(0)) + m_textureOffsets[i]
 			);
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -641,7 +657,11 @@ void GLWidget::makeObject()
 // 		{ { -1, -1, +1 }, { +1, -1, +1 }, { +1, +1, +1 }, { -1, +1, +1 } }
 // 	};
 	
-	m_sampleTexture = QImage(QString(":/images/side%1.png").arg(1)).convertToFormat(QImage::Format_ARGB32);
+	//m_sampleTexture = QImage(QString(":/images/side%1.png").arg(1)).convertToFormat(QImage::Format_ARGB32);
+	m_sampleTexture = QImage( 640, 480, QImage::Format_RGB32 );
+	m_sampleTexture.fill( Qt::green );
+	m_sampleTexture = m_sampleTexture.convertToFormat(QImage::Format_ARGB32);
+	
 	/*
 	for (int j=0; j < 6; ++j) 
 	{
