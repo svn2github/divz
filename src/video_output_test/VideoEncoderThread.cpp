@@ -42,9 +42,9 @@ AVStream *VideoEncoderThread::addAudioStream(AVFormatContext *oc, enum CodecID c
 	
 	/* put sample parameters */
 	c->sample_fmt = SAMPLE_FMT_S16;
-	c->bit_rate = 64000;
+	c->bit_rate    = 64000;
 	c->sample_rate = 44100;
-	c->channels = 2;
+	c->channels    = 2;
 	
 	// some formats want stream headers to be separate
 	if(oc->oformat->flags & AVFMT_GLOBALHEADER)
@@ -62,14 +62,16 @@ void VideoEncoderThread::openAudio(AVFormatContext */*oc*/, AVStream *st)
 	
 	/* find the audio encoder */
 	codec = avcodec_find_encoder(c->codec_id);
-	if (!codec) {
-		fprintf(stderr, "codec not found\n");
+	if (!codec) 
+	{
+		fprintf(stderr, "Audio codec not found\n");
 		exit(1);
 	}
 	
 	/* open it */
-	if (avcodec_open(c, codec) < 0) {
-		fprintf(stderr, "could not open codec\n");
+	if (avcodec_open(c, codec) < 0) 
+	{
+		fprintf(stderr, "Could not open audio codec\n");
 		exit(1);
 	}
 	
@@ -187,8 +189,8 @@ AVStream *VideoEncoderThread::addVideoStream(AVFormatContext *oc, enum CodecID c
 	c->bit_rate = 400000;
 	
 	/* resolution must be a multiple of two */
-	c->width = 352;
-	c->height = 288;
+	c->width  = 720;
+	c->height = 480;
 	
 	/* time base: this is the fundamental unit of time (in seconds) in terms
 	   of which frame timestamps are represented. for fixed-fps content,
