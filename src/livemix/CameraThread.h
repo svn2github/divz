@@ -124,6 +124,7 @@ private:
 	bool m_rawFrames;
 	
 	QFile m_videoDev;
+	QByteArray m_frameData;
 	
 };
 

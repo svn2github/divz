@@ -291,118 +291,126 @@ int CameraThread::initCamera()
 	#endif
 
 	qDebug() << "[DEBUG] CameraThread::load(): fmt:"<<fmt<<", filetmp:"<<fileTmp;
-
-	inFmt = av_find_input_format(qPrintable(fmt));
-	if( !inFmt )
-	{
-		qDebug() << "[ERROR] CameraThread::load(): Unable to find input format:"<<fmt;
-		return -1;
-	}
-
-	formatParams.time_base.num = 1;
-	formatParams.time_base.den = 35; //25;
-// 	formatParams.width = 352;
-// 	formatParams.height = 288;
-	formatParams.width = 640;
-	formatParams.height = 480;
-// 	formatParams.channel = 1;
-	//formatParams.pix_fmt = PIX_FMT_RGB24 ;
-
-
-	// Open video file
-	 //
-	if(av_open_input_file(&m_av_format_context, qPrintable(fileTmp), inFmt, 0, &formatParams) != 0)
-	//if(av_open_input_file(&m_av_format_context, "1", inFmt, 0, NULL) != 0)
-	{
-		qDebug() << "[WARN] CameraThread::load(): av_open_input_file() failed, fileTmp:"<<fileTmp;
-		return false;
-	}
-
-	//dump_format(m_av_format_context, 0, qPrintable(m_cameraFile), 0);
-	qDebug() << "[DEBUG] dump_format():";
-	dump_format(m_av_format_context, 0, qPrintable(fileTmp), false);
-
-
-	uint i;
-
-	// Find the first video stream
-	m_video_stream = -1;
-	m_audio_stream = -1;
-	for(i = 0; i < m_av_format_context->nb_streams; i++)
-	{
-		if(m_av_format_context->streams[i]->codec->codec_type == CODEC_TYPE_VIDEO)
-		{
-			m_video_stream = i;
-		}
-		if(m_av_format_context->streams[i]->codec->codec_type == CODEC_TYPE_AUDIO)
-		{
-			m_audio_stream = i;
-		}
-	}
-	if(m_video_stream == -1)
-	{
-		qDebug() << "[WARN] CameraThread::load(): Cannot find video stream.";
-		return false;
-	}
-
-	// Get a pointer to the codec context for the video and audio streams
-	m_video_codec_context = m_av_format_context->streams[m_video_stream]->codec;
-// 	m_video_codec_context->get_buffer = our_get_buffer;
-// 	m_video_codec_context->release_buffer = our_release_buffer;
-
-	// Find the decoder for the video stream
-	m_video_codec = avcodec_find_decoder(m_video_codec_context->codec_id);
-	if(m_video_codec == NULL)
-	{
-		qDebug() << "[WARN] CameraThread::load(): avcodec_find_decoder() failed for codec_id:" << m_video_codec_context->codec_id;
-		//return false;
-	}
-
-	// Open codec
-	if(avcodec_open(m_video_codec_context, m_video_codec) < 0)
-	{
-		qDebug() << "[WARN] CameraThread::load(): avcodec_open() failed.";
-		//return false;
-	}
-
-	// Allocate video frame
-	m_av_frame = avcodec_alloc_frame();
-
-	// Allocate an AVFrame structure
-	m_av_rgb_frame =avcodec_alloc_frame();
-	if(m_av_rgb_frame == NULL)
-	{
-		qDebug() << "[WARN] CameraThread::load(): avcodec_alloc_frame() failed.";
-		return false;
-	}
-
-	qDebug() << "[DEBUG] codec context size:"<<m_video_codec_context->width<<"x"<<m_video_codec_context->height;
-
-	// Determine required buffer size and allocate buffer
-	int num_bytes = avpicture_get_size(RAW_PIX_FMT, m_video_codec_context->width, m_video_codec_context->height);
-
-	m_buffer = (uint8_t *)av_malloc(num_bytes * sizeof(uint8_t));
-
-	// Assign appropriate parts of buffer to image planes in pFrameRGB
-	// Note that pFrameRGB is an AVFrame, but AVFrame is a superset of AVPicture
-	avpicture_fill((AVPicture *)m_av_rgb_frame, m_buffer, RAW_PIX_FMT,
-					m_video_codec_context->width, m_video_codec_context->height);
 	
-	if(m_audio_stream != -1)
+	m_videoDev.setFileName(fileTmp);
+	if(!m_videoDev.open(QIODevice::ReadOnly))
 	{
-		m_audio_codec_context = m_av_format_context->streams[m_audio_stream]->codec;
-
-		m_audio_codec = avcodec_find_decoder(m_audio_codec_context->codec_id);
-		if(!m_audio_codec)
-		{
-			//unsupported codec
-			return false;
-		}
-		avcodec_open(m_audio_codec_context, m_audio_codec);
+		qDebug() << "Unable to open "<<fileTmp<<" for reading.";
+		return 0;
 	}
 
-	m_timebase = m_av_format_context->streams[m_video_stream]->time_base;
+// 	inFmt = av_find_input_format(qPrintable(fmt));
+// 	if( !inFmt )
+// 	{
+// 		qDebug() << "[ERROR] CameraThread::load(): Unable to find input format:"<<fmt;
+// 		return -1;
+// 	}
+// 
+// 	formatParams.time_base.num = 1;
+// 	formatParams.time_base.den = 35; //25;
+// // 	formatParams.width = 352;
+// // 	formatParams.height = 288;
+// 	formatParams.width = 640;
+// 	formatParams.height = 480;
+// // 	formatParams.channel = 1;
+// 	//formatParams.pix_fmt = PIX_FMT_RGB24 ;
+// 
+// 
+// 	// Open video file
+// 	 //
+// 	if(av_open_input_file(&m_av_format_context, qPrintable(fileTmp), inFmt, 0, &formatParams) != 0)
+// 	//if(av_open_input_file(&m_av_format_context, "1", inFmt, 0, NULL) != 0)
+// 	{
+// 		qDebug() << "[WARN] CameraThread::load(): av_open_input_file() failed, fileTmp:"<<fileTmp;
+// 		return false;
+// 	}
+// 
+// 	//dump_format(m_av_format_context, 0, qPrintable(m_cameraFile), 0);
+// 	qDebug() << "[DEBUG] dump_format():";
+// 	dump_format(m_av_format_context, 0, qPrintable(fileTmp), false);
+// 
+// 
+// 	uint i;
+// 
+// 	// Find the first video stream
+// 	m_video_stream = -1;
+// 	m_audio_stream = -1;
+// 	for(i = 0; i < m_av_format_context->nb_streams; i++)
+// 	{
+// 		if(m_av_format_context->streams[i]->codec->codec_type == CODEC_TYPE_VIDEO)
+// 		{
+// 			m_video_stream = i;
+// 		}
+// 		if(m_av_format_context->streams[i]->codec->codec_type == CODEC_TYPE_AUDIO)
+// 		{
+// 			m_audio_stream = i;
+// 		}
+// 	}
+// 	if(m_video_stream == -1)
+// 	{
+// 		qDebug() << "[WARN] CameraThread::load(): Cannot find video stream.";
+// 		return false;
+// 	}
+// 
+// 	// Get a pointer to the codec context for the video and audio streams
+// 	m_video_codec_context = m_av_format_context->streams[m_video_stream]->codec;
+// // 	m_video_codec_context->get_buffer = our_get_buffer;
+// // 	m_video_codec_context->release_buffer = our_release_buffer;
+// 
+// 	// Find the decoder for the video stream
+// 	m_video_codec = avcodec_find_decoder(m_video_codec_context->codec_id);
+// 	if(m_video_codec == NULL)
+// 	{
+// 		qDebug() << "[WARN] CameraThread::load(): avcodec_find_decoder() failed for codec_id:" << m_video_codec_context->codec_id;
+// 		//return false;
+// 	}
+// 
+// 	// Open codec
+// 	if(avcodec_open(m_video_codec_context, m_video_codec) < 0)
+// 	{
+// 		qDebug() << "[WARN] CameraThread::load(): avcodec_open() failed.";
+// 		//return false;
+// 	}
+// 
+// 	// Allocate video frame
+// 	m_av_frame = avcodec_alloc_frame();
+// 
+// 	// Allocate an AVFrame structure
+// 	m_av_rgb_frame =avcodec_alloc_frame();
+// 	if(m_av_rgb_frame == NULL)
+// 	{
+// 		qDebug() << "[WARN] CameraThread::load(): avcodec_alloc_frame() failed.";
+// 		return false;
+// 	}
+// 
+// 	qDebug() << "[DEBUG] codec context size:"<<m_video_codec_context->width<<"x"<<m_video_codec_context->height;
+// 
+// 	// Determine required buffer size and allocate buffer
+// 	int num_bytes = avpicture_get_size(RAW_PIX_FMT, m_video_codec_context->width, m_video_codec_context->height);
+// 
+// 	m_buffer = (uint8_t *)av_malloc(num_bytes * sizeof(uint8_t));
+// 
+// 	// Assign appropriate parts of buffer to image planes in pFrameRGB
+// 	// Note that pFrameRGB is an AVFrame, but AVFrame is a superset of AVPicture
+// 	avpicture_fill((AVPicture *)m_av_rgb_frame, m_buffer, RAW_PIX_FMT,
+// 					m_video_codec_context->width, m_video_codec_context->height);
+// 	
+// 	if(m_audio_stream != -1)
+// 	{
+// 		m_audio_codec_context = m_av_format_context->streams[m_audio_stream]->codec;
+// 
+// 		m_audio_codec = avcodec_find_decoder(m_audio_codec_context->codec_id);
+// 		if(!m_audio_codec)
+// 		{
+// 			//unsupported codec
+// 			return false;
+// 		}
+// 		avcodec_open(m_audio_codec_context, m_audio_codec);
+// 	}
+// 
+// 	m_timebase = m_av_format_context->streams[m_video_stream]->time_base;
 
+	
 	m_inited = true;
 	return 0;
 }
@@ -499,138 +507,160 @@ void CameraThread::readFrame()
 		//emit frameReady(1000/m_fps);
 		return;
 	}
-	AVPacket pkt1, *packet = &pkt1;
-	double pts;
+// 	AVPacket pkt1, *packet = &pkt1;
+// 	double pts;
 
 	//qDebug() << "CameraThread::readFrame(): My Frame Count # "<<m_frameCount ++;
 	m_frameCount ++;
 	
+	static const int width = 640;
+	static const int height = 480;
+	static const int frameLength = 
+		width*height +
+		((width/2) * (height/2)) * 2;
+		
+	if(m_frameData.size() < frameLength)
+		m_frameData.resize(frameLength);
+		
+	m_frameData.clear();
+	
+	QTime capTime = QTime::currentTime();
+	
 	int frame_finished = 0;
 	while(!frame_finished && !m_killed)
 	{
-		if(av_read_frame(m_av_format_context, packet) >= 0)
-		{
-			// Is this a packet from the video stream?
-			if(packet->stream_index == m_video_stream)
-			{
+// 		if(av_read_frame(m_av_format_context, packet) >= 0)
+// 		{
+// 			// Is this a packet from the video stream?
+// 			if(packet->stream_index == m_video_stream)
+// 			{
 				//global_video_pkt_pts = packet->pts;
-				QTime capTime = QTime::currentTime();
+				
 
 // 				mutex.lock();
-				avcodec_decode_video(m_video_codec_context, m_av_frame, &frame_finished, packet->data, packet->size);
-// 				mutex.unlock();
-
-				if(packet->dts == (uint)AV_NOPTS_VALUE &&
-						  m_av_frame->opaque &&
-				  *(uint64_t*)m_av_frame->opaque != (uint)AV_NOPTS_VALUE)
-				{
-					pts = *(uint64_t *)m_av_frame->opaque;
-				}
-				else if(packet->dts != AV_NOPTS_VALUE)
-				{
-					pts = packet->dts;
-				}
-				else
-				{
-					pts = 0;
-				}
-
-				pts *= av_q2d(m_timebase);
-
-				// Did we get a video frame?
-				if(frame_finished)
-				{
-
-					if(m_rawFrames)
-					{
- 						//qDebug() << "Decode Time: "<<capTime.msecsTo(QTime::currentTime())<<" ms";
-						VideoFrame frame(1000/m_fps,capTime);
-						frame.setRawData(m_av_frame->data, m_av_frame->linesize);
-						enqueue(frame);
-					}
-					else
-					{
-						// Convert the image from its native format to RGB, then copy the image data to a QImage
-						if(m_sws_context == NULL)
-						{
-							//mutex.lock();
-							//qDebug() << "Creating software scaler for pix_fmt: "<<m_video_codec_context->pix_fmt;
-							m_sws_context = sws_getContext(
-								m_video_codec_context->width, m_video_codec_context->height,
-								m_video_codec_context->pix_fmt,
-								m_video_codec_context->width, m_video_codec_context->height,
-								//PIX_FMT_RGB32,SWS_BICUBIC,
-								RAW_PIX_FMT, SWS_FAST_BILINEAR,
-								NULL, NULL, NULL); //SWS_PRINT_INFO
-							//mutex.unlock();
-							//printf("decode(): created m_sws_context\n");
-						}
-			
-						sws_scale(m_sws_context,
-							m_av_frame->data,
-							m_av_frame->linesize, 0,
-							m_video_codec_context->height,
-							m_av_rgb_frame->data,
-							m_av_rgb_frame->linesize);
-	
-						if(m_deinterlace)
-						{
-							QImage frame(m_video_codec_context->width,
-								m_video_codec_context->height,
-								QImage::Format_ARGB32_Premultiplied);
-							// I can cheat and claim premul because I know the video (should) never have alpha
-							
-							bool bottomFrame = m_frameCount % 2 == 1;
-							
-							uchar * dest = frame.scanLine(0); // use scanLine() instead of bits() to prevent deep copy
-							uchar * src  = (uchar*)m_av_rgb_frame->data[0];
-							const int h  = m_video_codec_context->height;
-							const int stride = frame.bytesPerLine();
-							
-							bobDeinterlace( src,  src +h*stride, 
-									dest, dest+h*stride,
-									h, stride, bottomFrame);
-								
-							enqueue(VideoFrame(frame,1000/m_fps,capTime));
-						}
-						else
-						{
-							QImage frame(m_av_rgb_frame->data[0],
-								m_video_codec_context->width,
-								m_video_codec_context->height,
-								//QImage::Format_RGB16);
-								QImage::Format_ARGB32_Premultiplied);
-								
-							enqueue(VideoFrame(frame,1000/m_fps,capTime));
-						}
-					}
-					
-					// lame attempt to de-interlace
-					//frame = frame.scaled(m_video_codec_context->width, m_video_codec_context->height/2)
-					//	     .scaled(m_video_codec_context->width,m_video_codec_context->height);
+// 				avcodec_decode_video(m_video_codec_context, m_av_frame, &frame_finished, packet->data, packet->size);
+// // 				mutex.unlock();
+// 
+// 				if(packet->dts == (uint)AV_NOPTS_VALUE &&
+// 						  m_av_frame->opaque &&
+// 				  *(uint64_t*)m_av_frame->opaque != (uint)AV_NOPTS_VALUE)
+// 				{
+// 					pts = *(uint64_t *)m_av_frame->opaque;
+// 				}
+// 				else if(packet->dts != AV_NOPTS_VALUE)
+// 				{
+// 					pts = packet->dts;
+// 				}
+// 				else
+// 				{
+// 					pts = 0;
+// 				}
+// 
+// 				pts *= av_q2d(m_timebase);
+// 
+// 				// Did we get a video frame?
+// 				if(frame_finished)
+// 				{
 				
-					av_free_packet(packet);
-					
-					
+				//qDebug() << "starting read...";
+				QByteArray tmp = m_videoDev.read(frameLength);
+				m_frameData.append(tmp);
+				
+				//qDebug() << "read "<<tmp.size()<<", frameLen:"<<frameLength<<", m_frameData.size():"<<m_frameData.size();
+				
+				if(m_frameData.size() >= frameLength)
+				{
+					frame_finished = 1;
+				
+					qDebug() << "Decode Time: "<<capTime.msecsTo(QTime::currentTime())<<" ms";
+					VideoFrame frame(1000/m_fps,capTime);
+					frame.setRawBits((uchar*)m_frameData.data());
+					enqueue(frame);
 				}
-
-			}
-			else if(packet->stream_index == m_audio_stream)
-			{
-				//decode audio packet, store in queue
-				av_free_packet(packet);
-			}
-			else
-			{
-				av_free_packet(packet);
-			}
-		}
-		else
-		{
-			//emit reachedEnd();
-// 			qDebug() << "reachedEnd()";
-		}
 	}
+// 					else
+// 					{
+// 						// Convert the image from its native format to RGB, then copy the image data to a QImage
+// 						if(m_sws_context == NULL)
+// 						{
+// 							//mutex.lock();
+// 							//qDebug() << "Creating software scaler for pix_fmt: "<<m_video_codec_context->pix_fmt;
+// 							m_sws_context = sws_getContext(
+// 								m_video_codec_context->width, m_video_codec_context->height,
+// 								m_video_codec_context->pix_fmt,
+// 								m_video_codec_context->width, m_video_codec_context->height,
+// 								//PIX_FMT_RGB32,SWS_BICUBIC,
+// 								RAW_PIX_FMT, SWS_FAST_BILINEAR,
+// 								NULL, NULL, NULL); //SWS_PRINT_INFO
+// 							//mutex.unlock();
+// 							//printf("decode(): created m_sws_context\n");
+// 						}
+// 			
+// 						sws_scale(m_sws_context,
+// 							m_av_frame->data,
+// 							m_av_frame->linesize, 0,
+// 							m_video_codec_context->height,
+// 							m_av_rgb_frame->data,
+// 							m_av_rgb_frame->linesize);
+// 	
+// 						if(m_deinterlace)
+// 						{
+// 							QImage frame(m_video_codec_context->width,
+// 								m_video_codec_context->height,
+// 								QImage::Format_ARGB32_Premultiplied);
+// 							// I can cheat and claim premul because I know the video (should) never have alpha
+// 							
+// 							bool bottomFrame = m_frameCount % 2 == 1;
+// 							
+// 							uchar * dest = frame.scanLine(0); // use scanLine() instead of bits() to prevent deep copy
+// 							uchar * src  = (uchar*)m_av_rgb_frame->data[0];
+// 							const int h  = m_video_codec_context->height;
+// 							const int stride = frame.bytesPerLine();
+// 							
+// 							bobDeinterlace( src,  src +h*stride, 
+// 									dest, dest+h*stride,
+// 									h, stride, bottomFrame);
+// 								
+// 							enqueue(VideoFrame(frame,1000/m_fps,capTime));
+// 						}
+// 						else
+// 						{
+// 							QImage frame(m_av_rgb_frame->data[0],
+// 								m_video_codec_context->width,
+// 								m_video_codec_context->height,
+// 								//QImage::Format_RGB16);
+// 								QImage::Format_ARGB32_Premultiplied);
+// 								
+// 							enqueue(VideoFrame(frame,1000/m_fps,capTime));
+// 						}
+// 					}
+// 					
+// 					// lame attempt to de-interlace
+// 					//frame = frame.scaled(m_video_codec_context->width, m_video_codec_context->height/2)
+// 					//	     .scaled(m_video_codec_context->width,m_video_codec_context->height);
+// 				
+// 					av_free_packet(packet);
+// 					
+// 					
+// 				}
+// 
+// 			}
+// 			else if(packet->stream_index == m_audio_stream)
+// 			{
+// 				//decode audio packet, store in queue
+// 				av_free_packet(packet);
+// 			}
+// 			else
+// 			{
+// 				av_free_packet(packet);
+// 			}
+// 		}
+// 		else
+// 		{
+// 			//emit reachedEnd();
+// // 			qDebug() << "reachedEnd()";
+// 		}
+// 	}
 }
 
 // QImage CameraThread::frame()
