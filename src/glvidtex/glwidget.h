@@ -23,6 +23,17 @@ public:
 	QSize sizeHint() const;
 	void rotateBy(int xAngle, int yAngle, int zAngle);
 	void setClearColor(const QColor &color);
+	
+	int brightness() const;
+	int contrast() const;
+	int hue() const;
+	int saturation() const;
+	
+public slots:
+	void setBrightness(int brightness);
+	void setContrast(int contrast);
+	void setHue(int hue);
+	void setSaturation(int saturation);
 
 signals:
 	void clicked();
@@ -98,6 +109,15 @@ private:
 	
 	VideoFrame m_frame;
 	VideoSource *m_source;
+	
+	QTime m_time;
+	int m_frameCount;
+	int m_latencyAccum;
+	
+	GLuint m_pboIds[2];                   // IDs of PBO
+	GLuint m_pboTextureId;                // ID of texture
+	int m_pboMode;
+	int m_pboIndex;
 	
 };
 

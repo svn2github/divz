@@ -17,6 +17,8 @@ extern "C" {
 #include <QTimer>
 #include <QMutex>
 
+#include <QFile>
+
 #include "VideoSource.h"
 
 class CameraThread: public VideoSource
@@ -38,13 +40,16 @@ public:
 
 	//QImage frame();
 	
-	void setFps(int fps=30);
 	int fps() { return m_fps; }
 	
 	bool deinterlace() { return m_deinterlace; }
+	
+	bool rawFramesEnabled() { return m_rawFrames; }
 
 public slots:
 	void setDeinterlace(bool);
+	void setFps(int fps=30);
+	void enableRawFrames(bool enable=true);
 	
 signals:
 	//void newImage(QImage);
@@ -115,6 +120,11 @@ private:
 	bool m_deinterlace;
 	
 	static QMutex threadCacheMutex;
+	
+	bool m_rawFrames;
+	
+	QFile m_videoDev;
+	
 };
 
 

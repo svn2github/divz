@@ -4,6 +4,40 @@
 #include <QAbstractVideoSurface>
 #include "glwidget.h"
 #include "../livemix/VideoThread.h"
+#include "../livemix/CameraThread.h"
+
+typedef void (APIENTRY *_glBindBufferARB) (GLenum, GLuint);
+_glBindBufferARB glBindBufferARB;
+
+typedef void (APIENTRY *_glDeleteBuffersARB) (GLsizei, const GLuint *);
+_glDeleteBuffersARB glDeleteBuffersARB;
+
+typedef void (APIENTRY *_glGenBuffersARB) (GLsizei, GLuint *);
+_glGenBuffersARB glGenBuffersARB;
+
+typedef GLboolean (APIENTRY *_glIsBufferARB) (GLuint);
+_glIsBufferARB glIsBufferARB;
+
+typedef void (APIENTRY *_glBufferDataARB) (GLenum, GLsizeiptrARB, const GLvoid *, GLenum);
+_glBufferDataARB glBufferDataARB;
+
+typedef void (APIENTRY *_glBufferSubDataARB) (GLenum, GLintptrARB, GLsizeiptrARB, const GLvoid *);
+_glBufferSubDataARB glBufferSubDataARB;
+
+typedef void (APIENTRY *_glGetBufferSubDataARB) (GLenum, GLintptrARB, GLsizeiptrARB, GLvoid *);
+_glGetBufferSubDataARB glGetBufferSubDataARB;
+
+typedef GLvoid* (APIENTRY *_glMapBufferARB) (GLenum, GLenum);
+_glMapBufferARB glMapBufferARB;
+
+typedef GLboolean (APIENTRY *_glUnmapBufferARB) (GLenum);
+_glUnmapBufferARB glUnmapBufferARB;
+
+typedef void (APIENTRY *_glGetBufferParameterivARB) (GLenum, GLenum, GLint *);
+_glGetBufferParameterivARB glGetBufferParameterivARB;
+
+typedef void (APIENTRY *_glGetBufferPointervARB) (GLenum, GLenum, GLvoid* *);
+_glGetBufferPointervARB glGetBufferPointervARB;
 
 #if !defined(QT_NO_OPENGL) && !defined(QT_OPENGL_ES_1_CL) && !defined(QT_OPENGL_ES_1)
 
@@ -108,6 +142,10 @@ GLWidget::GLWidget(QWidget *parent, QGLWidget *shareWidget)
 	, m_contrast(0)
 	, m_hue(0)
 	, m_saturation(0)
+	, m_frameCount(0)
+	, m_latencyAccum(0)
+	, m_pboMode(2)
+	, m_pboIndex(0)
 	//, m_pixelFormat(QVideoFrame::Format_Invalid)
 {
 	clearColor = Qt::black;
@@ -120,10 +158,55 @@ GLWidget::GLWidget(QWidget *parent, QGLWidget *shareWidget)
 	glActiveTexture = (_glActiveTexture)context()->getProcAddress(QLatin1String("glActiveTexture"));
 	#endif
 	
-	VideoThread * thread = new VideoThread();
-	thread->setVideo("../data/Seasons_Loop_3_SD.mpg");
-	thread->start();
-	m_source = thread;
+	// get pointers to GL functions
+	glGenBuffersARB 	= (_glGenBuffersARB)	context()->getProcAddress(QLatin1String("glGenBuffersARB"));
+	glBindBufferARB 	= (_glBindBufferARB)	context()->getProcAddress(QLatin1String("glBindBufferARB"));
+	glBufferDataARB 	= (_glBufferDataARB)	context()->getProcAddress(QLatin1String("glBufferDataARB"));
+	glBufferSubDataARB 	= (_glBufferSubDataARB)	context()->getProcAddress(QLatin1String("glBufferSubDataARB"));
+	glDeleteBuffersARB 	= (_glDeleteBuffersARB)	context()->getProcAddress(QLatin1String("glDeleteBuffersARB"));
+	glMapBufferARB 		= (_glMapBufferARB)	context()->getProcAddress(QLatin1String("glMapBufferARB"));
+	glUnmapBufferARB 	= (_glUnmapBufferARB)	context()->getProcAddress(QLatin1String("glUnmapBufferARB"));
+	glGetBufferParameterivARB = (_glGetBufferParameterivARB)context()->getProcAddress(QLatin1String("glGetBufferParameterivARB"));
+	
+	// check PBO extension
+	if(glGenBuffersARB && glBindBufferARB && glBufferDataARB && glBufferSubDataARB &&
+		glMapBufferARB && glUnmapBufferARB && glDeleteBuffersARB && glGetBufferParameterivARB)
+	{
+		//pboSupported = true;
+		//pboMode = 1;    // using 1 PBO
+		qDebug() << "Video card supports GL_ARB_pixel_buffer_object.";
+	}
+	else
+	{
+		//pboSupported = false;
+		//pboMode = 0;    // without PBO
+		qDebug() << "Video card does NOT support GL_ARB_pixel_buffer_object.";
+	}
+	
+
+	#ifdef Q_OS_WIN
+	QString defaultCamera = "vfwcap://0";
+	#else
+	QString defaultCamera = "/dev/video0";
+	#endif
+
+
+	CameraThread *thread = CameraThread::threadForCamera(defaultCamera);
+	if(thread)
+	{
+		thread->setFps(30);
+		thread->enableRawFrames(true);
+		m_source = thread;
+	}
+	if(!thread)
+	{
+		VideoThread * thread = new VideoThread();
+		thread->setVideo("../data/Seasons_Loop_3_SD.mpg");
+		thread->start();
+	}
+
+
+	
 	
 	connect(thread, SIGNAL(frameReady()), this, SLOT(frameReady()));
 
@@ -264,6 +347,8 @@ void GLWidget::initYuv420PTextureInfo(const QSize &size)
 	m_textureWidths[2] = size.width() / 2;
 	m_textureHeights[2] = size.height() / 2;
 	m_textureOffsets[2] = size.width() * size.height() * 5 / 4;
+	
+	//qDebug() << "yuv420p tex: off2:"<<m_textureOffsets[2];
 }
 
 void GLWidget::initYv12TextureInfo(const QSize &size)
@@ -304,7 +389,8 @@ void GLWidget::initializeGL()
 	#define PROGRAM_VERTEX_ATTRIBUTE 0
 	#define PROGRAM_TEXCOORD_ATTRIBUTE 1
 	
-	QVideoSurfaceFormat format(m_sampleTexture.size(), QVideoFrame::Format_ARGB32);
+	//QVideoSurfaceFormat format(m_sampleTexture.size(), QVideoFrame::Format_ARGB32);
+	QVideoSurfaceFormat format(m_sampleTexture.size(), QVideoFrame::Format_YUV420P);
 	
 	const char *fragmentProgram = 0;
 
@@ -377,7 +463,7 @@ void GLWidget::initializeGL()
 	else 
 	if (!m_program.addShaderFromSourceCode(QGLShader::Vertex, qt_glsl_vertexShaderProgram)) 
 	{
-		qWarning("QPainterVideoSurface: Vertex shader compile error %s",
+		qWarning("GLWidget: Vertex shader compile error %s",
 			qPrintable(m_program.log()));
 		//error = QAbstractVideoSurface::ResourceError;
 		
@@ -385,14 +471,14 @@ void GLWidget::initializeGL()
 	else 
 	if (!m_program.addShaderFromSourceCode(QGLShader::Fragment, fragmentProgram)) 
 	{
-		qWarning("QPainterVideoSurface: Shader compile error %s", qPrintable(m_program.log()));
+		qWarning("GLWidget: Shader compile error %s", qPrintable(m_program.log()));
 		//error = QAbstractVideoSurface::ResourceError;
 		m_program.removeAllShaders();
 	} 
 	else 
 	if(!m_program.link()) 
 	{
-		qWarning("QPainterVideoSurface: Shader link error %s", qPrintable(m_program.log()));
+		qWarning("GLWidget: Shader link error %s", qPrintable(m_program.log()));
 		m_program.removeAllShaders();
 	} 
 	else 
@@ -408,18 +494,54 @@ void GLWidget::initializeGL()
 // 	program->bind();
 // 	program->setUniformValue("texture", 0);
 
+
+	m_pboTextureId = m_textureIds[0];
+	//glGenTextures(1, &m_pboTextureId);
+	glBindTexture(GL_TEXTURE_2D, m_pboTextureId);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_sampleTexture.width(), m_sampleTexture.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid*)m_sampleTexture.scanLine(0));
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	glGenBuffersARB(2, m_pboIds);
+	glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, m_pboIds[0]);
+	glBufferDataARB(GL_PIXEL_UNPACK_BUFFER_ARB, m_sampleTexture.byteCount(), 0, GL_STREAM_DRAW_ARB);
+	glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, m_pboIds[1]);
+	glBufferDataARB(GL_PIXEL_UNPACK_BUFFER_ARB, m_sampleTexture.byteCount(), 0, GL_STREAM_DRAW_ARB);
+	glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, 0);
+	
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 4);      // 4-byte pixel alignment
+
+
+	m_time.start();
+
 }
+
+// NOTE: on x86 machines with glibc 2.3.6 and g++ 3.4.4, it looks
+	// like std::copy is faster than memcpy, so we use that to do the
+	// copying here:
+
+#ifndef fast_memcpy
+#  if 1
+#    define fast_memcpy(dst,src,n) std::copy((src),(src)+(n),(dst))
+#  else
+#    define fast_memcpy(dst,src,n) memcpy((dst),(src),(n))
+#  endif
+#endif
 
 void GLWidget::paintGL()
 {
 	if (m_colorsDirty) 
 	{
-		qDebug() << "Updating color matrix";
+		//qDebug() << "Updating color matrix";
 		updateColors(m_brightness, m_contrast, m_hue, m_saturation);
 		m_colorsDirty = false;
         }
 
-        qglClearColor(clearColor);
+        //qglClearColor(clearColor);
+        qglClearColor(Qt::black);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
 	// #if !defined(QT_OPENGL_ES_2)
@@ -466,27 +588,130 @@ void GLWidget::paintGL()
 
 
 	//makeCurrent();
-
-	for (int i = 0; i < m_textureCount; ++i) 
+	
+	bool testPbos = false;
+	
+	if(testPbos)
 	{
-		glBindTexture(GL_TEXTURE_2D, m_textureIds[i]);
-		glTexImage2D(
-			GL_TEXTURE_2D,
-			0,
-			m_textureInternalFormat,
-			m_textureWidths[i],
-			m_textureHeights[i],
-			0,
-			m_textureFormat,
-			m_textureType,
-			//m_frame.bits() + m_textureOffsets[i]
-			(m_frame.isValid() ? m_frame.image.convertToFormat(QImage::Format_ARGB32).scanLine(0) : m_sampleTexture.scanLine(0)) + m_textureOffsets[i]
-			);
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		// increment current index first then get the next index
+		// "index" is used to copy pixels from a PBO to a texture object
+		// "nextIndex" is used to update pixels in a PBO
+		int nextIndex = 0;
+		m_pboIndex = (m_pboIndex + 1) % 2;
+		if(m_pboMode == 1)        // with 1 PBO
+			nextIndex = m_pboIndex;
+		else if(m_pboMode == 2)   // with 2 PBO
+			nextIndex = (m_pboIndex + 1) % 2;
+	
+		// start to copy from PBO to texture object ///////
+		
+		// bind the texture and PBO
+		glBindTexture(GL_TEXTURE_2D, m_pboTextureId);
+		glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, m_pboIds[m_pboIndex]);
+		
+		// copy pixels from PBO to texture object
+		// Use offset instead of ponter.
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_textureWidths[0], m_textureHeights[0], GL_RGBA, GL_UNSIGNED_BYTE, 0);
+	
+		///////////////////////////////////////////////////
+		
+		
+		// start to modify pixel values ///////////////////
+	
+		// bind PBO to update pixel values
+		glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, m_pboIds[nextIndex]);
+		
+		// map the buffer object into client's memory
+		// Note that glMapBufferARB() causes sync issue.
+		// If GPU is working with this buffer, glMapBufferARB() will wait(stall)
+		// for GPU to finish its job. To avoid waiting (stall), you can call
+		// first glBufferDataARB() with NULL pointer before glMapBufferARB().
+		// If you do that, the previous data in PBO will be discarded and
+		// glMapBufferARB() returns a new allocated pointer immediately
+		// even if GPU is still working with the previous data.
+		glBufferDataARB(GL_PIXEL_UNPACK_BUFFER_ARB, m_sampleTexture.byteCount(), 0, GL_STREAM_DRAW_ARB);
+		GLubyte* ptr = (GLubyte*)glMapBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, GL_WRITE_ONLY_ARB);
+		if(ptr)
+		{
+			// update data directly on the mapped buffer
+			//updatePixels(ptr, DATA_SIZE);
+			int size = m_sampleTexture.byteCount();
+			//const uchar *from =  m_sampleTexture.scanLine(0); 
+			//.convertToFormat(QImage::Format_ARGB32)
+			QImage source = !m_frame.image.isNull() ? m_frame.image : m_sampleTexture;
+			
+			const uchar *from = source.scanLine(0);
+			
+			uchar *to = (uchar*)ptr;
+			//memset(to, 0, m_sharedMemory.size());
+			//qDebug() << "From:"<<from<<", to:"<<to;
+			fast_memcpy(to, from, size); //qMin(m_sharedMemory.size(), size));
+			
+			glUnmapBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB); // release pointer to mapping buffer
+		}
+		
+	// 	// measure the time modifying the mapped buffer
+	// 	t1.stop();
+	// 	updateTime = t1.getElapsedTimeInMilliSec();
+		///////////////////////////////////////////////////
+		
+		// it is good idea to release PBOs with ID 0 after use.
+		// Once bound with 0, all pixel operations behave normal ways.
+		glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, 0);
 	}
+	else
+	{
+	
+		//m_frame.isValid() && 
+		if(m_frame.isRaw)
+		{
+			for (int i = 0; i < m_textureCount; ++i) 
+			{
+				//qDebug() << "raw";
+				glBindTexture(GL_TEXTURE_2D, m_textureIds[i]);
+				glTexImage2D(
+					GL_TEXTURE_2D,
+					0,
+					m_textureInternalFormat,
+					m_textureWidths[i],
+					m_textureHeights[i],
+					0,
+					m_textureFormat,
+					m_textureType,
+					m_frame.isPlanar ? m_frame.data[i] : m_frame.bits + m_textureOffsets[i]);
+				glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+				glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+				glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+				glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+			}
+		}
+		else
+		{
+			//qDebug() << "normal";
+			for (int i = 0; i < m_textureCount; ++i) 
+			{
+				glBindTexture(GL_TEXTURE_2D, m_textureIds[i]);
+				glTexImage2D(
+					GL_TEXTURE_2D,
+					0,
+					m_textureInternalFormat,
+					m_textureWidths[i],
+					m_textureHeights[i],
+					0,
+					m_textureFormat,
+					m_textureType,
+					//m_frame.bits() + m_textureOffsets[i]
+					(!m_frame.image.isNull() ? m_frame.image.scanLine(0) : m_sampleTexture.scanLine(0)) + m_textureOffsets[i]
+					);
+				glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+				glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+				glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+				glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+			}
+		}
+	}
+	
+	
 	//m_frame.unmap();
 	
 	QRectF source = m_sampleTexture.rect();
@@ -499,7 +724,7 @@ void GLWidget::paintGL()
 
 	const QTransform transform;// = painter->deviceTransform();
 
-	const GLfloat wfactor = 2.0 / width;
+	const GLfloat wfactor =  2.0 / width;
 	const GLfloat hfactor = -2.0 / height;
 
 	const GLfloat positionMatrix[4][4] =
@@ -600,9 +825,36 @@ void GLWidget::paintGL()
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
 	m_program.release();
+	
+	
+	
+	//renderText(10, 10, qPrintable(QString("%1 fps").arg(framesPerSecond)));
+	
+	if(!m_frame.captureTime.isNull())
+	{
+		int msecLatency = m_frame.captureTime.msecsTo(QTime::currentTime());
+		
+		m_latencyAccum += msecLatency;
+	}
+					
+	if (!(m_frameCount % 100)) 
+	{
+		QString framesPerSecond;
+		framesPerSecond.setNum(m_frameCount /(m_time.elapsed() / 1000.0), 'f', 2);
+		
+		QString latencyPerFrame;
+		latencyPerFrame.setNum((((double)m_latencyAccum) / ((double)m_frameCount)), 'f', 3);
+		
+		qDebug() << "FPS: "<<framesPerSecond<<", Latency: "<<latencyPerFrame<<" ms";
 
-
-
+		m_time.start();
+		m_frameCount = 0;
+		m_latencyAccum = 0;
+		
+		//lastFrameTime = time.elapsed();
+	}
+	
+	m_frameCount ++;
 }
 
 void GLWidget::resizeGL(int width, int height)
@@ -681,3 +933,67 @@ void GLWidget::makeObject()
 	}*/
 }
 
+
+/*!
+*/
+int GLWidget::brightness() const
+{
+    return m_brightness;
+}
+
+/*!
+*/
+void GLWidget::setBrightness(int brightness)
+{
+    m_brightness = brightness;
+
+    m_colorsDirty = true;
+}
+
+/*!
+*/
+int GLWidget::contrast() const
+{
+    return m_contrast;
+}
+
+/*!
+*/
+void GLWidget::setContrast(int contrast)
+{
+    m_contrast = contrast;
+
+    m_colorsDirty = true;
+}
+
+/*!
+*/
+int GLWidget::hue() const
+{
+    return m_hue;
+}
+
+/*!
+*/
+void GLWidget::setHue(int hue)
+{
+    m_hue = hue;
+
+    m_colorsDirty = true;
+}
+
+/*!
+*/
+int GLWidget::saturation() const
+{
+    return m_saturation;
+}
+
+/*!
+*/
+void GLWidget::setSaturation(int saturation)
+{
+    m_saturation = saturation;
+
+    m_colorsDirty = true;
+}

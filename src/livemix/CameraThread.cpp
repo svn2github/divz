@@ -145,10 +145,10 @@ QMutex CameraThread::threadCacheMutex;
 
 CameraThread::CameraThread(const QString& camera, QObject *parent)
 	: VideoSource(parent)
+	, m_fps(30)
 	, m_inited(false)
 	, m_cameraFile(camera)
 	, m_frameCount(0)
-	, m_fps(30)
 	, m_deinterlace(false)
 {
 	m_time_base_rational.num = 1;
@@ -412,7 +412,7 @@ void CameraThread::run()
 	initCamera();
 	
 	//qDebug() << "CameraThread::run: In Thread ID "<<QThread::currentThreadId(); 
-	int counter = 0;
+// 	int counter = 0;
 	while(!m_killed)
 	{
 		readFrame();
@@ -426,7 +426,7 @@ void CameraThread::run()
 // 			writer.write(m_singleFrame.image);
 // 		}
 		
-		msleep(1000 / m_fps / 1.5 / (m_deinterlace ? 1 : 2));
+		msleep(int(1000 / m_fps / 1.5 / (m_deinterlace ? 1 : 2)));
 	};
 }
 
@@ -485,6 +485,12 @@ void CameraThread::freeResources()
 		av_close_input_file(m_av_format_context);
 }
 
+void CameraThread::enableRawFrames(bool enable)
+{
+	m_rawFrames = enable;
+}
+
+
 void CameraThread::readFrame()
 {
 	if(!m_inited)
@@ -514,9 +520,9 @@ void CameraThread::readFrame()
 				avcodec_decode_video(m_video_codec_context, m_av_frame, &frame_finished, packet->data, packet->size);
 // 				mutex.unlock();
 
-				if(packet->dts == AV_NOPTS_VALUE &&
+				if(packet->dts == (uint)AV_NOPTS_VALUE &&
 						  m_av_frame->opaque &&
-				  *(uint64_t*)m_av_frame->opaque != AV_NOPTS_VALUE)
+				  *(uint64_t*)m_av_frame->opaque != (uint)AV_NOPTS_VALUE)
 				{
 					pts = *(uint64_t *)m_av_frame->opaque;
 				}
@@ -535,60 +541,69 @@ void CameraThread::readFrame()
 				if(frame_finished)
 				{
 
-					// Convert the image from its native format to RGB, then copy the image data to a QImage
-					if(m_sws_context == NULL)
+					if(m_rawFrames)
 					{
-						//mutex.lock();
-						//qDebug() << "Creating software scaler for pix_fmt: "<<m_video_codec_context->pix_fmt;
-						m_sws_context = sws_getContext(
-							m_video_codec_context->width, m_video_codec_context->height,
-							m_video_codec_context->pix_fmt,
-							m_video_codec_context->width, m_video_codec_context->height,
-							//PIX_FMT_RGB32,SWS_BICUBIC,
-							RAW_PIX_FMT, SWS_FAST_BILINEAR,
-							NULL, NULL, NULL); //SWS_PRINT_INFO
-						//mutex.unlock();
-						//printf("decode(): created m_sws_context\n");
-					}
-		
-					sws_scale(m_sws_context,
-						m_av_frame->data,
-						m_av_frame->linesize, 0,
-						m_video_codec_context->height,
-						m_av_rgb_frame->data,
-						m_av_rgb_frame->linesize);
-
-					if(m_deinterlace)
-					{
-						QImage frame(m_video_codec_context->width,
-							     m_video_codec_context->height,
-							     QImage::Format_ARGB32_Premultiplied);
-						// I can cheat and claim premul because I know the video (should) never have alpha
-						
-						bool bottomFrame = m_frameCount % 2 == 1;
-						
-						uchar * dest = frame.scanLine(0); // use scanLine() instead of bits() to prevent deep copy
-						uchar * src  = (uchar*)m_av_rgb_frame->data[0];
-						const int h  = m_video_codec_context->height;
-						const int stride = frame.bytesPerLine();
-						
-						bobDeinterlace( src,  src +h*stride, 
-								dest, dest+h*stride,
-								h, stride, bottomFrame);
-							
-						enqueue(VideoFrame(frame,1000/m_fps,capTime));
+ 						//qDebug() << "Decode Time: "<<capTime.msecsTo(QTime::currentTime())<<" ms";
+						VideoFrame frame(1000/m_fps,capTime);
+						frame.setRawData(m_av_frame->data, m_av_frame->linesize);
+						enqueue(frame);
 					}
 					else
 					{
-						QImage frame(m_av_rgb_frame->data[0],
-							m_video_codec_context->width,
+						// Convert the image from its native format to RGB, then copy the image data to a QImage
+						if(m_sws_context == NULL)
+						{
+							//mutex.lock();
+							//qDebug() << "Creating software scaler for pix_fmt: "<<m_video_codec_context->pix_fmt;
+							m_sws_context = sws_getContext(
+								m_video_codec_context->width, m_video_codec_context->height,
+								m_video_codec_context->pix_fmt,
+								m_video_codec_context->width, m_video_codec_context->height,
+								//PIX_FMT_RGB32,SWS_BICUBIC,
+								RAW_PIX_FMT, SWS_FAST_BILINEAR,
+								NULL, NULL, NULL); //SWS_PRINT_INFO
+							//mutex.unlock();
+							//printf("decode(): created m_sws_context\n");
+						}
+			
+						sws_scale(m_sws_context,
+							m_av_frame->data,
+							m_av_frame->linesize, 0,
 							m_video_codec_context->height,
-							//QImage::Format_RGB16);
-							QImage::Format_ARGB32_Premultiplied);
+							m_av_rgb_frame->data,
+							m_av_rgb_frame->linesize);
+	
+						if(m_deinterlace)
+						{
+							QImage frame(m_video_codec_context->width,
+								m_video_codec_context->height,
+								QImage::Format_ARGB32_Premultiplied);
+							// I can cheat and claim premul because I know the video (should) never have alpha
 							
-						enqueue(VideoFrame(frame,1000/m_fps,capTime));
+							bool bottomFrame = m_frameCount % 2 == 1;
+							
+							uchar * dest = frame.scanLine(0); // use scanLine() instead of bits() to prevent deep copy
+							uchar * src  = (uchar*)m_av_rgb_frame->data[0];
+							const int h  = m_video_codec_context->height;
+							const int stride = frame.bytesPerLine();
+							
+							bobDeinterlace( src,  src +h*stride, 
+									dest, dest+h*stride,
+									h, stride, bottomFrame);
+								
+							enqueue(VideoFrame(frame,1000/m_fps,capTime));
+						}
+						else
+						{
+							QImage frame(m_av_rgb_frame->data[0],
+								m_video_codec_context->width,
+								m_video_codec_context->height,
+								//QImage::Format_RGB16);
+								QImage::Format_ARGB32_Premultiplied);
+								
+							enqueue(VideoFrame(frame,1000/m_fps,capTime));
+						}
 					}
-					
 					
 					// lame attempt to de-interlace
 					//frame = frame.scaled(m_video_codec_context->width, m_video_codec_context->height/2)

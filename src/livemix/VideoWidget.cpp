@@ -550,9 +550,9 @@ void VideoWidget::paintEvent(QPaintEvent*)
 					m_latencyAccum += msecLatency;
 					
 					QString latencyPerFrame;
-					latencyPerFrame.setNum((((double)m_latencyAccum) / ((double)m_frameCount) / 1000.0), 'f', 3);
+					latencyPerFrame.setNum((((double)m_latencyAccum) / ((double)m_frameCount)), 'f', 3);
 					
-					latencyString = QString("| %1s latency").arg(latencyPerFrame);
+					latencyString = QString("| %1 ms latency").arg(latencyPerFrame);
 				}
 					
 					
@@ -567,7 +567,7 @@ void VideoWidget::paintEvent(QPaintEvent*)
 					m_elapsedTime.start();
 					m_frameCount = 0;
 					m_latencyAccum = 0;
-					//qDebug() << "FPS: "<<framesPerSecond;
+					qDebug() << "FPS: "<<QString("%1 fps %2").arg(framesPerSecond).arg(latencyString);
 				}
 			}
 		}
