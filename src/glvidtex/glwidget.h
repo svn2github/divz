@@ -53,6 +53,7 @@ protected:
 
 protected slots:
 	void frameReady();
+	void readFrame();
 
 private:
 	void makeObject();
@@ -119,6 +120,7 @@ private:
 	int m_pboMode;
 	int m_pboIndex;
 	
+	QTimer m_timer;
 };
 
 #endif
