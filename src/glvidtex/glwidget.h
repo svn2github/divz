@@ -10,19 +10,52 @@
 
 
 class QGLShaderProgram;
+class GLWidget;
 
-class GLWidget : public QGLWidget
+class GLDrawable : public QObject
 {
 	Q_OBJECT
-
 public:
-	GLWidget(QWidget *parent = 0, QGLWidget *shareWidget = 0);
-	~GLWidget();
+	GLDrawable(QObject *parent=0);
 	
-	QSize minimumSizeHint() const;
-	QSize sizeHint() const;
-	void rotateBy(int xAngle, int yAngle, int zAngle);
-	void setClearColor(const QColor &color);
+	void updateGL();
+	
+	const QRectF & rect() const { return m_rect; }
+	void setRect(const QRectF& rect);
+	
+	GLWidget *glWidget() { return m_glw; }
+	
+	double zIndex() { return m_zIndex; }
+	void setZIndex(double z);
+
+signals:
+	void zIndexChanged(double newZIndex);
+	void drawableResized(const QSize& newSize);
+	
+protected:
+	friend class GLWidget;
+	virtual void setGLWidget(GLWidget*); // when update is called, it calls GLWidget::updateGL()
+	
+	virtual void viewportResized(const QSize& newSize);
+	virtual void drawableResized(const QSizeF& newSize);
+	
+	virtual void paintGL();
+	virtual void initGL();
+		
+	GLWidget *m_glw;
+
+private:
+	QRectF m_rect;
+	double m_zIndex;
+	
+};
+
+class GLVideoDrawable : public GLDrawable
+{
+	Q_OBJECT
+public:
+	GLVideoDrawable(QObject *parent=0);
+	~GLVideoDrawable();
 	
 	int brightness() const;
 	int contrast() const;
@@ -35,41 +68,26 @@ public slots:
 	void setHue(int hue);
 	void setSaturation(int saturation);
 
-signals:
-	void clicked();
-
 protected:
-	void initializeGL();
 	void paintGL();
-	void resizeGL(int width, int height);
-	void mousePressEvent(QMouseEvent *event);
-	void mouseMoveEvent(QMouseEvent *event);
-	void mouseReleaseEvent(QMouseEvent *event);
 	
+	void viewportResized(const QSize& newSize);
+	
+	void initGL();
+
 	void initYv12TextureInfo(const QSize &size);
 	void initYuv420PTextureInfo(const QSize &size);
 	void initRgbTextureInfo(GLenum internalFormat, GLuint format, GLenum type, const QSize &size);
-        void updateColors(int brightness, int contrast, int hue, int saturation);
+	
+	void updateColors(int brightness, int contrast, int hue, int saturation);
+	
+	void updateRects();
 
 protected slots:
 	void frameReady();
-	void readFrame();
-
+	
 private:
-	void makeObject();
-	
-	QColor clearColor;
-	QPoint lastPos;
-	int xRot;
-	int yRot;
-	int zRot;
-	GLuint textures[6];
-	QVector<QVector3D> vertices;
-	QVector<QVector2D> texCoords;
-	//#ifdef QT_OPENGL_ES_2
 	QGLShaderProgram m_program;
-	// #endif
-	
 	
 	QList<QVideoFrame::PixelFormat> m_imagePixelFormats;
 	QList<QVideoFrame::PixelFormat> m_glPixelFormats;
@@ -115,12 +133,55 @@ private:
 	int m_frameCount;
 	int m_latencyAccum;
 	
-	GLuint m_pboIds[2];                   // IDs of PBO
-	GLuint m_pboTextureId;                // ID of texture
-	int m_pboMode;
-	int m_pboIndex;
-	
 	QTimer m_timer;
+	
+	QRectF m_targetRect;
+	QRectF m_sourceRect;
+	
+	Qt::AspectRatioMode m_aspectRatioMode;
+};
+
+
+class GLWidget : public QGLWidget
+{
+	Q_OBJECT
+
+public:
+	GLWidget(QWidget *parent = 0, QGLWidget *shareWidget = 0);
+	~GLWidget();
+	
+	QSize minimumSizeHint() const;
+	QSize sizeHint() const;
+	
+	void addDrawable(GLDrawable *);
+	void removeDrawable(GLDrawable*);
+	
+signals:
+	void clicked();
+
+protected slots:
+	void zIndexChanged();
+	
+protected:
+	void sortDrawables();
+	void initializeGL();
+	void paintGL();
+	void resizeGL(int width, int height);
+	void mousePressEvent(QMouseEvent *event);
+	void mouseMoveEvent(QMouseEvent *event);
+	void mouseReleaseEvent(QMouseEvent *event);
+	
+
+private:
+// 	QPoint lastPos;
+// 	int xRot;
+// 	int yRot;
+// 	int zRot;
+	
+	QList<GLDrawable*> m_drawables;
+	
+	bool m_glInited;
+	
 };
 
 #endif

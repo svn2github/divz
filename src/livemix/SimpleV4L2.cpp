@@ -104,7 +104,7 @@ VideoFrame SimpleV4L2::readFrame()
 		frame.useByteArray = true;
 		frame.byteArray.append((char*)m_buffers[0].start, m_buffers[0].length);
 		frame.holdTime = 1000/30;
-		frame.size = m_imageSize;
+		frame.setSize(m_imageSize);
 
 		break;
 
@@ -135,7 +135,7 @@ VideoFrame SimpleV4L2::readFrame()
 		frame.useByteArray = true;
 		frame.byteArray.append((char*)m_buffers[buf.index].start, m_buffers[buf.index].length);
 		frame.holdTime = 1000/30;
-		frame.size = m_imageSize;
+		frame.setSize(m_imageSize);
 		
 		if (-1 == xioctl (m_fd, VIDIOC_QBUF, &buf))
 			errno_exit ("VIDIOC_QBUF");
@@ -175,7 +175,7 @@ VideoFrame SimpleV4L2::readFrame()
 		frame.useByteArray = true;
 		frame.byteArray.append((char*)buf.m.userptr, buf.length);
 		frame.holdTime = 1000/30;
-		frame.size = m_imageSize;
+		frame.setSize(m_imageSize);
 
 		if (-1 == xioctl (m_fd, VIDIOC_QBUF, &buf))
 			errno_exit ("VIDIOC_QBUF");
