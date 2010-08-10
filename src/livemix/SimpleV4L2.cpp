@@ -101,7 +101,7 @@ VideoFrame SimpleV4L2::readFrame()
 		}
 
 		frame.isRaw = true;
-		frame.useByteArray = true;
+		frame.bufferType = VideoFrame::BUFFER_BYTEARRAY;
 		frame.byteArray.append((char*)m_buffers[0].start, m_buffers[0].length);
 		frame.holdTime = 1000/30;
 		frame.setSize(m_imageSize);
@@ -132,7 +132,7 @@ VideoFrame SimpleV4L2::readFrame()
 		assert (buf.index < m_numBuffers);
 
 		frame.isRaw = true;
-		frame.useByteArray = true;
+		frame.bufferType = VideoFrame::BUFFER_BYTEARRAY;
 		frame.byteArray.append((char*)m_buffers[buf.index].start, m_buffers[buf.index].length);
 		frame.holdTime = 1000/30;
 		frame.setSize(m_imageSize);
@@ -172,7 +172,7 @@ VideoFrame SimpleV4L2::readFrame()
 
 		//process_image ((void *) buf.m.userptr);
 		frame.isRaw = true;
-		frame.useByteArray = true;
+		frame.bufferType = VideoFrame::BUFFER_BYTEARRAY;
 		frame.byteArray.append((char*)buf.m.userptr, buf.length);
 		frame.holdTime = 1000/30;
 		frame.setSize(m_imageSize);

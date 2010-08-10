@@ -524,15 +524,42 @@ void CameraThread::enableRawFrames(bool enable)
 	if(old != enable)
 	{
 		// switch from raw V4L2 to LibAV* (or visa versa based on m_rawFrames, since SimpleV4L2 only outputs raw ARGB32)
+		//qDebug() << "CameraThread::enableRawFrames: flag changed, status: "<<m_rawFrames;
+		QMutexLocker lock(&m_readMutex);
+	
 		freeResources();
 		initCamera();
 	}
 	
 }
 
+VideoFormat CameraThread::videoFormat()
+{
+
+	return VideoFormat(
+		m_rawFrames ? 
+			#if defined(Q_OS_LINUX)
+				 VideoFrame::BUFFER_BYTEARRAY :
+			#else
+				 VideoFrame::BUFFER_POINTER   :
+			#endif
+				 VideoFrame::BUFFER_IMAGE,
+		m_rawFrames ?
+			#if defined(Q_OS_LINUX)
+				 QVideoFrame::Format_ARGB32  :
+			#else
+				 QVideoFrame::Format_YUV420P :
+			#endif
+				 QVideoFrame::Format_ARGB32 //_Premultiplied
+	); 
+	
+	// Size defaults to 640,480
+}
 
 void CameraThread::readFrame()
 {
+	QMutexLocker lock(&m_readMutex);
+	
 	QTime capTime = QTime::currentTime();
 	//qDebug() << "CameraThread::readFrame(): My Frame Count # "<<m_frameCount ++;
 	m_frameCount ++;
@@ -553,7 +580,7 @@ void CameraThread::readFrame()
 				deinterlacedFrame.captureTime  = frame.captureTime;
 				deinterlacedFrame.holdTime     = frame.holdTime;
 				deinterlacedFrame.isRaw        = true;
-				deinterlacedFrame.useByteArray = true;
+				deinterlacedFrame.bufferType   = VideoFrame::BUFFER_BYTEARRAY;
 				deinterlacedFrame.byteArray.resize(frame.byteArray.size());
 				
 				bool bottomFrame  = m_frameCount % 2 == 1;
@@ -586,7 +613,6 @@ void CameraThread::readFrame()
 	double pts;
 	
 	
-
 	
 	int frame_finished = 0;
 	while(!frame_finished && !m_killed)
@@ -628,8 +654,9 @@ void CameraThread::readFrame()
 					{
  						//qDebug() << "Decode Time: "<<capTime.msecsTo(QTime::currentTime())<<" ms";
 						VideoFrame frame(1000/m_fps,capTime);
-						frame.setRawData(m_av_frame->data, m_av_frame->linesize);
-						//frame.setRawBits(packet->data);
+						frame.setPointerData(m_av_frame->data, m_av_frame->linesize);
+						frame.pixelFormat = QVideoFrame::Format_YUV420P;
+						frame.setSize(QSize(m_video_codec_context->width, m_video_codec_context->height));
 						enqueue(frame);
 					}
 					else
@@ -661,7 +688,7 @@ void CameraThread::readFrame()
 						{
 							QImage frame(m_video_codec_context->width,
 								m_video_codec_context->height,
-								QImage::Format_ARGB32_Premultiplied);
+								QImage::Format_ARGB32);//_Premultiplied);
 							// I can cheat and claim premul because I know the video (should) never have alpha
 							
 							bool bottomFrame = m_frameCount % 2 == 1;
@@ -683,17 +710,13 @@ void CameraThread::readFrame()
 								m_video_codec_context->width,
 								m_video_codec_context->height,
 								//QImage::Format_RGB16);
-								QImage::Format_ARGB32_Premultiplied);
+								QImage::Format_ARGB32); //_Premultiplied);
 								
 							enqueue(VideoFrame(frame,1000/m_fps,capTime));
 						}
 					}
 					
-					// lame attempt to de-interlace
-					//frame = frame.scaled(m_video_codec_context->width, m_video_codec_context->height/2)
-					//	     .scaled(m_video_codec_context->width,m_video_codec_context->height);
-				
-					//av_free_packet(packet);
+					av_free_packet(packet);
 					
 					
 				}
@@ -716,12 +739,3 @@ void CameraThread::readFrame()
 		}
 	}
 }
-
-// QImage CameraThread::frame()
-// {
-// 	QImage ref;
-// 	m_bufferMutex.lock();
-// 	ref = m_bufferImage.copy();
-// 	m_bufferMutex.unlock();
-// 	return ref;
-// }

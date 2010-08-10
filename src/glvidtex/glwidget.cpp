@@ -105,8 +105,8 @@ static const char *qt_glsl_yuvPlanarShaderProgram =
 // class GLDrawable 
 GLDrawable::GLDrawable(QObject *parent)
 	: QObject(parent)
-	, m_zIndex(0)
 	, m_glw(0)
+	, m_zIndex(0)
 {}
 
 void GLDrawable::updateGL()
@@ -160,6 +160,7 @@ void GLDrawable::initGL()
 
 GLVideoDrawable::GLVideoDrawable(QObject *parent)
 	: GLDrawable(parent)
+	, m_glInited(false)
 	, m_colorsDirty(true)
 	, m_brightness(0)
 	, m_contrast(0)
@@ -181,18 +182,29 @@ GLVideoDrawable::GLVideoDrawable(QObject *parent)
 	if(thread)
 	{
 		thread->setFps(30);
+		//usleep(250 * 1000); // This causes a race condition to manifist itself reliably, which causes a crash every time instead of intermitently. 
+		// With the crash reproducable, I can now work to fix it.
 		thread->enableRawFrames(true);
 		//thread->setDeinterlace(true);
 		m_source = thread;
 	}
-// 	if(!thread)
-// 	{
-// 		VideoThread * thread = new VideoThread();
-// 		thread->setVideo("../data/Seasons_Loop_3_SD.mpg");
-// 		thread->start();
-// 		m_source = thread;
-// 	}
+	if(!thread)
+	{
+		VideoThread * thread = new VideoThread();
+		thread->setVideo("../data/Seasons_Loop_3_SD.mpg");
+		thread->start();
+		m_source = thread;
+	}
+
+	m_imagePixelFormats
+		<< QVideoFrame::Format_RGB32
+		<< QVideoFrame::Format_ARGB32
+		<< QVideoFrame::Format_RGB24
+		<< QVideoFrame::Format_RGB565
+		<< QVideoFrame::Format_YV12
+		<< QVideoFrame::Format_YUV420P;
 	
+	setVideoFormat(m_source->videoFormat());
 	
 	connect(m_source, SIGNAL(frameReady()), this, SLOT(frameReady()));
 }
@@ -209,7 +221,10 @@ void GLVideoDrawable::frameReady()
 	m_frame = m_source->frame();
 	
 	if(m_frame.rect != m_sourceRect)
+	{
+		resizeTextures(m_frame.size);
 		updateRects();
+	}
 		
 	updateGL();
 }
@@ -409,59 +424,38 @@ void GLVideoDrawable::initGL()
 	glActiveTexture = (_glActiveTexture)glWidget()->context()->getProcAddress(QLatin1String("glActiveTexture"));
 	#endif
 	
+	m_glInited = true;
+	setVideoFormat(m_videoFormat);
 	
-	//m_sampleTexture.load("/opt/qtsdk-2010.02/qt/examples/opengl/pbuffers/cubelogo.png"); 
+	m_time.start();
+}
+
+bool GLVideoDrawable::setVideoFormat(const VideoFormat& format)
+{
+	m_videoFormat = format;
+//m_sampleTexture.load("/opt/qtsdk-2010.02/qt/examples/opengl/pbuffers/cubelogo.png"); 
 	//m_sampleTexture = m_sampleTexture.scaled(640,480);
-	m_sampleTexture = QImage( 640, 480, QImage::Format_RGB32 );
-	m_sampleTexture.fill( Qt::green );
+	m_sampleTexture = QImage( format.frameSize, QImage::Format_RGB32 );
+	m_sampleTexture.fill( Qt::red );
 	m_sampleTexture = m_sampleTexture.convertToFormat(QImage::Format_ARGB32);
 	
+	if(!m_glInited)
+		return m_imagePixelFormats.contains(format.pixelFormat);
 	
-	qDebug() << "Sample Texture Size:"<<m_sampleTexture.size();
+	//qDebug() << "Sample Texture Size:"<<m_sampleTexture.size();
 	
 	#define PROGRAM_VERTEX_ATTRIBUTE 0
 	#define PROGRAM_TEXCOORD_ATTRIBUTE 1
 	
-	QVideoSurfaceFormat format(m_sampleTexture.size(), QVideoFrame::Format_ARGB32);
+	//QVideoSurfaceFormat format(m_sampleTexture.size(), QVideoFrame::Format_ARGB32);
 	//QVideoSurfaceFormat format(m_sampleTexture.size(), QVideoFrame::Format_YUV420P);
 	
-	const char *fragmentProgram = 0;
-
-	switch (format.pixelFormat()) 
-	{
-	case QVideoFrame::Format_RGB32:
-		initRgbTextureInfo(GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE, format.frameSize());
-		fragmentProgram = qt_glsl_xrgbShaderProgram;
-		break;
-        case QVideoFrame::Format_ARGB32:
-		initRgbTextureInfo(GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE, format.frameSize());
-		fragmentProgram = qt_glsl_argbShaderProgram;
-		break;
-#ifndef QT_OPENGL_ES
-        case QVideoFrame::Format_RGB24:
-		initRgbTextureInfo(GL_RGB8, GL_RGB, GL_UNSIGNED_BYTE, format.frameSize());
-		fragmentProgram = qt_glsl_rgbShaderProgram;
-		break;
-#endif
-	case QVideoFrame::Format_RGB565:
-		initRgbTextureInfo(GL_RGB, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, format.frameSize());
-		fragmentProgram = qt_glsl_rgbShaderProgram;
-		break;
-	case QVideoFrame::Format_YV12:
-		initYv12TextureInfo(format.frameSize());
-		fragmentProgram = qt_glsl_yuvPlanarShaderProgram;
-		break;
-	case QVideoFrame::Format_YUV420P:
-		initYuv420PTextureInfo(format.frameSize());
-		fragmentProgram = qt_glsl_yuvPlanarShaderProgram;
-		break;
-	default:
-		break;
-	}
+	const char *fragmentProgram = resizeTextures(format.frameSize);
  
 	if (!fragmentProgram) 
 	{
-		qDebug() << "No program found - format not supported.";
+		qDebug() << "No shader program found - format not supported.";
+		return false;
 	} 
 	else 
 	if (!m_program.addShaderFromSourceCode(QGLShader::Vertex, qt_glsl_vertexShaderProgram)) 
@@ -487,14 +481,55 @@ void GLVideoDrawable::initGL()
 	else 
 	{
 		//m_handleType = format.handleType();
-		m_scanLineDirection = format.scanLineDirection();
-		m_frameSize = format.frameSize();
+		m_scanLineDirection = QVideoSurfaceFormat::TopToBottom; //format.scanLineDirection();
+		m_frameSize = format.frameSize;
 	
 		//if (m_handleType == QAbstractVideoBuffer::NoHandle)
 			glGenTextures(m_textureCount, m_textureIds);
 	}
 	
-	m_time.start();
+	return true;
+}
+
+const char * GLVideoDrawable::resizeTextures(const QSize& frameSize)
+{
+	const char * fragmentProgram = 0;
+	
+	qDebug() << "GLVideoDrawable::resizeTextures(): frameSize: "<<frameSize<<", format: "<<m_videoFormat.pixelFormat;
+
+	switch (m_videoFormat.pixelFormat) 
+	{
+	case QVideoFrame::Format_RGB32:
+		initRgbTextureInfo(GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE, frameSize);
+		fragmentProgram = qt_glsl_xrgbShaderProgram;
+		break;
+        case QVideoFrame::Format_ARGB32:
+		initRgbTextureInfo(GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE, frameSize);
+		fragmentProgram = qt_glsl_argbShaderProgram;
+		break;
+#ifndef QT_OPENGL_ES
+        case QVideoFrame::Format_RGB24:
+		initRgbTextureInfo(GL_RGB8, GL_RGB, GL_UNSIGNED_BYTE, frameSize);
+		fragmentProgram = qt_glsl_rgbShaderProgram;
+		break;
+#endif
+	case QVideoFrame::Format_RGB565:
+		initRgbTextureInfo(GL_RGB, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, frameSize);
+		fragmentProgram = qt_glsl_rgbShaderProgram;
+		break;
+	case QVideoFrame::Format_YV12:
+		initYv12TextureInfo(frameSize);
+		fragmentProgram = qt_glsl_yuvPlanarShaderProgram;
+		break;
+	case QVideoFrame::Format_YUV420P:
+		initYuv420PTextureInfo(frameSize);
+		fragmentProgram = qt_glsl_yuvPlanarShaderProgram;
+		break;
+	default:
+		break;
+	}
+	
+	return fragmentProgram;
 }
 
 void GLVideoDrawable::viewportResized(const QSize& newSize)
@@ -541,7 +576,7 @@ void GLVideoDrawable::updateRects()
 		size.scale(nativeSize, Qt::KeepAspectRatio);
 
 		m_sourceRect = QRectF(QPointF(0,0),size);
-		m_sourceRect.moveCenter(QPoint(size.width() / 2, size.height() / 2));
+		m_sourceRect.moveCenter(QPointF(size.width() / 2, size.height() / 2));
 	}
 }
 
@@ -572,8 +607,10 @@ void GLVideoDrawable::paintGL()
 				0,
 				m_textureFormat,
 				m_textureType,
-				m_frame.useByteArray ? (uint8_t*)m_frame.byteArray.constData() + m_textureOffsets[i] : 
-					m_frame.isPlanar ? m_frame.data[i] : m_frame.bits + m_textureOffsets[i]);
+				m_frame.bufferType == VideoFrame::BUFFER_POINTER ? m_frame.data[i] :
+					(uint8_t*)m_frame.byteArray.constData() + m_textureOffsets[i]
+			);
+				 
 			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);

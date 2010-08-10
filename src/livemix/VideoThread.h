@@ -41,6 +41,7 @@ public:
 	void release(VideoWidget */*consumer*/=0) {}
 	
 	//QImage frame();
+	virtual VideoFormat videoFormat();
 	
 signals:
 	//void newImage(QImage,QTime);

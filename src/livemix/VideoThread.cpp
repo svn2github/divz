@@ -26,8 +26,8 @@ VideoThread::VideoThread(QObject *parent)
 	, m_nextDelay(1000/30)
 	, m_frameConsumed(true)
 	, m_frameLockCount(0)
-	, m_frameSmoothAccum(0)
 	, m_frameSmoothCount(0)
+	, m_frameSmoothAccum(0)
 {
 	m_time_base_rational.num = 1;
 	m_time_base_rational.den = AV_TIME_BASE;
@@ -45,6 +45,13 @@ VideoThread::VideoThread(QObject *parent)
 void VideoThread::setVideo(const QString& name)
 {
 	m_videoFile = name;
+}
+
+VideoFormat VideoThread::videoFormat()
+{
+	return VideoFormat(VideoFrame::BUFFER_IMAGE, QVideoFrame::Format_RGB565);
+	
+	// Size defaults to 640,480
 }
 
 int VideoThread::initVideo()

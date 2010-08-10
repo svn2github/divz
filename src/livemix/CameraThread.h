@@ -46,6 +46,8 @@ public:
 	bool deinterlace() { return m_deinterlace; }
 	
 	bool rawFramesEnabled() { return m_rawFrames; }
+	
+	virtual VideoFormat videoFormat();
 
 public slots:
 	void setDeinterlace(bool);
@@ -115,8 +117,7 @@ private:
 
 	int m_frameCount;
 
-	QMutex m_bufferMutex;
-	QImage m_bufferImage;
+	QMutex m_readMutex;
 	
 	bool m_deinterlace;
 	

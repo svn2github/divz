@@ -15,17 +15,22 @@ class GLWidget;
 class GLDrawable : public QObject
 {
 	Q_OBJECT
+	//Q_PROPERTY(QString itemName READ itemName WRITE setItemName);
+	Q_PROPERTY(QRectF rect READ rect WRITE setRect);
+	Q_PROPERTY(double zIndex READ zIndex WRITE setZIndex);
 public:
 	GLDrawable(QObject *parent=0);
 	
 	void updateGL();
 	
-	const QRectF & rect() const { return m_rect; }
-	void setRect(const QRectF& rect);
-	
 	GLWidget *glWidget() { return m_glw; }
 	
+	const QRectF & rect() const { return m_rect; }
 	double zIndex() { return m_zIndex; }
+	
+public slots:
+	void setRect(const QRectF& rect);
+	
 	void setZIndex(double z);
 
 signals:
@@ -57,6 +62,10 @@ public:
 	GLVideoDrawable(QObject *parent=0);
 	~GLVideoDrawable();
 	
+	// Returns false if format won't be acceptable
+	bool setVideoFormat(const VideoFormat& format);
+	const VideoFormat& videoFormat();
+	
 	int brightness() const;
 	int contrast() const;
 	int hue() const;
@@ -82,20 +91,23 @@ protected:
 	void updateColors(int brightness, int contrast, int hue, int saturation);
 	
 	void updateRects();
+	
+	const char * resizeTextures(const QSize& size);
 
 protected slots:
 	void frameReady();
 	
 private:
+	VideoFormat m_videoFormat;
+	bool m_glInited;
+	
 	QGLShaderProgram m_program;
 	
 	QList<QVideoFrame::PixelFormat> m_imagePixelFormats;
-	QList<QVideoFrame::PixelFormat> m_glPixelFormats;
+	QList<QVideoFrame::PixelFormat> m_rawPixelFormats;
 	QMatrix4x4 m_colorMatrix;
-	//QVideoFrame m_frame;
-	
 	//QGLContext *m_context;
-	//QAbstractVideoBuffer::HandleType m_handleType;
+	
 	QVideoSurfaceFormat::Direction m_scanLineDirection;
 	GLenum m_textureFormat;
 	GLuint m_textureInternalFormat;
