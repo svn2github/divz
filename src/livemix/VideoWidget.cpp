@@ -522,7 +522,18 @@ void VideoWidget::paintEvent(QPaintEvent*)
 		{ 
 			p.setOpacity(m_opacity);
 				
-			p.drawImage(m_targetRect,m_frame.image,m_sourceRect);
+			if(m_frame.isRaw)
+			{
+				if(m_frame.useByteArray) // assume from SimpleV4L2 in ARGB32 format
+				{
+					QImage image((const uchar*)m_frame.byteArray.constData(),m_frame.size.width(),m_frame.size.height(),QImage::Format_RGB32);
+					p.drawImage(m_targetRect,image,m_sourceRect);
+					//qDebug() << "Simple bytearray format: isNull: "<<image.isNull();
+				}
+				// else cannot use frame
+			}
+			else	
+				p.drawImage(m_targetRect,m_frame.image,m_sourceRect);
 	
 			// If fading in from black (e.g. no old thread)
 			// then fade in the overlay with the frame, otherwise during

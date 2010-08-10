@@ -20,6 +20,7 @@ extern "C" {
 #include <QFile>
 
 #include "VideoSource.h"
+class SimpleV4L2;
 
 class CameraThread: public VideoSource
 {
@@ -125,6 +126,8 @@ private:
 	
 	QFile m_videoDev;
 	QByteArray m_frameData;
+	
+	SimpleV4L2 * m_v4l2;
 	
 };
 

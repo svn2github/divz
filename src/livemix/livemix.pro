@@ -31,7 +31,7 @@ HEADERS += CameraThread.h \
 	../qq06-glthread/GLWidget.h \
 	../qq06-glthread/GLThread.h \
 	DVizSharedMemoryThread.h \
-	MdiDVizWidget.h
+	MdiDVizWidget.h 
 	
 SOURCES += main.cpp \
 	CameraThread.cpp \
@@ -53,7 +53,8 @@ SOURCES += main.cpp \
 	../qq06-glthread/GLWidget.cpp \
 	../qq06-glthread/GLThread.cpp \
 	DVizSharedMemoryThread.cpp \
-	MdiDVizWidget.cpp
+	MdiDVizWidget.cpp \
+	SimpleV4L2.cpp 
 
 unix {
 	LIBS += -lavdevice -lavformat -lavcodec -lavutil -lswscale -lbz2 

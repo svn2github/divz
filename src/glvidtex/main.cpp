@@ -41,14 +41,17 @@
 
 #include <QApplication>
 
-#include "window.h"
+// #include "window.h"
+#include "glwidget.h"
 
 int main(int argc, char *argv[])
 {
     Q_INIT_RESOURCE(textures);
 
     QApplication app(argc, argv);
-    Window window;
-    window.show();
+//     Window window;
+//     window.show();
+	GLWidget w;
+	w.show();
     return app.exec();
 }

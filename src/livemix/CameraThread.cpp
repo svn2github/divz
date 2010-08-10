@@ -15,6 +15,8 @@ extern "C" {
 #include "libavdevice/avdevice.h"
 }
 
+#include "SimpleV4L2.h"
+
 //#include "ccvt/ccvt.h"
 
 #include "CameraThread.h"
@@ -150,12 +152,15 @@ CameraThread::CameraThread(const QString& camera, QObject *parent)
 	, m_cameraFile(camera)
 	, m_frameCount(0)
 	, m_deinterlace(false)
+	, m_v4l2(0)
 {
 	m_time_base_rational.num = 1;
 	m_time_base_rational.den = AV_TIME_BASE;
 
 	m_sws_context = NULL;
 	m_frame = NULL;
+	
+	m_rawFrames = false;
 	
 	setIsBuffered(false);
 }
@@ -276,6 +281,20 @@ QStringList CameraThread::enumerateDevices(bool forceReenum)
 
 int CameraThread::initCamera()
 {
+	#if defined(Q_OS_LINUX)
+	if(m_rawFrames)
+	{
+		m_v4l2 = new SimpleV4L2();
+		if(m_v4l2->openDevice(qPrintable(m_cameraFile)))
+		{
+			m_v4l2->initDevice();
+			m_v4l2->startCapturing();
+			m_inited = true;
+			return 1;
+		}
+	}
+	#endif
+
 	AVInputFormat *inFmt = NULL;
 	AVFormatParameters formatParams;
 	memset(&formatParams, 0, sizeof(AVFormatParameters));
@@ -442,9 +461,18 @@ void CameraThread::setFps(int fps)
 
 CameraThread::~CameraThread()
 {
+	
 	m_killed = true;
 	quit();
 	wait();
+	
+	#if defined(Q_OS_LINUX)
+	if(m_v4l2)
+	{
+		delete m_v4l2;
+		m_v4l2 = 0;
+	}
+	#endif
 
 	freeResources();
 
@@ -487,12 +515,67 @@ void CameraThread::freeResources()
 
 void CameraThread::enableRawFrames(bool enable)
 {
+	bool old = m_rawFrames;
 	m_rawFrames = enable;
+	
+	if(!m_inited)
+		return;
+	
+	if(old != enable)
+	{
+		// switch from raw V4L2 to LibAV* (or visa versa based on m_rawFrames, since SimpleV4L2 only outputs raw ARGB32)
+		freeResources();
+		initCamera();
+	}
+	
 }
 
 
 void CameraThread::readFrame()
 {
+	QTime capTime = QTime::currentTime();
+	//qDebug() << "CameraThread::readFrame(): My Frame Count # "<<m_frameCount ++;
+	m_frameCount ++;
+	
+	if(m_v4l2 && m_rawFrames)
+	{
+		VideoFrame frame = m_v4l2->readFrame();
+		if(frame.isValid())
+		{
+			frame.captureTime = capTime;
+			frame.holdTime = 1000/m_fps;
+			
+			// We can do deinterlacing on these frames because SimpleV4L2 provides raw ARGB32 frames
+			//m_deinterlace = false;
+			if(m_deinterlace)
+			{
+				VideoFrame deinterlacedFrame;
+				deinterlacedFrame.captureTime  = frame.captureTime;
+				deinterlacedFrame.holdTime     = frame.holdTime;
+				deinterlacedFrame.isRaw        = true;
+				deinterlacedFrame.useByteArray = true;
+				deinterlacedFrame.byteArray.resize(frame.byteArray.size());
+				
+				bool bottomFrame  = m_frameCount % 2 == 1;
+				const char * src  = frame.byteArray.constData();
+				char * dest       = deinterlacedFrame.byteArray.data();
+				const int h       = frame.size.height();
+				const int stride  = frame.size.width()*4; // I can  cheat because I know SimpleV4L2 sends ARGB32 frames, with 4 bytes per pixel
+				
+				bobDeinterlace( (uchar*)src,  (uchar*)src +h*stride, 
+						(uchar*)dest, (uchar*)dest+h*stride,
+						h, stride, bottomFrame);
+				
+				enqueue(deinterlacedFrame);
+			}
+			else
+			{
+				enqueue(frame);
+			}
+		}
+		return;
+	}
+	
 	if(!m_inited)
 	{
 		//emit newImage(QImage());
@@ -502,11 +585,8 @@ void CameraThread::readFrame()
 	AVPacket pkt1, *packet = &pkt1;
 	double pts;
 	
-	QTime capTime = QTime::currentTime();
+	
 
-
-	//qDebug() << "CameraThread::readFrame(): My Frame Count # "<<m_frameCount ++;
-	m_frameCount ++;
 	
 	int frame_finished = 0;
 	while(!frame_finished && !m_killed)

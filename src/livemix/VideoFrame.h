@@ -16,6 +16,7 @@ public:
 		isRaw=false; 
 		isYuv=false;
 		isPlanar=false;
+		useByteArray=false;
 	}
 	VideoFrame(int holdTime, const QTime &captureTime = QTime())
 		: holdTime(holdTime)
@@ -23,6 +24,7 @@ public:
 		, isRaw(false)
 		, isYuv(false)
 		, isPlanar(false)
+		, useByteArray(false)
 		{}
 	VideoFrame(const QImage &frame, int holdTime, const QTime &captureTime = QTime())
 		: image(frame)
@@ -31,6 +33,8 @@ public:
 		, isRaw(false)
 		, isYuv(false)
 		, isPlanar(false)
+		, useByteArray(false)
+		, size(frame.size())
 		{}
 	VideoFrame(const VideoFrame& other)
 		: image(other.image)
@@ -39,12 +43,16 @@ public:
 		, isRaw(other.isRaw)
 		, isYuv(other.isYuv)
 		, isPlanar(other.isPlanar)
+		, useByteArray(other.useByteArray)
+		, size(other.size)
 		{
 			if(isRaw)
 			{
 				bits = other.bits;
 				setRawData(other.data, other.linesize);
 			}
+			if(useByteArray)
+				byteArray = other.byteArray;
 		}
 	
 	void operator=(const VideoFrame& other)
@@ -55,11 +63,15 @@ public:
 		isRaw = other.isRaw;
 		isYuv = other.isYuv;
 		isPlanar = other.isPlanar;
+		size = other.size;
 		if(isRaw)
 		{
 			bits = other.bits;
 			setRawData(other.data, other.linesize);
 		}
+		useByteArray = other.useByteArray;
+		if(useByteArray)
+			byteArray = other.byteArray;
 	}
 	
 	bool isEmpty() { return holdTime < 0; }
@@ -86,6 +98,11 @@ public:
 	int linesize[4];
 	uchar *bits;
 	
+	QByteArray byteArray;
+	bool useByteArray;
+	
+	QSize size;
+
 	void setRawBits(uchar *dataBits)
 	{
 		isRaw = true;

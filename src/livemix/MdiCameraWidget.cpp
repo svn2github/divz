@@ -78,6 +78,9 @@ void MdiCameraWidget::deviceBoxChanged(int idx)
 		setWindowTitle("Camera Error");
 	}
 	
+	// Enable raw VL42 access on linux - note that VideoWidget must be able to handle raw frames
+	//m_thread->enableRawFrames(true);
+	
 	// Default clip rect to compensate for oft-seen video capture 'bugs' (esp. on hauppauge/bttv)
 	m_videoWidget->setSourceRectAdjust(11,0,-6,-3);
 	

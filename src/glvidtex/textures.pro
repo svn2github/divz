@@ -19,7 +19,8 @@ SOURCES       = glwidget.cpp \
 		../livemix/VideoSource.cpp \
 		../livemix/VideoThread.cpp \
 		../livemix/VideoFrame.cpp \
-		../livemix/CameraThread.cpp
+		../livemix/CameraThread.cpp \
+		../livemix/SimpleV4L2.cpp
 
 RESOURCES     = textures.qrc
 QT           += opengl multimedia
