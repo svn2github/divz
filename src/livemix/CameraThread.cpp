@@ -546,7 +546,7 @@ VideoFormat CameraThread::videoFormat()
 				 VideoFrame::BUFFER_IMAGE,
 		m_rawFrames ?
 			#if defined(Q_OS_LINUX)
-				 QVideoFrame::Format_ARGB32  :
+				 QVideoFrame::Format_RGB32  :
 			#else
 				 QVideoFrame::Format_YUV420P :
 			#endif

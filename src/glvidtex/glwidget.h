@@ -55,6 +55,32 @@ private:
 	
 };
 
+
+
+class StaticVideoSource : public VideoSource
+{
+	Q_OBJECT
+
+public:
+	StaticVideoSource(QObject *parent=0);
+	//virtual ~StaticVideoSource() {}
+
+	VideoFormat videoFormat() { return VideoFormat(VideoFrame::BUFFER_IMAGE,QVideoFrame::Format_ARGB32); }
+	
+	void setImage(const QImage&);
+	
+signals:
+	void frameReady();
+
+protected:
+	void run();
+	
+private:
+	QImage m_image;
+	VideoFrame m_frame;
+};
+
+
 class GLVideoDrawable : public GLDrawable
 {
 	Q_OBJECT
@@ -71,11 +97,16 @@ public:
 	int hue() const;
 	int saturation() const;
 	
+	VideoSource *videoSource();
+	
 public slots:
 	void setBrightness(int brightness);
 	void setContrast(int contrast);
 	void setHue(int hue);
 	void setSaturation(int saturation);
+	
+	void setVideoSource(VideoSource*);
+	void disconnectVideoSource();
 
 protected:
 	void paintGL();

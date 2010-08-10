@@ -71,6 +71,7 @@ static const char *qt_glsl_argbShaderProgram =
         "    gl_FragColor = vec4(color.rgb, texture2D(texRgb, textureCoord.st).a);\n"
         "}\n";
 
+
 // Paints an RGB(A) frame.
 static const char *qt_glsl_rgbShaderProgram =
         "uniform sampler2D texRgb;\n"
@@ -166,36 +167,11 @@ GLVideoDrawable::GLVideoDrawable(QObject *parent)
 	, m_contrast(0)
 	, m_hue(0)
 	, m_saturation(25)
+	, m_source(0)
 	, m_frameCount(0)
 	, m_latencyAccum(0)
 	, m_aspectRatioMode(Qt::KeepAspectRatio)
-	
 {
-	#ifdef Q_OS_WIN
-	QString defaultCamera = "vfwcap://0";
-	#else
-	QString defaultCamera = "/dev/video0";
-	#endif
-
-
-	CameraThread *thread = CameraThread::threadForCamera(defaultCamera);
-	if(thread)
-	{
-		thread->setFps(30);
-		//usleep(250 * 1000); // This causes a race condition to manifist itself reliably, which causes a crash every time instead of intermitently. 
-		// With the crash reproducable, I can now work to fix it.
-		thread->enableRawFrames(true);
-		//thread->setDeinterlace(true);
-		m_source = thread;
-	}
-	if(!thread)
-	{
-		VideoThread * thread = new VideoThread();
-		thread->setVideo("../data/Seasons_Loop_3_SD.mpg");
-		thread->start();
-		m_source = thread;
-	}
-
 	m_imagePixelFormats
 		<< QVideoFrame::Format_RGB32
 		<< QVideoFrame::Format_ARGB32
@@ -203,15 +179,42 @@ GLVideoDrawable::GLVideoDrawable(QObject *parent)
 		<< QVideoFrame::Format_RGB565
 		<< QVideoFrame::Format_YV12
 		<< QVideoFrame::Format_YUV420P;
-	
-	setVideoFormat(m_source->videoFormat());
-	
-	connect(m_source, SIGNAL(frameReady()), this, SLOT(frameReady()));
 }
 
 GLVideoDrawable::~GLVideoDrawable()
 {
+	setVideoSource(0);
 }
+
+void GLVideoDrawable::setVideoSource(VideoSource *source)
+{
+	if(m_source == source)
+		return;
+		
+	if(m_source)
+		disconnectVideoSource();
+	
+	m_source = source;
+	if(m_source)
+	{	
+		connect(m_source, SIGNAL(frameReady()), this, SLOT(frameReady()));
+		connect(m_source, SIGNAL(destroyed()), this, SLOT(disconnectVideoSource()));
+		
+		setVideoFormat(m_source->videoFormat());
+		
+		frameReady();
+	}
+
+}
+
+void GLVideoDrawable::disconnectVideoSource()
+{
+	if(!m_source)
+		return;
+	disconnect(m_source, 0, this, 0);
+	m_source = 0;
+}
+	
 
 void GLVideoDrawable::frameReady()
 {
@@ -222,6 +225,7 @@ void GLVideoDrawable::frameReady()
 	
 	if(m_frame.rect != m_sourceRect)
 	{
+		//qDebug() << "GLVideoDrawable::frameReady(): \t m_frame.rect:"<<m_frame.rect<<", m_sourceRect:"<<m_sourceRect;
 		resizeTextures(m_frame.size);
 		updateRects();
 	}
@@ -439,10 +443,15 @@ bool GLVideoDrawable::setVideoFormat(const VideoFormat& format)
 	m_sampleTexture.fill( Qt::red );
 	m_sampleTexture = m_sampleTexture.convertToFormat(QImage::Format_ARGB32);
 	
+	
+	//qDebug() << "GLVideoDrawable::setVideoFormat(): \t frameSize:"<<format.frameSize<<", pixelFormat:"<<format.pixelFormat;
+	
+	
 	if(!m_glInited)
 		return m_imagePixelFormats.contains(format.pixelFormat);
+		
+	//qDebug() << "GLVideoDrawable::setVideoFormat(): \t Initalizing vertex and pixel shaders...";
 	
-	//qDebug() << "Sample Texture Size:"<<m_sampleTexture.size();
 	
 	#define PROGRAM_VERTEX_ATTRIBUTE 0
 	#define PROGRAM_TEXCOORD_ATTRIBUTE 1
@@ -488,6 +497,8 @@ bool GLVideoDrawable::setVideoFormat(const VideoFormat& format)
 			glGenTextures(m_textureCount, m_textureIds);
 	}
 	
+	//qDebug() << "GLVideoDrawable::setVideoFormat(): \t Initalized"<<m_textureCount<<"textures";
+	
 	return true;
 }
 
@@ -495,7 +506,8 @@ const char * GLVideoDrawable::resizeTextures(const QSize& frameSize)
 {
 	const char * fragmentProgram = 0;
 	
-	qDebug() << "GLVideoDrawable::resizeTextures(): frameSize: "<<frameSize<<", format: "<<m_videoFormat.pixelFormat;
+	qDebug() << "GLVideoDrawable::resizeTextures(): \t frameSize: "<<frameSize<<", format: "<<m_videoFormat.pixelFormat;
+	m_frameSize = frameSize;
 
 	switch (m_videoFormat.pixelFormat) 
 	{
@@ -504,6 +516,7 @@ const char * GLVideoDrawable::resizeTextures(const QSize& frameSize)
 		fragmentProgram = qt_glsl_xrgbShaderProgram;
 		break;
         case QVideoFrame::Format_ARGB32:
+        	//qDebug() << "GLVideoDrawable::resizeTextures(): \t Format ARGB, using qt_glsl_argbShaderProgram";
 		initRgbTextureInfo(GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE, frameSize);
 		fragmentProgram = qt_glsl_argbShaderProgram;
 		break;
@@ -535,7 +548,7 @@ const char * GLVideoDrawable::resizeTextures(const QSize& frameSize)
 void GLVideoDrawable::viewportResized(const QSize& newSize)
 {
 	// recalc rects here
-	setRect(QRectF(0,0,newSize.width(),newSize.height()));
+	//setRect(QRectF(0,0,newSize.width(),newSize.height()));
 	
 	updateRects();
 }
@@ -578,9 +591,14 @@ void GLVideoDrawable::updateRects()
 		m_sourceRect = QRectF(QPointF(0,0),size);
 		m_sourceRect.moveCenter(QPointF(size.width() / 2, size.height() / 2));
 	}
+	
+	//qDebug() << "GLVideoDrawable::updateRects(): \t m_sourceRect:"<<m_sourceRect<<", m_targetRect:"<<m_targetRect;
 }
 
+// float opacity = 0.5;
+// 	glColor4f(opacity,opacity,opacity,opacity);
 
+	
 void GLVideoDrawable::paintGL()
 {
 	if (m_colorsDirty) 
@@ -619,9 +637,10 @@ void GLVideoDrawable::paintGL()
 	}
 	else
 	{
-		//qDebug() << "normal";
 		for (int i = 0; i < m_textureCount; ++i) 
 		{
+			//qDebug() << "normal: "<<i<<m_textureWidths[i]<<m_textureHeights[i];
+		
 			glBindTexture(GL_TEXTURE_2D, m_textureIds[i]);
 			glTexImage2D(
 				GL_TEXTURE_2D,
@@ -651,7 +670,7 @@ void GLVideoDrawable::paintGL()
 	//qDebug() << "source:"<<source<<", target:"<<target;
 	
 	
-	const int width = QGLContext::currentContext()->device()->width();
+	const int width  = QGLContext::currentContext()->device()->width();
 	const int height = QGLContext::currentContext()->device()->height();
 
 	//QPainter painter(this);
@@ -696,24 +715,22 @@ void GLVideoDrawable::paintGL()
 
 	const GLfloat vertexCoordArray[] =
 	{
-		target.left()     , vBottom,
-		target.right() + 1, vBottom,
-		target.left()     , vTop,
-		target.right() + 1, vTop
+		target.left()     , vBottom, 	(GLfloat)zIndex(),
+		target.right() + 1, vBottom, 	(GLfloat)zIndex(),
+		target.left()     , vTop, 	(GLfloat)zIndex(),
+		target.right() + 1, vTop, 	(GLfloat)zIndex()
 	};
 	
 	
 	//qDebug() << vTop << vBottom;
 	
-	bool flipHorizontal = true;
+	const GLfloat txLeft   = m_videoFormat.flipHorizontal ? source.right()  / m_frameSize.width() : source.left()  / m_frameSize.width();
+	const GLfloat txRight  = m_videoFormat.flipHorizontal ? source.left()   / m_frameSize.width() : source.right() / m_frameSize.width();
 	
-	const GLfloat txLeft   = flipHorizontal ? source.right()  / m_frameSize.width() : source.left()  / m_frameSize.width();
-	const GLfloat txRight  = flipHorizontal ? source.left()   / m_frameSize.width() : source.right() / m_frameSize.width();
-	
-	const GLfloat txTop    = m_scanLineDirection == QVideoSurfaceFormat::TopToBottom
+	const GLfloat txTop    = !m_videoFormat.flipVertical //m_scanLineDirection == QVideoSurfaceFormat::TopToBottom
 		? source.top()    / m_frameSize.height()
 		: source.bottom() / m_frameSize.height();
-	const GLfloat txBottom = m_scanLineDirection == QVideoSurfaceFormat::TopToBottom
+	const GLfloat txBottom = !m_videoFormat.flipVertical //m_scanLineDirection == QVideoSurfaceFormat::TopToBottom
 		? source.bottom() / m_frameSize.height()
 		: source.top()    / m_frameSize.height();
 
@@ -730,7 +747,7 @@ void GLVideoDrawable::paintGL()
 	m_program.enableAttributeArray("vertexCoordArray");
 	m_program.enableAttributeArray("textureCoordArray");
 	
-	m_program.setAttributeArray("vertexCoordArray",  vertexCoordArray,  2);
+	m_program.setAttributeArray("vertexCoordArray",  vertexCoordArray,  3);
 	m_program.setAttributeArray("textureCoordArray", textureCoordArray, 2);
 	
 	m_program.setUniformValue("positionMatrix",      positionMatrix);
@@ -760,7 +777,7 @@ void GLVideoDrawable::paintGL()
 		m_program.setUniformValue("texRgb", 0);
 	}
 	m_program.setUniformValue("colorMatrix", m_colorMatrix);
-
+	
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
 	m_program.release();
@@ -918,12 +935,84 @@ void GLBugDrawable::paintGL()
 }
 
 
+
+StaticVideoSource::StaticVideoSource(QObject *parent)
+	: VideoSource(parent)
+{
+	setImage(QImage());
+}
+
+void StaticVideoSource::setImage(const QImage& img)
+{
+	m_image = img.convertToFormat(QImage::Format_ARGB32);
+	m_frame = VideoFrame(m_image,1000/30);
+	enqueue(m_frame);
+}
+
+void StaticVideoSource::run()
+{
+	while(!m_killed)
+	{
+		//qDebug() << "Frame ready";
+		enqueue(m_frame);
+		emit frameReady();
+		msleep(m_frame.holdTime);
+	}
+}
+
+
+
 GLWidget::GLWidget(QWidget *parent, QGLWidget *shareWidget)
 	: QGLWidget(parent, shareWidget)
 	, m_glInited(false)
 {
-	GLVideoDrawable *video = new GLVideoDrawable(this);
-	addDrawable(video);
+	
+	
+	#ifdef Q_OS_WIN
+	QString defaultCamera = "vfwcap://0";
+	#else
+	QString defaultCamera = "/dev/video0";
+	#endif
+
+	CameraThread *thread = CameraThread::threadForCamera(defaultCamera);
+	if(thread)
+	{
+		thread->setFps(30);
+		//usleep(250 * 1000); // This causes a race condition to manifist itself reliably, which causes a crash every time instead of intermitently. 
+		// With the crash reproducable, I can now work to fix it.
+		thread->enableRawFrames(true);
+		//thread->setDeinterlace(true);
+		//m_source = thread;
+		
+		GLVideoDrawable *camera = new GLVideoDrawable(this);
+		camera->setVideoSource(thread);
+		camera->setRect(QRectF(0,0,320,240));
+		addDrawable(camera);
+		
+	}
+// 	if(!thread)
+// 	{
+// 		VideoThread * thread = new VideoThread();
+// 		thread->setVideo("../data/Seasons_Loop_3_SD.mpg");
+// 		thread->start();
+// 		m_source = thread;
+// 	}
+
+	GLVideoDrawable *videoBug = new GLVideoDrawable(this);
+	
+	
+	StaticVideoSource *source = new StaticVideoSource();
+	//source->setImage(QImage("me2.jpg"));
+	source->setImage(QImage("/opt/qtsdk-2010.02/qt/examples/opengl/pbuffers/cubelogo.png"));
+	
+	source->start();
+	videoBug->setVideoSource(source);
+	videoBug->setRect(QRectF(0,0,64,64));
+	videoBug->setZIndex(1);
+	
+	addDrawable(videoBug);
+	
+	resize(320,240);
 	
 // 	GLBugDrawable *bug = new GLBugDrawable();
 // 	bug->setZIndex(1);
@@ -953,6 +1042,14 @@ void GLWidget::initializeGL()
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 	
+	glEnable(GL_BLEND); 
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	
+	glClearDepth(1.0f);						// Depth Buffer Setup
+	glEnable(GL_DEPTH_TEST);					// Enables Depth Testing
+	glDepthFunc(GL_LEQUAL);						// The Type Of Depth Testing To Do
+	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);		// Really Nice Perspective Calculations
+	
 	m_glInited = true;
 	foreach(GLDrawable *drawable, m_drawables)
 		drawable->initGL();
@@ -974,7 +1071,7 @@ void GLWidget::initializeGL()
 
 void GLWidget::paintGL()
 {
-	qglClearColor(Qt::black);
+	qglClearColor(Qt::green);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
 	foreach(GLDrawable *drawable, m_drawables)
@@ -1006,7 +1103,7 @@ void GLWidget::zIndexChanged()
 
 bool GLWidget_drawable_zIndex_compare(GLDrawable *a, GLDrawable *b)
 {
-	return (a && b) ? a->zIndex() < b->zIndex() : true;
+	return (a && b) ? a->zIndex() > b->zIndex() : true;
 }
 
 
