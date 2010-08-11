@@ -562,4 +562,183 @@ bool SimpleV4L2::openDevice(const char *dev_name)
 	return true;
 }
 
+
+
+QStringList SimpleV4L2::inputs()
+{
+	if(!m_inputs.isEmpty())
+		return m_inputs;
+		
+	QStringList inputs;
+	// xioctl call to enum inputs
+	// Recreate the inputs vector
+        for (unsigned int iNumber=0; iNumber < 99; ++iNumber) 
+        {
+		// get input description
+		struct v4l2_input videoInput;
+		CLEAR(videoInput);
+		videoInput.index = iNumber;
+		if (xioctl(m_fd, VIDIOC_ENUMINPUT, &videoInput))
+			break;
+	
+		// append new VideoInput
+		//VideoInput input;
+		inputs << QString::fromLocal8Bit((const char*)videoInput.name);
+		qDebug() << "SimpleV4L2::inputs: Input " << iNumber << ": " << inputs.last();
+	}
+	m_inputs = inputs;
+	return inputs;
+}
+	
+
+int SimpleV4L2::input()
+{
+	// return current input	
+	int index = 0;
+	if (-1 == xioctl(m_fd, VIDIOC_G_INPUT, &index)) {
+		perror("VIDIOC_G_INPUT");
+		return -1;
+	}
+	
+	return index;
+}
+	
+void SimpleV4L2::setInput(int index)
+{
+	// xioctl call to set input
+	if (-1 == xioctl(m_fd, VIDIOC_S_INPUT, &index)) {
+		perror ("VIDIOC_S_INPUT");
+		//return false;
+	}
+}
+
+bool SimpleV4L2::setInput(const QString& name)
+{
+	// Must match exactly one of the names from inputs()
+	int index = inputs().indexOf(name);
+	if(index >= 0)
+	{
+// 		qDebug() << "SimpleV4l2::setInput: Found"<<name<<" at index"<<index;
+		setInput(index);
+		return true;
+	}
+	
+	return false;
+}
+
+/*
+	typedef struct {
+		QString name;
+		v4l2_std_id id;
+	} StandardInfo;
+*/
+	
+QList<SimpleV4L2::StandardInfo> SimpleV4L2::standards()
+{
+	if(!m_standards.isEmpty())
+		return m_standards;
+		
+	//enum standards
+	QList<SimpleV4L2::StandardInfo> list;
+	
+	int index = input();
+	if(index < 0)
+		return list;
+		
+	// describe the current input
+	struct v4l2_input input;
+	CLEAR(input);
+	input.index = index;
+	if (-1 == xioctl(m_fd, VIDIOC_ENUMINPUT, &input)) 
+	{
+		perror("VIDIOC_ENUM_INPUT");
+		return list;
+	}
+	//qWarning("VideoDevice::detectSignalStandards: input %d is '%s' std: 0x%x", index, input.name, (int)input.std);
+
+	// skip standard matching if reported is unknown
+	if (input.std != V4L2_STD_UNKNOWN) 
+	{
+		// match the input.std to all the device's standards
+		struct v4l2_standard standard;
+		CLEAR(standard);
+		standard.index = 0;
+		while (-1 != xioctl(m_fd, VIDIOC_ENUMSTD, &standard)) 
+		{
+			//qDebug() << "SSS" << standard.name;
+			if (standard.id & input.std)
+			{
+				//qDebug() << "VideoDevice::detectSignalStandards:" << /*signalStandardName(standard.id) <<*/ "(" << standard.id << ")";
+				
+				SimpleV4L2::StandardInfo info;
+				info.name = QString::fromLocal8Bit((const char*)standard.name);
+				info.id = standard.id;
+				
+				qDebug() << "SimpleV4L2::standards: Standard "<<info.name<<" supported";
+				list << info;
+			}
+			standard.index++;
+		}
+
+		// EINVAL indicates the end of the enumeration, which cannot be empty unless this device falls under the USB exception.
+		if (errno != EINVAL || standard.index == 0) 
+		{
+			perror("VIDIOC_ENUMSTD");
+			return list;
+		}
+	}
+	
+	m_standards = list;
+	
+	return list;
+}
+
+SimpleV4L2::StandardInfo SimpleV4L2::standard()
+{
+	// return current standard
+	
+	// xioctl call to query current standard
+	
+	SimpleV4L2::StandardInfo info;
+	v4l2_std_id stdId;
+	CLEAR(stdId);
+	CLEAR(info);
+	if (-1 == xioctl(m_fd, VIDIOC_G_STD, &stdId)) {
+		perror("VIDIOC_G_STD");
+		return info;
+	}
+	
+	QList<SimpleV4L2::StandardInfo> stdList = standards();
+	foreach(SimpleV4L2::StandardInfo item, stdList)
+		if(item.id == stdId)
+			return item;
+	
+	info.name = "(Unknown)";
+	info.id = stdId;
+	return info;
+}
+
+void SimpleV4L2::setStandard(SimpleV4L2::StandardInfo info)
+{
+	// call to set with info.id
+	if (-1 == xioctl(m_fd, VIDIOC_S_STD, &info.id)) {
+		perror ("VIDIOC_S_STD");
+		//return false;
+	}
+}
+
+bool SimpleV4L2::setStandard(const QString& name)
+{
+	 // must be in the list return by standards()
+	QList<SimpleV4L2::StandardInfo> stdList = standards();
+	foreach(SimpleV4L2::StandardInfo item, stdList)
+		if(item.name == name)
+		{
+			setStandard(item);
+			return true;
+		}
+		
+	return false;
+}
+
 #endif

@@ -705,10 +705,10 @@ void GLVideoDrawable::paintGL()
 		}
 	};
 	
-	const GLfloat vTop = m_scanLineDirection == QVideoSurfaceFormat::TopToBottom
+	const GLfloat vTop = !m_videoFormat.flipVertical //m_scanLineDirection == QVideoSurfaceFormat::TopToBottom
 		? target.top()
 		: target.bottom() + 1;
-	const GLfloat vBottom = m_scanLineDirection == QVideoSurfaceFormat::TopToBottom
+	const GLfloat vBottom = !m_videoFormat.flipVertical //m_scanLineDirection == QVideoSurfaceFormat::TopToBottom
 		? target.bottom() + 1
 		: target.top();
 
@@ -1039,16 +1039,16 @@ QSize GLWidget::sizeHint() const
 
 void GLWidget::initializeGL()
 {
-	glEnable(GL_DEPTH_TEST);
+	glDisable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 	
 	glEnable(GL_BLEND); 
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	
-	glClearDepth(1.0f);						// Depth Buffer Setup
-	glEnable(GL_DEPTH_TEST);					// Enables Depth Testing
-	glDepthFunc(GL_LEQUAL);						// The Type Of Depth Testing To Do
-	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);		// Really Nice Perspective Calculations
+// 	glClearDepth(1.0f);						// Depth Buffer Setup
+// 	glEnable(GL_DEPTH_TEST);					// Enables Depth Testing
+// 	glDepthFunc(GL_LEQUAL);						// The Type Of Depth Testing To Do
+// 	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);		// Really Nice Perspective Calculations
 	
 	m_glInited = true;
 	foreach(GLDrawable *drawable, m_drawables)
@@ -1071,11 +1071,15 @@ void GLWidget::initializeGL()
 
 void GLWidget::paintGL()
 {
-	qglClearColor(Qt::green);
+	qglClearColor(Qt::black);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
+	int counter = 0;
 	foreach(GLDrawable *drawable, m_drawables)
+	{
+		//qDebug() << "GLWidget::paintGL(): ["<<counter++<<"] drawable->rect: "<<drawable->rect();
 		drawable->paintGL();
+	}
 }
 	
 void GLWidget::addDrawable(GLDrawable *item)
@@ -1103,7 +1107,7 @@ void GLWidget::zIndexChanged()
 
 bool GLWidget_drawable_zIndex_compare(GLDrawable *a, GLDrawable *b)
 {
-	return (a && b) ? a->zIndex() > b->zIndex() : true;
+	return (a && b) ? a->zIndex() < b->zIndex() : true;
 }
 
 

@@ -1,6 +1,8 @@
 #ifndef SimpleV4L2_H
 #define SimpleV4L2_H
 
+#include <QStringList>
+
 typedef enum {
 	IO_METHOD_READ,
 	IO_METHOD_MMAP,
@@ -27,6 +29,23 @@ public:
 	void uninitDevice();
 	void closeDevice();
 	
+	QStringList inputs();
+	int input(); // return current input	
+	void setInput(int idx);
+	bool setInput(const QString& name); // Must match exactly one of the names from inputs()
+		
+	typedef unsigned long long v4l2_std_id;
+	
+	typedef struct {
+		QString name;
+		v4l2_std_id id;
+	} StandardInfo;
+	
+	QList<StandardInfo> standards();
+	StandardInfo standard(); // return current standard
+	void setStandard(StandardInfo standard);
+	bool setStandard(const QString& name); // must be in the list return by standards()
+	
 private:
 	void io_init_read(unsigned int buffer_size);
 	void io_init_mmap();
@@ -38,6 +57,9 @@ private:
 	v4l2_simple_buffer	* m_buffers;//		= NULL;
 	unsigned int		  m_numBuffers;//	= 0;
 	QSize			  m_imageSize;//	= QSize(0,0)
+	
+	QStringList		  m_inputs;
+	QList<StandardInfo>	  m_standards;
 };
 
 

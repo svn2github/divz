@@ -38,7 +38,11 @@ public:
 	static CameraThread * threadForCamera(const QString& camera);
 	
 	static QStringList enumerateDevices(bool forceReenum=false);
-
+	
+	QStringList inputs();
+	int input();
+	
+	
 	//QImage frame();
 	
 	int fps() { return m_fps; }
@@ -53,6 +57,10 @@ public slots:
 	void setDeinterlace(bool);
 	void setFps(int fps=30);
 	void enableRawFrames(bool enable=true);
+	
+	void setInput(int);
+	bool setInput(const QString& name);
+	
 	
 signals:
 	//void newImage(QImage);

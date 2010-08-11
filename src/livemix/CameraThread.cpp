@@ -278,6 +278,115 @@ QStringList CameraThread::enumerateDevices(bool forceReenum)
 	return list;
 }
 
+QStringList CameraThread::inputs()
+{
+	#if !defined(Q_OS_LINUX)
+		return QStringList();
+	#endif
+	
+	SimpleV4L2 * api = m_v4l2;
+	bool deleteIt = false;
+	if(!api)
+	{
+		api = new SimpleV4L2();
+		deleteIt = true;
+		if(!api->openDevice(qPrintable(m_cameraFile)))
+		{
+			delete api;
+			return QStringList();
+		}
+	}
+	
+	QStringList inputs = api->inputs();
+	
+	if(deleteIt)
+		delete api;
+	return inputs;	
+}
+
+int CameraThread::input()
+{
+	#if !defined(Q_OS_LINUX)
+		return -1;
+	#endif
+	
+	SimpleV4L2 * api = m_v4l2;
+	bool deleteIt = false;
+	if(!api)
+	{
+		api = new SimpleV4L2();
+		deleteIt = true;
+		if(!api->openDevice(qPrintable(m_cameraFile)))
+		{
+			delete api;
+			return -1;
+		}
+	}
+	
+	int idx = api->input();
+	
+	if(deleteIt)
+		delete api;
+	
+	return idx;
+}
+
+void CameraThread::setInput(int idx)
+{
+	#if !defined(Q_OS_LINUX)
+		return;
+	#endif
+	
+	SimpleV4L2 * api = m_v4l2;
+	bool deleteIt = false;
+	if(!api)
+	{
+		api = new SimpleV4L2();
+		deleteIt = true;
+		if(!api->openDevice(qPrintable(m_cameraFile)))
+		{
+			delete api;
+			return;
+		}
+	}
+	
+	api->setInput(idx);
+	api->setStandard("NTSC");
+	
+	if(deleteIt)
+		delete api;
+}
+
+bool CameraThread::setInput(const QString& name)
+{
+	#if !defined(Q_OS_LINUX)
+		return false
+	#endif
+	
+	SimpleV4L2 * api = m_v4l2;
+	bool deleteIt = false;
+	if(!api)
+	{
+		api = new SimpleV4L2();
+		deleteIt = true;
+		if(!api->openDevice(qPrintable(m_cameraFile)))
+		{
+			delete api;
+			return false;
+		}
+	}
+	
+	bool flag = api->setInput(name);
+	if(flag)
+		api->setStandard("NTSC");
+	
+	if(deleteIt)
+		delete api;
+	
+	return flag;
+}
+
+
 
 int CameraThread::initCamera()
 {
@@ -287,13 +396,26 @@ int CameraThread::initCamera()
 		m_v4l2 = new SimpleV4L2();
 		if(m_v4l2->openDevice(qPrintable(m_cameraFile)))
 		{
+			// Do the code here so that we dont have to open the device twice
+			if(!setInput("Composite"))
+				if(!setInput("Composite1"))
+					setInput(0);
+				
 			m_v4l2->initDevice();
 			m_v4l2->startCapturing();
 			m_inited = true;
+			
 			return 1;
 		}
 	}
 	#endif
+	
+	// And do it here even if we're not using raw frames because setInput() will use SimpleV4L2 on linux,
+	// and its a NOOP on windows.
+	if(!setInput("Composite"))
+		if(!setInput("Composite1"))
+			setInput(0);
+			
 
 	AVInputFormat *inFmt = NULL;
 	AVFormatParameters formatParams;

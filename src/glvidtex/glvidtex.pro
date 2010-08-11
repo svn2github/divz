@@ -4,6 +4,8 @@ OBJECTS_DIR = .build
 RCC_DIR = .build
 UI_DIR = .build
 
+TARGET = glvidtex
+
 
 
 HEADERS       = glwidget.h \
@@ -22,7 +24,7 @@ SOURCES       = glwidget.cpp \
 		../livemix/CameraThread.cpp \
 		../livemix/SimpleV4L2.cpp
 
-RESOURCES     = textures.qrc
+RESOURCES     = glvidtex.qrc
 QT           += opengl multimedia
 
 # install
