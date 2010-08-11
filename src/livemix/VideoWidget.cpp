@@ -524,7 +524,7 @@ void VideoWidget::paintEvent(QPaintEvent*)
 				
 			if(m_frame.isRaw)
 			{
-				if(m_frame.useByteArray) // assume from SimpleV4L2 in ARGB32 format
+				if(m_frame.bufferType = VideoFrame::BUFFER_BYTEARRAY) // assume from SimpleV4L2 in ARGB32 format
 				{
 					QImage image((const uchar*)m_frame.byteArray.constData(),m_frame.size.width(),m_frame.size.height(),QImage::Format_RGB32);
 					p.drawImage(m_targetRect,image,m_sourceRect);

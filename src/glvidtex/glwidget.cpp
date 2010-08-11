@@ -159,19 +159,57 @@ void GLDrawable::initGL()
 	// NOOP
 }
 
+QByteArray VideoDisplayOptions::toByteArray()
+{
+	QByteArray array;
+	QDataStream b(&array, QIODevice::WriteOnly);
+
+	b << QVariant(flipHorizontal);
+	b << QVariant(flipVertical);
+	b << QVariant(cropTopLeft);
+	b << QVariant(cropBottomRight);
+	b << QVariant(brightness);
+	b << QVariant(contrast);
+	b << QVariant(hue);
+	b << QVariant(saturation);
+	
+	return array;
+}
+
+
+void VideoDisplayOptions::fromByteArray(QByteArray array)
+{
+	QDataStream b(&array, QIODevice::ReadOnly);
+	QVariant x;
+
+	b >> x; flipHorizontal = x.toBool();
+	b >> x; flipVertical = x.toBool();
+	b >> x; cropTopLeft = x.toPointF();
+	b >> x; cropBottomRight = x.toPointF();
+	b >> x; brightness = x.toInt();
+	b >> x; contrast = x.toInt();
+	b >> x; hue = x.toInt();
+	b >> x; saturation = x.toInt();
+}
+
+QDebug operator<<(QDebug dbg, const VideoDisplayOptions &opts)
+{
+	dbg.nospace() << "VideoDisplayOptions("<<opts.flipHorizontal<<","<<opts.flipVertical<<","<<opts.cropTopLeft<<","<<opts.cropBottomRight<<","<<opts.brightness<<","<<opts.contrast<<","<<opts.hue<<","<<opts.saturation<<")";
+	
+	return dbg.space();
+}
+
+
 GLVideoDrawable::GLVideoDrawable(QObject *parent)
 	: GLDrawable(parent)
 	, m_glInited(false)
 	, m_colorsDirty(true)
-	, m_brightness(0)
-	, m_contrast(0)
-	, m_hue(0)
-	, m_saturation(25)
 	, m_source(0)
 	, m_frameCount(0)
 	, m_latencyAccum(0)
 	, m_aspectRatioMode(Qt::KeepAspectRatio)
 {
+	
 	m_imagePixelFormats
 		<< QVideoFrame::Format_RGB32
 		<< QVideoFrame::Format_ARGB32
@@ -230,6 +268,60 @@ void GLVideoDrawable::frameReady()
 		updateRects();
 	}
 		
+	if(m_glInited)
+	{
+		//m_frame.isValid() && 
+		if(m_frame.isRaw)
+		{
+			for (int i = 0; i < m_textureCount; ++i) 
+			{
+				glBindTexture(GL_TEXTURE_2D, m_textureIds[i]);
+				glTexImage2D(
+					GL_TEXTURE_2D,
+					0,
+					m_textureInternalFormat,
+					m_textureWidths[i],
+					m_textureHeights[i],
+					0,
+					m_textureFormat,
+					m_textureType,
+					m_frame.bufferType == VideoFrame::BUFFER_POINTER ? m_frame.data[i] :
+						(uint8_t*)m_frame.byteArray.constData() + m_textureOffsets[i]
+				);
+					
+				glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+				glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+				glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+				glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+			}
+		}
+		else
+		{
+			for (int i = 0; i < m_textureCount; ++i) 
+			{
+				//qDebug() << "normal: "<<i<<m_textureWidths[i]<<m_textureHeights[i];
+			
+				glBindTexture(GL_TEXTURE_2D, m_textureIds[i]);
+				glTexImage2D(
+					GL_TEXTURE_2D,
+					0,
+					m_textureInternalFormat,
+					m_textureWidths[i],
+					m_textureHeights[i],
+					0,
+					m_textureFormat,
+					m_textureType,
+					//m_frame.bits() + m_textureOffsets[i]
+					(!m_frame.image.isNull() ? m_frame.image.scanLine(0) : m_sampleTexture.scanLine(0)) + m_textureOffsets[i]
+					);
+				glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+				glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+				glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+				glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+			}
+		}
+	}
+	
 	updateGL();
 }
 
@@ -237,14 +329,14 @@ void GLVideoDrawable::frameReady()
 */
 int GLVideoDrawable::brightness() const
 {
-	return m_brightness;
+	return m_displayOpts.brightness;
 }
 
 /*!
 */
 void GLVideoDrawable::setBrightness(int brightness)
 {
-	m_brightness = brightness;
+	m_displayOpts.brightness = brightness;
 	
 	m_colorsDirty = true;
 }
@@ -253,14 +345,14 @@ void GLVideoDrawable::setBrightness(int brightness)
 */
 int GLVideoDrawable::contrast() const
 {
-	return m_contrast;
+	return m_displayOpts.contrast;
 }
 
 /*!
 */
 void GLVideoDrawable::setContrast(int contrast)
 {
-	m_contrast = contrast;
+	m_displayOpts.contrast = contrast;
 	
 	m_colorsDirty = true;
 }
@@ -269,14 +361,14 @@ void GLVideoDrawable::setContrast(int contrast)
 */
 int GLVideoDrawable::hue() const
 {
-	return m_hue;
+	return m_displayOpts.hue;
 }
 
 /*!
 */
 void GLVideoDrawable::setHue(int hue)
 {
-	m_hue = hue;
+	m_displayOpts.hue = hue;
 	
 	m_colorsDirty = true;
 }
@@ -285,14 +377,14 @@ void GLVideoDrawable::setHue(int hue)
 */
 int GLVideoDrawable::saturation() const
 {
-	return m_saturation;
+	return m_displayOpts.saturation;
 }
 
 /*!
 */
 void GLVideoDrawable::setSaturation(int saturation)
 {
-	m_saturation = saturation;
+	m_displayOpts.saturation = saturation;
 	
 	m_colorsDirty = true;
 }
@@ -436,6 +528,7 @@ void GLVideoDrawable::initGL()
 
 bool GLVideoDrawable::setVideoFormat(const VideoFormat& format)
 {
+	bool samePixelFormat = false; //format.pixelFormat == m_videoFormat.pixelFormat;
 	m_videoFormat = format;
 //m_sampleTexture.load("/opt/qtsdk-2010.02/qt/examples/opengl/pbuffers/cubelogo.png"); 
 	//m_sampleTexture = m_sampleTexture.scaled(640,480);
@@ -461,44 +554,50 @@ bool GLVideoDrawable::setVideoFormat(const VideoFormat& format)
 	
 	const char *fragmentProgram = resizeTextures(format.frameSize);
  
-	if (!fragmentProgram) 
-	{
-		qDebug() << "No shader program found - format not supported.";
-		return false;
-	} 
-	else 
-	if (!m_program.addShaderFromSourceCode(QGLShader::Vertex, qt_glsl_vertexShaderProgram)) 
-	{
-		qWarning("GLWidget: Vertex shader compile error %s",
-			qPrintable(m_program.log()));
-		//error = QAbstractVideoSurface::ResourceError;
+ 	if(!samePixelFormat)
+ 	{
+		if (!fragmentProgram) 
+		{
+			qDebug() << "No shader program found - format not supported.";
+			return false;
+		} 
+		else 
+		if (!m_program.addShaderFromSourceCode(QGLShader::Vertex, qt_glsl_vertexShaderProgram)) 
+		{
+			qWarning("GLWidget: Vertex shader compile error %s",
+				qPrintable(m_program.log()));
+			//error = QAbstractVideoSurface::ResourceError;
+			return false;
+			
+		} 
+		else 
+		if (!m_program.addShaderFromSourceCode(QGLShader::Fragment, fragmentProgram)) 
+		{
+			qWarning("GLWidget: Shader compile error %s", qPrintable(m_program.log()));
+			//error = QAbstractVideoSurface::ResourceError;
+			m_program.removeAllShaders();
+			return false;
+		} 
+		else 
+		if(!m_program.link()) 
+		{
+			qWarning("GLWidget: Shader link error %s", qPrintable(m_program.log()));
+			m_program.removeAllShaders();
+			return false;
+		} 
+		else 
+		{
+			//m_handleType = format.handleType();
+			m_scanLineDirection = QVideoSurfaceFormat::TopToBottom; //format.scanLineDirection();
+			m_frameSize = format.frameSize;
 		
-	} 
-	else 
-	if (!m_program.addShaderFromSourceCode(QGLShader::Fragment, fragmentProgram)) 
-	{
-		qWarning("GLWidget: Shader compile error %s", qPrintable(m_program.log()));
-		//error = QAbstractVideoSurface::ResourceError;
-		m_program.removeAllShaders();
-	} 
-	else 
-	if(!m_program.link()) 
-	{
-		qWarning("GLWidget: Shader link error %s", qPrintable(m_program.log()));
-		m_program.removeAllShaders();
-	} 
-	else 
-	{
-		//m_handleType = format.handleType();
-		m_scanLineDirection = QVideoSurfaceFormat::TopToBottom; //format.scanLineDirection();
-		m_frameSize = format.frameSize;
-	
-		//if (m_handleType == QAbstractVideoBuffer::NoHandle)
-			glGenTextures(m_textureCount, m_textureIds);
+			//if (m_handleType == QAbstractVideoBuffer::NoHandle)
+				glGenTextures(m_textureCount, m_textureIds);
+		}
+		
+		//qDebug() << "GLVideoDrawable::setVideoFormat(): \t Initalized"<<m_textureCount<<"textures";
 	}
-	
-	//qDebug() << "GLVideoDrawable::setVideoFormat(): \t Initalized"<<m_textureCount<<"textures";
-	
+			
 	return true;
 }
 
@@ -545,7 +644,7 @@ const char * GLVideoDrawable::resizeTextures(const QSize& frameSize)
 	return fragmentProgram;
 }
 
-void GLVideoDrawable::viewportResized(const QSize& newSize)
+void GLVideoDrawable::viewportResized(const QSize& /*newSize*/)
 {
 	// recalc rects here
 	//setRect(QRectF(0,0,newSize.width(),newSize.height()));
@@ -556,11 +655,17 @@ void GLVideoDrawable::viewportResized(const QSize& newSize)
 void GLVideoDrawable::updateRects()
 {
 	m_sourceRect = m_frame.rect;
+	
+	QRectF adjustedSource = m_sourceRect.adjusted(
+		m_displayOpts.cropTopLeft.x(),
+		m_displayOpts.cropTopLeft.y(),
+		m_displayOpts.cropBottomRight.x(),
+		m_displayOpts.cropBottomRight.y());
 // 	m_origSourceRect = m_sourceRect;
 // 
 // 	m_sourceRect.adjust(m_adjustDx1,m_adjustDy1,m_adjustDx2,m_adjustDy2);
 
-	QSize nativeSize = m_frame.size;
+	QSizeF nativeSize = adjustedSource.size(); //m_frame.size;
 
 	if (nativeSize.isEmpty())
 	{
@@ -598,74 +703,33 @@ void GLVideoDrawable::updateRects()
 // float opacity = 0.5;
 // 	glColor4f(opacity,opacity,opacity,opacity);
 
+void GLVideoDrawable::setDisplayOptions(const VideoDisplayOptions& opts)
+{
+	m_displayOpts = opts;
+	m_colorsDirty = true;
+	emit displayOptionsChanged(opts);
+}
 	
 void GLVideoDrawable::paintGL()
 {
 	if (m_colorsDirty) 
 	{
 		//qDebug() << "Updating color matrix";
-		updateColors(m_brightness, m_contrast, m_hue, m_saturation);
+		updateColors(m_displayOpts.brightness, m_displayOpts.contrast, m_displayOpts.hue, m_displayOpts.saturation);
 		m_colorsDirty = false;
         }
-
-	
-	
-	//m_frame.isValid() && 
-	if(m_frame.isRaw)
-	{
-		for (int i = 0; i < m_textureCount; ++i) 
-		{
-			glBindTexture(GL_TEXTURE_2D, m_textureIds[i]);
-			glTexImage2D(
-				GL_TEXTURE_2D,
-				0,
-				m_textureInternalFormat,
-				m_textureWidths[i],
-				m_textureHeights[i],
-				0,
-				m_textureFormat,
-				m_textureType,
-				m_frame.bufferType == VideoFrame::BUFFER_POINTER ? m_frame.data[i] :
-					(uint8_t*)m_frame.byteArray.constData() + m_textureOffsets[i]
-			);
-				 
-			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		}
-	}
-	else
-	{
-		for (int i = 0; i < m_textureCount; ++i) 
-		{
-			//qDebug() << "normal: "<<i<<m_textureWidths[i]<<m_textureHeights[i];
-		
-			glBindTexture(GL_TEXTURE_2D, m_textureIds[i]);
-			glTexImage2D(
-				GL_TEXTURE_2D,
-				0,
-				m_textureInternalFormat,
-				m_textureWidths[i],
-				m_textureHeights[i],
-				0,
-				m_textureFormat,
-				m_textureType,
-				//m_frame.bits() + m_textureOffsets[i]
-				(!m_frame.image.isNull() ? m_frame.image.scanLine(0) : m_sampleTexture.scanLine(0)) + m_textureOffsets[i]
-				);
-			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		}
-	}
 
 	
 	//m_frame.unmap();
 	
 	QRectF source = m_sourceRect; //m_sampleTexture.rect();
 	QRectF target = m_targetRect; //rect();
+	
+	source = source.adjusted(
+		m_displayOpts.cropTopLeft.x(),
+		m_displayOpts.cropTopLeft.y(),
+		m_displayOpts.cropBottomRight.x(),
+		m_displayOpts.cropBottomRight.y());
 	
 	//qDebug() << "source:"<<source<<", target:"<<target;
 	
@@ -674,7 +738,7 @@ void GLVideoDrawable::paintGL()
 	const int height = QGLContext::currentContext()->device()->height();
 
 	//QPainter painter(this);
-	QTransform transform; // = painter.deviceTransform();
+	QTransform transform =  m_glw->transform(); //= painter.deviceTransform();
 	//transform = transform.scale(1.25,1.);
 
 	const GLfloat wfactor = 2.0 / width;
@@ -705,10 +769,10 @@ void GLVideoDrawable::paintGL()
 		}
 	};
 	
-	const GLfloat vTop = !m_videoFormat.flipVertical //m_scanLineDirection == QVideoSurfaceFormat::TopToBottom
+	const GLfloat vTop = !m_displayOpts.flipVertical //m_scanLineDirection == QVideoSurfaceFormat::TopToBottom
 		? target.top()
 		: target.bottom() + 1;
-	const GLfloat vBottom = !m_videoFormat.flipVertical //m_scanLineDirection == QVideoSurfaceFormat::TopToBottom
+	const GLfloat vBottom = !m_displayOpts.flipVertical //m_scanLineDirection == QVideoSurfaceFormat::TopToBottom
 		? target.bottom() + 1
 		: target.top();
 
@@ -724,13 +788,13 @@ void GLVideoDrawable::paintGL()
 	
 	//qDebug() << vTop << vBottom;
 	
-	const GLfloat txLeft   = m_videoFormat.flipHorizontal ? source.right()  / m_frameSize.width() : source.left()  / m_frameSize.width();
-	const GLfloat txRight  = m_videoFormat.flipHorizontal ? source.left()   / m_frameSize.width() : source.right() / m_frameSize.width();
+	const GLfloat txLeft   = m_displayOpts.flipHorizontal ? source.right()  / m_frameSize.width() : source.left()  / m_frameSize.width();
+	const GLfloat txRight  = m_displayOpts.flipHorizontal ? source.left()   / m_frameSize.width() : source.right() / m_frameSize.width();
 	
-	const GLfloat txTop    = !m_videoFormat.flipVertical //m_scanLineDirection == QVideoSurfaceFormat::TopToBottom
+	const GLfloat txTop    = !m_displayOpts.flipVertical //m_scanLineDirection == QVideoSurfaceFormat::TopToBottom
 		? source.top()    / m_frameSize.height()
 		: source.bottom() / m_frameSize.height();
-	const GLfloat txBottom = !m_videoFormat.flipVertical //m_scanLineDirection == QVideoSurfaceFormat::TopToBottom
+	const GLfloat txBottom = !m_displayOpts.flipVertical //m_scanLineDirection == QVideoSurfaceFormat::TopToBottom
 		? source.bottom() / m_frameSize.height()
 		: source.top()    / m_frameSize.height();
 
@@ -801,7 +865,8 @@ void GLVideoDrawable::paintGL()
 		QString latencyPerFrame;
 		latencyPerFrame.setNum((((double)m_latencyAccum) / ((double)m_frameCount)), 'f', 3);
 		
-		qDebug() << "FPS: "<<framesPerSecond<<", Latency: "<<latencyPerFrame<<" ms";
+		
+		qDebug() << "FPS: " + framesPerSecond + (m_frame.captureTime.isNull() ? "" : ", Latency: " + latencyPerFrame + " ms");
 
 		m_time.start();
 		m_frameCount = 0;
@@ -814,6 +879,218 @@ void GLVideoDrawable::paintGL()
 }
 
 
+
+VideoDisplayOptionWidget::VideoDisplayOptionWidget(GLVideoDrawable *drawable, QWidget *parent)
+	: QWidget(parent)
+	, m_drawable(drawable)
+{
+	if(drawable)
+	{
+		m_opts = drawable->displayOptions();
+		connect(this, SIGNAL(displayOptionsChanged(const VideoDisplayOptions&)), drawable, SLOT(setDisplayOptions(const VideoDisplayOptions&)));
+	}
+	
+	initUI();
+}
+
+VideoDisplayOptionWidget::VideoDisplayOptionWidget(const VideoDisplayOptions& opts, QWidget *parent)
+	: QWidget(parent)
+{
+	m_opts = opts;
+	initUI();
+}
+	
+	
+void VideoDisplayOptionWidget::initUI()
+{
+	QVBoxLayout *layout = new QVBoxLayout(this);
+	
+	QHBoxLayout *row = 0;
+	
+	QCheckBox *cb = 0;
+	row = new QHBoxLayout();
+	cb = new QCheckBox("Flip Horizontal");
+	cb->setChecked(m_opts.flipHorizontal);
+	connect(cb, SIGNAL(toggled(bool)), this, SLOT(flipHChanged(bool)));
+	row->addWidget(cb);
+	layout->addLayout(row);
+	
+	row = new QHBoxLayout();
+	cb = new QCheckBox("Flip Vertical");
+	cb->setChecked(m_opts.flipVertical);
+	connect(cb, SIGNAL(toggled(bool)), this, SLOT(flipVChanged(bool)));
+	row->addWidget(cb);
+	layout->addLayout(row);
+	
+	QSpinBox *spinBox = 0;
+	row = new QHBoxLayout();
+	row->addWidget(new QLabel("Crop Left By:"));
+	spinBox = new QSpinBox;
+	spinBox->setSuffix(" px");
+	spinBox->setMinimum(-1000);
+	spinBox->setMaximum(1000);
+	spinBox->setValue(m_opts.cropTopLeft.x());
+	connect(spinBox, SIGNAL(valueChanged(int)), this, SLOT(cropX1Changed(int)));
+	row->addWidget(spinBox);
+	layout->addLayout(row);
+	
+	row = new QHBoxLayout();
+	row->addWidget(new QLabel("Crop Right By:"));
+	spinBox = new QSpinBox;
+	spinBox->setSuffix(" px");
+	spinBox->setMinimum(-1000);
+	spinBox->setMaximum(1000);
+	spinBox->setValue(m_opts.cropBottomRight.x());
+	connect(spinBox, SIGNAL(valueChanged(int)), this, SLOT(cropX2Changed(int)));
+	row->addWidget(spinBox);
+	layout->addLayout(row);
+	
+	row = new QHBoxLayout();
+	row->addWidget(new QLabel("Crop Top By:"));
+	spinBox = new QSpinBox;
+	spinBox->setSuffix(" px");
+	spinBox->setMinimum(-1000);
+	spinBox->setMaximum(1000);
+	spinBox->setValue(m_opts.cropTopLeft.y());
+	connect(spinBox, SIGNAL(valueChanged(int)), this, SLOT(cropY1Changed(int)));
+	row->addWidget(spinBox);
+	layout->addLayout(row);
+	
+	row = new QHBoxLayout();
+	row->addWidget(new QLabel("Crop Bottom By:"));
+	spinBox = new QSpinBox;
+	spinBox->setSuffix(" px");
+	spinBox->setMinimum(-1000);
+	spinBox->setMaximum(1000);
+	spinBox->setValue(m_opts.cropBottomRight.y());
+	connect(spinBox, SIGNAL(valueChanged(int)), this, SLOT(cropY2Changed(int)));
+	row->addWidget(spinBox);
+	layout->addLayout(row);
+	
+	QSlider *slider =0;
+	row = new QHBoxLayout();
+	row->addWidget(new QLabel("Brightness:"));
+	slider = new QSlider;
+	slider->setOrientation(Qt::Horizontal);
+	slider->setMinimum(-100);
+	slider->setMaximum(100);
+	slider->setValue(m_opts.brightness);
+	connect(slider, SIGNAL(valueChanged(int)), this, SLOT(bChanged(int)));
+	row->addWidget(slider);
+	layout->addLayout(row);
+	
+	row = new QHBoxLayout();
+	row->addWidget(new QLabel("Contrast:"));
+	slider = new QSlider;
+	slider->setOrientation(Qt::Horizontal);
+	slider->setMinimum(-50);
+	slider->setMaximum(50);
+	slider->setValue(m_opts.contrast);
+	connect(slider, SIGNAL(valueChanged(int)), this, SLOT(cChanged(int)));
+	row->addWidget(slider);
+	layout->addLayout(row);
+	
+	row = new QHBoxLayout();
+	row->addWidget(new QLabel("Hue:"));
+	slider = new QSlider;
+	slider->setOrientation(Qt::Horizontal);
+	slider->setMinimum(-100);
+	slider->setMaximum(100);
+	slider->setValue(m_opts.hue);
+	connect(slider, SIGNAL(valueChanged(int)), this, SLOT(hChanged(int)));
+	row->addWidget(slider);
+	layout->addLayout(row);
+	
+	row = new QHBoxLayout();
+	row->addWidget(new QLabel("Saturation:"));
+	slider = new QSlider;
+	slider->setOrientation(Qt::Horizontal);
+	slider->setMinimum(-50);
+	slider->setMaximum(50);
+	slider->setValue(m_opts.saturation);
+	connect(slider, SIGNAL(valueChanged(int)), this, SLOT(sChanged(int)));
+	row->addWidget(slider);
+	layout->addLayout(row);
+	
+}
+
+// signals:
+// 	void displayOptionsChanged(const VideoDisplayOptions&);
+
+/*public slots:
+	void setDisplayOptions(const VideoDisplayOptions&);*/
+	
+void VideoDisplayOptionWidget::flipHChanged(bool value)
+{
+	m_opts.flipHorizontal = value;
+	emit displayOptionsChanged(m_opts);
+}
+
+void VideoDisplayOptionWidget::flipVChanged(bool value)
+{
+	m_opts.flipVertical = value;
+	emit displayOptionsChanged(m_opts);
+}
+
+
+void VideoDisplayOptionWidget::cropX1Changed(int value)
+{
+	m_opts.cropTopLeft.setX(value);
+	emit displayOptionsChanged(m_opts);
+}
+
+
+void VideoDisplayOptionWidget::cropY1Changed(int value)
+{
+	m_opts.cropTopLeft.setY(value);
+	emit displayOptionsChanged(m_opts);
+}
+
+
+void VideoDisplayOptionWidget::cropX2Changed(int value)
+{
+	m_opts.cropBottomRight.setX(value);
+	emit displayOptionsChanged(m_opts);
+}
+
+
+void VideoDisplayOptionWidget::cropY2Changed(int value)
+{
+	m_opts.cropBottomRight.setY(value);
+	emit displayOptionsChanged(m_opts);
+}
+
+
+void VideoDisplayOptionWidget::bChanged(int value)
+{
+	//qDebug() << "b changed: "<<value;
+	m_opts.brightness = value;
+	emit displayOptionsChanged(m_opts);
+}
+
+
+void VideoDisplayOptionWidget::cChanged(int value)
+{
+	m_opts.contrast = value;
+	emit displayOptionsChanged(m_opts);
+}
+
+
+void VideoDisplayOptionWidget::hChanged(int value)
+{
+	m_opts.hue = value;
+	emit displayOptionsChanged(m_opts);
+}
+
+
+void VideoDisplayOptionWidget::sChanged(int value)
+{
+	m_opts.saturation = value;
+	emit displayOptionsChanged(m_opts);
+}
+
+
+	
 class GLBugDrawable : public GLDrawable
 {
 public:
@@ -966,7 +1243,7 @@ GLWidget::GLWidget(QWidget *parent, QGLWidget *shareWidget)
 	: QGLWidget(parent, shareWidget)
 	, m_glInited(false)
 {
-	
+	setViewport(QRectF(0,0,1000.,750.));
 	
 	#ifdef Q_OS_WIN
 	QString defaultCamera = "vfwcap://0";
@@ -986,9 +1263,12 @@ GLWidget::GLWidget(QWidget *parent, QGLWidget *shareWidget)
 		
 		GLVideoDrawable *camera = new GLVideoDrawable(this);
 		camera->setVideoSource(thread);
-		camera->setRect(QRectF(0,0,320,240));
+		camera->setRect(QRectF(0,0,1000,750));
 		addDrawable(camera);
 		
+		VideoDisplayOptionWidget *opts = new VideoDisplayOptionWidget(camera);
+		opts->adjustSize();
+		opts->show();
 	}
 // 	if(!thread)
 // 	{
@@ -1007,12 +1287,12 @@ GLWidget::GLWidget(QWidget *parent, QGLWidget *shareWidget)
 	
 	source->start();
 	videoBug->setVideoSource(source);
-	videoBug->setRect(QRectF(0,0,64,64));
+	videoBug->setRect(QRectF(1000 - 70,750 - 70,64,64));
 	videoBug->setZIndex(1);
 	
 	addDrawable(videoBug);
 	
-	resize(320,240);
+	resize(640,480);
 	
 // 	GLBugDrawable *bug = new GLBugDrawable();
 // 	bug->setZIndex(1);
@@ -1074,7 +1354,7 @@ void GLWidget::paintGL()
 	qglClearColor(Qt::black);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
-	int counter = 0;
+// 	int counter = 0;
 	foreach(GLDrawable *drawable, m_drawables)
 	{
 		//qDebug() << "GLWidget::paintGL(): ["<<counter++<<"] drawable->rect: "<<drawable->rect();
@@ -1119,15 +1399,40 @@ void GLWidget::sortDrawables()
 void GLWidget::resizeGL(int width, int height)
 {
 // 	int side = qMin(width, height);
+	//glViewport(0,0,width,height); //(width - side) / 2, (height - side) / 2, side, side);
 	glViewport(0,0,width,height); //(width - side) / 2, (height - side) / 2, side, side);
-	//glViewport((width - side) / 2, (height - side) / 2, side, side);
 	
-	QSize size(width,height);
+	setViewport(viewport());
+}
 	
-// 	qDebug() << "GLWidget::resizeGL(): size:"<<size;
+void GLWidget::setViewport(const QRectF& viewport)
+{
+	m_viewport = viewport;
+	float sw = viewport.width();
+	float sh = viewport.height();;
 	
-	foreach(GLDrawable *drawable, m_drawables)
-		drawable->viewportResized(size);
+	float sx = ((float)width()) / sw;
+	float sy = ((float)height()) / sh;
+
+	float scale = qMin(sx,sy);
+	float scaledWidth = sw * scale;
+	float scaledHeight = sh * scale;
+	float diffWidth = width() - scaledWidth;
+	float diffHeight = height() - scaledHeight;
+	//qDebug() << "scaledWH:"<<scaledWidth<<scaledHeight<<", diffWH:"<<diffWidth<<diffHeight;
+	
+	/// WHY?? The usual centering algorithm of 'divide by 2' doesn't seem to work - at least
+	/// on my work machine. The math is correct, but the output renders too far to the right and top. 
+	/// The 2.75 and 1.5 were found simply thru trial and error.
+	float xt = diffWidth/2.75  + viewport.left();
+	float yt = diffHeight/1.5  + viewport.top();
+	//qDebug() << "GLWidget::resizeGL: width:"<<width<<",height:"<<height<<", scale:"<<scale<<", trans:"<<xt<<yt;
+	
+	setTransform(QTransform().scale(scale,scale).translate(xt,yt));
+	
+	//QSize size(width,height);
+	//foreach(GLDrawable *drawable, m_drawables)
+		//drawable->viewportResized(size);
 
 /*#if !defined(QT_OPENGL_ES_2)
 	glMatrixMode(GL_PROJECTION);
@@ -1139,6 +1444,11 @@ void GLWidget::resizeGL(int width, int height)
 		#endif
 	glMatrixMode(GL_MODELVIEW);
 #endif*/
+}
+
+void GLWidget::setTransform(const QTransform& tx)
+{
+	m_transform = tx;
 }
 
 void GLWidget::mousePressEvent(QMouseEvent */*event*/)

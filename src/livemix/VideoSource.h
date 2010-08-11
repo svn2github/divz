@@ -14,8 +14,6 @@ public:
 	{
 		bufferType = VideoFrame::BUFFER_INVALID;
 		pixelFormat = QVideoFrame::Format_Invalid;
-		flipHorizontal = false;
-		flipVertical = false;
 	};
 	
 	VideoFormat(    VideoFrame::BufferType buffer, 
@@ -25,8 +23,6 @@ public:
 		bufferType = buffer;
 		pixelFormat = pixel;
 		frameSize = size;
-		flipHorizontal = false;
-		flipVertical = false;
 	}
 	
 	bool isValid() { return pixelFormat != QVideoFrame::Format_Invalid && !frameSize.isNull() && bufferType != VideoFrame::BUFFER_INVALID; }
@@ -34,8 +30,6 @@ public:
 	VideoFrame::BufferType bufferType;
 	QVideoFrame::PixelFormat pixelFormat;
 	QSize frameSize;
-	bool flipHorizontal;
-	bool flipVertical;
 };
 
 class VideoWidget;

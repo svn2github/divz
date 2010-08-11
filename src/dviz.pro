@@ -10,7 +10,7 @@ OBJECTS_DIR = .build
 RCC_DIR = .build
 UI_DIR = .build
 
-QT += sql
+QT += sql multimedia
 
 # Disable till I find a way to test QT Version here
 #if(QT_VERSION >= 0x040600)

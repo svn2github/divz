@@ -80,6 +80,43 @@ private:
 	VideoFrame m_frame;
 };
 
+class VideoDisplayOptions
+{
+public:
+	VideoDisplayOptions(
+		bool flipX=false, 
+		bool flipY=false, 
+		QPointF cropTL = QPointF(0,0), 
+		QPointF cropBR = QPointF(0,0), 
+		int b=0, 
+		int c=0, 
+		int h=0, 
+		int s=0
+	)
+	:	flipHorizontal(flipX)
+	,	flipVertical(flipY)
+	,	cropTopLeft(cropTL)
+	,	cropBottomRight(cropBR)
+	,	brightness(b)
+	,	contrast(c)
+	,	hue(h)
+	,	saturation(s)
+	{}
+	
+	bool flipHorizontal;
+	bool flipVertical;
+	QPointF cropTopLeft;
+	QPointF cropBottomRight;
+	int brightness;
+	int contrast;
+	int hue;
+	int saturation;
+	
+	QByteArray toByteArray();
+	void fromByteArray(QByteArray);
+};
+QDebug operator<<(QDebug dbg, const VideoDisplayOptions &);
+
 
 class GLVideoDrawable : public GLDrawable
 {
@@ -88,8 +125,6 @@ public:
 	GLVideoDrawable(QObject *parent=0);
 	~GLVideoDrawable();
 	
-	// Returns false if format won't be acceptable
-	bool setVideoFormat(const VideoFormat& format);
 	const VideoFormat& videoFormat();
 	
 	int brightness() const;
@@ -99,6 +134,8 @@ public:
 	
 	VideoSource *videoSource();
 	
+	VideoDisplayOptions displayOptions() { return m_displayOpts; }
+	
 public slots:
 	void setBrightness(int brightness);
 	void setContrast(int contrast);
@@ -107,6 +144,14 @@ public slots:
 	
 	void setVideoSource(VideoSource*);
 	void disconnectVideoSource();
+	
+	void setDisplayOptions(const VideoDisplayOptions&);
+	
+	// Returns false if format won't be acceptable
+	bool setVideoFormat(const VideoFormat& format);
+
+signals:
+	void displayOptionsChanged(const VideoDisplayOptions&);
 
 protected:
 	void paintGL();
@@ -155,10 +200,7 @@ private:
 	
 	bool m_colorsDirty;
 	
-	int m_brightness;
-	int m_contrast;
-	int m_hue;
-	int m_saturation;
+	VideoDisplayOptions m_displayOpts;
 	
 	QImage m_sampleTexture;
 	
@@ -184,6 +226,38 @@ private:
 	Qt::AspectRatioMode m_aspectRatioMode;
 };
 
+class VideoDisplayOptionWidget : public QWidget
+{
+	Q_OBJECT
+public:
+	VideoDisplayOptionWidget(GLVideoDrawable *drawable, QWidget *parent=0);
+	VideoDisplayOptionWidget(const VideoDisplayOptions&, QWidget *parent=0);
+	
+signals:
+	void displayOptionsChanged(const VideoDisplayOptions&);
+
+// public slots:
+// 	void setDisplayOptions(const VideoDisplayOptions&);
+	
+private slots:
+	void flipHChanged(bool);
+	void flipVChanged(bool);
+	void cropX1Changed(int);
+	void cropY1Changed(int);
+	void cropX2Changed(int);
+	void cropY2Changed(int);
+	void bChanged(int);
+	void cChanged(int);
+	void hChanged(int);
+	void sChanged(int);
+
+private:
+	void initUI();
+	
+	VideoDisplayOptions m_opts;
+	GLVideoDrawable *m_drawable;
+	
+};
 
 class GLWidget : public QGLWidget
 {
@@ -198,6 +272,12 @@ public:
 	
 	void addDrawable(GLDrawable *);
 	void removeDrawable(GLDrawable*);
+	
+	QTransform transform() { return m_transform; }
+	void setTransform(const QTransform&);
+	
+	const QRectF & viewport() const { return m_viewport; }
+	void setViewport(const QRectF&);
 	
 signals:
 	void clicked();
@@ -224,6 +304,9 @@ private:
 	QList<GLDrawable*> m_drawables;
 	
 	bool m_glInited;
+	
+	QTransform m_transform;
+	QRectF m_viewport;
 	
 };
 
