@@ -2,9 +2,8 @@
 #include <QtOpenGL>
 #include <QVideoFrame>
 #include <QAbstractVideoSurface>
-#include "glwidget.h"
-#include "../livemix/VideoThread.h"
-#include "../livemix/CameraThread.h"
+#include "GLWidget.h"
+#include "../livemix/VideoSource.h"
 
 #if !defined(QT_NO_OPENGL) && !defined(QT_OPENGL_ES_1_CL) && !defined(QT_OPENGL_ES_1)
 
@@ -52,23 +51,26 @@ static const char *qt_glsl_vertexShaderProgram =
 static const char *qt_glsl_xrgbShaderProgram =
         "uniform sampler2D texRgb;\n"
         "uniform mediump mat4 colorMatrix;\n"
+        "uniform mediump float alpha;\n"
         "varying highp vec2 textureCoord;\n"
         "void main(void)\n"
         "{\n"
         "    highp vec4 color = vec4(texture2D(texRgb, textureCoord.st).bgr, 1.0);\n"
-        "    gl_FragColor = colorMatrix * color;\n"
+        "    color = colorMatrix * color;\n"
+        "    gl_FragColor = vec4(color.rgb, alpha);\n"
         "}\n";
 
 // Paints an ARGB frame.
 static const char *qt_glsl_argbShaderProgram =
         "uniform sampler2D texRgb;\n"
         "uniform mediump mat4 colorMatrix;\n"
+        "uniform mediump float alpha;\n"
         "varying highp vec2 textureCoord;\n"
         "void main(void)\n"
         "{\n"
         "    highp vec4 color = vec4(texture2D(texRgb, textureCoord.st).bgr, 1.0);\n"
         "    color = colorMatrix * color;\n"
-        "    gl_FragColor = vec4(color.rgb, texture2D(texRgb, textureCoord.st).a);\n"
+        "    gl_FragColor = vec4(color.rgb, texture2D(texRgb, textureCoord.st).a * alpha);\n"
         "}\n";
 
 
@@ -76,12 +78,13 @@ static const char *qt_glsl_argbShaderProgram =
 static const char *qt_glsl_rgbShaderProgram =
         "uniform sampler2D texRgb;\n"
         "uniform mediump mat4 colorMatrix;\n"
+        "uniform mediump float alpha;\n"
         "varying highp vec2 textureCoord;\n"
         "void main(void)\n"
         "{\n"
         "    highp vec4 color = vec4(texture2D(texRgb, textureCoord.st).rgb, 1.0);\n"
         "    color = colorMatrix * color;\n"
-        "    gl_FragColor = vec4(color.rgb, texture2D(texRgb, textureCoord.st).a);\n"
+        "    gl_FragColor = vec4(color.rgb, texture2D(texRgb, textureCoord.st).a * alpha);\n"
         "}\n";
 
 // Paints a YUV420P or YV12 frame.
@@ -90,6 +93,7 @@ static const char *qt_glsl_yuvPlanarShaderProgram =
         "uniform sampler2D texU;\n"
         "uniform sampler2D texV;\n"
         "uniform mediump mat4 colorMatrix;\n"
+        "uniform mediump float alpha;\n"
         "varying highp vec2 textureCoord;\n"
         "void main(void)\n"
         "{\n"
@@ -98,7 +102,8 @@ static const char *qt_glsl_yuvPlanarShaderProgram =
         "           texture2D(texU, textureCoord.st).r,\n"
         "           texture2D(texV, textureCoord.st).r,\n"
         "           1.0);\n"
-        "    gl_FragColor = colorMatrix * color;\n"
+        "    color = colorMatrix * color;\n"
+        "    gl_FragColor = vec4(color.rgb, alpha);\n"
         "}\n";
 
 
@@ -108,6 +113,7 @@ GLDrawable::GLDrawable(QObject *parent)
 	: QObject(parent)
 	, m_glw(0)
 	, m_zIndex(0)
+	, m_opacity(1)
 {}
 
 void GLDrawable::updateGL()
@@ -127,6 +133,12 @@ void GLDrawable::setZIndex(double z)
 {
 	m_zIndex = z;
 	emit zIndexChanged(z);
+}
+
+void GLDrawable::setOpacity(double o)
+{
+	m_opacity = o;
+	updateGL();
 }
 
 void GLDrawable::setGLWidget(GLWidget* w)
@@ -208,6 +220,7 @@ GLVideoDrawable::GLVideoDrawable(QObject *parent)
 	, m_frameCount(0)
 	, m_latencyAccum(0)
 	, m_aspectRatioMode(Qt::KeepAspectRatio)
+	, m_validShader(false)
 {
 	
 	m_imagePixelFormats
@@ -552,6 +565,7 @@ bool GLVideoDrawable::setVideoFormat(const VideoFormat& format)
 	//QVideoSurfaceFormat format(m_sampleTexture.size(), QVideoFrame::Format_ARGB32);
 	//QVideoSurfaceFormat format(m_sampleTexture.size(), QVideoFrame::Format_YUV420P);
 	
+	m_validShader = false;
 	const char *fragmentProgram = resizeTextures(format.frameSize);
  
  	if(!samePixelFormat)
@@ -597,7 +611,7 @@ bool GLVideoDrawable::setVideoFormat(const VideoFormat& format)
 		
 		//qDebug() << "GLVideoDrawable::setVideoFormat(): \t Initalized"<<m_textureCount<<"textures";
 	}
-			
+	m_validShader = true;
 	return true;
 }
 
@@ -712,6 +726,11 @@ void GLVideoDrawable::setDisplayOptions(const VideoDisplayOptions& opts)
 	
 void GLVideoDrawable::paintGL()
 {
+	if(!m_validShader)
+	{
+		return;
+	}
+	
 	if (m_colorsDirty) 
 	{
 		//qDebug() << "Updating color matrix";
@@ -769,20 +788,13 @@ void GLVideoDrawable::paintGL()
 		}
 	};
 	
-	const GLfloat vTop = !m_displayOpts.flipVertical //m_scanLineDirection == QVideoSurfaceFormat::TopToBottom
-		? target.top()
-		: target.bottom() + 1;
-	const GLfloat vBottom = !m_displayOpts.flipVertical //m_scanLineDirection == QVideoSurfaceFormat::TopToBottom
-		? target.bottom() + 1
-		: target.top();
-
 
 	const GLfloat vertexCoordArray[] =
 	{
-		target.left()     , vBottom, 	(GLfloat)zIndex(),
-		target.right() + 1, vBottom, 	(GLfloat)zIndex(),
-		target.left()     , vTop, 	(GLfloat)zIndex(),
-		target.right() + 1, vTop, 	(GLfloat)zIndex()
+		target.left()     , target.bottom() + 1,(GLfloat)zIndex(),
+		target.right() + 1, target.bottom() + 1,(GLfloat)zIndex(),
+		target.left()     , target.top(), 	(GLfloat)zIndex(),
+		target.right() + 1, target.top(), 	(GLfloat)zIndex()
 	};
 	
 	
@@ -815,6 +827,8 @@ void GLVideoDrawable::paintGL()
 	m_program.setAttributeArray("textureCoordArray", textureCoordArray, 2);
 	
 	m_program.setUniformValue("positionMatrix",      positionMatrix);
+	
+	m_program.setUniformValue("alpha",               (GLfloat)opacity());
 
 	if (m_textureCount == 3) 
 	{
@@ -888,6 +902,7 @@ VideoDisplayOptionWidget::VideoDisplayOptionWidget(GLVideoDrawable *drawable, QW
 	{
 		m_opts = drawable->displayOptions();
 		connect(this, SIGNAL(displayOptionsChanged(const VideoDisplayOptions&)), drawable, SLOT(setDisplayOptions(const VideoDisplayOptions&)));
+		connect(drawable, SIGNAL(displayOptionsChanged(const VideoDisplayOptions&)), this, SLOT(setDisplayOptions(const VideoDisplayOptions&)));
 	}
 	
 	initUI();
@@ -903,122 +918,205 @@ VideoDisplayOptionWidget::VideoDisplayOptionWidget(const VideoDisplayOptions& op
 	
 void VideoDisplayOptionWidget::initUI()
 {
-	QVBoxLayout *layout = new QVBoxLayout(this);
+	setWindowTitle("Video Display Options");
 	
-	QHBoxLayout *row = 0;
+	QGridLayout *layout = new QGridLayout(this);
+	m_optsOriginal = m_opts;
+	
+	int row = 0;
 	
 	QCheckBox *cb = 0;
-	row = new QHBoxLayout();
 	cb = new QCheckBox("Flip Horizontal");
 	cb->setChecked(m_opts.flipHorizontal);
 	connect(cb, SIGNAL(toggled(bool)), this, SLOT(flipHChanged(bool)));
-	row->addWidget(cb);
-	layout->addLayout(row);
+	layout->addWidget(cb,row,1);
+	m_cbFlipH = cb;
 	
-	row = new QHBoxLayout();
+	row++;
 	cb = new QCheckBox("Flip Vertical");
 	cb->setChecked(m_opts.flipVertical);
 	connect(cb, SIGNAL(toggled(bool)), this, SLOT(flipVChanged(bool)));
-	row->addWidget(cb);
-	layout->addLayout(row);
+	layout->addWidget(cb,row,1);
+	m_cbFlipV = cb;
 	
+	row++;
 	QSpinBox *spinBox = 0;
-	row = new QHBoxLayout();
-	row->addWidget(new QLabel("Crop Left By:"));
+	QHBoxLayout *rowLayout = new QHBoxLayout();
+	layout->addWidget(new QLabel("Crop Left By:"),row,0);
 	spinBox = new QSpinBox;
 	spinBox->setSuffix(" px");
 	spinBox->setMinimum(-1000);
 	spinBox->setMaximum(1000);
 	spinBox->setValue(m_opts.cropTopLeft.x());
 	connect(spinBox, SIGNAL(valueChanged(int)), this, SLOT(cropX1Changed(int)));
-	row->addWidget(spinBox);
-	layout->addLayout(row);
+	rowLayout->addWidget(spinBox);
+	rowLayout->addStretch(1);
+	layout->addLayout(rowLayout,row,1);
+	m_spinCropX1 = spinBox;
 	
-	row = new QHBoxLayout();
-	row->addWidget(new QLabel("Crop Right By:"));
+	row++;
+	rowLayout = new QHBoxLayout();
+	layout->addWidget(new QLabel("Crop Right By:"),row,0);
 	spinBox = new QSpinBox;
 	spinBox->setSuffix(" px");
 	spinBox->setMinimum(-1000);
 	spinBox->setMaximum(1000);
 	spinBox->setValue(m_opts.cropBottomRight.x());
 	connect(spinBox, SIGNAL(valueChanged(int)), this, SLOT(cropX2Changed(int)));
-	row->addWidget(spinBox);
-	layout->addLayout(row);
+	rowLayout->addWidget(spinBox);
+	rowLayout->addStretch(1);
+	layout->addLayout(rowLayout,row,1);
+	m_spinCropX2 = spinBox;
 	
-	row = new QHBoxLayout();
-	row->addWidget(new QLabel("Crop Top By:"));
+	row++;
+	rowLayout = new QHBoxLayout();
+	layout->addWidget(new QLabel("Crop Top By:"),row,0);
 	spinBox = new QSpinBox;
 	spinBox->setSuffix(" px");
 	spinBox->setMinimum(-1000);
 	spinBox->setMaximum(1000);
 	spinBox->setValue(m_opts.cropTopLeft.y());
 	connect(spinBox, SIGNAL(valueChanged(int)), this, SLOT(cropY1Changed(int)));
-	row->addWidget(spinBox);
-	layout->addLayout(row);
+	rowLayout->addWidget(spinBox);
+	rowLayout->addStretch(1);
+	layout->addLayout(rowLayout,row,1);
+	m_spinCropY1 = spinBox;
 	
-	row = new QHBoxLayout();
-	row->addWidget(new QLabel("Crop Bottom By:"));
+	row++;
+	rowLayout = new QHBoxLayout();
+	layout->addWidget(new QLabel("Crop Bottom By:"),row,0);
 	spinBox = new QSpinBox;
 	spinBox->setSuffix(" px");
 	spinBox->setMinimum(-1000);
 	spinBox->setMaximum(1000);
 	spinBox->setValue(m_opts.cropBottomRight.y());
 	connect(spinBox, SIGNAL(valueChanged(int)), this, SLOT(cropY2Changed(int)));
-	row->addWidget(spinBox);
-	layout->addLayout(row);
+	rowLayout->addWidget(spinBox);
+	rowLayout->addStretch(1);
+	layout->addLayout(rowLayout,row,1);
+	m_spinCropY2 = spinBox;
 	
+	row++;
 	QSlider *slider =0;
-	row = new QHBoxLayout();
-	row->addWidget(new QLabel("Brightness:"));
+	rowLayout = new QHBoxLayout();
+	// add label
+	layout->addWidget(new QLabel("Brightness:"),row,0);
+	// add slider
 	slider = new QSlider;
 	slider->setOrientation(Qt::Horizontal);
 	slider->setMinimum(-100);
 	slider->setMaximum(100);
 	slider->setValue(m_opts.brightness);
 	connect(slider, SIGNAL(valueChanged(int)), this, SLOT(bChanged(int)));
-	row->addWidget(slider);
-	layout->addLayout(row);
+	rowLayout->addWidget(slider);
+	// add spinBox
+	spinBox = new QSpinBox;
+	spinBox->setMinimum(-100);
+	spinBox->setMaximum(100);
+	spinBox->setValue(m_opts.brightness);
+	connect(spinBox, SIGNAL(valueChanged(int)), slider, SLOT(setValue(int)));
+	connect(slider, SIGNAL(valueChanged(int)), spinBox, SLOT(setValue(int)));
+	rowLayout->addWidget(spinBox);
+	// finish the row
+	rowLayout->addStretch(1);
+	layout->addLayout(rowLayout,row,1);
+	m_spinB = spinBox;
 	
-	row = new QHBoxLayout();
-	row->addWidget(new QLabel("Contrast:"));
+	row++;
+	rowLayout = new QHBoxLayout();
+	layout->addWidget(new QLabel("Contrast:"),row,0);
 	slider = new QSlider;
 	slider->setOrientation(Qt::Horizontal);
 	slider->setMinimum(-50);
 	slider->setMaximum(50);
 	slider->setValue(m_opts.contrast);
 	connect(slider, SIGNAL(valueChanged(int)), this, SLOT(cChanged(int)));
-	row->addWidget(slider);
-	layout->addLayout(row);
+	rowLayout->addWidget(slider);
+	// add spinBox
+	spinBox = new QSpinBox;
+	spinBox->setMinimum(-50);
+	spinBox->setMaximum(50);
+	spinBox->setValue(m_opts.brightness);
+	connect(spinBox, SIGNAL(valueChanged(int)), slider, SLOT(setValue(int)));
+	connect(slider, SIGNAL(valueChanged(int)), spinBox, SLOT(setValue(int)));
+	rowLayout->addWidget(spinBox);
+	// finish the row
+	rowLayout->addStretch(1);
+	layout->addLayout(rowLayout,row,1);
+	m_spinC = spinBox;
 	
-	row = new QHBoxLayout();
-	row->addWidget(new QLabel("Hue:"));
+	row++;
+	rowLayout = new QHBoxLayout();
+	layout->addWidget(new QLabel("Hue:"),row,0);
 	slider = new QSlider;
 	slider->setOrientation(Qt::Horizontal);
 	slider->setMinimum(-100);
 	slider->setMaximum(100);
 	slider->setValue(m_opts.hue);
 	connect(slider, SIGNAL(valueChanged(int)), this, SLOT(hChanged(int)));
-	row->addWidget(slider);
-	layout->addLayout(row);
+	rowLayout->addWidget(slider);
+	// add spinBox
+	spinBox = new QSpinBox;
+	spinBox->setMinimum(-100);
+	spinBox->setMaximum(100);
+	spinBox->setValue(m_opts.brightness);
+	connect(spinBox, SIGNAL(valueChanged(int)), slider, SLOT(setValue(int)));
+	connect(slider, SIGNAL(valueChanged(int)), spinBox, SLOT(setValue(int)));
+	rowLayout->addWidget(spinBox);
+	// finish the row
+	rowLayout->addStretch(1);
+	layout->addLayout(rowLayout,row,1);
+	m_spinH = spinBox;
 	
-	row = new QHBoxLayout();
-	row->addWidget(new QLabel("Saturation:"));
+	row++;
+	rowLayout = new QHBoxLayout();
+	layout->addWidget(new QLabel("Saturation:"),row,0);
 	slider = new QSlider;
 	slider->setOrientation(Qt::Horizontal);
 	slider->setMinimum(-50);
 	slider->setMaximum(50);
 	slider->setValue(m_opts.saturation);
 	connect(slider, SIGNAL(valueChanged(int)), this, SLOT(sChanged(int)));
-	row->addWidget(slider);
-	layout->addLayout(row);
+	rowLayout->addWidget(slider);
+	// add spinBox
+	spinBox = new QSpinBox;
+	spinBox->setMinimum(-50);
+	spinBox->setMaximum(50);
+	spinBox->setValue(m_opts.brightness);
+	connect(spinBox, SIGNAL(valueChanged(int)), slider, SLOT(setValue(int)));
+	connect(slider, SIGNAL(valueChanged(int)), spinBox, SLOT(setValue(int)));
+	rowLayout->addWidget(spinBox);
+	// finish the row
+	rowLayout->addStretch(1);
+	layout->addLayout(rowLayout,row,1);
+	m_spinS = spinBox;
 	
+	row++;
+	QPushButton *resetButton = new QPushButton("Undo Changes");
+	connect(resetButton, SIGNAL(clicked()), this, SLOT(undoChanges()));
+	layout->addWidget(resetButton,row,1);
 }
 
-// signals:
-// 	void displayOptionsChanged(const VideoDisplayOptions&);
+void VideoDisplayOptionWidget::undoChanges()
+{
+	setDisplayOptions(m_optsOriginal);
+}
 
-/*public slots:
-	void setDisplayOptions(const VideoDisplayOptions&);*/
+void VideoDisplayOptionWidget::setDisplayOptions(const VideoDisplayOptions& opts)
+{
+	m_opts = opts;
+	m_cbFlipH->setChecked(opts.flipHorizontal);
+	m_cbFlipV->setChecked(opts.flipVertical);
+	m_spinCropX1->setValue(opts.cropTopLeft.x());
+	m_spinCropY1->setValue(opts.cropTopLeft.y());
+	m_spinCropX2->setValue(opts.cropBottomRight.x());
+	m_spinCropY2->setValue(opts.cropBottomRight.y());
+	m_spinB->setValue(opts.brightness);
+	m_spinC->setValue(opts.contrast);
+	m_spinH->setValue(opts.hue);
+	m_spinS->setValue(opts.saturation);
+	
+}
 	
 void VideoDisplayOptionWidget::flipHChanged(bool value)
 {
@@ -1245,54 +1343,6 @@ GLWidget::GLWidget(QWidget *parent, QGLWidget *shareWidget)
 {
 	setViewport(QRectF(0,0,1000.,750.));
 	
-	#ifdef Q_OS_WIN
-	QString defaultCamera = "vfwcap://0";
-	#else
-	QString defaultCamera = "/dev/video0";
-	#endif
-
-	CameraThread *thread = CameraThread::threadForCamera(defaultCamera);
-	if(thread)
-	{
-		thread->setFps(30);
-		//usleep(250 * 1000); // This causes a race condition to manifist itself reliably, which causes a crash every time instead of intermitently. 
-		// With the crash reproducable, I can now work to fix it.
-		thread->enableRawFrames(true);
-		//thread->setDeinterlace(true);
-		//m_source = thread;
-		
-		GLVideoDrawable *camera = new GLVideoDrawable(this);
-		camera->setVideoSource(thread);
-		camera->setRect(QRectF(0,0,1000,750));
-		addDrawable(camera);
-		
-		VideoDisplayOptionWidget *opts = new VideoDisplayOptionWidget(camera);
-		opts->adjustSize();
-		opts->show();
-	}
-// 	if(!thread)
-// 	{
-// 		VideoThread * thread = new VideoThread();
-// 		thread->setVideo("../data/Seasons_Loop_3_SD.mpg");
-// 		thread->start();
-// 		m_source = thread;
-// 	}
-
-	GLVideoDrawable *videoBug = new GLVideoDrawable(this);
-	
-	
-	StaticVideoSource *source = new StaticVideoSource();
-	//source->setImage(QImage("me2.jpg"));
-	source->setImage(QImage("/opt/qtsdk-2010.02/qt/examples/opengl/pbuffers/cubelogo.png"));
-	
-	source->start();
-	videoBug->setVideoSource(source);
-	videoBug->setRect(QRectF(1000 - 70,750 - 70,64,64));
-	videoBug->setZIndex(1);
-	
-	addDrawable(videoBug);
-	
-	resize(640,480);
 	
 // 	GLBugDrawable *bug = new GLBugDrawable();
 // 	bug->setZIndex(1);

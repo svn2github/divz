@@ -18,6 +18,7 @@ class GLDrawable : public QObject
 	//Q_PROPERTY(QString itemName READ itemName WRITE setItemName);
 	Q_PROPERTY(QRectF rect READ rect WRITE setRect);
 	Q_PROPERTY(double zIndex READ zIndex WRITE setZIndex);
+	Q_PROPERTY(double opacity READ opacity WRITE setOpacity);
 public:
 	GLDrawable(QObject *parent=0);
 	
@@ -28,9 +29,11 @@ public:
 	const QRectF & rect() const { return m_rect; }
 	double zIndex() { return m_zIndex; }
 	
+	double opacity() { return m_opacity; }
+	
 public slots:
 	void setRect(const QRectF& rect);
-	
+	void setOpacity(double i);
 	void setZIndex(double z);
 
 signals:
@@ -52,6 +55,7 @@ protected:
 private:
 	QRectF m_rect;
 	double m_zIndex;
+	double m_opacity;
 	
 };
 
@@ -60,6 +64,8 @@ private:
 class StaticVideoSource : public VideoSource
 {
 	Q_OBJECT
+	
+	Q_PROPERTY(QImage image READ image WRITE setImage);
 
 public:
 	StaticVideoSource(QObject *parent=0);
@@ -67,6 +73,9 @@ public:
 
 	VideoFormat videoFormat() { return VideoFormat(VideoFrame::BUFFER_IMAGE,QVideoFrame::Format_ARGB32); }
 	
+	const QImage & image() { return m_image; }
+
+public slots:
 	void setImage(const QImage&);
 	
 signals:
@@ -121,6 +130,12 @@ QDebug operator<<(QDebug dbg, const VideoDisplayOptions &);
 class GLVideoDrawable : public GLDrawable
 {
 	Q_OBJECT
+	
+	Q_PROPERTY(int brightness READ brightness WRITE setBrightness);
+	Q_PROPERTY(int contrast READ contrast WRITE setContrast);
+	Q_PROPERTY(int hue READ hue WRITE setHue);
+	Q_PROPERTY(int saturation READ saturation WRITE setSaturation);
+	
 public:
 	GLVideoDrawable(QObject *parent=0);
 	~GLVideoDrawable();
@@ -224,6 +239,8 @@ private:
 	QRectF m_sourceRect;
 	
 	Qt::AspectRatioMode m_aspectRatioMode;
+	
+	bool m_validShader;
 };
 
 class VideoDisplayOptionWidget : public QWidget
@@ -236,8 +253,9 @@ public:
 signals:
 	void displayOptionsChanged(const VideoDisplayOptions&);
 
-// public slots:
-// 	void setDisplayOptions(const VideoDisplayOptions&);
+public slots:
+	void setDisplayOptions(const VideoDisplayOptions&);
+	void undoChanges();
 	
 private slots:
 	void flipHChanged(bool);
@@ -254,8 +272,20 @@ private slots:
 private:
 	void initUI();
 	
+	VideoDisplayOptions m_optsOriginal;
 	VideoDisplayOptions m_opts;
 	GLVideoDrawable *m_drawable;
+	
+	QCheckBox *m_cbFlipH;
+	QCheckBox *m_cbFlipV;
+	QSpinBox *m_spinCropX1;
+	QSpinBox *m_spinCropX2;
+	QSpinBox *m_spinCropY1;
+	QSpinBox *m_spinCropY2;
+	QSpinBox *m_spinB;
+	QSpinBox *m_spinC;
+	QSpinBox *m_spinH;
+	QSpinBox *m_spinS;
 	
 };
 

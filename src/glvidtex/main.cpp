@@ -42,7 +42,10 @@
 #include <QApplication>
 
 // #include "window.h"
-#include "glwidget.h"
+#include "GLWidget.h"
+#include "../livemix/VideoThread.h"
+#include "../livemix/CameraThread.h"
+
 
 int main(int argc, char *argv[])
 {
@@ -52,6 +55,59 @@ int main(int argc, char *argv[])
 //     Window window;
 //     window.show();
 	GLWidget w;
+	
+	
+	
+	#ifdef Q_OS_WIN
+	QString defaultCamera = "vfwcap://0";
+	#else
+	QString defaultCamera = "/dev/video0";
+	#endif
+
+	CameraThread *thread = CameraThread::threadForCamera(defaultCamera);
+	if(thread)
+	{
+		thread->setFps(30);
+		//usleep(250 * 1000); // This causes a race condition to manifist itself reliably, which causes a crash every time instead of intermitently. 
+		// With the crash reproducable, I can now work to fix it.
+		thread->enableRawFrames(true);
+		//thread->setDeinterlace(true);
+		//m_source = thread;
+		
+		GLVideoDrawable *camera = new GLVideoDrawable(&w);
+		camera->setVideoSource(thread);
+		camera->setRect(QRectF(0,0,1000,750));
+		w.addDrawable(camera);
+		
+		VideoDisplayOptionWidget *opts = new VideoDisplayOptionWidget(camera);
+		opts->adjustSize();
+		opts->show();
+	}
+// 	if(!thread)
+// 	{
+// 		VideoThread * thread = new VideoThread();
+// 		thread->setVideo("../data/Seasons_Loop_3_SD.mpg");
+// 		thread->start();
+// 		m_source = thread;
+// 	}
+
+	GLVideoDrawable *videoBug = new GLVideoDrawable(&w);
+	
+	
+	StaticVideoSource *source = new StaticVideoSource();
+	//source->setImage(QImage("me2.jpg"));
+	source->setImage(QImage("/opt/qtsdk-2010.02/qt/examples/opengl/pbuffers/cubelogo.png"));
+	
+	source->start();
+	videoBug->setVideoSource(source);
+	videoBug->setRect(QRectF(1000 - 70,750 - 70,64,64));
+	videoBug->setZIndex(1);
+	videoBug->setOpacity(0.5);
+	
+	w.addDrawable(videoBug);
+	
+	w.resize(640,480);
+	
 	w.show();
     return app.exec();
 }

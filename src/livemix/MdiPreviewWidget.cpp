@@ -3,9 +3,6 @@
 #include <QMessageBox>
 #include <QDesktopWidget>
 
-//#include "VideoOutputWidget.h"
-//#include "../qq06-glthread/GLWidget.h"
-
 #include <QApplication>
 #include <QSettings>
 #include <QHBoxLayout>

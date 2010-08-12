@@ -8,14 +8,14 @@ TARGET = glvidtex
 
 
 
-HEADERS       = glwidget.h \
+HEADERS       = GLWidget.h \
 		window.h \
 		../livemix/VideoSource.h \
 		../livemix/VideoThread.h \
 		../livemix/VideoFrame.h \
 		../livemix/CameraThread.h
 		
-SOURCES       = glwidget.cpp \
+SOURCES       = GLWidget.cpp \
 		main.cpp \
 		window.cpp \
 		../livemix/VideoSource.cpp \

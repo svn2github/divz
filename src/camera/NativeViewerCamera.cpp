@@ -52,6 +52,7 @@ void NativeViewerCamera::setSlideGroup(SlideGroup *group)
 	m_cameraGroup->addNativeViewer(outputId(),this);
 	
 	m_camera = CameraThread::threadForCamera(m_cameraGroup->device());
+	//m_camera->enableRawFrames(true);
 	m_widget->setVideoSource(m_camera);
 	//m_widget->setCamera(m_cameraGroup->device());
 }

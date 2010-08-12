@@ -54,14 +54,18 @@ static int xioctl(int    fd,
 SimpleV4L2::SimpleV4L2()
 {
 	m_fd = -1;
+	m_startedCapturing = false;
+	m_deviceInited = false;
 }
 
 SimpleV4L2::~SimpleV4L2()
 {
 	if(m_fd > -1)
 	{
-		stopCapturing();
-		uninitDevice();
+		if(m_startedCapturing)
+			stopCapturing();
+		if(m_deviceInited)
+			uninitDevice();
 		closeDevice();
 	}
 }
@@ -269,6 +273,8 @@ void SimpleV4L2::startCapturing()
 
 		break;
 	}
+	
+	m_startedCapturing = true;
 }
 
 void SimpleV4L2::uninitDevice()
@@ -519,6 +525,8 @@ void SimpleV4L2::initDevice()
 		fmt.fmt.pix.sizeimage);
 		
 	m_imageSize = QSize(fmt.fmt.pix.width,fmt.fmt.pix.height);
+	
+	m_deviceInited = true;
 }
 
 void SimpleV4L2::closeDevice()

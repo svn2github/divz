@@ -1,5 +1,3 @@
-#include "../qq06-glthread/GLWidget.h"
-
 #include <QtGui/QApplication>
 #include <QGraphicsView>
 #include <QGraphicsItem>

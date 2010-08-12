@@ -60,6 +60,9 @@ private:
 	
 	QStringList		  m_inputs;
 	QList<StandardInfo>	  m_standards;
+	
+	bool			  m_startedCapturing;
+	bool 			  m_deviceInited;
 };
 
 

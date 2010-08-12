@@ -9,7 +9,7 @@ OBJECTS_DIR = .build
 RCC_DIR = .build
 UI_DIR = .build
 
-QT += opengl network
+QT += opengl network multimedia
 
 # Input
 HEADERS += CameraThread.h \
@@ -26,12 +26,9 @@ HEADERS += CameraThread.h \
 	MdiCameraWidget.h \
 	MdiMjpegWidget.h \
 	MdiPreviewWidget.h \
-	VideoOutputWidget.h \
-	GLVideoThread.h \
-	../qq06-glthread/GLWidget.h \
-	../qq06-glthread/GLThread.h \
 	DVizSharedMemoryThread.h \
-	MdiDVizWidget.h 
+	MdiDVizWidget.h \
+	../glvidtex/GLWidget.h
 	
 SOURCES += main.cpp \
 	CameraThread.cpp \
@@ -48,13 +45,10 @@ SOURCES += main.cpp \
 	MdiCameraWidget.cpp \
 	MdiMjpegWidget.cpp \
 	MdiPreviewWidget.cpp \
-	VideoOutputWidget.cpp \
-	GLVideoThread.cpp \
-	../qq06-glthread/GLWidget.cpp \
-	../qq06-glthread/GLThread.cpp \
 	DVizSharedMemoryThread.cpp \
 	MdiDVizWidget.cpp \
-	SimpleV4L2.cpp 
+	SimpleV4L2.cpp \
+	../glvidtex/GLWidget.cpp
 
 unix {
 	LIBS += -lavdevice -lavformat -lavcodec -lavutil -lswscale -lbz2 

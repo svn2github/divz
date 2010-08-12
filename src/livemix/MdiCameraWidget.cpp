@@ -59,6 +59,8 @@ MdiCameraWidget::MdiCameraWidget(QWidget *parent)
 	configBtn->setMenu(m_configMenu);
 	hbox->addWidget(configBtn);
 	
+	//videoWidget()->setFps(30);
+	
 	// Start the camera
 	deviceBoxChanged(0);
 }
