@@ -114,7 +114,11 @@ GLDrawable::GLDrawable(QObject *parent)
 	, m_glw(0)
 	, m_zIndex(0)
 	, m_opacity(1)
-{}
+	, m_isVisible(false)
+	, m_showAnimLength(500)
+	, m_hideAnimLength(500)
+{
+}
 
 void GLDrawable::updateGL()
 {
@@ -122,11 +126,130 @@ void GLDrawable::updateGL()
 		m_glw->updateGL();
 }
 	
+void GLDrawable::show()
+{
+	setVisible(true);
+}
+
+void GLDrawable::hide()
+{
+	setVisible(false);
+}
+
+void GLDrawable::setVisible(bool flag)
+{
+	m_animDirection = flag;
+	startAnimations();
+}
+
+void GLDrawable::startAnimations()
+{
+	QList<GLDrawable::AnimationType> list = m_animDirection ? m_showAnimations : m_hideAnimations;
+	
+	if(list.isEmpty() || m_animDirection)
+		m_isVisible = m_animDirection;
+		
+	foreach(GLDrawable::AnimationType type, list)
+		startAnimation(type);
+}
+
+void GLDrawable::addShowAnimation(AnimationType value)
+{
+	if(!m_showAnimations.contains(value))
+		m_showAnimations << value;
+}
+
+void GLDrawable::removeShowAnimation(AnimationType value)
+{
+	m_showAnimations.removeAll(value);
+}
+
+void GLDrawable::addHideAnimation(AnimationType value)
+{
+	if(!m_hideAnimations.contains(value))
+		m_hideAnimations.append(value);
+}
+
+void GLDrawable::removeHideAnimation(AnimationType value)
+{
+	m_hideAnimations.removeAll(value);
+}
+
+void GLDrawable::setHideAnimationLength(int val)
+{
+	m_hideAnimLength = val;
+}
+
+void GLDrawable::setShowAnimationLength(int val)
+{
+	m_showAnimLength = val;
+}
+
+void GLDrawable::startAnimation(AnimationType type)
+{
+	QRectF viewport = m_glw ? m_glw->viewport() : QRectF(0,0,1000,750);
+	bool inFlag = m_animDirection;
+	switch(type)
+	{
+		case GLDrawable::AnimFade:
+			{
+				QPropertyAnimation *ani = new QPropertyAnimation(this, "opacity");
+				ani->setStartValue(inFlag ? 0.0 : 1.0);
+				ani->setEndValue(inFlag ?   1.0 : 0.0);
+				ani->setDuration(inFlag ? m_showAnimLength : m_hideAnimLength);
+				ani->start(QPropertyAnimation::DeleteWhenStopped);
+				connect(ani, SIGNAL(finished()), this, SLOT(animationFinished()));
+			}	
+			break;
+		
+		case GLDrawable::AnimZoom:
+			startRectAnimation(m_rect.adjusted(-m_rect.width(),-m_rect.height(),viewport.width(),viewport.height()),inFlag);
+			break;
+		case GLDrawable::AnimSlideTop:
+			startRectAnimation(m_rect.adjusted(0,-m_rect.height(),0,0),inFlag);
+			break;
+		case GLDrawable::AnimSlideBottom:
+			startRectAnimation(m_rect.adjusted(0,viewport.height(),0,0),inFlag);
+			break;
+		case GLDrawable::AnimSlideLeft:
+			startRectAnimation(m_rect.adjusted(-m_rect.width(),0,0,0),inFlag);
+			break;
+		case GLDrawable::AnimSlideRight:
+			startRectAnimation(m_rect.adjusted(viewport.width(),0,0,0),inFlag);
+			break;	
+		
+		default:
+			break;
+	}
+}
+
+
+void GLDrawable::startRectAnimation(const QRectF& otherRect, bool inFlag)
+{
+	QPropertyAnimation *ani = new QPropertyAnimation(this, "rect");
+	ani->setEasingCurve(inFlag ? QEasingCurve::OutCubic : QEasingCurve::InCubic);
+	
+	ani->setEndValue(inFlag   ? m_rect : otherRect);
+	ani->setStartValue(inFlag ? otherRect : m_rect);
+	
+	ani->start(QPropertyAnimation::DeleteWhenStopped);
+	ani->setDuration(inFlag ? m_showAnimLength : m_hideAnimLength);
+	connect(ani, SIGNAL(finished()), this, SLOT(animationFinished()));
+}
+
+void GLDrawable::animationFinished()
+{
+	m_isVisible = m_animDirection;
+	updateGL();
+}
+	
 void GLDrawable::setRect(const QRectF& rect)
 {
 	m_rect = rect;
+	//qDebug() << "GLDrawable::setRect: "<<rect;
 	drawableResized(rect.size());
 	emit drawableResized(rect.size());
+	updateGL();
 }
 	
 void GLDrawable::setZIndex(double z)
@@ -137,6 +260,7 @@ void GLDrawable::setZIndex(double z)
 
 void GLDrawable::setOpacity(double o)
 {
+	//qDebug() << "GLDrawable::setOpacity: "<<o;
 	m_opacity = o;
 	updateGL();
 }
@@ -665,6 +789,12 @@ void GLVideoDrawable::viewportResized(const QSize& /*newSize*/)
 	
 	updateRects();
 }
+
+void GLVideoDrawable::drawableResized(const QSizeF& /*newSize*/)
+{
+	updateRects();
+}
+
 
 void GLVideoDrawable::updateRects()
 {
@@ -1408,7 +1538,10 @@ void GLWidget::paintGL()
 	foreach(GLDrawable *drawable, m_drawables)
 	{
 		//qDebug() << "GLWidget::paintGL(): ["<<counter++<<"] drawable->rect: "<<drawable->rect();
-		drawable->paintGL();
+		
+		// Don't draw if not visible or if opacity == 0
+		if(drawable->isVisible() && drawable->opacity() > 0)
+			drawable->paintGL();
 	}
 }
 	

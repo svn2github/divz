@@ -49,7 +49,7 @@
 
 int main(int argc, char *argv[])
 {
-    Q_INIT_RESOURCE(glvidtex);
+    //Q_INIT_RESOURCE(glvidtex);
 
     QApplication app(argc, argv);
 //     Window window;
@@ -76,13 +76,63 @@ int main(int argc, char *argv[])
 		
 		GLVideoDrawable *camera = new GLVideoDrawable(&w);
 		camera->setVideoSource(thread);
-		camera->setRect(QRectF(0,0,1000,750));
+		camera->setRect(w.viewport());
 		w.addDrawable(camera);
+		camera->addShowAnimation(GLDrawable::AnimFade);
+		//camera->addShowAnimation(GLDrawable::AnimZoom);
+		camera->addShowAnimation(GLDrawable::AnimSlideTop);
+		camera->addHideAnimation(GLDrawable::AnimSlideBottom);
+		camera->setHideAnimationLength(1000);
+		//camera->addHideAnimation(GLDrawable::AnimZoom);
+		camera->show();
 		
-		VideoDisplayOptionWidget *opts = new VideoDisplayOptionWidget(camera);
-		opts->adjustSize();
-		opts->show();
+		QTimer *timer = new QTimer;
+		QObject::connect(timer, SIGNAL(timeout()), camera, SLOT(hide()));
+		timer->start(5000);
+		timer->setSingleShot(true);
+		
+// 		VideoDisplayOptionWidget *opts = new VideoDisplayOptionWidget(camera);
+// 		opts->adjustSize();
+// 		opts->show();
 	}
+	
+	// add secondary frame
+	{
+		GLVideoDrawable *videoBug = new GLVideoDrawable(&w);
+		
+		
+		StaticVideoSource *source = new StaticVideoSource();
+		source->setImage(QImage("me2.jpg"));
+		//source->setImage(QImage("/opt/qtsdk-2010.02/qt/examples/opengl/pbuffers/cubelogo.png"));
+		
+		source->start();
+		videoBug->setVideoSource(source);
+		videoBug->setRect(w.viewport());
+		videoBug->setZIndex(-1);
+		videoBug->setOpacity(0.5);
+		//videoBug->show();
+		
+		
+		videoBug->setShowAnimationLength(1000);
+		videoBug->addShowAnimation(GLDrawable::AnimFade);
+		videoBug->addShowAnimation(GLDrawable::AnimSlideTop);
+		//videoBug->addShowAnimation(GLDrawable::AnimZoom);
+		videoBug->addHideAnimation(GLDrawable::AnimFade);
+		videoBug->addHideAnimation(GLDrawable::AnimZoom);
+		
+		QTimer *timer = new QTimer;
+		QObject::connect(timer, SIGNAL(timeout()), videoBug, SLOT(show()));
+		timer->start(5000);
+		timer->setSingleShot(true);
+		
+		timer = new QTimer;
+		QObject::connect(timer, SIGNAL(timeout()), videoBug, SLOT(hide()));
+		timer->start(8000);
+		timer->setSingleShot(true);
+		
+		w.addDrawable(videoBug);
+	}
+	
 // 	if(!thread)
 // 	{
 // 		VideoThread * thread = new VideoThread();
@@ -100,9 +150,14 @@ int main(int argc, char *argv[])
 	
 	source->start();
 	videoBug->setVideoSource(source);
-	videoBug->setRect(QRectF(1000 - 70,750 - 70,64,64));
+	videoBug->setRect(QRectF(
+		w.viewport().right() - source->image().width() * 1.25,
+		w.viewport().bottom() - source->image().height() * 1.25,
+		source->image().width(),
+		source->image().height()));
 	videoBug->setZIndex(1);
 	videoBug->setOpacity(0.5);
+	videoBug->show();
 	
 	w.addDrawable(videoBug);
 	

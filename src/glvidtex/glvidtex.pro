@@ -9,7 +9,6 @@ TARGET = glvidtex
 
 
 HEADERS       = GLWidget.h \
-		window.h \
 		../livemix/VideoSource.h \
 		../livemix/VideoThread.h \
 		../livemix/VideoFrame.h \
@@ -17,7 +16,6 @@ HEADERS       = GLWidget.h \
 		
 SOURCES       = GLWidget.cpp \
 		main.cpp \
-		window.cpp \
 		../livemix/VideoSource.cpp \
 		../livemix/VideoThread.cpp \
 		../livemix/VideoFrame.cpp \

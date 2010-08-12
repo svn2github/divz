@@ -31,14 +31,50 @@ public:
 	
 	double opacity() { return m_opacity; }
 	
+	
+	typedef enum AnimationType
+	{
+		AnimNone = 0,
+		
+		AnimFade,
+		AnimZoom,
+		AnimSlideTop,
+		AnimSlideBottom,
+		AnimSlideLeft,
+		AnimSlideRight,
+		
+		AnimUser = 1000
+	};
+	
+	void addShowAnimation(AnimationType);
+	void removeShowAnimation(AnimationType);
+	
+	void setShowAnimationLength(int ms=1000);
+	int showAnimationLength() { return m_showAnimLength; }
+	
+	void addHideAnimation(AnimationType);
+	void removeHideAnimation(AnimationType);
+	
+	void setHideAnimationLength(int ms=1000);
+	int hideAnimationLength() { return m_showAnimLength; }
+	
+	bool isVisible() { return m_isVisible; }
+	
 public slots:
 	void setRect(const QRectF& rect);
 	void setOpacity(double i);
 	void setZIndex(double z);
+	
+	void show();
+	void hide();
+	void setVisible(bool flag);
 
 signals:
 	void zIndexChanged(double newZIndex);
 	void drawableResized(const QSize& newSize);
+
+protected slots:
+	virtual void animationFinished();
 	
 protected:
 	friend class GLWidget;
@@ -49,14 +85,27 @@ protected:
 	
 	virtual void paintGL();
 	virtual void initGL();
+	
+	virtual void startAnimation(AnimationType type);
+	virtual void startAnimations();
 		
 	GLWidget *m_glw;
-
 private:
+	void startRectAnimation(const QRectF& other, bool animateIn);
+	
 	QRectF m_rect;
 	double m_zIndex;
 	double m_opacity;
+			
+	bool m_isVisible;
+	bool m_animDirection;
 	
+	QList<AnimationType> m_showAnimations;
+	QList<AnimationType> m_hideAnimations;
+	
+	int m_showAnimLength;
+	int m_hideAnimLength;
+
 };
 
 
@@ -172,6 +221,7 @@ protected:
 	void paintGL();
 	
 	void viewportResized(const QSize& newSize);
+	void drawableResized(const QSizeF& newSize);
 	
 	void initGL();
 
