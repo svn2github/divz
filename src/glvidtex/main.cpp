@@ -80,9 +80,8 @@ int main(int argc, char *argv[])
 		w.addDrawable(camera);
 		camera->addShowAnimation(GLDrawable::AnimFade);
 		//camera->addShowAnimation(GLDrawable::AnimZoom);
-		camera->addShowAnimation(GLDrawable::AnimSlideTop);
-		camera->addHideAnimation(GLDrawable::AnimSlideBottom);
-		camera->setHideAnimationLength(1000);
+		camera->addShowAnimation(GLDrawable::AnimSlideTop,1000);
+		camera->addHideAnimation(GLDrawable::AnimSlideBottom,1000);
 		//camera->addHideAnimation(GLDrawable::AnimZoom);
 		camera->show();
 		
@@ -109,13 +108,12 @@ int main(int argc, char *argv[])
 		videoBug->setVideoSource(source);
 		videoBug->setRect(w.viewport());
 		videoBug->setZIndex(-1);
-		videoBug->setOpacity(0.5);
+		//videoBug->setOpacity(0.5);
 		//videoBug->show();
 		
 		
-		videoBug->setShowAnimationLength(1000);
-		videoBug->addShowAnimation(GLDrawable::AnimFade);
-		videoBug->addShowAnimation(GLDrawable::AnimSlideTop);
+		//videoBug->addShowAnimation(GLDrawable::AnimFade);
+		videoBug->addShowAnimation(GLDrawable::AnimSlideTop,1000);
 		//videoBug->addShowAnimation(GLDrawable::AnimZoom);
 		videoBug->addHideAnimation(GLDrawable::AnimFade);
 		videoBug->addHideAnimation(GLDrawable::AnimZoom);
@@ -157,7 +155,22 @@ int main(int argc, char *argv[])
 		source->image().height()));
 	videoBug->setZIndex(1);
 	videoBug->setOpacity(0.5);
-	videoBug->show();
+	//videoBug->show();
+	
+	videoBug->addShowAnimation(GLDrawable::AnimSlideLeft,1000).curve = QEasingCurve::OutElastic;
+	
+	videoBug->addHideAnimation(GLDrawable::AnimFade,300);
+	videoBug->addHideAnimation(GLDrawable::AnimSlideTop,300);
+	
+	QTimer * timer = new QTimer;
+	QObject::connect(timer, SIGNAL(timeout()), videoBug, SLOT(show()));
+	timer->start(1000);
+	timer->setSingleShot(true);
+	
+	timer = new QTimer;
+	QObject::connect(timer, SIGNAL(timeout()), videoBug, SLOT(hide()));
+	timer->start(6000);
+	timer->setSingleShot(true);
 	
 	w.addDrawable(videoBug);
 	

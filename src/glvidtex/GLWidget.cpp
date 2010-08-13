@@ -115,8 +115,6 @@ GLDrawable::GLDrawable(QObject *parent)
 	, m_zIndex(0)
 	, m_opacity(1)
 	, m_isVisible(false)
-	, m_showAnimLength(500)
-	, m_hideAnimLength(500)
 {
 }
 
@@ -144,97 +142,124 @@ void GLDrawable::setVisible(bool flag)
 
 void GLDrawable::startAnimations()
 {
-	QList<GLDrawable::AnimationType> list = m_animDirection ? m_showAnimations : m_hideAnimations;
-	
-	if(list.isEmpty() || m_animDirection)
+	if(m_animDirection)
 		m_isVisible = m_animDirection;
 		
-	foreach(GLDrawable::AnimationType type, list)
-		startAnimation(type);
+	foreach(GLDrawable::AnimParam p, m_animations)
+		if(( m_animDirection && p.cond == GLDrawable::OnShow) ||
+		   (!m_animDirection && p.cond == GLDrawable::OnHide))
+			startAnimation(p);
 }
 
-void GLDrawable::addShowAnimation(AnimationType value)
+GLDrawable::AnimParam & GLDrawable::addShowAnimation(AnimationType value, int length)
 {
-	if(!m_showAnimations.contains(value))
-		m_showAnimations << value;
+	GLDrawable::AnimParam p;
+	p.cond = GLDrawable::OnShow;
+	p.type = value;
+	p.startDelay = 0;
+	p.length = length;
+	p.curve = value == GLDrawable::AnimFade ? QEasingCurve::Linear : QEasingCurve::OutCubic;
+	m_animations << p;
+	
+	return m_animations.last();
 }
 
-void GLDrawable::removeShowAnimation(AnimationType value)
+GLDrawable::AnimParam & GLDrawable::addHideAnimation(AnimationType value, int length)
 {
-	m_showAnimations.removeAll(value);
+	GLDrawable::AnimParam p;
+	p.cond = GLDrawable::OnHide;
+	p.type = value;
+	p.startDelay = 0;
+	p.length = length;
+	p.curve = value == GLDrawable::AnimFade ? QEasingCurve::Linear : QEasingCurve::InCubic;
+	m_animations << p;
+	
+	return m_animations.last();
 }
 
-void GLDrawable::addHideAnimation(AnimationType value)
+void GLDrawable::removeAnimation(GLDrawable::AnimParam p)
 {
-	if(!m_hideAnimations.contains(value))
-		m_hideAnimations.append(value);
+	m_animations.removeAll(p);
 }
 
-void GLDrawable::removeHideAnimation(AnimationType value)
+
+bool operator==(const GLDrawable::AnimParam&a, const GLDrawable::AnimParam&b)
 {
-	m_hideAnimations.removeAll(value);
-}
+	return a.cond == b.cond &&
+		a.type == b.type &&
+		a.startDelay == b.startDelay &&
+		a.length == b.length &&
+		a.curve == b.curve;
+};
 
-void GLDrawable::setHideAnimationLength(int val)
-{
-	m_hideAnimLength = val;
-}
-
-void GLDrawable::setShowAnimationLength(int val)
-{
-	m_showAnimLength = val;
-}
-
-void GLDrawable::startAnimation(AnimationType type)
+void GLDrawable::startAnimation(const GLDrawable::AnimParam& p)
 {
 	QRectF viewport = m_glw ? m_glw->viewport() : QRectF(0,0,1000,750);
 	bool inFlag = m_animDirection;
-	switch(type)
+	
+	QAutoDelPropertyAnimation *ani = 0;
+	
+	switch(p.type)
 	{
 		case GLDrawable::AnimFade:
-			{
-				QPropertyAnimation *ani = new QPropertyAnimation(this, "opacity");
-				ani->setStartValue(inFlag ? 0.0 : 1.0);
-				ani->setEndValue(inFlag ?   1.0 : 0.0);
-				ani->setDuration(inFlag ? m_showAnimLength : m_hideAnimLength);
-				ani->start(QPropertyAnimation::DeleteWhenStopped);
-				connect(ani, SIGNAL(finished()), this, SLOT(animationFinished()));
-			}	
+			ani = new QAutoDelPropertyAnimation(this, "opacity");
+			ani->setStartValue(inFlag ? 0.0 : 1.0);
+			ani->setEndValue(inFlag ?   1.0 : 0.0);
 			break;
 		
 		case GLDrawable::AnimZoom:
-			startRectAnimation(m_rect.adjusted(-m_rect.width(),-m_rect.height(),viewport.width(),viewport.height()),inFlag);
+			ani = setupRectAnimation(m_rect.adjusted(-viewport.width(),-viewport.height(),viewport.width(),viewport.height()),inFlag);
 			break;
 		case GLDrawable::AnimSlideTop:
-			startRectAnimation(m_rect.adjusted(0,-m_rect.height(),0,0),inFlag);
+			ani = setupRectAnimation(m_rect.adjusted(0,-viewport.height(),0,-viewport.height()),inFlag);
 			break;
 		case GLDrawable::AnimSlideBottom:
-			startRectAnimation(m_rect.adjusted(0,viewport.height(),0,0),inFlag);
+			ani = setupRectAnimation(m_rect.adjusted(0,viewport.height(),0,viewport.height()),inFlag);
 			break;
 		case GLDrawable::AnimSlideLeft:
-			startRectAnimation(m_rect.adjusted(-m_rect.width(),0,0,0),inFlag);
+			ani = setupRectAnimation(m_rect.adjusted(-viewport.width(),0,-viewport.width(),0),inFlag);
 			break;
 		case GLDrawable::AnimSlideRight:
-			startRectAnimation(m_rect.adjusted(viewport.width(),0,0,0),inFlag);
+			ani = setupRectAnimation(m_rect.adjusted(viewport.width(),0,viewport.width(),0),inFlag);
 			break;	
 		
 		default:
 			break;
 	}
+	
+	if(ani)
+	{
+		ani->setEasingCurve(p.curve); //inFlag ? QEasingCurve::OutCubic : QEasingCurve::InCubic);
+		ani->setDuration(p.length);
+		
+// 		//qDebug() << "GLDrawable::startAnimation: type:"<<p.type<<", length:"<<p.length<<", curve:"<<p.curve.type();
+		
+		connect(ani, SIGNAL(finished()), this, SLOT(animationFinished()));
+		
+		if(p.startDelay > 0)
+		{
+			QTimer *timer = new QTimer();
+			timer->setInterval(p.startDelay);
+			
+			connect(timer, SIGNAL(timeout()), ani, SLOT(startAutoDel()));
+		}
+		else
+		{
+			ani->startAutoDel();
+		}
+	}
 }
 
 
-void GLDrawable::startRectAnimation(const QRectF& otherRect, bool inFlag)
+QAutoDelPropertyAnimation * GLDrawable::setupRectAnimation(const QRectF& otherRect, bool inFlag)
 {
-	QPropertyAnimation *ani = new QPropertyAnimation(this, "rect");
-	ani->setEasingCurve(inFlag ? QEasingCurve::OutCubic : QEasingCurve::InCubic);
+	QAutoDelPropertyAnimation *ani = new QAutoDelPropertyAnimation(this, "rect");
 	
 	ani->setEndValue(inFlag   ? m_rect : otherRect);
 	ani->setStartValue(inFlag ? otherRect : m_rect);
 	
-	ani->start(QPropertyAnimation::DeleteWhenStopped);
-	ani->setDuration(inFlag ? m_showAnimLength : m_hideAnimLength);
-	connect(ani, SIGNAL(finished()), this, SLOT(animationFinished()));
+	//qDebug() << "GLDrawable::startRectAnimation: start:"<<(inFlag ? otherRect : m_rect)<<", end:"<<(inFlag   ? m_rect : otherRect)<<", other:"<<otherRect<<", duration:"<<duration<<", inFlag:"<<inFlag;
+	return ani;
 }
 
 void GLDrawable::animationFinished()
@@ -294,6 +319,36 @@ void GLDrawable::initGL()
 {
 	// NOOP
 }
+
+
+
+QByteArray GLDrawable::AnimParam::toByteArray()
+{
+	QByteArray array;
+	QDataStream b(&array, QIODevice::WriteOnly);
+
+	b << QVariant(cond);
+	b << QVariant(type);
+	b << QVariant(startDelay);
+	b << QVariant(length);
+	b << QVariant(curve.type());
+	
+	return array;
+}
+
+void GLDrawable::AnimParam::fromByteArray(QByteArray array)
+{
+	QDataStream b(&array, QIODevice::ReadOnly);
+	QVariant x;
+
+	b >> x; cond = (GLDrawable::AnimCondition)x.toInt();
+	b >> x; type = (GLDrawable::AnimationType)x.toInt();
+	b >> x; startDelay = x.toInt();
+	b >> x; length = x.toInt();
+	b >> x; int curveType = x.toInt();
+	curve.setType((QEasingCurve::Type)curveType);
+}
+
 
 QByteArray VideoDisplayOptions::toByteArray()
 {
@@ -1077,7 +1132,7 @@ void VideoDisplayOptionWidget::initUI()
 	spinBox->setSuffix(" px");
 	spinBox->setMinimum(-1000);
 	spinBox->setMaximum(1000);
-	spinBox->setValue(m_opts.cropTopLeft.x());
+	spinBox->setValue((int)m_opts.cropTopLeft.x());
 	connect(spinBox, SIGNAL(valueChanged(int)), this, SLOT(cropX1Changed(int)));
 	rowLayout->addWidget(spinBox);
 	rowLayout->addStretch(1);
@@ -1091,7 +1146,7 @@ void VideoDisplayOptionWidget::initUI()
 	spinBox->setSuffix(" px");
 	spinBox->setMinimum(-1000);
 	spinBox->setMaximum(1000);
-	spinBox->setValue(m_opts.cropBottomRight.x());
+	spinBox->setValue((int)m_opts.cropBottomRight.x());
 	connect(spinBox, SIGNAL(valueChanged(int)), this, SLOT(cropX2Changed(int)));
 	rowLayout->addWidget(spinBox);
 	rowLayout->addStretch(1);
@@ -1105,7 +1160,7 @@ void VideoDisplayOptionWidget::initUI()
 	spinBox->setSuffix(" px");
 	spinBox->setMinimum(-1000);
 	spinBox->setMaximum(1000);
-	spinBox->setValue(m_opts.cropTopLeft.y());
+	spinBox->setValue((int)m_opts.cropTopLeft.y());
 	connect(spinBox, SIGNAL(valueChanged(int)), this, SLOT(cropY1Changed(int)));
 	rowLayout->addWidget(spinBox);
 	rowLayout->addStretch(1);
@@ -1119,7 +1174,7 @@ void VideoDisplayOptionWidget::initUI()
 	spinBox->setSuffix(" px");
 	spinBox->setMinimum(-1000);
 	spinBox->setMaximum(1000);
-	spinBox->setValue(m_opts.cropBottomRight.y());
+	spinBox->setValue((int)m_opts.cropBottomRight.y());
 	connect(spinBox, SIGNAL(valueChanged(int)), this, SLOT(cropY2Changed(int)));
 	rowLayout->addWidget(spinBox);
 	rowLayout->addStretch(1);
@@ -1237,10 +1292,10 @@ void VideoDisplayOptionWidget::setDisplayOptions(const VideoDisplayOptions& opts
 	m_opts = opts;
 	m_cbFlipH->setChecked(opts.flipHorizontal);
 	m_cbFlipV->setChecked(opts.flipVertical);
-	m_spinCropX1->setValue(opts.cropTopLeft.x());
-	m_spinCropY1->setValue(opts.cropTopLeft.y());
-	m_spinCropX2->setValue(opts.cropBottomRight.x());
-	m_spinCropY2->setValue(opts.cropBottomRight.y());
+	m_spinCropX1->setValue((int)opts.cropTopLeft.x());
+	m_spinCropY1->setValue((int)opts.cropTopLeft.y());
+	m_spinCropX2->setValue((int)opts.cropBottomRight.x());
+	m_spinCropY2->setValue((int)opts.cropBottomRight.y());
 	m_spinB->setValue(opts.brightness);
 	m_spinC->setValue(opts.contrast);
 	m_spinH->setValue(opts.hue);

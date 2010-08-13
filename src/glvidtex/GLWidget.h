@@ -11,6 +11,25 @@
 
 class QGLShaderProgram;
 class GLWidget;
+class QPropertyAnimation;
+
+// This class exists because we want to be able to call start()
+// from a slot AND have the animation automatically delete when done.
+// However, since we cant pass hardcoded arguments thru a slot, AND
+// connecting the animation's finished() signal to deleteLater()
+// causes a SEGFLT, then this is the only way I can think of.
+class QAutoDelPropertyAnimation : public QPropertyAnimation
+{
+	Q_OBJECT
+	
+public:
+	QAutoDelPropertyAnimation(QObject * target, const QByteArray & propertyName, QObject * parent = 0) 
+		: QPropertyAnimation(target,propertyName,parent) 
+		{}
+	
+public slots:
+	void startAutoDel() { start(QAbstractAnimation::DeleteWhenStopped); }
+};
 
 class GLDrawable : public QObject
 {
@@ -46,17 +65,29 @@ public:
 		AnimUser = 1000
 	};
 	
-	void addShowAnimation(AnimationType);
-	void removeShowAnimation(AnimationType);
+	typedef enum AnimCondition
+	{
+		OnHide,
+		OnShow,
+	};
 	
-	void setShowAnimationLength(int ms=1000);
-	int showAnimationLength() { return m_showAnimLength; }
+	typedef struct AnimParam
+	{
+		AnimCondition cond;
+		AnimationType type;
+		int startDelay;
+		int length;
+		QEasingCurve curve;
+		
+		QByteArray toByteArray();
+		void fromByteArray(QByteArray);
+	};
 	
-	void addHideAnimation(AnimationType);
-	void removeHideAnimation(AnimationType);
+	void addAnimation(AnimParam);
+	void removeAnimation(AnimParam);
 	
-	void setHideAnimationLength(int ms=1000);
-	int hideAnimationLength() { return m_showAnimLength; }
+	AnimParam & addShowAnimation(AnimationType type, int length=500);
+	AnimParam & addHideAnimation(AnimationType type, int length=500);
 	
 	bool isVisible() { return m_isVisible; }
 	
@@ -86,12 +117,13 @@ protected:
 	virtual void paintGL();
 	virtual void initGL();
 	
-	virtual void startAnimation(AnimationType type);
+	virtual void startAnimation(const AnimParam & p);
 	virtual void startAnimations();
 		
 	GLWidget *m_glw;
+	
 private:
-	void startRectAnimation(const QRectF& other, bool animateIn);
+	QAutoDelPropertyAnimation * setupRectAnimation(const QRectF& other, bool animateIn);
 	
 	QRectF m_rect;
 	double m_zIndex;
@@ -100,13 +132,11 @@ private:
 	bool m_isVisible;
 	bool m_animDirection;
 	
-	QList<AnimationType> m_showAnimations;
-	QList<AnimationType> m_hideAnimations;
-	
-	int m_showAnimLength;
-	int m_hideAnimLength;
+	QList<GLDrawable::AnimParam> m_animations;
 
 };
+
+bool operator==(const GLDrawable::AnimParam&a, const GLDrawable::AnimParam&b);
 
 
 
