@@ -46,6 +46,9 @@
 #include "../livemix/VideoThread.h"
 #include "../livemix/CameraThread.h"
 
+#ifdef HAS_QT_VIDEO_SOURCE
+#include "QtVideoSource.h"
+#endif
 
 int main(int argc, char *argv[])
 {
@@ -64,6 +67,32 @@ int main(int argc, char *argv[])
 	QString defaultCamera = "/dev/video0";
 	#endif
 
+	#ifdef HAS_QT_VIDEO_SOURCE
+	QString testFile = "/opt/qt-mobility-opensource-src-1.0.1/examples/player/dsc_7721.avi";
+	{
+		QtVideoSource *source = new QtVideoSource();
+		source->setFile(testFile);
+		source->start();
+		
+		GLVideoDrawable *camera = new GLVideoDrawable(&w);
+		camera->setVideoSource(source);
+		camera->setRect(w.viewport());
+		w.addDrawable(camera);
+		camera->addShowAnimation(GLDrawable::AnimFade);
+		//camera->addShowAnimation(GLDrawable::AnimZoom);
+		camera->addShowAnimation(GLDrawable::AnimSlideTop,1000);
+		
+		camera->addHideAnimation(GLDrawable::AnimZoom,1000);
+		camera->addHideAnimation(GLDrawable::AnimFade);
+		camera->show();
+		
+		QTimer *timer = new QTimer;
+		QObject::connect(timer, SIGNAL(timeout()), camera, SLOT(hide()));
+		timer->start(5000);
+		timer->setSingleShot(true);
+	}
+
+	#else
 	CameraThread *thread = CameraThread::threadForCamera(defaultCamera);
 	if(thread)
 	{
@@ -81,6 +110,7 @@ int main(int argc, char *argv[])
 		camera->addShowAnimation(GLDrawable::AnimFade);
 		//camera->addShowAnimation(GLDrawable::AnimZoom);
 		camera->addShowAnimation(GLDrawable::AnimSlideTop,1000);
+		
 		camera->addHideAnimation(GLDrawable::AnimSlideBottom,1000);
 		//camera->addHideAnimation(GLDrawable::AnimZoom);
 		camera->show();
@@ -94,6 +124,8 @@ int main(int argc, char *argv[])
 // 		opts->adjustSize();
 // 		opts->show();
 	}
+	#endif
+	
 	
 	// add secondary frame
 	{
@@ -112,9 +144,14 @@ int main(int argc, char *argv[])
 		//videoBug->show();
 		
 		
-		//videoBug->addShowAnimation(GLDrawable::AnimFade);
+		#ifdef HAS_QT_VIDEO_SOURCE
+		// just change enterance anim to match effects
+		videoBug->addShowAnimation(GLDrawable::AnimFade);
+		videoBug->addShowAnimation(GLDrawable::AnimZoom);
+		#else
 		videoBug->addShowAnimation(GLDrawable::AnimSlideTop,1000);
-		//videoBug->addShowAnimation(GLDrawable::AnimZoom);
+		#endif
+		
 		videoBug->addHideAnimation(GLDrawable::AnimFade);
 		videoBug->addHideAnimation(GLDrawable::AnimZoom);
 		

@@ -456,6 +456,8 @@ void GLVideoDrawable::frameReady()
 	if(m_frame.rect != m_sourceRect)
 	{
 		//qDebug() << "GLVideoDrawable::frameReady(): \t m_frame.rect:"<<m_frame.rect<<", m_sourceRect:"<<m_sourceRect;
+		if(m_videoFormat.pixelFormat != m_source->videoFormat().pixelFormat)
+			setVideoFormat(m_source->videoFormat());
 		resizeTextures(m_frame.size);
 		updateRects();
 	}
