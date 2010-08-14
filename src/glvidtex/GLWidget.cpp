@@ -115,6 +115,7 @@ GLDrawable::GLDrawable(QObject *parent)
 	, m_zIndex(0)
 	, m_opacity(1)
 	, m_isVisible(false)
+	, m_animFinished(true)
 {
 }
 
@@ -136,6 +137,17 @@ void GLDrawable::hide()
 
 void GLDrawable::setVisible(bool flag)
 {
+	emit isVisible(flag);
+	if(!m_animFinished)
+	{
+		foreach(QAutoDelPropertyAnimation *ani, m_runningAnimations)
+		{
+			ani->stop();
+			ani->deleteLater();
+		}
+		animationFinished();
+	}
+	
 	m_animDirection = flag;
 	startAnimations();
 }
@@ -144,11 +156,20 @@ void GLDrawable::startAnimations()
 {
 	if(m_animDirection)
 		m_isVisible = m_animDirection;
-		
+	
+	m_animFinished = false;
+	
+	bool hasFade  = false;
 	foreach(GLDrawable::AnimParam p, m_animations)
 		if(( m_animDirection && p.cond == GLDrawable::OnShow) ||
 		   (!m_animDirection && p.cond == GLDrawable::OnHide))
+		{
+			if(p.type == GLDrawable::AnimFade)
+				hasFade = true; 
 			startAnimation(p);
+		}
+	if(m_isVisible && !hasFade)
+		setOpacity(1.0);
 }
 
 GLDrawable::AnimParam & GLDrawable::addShowAnimation(AnimationType value, int length)
@@ -247,6 +268,8 @@ void GLDrawable::startAnimation(const GLDrawable::AnimParam& p)
 		{
 			ani->startAutoDel();
 		}
+		
+		m_runningAnimations << ani;
 	}
 }
 
@@ -254,6 +277,8 @@ void GLDrawable::startAnimation(const GLDrawable::AnimParam& p)
 QAutoDelPropertyAnimation * GLDrawable::setupRectAnimation(const QRectF& otherRect, bool inFlag)
 {
 	QAutoDelPropertyAnimation *ani = new QAutoDelPropertyAnimation(this, "rect");
+	
+	m_originalRect = m_rect; // will be restored when anim done
 	
 	ani->setEndValue(inFlag   ? m_rect : otherRect);
 	ani->setStartValue(inFlag ? otherRect : m_rect);
@@ -265,6 +290,9 @@ QAutoDelPropertyAnimation * GLDrawable::setupRectAnimation(const QRectF& otherRe
 void GLDrawable::animationFinished()
 {
 	m_isVisible = m_animDirection;
+	m_rect = m_originalRect;
+	m_runningAnimations.clear();
+	m_animFinished = true;
 	updateGL();
 }
 	

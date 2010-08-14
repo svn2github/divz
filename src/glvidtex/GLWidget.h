@@ -103,6 +103,8 @@ public slots:
 signals:
 	void zIndexChanged(double newZIndex);
 	void drawableResized(const QSize& newSize);
+	
+	void isVisible(bool);
 
 protected slots:
 	virtual void animationFinished();
@@ -131,8 +133,11 @@ private:
 			
 	bool m_isVisible;
 	bool m_animDirection;
+	bool m_animFinished;
+	QRectF m_originalRect;
 	
 	QList<GLDrawable::AnimParam> m_animations;
+	QList<QAutoDelPropertyAnimation*> m_runningAnimations;
 
 };
 

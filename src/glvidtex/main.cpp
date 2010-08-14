@@ -36,6 +36,7 @@ GLDrawable * addCamera(GLWidget *glw)
 		drawable->addHideAnimation(GLDrawable::AnimSlideBottom,1000);
 		//drawable->addHideAnimation(GLDrawable::AnimZoom);
 		drawable->show();
+		drawable->setObjectName(qPrintable(defaultCamera));
 		
 		QTimer *timer = new QTimer;
 		QObject::connect(timer, SIGNAL(timeout()), drawable, SLOT(hide()));
@@ -71,6 +72,7 @@ GLDrawable * addQtSource(GLWidget * glw)
 	drawable->addHideAnimation(GLDrawable::AnimZoom,1000);
 	drawable->addHideAnimation(GLDrawable::AnimFade);
 	drawable->show();
+	drawable->setObjectName("QtVideoSource");
 	
 	QTimer *timer = new QTimer;
 	QObject::connect(timer, SIGNAL(timeout()), drawable, SLOT(hide()));
@@ -103,6 +105,7 @@ GLDrawable * addSecondSource(GLWidget * glw)
 	drawable->setVideoSource(source);
 	drawable->setRect(glw->viewport());
 	drawable->setZIndex(-1);
+	drawable->setObjectName("SecondSource");
 	//drawable->setOpacity(0.5);
 	//drawable->show();
 	
@@ -118,15 +121,15 @@ GLDrawable * addSecondSource(GLWidget * glw)
 	drawable->addHideAnimation(GLDrawable::AnimFade);
 	drawable->addHideAnimation(GLDrawable::AnimZoom);
 	
-	QTimer *timer = new QTimer;
-	QObject::connect(timer, SIGNAL(timeout()), drawable, SLOT(show()));
-	timer->start(5000);
-	timer->setSingleShot(true);
-	
-	timer = new QTimer;
-	QObject::connect(timer, SIGNAL(timeout()), drawable, SLOT(hide()));
-	timer->start(8000);
-	timer->setSingleShot(true);
+// 	QTimer *timer = new QTimer;
+// 	QObject::connect(timer, SIGNAL(timeout()), drawable, SLOT(show()));
+// 	timer->start(5000);
+// 	timer->setSingleShot(true);
+// 	
+// 	timer = new QTimer;
+// 	QObject::connect(timer, SIGNAL(timeout()), drawable, SLOT(hide()));
+// 	timer->start(8000);
+// 	timer->setSingleShot(true);
 	
 	glw->addDrawable(drawable);
 	
@@ -155,6 +158,7 @@ GLDrawable * addVideoBug(GLWidget *glw)
 		image.height()));
 	drawable->setZIndex(1);
 	drawable->setOpacity(0.5);
+	drawable->setObjectName("VideoBug");
 	//drawable->show();
 	
 	drawable->addShowAnimation(GLDrawable::AnimSlideLeft,2500).curve = QEasingCurve::OutElastic;
@@ -162,15 +166,15 @@ GLDrawable * addVideoBug(GLWidget *glw)
 	drawable->addHideAnimation(GLDrawable::AnimFade,300);
 	drawable->addHideAnimation(GLDrawable::AnimZoom,300);
 	
-	QTimer * timer = new QTimer;
-	QObject::connect(timer, SIGNAL(timeout()), drawable, SLOT(show()));
-	timer->start(2000);
-	timer->setSingleShot(true);
-	
-	timer = new QTimer;
-	QObject::connect(timer, SIGNAL(timeout()), drawable, SLOT(hide()));
-	timer->start(8000);
-	timer->setSingleShot(true);
+// 	QTimer * timer = new QTimer;
+// 	QObject::connect(timer, SIGNAL(timeout()), drawable, SLOT(show()));
+// 	timer->start(2000);
+// 	timer->setSingleShot(true);
+// 	
+// 	timer = new QTimer;
+// 	QObject::connect(timer, SIGNAL(timeout()), drawable, SLOT(hide()));
+// 	timer->start(8000);
+// 	timer->setSingleShot(true);
 	
 	glw->addDrawable(drawable);
 	
@@ -191,6 +195,7 @@ GLDrawable * addStaticSource(GLWidget * glw)
 	drawable->setVideoSource(source);
 	drawable->setRect(glw->viewport());
 	drawable->setZIndex(-1);
+	drawable->setObjectName("Static");
 	//drawable->setOpacity(0.5);
 	//drawable->show();
 	
@@ -198,13 +203,13 @@ GLDrawable * addStaticSource(GLWidget * glw)
 // 	#ifdef HAS_QT_VIDEO_SOURCE
 // 	// just change enterance anim to match effects
 // 	drawable->addShowAnimation(GLDrawable::AnimFade);
-// 	drawable->addShowAnimation(GLDrawable::AnimZoom);
+ 	//drawable->addShowAnimation(GLDrawable::AnimZoom);
 // 	#else
 	drawable->addShowAnimation(GLDrawable::AnimZoom,2500).curve = QEasingCurve::OutElastic;
 // 	#endif
 // 	
-// 	drawable->addHideAnimation(GLDrawable::AnimFade);
-// 	drawable->addHideAnimation(GLDrawable::AnimZoom);
+ 	drawable->addHideAnimation(GLDrawable::AnimFade);
+ 	drawable->addHideAnimation(GLDrawable::AnimZoom,1000);
 // 	
 // 	QTimer *timer = new QTimer;
 // 	QObject::connect(timer, SIGNAL(timeout()), drawable, SLOT(show()));
@@ -223,26 +228,63 @@ GLDrawable * addStaticSource(GLWidget * glw)
 	return drawable;
 }
 
+QFormLayout * createToggleBox()
+{
+	QWidget *tb = new QWidget();
+	tb->setWindowTitle("Toggle Box");
+	QFormLayout *layout = new QFormLayout;
+	tb->setLayout(layout);
+	tb->show();
+	return layout;
+}
+
+void addButtons(QFormLayout *layout, GLDrawable *glw)
+{
+	QHBoxLayout *box = new QHBoxLayout;
+	
+	QPushButton *show = new QPushButton("Show");
+	QObject::connect(show, SIGNAL(clicked()), glw, SLOT(show()));
+	QObject::connect(glw, SIGNAL(isVisible(bool)), show, SLOT(setDisabled(bool)));
+	show->setDisabled(glw->isVisible());
+	
+	QPushButton *hide = new QPushButton("Hide");
+	QObject::connect(hide, SIGNAL(clicked()), glw, SLOT(hide()));
+	QObject::connect(glw, SIGNAL(isVisible(bool)), hide, SLOT(setEnabled(bool)));
+	hide->setEnabled(glw->isVisible());
+	
+	box->addWidget(show);
+	box->addWidget(hide);
+	
+	layout->addRow(glw->objectName(), box); 
+}
+
 
 int main(int argc, char *argv[])
 {
 
 	QApplication app(argc, argv);
-	GLWidget *glw = new GLWidget();	
+	GLWidget *glw = new GLWidget();
+		
+	QFormLayout * tb = createToggleBox();
 	
 	#ifdef HAS_QT_VIDEO_SOURCE
-		addQtSource(glw);
+		addButtons(tb, addQtSource(glw));
 	#else
-		if(!addCamera(glw))
-			addStaticSource(glw);
+		GLDrawable *d;
+		d = addCamera(glw);
+		if(d)
+			addButtons(tb,d); 
+		else
+			addButtons(tb,addStaticSource(glw));
 	#endif
 	
-	addSecondSource(glw);	
-	addVideoBug(glw);
+	addButtons(tb,addSecondSource(glw));	
+	addButtons(tb,addVideoBug(glw));
 	
 	glw->resize(640,480);
 	
 	glw->show();
+	
 	int x = app.exec();
 	delete glw;
 	return x;
