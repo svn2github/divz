@@ -326,7 +326,7 @@ void VideoEncoderThread::fillDummyYuvImage(AVFrame *pict, int frame_index, int w
 
 void VideoEncoderThread::writeVideoFrame(AVFormatContext *oc, AVStream *st)
 {
-	int out_size, ret;
+	int out_size, ret = 0;
 	AVCodecContext *c;
 	
 	c = st->codec;

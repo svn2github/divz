@@ -756,7 +756,7 @@ void CameraThread::readFrame()
 				{
 					pts = *(uint64_t *)m_av_frame->opaque;
 				}
-				else if(packet->dts != AV_NOPTS_VALUE)
+				else if(packet->dts != (uint)AV_NOPTS_VALUE)
 				{
 					pts = packet->dts;
 				}

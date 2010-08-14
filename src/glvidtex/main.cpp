@@ -1,47 +1,5 @@
-/****************************************************************************
-**
-** Copyright (C) 2010 Nokia Corporation and/or its subsidiary(-ies).
-** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
-**
-** This file is part of the examples of the Qt Toolkit.
-**
-** $QT_BEGIN_LICENSE:LGPL$
-** Commercial Usage
-** Licensees holding valid Qt Commercial licenses may use this file in
-** accordance with the Qt Commercial License Agreement provided with the
-** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and Nokia.
-**
-** GNU Lesser General Public License Usage
-** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 as published by the Free Software
-** Foundation and appearing in the file LICENSE.LGPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU Lesser General Public License version 2.1 requirements
-** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
-**
-** In addition, as a special exception, Nokia gives you certain additional
-** rights.  These rights are described in the Nokia Qt LGPL Exception
-** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
-**
-** GNU General Public License Usage
-** Alternatively, this file may be used under the terms of the GNU
-** General Public License version 3.0 as published by the Free Software
-** Foundation and appearing in the file LICENSE.GPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU General Public License version 3.0 requirements will be
-** met: http://www.gnu.org/copyleft/gpl.html.
-**
-** If you have questions regarding the use of this file, please contact
-** Nokia at qt-info@nokia.com.
-** $QT_END_LICENSE$
-**
-****************************************************************************/
-
 #include <QApplication>
 
-// #include "window.h"
 #include "GLWidget.h"
 #include "../livemix/VideoThread.h"
 #include "../livemix/CameraThread.h"
@@ -50,123 +8,249 @@
 #include "QtVideoSource.h"
 #endif
 
-int main(int argc, char *argv[])
+GLDrawable * addCamera(GLWidget *glw)
 {
-    //Q_INIT_RESOURCE(glvidtex);
-
-    QApplication app(argc, argv);
-//     Window window;
-//     window.show();
-	GLWidget w;
-	
-	
-	
 	#ifdef Q_OS_WIN
-	QString defaultCamera = "vfwcap://0";
+		QString defaultCamera = "vfwcap://0";
 	#else
-	QString defaultCamera = "/dev/video0";
+		QString defaultCamera = "/dev/video0";
 	#endif
 
-	#ifdef HAS_QT_VIDEO_SOURCE
-	QString testFile = "/opt/qt-mobility-opensource-src-1.0.1/examples/player/dsc_7721.avi";
+	CameraThread *source = CameraThread::threadForCamera(defaultCamera);
+	if(source)
 	{
-		QtVideoSource *source = new QtVideoSource();
-		source->setFile(testFile);
-		source->start();
-		
-		GLVideoDrawable *camera = new GLVideoDrawable(&w);
-		camera->setVideoSource(source);
-		camera->setRect(w.viewport());
-		w.addDrawable(camera);
-		camera->addShowAnimation(GLDrawable::AnimFade);
-		//camera->addShowAnimation(GLDrawable::AnimZoom);
-		camera->addShowAnimation(GLDrawable::AnimSlideTop,1000);
-		
-		camera->addHideAnimation(GLDrawable::AnimZoom,1000);
-		camera->addHideAnimation(GLDrawable::AnimFade);
-		camera->show();
-		
-		QTimer *timer = new QTimer;
-		QObject::connect(timer, SIGNAL(timeout()), camera, SLOT(hide()));
-		timer->start(5000);
-		timer->setSingleShot(true);
-	}
-
-	#else
-	CameraThread *thread = CameraThread::threadForCamera(defaultCamera);
-	if(thread)
-	{
-		thread->setFps(30);
+		source->setFps(30);
 		//usleep(250 * 1000); // This causes a race condition to manifist itself reliably, which causes a crash every time instead of intermitently. 
 		// With the crash reproducable, I can now work to fix it.
-		thread->enableRawFrames(true);
-		//thread->setDeinterlace(true);
-		//m_source = thread;
+		source->enableRawFrames(true);
+		//source->setDeinterlace(true);
 		
-		GLVideoDrawable *camera = new GLVideoDrawable(&w);
-		camera->setVideoSource(thread);
-		camera->setRect(w.viewport());
-		w.addDrawable(camera);
-		camera->addShowAnimation(GLDrawable::AnimFade);
-		//camera->addShowAnimation(GLDrawable::AnimZoom);
-		camera->addShowAnimation(GLDrawable::AnimSlideTop,1000);
+		GLVideoDrawable *drawable = new GLVideoDrawable(glw);
+		drawable->setVideoSource(source);
+		drawable->setRect(glw->viewport());
+		glw->addDrawable(drawable);
+		drawable->addShowAnimation(GLDrawable::AnimFade);
+		//drawable->addShowAnimation(GLDrawable::AnimZoom);
+		drawable->addShowAnimation(GLDrawable::AnimSlideTop,1000);
 		
-		camera->addHideAnimation(GLDrawable::AnimSlideBottom,1000);
-		//camera->addHideAnimation(GLDrawable::AnimZoom);
-		camera->show();
+		drawable->addHideAnimation(GLDrawable::AnimSlideBottom,1000);
+		//drawable->addHideAnimation(GLDrawable::AnimZoom);
+		drawable->show();
 		
 		QTimer *timer = new QTimer;
-		QObject::connect(timer, SIGNAL(timeout()), camera, SLOT(hide()));
+		QObject::connect(timer, SIGNAL(timeout()), drawable, SLOT(hide()));
 		timer->start(5000);
 		timer->setSingleShot(true);
 		
-// 		VideoDisplayOptionWidget *opts = new VideoDisplayOptionWidget(camera);
+// 		VideoDisplayOptionWidget *opts = new VideoDisplayOptionWidget(drawable);
 // 		opts->adjustSize();
 // 		opts->show();
+		return drawable;
 	}
+
+	return 0;
+}
+
+GLDrawable * addQtSource(GLWidget * glw)
+{
+	#ifdef HAS_QT_VIDEO_SOURCE
+	QString testFile = "/opt/qt-mobility-opensource-src-1.0.1/examples/player/dsc_7721.avi";
+	
+	QtVideoSource *source = new QtVideoSource();
+	source->setFile(testFile);
+	source->start();
+	
+	GLVideoDrawable *drawable = new GLVideoDrawable(glw);
+	drawable->setVideoSource(source);
+	drawable->setRect(glw->viewport());
+	glw->addDrawable(drawable);
+	drawable->addShowAnimation(GLDrawable::AnimFade);
+	//drawable->addShowAnimation(GLDrawable::AnimZoom);
+	drawable->addShowAnimation(GLDrawable::AnimSlideTop,1000);
+	
+	drawable->addHideAnimation(GLDrawable::AnimZoom,1000);
+	drawable->addHideAnimation(GLDrawable::AnimFade);
+	drawable->show();
+	
+	QTimer *timer = new QTimer;
+	QObject::connect(timer, SIGNAL(timeout()), drawable, SLOT(hide()));
+	timer->start(5000);
+	timer->setSingleShot(true);
+	
+	return drawable;
+
+	#else
+	
+	Q_UNUSED(glw)
+	
+	return 0;
+	
+	#endif
+
+}
+
+GLDrawable * addSecondSource(GLWidget * glw)
+{
+	// add secondary frame
+	GLVideoDrawable *drawable = new GLVideoDrawable(glw);
+	
+	
+	StaticVideoSource *source = new StaticVideoSource();
+	source->setImage(QImage("me2.jpg"));
+	//source->setImage(QImage("/opt/qtsdk-2010.02/qt/examples/opengl/pbuffers/cubelogo.png"));
+	
+	source->start();
+	drawable->setVideoSource(source);
+	drawable->setRect(glw->viewport());
+	drawable->setZIndex(-1);
+	//drawable->setOpacity(0.5);
+	//drawable->show();
+	
+	
+	#ifdef HAS_QT_VIDEO_SOURCE
+	// just change enterance anim to match effects
+	drawable->addShowAnimation(GLDrawable::AnimFade);
+	drawable->addShowAnimation(GLDrawable::AnimZoom);
+	#else
+	drawable->addShowAnimation(GLDrawable::AnimSlideTop,1000);
 	#endif
 	
+	drawable->addHideAnimation(GLDrawable::AnimFade);
+	drawable->addHideAnimation(GLDrawable::AnimZoom);
 	
+	QTimer *timer = new QTimer;
+	QObject::connect(timer, SIGNAL(timeout()), drawable, SLOT(show()));
+	timer->start(5000);
+	timer->setSingleShot(true);
+	
+	timer = new QTimer;
+	QObject::connect(timer, SIGNAL(timeout()), drawable, SLOT(hide()));
+	timer->start(8000);
+	timer->setSingleShot(true);
+	
+	glw->addDrawable(drawable);
+	
+	return drawable;
+}
+
+GLDrawable * addVideoBug(GLWidget *glw)
+{
+	GLVideoDrawable *drawable = new GLVideoDrawable(glw);
+	
+	
+	StaticVideoSource *source = new StaticVideoSource();
+	//source->setImage(QImage("me2.jpg"));
+	QImage image = QImage("/opt/qtsdk-2010.02/qt/examples/opengl/pbuffers/cubelogo.png");
+	if(image.isNull())
+		image = QImage("../data/icon-next-large.png");
+		//image = QImage("/home/josiah/Documents/JDBryanPhotography/Logo.png");
+	source->setImage(image);
+	
+	source->start();
+	drawable->setVideoSource(source);
+	drawable->setRect(QRectF(
+		qMax(glw->viewport().right()  - image.width()  * 1.75, 50.0),
+		qMax(glw->viewport().bottom() - image.height() * 1.25, 50.0),
+		image.width(),
+		image.height()));
+	drawable->setZIndex(1);
+	drawable->setOpacity(0.5);
+	//drawable->show();
+	
+	drawable->addShowAnimation(GLDrawable::AnimSlideLeft,2500).curve = QEasingCurve::OutElastic;
+	
+	drawable->addHideAnimation(GLDrawable::AnimFade,300);
+	drawable->addHideAnimation(GLDrawable::AnimZoom,300);
+	
+	QTimer * timer = new QTimer;
+	QObject::connect(timer, SIGNAL(timeout()), drawable, SLOT(show()));
+	timer->start(2000);
+	timer->setSingleShot(true);
+	
+	timer = new QTimer;
+	QObject::connect(timer, SIGNAL(timeout()), drawable, SLOT(hide()));
+	timer->start(8000);
+	timer->setSingleShot(true);
+	
+	glw->addDrawable(drawable);
+	
+	return drawable;
+}
+
+GLDrawable * addStaticSource(GLWidget * glw)
+{
 	// add secondary frame
-	{
-		GLVideoDrawable *videoBug = new GLVideoDrawable(&w);
-		
-		
-		StaticVideoSource *source = new StaticVideoSource();
-		source->setImage(QImage("me2.jpg"));
-		//source->setImage(QImage("/opt/qtsdk-2010.02/qt/examples/opengl/pbuffers/cubelogo.png"));
-		
-		source->start();
-		videoBug->setVideoSource(source);
-		videoBug->setRect(w.viewport());
-		videoBug->setZIndex(-1);
-		//videoBug->setOpacity(0.5);
-		//videoBug->show();
-		
-		
-		#ifdef HAS_QT_VIDEO_SOURCE
-		// just change enterance anim to match effects
-		videoBug->addShowAnimation(GLDrawable::AnimFade);
-		videoBug->addShowAnimation(GLDrawable::AnimZoom);
-		#else
-		videoBug->addShowAnimation(GLDrawable::AnimSlideTop,1000);
-		#endif
-		
-		videoBug->addHideAnimation(GLDrawable::AnimFade);
-		videoBug->addHideAnimation(GLDrawable::AnimZoom);
-		
-		QTimer *timer = new QTimer;
-		QObject::connect(timer, SIGNAL(timeout()), videoBug, SLOT(show()));
-		timer->start(5000);
-		timer->setSingleShot(true);
-		
-		timer = new QTimer;
-		QObject::connect(timer, SIGNAL(timeout()), videoBug, SLOT(hide()));
-		timer->start(8000);
-		timer->setSingleShot(true);
-		
-		w.addDrawable(videoBug);
-	}
+	GLVideoDrawable *drawable = new GLVideoDrawable(glw);
+	
+	
+	StaticVideoSource *source = new StaticVideoSource();
+	source->setImage(QImage("me2.jpg"));
+	//source->setImage(QImage("/opt/qtsdk-2010.02/qt/examples/opengl/pbuffers/cubelogo.png"));
+	
+	source->start();
+	drawable->setVideoSource(source);
+	drawable->setRect(glw->viewport());
+	drawable->setZIndex(-1);
+	//drawable->setOpacity(0.5);
+	//drawable->show();
+	
+	
+// 	#ifdef HAS_QT_VIDEO_SOURCE
+// 	// just change enterance anim to match effects
+// 	drawable->addShowAnimation(GLDrawable::AnimFade);
+// 	drawable->addShowAnimation(GLDrawable::AnimZoom);
+// 	#else
+	drawable->addShowAnimation(GLDrawable::AnimZoom,2500).curve = QEasingCurve::OutElastic;
+// 	#endif
+// 	
+// 	drawable->addHideAnimation(GLDrawable::AnimFade);
+// 	drawable->addHideAnimation(GLDrawable::AnimZoom);
+// 	
+// 	QTimer *timer = new QTimer;
+// 	QObject::connect(timer, SIGNAL(timeout()), drawable, SLOT(show()));
+// 	timer->start(5000);
+// 	timer->setSingleShot(true);
+// 	
+// 	timer = new QTimer;
+// 	QObject::connect(timer, SIGNAL(timeout()), drawable, SLOT(hide()));
+// 	timer->start(8000);
+// 	timer->setSingleShot(true);
+	
+	glw->addDrawable(drawable);
+	
+	drawable->show();
+	
+	return drawable;
+}
+
+
+int main(int argc, char *argv[])
+{
+
+	QApplication app(argc, argv);
+	GLWidget *glw = new GLWidget();	
+	
+	#ifdef HAS_QT_VIDEO_SOURCE
+		addQtSource(glw);
+	#else
+		if(!addCamera(glw))
+			addStaticSource(glw);
+	#endif
+	
+	addSecondSource(glw);	
+	addVideoBug(glw);
+	
+	glw->resize(640,480);
+	
+	glw->show();
+	int x = app.exec();
+	delete glw;
+	return x;
+}
+
+
+
+	
 	
 // 	if(!thread)
 // 	{
@@ -175,44 +259,3 @@ int main(int argc, char *argv[])
 // 		thread->start();
 // 		m_source = thread;
 // 	}
-
-	GLVideoDrawable *videoBug = new GLVideoDrawable(&w);
-	
-	
-	StaticVideoSource *source = new StaticVideoSource();
-	//source->setImage(QImage("me2.jpg"));
-	source->setImage(QImage("/opt/qtsdk-2010.02/qt/examples/opengl/pbuffers/cubelogo.png"));
-	
-	source->start();
-	videoBug->setVideoSource(source);
-	videoBug->setRect(QRectF(
-		w.viewport().right() - source->image().width() * 1.25,
-		w.viewport().bottom() - source->image().height() * 1.25,
-		source->image().width(),
-		source->image().height()));
-	videoBug->setZIndex(1);
-	videoBug->setOpacity(0.5);
-	//videoBug->show();
-	
-	videoBug->addShowAnimation(GLDrawable::AnimSlideLeft,1000).curve = QEasingCurve::OutElastic;
-	
-	videoBug->addHideAnimation(GLDrawable::AnimFade,300);
-	videoBug->addHideAnimation(GLDrawable::AnimSlideTop,300);
-	
-	QTimer * timer = new QTimer;
-	QObject::connect(timer, SIGNAL(timeout()), videoBug, SLOT(show()));
-	timer->start(1000);
-	timer->setSingleShot(true);
-	
-	timer = new QTimer;
-	QObject::connect(timer, SIGNAL(timeout()), videoBug, SLOT(hide()));
-	timer->start(6000);
-	timer->setSingleShot(true);
-	
-	w.addDrawable(videoBug);
-	
-	w.resize(640,480);
-	
-	w.show();
-    return app.exec();
-}
