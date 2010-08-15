@@ -108,6 +108,22 @@ static const char *qt_glsl_yuvPlanarShaderProgram =
 
 
 
+	
+QAutoDelPropertyAnimation::QAutoDelPropertyAnimation(QObject * target, const QByteArray & propertyName, QObject * parent) 
+	: QPropertyAnimation(target,propertyName,parent) 
+{
+	m_originalPropValue = target->property(propertyName.constData());
+// 	qDebug() << "QAutoDelPropertyAnimation: Anim STARTED for "<<propertyName.constData()<<", got orig value: "<<m_originalPropValue;
+	//connect(this, SIGNAL(finished()), this, SLOT(resetProperty()));
+}
+	
+void QAutoDelPropertyAnimation::resetProperty()
+{
+// 	qDebug() << "QAutoDelPropertyAnimation: Anim FINISHED for "<<propertyName().constData()<<", setting value: "<<m_originalPropValue;
+	targetObject()->setProperty(propertyName().constData(), m_originalPropValue);
+}
+
+
 // class GLDrawable 
 GLDrawable::GLDrawable(QObject *parent)
 	: QObject(parent)
@@ -143,8 +159,11 @@ void GLDrawable::setVisible(bool flag)
 		foreach(QAutoDelPropertyAnimation *ani, m_runningAnimations)
 		{
 			ani->stop();
+			//qDebug() << "GLDrawable::setVisible while anim running, resetting property on "<<ani->propertyName().constData();
+			ani->resetProperty();
 			ani->deleteLater();
 		}
+		m_runningAnimations.clear();
 		animationFinished();
 	}
 	
@@ -262,11 +281,14 @@ void GLDrawable::startAnimation(const GLDrawable::AnimParam& p)
 			QTimer *timer = new QTimer();
 			timer->setInterval(p.startDelay);
 			
-			connect(timer, SIGNAL(timeout()), ani, SLOT(startAutoDel()));
+			connect(timer, SIGNAL(timeout()), ani, SLOT(start()));
+			connect(timer, SIGNAL(timeout()), timer, SLOT(deleteLater()));
+			timer->setSingleShot(true);
+			timer->start();
 		}
 		else
 		{
-			ani->startAutoDel();
+			ani->start();
 		}
 		
 		m_runningAnimations << ani;
@@ -289,11 +311,43 @@ QAutoDelPropertyAnimation * GLDrawable::setupRectAnimation(const QRectF& otherRe
 
 void GLDrawable::animationFinished()
 {
-	m_isVisible = m_animDirection;
-	m_rect = m_originalRect;
-	m_runningAnimations.clear();
-	m_animFinished = true;
-	updateGL();
+	QAutoDelPropertyAnimation *ani = dynamic_cast<QAutoDelPropertyAnimation*>(sender());
+	if(ani)
+	{
+// 		qDebug() << "GLDrawable::animationFinished(): Got ANI";
+		m_runningAnimations.removeAll(ani);
+		m_finishedAnimations.append(ani);
+		if(m_runningAnimations.isEmpty())
+		{
+// 			qDebug() << "GLDrawable::animationFinished(): All animations finished";
+			m_isVisible = m_animDirection;
+			m_runningAnimations.clear();
+			m_animFinished = true;
+			updateGL();
+			
+			foreach(QAutoDelPropertyAnimation *ani, m_finishedAnimations)
+			{
+				ani->resetProperty();
+				//ani->deleteLater();
+			}
+			qDeleteAll(m_finishedAnimations);
+			m_finishedAnimations.clear();
+		}
+		
+	}
+	else
+	{
+		foreach(QAutoDelPropertyAnimation *ani, m_finishedAnimations)
+		{
+			ani->resetProperty();
+			//ani->deleteLater();
+		}
+		qDeleteAll(m_finishedAnimations);
+		m_finishedAnimations.clear();
+		m_animFinished = true;
+		m_isVisible = m_animDirection;
+		updateGL();
+	}
 }
 	
 void GLDrawable::setRect(const QRectF& rect)
@@ -1095,7 +1149,7 @@ void GLVideoDrawable::paintGL()
 		latencyPerFrame.setNum((((double)m_latencyAccum) / ((double)m_frameCount)), 'f', 3);
 		
 		
-		qDebug() << "FPS: " + framesPerSecond + (m_frame.captureTime.isNull() ? "" : ", Latency: " + latencyPerFrame + " ms");
+		//qDebug() << "FPS: " + framesPerSecond + (m_frame.captureTime.isNull() ? "" : ", Latency: " + latencyPerFrame + " ms");
 
 		m_time.start();
 		m_frameCount = 0;

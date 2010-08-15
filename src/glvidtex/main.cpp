@@ -13,7 +13,7 @@ GLDrawable * addCamera(GLWidget *glw)
 	#ifdef Q_OS_WIN
 		QString defaultCamera = "vfwcap://0";
 	#else
-		QString defaultCamera = "/dev/video0";
+		QString defaultCamera = "/dev/video1";
 	#endif
 
 	CameraThread *source = CameraThread::threadForCamera(defaultCamera);
@@ -30,22 +30,22 @@ GLDrawable * addCamera(GLWidget *glw)
 		drawable->setRect(glw->viewport());
 		glw->addDrawable(drawable);
 		drawable->addShowAnimation(GLDrawable::AnimFade);
-		//drawable->addShowAnimation(GLDrawable::AnimZoom);
-		drawable->addShowAnimation(GLDrawable::AnimSlideTop,1000);
+		drawable->addShowAnimation(GLDrawable::AnimZoom,2500).curve = QEasingCurve::OutElastic;
 		
-		drawable->addHideAnimation(GLDrawable::AnimSlideBottom,1000);
-		//drawable->addHideAnimation(GLDrawable::AnimZoom);
+		//drawable->addHideAnimation(GLDrawable::AnimSlideBottom,1000);
+		drawable->addHideAnimation(GLDrawable::AnimFade).startDelay = 500;
+		drawable->addHideAnimation(GLDrawable::AnimZoom,1000);
 		drawable->show();
 		drawable->setObjectName(qPrintable(defaultCamera));
 		
-		QTimer *timer = new QTimer;
-		QObject::connect(timer, SIGNAL(timeout()), drawable, SLOT(hide()));
-		timer->start(5000);
-		timer->setSingleShot(true);
-		
-// 		VideoDisplayOptionWidget *opts = new VideoDisplayOptionWidget(drawable);
-// 		opts->adjustSize();
-// 		opts->show();
+// 		QTimer *timer = new QTimer;
+// 		QObject::connect(timer, SIGNAL(timeout()), drawable, SLOT(hide()));
+// 		timer->start(5000);
+// 		timer->setSingleShot(true);
+// 		
+		VideoDisplayOptionWidget *opts = new VideoDisplayOptionWidget(drawable);
+		opts->adjustSize();
+		opts->show();
 		return drawable;
 	}
 

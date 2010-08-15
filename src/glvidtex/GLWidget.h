@@ -8,7 +8,6 @@
 #include "../livemix/VideoFrame.h"
 #include "../livemix/VideoSource.h"
 
-
 class QGLShaderProgram;
 class GLWidget;
 class QPropertyAnimation;
@@ -23,12 +22,13 @@ class QAutoDelPropertyAnimation : public QPropertyAnimation
 	Q_OBJECT
 	
 public:
-	QAutoDelPropertyAnimation(QObject * target, const QByteArray & propertyName, QObject * parent = 0) 
-		: QPropertyAnimation(target,propertyName,parent) 
-		{}
+	QAutoDelPropertyAnimation(QObject * target, const QByteArray & propertyName, QObject * parent = 0) ;
 	
 public slots:
-	void startAutoDel() { start(QAbstractAnimation::DeleteWhenStopped); }
+	void resetProperty();
+	
+private:
+	QVariant m_originalPropValue;
 };
 
 class GLDrawable : public QObject
@@ -138,6 +138,7 @@ private:
 	
 	QList<GLDrawable::AnimParam> m_animations;
 	QList<QAutoDelPropertyAnimation*> m_runningAnimations;
+	QList<QAutoDelPropertyAnimation*> m_finishedAnimations;
 
 };
 
