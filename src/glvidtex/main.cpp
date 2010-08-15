@@ -4,6 +4,9 @@
 #include "../livemix/VideoThread.h"
 #include "../livemix/CameraThread.h"
 
+#include "GLVideoDrawable.h"
+#include "StaticVideoSource.h"
+
 #ifdef HAS_QT_VIDEO_SOURCE
 #include "QtVideoSource.h"
 #endif
@@ -188,7 +191,12 @@ GLDrawable * addStaticSource(GLWidget * glw)
 	
 	
 	StaticVideoSource *source = new StaticVideoSource();
-	source->setImage(QImage("me2.jpg"));
+	//source->setImage(QImage("me2.jpg"));
+	QImage img("dsc_6645-1.jpg");
+	if(img.isNull())
+		source->setImage(QImage("me2.jpg"));
+	else
+		source->setImage(img);
 	//source->setImage(QImage("/opt/qtsdk-2010.02/qt/examples/opengl/pbuffers/cubelogo.png"));
 	
 	source->start();
@@ -221,6 +229,10 @@ GLDrawable * addStaticSource(GLWidget * glw)
 // 	timer->start(8000);
 // 	timer->setSingleShot(true);
 	
+	VideoDisplayOptionWidget *opts = new VideoDisplayOptionWidget(drawable);
+	opts->adjustSize();
+	opts->show();
+
 	glw->addDrawable(drawable);
 	
 	drawable->show();

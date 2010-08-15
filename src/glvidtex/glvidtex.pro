@@ -12,7 +12,10 @@ HEADERS       = GLWidget.h \
 		../livemix/VideoSource.h \
 		../livemix/VideoThread.h \
 		../livemix/VideoFrame.h \
-		../livemix/CameraThread.h
+		../livemix/CameraThread.h \
+		StaticVideoSource.h \
+		GLDrawable.h \
+		GLVideoDrawable.h 
 		
 SOURCES       = GLWidget.cpp \
 		main.cpp \
@@ -20,7 +23,10 @@ SOURCES       = GLWidget.cpp \
 		../livemix/VideoThread.cpp \
 		../livemix/VideoFrame.cpp \
 		../livemix/CameraThread.cpp \
-		../livemix/SimpleV4L2.cpp
+		../livemix/SimpleV4L2.cpp \
+		StaticVideoSource.cpp \
+		GLDrawable.cpp \
+		GLVideoDrawable.cpp
 
 RESOURCES     = glvidtex.qrc
 QT           += opengl multimedia
