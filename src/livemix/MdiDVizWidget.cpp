@@ -11,4 +11,6 @@ MdiDVizWidget::MdiDVizWidget(QWidget *parent)
 	setVideoSource(m_thread);
 	
 	setWindowTitle("DViz Feed");
+	
+	videoWidget()->setFps(1);
 }

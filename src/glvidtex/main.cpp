@@ -26,7 +26,7 @@ GLDrawable * addCamera(GLWidget *glw)
 		//usleep(250 * 1000); // This causes a race condition to manifist itself reliably, which causes a crash every time instead of intermitently. 
 		// With the crash reproducable, I can now work to fix it.
 		source->enableRawFrames(true);
-		//source->setDeinterlace(true);
+		source->setDeinterlace(true);
 		
 		GLVideoDrawable *drawable = new GLVideoDrawable(glw);
 		drawable->setVideoSource(source);

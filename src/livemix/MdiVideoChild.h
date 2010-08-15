@@ -33,7 +33,9 @@ public slots:
 	
 protected:
 	void setupDefaultGui();
-	void contextMenuEvent(QContextMenuEvent *);
+	virtual void contextMenuEvent(QContextMenuEvent *);
+	virtual void closeEvent(QCloseEvent*);
+	virtual void showEvent(QShowEvent*);
 
 	
 	QVBoxLayout *m_layout;

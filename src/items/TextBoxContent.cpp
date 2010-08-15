@@ -587,8 +587,7 @@ void TextBoxWarmingThread::run()
 			
 	QSizeF shadowSize = model->shadowEnabled() ? QSizeF(model->shadowOffsetX(),model->shadowOffsetY()) : QSizeF(0,0);
 	QImage *cache = new QImage((model->contentsRect().size()+shadowSize).toSize(),QImage::Format_ARGB32_Premultiplied);
-	memset(cache->scanLine(0), 0, cache->byteCount());
-	
+
 	QPainter textPainter(cache);
 	textPainter.fillRect(cache->rect(),Qt::transparent);
 	
@@ -616,7 +615,6 @@ void TextBoxWarmingThread::run()
 			double blurSize = (int)(radiusSquared*2);
 			QSize shadowSize(blurSize,blurSize);
 			QImage tmpImage((model->contentsRect().size()+shadowSize).toSize(),QImage::Format_ARGB32);
-			memset(tmpImage.scanLine(0), 0, tmpImage.byteCount());
 			
 			// render the text
 			QPainter tmpPainter(&tmpImage);
@@ -756,7 +754,7 @@ void TextBoxContent::paint(QPainter * painter, const QStyleOptionGraphicsItem * 
 				{
 					cache.load(key);
 					QPixmapCache::insert(key,cache);
-					qDebug()<<"TextBoxContent::paint(): modelItem:"<<modelItem()->itemName()<<": Cache load from"<<key;
+					//qDebug()<<"TextBoxContent::paint(): modelItem:"<<modelItem()->itemName()<<": Cache load from"<<key;
 				}
 				else
 				{

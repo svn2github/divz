@@ -698,11 +698,12 @@ void CameraThread::readFrame()
 			//m_deinterlace = false;
 			if(m_deinterlace)
 			{
-				VideoFrame deinterlacedFrame;
-				deinterlacedFrame.captureTime  = frame.captureTime;
-				deinterlacedFrame.holdTime     = frame.holdTime;
-				deinterlacedFrame.isRaw        = true;
+				VideoFrame deinterlacedFrame = frame;
+// 				deinterlacedFrame.captureTime  = frame.captureTime;
+// 				deinterlacedFrame.holdTime     = frame.holdTime;
+// 				deinterlacedFrame.isRaw        = true;
 				deinterlacedFrame.bufferType   = VideoFrame::BUFFER_BYTEARRAY;
+				deinterlacedFrame.byteArray = QByteArray(); // give us a new array, dont mudge the original image
 				deinterlacedFrame.byteArray.resize(frame.byteArray.size());
 				
 				bool bottomFrame  = m_frameCount % 2 == 1;

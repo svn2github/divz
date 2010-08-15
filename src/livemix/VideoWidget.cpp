@@ -70,17 +70,21 @@ void VideoWidget::mouseReleaseEvent(QMouseEvent*)
 
 void VideoWidget::closeEvent(QCloseEvent*)
 {
-// 	disconnectCamera();
+ 	disconnectVideoSource();
 	m_paintTimer.stop();
 }
 
 void VideoWidget::disconnectVideoSource()
 {
 	m_paintTimer.stop();
-	m_thread->release(this);
-	disconnect(m_thread,0,this,0);
-	emit sourceDiscarded(m_thread);
-	m_thread = 0;
+	if(m_thread)
+	{
+		m_thread->release(this);
+		disconnect(m_thread,0,this,0);
+		emit sourceDiscarded(m_thread);
+	
+		m_thread = 0;
+	}
 }
 
 void VideoWidget::sourceDestroyed()

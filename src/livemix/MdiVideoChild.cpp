@@ -23,6 +23,18 @@ void MdiVideoChild::setVideoSource(VideoSource* source)
 	m_videoWidget->setVideoSource(source);
 }
 
+void MdiVideoChild::closeEvent(QCloseEvent*)
+{
+	m_videoWidget->disconnectVideoSource();
+	deleteLater();
+	qDebug() << "MdiVideoChild::closeEvent(): "<<this;
+}
+
+void MdiVideoChild::showEvent(QShowEvent*)
+{
+	//m_videoWidget->setVideoSource(source);
+}
+
 void MdiVideoChild::setupDefaultGui()
 {
 	m_layout->setContentsMargins(3,3,3,3);

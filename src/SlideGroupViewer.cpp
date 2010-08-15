@@ -322,13 +322,13 @@ SlideGroupViewer::SlideGroupViewer(QWidget *parent)
 
 void SlideGroupViewer::setSharedMemoryImageWriterEnabled(bool enable, const QString& key)
 {
-	m_sharedMemoryImageWriterEnabled = enable;
-	if(!m_shmemWriter)
-		m_shmemWriter = new SharedMemoryImageWriter(this);
-	if(enable)
-		m_shmemWriter->enable(key,m_scene);
-	else
-		m_shmemWriter->disable();
+// 	m_sharedMemoryImageWriterEnabled = enable;
+// 	if(!m_shmemWriter)
+// 		m_shmemWriter = new SharedMemoryImageWriter(this);
+// 	if(enable)
+// 		m_shmemWriter->enable(key,m_scene);
+// 	else
+// 		m_shmemWriter->disable();
 }
 
 bool SlideGroupViewer::canZoom() { return m_view->canZoom(); }
