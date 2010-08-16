@@ -29,7 +29,7 @@ extern "C" {
 // 	#else
 // 		#define RAW_PIX_FMT PIX_FMT_BGR565
 // 	#endif
-#else 
+#else
 // 	#ifdef DEINTERLACE
 		#define RAW_PIX_FMT PIX_FMT_RGB32
 // 	#else
@@ -43,7 +43,7 @@ namespace
 	// found at http://ilab.usc.edu/source/. The note following is from
 	// the USC code base. I've just converted it to use uchar* instead of
 	// the iLab (I assume) specific typedef 'byte'. - Josiah 20100730
-	
+
 void bobDeinterlace(const uchar* src, const uchar* const srcend,
 		    uchar* dest, uchar* const destend,
 		    const int height, const int stride,
@@ -53,7 +53,7 @@ void bobDeinterlace(const uchar* src, const uchar* const srcend,
 	// NOTE: this deinterlacing code was derived from and/or inspired by
 	// code from tvtime (http://tvtime.sourceforge.net/); original
 	// copyright notice here:
-	
+
 	/**
 	* Copyright (c) 2001, 2002, 2003 Billy Biggs <vektor@dumbterm.net>.
 	*
@@ -71,10 +71,10 @@ void bobDeinterlace(const uchar* src, const uchar* const srcend,
 	* along with this program; if not, write to the Free Software Foundation,
 	* Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 	*/
-	
+
 	assert(height > 0);
 	assert(stride > 0);
-	
+
 	// NOTE: on x86 machines with glibc 2.3.6 and g++ 3.4.4, it looks
 	// like std::copy is faster than memcpy, so we use that to do the
 	// copying here:
@@ -88,48 +88,48 @@ void bobDeinterlace(const uchar* src, const uchar* const srcend,
 	if (in_bottom_field)
 	{
 		src += stride;
-	
+
 		DOCOPY(dest, src, stride);
-	
+
 		dest += stride;
 	}
-	
+
 	DOCOPY(dest, src, stride);
-	
+
 	dest += stride;
-	
+
 	const int N = (height / 2) - 1;
 	for (int i = 0; i < N; ++i)
 	{
 		const uchar* const src2 = src + (stride*2);
-	
+
 		for (int k = 0; k < stride; ++k)
 			dest[k] = (src[k] + src2[k]) / 2;
-	
+
 		dest += stride;
-	
+
 		DOCOPY(dest, src2, stride);
-	
+
 		src += stride*2;
 		dest += stride;
 	}
-	
+
 	if (!in_bottom_field)
 	{
 		DOCOPY(dest, src, stride);
-	
+
 		src += stride*2;
 		dest += stride;
 	}
 	else
 		src += stride;
-	
+
 	// consistency check: make sure we've done all our counting right:
-	
+
 	if (src != srcend)
 		qFatal("deinterlacing consistency check failed: %d src %p-%p=%d",
 			int(in_bottom_field), src, srcend, int(src-srcend));
-	
+
 	if (dest != destend)
 		qFatal("deinterlacing consistency check failed: %d dst %p-%p=%d",
 			int(in_bottom_field), dest, destend, int(dest-destend));
@@ -159,9 +159,9 @@ CameraThread::CameraThread(const QString& camera, QObject *parent)
 
 	m_sws_context = NULL;
 	m_frame = NULL;
-	
+
 	m_rawFrames = false;
-	
+
 	setIsBuffered(false);
 }
 
@@ -170,7 +170,7 @@ void CameraThread::destroySource()
 	qDebug() << "CameraThread::destroySource(): "<<this;
 	QMutexLocker lock(&threadCacheMutex);
 	m_threadMap.remove(m_cameraFile);
-	
+
 	VideoSource::destroySource();
 }
 
@@ -178,14 +178,14 @@ CameraThread * CameraThread::threadForCamera(const QString& camera)
 {
 	if(camera.isEmpty())
 		return 0;
-		
+
 	QStringList devices = enumerateDevices();
-	
+
 	if(!devices.contains(camera))
 		return 0;
-		
+
 	QMutexLocker lock(&threadCacheMutex);
-	
+
 	if(m_threadMap.contains(camera))
 	{
 		CameraThread *v = m_threadMap[camera];
@@ -209,13 +209,13 @@ CameraThread * CameraThread::threadForCamera(const QString& camera)
 QStringList CameraThread::enumerateDevices(bool forceReenum)
 {
 	VideoSource::initAV();
-	
+
 	if(!forceReenum && m_devicesEnumerated)
 		return m_enumeratedDevices;
-		
+
 	m_enumeratedDevices.clear();
 	m_devicesEnumerated = true;
-	
+
 	#ifdef Q_OS_WIN32
 		QString deviceBase = "vfwcap://";
 		QString formatName = "vfwcap";
@@ -224,11 +224,11 @@ QStringList CameraThread::enumerateDevices(bool forceReenum)
 		QString formatName = "video4linux";
 	#endif
 	QStringList list;
-	
-	
+
+
 	AVInputFormat *inFmt = NULL;
 	AVFormatParameters formatParams;
-	
+
 	for(int i=0; i<10; i++)
 	{
 		memset(&formatParams, 0, sizeof(AVFormatParameters));
@@ -250,12 +250,12 @@ QStringList CameraThread::enumerateDevices(bool forceReenum)
 		formatParams.time_base.den = 29; //25;
 		formatParams.channel = 0;
 		formatParams.standard = "ntsc";
-		
+
 		//formatParams.width = 352;
 		//formatParams.height = 288;
 		//formatParams.channel = 0;
 		//formatParams.pix_fmt = PIX_FMT_RGB24 ;
-	
+
 		// Open video file
 		//
 		AVFormatContext * formatCtx;
@@ -271,9 +271,9 @@ QStringList CameraThread::enumerateDevices(bool forceReenum)
 			av_close_input_file(formatCtx);
 		}
 	}
-	
+
 	qDebug() << "enumerateDevices: Found: "<<list;
-	
+
 	m_enumeratedDevices = list;
 	return list;
 }
@@ -283,7 +283,7 @@ QStringList CameraThread::inputs()
 	#if !defined(Q_OS_LINUX)
 		return QStringList();
 	#endif
-	
+
 	SimpleV4L2 * api = m_v4l2;
 	bool deleteIt = false;
 	if(!api)
@@ -296,12 +296,12 @@ QStringList CameraThread::inputs()
 			return QStringList();
 		}
 	}
-	
+
 	QStringList inputs = api->inputs();
-	
+
 	if(deleteIt)
 		delete api;
-	return inputs;	
+	return inputs;
 }
 
 int CameraThread::input()
@@ -309,7 +309,7 @@ int CameraThread::input()
 	#if !defined(Q_OS_LINUX)
 		return -1;
 	#endif
-	
+
 	SimpleV4L2 * api = m_v4l2;
 	bool deleteIt = false;
 	if(!api)
@@ -322,12 +322,12 @@ int CameraThread::input()
 			return -1;
 		}
 	}
-	
+
 	int idx = api->input();
-	
+
 	if(deleteIt)
 		delete api;
-	
+
 	return idx;
 }
 
@@ -336,7 +336,7 @@ void CameraThread::setInput(int idx)
 	#if !defined(Q_OS_LINUX)
 		return;
 	#endif
-	
+
 	SimpleV4L2 * api = m_v4l2;
 	bool deleteIt = false;
 	if(!api)
@@ -349,10 +349,10 @@ void CameraThread::setInput(int idx)
 			return;
 		}
 	}
-	
+
 	api->setInput(idx);
 	api->setStandard("NTSC");
-	
+
 	if(deleteIt)
 		delete api;
 }
@@ -360,9 +360,10 @@ void CameraThread::setInput(int idx)
 bool CameraThread::setInput(const QString& name)
 {
 	#if !defined(Q_OS_LINUX)
-		return false
-	#endif
-	
+		return false;
+	#else
+
+
 	SimpleV4L2 * api = m_v4l2;
 	bool deleteIt = false;
 	if(!api)
@@ -375,15 +376,17 @@ bool CameraThread::setInput(const QString& name)
 			return false;
 		}
 	}
-	
+
 	bool flag = api->setInput(name);
 	if(flag)
 		api->setStandard("NTSC");
-	
+
 	if(deleteIt)
 		delete api;
-	
+
 	return flag;
+
+	#endif
 }
 
 
@@ -400,22 +403,22 @@ int CameraThread::initCamera()
 			if(!setInput("Composite"))
 				if(!setInput("Composite1"))
 					setInput(0);
-				
+
 			m_v4l2->initDevice();
 			m_v4l2->startCapturing();
 			m_inited = true;
-			
+
 			return 1;
 		}
 	}
 	#endif
-	
+
 	// And do it here even if we're not using raw frames because setInput() will use SimpleV4L2 on linux,
 	// and its a NOOP on windows.
 	if(!setInput("Composite"))
 		if(!setInput("Composite1"))
 			setInput(0);
-			
+
 
 	AVInputFormat *inFmt = NULL;
 	AVFormatParameters formatParams;
@@ -528,7 +531,7 @@ int CameraThread::initCamera()
 	// Note that pFrameRGB is an AVFrame, but AVFrame is a superset of AVPicture
 	avpicture_fill((AVPicture *)m_av_rgb_frame, m_buffer, RAW_PIX_FMT,
 					m_video_codec_context->width, m_video_codec_context->height);
-	
+
 	if(m_audio_stream != -1)
 	{
 		m_audio_codec_context = m_av_format_context->streams[m_audio_stream]->codec;
@@ -551,13 +554,13 @@ int CameraThread::initCamera()
 void CameraThread::run()
 {
 	initCamera();
-	
-	//qDebug() << "CameraThread::run: In Thread ID "<<QThread::currentThreadId(); 
+
+	//qDebug() << "CameraThread::run: In Thread ID "<<QThread::currentThreadId();
 // 	int counter = 0;
 	while(!m_killed)
 	{
 		readFrame();
-		
+
 // 		counter ++;
 // 		if(m_singleFrame.holdTime>0)
 // 		{
@@ -566,7 +569,7 @@ void CameraThread::run()
 // 			QImageWriter writer(file, "jpg");
 // 			writer.write(m_singleFrame.image);
 // 		}
-		
+
 		msleep(int(1000 / m_fps / 1.5 / (m_deinterlace ? 1 : 2)));
 	};
 }
@@ -583,11 +586,11 @@ void CameraThread::setFps(int fps)
 
 CameraThread::~CameraThread()
 {
-	
+
 	m_killed = true;
 	quit();
 	wait();
-	
+
 	#if defined(Q_OS_LINUX)
 	if(m_v4l2)
 	{
@@ -615,7 +618,7 @@ void CameraThread::freeResources()
 {
 	if(!m_inited)
 		return;
-		
+
 	// Free the RGB image
 	if(m_buffer != NULL)
 		av_free(m_buffer);
@@ -627,7 +630,7 @@ void CameraThread::freeResources()
 	//mutex.unlock();
 
 	// Close the codec
-	if(m_video_codec_context != NULL) 
+	if(m_video_codec_context != NULL)
 		avcodec_close(m_video_codec_context);
 
 	// Close the video file
@@ -639,27 +642,27 @@ void CameraThread::enableRawFrames(bool enable)
 {
 	bool old = m_rawFrames;
 	m_rawFrames = enable;
-	
+
 	if(!m_inited)
 		return;
-	
+
 	if(old != enable)
 	{
 		// switch from raw V4L2 to LibAV* (or visa versa based on m_rawFrames, since SimpleV4L2 only outputs raw ARGB32)
 		//qDebug() << "CameraThread::enableRawFrames: flag changed, status: "<<m_rawFrames;
 		QMutexLocker lock(&m_readMutex);
-	
+
 		freeResources();
 		initCamera();
 	}
-	
+
 }
 
 VideoFormat CameraThread::videoFormat()
 {
 
 	return VideoFormat(
-		m_rawFrames ? 
+		m_rawFrames ?
 			#if defined(Q_OS_LINUX)
 				 VideoFrame::BUFFER_BYTEARRAY :
 			#else
@@ -673,19 +676,20 @@ VideoFormat CameraThread::videoFormat()
 				 QVideoFrame::Format_YUV420P :
 			#endif
 				 QVideoFrame::Format_ARGB32 //_Premultiplied
-	); 
-	
+	);
+
 	// Size defaults to 640,480
 }
 
 void CameraThread::readFrame()
 {
 	QMutexLocker lock(&m_readMutex);
-	
+
 	QTime capTime = QTime::currentTime();
 	//qDebug() << "CameraThread::readFrame(): My Frame Count # "<<m_frameCount ++;
 	m_frameCount ++;
-	
+
+	#if defined(Q_OS_LINUX)
 	if(m_v4l2 && m_rawFrames)
 	{
 		VideoFrame frame = m_v4l2->readFrame();
@@ -693,7 +697,7 @@ void CameraThread::readFrame()
 		{
 			frame.captureTime = capTime;
 			frame.holdTime = 1000/m_fps;
-			
+
 			// We can do deinterlacing on these frames because SimpleV4L2 provides raw ARGB32 frames
 			//m_deinterlace = false;
 			if(m_deinterlace)
@@ -705,17 +709,17 @@ void CameraThread::readFrame()
 				deinterlacedFrame.bufferType   = VideoFrame::BUFFER_BYTEARRAY;
 				deinterlacedFrame.byteArray = QByteArray(); // give us a new array, dont mudge the original image
 				deinterlacedFrame.byteArray.resize(frame.byteArray.size());
-				
+
 				bool bottomFrame  = m_frameCount % 2 == 1;
 				const char * src  = frame.byteArray.constData();
 				char * dest       = deinterlacedFrame.byteArray.data();
 				const int h       = frame.size.height();
 				const int stride  = frame.size.width()*4; // I can  cheat because I know SimpleV4L2 sends ARGB32 frames, with 4 bytes per pixel
-				
-				bobDeinterlace( (uchar*)src,  (uchar*)src +h*stride, 
+
+				bobDeinterlace( (uchar*)src,  (uchar*)src +h*stride,
 						(uchar*)dest, (uchar*)dest+h*stride,
 						h, stride, bottomFrame);
-				
+
 				enqueue(deinterlacedFrame);
 			}
 			else
@@ -725,7 +729,8 @@ void CameraThread::readFrame()
 		}
 		return;
 	}
-	
+	#endif
+
 	if(!m_inited)
 	{
 		//emit newImage(QImage());
@@ -734,9 +739,9 @@ void CameraThread::readFrame()
 	}
 	AVPacket pkt1, *packet = &pkt1;
 	double pts;
-	
-	
-	
+
+
+
 	int frame_finished = 0;
 	while(!frame_finished && !m_killed)
 	{
@@ -746,7 +751,7 @@ void CameraThread::readFrame()
 			if(packet->stream_index == m_video_stream)
 			{
 				//global_video_pkt_pts = packet->pts;
-				
+
 //				mutex.lock();
 				avcodec_decode_video(m_video_codec_context, m_av_frame, &frame_finished, packet->data, packet->size);
 // 				mutex.unlock();
@@ -799,32 +804,32 @@ void CameraThread::readFrame()
 							//mutex.unlock();
 							//printf("decode(): created m_sws_context\n");
 						}
-			
+
 						sws_scale(m_sws_context,
 							m_av_frame->data,
 							m_av_frame->linesize, 0,
 							m_video_codec_context->height,
 							m_av_rgb_frame->data,
 							m_av_rgb_frame->linesize);
-	
+
 						if(m_deinterlace)
 						{
 							QImage frame(m_video_codec_context->width,
 								m_video_codec_context->height,
 								QImage::Format_ARGB32);//_Premultiplied);
 							// I can cheat and claim premul because I know the video (should) never have alpha
-							
+
 							bool bottomFrame = m_frameCount % 2 == 1;
-							
+
 							uchar * dest = frame.scanLine(0); // use scanLine() instead of bits() to prevent deep copy
 							uchar * src  = (uchar*)m_av_rgb_frame->data[0];
 							const int h  = m_video_codec_context->height;
 							const int stride = frame.bytesPerLine();
-							
-							bobDeinterlace( src,  src +h*stride, 
+
+							bobDeinterlace( src,  src +h*stride,
 									dest, dest+h*stride,
 									h, stride, bottomFrame);
-								
+
 							enqueue(VideoFrame(frame,1000/m_fps,capTime));
 						}
 						else
@@ -834,14 +839,14 @@ void CameraThread::readFrame()
 								m_video_codec_context->height,
 								//QImage::Format_RGB16);
 								QImage::Format_ARGB32); //_Premultiplied);
-								
+
 							enqueue(VideoFrame(frame,1000/m_fps,capTime));
 						}
 					}
-					
+
 					av_free_packet(packet);
-					
-					
+
+
 				}
 
 			}

@@ -23,10 +23,17 @@ SOURCES       = GLWidget.cpp \
 		../livemix/VideoThread.cpp \
 		../livemix/VideoFrame.cpp \
 		../livemix/CameraThread.cpp \
-		../livemix/SimpleV4L2.cpp \
 		StaticVideoSource.cpp \
 		GLDrawable.cpp \
 		GLVideoDrawable.cpp
+
+unix: {
+	HEADERS += \
+		../livemix/SimpleV4L2.h
+	SOURCES += \
+		../livemix/SimpleV4L2.cpp
+}
+
 
 RESOURCES     = glvidtex.qrc
 QT           += opengl multimedia

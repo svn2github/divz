@@ -14,13 +14,18 @@ HEADERS += NativeViewerCamera.h \
 	   #../camera_test/CameraViewerWidget.h
 		../livemix/VideoWidget.h \
 		../livemix/CameraThread.h \
-		../livemix/VideoSource.h \
-		../livemix/SimpleV4L2.h
+		../livemix/VideoSource.h 
 SOURCES += NativeViewerCamera.cpp \ 
 	   CameraSlideGroup.cpp \
 	   CameraSlideGroupFactory.cpp \
 #	   ../camera_test/CameraViewerWidget.cpp
 		../livemix/VideoWidget.cpp \
 		../livemix/CameraThread.cpp \
-		../livemix/VideoSource.cpp \
+		../livemix/VideoSource.cpp 
+
+unix: {
+	HEADERS += \
+		../livemix/SimpleV4L2.h
+	SOURCES += \
 		../livemix/SimpleV4L2.cpp
+}
