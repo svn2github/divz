@@ -352,6 +352,7 @@ void GLVideoDrawable::setBrightness(int brightness)
 	m_displayOpts.brightness = brightness;
 	
 	m_colorsDirty = true;
+	updateGL();
 }
 
 /*!
@@ -368,6 +369,7 @@ void GLVideoDrawable::setContrast(int contrast)
 	m_displayOpts.contrast = contrast;
 	
 	m_colorsDirty = true;
+	updateGL();
 }
 
 /*!
@@ -384,6 +386,7 @@ void GLVideoDrawable::setHue(int hue)
 	m_displayOpts.hue = hue;
 	
 	m_colorsDirty = true;
+	updateGL();
 }
 
 /*!
@@ -400,6 +403,7 @@ void GLVideoDrawable::setSaturation(int saturation)
 	m_displayOpts.saturation = saturation;
 	
 	m_colorsDirty = true;
+	updateGL();
 }
 
 void GLVideoDrawable::updateColors(int brightness, int contrast, int hue, int saturation)
@@ -730,6 +734,7 @@ void GLVideoDrawable::setDisplayOptions(const VideoDisplayOptions& opts)
 	m_displayOpts = opts;
 	m_colorsDirty = true;
 	emit displayOptionsChanged(opts);
+	updateGL();
 }
 	
 void GLVideoDrawable::paintGL()
