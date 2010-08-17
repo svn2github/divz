@@ -931,7 +931,8 @@ VideoDisplayOptionWidget::VideoDisplayOptionWidget(const VideoDisplayOptions& op
 	
 void VideoDisplayOptionWidget::initUI()
 {
-	setWindowTitle("Video Display Options");
+	QString name(m_drawable ? m_drawable->objectName() : "");
+	setWindowTitle(QString("%1Display Options").arg(name.isEmpty() ? "" : name + " - "));
 	
 	QGridLayout *layout = new QGridLayout(this);
 	m_optsOriginal = m_opts;

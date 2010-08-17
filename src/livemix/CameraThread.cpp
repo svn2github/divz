@@ -153,6 +153,7 @@ CameraThread::CameraThread(const QString& camera, QObject *parent)
 	, m_frameCount(0)
 	, m_deinterlace(false)
 	, m_v4l2(0)
+	, m_initStarted(false)
 {
 	m_time_base_rational.num = 1;
 	m_time_base_rational.den = AV_TIME_BASE;
@@ -393,6 +394,9 @@ bool CameraThread::setInput(const QString& name)
 
 int CameraThread::initCamera()
 {
+	m_initStarted = true;
+	m_inited = false;
+	
 	#if defined(Q_OS_LINUX)
 	if(m_rawFrames)
 	{
@@ -640,6 +644,8 @@ void CameraThread::freeResources()
 
 void CameraThread::enableRawFrames(bool enable)
 {
+	QMutexLocker lock(&m_readMutex);
+	
 	bool old = m_rawFrames;
 	m_rawFrames = enable;
 
@@ -650,8 +656,12 @@ void CameraThread::enableRawFrames(bool enable)
 	{
 		// switch from raw V4L2 to LibAV* (or visa versa based on m_rawFrames, since SimpleV4L2 only outputs raw ARGB32)
 		//qDebug() << "CameraThread::enableRawFrames: flag changed, status: "<<m_rawFrames;
-		QMutexLocker lock(&m_readMutex);
-
+		while(m_initStarted && !m_inited)
+		{
+			qDebug() << "CameraThread::enableRawFrames: Still init'ing camera, waiting for initCamera() to finish before swithing raw frame mode.";
+			usleep(100 * 1000);
+		}
+		
 		freeResources();
 		initCamera();
 	}

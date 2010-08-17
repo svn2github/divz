@@ -30,6 +30,7 @@ protected:
 private:
 	QImage m_image;
 	VideoFrame m_frame;
+	bool m_frameUpdated;
 };
 
 #endif

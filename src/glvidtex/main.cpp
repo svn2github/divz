@@ -6,49 +6,53 @@
 
 #include "GLVideoDrawable.h"
 #include "StaticVideoSource.h"
+#include "TextVideoSource.h"
 
 #ifdef HAS_QT_VIDEO_SOURCE
 #include "QtVideoSource.h"
 #endif
 
-GLDrawable * addCamera(GLWidget *glw)
+GLDrawable * addCamera(GLWidget *glw, QString camera = "")
 {
 	#ifdef Q_OS_WIN
 		QString defaultCamera = "vfwcap://0";
 	#else
-		QString defaultCamera = "/dev/video1";
+		QString defaultCamera = "/dev/video0";
 	#endif
 
-	CameraThread *source = CameraThread::threadForCamera(defaultCamera);
+	CameraThread *source = CameraThread::threadForCamera(camera.isEmpty() ? defaultCamera : camera);
 	if(source)
 	{
 		source->setFps(30);
-		//usleep(250 * 1000); // This causes a race condition to manifist itself reliably, which causes a crash every time instead of intermitently. 
+		usleep(750 * 1000); // This causes a race condition to manifist itself reliably, which causes a crash every time instead of intermitently. 
 		// With the crash reproducable, I can now work to fix it.
 		source->enableRawFrames(true);
-		source->setDeinterlace(true);
+		//source->setDeinterlace(true);
 		
 		GLVideoDrawable *drawable = new GLVideoDrawable(glw);
 		drawable->setVideoSource(source);
 		drawable->setRect(glw->viewport());
 		glw->addDrawable(drawable);
 		drawable->addShowAnimation(GLDrawable::AnimFade);
-		drawable->addShowAnimation(GLDrawable::AnimZoom,2500).curve = QEasingCurve::OutElastic;
+		//drawable->addShowAnimation(GLDrawable::AnimZoom,2500).curve = QEasingCurve::OutElastic;
 		
 		//drawable->addHideAnimation(GLDrawable::AnimSlideBottom,1000);
-		drawable->addHideAnimation(GLDrawable::AnimFade).startDelay = 500;
-		drawable->addHideAnimation(GLDrawable::AnimZoom,1000);
+		drawable->addHideAnimation(GLDrawable::AnimFade);
+		//drawable->addHideAnimation(GLDrawable::AnimFade).startDelay = 500;
+		//drawable->addHideAnimation(GLDrawable::AnimZoom,1000);
 		drawable->show();
-		drawable->setObjectName(qPrintable(defaultCamera));
+		drawable->setObjectName(qPrintable(camera.isEmpty() ? defaultCamera : camera));
 		
 // 		QTimer *timer = new QTimer;
 // 		QObject::connect(timer, SIGNAL(timeout()), drawable, SLOT(hide()));
 // 		timer->start(5000);
 // 		timer->setSingleShot(true);
 // 		
-		VideoDisplayOptionWidget *opts = new VideoDisplayOptionWidget(drawable);
-		opts->adjustSize();
-		opts->show();
+
+
+// 		VideoDisplayOptionWidget *opts = new VideoDisplayOptionWidget(drawable);
+// 		opts->adjustSize();
+// 		opts->show();
 		return drawable;
 	}
 
@@ -58,7 +62,8 @@ GLDrawable * addCamera(GLWidget *glw)
 GLDrawable * addQtSource(GLWidget * glw)
 {
 	#ifdef HAS_QT_VIDEO_SOURCE
-	QString testFile = "/opt/qt-mobility-opensource-src-1.0.1/examples/player/dsc_7721.avi";
+	//QString testFile = "/opt/qt-mobility-opensource-src-1.0.1/examples/player/dsc_7721.avi";
+	QString testFile = "dsc_0259.avi";
 	
 	QtVideoSource *source = new QtVideoSource();
 	source->setFile(testFile);
@@ -77,11 +82,11 @@ GLDrawable * addQtSource(GLWidget * glw)
 	drawable->show();
 	drawable->setObjectName("QtVideoSource");
 	
-	QTimer *timer = new QTimer;
-	QObject::connect(timer, SIGNAL(timeout()), drawable, SLOT(hide()));
-	timer->start(5000);
-	timer->setSingleShot(true);
-	
+// 	QTimer *timer = new QTimer;
+// 	QObject::connect(timer, SIGNAL(timeout()), drawable, SLOT(hide()));
+// 	timer->start(5000);
+// 	timer->setSingleShot(true);
+// 	
 	return drawable;
 
 	#else
@@ -229,9 +234,56 @@ GLDrawable * addStaticSource(GLWidget * glw)
 // 	timer->start(8000);
 // 	timer->setSingleShot(true);
 	
-	VideoDisplayOptionWidget *opts = new VideoDisplayOptionWidget(drawable);
-	opts->adjustSize();
-	opts->show();
+// 	VideoDisplayOptionWidget *opts = new VideoDisplayOptionWidget(drawable);
+// 	opts->adjustSize();
+// 	opts->show();
+
+	glw->addDrawable(drawable);
+	
+	//drawable->show();
+	
+	return drawable;
+}
+
+
+
+GLDrawable * addTextOverlay(GLWidget * glw)
+{
+	// add text overlay frame
+	GLVideoDrawable *drawable = new GLVideoDrawable(glw);
+	
+	
+	TextVideoSource *source = new TextVideoSource();
+	source->start();
+	source->setHtml("<span style='font-size:100px'>LiveMix</span>");
+	source->changeFontSize(40);
+	QSize size = source->findNaturalSize();
+	source->setTextWidth(size.width());
+	//qDebug() << "New html: "<<source->html();
+	//source->setImage(QImage("/opt/qtsdk-2010.02/qt/examples/opengl/pbuffers/cubelogo.png"));
+	
+	drawable->setVideoSource(source);
+	//drawable->setRect(glw->viewport());
+	qDebug() << "Text Size: "<<size;
+	
+	drawable->setRect(QRectF(
+		qMax(glw->viewport().right()  - size.width()  , 50.0),
+		qMax(glw->viewport().bottom() - size.height() , 50.0),
+		size.width(),
+		size.height()));
+	drawable->setZIndex(1);
+	//drawable->setOpacity(0.5);
+	drawable->setObjectName("Text");
+	
+	drawable->addHideAnimation(GLDrawable::AnimFade);
+	//drawable->addShowAnimation(GLDrawable::AnimZoom,2500).curve = QEasingCurve::OutElastic;
+ 	
+ 	drawable->addHideAnimation(GLDrawable::AnimFade);
+ 	//drawable->addHideAnimation(GLDrawable::AnimZoom,1000);
+	
+// 	VideoDisplayOptionWidget *opts = new VideoDisplayOptionWidget(drawable);
+// 	opts->adjustSize();
+// 	opts->show();
 
 	glw->addDrawable(drawable);
 	
@@ -239,6 +291,7 @@ GLDrawable * addStaticSource(GLWidget * glw)
 	
 	return drawable;
 }
+
 
 QFormLayout * createToggleBox()
 {
@@ -278,22 +331,32 @@ int main(int argc, char *argv[])
 	GLWidget *glw = new GLWidget();
 		
 	QFormLayout * tb = createToggleBox();
-	
+	#undef HAS_QT_VIDEO_SOURCE
 	#ifdef HAS_QT_VIDEO_SOURCE
 		addButtons(tb, addQtSource(glw));
 	#else
 		GLDrawable *d;
-		d = addCamera(glw);
+/*		d = addCamera(glw,"/dev/video0");
 		if(d)
-			addButtons(tb,d); 
+		{*/
+			d = addCamera(glw,"/dev/video0");
+			if(d)
+				addButtons(tb,d); 
+			
+			d = addCamera(glw,"/dev/video1");
+			if(d)
+				addButtons(tb,d); 
+/*		}
 		else
+		*/
 			addButtons(tb,addStaticSource(glw));
 	#endif
 	
 	addButtons(tb,addSecondSource(glw));	
 	addButtons(tb,addVideoBug(glw));
+	addButtons(tb,addTextOverlay(glw));
 	
-	glw->resize(640,480);
+	glw->resize(glw->viewport().width(),glw->viewport().height());
 	
 	glw->show();
 	

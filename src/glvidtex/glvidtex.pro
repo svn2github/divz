@@ -15,7 +15,9 @@ HEADERS       = GLWidget.h \
 		../livemix/CameraThread.h \
 		StaticVideoSource.h \
 		GLDrawable.h \
-		GLVideoDrawable.h 
+		GLVideoDrawable.h \
+		../ImageFilters.h \
+		TextVideoSource.h
 		
 SOURCES       = GLWidget.cpp \
 		main.cpp \
@@ -25,7 +27,9 @@ SOURCES       = GLWidget.cpp \
 		../livemix/CameraThread.cpp \
 		StaticVideoSource.cpp \
 		GLDrawable.cpp \
-		GLVideoDrawable.cpp
+		GLVideoDrawable.cpp \
+		../ImageFilters.cpp \
+		TextVideoSource.cpp
 
 unix: {
 	HEADERS += \
