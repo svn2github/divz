@@ -46,7 +46,8 @@ void GLDrawable::hide()
 
 void GLDrawable::setVisible(bool flag)
 {
-	emit isVisible(flag);
+	if(flag)
+		emit isVisible(flag);
 	if(!m_animFinished)
 	{
 		foreach(QAutoDelPropertyAnimation *ani, m_runningAnimations)
@@ -68,6 +69,7 @@ void GLDrawable::startAnimations()
 {
 	if(m_animDirection)
 		m_isVisible = m_animDirection;
+
 	
 	m_animFinished = false;
 	
@@ -226,6 +228,9 @@ void GLDrawable::animationFinished()
 			}
 			qDeleteAll(m_finishedAnimations);
 			m_finishedAnimations.clear();
+			
+			if(!m_isVisible)
+				emit isVisible(m_isVisible);
 		}
 		
 	}

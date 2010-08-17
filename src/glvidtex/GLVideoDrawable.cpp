@@ -214,9 +214,10 @@ GLVideoDrawable::GLVideoDrawable(QObject *parent)
 	, m_source(0)
 	, m_frameCount(0)
 	, m_latencyAccum(0)
-	, m_debugFps(false)
+	, m_debugFps(true)
 	, m_aspectRatioMode(Qt::KeepAspectRatio)
 	, m_validShader(false)
+	, m_program(0)
 {
 	
 	m_imagePixelFormats
@@ -282,6 +283,8 @@ void GLVideoDrawable::frameReady()
 		
 	if(m_glInited)
 	{
+		glWidget()->makeCurrent();
+		
 		//m_frame.isValid() && 
 		if(m_frame.isRaw)
 		{
@@ -409,9 +412,9 @@ void GLVideoDrawable::setSaturation(int saturation)
 void GLVideoDrawable::updateColors(int brightness, int contrast, int hue, int saturation)
 {
 	const qreal b = brightness / 200.0;
-	const qreal c = contrast / 100.0 + 1.0;
+	const qreal c = contrast / 200.0 + 1.0;
 	const qreal h = hue / 200.0;
-	const qreal s = saturation / 100.0 + 1.0;
+	const qreal s = saturation / 200.0 + 1.0;
 	
 	const qreal cosH = qCos(M_PI * h);
 	const qreal sinH = qSin(M_PI * h);
@@ -541,6 +544,8 @@ void GLVideoDrawable::initGL()
 	glActiveTexture = (_glActiveTexture)glWidget()->context()->getProcAddress(QLatin1String("glActiveTexture"));
 	#endif
 	
+	m_program = new QGLShaderProgram(glWidget()->context(), this);
+	
 	m_glInited = true;
 	//qDebug() << "GLVideoDrawable::initGL(): "<<objectName();
 	setVideoFormat(m_videoFormat);
@@ -573,8 +578,8 @@ bool GLVideoDrawable::setVideoFormat(const VideoFormat& format)
  
  	if(!samePixelFormat)
  	{
- 		if(!m_program.shaders().isEmpty())
- 			m_program.removeAllShaders();
+ 		if(!m_program->shaders().isEmpty())
+ 			m_program->removeAllShaders();
  			
 		if (!fragmentProgram) 
 		{
@@ -582,27 +587,27 @@ bool GLVideoDrawable::setVideoFormat(const VideoFormat& format)
 			return false;
 		} 
 		else 
-		if (!m_program.addShaderFromSourceCode(QGLShader::Vertex, qt_glsl_vertexShaderProgram)) 
+		if (!m_program->addShaderFromSourceCode(QGLShader::Vertex, qt_glsl_vertexShaderProgram)) 
 		{
 			qWarning("GLWidget: Vertex shader compile error %s",
-				qPrintable(m_program.log()));
+				qPrintable(m_program->log()));
 			//error = QAbstractVideoSurface::ResourceError;
 			return false;
 			
 		} 
 		else 
-		if (!m_program.addShaderFromSourceCode(QGLShader::Fragment, fragmentProgram)) 
+		if (!m_program->addShaderFromSourceCode(QGLShader::Fragment, fragmentProgram)) 
 		{
-			qWarning("GLWidget: Shader compile error %s", qPrintable(m_program.log()));
+			qWarning("GLWidget: Shader compile error %s", qPrintable(m_program->log()));
 			//error = QAbstractVideoSurface::ResourceError;
-			m_program.removeAllShaders();
+			m_program->removeAllShaders();
 			return false;
 		} 
 		else 
-		if(!m_program.link()) 
+		if(!m_program->link()) 
 		{
-			qWarning("GLWidget: Shader link error %s", qPrintable(m_program.log()));
-			m_program.removeAllShaders();
+			qWarning("GLWidget: Shader link error %s", qPrintable(m_program->log()));
+			m_program->removeAllShaders();
 			return false;
 		} 
 		else 
@@ -831,17 +836,17 @@ void GLVideoDrawable::paintGL()
 		txRight, txTop
 	};
 	
-	m_program.bind();
+	m_program->bind();
 
-	m_program.enableAttributeArray("vertexCoordArray");
-	m_program.enableAttributeArray("textureCoordArray");
+	m_program->enableAttributeArray("vertexCoordArray");
+	m_program->enableAttributeArray("textureCoordArray");
 	
-	m_program.setAttributeArray("vertexCoordArray",  vertexCoordArray,  3);
-	m_program.setAttributeArray("textureCoordArray", textureCoordArray, 2);
+	m_program->setAttributeArray("vertexCoordArray",  vertexCoordArray,  3);
+	m_program->setAttributeArray("textureCoordArray", textureCoordArray, 2);
 	
-	m_program.setUniformValue("positionMatrix",      positionMatrix);
+	m_program->setUniformValue("positionMatrix",      positionMatrix);
 	
-	m_program.setUniformValue("alpha",               (GLfloat)opacity());
+	m_program->setUniformValue("alpha",               (GLfloat)opacity());
 
 	if (m_textureCount == 3) 
 	{
@@ -856,22 +861,22 @@ void GLVideoDrawable::paintGL()
 		
 		glActiveTexture(GL_TEXTURE0);
 	
-		m_program.setUniformValue("texY", 0);
-		m_program.setUniformValue("texU", 1);
-		m_program.setUniformValue("texV", 2);
+		m_program->setUniformValue("texY", 0);
+		m_program->setUniformValue("texU", 1);
+		m_program->setUniformValue("texV", 2);
 	} 
 	else 
 	{
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, m_textureIds[0]);
 	
-		m_program.setUniformValue("texRgb", 0);
+		m_program->setUniformValue("texRgb", 0);
 	}
-	m_program.setUniformValue("colorMatrix", m_colorMatrix);
+	m_program->setUniformValue("colorMatrix", m_colorMatrix);
 	
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
-	m_program.release();
+	m_program->release();
 	
 	
 	
@@ -1041,15 +1046,15 @@ void VideoDisplayOptionWidget::initUI()
 	layout->addWidget(new QLabel("Contrast:"),row,0);
 	slider = new QSlider;
 	slider->setOrientation(Qt::Horizontal);
-	slider->setMinimum(-50);
-	slider->setMaximum(50);
+	slider->setMinimum(-100);
+	slider->setMaximum(100);
 	slider->setValue(m_opts.contrast);
 	connect(slider, SIGNAL(valueChanged(int)), this, SLOT(cChanged(int)));
 	rowLayout->addWidget(slider);
 	// add spinBox
 	spinBox = new QSpinBox;
-	spinBox->setMinimum(-50);
-	spinBox->setMaximum(50);
+	spinBox->setMinimum(-100);
+	spinBox->setMaximum(100);
 	spinBox->setValue(m_opts.brightness);
 	connect(spinBox, SIGNAL(valueChanged(int)), slider, SLOT(setValue(int)));
 	connect(slider, SIGNAL(valueChanged(int)), spinBox, SLOT(setValue(int)));
@@ -1087,15 +1092,15 @@ void VideoDisplayOptionWidget::initUI()
 	layout->addWidget(new QLabel("Saturation:"),row,0);
 	slider = new QSlider;
 	slider->setOrientation(Qt::Horizontal);
-	slider->setMinimum(-50);
-	slider->setMaximum(50);
+	slider->setMinimum(-100);
+	slider->setMaximum(100);
 	slider->setValue(m_opts.saturation);
 	connect(slider, SIGNAL(valueChanged(int)), this, SLOT(sChanged(int)));
 	rowLayout->addWidget(slider);
 	// add spinBox
 	spinBox = new QSpinBox;
-	spinBox->setMinimum(-50);
-	spinBox->setMaximum(50);
+	spinBox->setMinimum(-100);
+	spinBox->setMaximum(100);
 	spinBox->setValue(m_opts.brightness);
 	connect(spinBox, SIGNAL(valueChanged(int)), slider, SLOT(setValue(int)));
 	connect(slider, SIGNAL(valueChanged(int)), spinBox, SLOT(setValue(int)));

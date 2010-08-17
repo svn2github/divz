@@ -161,7 +161,7 @@ private:
 	VideoFormat m_videoFormat;
 	bool m_glInited;
 	
-	QGLShaderProgram m_program;
+	QGLShaderProgram *m_program;
 	
 	QList<QVideoFrame::PixelFormat> m_imagePixelFormats;
 	QList<QVideoFrame::PixelFormat> m_rawPixelFormats;

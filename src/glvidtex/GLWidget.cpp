@@ -29,6 +29,8 @@ QSize GLWidget::sizeHint() const
 
 void GLWidget::initializeGL()
 {
+	//makeCurrent();
+	
 	glDisable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 	
@@ -50,6 +52,8 @@ void GLWidget::initializeGL()
 
 void GLWidget::paintGL()
 {
+	//makeCurrent();
+	
 	qglClearColor(Qt::black);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
@@ -66,12 +70,14 @@ void GLWidget::paintGL()
 	
 void GLWidget::addDrawable(GLDrawable *item)
 {
+	//makeCurrent();
+	
 	item->setGLWidget(this);
 	m_drawables << item;
 	connect(item, SIGNAL(zIndexChanged(double)), this, SLOT(zIndexChanged()));
 	if(m_glInited)
 	{
-		qDebug() << "GLWidget::addDrawable()";
+		//qDebug() << "GLWidget::addDrawable()";
 		item->initGL();
 	}
 	sortDrawables();
@@ -103,6 +109,8 @@ void GLWidget::sortDrawables()
 
 void GLWidget::resizeGL(int width, int height)
 {
+	//makeCurrent();
+	
 // 	int side = qMin(width, height);
 	//glViewport(0,0,width,height); //(width - side) / 2, (height - side) / 2, side, side);
 	glViewport(0,0,width,height); //(width - side) / 2, (height - side) / 2, side, side);

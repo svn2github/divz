@@ -168,7 +168,9 @@ CameraThread::CameraThread(const QString& camera, QObject *parent)
 
 void CameraThread::destroySource()
 {
+	#ifdef DEBUG
 	qDebug() << "CameraThread::destroySource(): "<<this;
+	#endif
 	QMutexLocker lock(&threadCacheMutex);
 	m_threadMap.remove(m_cameraFile);
 
@@ -191,7 +193,9 @@ CameraThread * CameraThread::threadForCamera(const QString& camera)
 	{
 		CameraThread *v = m_threadMap[camera];
 		v->m_refCount++;
+		#ifdef DEBUG
  		qDebug() << "CameraThread::threadForCamera(): "<<v<<": "<<camera<<": [CACHE HIT] +";
+ 		#endif
 		return v;
 	}
 	else
@@ -199,7 +203,9 @@ CameraThread * CameraThread::threadForCamera(const QString& camera)
 		CameraThread *v = new CameraThread(camera);
 		m_threadMap[camera] = v;
 		v->m_refCount=1;
+ 		#ifdef DEBUG
  		qDebug() << "CameraThread::threadForCamera(): "<<v<<": "<<camera<<": [CACHE MISS] -";
+ 		#endif
 		v->start(QThread::HighPriority);
 
 		return v;
@@ -263,7 +269,7 @@ QStringList CameraThread::enumerateDevices(bool forceReenum)
 		if(av_open_input_file(&formatCtx, qPrintable(file), inFmt, 0, &formatParams) != 0)
 		//if(av_open_input_file(&m_av_format_context, "1", inFmt, 0, NULL) != 0)
 		{
-			qDebug() << "[WARN] CameraThread::load(): av_open_input_file() failed, file:"<<file;
+			//qDebug() << "[WARN] CameraThread::load(): av_open_input_file() failed, file:"<<file;
 			break;
 		}
 		else
@@ -273,7 +279,9 @@ QStringList CameraThread::enumerateDevices(bool forceReenum)
 		}
 	}
 
+	#ifdef DEBUG
 	qDebug() << "enumerateDevices: Found: "<<list;
+	#endif
 
 	m_enumeratedDevices = list;
 	return list;
@@ -438,7 +446,9 @@ int CameraThread::initCamera()
 	QString fmt = "video4linux";
 	#endif
 
+	#ifdef DEBUG
 	qDebug() << "[DEBUG] CameraThread::load(): fmt:"<<fmt<<", filetmp:"<<fileTmp;
+	#endif
 
 	inFmt = av_find_input_format(qPrintable(fmt));
 	if( !inFmt )
@@ -467,9 +477,10 @@ int CameraThread::initCamera()
 	}
 
 	//dump_format(m_av_format_context, 0, qPrintable(m_cameraFile), 0);
+	#ifdef DEBUG
 	qDebug() << "[DEBUG] dump_format():";
 	dump_format(m_av_format_context, 0, qPrintable(fileTmp), false);
-
+	#endif
 
 	uint i;
 
@@ -524,7 +535,9 @@ int CameraThread::initCamera()
 		return false;
 	}
 
+	#ifdef DEBUG
 	qDebug() << "[DEBUG] codec context size:"<<m_video_codec_context->width<<"x"<<m_video_codec_context->height;
+	#endif
 
 	// Determine required buffer size and allocate buffer
 	int num_bytes = avpicture_get_size(RAW_PIX_FMT, m_video_codec_context->width, m_video_codec_context->height);

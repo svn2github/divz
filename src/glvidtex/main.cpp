@@ -50,9 +50,9 @@ GLDrawable * addCamera(GLWidget *glw, QString camera = "")
 // 		
 
 
-// 		VideoDisplayOptionWidget *opts = new VideoDisplayOptionWidget(drawable);
-// 		opts->adjustSize();
-// 		opts->show();
+		VideoDisplayOptionWidget *opts = new VideoDisplayOptionWidget(drawable);
+		opts->adjustSize();
+		opts->show();
 		return drawable;
 	}
 
@@ -255,7 +255,7 @@ GLDrawable * addTextOverlay(GLWidget * glw)
 	
 	TextVideoSource *source = new TextVideoSource();
 	source->start();
-	source->setHtml("<span style='font-size:100px'>LiveMix</span>");
+	source->setHtml("<img src='me2.jpg'><b>TextVideoSource</b>");
 	source->changeFontSize(40);
 	QSize size = source->findNaturalSize();
 	source->setTextWidth(size.width());
@@ -264,11 +264,11 @@ GLDrawable * addTextOverlay(GLWidget * glw)
 	
 	drawable->setVideoSource(source);
 	//drawable->setRect(glw->viewport());
-	qDebug() << "Text Size: "<<size;
+	//qDebug() << "Text Size: "<<size;
 	
 	drawable->setRect(QRectF(
-		qMax(glw->viewport().right()  - size.width()  , 50.0),
-		qMax(glw->viewport().bottom() - size.height() , 50.0),
+		qMax(glw->viewport().right()  - size.width()  , 0.0),
+		qMax(glw->viewport().bottom() - size.height() , 0.0),
 		size.width(),
 		size.height()));
 	drawable->setZIndex(1);
@@ -276,10 +276,10 @@ GLDrawable * addTextOverlay(GLWidget * glw)
 	drawable->setObjectName("Text");
 	
 	drawable->addShowAnimation(GLDrawable::AnimFade);
-	//drawable->addShowAnimation(GLDrawable::AnimZoom,2500).curve = QEasingCurve::OutElastic;
+	drawable->addShowAnimation(GLDrawable::AnimSlideTop,2500).curve = QEasingCurve::OutElastic;
  	
  	drawable->addHideAnimation(GLDrawable::AnimFade);
- 	//drawable->addHideAnimation(GLDrawable::AnimZoom,1000);
+ 	drawable->addHideAnimation(GLDrawable::AnimZoom);
 	
 // 	VideoDisplayOptionWidget *opts = new VideoDisplayOptionWidget(drawable);
 // 	opts->adjustSize();
@@ -339,9 +339,9 @@ int main(int argc, char *argv[])
 /*		d = addCamera(glw,"/dev/video0");
 		if(d)
 		{*/
-// 			d = addCamera(glw,"/dev/video0");
-// 			if(d)
-// 				addButtons(tb,d); 
+			d = addCamera(glw,"/dev/video0");
+			if(d)
+				addButtons(tb,d); 
 			
 			d = addCamera(glw,"/dev/video1");
 			if(d)

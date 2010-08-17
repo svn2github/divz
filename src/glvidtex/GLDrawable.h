@@ -93,7 +93,7 @@ public slots:
 	void show();
 	void hide();
 	void setVisible(bool flag);
-
+	
 signals:
 	void zIndexChanged(double newZIndex);
 	void drawableResized(const QSize& newSize);

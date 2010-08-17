@@ -520,9 +520,11 @@ void SimpleV4L2::initDevice()
 		break;
 	}
 	
-	printf("init_device: image size: %d x %d, bytes: %d\n",
+	#ifdef DEBUG
+	printf("SimpleV4L2::initDevice(): image size: %d x %d, bytes: %d\n",
 		fmt.fmt.pix.width,fmt.fmt.pix.height,
 		fmt.fmt.pix.sizeimage);
+	#endif
 		
 	m_imageSize = QSize(fmt.fmt.pix.width,fmt.fmt.pix.height);
 	
@@ -592,7 +594,9 @@ QStringList SimpleV4L2::inputs()
 		// append new VideoInput
 		//VideoInput input;
 		inputs << QString::fromLocal8Bit((const char*)videoInput.name);
+		#ifdef DEBUG
 		qDebug() << "SimpleV4L2::inputs: Input " << iNumber << ": " << inputs.last();
+		#endif
 	}
 	m_inputs = inputs;
 	return inputs;
@@ -673,16 +677,15 @@ QList<SimpleV4L2::StandardInfo> SimpleV4L2::standards()
 		standard.index = 0;
 		while (-1 != xioctl(m_fd, VIDIOC_ENUMSTD, &standard)) 
 		{
-			//qDebug() << "SSS" << standard.name;
 			if (standard.id & input.std)
 			{
-				//qDebug() << "VideoDevice::detectSignalStandards:" << /*signalStandardName(standard.id) <<*/ "(" << standard.id << ")";
-				
 				SimpleV4L2::StandardInfo info;
 				info.name = QString::fromLocal8Bit((const char*)standard.name);
 				info.id = standard.id;
 				
+				#ifdef DEBUG
 				qDebug() << "SimpleV4L2::standards: Standard "<<info.name<<" supported";
+				#endif
 				list << info;
 			}
 			standard.index++;

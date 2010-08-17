@@ -1,18 +1,126 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include <QtGui>
 #include <QMainWindow>
 
-class MdiChild;
+#include "../glvidtex/GLDrawable.h"
+#include "../glvidtex/GLVideoDrawable.h"
+#include "../glvidtex/GLWidget.h"
+#include "CameraThread.h"
+
+class LiveLayer;
+class LayerControlWidget : public QWidget 
+{
+	Q_OBJECT
+public:
+	LayerControlWidget(LiveLayer*);
+	virtual ~LayerControlWidget();
+	
+	LiveLayer *layer() { return m_layer; }
+	
+protected:
+	virtual void setupUI() = 0;
+	
+private:
+	LiveLayer *m_layer;
+};
+
+class LiveLayer : public QObject
+{
+public:
+	LiveLayer(QObject *parent=0);
+	virtual ~LiveLayer();
+	
+	GLDrawable * drawable() { return m_drawable; }
+	
+	LayerControlWidget *controlWidget() { return m_controlWidget; }
+	
+protected:
+	virtual void setupDrawable() = 0;
+	
+	GLDrawable * m_drawable;
+	LayerControlWidget *m_controlWidget; 
+};
+
+class LiveScene : public QObject
+{
+	Q_OBJECT
+public:
+	LiveScene(QObject *parent=0);
+	~LiveScene();
+	
+	QList<LayerControlWidget*> controlWidgets();
+	QList<LiveLayer*> layerList() { return m_layers; }
+	void addLayer(LiveLayer*);
+	void removeLayer(LiveLayer*);
+	
+	void attachGLWidget(GLWidget*);
+	void detachGLWidget();
+	GLWidget *currentGLWidget() { return m_glWidget; }
+	
+public slots:
+	void layerAdded(LiveLayer*);
+	void layerRemoved(LiveLayer*);
+
+private:
+	GLWidget *m_glWidget;
+	QList<LiveLayer*> m_layers;
+	
+};
+
+///////////////////////
+
+class VideoInputControlWidget : public LayerControlWidget
+{
+	Q_OBJECT
+public:
+	VideoInputControlWidget(LiveLayer *);
+	~VideoInputControlWidget();
+	
+	bool deinterlace() { return m_deinterlace; }
+	
+public slots:
+	void setDeinterlace(bool flag);
+
+protected slots:
+	void deviceBoxChanged(int);
+
+protected:
+	virtual void setupUI();
+	
+private:
+	QComboBox *m_deviceBox;
+	QStringList m_cameras;
+	bool m_deinterlace;
+};
+
+class LiveVideoInputLayer : public LiveLayer
+{
+	Q_OBJECT
+public:
+	LiveVideoInputLayer(QObject *parent=0);
+	~LiveVideoInputLayer();
+	
+protected:
+	virtual void setupDrawable();
+	
+	friend class VideoInputControlWidget;
+	
+	void setCamera(CameraThread*);
+	CameraThread *camera() { return m_camera; }
+	GLVideoDrawable *videoDrawable() { return m_videoDrawable; }
+	
+private:
+	
+	GLVideoDrawable *m_videoDrawable;
+	CameraThread *m_camera;
+};
+
+///////////////////////
 
 class QAction;
 class QMenu;
-class QMdiArea;
-class QMdiSubWindow;
-class QSignalMapper;
-
-class MdiPreviewWidget;
-class MdiVideoChild;
 
 class MainWindow : public QMainWindow
 {
@@ -21,33 +129,13 @@ class MainWindow : public QMainWindow
 public:
 	MainWindow();
 
-signals:
-	void videoChildAdded(MdiVideoChild*);
 
 protected:
 	void closeEvent(QCloseEvent *event);
 
 private slots:
-	void newFile();
-	void open();
-	void save();
-	void saveAs();
-	void cut();
-	void copy();
-	void paste();
 	void about();
-	void updateMenus();
-	void updateWindowMenu();
-	void addNewWindow(QWidget *window);
-	void setActiveSubWindow(QWidget *window);
 	
-	void newOutput();
-	void newCamera();
-	void newVideo();
-	void newMjpeg();
-	void newDViz();
-	
-	void mdiChildClicked();
 
 private:
 	void createActions();
@@ -56,43 +144,32 @@ private:
 	void createStatusBar();
 	void readSettings();
 	void writeSettings();
-	MdiChild *activeMdiChild();
-	QMdiSubWindow *findMdiChild(const QString &fileName);
 	
-	QMdiArea *mdiArea;
-	QSignalMapper *windowMapper;
 	
-	QMenu *fileMenu;
-	QMenu *editMenu;
-	QMenu *windowMenu;
-	QMenu *helpMenu;
-	QToolBar *fileToolBar;
-	QToolBar *editToolBar;
-	QAction *newAct;
-	QAction *openAct;
-	QAction *saveAct;
-	QAction *saveAsAct;
-	QAction *exitAct;
-	QAction *cutAct;
-	QAction *copyAct;
-	QAction *pasteAct;
-	QAction *closeAct;
-	QAction *closeAllAct;
-	QAction *tileAct;
-	QAction *cascadeAct;
-	QAction *nextAct;
-	QAction *previousAct;
-	QAction *separatorAct;
-	QAction *aboutAct;
-	QAction *aboutQtAct;
+	QMenu *m_fileMenu;
+	QMenu *m_editMenu;
+	QMenu *m_helpMenu;
+	QToolBar *m_fileToolBar;
+	QToolBar *m_editToolBar;
+	QAction *m_exitAct;
+	QAction *m_aboutAct;
+	QAction *m_aboutQtAct;
 	
-	QAction * m_actNewCamera;
-	QAction * m_actNewVideo;
-	QAction * m_actNewMjpeg;
-	QAction * m_actNewOutput;
-	QAction * m_actNewDViz;
 	
-	QList<MdiPreviewWidget*> m_previewWidgets;
+	QSplitter *m_mainSplitter;
+	QWidget *m_leftPanel;
+	QWidget *m_centerPanel;
+	QWidget *m_rightPanel;
+	
+	
+	QList<LiveScene*> m_scenes;
+	GLWidget *m_mainViewer;
+	GLWidget *m_layerViewer;
+	GLWidget *m_mainOutput;
+	
+	QScrollArea *m_controlArea;	
+	QWidget *m_controlBase;
+	
 	
 };
 
