@@ -11,7 +11,7 @@ TextVideoSource::TextVideoSource(QObject *parent)
 	, m_fillEnabled(true)
 	, m_fillBrush(Qt::white)
 	, m_shadowEnabled(true)
-	, m_shadowBlurRadius(10)
+	, m_shadowBlurRadius(16)
 	, m_shadowOffsetX(3)
 	, m_shadowOffsetY(3)
 	, m_frameChanged(false)
@@ -32,8 +32,8 @@ void TextVideoSource::setImage(const QImage& img)
 {
 	m_image = img.convertToFormat(QImage::Format_ARGB32);
 	m_frame = VideoFrame(m_image,1000/30);
-	enqueue(m_frame);
-	emit frameReady();
+	//enqueue(m_frame);
+	//emit frameReady();
 	m_frameChanged = true;
 }
 
@@ -138,12 +138,12 @@ int TextVideoSource::fitToSize(const QSize& size, int minimumFontSize, int maxim
 		int maxCount = 100; 	// max iterations of the search loop
 		bool done = false;
 		
-		int lastGoodSize = ptSize;
+		double lastGoodSize = ptSize;
 		QString lastGoodHtml = html();
 		
 		QTextDocument doc;
 		
-		int heightTmp;
+		qreal heightTmp;
 		
 		doc.setTextWidth(width);
 		if (Qt::mightBeRichText(html()))
@@ -235,7 +235,7 @@ int TextVideoSource::fitToSize(const QSize& size, int minimumFontSize, int maxim
 		static_autoTextSizeCache.insert(sizeKey, new double(lastGoodSize),1);
 	}
 	
-	return boxHeight;
+	return (int)boxHeight;
 	
 }
 
@@ -351,9 +351,10 @@ void TextVideoSource::update()
 	QSize sumSize = (docSize + shadowSize).toSize();
 	//qDebug() << "TextVideoSource::update(): textWidth: "<<textWidth<<", shadowSize:"<<shadowSize<<", docSize:"<<docSize<<", sumSize:"<<sumSize;
 	QImage cache(sumSize,QImage::Format_ARGB32_Premultiplied);
-
+	memset(cache.scanLine(0),0,cache.byteCount());
+	
 	QPainter textPainter(&cache);
-	textPainter.fillRect(cache.rect(),Qt::transparent);
+	//textPainter.fillRect(cache.rect(),Qt::transparent);
 	
 	QAbstractTextDocumentLayout::PaintContext pCtx;
 
@@ -372,19 +373,18 @@ void TextVideoSource::update()
 		else
 		{
 			double radius = shadowBlurRadius();
-			double radiusSquared = radius*radius;
 			
 			// create temporary pixmap to hold a copy of the text
-			double blurSize = (int)(radiusSquared*2);
-			QSizeF shadowSize(blurSize,blurSize);
-			QImage tmpImage((doc.size()+shadowSize).toSize(),QImage::Format_ARGB32);
+			QSizeF blurSize = ImageFilters::blurredSizeFor(doc.size(), (int)radius);
+			//qDebug() << "Blur size:"<<blurSize<<", doc:"<<doc.size()<<", radius:"<<radius;
+			QImage tmpImage(blurSize.toSize(),QImage::Format_ARGB32_Premultiplied);
+			memset(tmpImage.scanLine(0),0,tmpImage.byteCount());
 			
 			// render the text
 			QPainter tmpPainter(&tmpImage);
-			tmpPainter.fillRect(tmpImage.rect(),Qt::transparent);
 			
 			tmpPainter.save();
-			tmpPainter.translate(radiusSquared, radiusSquared);
+			tmpPainter.translate(radius, radius);
 			doc.documentLayout()->draw(&tmpPainter, pCtx);
 			tmpPainter.restore();
 			
@@ -396,13 +396,13 @@ void TextVideoSource::update()
 			tmpPainter.end();
 
 			// blur the colored text
-			QImage  blurredImage   = ImageFilters::blurred(tmpImage, rect, (int)radius);
+			ImageFilters::blurImage(tmpImage, (int)radius);
 			
 			// render the blurred text at an offset into the cache
 			textPainter.save();
-			textPainter.translate(shadowOffsetX() - radiusSquared,
-					      shadowOffsetY() - radiusSquared);
-			textPainter.drawImage(0, 0, blurredImage.copy(blurredImage.rect()));
+			textPainter.translate(shadowOffsetX() - radius,
+					      shadowOffsetY() - radius);
+			textPainter.drawImage(0, 0, tmpImage);
 			textPainter.restore();
 		}
 	}

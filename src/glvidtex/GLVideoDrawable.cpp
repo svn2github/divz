@@ -214,7 +214,7 @@ GLVideoDrawable::GLVideoDrawable(QObject *parent)
 	, m_source(0)
 	, m_frameCount(0)
 	, m_latencyAccum(0)
-	, m_debugFps(true)
+	, m_debugFps(false)
 	, m_aspectRatioMode(Qt::KeepAspectRatio)
 	, m_validShader(false)
 {

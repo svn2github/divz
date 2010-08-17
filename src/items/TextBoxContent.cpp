@@ -411,7 +411,7 @@ QString TextBoxContent::cacheKey(AbstractVisualItem *abstract_model)
 	QVariant var = model->property("$tb.cacheKeyRev");
 	int keyRev = var.isValid() ? var.toInt() : -1;
 	
-	if(key.isEmpty() || keyRev != model->revision())
+	if(key.isEmpty() || (uint)keyRev != (uint)model->revision())
 	{
 		QByteArray array;
 		QDataStream list(&array, QIODevice::WriteOnly);
@@ -587,6 +587,7 @@ void TextBoxWarmingThread::run()
 			
 	QSizeF shadowSize = model->shadowEnabled() ? QSizeF(model->shadowOffsetX(),model->shadowOffsetY()) : QSizeF(0,0);
 	QImage *cache = new QImage((model->contentsRect().size()+shadowSize).toSize(),QImage::Format_ARGB32_Premultiplied);
+	memset(cache->scanLine(0),0,cache->byteCount());
 
 	QPainter textPainter(cache);
 	textPainter.fillRect(cache->rect(),Qt::transparent);
@@ -608,20 +609,56 @@ void TextBoxWarmingThread::run()
 		}
 		else
 		{
+// 			double radius = model->shadowBlurRadius();
+// 			double radiusSquared = radius*radius;
+// 			
+// 			// create temporary pixmap to hold a copy of the text
+// 			double blurSize = (int)(radiusSquared*2);
+// 			QSize shadowSize(blurSize,blurSize);
+// 			QImage tmpImage((model->contentsRect().size()+shadowSize).toSize(),QImage::Format_ARGB32);
+// 			memset(tmpImage.scanLine(0),0,tmpImage.byteCount());
+// 			
+// 			// render the text
+// 			QPainter tmpPainter(&tmpImage);
+// 			tmpPainter.fillRect(tmpImage.rect(),Qt::transparent);
+// 			
+// 			tmpPainter.save();
+// 			tmpPainter.translate(radiusSquared, radiusSquared);
+// 			doc.documentLayout()->draw(&tmpPainter, pCtx);
+// 			tmpPainter.restore();
+// 			
+// 			// blacken the text by applying a color to the copy using a QPainter::CompositionMode_DestinationIn operation. 
+// 			// This produces a homogeneously-colored pixmap.
+// 			QRect rect = tmpImage.rect();
+// 			tmpPainter.setCompositionMode(QPainter::CompositionMode_SourceIn);
+// 			tmpPainter.fillRect(rect, model->shadowBrush().color());
+// 			tmpPainter.end();
+// 
+// 			// blur the colored text
+// 			QImage  blurredImage   = ImageFilters::blurred(tmpImage, rect, (int)radius);
+// 			
+// 			// render the blurred text at an offset into the cache
+// 			textPainter.save();
+// 			textPainter.translate(model->shadowOffsetX() - radiusSquared,
+// 					model->shadowOffsetY() - radiusSquared);
+// 			textPainter.drawImage(0, 0, blurredImage.copy(blurredImage.rect()));
+// 			textPainter.restore();
+			
+			
+			// New method of rendering shadows
 			double radius = model->shadowBlurRadius();
-			double radiusSquared = radius*radius;
 			
 			// create temporary pixmap to hold a copy of the text
-			double blurSize = (int)(radiusSquared*2);
-			QSize shadowSize(blurSize,blurSize);
-			QImage tmpImage((model->contentsRect().size()+shadowSize).toSize(),QImage::Format_ARGB32);
+			QSizeF blurSize = ImageFilters::blurredSizeFor(model->contentsRect().size(), (int)radius);
+			//qDebug() << "Blur size:"<<blurSize<<", doc:"<<doc.size()<<", radius:"<<radius;
+			QImage tmpImage(blurSize.toSize(),QImage::Format_ARGB32_Premultiplied);
+			memset(tmpImage.scanLine(0),0,tmpImage.byteCount());
 			
 			// render the text
 			QPainter tmpPainter(&tmpImage);
-			tmpPainter.fillRect(tmpImage.rect(),Qt::transparent);
 			
 			tmpPainter.save();
-			tmpPainter.translate(radiusSquared, radiusSquared);
+			tmpPainter.translate(radius, radius);
 			doc.documentLayout()->draw(&tmpPainter, pCtx);
 			tmpPainter.restore();
 			
@@ -633,13 +670,13 @@ void TextBoxWarmingThread::run()
 			tmpPainter.end();
 
 			// blur the colored text
-			QImage  blurredImage   = ImageFilters::blurred(tmpImage, rect, (int)radius);
+			ImageFilters::blurImage(tmpImage, (int)radius);
 			
 			// render the blurred text at an offset into the cache
 			textPainter.save();
-			textPainter.translate(model->shadowOffsetX() - radiusSquared,
-					model->shadowOffsetY() - radiusSquared);
-			textPainter.drawImage(0, 0, blurredImage.copy(blurredImage.rect()));
+			textPainter.translate(model->shadowOffsetX() - radius,
+					      model->shadowOffsetY() - radius);
+			textPainter.drawImage(0, 0, tmpImage);
 			textPainter.restore();
 		}
 	}
@@ -885,39 +922,73 @@ void TextBoxContent::renderShadow(QPainter *painter, QAbstractTextDocumentLayout
 	}
 	else
 	{
+// 		double radius = model->shadowBlurRadius();
+// 		double radiusSquared = radius*radius;
+// 		
+// 		// create temporary pixmap to hold a copy of the text
+// 		double blurSize = (int)(radiusSquared*2);
+// 		QSize shadowSize(blurSize,blurSize);
+// 		QPixmap tmpPx(contentsRect().size()+shadowSize);
+// 		tmpPx.fill(Qt::transparent);
+// 		
+// 		// render the text
+// 		QPainter tmpPainter(&tmpPx);
+// 		tmpPainter.save();
+// 		tmpPainter.translate(radiusSquared, radiusSquared);
+// 		m_text->documentLayout()->draw(&tmpPainter, *pCtx);
+// 		tmpPainter.restore();
+// 		
+// 		// blacken the text by applying a color to the copy using a QPainter::CompositionMode_DestinationIn operation. 
+// 		// This produces a homogeneously-colored pixmap.
+// 		QRect rect = QRect(0, 0, tmpPx.width(), tmpPx.height());
+// 		tmpPainter.setCompositionMode(QPainter::CompositionMode_SourceIn);
+// 		tmpPainter.fillRect(rect, model->shadowBrush().color());
+// 		tmpPainter.end();
+// 
+// 		// blur the colored text
+// 		QImage  orignalImage   = tmpPx.toImage();
+// 		QImage  blurredImage   = ImageFilters::blurred(orignalImage, rect, (int)radius);
+// 		QPixmap blurredPixmap  = QPixmap::fromImage(blurredImage);
+// 		
+// 		// render the blurred text at an offset into the cache
+// 		painter->save();
+// 		painter->translate(model->shadowOffsetX() - radiusSquared,
+// 				model->shadowOffsetY() - radiusSquared);
+// 		painter->drawPixmap(0, 0, blurredPixmap);
+// 		painter->restore();
+		
+		// New method of rendering shadows
 		double radius = model->shadowBlurRadius();
-		double radiusSquared = radius*radius;
 		
 		// create temporary pixmap to hold a copy of the text
-		double blurSize = (int)(radiusSquared*2);
-		QSize shadowSize(blurSize,blurSize);
-		QPixmap tmpPx(contentsRect().size()+shadowSize);
-		tmpPx.fill(Qt::transparent);
+		QSizeF blurSize = ImageFilters::blurredSizeFor(model->contentsRect().size(), (int)radius);
+		//qDebug() << "Blur size:"<<blurSize<<", doc:"<<doc.size()<<", radius:"<<radius;
+		QImage tmpImage(blurSize.toSize(),QImage::Format_ARGB32_Premultiplied);
+		memset(tmpImage.scanLine(0),0,tmpImage.byteCount());
 		
 		// render the text
-		QPainter tmpPainter(&tmpPx);
+		QPainter tmpPainter(&tmpImage);
+		
 		tmpPainter.save();
-		tmpPainter.translate(radiusSquared, radiusSquared);
+		tmpPainter.translate(radius, radius);
 		m_text->documentLayout()->draw(&tmpPainter, *pCtx);
 		tmpPainter.restore();
 		
 		// blacken the text by applying a color to the copy using a QPainter::CompositionMode_DestinationIn operation. 
 		// This produces a homogeneously-colored pixmap.
-		QRect rect = QRect(0, 0, tmpPx.width(), tmpPx.height());
+		QRect rect = tmpImage.rect();
 		tmpPainter.setCompositionMode(QPainter::CompositionMode_SourceIn);
 		tmpPainter.fillRect(rect, model->shadowBrush().color());
 		tmpPainter.end();
 
 		// blur the colored text
-		QImage  orignalImage   = tmpPx.toImage();
-		QImage  blurredImage   = ImageFilters::blurred(orignalImage, rect, (int)radius);
-		QPixmap blurredPixmap  = QPixmap::fromImage(blurredImage);
+		ImageFilters::blurImage(tmpImage, (int)radius);
 		
 		// render the blurred text at an offset into the cache
 		painter->save();
-		painter->translate(model->shadowOffsetX() - radiusSquared,
-				model->shadowOffsetY() - radiusSquared);
-		painter->drawPixmap(0, 0, blurredPixmap);
+		painter->translate(model->shadowOffsetX() - radius,
+				      model->shadowOffsetY() - radius);
+		painter->drawImage(0, 0, tmpImage);
 		painter->restore();
 	}
 }

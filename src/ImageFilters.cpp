@@ -1,12 +1,44 @@
 #include "ImageFilters.h"
 
-/// Algorithim below copied from Qt4.6, file: /src/gui/image/qpixmapfilter.cpp
+// Qt 4.6.2 includes a wonderfully optimized blur function in /src/gui/image/qpixmapfilter.cpp
+// I'll just hook into their implementation here, instead of reinventing the wheel.
+extern void qt_blurImage(QImage &blurImage, qreal radius, bool quality, int transposed = 0);
+
+const qreal radiusScale = qreal(2.5);
+
+// Copied from QPixmapBlurFilter::boundingRectFor(const QRectF &rect)
+QRectF ImageFilters::blurredBoundingRectFor(const QRectF &rect, int radius) 
+{
+	const qreal delta = radiusScale * radius + 1;
+	return rect.adjusted(-delta, -delta, delta, delta);
+}
+
+QSizeF ImageFilters::blurredSizeFor(const QSizeF &size, int radius)
+{
+	const qreal delta = radiusScale * radius + 1;
+	QSizeF newSize(size.width()  + delta * 2.0, 
+	               size.height() + delta * 2.0);
+	
+	return newSize;
+}
+
+
+// Modifies the input image, no copying
+void ImageFilters::blurImage(QImage& image, int radius, bool highQuality)
+{
+	qt_blurImage(image, radius, highQuality);
+}
 
 // Blur the image according to the blur radius
 // Based on exponential blur algorithm by Jani Huhtanen
 // (maximum radius is set to 16)
 QImage ImageFilters::blurred(const QImage& image, const QRect& rect, int radius)
 {
+	QImage copy = image.copy();
+	qt_blurImage(copy, radius, false);
+	return copy;
+/*	
+    /// Algorithim below copied from Qt4.6, file: /src/gui/image/qpixmapfilter.cpp
     int tab[] = { 14, 10, 8, 6, 5, 5, 4, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2 };
     int alpha = (radius < 1)  ? 16 : (radius > 17) ? 1 : tab[radius-1];
 
@@ -64,7 +96,5 @@ QImage ImageFilters::blurred(const QImage& image, const QRect& rect, int radius)
                 p[i] = (rgba[i] += ((p[i] << 4) - rgba[i]) * alpha / 16) >> 4;
     }
 
-    return result;
+    return result;*/
 }
-
-

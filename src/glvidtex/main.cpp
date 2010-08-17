@@ -275,7 +275,7 @@ GLDrawable * addTextOverlay(GLWidget * glw)
 	//drawable->setOpacity(0.5);
 	drawable->setObjectName("Text");
 	
-	drawable->addHideAnimation(GLDrawable::AnimFade);
+	drawable->addShowAnimation(GLDrawable::AnimFade);
 	//drawable->addShowAnimation(GLDrawable::AnimZoom,2500).curve = QEasingCurve::OutElastic;
  	
  	drawable->addHideAnimation(GLDrawable::AnimFade);
@@ -339,9 +339,9 @@ int main(int argc, char *argv[])
 /*		d = addCamera(glw,"/dev/video0");
 		if(d)
 		{*/
-			d = addCamera(glw,"/dev/video0");
-			if(d)
-				addButtons(tb,d); 
+// 			d = addCamera(glw,"/dev/video0");
+// 			if(d)
+// 				addButtons(tb,d); 
 			
 			d = addCamera(glw,"/dev/video1");
 			if(d)

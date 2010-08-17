@@ -109,7 +109,7 @@ SlideGroup * SongSlideGroup::createDefaultTemplates()
 
 	text->setOutlineEnabled(true);
 	text->setShadowEnabled(true);
-	text->setShadowBlurRadius(6);
+	text->setShadowBlurRadius(11);
 
 	slide->addItem(text);
 	group->addSlide(slide);
@@ -424,7 +424,7 @@ void SongSlideGroup::textToSlides(SongTextFilter filter)
 				text->setOutlinePen(pen);
 				text->setOutlineEnabled(true);
 				text->setShadowEnabled(true);
-				text->setShadowBlurRadius(7);
+				text->setShadowBlurRadius(11);
 				slide->addItem(text);
 			}
 
