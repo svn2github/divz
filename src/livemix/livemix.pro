@@ -30,7 +30,10 @@ HEADERS += CameraThread.h \
 	MdiDVizWidget.h \
 	../glvidtex/GLWidget.h \
 	../glvidtex/GLDrawable.h \
-	../glvidtex/GLVideoDrawable.h
+	../glvidtex/GLVideoDrawable.h \
+	../glvidtex/StaticVideoSource.h \
+	../glvidtex/TextVideoSource.h \
+	../ImageFilters.h
 	
 SOURCES += main.cpp \
 	CameraThread.cpp \
@@ -52,7 +55,10 @@ SOURCES += main.cpp \
 	SimpleV4L2.cpp \
 	../glvidtex/GLWidget.cpp \
 	../glvidtex/GLDrawable.cpp \
-	../glvidtex/GLVideoDrawable.cpp
+	../glvidtex/GLVideoDrawable.cpp \
+	../glvidtex/StaticVideoSource.cpp \
+	../glvidtex/TextVideoSource.cpp \
+	../ImageFilters.cpp 
 
 unix {
 	LIBS += -lavdevice -lavformat -lavcodec -lavutil -lswscale -lbz2 

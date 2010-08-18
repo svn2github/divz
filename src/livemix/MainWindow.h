@@ -7,10 +7,12 @@
 #include "../glvidtex/GLDrawable.h"
 #include "../glvidtex/GLVideoDrawable.h"
 #include "../glvidtex/GLWidget.h"
+#include "../glvidtex/StaticVideoSource.h"
+#include "../glvidtex/TextVideoSource.h"
 #include "CameraThread.h"
 
 class LiveLayer;
-class LayerControlWidget : public QWidget 
+class LayerControlWidget : public QFrame 
 {
 	Q_OBJECT
 public:
@@ -19,11 +21,18 @@ public:
 	
 	LiveLayer *layer() { return m_layer; }
 	
+protected slots:
+	void instanceNameChanged(const QString&);
+	void opacitySliderChanged(int);
+	
 protected:
 	virtual void setupUI();
 	
 private:
 	LiveLayer *m_layer;
+	QLabel *m_nameLabel;
+	QSlider *m_opacitySlider;
+	QPushButton *m_liveButton;
 };
 
 class LiveLayer : public QObject
@@ -33,16 +42,25 @@ public:
 	LiveLayer(QObject *parent=0);
 	virtual ~LiveLayer();
 	
+	virtual QString typeName() { return "Generic Layer"; }
+	virtual QString instanceName() { return m_instanceName; }
+	
 	GLDrawable * drawable();
 	
 	LayerControlWidget *controlWidget() { return m_controlWidget; }
 	
+signals:
+	void instanceNameChanged(const QString&);
+	
 protected:
+	void changeInstanceName(const QString&);
+	
 	friend class LiveScene;
 	virtual void setupDrawable();
 	
 	GLDrawable * m_drawable;
 	LayerControlWidget *m_controlWidget; 
+	QString m_instanceName;
 };
 
 class LiveScene : public QObject
@@ -58,13 +76,16 @@ public:
 	void removeLayer(LiveLayer*);
 	
 	void attachGLWidget(GLWidget*);
-	void detachGLWidget();
+	void detachGLWidget(bool hideFirst=true);
 	GLWidget *currentGLWidget() { return m_glWidget; }
 	
 signals:
 	void layerAdded(LiveLayer*);
 	void layerRemoved(LiveLayer*);
 
+private slots:
+	void layerVisibilityChanged(bool);
+	
 private:
 	GLWidget *m_glWidget;
 	QList<LiveLayer*> m_layers;
@@ -106,6 +127,8 @@ public:
 	LiveVideoInputLayer(QObject *parent=0);
 	~LiveVideoInputLayer();
 	
+	virtual QString typeName() { return "Video Input"; }
+
 protected:
 	virtual void setupDrawable();
 	
@@ -116,9 +139,46 @@ protected:
 	GLVideoDrawable *videoDrawable() { return m_videoDrawable; }
 	
 private:
-	
 	GLVideoDrawable *m_videoDrawable;
 	CameraThread *m_camera;
+};
+
+class LiveStaticSourceLayer : public LiveLayer
+{
+	Q_OBJECT
+public:
+	LiveStaticSourceLayer(QObject *parent=0);
+	~LiveStaticSourceLayer();
+	
+	virtual QString typeName() { return "Static Source"; }
+
+protected:
+	virtual void setupDrawable();
+	
+	GLVideoDrawable *videoDrawable() { return m_videoDrawable; }
+	
+private:
+	GLVideoDrawable *m_videoDrawable;
+	StaticVideoSource *m_staticSource;
+};
+
+class LiveTextLayer  : public LiveLayer
+{
+	Q_OBJECT
+public:
+	LiveTextLayer(QObject *parent=0);
+	~LiveTextLayer();
+	
+	virtual QString typeName() { return "Text Layer"; }
+
+protected:
+	virtual void setupDrawable();
+	
+	GLVideoDrawable *videoDrawable() { return m_videoDrawable; }
+	
+private:
+	GLVideoDrawable *m_videoDrawable;
+	TextVideoSource *m_textSource;
 };
 
 ///////////////////////
@@ -139,7 +199,8 @@ protected:
 
 private slots:
 	void about();
-	
+	void updateLayerList();
+
 
 private:
 	void createActions();
@@ -154,6 +215,10 @@ private:
 	void createRightPanel();
 	
 	void setupSampleScene();
+	
+	void loadLiveScene(LiveScene*);
+	void loadLayerProperties(LiveLayer*);
+	void removeCurrentScene();
 	
 	
 	QMenu *m_fileMenu;
@@ -182,8 +247,11 @@ private:
 	QWidget *m_controlBase;
 	
 	QScrollArea *m_layerArea;
-	QWidget *m_layerBase;
+	QWidget *m_layerBase; /// TODO make this a drag widget like fridgemagnets example
 	
+	LiveScene *m_currentScene;
+	
+	QHash<LiveLayer*, LayerControlWidget*> m_controlWidgetMap;
 	
 };
 

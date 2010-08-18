@@ -38,7 +38,7 @@ class TextVideoSource : public VideoSource
 
 public:
 	TextVideoSource(QObject *parent=0);
-	//virtual ~StaticVideoSource() {}
+	virtual ~TextVideoSource() {}
 
 	VideoFormat videoFormat() { return VideoFormat(VideoFrame::BUFFER_IMAGE,QVideoFrame::Format_ARGB32); }
 	

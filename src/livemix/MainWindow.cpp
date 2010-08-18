@@ -6,7 +6,7 @@
 
 ////////////////////////
 LayerControlWidget::LayerControlWidget(LiveLayer *layer)
-	: QWidget()
+	: QFrame()
 	, m_layer(layer)
 {
 	setupUI();
@@ -17,6 +17,51 @@ LayerControlWidget::~LayerControlWidget()
 
 void LayerControlWidget::setupUI()
 {
+	setFrameStyle(QFrame::StyledPanel | QFrame::Raised);
+	setLineWidth(2);
+	
+	QHBoxLayout *layout = new QHBoxLayout(this);
+	
+	m_nameLabel = new QLabel;
+	layout->addWidget(m_nameLabel);
+	connect(m_layer, SIGNAL(instanceNameChanged(const QString&)), this, SLOT(instanceNameChanged(const QString&)));
+	instanceNameChanged(m_layer->instanceName());
+	layout->addStretch(1);
+	
+	m_opacitySlider = new QSlider(this);
+	m_opacitySlider->setOrientation(Qt::Horizontal);
+	m_opacitySlider->setMinimum(0);
+	m_opacitySlider->setMaximum(100);
+	m_opacitySlider->setValue(100);
+	connect(m_opacitySlider, SIGNAL(valueChanged(int)), this, SLOT(opacitySliderChanged(int)));
+	layout->addWidget(m_opacitySlider);
+	
+	QSpinBox *box = new QSpinBox(this);
+	box->setMinimum(0);
+	box->setMaximum(100);
+	box->setValue(100);
+	connect(m_opacitySlider, SIGNAL(valueChanged(int)), box, SLOT(setValue(int)));
+	connect(box, SIGNAL(valueChanged(int)), m_opacitySlider, SLOT(setValue(int)));
+	layout->addWidget(box);
+	
+	layout->addStretch(1);
+	
+	m_liveButton = new QPushButton("Live");
+	m_liveButton->setCheckable(true);
+	connect(m_liveButton, SIGNAL(toggled(bool)), m_layer->drawable(), SLOT(setVisible(bool)));
+	connect(m_layer->drawable(), SIGNAL(isVisible(bool)), m_liveButton, SLOT(setChecked(bool)));
+	layout->addWidget(m_liveButton);
+	
+}
+
+void LayerControlWidget::instanceNameChanged(const QString& name)
+{
+	m_nameLabel->setText(QString("<b>%1</b><br>%2").arg(name).arg(m_layer->typeName()));
+}
+
+void LayerControlWidget::opacitySliderChanged(int value)
+{
+	m_layer->drawable()->setOpacity((double)value/100.0);
 }
 
 ///////////////////////
@@ -40,6 +85,12 @@ GLDrawable* LiveLayer::drawable()
 void LiveLayer::setupDrawable()
 {
 	qDebug() << "LiveLayer::setupDrawable: VIRTUAL - NOTHING DONE";
+}
+
+void LiveLayer::changeInstanceName(const QString& name)
+{
+	m_instanceName = name;
+	emit instanceNameChanged(name);
 }
 
 ///////////////////////
@@ -99,15 +150,49 @@ void LiveScene::attachGLWidget(GLWidget *glw)
 		m_glWidget->addDrawable(layer->drawable());
 }
 	
-void LiveScene::detachGLWidget()
+void LiveScene::detachGLWidget(bool hideFirst)
 {
 	if(!m_glWidget)
 		return;
 		
+	if(hideFirst)
+	{
+		bool foundVisible = false;
+		foreach(LiveLayer *layer, m_layers)
+		{
+			if(layer->drawable()->isVisible())
+			{
+				foundVisible = true;
+				connect(layer->drawable(), SIGNAL(isVisible(bool)), this, SLOT(layerVisibilityChanged(bool)));
+				layer->drawable()->hide();
+			}
+		}
+			
+		if(foundVisible)
+			return;
+	}
+	
 	foreach(LiveLayer *layer, m_layers)
 		m_glWidget->removeDrawable(layer->drawable());
 
 	m_glWidget = 0;
+}
+
+void LiveScene::layerVisibilityChanged(bool flag)
+{
+	if(flag)
+		return;
+	bool foundVisible = false;
+	foreach(LiveLayer *layer, m_layers)
+		if(layer->drawable()->isVisible())
+		{
+			foundVisible = true;
+			break;
+		}
+		
+	if(!foundVisible)
+		detachGLWidget(false);
+	
 }
 
 ///////////////////////
@@ -225,6 +310,7 @@ void VideoInputControlWidget::setupUI()
 LiveVideoInputLayer::LiveVideoInputLayer(QObject *parent)
 	: LiveLayer(parent)
 {
+	m_controlWidget = new LayerControlWidget(this);
 }
 
 LiveVideoInputLayer::~LiveVideoInputLayer()
@@ -255,7 +341,7 @@ void LiveVideoInputLayer::setupDrawable()
 	m_camera = source;
 	
 	GLVideoDrawable *drawable = new GLVideoDrawable();
-	drawable->setVideoSource(source);
+	//drawable->setVideoSource(source);
 	drawable->setRect(QRectF(0,0,1000,750));
 	
 	drawable->addShowAnimation(GLDrawable::AnimFade);
@@ -270,20 +356,133 @@ void LiveVideoInputLayer::setupDrawable()
 	opts->show();
 	m_drawable = drawable;
 	m_videoDrawable = drawable;
+	
+	setCamera(source);
+	
 }
 
 void LiveVideoInputLayer::setCamera(CameraThread *camera)
 {
 	m_videoDrawable->setVideoSource(camera);
 	m_camera = camera;
+	changeInstanceName(camera->inputName());
 }
 
+
+///////////////////////
+LiveStaticSourceLayer::LiveStaticSourceLayer(QObject *parent)
+	: LiveLayer(parent)
+{
+	m_controlWidget = new LayerControlWidget(this);
+}
+
+LiveStaticSourceLayer::~LiveStaticSourceLayer()
+{
+}
+
+void LiveStaticSourceLayer::setupDrawable()
+{
+	// add secondary frame
+	GLVideoDrawable *drawable = new GLVideoDrawable();
+	
+	
+	StaticVideoSource *source = new StaticVideoSource();
+	//source->setImage(QImage("me2.jpg"));
+	QImage img("dsc_6645-1.jpg");
+	if(img.isNull())
+		source->setImage(QImage("../glvidtex/me2.jpg"));
+	else
+		source->setImage(img);
+	//source->setImage(QImage("/opt/qtsdk-2010.02/qt/examples/opengl/pbuffers/cubelogo.png"));
+	
+	source->start();
+	drawable->setVideoSource(source);
+	QRectF viewport(0,0,1000,750);
+	drawable->setRect(viewport);
+	drawable->setZIndex(-1);
+	drawable->setObjectName("Static");
+	//drawable->setOpacity(0.5);
+	//drawable->show();
+	
+	
+// 	#ifdef HAS_QT_VIDEO_SOURCE
+// 	// just change enterance anim to match effects
+// 	drawable->addShowAnimation(GLDrawable::AnimFade);
+ 	//drawable->addShowAnimation(GLDrawable::AnimZoom);
+// 	#else
+	drawable->addShowAnimation(GLDrawable::AnimZoom,2500).curve = QEasingCurve::OutElastic;
+// 	#endif
+// 	
+ 	drawable->addHideAnimation(GLDrawable::AnimFade);
+ 	drawable->addHideAnimation(GLDrawable::AnimZoom,1000);
+// 	
+
+	m_drawable = drawable;
+	changeInstanceName("File 'me2.jpg'");
+	
+	
+}
+
+///////////////////////
+
+LiveTextLayer::LiveTextLayer(QObject *parent)
+	: LiveLayer(parent)
+{
+	m_controlWidget = new LayerControlWidget(this);
+}
+
+LiveTextLayer::~LiveTextLayer()
+{
+}
+
+void LiveTextLayer::setupDrawable()
+{
+	// add secondary frame
+	// add text overlay frame
+	GLVideoDrawable *drawable = new GLVideoDrawable();
+	
+	
+	TextVideoSource *source = new TextVideoSource();
+	source->start();
+	source->setHtml("<b>Welcome to LiveMix</b>");
+	source->changeFontSize(40);
+	QSize size = source->findNaturalSize();
+	source->setTextWidth(size.width());
+	//qDebug() << "New html: "<<source->html();
+	//source->setImage(QImage("/opt/qtsdk-2010.02/qt/examples/opengl/pbuffers/cubelogo.png"));
+	
+	drawable->setVideoSource(source);
+	//drawable->setRect(glw->viewport());
+	//qDebug() << "Text Size: "<<size;
+	
+	QRectF viewport(0,0,1000,750);
+	
+	drawable->setRect(QRectF(
+		qMax(viewport.right()  - size.width()  , 0.0),
+		qMax(viewport.bottom() - size.height() , 0.0),
+		size.width(),
+		size.height()));
+	drawable->setZIndex(1);
+	//drawable->setOpacity(0.5);
+	drawable->setObjectName("Text");
+	
+	drawable->addShowAnimation(GLDrawable::AnimFade);
+	drawable->addShowAnimation(GLDrawable::AnimSlideTop,2500).curve = QEasingCurve::OutElastic;
+ 	
+ 	drawable->addHideAnimation(GLDrawable::AnimFade);
+ 	drawable->addHideAnimation(GLDrawable::AnimZoom);
+ 	
+	m_drawable = drawable;
+	changeInstanceName("Welcome to LiveMix");
+}
 
 ///////////////////////
 
 
 
 MainWindow::MainWindow()
+	: QMainWindow()
+	, m_currentScene(0)
 {
 	
 	
@@ -310,11 +509,98 @@ MainWindow::MainWindow()
 
 void MainWindow::setupSampleScene()
 {
-	LiveVideoInputLayer *videoLayer = new LiveVideoInputLayer();
 	LiveScene *scene = new LiveScene();
+	
+	LiveVideoInputLayer *videoLayer = new LiveVideoInputLayer();
 	scene->addLayer(videoLayer);
+	
+	scene->addLayer(new LiveStaticSourceLayer());
+	scene->addLayer(new LiveTextLayer());
+	
+	loadLiveScene(scene);
+}
+
+void MainWindow::loadLiveScene(LiveScene *scene)
+{
+	if(m_currentScene)
+		removeCurrentScene();
+	
+	m_currentScene = scene;
+	
+	// attach to main viewer
 	scene->attachGLWidget(m_mainViewer);
 	
+	// attach to main output
+	/// TODO main output
+	
+	// Load layers into list
+	connect(scene, SIGNAL(layerAdded(LiveLayer*)),   this, SLOT(updateLayerList()));
+	connect(scene, SIGNAL(layerRemoved(LiveLayer*)), this, SLOT(updateLayerList()));
+	updateLayerList();
+}
+
+void MainWindow::removeCurrentScene()
+{
+	if(!m_currentScene)
+		return;
+	
+	disconnect(m_currentScene, 0, this, 0);
+	m_currentScene->detachGLWidget();
+	
+	m_currentScene = 0;
+	
+	updateLayerList();
+	
+}
+
+void MainWindow::updateLayerList()
+{
+	if(!m_currentScene)
+	{
+		qDebug() << "MainWindow::updateLayerList(): No current scene";
+		foreach(LiveLayer *layer, m_controlWidgetMap.keys())
+		{
+			m_layerBase->layout()->removeWidget(m_controlWidgetMap[layer]);
+			m_controlWidgetMap.remove(layer);
+		}
+		return;
+	}
+		
+	QList<LiveLayer*> layers = m_currentScene->layerList();
+	
+	/// TODO resort layer list on screen by Z order
+	
+	QList<LiveLayer*> foundLayer;
+	
+	foreach(LiveLayer *layer, layers)
+	{
+		if(m_controlWidgetMap.contains(layer))
+		{
+			qDebug() << "MainWindow::updateLayerList(): control map has layer already"<<layer;
+			foundLayer.append(layer);
+		}
+		else
+		{
+			LayerControlWidget *widget = layer->controlWidget();
+			m_layerBase->layout()->addWidget(widget);
+			widget->show();
+			
+			qDebug() << "MainWindow::updateLayerList(): adding control widget for layer"<<layer<<", widget:"<<widget;
+			
+			m_controlWidgetMap[layer] = widget;
+			foundLayer.append(layer);
+		}
+	}
+	
+	foreach(LiveLayer *layer, m_controlWidgetMap.keys())
+	{
+		if(!foundLayer.contains(layer))
+		{
+			qDebug() << "MainWindow::updateLayerList(): layer not found, removing control widget"<<layer;
+			m_layerBase->layout()->removeWidget(m_controlWidgetMap[layer]);
+			m_controlWidgetMap.remove(layer);
+		}
+	}
 }
 
 void MainWindow::createLeftPanel()
@@ -334,13 +620,21 @@ void MainWindow::createLeftPanel()
 
 void MainWindow::createCenterPanel()
 {
-	m_layerArea = new QScrollArea(m_mainSplitter);
+	//m_layerArea = new QScrollArea(m_mainSplitter);
 	
-	m_layerBase = new QWidget(m_layerArea);
+	//m_layerBase = new QWidget(m_layerArea);
+	
+	QWidget *baseParent = new QWidget(m_mainSplitter);
+	QVBoxLayout *parentLayout = new QVBoxLayout(baseParent);
+	parentLayout->setContentsMargins(0,0,0,0);
+	m_layerBase = new QWidget(baseParent);
 	(void)new QVBoxLayout(m_layerBase);
-	m_layerArea->setWidget(m_layerBase);
+	parentLayout->addWidget(m_layerBase);
+	parentLayout->addStretch(1);
+	//m_layerArea->setWidget(m_layerBase);
+	//m_mainSplitter->addWidget(m_layerArea);
+	m_mainSplitter->addWidget(baseParent);
 	
-	m_mainSplitter->addWidget(m_layerArea);
 }
 
 void MainWindow::createRightPanel()

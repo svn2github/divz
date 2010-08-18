@@ -52,6 +52,8 @@ public:
 	bool rawFramesEnabled() { return m_rawFrames; }
 	
 	virtual VideoFormat videoFormat();
+	
+	const QString & inputName() { return m_cameraFile; }
 
 public slots:
 	void setDeinterlace(bool);
