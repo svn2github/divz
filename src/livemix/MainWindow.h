@@ -20,7 +20,7 @@ public:
 	LiveLayer *layer() { return m_layer; }
 	
 protected:
-	virtual void setupUI() = 0;
+	virtual void setupUI();
 	
 private:
 	LiveLayer *m_layer;
@@ -28,16 +28,18 @@ private:
 
 class LiveLayer : public QObject
 {
+	Q_OBJECT
 public:
 	LiveLayer(QObject *parent=0);
 	virtual ~LiveLayer();
 	
-	GLDrawable * drawable() { return m_drawable; }
+	GLDrawable * drawable();
 	
 	LayerControlWidget *controlWidget() { return m_controlWidget; }
 	
 protected:
-	virtual void setupDrawable() = 0;
+	friend class LiveScene;
+	virtual void setupDrawable();
 	
 	GLDrawable * m_drawable;
 	LayerControlWidget *m_controlWidget; 
@@ -59,7 +61,7 @@ public:
 	void detachGLWidget();
 	GLWidget *currentGLWidget() { return m_glWidget; }
 	
-public slots:
+signals:
 	void layerAdded(LiveLayer*);
 	void layerRemoved(LiveLayer*);
 
@@ -71,11 +73,12 @@ private:
 
 ///////////////////////
 
+class LiveVideoInputLayer;
 class VideoInputControlWidget : public LayerControlWidget
 {
 	Q_OBJECT
 public:
-	VideoInputControlWidget(LiveLayer *);
+	VideoInputControlWidget(LiveVideoInputLayer *);
 	~VideoInputControlWidget();
 	
 	bool deinterlace() { return m_deinterlace; }
@@ -90,6 +93,7 @@ protected:
 	virtual void setupUI();
 	
 private:
+	LiveVideoInputLayer *m_videoLayer;
 	QComboBox *m_deviceBox;
 	QStringList m_cameras;
 	bool m_deinterlace;
@@ -145,6 +149,12 @@ private:
 	void readSettings();
 	void writeSettings();
 	
+	void createLeftPanel();
+	void createCenterPanel();
+	void createRightPanel();
+	
+	void setupSampleScene();
+	
 	
 	QMenu *m_fileMenu;
 	QMenu *m_editMenu;
@@ -157,6 +167,7 @@ private:
 	
 	
 	QSplitter *m_mainSplitter;
+	QSplitter *m_leftSplitter;
 	QWidget *m_leftPanel;
 	QWidget *m_centerPanel;
 	QWidget *m_rightPanel;
@@ -169,6 +180,9 @@ private:
 	
 	QScrollArea *m_controlArea;	
 	QWidget *m_controlBase;
+	
+	QScrollArea *m_layerArea;
+	QWidget *m_layerBase;
 	
 	
 };

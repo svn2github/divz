@@ -28,7 +28,9 @@ HEADERS += CameraThread.h \
 	MdiPreviewWidget.h \
 	DVizSharedMemoryThread.h \
 	MdiDVizWidget.h \
-	../glvidtex/GLWidget.h
+	../glvidtex/GLWidget.h \
+	../glvidtex/GLDrawable.h \
+	../glvidtex/GLVideoDrawable.h
 	
 SOURCES += main.cpp \
 	CameraThread.cpp \
@@ -48,7 +50,9 @@ SOURCES += main.cpp \
 	DVizSharedMemoryThread.cpp \
 	MdiDVizWidget.cpp \
 	SimpleV4L2.cpp \
-	../glvidtex/GLWidget.cpp
+	../glvidtex/GLWidget.cpp \
+	../glvidtex/GLDrawable.cpp \
+	../glvidtex/GLVideoDrawable.cpp
 
 unix {
 	LIBS += -lavdevice -lavformat -lavcodec -lavutil -lswscale -lbz2 

@@ -15,17 +15,32 @@ LayerControlWidget::LayerControlWidget(LiveLayer *layer)
 LayerControlWidget::~LayerControlWidget()
 {}
 
+void LayerControlWidget::setupUI()
+{
+}
+
 ///////////////////////
 LiveLayer::LiveLayer(QObject *parent)
 	: QObject(parent)
 	, m_drawable(0)
 	, m_controlWidget(0)
 {
-	setupDrawable();
 }
 
 LiveLayer::~LiveLayer()
 {}
+
+GLDrawable* LiveLayer::drawable()
+{
+	if(!m_drawable)
+		setupDrawable();
+	return m_drawable;
+}
+
+void LiveLayer::setupDrawable()
+{
+	qDebug() << "LiveLayer::setupDrawable: VIRTUAL - NOTHING DONE";
+}
 
 ///////////////////////
 LiveScene::LiveScene(QObject *parent)
@@ -97,6 +112,116 @@ void LiveScene::detachGLWidget()
 
 ///////////////////////
 
+VideoInputControlWidget::VideoInputControlWidget(LiveVideoInputLayer *layer)
+	: LayerControlWidget(layer)
+	, m_videoLayer(layer)
+{
+}
+
+VideoInputControlWidget::~VideoInputControlWidget()
+{
+}
+
+void VideoInputControlWidget::setDeinterlace(bool flag)
+{
+	m_deinterlace = flag;
+	
+	QSettings settings;
+	settings.setValue("VideoInputControlWidget/deinterlace",(int)m_deinterlace);
+	
+	if(m_videoLayer->camera())
+		m_videoLayer->camera()->setDeinterlace(flag);
+}
+
+void VideoInputControlWidget::deviceBoxChanged(int idx)
+{
+	if(idx < 0 || idx >= m_cameras.size())
+		return;
+		
+	QString camera = m_cameras[idx];
+	
+	CameraThread * thread = CameraThread::threadForCamera(camera);
+	
+	if(!thread)
+	{
+		QMessageBox::critical(this,"Missing Camera",QString("Sorry, cannot connect to %1!").arg(camera));
+		setWindowTitle("Camera Error");
+	}
+	
+	// Enable raw VL42 access on linux - note that VideoWidget must be able to handle raw frames
+	thread->enableRawFrames(true);
+	
+	// Default clip rect to compensate for oft-seen video capture 'bugs' (esp. on hauppauge/bttv)
+	//thread->setSourceRectAdjust(11,0,-6,-3);
+	
+	thread->setDeinterlace(m_deinterlace);
+	
+	//setWindowTitle(camera);
+	
+	//setVideoSource(m_thread);	
+	m_videoLayer->setCamera(thread);
+}
+
+void VideoInputControlWidget::setupUI()
+{
+
+	QVBoxLayout *layout = new QVBoxLayout(this);
+	
+	QHBoxLayout *hbox = new QHBoxLayout();
+	layout->addLayout(hbox);
+	
+	m_deviceBox = new QComboBox(this);
+	
+	hbox->addWidget(m_deviceBox);
+
+	m_cameras = CameraThread::enumerateDevices();
+	if(!m_cameras.size())
+	{
+		QMessageBox::critical(this,tr("No Cameras Found"),tr("Sorry, but no camera devices were found attached to this computer."));
+		setWindowTitle("No Camera");
+		return;
+	}
+
+	QStringList items;
+	int counter = 1;
+	foreach(QString dev, m_cameras)
+		items << QString("Camera # %1").arg(counter++);
+	
+	m_deviceBox->addItems(items);
+	
+	connect(m_deviceBox, SIGNAL(currentIndexChanged(int)), this, SLOT(deviceBoxChanged(int)));
+	
+	// load last deinterlace setting
+	QSettings settings;
+	m_deinterlace = (bool)settings.value("VideoInputControlWidget/deinterlace",false).toInt();
+	
+	// setup the popup config menu
+	QPushButton *configBtn = new QPushButton(QPixmap("../data/stock-preferences.png"),"");
+	configBtn->setToolTip("Options");
+	
+	// Use CDE style to minimize the space used by the button
+	// (Could use a custom stylesheet I suppose - later.)
+	configBtn->setStyle(new QCDEStyle());
+	//configBtn->setStyleSheet("border:1px solid black; padding:0; width: 1em; margin:0");
+	
+	QAction * action;
+	
+	// Deinterlace option
+	QMenu *configMenu = new QMenu(this);
+	action = configMenu->addAction("Deinterlace Video");
+	action->setCheckable(true);
+	action->setChecked(deinterlace());
+	connect(action, SIGNAL(toggled(bool)), this, SLOT(setDeinterlace(bool)));
+	
+	configBtn->setMenu(configMenu);
+	hbox->addWidget(configBtn);
+	
+	//videoWidget()->setFps(30);
+	
+	// Start the camera
+	deviceBoxChanged(0);
+}
+
 LiveVideoInputLayer::LiveVideoInputLayer(QObject *parent)
 	: LiveLayer(parent)
 {
@@ -114,6 +239,9 @@ void LiveVideoInputLayer::setupDrawable()
 	#else
 		QString defaultCamera = "/dev/video0";
 	#endif
+	
+	qDebug() << "LiveVideoInputLayer::setupDrawable: Using default camera:"<<defaultCamera;
+	
 
 	CameraThread *source = CameraThread::threadForCamera(defaultCamera);
 	if(source)
@@ -128,12 +256,12 @@ void LiveVideoInputLayer::setupDrawable()
 	
 	GLVideoDrawable *drawable = new GLVideoDrawable();
 	drawable->setVideoSource(source);
-	drawable->setRect(QRectF(0,0,100,750));
+	drawable->setRect(QRectF(0,0,1000,750));
 	
 	drawable->addShowAnimation(GLDrawable::AnimFade);
 	drawable->addHideAnimation(GLDrawable::AnimFade);
 	
-	//drawable->show();
+	drawable->show();
 	drawable->setObjectName(qPrintable(defaultCamera));
 		
 
@@ -164,10 +292,67 @@ MainWindow::MainWindow()
 	createToolBars();
 	createStatusBar();
 	
+	m_mainSplitter = new QSplitter(this);
+	//m_splitter->setOrientation(Qt::Vertical);
+	setCentralWidget(m_mainSplitter);
+	
+	createLeftPanel();
+	createCenterPanel();
+	createRightPanel();
+	
+	setupSampleScene();
+	
 	readSettings();
 	
 	setWindowTitle(tr("LiveMix"));
 	setUnifiedTitleAndToolBarOnMac(true);
+}
+
+void MainWindow::setupSampleScene()
+{
+	LiveVideoInputLayer *videoLayer = new LiveVideoInputLayer();
+	LiveScene *scene = new LiveScene();
+	scene->addLayer(videoLayer);
+	scene->attachGLWidget(m_mainViewer);
+	
+}
+
+void MainWindow::createLeftPanel()
+{
+	m_leftSplitter = new QSplitter(m_mainSplitter);
+	m_leftSplitter->setOrientation(Qt::Vertical);
+	
+	m_layerViewer = new GLWidget(m_leftSplitter);
+	m_leftSplitter->addWidget(m_layerViewer);
+	
+	m_controlArea = new QScrollArea(m_leftSplitter);
+	m_controlBase = new QWidget(m_controlArea);
+	(void)new QVBoxLayout(m_controlBase);
+	m_controlArea->setWidget(m_controlBase);
+	m_leftSplitter->addWidget(m_controlArea);
+}
+
+void MainWindow::createCenterPanel()
+{
+	m_layerArea = new QScrollArea(m_mainSplitter);
+	
+	m_layerBase = new QWidget(m_layerArea);
+	(void)new QVBoxLayout(m_layerBase);
+	m_layerArea->setWidget(m_layerBase);
+	
+	m_mainSplitter->addWidget(m_layerArea);
+}
+
+void MainWindow::createRightPanel()
+{
+	QWidget *base = new QWidget(m_mainSplitter);
+	QVBoxLayout *layout = new QVBoxLayout(base);
+	
+	m_mainViewer = new GLWidget(base);
+	layout->addWidget(m_mainViewer);
+	layout->addStretch(1);
+	
+	m_mainSplitter->addWidget(base);
 }
 
 
@@ -278,15 +463,22 @@ void MainWindow::createStatusBar()
 void MainWindow::readSettings()
 {
 	QSettings settings;
-	QPoint pos = settings.value("pos", QPoint(10, 10)).toPoint();
-	QSize size = settings.value("size", QSize(640,480)).toSize();
+	QPoint pos = settings.value("mainwindow/pos", QPoint(10, 10)).toPoint();
+	QSize size = settings.value("mainwindow/size", QSize(640,480)).toSize();
 	move(pos);
 	resize(size);
+	
+	m_mainSplitter->restoreState(settings.value("mainwindow/main_splitter").toByteArray());
+	m_leftSplitter->restoreState(settings.value("mainwindow/left_splitter").toByteArray());
+	
 }
 
 void MainWindow::writeSettings()
 {
 	QSettings settings;
-	settings.setValue("pos", pos());
-	settings.setValue("size", size());
+	settings.setValue("mainwindow/pos", pos());
+	settings.setValue("mainwindow/size", size());
+	
+	settings.setValue("mainwindow/main_splitter",m_mainSplitter->saveState());
+	settings.setValue("mainwindow/left_splitter",m_leftSplitter->saveState());
 }
