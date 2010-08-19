@@ -449,7 +449,7 @@ void LiveVideoInputLayer::setupDrawable()
 	drawable->addShowAnimation(GLDrawable::AnimFade);
 	drawable->addHideAnimation(GLDrawable::AnimFade);
 
-	drawable->show();
+	//drawable->show();
 	drawable->setObjectName(qPrintable(defaultCamera));
 
 
@@ -761,24 +761,61 @@ void LiveTextLayer::setupDrawable()
 {
 	// add secondary frame
 	// add text overlay frame
-	GLVideoDrawable *drawable = new GLVideoDrawable();
+ 	GLVideoDrawable *drawable = new GLVideoDrawable();
+	m_drawable = drawable;
 
+// 
+// 
+// 	m_textSource = new TextVideoSource();
+// 	m_textSource->start();
+// 	
+// 	drawable->setVideoSource(m_textSource);
+// 	
+// 	drawable->setZIndex(9999);
+// 	drawable->setObjectName("Text");
+// 
+// 	drawable->addShowAnimation(GLDrawable::AnimFade);
+// 	drawable->addShowAnimation(GLDrawable::AnimSlideTop,2500).curve = QEasingCurve::OutElastic;
+// 
+// 	drawable->addHideAnimation(GLDrawable::AnimFade);
+// 	drawable->addHideAnimation(GLDrawable::AnimZoom);
 
+	
 	m_textSource = new TextVideoSource();
 	m_textSource->start();
+	//source->setHtml("<img src='me2.jpg'><b>TextVideoSource</b>");
+	m_textSource->setHtml("?");
+	m_textSource->changeFontSize(40);
+	
+	QSizeF size = m_textSource->findNaturalSize();
+	m_textSource->setTextWidth((int)size.width());
+	//qDebug() << "New html: "<<source->html();
+	//source->setImage(QImage("/opt/qtsdk-2010.02/qt/examples/opengl/pbuffers/cubelogo.png"));
 	
 	drawable->setVideoSource(m_textSource);
+	//drawable->setRect(glw->viewport());
+	//qDebug() << "Text Size: "<<size;
 	
-	drawable->setZIndex(1);
-	drawable->setObjectName("Text");
+	QRectF viewport(0,0,1000,750);
 
-	drawable->addShowAnimation(GLDrawable::AnimFade);
-	drawable->addShowAnimation(GLDrawable::AnimSlideTop,2500).curve = QEasingCurve::OutElastic;
+	m_drawable->setRect(QRectF(
+		qMax(viewport.right()  - size.width()  , 0.0),
+		qMax(viewport.bottom() - size.height() , 0.0),
+		size.width(),
+		size.height()));
 
-	drawable->addHideAnimation(GLDrawable::AnimFade);
-	drawable->addHideAnimation(GLDrawable::AnimZoom);
+	m_drawable->setZIndex(1);
+	//drawable->setOpacity(0.5);
+	m_drawable->setObjectName("Text");
+	
+	m_drawable->addShowAnimation(GLDrawable::AnimFade);
+	//m_drawable->addShowAnimation(GLDrawable::AnimSlideTop,2500).curve = QEasingCurve::OutElastic;
+	m_drawable->addShowAnimation(GLDrawable::AnimSlideLeft,2000).curve = QEasingCurve::OutElastic;
+ 	
+ 	m_drawable->addHideAnimation(GLDrawable::AnimFade);
+ 	m_drawable->addHideAnimation(GLDrawable::AnimZoom);
+ 	
 
-	m_drawable = drawable;
 	
 	setText("<b>Welcome to LiveMix</b>");
 }
@@ -793,7 +830,16 @@ void LiveTextLayer::setupInstanceProperties(GLDrawable *drawable)
 	if(!vid)
 		return;
 	
-	m_props["text"] = text();
+	m_props["text"] 		= text();
+	m_props["outlineEnabled"] 	= m_textSource->outlineEnabled();
+	m_props["outlineColor"] 	= m_textSource->outlinePen().color();
+	m_props["fillEnabled"] 		= m_textSource->fillEnabled();
+	m_props["fillColor"] 		= m_textSource->fillBrush().color();
+	m_props["shadowEnabled"] 	= m_textSource->shadowEnabled();
+	m_props["shadowColor"] 		= m_textSource->shadowBrush().color();
+	m_props["shadowBlurRadius"] 	= m_textSource->shadowBlurRadius();
+	m_props["shadowOffsetX"] 	= m_textSource->shadowOffsetX();
+	m_props["shadowOffsetY"] 	= m_textSource->shadowOffsetY();
 }
 
 void LiveTextLayer::setText(const QString& text)
@@ -818,7 +864,7 @@ void LiveTextLayer::setText(const QString& text)
 	m_props["text"] = text;
 	
 	m_text = text;
-	
+// 	
 	changeInstanceName(text);
 }
 
@@ -838,6 +884,64 @@ QList<QtPropertyEditorIdPair> LiveTextLayer::createPropertyEditors(QtVariantProp
 	property->setValue(text());
 	list << QtPropertyEditorIdPair("text", property);
 	
+	///////////////////////////////////////////
+	
+	property = manager->addProperty(QVariant::Bool, tr("Draw Outline?"));
+	property->setValue(m_textSource->outlineEnabled());
+	list << QtPropertyEditorIdPair("outlineEnabled", property);
+	
+	property = manager->addProperty(QVariant::Color, tr("Outline Color"));
+	property->setValue(m_textSource->outlinePen().color());
+	list << QtPropertyEditorIdPair("outlineColor", property);
+	
+	///////////////////////////////////////////
+	
+	property = manager->addProperty(QVariant::Bool, tr("Fill Text?"));
+	property->setValue(m_textSource->fillEnabled());
+	list << QtPropertyEditorIdPair("fillEnabled", property);
+	
+	property = manager->addProperty(QVariant::Color, tr("Fill Color"));
+	property->setValue(m_textSource->fillBrush().color());
+	list << QtPropertyEditorIdPair("fillColor", property);
+	
+	///////////////////////////////////////////
+	
+	
+	property = manager->addProperty(QVariant::Bool, tr("Draw Shadow?"));
+	property->setValue(m_textSource->shadowEnabled());
+	list << QtPropertyEditorIdPair("shadowEnabled", property);
+	
+	property = manager->addProperty(QVariant::Color, tr("Shadow Color"));
+	property->setValue(m_textSource->shadowBrush().color());
+	list << QtPropertyEditorIdPair("shadowColor", property);
+	
+	property = manager->addProperty(QVariant::Double, tr("Shadow Radius"));
+	property->setValue(m_textSource->shadowBlurRadius());
+	list << QtPropertyEditorIdPair("shadowBlurRadius", property);
+	
+	property = manager->addProperty(QVariant::Double, tr("Shadow X"));
+	property->setValue(m_textSource->shadowOffsetX());
+	list << QtPropertyEditorIdPair("shadowOffsetX", property);
+	
+	property = manager->addProperty(QVariant::Double, tr("Shadow Y"));
+	property->setValue(m_textSource->shadowOffsetY());
+	list << QtPropertyEditorIdPair("shadowOffsetY", property);
+	
+	
+	///////////////////////////////////////////
+	
+	
+	
+// 	m_props["outlineEnabled"] 	= m_textSource->outlineEnabled();
+// 	m_props["outlineColor"] 	= m_textSource->outlinePen().color();
+// 	m_props["fillEnabled"] 		= m_textSource->fillEnabled();
+// 	m_props["fillColor"] 		= m_textSource->fillBrush().color()
+// 	m_props["shadowEnabled"] 	= m_textSource->shadowEnabled();
+// 	m_props["shadowColor"] 		= m_textSource->shadowBrush().color();
+// 	m_props["shadowBlurRadius"] 	= m_textSource->shadowBlurRadius();
+// 	m_props["shadowOffsetX"] 	= m_textSource->shadowOffsetX();
+// 	m_props["shadowOffsetY"] 	= m_textSource->shadowOffsetY();
+	
 	return list;
 }
 
@@ -846,6 +950,33 @@ void LiveTextLayer::setInstanceProperty(const QString& key, const QVariant& valu
 	if(key == "text")
 	{
 		setText(value.toString());
+	}
+	else
+	if(key.indexOf("color") > -1)
+	{
+		QColor color = value.value<QColor>();
+		
+		if(key == "outlineColor")
+		{
+			m_textSource->setOutlinePen(color);
+		}
+		else
+		if(key == "fillColor")
+		{
+			m_textSource->setFillBrush(color);
+		}
+		else
+		if(key == "shadowColor")
+		{
+			m_textSource->setShadowBrush(color);
+		}
+	}
+	else
+	{
+		if(m_textSource->property(qPrintable(key)).isValid())
+		{
+			m_textSource->setProperty(qPrintable(key), value);
+		}
 	}
 	
 	LiveLayer::setInstanceProperty(key,value);
@@ -890,12 +1021,11 @@ void MainWindow::setupSampleScene()
 {
 	LiveScene *scene = new LiveScene();
 
-	//LiveVideoInputLayer *videoLayer = new LiveVideoInputLayer();
 	scene->addLayer(new LiveVideoInputLayer());
-
 	scene->addLayer(new LiveStaticSourceLayer());
 	scene->addLayer(new LiveTextLayer());
-
+	
+	
 	scene->layerList().at(0)->drawable()->show();
 
 	loadLiveScene(scene);

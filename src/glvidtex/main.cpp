@@ -280,17 +280,22 @@ GLDrawable * addTextOverlay(GLWidget * glw)
 	//drawable->setOpacity(0.5);
 	drawable->setObjectName("Text");
 	
-	drawable->addShowAnimation(GLDrawable::AnimFade);
-	drawable->addShowAnimation(GLDrawable::AnimSlideTop,2500).curve = QEasingCurve::OutElastic;
+	//drawable->addShowAnimation(GLDrawable::AnimFade);
+	//drawable->addShowAnimation(GLDrawable::AnimSlideTop,2500).curve = QEasingCurve::OutElastic;
  	
  	drawable->addHideAnimation(GLDrawable::AnimFade);
  	drawable->addHideAnimation(GLDrawable::AnimZoom);
-	
+ 	
 // 	VideoDisplayOptionWidget *opts = new VideoDisplayOptionWidget(drawable);
 // 	opts->adjustSize();
 // 	opts->show();
 
 	glw->addDrawable(drawable);
+	
+// 	QTimer *timer = new QTimer;
+// 	QObject::connect(timer, SIGNAL(timeout()), drawable, SLOT(show()));
+// 	timer->start(5000);
+// 	timer->setSingleShot(true);
 	
 	drawable->show();
 	
