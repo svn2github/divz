@@ -104,6 +104,12 @@ class GLVideoDrawable : public GLDrawable
 	Q_PROPERTY(int hue READ hue WRITE setHue);
 	Q_PROPERTY(int saturation READ saturation WRITE setSaturation);
 	
+	Q_PROPERTY(bool flipHorizontal READ flipHorizontal WRITE setFlipHorizontal);
+	Q_PROPERTY(bool flipVertical READ flipVertical WRITE setFlipVertical);
+	
+	Q_PROPERTY(QPointF cropTopLeft READ cropTopLeft WRITE setCropTopLeft);
+	Q_PROPERTY(QPointF flipVertical READ cropBottomRight WRITE setCropBottomRight);
+	
 public:
 	GLVideoDrawable(QObject *parent=0);
 	~GLVideoDrawable();
@@ -115,7 +121,13 @@ public:
 	int hue() const;
 	int saturation() const;
 	
-	VideoSource *videoSource();
+	bool flipHorizontal() { return m_displayOpts.flipHorizontal; }
+	bool flipVertical() { return m_displayOpts.flipVertical; }
+	
+	const QPointF & cropTopLeft() { return m_displayOpts.cropTopLeft; }
+	const QPointF & cropBottomRight() { return m_displayOpts.cropBottomRight; }
+	
+	VideoSource *videoSource() { return m_source; }
 	
 	VideoDisplayOptions displayOptions() { return m_displayOpts; }
 	
@@ -124,6 +136,11 @@ public slots:
 	void setContrast(int contrast);
 	void setHue(int hue);
 	void setSaturation(int saturation);
+	
+	void setFlipHorizontal(bool);
+	void setFlipVertical(bool);
+	void setCropTopLeft(QPointF);
+	void setCropBottomRight(QPointF);
 	
 	void setVideoSource(VideoSource*);
 	void disconnectVideoSource();

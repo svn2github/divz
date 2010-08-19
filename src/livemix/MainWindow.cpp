@@ -3,6 +3,10 @@
 #include "MainWindow.h"
 #include <QCDEStyle>
 
+#include "qtvariantproperty.h"
+#include "qttreepropertybrowser.h"
+
+
 
 ////////////////////////
 LayerControlWidget::LayerControlWidget(LiveLayer *layer)
@@ -39,6 +43,7 @@ void LayerControlWidget::setupUI()
 	setLineWidth(2);
 
 	QHBoxLayout *layout = new QHBoxLayout(this);
+	layout->setContentsMargins(2,2,2,2);
 
 	m_editButton = new QPushButton(QPixmap("../data/stock-edit.png"),"");
 	m_editButton->setCheckable(true);
@@ -117,6 +122,75 @@ void LiveLayer::changeInstanceName(const QString& name)
 {
 	m_instanceName = name;
 	emit instanceNameChanged(name);
+}
+
+QHash<QString,QVariant> LiveLayer::instanceProperties()
+{
+	if(m_props.isEmpty())
+		setupInstanceProperties(drawable());
+	return m_props;
+}
+
+void LiveLayer::setupInstanceProperties(GLDrawable *drawable)
+{
+	m_props["rect"] = drawable->rect();
+	m_props["zIndex"] = drawable->zIndex();
+	m_props["opacity"] = drawable->opacity();
+}
+
+QList<QtPropertyEditorIdPair> LiveLayer::createPropertyEditors(QtVariantPropertyManager *manager)
+{
+	QList<QtPropertyEditorIdPair> list;
+	
+	GLDrawable *gl = drawable();
+	if(!gl)
+		return list;
+		
+	QtVariantProperty *property;
+
+	property = manager->addProperty(QVariant::RectF, tr("Size/Position"));
+// 	property->setAttribute(QLatin1String("minimum"), 0);
+// 	property->setAttribute(QLatin1String("maximum"), canvas->width());
+	property->setValue(gl->rect());
+	list << QtPropertyEditorIdPair("rect", property);
+
+	property = manager->addProperty(QVariant::Double, tr("Z Position"));
+	property->setAttribute(QLatin1String("minimum"), -1000);
+	property->setAttribute(QLatin1String("maximum"), 1000);
+	property->setValue(gl->zIndex());
+	list << QtPropertyEditorIdPair("zIndex", property);
+	
+	property = manager->addProperty(QVariant::Double, tr("Opacity"));
+	property->setAttribute(QLatin1String("minimum"), 0);
+	property->setAttribute(QLatin1String("maximum"), 1);
+	property->setValue(gl->opacity());
+	list << QtPropertyEditorIdPair("opacity", property);
+	
+	return list;
+}
+
+// Default impl just iterates through all the keys and calls setInstanceProperty()
+void LiveLayer::setInstanceProperties(QHash<QString,QVariant> props)
+{
+	foreach(QString key, props.keys())
+	{
+		setInstanceProperty(key, props[key]);
+	}
+}
+
+void LiveLayer::setInstanceProperty(const QString& key, const QVariant& variant)
+{
+	m_props[key] = variant;
+	
+	if(GLDrawable *gl = drawable())
+	{
+		if(m_props.contains(key) && gl->property(qPrintable(key)).isValid())
+		{
+			gl->setProperty(qPrintable(key), variant);
+		}
+	}
+		
+	emit instancePropertyChanged(key,variant);
 }
 
 ///////////////////////
@@ -379,13 +453,118 @@ void LiveVideoInputLayer::setupDrawable()
 	drawable->setObjectName(qPrintable(defaultCamera));
 
 
-	VideoDisplayOptionWidget *opts = new VideoDisplayOptionWidget(drawable);
-	opts->adjustSize();
-	opts->show();
+// 	VideoDisplayOptionWidget *opts = new VideoDisplayOptionWidget(drawable);
+// 	opts->adjustSize();
+// 	opts->show();
+
 	m_drawable = drawable;
 	m_videoDrawable = drawable;
 
 	setCamera(source);
+
+}
+
+
+void LiveVideoInputLayer::setupInstanceProperties(GLDrawable *drawable)
+{
+	LiveLayer::setupInstanceProperties(drawable);
+	
+	GLVideoDrawable *vid = dynamic_cast<GLVideoDrawable*>(drawable);
+	if(!vid)
+		return;
+	
+	QStringList props = QStringList()
+		<< "brightness"
+		<< "contrast"
+		<< "hue"
+		<< "saturation"
+		<< "flipHorizontal"
+		<< "flipVertical"
+		<< "cropTopLeft"
+		<< "cropBottomRight";
+		
+	foreach(QString prop, props)
+	{
+		m_props[prop] = vid->property(qPrintable(prop));
+	}
+}
+
+QList<QtPropertyEditorIdPair> LiveVideoInputLayer::createPropertyEditors(QtVariantPropertyManager *manager)
+{
+	QList<QtPropertyEditorIdPair> list = LiveLayer::createPropertyEditors(manager);
+		
+	QtVariantProperty *property;
+	
+	VideoSource *source = m_videoDrawable->videoSource();
+	
+	CameraThread *camera = dynamic_cast<CameraThread*>(source);
+	if(camera)
+	{
+		property = manager->addProperty(QVariant::Bool, tr("Deinterlace"));
+		property->setValue(camera->deinterlace());
+		list << QtPropertyEditorIdPair("deinterlace", property);
+	}
+	
+	///////////////////////////////////////////
+	
+	property = manager->addProperty(QVariant::Int, tr("Contrast"));
+	property->setAttribute(QLatin1String("minimum"), -100);
+	property->setAttribute(QLatin1String("maximum"), 100);
+	property->setValue(m_videoDrawable->brightness());
+	list << QtPropertyEditorIdPair("contrast", property);
+	
+	property = manager->addProperty(QVariant::Int, tr("Hue"));
+	property->setAttribute(QLatin1String("minimum"), -100);
+	property->setAttribute(QLatin1String("maximum"), 100);
+	property->setValue(m_videoDrawable->brightness());
+	list << QtPropertyEditorIdPair("saturation", property);
+	
+	property = manager->addProperty(QVariant::Int, tr("Saturation"));
+	property->setAttribute(QLatin1String("minimum"), -100);
+	property->setAttribute(QLatin1String("maximum"), 100);
+	property->setValue(m_videoDrawable->brightness());
+	list << QtPropertyEditorIdPair("saturation", property);
+	
+	
+	///////////////////////////////////////////
+	
+	property = manager->addProperty(QVariant::Bool, tr("Flip Horizontal"));
+	property->setValue(m_videoDrawable->flipHorizontal());
+	list << QtPropertyEditorIdPair("flipHorizontal", property);
+	
+	property = manager->addProperty(QVariant::Bool, tr("Flip Vertical"));
+	property->setValue(m_videoDrawable->flipHorizontal());
+	list << QtPropertyEditorIdPair("flipVertical", property);
+	
+	///////////////////////////////////////////
+		
+	property = manager->addProperty(QVariant::PointF, tr("Crop Top-Left"));
+	property->setValue(m_videoDrawable->cropTopLeft());
+	list << QtPropertyEditorIdPair("cropTopLeft", property);
+	
+	property = manager->addProperty(QVariant::PointF, tr("Crop Bottom-Right"));
+	property->setValue(m_videoDrawable->cropBottomRight());
+	list << QtPropertyEditorIdPair("cropBottomRight", property);
+	
+	///////////////////////////////////////////
+	
+	return list;
+}
+
+void LiveVideoInputLayer::setInstanceProperty(const QString& key, const QVariant& value)
+{
+	if(key == "deinterlace")
+	{
+		VideoSource *source = m_videoDrawable->videoSource();
+		
+		CameraThread *camera = dynamic_cast<CameraThread*>(source);
+		if(camera)
+		{
+			camera->setDeinterlace((bool)value.toInt());
+		}
+	}
+	
+	LiveLayer::setInstanceProperty(key,value);
 
 }
 
@@ -447,9 +626,124 @@ void LiveStaticSourceLayer::setupDrawable()
 
 	m_drawable = drawable;
 	changeInstanceName("File 'me2.jpg'");
+}
 
+
+void LiveStaticSourceLayer::setupInstanceProperties(GLDrawable *drawable)
+{
+	LiveLayer::setupInstanceProperties(drawable);
+	
+	// TODO expose a 'filename' property
+	
+	/*
+	GLVideoDrawable *vid = dynamic_cast<GLVideoDrawable*>(drawable);
+	if(!vid)
+		return;
+	
+	QStringList props
+		<< "brightness"
+		<< "contrast"
+		<< "hue"
+		<< "saturation"
+		<< "flipHorizontal"
+		<< "flipVertical"
+		<< "cropTopLeft"
+		<< "cropBottomRight";
+		
+	foreach(QString prop, props)
+	{
+		m_props[prop] = vid->property(qPrintable(prop));
+	}*/
+}
+
+QList<QtPropertyEditorIdPair> LiveStaticSourceLayer::createPropertyEditors(QtVariantPropertyManager *manager)
+{
+	QList<QtPropertyEditorIdPair> list = LiveLayer::createPropertyEditors(manager);
+		
+	GLDrawable *gl = drawable();
+	if(!gl)
+		return list;
+		
+	// TODO expose filename property
+	
+// 	QtVariantProperty *property;
+// 	
+// 	
+// 	VideoSource *source = gl->videoSource();
+// 	
+// 	CameraThread *camera = dynamic_cast<CameraThread*>(source);
+// 	if(camera)
+// 	{
+// 		property = manager->addProperty(QVariant::Bool, tr("Deinterlace"));
+// 		property->setValue(camera->deinterlace());
+// 		list << QtPropertyEditorIdPair("deinterlace", property);
+// 	}
+// 	
+// 	///////////////////////////////////////////
+// 	
+// 	property = manager->addProperty(QVariant::Int, tr("Contrast"));
+// 	property->setAttribute(QLatin1String("minimum"), -100);
+// 	property->setAttribute(QLatin1String("maximum"), 100);
+// 	property->setValue(gl->brightness());
+// 	list << QtPropertyEditorIdPair("contrast", property);
+// 	
+// 	property = manager->addProperty(QVariant::Int, tr("Hue"));
+// 	property->setAttribute(QLatin1String("minimum"), -100);
+// 	property->setAttribute(QLatin1String("maximum"), 100);
+// 	property->setValue(gl->brightness());
+// 	list << QtPropertyEditorIdPair("saturation", property);
+// 	
+// 	property = manager->addProperty(QVariant::Int, tr("Saturation"));
+// 	property->setAttribute(QLatin1String("minimum"), -100);
+// 	property->setAttribute(QLatin1String("maximum"), 100);
+// 	property->setValue(gl->brightness());
+// 	list << QtPropertyEditorIdPair("saturation", property);
+// 	
+// 	
+// 	///////////////////////////////////////////
+// 	
+// 	property = manager->addProperty(QVariant::Bool, tr("Flip Horizontal"));
+// 	property->setValue(gl->flipHorizontal());
+// 	list << QtPropertyEditorIdPair("flipHorizontal", property);
+// 	
+// 	property = manager->addProperty(QVariant::Bool, tr("Flip Vertical"));
+// 	property->setValue(gl->flipHorizontal());
+// 	list << QtPropertyEditorIdPair("flipVertical", property);
+// 	
+// 	///////////////////////////////////////////
+// 		
+// 	property = manager->addProperty(QVariant::PointF, tr("Crop Top-Left"));
+// 	property->setValue(gl->cropTopLeft());
+// 	list << QtPropertyEditorIdPair("cropTopLeft", property);
+// 	
+// 	property = manager->addProperty(QVariant::PointF, tr("Crop Bottom-Right"));
+// 	property->setValue(gl->cropBottomRight());
+// 	list << QtPropertyEditorIdPair("cropBottomRight", property);
+// 	
+// 	///////////////////////////////////////////
+	
+	return list;
+}
+
+void LiveStaticSourceLayer::setInstanceProperty(const QString& key, const QVariant& value)
+{
+	// TODO load filename from prop and set image
+	
+// 	if(key == "deinterlace")
+// 	{
+// 		VideoSource *source = gl->videoSource();
+// 		
+// 		CameraThread *camera = dynamic_cast<CameraThread*>(source);
+// 		if(camera)
+// 		{
+// 			camera->setDeinterlace((bool)value.toInt());
+// 		}
+// 	}
+	
+	LiveLayer::setInstanceProperty(key,value);
 
 }
+
 
 ///////////////////////
 
@@ -470,39 +764,94 @@ void LiveTextLayer::setupDrawable()
 	GLVideoDrawable *drawable = new GLVideoDrawable();
 
 
-	TextVideoSource *source = new TextVideoSource();
-	source->start();
-	source->setHtml("<b>Welcome to LiveMix</b>");
-	source->changeFontSize(40);
-	QSize size = source->findNaturalSize();
-	source->setTextWidth(size.width());
-	//qDebug() << "New html: "<<source->html();
-	//source->setImage(QImage("/opt/qtsdk-2010.02/qt/examples/opengl/pbuffers/cubelogo.png"));
-
-	drawable->setVideoSource(source);
-	//drawable->setRect(glw->viewport());
-	//qDebug() << "Text Size: "<<size;
-
-	QRectF viewport(0,0,1000,750);
-
-	drawable->setRect(QRectF(
-		qMax(viewport.right()  - size.width()  , 0.0),
-		qMax(viewport.bottom() - size.height() , 0.0),
-		size.width(),
-		size.height()));
+	m_textSource = new TextVideoSource();
+	m_textSource->start();
+	
+	drawable->setVideoSource(m_textSource);
+	
 	drawable->setZIndex(1);
-	//drawable->setOpacity(0.5);
 	drawable->setObjectName("Text");
 
 	drawable->addShowAnimation(GLDrawable::AnimFade);
 	drawable->addShowAnimation(GLDrawable::AnimSlideTop,2500).curve = QEasingCurve::OutElastic;
 
- 	drawable->addHideAnimation(GLDrawable::AnimFade);
- 	drawable->addHideAnimation(GLDrawable::AnimZoom);
+	drawable->addHideAnimation(GLDrawable::AnimFade);
+	drawable->addHideAnimation(GLDrawable::AnimZoom);
 
 	m_drawable = drawable;
-	changeInstanceName("Welcome to LiveMix");
+	
+	setText("<b>Welcome to LiveMix</b>");
 }
+
+
+
+void LiveTextLayer::setupInstanceProperties(GLDrawable *drawable)
+{
+	LiveLayer::setupInstanceProperties(drawable);
+	
+	GLVideoDrawable *vid = dynamic_cast<GLVideoDrawable*>(drawable);
+	if(!vid)
+		return;
+	
+	m_props["text"] = text();
+}
+
+void LiveTextLayer::setText(const QString& text)
+{
+	m_textSource->setHtml(text);
+	// TODO make font size configurable
+	m_textSource->changeFontSize(40);
+	QSize size = m_textSource->findNaturalSize();
+	m_textSource->setTextWidth(size.width());
+	
+	// TODO make anchor configurable
+	
+	QRectF viewport(0,0,1000,750);
+
+	m_drawable->setRect(QRectF(
+		qMax(viewport.right()  - size.width()  , 0.0),
+		qMax(viewport.bottom() - size.height() , 0.0),
+		size.width(),
+		size.height()));
+	
+	// TODO do we need to store both in a member var AND m_props?
+	m_props["text"] = text;
+	
+	m_text = text;
+	
+	changeInstanceName(text);
+}
+
+QList<QtPropertyEditorIdPair> LiveTextLayer::createPropertyEditors(QtVariantPropertyManager *manager)
+{
+	QList<QtPropertyEditorIdPair> list = LiveLayer::createPropertyEditors(manager);
+	
+	GLDrawable *gl = drawable();
+	if(!gl)
+		return list;
+		
+	QtVariantProperty *property;
+	
+	///////////////////////////////////////////
+	
+	property = manager->addProperty(QVariant::String, tr("Text"));
+	property->setValue(text());
+	list << QtPropertyEditorIdPair("text", property);
+	
+	return list;
+}
+
+void LiveTextLayer::setInstanceProperty(const QString& key, const QVariant& value)
+{
+	if(key == "text")
+	{
+		setText(value.toString());
+	}
+	
+	LiveLayer::setInstanceProperty(key,value);
+
+}
+
 
 ///////////////////////
 
@@ -542,7 +891,7 @@ void MainWindow::setupSampleScene()
 	LiveScene *scene = new LiveScene();
 
 	//LiveVideoInputLayer *videoLayer = new LiveVideoInputLayer();
-	//scene->addLayer(new LiveVideoInputLayer());
+	scene->addLayer(new LiveVideoInputLayer());
 
 	scene->addLayer(new LiveStaticSourceLayer());
 	scene->addLayer(new LiveTextLayer());
@@ -653,10 +1002,196 @@ void MainWindow::liveLayerClicked()
 	}
 }
 
+void MainWindow::updateExpandState()
+{
+	QList<QtBrowserItem *> list = m_propertyEditor->topLevelItems();
+	QListIterator<QtBrowserItem *> it(list);
+	while (it.hasNext()) 
+	{
+		QtBrowserItem *item = it.next();
+		QtProperty *prop = item->property();
+		m_idToExpanded[m_propertyToId[prop]] = m_propertyEditor->isExpanded(item);
+	}
+}
+
 void MainWindow::loadLayerProperties(LiveLayer *layer)
 {
 	m_currentLayer = layer;
+	updateExpandState();
+
+	QMap<QtProperty *, QString>::ConstIterator itProp = m_propertyToId.constBegin();
+	while (itProp != m_propertyToId.constEnd()) 
+	{
+		delete itProp.key();
+		itProp++;
+	}
+	m_propertyToId.clear();
+	m_idToProperty.clear();
+
+	if (!m_currentLayer) 
+	{
+		//deleteAction->setEnabled(false);
+		return;
+	}
+
+	//deleteAction->setEnabled(true);
+
+// 	QtVariantProperty *property;
+	
+	QList<QtPropertyEditorIdPair> list = layer->createPropertyEditors(m_variantManager);
+	foreach(QtPropertyEditorIdPair pair, list)
+	{
+		addProperty(pair.value, pair.id);
+	}
+
+// 	property = variantManager->addProperty(QVariant::Double, tr("Position X"));
+// 	property->setAttribute(QLatin1String("minimum"), 0);
+// 	property->setAttribute(QLatin1String("maximum"), canvas->width());
+// 	property->setValue(item->x());
+// 	addProperty(property, QLatin1String("xpos"));
+// 	
+// 	property = variantManager->addProperty(QVariant::Double, tr("Position Y"));
+// 	property->setAttribute(QLatin1String("minimum"), 0);
+// 	property->setAttribute(QLatin1String("maximum"), canvas->height());
+// 	property->setValue(item->y());
+// 	addProperty(property, QLatin1String("ypos"));
+// 	
+// 	property = variantManager->addProperty(QVariant::Double, tr("Position Z"));
+// 	property->setAttribute(QLatin1String("minimum"), 0);
+// 	property->setAttribute(QLatin1String("maximum"), 256);
+// 	property->setValue(item->z());
+// 	addProperty(property, QLatin1String("zpos"));
+// 	
+// 	if (item->rtti() == QtCanvasItem::Rtti_Rectangle) {
+// 		QtCanvasRectangle *i = (QtCanvasRectangle *)item;
+// 	
+// 		property = variantManager->addProperty(QVariant::Color, tr("Brush Color"));
+// 		property->setValue(i->brush().color());
+// 		addProperty(property, QLatin1String("brush"));
+// 	
+// 		property = variantManager->addProperty(QVariant::Color, tr("Pen Color"));
+// 		property->setValue(i->pen().color());
+// 		addProperty(property, QLatin1String("pen"));
+// 	
+// 		property = variantManager->addProperty(QVariant::Size, tr("Size"));
+// 		property->setValue(i->size());
+// 		addProperty(property, QLatin1String("size"));
+// 	} else if (item->rtti() == QtCanvasItem::Rtti_Line) {
+// 		QtCanvasLine *i = (QtCanvasLine *)item;
+// 	
+// 		property = variantManager->addProperty(QVariant::Color, tr("Pen Color"));
+// 		property->setValue(i->pen().color());
+// 		addProperty(property, QLatin1String("pen"));
+// 	
+// 		property = variantManager->addProperty(QVariant::Point, tr("Vector"));
+// 		property->setValue(i->endPoint());
+// 		addProperty(property, QLatin1String("endpoint"));
+// 	} else if (item->rtti() == QtCanvasItem::Rtti_Ellipse) {
+// 		QtCanvasEllipse *i = (QtCanvasEllipse *)item;
+// 	
+// 		property = variantManager->addProperty(QVariant::Color, tr("Brush Color"));
+// 		property->setValue(i->brush().color());
+// 		addProperty(property, QLatin1String("brush"));
+// 	
+// 		property = variantManager->addProperty(QVariant::Size, tr("Size"));
+// 		property->setValue(QSize(i->width(), i->height()));
+// 		addProperty(property, QLatin1String("size"));
+// 	} else if (item->rtti() == QtCanvasItem::Rtti_Text) {
+// 		QtCanvasText *i = (QtCanvasText *)item;
+// 	
+// 		property = variantManager->addProperty(QVariant::Color, tr("Color"));
+// 		property->setValue(i->color());
+// 		addProperty(property, QLatin1String("color"));
+// 	
+// 		property = variantManager->addProperty(QVariant::String, tr("Text"));
+// 		property->setValue(i->text());
+// 		addProperty(property, QLatin1String("text"));
+// 	
+// 		property = variantManager->addProperty(QVariant::Font, tr("Font"));
+// 		property->setValue(i->font());
+// 		addProperty(property, QLatin1String("font"));
+// 	}
 }
+
+void MainWindow::addProperty(QtVariantProperty *property, const QString &id)
+{
+	m_propertyToId[property] = id;
+	m_idToProperty[id] = property;
+	QtBrowserItem *item = m_propertyEditor->addProperty(property);
+	if (m_idToExpanded.contains(id))
+		m_propertyEditor->setExpanded(item, m_idToExpanded[id]);
+}
+
+void MainWindow::valueChanged(QtProperty *property, const QVariant &value)
+{
+	if (!m_propertyToId.contains(property))
+		return;
+	
+	if (!m_currentLayer)
+		return;
+	
+	QString id = m_propertyToId[property];
+	
+	m_currentLayer->setInstanceProperty(id, value);
+	
+// 	if (id == QLatin1String("xpos")) {
+// 		currentItem->setX(value.toDouble());
+// 	} else if (id == QLatin1String("ypos")) {
+// 		currentItem->setY(value.toDouble());
+// 	} else if (id == QLatin1String("zpos")) {
+// 		currentItem->setZ(value.toDouble());
+// 	} else if (id == QLatin1String("text")) {
+// 		if (currentItem->rtti() == QtCanvasItem::Rtti_Text) {
+// 		QtCanvasText *i = (QtCanvasText *)currentItem;
+// 		i->setText(qVariantValue<QString>(value));
+// 		}
+// 	} else if (id == QLatin1String("color")) {
+// 		if (currentItem->rtti() == QtCanvasItem::Rtti_Text) {
+// 		QtCanvasText *i = (QtCanvasText *)currentItem;
+// 		i->setColor(qVariantValue<QColor>(value));
+// 		}
+// 	} else if (id == QLatin1String("brush")) {
+// 		if (currentItem->rtti() == QtCanvasItem::Rtti_Rectangle ||
+// 			currentItem->rtti() == QtCanvasItem::Rtti_Ellipse) {
+// 		QtCanvasPolygonalItem *i = (QtCanvasPolygonalItem *)currentItem;
+// 		QBrush b = i->brush();
+// 		b.setColor(qVariantValue<QColor>(value));
+// 		i->setBrush(b);
+// 		}
+// 	} else if (id == QLatin1String("pen")) {
+// 		if (currentItem->rtti() == QtCanvasItem::Rtti_Rectangle ||
+// 			currentItem->rtti() == QtCanvasItem::Rtti_Line) {
+// 		QtCanvasPolygonalItem *i = (QtCanvasPolygonalItem *)currentItem;
+// 		QPen p = i->pen();
+// 		p.setColor(qVariantValue<QColor>(value));
+// 		i->setPen(p);
+// 		}
+// 	} else if (id == QLatin1String("font")) {
+// 		if (currentItem->rtti() == QtCanvasItem::Rtti_Text) {
+// 		QtCanvasText *i = (QtCanvasText *)currentItem;
+// 		i->setFont(qVariantValue<QFont>(value));
+// 		}
+// 	} else if (id == QLatin1String("endpoint")) {
+// 		if (currentItem->rtti() == QtCanvasItem::Rtti_Line) {
+// 		QtCanvasLine *i = (QtCanvasLine *)currentItem;
+// 		QPoint p = qVariantValue<QPoint>(value);
+// 		i->setPoints(i->startPoint().x(), i->startPoint().y(), p.x(), p.y());
+// 		}
+// 	} else if (id == QLatin1String("size")) {
+// 		if (currentItem->rtti() == QtCanvasItem::Rtti_Rectangle) {
+// 		QtCanvasRectangle *i = (QtCanvasRectangle *)currentItem;
+// 		QSize s = qVariantValue<QSize>(value);
+// 		i->setSize(s.width(), s.height());
+// 		} else if (currentItem->rtti() == QtCanvasItem::Rtti_Ellipse) {
+// 		QtCanvasEllipse *i = (QtCanvasEllipse *)currentItem;
+// 		QSize s = qVariantValue<QSize>(value);
+// 		i->setSize(s.width(), s.height());
+// 		}
+// 	}
+// 	canvas->update();
+}
+
+
 
 void MainWindow::createLeftPanel()
 {
@@ -666,11 +1201,37 @@ void MainWindow::createLeftPanel()
 	m_layerViewer = new GLWidget(m_leftSplitter);
 	m_leftSplitter->addWidget(m_layerViewer);
 
-	m_controlArea = new QScrollArea(m_leftSplitter);
-	m_controlBase = new QWidget(m_controlArea);
-	(void)new QVBoxLayout(m_controlBase);
-	m_controlArea->setWidget(m_controlBase);
-	m_leftSplitter->addWidget(m_controlArea);
+// 	m_controlArea = new QScrollArea(m_leftSplitter);
+// 	m_controlBase = new QWidget(m_controlArea);
+// 	(void)new QVBoxLayout(m_controlBase);
+// 	m_controlArea->setWidget(m_controlBase);
+// 	m_leftSplitter->addWidget(m_controlArea);
+
+	m_variantManager = new QtVariantPropertyManager(this);
+	
+	connect(m_variantManager, SIGNAL(valueChanged(QtProperty *, const QVariant &)),
+			      this, SLOT(valueChanged(QtProperty *, const QVariant &)));
+	
+	QtVariantEditorFactory *variantFactory = new QtVariantEditorFactory(this);
+	
+// 	canvas = new QtCanvas(800, 600);
+// 	canvasView = new CanvasView(canvas, this);
+// 	setCentralWidget(canvasView);
+	
+// 	QDockWidget *dock = new QDockWidget(this);
+// 	addDockWidget(Qt::RightDockWidgetArea, dock);
+	
+	m_propertyEditor = new QtTreePropertyBrowser(m_leftSplitter);
+	m_propertyEditor->setFactoryForManager(m_variantManager, variantFactory);
+	m_leftSplitter->addWidget(m_propertyEditor);
+	
+// 	m_currentItem = 0;
+	
+// 	connect(canvasView, SIGNAL(itemClicked(QtCanvasItem *)),
+// 		this, SLOT(itemClicked(QtCanvasItem *)));
+// 	connect(canvasView, SIGNAL(itemMoved(QtCanvasItem *)),
+// 		this, SLOT(itemMoved(QtCanvasItem *)));
+
 }
 
 void MainWindow::createCenterPanel()
@@ -692,8 +1253,11 @@ void MainWindow::createCenterPanel()
 	QWidget *baseParent = new QWidget(m_mainSplitter);
 	QVBoxLayout *parentLayout = new QVBoxLayout(baseParent);
 	parentLayout->setContentsMargins(0,0,0,0);
+	
 	m_layerBase = new QWidget(baseParent);
-	(void)new QVBoxLayout(m_layerBase);
+	QVBoxLayout *layout = new QVBoxLayout(m_layerBase);
+	layout->setContentsMargins(2,2,2,2);
+	
 	parentLayout->addWidget(m_layerBase);
 	parentLayout->addStretch(1);
 	//m_layerArea->setWidget(m_layerBase);

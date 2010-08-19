@@ -46,6 +46,31 @@ private:
 	bool m_isCurrentWidget;
 };
 
+class QtVariantProperty;
+class QtVariantPropertyManager;
+
+#ifndef QtPropertyEditorIdPair
+//typedef QPair<QtVariantProperty,QString> QtPropertyEditorIdPair;
+class QtPropertyEditorIdPair
+{
+public:
+	QtPropertyEditorIdPair(QString _id, QtVariantProperty *_value) 
+		: id(_id), value(_value) {}
+	QString id;
+	QtVariantProperty *value;
+};
+
+#endif
+
+class QtVariantIdPair
+{
+public:
+	QtVariantIdPair(QString _id, QVariant _value) 
+		: id(_id), value(_value) {}
+	QString id;
+	QVariant value;
+};
+
 class LiveLayer : public QObject
 {
 	Q_OBJECT
@@ -60,18 +85,37 @@ public:
 	
 	LayerControlWidget *controlWidget() { return m_controlWidget; }
 	
+	// Used by MainWindow to setup the property editor for this layer
+	virtual QList<QtPropertyEditorIdPair> createPropertyEditors(QtVariantPropertyManager *manager);
+	
+	// Used to save/restore layers 
+	QHash<QString,QVariant> instanceProperties();
+	
+	// Default impl just iterates through all the keys and calls setInstanceProperty()
+	virtual void setInstanceProperties(QHash<QString,QVariant> props);
+	
+	// Query for a specific prop
+	QVariant instanceProperty(const QString& id) { return m_props[id]; }
+	
 signals:
 	void instanceNameChanged(const QString&);
+	void instancePropertyChanged(const QString&, const QVariant&);
+	
+public slots:
+	// Set a property (emits instancePropertyChanged)
+	virtual void setInstanceProperty(const QString&, const QVariant&);
 	
 protected:
 	void changeInstanceName(const QString&);
+	virtual void setupInstanceProperties(GLDrawable*);
 	
-	friend class LiveScene;
 	virtual void setupDrawable();
 	
 	GLDrawable * m_drawable;
 	LayerControlWidget *m_controlWidget; 
 	QString m_instanceName;
+	
+	QHash<QString,QVariant> m_props;
 };
 
 class LiveScene : public QObject
@@ -139,9 +183,17 @@ public:
 	~LiveVideoInputLayer();
 	
 	virtual QString typeName() { return "Video Input"; }
+	
+	// Used by MainWindow to setup the property editor for this layer
+	virtual QList<QtPropertyEditorIdPair> createPropertyEditors(QtVariantPropertyManager *manager);
 
+public slots:
+	// Set a property (emits instancePropertyChanged)
+	virtual void setInstanceProperty(const QString&, const QVariant&);
+	
 protected:
 	virtual void setupDrawable();
+	virtual void setupInstanceProperties(GLDrawable*);
 	
 	friend class VideoInputControlWidget;
 	
@@ -163,8 +215,16 @@ public:
 	
 	virtual QString typeName() { return "Static Source"; }
 
+	// Used by MainWindow to setup the property editor for this layer
+	virtual QList<QtPropertyEditorIdPair> createPropertyEditors(QtVariantPropertyManager *manager);
+
+public slots:
+	// Set a property (emits instancePropertyChanged)
+	virtual void setInstanceProperty(const QString&, const QVariant&);
+
 protected:
 	virtual void setupDrawable();
+	virtual void setupInstanceProperties(GLDrawable*);
 	
 	GLVideoDrawable *videoDrawable() { return m_videoDrawable; }
 	
@@ -181,21 +241,40 @@ public:
 	~LiveTextLayer();
 	
 	virtual QString typeName() { return "Text Layer"; }
+	
+	QString text() { return m_text; }
+	
+	// Used by MainWindow to setup the property editor for this layer
+	virtual QList<QtPropertyEditorIdPair> createPropertyEditors(QtVariantPropertyManager *manager);
+
+public slots:
+	// Calls setInstanceProperty internally
+	void setText(const QString& text);
+	
+	// Set a property (emits instancePropertyChanged)
+	virtual void setInstanceProperty(const QString&, const QVariant&);
 
 protected:
 	virtual void setupDrawable();
+	virtual void setupInstanceProperties(GLDrawable*);
 	
 	GLVideoDrawable *videoDrawable() { return m_videoDrawable; }
 	
 private:
 	GLVideoDrawable *m_videoDrawable;
 	TextVideoSource *m_textSource;
+	QString m_text; 
 };
 
 ///////////////////////
 
 class QAction;
 class QMenu;
+
+class QtVariantProperty;
+class QtProperty;
+
+class QtBrowserIndex;
 
 class MainWindow : public QMainWindow
 {
@@ -213,6 +292,8 @@ private slots:
 	void updateLayerList();
 
 	void liveLayerClicked();
+	
+	void valueChanged(QtProperty *property, const QVariant &value);
 
 private:
 	void createActions();
@@ -267,6 +348,17 @@ private:
 	LayerControlWidget * m_currentControlWidget;
 	LiveLayer *m_currentLayer;
 	
+
+	void addProperty(QtVariantProperty *property, const QString &id);
+    	void updateExpandState();
+    	
+    	class QtVariantPropertyManager *m_variantManager;
+	class QtTreePropertyBrowser *m_propertyEditor;
+    
+	QMap<QtProperty *, QString> m_propertyToId;
+	QMap<QString, QtVariantProperty *> m_idToProperty;
+	QMap<QString, bool> m_idToExpanded;
+
 };
 
 #endif

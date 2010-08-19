@@ -341,6 +341,34 @@ void GLVideoDrawable::frameReady()
 	updateGL();
 }
 
+void GLVideoDrawable::setFlipHorizontal(bool value)
+{
+	m_displayOpts.flipHorizontal = value;
+	emit displayOptionsChanged(m_displayOpts);
+	updateGL();
+}
+
+void GLVideoDrawable::setFlipVertical(bool value)
+{
+	m_displayOpts.flipVertical = value;
+	emit displayOptionsChanged(m_displayOpts);
+	updateGL();
+}
+
+void GLVideoDrawable::setCropTopLeft(QPointF value)
+{
+	m_displayOpts.cropTopLeft = value;
+	emit displayOptionsChanged(m_displayOpts);
+	updateGL();
+}
+
+void GLVideoDrawable::setCropBottomRight(QPointF value)
+{
+	m_displayOpts.cropBottomRight = value;
+	emit displayOptionsChanged(m_displayOpts);
+	updateGL();
+}
+
 /*!
 */
 int GLVideoDrawable::brightness() const
@@ -353,7 +381,7 @@ int GLVideoDrawable::brightness() const
 void GLVideoDrawable::setBrightness(int brightness)
 {
 	m_displayOpts.brightness = brightness;
-	
+	emit displayOptionsChanged(m_displayOpts);
 	m_colorsDirty = true;
 	updateGL();
 }
@@ -370,7 +398,7 @@ int GLVideoDrawable::contrast() const
 void GLVideoDrawable::setContrast(int contrast)
 {
 	m_displayOpts.contrast = contrast;
-	
+	emit displayOptionsChanged(m_displayOpts);
 	m_colorsDirty = true;
 	updateGL();
 }
@@ -387,7 +415,7 @@ int GLVideoDrawable::hue() const
 void GLVideoDrawable::setHue(int hue)
 {
 	m_displayOpts.hue = hue;
-	
+	emit displayOptionsChanged(m_displayOpts);
 	m_colorsDirty = true;
 	updateGL();
 }
@@ -404,7 +432,7 @@ int GLVideoDrawable::saturation() const
 void GLVideoDrawable::setSaturation(int saturation)
 {
 	m_displayOpts.saturation = saturation;
-	
+	emit displayOptionsChanged(m_displayOpts);
 	m_colorsDirty = true;
 	updateGL();
 }
