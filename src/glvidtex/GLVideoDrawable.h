@@ -131,7 +131,11 @@ public:
 	
 	VideoDisplayOptions displayOptions() { return m_displayOpts; }
 	
+	QImage alphaMask() { return m_alphaMask; }
+	
 public slots:
+	void setAlphaMask(const QImage&);
+
 	void setBrightness(int brightness);
 	void setContrast(int contrast);
 	void setHue(int hue);
@@ -226,6 +230,10 @@ private:
 	Qt::AspectRatioMode m_aspectRatioMode;
 	
 	bool m_validShader;
+	
+	QImage m_alphaMask;
+	GLuint m_alphaTextureId;
+	qint64 m_uploadedCacheKey;
 };
 
 #endif 

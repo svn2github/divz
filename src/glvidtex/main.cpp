@@ -32,6 +32,10 @@ GLDrawable * addCamera(GLWidget *glw, QString camera = "")
 		GLVideoDrawable *drawable = new GLVideoDrawable(glw);
 		drawable->setVideoSource(source);
 		drawable->setRect(glw->viewport());
+		
+		if(camera != "/dev/video1")
+			drawable->setAlphaMask(QImage("alphamask2.png"));
+		
 		glw->addDrawable(drawable);
 		drawable->addShowAnimation(GLDrawable::AnimFade);
 		//drawable->addShowAnimation(GLDrawable::AnimZoom,2500).curve = QEasingCurve::OutElastic;
@@ -255,7 +259,8 @@ GLDrawable * addTextOverlay(GLWidget * glw)
 	
 	TextVideoSource *source = new TextVideoSource();
 	source->start();
-	source->setHtml("<img src='me2.jpg'><b>TextVideoSource</b>");
+	//source->setHtml("<img src='me2.jpg'><b>TextVideoSource</b>");
+	source->setHtml("<b>Welcome to LiveMix</b>");
 	source->changeFontSize(40);
 	QSize size = source->findNaturalSize();
 	source->setTextWidth(size.width());
@@ -339,13 +344,14 @@ int main(int argc, char *argv[])
 /*		d = addCamera(glw,"/dev/video0");
 		if(d)
 		{*/
-			d = addCamera(glw,"/dev/video0");
-			if(d)
-				addButtons(tb,d); 
-			
 			d = addCamera(glw,"/dev/video1");
 			if(d)
 				addButtons(tb,d); 
+			
+			d = addCamera(glw,"/dev/video0");
+			if(d)
+				addButtons(tb,d); 
+
 /*		}
 		else
 		*/

@@ -26,6 +26,7 @@
 #  define GL_TEXTURE0    0x84C0
 #  define GL_TEXTURE1    0x84C1
 #  define GL_TEXTURE2    0x84C2
+#  define GL_TEXTURE3    0x84C3
 #endif
 #ifndef GL_PROGRAM_ERROR_STRING_ARB
 #  define GL_PROGRAM_ERROR_STRING_ARB       0x8874
@@ -51,6 +52,7 @@ static const char *qt_glsl_vertexShaderProgram =
 // Paints an RGB32 frame
 static const char *qt_glsl_xrgbShaderProgram =
         "uniform sampler2D texRgb;\n"
+        "uniform sampler2D alphaMask;\n"
         "uniform mediump mat4 colorMatrix;\n"
         "uniform mediump float alpha;\n"
         "varying highp vec2 textureCoord;\n"
@@ -58,12 +60,14 @@ static const char *qt_glsl_xrgbShaderProgram =
         "{\n"
         "    highp vec4 color = vec4(texture2D(texRgb, textureCoord.st).bgr, 1.0);\n"
         "    color = colorMatrix * color;\n"
-        "    gl_FragColor = vec4(color.rgb, alpha);\n"
+        "    gl_FragColor = vec4(color.rgb, alpha * texture2D(alphaMask, textureCoord.st).a);\n"
         "}\n";
 
+//
 // Paints an ARGB frame.
 static const char *qt_glsl_argbShaderProgram =
 	"uniform sampler2D texRgb;\n"
+	"uniform sampler2D alphaMask;\n"
 	"uniform mediump mat4 colorMatrix;\n"
 	"uniform mediump float alpha;\n"
 	"varying highp vec2 textureCoord;\n"
@@ -71,7 +75,7 @@ static const char *qt_glsl_argbShaderProgram =
 	"{\n"
 	"    highp vec4 color = vec4(texture2D(texRgb, textureCoord.st).bgr, 1.0);\n"
 	"    color = colorMatrix * color;\n"
-	"    gl_FragColor = vec4(color.rgb, texture2D(texRgb, textureCoord.st).a * alpha);\n"
+	"    gl_FragColor = vec4(color.rgb, texture2D(texRgb, textureCoord.st).a * alpha * texture2D(alphaMask, textureCoord.st).a);\n"
 	"}\n";
 
 
@@ -136,6 +140,7 @@ static const char *qt_glsl_argbShaderProgram =
 // Paints an RGB(A) frame.
 static const char *qt_glsl_rgbShaderProgram =
         "uniform sampler2D texRgb;\n"
+        "uniform sampler2D alphaMask;\n"
         "uniform mediump mat4 colorMatrix;\n"
         "uniform mediump float alpha;\n"
         "varying highp vec2 textureCoord;\n"
@@ -143,7 +148,7 @@ static const char *qt_glsl_rgbShaderProgram =
         "{\n"
         "    highp vec4 color = vec4(texture2D(texRgb, textureCoord.st).rgb, 1.0);\n"
         "    color = colorMatrix * color;\n"
-        "    gl_FragColor = vec4(color.rgb, texture2D(texRgb, textureCoord.st).a * alpha);\n"
+        "    gl_FragColor = vec4(color.rgb, texture2D(texRgb, textureCoord.st).a * alpha * texture2D(alphaMask, textureCoord.st).a);\n"
         "}\n";
 
 // Paints a YUV420P or YV12 frame.
@@ -151,6 +156,7 @@ static const char *qt_glsl_yuvPlanarShaderProgram =
         "uniform sampler2D texY;\n"
         "uniform sampler2D texU;\n"
         "uniform sampler2D texV;\n"
+        "uniform sampler2D alphaMask;\n"
         "uniform mediump mat4 colorMatrix;\n"
         "uniform mediump float alpha;\n"
         "varying highp vec2 textureCoord;\n"
@@ -162,7 +168,7 @@ static const char *qt_glsl_yuvPlanarShaderProgram =
         "           texture2D(texV, textureCoord.st).r,\n"
         "           1.0);\n"
         "    color = colorMatrix * color;\n"
-        "    gl_FragColor = vec4(color.rgb, alpha);\n"
+        "    gl_FragColor = vec4(color.rgb, alpha * texture2D(alphaMask, textureCoord.st).a);\n"
         "}\n";
 
 
@@ -218,6 +224,7 @@ GLVideoDrawable::GLVideoDrawable(QObject *parent)
 	, m_aspectRatioMode(Qt::KeepAspectRatio)
 	, m_validShader(false)
 	, m_program(0)
+	, m_uploadedCacheKey(0)
 {
 	
 	m_imagePixelFormats
@@ -339,6 +346,70 @@ void GLVideoDrawable::frameReady()
 	}
 	
 	updateGL();
+}
+
+void GLVideoDrawable::setAlphaMask(const QImage &mask)
+{
+	m_alphaMask = mask;
+	
+	if(mask.isNull())
+	{
+		//qDebug() << "GLVideoDrawable::setAlphaMask: "<<this<<",  Got null mask, size:"<<mask.size();
+		return;
+	}
+	
+	if(m_glInited)
+	{
+		if(m_sourceRect.size().toSize() == QSize(0,0))
+		{
+			//qDebug() << "GLVideoDrawable::setAlphaMask: "<<this<<", Not scaling or setting mask, video size is 0x0";
+			return;
+		}
+		
+		glWidget()->makeCurrent();
+		if(m_alphaMask.size() != m_sourceRect.size().toSize())
+		{
+			//qDebug() << "GLVideoDrawable::setAlphaMask: "<<this<<",  Mask size and source size different, scaling";
+			m_alphaMask = m_alphaMask.scaled(m_sourceRect.size().toSize());
+		}
+		
+		if(m_alphaMask.format() != QImage::Format_ARGB32)
+		{
+			//qDebug() << "GLVideoDrawable::setAlphaMask: "<<this<<",  Mask format not ARGB32, reformatting";
+			m_alphaMask = m_alphaMask.convertToFormat(QImage::Format_ARGB32);
+		}
+			
+		if(m_alphaMask.cacheKey() == m_uploadedCacheKey)
+		{
+			//qDebug() << "GLVideoDrawable::setAlphaMask: "<<this<<",  Current mask already uploaded to GPU, not re-uploading.";
+			return;
+		}
+			
+		
+		m_uploadedCacheKey = m_alphaMask.cacheKey();
+
+		//qDebug() << "GLVideoDrawable::setAlphaMask: "<<this<<",  Valid mask, size:"<<m_alphaMask.size()<<", null?"<<m_alphaMask.isNull();
+		
+		glBindTexture(GL_TEXTURE_2D, m_alphaTextureId);
+		glTexImage2D(
+			GL_TEXTURE_2D,
+			0,
+			GL_RGBA,
+			mask.width(),
+			mask.height(),
+			0,
+			GL_RGBA, 
+			GL_UNSIGNED_BYTE,
+			mask.scanLine(0)
+			);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	}
+	
+// 	qDebug() << "GLVideoDrawable::setAlphaMask: "<<this<<",  AT END :"<<m_alphaMask.size()<<", null?"<<m_alphaMask.isNull();
+	
 }
 
 void GLVideoDrawable::setFlipHorizontal(bool value)
@@ -586,6 +657,23 @@ void GLVideoDrawable::initGL()
 	if(m_source)
 		QTimer::singleShot(0,this,SLOT(frameReady()));
 	
+	
+	// create the alpha texture
+	glGenTextures(1, &m_alphaTextureId);
+	
+	if(m_alphaMask.isNull())
+	{
+		m_alphaMask = QImage(1,1,QImage::Format_RGB32);
+		m_alphaMask.fill(Qt::black);
+ 		//qDebug() << "GLVideoDrawable::initGL: BLACK m_alphaMask.size:"<<m_alphaMask.size();
+ 		setAlphaMask(m_alphaMask);
+	}
+	else
+	{
+ 		//qDebug() << "GLVideoDrawable::initGL: Alpha mask already set, m_alphaMask.size:"<<m_alphaMask.size();
+		setAlphaMask(m_alphaMask);
+	}
+	
 	m_time.start();
 }
 
@@ -664,21 +752,24 @@ const char * GLVideoDrawable::resizeTextures(const QSize& frameSize)
 	switch (m_videoFormat.pixelFormat) 
 	{
 	case QVideoFrame::Format_RGB32:
+// 		qDebug() << "GLVideoDrawable::resizeTextures(): \t Format RGB32, using qt_glsl_xrgbShaderProgram";
 		initRgbTextureInfo(GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE, frameSize);
 		fragmentProgram = qt_glsl_xrgbShaderProgram;
 		break;
         case QVideoFrame::Format_ARGB32:
-        	//qDebug() << "GLVideoDrawable::resizeTextures(): \t Format ARGB, using qt_glsl_argbShaderProgram";
+//         	qDebug() << "GLVideoDrawable::resizeTextures(): \t Format ARGB, using qt_glsl_argbShaderProgram";
 		initRgbTextureInfo(GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE, frameSize);
 		fragmentProgram = qt_glsl_argbShaderProgram;
 		break;
 #ifndef QT_OPENGL_ES
         case QVideoFrame::Format_RGB24:
+//         	qDebug() << "GLVideoDrawable::resizeTextures(): \t Format RGB24, using qt_glsl_rgbShaderProgram";
 		initRgbTextureInfo(GL_RGB8, GL_RGB, GL_UNSIGNED_BYTE, frameSize);
 		fragmentProgram = qt_glsl_rgbShaderProgram;
 		break;
 #endif
 	case QVideoFrame::Format_RGB565:
+// 		qDebug() << "GLVideoDrawable::resizeTextures(): \t Format RGB565, using qt_glsl_rgbShaderProgram";
 		initRgbTextureInfo(GL_RGB, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, frameSize);
 		fragmentProgram = qt_glsl_rgbShaderProgram;
 		break;
@@ -713,7 +804,14 @@ void GLVideoDrawable::drawableResized(const QSizeF& /*newSize*/)
 
 void GLVideoDrawable::updateRects()
 {
+		
 	m_sourceRect = m_frame.rect;
+	//if(m_frame.rect != m_sourceRect)
+	setAlphaMask(m_alphaMask);
+	
+	// force mask to be re-scaled
+	//qDebug() << "GLVideoDrawable::updateRects(): "<<this<<",  New source rect: "<<m_sourceRect<<", mask size:"<<m_alphaMask.size()<<", isNull?"<<m_alphaMask.isNull();
+	
 	
 	QRectF adjustedSource = m_sourceRect.adjusted(
 		m_displayOpts.cropTopLeft.x(),
@@ -887,18 +985,28 @@ void GLVideoDrawable::paintGL()
 		glActiveTexture(GL_TEXTURE2);
 		glBindTexture(GL_TEXTURE_2D, m_textureIds[2]);
 		
+		glActiveTexture(GL_TEXTURE3);
+		glBindTexture(GL_TEXTURE_2D, m_alphaTextureId);
+		
 		glActiveTexture(GL_TEXTURE0);
 	
 		m_program->setUniformValue("texY", 0);
 		m_program->setUniformValue("texU", 1);
 		m_program->setUniformValue("texV", 2);
+		m_program->setUniformValue("alphaMask", 3);
 	} 
 	else 
 	{
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, m_textureIds[0]);
 	
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, m_alphaTextureId);
+		
+		glActiveTexture(GL_TEXTURE0);
+	
 		m_program->setUniformValue("texRgb", 0);
+		m_program->setUniformValue("alphaMask", 1);
 	}
 	m_program->setUniformValue("colorMatrix", m_colorMatrix);
 	
