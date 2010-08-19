@@ -121,34 +121,21 @@ void GLWidget::resizeGL(int width, int height)
 void GLWidget::setViewport(const QRectF& viewport)
 {
 	m_viewport = viewport;
+	
 	float sw = viewport.width();
 	float sh = viewport.height();
 	
-	float sx = ((float)width()) / sw;
+	float sx = ((float)width())  / sw;
 	float sy = ((float)height()) / sh;
 
 	float scale = qMin(sx,sy);
 	float scaledWidth  = sw * scale;
 	float scaledHeight = sh * scale;
-	int diffWidth  = width()  - (int)scaledWidth;
-	int diffHeight = height() - (int)scaledHeight;
-/*	qDebug() << "GLWidget::setViewport: viewport:"<<viewport;
-	qDebug() << "GLWidget::setViewport: widget size:"<<width()<<"x"<<height();
-	qDebug() << "GLWidget::setViewport: sx:"<<sx<<",sy:"<<sy<<", final scale:"<<scale;
-	qDebug() << "GLWidget::setViewport: scaled viewport size:"<<scaledWidth<<"x"<<scaledHeight;
-	qDebug() << "GLWidget::setViewport: widget size - viewport size:"<<diffWidth<<"x"<<diffHeight;*/
 	
-	/// WHY?? The usual centering algorithm of 'divide by 2' doesn't seem to work - at least
-	/// on my work machine. The math is correct, but the output renders too far to the right and top. 
-	/// The 2.75 and 1.5 were found simply thru trial and error.
-	float xt = diffWidth/2  + viewport.left();
-	float yt = diffHeight/2  + viewport.top();
-// 	int xt = diffWidth/2.0  + (int)viewport.left();
-// 	int yt = diffHeight/2.0 + (int)viewport.top();
+	float xt = (width()  - scaledWidth) /2  + viewport.left();
+	float yt = (height() - scaledHeight)/2  + viewport.top();
 	
-	//qDebug() << "GLWidget::setViewport: xt:"<<xt<<", yt:"<<yt;
-	
-	setTransform(QTransform().scale(scale,scale).translate(xt,yt));
+	setTransform(QTransform().translate(xt,yt).scale(scale,scale));
 	
 	//QSize size(width,height);
 	//foreach(GLDrawable *drawable, m_drawables)
