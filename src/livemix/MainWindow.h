@@ -20,19 +20,30 @@ public:
 	virtual ~LayerControlWidget();
 	
 	LiveLayer *layer() { return m_layer; }
+	bool isCurrentWidget() { return m_isCurrentWidget; }
+	
+signals:
+	void clicked();
+	
+public slots:
+	void setIsCurrentWidget(bool);
 	
 protected slots:
 	void instanceNameChanged(const QString&);
 	void opacitySliderChanged(int);
+	void drawableVisibilityChanged(bool);
 	
 protected:
 	virtual void setupUI();
+	void mouseReleaseEvent(QMouseEvent*);
 	
 private:
 	LiveLayer *m_layer;
 	QLabel *m_nameLabel;
 	QSlider *m_opacitySlider;
 	QPushButton *m_liveButton;
+	QPushButton *m_editButton;
+	bool m_isCurrentWidget;
 };
 
 class LiveLayer : public QObject
@@ -201,6 +212,7 @@ private slots:
 	void about();
 	void updateLayerList();
 
+	void liveLayerClicked();
 
 private:
 	void createActions();
@@ -252,6 +264,8 @@ private:
 	LiveScene *m_currentScene;
 	
 	QHash<LiveLayer*, LayerControlWidget*> m_controlWidgetMap;
+	LayerControlWidget * m_currentControlWidget;
+	LiveLayer *m_currentLayer;
 	
 };
 

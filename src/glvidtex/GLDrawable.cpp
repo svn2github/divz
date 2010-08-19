@@ -139,8 +139,8 @@ void GLDrawable::startAnimation(const GLDrawable::AnimParam& p)
 		case GLDrawable::AnimFade:
 			m_originalOpacity = m_opacity;
 			ani = new QAutoDelPropertyAnimation(this, "opacity");
-			ani->setStartValue(inFlag ? 0.0 : 1.0);
-			ani->setEndValue(inFlag ?   1.0 : 0.0);
+			ani->setStartValue(inFlag ? 0.0 : opacity());
+			ani->setEndValue(inFlag ?   opacity() : 0.0);
 			break;
 		
 		case GLDrawable::AnimZoom:

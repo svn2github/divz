@@ -15,12 +15,36 @@ LayerControlWidget::LayerControlWidget(LiveLayer *layer)
 LayerControlWidget::~LayerControlWidget()
 {}
 
+void LayerControlWidget::mouseReleaseEvent(QMouseEvent*)
+{
+ 	emit clicked();
+}
+
+void LayerControlWidget::setIsCurrentWidget(bool flag)
+{
+	m_isCurrentWidget = flag;
+	m_editButton->setStyleSheet(flag ? "background: yellow" : "");
+	m_editButton->setChecked(flag);
+}
+
+void LayerControlWidget::drawableVisibilityChanged(bool flag)
+{
+	m_liveButton->setStyleSheet(flag ? "background: red; color: white; font-weight: bold" : "");
+	m_liveButton->setChecked(flag);
+}
+
 void LayerControlWidget::setupUI()
 {
 	setFrameStyle(QFrame::StyledPanel | QFrame::Raised);
 	setLineWidth(2);
 	
 	QHBoxLayout *layout = new QHBoxLayout(this);
+	
+	m_editButton = new QPushButton(QPixmap("../data/stock-edit.png"),"");
+	m_editButton->setCheckable(true);
+	connect(m_editButton, SIGNAL(clicked()), this, SIGNAL(clicked()));
+	layout->addWidget(m_editButton);
+	
 	
 	m_nameLabel = new QLabel;
 	layout->addWidget(m_nameLabel);
@@ -49,7 +73,9 @@ void LayerControlWidget::setupUI()
 	m_liveButton = new QPushButton("Live");
 	m_liveButton->setCheckable(true);
 	connect(m_liveButton, SIGNAL(toggled(bool)), m_layer->drawable(), SLOT(setVisible(bool)));
-	connect(m_layer->drawable(), SIGNAL(isVisible(bool)), m_liveButton, SLOT(setChecked(bool)));
+	connect(m_layer->drawable(), SIGNAL(isVisible(bool)), this, SLOT(drawableVisibilityChanged(bool)));
+	if(m_layer->drawable()->isVisible())
+		drawableVisibilityChanged(true);
 	layout->addWidget(m_liveButton);
 	
 }
@@ -483,6 +509,8 @@ void LiveTextLayer::setupDrawable()
 MainWindow::MainWindow()
 	: QMainWindow()
 	, m_currentScene(0)
+	, m_currentControlWidget(0)
+	, m_currentLayer(0)
 {
 	
 	
@@ -589,6 +617,8 @@ void MainWindow::updateLayerList()
 			
 			m_controlWidgetMap[layer] = widget;
 			foundLayer.append(layer);
+			
+			connect(widget, SIGNAL(clicked()), this, SLOT(liveLayerClicked()));
 		}
 	}
 	
@@ -597,10 +627,31 @@ void MainWindow::updateLayerList()
 		if(!foundLayer.contains(layer))
 		{
 			qDebug() << "MainWindow::updateLayerList(): layer not found, removing control widget"<<layer;
+			disconnect(m_controlWidgetMap[layer], 0, this, 0);
 			m_layerBase->layout()->removeWidget(m_controlWidgetMap[layer]);
 			m_controlWidgetMap.remove(layer);
+			
 		}
 	}
+}
+
+void MainWindow::liveLayerClicked()
+{
+	if(m_currentControlWidget)
+		m_currentControlWidget->setIsCurrentWidget(false);
+		
+	LayerControlWidget *widget = dynamic_cast<LayerControlWidget*>(sender());
+	if(widget)
+	{
+		widget->setIsCurrentWidget(true);
+		loadLayerProperties(widget->layer());
+		m_currentControlWidget = widget;
+	}
+}
+
+void MainWindow::loadLayerProperties(LiveLayer *layer)
+{
+	m_currentLayer = layer;
 }
 
 void MainWindow::createLeftPanel()
@@ -620,9 +671,19 @@ void MainWindow::createLeftPanel()
 
 void MainWindow::createCenterPanel()
 {
-	//m_layerArea = new QScrollArea(m_mainSplitter);
-	
-	//m_layerBase = new QWidget(m_layerArea);
+//	m_layerArea = new QScrollArea(m_mainSplitter);	
+// 	QWidget *baseParent = new QWidget(m_layerArea);
+// 	QVBoxLayout *parentLayout = new QVBoxLayout(baseParent);
+// 	parentLayout->setContentsMargins(0,0,0,0);
+// 	m_layerBase = new QWidget(baseParent);
+// 	(void)new QVBoxLayout(m_layerBase);
+// 	parentLayout->addWidget(m_layerBase);
+// 	parentLayout->addStretch(1);
+// 	//m_layerArea->setWidget(m_layerBase);
+// 	//m_mainSplitter->addWidget(m_layerArea);
+// 	m_layerArea->setWidget(baseParent);
+// 	m_mainSplitter->addWidget(m_layerArea);
+// 	baseParent->show();
 	
 	QWidget *baseParent = new QWidget(m_mainSplitter);
 	QVBoxLayout *parentLayout = new QVBoxLayout(baseParent);
@@ -648,7 +709,6 @@ void MainWindow::createRightPanel()
 	
 	m_mainSplitter->addWidget(base);
 }
-
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
