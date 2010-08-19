@@ -52,7 +52,6 @@ SOURCES += main.cpp \
 	MdiPreviewWidget.cpp \
 	DVizSharedMemoryThread.cpp \
 	MdiDVizWidget.cpp \
-	SimpleV4L2.cpp \
 	../glvidtex/GLWidget.cpp \
 	../glvidtex/GLDrawable.cpp \
 	../glvidtex/GLVideoDrawable.cpp \
@@ -60,7 +59,13 @@ SOURCES += main.cpp \
 	../glvidtex/TextVideoSource.cpp \
 	../ImageFilters.cpp 
 
+
 unix {
+	HEADERS += \
+		../livemix/SimpleV4L2.h
+	SOURCES += \
+		../livemix/SimpleV4L2.cpp
+
 	LIBS += -lavdevice -lavformat -lavcodec -lavutil -lswscale -lbz2 
 }
 
