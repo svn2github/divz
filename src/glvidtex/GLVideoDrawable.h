@@ -112,6 +112,10 @@ class GLVideoDrawable : public GLDrawable
 	
 	Q_PROPERTY(QPointF textureOffset READ textureOffset WRITE setTextureOffset);
 	
+	Q_PROPERTY(VideoSource* videoSource READ videoSource WRITE setVideoSource);
+	
+	
+	
 public:
 	GLVideoDrawable(QObject *parent=0);
 	~GLVideoDrawable();
@@ -180,6 +184,8 @@ protected:
 	void updateRects();
 	
 	const char * resizeTextures(const QSize& size);
+	
+	void updateTextureOffsets();
 
 protected slots:
 	void frameReady();

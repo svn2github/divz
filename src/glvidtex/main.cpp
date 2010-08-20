@@ -33,8 +33,8 @@ GLDrawable * addCamera(GLWidget *glw, QString camera = "")
 		drawable->setVideoSource(source);
 		drawable->setRect(glw->viewport());
 		
-		if(camera != "/dev/video1")
-			drawable->setAlphaMask(QImage("alphamask2.png"));
+// 		if(camera != "/dev/video1")
+// 			drawable->setAlphaMask(QImage("alphamask2.png"));
 		
 		glw->addDrawable(drawable);
 		drawable->addShowAnimation(GLDrawable::AnimFade);

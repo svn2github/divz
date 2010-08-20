@@ -153,7 +153,6 @@ CameraThread::CameraThread(const QString& camera, QObject *parent)
 	, m_frameCount(0)
 	, m_deinterlace(false)
 	, m_v4l2(0)
-	, m_initStarted(false)
 {
 	m_time_base_rational.num = 1;
 	m_time_base_rational.den = AV_TIME_BASE;
@@ -206,7 +205,9 @@ CameraThread * CameraThread::threadForCamera(const QString& camera)
  		#ifdef DEBUG
  		qDebug() << "CameraThread::threadForCamera(): "<<v<<": "<<camera<<": [CACHE MISS] -";
  		#endif
+//  		v->initCamera();
 		v->start(QThread::HighPriority);
+		usleep(500 * 1000); // give it half a sec or so to init
 
 		return v;
 	}
@@ -402,7 +403,11 @@ bool CameraThread::setInput(const QString& name)
 
 int CameraThread::initCamera()
 {
-	m_initStarted = true;
+// 	qDebug() << "CameraThread::initCamera(): start";
+	QMutexLocker lock(&m_initMutex);
+	
+	
+	
 	m_inited = false;
 	
 	#if defined(Q_OS_LINUX)
@@ -419,11 +424,19 @@ int CameraThread::initCamera()
 			m_v4l2->initDevice();
 			m_v4l2->startCapturing();
 			m_inited = true;
+			
+// 			qDebug() << "CameraThread::initCamera(): finish2";
 
 			return 1;
 		}
 	}
 	#endif
+	
+	if(m_inited)
+	{
+// 		qDebug() << "CameraThread::initCamera(): finish3";
+		return 1;
+	}
 
 	// And do it here even if we're not using raw frames because setInput() will use SimpleV4L2 on linux,
 	// and its a NOOP on windows.
@@ -565,12 +578,13 @@ int CameraThread::initCamera()
 	m_timebase = m_av_format_context->streams[m_video_stream]->time_base;
 
 	m_inited = true;
+// 	qDebug() << "CameraThread::initCamera(): finish";
 	return 0;
 }
 
 void CameraThread::run()
 {
-	initCamera();
+ 	initCamera();
 
 	//qDebug() << "CameraThread::run: In Thread ID "<<QThread::currentThreadId();
 // 	int counter = 0;
@@ -662,21 +676,22 @@ void CameraThread::enableRawFrames(bool enable)
 	bool old = m_rawFrames;
 	m_rawFrames = enable;
 
-	if(!m_inited)
-		return;
-
+	
 	if(old != enable)
 	{
+// 		qDebug() << "CameraThread::enableRawFrames(): start";
+		m_initMutex.lock(); // make sure init isnt running, block while it is
 		// switch from raw V4L2 to LibAV* (or visa versa based on m_rawFrames, since SimpleV4L2 only outputs raw ARGB32)
 		//qDebug() << "CameraThread::enableRawFrames: flag changed, status: "<<m_rawFrames;
-		while(m_initStarted && !m_inited)
-		{
-			qDebug() << "CameraThread::enableRawFrames: Still init'ing camera, waiting for initCamera() to finish before swithing raw frame mode.";
-			usleep(100 * 1000);
-		}
 		
 		freeResources();
+		
+		m_initMutex.unlock(); // dont block init now
+		
+// 		qDebug() << "CameraThread::enableRawFrames(): mark1";
 		initCamera();
+		
+// 		qDebug() << "CameraThread::enableRawFrames(): finish";
 	}
 
 }

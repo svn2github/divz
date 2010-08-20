@@ -21,13 +21,13 @@ HEADERS += CameraThread.h \
 	VideoThread.h \
 	VideoFrame.h \
 	MjpegThread.h \
-	MainWindow.h \
+#	MainWindow.h \
 	MdiChild.h \
 	MdiVideoChild.h \
 	MdiVideoWidget.h \
 	MdiCameraWidget.h \
 	MdiMjpegWidget.h \
-	MdiPreviewWidget.h \
+#	MdiPreviewWidget.h \
 	DVizSharedMemoryThread.h \
 	MdiDVizWidget.h \
 	../glvidtex/GLWidget.h \
@@ -35,7 +35,12 @@ HEADERS += CameraThread.h \
 	../glvidtex/GLVideoDrawable.h \
 	../glvidtex/StaticVideoSource.h \
 	../glvidtex/TextVideoSource.h \
-	../ImageFilters.h
+	../ImageFilters.h \
+	LiveScene.h \
+	LiveLayer.h \
+	LiveVideoInputLayer.h \
+#	LiveStaticSourceLayer.h \
+#	LiveTextLayer.h 
 	
 SOURCES += main.cpp \
 	CameraThread.cpp \
@@ -45,13 +50,13 @@ SOURCES += main.cpp \
 	VideoThread.cpp \
 	VideoFrame.cpp \
 	MjpegThread.cpp \
-	MainWindow.cpp \
+#	MainWindow.cpp \
 	MdiChild.cpp \
 	MdiVideoChild.cpp \
 	MdiVideoWidget.cpp \
 	MdiCameraWidget.cpp \
 	MdiMjpegWidget.cpp \
-	MdiPreviewWidget.cpp \
+#	MdiPreviewWidget.cpp \
 	DVizSharedMemoryThread.cpp \
 	MdiDVizWidget.cpp \
 	../glvidtex/GLWidget.cpp \
@@ -59,7 +64,12 @@ SOURCES += main.cpp \
 	../glvidtex/GLVideoDrawable.cpp \
 	../glvidtex/StaticVideoSource.cpp \
 	../glvidtex/TextVideoSource.cpp \
-	../ImageFilters.cpp 
+	../ImageFilters.cpp \
+	LiveScene.cpp \
+	LiveLayer.cpp \
+	LiveVideoInputLayer.cpp \
+#	LiveStaticSourceLayer.cpp \
+#	LiveTextLayer.cpp 
 
 
 unix {

@@ -8,12 +8,18 @@
 #include <QTextCursor>
 
 //#include "CameraTest.h"
-#include "VideoWidget.h"
-#include "CameraThread.h"
-#include "VideoThread.h"
-#include "MjpegThread.h"
+// #include "VideoWidget.h"
+ #include "CameraThread.h"
+// #include "VideoThread.h"
+// #include "MjpegThread.h"
 
-#include "MainWindow.h"
+#include "LiveVideoInputLayer.h"
+#include "LiveScene.h"
+#include "../glvidtex/GLWidget.h"
+#include "../glvidtex/GLVideoDrawable.h"
+#include "../glvidtex/StaticVideoSource.h"
+
+//#include "MainWindow.h"
 
 //#include "MdiCamera.h"
 
@@ -48,8 +54,76 @@ int main(int argc, char **argv)
 //  	t.show();
 
 
-	MainWindow mw;
-	mw.show();
+// 	MainWindow mw;
+// 	mw.show();
+
+	GLWidget *viewer = new GLWidget();
+	viewer->resize(400,300);
+	
+	
+// 	QSize size = viewer->viewport().size().toSize();
+// 	size /= 4;
+// 	//qDebug() << "MainWindow::createLeftPanel(): size:"<<size;
+// 	QImage bgImage(size, QImage::Format_ARGB32_Premultiplied);
+// 	QBrush bgTexture(QPixmap("squares2.png"));
+// 	QPainter bgPainter(&bgImage);
+// 	bgPainter.fillRect(bgImage.rect(), bgTexture);
+// 	bgPainter.end();
+// 	
+// 	StaticVideoSource *source = new StaticVideoSource();
+// 	source->setImage(bgImage);
+// 	//source->setImage(QImage("squares2.png"));
+// 	source->start();
+// 	
+// 	GLVideoDrawable *drawable = new GLVideoDrawable(viewer);
+// 	drawable->setVideoSource(source);
+// 	drawable->setRect(viewer->viewport());
+// 	drawable->setZIndex(-100);
+// 	drawable->setObjectName("StaticBackground");
+// 	drawable->show();
+// 	
+// 	viewer->addDrawable(drawable);
+// 	
+	
+	
+	LiveScene *scene = new LiveScene();
+	scene->addLayer(new LiveVideoInputLayer());
+	scene->attachGLWidget(viewer);
+	scene->layerList().at(0)->setIsVisible(true);
+	
+// 	#ifdef Q_OS_WIN
+// 		QString defaultCamera = "vfwcap://0";
+// 	#else
+// 		QString defaultCamera = "/dev/video0";
+// 	#endif
+// 
+// 	CameraThread *source = CameraThread::threadForCamera(defaultCamera);
+// 	if(source)
+// 	{
+// 		source->setFps(30);
+// 		usleep(750 * 1000); // This causes a race condition to manifist itself reliably, which causes a crash every time instead of intermitently. 
+// 		// With the crash reproducable, I can now work to fix it.
+// 		source->enableRawFrames(true);
+// 		//source->setDeinterlace(true);
+// 		
+// 		GLVideoDrawable *drawable = new GLVideoDrawable(viewer);
+// 		drawable->setVideoSource(source);
+// 		drawable->setRect(viewer->viewport());
+// 		
+// 		//if(camera != "/dev/video1")
+// 		//	drawable->setAlphaMask(QImage("alphamask2.png"));
+// 		
+// 		viewer->addDrawable(drawable);
+// 		drawable->addShowAnimation(GLDrawable::AnimFade);
+// 		drawable->addHideAnimation(GLDrawable::AnimFade);
+// 		drawable->show();
+// 		drawable->setObjectName(qPrintable(defaultCamera));
+// 	}
+		
+	
+	viewer->show();
+
+	//loadLiveScene(scene);
 
 /*
 	MdiCamera a;

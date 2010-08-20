@@ -32,6 +32,7 @@ class GLDrawable : public QObject
 	Q_PROPERTY(QRectF rect READ rect WRITE setRect);
 	Q_PROPERTY(double zIndex READ zIndex WRITE setZIndex);
 	Q_PROPERTY(double opacity READ opacity WRITE setOpacity);
+	Q_PROPERTY(double isVisible READ isVisible WRITE setVisible);
 public:
 	GLDrawable(QObject *parent=0);
 	

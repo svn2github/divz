@@ -823,6 +823,11 @@ void GLVideoDrawable::drawableResized(const QSizeF& /*newSize*/)
 	updateRects();
 }
 
+void GLVideoDrawable::updateTextureOffsets()
+{
+	m_invertedOffset = QPointF(m_textureOffset.x() * 1/m_sourceRect.width(),
+				   m_textureOffset.y() * 1/m_sourceRect.height());
+}
 
 void GLVideoDrawable::updateRects()
 {
@@ -831,9 +836,7 @@ void GLVideoDrawable::updateRects()
 	//if(m_frame.rect != m_sourceRect)
 	setAlphaMask(m_alphaMask);
 	
-	
-	m_invertedOffset = QPointF(m_textureOffset.x() * 1/m_sourceRect.width(),
-				   m_textureOffset.y() * 1/m_sourceRect.height());
+	updateTextureOffsets();
 	
 	// force mask to be re-scaled
 	//qDebug() << "GLVideoDrawable::updateRects(): "<<this<<",  New source rect: "<<m_sourceRect<<", mask size:"<<m_alphaMask.size()<<", isNull?"<<m_alphaMask.isNull();
@@ -902,6 +905,7 @@ void GLVideoDrawable::setTextureOffset(double x, double y)
 void GLVideoDrawable::setTextureOffset(const QPointF& point)
 {
 	m_textureOffset = point;
+	updateTextureOffsets();
 	updateGL();
 }
 	

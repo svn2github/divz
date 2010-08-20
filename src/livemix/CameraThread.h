@@ -140,7 +140,7 @@ private:
 	
 	SimpleV4L2 * m_v4l2;
 	
-	bool m_initStarted;
+	QMutex m_initMutex;
 	
 };
 
