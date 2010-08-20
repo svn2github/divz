@@ -110,6 +110,8 @@ class GLVideoDrawable : public GLDrawable
 	Q_PROPERTY(QPointF cropTopLeft READ cropTopLeft WRITE setCropTopLeft);
 	Q_PROPERTY(QPointF flipVertical READ cropBottomRight WRITE setCropBottomRight);
 	
+	Q_PROPERTY(QPointF textureOffset READ textureOffset WRITE setTextureOffset);
+	
 public:
 	GLVideoDrawable(QObject *parent=0);
 	~GLVideoDrawable();
@@ -133,8 +135,12 @@ public:
 	
 	QImage alphaMask() { return m_alphaMask; }
 	
+	QPointF textureOffset() { return m_textureOffset; }
+	
 public slots:
 	void setAlphaMask(const QImage&);
+	void setTextureOffset(double x, double y);
+	void setTextureOffset(const QPointF&);
 
 	void setBrightness(int brightness);
 	void setContrast(int contrast);
@@ -234,6 +240,9 @@ private:
 	QImage m_alphaMask;
 	GLuint m_alphaTextureId;
 	qint64 m_uploadedCacheKey;
+	
+	QPointF m_textureOffset;
+	QPointF m_invertedOffset; // calculated as m_textureOffset.x() * 1/textureWidth, etc
 };
 
 #endif 

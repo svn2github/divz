@@ -55,10 +55,13 @@ static const char *qt_glsl_xrgbShaderProgram =
         "uniform sampler2D alphaMask;\n"
         "uniform mediump mat4 colorMatrix;\n"
         "uniform mediump float alpha;\n"
+        "uniform mediump float texOffsetX;\n"
+        "uniform mediump float texOffsetY;\n"
         "varying highp vec2 textureCoord;\n"
         "void main(void)\n"
         "{\n"
-        "    highp vec4 color = vec4(texture2D(texRgb, textureCoord.st).bgr, 1.0);\n"
+        "    mediump vec2 texPoint = vec2(textureCoord.s + texOffsetX, textureCoord.t + texOffsetY);\n"
+        "    highp vec4 color = vec4(texture2D(texRgb, texPoint).bgr, 1.0);\n"
         "    color = colorMatrix * color;\n"
         "    gl_FragColor = vec4(color.rgb, alpha * texture2D(alphaMask, textureCoord.st).a);\n"
         "}\n";
@@ -70,12 +73,15 @@ static const char *qt_glsl_argbShaderProgram =
 	"uniform sampler2D alphaMask;\n"
 	"uniform mediump mat4 colorMatrix;\n"
 	"uniform mediump float alpha;\n"
+	"uniform mediump float texOffsetX;\n"
+        "uniform mediump float texOffsetY;\n"
 	"varying highp vec2 textureCoord;\n"
 	"void main(void)\n"
 	"{\n"
-	"    highp vec4 color = vec4(texture2D(texRgb, textureCoord.st).bgr, 1.0);\n"
+	"    mediump vec2 texPoint = vec2(textureCoord.s + texOffsetX, textureCoord.t + texOffsetY);\n"
+	"    highp vec4 color = vec4(texture2D(texRgb, texPoint).bgr, 1.0);\n"
 	"    color = colorMatrix * color;\n"
-	"    gl_FragColor = vec4(color.rgb, texture2D(texRgb, textureCoord.st).a * alpha * texture2D(alphaMask, textureCoord.st).a);\n"
+	"    gl_FragColor = vec4(color.rgb, texture2D(texRgb, texPoint).a * alpha * texture2D(alphaMask, textureCoord.st).a);\n"
 	"}\n";
 
 
@@ -143,12 +149,15 @@ static const char *qt_glsl_rgbShaderProgram =
         "uniform sampler2D alphaMask;\n"
         "uniform mediump mat4 colorMatrix;\n"
         "uniform mediump float alpha;\n"
+        "uniform mediump float texOffsetX;\n"
+        "uniform mediump float texOffsetY;\n"
         "varying highp vec2 textureCoord;\n"
         "void main(void)\n"
         "{\n"
-        "    highp vec4 color = vec4(texture2D(texRgb, textureCoord.st).rgb, 1.0);\n"
+        "    mediump vec2 texPoint = vec2(textureCoord.s + texOffsetX, textureCoord.t + texOffsetY);\n"
+        "    highp vec4 color = vec4(texture2D(texRgb, texPoint).rgb, 1.0);\n"
         "    color = colorMatrix * color;\n"
-        "    gl_FragColor = vec4(color.rgb, texture2D(texRgb, textureCoord.st).a * alpha * texture2D(alphaMask, textureCoord.st).a);\n"
+        "    gl_FragColor = vec4(color.rgb, texture2D(texRgb, texPoint).a * alpha * texture2D(alphaMask, textureCoord.st).a);\n"
         "}\n";
 
 // Paints a YUV420P or YV12 frame.
@@ -159,13 +168,16 @@ static const char *qt_glsl_yuvPlanarShaderProgram =
         "uniform sampler2D alphaMask;\n"
         "uniform mediump mat4 colorMatrix;\n"
         "uniform mediump float alpha;\n"
+        "uniform mediump float texOffsetX;\n"
+        "uniform mediump float texOffsetY;\n"
         "varying highp vec2 textureCoord;\n"
         "void main(void)\n"
         "{\n"
+        "    mediump vec2 texPoint = vec2(textureCoord.s + texOffsetX, textureCoord.t + texOffsetY);\n"
         "    highp vec4 color = vec4(\n"
-        "           texture2D(texY, textureCoord.st).r,\n"
-        "           texture2D(texU, textureCoord.st).r,\n"
-        "           texture2D(texV, textureCoord.st).r,\n"
+        "           texture2D(texY, texPoint).r,\n"
+        "           texture2D(texU, texPoint).r,\n"
+        "           texture2D(texV, texPoint).r,\n"
         "           1.0);\n"
         "    color = colorMatrix * color;\n"
         "    gl_FragColor = vec4(color.rgb, alpha * texture2D(alphaMask, textureCoord.st).a);\n"
@@ -225,6 +237,7 @@ GLVideoDrawable::GLVideoDrawable(QObject *parent)
 	, m_validShader(false)
 	, m_program(0)
 	, m_uploadedCacheKey(0)
+	, m_textureOffset(0,0)
 {
 	
 	m_imagePixelFormats
@@ -749,35 +762,44 @@ const char * GLVideoDrawable::resizeTextures(const QSize& frameSize)
 	//qDebug() << "GLVideoDrawable::resizeTextures(): "<<objectName()<<" \t frameSize: "<<frameSize<<", format: "<<m_videoFormat.pixelFormat;
 	m_frameSize = frameSize;
 
+	bool debugShaderName = true;
 	switch (m_videoFormat.pixelFormat) 
 	{
 	case QVideoFrame::Format_RGB32:
-// 		qDebug() << "GLVideoDrawable::resizeTextures(): \t Format RGB32, using qt_glsl_xrgbShaderProgram";
+ 		if(debugShaderName)
+ 			qDebug() << "GLVideoDrawable::resizeTextures(): \t Format RGB32, using qt_glsl_xrgbShaderProgram";
 		initRgbTextureInfo(GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE, frameSize);
 		fragmentProgram = qt_glsl_xrgbShaderProgram;
 		break;
         case QVideoFrame::Format_ARGB32:
-//         	qDebug() << "GLVideoDrawable::resizeTextures(): \t Format ARGB, using qt_glsl_argbShaderProgram";
+         	if(debugShaderName)
+         		qDebug() << "GLVideoDrawable::resizeTextures(): \t Format ARGB, using qt_glsl_argbShaderProgram";
 		initRgbTextureInfo(GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE, frameSize);
 		fragmentProgram = qt_glsl_argbShaderProgram;
 		break;
 #ifndef QT_OPENGL_ES
         case QVideoFrame::Format_RGB24:
-//         	qDebug() << "GLVideoDrawable::resizeTextures(): \t Format RGB24, using qt_glsl_rgbShaderProgram";
+        	if(debugShaderName)
+         		qDebug() << "GLVideoDrawable::resizeTextures(): \t Format RGB24, using qt_glsl_rgbShaderProgram";
 		initRgbTextureInfo(GL_RGB8, GL_RGB, GL_UNSIGNED_BYTE, frameSize);
 		fragmentProgram = qt_glsl_rgbShaderProgram;
 		break;
 #endif
 	case QVideoFrame::Format_RGB565:
-// 		qDebug() << "GLVideoDrawable::resizeTextures(): \t Format RGB565, using qt_glsl_rgbShaderProgram";
+		if(debugShaderName)
+			qDebug() << "GLVideoDrawable::resizeTextures(): \t Format RGB565, using qt_glsl_rgbShaderProgram";
 		initRgbTextureInfo(GL_RGB, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, frameSize);
 		fragmentProgram = qt_glsl_rgbShaderProgram;
 		break;
 	case QVideoFrame::Format_YV12:
+		if(debugShaderName)
+			qDebug() << "GLVideoDrawable::resizeTextures(): \t Format YV12, using qt_glsl_yuvPlanarShaderProgram";
 		initYv12TextureInfo(frameSize);
 		fragmentProgram = qt_glsl_yuvPlanarShaderProgram;
 		break;
 	case QVideoFrame::Format_YUV420P:
+		if(debugShaderName)
+			qDebug() << "GLVideoDrawable::resizeTextures(): \t Format YUV420P, using qt_glsl_yuvPlanarShaderProgram";
 		initYuv420PTextureInfo(frameSize);
 		fragmentProgram = qt_glsl_yuvPlanarShaderProgram;
 		break;
@@ -808,6 +830,10 @@ void GLVideoDrawable::updateRects()
 	m_sourceRect = m_frame.rect;
 	//if(m_frame.rect != m_sourceRect)
 	setAlphaMask(m_alphaMask);
+	
+	
+	m_invertedOffset = QPointF(m_textureOffset.x() * 1/m_sourceRect.width(),
+				   m_textureOffset.y() * 1/m_sourceRect.height());
 	
 	// force mask to be re-scaled
 	//qDebug() << "GLVideoDrawable::updateRects(): "<<this<<",  New source rect: "<<m_sourceRect<<", mask size:"<<m_alphaMask.size()<<", isNull?"<<m_alphaMask.isNull();
@@ -865,6 +891,17 @@ void GLVideoDrawable::setDisplayOptions(const VideoDisplayOptions& opts)
 	m_displayOpts = opts;
 	m_colorsDirty = true;
 	emit displayOptionsChanged(opts);
+	updateGL();
+}
+
+void GLVideoDrawable::setTextureOffset(double x, double y)
+{
+	setTextureOffset(QPointF(x,y));
+}
+
+void GLVideoDrawable::setTextureOffset(const QPointF& point)
+{
+	m_textureOffset = point;
 	updateGL();
 }
 	
@@ -935,10 +972,10 @@ void GLVideoDrawable::paintGL()
 
 	const GLfloat vertexCoordArray[] =
 	{
-		target.left()     , target.bottom() + 1,(GLfloat)zIndex(),
-		target.right() + 1, target.bottom() + 1,(GLfloat)zIndex(),
-		target.left()     , target.top(), 	(GLfloat)zIndex(),
-		target.right() + 1, target.top(), 	(GLfloat)zIndex()
+		target.left()     , target.bottom() + 1,//(GLfloat)zIndex(),
+		target.right() + 1, target.bottom() + 1,//(GLfloat)zIndex(),
+		target.left()     , target.top(), 	//(GLfloat)zIndex(),
+		target.right() + 1, target.top()//, 	(GLfloat)zIndex()
 	};
 	
 	
@@ -967,12 +1004,15 @@ void GLVideoDrawable::paintGL()
 	m_program->enableAttributeArray("vertexCoordArray");
 	m_program->enableAttributeArray("textureCoordArray");
 	
-	m_program->setAttributeArray("vertexCoordArray",  vertexCoordArray,  3);
+	m_program->setAttributeArray("vertexCoordArray",  vertexCoordArray,  2);
 	m_program->setAttributeArray("textureCoordArray", textureCoordArray, 2);
 	
 	m_program->setUniformValue("positionMatrix",      positionMatrix);
 	
 	m_program->setUniformValue("alpha",               (GLfloat)opacity());
+	m_program->setUniformValue("texOffsetX",          (GLfloat)m_invertedOffset.x());
+	m_program->setUniformValue("texOffsetY",          (GLfloat)m_invertedOffset.y());
+		
 
 	if (m_textureCount == 3) 
 	{

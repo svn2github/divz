@@ -54,9 +54,9 @@ GLDrawable * addCamera(GLWidget *glw, QString camera = "")
 // 		
 
 
-		VideoDisplayOptionWidget *opts = new VideoDisplayOptionWidget(drawable);
-		opts->adjustSize();
-		opts->show();
+// 		VideoDisplayOptionWidget *opts = new VideoDisplayOptionWidget(drawable);
+// 		opts->adjustSize();
+// 		opts->show();
 		return drawable;
 	}
 
@@ -309,7 +309,7 @@ QFormLayout * createToggleBox()
 	tb->setWindowTitle("Toggle Box");
 	QFormLayout *layout = new QFormLayout;
 	tb->setLayout(layout);
-	tb->show();
+	//tb->show();
 	return layout;
 }
 
@@ -349,9 +349,9 @@ int main(int argc, char *argv[])
 /*		d = addCamera(glw,"/dev/video0");
 		if(d)
 		{*/
-			d = addCamera(glw,"/dev/video1");
-			if(d)
-				addButtons(tb,d); 
+// 			d = addCamera(glw,"/dev/video1");
+// 			if(d)
+// 				addButtons(tb,d); 
 			
 			d = addCamera(glw,"/dev/video0");
 			if(d)
@@ -360,12 +360,12 @@ int main(int argc, char *argv[])
 /*		}
 		else
 		*/
-			addButtons(tb,addStaticSource(glw));
+// 			addButtons(tb,addStaticSource(glw));
 	#endif
 	
-	addButtons(tb,addSecondSource(glw));	
-	addButtons(tb,addVideoBug(glw));
-	addButtons(tb,addTextOverlay(glw));
+// 	addButtons(tb,addSecondSource(glw));	
+// 	addButtons(tb,addVideoBug(glw));
+// 	addButtons(tb,addTextOverlay(glw));
 	
 	glw->resize(glw->viewport().width(),glw->viewport().height());
 	
@@ -387,3 +387,4 @@ int main(int argc, char *argv[])
 // 		thread->start();
 // 		m_source = thread;
 // 	}
+ 
