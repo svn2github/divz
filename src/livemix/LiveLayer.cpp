@@ -38,6 +38,11 @@ GLDrawable* LiveLayer::drawable(GLWidget *widget)
 		
 		m_drawables[widget] = drawable;
 		
+		if(widget->property("isEditorWidget").toInt())
+			drawable->show();
+		else
+			connect(this, SIGNAL(isVisible(bool)), drawable, SLOT(setVisible(bool)));
+		
 		return drawable;
 	}
 }
@@ -45,8 +50,8 @@ GLDrawable* LiveLayer::drawable(GLWidget *widget)
 void LiveLayer::setIsVisible(bool flag)
 {
 // 	qDebug() << "LiveLayer::setVisible";
-	foreach(GLWidget *widget, m_drawables.keys())
-		m_drawables[widget]->setVisible(flag);
+// 	foreach(GLWidget *widget, m_drawables.keys())
+// 		m_drawables[widget]->setVisible(flag);
 	
 	emit isVisible(flag);
 }

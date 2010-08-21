@@ -26,7 +26,7 @@ GLDrawable *LiveVideoInputLayer::createDrawable(GLWidget *widget)
 	drawable->addShowAnimation(GLDrawable::AnimFade);
 	drawable->addHideAnimation(GLDrawable::AnimFade);
 
-	drawable->show();
+	//drawable->show();
 	
 	//drawable->setObjectName(qPrintable(defaultCamera));
 
@@ -45,7 +45,7 @@ GLDrawable *LiveVideoInputLayer::createDrawable(GLWidget *widget)
 
 void LiveVideoInputLayer::initDrawable(GLDrawable *drawable, GLDrawable *copyFrom)
 {
-	//qDebug() << "LiveVideoInputLayer::setupInstanceProperties: mark1";
+	//qDebug() << "LiveVideoInputLayer::setupDrawable: drawable:"<<drawable<<", copyFrom:"<<copyFrom;
 	LiveLayer::initDrawable(drawable, copyFrom);
 	
 	GLVideoDrawable *vid = dynamic_cast<GLVideoDrawable*>(drawable);
@@ -71,8 +71,13 @@ void LiveVideoInputLayer::initDrawable(GLDrawable *drawable, GLDrawable *copyFro
 			
 		foreach(QString prop, props)
 		{
-			vid2->setProperty(qPrintable(prop), vid->property(qPrintable(prop)));
+			QVariant var = vid->property(qPrintable(prop));
+			//qDebug() << "LiveVideoInputLayer::setupDrawable: copying "<<prop<<":"<<var;
+			vid2->setProperty(qPrintable(prop), var);
 		}
+		
+		if(m_camera)
+			setCamera(m_camera);
 	}
 	else
 	{
@@ -89,12 +94,7 @@ void LiveVideoInputLayer::initDrawable(GLDrawable *drawable, GLDrawable *copyFro
 		if(source)
 		{
 			source->setFps(30);
-			#ifdef Q_OS_LINUX
-				//usleep(750 * 1000); // This causes a race condition to manifist itself reliably, which causes a crash every time instead of intermitently.
-				// With the crash reproducable, I can now work to fix it.
-			#endif
 			source->enableRawFrames(true);
-			//source->setDeinterlace(true);
 			
 			setCamera(source);
 		}

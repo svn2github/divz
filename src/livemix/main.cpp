@@ -58,7 +58,10 @@ int main(int argc, char **argv)
 // 	mw.show();
 
 	GLWidget *viewer = new GLWidget();
+	viewer->setWindowTitle("Monitor");
 	viewer->resize(400,300);
+	
+	
 	
 	
 // 	QSize size = viewer->viewport().size().toSize();
@@ -85,11 +88,28 @@ int main(int argc, char **argv)
 // 	viewer->addDrawable(drawable);
 // 	
 	
+	GLWidget *viewer2 = new GLWidget();
+	viewer2->setWindowTitle("Live");
+	viewer2->resize(1000,750);
+	
+	
+	viewer->setProperty("isEditorWidget",true);
+	viewer2->setProperty("isEditorWidget",true);
+	
+	
 	
 	LiveScene *scene = new LiveScene();
 	scene->addLayer(new LiveVideoInputLayer());
-	scene->attachGLWidget(viewer);
+	
+	viewer->addDrawable(scene->layerList().at(0)->drawable(viewer));
+	
+	
+	
+	scene->attachGLWidget(viewer2);
 	scene->layerList().at(0)->setIsVisible(true);
+	
+	viewer->show();
+	viewer2->show();
 	
 // 	#ifdef Q_OS_WIN
 // 		QString defaultCamera = "vfwcap://0";
@@ -121,8 +141,6 @@ int main(int argc, char **argv)
 // 	}
 		
 	
-	viewer->show();
-
 	//loadLiveScene(scene);
 
 /*
