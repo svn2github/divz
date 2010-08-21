@@ -19,21 +19,26 @@ public:
 	
 	virtual QString typeName() { return "Static Source"; }
 
-	// Used by MainWindow to setup the property editor for this layer
-	virtual QList<QtPropertyEditorIdPair> createPropertyEditors(QtVariantPropertyManager *manager);
+// 	// Used by MainWindow to setup the property editor for this layer
+// 	virtual QList<QtPropertyEditorIdPair> createPropertyEditors(QtVariantPropertyManager *manager);
 
 public slots:
-	// Set a property (emits instancePropertyChanged)
-	virtual void setInstanceProperty(const QString&, const QVariant&);
+// 	// Set a property (emits instancePropertyChanged)
+// 	virtual void setInstanceProperty(const QString&, const QVariant&);
 
 protected:
-	virtual GLDrawable *createDrawable(GLWidget *);
-	virtual void setupInstanceProperties(GLDrawable*);
+/*	virtual GLDrawable *createDrawable(GLWidget *);
+	virtual void setupInstanceProperties(GLDrawable*);*/
 	
-	GLVideoDrawable *videoDrawable() { return m_videoDrawable; }
+	virtual GLDrawable *createDrawable(GLWidget *widget);
+	// If its the first drawable, setup with defaults
+	// Otherwise, copy from 'copyFrom'
+	virtual void initDrawable(GLDrawable *drawable, bool isFirstDrawable = false);
+	
+// 	GLVideoDrawable *videoDrawable() { return m_videoDrawable; }
 	
 private:
-	GLVideoDrawable *m_videoDrawable;
+// 	GLVideoDrawable *m_videoDrawable;
 	StaticVideoSource *m_staticSource;
 };
 

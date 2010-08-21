@@ -29,7 +29,7 @@ protected:
 	virtual GLDrawable *createDrawable(GLWidget *widget);
 	// If its the first drawable, setup with defaults
 	// Otherwise, copy from 'copyFrom'
-	virtual void initDrawable(GLDrawable *newDrawable, GLDrawable *copyFrom=0);
+	virtual void initDrawable(GLDrawable *drawable, bool isFirstDrawable = false);
 	
 	void setCamera(CameraThread*);
 	CameraThread *camera() { return m_camera; }

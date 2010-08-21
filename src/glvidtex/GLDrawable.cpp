@@ -252,7 +252,7 @@ void GLDrawable::animationFinished()
 void GLDrawable::setRect(const QRectF& rect)
 {
 	m_rect = rect;
-	//qDebug() << "GLDrawable::setRect: "<<rect;
+	//qDebug() << "GLDrawable::setRect: "<<objectName()<<rect;
 	drawableResized(rect.size());
 	emit drawableResized(rect.size());
 	updateGL();

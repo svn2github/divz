@@ -14,6 +14,7 @@
 // #include "MjpegThread.h"
 
 #include "LiveVideoInputLayer.h"
+#include "LiveStaticSourceLayer.h"
 #include "LiveScene.h"
 #include "../glvidtex/GLWidget.h"
 #include "../glvidtex/GLVideoDrawable.h"
@@ -57,59 +58,78 @@ int main(int argc, char **argv)
 // 	MainWindow mw;
 // 	mw.show();
 
-	GLWidget *viewer = new GLWidget();
-	viewer->setWindowTitle("Monitor");
-	viewer->resize(400,300);
+	GLWidget *glOutputWin = new GLWidget();
+	{
+		glOutputWin->setWindowTitle("Live");
+		glOutputWin->resize(1000,750);
+		// debugging...
+		//glOutputWin->setProperty("isEditorWidget",true);
+	
+	}
+	
+	GLWidget *glEditorWin = new GLWidget();
+	{
+		glEditorWin->setWindowTitle("Editor");
+		glEditorWin->resize(400,300);
+		glEditorWin->setProperty("isEditorWidget",true);
+	}
+	
+	// Setup Editor Background
+	{
+		QSize size = glEditorWin->viewport().size().toSize();
+		size /= 4;
+		//qDebug() << "MainWindow::createLeftPanel(): size:"<<size;
+		QImage bgImage(size, QImage::Format_ARGB32_Premultiplied);
+		QBrush bgTexture(QPixmap("squares2.png"));
+		QPainter bgPainter(&bgImage);
+		bgPainter.fillRect(bgImage.rect(), bgTexture);
+		bgPainter.end();
+		
+		StaticVideoSource *source = new StaticVideoSource();
+		source->setImage(bgImage);
+		//source->setImage(QImage("squares2.png"));
+		source->start();
+		
+		GLVideoDrawable *drawable = new GLVideoDrawable(glEditorWin);
+		drawable->setVideoSource(source);
+		drawable->setRect(glEditorWin->viewport());
+		drawable->setZIndex(-100);
+		drawable->setObjectName("StaticBackground");
+		drawable->show();
+		
+		glEditorWin->addDrawable(drawable);
+	}
 	
 	
 	
-	
-// 	QSize size = viewer->viewport().size().toSize();
-// 	size /= 4;
-// 	//qDebug() << "MainWindow::createLeftPanel(): size:"<<size;
-// 	QImage bgImage(size, QImage::Format_ARGB32_Premultiplied);
-// 	QBrush bgTexture(QPixmap("squares2.png"));
-// 	QPainter bgPainter(&bgImage);
-// 	bgPainter.fillRect(bgImage.rect(), bgTexture);
-// 	bgPainter.end();
-// 	
-// 	StaticVideoSource *source = new StaticVideoSource();
-// 	source->setImage(bgImage);
-// 	//source->setImage(QImage("squares2.png"));
-// 	source->start();
-// 	
-// 	GLVideoDrawable *drawable = new GLVideoDrawable(viewer);
-// 	drawable->setVideoSource(source);
-// 	drawable->setRect(viewer->viewport());
-// 	drawable->setZIndex(-100);
-// 	drawable->setObjectName("StaticBackground");
-// 	drawable->show();
-// 	
-// 	viewer->addDrawable(drawable);
-// 	
-	
-	GLWidget *viewer2 = new GLWidget();
-	viewer2->setWindowTitle("Live");
-	viewer2->resize(1000,750);
-	
-	
-	viewer->setProperty("isEditorWidget",true);
-	viewer2->setProperty("isEditorWidget",true);
-	
-	
-	
+	// setup scene
 	LiveScene *scene = new LiveScene();
-	scene->addLayer(new LiveVideoInputLayer());
+	{
+		//scene->addLayer(new LiveVideoInputLayer());
+		scene->addLayer(new LiveStaticSourceLayer());
+	}
 	
-	viewer->addDrawable(scene->layerList().at(0)->drawable(viewer));
+	// add to live output
+	{
+		//scene->attachGLWidget(glOutputWin);
+		scene->layerList().at(0)->drawable(glOutputWin)->setObjectName("Output");
+		glOutputWin->addDrawable(scene->layerList().at(0)->drawable(glOutputWin));
+		scene->layerList().at(0)->setVisible(true);
+	}
+	
+	// add to editor
+	{
+		scene->layerList().at(0)->drawable(glEditorWin)->setObjectName("Editor");
+		glEditorWin->addDrawable(scene->layerList().at(0)->drawable(glEditorWin));
+	}
+	
+	// show windows
+	{
+		glOutputWin->show();
+		glEditorWin->show();
+	}
 	
 	
-	
-	scene->attachGLWidget(viewer2);
-	scene->layerList().at(0)->setIsVisible(true);
-	
-	viewer->show();
-	viewer2->show();
 	
 // 	#ifdef Q_OS_WIN
 // 		QString defaultCamera = "vfwcap://0";

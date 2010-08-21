@@ -8,7 +8,7 @@
 LiveStaticSourceLayer::LiveStaticSourceLayer(QObject *parent)
 	: LiveLayer(parent)
 {
-	m_controlWidget = new LayerControlWidget(this);
+// 	m_controlWidget = new LayerControlWidget(this);
 }
 
 LiveStaticSourceLayer::~LiveStaticSourceLayer()
@@ -20,12 +20,14 @@ GLDrawable* LiveStaticSourceLayer::createDrawable(GLWidget *context)
 	// add secondary frame
 	GLVideoDrawable *drawable = new GLVideoDrawable();
 
+// 	qDebug() << "LiveStaticSourceLayer::createDrawable: context viewport:"<<context->viewport();
 
 	StaticVideoSource *source = new StaticVideoSource();
 	//source->setImage(QImage("me2.jpg"));
 	QImage img("dsc_6645-1.jpg");
 	if(img.isNull())
 		source->setImage(QImage("../glvidtex/me2.jpg"));
+		//source->setImage(QImage("../data/icon-d.png"));
 	else
 		source->setImage(img);
 	//source->setImage(QImage("/opt/qtsdk-2010.02/qt/examples/opengl/pbuffers/cubelogo.png"));
@@ -45,21 +47,26 @@ GLDrawable* LiveStaticSourceLayer::createDrawable(GLWidget *context)
  	//drawable->addShowAnimation(GLDrawable::AnimZoom);
 // 	#else
 	drawable->addShowAnimation(GLDrawable::AnimZoom,2500).curve = QEasingCurve::OutElastic;
+	//drawable->addShowAnimation(GLDrawable::AnimFade,2500).curve = QEasingCurve::OutElastic;
+	//drawable->addShowAnimation(GLDrawable::AnimFade,100);
 // 	#endif
 //
  	drawable->addHideAnimation(GLDrawable::AnimFade);
  	drawable->addHideAnimation(GLDrawable::AnimZoom,1000);
 //
 
-	changeInstanceName("File 'me2.jpg'");
+	setInstanceName("File 'me2.jpg'");
+	
+// 	qDebug() << "LiveStaticSourceLayer::createDrawable: setup complete, drawable rect:"<<drawable->rect();
 	
 	return drawable;
 }
 
 
-void LiveStaticSourceLayer::setupInstanceProperties(GLDrawable *drawable)
+//void LiveStaticSourceLayer::setupInstanceProperties(GLDrawable *drawable)
+void LiveStaticSourceLayer::initDrawable(GLDrawable *newDrawable, bool isFirst)
 {
-	LiveLayer::setupInstanceProperties(drawable);
+	LiveLayer::initDrawable(newDrawable, isFirst);
 	
 	// TODO expose a 'filename' property
 	
@@ -84,90 +91,90 @@ void LiveStaticSourceLayer::setupInstanceProperties(GLDrawable *drawable)
 	}*/
 }
 
-QList<QtPropertyEditorIdPair> LiveStaticSourceLayer::createPropertyEditors(QtVariantPropertyManager *manager)
-{
-	QList<QtPropertyEditorIdPair> list = LiveLayer::createPropertyEditors(manager);
-		
-// 	GLDrawable *gl = drawable();
-// 	if(!gl)
-// 		return list;
-		
-	// TODO expose filename property
-	
-// 	QtVariantProperty *property;
-// 	
-// 	
-// 	VideoSource *source = gl->videoSource();
-// 	
-// 	CameraThread *camera = dynamic_cast<CameraThread*>(source);
-// 	if(camera)
-// 	{
-// 		property = manager->addProperty(QVariant::Bool, tr("Deinterlace"));
-// 		property->setValue(camera->deinterlace());
-// 		list << QtPropertyEditorIdPair("deinterlace", property);
-// 	}
-// 	
-// 	///////////////////////////////////////////
-// 	
-// 	property = manager->addProperty(QVariant::Int, tr("Contrast"));
-// 	property->setAttribute(QLatin1String("minimum"), -100);
-// 	property->setAttribute(QLatin1String("maximum"), 100);
-// 	property->setValue(gl->brightness());
-// 	list << QtPropertyEditorIdPair("contrast", property);
-// 	
-// 	property = manager->addProperty(QVariant::Int, tr("Hue"));
-// 	property->setAttribute(QLatin1String("minimum"), -100);
-// 	property->setAttribute(QLatin1String("maximum"), 100);
-// 	property->setValue(gl->brightness());
-// 	list << QtPropertyEditorIdPair("saturation", property);
-// 	
-// 	property = manager->addProperty(QVariant::Int, tr("Saturation"));
-// 	property->setAttribute(QLatin1String("minimum"), -100);
-// 	property->setAttribute(QLatin1String("maximum"), 100);
-// 	property->setValue(gl->brightness());
-// 	list << QtPropertyEditorIdPair("saturation", property);
-// 	
-// 	
-// 	///////////////////////////////////////////
-// 	
-// 	property = manager->addProperty(QVariant::Bool, tr("Flip Horizontal"));
-// 	property->setValue(gl->flipHorizontal());
-// 	list << QtPropertyEditorIdPair("flipHorizontal", property);
-// 	
-// 	property = manager->addProperty(QVariant::Bool, tr("Flip Vertical"));
-// 	property->setValue(gl->flipHorizontal());
-// 	list << QtPropertyEditorIdPair("flipVertical", property);
-// 	
-// 	///////////////////////////////////////////
+// QList<QtPropertyEditorIdPair> LiveStaticSourceLayer::createPropertyEditors(QtVariantPropertyManager *manager)
+// {
+// 	QList<QtPropertyEditorIdPair> list = LiveLayer::createPropertyEditors(manager);
 // 		
-// 	property = manager->addProperty(QVariant::PointF, tr("Crop Top-Left"));
-// 	property->setValue(gl->cropTopLeft());
-// 	list << QtPropertyEditorIdPair("cropTopLeft", property);
-// 	
-// 	property = manager->addProperty(QVariant::PointF, tr("Crop Bottom-Right"));
-// 	property->setValue(gl->cropBottomRight());
-// 	list << QtPropertyEditorIdPair("cropBottomRight", property);
-// 	
-// 	///////////////////////////////////////////
-	
-	return list;
-}
-
-void LiveStaticSourceLayer::setInstanceProperty(const QString& key, const QVariant& value)
-{
-	// TODO load filename from prop and set image
-	
-// 	if(key == "deinterlace")
-// 	{
-// 		VideoSource *source = gl->videoSource();
+// // 	GLDrawable *gl = drawable();
+// // 	if(!gl)
+// // 		return list;
 // 		
-// 		CameraThread *camera = dynamic_cast<CameraThread*>(source);
-// 		if(camera)
-// 		{
-// 			camera->setDeinterlace((bool)value.toInt());
-// 		}
-// 	}
-	
-	LiveLayer::setInstanceProperty(key,value);
-
-}
+// 	// TODO expose filename property
+// 	
+// // 	QtVariantProperty *property;
+// // 	
+// // 	
+// // 	VideoSource *source = gl->videoSource();
+// // 	
+// // 	CameraThread *camera = dynamic_cast<CameraThread*>(source);
+// // 	if(camera)
+// // 	{
+// // 		property = manager->addProperty(QVariant::Bool, tr("Deinterlace"));
+// // 		property->setValue(camera->deinterlace());
+// // 		list << QtPropertyEditorIdPair("deinterlace", property);
+// // 	}
+// // 	
+// // 	///////////////////////////////////////////
+// // 	
+// // 	property = manager->addProperty(QVariant::Int, tr("Contrast"));
+// // 	property->setAttribute(QLatin1String("minimum"), -100);
+// // 	property->setAttribute(QLatin1String("maximum"), 100);
+// // 	property->setValue(gl->brightness());
+// // 	list << QtPropertyEditorIdPair("contrast", property);
+// // 	
+// // 	property = manager->addProperty(QVariant::Int, tr("Hue"));
+// // 	property->setAttribute(QLatin1String("minimum"), -100);
+// // 	property->setAttribute(QLatin1String("maximum"), 100);
+// // 	property->setValue(gl->brightness());
+// // 	list << QtPropertyEditorIdPair("saturation", property);
+// // 	
+// // 	property = manager->addProperty(QVariant::Int, tr("Saturation"));
+// // 	property->setAttribute(QLatin1String("minimum"), -100);
+// // 	property->setAttribute(QLatin1String("maximum"), 100);
+// // 	property->setValue(gl->brightness());
+// // 	list << QtPropertyEditorIdPair("saturation", property);
+// // 	
+// // 	
+// // 	///////////////////////////////////////////
+// // 	
+// // 	property = manager->addProperty(QVariant::Bool, tr("Flip Horizontal"));
+// // 	property->setValue(gl->flipHorizontal());
+// // 	list << QtPropertyEditorIdPair("flipHorizontal", property);
+// // 	
+// // 	property = manager->addProperty(QVariant::Bool, tr("Flip Vertical"));
+// // 	property->setValue(gl->flipHorizontal());
+// // 	list << QtPropertyEditorIdPair("flipVertical", property);
+// // 	
+// // 	///////////////////////////////////////////
+// // 		
+// // 	property = manager->addProperty(QVariant::PointF, tr("Crop Top-Left"));
+// // 	property->setValue(gl->cropTopLeft());
+// // 	list << QtPropertyEditorIdPair("cropTopLeft", property);
+// // 	
+// // 	property = manager->addProperty(QVariant::PointF, tr("Crop Bottom-Right"));
+// // 	property->setValue(gl->cropBottomRight());
+// // 	list << QtPropertyEditorIdPair("cropBottomRight", property);
+// // 	
+// // 	///////////////////////////////////////////
+// 	
+// 	return list;
+// }
+// 
+// void LiveStaticSourceLayer::setInstanceProperty(const QString& key, const QVariant& value)
+// {
+// 	// TODO load filename from prop and set image
+// 	
+// // 	if(key == "deinterlace")
+// // 	{
+// // 		VideoSource *source = gl->videoSource();
+// // 		
+// // 		CameraThread *camera = dynamic_cast<CameraThread*>(source);
+// // 		if(camera)
+// // 		{
+// // 			camera->setDeinterlace((bool)value.toInt());
+// // 		}
+// // 	}
+// 	
+// 	LiveLayer::setInstanceProperty(key,value);
+// 
+// }

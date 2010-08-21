@@ -43,22 +43,16 @@ GLDrawable *LiveVideoInputLayer::createDrawable(GLWidget *widget)
 }
 
 
-void LiveVideoInputLayer::initDrawable(GLDrawable *drawable, GLDrawable *copyFrom)
+void LiveVideoInputLayer::initDrawable(GLDrawable *drawable, bool isFirst)
 {
 	//qDebug() << "LiveVideoInputLayer::setupDrawable: drawable:"<<drawable<<", copyFrom:"<<copyFrom;
-	LiveLayer::initDrawable(drawable, copyFrom);
+	LiveLayer::initDrawable(drawable, isFirst);
 	
 	GLVideoDrawable *vid = dynamic_cast<GLVideoDrawable*>(drawable);
 	if(!vid)
 		return;
 		
-	if(copyFrom)
-	{
-		GLVideoDrawable *vid2 = dynamic_cast<GLVideoDrawable*>(copyFrom);
-		if(!vid2)
-			return;
-	
-		QStringList props = QStringList()
+	QStringList props = QStringList()
 			<< "brightness"
 			<< "contrast"
 			<< "hue"
@@ -69,18 +63,9 @@ void LiveVideoInputLayer::initDrawable(GLDrawable *drawable, GLDrawable *copyFro
 			<< "cropBottomRight"
 			<< "textureOffset";
 			
-		foreach(QString prop, props)
-		{
-			QVariant var = vid->property(qPrintable(prop));
-			//qDebug() << "LiveVideoInputLayer::setupDrawable: copying "<<prop<<":"<<var;
-			vid2->setProperty(qPrintable(prop), var);
-		}
-		
-		if(m_camera)
-			setCamera(m_camera);
-	}
-	else
+	if(isFirst)
 	{
+		loadLayerPropertiesFromDrawable(drawable, props);
 		
 		#ifdef Q_OS_WIN
 			QString defaultCamera = "vfwcap://0";
@@ -98,8 +83,14 @@ void LiveVideoInputLayer::initDrawable(GLDrawable *drawable, GLDrawable *copyFro
 			
 			setCamera(source);
 		}
+			
 	}
-	
+	else
+	{
+		applyLayerPropertiesToDrawable(drawable, props);
+		if(m_camera)
+			setCamera(m_camera);
+	}
 }
 
 void LiveVideoInputLayer::setCamera(CameraThread *camera)
@@ -107,7 +98,7 @@ void LiveVideoInputLayer::setCamera(CameraThread *camera)
 	qDebug() << "LiveVideoInputLayer::setCamera: "<<camera;
 	emit videoSourceChanged(camera);
 	m_camera = camera;
-	changeInstanceName(camera->inputName());
+	setInstanceName(camera->inputName());
 }
 
 
