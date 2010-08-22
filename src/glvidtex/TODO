@@ -1,0 +1,13 @@
+Update GLDrawable to either support:
+	- Blue Alpha Blending
+		- Already supports alpha masks
+		- Use the blue channel (or some other channel) to control blending the pixel between BLACK and the texture color
+		- This would allow drawing black lines on top of the texture using the alpha mask, instead of requiring a third texture for an overlay (in addition to the alpha mask)
+	- Or a third texture for overlay on top of the alpha mask
+		
+Update VideoThread to support HD
+	Need to create a variable length buffer
+	Move timing code into buffer control
+	Selectivly hold frames if falling behind 
+	
+	Also, get YUV420P working in raw format to allow YUV conversion on the GPU

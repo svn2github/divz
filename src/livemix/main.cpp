@@ -76,6 +76,7 @@ int main(int argc, char **argv)
 	}
 	
 	// Setup Editor Background
+	if(true)
 	{
 		QSize size = glEditorWin->viewport().size().toSize();
 		size /= 2.5;
@@ -123,6 +124,7 @@ int main(int argc, char **argv)
 	// add to editor
 	{
 		scene->layerList().at(0)->drawable(glEditorWin)->setObjectName("Editor");
+		//glEditorWin->addDrawable(scene->layerList().at(1)->drawable(glEditorWin));
 		glEditorWin->addDrawable(scene->layerList().at(1)->drawable(glEditorWin));
 	}
 	

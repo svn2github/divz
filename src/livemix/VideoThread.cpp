@@ -38,6 +38,9 @@ VideoThread::VideoThread(QObject *parent)
 	m_total_runtime = 0;
 	
 	m_sws_context = NULL;
+	
+	// primer...
+	enqueue(VideoFrame(QImage("../livemix/squares2.png"),1000/30));
 // 	m_frame = NULL;
 
 }
@@ -50,6 +53,9 @@ void VideoThread::setVideo(const QString& name)
 VideoFormat VideoThread::videoFormat()
 {
 	return VideoFormat(VideoFrame::BUFFER_IMAGE, QVideoFrame::Format_RGB565);
+	//return VideoFormat(VideoFrame::BUFFER_IMAGE, QVideoFrame::Format_ARGB32);
+	//return VideoFormat(VideoFrame::BUFFER_BYTEARRAY, QVideoFrame::Format_YUV420P);
+	
 	
 	// Size defaults to 640,480
 }
@@ -232,6 +238,7 @@ void VideoThread::calculateVideoProperties()
 	m_frame_rate = Round(av_q2d(m_av_format_context->streams[m_video_stream]->r_frame_rate));
 	m_fpms = (double)m_frame_rate / 1000.0f;
 	//printf("m_fpms = %.02f, frame_rate=%d\n",m_fpms,m_video->m_frame_rate);
+	//qDebug() << "m_frame_rate:"<<m_frame_rate<<", m_fpms:"<<m_fpms;
 
 	//duration
 	m_duration = (m_av_format_context->duration / AV_TIME_BASE);
@@ -416,6 +423,7 @@ void VideoThread::readFrame()
 							m_video_codec_context->width, m_video_codec_context->height,
 							//PIX_FMT_RGB32,SWS_BICUBIC,
 							PIX_FMT_RGB565, SWS_FAST_BILINEAR,
+							//PIX_FMT_YUV420P, SWS_FAST_BILINEAR,
 							NULL, NULL, NULL); //SWS_PRINT_INFO
 						//mutex.unlock();
 						//printf("decode(): created m_sws_context\n");
@@ -429,12 +437,13 @@ void VideoThread::readFrame()
 						  m_av_rgb_frame->data,
 						  m_av_rgb_frame->linesize);
 
-					m_bufferMutex.lock();
+					//m_bufferMutex.lock();
+// 					qDebug() << "VideoThread: void*:"<<(void*)m_av_rgb_frame->data[0];
 					QImage frame = QImage(m_av_rgb_frame->data[0],
 								m_video_codec_context->width,
 								m_video_codec_context->height,
 								QImage::Format_RGB16);
-					m_bufferMutex.unlock();
+					//m_bufferMutex.unlock();
 					
 					av_free_packet(packet);
 
@@ -492,8 +501,10 @@ void VideoThread::readFrame()
 					//double curTime = (double)(av_gettime() / 1000000.0);
 					double curTime = ((double)m_run_time.elapsed() + m_total_runtime) / 1000.0;
 					m_frameTimer += pts_delay;
-					//if(m_frameTimer > curTime)
-						//m_frameTimer = curTime;
+					if(m_frameTimer > curTime+.5)
+						m_frameTimer = curTime;
+					if(m_frameTimer < curTime-1.)
+						m_frameTimer = curTime;
 					double actual_delay = m_frameTimer - curTime;
 					//qDebug() << "VideoThread::readFrame(): frame timer: "<<m_frameTimer<<", curTime:"<<curTime<<", \t actual_delay:"<<((int)(actual_delay*1000))<<", pts_delay:"<<((int)(pts_delay*1000))<<", m_run_time:"<<m_run_time.elapsed()<<", m_total_runtime:"<<m_total_runtime;
 					if(actual_delay < 0.010)
@@ -524,7 +535,7 @@ void VideoThread::readFrame()
 					m_frameSmoothCount ++;
 					m_frameSmoothAccum += frameDelay;
 					
-					frameDelay = m_frameSmoothAccum / m_frameSmoothCount;
+					//frameDelay = m_frameSmoothAccum / m_frameSmoothCount;
 					
 					// Reset the averaging every 15 sec (approx)
 					if( m_frameSmoothCount % 100 == 0)
@@ -534,10 +545,11 @@ void VideoThread::readFrame()
 						//qDebug() << "VideoThread::readFrame(): frame smoother reset";
 					}
 					
-					if(frameDelay < 10)
-						frameDelay = 10;
-					if(frameDelay > 100)
-						frameDelay = 100;
+					// Arbitrary min/max delays - equals about a max fps of 66fps (15 ms) and a min fps of 9fps (111ms)
+					if(frameDelay < 15)
+						frameDelay = 15;
+					if(frameDelay > 111)
+						frameDelay = 111;
 					//qDebug() << "VideoThread::readFrame(): frameDelay:"<<frameDelay;
 					
 // 					if(m_frameConsumed || (!m_frameConsumed && ++m_frameLockCount > 10))
@@ -550,7 +562,28 @@ void VideoThread::readFrame()
 						//emit frameReady((int)(pts_delay*1000));
 						
 						//enqueue(VideoFrame(m_frame,frameDelay));
+						//enqueue(VideoFrame(frame.convertToFormat(QImage::Format_ARGB32),pts_delay*1000));
 						enqueue(VideoFrame(frame,pts_delay*1000));
+// 						VideoFrame vid(pts_delay*1000);
+// 						vid.isRaw = true;
+// 						vid.bufferType = VideoFrame::BUFFER_BYTEARRAY;
+// 						vid.pixelFormat = QVideoFrame::Format_YUV420P;
+// 						//vid.setPointerData(m_av_rgb_frame->data, m_av_rgb_frame->linesize);
+// 						vid.setSize(m_frame_size);
+// 						int frame0 = m_frame_size.width() * m_frame_size.height();
+// 						int frame1 = m_frame_size.width()/2 * m_frame_size.height()/2;
+// 						int frame2 = m_frame_size.width()/2 * m_frame_size.height()/2;
+// 						int maxSize = frame0 + frame1 + frame2;
+// 						qDebug() << "frame0:"<<frame0<<", frame1:"<<frame1+frame0<<", frame2:"<<frame2+frame1+frame0<<m_frame_size;
+// 						vid.byteArray.resize(maxSize);
+// 						vid.byteArray.append((const char*)m_av_frame->data[0], frame0);
+// 						vid.byteArray.append((const char*)m_av_frame->data[1], frame1);
+// 						vid.byteArray.append((const char*)m_av_frame->data[2], frame2);
+// 						
+// 						enqueue(vid);
+						
+						
+						
 						//emit frameReady();
 					//}
 						

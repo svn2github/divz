@@ -199,17 +199,34 @@ GLDrawable * addStaticSource(GLWidget * glw)
 	GLVideoDrawable *drawable = new GLVideoDrawable(glw);
 	
 	
-	StaticVideoSource *source = new StaticVideoSource();
-	//source->setImage(QImage("me2.jpg"));
-	QImage img("dsc_6645-1.jpg");
-	if(img.isNull())
-		source->setImage(QImage("me2.jpg"));
+	if(false)
+	{
+		StaticVideoSource *source = new StaticVideoSource();
+		//source->setImage(QImage("me2.jpg"));
+		QImage img("dsc_6645-1.jpg");
+		if(img.isNull())
+			source->setImage(QImage("me2.jpg"));
+		else
+			source->setImage(img);
+			
+			
+		//source->setImage(QImage("/opt/qtsdk-2010.02/qt/examples/opengl/pbuffers/cubelogo.png"));
+		source->start();
+		drawable->setVideoSource(source);
+	}
 	else
-		source->setImage(img);
-	//source->setImage(QImage("/opt/qtsdk-2010.02/qt/examples/opengl/pbuffers/cubelogo.png"));
+	{	
+		VideoThread * source = new VideoThread();
+		source->setVideo("../data/Seasons_Loop_3_SD.mpg");
+		//source->setVideo("../samples/BlueFish/EssentialsVol05_Abstract_Media/HD/Countdowns/Abstract_Countdown_3_HD.mp4");
+		//source->setVideo("../samples/BlueFish/EssentialsVol05_Abstract_Media/SD/Countdowns/Abstract_Countdown_3_SD.mpg");
+		
+		source->start();
 	
-	source->start();
-	drawable->setVideoSource(source);
+		drawable->setVideoSource(source);
+		drawable->setAlphaMask(QImage("alphamask2.png"));
+	}
+	
 	drawable->setRect(glw->viewport());
 	drawable->setZIndex(-1);
 	drawable->setObjectName("Static");
@@ -219,10 +236,10 @@ GLDrawable * addStaticSource(GLWidget * glw)
 	
 // 	#ifdef HAS_QT_VIDEO_SOURCE
 // 	// just change enterance anim to match effects
-// 	drawable->addShowAnimation(GLDrawable::AnimFade);
+ 	drawable->addShowAnimation(GLDrawable::AnimFade);
  	//drawable->addShowAnimation(GLDrawable::AnimZoom);
 // 	#else
-	drawable->addShowAnimation(GLDrawable::AnimZoom,2500).curve = QEasingCurve::OutElastic;
+	//drawable->addShowAnimation(GLDrawable::AnimZoom,2500).curve = QEasingCurve::OutElastic;
 // 	#endif
 // 	
  	drawable->addHideAnimation(GLDrawable::AnimFade);
@@ -244,7 +261,7 @@ GLDrawable * addStaticSource(GLWidget * glw)
 
 	glw->addDrawable(drawable);
 	
-	//drawable->show();
+	drawable->show();
 	
 	return drawable;
 }
@@ -309,7 +326,7 @@ QFormLayout * createToggleBox()
 	tb->setWindowTitle("Toggle Box");
 	QFormLayout *layout = new QFormLayout;
 	tb->setLayout(layout);
-	//tb->show();
+	tb->show();
 	return layout;
 }
 
@@ -353,19 +370,19 @@ int main(int argc, char *argv[])
 // 			if(d)
 // 				addButtons(tb,d); 
 			
-			d = addCamera(glw,"/dev/video0");
-			if(d)
-				addButtons(tb,d); 
+// 			d = addCamera(glw,"/dev/video0");
+// 			if(d)
+// 				addButtons(tb,d); 
 
 /*		}
 		else
 		*/
-// 			addButtons(tb,addStaticSource(glw));
+ 			addButtons(tb,addStaticSource(glw));
 	#endif
 	
-// 	addButtons(tb,addSecondSource(glw));	
-// 	addButtons(tb,addVideoBug(glw));
-// 	addButtons(tb,addTextOverlay(glw));
+	addButtons(tb,addSecondSource(glw));	
+	addButtons(tb,addVideoBug(glw));
+	addButtons(tb,addTextOverlay(glw));
 	
 	glw->resize(glw->viewport().width(),glw->viewport().height());
 	

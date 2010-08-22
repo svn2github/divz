@@ -73,7 +73,7 @@ GLDrawable* LiveTextLayer::createDrawable(GLWidget *context)
 	drawable->setObjectName("Text");
 	
 	drawable->addShowAnimation(GLDrawable::AnimFade);
-	drawable->addShowAnimation(GLDrawable::AnimSlideTop,2500).curve = QEasingCurve::OutElastic;
+	//drawable->addShowAnimation(GLDrawable::AnimSlideTop,2500).curve = QEasingCurve::OutElastic;
 	//drawable->addShowAnimation(GLDrawable::AnimSlideLeft,2000).curve = QEasingCurve::OutElastic;
  	
  	drawable->addHideAnimation(GLDrawable::AnimFade);
@@ -112,7 +112,9 @@ void LiveTextLayer::initDrawable(GLDrawable *drawable, bool isFirstDrawable)
 	else
 	{
 		applyLayerPropertiesToObject(drawable, props);
-		setText(text());
+		
+		// Not needed if not first drawable
+		//setText(text());
 	}
 	
 	

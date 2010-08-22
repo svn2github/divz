@@ -6,6 +6,8 @@
 #include <QAbstractVideoSurface>
 #include "../livemix/VideoSource.h"
 
+#include <QImageWriter>
+
 #if !defined(QT_NO_OPENGL) && !defined(QT_OPENGL_ES_1_CL) && !defined(QT_OPENGL_ES_1)
 
 #ifndef Q_WS_MAC
@@ -238,6 +240,7 @@ GLVideoDrawable::GLVideoDrawable(QObject *parent)
 	, m_program(0)
 	, m_uploadedCacheKey(0)
 	, m_textureOffset(0,0)
+	, m_texturesInited(false)
 {
 	
 	m_imagePixelFormats
@@ -289,27 +292,28 @@ void GLVideoDrawable::frameReady()
 {
 	if(!m_source)
 		return;
-		
+	
 	m_frame = m_source->frame();
 	
-	if(m_frame.rect != m_sourceRect)
-	{
-		//qDebug() << "GLVideoDrawable::frameReady(): \t m_frame.rect:"<<m_frame.rect<<", m_sourceRect:"<<m_sourceRect;
-		if(m_videoFormat.pixelFormat != m_source->videoFormat().pixelFormat)
-			setVideoFormat(m_source->videoFormat());
-		resizeTextures(m_frame.size);
-		updateRects();
-	}
-		
 	if(m_glInited)
 	{
+		if(m_frame.rect != m_sourceRect || !m_texturesInited)
+		{
+			//qDebug() << "GLVideoDrawable::frameReady(): \t m_frame.rect:"<<m_frame.rect<<", m_sourceRect:"<<m_sourceRect;
+			//qDebug() << "GLVideoDrawable::frameReady(): "<<(this)<<": frame size changed or !m_texturesInited, resizing and adjusting pixels...";
+			if(m_videoFormat.pixelFormat != m_source->videoFormat().pixelFormat)
+				setVideoFormat(m_source->videoFormat());
+			resizeTextures(m_frame.size);
+			updateRects();
+		}
+		
 		glWidget()->makeCurrent();
 		
-		//m_frame.isValid() && 
 		if(m_frame.isRaw)
 		{
 			for (int i = 0; i < m_textureCount; ++i) 
 			{
+				//qDebug() << "raw: "<<i<<m_textureWidths[i]<<m_textureHeights[i]<<m_textureOffsets[i]<<m_textureInternalFormat<<m_textureFormat<<m_textureType;
 				glBindTexture(GL_TEXTURE_2D, m_textureIds[i]);
 				glTexImage2D(
 					GL_TEXTURE_2D,
@@ -335,7 +339,9 @@ void GLVideoDrawable::frameReady()
 		{
 			for (int i = 0; i < m_textureCount; ++i) 
 			{
-				//qDebug() << "normal: "<<i<<m_textureWidths[i]<<m_textureHeights[i];
+				//qDebug() << (this) << "normal: "<<i<<m_textureWidths[i]<<m_textureHeights[i]<<m_textureOffsets[i]<<m_textureInternalFormat<<m_textureFormat<<m_textureType;
+// 				QImageWriter writer("test.jpg");
+// 				writer.write(m_frame.image);
 			
 				glBindTexture(GL_TEXTURE_2D, m_textureIds[i]);
 				glTexImage2D(
@@ -347,7 +353,6 @@ void GLVideoDrawable::frameReady()
 					0,
 					m_textureFormat,
 					m_textureType,
-					//m_frame.bits() + m_textureOffsets[i]
 					m_frame.image.scanLine(0) + m_textureOffsets[i]
 					);
 				glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -363,6 +368,7 @@ void GLVideoDrawable::frameReady()
 
 void GLVideoDrawable::setAlphaMask(const QImage &mask)
 {
+	m_alphaMask_preScaled = mask;
 	m_alphaMask = mask;
 	
 	if(mask.isNull())
@@ -615,6 +621,7 @@ void GLVideoDrawable::initYuv420PTextureInfo(const QSize &size)
 	m_textureWidths[1] = size.width() / 2;
 	m_textureHeights[1] = size.height() / 2;
 	m_textureOffsets[1] = size.width() * size.height();
+	//qDebug() << "GLVideoDrawable::initYuv420PTextureInfo: size:"<<size;
 	
 	m_textureWidths[2] = size.width() / 2;
 	m_textureHeights[2] = size.height() / 2;
@@ -652,6 +659,8 @@ void GLVideoDrawable::initGL()
 	if(m_glInited)
 		return;
 		
+	//qDebug() << "GLVideoDrawable::initGL(): "<<objectName();
+		
 	#ifndef QT_OPENGL_ES
 	glActiveTexture = (_glActiveTexture)glWidget()->context()->getProcAddress(QLatin1String("glActiveTexture"));
 	#endif
@@ -684,7 +693,7 @@ void GLVideoDrawable::initGL()
 	else
 	{
  		//qDebug() << "GLVideoDrawable::initGL: Alpha mask already set, m_alphaMask.size:"<<m_alphaMask.size();
-		setAlphaMask(m_alphaMask);
+		setAlphaMask(m_alphaMask_preScaled);
 	}
 	
 	m_time.start();
@@ -747,6 +756,8 @@ bool GLVideoDrawable::setVideoFormat(const VideoFormat& format)
 		
 			//if (m_handleType == QAbstractVideoBuffer::NoHandle)
 				glGenTextures(m_textureCount, m_textureIds);
+				
+			m_texturesInited = true;
 		}
 		
 		//qDebug() << "GLVideoDrawable::setVideoFormat(): \t Initalized"<<m_textureCount<<"textures";
@@ -762,7 +773,7 @@ const char * GLVideoDrawable::resizeTextures(const QSize& frameSize)
 	//qDebug() << "GLVideoDrawable::resizeTextures(): "<<objectName()<<" \t frameSize: "<<frameSize<<", format: "<<m_videoFormat.pixelFormat;
 	m_frameSize = frameSize;
 
-	bool debugShaderName = true;
+	bool debugShaderName = false;
 	switch (m_videoFormat.pixelFormat) 
 	{
 	case QVideoFrame::Format_RGB32:
@@ -815,11 +826,13 @@ void GLVideoDrawable::viewportResized(const QSize& /*newSize*/)
 	// recalc rects here
 	//setRect(QRectF(0,0,newSize.width(),newSize.height()));
 	
+	//qDebug() << "GLVideoDrawable::viewportResized()";
 	updateRects();
 }
 
 void GLVideoDrawable::drawableResized(const QSizeF& /*newSize*/)
 {
+	//qDebug() << "GLVideoDrawable::drawableResized()";
 	updateRects();
 }
 
@@ -831,15 +844,17 @@ void GLVideoDrawable::updateTextureOffsets()
 
 void GLVideoDrawable::updateRects()
 {
+	if(!m_glInited)
+		return;
 		
 	m_sourceRect = m_frame.rect;
 	//if(m_frame.rect != m_sourceRect)
-	setAlphaMask(m_alphaMask);
+	setAlphaMask(m_alphaMask_preScaled);
 	
 	updateTextureOffsets();
 	
 	// force mask to be re-scaled
-	//qDebug() << "GLVideoDrawable::updateRects(): "<<this<<",  New source rect: "<<m_sourceRect<<", mask size:"<<m_alphaMask.size()<<", isNull?"<<m_alphaMask.isNull();
+	//qDebug() << "GLVideoDrawable::updateRects(): "<<(this)<<",  New source rect: "<<m_sourceRect<<", mask size:"<<m_alphaMask.size()<<", isNull?"<<m_alphaMask.isNull();
 	
 	
 	QRectF adjustedSource = m_sourceRect.adjusted(
@@ -883,7 +898,7 @@ void GLVideoDrawable::updateRects()
 		m_sourceRect.moveCenter(QPointF(size.width() / 2, size.height() / 2));
 	}
 	
-	//qDebug() << "GLVideoDrawable::updateRects(): \t m_sourceRect:"<<m_sourceRect<<", m_targetRect:"<<m_targetRect;
+	//qDebug() << "GLVideoDrawable::updateRects(): "<<(this)<<" m_sourceRect:"<<m_sourceRect<<", m_targetRect:"<<m_targetRect;
 }
 
 // float opacity = 0.5;
@@ -1077,7 +1092,7 @@ void GLVideoDrawable::paintGL()
 		QString latencyPerFrame;
 		latencyPerFrame.setNum((((double)m_latencyAccum) / ((double)m_frameCount)), 'f', 3);
 		
-		if(m_debugFps)
+		if(m_debugFps && framesPerSecond!="0.00")
 			qDebug() << "GLVideoDrawable::paintGL: "<<objectName()<<" FPS: " << qPrintable(framesPerSecond) << (m_frame.captureTime.isNull() ? "" : qPrintable(QString(", Latency: %1 ms").arg(latencyPerFrame)));
 
 		m_time.start();

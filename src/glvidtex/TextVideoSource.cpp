@@ -290,6 +290,7 @@ void TextVideoSource::update()
 {
 // 	qDebug()<<itemName()<<"TextBoxWarmingThread::run(): htmlCode:"<<htmlCode;
 	//qDebug() << "TextVideoSource::update(): HTML:"<<html();
+	//qDebug() << "TextVideoSource::update(): Update Begin.";
 	
 	QTextDocument doc;
 	QTextDocument shadowDoc;
@@ -350,7 +351,7 @@ void TextVideoSource::update()
 	QSizeF docSize = doc.size();
 	QSize sumSize = (docSize + shadowSize).toSize();
 	//qDebug() << "TextVideoSource::update(): textWidth: "<<textWidth<<", shadowSize:"<<shadowSize<<", docSize:"<<docSize<<", sumSize:"<<sumSize;
-	QImage cache(sumSize,QImage::Format_ARGB32_Premultiplied);
+	QImage cache(sumSize,QImage::Format_ARGB32); //_Premultiplied);
 	memset(cache.scanLine(0),0,cache.byteCount());
 	
 	QPainter textPainter(&cache);
@@ -412,6 +413,8 @@ void TextVideoSource::update()
 	textPainter.end();
 	
 	setImage(cache);
+	
+	//qDebug() << "TextVideoSource::update(): Update Done.";
 }
 
 ITEM_PROPSET(TextVideoSource, TextWidth,	int,	textWidth);

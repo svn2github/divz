@@ -244,11 +244,14 @@ private:
 	bool m_validShader;
 	
 	QImage m_alphaMask;
+	QImage m_alphaMask_preScaled;
 	GLuint m_alphaTextureId;
 	qint64 m_uploadedCacheKey;
 	
 	QPointF m_textureOffset;
 	QPointF m_invertedOffset; // calculated as m_textureOffset.x() * 1/textureWidth, etc
+	
+	bool m_texturesInited;
 };
 
 #endif 
