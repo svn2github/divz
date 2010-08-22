@@ -13,6 +13,9 @@ class StaticVideoSource;
 class LiveStaticSourceLayer : public LiveLayer
 {
 	Q_OBJECT
+	
+	Q_PROPERTY(QString file READ file WRITE setFile)
+	
 public:
 	LiveStaticSourceLayer(QObject *parent=0);
 	~LiveStaticSourceLayer();
@@ -22,9 +25,13 @@ public:
 // 	// Used by MainWindow to setup the property editor for this layer
 // 	virtual QList<QtPropertyEditorIdPair> createPropertyEditors(QtVariantPropertyManager *manager);
 
+	QString file() { return layerPropertyValue("file").toString(); }
+
 public slots:
 // 	// Set a property (emits instancePropertyChanged)
-// 	virtual void setInstanceProperty(const QString&, const QVariant&);
+ 	virtual void setLayerProperty(const QString& propertyId, const QVariant& value);
+
+	void setFile(const QString&);
 
 protected:
 /*	virtual GLDrawable *createDrawable(GLWidget *);

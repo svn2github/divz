@@ -66,7 +66,11 @@ GLDrawable* LiveLayer::drawable(GLWidget *widget)
 	else
 	{
 		GLDrawable *drawable = createDrawable(widget);
-		if(m_drawables.isEmpty())
+		
+		bool wasEmpty = m_drawables.isEmpty();
+		m_drawables[widget] = drawable;
+		
+		if(wasEmpty)
 		{
 // 			qDebug() << "LiveLayer::drawable: widget:"<<widget<<", cache miss, first drawable";
 			initDrawable(drawable, true);
@@ -76,8 +80,6 @@ GLDrawable* LiveLayer::drawable(GLWidget *widget)
 // 			qDebug() << "LiveLayer::drawable: widget:"<<widget<<", cache miss, copy from first";
 			initDrawable(drawable, false);
 		}
-		
-		m_drawables[widget] = drawable;
 		
 		if(widget->property("isEditorWidget").toInt())
 			drawable->show();
@@ -170,7 +172,7 @@ void LiveLayer::initDrawable(GLDrawable *drawable, bool isFirstDrawable)
 // 	qDebug() << "LiveLayer::initDrawable: drawable:"<<drawable<<", copyFrom:"<<copyFrom;
 	if(isFirstDrawable)
 	{
-		loadLayerPropertiesFromDrawable(drawable, QStringList() 
+		loadLayerPropertiesFromObject(drawable, QStringList() 
 			<< "rect"
 			<< "zIndex"
 			<< "opacity");
@@ -178,7 +180,7 @@ void LiveLayer::initDrawable(GLDrawable *drawable, bool isFirstDrawable)
 	}
 	else
 	{
-		applyLayerPropertiesToDrawable(drawable, QStringList()
+		applyLayerPropertiesToObject(drawable, QStringList()
 			<< "rect"
 			<< "zIndex"
 			<< "opacity");
@@ -187,18 +189,18 @@ void LiveLayer::initDrawable(GLDrawable *drawable, bool isFirstDrawable)
 
 
 // Helper function - given a list of property names, load the props using QObject::property() from the drawable into m_props
-void LiveLayer::loadLayerPropertiesFromDrawable(const GLDrawable *drawable, const QStringList& list)
+void LiveLayer::loadLayerPropertiesFromObject(const QObject *object, const QStringList& list)
 {
 	foreach(QString key, list)
 	{
-		QVariant value = drawable->property(qPrintable(key));
+		QVariant value = object->property(qPrintable(key));
 		m_props[key] = LiveLayerProperty(key,value);
 	}
 }
 
 // Helper function - attempts to apply the list of props in 'list' (or all props in m_props if 'list' is empty) to drawable
 // 'Attempts' means that if drawable->metaObject()->indexOfProperty() returns <0, then setProperty is not called
-void LiveLayer::applyLayerPropertiesToDrawable(GLDrawable *drawable, QStringList list)
+void LiveLayer::applyLayerPropertiesToObject(QObject *object, QStringList list)
 {
 	if(list.isEmpty())
 		foreach(QString key, m_props.keys())
@@ -209,9 +211,9 @@ void LiveLayer::applyLayerPropertiesToDrawable(GLDrawable *drawable, QStringList
 		if(m_props.contains(key))
 		{
 			const char *asciiPropId = qPrintable(key);
-			if(drawable->metaObject()->indexOfProperty(asciiPropId) >= 0)
+			if(object->metaObject()->indexOfProperty(asciiPropId) >= 0)
 			{
-				drawable->setProperty(asciiPropId, m_props[key].value);
+				object->setProperty(asciiPropId, m_props[key].value);
 			}
 		}
 	}

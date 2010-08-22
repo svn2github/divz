@@ -15,6 +15,7 @@
 
 #include "LiveVideoInputLayer.h"
 #include "LiveStaticSourceLayer.h"
+#include "LiveTextLayer.h"
 #include "LiveScene.h"
 #include "../glvidtex/GLWidget.h"
 #include "../glvidtex/GLVideoDrawable.h"
@@ -77,7 +78,7 @@ int main(int argc, char **argv)
 	// Setup Editor Background
 	{
 		QSize size = glEditorWin->viewport().size().toSize();
-		size /= 4;
+		size /= 2.5;
 		//qDebug() << "MainWindow::createLeftPanel(): size:"<<size;
 		QImage bgImage(size, QImage::Format_ARGB32_Premultiplied);
 		QBrush bgTexture(QPixmap("squares2.png"));
@@ -107,20 +108,22 @@ int main(int argc, char **argv)
 	{
 		//scene->addLayer(new LiveVideoInputLayer());
 		scene->addLayer(new LiveStaticSourceLayer());
+		scene->addLayer(new LiveTextLayer());
 	}
 	
 	// add to live output
 	{
-		//scene->attachGLWidget(glOutputWin);
+		scene->attachGLWidget(glOutputWin);
 		scene->layerList().at(0)->drawable(glOutputWin)->setObjectName("Output");
-		glOutputWin->addDrawable(scene->layerList().at(0)->drawable(glOutputWin));
+		//glOutputWin->addDrawable(scene->layerList().at(0)->drawable(glOutputWin));
 		scene->layerList().at(0)->setVisible(true);
+		scene->layerList().at(1)->setVisible(true);
 	}
 	
 	// add to editor
 	{
 		scene->layerList().at(0)->drawable(glEditorWin)->setObjectName("Editor");
-		glEditorWin->addDrawable(scene->layerList().at(0)->drawable(glEditorWin));
+		glEditorWin->addDrawable(scene->layerList().at(1)->drawable(glEditorWin));
 	}
 	
 	// show windows

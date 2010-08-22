@@ -327,7 +327,7 @@ void GLDrawable::AnimParam::fromByteArray(QByteArray array)
 	b >> x; startDelay = x.toInt();
 	b >> x; length = x.toInt();
 	b >> x; int curveType = x.toInt();
-	curve.setType((QEasingCurve::Type)curveType);
+	curve = (QEasingCurve::Type)curveType;
 }
 
 

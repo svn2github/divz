@@ -108,11 +108,11 @@ protected:
 	virtual void initDrawable(GLDrawable *drawable, bool isFirstDrawable = false);
 	
 	// Helper function - given a list of property names, load the props using QObject::property() from the drawable into m_props
-	void loadLayerPropertiesFromDrawable(const GLDrawable *drawable, const QStringList& list);
+	void loadLayerPropertiesFromObject(const QObject *, const QStringList& list);
 	
 	// Helper function - attempts to apply the list of props in 'list' (or all props in m_props if 'list' is empty) to drawable
 	// 'Attempts' means that if drawable->metaObject()->indexOfProperty() returns <0, then setProperty is not called
-	void applyLayerPropertiesToDrawable(GLDrawable *drawable, QStringList list = QStringList());
+	void applyLayerPropertiesToObject(QObject *object, QStringList list = QStringList());
 	
 	// "pretty" name for this instance, like "SeasonsLoop3.mpg" or some other content-identifying string
 	QString m_instanceName;

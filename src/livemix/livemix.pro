@@ -40,7 +40,7 @@ HEADERS += CameraThread.h \
 	LiveLayer.h \
 	LiveVideoInputLayer.h \
 	LiveStaticSourceLayer.h \
-#	LiveTextLayer.h 
+	LiveTextLayer.h 
 	
 SOURCES += main.cpp \
 	CameraThread.cpp \
@@ -69,7 +69,7 @@ SOURCES += main.cpp \
 	LiveLayer.cpp \
 	LiveVideoInputLayer.cpp \
 	LiveStaticSourceLayer.cpp \
-#	LiveTextLayer.cpp 
+	LiveTextLayer.cpp 
 
 
 unix {

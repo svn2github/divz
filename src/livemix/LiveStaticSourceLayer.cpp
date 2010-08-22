@@ -4,6 +4,8 @@
 #include "../glvidtex/GLVideoDrawable.h"
 #include "../glvidtex/StaticVideoSource.h"
 
+#include <QFileInfo>
+
 ///////////////////////
 LiveStaticSourceLayer::LiveStaticSourceLayer(QObject *parent)
 	: LiveLayer(parent)
@@ -22,18 +24,11 @@ GLDrawable* LiveStaticSourceLayer::createDrawable(GLWidget *context)
 
 // 	qDebug() << "LiveStaticSourceLayer::createDrawable: context viewport:"<<context->viewport();
 
-	StaticVideoSource *source = new StaticVideoSource();
-	//source->setImage(QImage("me2.jpg"));
-	QImage img("dsc_6645-1.jpg");
-	if(img.isNull())
-		source->setImage(QImage("../glvidtex/me2.jpg"));
-		//source->setImage(QImage("../data/icon-d.png"));
-	else
-		source->setImage(img);
-	//source->setImage(QImage("/opt/qtsdk-2010.02/qt/examples/opengl/pbuffers/cubelogo.png"));
-
-	source->start();
-	drawable->setVideoSource(source);
+	m_staticSource = new StaticVideoSource();
+	m_staticSource->setImage(QImage("squares2.png"));
+	m_staticSource->start();
+	
+	drawable->setVideoSource(m_staticSource);
 	drawable->setRect(context->viewport());
 	drawable->setZIndex(-1);
 	drawable->setObjectName("Static");
@@ -55,40 +50,31 @@ GLDrawable* LiveStaticSourceLayer::createDrawable(GLWidget *context)
  	drawable->addHideAnimation(GLDrawable::AnimZoom,1000);
 //
 
-	setInstanceName("File 'me2.jpg'");
+	
 	
 // 	qDebug() << "LiveStaticSourceLayer::createDrawable: setup complete, drawable rect:"<<drawable->rect();
 	
 	return drawable;
 }
 
-
 //void LiveStaticSourceLayer::setupInstanceProperties(GLDrawable *drawable)
 void LiveStaticSourceLayer::initDrawable(GLDrawable *newDrawable, bool isFirst)
 {
 	LiveLayer::initDrawable(newDrawable, isFirst);
 	
-	// TODO expose a 'filename' property
-	
-	/*
-	GLVideoDrawable *vid = dynamic_cast<GLVideoDrawable*>(drawable);
-	if(!vid)
-		return;
-	
-	QStringList props
-		<< "brightness"
-		<< "contrast"
-		<< "hue"
-		<< "saturation"
-		<< "flipHorizontal"
-		<< "flipVertical"
-		<< "cropTopLeft"
-		<< "cropBottomRight";
-		
-	foreach(QString prop, props)
+	if(isFirst)
 	{
-		m_props[prop] = vid->property(qPrintable(prop));
-	}*/
+		//loadLayerPropertiesFromObject(m_textSource, props);
+		
+		setFile("../data/icon-next-large.png");
+		m_props["file"] = LiveLayerProperty("file",file());
+	}
+	else
+	{
+		//applyLayerPropertiesToObject(m_textSource, props);
+		//setFile(file());
+	}
+	
 }
 
 // QList<QtPropertyEditorIdPair> LiveStaticSourceLayer::createPropertyEditors(QtVariantPropertyManager *manager)
@@ -160,21 +146,29 @@ void LiveStaticSourceLayer::initDrawable(GLDrawable *newDrawable, bool isFirst)
 // 	return list;
 // }
 // 
-// void LiveStaticSourceLayer::setInstanceProperty(const QString& key, const QVariant& value)
-// {
-// 	// TODO load filename from prop and set image
-// 	
-// // 	if(key == "deinterlace")
-// // 	{
-// // 		VideoSource *source = gl->videoSource();
-// // 		
-// // 		CameraThread *camera = dynamic_cast<CameraThread*>(source);
-// // 		if(camera)
-// // 		{
-// // 			camera->setDeinterlace((bool)value.toInt());
-// // 		}
-// // 	}
-// 	
-// 	LiveLayer::setInstanceProperty(key,value);
-// 
-// }
+
+void LiveStaticSourceLayer::setFile(const QString& file)
+{
+	QImage image(file);
+	if(image.isNull())
+		qDebug() << "LiveStaticsourceLayer::setFile: Error loading file:"<<file;
+	else
+	{
+		m_staticSource->setImage(image);
+		setInstanceName(QFileInfo(file).fileName());
+	}
+}
+
+
+void LiveStaticSourceLayer::setLayerProperty(const QString& propertyId, const QVariant& value)
+{
+	// TODO load filename from prop and set image
+	
+	if(propertyId == "file")
+	{
+		setFile(value.toString());
+	}
+	
+	LiveLayer::setLayerProperty(propertyId,value);
+
+}

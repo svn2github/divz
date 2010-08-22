@@ -65,7 +65,7 @@ void LiveVideoInputLayer::initDrawable(GLDrawable *drawable, bool isFirst)
 			
 	if(isFirst)
 	{
-		loadLayerPropertiesFromDrawable(drawable, props);
+		loadLayerPropertiesFromObject(drawable, props);
 		
 		#ifdef Q_OS_WIN
 			QString defaultCamera = "vfwcap://0";
@@ -87,7 +87,7 @@ void LiveVideoInputLayer::initDrawable(GLDrawable *drawable, bool isFirst)
 	}
 	else
 	{
-		applyLayerPropertiesToDrawable(drawable, props);
+		applyLayerPropertiesToObject(drawable, props);
 		if(m_camera)
 			setCamera(m_camera);
 	}

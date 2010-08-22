@@ -10,7 +10,7 @@ LiveTextLayer::LiveTextLayer(QObject *parent)
 	: LiveLayer(parent)
 	, m_textSource(0)
 {
-	m_controlWidget = new LayerControlWidget(this);
+
 }
 
 LiveTextLayer::~LiveTextLayer()
@@ -21,7 +21,8 @@ GLDrawable* LiveTextLayer::createDrawable(GLWidget *context)
 {
 	// add secondary frame
 	// add text overlay frame
- 	GLVideoDrawable *drawable = new GLVideoDrawable();
+ 	GLVideoDrawable *drawable = new GLVideoDrawable(context);
+ 	drawable->setObjectName("LiveTextLayer:drawable");
 // 
 // 
 // 	m_textSource = new TextVideoSource();
@@ -72,11 +73,11 @@ GLDrawable* LiveTextLayer::createDrawable(GLWidget *context)
 	drawable->setObjectName("Text");
 	
 	drawable->addShowAnimation(GLDrawable::AnimFade);
-	//drawable->addShowAnimation(GLDrawable::AnimSlideTop,2500).curve = QEasingCurve::OutElastic;
-	drawable->addShowAnimation(GLDrawable::AnimSlideLeft,2000).curve = QEasingCurve::OutElastic;
+	drawable->addShowAnimation(GLDrawable::AnimSlideTop,2500).curve = QEasingCurve::OutElastic;
+	//drawable->addShowAnimation(GLDrawable::AnimSlideLeft,2000).curve = QEasingCurve::OutElastic;
  	
  	drawable->addHideAnimation(GLDrawable::AnimFade);
- 	drawable->addHideAnimation(GLDrawable::AnimZoom);
+ 	//drawable->addHideAnimation(GLDrawable::AnimZoom);
  	
 
 	
@@ -85,23 +86,36 @@ GLDrawable* LiveTextLayer::createDrawable(GLWidget *context)
 
 
 
-void LiveTextLayer::setupInstanceProperties(GLDrawable *drawable)
+void LiveTextLayer::initDrawable(GLDrawable *drawable, bool isFirstDrawable)
 {
-	LiveLayer::setupInstanceProperties(drawable);
+	LiveLayer::initDrawable(drawable, isFirstDrawable);
 	
-	m_props["outlineEnabled"] 	= m_textSource->outlineEnabled();
-	m_props["outlineColor"] 	= m_textSource->outlinePen().color();
-	m_props["fillEnabled"] 		= m_textSource->fillEnabled();
-	m_props["fillColor"] 		= m_textSource->fillBrush().color();
-	m_props["shadowEnabled"] 	= m_textSource->shadowEnabled();
-	m_props["shadowColor"] 		= m_textSource->shadowBrush().color();
-	m_props["shadowBlurRadius"] 	= m_textSource->shadowBlurRadius();
-	m_props["shadowOffsetX"] 	= m_textSource->shadowOffsetX();
-	m_props["shadowOffsetY"] 	= m_textSource->shadowOffsetY();
+	QStringList props = QStringList()
+		<< "outlineEnabled"
+		<< "outlineColor"
+		<< "fillEnabled"
+		<< "fillColor"
+		<< "shadowEnabled"
+		<< "shadowColor"
+		<< "shadowBlurRadius"
+		<< "shadowOffsetX"
+		<< "shadowOffsetY";
+		
+				
+	if(isFirstDrawable)
+	{
+		loadLayerPropertiesFromObject(drawable, props);
+		
+		setText("<b>Welcome to LiveMix</b>");
+		m_props["text"] = LiveLayerProperty("text",text());
+	}
+	else
+	{
+		applyLayerPropertiesToObject(drawable, props);
+		setText(text());
+	}
 	
-	setText("<b>Welcome to LiveMix</b>");
 	
-	m_props["text"] 		= text();
 }
 
 void LiveTextLayer::setText(const QString& text)
@@ -122,16 +136,15 @@ void LiveTextLayer::setText(const QString& text)
 		size.width(),
 		size.height());
 	
-	setDrawableProperty("rect",newRect);
+	//qDebug() << "LiveTextLayer::setText:"<<text<<": size:"<<size<<", newRect:"<<newRect;
 	
-	// TODO do we need to store both in a member var AND m_props?
-	m_props["text"] = text;
+	setLayerProperty("rect",newRect);
 	
-	m_text = text;
+	m_props["text"].value = text;
 // 	
-	changeInstanceName(text);
+	setInstanceName(text);
 }
-
+/*
 QList<QtPropertyEditorIdPair> LiveTextLayer::createPropertyEditors(QtVariantPropertyManager *manager)
 {
 	QList<QtPropertyEditorIdPair> list = LiveLayer::createPropertyEditors(manager);
@@ -203,9 +216,9 @@ QList<QtPropertyEditorIdPair> LiveTextLayer::createPropertyEditors(QtVariantProp
 // 	m_props["shadowOffsetY"] 	= m_textSource->shadowOffsetY();
 	
 	return list;
-}
+}*/
 
-void LiveTextLayer::setInstanceProperty(const QString& key, const QVariant& value)
+void LiveTextLayer::setLayerProperty(const QString& key, const QVariant& value)
 {
 	if(key == "text")
 	{
@@ -218,28 +231,29 @@ void LiveTextLayer::setInstanceProperty(const QString& key, const QVariant& valu
 		
 		if(key == "outlineColor")
 		{
-			m_textSource->setOutlinePen(color);
+			m_textSource->setOutlinePen(QPen(color));
 		}
 		else
 		if(key == "fillColor")
 		{
-			m_textSource->setFillBrush(color);
+			m_textSource->setFillBrush(QBrush(color));
 		}
 		else
 		if(key == "shadowColor")
 		{
-			m_textSource->setShadowBrush(color);
+			m_textSource->setShadowBrush(QBrush(color));
 		}
 	}
 	else
 	{
-		if(m_textSource->property(qPrintable(key)).isValid())
+		const char *keyStr = qPrintable(key);
+		if(m_textSource->metaObject()->indexOfProperty(keyStr)>=0)
 		{
-			m_textSource->setProperty(qPrintable(key), value);
+			m_textSource->setProperty(keyStr, value);
 		}
 	}
 	
-	LiveLayer::setInstanceProperty(key,value);
+	LiveLayer::setLayerProperty(key,value);
 
 }
 
