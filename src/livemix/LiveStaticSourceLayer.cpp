@@ -41,13 +41,14 @@ GLDrawable* LiveStaticSourceLayer::createDrawable(GLWidget *context)
 // 	drawable->addShowAnimation(GLDrawable::AnimFade);
  	//drawable->addShowAnimation(GLDrawable::AnimZoom);
 // 	#else
+
 	drawable->addShowAnimation(GLDrawable::AnimZoom,2500).curve = QEasingCurve::OutElastic;
 	//drawable->addShowAnimation(GLDrawable::AnimFade,2500).curve = QEasingCurve::OutElastic;
 	//drawable->addShowAnimation(GLDrawable::AnimFade,100);
 // 	#endif
 //
- 	drawable->addHideAnimation(GLDrawable::AnimFade);
- 	drawable->addHideAnimation(GLDrawable::AnimZoom,1000);
+	drawable->addHideAnimation(GLDrawable::AnimFade);
+	drawable->addHideAnimation(GLDrawable::AnimZoom,1000);
 //
 
 	
@@ -72,7 +73,7 @@ void LiveStaticSourceLayer::initDrawable(GLDrawable *newDrawable, bool isFirst)
 	else
 	{
 		//applyLayerPropertiesToObject(m_textSource, props);
-		//setFile(file());
+		setFile(file());
 	}
 	
 }
@@ -155,6 +156,7 @@ void LiveStaticSourceLayer::setFile(const QString& file)
 	else
 	{
 		m_staticSource->setImage(image);
+		m_props["file"].value = file;
 		setInstanceName(QFileInfo(file).fileName());
 	}
 }

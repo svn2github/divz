@@ -86,6 +86,8 @@ public:
 	
 	bool isVisible() { return m_isVisible; }
 	
+	bool animationsEnabled() { return m_animationsEnabled; }
+	
 public slots:
 	void setRect(const QRectF& rect);
 	void setOpacity(double i);
@@ -94,6 +96,8 @@ public slots:
 	void show();
 	void hide();
 	void setVisible(bool flag);
+	
+	void setAnimationsEnabled(bool);
 	
 signals:
 	void zIndexChanged(double newZIndex);
@@ -135,6 +139,8 @@ private:
 	QList<GLDrawable::AnimParam> m_animations;
 	QList<QAutoDelPropertyAnimation*> m_runningAnimations;
 	QList<QAutoDelPropertyAnimation*> m_finishedAnimations;
+	
+	bool m_animationsEnabled;
 
 };
 

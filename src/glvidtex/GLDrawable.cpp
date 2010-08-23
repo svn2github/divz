@@ -25,6 +25,7 @@ GLDrawable::GLDrawable(QObject *parent)
 	, m_opacity(1)
 	, m_isVisible(false)
 	, m_animFinished(true)
+	, m_animationsEnabled(true)
 {
 }
 
@@ -74,16 +75,25 @@ void GLDrawable::startAnimations()
 	m_animFinished = false;
 	
 	bool hasFade  = false;
-	foreach(GLDrawable::AnimParam p, m_animations)
-		if(( m_animDirection && p.cond == GLDrawable::OnShow) ||
-		   (!m_animDirection && p.cond == GLDrawable::OnHide))
-		{
-			if(p.type == GLDrawable::AnimFade)
-				hasFade = true; 
-			startAnimation(p);
+	if(m_animationsEnabled)
+	{
+		foreach(GLDrawable::AnimParam p, m_animations)
+			if(( m_animDirection && p.cond == GLDrawable::OnShow) ||
+			   (!m_animDirection && p.cond == GLDrawable::OnHide))
+			{
+				if(p.type == GLDrawable::AnimFade)
+					hasFade = true; 
+				startAnimation(p);
+			}
 		}
+		
 	if(m_isVisible && !hasFade)
 		setOpacity(1.0);
+}
+
+void GLDrawable::setAnimationsEnabled(bool flag)
+{
+	m_animationsEnabled = flag;
 }
 
 GLDrawable::AnimParam & GLDrawable::addShowAnimation(AnimationType value, int length)

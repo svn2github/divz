@@ -100,7 +100,8 @@ void LiveLayer::setVisible(bool flag)
 	// Implemented using sig/slot instead of just calling each if the drawables setVisible
 	// directly so that it can be conditionally connected based on the GLWidget that
 	// the drawable is connected to - see the connect() statement in LiveLayer::drawable()	
-	emit isVisible(flag);
+	//if(flag != m_isVisible)
+		emit isVisible(flag);
 	m_isVisible = flag;
 }
 
@@ -177,6 +178,7 @@ void LiveLayer::initDrawable(GLDrawable *drawable, bool isFirstDrawable)
 			<< "zIndex"
 			<< "opacity");
 			
+		m_isVisible = drawable->isVisible();
 	}
 	else
 	{
@@ -184,6 +186,8 @@ void LiveLayer::initDrawable(GLDrawable *drawable, bool isFirstDrawable)
 			<< "rect"
 			<< "zIndex"
 			<< "opacity");
+			
+		setVisible(m_isVisible);
 	}
 }
 

@@ -234,7 +234,7 @@ GLVideoDrawable::GLVideoDrawable(QObject *parent)
 	, m_source(0)
 	, m_frameCount(0)
 	, m_latencyAccum(0)
-	, m_debugFps(true)
+	, m_debugFps(false)
 	, m_aspectRatioMode(Qt::KeepAspectRatio)
 	, m_validShader(false)
 	, m_program(0)
@@ -295,7 +295,7 @@ void GLVideoDrawable::frameReady()
 	
 	m_frame = m_source->frame();
 	
-	if(m_glInited)
+	if(m_glInited && glWidget())
 	{
 		if(m_frame.rect != m_sourceRect || !m_texturesInited)
 		{
@@ -377,7 +377,7 @@ void GLVideoDrawable::setAlphaMask(const QImage &mask)
 		return;
 	}
 	
-	if(m_glInited)
+	if(m_glInited && glWidget())
 	{
 		if(m_sourceRect.size().toSize() == QSize(0,0))
 		{
@@ -659,6 +659,9 @@ void GLVideoDrawable::initGL()
 	if(m_glInited)
 		return;
 		
+	if(glWidget())
+		glWidget()->makeCurrent();
+		
 	//qDebug() << "GLVideoDrawable::initGL(): "<<objectName();
 		
 	#ifndef QT_OPENGL_ES
@@ -706,10 +709,12 @@ bool GLVideoDrawable::setVideoFormat(const VideoFormat& format)
 	
 	//qDebug() << "GLVideoDrawable::setVideoFormat(): "<<objectName()<<" \t frameSize:"<<format.frameSize<<", pixelFormat:"<<format.pixelFormat;
 	
-	if(!m_glInited)
+	if(!m_glInited || !glWidget())
 		return m_imagePixelFormats.contains(format.pixelFormat);
 		
 	//qDebug() << "GLVideoDrawable::setVideoFormat(): \t Initalizing vertex and pixel shaders...";
+	
+	glWidget()->makeCurrent();
 	
 	m_validShader = false;
 	const char *fragmentProgram = resizeTextures(format.frameSize);

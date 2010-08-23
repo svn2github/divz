@@ -3,13 +3,14 @@
 #include "MainWindow.h"
 #include <QCDEStyle>
 
-#include "qtvariantproperty.h"
-#include "qttreepropertybrowser.h"
+// #include "qtvariantproperty.h"
+// #include "qttreepropertybrowser.h"
 
 #include "VideoSource.h"
 #include "../glvidtex/GLWidget.h"
 #include "../glvidtex/GLVideoDrawable.h"
 #include "../glvidtex/StaticVideoSource.h"
+#include "LayerControlWidget.h"
 
 
 MainWindow::MainWindow()
@@ -53,7 +54,96 @@ void MainWindow::setupSampleScene()
 	
 	loadLiveScene(scene);
 	
-	scene->layerList().at(0)->show();
+	//scene->layerList().at(2)->setVisible(true);
+	
+	
+	m_layerViewer->addDrawable(scene->layerList().at(1)->drawable(m_layerViewer));
+	
+	/*
+	
+	
+	
+// 	GLWidget *glOutputWin = new GLWidget();
+// 	{
+// 		glOutputWin->setWindowTitle("Live");
+// 		glOutputWin->resize(1000,750);
+// 		// debugging...
+// 		//glOutputWin->setProperty("isEditorWidget",true);
+// 	
+// 	}
+	
+	GLWidget *glEditorWin = new GLWidget();
+	{
+		glEditorWin->setWindowTitle("Editor");
+		glEditorWin->resize(400,300);
+		glEditorWin->setProperty("isEditorWidget",true);
+	}
+	
+	// Setup Editor Background
+	if(true)
+	{
+		QSize size = glEditorWin->viewport().size().toSize();
+		size /= 2.5;
+		//qDebug() << "MainWindow::createLeftPanel(): size:"<<size;
+		QImage bgImage(size, QImage::Format_ARGB32_Premultiplied);
+		QBrush bgTexture(QPixmap("squares2.png"));
+		QPainter bgPainter(&bgImage);
+		bgPainter.fillRect(bgImage.rect(), bgTexture);
+		bgPainter.end();
+		
+		StaticVideoSource *source = new StaticVideoSource();
+		source->setImage(bgImage);
+		//source->setImage(QImage("squares2.png"));
+		source->start();
+		
+		GLVideoDrawable *drawable = new GLVideoDrawable(glEditorWin);
+		drawable->setVideoSource(source);
+		drawable->setRect(glEditorWin->viewport());
+		drawable->setZIndex(-100);
+		drawable->setObjectName("StaticBackground");
+		drawable->show();
+		
+		glEditorWin->addDrawable(drawable);
+	}
+	
+	
+	
+// 	// setup scene
+// 	LiveScene *scene = new LiveScene();
+// 	{
+// 		//scene->addLayer(new LiveVideoInputLayer());
+// 		scene->addLayer(new LiveStaticSourceLayer());
+// 		scene->addLayer(new LiveTextLayer());
+// 	}
+	
+	// add to live output
+	{
+		//scene->attachGLWidget(glOutputWin);
+		//scene->layerList().at(0)->drawable(glOutputWin)->setObjectName("Output");
+		//glOutputWin->addDrawable(scene->layerList().at(0)->drawable(glOutputWin));
+		scene->layerList().at(0)->setVisible(true);
+		scene->layerList().at(1)->setVisible(true);
+	}
+	
+	// add to editor
+	{
+		scene->layerList().at(0)->drawable(glEditorWin)->setObjectName("Editor");
+		//glEditorWin->addDrawable(scene->layerList().at(1)->drawable(glEditorWin));
+		glEditorWin->addDrawable(scene->layerList().at(1)->drawable(glEditorWin));
+		m_layerViewer->addDrawable(scene->layerList().at(1)->drawable(m_layerViewer));
+		
+	}
+	
+	// show windows
+	{
+		//glOutputWin->show();
+		glEditorWin->show();
+	}*/
+	
+	
+	
+	
+	//m_layerViewer->addDrawable(scene->layerList().at(2)->drawable(m_layerViewer));
 }
 
 void MainWindow::loadLiveScene(LiveScene *scene)
@@ -112,16 +202,16 @@ void MainWindow::updateLayerList()
 	{
 		if(m_controlWidgetMap.contains(layer))
 		{
-			qDebug() << "MainWindow::updateLayerList(): control map has layer already"<<layer;
+// 			qDebug() << "MainWindow::updateLayerList(): control map has layer already"<<layer;
 			foundLayer.append(layer);
 		}
 		else
 		{
-			LayerControlWidget *widget = layer->controlWidget();
+			LayerControlWidget *widget = new LayerControlWidget(layer);
 			m_layerBase->layout()->addWidget(widget);
 			widget->show();
 
-			qDebug() << "MainWindow::updateLayerList(): adding control widget for layer"<<layer<<", widget:"<<widget;
+// 			qDebug() << "MainWindow::updateLayerList(): adding control widget for layer"<<layer<<", widget:"<<widget;
 
 			m_controlWidgetMap[layer] = widget;
 			foundLayer.append(layer);
@@ -134,7 +224,7 @@ void MainWindow::updateLayerList()
 	{
 		if(!foundLayer.contains(layer))
 		{
-			qDebug() << "MainWindow::updateLayerList(): layer not found, removing control widget"<<layer;
+// 			qDebug() << "MainWindow::updateLayerList(): layer not found, removing control widget"<<layer;
 			disconnect(m_controlWidgetMap[layer], 0, this, 0);
 			m_layerBase->layout()->removeWidget(m_controlWidgetMap[layer]);
 			m_controlWidgetMap.remove(layer);
@@ -145,15 +235,21 @@ void MainWindow::updateLayerList()
 
 void MainWindow::liveLayerClicked()
 {
+	LayerControlWidget *widget = dynamic_cast<LayerControlWidget*>(sender());
+	if(m_currentControlWidget == widget)
+		return;
+	
+// 	qDebug() << "MainWindow::liveLayerClicked(): m_layerViewer:"<<m_layerViewer;
 	if(m_currentControlWidget)
 	{
+// 		qDebug() << "MainWindow::liveLayerClicked(): removing old layer from editor";
 		m_currentControlWidget->setIsCurrentWidget(false);
 		m_layerViewer->removeDrawable(m_currentControlWidget->layer()->drawable(m_layerViewer));
 	}
-
-	LayerControlWidget *widget = dynamic_cast<LayerControlWidget*>(sender());
+	
 	if(widget)
 	{
+// 		qDebug() << "MainWindow::liveLayerClicked(): adding clicked layer to editor";
 		widget->setIsCurrentWidget(true);
 		loadLayerProperties(widget->layer());
 		m_layerViewer->addDrawable(widget->layer()->drawable(m_layerViewer));
@@ -163,14 +259,14 @@ void MainWindow::liveLayerClicked()
 
 void MainWindow::updateExpandState()
 {
-	QList<QtBrowserItem *> list = m_propertyEditor->topLevelItems();
-	QListIterator<QtBrowserItem *> it(list);
-	while (it.hasNext()) 
-	{
-		QtBrowserItem *item = it.next();
-		QtProperty *prop = item->property();
-		m_idToExpanded[m_propertyToId[prop]] = m_propertyEditor->isExpanded(item);
-	}
+// 	QList<QtBrowserItem *> list = m_propertyEditor->topLevelItems();
+// 	QListIterator<QtBrowserItem *> it(list);
+// 	while (it.hasNext()) 
+// 	{
+// 		QtBrowserItem *item = it.next();
+// 		QtProperty *prop = item->property();
+// 		m_idToExpanded[m_propertyToId[prop]] = m_propertyEditor->isExpanded(item);
+// 	}
 }
 
 void MainWindow::loadLayerProperties(LiveLayer *layer)
@@ -178,14 +274,6 @@ void MainWindow::loadLayerProperties(LiveLayer *layer)
 	m_currentLayer = layer;
 	updateExpandState();
 
-	QMap<QtProperty *, QString>::ConstIterator itProp = m_propertyToId.constBegin();
-	while (itProp != m_propertyToId.constEnd()) 
-	{
-		delete itProp.key();
-		itProp++;
-	}
-	m_propertyToId.clear();
-	m_idToProperty.clear();
 
 	if (!m_currentLayer) 
 	{
@@ -193,92 +281,13 @@ void MainWindow::loadLayerProperties(LiveLayer *layer)
 		return;
 	}
 
-	//deleteAction->setEnabled(true);
 
-// 	QtVariantProperty *property;
-	
-	QList<QtPropertyEditorIdPair> list = layer->createPropertyEditors(m_variantManager);
-	foreach(QtPropertyEditorIdPair pair, list)
-	{
-		addProperty(pair.value, pair.id);
-	}
-
-// 	property = variantManager->addProperty(QVariant::Double, tr("Position X"));
-// 	property->setAttribute(QLatin1String("minimum"), 0);
-// 	property->setAttribute(QLatin1String("maximum"), canvas->width());
-// 	property->setValue(item->x());
-// 	addProperty(property, QLatin1String("xpos"));
-// 	
-// 	property = variantManager->addProperty(QVariant::Double, tr("Position Y"));
-// 	property->setAttribute(QLatin1String("minimum"), 0);
-// 	property->setAttribute(QLatin1String("maximum"), canvas->height());
-// 	property->setValue(item->y());
-// 	addProperty(property, QLatin1String("ypos"));
-// 	
-// 	property = variantManager->addProperty(QVariant::Double, tr("Position Z"));
-// 	property->setAttribute(QLatin1String("minimum"), 0);
-// 	property->setAttribute(QLatin1String("maximum"), 256);
-// 	property->setValue(item->z());
-// 	addProperty(property, QLatin1String("zpos"));
-// 	
-// 	if (item->rtti() == QtCanvasItem::Rtti_Rectangle) {
-// 		QtCanvasRectangle *i = (QtCanvasRectangle *)item;
-// 	
-// 		property = variantManager->addProperty(QVariant::Color, tr("Brush Color"));
-// 		property->setValue(i->brush().color());
-// 		addProperty(property, QLatin1String("brush"));
-// 	
-// 		property = variantManager->addProperty(QVariant::Color, tr("Pen Color"));
-// 		property->setValue(i->pen().color());
-// 		addProperty(property, QLatin1String("pen"));
-// 	
-// 		property = variantManager->addProperty(QVariant::Size, tr("Size"));
-// 		property->setValue(i->size());
-// 		addProperty(property, QLatin1String("size"));
-// 	} else if (item->rtti() == QtCanvasItem::Rtti_Line) {
-// 		QtCanvasLine *i = (QtCanvasLine *)item;
-// 	
-// 		property = variantManager->addProperty(QVariant::Color, tr("Pen Color"));
-// 		property->setValue(i->pen().color());
-// 		addProperty(property, QLatin1String("pen"));
-// 	
-// 		property = variantManager->addProperty(QVariant::Point, tr("Vector"));
-// 		property->setValue(i->endPoint());
-// 		addProperty(property, QLatin1String("endpoint"));
-// 	} else if (item->rtti() == QtCanvasItem::Rtti_Ellipse) {
-// 		QtCanvasEllipse *i = (QtCanvasEllipse *)item;
-// 	
-// 		property = variantManager->addProperty(QVariant::Color, tr("Brush Color"));
-// 		property->setValue(i->brush().color());
-// 		addProperty(property, QLatin1String("brush"));
-// 	
-// 		property = variantManager->addProperty(QVariant::Size, tr("Size"));
-// 		property->setValue(QSize(i->width(), i->height()));
-// 		addProperty(property, QLatin1String("size"));
-// 	} else if (item->rtti() == QtCanvasItem::Rtti_Text) {
-// 		QtCanvasText *i = (QtCanvasText *)item;
-// 	
-// 		property = variantManager->addProperty(QVariant::Color, tr("Color"));
-// 		property->setValue(i->color());
-// 		addProperty(property, QLatin1String("color"));
-// 	
-// 		property = variantManager->addProperty(QVariant::String, tr("Text"));
-// 		property->setValue(i->text());
-// 		addProperty(property, QLatin1String("text"));
-// 	
-// 		property = variantManager->addProperty(QVariant::Font, tr("Font"));
-// 		property->setValue(i->font());
-// 		addProperty(property, QLatin1String("font"));
-// 	}
 }
 
 void MainWindow::addProperty(QtVariantProperty *property, const QString &id)
 {
-	m_propertyToId[property] = id;
-	m_idToProperty[id] = property;
-	QtBrowserItem *item = m_propertyEditor->addProperty(property);
-	if (m_idToExpanded.contains(id))
-		m_propertyEditor->setExpanded(item, m_idToExpanded[id]);
+// 	if (m_idToExpanded.contains(id))
+// 		m_propertyEditor->setExpanded(item, m_idToExpanded[id]);
 }
 
 void MainWindow::valueChanged(QtProperty *property, const QVariant &value)
@@ -291,7 +300,7 @@ void MainWindow::valueChanged(QtProperty *property, const QVariant &value)
 	
 	QString id = m_propertyToId[property];
 	
-	m_currentLayer->setInstanceProperty(id, value);
+	//m_currentLayer->setInstanceProperty(id, value);
 	
 // 	if (id == QLatin1String("xpos")) {
 // 		currentItem->setX(value.toDouble());
@@ -358,9 +367,10 @@ void MainWindow::createLeftPanel()
 	m_leftSplitter->setOrientation(Qt::Vertical);
 
 	m_layerViewer = new GLWidget(m_leftSplitter);
+	m_layerViewer->setProperty("isEditorWidget",true);
 	
 	QSize size = m_layerViewer->viewport().size().toSize();
-	size /= 4;
+	size /= 2.5;
 	qDebug() << "MainWindow::createLeftPanel(): size:"<<size;
 	QImage bgImage(size, QImage::Format_ARGB32_Premultiplied);
 	QBrush bgTexture(QPixmap("squares2.png"));
@@ -385,18 +395,19 @@ void MainWindow::createLeftPanel()
 	
 	m_leftSplitter->addWidget(m_layerViewer);
 
-// 	m_controlArea = new QScrollArea(m_leftSplitter);
-// 	m_controlBase = new QWidget(m_controlArea);
-// 	(void)new QVBoxLayout(m_controlBase);
-// 	m_controlArea->setWidget(m_controlBase);
-// 	m_leftSplitter->addWidget(m_controlArea);
+ 	m_controlArea = new QScrollArea(m_leftSplitter);
+ 	m_controlArea->setWidgetResizable(true);
+ 	m_controlBase = new QWidget(m_controlArea);
+ 	(void)new QVBoxLayout(m_controlBase);
+ 	m_controlArea->setWidget(m_controlBase);
+ 	m_leftSplitter->addWidget(m_controlArea);
 
-	m_variantManager = new QtVariantPropertyManager(this);
-	
-	connect(m_variantManager, SIGNAL(valueChanged(QtProperty *, const QVariant &)),
-			      this, SLOT(valueChanged(QtProperty *, const QVariant &)));
-	
-	QtVariantEditorFactory *variantFactory = new QtVariantEditorFactory(this);
+// 	m_variantManager = new QtVariantPropertyManager(this);
+// 	
+// 	connect(m_variantManager, SIGNAL(valueChanged(QtProperty *, const QVariant &)),
+// 			      this, SLOT(valueChanged(QtProperty *, const QVariant &)));
+// 	
+// 	QtVariantEditorFactory *variantFactory = new QtVariantEditorFactory(this);
 	
 // 	canvas = new QtCanvas(800, 600);
 // 	canvasView = new CanvasView(canvas, this);
@@ -405,9 +416,9 @@ void MainWindow::createLeftPanel()
 // 	QDockWidget *dock = new QDockWidget(this);
 // 	addDockWidget(Qt::RightDockWidgetArea, dock);
 	
-	m_propertyEditor = new QtTreePropertyBrowser(m_leftSplitter);
-	m_propertyEditor->setFactoryForManager(m_variantManager, variantFactory);
-	m_leftSplitter->addWidget(m_propertyEditor);
+// 	m_propertyEditor = new QtTreePropertyBrowser(m_leftSplitter);
+// 	m_propertyEditor->setFactoryForManager(m_variantManager, variantFactory);
+//	m_leftSplitter->addWidget(m_propertyEditor);
 	
 // 	m_currentItem = 0;
 	
@@ -420,33 +431,35 @@ void MainWindow::createLeftPanel()
 
 void MainWindow::createCenterPanel()
 {
-//	m_layerArea = new QScrollArea(m_mainSplitter);
-// 	QWidget *baseParent = new QWidget(m_layerArea);
+	m_layerArea = new QScrollArea(m_mainSplitter);
+	m_layerArea->setWidgetResizable(true);
+
+ 	QWidget *baseParent = new QWidget(m_layerArea);
+ 	QVBoxLayout *parentLayout = new QVBoxLayout(baseParent);
+ 	parentLayout->setContentsMargins(0,0,0,0);
+ 	
+ 	m_layerBase = new QWidget(baseParent);
+ 	(void)new QVBoxLayout(m_layerBase);
+ 	parentLayout->addWidget(m_layerBase);
+ 	parentLayout->addStretch(1);
+ 	//m_layerArea->setWidget(m_layerBase);
+ 	//m_mainSplitter->addWidget(m_layerArea);
+ 	m_layerArea->setWidget(baseParent);
+ 	m_mainSplitter->addWidget(m_layerArea);
+ 	
+// 	QWidget *baseParent = new QWidget(m_mainSplitter);
 // 	QVBoxLayout *parentLayout = new QVBoxLayout(baseParent);
 // 	parentLayout->setContentsMargins(0,0,0,0);
+// 	
 // 	m_layerBase = new QWidget(baseParent);
-// 	(void)new QVBoxLayout(m_layerBase);
+// 	QVBoxLayout *layout = new QVBoxLayout(m_layerBase);
+// 	layout->setContentsMargins(2,2,2,2);
+// 	
 // 	parentLayout->addWidget(m_layerBase);
 // 	parentLayout->addStretch(1);
 // 	//m_layerArea->setWidget(m_layerBase);
 // 	//m_mainSplitter->addWidget(m_layerArea);
-// 	m_layerArea->setWidget(baseParent);
-// 	m_mainSplitter->addWidget(m_layerArea);
-// 	baseParent->show();
-
-	QWidget *baseParent = new QWidget(m_mainSplitter);
-	QVBoxLayout *parentLayout = new QVBoxLayout(baseParent);
-	parentLayout->setContentsMargins(0,0,0,0);
-	
-	m_layerBase = new QWidget(baseParent);
-	QVBoxLayout *layout = new QVBoxLayout(m_layerBase);
-	layout->setContentsMargins(2,2,2,2);
-	
-	parentLayout->addWidget(m_layerBase);
-	parentLayout->addStretch(1);
-	//m_layerArea->setWidget(m_layerBase);
-	//m_mainSplitter->addWidget(m_layerArea);
-	m_mainSplitter->addWidget(baseParent);
+// 	m_mainSplitter->addWidget(baseParent);
 
 }
 

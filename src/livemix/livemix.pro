@@ -21,7 +21,7 @@ HEADERS += CameraThread.h \
 	VideoThread.h \
 	VideoFrame.h \
 	MjpegThread.h \
-#	MainWindow.h \
+	MainWindow.h \
 	MdiChild.h \
 	MdiVideoChild.h \
 	MdiVideoWidget.h \
@@ -41,7 +41,8 @@ HEADERS += CameraThread.h \
 	LiveVideoInputLayer.h \
 	LiveStaticSourceLayer.h \
 	LiveTextLayer.h \
-	ExpandableWidget.h
+	ExpandableWidget.h \
+	LayerControlWidget.h
 	
 SOURCES += main.cpp \
 	CameraThread.cpp \
@@ -51,7 +52,7 @@ SOURCES += main.cpp \
 	VideoThread.cpp \
 	VideoFrame.cpp \
 	MjpegThread.cpp \
-#	MainWindow.cpp \
+	MainWindow.cpp \
 	MdiChild.cpp \
 	MdiVideoChild.cpp \
 	MdiVideoWidget.cpp \
@@ -71,7 +72,8 @@ SOURCES += main.cpp \
 	LiveVideoInputLayer.cpp \
 	LiveStaticSourceLayer.cpp \
 	LiveTextLayer.cpp \
-	ExpandableWidget.cpp
+	ExpandableWidget.cpp \
+	LayerControlWidget.cpp
 
 
 unix {

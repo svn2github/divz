@@ -26,7 +26,7 @@
 #include "../glvidtex/GLVideoDrawable.h"
 #include "../glvidtex/StaticVideoSource.h"
 
-//#include "MainWindow.h"
+#include "MainWindow.h"
 
 //#include "MdiCamera.h"
 
@@ -49,28 +49,34 @@ int main(int argc, char **argv)
 	qApp->setOrganizationName("Josiah Bryan");
 	qApp->setOrganizationDomain("mybryanlife.com");
 	
-	QWidget window;
-	window.setWindowTitle("Expandable Widget Demo");
-	QVBoxLayout *layout = new QVBoxLayout(&window);
 	
-	ExpandableWidget *expand = new ExpandableWidget("Task 1");
-	
-	QLabel *label = new QLabel("Test");
-	QPushButton *button = new QPushButton("Test Button");
-	
-	QWidget *base = new QWidget();
-	QHBoxLayout *hbox = new QHBoxLayout(base);
-	hbox->addWidget(label);
-	hbox->addWidget(button);
-	
-	expand->setWidget(base);
-	layout->addWidget(expand);
-	layout->addStretch(1);
-	window.show();
+// 	QScrollArea *area = new QScrollArea;
+// 	area->setWindowTitle("Expandable Widget Demo");
+// 	area->setWidgetResizable(true);
+// 	
+// 	QWidget *containerWidget = new QWidget;
+// 	QVBoxLayout *layout = new QVBoxLayout(containerWidget);
+// 	
+// 	ExpandableWidget *expand = new ExpandableWidget("Task 1");
+// 	
+// 	QLabel *label = new QLabel("Test");
+// 	QPushButton *button = new QPushButton("Test Button");
+// 	
+// 	QWidget *base = new QWidget();
+// 	QHBoxLayout *hbox = new QHBoxLayout(base);
+// 	hbox->addWidget(label);
+// 	hbox->addWidget(button);
+// 	expand->setWidget(base);
+// 	
+// 	layout->addWidget(expand);
+// 	layout->addStretch(1);
+// 	
+// 	area->setWidget(expand);
+// 	area->show();
 	
 
-// 	MainWindow mw;
-// 	mw.show();
+	MainWindow mw;
+	mw.show();
 
 // 	GLWidget *glOutputWin = new GLWidget();
 // 	{
