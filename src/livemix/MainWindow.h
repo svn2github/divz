@@ -79,6 +79,7 @@ private:
 	
 	QScrollArea *m_controlArea;	
 	QWidget *m_controlBase;
+	QWidget *m_currentLayerPropsEditor;
 	
 	QScrollArea *m_layerArea;
 	QWidget *m_layerBase; /// TODO make this a drag widget like fridgemagnets example

@@ -4,6 +4,7 @@
 #include "../glvidtex/GLDrawable.h"
 #include "../glvidtex/GLWidget.h"
 
+
 LiveLayerProperty::LiveLayerProperty(
 		const QString&  _id, 
 		const QVariant& _value, 
@@ -82,7 +83,10 @@ GLDrawable* LiveLayer::drawable(GLWidget *widget)
 		}
 		
 		if(widget->property("isEditorWidget").toInt())
+		{
+			drawable->setAnimationsEnabled(false);
 			drawable->show();
+		}
 		else
 			connect(this, SIGNAL(isVisible(bool)), drawable, SLOT(setVisible(bool)));
 		
@@ -90,9 +94,144 @@ GLDrawable* LiveLayer::drawable(GLWidget *widget)
 	}
 }
 
-void LiveLayer::setupLayerPropertyEditors(QtVariantPropertyManager */*manager*/)
+
+
+#include "ExpandableWidget.h"
+#include <QVBoxLayout>
+#include <QFormLayout>
+#include <QHBoxLayout>
+#include <QSpinBox>
+#include <QSlider>
+
+
+QWidget * LiveLayer::createLayerPropertyEditors()
 {
-	/// TODO
+	QWidget * base = new QWidget();
+	QVBoxLayout *blay = new QVBoxLayout(base);
+	blay->setContentsMargins(0,0,0,0);
+	
+	ExpandableWidget *groupGeom = new ExpandableWidget("Geometry",base);
+	blay->addWidget(groupGeom);
+	
+	QWidget *groupGeomContainer = new QWidget;
+	QFormLayout *formLayout = new QFormLayout(groupGeomContainer);
+	
+	groupGeom->setWidget(groupGeomContainer);
+	
+	QHBoxLayout *hbox;
+	QSpinBox *spin;
+	
+	QWidget *posBase = new QWidget();
+	hbox = new QHBoxLayout(posBase);
+	hbox->setContentsMargins(0,0,0,0);
+	
+	spin = new QSpinBox(posBase);
+	spin->setSuffix(" px");
+	spin->setMinimum(-9999);
+	spin->setMaximum(9999);
+	spin->setValue(rect().topLeft().x());
+	connect(spin, SIGNAL(valueChanged(int)), this, SLOT(setX(int)));
+	hbox->addWidget(spin);
+	
+	hbox->addWidget(new QLabel(" x "));
+	
+	spin = new QSpinBox(posBase);
+	spin->setSuffix(" px");
+	spin->setMinimum(-9999);
+	spin->setMaximum(9999);
+	spin->setValue(rect().topLeft().y());
+	connect(spin, SIGNAL(valueChanged(int)), this, SLOT(setY(int)));
+	hbox->addWidget(spin);
+	
+	formLayout->addRow(tr("&Position:"), posBase);
+	
+	QWidget *sizeBase = new QWidget();
+	hbox = new QHBoxLayout(sizeBase);
+	hbox->setContentsMargins(0,0,0,0);
+	
+	spin = new QSpinBox(sizeBase);
+	spin->setSuffix(" px");
+	spin->setMinimum(-9999);
+	spin->setMaximum(9999);
+	spin->setValue(rect().size().width());
+	connect(spin, SIGNAL(valueChanged(int)), this, SLOT(setWidth(int)));
+	hbox->addWidget(spin);
+	
+	hbox->addWidget(new QLabel(" x "));
+	
+	spin = new QSpinBox(sizeBase);
+	spin->setSuffix(" px");
+	spin->setMinimum(-9999);
+	spin->setMaximum(9999);
+	spin->setValue(rect().size().height());
+	connect(spin, SIGNAL(valueChanged(int)), this, SLOT(setHeight(int)));
+	hbox->addWidget(spin);
+	
+	formLayout->addRow(tr("&Size:"), sizeBase);
+	
+	spin = new QSpinBox();
+	spin->setSuffix(" z");
+	spin->setMinimum(-9999);
+	spin->setMaximum(9999);
+	spin->setValue(zIndex());
+	connect(spin, SIGNAL(valueChanged(int)), this, SLOT(setZIndex(int)));
+	formLayout->addRow(tr("&Z Value:"), spin);
+	
+	QWidget *opacBase = new QWidget();
+	hbox = new QHBoxLayout(opacBase);
+	hbox->setContentsMargins(0,0,0,0);
+	
+	spin = new QSpinBox(opacBase);
+	spin->setSuffix("%");
+	spin->setMinimum(0);
+	spin->setMaximum(100);
+	spin->setValue(opacity()*100);
+	connect(spin, SIGNAL(valueChanged(int)), this, SLOT(setOpacity(int)));
+	hbox->addWidget(spin);
+	
+	QSlider *slider;
+	slider = new QSlider();
+	slider->setOrientation(Qt::Horizontal);
+	slider->setMinimum(0);
+	slider->setMaximum(100);
+	slider->setValue(opacity()*100);
+	connect(spin, SIGNAL(valueChanged(int)), slider, SLOT(setValue(int)));
+	connect(slider, SIGNAL(valueChanged(int)), spin, SLOT(setValue(int)));
+	hbox->addWidget(slider);
+	
+	formLayout->addRow(tr("&Opacity:"), opacBase);
+	
+	groupGeom->setExpanded(true);
+	
+	return base;
+}
+
+void LiveLayer::setX(int value)
+{
+	QRectF r = rect();
+	r = QRectF(value, r.y(), r.width(), r.height());
+	setRect(r);
+}
+
+void LiveLayer::setY(int value)
+{
+	QRectF r = rect();
+	r = QRectF(r.x(), value, r.width(), r.height());
+	setRect(r);
+}
+
+void LiveLayer::setWidth(int value)
+{
+	QRectF r = rect();
+	r = QRectF(r.x(), r.y(), value, r.height());
+	setRect(r);
+}
+
+void LiveLayer::setHeight(int value)
+{
+	QRectF r = rect();
+	r = QRectF(r.x(), r.y(), r.width(), value);
+	setRect(r);
 }
 
 void LiveLayer::setVisible(bool flag)
@@ -107,7 +246,10 @@ void LiveLayer::setVisible(bool flag)
 
 void LiveLayer::setRect(const QRectF& rect) 	{ setLayerProperty("rect", rect); }
 void LiveLayer::setZIndex(double z)	 	{ setLayerProperty("zIndex", z);  }
+void LiveLayer::setZIndex(int z)	 	{ setLayerProperty("zIndex", z);  } // for sig slot compat
 void LiveLayer::setOpacity(double o)		{ setLayerProperty("opacity", o); }
+void LiveLayer::setOpacity(int o)		{ setLayerProperty("opacity", ((double)o)/100.0); }
+void LiveLayer::setTransparency(int o)		{ setLayerProperty("opacity", (100.0-(double)o)/100.0); }
 
 // Internally, tries to set the named property on all the drawables if it has such a property
 // If no prop exists on the drawable, then tries to set the prop on the layer object
@@ -187,7 +329,7 @@ void LiveLayer::initDrawable(GLDrawable *drawable, bool isFirstDrawable)
 			<< "zIndex"
 			<< "opacity");
 			
-		setVisible(m_isVisible);
+		drawable->setVisible(m_isVisible);
 	}
 }
 

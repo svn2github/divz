@@ -10,6 +10,7 @@ ExpandableWidget::ExpandableWidget(const QString& title, QWidget *parent)
 	, m_expanded(false)
 {
 	QVBoxLayout *layout = new QVBoxLayout(this);
+	layout->setContentsMargins(0,5,0,0);
 
 	m_button = new QToolButton(parent);
 	m_button->setCheckable(true);
@@ -17,8 +18,10 @@ ExpandableWidget::ExpandableWidget(const QString& title, QWidget *parent)
 	m_button->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
 	m_button->setArrowType(Qt::RightArrow);
 	m_button->setIconSize(QSize(16, 16));
-	m_button->setStyleSheet("border-top: 1px solid gray");
+	m_button->setStyleSheet("border-top: 1px solid gray;background:rgb(200,200,200)");
 	layout->addWidget(m_button);
+	
+	//setStyleSheet("ExpandableWidget {border-bottom: 1px solid gray}");
 	
 	connect(m_button, SIGNAL(toggled(bool)), this, SLOT(setExpanded(bool)));
 	

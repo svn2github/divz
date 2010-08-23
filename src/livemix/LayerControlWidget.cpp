@@ -15,7 +15,7 @@ LayerControlWidget::~LayerControlWidget()
 
 void LayerControlWidget::mouseReleaseEvent(QMouseEvent*)
 {
-	//emit clicked();
+	emit clicked();
 }
 
 void LayerControlWidget::setIsCurrentWidget(bool flag)

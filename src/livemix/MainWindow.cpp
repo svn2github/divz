@@ -18,6 +18,7 @@ MainWindow::MainWindow()
 	, m_currentScene(0)
 	, m_currentControlWidget(0)
 	, m_currentLayer(0)
+	, m_currentLayerPropsEditor(0)
 {
 
 	qRegisterMetaType<VideoSource*>("VideoSource*");
@@ -57,7 +58,7 @@ void MainWindow::setupSampleScene()
 	//scene->layerList().at(2)->setVisible(true);
 	
 	
-	m_layerViewer->addDrawable(scene->layerList().at(1)->drawable(m_layerViewer));
+	//m_layerViewer->addDrawable(scene->layerList().at(1)->drawable(m_layerViewer));
 	
 	/*
 	
@@ -280,8 +281,28 @@ void MainWindow::loadLayerProperties(LiveLayer *layer)
 		//deleteAction->setEnabled(false);
 		return;
 	}
-
-
+	
+	if(m_currentLayerPropsEditor)
+	{
+		m_controlBase->layout()->removeWidget(m_currentLayerPropsEditor);
+		m_currentLayerPropsEditor->deleteLater();
+		m_currentLayerPropsEditor = 0;
+	}
+	
+	QWidget *props = m_currentLayer->createLayerPropertyEditors();
+	
+	QVBoxLayout *layout = dynamic_cast<QVBoxLayout*>(m_controlBase->layout());
+	while(layout->count() > 0)
+	{
+		QLayoutItem * item = layout->itemAt(layout->count() - 1);
+		layout->removeItem(item);
+		delete item;
+	}
+	
+	layout->addWidget(props);
+	layout->addStretch(1);
+	
+	m_currentLayerPropsEditor = props;
 }
 
 void MainWindow::addProperty(QtVariantProperty *property, const QString &id)
@@ -398,7 +419,10 @@ void MainWindow::createLeftPanel()
  	m_controlArea = new QScrollArea(m_leftSplitter);
  	m_controlArea->setWidgetResizable(true);
  	m_controlBase = new QWidget(m_controlArea);
- 	(void)new QVBoxLayout(m_controlBase);
+ 	
+ 	QVBoxLayout *layout = new QVBoxLayout(m_controlBase);
+ 	layout->setContentsMargins(0,0,0,0);
+ 	
  	m_controlArea->setWidget(m_controlBase);
  	m_leftSplitter->addWidget(m_controlArea);
 

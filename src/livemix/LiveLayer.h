@@ -58,7 +58,8 @@ public:
 	virtual QVariant layerPropertyValue(const QString& id) { return m_props[id].value; }
 	
 	// Default impl iterates thru m_props and sets up appropriate editors
-	virtual void setupLayerPropertyEditors(QtVariantPropertyManager*);
+	// Caller takes ownership of widget and deletes when done
+	virtual QWidget *createLayerPropertyEditors();
 	
 	// Translated from a perl function I wrote to do basically
 	// the same thing for an ERP project a few years back.
@@ -83,7 +84,16 @@ public slots:
 	
 	void setRect(const QRectF&);
 	void setZIndex(double z);
+	void setZIndex(int z); // for sig/slot compat
 	void setOpacity(double o);
+	void setOpacity(int);
+	void setTransparency(int);
+	
+	void setX(int);
+	void setY(int);
+	void setWidth(int);
+	void setHeight(int);
+	
 	
 	// Internally, tries to set the named property on all the drawables if it has such a property
 	// If no prop exists on the drawable, then tries to set the prop on the layer object
