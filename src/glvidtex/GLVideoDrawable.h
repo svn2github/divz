@@ -114,7 +114,7 @@ class GLVideoDrawable : public GLDrawable
 	
 	Q_PROPERTY(VideoSource* videoSource READ videoSource WRITE setVideoSource);
 	
-	
+	Q_PROPERTY(Qt::AspectRatioMode aspectRatioMode READ aspectRatioMode WRITE setAspectRatioMode);
 	
 public:
 	GLVideoDrawable(QObject *parent=0);
@@ -141,6 +141,8 @@ public:
 	
 	QPointF textureOffset() { return m_textureOffset; }
 	
+	Qt::AspectRatioMode aspectRatioMode() { return m_aspectRatioMode; }
+	
 public slots:
 	void setAlphaMask(const QImage&);
 	void setTextureOffset(double x, double y);
@@ -155,6 +157,8 @@ public slots:
 	void setFlipVertical(bool);
 	void setCropTopLeft(QPointF);
 	void setCropBottomRight(QPointF);
+	
+	void setAspectRatioMode(Qt::AspectRatioMode mode);
 	
 	void setVideoSource(VideoSource*);
 	void disconnectVideoSource();

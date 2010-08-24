@@ -26,6 +26,9 @@ GLDrawable::GLDrawable(QObject *parent)
 	, m_isVisible(false)
 	, m_animFinished(true)
 	, m_animationsEnabled(true)
+	, m_showFullScreen(true)
+	, m_alignment(Qt::AlignAbsolute)
+	, m_inAlignment(false)
 {
 }
 
@@ -289,6 +292,8 @@ void GLDrawable::setRect(const QRectF& rect)
 	//qDebug() << "GLDrawable::setRect: "<<objectName()<<rect;
 	drawableResized(rect.size());
 	emit drawableResized(rect.size());
+	if(!m_inAlignment)
+		updateAlignment();
 	updateGL();
 }
 	
@@ -305,6 +310,129 @@ void GLDrawable::setOpacity(double o)
 	updateGL();
 }
 
+void GLDrawable::setShowFullScreen(bool flag)
+{
+// 	qDebug() << "GLDrawable::setShowFullScreen(): "<<flag;
+	m_showFullScreen = flag;
+	updateAlignment();
+}
+
+void GLDrawable::setAlignment(Qt::Alignment value)
+{
+	m_alignment = value;
+// 	qDebug() << "GLDrawable::setAlignment(Qt::Alignment): "<<this<<objectName()<<", m_alignment:"<<m_alignment;
+	updateAlignment();
+}
+
+void GLDrawable::setAlignment(int value)
+{
+	m_alignment = (Qt::Alignment)value;
+// 	qDebug() << "GLDrawable::setAlignment(int): "<<this<<objectName()<<", m_alignment:"<<m_alignment;
+	updateAlignment();
+}
+
+void GLDrawable::setInsetTopLeft(const QPointF& value)
+{
+	m_insetTopLeft = value;
+// 	qDebug() << "GLDrawable::setInsetTopLeft(): "<<value;
+	updateAlignment();
+}
+
+void GLDrawable::setInsetBottomRight(const QPointF& value)
+{
+	m_insetBottomRight = value;
+// 	qDebug() << "GLDrawable::setInsetBottomRight(): "<<value;
+	updateAlignment();
+}
+
+void GLDrawable::updateAlignment(QSizeF size)
+{
+	m_inAlignment = true;
+	
+// 	if(!size.isValid())
+// 		size = naturalSize();
+// 	if(!size.isValid())
+		size = m_rect.size();
+		
+	if(!m_glw)
+	{
+// 		qDebug() << "GLDrawable::updateAlignment(): "<<this<<objectName()<<", no m_glw, can't align";
+		m_inAlignment = false;
+		return;
+	}
+		
+	
+//  	qDebug() << "GLDrawable::updateAlignment(): "<<this<<objectName()<<", size:"<<size;
+		
+	if(m_showFullScreen)
+	{
+		QRectF rect = m_glw->viewport();
+		rect = rect.adjusted(
+			 m_insetTopLeft.x(),
+			 m_insetTopLeft.y(),
+			-m_insetBottomRight.x(),
+			-m_insetBottomRight.y());
+		setRect(rect);
+// 		qDebug() << "GLDrawable::updateAlignment(): "<<this<<objectName()<<", full screen, new rect:"<<rect;
+	}
+	else
+	{
+		qreal x=0, y=0, w=size.width(), h=size.height();
+		qreal vw = m_glw->viewport().width(), vh = m_glw->viewport().height();
+		
+		if((m_alignment & Qt::AlignAbsolute) == Qt::AlignAbsolute)
+		{
+// 			qDebug() << "GLDrawable::updateAlignment(): "<<this<<objectName()<<", absolute";
+			// dont change m_rect, just leave it as is
+			m_inAlignment = false;
+			return;
+		}
+		
+		if ((m_alignment & Qt::AlignHCenter) == Qt::AlignHCenter)
+		{
+			x = (vw - w)/2 + m_insetTopLeft.x() - m_insetBottomRight.x();
+// 			qDebug() << "GLDrawable::updateAlignment(): "<<this<<objectName()<<", ALIGN: H Center, x:"<<x;
+			
+		}
+		
+		if ((m_alignment & Qt::AlignVCenter) == Qt::AlignVCenter)
+		{
+			y = (vh - h)/2 + m_insetTopLeft.y() - m_insetBottomRight.y();
+// 			qDebug() << "GLDrawable::updateAlignment(): "<<this<<objectName()<<", ALIGN: V Center, y:"<<y;
+		}
+			
+		if ((m_alignment & Qt::AlignBottom) == Qt::AlignBottom)
+		{
+			y = vh - h - m_insetBottomRight.y();
+// 			qDebug() << "GLDrawable::updateAlignment(): "<<this<<objectName()<<", ALIGN: Bottom, y:"<<y;
+		}
+		
+		if ((m_alignment & Qt::AlignRight) == Qt::AlignRight)
+		{
+			x = vw - w - m_insetBottomRight.x();
+// 			qDebug() << "GLDrawable::updateAlignment(): "<<this<<objectName()<<", ALIGN: Right, x:"<<x;
+		}
+			
+		if ((m_alignment & Qt::AlignTop) == Qt::AlignTop)
+		{
+			y = m_insetBottomRight.x();
+// 			qDebug() << "GLDrawable::updateAlignment(): "<<this<<objectName()<<", ALIGN: Top, y:"<<y;
+		}
+		
+		if ((m_alignment & Qt::AlignLeft) == Qt::AlignLeft)
+		{
+			x = m_insetBottomRight.x();
+// 			qDebug() << "GLDrawable::updateAlignment(): "<<this<<objectName()<<", ALIGN: Left, x:"<<x;
+		}
+		
+		QRectF rect = QRectF(x,y,w,h);
+// 		qDebug() << "GLDrawable::updateAlignment(): "<<this<<objectName()<<", final rect: "<<rect;
+		setRect(rect);
+	}
+	
+	m_inAlignment = false;
+}
+
 void GLDrawable::setGLWidget(GLWidget* w)
 {
 	m_glw = w;
@@ -312,12 +440,14 @@ void GLDrawable::setGLWidget(GLWidget* w)
 		return;
 		
 	if(m_rect.isNull())
-		m_rect = w->rect();
+		m_rect = m_glw->viewport();
+		
+	updateAlignment();
 }
 
 void GLDrawable::viewportResized(const QSize& /*newSize*/)
 {
-	// NOOP
+	updateAlignment();
 }
 
 void GLDrawable::drawableResized(const QSizeF& /*newSize*/)

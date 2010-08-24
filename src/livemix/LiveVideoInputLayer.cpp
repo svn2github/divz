@@ -61,7 +61,8 @@ void LiveVideoInputLayer::initDrawable(GLDrawable *drawable, bool isFirst)
 			<< "flipVertical"
 			<< "cropTopLeft"
 			<< "cropBottomRight"
-			<< "textureOffset";
+			<< "textureOffset"
+			<< "aspectRatioMode";
 			
 	if(isFirst)
 	{
@@ -137,6 +138,91 @@ QWidget * LiveVideoInputLayer::createLayerPropertyEditors()
 	
 	/////////////////////////////////////////
 	
+	
+	
+	ExpandableWidget *groupDisplay = new ExpandableWidget("Video Display Options",base);
+	blay->addWidget(groupDisplay);
+	
+	QWidget *groupDisplayContainer = new QWidget;
+	QGridLayout *displayLayout = new QGridLayout(groupDisplayContainer);
+	//gridLayout->setDisplaysMargins(3,3,3,3);
+	
+	groupDisplay->setWidget(groupDisplayContainer);
+	
+	//int row = 0;
+	PropertyEditorOptions opts;
+	
+	opts.min = -100;
+	opts.max =  100;
+	
+	row=0;
+	displayLayout->addWidget(new QLabel(tr("Brightness:")), row, 0);
+	displayLayout->addWidget(generatePropertyEditor(this, "brightness", SLOT(setBrightness(int)), opts), row, 1);
+	
+	row++;
+	displayLayout->addWidget(new QLabel(tr("Contrast:")), row, 0);
+	displayLayout->addWidget(generatePropertyEditor(this, "contrast", SLOT(setContrast(int)), opts), row, 1);
+	
+	row++;
+	displayLayout->addWidget(new QLabel(tr("Hue:")), row, 0);
+	displayLayout->addWidget(generatePropertyEditor(this, "hue", SLOT(setHue(int)), opts), row, 1);
+	
+	row++;
+	displayLayout->addWidget(new QLabel(tr("Saturation:")), row, 0);
+	displayLayout->addWidget(generatePropertyEditor(this, "saturation", SLOT(setSaturation(int)), opts), row, 1);
+	
+	opts.reset();
+	
+	row++;
+	displayLayout->addWidget(generatePropertyEditor(this, "flipHorizontal", SLOT(setFlipHorizontal(bool))), row, 0, 1, 2);
+	row++;
+	displayLayout->addWidget(generatePropertyEditor(this, "flipVertical", SLOT(setFlipVertical(bool))), row, 0, 1, 2);
+	
+	row++;
+	displayLayout->addWidget(new QLabel(tr("Crop Top-Left:")), row, 0);
+	displayLayout->addWidget(generatePropertyEditor(this, "cropTopLeft", SLOT(setCropTopLeft(const QPointF&))), row, 1);
+	
+	row++;
+	displayLayout->addWidget(new QLabel(tr("Crop Bottom-Right:")), row, 0);
+	displayLayout->addWidget(generatePropertyEditor(this, "cropBottomRight", SLOT(setCropBottomRight(const QPointF&))), row, 1);
+	
+	row++;
+	displayLayout->addWidget(new QLabel(tr("Video Offset:")), row, 0);
+	displayLayout->addWidget(generatePropertyEditor(this, "videoOffset", SLOT(setVideoOffset(const QPointF&))), row, 1);
+	
+	row++;
+	displayLayout->addWidget(new QLabel(tr("Alpha Mask File:")), row, 0);
+	displayLayout->addWidget(generatePropertyEditor(this, "alphaMaskFile", SLOT(setAlphaMaskFile(const QString&))), row, 1);
+	
+	row++;
+	displayLayout->addWidget(new QLabel(tr("Overlay Mask File:")), row, 0);
+	displayLayout->addWidget(generatePropertyEditor(this, "overlayMaskFile", SLOT(setAlphaMaskFile(const QString&))), row, 1);
+	
+	QStringList modeList = QStringList()
+		<< "Ignore Aspect Ratio"
+		<< "Keep Aspect Ratio"
+		<< "Keep by Expanding";
+		
+	QComboBox *modeListBox = new QComboBox();
+	modeListBox->addItems(modeList);
+	connect(modeListBox, SIGNAL(activated(int)), this, SLOT(setAspectRatioMode(int)));
+	
+	row++;
+	displayLayout->addWidget(new QLabel(tr("Aspect Ratio Mode:")), row, 0);
+	displayLayout->addWidget(modeListBox, row, 1);
+	
+
+// 	QFormLayout *formLayout = new QFormLayout(groupDisplayContainer);
+// 	formLayout->setDisplaysMargins(3,3,3,3);
+// 	
+// 	groupDisplay->setWidget(groupDisplayContainer);
+// 	
+// 	formLayout->addRow("", generatePropertyEditor(this, "deinterlace", SLOT(setDeinterlace(bool))));
+// 	
+ 	groupDisplay->setExpanded(true);
+ 	
+ 	/////////////////////////////////////////
+	
 	QWidget *basics =  LiveLayer::createLayerPropertyEditors();
 	blay->addWidget(basics);
 	
@@ -156,6 +242,28 @@ void LiveVideoInputLayer::setLayerProperty(const QString& key, const QVariant& v
 		setDeinterlace(value.toBool());
 	}
 	else
+	if(key == "alphaMaskFile" || key == "overlayMaskFile")
+	{
+		QImage image(value.toString());
+		if(image.isNull())
+			qDebug() << "LiveVideoInputLayer: "<<key<<": Unable to load file "<<value.toString();
+		else
+		{
+			foreach(GLWidget *widget, m_drawables.keys())
+			{
+				GLVideoDrawable *vid = dynamic_cast<GLVideoDrawable*>(m_drawables[widget]);
+				if(vid)
+				{
+					if(key == "alphaMaskFile")
+						vid->setAlphaMask(image);
+					
+					// Not Implemented yet
+					//else
+					//	m_drawables[widget]->setOverlayMask(image);
+				}
+			}
+		}
+	}
 	if(m_camera)
 	{
 		const char *keyStr = qPrintable(key);

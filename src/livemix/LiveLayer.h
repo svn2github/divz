@@ -131,6 +131,11 @@ class LiveLayer : public QObject
 	Q_PROPERTY(int hideAnimationLength READ hideAnimationLength WRITE setHideAnimationLength);
 	Q_PROPERTY(QEasingCurve::Type hideAnimationCurve READ hideAnimationCurve WRITE setHideAnimationCurve);
 	
+	Q_PROPERTY(bool showFullScreen READ showFullScreen WRITE setShowFullScreen);
+	Q_PROPERTY(Qt::Alignment alignment READ alignment WRITE setAlignment);
+	Q_PROPERTY(QPointF insetTopLeft READ insetTopLeft WRITE setInsetTopLeft);
+	Q_PROPERTY(QPointF insetBottomRight READ insetBottomRight WRITE setInsetBottomRight);
+	
 public:
 	LiveLayer(QObject *parent=0);
 	virtual ~LiveLayer();
@@ -163,10 +168,10 @@ public:
 	double opacity()	{ return layerPropertyValue("opacity").toDouble(); }
 	
 	
-	bool fadeIn() 			{ return (bool)layerPropertyValue("fadeIn").toInt(); }
+	bool fadeIn() 			{ return layerPropertyValue("fadeIn").toBool(); }
 	int fadeInLength() 		{ return layerPropertyValue("fadeInLength").toInt(); }
 	
-	bool fadeOut() 			{ return (bool)layerPropertyValue("fadeOut").toInt(); }
+	bool fadeOut() 			{ return layerPropertyValue("fadeOut").toBool(); }
 	int fadeOutLength() 		{ return layerPropertyValue("fadeOutLength").toInt(); }
 	
 	GLDrawable::AnimationType showAnimationType() 	{ return (GLDrawable::AnimationType)layerPropertyValue("showAnimationType").toInt(); }
@@ -176,6 +181,11 @@ public:
 	GLDrawable::AnimationType hideAnimationType() 	{ return (GLDrawable::AnimationType)layerPropertyValue("hideAnimationType").toInt(); }
 	int hideAnimationLength() 			{ return layerPropertyValue("hideAnimationLength").toInt(); }
 	QEasingCurve::Type hideAnimationCurve() 	{ return (QEasingCurve::Type)layerPropertyValue("hideAnimationCurve").toInt(); }
+	
+	bool showFullScreen()		{ return layerPropertyValue("showFullScreen").toBool(); }
+	Qt::Alignment alignment()	{ return (Qt::Alignment)layerPropertyValue("alignment").toInt(); }
+	QPointF insetTopLeft()		{ return layerPropertyValue("insetTopLeft").toPointF(); }
+	QPointF insetBottomRight()	{ return layerPropertyValue("insetBottomRight").toPointF(); }
 
 signals:
 	void isVisible(bool);
@@ -219,6 +229,16 @@ public slots:
 	void setHideAnimationLength(int value) 				{ setLayerProperty("hideAnimationLength", value); }
 	void setHideAnimationCurve(QEasingCurve::Type value) 		{ setLayerProperty("hideAnimationCurve",  value); }
 	
+	void setShowFullScreen(bool value)	{ setLayerProperty("showFullScreen", value); }
+	void setAlignment(Qt::Alignment value)	{ setLayerProperty("alignment", (int)value); }
+	void setInsetTopLeft(QPointF value)	{ setLayerProperty("insetTopLeft", value); }
+	void setInsetBottomRight(QPointF value)	{ setLayerProperty("insetBottomRight", value); }
+	
+	void setTopInset(int value)	{ setInsetTopLeft(QPointF(insetTopLeft().x(), value)); }
+	void setLeftInset(int value)	{ setInsetTopLeft(QPointF(value, insetTopLeft().y())); }
+	void setBottomInset(int value)	{ setInsetBottomRight(QPointF(insetBottomRight().x(), value)); }
+	void setRightInset(int value)	{ setInsetBottomRight(QPointF(value, insetBottomRight().y())); }
+	
 	
 	// Internally, tries to set the named property on all the drawables if it has such a property
 	// If no prop exists on the drawable, then tries to set the prop on the layer object
@@ -232,6 +252,9 @@ protected slots:
 	// needed to offset the small list of options into the proper enum value
 	void setShowAnim(int);
 	void setHideAnim(int);
+	
+	// Translate the 'show as' combo box into a set of alignment flags and showFullScreen boolean value
+	void setShowAsType(const QString&);
 	
 protected:
 	class PropertyEditorOptions
@@ -288,6 +311,9 @@ protected:
 	
 	// Apply the animation properties to the drawable
 	void applyAnimationProperties(GLDrawable *);
+	
+	// Helper routine to loop thru all drawables and set 'prop' to 'value'
+	void applyDrawableProperty(const QString& prop, const QVariant& value);
 	
 	// "pretty" name for this instance, like "SeasonsLoop3.mpg" or some other content-identifying string
 	QString m_instanceName;

@@ -30,6 +30,8 @@ PointEditorWidget::PointEditorWidget(QWidget *parent)
 	connect(spin, SIGNAL(valueChanged(int)), this, SLOT(yValueChanged(int)));
 	hbox->addWidget(spin);
 	
+	hbox->addStretch(1);
+	
 	y_box = spin;
 }
 	
@@ -87,6 +89,8 @@ SizeEditorWidget::SizeEditorWidget(QWidget *parent)
 	spin->setMaximum(9999);
 	connect(spin, SIGNAL(valueChanged(int)), this, SLOT(hValueChanged(int)));
 	hbox->addWidget(spin);
+	
+	hbox->addStretch(1);
 	
 	h_box = spin;
 }
@@ -385,6 +389,10 @@ QWidget * LiveLayer::generatePropertyEditor(QObject *object, const char *propert
 		
 		return editor;
 	}
+	else
+	{
+		qDebug() << "LiveLayer::generatePropertyEditor(): No editor for type: "<<opts.type;
+	}
 	
 	
 	return base;
@@ -410,7 +418,56 @@ QWidget * LiveLayer::createLayerPropertyEditors()
 // 	QHBoxLayout *hbox;
 // 	QSpinBox *spin;
 
+// 	<< "showFullScreen"
+// 			<< "alignment"
+// 			<< "insetTopLeft"
+// 			<< "insetBottomRight";
+
 	PropertyEditorOptions opts;
+	
+	opts.reset();
+	//opts.value = rect().topLeft();
+	//formLayout->addRow(tr("&Full Screen:"), generatePropertyEditor(this, "showFullScreen", SLOT(setShowFullScreen(bool)), opts));
+	
+	QStringList showAsList = QStringList()
+		<< "Full Screen"
+		<< "--------------------"
+		<< "Absolute Position"
+		<< "--------------------"
+		<< "Centered on Screen"
+		<< "Aligned Top Left"
+		<< "Aligned Top Center"
+		<< "Aligned Top Right"
+		<< "Aligned Center Right"
+		<< "Aligned Center Left"
+		<< "Aligned Bottom Left"
+		<< "Aligned Bottom Center"
+		<< "Aligned Bottom Right";
+		
+	QComboBox *showAsBox = new QComboBox();
+	showAsBox->addItems(showAsList);
+	connect(showAsBox, SIGNAL(activated(const QString&)), this, SLOT(setShowAsType(const QString&)));
+	
+	formLayout->addRow(tr("&Show As:"), showAsBox);
+	
+	opts.reset();
+	opts.type = QVariant::Int;
+	opts.min = -1000;
+	opts.max =  1000;
+	
+	opts.value = insetTopLeft().x();
+	formLayout->addRow(tr("&Inset Left:"), generatePropertyEditor(this, "insetLeft", SLOT(setLeftInset(int)), opts));
+	
+	opts.value = insetTopLeft().y();
+	formLayout->addRow(tr("&Inset Top:"), generatePropertyEditor(this, "insetTop", SLOT(setTopInset(int)), opts));
+	
+	opts.value = insetBottomRight().x();
+	formLayout->addRow(tr("&Inset Right:"), generatePropertyEditor(this, "insetRight", SLOT(setRightInset(int)), opts));
+	
+	opts.value = insetBottomRight().y();
+	formLayout->addRow(tr("&Inset Bottom:"), generatePropertyEditor(this, "insetBottom", SLOT(setBottomInset(int)), opts));
+	
+	opts.reset();
 	opts.value = rect().topLeft();
 	formLayout->addRow(tr("&Position:"), generatePropertyEditor(this, "pos", SLOT(setPos(const QPointF&)), opts));
 	
@@ -451,17 +508,11 @@ QWidget * LiveLayer::createLayerPropertyEditors()
 	opts.max = 8000;
 	
 	int row = 0;
-	animLayout->addWidget(generatePropertyEditor(this, "fadeIn", SLOT(setFadeIn(bool)), opts), row, 0, 1, 2);
-	
-	row++;
-	animLayout->addWidget(new QLabel(tr("Length:")), row, 0);
+	animLayout->addWidget(generatePropertyEditor(this, "fadeIn", SLOT(setFadeIn(bool)), opts), row, 0);
 	animLayout->addWidget(generatePropertyEditor(this, "fadeInLength", SLOT(setFadeInLength(int)), opts), row, 1);
 	
 	row++;
-	animLayout->addWidget(generatePropertyEditor(this, "fadeOut", SLOT(setFadeOut(bool)), opts), row, 0, 1, 2);
-	
-	row++;
-	animLayout->addWidget(new QLabel(tr("Length:")), row, 0);
+	animLayout->addWidget(generatePropertyEditor(this, "fadeOut", SLOT(setFadeOut(bool)), opts), row, 0);
 	animLayout->addWidget(generatePropertyEditor(this, "fadeOutLength", SLOT(setFadeOutLength(int)), opts), row, 1);
 	
 	opts.reset();
@@ -528,6 +579,89 @@ void LiveLayer::setHideAnim(int x)
 	setHideAnimationType((GLDrawable::AnimationType)(x == 0 ? x : x + 1));
 }
 
+void LiveLayer::setShowAsType(const QString& text)
+{
+// 	<< "Full Screen"
+// 	<< "--------------------"
+// 	<< "Absolute Position"
+// 	<< "--------------------"
+// 	<< "Centered on Screen"
+// 	<< "Aligned Top Left"
+// 	<< "Aligned Top Center"
+// 	<< "Aligned Top Right"
+// 	<< "Aligned Center Right"
+// 	<< "Aligned Center Left"
+// 	<< "Aligned Bottom Left"
+// 	<< "Aligned Bottom Center"
+// 	<< "Aligned Bottom Right"
+	qDebug() << "LiveLayer::setShowAsType(): text:"<<text;
+	if(text.indexOf("---") >= 0)
+		return;
+		
+	if(text.indexOf("Full Screen") >= 0)
+	{
+		setShowFullScreen(true);
+	}
+	else
+	{
+		setShowFullScreen(false);
+		
+		if(text.indexOf("Absolute") >= 0)
+		{
+			setAlignment(Qt::AlignAbsolute);
+		}
+		else
+		if(text.indexOf("Centered") >= 0)
+		{
+			setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+		}
+		else
+		if(text.indexOf("Top Left") >= 0)
+		{
+			setAlignment(Qt::AlignTop | Qt::AlignLeft);
+		}
+		else
+		if(text.indexOf("Top Center") >= 0)
+		{
+			setAlignment(Qt::AlignTop | Qt::AlignHCenter);
+		}
+		else
+		if(text.indexOf("Top Right") >= 0)
+		{
+			setAlignment(Qt::AlignTop | Qt::AlignRight);
+		}
+		else
+		if(text.indexOf("Center Right") >= 0)
+		{
+			setAlignment(Qt::AlignVCenter | Qt::AlignRight);
+		}
+		else
+		if(text.indexOf("Center Left") >= 0)
+		{
+			setAlignment(Qt::AlignVCenter | Qt::AlignLeft);
+		}
+		else
+		if(text.indexOf("Bottom Left") >= 0)
+		{
+			setAlignment(Qt::AlignBottom | Qt::AlignLeft);
+		}
+		else
+		if(text.indexOf("Bottom Center") >= 0)
+		{
+			setAlignment(Qt::AlignBottom | Qt::AlignHCenter);
+		}
+		else
+		if(text.indexOf("Bottom Right") >= 0)
+		{
+			setAlignment(Qt::AlignBottom | Qt::AlignRight);
+		}
+		else
+		{
+			qDebug() << "LiveLayer::setShowAsType(): Unknown type:"<<text;
+		}
+	}
+}
+
 void LiveLayer::setX(int value)
 {
 	QRectF r = rect();
@@ -584,6 +718,8 @@ void LiveLayer::setLayerProperty(const QString& propertyId, const QVariant& valu
 	if(!m_props.contains(propertyId))
 		return;
 		
+// 	qDebug() << "LiveLayer::setLayerProperty: id:"<<propertyId<<", value:"<<value;
+	
 	QVariant oldValue = m_props[propertyId].value;
 	m_props[propertyId].value = value;
 	
@@ -606,19 +742,24 @@ void LiveLayer::setLayerProperty(const QString& propertyId, const QVariant& valu
 	{	
 		GLDrawable *drawable = m_drawables[m_drawables.keys().first()];
 		
-		const char *asciiPropId = qPrintable(propertyId);
-		if(drawable->metaObject()->indexOfProperty(asciiPropId) >= 0)
+		if(drawable->metaObject()->indexOfProperty(qPrintable(propertyId)) >= 0)
 		{
-			foreach(GLWidget *widget, m_drawables.keys())
-			{
-				m_drawables[widget]->setProperty(asciiPropId, value);
-			}
+			applyDrawableProperty(propertyId, value);	
 		}
 		else
-		if(metaObject()->indexOfProperty(asciiPropId) >= 0)
+		if(metaObject()->indexOfProperty(qPrintable(propertyId)) >= 0)
 		{
-			setProperty(asciiPropId, value);
+			setProperty(qPrintable(propertyId), value);
 		}
+	}
+}
+
+
+void LiveLayer::applyDrawableProperty(const QString& propertyId, const QVariant& value)
+{
+	foreach(GLWidget *widget, m_drawables.keys())
+	{
+		m_drawables[widget]->setProperty(qPrintable(propertyId), value);
 	}
 }
 
@@ -668,12 +809,19 @@ GLDrawable *LiveLayer::createDrawable(GLWidget */*widget*/)
 void LiveLayer::initDrawable(GLDrawable *drawable, bool isFirstDrawable)
 {
 // 	qDebug() << "LiveLayer::initDrawable: drawable:"<<drawable<<", copyFrom:"<<copyFrom;
-	if(isFirstDrawable)
-	{
-		loadLayerPropertiesFromObject(drawable, QStringList() 
+
+	QStringList generalProps = QStringList()
 			<< "rect"
 			<< "zIndex"
-			<< "opacity");
+			<< "opacity"
+			<< "showFullScreen"
+			<< "alignment"
+			<< "insetTopLeft"
+			<< "insetBottomRight";
+			
+	if(isFirstDrawable)
+	{
+		loadLayerPropertiesFromObject(drawable, generalProps);
 			
 		m_isVisible = drawable->isVisible();
 		
@@ -693,11 +841,9 @@ void LiveLayer::initDrawable(GLDrawable *drawable, bool isFirstDrawable)
 	}
 	else
 	{
-		applyLayerPropertiesToObject(drawable, QStringList()
-			<< "rect"
-			<< "zIndex"
-			<< "opacity");
-			
+		applyLayerPropertiesToObject(drawable, generalProps);
+		applyAnimationProperties(drawable);
+		
 		drawable->setVisible(m_isVisible);
 	}
 }

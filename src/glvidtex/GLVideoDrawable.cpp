@@ -459,6 +459,13 @@ void GLVideoDrawable::setCropBottomRight(QPointF value)
 	updateGL();
 }
 
+void GLVideoDrawable::setAspectRatioMode(Qt::AspectRatioMode mode)
+{
+	m_aspectRatioMode = mode;
+	updateRects();
+	updateGL();
+}
+
 /*!
 */
 int GLVideoDrawable::brightness() const
@@ -832,12 +839,14 @@ void GLVideoDrawable::viewportResized(const QSize& /*newSize*/)
 	//setRect(QRectF(0,0,newSize.width(),newSize.height()));
 	
 	//qDebug() << "GLVideoDrawable::viewportResized()";
+	updateAlignment();
 	updateRects();
 }
 
 void GLVideoDrawable::drawableResized(const QSizeF& /*newSize*/)
 {
 	//qDebug() << "GLVideoDrawable::drawableResized()";
+	//updateAlignment();
 	updateRects();
 }
 

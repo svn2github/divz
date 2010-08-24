@@ -138,8 +138,10 @@ void GLWidget::setViewport(const QRectF& viewport)
 	setTransform(QTransform().translate(xt,yt).scale(scale,scale));
 	
 	//QSize size(width,height);
-	//foreach(GLDrawable *drawable, m_drawables)
-		//drawable->viewportResized(size);
+	QSize size = viewport.size().toSize();
+	qDebug() <<"GLWidget::setViewport(): size:"<<size;
+	foreach(GLDrawable *drawable, m_drawables)
+		drawable->viewportResized(size);
 
 /*#if !defined(QT_OPENGL_ES_2)
 	glMatrixMode(GL_PROJECTION);

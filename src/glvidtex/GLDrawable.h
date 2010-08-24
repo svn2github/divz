@@ -33,6 +33,12 @@ class GLDrawable : public QObject
 	Q_PROPERTY(double zIndex READ zIndex WRITE setZIndex);
 	Q_PROPERTY(double opacity READ opacity WRITE setOpacity);
 	Q_PROPERTY(double isVisible READ isVisible WRITE setVisible);
+	
+	Q_PROPERTY(bool showFullScreen READ showFullScreen WRITE setShowFullScreen);
+	Q_PROPERTY(Qt::Alignment alignment READ alignment WRITE setAlignment);
+	Q_PROPERTY(QPointF insetTopLeft READ insetTopLeft WRITE setInsetTopLeft);
+	Q_PROPERTY(QPointF insetBottomRight READ insetBottomRight WRITE setInsetBottomRight);
+	
 public:
 	GLDrawable(QObject *parent=0);
 	
@@ -90,6 +96,16 @@ public:
 	
 	bool animationsEnabled() { return m_animationsEnabled; }
 	
+	bool showFullScreen()		{ return m_showFullScreen; }
+	Qt::Alignment alignment()	{ return m_alignment; }
+	QPointF insetTopLeft()		{ return m_insetTopLeft; }
+	QPointF insetBottomRight()	{ return m_insetBottomRight; }
+	
+	// This is the normal size of the content in pixels - independent of the specified rect().
+	// E.g. if its an image, this is the size of the image, if this is text, then the size
+	// of the text unscaled at natural resolution. Used for calculating alignment.
+	virtual QSizeF naturalSize() { return QSizeF(0,0); }
+	
 public slots:
 	void setRect(const QRectF& rect);
 	void setOpacity(double i);
@@ -101,6 +117,12 @@ public slots:
 	
 	void setAnimationsEnabled(bool);
 	
+	void setShowFullScreen(bool flag);
+	void setAlignment(Qt::Alignment value);
+	void setAlignment(int value);
+	void setInsetTopLeft(const QPointF& value);
+	void setInsetBottomRight(const QPointF& value);
+	
 signals:
 	void zIndexChanged(double newZIndex);
 	void drawableResized(const QSize& newSize);
@@ -111,6 +133,8 @@ protected slots:
 	virtual void animationFinished();
 	
 protected:
+	virtual void updateAlignment(QSizeF size = QSizeF());
+
 	friend class GLWidget;
 	virtual void setGLWidget(GLWidget*); // when update is called, it calls GLWidget::updateGL()
 	
@@ -143,6 +167,13 @@ private:
 	QList<QAutoDelPropertyAnimation*> m_finishedAnimations;
 	
 	bool m_animationsEnabled;
+	
+	bool m_showFullScreen;
+	Qt::Alignment m_alignment;
+	QPointF m_insetTopLeft;
+	QPointF m_insetBottomRight;
+	
+	bool m_inAlignment;
 
 };
 
