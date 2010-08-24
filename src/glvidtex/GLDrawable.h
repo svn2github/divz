@@ -84,6 +84,8 @@ public:
 	AnimParam & addShowAnimation(AnimationType type, int length=500);
 	AnimParam & addHideAnimation(AnimationType type, int length=500);
 	
+	void resetAllAnimations();
+	
 	bool isVisible() { return m_isVisible; }
 	
 	bool animationsEnabled() { return m_animationsEnabled; }

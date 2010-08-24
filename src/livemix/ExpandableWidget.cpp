@@ -10,7 +10,7 @@ ExpandableWidget::ExpandableWidget(const QString& title, QWidget *parent)
 	, m_expanded(false)
 {
 	QVBoxLayout *layout = new QVBoxLayout(this);
-	layout->setContentsMargins(0,5,0,0);
+	layout->setContentsMargins(0,0,0,0);
 
 	m_button = new QToolButton(parent);
 	m_button->setCheckable(true);

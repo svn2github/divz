@@ -11,6 +11,9 @@ class TextVideoSource;
 class LiveTextLayer  : public LiveLayer
 {
 	Q_OBJECT
+	
+	Q_PROPERTY(QString text READ text WRITE setText);
+	
 public:
 	LiveTextLayer(QObject *parent=0);
 	~LiveTextLayer();
@@ -32,6 +35,7 @@ public slots:
 protected:
 	virtual GLDrawable *createDrawable(GLWidget *);
 	virtual void initDrawable(GLDrawable *drawable, bool isFirstDrawable = false);
+	virtual QWidget *createLayerPropertyEditors();
 	
 private:
 	TextVideoSource *m_textSource;

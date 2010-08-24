@@ -82,14 +82,17 @@ void LiveVideoInputLayer::initDrawable(GLDrawable *drawable, bool isFirst)
 			source->enableRawFrames(true);
 			
 			setCamera(source);
-		}
 			
+			m_props["deinterlace"].value = source->deinterlace();
+		}
 	}
 	else
 	{
 		applyLayerPropertiesToObject(drawable, props);
 		if(m_camera)
 			setCamera(m_camera);
+			
+		
 	}
 }
 
@@ -102,3 +105,66 @@ void LiveVideoInputLayer::setCamera(CameraThread *camera)
 }
 
 
+#include "ExpandableWidget.h"
+	
+QWidget * LiveVideoInputLayer::createLayerPropertyEditors()
+{
+	QWidget * base = new QWidget();
+	QVBoxLayout *blay = new QVBoxLayout(base);
+	blay->setContentsMargins(0,0,0,0);
+	
+	ExpandableWidget *groupContent = new ExpandableWidget("Video Input",base);
+	blay->addWidget(groupContent);
+	
+	QWidget *groupContentContainer = new QWidget;
+	QGridLayout *gridLayout = new QGridLayout(groupContentContainer);
+	gridLayout->setContentsMargins(3,3,3,3);
+	
+	groupContent->setWidget(groupContentContainer);
+	
+	//formLayout->addRow(tr("&Text:"), generatePropertyEditor(this, "text", SLOT(setText(const QString&))));
+	int row = 0;
+	gridLayout->addWidget(generatePropertyEditor(this, "deinterlace", SLOT(setDeinterlace(bool))), row, 0, 1, 2);
+
+// 	QFormLayout *formLayout = new QFormLayout(groupContentContainer);
+// 	formLayout->setContentsMargins(3,3,3,3);
+// 	
+// 	groupContent->setWidget(groupContentContainer);
+// 	
+// 	formLayout->addRow("", generatePropertyEditor(this, "deinterlace", SLOT(setDeinterlace(bool))));
+// 	
+ 	groupContent->setExpanded(true);
+	
+	/////////////////////////////////////////
+	
+	QWidget *basics =  LiveLayer::createLayerPropertyEditors();
+	blay->addWidget(basics);
+	
+	return base;
+}
+
+void LiveVideoInputLayer::setDeinterlace(bool flag)
+{
+	if(m_camera)
+		m_camera->setDeinterlace(flag);
+}
+
+void LiveVideoInputLayer::setLayerProperty(const QString& key, const QVariant& value)
+{
+	if(key == "deinterlace")
+	{
+		setDeinterlace(value.toBool());
+	}
+	else
+	if(m_camera)
+	{
+		const char *keyStr = qPrintable(key);
+		if(m_camera->metaObject()->indexOfProperty(keyStr)>=0)
+		{
+			m_camera->setProperty(keyStr, value);
+		}
+	}
+	
+	LiveLayer::setLayerProperty(key,value);
+
+}

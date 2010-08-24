@@ -6,8 +6,86 @@
 #include "qtvariantproperty.h"
 #include "qttreepropertybrowser.h"
 
-class GLDrawable;
+#include "../glvidtex/GLDrawable.h"
 class GLWidget;
+
+class QSpinBox;
+
+class PointEditorWidget : public QWidget
+{
+	Q_OBJECT
+public:
+	PointEditorWidget(QWidget *parent=0);
+	
+public slots:
+	void setValue(const QPointF&);
+	void setXMinMax(int,int);
+	void setYMinMax(int,int);
+	void setSufix(const QString&);
+	
+signals:
+	void valueChanged(const QPointF&);
+	
+private slots:
+	void xValueChanged(int);
+	void yValueChanged(int);
+	
+private:
+	QPointF m_point;
+	QSpinBox *x_box;
+	QSpinBox *y_box;
+	
+};
+
+class SizeEditorWidget : public QWidget
+{
+	Q_OBJECT
+public:
+	SizeEditorWidget(QWidget *parent=0);
+	
+public slots:
+	void setValue(const QSizeF&);
+	void setWMinMax(int,int);
+	void setHMinMax(int,int);
+	void setSufix(const QString&);
+	
+signals:
+	void valueChanged(const QSizeF&);
+	
+private slots:
+	void wValueChanged(int);
+	void hValueChanged(int);
+	
+	
+private:
+	QSizeF m_size;
+	QSpinBox *w_box;
+	QSpinBox *h_box;
+};
+/*
+class ColorEditorWidget : public QWidget
+{
+	Q_OBJECT
+public:
+	ColorEditorWidget(QWidget *parent=0);
+	
+public slots:
+	void setValue(const QColor&);
+	
+signals:
+	void valueChanged(const QColor&);
+	
+private slots:
+	void rValueChanged(int);
+	void gValueChanged(int);
+	void bValueChanged(int);
+	
+private:
+	QColor m_point;
+	QSpinBox *r_box;
+	QSpinBox *g_box;
+	QSpinBox *b_box;
+};*/
 
 class LiveLayerProperty
 {
@@ -39,6 +117,20 @@ class LiveLayer : public QObject
 	Q_PROPERTY(double zIndex READ zIndex WRITE setZIndex);
 	Q_PROPERTY(double opacity READ opacity WRITE setOpacity);
 	
+	Q_PROPERTY(bool fadeIn READ fadeIn WRITE setFadeIn);
+	Q_PROPERTY(int fadeInLength READ fadeInLength WRITE setFadeInLength);
+	
+	Q_PROPERTY(bool fadeOut READ fadeOut WRITE setFadeOut);
+	Q_PROPERTY(int  fadeOutLength READ fadeOutLength WRITE setFadeOutLength);
+	
+	Q_PROPERTY(GLDrawable::AnimationType showAnimationType READ showAnimationType WRITE setShowAnimationType);
+	Q_PROPERTY(int showAnimationLength READ showAnimationLength WRITE setShowAnimationLength);
+	Q_PROPERTY(QEasingCurve::Type showAnimationCurve READ showAnimationCurve WRITE setShowAnimationCurve);
+	
+	Q_PROPERTY(GLDrawable::AnimationType hideAnimationType READ hideAnimationType WRITE setHideAnimationType);
+	Q_PROPERTY(int hideAnimationLength READ hideAnimationLength WRITE setHideAnimationLength);
+	Q_PROPERTY(QEasingCurve::Type hideAnimationCurve READ hideAnimationCurve WRITE setHideAnimationCurve);
+	
 public:
 	LiveLayer(QObject *parent=0);
 	virtual ~LiveLayer();
@@ -69,6 +161,21 @@ public:
 	QRectF rect()		{ return layerPropertyValue("rect").toRectF(); }
 	double zIndex()		{ return layerPropertyValue("zIndex").toDouble(); }
 	double opacity()	{ return layerPropertyValue("opacity").toDouble(); }
+	
+	
+	bool fadeIn() 			{ return (bool)layerPropertyValue("fadeIn").toInt(); }
+	int fadeInLength() 		{ return layerPropertyValue("fadeInLength").toInt(); }
+	
+	bool fadeOut() 			{ return (bool)layerPropertyValue("fadeOut").toInt(); }
+	int fadeOutLength() 		{ return layerPropertyValue("fadeOutLength").toInt(); }
+	
+	GLDrawable::AnimationType showAnimationType() 	{ return (GLDrawable::AnimationType)layerPropertyValue("showAnimationType").toInt(); }
+	int showAnimationLength() 			{ return layerPropertyValue("showAnimationLength").toInt(); }
+	QEasingCurve::Type showAnimationCurve() 	{ return (QEasingCurve::Type)layerPropertyValue("showAnimationCurve").toInt(); }
+	
+	GLDrawable::AnimationType hideAnimationType() 	{ return (GLDrawable::AnimationType)layerPropertyValue("hideAnimationType").toInt(); }
+	int hideAnimationLength() 			{ return layerPropertyValue("hideAnimationLength").toInt(); }
+	QEasingCurve::Type hideAnimationCurve() 	{ return (QEasingCurve::Type)layerPropertyValue("hideAnimationCurve").toInt(); }
 
 signals:
 	void isVisible(bool);
@@ -91,8 +198,26 @@ public slots:
 	
 	void setX(int);
 	void setY(int);
+	
 	void setWidth(int);
 	void setHeight(int);
+	
+	void setPos(const QPointF& point)	{ setRect(QRectF(point, rect().size())); }
+	void setSize(const QSizeF& size)	{ setRect(QRectF(rect().topLeft(),size)); }
+	
+	void setFadeIn(bool value) 		{ setLayerProperty("fadeIn", value); }
+	void setFadeInLength(int value) 	{ setLayerProperty("fadeInLength", value); }
+	
+	void setFadeOut(bool value) 		{ setLayerProperty("fadeOut", value); }
+	void setFadeOutLength(int value) 	{ setLayerProperty("fadeOutLength", value); }
+	
+	void setShowAnimationType(GLDrawable::AnimationType value) 	{ setLayerProperty("showAnimationType",   value); }
+	void setShowAnimationLength(int value) 				{ setLayerProperty("showAnimationLength", value); }
+	void setShowAnimationCurve(QEasingCurve::Type value) 		{ setLayerProperty("showAnimationCurve",  value); }
+	
+	void setHideAnimationType(GLDrawable::AnimationType value) 	{ setLayerProperty("hideAnimationType",   value); }
+	void setHideAnimationLength(int value) 				{ setLayerProperty("hideAnimationLength", value); }
+	void setHideAnimationCurve(QEasingCurve::Type value) 		{ setLayerProperty("hideAnimationCurve",  value); }
 	
 	
 	// Internally, tries to set the named property on all the drawables if it has such a property
@@ -103,7 +228,44 @@ public slots:
 	// for basic properties, but for some custom ones you might have to intercept it.
 	virtual void setLayerProperty(const QString& propertyId, const QVariant& value);
 	
+protected slots:
+	// needed to offset the small list of options into the proper enum value
+	void setShowAnim(int);
+	void setHideAnim(int);
+	
 protected:
+	class PropertyEditorOptions
+	{
+	public:
+		PropertyEditorOptions()
+		{
+			reset();
+		};
+		
+		void reset()
+		{
+			text = "";
+			suffix = "";
+			noSlider = false;
+			min = -9999;
+			max =  9999;
+			type = QVariant::Invalid;
+			value = QVariant();
+			doubleIsPercentage = false;
+		}
+		
+		QString text;
+		QString suffix;
+		bool noSlider;
+		double min;
+		double max;
+		QVariant::Type type;
+		QVariant value;
+		bool doubleIsPercentage;
+	};
+	
+	QWidget * generatePropertyEditor(QObject *object, const char *property, const char *slot, PropertyEditorOptions opts = PropertyEditorOptions());
+
 	void setInstanceName(const QString&);
 	
 	// just emits layerPropertyChanged
@@ -123,6 +285,9 @@ protected:
 	// Helper function - attempts to apply the list of props in 'list' (or all props in m_props if 'list' is empty) to drawable
 	// 'Attempts' means that if drawable->metaObject()->indexOfProperty() returns <0, then setProperty is not called
 	void applyLayerPropertiesToObject(QObject *object, QStringList list = QStringList());
+	
+	// Apply the animation properties to the drawable
+	void applyAnimationProperties(GLDrawable *);
 	
 	// "pretty" name for this instance, like "SeasonsLoop3.mpg" or some other content-identifying string
 	QString m_instanceName;

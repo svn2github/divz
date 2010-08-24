@@ -63,6 +63,7 @@ void LayerControlWidget::setupUI()
 	box->setMinimum(0);
 	box->setMaximum(100);
 	box->setValue(100);
+	box->setSuffix("%");
 	connect(m_opacitySlider, SIGNAL(valueChanged(int)), box, SLOT(setValue(int)));
 	connect(box, SIGNAL(valueChanged(int)), m_opacitySlider, SLOT(setValue(int)));
 	layout->addWidget(box);

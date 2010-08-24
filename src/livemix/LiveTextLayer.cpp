@@ -259,5 +259,34 @@ void LiveTextLayer::setLayerProperty(const QString& key, const QVariant& value)
 
 }
 
+#include "ExpandableWidget.h"
+	
+QWidget * LiveTextLayer::createLayerPropertyEditors()
+{
+	QWidget * base = new QWidget();
+	QVBoxLayout *blay = new QVBoxLayout(base);
+	blay->setContentsMargins(0,0,0,0);
+	
+	ExpandableWidget *groupContent = new ExpandableWidget("Text",base);
+	blay->addWidget(groupContent);
+	
+	QWidget *groupContentContainer = new QWidget;
+	QFormLayout *formLayout = new QFormLayout(groupContentContainer);
+	formLayout->setContentsMargins(3,3,3,3);
+	
+	groupContent->setWidget(groupContentContainer);
+	
+	formLayout->addRow(tr("&Text:"), generatePropertyEditor(this, "text", SLOT(setText(const QString&))));
+	
+	groupContent->setExpanded(true);
+	
+	
+	/////////////////////////////////////////
+	
+	QWidget *basics =  LiveLayer::createLayerPropertyEditors();
+	blay->addWidget(basics);
+	
+	return base;
+}
 
 ///////////////////////

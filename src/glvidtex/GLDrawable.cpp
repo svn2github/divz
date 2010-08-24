@@ -63,7 +63,16 @@ void GLDrawable::setVisible(bool flag)
 	}
 	
 	m_animDirection = flag;
-	startAnimations();
+	
+	if(!m_animations.isEmpty())
+		startAnimations();
+	else
+	{
+		m_isVisible = flag;
+		if(!flag)
+			emit isVisible(flag);
+	}
+		
 }
 
 void GLDrawable::startAnimations()
@@ -74,7 +83,8 @@ void GLDrawable::startAnimations()
 	
 	m_animFinished = false;
 	
-	bool hasFade  = false;
+	bool hasFade = false;
+	bool hasAnimation = false;
 	if(m_animationsEnabled)
 	{
 		foreach(GLDrawable::AnimParam p, m_animations)
@@ -84,16 +94,30 @@ void GLDrawable::startAnimations()
 				if(p.type == GLDrawable::AnimFade)
 					hasFade = true; 
 				startAnimation(p);
+				hasAnimation = true;
 			}
-		}
+	}
 		
-	if(m_isVisible && !hasFade)
-		setOpacity(1.0);
+	//if(m_animDirection && m_isVisible && !hasFade)
+	//	setOpacity(1.0);
+		
+	if(!hasAnimation)
+	{
+		m_isVisible = m_animDirection;
+		if(!m_animDirection)
+			emit isVisible(m_animDirection);
+	}
+	
 }
 
 void GLDrawable::setAnimationsEnabled(bool flag)
 {
 	m_animationsEnabled = flag;
+}
+
+void GLDrawable::resetAllAnimations()
+{
+	m_animations.clear();
 }
 
 GLDrawable::AnimParam & GLDrawable::addShowAnimation(AnimationType value, int length)

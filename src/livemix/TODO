@@ -1,3 +1,15 @@
 
 - CameraThread: Integrate more advanced deinterlacing methods, such as those in http://tvtime.sourceforge.net/
 - VideoWidget: Adaptivly adjust fade speed during fading to make the predicted clock alight with the real speed (either speed up/slow down)
+
+- Property Editors:
+	Add 'read' signal or something like that to update the property values
+	
+- Add geometry anchor points
+- Add geometry anchor inset
+- Add file chooser for static overlay
+- Add video input chooser
+- Integrate Qt Graphics Dojo blog - htmleditor - into editing text
+- Fix text jumpiness - jumps as you type on screen somtimes
+- Add drag/drop z value changing
+- Add fade in/out offsets

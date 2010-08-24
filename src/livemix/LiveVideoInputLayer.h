@@ -12,15 +12,23 @@ class VideoSource;
 class LiveVideoInputLayer : public LiveLayer
 {
 	Q_OBJECT
+	
+	Q_PROPERTY(bool deinterlace READ deinterlace WRITE setDeinterlace);
+	
 public:
 	LiveVideoInputLayer(QObject *parent=0);
 	~LiveVideoInputLayer();
 	
 	virtual QString typeName() { return "Video Input"; }
+	
+	bool deinterlace() { return layerPropertyValue("deinterlace").toBool(); }
 
 public slots:
 	// Set a property (emits instancePropertyChanged)
 // 	virtual void setInstanceProperty(const QString&, const QVariant&);
+	void setDeinterlace(bool);
+	
+	virtual void setLayerProperty(const QString& propertyId, const QVariant& value);
 
 signals:
 	void videoSourceChanged(VideoSource*);
@@ -30,6 +38,7 @@ protected:
 	// If its the first drawable, setup with defaults
 	// Otherwise, copy from 'copyFrom'
 	virtual void initDrawable(GLDrawable *drawable, bool isFirstDrawable = false);
+	virtual QWidget *createLayerPropertyEditors();
 	
 	void setCamera(CameraThread*);
 	CameraThread *camera() { return m_camera; }
