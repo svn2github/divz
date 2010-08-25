@@ -143,6 +143,11 @@ public:
 	
 	Qt::AspectRatioMode aspectRatioMode() { return m_aspectRatioMode; }
 	
+	// This is the normal size of the content in pixels - independent of the specified rect().
+	// E.g. if its an image, this is the size of the image, if this is text, then the size
+	// of the text unscaled at natural resolution. Used for calculating alignment.
+	virtual QSizeF naturalSize() { return m_sourceRect.size(); }
+	
 public slots:
 	void setAlphaMask(const QImage&);
 	void setTextureOffset(double x, double y);

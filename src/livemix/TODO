@@ -13,6 +13,15 @@
 - Fix text jumpiness - jumps as you type on screen somtimes
 - Add drag/drop z value changing
 - Add fade in/out offsets
+- Start out all layer types with just fade in/out animations, no funky stuff
+- Start out all layers with full screen rects
+
+BUGS:
+- fix text:
+	when clicking edit on text, it reverts back to the original setup position
+	have to re-click alignment to get it to work
+- Opacity slider in props doesnt match opacity as set by control widget
+- Control widget should update opacity when it changes in props
 
 
 

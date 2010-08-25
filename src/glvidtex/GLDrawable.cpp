@@ -292,8 +292,8 @@ void GLDrawable::setRect(const QRectF& rect)
 	//qDebug() << "GLDrawable::setRect: "<<objectName()<<rect;
 	drawableResized(rect.size());
 	emit drawableResized(rect.size());
-	if(!m_inAlignment)
-		updateAlignment();
+// 	if(!m_inAlignment)
+// 		updateAlignment();
 	updateGL();
 }
 	
@@ -349,10 +349,10 @@ void GLDrawable::updateAlignment(QSizeF size)
 {
 	m_inAlignment = true;
 	
+	if(!size.isValid())
+		size = naturalSize();
 // 	if(!size.isValid())
-// 		size = naturalSize();
-// 	if(!size.isValid())
-		size = m_rect.size();
+// 		size = m_rect.size();
 		
 	if(!m_glw)
 	{
@@ -362,7 +362,7 @@ void GLDrawable::updateAlignment(QSizeF size)
 	}
 		
 	
-//  	qDebug() << "GLDrawable::updateAlignment(): "<<this<<objectName()<<", size:"<<size;
+  	//qDebug() << "GLDrawable::updateAlignment(): "<<this<<objectName()<<", size:"<<size;
 		
 	if(m_showFullScreen)
 	{

@@ -188,7 +188,7 @@ QWidget * LiveVideoInputLayer::createLayerPropertyEditors()
 	
 	row++;
 	displayLayout->addWidget(new QLabel(tr("Video Offset:")), row, 0);
-	displayLayout->addWidget(generatePropertyEditor(this, "videoOffset", SLOT(setVideoOffset(const QPointF&))), row, 1);
+	displayLayout->addWidget(generatePropertyEditor(this, "textureOffset", SLOT(setTextureOffset(const QPointF&))), row, 1);
 	
 	row++;
 	displayLayout->addWidget(new QLabel(tr("Alpha Mask File:")), row, 0);
@@ -205,6 +205,7 @@ QWidget * LiveVideoInputLayer::createLayerPropertyEditors()
 		
 	QComboBox *modeListBox = new QComboBox();
 	modeListBox->addItems(modeList);
+	modeListBox->setCurrentIndex(m_props["aspectRatioMode"].value.toInt());
 	connect(modeListBox, SIGNAL(activated(int)), this, SLOT(setAspectRatioMode(int)));
 	
 	row++;

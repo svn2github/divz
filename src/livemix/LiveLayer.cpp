@@ -430,22 +430,95 @@ QWidget * LiveLayer::createLayerPropertyEditors()
 	//formLayout->addRow(tr("&Full Screen:"), generatePropertyEditor(this, "showFullScreen", SLOT(setShowFullScreen(bool)), opts));
 	
 	QStringList showAsList = QStringList()
-		<< "Full Screen"
-		<< "--------------------"
-		<< "Absolute Position"
-		<< "--------------------"
-		<< "Centered on Screen"
-		<< "Aligned Top Left"
-		<< "Aligned Top Center"
-		<< "Aligned Top Right"
-		<< "Aligned Center Right"
-		<< "Aligned Center Left"
-		<< "Aligned Bottom Left"
-		<< "Aligned Bottom Center"
-		<< "Aligned Bottom Right";
+		<< "Full Screen"//0
+		<< "--------------------"//1
+		<< "Absolute Position"//2
+		<< "--------------------"//3
+		<< "Centered on Screen"//4
+		<< "Aligned Top Left"//5
+		<< "Aligned Top Center"//6
+		<< "Aligned Top Right"//7
+		<< "Aligned Center Right"//8
+		<< "Aligned Center Left"//9
+		<< "Aligned Bottom Left"//10
+		<< "Aligned Bottom Center"//11
+		<< "Aligned Bottom Right";//12
 		
 	QComboBox *showAsBox = new QComboBox();
 	showAsBox->addItems(showAsList);
+	//showAsBox->setCurrentIndex(
+	
+	int idx = 0;
+	if(showFullScreen())
+	{
+		idx = 0;
+	}
+	else
+	{
+		Qt::Alignment align = alignment();
+		
+		if((align & Qt::AlignAbsolute) == Qt::AlignAbsolute)
+		{
+			idx = 2;
+		}
+		else
+		if((align & Qt::AlignHCenter) == Qt::AlignHCenter &&
+		   (align & Qt::AlignVCenter) == Qt::AlignVCenter)
+		{
+			idx = 4;
+		}
+		else
+		if((align & Qt::AlignTop)  == Qt::AlignTop &&
+		   (align & Qt::AlignLeft) == Qt::AlignLeft)
+		{
+			idx = 5;
+		}
+		else
+		if((align & Qt::AlignTop)  == Qt::AlignTop &&
+		   (align & Qt::AlignHCenter) == Qt::AlignHCenter)
+		{
+			idx = 6;
+		}
+		else
+		if((align & Qt::AlignTop)  == Qt::AlignTop &&
+		   (align & Qt::AlignRight) == Qt::AlignRight)
+		{
+			idx = 7;
+		}
+		else
+		if((align & Qt::AlignVCenter) == Qt::AlignVCenter &&
+		   (align & Qt::AlignRight) == Qt::AlignRight)
+		{
+			idx = 8;
+		}
+		else
+		if((align & Qt::AlignVCenter) == Qt::AlignVCenter &&
+		   (align & Qt::AlignLeft) == Qt::AlignLeft)
+		{
+			idx = 9;
+		}
+		else
+		if((align & Qt::AlignBottom) == Qt::AlignBottom &&
+		   (align & Qt::AlignLeft) == Qt::AlignLeft)
+		{
+			idx = 10;
+		}
+		else
+		if((align & Qt::AlignBottom) == Qt::AlignBottom &&
+		   (align & Qt::AlignHCenter) == Qt::AlignHCenter)
+		{
+			idx = 11;
+		}
+		else
+		if((align & Qt::AlignBottom) == Qt::AlignBottom &&
+		   (align & Qt::AlignRight) == Qt::AlignRight)
+		{
+			idx = 12;
+		}
+	}
+	if(idx >=0 && idx <= 12)
+		showAsBox->setCurrentIndex(idx);
+	
 	connect(showAsBox, SIGNAL(activated(const QString&)), this, SLOT(setShowAsType(const QString&)));
 	
 	formLayout->addRow(tr("&Show As:"), showAsBox);
@@ -546,10 +619,14 @@ QWidget * LiveLayer::createLayerPropertyEditors()
 		
 	QComboBox *showBox = new QComboBox();
 	showBox->addItems(animTypes);
+	idx = (int)showAnimationType();
+	showBox->setCurrentIndex(!idx?idx:idx-1);
 	connect(showBox, SIGNAL(activated(int)), this, SLOT(setShowAnim(int)));
 	
 	QComboBox *hideBox = new QComboBox();
 	hideBox->addItems(animTypes);
+	idx = (int)hideAnimationType();
+	hideBox->setCurrentIndex(!idx?idx:idx-1);
 	connect(hideBox, SIGNAL(activated(int)), this, SLOT(setHideAnim(int)));
 	
 	animAdvancedLayout->addRow(tr("&Show Animation:"), showBox);

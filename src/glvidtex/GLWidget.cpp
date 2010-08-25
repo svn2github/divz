@@ -139,7 +139,7 @@ void GLWidget::setViewport(const QRectF& viewport)
 	
 	//QSize size(width,height);
 	QSize size = viewport.size().toSize();
-	qDebug() <<"GLWidget::setViewport(): size:"<<size;
+	//qDebug() <<"GLWidget::setViewport(): size:"<<size;
 	foreach(GLDrawable *drawable, m_drawables)
 		drawable->viewportResized(size);
 
