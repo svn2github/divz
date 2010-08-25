@@ -22,7 +22,7 @@ MainWindow::MainWindow()
 {
 
 	qRegisterMetaType<VideoSource*>("VideoSource*");
-	
+
 	createActions();
 	createMenus();
 	createToolBars();
@@ -48,38 +48,38 @@ void MainWindow::setupSampleScene()
 {
 	LiveScene *scene = new LiveScene();
 
-	scene->addLayer(new LiveVideoInputLayer());
-	scene->addLayer(new LiveStaticSourceLayer());
+	//scene->addLayer(new LiveVideoInputLayer());
+	//scene->addLayer(new LiveStaticSourceLayer());
 	scene->addLayer(new LiveTextLayer());
-	
-	
+
+
 	loadLiveScene(scene);
-	
+
 	//scene->layerList().at(2)->setVisible(true);
-	
-	
+
+
 	//m_layerViewer->addDrawable(scene->layerList().at(1)->drawable(m_layerViewer));
-	
+
 	/*
-	
-	
-	
+
+
+
 // 	GLWidget *glOutputWin = new GLWidget();
 // 	{
 // 		glOutputWin->setWindowTitle("Live");
 // 		glOutputWin->resize(1000,750);
 // 		// debugging...
 // 		//glOutputWin->setProperty("isEditorWidget",true);
-// 	
+//
 // 	}
-	
+
 	GLWidget *glEditorWin = new GLWidget();
 	{
 		glEditorWin->setWindowTitle("Editor");
 		glEditorWin->resize(400,300);
 		glEditorWin->setProperty("isEditorWidget",true);
 	}
-	
+
 	// Setup Editor Background
 	if(true)
 	{
@@ -91,24 +91,24 @@ void MainWindow::setupSampleScene()
 		QPainter bgPainter(&bgImage);
 		bgPainter.fillRect(bgImage.rect(), bgTexture);
 		bgPainter.end();
-		
+
 		StaticVideoSource *source = new StaticVideoSource();
 		source->setImage(bgImage);
 		//source->setImage(QImage("squares2.png"));
 		source->start();
-		
+
 		GLVideoDrawable *drawable = new GLVideoDrawable(glEditorWin);
 		drawable->setVideoSource(source);
 		drawable->setRect(glEditorWin->viewport());
 		drawable->setZIndex(-100);
 		drawable->setObjectName("StaticBackground");
 		drawable->show();
-		
+
 		glEditorWin->addDrawable(drawable);
 	}
-	
-	
-	
+
+
+
 // 	// setup scene
 // 	LiveScene *scene = new LiveScene();
 // 	{
@@ -116,7 +116,7 @@ void MainWindow::setupSampleScene()
 // 		scene->addLayer(new LiveStaticSourceLayer());
 // 		scene->addLayer(new LiveTextLayer());
 // 	}
-	
+
 	// add to live output
 	{
 		//scene->attachGLWidget(glOutputWin);
@@ -125,25 +125,25 @@ void MainWindow::setupSampleScene()
 		scene->layerList().at(0)->setVisible(true);
 		scene->layerList().at(1)->setVisible(true);
 	}
-	
+
 	// add to editor
 	{
 		scene->layerList().at(0)->drawable(glEditorWin)->setObjectName("Editor");
 		//glEditorWin->addDrawable(scene->layerList().at(1)->drawable(glEditorWin));
 		glEditorWin->addDrawable(scene->layerList().at(1)->drawable(glEditorWin));
 		m_layerViewer->addDrawable(scene->layerList().at(1)->drawable(m_layerViewer));
-		
+
 	}
-	
+
 	// show windows
 	{
 		//glOutputWin->show();
 		glEditorWin->show();
 	}*/
-	
-	
-	
-	
+
+
+
+
 	//m_layerViewer->addDrawable(scene->layerList().at(2)->drawable(m_layerViewer));
 }
 
@@ -239,7 +239,7 @@ void MainWindow::liveLayerClicked()
 	LayerControlWidget *widget = dynamic_cast<LayerControlWidget*>(sender());
 	if(m_currentControlWidget == widget)
 		return;
-	
+
 // 	qDebug() << "MainWindow::liveLayerClicked(): m_layerViewer:"<<m_layerViewer;
 	if(m_currentControlWidget)
 	{
@@ -247,7 +247,7 @@ void MainWindow::liveLayerClicked()
 		m_currentControlWidget->setIsCurrentWidget(false);
 		m_layerViewer->removeDrawable(m_currentControlWidget->layer()->drawable(m_layerViewer));
 	}
-	
+
 	if(widget)
 	{
 // 		qDebug() << "MainWindow::liveLayerClicked(): adding clicked layer to editor";
@@ -262,7 +262,7 @@ void MainWindow::updateExpandState()
 {
 // 	QList<QtBrowserItem *> list = m_propertyEditor->topLevelItems();
 // 	QListIterator<QtBrowserItem *> it(list);
-// 	while (it.hasNext()) 
+// 	while (it.hasNext())
 // 	{
 // 		QtBrowserItem *item = it.next();
 // 		QtProperty *prop = item->property();
@@ -276,21 +276,21 @@ void MainWindow::loadLayerProperties(LiveLayer *layer)
 	updateExpandState();
 
 
-	if (!m_currentLayer) 
+	if (!m_currentLayer)
 	{
 		//deleteAction->setEnabled(false);
 		return;
 	}
-	
+
 	if(m_currentLayerPropsEditor)
 	{
 		m_controlBase->layout()->removeWidget(m_currentLayerPropsEditor);
 		m_currentLayerPropsEditor->deleteLater();
 		m_currentLayerPropsEditor = 0;
 	}
-	
+
 	QWidget *props = m_currentLayer->createLayerPropertyEditors();
-	
+
 	QVBoxLayout *layout = dynamic_cast<QVBoxLayout*>(m_controlBase->layout());
 	while(layout->count() > 0)
 	{
@@ -298,10 +298,10 @@ void MainWindow::loadLayerProperties(LiveLayer *layer)
 		layout->removeItem(item);
 		delete item;
 	}
-	
+
 	layout->addWidget(props);
 	layout->addStretch(1);
-	
+
 	m_currentLayerPropsEditor = props;
 }
 
@@ -315,14 +315,14 @@ void MainWindow::valueChanged(QtProperty *property, const QVariant &value)
 {
 	if (!m_propertyToId.contains(property))
 		return;
-	
+
 	if (!m_currentLayer)
 		return;
-	
+
 	QString id = m_propertyToId[property];
-	
+
 	//m_currentLayer->setInstanceProperty(id, value);
-	
+
 // 	if (id == QLatin1String("xpos")) {
 // 		currentItem->setX(value.toDouble());
 // 	} else if (id == QLatin1String("ypos")) {
@@ -389,7 +389,7 @@ void MainWindow::createLeftPanel()
 
 	m_layerViewer = new GLWidget(m_leftSplitter);
 	m_layerViewer->setProperty("isEditorWidget",true);
-	
+
 	QSize size = m_layerViewer->viewport().size().toSize();
 	size /= 2.5;
 	qDebug() << "MainWindow::createLeftPanel(): size:"<<size;
@@ -398,54 +398,54 @@ void MainWindow::createLeftPanel()
 	QPainter bgPainter(&bgImage);
 	bgPainter.fillRect(bgImage.rect(), bgTexture);
 	bgPainter.end();
-	
+
 	StaticVideoSource *source = new StaticVideoSource();
 	source->setImage(bgImage);
 	//source->setImage(QImage("squares2.png"));
 	source->start();
-	
+
 	GLVideoDrawable *drawable = new GLVideoDrawable(m_layerViewer);
 	drawable->setVideoSource(source);
 	drawable->setRect(m_layerViewer->viewport());
 	drawable->setZIndex(-100);
 	drawable->setObjectName("StaticBackground");
 	drawable->show();
-	
+
 	m_layerViewer->addDrawable(drawable);
-	
-	
+
+
 	m_leftSplitter->addWidget(m_layerViewer);
 
  	m_controlArea = new QScrollArea(m_leftSplitter);
  	m_controlArea->setWidgetResizable(true);
  	m_controlBase = new QWidget(m_controlArea);
- 	
+
  	QVBoxLayout *layout = new QVBoxLayout(m_controlBase);
  	layout->setContentsMargins(0,0,0,0);
- 	
+
  	m_controlArea->setWidget(m_controlBase);
  	m_leftSplitter->addWidget(m_controlArea);
 
 // 	m_variantManager = new QtVariantPropertyManager(this);
-// 	
+//
 // 	connect(m_variantManager, SIGNAL(valueChanged(QtProperty *, const QVariant &)),
 // 			      this, SLOT(valueChanged(QtProperty *, const QVariant &)));
-// 	
+//
 // 	QtVariantEditorFactory *variantFactory = new QtVariantEditorFactory(this);
-	
+
 // 	canvas = new QtCanvas(800, 600);
 // 	canvasView = new CanvasView(canvas, this);
 // 	setCentralWidget(canvasView);
-	
+
 // 	QDockWidget *dock = new QDockWidget(this);
 // 	addDockWidget(Qt::RightDockWidgetArea, dock);
-	
+
 // 	m_propertyEditor = new QtTreePropertyBrowser(m_leftSplitter);
 // 	m_propertyEditor->setFactoryForManager(m_variantManager, variantFactory);
 //	m_leftSplitter->addWidget(m_propertyEditor);
-	
+
 // 	m_currentItem = 0;
-	
+
 // 	connect(canvasView, SIGNAL(itemClicked(QtCanvasItem *)),
 // 		this, SLOT(itemClicked(QtCanvasItem *)));
 // 	connect(canvasView, SIGNAL(itemMoved(QtCanvasItem *)),
@@ -461,7 +461,7 @@ void MainWindow::createCenterPanel()
  	QWidget *baseParent = new QWidget(m_layerArea);
  	QVBoxLayout *parentLayout = new QVBoxLayout(baseParent);
  	parentLayout->setContentsMargins(0,0,0,0);
- 	
+
  	m_layerBase = new QWidget(baseParent);
  	(void)new QVBoxLayout(m_layerBase);
  	parentLayout->addWidget(m_layerBase);
@@ -470,15 +470,15 @@ void MainWindow::createCenterPanel()
  	//m_mainSplitter->addWidget(m_layerArea);
  	m_layerArea->setWidget(baseParent);
  	m_mainSplitter->addWidget(m_layerArea);
- 	
+
 // 	QWidget *baseParent = new QWidget(m_mainSplitter);
 // 	QVBoxLayout *parentLayout = new QVBoxLayout(baseParent);
 // 	parentLayout->setContentsMargins(0,0,0,0);
-// 	
+//
 // 	m_layerBase = new QWidget(baseParent);
 // 	QVBoxLayout *layout = new QVBoxLayout(m_layerBase);
 // 	layout->setContentsMargins(2,2,2,2);
-// 	
+//
 // 	parentLayout->addWidget(m_layerBase);
 // 	parentLayout->addStretch(1);
 // 	//m_layerArea->setWidget(m_layerBase);

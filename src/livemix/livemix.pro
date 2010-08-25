@@ -11,7 +11,11 @@ UI_DIR = .build
 
 QT += opengl network multimedia
 
-include(qtpropertybrowser-2.5_1-opensource/src/qtpropertybrowser.pri)
+win32 {
+         CONFIG += console
+    #debug {
+    #}
+}
 
 # Input
 HEADERS += CameraThread.h \

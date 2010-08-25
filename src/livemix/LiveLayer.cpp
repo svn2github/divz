@@ -5,36 +5,102 @@
 #include "../glvidtex/GLWidget.h"
 
 
+DoubleEditorWidget::DoubleEditorWidget(QWidget *parent)
+	: QWidget(parent)
+{
+	QHBoxLayout *hbox = new QHBoxLayout(this);
+	hbox->setContentsMargins(0,0,0,0);
+
+
+	QDoubleSpinBox *spin = new QDoubleSpinBox(this);
+	m_box = spin;
+	hbox->addWidget(spin);
+
+	QSlider *slider;
+	slider = new QSlider(this);
+	slider->setOrientation(Qt::Horizontal);
+
+	connect(spin, SIGNAL(valueChanged(double)), this, SLOT(boxValueChanged(double)));
+	connect(slider, SIGNAL(valueChanged(int)), this, SLOT(sliderValueChanged(int)));
+	hbox->addWidget(slider);
+
+	m_slider = slider;
+}
+
+void DoubleEditorWidget::setValue(double value)
+{
+	m_value = value;
+	m_box->setValue(value);
+	m_slider->setValue((int)value);
+}
+
+void DoubleEditorWidget::setMinMax(double a, double b)
+{
+	   m_box->setMinimum(a);    m_box->setMaximum(b);
+	m_slider->setMinimum(a); m_slider->setMaximum(b);
+}
+
+void DoubleEditorWidget::setShowSlider(bool flag)
+{
+	m_slider->setVisible(flag);
+}
+
+void DoubleEditorWidget::setSuffix(const QString& suffix)
+{
+	m_box->setSuffix(suffix);
+}
+
+
+void DoubleEditorWidget::boxValueChanged(double v)
+{
+	m_value = v;
+	m_slider->setValue((int)v);
+	emit valueChanged(v);
+}
+
+void DoubleEditorWidget::sliderValueChanged(int v)
+{
+	double d = (double)v;
+	if(m_box->value() != d)
+	{
+		m_box->setValue(d);
+	}
+}
+
+
+//////////////////////////////////////////////////////////////////////////////
+
+
 
 PointEditorWidget::PointEditorWidget(QWidget *parent)
 	: QWidget(parent)
 {
 	QHBoxLayout *hbox = new QHBoxLayout(this);
 	hbox->setContentsMargins(0,0,0,0);
-	
+
 	QSpinBox *spin = new QSpinBox(this);
 	spin->setSuffix(" px");
 	spin->setMinimum(-9999);
 	spin->setMaximum(9999);
 	connect(spin, SIGNAL(valueChanged(int)), this, SLOT(xValueChanged(int)));
 	hbox->addWidget(spin);
-	
+
 	x_box = spin;
-	
+
 	hbox->addWidget(new QLabel(" x "));
-	
+
 	spin = new QSpinBox(this);
 	spin->setSuffix(" px");
 	spin->setMinimum(-9999);
 	spin->setMaximum(9999);
 	connect(spin, SIGNAL(valueChanged(int)), this, SLOT(yValueChanged(int)));
 	hbox->addWidget(spin);
-	
+
 	hbox->addStretch(1);
-	
+
 	y_box = spin;
 }
-	
+
 void PointEditorWidget::setValue(const QPointF& point)
 {
 	m_point = point;
@@ -50,7 +116,7 @@ void PointEditorWidget::setSufix(const QString& suffix)
 	y_box->setSuffix(suffix);
 }
 
-	
+
 void PointEditorWidget::xValueChanged(int v)
 {
 	m_point = QPointF(v,m_point.y());
@@ -71,30 +137,30 @@ SizeEditorWidget::SizeEditorWidget(QWidget *parent)
 {
 	QHBoxLayout *hbox = new QHBoxLayout(this);
 	hbox->setContentsMargins(0,0,0,0);
-	
+
 	QSpinBox *spin = new QSpinBox(this);
 	spin->setSuffix(" px");
 	spin->setMinimum(-9999);
 	spin->setMaximum(9999);
 	connect(spin, SIGNAL(valueChanged(int)), this, SLOT(wValueChanged(int)));
 	hbox->addWidget(spin);
-	
+
 	w_box = spin;
-	
+
 	hbox->addWidget(new QLabel(" x "));
-	
+
 	spin = new QSpinBox(this);
 	spin->setSuffix(" px");
 	spin->setMinimum(-9999);
 	spin->setMaximum(9999);
 	connect(spin, SIGNAL(valueChanged(int)), this, SLOT(hValueChanged(int)));
 	hbox->addWidget(spin);
-	
+
 	hbox->addStretch(1);
-	
+
 	h_box = spin;
 }
-	
+
 void SizeEditorWidget::setValue(const QSizeF& size)
 {
 	m_size = size;
@@ -110,7 +176,7 @@ void SizeEditorWidget::setSufix(const QString& suffix)
 	h_box->setSuffix(suffix);
 }
 
-	
+
 void SizeEditorWidget::wValueChanged(int v)
 {
 	m_size = QSizeF(v,m_size.height());
@@ -130,35 +196,35 @@ ColorEditorWidget::ColorEditorWidget(QWidget *parent)
 {
 	QHBoxLayout *hbox = new QHBoxLayout(this);
 	hbox->setContentsMargins(0,0,0,0);
-	
+
 	QSpinBox *spin = new QSpinBox(this);
 	spin->setPrefix("R ");
 	spin->setMinimum(0);
 	spin->setMaximum(255);
 	connect(spin, SIGNAL(valueChanged(int)), this, SLOT(rValueChanged(int)));
 	hbox->addWidget(spin);
-	
+
 	r_box = spin;
-	
+
 	spin = new QSpinBox(this);
 	spin->setPrefix("G ");
 	spin->setMinimum(0);
 	spin->setMaximum(255);
 	connect(spin, SIGNAL(valueChanged(int)), this, SLOT(gValueChanged(int)));
 	hbox->addWidget(spin);
-	
+
 	g_box = spin;
-	
+
 	spin = new QSpinBox(this);
 	spin->setPrefix("B ");
 	spin->setMinimum(0);
 	spin->setMaximum(255);
 	connect(spin, SIGNAL(valueChanged(int)), this, SLOT(bValueChanged(int)));
 	hbox->addWidget(spin);
-	
+
 	b_box = spin;
 }
-	
+
 void ColorEditorWidget::setValue(const QColor& color)
 {
 	m_color = color;
@@ -167,7 +233,7 @@ void ColorEditorWidget::setValue(const QColor& color)
 	b_box->setValue((int)color.b());
 }
 
-	
+
 void ColorEditorWidget::rValueChanged(int r)
 {
 	m_color = QColor(r,m_color.g(),m_color.b());
@@ -190,12 +256,12 @@ void ColorEditorWidget::bValueChanged(int b)
 //////////////////////////////////////////////////////////////////////////////
 
 LiveLayerProperty::LiveLayerProperty(
-		const QString&  _id, 
-		const QVariant& _value, 
-		const QString&  _title, 
-		double _min, 
+		const QString&  _id,
+		const QVariant& _value,
+		const QString&  _title,
+		double _min,
 		double _max)
-	: id(_id) 
+	: id(_id)
 	, title(_title.isEmpty() ? LiveLayer::guessTitle(_id) : _title)
 	, value(_value)
 	, min(_min)
@@ -211,9 +277,9 @@ QString LiveLayer::guessTitle(QString field)
 	static QRegExp rUpperCase = QRegExp("([a-z])([A-Z])");
 	static QRegExp rFirstLetter = QRegExp("([a-z])");
 	static QRegExp rLetterNumber = QRegExp("([a-z])([0-9])");
-	//static QRegExp rUnderScore 
+	//static QRegExp rUnderScore
 	//$name =~ s/([a-z])_([a-z])/$1.' '.uc($2)/segi;
-	
+
 	QString tmp = field;
 	tmp.replace(rUpperCase,"\\1 \\2");
 	if(tmp.indexOf(rFirstLetter) == 0)
@@ -222,9 +288,9 @@ QString LiveLayer::guessTitle(QString field)
 		tmp.remove(0,1);
 		tmp.prepend(QString(x).toUpper());
 	}
-	
+
 	tmp.replace(rLetterNumber,"\\1 #\\2");
-	
+
 	return tmp;
 }
 
@@ -252,10 +318,10 @@ GLDrawable* LiveLayer::drawable(GLWidget *widget)
 	else
 	{
 		GLDrawable *drawable = createDrawable(widget);
-		
+
 		bool wasEmpty = m_drawables.isEmpty();
 		m_drawables[widget] = drawable;
-		
+
 		if(wasEmpty)
 		{
 // 			qDebug() << "LiveLayer::drawable: widget:"<<widget<<", cache miss, first drawable";
@@ -266,7 +332,7 @@ GLDrawable* LiveLayer::drawable(GLWidget *widget)
 // 			qDebug() << "LiveLayer::drawable: widget:"<<widget<<", cache miss, copy from first";
 			initDrawable(drawable, false);
 		}
-		
+
 		if(widget->property("isEditorWidget").toInt())
 		{
 			drawable->setAnimationsEnabled(false);
@@ -274,7 +340,7 @@ GLDrawable* LiveLayer::drawable(GLWidget *widget)
 		}
 		else
 			connect(this, SIGNAL(isVisible(bool)), drawable, SLOT(setVisible(bool)));
-		
+
 		return drawable;
 	}
 }
@@ -287,24 +353,25 @@ GLDrawable* LiveLayer::drawable(GLWidget *widget)
 #include <QHBoxLayout>
 #include <QSpinBox>
 #include <QSlider>
+#include <QDoubleSpinBox>
 
-	
+
 QWidget * LiveLayer::generatePropertyEditor(QObject *object, const char *property, const char *slot, PropertyEditorOptions opts)
 {
 	QWidget *base = new QWidget();
 	QHBoxLayout *hbox = new QHBoxLayout(base);
 	hbox->setContentsMargins(0,0,0,0);
-	
+
 	QVariant prop = object->property(property);
-	
+
 	if(opts.value.isValid())
 		prop = opts.value;
-		
+
 	if(opts.type == QVariant::Invalid)
 		opts.type = prop.type();
-		
+
 	//qDebug() << "generatePropertyEditor: prop:"<<property<<", opts.type:"<<opts.type<<", variant:"<<(opts.value.isValid() ? opts.value : prop);
-	
+
 	if(opts.type == QVariant::Int)
 	{
 		QSpinBox *spin = new QSpinBox(base);
@@ -312,15 +379,15 @@ QWidget * LiveLayer::generatePropertyEditor(QObject *object, const char *propert
 			spin->setSuffix(opts.suffix);
 		spin->setMinimum((int)opts.min);
 		spin->setMaximum((int)opts.max);
-		
+
 		if(prop.type() == QVariant::Double && opts.doubleIsPercentage)
 			spin->setValue((int)(prop.toDouble()*100.0));
 		else
 			spin->setValue(prop.toInt());
-			
+
 		QObject::connect(spin, SIGNAL(valueChanged(int)), object, slot);
 		hbox->addWidget(spin);
-		
+
 		if(!opts.noSlider)
 		{
 			QSlider *slider;
@@ -328,12 +395,12 @@ QWidget * LiveLayer::generatePropertyEditor(QObject *object, const char *propert
 			slider->setOrientation(Qt::Horizontal);
 			slider->setMinimum((int)opts.min);
 			slider->setMaximum((int)opts.max);
-			
+
 			if(prop.type() == QVariant::Double && opts.doubleIsPercentage)
 				slider->setValue((int)(prop.toDouble()*100.0));
 			else
 				slider->setValue(prop.toInt());
-				
+
 			QObject::connect(spin, SIGNAL(valueChanged(int)), slider, SLOT(setValue(int)));
 			QObject::connect(slider, SIGNAL(valueChanged(int)), spin, SLOT(setValue(int)));
 			hbox->addWidget(slider);
@@ -344,15 +411,15 @@ QWidget * LiveLayer::generatePropertyEditor(QObject *object, const char *propert
 	{
 		QCheckBox *box = new QCheckBox();
 		delete base;
-		
+
 		if(opts.text.isEmpty())
 			opts.text = guessTitle(property);
-			
+
 		box->setText(opts.text);
-		
+
 		QObject::connect(box, SIGNAL(toggled(bool)), object, slot);
 		box->setChecked( prop.toBool() );
-		
+
 		return box;
 	}
 	else
@@ -360,10 +427,10 @@ QWidget * LiveLayer::generatePropertyEditor(QObject *object, const char *propert
 	{
 		QLineEdit *box = new QLineEdit();
 		delete base;
-		
+
 		QObject::connect(box, SIGNAL(textChanged(const QString&)), object, slot);
 		box->setText( prop.toString() );
-		
+
 		return box;
 	}
 	else
@@ -371,12 +438,12 @@ QWidget * LiveLayer::generatePropertyEditor(QObject *object, const char *propert
 	{
 		SizeEditorWidget *editor = new SizeEditorWidget();
 		delete base;
-		
+
 		QSizeF size = prop.toSizeF();
 		editor->setValue(size);
-		
+
 		connect(editor, SIGNAL(valueChanged(const QSizeF&)), object, slot);
-		
+
 		return editor;
 	}
 	else
@@ -384,40 +451,57 @@ QWidget * LiveLayer::generatePropertyEditor(QObject *object, const char *propert
 	{
 		PointEditorWidget *editor = new PointEditorWidget();
 		delete base;
-		
+
 		QPointF point = prop.toPointF();
 		editor->setValue(point);
-		
+
 		connect(editor, SIGNAL(valueChanged(const QPointF&)), object, slot);
-		
+
+		return editor;
+	}
+	else
+	if(opts.type == QVariant::Double)
+	{
+		DoubleEditorWidget *editor = new DoubleEditorWidget();
+		delete base;
+
+		editor->setShowSlider(!opts.noSlider);
+
+		editor->setValue(prop.toDouble());
+
+		connect(editor, SIGNAL(valueChanged(double)), object, slot);
+
 		return editor;
 	}
 	else
 	{
 		qDebug() << "LiveLayer::generatePropertyEditor(): No editor for type: "<<opts.type;
 	}
-	
-	
+
+
 	return base;
 }
 
 
-	
+
 QWidget * LiveLayer::createLayerPropertyEditors()
 {
 	QWidget * base = new QWidget();
 	QVBoxLayout *blay = new QVBoxLayout(base);
 	blay->setContentsMargins(0,0,0,0);
-	
+
 	ExpandableWidget *groupGeom = new ExpandableWidget("Geometry",base);
 	blay->addWidget(groupGeom);
-	
+
 	QWidget *groupGeomContainer = new QWidget;
 	QFormLayout *formLayout = new QFormLayout(groupGeomContainer);
 	formLayout->setContentsMargins(3,3,3,3);
-	
+	//formLayout->setContentsMargins(0,0,0,0);
+
+	m_geomLayout = formLayout;
+
 	groupGeom->setWidget(groupGeomContainer);
-	
+
 // 	QHBoxLayout *hbox;
 // 	QSpinBox *spin;
 
@@ -427,11 +511,11 @@ QWidget * LiveLayer::createLayerPropertyEditors()
 // 			<< "insetBottomRight";
 
 	PropertyEditorOptions opts;
-	
+
 	opts.reset();
 	//opts.value = rect().topLeft();
 	//formLayout->addRow(tr("&Full Screen:"), generatePropertyEditor(this, "showFullScreen", SLOT(setShowFullScreen(bool)), opts));
-	
+
 	QStringList showAsList = QStringList()
 		<< "Full Screen"//0
 		<< "--------------------"//1
@@ -446,11 +530,11 @@ QWidget * LiveLayer::createLayerPropertyEditors()
 		<< "Aligned Bottom Left"//10
 		<< "Aligned Bottom Center"//11
 		<< "Aligned Bottom Right";//12
-		
+
 	QComboBox *showAsBox = new QComboBox();
 	showAsBox->addItems(showAsList);
 	//showAsBox->setCurrentIndex(
-	
+
 	int idx = 0;
 	if(showFullScreen())
 	{
@@ -459,7 +543,7 @@ QWidget * LiveLayer::createLayerPropertyEditors()
 	else
 	{
 		Qt::Alignment align = alignment();
-		
+
 		if((align & Qt::AlignAbsolute) == Qt::AlignAbsolute)
 		{
 			idx = 2;
@@ -521,42 +605,51 @@ QWidget * LiveLayer::createLayerPropertyEditors()
 	}
 	if(idx >=0 && idx <= 12)
 		showAsBox->setCurrentIndex(idx);
-	
+
 	connect(showAsBox, SIGNAL(activated(const QString&)), this, SLOT(setShowAsType(const QString&)));
-	
+
 	formLayout->addRow(tr("&Show As:"), showAsBox);
-	
+
 	opts.reset();
 	opts.type = QVariant::Int;
 	opts.min = -500;
 	opts.max =  500;
-	
+
 	opts.value = insetTopLeft().x();
-	formLayout->addRow(tr("&Inset Left:"), generatePropertyEditor(this, "insetLeft", SLOT(setLeftInset(int)), opts));
-	
+	formLayout->addRow(tr("&Inset Left:"), m_propWidget["insetLeft"] = generatePropertyEditor(this, "insetLeft", SLOT(setLeftInset(int)), opts));
+
 	opts.value = insetTopLeft().y();
-	formLayout->addRow(tr("&Inset Top:"), generatePropertyEditor(this, "insetTop", SLOT(setTopInset(int)), opts));
-	
+	formLayout->addRow(tr("&Inset Top:"), m_propWidget["insetTop"] = generatePropertyEditor(this, "insetTop", SLOT(setTopInset(int)), opts));
+
 	opts.value = insetBottomRight().x();
-	formLayout->addRow(tr("&Inset Right:"), generatePropertyEditor(this, "insetRight", SLOT(setRightInset(int)), opts));
-	
+	formLayout->addRow(tr("&Inset Right:"), m_propWidget["insetRight"] = generatePropertyEditor(this, "insetRight", SLOT(setRightInset(int)), opts));
+
 	opts.value = insetBottomRight().y();
-	formLayout->addRow(tr("&Inset Bottom:"), generatePropertyEditor(this, "insetBottom", SLOT(setBottomInset(int)), opts));
-	
+	formLayout->addRow(tr("&Inset Bottom:"), m_propWidget["insetBottom"] = generatePropertyEditor(this, "insetBottom", SLOT(setBottomInset(int)), opts));
+
+	opts.reset();
+	opts.suffix = "%";
+	opts.min = 0;
+	opts.max = 10000;
+	opts.type = QVariant::Int;
+	opts.doubleIsPercentage = true;
+	formLayout->addRow(tr("&Scale Size:"), m_propWidget["sizeScale"] = generatePropertyEditor(this, "alignedSizeScale", SLOT(setAlignedSizeScale(int)), opts));
+
+
 	opts.reset();
 	opts.value = rect().topLeft();
-	formLayout->addRow(tr("&Position:"), generatePropertyEditor(this, "pos", SLOT(setPos(const QPointF&)), opts));
-	
+	formLayout->addRow(tr("&Position:"), m_propWidget["pos"] = generatePropertyEditor(this, "pos", SLOT(setPos(const QPointF&)), opts));
+
 	opts.reset();
 	opts.value = rect().size();
-	formLayout->addRow(tr("&Size:"), generatePropertyEditor(this, "size", SLOT(setSize(const QSizeF&)), opts));
-	
-	
+	formLayout->addRow(tr("&Size:"), m_propWidget["size"] = generatePropertyEditor(this, "size", SLOT(setSize(const QSizeF&)), opts));
+
+
 	opts.reset();
 	opts.noSlider = true;
 	opts.type = QVariant::Int;
 	formLayout->addRow(tr("&Z Value:"), generatePropertyEditor(this, "zIndex", SLOT(setZIndex(int)), opts));
-	
+
 	opts.reset();
 	opts.suffix = "%";
 	opts.min = 0;
@@ -564,54 +657,54 @@ QWidget * LiveLayer::createLayerPropertyEditors()
 	opts.type = QVariant::Int;
 	opts.doubleIsPercentage = true;
 	formLayout->addRow(tr("&Opacity:"), generatePropertyEditor(this, "opacity", SLOT(setOpacity(int)), opts));
-	
+
 	groupGeom->setExpanded(true);
-	
+
 	/////////////////////////////////////////
-	
+
 	ExpandableWidget *groupAnim = new ExpandableWidget("Show/Hide Effects",base);
 	blay->addWidget(groupAnim);
-	
+
 	QWidget *groupAnimContainer = new QWidget;
 	QGridLayout *animLayout = new QGridLayout(groupAnimContainer);
 	animLayout->setContentsMargins(3,3,3,3);
-	
+
 	groupAnim->setWidget(groupAnimContainer);
-	
+
 	opts.reset();
 	opts.suffix = " ms";
 	opts.min = 10;
 	opts.max = 8000;
-	
+
 	int row = 0;
 	animLayout->addWidget(generatePropertyEditor(this, "fadeIn", SLOT(setFadeIn(bool)), opts), row, 0);
 	animLayout->addWidget(generatePropertyEditor(this, "fadeInLength", SLOT(setFadeInLength(int)), opts), row, 1);
-	
+
 	row++;
 	animLayout->addWidget(generatePropertyEditor(this, "fadeOut", SLOT(setFadeOut(bool)), opts), row, 0);
 	animLayout->addWidget(generatePropertyEditor(this, "fadeOutLength", SLOT(setFadeOutLength(int)), opts), row, 1);
-	
+
 	opts.reset();
-	
+
 	groupAnim->setExpanded(false);
-	
+
 	/////////////////////////////////////////
-	
+
 	ExpandableWidget *groupAnimAdvanced = new ExpandableWidget("Advanced Effects",base);
 	blay->addWidget(groupAnimAdvanced);
-	
+
 	QWidget *groupAnimAdvancedContainer = new QWidget;
 	QFormLayout *animAdvancedLayout = new QFormLayout(groupAnimAdvancedContainer);
 	animAdvancedLayout->setContentsMargins(3,3,3,3);
-	
+
 	groupAnimAdvanced->setWidget(groupAnimAdvancedContainer);
-	
+
 	opts.reset();
 	opts.suffix = " ms";
 	opts.min = 10;
 	opts.max = 8000;
-	
-	
+
+
 	QStringList animTypes = QStringList()
 		<< "(None)"
 		<< "Zoom In/Out"
@@ -619,33 +712,35 @@ QWidget * LiveLayer::createLayerPropertyEditors()
 		<< "Slide From/To Bottom"
 		<< "Slide From/To Left"
 		<< "Slide From/To Right";
-		
+
 	QComboBox *showBox = new QComboBox();
 	showBox->addItems(animTypes);
 	idx = (int)showAnimationType();
 	showBox->setCurrentIndex(!idx?idx:idx-1);
 	connect(showBox, SIGNAL(activated(int)), this, SLOT(setShowAnim(int)));
-	
+
 	QComboBox *hideBox = new QComboBox();
 	hideBox->addItems(animTypes);
 	idx = (int)hideAnimationType();
 	hideBox->setCurrentIndex(!idx?idx:idx-1);
 	connect(hideBox, SIGNAL(activated(int)), this, SLOT(setHideAnim(int)));
-	
+
 	animAdvancedLayout->addRow(tr("&Show Animation:"), showBox);
 	animAdvancedLayout->addRow(tr("&Show Anim Length:"), generatePropertyEditor(this, "showAnimationLength", SLOT(setShowAnimationLength(int)), opts));
-	
+
 	animAdvancedLayout->addRow(tr("&Hide Animation:"), hideBox);
 	animAdvancedLayout->addRow(tr("&Hide Anim Length:"), generatePropertyEditor(this, "hideAnimationLength", SLOT(setHideAnimationLength(int)), opts));
-	
+
 	groupAnimAdvanced->setExpanded(false);
-	
+
 	row++;
 	animLayout->addWidget(groupAnimAdvanced, row, 0,1, 2);
-	
+
 	/////////////////////////////////////////
-	
-	
+
+	setShowAsType(showAsBox->itemText(showAsBox->currentIndex()));
+
+
 	return base;
 }
 
@@ -674,70 +769,121 @@ void LiveLayer::setShowAsType(const QString& text)
 // 	<< "Aligned Bottom Left"
 // 	<< "Aligned Bottom Center"
 // 	<< "Aligned Bottom Right"
+	setVisibleGeometryFields();
+
 	qDebug() << "LiveLayer::setShowAsType(): text:"<<text;
 	if(text.indexOf("---") >= 0)
 		return;
-		
+
 	if(text.indexOf("Full Screen") >= 0)
 	{
 		setShowFullScreen(true);
+
+		setVisibleGeometryFields(QStringList());
+
 	}
 	else
 	{
 		setShowFullScreen(false);
-		
+
 		if(text.indexOf("Absolute") >= 0)
 		{
 			setAlignment(Qt::AlignAbsolute);
+			setVisibleGeometryFields(QStringList() << "pos" << "size");
 		}
 		else
 		if(text.indexOf("Centered") >= 0)
 		{
 			setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+			setVisibleGeometryFields(QStringList() << "sizeScale");
 		}
 		else
 		if(text.indexOf("Top Left") >= 0)
 		{
 			setAlignment(Qt::AlignTop | Qt::AlignLeft);
+			setVisibleGeometryFields(QStringList() << "insetTop" << "insetLeft" << "sizeScale");
 		}
 		else
 		if(text.indexOf("Top Center") >= 0)
 		{
 			setAlignment(Qt::AlignTop | Qt::AlignHCenter);
+			setVisibleGeometryFields(QStringList() << "insetTop" << "sizeScale");
 		}
 		else
 		if(text.indexOf("Top Right") >= 0)
 		{
 			setAlignment(Qt::AlignTop | Qt::AlignRight);
+			setVisibleGeometryFields(QStringList() << "insetTop" << "insetRight" << "sizeScale");
 		}
 		else
 		if(text.indexOf("Center Right") >= 0)
 		{
 			setAlignment(Qt::AlignVCenter | Qt::AlignRight);
+			setVisibleGeometryFields(QStringList() << "insetRight" << "sizeScale");
 		}
 		else
 		if(text.indexOf("Center Left") >= 0)
 		{
 			setAlignment(Qt::AlignVCenter | Qt::AlignLeft);
+			setVisibleGeometryFields(QStringList() << "insetLeft" << "sizeScale");
 		}
 		else
 		if(text.indexOf("Bottom Left") >= 0)
 		{
 			setAlignment(Qt::AlignBottom | Qt::AlignLeft);
+			setVisibleGeometryFields(QStringList() << "insetBottom" << "insetLeft" << "sizeScale");
 		}
 		else
 		if(text.indexOf("Bottom Center") >= 0)
 		{
 			setAlignment(Qt::AlignBottom | Qt::AlignHCenter);
+			setVisibleGeometryFields(QStringList() << "insetBottom" << "sizeScale");
 		}
 		else
 		if(text.indexOf("Bottom Right") >= 0)
 		{
 			setAlignment(Qt::AlignBottom | Qt::AlignRight);
+			setVisibleGeometryFields(QStringList() << "insetBottom" << "insetRight" << "sizeScale");
 		}
 		else
 		{
 			qDebug() << "LiveLayer::setShowAsType(): Unknown type:"<<text;
+		}
+	}
+}
+
+void LiveLayer::setVisibleGeometryFields(QStringList list)
+{
+	QHash<QString,bool> found;
+	foreach(QString field, list)
+	{
+		QWidget *widget = m_propWidget[field];
+		if(!widget)
+		{
+			qDebug() << "LiveLayer::setVisibleGeometryFields: Cannot find requested field:"<<field;
+		}
+		else
+		{
+			widget->setVisible(true);
+
+			QWidget *label = m_geomLayout->labelForField(widget);
+			if(label)
+				label->setVisible(true);
+
+			found[field] = true;
+		}
+	}
+
+	foreach(QString key, m_propWidget.keys())
+	{
+		if(!found.contains(key))
+		{
+			QWidget *widget = m_propWidget[key];
+			widget->setVisible(false);
+
+			QWidget *label = m_geomLayout->labelForField(widget);
+			if(label)
+				label->setVisible(false);
 		}
 	}
 }
@@ -774,7 +920,7 @@ void LiveLayer::setVisible(bool flag)
 {
 	// Implemented using sig/slot instead of just calling each if the drawables setVisible
 	// directly so that it can be conditionally connected based on the GLWidget that
-	// the drawable is connected to - see the connect() statement in LiveLayer::drawable()	
+	// the drawable is connected to - see the connect() statement in LiveLayer::drawable()
 	//if(flag != m_isVisible)
 		emit isVisible(flag);
 	m_isVisible = flag;
@@ -789,26 +935,26 @@ void LiveLayer::setTransparency(int o)		{ setLayerProperty("opacity", (100.0-(do
 
 // Internally, tries to set the named property on all the drawables if it has such a property
 // If no prop exists on the drawable, then tries to set the prop on the layer object
-// Either way, sets the prop in m_props and emits layerPropertyChanged() 
-// This can be overridden to catch property changes internally, since the property editors 
+// Either way, sets the prop in m_props and emits layerPropertyChanged()
+// This can be overridden to catch property changes internally, since the property editors
 // in MainWindow use this slot to update the props. Most of the time, this will Do The Right Thing
 // for basic properties, but for some custom ones you might have to intercept it.
 void LiveLayer::setLayerProperty(const QString& propertyId, const QVariant& value)
 {
 	if(!m_props.contains(propertyId))
 		return;
-		
+
 // 	qDebug() << "LiveLayer::setLayerProperty: id:"<<propertyId<<", value:"<<value;
-	
+
 	QVariant oldValue = m_props[propertyId].value;
 	m_props[propertyId].value = value;
-	
+
 	if(value != oldValue)
 		layerPropertyWasChanged(propertyId, value, oldValue);
-	
+
 	if(m_drawables.isEmpty())
 		return;
-		
+
 	if(propertyId.indexOf("fadeIn")    > -1 ||
 	   propertyId.indexOf("fadeOut")   > -1 ||
 	   propertyId.indexOf("Animation") > -1)
@@ -819,12 +965,12 @@ void LiveLayer::setLayerProperty(const QString& propertyId, const QVariant& valu
 		}
 	}
 	else
-	{	
+	{
 		GLDrawable *drawable = m_drawables[m_drawables.keys().first()];
-		
+
 		if(drawable->metaObject()->indexOfProperty(qPrintable(propertyId)) >= 0)
 		{
-			applyDrawableProperty(propertyId, value);	
+			applyDrawableProperty(propertyId, value);
 		}
 		else
 		if(metaObject()->indexOfProperty(qPrintable(propertyId)) >= 0)
@@ -846,19 +992,19 @@ void LiveLayer::applyDrawableProperty(const QString& propertyId, const QVariant&
 void LiveLayer::applyAnimationProperties(GLDrawable *drawable)
 {
 	drawable->resetAllAnimations();
-	
+
 	if(m_props["fadeIn"].value.toBool())
 		drawable->addShowAnimation(GLDrawable::AnimFade,m_props["fadeInLength"].value.toInt());
-		
+
 	if(m_props["fadeOut"].value.toBool())
 		drawable->addHideAnimation(GLDrawable::AnimFade,m_props["fadeOutLength"].value.toInt());
-	
+
 	GLDrawable::AnimationType type;
-	 
+
 	type = (GLDrawable::AnimationType)m_props["showAnimationType"].value.toInt();
 	if(type != GLDrawable::AnimNone)
 		drawable->addShowAnimation(type,m_props["showAnimationLength"].value.toInt()).curve = (QEasingCurve::Type)m_props["showAnimationCurve"].value.toInt();
-		
+
 	type = (GLDrawable::AnimationType)m_props["hideAnimationType"].value.toInt();
 	if(type != GLDrawable::AnimNone)
 		drawable->addHideAnimation(type,m_props["hideAnimationLength"].value.toInt()).curve = (QEasingCurve::Type)m_props["hideAnimationCurve"].value.toInt();
@@ -897,24 +1043,25 @@ void LiveLayer::initDrawable(GLDrawable *drawable, bool isFirstDrawable)
 			<< "showFullScreen"
 			<< "alignment"
 			<< "insetTopLeft"
-			<< "insetBottomRight";
-			
+			<< "insetBottomRight"
+			<< "alignedSizeScale";
+
 	if(isFirstDrawable)
 	{
 		loadLayerPropertiesFromObject(drawable, generalProps);
-			
+
 		m_isVisible = drawable->isVisible();
-		
+
 		m_props["fadeIn"].value = 1;
 		m_props["fadeInLength"].value = 300;
-		
+
 		m_props["fadeOut"].value = 1;
 		m_props["fadeOutLength"].value = 300;
-		
+
 		m_props["showAnimationType"].value = GLDrawable::AnimNone;
 		m_props["showAnimationLength"].value = 2500;
 		m_props["showAnimationCurve"].value = QEasingCurve::OutElastic;
-		
+
 		m_props["hideAnimationType"].value = GLDrawable::AnimNone;
 		m_props["hideAnimationLength"].value = 300;
 		m_props["hideAnimationCurve"].value = QEasingCurve::Linear;
@@ -923,7 +1070,7 @@ void LiveLayer::initDrawable(GLDrawable *drawable, bool isFirstDrawable)
 	{
 		applyLayerPropertiesToObject(drawable, generalProps);
 		applyAnimationProperties(drawable);
-		
+
 		drawable->setVisible(m_isVisible);
 	}
 }
@@ -946,7 +1093,7 @@ void LiveLayer::applyLayerPropertiesToObject(QObject *object, QStringList list)
 	if(list.isEmpty())
 		foreach(QString key, m_props.keys())
 			list << key;
-	
+
 	foreach(QString key, list)
 	{
 		if(m_props.contains(key))
@@ -958,5 +1105,5 @@ void LiveLayer::applyLayerPropertiesToObject(QObject *object, QStringList list)
 			}
 		}
 	}
-	
+
 }

@@ -1,15 +1,15 @@
 #include "GLDrawable.h"
-	
+
 #include "GLWidget.h"
 
-QAutoDelPropertyAnimation::QAutoDelPropertyAnimation(QObject * target, const QByteArray & propertyName, QObject * parent) 
-	: QPropertyAnimation(target,propertyName,parent) 
+QAutoDelPropertyAnimation::QAutoDelPropertyAnimation(QObject * target, const QByteArray & propertyName, QObject * parent)
+	: QPropertyAnimation(target,propertyName,parent)
 {
 	m_originalPropValue = target->property(propertyName.constData());
 // 	qDebug() << "QAutoDelPropertyAnimation: Anim STARTED for "<<propertyName.constData()<<", got orig value: "<<m_originalPropValue;
 	//connect(this, SIGNAL(finished()), this, SLOT(resetProperty()));
 }
-	
+
 void QAutoDelPropertyAnimation::resetProperty()
 {
 // 	qDebug() << "QAutoDelPropertyAnimation: Anim FINISHED for "<<propertyName().constData()<<", setting value: "<<m_originalPropValue;
@@ -17,7 +17,7 @@ void QAutoDelPropertyAnimation::resetProperty()
 }
 
 
-// class GLDrawable 
+// class GLDrawable
 GLDrawable::GLDrawable(QObject *parent)
 	: QObject(parent)
 	, m_glw(0)
@@ -29,7 +29,7 @@ GLDrawable::GLDrawable(QObject *parent)
 	, m_showFullScreen(true)
 	, m_alignment(Qt::AlignAbsolute)
 	, m_inAlignment(false)
-	, m_alignedSizeScale(0.)
+	, m_alignedSizeScale(1.)
 {
 }
 
@@ -38,7 +38,7 @@ void GLDrawable::updateGL()
 	if(m_glw)
 		m_glw->updateGL();
 }
-	
+
 void GLDrawable::show()
 {
 	setVisible(true);
@@ -65,9 +65,9 @@ void GLDrawable::setVisible(bool flag)
 		m_runningAnimations.clear();
 		animationFinished();
 	}
-	
+
 	m_animDirection = flag;
-	
+
 	if(!m_animations.isEmpty())
 		startAnimations();
 	else
@@ -76,7 +76,7 @@ void GLDrawable::setVisible(bool flag)
 		if(!flag)
 			emit isVisible(flag);
 	}
-		
+
 }
 
 void GLDrawable::startAnimations()
@@ -84,9 +84,9 @@ void GLDrawable::startAnimations()
 	if(m_animDirection)
 		m_isVisible = m_animDirection;
 
-	
+
 	m_animFinished = false;
-	
+
 	bool hasFade = false;
 	bool hasAnimation = false;
 	if(m_animationsEnabled)
@@ -96,22 +96,22 @@ void GLDrawable::startAnimations()
 			   (!m_animDirection && p.cond == GLDrawable::OnHide))
 			{
 				if(p.type == GLDrawable::AnimFade)
-					hasFade = true; 
+					hasFade = true;
 				startAnimation(p);
 				hasAnimation = true;
 			}
 	}
-		
+
 	//if(m_animDirection && m_isVisible && !hasFade)
 	//	setOpacity(1.0);
-		
+
 	if(!hasAnimation)
 	{
 		m_isVisible = m_animDirection;
 		if(!m_animDirection)
 			emit isVisible(m_animDirection);
 	}
-	
+
 }
 
 void GLDrawable::setAnimationsEnabled(bool flag)
@@ -133,7 +133,7 @@ GLDrawable::AnimParam & GLDrawable::addShowAnimation(AnimationType value, int le
 	p.length = length;
 	p.curve = value == GLDrawable::AnimFade ? QEasingCurve::Linear : QEasingCurve::OutCubic;
 	m_animations << p;
-	
+
 	return m_animations.last();
 }
 
@@ -146,7 +146,7 @@ GLDrawable::AnimParam & GLDrawable::addHideAnimation(AnimationType value, int le
 	p.length = length;
 	p.curve = value == GLDrawable::AnimFade ? QEasingCurve::Linear : QEasingCurve::InCubic;
 	m_animations << p;
-	
+
 	return m_animations.last();
 }
 
@@ -169,9 +169,9 @@ void GLDrawable::startAnimation(const GLDrawable::AnimParam& p)
 {
 	QRectF viewport = m_glw ? m_glw->viewport() : QRectF(0,0,1000,750);
 	bool inFlag = m_animDirection;
-	
+
 	QAutoDelPropertyAnimation *ani = 0;
-	
+
 	switch(p.type)
 	{
 		case GLDrawable::AnimFade:
@@ -180,7 +180,7 @@ void GLDrawable::startAnimation(const GLDrawable::AnimParam& p)
 			ani->setStartValue(inFlag ? 0.0 : opacity());
 			ani->setEndValue(inFlag ?   opacity() : 0.0);
 			break;
-		
+
 		case GLDrawable::AnimZoom:
 			ani = setupRectAnimation(m_rect.adjusted(-viewport.width(),-viewport.height(),viewport.width(),viewport.height()),inFlag);
 			break;
@@ -195,26 +195,26 @@ void GLDrawable::startAnimation(const GLDrawable::AnimParam& p)
 			break;
 		case GLDrawable::AnimSlideRight:
 			ani = setupRectAnimation(m_rect.adjusted(viewport.width(),0,viewport.width(),0),inFlag);
-			break;	
-		
+			break;
+
 		default:
 			break;
 	}
-	
+
 	if(ani)
 	{
 		ani->setEasingCurve(p.curve); //inFlag ? QEasingCurve::OutCubic : QEasingCurve::InCubic);
 		ani->setDuration(p.length);
-		
+
 // 		//qDebug() << "GLDrawable::startAnimation: type:"<<p.type<<", length:"<<p.length<<", curve:"<<p.curve.type();
-		
+
 		connect(ani, SIGNAL(finished()), this, SLOT(animationFinished()));
-		
+
 		if(p.startDelay > 0)
 		{
 			QTimer *timer = new QTimer();
 			timer->setInterval(p.startDelay);
-			
+
 			connect(timer, SIGNAL(timeout()), ani, SLOT(start()));
 			connect(timer, SIGNAL(timeout()), timer, SLOT(deleteLater()));
 			timer->setSingleShot(true);
@@ -224,7 +224,7 @@ void GLDrawable::startAnimation(const GLDrawable::AnimParam& p)
 		{
 			ani->start();
 		}
-		
+
 		m_runningAnimations << ani;
 	}
 }
@@ -233,12 +233,12 @@ void GLDrawable::startAnimation(const GLDrawable::AnimParam& p)
 QAutoDelPropertyAnimation * GLDrawable::setupRectAnimation(const QRectF& otherRect, bool inFlag)
 {
 	QAutoDelPropertyAnimation *ani = new QAutoDelPropertyAnimation(this, "rect");
-	
+
 	m_originalRect = m_rect; // will be restored when anim done
-	
+
 	ani->setEndValue(inFlag   ? m_rect : otherRect);
 	ani->setStartValue(inFlag ? otherRect : m_rect);
-	
+
 	//qDebug() << "GLDrawable::startRectAnimation: start:"<<(inFlag ? otherRect : m_rect)<<", end:"<<(inFlag   ? m_rect : otherRect)<<", other:"<<otherRect<<", duration:"<<duration<<", inFlag:"<<inFlag;
 	return ani;
 }
@@ -258,7 +258,7 @@ void GLDrawable::animationFinished()
 			m_runningAnimations.clear();
 			m_animFinished = true;
 			updateGL();
-			
+
 			foreach(QAutoDelPropertyAnimation *ani, m_finishedAnimations)
 			{
 				ani->resetProperty();
@@ -266,11 +266,11 @@ void GLDrawable::animationFinished()
 			}
 			qDeleteAll(m_finishedAnimations);
 			m_finishedAnimations.clear();
-			
+
 			if(!m_isVisible)
 				emit isVisible(m_isVisible);
 		}
-		
+
 	}
 	else
 	{
@@ -286,7 +286,7 @@ void GLDrawable::animationFinished()
 		updateGL();
 	}
 }
-	
+
 void GLDrawable::setRect(const QRectF& rect)
 {
 	m_rect = rect;
@@ -297,7 +297,7 @@ void GLDrawable::setRect(const QRectF& rect)
 // 		updateAlignment();
 	updateGL();
 }
-	
+
 void GLDrawable::setZIndex(double z)
 {
 	m_zIndex = z;
@@ -349,28 +349,29 @@ void GLDrawable::setInsetBottomRight(const QPointF& value)
 void GLDrawable::setAlignedSizeScale(qreal scale)
 {
 	m_alignedSizeScale = scale;
+	//qDebug() << "GLDrawable::setAlignedSizeScale: New scale: "<<m_alignedSizeScale;
 	updateAlignment();
 }
 
 void GLDrawable::updateAlignment(QSizeF size)
 {
 	m_inAlignment = true;
-	
+
 	if(!size.isValid())
 		size = naturalSize();
 // 	if(!size.isValid())
 // 		size = m_rect.size();
-		
+
 	if(!m_glw)
 	{
 // 		qDebug() << "GLDrawable::updateAlignment(): "<<this<<objectName()<<", no m_glw, can't align";
 		m_inAlignment = false;
 		return;
 	}
-		
-	
+
+
   	//qDebug() << "GLDrawable::updateAlignment(): "<<this<<objectName()<<", size:"<<size;
-		
+
 	if(m_showFullScreen)
 	{
 		QRectF rect = m_glw->viewport();
@@ -384,12 +385,14 @@ void GLDrawable::updateAlignment(QSizeF size)
 	}
 	else
 	{
-		qreal x = 0, y = 0, 
+		qreal x = 0, y = 0,
 		      w = size.width()  * alignedSizeScale(),
 		      h = size.height() * alignedSizeScale();
 		qreal vw = m_glw->viewport().width(),
 		      vh = m_glw->viewport().height();
-		
+
+		//qDebug() << "GLDrawable::updateAlignment: w:"<<w<<", h:"<<h<<", alignedSizeScale:"<<alignedSizeScale();
+
 		if((m_alignment & Qt::AlignAbsolute) == Qt::AlignAbsolute)
 		{
 // 			qDebug() << "GLDrawable::updateAlignment(): "<<this<<objectName()<<", absolute";
@@ -397,49 +400,49 @@ void GLDrawable::updateAlignment(QSizeF size)
 			m_inAlignment = false;
 			return;
 		}
-		
+
 		if ((m_alignment & Qt::AlignHCenter) == Qt::AlignHCenter)
 		{
 			x = (vw - w)/2 + m_insetTopLeft.x() - m_insetBottomRight.x();
 // 			qDebug() << "GLDrawable::updateAlignment(): "<<this<<objectName()<<", ALIGN: H Center, x:"<<x;
-			
+
 		}
-		
+
 		if ((m_alignment & Qt::AlignVCenter) == Qt::AlignVCenter)
 		{
 			y = (vh - h)/2 + m_insetTopLeft.y() - m_insetBottomRight.y();
 // 			qDebug() << "GLDrawable::updateAlignment(): "<<this<<objectName()<<", ALIGN: V Center, y:"<<y;
 		}
-			
+
 		if ((m_alignment & Qt::AlignBottom) == Qt::AlignBottom)
 		{
 			y = vh - h - m_insetBottomRight.y();
 // 			qDebug() << "GLDrawable::updateAlignment(): "<<this<<objectName()<<", ALIGN: Bottom, y:"<<y;
 		}
-		
+
 		if ((m_alignment & Qt::AlignRight) == Qt::AlignRight)
 		{
 			x = vw - w - m_insetBottomRight.x();
 // 			qDebug() << "GLDrawable::updateAlignment(): "<<this<<objectName()<<", ALIGN: Right, x:"<<x;
 		}
-			
+
 		if ((m_alignment & Qt::AlignTop) == Qt::AlignTop)
 		{
 			y = m_insetTopLeft.x();
 // 			qDebug() << "GLDrawable::updateAlignment(): "<<this<<objectName()<<", ALIGN: Top, y:"<<y;
 		}
-		
+
 		if ((m_alignment & Qt::AlignLeft) == Qt::AlignLeft)
 		{
 			x = m_insetTopLeft.x();
 // 			qDebug() << "GLDrawable::updateAlignment(): "<<this<<objectName()<<", ALIGN: Left, x:"<<x;
 		}
-		
+
 		QRectF rect = QRectF(x,y,w,h);
 // 		qDebug() << "GLDrawable::updateAlignment(): "<<this<<objectName()<<", final rect: "<<rect;
 		setRect(rect);
 	}
-	
+
 	m_inAlignment = false;
 }
 
@@ -448,10 +451,10 @@ void GLDrawable::setGLWidget(GLWidget* w)
 	m_glw = w;
 	if(!w)
 		return;
-		
+
 	if(m_rect.isNull())
 		m_rect = m_glw->viewport();
-		
+
 	updateAlignment();
 }
 
@@ -464,12 +467,12 @@ void GLDrawable::drawableResized(const QSizeF& /*newSize*/)
 {
 	// NOOP
 }
-	
+
 void GLDrawable::paintGL()
 {
 	// NOOP
 }
-	
+
 void GLDrawable::initGL()
 {
 	// NOOP
@@ -487,7 +490,7 @@ QByteArray GLDrawable::AnimParam::toByteArray()
 	b << QVariant(startDelay);
 	b << QVariant(length);
 	b << QVariant(curve.type());
-	
+
 	return array;
 }
 
