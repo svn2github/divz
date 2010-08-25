@@ -29,6 +29,7 @@ GLDrawable::GLDrawable(QObject *parent)
 	, m_showFullScreen(true)
 	, m_alignment(Qt::AlignAbsolute)
 	, m_inAlignment(false)
+	, m_alignedSizeScale(0.)
 {
 }
 
@@ -345,6 +346,12 @@ void GLDrawable::setInsetBottomRight(const QPointF& value)
 	updateAlignment();
 }
 
+void GLDrawable::setAlignedSizeScale(qreal scale)
+{
+	m_alignedSizeScale = scale;
+	updateAlignment();
+}
+
 void GLDrawable::updateAlignment(QSizeF size)
 {
 	m_inAlignment = true;
@@ -377,8 +384,11 @@ void GLDrawable::updateAlignment(QSizeF size)
 	}
 	else
 	{
-		qreal x=0, y=0, w=size.width(), h=size.height();
-		qreal vw = m_glw->viewport().width(), vh = m_glw->viewport().height();
+		qreal x = 0, y = 0, 
+		      w = size.width()  * alignedSizeScale(),
+		      h = size.height() * alignedSizeScale();
+		qreal vw = m_glw->viewport().width(),
+		      vh = m_glw->viewport().height();
 		
 		if((m_alignment & Qt::AlignAbsolute) == Qt::AlignAbsolute)
 		{
@@ -415,13 +425,13 @@ void GLDrawable::updateAlignment(QSizeF size)
 			
 		if ((m_alignment & Qt::AlignTop) == Qt::AlignTop)
 		{
-			y = m_insetBottomRight.x();
+			y = m_insetTopLeft.x();
 // 			qDebug() << "GLDrawable::updateAlignment(): "<<this<<objectName()<<", ALIGN: Top, y:"<<y;
 		}
 		
 		if ((m_alignment & Qt::AlignLeft) == Qt::AlignLeft)
 		{
-			x = m_insetBottomRight.x();
+			x = m_insetTopLeft.x();
 // 			qDebug() << "GLDrawable::updateAlignment(): "<<this<<objectName()<<", ALIGN: Left, x:"<<x;
 		}
 		

@@ -38,6 +38,8 @@ class GLDrawable : public QObject
 	Q_PROPERTY(Qt::Alignment alignment READ alignment WRITE setAlignment);
 	Q_PROPERTY(QPointF insetTopLeft READ insetTopLeft WRITE setInsetTopLeft);
 	Q_PROPERTY(QPointF insetBottomRight READ insetBottomRight WRITE setInsetBottomRight);
+	Q_PROPERTY(qreal alignedSizeScale READ alignedSizeScale WRITE setAlignedSizeScale);
+	
 	
 public:
 	GLDrawable(QObject *parent=0);
@@ -106,6 +108,8 @@ public:
 	// of the text unscaled at natural resolution. Used for calculating alignment.
 	virtual QSizeF naturalSize() { return QSizeF(0,0); }
 	
+	qreal alignedSizeScale() { return m_alignedSizeScale; }
+	
 public slots:
 	void setRect(const QRectF& rect);
 	void setOpacity(double i);
@@ -122,6 +126,8 @@ public slots:
 	void setAlignment(int value);
 	void setInsetTopLeft(const QPointF& value);
 	void setInsetBottomRight(const QPointF& value);
+	
+	void setAlignedSizeScale(qreal);
 	
 signals:
 	void zIndexChanged(double newZIndex);
@@ -174,6 +180,8 @@ private:
 	QPointF m_insetBottomRight;
 	
 	bool m_inAlignment;
+	
+	qreal m_alignedSizeScale;
 
 };
 

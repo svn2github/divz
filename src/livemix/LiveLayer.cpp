@@ -297,8 +297,11 @@ QWidget * LiveLayer::generatePropertyEditor(QObject *object, const char *propert
 	
 	QVariant prop = object->property(property);
 	
+	if(opts.value.isValid())
+		prop = opts.value;
+		
 	if(opts.type == QVariant::Invalid)
-		opts.type = opts.value.isValid() ? opts.value.type() : prop.type();
+		opts.type = prop.type();
 		
 	//qDebug() << "generatePropertyEditor: prop:"<<property<<", opts.type:"<<opts.type<<", variant:"<<(opts.value.isValid() ? opts.value : prop);
 	
@@ -311,7 +314,7 @@ QWidget * LiveLayer::generatePropertyEditor(QObject *object, const char *propert
 		spin->setMaximum((int)opts.max);
 		
 		if(prop.type() == QVariant::Double && opts.doubleIsPercentage)
-			spin->setValue((int)prop.toDouble()*100);
+			spin->setValue((int)(prop.toDouble()*100.0));
 		else
 			spin->setValue(prop.toInt());
 			
@@ -327,7 +330,7 @@ QWidget * LiveLayer::generatePropertyEditor(QObject *object, const char *propert
 			slider->setMaximum((int)opts.max);
 			
 			if(prop.type() == QVariant::Double && opts.doubleIsPercentage)
-				slider->setValue((int)prop.toDouble()*100);
+				slider->setValue((int)(prop.toDouble()*100.0));
 			else
 				slider->setValue(prop.toInt());
 				
@@ -348,7 +351,7 @@ QWidget * LiveLayer::generatePropertyEditor(QObject *object, const char *propert
 		box->setText(opts.text);
 		
 		QObject::connect(box, SIGNAL(toggled(bool)), object, slot);
-		box->setChecked( opts.value.isValid() ? opts.value.toBool() : prop.toBool() );
+		box->setChecked( prop.toBool() );
 		
 		return box;
 	}
@@ -359,7 +362,7 @@ QWidget * LiveLayer::generatePropertyEditor(QObject *object, const char *propert
 		delete base;
 		
 		QObject::connect(box, SIGNAL(textChanged(const QString&)), object, slot);
-		box->setText( opts.value.isValid() ? opts.value.toString() : prop.toString() );
+		box->setText( prop.toString() );
 		
 		return box;
 	}
@@ -369,7 +372,7 @@ QWidget * LiveLayer::generatePropertyEditor(QObject *object, const char *propert
 		SizeEditorWidget *editor = new SizeEditorWidget();
 		delete base;
 		
-		QSizeF size = opts.value.isValid() ? opts.value.toSizeF() : prop.toSizeF();
+		QSizeF size = prop.toSizeF();
 		editor->setValue(size);
 		
 		connect(editor, SIGNAL(valueChanged(const QSizeF&)), object, slot);
@@ -382,7 +385,7 @@ QWidget * LiveLayer::generatePropertyEditor(QObject *object, const char *propert
 		PointEditorWidget *editor = new PointEditorWidget();
 		delete base;
 		
-		QPointF point = opts.value.isValid() ? opts.value.toPointF() : prop.toPointF();
+		QPointF point = prop.toPointF();
 		editor->setValue(point);
 		
 		connect(editor, SIGNAL(valueChanged(const QPointF&)), object, slot);
@@ -525,8 +528,8 @@ QWidget * LiveLayer::createLayerPropertyEditors()
 	
 	opts.reset();
 	opts.type = QVariant::Int;
-	opts.min = -1000;
-	opts.max =  1000;
+	opts.min = -500;
+	opts.max =  500;
 	
 	opts.value = insetTopLeft().x();
 	formLayout->addRow(tr("&Inset Left:"), generatePropertyEditor(this, "insetLeft", SLOT(setLeftInset(int)), opts));
