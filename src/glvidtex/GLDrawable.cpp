@@ -428,7 +428,7 @@ void GLDrawable::updateAlignment(QSizeF size)
 
 		if ((m_alignment & Qt::AlignTop) == Qt::AlignTop)
 		{
-			y = m_insetTopLeft.x();
+			y = m_insetTopLeft.y();
 // 			qDebug() << "GLDrawable::updateAlignment(): "<<this<<objectName()<<", ALIGN: Top, y:"<<y;
 		}
 

@@ -48,8 +48,8 @@ void MainWindow::setupSampleScene()
 {
 	LiveScene *scene = new LiveScene();
 
-	//scene->addLayer(new LiveVideoInputLayer());
-	//scene->addLayer(new LiveStaticSourceLayer());
+	scene->addLayer(new LiveVideoInputLayer());
+	scene->addLayer(new LiveStaticSourceLayer());
 	scene->addLayer(new LiveTextLayer());
 
 
