@@ -37,7 +37,7 @@ void DoubleEditorWidget::setValue(double value)
 void DoubleEditorWidget::setMinMax(double a, double b)
 {
 	   m_box->setMinimum(a);    m_box->setMaximum(b);
-	m_slider->setMinimum(a); m_slider->setMaximum(b);
+	m_slider->setMinimum((int)a); m_slider->setMaximum((int)b);
 }
 
 void DoubleEditorWidget::setShowSlider(bool flag)
@@ -96,8 +96,12 @@ PointEditorWidget::PointEditorWidget(QWidget *parent)
 	connect(spin, SIGNAL(valueChanged(int)), this, SLOT(yValueChanged(int)));
 	hbox->addWidget(spin);
 
+	QPushButton *undoBtn = new QPushButton(QPixmap("../data/stock-undo.png"), "");
+	connect(undoBtn, SIGNAL(clicked()), this, SLOT(reset()));
+	hbox->addWidget(undoBtn);
+	
 	hbox->addStretch(1);
-
+	
 	y_box = spin;
 }
 
@@ -106,6 +110,12 @@ void PointEditorWidget::setValue(const QPointF& point)
 	m_point = point;
 	x_box->setValue((int)point.x());
 	y_box->setValue((int)point.y());
+	m_orig = point;
+}
+
+void PointEditorWidget::reset()
+{
+	setValue(m_orig);
 }
 
 void PointEditorWidget::setXMinMax(int a, int b) { x_box->setMinimum(a); x_box->setMaximum(b); }
@@ -155,6 +165,10 @@ SizeEditorWidget::SizeEditorWidget(QWidget *parent)
 	spin->setMaximum(9999);
 	connect(spin, SIGNAL(valueChanged(int)), this, SLOT(hValueChanged(int)));
 	hbox->addWidget(spin);
+	
+	QPushButton *undoBtn = new QPushButton(QPixmap("../data/stock-undo.png"), "");
+	connect(undoBtn, SIGNAL(clicked()), this, SLOT(reset()));
+	hbox->addWidget(undoBtn);
 
 	hbox->addStretch(1);
 
@@ -166,6 +180,11 @@ void SizeEditorWidget::setValue(const QSizeF& size)
 	m_size = size;
 	w_box->setValue((int)size.width());
 	h_box->setValue((int)size.height());
+}
+
+void SizeEditorWidget::reset()
+{
+	setValue(m_orig);
 }
 
 void SizeEditorWidget::setWMinMax(int a, int b) { w_box->setMinimum(a); w_box->setMaximum(b); }
@@ -355,6 +374,47 @@ GLDrawable* LiveLayer::drawable(GLWidget *widget)
 #include <QSlider>
 #include <QDoubleSpinBox>
 
+ObjectValueSetter::ObjectValueSetter(QObject *attached, const char *slot, QVariant value)
+	: QObject(attached)
+	, m_value(value)
+{
+	switch(value.type())
+	{
+		case QVariant::Int:
+			connect(this, SIGNAL(setValue(int)), attached, slot);
+			break;
+		case QVariant::Double:
+			connect(this, SIGNAL(setValue(double)), attached, slot);
+			break;
+		case QVariant::String:
+			connect(this, SIGNAL(setValue(const QString&)), attached, slot);
+			break;
+		default:
+			qDebug() << "ObjectValueSetter: No signal for value type: "<<value.type();
+			break;
+	}
+	
+	connect(attached, SIGNAL(destroyed()), this, SLOT(deleteLater()));
+}
+	
+void ObjectValueSetter::executeSetValue()
+{
+	switch(m_value.type())
+	{
+		case QVariant::Int:
+			emit setValue(m_value.toInt());
+			break;
+		case QVariant::Double:
+			emit setValue(m_value.toDouble());
+			break;
+		case QVariant::String:
+			emit setValue(m_value.toString());
+			break;
+		default:
+			qDebug() << "ObjectValueSetter::executeSetValue: No signal for value type: "<<m_value.type();
+			break;
+	}
+}
 
 QWidget * LiveLayer::generatePropertyEditor(QObject *object, const char *property, const char *slot, PropertyEditorOptions opts)
 {
@@ -405,6 +465,21 @@ QWidget * LiveLayer::generatePropertyEditor(QObject *object, const char *propert
 			QObject::connect(slider, SIGNAL(valueChanged(int)), spin, SLOT(setValue(int)));
 			hbox->addWidget(slider);
 		}
+		
+		QPushButton *undoBtn = new QPushButton(QPixmap("../data/stock-undo.png"), "");
+		ObjectValueSetter *setter = new ObjectValueSetter(spin, SLOT(setValue(int)), spin->value());
+		connect(undoBtn, SIGNAL(clicked()), setter, SLOT(executeSetValue()));
+		hbox->addWidget(undoBtn);
+		
+		if(opts.defaultValue.isValid())
+		{
+			QPushButton *resetBtn = new QPushButton(QPixmap("../data/stock-close.png"), "");
+			ObjectValueSetter *setter = new ObjectValueSetter(spin, SLOT(setValue(int)), opts.defaultValue);
+			connect(resetBtn, SIGNAL(clicked()), setter, SLOT(executeSetValue()));
+			hbox->addWidget(resetBtn);
+		}
+		
+		
 	}
 	else
 	if(opts.type == QVariant::Bool)
@@ -490,7 +565,7 @@ QWidget * LiveLayer::createLayerPropertyEditors()
 	QVBoxLayout *blay = new QVBoxLayout(base);
 	blay->setContentsMargins(0,0,0,0);
 
-	ExpandableWidget *groupGeom = new ExpandableWidget("Geometry",base);
+	ExpandableWidget *groupGeom = new ExpandableWidget("Position and Display",base);
 	blay->addWidget(groupGeom);
 
 	QWidget *groupGeomContainer = new QWidget;
@@ -501,20 +576,10 @@ QWidget * LiveLayer::createLayerPropertyEditors()
 	m_geomLayout = formLayout;
 
 	groupGeom->setWidget(groupGeomContainer);
-
-// 	QHBoxLayout *hbox;
-// 	QSpinBox *spin;
-
-// 	<< "showFullScreen"
-// 			<< "alignment"
-// 			<< "insetTopLeft"
-// 			<< "insetBottomRight";
-
+	
 	PropertyEditorOptions opts;
 
 	opts.reset();
-	//opts.value = rect().topLeft();
-	//formLayout->addRow(tr("&Full Screen:"), generatePropertyEditor(this, "showFullScreen", SLOT(setShowFullScreen(bool)), opts));
 
 	QStringList showAsList = QStringList()
 		<< "Full Screen"//0
@@ -614,6 +679,7 @@ QWidget * LiveLayer::createLayerPropertyEditors()
 	opts.type = QVariant::Int;
 	opts.min = -500;
 	opts.max =  500;
+	opts.defaultValue = 0;
 
 	opts.value = insetTopLeft().x();
 	formLayout->addRow(tr("&Inset Left:"), m_propWidget["insetLeft"] = generatePropertyEditor(this, "insetLeft", SLOT(setLeftInset(int)), opts));
@@ -630,7 +696,8 @@ QWidget * LiveLayer::createLayerPropertyEditors()
 	opts.reset();
 	opts.suffix = "%";
 	opts.min = 0;
-	opts.max = 10000;
+	opts.max = 5000;
+	opts.defaultValue = 100;
 	opts.type = QVariant::Int;
 	opts.doubleIsPercentage = true;
 	formLayout->addRow(tr("&Scale Size:"), m_propWidget["sizeScale"] = generatePropertyEditor(this, "alignedSizeScale", SLOT(setAlignedSizeScale(int)), opts));
@@ -648,17 +715,20 @@ QWidget * LiveLayer::createLayerPropertyEditors()
 	opts.reset();
 	opts.noSlider = true;
 	opts.type = QVariant::Int;
+	opts.defaultValue = 0;
 	formLayout->addRow(tr("&Z Value:"), generatePropertyEditor(this, "zIndex", SLOT(setZIndex(int)), opts));
 
 	opts.reset();
 	opts.suffix = "%";
 	opts.min = 0;
 	opts.max = 100;
+	opts.defaultValue = 100;
 	opts.type = QVariant::Int;
 	opts.doubleIsPercentage = true;
 	formLayout->addRow(tr("&Opacity:"), generatePropertyEditor(this, "opacity", SLOT(setOpacity(int)), opts));
 
-	groupGeom->setExpanded(true);
+	//groupGeom->setExpanded(false);
+	groupGeom->setExpandedIfNoDefault(false);
 
 	/////////////////////////////////////////
 
@@ -675,6 +745,7 @@ QWidget * LiveLayer::createLayerPropertyEditors()
 	opts.suffix = " ms";
 	opts.min = 10;
 	opts.max = 8000;
+	opts.defaultValue = 300;
 
 	int row = 0;
 	animLayout->addWidget(generatePropertyEditor(this, "fadeIn", SLOT(setFadeIn(bool)), opts), row, 0);
@@ -686,7 +757,7 @@ QWidget * LiveLayer::createLayerPropertyEditors()
 
 	opts.reset();
 
-	groupAnim->setExpanded(false);
+	groupAnim->setExpandedIfNoDefault(false);
 
 	/////////////////////////////////////////
 
@@ -703,8 +774,7 @@ QWidget * LiveLayer::createLayerPropertyEditors()
 	opts.suffix = " ms";
 	opts.min = 10;
 	opts.max = 8000;
-
-
+	
 	QStringList animTypes = QStringList()
 		<< "(None)"
 		<< "Zoom In/Out"
@@ -726,12 +796,14 @@ QWidget * LiveLayer::createLayerPropertyEditors()
 	connect(hideBox, SIGNAL(activated(int)), this, SLOT(setHideAnim(int)));
 
 	animAdvancedLayout->addRow(tr("&Show Animation:"), showBox);
+	opts.defaultValue = 2500;
 	animAdvancedLayout->addRow(tr("&Show Anim Length:"), generatePropertyEditor(this, "showAnimationLength", SLOT(setShowAnimationLength(int)), opts));
 
 	animAdvancedLayout->addRow(tr("&Hide Animation:"), hideBox);
+	opts.defaultValue = 300;
 	animAdvancedLayout->addRow(tr("&Hide Anim Length:"), generatePropertyEditor(this, "hideAnimationLength", SLOT(setHideAnimationLength(int)), opts));
 
-	groupAnimAdvanced->setExpanded(false);
+	groupAnimAdvanced->setExpandedIfNoDefault(false);
 
 	row++;
 	animLayout->addWidget(groupAnimAdvanced, row, 0,1, 2);

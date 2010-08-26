@@ -20,6 +20,8 @@ public:
 	QWidget *widget() { return m_widget; }
 	void setWidget(QWidget *widget);
 	
+	void setExpandedIfNoDefault(bool);
+	
 public slots:
 	void setExpanded(bool flag=true);
 	void setTitle(const QString&);

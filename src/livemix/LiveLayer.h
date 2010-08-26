@@ -47,6 +47,8 @@ public slots:
 	void setXMinMax(int,int);
 	void setYMinMax(int,int);
 	void setSufix(const QString&);
+	
+	void reset();
 
 signals:
 	void valueChanged(const QPointF&);
@@ -59,6 +61,7 @@ private:
 	QPointF m_point;
 	QSpinBox *x_box;
 	QSpinBox *y_box;
+	QPointF m_orig;
 
 };
 
@@ -73,6 +76,8 @@ public slots:
 	void setWMinMax(int,int);
 	void setHMinMax(int,int);
 	void setSufix(const QString&);
+	
+	void reset();
 
 signals:
 	void valueChanged(const QSizeF&);
@@ -86,6 +91,7 @@ private:
 	QSizeF m_size;
 	QSpinBox *w_box;
 	QSpinBox *h_box;
+	QSizeF m_orig;
 };
 /*
 class ColorEditorWidget : public QWidget
@@ -309,6 +315,7 @@ protected:
 			type = QVariant::Invalid;
 			value = QVariant();
 			doubleIsPercentage = false;
+			defaultValue = QVariant();
 		}
 
 		QString text;
@@ -319,6 +326,7 @@ protected:
 		QVariant::Type type;
 		QVariant value;
 		bool doubleIsPercentage;
+		QVariant defaultValue;
 	};
 
 	QWidget * generatePropertyEditor(QObject *object, const char *property, const char *slot, PropertyEditorOptions opts = PropertyEditorOptions());
@@ -366,6 +374,24 @@ private:
 
 	QFormLayout * m_geomLayout;
 	QHash<QString,QWidget*> m_propWidget;
+};
+
+class ObjectValueSetter : public QObject
+{
+	Q_OBJECT
+public:
+	ObjectValueSetter(QObject *attached, const char *slot, QVariant value);
+	
+public slots:
+	void executeSetValue();
+	
+signals:
+	void setValue(int);
+	void setValue(double);
+	void setValue(const QString&);
+
+private:
+	QVariant m_value;
 };
 
 #endif

@@ -9,6 +9,8 @@ OBJECTS_DIR = .build
 RCC_DIR = .build
 UI_DIR = .build
 
+include(../qtcolorpicker/qtcolorpicker.pri)
+
 QT += opengl network multimedia
 
 win32 {

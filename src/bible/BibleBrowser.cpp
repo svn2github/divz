@@ -845,6 +845,7 @@ SlideGroup * BibleBrowser::createSlideGroup(bool allowAppend)
 			tmpText = new TextBoxItem();
 			tmpText->setItemId(ItemFactory::nextId());
 			tmpText->setItemName(QString("TextBox%1").arg(tmpText->itemId()));
+			tmpText->setZValue(99);
 		}
 
 		tmpText->setText(QString("%1%2%3")

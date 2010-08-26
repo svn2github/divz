@@ -4,6 +4,8 @@
 #include "../glvidtex/GLVideoDrawable.h"
 #include "../glvidtex/TextVideoSource.h"
 
+#include <qtcolorpicker.h>
+
 ///////////////////////
 
 LiveTextLayer::LiveTextLayer(QObject *parent)
@@ -92,11 +94,11 @@ void LiveTextLayer::initDrawable(GLDrawable *drawable, bool isFirstDrawable)
 
 	QStringList props = QStringList()
 		<< "outlineEnabled"
-		<< "outlineColor"
+		<< "outlinePen"
 		<< "fillEnabled"
-		<< "fillColor"
+		<< "fillBrush"
 		<< "shadowEnabled"
-		<< "shadowColor"
+		<< "shadowBrush"
 		<< "shadowBlurRadius"
 		<< "shadowOffsetX"
 		<< "shadowOffsetY";
@@ -277,8 +279,99 @@ QWidget * LiveTextLayer::createLayerPropertyEditors()
 
 	formLayout->addRow(tr("&Text:"), generatePropertyEditor(this, "text", SLOT(setText(const QString&))));
 
-	groupContent->setExpanded(true);
+	groupContent->setExpandedIfNoDefault(true);
 
+// 	/////////////////////////////////////////
+// 
+// 	ExpandableWidget *groupDisplay = new ExpandableWidget("Text Display",base);
+// 	blay->addWidget(groupDisplay);
+// 
+// 	QWidget *groupDisplayContainer = new QWidget;
+// 	QFormLayout *dispLayout = new QFormLayout(groupDisplayContainer);
+// 	dispLayout->setContentsMargins(3,3,3,3);
+// 
+// 	groupDisplay->setWidget(groupDisplayContainer);
+// 	
+// 	
+// 	QWidget *boxBase;
+// 	QHBoxLayout *hbox;
+// 	
+// 	{
+// 		PropertyEditorOptions opts;
+// 		
+// 		boxBase = new QWidget();
+// 		hbox = new QHBoxLayout(boxBase);
+// 		
+// 		hbox->addWidget(generatePropertyEditor(m_textSource, "outlineEnabled", SLOT(setOutlineEnabled(bool))));
+// 		
+// 		opts.value = m_textSource->outlinePen().widthF();
+// 		opts.suffix = " px";
+// 		opts.noSlider = true;
+// 		opts.min = 0.1;
+// 		opts.max = 10.;
+// 		opts.defaultValue = 1.5;
+// 		hbox->addWidget(generatePropertyEditor(m_textSource, "-", SLOT(setOutlineWidth(double)), opts));
+// 		
+// 		QtColorPicker * colorPicker = new QtColorPicker;
+// 		colorPicker->setStandardColors();
+// 		colorPicker->setCurrentColor(m_textSource->fillBrush().color());
+// 		connect(colorPicker, SIGNAL(colorChanged(const QColor &)), m_textSource, SLOT(setOutlineColor(const QColor &)));
+// 		hbox->addWidget(colorPicker);
+// 		
+// 		dispLayout->addRow(tr("&Outline:"), boxBase);
+// 	}
+// 	
+// 	{
+// 		boxBase = new QWidget();
+// 		hbox = new QHBoxLayout(boxBase);
+// 		
+// 		hbox->addWidget(generatePropertyEditor(m_textSource, "fillEnabled", SLOT(setFillEnabled(bool))));
+// 		
+// 		QtColorPicker * fillColorPicker = new QtColorPicker;
+// 		fillColorPicker->setStandardColors();
+// 		fillColorPicker->setCurrentColor(m_textSource->fillBrush().color());
+// 		connect(fillColorPicker, SIGNAL(colorChanged(const QColor &)), m_textSource, SLOT(setFillBrush(const QColor &)));
+// 		hbox->addWidget(fillColorPicker);
+// 		
+// 		dispLayout->addRow(tr("&Fill Color:"), boxBase);
+// 	}
+// 	
+// 	{
+// 		PropertyEditorOptions opts;
+// 		
+// 		boxBase = new QWidget();
+// 		hbox = new QHBoxLayout(boxBase);
+// 		
+// 		hbox->addWidget(generatePropertyEditor(m_textSource, "shadowEnabled", SLOT(setOutlineEnabled(bool))));
+// 		
+// 		opts.suffix = " px";
+// 		opts.noSlider = true;
+// 		opts.min = 0.1;
+// 		opts.max = 50.;
+// 		opts.defaultValue = 16.;
+// 		hbox->addWidget(generatePropertyEditor(m_textSource, "shadowBlurRadius", SLOT(setShadowBlurRadius(double)), opts));
+// 		
+// 		QtColorPicker * colorPicker = new QtColorPicker;
+// 		colorPicker->setStandardColors();
+// 		colorPicker->setCurrentColor(m_textSource->shadowBrush().color());
+// 		connect(colorPicker, SIGNAL(colorChanged(const QColor &)), m_textSource, SLOT(setShadowColor(const QColor &)));
+// 		hbox->addWidget(colorPicker);
+// 		
+// 		dispLayout->addRow(tr("&Shadow:"), boxBase);
+// 	}
+// 	
+// 	PropertyEditorOptions opts;
+// 	opts.suffix = " px";
+// 	opts.noSlider = true;
+// 	opts.min = -50.;
+// 	opts.max = 50.;
+// 	opts.defaultValue = 5.;
+// 	dispLayout->addRow(tr("&Offset X:"), generatePropertyEditor(m_textSource, "shadowOffsetX", SLOT(setShadowOffsetX(double)), opts));
+// 	dispLayout->addRow(tr("&Offset Y:"), generatePropertyEditor(m_textSource, "shadowOffsetY", SLOT(setShadowOffsetY(double)), opts));
+// 
+// 	groupDisplay->setExpandedIfNoDefault(true);
+// 
+// 
 
 	/////////////////////////////////////////
 

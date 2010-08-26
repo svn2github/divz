@@ -207,7 +207,7 @@ CameraThread * CameraThread::threadForCamera(const QString& camera)
  		#endif
 //  		v->initCamera();
 		v->start(QThread::HighPriority);
-		usleep(500 * 1000); // give it half a sec or so to init
+		usleep(750 * 1000); // give it half a sec or so to init
 
 		return v;
 	}

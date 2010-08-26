@@ -6,6 +6,23 @@
 #include "../glvidtex/GLVideoDrawable.h"
 
 
+/*
+#include <QDirModel>
+#include <QCompleter>
+static void GenericItemConfigDialog_setupGenericDirectoryCompleter(QLineEdit*lineEdit)
+{
+	QCompleter *completer = new QCompleter(lineEdit);
+	QDirModel *dirModel = new QDirModel(completer);
+	completer->setModel(dirModel);
+	//completer->setMaxVisibleItems(10);
+	completer->setCompletionMode(QCompleter::PopupCompletion);
+	completer->setCaseSensitivity(Qt::CaseInsensitive);
+	completer->setWrapAround(true);
+	lineEdit->setCompleter(completer);
+}
+*/
+
+
 LiveVideoInputLayer::LiveVideoInputLayer(QObject *parent)
 	: LiveLayer(parent)
 {
@@ -134,7 +151,7 @@ QWidget * LiveVideoInputLayer::createLayerPropertyEditors()
 // 	
 // 	formLayout->addRow("", generatePropertyEditor(this, "deinterlace", SLOT(setDeinterlace(bool))));
 // 	
- 	groupContent->setExpanded(true);
+ 	groupContent->setExpandedIfNoDefault(true);
 	
 	/////////////////////////////////////////
 	
@@ -154,6 +171,7 @@ QWidget * LiveVideoInputLayer::createLayerPropertyEditors()
 	
 	opts.min = -100;
 	opts.max =  100;
+	opts.defaultValue = 0;
 	
 	row=0;
 	displayLayout->addWidget(new QLabel(tr("Brightness:")), row, 0);
@@ -220,7 +238,7 @@ QWidget * LiveVideoInputLayer::createLayerPropertyEditors()
 // 	
 // 	formLayout->addRow("", generatePropertyEditor(this, "deinterlace", SLOT(setDeinterlace(bool))));
 // 	
- 	groupDisplay->setExpanded(true);
+ 	groupDisplay->setExpandedIfNoDefault(true);
  	
  	/////////////////////////////////////////
 	

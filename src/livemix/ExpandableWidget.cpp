@@ -2,6 +2,7 @@
 
 #include <QToolButton>
 #include <QVBoxLayout>
+#include <QSettings>
 
 ExpandableWidget::ExpandableWidget(const QString& title, QWidget *parent)
 	: QWidget(parent)
@@ -59,6 +60,9 @@ void ExpandableWidget::setExpanded(bool expanded)
 			m_widget->hide();
 		}
 	}
+	
+	QSettings settings;
+	settings.setValue(QString("ExpandableWidget/state/%1").arg(m_title),expanded);
 }
 
 void ExpandableWidget::setTitle(const QString& title)
@@ -66,5 +70,15 @@ void ExpandableWidget::setTitle(const QString& title)
 	m_title = title;
 	m_button->setText(title);
 	setObjectName(qPrintable(title));
+	
+	QSettings settings;
+	setExpanded(settings.value(QString("ExpandableWidget/state/%1").arg(title),false).toBool());
 }
 
+void ExpandableWidget::setExpandedIfNoDefault(bool flag)
+{
+	QSettings settings;
+	QVariant var = settings.value(QString("ExpandableWidget/state/%1").arg(m_title));
+	if(!var.isValid())
+		setExpanded(flag);
+}

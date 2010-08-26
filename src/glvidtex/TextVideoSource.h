@@ -66,11 +66,15 @@ public:
 	ITEM_PROPDEF(ShadowOffsetY,	double,	shadowOffsetY);
 	ITEM_PROPDEF(ShadowBrush,	QBrush,	shadowBrush);
 	
-	
-	
 public slots:
 	void setHtml(const QString&);
 	void update();
+	
+	
+	void setShadowColor(const QColor& c) { setShadowBrush(c); }
+	void setFillColor(const QColor& c) { setFillBrush(c); }
+	void setOutlineColor(const QColor& c) { setOutlinePen(QPen(c, outlinePen().widthF())); }
+	void setOutlineWidth(double w) { setOutlinePen(QPen(outlinePen().color(), w)); }
 	
 signals:
 	void frameReady();

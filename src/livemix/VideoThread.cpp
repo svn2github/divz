@@ -52,8 +52,8 @@ void VideoThread::setVideo(const QString& name)
 
 VideoFormat VideoThread::videoFormat()
 {
-	return VideoFormat(VideoFrame::BUFFER_IMAGE, QVideoFrame::Format_RGB565);
-	//return VideoFormat(VideoFrame::BUFFER_IMAGE, QVideoFrame::Format_ARGB32);
+	//return VideoFormat(VideoFrame::BUFFER_IMAGE, QVideoFrame::Format_RGB565);
+	return VideoFormat(VideoFrame::BUFFER_IMAGE, QVideoFrame::Format_ARGB32);
 	//return VideoFormat(VideoFrame::BUFFER_BYTEARRAY, QVideoFrame::Format_YUV420P);
 	
 	
@@ -562,8 +562,8 @@ void VideoThread::readFrame()
 						//emit frameReady((int)(pts_delay*1000));
 						
 						//enqueue(VideoFrame(m_frame,frameDelay));
-						//enqueue(VideoFrame(frame.convertToFormat(QImage::Format_ARGB32),pts_delay*1000));
-						enqueue(VideoFrame(frame,pts_delay*1000));
+						enqueue(VideoFrame(frame.convertToFormat(QImage::Format_ARGB32),pts_delay*1000));
+						//enqueue(VideoFrame(frame,pts_delay*1000));
 // 						VideoFrame vid(pts_delay*1000);
 // 						vid.isRaw = true;
 // 						vid.bufferType = VideoFrame::BUFFER_BYTEARRAY;
