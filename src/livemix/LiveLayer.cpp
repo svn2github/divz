@@ -421,6 +421,8 @@ GLDrawable* LiveLayer::drawable(GLWidget *widget)
 #include <QSpinBox>
 #include <QSlider>
 #include <QDoubleSpinBox>
+#include <QDirModel>
+#include <QCompleter>
 
 ObjectValueSetter::ObjectValueSetter(QObject *attached, const char *slot, QVariant value)
 	: QObject(attached)
@@ -555,6 +557,16 @@ QWidget * LiveLayer::generatePropertyEditor(QObject *object, const char *propert
 		
 		if(opts.stringIsFile)
 		{
+			
+			QCompleter *completer = new QCompleter(box);
+			QDirModel *dirModel = new QDirModel(completer);
+			completer->setModel(dirModel);
+			//completer->setMaxVisibleItems(10);
+			completer->setCompletionMode(QCompleter::PopupCompletion);
+			completer->setCaseSensitivity(Qt::CaseInsensitive);
+			completer->setWrapAround(true);
+			box->setCompleter(completer);
+			
 			hbox->addWidget(box);
 			
 			QPushButton *browseButton = new QPushButton(QPixmap("../data/stock-open.png"), "");

@@ -1,30 +1,11 @@
 #include "LiveVideoInputLayer.h"
-
-
+#include "ExpandableWidget.h"
 #include "CameraThread.h"
 #include "../glvidtex/GLWidget.h"
 #include "../glvidtex/GLVideoDrawable.h"
 
-
-/*
-#include <QDirModel>
-#include <QCompleter>
-static void GenericItemConfigDialog_setupGenericDirectoryCompleter(QLineEdit*lineEdit)
-{
-	QCompleter *completer = new QCompleter(lineEdit);
-	QDirModel *dirModel = new QDirModel(completer);
-	completer->setModel(dirModel);
-	//completer->setMaxVisibleItems(10);
-	completer->setCompletionMode(QCompleter::PopupCompletion);
-	completer->setCaseSensitivity(Qt::CaseInsensitive);
-	completer->setWrapAround(true);
-	lineEdit->setCompleter(completer);
-}
-*/
-
-
 LiveVideoInputLayer::LiveVideoInputLayer(QObject *parent)
-	: LiveLayer(parent)
+	: LiveVideoLayer(parent)
 {
 }
 
@@ -35,60 +16,21 @@ LiveVideoInputLayer::~LiveVideoInputLayer()
 
 GLDrawable *LiveVideoInputLayer::createDrawable(GLWidget *widget)
 {
-	GLVideoDrawable *drawable = new GLVideoDrawable();
-	//drawable->setVideoSource(source);
-	//drawable->setRect(QRectF(0,0,1000,750));
-	drawable->setRect(widget->viewport());
-
-	drawable->addShowAnimation(GLDrawable::AnimFade);
-	drawable->addHideAnimation(GLDrawable::AnimFade);
-
-	//drawable->show();
-	
-	//drawable->setObjectName(qPrintable(defaultCamera));
-
-
-// 	VideoDisplayOptionWidget *opts = new VideoDisplayOptionWidget(drawable);
-// 	opts->adjustSize();
-// 	opts->show();
-
-	connect(this, SIGNAL(videoSourceChanged(VideoSource*)), drawable, SLOT(setVideoSource(VideoSource*)));
-	
-	/// TODO
-	//setCamera(source);
-	return drawable;
+	// We overrride createDrawable here just for future expansiosn sake
+	return LiveVideoLayer::createDrawable(widget);
 }
-
 
 void LiveVideoInputLayer::initDrawable(GLDrawable *drawable, bool isFirst)
 {
 	//qDebug() << "LiveVideoInputLayer::setupDrawable: drawable:"<<drawable<<", copyFrom:"<<copyFrom;
-	LiveLayer::initDrawable(drawable, isFirst);
-	
-	GLVideoDrawable *vid = dynamic_cast<GLVideoDrawable*>(drawable);
-	if(!vid)
-		return;
-		
-	QStringList props = QStringList()
-			<< "brightness"
-			<< "contrast"
-			<< "hue"
-			<< "saturation"
-			<< "flipHorizontal"
-			<< "flipVertical"
-			<< "cropTopLeft"
-			<< "cropBottomRight"
-			<< "textureOffset"
-			<< "aspectRatioMode";
-			
+	LiveVideoLayer::initDrawable(drawable, isFirst);
+
 	if(isFirst)
 	{
-		loadLayerPropertiesFromObject(drawable, props);
-		
 		#ifdef Q_OS_WIN
 			QString defaultCamera = "vfwcap://0";
 		#else
-			QString defaultCamera = "/dev/video1";
+			QString defaultCamera = "/dev/video0";
 		#endif
 	
 		qDebug() << "LiveVideoInputLayer::initDrawable: Using default camera:"<<defaultCamera;
@@ -106,25 +48,28 @@ void LiveVideoInputLayer::initDrawable(GLDrawable *drawable, bool isFirst)
 	}
 	else
 	{
-		applyLayerPropertiesToObject(drawable, props);
 		if(m_camera)
 			setCamera(m_camera);
-			
-		
 	}
 }
 
 void LiveVideoInputLayer::setCamera(CameraThread *camera)
 {
 	qDebug() << "LiveVideoInputLayer::setCamera: "<<camera;
-	emit videoSourceChanged(camera);
+	setVideoSource(camera);
 	m_camera = camera;
 	setInstanceName(camera->inputName());
 }
 
-
-#include "ExpandableWidget.h"
+void LiveVideoInputLayer::selectCameraIdx(int idx)
+{
+	QStringList rawDevices = CameraThread::enumerateDevices();
+	if(idx < 0 || idx >= rawDevices.size()) 
+		return;
 	
+	setCamera(CameraThread::threadForCamera(rawDevices[idx]));
+}
+
 QWidget * LiveVideoInputLayer::createLayerPropertyEditors()
 {
 	QWidget * base = new QWidget();
@@ -140,113 +85,39 @@ QWidget * LiveVideoInputLayer::createLayerPropertyEditors()
 	
 	groupContent->setWidget(groupContentContainer);
 	
-	//formLayout->addRow(tr("&Text:"), generatePropertyEditor(this, "text", SLOT(setText(const QString&))));
 	int row = 0;
-	gridLayout->addWidget(generatePropertyEditor(this, "deinterlace", SLOT(setDeinterlace(bool))), row, 0, 1, 2);
-
-// 	QFormLayout *formLayout = new QFormLayout(groupContentContainer);
-// 	formLayout->setContentsMargins(3,3,3,3);
-// 	
-// 	groupContent->setWidget(groupContentContainer);
-// 	
-// 	formLayout->addRow("", generatePropertyEditor(this, "deinterlace", SLOT(setDeinterlace(bool))));
-// 	
+	{
+		QStringList rawDevices = CameraThread::enumerateDevices();
+		
+		QStringList devices;
+		int counter = 1;
+		int idx = 0;
+		foreach(QString dev, rawDevices)
+		{
+			if(m_camera && m_camera->inputName() == dev)
+				idx = counter-1;
+			devices << QString("Camera # %1").arg(counter++);
+		}
+		
+		QComboBox *cameraBox = new QComboBox();
+		cameraBox->addItems(devices);
+		cameraBox->setCurrentIndex(idx);
+		connect(cameraBox, SIGNAL(activated(int)), this, SLOT(selectCameraIdx(int)));
+		
+		gridLayout->addWidget(new QLabel("Camera:"), row, 0, 1, 2);
+		gridLayout->addWidget(cameraBox, row, 1, 1, 2);
+	}
+	
+	row++;
+	{
+		gridLayout->addWidget(generatePropertyEditor(this, "deinterlace", SLOT(setDeinterlace(bool))), row, 0, 1, 2);
+	}
+ 	
  	groupContent->setExpandedIfNoDefault(true);
 	
 	/////////////////////////////////////////
 	
-	
-	
-	ExpandableWidget *groupDisplay = new ExpandableWidget("Video Display Options",base);
-	blay->addWidget(groupDisplay);
-	
-	QWidget *groupDisplayContainer = new QWidget;
-	QGridLayout *displayLayout = new QGridLayout(groupDisplayContainer);
-	//gridLayout->setDisplaysMargins(3,3,3,3);
-	
-	groupDisplay->setWidget(groupDisplayContainer);
-	
-	//int row = 0;
-	PropertyEditorOptions opts;
-	
-	opts.min = -100;
-	opts.max =  100;
-	opts.defaultValue = 0;
-	
-	row=0;
-	displayLayout->addWidget(new QLabel(tr("Brightness:")), row, 0);
-	displayLayout->addWidget(generatePropertyEditor(this, "brightness", SLOT(setBrightness(int)), opts), row, 1);
-	
-	row++;
-	displayLayout->addWidget(new QLabel(tr("Contrast:")), row, 0);
-	displayLayout->addWidget(generatePropertyEditor(this, "contrast", SLOT(setContrast(int)), opts), row, 1);
-	
-	row++;
-	displayLayout->addWidget(new QLabel(tr("Hue:")), row, 0);
-	displayLayout->addWidget(generatePropertyEditor(this, "hue", SLOT(setHue(int)), opts), row, 1);
-	
-	row++;
-	displayLayout->addWidget(new QLabel(tr("Saturation:")), row, 0);
-	displayLayout->addWidget(generatePropertyEditor(this, "saturation", SLOT(setSaturation(int)), opts), row, 1);
-	
-	opts.reset();
-	
-	row++;
-	displayLayout->addWidget(generatePropertyEditor(this, "flipHorizontal", SLOT(setFlipHorizontal(bool))), row, 0, 1, 2);
-	row++;
-	displayLayout->addWidget(generatePropertyEditor(this, "flipVertical", SLOT(setFlipVertical(bool))), row, 0, 1, 2);
-	
-	row++;
-	displayLayout->addWidget(new QLabel(tr("Crop Top-Left:")), row, 0);
-	displayLayout->addWidget(generatePropertyEditor(this, "cropTopLeft", SLOT(setCropTopLeft(const QPointF&))), row, 1);
-	
-	row++;
-	displayLayout->addWidget(new QLabel(tr("Crop Bottom-Right:")), row, 0);
-	displayLayout->addWidget(generatePropertyEditor(this, "cropBottomRight", SLOT(setCropBottomRight(const QPointF&))), row, 1);
-	
-	row++;
-	displayLayout->addWidget(new QLabel(tr("Video Offset:")), row, 0);
-	displayLayout->addWidget(generatePropertyEditor(this, "textureOffset", SLOT(setTextureOffset(const QPointF&))), row, 1);
-	
-	opts.reset();
-	opts.stringIsFile = true;
-	opts.fileTypeFilter = tr("Image Files (*.png *.jpg *.bmp *.svg *.xpm *.gif);;Any File (*.*)");
-	
-	row++;
-	displayLayout->addWidget(new QLabel(tr("Alpha Mask File:")), row, 0);
-	displayLayout->addWidget(generatePropertyEditor(this, "alphaMaskFile", SLOT(setAlphaMaskFile(const QString&)), opts), row, 1);
-	
-	row++;
-	displayLayout->addWidget(new QLabel(tr("Overlay Mask File:")), row, 0);
-	displayLayout->addWidget(generatePropertyEditor(this, "overlayMaskFile", SLOT(setOverlayMaskFile(const QString&)), opts), row, 1);
-	
-	QStringList modeList = QStringList()
-		<< "Ignore Aspect Ratio"
-		<< "Keep Aspect Ratio"
-		<< "Keep by Expanding";
-		
-	QComboBox *modeListBox = new QComboBox();
-	modeListBox->addItems(modeList);
-	modeListBox->setCurrentIndex(m_props["aspectRatioMode"].value.toInt());
-	connect(modeListBox, SIGNAL(activated(int)), this, SLOT(setAspectRatioMode(int)));
-	
-	row++;
-	displayLayout->addWidget(new QLabel(tr("Aspect Ratio Mode:")), row, 0);
-	displayLayout->addWidget(modeListBox, row, 1);
-	
-
-// 	QFormLayout *formLayout = new QFormLayout(groupDisplayContainer);
-// 	formLayout->setDisplaysMargins(3,3,3,3);
-// 	
-// 	groupDisplay->setWidget(groupDisplayContainer);
-// 	
-// 	formLayout->addRow("", generatePropertyEditor(this, "deinterlace", SLOT(setDeinterlace(bool))));
-// 	
- 	groupDisplay->setExpandedIfNoDefault(true);
- 	
- 	/////////////////////////////////////////
-	
-	QWidget *basics =  LiveLayer::createLayerPropertyEditors();
+	QWidget *basics =  LiveVideoLayer::createLayerPropertyEditors();
 	blay->addWidget(basics);
 	
 	return base;
@@ -260,34 +131,9 @@ void LiveVideoInputLayer::setDeinterlace(bool flag)
 
 void LiveVideoInputLayer::setLayerProperty(const QString& key, const QVariant& value)
 {
-	m_props[key].value = value;
 	if(key == "deinterlace")
 	{
 		setDeinterlace(value.toBool());
-	}
-	else
-	if(key == "alphaMaskFile" || key == "overlayMaskFile")
-	{
-		QImage image(value.toString());
-		if(image.isNull() && !value.toString().isEmpty())
-		{
-			qDebug() << "LiveVideoInputLayer: "<<key<<": Unable to load file "<<value.toString();
-			image = QImage();
-		}
-			
-		foreach(GLWidget *widget, m_drawables.keys())
-		{
-			GLVideoDrawable *vid = dynamic_cast<GLVideoDrawable*>(m_drawables[widget]);
-			if(vid)
-			{
-				if(key == "alphaMaskFile")
-					vid->setAlphaMask(image);
-				
-				// Not Implemented yet
-				//else
-				//	m_drawables[widget]->setOverlayMask(image);
-			}
-		}
 	}
 	else
 	if(m_camera)
@@ -297,10 +143,8 @@ void LiveVideoInputLayer::setLayerProperty(const QString& key, const QVariant& v
 		{
 			m_camera->setProperty(keyStr, value);
 		}
+		
 	}
-	else
-	{
-		LiveLayer::setLayerProperty(key,value);
-	}
-
+	
+	LiveLayer::setLayerProperty(key,value);
 }

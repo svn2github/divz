@@ -11,7 +11,7 @@
 #include "../glvidtex/GLVideoDrawable.h"
 #include "../glvidtex/StaticVideoSource.h"
 #include "LayerControlWidget.h"
-
+#include "LiveVideoFileLayer.h"
 
 MainWindow::MainWindow()
 	: QMainWindow()
@@ -51,7 +51,7 @@ void MainWindow::setupSampleScene()
 	scene->addLayer(new LiveVideoInputLayer());
 	scene->addLayer(new LiveStaticSourceLayer());
 	scene->addLayer(new LiveTextLayer());
-
+	scene->addLayer(new LiveVideoFileLayer());
 
 	loadLiveScene(scene);
 

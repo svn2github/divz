@@ -48,7 +48,9 @@ HEADERS += CameraThread.h \
 	LiveStaticSourceLayer.h \
 	LiveTextLayer.h \
 	ExpandableWidget.h \
-	LayerControlWidget.h
+	LayerControlWidget.h \
+	LiveVideoLayer.h \
+	LiveVideoFileLayer.h
 	
 SOURCES += main.cpp \
 	CameraThread.cpp \
@@ -79,7 +81,9 @@ SOURCES += main.cpp \
 	LiveStaticSourceLayer.cpp \
 	LiveTextLayer.cpp \
 	ExpandableWidget.cpp \
-	LayerControlWidget.cpp
+	LayerControlWidget.cpp \ 
+	LiveVideoLayer.cpp \
+	LiveVideoFileLayer.cpp
 
 
 unix {

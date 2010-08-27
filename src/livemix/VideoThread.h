@@ -43,6 +43,8 @@ public:
 	//QImage frame();
 	virtual VideoFormat videoFormat();
 	
+	QString videoFile() { return m_videoFile; }
+	
 signals:
 	//void newImage(QImage,QTime);
 	//void frameReady(int frameHoldTime);

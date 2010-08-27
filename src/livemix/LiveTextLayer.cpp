@@ -130,96 +130,11 @@ void LiveTextLayer::setText(const QString& text)
 	QSize size = m_textSource->findNaturalSize();
 	m_textSource->setTextWidth(size.width());
 
-	// TODO make anchor configurable
-/*
-	QRectF viewport(0,0,1000,750);
-
-	QRectF newRect(
-		qMax(viewport.right()  - size.width()  , 0.0),
-		qMax(viewport.bottom() - size.height() , 0.0),
-		size.width(),
-		size.height());
-	//qDebug() << "LiveTextLayer::setText:"<<text<<": size:"<<size<<", newRect:"<<newRect;
-
-	setLayerProperty("rect",newRect);
-*/
 	m_props["text"].value = text;
-//
+	
 	setInstanceName(text);
 }
-/*
-QList<QtPropertyEditorIdPair> LiveTextLayer::createPropertyEditors(QtVariantPropertyManager *manager)
-{
-	QList<QtPropertyEditorIdPair> list = LiveLayer::createPropertyEditors(manager);
 
-	QtVariantProperty *property;
-
-	///////////////////////////////////////////
-
-	property = manager->addProperty(QVariant::String, tr("Text"));
-	property->setValue(text());
-	list << QtPropertyEditorIdPair("text", property);
-
-	///////////////////////////////////////////
-
-	property = manager->addProperty(QVariant::Bool, tr("Draw Outline?"));
-	property->setValue(m_textSource->outlineEnabled());
-	list << QtPropertyEditorIdPair("outlineEnabled", property);
-
-	property = manager->addProperty(QVariant::Color, tr("Outline Color"));
-	property->setValue(m_textSource->outlinePen().color());
-	list << QtPropertyEditorIdPair("outlineColor", property);
-
-	///////////////////////////////////////////
-
-	property = manager->addProperty(QVariant::Bool, tr("Fill Text?"));
-	property->setValue(m_textSource->fillEnabled());
-	list << QtPropertyEditorIdPair("fillEnabled", property);
-
-	property = manager->addProperty(QVariant::Color, tr("Fill Color"));
-	property->setValue(m_textSource->fillBrush().color());
-	list << QtPropertyEditorIdPair("fillColor", property);
-
-	///////////////////////////////////////////
-
-
-	property = manager->addProperty(QVariant::Bool, tr("Draw Shadow?"));
-	property->setValue(m_textSource->shadowEnabled());
-	list << QtPropertyEditorIdPair("shadowEnabled", property);
-
-	property = manager->addProperty(QVariant::Color, tr("Shadow Color"));
-	property->setValue(m_textSource->shadowBrush().color());
-	list << QtPropertyEditorIdPair("shadowColor", property);
-
-	property = manager->addProperty(QVariant::Double, tr("Shadow Radius"));
-	property->setValue(m_textSource->shadowBlurRadius());
-	list << QtPropertyEditorIdPair("shadowBlurRadius", property);
-
-	property = manager->addProperty(QVariant::Double, tr("Shadow X"));
-	property->setValue(m_textSource->shadowOffsetX());
-	list << QtPropertyEditorIdPair("shadowOffsetX", property);
-
-	property = manager->addProperty(QVariant::Double, tr("Shadow Y"));
-	property->setValue(m_textSource->shadowOffsetY());
-	list << QtPropertyEditorIdPair("shadowOffsetY", property);
-
-
-	///////////////////////////////////////////
-
-
-
-// 	m_props["outlineEnabled"] 	= m_textSource->outlineEnabled();
-// 	m_props["outlineColor"] 	= m_textSource->outlinePen().color();
-// 	m_props["fillEnabled"] 		= m_textSource->fillEnabled();
-// 	m_props["fillColor"] 		= m_textSource->fillBrush().color()
-// 	m_props["shadowEnabled"] 	= m_textSource->shadowEnabled();
-// 	m_props["shadowColor"] 		= m_textSource->shadowBrush().color();
-// 	m_props["shadowBlurRadius"] 	= m_textSource->shadowBlurRadius();
-// 	m_props["shadowOffsetX"] 	= m_textSource->shadowOffsetX();
-// 	m_props["shadowOffsetY"] 	= m_textSource->shadowOffsetY();
-
-	return list;
-}*/
 
 void LiveTextLayer::setLayerProperty(const QString& key, const QVariant& value)
 {
