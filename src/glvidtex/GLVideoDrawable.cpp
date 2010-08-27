@@ -374,7 +374,12 @@ void GLVideoDrawable::setAlphaMask(const QImage &mask)
 	if(mask.isNull())
 	{
 		//qDebug() << "GLVideoDrawable::setAlphaMask: "<<this<<",  Got null mask, size:"<<mask.size();
-		return;
+		//return;
+		m_alphaMask = QImage(1,1,QImage::Format_RGB32);
+		m_alphaMask.fill(Qt::black);
+ 		//qDebug() << "GLVideoDrawable::initGL: BLACK m_alphaMask.size:"<<m_alphaMask.size();
+ 		setAlphaMask(m_alphaMask);
+ 		return;
 	}
 	
 	if(m_glInited && glWidget())

@@ -4,6 +4,54 @@
 #include "../glvidtex/GLDrawable.h"
 #include "../glvidtex/GLWidget.h"
 
+//////////////////////////////////////////////////////////////////////////////
+
+BrowseDialogLauncher::BrowseDialogLauncher(QObject *attached, const char *slot, QVariant value)
+	: QObject(attached)
+	, m_attached(attached)
+	, m_value(value)
+	, m_settingsKey("default")
+	, m_title("Browse")
+	, m_filter("Any File (*.*)")
+{
+	connect(this, SIGNAL(setValue(const QString&)), attached, slot);
+}
+
+
+void BrowseDialogLauncher::setTitle(const QString& value)
+{
+	m_title = value;
+}
+
+void BrowseDialogLauncher::setSettingsKey(const QString& value)
+{
+	m_settingsKey = value;
+}
+
+void BrowseDialogLauncher::setFilter(const QString& value)
+{
+	m_filter = value;
+}
+	
+void BrowseDialogLauncher::browse()
+{
+	QString text = m_value.toString();
+	QString settingsPath = QString("BrowseDialogLauncher/%1").arg(m_settingsKey);
+	
+	if(text.trimmed().isEmpty())
+	{
+		text = QSettings().value(settingsPath,"").toString();
+	}
+
+	QString fileName = QFileDialog::getOpenFileName(dynamic_cast<QWidget*>(m_attached), m_title, text, m_filter);
+	if(fileName != "")
+	{
+		emit setValue(fileName);
+		QSettings().setValue(settingsPath,QFileInfo(fileName).absolutePath());
+	}
+}
+
+//////////////////////////////////////////////////////////////////////////////
 
 DoubleEditorWidget::DoubleEditorWidget(QWidget *parent)
 	: QWidget(parent)
@@ -501,10 +549,29 @@ QWidget * LiveLayer::generatePropertyEditor(QObject *object, const char *propert
 	if(opts.type == QVariant::String)
 	{
 		QLineEdit *box = new QLineEdit();
-		delete base;
-
+		
 		QObject::connect(box, SIGNAL(textChanged(const QString&)), object, slot);
 		box->setText( prop.toString() );
+		
+		if(opts.stringIsFile)
+		{
+			hbox->addWidget(box);
+			
+			QPushButton *browseButton = new QPushButton(QPixmap("../data/stock-open.png"), "");
+			BrowseDialogLauncher *setter = new BrowseDialogLauncher(box, SLOT(setText(const QString&)), box->text());
+			connect(browseButton, SIGNAL(clicked()), setter, SLOT(browse()));
+			
+			if(!opts.fileTypeFilter.isEmpty())
+				setter->setFilter(opts.fileTypeFilter);
+			
+			hbox->addWidget(browseButton);
+			
+			return base;
+		}
+		else
+		{
+			delete base;
+		}
 
 		return box;
 	}

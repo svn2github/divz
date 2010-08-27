@@ -88,7 +88,7 @@ void LiveVideoInputLayer::initDrawable(GLDrawable *drawable, bool isFirst)
 		#ifdef Q_OS_WIN
 			QString defaultCamera = "vfwcap://0";
 		#else
-			QString defaultCamera = "/dev/video0";
+			QString defaultCamera = "/dev/video1";
 		#endif
 	
 		qDebug() << "LiveVideoInputLayer::initDrawable: Using default camera:"<<defaultCamera;
@@ -208,13 +208,17 @@ QWidget * LiveVideoInputLayer::createLayerPropertyEditors()
 	displayLayout->addWidget(new QLabel(tr("Video Offset:")), row, 0);
 	displayLayout->addWidget(generatePropertyEditor(this, "textureOffset", SLOT(setTextureOffset(const QPointF&))), row, 1);
 	
+	opts.reset();
+	opts.stringIsFile = true;
+	opts.fileTypeFilter = tr("Image Files (*.png *.jpg *.bmp *.svg *.xpm *.gif);;Any File (*.*)");
+	
 	row++;
 	displayLayout->addWidget(new QLabel(tr("Alpha Mask File:")), row, 0);
-	displayLayout->addWidget(generatePropertyEditor(this, "alphaMaskFile", SLOT(setAlphaMaskFile(const QString&))), row, 1);
+	displayLayout->addWidget(generatePropertyEditor(this, "alphaMaskFile", SLOT(setAlphaMaskFile(const QString&)), opts), row, 1);
 	
 	row++;
 	displayLayout->addWidget(new QLabel(tr("Overlay Mask File:")), row, 0);
-	displayLayout->addWidget(generatePropertyEditor(this, "overlayMaskFile", SLOT(setAlphaMaskFile(const QString&))), row, 1);
+	displayLayout->addWidget(generatePropertyEditor(this, "overlayMaskFile", SLOT(setOverlayMaskFile(const QString&)), opts), row, 1);
 	
 	QStringList modeList = QStringList()
 		<< "Ignore Aspect Ratio"
@@ -256,6 +260,7 @@ void LiveVideoInputLayer::setDeinterlace(bool flag)
 
 void LiveVideoInputLayer::setLayerProperty(const QString& key, const QVariant& value)
 {
+	m_props[key].value = value;
 	if(key == "deinterlace")
 	{
 		setDeinterlace(value.toBool());
@@ -264,25 +269,27 @@ void LiveVideoInputLayer::setLayerProperty(const QString& key, const QVariant& v
 	if(key == "alphaMaskFile" || key == "overlayMaskFile")
 	{
 		QImage image(value.toString());
-		if(image.isNull())
-			qDebug() << "LiveVideoInputLayer: "<<key<<": Unable to load file "<<value.toString();
-		else
+		if(image.isNull() && !value.toString().isEmpty())
 		{
-			foreach(GLWidget *widget, m_drawables.keys())
+			qDebug() << "LiveVideoInputLayer: "<<key<<": Unable to load file "<<value.toString();
+			image = QImage();
+		}
+			
+		foreach(GLWidget *widget, m_drawables.keys())
+		{
+			GLVideoDrawable *vid = dynamic_cast<GLVideoDrawable*>(m_drawables[widget]);
+			if(vid)
 			{
-				GLVideoDrawable *vid = dynamic_cast<GLVideoDrawable*>(m_drawables[widget]);
-				if(vid)
-				{
-					if(key == "alphaMaskFile")
-						vid->setAlphaMask(image);
-					
-					// Not Implemented yet
-					//else
-					//	m_drawables[widget]->setOverlayMask(image);
-				}
+				if(key == "alphaMaskFile")
+					vid->setAlphaMask(image);
+				
+				// Not Implemented yet
+				//else
+				//	m_drawables[widget]->setOverlayMask(image);
 			}
 		}
 	}
+	else
 	if(m_camera)
 	{
 		const char *keyStr = qPrintable(key);
@@ -291,7 +298,9 @@ void LiveVideoInputLayer::setLayerProperty(const QString& key, const QVariant& v
 			m_camera->setProperty(keyStr, value);
 		}
 	}
-	
-	LiveLayer::setLayerProperty(key,value);
+	else
+	{
+		LiveLayer::setLayerProperty(key,value);
+	}
 
 }

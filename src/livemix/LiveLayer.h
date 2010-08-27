@@ -316,6 +316,8 @@ protected:
 			value = QVariant();
 			doubleIsPercentage = false;
 			defaultValue = QVariant();
+			stringIsFile = false;
+			fileTypeFilter = "";
 		}
 
 		QString text;
@@ -327,6 +329,8 @@ protected:
 		QVariant value;
 		bool doubleIsPercentage;
 		QVariant defaultValue;
+		bool stringIsFile;
+		QString fileTypeFilter;
 	};
 
 	QWidget * generatePropertyEditor(QObject *object, const char *property, const char *slot, PropertyEditorOptions opts = PropertyEditorOptions());
@@ -392,6 +396,30 @@ signals:
 
 private:
 	QVariant m_value;
+};
+
+class BrowseDialogLauncher : public QObject
+{
+	Q_OBJECT
+public:
+	BrowseDialogLauncher(QObject *attached, const char *slot, QVariant value);
+	
+public slots:
+	void browse();
+	
+	void setTitle(const QString&);
+	void setSettingsKey(const QString&);
+	void setFilter(const QString&);
+	
+signals:
+	void setValue(const QString&);
+
+private:
+	QObject * m_attached;
+	QVariant m_value;
+	QString m_settingsKey;
+	QString m_title;
+	QString m_filter;
 };
 
 #endif
