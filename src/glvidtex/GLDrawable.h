@@ -40,6 +40,7 @@ class GLDrawable : public QObject
 	Q_PROPERTY(QPointF insetBottomRight READ insetBottomRight WRITE setInsetBottomRight);
 	Q_PROPERTY(double alignedSizeScale READ alignedSizeScale WRITE setAlignedSizeScale);
 
+	Q_ENUMS(AnimationType);
 
 public:
 	GLDrawable(QObject *parent=0);
@@ -67,7 +68,7 @@ public:
 
 		AnimUser = 1000
 	};
-
+	
 	typedef enum AnimCondition
 	{
 		OnHide,
@@ -186,5 +187,6 @@ private:
 };
 
 bool operator==(const GLDrawable::AnimParam&a, const GLDrawable::AnimParam&b);
+Q_DECLARE_METATYPE(GLDrawable::AnimationType);
 
 #endif

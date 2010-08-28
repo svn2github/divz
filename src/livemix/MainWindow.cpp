@@ -15,10 +15,10 @@
 
 MainWindow::MainWindow()
 	: QMainWindow()
+	, m_currentLayerPropsEditor(0)
 	, m_currentScene(0)
 	, m_currentControlWidget(0)
 	, m_currentLayer(0)
-	, m_currentLayerPropsEditor(0)
 {
 
 	qRegisterMetaType<VideoSource*>("VideoSource*");
@@ -36,7 +36,8 @@ MainWindow::MainWindow()
 	createCenterPanel();
 	createRightPanel();
 
-	setupSampleScene();
+	//setupSampleScene();
+	newFile();
 
 	readSettings();
 
@@ -184,11 +185,13 @@ void MainWindow::updateLayerList()
 {
 	if(!m_currentScene)
 	{
-		qDebug() << "MainWindow::updateLayerList(): No current scene";
+		//qDebug() << "MainWindow::updateLayerList(): No current scene";
 		foreach(LiveLayer *layer, m_controlWidgetMap.keys())
 		{
 			m_layerBase->layout()->removeWidget(m_controlWidgetMap[layer]);
 			m_controlWidgetMap.remove(layer);
+			m_controlWidgetMap[layer]->deleteLater();
+			m_controlWidgetMap[layer] = 0;
 		}
 		return;
 	}
@@ -229,6 +232,8 @@ void MainWindow::updateLayerList()
 			disconnect(m_controlWidgetMap[layer], 0, this, 0);
 			m_layerBase->layout()->removeWidget(m_controlWidgetMap[layer]);
 			m_controlWidgetMap.remove(layer);
+			m_controlWidgetMap[layer]->deleteLater();
+			m_controlWidgetMap[layer] = 0;
 
 		}
 	}
@@ -258,24 +263,10 @@ void MainWindow::liveLayerClicked()
 	}
 }
 
-void MainWindow::updateExpandState()
-{
-// 	QList<QtBrowserItem *> list = m_propertyEditor->topLevelItems();
-// 	QListIterator<QtBrowserItem *> it(list);
-// 	while (it.hasNext())
-// 	{
-// 		QtBrowserItem *item = it.next();
-// 		QtProperty *prop = item->property();
-// 		m_idToExpanded[m_propertyToId[prop]] = m_propertyEditor->isExpanded(item);
-// 	}
-}
-
 void MainWindow::loadLayerProperties(LiveLayer *layer)
 {
 	m_currentLayer = layer;
-	updateExpandState();
-
-
+	
 	if (!m_currentLayer)
 	{
 		//deleteAction->setEnabled(false);
@@ -304,83 +295,6 @@ void MainWindow::loadLayerProperties(LiveLayer *layer)
 
 	m_currentLayerPropsEditor = props;
 }
-
-void MainWindow::addProperty(QtVariantProperty *property, const QString &id)
-{
-// 	if (m_idToExpanded.contains(id))
-// 		m_propertyEditor->setExpanded(item, m_idToExpanded[id]);
-}
-
-void MainWindow::valueChanged(QtProperty *property, const QVariant &value)
-{
-	if (!m_propertyToId.contains(property))
-		return;
-
-	if (!m_currentLayer)
-		return;
-
-	QString id = m_propertyToId[property];
-
-	//m_currentLayer->setInstanceProperty(id, value);
-
-// 	if (id == QLatin1String("xpos")) {
-// 		currentItem->setX(value.toDouble());
-// 	} else if (id == QLatin1String("ypos")) {
-// 		currentItem->setY(value.toDouble());
-// 	} else if (id == QLatin1String("zpos")) {
-// 		currentItem->setZ(value.toDouble());
-// 	} else if (id == QLatin1String("text")) {
-// 		if (currentItem->rtti() == QtCanvasItem::Rtti_Text) {
-// 		QtCanvasText *i = (QtCanvasText *)currentItem;
-// 		i->setText(qVariantValue<QString>(value));
-// 		}
-// 	} else if (id == QLatin1String("color")) {
-// 		if (currentItem->rtti() == QtCanvasItem::Rtti_Text) {
-// 		QtCanvasText *i = (QtCanvasText *)currentItem;
-// 		i->setColor(qVariantValue<QColor>(value));
-// 		}
-// 	} else if (id == QLatin1String("brush")) {
-// 		if (currentItem->rtti() == QtCanvasItem::Rtti_Rectangle ||
-// 			currentItem->rtti() == QtCanvasItem::Rtti_Ellipse) {
-// 		QtCanvasPolygonalItem *i = (QtCanvasPolygonalItem *)currentItem;
-// 		QBrush b = i->brush();
-// 		b.setColor(qVariantValue<QColor>(value));
-// 		i->setBrush(b);
-// 		}
-// 	} else if (id == QLatin1String("pen")) {
-// 		if (currentItem->rtti() == QtCanvasItem::Rtti_Rectangle ||
-// 			currentItem->rtti() == QtCanvasItem::Rtti_Line) {
-// 		QtCanvasPolygonalItem *i = (QtCanvasPolygonalItem *)currentItem;
-// 		QPen p = i->pen();
-// 		p.setColor(qVariantValue<QColor>(value));
-// 		i->setPen(p);
-// 		}
-// 	} else if (id == QLatin1String("font")) {
-// 		if (currentItem->rtti() == QtCanvasItem::Rtti_Text) {
-// 		QtCanvasText *i = (QtCanvasText *)currentItem;
-// 		i->setFont(qVariantValue<QFont>(value));
-// 		}
-// 	} else if (id == QLatin1String("endpoint")) {
-// 		if (currentItem->rtti() == QtCanvasItem::Rtti_Line) {
-// 		QtCanvasLine *i = (QtCanvasLine *)currentItem;
-// 		QPoint p = qVariantValue<QPoint>(value);
-// 		i->setPoints(i->startPoint().x(), i->startPoint().y(), p.x(), p.y());
-// 		}
-// 	} else if (id == QLatin1String("size")) {
-// 		if (currentItem->rtti() == QtCanvasItem::Rtti_Rectangle) {
-// 		QtCanvasRectangle *i = (QtCanvasRectangle *)currentItem;
-// 		QSize s = qVariantValue<QSize>(value);
-// 		i->setSize(s.width(), s.height());
-// 		} else if (currentItem->rtti() == QtCanvasItem::Rtti_Ellipse) {
-// 		QtCanvasEllipse *i = (QtCanvasEllipse *)currentItem;
-// 		QSize s = qVariantValue<QSize>(value);
-// 		i->setSize(s.width(), s.height());
-// 		}
-// 	}
-// 	canvas->update();
-}
-
-
 
 void MainWindow::createLeftPanel()
 {
@@ -514,25 +428,25 @@ void MainWindow::about()
 
 void MainWindow::createActions()
 {
-// 	newAct = new QAction(QIcon(":/images/new.png"), tr("&New"), this);
-// 	newAct->setShortcuts(QKeySequence::New);
-// 	newAct->setStatusTip(tr("Create a new file"));
-// 	connect(newAct, SIGNAL(triggered()), this, SLOT(newFile()));
-//
-// 	openAct = new QAction(QIcon(":/images/open.png"), tr("&Open..."), this);
-// 	openAct->setShortcuts(QKeySequence::Open);
-// 	openAct->setStatusTip(tr("Open an existing file"));
-// 	connect(openAct, SIGNAL(triggered()), this, SLOT(open()));
-//
-// 	saveAct = new QAction(QIcon(":/images/save.png"), tr("&Save"), this);
-// 	saveAct->setShortcuts(QKeySequence::Save);
-// 	saveAct->setStatusTip(tr("Save the document to disk"));
-// 	connect(saveAct, SIGNAL(triggered()), this, SLOT(save()));
-//
-// 	saveAsAct = new QAction(tr("Save &As..."), this);
-// 	saveAsAct->setShortcuts(QKeySequence::SaveAs);
-// 	saveAsAct->setStatusTip(tr("Save the document under a new name"));
-// 	connect(saveAsAct, SIGNAL(triggered()), this, SLOT(saveAs()));
+	m_newAct = new QAction(QIcon(":/images/new.png"), tr("&New"), this);
+	m_newAct->setShortcuts(QKeySequence::New);
+	m_newAct->setStatusTip(tr("Create a new file"));
+	connect(m_newAct, SIGNAL(triggered()), this, SLOT(newFile()));
+
+	m_openAct = new QAction(QIcon(":/images/open.png"), tr("&Open..."), this);
+	m_openAct->setShortcuts(QKeySequence::Open);
+	m_openAct->setStatusTip(tr("Open an existing file"));
+	connect(m_openAct, SIGNAL(triggered()), this, SLOT(open()));
+
+	m_saveAct = new QAction(QIcon(":/images/save.png"), tr("&Save"), this);
+	m_saveAct->setShortcuts(QKeySequence::Save);
+	m_saveAct->setStatusTip(tr("Save the document to disk"));
+	connect(m_saveAct, SIGNAL(triggered()), this, SLOT(save()));
+
+	m_saveAsAct = new QAction(tr("Save &As..."), this);
+	m_saveAsAct->setShortcuts(QKeySequence::SaveAs);
+	m_saveAsAct->setStatusTip(tr("Save the document under a new name"));
+	connect(m_saveAsAct, SIGNAL(triggered()), this, SLOT(saveAs()));
 
 	//! [0]
 	m_exitAct = new QAction(tr("E&xit"), this);
@@ -556,32 +470,31 @@ void MainWindow::createActions()
 	m_aboutQtAct->setStatusTip(tr("Show the Qt library's About box"));
 	connect(m_aboutQtAct, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
 
-// 	m_actNewCamera= new QAction(tr("New Camera"), this);
-// 	connect(m_actNewCamera, SIGNAL(triggered()), this, SLOT(newCamera()));
-//
-// 	m_actNewVideo = new QAction(tr("New Video"), this);
-// 	connect(m_actNewVideo, SIGNAL(triggered()), this, SLOT(newVideo()));
-//
-// 	m_actNewMjpeg = new QAction(tr("New MJPEG"), this);
-// 	connect(m_actNewMjpeg, SIGNAL(triggered()), this, SLOT(newMjpeg()));
-//
-// 	m_actNewDViz = new QAction(tr("New DViz"), this);
-// 	connect(m_actNewDViz, SIGNAL(triggered()), this, SLOT(newDViz()));
-//
-// 	m_actNewOutput = new QAction(tr("New Output"), this);
-// 	connect(m_actNewOutput, SIGNAL(triggered()), this, SLOT(newOutput()));
+ 	
+	m_newCameraLayerAct = new QAction(QIcon("../data/stock-panel-screenshot.png"), tr("New Camera Layer"), this);
+	connect(m_newCameraLayerAct, SIGNAL(triggered()), this, SLOT(newCameraLayer()));
+	
+	m_newVideoLayerAct = new QAction(QIcon("../data/stock-panel-multimedia.png"), tr("New Video Layer"), this);
+	connect(m_newVideoLayerAct, SIGNAL(triggered()), this, SLOT(newVideoLayer()));
+		
+	m_newTextLayerAct = new QAction(QIcon("../data/stock-font.png"), tr("New Text Layer"), this);
+	connect(m_newTextLayerAct, SIGNAL(triggered()), this, SLOT(newTextLayer()));
+	
+	m_newImageLayerAct = new QAction(QIcon("../data/stock-insert-image.png"), tr("New Image Layer"), this);
+	connect(m_newImageLayerAct, SIGNAL(triggered()), this, SLOT(newImageLayer()));
+
 }
 
 void MainWindow::createMenus()
 {
 	m_fileMenu = menuBar()->addMenu(tr("&File"));
 
-// 	fileMenu->addAction(m_actNewCamera);
-// 	fileMenu->addAction(m_actNewVideo);
-// 	fileMenu->addAction(m_actNewMjpeg);
-// 	fileMenu->addAction(m_actNewDViz);
-// 	fileMenu->addAction(m_actNewOutput);
-// 	fileMenu->addSeparator();
+	m_fileMenu->addAction(m_newAct);
+	m_fileMenu->addAction(m_openAct);
+	m_fileMenu->addAction(m_saveAct);
+	m_fileMenu->addAction(m_saveAsAct);
+ 	
+ 	m_fileMenu->addSeparator();
 
 	m_fileMenu->addAction(m_exitAct);
 
@@ -595,7 +508,11 @@ void MainWindow::createMenus()
 void MainWindow::createToolBars()
 {
 	m_fileToolBar = addToolBar(tr("Layer Toolbar"));
-// 	m_fileToolBar->addAction();
+	
+	m_fileToolBar->addAction(m_newCameraLayerAct);
+	m_fileToolBar->addAction(m_newVideoLayerAct);
+	m_fileToolBar->addAction(m_newTextLayerAct);
+	m_fileToolBar->addAction(m_newImageLayerAct);
 }
 
 void MainWindow::createStatusBar()
@@ -625,3 +542,145 @@ void MainWindow::writeSettings()
 	settings.setValue("mainwindow/main_splitter",m_mainSplitter->saveState());
 	settings.setValue("mainwindow/left_splitter",m_leftSplitter->saveState());
 }
+
+void MainWindow::newFile()
+{
+	LiveScene *old = m_currentScene;
+	
+	LiveScene *scene = new LiveScene();
+	loadLiveScene(scene);
+	
+	if(old)
+		old->deleteLater();
+		
+	setWindowTitle("New File - LiveMix");
+}
+
+void MainWindow::open()
+{
+	QString curFile = m_currentFile;
+	if(curFile.trimmed().isEmpty())
+		curFile = QSettings().value("last-livemix-file","").toString();
+
+	QString fileName = QFileDialog::getOpenFileName(this, tr("Select LiveMix File"), curFile, tr("LiveMix File (*.livemix *.lmx);;Any File (*.*)"));
+	if(fileName != "")
+	{
+		QSettings().setValue("last-livemix-file",fileName);
+		if(QFile(fileName).exists())
+		{
+			QFile file(fileName);
+			if (!file.open(QIODevice::ReadOnly)) 
+			{
+				QMessageBox::critical(0, tr("Loading error"), tr("Unable to read file %1").arg(fileName));
+				return;
+			}
+
+			m_currentFile = fileName;
+			
+			QByteArray array = file.readAll();
+			
+			LiveScene *old = m_currentScene;
+	
+			LiveScene *scene = new LiveScene();
+			scene->fromByteArray(array);
+			
+			loadLiveScene(scene);
+			
+			if(old)
+				old->deleteLater();
+				
+			setWindowTitle(QString("%1 - LiveMix").arg(QFileInfo(fileName).fileName()));
+		}
+		else
+		{
+			QMessageBox::critical(this,tr("File Does Not Exist"),tr("Sorry, but the file you chose does not exist. Please try again."));
+		}
+	}
+	
+}
+
+void MainWindow::save(const QString& filename)
+{
+	if(!m_currentScene)
+	{
+		QMessageBox::warning(0, tr("Save Error"), tr("No current scene."));
+		return;
+	}
+		
+	QString tmp = filename;
+	if(tmp.isEmpty())
+		tmp = m_currentFile;
+	else
+		m_currentFile = tmp;
+		
+	if(tmp.isEmpty())
+	{
+		saveAs();
+		return;
+	}
+	
+	QFile file(tmp);
+	// Open file
+	if (!file.open(QIODevice::WriteOnly))
+	{
+		QMessageBox::warning(0, tr("File Error"), tr("Error saving writing file '%1'").arg(tmp));
+		//throw 0;
+		return;
+	}
+	
+	//QByteArray array;
+	//QDataStream stream(&array, QIODevice::WriteOnly);
+	//QVariantMap map;
+	
+	file.write(m_currentScene->toByteArray());
+	file.close();
+}
+
+void MainWindow::saveAs()
+{
+	QString curFile = m_currentFile;
+	if(curFile.trimmed().isEmpty())
+		curFile = QSettings().value("last-livemix-file","").toString();
+
+	QString fileName = QFileDialog::getSaveFileName(this, tr("Choose a Filename"), curFile, tr("LiveMix File (*.livemix *.lmx);;Any File (*.*)"));
+	if(fileName != "")
+	{
+		//QFileInfo info(fileName);
+		//if(info.suffix().isEmpty())
+			//fileName += ".dviz";
+		QSettings().setValue("last-livemix-file",fileName);
+		save(fileName);
+		//return true;
+	}
+
+	//return false;
+}
+
+void MainWindow::addLayer(LiveLayer *layer)
+{
+	if(!m_currentScene)
+		m_currentScene = new LiveScene();
+	m_currentScene->addLayer(layer);
+	//loadLiveScene(m_currentScene);
+}
+
+void MainWindow::newCameraLayer()
+{
+	addLayer(new LiveVideoInputLayer());
+}
+
+void MainWindow::newVideoLayer()
+{
+	addLayer(new LiveVideoFileLayer());
+}
+
+void MainWindow::newTextLayer()
+{
+	addLayer(new LiveTextLayer());
+}
+
+void MainWindow::newImageLayer()
+{
+	addLayer(new LiveStaticSourceLayer());
+}
+

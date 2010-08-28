@@ -12,7 +12,14 @@ LiveTextLayer::LiveTextLayer(QObject *parent)
 	: LiveLayer(parent)
 	, m_textSource(0)
 {
+	m_textSource = new TextVideoSource();
+	m_textSource->start();
+	//source->setHtml("<img src='me2.jpg'><b>TextVideoSource</b>");
+	m_textSource->setHtml("?");
+	m_textSource->changeFontSize(40);
 
+	QSizeF size = m_textSource->findNaturalSize();
+	m_textSource->setTextWidth((int)size.width());
 }
 
 LiveTextLayer::~LiveTextLayer()
@@ -42,19 +49,8 @@ GLDrawable* LiveTextLayer::createDrawable(GLWidget *context)
 // 	drawable->addHideAnimation(GLDrawable::AnimZoom);
 
 
-	QSizeF size;
+	//QSizeF size;
 
-	if(!m_textSource)
-	{
-		m_textSource = new TextVideoSource();
-		m_textSource->start();
-		//source->setHtml("<img src='me2.jpg'><b>TextVideoSource</b>");
-		m_textSource->setHtml("?");
-		m_textSource->changeFontSize(40);
-
-		size = m_textSource->findNaturalSize();
-		m_textSource->setTextWidth((int)size.width());
-	}
 	//qDebug() << "New html: "<<source->html();
 	//source->setImage(QImage("/opt/qtsdk-2010.02/qt/examples/opengl/pbuffers/cubelogo.png"));
 

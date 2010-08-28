@@ -16,7 +16,7 @@ class LiveVideoFileLayer : public LiveVideoLayer
 	Q_PROPERTY(QString file READ file WRITE setFile);
 	
 public:
-	LiveVideoFileLayer(QObject *parent=0);
+	Q_INVOKABLE LiveVideoFileLayer(QObject *parent=0);
 	~LiveVideoFileLayer();
 	
 	virtual QString typeName() { return "Video File"; }

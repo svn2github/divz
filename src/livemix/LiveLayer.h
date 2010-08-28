@@ -190,6 +190,10 @@ public:
 	// Default impl iterates thru m_props and sets up appropriate editors
 	// Caller takes ownership of widget and deletes when done
 	virtual QWidget *createLayerPropertyEditors();
+	
+	virtual void fromByteArray(QByteArray&);
+	virtual QByteArray toByteArray();
+	
 
 	// Translated from a perl function I wrote to do basically
 	// the same thing for an ERP project a few years back.
@@ -378,6 +382,8 @@ private:
 
 	QFormLayout * m_geomLayout;
 	QHash<QString,QWidget*> m_propWidget;
+	
+	QHash<QString,bool> m_propSetLock;
 };
 
 class ObjectValueSetter : public QObject

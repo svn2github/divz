@@ -4,6 +4,7 @@
 #include "../glvidtex/GLDrawable.h"
 #include "../glvidtex/GLWidget.h"
 
+QHash<QString, const QMetaObject*> LiveScene::s_metaObjects;
 
 ///////////////////////
 LiveScene::LiveScene(QObject *parent)
@@ -109,4 +110,84 @@ void LiveScene::layerVisibilityChanged(bool flag)
 	if(!foundVisible)
 		detachGLWidget(false);
 
+}
+
+void LiveScene::fromByteArray(QByteArray& array)
+{
+	QDataStream stream(&array, QIODevice::ReadOnly);
+	QVariantMap map;
+	stream >> map;
+	
+	//qDebug() << "LiveScene::fromByteArray(): "<<map;
+	if(map.isEmpty())
+	{
+		qDebug() << "Error: LiveScene::fromByteArray(): Map is empty, unable to load scene.";
+		return;
+	}
+	
+	qDeleteAll(m_layers);
+	m_layers.clear();
+	
+	QVariantList layers = map["layers"].toList();
+	foreach(QVariant layer, layers)
+	{
+		QVariantMap meta = layer.toMap();
+		QString className = meta["class"].toString();
+		const QMetaObject *metaObject = LiveScene::metaObjectForClass(className);
+		if(!metaObject)
+		{
+			qDebug() << "Error: LiveScene::fromByteArray(): Unable to create layer of type:"<<className;
+			continue;
+		}
+		
+		qDebug() << "LiveScene::fromByteArray(): Debug: metaObject classname: "<<metaObject->className()<<", asked for:"<<className;
+		
+		QObject *instance = metaObject->newInstance(Q_ARG(QObject*,0));
+		if(!instance)
+		{
+			qDebug() << "Error: LiveScene::fromByteArray(): Creation of "<<className<<" failed.";
+			continue;
+		}
+		
+		
+		LiveLayer *layer = dynamic_cast<LiveLayer*>(instance);
+		if(!layer)
+		{
+			qDebug() << "Error: LiveScene::fromByteArray(): Object created for type "<<className<<" does not inherit from LiveLayer.";
+			continue;
+		}
+		
+		QByteArray bytes = meta["data"].toByteArray();
+		layer->fromByteArray(bytes);
+		
+		addLayer(layer);
+	}
+}
+
+
+
+QByteArray LiveScene::toByteArray()
+{
+	QByteArray array;
+	QDataStream stream(&array, QIODevice::WriteOnly);
+	QVariantMap map;
+	
+	QVariantList list;
+	if(m_layers.isEmpty())
+		return array;
+		
+	foreach(LiveLayer *layer, m_layers)
+	{
+		QVariantMap meta;
+		meta["class"] = layer->metaObject()->className();
+		meta["data"]  = layer->toByteArray();
+		
+		list.append(meta);
+	}
+	
+	map["layers"] = list;
+	
+	stream << map;
+	
+	return array;
 }

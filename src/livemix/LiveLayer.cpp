@@ -1094,6 +1094,13 @@ void LiveLayer::setLayerProperty(const QString& propertyId, const QVariant& valu
 {
 	if(!m_props.contains(propertyId))
 		return;
+		
+	// Prevent recursions that may be triggered by a property setter in turn calling setLayerProperty(), 
+	// which would just loop back and call that property setter again for that property - recursion.
+	if(m_propSetLock[propertyId])
+		return;
+		
+	m_propSetLock[propertyId] = true;
 
 // 	qDebug() << "LiveLayer::setLayerProperty: id:"<<propertyId<<", value:"<<value;
 
@@ -1104,7 +1111,10 @@ void LiveLayer::setLayerProperty(const QString& propertyId, const QVariant& valu
 		layerPropertyWasChanged(propertyId, value, oldValue);
 
 	if(m_drawables.isEmpty())
+	{
+		m_propSetLock[propertyId] = false;
 		return;
+	}
 
 	if(propertyId.indexOf("fadeIn")    > -1 ||
 	   propertyId.indexOf("fadeOut")   > -1 ||
@@ -1129,6 +1139,8 @@ void LiveLayer::setLayerProperty(const QString& propertyId, const QVariant& valu
 			setProperty(qPrintable(propertyId), value);
 		}
 	}
+	
+	m_propSetLock[propertyId] = false;
 }
 
 
@@ -1257,4 +1269,62 @@ void LiveLayer::applyLayerPropertiesToObject(QObject *object, QStringList list)
 		}
 	}
 
+}
+
+
+void LiveLayer::fromByteArray(QByteArray& array)
+{
+	QDataStream stream(&array, QIODevice::ReadOnly);
+	QVariantMap map;
+	stream >> map;
+	
+	//qDebug() << "LiveScene::fromByteArray(): "<<map;
+	if(map.isEmpty())
+	{
+		qDebug() << "Error: LiveLayer::fromByteArray(): Map is empty, unable to load scene.";
+		return;
+	}
+	
+	// So we dont have to engineer our own method of tracking
+	// properties, just assume all inherited objects delcare the relevant
+	// properties using Q_PROPERTY macro
+	const QMetaObject *metaobject = metaObject();
+	int count = metaobject->propertyCount();
+	for (int i=0; i<count; ++i)
+	{
+		QMetaProperty metaproperty = metaobject->property(i);
+		const char *name = metaproperty.name();
+		QVariant value = map[name];
+		//qDebug() << "AbstractItem::clone():"<<itemName()<<": prop:"<<name<<", value:"<<value;
+		if(value.isValid())
+			setProperty(name,value);
+		else
+			qDebug() << "LiveLayer::loadByteArray: Unable to load property for "<<name<<", got invalid property from map";
+	}
+}
+
+QByteArray LiveLayer::toByteArray()
+{
+	QByteArray array;
+	QDataStream stream(&array, QIODevice::WriteOnly);
+	QVariantMap map;
+	
+	// So we dont have to engineer our own method of tracking
+	// properties, just assume all inherited objects delcare the relevant
+	// properties using Q_PROPERTY macro
+	const QMetaObject *metaobject = metaObject();
+	int count = metaobject->propertyCount();
+	for (int i=0; i<count; ++i)
+	{
+		QMetaProperty metaproperty = metaobject->property(i);
+		const char *name = metaproperty.name();
+		QVariant value = property(name);
+		//qDebug() << "LiveScene::toByteArray():"<<itemName()<<": prop:"<<name<<", value:"<<value;
+		//item->setProperty(name,value);
+		map[name] = value;
+	}
+	
+	stream << map;
+	
+	return array;
 }

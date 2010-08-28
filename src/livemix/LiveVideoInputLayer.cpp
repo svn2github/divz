@@ -6,7 +6,27 @@
 
 LiveVideoInputLayer::LiveVideoInputLayer(QObject *parent)
 	: LiveVideoLayer(parent)
+	, m_camera(0)
 {
+	#ifdef Q_OS_WIN
+		QString defaultCamera = "vfwcap://0";
+	#else
+		QString defaultCamera = "/dev/video0";
+	#endif
+
+	qDebug() << "LiveVideoInputLayer::initDrawable: Using default camera:"<<defaultCamera;
+
+	CameraThread *source = CameraThread::threadForCamera(defaultCamera);
+	if(source)
+	{
+		source->setFps(30);
+		source->enableRawFrames(true);
+		
+		setCamera(source);
+		
+		m_props["deinterlace"].value = source->deinterlace();
+	}
+
 }
 
 LiveVideoInputLayer::~LiveVideoInputLayer()
@@ -27,30 +47,13 @@ void LiveVideoInputLayer::initDrawable(GLDrawable *drawable, bool isFirst)
 
 	if(isFirst)
 	{
-		#ifdef Q_OS_WIN
-			QString defaultCamera = "vfwcap://0";
-		#else
-			QString defaultCamera = "/dev/video0";
-		#endif
-	
-		qDebug() << "LiveVideoInputLayer::initDrawable: Using default camera:"<<defaultCamera;
-	
-		CameraThread *source = CameraThread::threadForCamera(defaultCamera);
-		if(source)
-		{
-			source->setFps(30);
-			source->enableRawFrames(true);
-			
-			setCamera(source);
-			
-			m_props["deinterlace"].value = source->deinterlace();
-		}
 	}
 	else
 	{
-		if(m_camera)
-			setCamera(m_camera);
 	}
+	
+	if(m_camera)
+		setCamera(m_camera);
 }
 
 void LiveVideoInputLayer::setCamera(CameraThread *camera)
@@ -89,23 +92,30 @@ QWidget * LiveVideoInputLayer::createLayerPropertyEditors()
 	{
 		QStringList rawDevices = CameraThread::enumerateDevices();
 		
-		QStringList devices;
-		int counter = 1;
-		int idx = 0;
-		foreach(QString dev, rawDevices)
+		if(rawDevices.isEmpty())
 		{
-			if(m_camera && m_camera->inputName() == dev)
-				idx = counter-1;
-			devices << QString("Camera # %1").arg(counter++);
+			gridLayout->addWidget(new QLabel("<b>No video input devices found.</b>"), row, 0, 1, 2);
 		}
-		
-		QComboBox *cameraBox = new QComboBox();
-		cameraBox->addItems(devices);
-		cameraBox->setCurrentIndex(idx);
-		connect(cameraBox, SIGNAL(activated(int)), this, SLOT(selectCameraIdx(int)));
-		
-		gridLayout->addWidget(new QLabel("Camera:"), row, 0, 1, 2);
-		gridLayout->addWidget(cameraBox, row, 1, 1, 2);
+		else
+		{
+			QStringList devices;
+			int counter = 1;
+			int idx = 0;
+			foreach(QString dev, rawDevices)
+			{
+				if(m_camera && m_camera->inputName() == dev)
+					idx = counter-1;
+				devices << QString("Camera # %1").arg(counter++);
+			}
+			
+			QComboBox *cameraBox = new QComboBox();
+			cameraBox->addItems(devices);
+			cameraBox->setCurrentIndex(idx);
+			connect(cameraBox, SIGNAL(activated(int)), this, SLOT(selectCameraIdx(int)));
+			
+			gridLayout->addWidget(new QLabel("Camera:"), row, 0);
+			gridLayout->addWidget(cameraBox, row, 1);
+		}
 	}
 	
 	row++;

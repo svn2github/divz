@@ -15,7 +15,7 @@ class LiveTextLayer  : public LiveLayer
 	Q_PROPERTY(QString text READ text WRITE setText);
 	
 public:
-	LiveTextLayer(QObject *parent=0);
+	Q_INVOKABLE LiveTextLayer(QObject *parent=0);
 	~LiveTextLayer();
 	
 	virtual QString typeName() { return "Text Layer"; }

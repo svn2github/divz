@@ -34,7 +34,17 @@ private slots:
 
 	void liveLayerClicked();
 	
-	void valueChanged(QtProperty *property, const QVariant &value);
+	void newFile();
+	void open();
+	void save(const QString& file="");
+	void saveAs();
+	
+	void newCameraLayer();
+	void newVideoLayer();
+	void newTextLayer();
+	void newImageLayer();
+	
+	void addLayer(LiveLayer *);
 
 private:
 	void createActions();
@@ -64,6 +74,16 @@ private:
 	QAction *m_aboutAct;
 	QAction *m_aboutQtAct;
 	
+	QAction *m_openAct;
+	QAction *m_newAct;
+	QAction *m_saveAct;
+	QAction *m_saveAsAct;
+	
+	QAction *m_newCameraLayerAct;
+	QAction *m_newVideoLayerAct;
+	QAction *m_newTextLayerAct;
+	QAction *m_newImageLayerAct;
+	
 	
 	QSplitter *m_mainSplitter;
 	QSplitter *m_leftSplitter;
@@ -90,16 +110,8 @@ private:
 	LayerControlWidget * m_currentControlWidget;
 	LiveLayer *m_currentLayer;
 	
-
-	void addProperty(QtVariantProperty *property, const QString &id);
-    	void updateExpandState();
-    	
-    	class QtVariantPropertyManager *m_variantManager;
-	class QtTreePropertyBrowser *m_propertyEditor;
-    
-	QMap<QtProperty *, QString> m_propertyToId;
-	QMap<QString, QtVariantProperty *> m_idToProperty;
-	QMap<QString, bool> m_idToExpanded;
+	QString m_currentFile;
+	
 
 };
 

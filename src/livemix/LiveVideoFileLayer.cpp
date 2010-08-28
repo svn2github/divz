@@ -7,6 +7,7 @@
 
 LiveVideoFileLayer::LiveVideoFileLayer(QObject *parent)
 	: LiveVideoLayer(parent)
+	, m_video(0)
 {
 }
 
@@ -43,7 +44,7 @@ void LiveVideoFileLayer::setVideo(VideoThread *vid)
 	qDebug() << "LiveVideoFileLayer::setVideo: "<<vid;
 	setVideoSource(vid);
 	m_video = vid;
-	setInstanceName(vid->videoFile());
+	setInstanceName(QFileInfo(vid->videoFile()).baseName());
 }
 
 QWidget * LiveVideoFileLayer::createLayerPropertyEditors()

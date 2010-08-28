@@ -16,7 +16,7 @@ class LiveVideoInputLayer : public LiveVideoLayer
 	Q_PROPERTY(bool deinterlace READ deinterlace WRITE setDeinterlace);
 	
 public:
-	LiveVideoInputLayer(QObject *parent=0);
+	Q_INVOKABLE LiveVideoInputLayer(QObject *parent=0);
 	~LiveVideoInputLayer();
 	
 	virtual QString typeName() { return "Video Input"; }

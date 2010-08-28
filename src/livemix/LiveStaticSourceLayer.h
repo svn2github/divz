@@ -17,7 +17,7 @@ class LiveStaticSourceLayer : public LiveLayer
 	Q_PROPERTY(QString file READ file WRITE setFile)
 	
 public:
-	LiveStaticSourceLayer(QObject *parent=0);
+	Q_INVOKABLE LiveStaticSourceLayer(QObject *parent=0);
 	~LiveStaticSourceLayer();
 	
 	virtual QString typeName() { return "Static Source"; }
