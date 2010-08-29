@@ -200,6 +200,7 @@ void MainWindow::setCurrentLayer(LiveLayer *layer)
 
 	if(layer)
 	{
+		m_currentLayer = layer;
 // 		qDebug() << "MainWindow::liveLayerClicked(): adding clicked layer to editor";
 		loadLayerProperties(m_currentLayer);
 		m_layerViewer->addDrawable(m_currentLayer->drawable(m_layerViewer));
