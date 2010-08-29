@@ -12,12 +12,12 @@
 #include "../glvidtex/StaticVideoSource.h"
 #include "LayerControlWidget.h"
 #include "LiveVideoFileLayer.h"
+#include "LiveSceneListModel.h"
 
 MainWindow::MainWindow()
 	: QMainWindow()
 	, m_currentLayerPropsEditor(0)
 	, m_currentScene(0)
-	, m_currentControlWidget(0)
 	, m_currentLayer(0)
 {
 
@@ -157,6 +157,8 @@ void MainWindow::loadLiveScene(LiveScene *scene)
 
 	// attach to main viewer
 	scene->attachGLWidget(m_mainViewer);
+	
+	m_sceneModel->setLiveScene(scene);
 
 	// attach to main output
 	/// TODO main output
@@ -183,83 +185,24 @@ void MainWindow::removeCurrentScene()
 
 void MainWindow::updateLayerList()
 {
-	if(!m_currentScene)
-	{
-		//qDebug() << "MainWindow::updateLayerList(): No current scene";
-		foreach(LiveLayer *layer, m_controlWidgetMap.keys())
-		{
-			m_layerBase->layout()->removeWidget(m_controlWidgetMap[layer]);
-			m_controlWidgetMap.remove(layer);
-			m_controlWidgetMap[layer]->deleteLater();
-			m_controlWidgetMap[layer] = 0;
-		}
-		return;
-	}
+	//QList<LiveLayer*> layers = m_currentScene->layerList();
+	//m_sceneModel->setLiveScene(m_currentScene);
 
-	QList<LiveLayer*> layers = m_currentScene->layerList();
-
-	/// TODO resort layer list on screen by Z order
-
-	QList<LiveLayer*> foundLayer;
-
-	foreach(LiveLayer *layer, layers)
-	{
-		if(m_controlWidgetMap.contains(layer))
-		{
-// 			qDebug() << "MainWindow::updateLayerList(): control map has layer already"<<layer;
-			foundLayer.append(layer);
-		}
-		else
-		{
-			LayerControlWidget *widget = new LayerControlWidget(layer);
-			m_layerBase->layout()->addWidget(widget);
-			widget->show();
-
-// 			qDebug() << "MainWindow::updateLayerList(): adding control widget for layer"<<layer<<", widget:"<<widget;
-
-			m_controlWidgetMap[layer] = widget;
-			foundLayer.append(layer);
-
-			connect(widget, SIGNAL(clicked()), this, SLOT(liveLayerClicked()));
-		}
-	}
-
-	foreach(LiveLayer *layer, m_controlWidgetMap.keys())
-	{
-		if(!foundLayer.contains(layer))
-		{
-// 			qDebug() << "MainWindow::updateLayerList(): layer not found, removing control widget"<<layer;
-			disconnect(m_controlWidgetMap[layer], 0, this, 0);
-			m_layerBase->layout()->removeWidget(m_controlWidgetMap[layer]);
-			m_controlWidgetMap.remove(layer);
-			m_controlWidgetMap[layer]->deleteLater();
-			m_controlWidgetMap[layer] = 0;
-
-		}
-	}
 }
 
-void MainWindow::liveLayerClicked()
+void MainWindow::setCurrentLayer(LiveLayer *layer)
 {
-	LayerControlWidget *widget = dynamic_cast<LayerControlWidget*>(sender());
-	if(m_currentControlWidget == widget)
-		return;
-
-// 	qDebug() << "MainWindow::liveLayerClicked(): m_layerViewer:"<<m_layerViewer;
-	if(m_currentControlWidget)
+	if(m_currentLayer)
 	{
 // 		qDebug() << "MainWindow::liveLayerClicked(): removing old layer from editor";
-		m_currentControlWidget->setIsCurrentWidget(false);
-		m_layerViewer->removeDrawable(m_currentControlWidget->layer()->drawable(m_layerViewer));
+		m_layerViewer->removeDrawable(m_currentLayer->drawable(m_layerViewer));
 	}
 
-	if(widget)
+	if(layer)
 	{
 // 		qDebug() << "MainWindow::liveLayerClicked(): adding clicked layer to editor";
-		widget->setIsCurrentWidget(true);
-		loadLayerProperties(widget->layer());
-		m_layerViewer->addDrawable(widget->layer()->drawable(m_layerViewer));
-		m_currentControlWidget = widget;
+		loadLayerProperties(m_currentLayer);
+		m_layerViewer->addDrawable(m_currentLayer->drawable(m_layerViewer));
 	}
 }
 
@@ -369,21 +312,55 @@ void MainWindow::createLeftPanel()
 
 void MainWindow::createCenterPanel()
 {
-	m_layerArea = new QScrollArea(m_mainSplitter);
-	m_layerArea->setWidgetResizable(true);
+// 	m_layerArea = new QScrollArea(m_mainSplitter);
+// 	m_layerArea->setWidgetResizable(true);
+// 
+//  	QWidget *baseParent = new QWidget(m_layerArea);
+//  	QVBoxLayout *parentLayout = new QVBoxLayout(baseParent);
+//  	parentLayout->setContentsMargins(0,0,0,0);
 
- 	QWidget *baseParent = new QWidget(m_layerArea);
- 	QVBoxLayout *parentLayout = new QVBoxLayout(baseParent);
- 	parentLayout->setContentsMargins(0,0,0,0);
+//  	m_layerBase = new QWidget(baseParent);
+//  	(void)new QVBoxLayout(m_layerBase);
+//  	parentLayout->addWidget(m_layerBase);
+//  	parentLayout->addStretch(1);
+//  	//m_layerArea->setWidget(m_layerBase);
+//  	//m_mainSplitter->addWidget(m_layerArea);
+//  	m_layerArea->setWidget(baseParent);
 
- 	m_layerBase = new QWidget(baseParent);
- 	(void)new QVBoxLayout(m_layerBase);
- 	parentLayout->addWidget(m_layerBase);
- 	parentLayout->addStretch(1);
- 	//m_layerArea->setWidget(m_layerBase);
- 	//m_mainSplitter->addWidget(m_layerArea);
- 	m_layerArea->setWidget(baseParent);
- 	m_mainSplitter->addWidget(m_layerArea);
+	m_layerListView = new QListView(m_mainSplitter);
+	m_layerListView->setViewMode(QListView::ListMode);
+	//m_layerListView->setViewMode(QListView::IconMode);
+	m_layerListView->setMovement(QListView::Free);
+	m_layerListView->setWordWrap(true);
+	m_layerListView->setSelectionMode(QAbstractItemView::ExtendedSelection);
+	m_layerListView->setDragEnabled(true);
+	m_layerListView->setAcceptDrops(true);
+	m_layerListView->setDropIndicatorShown(true);
+
+	connect(m_layerListView, SIGNAL(activated(const QModelIndex &)), this, SLOT(layerSelected(const QModelIndex &)));
+	connect(m_layerListView, SIGNAL(clicked(const QModelIndex &)),   this, SLOT(layerSelected(const QModelIndex &)));
+
+	// deleting old selection model per http://doc.trolltech.com/4.5/qabstractitemview.html#setModel
+	QItemSelectionModel *m = m_layerListView->selectionModel();
+
+	m_sceneModel = new LiveSceneListModel();
+	m_layerListView->setModel(m_sceneModel);
+	connect(m_sceneModel, SIGNAL(repaintList()), this, SLOT(repaintLayerList()));
+	connect(m_sceneModel, SIGNAL(layersDropped(QList<Slide*>)), this, SLOT(layersDropped(QList<LiveLayer*>)));
+
+	if(m)
+	{
+		delete m;
+		m=0;
+	}
+
+	QItemSelectionModel *currentSelectionModel = m_layerListView->selectionModel();
+	connect(currentSelectionModel, SIGNAL(currentChanged(const QModelIndex &, const QModelIndex &)), this, SLOT(currentChanged(const QModelIndex &, const QModelIndex &)));
+	
+	//parentLyout->addWidget(m_layerListView);
+	
+	
+ 	m_mainSplitter->addWidget(m_layerListView);
 
 // 	QWidget *baseParent = new QWidget(m_mainSplitter);
 // 	QVBoxLayout *parentLayout = new QVBoxLayout(baseParent);
@@ -400,6 +377,36 @@ void MainWindow::createCenterPanel()
 // 	m_mainSplitter->addWidget(baseParent);
 
 }
+
+void MainWindow::layerSelected(const QModelIndex &idx)
+{
+	LiveLayer *layer = m_sceneModel->itemFromIndex(idx);
+	//qDebug() << "SlideEditorWindow::slideSelected(): selected slide#:"<<s->slideNumber();
+	if(m_currentLayer != layer)
+		setCurrentLayer(layer);
+}
+
+
+void MainWindow::currentChanged(const QModelIndex &idx,const QModelIndex &)
+{
+	if(idx.isValid())
+		layerSelected(idx);
+}
+
+void MainWindow::repaintLayerList()
+{
+	m_layerListView->clearFocus();
+	m_layerListView->setFocus();
+	m_layerListView->update();
+}
+
+
+void MainWindow::layersDropped(QList<LiveLayer*> list)
+{
+	QModelIndex idx = m_sceneModel->indexForItem(list.first());
+	m_layerListView->setCurrentIndex(idx);
+}
+
 
 void MainWindow::createRightPanel()
 {

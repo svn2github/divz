@@ -32,7 +32,7 @@ private slots:
 	void about();
 	void updateLayerList();
 
-	void liveLayerClicked();
+	void setCurrentLayer(LiveLayer *layer);
 	
 	void newFile();
 	void open();
@@ -45,6 +45,11 @@ private slots:
 	void newImageLayer();
 	
 	void addLayer(LiveLayer *);
+	
+	void layerSelected(const QModelIndex &);
+	void currentChanged(const QModelIndex &idx,const QModelIndex &);
+	void repaintLayerList();
+	void layersDropped(QList<LiveLayer*>);
 
 private:
 	void createActions();
@@ -107,10 +112,12 @@ private:
 	LiveScene *m_currentScene;
 	
 	QHash<LiveLayer*, LayerControlWidget*> m_controlWidgetMap;
-	LayerControlWidget * m_currentControlWidget;
 	LiveLayer *m_currentLayer;
 	
 	QString m_currentFile;
+	
+	QListView * m_layerListView;
+	class LiveSceneListModel *m_sceneModel;
 	
 
 };

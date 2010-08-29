@@ -50,7 +50,8 @@ HEADERS += CameraThread.h \
 	ExpandableWidget.h \
 	LayerControlWidget.h \
 	LiveVideoLayer.h \
-	LiveVideoFileLayer.h
+	LiveVideoFileLayer.h \
+	LiveSceneListModel.h
 	
 SOURCES += main.cpp \
 	CameraThread.cpp \
@@ -83,7 +84,8 @@ SOURCES += main.cpp \
 	ExpandableWidget.cpp \
 	LayerControlWidget.cpp \ 
 	LiveVideoLayer.cpp \
-	LiveVideoFileLayer.cpp
+	LiveVideoFileLayer.cpp \
+	LiveSceneListModel.cpp
 
 
 unix {
