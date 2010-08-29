@@ -242,92 +242,6 @@ void MainWindow::loadLayerProperties(LiveLayer *layer)
 
 void MainWindow::createLeftPanel()
 {
-	m_leftSplitter = new QSplitter(m_mainSplitter);
-	m_leftSplitter->setOrientation(Qt::Vertical);
-
-	m_layerViewer = new GLWidget(m_leftSplitter);
-	m_layerViewer->setProperty("isEditorWidget",true);
-
-	QSize size = m_layerViewer->viewport().size().toSize();
-	size /= 2.5;
-	qDebug() << "MainWindow::createLeftPanel(): size:"<<size;
-	QImage bgImage(size, QImage::Format_ARGB32_Premultiplied);
-	QBrush bgTexture(QPixmap("squares2.png"));
-	QPainter bgPainter(&bgImage);
-	bgPainter.fillRect(bgImage.rect(), bgTexture);
-	bgPainter.end();
-
-	StaticVideoSource *source = new StaticVideoSource();
-	source->setImage(bgImage);
-	//source->setImage(QImage("squares2.png"));
-	source->start();
-
-	GLVideoDrawable *drawable = new GLVideoDrawable(m_layerViewer);
-	drawable->setVideoSource(source);
-	drawable->setRect(m_layerViewer->viewport());
-	drawable->setZIndex(-100);
-	drawable->setObjectName("StaticBackground");
-	drawable->show();
-
-	m_layerViewer->addDrawable(drawable);
-
-
-	m_leftSplitter->addWidget(m_layerViewer);
-
- 	m_controlArea = new QScrollArea(m_leftSplitter);
- 	m_controlArea->setWidgetResizable(true);
- 	m_controlBase = new QWidget(m_controlArea);
-
- 	QVBoxLayout *layout = new QVBoxLayout(m_controlBase);
- 	layout->setContentsMargins(0,0,0,0);
-
- 	m_controlArea->setWidget(m_controlBase);
- 	m_leftSplitter->addWidget(m_controlArea);
-
-// 	m_variantManager = new QtVariantPropertyManager(this);
-//
-// 	connect(m_variantManager, SIGNAL(valueChanged(QtProperty *, const QVariant &)),
-// 			      this, SLOT(valueChanged(QtProperty *, const QVariant &)));
-//
-// 	QtVariantEditorFactory *variantFactory = new QtVariantEditorFactory(this);
-
-// 	canvas = new QtCanvas(800, 600);
-// 	canvasView = new CanvasView(canvas, this);
-// 	setCentralWidget(canvasView);
-
-// 	QDockWidget *dock = new QDockWidget(this);
-// 	addDockWidget(Qt::RightDockWidgetArea, dock);
-
-// 	m_propertyEditor = new QtTreePropertyBrowser(m_leftSplitter);
-// 	m_propertyEditor->setFactoryForManager(m_variantManager, variantFactory);
-//	m_leftSplitter->addWidget(m_propertyEditor);
-
-// 	m_currentItem = 0;
-
-// 	connect(canvasView, SIGNAL(itemClicked(QtCanvasItem *)),
-// 		this, SLOT(itemClicked(QtCanvasItem *)));
-// 	connect(canvasView, SIGNAL(itemMoved(QtCanvasItem *)),
-// 		this, SLOT(itemMoved(QtCanvasItem *)));
-
-}
-
-void MainWindow::createCenterPanel()
-{
-// 	m_layerArea = new QScrollArea(m_mainSplitter);
-// 	m_layerArea->setWidgetResizable(true);
-// 
-//  	QWidget *baseParent = new QWidget(m_layerArea);
-//  	QVBoxLayout *parentLayout = new QVBoxLayout(baseParent);
-//  	parentLayout->setContentsMargins(0,0,0,0);
-
-//  	m_layerBase = new QWidget(baseParent);
-//  	(void)new QVBoxLayout(m_layerBase);
-//  	parentLayout->addWidget(m_layerBase);
-//  	parentLayout->addStretch(1);
-//  	//m_layerArea->setWidget(m_layerBase);
-//  	//m_mainSplitter->addWidget(m_layerArea);
-//  	m_layerArea->setWidget(baseParent);
-
 	m_layerListView = new QListView(m_mainSplitter);
 	m_layerListView->setViewMode(QListView::ListMode);
 	//m_layerListView->setViewMode(QListView::IconMode);
@@ -362,20 +276,81 @@ void MainWindow::createCenterPanel()
 	
 	
  	m_mainSplitter->addWidget(m_layerListView);
+ 	
+ 	
 
-// 	QWidget *baseParent = new QWidget(m_mainSplitter);
-// 	QVBoxLayout *parentLayout = new QVBoxLayout(baseParent);
-// 	parentLayout->setContentsMargins(0,0,0,0);
+// 	m_variantManager = new QtVariantPropertyManager(this);
 //
-// 	m_layerBase = new QWidget(baseParent);
-// 	QVBoxLayout *layout = new QVBoxLayout(m_layerBase);
-// 	layout->setContentsMargins(2,2,2,2);
+// 	connect(m_variantManager, SIGNAL(valueChanged(QtProperty *, const QVariant &)),
+// 			      this, SLOT(valueChanged(QtProperty *, const QVariant &)));
 //
-// 	parentLayout->addWidget(m_layerBase);
-// 	parentLayout->addStretch(1);
-// 	//m_layerArea->setWidget(m_layerBase);
-// 	//m_mainSplitter->addWidget(m_layerArea);
-// 	m_mainSplitter->addWidget(baseParent);
+// 	QtVariantEditorFactory *variantFactory = new QtVariantEditorFactory(this);
+
+// 	canvas = new QtCanvas(800, 600);
+// 	canvasView = new CanvasView(canvas, this);
+// 	setCentralWidget(canvasView);
+
+// 	QDockWidget *dock = new QDockWidget(this);
+// 	addDockWidget(Qt::RightDockWidgetArea, dock);
+
+// 	m_propertyEditor = new QtTreePropertyBrowser(m_editSplitter);
+// 	m_propertyEditor->setFactoryForManager(m_variantManager, variantFactory);
+//	m_editSplitter->addWidget(m_propertyEditor);
+
+// 	m_currentItem = 0;
+
+// 	connect(canvasView, SIGNAL(itemClicked(QtCanvasItem *)),
+// 		this, SLOT(itemClicked(QtCanvasItem *)));
+// 	connect(canvasView, SIGNAL(itemMoved(QtCanvasItem *)),
+// 		this, SLOT(itemMoved(QtCanvasItem *)));
+
+}
+
+void MainWindow::createCenterPanel()
+{
+	m_editSplitter = new QSplitter(m_mainSplitter);
+	m_editSplitter->setOrientation(Qt::Vertical);
+
+	m_layerViewer = new GLWidget(m_editSplitter);
+	m_layerViewer->setProperty("isEditorWidget",true);
+
+	QSize size = m_layerViewer->viewport().size().toSize();
+	size /= 2.5;
+	qDebug() << "MainWindow::createLeftPanel(): size:"<<size;
+	QImage bgImage(size, QImage::Format_ARGB32_Premultiplied);
+	QBrush bgTexture(QPixmap("squares2.png"));
+	QPainter bgPainter(&bgImage);
+	bgPainter.fillRect(bgImage.rect(), bgTexture);
+	bgPainter.end();
+
+	StaticVideoSource *source = new StaticVideoSource();
+	source->setImage(bgImage);
+	//source->setImage(QImage("squares2.png"));
+	source->start();
+
+	GLVideoDrawable *drawable = new GLVideoDrawable(m_layerViewer);
+	drawable->setVideoSource(source);
+	drawable->setRect(m_layerViewer->viewport());
+	drawable->setZIndex(-100);
+	drawable->setObjectName("StaticBackground");
+	drawable->show();
+
+	m_layerViewer->addDrawable(drawable);
+	
+	
+	m_editSplitter->addWidget(m_layerViewer);
+	
+	m_controlArea = new QScrollArea(m_editSplitter);
+	m_controlArea->setWidgetResizable(true);
+	m_controlBase = new QWidget(m_controlArea);
+	
+	QVBoxLayout *layout = new QVBoxLayout(m_controlBase);
+	layout->setContentsMargins(0,0,0,0);
+	
+	m_controlArea->setWidget(m_controlBase);
+	m_editSplitter->addWidget(m_controlArea);
+	
+	m_mainSplitter->addWidget(m_editSplitter);
 
 }
 
@@ -411,14 +386,17 @@ void MainWindow::layersDropped(QList<LiveLayer*> list)
 
 void MainWindow::createRightPanel()
 {
+	m_previewSplitter = new QSplitter(m_mainSplitter);
+	m_previewSplitter->setOrientation(Qt::Vertical);
+	/*
 	QWidget *base = new QWidget(m_mainSplitter);
-	QVBoxLayout *layout = new QVBoxLayout(base);
+	QVBoxLayout *layout = new QVBoxLayout(base);*/
 
-	m_mainViewer = new GLWidget(base);
-	layout->addWidget(m_mainViewer);
-	layout->addStretch(1);
+	m_mainViewer = new GLWidget(m_previewSplitter);
+	m_previewSplitter->addWidget(m_mainViewer);
+	//layout->addStretch(1);
 
-	m_mainSplitter->addWidget(base);
+	m_mainSplitter->addWidget(m_previewSplitter);
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
@@ -537,7 +515,7 @@ void MainWindow::readSettings()
 	resize(size);
 
 	m_mainSplitter->restoreState(settings.value("mainwindow/main_splitter").toByteArray());
-	m_leftSplitter->restoreState(settings.value("mainwindow/left_splitter").toByteArray());
+	m_editSplitter->restoreState(settings.value("mainwindow/left_splitter").toByteArray());
 
 }
 
@@ -548,7 +526,7 @@ void MainWindow::writeSettings()
 	settings.setValue("mainwindow/size", size());
 
 	settings.setValue("mainwindow/main_splitter",m_mainSplitter->saveState());
-	settings.setValue("mainwindow/left_splitter",m_leftSplitter->saveState());
+	settings.setValue("mainwindow/left_splitter",m_editSplitter->saveState());
 }
 
 void MainWindow::newFile()

@@ -241,7 +241,7 @@ QMimeData * LiveSceneListModel::mimeData(const QModelIndexList & list) const
 
 bool livelayer_num_compare(LiveLayer *a, LiveLayer *b)
 {
-	return (a && b) ? a->zIndex() < b->zIndex() : true;
+	return (a && b) ? a->zIndex() > b->zIndex() : true;
 }
 
 void LiveSceneListModel::setLiveScene(LiveScene *scene)

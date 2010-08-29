@@ -91,7 +91,8 @@ private:
 	
 	
 	QSplitter *m_mainSplitter;
-	QSplitter *m_leftSplitter;
+	QSplitter *m_editSplitter;
+	QSplitter *m_previewSplitter;
 	QWidget *m_leftPanel;
 	QWidget *m_centerPanel;
 	QWidget *m_rightPanel;

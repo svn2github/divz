@@ -69,9 +69,14 @@ QWidget * LiveStaticSourceLayer::createLayerPropertyEditors()
 	PropertyEditorOptions opts;
 	opts.stringIsFile = true;
 	opts.fileTypeFilter = tr("Image Files (*.png *.jpg *.bmp *.svg *.xpm *.gif);;Any File (*.*)");
-	formLayout->addRow(tr("&Image:"), generatePropertyEditor(this, "file", SLOT(setFile(const QString&))));
+	formLayout->addRow(tr("&Image:"), generatePropertyEditor(this, "file", SLOT(setFile(const QString&)), opts));
 
 	groupContent->setExpandedIfNoDefault(true);
+	
+	/////////////////////////////////////////
+	
+	QWidget *basics =  LiveLayer::createLayerPropertyEditors();
+	blay->addWidget(basics);
 	
 	return base;
 }

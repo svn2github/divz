@@ -110,7 +110,7 @@ void LiveVideoFileLayer::setFile(const QString& file)
 	
 	m_props["file"] = file;
 	
-	
+	setInstanceName(info.fileName());
 }
 
 void LiveVideoFileLayer::setLayerProperty(const QString& key, const QVariant& value)

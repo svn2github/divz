@@ -562,7 +562,18 @@ void VideoThread::readFrame()
 						//emit frameReady((int)(pts_delay*1000));
 						
 						//enqueue(VideoFrame(m_frame,frameDelay));
-						enqueue(VideoFrame(frame.convertToFormat(QImage::Format_ARGB32),pts_delay*1000));
+						//enqueue(VideoFrame(frame.convertToFormat(QImage::Format_ARGB32),pts_delay*1000));
+						VideoFrame vid(pts_delay*1000);
+						QImage rgb32img = frame.convertToFormat(QImage::Format_ARGB32);
+						vid.isRaw = true;
+						vid.bufferType = VideoFrame::BUFFER_BYTEARRAY;
+						vid.pixelFormat = QVideoFrame::Format_ARGB32;
+						vid.setSize(m_frame_size);
+						vid.byteArray.resize(rgb32img.byteCount());
+						const uchar * bits = rgb32img.bits();
+						vid.byteArray.append((const char*)bits, rgb32img.byteCount());
+						enqueue(vid);
+						
 						//enqueue(VideoFrame(frame,pts_delay*1000));
 // 						VideoFrame vid(pts_delay*1000);
 // 						vid.isRaw = true;

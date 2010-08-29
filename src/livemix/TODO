@@ -46,55 +46,10 @@ before nap I was doing:
 		- doesnt seem to sort correctly if it does load
 also check on signals not connecting msgs on console
 
+----
+still leaking memory in VideoThread and no image showing
+still crashes when creating a camera
+	seems to crash in GLDrawable when calling scanLine on the video frame .image
+		should be a raw frame - why is it using .image??
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+memory corruption around edges of text rects - whats up with that??
