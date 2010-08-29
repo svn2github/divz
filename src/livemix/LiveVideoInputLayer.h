@@ -21,7 +21,7 @@ public:
 	
 	virtual QString typeName() { return "Video Input"; }
 	
-	bool deinterlace() { return layerPropertyValue("deinterlace").toBool(); }
+	bool deinterlace() { return layerProperty("deinterlace").toBool(); }
 
 public slots:
 	// Set a property (emits instancePropertyChanged)

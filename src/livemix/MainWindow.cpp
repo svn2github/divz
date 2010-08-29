@@ -347,7 +347,7 @@ void MainWindow::createCenterPanel()
 	m_sceneModel = new LiveSceneListModel();
 	m_layerListView->setModel(m_sceneModel);
 	connect(m_sceneModel, SIGNAL(repaintList()), this, SLOT(repaintLayerList()));
-	connect(m_sceneModel, SIGNAL(layersDropped(QList<Slide*>)), this, SLOT(layersDropped(QList<LiveLayer*>)));
+	connect(m_sceneModel, SIGNAL(layersDropped(QList<LiveLayer*>)), this, SLOT(layersDropped(QList<LiveLayer*>)));
 
 	if(m)
 	{

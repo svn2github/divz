@@ -24,7 +24,7 @@ LiveVideoInputLayer::LiveVideoInputLayer(QObject *parent)
 		
 		setCamera(source);
 		
-		m_props["deinterlace"].value = source->deinterlace();
+		m_props["deinterlace"] = source->deinterlace();
 	}
 
 }
@@ -45,13 +45,6 @@ void LiveVideoInputLayer::initDrawable(GLDrawable *drawable, bool isFirst)
 	//qDebug() << "LiveVideoInputLayer::setupDrawable: drawable:"<<drawable<<", copyFrom:"<<copyFrom;
 	LiveVideoLayer::initDrawable(drawable, isFirst);
 
-	if(isFirst)
-	{
-	}
-	else
-	{
-	}
-	
 	if(m_camera)
 		setCamera(m_camera);
 }

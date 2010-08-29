@@ -6,7 +6,18 @@
 
 LiveVideoLayer::LiveVideoLayer(QObject *parent)
 	: LiveLayer(parent)
+	, m_source(0)
 {
+	setBrightness(0);
+	setContrast(0);
+	setHue(0);
+	setSaturation(0);
+	setFlipHorizontal(false);
+	setFlipVertical(false);
+	setCropTopLeft(QPointF(0,0));
+	setCropBottomRight(QPointF(0,0));
+	setTextureOffset(QPointF(0,0));
+	setAspectRatioMode(Qt::KeepAspectRatio);
 }
 
 LiveVideoLayer::~LiveVideoLayer()
@@ -24,7 +35,6 @@ GLDrawable *LiveVideoLayer::createDrawable(GLWidget *widget)
 	drawable->addShowAnimation(GLDrawable::AnimFade);
 	drawable->addHideAnimation(GLDrawable::AnimFade);
 
-	
 	connect(this, SIGNAL(videoSourceChanged(VideoSource*)), drawable, SLOT(setVideoSource(VideoSource*)));
 	
 	return drawable;
@@ -36,40 +46,33 @@ void LiveVideoLayer::initDrawable(GLDrawable *drawable, bool isFirst)
 	//qDebug() << "LiveVideoLayer::setupDrawable: drawable:"<<drawable<<", copyFrom:"<<copyFrom;
 	LiveLayer::initDrawable(drawable, isFirst);
 	
-	GLVideoDrawable *vid = dynamic_cast<GLVideoDrawable*>(drawable);
-	if(!vid)
-		return;
-		
+// 	GLVideoDrawable *vid = dynamic_cast<GLVideoDrawable*>(drawable);
+// 	if(!vid)
+// 		return;
+// 		
+
 	QStringList props = QStringList()
-			<< "brightness"
-			<< "contrast"
-			<< "hue"
-			<< "saturation"
-			<< "flipHorizontal"
-			<< "flipVertical"
-			<< "cropTopLeft"
-			<< "cropBottomRight"
-			<< "textureOffset"
-			<< "aspectRatioMode";
-			
-	if(isFirst)
-	{
-		loadLayerPropertiesFromObject(drawable, props);
-	}
-	else
-	{
-		applyLayerPropertiesToObject(drawable, props);
-		if(m_source)
-			setVideoSource(m_source);
-			
+		<< "brightness"
+		<< "contrast"
+		<< "hue"
+		<< "saturation"
+		<< "flipHorizontal"
+		<< "flipVertical"
+		<< "cropTopLeft"
+		<< "cropBottomRight"
+		<< "textureOffset"
+		<< "aspectRatioMode";
 		
-	}
+	applyLayerPropertiesToObject(drawable, props);
+	if(m_source)
+		setVideoSource(m_source);
 }
 
-void LiveVideoLayer::setVideoSource(VideoSource *m_source)
+void LiveVideoLayer::setVideoSource(VideoSource *source)
 {
-	qDebug() << "LiveVideoLayer::setVideoSource: "<<m_source;
-	emit videoSourceChanged(m_source);
+// 	if(source)
+// 		qDebug() << "LiveVideoLayer::setVideoSource: "<<source;
+	emit videoSourceChanged(source);
 	m_source = m_source;
 }
 
@@ -151,7 +154,7 @@ QWidget * LiveVideoLayer::createLayerPropertyEditors()
 		
 	QComboBox *modeListBox = new QComboBox();
 	modeListBox->addItems(modeList);
-	modeListBox->setCurrentIndex(m_props["aspectRatioMode"].value.toInt());
+	modeListBox->setCurrentIndex(m_props["aspectRatioMode"].toInt());
 	connect(modeListBox, SIGNAL(activated(int)), this, SLOT(setAspectRatioMode(int)));
 	
 	row++;
@@ -180,7 +183,7 @@ void LiveVideoLayer::setLayerProperty(const QString& key, const QVariant& value)
 {
 	if(key == "alphaMaskFile" || key == "overlayMaskFile")
 	{
-		m_props[key].value = value;
+		m_props[key] = value;
 
 		QImage image(value.toString());
 		if(image.isNull() && !value.toString().isEmpty())

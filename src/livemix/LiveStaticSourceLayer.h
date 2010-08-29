@@ -25,7 +25,7 @@ public:
 // 	// Used by MainWindow to setup the property editor for this layer
 // 	virtual QList<QtPropertyEditorIdPair> createPropertyEditors(QtVariantPropertyManager *manager);
 
-	QString file() { return layerPropertyValue("file").toString(); }
+	QString file() { return layerProperty("file").toString(); }
 
 public slots:
 // 	// Set a property (emits instancePropertyChanged)
@@ -34,15 +34,14 @@ public slots:
 	void setFile(const QString&);
 
 protected:
-/*	virtual GLDrawable *createDrawable(GLWidget *);
-	virtual void setupInstanceProperties(GLDrawable*);*/
+
 	
 	virtual GLDrawable *createDrawable(GLWidget *widget);
 	// If its the first drawable, setup with defaults
 	// Otherwise, copy from 'copyFrom'
 	virtual void initDrawable(GLDrawable *drawable, bool isFirstDrawable = false);
 	
-// 	GLVideoDrawable *videoDrawable() { return m_videoDrawable; }
+	virtual QWidget *createLayerPropertyEditors();
 	
 private:
 // 	GLVideoDrawable *m_videoDrawable;

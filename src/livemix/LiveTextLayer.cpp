@@ -4,6 +4,7 @@
 #include "../glvidtex/GLVideoDrawable.h"
 #include "../glvidtex/TextVideoSource.h"
 
+#include "ExpandableWidget.h"
 #include <qtcolorpicker.h>
 
 ///////////////////////
@@ -14,12 +15,22 @@ LiveTextLayer::LiveTextLayer(QObject *parent)
 {
 	m_textSource = new TextVideoSource();
 	m_textSource->start();
-	//source->setHtml("<img src='me2.jpg'><b>TextVideoSource</b>");
 	m_textSource->setHtml("?");
 	m_textSource->changeFontSize(40);
 
 	QSizeF size = m_textSource->findNaturalSize();
 	m_textSource->setTextWidth((int)size.width());
+	
+	setText("<b>Hello, World</b>");
+	
+// 	setOutlineEnabled(true);
+// 	setOutlinePen(QPen(1.5,Qt::black));
+// 	setFillEnabled(true);
+// 	setFullBrush(Qt::black);
+// 	setShadowEnabled(true);
+// 	setShadowBlurRadius(16);
+// 	setShadowOffsetX(0);
+// 	setShadowOffsetY(0);
 }
 
 LiveTextLayer::~LiveTextLayer()
@@ -30,55 +41,16 @@ GLDrawable* LiveTextLayer::createDrawable(GLWidget *context)
 {
 	// add secondary frame
 	// add text overlay frame
- 	GLVideoDrawable *drawable = new GLVideoDrawable(context);
- 	drawable->setObjectName("LiveTextLayer:drawable");
-//
-//
-// 	m_textSource = new TextVideoSource();
-// 	m_textSource->start();
-//
-// 	drawable->setVideoSource(m_textSource);
-//
-// 	drawable->setZIndex(9999);
-// 	drawable->setObjectName("Text");
-//
-// 	drawable->addShowAnimation(GLDrawable::AnimFade);
-// 	drawable->addShowAnimation(GLDrawable::AnimSlideTop,2500).curve = QEasingCurve::OutElastic;
-//
-// 	drawable->addHideAnimation(GLDrawable::AnimFade);
-// 	drawable->addHideAnimation(GLDrawable::AnimZoom);
-
-
-	//QSizeF size;
-
-	//qDebug() << "New html: "<<source->html();
-	//source->setImage(QImage("/opt/qtsdk-2010.02/qt/examples/opengl/pbuffers/cubelogo.png"));
+	GLVideoDrawable *drawable = new GLVideoDrawable(context);
 
 	drawable->setVideoSource(m_textSource);
-	//drawable->setRect(glw->viewport());
-	//qDebug() << "Text Size: "<<size;
-	/*
-	QRectF viewport = context->viewport();
-
-	drawable->setRect(QRectF(
-		qMax(viewport.right()  - size.width()  , 0.0),
-		qMax(viewport.bottom() - size.height() , 0.0),
-		size.width(),
-		size.height()));
-	*/
+	
 	drawable->setZIndex(1);
-	//drawable->setOpacity(0.5);
 	drawable->setObjectName("Text");
 
 	drawable->addShowAnimation(GLDrawable::AnimFade);
-	//drawable->addShowAnimation(GLDrawable::AnimSlideTop,2500).curve = QEasingCurve::OutElastic;
-	//drawable->addShowAnimation(GLDrawable::AnimSlideLeft,2000).curve = QEasingCurve::OutElastic;
-
- 	drawable->addHideAnimation(GLDrawable::AnimFade);
- 	//drawable->addHideAnimation(GLDrawable::AnimZoom);
-
-
-
+	drawable->addHideAnimation(GLDrawable::AnimFade);
+ 
 	return drawable;
 }
 
@@ -87,34 +59,6 @@ GLDrawable* LiveTextLayer::createDrawable(GLWidget *context)
 void LiveTextLayer::initDrawable(GLDrawable *drawable, bool isFirstDrawable)
 {
 	LiveLayer::initDrawable(drawable, isFirstDrawable);
-
-	QStringList props = QStringList()
-		<< "outlineEnabled"
-		<< "outlinePen"
-		<< "fillEnabled"
-		<< "fillBrush"
-		<< "shadowEnabled"
-		<< "shadowBrush"
-		<< "shadowBlurRadius"
-		<< "shadowOffsetX"
-		<< "shadowOffsetY";
-
-
-	if(isFirstDrawable)
-	{
-		loadLayerPropertiesFromObject(drawable, props);
-
-		setText("<b>Welcome to LiveMix</b>");
-		m_props["text"] = LiveLayerProperty("text",text());
-	}
-	else
-	{
-		applyLayerPropertiesToObject(drawable, props);
-
-		// Not needed if not first drawable
-		//setText(text());
-	}
-
 
 }
 
@@ -126,9 +70,11 @@ void LiveTextLayer::setText(const QString& text)
 	QSize size = m_textSource->findNaturalSize();
 	m_textSource->setTextWidth(size.width());
 
-	m_props["text"].value = text;
+	m_props["text"] = text;
 	
 	setInstanceName(text);
+	
+	qDebug() << "LiveTextLayer::setText(): text:"<<text;
 }
 
 
@@ -168,10 +114,7 @@ void LiveTextLayer::setLayerProperty(const QString& key, const QVariant& value)
 	}
 
 	LiveLayer::setLayerProperty(key,value);
-
 }
-
-#include "ExpandableWidget.h"
 
 QWidget * LiveTextLayer::createLayerPropertyEditors()
 {

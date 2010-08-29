@@ -13,7 +13,7 @@ LiveVideoFileLayer::LiveVideoFileLayer(QObject *parent)
 
 LiveVideoFileLayer::~LiveVideoFileLayer()
 {
-	// TODO close camera
+	// TODO close decoder thread
 }
 
 GLDrawable *LiveVideoFileLayer::createDrawable(GLWidget *widget)
@@ -41,6 +41,9 @@ void LiveVideoFileLayer::initDrawable(GLDrawable *drawable, bool isFirst)
 
 void LiveVideoFileLayer::setVideo(VideoThread *vid)
 {
+	if(vid == m_video)
+		return;
+		
 	qDebug() << "LiveVideoFileLayer::setVideo: "<<vid;
 	setVideoSource(vid);
 	m_video = vid;
@@ -81,6 +84,9 @@ QWidget * LiveVideoFileLayer::createLayerPropertyEditors()
 
 void LiveVideoFileLayer::setFile(const QString& file)
 {
+	if(m_video && m_video->videoFile() == file)
+		return;
+		 
 	QFileInfo info(file);
 	
 	if(!info.exists())
@@ -102,7 +108,7 @@ void LiveVideoFileLayer::setFile(const QString& file)
 	m_video->play();
 	setVideo(m_video);
 	
-	m_props["file"].value = file;
+	m_props["file"] = file;
 	
 	
 }

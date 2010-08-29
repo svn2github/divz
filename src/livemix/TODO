@@ -33,4 +33,68 @@ Structure:
 	
 	
 	
-	
+---------------------------------
+
+
+before nap I was doing:
+	- loading three.livemix doesnt:
+		- restore alignment setting
+		- restore in/out advanced settings
+		- start playing video even tho file was set
+		- leaks memory, probably due to video
+	- confirm if it loads Z value correctly
+		- doesnt seem to sort correctly if it does load
+also check on signals not connecting msgs on console
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

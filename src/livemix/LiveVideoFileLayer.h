@@ -21,7 +21,7 @@ public:
 	
 	virtual QString typeName() { return "Video File"; }
 	
-	QString file() { return layerPropertyValue("file").toString(); }
+	QString file() { return layerProperty("file").toString(); }
 
 public slots:
 	// Set a property (emits instancePropertyChanged)

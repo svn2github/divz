@@ -37,9 +37,6 @@
 
 #include "ExpandableWidget.h"
 
-QDataStream &operator<<(QDataStream &out, const GLDrawable::AnimationType &myObj) { out << (int)myObj; return out; }
-QDataStream &operator>>(QDataStream &in, GLDrawable::AnimationType &myObj) { int x; in >> x; myObj = (GLDrawable::AnimationType)x; return in;} 
- 
 int main(int argc, char **argv)
 {
 /*	#ifdef Q_WS_X11
@@ -58,10 +55,7 @@ int main(int argc, char **argv)
 	LiveScene_Register(LiveVideoInputLayer);
 	LiveScene_Register(LiveVideoFileLayer);
 	
-	qRegisterMetaType<GLDrawable::AnimationType>("GLDrawable::AnimationType");
-	qRegisterMetaTypeStreamOperators<GLDrawable::AnimationType>("GLDrawable::AnimationType");
-	
-// 	QScrollArea *area = new QScrollArea;
+//	QScrollArea *area = new QScrollArea;
 // 	area->setWindowTitle("Expandable Widget Demo");
 // 	area->setWidgetResizable(true);
 // 	

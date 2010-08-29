@@ -264,10 +264,14 @@ void LiveSceneListModel::setLiveScene(LiveScene *scene)
 	
 	if(scene) // != g)
 	{
-		connect(scene, SIGNAL(layerPropertyChanged(const QString&, const QVariant&, const QVariant&)),this,SLOT(layerPropertyChanged(const QString&, const QVariant&, const QVariant&)));
 		connect(scene, SIGNAL(layerAdded(LiveLayer*)), this, SLOT(layerAdded(LiveLayer*)));
 		connect(scene, SIGNAL(layerRemoved(LiveLayer*)), this, SLOT(layerRemoved(LiveLayer*)));
 		connect(scene, SIGNAL(destroyed(QObject*)), this, SLOT(releaseLiveScene()));
+		
+		foreach(LiveLayer *layer, scene->layerList()) 
+			connect(layer, SIGNAL(layerPropertyChanged(const QString&, const QVariant&, const QVariant&)),
+				this,    SLOT(layerPropertyChanged(const QString&, const QVariant&, const QVariant&)));
+		
 	}
 	
 	m_scene = scene;
@@ -326,8 +330,10 @@ void LiveSceneListModel::layerPropertyChanged(const QString& /*propertyId*/, con
 	markLayerDirty(dynamic_cast<LiveLayer*>(sender()));
 }
 
-void LiveSceneListModel::layerRemoved(LiveLayer */*layer*/)
+void LiveSceneListModel::layerRemoved(LiveLayer *layer)
 {
+	disconnect(layer, 0, this, 0);
+	
 	int sz = m_scene->layerList().size();
 	beginRemoveRows(QModelIndex(),0,sz+1); // hack - yes, I know
 	
@@ -336,8 +342,11 @@ void LiveSceneListModel::layerRemoved(LiveLayer */*layer*/)
 	endRemoveRows();
 }
 
-void LiveSceneListModel::layerAdded(LiveLayer */*layer*/)
+void LiveSceneListModel::layerAdded(LiveLayer *layer)
 {
+	connect(layer, SIGNAL(layerPropertyChanged(const QString&, const QVariant&, const QVariant&)),
+		this,    SLOT(layerPropertyChanged(const QString&, const QVariant&, const QVariant&)));
+			
 	int sz = m_scene->layerList().size();
 	beginInsertRows(QModelIndex(),sz-1,sz);
 	
@@ -439,7 +448,7 @@ QVariant LiveSceneListModel::data(const QModelIndex &index, int role) const
 		//qDebug() << "LiveSceneListModel::data: VALID:"<<index.row();
 		
 		LiveLayer *layer = m_sortedLayers.at(index.row());
-		return QString("<b>%1</b>\n%2")
+		return QString("%1\n(%2)")
 			.arg(layer->instanceName())
 			.arg(layer->typeName());
 		//QString("Slide %1").arg(slide->slideNumber()+1) +
@@ -449,7 +458,9 @@ QVariant LiveSceneListModel::data(const QModelIndex &index, int role) const
 	else if(Qt::CheckStateRole == role)
 	{
 		LiveLayer *layer = m_sortedLayers.at(index.row());
-		return layer->isVisible();
+		return layer->isVisible() ? 
+			Qt::Checked :
+			Qt::Unchecked;
 	}
 // 	else if(Qt::DecorationRole == role)
 // 	{
@@ -497,7 +508,7 @@ bool LiveSceneListModel::setData(const QModelIndex &index, const QVariant & valu
 	if(role == Qt::CheckStateRole)
 	{
 		LiveLayer *layer = m_sortedLayers.at(index.row());
-		qDebug() << "LiveSceneListModel::setData: index:"<<index<<", value:"<<value; 
+		//qDebug() << "LiveSceneListModel::setData: index:"<<index<<", value:"<<value; 
 		if(value.isValid() && !value.isNull())
 		{
 			//slide->setSlideName(value.toString());

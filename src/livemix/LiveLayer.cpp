@@ -322,21 +322,6 @@ void ColorEditorWidget::bValueChanged(int b)
 
 //////////////////////////////////////////////////////////////////////////////
 
-LiveLayerProperty::LiveLayerProperty(
-		const QString&  _id,
-		const QVariant& _value,
-		const QString&  _title,
-		double _min,
-		double _max)
-	: id(_id)
-	, title(_title.isEmpty() ? LiveLayer::guessTitle(_id) : _title)
-	, value(_value)
-	, min(_min)
-	, max(_max)
-{}
-
-//////////////////////////////////////////////////////////////////////////////
-
 // Translated from a perl function I wrote to do basically
 // the same thing for an ERP project a few years back.
 QString LiveLayer::guessTitle(QString field)
@@ -368,6 +353,28 @@ QString LiveLayer::guessTitle(QString field)
 LiveLayer::LiveLayer(QObject *parent)
 	: QObject(parent)
 {
+	m_props["rect"] = QRectF();
+	m_props["zIndex"] = 0.0;
+	m_props["opacity"] = 1.0;
+	m_props["showFullScreen"] = true;
+	m_props["alignment"] = 0;
+	m_props["insetTopLeft"] = QPointF(0,0);
+	m_props["insetBottomRight"] = QPointF(0,0);
+	m_props["alignedSizeScale"] = 1.0;
+	
+	m_props["fadeIn"] = 1;
+	m_props["fadeInLength"] = 300;
+
+	m_props["fadeOut"] = 1;
+	m_props["fadeOutLength"] = 300;
+
+	m_props["showAnimationType"] = GLDrawable::AnimNone;
+	m_props["showAnimationLength"] = 2500;
+	m_props["showAnimationCurve"] = QEasingCurve::OutElastic;
+
+	m_props["hideAnimationType"] = GLDrawable::AnimNone;
+	m_props["hideAnimationLength"] = 300;
+	m_props["hideAnimationCurve"] = QEasingCurve::Linear;
 }
 
 LiveLayer::~LiveLayer()
@@ -897,12 +904,12 @@ QWidget * LiveLayer::createLayerPropertyEditors()
 
 void LiveLayer::setShowAnim(int x)
 {
-	setShowAnimationType((GLDrawable::AnimationType)(x == 0 ? x : x + 1));
+	setShowAnimationType(x == 0 ? x : x + 1);
 }
 
 void LiveLayer::setHideAnim(int x)
 {
-	setHideAnimationType((GLDrawable::AnimationType)(x == 0 ? x : x + 1));
+	setHideAnimationType(x == 0 ? x : x + 1);
 }
 
 void LiveLayer::setShowAsType(const QString& text)
@@ -1092,8 +1099,8 @@ void LiveLayer::setTransparency(int o)		{ setLayerProperty("opacity", (100.0-(do
 // for basic properties, but for some custom ones you might have to intercept it.
 void LiveLayer::setLayerProperty(const QString& propertyId, const QVariant& value)
 {
-	if(!m_props.contains(propertyId))
-		return;
+	//if(!m_props.contains(propertyId))
+	//	return;
 		
 	// Prevent recursions that may be triggered by a property setter in turn calling setLayerProperty(), 
 	// which would just loop back and call that property setter again for that property - recursion.
@@ -1104,8 +1111,8 @@ void LiveLayer::setLayerProperty(const QString& propertyId, const QVariant& valu
 
 // 	qDebug() << "LiveLayer::setLayerProperty: id:"<<propertyId<<", value:"<<value;
 
-	QVariant oldValue = m_props[propertyId].value;
-	m_props[propertyId].value = value;
+	QVariant oldValue = m_props[propertyId];
+	m_props[propertyId] = value;
 
 	if(value != oldValue)
 		layerPropertyWasChanged(propertyId, value, oldValue);
@@ -1156,21 +1163,21 @@ void LiveLayer::applyAnimationProperties(GLDrawable *drawable)
 {
 	drawable->resetAllAnimations();
 
-	if(m_props["fadeIn"].value.toBool())
-		drawable->addShowAnimation(GLDrawable::AnimFade,m_props["fadeInLength"].value.toInt());
+	if(m_props["fadeIn"].toBool())
+		drawable->addShowAnimation(GLDrawable::AnimFade,m_props["fadeInLength"].toInt());
 
-	if(m_props["fadeOut"].value.toBool())
-		drawable->addHideAnimation(GLDrawable::AnimFade,m_props["fadeOutLength"].value.toInt());
+	if(m_props["fadeOut"].toBool())
+		drawable->addHideAnimation(GLDrawable::AnimFade,m_props["fadeOutLength"].toInt());
 
 	GLDrawable::AnimationType type;
 
-	type = (GLDrawable::AnimationType)m_props["showAnimationType"].value.toInt();
+	type = (GLDrawable::AnimationType)m_props["showAnimationType"].toInt();
 	if(type != GLDrawable::AnimNone)
-		drawable->addShowAnimation(type,m_props["showAnimationLength"].value.toInt()).curve = (QEasingCurve::Type)m_props["showAnimationCurve"].value.toInt();
+		drawable->addShowAnimation(type,m_props["showAnimationLength"].toInt()).curve = (QEasingCurve::Type)m_props["showAnimationCurve"].toInt();
 
-	type = (GLDrawable::AnimationType)m_props["hideAnimationType"].value.toInt();
+	type = (GLDrawable::AnimationType)m_props["hideAnimationType"].toInt();
 	if(type != GLDrawable::AnimNone)
-		drawable->addHideAnimation(type,m_props["hideAnimationLength"].value.toInt()).curve = (QEasingCurve::Type)m_props["hideAnimationCurve"].value.toInt();
+		drawable->addHideAnimation(type,m_props["hideAnimationLength"].toInt()).curve = (QEasingCurve::Type)m_props["hideAnimationCurve"].toInt();
 }
 
 void LiveLayer::setInstanceName(const QString& name)
@@ -1195,7 +1202,7 @@ GLDrawable *LiveLayer::createDrawable(GLWidget */*widget*/)
 
 // If its the first drawable, setup with defaults and load m_props[] with appros values
 // If not first drawable, load drawable with values from m_props[]
-void LiveLayer::initDrawable(GLDrawable *drawable, bool isFirstDrawable)
+void LiveLayer::initDrawable(GLDrawable *drawable, bool /*isFirstDrawable*/)
 {
 // 	qDebug() << "LiveLayer::initDrawable: drawable:"<<drawable<<", copyFrom:"<<copyFrom;
 
@@ -1208,34 +1215,11 @@ void LiveLayer::initDrawable(GLDrawable *drawable, bool isFirstDrawable)
 			<< "insetTopLeft"
 			<< "insetBottomRight"
 			<< "alignedSizeScale";
+			
+	applyLayerPropertiesToObject(drawable, generalProps);
+	applyAnimationProperties(drawable);
 
-	if(isFirstDrawable)
-	{
-		loadLayerPropertiesFromObject(drawable, generalProps);
-
-		m_isVisible = drawable->isVisible();
-
-		m_props["fadeIn"].value = 1;
-		m_props["fadeInLength"].value = 300;
-
-		m_props["fadeOut"].value = 1;
-		m_props["fadeOutLength"].value = 300;
-
-		m_props["showAnimationType"].value = GLDrawable::AnimNone;
-		m_props["showAnimationLength"].value = 2500;
-		m_props["showAnimationCurve"].value = QEasingCurve::OutElastic;
-
-		m_props["hideAnimationType"].value = GLDrawable::AnimNone;
-		m_props["hideAnimationLength"].value = 300;
-		m_props["hideAnimationCurve"].value = QEasingCurve::Linear;
-	}
-	else
-	{
-		applyLayerPropertiesToObject(drawable, generalProps);
-		applyAnimationProperties(drawable);
-
-		drawable->setVisible(m_isVisible);
-	}
+	drawable->setVisible(m_isVisible);
 }
 
 
@@ -1244,8 +1228,7 @@ void LiveLayer::loadLayerPropertiesFromObject(const QObject *object, const QStri
 {
 	foreach(QString key, list)
 	{
-		QVariant value = object->property(qPrintable(key));
-		m_props[key] = LiveLayerProperty(key,value);
+		m_props[key] = object->property(qPrintable(key));
 	}
 }
 
@@ -1264,7 +1247,7 @@ void LiveLayer::applyLayerPropertiesToObject(QObject *object, QStringList list)
 			const char *asciiPropId = qPrintable(key);
 			if(object->metaObject()->indexOfProperty(asciiPropId) >= 0)
 			{
-				object->setProperty(asciiPropId, m_props[key].value);
+				object->setProperty(asciiPropId, m_props[key]);
 			}
 		}
 	}
@@ -1296,10 +1279,11 @@ void LiveLayer::fromByteArray(QByteArray& array)
 		const char *name = metaproperty.name();
 		QVariant value = map[name];
 		//qDebug() << "AbstractItem::clone():"<<itemName()<<": prop:"<<name<<", value:"<<value;
+		qDebug() << "LiveScene::fromByteArray():"<<this<<": prop:"<<name<<", value:"<<value;
 		if(value.isValid())
 			setProperty(name,value);
 		else
-			qDebug() << "LiveLayer::loadByteArray: Unable to load property for "<<name<<", got invalid property from map";
+			qDebug() << "LiveLayer::fromByteArray: Unable to load property for "<<name<<", got invalid property from map";
 	}
 }
 
@@ -1319,7 +1303,7 @@ QByteArray LiveLayer::toByteArray()
 		QMetaProperty metaproperty = metaobject->property(i);
 		const char *name = metaproperty.name();
 		QVariant value = property(name);
-		//qDebug() << "LiveScene::toByteArray():"<<itemName()<<": prop:"<<name<<", value:"<<value;
+		qDebug() << "LiveScene::toByteArray():"<<this<<instanceName()<<": prop:"<<name<<", value:"<<value;
 		//item->setProperty(name,value);
 		map[name] = value;
 	}

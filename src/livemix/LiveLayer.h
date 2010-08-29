@@ -118,27 +118,6 @@ private:
 	QSpinBox *b_box;
 };*/
 
-class LiveLayerProperty
-{
-public:
-	LiveLayerProperty() { min=0; max=0; }
-	LiveLayerProperty(
-			const QString&  _id,
-			const QVariant& _value,
-			const QString&  _title="",
-			double _min=-100,
-			double _max=100);
-
-	QString id;
-	QString title;
-	QVariant value;
-
-	// For numerical properties
-	double min, max;
-};
-
-typedef QHash<QString, LiveLayerProperty> LiveLayerPropertyHash;
-
 class LiveLayer : public QObject
 {
 	Q_OBJECT
@@ -154,11 +133,11 @@ class LiveLayer : public QObject
 	Q_PROPERTY(bool fadeOut READ fadeOut WRITE setFadeOut);
 	Q_PROPERTY(int  fadeOutLength READ fadeOutLength WRITE setFadeOutLength);
 
-	Q_PROPERTY(GLDrawable::AnimationType showAnimationType READ showAnimationType WRITE setShowAnimationType);
+	Q_PROPERTY(int showAnimationType READ showAnimationType WRITE setShowAnimationType);
 	Q_PROPERTY(int showAnimationLength READ showAnimationLength WRITE setShowAnimationLength);
 	Q_PROPERTY(QEasingCurve::Type showAnimationCurve READ showAnimationCurve WRITE setShowAnimationCurve);
 
-	Q_PROPERTY(GLDrawable::AnimationType hideAnimationType READ hideAnimationType WRITE setHideAnimationType);
+	Q_PROPERTY(int hideAnimationType READ hideAnimationType WRITE setHideAnimationType);
 	Q_PROPERTY(int hideAnimationLength READ hideAnimationLength WRITE setHideAnimationLength);
 	Q_PROPERTY(QEasingCurve::Type hideAnimationCurve READ hideAnimationCurve WRITE setHideAnimationCurve);
 
@@ -183,48 +162,46 @@ public:
 	virtual GLDrawable * drawable(GLWidget *widget);
 
 	// Query for layer properties
-	virtual LiveLayerPropertyHash layerProperties() { return m_props; }
-	virtual LiveLayerProperty layerProperty(const QString& id) { return m_props[id]; }
-	virtual QVariant layerPropertyValue(const QString& id) { return m_props[id].value; }
-
+	virtual QVariantMap layerProperties() { return m_props; }
+	virtual QVariant layerProperty(const QString& id) { return m_props[id]; }
+	
 	// Default impl iterates thru m_props and sets up appropriate editors
 	// Caller takes ownership of widget and deletes when done
 	virtual QWidget *createLayerPropertyEditors();
 	
 	virtual void fromByteArray(QByteArray&);
 	virtual QByteArray toByteArray();
-	
 
 	// Translated from a perl function I wrote to do basically
 	// the same thing for an ERP project a few years back.
 	static QString guessTitle(QString field);
 
 	bool isVisible() 	{ return m_isVisible; }
-	QRectF rect()		{ return layerPropertyValue("rect").toRectF(); }
-	double zIndex()		{ return layerPropertyValue("zIndex").toDouble(); }
-	double opacity()	{ return layerPropertyValue("opacity").toDouble(); }
+	QRectF rect()		{ return layerProperty("rect").toRectF(); }
+	double zIndex()		{ return layerProperty("zIndex").toDouble(); }
+	double opacity()	{ return layerProperty("opacity").toDouble(); }
 
 
-	bool fadeIn() 			{ return layerPropertyValue("fadeIn").toBool(); }
-	int fadeInLength() 		{ return layerPropertyValue("fadeInLength").toInt(); }
+	bool fadeIn() 			{ return layerProperty("fadeIn").toBool(); }
+	int fadeInLength() 		{ return layerProperty("fadeInLength").toInt(); }
 
-	bool fadeOut() 			{ return layerPropertyValue("fadeOut").toBool(); }
-	int fadeOutLength() 		{ return layerPropertyValue("fadeOutLength").toInt(); }
+	bool fadeOut() 			{ return layerProperty("fadeOut").toBool(); }
+	int fadeOutLength() 		{ return layerProperty("fadeOutLength").toInt(); }
 
-	GLDrawable::AnimationType showAnimationType() 	{ return (GLDrawable::AnimationType)layerPropertyValue("showAnimationType").toInt(); }
-	int showAnimationLength() 			{ return layerPropertyValue("showAnimationLength").toInt(); }
-	QEasingCurve::Type showAnimationCurve() 	{ return (QEasingCurve::Type)layerPropertyValue("showAnimationCurve").toInt(); }
+	int showAnimationType() 	{ return layerProperty("showAnimationType").toInt(); }
+	int showAnimationLength() 	{ return layerProperty("showAnimationLength").toInt(); }
+	QEasingCurve::Type showAnimationCurve() 	{ return (QEasingCurve::Type)layerProperty("showAnimationCurve").toInt(); }
 
-	GLDrawable::AnimationType hideAnimationType() 	{ return (GLDrawable::AnimationType)layerPropertyValue("hideAnimationType").toInt(); }
-	int hideAnimationLength() 			{ return layerPropertyValue("hideAnimationLength").toInt(); }
-	QEasingCurve::Type hideAnimationCurve() 	{ return (QEasingCurve::Type)layerPropertyValue("hideAnimationCurve").toInt(); }
+	int hideAnimationType() 	{ return layerProperty("hideAnimationType").toInt(); }
+	int hideAnimationLength() 	{ return layerProperty("hideAnimationLength").toInt(); }
+	QEasingCurve::Type hideAnimationCurve() 	{ return (QEasingCurve::Type)layerProperty("hideAnimationCurve").toInt(); }
 
-	bool showFullScreen()		{ return layerPropertyValue("showFullScreen").toBool(); }
-	Qt::Alignment alignment()	{ return (Qt::Alignment)layerPropertyValue("alignment").toInt(); }
-	QPointF insetTopLeft()		{ return layerPropertyValue("insetTopLeft").toPointF(); }
-	QPointF insetBottomRight()	{ return layerPropertyValue("insetBottomRight").toPointF(); }
+	bool showFullScreen()		{ return layerProperty("showFullScreen").toBool(); }
+	Qt::Alignment alignment()	{ return (Qt::Alignment)layerProperty("alignment").toInt(); }
+	QPointF insetTopLeft()		{ return layerProperty("insetTopLeft").toPointF(); }
+	QPointF insetBottomRight()	{ return layerProperty("insetBottomRight").toPointF(); }
 
-	double alignedSizeScale()	{ return layerPropertyValue("alignedSizeScale").toDouble(); }
+	double alignedSizeScale()	{ return layerProperty("alignedSizeScale").toDouble(); }
 
 
 
@@ -262,12 +239,12 @@ public slots:
 	void setFadeOut(bool value) 		{ setLayerProperty("fadeOut", value); }
 	void setFadeOutLength(int value) 	{ setLayerProperty("fadeOutLength", value); }
 
-	void setShowAnimationType(GLDrawable::AnimationType value) 	{ setLayerProperty("showAnimationType",   value); }
-	void setShowAnimationLength(int value) 				{ setLayerProperty("showAnimationLength", value); }
+	void setShowAnimationType(int value) 	{ setLayerProperty("showAnimationType",   value); }
+	void setShowAnimationLength(int value) 	{ setLayerProperty("showAnimationLength", value); }
 	void setShowAnimationCurve(QEasingCurve::Type value) 		{ setLayerProperty("showAnimationCurve",  value); }
 
-	void setHideAnimationType(GLDrawable::AnimationType value) 	{ setLayerProperty("hideAnimationType",   value); }
-	void setHideAnimationLength(int value) 				{ setLayerProperty("hideAnimationLength", value); }
+	void setHideAnimationType(int value) 	{ setLayerProperty("hideAnimationType",   value); }
+	void setHideAnimationLength(int value) 	{ setLayerProperty("hideAnimationLength", value); }
 	void setHideAnimationCurve(QEasingCurve::Type value) 		{ setLayerProperty("hideAnimationCurve",  value); }
 
 	void setShowFullScreen(bool value)	{ setLayerProperty("showFullScreen", value); }
@@ -351,7 +328,7 @@ protected:
 	// If its the first drawable, setup with defaults and load m_props[] with appros values
 	// If not first drawable, load drawable with values from m_props[]
 	virtual void initDrawable(GLDrawable *drawable, bool isFirstDrawable = false);
-
+	
 	// Helper function - given a list of property names, load the props using QObject::property() from the drawable into m_props
 	void loadLayerPropertiesFromObject(const QObject *, const QStringList& list);
 
@@ -375,7 +352,7 @@ protected:
 	QHash<GLWidget*, GLDrawable*> m_drawables;
 
 	// The properties for this layer - to properly set in sub-classes, use setProperty
-	LiveLayerPropertyHash m_props;
+	QVariantMap m_props;
 
 private:
 	void setVisibleGeometryFields(QStringList list = QStringList());

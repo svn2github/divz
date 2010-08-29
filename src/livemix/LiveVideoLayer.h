@@ -37,25 +37,25 @@ public:
 	
 	virtual QString typeName() { return "Video"; }
 	
-	bool deinterlace() { return layerPropertyValue("deinterlace").toBool(); }
+	bool deinterlace()	{ return layerProperty("deinterlace").toBool(); }
 	
-	int brightness() { return layerPropertyValue("brightness").toInt(); }
-	int contrast() { return layerPropertyValue("contrast").toInt(); }
-	int hue() { return layerPropertyValue("hue").toInt(); }
-	int saturation() { return layerPropertyValue("saturation").toInt(); }
+	int brightness()	{ return layerProperty("brightness").toInt(); }
+	int contrast()		{ return layerProperty("contrast").toInt(); }
+	int hue()		{ return layerProperty("hue").toInt(); }
+	int saturation()	{ return layerProperty("saturation").toInt(); }
 	
-	bool flipHorizontal() { return layerPropertyValue("flipHorizontal").toBool(); }
-	bool flipVertical() { return layerPropertyValue("flipVertical").toBool(); }
+	bool flipHorizontal()	{ return layerProperty("flipHorizontal").toBool(); }
+	bool flipVertical()	{ return layerProperty("flipVertical").toBool(); }
 	
-	QPointF cropTopLeft() { return layerPropertyValue("cropTopLeft").toPointF(); }
-	QPointF cropBottomRight() { return layerPropertyValue("cropBottomRight").toPointF(); }
+	QPointF cropTopLeft()	{ return layerProperty("cropTopLeft").toPointF(); }
+	QPointF cropBottomRight() { return layerProperty("cropBottomRight").toPointF(); }
 	
-	QPointF textureOffset() { return layerPropertyValue("textureOffset").toPointF(); }
+	QPointF textureOffset()	{ return layerProperty("textureOffset").toPointF(); }
 	
-	QString alphaMaskFile() { return layerPropertyValue("alphaMaskFile").toString(); }
-	QString overlayMaskFile() { return layerPropertyValue("overlayMaskFile").toString(); }
+	QString alphaMaskFile()	{ return layerProperty("alphaMaskFile").toString(); }
+	QString overlayMaskFile() { return layerProperty("overlayMaskFile").toString(); }
 	
-	Qt::AspectRatioMode aspectRatioMode() { return (Qt::AspectRatioMode)layerPropertyValue("aspectRatioMode").toInt(); }
+	Qt::AspectRatioMode aspectRatioMode() { return (Qt::AspectRatioMode)layerProperty("aspectRatioMode").toInt(); }
 
 
 public slots:
