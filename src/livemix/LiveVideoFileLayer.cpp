@@ -32,22 +32,31 @@ void LiveVideoFileLayer::initDrawable(GLDrawable *drawable, bool isFirst)
 		// nothing to do 
 		// Maybe in future set a static video source with a blue image?
 	}
+	
+	if(m_video)
+	{
+		qDebug() << "LiveVideoFileLayer::initDrawable: setting video:"<<m_video;
+		setVideo(m_video);
+	}
 	else
 	{
-		if(m_video)
-			setVideo(m_video);
+		qDebug() << "LiveVideoFileLayer::initDrawable: m_video is null";
 	}
 }
 
 void LiveVideoFileLayer::setVideo(VideoThread *vid)
 {
-	if(vid == m_video)
-		return;
-		
 	qDebug() << "LiveVideoFileLayer::setVideo: "<<vid;
+	
+// 	if(vid == m_video)
+// 	{
+// 		qDebug() << "LiveVideoFileLayer::setVideo: Not setting, vid == m_video";
+// 		return;
+// 	}
+		
 	setVideoSource(vid);
 	m_video = vid;
-	setInstanceName(QFileInfo(vid->videoFile()).baseName());
+	setInstanceName(guessTitle(QFileInfo(vid->videoFile()).baseName()));
 }
 
 QWidget * LiveVideoFileLayer::createLayerPropertyEditors()
@@ -100,17 +109,18 @@ void LiveVideoFileLayer::setFile(const QString& file)
 		m_video->stop();
 		m_video->quit();
 		m_video->deleteLater();
+		m_video = 0;
 	}
 	
-	m_video = new VideoThread();
-	m_video->setVideo(file);
-	m_video->start();
-	m_video->play();
-	setVideo(m_video);
+	//qDebug() << "LiveVideoFileLayer::setFile: Loading file: "<<file;
+	VideoThread *video = new VideoThread();
+	video->setVideo(file);
+	video->start();
+	setVideo(video);
 	
 	m_props["file"] = file;
 	
-	setInstanceName(info.fileName());
+	setInstanceName(guessTitle(info.fileName()));
 }
 
 void LiveVideoFileLayer::setLayerProperty(const QString& key, const QVariant& value)

@@ -679,7 +679,7 @@ void CameraThread::enableRawFrames(bool enable)
 	
 	if(old != enable)
 	{
-// 		qDebug() << "CameraThread::enableRawFrames(): start";
+ 		qDebug() << "CameraThread::enableRawFrames(): start, flag:"<<enable;
 		m_initMutex.lock(); // make sure init isnt running, block while it is
 		// switch from raw V4L2 to LibAV* (or visa versa based on m_rawFrames, since SimpleV4L2 only outputs raw ARGB32)
 		//qDebug() << "CameraThread::enableRawFrames: flag changed, status: "<<m_rawFrames;
@@ -691,7 +691,7 @@ void CameraThread::enableRawFrames(bool enable)
 // 		qDebug() << "CameraThread::enableRawFrames(): mark1";
 		initCamera();
 		
-// 		qDebug() << "CameraThread::enableRawFrames(): finish";
+ 		qDebug() << "CameraThread::enableRawFrames(): finish";
 	}
 
 }
@@ -758,10 +758,12 @@ void CameraThread::readFrame()
 						(uchar*)dest, (uchar*)dest+h*stride,
 						h, stride, bottomFrame);
 
+				//qDebug() << "CameraThread::enqueue call: deinterlaced raw V4L2 frame";
 				enqueue(deinterlacedFrame);
 			}
 			else
 			{
+				//qDebug() << "CameraThread::enqueue call: raw V4L2 frame";
 				enqueue(frame);
 			}
 		}
@@ -823,6 +825,7 @@ void CameraThread::readFrame()
 						frame.setPointerData(m_av_frame->data, m_av_frame->linesize);
 						frame.pixelFormat = QVideoFrame::Format_YUV420P;
 						frame.setSize(QSize(m_video_codec_context->width, m_video_codec_context->height));
+						//qDebug() << "CameraThread::enqueue call: raw LibAV YUV420P frame";
 						enqueue(frame);
 					}
 					else
@@ -868,7 +871,8 @@ void CameraThread::readFrame()
 									dest, dest+h*stride,
 									h, stride, bottomFrame);
 
-							enqueue(VideoFrame(frame,1000/m_fps,capTime));
+							//qDebug() << "CameraThread::enqueue call: deinterlaced QImage ARGB32 frame";
+							enqueue(VideoFrame(frame.copy(),1000/m_fps,capTime));
 						}
 						else
 						{
@@ -878,7 +882,8 @@ void CameraThread::readFrame()
 								//QImage::Format_RGB16);
 								QImage::Format_ARGB32); //_Premultiplied);
 
-							enqueue(VideoFrame(frame,1000/m_fps,capTime));
+							//qDebug() << "CameraThread::enqueue call: QImage ARGB32 frame";
+							enqueue(VideoFrame(frame.copy(),1000/m_fps,capTime));
 						}
 					}
 

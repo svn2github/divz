@@ -271,10 +271,14 @@ void GLVideoDrawable::setVideoSource(VideoSource *source)
 		connect(m_source, SIGNAL(frameReady()), this, SLOT(frameReady()));
 		connect(m_source, SIGNAL(destroyed()), this, SLOT(disconnectVideoSource()));
 		
-		//qDebug() << "GLVideoDrawable::setVideoSource(): "<<objectName();
+		qDebug() << "GLVideoDrawable::setVideoSource(): "<<objectName()<<" m_source:"<<m_source;
 		setVideoFormat(m_source->videoFormat());
 		
 		frameReady();
+	}
+	else
+	{
+		qDebug() << "GLVideoDrawable::setVideoSource(): "<<objectName()<<" Source is NULL";
 	}
 
 }
@@ -297,6 +301,9 @@ void GLVideoDrawable::frameReady()
 	
 	if(m_glInited && glWidget())
 	{
+		//if(objectName() != "StaticBackground")
+			//qDebug() << "GLVideoDrawable::frameReady(): "<<this<<" Got a frame, size:"<<m_frame.size;
+			
 		if(m_frame.rect != m_sourceRect || !m_texturesInited)
 		{
 			//qDebug() << "GLVideoDrawable::frameReady(): \t m_frame.rect:"<<m_frame.rect<<", m_sourceRect:"<<m_sourceRect;
@@ -309,6 +316,11 @@ void GLVideoDrawable::frameReady()
 		
 		glWidget()->makeCurrent();
 		
+		if(m_frame.isEmpty())
+		{
+			qDebug() << "GLVideoDrawable::frameReady(): Got empty frame, ignoring.";
+		}
+		else
 		if(m_frame.isRaw)
 		{
 			for (int i = 0; i < m_textureCount; ++i) 

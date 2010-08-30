@@ -63,7 +63,11 @@ void LiveVideoInputLayer::selectCameraIdx(int idx)
 	if(idx < 0 || idx >= rawDevices.size()) 
 		return;
 	
-	setCamera(CameraThread::threadForCamera(rawDevices[idx]));
+	CameraThread *source = CameraThread::threadForCamera(rawDevices[idx]);
+	source->setFps(30);
+	source->enableRawFrames(true);
+	
+	setCamera(source);
 }
 
 QWidget * LiveVideoInputLayer::createLayerPropertyEditors()

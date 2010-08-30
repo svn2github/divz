@@ -32,24 +32,8 @@ Structure:
 	Switch to one or more layer "setups"
 	
 	
-	
----------------------------------
-
-
-before nap I was doing:
-	- loading three.livemix doesnt:
-		- restore alignment setting
-		- restore in/out advanced settings
-		- start playing video even tho file was set
-		- leaks memory, probably due to video
-	- confirm if it loads Z value correctly
-		- doesnt seem to sort correctly if it does load
-also check on signals not connecting msgs on console
-
-----
-still leaking memory in VideoThread and no image showing
-still crashes when creating a camera
-	seems to crash in GLDrawable when calling scanLine on the video frame .image
-		should be a raw frame - why is it using .image??
 
 memory corruption around edges of text rects - whats up with that??
+	only on centos...
+text sometimes doesnt load and set correct rect (too small sometimes)
+loading file will start editing a layer, but not show drawable until clicking ANOTHEr layer to edit, then back to orig

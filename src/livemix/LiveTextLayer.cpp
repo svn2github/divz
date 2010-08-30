@@ -73,6 +73,7 @@ void LiveTextLayer::setText(const QString& text)
 	m_props["text"] = text;
 	
 	setInstanceName(text);
+	setAlignment(alignment()); // force recalc of layout
 	
 	qDebug() << "LiveTextLayer::setText(): text:"<<text;
 }

@@ -371,7 +371,7 @@ void MainWindow::actionAddCamera()
 	QStringList items;
 	int counter = 1;
 	foreach(QString dev, cameras)
-		items << QString("Camera # %1").arg(counter);
+		items << QString("Camera # %1").arg(counter++);
 	
 	bool ok;
 	QString item = QInputDialog::getItem(this, tr("Camera"),

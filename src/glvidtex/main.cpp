@@ -326,7 +326,7 @@ QFormLayout * createToggleBox()
 	tb->setWindowTitle("Toggle Box");
 	QFormLayout *layout = new QFormLayout;
 	tb->setLayout(layout);
-	tb->show();
+	//tb->show();
 	return layout;
 }
 
@@ -380,9 +380,9 @@ int main(int argc, char *argv[])
  			addButtons(tb,addStaticSource(glw));
 	#endif
 	
-	addButtons(tb,addSecondSource(glw));	
-	addButtons(tb,addVideoBug(glw));
-	addButtons(tb,addTextOverlay(glw));
+// 	addButtons(tb,addSecondSource(glw));	
+// 	addButtons(tb,addVideoBug(glw));
+// 	addButtons(tb,addTextOverlay(glw));
 	
 	glw->resize(glw->viewport().width(),glw->viewport().height());
 	

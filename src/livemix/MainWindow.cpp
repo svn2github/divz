@@ -43,6 +43,8 @@ MainWindow::MainWindow()
 
 	setWindowTitle(tr("LiveMix"));
 	setUnifiedTitleAndToolBarOnMac(true);
+		
+	loadFile("vid.lmx");
 }
 
 void MainWindow::setupSampleScene()
@@ -314,28 +316,28 @@ void MainWindow::createCenterPanel()
 	m_layerViewer = new GLWidget(m_editSplitter);
 	m_layerViewer->setProperty("isEditorWidget",true);
 
-	QSize size = m_layerViewer->viewport().size().toSize();
-	size /= 2.5;
-	qDebug() << "MainWindow::createLeftPanel(): size:"<<size;
-	QImage bgImage(size, QImage::Format_ARGB32_Premultiplied);
-	QBrush bgTexture(QPixmap("squares2.png"));
-	QPainter bgPainter(&bgImage);
-	bgPainter.fillRect(bgImage.rect(), bgTexture);
-	bgPainter.end();
-
-	StaticVideoSource *source = new StaticVideoSource();
-	source->setImage(bgImage);
-	//source->setImage(QImage("squares2.png"));
-	source->start();
-
-	GLVideoDrawable *drawable = new GLVideoDrawable(m_layerViewer);
-	drawable->setVideoSource(source);
-	drawable->setRect(m_layerViewer->viewport());
-	drawable->setZIndex(-100);
-	drawable->setObjectName("StaticBackground");
-	drawable->show();
-
-	m_layerViewer->addDrawable(drawable);
+// 	QSize size = m_layerViewer->viewport().size().toSize();
+// 	size /= 2.5;
+// 	qDebug() << "MainWindow::createLeftPanel(): size:"<<size;
+// 	QImage bgImage(size, QImage::Format_ARGB32_Premultiplied);
+// 	QBrush bgTexture(QPixmap("squares2.png"));
+// 	QPainter bgPainter(&bgImage);
+// 	bgPainter.fillRect(bgImage.rect(), bgTexture);
+// 	bgPainter.end();
+// 
+// 	StaticVideoSource *source = new StaticVideoSource();
+// 	source->setImage(bgImage);
+// 	//source->setImage(QImage("squares2.png"));
+// 	source->start();
+// 
+// 	GLVideoDrawable *drawable = new GLVideoDrawable(m_layerViewer);
+// 	drawable->setVideoSource(source);
+// 	drawable->setRect(m_layerViewer->viewport());
+// 	drawable->setZIndex(-100);
+// 	drawable->setObjectName("StaticBackground");
+// 	drawable->show();
+// 
+// 	m_layerViewer->addDrawable(drawable);
 	
 	
 	m_editSplitter->addWidget(m_layerViewer);
@@ -554,28 +556,7 @@ void MainWindow::open()
 		QSettings().setValue("last-livemix-file",fileName);
 		if(QFile(fileName).exists())
 		{
-			QFile file(fileName);
-			if (!file.open(QIODevice::ReadOnly)) 
-			{
-				QMessageBox::critical(0, tr("Loading error"), tr("Unable to read file %1").arg(fileName));
-				return;
-			}
-
-			m_currentFile = fileName;
-			
-			QByteArray array = file.readAll();
-			
-			LiveScene *old = m_currentScene;
-	
-			LiveScene *scene = new LiveScene();
-			scene->fromByteArray(array);
-			
-			loadLiveScene(scene);
-			
-			if(old)
-				old->deleteLater();
-				
-			setWindowTitle(QString("%1 - LiveMix").arg(QFileInfo(fileName).fileName()));
+			loadFile(fileName);
 		}
 		else
 		{
@@ -583,6 +564,32 @@ void MainWindow::open()
 		}
 	}
 	
+}
+
+void MainWindow::loadFile(const QString& fileName)
+{
+	QFile file(fileName);
+	if (!file.open(QIODevice::ReadOnly)) 
+	{
+		QMessageBox::critical(0, tr("Loading error"), tr("Unable to read file %1").arg(fileName));
+		return;
+	}
+
+	m_currentFile = fileName;
+	
+	QByteArray array = file.readAll();
+	
+	LiveScene *old = m_currentScene;
+
+	LiveScene *scene = new LiveScene();
+	scene->fromByteArray(array);
+	
+	loadLiveScene(scene);
+	
+	if(old)
+		old->deleteLater();
+		
+	setWindowTitle(QString("%1 - LiveMix").arg(QFileInfo(fileName).fileName()));
 }
 
 void MainWindow::save(const QString& filename)

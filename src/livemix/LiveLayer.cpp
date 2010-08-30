@@ -326,13 +326,14 @@ void ColorEditorWidget::bValueChanged(int b)
 // the same thing for an ERP project a few years back.
 QString LiveLayer::guessTitle(QString field)
 {
-	static QRegExp rUpperCase = QRegExp("([a-z])([A-Z])");
-	static QRegExp rFirstLetter = QRegExp("([a-z])");
-	static QRegExp rLetterNumber = QRegExp("([a-z])([0-9])");
-	//static QRegExp rUnderScore
+	static const QRegExp rUpperCase = QRegExp("([a-z])([A-Z])");
+	static const QRegExp rFirstLetter = QRegExp("([a-z])");
+	static const QRegExp rLetterNumber = QRegExp("([a-z])([0-9])");
 	//$name =~ s/([a-z])_([a-z])/$1.' '.uc($2)/segi;
+	static const QRegExp rUnderScore = QRegExp("([a-z])_([a-z])");
 
 	QString tmp = field;
+	tmp.replace(rUnderScore,"\\1 \\2");
 	tmp.replace(rUpperCase,"\\1 \\2");
 	if(tmp.indexOf(rFirstLetter) == 0)
 	{
@@ -1278,8 +1279,7 @@ void LiveLayer::fromByteArray(QByteArray& array)
 		QMetaProperty metaproperty = metaobject->property(i);
 		const char *name = metaproperty.name();
 		QVariant value = map[name];
-		//qDebug() << "AbstractItem::clone():"<<itemName()<<": prop:"<<name<<", value:"<<value;
-		qDebug() << "LiveScene::fromByteArray():"<<this<<": prop:"<<name<<", value:"<<value;
+		//qDebug() << "LiveLayer::fromByteArray():"<<this<<": prop:"<<name<<", value:"<<value;
 		if(value.isValid())
 			setProperty(name,value);
 		else
@@ -1303,8 +1303,7 @@ QByteArray LiveLayer::toByteArray()
 		QMetaProperty metaproperty = metaobject->property(i);
 		const char *name = metaproperty.name();
 		QVariant value = property(name);
-		qDebug() << "LiveScene::toByteArray():"<<this<<instanceName()<<": prop:"<<name<<", value:"<<value;
-		//item->setProperty(name,value);
+		//qDebug() << "LiveLayer::toByteArray():"<<this<<instanceName()<<": prop:"<<name<<", value:"<<value;
 		map[name] = value;
 	}
 	
