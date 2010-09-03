@@ -5,6 +5,7 @@
 #include <QTime>
 #include <QDebug>
 #include <QVideoFrame>
+#include <QQueue>
 
 class VideoFrame
 {
@@ -97,6 +98,30 @@ QVideoFrame::Format_RGB555	6	The frame is stored using a 16-bit RGB format (5-5-
 	bool isEmpty() { return bufferType == BUFFER_INVALID; }
 	bool isValid() { return bufferType != BUFFER_INVALID; }
 	
+	
+	// Returns the approx memory consumption of this frame.
+	// 'approx' because it isn't perfect, especially when using
+	// BUFFER_POINTER bufferType's. 
+	int byteSize() const
+	{
+		int mem = 0;
+		switch(bufferType)
+		{
+			case BUFFER_IMAGE:
+				mem = image.byteCount();
+				break;
+			case BUFFER_BYTEARRAY:
+				mem = byteArray.size();
+				break;
+			case BUFFER_POINTER:
+				mem = size.width() * size.height() * 3; // assumption!
+				break;
+			default:
+				break;
+		}
+		return mem + sizeof(VideoFrame);
+	}
+	
 	// Variable holdTime : int:
 	// Time in milliseconds to 'hold' this frame on screen before displaying the next frame.
 	int holdTime;
@@ -169,5 +194,42 @@ QVideoFrame::Format_RGB555	6	The frame is stored using a 16-bit RGB format (5-5-
 
 };
 
+class VideoFrameQueue : public QQueue<VideoFrame>
+{
+public:
+	VideoFrameQueue(int maxBytes=0)
+		: QQueue<VideoFrame>()
+		, m_maxBytes(maxBytes)
+		{}
+		
+	int byteSize() const
+	{
+		int sum = 0;
+		for(int i=0; i<size(); i++)
+		{
+			sum += at(i).byteSize();
+		}
+		return sum;
+	}
+	
+	void setMaxByteSize(int bytes)
+	{
+		m_maxBytes = bytes;
+	}
+	
+	int maxByteSize() { return m_maxBytes; }
+	
+	void enqueue(VideoFrame frame)
+	{
+// 		if(m_maxBytes > 0)
+// 			while(byteSize() > m_maxBytes)
+// 				dequeue();	
+		
+		QQueue<VideoFrame>::enqueue(frame);
+	};
+	
+protected:
+	int m_maxBytes;
+};
 
 #endif

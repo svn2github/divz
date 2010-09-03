@@ -34,6 +34,10 @@ VideoSource::VideoSource(QObject *parent)
 	, m_killed(false)
 	, m_isBuffered(true)
 {
+	m_frameQueue.setMaxByteSize(1024 * 1024 // 1 MB
+				         *  512 // 512 MB
+				   );
+
 	initAV();
 }
 

@@ -66,7 +66,8 @@ protected:
 	static void initAV();
 	static bool isLibAVInit;
 
-	QQueue<VideoFrame> m_frameQueue;
+	//QQueue<VideoFrame> m_frameQueue;
+	VideoFrameQueue m_frameQueue;
 	QList<VideoWidget*> m_consumerList;
 	int m_refCount;
 	bool m_isBuffered;
