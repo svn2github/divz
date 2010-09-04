@@ -1,7 +1,7 @@
 #ifndef LiveStaticSourceLayer_H
 #define LiveStaticSourceLayer_H
 
-#include "LiveLayer.h"
+#include "LiveVideoLayer.h"
 
 class GLVideoDrawable ;
 class GLDrawable;
@@ -9,8 +9,7 @@ class GLWidget;
 class StaticVideoSource;
 
 
-
-class LiveStaticSourceLayer : public LiveLayer
+class LiveStaticSourceLayer : public LiveVideoLayer
 {
 	Q_OBJECT
 	
@@ -22,29 +21,22 @@ public:
 	
 	virtual QString typeName() { return "Static Source"; }
 
-// 	// Used by MainWindow to setup the property editor for this layer
-// 	virtual QList<QtPropertyEditorIdPair> createPropertyEditors(QtVariantPropertyManager *manager);
-
 	QString file() { return layerProperty("file").toString(); }
 
 public slots:
-// 	// Set a property (emits instancePropertyChanged)
+ 	// Set a property (emits instancePropertyChanged)
  	virtual void setLayerProperty(const QString& propertyId, const QVariant& value);
 
 	void setFile(const QString&);
 
 protected:
-
-	
 	virtual GLDrawable *createDrawable(GLWidget *widget);
 	// If its the first drawable, setup with defaults
 	// Otherwise, copy from 'copyFrom'
 	virtual void initDrawable(GLDrawable *drawable, bool isFirstDrawable = false);
-	
 	virtual QWidget *createLayerPropertyEditors();
 	
 private:
-// 	GLVideoDrawable *m_videoDrawable;
 	StaticVideoSource *m_staticSource;
 };
 

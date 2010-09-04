@@ -9,14 +9,17 @@
 
 ///////////////////////
 LiveStaticSourceLayer::LiveStaticSourceLayer(QObject *parent)
-	: LiveLayer(parent)
+	: LiveVideoLayer(parent)
 {
+	QString file = "squares2.png";
+	
 	m_staticSource = new StaticVideoSource();
-	m_staticSource->setImage(QImage("squares2.png"));
+	m_staticSource->setImage(QImage(file));
 	m_staticSource->start();
 	
 	//setFile("../data/icon-next-large.png");
-	m_props["file"] = file();
+	m_props["file"] = file;
+	setInstanceName(QFileInfo(file).fileName());
 }
 
 LiveStaticSourceLayer::~LiveStaticSourceLayer()
@@ -25,30 +28,15 @@ LiveStaticSourceLayer::~LiveStaticSourceLayer()
 
 GLDrawable* LiveStaticSourceLayer::createDrawable(GLWidget *context)
 {
-	// add secondary frame
-	GLVideoDrawable *drawable = new GLVideoDrawable();
-
- 	//qDebug() << "LiveStaticSourceLayer::createDrawable(): context viewport:"<<context->viewport();
-
-	drawable->setVideoSource(m_staticSource);
-	drawable->setRect(context->viewport());
-	drawable->setZIndex(-1);
+	GLDrawable *drawable = LiveVideoLayer::createDrawable(context);
 	drawable->setObjectName("Static");
-	
-	drawable->addShowAnimation(GLDrawable::AnimFade);
-	drawable->addHideAnimation(GLDrawable::AnimFade);
-	drawable->addHideAnimation(GLDrawable::AnimZoom,1000);
-	
- 	//qDebug() << "LiveStaticSourceLayer::createDrawable(): "<<drawable<<": setup complete, drawable rect:"<<drawable->rect();
-	
+	setVideoSource(m_staticSource);
 	return drawable;
 }
 
 void LiveStaticSourceLayer::initDrawable(GLDrawable *newDrawable, bool isFirst)
 {
 	LiveLayer::initDrawable(newDrawable, isFirst);
-
-	//setFile(file());
 }
 
 QWidget * LiveStaticSourceLayer::createLayerPropertyEditors()
@@ -75,7 +63,7 @@ QWidget * LiveStaticSourceLayer::createLayerPropertyEditors()
 	
 	/////////////////////////////////////////
 	
-	QWidget *basics =  LiveLayer::createLayerPropertyEditors();
+	QWidget *basics =  LiveVideoLayer::createLayerPropertyEditors();
 	blay->addWidget(basics);
 	
 	return base;

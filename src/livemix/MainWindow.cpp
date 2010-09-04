@@ -201,25 +201,15 @@ void MainWindow::setCurrentLayer(LiveLayer *layer)
 		m_layerViewer->removeDrawable(m_currentLayer->drawable(m_layerViewer));
 	}
 
-	if(layer)
-	{
-		m_currentLayer = layer;
-//  		qDebug() << "MainWindow::setCurrentLayer(): adding clicked layer to editor";
-		loadLayerProperties(m_currentLayer);
+	m_currentLayer = layer;
+	loadLayerProperties(m_currentLayer);
+		
+	if(m_currentLayer)
 		m_layerViewer->addDrawable(m_currentLayer->drawable(m_layerViewer));
-	}
 }
 
 void MainWindow::loadLayerProperties(LiveLayer *layer)
 {
-	m_currentLayer = layer;
-	
-	if (!m_currentLayer)
-	{
-		//deleteAction->setEnabled(false);
-		return;
-	}
-
 	if(m_currentLayerPropsEditor)
 	{
 		m_controlBase->layout()->removeWidget(m_currentLayerPropsEditor);
@@ -227,6 +217,9 @@ void MainWindow::loadLayerProperties(LiveLayer *layer)
 		m_currentLayerPropsEditor = 0;
 	}
 
+	if(!m_currentLayer)
+		return;
+		
 	QWidget *props = m_currentLayer->createLayerPropertyEditors();
 
 	QVBoxLayout *layout = dynamic_cast<QVBoxLayout*>(m_controlBase->layout());
@@ -536,6 +529,8 @@ void MainWindow::writeSettings()
 void MainWindow::newFile()
 {
 	LiveScene *old = m_currentScene;
+	
+	setCurrentLayer(0);
 	
 	LiveScene *scene = new LiveScene();
 	loadLiveScene(scene);

@@ -25,12 +25,10 @@ public:
 
 public slots:
 	// Set a property (emits instancePropertyChanged)
-// 	virtual void setInstanceProperty(const QString&, const QVariant&);
-	void setDeinterlace(bool);
-	
-	
 	virtual void setLayerProperty(const QString& propertyId, const QVariant& value);
 
+	void setDeinterlace(bool);
+	
 protected:
 	virtual GLDrawable *createDrawable(GLWidget *widget);
 	// If its the first drawable, setup with defaults

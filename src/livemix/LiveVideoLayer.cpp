@@ -84,7 +84,7 @@ QWidget * LiveVideoLayer::createLayerPropertyEditors()
 	
 	/////////////////////////////////////////
 	
-	ExpandableWidget *groupDisplay = new ExpandableWidget("Video Display Options",base);
+	ExpandableWidget *groupDisplay = new ExpandableWidget("Display Options",base);
 	blay->addWidget(groupDisplay);
 	
 	QWidget *groupDisplayContainer = new QWidget;
