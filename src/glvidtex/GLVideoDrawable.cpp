@@ -271,14 +271,14 @@ void GLVideoDrawable::setVideoSource(VideoSource *source)
 		connect(m_source, SIGNAL(frameReady()), this, SLOT(frameReady()));
 		connect(m_source, SIGNAL(destroyed()), this, SLOT(disconnectVideoSource()));
 		
-		qDebug() << "GLVideoDrawable::setVideoSource(): "<<objectName()<<" m_source:"<<m_source;
+		//qDebug() << "GLVideoDrawable::setVideoSource(): "<<objectName()<<" m_source:"<<m_source;
 		setVideoFormat(m_source->videoFormat());
 		
 		frameReady();
 	}
 	else
 	{
-		qDebug() << "GLVideoDrawable::setVideoSource(): "<<objectName()<<" Source is NULL";
+		qDebug() << "GLVideoDrawable::setVideoSource(): "<<this<<" Source is NULL";
 	}
 
 }
@@ -312,6 +312,7 @@ void GLVideoDrawable::frameReady()
 				setVideoFormat(m_source->videoFormat());
 			resizeTextures(m_frame.size);
 			updateRects();
+			updateAlignment();
 		}
 		
 		glWidget()->makeCurrent();
@@ -480,6 +481,7 @@ void GLVideoDrawable::setAspectRatioMode(Qt::AspectRatioMode mode)
 {
 	m_aspectRatioMode = mode;
 	updateRects();
+	updateAlignment();
 	updateGL();
 }
 
@@ -1059,6 +1061,7 @@ void GLVideoDrawable::paintGL()
 	
 	m_program->setUniformValue("positionMatrix",      positionMatrix);
 	
+	//qDebug() << "GLVideoDrawable:paintGL():"<<this<<", rendering with opacity:"<<opacity();
 	m_program->setUniformValue("alpha",               (GLfloat)opacity());
 	m_program->setUniformValue("texOffsetX",          (GLfloat)m_invertedOffset.x());
 	m_program->setUniformValue("texOffsetY",          (GLfloat)m_invertedOffset.y());

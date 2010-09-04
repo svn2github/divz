@@ -140,7 +140,7 @@ protected slots:
 	virtual void animationFinished();
 
 protected:
-	virtual void updateAlignment(QSizeF size = QSizeF());
+	virtual void updateAlignment();
 
 	friend class GLWidget;
 	virtual void setGLWidget(GLWidget*); // when update is called, it calls GLWidget::updateGL()
@@ -153,6 +153,7 @@ protected:
 
 	virtual void startAnimation(const AnimParam & p);
 	virtual void startAnimations();
+	void forceStopAnimations();
 
 	GLWidget *m_glw;
 
@@ -183,7 +184,9 @@ private:
 	bool m_inAlignment;
 
 	double m_alignedSizeScale;
-
+	
+	bool m_animPendingGlWidget;
+	bool m_alignmentPending;
 };
 
 bool operator==(const GLDrawable::AnimParam&a, const GLDrawable::AnimParam&b);

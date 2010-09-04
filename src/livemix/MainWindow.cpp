@@ -197,14 +197,14 @@ void MainWindow::setCurrentLayer(LiveLayer *layer)
 {
 	if(m_currentLayer)
 	{
-// 		qDebug() << "MainWindow::liveLayerClicked(): removing old layer from editor";
+//  		qDebug() << "MainWindow::setCurrentLayer(): removing old layer from editor";
 		m_layerViewer->removeDrawable(m_currentLayer->drawable(m_layerViewer));
 	}
 
 	if(layer)
 	{
 		m_currentLayer = layer;
-// 		qDebug() << "MainWindow::liveLayerClicked(): adding clicked layer to editor";
+//  		qDebug() << "MainWindow::setCurrentLayer(): adding clicked layer to editor";
 		loadLayerProperties(m_currentLayer);
 		m_layerViewer->addDrawable(m_currentLayer->drawable(m_layerViewer));
 	}
@@ -330,6 +330,7 @@ void MainWindow::createCenterPanel()
 	source->setImage(bgImage);
 	//source->setImage(QImage("squares2.png"));
 	source->start();
+	connect(this, SIGNAL(destroyed()), source, SLOT(deleteLater()));
 
 	GLVideoDrawable *drawable = new GLVideoDrawable(m_layerViewer);
 	drawable->setVideoSource(source);

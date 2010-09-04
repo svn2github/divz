@@ -15,7 +15,7 @@ LiveStaticSourceLayer::LiveStaticSourceLayer(QObject *parent)
 	m_staticSource->setImage(QImage("squares2.png"));
 	m_staticSource->start();
 	
-	setFile("../data/icon-next-large.png");
+	//setFile("../data/icon-next-large.png");
 	m_props["file"] = file();
 }
 
@@ -28,7 +28,7 @@ GLDrawable* LiveStaticSourceLayer::createDrawable(GLWidget *context)
 	// add secondary frame
 	GLVideoDrawable *drawable = new GLVideoDrawable();
 
-// 	qDebug() << "LiveStaticSourceLayer::createDrawable: context viewport:"<<context->viewport();
+ 	//qDebug() << "LiveStaticSourceLayer::createDrawable(): context viewport:"<<context->viewport();
 
 	drawable->setVideoSource(m_staticSource);
 	drawable->setRect(context->viewport());
@@ -39,7 +39,7 @@ GLDrawable* LiveStaticSourceLayer::createDrawable(GLWidget *context)
 	drawable->addHideAnimation(GLDrawable::AnimFade);
 	drawable->addHideAnimation(GLDrawable::AnimZoom,1000);
 	
-// 	qDebug() << "LiveStaticSourceLayer::createDrawable: setup complete, drawable rect:"<<drawable->rect();
+ 	//qDebug() << "LiveStaticSourceLayer::createDrawable(): "<<drawable<<": setup complete, drawable rect:"<<drawable->rect();
 	
 	return drawable;
 }

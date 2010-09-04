@@ -41,10 +41,10 @@ loading file will start editing a layer, but not show drawable until clicking AN
 
 ---
 vid2.lmx:
-	face does zoom anim, but ends up off screen
-	clicking face does not restore rect or show in preview
-	clicking text does not show in preview
-	clicking face a second time shows in preview and updates rect
+	#face does zoom anim, but ends up off screen
+	#clicking face does not restore rect or show in preview
+	#clicking text does not show in preview
+	#clicking face a second time shows in preview and updates rect
 	zoom rect goes "negative" if rect too small
 	
 	

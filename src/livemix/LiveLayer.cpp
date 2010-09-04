@@ -930,7 +930,7 @@ void LiveLayer::setShowAsType(const QString& text)
 // 	<< "Aligned Bottom Right"
 	setVisibleGeometryFields();
 
-	qDebug() << "LiveLayer::setShowAsType(): text:"<<text;
+	//qDebug() << "LiveLayer::setShowAsType(): text:"<<text;
 	if(text.indexOf("---") >= 0)
 		return;
 
@@ -1205,7 +1205,7 @@ GLDrawable *LiveLayer::createDrawable(GLWidget */*widget*/)
 // If not first drawable, load drawable with values from m_props[]
 void LiveLayer::initDrawable(GLDrawable *drawable, bool /*isFirstDrawable*/)
 {
-// 	qDebug() << "LiveLayer::initDrawable: drawable:"<<drawable<<", copyFrom:"<<copyFrom;
+ 	//qDebug() << "LiveLayer::initDrawable: drawable:"<<drawable;
 
 	QStringList generalProps = QStringList()
 			<< "rect"
@@ -1220,6 +1220,7 @@ void LiveLayer::initDrawable(GLDrawable *drawable, bool /*isFirstDrawable*/)
 	applyLayerPropertiesToObject(drawable, generalProps);
 	applyAnimationProperties(drawable);
 
+	//qDebug() << "LiveLayer::initDrawable: now setting visible:"<<m_isVisible<<", rect:"<<drawable->rect();
 	drawable->setVisible(m_isVisible);
 }
 
@@ -1269,6 +1270,8 @@ void LiveLayer::fromByteArray(QByteArray& array)
 		return;
 	}
 	
+	bool vis = false;
+	
 	// So we dont have to engineer our own method of tracking
 	// properties, just assume all inherited objects delcare the relevant
 	// properties using Q_PROPERTY macro
@@ -1280,11 +1283,25 @@ void LiveLayer::fromByteArray(QByteArray& array)
 		const char *name = metaproperty.name();
 		QVariant value = map[name];
 		//qDebug() << "LiveLayer::fromByteArray():"<<this<<": prop:"<<name<<", value:"<<value;
-		if(value.isValid())
-			setProperty(name,value);
+		
+		// Hold setting visiblility flag till last so that way any properties that affect
+		// animations are set BEFORE animations start!
+		if(QString(name) == "isVisible")
+		{
+			vis = value.toBool();
+			//qDebug() << "LiveLayer::fromByteArray():"<<this<<": *** Found visibility prop, vis:"<<vis;
+		}
 		else
-			qDebug() << "LiveLayer::fromByteArray: Unable to load property for "<<name<<", got invalid property from map";
+		{
+			if(value.isValid())
+				setProperty(name,value);
+			else
+				qDebug() << "LiveLayer::fromByteArray: Unable to load property for "<<name<<", got invalid property from map";
+			}
 	}
+	
+	//qDebug() << "LiveLayer::fromByteArray():"<<this<<": *** Setting visibility to "<<vis;
+	setVisible(vis);
 }
 
 QByteArray LiveLayer::toByteArray()

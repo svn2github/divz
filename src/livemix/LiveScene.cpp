@@ -140,7 +140,7 @@ void LiveScene::fromByteArray(QByteArray& array)
 			continue;
 		}
 		
-		qDebug() << "LiveScene::fromByteArray(): Debug: metaObject classname: "<<metaObject->className()<<", asked for:"<<className;
+		//qDebug() << "LiveScene::fromByteArray(): Debug: metaObject classname: "<<metaObject->className()<<", asked for:"<<className;
 		
 		QObject *instance = metaObject->newInstance(Q_ARG(QObject*,0));
 		if(!instance)

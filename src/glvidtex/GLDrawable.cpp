@@ -25,11 +25,13 @@ GLDrawable::GLDrawable(QObject *parent)
 	, m_opacity(1)
 	, m_isVisible(false)
 	, m_animFinished(true)
+	, m_originalOpacity(-1)
 	, m_animationsEnabled(true)
 	, m_showFullScreen(true)
 	, m_alignment(Qt::AlignAbsolute)
 	, m_inAlignment(false)
 	, m_alignedSizeScale(1.)
+	, m_animPendingGlWidget(false)
 {
 }
 
@@ -51,20 +53,13 @@ void GLDrawable::hide()
 
 void GLDrawable::setVisible(bool flag)
 {
+	if(m_animFinished && m_isVisible == flag)
+		return;
+		
+	//qDebug() << "GLDrawable::setVisible(): "<<this<<": Flag:"<<flag;
 	if(flag)
 		emit isVisible(flag);
-	if(!m_animFinished)
-	{
-		foreach(QAutoDelPropertyAnimation *ani, m_runningAnimations)
-		{
-			ani->stop();
-			//qDebug() << "GLDrawable::setVisible while anim running, resetting property on "<<ani->propertyName().constData();
-			ani->resetProperty();
-			ani->deleteLater();
-		}
-		m_runningAnimations.clear();
-		animationFinished();
-	}
+	forceStopAnimations();
 
 	m_animDirection = flag;
 
@@ -79,11 +74,34 @@ void GLDrawable::setVisible(bool flag)
 
 }
 
+void GLDrawable::forceStopAnimations()
+{
+	if(!m_animFinished)
+	{
+		foreach(QAutoDelPropertyAnimation *ani, m_runningAnimations)
+		{
+			ani->stop();
+			//qDebug() << "GLDrawable::setVisible while anim running, resetting property on "<<ani->propertyName().constData();
+			ani->resetProperty();
+			ani->deleteLater();
+		}
+		m_runningAnimations.clear();
+		animationFinished();
+	}
+}
+
 void GLDrawable::startAnimations()
 {
+	if(!m_glw)
+	{
+		m_animPendingGlWidget = true;
+		return;
+	}
+	
+	//qDebug() << "GLDrawable::startAnimations(): "<<this<<": At start, rect:"<<rect()<<", opacity:"<<opacity();
+	
 	if(m_animDirection)
 		m_isVisible = m_animDirection;
-
 
 	m_animFinished = false;
 
@@ -175,7 +193,11 @@ void GLDrawable::startAnimation(const GLDrawable::AnimParam& p)
 	switch(p.type)
 	{
 		case GLDrawable::AnimFade:
-			m_originalOpacity = m_opacity;
+			if(m_originalOpacity>-1)
+				setOpacity(m_originalOpacity);
+			else
+				m_originalOpacity = opacity();
+			//qDebug() << "GLDrawable::startAnimation(): m_originalOpacity:"<<m_originalOpacity;
 			ani = new QAutoDelPropertyAnimation(this, "opacity");
 			ani->setStartValue(inFlag ? 0.0 : opacity());
 			ani->setEndValue(inFlag ?   opacity() : 0.0);
@@ -224,6 +246,8 @@ void GLDrawable::startAnimation(const GLDrawable::AnimParam& p)
 		{
 			ani->start();
 		}
+		
+		//qDebug() << "GLDrawable::startAnimation(): "<<this<<": added animation:"<<ani;
 
 		m_runningAnimations << ani;
 	}
@@ -246,6 +270,7 @@ QAutoDelPropertyAnimation * GLDrawable::setupRectAnimation(const QRectF& otherRe
 void GLDrawable::animationFinished()
 {
 	QAutoDelPropertyAnimation *ani = dynamic_cast<QAutoDelPropertyAnimation*>(sender());
+	//qDebug() << "GLDrawable::animationFinished(): "<<this<<": animation finished:"<<ani;
 	if(ani)
 	{
 // 		qDebug() << "GLDrawable::animationFinished(): Got ANI";
@@ -270,10 +295,15 @@ void GLDrawable::animationFinished()
 			if(!m_isVisible)
 				emit isVisible(m_isVisible);
 		}
+		else
+		{
+			//qDebug() << "GLDrawable::startAnimation(): "<<this<<": "<<ani<<": not all empty: "<<m_runningAnimations.size();
+		}
 
 	}
 	else
 	{
+		m_runningAnimations.clear();
 		foreach(QAutoDelPropertyAnimation *ani, m_finishedAnimations)
 		{
 			ani->resetProperty();
@@ -306,7 +336,7 @@ void GLDrawable::setZIndex(double z)
 
 void GLDrawable::setOpacity(double o)
 {
-	//qDebug() << "GLDrawable::setOpacity: "<<o;
+	//qDebug() << "GLDrawable::setOpacity: "<<this<<", opacity:"<<o;
 	m_opacity = o;
 	updateGL();
 }
@@ -321,7 +351,7 @@ void GLDrawable::setShowFullScreen(bool flag)
 void GLDrawable::setAlignment(Qt::Alignment value)
 {
 	m_alignment = value;
-// 	qDebug() << "GLDrawable::setAlignment(Qt::Alignment): "<<this<<objectName()<<", m_alignment:"<<m_alignment;
+ 	//qDebug() << "GLDrawable::setAlignment(): "<<this<<", m_alignment:"<<m_alignment;
 	updateAlignment();
 }
 
@@ -353,12 +383,11 @@ void GLDrawable::setAlignedSizeScale(qreal scale)
 	updateAlignment();
 }
 
-void GLDrawable::updateAlignment(QSizeF size)
+void GLDrawable::updateAlignment()
 {
 	m_inAlignment = true;
 
-	if(!size.isValid())
-		size = naturalSize();
+	QSizeF size = naturalSize();
 // 	if(!size.isValid())
 // 		size = m_rect.size();
 
@@ -367,6 +396,19 @@ void GLDrawable::updateAlignment(QSizeF size)
 // 		qDebug() << "GLDrawable::updateAlignment(): "<<this<<objectName()<<", no m_glw, can't align";
 		m_inAlignment = false;
 		return;
+	}
+		
+	//qDebug() << "GLDrawable::updateAlignment(): "<<this<<", m_animFinished:"<<m_animFinished<<", m_animDirection:"<<m_animDirection;;
+	bool restartAnimations = false;
+	if(!m_animFinished && m_animDirection)
+	{
+		// This will force a stop of the animations, reset properties.
+		// We'll restart animations at the end
+		forceStopAnimations();
+		//qDebug() << "GLDrawable::updateAlignment(): restoring opacity:"<<m_originalOpacity;
+		if(m_originalOpacity>-1)
+			setOpacity(m_originalOpacity);
+		restartAnimations = true;
 	}
 
 
@@ -381,7 +423,7 @@ void GLDrawable::updateAlignment(QSizeF size)
 			-m_insetBottomRight.x(),
 			-m_insetBottomRight.y());
 		setRect(rect);
-// 		qDebug() << "GLDrawable::updateAlignment(): "<<this<<objectName()<<", full screen, new rect:"<<rect;
+ 		//qDebug() << "GLDrawable::updateAlignment(): "<<this<<", full screen, new rect:"<<rect;
 	}
 	else
 	{
@@ -439,15 +481,21 @@ void GLDrawable::updateAlignment(QSizeF size)
 		}
 
 		QRectF rect = QRectF(x,y,w,h);
-// 		qDebug() << "GLDrawable::updateAlignment(): "<<this<<objectName()<<", final rect: "<<rect;
+ 		//qDebug() << "GLDrawable::updateAlignment(): "<<this<<", final rect: "<<rect;
 		setRect(rect);
 	}
 
 	m_inAlignment = false;
+	
+	if(restartAnimations)
+	{
+		startAnimations();
+	}
 }
 
 void GLDrawable::setGLWidget(GLWidget* w)
 {
+	//qDebug() << "GLDrawable::setGLWidget(): "<<this<<", w:"<<w;
 	m_glw = w;
 	if(!w)
 		return;
@@ -456,6 +504,12 @@ void GLDrawable::setGLWidget(GLWidget* w)
 		m_rect = m_glw->viewport();
 
 	updateAlignment();
+	
+	if(m_animPendingGlWidget)
+	{
+		m_animPendingGlWidget = false;
+		startAnimations();
+	}
 }
 
 void GLDrawable::viewportResized(const QSize& /*newSize*/)
