@@ -320,6 +320,10 @@ void GLDrawable::animationFinished()
 void GLDrawable::setRect(const QRectF& rect)
 {
 	m_rect = rect;
+	if(m_rect.width()<0)
+		m_rect.setWidth(0);
+	if(m_rect.height()<0)
+		m_rect.setHeight(0);
 	//qDebug() << "GLDrawable::setRect: "<<objectName()<<rect;
 	drawableResized(rect.size());
 	emit drawableResized(rect.size());

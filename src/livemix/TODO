@@ -1,28 +1,13 @@
 
 - CameraThread: Integrate more advanced deinterlacing methods, such as those in http://tvtime.sourceforge.net/
-- VideoWidget: Adaptivly adjust fade speed during fading to make the predicted clock alight with the real speed (either speed up/slow down)
 
 - Property Editors:
 	Add 'read' signal or something like that to update the property values
 	
-- Add geometry anchor points
-- Add geometry anchor inset
-- Add file chooser for static overlay
-- Add video input chooser
 - Integrate Qt Graphics Dojo blog - htmleditor - into editing text
 - Fix text jumpiness - jumps as you type on screen somtimes
 - Add drag/drop z value changing
 - Add fade in/out offsets
-- Start out all layer types with just fade in/out animations, no funky stuff
-- Start out all layers with full screen rects
-
-BUGS:
-- fix text:
-	when clicking edit on text, it reverts back to the original setup position
-	have to re-click alignment to get it to work
-- Opacity slider in props doesnt match opacity as set by control widget
-- Control widget should update opacity when it changes in props
-
 
 
 Structure:
@@ -30,22 +15,3 @@ Structure:
 	Output
 	
 	Switch to one or more layer "setups"
-	
-	
-
-memory corruption around edges of text rects - whats up with that??
-	only on centos...
-text sometimes doesnt load and set correct rect (too small sometimes)
-loading file will start editing a layer, but not show drawable until clicking ANOTHEr layer to edit, then back to orig
-
-
----
-vid2.lmx:
-	#face does zoom anim, but ends up off screen
-	#clicking face does not restore rect or show in preview
-	#clicking text does not show in preview
-	#clicking face a second time shows in preview and updates rect
-	zoom rect goes "negative" if rect too small
-	
-	
-	
