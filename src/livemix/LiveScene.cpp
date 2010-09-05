@@ -34,6 +34,7 @@ void LiveScene::addLayer(LiveLayer *layer)
 		if(m_glWidget)
 			m_glWidget->addDrawable(layer->drawable(m_glWidget));
 
+		layer->setScene(this);
 		emit layerAdded(layer);
 	}
 }
@@ -48,6 +49,7 @@ void LiveScene::removeLayer(LiveLayer *layer)
 		if(m_glWidget)
 			m_glWidget->removeDrawable(layer->drawable(m_glWidget));
 
+		layer->setScene(0);
 		emit layerRemoved(layer);
 	}
 }

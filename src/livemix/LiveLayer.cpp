@@ -1,6 +1,6 @@
 
 #include "LiveLayer.h"
-
+#include "LiveScene.h"
 #include "../glvidtex/GLDrawable.h"
 #include "../glvidtex/GLWidget.h"
 
@@ -353,6 +353,10 @@ QString LiveLayer::guessTitle(QString field)
 
 LiveLayer::LiveLayer(QObject *parent)
 	: QObject(parent)
+	, m_showOnShow(0)
+	, m_hideOnShow(0)
+	, m_scene(0)
+	, m_lockVsibleSetter(false)
 {
 	m_props["rect"] = QRectF();
 	m_props["zIndex"] = 0.0;
@@ -814,6 +818,43 @@ QWidget * LiveLayer::createLayerPropertyEditors()
 	opts.doubleIsPercentage = true;
 	formLayout->addRow(tr("&Opacity:"), generatePropertyEditor(this, "opacity", SLOT(setOpacity(int)), opts));
 
+	// Add layers to a map to sort by zindex
+	if(m_scene)
+	{
+		QMap<double,LiveLayer*> layerMap;
+		QList<LiveLayer*> layerList = m_scene->layerList();
+		foreach(LiveLayer *layer, layerList)
+			layerMap[layer->zIndex()] = layer;
+			
+		m_sortedLayerList = layerMap.values();
+		
+		QStringList layerNames;
+		layerNames << "(None)";
+		int hideIdx=0, showIdx=0, count=0;
+		foreach(LiveLayer *layer, m_sortedLayerList)
+		{
+			layerNames << QString("%1 (%2)").arg(layer->instanceName()).arg(layer->typeName());
+			if(layer == m_hideOnShow)
+				hideIdx = count;
+			if(layer == m_showOnShow)
+				showIdx = count;
+			count ++;
+		}
+	
+		QComboBox *hideOnShowBox = new QComboBox();
+		hideOnShowBox->addItems(layerNames);
+		hideOnShowBox->setCurrentIndex(hideIdx);
+		connect(hideOnShowBox, SIGNAL(activated(int)), this, SLOT(setHideOnShow(int)));
+	
+		QComboBox *showOnShowBox = new QComboBox();
+		showOnShowBox->addItems(layerNames);
+		showOnShowBox->setCurrentIndex(showIdx);
+		connect(showOnShowBox, SIGNAL(activated(int)), this, SLOT(setShowOnShow(int)));
+	
+		formLayout->addRow(tr("&Hide on Show:"), hideOnShowBox);
+		formLayout->addRow(tr("&Show on Show:"), showOnShowBox);
+	}
+	
 	//groupGeom->setExpanded(false);
 	groupGeom->setExpandedIfNoDefault(false);
 
@@ -1077,13 +1118,24 @@ void LiveLayer::setHeight(int value)
 
 void LiveLayer::setVisible(bool flag)
 {
+	if(m_lockVsibleSetter)
+		return;
+	m_lockVsibleSetter = true;
 	// Implemented using sig/slot instead of just calling each if the drawables setVisible
 	// directly so that it can be conditionally connected based on the GLWidget that
 	// the drawable is connected to - see the connect() statement in LiveLayer::drawable()
 	//if(flag != m_isVisible)
 		emit isVisible(flag);
 	m_isVisible = flag;
+	
+	if(m_hideOnShow)
+		m_hideOnShow->setVisible(!flag);
+	if(m_showOnShow)
+		m_showOnShow->setVisible(flag);
+		
+	m_lockVsibleSetter = false;
 }
+
 
 void LiveLayer::setRect(const QRectF& rect) 	{ setLayerProperty("rect", rect); }
 void LiveLayer::setZIndex(double z)	 	{ setLayerProperty("zIndex", z);  }
@@ -1328,3 +1380,33 @@ QByteArray LiveLayer::toByteArray()
 	
 	return array;
 }
+
+void LiveLayer::setHideOnShow(LiveLayer *layer)
+{
+	m_hideOnShow = layer;
+}
+
+void LiveLayer::setHideOnShow(int x)
+{
+	if(x<1 || x>m_sortedLayerList.size())
+		return;
+	setHideOnShow(m_sortedLayerList[x-1]);
+}
+
+void LiveLayer::setShowOnShow(LiveLayer *layer)
+{
+	m_showOnShow = layer;
+}
+
+void LiveLayer::setShowOnShow(int x)
+{
+	if(x<1 || x>m_sortedLayerList.size())
+		return;
+	setShowOnShow(m_sortedLayerList[x-1]);
+}
+
+void LiveLayer::setScene(LiveScene *scene)
+{
+	m_scene = scene;
+}
+

@@ -49,6 +49,14 @@ void LiveVideoInputLayer::initDrawable(GLDrawable *drawable, bool isFirst)
 		setCamera(m_camera);
 }
 
+void LiveVideoInputLayer::setCamera(const QString& dev)
+{
+	CameraThread *thread = CameraThread::threadForCamera(dev);
+	if(m_camera == thread)
+		return;
+	setCamera(thread);
+}
+
 void LiveVideoInputLayer::setCamera(CameraThread *camera)
 {
 	qDebug() << "LiveVideoInputLayer::setCamera: "<<camera;

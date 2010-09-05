@@ -202,7 +202,16 @@ public:
 	QPointF insetBottomRight()	{ return layerProperty("insetBottomRight").toPointF(); }
 
 	double alignedSizeScale()	{ return layerProperty("alignedSizeScale").toDouble(); }
-
+	
+	LiveLayer * hideOnShow() { return m_hideOnShow; }
+	LiveLayer * showOnShow() { return m_showOnShow; }
+	
+	void setHideOnShow(LiveLayer *layer);
+	void setShowOnShow(LiveLayer *layer);
+	
+	class LiveScene *scene() { return m_scene; }
+	void setScene(LiveScene *scene);
+	
 
 
 signals:
@@ -276,6 +285,9 @@ protected slots:
 
 	// Translate the 'show as' combo box into a set of alignment flags and showFullScreen boolean value
 	void setShowAsType(const QString&);
+	
+	void setShowOnShow(int);
+	void setHideOnShow(int);
 
 protected:
 	class PropertyEditorOptions
@@ -361,6 +373,13 @@ private:
 	QHash<QString,QWidget*> m_propWidget;
 	
 	QHash<QString,bool> m_propSetLock;
+	
+	LiveScene * m_scene;
+	LiveLayer * m_hideOnShow;
+	LiveLayer * m_showOnShow;
+	
+	QList<LiveLayer*> m_sortedLayerList;
+	bool m_lockVsibleSetter;
 };
 
 class ObjectValueSetter : public QObject

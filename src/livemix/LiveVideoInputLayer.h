@@ -22,6 +22,8 @@ public:
 	virtual QString typeName() { return "Video Input"; }
 	
 	bool deinterlace() { return layerProperty("deinterlace").toBool(); }
+	
+	void setCamera(const QString& dev);
 
 public slots:
 	// Set a property (emits instancePropertyChanged)

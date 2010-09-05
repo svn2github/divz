@@ -121,6 +121,9 @@ private:
 	QListView * m_layerListView;
 	class LiveSceneListModel *m_sceneModel;
 	
+	LiveVideoInputLayer * m_cam1Layer;
+	LiveVideoInputLayer * m_cam2Layer;
+	QSplitter *m_cameraSplitter;	
 
 };
 

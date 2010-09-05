@@ -14,6 +14,9 @@
 #include "LiveVideoFileLayer.h"
 #include "LiveSceneListModel.h"
 
+#include <QDesktopWidget>
+#include <QApplication>
+
 MainWindow::MainWindow()
 	: QMainWindow()
 	, m_currentLayerPropsEditor(0)
@@ -28,13 +31,86 @@ MainWindow::MainWindow()
 	createToolBars();
 	createStatusBar();
 
-	m_mainSplitter = new QSplitter(this);
+	m_cameraSplitter = new QSplitter(this);
+	m_cameraSplitter->setOrientation(Qt::Vertical);
+	
+	QWidget *baseWidget = new QWidget();
+	QVBoxLayout *mainLayout = new QVBoxLayout(baseWidget);
+	
+	QHBoxLayout *camLayout = new QHBoxLayout();
+	
+	camLayout->addStretch(1);
+	
+	// Camera 1
+	QVBoxLayout *layout = new QVBoxLayout();
+	
+	GLWidget *cam1widget = new GLWidget();
+	cam1widget->setProperty("isEditorWidget",true);
+	m_cam1Layer = new LiveVideoInputLayer();
+	m_cam1Layer->setCamera("/dev/video0");
+	m_cam1Layer->setZIndex(-1);
+	cam1widget->addDrawable(m_cam1Layer->drawable(cam1widget));
+	layout->addWidget(cam1widget);
+	
+	QPushButton *button = new QPushButton("Live");
+	button->setCheckable(true);
+	connect(button, SIGNAL(toggled(bool)), m_cam1Layer, SLOT(setVisible(bool)));
+	connect(m_cam1Layer, SIGNAL(isVisible(bool)), button, SLOT(setChecked(bool)));
+	layout->addWidget(button);
+	
+	camLayout->addLayout(layout);
+	
+	// Camera 2
+	layout = new QVBoxLayout();
+	
+	GLWidget *cam2widget = new GLWidget();
+	cam2widget->setProperty("isEditorWidget",true);
+	m_cam2Layer = new LiveVideoInputLayer();
+	m_cam2Layer->setCamera("/dev/video1");
+	m_cam2Layer->setZIndex(-2);
+	cam2widget->addDrawable(m_cam2Layer->drawable(cam1widget));
+	layout->addWidget(cam2widget);
+	
+	button = new QPushButton("Live");
+	button->setCheckable(true);
+	connect(button, SIGNAL(toggled(bool)), m_cam2Layer, SLOT(setVisible(bool)));
+	connect(m_cam2Layer, SIGNAL(isVisible(bool)), button, SLOT(setChecked(bool)));
+	layout->addWidget(button);
+	
+	camLayout->addLayout(layout);
+	camLayout->addStretch(1);
+	
+	mainLayout->addLayout(camLayout);
+	
+	m_cameraSplitter->addWidget(baseWidget);
+	
+	// Splitter
+	m_mainSplitter = new QSplitter(m_cameraSplitter);
+	m_cameraSplitter->addWidget(m_mainSplitter);
 	//m_splitter->setOrientation(Qt::Vertical);
-	setCentralWidget(m_mainSplitter);
+	//setCentralWidget(m_mainSplitter);
+	setCentralWidget(m_cameraSplitter);
 
 	createLeftPanel();
 	createCenterPanel();
 	createRightPanel();
+	
+	m_mainOutput = new GLWidget();
+	m_mainOutput->setWindowFlags(Qt::FramelessWindowHint | Qt::ToolTip);
+	
+	int screenNum = 1;
+	QDesktopWidget *desktopWidget = QApplication::desktop();
+	QRect geom = desktopWidget->screenGeometry(screenNum);
+	
+	m_mainOutput->resize(geom.width(),geom.height());
+	m_mainOutput->move(geom.left(),geom.top());
+		
+	m_mainOutput->show();
+	
+	m_mainOutput->setWindowTitle(QString("Video Output - LiveMix")/*.arg(m_output->name())*/);
+	m_mainOutput->setWindowIcon(QIcon(":/data/icon-d.png"));
+	
+	
 
 	//setupSampleScene();
 	newFile();
@@ -44,8 +120,8 @@ MainWindow::MainWindow()
 	setWindowTitle(tr("LiveMix"));
 	setUnifiedTitleAndToolBarOnMac(true);
 		
-	QString lastFile = QSettings().value("last-lmx-file","vid.lmx").toString();
-	loadFile(lastFile);
+	//QString lastFile = QSettings().value("last-lmx-file","vid.lmx").toString();
+	//loadFile(lastFile);
 }
 
 void MainWindow::setupSampleScene()
@@ -160,6 +236,7 @@ void MainWindow::loadLiveScene(LiveScene *scene)
 
 	// attach to main viewer
 	scene->attachGLWidget(m_mainViewer);
+	scene->attachGLWidget(m_mainOutput);
 	
 	m_sceneModel->setLiveScene(scene);
 
@@ -513,7 +590,7 @@ void MainWindow::readSettings()
 
 	m_mainSplitter->restoreState(settings.value("mainwindow/main_splitter").toByteArray());
 	m_editSplitter->restoreState(settings.value("mainwindow/left_splitter").toByteArray());
-
+	m_cameraSplitter->restoreState(settings.value("mainwindow/camera_splitter").toByteArray());
 }
 
 void MainWindow::writeSettings()
@@ -524,6 +601,8 @@ void MainWindow::writeSettings()
 
 	settings.setValue("mainwindow/main_splitter",m_mainSplitter->saveState());
 	settings.setValue("mainwindow/left_splitter",m_editSplitter->saveState());
+	settings.setValue("mainwindow/camera_splitter",m_cameraSplitter->saveState());
+	
 }
 
 void MainWindow::newFile()
@@ -533,6 +612,10 @@ void MainWindow::newFile()
 	setCurrentLayer(0);
 	
 	LiveScene *scene = new LiveScene();
+	
+	scene->addLayer(m_cam2Layer);
+	scene->addLayer(m_cam1Layer);
+	
 	loadLiveScene(scene);
 	
 	if(old)
