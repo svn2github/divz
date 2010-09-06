@@ -13,7 +13,12 @@ LiveVideoFileLayer::LiveVideoFileLayer(QObject *parent)
 
 LiveVideoFileLayer::~LiveVideoFileLayer()
 {
-	// TODO close decoder thread
+	setVideoSource(0); // doesnt change m_video
+	if(m_video)
+	{
+		delete m_video;
+		m_video = 0;
+	}
 }
 
 GLDrawable *LiveVideoFileLayer::createDrawable(GLWidget *widget)

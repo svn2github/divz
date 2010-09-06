@@ -193,9 +193,9 @@ void GLDrawable::startAnimation(const GLDrawable::AnimParam& p)
 	switch(p.type)
 	{
 		case GLDrawable::AnimFade:
-			if(m_originalOpacity>-1)
-				setOpacity(m_originalOpacity);
-			else
+// 			if(m_originalOpacity>-1)
+// 				setOpacity(m_originalOpacity);
+// 			else
 				m_originalOpacity = opacity();
 			//qDebug() << "GLDrawable::startAnimation(): m_originalOpacity:"<<m_originalOpacity;
 			ani = new QAutoDelPropertyAnimation(this, "opacity");

@@ -25,14 +25,12 @@ public:
 	LiveScene(QObject *parent=0);
 	~LiveScene();
 	
-	QList<LayerControlWidget*> controlWidgets();
 	QList<LiveLayer*> layerList() { return m_layers; }
 	void addLayer(LiveLayer*);
 	void removeLayer(LiveLayer*);
 	
 	void attachGLWidget(GLWidget*);
-	void detachGLWidget(bool hideFirst=true);
-	GLWidget *currentGLWidget() { return m_glWidget; }
+	void detachGLWidget(GLWidget*);
 	
 	QByteArray toByteArray();
 	void fromByteArray(QByteArray&);
@@ -40,12 +38,9 @@ public:
 signals:
 	void layerAdded(LiveLayer*);
 	void layerRemoved(LiveLayer*);
-
-private slots:
-	void layerVisibilityChanged(bool);
 	
 private:
-	GLWidget *m_glWidget;
+	QList<GLWidget*>  m_glWidgets;
 	QList<LiveLayer*> m_layers;
 };
 

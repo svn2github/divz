@@ -9,19 +9,24 @@ QHash<QString, const QMetaObject*> LiveScene::s_metaObjects;
 ///////////////////////
 LiveScene::LiveScene(QObject *parent)
 	: QObject(parent)
-	, m_glWidget(0)
 {}
 
 LiveScene::~LiveScene()
-{}
-
-QList<LayerControlWidget*> LiveScene::controlWidgets()
 {
-	QList<LayerControlWidget*> list;
-// 	foreach(LiveLayer *layer, m_layers)
-// 		if(layer->controlWidget())
-// 			list.append(layer->controlWidget());
-	return list;
+	//qDebug() << "LiveScene::~LiveScene() - start";
+	while(!m_glWidgets.isEmpty())
+	{
+		// Yes, I know detachGLWidget() removes the widget from the list -
+		// But, on the *rare* chance that it doesnt, I don't want this
+		// list to run forever - so the takeFirst() call guarantees that
+		// eventually the list will be empty, terminating the loop./
+		detachGLWidget(m_glWidgets.takeFirst());
+	}
+	
+	//qDebug() << "LiveScene::~LiveScene() - end";
+	
+	qDeleteAll(m_layers);
+	m_layers.clear();
 }
 
 void LiveScene::addLayer(LiveLayer *layer)
@@ -31,8 +36,8 @@ void LiveScene::addLayer(LiveLayer *layer)
 	if(!m_layers.contains(layer))
 	{
 		m_layers.append(layer);
-		if(m_glWidget)
-			m_glWidget->addDrawable(layer->drawable(m_glWidget));
+		foreach(GLWidget *glw, m_glWidgets)
+			glw->addDrawable(layer->drawable(glw));
 
 		layer->setScene(this);
 		emit layerAdded(layer);
@@ -46,8 +51,8 @@ void LiveScene::removeLayer(LiveLayer *layer)
 	if(m_layers.contains(layer))
 	{
 		m_layers.removeAll(layer);
-		if(m_glWidget)
-			m_glWidget->removeDrawable(layer->drawable(m_glWidget));
+		foreach(GLWidget *glw, m_glWidgets)
+			glw->removeDrawable(layer->drawable(glw));
 
 		layer->setScene(0);
 		emit layerRemoved(layer);
@@ -56,62 +61,25 @@ void LiveScene::removeLayer(LiveLayer *layer)
 
 void LiveScene::attachGLWidget(GLWidget *glw)
 {
-	if(m_glWidget)
-		detachGLWidget();
-
-	m_glWidget = glw;
-
-	foreach(LiveLayer *layer, m_layers)
-		m_glWidget->addDrawable(layer->drawable(m_glWidget));
-}
-
-void LiveScene::detachGLWidget(bool hideFirst)
-{
-	if(!m_glWidget)
-		return;
-
-	if(hideFirst)
-	{
-		bool foundVisible = false;
-		foreach(LiveLayer *layer, m_layers)
-		{
-			if(layer->drawable(m_glWidget)->isVisible())
-			{
-				foundVisible = true;
-				connect(layer->drawable(m_glWidget), SIGNAL(isVisible(bool)), this, SLOT(layerVisibilityChanged(bool)));
-				layer->drawable(m_glWidget)->hide();
-			}
-		}
-
-		if(foundVisible)
-			return;
-	}
-
-	foreach(LiveLayer *layer, m_layers)
-		m_glWidget->removeDrawable(layer->drawable(m_glWidget));
-
-	m_glWidget = 0;
-}
-
-void LiveScene::layerVisibilityChanged(bool flag)
-{
-	if(flag)
-		return;
-	
-	if(!m_glWidget)
+	if(!glw)
 		return;
 		
-	bool foundVisible = false;
+	m_glWidgets.append(glw);
+
 	foreach(LiveLayer *layer, m_layers)
-		if(layer->drawable(m_glWidget)->isVisible())
-		{
-			foundVisible = true;
-			break;
-		}
+		glw->addDrawable(layer->drawable(glw));
+}
 
-	if(!foundVisible)
-		detachGLWidget(false);
+void LiveScene::detachGLWidget(GLWidget *glw)
+{
+	if(!glw)
+		return;
 
+	qDebug() << "LiveScene::detachGLWidget(): glw: "<<glw;
+	foreach(LiveLayer *layer, m_layers)
+		glw->removeDrawable(layer->drawable(glw));
+
+	m_glWidgets.removeAll(glw);
 }
 
 void LiveScene::fromByteArray(QByteArray& array)

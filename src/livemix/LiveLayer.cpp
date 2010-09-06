@@ -353,9 +353,9 @@ QString LiveLayer::guessTitle(QString field)
 
 LiveLayer::LiveLayer(QObject *parent)
 	: QObject(parent)
-	, m_showOnShow(0)
-	, m_hideOnShow(0)
 	, m_scene(0)
+	, m_hideOnShow(0)
+	, m_showOnShow(0)
 	, m_lockVsibleSetter(false)
 {
 	m_props["rect"] = QRectF();
@@ -383,7 +383,17 @@ LiveLayer::LiveLayer(QObject *parent)
 }
 
 LiveLayer::~LiveLayer()
-{}
+{
+	QList<GLDrawable *> drawables = m_drawables.values();
+	m_drawables.clear();
+	
+	qDeleteAll(drawables);
+	drawables.clear();
+	
+	m_scene = 0;
+	m_hideOnShow = 0;
+	m_showOnShow = 0;	
+}
 
 // Returns a GLDrawable for the specified GLWidget. If none exists,
 // then calls createDrawable() internally, followed by initDrawable()
@@ -1236,6 +1246,7 @@ void LiveLayer::applyAnimationProperties(GLDrawable *drawable)
 void LiveLayer::setInstanceName(const QString& name)
 {
 	m_instanceName = name;
+	setObjectName(qPrintable(m_instanceName));
 	emit instanceNameChanged(name);
 }
 

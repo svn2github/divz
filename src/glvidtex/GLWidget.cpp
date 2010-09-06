@@ -62,9 +62,11 @@ void GLWidget::paintGL()
 	{
 		//qDebug() << "GLWidget::paintGL(): ["<<counter++<<"] drawable->rect: "<<drawable->rect();
 		
+// 		qDebug() << "GLWidget::paintGL(): drawable:"<<((void*)drawable)<<", isvis:"<<drawable->isVisible();
 		// Don't draw if not visible or if opacity == 0
 		if(drawable->isVisible() && drawable->opacity() > 0)
 			drawable->paintGL();
+// 		qDebug() << "GLWidget::paintGL(): drawable:"<<((void*)drawable)<<", draw done";
 	}
 }
 	
@@ -85,6 +87,7 @@ void GLWidget::addDrawable(GLDrawable *item)
 
 void GLWidget::removeDrawable(GLDrawable *item)
 {
+// 	qDebug() << "GLWidget::removeDrawable(): drawable:"<<((void*)item);
 	m_drawables.removeAll(item);
 	item->setGLWidget(0);
 	disconnect(item, 0, this, 0);
