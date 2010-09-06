@@ -345,18 +345,18 @@ void GLDrawable::setOpacity(double o)
 	updateGL();
 }
 
-void GLDrawable::setShowFullScreen(bool flag)
+void GLDrawable::setShowFullScreen(bool flag, bool animate, int animLength, QEasingCurve animCurve)
 {
 // 	qDebug() << "GLDrawable::setShowFullScreen(): "<<flag;
 	m_showFullScreen = flag;
-	updateAlignment();
+	updateAlignment(animate, animLength, animCurve);
 }
 
-void GLDrawable::setAlignment(Qt::Alignment value)
+void GLDrawable::setAlignment(Qt::Alignment value, bool animate, int animLength, QEasingCurve animCurve)
 {
 	m_alignment = value;
  	//qDebug() << "GLDrawable::setAlignment(): "<<this<<", m_alignment:"<<m_alignment;
-	updateAlignment();
+	updateAlignment(animate, animLength, animCurve);
 }
 
 void GLDrawable::setAlignment(int value)
@@ -387,7 +387,7 @@ void GLDrawable::setAlignedSizeScale(qreal scale)
 	updateAlignment();
 }
 
-void GLDrawable::updateAlignment()
+void GLDrawable::updateAlignment(bool animateRect, int animLength, QEasingCurve animCurve)
 {
 	m_inAlignment = true;
 
@@ -421,12 +421,23 @@ void GLDrawable::updateAlignment()
 	if(m_showFullScreen)
 	{
 		QRectF rect = m_glw->viewport();
-		rect = rect.adjusted(
-			 m_insetTopLeft.x(),
-			 m_insetTopLeft.y(),
-			-m_insetBottomRight.x(),
-			-m_insetBottomRight.y());
-		setRect(rect);
+// 		rect = rect.adjusted(
+// 			 m_insetTopLeft.x(),
+// 			 m_insetTopLeft.y(),
+// 			-m_insetBottomRight.x(),
+// 			-m_insetBottomRight.y());
+		if(animateRect)
+		{
+			QPropertyAnimation *animation = new QPropertyAnimation(this, "rect");
+			animation->setDuration(animLength);
+			animation->setEasingCurve(animCurve);
+			animation->setEndValue(rect);
+			animation->start(QAbstractAnimation::DeleteWhenStopped);
+		}
+		else
+		{
+			setRect(rect);
+		}
  		//qDebug() << "GLDrawable::updateAlignment(): "<<this<<", full screen, new rect:"<<rect;
 	}
 	else
@@ -486,7 +497,18 @@ void GLDrawable::updateAlignment()
 
 		QRectF rect = QRectF(x,y,w,h);
  		//qDebug() << "GLDrawable::updateAlignment(): "<<this<<", final rect: "<<rect;
-		setRect(rect);
+		if(animateRect)
+		{
+			QPropertyAnimation *animation = new QPropertyAnimation(this, "rect");
+			animation->setDuration(animLength);
+			animation->setEasingCurve(animCurve);
+			animation->setEndValue(rect);
+			animation->start(QAbstractAnimation::DeleteWhenStopped);
+		}
+		else
+		{
+			setRect(rect);
+		}
 	}
 
 	m_inAlignment = false;

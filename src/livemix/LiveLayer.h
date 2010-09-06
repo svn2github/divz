@@ -151,15 +151,14 @@ class LiveLayer : public QObject
 public:
 	LiveLayer(QObject *parent=0);
 	virtual ~LiveLayer();
-
+	
+	void attachGLWidget(GLWidget*);
+	void detachGLWidget(GLWidget*);
+	
 	// Override and return a descritive static type name for your layer
 	virtual QString typeName() { return "Generic Layer"; }
 	// Use "setInstanceName to change the name here, which emits instanceNameChanged()
 	virtual QString instanceName() { return m_instanceName; }
-
-	// Returns a GLDrawable for the specified GLWidget. If none exists,
-	// then calls createDrawable() internally, followed by initDrawable()
-	virtual GLDrawable * drawable(GLWidget *widget);
 
 	// Query for layer properties
 	virtual QVariantMap layerProperties() { return m_props; }
@@ -171,15 +170,38 @@ public:
 	
 	virtual void fromByteArray(QByteArray&);
 	virtual QByteArray toByteArray();
+	
+	class AnimParam
+	{
+	public:
+		AnimParam()
+			: length(300)
+			, curve(QEasingCurve::Linear)
+			{}
+		
+		int length;
+		QEasingCurve curve;
+	};
+	
+	// Set/get the currently effective animation parameters used
+	// for transitioning from one property to another
+	void setAnimParam(const AnimParam&);
+	const AnimParam & animParam() { return m_animParam; }
+	
+	// Enable/disable animations. By default, animations are enabled.
+	// Disable for setting properties in bulk or loading props
+	bool setAnimEnabled(bool);
+	bool animEnabled() { return !m_animationsDisabled; }
+		
 
 	// Translated from a perl function I wrote to do basically
 	// the same thing for an ERP project a few years back.
 	static QString guessTitle(QString field);
 
-	bool isVisible() 	{ return m_isVisible; }
-	QRectF rect()		{ return layerProperty("rect").toRectF(); }
-	double zIndex()		{ return layerProperty("zIndex").toDouble(); }
-	double opacity()	{ return layerProperty("opacity").toDouble(); }
+	bool isVisible() 		{ return m_isVisible; }
+	QRectF rect()			{ return layerProperty("rect").toRectF(); }
+	double zIndex()			{ return layerProperty("zIndex").toDouble(); }
+	double opacity()		{ return layerProperty("opacity").toDouble(); }
 
 
 	bool fadeIn() 			{ return layerProperty("fadeIn").toBool(); }
@@ -290,6 +312,11 @@ protected slots:
 	void setHideOnShow(int);
 
 protected:
+	// Returns a GLDrawable for the specified GLWidget. If none exists,
+	// then calls createDrawable() internally, followed by initDrawable()
+	virtual GLDrawable * drawable(GLWidget *widget);
+
+	
 	class PropertyEditorOptions
 	{
 	public:
@@ -380,6 +407,12 @@ private:
 	
 	QList<LiveLayer*> m_sortedLayerList;
 	bool m_lockVsibleSetter;
+	
+	QList<GLWidget*>  m_glWidgets;
+	
+	bool m_animationsDisabled;
+	AnimParam m_animParam;
+	
 };
 
 class ObjectValueSetter : public QObject

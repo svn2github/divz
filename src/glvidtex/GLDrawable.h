@@ -122,8 +122,8 @@ public slots:
 
 	void setAnimationsEnabled(bool);
 
-	void setShowFullScreen(bool flag);
-	void setAlignment(Qt::Alignment value);
+	void setShowFullScreen(bool flag, bool animate=true, int animLength=300, QEasingCurve animCurve = QEasingCurve::Linear);
+	void setAlignment(Qt::Alignment value, bool animate=true, int animLength=300, QEasingCurve animCurve = QEasingCurve::Linear);
 	void setAlignment(int value);
 	void setInsetTopLeft(const QPointF& value);
 	void setInsetBottomRight(const QPointF& value);
@@ -140,7 +140,7 @@ protected slots:
 	virtual void animationFinished();
 
 protected:
-	virtual void updateAlignment();
+	virtual void updateAlignment(bool animateRect=false, int animLength=300, QEasingCurve animCurve = QEasingCurve::Linear);
 
 	friend class GLWidget;
 	virtual void setGLWidget(GLWidget*); // when update is called, it calls GLWidget::updateGL()

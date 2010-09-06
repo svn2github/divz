@@ -3,6 +3,7 @@
 #include "LiveScene.h"
 #include "../glvidtex/GLDrawable.h"
 #include "../glvidtex/GLWidget.h"
+#include <QPropertyAnimation>
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -357,6 +358,7 @@ LiveLayer::LiveLayer(QObject *parent)
 	, m_hideOnShow(0)
 	, m_showOnShow(0)
 	, m_lockVsibleSetter(false)
+	, m_animationsDisabled(false)
 {
 	m_props["rect"] = QRectF();
 	m_props["zIndex"] = 0.0;
@@ -1206,6 +1208,7 @@ void LiveLayer::setLayerProperty(const QString& propertyId, const QVariant& valu
 		else
 		if(metaObject()->indexOfProperty(qPrintable(propertyId)) >= 0)
 		{
+			// could cause recursion if the property setter calls this method again, hence the m_propSetLock[] usage
 			setProperty(qPrintable(propertyId), value);
 		}
 	}
@@ -1218,7 +1221,31 @@ void LiveLayer::applyDrawableProperty(const QString& propertyId, const QVariant&
 {
 	foreach(GLWidget *widget, m_drawables.keys())
 	{
-		m_drawables[widget]->setProperty(qPrintable(propertyId), value);
+		if(m_animationsDisabled || 
+			(value.type() == QVariant::Bool && propertyId != "showFullScreen"))
+		{
+			m_drawables[widget]->setProperty(qPrintable(propertyId), value);
+		}
+		else
+		{
+			if(propertyId == "alignment")
+			{
+				m_drawables[widget]->setAlignment((Qt::Alignment)value.toInt(), true, m_animParam.length, m_animParam.curve);
+			}
+			else
+			if(propertyId == "showFullScreen")
+			{
+				m_drawables[widget]->setShowFullScreen(value.toBool(), true, m_animParam.length, m_animParam.curve);
+			}
+			else
+			{
+				QPropertyAnimation *animation = new QPropertyAnimation(m_drawables[widget], propertyId.toAscii());
+				animation->setDuration(m_animParam.length);
+				animation->setEasingCurve(m_animParam.curve);
+				animation->setEndValue(value);
+				animation->start(QAbstractAnimation::DeleteWhenStopped);
+			}
+		}
 	}
 }
 
@@ -1269,7 +1296,8 @@ GLDrawable *LiveLayer::createDrawable(GLWidget */*widget*/)
 void LiveLayer::initDrawable(GLDrawable *drawable, bool /*isFirstDrawable*/)
 {
  	//qDebug() << "LiveLayer::initDrawable: drawable:"<<drawable;
-
+	bool animEnabled = setAnimEnabled(false);
+	
 	QStringList generalProps = QStringList()
 			<< "rect"
 			<< "zIndex"
@@ -1282,9 +1310,12 @@ void LiveLayer::initDrawable(GLDrawable *drawable, bool /*isFirstDrawable*/)
 			
 	applyLayerPropertiesToObject(drawable, generalProps);
 	applyAnimationProperties(drawable);
+	
+	setAnimEnabled(animEnabled);
 
 	//qDebug() << "LiveLayer::initDrawable: now setting visible:"<<m_isVisible<<", rect:"<<drawable->rect();
 	drawable->setVisible(m_isVisible);
+	
 }
 
 
@@ -1322,6 +1353,8 @@ void LiveLayer::applyLayerPropertiesToObject(QObject *object, QStringList list)
 
 void LiveLayer::fromByteArray(QByteArray& array)
 {
+	bool animEnabled = setAnimEnabled(false);
+	
 	QDataStream stream(&array, QIODevice::ReadOnly);
 	QVariantMap map;
 	stream >> map;
@@ -1362,6 +1395,8 @@ void LiveLayer::fromByteArray(QByteArray& array)
 				qDebug() << "LiveLayer::fromByteArray: Unable to load property for "<<name<<", got invalid property from map";
 			}
 	}
+	
+	setAnimEnabled(animEnabled);
 	
 	//qDebug() << "LiveLayer::fromByteArray():"<<this<<": *** Setting visibility to "<<vis;
 	setVisible(vis);
@@ -1421,3 +1456,34 @@ void LiveLayer::setScene(LiveScene *scene)
 	m_scene = scene;
 }
 
+void LiveLayer::attachGLWidget(GLWidget *glw)
+{
+	if(!glw)
+		return;
+		
+	m_glWidgets.append(glw);
+
+	glw->addDrawable(drawable(glw));
+}
+
+void LiveLayer::detachGLWidget(GLWidget *glw)
+{
+	if(!glw)
+		return;
+
+	glw->removeDrawable(drawable(glw));
+
+	m_glWidgets.removeAll(glw);
+}
+
+bool LiveLayer::setAnimEnabled(bool flag)
+{
+	bool old = !m_animationsDisabled;
+	m_animationsDisabled = !flag;
+	return old;
+}
+
+void LiveLayer::setAnimParam(const LiveLayer::AnimParam &p)
+{
+	m_animParam = p;
+}

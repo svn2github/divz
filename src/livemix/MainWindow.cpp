@@ -202,14 +202,16 @@ void MainWindow::setCurrentLayer(LiveLayer *layer)
 	if(m_currentLayer)
 	{
 //  		qDebug() << "MainWindow::setCurrentLayer(): removing old layer from editor";
-		m_layerViewer->removeDrawable(m_currentLayer->drawable(m_layerViewer));
+		//m_layerViewer->removeDrawable(m_currentLayer->drawable(m_layerViewer));
+		m_currentLayer->detachGLWidget(m_layerViewer);
 	}
 
 	m_currentLayer = layer;
 	loadLayerProperties(m_currentLayer);
 		
 	if(m_currentLayer)
-		m_layerViewer->addDrawable(m_currentLayer->drawable(m_layerViewer));
+		//m_layerViewer->addDrawable(m_currentLayer->drawable(m_layerViewer));
+		m_currentLayer->attachGLWidget(m_layerViewer);
 }
 
 void MainWindow::loadLayerProperties(LiveLayer *layer)

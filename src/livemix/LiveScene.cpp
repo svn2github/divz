@@ -37,7 +37,7 @@ void LiveScene::addLayer(LiveLayer *layer)
 	{
 		m_layers.append(layer);
 		foreach(GLWidget *glw, m_glWidgets)
-			glw->addDrawable(layer->drawable(glw));
+			layer->attachGLWidget(glw);
 
 		layer->setScene(this);
 		emit layerAdded(layer);
@@ -52,7 +52,7 @@ void LiveScene::removeLayer(LiveLayer *layer)
 	{
 		m_layers.removeAll(layer);
 		foreach(GLWidget *glw, m_glWidgets)
-			glw->removeDrawable(layer->drawable(glw));
+			layer->detachGLWidget(glw);
 
 		layer->setScene(0);
 		emit layerRemoved(layer);
@@ -67,7 +67,7 @@ void LiveScene::attachGLWidget(GLWidget *glw)
 	m_glWidgets.append(glw);
 
 	foreach(LiveLayer *layer, m_layers)
-		glw->addDrawable(layer->drawable(glw));
+		layer->attachGLWidget(glw);
 }
 
 void LiveScene::detachGLWidget(GLWidget *glw)
@@ -75,9 +75,9 @@ void LiveScene::detachGLWidget(GLWidget *glw)
 	if(!glw)
 		return;
 
-	qDebug() << "LiveScene::detachGLWidget(): glw: "<<glw;
+	//qDebug() << "LiveScene::detachGLWidget(): glw: "<<glw;
 	foreach(LiveLayer *layer, m_layers)
-		glw->removeDrawable(layer->drawable(glw));
+		layer->detachGLWidget(glw);
 
 	m_glWidgets.removeAll(glw);
 }

@@ -51,6 +51,7 @@ public:
 	
 	// not valid until setHtml called
 	QSize size() { return m_image.size(); }
+	const QImage & image() { return m_image; }
 
 	ITEM_PROPDEF(TextWidth,		int,	textWidth);
 	
