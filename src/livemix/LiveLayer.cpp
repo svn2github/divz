@@ -359,9 +359,11 @@ LiveLayer::LiveLayer(QObject *parent)
 	, m_showOnShow(0)
 	, m_lockVsibleSetter(false)
 	, m_animationsDisabled(false)
+	, m_layerId(-1)
+	, m_layerIdLoaded(false)
 {
 	m_props["rect"] = QRectF();
-	m_props["zIndex"] = 0.0;
+	m_props["zIndex"] = -1.;
 	m_props["opacity"] = 1.0;
 	m_props["showFullScreen"] = true;
 	m_props["alignment"] = 0;
@@ -397,6 +399,18 @@ LiveLayer::~LiveLayer()
 	m_showOnShow = 0;	
 }
 
+int LiveLayer::id()
+{
+	if(m_layerId < 0)
+	{
+		QSettings set;
+		m_layerId = set.value("livelayer/id-counter",0).toInt() + 1;
+		set.setValue("livelayer/id-counter",m_layerId);
+	}
+	
+	return m_layerId;
+}
+
 // Returns a GLDrawable for the specified GLWidget. If none exists,
 // then calls createDrawable() internally, followed by initDrawable()
 GLDrawable* LiveLayer::drawable(GLWidget *widget)
@@ -415,12 +429,12 @@ GLDrawable* LiveLayer::drawable(GLWidget *widget)
 
 		if(wasEmpty)
 		{
-// 			qDebug() << "LiveLayer::drawable: widget:"<<widget<<", cache miss, first drawable";
+ 			//qDebug() << "LiveLayer::drawable: widget:"<<widget<<", cache miss, first drawable";
 			initDrawable(drawable, true);
 		}
 		else
 		{
-// 			qDebug() << "LiveLayer::drawable: widget:"<<widget<<", cache miss, copy from first";
+ 			//qDebug() << "LiveLayer::drawable: widget:"<<widget<<", cache miss, copy from first";
 			initDrawable(drawable, false);
 		}
 
@@ -836,13 +850,14 @@ QWidget * LiveLayer::createLayerPropertyEditors()
 		QMap<double,LiveLayer*> layerMap;
 		QList<LiveLayer*> layerList = m_scene->layerList();
 		foreach(LiveLayer *layer, layerList)
-			layerMap[layer->zIndex()] = layer;
+			if(layer != this)
+				layerMap[layer->zIndex()] = layer;
 			
 		m_sortedLayerList = layerMap.values();
 		
 		QStringList layerNames;
 		layerNames << "(None)";
-		int hideIdx=0, showIdx=0, count=0;
+		int hideIdx=0, showIdx=0, count=1;
 		foreach(LiveLayer *layer, m_sortedLayerList)
 		{
 			layerNames << QString("%1 (%2)").arg(layer->instanceName()).arg(layer->typeName());
@@ -853,14 +868,18 @@ QWidget * LiveLayer::createLayerPropertyEditors()
 			count ++;
 		}
 	
+		//qDebug() << "LiveLayer::createLayerPropertyEditors(): hideIdx:"<<hideIdx<<", showIdx:"<<showIdx;
+		
 		QComboBox *hideOnShowBox = new QComboBox();
 		hideOnShowBox->addItems(layerNames);
 		hideOnShowBox->setCurrentIndex(hideIdx);
+		hideOnShowBox->setEnabled(layerNames.size() > 1);
 		connect(hideOnShowBox, SIGNAL(activated(int)), this, SLOT(setHideOnShow(int)));
 	
 		QComboBox *showOnShowBox = new QComboBox();
 		showOnShowBox->addItems(layerNames);
 		showOnShowBox->setCurrentIndex(showIdx);
+		showOnShowBox->setEnabled(layerNames.size() > 1);
 		connect(showOnShowBox, SIGNAL(activated(int)), this, SLOT(setShowOnShow(int)));
 	
 		formLayout->addRow(tr("&Hide on Show:"), hideOnShowBox);
@@ -1174,7 +1193,8 @@ void LiveLayer::setLayerProperty(const QString& propertyId, const QVariant& valu
 		
 	m_propSetLock[propertyId] = true;
 
-// 	qDebug() << "LiveLayer::setLayerProperty: id:"<<propertyId<<", value:"<<value;
+ 	//if(propertyId != "rect")
+ 	//qDebug() << "LiveLayer::setLayerProperty: id:"<<propertyId<<", value:"<<value;
 
 	QVariant oldValue = m_props[propertyId];
 	m_props[propertyId] = value;
@@ -1184,6 +1204,7 @@ void LiveLayer::setLayerProperty(const QString& propertyId, const QVariant& valu
 
 	if(m_drawables.isEmpty())
 	{
+		//qDebug() << "LiveLayer::setLayerProperty: id:"<<propertyId<<", drawables empty, unlocking and returning";
 		m_propSetLock[propertyId] = false;
 		return;
 	}
@@ -1200,16 +1221,22 @@ void LiveLayer::setLayerProperty(const QString& propertyId, const QVariant& valu
 	else
 	{
 		GLDrawable *drawable = m_drawables[m_drawables.keys().first()];
-
+	
 		if(drawable->metaObject()->indexOfProperty(qPrintable(propertyId)) >= 0)
 		{
+			//qDebug() << "LiveLayer::setLayerProperty: id:"<<propertyId<<", applying to drawables";
 			applyDrawableProperty(propertyId, value);
 		}
 		else
 		if(metaObject()->indexOfProperty(qPrintable(propertyId)) >= 0)
 		{
+			//qDebug() << "LiveLayer::setLayerProperty: id:"<<propertyId<<", applying to self";
 			// could cause recursion if the property setter calls this method again, hence the m_propSetLock[] usage
 			setProperty(qPrintable(propertyId), value);
+		}
+		else
+		{
+			qDebug() << "LiveLayer::setLayerProperty: id:"<<propertyId<<", not found in any meta object!";
 		}
 	}
 	
@@ -1222,6 +1249,7 @@ void LiveLayer::applyDrawableProperty(const QString& propertyId, const QVariant&
 	foreach(GLWidget *widget, m_drawables.keys())
 	{
 		if(m_animationsDisabled || 
+			propertyId == "aspectRatioMode" || // yes, I know, hack - need to be some way for layers to specify what props dont need to be animated - or to ask a prop if its an enum.......
 			(value.type() == QVariant::Bool && propertyId != "showFullScreen"))
 		{
 			m_drawables[widget]->setProperty(qPrintable(propertyId), value);
@@ -1307,7 +1335,8 @@ void LiveLayer::initDrawable(GLDrawable *drawable, bool /*isFirstDrawable*/)
 			<< "insetTopLeft"
 			<< "insetBottomRight"
 			<< "alignedSizeScale";
-			
+		
+	//qDebug() << "LiveLayer::initDrawable: drawable:"<<drawable<<", props list:"<<generalProps;
 	applyLayerPropertiesToObject(drawable, generalProps);
 	applyAnimationProperties(drawable);
 	
@@ -1332,6 +1361,7 @@ void LiveLayer::loadLayerPropertiesFromObject(const QObject *object, const QStri
 // 'Attempts' means that if drawable->metaObject()->indexOfProperty() returns <0, then setProperty is not called
 void LiveLayer::applyLayerPropertiesToObject(QObject *object, QStringList list)
 {
+	//qDebug() << "LiveLayer::applyLayerPropertiesToObject(): "<<object<<", list:"<<list;
 	if(list.isEmpty())
 		foreach(QString key, m_props.keys())
 			list << key;
@@ -1343,11 +1373,19 @@ void LiveLayer::applyLayerPropertiesToObject(QObject *object, QStringList list)
 			const char *asciiPropId = qPrintable(key);
 			if(object->metaObject()->indexOfProperty(asciiPropId) >= 0)
 			{
+				//qDebug() << "LiveLayer::applyLayerPropertiesToObject(): "<<object<<", prop:"<<key<<", setting to "<<m_props[key];
 				object->setProperty(asciiPropId, m_props[key]);
 			}
+			else
+			{
+				qDebug() << "LiveLayer::applyLayerPropertiesToObject(): "<<object<<", prop:"<<key<<", cannot find index of prop on object, not setting";
+			}
+		}
+		else
+		{
+			qDebug() << "LiveLayer::applyLayerPropertiesToObject(): "<<object<<", prop:"<<key<<", m_props doesnt contain it, not setting";
 		}
 	}
-
 }
 
 
@@ -1366,6 +1404,15 @@ void LiveLayer::fromByteArray(QByteArray& array)
 		return;
 	}
 	
+	loadPropsFromMap(map);
+	
+	setAnimEnabled(animEnabled);
+	
+	
+}
+
+void LiveLayer::loadPropsFromMap(const QVariantMap& map, bool onlyApplyIfChanged)
+{
 	bool vis = false;
 	
 	// So we dont have to engineer our own method of tracking
@@ -1378,36 +1425,63 @@ void LiveLayer::fromByteArray(QByteArray& array)
 		QMetaProperty metaproperty = metaobject->property(i);
 		const char *name = metaproperty.name();
 		QVariant value = map[name];
-		//qDebug() << "LiveLayer::fromByteArray():"<<this<<": prop:"<<name<<", value:"<<value;
+		
+		//if(name == "aspectRatioMode")
+		//qDebug() << "LiveLayer::loadPropsFromMap():"<<this<<": i:"<<i<<", count:"<<count<<", prop:"<<name<<", value:"<<value;
 		
 		// Hold setting visiblility flag till last so that way any properties that affect
 		// animations are set BEFORE animations start!
 		if(QString(name) == "isVisible")
 		{
 			vis = value.toBool();
-			//qDebug() << "LiveLayer::fromByteArray():"<<this<<": *** Found visibility prop, vis:"<<vis;
+		}
+		else
+		if(QString(name) == "id")
+		{
+			// m_layerId is only set ONCE by this method, overwriting any ID assigned at creation time
+			if(!m_layerIdLoaded && value.isValid())
+			{
+				m_layerIdLoaded = true;
+				m_layerId = value.toInt();
+			}
 		}
 		else
 		{
+			
 			if(value.isValid())
-				setProperty(name,value);
-			else
-				qDebug() << "LiveLayer::fromByteArray: Unable to load property for "<<name<<", got invalid property from map";
+			{
+				if(onlyApplyIfChanged)
+				{
+					if(property(name) != value)
+						setProperty(name,value);
+				}
+				else
+				{
+					//qDebug() << "LiveLayer::loadPropsFromMap():"<<this<<": i:"<<i<<", count:"<<count<<", prop:"<<name<<", value:"<<value<<" (calling set prop)";
+					setProperty(name,value);
+				}
 			}
+			//else
+				//qDebug() << "LiveLayer::loadPropsFromMap: Unable to load property for "<<name<<", got invalid property from map";
+		}
 	}
 	
-	setAnimEnabled(animEnabled);
-	
 	//qDebug() << "LiveLayer::fromByteArray():"<<this<<": *** Setting visibility to "<<vis;
-	setVisible(vis);
+	if(!onlyApplyIfChanged || isVisible() != vis)
+		setVisible(vis);
 }
 
 QByteArray LiveLayer::toByteArray()
 {
 	QByteArray array;
 	QDataStream stream(&array, QIODevice::WriteOnly);
+	stream << propsToMap();
+	return array;
+}
+
+QVariantMap LiveLayer::propsToMap()
+{
 	QVariantMap map;
-	
 	// So we dont have to engineer our own method of tracking
 	// properties, just assume all inherited objects delcare the relevant
 	// properties using Q_PROPERTY macro
@@ -1418,18 +1492,33 @@ QByteArray LiveLayer::toByteArray()
 		QMetaProperty metaproperty = metaobject->property(i);
 		const char *name = metaproperty.name();
 		QVariant value = property(name);
-		//qDebug() << "LiveLayer::toByteArray():"<<this<<instanceName()<<": prop:"<<name<<", value:"<<value;
+		
+		if(name == "aspectRatioMode")
+			qDebug() << "LiveLayer::toByteArray():"<<this<<instanceName()<<": prop:"<<name<<", value:"<<value;
+			
 		map[name] = value;
 	}
-	
-	stream << map;
-	
-	return array;
+	return map;
 }
 
+void LiveLayer::setShowOnShowLayerId(int value)
+{
+	setLayerProperty("showOnShowLayerId", value);
+	if(m_scene)
+		setShowOnShow(m_scene->layerFromId(value));
+}
+
+void LiveLayer::setHideOnShowLayerId(int value)
+{
+	setLayerProperty("hideOnShowLayerId", value);
+	if(m_scene)
+		setHideOnShow(m_scene->layerFromId(value));
+}
+	
 void LiveLayer::setHideOnShow(LiveLayer *layer)
 {
 	m_hideOnShow = layer;
+	setLayerProperty("hideOnShowLayerId", layer ? layer->id() : 0);
 }
 
 void LiveLayer::setHideOnShow(int x)
@@ -1442,6 +1531,7 @@ void LiveLayer::setHideOnShow(int x)
 void LiveLayer::setShowOnShow(LiveLayer *layer)
 {
 	m_showOnShow = layer;
+	setLayerProperty("showOnShowLayerId", layer ? layer->id() : 0);
 }
 
 void LiveLayer::setShowOnShow(int x)
@@ -1454,6 +1544,22 @@ void LiveLayer::setShowOnShow(int x)
 void LiveLayer::setScene(LiveScene *scene)
 {
 	m_scene = scene;
+	
+	if(hideOnShowLayerId() > 0 &&
+	  !hideOnShow())
+	  {
+	  	LiveLayer *layer = m_scene->layerFromId(hideOnShowLayerId());
+	  	if(layer)
+	  		setHideOnShow(layer);
+	  }
+		
+	if(showOnShowLayerId() > 0 &&
+	  !showOnShow())
+	  {
+	  	LiveLayer *layer = m_scene->layerFromId(showOnShowLayerId());
+	  	if(layer)
+			setShowOnShow(layer);
+	}
 }
 
 void LiveLayer::attachGLWidget(GLWidget *glw)

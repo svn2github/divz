@@ -412,7 +412,7 @@ void GLDrawable::updateAlignment(bool animateRect, int animLength, QEasingCurve 
 		//qDebug() << "GLDrawable::updateAlignment(): restoring opacity:"<<m_originalOpacity;
 		if(m_originalOpacity>-1)
 			setOpacity(m_originalOpacity);
-		restartAnimations = true;
+		//restartAnimations = true;
 	}
 
 
@@ -513,10 +513,10 @@ void GLDrawable::updateAlignment(bool animateRect, int animLength, QEasingCurve 
 
 	m_inAlignment = false;
 	
-	if(restartAnimations)
-	{
-		startAnimations();
-	}
+// 	if(restartAnimations)
+// 	{
+// 		startAnimations();
+// 	}
 }
 
 void GLDrawable::setGLWidget(GLWidget* w)

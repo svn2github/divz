@@ -479,6 +479,7 @@ void GLVideoDrawable::setCropBottomRight(QPointF value)
 
 void GLVideoDrawable::setAspectRatioMode(Qt::AspectRatioMode mode)
 {
+	//qDebug() << "GLVideoDrawable::setAspectRatioMode: "<<this<<", mode:"<<mode<<", int:"<<(int)mode;
 	m_aspectRatioMode = mode;
 	updateRects();
 	updateAlignment();

@@ -36,7 +36,7 @@ GLDrawable* LiveStaticSourceLayer::createDrawable(GLWidget *context)
 
 void LiveStaticSourceLayer::initDrawable(GLDrawable *newDrawable, bool isFirst)
 {
-	LiveLayer::initDrawable(newDrawable, isFirst);
+	LiveVideoLayer::initDrawable(newDrawable, isFirst);
 }
 
 QWidget * LiveStaticSourceLayer::createLayerPropertyEditors()

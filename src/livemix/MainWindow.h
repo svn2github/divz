@@ -30,8 +30,7 @@ protected:
 
 private slots:
 	void about();
-	void updateLayerList();
-
+	
 	void setCurrentLayer(LiveLayer *layer);
 	
 	void newFile();
@@ -51,6 +50,15 @@ private slots:
 	void currentChanged(const QModelIndex &idx,const QModelIndex &);
 	void repaintLayerList();
 	void layersDropped(QList<LiveLayer*>);
+	
+	void slotTimelineTableCellActivated(int,int);
+	void slotTimelineTableCellEdited(QTableWidgetItem*);
+	void keyFrameBtnActivated();
+	
+	void createKeyFrame();
+	void deleteKeyFrame();
+	
+	void deleteCurrentLayer();
 
 private:
 	void createActions();
@@ -69,6 +77,8 @@ private:
 	void loadLiveScene(LiveScene*);
 	void loadLayerProperties(LiveLayer*);
 	void removeCurrentScene();
+	
+	void loadKeyFramesToTable();
 	
 	
 	QMenu *m_fileMenu;
@@ -89,6 +99,8 @@ private:
 	QAction *m_newVideoLayerAct;
 	QAction *m_newTextLayerAct;
 	QAction *m_newImageLayerAct;
+	
+	QAction *m_deleteLayerAct;
 	
 	
 	QSplitter *m_mainSplitter;
@@ -120,6 +132,13 @@ private:
 	
 	QListView * m_layerListView;
 	class LiveSceneListModel *m_sceneModel;
+	
+	QSplitter *m_leftSplitter;
+	QTableWidget *m_timelineTable;
+	
+	QPushButton *m_keyDelBtn;
+	QPushButton *m_keyNewBtn;
+	int m_currentKeyFrameRow;
 	
 
 };

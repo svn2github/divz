@@ -43,7 +43,7 @@ GLDrawable *LiveVideoLayer::createDrawable(GLWidget *widget)
 
 void LiveVideoLayer::initDrawable(GLDrawable *drawable, bool isFirst)
 {
-	//qDebug() << "LiveVideoLayer::setupDrawable: drawable:"<<drawable<<", copyFrom:"<<copyFrom;
+	//qDebug() << "LiveVideoLayer::initDrawable: drawable:"<<drawable<<", calling parent";
 	LiveLayer::initDrawable(drawable, isFirst);
 	
 // 	GLVideoDrawable *vid = dynamic_cast<GLVideoDrawable*>(drawable);
@@ -63,6 +63,7 @@ void LiveVideoLayer::initDrawable(GLDrawable *drawable, bool isFirst)
 		<< "textureOffset"
 		<< "aspectRatioMode";
 		
+	//qDebug() << "LiveVideoLayer::initDrawable: drawable:"<<drawable<<", props list:"<<props;
 	applyLayerPropertiesToObject(drawable, props);
 	if(m_source)
 		setVideoSource(m_source);

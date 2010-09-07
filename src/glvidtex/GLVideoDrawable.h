@@ -108,7 +108,7 @@ class GLVideoDrawable : public GLDrawable
 	Q_PROPERTY(bool flipVertical READ flipVertical WRITE setFlipVertical);
 	
 	Q_PROPERTY(QPointF cropTopLeft READ cropTopLeft WRITE setCropTopLeft);
-	Q_PROPERTY(QPointF flipVertical READ cropBottomRight WRITE setCropBottomRight);
+	Q_PROPERTY(QPointF cropBottomRight READ cropBottomRight WRITE setCropBottomRight);
 	
 	Q_PROPERTY(QPointF textureOffset READ textureOffset WRITE setTextureOffset);
 	

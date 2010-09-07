@@ -122,6 +122,8 @@ class LiveLayer : public QObject
 {
 	Q_OBJECT
 
+	Q_PROPERTY(int id READ id);
+	
 	Q_PROPERTY(bool isVisible READ isVisible WRITE setVisible);
 	Q_PROPERTY(QRectF rect READ rect WRITE setRect);
 	Q_PROPERTY(double zIndex READ zIndex WRITE setZIndex);
@@ -147,10 +149,15 @@ class LiveLayer : public QObject
 	Q_PROPERTY(QPointF insetBottomRight READ insetBottomRight WRITE setInsetBottomRight);
 
 	Q_PROPERTY(double alignedSizeScale READ alignedSizeScale WRITE setAlignedSizeScale);
+	
+	Q_PROPERTY(int hideOnShowLayerId READ hideOnShowLayerId WRITE setHideOnShowLayerId);
+	Q_PROPERTY(int showOnShowLayerId READ showOnShowLayerId WRITE setShowOnShowLayerId);
 
 public:
 	LiveLayer(QObject *parent=0);
 	virtual ~LiveLayer();
+	
+	int id();
 	
 	void attachGLWidget(GLWidget*);
 	void detachGLWidget(GLWidget*);
@@ -170,6 +177,9 @@ public:
 	
 	virtual void fromByteArray(QByteArray&);
 	virtual QByteArray toByteArray();
+	
+	virtual void loadPropsFromMap(const QVariantMap&, bool onlyApplyIfChanged = false);
+	virtual QVariantMap propsToMap();
 	
 	class AnimParam
 	{
@@ -224,6 +234,9 @@ public:
 	QPointF insetBottomRight()	{ return layerProperty("insetBottomRight").toPointF(); }
 
 	double alignedSizeScale()	{ return layerProperty("alignedSizeScale").toDouble(); }
+	
+	int showOnShowLayerId()	{ return layerProperty("showOnShowLayerId").toInt(); }
+	int hideOnShowLayerId()	{ return layerProperty("hideOnShowLayerId").toInt(); }
 	
 	LiveLayer * hideOnShow() { return m_hideOnShow; }
 	LiveLayer * showOnShow() { return m_showOnShow; }
@@ -290,6 +303,9 @@ public slots:
 
 	void setAlignedSizeScale(double value) { setLayerProperty("alignedSizeScale", value); }
 	void setAlignedSizeScale(int value) { setAlignedSizeScale((double)value / 100.0); }
+	
+	void setShowOnShowLayerId(int);
+	void setHideOnShowLayerId(int);
 
 
 	// Internally, tries to set the named property on all the drawables if it has such a property
@@ -395,7 +411,7 @@ protected:
 
 private:
 	void setVisibleGeometryFields(QStringList list = QStringList());
-
+	
 	QFormLayout * m_geomLayout;
 	QHash<QString,QWidget*> m_propWidget;
 	
@@ -413,6 +429,8 @@ private:
 	bool m_animationsDisabled;
 	AnimParam m_animParam;
 	
+	int m_layerId;
+	bool m_layerIdLoaded;
 };
 
 class ObjectValueSetter : public QObject

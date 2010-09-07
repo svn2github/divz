@@ -6,8 +6,10 @@
 	
 - Integrate Qt Graphics Dojo blog - htmleditor - into editing text
 - Fix text jumpiness - jumps as you type on screen somtimes
-- Add drag/drop z value changing
 - Add fade in/out offsets
+
+- Add read signal for prop editors - even more important now with key framing , etc
+- Add an "edit key frame" button or something like that
 
 
 Structure:

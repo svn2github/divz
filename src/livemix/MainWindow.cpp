@@ -19,6 +19,7 @@ MainWindow::MainWindow()
 	, m_currentLayerPropsEditor(0)
 	, m_currentScene(0)
 	, m_currentLayer(0)
+	, m_currentKeyFrameRow(-1)
 {
 
 	qRegisterMetaType<VideoSource*>("VideoSource*");
@@ -165,14 +166,11 @@ void MainWindow::loadLiveScene(LiveScene *scene)
 	scene->attachGLWidget(m_mainViewer);
 	
 	m_sceneModel->setLiveScene(scene);
+	
+	loadKeyFramesToTable();
 
 	// attach to main output
 	/// TODO main output
-
-	// Load layers into list
-	connect(scene, SIGNAL(layerAdded(LiveLayer*)),   this, SLOT(updateLayerList()));
-	connect(scene, SIGNAL(layerRemoved(LiveLayer*)), this, SLOT(updateLayerList()));
-	updateLayerList();
 }
 
 void MainWindow::removeCurrentScene()
@@ -186,31 +184,40 @@ void MainWindow::removeCurrentScene()
 	m_currentScene = 0;
 
 	setCurrentLayer(0);
-	updateLayerList();
+	
+	loadKeyFramesToTable();
 
 }
 
-void MainWindow::updateLayerList()
+
+void MainWindow::deleteCurrentLayer()
 {
-	//QList<LiveLayer*> layers = m_currentScene->layerList();
-	//m_sceneModel->setLiveScene(m_currentScene);
-
+	LiveLayer *layer = m_currentLayer;
+	if(layer)
+	{
+		setCurrentLayer(0);
+		if(m_currentScene)
+			m_currentScene->removeLayer(layer);
+		delete layer;
+		layer = 0;
+	}
 }
+
 
 void MainWindow::setCurrentLayer(LiveLayer *layer)
 {
 	if(m_currentLayer)
 	{
 //  		qDebug() << "MainWindow::setCurrentLayer(): removing old layer from editor";
-		//m_layerViewer->removeDrawable(m_currentLayer->drawable(m_layerViewer));
 		m_currentLayer->detachGLWidget(m_layerViewer);
 	}
 
 	m_currentLayer = layer;
 	loadLayerProperties(m_currentLayer);
+	
+	m_deleteLayerAct->setEnabled(layer!=NULL);
 		
 	if(m_currentLayer)
-		//m_layerViewer->addDrawable(m_currentLayer->drawable(m_layerViewer));
 		m_currentLayer->attachGLWidget(m_layerViewer);
 }
 
@@ -244,7 +251,10 @@ void MainWindow::loadLayerProperties(LiveLayer *layer)
 
 void MainWindow::createLeftPanel()
 {
-	m_layerListView = new QListView(m_mainSplitter);
+	m_leftSplitter = new QSplitter(this);
+	m_leftSplitter->setOrientation(Qt::Vertical);
+	
+	m_layerListView = new QListView(m_leftSplitter);
 	m_layerListView->setViewMode(QListView::ListMode);
 	//m_layerListView->setViewMode(QListView::IconMode);
 	m_layerListView->setMovement(QListView::Free);
@@ -266,7 +276,7 @@ void MainWindow::createLeftPanel()
 	connect(m_sceneModel, SIGNAL(layersDropped(QList<LiveLayer*>)), this, SLOT(layersDropped(QList<LiveLayer*>)));
 
 	if(m)
-	{
+	{       
 		delete m;
 		m=0;
 	}
@@ -277,35 +287,153 @@ void MainWindow::createLeftPanel()
 	//parentLyout->addWidget(m_layerListView);
 	
 	
- 	m_mainSplitter->addWidget(m_layerListView);
- 	
- 	
+	m_leftSplitter->addWidget(m_layerListView);
+	
+	QWidget *tableBase = new QWidget(m_leftSplitter);
+	
+	QVBoxLayout *layout = new QVBoxLayout(tableBase);
+	
+	QHBoxLayout *btnLayout = new QHBoxLayout();
+	m_keyNewBtn = new QPushButton("Create Key Frame",tableBase);
+	m_keyDelBtn = new QPushButton("Delete Key Frame",tableBase);
+	btnLayout->addWidget(m_keyNewBtn);
+	btnLayout->addWidget(m_keyDelBtn);
+	layout->addLayout(btnLayout);
+	
+	m_keyDelBtn->setDisabled(true); // enabled when a row is selected
+	
+	connect(m_keyNewBtn, SIGNAL(clicked()), this, SLOT(createKeyFrame()));
+	connect(m_keyDelBtn, SIGNAL(clicked()), this, SLOT(deleteKeyFrame()));
+	
+	
+	m_timelineTable = new QTableWidget(tableBase);
+	m_timelineTable->verticalHeader()->setVisible(false);
+	m_timelineTable->horizontalHeader()->setVisible(false);
+	m_timelineTable->setColumnCount(3);
+	m_timelineTable->setHorizontalHeaderLabels(QStringList() << "#" << "Description"<<"Show");
+	m_timelineTable->setRowCount(0);
+	m_timelineTable->setSelectionBehavior(QAbstractItemView::SelectRows);
+	m_timelineTable->resizeColumnsToContents();
+	m_timelineTable->resizeRowsToContents();
+	connect(m_timelineTable, SIGNAL(cellClicked(int,int)), this, SLOT(slotTimelineTableCellActivated(int,int)));
+	connect(m_timelineTable, SIGNAL(itemChanged(QTableWidgetItem*)), this, SLOT(slotTimelineTableCellEdited(QTableWidgetItem*)));
+	
+	layout->addWidget(m_timelineTable);
+	m_leftSplitter->addWidget(tableBase);
+	
+	m_mainSplitter->addWidget(m_leftSplitter);
 
-// 	m_variantManager = new QtVariantPropertyManager(this);
-//
-// 	connect(m_variantManager, SIGNAL(valueChanged(QtProperty *, const QVariant &)),
-// 			      this, SLOT(valueChanged(QtProperty *, const QVariant &)));
-//
-// 	QtVariantEditorFactory *variantFactory = new QtVariantEditorFactory(this);
+}
 
-// 	canvas = new QtCanvas(800, 600);
-// 	canvasView = new CanvasView(canvas, this);
-// 	setCentralWidget(canvasView);
+void MainWindow::slotTimelineTableCellActivated(int row,int)
+{
+	m_keyDelBtn->setEnabled(true);
+	m_currentKeyFrameRow = row;
+}
 
-// 	QDockWidget *dock = new QDockWidget(this);
-// 	addDockWidget(Qt::RightDockWidgetArea, dock);
+void MainWindow::createKeyFrame()
+{
+	if(!m_currentScene)
+		return;
+	m_currentScene->createAndAddKeyFrame();
+	
+	loadKeyFramesToTable();
+}
 
-// 	m_propertyEditor = new QtTreePropertyBrowser(m_editSplitter);
-// 	m_propertyEditor->setFactoryForManager(m_variantManager, variantFactory);
-//	m_editSplitter->addWidget(m_propertyEditor);
+void MainWindow::deleteKeyFrame()
+{
+	if(m_currentKeyFrameRow<0)
+		return;
+	if(!m_currentScene)
+		return;
+		
+	m_currentScene->removeKeyFrame(m_currentKeyFrameRow);
+	m_currentKeyFrameRow = -1;
+	m_keyDelBtn->setEnabled(false);
+	
+	loadKeyFramesToTable();
+}
 
-// 	m_currentItem = 0;
+void MainWindow::slotTimelineTableCellEdited(QTableWidgetItem *item)
+{
+	if(!item)
+		return;
+	
+	if(!m_currentScene)
+		return;
+		
+	if(item->column() != 1)
+		return;
+	
+	QList<LiveScene::KeyFrame> frames = m_currentScene->keyFrames();
+	int row = item->row();
+	if(row < 0 || row >frames.size())
+		return;
+	
+	m_currentScene->setKeyFrameName(row,item->text());
+	
+	//qDebug() << "MainWindow::slotTimelineTableCellEdited(): row:"<<row<<", new text:"<<m_currentScene->keyFrames().at(row).frameName<<", text:"<<item->text();
+	
+}
 
-// 	connect(canvasView, SIGNAL(itemClicked(QtCanvasItem *)),
-// 		this, SLOT(itemClicked(QtCanvasItem *)));
-// 	connect(canvasView, SIGNAL(itemMoved(QtCanvasItem *)),
-// 		this, SLOT(itemMoved(QtCanvasItem *)));
+void MainWindow::loadKeyFramesToTable()
+{
+	m_timelineTable->clear();
+	if(!m_currentScene)
+		return;
+		
+	QList<LiveScene::KeyFrame> frames = m_currentScene->keyFrames();
+	
+	m_timelineTable->setRowCount(frames.size());
+	
+	QTableWidgetItem *prototype = new QTableWidgetItem();
+	prototype->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
 
+	int row=0;
+	foreach(LiveScene::KeyFrame frame, frames)
+	{
+		QTableWidgetItem *t = prototype->clone();
+		t->setText(QString::number(frame.id));
+		m_timelineTable->setItem(row,0,t);
+		
+		t = prototype->clone();
+		t->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled|Qt::ItemIsEditable);
+		t->setText(frame.frameName);
+		m_timelineTable->setItem(row,1,t);
+		
+		QPushButton *btn = new QPushButton("Show");
+		btn->setProperty("keyFrameRow", row);
+		
+		connect(btn, SIGNAL(clicked()), this, SLOT(keyFrameBtnActivated()));
+		m_timelineTable->setCellWidget(row,2,btn);
+		
+		row++;
+	}
+}
+
+void MainWindow::keyFrameBtnActivated()
+{
+	QPushButton *btn = dynamic_cast<QPushButton*>(sender());
+	if(!btn)
+		return;
+	QVariant prop = btn->property("keyFrameRow");
+	if(!prop.isValid())
+		return;
+
+	int row = prop.toInt();
+	
+	if(!m_currentScene)
+		return;
+	
+// 	QList<LiveScene::KeyFrame> frames = m_currentScene->keyFrames();
+// 	if(row < 0 || row >frames.size())
+// 		return;
+// 	
+// 	LiveScene::keyFrame frame = frames[row];
+	
+	//qDebug() << "MainWindow::slotTimelineTableCellEdited(): row:"<<item->row()<<", new text:"<<m_currentScene->keyFrames()[item->row()].frameName();
+	m_currentScene->applyKeyFrame(row);
+		
 }
 
 void MainWindow::createCenterPanel()
@@ -471,6 +599,9 @@ void MainWindow::createActions()
 	
 	m_newImageLayerAct = new QAction(QIcon("../data/stock-insert-image.png"), tr("New Image Layer"), this);
 	connect(m_newImageLayerAct, SIGNAL(triggered()), this, SLOT(newImageLayer()));
+	
+	m_deleteLayerAct = new QAction(QIcon("../data/action-delete.png"), tr("Delete Current Layer"), this);
+	connect(m_deleteLayerAct, SIGNAL(triggered()), this, SLOT(deleteCurrentLayer()));
 
 }
 
@@ -502,6 +633,11 @@ void MainWindow::createToolBars()
 	m_fileToolBar->addAction(m_newVideoLayerAct);
 	m_fileToolBar->addAction(m_newTextLayerAct);
 	m_fileToolBar->addAction(m_newImageLayerAct);
+	
+	m_fileToolBar->addSeparator();
+	
+	m_fileToolBar->addAction(m_deleteLayerAct);
+	
 }
 
 void MainWindow::createStatusBar()
@@ -659,6 +795,7 @@ void MainWindow::addLayer(LiveLayer *layer)
 	if(!m_currentScene)
 		m_currentScene = new LiveScene();
 	m_currentScene->addLayer(layer);
+	layer->setZIndex(-m_currentScene->layerList().size());
 	//loadLiveScene(m_currentScene);
 }
 
