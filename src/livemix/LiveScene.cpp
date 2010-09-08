@@ -45,6 +45,14 @@ QByteArray LiveScene::KeyFrame::toByteArray()
 	map["animParam.length"] = animParam.length;
 	map["animParam.type"] = (int)animParam.curve.type();
 		
+	QByteArray bytes;
+	QBuffer buffer(&bytes);
+	buffer.open(QIODevice::WriteOnly);
+	pixmap.save(&buffer, "PNG"); // writes pixmap into bytes in PNG format
+	buffer.close();
+	map["pixmap"] = bytes;
+	//qDebug() << "LiveScene::KeyFrame::toByteArray(): pixmap buffer byte count:"<<bytes.size()<<", pixmap size:"<<pixmap.size()<<", isnull:"<<pixmap.isNull();
+	
 	QVariantList list;
 	foreach(int id, layerProperties.keys())
 	{
@@ -82,6 +90,14 @@ void LiveScene::KeyFrame::fromByteArray(QByteArray& array)
 	playTime = map["playTime"].toInt();
 	animParam.length = map["animParam.length"].toInt();
 	animParam.curve.setType((QEasingCurve::Type)map["animParam.curveType"].toInt());
+	
+	QByteArray bytes = map["pixmap"].toByteArray();
+	QImage image;
+	image.loadFromData(bytes);
+	//qDebug() << "LiveScene::KeyFrame::fromByteArray(): image size:"<<image.size()<<", isnull:"<<image.isNull();
+	
+	pixmap = QPixmap::fromImage(image);
+	
 	
 	QVariantList list = map["props"].toList();
 	foreach(QVariant var, list)
@@ -280,9 +296,11 @@ QByteArray LiveScene::toByteArray()
 	return array;
 }
 
-LiveScene::KeyFrame LiveScene::createKeyFrame()
+LiveScene::KeyFrame LiveScene::createKeyFrame(const QPixmap& icon)
 {
 	LiveScene::KeyFrame frame(this);
+	if(!icon.isNull())
+		frame.pixmap = icon.scaled(QSize(128,128),Qt::KeepAspectRatio);
 	
 	foreach(LiveLayer *layer, m_layers)
 	{
@@ -297,9 +315,34 @@ LiveScene::KeyFrame LiveScene::createKeyFrame()
 	return frame;
 }
 
-LiveScene::KeyFrame LiveScene::createAndAddKeyFrame()
+
+LiveScene::KeyFrame LiveScene::updateKeyFrame(int idx, const QPixmap& icon)
 {
-	LiveScene::KeyFrame frame = createKeyFrame();
+	if(idx < 0 || idx >= m_keyFrames.size())
+		return LiveScene::KeyFrame(0);
+	
+	LiveScene::KeyFrame frame = m_keyFrames.takeAt(idx);
+	if(!icon.isNull())
+		frame.pixmap = icon.scaled(QSize(128,128),Qt::KeepAspectRatio);
+	
+	foreach(LiveLayer *layer, m_layers)
+	{
+		QVariantMap map = layer->propsToMap();
+		// remove props not needed to keyframe
+		map.remove("showOnShowLayerId");
+		map.remove("hideOnShowLayerId");
+		map.remove("aspectRatioMode");
+		frame.layerProperties[layer->id()] = map;
+	}
+	
+	m_keyFrames.insert(idx,frame);
+	
+	return frame;
+}
+
+LiveScene::KeyFrame LiveScene::createAndAddKeyFrame(const QPixmap& icon)
+{
+	LiveScene::KeyFrame frame = createKeyFrame(icon);
 	addKeyFrame(frame);
 	return frame;
 }

@@ -57,6 +57,7 @@ private slots:
 	
 	void createKeyFrame();
 	void deleteKeyFrame();
+	void updateKeyFrame();
 	
 	void deleteCurrentLayer();
 
@@ -138,6 +139,7 @@ private:
 	
 	QPushButton *m_keyDelBtn;
 	QPushButton *m_keyNewBtn;
+	QPushButton *m_keyUpdateBtn;
 	int m_currentKeyFrameRow;
 	
 

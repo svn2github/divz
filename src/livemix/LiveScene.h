@@ -66,13 +66,18 @@ public:
 		// Name for displaying in a list, for example, drop down list
 		QString frameName;
 		
+		// Graphic of the way the scene looks with these properties, scaled to 128x128, aspect ratio preserved
+		QPixmap pixmap;
+		
 		// For loading/saving frames
 		QByteArray toByteArray();
 		void fromByteArray(QByteArray&);
 	};
 	
-	KeyFrame createKeyFrame();
-	KeyFrame createAndAddKeyFrame();
+	KeyFrame createKeyFrame(const QPixmap& icon=QPixmap());
+	KeyFrame createAndAddKeyFrame(const QPixmap& icon=QPixmap());
+	
+	KeyFrame updateKeyFrame(int, const QPixmap& newIcon=QPixmap());
 	
 	// not const, because it sets the .id of the frame
 	void addKeyFrame(KeyFrame&);

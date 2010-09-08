@@ -294,16 +294,21 @@ void MainWindow::createLeftPanel()
 	QVBoxLayout *layout = new QVBoxLayout(tableBase);
 	
 	QHBoxLayout *btnLayout = new QHBoxLayout();
-	m_keyNewBtn = new QPushButton("Create Key Frame",tableBase);
-	m_keyDelBtn = new QPushButton("Delete Key Frame",tableBase);
+	m_keyNewBtn = new QPushButton("Create Frame",tableBase);
+	m_keyDelBtn = new QPushButton("Delete Frame",tableBase);
+	m_keyUpdateBtn = new QPushButton("Update Frame",tableBase);
+	
 	btnLayout->addWidget(m_keyNewBtn);
 	btnLayout->addWidget(m_keyDelBtn);
+	btnLayout->addWidget(m_keyUpdateBtn);
 	layout->addLayout(btnLayout);
 	
 	m_keyDelBtn->setDisabled(true); // enabled when a row is selected
+	m_keyUpdateBtn->setDisabled(true);
 	
 	connect(m_keyNewBtn, SIGNAL(clicked()), this, SLOT(createKeyFrame()));
 	connect(m_keyDelBtn, SIGNAL(clicked()), this, SLOT(deleteKeyFrame()));
+	connect(m_keyUpdateBtn, SIGNAL(clicked()), this, SLOT(updateKeyFrame()));
 	
 	
 	m_timelineTable = new QTableWidget(tableBase);
@@ -328,6 +333,7 @@ void MainWindow::createLeftPanel()
 void MainWindow::slotTimelineTableCellActivated(int row,int)
 {
 	m_keyDelBtn->setEnabled(true);
+	m_keyUpdateBtn->setEnabled(true);
 	m_currentKeyFrameRow = row;
 }
 
@@ -335,7 +341,9 @@ void MainWindow::createKeyFrame()
 {
 	if(!m_currentScene)
 		return;
-	m_currentScene->createAndAddKeyFrame();
+		
+	QPixmap pixmap = QPixmap::fromImage(m_mainViewer->grabFrameBuffer());
+	m_currentScene->createAndAddKeyFrame(pixmap);
 	
 	loadKeyFramesToTable();
 }
@@ -350,6 +358,20 @@ void MainWindow::deleteKeyFrame()
 	m_currentScene->removeKeyFrame(m_currentKeyFrameRow);
 	m_currentKeyFrameRow = -1;
 	m_keyDelBtn->setEnabled(false);
+	m_keyUpdateBtn->setEnabled(false);
+	
+	loadKeyFramesToTable();
+}
+
+void MainWindow::updateKeyFrame()
+{
+	if(m_currentKeyFrameRow<0)
+		return;
+	if(!m_currentScene)
+		return;
+	
+	QPixmap pixmap = QPixmap::fromImage(m_mainViewer->grabFrameBuffer());
+	m_currentScene->updateKeyFrame(m_currentKeyFrameRow, pixmap);
 	
 	loadKeyFramesToTable();
 }
@@ -393,7 +415,10 @@ void MainWindow::loadKeyFramesToTable()
 	foreach(LiveScene::KeyFrame frame, frames)
 	{
 		QTableWidgetItem *t = prototype->clone();
-		t->setText(QString::number(frame.id));
+		if(!frame.pixmap.isNull())
+			t->setIcon(QIcon(frame.pixmap.scaled(QSize(32,32),Qt::KeepAspectRatio)));
+		else
+			t->setText(QString::number(frame.id));
 		m_timelineTable->setItem(row,0,t);
 		
 		t = prototype->clone();
@@ -424,6 +449,8 @@ void MainWindow::keyFrameBtnActivated()
 	
 	if(!m_currentScene)
 		return;
+		
+	m_currentKeyFrameRow = row;
 	
 // 	QList<LiveScene::KeyFrame> frames = m_currentScene->keyFrames();
 // 	if(row < 0 || row >frames.size())
