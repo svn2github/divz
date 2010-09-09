@@ -1523,6 +1523,12 @@ void LiveLayer::setHideOnShow(LiveLayer *layer)
 
 void LiveLayer::setHideOnShow(int x)
 {
+	if(x == 0)
+	{
+		setHideOnShow((LiveLayer*)0);
+		return;
+	}
+	
 	if(x<1 || x>m_sortedLayerList.size())
 		return;
 	setHideOnShow(m_sortedLayerList[x-1]);
@@ -1536,6 +1542,13 @@ void LiveLayer::setShowOnShow(LiveLayer *layer)
 
 void LiveLayer::setShowOnShow(int x)
 {
+	if(x == 0)
+	{
+		setShowOnShow((LiveLayer*)0);
+		return;
+	}
+	
+	
 	if(x<1 || x>m_sortedLayerList.size())
 		return;
 	setShowOnShow(m_sortedLayerList[x-1]);
