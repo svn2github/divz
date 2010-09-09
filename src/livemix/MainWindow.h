@@ -60,7 +60,17 @@ private slots:
 	void updateKeyFrame();
 	
 	void deleteCurrentLayer();
-
+	
+	void slotSceneTimerTick();
+	void slotPositionBoxChanged(double);
+	void slotSliderBoxChanged(int);
+	
+	void scenePlay();
+	void scenePause();
+	void sceneFF();
+	void sceneRR();
+	void sceneStop();
+	
 private:
 	void createActions();
 	void createMenus();
@@ -142,7 +152,23 @@ private:
 	QPushButton *m_keyUpdateBtn;
 	int m_currentKeyFrameRow;
 	
-
+	bool m_lockTimelineTableCellEditorSlot;
+	
+	QTimer m_scenePlayTimer;
+	QPushButton *m_playButton;
+	QPushButton *m_pauseButton;
+	QPushButton *m_ffButton;
+	QPushButton *m_rrButton;
+	QPushButton *m_stopButton;
+	QSlider *m_positionSlider;
+	QDoubleSpinBox *m_positionBox;
+	
+	LiveScene::KeyFrame m_currentKeyFrame;
+	double m_playTime;
+	
+	void showFrameForTime(double, bool forceApply=false);
+	void showFrame(const LiveScene::KeyFrame &frame);
+	void updateSceneTimeLength();
 };
 
 #endif

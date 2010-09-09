@@ -87,7 +87,7 @@ void LiveScene::KeyFrame::fromByteArray(QByteArray& array)
 	
 	frameName = map["frameName"].toString();
 	clockTime = map["clockTime"].toTime();
-	playTime = map["playTime"].toInt();
+	playTime = map["playTime"].toDouble();
 	animParam.length = map["animParam.length"].toInt();
 	animParam.curve.setType((QEasingCurve::Type)map["animParam.curveType"].toInt());
 	
@@ -259,9 +259,21 @@ void LiveScene::fromByteArray(QByteArray& array)
 		frame.id = m_keyFrames.size()+1;
 		m_keyFrames.append(frame);
 	}
+	
+	sortKeyFrames();
 }
 
-
+double LiveScene::sceneLength()
+{
+	if(m_keyFrames.isEmpty())
+		return 0;
+		
+	KeyFrame last = m_keyFrames.last();
+	// assumes frames are sorted already by time
+	double len = last.playTime + ((double)last.animParam.length)/1000.0;
+	//qDebug() << "LiveScene::sceneLength(): len:"<<len;
+	return len;
+}
 
 QByteArray LiveScene::toByteArray()
 {
@@ -336,6 +348,7 @@ LiveScene::KeyFrame LiveScene::updateKeyFrame(int idx, const QPixmap& icon)
 	}
 	
 	m_keyFrames.insert(idx,frame);
+	// play time doesnt change, so we dont need to re-sort
 	
 	return frame;
 }
@@ -351,6 +364,7 @@ void LiveScene::addKeyFrame(LiveScene::KeyFrame& frame)
 {
 	frame.id = m_keyFrames.size()+1;
 	m_keyFrames.append(frame);
+	sortKeyFrames();
 	emit keyFrameAdded(frame);
 }
 
@@ -377,8 +391,11 @@ void LiveScene::applyKeyFrame(const LiveScene::KeyFrame& frame)
 		if(layer)
 		{
 			flags[layer] = true;
+			layer->setAnimParam(frame.animParam);
 			// true = apply only if changed
 			layer->loadPropsFromMap(frame.layerProperties[id],true);
+			// reset for future value changes
+			layer->setAnimParam(LiveLayer::AnimParam());
 		}
 	}
 	
@@ -399,6 +416,29 @@ void LiveScene::setKeyFrameName(int idx, const QString& name)
 	m_keyFrames.insert(idx,frame);
 }
 
+void LiveScene::setKeyFrameStartTime(int idx, double value)
+{
+	if(idx < 0 || idx >= m_keyFrames.size())
+		return;
+	
+	LiveScene::KeyFrame frame = m_keyFrames.takeAt(idx);
+	frame.playTime = value;
+	m_keyFrames.insert(idx,frame);
+	
+	sortKeyFrames();
+}
+
+void LiveScene::setKeyFrameAnimLength(int idx, int value)
+{
+	if(idx < 0 || idx >= m_keyFrames.size())
+		return;
+	
+	LiveScene::KeyFrame frame = m_keyFrames.takeAt(idx);
+	frame.animParam.length = value;
+	m_keyFrames.insert(idx,frame);
+}
+
+
 void LiveScene::applyKeyFrame(int idx)
 {
 	if(idx < 0 || idx >= m_keyFrames.size())
@@ -407,3 +447,13 @@ void LiveScene::applyKeyFrame(int idx)
 	applyKeyFrame(m_keyFrames[idx]);
 }
 	
+bool LiveScene_keyFrame_compare(LiveScene::KeyFrame a, LiveScene::KeyFrame b)
+{
+	return a.playTime < b.playTime;
+}
+
+
+void LiveScene::sortKeyFrames()
+{
+	qSort(m_keyFrames.begin(), m_keyFrames.end(), LiveScene_keyFrame_compare);
+}

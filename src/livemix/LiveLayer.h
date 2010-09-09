@@ -10,6 +10,32 @@ class GLWidget;
 class QSpinBox;
 class QDoubleSpinBox;
 
+class PropertyChangeListener : public QObject
+{
+	Q_OBJECT
+public:
+	PropertyChangeListener(QObject *source, const char *changeSignal, QObject *receiver, const char *receiverSlot, QVariant value, QString propertyName = "");
+	
+signals:
+	void value(int);
+	void value(bool);
+	void value(double);
+	void value(const QString&);
+	void value(const QSize&);
+	void value(const QSizeF&);
+	void value(const QPoint&);
+	void value(const QPointF&);
+	
+private slots:
+	void receiver(const QString&, const QVariant&);
+	void receiver(const QVariant&);
+	
+private:
+	QVariant m_value;
+	QString m_property;
+};
+
+
 class DoubleEditorWidget : public QWidget
 {
 	Q_OBJECT
@@ -369,7 +395,7 @@ protected:
 		QString fileTypeFilter;
 	};
 
-	QWidget * generatePropertyEditor(QObject *object, const char *property, const char *slot, PropertyEditorOptions opts = PropertyEditorOptions());
+	QWidget * generatePropertyEditor(QObject *object, const char *property, const char *slot, PropertyEditorOptions opts = PropertyEditorOptions(), const char *changeSignal=0);
 
 	void setInstanceName(const QString&);
 

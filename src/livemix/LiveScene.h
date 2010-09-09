@@ -58,8 +58,8 @@ public:
 		QList<LiveLayer*> layers();
 		QVariantMap propsForLayer(LiveLayer*);
 		
-		// playTime : Time on the 'play clock' to show this frame
-		int playTime;
+		// playTime : Time on the 'play clock' to show this frame, in seconds
+		double playTime;
 		// clockTime : if set, overrides playTime - wall time to show this frame
 		QTime clockTime;
 		
@@ -88,8 +88,13 @@ public:
 	void applyKeyFrame(int);
 	
 	void setKeyFrameName(int, const QString&);
+	void setKeyFrameStartTime(int, double);
+	void setKeyFrameAnimLength(int, int);
 	
 	QList<KeyFrame> keyFrames() { return m_keyFrames; }
+	
+	// time it would take to play ever key frame, include all animations, in sequence
+	double sceneLength();
 	
 signals:
 	void layerAdded(LiveLayer*);
@@ -99,6 +104,8 @@ signals:
 	void keyFrameRemoved(const KeyFrame&);
 	
 private:
+	void sortKeyFrames();
+	
 	QList<GLWidget*>  m_glWidgets;
 	QList<LiveLayer*> m_layers;
 	QHash<int,LiveLayer*> m_idLookup;

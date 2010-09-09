@@ -7,6 +7,100 @@
 
 //////////////////////////////////////////////////////////////////////////////
 
+		
+PropertyChangeListener::PropertyChangeListener(QObject *source, const char *changeSignal, QObject *receiver, const char *receiverSlot, QVariant value, QString prop)
+	: QObject(receiver)
+	, m_value(value)
+	, m_property(prop)
+{
+// 	qDebug() << "PropertyChangeListener: connecting "<<source<<"::"<<changeSignal<<" to "<<receiver<<"::"<<receiverSlot<<", value:"<<value<<", prop:"<<prop;
+	switch(value.type())
+	{
+		case QVariant::Int:
+			connect(this, SIGNAL(value(int)), receiver, receiverSlot);
+			break;
+		case QVariant::Bool:
+			connect(this, SIGNAL(value(bool)), receiver, receiverSlot);
+			break;
+		case QVariant::Double:
+			connect(this, SIGNAL(value(double)), receiver, receiverSlot);
+			break;
+		case QVariant::String:
+			connect(this, SIGNAL(value(const QString&)), receiver, receiverSlot);
+			break;
+		case QVariant::Size:
+			connect(this, SIGNAL(value(const QSize&)), receiver, receiverSlot);
+			break;
+		case QVariant::Point:
+			connect(this, SIGNAL(value(const QPoint&)), receiver, receiverSlot);
+			break;
+		case QVariant::SizeF:
+			connect(this, SIGNAL(value(const QSizeF&)), receiver, receiverSlot);
+			break;
+		case QVariant::PointF:
+			connect(this, SIGNAL(value(const QPointF&)), receiver, receiverSlot);
+			break;
+		default:
+			qDebug() << "PropertyChangeListener: Unable to handle value type:"<<value.type();
+			break;
+	};
+	
+	QString signal(changeSignal);
+	if(signal.indexOf("QString"))
+	{
+		connect(source, changeSignal, this, SLOT(receiver(const QString&, const QVariant&)));
+	}
+	else
+	{
+		connect(source, changeSignal, this, SLOT(receiver(const QVariant&)));
+	}
+}
+
+void PropertyChangeListener::receiver(const QString& prop, const QVariant& data)
+{
+// 	qDebug() << "PropertyChangeListener::receiver: prop:"<<prop<<", m_property:"<<m_property<<", value:"<<data;
+	if(prop == m_property)
+		receiver(data);
+}
+
+void PropertyChangeListener::receiver(const QVariant& data)
+{
+// 	qDebug() << "PropertyChangeListener::receiver: value:"<<data;
+	switch(data.type())
+	{
+		case QVariant::Int:
+			emit value(data.toInt());
+			break;
+		case QVariant::Bool:
+			emit value(data.toBool());
+			break;
+		case QVariant::Double:
+			emit value(data.toDouble());
+			break;
+		case QVariant::String:
+			emit value(data.toString());
+			break;
+		case QVariant::Size:
+			emit value(data.toSize());
+			break;
+		case QVariant::Point:
+			emit value(data.toPoint());
+			break;
+		case QVariant::SizeF:
+			emit value(data.toSizeF());
+			break;
+		case QVariant::PointF:
+			emit value(data.toPointF());
+			break;
+		default:
+			qDebug() << "PropertyChangeListener::receiver: Unable to handle value type:"<<data.type()<<", variant:"<<data;
+			break;
+	};
+}
+
+
+//////////////////////////////////////////////////////////////////////////////
+
 BrowseDialogLauncher::BrowseDialogLauncher(QObject *attached, const char *slot, QVariant value)
 	: QObject(attached)
 	, m_attached(attached)
@@ -504,8 +598,12 @@ void ObjectValueSetter::executeSetValue()
 	}
 }
 
-QWidget * LiveLayer::generatePropertyEditor(QObject *object, const char *property, const char *slot, PropertyEditorOptions opts)
+QWidget * LiveLayer::generatePropertyEditor(QObject *object, const char *property, const char *slot, PropertyEditorOptions opts, const char *changeSignal)
 {
+	if(changeSignal == NULL &&
+		dynamic_cast<LiveLayer*>(object))
+		changeSignal = SIGNAL(layerPropertyChanged(const QString&, const QVariant&, const QVariant&));
+		
 	QWidget *base = new QWidget();
 	QHBoxLayout *hbox = new QHBoxLayout(base);
 	hbox->setContentsMargins(0,0,0,0);
@@ -534,6 +632,9 @@ QWidget * LiveLayer::generatePropertyEditor(QObject *object, const char *propert
 			spin->setValue(prop.toInt());
 
 		QObject::connect(spin, SIGNAL(valueChanged(int)), object, slot);
+		if(changeSignal)
+			new PropertyChangeListener(object, changeSignal, spin, SLOT(setValue(int)), spin->value(), property);
+			 
 		hbox->addWidget(spin);
 
 		if(!opts.noSlider)
@@ -580,8 +681,11 @@ QWidget * LiveLayer::generatePropertyEditor(QObject *object, const char *propert
 
 		box->setText(opts.text);
 
-		QObject::connect(box, SIGNAL(toggled(bool)), object, slot);
+		connect(box, SIGNAL(toggled(bool)), object, slot);
 		box->setChecked( prop.toBool() );
+		
+		if(changeSignal)
+			new PropertyChangeListener(object, changeSignal, box, SLOT(setChecked(bool)), prop, property);
 
 		return box;
 	}
@@ -592,6 +696,9 @@ QWidget * LiveLayer::generatePropertyEditor(QObject *object, const char *propert
 		
 		QObject::connect(box, SIGNAL(textChanged(const QString&)), object, slot);
 		box->setText( prop.toString() );
+		
+		if(changeSignal)
+			new PropertyChangeListener(object, changeSignal, box, SLOT(setText(const QString&)), prop, property);
 		
 		if(opts.stringIsFile)
 		{
@@ -635,6 +742,8 @@ QWidget * LiveLayer::generatePropertyEditor(QObject *object, const char *propert
 		editor->setValue(size);
 
 		connect(editor, SIGNAL(valueChanged(const QSizeF&)), object, slot);
+		if(changeSignal)
+			new PropertyChangeListener(object, changeSignal, editor, SLOT(setValue(const QSizeF&)), prop, property);
 
 		return editor;
 	}
@@ -648,6 +757,8 @@ QWidget * LiveLayer::generatePropertyEditor(QObject *object, const char *propert
 		editor->setValue(point);
 
 		connect(editor, SIGNAL(valueChanged(const QPointF&)), object, slot);
+		if(changeSignal)
+			new PropertyChangeListener(object, changeSignal, editor, SLOT(setValue(const QPointF&)), prop, property);
 
 		return editor;
 	}
@@ -662,6 +773,8 @@ QWidget * LiveLayer::generatePropertyEditor(QObject *object, const char *propert
 		editor->setValue(prop.toDouble());
 
 		connect(editor, SIGNAL(valueChanged(double)), object, slot);
+		if(changeSignal)
+			new PropertyChangeListener(object, changeSignal, editor, SLOT(setValue(double)), prop, property);
 
 		return editor;
 	}
@@ -1160,9 +1273,12 @@ void LiveLayer::setVisible(bool flag)
 	m_isVisible = flag;
 	
 	if(m_hideOnShow)
-		m_hideOnShow->setVisible(!flag);
+		if(m_hideOnShow->isVisible() == flag)
+			m_hideOnShow->setVisible(!flag);
+
 	if(m_showOnShow)
-		m_showOnShow->setVisible(flag);
+		if(m_showOnShow->isVisible() != flag)
+			m_showOnShow->setVisible(flag);
 		
 	m_lockVsibleSetter = false;
 }
@@ -1308,6 +1424,7 @@ void LiveLayer::setInstanceName(const QString& name)
 // just emits layerPropertyChanged
 void LiveLayer::layerPropertyWasChanged(const QString& propertyId, const QVariant& value, const QVariant& oldValue)
 {
+	//qDebug() << "LiveLayer::layerPropertyWasChanged: "<<this<<": property:"<<propertyId<<", value:"<<value<<", was:"<<oldValue;
 	emit layerPropertyChanged(propertyId, value, oldValue);
 }
 

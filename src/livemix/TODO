@@ -9,7 +9,11 @@
 - Add fade in/out offsets
 
 - Add read signal for prop editors - even more important now with key framing , etc
+	- tried, not working right now
+	
+- Add animation setup for keyframes (length, etc)
 
+- For videos, add a timeline, and pause/play/ff/rw actions
 
 Structure:
 

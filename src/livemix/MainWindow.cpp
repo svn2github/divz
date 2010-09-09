@@ -20,6 +20,9 @@ MainWindow::MainWindow()
 	, m_currentScene(0)
 	, m_currentLayer(0)
 	, m_currentKeyFrameRow(-1)
+	, m_lockTimelineTableCellEditorSlot(false)
+	, m_currentKeyFrame(0)
+	, m_playTime(0)
 {
 
 	qRegisterMetaType<VideoSource*>("VideoSource*");
@@ -157,6 +160,7 @@ void MainWindow::loadLiveScene(LiveScene *scene)
 	if(m_currentScene)
 	{
 		removeCurrentScene();
+		updateSceneTimeLength();
 		delete m_currentScene;
 	}
 
@@ -168,9 +172,18 @@ void MainWindow::loadLiveScene(LiveScene *scene)
 	m_sceneModel->setLiveScene(scene);
 	
 	loadKeyFramesToTable();
-
+	
+	updateSceneTimeLength();
+	
 	// attach to main output
 	/// TODO main output
+}
+
+void MainWindow::updateSceneTimeLength()
+{
+	double len = m_currentScene ? m_currentScene->sceneLength() : 0;
+	m_positionBox->setMaximum(len);
+	m_positionSlider->setMaximum((int)len);
 }
 
 void MainWindow::removeCurrentScene()
@@ -276,7 +289,7 @@ void MainWindow::createLeftPanel()
 	connect(m_sceneModel, SIGNAL(layersDropped(QList<LiveLayer*>)), this, SLOT(layersDropped(QList<LiveLayer*>)));
 
 	if(m)
-	{       
+	{
 		delete m;
 		m=0;
 	}
@@ -314,8 +327,11 @@ void MainWindow::createLeftPanel()
 	m_timelineTable = new QTableWidget(tableBase);
 	m_timelineTable->verticalHeader()->setVisible(false);
 	m_timelineTable->horizontalHeader()->setVisible(false);
-	m_timelineTable->setColumnCount(3);
-	m_timelineTable->setHorizontalHeaderLabels(QStringList() << "#" << "Description"<<"Show");
+	m_timelineTable->setColumnCount(5);
+// 	QStringList list;
+// 	list << "Nbr" << "Description"<<"Show";
+// 	m_timelineTable->setHorizontalHeaderLabels(list);
+	
 	m_timelineTable->setRowCount(0);
 	m_timelineTable->setSelectionBehavior(QAbstractItemView::SelectRows);
 	m_timelineTable->resizeColumnsToContents();
@@ -324,10 +340,202 @@ void MainWindow::createLeftPanel()
 	connect(m_timelineTable, SIGNAL(itemChanged(QTableWidgetItem*)), this, SLOT(slotTimelineTableCellEdited(QTableWidgetItem*)));
 	
 	layout->addWidget(m_timelineTable);
+	
+	QWidget *playBoxBase = new QWidget(tableBase);
+	QHBoxLayout *playlay = new QHBoxLayout(playBoxBase);
+	playlay->setContentsMargins(0,0,0,0);
+	
+	m_playButton = new QPushButton(style()->standardIcon(QStyle::SP_MediaPlay),"");
+	connect(m_playButton, SIGNAL(clicked()), this, SLOT(scenePlay()));
+	playlay->addWidget(m_playButton);
+	
+	m_pauseButton = new QPushButton(style()->standardIcon(QStyle::SP_MediaPause),"");
+	connect(m_pauseButton, SIGNAL(clicked()), this, SLOT(scenePause()));
+	playlay->addWidget(m_pauseButton);
+	
+	m_stopButton = new QPushButton(style()->standardIcon(QStyle::SP_MediaStop),"");
+	connect(m_stopButton, SIGNAL(clicked()), this, SLOT(sceneStop()));
+	playlay->addWidget(m_stopButton);
+	
+	m_rrButton = new QPushButton(style()->standardIcon(QStyle::SP_MediaSkipBackward),"");
+	connect(m_rrButton, SIGNAL(clicked()), this, SLOT(sceneRR()));
+	playlay->addWidget(m_rrButton);
+	
+	m_ffButton = new QPushButton(style()->standardIcon(QStyle::SP_MediaSkipForward),"");
+	connect(m_ffButton, SIGNAL(clicked()), this, SLOT(sceneFF()));
+	playlay->addWidget(m_ffButton);
+	
+	m_positionSlider = new QSlider();
+	m_positionSlider->setOrientation(Qt::Horizontal);
+	m_positionSlider->setMinimum(0);
+	m_positionSlider->setMaximum(100000);
+	connect(m_positionSlider, SIGNAL(valueChanged(int)), this, SLOT(slotSliderBoxChanged(int)));
+	playlay->addWidget(m_positionSlider,2);
+	
+	m_positionBox = new QDoubleSpinBox();
+	m_positionBox->setMinimum(0);
+	m_positionBox->setMaximum(100000);
+	connect(m_positionBox, SIGNAL(valueChanged(double)), this, SLOT(slotPositionBoxChanged(double)));
+	playlay->addWidget(m_positionBox);
+	
+	layout->addWidget(playBoxBase);
+	
+	connect(&m_scenePlayTimer, SIGNAL(timeout()), this, SLOT(slotSceneTimerTick()));
+	m_scenePlayTimer.setInterval(30);
+	
 	m_leftSplitter->addWidget(tableBase);
 	
 	m_mainSplitter->addWidget(m_leftSplitter);
 
+}
+
+void MainWindow::showFrameForTime(double time, bool forceApply)
+{
+	if(!m_currentScene)
+		return;
+		
+// 	qDebug() << "MainWindow::showFrameForTime: time:"<<time;
+			
+	QList<LiveScene::KeyFrame> list = m_currentScene->keyFrames();
+	LiveScene::KeyFrame frame(0), prevFrame(0);
+	foreach(LiveScene::KeyFrame testFrame, list)
+	{
+		if(prevFrame.playTime > -1)
+		{
+			if(time >= prevFrame.playTime && 
+			   time < testFrame.playTime)
+			{
+				frame = prevFrame;
+//  				qDebug() << "MainWindow::showFrameForTime: 1 found frame at play time:"<<frame.playTime;
+				break;
+			}
+			prevFrame = testFrame;
+		}
+		else
+		{
+			prevFrame = testFrame;
+			if(time <= testFrame.playTime)
+			{
+				frame = testFrame;
+//  				qDebug() << "MainWindow::showFrameForTime: 2 found frame at play time:"<<frame.playTime;
+				break;
+			}
+		}
+	}
+	
+	if(!frame.scene && time >= list.last().playTime)
+	{
+		frame = list.last();
+//  		qDebug() << "MainWindow::showFrameForTime: 3 found frame at play time:"<<frame.playTime;
+	}
+	
+	if(forceApply || !(m_currentKeyFrame == frame))
+	{
+//  		qDebug() << "MainWindow::showFrameForTime: SHOWING FRAME "<<frame.frameName;
+		showFrame(frame);
+	}
+	else
+	{
+//  		qDebug() << "MainWindow::showFrameForTime: frames the same, not changing";
+	}
+	
+	
+}
+void MainWindow::showFrame(const LiveScene::KeyFrame& frame)
+{
+	if(!m_currentScene)
+		return;
+		
+	QList<LiveScene::KeyFrame> frames = m_currentScene->keyFrames();
+	int idx = frames.indexOf(frame);
+// 	qDebug() << "MainWindow::showFrame: indx: "<<idx<<", frame id: "<<frame.id;
+	
+	if(idx<0 || idx>=frames.size())
+		return;
+		
+	m_timelineTable->setCurrentCell(idx,2);
+	
+	m_currentKeyFrame = frame;
+	m_currentScene->applyKeyFrame(frame);
+}
+
+void MainWindow::slotSceneTimerTick()
+{
+	if(!m_currentScene)
+	{
+		m_scenePlayTimer.stop();
+		return;
+	}
+	
+	m_playTime += ((double)m_scenePlayTimer.interval())/1000.0;
+	showFrameForTime(m_playTime);
+	m_positionBox->setValue(m_playTime);
+	
+	if(m_playTime > m_currentScene->sceneLength())
+		scenePause();
+}
+
+void MainWindow::slotPositionBoxChanged(double value)
+{
+	m_playTime = value;
+	showFrameForTime(value);
+	if(m_positionSlider->value() != (int)value)
+		m_positionSlider->setValue((int)value);
+}
+
+void MainWindow::slotSliderBoxChanged(int intValue)
+{
+	double value = (double)intValue;
+	m_playTime = value;
+	showFrameForTime(value);
+	if(m_positionBox->value() != value)
+		m_positionBox->setValue(value);
+}
+
+void MainWindow::scenePlay()
+{
+	m_scenePlayTimer.start();
+}
+
+void MainWindow::scenePause()
+{
+	m_scenePlayTimer.stop();
+}
+
+void MainWindow::sceneFF()
+{
+	if(!m_currentScene)
+		return;
+	QList<LiveScene::KeyFrame> frames = m_currentScene->keyFrames();
+	int idx = m_currentKeyFrame.scene ? frames.indexOf(m_currentKeyFrame) : 0;
+	if(idx<0 || idx>=frames.size()-1)
+		return;
+	idx++;
+	LiveScene::KeyFrame frame = frames.at(idx);
+	showFrame(frame);
+	m_playTime = frame.playTime;
+	m_positionBox->setValue(m_playTime);
+}
+
+void MainWindow::sceneRR()
+{
+	if(!m_currentScene)
+		return;
+	QList<LiveScene::KeyFrame> frames = m_currentScene->keyFrames();
+	int idx = m_currentKeyFrame.scene ? frames.indexOf(m_currentKeyFrame) : 0;
+	if(idx<1 || idx>=frames.size())
+		return;
+	idx--;
+	LiveScene::KeyFrame frame = frames.at(idx);
+	showFrame(frame);
+	m_playTime = frame.playTime;
+	m_positionBox->setValue(m_playTime);
+}
+
+void MainWindow::sceneStop()
+{
+	m_scenePlayTimer.stop();
+	m_playTime = 0;
 }
 
 void MainWindow::slotTimelineTableCellActivated(int row,int)
@@ -335,6 +543,12 @@ void MainWindow::slotTimelineTableCellActivated(int row,int)
 	m_keyDelBtn->setEnabled(true);
 	m_keyUpdateBtn->setEnabled(true);
 	m_currentKeyFrameRow = row;
+	
+// 	QList<LiveScene::KeyFrame> frames = m_currentScene->keyFrames();
+// 	if(row<0 || row>=frames.size())
+// 		return;
+// 		
+// 	m_positionBox->setValue(frames.at(row).playTime);
 }
 
 void MainWindow::createKeyFrame()
@@ -378,21 +592,40 @@ void MainWindow::updateKeyFrame()
 
 void MainWindow::slotTimelineTableCellEdited(QTableWidgetItem *item)
 {
+	if(m_lockTimelineTableCellEditorSlot)
+		return;
+	m_lockTimelineTableCellEditorSlot = true;
+	
 	if(!item)
 		return;
 	
 	if(!m_currentScene)
 		return;
 		
-	if(item->column() != 1)
-		return;
-	
 	QList<LiveScene::KeyFrame> frames = m_currentScene->keyFrames();
 	int row = item->row();
 	if(row < 0 || row >frames.size())
 		return;
 	
-	m_currentScene->setKeyFrameName(row,item->text());
+	switch(item->column())
+	{
+		case 1: // name
+			m_currentScene->setKeyFrameName(row,item->text());
+			break;
+		case 2: // start time
+			m_currentScene->setKeyFrameStartTime(row,item->text().toDouble());
+			loadKeyFramesToTable(); // call to sort by time, it also calls the resize..() methods, below, so just return
+			updateSceneTimeLength();
+			return;
+		case 3: // anim length
+			m_currentScene->setKeyFrameAnimLength(row,item->text().toInt());
+			break;
+	}
+	
+	m_timelineTable->resizeColumnsToContents();
+	m_timelineTable->resizeRowsToContents();
+	
+	m_lockTimelineTableCellEditorSlot = false;
 	
 	//qDebug() << "MainWindow::slotTimelineTableCellEdited(): row:"<<row<<", new text:"<<m_currentScene->keyFrames().at(row).frameName<<", text:"<<item->text();
 	
@@ -403,6 +636,8 @@ void MainWindow::loadKeyFramesToTable()
 	m_timelineTable->clear();
 	if(!m_currentScene)
 		return;
+		
+	m_lockTimelineTableCellEditorSlot = true;
 		
 	QList<LiveScene::KeyFrame> frames = m_currentScene->keyFrames();
 	
@@ -416,7 +651,7 @@ void MainWindow::loadKeyFramesToTable()
 	{
 		QTableWidgetItem *t = prototype->clone();
 		if(!frame.pixmap.isNull())
-			t->setIcon(QIcon(frame.pixmap.scaled(QSize(32,32),Qt::KeepAspectRatio)));
+			t->setIcon(QIcon(frame.pixmap));
 		else
 			t->setText(QString::number(frame.id));
 		m_timelineTable->setItem(row,0,t);
@@ -426,14 +661,32 @@ void MainWindow::loadKeyFramesToTable()
 		t->setText(frame.frameName);
 		m_timelineTable->setItem(row,1,t);
 		
+		t = prototype->clone();
+		t->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled|Qt::ItemIsEditable);
+		t->setText(QString::number(frame.playTime));
+		t->setTextAlignment(Qt::AlignRight);
+		m_timelineTable->setItem(row,2,t);
+		
+		t = prototype->clone();
+		t->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled|Qt::ItemIsEditable);
+		t->setText(QString::number(frame.animParam.length));
+		t->setTextAlignment(Qt::AlignRight);
+		m_timelineTable->setItem(row,3,t);
+		
 		QPushButton *btn = new QPushButton("Show");
 		btn->setProperty("keyFrameRow", row);
 		
 		connect(btn, SIGNAL(clicked()), this, SLOT(keyFrameBtnActivated()));
-		m_timelineTable->setCellWidget(row,2,btn);
+		m_timelineTable->setCellWidget(row,4,btn);
 		
 		row++;
 	}
+	
+	m_timelineTable->sortByColumn(2,Qt::AscendingOrder);
+	m_timelineTable->resizeColumnsToContents();
+	m_timelineTable->resizeRowsToContents();
+	
+	m_lockTimelineTableCellEditorSlot = false;
 }
 
 void MainWindow::keyFrameBtnActivated()
