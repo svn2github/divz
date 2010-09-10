@@ -5,6 +5,7 @@ StaticVideoSource::StaticVideoSource(QObject *parent)
 	, m_frameUpdated(false)
 {
 	setImage(QImage());
+// 	setIsBuffered(false);
 }
 
 void StaticVideoSource::setImage(const QImage& img)
@@ -23,6 +24,7 @@ void StaticVideoSource::run()
  		if(m_frameUpdated)
  		{
 			enqueue(m_frame);
+			m_frameUpdated = false;
 			emit frameReady();
 		}
 		msleep(100);

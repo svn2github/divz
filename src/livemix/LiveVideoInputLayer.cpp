@@ -46,7 +46,10 @@ void LiveVideoInputLayer::initDrawable(GLDrawable *drawable, bool isFirst)
 	LiveVideoLayer::initDrawable(drawable, isFirst);
 
 	if(m_camera)
+	{
+		drawable->setObjectName(qPrintable(m_camera->inputName()));
 		setCamera(m_camera);
+	}
 }
 
 void LiveVideoInputLayer::setCamera(const QString& dev)

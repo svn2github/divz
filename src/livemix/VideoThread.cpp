@@ -152,13 +152,15 @@ int VideoThread::initVideo()
 	}
 
 	// Determine required buffer size and allocate buffer
-	int num_bytes = avpicture_get_size(PIX_FMT_RGB565, m_video_codec_context->width, m_video_codec_context->height);
+	//int num_bytes = avpicture_get_size(PIX_FMT_RGB565, m_video_codec_context->width, m_video_codec_context->height);
+	int num_bytes = avpicture_get_size(PIX_FMT_RGB32, m_video_codec_context->width, m_video_codec_context->height);
 
 	m_buffer = (uint8_t *)av_malloc(num_bytes * sizeof(uint8_t));
 
 	// Assign appropriate parts of buffer to image planes in pFrameRGB
 	// Note that pFrameRGB is an AVFrame, but AVFrame is a superset of AVPicture
-	avpicture_fill((AVPicture *)m_av_rgb_frame, m_buffer, PIX_FMT_RGB565,
+	//avpicture_fill((AVPicture *)m_av_rgb_frame, m_buffer, PIX_FMT_RGB565,
+	avpicture_fill((AVPicture *)m_av_rgb_frame, m_buffer, PIX_FMT_RGB32,
 					m_video_codec_context->width, m_video_codec_context->height);
 
 	if(m_audio_stream != -1)
@@ -422,7 +424,8 @@ void VideoThread::readFrame()
 							m_video_codec_context->pix_fmt,
 							m_video_codec_context->width, m_video_codec_context->height,
 							//PIX_FMT_RGB32,SWS_BICUBIC,
-							PIX_FMT_RGB565, SWS_FAST_BILINEAR,
+							//PIX_FMT_RGB565, SWS_FAST_BILINEAR,
+							PIX_FMT_RGB32, SWS_FAST_BILINEAR,
 							//PIX_FMT_YUV420P, SWS_FAST_BILINEAR,
 							NULL, NULL, NULL); //SWS_PRINT_INFO
 						//mutex.unlock();
@@ -442,7 +445,8 @@ void VideoThread::readFrame()
 					QImage frame = QImage(m_av_rgb_frame->data[0],
 								m_video_codec_context->width,
 								m_video_codec_context->height,
-								QImage::Format_RGB16);
+								//QImage::Format_RGB16);
+								QImage::Format_ARGB32);
 					//m_bufferMutex.unlock();
 					
 					av_free_packet(packet);

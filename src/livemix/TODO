@@ -1,9 +1,6 @@
 
 - CameraThread: Integrate more advanced deinterlacing methods, such as those in http://tvtime.sourceforge.net/
 
-- Property Editors:
-	Add 'read' signal or something like that to update the property values
-	
 - Integrate Qt Graphics Dojo blog - htmleditor - into editing text
 - Fix text jumpiness - jumps as you type on screen somtimes
 - Add fade in/out offsets
@@ -11,8 +8,6 @@
 - Add read signal for prop editors - even more important now with key framing , etc
 	- tried, not working right now
 	
-- Add animation setup for keyframes (length, etc)
-
 - For videos, add a timeline, and pause/play/ff/rw actions
 
 Structure:

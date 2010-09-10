@@ -306,8 +306,8 @@ void GLVideoDrawable::frameReady()
 			
 		if(m_frame.rect != m_sourceRect || !m_texturesInited)
 		{
-			//qDebug() << "GLVideoDrawable::frameReady(): \t m_frame.rect:"<<m_frame.rect<<", m_sourceRect:"<<m_sourceRect;
-			//qDebug() << "GLVideoDrawable::frameReady(): "<<(this)<<": frame size changed or !m_texturesInited, resizing and adjusting pixels...";
+// 			qDebug() << "GLVideoDrawable::frameReady(): m_frame.rect:"<<m_frame.rect<<", m_sourceRect:"<<m_sourceRect;
+// 			qDebug() << "GLVideoDrawable::frameReady(): frame size changed or !m_texturesInited, resizing and adjusting pixels...";
 			if(m_videoFormat.pixelFormat != m_source->videoFormat().pixelFormat)
 				setVideoFormat(m_source->videoFormat());
 			resizeTextures(m_frame.size);
@@ -859,10 +859,6 @@ const char * GLVideoDrawable::resizeTextures(const QSize& frameSize)
 
 void GLVideoDrawable::viewportResized(const QSize& /*newSize*/)
 {
-	// recalc rects here
-	//setRect(QRectF(0,0,newSize.width(),newSize.height()));
-	
-	//qDebug() << "GLVideoDrawable::viewportResized()";
 	updateAlignment();
 	updateRects();
 }

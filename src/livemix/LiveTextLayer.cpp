@@ -15,9 +15,10 @@ LiveTextLayer::LiveTextLayer(QObject *parent)
 {
 	m_textSource = new TextVideoSource();
 	m_textSource->start();
+	//m_textSource->moveToThread(m_textSource);
 	m_textSource->setHtml("?");
 	m_textSource->changeFontSize(40);
-
+	
 	QSizeF size = m_textSource->findNaturalSize();
 	m_textSource->setTextWidth((int)size.width());
 	
@@ -64,18 +65,32 @@ void LiveTextLayer::initDrawable(GLDrawable *drawable, bool isFirstDrawable)
 
 void LiveTextLayer::setText(const QString& text)
 {
+// 	qDebug() << "LiveTextLayer::setText(): text:"<<text;
+	
+	m_textSource->lockUpdates(true);
+	
 	m_textSource->setHtml(text);
+	
+// 	qDebug() << "LiveTextLayer::setText(): changeFontSize(40)";
+	
 	// TODO make font size configurable
 	m_textSource->changeFontSize(40);
+	
 	QSize size = m_textSource->findNaturalSize();
+	
+// 	qDebug() << "LiveTextLayer::setText(): natural size: "<<size;
 	m_textSource->setTextWidth(size.width());
 
 	m_props["text"] = text;
 	
 	setInstanceName(text);
-	setAlignment(alignment()); // force recalc of layout
 	
-	qDebug() << "LiveTextLayer::setText(): text:"<<text;
+// 	qDebug() << "LiveTextLayer::setText(): updating alignment";
+// 	setAlignment(alignment()); // force recalc of layout
+	
+	m_textSource->lockUpdates(false);
+	
+	
 }
 
 

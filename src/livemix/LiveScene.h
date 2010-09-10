@@ -74,8 +74,8 @@ public:
 		void fromByteArray(QByteArray&);
 	};
 	
-	KeyFrame createKeyFrame(const QPixmap& icon=QPixmap());
-	KeyFrame createAndAddKeyFrame(const QPixmap& icon=QPixmap());
+	KeyFrame createKeyFrame(QList<LiveLayer*> layers = QList<LiveLayer*>(), const QPixmap& icon=QPixmap());
+	KeyFrame createAndAddKeyFrame(QList<LiveLayer*> layers = QList<LiveLayer*>(), const QPixmap& icon=QPixmap());
 	
 	KeyFrame updateKeyFrame(int, const QPixmap& newIcon=QPixmap());
 	

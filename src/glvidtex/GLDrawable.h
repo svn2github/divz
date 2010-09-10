@@ -122,8 +122,8 @@ public slots:
 
 	void setAnimationsEnabled(bool);
 
-	void setShowFullScreen(bool flag, bool animate=true, int animLength=300, QEasingCurve animCurve = QEasingCurve::Linear);
-	void setAlignment(Qt::Alignment value, bool animate=true, int animLength=300, QEasingCurve animCurve = QEasingCurve::Linear);
+	void setShowFullScreen(bool flag, bool animate=false, int animLength=300, QEasingCurve animCurve = QEasingCurve::Linear);
+	void setAlignment(Qt::Alignment value, bool animate=false, int animLength=300, QEasingCurve animCurve = QEasingCurve::Linear);
 	void setAlignment(int value);
 	void setInsetTopLeft(const QPointF& value);
 	void setInsetBottomRight(const QPointF& value);

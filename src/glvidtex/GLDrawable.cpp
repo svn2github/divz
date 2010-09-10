@@ -319,12 +319,18 @@ void GLDrawable::animationFinished()
 
 void GLDrawable::setRect(const QRectF& rect)
 {
+	if(m_rect == rect)
+		return;
+		
 	m_rect = rect;
 	if(m_rect.width()<0)
 		m_rect.setWidth(0);
 	if(m_rect.height()<0)
 		m_rect.setHeight(0);
 	//qDebug() << "GLDrawable::setRect: "<<objectName()<<rect;
+	//qDebug() << "GLDrawable::setRect: "<<rect;
+// 	qDebug() << "GLDrawable::setRect: size: "<<rect.size();
+	
 	drawableResized(rect.size());
 	emit drawableResized(rect.size());
 // 	if(!m_inAlignment)

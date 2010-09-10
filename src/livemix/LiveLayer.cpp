@@ -1362,6 +1362,7 @@ void LiveLayer::setLayerProperty(const QString& propertyId, const QVariant& valu
 
 void LiveLayer::applyDrawableProperty(const QString& propertyId, const QVariant& value)
 {
+// 	m_animationsDisabled = true;
 	foreach(GLWidget *widget, m_drawables.keys())
 	{
 		if(m_animationsDisabled || 

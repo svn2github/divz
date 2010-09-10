@@ -67,21 +67,25 @@ public:
 	ITEM_PROPDEF(ShadowOffsetY,	double,	shadowOffsetY);
 	ITEM_PROPDEF(ShadowBrush,	QBrush,	shadowBrush);
 	
+	bool updatesLocked() { return m_updatesLocked; }
+	bool lockUpdates(bool); // returns old status
+	
 public slots:
 	void setHtml(const QString&);
 	void update();
-	
 	
 	void setShadowColor(const QColor& c) { setShadowBrush(c); }
 	void setFillColor(const QColor& c) { setFillBrush(c); }
 	void setOutlineColor(const QColor& c) { setOutlinePen(QPen(c, outlinePen().widthF())); }
 	void setOutlineWidth(double w) { setOutlinePen(QPen(outlinePen().color(), w)); }
-	
 signals:
 	void frameReady();
 
 protected:
 	void run();
+	
+private slots:
+	void renderText();
 	
 private:
 	void setImage(const QImage& img);
@@ -112,7 +116,9 @@ private:
 	static QCache<QString,double> static_autoTextSizeCache;
 	
 	bool m_frameChanged;
+	bool m_updatesLocked;
 	
+	QTimer m_updateTimer;
 };
 
 #endif

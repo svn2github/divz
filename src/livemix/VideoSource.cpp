@@ -70,6 +70,8 @@ void VideoSource::enqueue(VideoFrame frame)
 	if(m_isBuffered)
 		m_frameQueue.enqueue(frame);
 	
+// 	qDebug() << "VideoSource::enqueue(): m_isBuffered:"<<m_isBuffered<<", Queue size: "<<m_frameQueue.size();
+	
 	emit frameReady();
 }
 

@@ -308,11 +308,14 @@ QByteArray LiveScene::toByteArray()
 	return array;
 }
 
-LiveScene::KeyFrame LiveScene::createKeyFrame(const QPixmap& icon)
+LiveScene::KeyFrame LiveScene::createKeyFrame(QList<LiveLayer*> layers, const QPixmap& icon)
 {
 	LiveScene::KeyFrame frame(this);
 	if(!icon.isNull())
 		frame.pixmap = icon.scaled(QSize(128,128),Qt::KeepAspectRatio);
+	
+	if(layers.isEmpty())
+		layers = m_layers;
 	
 	foreach(LiveLayer *layer, m_layers)
 	{
@@ -323,6 +326,8 @@ LiveScene::KeyFrame LiveScene::createKeyFrame(const QPixmap& icon)
 		map.remove("aspectRatioMode");
 		frame.layerProperties[layer->id()] = map;
 	}
+	
+	frame.playTime = m_keyFrames.isEmpty() ? 0 : ((int)m_keyFrames.last().playTime) + 1.0;
 	
 	return frame;
 }
@@ -353,9 +358,9 @@ LiveScene::KeyFrame LiveScene::updateKeyFrame(int idx, const QPixmap& icon)
 	return frame;
 }
 
-LiveScene::KeyFrame LiveScene::createAndAddKeyFrame(const QPixmap& icon)
+LiveScene::KeyFrame LiveScene::createAndAddKeyFrame(QList<LiveLayer*> layers, const QPixmap& icon)
 {
-	LiveScene::KeyFrame frame = createKeyFrame(icon);
+	LiveScene::KeyFrame frame = createKeyFrame(layers, icon);
 	addKeyFrame(frame);
 	return frame;
 }
@@ -384,13 +389,13 @@ void LiveScene::removeKeyFrame(int idx)
 
 void LiveScene::applyKeyFrame(const LiveScene::KeyFrame& frame)
 {
-	QHash<LiveLayer*,bool> flags;
+	//QHash<LiveLayer*,bool> flags;
 	foreach(int id, frame.layerProperties.keys())
 	{
 		LiveLayer * layer = m_idLookup[id];
 		if(layer)
 		{
-			flags[layer] = true;
+// 			flags[layer] = true;
 			layer->setAnimParam(frame.animParam);
 			// true = apply only if changed
 			layer->loadPropsFromMap(frame.layerProperties[id],true);
@@ -399,11 +404,11 @@ void LiveScene::applyKeyFrame(const LiveScene::KeyFrame& frame)
 		}
 	}
 	
-	foreach(LiveLayer *layer, m_layers)
-	{
-		if(!flags[layer])
-			layer->setVisible(false);
-	}
+// 	foreach(LiveLayer *layer, m_layers)
+// 	{
+// 		if(!flags[layer])
+// 			layer->setVisible(false);
+// 	}
 }
 
 void LiveScene::setKeyFrameName(int idx, const QString& name)

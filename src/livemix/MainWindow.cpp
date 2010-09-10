@@ -536,6 +536,7 @@ void MainWindow::sceneStop()
 {
 	m_scenePlayTimer.stop();
 	m_playTime = 0;
+	m_positionBox->setValue(m_playTime);
 }
 
 void MainWindow::slotTimelineTableCellActivated(int row,int)
@@ -557,7 +558,16 @@ void MainWindow::createKeyFrame()
 		return;
 		
 	QPixmap pixmap = QPixmap::fromImage(m_mainViewer->grabFrameBuffer());
-	m_currentScene->createAndAddKeyFrame(pixmap);
+	
+	QModelIndexList indexList = m_layerListView->selectionModel()->selectedIndexes();
+	
+	QList<LiveLayer*> layers;
+	foreach(QModelIndex index, indexList)
+		layers.append(m_sceneModel->itemFromIndex(index));
+		
+	//qDebug () << "MainWindow::createKeyFrame: Selected layer list size: "<<layers.size();
+	
+	m_currentScene->createAndAddKeyFrame(layers, pixmap);
 	
 	loadKeyFramesToTable();
 }

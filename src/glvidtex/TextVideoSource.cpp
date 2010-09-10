@@ -15,8 +15,14 @@ TextVideoSource::TextVideoSource(QObject *parent)
 	, m_shadowOffsetX(3)
 	, m_shadowOffsetY(3)
 	, m_frameChanged(false)
+	, m_updatesLocked(false)
 {
 	setImage(QImage());
+	setIsBuffered(false);
+// 	qDebug() << "TextVideoSource::ctor(): \t in thread:"<<QThread::currentThreadId();
+	connect(&m_updateTimer, SIGNAL(timeout()), this, SLOT(renderText()));
+	m_updateTimer.setInterval(100);
+	m_updateTimer.setSingleShot(true);
 }
 
 void TextVideoSource::setHtml(const QString& html)
@@ -32,9 +38,15 @@ void TextVideoSource::setImage(const QImage& img)
 {
 	m_image = img.convertToFormat(QImage::Format_ARGB32);
 	m_frame = VideoFrame(m_image,1000/30);
-	//enqueue(m_frame);
-	//emit frameReady();
+	//qDebug() << "TextVideoSource::setImage: new frame size: "<<m_image.size();
 	m_frameChanged = true;
+}
+
+bool TextVideoSource::lockUpdates(bool flag)
+{
+	bool oldValue = m_updatesLocked;
+	m_updatesLocked = flag;
+	return oldValue;
 }
 
 void TextVideoSource::run()
@@ -42,13 +54,17 @@ void TextVideoSource::run()
 	while(!m_killed)
 	{
 //		qDebug() << "TextVideoSource::run()";
-		if(m_frameChanged)
+		if(!m_updatesLocked)
 		{
-			enqueue(m_frame);
-			emit frameReady();
+			if(m_frameChanged)
+			{
+				m_frameChanged = false;
+				enqueue(m_frame);
+				emit frameReady();
+			}
 		}
 // 		msleep(m_frame.holdTime);
-		msleep(100);
+		msleep(50);
 	}
 }
 
@@ -285,12 +301,20 @@ QSize TextVideoSource::findNaturalSize(int atWidth)
 	}
 }
 
-
 void TextVideoSource::update()
+{
+ 	if(m_updateTimer.isActive())
+ 		m_updateTimer.stop();
+// 	qDebug() << "TextVideoSource::update(): \t in thread:"<<QThread::currentThreadId();
+	m_updateTimer.start();
+}
+
+void TextVideoSource::renderText()
 {
 // 	qDebug()<<itemName()<<"TextBoxWarmingThread::run(): htmlCode:"<<htmlCode;
 	//qDebug() << "TextVideoSource::update(): HTML:"<<html();
-	//qDebug() << "TextVideoSource::update(): Update Begin.";
+	//qDebug() << "TextVideoSource::update(): Update Start...";
+// 	qDebug() << "TextVideoSource::renderText(): \t in thread:"<<QThread::currentThreadId();
 	
 	QTextDocument doc;
 	QTextDocument shadowDoc;
