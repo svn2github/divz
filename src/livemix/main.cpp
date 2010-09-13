@@ -37,12 +37,19 @@
 
 #include "ExpandableWidget.h"
 
+QVariant LiveMix_Vector3dInterpolator(const QVector3D &start, const QVector3D &end, qreal progress)
+{
+	return (end - start) * progress;
+}
+ 
 int main(int argc, char **argv)
 {
 /*	#ifdef Q_WS_X11
 		qDebug() << "Setting up multithreaded X11 library calls";
 		XInitThreads();
 	#endif*/
+
+	qRegisterAnimationInterpolator<QVector3D>(LiveMix_Vector3dInterpolator);
 	
 	//QGL::setPreferredPaintEngine(QPaintEngine::OpenGL);
 	QApplication app(argc, argv);

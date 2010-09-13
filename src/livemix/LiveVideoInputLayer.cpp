@@ -37,7 +37,9 @@ LiveVideoInputLayer::~LiveVideoInputLayer()
 GLDrawable *LiveVideoInputLayer::createDrawable(GLWidget *widget)
 {
 	// We overrride createDrawable here just for future expansiosn sake
-	return LiveVideoLayer::createDrawable(widget);
+	GLDrawable *draw = LiveVideoLayer::createDrawable(widget);
+	//draw->setRotation(QVector3D(0,45,0));
+	return draw;
 }
 
 void LiveVideoInputLayer::initDrawable(GLDrawable *drawable, bool isFirst)

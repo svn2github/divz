@@ -993,7 +993,23 @@ void GLVideoDrawable::paintGL()
 	//QPainter painter(this);
 	QTransform transform =  m_glw->transform(); //= painter.deviceTransform();
 	//transform = transform.scale(1.25,1.);
-
+	
+	if(!translation().isNull())
+		transform *= QTransform().translate(translation().x(),translation().y());
+		
+	if(!rotation().isNull())
+	{
+		qreal x = ((qreal)width)*rotationPoint().x();
+		qreal y = ((qreal)height)*rotationPoint().y();
+		QVector3D rot = rotation();
+		transform *= QTransform()
+			.translate(x,y)
+			.rotate(rot.x(),Qt::XAxis)
+			.rotate(rot.y(),Qt::YAxis)
+			.rotate(rot.z(),Qt::ZAxis)
+			.translate(-x,-y);
+	}
+	
 	const GLfloat wfactor = 2.0 / width;
 	const GLfloat hfactor = -2.0 / height;
 
@@ -1021,6 +1037,8 @@ void GLVideoDrawable::paintGL()
 			/*(3,3)*/ transform.m33()
 		}
 	};
+	
+	
 	
 
 	const GLfloat vertexCoordArray[] =
@@ -1061,6 +1079,13 @@ void GLVideoDrawable::paintGL()
 	m_program->setAttributeArray("textureCoordArray", textureCoordArray, 2);
 	
 	m_program->setUniformValue("positionMatrix",      positionMatrix);
+// 	QMatrix4x4 mat4(
+// 		positionMatrix[0][0], positionMatrix[0][1], positionMatrix[0][2], positionMatrix[0][3],
+// 		positionMatrix[1][0], positionMatrix[1][1], positionMatrix[1][2], positionMatrix[1][3], 
+// 		positionMatrix[2][0], positionMatrix[2][1], positionMatrix[2][2], positionMatrix[2][3], 
+// 		positionMatrix[3][0], positionMatrix[3][1], positionMatrix[3][2], positionMatrix[3][3]
+// 		); 
+// 	m_program->setUniformValue("positionMatrix",      mat4);
 	
 	//qDebug() << "GLVideoDrawable:paintGL():"<<this<<", rendering with opacity:"<<opacity();
 	m_program->setUniformValue("alpha",               (GLfloat)opacity());

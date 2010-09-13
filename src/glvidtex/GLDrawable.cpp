@@ -32,6 +32,7 @@ GLDrawable::GLDrawable(QObject *parent)
 	, m_inAlignment(false)
 	, m_alignedSizeScale(1.)
 	, m_animPendingGlWidget(false)
+	, m_rotationPoint(.5,.5,.5) // rotate around center by default
 {
 }
 
@@ -342,6 +343,7 @@ void GLDrawable::setZIndex(double z)
 {
 	m_zIndex = z;
 	emit zIndexChanged(z);
+	updateGL();
 }
 
 void GLDrawable::setOpacity(double o)
@@ -591,6 +593,25 @@ void GLDrawable::AnimParam::fromByteArray(QByteArray array)
 	b >> x; length = x.toInt();
 	b >> x; int curveType = x.toInt();
 	curve = (QEasingCurve::Type)curveType;
+}
+
+void GLDrawable::setTranslation(QVector3D value)
+{
+	m_translation = value;
+	updateGL();
+}
+
+void GLDrawable::setRotation(QVector3D value)
+{
+	m_rotation = value;
+	updateGL();
+}
+
+// Expressed in a range of 0..1 as a percentage of the relevant size (e.g. (.5,.5,.5) means rotate around center, the default value)
+void GLDrawable::setRotationPoint(QVector3D value)
+{
+	m_rotationPoint = value;
+	updateGL();
 }
 
 

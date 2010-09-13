@@ -39,6 +39,11 @@ class GLDrawable : public QObject
 	Q_PROPERTY(QPointF insetTopLeft READ insetTopLeft WRITE setInsetTopLeft);
 	Q_PROPERTY(QPointF insetBottomRight READ insetBottomRight WRITE setInsetBottomRight);
 	Q_PROPERTY(double alignedSizeScale READ alignedSizeScale WRITE setAlignedSizeScale);
+	
+	Q_PROPERTY(QVector3D translation READ translation WRITE setTranslation);
+	Q_PROPERTY(QVector3D rotation READ rotation WRITE setRotation);
+	// Expressed in a range of 0..1 as a percentage of the relevant size (e.g. (.5,.5,.5) means rotate around center, the default value)
+	Q_PROPERTY(QVector3D rotationPoint READ rotationPoint WRITE setRotationPoint);
 
 	Q_ENUMS(AnimationType);
 
@@ -110,6 +115,10 @@ public:
 	virtual QSizeF naturalSize() { return QSizeF(0,0); }
 
 	double alignedSizeScale() { return m_alignedSizeScale; }
+	
+	QVector3D translation() { return m_translation; }
+	QVector3D rotation() { return m_rotation; }
+	QVector3D rotationPoint() { return m_rotationPoint; }
 
 public slots:
 	void setRect(const QRectF& rect);
@@ -130,6 +139,11 @@ public slots:
 
 	void setAlignedSizeScale(double);
 
+	void setTranslation(QVector3D value);
+	void setRotation(QVector3D value);
+	// Expressed in a range of 0..1 as a percentage of the relevant size (e.g. (.5,.5,.5) means rotate around center, the default value)
+	void setRotationPoint(QVector3D value);
+	
 signals:
 	void zIndexChanged(double newZIndex);
 	void drawableResized(const QSize& newSize);
@@ -187,6 +201,10 @@ private:
 	
 	bool m_animPendingGlWidget;
 	bool m_alignmentPending;
+
+	QVector3D m_translation;
+	QVector3D m_rotation;
+	QVector3D m_rotationPoint;
 };
 
 bool operator==(const GLDrawable::AnimParam&a, const GLDrawable::AnimParam&b);

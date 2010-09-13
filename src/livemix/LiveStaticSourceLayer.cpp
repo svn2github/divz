@@ -16,6 +16,7 @@ LiveStaticSourceLayer::LiveStaticSourceLayer(QObject *parent)
 	m_staticSource = new StaticVideoSource();
 	m_staticSource->setImage(QImage(file));
 	m_staticSource->start();
+	//m_staticSource->setIsBuffered(false);
 	
 	//setFile("../data/icon-next-large.png");
 	m_props["file"] = file;
@@ -37,6 +38,7 @@ GLDrawable* LiveStaticSourceLayer::createDrawable(GLWidget *context)
 void LiveStaticSourceLayer::initDrawable(GLDrawable *newDrawable, bool isFirst)
 {
 	LiveVideoLayer::initDrawable(newDrawable, isFirst);
+	setFile(file());
 }
 
 QWidget * LiveStaticSourceLayer::createLayerPropertyEditors()
