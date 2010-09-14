@@ -187,8 +187,8 @@ public:
 	
 	int id();
 	
-	void attachGLWidget(GLWidget*);
-	void detachGLWidget(GLWidget*);
+	virtual void attachGLWidget(GLWidget*);
+	virtual void detachGLWidget(GLWidget*);
 	
 	// Override and return a descritive static type name for your layer
 	virtual QString typeName() { return "Generic Layer"; }
@@ -279,6 +279,8 @@ public:
 	class LiveScene *scene() { return m_scene; }
 	void setScene(LiveScene *scene);
 	
+	bool layerPropertyUpdatesLocked() { return m_lockLayerPropertyUpdates; }
+	
 
 
 signals:
@@ -348,6 +350,8 @@ public slots:
 	
 	void setShowOnShowLayerId(int);
 	void setHideOnShowLayerId(int);
+	
+	void lockLayerPropertyUpdates(bool);
 
 
 	// Internally, tries to set the named property on all the drawables if it has such a property
@@ -450,7 +454,13 @@ protected:
 
 	// The properties for this layer - to properly set in sub-classes, use setProperty
 	QVariantMap m_props;
+	
+	// List of widgets currently attached to
+	QList<GLWidget*>  m_glWidgets;
 
+	// Flagged if user disabled animations
+	bool m_animationsDisabled;
+	
 private:
 	void setVisibleGeometryFields(QStringList list = QStringList());
 	
@@ -466,13 +476,11 @@ private:
 	QList<LiveLayer*> m_sortedLayerList;
 	bool m_lockVsibleSetter;
 	
-	QList<GLWidget*>  m_glWidgets;
-	
-	bool m_animationsDisabled;
 	AnimParam m_animParam;
 	
 	int m_layerId;
 	bool m_layerIdLoaded;
+	bool m_lockLayerPropertyUpdates;
 };
 
 class ObjectValueSetter : public QObject

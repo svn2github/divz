@@ -187,6 +187,8 @@ QtVideoSource::QtVideoSource(QObject *parent)
 	m_playlist = new QMediaPlaylist(this);
 	m_player->setPlaylist(m_playlist);
 	
+	m_playlist->setPlaybackMode(QMediaPlaylist::Loop);
+	
 	m_surfaceAdapter = new VideoSurfaceAdapter(this);
 	
 	QVideoRendererControl* rendererControl = m_player->service()->requestControl<QVideoRendererControl*>();
@@ -210,6 +212,8 @@ void QtVideoSource::start(QThread::Priority /*priority*/)
 void QtVideoSource::setFile(const QString& file)
 {
 	m_file = file;
+	
+	m_playlist->clear();
 
 	QFileInfo fileInfo(file);
 	if (fileInfo.exists()) 

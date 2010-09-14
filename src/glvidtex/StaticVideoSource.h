@@ -15,6 +15,8 @@ public:
 	//virtual ~StaticVideoSource() {}
 
 	VideoFormat videoFormat() { return VideoFormat(VideoFrame::BUFFER_IMAGE,QVideoFrame::Format_ARGB32); }
+	//VideoFormat videoFormat() { return VideoFormat(VideoFrame::BUFFER_BYTEARRAY,QVideoFrame::Format_ARGB32); }
+	
 	
 	const QImage & image() { return m_image; }
 

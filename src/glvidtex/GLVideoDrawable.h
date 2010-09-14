@@ -261,6 +261,7 @@ private:
 	QPointF m_invertedOffset; // calculated as m_textureOffset.x() * 1/textureWidth, etc
 	
 	bool m_texturesInited;
+	QMutex m_frameReadyLock;
 };
 
 #endif 

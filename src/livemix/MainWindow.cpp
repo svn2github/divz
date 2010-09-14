@@ -48,6 +48,11 @@ MainWindow::MainWindow()
 	setWindowTitle(tr("LiveMix"));
 	setUnifiedTitleAndToolBarOnMac(true);
 		
+	QTimer::singleShot(500, this, SLOT(loadLastFile()));	
+}
+
+void MainWindow::loadLastFile()
+{
 	QString lastFile = QSettings().value("last-lmx-file","vid.lmx").toString();
 	loadFile(lastFile);
 }
@@ -171,6 +176,9 @@ void MainWindow::loadLiveScene(LiveScene *scene)
 	
 	m_sceneModel->setLiveScene(scene);
 	
+	if(!scene->layerList().isEmpty())
+		setCurrentLayer(scene->layerList().first());
+	
 	loadKeyFramesToTable();
 	
 	updateSceneTimeLength();
@@ -216,6 +224,36 @@ void MainWindow::deleteCurrentLayer()
 	}
 }
 
+void MainWindow::duplicateLayer()
+{
+	if(m_currentLayer)
+	{
+		QObject *instance = m_currentLayer->metaObject()->newInstance(Q_ARG(QObject*,0));
+		
+		if(!instance)
+		{
+			qDebug() << "Error: MainWindow::duplicateCurrentLayer(): Creation of "<<m_currentLayer->metaObject()->className()<<" failed.";
+			return;
+		}
+		
+		
+		LiveLayer *layer = dynamic_cast<LiveLayer*>(instance);
+		if(!layer)
+		{
+			qDebug() << "Error: MainWindow::duplicateCurrentLayer(): Object created for type "<<m_currentLayer->metaObject()->className()<<" does not inherit from LiveLayer.";
+			delete layer;
+			return;
+		}
+		
+		QByteArray bytes = m_currentLayer->toByteArray();
+		layer->fromByteArray(bytes);
+		
+		setCurrentLayer(layer);
+		if(m_currentScene)
+			m_currentScene->addLayer(layer);
+	}
+}
+
 
 void MainWindow::setCurrentLayer(LiveLayer *layer)
 {
@@ -229,9 +267,16 @@ void MainWindow::setCurrentLayer(LiveLayer *layer)
 	loadLayerProperties(m_currentLayer);
 	
 	m_deleteLayerAct->setEnabled(layer!=NULL);
+	m_duplicateLayerAct->setEnabled(layer!=NULL);
 		
 	if(m_currentLayer)
+	{
 		m_currentLayer->attachGLWidget(m_layerViewer);
+		
+		QModelIndex idx = m_sceneModel->indexForItem(m_currentLayer);
+		if(m_layerListView->currentIndex().row() != idx.row())
+			m_layerListView->setCurrentIndex(idx);
+	}
 }
 
 void MainWindow::loadLayerProperties(LiveLayer *layer)
@@ -246,7 +291,9 @@ void MainWindow::loadLayerProperties(LiveLayer *layer)
 	if(!m_currentLayer)
 		return;
 		
+	m_currentLayer->lockLayerPropertyUpdates(true);
 	QWidget *props = m_currentLayer->createLayerPropertyEditors();
+	m_currentLayer->lockLayerPropertyUpdates(false);
 
 	QVBoxLayout *layout = dynamic_cast<QVBoxLayout*>(m_controlBase->layout());
 	while(layout->count() > 0)
@@ -457,6 +504,9 @@ void MainWindow::showFrame(const LiveScene::KeyFrame& frame)
 	
 	m_currentKeyFrame = frame;
 	m_currentScene->applyKeyFrame(frame);
+	
+	// Update property editors
+	setCurrentLayer(m_currentLayer);
 }
 
 void MainWindow::slotSceneTimerTick()
@@ -723,7 +773,9 @@ void MainWindow::keyFrameBtnActivated()
 	
 	//qDebug() << "MainWindow::slotTimelineTableCellEdited(): row:"<<item->row()<<", new text:"<<m_currentScene->keyFrames()[item->row()].frameName();
 	m_currentScene->applyKeyFrame(row);
-		
+	
+	// Update property editors
+	setCurrentLayer(m_currentLayer);
 }
 
 void MainWindow::createCenterPanel()
@@ -892,6 +944,11 @@ void MainWindow::createActions()
 	
 	m_deleteLayerAct = new QAction(QIcon("../data/action-delete.png"), tr("Delete Current Layer"), this);
 	connect(m_deleteLayerAct, SIGNAL(triggered()), this, SLOT(deleteCurrentLayer()));
+	
+	m_duplicateLayerAct = new QAction(QIcon("../data/stock-convert.png"), tr("Duplicate Current Layer"), this);
+	connect(m_duplicateLayerAct, SIGNAL(triggered()), this, SLOT(duplicateLayer()));
+	
+	
 
 }
 
@@ -927,6 +984,8 @@ void MainWindow::createToolBars()
 	m_fileToolBar->addSeparator();
 	
 	m_fileToolBar->addAction(m_deleteLayerAct);
+	m_fileToolBar->addAction(m_duplicateLayerAct);
+	
 	
 }
 

@@ -2,7 +2,7 @@
 - CameraThread: Integrate more advanced deinterlacing methods, such as those in http://tvtime.sourceforge.net/
 
 - Integrate Qt Graphics Dojo blog - htmleditor - into editing text
-- Fix text jumpiness - jumps as you type on screen somtimes
+#- Fix text jumpiness - jumps as you type on screen somtimes
 - Add fade in/out offsets
 
 - Add read signal for prop editors - even more important now with key framing , etc
@@ -15,7 +15,7 @@
 - Add cross fading for text and static sources
 - Add canvas size setting methods 
 - Add "camera" point (viewport) movement...?
-
+- Add "duplicate layer" functionality
 
 Structure:
 

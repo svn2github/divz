@@ -62,6 +62,8 @@ public:
 	
 	QString file() { return m_file; }
 	
+	QMediaPlaylist * playlist() { return m_playlist; } 
+	
 public slots:	
 	void start(QThread::Priority priority = QThread::InheritPriority);
 	void setFile(const QString&);

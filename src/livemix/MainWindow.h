@@ -71,6 +71,10 @@ private slots:
 	void sceneRR();
 	void sceneStop();
 	
+	void loadLastFile();
+	
+	void duplicateLayer();
+	
 private:
 	void createActions();
 	void createMenus();
@@ -112,6 +116,7 @@ private:
 	QAction *m_newImageLayerAct;
 	
 	QAction *m_deleteLayerAct;
+	QAction *m_duplicateLayerAct;
 	
 	
 	QSplitter *m_mainSplitter;

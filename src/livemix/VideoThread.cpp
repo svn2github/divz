@@ -53,7 +53,8 @@ void VideoThread::setVideo(const QString& name)
 VideoFormat VideoThread::videoFormat()
 {
 	//return VideoFormat(VideoFrame::BUFFER_IMAGE, QVideoFrame::Format_RGB565);
-	return VideoFormat(VideoFrame::BUFFER_IMAGE, QVideoFrame::Format_ARGB32);
+	//return VideoFormat(VideoFrame::BUFFER_IMAGE, QVideoFrame::Format_ARGB32);
+	return VideoFormat(VideoFrame::BUFFER_BYTEARRAY, QVideoFrame::Format_ARGB32);
 	//return VideoFormat(VideoFrame::BUFFER_BYTEARRAY, QVideoFrame::Format_YUV420P);
 	
 	
@@ -192,17 +193,20 @@ int VideoThread::initVideo()
 
 void VideoThread::run()
 {
-	//qDebug() << "VideoThread::run()";
+	
 	m_killed = false;
 	initVideo();
+	
 	//m_readTimer->start();
 	play();
+	
 	//exec();
 	while(!m_killed)
 	{
+// 		qDebug() << "VideoThread::run() mark4";
 		if(m_status == Running)
 			readFrame();
-			
+		//qDebug() << "VideoThread::run() mark5: "<<m_frameQueue.size();
 		msleep(qMax(m_nextDelay,10));
 	}
 }
@@ -566,7 +570,17 @@ void VideoThread::readFrame()
 						//emit frameReady((int)(pts_delay*1000));
 						
 						//enqueue(VideoFrame(m_frame,frameDelay));
+						
 						enqueue(VideoFrame(frame.convertToFormat(QImage::Format_ARGB32),pts_delay*1000));
+						
+// 						VideoFrame vidframe;
+// 						vidframe.isRaw = true;
+// 						vidframe.bufferType = VideoFrame::BUFFER_BYTEARRAY;
+// 						const uchar *bits = frame.bits();
+// 						vidframe.byteArray.append((const char*)bits, frame.byteCount());
+// 						vidframe.holdTime = pts_delay*1000;
+// 						vidframe.setSize(frame.size());
+// 						enqueue(vidframe);
 						
 // 						VideoFrame vid(pts_delay*1000);
 // 						QImage rgb32img = frame.convertToFormat(QImage::Format_ARGB32);

@@ -1306,6 +1306,8 @@ void LiveLayer::setOpacity(double o)		{ setLayerProperty("opacity", o); }
 void LiveLayer::setOpacity(int o)		{ setLayerProperty("opacity", ((double)o)/100.0); }
 void LiveLayer::setTransparency(int o)		{ setLayerProperty("opacity", (100.0-(double)o)/100.0); }
 
+void LiveLayer::lockLayerPropertyUpdates(bool flag) { m_lockLayerPropertyUpdates = flag; } 
+
 // Internally, tries to set the named property on all the drawables if it has such a property
 // If no prop exists on the drawable, then tries to set the prop on the layer object
 // Either way, sets the prop in m_props and emits layerPropertyChanged()
@@ -1316,6 +1318,8 @@ void LiveLayer::setLayerProperty(const QString& propertyId, const QVariant& valu
 {
 	//if(!m_props.contains(propertyId))
 	//	return;
+	if(m_lockLayerPropertyUpdates)
+		return;
 		
 	// Prevent recursions that may be triggered by a property setter in turn calling setLayerProperty(), 
 	// which would just loop back and call that property setter again for that property - recursion.

@@ -67,8 +67,10 @@ GLDrawable * addQtSource(GLWidget * glw)
 {
 	#ifdef HAS_QT_VIDEO_SOURCE
 	//QString testFile = "/opt/qt-mobility-opensource-src-1.0.1/examples/player/dsc_7721.avi";
-	QString testFile = "dsc_0259.avi";
-	
+	//QString testFile = "dsc_0259.avi";
+	QString testFile = "/root/Download/SermonSpice/92_Churchfamily.mpg";
+	//QString testFile = "2010-08-01-Rocky.mpg";
+	//QString testFile = "2009-07-25-ACB-Singing.mpg";
 	QtVideoSource *source = new QtVideoSource();
 	source->setFile(testFile);
 	source->start();
@@ -79,9 +81,10 @@ GLDrawable * addQtSource(GLWidget * glw)
 	glw->addDrawable(drawable);
 	drawable->addShowAnimation(GLDrawable::AnimFade);
 	//drawable->addShowAnimation(GLDrawable::AnimZoom);
-	drawable->addShowAnimation(GLDrawable::AnimSlideTop,1000);
+	//drawable->addShowAnimation(GLDrawable::AnimSlideTop,1000);
+	drawable->setZIndex(-1);
 	
-	drawable->addHideAnimation(GLDrawable::AnimZoom,1000);
+	//drawable->addHideAnimation(GLDrawable::AnimZoom,1000);
 	drawable->addHideAnimation(GLDrawable::AnimFade);
 	drawable->show();
 	drawable->setObjectName("QtVideoSource");
@@ -358,6 +361,9 @@ int main(int argc, char *argv[])
 	GLWidget *glw = new GLWidget();
 		
 	QFormLayout * tb = createToggleBox();
+	
+	addButtons(tb, addQtSource(glw));
+	
 	#undef HAS_QT_VIDEO_SOURCE
 	#ifdef HAS_QT_VIDEO_SOURCE
 		addButtons(tb, addQtSource(glw));

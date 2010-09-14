@@ -297,6 +297,10 @@ void GLVideoDrawable::frameReady()
 	if(!m_source)
 		return;
 	
+	// This seems to prevent crashes during startup of an application when a thread is pumping out frames
+	// before the app has finished initalizing.
+	QMutexLocker lock(&m_frameReadyLock);
+	
 	m_frame = m_source->frame();
 	
 	if(m_glInited && glWidget())

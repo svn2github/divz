@@ -117,7 +117,7 @@ void LiveVideoFileLayer::setFile(const QString& file)
 		m_video = 0;
 	}
 	
-	//qDebug() << "LiveVideoFileLayer::setFile: Loading file: "<<file;
+	qDebug() << "LiveVideoFileLayer::setFile: Loading file: "<<file;
 	VideoThread *video = new VideoThread();
 	video->setVideo(file);
 	video->start();
