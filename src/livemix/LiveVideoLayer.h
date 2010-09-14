@@ -78,7 +78,6 @@ public slots:
 	void setAspectRatioMode(Qt::AspectRatioMode value)	{ setLayerProperty("aspectRatioMode", (int)value); }
 	void setAspectRatioMode(int value)			{ setLayerProperty("aspectRatioMode", value); }
 	
-	
 	virtual void setLayerProperty(const QString& propertyId, const QVariant& value);
 
 signals:

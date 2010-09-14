@@ -993,26 +993,27 @@ void GLVideoDrawable::paintGL()
 	//QPainter painter(this);
 	QTransform transform =  m_glw->transform(); //= painter.deviceTransform();
 	//transform = transform.scale(1.25,1.);
-	
 	if(!translation().isNull())
 		transform *= QTransform().translate(translation().x(),translation().y());
-		
-	if(!rotation().isNull())
-	{
-		qreal x = ((qreal)width)*rotationPoint().x();
-		qreal y = ((qreal)height)*rotationPoint().y();
-		QVector3D rot = rotation();
-		transform *= QTransform()
-			.translate(x,y)
-			.rotate(rot.x(),Qt::XAxis)
-			.rotate(rot.y(),Qt::YAxis)
-			.rotate(rot.z(),Qt::ZAxis)
-			.translate(-x,-y);
-	}
 	
-	const GLfloat wfactor = 2.0 / width;
+	const GLfloat wfactor =  2.0 / width;
 	const GLfloat hfactor = -2.0 / height;
 
+	if(!rotation().isNull())
+	{
+ 		qreal tx = target.width()  * rotationPoint().x() + target.x();
+ 		qreal ty = target.height() * rotationPoint().y() + target.y();
+ 		qreal x, y;
+ 		transform.map(tx,ty,&x,&y);
+ 		
+ 		QVector3D rot = rotation();
+  		transform *= QTransform()
+ 			.translate(x,y)
+ 			.rotate(rot.x(),Qt::XAxis)
+ 			.rotate(rot.y(),Qt::YAxis)
+ 			.rotate(rot.z(),Qt::ZAxis)
+ 			.translate(-x,-y);
+	}
 	const GLfloat positionMatrix[4][4] =
 	{
 		{
@@ -1039,16 +1040,38 @@ void GLVideoDrawable::paintGL()
 	};
 	
 	
-	
+	//QVector3D list[] = 
 
 	const GLfloat vertexCoordArray[] =
 	{
-		target.left()     , target.bottom() + 1,//(GLfloat)zIndex(),
-		target.right() + 1, target.bottom() + 1,//(GLfloat)zIndex(),
+		target.left()     , target.bottom() + 1, //(GLfloat)zIndex(),
+		target.right() + 1, target.bottom() + 1, //(GLfloat)zIndex(),
 		target.left()     , target.top(), 	//(GLfloat)zIndex(),
 		target.right() + 1, target.top()//, 	(GLfloat)zIndex()
 	};
 	
+	
+// 	QVector3D v1(target.left(),      target.bottom() + 1, 1);
+// 	QVector3D v2(target.right() + 1, target.bottom() + 1, 1);
+// 	QVector3D v3(target.left(),      target.top(), 1);
+// 	QVector3D v4(target.right() + 1, target.top(), 1);
+// 	
+// 	if(applyRotTx)
+// 	{
+// 		v1 = rotTx.map(v1);
+// 		v2 = rotTx.map(v2);
+// 		v3 = rotTx.map(v3);
+// 		v4 = rotTx.map(v4);
+// 	}
+// 	
+// 	
+// 	const GLfloat vertexCoordArray[] =
+// 	{
+// 		v1.x(), v1.y(), v1.z(),
+// 		v2.x(), v2.y(), v2.z(),
+// 		v3.x(), v3.y(), v3.z(),
+// 		v4.x(), v4.y(), v4.z(),
+// 	};
 	
 	//qDebug() << vTop << vBottom;
 	

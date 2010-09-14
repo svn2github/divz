@@ -176,6 +176,8 @@ class LiveLayer : public QObject
 
 	Q_PROPERTY(double alignedSizeScale READ alignedSizeScale WRITE setAlignedSizeScale);
 	
+	Q_PROPERTY(QVector3D rotation READ rotation WRITE setRotation);
+	
 	Q_PROPERTY(int hideOnShowLayerId READ hideOnShowLayerId WRITE setHideOnShowLayerId);
 	Q_PROPERTY(int showOnShowLayerId READ showOnShowLayerId WRITE setShowOnShowLayerId);
 
@@ -261,6 +263,10 @@ public:
 
 	double alignedSizeScale()	{ return layerProperty("alignedSizeScale").toDouble(); }
 	
+	QVector3D rotation()	{ return layerProperty("rotation").value<QVector3D>(); }
+	
+	
+	
 	int showOnShowLayerId()	{ return layerProperty("showOnShowLayerId").toInt(); }
 	int hideOnShowLayerId()	{ return layerProperty("hideOnShowLayerId").toInt(); }
 	
@@ -329,6 +335,16 @@ public slots:
 
 	void setAlignedSizeScale(double value) { setLayerProperty("alignedSizeScale", value); }
 	void setAlignedSizeScale(int value) { setAlignedSizeScale((double)value / 100.0); }
+	
+	
+	void setRotation(QVector3D value)	{ setLayerProperty("rotation", value); }
+	void setXRotation(double value)		{ QVector3D r = rotation(); r.setX(value); setLayerProperty("rotation", r); }
+	void setYRotation(double value)		{ QVector3D r = rotation(); r.setY(value); setLayerProperty("rotation", r); }
+	void setZRotation(double value)		{ QVector3D r = rotation(); r.setZ(value); setLayerProperty("rotation", r); }
+	
+	void setXRotation(int value)		{ setXRotation((double)value); }
+	void setYRotation(int value)		{ setYRotation((double)value); }
+	void setZRotation(int value)		{ setZRotation((double)value); }
 	
 	void setShowOnShowLayerId(int);
 	void setHideOnShowLayerId(int);

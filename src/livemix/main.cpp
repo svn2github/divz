@@ -39,7 +39,10 @@
 
 QVariant LiveMix_Vector3dInterpolator(const QVector3D &start, const QVector3D &end, qreal progress)
 {
-	return (end - start) * progress;
+	QVector3D val = (end - start) * progress + start;
+	//qDebug() << "LiveMix_Vector3dInterpolator: end:"<<end<<", start:"<<start<<", progress:"<<progress<<", val:"<<val;
+	return val;
+	
 }
  
 int main(int argc, char **argv)

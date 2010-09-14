@@ -464,6 +464,7 @@ LiveLayer::LiveLayer(QObject *parent)
 	m_props["insetTopLeft"] = QPointF(0,0);
 	m_props["insetBottomRight"] = QPointF(0,0);
 	m_props["alignedSizeScale"] = 1.0;
+	m_props["rotation"] = QVector3D(0,0,0);
 	
 	m_props["fadeIn"] = 1;
 	m_props["fadeInLength"] = 300;
@@ -931,8 +932,7 @@ QWidget * LiveLayer::createLayerPropertyEditors()
 	opts.type = QVariant::Int;
 	opts.doubleIsPercentage = true;
 	formLayout->addRow(tr("&Scale Size:"), m_propWidget["sizeScale"] = generatePropertyEditor(this, "alignedSizeScale", SLOT(setAlignedSizeScale(int)), opts));
-
-
+	
 	opts.reset();
 	opts.value = rect().topLeft();
 	formLayout->addRow(tr("&Position:"), m_propWidget["pos"] = generatePropertyEditor(this, "pos", SLOT(setPos(const QPointF&)), opts));
@@ -947,6 +947,21 @@ QWidget * LiveLayer::createLayerPropertyEditors()
 	opts.type = QVariant::Int;
 	opts.defaultValue = 0;
 	formLayout->addRow(tr("&Z Value:"), generatePropertyEditor(this, "zIndex", SLOT(setZIndex(int)), opts));
+	
+	opts.reset();
+	opts.suffix = " deg";
+	opts.min = -360.0;
+	opts.max =  360.0;
+	opts.defaultValue = 0;
+	opts.type = QVariant::Int;
+	opts.value = rotation().x();
+	formLayout->addRow(tr("&X Rotation:"), generatePropertyEditor(this, "xRotation", SLOT(setXRotation(int)), opts));
+	
+	opts.value = rotation().y();
+	formLayout->addRow(tr("&Y Rotation:"), generatePropertyEditor(this, "yRotation", SLOT(setYRotation(int)), opts));
+	
+	opts.value = rotation().z();
+	formLayout->addRow(tr("&Z Rotation:"), generatePropertyEditor(this, "zRotation", SLOT(setZRotation(int)), opts));
 
 	opts.reset();
 	opts.suffix = "%";
@@ -1452,7 +1467,8 @@ void LiveLayer::initDrawable(GLDrawable *drawable, bool /*isFirstDrawable*/)
 			<< "alignment"
 			<< "insetTopLeft"
 			<< "insetBottomRight"
-			<< "alignedSizeScale";
+			<< "alignedSizeScale"
+			<< "rotation";
 		
 	//qDebug() << "LiveLayer::initDrawable: drawable:"<<drawable<<", props list:"<<generalProps;
 	applyLayerPropertiesToObject(drawable, generalProps);
