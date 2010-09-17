@@ -33,8 +33,13 @@ class GLDrawable : public QObject
 	Q_PROPERTY(double zIndex READ zIndex WRITE setZIndex);
 	Q_PROPERTY(double opacity READ opacity WRITE setOpacity);
 	Q_PROPERTY(double isVisible READ isVisible WRITE setVisible);
+	
+	Q_PROPERTY(double topPercent READ topPercent WRITE setTopPercent);
+	Q_PROPERTY(double leftPercent READ leftPercent WRITE setLeftPercent);
+	Q_PROPERTY(double bottomPercent READ bottomPercent WRITE setBottomPercent);
+	Q_PROPERTY(double rightPercent READ rightPercent WRITE setRightPercent);
 
-	Q_PROPERTY(bool showFullScreen READ showFullScreen WRITE setShowFullScreen);
+// 	Q_PROPERTY(bool showFullScreen READ showFullScreen WRITE setShowFullScreen);
 	Q_PROPERTY(Qt::Alignment alignment READ alignment WRITE setAlignment);
 	Q_PROPERTY(QPointF insetTopLeft READ insetTopLeft WRITE setInsetTopLeft);
 	Q_PROPERTY(QPointF insetBottomRight READ insetBottomRight WRITE setInsetBottomRight);
@@ -104,7 +109,7 @@ public:
 
 	bool animationsEnabled() { return m_animationsEnabled; }
 
-	bool showFullScreen()		{ return m_showFullScreen; }
+// 	bool showFullScreen()		{ return m_showFullScreen; }
 	Qt::Alignment alignment()	{ return m_alignment; }
 	QPointF insetTopLeft()		{ return m_insetTopLeft; }
 	QPointF insetBottomRight()	{ return m_insetBottomRight; }
@@ -115,6 +120,12 @@ public:
 	virtual QSizeF naturalSize() { return QSizeF(0,0); }
 
 	double alignedSizeScale() { return m_alignedSizeScale; }
+	
+	double topPercent() { return m_topPercent; }
+	double leftPercent() { return m_leftPercent; }
+	double bottomPercent() { return m_bottomPercent; }
+	double rightPercent() { return m_rightPercent; }
+	
 	
 	QVector3D translation() { return m_translation; }
 	QVector3D rotation() { return m_rotation; }
@@ -131,11 +142,16 @@ public slots:
 
 	void setAnimationsEnabled(bool);
 
-	void setShowFullScreen(bool flag, bool animate=false, int animLength=300, QEasingCurve animCurve = QEasingCurve::Linear);
+// 	void setShowFullScreen(bool flag, bool animate=false, int animLength=300, QEasingCurve animCurve = QEasingCurve::Linear);
 	void setAlignment(Qt::Alignment value, bool animate=false, int animLength=300, QEasingCurve animCurve = QEasingCurve::Linear);
 	void setAlignment(int value);
 	void setInsetTopLeft(const QPointF& value);
 	void setInsetBottomRight(const QPointF& value);
+	
+	void setTopPercent(double value);
+	void setLeftPercent(double value);
+	void setBottomPercent(double value);
+	void setRightPercent(double value);
 
 	void setAlignedSizeScale(double);
 
@@ -152,6 +168,9 @@ signals:
 
 protected slots:
 	virtual void animationFinished();
+	
+	// remove it from m_propAnims
+	void propAnimFinished();
 
 protected:
 	virtual void updateAlignment(bool animateRect=false, int animLength=300, QEasingCurve animCurve = QEasingCurve::Linear);
@@ -168,6 +187,9 @@ protected:
 	virtual void startAnimation(const AnimParam & p);
 	virtual void startAnimations();
 	void forceStopAnimations();
+	
+	QPropertyAnimation *propAnim(const QString&);
+	void registerPropAnim(const QString& prop, QPropertyAnimation *anim);
 
 	GLWidget *m_glw;
 
@@ -190,7 +212,7 @@ private:
 
 	bool m_animationsEnabled;
 
-	bool m_showFullScreen;
+// 	bool m_showFullScreen;
 	Qt::Alignment m_alignment;
 	QPointF m_insetTopLeft;
 	QPointF m_insetBottomRight;
@@ -205,6 +227,14 @@ private:
 	QVector3D m_translation;
 	QVector3D m_rotation;
 	QVector3D m_rotationPoint;
+	
+	double m_topPercent;
+	double m_leftPercent;
+	double m_bottomPercent;
+	double m_rightPercent;
+	
+	// Used by code to prevent two animations from running on same prop at same time
+	QHash<QString,QPropertyAnimation*> m_propAnims;
 };
 
 bool operator==(const GLDrawable::AnimParam&a, const GLDrawable::AnimParam&b);

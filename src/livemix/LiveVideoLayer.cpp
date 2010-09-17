@@ -18,6 +18,14 @@ LiveVideoLayer::LiveVideoLayer(QObject *parent)
 	setCropBottomRight(QPointF(0,0));
 	setTextureOffset(QPointF(0,0));
 	setAspectRatioMode(Qt::KeepAspectRatio);
+	
+	setAnimatePropFlags(QStringList()
+		<< "flipHorizontal" 
+		<< "flipVertical"
+		<< "aspectRatioMode"
+		<< "cropTopLeft"
+		<< "cropBottomRight",
+		false);
 }
 
 LiveVideoLayer::~LiveVideoLayer()

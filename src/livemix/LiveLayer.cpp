@@ -5,414 +5,18 @@
 #include "../glvidtex/GLWidget.h"
 #include <QPropertyAnimation>
 
-//////////////////////////////////////////////////////////////////////////////
+#include "ExpandableWidget.h"
+#include "EditorUtilityWidgets.h"
+
+#include <QVBoxLayout>
+#include <QFormLayout>
+#include <QHBoxLayout>
+#include <QSpinBox>
+#include <QSlider>
+#include <QDoubleSpinBox>
+#include <QDirModel>
+#include <QCompleter>
 
-		
-PropertyChangeListener::PropertyChangeListener(QObject *source, const char *changeSignal, QObject *receiver, const char *receiverSlot, QVariant value, QString prop)
-	: QObject(receiver)
-	, m_value(value)
-	, m_property(prop)
-{
-// 	qDebug() << "PropertyChangeListener: connecting "<<source<<"::"<<changeSignal<<" to "<<receiver<<"::"<<receiverSlot<<", value:"<<value<<", prop:"<<prop;
-	switch(value.type())
-	{
-		case QVariant::Int:
-			connect(this, SIGNAL(value(int)), receiver, receiverSlot);
-			break;
-		case QVariant::Bool:
-			connect(this, SIGNAL(value(bool)), receiver, receiverSlot);
-			break;
-		case QVariant::Double:
-			connect(this, SIGNAL(value(double)), receiver, receiverSlot);
-			break;
-		case QVariant::String:
-			connect(this, SIGNAL(value(const QString&)), receiver, receiverSlot);
-			break;
-		case QVariant::Size:
-			connect(this, SIGNAL(value(const QSize&)), receiver, receiverSlot);
-			break;
-		case QVariant::Point:
-			connect(this, SIGNAL(value(const QPoint&)), receiver, receiverSlot);
-			break;
-		case QVariant::SizeF:
-			connect(this, SIGNAL(value(const QSizeF&)), receiver, receiverSlot);
-			break;
-		case QVariant::PointF:
-			connect(this, SIGNAL(value(const QPointF&)), receiver, receiverSlot);
-			break;
-		default:
-			qDebug() << "PropertyChangeListener: Unable to handle value type:"<<value.type();
-			break;
-	};
-	
-	QString signal(changeSignal);
-	if(signal.indexOf("QString"))
-	{
-		connect(source, changeSignal, this, SLOT(receiver(const QString&, const QVariant&)));
-	}
-	else
-	{
-		connect(source, changeSignal, this, SLOT(receiver(const QVariant&)));
-	}
-}
-
-void PropertyChangeListener::receiver(const QString& prop, const QVariant& data)
-{
-// 	qDebug() << "PropertyChangeListener::receiver: prop:"<<prop<<", m_property:"<<m_property<<", value:"<<data;
-	if(prop == m_property)
-		receiver(data);
-}
-
-void PropertyChangeListener::receiver(const QVariant& data)
-{
-// 	qDebug() << "PropertyChangeListener::receiver: value:"<<data;
-	switch(data.type())
-	{
-		case QVariant::Int:
-			emit value(data.toInt());
-			break;
-		case QVariant::Bool:
-			emit value(data.toBool());
-			break;
-		case QVariant::Double:
-			emit value(data.toDouble());
-			break;
-		case QVariant::String:
-			emit value(data.toString());
-			break;
-		case QVariant::Size:
-			emit value(data.toSize());
-			break;
-		case QVariant::Point:
-			emit value(data.toPoint());
-			break;
-		case QVariant::SizeF:
-			emit value(data.toSizeF());
-			break;
-		case QVariant::PointF:
-			emit value(data.toPointF());
-			break;
-		default:
-			qDebug() << "PropertyChangeListener::receiver: Unable to handle value type:"<<data.type()<<", variant:"<<data;
-			break;
-	};
-}
-
-
-//////////////////////////////////////////////////////////////////////////////
-
-BrowseDialogLauncher::BrowseDialogLauncher(QObject *attached, const char *slot, QVariant value)
-	: QObject(attached)
-	, m_attached(attached)
-	, m_value(value)
-	, m_settingsKey("default")
-	, m_title("Browse")
-	, m_filter("Any File (*.*)")
-{
-	connect(this, SIGNAL(setValue(const QString&)), attached, slot);
-}
-
-
-void BrowseDialogLauncher::setTitle(const QString& value)
-{
-	m_title = value;
-}
-
-void BrowseDialogLauncher::setSettingsKey(const QString& value)
-{
-	m_settingsKey = value;
-}
-
-void BrowseDialogLauncher::setFilter(const QString& value)
-{
-	m_filter = value;
-}
-	
-void BrowseDialogLauncher::browse()
-{
-	QString text = m_value.toString();
-	QString settingsPath = QString("BrowseDialogLauncher/%1").arg(m_settingsKey);
-	
-	if(text.trimmed().isEmpty())
-	{
-		text = QSettings().value(settingsPath,"").toString();
-	}
-
-	QString fileName = QFileDialog::getOpenFileName(dynamic_cast<QWidget*>(m_attached), m_title, text, m_filter);
-	if(fileName != "")
-	{
-		emit setValue(fileName);
-		QSettings().setValue(settingsPath,QFileInfo(fileName).absolutePath());
-	}
-}
-
-//////////////////////////////////////////////////////////////////////////////
-
-DoubleEditorWidget::DoubleEditorWidget(QWidget *parent)
-	: QWidget(parent)
-{
-	QHBoxLayout *hbox = new QHBoxLayout(this);
-	hbox->setContentsMargins(0,0,0,0);
-
-
-	QDoubleSpinBox *spin = new QDoubleSpinBox(this);
-	m_box = spin;
-	hbox->addWidget(spin);
-
-	QSlider *slider;
-	slider = new QSlider(this);
-	slider->setOrientation(Qt::Horizontal);
-
-	connect(spin, SIGNAL(valueChanged(double)), this, SLOT(boxValueChanged(double)));
-	connect(slider, SIGNAL(valueChanged(int)), this, SLOT(sliderValueChanged(int)));
-	hbox->addWidget(slider);
-
-	m_slider = slider;
-}
-
-void DoubleEditorWidget::setValue(double value)
-{
-	m_value = value;
-	m_box->setValue(value);
-	m_slider->setValue((int)value);
-}
-
-void DoubleEditorWidget::setMinMax(double a, double b)
-{
-	   m_box->setMinimum(a);    m_box->setMaximum(b);
-	m_slider->setMinimum((int)a); m_slider->setMaximum((int)b);
-}
-
-void DoubleEditorWidget::setShowSlider(bool flag)
-{
-	m_slider->setVisible(flag);
-}
-
-void DoubleEditorWidget::setSuffix(const QString& suffix)
-{
-	m_box->setSuffix(suffix);
-}
-
-
-void DoubleEditorWidget::boxValueChanged(double v)
-{
-	m_value = v;
-	m_slider->setValue((int)v);
-	emit valueChanged(v);
-}
-
-void DoubleEditorWidget::sliderValueChanged(int v)
-{
-	double d = (double)v;
-	if(m_box->value() != d)
-	{
-		m_box->setValue(d);
-	}
-}
-
-
-//////////////////////////////////////////////////////////////////////////////
-
-
-
-PointEditorWidget::PointEditorWidget(QWidget *parent)
-	: QWidget(parent)
-{
-	QHBoxLayout *hbox = new QHBoxLayout(this);
-	hbox->setContentsMargins(0,0,0,0);
-
-	QSpinBox *spin = new QSpinBox(this);
-	spin->setSuffix(" px");
-	spin->setMinimum(-9999);
-	spin->setMaximum(9999);
-	connect(spin, SIGNAL(valueChanged(int)), this, SLOT(xValueChanged(int)));
-	hbox->addWidget(spin);
-
-	x_box = spin;
-
-	hbox->addWidget(new QLabel(" x "));
-
-	spin = new QSpinBox(this);
-	spin->setSuffix(" px");
-	spin->setMinimum(-9999);
-	spin->setMaximum(9999);
-	connect(spin, SIGNAL(valueChanged(int)), this, SLOT(yValueChanged(int)));
-	hbox->addWidget(spin);
-
-	QPushButton *undoBtn = new QPushButton(QPixmap("../data/stock-undo.png"), "");
-	connect(undoBtn, SIGNAL(clicked()), this, SLOT(reset()));
-	hbox->addWidget(undoBtn);
-	
-	hbox->addStretch(1);
-	
-	y_box = spin;
-}
-
-void PointEditorWidget::setValue(const QPointF& point)
-{
-	m_point = point;
-	x_box->setValue((int)point.x());
-	y_box->setValue((int)point.y());
-	m_orig = point;
-}
-
-void PointEditorWidget::reset()
-{
-	setValue(m_orig);
-}
-
-void PointEditorWidget::setXMinMax(int a, int b) { x_box->setMinimum(a); x_box->setMaximum(b); }
-void PointEditorWidget::setYMinMax(int a, int b) { y_box->setMinimum(a); y_box->setMaximum(b); }
-void PointEditorWidget::setSufix(const QString& suffix)
-{
-	x_box->setSuffix(suffix);
-	y_box->setSuffix(suffix);
-}
-
-
-void PointEditorWidget::xValueChanged(int v)
-{
-	m_point = QPointF(v,m_point.y());
-	emit valueChanged(m_point);
-}
-
-void PointEditorWidget::yValueChanged(int v)
-{
-	m_point = QPointF(m_point.x(),v);
-	emit valueChanged(m_point);
-}
-
-//////////////////////////////////////////////////////////////////////////////
-
-
-SizeEditorWidget::SizeEditorWidget(QWidget *parent)
-	: QWidget(parent)
-{
-	QHBoxLayout *hbox = new QHBoxLayout(this);
-	hbox->setContentsMargins(0,0,0,0);
-
-	QSpinBox *spin = new QSpinBox(this);
-	spin->setSuffix(" px");
-	spin->setMinimum(-9999);
-	spin->setMaximum(9999);
-	connect(spin, SIGNAL(valueChanged(int)), this, SLOT(wValueChanged(int)));
-	hbox->addWidget(spin);
-
-	w_box = spin;
-
-	hbox->addWidget(new QLabel(" x "));
-
-	spin = new QSpinBox(this);
-	spin->setSuffix(" px");
-	spin->setMinimum(-9999);
-	spin->setMaximum(9999);
-	connect(spin, SIGNAL(valueChanged(int)), this, SLOT(hValueChanged(int)));
-	hbox->addWidget(spin);
-	
-	QPushButton *undoBtn = new QPushButton(QPixmap("../data/stock-undo.png"), "");
-	connect(undoBtn, SIGNAL(clicked()), this, SLOT(reset()));
-	hbox->addWidget(undoBtn);
-
-	hbox->addStretch(1);
-
-	h_box = spin;
-}
-
-void SizeEditorWidget::setValue(const QSizeF& size)
-{
-	m_size = size;
-	w_box->setValue((int)size.width());
-	h_box->setValue((int)size.height());
-}
-
-void SizeEditorWidget::reset()
-{
-	setValue(m_orig);
-}
-
-void SizeEditorWidget::setWMinMax(int a, int b) { w_box->setMinimum(a); w_box->setMaximum(b); }
-void SizeEditorWidget::setHMinMax(int a, int b) { h_box->setMinimum(a); h_box->setMaximum(b); }
-void SizeEditorWidget::setSufix(const QString& suffix)
-{
-	w_box->setSuffix(suffix);
-	h_box->setSuffix(suffix);
-}
-
-
-void SizeEditorWidget::wValueChanged(int v)
-{
-	m_size = QSizeF(v,m_size.height());
-	emit valueChanged(m_size);
-}
-
-void SizeEditorWidget::hValueChanged(int v)
-{
-	m_size = QSizeF(m_size.width(),v);
-	emit valueChanged(m_size);
-}
-
-//////////////////////////////////////////////////////////////////////////////
-/*
-ColorEditorWidget::ColorEditorWidget(QWidget *parent)
-	: QWidget(parent)
-{
-	QHBoxLayout *hbox = new QHBoxLayout(this);
-	hbox->setContentsMargins(0,0,0,0);
-
-	QSpinBox *spin = new QSpinBox(this);
-	spin->setPrefix("R ");
-	spin->setMinimum(0);
-	spin->setMaximum(255);
-	connect(spin, SIGNAL(valueChanged(int)), this, SLOT(rValueChanged(int)));
-	hbox->addWidget(spin);
-
-	r_box = spin;
-
-	spin = new QSpinBox(this);
-	spin->setPrefix("G ");
-	spin->setMinimum(0);
-	spin->setMaximum(255);
-	connect(spin, SIGNAL(valueChanged(int)), this, SLOT(gValueChanged(int)));
-	hbox->addWidget(spin);
-
-	g_box = spin;
-
-	spin = new QSpinBox(this);
-	spin->setPrefix("B ");
-	spin->setMinimum(0);
-	spin->setMaximum(255);
-	connect(spin, SIGNAL(valueChanged(int)), this, SLOT(bValueChanged(int)));
-	hbox->addWidget(spin);
-
-	b_box = spin;
-}
-
-void ColorEditorWidget::setValue(const QColor& color)
-{
-	m_color = color;
-	r_box->setValue((int)color.r());
-	g_box->setValue((int)color.g());
-	b_box->setValue((int)color.b());
-}
-
-
-void ColorEditorWidget::rValueChanged(int r)
-{
-	m_color = QColor(r,m_color.g(),m_color.b());
-	emit valueChanged(m_color);
-}
-
-void ColorEditorWidget::gValueChanged(int g)
-{
-	m_color = QColor(m_color.r(),g,m_color.b());
-	emit valueChanged(m_color);
-}
-
-void ColorEditorWidget::bValueChanged(int b)
-{
-	m_color = QColor(m_color.r(),m_color.g(),b);
-	emit valueChanged(m_color);
-}*/
 
 
 //////////////////////////////////////////////////////////////////////////////
@@ -448,23 +52,30 @@ QString LiveLayer::guessTitle(QString field)
 
 LiveLayer::LiveLayer(QObject *parent)
 	: QObject(parent)
+	, m_animationsDisabled(false)
 	, m_scene(0)
 	, m_hideOnShow(0)
 	, m_showOnShow(0)
-	, m_lockVsibleSetter(false)
-	, m_animationsDisabled(false)
+	, m_lockVisibleSetter(false)
 	, m_layerId(-1)
 	, m_layerIdLoaded(false)
+	, m_lockLayerPropertyUpdates(false)
 {
 	m_props["rect"] = QRectF();
 	m_props["zIndex"] = -1.;
 	m_props["opacity"] = 1.0;
-	m_props["showFullScreen"] = true;
+// 	m_props["showFullScreen"] = true;
 	m_props["alignment"] = 0;
 	m_props["insetTopLeft"] = QPointF(0,0);
 	m_props["insetBottomRight"] = QPointF(0,0);
 	m_props["alignedSizeScale"] = 1.0;
 	m_props["rotation"] = QVector3D(0,0,0);
+	
+	m_props["topPercent"] = 0.;
+	m_props["leftPercent"] = 0.;
+	m_props["bottomPercent"] = 1.;
+	m_props["rightPercent"] = 1.;
+	
 	
 	m_props["fadeIn"] = 1;
 	m_props["fadeInLength"] = 300;
@@ -479,6 +90,22 @@ LiveLayer::LiveLayer(QObject *parent)
 	m_props["hideAnimationType"] = GLDrawable::AnimNone;
 	m_props["hideAnimationLength"] = 300;
 	m_props["hideAnimationCurve"] = QEasingCurve::Linear;
+	
+	
+	setAnimatePropFlags(QStringList()
+		<< "zIndex" 
+		<< "aspectRatioMode"
+		<< "fadeIn" 
+		<< "fadeInLength"
+		<< "fadeOut"
+		<< "fadeOutLength"
+		<< "showAnimationType"
+		<< "showAnimationLength"
+		<< "showAnimationCurve"
+		<< "hideAnimationType"
+		<< "hideAnimationLength"
+		<< "hideAnimationCurve",
+		false);
 }
 
 LiveLayer::~LiveLayer()
@@ -545,60 +172,6 @@ GLDrawable* LiveLayer::drawable(GLWidget *widget)
 	}
 }
 
-
-
-#include "ExpandableWidget.h"
-#include <QVBoxLayout>
-#include <QFormLayout>
-#include <QHBoxLayout>
-#include <QSpinBox>
-#include <QSlider>
-#include <QDoubleSpinBox>
-#include <QDirModel>
-#include <QCompleter>
-
-ObjectValueSetter::ObjectValueSetter(QObject *attached, const char *slot, QVariant value)
-	: QObject(attached)
-	, m_value(value)
-{
-	switch(value.type())
-	{
-		case QVariant::Int:
-			connect(this, SIGNAL(setValue(int)), attached, slot);
-			break;
-		case QVariant::Double:
-			connect(this, SIGNAL(setValue(double)), attached, slot);
-			break;
-		case QVariant::String:
-			connect(this, SIGNAL(setValue(const QString&)), attached, slot);
-			break;
-		default:
-			qDebug() << "ObjectValueSetter: No signal for value type: "<<value.type();
-			break;
-	}
-	
-	connect(attached, SIGNAL(destroyed()), this, SLOT(deleteLater()));
-}
-	
-void ObjectValueSetter::executeSetValue()
-{
-	switch(m_value.type())
-	{
-		case QVariant::Int:
-			emit setValue(m_value.toInt());
-			break;
-		case QVariant::Double:
-			emit setValue(m_value.toDouble());
-			break;
-		case QVariant::String:
-			emit setValue(m_value.toString());
-			break;
-		default:
-			qDebug() << "ObjectValueSetter::executeSetValue: No signal for value type: "<<m_value.type();
-			break;
-	}
-}
-
 QWidget * LiveLayer::generatePropertyEditor(QObject *object, const char *property, const char *slot, PropertyEditorOptions opts, const char *changeSignal)
 {
 	if(changeSignal == NULL &&
@@ -645,6 +218,8 @@ QWidget * LiveLayer::generatePropertyEditor(QObject *object, const char *propert
 			slider->setOrientation(Qt::Horizontal);
 			slider->setMinimum((int)opts.min);
 			slider->setMaximum((int)opts.max);
+			slider->setSingleStep(opts.step);
+			slider->setPageStep(opts.step*2);
 
 			if(prop.type() == QVariant::Double && opts.doubleIsPercentage)
 				slider->setValue((int)(prop.toDouble()*100.0));
@@ -813,93 +388,91 @@ QWidget * LiveLayer::createLayerPropertyEditors()
 	opts.reset();
 
 	QStringList showAsList = QStringList()
-		<< "Full Screen"//0
+		<< "Absolute Position"//0
 		<< "--------------------"//1
-		<< "Absolute Position"//2
-		<< "--------------------"//3
-		<< "Centered on Screen"//4
-		<< "Aligned Top Left"//5
-		<< "Aligned Top Center"//6
-		<< "Aligned Top Right"//7
-		<< "Aligned Center Right"//8
-		<< "Aligned Center Left"//9
-		<< "Aligned Bottom Left"//10
-		<< "Aligned Bottom Center"//11
-		<< "Aligned Bottom Right";//12
+		<< "Centered on Screen"//2
+		<< "Aligned Top Left"//3
+		<< "Aligned Top Center"//4
+		<< "Aligned Top Right"//5
+		<< "Aligned Center Right"//6
+		<< "Aligned Center Left"//7
+		<< "Aligned Bottom Left"//8
+		<< "Aligned Bottom Center"//9
+		<< "Aligned Bottom Right";//10
 
 	QComboBox *showAsBox = new QComboBox();
 	showAsBox->addItems(showAsList);
 	//showAsBox->setCurrentIndex(
 
 	int idx = 0;
-	if(showFullScreen())
-	{
-		idx = 0;
-	}
-	else
-	{
+// 	if(showFullScreen())
+// 	{
+// 		idx = 0;
+// 	}
+// 	else
+// 	{
 		Qt::Alignment align = alignment();
 
 		if((align & Qt::AlignAbsolute) == Qt::AlignAbsolute)
 		{
-			idx = 2;
+			idx = 0;
 		}
 		else
 		if((align & Qt::AlignHCenter) == Qt::AlignHCenter &&
 		   (align & Qt::AlignVCenter) == Qt::AlignVCenter)
 		{
-			idx = 4;
+			idx = 2;
 		}
 		else
 		if((align & Qt::AlignTop)  == Qt::AlignTop &&
 		   (align & Qt::AlignLeft) == Qt::AlignLeft)
 		{
-			idx = 5;
+			idx = 3;
 		}
 		else
 		if((align & Qt::AlignTop)  == Qt::AlignTop &&
 		   (align & Qt::AlignHCenter) == Qt::AlignHCenter)
 		{
-			idx = 6;
+			idx = 4;
 		}
 		else
 		if((align & Qt::AlignTop)  == Qt::AlignTop &&
 		   (align & Qt::AlignRight) == Qt::AlignRight)
 		{
-			idx = 7;
+			idx = 5;
 		}
 		else
 		if((align & Qt::AlignVCenter) == Qt::AlignVCenter &&
 		   (align & Qt::AlignRight) == Qt::AlignRight)
 		{
-			idx = 8;
+			idx = 6;
 		}
 		else
 		if((align & Qt::AlignVCenter) == Qt::AlignVCenter &&
 		   (align & Qt::AlignLeft) == Qt::AlignLeft)
+		{
+			idx = 7;
+		}
+		else
+		if((align & Qt::AlignBottom) == Qt::AlignBottom &&
+		   (align & Qt::AlignLeft) == Qt::AlignLeft)
+		{
+			idx = 8;
+		}
+		else
+		if((align & Qt::AlignBottom) == Qt::AlignBottom &&
+		   (align & Qt::AlignHCenter) == Qt::AlignHCenter)
 		{
 			idx = 9;
 		}
 		else
 		if((align & Qt::AlignBottom) == Qt::AlignBottom &&
-		   (align & Qt::AlignLeft) == Qt::AlignLeft)
+		   (align & Qt::AlignRight) == Qt::AlignRight)
 		{
 			idx = 10;
 		}
-		else
-		if((align & Qt::AlignBottom) == Qt::AlignBottom &&
-		   (align & Qt::AlignHCenter) == Qt::AlignHCenter)
-		{
-			idx = 11;
-		}
-		else
-		if((align & Qt::AlignBottom) == Qt::AlignBottom &&
-		   (align & Qt::AlignRight) == Qt::AlignRight)
-		{
-			idx = 12;
-		}
-	}
-	if(idx >=0 && idx <= 12)
+// 	}
+	if(idx >=0 && idx <= 10)
 		showAsBox->setCurrentIndex(idx);
 
 	connect(showAsBox, SIGNAL(activated(const QString&)), this, SLOT(setShowAsType(const QString&)));
@@ -908,8 +481,9 @@ QWidget * LiveLayer::createLayerPropertyEditors()
 
 	opts.reset();
 	opts.type = QVariant::Int;
-	opts.min = -500;
-	opts.max =  500;
+	opts.min = -1000;
+	opts.max =  1000;
+	opts.step = 10;
 	opts.defaultValue = 0;
 
 	opts.value = insetTopLeft().x();
@@ -928,18 +502,27 @@ QWidget * LiveLayer::createLayerPropertyEditors()
 	opts.suffix = "%";
 	opts.min = 0;
 	opts.max = 5000;
+	opts.step = 10;
 	opts.defaultValue = 100;
 	opts.type = QVariant::Int;
 	opts.doubleIsPercentage = true;
 	formLayout->addRow(tr("&Scale Size:"), m_propWidget["sizeScale"] = generatePropertyEditor(this, "alignedSizeScale", SLOT(setAlignedSizeScale(int)), opts));
 	
 	opts.reset();
-	opts.value = rect().topLeft();
-	formLayout->addRow(tr("&Position:"), m_propWidget["pos"] = generatePropertyEditor(this, "pos", SLOT(setPos(const QPointF&)), opts));
-
-	opts.reset();
-	opts.value = rect().size();
-	formLayout->addRow(tr("&Size:"), m_propWidget["size"] = generatePropertyEditor(this, "size", SLOT(setSize(const QSizeF&)), opts));
+	opts.suffix = "%";
+	opts.min = -100;
+	opts.max =  100;
+	opts.step = 10;
+	opts.type = QVariant::Int;
+	opts.doubleIsPercentage = true;
+	
+	opts.defaultValue = 0;
+	formLayout->addRow(tr("&Top:"), 	m_propWidget["topPercent"]	= generatePropertyEditor(this, "topPercent", SLOT(setTopPercent(int)), opts));
+	formLayout->addRow(tr("&Left:"), 	m_propWidget["leftPercent"]	= generatePropertyEditor(this, "leftPercent", SLOT(setLeftPercent(int)), opts));
+	
+	opts.defaultValue = 100;
+	formLayout->addRow(tr("&Bottom:"), 	m_propWidget["bottomPercent"]	= generatePropertyEditor(this, "bottomPercent", SLOT(setBottomPercent(int)), opts));
+	formLayout->addRow(tr("&Right:"), 	m_propWidget["rightPercent"]	= generatePropertyEditor(this, "rightPercent", SLOT(setRightPercent(int)), opts));
 
 
 	opts.reset();
@@ -952,6 +535,7 @@ QWidget * LiveLayer::createLayerPropertyEditors()
 	opts.suffix = " deg";
 	opts.min = -360.0;
 	opts.max =  360.0;
+	opts.step = 10;
 	opts.defaultValue = 0;
 	opts.type = QVariant::Int;
 	opts.value = rotation().x();
@@ -1134,21 +718,19 @@ void LiveLayer::setShowAsType(const QString& text)
 	if(text.indexOf("---") >= 0)
 		return;
 
-	if(text.indexOf("Full Screen") >= 0)
-	{
-		setShowFullScreen(true);
-
-		setVisibleGeometryFields(QStringList());
-
-	}
-	else
-	{
-		setShowFullScreen(false);
+// 	if(text.indexOf("Full Screen") >= 0)
+// 	{
+// 		setVisibleGeometryFields(QStringList());
+// 
+// 	}
+// 	else
+// 	{
+// 		setShowFullScreen(false);
 
 		if(text.indexOf("Absolute") >= 0)
 		{
 			setAlignment(Qt::AlignAbsolute);
-			setVisibleGeometryFields(QStringList() << "pos" << "size");
+			setVisibleGeometryFields(QStringList() << "topPercent" << "leftPercent" << "bottomPercent" << "rightPercent");
 		}
 		else
 		if(text.indexOf("Centered") >= 0)
@@ -1208,7 +790,10 @@ void LiveLayer::setShowAsType(const QString& text)
 		{
 			qDebug() << "LiveLayer::setShowAsType(): Unknown type:"<<text;
 		}
-	}
+	//}
+	
+// 	if(!m_drawables.isEmpty())
+// 		m_props["rect"] = m_drawables[m_drawables.keys().first()]->rect();
 }
 
 void LiveLayer::setVisibleGeometryFields(QStringList list)
@@ -1277,9 +862,9 @@ void LiveLayer::setHeight(int value)
 
 void LiveLayer::setVisible(bool flag)
 {
-	if(m_lockVsibleSetter)
+	if(m_lockVisibleSetter)
 		return;
-	m_lockVsibleSetter = true;
+	m_lockVisibleSetter = true;
 	// Implemented using sig/slot instead of just calling each if the drawables setVisible
 	// directly so that it can be conditionally connected based on the GLWidget that
 	// the drawable is connected to - see the connect() statement in LiveLayer::drawable()
@@ -1295,7 +880,7 @@ void LiveLayer::setVisible(bool flag)
 		if(m_showOnShow->isVisible() != flag)
 			m_showOnShow->setVisible(flag);
 		
-	m_lockVsibleSetter = false;
+	m_lockVisibleSetter = false;
 }
 
 
@@ -1319,7 +904,11 @@ void LiveLayer::setLayerProperty(const QString& propertyId, const QVariant& valu
 	//if(!m_props.contains(propertyId))
 	//	return;
 	if(m_lockLayerPropertyUpdates)
+	{
+		//qDebug() << "LiveLayer::setLayerProperty: [LOCKED] id:"<<propertyId<<", value:"<<value<<" [LOCKED]";
+		//m_props[propertyId] = value;
 		return;
+	}
 		
 	// Prevent recursions that may be triggered by a property setter in turn calling setLayerProperty(), 
 	// which would just loop back and call that property setter again for that property - recursion.
@@ -1359,7 +948,7 @@ void LiveLayer::setLayerProperty(const QString& propertyId, const QVariant& valu
 	
 		if(drawable->metaObject()->indexOfProperty(qPrintable(propertyId)) >= 0)
 		{
-			//qDebug() << "LiveLayer::setLayerProperty: id:"<<propertyId<<", applying to drawables";
+			//qDebug() << "LiveLayer::setLayerProperty: id:"<<propertyId<<", value:"<<value<<", applying to drawables";
 			applyDrawableProperty(propertyId, value);
 		}
 		else
@@ -1384,25 +973,28 @@ void LiveLayer::applyDrawableProperty(const QString& propertyId, const QVariant&
 // 	m_animationsDisabled = true;
 	foreach(GLWidget *widget, m_drawables.keys())
 	{
-		if(m_animationsDisabled || 
-			propertyId == "aspectRatioMode" || // yes, I know, hack - need to be some way for layers to specify what props dont need to be animated - or to ask a prop if its an enum.......
-			(value.type() == QVariant::Bool && propertyId != "showFullScreen"))
+		if(m_animationsDisabled || !canAnimateProperty(propertyId))
+			//(value.type() == QVariant::Bool && !propertyId != "showFullScreen"))
 		{
+			//qDebug() << "LiveLayer::applyDrawableProperty:"<<m_drawables[widget]<<propertyId<<"="<<value<<", not animating";
 			m_drawables[widget]->setProperty(qPrintable(propertyId), value);
 		}
 		else
 		{
 			if(propertyId == "alignment")
 			{
+				//qDebug() << "LiveLayer::applyDrawableProperty:"<<m_drawables[widget]<<propertyId<<"="<<value<<", animating alignment";
 				m_drawables[widget]->setAlignment((Qt::Alignment)value.toInt(), true, m_animParam.length, m_animParam.curve);
 			}
 			else
-			if(propertyId == "showFullScreen")
+// 			if(propertyId == "showFullScreen")
+// 			{
+// 				//qDebug() << "LiveLayer::applyDrawableProperty:"<<m_drawables[widget]<<propertyId<<"="<<value<<", animating show full screen";
+// 				m_drawables[widget]->setShowFullScreen(value.toBool(), true, m_animParam.length, m_animParam.curve);
+// 			}
+// 			else
 			{
-				m_drawables[widget]->setShowFullScreen(value.toBool(), true, m_animParam.length, m_animParam.curve);
-			}
-			else
-			{
+				//qDebug() << "LiveLayer::applyDrawableProperty:"<<m_drawables[widget]<<propertyId<<"="<<value<<", animating!!";
 				QPropertyAnimation *animation = new QPropertyAnimation(m_drawables[widget], propertyId.toAscii());
 				animation->setDuration(m_animParam.length);
 				animation->setEasingCurve(m_animParam.curve);
@@ -1412,6 +1004,14 @@ void LiveLayer::applyDrawableProperty(const QString& propertyId, const QVariant&
 		}
 	}
 }
+
+// void LiveLayer::setShowFullScreen(bool value)
+// {
+// 	setTopPercent(0.);
+// 	setLeftPercent(0.);
+// 	setBottomPercent(1.);
+// 	setRightPercent(1.);
+// }
 
 void LiveLayer::applyAnimationProperties(GLDrawable *drawable)
 {
@@ -1467,12 +1067,17 @@ void LiveLayer::initDrawable(GLDrawable *drawable, bool /*isFirstDrawable*/)
 			<< "rect"
 			<< "zIndex"
 			<< "opacity"
-			<< "showFullScreen"
+// 			<< "showFullScreen"
 			<< "alignment"
 			<< "insetTopLeft"
 			<< "insetBottomRight"
 			<< "alignedSizeScale"
-			<< "rotation";
+			<< "rotation"
+			<< "topPercent"
+			<< "leftPercent"
+			<< "bottomPercent"
+			<< "rightPercent";
+			
 		
 	//qDebug() << "LiveLayer::initDrawable: drawable:"<<drawable<<", props list:"<<generalProps;
 	applyLayerPropertiesToObject(drawable, generalProps);
@@ -1508,11 +1113,10 @@ void LiveLayer::applyLayerPropertiesToObject(QObject *object, QStringList list)
 	{
 		if(m_props.contains(key))
 		{
-			const char *asciiPropId = qPrintable(key);
-			if(object->metaObject()->indexOfProperty(asciiPropId) >= 0)
+			if(object->metaObject()->indexOfProperty(qPrintable(key)) >= 0)
 			{
-				//qDebug() << "LiveLayer::applyLayerPropertiesToObject(): "<<object<<", prop:"<<key<<", setting to "<<m_props[key];
-				object->setProperty(asciiPropId, m_props[key]);
+				//qDebug() << "LiveLayer::applyLayerPropertiesToObject(): "<<object<<", prop:"<<qPrintable(key)<<", setting to "<<m_props[key];
+				object->setProperty(qPrintable(key), m_props[key]);
 			}
 			else
 			{
@@ -1591,12 +1195,42 @@ void LiveLayer::loadPropsFromMap(const QVariantMap& map, bool onlyApplyIfChanged
 				if(onlyApplyIfChanged)
 				{
 					if(property(name) != value)
+					{
+// 						qDebug() << "LiveLayer::loadPropsFromMap():"<<this<<": [onlyApplyIfChanged] i:"<<i<<", count:"<<count<<", prop:"<<name<<", value:"<<value;
+// 						bool reenabAnim = false;
+// 						bool animEnabled = false;
+// 						if(name == "alignment" || name == "showFullScreen")
+// 						{
+// // 							Qt::Alignment align = (Qt::Alignment)value.toInt();
+//  							qDebug() << "LiveLayer::loadPropsFromMap():"<<this<<": [onlyApplyIfChanged] Prop is Alignment, checking if percentage changed...";
+// 
+// 							if(/*(align & Qt::AlignAbsolute) == Qt::AlignAbsolute &&*/
+// 								(property("topPercent")    != map["topPercent"]    ||
+// 								 property("leftPercent")   != map["leftPercent"]   ||
+// 								 property("bottomPercent") != map["bottomPercent"] ||
+// 								 property("rightPercent")  != map["rightPercent"]))
+// 							{ 
+// 								// If we allow it to animate alignment change AND a TLBR percent change,
+// 								// then the animations will set conflicting rectangles, causing undefined results
+// 								reenabAnim = true;
+// 								animEnabled = setAnimEnabled(false);
+// 								qDebug() << "LiveLayer::loadPropsFromMap():"<<this<<": [onlyApplyIfChanged] Absolute||showFullScreen && % changed, disabling anim.";
+// 							}
+// 						}
+// 						
 						setProperty(name,value);
+						
+// 						if(reenabAnim)
+// 							setAnimEnabled(reenabAnim);
+					}
 				}
 				else
 				{
-					//qDebug() << "LiveLayer::loadPropsFromMap():"<<this<<": i:"<<i<<", count:"<<count<<", prop:"<<name<<", value:"<<value<<" (calling set prop)";
+					//if(name == "zIndex")
+						//qDebug() << "LiveLayer::loadPropsFromMap():"<<this<<": i:"<<i<<", count:"<<count<<", prop:"<<name<<", value:"<<value<<" (calling set prop)";
+						
 					setProperty(name,value);
+					//m_props[name] = value;
 				}
 			}
 			//else
@@ -1631,12 +1265,25 @@ QVariantMap LiveLayer::propsToMap()
 		const char *name = metaproperty.name();
 		QVariant value = property(name);
 		
-		if(name == "aspectRatioMode")
-			qDebug() << "LiveLayer::toByteArray():"<<this<<instanceName()<<": prop:"<<name<<", value:"<<value;
+		//if(name == "aspectRatioMode")
+		//	qDebug() << "LiveLayer::toByteArray():"<<this<<instanceName()<<": prop:"<<name<<", value:"<<value;
 			
 		map[name] = value;
 	}
 	return map;
+}
+
+bool LiveLayer::canAnimateProperty(const QString& propId)
+{
+	if(m_animateProps.contains(propId))
+		return m_animateProps[propId];
+	return true;
+}
+
+void LiveLayer::setAnimatePropFlags(const QStringList& list, bool flag)
+{
+	foreach(QString propId, list)
+		m_animateProps[propId] = flag;
 }
 
 void LiveLayer::setShowOnShowLayerId(int value)

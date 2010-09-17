@@ -177,7 +177,7 @@ void MainWindow::loadLiveScene(LiveScene *scene)
 	m_sceneModel->setLiveScene(scene);
 	
 	if(!scene->layerList().isEmpty())
-		setCurrentLayer(scene->layerList().first());
+		setCurrentLayer(m_sceneModel->itemAt(scene->layerList().size()-1));
 	
 	loadKeyFramesToTable();
 	

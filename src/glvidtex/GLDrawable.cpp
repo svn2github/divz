@@ -27,12 +27,15 @@ GLDrawable::GLDrawable(QObject *parent)
 	, m_animFinished(true)
 	, m_originalOpacity(-1)
 	, m_animationsEnabled(true)
-	, m_showFullScreen(true)
 	, m_alignment(Qt::AlignAbsolute)
 	, m_inAlignment(false)
 	, m_alignedSizeScale(1.)
 	, m_animPendingGlWidget(false)
 	, m_rotationPoint(.5,.5,.5) // rotate around center by default
+	, m_topPercent(0.)
+	, m_leftPercent(0.)
+	, m_bottomPercent(1.)
+	, m_rightPercent(1.)
 {
 }
 
@@ -328,6 +331,7 @@ void GLDrawable::setRect(const QRectF& rect)
 		m_rect.setWidth(0);
 	if(m_rect.height()<0)
 		m_rect.setHeight(0);
+// 	qDebug() << "GLDrawable::setRect(): "<<this<<", pos:"<<rect.topLeft();
 	//qDebug() << "GLDrawable::setRect: "<<objectName()<<rect;
 	//qDebug() << "GLDrawable::setRect: "<<rect;
 // 	qDebug() << "GLDrawable::setRect: size: "<<rect.size();
@@ -341,6 +345,7 @@ void GLDrawable::setRect(const QRectF& rect)
 
 void GLDrawable::setZIndex(double z)
 {
+	//qDebug() << "GLDrawable::setZIndex: "<<this<<", zIndex:"<<z;
 	m_zIndex = z;
 	emit zIndexChanged(z);
 	updateGL();
@@ -353,17 +358,10 @@ void GLDrawable::setOpacity(double o)
 	updateGL();
 }
 
-void GLDrawable::setShowFullScreen(bool flag, bool animate, int animLength, QEasingCurve animCurve)
-{
-// 	qDebug() << "GLDrawable::setShowFullScreen(): "<<flag;
-	m_showFullScreen = flag;
-	updateAlignment(animate, animLength, animCurve);
-}
-
 void GLDrawable::setAlignment(Qt::Alignment value, bool animate, int animLength, QEasingCurve animCurve)
 {
 	m_alignment = value;
- 	//qDebug() << "GLDrawable::setAlignment(): "<<this<<", m_alignment:"<<m_alignment;
+//  	qDebug() << "GLDrawable::setAlignment(): "<<this<<", m_alignment:"<<m_alignment;
 	updateAlignment(animate, animLength, animCurve);
 }
 
@@ -411,7 +409,7 @@ void GLDrawable::updateAlignment(bool animateRect, int animLength, QEasingCurve 
 	}
 		
 	//qDebug() << "GLDrawable::updateAlignment(): "<<this<<", m_animFinished:"<<m_animFinished<<", m_animDirection:"<<m_animDirection;;
-	bool restartAnimations = false;
+// 	bool restartAnimations = false;
 	if(!m_animFinished && m_animDirection)
 	{
 		// This will force a stop of the animations, reset properties.
@@ -424,47 +422,30 @@ void GLDrawable::updateAlignment(bool animateRect, int animLength, QEasingCurve 
 	}
 
 
-  	//qDebug() << "GLDrawable::updateAlignment(): "<<this<<objectName()<<", size:"<<size;
+//   	qDebug() << "GLDrawable::updateAlignment(): "<<this<<", size:"<<size<<", m_alignment:"<<m_alignment;
 
-	if(m_showFullScreen)
+	QRectF rect;
+	qreal x = 0, y = 0,
+		w = size.width()  * alignedSizeScale(),
+		h = size.height() * alignedSizeScale();
+	qreal vw = m_glw->viewport().width(),
+		vh = m_glw->viewport().height();
+
+	//qDebug() << "GLDrawable::updateAlignment: w:"<<w<<", h:"<<h<<", alignedSizeScale:"<<alignedSizeScale();
+
+	if((m_alignment & Qt::AlignAbsolute) == Qt::AlignAbsolute)
 	{
-		QRectF rect = m_glw->viewport();
-// 		rect = rect.adjusted(
-// 			 m_insetTopLeft.x(),
-// 			 m_insetTopLeft.y(),
-// 			-m_insetBottomRight.x(),
-// 			-m_insetBottomRight.y());
-		if(animateRect)
-		{
-			QPropertyAnimation *animation = new QPropertyAnimation(this, "rect");
-			animation->setDuration(animLength);
-			animation->setEasingCurve(animCurve);
-			animation->setEndValue(rect);
-			animation->start(QAbstractAnimation::DeleteWhenStopped);
-		}
-		else
-		{
-			setRect(rect);
-		}
- 		//qDebug() << "GLDrawable::updateAlignment(): "<<this<<", full screen, new rect:"<<rect;
+		x = vw * m_leftPercent;
+		y = vh * m_topPercent;
+// 		qDebug() << "GLDrawable::updateAlignment(): "<<this<<objectName()<<", absolute: m_leftPercent:"<<m_leftPercent<<", x:"<<x;
+		
+		double b = vh * m_bottomPercent;
+		double r = vw * m_rightPercent;
+		h = b - y;
+		w = r - x;
 	}
 	else
 	{
-		qreal x = 0, y = 0,
-		      w = size.width()  * alignedSizeScale(),
-		      h = size.height() * alignedSizeScale();
-		qreal vw = m_glw->viewport().width(),
-		      vh = m_glw->viewport().height();
-
-		//qDebug() << "GLDrawable::updateAlignment: w:"<<w<<", h:"<<h<<", alignedSizeScale:"<<alignedSizeScale();
-
-		if((m_alignment & Qt::AlignAbsolute) == Qt::AlignAbsolute)
-		{
-// 			qDebug() << "GLDrawable::updateAlignment(): "<<this<<objectName()<<", absolute";
-			// dont change m_rect, just leave it as is
-			m_inAlignment = false;
-			return;
-		}
 
 		if ((m_alignment & Qt::AlignHCenter) == Qt::AlignHCenter)
 		{
@@ -502,23 +483,41 @@ void GLDrawable::updateAlignment(bool animateRect, int animLength, QEasingCurve 
 			x = m_insetTopLeft.x();
 // 			qDebug() << "GLDrawable::updateAlignment(): "<<this<<objectName()<<", ALIGN: Left, x:"<<x;
 		}
-
-		QRectF rect = QRectF(x,y,w,h);
- 		//qDebug() << "GLDrawable::updateAlignment(): "<<this<<", final rect: "<<rect;
-		if(animateRect)
-		{
-			QPropertyAnimation *animation = new QPropertyAnimation(this, "rect");
-			animation->setDuration(animLength);
-			animation->setEasingCurve(animCurve);
-			animation->setEndValue(rect);
-			animation->start(QAbstractAnimation::DeleteWhenStopped);
-		}
-		else
-		{
-			setRect(rect);
-		}
 	}
 
+	rect = QRectF(x,y,w,h);
+	
+	if((m_alignment & Qt::AlignAbsolute) == Qt::AlignAbsolute)
+	{
+		//qDebug() << "GLDrawable::updateAlignment(): "<<this<<", final rect: "<<rect;
+	}
+	
+	if(QPropertyAnimation *ani = propAnim("rect"))
+	{
+// 		qDebug() << "GLDrawable::updateAlignment(): "<<this<<", Killing running rect animation...";
+		ani->stop();
+		ani->deleteLater();
+		m_propAnims.remove("rect");
+// 		qDebug() << "GLDrawable::updateAlignment(): "<<this<<", done killing.";
+	}
+	
+	if(animateRect)
+	{
+		QPropertyAnimation *animation = new QPropertyAnimation(this, "rect");
+		animation->setDuration(animLength);
+		animation->setEasingCurve(animCurve);
+		animation->setEndValue(rect);
+		animation->start(QAbstractAnimation::DeleteWhenStopped);
+		
+		registerPropAnim("rect", animation);
+// 		qDebug() << "GLDrawable::updateAlignment(): "<<this<<", setting rect, animating change to:"<<rect;
+	}
+	else
+	{
+// 		qDebug() << "GLDrawable::updateAlignment(): "<<this<<", setting rect, no anim to:"<<rect;
+		setRect(rect);
+	}
+	
 	m_inAlignment = false;
 	
 // 	if(restartAnimations)
@@ -614,4 +613,51 @@ void GLDrawable::setRotationPoint(QVector3D value)
 	updateGL();
 }
 
+void GLDrawable::setTopPercent(double v)
+{
+	m_topPercent = v;
+	updateAlignment();
+}
+
+void GLDrawable::setLeftPercent(double v)
+{
+// 	qDebug() << "GLDrawable::setLeftPercent(): "<<this<<", m_leftPercent:"<<v;
+	m_leftPercent = v;
+	updateAlignment();
+}
+
+void GLDrawable::setBottomPercent(double v)
+{
+	m_bottomPercent = v;
+	updateAlignment();
+}
+
+void GLDrawable::setRightPercent(double v)
+{
+	m_rightPercent = v;
+	updateAlignment();
+}
+
+QPropertyAnimation *GLDrawable::propAnim(const QString& prop)
+{
+	if(m_propAnims.contains(prop))
+		return m_propAnims[prop];
+	return 0;
+}
+
+void GLDrawable::registerPropAnim(const QString& prop, QPropertyAnimation *anim)
+{
+	m_propAnims[prop] = anim;
+	connect(anim, SIGNAL(finished()), this, SLOT(propAnimFinished()));
+}
+
+void GLDrawable::propAnimFinished()
+{
+	QPropertyAnimation *ani = dynamic_cast<QPropertyAnimation*>(sender());	
+	if(!ani)
+		return;
+	
+	QString prop(ani->propertyName().constData());
+	m_propAnims.remove(prop);
+}
 

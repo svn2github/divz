@@ -1,148 +1,10 @@
 #ifndef LiveLayer_H
 #define LiveLayer_H
 
-
 #include <QtGui>
 
 #include "../glvidtex/GLDrawable.h"
 class GLWidget;
-
-class QSpinBox;
-class QDoubleSpinBox;
-
-class PropertyChangeListener : public QObject
-{
-	Q_OBJECT
-public:
-	PropertyChangeListener(QObject *source, const char *changeSignal, QObject *receiver, const char *receiverSlot, QVariant value, QString propertyName = "");
-	
-signals:
-	void value(int);
-	void value(bool);
-	void value(double);
-	void value(const QString&);
-	void value(const QSize&);
-	void value(const QSizeF&);
-	void value(const QPoint&);
-	void value(const QPointF&);
-	
-private slots:
-	void receiver(const QString&, const QVariant&);
-	void receiver(const QVariant&);
-	
-private:
-	QVariant m_value;
-	QString m_property;
-};
-
-
-class DoubleEditorWidget : public QWidget
-{
-	Q_OBJECT
-public:
-	DoubleEditorWidget(QWidget *parent=0);
-
-public slots:
-	void setValue(double);
-	void setMinMax(double,double);
-	void setShowSlider(bool);
-	void setSuffix(const QString&);
-
-signals:
-	void valueChanged(double);
-
-private slots:
-	void sliderValueChanged(int);
-	void boxValueChanged(double);
-
-private:
-	double m_value;
-	QSlider *m_slider;
-	QDoubleSpinBox *m_box;
-
-};
-
-class PointEditorWidget : public QWidget
-{
-	Q_OBJECT
-public:
-	PointEditorWidget(QWidget *parent=0);
-
-public slots:
-	void setValue(const QPointF&);
-	void setXMinMax(int,int);
-	void setYMinMax(int,int);
-	void setSufix(const QString&);
-	
-	void reset();
-
-signals:
-	void valueChanged(const QPointF&);
-
-private slots:
-	void xValueChanged(int);
-	void yValueChanged(int);
-
-private:
-	QPointF m_point;
-	QSpinBox *x_box;
-	QSpinBox *y_box;
-	QPointF m_orig;
-
-};
-
-class SizeEditorWidget : public QWidget
-{
-	Q_OBJECT
-public:
-	SizeEditorWidget(QWidget *parent=0);
-
-public slots:
-	void setValue(const QSizeF&);
-	void setWMinMax(int,int);
-	void setHMinMax(int,int);
-	void setSufix(const QString&);
-	
-	void reset();
-
-signals:
-	void valueChanged(const QSizeF&);
-
-private slots:
-	void wValueChanged(int);
-	void hValueChanged(int);
-
-
-private:
-	QSizeF m_size;
-	QSpinBox *w_box;
-	QSpinBox *h_box;
-	QSizeF m_orig;
-};
-/*
-class ColorEditorWidget : public QWidget
-{
-	Q_OBJECT
-public:
-	ColorEditorWidget(QWidget *parent=0);
-
-public slots:
-	void setValue(const QColor&);
-
-signals:
-	void valueChanged(const QColor&);
-
-private slots:
-	void rValueChanged(int);
-	void gValueChanged(int);
-	void bValueChanged(int);
-
-private:
-	QColor m_point;
-	QSpinBox *r_box;
-	QSpinBox *g_box;
-	QSpinBox *b_box;
-};*/
 
 class LiveLayer : public QObject
 {
@@ -154,6 +16,11 @@ class LiveLayer : public QObject
 	Q_PROPERTY(QRectF rect READ rect WRITE setRect);
 	Q_PROPERTY(double zIndex READ zIndex WRITE setZIndex);
 	Q_PROPERTY(double opacity READ opacity WRITE setOpacity);
+	
+	Q_PROPERTY(double topPercent READ topPercent WRITE setTopPercent);
+	Q_PROPERTY(double leftPercent READ leftPercent WRITE setLeftPercent);
+	Q_PROPERTY(double bottomPercent READ bottomPercent WRITE setBottomPercent);
+	Q_PROPERTY(double rightPercent READ rightPercent WRITE setRightPercent);
 
 	Q_PROPERTY(bool fadeIn READ fadeIn WRITE setFadeIn);
 	Q_PROPERTY(int fadeInLength READ fadeInLength WRITE setFadeInLength);
@@ -169,7 +36,7 @@ class LiveLayer : public QObject
 	Q_PROPERTY(int hideAnimationLength READ hideAnimationLength WRITE setHideAnimationLength);
 	Q_PROPERTY(QEasingCurve::Type hideAnimationCurve READ hideAnimationCurve WRITE setHideAnimationCurve);
 
-	Q_PROPERTY(bool showFullScreen READ showFullScreen WRITE setShowFullScreen);
+// 	Q_PROPERTY(bool showFullScreen READ showFullScreen WRITE setShowFullScreen);
 	Q_PROPERTY(Qt::Alignment alignment READ alignment WRITE setAlignment);
 	Q_PROPERTY(QPointF insetTopLeft READ insetTopLeft WRITE setInsetTopLeft);
 	Q_PROPERTY(QPointF insetBottomRight READ insetBottomRight WRITE setInsetBottomRight);
@@ -209,6 +76,8 @@ public:
 	virtual void loadPropsFromMap(const QVariantMap&, bool onlyApplyIfChanged = false);
 	virtual QVariantMap propsToMap();
 	
+	virtual bool canAnimateProperty(const QString&);
+	
 	class AnimParam
 	{
 	public:
@@ -240,6 +109,11 @@ public:
 	QRectF rect()			{ return layerProperty("rect").toRectF(); }
 	double zIndex()			{ return layerProperty("zIndex").toDouble(); }
 	double opacity()		{ return layerProperty("opacity").toDouble(); }
+	
+	double topPercent()		{ return layerProperty("topPercent").toDouble(); }
+	double leftPercent()		{ return layerProperty("leftPercent").toDouble(); }
+	double bottomPercent()		{ return layerProperty("bottomPercent").toDouble(); }
+	double rightPercent()		{ return layerProperty("rightPercent").toDouble(); }
 
 
 	bool fadeIn() 			{ return layerProperty("fadeIn").toBool(); }
@@ -256,7 +130,7 @@ public:
 	int hideAnimationLength() 	{ return layerProperty("hideAnimationLength").toInt(); }
 	QEasingCurve::Type hideAnimationCurve() 	{ return (QEasingCurve::Type)layerProperty("hideAnimationCurve").toInt(); }
 
-	bool showFullScreen()		{ return layerProperty("showFullScreen").toBool(); }
+// 	bool showFullScreen()		{ return layerProperty("showFullScreen").toBool(); }
 	Qt::Alignment alignment()	{ return (Qt::Alignment)layerProperty("alignment").toInt(); }
 	QPointF insetTopLeft()		{ return layerProperty("insetTopLeft").toPointF(); }
 	QPointF insetBottomRight()	{ return layerProperty("insetBottomRight").toPointF(); }
@@ -310,6 +184,16 @@ public slots:
 
 	void setPos(const QPointF& point)	{ setRect(QRectF(point, rect().size())); }
 	void setSize(const QSizeF& size)	{ setRect(QRectF(rect().topLeft(),size)); }
+	
+	void setTopPercent(double value)	{ setLayerProperty("topPercent", value); }
+	void setLeftPercent(double value)	{ setLayerProperty("leftPercent", value); }
+	void setBottomPercent(double value)	{ setLayerProperty("bottomPercent", value); }
+	void setRightPercent(double value)	{ setLayerProperty("rightPercent", value); }
+
+	void setTopPercent(int value)		{ setTopPercent(((double)value) / 100.0); }
+	void setLeftPercent(int value)		{ setLeftPercent(((double)value) / 100.0); }
+	void setBottomPercent(int value)	{ setBottomPercent(((double)value) / 100.0); }
+	void setRightPercent(int value)		{ setRightPercent(((double)value) / 100.0); }
 
 	void setFadeIn(bool value) 		{ setLayerProperty("fadeIn", value); }
 	void setFadeInLength(int value) 	{ setLayerProperty("fadeInLength", value); }
@@ -325,7 +209,7 @@ public slots:
 	void setHideAnimationLength(int value) 	{ setLayerProperty("hideAnimationLength", value); }
 	void setHideAnimationCurve(QEasingCurve::Type value) 		{ setLayerProperty("hideAnimationCurve",  value); }
 
-	void setShowFullScreen(bool value)	{ setLayerProperty("showFullScreen", value); }
+// 	void setShowFullScreen(bool value);//	{ setLayerProperty("showFullScreen", value); }
 	void setAlignment(Qt::Alignment value)	{ setLayerProperty("alignment", (int)value); }
 	void setInsetTopLeft(QPointF value)	{ setLayerProperty("insetTopLeft", value); }
 	void setInsetBottomRight(QPointF value)	{ setLayerProperty("insetBottomRight", value); }
@@ -367,7 +251,7 @@ protected slots:
 	void setShowAnim(int);
 	void setHideAnim(int);
 
-	// Translate the 'show as' combo box into a set of alignment flags and showFullScreen boolean value
+	// Translate the 'show as' combo box into a set of alignment flags
 	void setShowAsType(const QString&);
 	
 	void setShowOnShow(int);
@@ -400,6 +284,7 @@ protected:
 			defaultValue = QVariant();
 			stringIsFile = false;
 			fileTypeFilter = "";
+			step = 1;
 		}
 
 		QString text;
@@ -407,6 +292,7 @@ protected:
 		bool noSlider;
 		double min;
 		double max;
+		int step;
 		QVariant::Type type;
 		QVariant value;
 		bool doubleIsPercentage;
@@ -442,6 +328,12 @@ protected:
 
 	// Helper routine to loop thru all drawables and set 'prop' to 'value'
 	void applyDrawableProperty(const QString& prop, const QVariant& value);
+	
+	// Utility function to load the map of animatiable properties
+	void setAnimatePropFlags(const QStringList&, bool flag=false);
+	
+	// Default impl of canAnimateProperty() will return true UNLESS prop is listed here, then it will return the bool attached to the prop ID in this hash
+	QHash<QString, bool> m_animateProps;
 
 	// "pretty" name for this instance, like "SeasonsLoop3.mpg" or some other content-identifying string
 	QString m_instanceName;
@@ -474,55 +366,13 @@ private:
 	LiveLayer * m_showOnShow;
 	
 	QList<LiveLayer*> m_sortedLayerList;
-	bool m_lockVsibleSetter;
+	bool m_lockVisibleSetter;
 	
 	AnimParam m_animParam;
 	
 	int m_layerId;
 	bool m_layerIdLoaded;
 	bool m_lockLayerPropertyUpdates;
-};
-
-class ObjectValueSetter : public QObject
-{
-	Q_OBJECT
-public:
-	ObjectValueSetter(QObject *attached, const char *slot, QVariant value);
-	
-public slots:
-	void executeSetValue();
-	
-signals:
-	void setValue(int);
-	void setValue(double);
-	void setValue(const QString&);
-
-private:
-	QVariant m_value;
-};
-
-class BrowseDialogLauncher : public QObject
-{
-	Q_OBJECT
-public:
-	BrowseDialogLauncher(QObject *attached, const char *slot, QVariant value);
-	
-public slots:
-	void browse();
-	
-	void setTitle(const QString&);
-	void setSettingsKey(const QString&);
-	void setFilter(const QString&);
-	
-signals:
-	void setValue(const QString&);
-
-private:
-	QObject * m_attached;
-	QVariant m_value;
-	QString m_settingsKey;
-	QString m_title;
-	QString m_filter;
 };
 
 #endif

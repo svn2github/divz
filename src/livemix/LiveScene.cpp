@@ -103,9 +103,6 @@ void LiveScene::KeyFrame::fromByteArray(QByteArray& array)
 	foreach(QVariant var, list)
 	{
 		QVariantMap meta = var.toMap();
-		map.remove("showOnShowLayerId");
-		map.remove("hideOnShowLayerId");
-		map.remove("aspectRatioMode");
 		layerProperties[meta["id"].toInt()] = meta["map"].toMap();
 	}
 }
@@ -321,9 +318,12 @@ LiveScene::KeyFrame LiveScene::createKeyFrame(QList<LiveLayer*> layers, const QP
 	{
 		QVariantMap map = layer->propsToMap();
 		// remove props not needed to keyframe
-		map.remove("showOnShowLayerId");
-		map.remove("hideOnShowLayerId");
-		map.remove("aspectRatioMode");
+		foreach(QString key, map.keys())
+			if(!layer->canAnimateProperty(key))
+				map.remove(key);
+// 		map.remove("showOnShowLayerId");
+// 		map.remove("hideOnShowLayerId");
+// 		map.remove("aspectRatioMode");
 		frame.layerProperties[layer->id()] = map;
 	}
 	
@@ -346,9 +346,9 @@ LiveScene::KeyFrame LiveScene::updateKeyFrame(int idx, const QPixmap& icon)
 	{
 		QVariantMap map = layer->propsToMap();
 		// remove props not needed to keyframe
-		map.remove("showOnShowLayerId");
-		map.remove("hideOnShowLayerId");
-		map.remove("aspectRatioMode");
+		foreach(QString key, map.keys())
+			if(!layer->canAnimateProperty(key))
+				map.remove(key);
 		frame.layerProperties[layer->id()] = map;
 	}
 	

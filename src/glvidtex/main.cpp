@@ -68,7 +68,8 @@ GLDrawable * addQtSource(GLWidget * glw)
 	#ifdef HAS_QT_VIDEO_SOURCE
 	//QString testFile = "/opt/qt-mobility-opensource-src-1.0.1/examples/player/dsc_7721.avi";
 	//QString testFile = "dsc_0259.avi";
-	QString testFile = "/root/Download/SermonSpice/92_Churchfamily.mpg";
+	//QString testFile = "/root/Download/SermonSpice/92_Churchfamily.mpg";
+	QString testFile = "../Unicorn.mpg";
 	//QString testFile = "2010-08-01-Rocky.mpg";
 	//QString testFile = "2009-07-25-ACB-Singing.mpg";
 	QtVideoSource *source = new QtVideoSource();

@@ -26,6 +26,10 @@ LiveVideoInputLayer::LiveVideoInputLayer(QObject *parent)
 		
 		m_props["deinterlace"] = source->deinterlace();
 	}
+	
+	setAnimatePropFlags(QStringList()
+		<< "deinterlace",
+		false);
 
 }
 

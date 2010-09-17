@@ -679,7 +679,7 @@ void CameraThread::enableRawFrames(bool enable)
 	
 	if(old != enable)
 	{
- 		qDebug() << "CameraThread::enableRawFrames(): start, flag:"<<enable;
+ 		//qDebug() << "CameraThread::enableRawFrames(): start, flag:"<<enable;
 		m_initMutex.lock(); // make sure init isnt running, block while it is
 		// switch from raw V4L2 to LibAV* (or visa versa based on m_rawFrames, since SimpleV4L2 only outputs raw ARGB32)
 		//qDebug() << "CameraThread::enableRawFrames: flag changed, status: "<<m_rawFrames;
@@ -691,7 +691,7 @@ void CameraThread::enableRawFrames(bool enable)
 // 		qDebug() << "CameraThread::enableRawFrames(): mark1";
 		initCamera();
 		
- 		qDebug() << "CameraThread::enableRawFrames(): finish";
+ 		//qDebug() << "CameraThread::enableRawFrames(): finish";
 	}
 
 }
