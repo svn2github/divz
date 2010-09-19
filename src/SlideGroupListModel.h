@@ -83,7 +83,7 @@ protected:
 	virtual QPixmap generatePixmap(Slide*);
 	virtual QPixmap renderScene(MyGraphicsScene*);
 	QPixmap defaultPendingPixmap();
-	void markSlideDirty(Slide*);
+	void markSlideDirty(Slide*, bool pixmapDirty=true);
 	
 	void regenerateBlankPixmap();
 	
@@ -96,6 +96,7 @@ protected:
 	QList<Slide*> m_sortedSlides;
 	QList<Slide*> m_dirtySlides;
 	QList<Slide*> m_dirtySlides2;
+	QList<Slide*> m_pixmapOk;
 	QList<Slide*> m_needPixmaps;
 	QHash<int,QPixmap> m_pixmaps;
 	

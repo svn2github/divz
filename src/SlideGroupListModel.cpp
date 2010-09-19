@@ -135,8 +135,10 @@ bool SlideGroupListModel::dropMimeData ( const QMimeData * data, Qt::DropAction 
 	for(int i=0;i<list.size();i++)
 	{
 		int x = list.at(i).toInt();
+// 		qDebug() << "SlideGroupListModel::dropMimeData: Step 1: Slide Name: "<< m_sortedSlides.at(x)->slideName()<<", Removed Slide#:"<<x;
 		removed << x;
 	}
+	qSort(removed);
 	
 	// add the slides from start to parent row
 	QList<Slide*> newList;
@@ -167,10 +169,12 @@ bool SlideGroupListModel::dropMimeData ( const QMimeData * data, Qt::DropAction 
 	// renumber all the slides
 	int nbr = 0;
 	foreach(Slide *x, newList)
-// 	{
-// 		qDebug() << "SlideGroupListModel::dropMimeData: set slide # "<<nbr;
+	{
+// 		int oldNbr = x->slideNumber();
+// 		if(oldNbr != nbr)
+// 			qDebug() << "SlideGroupListModel::dropMimeData: Step 5: Slide Name: "<< x->slideName()<<", Renumbered slide # "<<nbr<<", old nbr: "<<oldNbr;
 		x->setSlideNumber(nbr++);
-// 	}
+	}
 
 	m_sortedSlides = newList;
 	
@@ -286,7 +290,7 @@ void SlideGroupListModel::internalSetup()
 	
 }
 
-void SlideGroupListModel::slideChanged(Slide *slide, QString slideOperation, AbstractItem */*item*/, QString /*operation*/, QString /*fieldName*/, QVariant /*value*/)
+void SlideGroupListModel::slideChanged(Slide *slide, QString slideOperation, AbstractItem */*item*/, QString operation, QString fieldName, QVariant /*value*/)
 {
 	if(!m_slideGroup)
 		return;
@@ -296,7 +300,7 @@ void SlideGroupListModel::slideChanged(Slide *slide, QString slideOperation, Abs
 // 	{
 // 		slideOperation = "add";
 // 	}
-	//qDebug() << "SlideGroupListModel::slideChanged: operation:"<<slideOperation;
+	//qDebug() << "SlideGroupListModel::slideChanged: slideOperation:"<<slideOperation<<", operation:"<<operation<<", fieldName:"<<fieldName;
 	
 	if(slideOperation == "remove" || slideOperation == "add")
 	{
@@ -316,11 +320,11 @@ void SlideGroupListModel::slideChanged(Slide *slide, QString slideOperation, Abs
 	}
 	else
 	{
-		markSlideDirty(slide);
+		markSlideDirty(slide, fieldName != "slideNumber");
 	}
 }
 
-void SlideGroupListModel::markSlideDirty(Slide *slide)
+void SlideGroupListModel::markSlideDirty(Slide *slide, bool pixmapDirty)
 {
 	if(m_dirtyTimer->isActive())
 		m_dirtyTimer->stop();
@@ -329,6 +333,9 @@ void SlideGroupListModel::markSlideDirty(Slide *slide)
 	
 	if(!m_dirtySlides.contains(slide))
 		m_dirtySlides << slide;
+	
+	if(!pixmapDirty && !m_pixmapOk.contains(slide))
+		m_pixmapOk << slide;
 }
 
 void SlideGroupListModel::modelDirtyTimeout()
@@ -342,12 +349,14 @@ void SlideGroupListModel::modelDirtyTimeout()
 		return;
 	
 	foreach(Slide *slide, m_dirtySlides)
-		QPixmapCache::remove(QString("%1-%2").arg(POINTER_STRING(slide)).arg(m_iconSize.width()));
+		if(!m_pixmapOk.contains(slide))
+			QPixmapCache::remove(QString("%1-%2").arg(POINTER_STRING(slide)).arg(m_iconSize.width()));
 	
 	QModelIndex top    = indexForSlide(m_dirtySlides.first()), 
 	            bottom = indexForSlide(m_dirtySlides.last());
 	
 	m_dirtySlides.clear();
+	m_pixmapOk.clear();
 
 	//qDebug() << "SlideGroupListModel::modelDirtyTimeout: top:"<<top<<", bottom:"<<bottom;
 

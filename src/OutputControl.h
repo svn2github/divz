@@ -8,7 +8,7 @@
 #include <QLineEdit>
 #include <QComboBox>
 #include <QListWidget>
-
+#include <QCheckBox>
 #include <qtcolorpicker.h>
 
 class OutputInstance;
@@ -142,6 +142,9 @@ protected:
 	QSlider			* m_zoomSlider;
 	
 	bool m_firstRun;
+	
+	QCheckBox		* m_wrapModeCheckbox;
+	QCheckBox		* m_listModeCheckbox;
 };
 
 

@@ -124,8 +124,9 @@ SlideGroupViewControl::SlideGroupViewControl(OutputInstance *group, QWidget *w,b
 	m_iconSize(192),
  	m_iconSizeSlider(0),
 	m_lockIconSizeSetter(false),
-	m_itemControlBase(0)
-
+	m_itemControlBase(0),
+	m_wrapModeEnabled(true),
+	m_listModeEnabled(false)
 
 {
 	if(initUI)
@@ -165,15 +166,37 @@ SlideGroupViewControl::SlideGroupViewControl(OutputInstance *group, QWidget *w,b
 		/** Setup the list view in icon mode */
 		//m_listView = new QListView(this);
 		m_listView = new SlideGroupViewControlListView(this);
-		m_listView->setViewMode(QListView::IconMode);
-		//m_listView->setViewMode(QListView::ListMode);
+		
+		QSettings s;
+		m_listModeEnabled = s.value(QString("slideviewcontrol/%1").arg(m_isPreviewControl ? "preview-list-mode" : "list-mode"),m_listModeEnabled).toBool();
+		m_wrapModeEnabled = s.value(QString("slideviewcontrol/%1").arg(m_isPreviewControl ? "preview-wrap-mode" : "wrap-mode"),m_listModeEnabled).toBool();
+		
+		if(m_isPreviewControl)
+		{
+			m_wrapModeEnabled = true;
+			m_listModeEnabled = false;
+		}
+		
+		if(!m_listModeEnabled)
+		{
+			m_listView->setViewMode(QListView::IconMode);
+			m_listView->setFlow(QListView::LeftToRight);
+			m_listView->setWrapping(m_wrapModeEnabled);
+		}
+		else
+		{
+			m_listView->setViewMode(QListView::ListMode);
+			m_listView->setFlow(QListView::TopToBottom);
+			m_listView->setWrapping(m_wrapModeEnabled);
+		}
+		
 		m_listView->setMovement(QListView::Static);
-		m_listView->setWrapping(true);
 		m_listView->setWordWrap(true);
 		m_listView->setLayoutMode(QListView::Batched);
-		m_listView->setFlow(QListView::LeftToRight);
 		m_listView->setResizeMode(QListView::Adjust);
 		m_listView->setSelectionMode(QAbstractItemView::SingleSelection);
+	
+		
 		setFocusProxy(m_listView);
 		setFocusPolicy(Qt::StrongFocus);
 
@@ -231,8 +254,7 @@ SlideGroupViewControl::SlideGroupViewControl(OutputInstance *group, QWidget *w,b
 
  		connect(m_iconSizeSlider, SIGNAL(valueChanged(int)), this, SLOT(setIconSize(int)));
  		
- 		QSettings s;
-		setIconSize(s.value(QString("slideviewcontrol/%1").arg(m_isPreviewControl ? "preview-icon-size" : "icon-size"),m_iconSize).toInt());
+ 		setIconSize(s.value(QString("slideviewcontrol/%1").arg(m_isPreviewControl ? "preview-icon-size" : "icon-size"),m_iconSize).toInt());
 
 // 		m_spinBox = new QSpinBox(this);
 // 		m_spinBox->setMinimum(16);
@@ -304,6 +326,34 @@ SlideGroupViewControl::~SlideGroupViewControl()
 	if(m_quickSlide)
 		delete m_quickSlide;
 }
+
+void SlideGroupViewControl::setListModeEnabled(bool flag)
+{
+	m_listModeEnabled = flag;
+	if(flag)
+	{
+		m_listView->setViewMode(QListView::ListMode);
+		m_listView->setFlow(QListView::TopToBottom);
+	}
+	else
+	{
+		m_listView->setViewMode(QListView::IconMode);
+		m_listView->setFlow(QListView::LeftToRight);
+	}
+	QSettings s;
+	s.setValue(QString("slideviewcontrol/%1").arg(m_isPreviewControl ? "preview-list-mode" : "list-mode"),m_listModeEnabled);
+	
+}
+
+void SlideGroupViewControl::setWrapModeEnabled(bool flag)
+{
+	m_wrapModeEnabled = flag;
+	if(m_listView)
+		m_listView->setWrapping(flag);
+	QSettings s;
+	s.setValue(QString("slideviewcontrol/%1").arg(m_isPreviewControl ? "preview-wrap-mode" : "wrap-mode"),m_listModeEnabled);
+}
+
 
 void SlideGroupViewControl::setIconSize(int size)
 {

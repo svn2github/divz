@@ -60,6 +60,9 @@ public:
 	// reimplement in sub-classes for those that don't use the icon size
 	virtual bool canSetIconSize() { return true; }
 	
+	bool wrapModeEnabled() { return m_wrapModeEnabled; }
+	bool listModeEnabled() { return m_listModeEnabled; }
+	
 signals:
 	void slideDoubleClicked(Slide *);
 	void slideSelected(Slide *);
@@ -86,6 +89,10 @@ public slots:
 	virtual void setQuickSlideText(const QString& text = "");
 	
 	virtual void setIconSize(int);
+	
+	virtual void setListModeEnabled(bool);
+	virtual void setWrapModeEnabled(bool);
+
 
 protected slots:
 	virtual void slideSelected(const QModelIndex &);
@@ -147,6 +154,9 @@ protected:
 	QSlider * m_iconSizeSlider;
 	bool m_lockIconSizeSetter;
 	QSpinBox * m_spinBox;
+	
+	bool m_wrapModeEnabled;
+	bool m_listModeEnabled;
 };
 
 class AbstractSlideGroupEditor : public QMainWindow

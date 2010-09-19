@@ -523,6 +523,15 @@ void OutputControl::setupAdvancedUI()
 	/*hbox->addWidget(m_zoomSlider,1);*/
 	gridLayout->addWidget(m_zoomSlider,rowNbr,1);
 	
+	// ListMode & Wrap Mode
+	rowNbr++;
+	
+	m_listModeCheckbox = new QCheckBox("List Mode");
+	gridLayout->addWidget(m_listModeCheckbox,rowNbr,0);
+	
+	m_wrapModeCheckbox = new QCheckBox("Wrapping Enabled");
+	gridLayout->addWidget(m_wrapModeCheckbox,rowNbr,1);
+	
 	layout->addLayout(gridLayout);
 // 	
 // 	connect(m_zoomSlider, SIGNAL(valueChanged(int)), this, SLOT(setIconSize(int)));
@@ -1019,6 +1028,12 @@ void OutputControl::setViewControl(SlideGroupViewControl *ctrl)
 		}
 		m_zoomSlider->setEnabled(ctrl->canSetIconSize());
 		
+		
+		connect(m_listModeCheckbox, SIGNAL(toggled(bool)), ctrl, SLOT(setListModeEnabled(bool)));
+		m_listModeCheckbox->setChecked(ctrl->listModeEnabled());
+		
+		connect(m_wrapModeCheckbox, SIGNAL(toggled(bool)), ctrl, SLOT(setWrapModeEnabled(bool)));
+		m_wrapModeCheckbox->setChecked(ctrl->wrapModeEnabled());
 	}
 	
 // 	if(m_inst)
