@@ -511,7 +511,7 @@ QWidget * LiveLayer::createLayerPropertyEditors()
 	opts.reset();
 	opts.suffix = "%";
 	opts.min = -100;
-	opts.max =  100;
+	opts.max =  200;
 	opts.step = 10;
 	opts.type = QVariant::Int;
 	opts.doubleIsPercentage = true;

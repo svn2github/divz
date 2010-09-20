@@ -1,5 +1,5 @@
-#ifndef LiveVideoFileLayer_H
-#define LiveVideoFileLayer_H
+#ifndef LiveVideoLoopLayer_H
+#define LiveVideoLoopLayer_H
 
 #include "LiveVideoLayer.h"
 
@@ -8,26 +8,20 @@ class CameraThread;
 class GLDrawable;
 class GLWidget;
 class VideoThread;
-class QtVideoSource;
-class QMediaPlaylist;
-class QMediaPlayer;
 
-class LiveVideoFileLayer : public LiveVideoLayer
+class LiveVideoLoopLayer : public LiveVideoLayer
 {
 	Q_OBJECT
 	
 	Q_PROPERTY(QString file READ file WRITE setFile);
 	
 public:
-	Q_INVOKABLE LiveVideoFileLayer(QObject *parent=0);
-	~LiveVideoFileLayer();
+	Q_INVOKABLE LiveVideoLoopLayer(QObject *parent=0);
+	~LiveVideoLoopLayer();
 	
-	virtual QString typeName() { return "Video File"; }
+	virtual QString typeName() { return "Video Loop"; }
 	
 	QString file() { return layerProperty("file").toString(); }
-	
-	QMediaPlaylist * playlist();
-	QMediaPlayer * player();
 
 public slots:
 	// Set a property (emits instancePropertyChanged)
@@ -42,11 +36,11 @@ protected:
 	virtual void initDrawable(GLDrawable *drawable, bool isFirstDrawable = false);
 	virtual QWidget *createLayerPropertyEditors();
 	
-	void setVideo(QtVideoSource*);
-	QtVideoSource  *video() { return m_video; }
+	void setVideo(VideoThread*);
+	VideoThread *video() { return m_video; }
 	
 private:
-	QtVideoSource *m_video;
+	VideoThread *m_video;
 };
 
 #endif

@@ -1,25 +1,17 @@
 #include <QFileInfo>
-#include "LiveVideoFileLayer.h"
+#include "LiveVideoLoopLayer.h"
 #include "ExpandableWidget.h"
+#include "VideoThread.h"
 #include "../glvidtex/GLWidget.h"
 #include "../glvidtex/GLVideoDrawable.h"
 
-#ifdef HAS_QT_VIDEO_SOURCE
-#include "../glvidtex/QtVideoSource.h"
-#else
-class QtVideoSource
-{
-
-};
-#endif
-
-LiveVideoFileLayer::LiveVideoFileLayer(QObject *parent)
+LiveVideoLoopLayer::LiveVideoLoopLayer(QObject *parent)
 	: LiveVideoLayer(parent)
 	, m_video(0)
 {
 }
 
-LiveVideoFileLayer::~LiveVideoFileLayer()
+LiveVideoLoopLayer::~LiveVideoLoopLayer()
 {
 	setVideoSource(0); // doesnt change m_video
 	if(m_video)
@@ -29,15 +21,15 @@ LiveVideoFileLayer::~LiveVideoFileLayer()
 	}
 }
 
-GLDrawable *LiveVideoFileLayer::createDrawable(GLWidget *widget)
+GLDrawable *LiveVideoLoopLayer::createDrawable(GLWidget *widget)
 {
 	// We overrride createDrawable here just for future expansiosn sake
 	return LiveVideoLayer::createDrawable(widget);
 }
 
-void LiveVideoFileLayer::initDrawable(GLDrawable *drawable, bool isFirst)
+void LiveVideoLoopLayer::initDrawable(GLDrawable *drawable, bool isFirst)
 {
-	//qDebug() << "LiveVideoFileLayer::setupDrawable: drawable:"<<drawable<<", copyFrom:"<<copyFrom;
+	//qDebug() << "LiveVideoLoopLayer::setupDrawable: drawable:"<<drawable<<", copyFrom:"<<copyFrom;
 	LiveVideoLayer::initDrawable(drawable, isFirst);
 
 	if(isFirst)
@@ -48,33 +40,31 @@ void LiveVideoFileLayer::initDrawable(GLDrawable *drawable, bool isFirst)
 	
 	if(m_video)
 	{
-		qDebug() << "LiveVideoFileLayer::initDrawable: setting video:"<<m_video;
+		qDebug() << "LiveVideoLoopLayer::initDrawable: setting video:"<<m_video;
 		setVideo(m_video);
 	}
 	else
 	{
-		qDebug() << "LiveVideoFileLayer::initDrawable: m_video is null";
+		qDebug() << "LiveVideoLoopLayer::initDrawable: m_video is null";
 	}
 }
 
-void LiveVideoFileLayer::setVideo(QtVideoSource *vid)
+void LiveVideoLoopLayer::setVideo(VideoThread *vid)
 {
-	qDebug() << "LiveVideoFileLayer::setVideo: "<<vid;
+	qDebug() << "LiveVideoLoopLayer::setVideo: "<<vid;
 	
 // 	if(vid == m_video)
 // 	{
-// 		qDebug() << "LiveVideoFileLayer::setVideo: Not setting, vid == m_video";
+// 		qDebug() << "LiveVideoLoopLayer::setVideo: Not setting, vid == m_video";
 // 		return;
 // 	}
-	
-	#ifdef HAS_QT_VIDEO_SOURCE
+		
 	setVideoSource(vid);
 	m_video = vid;
-	setInstanceName(guessTitle(QFileInfo(vid->file()).baseName()));
-	#endif
+	setInstanceName(guessTitle(QFileInfo(vid->videoFile()).baseName()));
 }
 
-QWidget * LiveVideoFileLayer::createLayerPropertyEditors()
+QWidget * LiveVideoLoopLayer::createLayerPropertyEditors()
 {
 	QWidget * base = new QWidget();
 	QVBoxLayout *blay = new QVBoxLayout(base);
@@ -106,70 +96,39 @@ QWidget * LiveVideoFileLayer::createLayerPropertyEditors()
 	return base;
 }
 
-void LiveVideoFileLayer::setFile(const QString& file)
+void LiveVideoLoopLayer::setFile(const QString& file)
 {
-	if(m_video && m_video->file() == file)
+	if(m_video && m_video->videoFile() == file)
 		return;
 		 
 	QFileInfo info(file);
 	
 	if(!info.exists())
 	{
-		qDebug() << "LiveVideoFileLayer::setFile: File does not exist: "<<file;
+		qDebug() << "LiveVideoLoopLayer::setFile: File does not exist: "<<file;
 		return;
 	}
 	
 	if(m_video)
 	{
-		//m_video->stop();
-// 		m_video->quit();
-// 		m_video->deleteLater();
-// 		m_video = 0;
-		m_video->setFile(file);
-		m_video->player()->play();
+		m_video->stop();
+		m_video->quit();
+		m_video->deleteLater();
+		m_video = 0;
 	}
-	else
-	{
 	
-		#ifdef HAS_QT_VIDEO_SOURCE
-		qDebug() << "LiveVideoFileLayer::setFile: Loading file: "<<file;
-		QtVideoSource *video = new QtVideoSource();
-		video->setFile(file);
-		video->start();
-		setVideo(video);
-		#else
-		qDebug() << "LiveVideoFileLayer::setFile: Unable to play any videos - not compiled with QtVideoSource or QtMobility.";
-		#endif
-	}
+	qDebug() << "LiveVideoLoopLayer::setFile: Loading file: "<<file;
+	VideoThread *video = new VideoThread();
+	video->setVideo(file);
+	video->start();
+	setVideo(video);
 	
 	m_props["file"] = file;
 	
 	setInstanceName(guessTitle(info.fileName()));
 }
 
-QMediaPlaylist * LiveVideoFileLayer::playlist()
-{
-	#ifdef HAS_QT_VIDEO_SOURCE
-	if(m_video)
-		return m_video->playlist();
-	#endif
-	
-	return 0;
-	
-}
-
-QMediaPlayer * LiveVideoFileLayer::player()
-{
-	#ifdef HAS_QT_VIDEO_SOURCE
-	if(m_video)
-		return m_video->player();
-	#endif
-	
-	return 0;
-	
-}
-
-void LiveVideoFileLayer::setLayerProperty(const QString& key, const QVariant& value)
+void LiveVideoLoopLayer::setLayerProperty(const QString& key, const QVariant& value)
 {
 	if(key == "file")
 	{
@@ -188,4 +147,3 @@ void LiveVideoFileLayer::setLayerProperty(const QString& key, const QVariant& va
 	
 	LiveLayer::setLayerProperty(key,value);
 }
-
