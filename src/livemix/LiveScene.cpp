@@ -42,6 +42,7 @@ QByteArray LiveScene::KeyFrame::toByteArray()
 	map["frameName"] = frameName;
 	map["clockTime"] = clockTime;
 	map["playTime"] = playTime;
+	map["viewport"] = viewport;
 	map["animParam.length"] = animParam.length;
 	map["animParam.type"] = (int)animParam.curve.type();
 		
@@ -88,6 +89,7 @@ void LiveScene::KeyFrame::fromByteArray(QByteArray& array)
 	frameName = map["frameName"].toString();
 	clockTime = map["clockTime"].toTime();
 	playTime = map["playTime"].toDouble();
+	viewport = map["viewport"].toRectF();
 	animParam.length = map["animParam.length"].toInt();
 	animParam.curve.setType((QEasingCurve::Type)map["animParam.curveType"].toInt());
 	
@@ -110,6 +112,7 @@ void LiveScene::KeyFrame::fromByteArray(QByteArray& array)
 ///////////////////////
 LiveScene::LiveScene(QObject *parent)
 	: QObject(parent)
+	, m_canvasSize(1000.,750.)
 {}
 
 LiveScene::~LiveScene()
@@ -173,6 +176,9 @@ void LiveScene::attachGLWidget(GLWidget *glw)
 		return;
 		
 	m_glWidgets.append(glw);
+	
+	connect(this, SIGNAL(canvasSizeChanged(const QSizeF&)), glw, SLOT(setCanvasSize(const QSizeF&)));
+	connect(this, SIGNAL(viewportChanged(const QRectF&)),   glw, SLOT(setViewport(const QRectF&)));
 
 	foreach(LiveLayer *layer, m_layers)
 		layer->attachGLWidget(glw);
@@ -186,6 +192,8 @@ void LiveScene::detachGLWidget(GLWidget *glw)
 	//qDebug() << "LiveScene::detachGLWidget(): glw: "<<glw;
 	foreach(LiveLayer *layer, m_layers)
 		layer->detachGLWidget(glw);
+		
+	disconnect(this, 0, glw, 0);
 
 	m_glWidgets.removeAll(glw);
 }
@@ -461,4 +469,16 @@ bool LiveScene_keyFrame_compare(LiveScene::KeyFrame a, LiveScene::KeyFrame b)
 void LiveScene::sortKeyFrames()
 {
 	qSort(m_keyFrames.begin(), m_keyFrames.end(), LiveScene_keyFrame_compare);
+}
+
+void LiveScene::setCanvasSize(const QSizeF& size)
+{
+	m_canvasSize = size;
+	emit canvasSizeChanged(size);
+}
+
+void LiveScene::setViewport(const QRectF& rect)
+{
+	m_viewport = rect;
+	emit viewportChanged(rect);
 }

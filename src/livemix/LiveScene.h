@@ -13,6 +13,19 @@ class GLWidget;
 class LiveScene : public QObject
 {
 	Q_OBJECT
+	
+	// Coordinates go through several stages:
+	// The physical window on the screen is often a fixed size that can't be configured or changed - a GLWidget fit to the screen or a window.
+	// The GLWidget than computes a transform to fit the viewport (or the entire canvas if the viewport is invalid) into an aspect-ratio correct
+	// rectangle. If the viewport doesnt match the canvas, it will set up a transform to first translate the viewport into the canvas, then 
+	// apply the scaling and translation for the window.
+	
+	// This is the usable area for arranging layers.
+	Q_PROPERTY(QSizeF canvasSize READ canvasSize WRITE setCanvasSize);
+	
+	// Viewport is an "instructive" property - can be used by GLWidgets to look at a subset of the canvas.
+	// By default, the viewport is an invalid rectangle, which will instruct the GLWidget to look at the entire canvas.
+	Q_PROPERTY(QRectF viewport READ viewport WRITE setViewport);
 
 private:
 	static QHash<QString, const QMetaObject*> s_metaObjects;	
@@ -24,6 +37,9 @@ public:
 public:
 	LiveScene(QObject *parent=0);
 	~LiveScene();
+	
+	QSizeF canvasSize() { return m_canvasSize; }
+	QRectF viewport() { return m_viewport; }
 	
 	QList<LiveLayer*> layerList() { return m_layers; }
 	LiveLayer *layerFromId(int);
@@ -49,6 +65,9 @@ public:
 		LiveScene *scene;
 		
 		int id;
+		
+		// Where to look at on the canvas
+		QRectF viewport;
 		
 		// int is the id of the layer
 		QHash<int, QVariantMap> layerProperties;
@@ -103,6 +122,14 @@ signals:
 	void keyFrameAdded(const KeyFrame&);
 	void keyFrameRemoved(const KeyFrame&);
 	
+	void canvasSizeChanged(const QSizeF&);
+	void viewportChanged(const QRectF&);
+
+public slots:
+	void setCanvasSize(const QSizeF&);
+	void setViewport(const QRectF&);
+	void setViewport(const QPointF& point) { setViewport(QRectF(point,viewport().size())); }
+	
 private:
 	void sortKeyFrames();
 	
@@ -110,6 +137,9 @@ private:
 	QList<LiveLayer*> m_layers;
 	QHash<int,LiveLayer*> m_idLookup;
 	QList<KeyFrame> m_keyFrames;
+	
+	QSizeF m_canvasSize;
+	QRectF m_viewport;
 };
 
 	

@@ -391,7 +391,9 @@ int main(int argc, char *argv[])
 // 	addButtons(tb,addVideoBug(glw));
 // 	addButtons(tb,addTextOverlay(glw));
 	
-	glw->resize(glw->viewport().width(),glw->viewport().height());
+	glw->resize(glw->canvasSize().width(),glw->canvasSize().height());
+	//glw->setCanvasSize(2000,2000);
+	glw->setViewport(QRectF(550,450,400,300));
 	
 	glw->show();
 	

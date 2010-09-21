@@ -7,18 +7,19 @@ GLWidget::GLWidget(QWidget *parent, QGLWidget *shareWidget)
 	: QGLWidget(parent, shareWidget)
 	, m_glInited(false)
 {
-	setViewport(QRectF(0,0,1000.,750.));
+	setCanvasSize(QSizeF(1000.,750.));
+	// setViewport() will use canvas size by default to construct a rect
+	setViewport(QRectF());
 }
 
 GLWidget::~GLWidget()
 {
 
-
 }
 
 QSize GLWidget::minimumSizeHint() const
 {
-	return QSize(50, 50);
+	return QSize(60, 45);
 }
 
 QSize GLWidget::sizeHint() const
@@ -36,6 +37,7 @@ void GLWidget::initializeGL()
 	
 	glEnable(GL_BLEND); 
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	//glEnable(GL_MULTISAMPLE) 
 	
 // 	glClearDepth(1.0f);						// Depth Buffer Setup
 // 	glEnable(GL_DEPTH_TEST);					// Enables Depth Testing
@@ -121,22 +123,37 @@ void GLWidget::resizeGL(int width, int height)
 	setViewport(viewport());
 }
 	
-void GLWidget::setViewport(const QRectF& viewport)
+void GLWidget::setViewport(const QRectF& rect)
 {
-	m_viewport = viewport;
+	m_viewport = rect;
 	
-	float sw = viewport.width();
-	float sh = viewport.height();
+	QRectF viewport = m_viewport;
+	if(!viewport.isValid())
+	{
+		QSizeF canvas = m_canvasSize;
+		if(canvas.isNull())
+			canvas = QSizeF(1000.,750.);
+		viewport = QRectF(QPointF(0.,0.),canvas);
+	}
 	
-	float sx = ((float)width())  / sw;
-	float sy = ((float)height()) / sh;
+	float vw = viewport.width();
+	float vh = viewport.height();
+	
+	// Scale viewport size to our size
+	float sx = ((float)width())  / vw;
+	float sy = ((float)height()) / vh;
+	
+	//qDebug() << "
 
 	float scale = qMin(sx,sy);
-	float scaledWidth  = sw * scale;
-	float scaledHeight = sh * scale;
 	
-	float xt = (width()  - scaledWidth) /2  + viewport.left();
-	float yt = (height() - scaledHeight)/2  + viewport.top();
+	// Center viewport in our rectangle
+	float scaledWidth  = vw * scale;
+	float scaledHeight = vh * scale;
+	
+	// Calculate centering and apply top-left translation
+	float xt = (width()  - scaledWidth) /2  - viewport.left();
+	float yt = (height() - scaledHeight)/2  - viewport.top();
 	
 	setTransform(QTransform().translate(xt,yt).scale(scale,scale));
 	
@@ -156,6 +173,13 @@ void GLWidget::setViewport(const QRectF& viewport)
 		#endif
 	glMatrixMode(GL_MODELVIEW);
 #endif*/
+}
+
+void GLWidget::setCanvasSize(const QSizeF& size)
+{
+	m_canvasSize = size;
+	foreach(GLDrawable *drawable, m_drawables)
+		drawable->canvasResized(size);
 }
 
 void GLWidget::setTransform(const QTransform& tx)

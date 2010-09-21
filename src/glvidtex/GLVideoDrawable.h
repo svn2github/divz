@@ -180,6 +180,7 @@ protected:
 	void paintGL();
 	
 	void viewportResized(const QSize& newSize);
+	void canvasResized(const QSizeF& newSize);
 	void drawableResized(const QSizeF& newSize);
 	
 	void initGL();

@@ -867,6 +867,12 @@ void GLVideoDrawable::viewportResized(const QSize& /*newSize*/)
 	updateRects();
 }
 
+void GLVideoDrawable::canvasResized(const QSizeF& /*newSize*/)
+{
+	updateAlignment();
+	updateRects();
+}
+
 void GLVideoDrawable::drawableResized(const QSizeF& /*newSize*/)
 {
 	//qDebug() << "GLVideoDrawable::drawableResized()";

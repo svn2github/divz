@@ -201,7 +201,9 @@ QtVideoSource::QtVideoSource(QObject *parent)
 
 QtVideoSource::~QtVideoSource()
 {
-
+	m_player->stop();
+	m_playlist->clear();
+	m_surfaceAdapter->stop();
 }
 
 void QtVideoSource::start(QThread::Priority /*priority*/)

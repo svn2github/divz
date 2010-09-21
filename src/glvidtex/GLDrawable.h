@@ -179,6 +179,7 @@ protected:
 	virtual void setGLWidget(GLWidget*); // when update is called, it calls GLWidget::updateGL()
 
 	virtual void viewportResized(const QSize& newSize);
+	virtual void canvasResized(const QSizeF& newSize);
 	virtual void drawableResized(const QSizeF& newSize);
 
 	virtual void paintGL();
