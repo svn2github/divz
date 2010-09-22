@@ -6,6 +6,9 @@
 class QPropertyAnimation;
 class GLWidget;
 
+// GLDrawable uses Z_MAX combined with the zIndexModifier to scale the zIndex to where zIndexModifier=<z<zIndexModifier
+#define Z_MAX 10000
+
 // This class exists because we want to be able to call start()
 // from a slot AND have the animation automatically delete when done.
 // However, since we cant pass hardcoded arguments thru a slot, AND
@@ -63,7 +66,9 @@ public:
 	GLWidget *glWidget() { return m_glw; }
 
 	const QRectF & rect() const { return m_rect; }
-	double zIndex() { return m_zIndex; }
+	double zIndex();
+	
+	double zIndexModifier();
 
 	double opacity() { return m_opacity; }
 
@@ -141,6 +146,7 @@ public slots:
 	void setRect(const QRectF& rect);
 	void setOpacity(double i);
 	void setZIndex(double z);
+	void setZIndexModifier(double mod);
 
 	void show();
 	void hide();
@@ -207,6 +213,7 @@ private:
 
 	QRectF m_rect;
 	double m_zIndex;
+	double m_zIndexModifier;
 	double m_opacity;
 
 	bool m_isVisible;

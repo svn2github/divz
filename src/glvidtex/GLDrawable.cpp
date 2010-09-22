@@ -22,6 +22,7 @@ GLDrawable::GLDrawable(QObject *parent)
 	: QObject(parent)
 	, m_glw(0)
 	, m_zIndex(0)
+	, m_zIndexModifier(0)
 	, m_opacity(1)
 	, m_isVisible(false)
 	, m_animFinished(true)
@@ -342,6 +343,27 @@ void GLDrawable::setRect(const QRectF& rect)
 // 		updateAlignment();
 	updateGL();
 }
+
+void GLDrawable::setZIndexModifier(double mod)
+{
+	m_zIndexModifier = mod;
+	emit zIndexChanged(zIndex());
+}
+
+double GLDrawable::zIndex()
+{
+	if(m_zIndexModifier != 0)
+	{
+		double fract = m_zIndex / (Z_MAX/2) + 0.5;
+		double final = fract * m_zIndexModifier;
+		//qDebug() << "GLDrawable::zIndex: m_zIndexModifier:"<<m_zIndexModifier<<", m_zIndex:"<<m_zIndex<<", final: "<<final;
+		
+		return final;
+	}
+	
+	return m_zIndex;
+}
+
 
 void GLDrawable::setZIndex(double z)
 {
