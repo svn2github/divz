@@ -151,11 +151,15 @@ void GLWidget::setViewport(const QRectF& rect)
 	float scaledWidth  = vw * scale;
 	float scaledHeight = vh * scale;
 	
-	// Calculate centering and apply top-left translation
-	float xt = (width()  - scaledWidth) /2  - viewport.left();
-	float yt = (height() - scaledHeight)/2  - viewport.top();
+	// Calculate centering 
+	float xt = (width()  - scaledWidth) /2;
+	float yt = (height() - scaledHeight)/2;
 	
-	setTransform(QTransform().translate(xt,yt).scale(scale,scale));
+	// Apply top-left translation for viewport location
+	float xtv = xt - viewport.left() * scale;
+	float ytv = yt - viewport.top()  * scale;
+	
+	setTransform(QTransform().translate(xtv,ytv).scale(scale,scale));
 	
 	//QSize size(width,height);
 	QSize size = viewport.size().toSize();

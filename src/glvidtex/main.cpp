@@ -203,15 +203,16 @@ GLDrawable * addStaticSource(GLWidget * glw)
 	GLVideoDrawable *drawable = new GLVideoDrawable(glw);
 	
 	
-	if(false)
+	if(true)
 	{
 		StaticVideoSource *source = new StaticVideoSource();
 		//source->setImage(QImage("me2.jpg"));
-		QImage img("dsc_6645-1.jpg");
-		if(img.isNull())
-			source->setImage(QImage("me2.jpg"));
-		else
-			source->setImage(img);
+// 		QImage img("dsc_6645-1.jpg");
+// 		if(img.isNull())
+// 			source->setImage(QImage("me2.jpg"));
+// 		else
+// 			source->setImage(img);
+		source->setImage(QImage("Pm5544.jpg"));
 			
 			
 		//source->setImage(QImage("/opt/qtsdk-2010.02/qt/examples/opengl/pbuffers/cubelogo.png"));
@@ -363,7 +364,7 @@ int main(int argc, char *argv[])
 		
 	QFormLayout * tb = createToggleBox();
 	
-	addButtons(tb, addQtSource(glw));
+	//addButtons(tb, addQtSource(glw));
 	
 	#undef HAS_QT_VIDEO_SOURCE
 	#ifdef HAS_QT_VIDEO_SOURCE
@@ -384,16 +385,20 @@ int main(int argc, char *argv[])
 /*		}
 		else
 		*/
- 			addButtons(tb,addStaticSource(glw));
+ 			//addButtons(tb,addStaticSource(glw));
 	#endif
 	
 // 	addButtons(tb,addSecondSource(glw));	
 // 	addButtons(tb,addVideoBug(glw));
 // 	addButtons(tb,addTextOverlay(glw));
 	
+	addButtons(tb,addStaticSource(glw));
+	
+	glw->setCanvasSize(764,572);
+	
 	glw->resize(glw->canvasSize().width(),glw->canvasSize().height());
-	//glw->setCanvasSize(2000,2000);
-	glw->setViewport(QRectF(550,450,400,300));
+	
+	glw->setViewport(QRectF(-764,-572,764*3,572*3));
 	
 	glw->show();
 	
