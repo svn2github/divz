@@ -3,7 +3,7 @@
 #include "LiveLayer.h"
 #include "../glvidtex/GLDrawable.h"
 #include "../glvidtex/GLWidget.h"
-
+	
 QHash<QString, const QMetaObject*> LiveScene::s_metaObjects;
 
 ///////////////////////
@@ -179,12 +179,21 @@ void LiveScene::attachGLWidget(GLWidget *glw)
 		
 	m_glWidgets.append(glw);
 	
-	connect(this, SIGNAL(canvasSizeChanged(const QSizeF&)), glw, SLOT(setCanvasSize(const QSizeF&)));
-	connect(this, SIGNAL(viewportChanged(const QRectF&)),   glw, SLOT(setViewport(const QRectF&)));
+	int numLayers = glw->property(GLW_PROP_NUM_SCENES).toInt();
+	numLayers ++;
+	glw->setProperty(GLW_PROP_NUM_SCENES,numLayers);
 	
-	//glw->setCanvasSize(canvasSize());
-	glw->setViewport(viewport());
-	//qDebug() << "LiveScene::attachGLWidget: canvasSize:"<<canvasSize()<<", viewport:"<<viewport();
+	if(numLayers == 1)
+	{
+		connect(this, SIGNAL(canvasSizeChanged(const QSizeF&)), glw, SLOT(setCanvasSize(const QSizeF&)));
+		connect(this, SIGNAL(viewportChanged(const QRectF&)),   glw, SLOT(setViewport(const QRectF&)));
+		
+		glw->setCanvasSize(canvasSize());
+		glw->setViewport(viewport());
+		
+		//qDebug() << "LiveScene::attachGLWidget: canvasSize:"<<canvasSize()<<", viewport:"<<viewport();
+	}
+	
 
 	foreach(LiveLayer *layer, m_layers)
 		layer->attachGLWidget(glw);
@@ -200,6 +209,10 @@ void LiveScene::detachGLWidget(GLWidget *glw)
 		layer->detachGLWidget(glw);
 		
 	disconnect(this, 0, glw, 0);
+	
+	int numLayers = glw->property(GLW_PROP_NUM_SCENES).toInt();
+	numLayers --;
+	glw->setProperty(GLW_PROP_NUM_SCENES,numLayers);
 
 	m_glWidgets.removeAll(glw);
 }

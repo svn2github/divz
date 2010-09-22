@@ -16,7 +16,8 @@ class LiveVideoFileLayer : public LiveVideoLayer
 {
 	Q_OBJECT
 	
-	Q_PROPERTY(QString file READ file WRITE setFile);
+	//Q_PROPERTY(QString file READ file WRITE setFile);
+	Q_PROPERTY(QStringList fileList READ fileList WRITE setFileList);
 	
 public:
 	Q_INVOKABLE LiveVideoFileLayer(QObject *parent=0);
@@ -24,16 +25,23 @@ public:
 	
 	virtual QString typeName() { return "Video File"; }
 	
-	QString file() { return layerProperty("file").toString(); }
+	QStringList fileList() { return layerProperty("fileList").toStringList(); }
+	
 	
 	QMediaPlaylist * playlist();
 	QMediaPlayer * player();
 
 public slots:
 	// Set a property (emits instancePropertyChanged)
-	void setFile(const QString&);
+	void addFile(const QString&);
+	void setFileList(const QStringList&);
 
 	virtual void setLayerProperty(const QString& propertyId, const QVariant& value);
+
+private slots:
+	void btnDelItem();
+	void btnMoveItemUp();
+	void btnMoveItemDown();
 
 protected:
 	virtual GLDrawable *createDrawable(GLWidget *widget);
@@ -47,6 +55,9 @@ protected:
 	
 private:
 	QtVideoSource *m_video;
+	
+	QPointer<QListWidget> m_listWidget;
+	void setupListWidget();
 };
 
 #endif

@@ -23,7 +23,15 @@ MainWindow::MainWindow()
 	, m_lockTimelineTableCellEditorSlot(false)
 	, m_currentKeyFrame(0)
 	, m_playTime(0)
+	, m_outputScreenIdx(0)
 {
+
+	m_mainOutput = new GLWidget();
+	m_mainOutput->setWindowTitle(QString("Live Output - LiveMix")/*.arg(m_output->name())*/);
+	m_mainOutput->setWindowIcon(QIcon(":/data/icon-d.png"));
+	m_mainOutput->resize(1000,750);
+	m_mainOutput->hide(); // keep hidden explicitly
+
 
 	qRegisterMetaType<VideoSource*>("VideoSource*");
 
@@ -173,6 +181,7 @@ void MainWindow::loadLiveScene(LiveScene *scene)
 
 	// attach to main viewer
 	scene->attachGLWidget(m_mainViewer);
+	scene->attachGLWidget(m_mainOutput);
 	
 	m_sceneModel->setLiveScene(scene);
 	
@@ -201,6 +210,7 @@ void MainWindow::removeCurrentScene()
 
 	disconnect(m_currentScene, 0, this, 0);
 	m_currentScene->detachGLWidget(m_mainViewer);
+	m_currentScene->detachGLWidget(m_mainOutput);
 
 	m_currentScene = 0;
 
@@ -260,7 +270,7 @@ void MainWindow::setCurrentLayer(LiveLayer *layer)
 	if(m_currentLayer)
 	{
 //  		qDebug() << "MainWindow::setCurrentLayer(): removing old layer from editor";
-		m_currentLayer->detachGLWidget(m_layerViewer);
+		//m_currentLayer->detachGLWidget(m_layerViewer);
 	}
 
 	m_currentLayer = layer;
@@ -271,7 +281,7 @@ void MainWindow::setCurrentLayer(LiveLayer *layer)
 		
 	if(m_currentLayer)
 	{
-		m_currentLayer->attachGLWidget(m_layerViewer);
+		//m_currentLayer->attachGLWidget(m_layerViewer);
 		
 		QModelIndex idx = m_sceneModel->indexForItem(m_currentLayer);
 		if(m_layerListView->currentIndex().row() != idx.row())
@@ -783,38 +793,38 @@ void MainWindow::createCenterPanel()
 	m_editSplitter = new QSplitter(m_mainSplitter);
 	m_editSplitter->setOrientation(Qt::Vertical);
 
-	m_layerViewer = new GLWidget(m_editSplitter);
-	m_layerViewer->setProperty("isEditorWidget",true);
-
-	QSize size = m_layerViewer->viewport().size().toSize();
-	size /= 2.5;
-	qDebug() << "MainWindow::createLeftPanel(): size:"<<size;
-	QImage bgImage(size, QImage::Format_ARGB32_Premultiplied);
-	QBrush bgTexture(QPixmap("squares2.png"));
-	QPainter bgPainter(&bgImage);
-	bgPainter.fillRect(bgImage.rect(), bgTexture);
-	bgPainter.end();
-
-	StaticVideoSource *source = new StaticVideoSource();
-	source->setImage(bgImage);
-	//source->setImage(QImage("squares2.png"));
-	source->start();
-	connect(this, SIGNAL(destroyed()), source, SLOT(deleteLater()));
-
-	GLVideoDrawable *drawable = new GLVideoDrawable(m_layerViewer);
-	drawable->setVideoSource(source);
-	drawable->setRect(m_layerViewer->viewport());
-	drawable->setZIndex(-100);
-	drawable->setObjectName("StaticBackground");
-	drawable->setAlignment(Qt::AlignAbsolute);
-	drawable->setBottomPercent(1.);
-	drawable->setRightPercent(1.);
-	drawable->show();
-
-	m_layerViewer->addDrawable(drawable);
-	
-	
-	m_editSplitter->addWidget(m_layerViewer);
+// 	m_layerViewer = new GLWidget(m_editSplitter);
+// 	m_layerViewer->setProperty("isEditorWidget",true);
+// 
+// 	QSize size = m_layerViewer->viewport().size().toSize();
+// 	size /= 2.5;
+// 	qDebug() << "MainWindow::createLeftPanel(): size:"<<size;
+// 	QImage bgImage(size, QImage::Format_ARGB32_Premultiplied);
+// 	QBrush bgTexture(QPixmap("squares2.png"));
+// 	QPainter bgPainter(&bgImage);
+// 	bgPainter.fillRect(bgImage.rect(), bgTexture);
+// 	bgPainter.end();
+// 
+// 	StaticVideoSource *source = new StaticVideoSource();
+// 	source->setImage(bgImage);
+// 	//source->setImage(QImage("squares2.png"));
+// 	source->start();
+// 	connect(this, SIGNAL(destroyed()), source, SLOT(deleteLater()));
+// 
+// 	GLVideoDrawable *drawable = new GLVideoDrawable(m_layerViewer);
+// 	drawable->setVideoSource(source);
+// 	drawable->setRect(m_layerViewer->viewport());
+// 	drawable->setZIndex(-100);
+// 	drawable->setObjectName("StaticBackground");
+// 	drawable->setAlignment(Qt::AlignAbsolute);
+// 	drawable->setBottomPercent(1.);
+// 	drawable->setRightPercent(1.);
+// 	drawable->show();
+// 
+// 	m_layerViewer->addDrawable(drawable);
+// 	
+// 	
+// 	m_editSplitter->addWidget(m_layerViewer);
 	
 	m_controlArea = new QScrollArea(m_editSplitter);
 	m_controlArea->setWidgetResizable(true);
@@ -989,9 +999,75 @@ void MainWindow::createToolBars()
 	m_fileToolBar->addAction(m_deleteLayerAct);
 	m_fileToolBar->addAction(m_duplicateLayerAct);
 	
+	m_fileToolBar->addSeparator();
+	m_fileToolBar->addWidget(new QLabel("Output:"));
+	
+	m_outputCombo = new QComboBox();
+	connect(m_outputCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(screenIndexChanged(int)));
+	
+	QDesktopWidget *desktopWidget = QApplication::desktop();
+	
+	QSettings settings;
+	m_outputScreenIdx = settings.value("MainWindow/last-screen-index",0).toInt();
+		
+	QStringList itemList;
+	int numScreens = desktopWidget->numScreens();
+	for(int screenNum = 0; screenNum < numScreens; screenNum ++)
+	{
+		QRect geom = desktopWidget->screenGeometry(screenNum);
+		
+		QString text = QString("Screen %1 at (%2 x %3)")
+			.arg(screenNum + 1)
+			.arg(geom.left())
+			.arg(geom.top());
+			
+		itemList << text;
+		m_screenList << geom;
+	}
+	
+	m_outputCombo->addItems(itemList);
+	m_outputCombo->setCurrentIndex(m_outputScreenIdx);
+	m_fileToolBar->addWidget(m_outputCombo);
+	
+	m_liveBtn = new QPushButton("Go Live");
+	m_liveBtn->setCheckable(true);
+	connect(m_liveBtn, SIGNAL(toggled(bool)), this, SLOT(showLiveOutput(bool)));
+	m_fileToolBar->addWidget(m_liveBtn);
+}
+
+void MainWindow::screenIndexChanged(int idx)
+{
+	if(idx < 0 || idx >= m_screenList.size())
+		return;
+		
+	QSettings settings;
+	settings.setValue("MainWindow/last-screen-index",idx);
+		
+	QRect geom = m_screenList[idx];
+	
+	//m_mainOutput->applyGeometry(geom);
+	//m_mainOutput->setVisible(true);
+	
+	//qDebug() << "VideoOutputWidget::applyGeometry(): rect: "<<rect;
+ 	//if(isFullScreen)
+ 		m_mainOutput->setWindowFlags(Qt::FramelessWindowHint | Qt::ToolTip);
+//  	else
+//  		m_mainOutput->setWindowFlags(Qt::FramelessWindowHint);
+				
+				
+	m_mainOutput->resize(geom.width(),geom.height());
+	m_mainOutput->move(geom.left(),geom.top());
+		
+	//m_mainOutput->show();
+	
 	
 }
 
+void MainWindow::showLiveOutput(bool flag)
+{
+	m_mainOutput->setVisible(flag);
+}
+	
 void MainWindow::createStatusBar()
 {
 	statusBar()->showMessage(tr("Ready"));

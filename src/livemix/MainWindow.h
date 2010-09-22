@@ -75,6 +75,9 @@ private slots:
 	
 	void duplicateLayer();
 	
+	void screenIndexChanged(int);
+	void showLiveOutput(bool flag=true);
+	
 private:
 	void createActions();
 	void createMenus();
@@ -174,6 +177,11 @@ private:
 	void showFrameForTime(double, bool forceApply=false);
 	void showFrame(const LiveScene::KeyFrame &frame);
 	void updateSceneTimeLength();
+	
+	QComboBox *m_outputCombo;
+	int m_outputScreenIdx;
+	QList<QRect> m_screenList;
+	QPushButton *m_liveBtn;
 };
 
 #endif

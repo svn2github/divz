@@ -137,18 +137,20 @@ int LiveLayer::id()
 // then calls createDrawable() internally, followed by initDrawable()
 GLDrawable* LiveLayer::drawable(GLWidget *widget)
 {
+	GLDrawable *drawable = 0;
 	if(m_drawables.contains(widget))
 	{
 // 		qDebug() << "LiveLayer::drawable: widget:"<<widget<<", cache hit";
-		return m_drawables[widget];
+
+		drawable = m_drawables[widget];
 	}
 	else
 	{
-		GLDrawable *drawable = createDrawable(widget);
+		drawable = createDrawable(widget);
 
 		bool wasEmpty = m_drawables.isEmpty();
 		m_drawables[widget] = drawable;
-
+		
 		if(wasEmpty)
 		{
  			//qDebug() << "LiveLayer::drawable: widget:"<<widget<<", cache miss, first drawable";
@@ -167,9 +169,13 @@ GLDrawable* LiveLayer::drawable(GLWidget *widget)
 		}
 		else
 			connect(this, SIGNAL(isVisible(bool)), drawable, SLOT(setVisible(bool)));
-
-		return drawable;
 	}
+	
+	// GLW_PROP_NUM_SCENES defined in LiveScene.h
+	int numLayers = widget->property(GLW_PROP_NUM_SCENES).toInt();
+	drawable->setZIndexModifier(numLayers);
+	
+	return drawable;
 }
 
 QWidget * LiveLayer::generatePropertyEditor(QObject *object, const char *property, const char *slot, PropertyEditorOptions opts, const char *changeSignal)

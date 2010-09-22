@@ -10,6 +10,9 @@ class GLWidget;
 
 #define LiveScene_Register(a) LiveScene::registerClass(a::staticMetaObject.className(), &a::staticMetaObject);
 
+#define GLW_PROP_NUM_SCENES "LiveScene/NumAttachedScenes"
+
+
 class LiveScene : public QObject
 {
 	Q_OBJECT
@@ -47,6 +50,8 @@ public:
 	void addLayer(LiveLayer*);
 	void removeLayer(LiveLayer*);
 	
+	// Only the first layer attached to a GLWidget manages the viewport - the rest just are along for the ride.
+	// Note that layers in each attached scene still respect the individual scenes canvas for layout
 	void attachGLWidget(GLWidget*);
 	void detachGLWidget(GLWidget*);
 	

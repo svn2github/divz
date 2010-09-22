@@ -76,24 +76,52 @@ void LiveVideoFileLayer::setVideo(QtVideoSource *vid)
 
 QWidget * LiveVideoFileLayer::createLayerPropertyEditors()
 {
+	//qDebug() << "LiveVideoFileLayer::createLayerPropertyEditors: mark1";
 	QWidget * base = new QWidget();
 	QVBoxLayout *blay = new QVBoxLayout(base);
 	blay->setContentsMargins(0,0,0,0);
 	
-	ExpandableWidget *groupContent = new ExpandableWidget("Video File",base);
+	ExpandableWidget *groupContent = new ExpandableWidget("Play List",base);
 	blay->addWidget(groupContent);
 	
 	QWidget *groupContentContainer = new QWidget;
-	QFormLayout *formLayout = new QFormLayout(groupContentContainer);
+	QGridLayout *formLayout = new QGridLayout(groupContentContainer);
 	formLayout->setContentsMargins(3,3,3,3);
 	
 	groupContent->setWidget(groupContentContainer);
 	
 	PropertyEditorOptions opts;
 	opts.stringIsFile = true;
+	opts.type = QVariant::String;
+	opts.value = "";
 	opts.fileTypeFilter = tr("Video Files (*.wmv *.mpeg *.mpg *.avi *.wmv *.flv *.mov *.mp4 *.m4a *.3gp *.3g2 *.mj2 *.mjpeg *.ipod *.m4v *.gsm *.swf *.dv *.dvd *.asf *.mtv *.roq *.aac *.ac3 *.aiff *.alaw *.iif);;Any File (*.*)");
 	
-	formLayout->addRow(tr("&File:"), generatePropertyEditor(this, "file", SLOT(setFile(const QString&)), opts));
+	int row = 0;
+	formLayout->addWidget(new QLabel(tr("Add File:")), row, 0);
+	formLayout->addWidget(generatePropertyEditor(this, "file", SLOT(addFile(const QString&)), opts), row, 1);
+	
+	row ++;
+	m_listWidget = new QListWidget(groupContentContainer);
+	formLayout->addWidget(m_listWidget, row, 0, 1, 2);
+	
+	row ++;
+	QWidget *buttonBase = new QWidget(groupContentContainer);
+	QHBoxLayout *hbox = new QHBoxLayout(buttonBase);
+	
+	QPushButton *moveItemUp = new QPushButton("Move Up");
+	hbox->addWidget(moveItemUp);
+	connect(moveItemUp, SIGNAL(clicked()), this, SLOT(btnMoveItemUp()));
+	
+	QPushButton *moveItemDown = new QPushButton("Move Down");
+	hbox->addWidget(moveItemDown);
+	connect(moveItemDown, SIGNAL(clicked()), this, SLOT(btnMoveItemDown()));
+	
+	QPushButton *delItem = new QPushButton("Remove File");
+	hbox->addWidget(delItem);
+	connect(delItem, SIGNAL(clicked()), this, SLOT(btnDelItem()));
+	formLayout->addWidget(buttonBase, row, 0, 1, 2);
+	
+	setupListWidget();
 	
  	
  	groupContent->setExpandedIfNoDefault(true);
@@ -106,45 +134,155 @@ QWidget * LiveVideoFileLayer::createLayerPropertyEditors()
 	return base;
 }
 
-void LiveVideoFileLayer::setFile(const QString& file)
+void LiveVideoFileLayer::setupListWidget()
 {
-	if(m_video && m_video->file() == file)
+	if(!m_listWidget)
 		return;
-		 
-	QFileInfo info(file);
 	
-	if(!info.exists())
+	m_listWidget->clear();
+	
+	QStringList list = fileList();
+	
+	foreach(QString file, list)
 	{
-		qDebug() << "LiveVideoFileLayer::setFile: File does not exist: "<<file;
+		QFileInfo info(file);
+		QListWidgetItem *item = new QListWidgetItem(info.fileName());
+		m_listWidget->addItem(item);
+	}
+}
+
+
+
+void LiveVideoFileLayer::btnDelItem()
+{
+	if(!m_listWidget)
 		return;
-	}
+		
+	QModelIndex idx = m_listWidget->currentIndex();
 	
-	if(m_video)
-	{
-		//m_video->stop();
-// 		m_video->quit();
-// 		m_video->deleteLater();
-// 		m_video = 0;
-		m_video->setFile(file);
-		m_video->player()->play();
-	}
-	else
+	if(!idx.isValid())
+		return;
+	
+	QStringList list = fileList();
+	if(list.isEmpty())
+		return;
+		
+	int row = idx.row();
+	if(row < 0 || row >= list.size())
+		return;
+		
+	list.removeAt(row);
+	
+	setFileList(list);
+}
+
+
+void LiveVideoFileLayer::btnMoveItemUp()
+{
+	if(!m_listWidget)
+		return;
+		
+	QModelIndex idx = m_listWidget->currentIndex();
+	
+	if(!idx.isValid())
+		return;
+	
+	QStringList list = fileList();
+	if(list.isEmpty())
+		return;
+		
+	int row = idx.row();
+	if(row < 1 || row >= list.size())
+		return;
+		
+	QString file = list.takeAt(row);
+	list.insert(row-1, file);
+	
+	setFileList(list);
+}
+
+void LiveVideoFileLayer::btnMoveItemDown()
+{
+	if(!m_listWidget)
+		return;
+		
+	QModelIndex idx = m_listWidget->currentIndex();
+	
+	if(!idx.isValid())
+		return;
+	
+	QStringList list = fileList();
+	if(list.isEmpty())
+		return;
+		
+	int row = idx.row();
+	if(row < 0 || row >= list.size()-1)
+		return;
+		
+	QString file = list.takeAt(row);
+	list.insert(row+1, file);
+	
+	setFileList(list);
+}
+
+void LiveVideoFileLayer::addFile(const QString& file)
+{
+	QStringList list = fileList();
+	list << file;
+	setFileList(list);
+}
+
+void LiveVideoFileLayer::setFileList(const QStringList& list)
+{
+	qDebug() << "LiveVideoFileLayer::setFileList: list: "<<list;
+	if(fileList() == list)
+		return;
+		
+	if(!m_video)
 	{
 	
 		#ifdef HAS_QT_VIDEO_SOURCE
-		qDebug() << "LiveVideoFileLayer::setFile: Loading file: "<<file;
+		//qDebug() << "LiveVideoFileLayer::setFile: Creating video source";
 		QtVideoSource *video = new QtVideoSource();
-		video->setFile(file);
-		video->start();
 		setVideo(video);
 		#else
 		qDebug() << "LiveVideoFileLayer::setFile: Unable to play any videos - not compiled with QtVideoSource or QtMobility.";
 		#endif
 	}
 	
-	m_props["file"] = file;
+	if(m_video)
+	{
+		QMediaPlaylist *medialist = playlist();
+		medialist->clear();
 	
-	setInstanceName(guessTitle(info.fileName()));
+		foreach(QString file, list)
+		{
+			QFileInfo info(file);
+			
+			if(!info.exists())
+			{
+				qDebug() << "LiveVideoFileLayer::setFileList: Warning: File does not exist: "<<file;
+				
+			}
+			else
+			{
+				QUrl url = QUrl::fromLocalFile(info.absoluteFilePath());
+				qDebug() << "LiveVideoFileLayer::setFileList: Adding media: "<<url;
+				if (info.suffix().toLower() == QLatin1String("m3u"))
+					medialist->load(url);
+				else
+					medialist->addMedia(url);
+			}
+		}
+		
+		m_video->player()->play();
+	}
+	
+	m_props["fileList"] = list;
+	
+	setupListWidget();
+
+	setInstanceName(guessTitle(QString("%1 Files").arg(list.size())));
 }
 
 QMediaPlaylist * LiveVideoFileLayer::playlist()
@@ -171,9 +309,9 @@ QMediaPlayer * LiveVideoFileLayer::player()
 
 void LiveVideoFileLayer::setLayerProperty(const QString& key, const QVariant& value)
 {
-	if(key == "file")
+	if(key == "fileList")
 	{
-		setFile(value.toString());
+		setFileList(value.toStringList());
 	}
 	else
 	if(m_video)
