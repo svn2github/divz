@@ -4,12 +4,13 @@
 #include "GLDrawable.h"
 
 GLWidget::GLWidget(QWidget *parent, QGLWidget *shareWidget)
-	: QGLWidget(parent, shareWidget)
+	: QGLWidget(QGLFormat(QGL::SampleBuffers),parent, shareWidget)
 	, m_glInited(false)
 {
 	setCanvasSize(QSizeF(1000.,750.));
 	// setViewport() will use canvas size by default to construct a rect
 	setViewport(QRectF());
+	//qDebug() << "GLWidget::doubleBuffered: "<<doubleBuffer();
 }
 
 GLWidget::~GLWidget()
@@ -120,18 +121,20 @@ void GLWidget::resizeGL(int width, int height)
 	//glViewport(0,0,width,height); //(width - side) / 2, (height - side) / 2, side, side);
 	glViewport(0,0,width,height); //(width - side) / 2, (height - side) / 2, side, side);
 	
+	//qDebug() << "GLWidget::resizeGL: "<<width<<","<<height;
 	setViewport(viewport());
 }
 	
 void GLWidget::setViewport(const QRectF& rect)
 {
 	m_viewport = rect;
+	//qDebug() << "GLWidget::setViewport: "<<rect;
 	
 	QRectF viewport = m_viewport;
 	if(!viewport.isValid())
 	{
 		QSizeF canvas = m_canvasSize;
-		if(canvas.isNull())
+		if(canvas.isNull() || !canvas.isValid())
 			canvas = QSizeF(1000.,750.);
 		viewport = QRectF(QPointF(0.,0.),canvas);
 	}
@@ -166,6 +169,8 @@ void GLWidget::setViewport(const QRectF& rect)
 	//qDebug() <<"GLWidget::setViewport(): size:"<<size;
 	foreach(GLDrawable *drawable, m_drawables)
 		drawable->viewportResized(size);
+	
+	updateGL();
 
 /*#if !defined(QT_OPENGL_ES_2)
 	glMatrixMode(GL_PROJECTION);

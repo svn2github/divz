@@ -806,6 +806,9 @@ void MainWindow::createCenterPanel()
 	drawable->setRect(m_layerViewer->viewport());
 	drawable->setZIndex(-100);
 	drawable->setObjectName("StaticBackground");
+	drawable->setAlignment(Qt::AlignAbsolute);
+	drawable->setBottomPercent(1.);
+	drawable->setRightPercent(1.);
 	drawable->show();
 
 	m_layerViewer->addDrawable(drawable);

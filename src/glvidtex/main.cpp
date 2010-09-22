@@ -398,10 +398,22 @@ int main(int argc, char *argv[])
 	
 	glw->resize(glw->canvasSize().width(),glw->canvasSize().height());
 	
-	glw->setViewport(QRectF(-764,-572,764*3,572*3));
+	double ar = 572./764.;
+	//glw->setViewport(QRectF(-764,-572,764*3,572*3));
+	glw->setViewport(QRectF(0,0,200.,200.*ar));
 	
 	glw->show();
 	
+	QPropertyAnimation *animation = new QPropertyAnimation(glw, "viewport");
+	animation->setDuration(10000);
+	//animation->setStartValue(QRect(0, 0, 100, 30));
+	QRect endRect = QRect(764-200, 572-200.*ar, 200.,200.*ar);
+	//qDebug() << "End Rect: "<<endRect<<", start:"<<glw->viewport();
+	animation->setEndValue(endRect);
+	animation->start();
+	//QTimer::singleShot(500,animation, SLOT(start()));
+	
+
 	int x = app.exec();
 	delete glw;
 	return x;

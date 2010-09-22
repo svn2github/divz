@@ -49,6 +49,9 @@ class GLDrawable : public QObject
 	Q_PROPERTY(QVector3D rotation READ rotation WRITE setRotation);
 	// Expressed in a range of 0..1 as a percentage of the relevant size (e.g. (.5,.5,.5) means rotate around center, the default value)
 	Q_PROPERTY(QVector3D rotationPoint READ rotationPoint WRITE setRotationPoint);
+	
+	// This is the usable area for arranging the drawable - if isNull, then it uses the GLWidget's canvas size
+	Q_PROPERTY(QSizeF canvasSize READ canvasSize WRITE setCanvasSize);
 
 	Q_ENUMS(AnimationType);
 
@@ -130,6 +133,9 @@ public:
 	QVector3D translation() { return m_translation; }
 	QVector3D rotation() { return m_rotation; }
 	QVector3D rotationPoint() { return m_rotationPoint; }
+	
+	// If m_canvasSize isNull, returns the GLWidget's canvas size
+	QSizeF canvasSize();
 
 public slots:
 	void setRect(const QRectF& rect);
@@ -159,6 +165,8 @@ public slots:
 	void setRotation(QVector3D value);
 	// Expressed in a range of 0..1 as a percentage of the relevant size (e.g. (.5,.5,.5) means rotate around center, the default value)
 	void setRotationPoint(QVector3D value);
+	
+	void setCanvasSize(const QSizeF&);
 	
 signals:
 	void zIndexChanged(double newZIndex);
@@ -233,6 +241,8 @@ private:
 	double m_leftPercent;
 	double m_bottomPercent;
 	double m_rightPercent;
+	
+	QSizeF m_canvasSize;
 	
 	// Used by code to prevent two animations from running on same prop at same time
 	QHash<QString,QPropertyAnimation*> m_propAnims;

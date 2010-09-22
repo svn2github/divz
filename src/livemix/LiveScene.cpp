@@ -113,6 +113,7 @@ void LiveScene::KeyFrame::fromByteArray(QByteArray& array)
 LiveScene::LiveScene(QObject *parent)
 	: QObject(parent)
 	, m_canvasSize(1000.,750.)
+	, m_viewport(QRectF()) // explicitly set a NULL rect so as to remind us how it starts out
 {}
 
 LiveScene::~LiveScene()
@@ -146,10 +147,11 @@ void LiveScene::addLayer(LiveLayer *layer)
 	{
 		m_layers.append(layer);
 		m_idLookup[layer->id()] = layer;
+		layer->setScene(this);
+		
 		foreach(GLWidget *glw, m_glWidgets)
 			layer->attachGLWidget(glw);
 
-		layer->setScene(this);
 		emit layerAdded(layer);
 	}
 }
@@ -179,6 +181,10 @@ void LiveScene::attachGLWidget(GLWidget *glw)
 	
 	connect(this, SIGNAL(canvasSizeChanged(const QSizeF&)), glw, SLOT(setCanvasSize(const QSizeF&)));
 	connect(this, SIGNAL(viewportChanged(const QRectF&)),   glw, SLOT(setViewport(const QRectF&)));
+	
+	//glw->setCanvasSize(canvasSize());
+	glw->setViewport(viewport());
+	//qDebug() << "LiveScene::attachGLWidget: canvasSize:"<<canvasSize()<<", viewport:"<<viewport();
 
 	foreach(LiveLayer *layer, m_layers)
 		layer->attachGLWidget(glw);
@@ -213,6 +219,12 @@ void LiveScene::fromByteArray(QByteArray& array)
 	
 	qDeleteAll(m_layers);
 	m_layers.clear();
+	
+	m_canvasSize = map["canvasSize"].toSizeF();
+	m_viewport   = map["viewport"].toRectF();
+	
+	if(!m_canvasSize.isValid() || m_canvasSize.isNull()) // probably an old file with no size set
+		m_canvasSize = QSizeF(1000.,750.);
 	
 	QVariantList layers = map["layers"].toList();
 	foreach(QVariant layer, layers)
@@ -289,6 +301,9 @@ QByteArray LiveScene::toByteArray()
 	QVariantList list;
 	if(m_layers.isEmpty())
 		return array;
+		
+	map["canvasSize"] = m_canvasSize;
+	map["viewport"]   = m_viewport;
 		
 	foreach(LiveLayer *layer, m_layers)
 	{

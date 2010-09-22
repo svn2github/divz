@@ -189,7 +189,7 @@ bool operator==(const GLDrawable::AnimParam&a, const GLDrawable::AnimParam&b)
 
 void GLDrawable::startAnimation(const GLDrawable::AnimParam& p)
 {
-	QSizeF viewport = m_glw ? m_glw->canvasSize() : QSizeF(1000,750);
+	QSizeF viewport = canvasSize();
 	bool inFlag = m_animDirection;
 
 	QAutoDelPropertyAnimation *ani = 0;
@@ -428,8 +428,8 @@ void GLDrawable::updateAlignment(bool animateRect, int animLength, QEasingCurve 
 	qreal x = 0, y = 0,
 		w = size.width()  * alignedSizeScale(),
 		h = size.height() * alignedSizeScale();
-	qreal vw = m_glw->canvasSize().width(),
-	      vh = m_glw->canvasSize().height();
+	qreal vw = canvasSize().width(),
+	      vh = canvasSize().height();
 
 	//qDebug() << "GLDrawable::updateAlignment: w:"<<w<<", h:"<<h<<", alignedSizeScale:"<<alignedSizeScale();
 
@@ -534,7 +534,7 @@ void GLDrawable::setGLWidget(GLWidget* w)
 		return;
 
 	if(m_rect.isNull())
-		m_rect = QRectF(QPointF(0,0),m_glw->canvasSize());
+		m_rect = QRectF(QPointF(0,0),canvasSize());
 
 	updateAlignment();
 	
@@ -543,6 +543,19 @@ void GLDrawable::setGLWidget(GLWidget* w)
 		m_animPendingGlWidget = false;
 		startAnimations();
 	}
+}
+
+QSizeF GLDrawable::canvasSize()
+{
+	if(m_canvasSize.isNull() || !m_canvasSize.isValid())
+		return m_glw ? m_glw->canvasSize() : QSizeF(1000.,750.);
+	return m_canvasSize;
+}
+
+void GLDrawable::setCanvasSize(const QSizeF& size)
+{
+	m_canvasSize = size;
+	canvasResized(size);
 }
 
 void GLDrawable::viewportResized(const QSize& /*newSize*/)

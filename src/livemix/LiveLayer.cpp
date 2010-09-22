@@ -1060,6 +1060,12 @@ GLDrawable *LiveLayer::createDrawable(GLWidget */*widget*/)
 // If not first drawable, load drawable with values from m_props[]
 void LiveLayer::initDrawable(GLDrawable *drawable, bool /*isFirstDrawable*/)
 {
+	if(m_scene)
+	{
+		connect(m_scene, SIGNAL(canvasSizeChanged(const QSizeF&)), drawable, SLOT(setCanvasSize(const QSizeF)));
+		drawable->setCanvasSize(m_scene->canvasSize());
+	}
+	
  	//qDebug() << "LiveLayer::initDrawable: drawable:"<<drawable;
 	bool animEnabled = setAnimEnabled(false);
 	
@@ -1357,6 +1363,14 @@ void LiveLayer::setScene(LiveScene *scene)
 	  	LiveLayer *layer = m_scene->layerFromId(showOnShowLayerId());
 	  	if(layer)
 			setShowOnShow(layer);
+	  }
+	  
+	QList<GLDrawable *> drawables = m_drawables.values();
+	
+	foreach(GLDrawable *drawable, drawables)
+	{
+		connect(m_scene, SIGNAL(canvasSizeChanged(const QSizeF&)), drawable, SLOT(setCanvasSize(const QSizeF)));
+		drawable->setCanvasSize(m_scene->canvasSize());
 	}
 }
 
