@@ -53,7 +53,8 @@ HEADERS += CameraThread.h \
 	LiveVideoFileLayer.h \
 	LiveSceneListModel.h \
 	EditorUtilityWidgets.h \
-	LiveVideoLoopLayer.h 
+	LiveVideoLoopLayer.h \
+	PlaylistModel.h
 	
 SOURCES += main.cpp \
 	CameraThread.cpp \
@@ -89,7 +90,8 @@ SOURCES += main.cpp \
 	LiveVideoFileLayer.cpp \
 	LiveSceneListModel.cpp \
 	EditorUtilityWidgets.cpp \
-	LivevideoLoopLayer.cpp
+	LivevideoLoopLayer.cpp \
+	PlaylistModel.cpp
 
 
 unix {
@@ -148,5 +150,6 @@ mobility: {
 }
 else: {
         message("QtMobility not enabled (use qmake CONFIG+=mobility and ensure $$QT_MOBILITY_HOME exists), QtVideoSource will not be built.")
-        DEFINES -= QT_MOBILITY_ENABLED
+        DEFINES -= QT_MOBILITY_ENABLED \
+                   HAS_QT_VIDEO_SOURCE
 }

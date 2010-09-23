@@ -11,6 +11,9 @@ class VideoThread;
 class QtVideoSource;
 class QMediaPlaylist;
 class QMediaPlayer;
+class QAbstractItemView;
+class QModelIndex;
+class PlaylistModel;
 
 class LiveVideoFileLayer : public LiveVideoLayer
 {
@@ -42,6 +45,8 @@ private slots:
 	void btnDelItem();
 	void btnMoveItemUp();
 	void btnMoveItemDown();
+	void playlistJump(const QModelIndex&);
+	void playlistPositionChanged(int);
 
 protected:
 	virtual GLDrawable *createDrawable(GLWidget *widget);
@@ -56,8 +61,11 @@ protected:
 private:
 	QtVideoSource *m_video;
 	
-	QPointer<QListWidget> m_listWidget;
+	//QPointer<QListWidget> m_listWidget;
 	void setupListWidget();
+	
+	QPointer<QAbstractItemView> m_playlistView;
+	PlaylistModel *m_playlistModel;
 };
 
 #endif

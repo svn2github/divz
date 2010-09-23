@@ -2,23 +2,22 @@
 - CameraThread: Integrate more advanced deinterlacing methods, such as those in http://tvtime.sourceforge.net/
 
 - Integrate Qt Graphics Dojo blog - htmleditor - into editing text
-#- Fix text jumpiness - jumps as you type on screen somtimes
 - Add fade in/out offsets
 
 - Add read signal for prop editors - even more important now with key framing , etc
 	- tried, not working right now
 	
 - For videos, add a timeline, and pause/play/ff/rw actions
-- Get rid of the 'preview' viewer - not really needed
 - Add mouse support to GLWidget for picking, moving
-- Add 3D translation of GL Video Drawables
 - Add cross fading for text and static sources
 - Add canvas size setting methods 
 - Add "camera" point (viewport) movement...?
-- Add "duplicate layer" functionality
 
-Structure:
+- Add a 'location editor widget' instead of just the percentage sliders
+	- Add ability to lock size to an aspect ratio
+	- Add display of aspect ratio
 
-	Output
-	
-	Switch to one or more layer "setups"
+- Add 'draw a border' around video if desired (for position on screen)
+
+- Add text scroller methods
+

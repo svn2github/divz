@@ -1,8 +1,11 @@
 #include <QFileInfo>
 #include "LiveVideoFileLayer.h"
 #include "ExpandableWidget.h"
+#include "EditorUtilityWidgets.h"
 #include "../glvidtex/GLWidget.h"
 #include "../glvidtex/GLVideoDrawable.h"
+
+#include "PlaylistModel.h"
 
 #ifdef HAS_QT_VIDEO_SOURCE
 #include "../glvidtex/QtVideoSource.h"
@@ -16,6 +19,7 @@ class QtVideoSource
 LiveVideoFileLayer::LiveVideoFileLayer(QObject *parent)
 	: LiveVideoLayer(parent)
 	, m_video(0)
+	, m_playlistModel(0)
 {
 }
 
@@ -70,7 +74,7 @@ void LiveVideoFileLayer::setVideo(QtVideoSource *vid)
 	#ifdef HAS_QT_VIDEO_SOURCE
 	setVideoSource(vid);
 	m_video = vid;
-	setInstanceName(guessTitle(QFileInfo(vid->file()).baseName()));
+	//setInstanceName(guessTitle(QFileInfo(vid->file()).baseName()));
 	#endif
 }
 
@@ -90,41 +94,59 @@ QWidget * LiveVideoFileLayer::createLayerPropertyEditors()
 	
 	groupContent->setWidget(groupContentContainer);
 	
-	PropertyEditorOptions opts;
-	opts.stringIsFile = true;
-	opts.type = QVariant::String;
-	opts.value = "";
-	opts.fileTypeFilter = tr("Video Files (*.wmv *.mpeg *.mpg *.avi *.wmv *.flv *.mov *.mp4 *.m4a *.3gp *.3g2 *.mj2 *.mjpeg *.ipod *.m4v *.gsm *.swf *.dv *.dvd *.asf *.mtv *.roq *.aac *.ac3 *.aiff *.alaw *.iif);;Any File (*.*)");
-	
 	int row = 0;
-	formLayout->addWidget(new QLabel(tr("Add File:")), row, 0);
-	formLayout->addWidget(generatePropertyEditor(this, "file", SLOT(addFile(const QString&)), opts), row, 1);
+	//m_listWidget = new QListWidget(groupContentContainer);
+	m_playlistView = new QListView(groupContentContainer);
 	
-	row ++;
-	m_listWidget = new QListWidget(groupContentContainer);
-	formLayout->addWidget(m_listWidget, row, 0, 1, 2);
+        if(!m_playlistModel)
+	{
+		m_playlistModel = new PlaylistModel(this);
+		if(m_video)
+		{
+			m_playlistModel->setPlaylist(m_video->playlist());
+			connect(m_video->playlist(), SIGNAL(currentIndexChanged(int)), this, SLOT(playlistPositionChanged(int)));
+		}
+	}
+
+	
+	m_playlistView->setModel(m_playlistModel);
+	if(m_video)
+        	m_playlistView->setCurrentIndex(m_playlistModel->index(m_video->playlist()->currentIndex(), 0));
+
+	connect(m_playlistView, SIGNAL(activated(const QModelIndex&)), this, SLOT(playlistJump(const QModelIndex&)));
+
+	formLayout->addWidget(m_playlistView, row, 0, 1, 2);
 	
 	row ++;
 	QWidget *buttonBase = new QWidget(groupContentContainer);
 	QHBoxLayout *hbox = new QHBoxLayout(buttonBase);
+	formLayout->addWidget(buttonBase, row, 0, 1, 2);
 	
-	QPushButton *moveItemUp = new QPushButton("Move Up");
+	QPushButton *addItem = new QPushButton(QPixmap("../data/stock-open.png"),"Add File...");
+	hbox->addWidget(addItem);
+	
+	BrowseDialogLauncher *setter = new BrowseDialogLauncher(this, SLOT(addFile(const QString&)), "");
+	setter->setFilter(tr("Video Files (*.wmv *.mpeg *.mpg *.avi *.wmv *.flv *.mov *.mp4 *.m4a *.3gp *.3g2 *.mj2 *.mjpeg *.ipod *.m4v *.gsm *.swf *.dv *.dvd *.asf *.mtv *.roq *.aac *.ac3 *.aiff *.alaw *.iif);;Any File (*.*)"));
+	connect(addItem, SIGNAL(clicked()), setter, SLOT(browse()));
+	
+	QPushButton *moveItemUp = new QPushButton(QPixmap("../data/stock-go-up.png"),"Move Up");
 	hbox->addWidget(moveItemUp);
 	connect(moveItemUp, SIGNAL(clicked()), this, SLOT(btnMoveItemUp()));
 	
-	QPushButton *moveItemDown = new QPushButton("Move Down");
+	QPushButton *moveItemDown = new QPushButton(QPixmap("../data/stock-go-down.png"),"Move Down");
 	hbox->addWidget(moveItemDown);
 	connect(moveItemDown, SIGNAL(clicked()), this, SLOT(btnMoveItemDown()));
 	
-	QPushButton *delItem = new QPushButton("Remove File");
+	QPushButton *delItem = new QPushButton(QPixmap("../data/stock-delete.png"),"Remove File");
 	hbox->addWidget(delItem);
 	connect(delItem, SIGNAL(clicked()), this, SLOT(btnDelItem()));
 	formLayout->addWidget(buttonBase, row, 0, 1, 2);
 	
-	setupListWidget();
+	hbox->addStretch(1);
 	
- 	
- 	groupContent->setExpandedIfNoDefault(true);
+	setupListWidget();
+		
+	groupContent->setExpandedIfNoDefault(true);
 	
 	/////////////////////////////////////////
 	
@@ -134,102 +156,123 @@ QWidget * LiveVideoFileLayer::createLayerPropertyEditors()
 	return base;
 }
 
+void LiveVideoFileLayer::playlistJump(const QModelIndex &index)
+{
+	if(m_video && index.isValid()) 
+		m_video->playlist()->setCurrentIndex(index.row());
+}
+
+void LiveVideoFileLayer::playlistPositionChanged(int currentItem)
+{
+	if(m_playlistView)
+		m_playlistView->setCurrentIndex(m_playlistModel->index(currentItem, 0));
+}
+
+
+
 void LiveVideoFileLayer::setupListWidget()
 {
-	if(!m_listWidget)
-		return;
-	
-	m_listWidget->clear();
-	
-	QStringList list = fileList();
-	
-	foreach(QString file, list)
-	{
-		QFileInfo info(file);
-		QListWidgetItem *item = new QListWidgetItem(info.fileName());
-		m_listWidget->addItem(item);
-	}
+// 	if(!m_listWidget)
+// 		return;
+// 	
+// 	m_listWidget->clear();
+// 	
+// 	QStringList list = fileList();
+// 	
+// 	foreach(QString file, list)
+// 	{
+// 		QFileInfo info(file);
+// 		QListWidgetItem *item = new QListWidgetItem(info.fileName());
+// 		m_listWidget->addItem(item);
+// 	}
 }
 
 
 
 void LiveVideoFileLayer::btnDelItem()
 {
-	if(!m_listWidget)
+	if(!m_video || !m_playlistView)
 		return;
 		
-	QModelIndex idx = m_listWidget->currentIndex();
-	
+	QMediaPlaylist *list = m_video->playlist();
+	QModelIndex idx = m_playlistView->currentIndex();
 	if(!idx.isValid())
 		return;
-	
-	QStringList list = fileList();
-	if(list.isEmpty())
-		return;
 		
-	int row = idx.row();
-	if(row < 0 || row >= list.size())
-		return;
-		
-	list.removeAt(row);
-	
-	setFileList(list);
+	qDebug() << "LiveVideoFileLayer::btnDelItem(): idx: "<<idx.row();
+	list->removeMedia(idx.row());
 }
 
 
 void LiveVideoFileLayer::btnMoveItemUp()
 {
-	if(!m_listWidget)
+	if(!m_video || !m_playlistView)
 		return;
 		
-	QModelIndex idx = m_listWidget->currentIndex();
-	
+	QMediaPlaylist *list = m_video->playlist();
+	QModelIndex idx = m_playlistView->currentIndex();
 	if(!idx.isValid())
 		return;
-	
-	QStringList list = fileList();
-	if(list.isEmpty())
-		return;
-		
 	int row = idx.row();
-	if(row < 1 || row >= list.size())
+		
+	qDebug() << "LiveVideoFileLayer::btnMoveItemUp(): row: "<<row;
+	
+	if(row < 1)
 		return;
 		
-	QString file = list.takeAt(row);
-	list.insert(row-1, file);
+	QMediaContent content = list->media(row);
+	list->removeMedia(row);
+	list->insertMedia(row-1,content);
 	
-	setFileList(list);
+	m_playlistView->setCurrentIndex(m_playlistModel->index(row-1, 0));
 }
 
 void LiveVideoFileLayer::btnMoveItemDown()
 {
-	if(!m_listWidget)
+	if(!m_video || !m_playlistView)
 		return;
 		
-	QModelIndex idx = m_listWidget->currentIndex();
-	
+	QMediaPlaylist *list = m_video->playlist();
+	QModelIndex idx = m_playlistView->currentIndex();
 	if(!idx.isValid())
 		return;
-	
-	QStringList list = fileList();
-	if(list.isEmpty())
-		return;
-		
 	int row = idx.row();
-	if(row < 0 || row >= list.size()-1)
+	
+	qDebug() << "LiveVideoFileLayer::btnMoveItemDown(): row: "<<row;
+	
+	if(row >= list->mediaCount())
 		return;
 		
-	QString file = list.takeAt(row);
-	list.insert(row+1, file);
+	QMediaContent content = list->media(row);
+	list->removeMedia(row);
+	list->insertMedia(row+1,content);
 	
-	setFileList(list);
+	m_playlistView->setCurrentIndex(m_playlistModel->index(row+1, 0));
 }
 
 void LiveVideoFileLayer::addFile(const QString& file)
 {
 	QStringList list = fileList();
 	list << file;
-	setFileList(list);
+	setInstanceName(guessTitle(QString("%1 Files").arg(list.size())));
+	
+	if(!m_video)
+		return;
+	
+	QFileInfo info(file);
+	if(!info.exists())
+	{
+		qDebug() << "LiveVideoFileLayer::addFile: Warning: File does not exist: "<<file;
+		
+	}
+	else
+	{
+		QUrl url = QUrl::fromLocalFile(info.absoluteFilePath());
+		qDebug() << "LiveVideoFileLayer::addFile: Adding media: "<<url;
+		m_video->playlist()->addMedia(url);
+		
+		m_playlistView->setCurrentIndex(m_playlistModel->index(m_video->playlist()->mediaCount()-1, 0));
+	}
 }
 
 void LiveVideoFileLayer::setFileList(const QStringList& list)
@@ -275,6 +318,7 @@ void LiveVideoFileLayer::setFileList(const QStringList& list)
 			}
 		}
 		
+		m_video->playlist()->setCurrentIndex(0);
 		m_video->player()->play();
 	}
 	
