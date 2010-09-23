@@ -5,7 +5,7 @@
 #include "../glvidtex/TextVideoSource.h"
 
 #include "ExpandableWidget.h"
-#include <qtcolorpicker.h>
+//#include <qtcolorpicker.h>
 
 ///////////////////////
 

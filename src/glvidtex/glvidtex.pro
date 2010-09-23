@@ -42,7 +42,13 @@ unix: {
 RESOURCES     = glvidtex.qrc
 QT           += opengl multimedia
 
-QT_MOBILITY_HOME = /opt/qt-mobility-opensource-src-1.0.1
+
+win32 {
+    QT_MOBILITY_HOME = C:/Qt/qt-mobility-opensource-src-1.0.2
+}
+unix {
+    QT_MOBILITY_HOME = /opt/qt-mobility-opensource-src-1.0.1
+}
 	
 # To enable, use: qmake CONFIG+=mobility, and make sure QT_MOBILITY_HOME is correct
 # To run: Make sure QT_PLUGIN_PATH has $QT_MOBILITY_HOME/plugins added, else media will not play

@@ -8,6 +8,8 @@
 #include "StaticVideoSource.h"
 #include "TextVideoSource.h"
 
+//#define HAS_QT_VIDEO_SOURCE
+
 #ifdef HAS_QT_VIDEO_SOURCE
 #include "QtVideoSource.h"
 #endif
@@ -24,7 +26,7 @@ GLDrawable * addCamera(GLWidget *glw, QString camera = "")
 	if(source)
 	{
 		source->setFps(30);
-		usleep(750 * 1000); // This causes a race condition to manifist itself reliably, which causes a crash every time instead of intermitently. 
+                //usleep(750 * 1000); // This causes a race condition to manifist itself reliably, which causes a crash every time instead of intermitently.
 		// With the crash reproducable, I can now work to fix it.
 		source->enableRawFrames(true);
 		//source->setDeinterlace(true);
@@ -68,8 +70,8 @@ GLDrawable * addQtSource(GLWidget * glw)
 	#ifdef HAS_QT_VIDEO_SOURCE
 	//QString testFile = "/opt/qt-mobility-opensource-src-1.0.1/examples/player/dsc_7721.avi";
 	//QString testFile = "dsc_0259.avi";
-	//QString testFile = "/root/Download/SermonSpice/92_Churchfamily.mpg";
-	QString testFile = "../Unicorn.mpg";
+        QString testFile = "P:/Video/SermonSpice/92_Churchfamily.mpg";
+        //QString testFile = "../Unicorn.mpg";
 	//QString testFile = "2010-08-01-Rocky.mpg";
 	//QString testFile = "2009-07-25-ACB-Singing.mpg";
 	QtVideoSource *source = new QtVideoSource();
@@ -337,6 +339,7 @@ QFormLayout * createToggleBox()
 
 void addButtons(QFormLayout *layout, GLDrawable *glw)
 {
+        return;
 	QHBoxLayout *box = new QHBoxLayout;
 	
 	QPushButton *show = new QPushButton("Show");
@@ -364,7 +367,7 @@ int main(int argc, char *argv[])
 		
 	QFormLayout * tb = createToggleBox();
 	
-	//addButtons(tb, addQtSource(glw));
+        addButtons(tb, addQtSource(glw));
 	
 	#undef HAS_QT_VIDEO_SOURCE
 	#ifdef HAS_QT_VIDEO_SOURCE
@@ -392,7 +395,7 @@ int main(int argc, char *argv[])
 // 	addButtons(tb,addVideoBug(glw));
 // 	addButtons(tb,addTextOverlay(glw));
 	
-	addButtons(tb,addStaticSource(glw));
+        //addButtons(tb,addStaticSource(glw));
 	
 	glw->setCanvasSize(764,572);
 	
