@@ -129,21 +129,32 @@ QWidget * LiveVideoFileLayer::createLayerPropertyEditors()
 	setter->setFilter(tr("Video Files (*.wmv *.mpeg *.mpg *.avi *.wmv *.flv *.mov *.mp4 *.m4a *.3gp *.3g2 *.mj2 *.mjpeg *.ipod *.m4v *.gsm *.swf *.dv *.dvd *.asf *.mtv *.roq *.aac *.ac3 *.aiff *.alaw *.iif);;Any File (*.*)"));
 	connect(addItem, SIGNAL(clicked()), setter, SLOT(browse()));
 	
-	QPushButton *moveItemUp = new QPushButton(QPixmap("../data/stock-go-up.png"),"Move Up");
+	QPushButton *delItem = new QPushButton(QPixmap("../data/stock-delete.png"),"Remove");
+	hbox->addWidget(delItem);
+	connect(delItem, SIGNAL(clicked()), this, SLOT(btnDelItem()));
+	
+	QPushButton *moveItemUp = new QPushButton(QPixmap("../data/stock-go-up.png"),"");
 	hbox->addWidget(moveItemUp);
 	connect(moveItemUp, SIGNAL(clicked()), this, SLOT(btnMoveItemUp()));
 	
-	QPushButton *moveItemDown = new QPushButton(QPixmap("../data/stock-go-down.png"),"Move Down");
+	QPushButton *moveItemDown = new QPushButton(QPixmap("../data/stock-go-down.png"),"");
 	hbox->addWidget(moveItemDown);
 	connect(moveItemDown, SIGNAL(clicked()), this, SLOT(btnMoveItemDown()));
 	
-	QPushButton *delItem = new QPushButton(QPixmap("../data/stock-delete.png"),"Remove File");
-	hbox->addWidget(delItem);
-	connect(delItem, SIGNAL(clicked()), this, SLOT(btnDelItem()));
+	if(m_video)
+	{
+		QPushButton *playBtn = new QPushButton(qApp->style()->standardIcon(QStyle::SP_MediaPlay),"");
+		hbox->addWidget(playBtn);
+		connect(playBtn, SIGNAL(clicked()), m_video->player(), SLOT(play()));
+		
+		QPushButton *pauseBtn = new QPushButton(qApp->style()->standardIcon(QStyle::SP_MediaPause),"");
+		hbox->addWidget(pauseBtn);
+		connect(pauseBtn, SIGNAL(clicked()), m_video->player(), SLOT(pause()));
+	}
+
+	
+	
 	formLayout->addWidget(buttonBase, row, 0, 1, 2);
-	
-	hbox->addStretch(1);
-	
 	setupListWidget();
 		
 	groupContent->setExpandedIfNoDefault(true);
@@ -254,10 +265,14 @@ void LiveVideoFileLayer::addFile(const QString& file)
 {
 	QStringList list = fileList();
 	list << file;
+	m_props["fileList"] = list;
 	setInstanceName(guessTitle(QString("%1 Files").arg(list.size())));
 	
 	if(!m_video)
+	{
+		setFileList(list);
 		return;
+	}
 	
 	QFileInfo info(file);
 	if(!info.exists())
@@ -278,7 +293,8 @@ void LiveVideoFileLayer::addFile(const QString& file)
 void LiveVideoFileLayer::setFileList(const QStringList& list)
 {
 	qDebug() << "LiveVideoFileLayer::setFileList: list: "<<list;
-	if(fileList() == list)
+	if(m_video && 
+	   fileList() == list)
 		return;
 		
 	if(!m_video)
@@ -300,6 +316,9 @@ void LiveVideoFileLayer::setFileList(const QStringList& list)
 	
 		foreach(QString file, list)
 		{
+			if(file.isEmpty())
+				continue;
+				
 			QFileInfo info(file);
 			
 			if(!info.exists())
