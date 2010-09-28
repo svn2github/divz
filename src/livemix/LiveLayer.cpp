@@ -514,22 +514,24 @@ QWidget * LiveLayer::createLayerPropertyEditors()
 	opts.doubleIsPercentage = true;
 	formLayout->addRow(tr("&Scale Size:"), m_propWidget["sizeScale"] = generatePropertyEditor(this, "alignedSizeScale", SLOT(setAlignedSizeScale(int)), opts));
 	
-	opts.reset();
-	opts.suffix = "%";
-	opts.min = -100;
-	opts.max =  200;
-	opts.step = 10;
-	opts.type = QVariant::Int;
-	opts.doubleIsPercentage = true;
-	
-	opts.defaultValue = 0;
-	formLayout->addRow(tr("&Top:"), 	m_propWidget["topPercent"]	= generatePropertyEditor(this, "topPercent", SLOT(setTopPercent(int)), opts));
-	formLayout->addRow(tr("&Left:"), 	m_propWidget["leftPercent"]	= generatePropertyEditor(this, "leftPercent", SLOT(setLeftPercent(int)), opts));
-	
-	opts.defaultValue = 100;
-	formLayout->addRow(tr("&Bottom:"), 	m_propWidget["bottomPercent"]	= generatePropertyEditor(this, "bottomPercent", SLOT(setBottomPercent(int)), opts));
-	formLayout->addRow(tr("&Right:"), 	m_propWidget["rightPercent"]	= generatePropertyEditor(this, "rightPercent", SLOT(setRightPercent(int)), opts));
+// 	opts.reset();
+// 	opts.suffix = "%";
+// 	opts.min = -100;
+// 	opts.max =  200;
+// 	opts.step = 10;
+// 	opts.type = QVariant::Int;
+// 	opts.doubleIsPercentage = true;
+// 	
+// 	opts.defaultValue = 0;
+// 	formLayout->addRow(tr("&Top:"), 	m_propWidget["topPercent"]	= generatePropertyEditor(this, "topPercent", SLOT(setTopPercent(int)), opts));
+// 	formLayout->addRow(tr("&Left:"), 	m_propWidget["leftPercent"]	= generatePropertyEditor(this, "leftPercent", SLOT(setLeftPercent(int)), opts));
+// 	
+// 	opts.defaultValue = 100;
+// 	formLayout->addRow(tr("&Bottom:"), 	m_propWidget["bottomPercent"]	= generatePropertyEditor(this, "bottomPercent", SLOT(setBottomPercent(int)), opts));
+// 	formLayout->addRow(tr("&Right:"), 	m_propWidget["rightPercent"]	= generatePropertyEditor(this, "rightPercent", SLOT(setRightPercent(int)), opts));
 
+	formLayout->addRow(m_propWidget["absPosition"] = new PercentPositionWidget(this));
+	
 
 	opts.reset();
 	opts.noSlider = true;
@@ -736,7 +738,7 @@ void LiveLayer::setShowAsType(const QString& text)
 		if(text.indexOf("Absolute") >= 0)
 		{
 			setAlignment(Qt::AlignAbsolute);
-			setVisibleGeometryFields(QStringList() << "topPercent" << "leftPercent" << "bottomPercent" << "rightPercent");
+			setVisibleGeometryFields(QStringList() << "absPosition");
 		}
 		else
 		if(text.indexOf("Centered") >= 0)

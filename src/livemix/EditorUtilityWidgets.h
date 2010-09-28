@@ -183,5 +183,67 @@ private:
 	QSpinBox *b_box;
 };*/
 
+
+class PercentPositionWidget : public QWidget
+{
+	Q_OBJECT
+public:
+	PercentPositionWidget(class LiveLayer *layer);
+
+signals:
+// 	void 
+
+private slots:
+	void layerTopChanged(double);
+	void layerLeftChanged(double);
+	void layerBottomChanged(double);
+	void layerRightChanged(double);
+	
+	void setLayerTop(double);
+	void setLayerLeft(double);
+	void setLayerBottom(double);
+	void setLayerRight(double);
+	
+	void setLayerWidth(double);
+	void setLayerHeight(double);
+	
+	void setLockAR(bool);
+	
+	void setEditPixels(bool);
+	void setEditPercent(bool);
+	
+	void setARLeft(int);
+	void setARRight(int);
+	
+	void layerPropertyChanged(const QString& propertyId, const QVariant& value, const QVariant& oldValue);
+	
+private:
+	void updateSizeUI();
+	
+	double heightFromWidth(double);
+	double widthFromHeight(double);
+	
+	LiveLayer *m_layer;
+	bool m_topLock;
+	bool m_leftLock;
+	bool m_bottomLock;
+	bool m_rightLock;
+	bool m_lockAspectRatio;
+	bool m_editPixels;
+	double m_lockToAR;
+	
+	QSpinBox *m_arLeft;
+	QSpinBox *m_arRight;
+	QDoubleSpinBox *m_posTop;
+	QDoubleSpinBox *m_posLeft;
+	QDoubleSpinBox *m_posBottom;
+	QDoubleSpinBox *m_posRight;
+	QDoubleSpinBox *m_sizeWidth;
+	QDoubleSpinBox *m_sizeHeight;
+	
+	bool m_lockUpdateSizeUI;
+	bool m_lockValueUpdates;
+};
+
 #endif
 
