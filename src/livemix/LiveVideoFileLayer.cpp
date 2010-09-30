@@ -84,7 +84,7 @@ QWidget * LiveVideoFileLayer::createLayerPropertyEditors()
 	QWidget * base = new QWidget();
 	QVBoxLayout *blay = new QVBoxLayout(base);
 	blay->setContentsMargins(0,0,0,0);
-	
+#ifdef HAS_QT_VIDEO_SOURCE	
 	ExpandableWidget *groupContent = new ExpandableWidget("Play List",base);
 	blay->addWidget(groupContent);
 	
@@ -158,7 +158,7 @@ QWidget * LiveVideoFileLayer::createLayerPropertyEditors()
 	setupListWidget();
 		
 	groupContent->setExpandedIfNoDefault(true);
-	
+#endif	
 	/////////////////////////////////////////
 	
 	QWidget *basics =  LiveVideoLayer::createLayerPropertyEditors();
@@ -169,14 +169,18 @@ QWidget * LiveVideoFileLayer::createLayerPropertyEditors()
 
 void LiveVideoFileLayer::playlistJump(const QModelIndex &index)
 {
+#ifdef HAS_QT_VIDEO_SOURCE
 	if(m_video && index.isValid()) 
 		m_video->playlist()->setCurrentIndex(index.row());
+#endif
 }
 
 void LiveVideoFileLayer::playlistPositionChanged(int currentItem)
 {
+#ifdef HAS_QT_VIDEO_SOURCE
 	if(m_playlistView)
 		m_playlistView->setCurrentIndex(m_playlistModel->index(currentItem, 0));
+#endif
 }
 
 
@@ -202,9 +206,9 @@ void LiveVideoFileLayer::setupListWidget()
 
 void LiveVideoFileLayer::btnDelItem()
 {
+#ifdef HAS_QT_VIDEO_SOURCE		
 	if(!m_video || !m_playlistView)
 		return;
-		
 	QMediaPlaylist *list = m_video->playlist();
 	QModelIndex idx = m_playlistView->currentIndex();
 	if(!idx.isValid())
@@ -212,14 +216,15 @@ void LiveVideoFileLayer::btnDelItem()
 		
 	qDebug() << "LiveVideoFileLayer::btnDelItem(): idx: "<<idx.row();
 	list->removeMedia(idx.row());
+#endif	
 }
 
 
 void LiveVideoFileLayer::btnMoveItemUp()
 {
+#ifdef HAS_QT_VIDEO_SOURCE		
 	if(!m_video || !m_playlistView)
 		return;
-		
 	QMediaPlaylist *list = m_video->playlist();
 	QModelIndex idx = m_playlistView->currentIndex();
 	if(!idx.isValid())
@@ -236,10 +241,12 @@ void LiveVideoFileLayer::btnMoveItemUp()
 	list->insertMedia(row-1,content);
 	
 	m_playlistView->setCurrentIndex(m_playlistModel->index(row-1, 0));
+#endif	
 }
 
 void LiveVideoFileLayer::btnMoveItemDown()
 {
+#ifdef HAS_QT_VIDEO_SOURCE		
 	if(!m_video || !m_playlistView)
 		return;
 		
@@ -259,10 +266,13 @@ void LiveVideoFileLayer::btnMoveItemDown()
 	list->insertMedia(row+1,content);
 	
 	m_playlistView->setCurrentIndex(m_playlistModel->index(row+1, 0));
+#endif	
 }
 
 void LiveVideoFileLayer::addFile(const QString& file)
 {
+#ifdef HAS_QT_VIDEO_SOURCE		
+
 	QStringList list = fileList();
 	list << file;
 	m_props["fileList"] = list;
@@ -288,6 +298,7 @@ void LiveVideoFileLayer::addFile(const QString& file)
 		
 		m_playlistView->setCurrentIndex(m_playlistModel->index(m_video->playlist()->mediaCount()-1, 0));
 	}
+#endif
 }
 
 void LiveVideoFileLayer::setFileList(const QStringList& list)
@@ -311,6 +322,8 @@ void LiveVideoFileLayer::setFileList(const QStringList& list)
 	
 	if(m_video)
 	{
+#ifdef HAS_QT_VIDEO_SOURCE		
+		
 		QMediaPlaylist *medialist = playlist();
 		medialist->clear();
 	
@@ -339,6 +352,7 @@ void LiveVideoFileLayer::setFileList(const QStringList& list)
 		
 		m_video->playlist()->setCurrentIndex(0);
 		m_video->player()->play();
+#endif		
 	}
 	
 	m_props["fileList"] = list;
@@ -379,12 +393,13 @@ void LiveVideoFileLayer::setLayerProperty(const QString& key, const QVariant& va
 	else
 	if(m_video)
 	{
+#ifdef HAS_QT_VIDEO_SOURCE		
 		const char *keyStr = qPrintable(key);
 		if(m_video->metaObject()->indexOfProperty(keyStr)>=0)
 		{
 			m_video->setProperty(keyStr, value);
 		}
-		
+#endif		
 	}
 	
 	LiveLayer::setLayerProperty(key,value);

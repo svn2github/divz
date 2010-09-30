@@ -53,8 +53,7 @@ HEADERS += CameraThread.h \
 	LiveVideoFileLayer.h \
 	LiveSceneListModel.h \
 	EditorUtilityWidgets.h \
-	LiveVideoLoopLayer.h \
-	PlaylistModel.h
+	LiveVideoLoopLayer.h 
 	
 SOURCES += main.cpp \
 	CameraThread.cpp \
@@ -90,9 +89,7 @@ SOURCES += main.cpp \
 	LiveVideoFileLayer.cpp \
 	LiveSceneListModel.cpp \
 	EditorUtilityWidgets.cpp \
-	LivevideoLoopLayer.cpp \
-	PlaylistModel.cpp
-
+	LiveVideoLoopLayer.cpp \
 
 unix {
 	HEADERS += \
@@ -142,9 +139,12 @@ mobility: {
                 HAS_QT_VIDEO_SOURCE
 
         HEADERS += \
-                ../glvidtex/QtVideoSource.h
+                ../glvidtex/QtVideoSource.h \
+                PlaylistModel.h
+
         SOURCES += \
-                ../glvidtex/QtVideoSource.cpp
+                ../glvidtex/QtVideoSource.cpp \
+                PlaylistModel.cpp
 
         message("QtMobility enabled. Before running, ensure \$QT_PLUGIN_PATH contains $$QT_MOBILITY_HOME/plugins, otherwise media will not play.")
 }

@@ -638,6 +638,11 @@ void SlideGroupViewControl::setIsPreviewControl(bool flag)
 // 	m_prevBtn->setText(!flag ? "P&rev" : "Prev");
 // 	m_nextBtn->setText(!flag ? "Nex&t" : "Next");
 	setQuickSlideEnabled(!flag);
+	if(flag)
+	{
+		setWrapModeEnabled(true);
+		setListModeEnabled(false);
+	}
 }
 
 void SlideGroupViewControl::repaintList()
