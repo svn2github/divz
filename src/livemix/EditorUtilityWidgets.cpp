@@ -569,10 +569,24 @@ PercentPositionWidget::PercentPositionWidget(LiveLayer *layer)
 	NEW_PANEL;
 	row++;
 	
-	QCheckBox *cb = new QCheckBox("Lock Aspect Ratio");
-	cb->setChecked(m_lockAspectRatio);
-	connect(cb, SIGNAL(toggled(bool)), this, SLOT(setLockAR(bool)));
-	hbox->addWidget(cb);
+	QComboBox *m_aspectRatioBox = new QComboBox();
+	QStringList arNames;
+	
+	#define AddRatio(name,a,r) \
+		arNames << name; \
+		m_arList << QPoint(a,r);
+		
+	AddRatio("Manual (Any Ratio)", 0,0);
+	AddRatio("User Specified", -1,-1);
+	AddRatio("4:3   - Standard Screen", 4,3);
+	AddRatio("16:9  - HDTV",16,9);
+	AddRatio("16:10 - Widescreen Monitor", 16,10);
+	
+	#undef AddRatio
+	
+	m_aspectRatioBox->addItems(arNames);
+	connect(m_aspectRatioBox, SIGNAL(activated(int)), this, SLOT(setAspectRatioIdx(int)));
+	hbox->addWidget(m_aspectRatioBox);
 	
 	m_arLeft = new QSpinBox(box);
  	connect(m_arLeft, SIGNAL(valueChanged(int)), this, SLOT(setARLeft(int)));
@@ -596,6 +610,26 @@ PercentPositionWidget::PercentPositionWidget(LiveLayer *layer)
 	// watch for position changes and update UI accordingly
 	//connect(m_layer, SIGNAL(layerPropertyChanged(const QString& propertyId, const QVariant& value, const QVariant& oldValue)), this, SLOT(layerPropertyChanged(const QString& propertyId, const QVariant& value, const QVariant& oldValue)));
 	
+}
+
+void PercentPositionWidget::setAspectRatioIdx(int idx)
+{
+	if(idx<0 || idx>=m_arList.size())
+		return;
+		
+	QPoint ar = m_arList[idx];
+	
+	m_arLeft->setEnabled(idx == 1);
+	m_arRight->setEnabled(idx == 1);
+	
+	m_lockAspectRatio = idx > 0;
+	
+	if(idx > 1)
+	{
+		m_arLeft->setValue(ar.x());
+		m_arRight->setValue(ar.y());
+	}
+
 }
 
 void PercentPositionWidget::layerPropertyChanged(const QString& /*propertyId*/, const QVariant& /*value*/, const QVariant& /*oldValue*/)
@@ -786,12 +820,12 @@ void PercentPositionWidget::setLayerHeight(double value)
 	m_lockValueUpdates = false;
 }
 
-void PercentPositionWidget::setLockAR(bool flag)
+/*void PercentPositionWidget::setLockAR(bool flag)
 {
 	m_lockAspectRatio = flag;
 	m_sizeWidth->setReadOnly(flag);
 	m_sizeHeight->setReadOnly(flag);
-}
+}*/
 	
 double PercentPositionWidget::heightFromWidth(double value)
 {
@@ -905,9 +939,10 @@ void PercentPositionWidget::setARLeft(int /*val*/)
 	
 	// AR left = width ratio, so update with respective to height
 	// eg width for height using new AR
+	double w = m_layer->scene()->canvasSize().height();
 	
 	double wp = widthFromHeight(m_layer->bottomPercent() - m_layer->topPercent());
-	double nv = m_editPixels ? wp * m_layer->scene()->canvasSize().width() : wp * 100.;
+	double nv = m_editPixels ? wp * w : wp * 100.;
 	qDebug() << "PercentPositionWidget::setARLeft: wp: "<<wp<<", nv: "<<nv;
 	if(m_sizeWidth->value() != nv)
 	{
@@ -915,6 +950,9 @@ void PercentPositionWidget::setARLeft(int /*val*/)
 		
 		// set the percent on the layer manually rather than waiting for the slot to do it, since we've disabled value updates
 		m_layer->setRightPercent(m_layer->leftPercent() + wp);
+		
+		// update the value in the bottom ui
+		m_posRight->setValue(m_layer->rightPercent() * (m_editPixels ? w : 100.));
 	}
 		
 	m_lockValueUpdates = false;
@@ -926,8 +964,10 @@ void PercentPositionWidget::setARRight(int /*val*/)
 		return;
 	m_lockValueUpdates = true;
 	
+	double h = m_layer->scene()->canvasSize().height();
+	
 	double hp = heightFromWidth(m_layer->rightPercent() - m_layer->leftPercent());
-	double nv = m_editPixels ? hp * m_layer->scene()->canvasSize().height() : hp * 100.;
+	double nv = m_editPixels ? hp * h : hp * 100.;
 	qDebug() << "PercentPositionWidget::setARRight: hp: "<<hp<<", nv: "<<nv;
 	if(m_sizeHeight->value() != nv)
 	{
@@ -935,6 +975,9 @@ void PercentPositionWidget::setARRight(int /*val*/)
 		
 		// set the percent on the layer manually rather than waiting for the slot to do it, since we've disabled value updates
 		m_layer->setBottomPercent(m_layer->topPercent() + hp);
+		
+		// update the value in the bottom ui
+		m_posBottom->setValue(m_layer->bottomPercent() * (m_editPixels ? h : 100.));
 	}
 		
 	m_lockValueUpdates = false;

@@ -207,7 +207,7 @@ private slots:
 	void setLayerWidth(double);
 	void setLayerHeight(double);
 	
-	void setLockAR(bool);
+// 	void setLockAR(bool);
 	
 	void setEditPixels(bool);
 	void setEditPercent(bool);
@@ -216,6 +216,8 @@ private slots:
 	void setARRight(int);
 	
 	void layerPropertyChanged(const QString& propertyId, const QVariant& value, const QVariant& oldValue);
+	
+	void setAspectRatioIdx(int);
 	
 private:
 	void updateSizeUI();
@@ -240,6 +242,8 @@ private:
 	QDoubleSpinBox *m_posRight;
 	QDoubleSpinBox *m_sizeWidth;
 	QDoubleSpinBox *m_sizeHeight;
+	
+	QList<QPoint> m_arList;
 	
 	bool m_lockUpdateSizeUI;
 	bool m_lockValueUpdates;

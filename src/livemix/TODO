@@ -13,11 +13,18 @@
 - Add canvas size setting methods 
 - Add "camera" point (viewport) movement...?
 
-- Add a 'location editor widget' instead of just the percentage sliders
-	- Add ability to lock size to an aspect ratio
-	- Add display of aspect ratio
-
 - Add 'draw a border' around video if desired (for position on screen)
 
 - Add text scroller methods
 
+
+
+
+- Location Editor:
+	- needs to always work in pixels
+	- Take away the idiot idea of using percentages (need to refactor GLDrawable)
+	- Move the alignment stuff out of GLDrawable and into LiveLayer
+	- Move the show/hide animations out of GLDrawable and Into LiveLayer (maybe......)
+	- Take away the "auto guess what AR from w/h I'm using" stuff in UpdatesizeUI
+	- When typing in a new width/height, update the bottom/right box as well, and ALSO update the correct secondary dimension IF AR IS LOCKED
+	- ADD MOUSE MOVE/RESIZE!

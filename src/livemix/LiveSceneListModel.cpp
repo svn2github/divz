@@ -448,9 +448,11 @@ QVariant LiveSceneListModel::data(const QModelIndex &index, int role) const
 		//qDebug() << "LiveSceneListModel::data: VALID:"<<index.row();
 		
 		LiveLayer *layer = m_sortedLayers.at(index.row());
-		return QString("%1\n(%2)")
-			.arg(layer->instanceName())
-			.arg(layer->typeName());
+		return layer->instanceName();
+// 		return QString("%1\n(%2)")
+// 			.arg(layer->instanceName())
+// 			.arg(layer->typeName());
+
 		//QString("Slide %1").arg(slide->slideNumber()+1) +
 		//return layer->assumedName() + 
 		//	(slide->autoChangeTime() > 0 ? QString("\n%1 secs").arg(slide->autoChangeTime()) : QString());

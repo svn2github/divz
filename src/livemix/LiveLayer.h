@@ -358,6 +358,7 @@ private:
 	
 	QFormLayout * m_geomLayout;
 	QHash<QString,QWidget*> m_propWidget;
+	QHash<QString,QWidget*> m_labelCache;
 	
 	QHash<QString,bool> m_propSetLock;
 	
