@@ -33,10 +33,10 @@ GLDrawable::GLDrawable(QObject *parent)
 	, m_alignedSizeScale(1.)
 	, m_animPendingGlWidget(false)
 	, m_rotationPoint(.5,.5,.5) // rotate around center by default
-	, m_topPercent(0.)
-	, m_leftPercent(0.)
-	, m_bottomPercent(1.)
-	, m_rightPercent(1.)
+// 	, m_topPercent(0.)
+// 	, m_leftPercent(0.)
+// 	, m_bottomPercent(1.)
+// 	, m_rightPercent(1.)
 {
 }
 
@@ -457,14 +457,18 @@ void GLDrawable::updateAlignment(bool animateRect, int animLength, QEasingCurve 
 
 	if((m_alignment & Qt::AlignAbsolute) == Qt::AlignAbsolute)
 	{
-		x = vw * m_leftPercent;
-		y = vh * m_topPercent;
-// 		qDebug() << "GLDrawable::updateAlignment(): "<<this<<objectName()<<", absolute: m_leftPercent:"<<m_leftPercent<<", x:"<<x;
-		
-		double b = vh * m_bottomPercent;
-		double r = vw * m_rightPercent;
-		h = b - y;
-		w = r - x;
+// 		x = vw * m_leftPercent;
+// 		y = vh * m_topPercent;
+// // 		qDebug() << "GLDrawable::updateAlignment(): "<<this<<objectName()<<", absolute: m_leftPercent:"<<m_leftPercent<<", x:"<<x;
+// 		
+// 		double b = vh * m_bottomPercent;
+// 		double r = vw * m_rightPercent;
+// 		h = b - y;
+// 		w = r - x;
+		x = m_rect.left();
+		y = m_rect.top();
+		w = m_rect.width();
+		h = m_rect.height();
 	}
 	else
 	{
@@ -653,30 +657,30 @@ void GLDrawable::setRotationPoint(QVector3D value)
 	updateGL();
 }
 
-void GLDrawable::setTopPercent(double v)
-{
-	m_topPercent = v;
-	updateAlignment();
-}
-
-void GLDrawable::setLeftPercent(double v)
-{
-// 	qDebug() << "GLDrawable::setLeftPercent(): "<<this<<", m_leftPercent:"<<v;
-	m_leftPercent = v;
-	updateAlignment();
-}
-
-void GLDrawable::setBottomPercent(double v)
-{
-	m_bottomPercent = v;
-	updateAlignment();
-}
-
-void GLDrawable::setRightPercent(double v)
-{
-	m_rightPercent = v;
-	updateAlignment();
-}
+// void GLDrawable::setTopPercent(double v)
+// {
+// 	m_topPercent = v;
+// 	updateAlignment();
+// }
+// 
+// void GLDrawable::setLeftPercent(double v)
+// {
+// // 	qDebug() << "GLDrawable::setLeftPercent(): "<<this<<", m_leftPercent:"<<v;
+// 	m_leftPercent = v;
+// 	updateAlignment();
+// }
+// 
+// void GLDrawable::setBottomPercent(double v)
+// {
+// 	m_bottomPercent = v;
+// 	updateAlignment();
+// }
+// 
+// void GLDrawable::setRightPercent(double v)
+// {
+// 	m_rightPercent = v;
+// 	updateAlignment();
+// }
 
 QPropertyAnimation *GLDrawable::propAnim(const QString& prop)
 {

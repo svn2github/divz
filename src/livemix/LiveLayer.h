@@ -17,10 +17,10 @@ class LiveLayer : public QObject
 	Q_PROPERTY(double zIndex READ zIndex WRITE setZIndex);
 	Q_PROPERTY(double opacity READ opacity WRITE setOpacity);
 	
-	Q_PROPERTY(double topPercent READ topPercent WRITE setTopPercent);
-	Q_PROPERTY(double leftPercent READ leftPercent WRITE setLeftPercent);
-	Q_PROPERTY(double bottomPercent READ bottomPercent WRITE setBottomPercent);
-	Q_PROPERTY(double rightPercent READ rightPercent WRITE setRightPercent);
+// 	Q_PROPERTY(double topPercent READ topPercent WRITE setTopPercent);
+// 	Q_PROPERTY(double leftPercent READ leftPercent WRITE setLeftPercent);
+// 	Q_PROPERTY(double bottomPercent READ bottomPercent WRITE setBottomPercent);
+// 	Q_PROPERTY(double rightPercent READ rightPercent WRITE setRightPercent);
 
 	Q_PROPERTY(bool fadeIn READ fadeIn WRITE setFadeIn);
 	Q_PROPERTY(int fadeInLength READ fadeInLength WRITE setFadeInLength);
@@ -47,6 +47,8 @@ class LiveLayer : public QObject
 	
 	Q_PROPERTY(int hideOnShowLayerId READ hideOnShowLayerId WRITE setHideOnShowLayerId);
 	Q_PROPERTY(int showOnShowLayerId READ showOnShowLayerId WRITE setShowOnShowLayerId);
+	
+	Q_PROPERTY(QPointF desiredAspectRatio READ desiredAspectRatio WRITE setDesiredAspectRatio);
 
 public:
 	LiveLayer(QObject *parent=0);
@@ -110,10 +112,10 @@ public:
 	double zIndex()			{ return layerProperty("zIndex").toDouble(); }
 	double opacity()		{ return layerProperty("opacity").toDouble(); }
 	
-	double topPercent()		{ return layerProperty("topPercent").toDouble(); }
-	double leftPercent()		{ return layerProperty("leftPercent").toDouble(); }
-	double bottomPercent()		{ return layerProperty("bottomPercent").toDouble(); }
-	double rightPercent()		{ return layerProperty("rightPercent").toDouble(); }
+// 	double topPercent()		{ return layerProperty("topPercent").toDouble(); }
+// 	double leftPercent()		{ return layerProperty("leftPercent").toDouble(); }
+// 	double bottomPercent()		{ return layerProperty("bottomPercent").toDouble(); }
+// 	double rightPercent()		{ return layerProperty("rightPercent").toDouble(); }
 
 
 	bool fadeIn() 			{ return layerProperty("fadeIn").toBool(); }
@@ -139,7 +141,7 @@ public:
 	
 	QVector3D rotation()	{ return layerProperty("rotation").value<QVector3D>(); }
 	
-	
+	QPointF desiredAspectRatio() { return layerProperty("desiredAspectRatio").toPointF(); }
 	
 	int showOnShowLayerId()	{ return layerProperty("showOnShowLayerId").toInt(); }
 	int hideOnShowLayerId()	{ return layerProperty("hideOnShowLayerId").toInt(); }
@@ -170,6 +172,7 @@ public slots:
 	void setVisible(bool);
 
 	void setRect(const QRectF&);
+	void setRect(double x, double y, double w, double h) { setRect(QRectF(x,y,w,h)); }
 	void setZIndex(double z);
 	void setZIndex(int z); // for sig/slot compat
 	void setOpacity(double o);
@@ -178,6 +181,9 @@ public slots:
 
 	void setX(int);
 	void setY(int);
+	void setX2(int);
+	void setY2(int);
+	
 
 	void setWidth(int);
 	void setHeight(int);
@@ -185,15 +191,15 @@ public slots:
 	void setPos(const QPointF& point)	{ setRect(QRectF(point, rect().size())); }
 	void setSize(const QSizeF& size)	{ setRect(QRectF(rect().topLeft(),size)); }
 	
-	void setTopPercent(double value)	{ setLayerProperty("topPercent", value); }
-	void setLeftPercent(double value)	{ setLayerProperty("leftPercent", value); }
-	void setBottomPercent(double value)	{ setLayerProperty("bottomPercent", value); }
-	void setRightPercent(double value)	{ setLayerProperty("rightPercent", value); }
-
-	void setTopPercent(int value)		{ setTopPercent(((double)value) / 100.0); }
-	void setLeftPercent(int value)		{ setLeftPercent(((double)value) / 100.0); }
-	void setBottomPercent(int value)	{ setBottomPercent(((double)value) / 100.0); }
-	void setRightPercent(int value)		{ setRightPercent(((double)value) / 100.0); }
+// 	void setTopPercent(double value)	{ setLayerProperty("topPercent", value); }
+// 	void setLeftPercent(double value)	{ setLayerProperty("leftPercent", value); }
+// 	void setBottomPercent(double value)	{ setLayerProperty("bottomPercent", value); }
+// 	void setRightPercent(double value)	{ setLayerProperty("rightPercent", value); }
+// 
+// 	void setTopPercent(int value)		{ setTopPercent(((double)value) / 100.0); }
+// 	void setLeftPercent(int value)		{ setLeftPercent(((double)value) / 100.0); }
+// 	void setBottomPercent(int value)	{ setBottomPercent(((double)value) / 100.0); }
+// 	void setRightPercent(int value)		{ setRightPercent(((double)value) / 100.0); }
 
 	void setFadeIn(bool value) 		{ setLayerProperty("fadeIn", value); }
 	void setFadeInLength(int value) 	{ setLayerProperty("fadeInLength", value); }
@@ -231,6 +237,8 @@ public slots:
 	void setXRotation(int value)		{ setXRotation((double)value); }
 	void setYRotation(int value)		{ setYRotation((double)value); }
 	void setZRotation(int value)		{ setZRotation((double)value); }
+	
+	void setDesiredAspectRatio(QPointF value) { setLayerProperty("desiredAspectRatio",value); }
 	
 	void setShowOnShowLayerId(int);
 	void setHideOnShowLayerId(int);

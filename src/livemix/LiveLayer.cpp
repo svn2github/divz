@@ -71,10 +71,10 @@ LiveLayer::LiveLayer(QObject *parent)
 	m_props["alignedSizeScale"] = 1.0;
 	m_props["rotation"] = QVector3D(0,0,0);
 	
-	m_props["topPercent"] = 0.;
-	m_props["leftPercent"] = 0.;
-	m_props["bottomPercent"] = 1.;
-	m_props["rightPercent"] = 1.;
+// 	m_props["topPercent"] = 0.;
+// 	m_props["leftPercent"] = 0.;
+// 	m_props["bottomPercent"] = 1.;
+// 	m_props["rightPercent"] = 1.;
 	
 	
 	m_props["fadeIn"] = 1;
@@ -530,7 +530,7 @@ QWidget * LiveLayer::createLayerPropertyEditors()
 // 	formLayout->addRow(tr("&Bottom:"), 	m_propWidget["bottomPercent"]	= generatePropertyEditor(this, "bottomPercent", SLOT(setBottomPercent(int)), opts));
 // 	formLayout->addRow(tr("&Right:"), 	m_propWidget["rightPercent"]	= generatePropertyEditor(this, "rightPercent", SLOT(setRightPercent(int)), opts));
 
-	formLayout->addRow(m_propWidget["absPosition"] = new PercentPositionWidget(this));
+	formLayout->addRow(m_propWidget["absPosition"] = new PositionWidget(this));
 	
 
 	opts.reset();
@@ -854,6 +854,20 @@ void LiveLayer::setY(int value)
 	setRect(r);
 }
 
+void LiveLayer::setX2(int value)
+{
+	QRectF r = rect();
+	r = QRectF(r.x(), r.y(), value-r.x(), r.height());
+	setRect(r);
+}
+
+void LiveLayer::setY2(int value)
+{
+	QRectF r = rect();
+	r = QRectF(r.x(), r.y(), r.width(), value-r.y());
+	setRect(r);
+}
+
 void LiveLayer::setWidth(int value)
 {
 	QRectF r = rect();
@@ -1087,10 +1101,10 @@ void LiveLayer::initDrawable(GLDrawable *drawable, bool /*isFirstDrawable*/)
 			<< "insetBottomRight"
 			<< "alignedSizeScale"
 			<< "rotation"
-			<< "topPercent"
+			/*<< "topPercent"
 			<< "leftPercent"
 			<< "bottomPercent"
-			<< "rightPercent";
+			<< "rightPercent"*/;
 			
 		
 	//qDebug() << "LiveLayer::initDrawable: drawable:"<<drawable<<", props list:"<<generalProps;

@@ -22,9 +22,8 @@
 
 - Location Editor:
 	- needs to always work in pixels
-	- Take away the idiot idea of using percentages (need to refactor GLDrawable)
 	- Move the alignment stuff out of GLDrawable and into LiveLayer
 	- Move the show/hide animations out of GLDrawable and Into LiveLayer (maybe......)
-	- Take away the "auto guess what AR from w/h I'm using" stuff in UpdatesizeUI
-	- When typing in a new width/height, update the bottom/right box as well, and ALSO update the correct secondary dimension IF AR IS LOCKED
 	- ADD MOUSE MOVE/RESIZE!
+	
+As of 2010-10-14: In Debug.lmx, the middle 'squares2.png' layer doesnt restore its position after load UNTIL I edit the width - then it properly restores rect 

@@ -37,10 +37,10 @@ class GLDrawable : public QObject
 	Q_PROPERTY(double opacity READ opacity WRITE setOpacity);
 	Q_PROPERTY(double isVisible READ isVisible WRITE setVisible);
 	
-	Q_PROPERTY(double topPercent READ topPercent WRITE setTopPercent);
-	Q_PROPERTY(double leftPercent READ leftPercent WRITE setLeftPercent);
-	Q_PROPERTY(double bottomPercent READ bottomPercent WRITE setBottomPercent);
-	Q_PROPERTY(double rightPercent READ rightPercent WRITE setRightPercent);
+// 	Q_PROPERTY(double topPercent READ topPercent WRITE setTopPercent);
+// 	Q_PROPERTY(double leftPercent READ leftPercent WRITE setLeftPercent);
+// 	Q_PROPERTY(double bottomPercent READ bottomPercent WRITE setBottomPercent);
+// 	Q_PROPERTY(double rightPercent READ rightPercent WRITE setRightPercent);
 
 // 	Q_PROPERTY(bool showFullScreen READ showFullScreen WRITE setShowFullScreen);
 	Q_PROPERTY(Qt::Alignment alignment READ alignment WRITE setAlignment);
@@ -129,10 +129,10 @@ public:
 
 	double alignedSizeScale() { return m_alignedSizeScale; }
 	
-	double topPercent() { return m_topPercent; }
-	double leftPercent() { return m_leftPercent; }
-	double bottomPercent() { return m_bottomPercent; }
-	double rightPercent() { return m_rightPercent; }
+// 	double topPercent() { return m_topPercent; }
+// 	double leftPercent() { return m_leftPercent; }
+// 	double bottomPercent() { return m_bottomPercent; }
+// 	double rightPercent() { return m_rightPercent; }
 	
 	
 	QVector3D translation() { return m_translation; }
@@ -160,10 +160,10 @@ public slots:
 	void setInsetTopLeft(const QPointF& value);
 	void setInsetBottomRight(const QPointF& value);
 	
-	void setTopPercent(double value);
-	void setLeftPercent(double value);
-	void setBottomPercent(double value);
-	void setRightPercent(double value);
+// 	void setTopPercent(double value);
+// 	void setLeftPercent(double value);
+// 	void setBottomPercent(double value);
+// 	void setRightPercent(double value);
 
 	void setAlignedSizeScale(double);
 
@@ -244,10 +244,10 @@ private:
 	QVector3D m_rotation;
 	QVector3D m_rotationPoint;
 	
-	double m_topPercent;
-	double m_leftPercent;
-	double m_bottomPercent;
-	double m_rightPercent;
+// 	double m_topPercent;
+// 	double m_leftPercent;
+// 	double m_bottomPercent;
+// 	double m_rightPercent;
 	
 	QSizeF m_canvasSize;
 	

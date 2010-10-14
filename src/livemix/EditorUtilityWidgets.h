@@ -184,11 +184,11 @@ private:
 };*/
 
 
-class PercentPositionWidget : public QWidget
+class PositionWidget : public QWidget
 {
 	Q_OBJECT
 public:
-	PercentPositionWidget(class LiveLayer *layer);
+	PositionWidget(class LiveLayer *layer);
 
 signals:
 // 	void 
@@ -209,9 +209,6 @@ private slots:
 	
 // 	void setLockAR(bool);
 	
-	void setEditPixels(bool);
-	void setEditPercent(bool);
-	
 	void setARLeft(int);
 	void setARRight(int);
 	
@@ -231,7 +228,6 @@ private:
 	bool m_bottomLock;
 	bool m_rightLock;
 	bool m_lockAspectRatio;
-	bool m_editPixels;
 	double m_lockToAR;
 	
 	QSpinBox *m_arLeft;
