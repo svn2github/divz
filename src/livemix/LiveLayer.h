@@ -244,6 +244,8 @@ public slots:
 	void setHideOnShowLayerId(int);
 	
 	void lockLayerPropertyUpdates(bool);
+	
+	void setBounceWhenShown(bool);
 
 
 	// Internally, tries to set the named property on all the drawables if it has such a property

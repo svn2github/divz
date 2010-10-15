@@ -677,7 +677,13 @@ QWidget * LiveLayer::createLayerPropertyEditors()
 	animAdvancedLayout->addRow(tr("&Show Animation:"), showBox);
 	opts.defaultValue = 2500;
 	animAdvancedLayout->addRow(tr("&Show Anim Length:"), generatePropertyEditor(this, "showAnimationLength", SLOT(setShowAnimationLength(int)), opts));
-
+	
+	
+	PropertyEditorOptions opts2;
+	opts2.type = QVariant::Bool;
+	opts2.value = showAnimationCurve() == QEasingCurve::OutElastic ? true : false;
+	animAdvancedLayout->addRow(tr("Bounce When Shown:"), generatePropertyEditor(this, "", SLOT(setBounceWhenShown(bool)), opts2));
+	
 	animAdvancedLayout->addRow(tr("&Hide Animation:"), hideBox);
 	opts.defaultValue = 300;
 	animAdvancedLayout->addRow(tr("&Hide Anim Length:"), generatePropertyEditor(this, "hideAnimationLength", SLOT(setHideAnimationLength(int)), opts));
@@ -693,6 +699,11 @@ QWidget * LiveLayer::createLayerPropertyEditors()
 
 
 	return base;
+}
+
+void LiveLayer::setBounceWhenShown(bool flag)
+{
+	setShowAnimationCurve(flag ? QEasingCurve::OutElastic : QEasingCurve::Linear);
 }
 
 void LiveLayer::setShowAnim(int x)

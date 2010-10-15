@@ -194,20 +194,11 @@ signals:
 // 	void 
 
 private slots:
-	void layerTopChanged(double);
-	void layerLeftChanged(double);
-	void layerBottomChanged(double);
-	void layerRightChanged(double);
-	
-	void setLayerTop(double);
-	void setLayerLeft(double);
-	void setLayerBottom(double);
-	void setLayerRight(double);
+	void setLayerY(double);
+	void setLayerX(double);
 	
 	void setLayerWidth(double);
 	void setLayerHeight(double);
-	
-// 	void setLockAR(bool);
 	
 	void setARLeft(int);
 	void setARRight(int);
@@ -217,31 +208,22 @@ private slots:
 	void setAspectRatioIdx(int);
 	
 private:
-	void updateSizeUI();
-	
 	double heightFromWidth(double);
 	double widthFromHeight(double);
 	
 	LiveLayer *m_layer;
-	bool m_topLock;
-	bool m_leftLock;
-	bool m_bottomLock;
-	bool m_rightLock;
 	bool m_lockAspectRatio;
 	double m_lockToAR;
 	
 	QSpinBox *m_arLeft;
 	QSpinBox *m_arRight;
-	QDoubleSpinBox *m_posTop;
-	QDoubleSpinBox *m_posLeft;
-	QDoubleSpinBox *m_posBottom;
-	QDoubleSpinBox *m_posRight;
+	QDoubleSpinBox *m_posY;
+	QDoubleSpinBox *m_posX;
 	QDoubleSpinBox *m_sizeWidth;
 	QDoubleSpinBox *m_sizeHeight;
 	
 	QList<QPoint> m_arList;
 	
-	bool m_lockUpdateSizeUI;
 	bool m_lockValueUpdates;
 };
 
