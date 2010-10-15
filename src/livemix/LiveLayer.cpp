@@ -927,7 +927,8 @@ void LiveLayer::setLayerProperty(const QString& propertyId, const QVariant& valu
 	//	return;
 	if(m_lockLayerPropertyUpdates)
 	{
-		//qDebug() << "LiveLayer::setLayerProperty: [LOCKED] id:"<<propertyId<<", value:"<<value<<" [LOCKED]";
+		//if(propertyId == "rect")
+		//	qDebug() << "LiveLayer::setLayerProperty: [LOCKED] id:"<<propertyId<<", value:"<<value<<" [LOCKED]";
 		//m_props[propertyId] = value;
 		return;
 	}
@@ -935,12 +936,17 @@ void LiveLayer::setLayerProperty(const QString& propertyId, const QVariant& valu
 	// Prevent recursions that may be triggered by a property setter in turn calling setLayerProperty(), 
 	// which would just loop back and call that property setter again for that property - recursion.
 	if(m_propSetLock[propertyId])
+	{
+		//if(propertyId == "rect")
+		//	qDebug() << "LiveLayer::setLayerProperty: [PROP_SET_LOCK] id:"<<propertyId<<", value:"<<value<<" [LOCKED]";
 		return;
+	}
 		
 	m_propSetLock[propertyId] = true;
 
  	//if(propertyId != "rect")
- 	//qDebug() << "LiveLayer::setLayerProperty: id:"<<propertyId<<", value:"<<value;
+ 	//if(propertyId == "rect")
+ 	//	qDebug() << "LiveLayer::setLayerProperty: id:"<<propertyId<<", value:"<<value;
 
 	QVariant oldValue = m_props[propertyId];
 	m_props[propertyId] = value;
@@ -950,7 +956,8 @@ void LiveLayer::setLayerProperty(const QString& propertyId, const QVariant& valu
 
 	if(m_drawables.isEmpty())
 	{
-		//qDebug() << "LiveLayer::setLayerProperty: id:"<<propertyId<<", drawables empty, unlocking and returning";
+		//if(propertyId == "rect")
+		//	qDebug() << "LiveLayer::setLayerProperty: id:"<<propertyId<<", drawables empty, unlocking and returning";
 		m_propSetLock[propertyId] = false;
 		return;
 	}
@@ -970,13 +977,15 @@ void LiveLayer::setLayerProperty(const QString& propertyId, const QVariant& valu
 	
 		if(drawable->metaObject()->indexOfProperty(qPrintable(propertyId)) >= 0)
 		{
-			//qDebug() << "LiveLayer::setLayerProperty: id:"<<propertyId<<", value:"<<value<<", applying to drawables";
+			//if(propertyId == "rect")
+			//	qDebug() << "LiveLayer::setLayerProperty: id:"<<propertyId<<", value:"<<value<<", applying to drawables";
 			applyDrawableProperty(propertyId, value);
 		}
 		else
 		if(metaObject()->indexOfProperty(qPrintable(propertyId)) >= 0)
 		{
-			//qDebug() << "LiveLayer::setLayerProperty: id:"<<propertyId<<", applying to self";
+			//if(propertyId == "rect")
+			//	qDebug() << "LiveLayer::setLayerProperty: id:"<<propertyId<<", applying to self";
 			// could cause recursion if the property setter calls this method again, hence the m_propSetLock[] usage
 			setProperty(qPrintable(propertyId), value);
 		}
@@ -1092,7 +1101,6 @@ void LiveLayer::initDrawable(GLDrawable *drawable, bool /*isFirstDrawable*/)
 	bool animEnabled = setAnimEnabled(false);
 	
 	QStringList generalProps = QStringList()
-			<< "rect"
 			<< "zIndex"
 			<< "opacity"
 // 			<< "showFullScreen"
@@ -1101,6 +1109,7 @@ void LiveLayer::initDrawable(GLDrawable *drawable, bool /*isFirstDrawable*/)
 			<< "insetBottomRight"
 			<< "alignedSizeScale"
 			<< "rotation"
+			<< "rect"
 			/*<< "topPercent"
 			<< "leftPercent"
 			<< "bottomPercent"
@@ -1143,7 +1152,8 @@ void LiveLayer::applyLayerPropertiesToObject(QObject *object, QStringList list)
 		{
 			if(object->metaObject()->indexOfProperty(qPrintable(key)) >= 0)
 			{
-				//qDebug() << "LiveLayer::applyLayerPropertiesToObject(): "<<object<<", prop:"<<qPrintable(key)<<", setting to "<<m_props[key];
+				//if(key == "alignment")
+				//	qDebug() << "LiveLayer::applyLayerPropertiesToObject(): "<<object<<", prop:"<<qPrintable(key)<<", setting to "<<m_props[key];
 				object->setProperty(qPrintable(key), m_props[key]);
 			}
 			else
@@ -1196,8 +1206,8 @@ void LiveLayer::loadPropsFromMap(const QVariantMap& map, bool onlyApplyIfChanged
 		const char *name = metaproperty.name();
 		QVariant value = map[name];
 		
-		//if(name == "aspectRatioMode")
-		//qDebug() << "LiveLayer::loadPropsFromMap():"<<this<<": i:"<<i<<", count:"<<count<<", prop:"<<name<<", value:"<<value;
+		//if(QString(name) == "rect")
+		//	qDebug() << "LiveLayer::loadPropsFromMap():"<<this<<": i:"<<i<<", count:"<<count<<", prop:"<<name<<", value:"<<value;
 		
 		// Hold setting visiblility flag till last so that way any properties that affect
 		// animations are set BEFORE animations start!
@@ -1224,45 +1234,21 @@ void LiveLayer::loadPropsFromMap(const QVariantMap& map, bool onlyApplyIfChanged
 				{
 					if(property(name) != value)
 					{
-// 						qDebug() << "LiveLayer::loadPropsFromMap():"<<this<<": [onlyApplyIfChanged] i:"<<i<<", count:"<<count<<", prop:"<<name<<", value:"<<value;
-// 						bool reenabAnim = false;
-// 						bool animEnabled = false;
-// 						if(name == "alignment" || name == "showFullScreen")
-// 						{
-// // 							Qt::Alignment align = (Qt::Alignment)value.toInt();
-//  							qDebug() << "LiveLayer::loadPropsFromMap():"<<this<<": [onlyApplyIfChanged] Prop is Alignment, checking if percentage changed...";
-// 
-// 							if(/*(align & Qt::AlignAbsolute) == Qt::AlignAbsolute &&*/
-// 								(property("topPercent")    != map["topPercent"]    ||
-// 								 property("leftPercent")   != map["leftPercent"]   ||
-// 								 property("bottomPercent") != map["bottomPercent"] ||
-// 								 property("rightPercent")  != map["rightPercent"]))
-// 							{ 
-// 								// If we allow it to animate alignment change AND a TLBR percent change,
-// 								// then the animations will set conflicting rectangles, causing undefined results
-// 								reenabAnim = true;
-// 								animEnabled = setAnimEnabled(false);
-// 								qDebug() << "LiveLayer::loadPropsFromMap():"<<this<<": [onlyApplyIfChanged] Absolute||showFullScreen && % changed, disabling anim.";
-// 							}
-// 						}
-// 						
+ 						//qDebug() << "LiveLayer::loadPropsFromMap():"<<this<<": [onlyApplyIfChanged] i:"<<i<<", count:"<<count<<", prop:"<<name<<", value:"<<value;
 						setProperty(name,value);
-						
-// 						if(reenabAnim)
-// 							setAnimEnabled(reenabAnim);
 					}
 				}
 				else
 				{
-					//if(name == "zIndex")
-						//qDebug() << "LiveLayer::loadPropsFromMap():"<<this<<": i:"<<i<<", count:"<<count<<", prop:"<<name<<", value:"<<value<<" (calling set prop)";
+					//if(QString(name) == "alignment")
+					//	qDebug() << "LiveLayer::loadPropsFromMap():"<<this<<": i:"<<i<<", count:"<<count<<", prop:"<<name<<", value:"<<value<<" (calling set prop)";
 						
 					setProperty(name,value);
 					//m_props[name] = value;
 				}
 			}
-			//else
-				//qDebug() << "LiveLayer::loadPropsFromMap: Unable to load property for "<<name<<", got invalid property from map";
+			else
+				qDebug() << "LiveLayer::loadPropsFromMap: Unable to load property for "<<name<<", got invalid property from map";
 		}
 	}
 	
@@ -1389,10 +1375,13 @@ void LiveLayer::setScene(LiveScene *scene)
 	  
 	QList<GLDrawable *> drawables = m_drawables.values();
 	
-	foreach(GLDrawable *drawable, drawables)
-	{
-		connect(m_scene, SIGNAL(canvasSizeChanged(const QSizeF&)), drawable, SLOT(setCanvasSize(const QSizeF)));
-		drawable->setCanvasSize(m_scene->canvasSize());
+	if(m_scene)
+	{	
+		foreach(GLDrawable *drawable, drawables)
+		{
+			connect(m_scene, SIGNAL(canvasSizeChanged(const QSizeF&)), drawable, SLOT(setCanvasSize(const QSizeF)));
+			drawable->setCanvasSize(m_scene->canvasSize());
+		}
 	}
 }
 

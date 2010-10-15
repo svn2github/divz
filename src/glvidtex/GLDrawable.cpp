@@ -332,8 +332,8 @@ void GLDrawable::setRect(const QRectF& rect)
 		m_rect.setWidth(0);
 	if(m_rect.height()<0)
 		m_rect.setHeight(0);
-// 	qDebug() << "GLDrawable::setRect(): "<<this<<", pos:"<<rect.topLeft();
-	//qDebug() << "GLDrawable::setRect: "<<objectName()<<rect;
+ 	//qDebug() << "GLDrawable::setRect(): "<<this<<", pos:"<<rect.topLeft();
+	//qDebug() << "GLDrawable::setRect: "<<this<<rect;
 	//qDebug() << "GLDrawable::setRect: "<<rect;
 // 	qDebug() << "GLDrawable::setRect: size: "<<rect.size();
 	
@@ -383,7 +383,7 @@ void GLDrawable::setOpacity(double o)
 void GLDrawable::setAlignment(Qt::Alignment value, bool animate, int animLength, QEasingCurve animCurve)
 {
 	m_alignment = value;
-//  	qDebug() << "GLDrawable::setAlignment(): "<<this<<", m_alignment:"<<m_alignment;
+  	//qDebug() << "GLDrawable::setAlignment(): "<<this<<", m_alignment:"<<m_alignment;
 	updateAlignment(animate, animLength, animCurve);
 }
 
@@ -447,34 +447,46 @@ void GLDrawable::updateAlignment(bool animateRect, int animLength, QEasingCurve 
 //   	qDebug() << "GLDrawable::updateAlignment(): "<<this<<", size:"<<size<<", m_alignment:"<<m_alignment;
 
 	QRectF rect;
-	qreal x = 0, y = 0,
-		w = size.width()  * alignedSizeScale(),
-		h = size.height() * alignedSizeScale();
+	qreal   x = m_rect.left(), 
+	        y = m_rect.top(),
+		w = m_rect.width(),
+		h = m_rect.height();
 	qreal vw = canvasSize().width(),
 	      vh = canvasSize().height();
 
 	//qDebug() << "GLDrawable::updateAlignment: w:"<<w<<", h:"<<h<<", alignedSizeScale:"<<alignedSizeScale();
+	
+	//qDebug() << "GLDrawable::updateAlignment(): "<<this<<" m_alignment: "<<m_alignment ;
 
-	if((m_alignment & Qt::AlignAbsolute) == Qt::AlignAbsolute)
+	if(!m_alignment || (m_alignment & Qt::AlignAbsolute) == Qt::AlignAbsolute)
 	{
 // 		x = vw * m_leftPercent;
 // 		y = vh * m_topPercent;
 // // 		qDebug() << "GLDrawable::updateAlignment(): "<<this<<objectName()<<", absolute: m_leftPercent:"<<m_leftPercent<<", x:"<<x;
+  		//qDebug() << "GLDrawable::updateAlignment(): "<<this<<", [AlignAbsolute]: m_rect:"<<m_rect;
 // 		
 // 		double b = vh * m_bottomPercent;
 // 		double r = vw * m_rightPercent;
 // 		h = b - y;
 // 		w = r - x;
-		x = m_rect.left();
-		y = m_rect.top();
-		w = m_rect.width();
-		h = m_rect.height();
+		
+// 		x = m_rect.left();
+// 		y = m_rect.top();
+// 		w = m_rect.width();
+// 		h = m_rect.height();
 	}
 	else
 	{
-
+		x = 0;
+		y = 0;
+		w = size.width()  * alignedSizeScale();
+		h = size.height() * alignedSizeScale();
+		
+		//qDebug() << "GLDrawable::updateAlignment(): "<<this<<", [NON ABSOLUTE]";
+		
 		if ((m_alignment & Qt::AlignHCenter) == Qt::AlignHCenter)
 		{
+			//qDebug() << "GLDrawable::updateAlignment(): "<<this<<", [AlignHCenter]";
 			x = (vw - w)/2 + m_insetTopLeft.x() - m_insetBottomRight.x();
 // 			qDebug() << "GLDrawable::updateAlignment(): "<<this<<objectName()<<", ALIGN: H Center, x:"<<x;
 
@@ -482,30 +494,35 @@ void GLDrawable::updateAlignment(bool animateRect, int animLength, QEasingCurve 
 
 		if ((m_alignment & Qt::AlignVCenter) == Qt::AlignVCenter)
 		{
+			//qDebug() << "GLDrawable::updateAlignment(): "<<this<<", [AlignVCenter]";
 			y = (vh - h)/2 + m_insetTopLeft.y() - m_insetBottomRight.y();
 // 			qDebug() << "GLDrawable::updateAlignment(): "<<this<<objectName()<<", ALIGN: V Center, y:"<<y;
 		}
 
 		if ((m_alignment & Qt::AlignBottom) == Qt::AlignBottom)
 		{
+			//qDebug() << "GLDrawable::updateAlignment(): "<<this<<", [AlignBottom]";
 			y = vh - h - m_insetBottomRight.y();
 // 			qDebug() << "GLDrawable::updateAlignment(): "<<this<<objectName()<<", ALIGN: Bottom, y:"<<y;
 		}
 
 		if ((m_alignment & Qt::AlignRight) == Qt::AlignRight)
 		{
+			//qDebug() << "GLDrawable::updateAlignment(): "<<this<<", [AlignRight]";
 			x = vw - w - m_insetBottomRight.x();
 // 			qDebug() << "GLDrawable::updateAlignment(): "<<this<<objectName()<<", ALIGN: Right, x:"<<x;
 		}
 
 		if ((m_alignment & Qt::AlignTop) == Qt::AlignTop)
 		{
+			//qDebug() << "GLDrawable::updateAlignment(): "<<this<<", [AlignTop]";
 			y = m_insetTopLeft.y();
 // 			qDebug() << "GLDrawable::updateAlignment(): "<<this<<objectName()<<", ALIGN: Top, y:"<<y;
 		}
 
 		if ((m_alignment & Qt::AlignLeft) == Qt::AlignLeft)
 		{
+			//qDebug() << "GLDrawable::updateAlignment(): "<<this<<", [AlignLeft]";
 			x = m_insetTopLeft.x();
 // 			qDebug() << "GLDrawable::updateAlignment(): "<<this<<objectName()<<", ALIGN: Left, x:"<<x;
 		}
