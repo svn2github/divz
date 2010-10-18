@@ -367,7 +367,7 @@ int main(int argc, char *argv[])
 		
 	QFormLayout * tb = createToggleBox();
 	
-        addButtons(tb, addQtSource(glw));
+        //addButtons(tb, addQtSource(glw));
 	
 	#undef HAS_QT_VIDEO_SOURCE
 	#ifdef HAS_QT_VIDEO_SOURCE
@@ -392,10 +392,10 @@ int main(int argc, char *argv[])
 	#endif
 	
 // 	addButtons(tb,addSecondSource(glw));	
-// 	addButtons(tb,addVideoBug(glw));
-// 	addButtons(tb,addTextOverlay(glw));
+ 	//addButtons(tb,addVideoBug(glw));
+ 	addButtons(tb,addTextOverlay(glw));
 	
-        //addButtons(tb,addStaticSource(glw));
+        addButtons(tb,addStaticSource(glw));
 	
 	glw->setCanvasSize(764,572);
 	

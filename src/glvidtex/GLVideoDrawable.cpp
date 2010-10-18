@@ -758,7 +758,13 @@ bool GLVideoDrawable::setVideoFormat(const VideoFormat& format)
  	{
  		if(!m_program->shaders().isEmpty())
  			m_program->removeAllShaders();
- 			
+ 		
+		if(!QGLShaderProgram::hasOpenGLShaderPrograms())
+		{
+			qDebug() << "GLSL Shaders Not Supported by this driver, this program will NOT function as expected and will likely crash.";
+			return false;
+		}
+
 		if (!fragmentProgram) 
 		{
 			qDebug() << "No shader program found - format not supported.";

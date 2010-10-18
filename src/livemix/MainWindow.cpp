@@ -24,6 +24,7 @@ MainWindow::MainWindow()
 	, m_currentKeyFrame(0)
 	, m_playTime(0)
 	, m_outputScreenIdx(0)
+	, m_mainOutput(0)
 {
 
 	m_mainOutput = new GLWidget();
@@ -181,7 +182,8 @@ void MainWindow::loadLiveScene(LiveScene *scene)
 
 	// attach to main viewer
 	scene->attachGLWidget(m_mainViewer);
-	scene->attachGLWidget(m_mainOutput);
+	if(m_mainOutput)
+		scene->attachGLWidget(m_mainOutput);
 	
 	m_sceneModel->setLiveScene(scene);
 	
@@ -210,7 +212,8 @@ void MainWindow::removeCurrentScene()
 
 	disconnect(m_currentScene, 0, this, 0);
 	m_currentScene->detachGLWidget(m_mainViewer);
-	m_currentScene->detachGLWidget(m_mainOutput);
+	if(m_mainOutput)
+		m_currentScene->detachGLWidget(m_mainOutput);
 
 	m_currentScene = 0;
 
@@ -1003,7 +1006,6 @@ void MainWindow::createToolBars()
 	m_fileToolBar->addWidget(new QLabel("Output:"));
 	
 	m_outputCombo = new QComboBox();
-	connect(m_outputCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(screenIndexChanged(int)));
 	
 	QDesktopWidget *desktopWidget = QApplication::desktop();
 	
@@ -1027,6 +1029,8 @@ void MainWindow::createToolBars()
 	
 	m_outputCombo->addItems(itemList);
 	m_outputCombo->setCurrentIndex(m_outputScreenIdx);
+	connect(m_outputCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(screenIndexChanged(int)));
+	
 	m_fileToolBar->addWidget(m_outputCombo);
 	
 	m_liveBtn = new QPushButton("Go Live");
@@ -1040,17 +1044,31 @@ void MainWindow::screenIndexChanged(int idx)
 	if(idx < 0 || idx >= m_screenList.size())
 		return;
 		
+	if(!m_mainOutput)
+	{
+		qDebug() << "MainWindow::screenIndexChanged: Main Output Widget not created, no output available.";
+		return;
+	}
+	
+// 	if(!m_mainOutput->isVisible())
+// 	{
+// 		qDebug() << "MainWindow::screenIndexChanged: Main Output Widget not enabled, not adjusting geometry yet.";
+// 		return;
+// 	}
+		
 	QSettings settings;
 	settings.setValue("MainWindow/last-screen-index",idx);
 		
 	QRect geom = m_screenList[idx];
 	
+	
+	//geom = QRect(0,0,320,240);
 	//m_mainOutput->applyGeometry(geom);
 	//m_mainOutput->setVisible(true);
 	
 	//qDebug() << "VideoOutputWidget::applyGeometry(): rect: "<<rect;
  	//if(isFullScreen)
- 		m_mainOutput->setWindowFlags(Qt::FramelessWindowHint | Qt::ToolTip);
+ 		//m_mainOutput->setWindowFlags(Qt::FramelessWindowHint | Qt::ToolTip);
 //  	else
 //  		m_mainOutput->setWindowFlags(Qt::FramelessWindowHint);
 				
@@ -1065,7 +1083,22 @@ void MainWindow::screenIndexChanged(int idx)
 
 void MainWindow::showLiveOutput(bool flag)
 {
-	m_mainOutput->setVisible(flag);
+	if(m_mainOutput)
+	{
+		
+		// Apply geometry
+
+		
+		screenIndexChanged(m_outputCombo->currentIndex());
+		m_mainOutput->setVisible(flag);
+		m_mainOutput->setWindowState(m_mainOutput->windowState() ^ Qt::WindowFullScreen);
+	
+		//if(flag)
+		//	screenIndexChanged(m_outputCombo->currentIndex());
+
+	}
+	
+	
 }
 	
 void MainWindow::createStatusBar()
