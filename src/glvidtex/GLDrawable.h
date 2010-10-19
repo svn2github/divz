@@ -151,6 +151,7 @@ public slots:
 	void show();
 	void hide();
 	void setVisible(bool flag);
+	void setHidden(bool flag);
 
 	void setAnimationsEnabled(bool);
 
@@ -253,6 +254,8 @@ private:
 	
 	// Used by code to prevent two animations from running on same prop at same time
 	QHash<QString,QPropertyAnimation*> m_propAnims;
+	
+	bool m_lockVisibleSetter;
 };
 
 bool operator==(const GLDrawable::AnimParam&a, const GLDrawable::AnimParam&b);

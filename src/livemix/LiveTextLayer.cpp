@@ -3,6 +3,7 @@
 #include "../glvidtex/GLWidget.h"
 #include "../glvidtex/GLVideoDrawable.h"
 #include "../glvidtex/TextVideoSource.h"
+#include "../glvidtex/StaticVideoSource.h"
 
 #include "ExpandableWidget.h"
 //#include <qtcolorpicker.h>
@@ -13,14 +14,25 @@ LiveTextLayer::LiveTextLayer(QObject *parent)
 	: LiveLayer(parent)
 	, m_textSource(0)
 {
+	// Text generator
 	m_textSource = new TextVideoSource();
 	m_textSource->start();
 	//m_textSource->moveToThread(m_textSource);
 	m_textSource->setHtml("?");
 	m_textSource->changeFontSize(40);
+	m_textSource->setObjectName("Primary");
 	
 	QSizeF size = m_textSource->findNaturalSize();
 	m_textSource->setTextWidth((int)size.width());
+	
+	// For cross fading
+	m_secondaryTextSource = new TextVideoSource();
+	m_secondaryTextSource->start();
+	//m_textSource->moveToThread(m_textSource);
+	m_secondaryTextSource->setHtml("?");
+	m_secondaryTextSource->changeFontSize(40);
+	m_secondaryTextSource->setTextWidth((int)size.width());
+	m_secondaryTextSource->setObjectName("Secondary");
 	
 	setText("<b>Hello, World</b>");
 	
@@ -38,16 +50,27 @@ LiveTextLayer::~LiveTextLayer()
 {
 }
 
-GLDrawable* LiveTextLayer::createDrawable(GLWidget *context)
+GLDrawable* LiveTextLayer::createDrawable(GLWidget *context, bool isSecondary)
 {
 	// add secondary frame
 	// add text overlay frame
 	GLVideoDrawable *drawable = new GLVideoDrawable(context);
-
-	drawable->setVideoSource(m_textSource);
+	
+	drawable->setVideoSource(isSecondary ?  m_secondaryTextSource : m_textSource);
+	if(isSecondary)
+	{
+		GLDrawable *primary = LiveLayer::drawable(context);
+		if(primary)
+		{
+			connect(primary, SIGNAL(isVisible(bool)), drawable, SLOT(setHidden(bool)));
+			connect(drawable, SIGNAL(isVisible(bool)), primary, SLOT(setHidden(bool)));
+		}
+	}
 	
 	drawable->setZIndex(1);
-	drawable->setObjectName("Text");
+	//drawable->setObjectName("Text");
+	drawable->setObjectName(isSecondary ? "Text-Secondary" : "Text-Primary");
+
 
 	drawable->addShowAnimation(GLDrawable::AnimFade);
 	drawable->addHideAnimation(GLDrawable::AnimFade);
@@ -66,20 +89,22 @@ void LiveTextLayer::initDrawable(GLDrawable *drawable, bool isFirstDrawable)
 void LiveTextLayer::setText(const QString& text)
 {
 // 	qDebug() << "LiveTextLayer::setText(): text:"<<text;
+	TextVideoSource *textSource = m_secondarySourceActive ? m_textSource : m_secondaryTextSource; 
+	//qDebug() << "LiveTextLayer::setText: "<<text<<", secondary flag:"<<m_secondarySourceActive<<", using source: "<<textSource;
 	
-	m_textSource->lockUpdates(true);
+	textSource->lockUpdates(true);
 	
-	m_textSource->setHtml(text);
+	textSource->setHtml(text);
 	
 // 	qDebug() << "LiveTextLayer::setText(): changeFontSize(40)";
 	
 	// TODO make font size configurable
-	m_textSource->changeFontSize(40);
+	textSource->changeFontSize(40);
 	
-	QSize size = m_textSource->findNaturalSize();
+	QSize size = textSource->findNaturalSize();
 	
 // 	qDebug() << "LiveTextLayer::setText(): natural size: "<<size;
-	m_textSource->setTextWidth(size.width());
+	textSource->setTextWidth(size.width());
 
 	m_props["text"] = text;
 	
@@ -87,10 +112,21 @@ void LiveTextLayer::setText(const QString& text)
 	
 // 	qDebug() << "LiveTextLayer::setText(): updating alignment";
 // 	setAlignment(alignment()); // force recalc of layout
+
+	textSource->lockUpdates(false);
 	
-	m_textSource->lockUpdates(false);
 	
+	// We only set the drawable visible that we want to be visible - inotherwords, we ignore the secondary ("other") drawable (the one we want hidden)
+	// because the sig/slot connection in createDrawable() handles the visibility inversion for us.
+	QList<GLDrawable*> drawables = m_secondarySourceActive ? m_drawables.values() : m_secondaryDrawables.values();
+	foreach(GLDrawable *item, drawables)
+	{
+		GLVideoDrawable *videoDrawable = dynamic_cast<GLVideoDrawable*>(item);
+		if(videoDrawable)
+			videoDrawable->setVisible(isVisible(),true); // true = wait for next frame before becoming visible
+	}
 	
+	m_secondarySourceActive = !m_secondarySourceActive;
 }
 
 
@@ -108,16 +144,19 @@ void LiveTextLayer::setLayerProperty(const QString& key, const QVariant& value)
 		if(key == "outlineColor")
 		{
 			m_textSource->setOutlinePen(QPen(color));
+			m_secondaryTextSource->setOutlinePen(QPen(color));
 		}
 		else
 		if(key == "fillColor")
 		{
 			m_textSource->setFillBrush(QBrush(color));
+			m_secondaryTextSource->setFillBrush(QBrush(color));
 		}
 		else
 		if(key == "shadowColor")
 		{
 			m_textSource->setShadowBrush(QBrush(color));
+			m_secondaryTextSource->setShadowBrush(QBrush(color));
 		}
 	}
 	else
@@ -126,6 +165,7 @@ void LiveTextLayer::setLayerProperty(const QString& key, const QVariant& value)
 		if(m_textSource->metaObject()->indexOfProperty(keyStr)>=0)
 		{
 			m_textSource->setProperty(keyStr, value);
+			m_secondaryTextSource->setProperty(keyStr, value);
 		}
 	}
 

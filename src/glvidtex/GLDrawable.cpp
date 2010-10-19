@@ -33,6 +33,7 @@ GLDrawable::GLDrawable(QObject *parent)
 	, m_alignedSizeScale(1.)
 	, m_animPendingGlWidget(false)
 	, m_rotationPoint(.5,.5,.5) // rotate around center by default
+	, m_lockVisibleSetter(false)
 // 	, m_topPercent(0.)
 // 	, m_leftPercent(0.)
 // 	, m_bottomPercent(1.)
@@ -56,10 +57,23 @@ void GLDrawable::hide()
 	setVisible(false);
 }
 
+void GLDrawable::setHidden(bool flag)
+{
+	setVisible(!flag);
+}
+
 void GLDrawable::setVisible(bool flag)
 {
-	if(m_animFinished && m_isVisible == flag)
+	if(m_lockVisibleSetter)
 		return;
+	m_lockVisibleSetter = true;
+	
+	//if(m_animFinished && 
+	if(m_isVisible == flag)
+	{
+		m_lockVisibleSetter = false;
+		return;
+	}
 		
 	//qDebug() << "GLDrawable::setVisible(): "<<this<<": Flag:"<<flag;
 	if(flag)
@@ -76,6 +90,8 @@ void GLDrawable::setVisible(bool flag)
 		if(!flag)
 			emit isVisible(flag);
 	}
+	
+	m_lockVisibleSetter = false;
 
 }
 
@@ -132,7 +148,11 @@ void GLDrawable::startAnimations()
 	{
 		m_isVisible = m_animDirection;
 		if(!m_animDirection)
+		{
+			m_lockVisibleSetter = true;
 			emit isVisible(m_animDirection);
+			m_lockVisibleSetter = false;
+		}
 	}
 
 }
@@ -298,7 +318,11 @@ void GLDrawable::animationFinished()
 			m_finishedAnimations.clear();
 
 			if(!m_isVisible)
+			{
+				m_lockVisibleSetter = true;
 				emit isVisible(m_isVisible);
+				m_lockVisibleSetter = false;
+			}
 		}
 		else
 		{

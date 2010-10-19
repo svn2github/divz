@@ -27,7 +27,7 @@ LiveStaticSourceLayer::~LiveStaticSourceLayer()
 {
 }
 
-GLDrawable* LiveStaticSourceLayer::createDrawable(GLWidget *context)
+GLDrawable* LiveStaticSourceLayer::createDrawable(GLWidget *context, bool)
 {
 	GLDrawable *drawable = LiveVideoLayer::createDrawable(context);
 	drawable->setObjectName("Static");

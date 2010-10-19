@@ -27,3 +27,55 @@
 	- ADD MOUSE MOVE/RESIZE!
 	
 As of 2010-10-14: In Debug.lmx, the middle 'squares2.png' layer doesnt restore its position after load UNTIL I edit the width - then it properly restores rect 
+
+
+---
+Structure:
+	- Components of the LiveMix system:
+		lmx-player
+			Standalone player, reads lmx-player.ini in current directory by default, -c to specify different config.
+			.ini file specifies:
+				[window]
+					window size - where on the screen to draw the output
+				[source]
+					either:
+						A livemix controller URI, such as 'controller=lmxctrl1.domain.local:7547'
+						A list of .lmx layer files to play in sequence, such as:
+							num-files=5
+							file1: logo.lmx
+							file2: video1.lmx
+							file3: adroll.lmx
+							
+							An overlay file can be specified with:
+							overlay: branding.lmx
+							
+							Background layer that is kept behind all other layers:
+							background: my-bg.lmx
+							
+			Need some higher-level concepts:
+				A "layout" that "tacks" different layers into position
+					Changing between layouts applies pre-defined transition effects to the layouts (slide in/out, etc)
+					Each "area" of the layout has at least one LiveWidget item on it
+						The widget item defines the user-modifiable controls at runtime (communicates with the controller via IP)
+							These controls are two way - they accept changes from the user and communicate values to the user:
+								Example: A video player
+									From User: play/pause commands, seek
+									To user: Current time in the video
+						The widget item also exposes scheduleable properties
+							E.g. At YYYY-MM-DD HH:MM:SS, the content of property 'X' should be 'Y'
+						Existing LiveLayer-derived objects can implement the LiveWidget interface by:
+							[TBD]
+							
+						
+						Each LiveWidget defines a calculated contentDuration property based on the total duration of all elements in its playlist
+							//If the playlist has absolute date/times in it, then the duration is the difference between the oldest time and the latest time
+							Playlist can be changed via a schedule - e.g. a new playlist is assigned to the liveiwdget at a certain time, etc
+							
+				Schedule:
+					Changes the layout in the player
+					Or the playlist of a widget
+					Or shows/hides a root elemnt of the layout
+					Or set a specific property on a widget
+					
+					
+							

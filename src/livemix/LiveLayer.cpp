@@ -52,6 +52,7 @@ QString LiveLayer::guessTitle(QString field)
 
 LiveLayer::LiveLayer(QObject *parent)
 	: QObject(parent)
+	, m_secondarySourceActive(false)
 	, m_animationsDisabled(false)
 	, m_scene(0)
 	, m_hideOnShow(0)
@@ -116,6 +117,12 @@ LiveLayer::~LiveLayer()
 	qDeleteAll(drawables);
 	drawables.clear();
 	
+	drawables = m_secondaryDrawables.values();
+	m_secondaryDrawables.clear();
+	
+	qDeleteAll(m_secondaryDrawables);
+	m_secondaryDrawables.clear();
+	
 	m_scene = 0;
 	m_hideOnShow = 0;
 	m_showOnShow = 0;	
@@ -135,21 +142,25 @@ int LiveLayer::id()
 
 // Returns a GLDrawable for the specified GLWidget. If none exists,
 // then calls createDrawable() internally, followed by initDrawable()
-GLDrawable* LiveLayer::drawable(GLWidget *widget)
+GLDrawable* LiveLayer::drawable(GLWidget *widget, bool secondary)
 {
 	GLDrawable *drawable = 0;
-	if(m_drawables.contains(widget))
+	QHash<GLWidget*, GLDrawable*> cache = secondary ? m_secondaryDrawables : m_drawables;
+	if(cache.contains(widget))
 	{
 // 		qDebug() << "LiveLayer::drawable: widget:"<<widget<<", cache hit";
 
-		drawable = m_drawables[widget];
+		drawable = cache[widget];
 	}
 	else
 	{
-		drawable = createDrawable(widget);
+		drawable = createDrawable(widget,secondary);
 
 		bool wasEmpty = m_drawables.isEmpty();
-		m_drawables[widget] = drawable;
+		if(secondary)
+			m_secondaryDrawables[widget] = drawable;
+		else
+			m_drawables[widget] = drawable;
 		
 		if(wasEmpty)
 		{
@@ -162,13 +173,11 @@ GLDrawable* LiveLayer::drawable(GLWidget *widget)
 			initDrawable(drawable, false);
 		}
 
-		if(widget->property("isEditorWidget").toInt())
+		if(widget->property("isEditorWidget").toBool())
 		{
 			drawable->setAnimationsEnabled(false);
 			drawable->show();
 		}
-		else
-			connect(this, SIGNAL(isVisible(bool)), drawable, SLOT(setVisible(bool)));
 	}
 	
 	// GLW_PROP_NUM_SCENES defined in LiveScene.h
@@ -903,6 +912,26 @@ void LiveLayer::setVisible(bool flag)
 	// the drawable is connected to - see the connect() statement in LiveLayer::drawable()
 	//if(flag != m_isVisible)
 		emit isVisible(flag);
+		
+	foreach(GLWidget *glw, m_glWidgets)
+	{
+		bool editor = glw->property("isEditorWidget").toBool();
+		if(editor)
+			continue;
+		
+		if(m_secondarySourceActive && m_secondaryDrawables.contains(glw))
+		{
+			m_secondaryDrawables[glw]->setVisible(flag);
+			m_drawables[glw]->setVisible(false);
+		}
+		else
+		{
+			m_drawables[glw]->setVisible(flag);
+			if(m_secondaryDrawables.contains(glw))
+				m_secondaryDrawables[glw]->setVisible(false);
+		}
+	}
+	
 	m_isVisible = flag;
 	
 	if(m_hideOnShow)
@@ -977,9 +1006,14 @@ void LiveLayer::setLayerProperty(const QString& propertyId, const QVariant& valu
 	   propertyId.indexOf("fadeOut")   > -1 ||
 	   propertyId.indexOf("Animation") > -1)
 	{
-		foreach(GLWidget *widget, m_drawables.keys())
+		foreach(GLDrawable *item, m_drawables.values())
 		{
-			applyAnimationProperties(m_drawables[widget]);
+			applyAnimationProperties(item);
+		}
+		
+		foreach(GLDrawable *item, m_secondaryDrawables.values())
+		{
+			applyAnimationProperties(item);
 		}
 	}
 	else
@@ -1013,36 +1047,39 @@ void LiveLayer::setLayerProperty(const QString& propertyId, const QVariant& valu
 void LiveLayer::applyDrawableProperty(const QString& propertyId, const QVariant& value)
 {
 // 	m_animationsDisabled = true;
-	foreach(GLWidget *widget, m_drawables.keys())
+	foreach(GLDrawable *item, m_drawables.values())
 	{
-		if(m_animationsDisabled || !canAnimateProperty(propertyId))
-			//(value.type() == QVariant::Bool && !propertyId != "showFullScreen"))
+		applyDrawablePropertyInternal(item, propertyId, value);
+	}
+	
+	foreach(GLDrawable *item, m_secondaryDrawables.values())
+	{
+		applyDrawablePropertyInternal(item, propertyId, value);
+	}
+}
+	
+void LiveLayer::applyDrawablePropertyInternal(GLDrawable *drawable, const QString& propertyId, const QVariant& value)
+{
+	if(m_animationsDisabled || !canAnimateProperty(propertyId))
+	{
+		//qDebug() << "LiveLayer::applyDrawableProperty:"<<drawable<<propertyId<<"="<<value<<", not animating";
+		drawable->setProperty(qPrintable(propertyId), value);
+	}
+	else
+	{
+		if(propertyId == "alignment")
 		{
-			//qDebug() << "LiveLayer::applyDrawableProperty:"<<m_drawables[widget]<<propertyId<<"="<<value<<", not animating";
-			m_drawables[widget]->setProperty(qPrintable(propertyId), value);
+			//qDebug() << "LiveLayer::applyDrawableProperty:"<<drawable<<propertyId<<"="<<value<<", animating alignment";
+			drawable->setAlignment((Qt::Alignment)value.toInt(), true, m_animParam.length, m_animParam.curve);
 		}
 		else
 		{
-			if(propertyId == "alignment")
-			{
-				//qDebug() << "LiveLayer::applyDrawableProperty:"<<m_drawables[widget]<<propertyId<<"="<<value<<", animating alignment";
-				m_drawables[widget]->setAlignment((Qt::Alignment)value.toInt(), true, m_animParam.length, m_animParam.curve);
-			}
-			else
-// 			if(propertyId == "showFullScreen")
-// 			{
-// 				//qDebug() << "LiveLayer::applyDrawableProperty:"<<m_drawables[widget]<<propertyId<<"="<<value<<", animating show full screen";
-// 				m_drawables[widget]->setShowFullScreen(value.toBool(), true, m_animParam.length, m_animParam.curve);
-// 			}
-// 			else
-			{
-				//qDebug() << "LiveLayer::applyDrawableProperty:"<<m_drawables[widget]<<propertyId<<"="<<value<<", animating!!";
-				QPropertyAnimation *animation = new QPropertyAnimation(m_drawables[widget], propertyId.toAscii());
-				animation->setDuration(m_animParam.length);
-				animation->setEasingCurve(m_animParam.curve);
-				animation->setEndValue(value);
-				animation->start(QAbstractAnimation::DeleteWhenStopped);
-			}
+			//qDebug() << "LiveLayer::applyDrawableProperty:"<<drawable<<propertyId<<"="<<value<<", animating!!";
+			QPropertyAnimation *animation = new QPropertyAnimation(drawable, propertyId.toAscii());
+			animation->setDuration(m_animParam.length);
+			animation->setEasingCurve(m_animParam.curve);
+			animation->setEndValue(value);
+			animation->start(QAbstractAnimation::DeleteWhenStopped);
 		}
 	}
 }
@@ -1092,7 +1129,7 @@ void LiveLayer::layerPropertyWasChanged(const QString& propertyId, const QVarian
 
 // The core of the layer - create a new drawable instance for the specified context.
 // drawable() will call initDrawable() on it to set it up as needed
-GLDrawable *LiveLayer::createDrawable(GLWidget */*widget*/)
+GLDrawable *LiveLayer::createDrawable(GLWidget */*widget*/, bool /*isSecondary*/)
 {
  	qDebug() << "LiveLayer::createDrawable: Nothing created.";
 	return 0;
@@ -1384,11 +1421,17 @@ void LiveLayer::setScene(LiveScene *scene)
 			setShowOnShow(layer);
 	  }
 	  
-	QList<GLDrawable *> drawables = m_drawables.values();
+	//QList<GLDrawable *> drawables = ;
 	
 	if(m_scene)
 	{	
-		foreach(GLDrawable *drawable, drawables)
+		foreach(GLDrawable *drawable, m_drawables.values())
+		{
+			connect(m_scene, SIGNAL(canvasSizeChanged(const QSizeF&)), drawable, SLOT(setCanvasSize(const QSizeF)));
+			drawable->setCanvasSize(m_scene->canvasSize());
+		}
+		
+		foreach(GLDrawable *drawable, m_secondaryDrawables.values())
 		{
 			connect(m_scene, SIGNAL(canvasSizeChanged(const QSizeF&)), drawable, SLOT(setCanvasSize(const QSizeF)));
 			drawable->setCanvasSize(m_scene->canvasSize());
@@ -1404,6 +1447,9 @@ void LiveLayer::attachGLWidget(GLWidget *glw)
 	m_glWidgets.append(glw);
 
 	glw->addDrawable(drawable(glw));
+	
+	if(requiresSecondaryDrawable())
+		glw->addDrawable(drawable(glw, true));
 }
 
 void LiveLayer::detachGLWidget(GLWidget *glw)
@@ -1412,6 +1458,9 @@ void LiveLayer::detachGLWidget(GLWidget *glw)
 		return;
 
 	glw->removeDrawable(drawable(glw));
+	
+	if(m_secondaryDrawables.contains(glw))
+		glw->removeDrawable(drawable(glw,true));
 
 	m_glWidgets.removeAll(glw);
 }

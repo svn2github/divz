@@ -38,10 +38,10 @@ LiveVideoInputLayer::~LiveVideoInputLayer()
 	// TODO close camera
 }
 
-GLDrawable *LiveVideoInputLayer::createDrawable(GLWidget *widget)
+GLDrawable *LiveVideoInputLayer::createDrawable(GLWidget *widget, bool flag)
 {
 	// We overrride createDrawable here just for future expansiosn sake
-	GLDrawable *draw = LiveVideoLayer::createDrawable(widget);
+	GLDrawable *draw = LiveVideoLayer::createDrawable(widget, flag);
 	//draw->setRotation(QVector3D(0,45,0));
 	return draw;
 }

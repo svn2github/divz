@@ -241,6 +241,7 @@ GLVideoDrawable::GLVideoDrawable(QObject *parent)
 	, m_uploadedCacheKey(0)
 	, m_textureOffset(0,0)
 	, m_texturesInited(false)
+	, m_visiblePendingFrame(false)
 {
 	
 	m_imagePixelFormats
@@ -291,6 +292,19 @@ void GLVideoDrawable::disconnectVideoSource()
 	m_source = 0;
 }
 	
+	
+void GLVideoDrawable::setVisible(bool flag, bool pendingFrame)
+{
+	if(pendingFrame)
+	{
+		m_visiblePendingFrame = true;
+		m_tempVisibleValue = flag;
+	}
+	else
+	{
+		GLDrawable::setVisible(flag);
+	}
+}
 
 void GLVideoDrawable::frameReady()
 {
@@ -385,6 +399,9 @@ void GLVideoDrawable::frameReady()
 	}
 	
 	updateGL();
+	
+	if(m_visiblePendingFrame)
+		GLDrawable::setVisible(m_tempVisibleValue);
 }
 
 void GLVideoDrawable::setAlphaMask(const QImage &mask)

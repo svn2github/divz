@@ -30,7 +30,7 @@ public slots:
 	void setFile(const QString&);
 
 protected:
-	virtual GLDrawable *createDrawable(GLWidget *widget);
+	virtual GLDrawable *createDrawable(GLWidget *widget, bool isSecondary=false);
 	// If its the first drawable, setup with defaults
 	// Otherwise, copy from 'copyFrom'
 	virtual void initDrawable(GLDrawable *drawable, bool isFirstDrawable = false);

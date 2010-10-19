@@ -270,7 +270,7 @@ protected slots:
 protected:
 	// Returns a GLDrawable for the specified GLWidget. If none exists,
 	// then calls createDrawable() internally, followed by initDrawable()
-	virtual GLDrawable * drawable(GLWidget *widget);
+	virtual GLDrawable * drawable(GLWidget *widget, bool secondary=false);
 
 	
 	class PropertyEditorOptions
@@ -318,9 +318,11 @@ protected:
 	// just emits layerPropertyChanged
 	void layerPropertyWasChanged(const QString& propertyId, const QVariant& value, const QVariant& oldValue);
 
+	virtual bool requiresSecondaryDrawable() { return false; }
+	
 	// The core of the layer - create a new drawable instance for the specified context.
 	// drawable() will call initDrawable() on it to set it up as needed
-	virtual GLDrawable *createDrawable(GLWidget *widget);
+	virtual GLDrawable *createDrawable(GLWidget *widget, bool isSecondary=false);
 
 	// If its the first drawable, setup with defaults and load m_props[] with appros values
 	// If not first drawable, load drawable with values from m_props[]
@@ -353,6 +355,10 @@ protected:
 
 	// Cache for the drawables for this layer
 	QHash<GLWidget*, GLDrawable*> m_drawables;
+	QHash<GLWidget*, GLDrawable*> m_secondaryDrawables;
+	
+	// used for cross fading inorder to know which drawable to make visible/invisible when setVisible is called
+	bool m_secondarySourceActive;
 
 	// The properties for this layer - to properly set in sub-classes, use setProperty
 	QVariantMap m_props;
@@ -365,6 +371,8 @@ protected:
 	
 private:
 	void setVisibleGeometryFields(QStringList list = QStringList());
+	void applyDrawablePropertyInternal(GLDrawable *drawable, const QString& prop, const QVariant& value);
+	
 	
 	QFormLayout * m_geomLayout;
 	QHash<QString,QWidget*> m_propWidget;

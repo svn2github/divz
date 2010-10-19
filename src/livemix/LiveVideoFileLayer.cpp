@@ -33,10 +33,10 @@ LiveVideoFileLayer::~LiveVideoFileLayer()
 	}
 }
 
-GLDrawable *LiveVideoFileLayer::createDrawable(GLWidget *widget)
+GLDrawable *LiveVideoFileLayer::createDrawable(GLWidget *widget, bool isSecondary)
 {
 	// We overrride createDrawable here just for future expansiosn sake
-	return LiveVideoLayer::createDrawable(widget);
+	return LiveVideoLayer::createDrawable(widget, isSecondary);
 }
 
 void LiveVideoFileLayer::initDrawable(GLDrawable *drawable, bool isFirst)

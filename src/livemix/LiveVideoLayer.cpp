@@ -33,7 +33,7 @@ LiveVideoLayer::~LiveVideoLayer()
 	// TODO close source
 }
 
-GLDrawable *LiveVideoLayer::createDrawable(GLWidget *widget)
+GLDrawable *LiveVideoLayer::createDrawable(GLWidget *widget, bool)
 {
 	GLVideoDrawable *drawable = new GLVideoDrawable();
 	//drawable->setVideoSource(source);

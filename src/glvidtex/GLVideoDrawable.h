@@ -149,6 +149,8 @@ public:
 	virtual QSizeF naturalSize() { return m_sourceRect.size(); }
 	
 public slots:
+	void setVisible(bool flag, bool waitOnFrameSignal=false);
+	
 	void setAlphaMask(const QImage&);
 	void setTextureOffset(double x, double y);
 	void setTextureOffset(const QPointF&);
@@ -263,6 +265,9 @@ private:
 	
 	bool m_texturesInited;
 	QMutex m_frameReadyLock;
+	
+	bool m_visiblePendingFrame;
+	bool m_tempVisibleValue;
 };
 
 #endif 

@@ -7,6 +7,7 @@ class GLVideoDrawable ;
 class GLDrawable;
 class GLWidget;
 class TextVideoSource;
+class StaticVideoSource;;
 
 class LiveTextLayer  : public LiveLayer
 {
@@ -47,12 +48,14 @@ public slots:
 	virtual void setLayerProperty(const QString& propertyId, const QVariant& value);
 
 protected:
-	virtual GLDrawable *createDrawable(GLWidget *);
+	virtual bool requiresSecondaryDrawable() { return true; }
+	virtual GLDrawable *createDrawable(GLWidget *widget, bool isSecondary=false);
 	virtual void initDrawable(GLDrawable *drawable, bool isFirstDrawable = false);
 	virtual QWidget *createLayerPropertyEditors();
 	
 private:
 	TextVideoSource *m_textSource;
+	TextVideoSource *m_secondaryTextSource;
 	QString m_text; 
 };
 
