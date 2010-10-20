@@ -272,8 +272,8 @@ QWidget * LiveLayer::generatePropertyEditor(QObject *object, const char *propert
 
 		box->setText(opts.text);
 
-		connect(box, SIGNAL(toggled(bool)), object, slot);
 		box->setChecked( prop.toBool() );
+		connect(box, SIGNAL(toggled(bool)), object, slot);
 		
 		if(changeSignal)
 			new PropertyChangeListener(object, changeSignal, box, SLOT(setChecked(bool)), prop, property);
@@ -285,8 +285,8 @@ QWidget * LiveLayer::generatePropertyEditor(QObject *object, const char *propert
 	{
 		QLineEdit *box = new QLineEdit();
 		
-		QObject::connect(box, SIGNAL(textChanged(const QString&)), object, slot);
 		box->setText( prop.toString() );
+		QObject::connect(box, SIGNAL(textChanged(const QString&)), object, slot);
 		
 		if(changeSignal)
 			new PropertyChangeListener(object, changeSignal, box, SLOT(setText(const QString&)), prop, property);
@@ -907,12 +907,14 @@ void LiveLayer::setVisible(bool flag)
 	if(m_lockVisibleSetter)
 		return;
 	m_lockVisibleSetter = true;
-	// Implemented using sig/slot instead of just calling each if the drawables setVisible
-	// directly so that it can be conditionally connected based on the GLWidget that
-	// the drawable is connected to - see the connect() statement in LiveLayer::drawable()
-	//if(flag != m_isVisible)
-		emit isVisible(flag);
+	
+	m_isVisible = flag;
+	
+	emit isVisible(flag);
 		
+	
+	//qDebug() << "LiveLayer::setVisible: "<<this<<", flag:"<<flag;
+	
 	foreach(GLWidget *glw, m_glWidgets)
 	{
 		bool editor = glw->property("isEditorWidget").toBool();
@@ -922,17 +924,17 @@ void LiveLayer::setVisible(bool flag)
 		if(m_secondarySourceActive && m_secondaryDrawables.contains(glw))
 		{
 			m_secondaryDrawables[glw]->setVisible(flag);
-			m_drawables[glw]->setVisible(false);
+			if(m_drawables[glw]->isVisible())
+				m_drawables[glw]->setVisible(false);
 		}
 		else
 		{
 			m_drawables[glw]->setVisible(flag);
-			if(m_secondaryDrawables.contains(glw))
+			if(m_secondaryDrawables.contains(glw) &&
+				m_secondaryDrawables[glw]->isVisible())
 				m_secondaryDrawables[glw]->setVisible(false);
 		}
 	}
-	
-	m_isVisible = flag;
 	
 	if(m_hideOnShow)
 		if(m_hideOnShow->isVisible() == flag)
@@ -1170,8 +1172,9 @@ void LiveLayer::initDrawable(GLDrawable *drawable, bool /*isFirstDrawable*/)
 	
 	setAnimEnabled(animEnabled);
 
-	//qDebug() << "LiveLayer::initDrawable: now setting visible:"<<m_isVisible<<", rect:"<<drawable->rect();
-	drawable->setVisible(m_isVisible);
+	//fqDebug() << "LiveLayer::initDrawable: "<<this<<", drawable: "<<drawable<<", now setting visible:"<<m_isVisible<<", rect:"<<drawable->rect();
+	//drawable->setVisible(m_isVisible);
+	setVisible(m_isVisible);
 	
 }
 
@@ -1444,12 +1447,16 @@ void LiveLayer::attachGLWidget(GLWidget *glw)
 	if(!glw)
 		return;
 		
+	//qDebug() << "LiveLayer::attachGLWidget: "<<this<<", mark1";
 	m_glWidgets.append(glw);
 
 	glw->addDrawable(drawable(glw));
+	//qDebug() << "LiveLayer::attachGLWidget: "<<this<<", mark2";
 	
 	if(requiresSecondaryDrawable())
 		glw->addDrawable(drawable(glw, true));
+		
+	//qDebug() << "LiveLayer::attachGLWidget: "<<this<<", mark3";
 }
 
 void LiveLayer::detachGLWidget(GLWidget *glw)

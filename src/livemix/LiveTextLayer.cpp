@@ -34,7 +34,11 @@ LiveTextLayer::LiveTextLayer(QObject *parent)
 	m_secondaryTextSource->setTextWidth((int)size.width());
 	m_secondaryTextSource->setObjectName("Secondary");
 	
+	//qDebug() << "LiveTextLayer::ctor";
+	
 	setText("<b>Hello, World</b>");
+	
+	
 	
 // 	setOutlineEnabled(true);
 // 	setOutlinePen(QPen(1.5,Qt::black));
@@ -55,26 +59,34 @@ GLDrawable* LiveTextLayer::createDrawable(GLWidget *context, bool isSecondary)
 	// add secondary frame
 	// add text overlay frame
 	GLVideoDrawable *drawable = new GLVideoDrawable(context);
-	
+	drawable->setObjectName(isSecondary ? "Text-Secondary" : "Text-Primary");
 	drawable->setVideoSource(isSecondary ?  m_secondaryTextSource : m_textSource);
+	
+	//qDebug() << "LiveTextLayer::createDrawable: "<<drawable<<" mark1";
+ 
+	
 	if(isSecondary)
 	{
 		GLDrawable *primary = LiveLayer::drawable(context);
+		m_drawPair[primary] = drawable;
+		m_drawPair[drawable] = primary;
 		if(primary)
 		{
 			connect(primary,  SIGNAL(isVisible(bool)), this, SLOT(primaryDrawableVisibilityChanged(bool)));
 			connect(drawable, SIGNAL(isVisible(bool)), this, SLOT(secondaryDrawableVisibilityChanged(bool)));
 		}
+		//drawable->setVisible(false);
+		//m_secondarySourceActive = false;
 	}
 	
 	drawable->setZIndex(1);
 	//drawable->setObjectName("Text");
-	drawable->setObjectName(isSecondary ? "Text-Secondary" : "Text-Primary");
-
+	//qDebug() << "LiveTextLayer::createDrawable: "<<drawable<<" mark2";
+	
 
 	drawable->addShowAnimation(GLDrawable::AnimFade);
 	drawable->addHideAnimation(GLDrawable::AnimFade);
- 
+	
 	return drawable;
 }
 
@@ -89,35 +101,45 @@ void LiveTextLayer::initDrawable(GLDrawable *drawable, bool isFirstDrawable)
 void LiveTextLayer::secondaryDrawableVisibilityChanged(bool flag)
 {
 	GLDrawable *drawable = dynamic_cast<GLDrawable*>(sender());
-	//qDebug() << "LiveTextLayer::secondaryDrawableVisibilityChanged: "<<drawable<<", flag:"<<flag;
+	//qDebug() << "LiveTextLayer::secondaryDrawableVisibilityChanged: "<<drawable<<", flag:"<<flag<<", text:"<<text(); //m_secondaryTextSource->renderer()->html();
+// 	if(flag || !flag)
+// 	{
+// 		qDebug() << "true!";
+// 	}
 	if(!drawable)
 		return;
+	//qDebug() << "LiveTextLayer::secondaryDrawableVisibilityChanged: "<<drawable<<", flag:"<<flag<<", mark1";
 	// normally, if secondary is hidden, we show primary - only if the layer is not hidden
 	if(!flag && !isVisible())
 		return;
-	// drawable not added to a glwidget yet
-	if(!drawable->glWidget())
+	//qDebug() << "LiveTextLayer::secondaryDrawableVisibilityChanged: "<<drawable<<", flag:"<<flag<<", mark2";
+	GLDrawable *primary = m_drawPair[drawable];
+	if(!primary)
 		return;
-	GLDrawable *primary = LiveLayer::drawable(drawable->glWidget());
-	if(primary && primary->isVisible() == flag)
+	//qDebug() << "LiveTextLayer::secondaryDrawableVisibilityChanged: "<<drawable<<", flag:"<<flag<<", mark3";
+	if(primary->isVisible() == flag)
 		primary->setVisible(!flag);
+	//qDebug() << "LiveTextLayer::secondaryDrawableVisibilityChanged: "<<drawable<<", flag:"<<flag<<", mark4";
 }
 
 void LiveTextLayer::primaryDrawableVisibilityChanged(bool flag)
 {
 	GLDrawable *drawable = dynamic_cast<GLDrawable*>(sender());
-	//qDebug() << "LiveTextLayer::primaryDrawableVisibilityChanged: "<<drawable<<", flag:"<<flag;
+	//qDebug() << "LiveTextLayer::primaryDrawableVisibilityChanged: "<<drawable<<", flag:"<<flag<<", text:"<<text(); //m_textSource->renderer()->html();
 	if(!drawable)
 		return;
+	//qDebug() << "LiveTextLayer::primaryDrawableVisibilityChanged: "<<drawable<<", flag:"<<flag<<", mark1";
 	// normally, if primary is hidden, we show secondary - only if the layer is not hidden
 	if(!flag && !isVisible())
 		return;
-	// drawable not added to a glwidget yet
-	if(!drawable->glWidget())
+	//qDebug() << "LiveTextLayer::primaryDrawableVisibilityChanged: "<<drawable<<", flag:"<<flag<<", mark2";
+	GLDrawable *secondary = m_drawPair[drawable];
+	if(!secondary)
 		return;
-	GLDrawable *secondary = LiveLayer::drawable(drawable->glWidget(),true);
-	if(secondary && secondary->isVisible() == flag)
+	//qDebug() << "LiveTextLayer::primaryDrawableVisibilityChanged: "<<drawable<<", flag:"<<flag<<", mark3";
+	if(secondary->isVisible() == flag)
 		secondary->setVisible(!flag);
+	//qDebug() << "LiveTextLayer::primaryDrawableVisibilityChanged: "<<drawable<<", flag:"<<flag<<", mark4";
 }
 
 
@@ -158,7 +180,7 @@ void LiveTextLayer::setText(const QString& text)
 	{
 		GLVideoDrawable *videoDrawable = dynamic_cast<GLVideoDrawable*>(item);
 		if(videoDrawable)
-			videoDrawable->setVisible(isVisible(),true); // true = wait for next frame before becoming visible
+			videoDrawable->setVisible(isVisible(),isVisible()); // true = wait for next frame before becoming visible
 	}
 	
 	m_secondarySourceActive = !m_secondarySourceActive;

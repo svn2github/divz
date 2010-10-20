@@ -61,6 +61,7 @@ protected:
 private:
 	TextVideoSource *m_textSource;
 	TextVideoSource *m_secondaryTextSource;
+	QHash<GLDrawable*,GLDrawable*> m_drawPair;
 	QString m_text; 
 };
 

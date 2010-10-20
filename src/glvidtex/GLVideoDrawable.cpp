@@ -295,13 +295,17 @@ void GLVideoDrawable::disconnectVideoSource()
 	
 void GLVideoDrawable::setVisible(bool flag, bool pendingFrame)
 {
-	if(pendingFrame)
+	//qDebug() << "GLVideoDrawable::setVisible: "<<this<<", flag:"<<flag<<", pendingFrame:"<<pendingFrame;
+	m_tempVisibleValue = flag;
+	if(flag && pendingFrame)
 	{
 		m_visiblePendingFrame = true;
-		m_tempVisibleValue = flag;
 	}
 	else
 	{
+		if(m_visiblePendingFrame)
+			m_visiblePendingFrame = false;
+			
 		GLDrawable::setVisible(flag);
 	}
 }
@@ -401,7 +405,11 @@ void GLVideoDrawable::frameReady()
 	updateGL();
 	
 	if(m_visiblePendingFrame)
+	{
+		//qDebug() << "GLVideoDrawable::frameReady: "<<this<<", pending visible set, calling setVisible("<<m_tempVisibleValue<<")";
+		m_visiblePendingFrame = false;
 		GLDrawable::setVisible(m_tempVisibleValue);
+	}
 }
 
 void GLVideoDrawable::setAlphaMask(const QImage &mask)
