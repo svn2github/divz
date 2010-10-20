@@ -41,6 +41,7 @@ HEADERS += CameraThread.h \
 	../glvidtex/GLVideoDrawable.h \
 	../glvidtex/StaticVideoSource.h \
 	../glvidtex/TextVideoSource.h \
+	../glvidtex/RichTextRenderer.h \
 	../ImageFilters.h \
 	LiveScene.h \
 	LiveLayer.h \
@@ -77,6 +78,7 @@ SOURCES += main.cpp \
 	../glvidtex/GLVideoDrawable.cpp \
 	../glvidtex/StaticVideoSource.cpp \
 	../glvidtex/TextVideoSource.cpp \
+	../glvidtex/RichTextRenderer.cpp \
 	../ImageFilters.cpp \
 	LiveScene.cpp \
 	LiveLayer.cpp \

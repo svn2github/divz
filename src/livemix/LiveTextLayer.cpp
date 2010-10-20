@@ -19,10 +19,10 @@ LiveTextLayer::LiveTextLayer(QObject *parent)
 	m_textSource->start();
 	//m_textSource->moveToThread(m_textSource);
 	m_textSource->setHtml("?");
-	m_textSource->changeFontSize(40);
+	m_textSource->renderer()->changeFontSize(40);
 	m_textSource->setObjectName("Primary");
 	
-	QSizeF size = m_textSource->findNaturalSize();
+	QSizeF size = m_textSource->renderer()->findNaturalSize();
 	m_textSource->setTextWidth((int)size.width());
 	
 	// For cross fading
@@ -30,7 +30,7 @@ LiveTextLayer::LiveTextLayer(QObject *parent)
 	m_secondaryTextSource->start();
 	//m_textSource->moveToThread(m_textSource);
 	m_secondaryTextSource->setHtml("?");
-	m_secondaryTextSource->changeFontSize(40);
+	m_secondaryTextSource->renderer()->changeFontSize(40);
 	m_secondaryTextSource->setTextWidth((int)size.width());
 	m_secondaryTextSource->setObjectName("Secondary");
 	
@@ -106,7 +106,7 @@ void LiveTextLayer::secondaryDrawableVisibilityChanged(bool flag)
 void LiveTextLayer::primaryDrawableVisibilityChanged(bool flag)
 {
 	GLDrawable *drawable = dynamic_cast<GLDrawable*>(sender());
-	qDebug() << "LiveTextLayer::primaryDrawableVisibilityChanged: "<<drawable<<", flag:"<<flag;
+	//qDebug() << "LiveTextLayer::primaryDrawableVisibilityChanged: "<<drawable<<", flag:"<<flag;
 	if(!drawable)
 		return;
 	// normally, if primary is hidden, we show secondary - only if the layer is not hidden
@@ -134,9 +134,9 @@ void LiveTextLayer::setText(const QString& text)
 // 	qDebug() << "LiveTextLayer::setText(): changeFontSize(40)";
 	
 	// TODO make font size configurable
-	textSource->changeFontSize(40);
+	textSource->renderer()->changeFontSize(40);
 	
-	QSize size = textSource->findNaturalSize();
+	QSize size = textSource->renderer()->findNaturalSize();
 	
 // 	qDebug() << "LiveTextLayer::setText(): natural size: "<<size;
 	textSource->setTextWidth(size.width());
@@ -172,29 +172,29 @@ void LiveTextLayer::setLayerProperty(const QString& key, const QVariant& value)
 		setText(value.toString());
 	}
 	else
-	if(key.indexOf("color") > -1)
-	{
-		QColor color = value.value<QColor>();
-
-		if(key == "outlineColor")
-		{
-			m_textSource->setOutlinePen(QPen(color));
-			m_secondaryTextSource->setOutlinePen(QPen(color));
-		}
-		else
-		if(key == "fillColor")
-		{
-			m_textSource->setFillBrush(QBrush(color));
-			m_secondaryTextSource->setFillBrush(QBrush(color));
-		}
-		else
-		if(key == "shadowColor")
-		{
-			m_textSource->setShadowBrush(QBrush(color));
-			m_secondaryTextSource->setShadowBrush(QBrush(color));
-		}
-	}
-	else
+// 	if(key.indexOf("color") > -1)
+// 	{
+// 		QColor color = value.value<QColor>();
+// 
+// 		if(key == "outlineColor")
+// 		{
+// 			m_textSource->setOutlinePen(QPen(color));
+// 			m_secondaryTextSource->setOutlinePen(QPen(color));
+// 		}
+// 		else
+// 		if(key == "fillColor")
+// 		{
+// 			m_textSource->setFillBrush(QBrush(color));
+// 			m_secondaryTextSource->setFillBrush(QBrush(color));
+// 		}
+// 		else
+// 		if(key == "shadowColor")
+// 		{
+// 			m_textSource->setShadowBrush(QBrush(color));
+// 			m_secondaryTextSource->setShadowBrush(QBrush(color));
+// 		}
+// 	}
+// 	else
 	{
 		const char *keyStr = qPrintable(key);
 		if(m_textSource->metaObject()->indexOfProperty(keyStr)>=0)
