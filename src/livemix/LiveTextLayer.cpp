@@ -156,7 +156,8 @@ void LiveTextLayer::setText(const QString& text)
 // 	qDebug() << "LiveTextLayer::setText(): changeFontSize(40)";
 	
 	// TODO make font size configurable
-	textSource->renderer()->changeFontSize(40);
+	if (!Qt::mightBeRichText(text))
+		textSource->renderer()->changeFontSize(40);
 	
 	QSize size = textSource->renderer()->findNaturalSize();
 	
@@ -165,7 +166,10 @@ void LiveTextLayer::setText(const QString& text)
 
 	m_props["text"] = text;
 	
-	setInstanceName(text);
+	QString plainText = text;
+	plainText.replace( QRegExp("<[^>]*>"), "" );
+
+	setInstanceName(plainText);
 	
 // 	qDebug() << "LiveTextLayer::setText(): updating alignment";
 // 	setAlignment(alignment()); // force recalc of layout

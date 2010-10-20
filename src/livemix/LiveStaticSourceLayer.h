@@ -13,7 +13,7 @@ class LiveStaticSourceLayer : public LiveVideoLayer
 {
 	Q_OBJECT
 	
-	Q_PROPERTY(QString file READ file WRITE setFile)
+	Q_PROPERTY(QString file READ file WRITE setFile USER true)
 	
 public:
 	Q_INVOKABLE LiveStaticSourceLayer(QObject *parent=0);

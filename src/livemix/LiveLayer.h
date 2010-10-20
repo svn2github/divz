@@ -12,6 +12,9 @@ class LiveLayer : public QObject
 
 	Q_PROPERTY(int id READ id);
 	
+	Q_PROPERTY(bool userControllable READ isUserControllable WRITE setUserControllable);
+	Q_PROPERTY(QString layerName READ layerName WRITE setLayerName);
+	
 	Q_PROPERTY(bool isVisible READ isVisible WRITE setVisible);
 	Q_PROPERTY(QRectF rect READ rect WRITE setRect);
 	Q_PROPERTY(double zIndex READ zIndex WRITE setZIndex);
@@ -63,6 +66,11 @@ public:
 	virtual QString typeName() { return "Generic Layer"; }
 	// Use "setInstanceName to change the name here, which emits instanceNameChanged()
 	virtual QString instanceName() { return m_instanceName; }
+	
+	// Returns the user-assigned layer name, if any
+	virtual QString layerName() { return m_layerName; }
+	
+	virtual bool isUserControllable() { return m_isUserControllable; }
 
 	// Query for layer properties
 	virtual QVariantMap layerProperties() { return m_props; }
@@ -167,8 +175,14 @@ signals:
 
 	// emitted by setInstanceName()
 	void instanceNameChanged(const QString&);
+	
+	void layerNameChanged(const QString&);
+	void userControllableChanged(bool);
 
 public slots:
+	void setLayerName(const QString&);
+	void setUserControllable(bool);
+	
 	void setVisible(bool);
 
 	void setRect(const QRectF&);
@@ -392,6 +406,9 @@ private:
 	int m_layerId;
 	bool m_layerIdLoaded;
 	bool m_lockLayerPropertyUpdates;
+	
+	QString m_layerName;
+	bool m_isUserControllable;
 };
 
 #endif

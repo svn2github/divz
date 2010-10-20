@@ -61,6 +61,7 @@ LiveLayer::LiveLayer(QObject *parent)
 	, m_layerId(-1)
 	, m_layerIdLoaded(false)
 	, m_lockLayerPropertyUpdates(false)
+	, m_isUserControllable(false)
 {
 	m_props["rect"] = QRectF();
 	m_props["zIndex"] = -1.;
@@ -386,6 +387,25 @@ QWidget * LiveLayer::createLayerPropertyEditors()
 	QVBoxLayout *blay = new QVBoxLayout(base);
 	blay->setContentsMargins(0,0,0,0);
 
+
+	PropertyEditorOptions opts;
+
+	opts.reset();
+	
+	{
+		ExpandableWidget *group = new ExpandableWidget("Layer Information",base);
+		blay->addWidget(group);
+	
+		QWidget *cont = new QWidget;
+		QFormLayout *lay = new QFormLayout(cont);
+		lay->setContentsMargins(3,3,3,3);
+		
+		group->setWidget(cont);
+		
+		lay->addRow(tr("&Layer Name:"), generatePropertyEditor(this, "layerName", SLOT(setLayerName(const QString&)), opts));
+		lay->addRow(generatePropertyEditor(this, "userControllable", SLOT(setUserControllable(bool)), opts));
+	}
+	
 	ExpandableWidget *groupGeom = new ExpandableWidget("Position and Display",base);
 	blay->addWidget(groupGeom);
 
@@ -398,9 +418,7 @@ QWidget * LiveLayer::createLayerPropertyEditors()
 
 	groupGeom->setWidget(groupGeomContainer);
 	
-	PropertyEditorOptions opts;
-
-	opts.reset();
+	
 
 	QStringList showAsList = QStringList()
 		<< "Absolute Position"//0
@@ -1117,9 +1135,25 @@ void LiveLayer::applyAnimationProperties(GLDrawable *drawable)
 
 void LiveLayer::setInstanceName(const QString& name)
 {
+	QString oldName = m_instanceName;
 	m_instanceName = name;
 	setObjectName(qPrintable(m_instanceName));
 	emit instanceNameChanged(name);
+	layerPropertyWasChanged("instanceName",name,oldName);
+}
+
+void LiveLayer::setUserControllable(bool flag)
+{
+	m_isUserControllable = flag;
+	emit userControllableChanged(flag);
+}
+
+void LiveLayer::setLayerName(const QString& name)
+{
+	QString oldName = m_layerName;
+	m_layerName = name;
+	emit layerNameChanged(name);
+	layerPropertyWasChanged("layerName",name,oldName);
 }
 
 // just emits layerPropertyChanged

@@ -60,6 +60,7 @@ void LiveVideoInputLayer::initDrawable(GLDrawable *drawable, bool isFirst)
 
 void LiveVideoInputLayer::setCamera(const QString& dev)
 {
+	m_cameraDev = dev;
 	CameraThread *thread = CameraThread::threadForCamera(dev);
 	if(m_camera == thread)
 		return;

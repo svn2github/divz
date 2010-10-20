@@ -78,4 +78,23 @@ Structure:
 					Or set a specific property on a widget
 					
 					
+					
+				Playlist data types:
+					LiveVideoFileLayer:
+						List of Video Files (Duration Explicit, in/out times can be edited)
+					LiveStaticSourceLayer:
+						List of Image Files (Duration Explicit)
+					LiveTextLayer:
+						List of Strings (Duration Explicit)
+					LiveVideoInputLayer:
+						List of Camera Devices (Duration Explcit)
+						
+				Other user controllable properties:
+					(All: Play list (current item/next/prev,pause/play), (add/del,move up/down))
+					(All: Visible/Hidden)
+					LiveVideoFileLayer:
+						Volume Level
+					
+						
+						
 							

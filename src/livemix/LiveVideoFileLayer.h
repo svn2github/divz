@@ -20,7 +20,7 @@ class LiveVideoFileLayer : public LiveVideoLayer
 	Q_OBJECT
 	
 	//Q_PROPERTY(QString file READ file WRITE setFile);
-	Q_PROPERTY(QStringList fileList READ fileList WRITE setFileList);
+	Q_PROPERTY(QStringList fileList READ fileList WRITE setFileList USER true);
 	
 public:
 	Q_INVOKABLE LiveVideoFileLayer(QObject *parent=0);

@@ -13,7 +13,7 @@ class LiveTextLayer  : public LiveLayer
 {
 	Q_OBJECT
 	
-	Q_PROPERTY(QString text READ text WRITE setText);
+	Q_PROPERTY(QString text READ text WRITE setText USER true);
 	
 // 	Q_PROPERTY(bool	   	outlineEnabled 	READ outlineEnabled 	WRITE setOutlineEnabled);
 // 	Q_PROPERTY(QColor	outlineColor 	READ outlineColor	WRITE setOutlineColor);
