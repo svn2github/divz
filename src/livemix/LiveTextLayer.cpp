@@ -62,8 +62,8 @@ GLDrawable* LiveTextLayer::createDrawable(GLWidget *context, bool isSecondary)
 		GLDrawable *primary = LiveLayer::drawable(context);
 		if(primary)
 		{
-			connect(primary, SIGNAL(isVisible(bool)), drawable, SLOT(setHidden(bool)));
-			connect(drawable, SIGNAL(isVisible(bool)), primary, SLOT(setHidden(bool)));
+			connect(primary,  SIGNAL(isVisible(bool)), this, SLOT(primaryDrawableVisibilityChanged(bool)));
+			connect(drawable, SIGNAL(isVisible(bool)), this, SLOT(secondaryDrawableVisibilityChanged(bool)));
 		}
 	}
 	
@@ -86,9 +86,44 @@ void LiveTextLayer::initDrawable(GLDrawable *drawable, bool isFirstDrawable)
 
 }
 
+void LiveTextLayer::secondaryDrawableVisibilityChanged(bool flag)
+{
+	GLDrawable *drawable = dynamic_cast<GLDrawable*>(sender());
+	//qDebug() << "LiveTextLayer::secondaryDrawableVisibilityChanged: "<<drawable<<", flag:"<<flag;
+	if(!drawable)
+		return;
+	// normally, if secondary is hidden, we show primary - only if the layer is not hidden
+	if(!flag && !isVisible())
+		return;
+	// drawable not added to a glwidget yet
+	if(!drawable->glWidget())
+		return;
+	GLDrawable *primary = LiveLayer::drawable(drawable->glWidget());
+	if(primary && primary->isVisible() == flag)
+		primary->setVisible(!flag);
+}
+
+void LiveTextLayer::primaryDrawableVisibilityChanged(bool flag)
+{
+	GLDrawable *drawable = dynamic_cast<GLDrawable*>(sender());
+	qDebug() << "LiveTextLayer::primaryDrawableVisibilityChanged: "<<drawable<<", flag:"<<flag;
+	if(!drawable)
+		return;
+	// normally, if primary is hidden, we show secondary - only if the layer is not hidden
+	if(!flag && !isVisible())
+		return;
+	// drawable not added to a glwidget yet
+	if(!drawable->glWidget())
+		return;
+	GLDrawable *secondary = LiveLayer::drawable(drawable->glWidget(),true);
+	if(secondary && secondary->isVisible() == flag)
+		secondary->setVisible(!flag);
+}
+
+
 void LiveTextLayer::setText(const QString& text)
 {
-// 	qDebug() << "LiveTextLayer::setText(): text:"<<text;
+ 	//qDebug() << "LiveTextLayer::setText(): text:"<<text;
 	TextVideoSource *textSource = m_secondarySourceActive ? m_textSource : m_secondaryTextSource; 
 	//qDebug() << "LiveTextLayer::setText: "<<text<<", secondary flag:"<<m_secondarySourceActive<<", using source: "<<textSource;
 	

@@ -47,6 +47,11 @@ public slots:
 	// Set a property (emits instancePropertyChanged)
 	virtual void setLayerProperty(const QString& propertyId, const QVariant& value);
 
+private slots:
+	void primaryDrawableVisibilityChanged(bool);
+	void secondaryDrawableVisibilityChanged(bool);
+
+
 protected:
 	virtual bool requiresSecondaryDrawable() { return true; }
 	virtual GLDrawable *createDrawable(GLWidget *widget, bool isSecondary=false);

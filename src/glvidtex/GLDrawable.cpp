@@ -72,6 +72,7 @@ void GLDrawable::setVisible(bool flag)
 	if(m_isVisible == flag)
 	{
 		m_lockVisibleSetter = false;
+		emit isVisible(flag);
 		return;
 	}
 		
