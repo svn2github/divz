@@ -22,6 +22,7 @@ LiveVideoInputLayer::LiveVideoInputLayer(QObject *parent)
 		source->setFps(30);
 		source->enableRawFrames(true);
 		
+		m_cameraDev = defaultCamera;
 		setCamera(source);
 		
 		m_props["deinterlace"] = source->deinterlace();
@@ -58,7 +59,7 @@ void LiveVideoInputLayer::initDrawable(GLDrawable *drawable, bool isFirst)
 	}
 }
 
-void LiveVideoInputLayer::setCamera(const QString& dev)
+void LiveVideoInputLayer::setInputDevice(const QString& dev)
 {
 	m_cameraDev = dev;
 	CameraThread *thread = CameraThread::threadForCamera(dev);
@@ -85,6 +86,7 @@ void LiveVideoInputLayer::selectCameraIdx(int idx)
 	source->setFps(30);
 	source->enableRawFrames(true);
 	
+	m_cameraDev = rawDevices[idx];
 	setCamera(source);
 }
 

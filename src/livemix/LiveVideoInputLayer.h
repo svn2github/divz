@@ -13,7 +13,7 @@ class LiveVideoInputLayer : public LiveVideoLayer
 {
 	Q_OBJECT
 	
-	Q_PROPERTY(QString camera READ camera WRITE setCamera USER true);
+	Q_PROPERTY(QString inputDevice READ inputDevice WRITE setInputDevice USER true);
 	Q_PROPERTY(bool deinterlace READ deinterlace WRITE setDeinterlace);
 	
 public:
@@ -24,8 +24,8 @@ public:
 	
 	bool deinterlace() { return layerProperty("deinterlace").toBool(); }
 	
-	QString camera() { return m_cameraDev; }
-	void setCamera(const QString& dev);
+	QString inputDevice() { return m_cameraDev; }
+	void setInputDevice(const QString& dev);
 
 public slots:
 	// Set a property (emits instancePropertyChanged)
