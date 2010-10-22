@@ -30,6 +30,9 @@ public:
 // 	void setIconSize(QSize);
 // 	QSize iconSize() { return m_iconSize; }
 	
+	void showOnlyUserControllable(bool flag=true);
+	bool isOnlyUserControllableShown() { return m_showOnlyUserControllable; }
+	
 	void setLiveScene(LiveScene*);
 	LiveLayer * itemFromIndex(const QModelIndex &index);
 	LiveLayer * itemAt(int);
@@ -54,10 +57,6 @@ public:
  	// Not from AbstractListModel, just for utility
 	QString itemMimeType() const { return "application/x-livemix-livescene-listmodel-item"; }
  	
- 	
-//  	void setQueuedIconGenerationMode(bool flag);
-// 	bool queuedIconGenerationMode() { return m_queuedIconGenerationMode; }
- 	
 
 signals:
 	void layersDropped(QList<LiveLayer*>);
@@ -67,60 +66,24 @@ public slots:
 	void releaseLiveScene();
 	
 private slots:
-	//void slideChanged(Slide *slide, QString slideOperation, AbstractItem *item, QString operation, QString fieldName, QVariant value);
 	void layerPropertyChanged(const QString& propertyId, const QVariant& value, const QVariant& oldValue);
 	void layerAdded(LiveLayer*);
 	void layerRemoved(LiveLayer*);
 	
  	void modelDirtyTimeout();
-// 	void modelDirtyTimeout2();
-// 	void aspectRatioChanged(double);
-// 	
-// 	void makePixmaps();
-// 	
-// 	void turnOffQueuedIconGeneration();
 	
 protected:
-// 	virtual QPixmap generatePixmap(Slide*);
-// 	virtual QPixmap renderScene(MyGraphicsScene*);
-// 	QPixmap defaultPendingPixmap();
 	void markLayerDirty(LiveLayer*);
 	
-// 	void regenerateBlankPixmap();
-	
-// 	void needPixmap(Slide*);
-	
 	void internalSetup();
-// 	void adjustIconAspectRatio();
 	
 	LiveScene * m_scene;
 	QList<LiveLayer*> m_sortedLayers;
  	QList<LiveLayer*> m_dirtyLayers;
-// 	QList<Slide*> m_dirtySlides2;
-// 	QList<Slide*> m_needPixmaps;
-// 	QHash<int,QPixmap> m_pixmaps;
-	
-// 	MyGraphicsScene * m_scene;
-	//QGraphicsView * m_view;
-	
+ 	
 	QTimer m_dirtyTimer;
-// 	QTimer * m_dirtyTimer;
-// 	QTimer * m_dirtyTimer2;
-// 	
-// 	QSize m_iconSize;
-// 	QRect m_sceneRect;
-// 	
-// 	QPixmap m_pendingPixmap;
-// 	
-// 	QHash<Slide*, MyGraphicsScene*> m_dataLoadPending;
-// 	
-// 	bool m_queuedIconGenerationMode;
-// 
-//  	QTimer m_needPixmapTimer;
-//  	
-//  	QTimer m_queueStateChangeTimer;
-//  	
-//  	QPixmap * m_blankPixmap;
+
+	bool m_showOnlyUserControllable;
 
 };
 

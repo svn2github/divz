@@ -1144,8 +1144,10 @@ void LiveLayer::setInstanceName(const QString& name)
 
 void LiveLayer::setUserControllable(bool flag)
 {
+	bool oldFlag = m_isUserControllable;
 	m_isUserControllable = flag;
 	emit userControllableChanged(flag);
+	layerPropertyWasChanged("isUserControllable",flag,oldFlag);
 }
 
 void LiveLayer::setLayerName(const QString& name)

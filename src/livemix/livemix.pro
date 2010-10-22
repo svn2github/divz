@@ -19,6 +19,8 @@ win32 {
     #}
 }
 
+FORMS += ControlWindow.ui
+
 # Input
 HEADERS += CameraThread.h \
 	CameraServer.h \
@@ -54,7 +56,9 @@ HEADERS += CameraThread.h \
 	LiveVideoFileLayer.h \
 	LiveSceneListModel.h \
 	EditorUtilityWidgets.h \
-	LiveVideoLoopLayer.h 
+	LiveVideoLoopLayer.h \
+	ControlWindow.h
+	
 	
 SOURCES += main.cpp \
 	CameraThread.cpp \
@@ -92,6 +96,7 @@ SOURCES += main.cpp \
 	LiveSceneListModel.cpp \
 	EditorUtilityWidgets.cpp \
 	LiveVideoLoopLayer.cpp \
+	ControlWindow.cpp
 
 unix {
 	HEADERS += \

@@ -1,119 +1,29 @@
 #include "LiveSceneListModel.h"
 #include <QDebug>
 
-// #ifndef QT_NO_OPENGL
-// # include <QtOpenGL/QGLWidget>
-// #endif
-
 #include <QMimeData>
-#include <QPixmap>
-#include <QPixmapCache>
 
-/*#include "MyGraphicsScene.h"*/
 #include "LiveScene.h"
 #include "LiveLayer.h"
-// #include "model/SlideGroup.h"
-// #include "model/Slide.h"
-// #include "MainWindow.h"
-// #include "AppSettings.h"
-
-// #include "DeepProgressIndicator.h"
 
 #define DEBUG_MARK() qDebug() << "[DEBUG] "<<__FILE__<<":"<<__LINE__
 
 #define POINTER_STRING(ptr) QString().sprintf("%p",static_cast<void*>(ptr))
 
-// #define NEED_PIXMAP_TIMEOUT 150
-// #define NEED_PIXMAP_TIMEOUT_FAST 100
-// #define DIRTY_TIMEOUT 250
-// #define QUEUE_STATE_CHANGE_TIME 1000
-
-// blank 4x3 pixmap
 
 LiveSceneListModel::LiveSceneListModel(QObject *parent)
 	: QAbstractListModel(parent)
-	//, m_scene(0)
 	, m_scene(0)
-// 	, m_dirtyTimer(0)
-// 	, m_iconSize(192,0)
-// 	, m_sceneRect(0,0,1024,768)
-// 	, m_queuedIconGenerationMode(false)
-// 	, m_blankPixmap(0)
+	, m_showOnlyUserControllable(false)
 {
-		
-// 	m_dirtyTimer = new QTimer(this);
  	m_dirtyTimer.setSingleShot(true);
  	connect(&m_dirtyTimer, SIGNAL(timeout()), this, SLOT(modelDirtyTimeout()));
-// 	
-// 	m_dirtyTimer2 = new QTimer(this);
-// 	m_dirtyTimer2->setSingleShot(true);
-// 	connect(m_dirtyTimer2, SIGNAL(timeout()), this, SLOT(modelDirtyTimeout2()));
-// 	
-// 	if(!m_blankPixmap)
-// 	{
-// 		regenerateBlankPixmap();
-// 	}
-// 	
-// 	connect(&m_needPixmapTimer, SIGNAL(timeout()), this, SLOT(makePixmaps()));
-// 
-// 	connect(&m_queueStateChangeTimer, SIGNAL(timeout()), this, SLOT(turnOffQueuedIconGeneration()));
-// 	m_queueStateChangeTimer.setSingleShot(true);
-	
-// 	if(m_scene)
-// 		setSlideGroup(g);
-// 	
-// 	if(MainWindow::mw())
-// 	{
-// 		m_sceneRect = MainWindow::mw()->standardSceneRect();
-// 		connect(MainWindow::mw(), SIGNAL(aspectRatioChanged(double)), this, SLOT(aspectRatioChanged(double)));
-// 	}
-// 			
-// 	setSceneRect(m_sceneRect);
 }
 
 LiveSceneListModel::~LiveSceneListModel()
 {
-// 	if(m_blankPixmap)
-// 	{
-// 		delete m_blankPixmap;
-// 		m_blankPixmap = 0;
-// 	}
-// 	
-// 	if(m_scene)
-// 	{
-// 		delete m_scene;
-// 		m_scene = 0;
-// 	}
 }
 
-// void LiveSceneListModel::regenerateBlankPixmap()
-// {
-// 	if(m_blankPixmap)
-// 		delete m_blankPixmap;
-// 		
-// 	m_blankPixmap = new QPixmap(m_iconSize.width(),m_iconSize.width() * (1/AppSettings::liveAspectRatio()));
-// 	m_blankPixmap->fill(Qt::lightGray);
-// 	QPainter painter(m_blankPixmap);
-// 	painter.setPen(QPen(Qt::black,1,Qt::DotLine));
-// 	painter.drawRect(m_blankPixmap->rect().adjusted(0,0,-1,-1));
-// 	painter.end();
-// }
-// 
-// void LiveSceneListModel::setQueuedIconGenerationMode(bool flag)
-// {
-// 	m_queuedIconGenerationMode = flag;
-// }
-// 
-// void LiveSceneListModel::turnOffQueuedIconGeneration()
-// {
-// 	setQueuedIconGenerationMode(false);
-// }
-// 
-// void LiveSceneListModel::aspectRatioChanged(double)
-// {
-// 	setSceneRect(MainWindow::mw()->standardSceneRect());
-// }
-// 
 
 Qt::ItemFlags LiveSceneListModel::flags(const QModelIndex &index) const
 {
@@ -307,7 +217,18 @@ void LiveSceneListModel::internalSetup()
 	if(!m_scene)
 		return;
 	
-	QList<LiveLayer*> slist = m_scene->layerList();
+	QList<LiveLayer*> slist;
+	
+	if(m_showOnlyUserControllable)
+	{
+		foreach(LiveLayer *layer,  m_scene->layerList())
+			if(layer->isUserControllable())
+				slist.append(layer);
+	}
+	else
+	{
+		 slist = m_scene->layerList();
+	}
 	
 	if(slist.size() <= 0)
 		return;
@@ -322,12 +243,16 @@ void LiveSceneListModel::internalSetup()
 	
 }
 
-void LiveSceneListModel::layerPropertyChanged(const QString& /*propertyId*/, const QVariant& /*value*/, const QVariant& /*oldValue*/)
+void LiveSceneListModel::layerPropertyChanged(const QString& propertyId, const QVariant& /*value*/, const QVariant& /*oldValue*/)
 {
 	if(!m_scene)
 		return;
 	
-	markLayerDirty(dynamic_cast<LiveLayer*>(sender()));
+	if(m_showOnlyUserControllable &&
+	   propertyId == "isUserControllable")
+		internalSetup();
+	else
+		markLayerDirty(dynamic_cast<LiveLayer*>(sender()));
 }
 
 void LiveSceneListModel::layerRemoved(LiveLayer *layer)
@@ -377,9 +302,6 @@ void LiveSceneListModel::modelDirtyTimeout()
 	if(m_dirtyLayers.isEmpty())
 		return;
 	
-// 	foreach(Slide *slide, m_dirtyLayers)
-// 		QPixmapCache::remove(QString("%1-%2").arg(POINTER_STRING(slide)).arg(m_iconSize.width()));
-	
 	QModelIndex top    = indexForItem(m_dirtyLayers.first()),
 	            bottom = indexForItem(m_dirtyLayers.last());
 	
@@ -403,7 +325,8 @@ void LiveSceneListModel::modelDirtyTimeout()
 	
 int LiveSceneListModel::rowCount(const QModelIndex &/*parent*/) const
 {
-	return m_scene ? m_scene->layerList().size() : 0;
+	//return m_scene ? m_scene->layerList().size() : 0;
+	return m_sortedLayers.size();
 }
 
 LiveLayer * LiveSceneListModel::itemFromIndex(const QModelIndex &index)
@@ -468,39 +391,8 @@ QVariant LiveSceneListModel::data(const QModelIndex &index, int role) const
 			Qt::Checked :
 			Qt::Unchecked;
 	}
-// 	else if(Qt::DecorationRole == role)
-// 	{
-// 		LiveLayer *g = m_sortedLayers.at(index.row());
-// 		QString cacheKey = QString("%1-%2").arg(POINTER_STRING(g)).arg(m_iconSize.width());
-// 		QPixmap icon;
-// 		
-// 		//qDebug() << "LiveSceneListModel::data: Decoration for row:"<<index.row();
-// 		
-// 		if(!QPixmapCache::find(cacheKey,icon))
-// 		{
-// 			// HACK - Have to remove the const'ness from 'this' so that
-// 			// we can cache the pixmap internally. Not sure if this is
-// 			// going to ruin anything - but it seems to work just fine
-// 			// so far!
-// 			LiveSceneListModel * self = const_cast<LiveSceneListModel*>(this);
-// 			
-// 			if(m_queuedIconGenerationMode)
-// 			{
-// 				self->needPixmap(g);
-// 				return *m_blankPixmap;
-// 			}
-// 			else
-// 			{
-// 				icon = self->generatePixmap(g);
-// 				QPixmapCache::insert(cacheKey,icon);
-// 			}
-// 			
-// 		}
-// 		
-// 		return icon;
-// 	}
-// 	else
-		return QVariant();
+	
+	return QVariant();
 }
 
 bool LiveSceneListModel::setData(const QModelIndex &index, const QVariant & value, int role) 
