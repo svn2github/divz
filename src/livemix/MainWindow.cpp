@@ -198,6 +198,26 @@ void MainWindow::loadLiveScene(LiveScene *scene)
 	/// TODO main output
 }
 
+void MainWindow::hideAllLayers(bool flag)
+{
+	if(!m_currentScene || m_currentScene->layerList().isEmpty())
+		return;
+	foreach(LiveLayer *layer, m_currentScene->layerList())
+	{
+		if(flag)
+		{
+			bool isVis = layer->isVisible();
+			layer->setProperty("mw-hideall-wasvis",isVis);
+			layer->setVisible(false);
+		}
+		else
+		{
+			bool wasVis = layer->property("mw-hideall-wasvis").toBool();
+			layer->setVisible(wasVis);
+		}
+	}
+}
+
 void MainWindow::updateSceneTimeLength()
 {
 	double len = m_currentScene ? m_currentScene->sceneLength() : 0;
@@ -273,7 +293,7 @@ void MainWindow::setCurrentLayer(LiveLayer *layer)
 	if(m_currentLayer)
 	{
 //  		qDebug() << "MainWindow::setCurrentLayer(): removing old layer from editor";
-		//m_currentLayer->detachGLWidget(m_layerViewer);
+		m_currentLayer->detachGLWidget(m_layerViewer);
 	}
 
 	m_currentLayer = layer;
@@ -284,7 +304,7 @@ void MainWindow::setCurrentLayer(LiveLayer *layer)
 		
 	if(m_currentLayer)
 	{
-		//m_currentLayer->attachGLWidget(m_layerViewer);
+		m_currentLayer->attachGLWidget(m_layerViewer);
 		
 		QModelIndex idx = m_sceneModel->indexForItem(m_currentLayer);
 		if(m_layerListView->currentIndex().row() != idx.row())
@@ -796,38 +816,38 @@ void MainWindow::createCenterPanel()
 	m_editSplitter = new QSplitter(m_mainSplitter);
 	m_editSplitter->setOrientation(Qt::Vertical);
 
-// 	m_layerViewer = new GLWidget(m_editSplitter);
-// 	m_layerViewer->setProperty("isEditorWidget",true);
-// 
-// 	QSize size = m_layerViewer->viewport().size().toSize();
-// 	size /= 2.5;
-// 	qDebug() << "MainWindow::createLeftPanel(): size:"<<size;
-// 	QImage bgImage(size, QImage::Format_ARGB32_Premultiplied);
-// 	QBrush bgTexture(QPixmap("squares2.png"));
-// 	QPainter bgPainter(&bgImage);
-// 	bgPainter.fillRect(bgImage.rect(), bgTexture);
-// 	bgPainter.end();
-// 
-// 	StaticVideoSource *source = new StaticVideoSource();
-// 	source->setImage(bgImage);
-// 	//source->setImage(QImage("squares2.png"));
-// 	source->start();
-// 	connect(this, SIGNAL(destroyed()), source, SLOT(deleteLater()));
-// 
-// 	GLVideoDrawable *drawable = new GLVideoDrawable(m_layerViewer);
-// 	drawable->setVideoSource(source);
-// 	drawable->setRect(m_layerViewer->viewport());
-// 	drawable->setZIndex(-100);
-// 	drawable->setObjectName("StaticBackground");
-// 	drawable->setAlignment(Qt::AlignAbsolute);
+	m_layerViewer = new GLWidget(m_editSplitter);
+	m_layerViewer->setProperty("isEditorWidget",true);
+
+	QSize size = m_layerViewer->viewport().size().toSize();
+	size /= 2.5;
+	qDebug() << "MainWindow::createLeftPanel(): size:"<<size;
+	QImage bgImage(size, QImage::Format_ARGB32_Premultiplied);
+	QBrush bgTexture(QPixmap("squares2.png"));
+	QPainter bgPainter(&bgImage);
+	bgPainter.fillRect(bgImage.rect(), bgTexture);
+	bgPainter.end();
+
+	StaticVideoSource *source = new StaticVideoSource();
+	source->setImage(bgImage);
+	//source->setImage(QImage("squares2.png"));
+	source->start();
+	connect(this, SIGNAL(destroyed()), source, SLOT(deleteLater()));
+
+	GLVideoDrawable *drawable = new GLVideoDrawable(m_layerViewer);
+	drawable->setVideoSource(source);
+	drawable->setRect(m_layerViewer->viewport());
+	drawable->setZIndex(-100);
+	drawable->setObjectName("StaticBackground");
+	drawable->setAlignment(Qt::AlignAbsolute);
 // 	drawable->setBottomPercent(1.);
 // 	drawable->setRightPercent(1.);
-// 	drawable->show();
-// 
-// 	m_layerViewer->addDrawable(drawable);
-// 	
-// 	
-// 	m_editSplitter->addWidget(m_layerViewer);
+	drawable->show();
+
+	m_layerViewer->addDrawable(drawable);
+	
+	
+	m_editSplitter->addWidget(m_layerViewer);
 	
 	m_controlArea = new QScrollArea(m_editSplitter);
 	m_controlArea->setWidgetResizable(true);
@@ -1037,6 +1057,13 @@ void MainWindow::createToolBars()
 	m_liveBtn->setCheckable(true);
 	connect(m_liveBtn, SIGNAL(toggled(bool)), this, SLOT(showLiveOutput(bool)));
 	m_fileToolBar->addWidget(m_liveBtn);
+	
+	m_fileToolBar->addSeparator();
+	
+	QPushButton *hideAll = new QPushButton("Hide All");
+	hideAll->setCheckable(true);
+	connect(hideAll, SIGNAL(toggled(bool)), this, SLOT(hideAllLayers(bool)));
+	m_fileToolBar->addWidget(hideAll);
 }
 
 void MainWindow::screenIndexChanged(int idx)
@@ -1068,7 +1095,7 @@ void MainWindow::screenIndexChanged(int idx)
 	
 	//qDebug() << "VideoOutputWidget::applyGeometry(): rect: "<<rect;
  	//if(isFullScreen)
- 		//m_mainOutput->setWindowFlags(Qt::FramelessWindowHint | Qt::ToolTip);
+ 		m_mainOutput->setWindowFlags(Qt::FramelessWindowHint);// | Qt::ToolTip);
 //  	else
 //  		m_mainOutput->setWindowFlags(Qt::FramelessWindowHint);
 				
@@ -1091,7 +1118,7 @@ void MainWindow::showLiveOutput(bool flag)
 		
 		screenIndexChanged(m_outputCombo->currentIndex());
 		m_mainOutput->setVisible(flag);
-		m_mainOutput->setWindowState(m_mainOutput->windowState() ^ Qt::WindowFullScreen);
+		//m_mainOutput->setWindowState(m_mainOutput->windowState() ^ Qt::WindowFullScreen);
 	
 		//if(flag)
 		//	screenIndexChanged(m_outputCombo->currentIndex());

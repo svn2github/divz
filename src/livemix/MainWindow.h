@@ -78,6 +78,8 @@ private slots:
 	void screenIndexChanged(int);
 	void showLiveOutput(bool flag=true);
 	
+	void hideAllLayers(bool flag=true);
+	
 private:
 	void createActions();
 	void createMenus();
@@ -120,6 +122,7 @@ private:
 	
 	QAction *m_deleteLayerAct;
 	QAction *m_duplicateLayerAct;
+	
 	
 	
 	QSplitter *m_mainSplitter;
