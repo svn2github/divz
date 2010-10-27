@@ -285,8 +285,8 @@ GLDrawable * addTextOverlay(GLWidget * glw)
 	source->start();
 	//source->setHtml("<img src='me2.jpg'><b>TextVideoSource</b>");
 	source->setHtml("<b>Welcome to LiveMix</b>");
-	source->changeFontSize(40);
-	QSize size = source->findNaturalSize();
+	source->renderer()->changeFontSize(40);
+	QSize size = source->renderer()->findNaturalSize();
 	source->setTextWidth(size.width());
 	//qDebug() << "New html: "<<source->html();
 	//source->setImage(QImage("/opt/qtsdk-2010.02/qt/examples/opengl/pbuffers/cubelogo.png"));
@@ -377,7 +377,7 @@ int main(int argc, char *argv[])
 /*		d = addCamera(glw,"/dev/video0");
 		if(d)
 		{*/
-// 			d = addCamera(glw,"/dev/video1");
+ 			d = addCamera(glw,"/dev/video0");
 // 			if(d)
 // 				addButtons(tb,d); 
 			
@@ -395,8 +395,9 @@ int main(int argc, char *argv[])
  	//addButtons(tb,addVideoBug(glw));
  	addButtons(tb,addTextOverlay(glw));
 	
-        addButtons(tb,addStaticSource(glw));
+        //addButtons(tb,addStaticSource(glw));
 	
+/*	
 	glw->setCanvasSize(764,572);
 	
 	glw->resize(glw->canvasSize().width(),glw->canvasSize().height());
@@ -415,8 +416,10 @@ int main(int argc, char *argv[])
 	animation->setEndValue(endRect);
 	animation->start();
 	//QTimer::singleShot(500,animation, SLOT(start()));
-	
+*/	
 
+	glw->show();
+	
 	int x = app.exec();
 	delete glw;
 	return x;

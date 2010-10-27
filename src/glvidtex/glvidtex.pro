@@ -17,7 +17,8 @@ HEADERS       = GLWidget.h \
 		GLDrawable.h \
 		GLVideoDrawable.h \
 		../ImageFilters.h \
-		TextVideoSource.h
+		TextVideoSource.h \
+		RichTextRenderer.h
 		
 SOURCES       = GLWidget.cpp \
 		main.cpp \
@@ -29,7 +30,8 @@ SOURCES       = GLWidget.cpp \
 		GLDrawable.cpp \
 		GLVideoDrawable.cpp \
 		../ImageFilters.cpp \
-		TextVideoSource.cpp
+		TextVideoSource.cpp \
+		RichTextRenderer.cpp
 
 unix: {
 	HEADERS += \

@@ -40,6 +40,9 @@ void GLWidget::initializeGL()
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	//glEnable(GL_MULTISAMPLE) 
 	
+	glPolygonMode (GL_FRONT_AND_BACK, GL_FILL);
+	glEnable(GL_LINE_SMOOTH);
+	
 // 	glClearDepth(1.0f);						// Depth Buffer Setup
 // 	glEnable(GL_DEPTH_TEST);					// Enables Depth Testing
 // 	glDepthFunc(GL_LEQUAL);						// The Type Of Depth Testing To Do
@@ -60,7 +63,7 @@ void GLWidget::paintGL()
 	qglClearColor(Qt::black);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
-// 	int counter = 0;
+	int counter = 0;
 	foreach(GLDrawable *drawable, m_drawables)
 	{
 		//qDebug() << "GLWidget::paintGL(): ["<<counter++<<"] drawable->rect: "<<drawable->rect();
@@ -71,6 +74,63 @@ void GLWidget::paintGL()
 			drawable->paintGL();
 // 		qDebug() << "GLWidget::paintGL(): drawable:"<<((void*)drawable)<<", draw done";
 	}
+
+
+// 	GLuint	texture[1]; // Storage For One Texture
+// 	QImage texOrig, texGL;
+// 	if ( !texOrig.load( "me2.jpg" ) )
+// 	//if ( !texOrig.load( "Pm5544.jpg" ) )
+// 	{
+// 		texOrig = QImage( 16, 16, QImage::Format_RGB32 );
+// 		texOrig.fill( Qt::green );
+// 	}
+// 	
+// 	// Setup inital texture
+// 	texGL = QGLWidget::convertToGLFormat( texOrig );
+// 	glGenTextures( 1, &texture[0] );
+// 	glBindTexture( GL_TEXTURE_2D, texture[0] );
+// 	glTexImage2D( GL_TEXTURE_2D, 0, 3, texGL.width(), texGL.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, texGL.bits() );
+// 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+// 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+// 	
+// 	glEnable(GL_TEXTURE_2D);					// Enable Texture Mapping ( NEW )
+// 	
+// 	glClearColor(0.1f, 0.1f, 0.2f, 1.0f);
+// 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+// 	
+// 	glLoadIdentity(); // Reset The View
+// 	//glTranslatef(0.0f,0.0f,-3.42f);
+// 	
+// 	glBindTexture(GL_TEXTURE_2D, texture[0]);
+// 	
+// 	
+// 	glBegin(GL_QUADS);
+// 		// Front Face
+// // 		glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0f, -1.0f,  1.0f);
+// // 		glTexCoord2f(1.0f, 0.0f); glVertex3f( 1.0f, -1.0f,  1.0f);
+// // 		glTexCoord2f(1.0f, 1.0f); glVertex3f( 1.0f,  1.0f,  1.0f);
+// // 		glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0f,  1.0f,  1.0f);
+// 	
+// 		QRectF rect(0,0,764,572);
+// 		
+// 		qreal 
+// 			vx1 = rect.left(),
+// 			vx2 = rect.right(),
+// 			vy1 = rect.bottom(),
+// 			vy2 = rect.top();
+// 		
+// 		glTexCoord2f(0.0f, 0.0f); glVertex3f(vx1,vy1,  0.0f); // top left
+// 		glTexCoord2f(1.0f, 0.0f); glVertex3f(vx2,vy1,  0.0f); // top right
+// 		glTexCoord2f(1.0f, 1.0f); glVertex3f(vx2,vy2,  0.0f); // bottom right
+// 		glTexCoord2f(0.0f, 1.0f); glVertex3f(vx1,vy2,  0.0f); // bottom left
+// 
+// // 		glTexCoord2f(0,0); glVertex3f( 0, 0,0); //lo
+// // 		glTexCoord2f(0,1); glVertex3f(256, 0,0); //lu
+// // 		glTexCoord2f(1,1); glVertex3f(256, 256,0); //ru
+// // 		glTexCoord2f(1,0); glVertex3f( 0, 256,0); //ro
+// 	glEnd();
+// 	
+	
 }
 	
 void GLWidget::addDrawable(GLDrawable *item)
@@ -120,6 +180,19 @@ void GLWidget::resizeGL(int width, int height)
 // 	int side = qMin(width, height);
 	//glViewport(0,0,width,height); //(width - side) / 2, (height - side) / 2, side, side);
 	glViewport(0,0,width,height); //(width - side) / 2, (height - side) / 2, side, side);
+	
+	if(height == 0)
+		height = 1;
+		
+	glMatrixMode(GL_PROJECTION);						// Select The Projection Matrix
+	glLoadIdentity();							// Reset The Projection Matrix
+
+	// Calculate The Aspect Ratio Of The Window
+	//gluPerspective(45.0f,(GLfloat)w/(GLfloat)h,0.1f,100.0f);
+	glOrtho(0, width, height, 0, -1, 1);
+
+	glMatrixMode(GL_MODELVIEW);						// Select The Modelview Matrix
+	glLoadIdentity();							// Reset The Modelview Matrix
 	
 	//qDebug() << "GLWidget::resizeGL: "<<width<<","<<height;
 	setViewport(viewport());

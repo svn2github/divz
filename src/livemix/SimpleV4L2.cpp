@@ -79,11 +79,11 @@ VideoFrame SimpleV4L2::readFrame()
 	VideoFrame frame;
 	frame.captureTime = QTime::currentTime();
 	
-// 	struct timeval tv_start, tv_end;
+/*	struct timeval tv_start, tv_end;
 	
-// 	if (gettimeofday(&tv_start, 0) < 0) {
-// 		errno_exit("Error getting time");
-// 	}
+	if (gettimeofday(&tv_start, 0) < 0) {
+		errno_exit("Error getting time");
+	}*/
 	
 
 	switch (m_io) {
@@ -186,13 +186,13 @@ VideoFrame SimpleV4L2::readFrame()
 
 		break;
 	}
+	/*
+	if (gettimeofday(&tv_end, 0) < 0) {
+		errno_exit("Error getting time");
+	}
 	
-// 	if (gettimeofday(&tv_end, 0) < 0) {
-// 		errno_exit("Error getting time");
-// 	}
-	
-	//long int elapsed = tv_end.tv_usec - tv_start.tv_usec;
-	//printf("Elapsed: %d usec\n",elapsed);
+	long int elapsed = tv_end.tv_usec - tv_start.tv_usec;
+	printf("Elapsed: %d usec\n",elapsed);*/
 
 	//return elapsed;
 	return frame;
@@ -491,10 +491,17 @@ void SimpleV4L2::initDevice()
 	fmt.fmt.pix.width       = 640; 
 	fmt.fmt.pix.height      = 480;
 	fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_BGR32; //V4L2_PIX_FMT_YUYV;
-	fmt.fmt.pix.field       = V4L2_FIELD_INTERLACED;
+	fmt.fmt.pix.field       = V4L2_FIELD_NONE; //V4L2_FIELD_INTERLACED;
 
 	if (-1 == xioctl (m_fd, VIDIOC_S_FMT, &fmt))
-		errno_exit ("VIDIOC_S_FMT");
+	{
+		if(22 == errno) // Invalid Argument
+		{
+			fmt.fmt.pix.field = V4L2_FIELD_INTERLACED;
+			if (-1 == xioctl (m_fd, VIDIOC_S_FMT, &fmt))
+				errno_exit ("VIDIOC_S_FMT");
+		}
+	}
 
 	/* Note VIDIOC_S_FMT may change width and height. */
 

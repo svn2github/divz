@@ -234,7 +234,7 @@ GLVideoDrawable::GLVideoDrawable(QObject *parent)
 	, m_source(0)
 	, m_frameCount(0)
 	, m_latencyAccum(0)
-	, m_debugFps(false)
+	, m_debugFps(true)
 	, m_aspectRatioMode(Qt::KeepAspectRatio)
 	, m_validShader(false)
 	, m_program(0)
@@ -348,17 +348,33 @@ void GLVideoDrawable::frameReady()
 		{
 			for (int i = 0; i < m_textureCount; ++i) 
 			{
+				/*Image texOrig, texGL;
+		if ( !texOrig.load( "me2.jpg" ) )
+		//if ( !texOrig.load( "Pm5544.jpg" ) )
+		{
+			texOrig = QImage( 16, 16, QImage::Format_RGB32 );
+			texOrig.fill( Qt::green );
+		}
+		
+		// Setup inital texture
+		texGL = QGLWidget::convertToGLFormat( texOrig );
+		glGenTextures( 1, &m_textureIds[0] );
+		glBindTexture( GL_TEXTURE_2D, m_textureIds[0] );
+		glTexImage2D( GL_TEXTURE_2D, 0, 3, texGL.width(), texGL.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, texGL.bits() );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );*/
+				
 				//qDebug() << "raw: "<<i<<m_textureWidths[i]<<m_textureHeights[i]<<m_textureOffsets[i]<<m_textureInternalFormat<<m_textureFormat<<m_textureType;
 				glBindTexture(GL_TEXTURE_2D, m_textureIds[i]);
 				glTexImage2D(
 					GL_TEXTURE_2D,
 					0,
-					m_textureInternalFormat,
+					3, //m_textureInternalFormat,
 					m_textureWidths[i],
 					m_textureHeights[i],
 					0,
-					m_textureFormat,
-					m_textureType,
+					GL_BGRA, //m_textureFormat,
+					GL_UNSIGNED_BYTE, //m_textureType,
 					m_frame.bufferType == VideoFrame::BUFFER_POINTER ? m_frame.data[i] :
 						(uint8_t*)m_frame.byteArray.constData() + m_textureOffsets[i]
 				);
@@ -728,7 +744,7 @@ void GLVideoDrawable::initGL()
 	glActiveTexture = (_glActiveTexture)glWidget()->context()->getProcAddress(QLatin1String("glActiveTexture"));
 	#endif
 	
-	m_program = new QGLShaderProgram(glWidget()->context(), this);
+	//m_program = new QGLShaderProgram(glWidget()->context(), this);
 	
 	m_glInited = true;
 	//qDebug() << "GLVideoDrawable::initGL(): "<<objectName();
@@ -779,48 +795,48 @@ bool GLVideoDrawable::setVideoFormat(const VideoFormat& format)
 	m_validShader = false;
 	const char *fragmentProgram = resizeTextures(format.frameSize);
  
- 	if(!samePixelFormat)
- 	{
- 		if(!m_program->shaders().isEmpty())
- 			m_program->removeAllShaders();
- 		
-		if(!QGLShaderProgram::hasOpenGLShaderPrograms())
-		{
-			qDebug() << "GLSL Shaders Not Supported by this driver, this program will NOT function as expected and will likely crash.";
-			return false;
-		}
-
-		if (!fragmentProgram) 
-		{
-			qDebug() << "No shader program found - format not supported.";
-			return false;
-		} 
-		else 
-		if (!m_program->addShaderFromSourceCode(QGLShader::Vertex, qt_glsl_vertexShaderProgram)) 
-		{
-			qWarning("GLWidget: Vertex shader compile error %s",
-				qPrintable(m_program->log()));
-			//error = QAbstractVideoSurface::ResourceError;
-			return false;
-			
-		} 
-		else 
-		if (!m_program->addShaderFromSourceCode(QGLShader::Fragment, fragmentProgram)) 
-		{
-			qWarning("GLWidget: Shader compile error %s", qPrintable(m_program->log()));
-			//error = QAbstractVideoSurface::ResourceError;
-			m_program->removeAllShaders();
-			return false;
-		} 
-		else 
-		if(!m_program->link()) 
-		{
-			qWarning("GLWidget: Shader link error %s", qPrintable(m_program->log()));
-			m_program->removeAllShaders();
-			return false;
-		} 
-		else 
-		{
+//  	if(!samePixelFormat)
+//  	{
+//  		if(!m_program->shaders().isEmpty())
+//  			m_program->removeAllShaders();
+//  		
+// 		if(!QGLShaderProgram::hasOpenGLShaderPrograms())
+// 		{
+// 			qDebug() << "GLSL Shaders Not Supported by this driver, this program will NOT function as expected and will likely crash.";
+// 			return false;
+// 		}
+// 
+// 		if (!fragmentProgram) 
+// 		{
+// 			qDebug() << "No shader program found - format not supported.";
+// 			return false;
+// 		} 
+// 		else 
+// 		if (!m_program->addShaderFromSourceCode(QGLShader::Vertex, qt_glsl_vertexShaderProgram)) 
+// 		{
+// 			qWarning("GLWidget: Vertex shader compile error %s",
+// 				qPrintable(m_program->log()));
+// 			//error = QAbstractVideoSurface::ResourceError;
+// 			return false;
+// 			
+// 		} 
+// 		else 
+// 		if (!m_program->addShaderFromSourceCode(QGLShader::Fragment, fragmentProgram)) 
+// 		{
+// 			qWarning("GLWidget: Shader compile error %s", qPrintable(m_program->log()));
+// 			//error = QAbstractVideoSurface::ResourceError;
+// 			m_program->removeAllShaders();
+// 			return false;
+// 		} 
+// 		else 
+// 		if(!m_program->link()) 
+// 		{
+// 			qWarning("GLWidget: Shader link error %s", qPrintable(m_program->log()));
+// 			m_program->removeAllShaders();
+// 			return false;
+// 		} 
+// 		else 
+// 		{
 			//m_handleType = format.handleType();
 			m_scanLineDirection = QVideoSurfaceFormat::TopToBottom; //format.scanLineDirection();
 			m_frameSize = format.frameSize;
@@ -829,10 +845,10 @@ bool GLVideoDrawable::setVideoFormat(const VideoFormat& format)
 				glGenTextures(m_textureCount, m_textureIds);
 				
 			m_texturesInited = true;
-		}
-		
-		//qDebug() << "GLVideoDrawable::setVideoFormat(): \t Initalized"<<m_textureCount<<"textures";
-	}
+// 		}
+// 		
+// 		//qDebug() << "GLVideoDrawable::setVideoFormat(): \t Initalized"<<m_textureCount<<"textures";
+// 	}
 	m_validShader = true;
 	return true;
 }
@@ -1133,7 +1149,7 @@ void GLVideoDrawable::paintGL()
 		txLeft , txTop,
 		txRight, txTop
 	};
-	
+/*	
 	m_program->bind();
 
 	m_program->enableAttributeArray("vertexCoordArray");
@@ -1195,8 +1211,60 @@ void GLVideoDrawable::paintGL()
 	
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
-	m_program->release();
+ 	m_program->release();
+ 	
+*/ 	
+ 	
+ 	if(0)
+ 	{
+		QImage texOrig, texGL;
+		if ( !texOrig.load( "me2.jpg" ) )
+		//if ( !texOrig.load( "Pm5544.jpg" ) )
+		{
+			texOrig = QImage( 16, 16, QImage::Format_RGB32 );
+			texOrig.fill( Qt::green );
+		}
+		
+		// Setup inital texture
+		texGL = QGLWidget::convertToGLFormat( texOrig );
+		glGenTextures( 1, &m_textureIds[0] );
+		glBindTexture( GL_TEXTURE_2D, m_textureIds[0] );
+		glTexImage2D( GL_TEXTURE_2D, 0, 3, texGL.width(), texGL.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, texGL.bits() );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+	}
 	
+	glEnable(GL_TEXTURE_2D);
+	
+	glActiveTexture(GL_TEXTURE0);
+	
+// 	glClearColor(0.1f, 0.1f, 0.2f, 1.0f);
+// 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	
+	glLoadIdentity(); // Reset The View
+	//glTranslatef(0.0f,0.0f,-3.42f);
+	
+	glBindTexture(GL_TEXTURE_2D, m_textureIds[0]);
+	
+	//qDebug() << "target: "<<target;
+	target = transform.mapRect(target);
+	glBegin(GL_QUADS);
+		qreal 
+			vx1 = target.left(),
+			vx2 = target.right(),
+			vy1 = target.bottom(),
+			vy2 = target.top();
+		
+		glTexCoord2f(0.0f, 1.0f); glVertex3f(vx1,vy1,  0.0f); // top left
+		glTexCoord2f(1.0f, 1.0f); glVertex3f(vx2,vy1,  0.0f); // top right
+		glTexCoord2f(1.0f, 0.0f); glVertex3f(vx2,vy2,  0.0f); // bottom right
+		glTexCoord2f(0.0f, 0.0f); glVertex3f(vx1,vy2,  0.0f); // bottom left
+
+// 		glTexCoord2f(0,0); glVertex3f( 0, 0,0); //lo
+// 		glTexCoord2f(0,1); glVertex3f(256, 0,0); //lu
+// 		glTexCoord2f(1,1); glVertex3f(256, 256,0); //ru
+// 		glTexCoord2f(1,0); glVertex3f( 0, 256,0); //ro
+	glEnd();
 	
 	
 	//renderText(10, 10, qPrintable(QString("%1 fps").arg(framesPerSecond)));

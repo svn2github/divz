@@ -93,9 +93,14 @@ bool VideoSurfaceAdapter::present(const QVideoFrame &frame)
 	if (surfaceFormat().pixelFormat() != frame.pixelFormat()
 	 || surfaceFormat().frameSize() != frame.size()) 
 	{
-		setError(IncorrectFormatError);
-		stop();
-		qDebug()<< "VideoSurfaceAdapter::present: Format/size mismatch, stopping.";
+		QVideoSurfaceFormat format(frame.size(),frame.pixelFormat());
+		start(format);
+		
+		//setError(IncorrectFormatError);
+		//stop();
+		qDebug()<< "VideoSurfaceAdapter::present: Format/size mismatch..."; //, stopping.";
+		qDebug()<< "	surfaceFormat().pixelFormat():"<<surfaceFormat().pixelFormat()<<",	frame.pixelFormat():"<<frame.pixelFormat();
+	 	qDebug()<< "	surfaceFormat().frameSize()  :"<<surfaceFormat().frameSize()<<",	frame.size()       :"<<frame.size();
 	
 		return false;
 	} 
