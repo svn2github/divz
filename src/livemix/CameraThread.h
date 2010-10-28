@@ -68,7 +68,9 @@ signals:
 	//void newImage(QImage);
 	//void frameReady(int frameHoldTime);
 
-protected:
+protected slots:
+	void start(QThread::Priority);
+	
 	void run();
 	void readFrame();
 
@@ -80,7 +82,7 @@ protected:
 private:
 	int m_fps;
 	
-	QTimer *m_readTimer;
+	QTimer m_readTimer;
 
 	AVFormatContext * m_av_format_context;
 	AVCodecContext * m_video_codec_context;
@@ -141,6 +143,8 @@ private:
 	SimpleV4L2 * m_v4l2;
 	
 	QMutex m_initMutex;
+	
+	QString m_inputName;
 	
 };
 

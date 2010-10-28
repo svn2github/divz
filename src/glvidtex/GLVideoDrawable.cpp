@@ -1234,6 +1234,9 @@ void GLVideoDrawable::paintGL()
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
 	}
 	
+	float opac = (float)opacity();
+	glColor4f(opac,opac,opac,opac);			// Full Brightness, 50% Alpha ( NEW )
+	
 	glEnable(GL_TEXTURE_2D);
 	
 	glActiveTexture(GL_TEXTURE0);

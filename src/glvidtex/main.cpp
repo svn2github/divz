@@ -26,6 +26,8 @@ GLDrawable * addCamera(GLWidget *glw, QString camera = "")
 	if(source)
 	{
 		source->setFps(30);
+		if(camera == "/dev/video1")
+			source->setInput("S-Video");
                 //usleep(750 * 1000); // This causes a race condition to manifist itself reliably, which causes a crash every time instead of intermitently.
 		// With the crash reproducable, I can now work to fix it.
 		source->enableRawFrames(true);
@@ -333,13 +335,13 @@ QFormLayout * createToggleBox()
 	tb->setWindowTitle("Toggle Box");
 	QFormLayout *layout = new QFormLayout;
 	tb->setLayout(layout);
-	//tb->show();
+	tb->show();
 	return layout;
 }
 
 void addButtons(QFormLayout *layout, GLDrawable *glw)
 {
-        return;
+        //return;
 	QHBoxLayout *box = new QHBoxLayout;
 	
 	QPushButton *show = new QPushButton("Show");
@@ -377,13 +379,13 @@ int main(int argc, char *argv[])
 /*		d = addCamera(glw,"/dev/video0");
 		if(d)
 		{*/
- 			d = addCamera(glw,"/dev/video0");
-// 			if(d)
-// 				addButtons(tb,d); 
+			d = addCamera(glw,"/dev/video0");
+			if(d)
+				addButtons(tb,d); 
 			
-// 			d = addCamera(glw,"/dev/video0");
-// 			if(d)
-// 				addButtons(tb,d); 
+ 			d = addCamera(glw,"/dev/video1");
+			if(d)
+				addButtons(tb,d); 
 
 /*		}
 		else

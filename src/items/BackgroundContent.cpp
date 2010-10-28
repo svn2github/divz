@@ -464,7 +464,7 @@ void BackgroundContent::setImageFile(const QString &file)
 		if(!path.exists())
 			QDir(AppSettings::cachePath()).mkdir(BG_IMG_CACHE_DIR);
 
-		QString cacheKey = QString("%1/%2/%3-%4x%5%6-auto_ar")
+		QString cacheKey = QString("%1/%2/%3-%4x%5%6-auto_ar.jpg")
 					.arg(AppSettings::cachePath())
 					.arg(BG_IMG_CACHE_DIR)
 					.arg(MD5::md5sum(file))
@@ -477,7 +477,7 @@ void BackgroundContent::setImageFile(const QString &file)
 		{
 // 			qDebug() << "BackgroundContent::setImageFile: "<<file<<": static preview, warming";
 
-			QString cacheKey = QString("%1/%2/%3-%4x%5-icon192-auto_ar")
+			QString cacheKey = QString("%1/%2/%3-%4x%5-icon192-auto_ar.jpg")
 						.arg(AppSettings::cachePath())
 						.arg(BG_IMG_CACHE_DIR)
 						.arg(MD5::md5sum(file))
@@ -637,7 +637,7 @@ QImage * BackgroundContent::internalLoadFile(QString file,QString cacheKey, QRec
 			}
 
 			cache = new QImage(image.scaled(size,Qt::IgnoreAspectRatio,Qt::SmoothTransformation));
-			cache->save(cacheKey,"PNG");
+			cache->save(cacheKey,"JPEG");
 
 			return cache;
 		}
@@ -662,10 +662,11 @@ BackgroundImageWarmingThreadManager::BackgroundImageWarmingThreadManager(Backgro
 	else
 	if(QFile(key).exists() && QFileInfo(model->fillImageFile()).lastModified() <= QFileInfo(key).lastModified())
 	{
-		//qDebug()<<"TextBoxWarmingThreadManager(): modelItem:"<<model->itemName()<<": Cache load from"<<key;
+		qDebug()<<"TextBoxWarmingThreadManager(): modelItem:"<<model->itemName()<<": Cache load from"<<key<<" done";
 		cache.load(key);
 		QPixmapCache::insert(key,cache);
 		deleteLater();
+		qDebug()<<"TextBoxWarmingThreadManager(): modelItem:"<<model->itemName()<<": Cache load from"<<key<<" finish";
 	}
 	else
 	{
@@ -686,7 +687,7 @@ void BackgroundImageWarmingThreadManager::renderDone(QImage *image)
 	}
 
 	QPixmap cache = QPixmap::fromImage(*image);
-	cache.save(m_cacheKey,"PNG");
+	cache.save(m_cacheKey,"JPEG");
 	QPixmapCache::insert(m_cacheKey, cache);
 	delete image; // QPixmap::fromImage() made a copy, so we dont need to waste this memory here
 	deleteLater();

@@ -372,6 +372,8 @@ bool CameraThread::setInput(const QString& name)
 	#if !defined(Q_OS_LINUX)
 		return false;
 	#else
+	
+	m_inputName = name;
 
 
 	SimpleV4L2 * api = m_v4l2;
@@ -417,9 +419,16 @@ int CameraThread::initCamera()
 		if(m_v4l2->openDevice(qPrintable(m_cameraFile)))
 		{
 			// Do the code here so that we dont have to open the device twice
-			if(!setInput("Composite"))
-				if(!setInput("Composite1"))
-					setInput(0);
+			if(!m_inputName.isEmpty())
+			{
+				setInput(m_inputName);
+			}
+			else
+			{
+				if(!setInput("Composite"))
+					if(!setInput("Composite1"))
+						setInput(0);
+			}
 
 			m_v4l2->initDevice();
 			m_v4l2->startCapturing();
@@ -582,9 +591,17 @@ int CameraThread::initCamera()
 	return 0;
 }
 
+void CameraThread::start(QThread::Priority)
+{
+	connect(&m_readTimer, SIGNAL(timeout()), this, SLOT(readFrame()));
+	m_readTimer.setInterval(1000 / m_fps / 1.5 / (m_deinterlace ? 1 : 2));
+	initCamera();
+	m_readTimer.start();
+}
+
 void CameraThread::run()
 {
- 	initCamera();
+/* 	initCamera();
 
 	//qDebug() << "CameraThread::run: In Thread ID "<<QThread::currentThreadId();
 // 	int counter = 0;
@@ -602,7 +619,7 @@ void CameraThread::run()
 // 		}
 
 		msleep(int(1000 / m_fps / 1.5 / (m_deinterlace ? 1 : 2)));
-	};
+	};*/
 }
 
 void CameraThread::setDeinterlace(bool flag)
