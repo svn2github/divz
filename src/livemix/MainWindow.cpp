@@ -28,6 +28,7 @@ MainWindow::MainWindow()
 {
 
 	m_mainOutput = new GLWidget();
+	m_mainOutput->setObjectName("MainOutput");
 	m_mainOutput->setWindowTitle(QString("Live Output - LiveMix")/*.arg(m_output->name())*/);
 	m_mainOutput->setWindowIcon(QIcon(":/data/icon-d.png"));
 	m_mainOutput->resize(1000,750);
@@ -817,6 +818,7 @@ void MainWindow::createCenterPanel()
 	m_editSplitter->setOrientation(Qt::Vertical);
 
 	m_layerViewer = new GLWidget(m_editSplitter);
+	m_layerViewer->setObjectName("Editor");
 	m_layerViewer->setProperty("isEditorWidget",true);
 
 	QSize size = m_layerViewer->viewport().size().toSize();
@@ -902,6 +904,7 @@ void MainWindow::createRightPanel()
 	QVBoxLayout *layout = new QVBoxLayout(base);*/
 
 	m_mainViewer = new GLWidget(m_previewSplitter);
+	m_mainViewer->setObjectName("MainPreview");
 	m_previewSplitter->addWidget(m_mainViewer);
 	//layout->addStretch(1);
 

@@ -137,6 +137,8 @@ void GLWidget::addDrawable(GLDrawable *item)
 {
 	//makeCurrent();
 	
+	QString newName = QString("%1/%2").arg(objectName()).arg(item->objectName());
+	item->setObjectName(qPrintable(newName));
 	item->setGLWidget(this);
 	m_drawables << item;
 	connect(item, SIGNAL(zIndexChanged(double)), this, SLOT(zIndexChanged()));

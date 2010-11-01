@@ -73,6 +73,10 @@ void LiveVideoInputLayer::setCamera(CameraThread *camera)
 	qDebug() << "LiveVideoInputLayer::setCamera: "<<camera;
 	setVideoSource(camera);
 	m_camera = camera;
+	foreach(GLDrawable *drawable, m_drawables)
+		drawable->setObjectName(qPrintable(m_camera->inputName()));
+	foreach(GLDrawable *drawable, m_secondaryDrawables)
+		drawable->setObjectName(qPrintable(m_camera->inputName()));
 	setInstanceName(camera->inputName());
 }
 

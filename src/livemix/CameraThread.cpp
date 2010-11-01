@@ -591,17 +591,23 @@ int CameraThread::initCamera()
 	return 0;
 }
 
-void CameraThread::start(QThread::Priority)
+void CameraThread::start(QThread::Priority priority)
 {
+	QThread::start(priority);
+	
+	/*
 	connect(&m_readTimer, SIGNAL(timeout()), this, SLOT(readFrame()));
-	m_readTimer.setInterval(1000 / m_fps / 1.5 / (m_deinterlace ? 1 : 2));
+	double finalFps = m_fps * 1.5 * (m_deinterlace ? 2 : 1);
+	qDebug() << "CameraThread::start: m_fps:"<<m_fps<<", finalFps:"<<finalFps;
+	m_readTimer.setInterval(1000 / finalFps);
 	initCamera();
 	m_readTimer.start();
+	*/
 }
 
 void CameraThread::run()
 {
-/* 	initCamera();
+ 	initCamera();
 
 	//qDebug() << "CameraThread::run: In Thread ID "<<QThread::currentThreadId();
 // 	int counter = 0;
@@ -619,7 +625,7 @@ void CameraThread::run()
 // 		}
 
 		msleep(int(1000 / m_fps / 1.5 / (m_deinterlace ? 1 : 2)));
-	};*/
+	};
 }
 
 void CameraThread::setDeinterlace(bool flag)
