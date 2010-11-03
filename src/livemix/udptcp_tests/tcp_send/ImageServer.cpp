@@ -26,6 +26,7 @@ void ImageServer::incomingConnection(int socketDescriptor)
 	ImageServerThread *thread = new ImageServerThread(socketDescriptor, m_adaptiveWriteEnabled);
 	connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
 	connect(m_imageProvider, m_signalName, thread, SLOT(imageReady(const QImage&, const QTime&)), Qt::QueuedConnection);
+	thread->moveToThread(thread);
 	thread->start();
 	qDebug() << "ImageServer: Client Connected, Socket Descriptor:"<<socketDescriptor;
 }
@@ -44,7 +45,9 @@ void ImageServer::emitTestImage()
 		//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
 		QImage image((const uchar*)m_frame.byteArray.constData(),m_frame.size.width(),m_frame.size.height(),QImage::Format_RGB32);
-		emit testImage(image.scaled(160,120), m_frame.captureTime);
+		//emit testImage(image.scaled(160,120), m_frame.captureTime);
+		emit testImage(image, m_frame.captureTime);
+		// QTime::currentTime()); //
 	}
 	else
 	{
@@ -141,7 +144,10 @@ void ImageServerThread::imageReady(const QImage& image, const QTime& time)
 {
 	
 	//QTime time = QTime::currentTime();
-	int timestamp = time.hour() + time.minute() + time.second() + time.msec();
+	int timestamp = time.hour()   * 60 * 60 * 1000 +
+			time.minute() * 60 * 1000      + 
+			time.second() * 1000           +
+			time.msec();
 	
 
 	//QImage image = *tmp;

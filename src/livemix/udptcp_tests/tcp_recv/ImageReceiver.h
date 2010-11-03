@@ -7,6 +7,7 @@
 
 #include <QThread>
 #include <QImage>
+#include <QTime>
 
 #define MJPEG_TEST 1
 
@@ -76,6 +77,10 @@ private:
 	
 #ifdef MJPEG_TEST
 	QLabel *m_label;
+	int m_frameCount;
+	int m_latencyAccum;
+	QTime m_time;	
+	bool m_debugFps;
 #endif
 
 };

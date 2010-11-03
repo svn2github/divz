@@ -57,6 +57,12 @@ bool ImageReceiver::connectTo(const QString& host, int port, QString url, const 
 	m_socket->connectToHost(host,port);
 	m_socket->setReadBufferSize(1024 * 1024);
 	
+	
+	m_time.start();
+	m_debugFps = true;
+	m_frameCount = 0;
+	m_latencyAccum = 0;
+	
 	return true;
 }
 
@@ -304,7 +310,7 @@ void ImageReceiver::processBlock()
 								const char *headerData = header.constData();
 								int imgX,imgY,formatId,timestamp,byteTmp;
 								sscanf(headerData,"%d %d %d %d %d %d",&byteTmp,&imgX,&imgY,&formatId,&timestamp);
-								qDebug() << "header data:"<<headerData;
+								//qDebug() << "header data:"<<headerData;
 								if(byteTmp != m_byteCount)
 								{
 									m_byteCount = byteTmp;
@@ -320,7 +326,7 @@ void ImageReceiver::processBlock()
 								
 								if(!frame.isNull())
 								{
-									qDebug() << "processBlock(): New image received, original size:"<<frame.size()<<", bytes:"<<block.length()<<", format:"<<formatId;
+									//qDebug() << "processBlock(): New image received, original size:"<<frame.size()<<", bytes:"<<block.length()<<", format:"<<formatId;
 									
 									if(m_autoResize.width()>0 && m_autoResize.height()>0 && 
 									m_autoResize != frame.size())
@@ -333,10 +339,32 @@ void ImageReceiver::processBlock()
 								
 								
 								#ifdef MJPEG_TEST
-								qDebug() << "processBlock(): latency: "<<msecTo(timestamp);
 								QPixmap pix = QPixmap::fromImage(frame);
 								m_label->setPixmap(pix);
 								m_label->resize(pix.width(),pix.height());
+								//qDebug() << "processBlock(): latency: "<<;
+								
+								int msecLatency = msecTo(timestamp);
+								m_latencyAccum += msecLatency;
+								
+								if (!(m_frameCount % 100)) 
+								{
+									QString framesPerSecond;
+									framesPerSecond.setNum(m_frameCount /(m_time.elapsed() / 1000.0), 'f', 2);
+									
+									QString latencyPerFrame;
+									latencyPerFrame.setNum((((double)m_latencyAccum) / ((double)m_frameCount)), 'f', 3);
+									
+									if(m_debugFps && framesPerSecond!="0.00")
+										qDebug() << "FPS: " << qPrintable(framesPerSecond) << qPrintable(QString(", Latency: %1 ms").arg(latencyPerFrame));
+							
+									m_time.start();
+									m_frameCount = 0;
+									m_latencyAccum = 0;
+									
+									//lastFrameTime = time.elapsed();
+								}
+								m_frameCount++;
 								#endif
 							}
 						}
@@ -358,7 +386,12 @@ void ImageReceiver::processBlock()
 int ImageReceiver::msecTo(int timestamp)
 {
 	QTime time = QTime::currentTime();
-	int currentTimestamp = time.hour() + time.minute() + time.second() + time.msec();
+	//int currentTimestamp = time.hour() + time.minute() + time.second() + time.msec();
+	int currentTimestamp = 
+			time.hour()   * 60 * 60 * 1000 +
+			time.minute() * 60 * 1000      + 
+			time.second() * 1000           +
+			time.msec();
 	return currentTimestamp - timestamp;
 }
 
