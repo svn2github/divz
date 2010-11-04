@@ -82,7 +82,7 @@ QVideoFrame::Format_RGB555	6	The frame is stored using a 16-bit RGB format (5-5-
 
 	void operator=(const VideoFrame& other)
 	{
-		//image = other.image;
+		image = other.image;
 		holdTime = other.holdTime;
 		captureTime = other.captureTime;
 		isRaw = other.isRaw;

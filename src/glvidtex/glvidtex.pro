@@ -18,7 +18,9 @@ HEADERS       = GLWidget.h \
 		GLVideoDrawable.h \
 		../ImageFilters.h \
 		TextVideoSource.h \
-		RichTextRenderer.h
+		RichTextRenderer.h \
+		VideoSender.h \
+		VideoReceiver.h
 		
 SOURCES       = GLWidget.cpp \
 		main.cpp \
@@ -31,7 +33,9 @@ SOURCES       = GLWidget.cpp \
 		GLVideoDrawable.cpp \
 		../ImageFilters.cpp \
 		TextVideoSource.cpp \
-		RichTextRenderer.cpp
+		RichTextRenderer.cpp \
+		VideoSender.cpp \
+		VideoReceiver.cpp
 
 unix: {
 	HEADERS += \
@@ -42,7 +46,7 @@ unix: {
 
 
 RESOURCES     = glvidtex.qrc
-QT           += opengl multimedia
+QT           += opengl multimedia network
 
 
 win32 {

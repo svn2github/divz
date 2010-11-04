@@ -10,6 +10,9 @@
 
 //#define HAS_QT_VIDEO_SOURCE
 
+#include "VideoSender.h"
+#include "VideoReceiver.h"
+
 #ifdef HAS_QT_VIDEO_SOURCE
 #include "QtVideoSource.h"
 #endif
@@ -32,6 +35,19 @@ GLDrawable * addCamera(GLWidget *glw, QString camera = "")
 		// With the crash reproducable, I can now work to fix it.
 		source->enableRawFrames(true);
 		//source->setDeinterlace(true);
+		
+		VideoSender *server = new VideoSender();
+	
+		int listenPort = 7755;
+		if (!server->listen(QHostAddress::Any,listenPort))
+		{
+			qDebug() << "VideoServer could not start on port"<<listenPort<<": "<<server->errorString();
+			//return -1;
+		}
+		else
+		{
+			server->setVideoSource(source);
+		}
 		
 		GLVideoDrawable *drawable = new GLVideoDrawable(glw);
 		drawable->setVideoSource(source);
@@ -65,6 +81,40 @@ GLDrawable * addCamera(GLWidget *glw, QString camera = "")
 	}
 
 	return 0;
+}
+
+GLDrawable * addReceiver(GLWidget * glw)
+{
+	VideoReceiver *source = new VideoReceiver();
+	if(!source->connectTo("localhost", 7755))
+	{
+		qDebug() << "Unable to connect: "<<source->errorString();
+	}
+	// start() not needed
+	//source->start();
+	
+	GLVideoDrawable *drawable = new GLVideoDrawable(glw);
+	drawable->setVideoSource(source);
+	drawable->setRect(glw->viewport());
+	glw->addDrawable(drawable);
+	drawable->addShowAnimation(GLDrawable::AnimFade);
+	//drawable->addShowAnimation(GLDrawable::AnimZoom);
+	//drawable->addShowAnimation(GLDrawable::AnimSlideTop,1000);
+	drawable->setZIndex(-1);
+	
+	//drawable->addHideAnimation(GLDrawable::AnimZoom,1000);
+	drawable->addHideAnimation(GLDrawable::AnimFade);
+	drawable->show();
+	drawable->setObjectName("VideoReceiver");
+	
+// 	QTimer *timer = new QTimer;
+// 	QObject::connect(timer, SIGNAL(timeout()), drawable, SLOT(hide()));
+// 	timer->start(5000);
+// 	timer->setSingleShot(true);
+// 	
+	return drawable;
+
+
 }
 
 GLDrawable * addQtSource(GLWidget * glw)
@@ -371,17 +421,22 @@ int main(int argc, char *argv[])
 	
         //addButtons(tb, addQtSource(glw));
 	
-	#undef HAS_QT_VIDEO_SOURCE
-	#ifdef HAS_QT_VIDEO_SOURCE
-		addButtons(tb, addQtSource(glw));
-	#else
+	#define COMPILE_SENDER
+	//#define COMPILE_RECEIVER
+	
+	#ifdef COMPILE_SENDER
+// 	#undef HAS_QT_VIDEO_SOURCE
+// 	#ifdef HAS_QT_VIDEO_SOURCE
+// 		addButtons(tb, addQtSource(glw));
+// 	#else
 		GLDrawable *d;
 /*		d = addCamera(glw,"/dev/video0");
 		if(d)
 		{*/
-			d = addCamera(glw,"/dev/video0");
-			if(d)
-				addButtons(tb,d); 
+		
+// 			d = addCamera(glw,"/dev/video0");
+// 			if(d)
+// 				addButtons(tb,d); 
 			
  			d = addCamera(glw,"/dev/video1");
 			if(d)
@@ -391,11 +446,19 @@ int main(int argc, char *argv[])
 		else
 		*/
  			//addButtons(tb,addStaticSource(glw));
-	#endif
+// 	#endif
 	
 // 	addButtons(tb,addSecondSource(glw));	
  	//addButtons(tb,addVideoBug(glw));
  	addButtons(tb,addTextOverlay(glw));
+ 	
+ 	#endif
+ 	
+ 	#ifdef COMPILE_RECEIVER
+ 	
+ 	addButtons(tb,addReceiver(glw));
+ 	
+ 	#endif
 	
         //addButtons(tb,addStaticSource(glw));
 	

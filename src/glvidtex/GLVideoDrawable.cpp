@@ -684,7 +684,7 @@ bool GLVideoDrawable::setVideoFormat(const VideoFormat& format)
 	bool samePixelFormat = false; //format.pixelFormat == m_videoFormat.pixelFormat;
 	m_videoFormat = format;
 	
-	//qDebug() << "GLVideoDrawable::setVideoFormat(): "<<objectName()<<" \t frameSize:"<<format.frameSize<<", pixelFormat:"<<format.pixelFormat;
+	qDebug() << "GLVideoDrawable::setVideoFormat(): "<<objectName()<<" \t frameSize:"<<format.frameSize<<", pixelFormat:"<<format.pixelFormat;
 	
 	if(!m_glInited || !glWidget())
 		return m_imagePixelFormats.contains(format.pixelFormat);
@@ -939,8 +939,8 @@ void GLVideoDrawable::paintGL()
 			
 		if(m_frame.rect != m_sourceRect || !m_texturesInited)
 		{
-// 			qDebug() << "GLVideoDrawable::frameReady(): m_frame.rect:"<<m_frame.rect<<", m_sourceRect:"<<m_sourceRect;
-// 			qDebug() << "GLVideoDrawable::frameReady(): frame size changed or !m_texturesInited, resizing and adjusting pixels...";
+ 			//qDebug() << "GLVideoDrawable::frameReady(): m_frame.rect:"<<m_frame.rect<<", m_sourceRect:"<<m_sourceRect;
+ 			//qDebug() << "GLVideoDrawable::frameReady(): frame size changed or !m_texturesInited, resizing and adjusting pixels...";
 			if(m_videoFormat.pixelFormat != m_source->videoFormat().pixelFormat)
 				setVideoFormat(m_source->videoFormat());
 			resizeTextures(m_frame.size);
@@ -986,8 +986,9 @@ void GLVideoDrawable::paintGL()
 					0,
 					GL_BGRA, //m_textureFormat,
 					GL_UNSIGNED_BYTE, //m_textureType,
-					m_frame.bufferType == VideoFrame::BUFFER_POINTER ? m_frame.data[i] :
-						(uint8_t*)m_frame.byteArray.constData() + m_textureOffsets[i]
+					m_frame.byteArray.constData() + m_textureOffsets[i]
+					//m_frame.bufferType == VideoFrame::BUFFER_POINTER ? m_frame.data[i] :
+						//(uint8_t*)m_frame.byteArray.constData() + m_textureOffsets[i]
 				);
 					
 				glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);

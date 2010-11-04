@@ -46,8 +46,7 @@ void ImageServer::emitTestImage()
 	
 		QImage image((const uchar*)m_frame.byteArray.constData(),m_frame.size.width(),m_frame.size.height(),QImage::Format_RGB32);
 		//emit testImage(image.scaled(160,120), m_frame.captureTime);
-		emit testImage(image, m_frame.captureTime);
-		// QTime::currentTime()); //
+		emit testImage(image, QTime::currentTime()); //m_frame.captureTime);
 	}
 	else
 	{
