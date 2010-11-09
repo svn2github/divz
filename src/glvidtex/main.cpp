@@ -28,7 +28,7 @@ GLDrawable * addCamera(GLWidget *glw, QString camera = "")
 	CameraThread *source = CameraThread::threadForCamera(camera.isEmpty() ? defaultCamera : camera);
 	if(source)
 	{
-		source->setFps(30);
+		source->setFps(40);
 		if(camera == "/dev/video1")
 			source->setInput("S-Video");
                 //usleep(750 * 1000); // This causes a race condition to manifist itself reliably, which causes a crash every time instead of intermitently.
@@ -52,6 +52,10 @@ GLDrawable * addCamera(GLWidget *glw, QString camera = "")
 		GLVideoDrawable *drawable = new GLVideoDrawable(glw);
 		drawable->setVideoSource(source);
 		drawable->setRect(glw->viewport());
+		
+		//drawable->setFpsLimit(30.);
+		drawable->setFlipHorizontal(true);
+
 		
 // 		if(camera != "/dev/video1")
 // 			drawable->setAlphaMask(QImage("alphamask2.png"));
@@ -120,16 +124,29 @@ GLDrawable * addReceiver(GLWidget * glw)
 GLDrawable * addQtSource(GLWidget * glw)
 {
 	#ifdef HAS_QT_VIDEO_SOURCE
-	//QString testFile = "/opt/qt-mobility-opensource-src-1.0.1/examples/player/dsc_7721.avi";
+	QString testFile = "/opt/qt-mobility-opensource-src-1.0.1/examples/player/dsc_7721.avi";
 	//QString testFile = "dsc_0259.avi";
-        QString testFile = "P:/Video/SermonSpice/92_Churchfamily.mpg";
+        //QString testFile = "P:/Video/SermonSpice/92_Churchfamily.mpg";
         //QString testFile = "../Unicorn.mpg";
 	//QString testFile = "2010-08-01-Rocky.mpg";
 	//QString testFile = "2009-07-25-ACB-Singing.mpg";
+	//QString testFile = "/home/josiah/Download/alabama_ditch_surfing.wmv";
+	
+	
+	//QString testFile = "/home/josiah/Download/lesson35_linux/data/Face2.avi";
+	qDebug() << "addQtSource: using test file:"<<testFile;
 	QtVideoSource *source = new QtVideoSource();
 	source->setFile(testFile);
 	source->start();
 	
+	
+	
+// 	StaticVideoSource *source = new StaticVideoSource();
+// 	source->setImage(QImage("me2.jpg"));
+// 	//source->setImage(QImage("/opt/qtsdk-2010.02/qt/examples/opengl/pbuffers/cubelogo.png"));
+// 	
+// 	source->start();
+// 	
 	GLVideoDrawable *drawable = new GLVideoDrawable(glw);
 	drawable->setVideoSource(source);
 	drawable->setRect(glw->viewport());
@@ -419,46 +436,53 @@ int main(int argc, char *argv[])
 		
 	QFormLayout * tb = createToggleBox();
 	
-        //addButtons(tb, addQtSource(glw));
+	if(1)
+	{
 	
-	#define COMPILE_SENDER
-	//#define COMPILE_RECEIVER
+        	addButtons(tb, addQtSource(glw));
+        }
 	
-	#ifdef COMPILE_SENDER
-// 	#undef HAS_QT_VIDEO_SOURCE
-// 	#ifdef HAS_QT_VIDEO_SOURCE
-// 		addButtons(tb, addQtSource(glw));
-// 	#else
-		GLDrawable *d;
-/*		d = addCamera(glw,"/dev/video0");
-		if(d)
-		{*/
+	if(0)
+	{
+		#define COMPILE_SENDER
+		//#define COMPILE_RECEIVER
 		
-// 			d = addCamera(glw,"/dev/video0");
-// 			if(d)
-// 				addButtons(tb,d); 
-			
- 			d = addCamera(glw,"/dev/video1");
+		#ifdef COMPILE_SENDER
+	// 	#undef HAS_QT_VIDEO_SOURCE
+	// 	#ifdef HAS_QT_VIDEO_SOURCE
+	// 		addButtons(tb, addQtSource(glw));
+	// 	#else
+			GLDrawable *d;
+	/*		d = addCamera(glw,"/dev/video0");
 			if(d)
-				addButtons(tb,d); 
-
-/*		}
-		else
-		*/
- 			//addButtons(tb,addStaticSource(glw));
-// 	#endif
+			{*/
+			
+	// 			d = addCamera(glw,"/dev/video0");
+	// 			if(d)
+	// 				addButtons(tb,d); 
+				
+				d = addCamera(glw,"/dev/video1");
+				if(d)
+					addButtons(tb,d); 
 	
-// 	addButtons(tb,addSecondSource(glw));	
- 	//addButtons(tb,addVideoBug(glw));
- 	addButtons(tb,addTextOverlay(glw));
- 	
- 	#endif
- 	
- 	#ifdef COMPILE_RECEIVER
- 	
- 	addButtons(tb,addReceiver(glw));
- 	
- 	#endif
+	/*		}
+			else
+			*/
+				//addButtons(tb,addStaticSource(glw));
+	// 	#endif
+		
+	// 	addButtons(tb,addSecondSource(glw));	
+		//addButtons(tb,addVideoBug(glw));
+		addButtons(tb,addTextOverlay(glw));
+		
+		#endif
+		
+		#ifdef COMPILE_RECEIVER
+		
+		addButtons(tb,addReceiver(glw));
+		
+ 		#endif
+ 	}
 	
         //addButtons(tb,addStaticSource(glw));
 	

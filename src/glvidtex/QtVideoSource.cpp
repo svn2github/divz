@@ -15,12 +15,16 @@ VideoSurfaceAdapter::VideoSurfaceAdapter(QtVideoSource *e, QObject *parent)
 	, m_pixelFormat(QVideoFrame::Format_Invalid)
 	, imageFormat(QImage::Format_Invalid)
 {
+	qDebug() << "VideoSurfaceAdapter::ctor()";
+	
 }
 
 QList<QVideoFrame::PixelFormat> VideoSurfaceAdapter::supportedPixelFormats(QAbstractVideoBuffer::HandleType handleType) const
 {
 	if (handleType == QAbstractVideoBuffer::NoHandle) 
 	{
+// 		qDebug() << "VideoSurfaceAdapter::supportedPixelFormats() list";
+	
 		return QList<QVideoFrame::PixelFormat>()
 			<< QVideoFrame::Format_RGB32
 			<< QVideoFrame::Format_ARGB32
@@ -30,6 +34,8 @@ QList<QVideoFrame::PixelFormat> VideoSurfaceAdapter::supportedPixelFormats(QAbst
 	} 
 	else 
 	{
+// 		qDebug() << "VideoSurfaceAdapter::supportedPixelFormats() empty list";
+	
 		return QList<QVideoFrame::PixelFormat>();
 	}
 }
@@ -38,6 +44,7 @@ bool VideoSurfaceAdapter::isFormatSupported(
         const QVideoSurfaceFormat &format, QVideoSurfaceFormat *similar) const
 {
 	Q_UNUSED(similar);
+	//qDebug() << "VideoSurfaceAdapter::isFormatSupported()";
 	
 	const QImage::Format imageFormat = QVideoFrame::imageFormatFromPixelFormat(format.pixelFormat());
 	const QSize size = format.frameSize();
@@ -53,6 +60,8 @@ bool VideoSurfaceAdapter::start(const QVideoSurfaceFormat &format)
 {
 	const QImage::Format imageFormat = QVideoFrame::imageFormatFromPixelFormat(format.pixelFormat());
 	const QSize size = format.frameSize();
+	
+	//qDebug() << "VideoSurfaceAdapter::start()";
 	
 	if (imageFormat != QImage::Format_Invalid && !size.isEmpty()) 
 	{
@@ -79,6 +88,8 @@ bool VideoSurfaceAdapter::start(const QVideoSurfaceFormat &format)
 
 void VideoSurfaceAdapter::stop()
 {
+	qDebug() << "VideoSurfaceAdapter::stop()";
+	
 	currentFrame = QVideoFrame();
 	targetRect = QRect();
 	
@@ -90,6 +101,8 @@ void VideoSurfaceAdapter::stop()
 
 bool VideoSurfaceAdapter::present(const QVideoFrame &frame)
 {
+	//qDebug() << "VideoSurfaceAdapter::present()";
+	
 	if (surfaceFormat().pixelFormat() != frame.pixelFormat()
 	 || surfaceFormat().frameSize() != frame.size()) 
 	{
@@ -102,7 +115,7 @@ bool VideoSurfaceAdapter::present(const QVideoFrame &frame)
 		qDebug()<< "	surfaceFormat().pixelFormat():"<<surfaceFormat().pixelFormat()<<",	frame.pixelFormat():"<<frame.pixelFormat();
 	 	qDebug()<< "	surfaceFormat().frameSize()  :"<<surfaceFormat().frameSize()<<",	frame.size()       :"<<frame.size();
 	
-		return false;
+		return true; //false;
 	} 
 	else 
 	{
@@ -145,6 +158,8 @@ bool VideoSurfaceAdapter::present(const QVideoFrame &frame)
 
 void VideoSurfaceAdapter::updateVideoRect()
 {
+	//qDebug() << "VideoSurfaceAdapter::updateVideoRect()";
+	
 	QSize size = surfaceFormat().sizeHint();
 // 	size.scale(widget->size().boundedTo(size), Qt::KeepAspectRatio);
 	
@@ -182,6 +197,8 @@ void VideoSurfaceAdapter::updateVideoRect()
 
 VideoFormat QtVideoSource::videoFormat()
 { 
+	//qDebug() << "QtVideoSource::videoFormat()";
+	
 	return VideoFormat(VideoFrame::BUFFER_IMAGE,m_surfaceAdapter ? m_surfaceAdapter->pixelFormat() : QVideoFrame::Format_RGB32); 
 }
 
@@ -213,6 +230,7 @@ QtVideoSource::~QtVideoSource()
 
 void QtVideoSource::start(QThread::Priority /*priority*/)
 {
+	//qDebug() << "QtVideoSource::start: starting...";
 	m_player->play();
 }
 	
@@ -230,6 +248,8 @@ void QtVideoSource::setFile(const QString& file)
 			m_playlist->load(url);
 		else
 			m_playlist->addMedia(url);
+			
+		qDebug() << "QtVideoSource::setFile: Added file:"<<url;
 	} 
 	else 
 	{
@@ -237,8 +257,10 @@ void QtVideoSource::setFile(const QString& file)
 		if (url.isValid()) 
 		{
 			m_playlist->addMedia(url);
+			qDebug() << "QtVideoSource::setFile: Added URL:"<<url;
 		}
 	}
+	
 }
 
 void QtVideoSource::run()
@@ -250,7 +272,7 @@ void QtVideoSource::present(QImage image)
 {
 	// TODO is there some way to get the FPS from the QMediaPlayer or friends?
 	m_frame = VideoFrame(image,1000/60);
-// 	qDebug()<< "QtVideoSource::present: Got image, size:"<<image.size();
+ 	//qDebug()<< "QtVideoSource::present: Got image, size:"<<image.size();
 	enqueue(m_frame);
 	emit frameReady();
 }

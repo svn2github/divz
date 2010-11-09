@@ -61,8 +61,6 @@ class GLDrawable : public QObject
 public:
 	GLDrawable(QObject *parent=0);
 
-	void updateGL();
-
 	GLWidget *glWidget() { return m_glw; }
 
 	const QRectF & rect() const { return m_rect; }
@@ -143,6 +141,8 @@ public:
 	QSizeF canvasSize();
 
 public slots:
+	void updateGL();
+
 	void setRect(const QRectF& rect);
 	void setOpacity(double i);
 	void setZIndex(double z);

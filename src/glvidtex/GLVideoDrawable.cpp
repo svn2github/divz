@@ -8,6 +8,8 @@
 
 #include <QImageWriter>
 
+#include <string.h> 
+
 #if !defined(QT_NO_OPENGL) && !defined(QT_OPENGL_ES_1_CL) && !defined(QT_OPENGL_ES_1)
 
 #ifndef Q_WS_MAC
@@ -230,6 +232,8 @@ QDebug operator<<(QDebug dbg, const VideoDisplayOptions &opts)
 GLVideoDrawable::GLVideoDrawable(QObject *parent)
 	: GLDrawable(parent)
 	, m_glInited(false)
+	, m_program(0)
+	, m_textureCount(1)
 	, m_colorsDirty(true)
 	, m_source(0)
 	, m_frameCount(0)
@@ -237,11 +241,12 @@ GLVideoDrawable::GLVideoDrawable(QObject *parent)
 	, m_debugFps(true)
 	, m_aspectRatioMode(Qt::KeepAspectRatio)
 	, m_validShader(false)
-	, m_program(0)
 	, m_uploadedCacheKey(0)
 	, m_textureOffset(0,0)
 	, m_texturesInited(false)
 	, m_visiblePendingFrame(false)
+	, m_useShaders(true)
+	, m_rateLimitFps(0.0)
 {
 	
 	m_imagePixelFormats
@@ -251,11 +256,29 @@ GLVideoDrawable::GLVideoDrawable(QObject *parent)
 		<< QVideoFrame::Format_RGB565
 		<< QVideoFrame::Format_YV12
 		<< QVideoFrame::Format_YUV420P;
+		
+	connect(&m_fpsRateLimiter, SIGNAL(timeout()), this, SLOT(updateGL()));
+	m_fpsRateLimiter.setInterval(1000/30);
+	// only start if setFpsLimit(float) is called
 }
 
 GLVideoDrawable::~GLVideoDrawable()
 {
 	setVideoSource(0);
+}
+
+void GLVideoDrawable::setFpsLimit(float fps)
+{
+	m_rateLimitFps = fps;
+	if(fps > 0.0)
+	{
+		m_fpsRateLimiter.setInterval((int)(1000./fps));
+		m_fpsRateLimiter.start();
+	}
+	else
+	{
+		m_fpsRateLimiter.stop();
+	}
 }
 
 void GLVideoDrawable::setVideoSource(VideoSource *source)
@@ -319,7 +342,10 @@ void GLVideoDrawable::frameReady()
 	// before the app has finished initalizing.
 	QMutexLocker lock(&m_frameReadyLock);
 	
-	updateGL();
+	if(m_rateLimitFps <= 0.0)
+		updateGL();
+	else
+		qDebug() << "GLVideoDrawable::frameReady(): "<<this<<" rate limited, waiting on timer"; 
 	
 	if(m_visiblePendingFrame)
 	{
@@ -645,7 +671,12 @@ void GLVideoDrawable::initGL()
 	glActiveTexture = (_glActiveTexture)glWidget()->context()->getProcAddress(QLatin1String("glActiveTexture"));
 	#endif
 	
-	//m_program = new QGLShaderProgram(glWidget()->context(), this);
+	const GLubyte *str = glGetString(GL_EXTENSIONS); 
+	m_useShaders = (strstr((const char *)str, "GL_ARB_fragment_shader") != NULL);
+	//m_useShaders = false;
+	
+	if(m_useShaders)
+		m_program = new QGLShaderProgram(glWidget()->context(), this);
 	
 	m_glInited = true;
 	//qDebug() << "GLVideoDrawable::initGL(): "<<objectName();
@@ -684,7 +715,7 @@ bool GLVideoDrawable::setVideoFormat(const VideoFormat& format)
 	bool samePixelFormat = false; //format.pixelFormat == m_videoFormat.pixelFormat;
 	m_videoFormat = format;
 	
-	qDebug() << "GLVideoDrawable::setVideoFormat(): "<<objectName()<<" \t frameSize:"<<format.frameSize<<", pixelFormat:"<<format.pixelFormat;
+	//qDebug() << "GLVideoDrawable::setVideoFormat(): "<<objectName()<<" \t frameSize:"<<format.frameSize<<", pixelFormat:"<<format.pixelFormat;
 	
 	if(!m_glInited || !glWidget())
 		return m_imagePixelFormats.contains(format.pixelFormat);
@@ -696,60 +727,74 @@ bool GLVideoDrawable::setVideoFormat(const VideoFormat& format)
 	m_validShader = false;
 	const char *fragmentProgram = resizeTextures(format.frameSize);
  
-//  	if(!samePixelFormat)
-//  	{
-//  		if(!m_program->shaders().isEmpty())
-//  			m_program->removeAllShaders();
-//  		
-// 		if(!QGLShaderProgram::hasOpenGLShaderPrograms())
-// 		{
-// 			qDebug() << "GLSL Shaders Not Supported by this driver, this program will NOT function as expected and will likely crash.";
-// 			return false;
-// 		}
-// 
-// 		if (!fragmentProgram) 
-// 		{
-// 			qDebug() << "No shader program found - format not supported.";
-// 			return false;
-// 		} 
-// 		else 
-// 		if (!m_program->addShaderFromSourceCode(QGLShader::Vertex, qt_glsl_vertexShaderProgram)) 
-// 		{
-// 			qWarning("GLWidget: Vertex shader compile error %s",
-// 				qPrintable(m_program->log()));
-// 			//error = QAbstractVideoSurface::ResourceError;
-// 			return false;
-// 			
-// 		} 
-// 		else 
-// 		if (!m_program->addShaderFromSourceCode(QGLShader::Fragment, fragmentProgram)) 
-// 		{
-// 			qWarning("GLWidget: Shader compile error %s", qPrintable(m_program->log()));
-// 			//error = QAbstractVideoSurface::ResourceError;
-// 			m_program->removeAllShaders();
-// 			return false;
-// 		} 
-// 		else 
-// 		if(!m_program->link()) 
-// 		{
-// 			qWarning("GLWidget: Shader link error %s", qPrintable(m_program->log()));
-// 			m_program->removeAllShaders();
-// 			return false;
-// 		} 
-// 		else 
-// 		{
-			//m_handleType = format.handleType();
+  	if(!samePixelFormat)
+  	{
+  		if(m_useShaders)
+		{
+			if(!m_program->shaders().isEmpty())
+				m_program->removeAllShaders();
+			
+			if(!QGLShaderProgram::hasOpenGLShaderPrograms())
+			{
+				qDebug() << "GLSL Shaders Not Supported by this driver, this program will NOT function as expected and will likely crash.";
+				return false;
+			}
+	
+			if (!fragmentProgram) 
+			{
+				qDebug() << "No shader program found - format not supported.";
+				return false;
+			} 
+			else 
+			if (!m_program->addShaderFromSourceCode(QGLShader::Vertex, qt_glsl_vertexShaderProgram)) 
+			{
+				qWarning("GLWidget: Vertex shader compile error %s",
+					qPrintable(m_program->log()));
+				//error = QAbstractVideoSurface::ResourceError;
+				return false;
+				
+			} 
+			else 
+			if (!m_program->addShaderFromSourceCode(QGLShader::Fragment, fragmentProgram)) 
+			{
+				qWarning("GLWidget: Shader compile error %s", qPrintable(m_program->log()));
+				//error = QAbstractVideoSurface::ResourceError;
+				m_program->removeAllShaders();
+				return false;
+			} 
+			else 
+			if(!m_program->link()) 
+			{
+				qWarning("GLWidget: Shader link error %s", qPrintable(m_program->log()));
+				m_program->removeAllShaders();
+				return false;
+			} 
+			else 
+			{
+				//m_handleType = format.handleType();
+				m_scanLineDirection = QVideoSurfaceFormat::TopToBottom; //format.scanLineDirection();
+				m_frameSize = format.frameSize;
+			
+				//if (m_handleType == QAbstractVideoBuffer::NoHandle)
+					glGenTextures(m_textureCount, m_textureIds);
+					
+				m_texturesInited = true;
+			}
+			
+			//qDebug() << "GLVideoDrawable::setVideoFormat(): \t Initalized"<<m_textureCount<<"textures";
+		}
+		else
+		{
 			m_scanLineDirection = QVideoSurfaceFormat::TopToBottom; //format.scanLineDirection();
 			m_frameSize = format.frameSize;
 		
-			//if (m_handleType == QAbstractVideoBuffer::NoHandle)
-				glGenTextures(m_textureCount, m_textureIds);
+			glGenTextures(1, m_textureIds);
 				
 			m_texturesInited = true;
-// 		}
-// 		
-// 		//qDebug() << "GLVideoDrawable::setVideoFormat(): \t Initalized"<<m_textureCount<<"textures";
-// 	}
+			
+			//qDebug() << "GLVideoDrawable::setVideoFormat(): \t Initalized 1 textures, no shader used";
+		}
+ 	}
 	m_validShader = true;
 	return true;
 }
@@ -803,6 +848,8 @@ const char * GLVideoDrawable::resizeTextures(const QSize& frameSize)
 		fragmentProgram = qt_glsl_yuvPlanarShaderProgram;
 		break;
 	default:
+		if(debugShaderName)
+			qDebug() << "GLVideoDrawable::resizeTextures(): \t Unknown pixel format:"<<m_videoFormat.pixelFormat;
 		break;
 	}
 	
@@ -918,29 +965,21 @@ void GLVideoDrawable::setTextureOffset(const QPointF& point)
 	
 void GLVideoDrawable::paintGL()
 {
-	if(!m_validShader)
-	{
+	VideoFrame f = m_source->frame();
+	if(f.isValid())
+		m_frame = f;
+	if(!m_frame.isValid())
 		return;
-	}
-	
-	if (m_colorsDirty) 
-	{
-		//qDebug() << "Updating color matrix";
-		updateColors(m_displayOpts.brightness, m_displayOpts.contrast, m_displayOpts.hue, m_displayOpts.saturation);
-		m_colorsDirty = false;
-        }
-	
-	m_frame = m_source->frame();
 	
 	if(m_glInited && glWidget())
 	{
 		//if(objectName() != "StaticBackground")
-			//qDebug() << "GLVideoDrawable::frameReady(): "<<this<<" Got a frame, size:"<<m_frame.size;
+			//qDebug() << "GLVideoDrawable::paintGL(): "<<this<<" Got a frame, size:"<<m_frame.size;
 			
 		if(m_frame.rect != m_sourceRect || !m_texturesInited)
 		{
- 			//qDebug() << "GLVideoDrawable::frameReady(): m_frame.rect:"<<m_frame.rect<<", m_sourceRect:"<<m_sourceRect;
- 			//qDebug() << "GLVideoDrawable::frameReady(): frame size changed or !m_texturesInited, resizing and adjusting pixels...";
+ 			//qDebug() << "GLVideoDrawable::paintGL(): m_frame.rect:"<<m_frame.rect<<", m_sourceRect:"<<m_sourceRect;
+ 			//qDebug() << "GLVideoDrawable::paintGL(): frame size changed or !m_texturesInited, resizing and adjusting pixels...";
 			if(m_videoFormat.pixelFormat != m_source->videoFormat().pixelFormat)
 				setVideoFormat(m_source->videoFormat());
 			resizeTextures(m_frame.size);
@@ -952,44 +991,47 @@ void GLVideoDrawable::paintGL()
 		
 		if(m_frame.isEmpty())
 		{
-			qDebug() << "GLVideoDrawable::frameReady(): Got empty frame, ignoring.";
+			qDebug() << "GLVideoDrawable::paintGL(): Got empty frame, ignoring.";
 		}
 		else
 		if(m_frame.isRaw)
 		{
 			for (int i = 0; i < m_textureCount; ++i) 
 			{
-				/*Image texOrig, texGL;
-		if ( !texOrig.load( "me2.jpg" ) )
-		//if ( !texOrig.load( "Pm5544.jpg" ) )
-		{
-			texOrig = QImage( 16, 16, QImage::Format_RGB32 );
-			texOrig.fill( Qt::green );
-		}
-		
-		// Setup inital texture
-		texGL = QGLWidget::convertToGLFormat( texOrig );
-		glGenTextures( 1, &m_textureIds[0] );
-		glBindTexture( GL_TEXTURE_2D, m_textureIds[0] );
-		glTexImage2D( GL_TEXTURE_2D, 0, 3, texGL.width(), texGL.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, texGL.bits() );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );*/
-				
 				//qDebug() << "raw: "<<i<<m_textureWidths[i]<<m_textureHeights[i]<<m_textureOffsets[i]<<m_textureInternalFormat<<m_textureFormat<<m_textureType;
 				glBindTexture(GL_TEXTURE_2D, m_textureIds[i]);
-				glTexImage2D(
-					GL_TEXTURE_2D,
-					0,
-					3, //m_textureInternalFormat,
-					m_textureWidths[i],
-					m_textureHeights[i],
-					0,
-					GL_BGRA, //m_textureFormat,
-					GL_UNSIGNED_BYTE, //m_textureType,
-					m_frame.byteArray.constData() + m_textureOffsets[i]
-					//m_frame.bufferType == VideoFrame::BUFFER_POINTER ? m_frame.data[i] :
-						//(uint8_t*)m_frame.byteArray.constData() + m_textureOffsets[i]
-				);
+				if(m_useShaders)
+				{
+					glTexImage2D(
+						GL_TEXTURE_2D,
+						0,
+						m_textureInternalFormat,
+						m_textureWidths[i],
+						m_textureHeights[i],
+						0,
+						m_textureFormat,
+						m_textureType,
+						m_frame.byteArray.constData() + m_textureOffsets[i]
+						//m_frame.bufferType == VideoFrame::BUFFER_POINTER ? m_frame.data[i] :
+							//(uint8_t*)m_frame.byteArray.constData() + m_textureOffsets[i]
+					);
+				}
+				else
+				{
+					glTexImage2D(
+						GL_TEXTURE_2D,
+						0,
+						3, //m_textureInternalFormat,
+						m_textureWidths[i],
+						m_textureHeights[i],
+						0,
+						GL_BGRA, //m_textureFormat,
+						GL_UNSIGNED_BYTE, //m_textureType,
+						m_frame.byteArray.constData() + m_textureOffsets[i]
+						//m_frame.bufferType == VideoFrame::BUFFER_POINTER ? m_frame.data[i] :
+							//(uint8_t*)m_frame.byteArray.constData() + m_textureOffsets[i]
+					);
+				}
 					
 				glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 				glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -1030,6 +1072,21 @@ void GLVideoDrawable::paintGL()
 		}
 	}
 
+	
+	if(!m_validShader)
+	{
+		//qDebug() << "GLVideoDrawable::paintGL(): "<<this<<" No valid shader, not painting";
+		return;
+	}
+	
+	if (m_colorsDirty) 
+	{
+		//qDebug() << "Updating color matrix";
+		updateColors(m_displayOpts.brightness, m_displayOpts.contrast, m_displayOpts.hue, m_displayOpts.saturation);
+		m_colorsDirty = false;
+        }
+	
+	
 	
 	//m_frame.unmap();
 	
@@ -1150,135 +1207,141 @@ void GLVideoDrawable::paintGL()
 		txLeft , txTop,
 		txRight, txTop
 	};
-/*	
-	m_program->bind();
-
-	m_program->enableAttributeArray("vertexCoordArray");
-	m_program->enableAttributeArray("textureCoordArray");
 	
-	m_program->setAttributeArray("vertexCoordArray",  vertexCoordArray,  2);
-	m_program->setAttributeArray("textureCoordArray", textureCoordArray, 2);
-	
-	m_program->setUniformValue("positionMatrix",      positionMatrix);
-// 	QMatrix4x4 mat4(
-// 		positionMatrix[0][0], positionMatrix[0][1], positionMatrix[0][2], positionMatrix[0][3],
-// 		positionMatrix[1][0], positionMatrix[1][1], positionMatrix[1][2], positionMatrix[1][3], 
-// 		positionMatrix[2][0], positionMatrix[2][1], positionMatrix[2][2], positionMatrix[2][3], 
-// 		positionMatrix[3][0], positionMatrix[3][1], positionMatrix[3][2], positionMatrix[3][3]
-// 		); 
-// 	m_program->setUniformValue("positionMatrix",      mat4);
-	
-	//qDebug() << "GLVideoDrawable:paintGL():"<<this<<", rendering with opacity:"<<opacity();
-	m_program->setUniformValue("alpha",               (GLfloat)opacity());
-	m_program->setUniformValue("texOffsetX",          (GLfloat)m_invertedOffset.x());
-	m_program->setUniformValue("texOffsetY",          (GLfloat)m_invertedOffset.y());
-		
-
-	if (m_textureCount == 3) 
+	if(m_useShaders)
 	{
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, m_textureIds[0]);
 		
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, m_textureIds[1]);
-		
-		glActiveTexture(GL_TEXTURE2);
-		glBindTexture(GL_TEXTURE_2D, m_textureIds[2]);
-		
-		glActiveTexture(GL_TEXTURE3);
-		glBindTexture(GL_TEXTURE_2D, m_alphaTextureId);
-		
-		glActiveTexture(GL_TEXTURE0);
+		m_program->bind();
 	
-		m_program->setUniformValue("texY", 0);
-		m_program->setUniformValue("texU", 1);
-		m_program->setUniformValue("texV", 2);
-		m_program->setUniformValue("alphaMask", 3);
-	} 
-	else 
-	{
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, m_textureIds[0]);
-	
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, m_alphaTextureId);
+		m_program->enableAttributeArray("vertexCoordArray");
+		m_program->enableAttributeArray("textureCoordArray");
 		
-		glActiveTexture(GL_TEXTURE0);
+		m_program->setAttributeArray("vertexCoordArray",  vertexCoordArray,  2);
+		m_program->setAttributeArray("textureCoordArray", textureCoordArray, 2);
+		
+		m_program->setUniformValue("positionMatrix",      positionMatrix);
+	// 	QMatrix4x4 mat4(
+	// 		positionMatrix[0][0], positionMatrix[0][1], positionMatrix[0][2], positionMatrix[0][3],
+	// 		positionMatrix[1][0], positionMatrix[1][1], positionMatrix[1][2], positionMatrix[1][3], 
+	// 		positionMatrix[2][0], positionMatrix[2][1], positionMatrix[2][2], positionMatrix[2][3], 
+	// 		positionMatrix[3][0], positionMatrix[3][1], positionMatrix[3][2], positionMatrix[3][3]
+	// 		); 
+	// 	m_program->setUniformValue("positionMatrix",      mat4);
+		
+		//qDebug() << "GLVideoDrawable:paintGL():"<<this<<", rendering with opacity:"<<opacity();
+		m_program->setUniformValue("alpha",               (GLfloat)opacity());
+		m_program->setUniformValue("texOffsetX",          (GLfloat)m_invertedOffset.x());
+		m_program->setUniformValue("texOffsetY",          (GLfloat)m_invertedOffset.y());
+			
 	
-		m_program->setUniformValue("texRgb", 0);
-		m_program->setUniformValue("alphaMask", 1);
-	}
-	m_program->setUniformValue("colorMatrix", m_colorMatrix);
-	
-	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
- 	m_program->release();
- 	
-*/ 	
- 	
- 	if(0)
- 	{
-		QImage texOrig, texGL;
-		if ( !texOrig.load( "me2.jpg" ) )
-		//if ( !texOrig.load( "Pm5544.jpg" ) )
+		if (m_textureCount == 3) 
 		{
-			texOrig = QImage( 16, 16, QImage::Format_RGB32 );
-			texOrig.fill( Qt::green );
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, m_textureIds[0]);
+			
+			glActiveTexture(GL_TEXTURE1);
+			glBindTexture(GL_TEXTURE_2D, m_textureIds[1]);
+			
+			glActiveTexture(GL_TEXTURE2);
+			glBindTexture(GL_TEXTURE_2D, m_textureIds[2]);
+			
+			glActiveTexture(GL_TEXTURE3);
+			glBindTexture(GL_TEXTURE_2D, m_alphaTextureId);
+			
+			glActiveTexture(GL_TEXTURE0);
+		
+			m_program->setUniformValue("texY", 0);
+			m_program->setUniformValue("texU", 1);
+			m_program->setUniformValue("texV", 2);
+			m_program->setUniformValue("alphaMask", 3);
+		} 
+		else 
+		{
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, m_textureIds[0]);
+		
+			glActiveTexture(GL_TEXTURE1);
+			glBindTexture(GL_TEXTURE_2D, m_alphaTextureId);
+			
+			glActiveTexture(GL_TEXTURE0);
+		
+			m_program->setUniformValue("texRgb", 0);
+			m_program->setUniformValue("alphaMask", 1);
+		}
+		m_program->setUniformValue("colorMatrix", m_colorMatrix);
+		
+		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+	
+		m_program->release();
+ 	
+	}
+	else
+	{
+		if(0)
+		{
+			QImage texOrig, texGL;
+			if ( !texOrig.load( "me2.jpg" ) )
+			//if ( !texOrig.load( "Pm5544.jpg" ) )
+			{
+				texOrig = QImage( 16, 16, QImage::Format_RGB32 );
+				texOrig.fill( Qt::green );
+			}
+			
+			// Setup inital texture
+			texGL = QGLWidget::convertToGLFormat( texOrig );
+			glGenTextures( 1, &m_textureIds[0] );
+			glBindTexture( GL_TEXTURE_2D, m_textureIds[0] );
+			glTexImage2D( GL_TEXTURE_2D, 0, 3, texGL.width(), texGL.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, texGL.bits() );
+			glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+			glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
 		}
 		
-		// Setup inital texture
-		texGL = QGLWidget::convertToGLFormat( texOrig );
-		glGenTextures( 1, &m_textureIds[0] );
-		glBindTexture( GL_TEXTURE_2D, m_textureIds[0] );
-		glTexImage2D( GL_TEXTURE_2D, 0, 3, texGL.width(), texGL.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, texGL.bits() );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-	}
+		float opac = opacity();
+		glColor4f(opac,opac,opac,opac);
 	
-	float opac = opacity();
-	glColor4f(opac,opac,opac,opac);
-
-	glEnable(GL_TEXTURE_2D);
-	
-	glActiveTexture(GL_TEXTURE0);
-	
-// 	glClearColor(0.1f, 0.1f, 0.2f, 1.0f);
-// 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	
-	glLoadIdentity(); // Reset The View
-	//glTranslatef(0.0f,0.0f,-3.42f);
-	
-	glBindTexture(GL_TEXTURE_2D, m_textureIds[0]);
-	
-	//qDebug() << "target: "<<target;
-	target = transform.mapRect(target);
-	glBegin(GL_QUADS);
-		qreal 
-			vx1 = target.left(),
-			vx2 = target.right(),
-			vy1 = target.bottom(),
-			vy2 = target.top();
-			
-// 		const GLfloat txLeft   = m_displayOpts.flipHorizontal ? source.right()  / m_frameSize.width() : source.left()  / m_frameSize.width();
-// 		const GLfloat txRight  = m_displayOpts.flipHorizontal ? source.left()   / m_frameSize.width() : source.right() / m_frameSize.width();
-// 		
-// 		const GLfloat txTop    = !m_displayOpts.flipVertical //m_scanLineDirection == QVideoSurfaceFormat::TopToBottom
-// 			? source.top()    / m_frameSize.height()
-// 			: source.bottom() / m_frameSize.height();
-// 		const GLfloat txBottom = !m_displayOpts.flipVertical //m_scanLineDirection == QVideoSurfaceFormat::TopToBottom
-// 			? source.bottom() / m_frameSize.height()
-// 			: source.top()    / m_frameSize.height();
+		glEnable(GL_TEXTURE_2D);
 		
-		glTexCoord2f(txLeft, txBottom); 		glVertex3f(vx1,vy1,  0.0f); // top left
-		glTexCoord2f(txRight, txBottom); 		glVertex3f(vx2,vy1,  0.0f); // top right
-		glTexCoord2f(txRight, txTop); 	glVertex3f(vx2,vy2,  0.0f); // bottom right
-		glTexCoord2f(txLeft, txTop); 	glVertex3f(vx1,vy2,  0.0f); // bottom left
-
-// 		glTexCoord2f(0,0); glVertex3f( 0, 0,0); //lo
-// 		glTexCoord2f(0,1); glVertex3f(256, 0,0); //lu
-// 		glTexCoord2f(1,1); glVertex3f(256, 256,0); //ru
-// 		glTexCoord2f(1,0); glVertex3f( 0, 256,0); //ro
-	glEnd();
+		glActiveTexture(GL_TEXTURE0);
+		
+	// 	glClearColor(0.1f, 0.1f, 0.2f, 1.0f);
+	// 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		
+		glLoadIdentity(); // Reset The View
+		//glTranslatef(0.0f,0.0f,-3.42f);
+		
+		glBindTexture(GL_TEXTURE_2D, m_textureIds[0]);
+		
+		//qDebug() << "target: "<<target;
+		target = transform.mapRect(target);
+		glBegin(GL_QUADS);
+			qreal 
+				vx1 = target.left(),
+				vx2 = target.right(),
+				vy1 = target.bottom(),
+				vy2 = target.top();
+				
+	// 		const GLfloat txLeft   = m_displayOpts.flipHorizontal ? source.right()  / m_frameSize.width() : source.left()  / m_frameSize.width();
+	// 		const GLfloat txRight  = m_displayOpts.flipHorizontal ? source.left()   / m_frameSize.width() : source.right() / m_frameSize.width();
+	// 		
+	// 		const GLfloat txTop    = !m_displayOpts.flipVertical //m_scanLineDirection == QVideoSurfaceFormat::TopToBottom
+	// 			? source.top()    / m_frameSize.height()
+	// 			: source.bottom() / m_frameSize.height();
+	// 		const GLfloat txBottom = !m_displayOpts.flipVertical //m_scanLineDirection == QVideoSurfaceFormat::TopToBottom
+	// 			? source.bottom() / m_frameSize.height()
+	// 			: source.top()    / m_frameSize.height();
+			
+			glTexCoord2f(txLeft, txBottom); 		glVertex3f(vx1,vy1,  0.0f); // top left
+			glTexCoord2f(txRight, txBottom); 		glVertex3f(vx2,vy1,  0.0f); // top right
+			glTexCoord2f(txRight, txTop); 	glVertex3f(vx2,vy2,  0.0f); // bottom right
+			glTexCoord2f(txLeft, txTop); 	glVertex3f(vx1,vy2,  0.0f); // bottom left
+	
+	// 		glTexCoord2f(0,0); glVertex3f( 0, 0,0); //lo
+	// 		glTexCoord2f(0,1); glVertex3f(256, 0,0); //lu
+	// 		glTexCoord2f(1,1); glVertex3f(256, 256,0); //ru
+	// 		glTexCoord2f(1,0); glVertex3f( 0, 256,0); //ro
+		glEnd();
+	}
+ 	
 	
 	
 	//renderText(10, 10, qPrintable(QString("%1 fps").arg(framesPerSecond)));

@@ -148,7 +148,10 @@ public:
 	// of the text unscaled at natural resolution. Used for calculating alignment.
 	virtual QSizeF naturalSize() { return m_sourceRect.size(); }
 	
+	float fpsLimit() { return m_rateLimitFps; }
+	
 public slots:
+	void setFpsLimit(float);
 	void setVisible(bool flag, bool waitOnFrameSignal=false);
 	
 	void setAlphaMask(const QImage&);
@@ -268,6 +271,11 @@ private:
 	
 	bool m_visiblePendingFrame;
 	bool m_tempVisibleValue;
+	
+	bool m_useShaders;
+	
+	float m_rateLimitFps;
+	QTimer m_fpsRateLimiter;
 };
 
 #endif 
