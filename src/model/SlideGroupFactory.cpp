@@ -351,7 +351,7 @@ void SlideGroupViewControl::setWrapModeEnabled(bool flag)
 	if(m_listView)
 		m_listView->setWrapping(flag);
 	QSettings s;
-	s.setValue(QString("slideviewcontrol/%1").arg(m_isPreviewControl ? "preview-wrap-mode" : "wrap-mode"),m_listModeEnabled);
+	s.setValue(QString("slideviewcontrol/%1").arg(m_isPreviewControl ? "preview-wrap-mode" : "wrap-mode"),m_wrapModeEnabled);
 }
 
 

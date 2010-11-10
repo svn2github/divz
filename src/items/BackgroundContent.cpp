@@ -660,13 +660,13 @@ BackgroundImageWarmingThreadManager::BackgroundImageWarmingThreadManager(Backgro
 		deleteLater();
 	}
 	else
-	if(QFile(key).exists() && QFileInfo(model->fillImageFile()).lastModified() <= QFileInfo(key).lastModified())
+	if(QFile(key).exists() && QFileInfo(model->fillImageFile()).lastModified() >= QFileInfo(key).lastModified())
 	{
-		qDebug()<<"TextBoxWarmingThreadManager(): modelItem:"<<model->itemName()<<": Cache load from"<<key<<" done";
+		qDebug()<<"BackgroundImageWarmingThreadManager(): modelItem:"<<model->itemName()<<": Cache load from"<<key<<" done";
 		cache.load(key);
 		QPixmapCache::insert(key,cache);
 		deleteLater();
-		qDebug()<<"TextBoxWarmingThreadManager(): modelItem:"<<model->itemName()<<": Cache load from"<<key<<" finish";
+		qDebug()<<"BackgroundImageWarmingThreadManager(): modelItem:"<<model->itemName()<<": Cache load from"<<key<<" finish";
 	}
 	else
 	{
