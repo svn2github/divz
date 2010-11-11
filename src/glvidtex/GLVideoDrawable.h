@@ -201,6 +201,8 @@ protected:
 	const char * resizeTextures(const QSize& size);
 	
 	void updateTextureOffsets();
+	
+	void updateTexture();
 
 protected slots:
 	void frameReady();

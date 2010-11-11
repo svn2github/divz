@@ -88,65 +88,6 @@ static const char *qt_glsl_argbShaderProgram =
 	"    gl_FragColor = vec4(color.rgb, texture2D(texRgb, texPoint).a * alpha * texture2D(alphaMask, textureCoord.st).a);\n"
 	"}\n";
 
-
-//  	"void main(void)\n"
-//  	"{\n"
-// 		"vec4 result = 0.0;\n"
-// 		"float stepU = 1.0 / 1024.0;\n"
-// 		"float stepV = 1.0 / 818.0;\n"
-// 		"vec2 texCoord;\n"
-// 		"\n"
-// 		"mat3 gaussianCoef = {\n"
-// 		"	1.0,	2.0,	1.0,\n"
-// 		"	2.0,	4.0,	2.0,\n"
-// 		"	1.0,	2.0,	1.0};\n"
-// 		"\n"
-// 		"for(int i=0;i<3;i++) {\n"
-// 		"	for(int j=0;j<3;j++) {\n"
-// 		"		texCoord = vec2(textureCoord.s + (i-1)*stepU, textureCoord.t + (j-1)*stepV);\n"
-// 		"		result += gaussianCoef[i][j] * vec4(texture2D(texRgb,texCoord).bgr, 1.0);\n" //, texture2D(texRgb,texCoord).a * alpha);\n"
-// 		"	}\n"
-// 		"}\n"
-// 		"result /= 16.0;\n"
-// 		"gl_FragColor = result;\n"
-// 	"}\n";
-	
-// 	"void main(void)\n"
-// 	"{\n"
-// 	"    highp vec4 color = vec4(texture2D(texRgb, textureCoord.st).bgr, 1.0);\n"
-// 	"    color = colorMatrix * color;\n"
-// 	"    gl_FragColor = vec4(color.rgb, texture2D(texRgb, textureCoord.st).a * alpha);\n"
-// 	"}\n";
-
-// 	"void main(void)\n"
-// 	"{\n"
-// 	"    vec4 sample[9];\n"
-// 	"    sample[0] = vec4(texture2D(texRgb, vec2(textureCoord.s - 1.0, textureCoord.t - 1.0)).bgr, 1.0);\n"
-// 	"    sample[1] = vec4(texture2D(texRgb, vec2(textureCoord.s - 0.0, textureCoord.t - 1.0)).bgr, 1.0);\n"
-// 	"    sample[2] = vec4(texture2D(texRgb, vec2(textureCoord.s + 1.0, textureCoord.t - 1.0)).bgr, 1.0);\n"
-// 	"    sample[3] = vec4(texture2D(texRgb, vec2(textureCoord.s - 1.0, textureCoord.t - 0.0)).bgr, 1.0);\n"
-// 	"    sample[4] = vec4(texture2D(texRgb, vec2(textureCoord.s - 0.0, textureCoord.t - 0.0)).bgr, 1.0);\n"
-// 	"    sample[5] = vec4(texture2D(texRgb, vec2(textureCoord.s + 1.0, textureCoord.t - 0.0)).bgr, 1.0);\n"
-// 	"    sample[6] = vec4(texture2D(texRgb, vec2(textureCoord.s - 1.0, textureCoord.t + 1.0)).bgr, 1.0);\n"
-// 	"    sample[7] = vec4(texture2D(texRgb, vec2(textureCoord.s - 0.0, textureCoord.t + 1.0)).bgr, 1.0);\n"
-// 	"    sample[8] = vec4(texture2D(texRgb, vec2(textureCoord.s + 1.0, textureCoord.t + 1.0)).bgr, 1.0);\n"
-// 	"    highp vec4 color = (sample[0] + (2.0*sample[1]) + sample[2] + \n"
-// 	"                       (2.0*sample[3]) + sample[4] + (2.0*sample[5]) + \n"
-// 	"                        sample[6] + (2.0*sample[7]) + sample[8]) / 13.0;\n"
-// 	"    color = colorMatrix * color;\n"
-// 	"    gl_FragColor = vec4(color.rgb, texture2D(texRgb, textureCoord.st).a * alpha);\n"
-// 	"}\n";
-
-//   1 2 1
-//   2 1 2   / 13
-//   1 2 1
-
-
-        // blur (low-pass) 3x3 kernel
-
-
-
-
 // Paints an RGB(A) frame.
 static const char *qt_glsl_rgbShaderProgram =
         "uniform sampler2D texRgb;\n"
@@ -341,6 +282,8 @@ void GLVideoDrawable::frameReady()
 	// This seems to prevent crashes during startup of an application when a thread is pumping out frames
 	// before the app has finished initalizing.
 	QMutexLocker lock(&m_frameReadyLock);
+	
+	updateTexture();
 	
 	if(m_rateLimitFps <= 0.0)
 		updateGL();
@@ -962,9 +905,12 @@ void GLVideoDrawable::setTextureOffset(const QPointF& point)
 	updateTextureOffsets();
 	updateGL();
 }
-	
-void GLVideoDrawable::paintGL()
+
+void GLVideoDrawable::updateTexture()
 {
+	if(!m_source)
+		return;
+		
 	VideoFrame f = m_source->frame();
 	if(f.isValid())
 		m_frame = f;
@@ -985,6 +931,12 @@ void GLVideoDrawable::paintGL()
 			resizeTextures(m_frame.size);
 			updateRects();
 			updateAlignment();
+		}
+		
+		if(!m_validShader)
+		{
+			//qDebug() << "GLVideoDrawable::paintGL(): "<<this<<" No valid shader, not painting";
+			return;
 		}
 		
 		glWidget()->makeCurrent();
@@ -1071,8 +1023,10 @@ void GLVideoDrawable::paintGL()
 			}
 		}
 	}
-
+}
 	
+void GLVideoDrawable::paintGL()
+{
 	if(!m_validShader)
 	{
 		//qDebug() << "GLVideoDrawable::paintGL(): "<<this<<" No valid shader, not painting";
