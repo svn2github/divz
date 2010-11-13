@@ -52,7 +52,7 @@ void LiveVideoFileLayer::initDrawable(GLDrawable *drawable, bool isFirst)
 	
 	if(m_video)
 	{
-		qDebug() << "LiveVideoFileLayer::initDrawable: setting video:"<<m_video;
+		//qDebug() << "LiveVideoFileLayer::initDrawable: setting video:"<<m_video;
 		setVideo(m_video);
 	}
 	else
@@ -63,7 +63,7 @@ void LiveVideoFileLayer::initDrawable(GLDrawable *drawable, bool isFirst)
 
 void LiveVideoFileLayer::setVideo(QtVideoSource *vid)
 {
-	qDebug() << "LiveVideoFileLayer::setVideo: "<<vid;
+	//qDebug() << "LiveVideoFileLayer::setVideo: "<<vid;
 	
 // 	if(vid == m_video)
 // 	{
@@ -214,8 +214,14 @@ void LiveVideoFileLayer::btnDelItem()
 	if(!idx.isValid())
 		return;
 		
-	qDebug() << "LiveVideoFileLayer::btnDelItem(): idx: "<<idx.row();
+	//qDebug() << "LiveVideoFileLayer::btnDelItem(): idx: "<<idx.row();
 	list->removeMedia(idx.row());
+	
+	QStringList files = fileList();
+	files.removeAt(idx.row());
+	m_props["fileList"] = files;
+	setInstanceName(guessTitle(QString("%1 Video Files").arg(files.size())));
+	
 #endif	
 }
 
@@ -231,7 +237,7 @@ void LiveVideoFileLayer::btnMoveItemUp()
 		return;
 	int row = idx.row();
 		
-	qDebug() << "LiveVideoFileLayer::btnMoveItemUp(): row: "<<row;
+	//qDebug() << "LiveVideoFileLayer::btnMoveItemUp(): row: "<<row;
 	
 	if(row < 1)
 		return;
@@ -241,6 +247,13 @@ void LiveVideoFileLayer::btnMoveItemUp()
 	list->insertMedia(row-1,content);
 	
 	m_playlistView->setCurrentIndex(m_playlistModel->index(row-1, 0));
+	
+	QStringList files = fileList();
+	QString taken = files.takeAt(row);
+	files.insert(row-1, taken);
+	m_props["fileList"] = files;
+	
+	
 #endif	
 }
 
@@ -256,7 +269,7 @@ void LiveVideoFileLayer::btnMoveItemDown()
 		return;
 	int row = idx.row();
 	
-	qDebug() << "LiveVideoFileLayer::btnMoveItemDown(): row: "<<row;
+	//qDebug() << "LiveVideoFileLayer::btnMoveItemDown(): row: "<<row;
 	
 	if(row >= list->mediaCount())
 		return;
@@ -266,6 +279,11 @@ void LiveVideoFileLayer::btnMoveItemDown()
 	list->insertMedia(row+1,content);
 	
 	m_playlistView->setCurrentIndex(m_playlistModel->index(row+1, 0));
+	
+	QStringList files = fileList();
+	QString taken = files.takeAt(row);
+	files.insert(row+1, taken);
+	m_props["fileList"] = files;
 #endif	
 }
 
@@ -276,7 +294,7 @@ void LiveVideoFileLayer::addFile(const QString& file)
 	QStringList list = fileList();
 	list << file;
 	m_props["fileList"] = list;
-	setInstanceName(guessTitle(QString("%1 Files").arg(list.size())));
+	setInstanceName(guessTitle(QString("%1 Video Files").arg(list.size())));
 	
 	if(!m_video)
 	{

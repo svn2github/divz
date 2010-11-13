@@ -131,9 +131,10 @@ GLDrawable * addQtSource(GLWidget * glw)
 	//QString testFile = "2010-08-01-Rocky.mpg";
 	//QString testFile = "2009-07-25-ACB-Singing.mpg";
 	//QString testFile = "/home/josiah/Download/alabama_ditch_surfing.wmv";
-	
-	
 	//QString testFile = "/home/josiah/Download/lesson35_linux/data/Face2.avi";
+	//QString testFile = "/home/josiah/LaptopBackup/j/UC/UCEDC_300k.wmv";
+	//QString testFile = "/home/josiah/Download/SermonSpice/92_wearechurch.wmv";
+	
 	qDebug() << "addQtSource: using test file:"<<testFile;
 	QtVideoSource *source = new QtVideoSource();
 	source->setFile(testFile);

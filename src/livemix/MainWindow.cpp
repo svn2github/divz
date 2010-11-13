@@ -821,32 +821,32 @@ void MainWindow::createCenterPanel()
 	m_layerViewer->setObjectName("Editor");
 	m_layerViewer->setProperty("isEditorWidget",true);
 
-	QSize size = m_layerViewer->viewport().size().toSize();
-	size /= 2.5;
-	qDebug() << "MainWindow::createLeftPanel(): size:"<<size;
-	QImage bgImage(size, QImage::Format_ARGB32_Premultiplied);
-	QBrush bgTexture(QPixmap("squares2.png"));
-	QPainter bgPainter(&bgImage);
-	bgPainter.fillRect(bgImage.rect(), bgTexture);
-	bgPainter.end();
-
-	StaticVideoSource *source = new StaticVideoSource();
-	source->setImage(bgImage);
-	//source->setImage(QImage("squares2.png"));
-	source->start();
-	connect(this, SIGNAL(destroyed()), source, SLOT(deleteLater()));
-
-	GLVideoDrawable *drawable = new GLVideoDrawable(m_layerViewer);
-	drawable->setVideoSource(source);
-	drawable->setRect(m_layerViewer->viewport());
-	drawable->setZIndex(-100);
-	drawable->setObjectName("StaticBackground");
-	drawable->setAlignment(Qt::AlignAbsolute);
-// 	drawable->setBottomPercent(1.);
-// 	drawable->setRightPercent(1.);
-	drawable->show();
-
-	m_layerViewer->addDrawable(drawable);
+// 	QSize size = m_layerViewer->viewport().size().toSize();
+// 	size /= 2.5;
+// 	qDebug() << "MainWindow::createLeftPanel(): size:"<<size;
+// 	QImage bgImage(size, QImage::Format_ARGB32_Premultiplied);
+// 	QBrush bgTexture(QPixmap("squares2.png"));
+// 	QPainter bgPainter(&bgImage);
+// 	bgPainter.fillRect(bgImage.rect(), bgTexture);
+// 	bgPainter.end();
+// 
+// 	StaticVideoSource *source = new StaticVideoSource();
+// 	source->setImage(bgImage);
+// 	//source->setImage(QImage("squares2.png"));
+// 	source->start();
+// 	connect(this, SIGNAL(destroyed()), source, SLOT(deleteLater()));
+// 
+// 	GLVideoDrawable *drawable = new GLVideoDrawable(m_layerViewer);
+// 	drawable->setVideoSource(source);
+// 	drawable->setRect(m_layerViewer->viewport());
+// 	drawable->setZIndex(-100);
+// 	drawable->setObjectName("StaticBackground");
+// 	drawable->setAlignment(Qt::AlignAbsolute);
+// // 	drawable->setBottomPercent(1.);
+// // 	drawable->setRightPercent(1.);
+// 	drawable->show();
+//
+// 	m_layerViewer->addDrawable(drawable);
 	
 	
 	m_editSplitter->addWidget(m_layerViewer);
