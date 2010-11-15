@@ -34,17 +34,49 @@ GLDrawable::GLDrawable(QObject *parent)
 	, m_animPendingGlWidget(false)
 	, m_rotationPoint(.5,.5,.5) // rotate around center by default
 	, m_lockVisibleSetter(false)
-// 	, m_topPercent(0.)
-// 	, m_leftPercent(0.)
-// 	, m_bottomPercent(1.)
-// 	, m_rightPercent(1.)
+	, m_id(-1)
+	, m_idLoaded(false)
+	, m_isUserControllable(false)
 {
+	// QGraphicsItem
+	setFlags(QGraphicsItem::ItemIsMovable); 
+}
+
+int GLDrawable::id()
+{
+	if(m_id < 0)
+	{
+		QSettings set;
+		m_id = set.value("gldrawable/id-counter",0).toInt() + 1;
+		set.setValue("gldrawable/id-counter",m_id);
+	}
+	
+	return m_id;
+}
+
+void GLDrawable::setItemName(const QString& name)
+{
+	m_itemName = name;
+	propertyWasChanged("itemName",name);
+}
+
+void GLDrawable::setUserControllable(bool flag)
+{
+	m_isUserControllable = flag;
+	propertyWasChanged("userControllable",flag);
+}
+
+void GLDrawable::propertyWasChanged(const QString& propName, const QVariant& value)
+{
+	emit propertyChanged(propName,value);
 }
 
 void GLDrawable::updateGL()
 {
 	if(m_glw)
 		m_glw->updateGL();
+	else
+		update(); // compat with QGraphicsItem
 }
 
 void GLDrawable::show()
@@ -158,9 +190,11 @@ void GLDrawable::startAnimations()
 
 }
 
-void GLDrawable::setAnimationsEnabled(bool flag)
+bool GLDrawable::setAnimationsEnabled(bool flag)
 {
+	bool oldValue = m_animationsEnabled; 
 	m_animationsEnabled = flag;
+	return oldValue;
 }
 
 void GLDrawable::resetAllAnimations()
@@ -396,6 +430,7 @@ void GLDrawable::setZIndex(double z)
 	m_zIndex = z;
 	emit zIndexChanged(z);
 	updateGL();
+	propertyWasChanged("zIndex",z);
 }
 
 void GLDrawable::setOpacity(double o)
@@ -403,6 +438,7 @@ void GLDrawable::setOpacity(double o)
 	//qDebug() << "GLDrawable::setOpacity: "<<this<<", opacity:"<<o;
 	m_opacity = o;
 	updateGL();
+	propertyWasChanged("opacity",o);
 }
 
 void GLDrawable::setAlignment(Qt::Alignment value, bool animate, int animLength, QEasingCurve animCurve)
@@ -651,6 +687,10 @@ void GLDrawable::initGL()
 	// NOOP
 }
 
+void GLDrawable::paint(QPainter * /*painter*/, const QStyleOptionGraphicsItem * /*option*/, QWidget * /*widget*/)
+{
+	// NOOP
+}
 
 
 QByteArray GLDrawable::AnimParam::toByteArray()
@@ -699,31 +739,6 @@ void GLDrawable::setRotationPoint(QVector3D value)
 	updateGL();
 }
 
-// void GLDrawable::setTopPercent(double v)
-// {
-// 	m_topPercent = v;
-// 	updateAlignment();
-// }
-// 
-// void GLDrawable::setLeftPercent(double v)
-// {
-// // 	qDebug() << "GLDrawable::setLeftPercent(): "<<this<<", m_leftPercent:"<<v;
-// 	m_leftPercent = v;
-// 	updateAlignment();
-// }
-// 
-// void GLDrawable::setBottomPercent(double v)
-// {
-// 	m_bottomPercent = v;
-// 	updateAlignment();
-// }
-// 
-// void GLDrawable::setRightPercent(double v)
-// {
-// 	m_rightPercent = v;
-// 	updateAlignment();
-// }
-
 QPropertyAnimation *GLDrawable::propAnim(const QString& prop)
 {
 	if(m_propAnims.contains(prop))
@@ -747,3 +762,120 @@ void GLDrawable::propAnimFinished()
 	m_propAnims.remove(prop);
 }
 
+void GLDrawable::fromByteArray(QByteArray& array)
+{
+	bool animEnabled = setAnimationsEnabled(false);
+	
+	QDataStream stream(&array, QIODevice::ReadOnly);
+	QVariantMap map;
+	stream >> map;
+	
+	//qDebug() << "LiveScene::fromByteArray(): "<<map;
+	if(map.isEmpty())
+	{
+		qDebug() << "Error: GLDrawable::fromByteArray(): Map is empty, unable to load item.";
+		return;
+	}
+	
+	loadPropsFromMap(map);
+	
+	setAnimationsEnabled(animEnabled);
+	
+	
+}
+
+void GLDrawable::loadPropsFromMap(const QVariantMap& map, bool onlyApplyIfChanged)
+{
+	bool vis = false;
+	
+	// So we dont have to engineer our own method of tracking
+	// properties, just assume all inherited objects delcare the relevant
+	// properties using Q_PROPERTY macro
+	const QMetaObject *metaobject = metaObject();
+	int count = metaobject->propertyCount();
+	for (int i=0; i<count; ++i)
+	{
+		QMetaProperty metaproperty = metaobject->property(i);
+		const char *name = metaproperty.name();
+		QVariant value = map[name];
+		
+		//if(QString(name) == "rect")
+		//	qDebug() << "LiveLayer::loadPropsFromMap():"<<this<<": i:"<<i<<", count:"<<count<<", prop:"<<name<<", value:"<<value;
+		
+		// Hold setting visiblility flag till last so that way any properties that affect
+		// animations are set BEFORE animations start!
+		if(QString(name) == "isVisible")
+		{
+			vis = value.toBool();
+		}
+		else
+		if(QString(name) == "id")
+		{
+			// m_layerId is only set ONCE by this method, overwriting any ID assigned at creation time
+			if(!m_idLoaded && value.isValid())
+			{
+				m_idLoaded = true;
+				m_id = value.toInt();
+			}
+		}
+		else
+		{
+			
+			if(value.isValid())
+			{
+				if(onlyApplyIfChanged)
+				{
+					if(property(name) != value)
+					{
+ 						//qDebug() << "LiveLayer::loadPropsFromMap():"<<this<<": [onlyApplyIfChanged] i:"<<i<<", count:"<<count<<", prop:"<<name<<", value:"<<value;
+						setProperty(name,value);
+					}
+				}
+				else
+				{
+					//if(QString(name) == "alignment")
+					//	qDebug() << "LiveLayer::loadPropsFromMap():"<<this<<": i:"<<i<<", count:"<<count<<", prop:"<<name<<", value:"<<value<<" (calling set prop)";
+						
+					setProperty(name,value);
+					//m_props[name] = value;
+				}
+			}
+			else
+				qDebug() << "GLDrawable::loadPropsFromMap: Unable to load property for "<<name<<", got invalid property from map";
+		}
+	}
+	
+	//qDebug() << "LiveLayer::fromByteArray():"<<this<<": *** Setting visibility to "<<vis;
+	if(!onlyApplyIfChanged || isVisible() != vis)
+		setVisible(vis);
+}
+
+QByteArray GLDrawable::toByteArray()
+{
+	QByteArray array;
+	QDataStream stream(&array, QIODevice::WriteOnly);
+	stream << propsToMap();
+	return array;
+}
+
+QVariantMap GLDrawable::propsToMap()
+{
+	QVariantMap map;
+	// So we dont have to engineer our own method of tracking
+	// properties, just assume all inherited objects delcare the relevant
+	// properties using Q_PROPERTY macro
+	const QMetaObject *metaobject = metaObject();
+	int count = metaobject->propertyCount();
+	for (int i=0; i<count; ++i)
+	{
+		QMetaProperty metaproperty = metaobject->property(i);
+		const char *name = metaproperty.name();
+		QVariant value = property(name);
+		
+		//if(name == "aspectRatioMode")
+		//	qDebug() << "LiveLayer::toByteArray():"<<this<<instanceName()<<": prop:"<<name<<", value:"<<value;
+			
+		map[name] = value;
+	}
+	return map;
+}

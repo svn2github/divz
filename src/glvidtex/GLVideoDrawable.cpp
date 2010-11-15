@@ -243,7 +243,7 @@ void GLVideoDrawable::setVideoSource(VideoSource *source)
 	}
 	else
 	{
-		qDebug() << "GLVideoDrawable::setVideoSource(): "<<this<<" Source is NULL";
+		qDebug() << "GLVideoDrawable::setVideoSource(): "<<(QObject*)this<<" Source is NULL";
 	}
 
 }
@@ -288,7 +288,7 @@ void GLVideoDrawable::frameReady()
 	if(m_rateLimitFps <= 0.0)
 		updateGL();
 	else
-		qDebug() << "GLVideoDrawable::frameReady(): "<<this<<" rate limited, waiting on timer"; 
+		qDebug() << "GLVideoDrawable::frameReady(): "<<(QObject*)this<<" rate limited, waiting on timer"; 
 	
 	if(m_visiblePendingFrame)
 	{
@@ -826,8 +826,8 @@ void GLVideoDrawable::updateTextureOffsets()
 
 void GLVideoDrawable::updateRects()
 {
-	if(!m_glInited)
-		return;
+// 	if(!m_glInited)
+// 		return;
 		
 	m_sourceRect = m_frame.rect;
 	//if(m_frame.rect != m_sourceRect)
@@ -1023,7 +1023,105 @@ void GLVideoDrawable::updateTexture()
 			}
 		}
 	}
+	else
+	{
+		if(m_frame.rect != m_sourceRect)
+		{
+			updateRects();
+			updateAlignment();
+		}
+	}
 }
+	
+	
+
+
+void GLVideoDrawable::paint(QPainter * painter, const QStyleOptionGraphicsItem * /*option*/, QWidget * /*widget*/)
+{
+// 	painter->setPen(pen);
+// 	painter->setBrush(brush);
+// 	painter->drawRect(m_contentsRect);
+
+
+	QRectF source = m_sourceRect;
+	QRectF target = m_targetRect;
+	
+	source = source.adjusted(
+		m_displayOpts.cropTopLeft.x(),
+		m_displayOpts.cropTopLeft.y(),
+		m_displayOpts.cropBottomRight.x(),
+		m_displayOpts.cropBottomRight.y());
+	
+	
+	//const QImage::Format imageFormat = QVideoFrame::imageFormatFromPixelFormat(format.pixelFormat());
+	
+	painter->setRenderHint(QPainter::HighQualityAntialiasing, true);
+	painter->setRenderHint(QPainter::SmoothPixmapTransform, true);
+	
+	if(!m_frame.image.isNull())
+	{
+		painter->drawImage(target,m_frame.image,source);
+		//qDebug() << "GLVideoDrawablle::paint: Painted frame, size:" << m_frame.image.size()<<", source:"<<source<<", target:"<<target;
+	}
+	else
+	{
+		const QImage::Format imageFormat = QVideoFrame::imageFormatFromPixelFormat(m_frame.pixelFormat);
+		if(imageFormat != QImage::Format_Invalid)
+		{
+			QImage image((const uchar*)m_frame.byteArray.constData(),
+				m_frame.size.width(),
+				m_frame.size.height(),
+				m_frame.size.width() * 
+					(imageFormat == QImage::Format_RGB16  ||
+					 imageFormat == QImage::Format_RGB555 ||
+					 imageFormat == QImage::Format_RGB444 ||
+					 imageFormat == QImage::Format_ARGB4444_Premultiplied ? 2 :
+					 imageFormat == QImage::Format_RGB888 ||
+					 imageFormat == QImage::Format_RGB666 ||
+					 imageFormat == QImage::Format_ARGB6666_Premultiplied ? 3 :
+					 4),
+				imageFormat);
+					 
+			painter->drawImage(target,image,source);
+			//qDebug() << "GLVideoDrawable::paint: Painted RAW frame, size:" << image.size()<<", source:"<<source<<", target:"<<target;
+		}
+		else
+		{
+			qDebug() << "GLVideoDrawable::paint: Unable to convert pixel format to image format, cannot paint frame. Pixel Format:"<<m_frame.pixelFormat;
+		}
+	}
+	
+	
+	
+	if(!m_frame.captureTime.isNull())
+	{
+		int msecLatency = m_frame.captureTime.msecsTo(QTime::currentTime());
+		
+		m_latencyAccum += msecLatency;
+	}
+					
+	if (!(m_frameCount % 100)) 
+	{
+		QString framesPerSecond;
+		framesPerSecond.setNum(m_frameCount /(m_time.elapsed() / 1000.0), 'f', 2);
+		
+		QString latencyPerFrame;
+		latencyPerFrame.setNum((((double)m_latencyAccum) / ((double)m_frameCount)), 'f', 3);
+		
+		if(m_debugFps && framesPerSecond!="0.00")
+			qDebug() << "GLVideoDrawable::paint: "<<objectName()<<" FPS: " << qPrintable(framesPerSecond) << (m_frame.captureTime.isNull() ? "" : qPrintable(QString(", Latency: %1 ms").arg(latencyPerFrame)));
+
+		m_time.start();
+		m_frameCount = 0;
+		m_latencyAccum = 0;
+		
+		//lastFrameTime = time.elapsed();
+	}
+	
+	m_frameCount ++;
+	
+}
+	
 	
 void GLVideoDrawable::paintGL()
 {
@@ -1327,7 +1425,6 @@ void GLVideoDrawable::paintGL()
 	
 	m_frameCount ++;
 }
-
 
 
 VideoDisplayOptionWidget::VideoDisplayOptionWidget(GLVideoDrawable *drawable, QWidget *parent)

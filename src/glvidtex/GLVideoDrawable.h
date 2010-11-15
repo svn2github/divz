@@ -183,6 +183,7 @@ signals:
 
 protected:
 	void paintGL();
+	void paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget);
 	
 	void viewportResized(const QSize& newSize);
 	void canvasResized(const QSizeF& newSize);

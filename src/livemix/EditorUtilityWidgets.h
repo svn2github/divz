@@ -3,6 +3,53 @@
 
 #include <QtGui>
 
+class PropertyEditorFactory : public QObject
+{
+	Q_OBJECT
+public:
+		
+	class PropertyEditorOptions
+	{
+	public:
+		PropertyEditorOptions()
+		{
+			reset();
+		};
+
+		void reset()
+		{
+			text = "";
+			suffix = "";
+			noSlider = false;
+			min = -9999;
+			max =  9999;
+			type = QVariant::Invalid;
+			value = QVariant();
+			doubleIsPercentage = false;
+			defaultValue = QVariant();
+			stringIsFile = false;
+			fileTypeFilter = "";
+			step = 1;
+		}
+
+		QString text;
+		QString suffix;
+		bool noSlider;
+		double min;
+		double max;
+		int step;
+		QVariant::Type type;
+		QVariant value;
+		bool doubleIsPercentage;
+		QVariant defaultValue;
+		bool stringIsFile;
+		QString fileTypeFilter;
+	};
+
+	static QWidget * generatePropertyEditor(QObject *object, const char *property, const char *slot, PropertyEditorOptions opts = PropertyEditorOptions(), const char *changeSignal=0);
+
+};
+
 class ObjectValueSetter : public QObject
 {
 	Q_OBJECT

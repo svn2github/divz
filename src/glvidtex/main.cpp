@@ -433,6 +433,99 @@ int main(int argc, char *argv[])
 {
 
 	QApplication app(argc, argv);
+	
+	
+	if(1)
+	{
+		QGraphicsView *graphicsView = new QGraphicsView();
+		graphicsView->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
+		graphicsView->setRenderHint( QPainter::Antialiasing, true );
+		
+		QGraphicsScene * scene = new QGraphicsScene();
+		
+		graphicsView->setScene(scene);
+		scene->setSceneRect(0,0,800,600);
+		graphicsView->resize(800,600);
+		graphicsView->setWindowTitle("Test");
+		
+		GLVideoDrawable *drawable = new GLVideoDrawable();
+		
+		if(0)
+		{
+			QString testFile = "/opt/qt-mobility-opensource-src-1.0.1/examples/player/dsc_7721.avi";
+			qDebug() << "addQtSource: using test file:"<<testFile;
+			QtVideoSource *source = new QtVideoSource();
+			source->setFile(testFile);
+			source->start();
+			
+			drawable->setVideoSource(source);
+		
+		}
+		
+		if(1)
+		{
+			QString camera = "/dev/video1";
+			
+			#ifdef Q_OS_WIN
+				QString defaultCamera = "vfwcap://0";
+			#else
+				QString defaultCamera = "/dev/video0";
+			#endif
+		
+			CameraThread *source = CameraThread::threadForCamera(camera.isEmpty() ? defaultCamera : camera);
+			if(source)
+			{
+				source->setFps(40);
+				if(camera == "/dev/video1")
+					source->setInput("S-Video");
+				//usleep(750 * 1000); // This causes a race condition to manifist itself reliably, which causes a crash every time instead of intermitently.
+				// With the crash reproducable, I can now work to fix it.
+				source->enableRawFrames(true);
+				//source->setDeinterlace(true);
+				
+// 				VideoSender *server = new VideoSender();
+// 			
+// 				int listenPort = 7755;
+// 				if (!server->listen(QHostAddress::Any,listenPort))
+// 				{
+// 					qDebug() << "VideoServer could not start on port"<<listenPort<<": "<<server->errorString();
+// 					//return -1;
+// 				}
+// 				else
+// 				{
+// 					server->setVideoSource(source);
+// 				}
+// 				
+				
+				drawable->setVideoSource(source);
+			}
+			else
+			{
+				qDebug() << "Unable to find camera";
+			}
+		}
+		
+		//drawable->setRect(glw->viewport());
+		drawable->setRect(QRectF(0,0,800,600));
+		scene->addItem(drawable);
+		//glw->addDrawable(drawable);
+		drawable->addShowAnimation(GLDrawable::AnimFade);
+		//drawable->addShowAnimation(GLDrawable::AnimZoom);
+		//drawable->addShowAnimation(GLDrawable::AnimSlideTop,1000);
+		drawable->setZIndex(-1);
+		
+		//drawable->addHideAnimation(GLDrawable::AnimZoom,1000);
+		drawable->addHideAnimation(GLDrawable::AnimFade);
+		drawable->show();
+		drawable->setObjectName("QtVideoSource");
+		
+		
+		graphicsView->show();
+		
+		return app.exec();
+	
+	}
+	
 	GLWidget *glw = new GLWidget();
 		
 	QFormLayout * tb = createToggleBox();

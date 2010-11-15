@@ -77,6 +77,7 @@ VideoFrame SimpleV4L2::readFrame()
 	unsigned int i;
 	
 	VideoFrame frame;
+	frame.pixelFormat = QVideoFrame::Format_RGB32;
 	frame.captureTime = QTime::currentTime();
 	
 /*	struct timeval tv_start, tv_end;

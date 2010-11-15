@@ -28,19 +28,18 @@ private:
 	QVariant m_originalPropValue;
 };
 
-class GLDrawable : public QObject
+class GLDrawable : public QObject,
+		   public QGraphicsItem
 {
 	Q_OBJECT
-	//Q_PROPERTY(QString itemName READ itemName WRITE setItemName);
+	Q_PROPERTY(int id READ id);
+	Q_PROPERTY(bool userControllable READ isUserControllable WRITE setUserControllable);
+	Q_PROPERTY(QString itemName READ itemName WRITE setItemName);
+	
 	Q_PROPERTY(QRectF rect READ rect WRITE setRect);
 	Q_PROPERTY(double zIndex READ zIndex WRITE setZIndex);
 	Q_PROPERTY(double opacity READ opacity WRITE setOpacity);
 	Q_PROPERTY(double isVisible READ isVisible WRITE setVisible);
-	
-// 	Q_PROPERTY(double topPercent READ topPercent WRITE setTopPercent);
-// 	Q_PROPERTY(double leftPercent READ leftPercent WRITE setLeftPercent);
-// 	Q_PROPERTY(double bottomPercent READ bottomPercent WRITE setBottomPercent);
-// 	Q_PROPERTY(double rightPercent READ rightPercent WRITE setRightPercent);
 
 // 	Q_PROPERTY(bool showFullScreen READ showFullScreen WRITE setShowFullScreen);
 	Q_PROPERTY(Qt::Alignment alignment READ alignment WRITE setAlignment);
@@ -60,16 +59,22 @@ class GLDrawable : public QObject
 
 public:
 	GLDrawable(QObject *parent=0);
+	
+	int id();
+	QString itemName() { return m_itemName; }
+	bool isUserControllable() { return m_isUserControllable; }
 
 	GLWidget *glWidget() { return m_glw; }
 
+	// Compat with QGraphgicsItem: boundingRect()
+	QRectF boundingRect() const { return m_rect; }
+	
 	const QRectF & rect() const { return m_rect; }
 	double zIndex();
 	
 	double zIndexModifier();
 
 	double opacity() { return m_opacity; }
-
 
 	typedef enum AnimationType
 	{
@@ -125,23 +130,29 @@ public:
 	// of the text unscaled at natural resolution. Used for calculating alignment.
 	virtual QSizeF naturalSize() { return QSizeF(0,0); }
 
+	// If the drawable is aligned to a corner or centered, the size isn't specified by the user - 
+	// so they can use this property to "scale" the size of the object.
 	double alignedSizeScale() { return m_alignedSizeScale; }
 	
-// 	double topPercent() { return m_topPercent; }
-// 	double leftPercent() { return m_leftPercent; }
-// 	double bottomPercent() { return m_bottomPercent; }
-// 	double rightPercent() { return m_rightPercent; }
-	
-	
+	// 3d translations that can be applied to the coordinates before redering
 	QVector3D translation() { return m_translation; }
 	QVector3D rotation() { return m_rotation; }
 	QVector3D rotationPoint() { return m_rotationPoint; }
 	
 	// If m_canvasSize isNull, returns the GLWidget's canvas size
 	QSizeF canvasSize();
+	
+	virtual void fromByteArray(QByteArray&);
+	virtual QByteArray toByteArray();
+	
+	virtual void loadPropsFromMap(const QVariantMap&, bool onlyApplyIfChanged = false);
+	virtual QVariantMap propsToMap();
 
 public slots:
 	void updateGL();
+	
+	void setItemName(const QString&);
+	void setUserControllable(bool);
 
 	void setRect(const QRectF& rect);
 	void setOpacity(double i);
@@ -153,18 +164,13 @@ public slots:
 	void setVisible(bool flag);
 	void setHidden(bool flag);
 
-	void setAnimationsEnabled(bool);
+	bool setAnimationsEnabled(bool);
 
 // 	void setShowFullScreen(bool flag, bool animate=false, int animLength=300, QEasingCurve animCurve = QEasingCurve::Linear);
 	void setAlignment(Qt::Alignment value, bool animate=false, int animLength=300, QEasingCurve animCurve = QEasingCurve::Linear);
 	void setAlignment(int value);
 	void setInsetTopLeft(const QPointF& value);
 	void setInsetBottomRight(const QPointF& value);
-	
-// 	void setTopPercent(double value);
-// 	void setLeftPercent(double value);
-// 	void setBottomPercent(double value);
-// 	void setRightPercent(double value);
 
 	void setAlignedSizeScale(double);
 
@@ -180,6 +186,8 @@ signals:
 	void drawableResized(const QSize& newSize);
 
 	void isVisible(bool);
+	
+	void propertyChanged(const QString& propName, const QVariant& value);
 
 protected slots:
 	virtual void animationFinished();
@@ -199,7 +207,12 @@ protected:
 
 	virtual void paintGL();
 	virtual void initGL();
+	
+	// For compat with QGraphicsItem
+	virtual void paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget);
 
+	void propertyWasChanged(const QString& propName, const QVariant& value);
+	
 	virtual void startAnimation(const AnimParam & p);
 	virtual void startAnimations();
 	void forceStopAnimations();
@@ -245,17 +258,19 @@ private:
 	QVector3D m_rotation;
 	QVector3D m_rotationPoint;
 	
-// 	double m_topPercent;
-// 	double m_leftPercent;
-// 	double m_bottomPercent;
-// 	double m_rightPercent;
-	
 	QSizeF m_canvasSize;
 	
 	// Used by code to prevent two animations from running on same prop at same time
 	QHash<QString,QPropertyAnimation*> m_propAnims;
 	
 	bool m_lockVisibleSetter;
+	
+	int m_id;
+	bool m_idLoaded;
+	//bool m_lockPropertyUpdates;
+	
+	QString m_itemName;
+	bool m_isUserControllable;
 };
 
 bool operator==(const GLDrawable::AnimParam&a, const GLDrawable::AnimParam&b);
