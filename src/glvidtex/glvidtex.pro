@@ -20,7 +20,8 @@ HEADERS       = GLWidget.h \
 		TextVideoSource.h \
 		RichTextRenderer.h \
 		VideoSender.h \
-		VideoReceiver.h
+		VideoReceiver.h \
+		GLImageDrawable.h
 		
 SOURCES       = GLWidget.cpp \
 		main.cpp \
@@ -35,7 +36,8 @@ SOURCES       = GLWidget.cpp \
 		TextVideoSource.cpp \
 		RichTextRenderer.cpp \
 		VideoSender.cpp \
-		VideoReceiver.cpp
+		VideoReceiver.cpp \
+		GLImageDrawable.cpp
 
 unix: {
 	HEADERS += \

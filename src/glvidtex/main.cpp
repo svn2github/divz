@@ -8,6 +8,8 @@
 #include "StaticVideoSource.h"
 #include "TextVideoSource.h"
 
+#include "GLImageDrawable.h"
+
 //#define HAS_QT_VIDEO_SOURCE
 
 #include "VideoSender.h"
@@ -449,20 +451,25 @@ int main(int argc, char *argv[])
 		graphicsView->setWindowTitle("Test");
 		
 		GLVideoDrawable *drawable = new GLVideoDrawable();
+		//GLImageDrawable *drawable = new GLImageDrawable("me2.jpg");
 		
 		if(0)
 		{
 			QString testFile = "/opt/qt-mobility-opensource-src-1.0.1/examples/player/dsc_7721.avi";
+			#ifdef HAS_QT_VIDEO_SOURCE
 			qDebug() << "addQtSource: using test file:"<<testFile;
 			QtVideoSource *source = new QtVideoSource();
 			source->setFile(testFile);
 			source->start();
 			
 			drawable->setVideoSource(source);
+			#else
+			qDebug() << "QtVideoSource not compiled in, not showing any video";
+			#endif
 		
 		}
 		
-		if(1)
+		if(0)
 		{
 			QString camera = "/dev/video1";
 			
@@ -505,6 +512,18 @@ int main(int argc, char *argv[])
 			}
 		}
 		
+		if(1)
+		{
+			VideoThread * source = new VideoThread();
+			source->setVideo("../data/Seasons_Loop_3_SD.mpg");
+			//source->setVideo("../samples/BlueFish/EssentialsVol05_Abstract_Media/HD/Countdowns/Abstract_Countdown_3_HD.mp4");
+			//source->setVideo("../samples/BlueFish/EssentialsVol05_Abstract_Media/SD/Countdowns/Abstract_Countdown_3_SD.mpg");
+			
+			source->start();
+			
+			drawable->setVideoSource(source);
+		}
+		
 		//drawable->setRect(glw->viewport());
 		drawable->setRect(QRectF(0,0,800,600));
 		scene->addItem(drawable);
@@ -530,10 +549,19 @@ int main(int argc, char *argv[])
 		
 	QFormLayout * tb = createToggleBox();
 	
-	if(1)
+	if(0)
 	{
 	
         	addButtons(tb, addQtSource(glw));
+        }
+        
+        if(1)
+        {
+        	GLImageDrawable *drawable = new GLImageDrawable("me2.jpg");
+        	drawable->addShowAnimation(GLDrawable::AnimFade);
+        	drawable->setRect(QRectF(0,0,800,600));
+        	glw->addDrawable(drawable);
+        	drawable->show();
         }
 	
 	if(0)

@@ -204,7 +204,12 @@ protected:
 	void updateTextureOffsets();
 	
 	void updateTexture();
-
+	
+	VideoFrame m_frame;
+	bool m_visiblePendingFrame;
+	bool m_tempVisibleValue;
+	
+	
 protected slots:
 	void frameReady();
 	
@@ -244,7 +249,6 @@ private:
 	_glActiveTexture glActiveTexture;
 	#endif
 	
-	VideoFrame m_frame;
 	VideoSource *m_source;
 	
 	QTime m_time;
@@ -271,9 +275,6 @@ private:
 	
 	bool m_texturesInited;
 	QMutex m_frameReadyLock;
-	
-	bool m_visiblePendingFrame;
-	bool m_tempVisibleValue;
 	
 	bool m_useShaders;
 	

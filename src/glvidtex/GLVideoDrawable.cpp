@@ -283,12 +283,16 @@ void GLVideoDrawable::frameReady()
 	// before the app has finished initalizing.
 	QMutexLocker lock(&m_frameReadyLock);
 	
+	VideoFrame f = m_source->frame();
+	if(f.isValid())
+		m_frame = f;
+	
 	updateTexture();
 	
 	if(m_rateLimitFps <= 0.0)
 		updateGL();
-	else
-		qDebug() << "GLVideoDrawable::frameReady(): "<<(QObject*)this<<" rate limited, waiting on timer"; 
+	//else
+	//	qDebug() << "GLVideoDrawable::frameReady(): "<<(QObject*)this<<" rate limited, waiting on timer"; 
 	
 	if(m_visiblePendingFrame)
 	{
@@ -908,12 +912,6 @@ void GLVideoDrawable::setTextureOffset(const QPointF& point)
 
 void GLVideoDrawable::updateTexture()
 {
-	if(!m_source)
-		return;
-		
-	VideoFrame f = m_source->frame();
-	if(f.isValid())
-		m_frame = f;
 	if(!m_frame.isValid())
 		return;
 	
