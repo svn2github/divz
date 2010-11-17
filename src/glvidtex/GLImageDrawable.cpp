@@ -12,9 +12,31 @@ GLImageDrawable::GLImageDrawable(QString file, QObject *parent)
 	
 void GLImageDrawable::setImage(const QImage& image)
 {
-	m_image = image;
-	m_frame.image = image;
+	QImage::Format format = image.format();
+	m_frame.pixelFormat =
+		format == QImage::Format_ARGB32 ? QVideoFrame::Format_ARGB32 :
+		format == QImage::Format_RGB32  ? QVideoFrame::Format_RGB32  :
+		format == QImage::Format_RGB888 ? QVideoFrame::Format_RGB24  :
+		format == QImage::Format_RGB16  ? QVideoFrame::Format_RGB565 :
+		format == QImage::Format_RGB555 ? QVideoFrame::Format_RGB555 :
+		//format == QImage::Format_ARGB32_Premultiplied ? QVideoFrame::Format_ARGB32_Premultiplied :
+		// GLVideoDrawable doesn't support premultiplied - so the format conversion below will convert it to ARGB32 automatically
+		QVideoFrame::Format_Invalid;
+		
+	if(m_frame.pixelFormat == QVideoFrame::Format_Invalid)
+	{
+		qDebug() << "VideoFrame: image was not in an acceptable format, converting to ARGB32 automatically.";
+		m_image = image.convertToFormat(QImage::Format_ARGB32);
+		m_frame.pixelFormat = QVideoFrame::Format_ARGB32;
+	}
+	else
+	{
+		m_image = image;
+	}
+	
+	m_frame.image = m_image;
 	m_frame.setSize(image.size());
+	
 	
 	updateTexture();
 	

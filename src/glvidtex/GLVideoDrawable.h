@@ -203,8 +203,6 @@ protected:
 	
 	void updateTextureOffsets();
 	
-	void updateTexture();
-	
 	VideoFrame m_frame;
 	bool m_visiblePendingFrame;
 	bool m_tempVisibleValue;
@@ -212,6 +210,8 @@ protected:
 	
 protected slots:
 	void frameReady();
+	void updateTexture();
+	
 	
 private:
 	VideoFormat m_videoFormat;

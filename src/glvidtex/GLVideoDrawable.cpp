@@ -276,16 +276,16 @@ void GLVideoDrawable::setVisible(bool flag, bool pendingFrame)
 
 void GLVideoDrawable::frameReady()
 {
-	if(!m_source)
-		return;
-	
 	// This seems to prevent crashes during startup of an application when a thread is pumping out frames
 	// before the app has finished initalizing.
 	QMutexLocker lock(&m_frameReadyLock);
 	
-	VideoFrame f = m_source->frame();
-	if(f.isValid())
-		m_frame = f;
+	if(m_source)
+	{
+		VideoFrame f = m_source->frame();
+		if(f.isValid())
+			m_frame = f;
+	}
 	
 	updateTexture();
 	
@@ -612,7 +612,7 @@ void GLVideoDrawable::initGL()
 	if(glWidget())
 		glWidget()->makeCurrent();
 		
-	//qDebug() << "GLVideoDrawable::initGL(): "<<objectName();
+	//qDebug() << "GLVideoDrawable::initGL(): "<<(QObject*)this;
 		
 	#ifndef QT_OPENGL_ES
 	glActiveTexture = (_glActiveTexture)glWidget()->context()->getProcAddress(QLatin1String("glActiveTexture"));
@@ -636,6 +636,9 @@ void GLVideoDrawable::initGL()
 	// fire as soon as control returns to the event loop
 	if(m_source)
 		QTimer::singleShot(0,this,SLOT(frameReady()));
+	else
+		if(m_frame.isValid())
+			QTimer::singleShot(0,this,SLOT(updateTexture()));
 	
 	
 	// create the alpha texture
@@ -662,7 +665,7 @@ bool GLVideoDrawable::setVideoFormat(const VideoFormat& format)
 	bool samePixelFormat = false; //format.pixelFormat == m_videoFormat.pixelFormat;
 	m_videoFormat = format;
 	
-	//qDebug() << "GLVideoDrawable::setVideoFormat(): "<<objectName()<<" \t frameSize:"<<format.frameSize<<", pixelFormat:"<<format.pixelFormat;
+	//qDebug() << "GLVideoDrawable::setVideoFormat(): "<<(QObject*)this<<" \t frameSize:"<<format.frameSize<<", pixelFormat:"<<format.pixelFormat;
 	
 	if(!m_glInited || !glWidget())
 		return m_imagePixelFormats.contains(format.pixelFormat);
@@ -913,19 +916,24 @@ void GLVideoDrawable::setTextureOffset(const QPointF& point)
 void GLVideoDrawable::updateTexture()
 {
 	if(!m_frame.isValid())
+	{
+		//qDebug() << "GLVideoDrawable::updateTexture(): Frame not valid";
 		return;
+	}
 	
 	if(m_glInited && glWidget())
 	{
 		//if(objectName() != "StaticBackground")
-			//qDebug() << "GLVideoDrawable::paintGL(): "<<this<<" Got a frame, size:"<<m_frame.size;
+		//qDebug() << "GLVideoDrawable::paintGL(): "<<(QObject*)this<<" Got a frame, size:"<<m_frame.size;
 			
 		if(m_frame.rect != m_sourceRect || !m_texturesInited)
 		{
  			//qDebug() << "GLVideoDrawable::paintGL(): m_frame.rect:"<<m_frame.rect<<", m_sourceRect:"<<m_sourceRect;
  			//qDebug() << "GLVideoDrawable::paintGL(): frame size changed or !m_texturesInited, resizing and adjusting pixels...";
-			if(m_videoFormat.pixelFormat != m_source->videoFormat().pixelFormat)
-				setVideoFormat(m_source->videoFormat());
+			//if(m_videoFormat.pixelFormat != m_source->videoFormat().pixelFormat)
+			if(m_videoFormat.pixelFormat != m_frame.pixelFormat)
+				//setVideoFormat(m_source->videoFormat());
+				setVideoFormat(VideoFormat(m_frame.bufferType, m_frame.pixelFormat, m_frame.size));
 			resizeTextures(m_frame.size);
 			updateRects();
 			updateAlignment();
@@ -933,7 +941,7 @@ void GLVideoDrawable::updateTexture()
 		
 		if(!m_validShader)
 		{
-			//qDebug() << "GLVideoDrawable::paintGL(): "<<this<<" No valid shader, not painting";
+			qDebug() << "GLVideoDrawable::paintGL(): "<<(QObject*)this<<" No valid shader, not painting";
 			return;
 		}
 		
@@ -996,7 +1004,7 @@ void GLVideoDrawable::updateTexture()
 		{
 			for (int i = 0; i < m_textureCount; ++i) 
 			{
-				//qDebug() << (this) << "normal: "<<i<<m_textureWidths[i]<<m_textureHeights[i]<<m_textureOffsets[i]<<m_textureInternalFormat<<m_textureFormat<<m_textureType;
+				//qDebug() << (QObject*)(this) << "normal: "<<i<<m_textureWidths[i]<<m_textureHeights[i]<<m_textureOffsets[i]<<m_textureInternalFormat<<m_textureFormat<<m_textureType;
 // 				QImageWriter writer("test.jpg");
 // 				writer.write(m_frame.image);
 			

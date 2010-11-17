@@ -18,6 +18,198 @@
 #endif
 
 
+QWidget * PropertyEditorFactory::generatePropertyEditor(QObject *object, const char *property, const char *slot, PropertyEditorOptions opts, const char *changeSignal)
+{
+	if(changeSignal == NULL &&
+		dynamic_cast<GLDrawable*>(object))
+		changeSignal = SIGNAL(propertyChanged(const QString&, const QVariant&));
+		
+	QWidget *base = new QWidget();
+	QHBoxLayout *hbox = new QHBoxLayout(base);
+	hbox->setContentsMargins(0,0,0,0);
+
+	QVariant prop = object->property(property);
+
+	if(opts.value.isValid())
+		prop = opts.value;
+
+	if(opts.type == QVariant::Invalid)
+		opts.type = prop.type();
+
+	//qDebug() << "generatePropertyEditor: prop:"<<property<<", opts.type:"<<opts.type<<", variant:"<<(opts.value.isValid() ? opts.value : prop);
+
+	if(opts.type == QVariant::Int)
+	{
+		QSpinBox *spin = new QSpinBox(base);
+		if(!opts.suffix.isEmpty())
+			spin->setSuffix(opts.suffix);
+		spin->setMinimum((int)opts.min);
+		spin->setMaximum((int)opts.max);
+
+		if(prop.type() == QVariant::Double && opts.doubleIsPercentage)
+			spin->setValue((int)(prop.toDouble()*100.0));
+		else
+			spin->setValue(prop.toInt());
+
+		QObject::connect(spin, SIGNAL(valueChanged(int)), object, slot);
+		if(changeSignal)
+			new PropertyChangeListener(object, changeSignal, spin, SLOT(setValue(int)), spin->value(), property);
+			 
+		hbox->addWidget(spin);
+
+		if(!opts.noSlider)
+		{
+			QSlider *slider;
+			slider = new QSlider(base);
+			slider->setOrientation(Qt::Horizontal);
+			slider->setMinimum((int)opts.min);
+			slider->setMaximum((int)opts.max);
+			slider->setSingleStep(opts.step);
+			slider->setPageStep(opts.step*2);
+
+			if(prop.type() == QVariant::Double && opts.doubleIsPercentage)
+				slider->setValue((int)(prop.toDouble()*100.0));
+			else
+				slider->setValue(prop.toInt());
+
+			QObject::connect(spin, SIGNAL(valueChanged(int)), slider, SLOT(setValue(int)));
+			QObject::connect(slider, SIGNAL(valueChanged(int)), spin, SLOT(setValue(int)));
+			hbox->addWidget(slider);
+		}
+		
+		QPushButton *undoBtn = new QPushButton(QPixmap("../data/stock-undo.png"), "");
+		ObjectValueSetter *setter = new ObjectValueSetter(spin, SLOT(setValue(int)), spin->value());
+		connect(undoBtn, SIGNAL(clicked()), setter, SLOT(executeSetValue()));
+		hbox->addWidget(undoBtn);
+		
+		if(opts.defaultValue.isValid())
+		{
+			QPushButton *resetBtn = new QPushButton(QPixmap("../data/stock-close.png"), "");
+			ObjectValueSetter *setter = new ObjectValueSetter(spin, SLOT(setValue(int)), opts.defaultValue);
+			connect(resetBtn, SIGNAL(clicked()), setter, SLOT(executeSetValue()));
+			hbox->addWidget(resetBtn);
+		}
+		
+		
+	}
+	else
+	if(opts.type == QVariant::Bool)
+	{
+		QCheckBox *box = new QCheckBox();
+		delete base;
+
+		if(opts.text.isEmpty())
+			opts.text = guessTitle(property);
+
+		box->setText(opts.text);
+
+		box->setChecked( prop.toBool() );
+		connect(box, SIGNAL(toggled(bool)), object, slot);
+		
+		if(changeSignal)
+			new PropertyChangeListener(object, changeSignal, box, SLOT(setChecked(bool)), prop, property);
+
+		return box;
+	}
+	else
+	if(opts.type == QVariant::String)
+	{
+		QLineEdit *box = new QLineEdit();
+		
+		box->setText( prop.toString() );
+		QObject::connect(box, SIGNAL(textChanged(const QString&)), object, slot);
+		
+		if(changeSignal)
+			new PropertyChangeListener(object, changeSignal, box, SLOT(setText(const QString&)), prop, property);
+		
+		if(opts.stringIsFile)
+		{
+			
+			QCompleter *completer = new QCompleter(box);
+			QDirModel *dirModel = new QDirModel(completer);
+			completer->setModel(dirModel);
+			//completer->setMaxVisibleItems(10);
+			completer->setCompletionMode(QCompleter::PopupCompletion);
+			completer->setCaseSensitivity(Qt::CaseInsensitive);
+			completer->setWrapAround(true);
+			box->setCompleter(completer);
+			
+			hbox->addWidget(box);
+			
+			QPushButton *browseButton = new QPushButton(QPixmap("../data/stock-open.png"), "");
+			BrowseDialogLauncher *setter = new BrowseDialogLauncher(box, SLOT(setText(const QString&)), box->text());
+			connect(browseButton, SIGNAL(clicked()), setter, SLOT(browse()));
+			
+			if(!opts.fileTypeFilter.isEmpty())
+				setter->setFilter(opts.fileTypeFilter);
+			
+			hbox->addWidget(browseButton);
+			
+			return base;
+		}
+		else
+		{
+			delete base;
+		}
+
+		return box;
+	}
+	else
+	if(opts.type == QVariant::SizeF)
+	{
+		SizeEditorWidget *editor = new SizeEditorWidget();
+		delete base;
+
+		QSizeF size = prop.toSizeF();
+		editor->setValue(size);
+
+		connect(editor, SIGNAL(valueChanged(const QSizeF&)), object, slot);
+		if(changeSignal)
+			new PropertyChangeListener(object, changeSignal, editor, SLOT(setValue(const QSizeF&)), prop, property);
+
+		return editor;
+	}
+	else
+	if(opts.type == QVariant::PointF)
+	{
+		PointEditorWidget *editor = new PointEditorWidget();
+		delete base;
+
+		QPointF point = prop.toPointF();
+		editor->setValue(point);
+
+		connect(editor, SIGNAL(valueChanged(const QPointF&)), object, slot);
+		if(changeSignal)
+			new PropertyChangeListener(object, changeSignal, editor, SLOT(setValue(const QPointF&)), prop, property);
+
+		return editor;
+	}
+	else
+	if(opts.type == QVariant::Double)
+	{
+		DoubleEditorWidget *editor = new DoubleEditorWidget();
+		delete base;
+
+		editor->setShowSlider(!opts.noSlider);
+
+		editor->setValue(prop.toDouble());
+
+		connect(editor, SIGNAL(valueChanged(double)), object, slot);
+		if(changeSignal)
+			new PropertyChangeListener(object, changeSignal, editor, SLOT(setValue(double)), prop, property);
+
+		return editor;
+	}
+	else
+	{
+		qDebug() << "PropertyEditorFactory::generatePropertyEditor(): No editor for type: "<<opts.type;
+	}
+
+
+	return base;
+}
+
+
 //////////////////////////////////////////////////////////////////////////////
 
 ObjectValueSetter::ObjectValueSetter(QObject *attached, const char *slot, QVariant value)

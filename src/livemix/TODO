@@ -36,6 +36,18 @@ Several Components:
 		- Initially, (e.g. early release) - if wanting to update schedule (e.g. auto-played stuff), will open link to web browser for that player
 			- Future releases may include native schedule editor
 		- Can edit/upload LMX templates to players
+			- Contains a 'template editor'
+				- Loads a scene into the editor
+				- Allows moving items in the scene
+				- Editing properties on the selected item
+				- Adding items to the scene
+				- Saving scene
+			- Library of LMX templates (folder browser)
+				- Select template
+					- Edit selected template
+					- Delete selected template
+					- Upload to Player
+				- Create new template
 		- Primary interface will be to control in real time the user-controllable properties of one or more players
 			- Intelligent controls, such as for the Live Video, it should provide a view of each video caputre device on the remote player for preview purposes inorder to facilitate switching between devices
 			- Discussion:	

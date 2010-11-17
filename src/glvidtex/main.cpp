@@ -405,7 +405,7 @@ QFormLayout * createToggleBox()
 	tb->setWindowTitle("Toggle Box");
 	QFormLayout *layout = new QFormLayout;
 	tb->setLayout(layout);
-	tb->show();
+	//tb->show();
 	return layout;
 }
 
@@ -437,7 +437,7 @@ int main(int argc, char *argv[])
 	QApplication app(argc, argv);
 	
 	
-	if(1)
+	if(0)
 	{
 		QGraphicsView *graphicsView = new QGraphicsView();
 		graphicsView->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
@@ -450,79 +450,79 @@ int main(int argc, char *argv[])
 		graphicsView->resize(800,600);
 		graphicsView->setWindowTitle("Test");
 		
-		GLVideoDrawable *drawable = new GLVideoDrawable();
-		//GLImageDrawable *drawable = new GLImageDrawable("me2.jpg");
+		GLImageDrawable *drawable = new GLImageDrawable("me2.jpg");
 		
-		if(0)
-		{
-			QString testFile = "/opt/qt-mobility-opensource-src-1.0.1/examples/player/dsc_7721.avi";
-			#ifdef HAS_QT_VIDEO_SOURCE
-			qDebug() << "addQtSource: using test file:"<<testFile;
-			QtVideoSource *source = new QtVideoSource();
-			source->setFile(testFile);
-			source->start();
-			
-			drawable->setVideoSource(source);
-			#else
-			qDebug() << "QtVideoSource not compiled in, not showing any video";
-			#endif
-		
-		}
-		
-		if(0)
-		{
-			QString camera = "/dev/video1";
-			
-			#ifdef Q_OS_WIN
-				QString defaultCamera = "vfwcap://0";
-			#else
-				QString defaultCamera = "/dev/video0";
-			#endif
-		
-			CameraThread *source = CameraThread::threadForCamera(camera.isEmpty() ? defaultCamera : camera);
-			if(source)
-			{
-				source->setFps(40);
-				if(camera == "/dev/video1")
-					source->setInput("S-Video");
-				//usleep(750 * 1000); // This causes a race condition to manifist itself reliably, which causes a crash every time instead of intermitently.
-				// With the crash reproducable, I can now work to fix it.
-				source->enableRawFrames(true);
-				//source->setDeinterlace(true);
-				
-// 				VideoSender *server = new VideoSender();
+// 		GLVideoDrawable *drawable = new GLVideoDrawable();
+// 		if(0)
+// 		{
+// 			QString testFile = "/opt/qt-mobility-opensource-src-1.0.1/examples/player/dsc_7721.avi";
+// 			#ifdef HAS_QT_VIDEO_SOURCE
+// 			qDebug() << "addQtSource: using test file:"<<testFile;
+// 			QtVideoSource *source = new QtVideoSource();
+// 			source->setFile(testFile);
+// 			source->start();
 // 			
-// 				int listenPort = 7755;
-// 				if (!server->listen(QHostAddress::Any,listenPort))
-// 				{
-// 					qDebug() << "VideoServer could not start on port"<<listenPort<<": "<<server->errorString();
-// 					//return -1;
-// 				}
-// 				else
-// 				{
-// 					server->setVideoSource(source);
-// 				}
+// 			drawable->setVideoSource(source);
+// 			#else
+// 			qDebug() << "QtVideoSource not compiled in, not showing any video";
+// 			#endif
+// 		
+// 		}
+// 		
+// 		if(0)
+// 		{
+// 			QString camera = "/dev/video1";
+// 			
+// 			#ifdef Q_OS_WIN
+// 				QString defaultCamera = "vfwcap://0";
+// 			#else
+// 				QString defaultCamera = "/dev/video0";
+// 			#endif
+// 		
+// 			CameraThread *source = CameraThread::threadForCamera(camera.isEmpty() ? defaultCamera : camera);
+// 			if(source)
+// 			{
+// 				source->setFps(40);
+// 				if(camera == "/dev/video1")
+// 					source->setInput("S-Video");
+// 				//usleep(750 * 1000); // This causes a race condition to manifist itself reliably, which causes a crash every time instead of intermitently.
+// 				// With the crash reproducable, I can now work to fix it.
+// 				source->enableRawFrames(true);
+// 				//source->setDeinterlace(true);
 // 				
-				
-				drawable->setVideoSource(source);
-			}
-			else
-			{
-				qDebug() << "Unable to find camera";
-			}
-		}
-		
-		if(1)
-		{
-			VideoThread * source = new VideoThread();
-			source->setVideo("../data/Seasons_Loop_3_SD.mpg");
-			//source->setVideo("../samples/BlueFish/EssentialsVol05_Abstract_Media/HD/Countdowns/Abstract_Countdown_3_HD.mp4");
-			//source->setVideo("../samples/BlueFish/EssentialsVol05_Abstract_Media/SD/Countdowns/Abstract_Countdown_3_SD.mpg");
-			
-			source->start();
-			
-			drawable->setVideoSource(source);
-		}
+// // 				VideoSender *server = new VideoSender();
+// // 			
+// // 				int listenPort = 7755;
+// // 				if (!server->listen(QHostAddress::Any,listenPort))
+// // 				{
+// // 					qDebug() << "VideoServer could not start on port"<<listenPort<<": "<<server->errorString();
+// // 					//return -1;
+// // 				}
+// // 				else
+// // 				{
+// // 					server->setVideoSource(source);
+// // 				}
+// // 				
+// 				
+// 				drawable->setVideoSource(source);
+// 			}
+// 			else
+// 			{
+// 				qDebug() << "Unable to find camera";
+// 			}
+// 		}
+// 		
+// 		if(1)
+// 		{
+// 			VideoThread * source = new VideoThread();
+// 			source->setVideo("../data/Seasons_Loop_3_SD.mpg");
+// 			//source->setVideo("../samples/BlueFish/EssentialsVol05_Abstract_Media/HD/Countdowns/Abstract_Countdown_3_HD.mp4");
+// 			//source->setVideo("../samples/BlueFish/EssentialsVol05_Abstract_Media/SD/Countdowns/Abstract_Countdown_3_SD.mpg");
+// 			
+// 			source->start();
+// 			
+// 			drawable->setVideoSource(source);
+// 		}
 		
 		//drawable->setRect(glw->viewport());
 		drawable->setRect(QRectF(0,0,800,600));
