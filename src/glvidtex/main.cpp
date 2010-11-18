@@ -30,7 +30,7 @@ GLDrawable * addCamera(GLWidget *glw, QString camera = "")
 	CameraThread *source = CameraThread::threadForCamera(camera.isEmpty() ? defaultCamera : camera);
 	if(source)
 	{
-		source->setFps(40);
+		source->setFps(30);
 		if(camera == "/dev/video1")
 			source->setInput("S-Video");
                 //usleep(750 * 1000); // This causes a race condition to manifist itself reliably, which causes a crash every time instead of intermitently.
@@ -555,16 +555,16 @@ int main(int argc, char *argv[])
         	addButtons(tb, addQtSource(glw));
         }
         
-        if(1)
+        if(0)
         {
         	GLImageDrawable *drawable = new GLImageDrawable("me2.jpg");
         	drawable->addShowAnimation(GLDrawable::AnimFade);
-        	drawable->setRect(QRectF(0,0,800,600));
+        	drawable->setRect(QRectF(0,0,1000,750));
         	glw->addDrawable(drawable);
         	drawable->show();
         }
 	
-	if(0)
+	if(1)
 	{
 		#define COMPILE_SENDER
 		//#define COMPILE_RECEIVER
@@ -583,7 +583,7 @@ int main(int argc, char *argv[])
 	// 			if(d)
 	// 				addButtons(tb,d); 
 				
-				d = addCamera(glw,"/dev/video1");
+				d = addCamera(glw,"/dev/video0");
 				if(d)
 					addButtons(tb,d); 
 	

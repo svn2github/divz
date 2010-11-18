@@ -1,3 +1,48 @@
+Target: pixelrevo-player
+	Components:
+		Core:
+			GLWidget / GLDrawable
+				Drawable Items:
+					GLVideoInputDrawable
+					GLVideoFileDrawable
+					GLVideoReceiverDrawable
+					GLImageDrawable (done)
+					GLTextDrawable
+					GLRectDrawable
+				Todo Items:
+					- Add native cross fading support in GLVideoDrawable (since all items above will probably derive from GLVideoDrawable)
+					- Add a 'transmit video' property to Video(input|file) drawables
+					- Add dropshadow support for image/text/rect
+					- Add outline support for image/text/rect/videos
+					- Add (explicit?) property animations for GLDrawable rect/opac props
+					- Consider adding a GLWebDrawable .. ? (idea: Use the proxy method used in DViz to render using QWebView off screen and feed frames as a video source...?)
+		Playing Functionality:
+			- Two things to 'play':
+				- inputs for the drawables (videos/images/etc)
+				- the entire layout
+					- Structure Concept:
+						- Scene
+							- All the elements as a bulk collection
+							- Layout
+								- Positions elements, shows/hides elements
+			- Need a controller which:
+				- loads playlists for each item and for layout
+				- syncs changes to clock
+				- listens for changes to playlist object and reloads accordingly
+				
+			- Need playlist object:
+				- list of playlist items
+					- item:
+						- drawableId & propName/value
+						- 
+						
+			
+					
+
+
+
+
+
 Update GLDrawable to either support:
 	- Blue Alpha Blending
 		- Already supports alpha masks
