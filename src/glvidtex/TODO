@@ -1,3 +1,7 @@
+Note: Video Conversion Example:
+	for i in `ls .`; do(mencoder $i -ofps 23.976 -oac mp3lame -lameopts abr:br=92 -ovc xvid -xvidencopts bitrate=2000 -o $i-xvid.avi);done;
+
+
 Target: pixelrevo-player
 	Components:
 		Core:

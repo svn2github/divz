@@ -207,6 +207,10 @@ protected:
 	bool m_visiblePendingFrame;
 	bool m_tempVisibleValue;
 	
+	// QGraphicsItem::
+	QVariant itemChange(GraphicsItemChange change, const QVariant &value);
+ 
+	
 	
 protected slots:
 	void frameReady();

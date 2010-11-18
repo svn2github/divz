@@ -141,7 +141,7 @@ bool VideoSurfaceAdapter::present(const QVideoFrame &frame)
 				
 // 			qDebug()<< "VideoSurfaceAdapter::present: Presenting image with "<<image.byteCount()<<" bytes";
 				
-			emitter->present(image.copy());
+			emitter->present(image); //.copy());
 		
 			//qDebug() << "Painting image size: "<<image.size();
 		
@@ -218,6 +218,7 @@ QtVideoSource::QtVideoSource(QObject *parent)
 		rendererControl->setSurface(m_surfaceAdapter);
 	else
 		qDebug() << "QtVideoSource: Unable to get QVideoRenderControl for video integration. No video will be emitted from this video source.";
+	
 
 }
 

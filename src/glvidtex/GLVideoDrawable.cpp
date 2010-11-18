@@ -6,6 +6,8 @@
 #include <QAbstractVideoSurface>
 #include "../livemix/VideoSource.h"
 
+#include "QtVideoSource.h"
+
 #include <QImageWriter>
 
 #include <string.h> 
@@ -603,6 +605,43 @@ void GLVideoDrawable::initYv12TextureInfo(const QSize &size)
 }
 
 
+ QVariant GLVideoDrawable::itemChange(GraphicsItemChange change, const QVariant &value)
+ {
+	if (change == ItemSceneChange)
+	{
+// 		// value is the new position.
+// 		QPointF newPos = value.toPointF();
+// 		QRectF rect = scene()->sceneRect();
+// 		if (!rect.contains(newPos)) {
+// 		// Keep the item inside the scene rect.
+// 		newPos.setX(qMin(rect.right(), qMax(newPos.x(), rect.left())));
+// 		newPos.setY(qMin(rect.bottom(), qMax(newPos.y(), rect.top())));
+// 		return newPos;
+// 		}
+/*
+		if(videoSource() && dynamic_cast<QtVideoSource*>(videoSource()))// && !m_videoWidgetItem)
+		{
+			QGraphicsProxyWidget *m_videoWidgetProxy = new QGraphicsProxyWidget(this);
+			QVideoWidget *m_videoWidgetItem = new QVideoWidget();
+			m_videoWidgetProxy->setWidget(m_videoWidgetItem);
+			//m_videoWidgetProxy->setVisible(true);
+			m_videoWidgetItem->show();
+			
+			QtVideoSource *src = dynamic_cast<QtVideoSource*>(videoSource());
+			src->player()->setVideoOutput(m_videoWidgetItem);
+			
+			
+			qDebug() << "Setup Video Proxy";
+		}
+		else
+		{
+			qDebug() << "Added to scene, but no qt video source";
+		}
+*/	
+	}
+	return QGraphicsItem::itemChange(change, value);
+ }
+
 void GLVideoDrawable::initGL()
 {
 	// Just to be safe, dont re-initalize this 'widgets' GL state if already passed thru here once.
@@ -620,7 +659,12 @@ void GLVideoDrawable::initGL()
 	
 	const GLubyte *str = glGetString(GL_EXTENSIONS); 
 	m_useShaders = (strstr((const char *)str, "GL_ARB_fragment_shader") != NULL);
-	//m_useShaders = false;
+	
+	if(1)
+	{
+		qDebug() << "GLVideoDrawable::initGL: Forcing NO GLSL shaders";
+		m_useShaders = false;
+	}
 	
 	if(m_useShaders)
 		m_program = new QGLShaderProgram(glWidget()->context(), this);
@@ -925,10 +969,12 @@ void GLVideoDrawable::updateTexture()
 	{
 		//if(objectName() != "StaticBackground")
 		//qDebug() << "GLVideoDrawable::paintGL(): "<<(QObject*)this<<" Got a frame, size:"<<m_frame.size;
+		//if()
+			//m_frameSize = m_frame.size;
 			
-		if(m_frame.rect != m_sourceRect || !m_texturesInited)
+		if(m_frameSize != m_frame.size || m_frame.rect != m_sourceRect || !m_texturesInited)
 		{
- 			//qDebug() << "GLVideoDrawable::paintGL(): m_frame.rect:"<<m_frame.rect<<", m_sourceRect:"<<m_sourceRect;
+ 			//qDebug() << "GLVideoDrawable::paintGL(): m_frame.rect:"<<m_frame.rect<<", m_sourceRect:"<<m_sourceRect<<", m_frame.size:"<<m_frame.size;
  			//qDebug() << "GLVideoDrawable::paintGL(): frame size changed or !m_texturesInited, resizing and adjusting pixels...";
 			//if(m_videoFormat.pixelFormat != m_source->videoFormat().pixelFormat)
 			if(m_videoFormat.pixelFormat != m_frame.pixelFormat)
@@ -1009,17 +1055,55 @@ void GLVideoDrawable::updateTexture()
 // 				writer.write(m_frame.image);
 			
 				glBindTexture(GL_TEXTURE_2D, m_textureIds[i]);
-				glTexImage2D(
-					GL_TEXTURE_2D,
-					0,
-					m_textureInternalFormat,
-					m_textureWidths[i],
-					m_textureHeights[i],
-					0,
-					m_textureFormat,
-					m_textureType,
-					m_frame.image.scanLine(0) + m_textureOffsets[i]
-					);
+				if(m_useShaders)
+				{
+					glTexImage2D(
+						GL_TEXTURE_2D,
+						0,
+						m_textureInternalFormat,
+						m_textureWidths[i],
+						m_textureHeights[i],
+						0,
+						m_textureFormat,
+						m_textureType,
+						m_frame.image.scanLine(0) + m_textureOffsets[i]
+						);
+				}
+				else
+				{
+					//m_frame.image = m_frame.image.convertToFormat(QImage::Format_ARGB32);
+					//qDebug() << "No shader, custom glTexImage2D arguments";
+					
+ 					//QImage texGL = m_frame.image;
+// 					//glTexImage2D( GL_TEXTURE_2D, 0, 3, texGL.width(), texGL.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, texGL.bits() );
+ 					//glTexImage2D( GL_TEXTURE_2D, 0, 3, texGL.width(), texGL.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, texGL.bits() );
+//  					qDebug() << (QObject*)(this) << "my args:      "<<m_textureInternalFormat<<m_textureFormat<<m_textureType;
+//  					qDebug() << (QObject*)(this) << "working args: "<<3<<GL_RGBA<<GL_UNSIGNED_BYTE;
+//  					qDebug() << (QObject*)(this) << "image format#:"<<m_frame.image.format();
+					
+					// Why does this work?? m_frame.image.format == #4, RGB32, but tex format seems to require BGRA when using non-GLSL texture rendering...wierd...
+					m_textureFormat = GL_BGRA;
+					
+					if(1)
+					{
+						glTexImage2D(
+							GL_TEXTURE_2D,
+							0,
+							m_textureInternalFormat,
+							m_textureWidths[i],
+							m_textureHeights[i],
+							0,
+							m_textureFormat,
+							m_textureType,
+							(const uchar*)m_frame.image.bits()
+							//m_frame.image.scanLine(0)
+						);
+					}
+					
+					//glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+ 					//glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+				}
+				
 				glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 				glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 // 				glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -1093,7 +1177,7 @@ void GLVideoDrawable::paint(QPainter * painter, const QStyleOptionGraphicsItem *
 		}
 		else
 		{
-			qDebug() << "GLVideoDrawable::paint: Unable to convert pixel format to image format, cannot paint frame. Pixel Format:"<<m_frame.pixelFormat;
+			//qDebug() << "GLVideoDrawable::paint: Unable to convert pixel format to image format, cannot paint frame. Pixel Format:"<<m_frame.pixelFormat;
 		}
 	}
 	
@@ -1247,6 +1331,7 @@ void GLVideoDrawable::paintGL()
 // 	};
 	
 	//qDebug() << vTop << vBottom;
+	//qDebug() << "m_frameSize:"<<m_frameSize;
 	
 	const GLfloat txLeft   = m_displayOpts.flipHorizontal ? source.right()  / m_frameSize.width() : source.left()  / m_frameSize.width();
 	const GLfloat txRight  = m_displayOpts.flipHorizontal ? source.left()   / m_frameSize.width() : source.right() / m_frameSize.width();
@@ -1369,8 +1454,9 @@ void GLVideoDrawable::paintGL()
 		
 		glBindTexture(GL_TEXTURE_2D, m_textureIds[0]);
 		
-		//qDebug() << "target: "<<target;
 		target = transform.mapRect(target);
+// 		qDebug() << "target: "<<target;
+// 		qDebug() << "texture: "<<txLeft<<txBottom<<txTop<<txRight;
 		glBegin(GL_QUADS);
 			qreal 
 				vx1 = target.left(),
@@ -1388,10 +1474,10 @@ void GLVideoDrawable::paintGL()
 	// 			? source.bottom() / m_frameSize.height()
 	// 			: source.top()    / m_frameSize.height();
 			
-			glTexCoord2f(txLeft, txBottom); 		glVertex3f(vx1,vy1,  0.0f); // top left
-			glTexCoord2f(txRight, txBottom); 		glVertex3f(vx2,vy1,  0.0f); // top right
-			glTexCoord2f(txRight, txTop); 	glVertex3f(vx2,vy2,  0.0f); // bottom right
-			glTexCoord2f(txLeft, txTop); 	glVertex3f(vx1,vy2,  0.0f); // bottom left
+			glTexCoord2f(txLeft, txBottom); 	glVertex3f(vx1,vy1,  0.0f); // top left
+			glTexCoord2f(txRight, txBottom); 	glVertex3f(vx2,vy1,  0.0f); // top right
+			glTexCoord2f(txRight, txTop); 		glVertex3f(vx2,vy2,  0.0f); // bottom right
+			glTexCoord2f(txLeft, txTop); 		glVertex3f(vx1,vy2,  0.0f); // bottom left
 	
 	// 		glTexCoord2f(0,0); glVertex3f( 0, 0,0); //lo
 	// 		glTexCoord2f(0,1); glVertex3f(256, 0,0); //lu
