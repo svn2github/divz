@@ -65,10 +65,10 @@ VideoFrame VideoSource::frame()
 
 void VideoSource::enqueue(VideoFrame frame)
 {
-	m_singleFrame = frame;
-	
 	if(m_isBuffered)
 		m_frameQueue.enqueue(frame);
+	//else
+		m_singleFrame = frame;
 	
  	//qDebug() << "VideoSource::enqueue(): "<<this<<" m_isBuffered:"<<m_isBuffered<<", Queue size: "<<m_frameQueue.size();
 	

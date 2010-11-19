@@ -174,6 +174,7 @@ QDebug operator<<(QDebug dbg, const VideoDisplayOptions &opts)
 
 GLVideoDrawable::GLVideoDrawable(QObject *parent)
 	: GLDrawable(parent)
+	, m_visiblePendingFrame(false)
 	, m_glInited(false)
 	, m_program(0)
 	, m_textureCount(1)
@@ -187,7 +188,6 @@ GLVideoDrawable::GLVideoDrawable(QObject *parent)
 	, m_uploadedCacheKey(0)
 	, m_textureOffset(0,0)
 	, m_texturesInited(false)
-	, m_visiblePendingFrame(false)
 	, m_useShaders(true)
 	, m_rateLimitFps(0.0)
 {
@@ -957,6 +957,252 @@ void GLVideoDrawable::setTextureOffset(const QPointF& point)
 	updateGL();
 }
 
+// returns the highest number closest to v, which is a power of 2
+// NB! assumes 32 bit ints
+int qt_next_power_of_two(int v)
+{
+    v--;
+    v |= v >> 1;
+    v |= v >> 2;
+    v |= v >> 4;
+    v |= v >> 8;
+    v |= v >> 16;
+    ++v;
+    return v;
+}
+
+// map from Qt's ARGB endianness-dependent format to GL's big-endian RGBA layout
+static inline void qgl_byteSwapImage(QImage &img, GLenum pixel_type)
+{
+    const int width = img.width();
+    const int height = img.height();
+
+    if (pixel_type == GL_UNSIGNED_INT_8_8_8_8_REV
+        || (pixel_type == GL_UNSIGNED_BYTE && QSysInfo::ByteOrder == QSysInfo::LittleEndian))
+    {
+        for (int i = 0; i < height; ++i) {
+            uint *p = (uint *) img.scanLine(i);
+            for (int x = 0; x < width; ++x)
+                p[x] = ((p[x] << 16) & 0xff0000) | ((p[x] >> 16) & 0xff) | (p[x] & 0xff00ff00);
+        }
+    } else {
+        for (int i = 0; i < height; ++i) {
+            uint *p = (uint *) img.scanLine(i);
+            for (int x = 0; x < width; ++x)
+                p[x] = (p[x] << 8) | ((p[x] >> 24) & 0xff);
+        }
+    }
+}
+
+//#define QGL_BIND_TEXTURE_DEBUG
+
+static void uploadTexture(GLuint tx_id, const QImage &image)
+{
+	 GLenum target = GL_TEXTURE_2D; 
+	 GLint internalFormat = GL_RGBA;
+	 QGLContext::BindOptions options;
+	 //const qint64 key = 0;
+	  
+    //Q_Q(QGLContext);
+    
+#ifdef QGL_BIND_TEXTURE_DEBUG
+    printf("GLVideoDrawable / uploadTexture(), imageSize=(%d,%d), internalFormat =0x%x, options=%x\n",
+           image.width(), image.height(), internalFormat, int(options));
+    QTime time;
+    time.start();
+#endif
+
+#ifndef QT_NO_DEBUG
+    // Reset the gl error stack...git
+    while (glGetError() != GL_NO_ERROR) ;
+#endif
+
+    // Scale the pixmap if needed. GL textures needs to have the
+    // dimensions 2^n+2(border) x 2^m+2(border), unless we're using GL
+    // 2.0 or use the GL_TEXTURE_RECTANGLE texture target
+    int tx_w = qt_next_power_of_two(image.width());
+    int tx_h = qt_next_power_of_two(image.height());
+
+    QImage img = image;
+    
+    if (// !(QGLExtensions::glExtensions() & QGLExtensions::NPOTTextures)
+        //&& 
+        !(QGLFormat::openGLVersionFlags() & QGLFormat::OpenGL_ES_Version_2_0)
+        && (target == GL_TEXTURE_2D && (tx_w != image.width() || tx_h != image.height())))
+    {
+        img = img.scaled(tx_w, tx_h);
+#ifdef QGL_BIND_TEXTURE_DEBUG
+        printf(" - upscaled to %dx%d (%d ms)\n", tx_w, tx_h, time.elapsed());
+
+#endif
+    }
+    
+
+    GLuint filtering = options & QGLContext::LinearFilteringBindOption ? GL_LINEAR : GL_NEAREST;
+
+    //GLuint tx_id;
+    //glGenTextures(1, &tx_id);
+    glBindTexture(target, tx_id);
+    glTexParameterf(target, GL_TEXTURE_MAG_FILTER, filtering);
+    
+    //qDebug() << "Upload, mark1";
+
+#if defined(QT_OPENGL_ES_2)
+    bool genMipmap = false;
+#endif
+
+//     if (glFormat.directRendering()
+//         && (QGLExtensions::glExtensions() & QGLExtensions::GenerateMipmap)
+//         && target == GL_TEXTURE_2D
+//         && (options & QGLContext::MipmapBindOption))
+//     {
+// #ifdef QGL_BIND_TEXTURE_DEBUG
+//         printf(" - generating mipmaps (%d ms)\n", time.elapsed());
+// #endif
+// #if !defined(QT_OPENGL_ES_2)
+//         glHint(GL_GENERATE_MIPMAP_HINT_SGIS, GL_NICEST);
+// #ifndef QT_OPENGL_ES
+//         glTexParameteri(target, GL_GENERATE_MIPMAP_SGIS, GL_TRUE);
+// #else
+//         glTexParameterf(target, GL_GENERATE_MIPMAP_SGIS, GL_TRUE);
+// #endif
+// #else
+//         glHint(GL_GENERATE_MIPMAP_HINT, GL_NICEST);
+//         genMipmap = true;
+// #endif
+//         glTexParameterf(target, GL_TEXTURE_MIN_FILTER, options & QGLContext::LinearFilteringBindOption
+//                         ? GL_LINEAR_MIPMAP_LINEAR : GL_NEAREST_MIPMAP_NEAREST);
+//     } else {
+        glTexParameterf(target, GL_TEXTURE_MIN_FILTER, filtering);
+    //}
+
+    QImage::Format target_format = img.format();
+    bool premul = options & QGLContext::PremultipliedAlphaBindOption;
+    GLenum externalFormat;
+    GLuint pixel_type;
+//     if (QGLExtensions::glExtensions() & QGLExtensions::BGRATextureFormat) {
+//         externalFormat = GL_BGRA;
+//         if (QGLFormat::openGLVersionFlags() & QGLFormat::OpenGL_Version_1_2)
+//             pixel_type = GL_UNSIGNED_INT_8_8_8_8_REV;
+//         else
+//             pixel_type = GL_UNSIGNED_BYTE;
+//     } else {
+        externalFormat = GL_RGBA;
+        pixel_type = GL_UNSIGNED_BYTE;
+    //}
+
+    switch (target_format) {
+    case QImage::Format_ARGB32:
+        if (premul) {
+            img = img.convertToFormat(target_format = QImage::Format_ARGB32_Premultiplied);
+#ifdef QGL_BIND_TEXTURE_DEBUG
+            printf(" - converting ARGB32 -> ARGB32_Premultiplied (%d ms) \n", time.elapsed());
+#endif
+        }
+        break;
+    case QImage::Format_ARGB32_Premultiplied:
+        if (!premul) {
+            img = img.convertToFormat(target_format = QImage::Format_ARGB32);
+#ifdef QGL_BIND_TEXTURE_DEBUG
+            printf(" - converting ARGB32_Premultiplied -> ARGB32 (%d ms)\n", time.elapsed());
+#endif
+        }
+        break;
+    case QImage::Format_RGB16:
+        pixel_type = GL_UNSIGNED_SHORT_5_6_5;
+        externalFormat = GL_RGB;
+        internalFormat = GL_RGB;
+        break;
+    case QImage::Format_RGB32:
+        break;
+    default:
+        if (img.hasAlphaChannel()) {
+            img = img.convertToFormat(premul
+                                      ? QImage::Format_ARGB32_Premultiplied
+                                      : QImage::Format_ARGB32);
+#ifdef QGL_BIND_TEXTURE_DEBUG
+            printf(" - converting to 32-bit alpha format (%d ms)\n", time.elapsed());
+#endif
+        } else {
+            img = img.convertToFormat(QImage::Format_RGB32);
+#ifdef QGL_BIND_TEXTURE_DEBUG
+            printf(" - converting to 32-bit (%d ms)\n", time.elapsed());
+#endif
+        }
+    }
+
+    if (options & QGLContext::InvertedYBindOption) {
+#ifdef QGL_BIND_TEXTURE_DEBUG
+            printf(" - flipping bits over y (%d ms)\n", time.elapsed());
+#endif
+        if (img.isDetached()) {
+            int ipl = img.bytesPerLine() / 4;
+            int h = img.height();
+            for (int y=0; y<h/2; ++y) {
+                int *a = (int *) img.scanLine(y);
+                int *b = (int *) img.scanLine(h - y - 1);
+                for (int x=0; x<ipl; ++x)
+                    qSwap(a[x], b[x]);
+            }
+        } else {
+            // Create a new image and copy across.  If we use the
+            // above in-place code then a full copy of the image is
+            // made before the lines are swapped, which processes the
+            // data twice.  This version should only do it once.
+            img = img.mirrored();
+        }
+    }
+
+    if (externalFormat == GL_RGBA) {
+#ifdef QGL_BIND_TEXTURE_DEBUG
+            printf(" - doing byte swapping (%d ms)\n", time.elapsed());
+#endif
+        // The only case where we end up with a depth different from
+        // 32 in the switch above is for the RGB16 case, where we set
+        // the format to GL_RGB
+        Q_ASSERT(img.depth() == 32);
+        qgl_byteSwapImage(img, pixel_type);
+        //qDebug() << "Upload, mark2 - unable to byte swap - dont hvae helper";
+    }
+#ifdef QT_OPENGL_ES
+    // OpenGL/ES requires that the internal and external formats be
+    // identical.
+    internalFormat = externalFormat;
+#endif
+#ifdef QGL_BIND_TEXTURE_DEBUG
+    printf(" - uploading, image.format=%d, externalFormat=0x%x, internalFormat=0x%x, pixel_type=0x%x\n",
+           img.format(), externalFormat, internalFormat, pixel_type);
+#endif
+
+    const QImage &constRef = img; // to avoid detach in bits()...
+    glTexImage2D(target, 0, internalFormat, img.width(), img.height(), 0, externalFormat,
+                 pixel_type, constRef.bits());
+#if defined(QT_OPENGL_ES_2)
+    if (genMipmap)
+        glGenerateMipmap(target);
+#endif
+#ifndef QT_NO_DEBUG
+    GLenum error = glGetError();
+    if (error != GL_NO_ERROR) {
+        qWarning(" - texture upload failed, error code 0x%x\n", error);
+    }
+#endif
+
+#ifdef QGL_BIND_TEXTURE_DEBUG
+    static int totalUploadTime = 0;
+    totalUploadTime += time.elapsed();
+    printf(" - upload done in (%d ms) time=%d\n", time.elapsed(), totalUploadTime);
+#endif
+
+
+    // this assumes the size of a texture is always smaller than the max cache size
+//     int cost = img.width()*img.height()*4/1024;
+//     QGLTexture *texture = new QGLTexture(q, tx_id, target, options);
+//     QGLTextureCache::instance()->insert(q, key, texture, cost);
+    //return texture;
+}	
+
+
 void GLVideoDrawable::updateTexture()
 {
 	if(!m_frame.isValid())
@@ -1054,6 +1300,8 @@ void GLVideoDrawable::updateTexture()
 // 				QImageWriter writer("test.jpg");
 // 				writer.write(m_frame.image);
 			
+				const QImage &constRef = m_frame.image; // avoid detach in .bits()
+					
 				glBindTexture(GL_TEXTURE_2D, m_textureIds[i]);
 				if(m_useShaders)
 				{
@@ -1066,7 +1314,7 @@ void GLVideoDrawable::updateTexture()
 						0,
 						m_textureFormat,
 						m_textureType,
-						m_frame.image.scanLine(0) + m_textureOffsets[i]
+						constRef.bits() + m_textureOffsets[i]
 						);
 				}
 				else
@@ -1084,7 +1332,17 @@ void GLVideoDrawable::updateTexture()
 					// Why does this work?? m_frame.image.format == #4, RGB32, but tex format seems to require BGRA when using non-GLSL texture rendering...wierd...
 					m_textureFormat = GL_BGRA;
 					
+					if(0)
+					{
+						m_textureIds[i] = m_glw->bindTexture(m_frame.image);
+					}
+					
 					if(1)
+					{
+						uploadTexture(m_textureIds[i],m_frame.image);
+					}
+					
+					if(0)
 					{
 						glTexImage2D(
 							GL_TEXTURE_2D,
@@ -1095,7 +1353,7 @@ void GLVideoDrawable::updateTexture()
 							0,
 							m_textureFormat,
 							m_textureType,
-							(const uchar*)m_frame.image.bits()
+							(const uchar*)constRef.bits()
 							//m_frame.image.scanLine(0)
 						);
 					}
@@ -1122,8 +1380,6 @@ void GLVideoDrawable::updateTexture()
 		}
 	}
 }
-	
-	
 
 
 void GLVideoDrawable::paint(QPainter * painter, const QStyleOptionGraphicsItem * /*option*/, QWidget * /*widget*/)
@@ -1190,7 +1446,7 @@ void GLVideoDrawable::paint(QPainter * painter, const QStyleOptionGraphicsItem *
 		m_latencyAccum += msecLatency;
 	}
 					
-	if (!(m_frameCount % 100)) 
+	if (!(m_frameCount % 20)) 
 	{
 		QString framesPerSecond;
 		framesPerSecond.setNum(m_frameCount /(m_time.elapsed() / 1000.0), 'f', 2);
@@ -1430,6 +1686,7 @@ void GLVideoDrawable::paintGL()
 				texOrig.fill( Qt::green );
 			}
 			
+			qDebug() << "Loaded test me2.jpg manually using glTexImage2D";
 			// Setup inital texture
 			texGL = QGLWidget::convertToGLFormat( texOrig );
 			glGenTextures( 1, &m_textureIds[0] );
@@ -1455,8 +1712,8 @@ void GLVideoDrawable::paintGL()
 		glBindTexture(GL_TEXTURE_2D, m_textureIds[0]);
 		
 		target = transform.mapRect(target);
-// 		qDebug() << "target: "<<target;
-// 		qDebug() << "texture: "<<txLeft<<txBottom<<txTop<<txRight;
+ 		//qDebug() << "target: "<<target;
+ 		//qDebug() << "texture: "<<txLeft<<txBottom<<txTop<<txRight;
 		glBegin(GL_QUADS);
 			qreal 
 				vx1 = target.left(),
@@ -1497,7 +1754,7 @@ void GLVideoDrawable::paintGL()
 		m_latencyAccum += msecLatency;
 	}
 					
-	if (!(m_frameCount % 100)) 
+	if (!(m_frameCount % 20)) 
 	{
 		QString framesPerSecond;
 		framesPerSecond.setNum(m_frameCount /(m_time.elapsed() / 1000.0), 'f', 2);

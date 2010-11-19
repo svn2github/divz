@@ -126,7 +126,8 @@ GLDrawable * addReceiver(GLWidget * glw)
 GLDrawable * addQtSource(GLWidget * glw)
 {
 	#ifdef HAS_QT_VIDEO_SOURCE
-	QString testFile = "/opt/qt-mobility-opensource-src-1.0.1/examples/player/dsc_7721.avi";
+	//QString testFile = "/opt/qt-mobility-opensource-src-1.0.1/examples/player/dsc_7721.avi";
+	QString testFile = "/root/Wildlife.wmv";
 	//QString testFile = "dsc_0259.avi";
         //QString testFile = "P:/Video/SermonSpice/92_Churchfamily.mpg";
         //QString testFile = "../Unicorn.mpg";
@@ -549,7 +550,7 @@ int main(int argc, char *argv[])
 		
 	QFormLayout * tb = createToggleBox();
 	
-	if(1)
+	if(0)
 	{
 	
         	addButtons(tb, addQtSource(glw));
@@ -563,6 +564,27 @@ int main(int argc, char *argv[])
         	glw->addDrawable(drawable);
         	drawable->show();
         }
+        
+        if(1)
+        {
+        	GLVideoDrawable *drawable = new GLVideoDrawable();
+        	
+        	VideoThread * source = new VideoThread();
+		source->setVideo("../data/Seasons_Loop_3_SD.mpg");
+		//source->setVideo("../samples/BlueFish/EssentialsVol05_Abstract_Media/HD/Countdowns/Abstract_Countdown_3_HD.mp4");
+		//source->setVideo("../samples/BlueFish/EssentialsVol05_Abstract_Media/SD/Countdowns/Abstract_Countdown_3_SD.mpg");
+		
+		source->start();
+		
+		drawable->setVideoSource(source);
+		
+        	drawable->addShowAnimation(GLDrawable::AnimFade);
+        	drawable->setRect(QRectF(0,0,1000,750));
+        	glw->addDrawable(drawable);
+        	drawable->show();
+        }
+        
+        
 	
 	if(0)
 	{
@@ -630,6 +652,7 @@ int main(int argc, char *argv[])
 */	
 
 	glw->show();
+	
 	
 	int x = app.exec();
 	delete glw;
