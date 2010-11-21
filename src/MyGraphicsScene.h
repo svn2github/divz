@@ -134,6 +134,10 @@ class MyGraphicsScene : public QGraphicsScene
 		int m_fadeStepCounter;
 		QList<double> m_fadeIncx;
 		QTimer * m_fadeTimer;
+		QTime m_fadeTime;
+		int m_fadeLength;
+		int m_fadeFrameMs;
+		int m_currentFadeTime;
 		
 		ContextHint m_contextHint;
 		

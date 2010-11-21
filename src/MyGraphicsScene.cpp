@@ -395,6 +395,11 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans, int speed, i
 		//int ms = 250  / m_fadeSteps;
 		int ms = speed / m_fadeSteps;
 		m_fadeTimer->start(ms); //ms);
+		
+		m_fadeFrameMs = ms;
+		m_fadeLength = speed;
+		m_currentFadeTime = 0;
+		m_fadeTime.start();
 
  		double inc = (double)1 / m_fadeSteps;
 
@@ -645,22 +650,32 @@ void MyGraphicsScene::endTransition()
 
 void MyGraphicsScene::slotTransitionStep()
 {
-	if( ++ m_fadeStepCounter < m_fadeSteps)
+	int elapsed = m_fadeTime.elapsed();
+	double fadeVal = ((double)elapsed) / ((double)m_fadeLength); 
+		
+	if( /*++ m_fadeStepCounter < m_fadeSteps && */elapsed < m_fadeLength)
 	{
 		//if(DEBUG_MYGRAPHICSSCENE)
 		//	qDebug()<<"MyGraphicsScene::slotTransitionStep(): [STEP BEGIN] step"<<m_fadeStepCounter<<"/"<<m_fadeSteps;
-		double inc = (double)1 / m_fadeSteps;
+		
+// 		m_fadeFrameMs = ms;
+// 		m_fadeLength = speed;
+// 		m_currentFadeTime = 0;
+// 		m_fadeTime.start();
+		
+		//double inc = (double)1 / m_fadeSteps;
 		if(!m_bg || m_bg->fillType() == AbstractVisualItem::None)
-			m_fadeRoot->setOpacity(m_fadeRoot->opacity() - inc);
+			m_fadeRoot->setOpacity(1.0 - fadeVal); //m_fadeRoot->opacity() - inc);
 		#if QT46_OPAC_ENAB > 0
 			QGraphicsOpacityEffect * opac = dynamic_cast<QGraphicsOpacityEffect*>(m_liveRoot->graphicsEffect()); 
 			if(opac) 
-				opac->setOpacity(opac->opacity() + inc);
+				opac->setOpacity(fadeVal); //opac->opacity() + inc);
 		#else
-			m_liveRoot->setOpacity(m_liveRoot->opacity() + inc);
+			m_liveRoot->setOpacity(fadeVal); //m_liveRoot->opacity() + inc);
 		#endif
 		if(DEBUG_MYGRAPHICSSCENE)
-			qDebug()<<"MyGraphicsScene::slotTransitionStep(): [STEP DONE] step"<<m_fadeStepCounter<<"/"<<m_fadeSteps<<", inc:"<<inc<<", fade:"<<m_fadeRoot->opacity()<<", live:"<<m_liveRoot->opacity();
+			qDebug()<<"MyGraphicsScene::slotTransitionStep(): [STEP DONE] step"<<m_fadeStepCounter<<"/"<<m_fadeSteps<<", fadeVal:"<<fadeVal<<", fade:"<<m_fadeRoot->opacity()<<", live:"<<m_liveRoot->opacity()<<" [m_fadeFrameMs:"<<m_fadeFrameMs<<", elapsed:"<<elapsed<<"]";
+			//qDebug()<<"MyGraphicsScene::slotTransitionStep(): [STEP DONE] step"<<m_fadeStepCounter<<"/"<<m_fadeSteps<<", inc:"<<inc<<", fade:"<<m_fadeRoot->opacity()<<", live:"<<m_liveRoot->opacity();
 		update();
 	}
 	else
