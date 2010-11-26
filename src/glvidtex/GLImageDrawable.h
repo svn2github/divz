@@ -19,7 +19,10 @@ public:
 public slots:
 	void setImage(const QImage&);
 	bool setImageFile(const QString&);
-
+	
+private slots:
+	void testXfade();
+	
 private:
 	void setVideoSource(VideoSource*);
 	

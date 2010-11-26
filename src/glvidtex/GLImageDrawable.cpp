@@ -3,15 +3,31 @@
 GLImageDrawable::GLImageDrawable(QString file, QObject *parent)
 	: GLVideoDrawable(parent)
 {
-	// Setup frame
-	m_frame.bufferType = VideoFrame::BUFFER_IMAGE;
-
 	if(!file.isEmpty())
 		setImageFile(file);
+	
+	QTimer::singleShot(1500, this, SLOT(testXfade()));
+}
+	
+void GLImageDrawable::testXfade()
+{
+	qDebug() << "GLImageDrawable::testXfade(): loading file #2";
+	setImageFile("dsc_6645.jpg");
 }
 	
 void GLImageDrawable::setImage(const QImage& image)
 {
+	if(m_frame.isValid() && xfadeEnabled())
+	{
+		m_frame2 = m_frame;
+		updateTexture(true); // true = read from m_frame2
+		xfadeStart();
+	}
+		
+				
+	// Setup frame
+	m_frame.bufferType = VideoFrame::BUFFER_IMAGE;
+
 	QImage::Format format = image.format();
 	m_frame.pixelFormat =
 		format == QImage::Format_ARGB32 ? QVideoFrame::Format_ARGB32 :
@@ -37,7 +53,6 @@ void GLImageDrawable::setImage(const QImage& image)
 	m_frame.image = m_image;
 	m_frame.setSize(image.size());
 	
-	
 	updateTexture();
 	
 	if(fpsLimit() <= 0.0)
@@ -54,6 +69,8 @@ void GLImageDrawable::setImage(const QImage& image)
 
 bool GLImageDrawable::setImageFile(const QString& file)
 {
+	qDebug() << "GLImageDrawable::setImageFile(): file:"<<file;
+	
 	QFileInfo fileInfo(file);
 	if(!fileInfo.exists())
 	{

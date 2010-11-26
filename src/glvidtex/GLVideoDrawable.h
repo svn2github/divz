@@ -116,6 +116,9 @@ class GLVideoDrawable : public GLDrawable
 	
 	Q_PROPERTY(Qt::AspectRatioMode aspectRatioMode READ aspectRatioMode WRITE setAspectRatioMode);
 	
+	Q_PROPERTY(bool xfadeEnabled READ xfadeEnabled WRITE setXFadeEnabled);
+	Q_PROPERTY(int xfadeLength READ xfadeLength WRITE setXFadeLength);
+	
 public:
 	GLVideoDrawable(QObject *parent=0);
 	~GLVideoDrawable();
@@ -150,6 +153,9 @@ public:
 	
 	float fpsLimit() { return m_rateLimitFps; }
 	
+	bool xfadeEnabled() { return m_xfadeEnabled; }
+	int xfadeLength() { return m_xfadeLength; }
+	
 public slots:
 	void setFpsLimit(float);
 	void setVisible(bool flag, bool waitOnFrameSignal=false);
@@ -170,18 +176,24 @@ public slots:
 	
 	void setAspectRatioMode(Qt::AspectRatioMode mode);
 	
+	void setXFadeEnabled(bool flag);
+	void setXFadeLength(int length);
+	
+	/// PS
 	void setVideoSource(VideoSource*);
 	void disconnectVideoSource();
 	
 	void setDisplayOptions(const VideoDisplayOptions&);
 	
+	/// PS
 	// Returns false if format won't be acceptable
-	bool setVideoFormat(const VideoFormat& format);
+	bool setVideoFormat(const VideoFormat& format, bool secondSource=false);
 
 signals:
 	void displayOptionsChanged(const VideoDisplayOptions&);
 
 protected:
+	/// PS
 	void paintGL();
 	void paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget);
 	
@@ -191,69 +203,105 @@ protected:
 	
 	void initGL();
 
-	void initYv12TextureInfo(const QSize &size);
-	void initYuv420PTextureInfo(const QSize &size);
-	void initRgbTextureInfo(GLenum internalFormat, GLuint format, GLenum type, const QSize &size);
+	/// PS
+	void initYv12TextureInfo(const QSize &size, bool secondSource=false);
+	void initYuv420PTextureInfo(const QSize &size, bool secondSource=false);
+	void initRgbTextureInfo(GLenum internalFormat, GLuint format, GLenum type, const QSize &size, bool secondSource=false);
 	
 	void updateColors(int brightness, int contrast, int hue, int saturation);
 	
-	void updateRects();
+	/// PS
+	void updateRects(bool secondSource=false);
 	
-	const char * resizeTextures(const QSize& size);
+	/// PS
+	const char * resizeTextures(const QSize& size, bool secondSource=false);
 	
 	void updateTextureOffsets();
 	
+	/// PS
 	VideoFrame m_frame;
+	VideoFrame m_frame2;
 	bool m_visiblePendingFrame;
 	bool m_tempVisibleValue;
 	
 	// QGraphicsItem::
 	QVariant itemChange(GraphicsItemChange change, const QVariant &value);
  
-	
+	void xfadeStart();
+	void xfadeStop();
 	
 protected slots:
+	/// PS
 	void frameReady();
-	void updateTexture();
+	void frameReady2();
+	void updateTexture(bool secondSource=false);
+	
+	void disconnectVideoSource2();
+	void xfadeTick();
 	
 	
 private:
+	/// PS
 	VideoFormat m_videoFormat;
+	VideoFormat m_videoFormat2;
 	bool m_glInited;
 	
+	/// PS
 	QGLShaderProgram *m_program;
+	QGLShaderProgram *m_program2;
 	
 	QList<QVideoFrame::PixelFormat> m_imagePixelFormats;
 	QList<QVideoFrame::PixelFormat> m_rawPixelFormats;
+	
 	QMatrix4x4 m_colorMatrix;
 	//QGLContext *m_context;
 	
+	/// PS
 	QVideoSurfaceFormat::Direction m_scanLineDirection;
+	/// PS
 	GLenum m_textureFormat;
+	GLenum m_textureFormat2;
+	/// PS
 	GLuint m_textureInternalFormat;
+	GLuint m_textureInternalFormat2;
+	/// PS
 	GLenum m_textureType;
+	GLenum m_textureType2;
 	
+	/// PS
 	int m_textureCount;
+	int m_textureCount2;
 	
+	/// PS
 	GLuint m_textureIds[3];
-	int m_textureWidths[3];
-	int m_textureHeights[3];
-	int m_textureOffsets[3];
+	GLuint m_textureIds2[3];
+	/// PS
+	int m_textureWidths[6];
+	/// PS
+	int m_textureHeights[6];
+	/// PS
+	int m_textureOffsets[6];
 	
+	/// PS
 	bool m_yuv;
+	bool m_yuv2;
 	
 	bool m_colorsDirty;
 	
 	VideoDisplayOptions m_displayOpts;
 	
+	/// PS
 	QSize m_frameSize;
+	QSize m_frameSize2;
 	
 	#ifndef QT_OPENGL_ES
 	typedef void (APIENTRY *_glActiveTexture) (GLenum);
 	_glActiveTexture glActiveTexture;
 	#endif
 	
+	/// PS
 	VideoSource *m_source;
+	VideoSource *m_source2;
 	
 	QTime m_time;
 	int m_frameCount;
@@ -262,12 +310,18 @@ private:
 	
 	QTimer m_timer;
 	
+	/// PS
 	QRectF m_targetRect;
+	QRectF m_targetRect2;
+	/// PS
 	QRectF m_sourceRect;
+	QRectF m_sourceRect2;
 	
 	Qt::AspectRatioMode m_aspectRatioMode;
 	
+	/// PS
 	bool m_validShader;
+	bool m_validShader2;
 	
 	QImage m_alphaMask;
 	QImage m_alphaMask_preScaled;
@@ -277,13 +331,31 @@ private:
 	QPointF m_textureOffset;
 	QPointF m_invertedOffset; // calculated as m_textureOffset.x() * 1/textureWidth, etc
 	
+	/// PS
 	bool m_texturesInited;
+	bool m_texturesInited2;
+	
 	QMutex m_frameReadyLock;
 	
 	bool m_useShaders;
 	
 	float m_rateLimitFps;
 	QTimer m_fpsRateLimiter;
+	
+	// If m_xfadeEnabled, then when setVideoSource() is called,
+	// m_fadeTick will be started at 1000/25 ms interval and
+	// m_fadeTime will be started. The xfadeTick() slot will 
+	// be called to update m_fadeValue while m_fadeTime.elapsed()
+	// is less than m_xfadeLength; While fade is active,
+	// m_fadeActive is true, which will tell the paint routines
+	// to honor m_fadeValue. When fade is finished, xfadeDone()
+	// slot is called and the second source is discarded. 
+	bool m_xfadeEnabled;
+	int m_xfadeLength; // in ms
+	QTimer m_fadeTick;
+	QTime m_fadeTime;
+	double m_fadeValue;
+	bool m_fadeActive;
 };
 
 #endif 

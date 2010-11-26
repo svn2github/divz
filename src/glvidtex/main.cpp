@@ -556,7 +556,7 @@ int main(int argc, char *argv[])
         	addButtons(tb, addQtSource(glw));
         }
         
-        if(0)
+        if(1)
         {
         	GLImageDrawable *drawable = new GLImageDrawable("me2.jpg");
         	drawable->addShowAnimation(GLDrawable::AnimFade);
@@ -565,7 +565,7 @@ int main(int argc, char *argv[])
         	drawable->show();
         }
         
-        if(1)
+        if(0)
         {
         	GLVideoDrawable *drawable = new GLVideoDrawable();
         	
