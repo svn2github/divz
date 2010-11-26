@@ -12,6 +12,7 @@
 #include "GLVideoLoopDrawable.h"
 #include "GLVideoInputDrawable.h"
 #include "GLVideoFileDrawable.h"
+#include "GLVideoReceiverDrawable.h"
 
 //#define HAS_QT_VIDEO_SOURCE
 
@@ -594,6 +595,16 @@ int main(int argc, char *argv[])
 		QString testFile = "/root/Wildlife.wmv";
 		
 		GLVideoFileDrawable *drawable = new GLVideoFileDrawable(testFile);
+		drawable->addShowAnimation(GLDrawable::AnimFade);
+		drawable->setRect(QRectF(0,0,1000,750));
+		glw->addDrawable(drawable);
+		drawable->show();
+        }
+        
+        // NOT TESTED YET
+        if(0)
+        {
+		GLVideoReceiverDrawable *drawable = new GLVideoReceiverDrawable("localhost",7755);
 		drawable->addShowAnimation(GLDrawable::AnimFade);
 		drawable->setRect(QRectF(0,0,1000,750));
 		glw->addDrawable(drawable);

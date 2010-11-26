@@ -15,7 +15,7 @@ Target: pixelrevo-player
 								- play/pause/ff/rw/etc
 								- Add seek method/slots
 								- Query play time for remote controllers
-					GLVideoReceiverDrawable
+					GLVideoReceiverDrawable (done)
 					GLImageDrawable (done)
 					GLTextDrawable
 					GLRectDrawable
