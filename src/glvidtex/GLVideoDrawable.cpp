@@ -253,6 +253,8 @@ void GLVideoDrawable::setVideoSource(VideoSource *source)
 			connect(m_source2, SIGNAL(destroyed()), this, SLOT(disconnectVideoSource2()));
 			
 			m_frame2 = m_frame;
+			updateTexture(true);
+			
 			xfadeStart();
 		}
 	}

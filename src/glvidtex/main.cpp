@@ -9,6 +9,7 @@
 #include "TextVideoSource.h"
 
 #include "GLImageDrawable.h"
+#include "GLVideoLoopDrawable.h"
 
 //#define HAS_QT_VIDEO_SOURCE
 
@@ -556,9 +557,18 @@ int main(int argc, char *argv[])
         	addButtons(tb, addQtSource(glw));
         }
         
-        if(1)
+        if(0)
         {
         	GLImageDrawable *drawable = new GLImageDrawable("me2.jpg");
+        	drawable->addShowAnimation(GLDrawable::AnimFade);
+        	drawable->setRect(QRectF(0,0,1000,750));
+        	glw->addDrawable(drawable);
+        	drawable->show();
+        }
+        
+        if(1)
+        {
+        	GLVideoLoopDrawable *drawable = new GLVideoLoopDrawable("../data/Seasons_Loop_3_SD.mpg");
         	drawable->addShowAnimation(GLDrawable::AnimFade);
         	drawable->setRect(QRectF(0,0,1000,750));
         	glw->addDrawable(drawable);

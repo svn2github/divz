@@ -6,7 +6,7 @@ GLImageDrawable::GLImageDrawable(QString file, QObject *parent)
 	if(!file.isEmpty())
 		setImageFile(file);
 	
-	QTimer::singleShot(1500, this, SLOT(testXfade()));
+	//QTimer::singleShot(1500, this, SLOT(testXfade()));
 }
 	
 void GLImageDrawable::testXfade()
