@@ -13,6 +13,7 @@
 #include "GLVideoInputDrawable.h"
 #include "GLVideoFileDrawable.h"
 #include "GLVideoReceiverDrawable.h"
+#include "GLTextDrawable.h"
 
 //#define HAS_QT_VIDEO_SOURCE
 
@@ -569,7 +570,7 @@ int main(int argc, char *argv[])
         	drawable->show();
         }
         
-        if(1)
+        if(0)
         {
         	GLVideoLoopDrawable *drawable = new GLVideoLoopDrawable("../data/Seasons_Loop_3_SD.mpg");
         	drawable->addShowAnimation(GLDrawable::AnimFade);
@@ -605,6 +606,15 @@ int main(int argc, char *argv[])
         if(0)
         {
 		GLVideoReceiverDrawable *drawable = new GLVideoReceiverDrawable("localhost",7755);
+		drawable->addShowAnimation(GLDrawable::AnimFade);
+		drawable->setRect(QRectF(0,0,1000,750));
+		glw->addDrawable(drawable);
+		drawable->show();
+        }
+        
+        if(1)
+        {
+		GLTextDrawable *drawable = new GLTextDrawable("Hello, World!");
 		drawable->addShowAnimation(GLDrawable::AnimFade);
 		drawable->setRect(QRectF(0,0,1000,750));
 		glw->addDrawable(drawable);

@@ -57,6 +57,8 @@ void GLImageDrawable::setImage(const QImage& image)
 	
 	if(fpsLimit() <= 0.0)
 		updateGL();
+		
+	//qDebug() << "GLImageDrawable::setImage(): Set image size:"<<m_frame.image.size();
 	
 	// TODO reimp so this code works
 // 	if(m_visiblePendingFrame)
@@ -77,6 +79,7 @@ bool GLImageDrawable::setImageFile(const QString& file)
 		qDebug() << "GLImageDrawable::setImageFile: "<<file<<" does not exist!";
 		return false;
 	}
+	m_imageFile = file;
 	QImage image(file);
 	if(image.isNull())
 	{

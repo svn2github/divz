@@ -207,9 +207,9 @@ protected:
 	void paintGL();
 	void paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget);
 	
-	void viewportResized(const QSize& newSize);
-	void canvasResized(const QSizeF& newSize);
-	void drawableResized(const QSizeF& newSize);
+	virtual void viewportResized(const QSize& newSize);
+	virtual void canvasResized(const QSizeF& newSize);
+	virtual void drawableResized(const QSizeF& newSize);
 	
 	void initGL();
 
