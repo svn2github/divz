@@ -7,14 +7,20 @@ Target: pixelrevo-player
 		Core:
 			GLWidget / GLDrawable
 				Drawable Items:
-					GLVideoInputDrawable
-					GLVideoFileDrawable
+					GLVideoInputDrawable (done)
+					GLVideoLoopDrawable (done)
+					GLVideoFileDrawable (done)
+						- TODO: 
+							Add properties for:
+								- play/pause/ff/rw/etc
+								- Add seek method/slots
+								- Query play time for remote controllers
 					GLVideoReceiverDrawable
 					GLImageDrawable (done)
 					GLTextDrawable
 					GLRectDrawable
 				Todo Items:
-					- Add native cross fading support in GLVideoDrawable (since all items above will probably derive from GLVideoDrawable)
+					- (done) Add native cross fading support in GLVideoDrawable (since all items above will probably derive from GLVideoDrawable)
 					- Add a 'transmit video' property to Video(input|file) drawables
 					- Add dropshadow support for image/text/rect
 					- Add outline support for image/text/rect/videos
