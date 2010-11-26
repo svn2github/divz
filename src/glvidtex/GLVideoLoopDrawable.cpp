@@ -28,6 +28,7 @@ bool GLVideoLoopDrawable::setVideoFile(const QString& file)
 		return false;
 	}
 	
+	m_videoFile = file;
 	
 	VideoThread * source = new VideoThread();
 	source->setVideo(file);

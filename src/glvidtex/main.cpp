@@ -10,6 +10,7 @@
 
 #include "GLImageDrawable.h"
 #include "GLVideoLoopDrawable.h"
+#include "GLVideoInputDrawable.h"
 
 //#define HAS_QT_VIDEO_SOURCE
 
@@ -573,6 +574,17 @@ int main(int argc, char *argv[])
         	drawable->setRect(QRectF(0,0,1000,750));
         	glw->addDrawable(drawable);
         	drawable->show();
+        }
+        
+        
+        // NOT TESTED YET
+        if(0)
+        {
+		GLVideoInputDrawable *drawable = new GLVideoInputDrawable("/dev/video0");
+		drawable->addShowAnimation(GLDrawable::AnimFade);
+		drawable->setRect(QRectF(0,0,1000,750));
+		glw->addDrawable(drawable);
+		drawable->show();
         }
         
         if(0)
