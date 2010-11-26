@@ -21,7 +21,8 @@ Target: pixelrevo-player
 					GLRectDrawable
 				Todo Items:
 					- (done) Add native cross fading support in GLVideoDrawable (since all items above will probably derive from GLVideoDrawable)
-					- Add a 'transmit video' property to Video(input|file) drawables
+					- (done) Add a 'transmit video' property to Video(input|file) drawables
+						- Called it 'videoSenderEnabled' - automatically allocates port if none set explicitly, starting from 7755 and up (tests to see if port is in use.) Port used can be queried from 'videoSenderPort' property, or set using same proprty.
 					- Add dropshadow support for image/text/rect
 					- Add outline support for image/text/rect/videos
 					- Add (explicit?) property animations for GLDrawable rect/opac props

@@ -119,6 +119,10 @@ class GLVideoDrawable : public GLDrawable
 	Q_PROPERTY(bool xfadeEnabled READ xfadeEnabled WRITE setXFadeEnabled);
 	Q_PROPERTY(int xfadeLength READ xfadeLength WRITE setXFadeLength);
 	
+	Q_PROPERTY(bool videoSenderEnabled READ videoSenderEnabled WRITE setVideoSenderEnabled);
+	Q_PROPERTY(int videoSenderPort READ videoSenderPort WRITE setVideoSenderPort);
+	
+	
 public:
 	GLVideoDrawable(QObject *parent=0);
 	~GLVideoDrawable();
@@ -156,6 +160,9 @@ public:
 	bool xfadeEnabled() { return m_xfadeEnabled; }
 	int xfadeLength() { return m_xfadeLength; }
 	
+	bool videoSenderEnabled() { return m_videoSenderEnabled; }
+	int videoSenderPort() { return m_videoSenderPort; }
+	
 public slots:
 	void setFpsLimit(float);
 	void setVisible(bool flag, bool waitOnFrameSignal=false);
@@ -188,6 +195,9 @@ public slots:
 	/// PS
 	// Returns false if format won't be acceptable
 	bool setVideoFormat(const VideoFormat& format, bool secondSource=false);
+	
+	void setVideoSenderEnabled(bool);
+	void setVideoSenderPort(int);
 
 signals:
 	void displayOptionsChanged(const VideoDisplayOptions&);
@@ -356,6 +366,12 @@ private:
 	QTime m_fadeTime;
 	double m_fadeValue;
 	bool m_fadeActive;
+	
+	class VideoSender *m_videoSender;
+	bool m_videoSenderEnabled;
+	int m_videoSenderPort;
+	
+	static int m_videoSenderPortAllocator;
 };
 
 #endif 

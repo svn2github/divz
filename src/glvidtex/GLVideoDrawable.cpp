@@ -6,6 +6,8 @@
 #include <QAbstractVideoSurface>
 #include "../livemix/VideoSource.h"
 
+#include "VideoSender.h"
+
 #include <QImageWriter>
 
 #include <string.h> 
@@ -170,6 +172,8 @@ QDebug operator<<(QDebug dbg, const VideoDisplayOptions &opts)
 }
 
 
+int GLVideoDrawable::m_videoSenderPortAllocator = 7755;
+
 GLVideoDrawable::GLVideoDrawable(QObject *parent)
 	: GLDrawable(parent)
 	, m_visiblePendingFrame(false)
@@ -196,6 +200,9 @@ GLVideoDrawable::GLVideoDrawable(QObject *parent)
 	, m_xfadeLength(700)
 	, m_fadeValue(0.)
 	, m_fadeActive(false)
+	, m_videoSender(0)
+	, m_videoSenderEnabled(false)
+	, m_videoSenderPort(-1)
 {
 	
 	m_imagePixelFormats
@@ -230,6 +237,66 @@ void GLVideoDrawable::setFpsLimit(float fps)
 	else
 	{
 		m_fpsRateLimiter.stop();
+	}
+}
+
+void GLVideoDrawable::setVideoSenderEnabled(bool flag)
+{
+	m_videoSenderEnabled = flag;
+	
+	if(m_videoSenderEnabled)
+	{
+		
+		if(!m_videoSender)
+			m_videoSender = new VideoSender();
+		
+		
+		if(m_videoSenderPort == -1)
+		{
+			bool done = false;
+			while(!done)
+			{
+				m_videoSenderPort = m_videoSenderPortAllocator ++;
+				if(m_videoSender->listen(QHostAddress::Any,m_videoSenderPort))
+				{
+					done = true;
+				}
+			}
+		}
+		else
+		{
+			if(!m_videoSender->listen(QHostAddress::Any,m_videoSenderPort))
+			{
+				qDebug() << "VideoServer could not start on port"<<m_videoSenderPort<<": "<<m_videoSender->errorString();
+				//return -1;
+			}
+		}
+		
+		if(m_source)
+		{
+			m_videoSender->setVideoSource(m_source);
+		}
+	}
+	else
+	{
+		m_videoSender->close();
+		delete m_videoSender;
+		m_videoSender = 0;
+	}
+}
+
+void GLVideoDrawable::setVideoSenderPort(int port)
+{
+	m_videoSenderPort = port;
+	
+	if(!m_videoSender)
+		// Port will be applied when video sender is enabled (above)
+		return;
+		
+	if(!m_videoSender->listen(QHostAddress::Any,m_videoSenderPort))
+	{
+		qDebug() << "VideoServer could not start on port"<<m_videoSenderPort<<": "<<m_videoSender->errorString();
+		//return -1;
 	}
 }
 
@@ -269,6 +336,9 @@ void GLVideoDrawable::setVideoSource(VideoSource *source)
 		setVideoFormat(m_source->videoFormat());
 		
 		frameReady();
+		
+		if(m_videoSender)
+			m_videoSender->setVideoSource(m_source);
 	}
 	else
 	{
