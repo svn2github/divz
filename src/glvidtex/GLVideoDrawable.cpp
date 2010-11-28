@@ -485,7 +485,7 @@ void GLVideoDrawable::setAlphaMask(const QImage &mask)
 			return;
 		}
 		
-		glWidget()->makeCurrent();
+		glWidget()->makeRenderContextCurrent();
 		if(m_alphaMask.size() != m_sourceRect.size().toSize())
 		{
 			//qDebug() << "GLVideoDrawable::setAlphaMask: "<<this<<",  Mask size and source size different, scaling";
@@ -851,7 +851,7 @@ void GLVideoDrawable::initGL()
 		return;
 		
 	if(glWidget())
-		glWidget()->makeCurrent();
+		glWidget()->makeRenderContextCurrent();
 		
 	//qDebug() << "GLVideoDrawable::initGL(): "<<(QObject*)this;
 		
@@ -924,7 +924,7 @@ bool GLVideoDrawable::setVideoFormat(const VideoFormat& format, bool secondSourc
 		
 	//qDebug() << "GLVideoDrawable::setVideoFormat(): \t Initalizing vertex and pixel shaders...";
 	
-	glWidget()->makeCurrent();
+	glWidget()->makeRenderContextCurrent();
 	
 	if(!secondSource)
 		m_validShader = false;
@@ -1493,7 +1493,7 @@ void GLVideoDrawable::updateTexture(bool secondSource)
 			return;
 		}
 		
-		glWidget()->makeCurrent();
+		glWidget()->makeRenderContextCurrent();
 		
 		if(!secondSource ? m_frame.isEmpty() : m_frame2.isEmpty())
 		{

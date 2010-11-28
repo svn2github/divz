@@ -4,6 +4,8 @@
 #include <QtGui>
 #include <QGLWidget>
 
+class QGLPixelBuffer;
+
 class GLDrawable;
 class GLWidget : public QGLWidget
 {
@@ -37,6 +39,8 @@ public:
 	
 	const QRectF & viewport() const { return m_viewport; }
 	const QSizeF & canvasSize() const { return m_canvasSize; }
+	
+	void makeRenderContextCurrent();
 	
 signals:
 	void clicked();
@@ -74,6 +78,10 @@ private:
 	QTransform m_transform;
 	QRectF m_viewport;
 	QSizeF m_canvasSize;
+	
+	QGLPixelBuffer * m_pbuffer;
+	bool m_hasDynamicTextureUpdate;
+	GLuint m_dynamicTexture;
 	
 };
 

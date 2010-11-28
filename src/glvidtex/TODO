@@ -17,7 +17,9 @@ Target: pixelrevo-player
 								- Query play time for remote controllers
 					GLVideoReceiverDrawable (done)
 					GLImageDrawable (done)
-					GLTextDrawable
+					GLTextDrawable (done)
+						- TODO:
+							Add properties for text shadow / color etc
 					GLRectDrawable
 				Todo Items:
 					- (done) Add native cross fading support in GLVideoDrawable (since all items above will probably derive from GLVideoDrawable)

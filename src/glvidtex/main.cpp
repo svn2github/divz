@@ -570,7 +570,7 @@ int main(int argc, char *argv[])
         	drawable->show();
         }
         
-        if(0)
+        if(1)
         {
         	GLVideoLoopDrawable *drawable = new GLVideoLoopDrawable("../data/Seasons_Loop_3_SD.mpg");
         	drawable->addShowAnimation(GLDrawable::AnimFade);
@@ -612,7 +612,7 @@ int main(int argc, char *argv[])
 		drawable->show();
         }
         
-        if(1)
+        if(0)
         {
 		GLTextDrawable *drawable = new GLTextDrawable("Hello, World!");
 		drawable->addShowAnimation(GLDrawable::AnimFade);

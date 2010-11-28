@@ -3,19 +3,32 @@
 #include "GLWidget.h"
 #include "GLDrawable.h"
 
+#include <math.h>
+
+#include <QGLPixelBuffer>
+
+#ifndef GL_MULTISAMPLE
+#define GL_MULTISAMPLE  0x809D
+#endif
+
 GLWidget::GLWidget(QWidget *parent, QGLWidget *shareWidget)
 	: QGLWidget(QGLFormat(QGL::SampleBuffers),parent, shareWidget)
 	, m_glInited(false)
 {
+	m_pbuffer = new QGLPixelBuffer(QSize(640,480), format(), this);
+	
 	setCanvasSize(QSizeF(1000.,750.));
 	// setViewport() will use canvas size by default to construct a rect
 	setViewport(QRectF());
 	//qDebug() << "GLWidget::doubleBuffered: "<<doubleBuffer();
+	
 }
 
 GLWidget::~GLWidget()
 {
-
+	m_pbuffer->releaseFromDynamicTexture();
+	glDeleteTextures(1, &m_dynamicTexture);
+	delete m_pbuffer;
 }
 
 QSize GLWidget::minimumSizeHint() const
@@ -48,6 +61,28 @@ void GLWidget::initializeGL()
 // 	glDepthFunc(GL_LEQUAL);						// The Type Of Depth Testing To Do
 // 	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);		// Really Nice Perspective Calculations
 	
+	m_pbuffer->makeCurrent();
+	{
+		glDisable(GL_DEPTH_TEST);
+		glEnable(GL_CULL_FACE);
+		
+		glEnable(GL_BLEND); 
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		//glEnable(GL_MULTISAMPLE) 
+		
+		glPolygonMode (GL_FRONT_AND_BACK, GL_FILL);
+		glEnable(GL_LINE_SMOOTH);
+		
+		
+		// generate a texture that has the same size/format as the pbuffer
+		m_dynamicTexture = m_pbuffer->generateDynamicTexture();
+	
+		// bind the dynamic texture to the pbuffer - this is a no-op under X11
+		m_hasDynamicTextureUpdate = m_pbuffer->bindToDynamicTexture(m_dynamicTexture);
+	}
+		
+	makeCurrent();
+	
 	m_glInited = true;
 	//qDebug() << "GLWidget::initializeGL()";
 	foreach(GLDrawable *drawable, m_drawables)
@@ -56,14 +91,34 @@ void GLWidget::initializeGL()
 	
 }
 
+void GLWidget::makeRenderContextCurrent()
+{
+	if(m_pbuffer)
+		m_pbuffer->makeCurrent();
+	else
+		makeCurrent();
+}
+
 void GLWidget::paintGL()
 {
 	//makeCurrent();
+	m_pbuffer->makeCurrent();
+	
+// 	//gluPerspective(45.0f,(GLfloat)w/(GLfloat)h,0.1f,100.0f);
+// 	glMatrixMode(GL_PROJECTION);
+// 	glLoadIdentity();
+// 	#ifdef QT_OPENGL_ES
+// 	//glOrthof(-1.0, +1.0, -1.0, +1.0, -90.0, +90.0);
+// 	#else
+// 	//glOrtho(-1.0, +1.0, -1.0, +1.0, -90.0, +90.0);
+// 	#endif
+// 	glOrtho(0, width(), height(), 0, -1, 1);
+// 	glMatrixMode(GL_MODELVIEW);
 	
 	qglClearColor(Qt::black);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
-	int counter = 0;
+	//int counter = 0;
 	foreach(GLDrawable *drawable, m_drawables)
 	{
 		//qDebug() << "GLWidget::paintGL(): ["<<counter++<<"] drawable->rect: "<<drawable->rect();
@@ -75,7 +130,70 @@ void GLWidget::paintGL()
 // 		qDebug() << "GLWidget::paintGL(): drawable:"<<((void*)drawable)<<", draw done";
 	}
 
+	glFlush();
+	
+	if (!m_hasDynamicTextureUpdate)
+        	m_pbuffer->updateDynamicTexture(m_dynamicTexture);
+    	
+    	makeCurrent();
+    	
+    	glClearColor(0.1f, 0.1f, 0.2f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glLoadIdentity(); // Reset The View
+	// Use the pbuffer as a texture to render the scene
+    	glBindTexture(GL_TEXTURE_2D, m_dynamicTexture);
+	
+	glEnable(GL_TEXTURE_2D);
+	
+	//glTranslatef(0.0f,0.0f,-3.42f);
+	
+  	glBegin(GL_QUADS);
+                // Front Face
+//              glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0f, -1.0f,  1.0f);
+//              glTexCoord2f(1.0f, 0.0f); glVertex3f( 1.0f, -1.0f,  1.0f);
+//              glTexCoord2f(1.0f, 1.0f); glVertex3f( 1.0f,  1.0f,  1.0f);
+//              glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0f,  1.0f,  1.0f);
 
+                QRectF rect(10,10,320,240);
+
+                qreal
+                        vx1 = rect.left(),
+                        vx2 = rect.right(),
+                        vy1 = rect.bottom(),
+                        vy2 = rect.top();
+
+//                 glTexCoord2f(0.0f, 0.0f); glVertex3f(vx1,vy1,  0.0f); // top left
+//                 glTexCoord2f(1.0f, 0.0f); glVertex3f(vx2,vy1,  0.0f); // top right
+//                 glTexCoord2f(1.0f, 1.0f); glVertex3f(vx2,vy2,  0.0f); // bottom right
+//                 glTexCoord2f(0.0f, 1.0f); glVertex3f(vx1,vy2,  0.0f); // bottom left
+
+		glTexCoord2f(0.0f, 0.0f); glVertex3f(vx1,vy1,  0.0f); // bottom left
+                glTexCoord2f(1.0f, 0.0f); glVertex3f(vx2,vy1,  0.0f); // bottom right
+                glTexCoord2f(1.0f, 1.0f); glVertex3f(vx2,vy2,  0.0f); // top right
+                glTexCoord2f(0.0f, 1.0f); glVertex3f(vx1,vy2,  0.0f); // top left
+
+// 		qreal inc = 5.;
+// 		//qDebug() << "params:"<<vy2<<vy1<<inc;
+// 		for(qreal x=vx1; x<vx2; x+=inc)
+// 		{
+// 			//qDebug() << "X:"<<x;
+// 			for(qreal y=vy1; y>vy2; y-=inc)
+// 			{
+// 				//qDebug() << "at:"<<x<<",y:"<<y;
+// 				glTexCoord2f(0.0f, 0.0f); glVertex3f(x,y,  0.0f); // bottom left
+// 				glTexCoord2f(1.0f, 0.0f); glVertex3f(x+inc,y,  0.0f); // bottom right
+// 				glTexCoord2f(1.0f, 1.0f); glVertex3f(x+inc,y+inc,  0.0f); // top right
+// 				glTexCoord2f(0.0f, 1.0f); glVertex3f(x,y+inc,  0.0f); // top left
+// 			}
+// 		}
+
+//              glTexCoord2f(0,0); glVertex3f( 0, 0,0); //lo
+//              glTexCoord2f(0,1); glVertex3f(256, 0,0); //lu
+//              glTexCoord2f(1,1); glVertex3f(256, 256,0); //ru
+//              glTexCoord2f(1,0); glVertex3f( 0, 256,0); //ro
+        glEnd();
+
+	
 // 	GLuint	texture[1]; // Storage For One Texture
 // 	QImage texOrig, texGL;
 // 	if ( !texOrig.load( "me2.jpg" ) )
@@ -196,6 +314,19 @@ void GLWidget::resizeGL(int width, int height)
 	glMatrixMode(GL_MODELVIEW);						// Select The Modelview Matrix
 	glLoadIdentity();							// Reset The Modelview Matrix
 	
+	
+	
+// 	glMatrixMode(GL_PROJECTION);
+// 	glLoadIdentity();
+// 	qreal aspect = (qreal)width / (qreal)(height ? height : 1);
+// 	#ifdef QT_OPENGL_ES
+// 	glFrustumf(-aspect, +aspect, -1.0, +1.0, 4.0, 15.0);
+// 	#else
+// 	glFrustum(-aspect, +aspect, -1.0, +1.0, 4.0, 15.0);
+// 	#endif
+// 	glMatrixMode(GL_MODELVIEW);
+	
+	
 	//qDebug() << "GLWidget::resizeGL: "<<width<<","<<height;
 	setViewport(viewport());
 }
@@ -203,7 +334,6 @@ void GLWidget::resizeGL(int width, int height)
 void GLWidget::setViewport(const QRectF& rect)
 {
 	m_viewport = rect;
-	//qDebug() << "GLWidget::setViewport: "<<rect;
 	
 	QRectF viewport = m_viewport;
 	if(!viewport.isValid())
@@ -214,12 +344,19 @@ void GLWidget::setViewport(const QRectF& rect)
 		viewport = QRectF(QPointF(0.,0.),canvas);
 	}
 	
+	//qDebug() << "GLWidget::setViewport: "<<viewport;
+	
 	float vw = viewport.width();
 	float vh = viewport.height();
 	
 	// Scale viewport size to our size
-	float sx = ((float)width())  / vw;
-	float sy = ((float)height()) / vh;
+// 	float sx = ((float)width())  / vw;
+// 	float sy = ((float)height()) / vh;
+	float winWidth  = (float)(m_pbuffer ? m_pbuffer->size().width()  : width());
+	float winHeight = (float)(m_pbuffer ? m_pbuffer->size().height() : height());
+	
+	float sx = winWidth  / vw;
+	float sy = winHeight / vh;
 	
 	//qDebug() << "
 
@@ -230,8 +367,8 @@ void GLWidget::setViewport(const QRectF& rect)
 	float scaledHeight = vh * scale;
 	
 	// Calculate centering 
-	float xt = (width()  - scaledWidth) /2;
-	float yt = (height() - scaledHeight)/2;
+	float xt = (winWidth  - scaledWidth) /2;
+	float yt = (winHeight - scaledHeight)/2;
 	
 	// Apply top-left translation for viewport location
 	float xtv = xt - viewport.left() * scale;
@@ -241,7 +378,7 @@ void GLWidget::setViewport(const QRectF& rect)
 	
 	//QSize size(width,height);
 	QSize size = viewport.size().toSize();
-	//qDebug() <<"GLWidget::setViewport(): size:"<<size;
+	//qDebug() <<"GLWidget::setViewport(): size:"<<size<<", scale:"<<scale<<", xtv:"<<xtv<<", tyv:"<<ytv<<", scaled size:"<<scaledWidth<<scaledHeight;
 	foreach(GLDrawable *drawable, m_drawables)
 		drawable->viewportResized(size);
 	
