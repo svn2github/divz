@@ -12,6 +12,8 @@
 #include "model/Slide.h"
 #include "model/SlideGroupFactory.h"
 
+#include "songdb/SongSlideGroup.h"
+
 #include <QTcpSocket>
 
 #include <QDateTime>
@@ -327,6 +329,7 @@ void ControlServer::screenLoadGroup(QTcpSocket *socket, const QStringList &path,
 		
 		SimpleTemplate tmpl(":/data/http/group.tmpl");
 		tmpl.param("list",outputSlideList);
+		tmpl.param("grid", dynamic_cast<SongSlideGroup*>(group) == NULL);
 		tmpl.param("groupidx", docModel->indexForGroup(group).row());
 		tmpl.param("grouptitle", group->assumedName());
 		

@@ -18,6 +18,18 @@ function xhttp()
 window.imageElementList = [];
 function gotoUrl(url)
 {
+	if(url == '/go/next')
+	{
+		if(incSlide(1))
+			return;
+	}
+	else
+	if(url == '/go/prev')
+	{
+		if(incSlide(-1))
+			return;
+	}
+	
 	if(window.RequestObject == null) {
 		window.RequestObject = xhttp();
 	}
@@ -29,6 +41,51 @@ function gotoUrl(url)
 		window.RequestObject.send(null);
 	}
 }
+
+function incSlide(dir)
+{
+	var elm = null;
+	var idx = 0;
+	for(var i=0;i<window.imageElementList.length;i++)
+	{
+		var otherElm = window.imageElementList[i];
+		if(otherElm.className == 'live')
+		{
+			//otherElm.className = 'notlive';
+			elm = otherElm;
+			idx = i;
+		}
+	}	
+	if(elm != null)// && typeof(elm.onclick) == 'function')
+	{
+		//elm.className = 'live';
+		
+		if(dir<0 && idx>0)
+		{
+			var nextElm = window.imageElementList[idx-1];
+			if(typeof(nextElm.onclick))
+			{
+				nextElm.onclick();
+				//nextElm.scrollIntoView(true);
+				return true;
+			}
+		}
+		else
+		if(dir>0 && idx<window.imageElementList.length-1)
+		{
+			var nextElm = window.imageElementList[idx+1];
+			if(typeof(nextElm.onclick))
+			{
+				nextElm.onclick();
+				//nextElm.scrollIntoView(false);
+				return true;
+			}
+		}
+	}
+	
+	return false;
+}
+
 function setSlide(url,elm)
 {
 	gotoUrl(url);
@@ -39,7 +96,31 @@ function setSlide(url,elm)
 			otherElm.className = 'notlive';
 	}	
 	elm.className = 'live';
+	checkTextForSlide(elm);
 }
+function checkTextForSlide(elm)
+{
+	if(!elm)
+	{
+		//alert("No Elm");
+		return;
+	}
+	var txt = elm.alt;
+	if(!txt)
+		txt = elm.getAttribute("alt");
+	var rx = new RegExp('(\\d) secs');
+	var m = rx.exec(txt);
+	if(!m)
+	{
+		//alert("No Match on '"+txt+"'");
+		return;
+	}
+	var sec = m[1];
+	var ms = parseInt(sec) * 1000
+	//alert(sec+","+ms);
+	setTimeout(function(){gotoUrl('/go/next')}, ms);
+}
+
 window.CurrentBlackState = null;
 window.CurrentClearState = null;
 function toggle_black(initialState,elm)

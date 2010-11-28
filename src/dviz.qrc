@@ -152,6 +152,8 @@
         <file>data/http/doc.tmpl</file>
         <file>data/http/group.tmpl</file>
         <file>data/http/inc-ctrl-toggles.tmpl</file>
+        <file>data/http/inc-group-grid.tmpl</file>
+        <file>data/http/inc-group-list.tmpl</file>
         <file>data/mime.types</file>
         <file>data/url-icon.png</file>
 
