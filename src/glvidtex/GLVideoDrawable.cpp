@@ -2073,7 +2073,7 @@ void GLVideoDrawable::paintGL()
 		
 		glBindTexture(GL_TEXTURE_2D, m_textureIds[0]);
 		
-		target = transform.mapRect(target);
+		QPolygonF points = transform.map(QPolygonF(target));
  		//qDebug() << "target: "<<target;
  		//qDebug() << "texture: "<<txLeft<<txBottom<<txTop<<txRight;
 		glBegin(GL_QUADS);
@@ -2093,11 +2093,17 @@ void GLVideoDrawable::paintGL()
 	// 			? source.bottom() / m_frameSize.height()
 	// 			: source.top()    / m_frameSize.height();
 			
-			glTexCoord2f(txLeft, txBottom); 	glVertex3f(vx1,vy1,  0.0f); // top left
-			glTexCoord2f(txRight, txBottom); 	glVertex3f(vx2,vy1,  0.0f); // top right
-			glTexCoord2f(txRight, txTop); 		glVertex3f(vx2,vy2,  0.0f); // bottom right
-			glTexCoord2f(txLeft, txTop); 		glVertex3f(vx1,vy2,  0.0f); // bottom left
-	
+			glTexCoord2f(txLeft, txBottom); 	glVertex3f(points[2].x(),points[2].y(),  0.0f); // top left
+			glTexCoord2f(txRight, txBottom); 	glVertex3f(points[1].x(),points[1].y(),  0.0f); // top right
+			glTexCoord2f(txRight, txTop); 		glVertex3f(points[0].x(),points[0].y(),  0.0f); // bottom right
+			glTexCoord2f(txLeft, txTop); 		glVertex3f(points[3].x(),points[3].y(),  0.0f); // bottom left
+			
+				/*
+			glTexCoord2f(0.0f, 0.0f); glVertex3f(vx1,vy1,  0.0f); // bottom left 2
+			glTexCoord2f(1.0f, 0.0f); glVertex3f(vx2,vy1,  0.0f); // bottom right 1
+			glTexCoord2f(1.0f, 1.0f); glVertex3f(vx2,vy2,  0.0f); // top right 0
+			glTexCoord2f(0.0f, 1.0f); glVertex3f(vx1,vy2,  0.0f); // top left 3
+	*/
 	// 		glTexCoord2f(0,0); glVertex3f( 0, 0,0); //lo
 	// 		glTexCoord2f(0,1); glVertex3f(256, 0,0); //lu
 	// 		glTexCoord2f(1,1); glVertex3f(256, 256,0); //ru

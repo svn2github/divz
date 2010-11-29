@@ -5,7 +5,7 @@
 
 #include <math.h>
 
-#include <QGLPixelBuffer>
+#include <QGLFramebufferObject>
 
 #ifndef GL_MULTISAMPLE
 #define GL_MULTISAMPLE  0x809D
@@ -14,8 +14,9 @@
 GLWidget::GLWidget(QWidget *parent, QGLWidget *shareWidget)
 	: QGLWidget(QGLFormat(QGL::SampleBuffers),parent, shareWidget)
 	, m_glInited(false)
+	, m_fbo(0)
 {
-	m_pbuffer = new QGLPixelBuffer(QSize(640,480), format(), this);
+	
 	
 	setCanvasSize(QSizeF(1000.,750.));
 	// setViewport() will use canvas size by default to construct a rect
@@ -26,9 +27,7 @@ GLWidget::GLWidget(QWidget *parent, QGLWidget *shareWidget)
 
 GLWidget::~GLWidget()
 {
-	m_pbuffer->releaseFromDynamicTexture();
-	glDeleteTextures(1, &m_dynamicTexture);
-	delete m_pbuffer;
+	delete m_fbo;
 }
 
 QSize GLWidget::minimumSizeHint() const
@@ -44,7 +43,7 @@ QSize GLWidget::sizeHint() const
 
 void GLWidget::initializeGL()
 {
-	//makeCurrent();
+	makeCurrent();
 	
 	glDisable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
@@ -61,40 +60,18 @@ void GLWidget::initializeGL()
 // 	glDepthFunc(GL_LEQUAL);						// The Type Of Depth Testing To Do
 // 	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);		// Really Nice Perspective Calculations
 	
-	m_pbuffer->makeCurrent();
-	{
-		glDisable(GL_DEPTH_TEST);
-		glEnable(GL_CULL_FACE);
+	m_fbo  = new QGLFramebufferObject(QSize(640,480));
 		
-		glEnable(GL_BLEND); 
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		//glEnable(GL_MULTISAMPLE) 
-		
-		glPolygonMode (GL_FRONT_AND_BACK, GL_FILL);
-		glEnable(GL_LINE_SMOOTH);
-		
-		
-		// generate a texture that has the same size/format as the pbuffer
-		m_dynamicTexture = m_pbuffer->generateDynamicTexture();
-	
-		// bind the dynamic texture to the pbuffer - this is a no-op under X11
-		m_hasDynamicTextureUpdate = m_pbuffer->bindToDynamicTexture(m_dynamicTexture);
-	}
-		
-	makeCurrent();
-	
 	m_glInited = true;
 	//qDebug() << "GLWidget::initializeGL()";
 	foreach(GLDrawable *drawable, m_drawables)
 		drawable->initGL();
-	
-	
 }
 
 void GLWidget::makeRenderContextCurrent()
 {
-	if(m_pbuffer)
-		m_pbuffer->makeCurrent();
+	if(m_fbo)
+		m_fbo->bind();
 	else
 		makeCurrent();
 }
@@ -102,7 +79,6 @@ void GLWidget::makeRenderContextCurrent()
 void GLWidget::paintGL()
 {
 	//makeCurrent();
-	m_pbuffer->makeCurrent();
 	
 // 	//gluPerspective(45.0f,(GLfloat)w/(GLfloat)h,0.1f,100.0f);
 // 	glMatrixMode(GL_PROJECTION);
@@ -114,6 +90,8 @@ void GLWidget::paintGL()
 // 	#endif
 // 	glOrtho(0, width(), height(), 0, -1, 1);
 // 	glMatrixMode(GL_MODELVIEW);
+	
+	m_fbo->bind();
 	
 	qglClearColor(Qt::black);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -132,16 +110,15 @@ void GLWidget::paintGL()
 
 	glFlush();
 	
-	if (!m_hasDynamicTextureUpdate)
-        	m_pbuffer->updateDynamicTexture(m_dynamicTexture);
-    	
-    	makeCurrent();
+	m_fbo->release();
+	
+    	//makeCurrent();
     	
     	glClearColor(0.1f, 0.1f, 0.2f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glLoadIdentity(); // Reset The View
 	// Use the pbuffer as a texture to render the scene
-    	glBindTexture(GL_TEXTURE_2D, m_dynamicTexture);
+    	glBindTexture(GL_TEXTURE_2D, m_fbo->texture());
 	
 	glEnable(GL_TEXTURE_2D);
 	
@@ -154,7 +131,8 @@ void GLWidget::paintGL()
 //              glTexCoord2f(1.0f, 1.0f); glVertex3f( 1.0f,  1.0f,  1.0f);
 //              glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0f,  1.0f,  1.0f);
 
-                QRectF rect(10,10,320,240);
+                //QRectF rect(10,10,320,240);
+                QRectF rect(0,0,width(),height());
 
                 qreal
                         vx1 = rect.left(),
@@ -301,6 +279,20 @@ void GLWidget::resizeGL(int width, int height)
 	//glViewport(0,0,width,height); //(width - side) / 2, (height - side) / 2, side, side);
 	glViewport(0,0,width,height); //(width - side) / 2, (height - side) / 2, side, side);
 	
+	//qDebug() << "GLWidget::resizeGL(): width:"<<width<<", height:"<<height;
+	
+	if(m_fbo && 
+		(m_fbo->size().width()  != width ||
+		 m_fbo->size().height() != height))
+		
+	{
+		delete m_fbo;
+		QSize size(width,height);
+		m_fbo = new QGLFramebufferObject(size);
+		
+		//qDebug() << "GLWidget::resizeGL(): New FBO size:"<<size;
+	}
+	
 	if(height == 0)
 		height = 1;
 		
@@ -352,8 +344,8 @@ void GLWidget::setViewport(const QRectF& rect)
 	// Scale viewport size to our size
 // 	float sx = ((float)width())  / vw;
 // 	float sy = ((float)height()) / vh;
-	float winWidth  = (float)(m_pbuffer ? m_pbuffer->size().width()  : width());
-	float winHeight = (float)(m_pbuffer ? m_pbuffer->size().height() : height());
+	float winWidth  = (float)(m_fbo ? m_fbo->size().width()  : width());
+	float winHeight = (float)(m_fbo ? m_fbo->size().height() : height());
 	
 	float sx = winWidth  / vw;
 	float sy = winHeight / vh;

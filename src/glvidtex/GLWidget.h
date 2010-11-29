@@ -4,7 +4,7 @@
 #include <QtGui>
 #include <QGLWidget>
 
-class QGLPixelBuffer;
+class QGLFramebufferObject;
 
 class GLDrawable;
 class GLWidget : public QGLWidget
@@ -64,6 +64,7 @@ protected:
 	void mouseMoveEvent(QMouseEvent *event);
 	void mouseReleaseEvent(QMouseEvent *event);
 	
+	
 
 private:
 // 	QPoint lastPos;
@@ -79,9 +80,7 @@ private:
 	QRectF m_viewport;
 	QSizeF m_canvasSize;
 	
-	QGLPixelBuffer * m_pbuffer;
-	bool m_hasDynamicTextureUpdate;
-	GLuint m_dynamicTexture;
+	QGLFramebufferObject * m_fbo;
 	
 };
 
