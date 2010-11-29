@@ -15,8 +15,14 @@ GLWidget::GLWidget(QWidget *parent, QGLWidget *shareWidget)
 	: QGLWidget(QGLFormat(QGL::SampleBuffers),parent, shareWidget)
 	, m_glInited(false)
 	, m_fbo(0)
+	, m_cornerTranslationsEnabled(true)
 {
 	
+	m_cornerTranslations 
+		<<  QPointF(50,50)
+		<<  QPointF(0,0)
+		<<  QPointF(-50,-50)
+		<<  QPointF(0,0);
 	
 	setCanvasSize(QSizeF(1000.,750.));
 	// setViewport() will use canvas size by default to construct a rect
@@ -40,6 +46,40 @@ QSize GLWidget::sizeHint() const
 	return QSize(400,300);
 }
 
+void GLWidget::setCornerTranslations(const QPolygonF& p)
+{
+	m_cornerTranslations = p;
+	updateGL();
+}
+	
+void GLWidget::setTopLeftTranslation(const QPointF& p)
+{
+	m_cornerTranslations[0] = p;
+	updateGL();
+}
+
+void GLWidget::setTopRightTranslation(const QPointF& p)
+{
+	m_cornerTranslations[1] = p;
+	updateGL();
+}
+
+void GLWidget::setBottomLeft(const QPointF& p)
+{
+	m_cornerTranslations[2] = p;
+	updateGL();
+}
+
+void GLWidget::setBottomRight(const QPointF& p)
+{
+	m_cornerTranslations[3] = p;
+	updateGL();
+}
+
+void GLWidget::enableCornerTranslations(bool flag)
+{
+	m_cornerTranslationsEnabled = flag;
+}
 
 void GLWidget::initializeGL()
 {
@@ -60,13 +100,29 @@ void GLWidget::initializeGL()
 // 	glDepthFunc(GL_LEQUAL);						// The Type Of Depth Testing To Do
 // 	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);		// Really Nice Perspective Calculations
 	
-	m_fbo  = new QGLFramebufferObject(QSize(640,480));
+	m_fbo  = new QGLFramebufferObject(QSize(16,16));
 		
 	m_glInited = true;
 	//qDebug() << "GLWidget::initializeGL()";
 	foreach(GLDrawable *drawable, m_drawables)
 		drawable->initGL();
+		
+	//resizeGL(width(),height());
+	//setViewport(viewport());
+	
 }
+
+void GLWidget::showEvent(QShowEvent *)
+{
+	QTimer::singleShot(50,this,SLOT(postInitGL()));
+}
+
+
+void GLWidget::postInitGL()
+{
+	resizeGL(width(),height());
+}
+
 
 void GLWidget::makeRenderContextCurrent()
 {
@@ -114,7 +170,8 @@ void GLWidget::paintGL()
 	
     	//makeCurrent();
     	
-    	glClearColor(0.1f, 0.1f, 0.2f, 1.0f);
+    	//glClearColor(0.1f, 0.1f, 0.2f, 1.0f);
+    	qglClearColor(Qt::black);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glLoadIdentity(); // Reset The View
 	// Use the pbuffer as a texture to render the scene
@@ -145,25 +202,56 @@ void GLWidget::paintGL()
 //                 glTexCoord2f(1.0f, 1.0f); glVertex3f(vx2,vy2,  0.0f); // bottom right
 //                 glTexCoord2f(0.0f, 1.0f); glVertex3f(vx1,vy2,  0.0f); // bottom left
 
-		glTexCoord2f(0.0f, 0.0f); glVertex3f(vx1,vy1,  0.0f); // bottom left
-                glTexCoord2f(1.0f, 0.0f); glVertex3f(vx2,vy1,  0.0f); // bottom right
-                glTexCoord2f(1.0f, 1.0f); glVertex3f(vx2,vy2,  0.0f); // top right
-                glTexCoord2f(0.0f, 1.0f); glVertex3f(vx1,vy2,  0.0f); // top left
+		if(1)
+		{
+			glTexCoord2f(0.0f, 0.0f); glVertex3f(vx1 + m_cornerTranslations[3].x(),vy1 + m_cornerTranslations[3].y(),  0.0f); // bottom left // 3
+			glTexCoord2f(1.0f, 0.0f); glVertex3f(vx2 + m_cornerTranslations[2].x(),vy1 + m_cornerTranslations[2].y(),  0.0f); // bottom right // 2
+			glTexCoord2f(1.0f, 1.0f); glVertex3f(vx2 + m_cornerTranslations[1].x(),vy2 + m_cornerTranslations[1].y(),  0.0f); // top right  // 1
+			glTexCoord2f(0.0f, 1.0f); glVertex3f(vx1 + m_cornerTranslations[0].x(),vy2 + m_cornerTranslations[0].y(),  0.0f); // top left // 0
+		}
 
-// 		qreal inc = 5.;
-// 		//qDebug() << "params:"<<vy2<<vy1<<inc;
-// 		for(qreal x=vx1; x<vx2; x+=inc)
-// 		{
-// 			//qDebug() << "X:"<<x;
-// 			for(qreal y=vy1; y>vy2; y-=inc)
-// 			{
-// 				//qDebug() << "at:"<<x<<",y:"<<y;
-// 				glTexCoord2f(0.0f, 0.0f); glVertex3f(x,y,  0.0f); // bottom left
-// 				glTexCoord2f(1.0f, 0.0f); glVertex3f(x+inc,y,  0.0f); // bottom right
-// 				glTexCoord2f(1.0f, 1.0f); glVertex3f(x+inc,y+inc,  0.0f); // top right
-// 				glTexCoord2f(0.0f, 1.0f); glVertex3f(x,y+inc,  0.0f); // top left
-// 			}
-// 		}
+		if(0)
+		{
+			qreal inc = fabs(vy2-vy1)/10.;
+			qreal dx = fabs(vx2-vx1);
+			qreal dy = fabs(vy2-vy1);
+			qreal xf = inc/dx;
+			qreal yf = inc/dy;
+			//qDebug() << "params:"<<xf<<yf;
+			for(qreal x=vx1; x<vx2; x+=inc)
+			{
+				qreal tx = x/dx;
+				//qDebug() << "tx:"<<tx;
+				for(qreal y=vy1; y>=vy2; y-=inc)
+				{
+					qreal ty = 1.-(y/dy);
+					//qDebug() << "Y:"<<y;
+					//qDebug() << "at:"<<x<<",y:"<<y;
+// 					glTexCoord2f(0.0f, 0.0f); glVertex3f(x,y,  0.0f); // bottom left
+// 					glTexCoord2f(1.0f, 0.0f); glVertex3f(x+inc,y,  0.0f); // bottom right
+// 					glTexCoord2f(1.0f, 1.0f); glVertex3f(x+inc,y+inc,  0.0f); // top right
+// 					glTexCoord2f(0.0f, 1.0f); glVertex3f(x,y+inc,  0.0f); // top left
+					
+					
+// 					glTexCoord2f(0.0f, 0.0f); glVertex3f(x,y+inc,  0.0f); // bottom left
+// 					glTexCoord2f(1.0f, 0.0f); glVertex3f(x+inc,y+inc,  0.0f); // bottom right
+// 					glTexCoord2f(1.0f, 1.0f); glVertex3f(x+inc,y,  0.0f); // top right
+// 					glTexCoord2f(0.0f, 1.0f); glVertex3f(x,y,  0.0f); // top left
+
+					glTexCoord2f(tx, ty);
+								glVertex3f(x,y+inc,  0.0f); // bottom left
+					
+					glTexCoord2f(tx+xf, ty);	
+								glVertex3f(x+inc,y+inc,  0.0f); // bottom right
+					
+					glTexCoord2f(tx+xf, ty+yf); 
+								glVertex3f(x+inc,y,  0.0f); // top right
+					
+					glTexCoord2f(tx, ty+yf); 
+								glVertex3f(x,y,  0.0f); // top left
+				}
+			}
+		}
 
 //              glTexCoord2f(0,0); glVertex3f( 0, 0,0); //lo
 //              glTexCoord2f(0,1); glVertex3f(256, 0,0); //lu

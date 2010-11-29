@@ -42,6 +42,9 @@ public:
 	
 	void makeRenderContextCurrent();
 	
+	const QPolygonF & cornerTranslations() { return m_cornerTranslations; }
+	bool cornerTranslationsEnabled() { return m_cornerTranslationsEnabled; }
+	
 signals:
 	void clicked();
 	void canvasSizeChanged(const QSizeF&);
@@ -52,8 +55,19 @@ public slots:
 	void setCanvasSize(const QSizeF&);
 	void setCanvasSize(double x,double y) { setCanvasSize(QSizeF(x,y)); }
 	
+	void setCornerTranslations(const QPolygonF&);
+	
+	void setTopLeftTranslation(const QPointF&);
+	void setTopRightTranslation(const QPointF&);
+	void setBottomLeft(const QPointF&);
+	void setBottomRight(const QPointF&);
+	
+	void enableCornerTranslations(bool flag=true);
+	
 protected slots:
 	void zIndexChanged();
+	
+	void postInitGL();
 	
 protected:
 	void sortDrawables();
@@ -63,6 +77,7 @@ protected:
 	void mousePressEvent(QMouseEvent *event);
 	void mouseMoveEvent(QMouseEvent *event);
 	void mouseReleaseEvent(QMouseEvent *event);
+	void showEvent(QShowEvent *);
 	
 	
 
@@ -81,6 +96,9 @@ private:
 	QSizeF m_canvasSize;
 	
 	QGLFramebufferObject * m_fbo;
+	
+	bool m_cornerTranslationsEnabled;
+	QPolygonF m_cornerTranslations;
 	
 };
 

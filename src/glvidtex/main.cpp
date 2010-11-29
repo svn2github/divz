@@ -579,9 +579,7 @@ int main(int argc, char *argv[])
         	drawable->show();
         }
         
-        
-        // NOT TESTED YET
-        if(0)
+	if(0)
         {
 		GLVideoInputDrawable *drawable = new GLVideoInputDrawable("/dev/video0");
 		drawable->addShowAnimation(GLDrawable::AnimFade);
@@ -590,11 +588,10 @@ int main(int argc, char *argv[])
 		drawable->show();
         }
         
-        // NOT TESTED YET
         if(0)
         {
-		QString testFile = "/root/Wildlife.wmv";
-		
+		//QString testFile = "/root/Wildlife.wmv";
+		QString testFile = "/opt/qt-mobility-opensource-src-1.0.1/examples/player/dsc_7721.avi";
 		GLVideoFileDrawable *drawable = new GLVideoFileDrawable(testFile);
 		drawable->addShowAnimation(GLDrawable::AnimFade);
 		drawable->setRect(QRectF(0,0,1000,750));

@@ -15,7 +15,7 @@ VideoSurfaceAdapter::VideoSurfaceAdapter(QtVideoSource *e, QObject *parent)
 	, m_pixelFormat(QVideoFrame::Format_Invalid)
 	, imageFormat(QImage::Format_Invalid)
 {
-	qDebug() << "VideoSurfaceAdapter::ctor()";
+	//qDebug() << "VideoSurfaceAdapter::ctor()";
 	
 }
 
@@ -88,7 +88,7 @@ bool VideoSurfaceAdapter::start(const QVideoSurfaceFormat &format)
 
 void VideoSurfaceAdapter::stop()
 {
-	qDebug() << "VideoSurfaceAdapter::stop()";
+	//qDebug() << "VideoSurfaceAdapter::stop()";
 	
 	currentFrame = QVideoFrame();
 	targetRect = QRect();
@@ -139,7 +139,7 @@ bool VideoSurfaceAdapter::present(const QVideoFrame &frame)
 				currentFrame.bytesPerLine(),
 				imageFormat);
 				
-// 			qDebug()<< "VideoSurfaceAdapter::present: Presenting image with "<<image.byteCount()<<" bytes";
+ 			//qDebug()<< "VideoSurfaceAdapter::present: Presenting image with "<<image.byteCount()<<" bytes";
 				
 			emitter->present(image); //.copy());
 		
@@ -271,6 +271,7 @@ void QtVideoSource::run()
 
 void QtVideoSource::present(QImage image)
 {
+	//qDebug() << "QtVideoSource::present()";
 	// TODO is there some way to get the FPS from the QMediaPlayer or friends?
 	m_frame = VideoFrame(image,1000/60);
  	//qDebug()<< "QtVideoSource::present: Got image, size:"<<image.size();

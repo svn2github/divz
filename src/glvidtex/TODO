@@ -8,6 +8,9 @@ Target: pixelrevo-player
 			GLWidget / GLDrawable
 				Drawable Items:
 					GLVideoInputDrawable (done)
+						- TODO:
+							Crossfading doesnt *quite* work smoothly enough -
+							I think this is due to the initaliztion of the V4L subsystem for the second camera - if the V4L input is already open, it *should* crossfade fine....
 					GLVideoLoopDrawable (done)
 					GLVideoFileDrawable (done)
 						- TODO: 
