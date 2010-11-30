@@ -112,7 +112,7 @@ class GLVideoDrawable : public GLDrawable
 	
 	Q_PROPERTY(QPointF textureOffset READ textureOffset WRITE setTextureOffset);
 	
-	Q_PROPERTY(VideoSource* videoSource READ videoSource WRITE setVideoSource);
+	//Q_PROPERTY(VideoSource* videoSource READ videoSource WRITE setVideoSource);
 	
 	Q_PROPERTY(Qt::AspectRatioMode aspectRatioMode READ aspectRatioMode WRITE setAspectRatioMode);
 	

@@ -26,7 +26,8 @@ HEADERS       = GLWidget.h \
 		GLVideoInputDrawable.h \
 		GLVideoFileDrawable.h \
 		GLVideoReceiverDrawable.h \
-		GLTextDrawable.h
+		GLTextDrawable.h \
+		GLSceneGroup.h
 		
 SOURCES       = GLWidget.cpp \
 		main.cpp \
@@ -47,7 +48,9 @@ SOURCES       = GLWidget.cpp \
 		GLVideoInputDrawable.cpp \
 		GLVideoFileDrawable.cpp \
 		GLVideoReceiverDrawable.cpp \
-		GLTextDrawable.cpp
+		GLTextDrawable.cpp \
+		GLSceneGroup.cpp \
+		MetaObjectUtil.cpp
 
 unix: {
 	HEADERS += \

@@ -3,6 +3,7 @@
 
 #include "GLVideoDrawable.h"
 
+
 class GLVideoFileDrawable : public GLVideoDrawable
 {
 	Q_OBJECT

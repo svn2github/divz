@@ -19,9 +19,9 @@ GLWidget::GLWidget(QWidget *parent, QGLWidget *shareWidget)
 {
 	
 	m_cornerTranslations 
-		<<  QPointF(50,50)
 		<<  QPointF(0,0)
-		<<  QPointF(-50,-50)
+		<<  QPointF(0,0)
+		<<  QPointF(0,0)
 		<<  QPointF(0,0);
 	
 	setCanvasSize(QSizeF(1000.,750.));

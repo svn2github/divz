@@ -278,6 +278,7 @@ void GLVideoDrawable::setVideoSenderEnabled(bool flag)
 		}
 	}
 	else
+	if(m_videoSender)
 	{
 		m_videoSender->close();
 		delete m_videoSender;

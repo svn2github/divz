@@ -20,9 +20,14 @@
 #include "VideoSender.h"
 #include "VideoReceiver.h"
 
+#include "GLSceneGroup.h"
+
 #ifdef HAS_QT_VIDEO_SOURCE
 #include "QtVideoSource.h"
 #endif
+
+#include "MetaObjectUtil.h"
+
 
 GLDrawable * addCamera(GLWidget *glw, QString camera = "")
 {
@@ -442,7 +447,17 @@ int main(int argc, char *argv[])
 
 	QApplication app(argc, argv);
 	
+	qApp->setApplicationName("GLVidTex");
+	qApp->setOrganizationName("Josiah Bryan");
+	qApp->setOrganizationDomain("mybryanlife.com");
 	
+	MetaObjectUtil_Register(GLImageDrawable);
+	MetaObjectUtil_Register(GLTextDrawable);
+	MetaObjectUtil_Register(GLVideoFileDrawable);
+	MetaObjectUtil_Register(GLVideoInputDrawable);
+	MetaObjectUtil_Register(GLVideoLoopDrawable);
+	MetaObjectUtil_Register(GLVideoReceiverDrawable);
+
 	if(0)
 	{
 		QGraphicsView *graphicsView = new QGraphicsView();
@@ -555,156 +570,206 @@ int main(int argc, char *argv[])
 		
 	QFormLayout * tb = createToggleBox();
 	
-	if(0)
-	{
-	
-        	addButtons(tb, addQtSource(glw));
-        }
-        
-        if(0)
-        {
-        	GLImageDrawable *drawable = new GLImageDrawable("me2.jpg");
-        	drawable->addShowAnimation(GLDrawable::AnimFade);
-        	drawable->setRect(QRectF(0,0,1000,750));
-        	glw->addDrawable(drawable);
-        	drawable->show();
-        }
-        
-        if(1)
-        {
-        	GLVideoLoopDrawable *drawable = new GLVideoLoopDrawable("../data/Seasons_Loop_3_SD.mpg");
-        	drawable->addShowAnimation(GLDrawable::AnimFade);
-        	drawable->setRect(QRectF(0,0,1000,750));
-        	glw->addDrawable(drawable);
-        	drawable->show();
-        }
-        
-	if(0)
-        {
-		GLVideoInputDrawable *drawable = new GLVideoInputDrawable("/dev/video0");
-		drawable->addShowAnimation(GLDrawable::AnimFade);
-		drawable->setRect(QRectF(0,0,1000,750));
-		glw->addDrawable(drawable);
-		drawable->show();
-        }
-        
-        if(0)
-        {
-		//QString testFile = "/root/Wildlife.wmv";
-		QString testFile = "/opt/qt-mobility-opensource-src-1.0.1/examples/player/dsc_7721.avi";
-		GLVideoFileDrawable *drawable = new GLVideoFileDrawable(testFile);
-		drawable->addShowAnimation(GLDrawable::AnimFade);
-		drawable->setRect(QRectF(0,0,1000,750));
-		glw->addDrawable(drawable);
-		drawable->show();
-        }
-        
-        // NOT TESTED YET
-        if(0)
-        {
-		GLVideoReceiverDrawable *drawable = new GLVideoReceiverDrawable("localhost",7755);
-		drawable->addShowAnimation(GLDrawable::AnimFade);
-		drawable->setRect(QRectF(0,0,1000,750));
-		glw->addDrawable(drawable);
-		drawable->show();
-        }
-        
-        if(0)
-        {
-		GLTextDrawable *drawable = new GLTextDrawable("Hello, World!");
-		drawable->addShowAnimation(GLDrawable::AnimFade);
-		drawable->setRect(QRectF(0,0,1000,750));
-		glw->addDrawable(drawable);
-		drawable->show();
-        }
-        
-        if(0)
-        {
-        	GLVideoDrawable *drawable = new GLVideoDrawable();
-        	
-        	VideoThread * source = new VideoThread();
-		source->setVideo("../data/Seasons_Loop_3_SD.mpg");
-		//source->setVideo("../samples/BlueFish/EssentialsVol05_Abstract_Media/HD/Countdowns/Abstract_Countdown_3_HD.mp4");
-		//source->setVideo("../samples/BlueFish/EssentialsVol05_Abstract_Media/SD/Countdowns/Abstract_Countdown_3_SD.mpg");
-		
-		source->start();
-		
-		drawable->setVideoSource(source);
-		
-        	drawable->addShowAnimation(GLDrawable::AnimFade);
-        	drawable->setRect(QRectF(0,0,1000,750));
-        	glw->addDrawable(drawable);
-        	drawable->show();
-        }
-        
-        
 	
 	if(0)
 	{
-		#define COMPILE_SENDER
-		//#define COMPILE_RECEIVER
+		GLScene *scene = new GLScene();
+	
+		if(0)
+		{
 		
-		#ifdef COMPILE_SENDER
-	// 	#undef HAS_QT_VIDEO_SOURCE
-	// 	#ifdef HAS_QT_VIDEO_SOURCE
-	// 		addButtons(tb, addQtSource(glw));
-	// 	#else
-			GLDrawable *d;
-	/*		d = addCamera(glw,"/dev/video0");
-			if(d)
-			{*/
+			addButtons(tb, addQtSource(glw));
+		}
+		
+		if(0)
+		{
+			GLImageDrawable *drawable = new GLImageDrawable("me2.jpg");
+			drawable->addShowAnimation(GLDrawable::AnimFade);
+			drawable->setRect(QRectF(0,0,1000,750));
+			glw->addDrawable(drawable);
+			drawable->show();
+		}
+		
+		if(1)
+		{
+			GLVideoLoopDrawable *drawable = new GLVideoLoopDrawable("../data/Seasons_Loop_3_SD.mpg");
+			drawable->addShowAnimation(GLDrawable::AnimFade);
+			drawable->setRect(QRectF(0,0,1000,750));
+			//glw->addDrawable(drawable);
+			drawable->show();
 			
-	// 			d = addCamera(glw,"/dev/video0");
-	// 			if(d)
-	// 				addButtons(tb,d); 
-				
-				d = addCamera(glw,"/dev/video0");
+			scene->addDrawable(drawable);
+		}
+		
+		if(0)
+		{
+			GLVideoInputDrawable *drawable = new GLVideoInputDrawable("/dev/video0");
+			drawable->addShowAnimation(GLDrawable::AnimFade);
+			drawable->setRect(QRectF(0,0,1000,750));
+			glw->addDrawable(drawable);
+			drawable->show();
+		}
+		
+		if(0)
+		{
+			//QString testFile = "/root/Wildlife.wmv";
+			QString testFile = "/opt/qt-mobility-opensource-src-1.0.1/examples/player/dsc_7721.avi";
+			GLVideoFileDrawable *drawable = new GLVideoFileDrawable(testFile);
+			drawable->addShowAnimation(GLDrawable::AnimFade);
+			drawable->setRect(QRectF(0,0,1000,750));
+			glw->addDrawable(drawable);
+			drawable->show();
+		}
+		
+		// NOT TESTED YET
+		if(0)
+		{
+			GLVideoReceiverDrawable *drawable = new GLVideoReceiverDrawable("localhost",7755);
+			drawable->addShowAnimation(GLDrawable::AnimFade);
+			drawable->setRect(QRectF(0,0,1000,750));
+			glw->addDrawable(drawable);
+			drawable->show();
+		}
+		
+		if(0)
+		{
+			GLTextDrawable *drawable = new GLTextDrawable("Hello, World!");
+			drawable->addShowAnimation(GLDrawable::AnimFade);
+			drawable->setRect(QRectF(0,0,1000,750));
+			glw->addDrawable(drawable);
+			drawable->show();
+		}
+		
+		if(0)
+		{
+			GLVideoDrawable *drawable = new GLVideoDrawable();
+			
+			VideoThread * source = new VideoThread();
+			source->setVideo("../data/Seasons_Loop_3_SD.mpg");
+			//source->setVideo("../samples/BlueFish/EssentialsVol05_Abstract_Media/HD/Countdowns/Abstract_Countdown_3_HD.mp4");
+			//source->setVideo("../samples/BlueFish/EssentialsVol05_Abstract_Media/SD/Countdowns/Abstract_Countdown_3_SD.mpg");
+			
+			source->start();
+			
+			drawable->setVideoSource(source);
+			
+			drawable->addShowAnimation(GLDrawable::AnimFade);
+			drawable->setRect(QRectF(0,0,1000,750));
+			glw->addDrawable(drawable);
+			drawable->show();
+		}
+		
+		
+		
+		if(0)
+		{
+			#define COMPILE_SENDER
+			//#define COMPILE_RECEIVER
+			
+			#ifdef COMPILE_SENDER
+		// 	#undef HAS_QT_VIDEO_SOURCE
+		// 	#ifdef HAS_QT_VIDEO_SOURCE
+		// 		addButtons(tb, addQtSource(glw));
+		// 	#else
+				GLDrawable *d;
+		/*		d = addCamera(glw,"/dev/video0");
 				if(d)
-					addButtons(tb,d); 
-	
-	/*		}
-			else
-			*/
-				//addButtons(tb,addStaticSource(glw));
-	// 	#endif
+				{*/
+				
+		// 			d = addCamera(glw,"/dev/video0");
+		// 			if(d)
+		// 				addButtons(tb,d); 
+					
+					d = addCamera(glw,"/dev/video0");
+					if(d)
+						addButtons(tb,d); 
 		
-	// 	addButtons(tb,addSecondSource(glw));	
-		//addButtons(tb,addVideoBug(glw));
-		addButtons(tb,addTextOverlay(glw));
+		/*		}
+				else
+				*/
+					//addButtons(tb,addStaticSource(glw));
+		// 	#endif
+			
+		// 	addButtons(tb,addSecondSource(glw));	
+			//addButtons(tb,addVideoBug(glw));
+			addButtons(tb,addTextOverlay(glw));
+			
+			#endif
+			
+			#ifdef COMPILE_RECEIVER
+			
+			addButtons(tb,addReceiver(glw));
+			
+			#endif
+		}
 		
-		#endif
+		//addButtons(tb,addStaticSource(glw));
 		
-		#ifdef COMPILE_RECEIVER
+	/*	
+		glw->setCanvasSize(764,572);
 		
-		addButtons(tb,addReceiver(glw));
+		glw->resize(glw->canvasSize().width(),glw->canvasSize().height());
 		
- 		#endif
- 	}
+		double ar = 572./764.;
+		//glw->setViewport(QRectF(-764,-572,764*3,572*3));
+		glw->setViewport(QRectF(0,0,200.,200.*ar));
+		
+		glw->show();
+		
+		QPropertyAnimation *animation = new QPropertyAnimation(glw, "viewport");
+		animation->setDuration(10000);
+		//animation->setStartValue(QRect(0, 0, 100, 30));
+		QRect endRect = QRect(764-200, 572-200.*ar, 200.,200.*ar);
+		//qDebug() << "End Rect: "<<endRect<<", start:"<<glw->viewport();
+		animation->setEndValue(endRect);
+		animation->start();
+		//QTimer::singleShot(500,animation, SLOT(start()));
+	*/	
 	
-        //addButtons(tb,addStaticSource(glw));
-	
-/*	
-	glw->setCanvasSize(764,572);
-	
-	glw->resize(glw->canvasSize().width(),glw->canvasSize().height());
-	
-	double ar = 572./764.;
-	//glw->setViewport(QRectF(-764,-572,764*3,572*3));
-	glw->setViewport(QRectF(0,0,200.,200.*ar));
+		scene->setGLWidget(glw);
+		
+		QString fileName = "test.gtx";
+		QFile file(fileName);
+		// Open file
+		if (!file.open(QIODevice::WriteOnly))
+		{
+			QMessageBox::warning(0, QObject::tr("File Error"), QObject::tr("Error saving writing file '%1'").arg(fileName));
+			//throw 0;
+			//return;
+		}
+		else
+		{
+			
+			//QByteArray array;
+			//QDataStream stream(&array, QIODevice::WriteOnly);
+			//QVariantMap map;
+			
+			file.write(scene->toByteArray());
+			file.close();
+		}
+	}
+	else
+	{
+		GLScene *scene = new GLScene();
+		
+		QString fileName = "test.gtx";
+		QFile file(fileName);
+		if (!file.open(QIODevice::ReadOnly)) 
+		{
+			QMessageBox::critical(0, QObject::tr("Loading error"), QObject::tr("Unable to read file %1").arg(fileName));
+			//return;
+		}
+		else
+		{
+			QByteArray array = file.readAll();
+			scene->fromByteArray(array);
+			
+			scene->setGLWidget(glw);
+		}
+	}
 	
 	glw->show();
-	
-	QPropertyAnimation *animation = new QPropertyAnimation(glw, "viewport");
-	animation->setDuration(10000);
-	//animation->setStartValue(QRect(0, 0, 100, 30));
-	QRect endRect = QRect(764-200, 572-200.*ar, 200.,200.*ar);
-	//qDebug() << "End Rect: "<<endRect<<", start:"<<glw->viewport();
-	animation->setEndValue(endRect);
-	animation->start();
-	//QTimer::singleShot(500,animation, SLOT(start()));
-*/	
-
-	glw->show();
+		
 	
 	
 	int x = app.exec();
