@@ -24,6 +24,8 @@ class GLWidget : public QGLWidget
 	// By default, the viewport is an invalid rectangle, which will instruct the GLWidget to look at the entire canvas.
 	Q_PROPERTY(QRectF viewport READ viewport WRITE setViewport);
 	
+	Q_PROPERTY(Qt::AspectRatioMode aspectRatioMode READ aspectRatioMode WRITE setAspectRatioMode);
+	
 public:
 	GLWidget(QWidget *parent = 0, QGLWidget *shareWidget = 0);
 	~GLWidget();
@@ -45,6 +47,8 @@ public:
 	const QPolygonF & cornerTranslations() { return m_cornerTranslations; }
 	bool cornerTranslationsEnabled() { return m_cornerTranslationsEnabled; }
 	
+	Qt::AspectRatioMode aspectRatioMode() { return m_aspectRatioMode; }
+	
 signals:
 	void clicked();
 	void canvasSizeChanged(const QSizeF&);
@@ -63,6 +67,8 @@ public slots:
 	void setBottomRight(const QPointF&);
 	
 	void enableCornerTranslations(bool flag=true);
+	
+	void setAspectRatioMode(Qt::AspectRatioMode mode);
 	
 protected slots:
 	void zIndexChanged();
@@ -99,6 +105,8 @@ private:
 	
 	bool m_cornerTranslationsEnabled;
 	QPolygonF m_cornerTranslations;
+	
+	Qt::AspectRatioMode m_aspectRatioMode;
 	
 };
 

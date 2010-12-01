@@ -571,7 +571,7 @@ int main(int argc, char *argv[])
 	QFormLayout * tb = createToggleBox();
 	
 	
-	if(0)
+	if(1)
 	{
 		GLScene *scene = new GLScene();
 	
@@ -594,11 +594,15 @@ int main(int argc, char *argv[])
 		{
 			GLVideoLoopDrawable *drawable = new GLVideoLoopDrawable("../data/Seasons_Loop_3_SD.mpg");
 			drawable->addShowAnimation(GLDrawable::AnimFade);
-			drawable->setRect(QRectF(0,0,1000,750));
+			drawable->setRect(QRectF(0,0,1600,900));
+			//drawable->setAspectRatioMode(Qt::IgnoreAspectRatio);
 			//glw->addDrawable(drawable);
 			drawable->show();
 			
 			scene->addDrawable(drawable);
+			
+			glw->setCanvasSize(QSizeF(1600.,900.));
+			glw->setAspectRatioMode(Qt::IgnoreAspectRatio);
 		}
 		
 		if(0)

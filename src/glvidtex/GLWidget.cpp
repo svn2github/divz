@@ -16,6 +16,7 @@ GLWidget::GLWidget(QWidget *parent, QGLWidget *shareWidget)
 	, m_glInited(false)
 	, m_fbo(0)
 	, m_cornerTranslationsEnabled(true)
+	, m_aspectRatioMode(Qt::KeepAspectRatio)
 {
 	
 	m_cornerTranslations 
@@ -361,10 +362,6 @@ void GLWidget::sortDrawables()
 
 void GLWidget::resizeGL(int width, int height)
 {
-	//makeCurrent();
-	
-// 	int side = qMin(width, height);
-	//glViewport(0,0,width,height); //(width - side) / 2, (height - side) / 2, side, side);
 	glViewport(0,0,width,height); //(width - side) / 2, (height - side) / 2, side, side);
 	
 	//qDebug() << "GLWidget::resizeGL(): width:"<<width<<", height:"<<height;
@@ -411,6 +408,16 @@ void GLWidget::resizeGL(int width, int height)
 	setViewport(viewport());
 }
 	
+	
+void GLWidget::setAspectRatioMode(Qt::AspectRatioMode mode)
+{
+	//qDebug() << "GLVideoDrawable::setAspectRatioMode: "<<this<<", mode:"<<mode<<", int:"<<(int)mode;
+	m_aspectRatioMode = mode;
+	setViewport(viewport());
+	updateGL();
+}
+
+
 void GLWidget::setViewport(const QRectF& rect)
 {
 	m_viewport = rect;
@@ -430,8 +437,6 @@ void GLWidget::setViewport(const QRectF& rect)
 	float vh = viewport.height();
 	
 	// Scale viewport size to our size
-// 	float sx = ((float)width())  / vw;
-// 	float sy = ((float)height()) / vh;
 	float winWidth  = (float)(m_fbo ? m_fbo->size().width()  : width());
 	float winHeight = (float)(m_fbo ? m_fbo->size().height() : height());
 	
@@ -440,21 +445,28 @@ void GLWidget::setViewport(const QRectF& rect)
 	
 	//qDebug() << "
 
-	float scale = qMin(sx,sy);
+	//float scale = qMin(sx,sy);
+	if (m_aspectRatioMode != Qt::IgnoreAspectRatio)
+	{
+		if(sx < sy)
+			sy = sx;
+		else
+			sx = sy;
+	}
 	
 	// Center viewport in our rectangle
-	float scaledWidth  = vw * scale;
-	float scaledHeight = vh * scale;
+	float scaledWidth  = vw * sx;//scale;
+	float scaledHeight = vh * sy;//scale;
 	
 	// Calculate centering 
 	float xt = (winWidth  - scaledWidth) /2;
 	float yt = (winHeight - scaledHeight)/2;
 	
 	// Apply top-left translation for viewport location
-	float xtv = xt - viewport.left() * scale;
-	float ytv = yt - viewport.top()  * scale;
+	float xtv = xt - viewport.left() * sx;//scale;
+	float ytv = yt - viewport.top()  * sy;//scale;
 	
-	setTransform(QTransform().translate(xtv,ytv).scale(scale,scale));
+	setTransform(QTransform().translate(xtv,ytv).scale(sx,sy));//scale,scale));
 	
 	//QSize size(width,height);
 	QSize size = viewport.size().toSize();
