@@ -3,6 +3,7 @@
 
 #include <QtGui>
 #include <QGLWidget>
+#include <QGLShaderProgram>
 
 class QGLFramebufferObject;
 
@@ -25,6 +26,14 @@ class GLWidget : public QGLWidget
 	Q_PROPERTY(QRectF viewport READ viewport WRITE setViewport);
 	
 	Q_PROPERTY(Qt::AspectRatioMode aspectRatioMode READ aspectRatioMode WRITE setAspectRatioMode);
+	
+	Q_PROPERTY(int brightness READ brightness WRITE setBrightness);
+	Q_PROPERTY(int contrast READ contrast WRITE setContrast);
+	Q_PROPERTY(int hue READ hue WRITE setHue);
+	Q_PROPERTY(int saturation READ saturation WRITE setSaturation);
+	
+	Q_PROPERTY(bool flipHorizontal READ flipHorizontal WRITE setFlipHorizontal);
+	Q_PROPERTY(bool flipVertical READ flipVertical WRITE setFlipVertical);
 	
 public:
 	GLWidget(QWidget *parent = 0, QGLWidget *shareWidget = 0);
@@ -49,6 +58,16 @@ public:
 	
 	Qt::AspectRatioMode aspectRatioMode() { return m_aspectRatioMode; }
 	
+	QImage alphaMask() { return m_alphaMask; }
+	
+	int brightness() const { return m_brightness; }
+	int contrast() const { return m_contrast; }
+	int hue() const { return m_hue; }
+	int saturation() const { return m_saturation; }
+	
+	bool flipHorizontal() { return m_flipHorizontal; }
+	bool flipVertical() { return m_flipVertical; }
+	
 signals:
 	void clicked();
 	void canvasSizeChanged(const QSizeF&);
@@ -70,6 +89,16 @@ public slots:
 	
 	void setAspectRatioMode(Qt::AspectRatioMode mode);
 	
+	void setAlphaMask(const QImage&);
+	
+	void setBrightness(int brightness);
+	void setContrast(int contrast);
+	void setHue(int hue);
+	void setSaturation(int saturation);
+	
+	void setFlipHorizontal(bool flip);
+	void setFlipVertical(bool flip);
+	
 protected slots:
 	void zIndexChanged();
 	
@@ -85,14 +114,11 @@ protected:
 	void mouseReleaseEvent(QMouseEvent *event);
 	void showEvent(QShowEvent *);
 	
-	
+	void updateColors(int brightness, int contrast, int hue, int saturation);
 
 private:
-// 	QPoint lastPos;
-// 	int xRot;
-// 	int yRot;
-// 	int zRot;
 	void initShaders();
+	void initAlphaMask();
 	
 	QList<GLDrawable*> m_drawables;
 	
@@ -117,6 +143,23 @@ private:
 	_glActiveTexture glActiveTexture;
 	#endif
 	
+	QImage m_alphaMask;
+	QImage m_alphaMask_preScaled;
+	GLuint m_alphaTextureId;
+	qint64 m_uploadedCacheKey;
+	
+	QMatrix4x4 m_colorMatrix;
+	
+	bool m_colorsDirty;
+	
+	bool m_flipHorizontal;
+	bool m_flipVertical;
+// 	QPointF cropTopLeft;
+// 	QPointF cropBottomRight;
+	int m_brightness;
+	int m_contrast;
+	int m_hue;
+	int m_saturation;
 };
 
 #endif

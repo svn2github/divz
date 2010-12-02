@@ -757,6 +757,8 @@ int main(int argc, char *argv[])
 			
 			file.write(scene->toByteArray());
 			file.close();
+			
+			qDebug() << "Debug: Saved SceneID: "<< scene->sceneId();
 		}
 	}
 	else
@@ -776,6 +778,8 @@ int main(int argc, char *argv[])
 			scene->fromByteArray(array);
 			
 			scene->setGLWidget(glw);
+			
+			qDebug() << "Debug: Loaded SceneID: "<< scene->sceneId();
 		}
 	}
 	

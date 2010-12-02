@@ -21,6 +21,13 @@ GLWidget::GLWidget(QWidget *parent, QGLWidget *shareWidget)
 	, m_aspectRatioMode(Qt::KeepAspectRatio)
 	, m_program(0)
 	, m_useShaders(false)
+	, m_colorsDirty(true)
+	, m_flipHorizontal(false)
+	, m_flipVertical(true)
+	, m_brightness(0)
+	, m_contrast(0)
+	, m_hue(0)
+	, m_saturation(0)
 {
 	
 	m_cornerTranslations 
@@ -109,35 +116,27 @@ void GLWidget::initializeGL()
 	m_program = new QGLShaderProgram(context(), this);
 	
 	#ifndef QT_OPENGL_ES
-	glActiveTexture = (_glActiveTexture)glWidget()->context()->getProcAddress(QLatin1String("glActiveTexture"));
+	glActiveTexture = (_glActiveTexture)context()->getProcAddress(QLatin1String("glActiveTexture"));
 	#endif
 	
 	const GLubyte *str = glGetString(GL_EXTENSIONS); 
 	m_useShaders = (strstr((const char *)str, "GL_ARB_fragment_shader") != NULL);
 	
-	if(1)
+	if(0)
 	{
 		qDebug() << "GLWidget::initGL: Forcing NO GLSL shaders";
 		m_useShaders = false;
 	}
 	
+	if(0)
+	{
+		qDebug() << "GLWidget::initGL: Forcing GLSL shaders";
+		m_useShaders = true;
+	}
+	
 	initShaders();
 	
-	glGenTextures(1, &m_alphaTextureId);
-	
-	if(m_alphaMask.isNull())
-	{
-		m_alphaMask = QImage(1,1,QImage::Format_RGB32);
-		m_alphaMask.fill(Qt::black);
- 		//qDebug() << "GLVideoDrawable::initGL: BLACK m_alphaMask.size:"<<m_alphaMask.size();
- 		setAlphaMask(m_alphaMask);
-	}
-	else
-	{
- 		//qDebug() << "GLVideoDrawable::initGL: Alpha mask already set, m_alphaMask.size:"<<m_alphaMask.size();
-		setAlphaMask(m_alphaMask_preScaled);
-	}
-	
+	initAlphaMask();
 		
 	m_glInited = true;
 	//qDebug() << "GLWidget::initializeGL()";
@@ -152,26 +151,29 @@ void GLWidget::initializeGL()
 void GLWidget::initShaders()
 {
 	
-	const char *fragmentProgram = qt_glsl_xrgbShaderProgram;
+	const char *fragmentProgram = 
+		qt_glsl_rgbShaderProgram;
+		//qt_glsl_argbShaderProgram;
+		//qt_glsl_xrgbShaderProgram;
 	
 	if(!m_program->shaders().isEmpty())
 		m_program->removeAllShaders();
 	
 	if(!QGLShaderProgram::hasOpenGLShaderPrograms())
 	{
-		qDebug() << "GLSL Shaders Not Supported by this driver, this program will NOT function as expected and will likely crash.";
+		qDebug() << "GLWidget::initShaders: GLSL Shaders Not Supported by this driver, this program will NOT function as expected and will likely crash.";
 		return;// false;
 	}
 
 	if (!fragmentProgram) 
 	{
-		qDebug() << "No shader program found - format not supported.";
+		qDebug() << "GLWidget::initShaders: No shader program found - format not supported.";
 		return;// false;
 	} 
 	else 
 	if (!m_program->addShaderFromSourceCode(QGLShader::Vertex, qt_glsl_vertexShaderProgram)) 
 	{
-		qWarning("GLWidget: Vertex shader compile error %s",
+		qWarning("GLWidget::initShaders: Vertex shader compile error %s",
 			qPrintable(m_program->log()));
 		//error = QAbstractVideoSurface::ResourceError;
 		return;// false;
@@ -180,7 +182,7 @@ void GLWidget::initShaders()
 	else 
 	if (!m_program->addShaderFromSourceCode(QGLShader::Fragment, fragmentProgram)) 
 	{
-		qWarning("GLWidget: Shader compile error %s", qPrintable(m_program->log()));
+		qWarning("GLWidget::initShaders: Shader compile error %s", qPrintable(m_program->log()));
 		//error = QAbstractVideoSurface::ResourceError;
 		m_program->removeAllShaders();
 		return;// false;
@@ -188,10 +190,29 @@ void GLWidget::initShaders()
 	else 
 	if(!m_program->link()) 
 	{
-		qWarning("GLWidget: Shader link error %s", qPrintable(m_program->log()));
+		qWarning("GLWidget::initShaders: Shader link error %s", qPrintable(m_program->log()));
 		m_program->removeAllShaders();
 		return;// false;
 	} 
+}
+
+void GLWidget::initAlphaMask()
+{
+	glGenTextures(1, &m_alphaTextureId);
+	
+	// Alpha mask may have been set prior to initAlphaMask() due to the fact init...() is called from initalizeGL()
+	if(m_alphaMask.isNull())
+	{
+		m_alphaMask = QImage(1,1,QImage::Format_RGB32);
+		m_alphaMask.fill(Qt::black);
+ 		//qDebug() << "GLVideoDrawable::initGL: BLACK m_alphaMask.size:"<<m_alphaMask.size();
+ 		setAlphaMask(m_alphaMask);
+	}
+	else
+	{
+ 		//qDebug() << "GLVideoDrawable::initGL: Alpha mask already set, m_alphaMask.size:"<<m_alphaMask.size();
+		setAlphaMask(m_alphaMask_preScaled);
+	}
 }
 
 void GLWidget::showEvent(QShowEvent *)
@@ -214,8 +235,7 @@ void GLWidget::makeRenderContextCurrent()
 		makeCurrent();
 }
 
-
-void GLVideoDrawable::setAlphaMask(const QImage &mask)
+void GLWidget::setAlphaMask(const QImage &mask)
 {
 	m_alphaMask_preScaled = mask;
 	m_alphaMask = mask;
@@ -231,19 +251,20 @@ void GLVideoDrawable::setAlphaMask(const QImage &mask)
  		return;
 	}
 	
-	if(m_glInited && glWidget())
+	if(m_glInited)
 	{
-		if(m_sourceRect.size().toSize() == QSize(0,0))
+		QSize targetSize = m_fbo->size();
+		if(targetSize == QSize(0,0))
 		{
 			//qDebug() << "GLVideoDrawable::setAlphaMask: "<<this<<", Not scaling or setting mask, video size is 0x0";
 			return;
 		}
 		
-		glWidget()->makeRenderContextCurrent();
-		if(m_alphaMask.size() != m_sourceRect.size().toSize())
+		makeCurrent();
+		if(m_alphaMask.size() != targetSize)
 		{
 			//qDebug() << "GLVideoDrawable::setAlphaMask: "<<this<<",  Mask size and source size different, scaling";
-			m_alphaMask = m_alphaMask.scaled(m_sourceRect.size().toSize());
+			m_alphaMask = m_alphaMask.scaled(targetSize);
 		}
 		
 		if(m_alphaMask.format() != QImage::Format_ARGB32)
@@ -287,19 +308,7 @@ void GLVideoDrawable::setAlphaMask(const QImage &mask)
 
 void GLWidget::paintGL()
 {
-	//makeCurrent();
-	
-// 	//gluPerspective(45.0f,(GLfloat)w/(GLfloat)h,0.1f,100.0f);
-// 	glMatrixMode(GL_PROJECTION);
-// 	glLoadIdentity();
-// 	#ifdef QT_OPENGL_ES
-// 	//glOrthof(-1.0, +1.0, -1.0, +1.0, -90.0, +90.0);
-// 	#else
-// 	//glOrtho(-1.0, +1.0, -1.0, +1.0, -90.0, +90.0);
-// 	#endif
-// 	glOrtho(0, width(), height(), 0, -1, 1);
-// 	glMatrixMode(GL_MODELVIEW);
-	
+	// Render all drawables into the FBO
 	m_fbo->bind();
 	
 	qglClearColor(Qt::black);
@@ -332,19 +341,28 @@ void GLWidget::paintGL()
 	
 	m_fbo->release();
 	
-    	//makeCurrent();
-    	
-    	//glClearColor(0.1f, 0.1f, 0.2f, 1.0f);
-    	qglClearColor(Qt::black);
+
+	// Now render the FBO to the screen, applying a variety of transforms/effects:
+	// 1. Corner distortion ("keystoning") - can move any of the four corners individually
+	// 2. Alpha masking - using a PNG image as a mask, using only the alpha channel to blend/black out areas of the final image
+	// 3. Brightness/Contrast/Hue/Saturation adjustments - Adjust the B/C/H/S over the entire output image, not just individual drawables
+	// The alpha masking and BCHS adjustments require pixel shaders - therefore, if the system does not support them (<OpenGL 2), then
+	// only the first item (corner distortion) will work.
+	qglClearColor(Qt::black);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glLoadIdentity(); // Reset The View
-	// Use the fbo as a texture to render the scene
-    	
+	
 	glEnable(GL_TEXTURE_2D);
 	
-	
-    	if(m_useShaders)
+	if(m_useShaders)
 	{
+		if (m_colorsDirty) 
+		{
+			//qDebug() << "Updating color matrix";
+			updateColors(m_brightness, m_contrast, m_hue, m_saturation);
+			m_colorsDirty = false;
+		}
+		
 		QRectF source = QRect(0,0,m_fbo->size().width(),m_fbo->size().height());
 		QRectF target = rect();
 		
@@ -410,23 +428,20 @@ void GLWidget::paintGL()
 	
 		const GLfloat vertexCoordArray[] =
 		{
-			target.left()     , target.bottom() + 1, //(GLfloat)zIndex(),
-			target.right() + 1, target.bottom() + 1, //(GLfloat)zIndex(),
-			target.left()     , target.top(), 	//(GLfloat)zIndex(),
-			target.right() + 1, target.top()//, 	(GLfloat)zIndex()
+			target.left()      + m_cornerTranslations[3].x(), target.bottom() + 1 + m_cornerTranslations[3].x(), //(GLfloat)zIndex(),
+			target.right() + 1 - m_cornerTranslations[2].x(), target.bottom() + 1 - m_cornerTranslations[2].y(), //(GLfloat)zIndex(),
+			target.left()      + m_cornerTranslations[0].x(), target.top() + m_cornerTranslations[0].y(), 	//(GLfloat)zIndex(),
+			target.right() + 1 - m_cornerTranslations[1].x(), target.top() - m_cornerTranslations[1].y()//, 	(GLfloat)zIndex()
 		};
 		
-		bool flipHorizontal = false;
-		bool flipVertical = false;
 		
+		const GLfloat txLeft   = m_flipHorizontal ? source.right()  / m_fbo->size().width() : source.left()  / m_fbo->size().width();
+		const GLfloat txRight  = m_flipHorizontal ? source.left()   / m_fbo->size().width() : source.right() / m_fbo->size().width();
 		
-		const GLfloat txLeft   = flipHorizontal ? source.right()  / m_fbo->size().width() : source.left()  / m_fbo->size().width();
-		const GLfloat txRight  = flipHorizontal ? source.left()   / m_fbo->size().width() : source.right() / m_fbo->size().width();
-		
-		const GLfloat txTop    = !flipVertical //m_scanLineDirection == QVideoSurfaceFormat::TopToBottom
+		const GLfloat txTop    = !m_flipVertical //m_scanLineDirection == QVideoSurfaceFormat::TopToBottom
 			? source.top()    / m_fbo->size().height()
 			: source.bottom() / m_fbo->size().height();
-		const GLfloat txBottom = !flipVertical //m_scanLineDirection == QVideoSurfaceFormat::TopToBottom
+		const GLfloat txBottom = !m_flipVertical //m_scanLineDirection == QVideoSurfaceFormat::TopToBottom
 			? source.bottom() / m_fbo->size().height()
 			: source.top()    / m_fbo->size().height();
 	
@@ -621,7 +636,109 @@ void GLWidget::paintGL()
 // 	
 	
 }
+
+
+void GLWidget::setFlipHorizontal(bool value)
+{
+	m_flipHorizontal = value;
+	updateGL();
+}
+
+void GLWidget::setFlipVertical(bool value)
+{
+	m_flipVertical = value;
+	updateGL();
+}
+
+/*!
+*/
+void GLWidget::setBrightness(int brightness)
+{
+	m_brightness = brightness;
+	m_colorsDirty = true;
+	updateGL();
+}
+
+/*!
+*/
+void GLWidget::setContrast(int contrast)
+{
+	m_contrast = contrast;
+	m_colorsDirty = true;
+	updateGL();
+}
+
+/*!
+*/
+void GLWidget::setHue(int hue)
+{
+	m_hue = hue;
+	m_colorsDirty = true;
+	updateGL();
+}
+
+/*!
+*/
+void GLWidget::setSaturation(int saturation)
+{
+	m_saturation = saturation;
+	m_colorsDirty = true;
+	updateGL();
+}
+
+void GLWidget::updateColors(int brightness, int contrast, int hue, int saturation)
+{
+	const qreal b = brightness / 200.0;
+	const qreal c = contrast / 200.0 + 1.0;
+	const qreal h = hue / 200.0;
+	const qreal s = saturation / 200.0 + 1.0;
 	
+	const qreal cosH = qCos(M_PI * h);
+	const qreal sinH = qSin(M_PI * h);
+	
+	const qreal h11 = -0.4728 * cosH + 0.7954 * sinH + 1.4728;
+	const qreal h21 = -0.9253 * cosH - 0.0118 * sinH + 0.9523;
+	const qreal h31 =  0.4525 * cosH + 0.8072 * sinH - 0.4524;
+	
+	const qreal h12 =  1.4728 * cosH - 1.3728 * sinH - 1.4728;
+	const qreal h22 =  1.9253 * cosH + 0.5891 * sinH - 0.9253;
+	const qreal h32 = -0.4525 * cosH - 1.9619 * sinH + 0.4525;
+	
+	const qreal h13 =  1.4728 * cosH - 0.2181 * sinH - 1.4728;
+	const qreal h23 =  0.9253 * cosH + 1.1665 * sinH - 0.9253;
+	const qreal h33 =  0.5475 * cosH - 1.3846 * sinH + 0.4525;
+	
+	const qreal sr = (1.0 - s) * 0.3086;
+	const qreal sg = (1.0 - s) * 0.6094;
+	const qreal sb = (1.0 - s) * 0.0820;
+	
+	const qreal sr_s = sr + s;
+	const qreal sg_s = sg + s;
+	const qreal sb_s = sr + s;
+	
+	const float m4 = (s + sr + sg + sb) * (0.5 - 0.5 * c + b);
+	
+	m_colorMatrix(0, 0) = c * (sr_s * h11 + sg * h21 + sb * h31);
+	m_colorMatrix(0, 1) = c * (sr_s * h12 + sg * h22 + sb * h32);
+	m_colorMatrix(0, 2) = c * (sr_s * h13 + sg * h23 + sb * h33);
+	m_colorMatrix(0, 3) = m4;
+	
+	m_colorMatrix(1, 0) = c * (sr * h11 + sg_s * h21 + sb * h31);
+	m_colorMatrix(1, 1) = c * (sr * h12 + sg_s * h22 + sb * h32);
+	m_colorMatrix(1, 2) = c * (sr * h13 + sg_s * h23 + sb * h33);
+	m_colorMatrix(1, 3) = m4;
+	
+	m_colorMatrix(2, 0) = c * (sr * h11 + sg * h21 + sb_s * h31);
+	m_colorMatrix(2, 1) = c * (sr * h12 + sg * h22 + sb_s * h32);
+	m_colorMatrix(2, 2) = c * (sr * h13 + sg * h23 + sb_s * h33);
+	m_colorMatrix(2, 3) = m4;
+	
+	m_colorMatrix(3, 0) = 0.0;
+	m_colorMatrix(3, 1) = 0.0;
+	m_colorMatrix(3, 2) = 0.0;
+	m_colorMatrix(3, 3) = 1.0;
+}
+
 void GLWidget::addDrawable(GLDrawable *item)
 {
 	//makeCurrent();
