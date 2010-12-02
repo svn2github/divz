@@ -27,7 +27,7 @@ GLWidget::GLWidget(QWidget *parent, QGLWidget *shareWidget)
 	
 	setCanvasSize(QSizeF(1000.,750.));
 	// setViewport() will use canvas size by default to construct a rect
-	setViewport(QRectF());
+	//setViewport(QRectF(QPointF(0,0),canvasSize()));
 	//qDebug() << "GLWidget::doubleBuffered: "<<doubleBuffer();
 	
 }
@@ -153,6 +153,15 @@ void GLWidget::paintGL()
 	qglClearColor(Qt::black);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
+	QRectF viewport = m_viewport;
+	if(!viewport.isValid())
+	{
+		QSizeF canvas = m_canvasSize;
+		if(canvas.isNull() || !canvas.isValid())
+			canvas = QSizeF(1000.,750.);
+		viewport = QRectF(QPointF(0.,0.),canvas);
+	}
+	
 	//int counter = 0;
 	foreach(GLDrawable *drawable, m_drawables)
 	{
@@ -160,7 +169,9 @@ void GLWidget::paintGL()
 		
 // 		qDebug() << "GLWidget::paintGL(): drawable:"<<((void*)drawable)<<", isvis:"<<drawable->isVisible();
 		// Don't draw if not visible or if opacity == 0
-		if(drawable->isVisible() && drawable->opacity() > 0)
+		if(drawable->isVisible() && 
+		   drawable->opacity() > 0 &&
+		   drawable->rect().intersects(viewport))
 			drawable->paintGL();
 // 		qDebug() << "GLWidget::paintGL(): drawable:"<<((void*)drawable)<<", draw done";
 	}
@@ -175,7 +186,7 @@ void GLWidget::paintGL()
     	qglClearColor(Qt::black);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glLoadIdentity(); // Reset The View
-	// Use the pbuffer as a texture to render the scene
+	// Use the fbo as a texture to render the scene
     	glBindTexture(GL_TEXTURE_2D, m_fbo->texture());
 	
 	glEnable(GL_TEXTURE_2D);
@@ -206,8 +217,8 @@ void GLWidget::paintGL()
 		if(1)
 		{
 			glTexCoord2f(0.0f, 0.0f); glVertex3f(vx1 + m_cornerTranslations[3].x(),vy1 + m_cornerTranslations[3].y(),  0.0f); // bottom left // 3
-			glTexCoord2f(1.0f, 0.0f); glVertex3f(vx2 + m_cornerTranslations[2].x(),vy1 + m_cornerTranslations[2].y(),  0.0f); // bottom right // 2
-			glTexCoord2f(1.0f, 1.0f); glVertex3f(vx2 + m_cornerTranslations[1].x(),vy2 + m_cornerTranslations[1].y(),  0.0f); // top right  // 1
+			glTexCoord2f(1.0f, 0.0f); glVertex3f(vx2 - m_cornerTranslations[2].x(),vy1 - m_cornerTranslations[2].y(),  0.0f); // bottom right // 2
+			glTexCoord2f(1.0f, 1.0f); glVertex3f(vx2 - m_cornerTranslations[1].x(),vy2 - m_cornerTranslations[1].y(),  0.0f); // top right  // 1
 			glTexCoord2f(0.0f, 1.0f); glVertex3f(vx1 + m_cornerTranslations[0].x(),vy2 + m_cornerTranslations[0].y(),  0.0f); // top left // 0
 		}
 
@@ -470,7 +481,7 @@ void GLWidget::setViewport(const QRectF& rect)
 	
 	//QSize size(width,height);
 	QSize size = viewport.size().toSize();
-	//qDebug() <<"GLWidget::setViewport(): size:"<<size<<", scale:"<<scale<<", xtv:"<<xtv<<", tyv:"<<ytv<<", scaled size:"<<scaledWidth<<scaledHeight;
+	//qDebug() <<"GLWidget::setViewport:  size:"<<size<<", sx:"<<sx<<",sy:"<<sy<<", xtv:"<<xtv<<", ytv:"<<ytv<<", scaled size:"<<scaledWidth<<scaledHeight;
 	foreach(GLDrawable *drawable, m_drawables)
 		drawable->viewportResized(size);
 	

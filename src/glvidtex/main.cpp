@@ -581,16 +581,17 @@ int main(int argc, char *argv[])
 			addButtons(tb, addQtSource(glw));
 		}
 		
-		if(0)
+		if(1)
 		{
-			GLImageDrawable *drawable = new GLImageDrawable("me2.jpg");
+			//GLImageDrawable *drawable = new GLImageDrawable("me2.jpg");
+			GLImageDrawable *drawable = new GLImageDrawable("Pm5544.jpg");
 			drawable->addShowAnimation(GLDrawable::AnimFade);
 			drawable->setRect(QRectF(0,0,1000,750));
 			glw->addDrawable(drawable);
 			drawable->show();
 		}
 		
-		if(1)
+		if(0)
 		{
 			GLVideoLoopDrawable *drawable = new GLVideoLoopDrawable("../data/Seasons_Loop_3_SD.mpg");
 			drawable->addShowAnimation(GLDrawable::AnimFade);
@@ -602,6 +603,7 @@ int main(int argc, char *argv[])
 			scene->addDrawable(drawable);
 			
 			glw->setCanvasSize(QSizeF(1600.,900.));
+			glw->setViewport(QRectF(0.,0.,1600.,900.));
 			glw->setAspectRatioMode(Qt::IgnoreAspectRatio);
 		}
 		
@@ -709,26 +711,31 @@ int main(int argc, char *argv[])
 		
 		//addButtons(tb,addStaticSource(glw));
 		
-	/*	
-		glw->setCanvasSize(764,572);
+	
 		
-		glw->resize(glw->canvasSize().width(),glw->canvasSize().height());
+		//glw->resize(glw->canvasSize().width(),glw->canvasSize().height());
 		
-		double ar = 572./764.;
-		//glw->setViewport(QRectF(-764,-572,764*3,572*3));
-		glw->setViewport(QRectF(0,0,200.,200.*ar));
+		if(0)
+		{
+			double cw = 764., ch=572.;
+			glw->setCanvasSize(cw,ch);
+			double ar = cw/ch;
+			//glw->setViewport(QRectF(-764,-572,764*3,572*3));
+			double vh = 200., vw = vh*ar;
+			glw->setViewport(QRectF(0,0,vw,vh));
+			
+			glw->show();
+			
+			QPropertyAnimation *animation = new QPropertyAnimation(glw, "viewport");
+			animation->setDuration(10000);
+			//animation->setStartValue(QRect(0, 0, 100, 30));
+			QRect endRect = QRect(cw-vw, ch-vh, vw,vh);
+			qDebug() << "End Rect: "<<endRect<<", start:"<<glw->viewport();
+			animation->setEndValue(endRect);
+			animation->start();
+			//QTimer::singleShot(500,animation, SLOT(start()));
+		}
 		
-		glw->show();
-		
-		QPropertyAnimation *animation = new QPropertyAnimation(glw, "viewport");
-		animation->setDuration(10000);
-		//animation->setStartValue(QRect(0, 0, 100, 30));
-		QRect endRect = QRect(764-200, 572-200.*ar, 200.,200.*ar);
-		//qDebug() << "End Rect: "<<endRect<<", start:"<<glw->viewport();
-		animation->setEndValue(endRect);
-		animation->start();
-		//QTimer::singleShot(500,animation, SLOT(start()));
-	*/	
 	
 		scene->setGLWidget(glw);
 		
