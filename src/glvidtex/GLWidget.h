@@ -92,6 +92,7 @@ private:
 // 	int xRot;
 // 	int yRot;
 // 	int zRot;
+	void initShaders();
 	
 	QList<GLDrawable*> m_drawables;
 	
@@ -107,6 +108,14 @@ private:
 	QPolygonF m_cornerTranslations;
 	
 	Qt::AspectRatioMode m_aspectRatioMode;
+	
+	QGLShaderProgram *m_program;
+	bool m_useShaders;
+	
+	#ifndef QT_OPENGL_ES
+	typedef void (APIENTRY *_glActiveTexture) (GLenum);
+	_glActiveTexture glActiveTexture;
+	#endif
 	
 };
 

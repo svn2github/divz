@@ -11,12 +11,16 @@
 #define GL_MULTISAMPLE  0x809D
 #endif
 
+#include "GLCommonShaders.h"
+
 GLWidget::GLWidget(QWidget *parent, QGLWidget *shareWidget)
 	: QGLWidget(QGLFormat(QGL::SampleBuffers),parent, shareWidget)
 	, m_glInited(false)
 	, m_fbo(0)
 	, m_cornerTranslationsEnabled(true)
 	, m_aspectRatioMode(Qt::KeepAspectRatio)
+	, m_program(0)
+	, m_useShaders(false)
 {
 	
 	m_cornerTranslations 
@@ -101,7 +105,39 @@ void GLWidget::initializeGL()
 // 	glDepthFunc(GL_LEQUAL);						// The Type Of Depth Testing To Do
 // 	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);		// Really Nice Perspective Calculations
 	
-	m_fbo  = new QGLFramebufferObject(QSize(16,16));
+	m_fbo = new QGLFramebufferObject(QSize(16,16));
+	m_program = new QGLShaderProgram(context(), this);
+	
+	#ifndef QT_OPENGL_ES
+	glActiveTexture = (_glActiveTexture)glWidget()->context()->getProcAddress(QLatin1String("glActiveTexture"));
+	#endif
+	
+	const GLubyte *str = glGetString(GL_EXTENSIONS); 
+	m_useShaders = (strstr((const char *)str, "GL_ARB_fragment_shader") != NULL);
+	
+	if(1)
+	{
+		qDebug() << "GLWidget::initGL: Forcing NO GLSL shaders";
+		m_useShaders = false;
+	}
+	
+	initShaders();
+	
+	glGenTextures(1, &m_alphaTextureId);
+	
+	if(m_alphaMask.isNull())
+	{
+		m_alphaMask = QImage(1,1,QImage::Format_RGB32);
+		m_alphaMask.fill(Qt::black);
+ 		//qDebug() << "GLVideoDrawable::initGL: BLACK m_alphaMask.size:"<<m_alphaMask.size();
+ 		setAlphaMask(m_alphaMask);
+	}
+	else
+	{
+ 		//qDebug() << "GLVideoDrawable::initGL: Alpha mask already set, m_alphaMask.size:"<<m_alphaMask.size();
+		setAlphaMask(m_alphaMask_preScaled);
+	}
+	
 		
 	m_glInited = true;
 	//qDebug() << "GLWidget::initializeGL()";
@@ -111,6 +147,51 @@ void GLWidget::initializeGL()
 	//resizeGL(width(),height());
 	//setViewport(viewport());
 	
+}
+
+void GLWidget::initShaders()
+{
+	
+	const char *fragmentProgram = qt_glsl_xrgbShaderProgram;
+	
+	if(!m_program->shaders().isEmpty())
+		m_program->removeAllShaders();
+	
+	if(!QGLShaderProgram::hasOpenGLShaderPrograms())
+	{
+		qDebug() << "GLSL Shaders Not Supported by this driver, this program will NOT function as expected and will likely crash.";
+		return;// false;
+	}
+
+	if (!fragmentProgram) 
+	{
+		qDebug() << "No shader program found - format not supported.";
+		return;// false;
+	} 
+	else 
+	if (!m_program->addShaderFromSourceCode(QGLShader::Vertex, qt_glsl_vertexShaderProgram)) 
+	{
+		qWarning("GLWidget: Vertex shader compile error %s",
+			qPrintable(m_program->log()));
+		//error = QAbstractVideoSurface::ResourceError;
+		return;// false;
+		
+	} 
+	else 
+	if (!m_program->addShaderFromSourceCode(QGLShader::Fragment, fragmentProgram)) 
+	{
+		qWarning("GLWidget: Shader compile error %s", qPrintable(m_program->log()));
+		//error = QAbstractVideoSurface::ResourceError;
+		m_program->removeAllShaders();
+		return;// false;
+	} 
+	else 
+	if(!m_program->link()) 
+	{
+		qWarning("GLWidget: Shader link error %s", qPrintable(m_program->log()));
+		m_program->removeAllShaders();
+		return;// false;
+	} 
 }
 
 void GLWidget::showEvent(QShowEvent *)
@@ -131,6 +212,77 @@ void GLWidget::makeRenderContextCurrent()
 		m_fbo->bind();
 	else
 		makeCurrent();
+}
+
+
+void GLVideoDrawable::setAlphaMask(const QImage &mask)
+{
+	m_alphaMask_preScaled = mask;
+	m_alphaMask = mask;
+	
+	if(mask.isNull())
+	{
+		//qDebug() << "GLVideoDrawable::setAlphaMask: "<<this<<",  Got null mask, size:"<<mask.size();
+		//return;
+		m_alphaMask = QImage(1,1,QImage::Format_RGB32);
+		m_alphaMask.fill(Qt::black);
+ 		//qDebug() << "GLVideoDrawable::initGL: BLACK m_alphaMask.size:"<<m_alphaMask.size();
+ 		setAlphaMask(m_alphaMask);
+ 		return;
+	}
+	
+	if(m_glInited && glWidget())
+	{
+		if(m_sourceRect.size().toSize() == QSize(0,0))
+		{
+			//qDebug() << "GLVideoDrawable::setAlphaMask: "<<this<<", Not scaling or setting mask, video size is 0x0";
+			return;
+		}
+		
+		glWidget()->makeRenderContextCurrent();
+		if(m_alphaMask.size() != m_sourceRect.size().toSize())
+		{
+			//qDebug() << "GLVideoDrawable::setAlphaMask: "<<this<<",  Mask size and source size different, scaling";
+			m_alphaMask = m_alphaMask.scaled(m_sourceRect.size().toSize());
+		}
+		
+		if(m_alphaMask.format() != QImage::Format_ARGB32)
+		{
+			//qDebug() << "GLVideoDrawable::setAlphaMask: "<<this<<",  Mask format not ARGB32, reformatting";
+			m_alphaMask = m_alphaMask.convertToFormat(QImage::Format_ARGB32);
+		}
+			
+		if(m_alphaMask.cacheKey() == m_uploadedCacheKey)
+		{
+			//qDebug() << "GLVideoDrawable::setAlphaMask: "<<this<<",  Current mask already uploaded to GPU, not re-uploading.";
+			return;
+		}
+			
+		
+		m_uploadedCacheKey = m_alphaMask.cacheKey();
+
+		//qDebug() << "GLVideoDrawable::setAlphaMask: "<<this<<",  Valid mask, size:"<<m_alphaMask.size()<<", null?"<<m_alphaMask.isNull();
+		
+		glBindTexture(GL_TEXTURE_2D, m_alphaTextureId);
+		glTexImage2D(
+			GL_TEXTURE_2D,
+			0,
+			GL_RGBA,
+			mask.width(),
+			mask.height(),
+			0,
+			GL_RGBA, 
+			GL_UNSIGNED_BYTE,
+			mask.scanLine(0)
+			);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	}
+	
+// 	qDebug() << "GLVideoDrawable::setAlphaMask: "<<this<<",  AT END :"<<m_alphaMask.size()<<", null?"<<m_alphaMask.isNull();
+	
 }
 
 void GLWidget::paintGL()
@@ -187,89 +339,230 @@ void GLWidget::paintGL()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glLoadIdentity(); // Reset The View
 	// Use the fbo as a texture to render the scene
-    	glBindTexture(GL_TEXTURE_2D, m_fbo->texture());
-	
+    	
 	glEnable(GL_TEXTURE_2D);
 	
-	//glTranslatef(0.0f,0.0f,-3.42f);
 	
-  	glBegin(GL_QUADS);
-                // Front Face
-//              glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0f, -1.0f,  1.0f);
-//              glTexCoord2f(1.0f, 0.0f); glVertex3f( 1.0f, -1.0f,  1.0f);
-//              glTexCoord2f(1.0f, 1.0f); glVertex3f( 1.0f,  1.0f,  1.0f);
-//              glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0f,  1.0f,  1.0f);
-
-                //QRectF rect(10,10,320,240);
-                QRectF rect(0,0,width(),height());
-
-                qreal
-                        vx1 = rect.left(),
-                        vx2 = rect.right(),
-                        vy1 = rect.bottom(),
-                        vy2 = rect.top();
-
-//                 glTexCoord2f(0.0f, 0.0f); glVertex3f(vx1,vy1,  0.0f); // top left
-//                 glTexCoord2f(1.0f, 0.0f); glVertex3f(vx2,vy1,  0.0f); // top right
-//                 glTexCoord2f(1.0f, 1.0f); glVertex3f(vx2,vy2,  0.0f); // bottom right
-//                 glTexCoord2f(0.0f, 1.0f); glVertex3f(vx1,vy2,  0.0f); // bottom left
-
-		if(1)
+    	if(m_useShaders)
+	{
+		QRectF source = QRect(0,0,m_fbo->size().width(),m_fbo->size().height());
+		QRectF target = rect();
+		
+// 		source = source.adjusted(
+// 			m_displayOpts.cropTopLeft.x(),
+// 			m_displayOpts.cropTopLeft.y(),
+// 			m_displayOpts.cropBottomRight.x(),
+// 			m_displayOpts.cropBottomRight.y());
+		
+		const int width  = QGLContext::currentContext()->device()->width();
+		const int height = QGLContext::currentContext()->device()->height();
+	
+		QTransform transform =  QTransform(); //m_glw->transform(); //= painter.deviceTransform();
+		//transform = transform.scale(1.25,1.);
+// 		if(!translation().isNull())
+// 			transform *= QTransform().translate(translation().x(),translation().y());
+		
+		const GLfloat wfactor =  2.0 / width;
+		const GLfloat hfactor = -2.0 / height;
+	
+// 		if(!rotation().isNull())
+// 		{
+// 			qreal tx = target.width()  * rotationPoint().x() + target.x();
+// 			qreal ty = target.height() * rotationPoint().y() + target.y();
+// 			qreal x, y;
+// 			transform.map(tx,ty,&x,&y);
+// 			
+// 			QVector3D rot = rotation();
+// 			transform *= QTransform()
+// 				.translate(x,y)
+// 				.rotate(rot.x(),Qt::XAxis)
+// 				.rotate(rot.y(),Qt::YAxis)
+// 				.rotate(rot.z(),Qt::ZAxis)
+// 				.translate(-x,-y);
+// 		}
+		const GLfloat positionMatrix[4][4] =
 		{
-			glTexCoord2f(0.0f, 0.0f); glVertex3f(vx1 + m_cornerTranslations[3].x(),vy1 + m_cornerTranslations[3].y(),  0.0f); // bottom left // 3
-			glTexCoord2f(1.0f, 0.0f); glVertex3f(vx2 - m_cornerTranslations[2].x(),vy1 - m_cornerTranslations[2].y(),  0.0f); // bottom right // 2
-			glTexCoord2f(1.0f, 1.0f); glVertex3f(vx2 - m_cornerTranslations[1].x(),vy2 - m_cornerTranslations[1].y(),  0.0f); // top right  // 1
-			glTexCoord2f(0.0f, 1.0f); glVertex3f(vx1 + m_cornerTranslations[0].x(),vy2 + m_cornerTranslations[0].y(),  0.0f); // top left // 0
-		}
-
-		if(0)
-		{
-			qreal inc = fabs(vy2-vy1)/10.;
-			qreal dx = fabs(vx2-vx1);
-			qreal dy = fabs(vy2-vy1);
-			qreal xf = inc/dx;
-			qreal yf = inc/dy;
-			//qDebug() << "params:"<<xf<<yf;
-			for(qreal x=vx1; x<vx2; x+=inc)
 			{
-				qreal tx = x/dx;
-				//qDebug() << "tx:"<<tx;
-				for(qreal y=vy1; y>=vy2; y-=inc)
+				/*(0,0)*/ wfactor * transform.m11() - transform.m13(),
+				/*(0,1)*/ hfactor * transform.m12() + transform.m13(),
+				/*(0,2)*/ 0.0,
+				/*(0,3)*/ transform.m13()
+			}, {
+				/*(1,0)*/ wfactor * transform.m21() - transform.m23(),
+				/*(1,1)*/ hfactor * transform.m22() + transform.m23(),
+				/*(1,2)*/ 0.0,
+				/*(1,3)*/ transform.m23()
+			}, {
+				/*(2,0)*/ 0.0,
+				/*(2,1)*/ 0.0,
+				/*(2,2)*/ -1.0,
+				/*(2,3)*/ 0.0
+			}, {
+				/*(3,0)*/ wfactor * transform.dx() - transform.m33(),
+				/*(3,1)*/ hfactor * transform.dy() + transform.m33(),
+				/*(3,2)*/ 0.0,
+				/*(3,3)*/ transform.m33()
+			}
+		};
+		
+		
+		//QVector3D list[] = 
+	
+		const GLfloat vertexCoordArray[] =
+		{
+			target.left()     , target.bottom() + 1, //(GLfloat)zIndex(),
+			target.right() + 1, target.bottom() + 1, //(GLfloat)zIndex(),
+			target.left()     , target.top(), 	//(GLfloat)zIndex(),
+			target.right() + 1, target.top()//, 	(GLfloat)zIndex()
+		};
+		
+		bool flipHorizontal = false;
+		bool flipVertical = false;
+		
+		
+		const GLfloat txLeft   = flipHorizontal ? source.right()  / m_fbo->size().width() : source.left()  / m_fbo->size().width();
+		const GLfloat txRight  = flipHorizontal ? source.left()   / m_fbo->size().width() : source.right() / m_fbo->size().width();
+		
+		const GLfloat txTop    = !flipVertical //m_scanLineDirection == QVideoSurfaceFormat::TopToBottom
+			? source.top()    / m_fbo->size().height()
+			: source.bottom() / m_fbo->size().height();
+		const GLfloat txBottom = !flipVertical //m_scanLineDirection == QVideoSurfaceFormat::TopToBottom
+			? source.bottom() / m_fbo->size().height()
+			: source.top()    / m_fbo->size().height();
+	
+		const GLfloat textureCoordArray[] =
+		{
+			txLeft , txBottom,
+			txRight, txBottom,
+			txLeft , txTop,
+			txRight, txTop
+		};
+		
+		double liveOpacity = 1.;//(opacity() * (m_fadeActive ? m_fadeValue : 1.));
+	
+		m_program->bind();
+	
+		m_program->enableAttributeArray("vertexCoordArray");
+		m_program->enableAttributeArray("textureCoordArray");
+		
+		m_program->setAttributeArray("vertexCoordArray",  vertexCoordArray,  2);
+		m_program->setAttributeArray("textureCoordArray", textureCoordArray, 2);
+		
+		m_program->setUniformValue("positionMatrix",      positionMatrix);
+	// 	QMatrix4x4 mat4(
+	// 		positionMatrix[0][0], positionMatrix[0][1], positionMatrix[0][2], positionMatrix[0][3],
+	// 		positionMatrix[1][0], positionMatrix[1][1], positionMatrix[1][2], positionMatrix[1][3], 
+	// 		positionMatrix[2][0], positionMatrix[2][1], positionMatrix[2][2], positionMatrix[2][3], 
+	// 		positionMatrix[3][0], positionMatrix[3][1], positionMatrix[3][2], positionMatrix[3][3]
+	// 		); 
+	// 	m_program->setUniformValue("positionMatrix",      mat4);
+		
+		//qDebug() << "GLVideoDrawable:paintGL():"<<this<<", rendering with opacity:"<<opacity();
+		m_program->setUniformValue("alpha",               (GLfloat)liveOpacity);
+		m_program->setUniformValue("texOffsetX",          (GLfloat)0.);//m_invertedOffset.x());
+		m_program->setUniformValue("texOffsetY",          (GLfloat)0.);//m_invertedOffset.y());
+			
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, m_fbo->texture());
+	
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, m_alphaTextureId);
+		
+		glActiveTexture(GL_TEXTURE0);
+	
+		m_program->setUniformValue("texRgb", 0);
+		m_program->setUniformValue("alphaMask", 1);
+		
+		m_program->setUniformValue("colorMatrix", m_colorMatrix);
+		
+		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+	
+		m_program->release();
+	}
+	else
+	{
+		glBindTexture(GL_TEXTURE_2D, m_fbo->texture());
+	
+		//glTranslatef(0.0f,0.0f,-3.42f);
+		
+		glBegin(GL_QUADS);
+			// Front Face
+	//              glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0f, -1.0f,  1.0f);
+	//              glTexCoord2f(1.0f, 0.0f); glVertex3f( 1.0f, -1.0f,  1.0f);
+	//              glTexCoord2f(1.0f, 1.0f); glVertex3f( 1.0f,  1.0f,  1.0f);
+	//              glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0f,  1.0f,  1.0f);
+	
+			//QRectF rect(10,10,320,240);
+			QRectF rect(0,0,width(),height());
+	
+			qreal
+				vx1 = rect.left(),
+				vx2 = rect.right(),
+				vy1 = rect.bottom(),
+				vy2 = rect.top();
+	
+	//                 glTexCoord2f(0.0f, 0.0f); glVertex3f(vx1,vy1,  0.0f); // top left
+	//                 glTexCoord2f(1.0f, 0.0f); glVertex3f(vx2,vy1,  0.0f); // top right
+	//                 glTexCoord2f(1.0f, 1.0f); glVertex3f(vx2,vy2,  0.0f); // bottom right
+	//                 glTexCoord2f(0.0f, 1.0f); glVertex3f(vx1,vy2,  0.0f); // bottom left
+	
+			if(1)
+			{
+				glTexCoord2f(0.0f, 0.0f); glVertex3f(vx1 + m_cornerTranslations[3].x(),vy1 + m_cornerTranslations[3].y(),  0.0f); // bottom left // 3
+				glTexCoord2f(1.0f, 0.0f); glVertex3f(vx2 - m_cornerTranslations[2].x(),vy1 - m_cornerTranslations[2].y(),  0.0f); // bottom right // 2
+				glTexCoord2f(1.0f, 1.0f); glVertex3f(vx2 - m_cornerTranslations[1].x(),vy2 - m_cornerTranslations[1].y(),  0.0f); // top right  // 1
+				glTexCoord2f(0.0f, 1.0f); glVertex3f(vx1 + m_cornerTranslations[0].x(),vy2 + m_cornerTranslations[0].y(),  0.0f); // top left // 0
+			}
+	
+			if(0)
+			{
+				qreal inc = fabs(vy2-vy1)/10.;
+				qreal dx = fabs(vx2-vx1);
+				qreal dy = fabs(vy2-vy1);
+				qreal xf = inc/dx;
+				qreal yf = inc/dy;
+				//qDebug() << "params:"<<xf<<yf;
+				for(qreal x=vx1; x<vx2; x+=inc)
 				{
-					qreal ty = 1.-(y/dy);
-					//qDebug() << "Y:"<<y;
-					//qDebug() << "at:"<<x<<",y:"<<y;
-// 					glTexCoord2f(0.0f, 0.0f); glVertex3f(x,y,  0.0f); // bottom left
-// 					glTexCoord2f(1.0f, 0.0f); glVertex3f(x+inc,y,  0.0f); // bottom right
-// 					glTexCoord2f(1.0f, 1.0f); glVertex3f(x+inc,y+inc,  0.0f); // top right
-// 					glTexCoord2f(0.0f, 1.0f); glVertex3f(x,y+inc,  0.0f); // top left
-					
-					
-// 					glTexCoord2f(0.0f, 0.0f); glVertex3f(x,y+inc,  0.0f); // bottom left
-// 					glTexCoord2f(1.0f, 0.0f); glVertex3f(x+inc,y+inc,  0.0f); // bottom right
-// 					glTexCoord2f(1.0f, 1.0f); glVertex3f(x+inc,y,  0.0f); // top right
-// 					glTexCoord2f(0.0f, 1.0f); glVertex3f(x,y,  0.0f); // top left
-
-					glTexCoord2f(tx, ty);
-								glVertex3f(x,y+inc,  0.0f); // bottom left
-					
-					glTexCoord2f(tx+xf, ty);	
-								glVertex3f(x+inc,y+inc,  0.0f); // bottom right
-					
-					glTexCoord2f(tx+xf, ty+yf); 
-								glVertex3f(x+inc,y,  0.0f); // top right
-					
-					glTexCoord2f(tx, ty+yf); 
-								glVertex3f(x,y,  0.0f); // top left
+					qreal tx = x/dx;
+					//qDebug() << "tx:"<<tx;
+					for(qreal y=vy1; y>=vy2; y-=inc)
+					{
+						qreal ty = 1.-(y/dy);
+						//qDebug() << "Y:"<<y;
+						//qDebug() << "at:"<<x<<",y:"<<y;
+	// 					glTexCoord2f(0.0f, 0.0f); glVertex3f(x,y,  0.0f); // bottom left
+	// 					glTexCoord2f(1.0f, 0.0f); glVertex3f(x+inc,y,  0.0f); // bottom right
+	// 					glTexCoord2f(1.0f, 1.0f); glVertex3f(x+inc,y+inc,  0.0f); // top right
+	// 					glTexCoord2f(0.0f, 1.0f); glVertex3f(x,y+inc,  0.0f); // top left
+						
+						
+	// 					glTexCoord2f(0.0f, 0.0f); glVertex3f(x,y+inc,  0.0f); // bottom left
+	// 					glTexCoord2f(1.0f, 0.0f); glVertex3f(x+inc,y+inc,  0.0f); // bottom right
+	// 					glTexCoord2f(1.0f, 1.0f); glVertex3f(x+inc,y,  0.0f); // top right
+	// 					glTexCoord2f(0.0f, 1.0f); glVertex3f(x,y,  0.0f); // top left
+	
+						glTexCoord2f(tx, ty);
+									glVertex3f(x,y+inc,  0.0f); // bottom left
+						
+						glTexCoord2f(tx+xf, ty);	
+									glVertex3f(x+inc,y+inc,  0.0f); // bottom right
+						
+						glTexCoord2f(tx+xf, ty+yf); 
+									glVertex3f(x+inc,y,  0.0f); // top right
+						
+						glTexCoord2f(tx, ty+yf); 
+									glVertex3f(x,y,  0.0f); // top left
+					}
 				}
 			}
-		}
-
-//              glTexCoord2f(0,0); glVertex3f( 0, 0,0); //lo
-//              glTexCoord2f(0,1); glVertex3f(256, 0,0); //lu
-//              glTexCoord2f(1,1); glVertex3f(256, 256,0); //ru
-//              glTexCoord2f(1,0); glVertex3f( 0, 256,0); //ro
-        glEnd();
+	
+	//              glTexCoord2f(0,0); glVertex3f( 0, 0,0); //lo
+	//              glTexCoord2f(0,1); glVertex3f(256, 0,0); //lu
+	//              glTexCoord2f(1,1); glVertex3f(256, 256,0); //ru
+	//              glTexCoord2f(1,0); glVertex3f( 0, 256,0); //ro
+		glEnd();
+	}
 
 	
 // 	GLuint	texture[1]; // Storage For One Texture
@@ -417,6 +710,8 @@ void GLWidget::resizeGL(int width, int height)
 	
 	//qDebug() << "GLWidget::resizeGL: "<<width<<","<<height;
 	setViewport(viewport());
+	setAlphaMask(m_alphaMask_preScaled);
+
 }
 	
 	
