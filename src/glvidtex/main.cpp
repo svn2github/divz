@@ -3,6 +3,7 @@
 #include "GLWidget.h"
 #include "../livemix/VideoThread.h"
 #include "../livemix/CameraThread.h"
+#include "../livemix/MjpegThread.h"
 
 #include "GLVideoDrawable.h"
 #include "StaticVideoSource.h"
@@ -28,6 +29,7 @@
 
 #include "MetaObjectUtil.h"
 
+#include "PlayerWindow.h"
 
 GLDrawable * addCamera(GLWidget *glw, QString camera = "")
 {
@@ -566,7 +568,8 @@ int main(int argc, char *argv[])
 	
 	}
 	
-	GLWidget *glw = new GLWidget();
+	//GLWidget *glw = new GLWidget();
+	PlayerWindow *glw = new PlayerWindow();
 		
 	QFormLayout * tb = createToggleBox();
 	
@@ -590,6 +593,33 @@ int main(int argc, char *argv[])
 			glw->addDrawable(drawable);
 			drawable->show();
 		}
+		
+		if(0)
+		{
+			//GLImageDrawable *drawable = new GLImageDrawable("me2.jpg");
+			GLVideoDrawable *drawable = new GLVideoDrawable();
+			drawable->addShowAnimation(GLDrawable::AnimFade);
+			drawable->setRect(QRectF(0,0,1000,750));
+			
+			MjpegThread *thread = new MjpegThread();
+			drawable->setVideoSource(thread);
+			
+			QUrl url("http://cameras:8082");
+			if(!url.isValid())
+			{
+				QMessageBox::critical(0, "Invalid URL","Sorry, the URL you entered is not a properly-formatted URL. Please try again.");
+			}
+			
+			if(!thread->connectTo(url.host(), url.port(), url.path(), url.userName(), url.password()))
+			{
+				QMessageBox::critical(0, "Connection Problem","Sorry, could not connect to the URL given!");
+			}
+			
+			glw->addDrawable(drawable);
+			drawable->show();
+			
+		}
+		
 		
 		if(0)
 		{

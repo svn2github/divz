@@ -76,13 +76,13 @@ void GLWidget::setTopRightTranslation(const QPointF& p)
 	updateGL();
 }
 
-void GLWidget::setBottomLeft(const QPointF& p)
+void GLWidget::setBottomLeftTranslation(const QPointF& p)
 {
 	m_cornerTranslations[2] = p;
 	updateGL();
 }
 
-void GLWidget::setBottomRight(const QPointF& p)
+void GLWidget::setBottomRightTranslation(const QPointF& p)
 {
 	m_cornerTranslations[3] = p;
 	updateGL();
@@ -428,20 +428,20 @@ void GLWidget::paintGL()
 	
 		const GLfloat vertexCoordArray[] =
 		{
-			target.left()      + m_cornerTranslations[3].x(), target.bottom() + 1 + m_cornerTranslations[3].x(), //(GLfloat)zIndex(),
-			target.right() + 1 - m_cornerTranslations[2].x(), target.bottom() + 1 - m_cornerTranslations[2].y(), //(GLfloat)zIndex(),
-			target.left()      + m_cornerTranslations[0].x(), target.top() + m_cornerTranslations[0].y(), 	//(GLfloat)zIndex(),
-			target.right() + 1 - m_cornerTranslations[1].x(), target.top() - m_cornerTranslations[1].y()//, 	(GLfloat)zIndex()
+			target.left()      + m_cornerTranslations[2].x(), target.bottom() + 1 - m_cornerTranslations[2].y(), //(GLfloat)zIndex(),
+			target.right() + 1 - m_cornerTranslations[3].x(), target.bottom() + 1 - m_cornerTranslations[3].y(), //(GLfloat)zIndex(),
+			target.left()      + m_cornerTranslations[0].x(), target.top()        + m_cornerTranslations[0].y(), 	//(GLfloat)zIndex(),
+			target.right() + 1 - m_cornerTranslations[1].x(), target.top()        + m_cornerTranslations[1].y()//, 	(GLfloat)zIndex()
 		};
 		
 		
 		const GLfloat txLeft   = m_flipHorizontal ? source.right()  / m_fbo->size().width() : source.left()  / m_fbo->size().width();
 		const GLfloat txRight  = m_flipHorizontal ? source.left()   / m_fbo->size().width() : source.right() / m_fbo->size().width();
 		
-		const GLfloat txTop    = !m_flipVertical //m_scanLineDirection == QVideoSurfaceFormat::TopToBottom
+		const GLfloat txTop    = m_flipVertical //m_scanLineDirection == QVideoSurfaceFormat::TopToBottom
 			? source.top()    / m_fbo->size().height()
 			: source.bottom() / m_fbo->size().height();
-		const GLfloat txBottom = !m_flipVertical //m_scanLineDirection == QVideoSurfaceFormat::TopToBottom
+		const GLfloat txBottom = m_flipVertical //m_scanLineDirection == QVideoSurfaceFormat::TopToBottom
 			? source.bottom() / m_fbo->size().height()
 			: source.top()    / m_fbo->size().height();
 	
@@ -479,6 +479,12 @@ void GLWidget::paintGL()
 			
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, m_fbo->texture());
+		
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		
 	
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, m_alphaTextureId);
@@ -524,9 +530,9 @@ void GLWidget::paintGL()
 			if(1)
 			{
 				glTexCoord2f(0.0f, 0.0f); glVertex3f(vx1 + m_cornerTranslations[3].x(),vy1 + m_cornerTranslations[3].y(),  0.0f); // bottom left // 3
-				glTexCoord2f(1.0f, 0.0f); glVertex3f(vx2 - m_cornerTranslations[2].x(),vy1 - m_cornerTranslations[2].y(),  0.0f); // bottom right // 2
+				glTexCoord2f(1.0f, 0.0f); glVertex3f(vx2 - m_cornerTranslations[2].x(),vy1 + m_cornerTranslations[2].y(),  0.0f); // bottom right // 2
 				glTexCoord2f(1.0f, 1.0f); glVertex3f(vx2 - m_cornerTranslations[1].x(),vy2 - m_cornerTranslations[1].y(),  0.0f); // top right  // 1
-				glTexCoord2f(0.0f, 1.0f); glVertex3f(vx1 + m_cornerTranslations[0].x(),vy2 + m_cornerTranslations[0].y(),  0.0f); // top left // 0
+				glTexCoord2f(0.0f, 1.0f); glVertex3f(vx1 + m_cornerTranslations[0].x(),vy2 - m_cornerTranslations[0].y(),  0.0f); // top left // 0
 			}
 	
 			if(0)
@@ -688,6 +694,8 @@ void GLWidget::setSaturation(int saturation)
 
 void GLWidget::updateColors(int brightness, int contrast, int hue, int saturation)
 {
+	//qDebug() << "GLWidget::updateColors: b:"<<brightness<<", c:"<<contrast<<", h:"<<hue<<", s:"<<saturation;
+	
 	const qreal b = brightness / 200.0;
 	const qreal c = contrast / 200.0 + 1.0;
 	const qreal h = hue / 200.0;

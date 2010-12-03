@@ -27,7 +27,9 @@ HEADERS       = GLWidget.h \
 		GLVideoFileDrawable.h \
 		GLVideoReceiverDrawable.h \
 		GLTextDrawable.h \
-		GLSceneGroup.h
+		GLSceneGroup.h \
+		PlayerWindow.h \
+		../livemix/MjpegThread.h
 		
 SOURCES       = GLWidget.cpp \
 		main.cpp \
@@ -50,7 +52,9 @@ SOURCES       = GLWidget.cpp \
 		GLVideoReceiverDrawable.cpp \
 		GLTextDrawable.cpp \
 		GLSceneGroup.cpp \
-		MetaObjectUtil.cpp
+		MetaObjectUtil.cpp \
+		PlayerWindow.cpp \
+		../livemix/MjpegThread.cpp
 
 unix: {
 	HEADERS += \

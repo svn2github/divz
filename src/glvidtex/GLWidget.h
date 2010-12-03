@@ -82,8 +82,8 @@ public slots:
 	
 	void setTopLeftTranslation(const QPointF&);
 	void setTopRightTranslation(const QPointF&);
-	void setBottomLeft(const QPointF&);
-	void setBottomRight(const QPointF&);
+	void setBottomLeftTranslation(const QPointF&);
+	void setBottomRightTranslation(const QPointF&);
 	
 	void enableCornerTranslations(bool flag=true);
 	
