@@ -50,7 +50,8 @@ protected:
 	void itemSelected(GLDrawable*);
 	
 	virtual void mousePressEvent ( QGraphicsSceneMouseEvent * mouseEvent );
-	
+	virtual void keyPressEvent(QKeyEvent * event);
+
 private:
 	QList<GLDrawable*> m_selection;
 	RectItem * m_bgRect;	

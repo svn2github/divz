@@ -15,7 +15,12 @@ GLTextDrawable::GLTextDrawable(QString text, QObject *parent)
 	if(!text.isEmpty())
 		setText(text);
 	
-	QTimer::singleShot(1500, this, SLOT(testXfade()));
+	//QTimer::singleShot(1500, this, SLOT(testXfade()));
+	
+	foreach(CornerItem *corner, m_cornerItems)
+		corner->setDefaultLeftOp(CornerItem::Scale);
+		
+	//setAspectRatioMode(Qt::KeepAspectRatioByExpanding);
 }
 	
 void GLTextDrawable::testXfade()
@@ -39,4 +44,32 @@ void GLTextDrawable::drawableResized(const QSizeF& newSize)
 	if(m_renderer->textWidth() != (int)newSize.width())
 		m_renderer->setTextWidth((int)newSize.width());
 	GLVideoDrawable::drawableResized(newSize);
+}
+
+void GLTextDrawable::updateRects(bool secondSource)
+{
+	QRectF sourceRect = m_frame.rect;
+	
+	updateTextureOffsets();
+	
+	// Honor croping since the rendering will honor croping - but not really needed for text.
+	QRectF adjustedSource = sourceRect.adjusted(
+		m_displayOpts.cropTopLeft.x(),
+		m_displayOpts.cropTopLeft.y(),
+		m_displayOpts.cropBottomRight.x(),
+		m_displayOpts.cropBottomRight.y());
+		
+	QRectF targetRect = QRectF(rect().topLeft(),adjustedSource.size()); 
+	
+	if(!secondSource)
+	{
+		//qDebug() << "GLTextDrawable::updateRects: source:"<<sourceRect<<", target:"<<targetRect;
+		m_sourceRect = sourceRect;
+		m_targetRect = targetRect;
+	}
+	else
+	{
+		m_sourceRect2 = sourceRect;
+		m_targetRect2 = targetRect;
+	}
 }

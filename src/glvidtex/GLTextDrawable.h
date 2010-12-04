@@ -21,7 +21,8 @@ public slots:
 	
 	
 protected:
-	void drawableResized(const QSizeF& /*newSize*/);
+	virtual void drawableResized(const QSizeF& /*newSize*/);
+	virtual void updateRects(bool secondSource=false);
 	
 private slots:
 	void testXfade();

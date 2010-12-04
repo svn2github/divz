@@ -221,7 +221,7 @@ protected:
 	void updateColors(int brightness, int contrast, int hue, int saturation);
 	
 	/// PS
-	void updateRects(bool secondSource=false);
+	virtual void updateRects(bool secondSource=false);
 	
 	/// PS
 	const char * resizeTextures(const QSize& size, bool secondSource=false);
@@ -233,6 +233,18 @@ protected:
 	VideoFrame m_frame2;
 	bool m_visiblePendingFrame;
 	bool m_tempVisibleValue;
+	
+	Qt::AspectRatioMode m_aspectRatioMode;
+	
+	VideoDisplayOptions m_displayOpts;
+	
+	/// PS
+	QRectF m_targetRect;
+	QRectF m_targetRect2;
+	/// PS
+	QRectF m_sourceRect;
+	QRectF m_sourceRect2;
+	
 	
 	// QGraphicsItem::
 	QVariant itemChange(GraphicsItemChange change, const QVariant &value);
@@ -298,8 +310,6 @@ private:
 	
 	bool m_colorsDirty;
 	
-	VideoDisplayOptions m_displayOpts;
-	
 	/// PS
 	QSize m_frameSize;
 	QSize m_frameSize2;
@@ -319,15 +329,6 @@ private:
 	bool m_debugFps;
 	
 	QTimer m_timer;
-	
-	/// PS
-	QRectF m_targetRect;
-	QRectF m_targetRect2;
-	/// PS
-	QRectF m_sourceRect;
-	QRectF m_sourceRect2;
-	
-	Qt::AspectRatioMode m_aspectRatioMode;
 	
 	/// PS
 	bool m_validShader;

@@ -1061,10 +1061,28 @@ void GLDrawable::mousePressEvent(QGraphicsSceneMouseEvent * event)
 {
 	//qDebug() << "GLDrawable::mousePressEvent";
 	QGraphicsItem::mousePressEvent(event);
-	//if (event->button() == Qt::RightButton) {
-		setSelected(true);
-	//	emit configureMe(event->scenePos().toPoint());
-	//}
+	setSelected(true);
+
+}
+
+void GLDrawable::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
+{
+	//qDebug() << "GLDrawable::mouseMoveEvent";
+	QGraphicsItem::mouseMoveEvent(event);
+	if(pos() != rect().topLeft())
+	{
+		//qDebug() << "New Pos:"<<pos();
+		QSizeF sz(10.,10.);// = AppSettings::gridSize();
+		bool halfGrid = false;
+		QPointF newPos = pos();
+		qreal x = sz.width()  / (halfGrid ? 2:1);
+		qreal y = sz.height() / (halfGrid ? 2:1);
+		newPos.setX(((int)(newPos.x() / x)) * x);
+		newPos.setY(((int)(newPos.y() / y)) * y);
+		if(newPos != pos())
+			setPos(newPos);
+	}
+
 }
 
 void GLDrawable::mouseReleaseEvent(QGraphicsSceneMouseEvent * event)
@@ -1078,23 +1096,6 @@ void GLDrawable::mouseReleaseEvent(QGraphicsSceneMouseEvent * event)
 		setRect(newRect);
 		//qDebug() << "GLDrawable::mouseReleaseEvent: Rect changed: "<<newRect; 
 	}
-	
-// 	syncToModelItem(modelItem());
-// 	
-// 	if(scene())
-// 	{
-// 		// explictly call syncToModelItem() on the other selection items
-// 		// because only the first item selected receives the mouseReleaseEvent() on drag stop
-// 		
-// 		QList<QGraphicsItem *> selection = scene()->selectedItems();
-// 			
-// 		foreach(QGraphicsItem *item, selection)
-// 		{
-// 			AbstractContent * content = dynamic_cast<AbstractContent *>(item);
-// 			if(content)
-// 				content->syncToModelItem(content->modelItem());
-// 		}
-// 	}
 }
 
 QRectF GLDrawable::boundingRect() const

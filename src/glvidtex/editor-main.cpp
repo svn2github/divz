@@ -55,6 +55,8 @@ class EditorGraphicsView : public QGraphicsView
 			//setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 			//setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 			
+			setBackgroundBrush(Qt::gray);
+			
 		}
 
 		bool canZoom() { return m_canZoom; }
@@ -80,6 +82,8 @@ class EditorGraphicsView : public QGraphicsView
 						QGraphicsView::keyPressEvent(event);
 				}
 			}
+			else
+				QGraphicsView::keyPressEvent(event);
 		}
 
 
@@ -233,7 +237,8 @@ int main(int argc, char *argv[])
 	{
 		GLTextDrawable *drawable = new GLTextDrawable("Hello, World!");
 		drawable->addShowAnimation(GLDrawable::AnimFade);
-		drawable->setRect(QRectF(0,0,1000,750));
+		//drawable->setRect(QRectF(0,0,1000,750));
+		drawable->setRect(scene->sceneRect());
 		scene->addItem(drawable);
 		drawable->show();
 		drawable->setObjectName("text");
