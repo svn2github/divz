@@ -1,6 +1,7 @@
 #include "GLDrawable.h"
 
 #include "GLWidget.h"
+#include "GLEditorGraphicsScene.h"
 
 QAutoDelPropertyAnimation::QAutoDelPropertyAnimation(QObject * target, const QByteArray & propertyName, QObject * parent)
 	: QPropertyAnimation(target,propertyName,parent)
@@ -20,6 +21,7 @@ void QAutoDelPropertyAnimation::resetProperty()
 // class GLDrawable
 GLDrawable::GLDrawable(QObject *parent)
 	: QObject(parent)
+	, QGraphicsItem()
 	, m_glw(0)
 	, m_controlsVisible(false)
 	, m_zIndex(0)
@@ -38,6 +40,7 @@ GLDrawable::GLDrawable(QObject *parent)
 	, m_id(-1)
 	, m_idLoaded(false)
 	, m_isUserControllable(false)
+	, m_selected(false)
 {
 	// QGraphicsItem
 	{
@@ -64,7 +67,7 @@ GLDrawable::GLDrawable(QObject *parent)
 		createCorner(CornerItem::MidRight, noRescale);
 		createCorner(CornerItem::MidBottom, noRescale);
 		
-		setControlsVisible(true);
+		setControlsVisible(false);
 	}
 }
 
@@ -411,6 +414,9 @@ void GLDrawable::setRect(const QRectF& rect)
 {
 	if(m_rect == rect)
 		return;
+	
+	// Notify QGraphicsItem of upcoming change
+	prepareGeometryChange();
 		
 	m_rect = rect;
 	if(m_rect.width()<0)
@@ -714,9 +720,15 @@ void GLDrawable::initGL()
 	// NOOP
 }
 
-void GLDrawable::paint(QPainter * /*painter*/, const QStyleOptionGraphicsItem * /*option*/, QWidget * /*widget*/)
+void GLDrawable::paint(QPainter * painter, const QStyleOptionGraphicsItem * /*option*/, QWidget * /*widget*/)
 {
-	// NOOP
+	if(isSelected())
+	{
+		painter->setRenderHint(QPainter::Antialiasing, true);
+		painter->setPen(QPen(qApp->palette().color(QPalette::Highlight), 1.0));
+		// FIXME: this draws OUTSIDE (but inside the safe 2px area)
+		painter->drawRect(QRectF(boundingRect()).adjusted(-0.5, -0.5, +0.5, +0.5));
+	}
 }
 
 
@@ -907,48 +919,15 @@ QVariantMap GLDrawable::propsToMap()
 	return map;
 }
 
-
-
-void GLDrawable::keyPressEvent(QKeyEvent * event)
-{
-	event->accept();
-	QSizeF grid(10.,10.);// = AppSettings::gridSize();
-	qreal x = grid.width();
-	qreal y = grid.height();
-	if(x<5)
-		x = 5;
-	if(y<5)
-		y = 5;
-	
-	switch(event->key())
-	{
-		case Qt::Key_Delete:
-			//emit deleteItem();
-			break;
-		
-		case Qt::Key_Up:
-			moveBy(0,-y);
-			break;
-		case Qt::Key_Down:
-			moveBy(0,+y);
-			break;
-		case Qt::Key_Left:
-			moveBy(-x,0);
-			break;
-		case Qt::Key_Right:
-			moveBy(+x,0);
-			break;
-			
-		default:
-			break;
-	}
-}
-
 QVariant GLDrawable::itemChange(GraphicsItemChange change, const QVariant & value)
 {
 	QVariant retVal;
 	bool retValOverride = false;
-	//qDebug() << "GLDrawable::itemChange: change:"<<change<<", value:"<<value;
+	if(change != ItemFlagsChange &&
+		change != ItemFlagsHaveChanged &&
+		change != ItemChildAddedChange) 
+		qDebug() << "GLDrawable::itemChange: change:"<<change<<", value:"<<value;
+		
 	// keep the AbstractContent's center inside the scene rect..
 // 	if (change == ItemPositionChange && scene() && AppSettings::gridEnabled())
 // 	{
@@ -1062,5 +1041,63 @@ void GLDrawable::layoutChildren()
 {
 	// layout corners
 	foreach (CornerItem * corner, m_cornerItems)
-		corner->relayout(rect().toRect()); //m_contentsRect);
+		corner->relayout(boundingRect().toRect()); //m_contentsRect);
+}
+
+void GLDrawable::setSelected(bool flag)
+{
+	//qDebug() << "GLDrawable::setSelected: "<<(QObject*)this<<" flag:"<<flag;
+	m_selected = flag;
+	setControlsVisible(flag);
+	if(flag)
+	{
+		GLEditorGraphicsScene *gls = dynamic_cast<GLEditorGraphicsScene*>(scene());
+		if(gls)
+			gls->itemSelected(this);
+	}
+}
+
+void GLDrawable::mousePressEvent(QGraphicsSceneMouseEvent * event)
+{
+	//qDebug() << "GLDrawable::mousePressEvent";
+	QGraphicsItem::mousePressEvent(event);
+	//if (event->button() == Qt::RightButton) {
+		setSelected(true);
+	//	emit configureMe(event->scenePos().toPoint());
+	//}
+}
+
+void GLDrawable::mouseReleaseEvent(QGraphicsSceneMouseEvent * event)
+{
+	//qDebug() << "GLDrawable::mouseReleaseEvent";
+	QGraphicsItem::mouseReleaseEvent(event);
+	
+	if(pos() != rect().topLeft())
+	{
+		QRectF newRect(pos(), rect().size());
+		setRect(newRect);
+		//qDebug() << "GLDrawable::mouseReleaseEvent: Rect changed: "<<newRect; 
+	}
+	
+// 	syncToModelItem(modelItem());
+// 	
+// 	if(scene())
+// 	{
+// 		// explictly call syncToModelItem() on the other selection items
+// 		// because only the first item selected receives the mouseReleaseEvent() on drag stop
+// 		
+// 		QList<QGraphicsItem *> selection = scene()->selectedItems();
+// 			
+// 		foreach(QGraphicsItem *item, selection)
+// 		{
+// 			AbstractContent * content = dynamic_cast<AbstractContent *>(item);
+// 			if(content)
+// 				content->syncToModelItem(content->modelItem());
+// 		}
+// 	}
+}
+
+QRectF GLDrawable::boundingRect() const
+{
+	return QRectF(QPointF(0,0), rect().size());
 }

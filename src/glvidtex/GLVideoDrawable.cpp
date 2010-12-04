@@ -1579,7 +1579,7 @@ void GLVideoDrawable::updateTexture(bool secondSource)
 }
 
 
-void GLVideoDrawable::paint(QPainter * painter, const QStyleOptionGraphicsItem * /*option*/, QWidget * /*widget*/)
+void GLVideoDrawable::paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget)
 {
 // 	painter->setPen(pen);
 // 	painter->setBrush(brush);
@@ -1587,7 +1587,7 @@ void GLVideoDrawable::paint(QPainter * painter, const QStyleOptionGraphicsItem *
 
 
 	QRectF source = m_sourceRect;
-	QRectF target = m_targetRect;
+	QRectF target = QRectF(m_targetRect.topLeft() - rect().topLeft(),m_targetRect.size());
 	
 	source = source.adjusted(
 		m_displayOpts.cropTopLeft.x(),
@@ -1638,7 +1638,7 @@ void GLVideoDrawable::paint(QPainter * painter, const QStyleOptionGraphicsItem *
 	if(m_fadeActive)
 	{
 		QRectF source2 = m_sourceRect2;
-		QRectF target2 = m_targetRect2;
+		QRectF target2 = QRectF(m_targetRect2.topLeft() - rect().topLeft(),m_targetRect2.size());
 		
 		source2 = source2.adjusted(
 			m_displayOpts.cropTopLeft.x(),
@@ -1711,6 +1711,9 @@ void GLVideoDrawable::paint(QPainter * painter, const QStyleOptionGraphicsItem *
 	}
 	
 	m_frameCount ++;
+	
+	painter->setOpacity(1.);
+	GLDrawable::paint(painter, option, widget);
 	
 }
 	

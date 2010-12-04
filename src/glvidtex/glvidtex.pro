@@ -28,7 +28,8 @@ HEADERS       = GLWidget.h \
 		PlayerWindow.h \
 		../livemix/MjpegThread.h \
 		GLVideoMjpegDrawable.h \
-		CornerItem.h
+		CornerItem.h \
+		GLEditorGraphicsScene.h
 		
 SOURCES       = GLWidget.cpp \
 		../livemix/VideoSource.cpp \
@@ -54,7 +55,8 @@ SOURCES       = GLWidget.cpp \
 		PlayerWindow.cpp \
 		../livemix/MjpegThread.cpp \
 		GLVideoMjpegDrawable.cpp \
-		CornerItem.cpp
+		CornerItem.cpp \
+		GLEditorGraphicsScene.cpp
 
 gleditor: {
 	TARGET = gleditor

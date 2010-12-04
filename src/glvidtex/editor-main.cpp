@@ -24,6 +24,8 @@
 
 #include "GLSceneGroup.h"
 
+#include "GLEditorGraphicsScene.h"
+
 #ifdef HAS_QT_VIDEO_SOURCE
 #include "QtVideoSource.h"
 #endif
@@ -31,6 +33,77 @@
 #include "MetaObjectUtil.h"
 
 //#include "EditorWindow.h"
+
+
+
+class EditorGraphicsView : public QGraphicsView
+{
+	public:
+		EditorGraphicsView(QWidget * parent=0)
+			: QGraphicsView(parent)
+			, m_canZoom(true)
+		{
+			setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing | QPainter::SmoothPixmapTransform );
+			setCacheMode(QGraphicsView::CacheBackground);
+			setViewportUpdateMode(QGraphicsView::BoundingRectViewportUpdate);
+			setOptimizationFlags(QGraphicsView::DontSavePainterState);
+			setViewportUpdateMode(QGraphicsView::SmartViewportUpdate);
+			setTransformationAnchor(AnchorUnderMouse);
+			setResizeAnchor(AnchorViewCenter);
+			
+			//setFrameStyle(QFrame::NoFrame);
+			//setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+			//setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+			
+		}
+
+		bool canZoom() { return m_canZoom; }
+		void setCanZoom(bool flag) { m_canZoom = flag; }
+
+
+	protected:
+		void keyPressEvent(QKeyEvent *event)
+		{
+			if(event->modifiers() & Qt::ControlModifier)
+			{
+
+				switch (event->key())
+				{
+					case Qt::Key_Plus:
+						scaleView(qreal(1.2));
+						break;
+					case Qt::Key_Minus:
+                                        case Qt::Key_Equal:
+						scaleView(1 / qreal(1.2));
+						break;
+					default:
+						QGraphicsView::keyPressEvent(event);
+				}
+			}
+		}
+
+
+		void wheelEvent(QWheelEvent *event)
+		{
+                        scaleView(pow((double)2, event->delta() / 240.0));
+		}
+
+
+		void scaleView(qreal scaleFactor)
+		{
+			if(!m_canZoom)
+				return;
+
+			qreal factor = matrix().scale(scaleFactor, scaleFactor).mapRect(QRectF(0, 0, 1, 1)).width();
+			if (factor < 0.07 || factor > 100)
+				return;
+
+			scale(scaleFactor, scaleFactor);
+		}
+	private:
+		bool m_canZoom;
+};
+
 
 int main(int argc, char *argv[])
 {
@@ -50,14 +123,14 @@ int main(int argc, char *argv[])
 
 	
 	
-	QGraphicsView *graphicsView = new QGraphicsView();
+	EditorGraphicsView *graphicsView = new EditorGraphicsView();
 	graphicsView->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
-	graphicsView->setRenderHint( QPainter::Antialiasing, true );
+	//graphicsView->setRenderHint( QPainter::Antialiasing, true );
 	
-	QGraphicsScene * scene = new QGraphicsScene();
+	GLEditorGraphicsScene * scene = new GLEditorGraphicsScene();
 	
 	graphicsView->setScene(scene);
-	scene->setSceneRect(0,0,800,600);
+	scene->setSceneRect(QRectF(0,0,800,600));
 	graphicsView->resize(800,600);
 	graphicsView->setWindowTitle("Test");
 	
@@ -92,6 +165,9 @@ int main(int argc, char *argv[])
 		drawable->setRect(scene->sceneRect());
 		scene->addItem(drawable);
 		drawable->show();
+		
+		drawable->setSelected(true);
+		drawable->setObjectName("image");
 	}
 	
 	if(0)
@@ -107,7 +183,7 @@ int main(int argc, char *argv[])
 	}
 	
 	
-	if(1)
+	if(0)
 	{
 		GLVideoLoopDrawable *drawable = new GLVideoLoopDrawable("../data/Seasons_Loop_3_SD.mpg");
 		drawable->addShowAnimation(GLDrawable::AnimFade);
@@ -160,6 +236,7 @@ int main(int argc, char *argv[])
 		drawable->setRect(QRectF(0,0,1000,750));
 		scene->addItem(drawable);
 		drawable->show();
+		drawable->setObjectName("text");
 	}
 	
 	if(0)

@@ -69,7 +69,7 @@ public:
 	GLWidget *glWidget() { return m_glw; }
 
 	// Compat with QGraphgicsItem: boundingRect()
-	QRectF boundingRect() const { return m_rect; }
+	QRectF boundingRect() const;// { return m_rect; }
 	
 	const QRectF & rect() const { return m_rect; }
 	double zIndex();
@@ -149,6 +149,8 @@ public:
 	
 	virtual void loadPropsFromMap(const QVariantMap&, bool onlyApplyIfChanged = false);
 	virtual QVariantMap propsToMap();
+	
+	bool isSelected() { return m_selected; }
 
 public slots:
 	void updateGL();
@@ -183,6 +185,8 @@ public slots:
 	
 	void setCanvasSize(const QSizeF&);
 	
+	void setSelected(bool selected=true);
+	
 signals:
 	void zIndexChanged(double newZIndex);
 	void drawableResized(const QSize& newSize);
@@ -213,7 +217,8 @@ protected:
 	// For compat with QGraphicsItem
 	virtual void paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget);
 	// QGraphicsItem::
-	virtual void keyPressEvent(QKeyEvent * event);
+	virtual void mousePressEvent(QGraphicsSceneMouseEvent * event);
+	virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent * event);
 	virtual QVariant itemChange(GraphicsItemChange change, const QVariant & value);
 	
 	// For corner items
@@ -285,6 +290,8 @@ private:
 	
 	QString m_itemName;
 	bool m_isUserControllable;
+	
+	bool m_selected;
 };
 
 bool operator==(const GLDrawable::AnimParam&a, const GLDrawable::AnimParam&b);

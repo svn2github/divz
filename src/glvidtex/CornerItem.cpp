@@ -167,7 +167,7 @@ void CornerItem::mousePressEvent(QGraphicsSceneMouseEvent * event)
     //m_operation = Crop | Scale;
 
     // intial parameters
-    QRect contentsRect = m_content->rect().toRect(); //contentsRect();
+    QRect contentsRect = m_content->boundingRect().toRect(); //contentsRect();
     m_startRatio = (double)contentsRect.width() / (double)contentsRect.height();
     m_startPos = event->pos(); //m_content->pos();
 
@@ -221,7 +221,7 @@ void CornerItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 // 		{
 			static int counter = 0;
 
-			QRect cr = m_content->rect().toRect(); //contentsRect();
+			QRect cr = m_content->boundingRect().toRect(); //contentsRect();
 			//QPointF d = AppSettings::snapToGrid( event->pos() - m_startPos );
 			QPointF d = ( event->pos() - m_startPos );
 

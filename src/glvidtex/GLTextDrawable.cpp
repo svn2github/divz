@@ -36,6 +36,7 @@ void GLTextDrawable::setText(const QString& text)
 
 void GLTextDrawable::drawableResized(const QSizeF& newSize)
 {
-	m_renderer->setTextWidth((int)newSize.width());
+	if(m_renderer->textWidth() != (int)newSize.width())
+		m_renderer->setTextWidth((int)newSize.width());
 	GLVideoDrawable::drawableResized(newSize);
 }
