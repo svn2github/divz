@@ -24,6 +24,7 @@ Target: pixelrevo-player
 						- TODO:
 							Add properties for text shadow / color etc
 					GLRectDrawable
+					GLVideoMjpegDrawable (done)
 				Todo Items:
 					- (done) Add native cross fading support in GLVideoDrawable (since all items above will probably derive from GLVideoDrawable)
 					- (done) Add a 'transmit video' property to Video(input|file) drawables

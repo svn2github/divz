@@ -21,6 +21,7 @@ void QAutoDelPropertyAnimation::resetProperty()
 GLDrawable::GLDrawable(QObject *parent)
 	: QObject(parent)
 	, m_glw(0)
+	, m_controlsVisible(false)
 	, m_zIndex(0)
 	, m_zIndexModifier(0)
 	, m_opacity(1)
@@ -39,7 +40,32 @@ GLDrawable::GLDrawable(QObject *parent)
 	, m_isUserControllable(false)
 {
 	// QGraphicsItem
-	setFlags(QGraphicsItem::ItemIsMovable); 
+	{
+		// customize item's behavior
+		setFlags(QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsFocusable | QGraphicsItem::ItemIsSelectable);
+		#if QT_VERSION >= 0x040600
+			setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
+		#endif
+		// allow some items (eg. the shape controls for text) to be shown
+		setFlag(QGraphicsItem::ItemClipsChildrenToShape, false);
+		setAcceptHoverEvents(true);
+	
+		bool noRescale=false;
+		
+		// create child controls
+		createCorner(CornerItem::TopLeftCorner, noRescale);
+		createCorner(CornerItem::TopRightCorner, noRescale);
+		createCorner(CornerItem::BottomLeftCorner, noRescale);
+		createCorner(CornerItem::BottomRightCorner, noRescale);
+		
+		// create midpoint handles
+		createCorner(CornerItem::MidTop, noRescale);
+		createCorner(CornerItem::MidLeft, noRescale);
+		createCorner(CornerItem::MidRight, noRescale);
+		createCorner(CornerItem::MidBottom, noRescale);
+		
+		setControlsVisible(true);
+	}
 }
 
 int GLDrawable::id()
@@ -401,6 +427,7 @@ void GLDrawable::setRect(const QRectF& rect)
 // 	if(!m_inAlignment)
 // 		updateAlignment();
 	updateGL();
+	layoutChildren();
 }
 
 void GLDrawable::setZIndexModifier(double mod)
@@ -878,4 +905,162 @@ QVariantMap GLDrawable::propsToMap()
 		map[name] = value;
 	}
 	return map;
+}
+
+
+
+void GLDrawable::keyPressEvent(QKeyEvent * event)
+{
+	event->accept();
+	QSizeF grid(10.,10.);// = AppSettings::gridSize();
+	qreal x = grid.width();
+	qreal y = grid.height();
+	if(x<5)
+		x = 5;
+	if(y<5)
+		y = 5;
+	
+	switch(event->key())
+	{
+		case Qt::Key_Delete:
+			//emit deleteItem();
+			break;
+		
+		case Qt::Key_Up:
+			moveBy(0,-y);
+			break;
+		case Qt::Key_Down:
+			moveBy(0,+y);
+			break;
+		case Qt::Key_Left:
+			moveBy(-x,0);
+			break;
+		case Qt::Key_Right:
+			moveBy(+x,0);
+			break;
+			
+		default:
+			break;
+	}
+}
+
+QVariant GLDrawable::itemChange(GraphicsItemChange change, const QVariant & value)
+{
+	QVariant retVal;
+	bool retValOverride = false;
+	//qDebug() << "GLDrawable::itemChange: change:"<<change<<", value:"<<value;
+	// keep the AbstractContent's center inside the scene rect..
+// 	if (change == ItemPositionChange && scene() && AppSettings::gridEnabled())
+// 	{
+// 		if(modelItem() && modelItem()->itemClass() == BackgroundItem::ItemClass)
+// 		{
+// 			retVal = QVariant(pos());
+//  			retValOverride = true;
+//  		}
+//  		else
+//  		{
+// 				
+// 			QPointF newPos = AppSettings::snapToGrid(value.toPointF(),m_kbdMotivated);
+// 			
+// 			// reset the keyboard flag - if another key press comes, it will be set again by the scene
+// 			if(m_kbdMotivated)
+// 				m_kbdMotivated = false;
+// 	
+// 			if (newPos != value.toPointF())
+// 			{
+// 				retVal = QVariant(newPos);
+// 				retValOverride = true;
+// 			}
+// 		}
+// 	}
+
+	// tell subclasses about selection changes
+// 	if (change == ItemSelectedHasChanged)
+// 		selectionChanged(value.toBool());
+
+	//qDebug() << "itemChange(): value:"<<value;
+
+	// changes that affect the mirror item
+	//if (m_mirrorItem) {
+	switch (change)
+	{
+		// notify about setPos
+		case ItemPositionHasChanged:
+// 			if(DEBUG_ABSTRACTCONTENT)
+// 				qDebug() << "AbstractContent::itemChange: " << modelItem()->itemName() << " ItemPositionHasChanged:"<<value;
+			
+			//syncToModelItem(modelItem());
+			break;
+
+		// notify about graphics changes
+		case ItemSelectedHasChanged:
+// 			if(DEBUG_ABSTRACTCONTENT)
+// 				qDebug() << "AbstractContent::itemChange: " << modelItem()->itemName() << " ItemSelectedHasChanged:"<<value;
+			setControlsVisible(value.toBool() ? true : false);
+
+		case ItemTransformHasChanged:
+		case ItemEnabledHasChanged:
+
+		case ItemParentHasChanged:
+#if QT_VERSION >= 0x040500
+		case ItemOpacityHasChanged:
+#endif
+/*			if(DEBUG_ABSTRACTCONTENT)
+				qDebug() << "AbstractContent::itemChange: " << modelItem()->itemName() << " ItemTransformHasChanged - ItemOpacityHasChanged:"<<value;
+			//syncToModelItem(modelItem());
+			GFX_CHANGED();*/
+			break;
+
+		case ItemZValueHasChanged:
+/*			//syncToModelItem(modelItem());
+			if(DEBUG_ABSTRACTCONTENT)
+				qDebug() << "AbstractContent::itemChange: " << modelItem()->itemName() << " ItemZValueHasChanged:"<<value;
+			if(m_mirrorItem)
+				m_mirrorItem->setZValue(zValue());*/
+			break;
+
+		case ItemVisibleHasChanged:
+/*			if(DEBUG_ABSTRACTCONTENT)
+				qDebug() << "AbstractContent::itemChange: " << modelItem()->itemName() << " ItemVisibleHasChanged:"<<value;
+			//syncToModelItem(modelItem());
+			if(m_mirrorItem)
+				m_mirrorItem->setVisible(isVisible());*/
+			break;
+
+		default:
+			break;
+	}
+
+	// ..or just apply the value
+
+	QVariant otherVal = QGraphicsItem::itemChange(change, value);
+	return retValOverride ? retVal : otherVal;
+}
+
+
+void GLDrawable::setControlsVisible(bool visible)
+{
+// 	if(m_contextHint != MyGraphicsScene::Editor)
+// 		return;
+
+	m_controlsVisible = visible;
+	foreach (CornerItem * corner, m_cornerItems)
+		corner->setVisible(visible);
+}
+
+
+void GLDrawable::createCorner(CornerItem::CornerPosition corner, bool noRescale)
+{
+	CornerItem * c = new CornerItem(corner, noRescale, this);
+	c->setVisible(m_controlsVisible);
+	c->setZValue(999.0);
+	c->setToolTip(tr("Drag with Left or Right mouse button.\n - Hold down SHIFT for free resize\n - Hold down CTRL to allow rotation\n - Hold down ALT to snap rotation\n - Double click (with LMB/RMB) to restore the aspect ratio/rotation"));
+	m_cornerItems.append(c);
+}
+
+void GLDrawable::layoutChildren()
+{
+	// layout corners
+	foreach (CornerItem * corner, m_cornerItems)
+		corner->relayout(rect().toRect()); //m_contentsRect);
 }

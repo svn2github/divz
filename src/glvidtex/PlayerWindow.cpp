@@ -14,13 +14,28 @@ PlayerWindow::PlayerWindow(QWidget *parent)
 		
 	QSettings settings(configFile,QSettings::IniFormat);
 	
-	QString tmp;
+	QString str;
 	QStringList parts;
 	QPoint point;
-	 
+	
+	QString activeGroup = settings.value("config").toString();
+	
+	str = settings.value("verbose").toString();
+	if(!str.isEmpty())
+		verbose = str == "true";
+	
+	if(verbose && !activeGroup.isEmpty())
+		qDebug() << "PlayerWindow: Using config:"<<activeGroup;
+	
+	#define READ_STRING(key,default) \
+		(!activeGroup.isEmpty() ? \
+			(!(str = settings.value(QString("%1/%2").arg(activeGroup).arg(key)).toString()).isEmpty() ?  str : \
+				settings.value(key,default).toString()) : \
+			settings.value(key,default).toString())
+			
 	#define READ_POINT(key,default) \
-		tmp = settings.value(key,default).toString(); \
-		parts = tmp.split("x"); \
+		str = READ_STRING(key,default); \
+		parts = str.split("x"); \
 		point = QPoint(parts[0].toInt(),parts[1].toInt()); \
 		if(verbose) qDebug() << "PlayerWindow: " key ": " << point; 
 	
@@ -37,7 +52,7 @@ PlayerWindow::PlayerWindow(QWidget *parent)
 	resize(windowSize.x(),windowSize.y());
 	move(windowPos.x(),windowPos.y());
 	
-	bool frameless = settings.value("frameless","true").toString() == "true";
+	bool frameless = READ_STRING("frameless","true") == "true";
 	if(frameless)
 		setWindowFlags(Qt::FramelessWindowHint);// | Qt::ToolTip);
 	
@@ -55,24 +70,24 @@ PlayerWindow::PlayerWindow(QWidget *parent)
 	setBottomRightTranslation(point);
 	
 	// Brightness/Contrast, Hue/Sat
-	setBrightness(settings.value("brightness","0").toInt());
-	setContrast(settings.value("contrast","0").toInt());
-	setHue(settings.value("hue","0").toInt());
-	setSaturation(settings.value("saturation","0").toInt());
+	setBrightness(READ_STRING("brightness","0").toInt());
+	setContrast(READ_STRING("contrast","0").toInt());
+	setHue(READ_STRING("hue","0").toInt());
+	setSaturation(READ_STRING("saturation","0").toInt());
 	
 	// Flip H/V
-	bool fliph = settings.value("flip-h","false").toString() == "true";
+	bool fliph = READ_STRING("flip-h","false") == "true";
 	if(verbose)
 		qDebug() << "PlayerWindow: flip-h: "<<fliph;
 	setFlipHorizontal(fliph);
 	
-	bool flipv = settings.value("flip-v","false").toString() == "true";
+	bool flipv = READ_STRING("flip-v","false") == "true";
 	if(verbose)
 		qDebug() << "PlayerWindow: flip-v: "<<flipv;
 	setFlipVertical(flipv);
 	
 	// Rotate
-	int rv = settings.value("rotate","0").toInt();
+	int rv = READ_STRING("rotate","0").toInt();
 	if(verbose)
 		qDebug() << "PlayerWindow: rotate: "<<rv;
 	
@@ -82,14 +97,14 @@ PlayerWindow::PlayerWindow(QWidget *parent)
 				             GLWidget::RotateNone);
 	
 	// Aspet Ratio Mode
-	setAspectRatioMode(settings.value("ignore-ar","false").toString() == "true" ? Qt::IgnoreAspectRatio : Qt::KeepAspectRatio);
+	setAspectRatioMode(READ_STRING("ignore-ar","false") == "true" ? Qt::IgnoreAspectRatio : Qt::KeepAspectRatio);
 	
 	// Canvas Size
 	READ_POINT("canvas-size","1000x750");
 	setCanvasSize(QSizeF((qreal)point.x(),(qreal)point.y()));
 	
 	// Alpha Mask
-	QString alphaFile = settings.value("alphamask","").toString();
+	QString alphaFile = READ_STRING("alphamask","");
 	if(!alphaFile.isEmpty())
 	{
 		QImage alphamask(alphaFile);
@@ -98,5 +113,4 @@ PlayerWindow::PlayerWindow(QWidget *parent)
 		else
 			setAlphaMask(alphamask);
 	}
-	
 }

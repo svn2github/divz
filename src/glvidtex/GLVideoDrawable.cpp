@@ -833,13 +833,14 @@ bool GLVideoDrawable::setVideoFormat(const VideoFormat& format, bool secondSourc
 	
 			if (!fragmentProgram) 
 			{
-				qDebug() << "No shader program found - format not supported.";
+				if(format.pixelFormat != QVideoFrame::Format_Invalid)
+					qDebug() << "GLVideoDrawable: No shader program found - format not supported.";
 				return false;
 			} 
 			else 
 			if (!program->addShaderFromSourceCode(QGLShader::Vertex, qt_glsl_vertexShaderProgram)) 
 			{
-				qWarning("GLWidget: Vertex shader compile error %s",
+				qWarning("GLVideoDrawable: Vertex shader compile error %s",
 					qPrintable(program->log()));
 				//error = QAbstractVideoSurface::ResourceError;
 				return false;
@@ -848,7 +849,7 @@ bool GLVideoDrawable::setVideoFormat(const VideoFormat& format, bool secondSourc
 			else 
 			if (!program->addShaderFromSourceCode(QGLShader::Fragment, fragmentProgram)) 
 			{
-				qWarning("GLWidget: Shader compile error %s", qPrintable(program->log()));
+				qWarning("GLVideoDrawable: Shader compile error %s", qPrintable(program->log()));
 				//error = QAbstractVideoSurface::ResourceError;
 				program->removeAllShaders();
 				return false;
@@ -856,7 +857,7 @@ bool GLVideoDrawable::setVideoFormat(const VideoFormat& format, bool secondSourc
 			else 
 			if(!program->link()) 
 			{
-				qWarning("GLWidget: Shader link error %s", qPrintable(program->log()));
+				qWarning("GLVideoDrawable: Shader link error %s", qPrintable(program->log()));
 				program->removeAllShaders();
 				return false;
 			} 

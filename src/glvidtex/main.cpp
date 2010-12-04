@@ -15,6 +15,7 @@
 #include "GLVideoFileDrawable.h"
 #include "GLVideoReceiverDrawable.h"
 #include "GLTextDrawable.h"
+#include "GLVideoMjpegDrawable.h"
 
 //#define HAS_QT_VIDEO_SOURCE
 
@@ -584,7 +585,7 @@ int main(int argc, char *argv[])
 			addButtons(tb, addQtSource(glw));
 		}
 		
-		if(0)
+		if(1)
 		{
 			//GLImageDrawable *drawable = new GLImageDrawable("me2.jpg");
 			GLImageDrawable *drawable = new GLImageDrawable("Pm5544.jpg");
@@ -598,29 +599,13 @@ int main(int argc, char *argv[])
 			drawable->show();
 		}
 		
-		if(1)
+		if(0)
 		{
 			//GLImageDrawable *drawable = new GLImageDrawable("me2.jpg");
-			GLVideoDrawable *drawable = new GLVideoDrawable();
+			GLVideoMjpegDrawable *drawable = new GLVideoMjpegDrawable("http://cameras:8082");
 			drawable->addShowAnimation(GLDrawable::AnimFade);
 			//drawable->setRect(QRectF(0,0,1000,750));
 			drawable->setRect(glw->canvasRect());
-			
-			MjpegThread *thread = new MjpegThread();
-			drawable->setVideoSource(thread);
-			
-			QUrl url("http://cameras:8082");
-			//QUrl url("http://cameras:9041");
-			if(!url.isValid())
-			{
-				QMessageBox::critical(0, "Invalid URL","Sorry, the URL you entered is not a properly-formatted URL. Please try again.");
-			}
-			
-			if(!thread->connectTo(url.host(), url.port(), url.path(), url.userName(), url.password()))
-			{
-				QMessageBox::critical(0, "Connection Problem","Sorry, could not connect to the URL given!");
-			}
-			
 			glw->addDrawable(drawable);
 			drawable->show();
 			

@@ -6,11 +6,12 @@
 #include "MetaObjectUtil.h"
 
 #include "GLImageDrawable.h"
+#include "GLTextDrawable.h"
 #include "GLVideoLoopDrawable.h"
 #include "GLVideoInputDrawable.h"
 #include "GLVideoFileDrawable.h"
 #include "GLVideoReceiverDrawable.h"
-#include "GLTextDrawable.h"
+#include "GLVideoMjpegDrawable.h"
 
 
 // ****************************
@@ -268,6 +269,7 @@ void GLScene::fromByteArray(QByteArray& array)
 		IF_CLASS(GLVideoInputDrawable);
 		IF_CLASS(GLVideoLoopDrawable);
 		IF_CLASS(GLVideoReceiverDrawable);
+		IF_CLASS(GLVideoMjpegDrawable);
 		
 		#undef IF_CLASS
 		

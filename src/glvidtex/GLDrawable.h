@@ -3,6 +3,8 @@
 
 #include <QtGui>
 
+#include "CornerItem.h"
+
 class QPropertyAnimation;
 class GLWidget;
 
@@ -210,6 +212,15 @@ protected:
 	
 	// For compat with QGraphicsItem
 	virtual void paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget);
+	// QGraphicsItem::
+	virtual void keyPressEvent(QKeyEvent * event);
+	virtual QVariant itemChange(GraphicsItemChange change, const QVariant & value);
+	
+	// For corner items
+	void createCorner(CornerItem::CornerPosition corner, bool noRescale);
+	void layoutChildren();
+	void setControlsVisible(bool visible);
+
 
 	void propertyWasChanged(const QString& propName, const QVariant& value);
 	
@@ -219,8 +230,11 @@ protected:
 	
 	QPropertyAnimation *propAnim(const QString&);
 	void registerPropAnim(const QString& prop, QPropertyAnimation *anim);
-
-	GLWidget *m_glw;
+	
+	
+	GLWidget 	   *m_glw;
+	QList<CornerItem *> m_cornerItems;
+	bool                m_controlsVisible;
 
 private:
 	QAutoDelPropertyAnimation * setupRectAnimation(const QRectF& other, bool animateIn);

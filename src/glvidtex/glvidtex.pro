@@ -4,9 +4,6 @@ OBJECTS_DIR = .build
 RCC_DIR = .build
 UI_DIR = .build
 
-TARGET = glvidtex
-
-
 
 HEADERS       = GLWidget.h \
 		../livemix/VideoSource.h \
@@ -29,10 +26,11 @@ HEADERS       = GLWidget.h \
 		GLTextDrawable.h \
 		GLSceneGroup.h \
 		PlayerWindow.h \
-		../livemix/MjpegThread.h
+		../livemix/MjpegThread.h \
+		GLVideoMjpegDrawable.h \
+		CornerItem.h
 		
 SOURCES       = GLWidget.cpp \
-		main.cpp \
 		../livemix/VideoSource.cpp \
 		../livemix/VideoThread.cpp \
 		../livemix/VideoFrame.cpp \
@@ -54,7 +52,19 @@ SOURCES       = GLWidget.cpp \
 		GLSceneGroup.cpp \
 		MetaObjectUtil.cpp \
 		PlayerWindow.cpp \
-		../livemix/MjpegThread.cpp
+		../livemix/MjpegThread.cpp \
+		GLVideoMjpegDrawable.cpp \
+		CornerItem.cpp
+
+gleditor: {
+	TARGET = gleditor
+	SOURCES += editor-main.cpp
+}
+else: {
+	TARGET = glvidtex
+	SOURCES += main.cpp
+}		
+
 
 unix: {
 	HEADERS += \
