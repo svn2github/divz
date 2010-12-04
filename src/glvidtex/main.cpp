@@ -584,27 +584,33 @@ int main(int argc, char *argv[])
 			addButtons(tb, addQtSource(glw));
 		}
 		
-		if(1)
+		if(0)
 		{
 			//GLImageDrawable *drawable = new GLImageDrawable("me2.jpg");
 			GLImageDrawable *drawable = new GLImageDrawable("Pm5544.jpg");
-			drawable->addShowAnimation(GLDrawable::AnimFade);
-			drawable->setRect(QRectF(0,0,1000,750));
+			//GLImageDrawable *drawable = new GLImageDrawable("grayscale3.jpg");
+			//GLImageDrawable *drawable = new GLImageDrawable("/usr/share/backgrounds/images/default.jpg");
+			
+			//drawable->addShowAnimation(GLDrawable::AnimFade);
+			//drawable->setRect(QRectF(0,0,1000,750));
+			drawable->setRect(glw->canvasRect());
 			glw->addDrawable(drawable);
 			drawable->show();
 		}
 		
-		if(0)
+		if(1)
 		{
 			//GLImageDrawable *drawable = new GLImageDrawable("me2.jpg");
 			GLVideoDrawable *drawable = new GLVideoDrawable();
 			drawable->addShowAnimation(GLDrawable::AnimFade);
-			drawable->setRect(QRectF(0,0,1000,750));
+			//drawable->setRect(QRectF(0,0,1000,750));
+			drawable->setRect(glw->canvasRect());
 			
 			MjpegThread *thread = new MjpegThread();
 			drawable->setVideoSource(thread);
 			
 			QUrl url("http://cameras:8082");
+			//QUrl url("http://cameras:9041");
 			if(!url.isValid())
 			{
 				QMessageBox::critical(0, "Invalid URL","Sorry, the URL you entered is not a properly-formatted URL. Please try again.");

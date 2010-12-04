@@ -71,6 +71,16 @@ PlayerWindow::PlayerWindow(QWidget *parent)
 		qDebug() << "PlayerWindow: flip-v: "<<flipv;
 	setFlipVertical(flipv);
 	
+	// Rotate
+	int rv = settings.value("rotate","0").toInt();
+	if(verbose)
+		qDebug() << "PlayerWindow: rotate: "<<rv;
+	
+	if(rv != 0)
+		setCornerRotation(rv == -1 ? GLWidget::RotateLeft  : 
+				  rv ==  1 ? GLWidget::RotateRight : 
+				             GLWidget::RotateNone);
+	
 	// Aspet Ratio Mode
 	setAspectRatioMode(settings.value("ignore-ar","false").toString() == "true" ? Qt::IgnoreAspectRatio : Qt::KeepAspectRatio);
 	

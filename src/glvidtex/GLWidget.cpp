@@ -28,6 +28,7 @@ GLWidget::GLWidget(QWidget *parent, QGLWidget *shareWidget)
 	, m_contrast(0)
 	, m_hue(0)
 	, m_saturation(0)
+	, m_cornerRotation(GLWidget::RotateNone)
 {
 	
 	m_cornerTranslations 
@@ -235,6 +236,12 @@ void GLWidget::makeRenderContextCurrent()
 		makeCurrent();
 }
 
+void GLWidget::setCornerRotation(RotateValue rv)
+{
+	m_cornerRotation = rv;
+	updateGL();
+}
+
 void GLWidget::setAlphaMask(const QImage &mask)
 {
 	m_alphaMask_preScaled = mask;
@@ -424,14 +431,45 @@ void GLWidget::paintGL()
 		};
 		
 		
-		//QVector3D list[] = 
-	
+		// Handle flipping the corner translation points so that the top left is flipped 
+		// without the user having think about flipping the point inputs.
+		int cbl = 2,
+		    cbr = 3,
+		    ctl = 0,
+		    ctr = 1;
+		
+		if(m_flipHorizontal && m_flipVertical)
+		{
+			cbl = 1;
+			cbr = 0;
+			ctl = 3;
+			ctr = 2;
+		}
+		else
+		if(m_flipVertical)
+		{
+			cbl = 0;
+			cbr = 1;
+			ctl = 2;
+			ctr = 3;
+		}
+		else
+		if(m_flipHorizontal)
+		{
+			cbl = 1;
+			cbr = 0;
+			ctl = 3;
+			ctr = 2;
+		}
+		
+		//qDebug() << "cbl:"<<cbl<<",cbr:"<<cbr<<",ctl:"<<ctl<<",ctr:"<<ctr;
+
 		const GLfloat vertexCoordArray[] =
 		{
-			target.left()      + m_cornerTranslations[2].x(), target.bottom() + 1 - m_cornerTranslations[2].y(), //(GLfloat)zIndex(),
-			target.right() + 1 - m_cornerTranslations[3].x(), target.bottom() + 1 - m_cornerTranslations[3].y(), //(GLfloat)zIndex(),
-			target.left()      + m_cornerTranslations[0].x(), target.top()        + m_cornerTranslations[0].y(), 	//(GLfloat)zIndex(),
-			target.right() + 1 - m_cornerTranslations[1].x(), target.top()        + m_cornerTranslations[1].y()//, 	(GLfloat)zIndex()
+			target.left()      + m_cornerTranslations[cbl].x(), target.bottom() + 1 - m_cornerTranslations[cbl].y(),
+			target.right() + 1 - m_cornerTranslations[cbr].x(), target.bottom() + 1 - m_cornerTranslations[cbr].y(),
+			target.left()      + m_cornerTranslations[ctl].x(), target.top()        + m_cornerTranslations[ctl].y(),
+			target.right() + 1 - m_cornerTranslations[ctr].x(), target.top()        + m_cornerTranslations[ctr].y()
 		};
 		
 		
@@ -444,8 +482,8 @@ void GLWidget::paintGL()
 		const GLfloat txBottom = m_flipVertical //m_scanLineDirection == QVideoSurfaceFormat::TopToBottom
 			? source.bottom() / m_fbo->size().height()
 			: source.top()    / m_fbo->size().height();
-	
-		const GLfloat textureCoordArray[] =
+			
+		GLfloat textureCoordArray[] =
 		{
 			txLeft , txBottom,
 			txRight, txBottom,
@@ -453,7 +491,49 @@ void GLWidget::paintGL()
 			txRight, txTop
 		};
 		
-		double liveOpacity = 1.;//(opacity() * (m_fadeActive ? m_fadeValue : 1.));
+// 		qDebug() << "GLWidget: Before Rotate: textureCoordArray: " 
+// 			<< "BL: "<<textureCoordArray[0]<<textureCoordArray[1]
+// 			<< "BR: "<<textureCoordArray[2]<<textureCoordArray[3]
+			
+		if(m_cornerRotation == GLWidget::RotateLeft)
+		{
+			// Bottom Left = Top Left
+			textureCoordArray[0] = txLeft;
+			textureCoordArray[1] = txTop;
+			
+			// Bottom Right = Bottom Left
+			textureCoordArray[2] = txLeft;
+			textureCoordArray[3] = txBottom;
+			
+			// Top Left = Top Right
+			textureCoordArray[4] = txRight;
+			textureCoordArray[5] = txTop;
+			
+			// Top Right = Bottom Right
+			textureCoordArray[6] = txRight;
+			textureCoordArray[7] = txBottom;
+		}
+		else
+		if(m_cornerRotation == GLWidget::RotateRight)
+		{
+			// Bottom Left = Bottom Right
+			textureCoordArray[0] = txRight;
+			textureCoordArray[1] = txBottom;
+			
+			// Bottom Right = Top Right
+			textureCoordArray[2] = txRight;
+			textureCoordArray[3] = txTop;
+			
+			// Top Left = Bottom Left
+			textureCoordArray[4] = txLeft;
+			textureCoordArray[5] = txBottom;
+			
+			// Top Right = Top Left
+			textureCoordArray[6] = txLeft;
+			textureCoordArray[7] = txTop;
+		}
+	
+		double liveOpacity = 1.;
 	
 		m_program->bind();
 	

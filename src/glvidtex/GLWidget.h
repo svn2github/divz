@@ -50,6 +50,7 @@ public:
 	
 	const QRectF & viewport() const { return m_viewport; }
 	const QSizeF & canvasSize() const { return m_canvasSize; }
+	const QRectF canvasRect() const { return QRectF(QPointF(0,0), m_canvasSize); }
 	
 	void makeRenderContextCurrent();
 	
@@ -67,6 +68,17 @@ public:
 	
 	bool flipHorizontal() { return m_flipHorizontal; }
 	bool flipVertical() { return m_flipVertical; }
+	
+	typedef enum RotateValue
+	{
+		RotateLeft =-1,
+		RotateNone = 0,
+		RotateRight=+1
+	};
+	
+	RotateValue cornerRotation() { return m_cornerRotation; }
+
+
 	
 signals:
 	void clicked();
@@ -98,6 +110,8 @@ public slots:
 	
 	void setFlipHorizontal(bool flip);
 	void setFlipVertical(bool flip);
+	
+	void setCornerRotation(RotateValue);
 	
 protected slots:
 	void zIndexChanged();
@@ -160,6 +174,8 @@ private:
 	int m_contrast;
 	int m_hue;
 	int m_saturation;
+	
+	RotateValue m_cornerRotation;
 };
 
 #endif
