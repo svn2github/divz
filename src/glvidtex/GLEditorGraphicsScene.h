@@ -4,31 +4,7 @@
 #include <QGraphicsScene>
 #include "GLDrawable.h"
 
-class RectItem : public QGraphicsItem
-{
-public:
-	RectItem (QGraphicsItem * parent = 0 ) :
-		QGraphicsItem (parent) {}
-
-	QRectF boundingRect() const { return m_rect; }
-	void setBoundingRect(const QRectF& rect) { m_rect = rect; update(); }
-	
-	void paint(QPainter*p, const QStyleOptionGraphicsItem*, QWidget*)
-	{
-		p->save();
-		//p->setCompositionMode(QPainter::CompositionMode_Difference);
-		p->setPen(pen);
-		p->fillRect(boundingRect(), brush);
-		p->restore();
-	}
-	
-	QPen pen;
-	QBrush brush;
-private:
-	QRectF m_rect;
-	
-};
-
+class RectItem;
 
 class GLEditorGraphicsScene : public QGraphicsScene
 {
@@ -50,11 +26,15 @@ protected:
 	void itemSelected(GLDrawable*);
 	
 	virtual void mousePressEvent ( QGraphicsSceneMouseEvent * mouseEvent );
+	virtual void mouseMoveEvent ( QGraphicsSceneMouseEvent * mouseEvent );
+	virtual void mouseReleaseEvent ( QGraphicsSceneMouseEvent * mouseEvent );
 	virtual void keyPressEvent(QKeyEvent * event);
 
 private:
 	QList<GLDrawable*> m_selection;
-	RectItem * m_bgRect;	
+	RectItem * m_bgRect;
+	RectItem * m_dragRect;
+	bool m_lockClearSelection;	
 	
 };
 

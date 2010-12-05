@@ -726,6 +726,7 @@ void GLDrawable::paint(QPainter * painter, const QStyleOptionGraphicsItem * /*op
 	{
 		painter->setRenderHint(QPainter::Antialiasing, true);
 		painter->setPen(QPen(qApp->palette().color(QPalette::Highlight), 1.0));
+		painter->setBrush(QBrush());
 		// FIXME: this draws OUTSIDE (but inside the safe 2px area)
 		painter->drawRect(QRectF(boundingRect()).adjusted(-0.5, -0.5, +0.5, +0.5));
 	}
@@ -1061,7 +1062,8 @@ void GLDrawable::mousePressEvent(QGraphicsSceneMouseEvent * event)
 {
 	//qDebug() << "GLDrawable::mousePressEvent";
 	QGraphicsItem::mousePressEvent(event);
-	setSelected(true);
+	if(!isSelected())
+		setSelected(true);
 
 }
 
@@ -1080,9 +1082,25 @@ void GLDrawable::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 		newPos.setX(((int)(newPos.x() / x)) * x);
 		newPos.setY(((int)(newPos.y() / y)) * y);
 		if(newPos != pos())
+		{
 			setPos(newPos);
+			
+// 			QPointF posDiff = event->scenePos() - event->lastScenePos(); 
+// 		
+// 			GLEditorGraphicsScene *gls = dynamic_cast<GLEditorGraphicsScene*>(scene());
+// 			if(gls)
+// 			{
+// 				//qDebug() << "posDiff: "<<posDiff;
+// 				QList<GLDrawable*> sel = gls->selectedItems();
+// 				foreach(GLDrawable *item, sel)
+// 				{
+// 					if(item != this)
+// 						item->moveBy(posDiff.x(), posDiff.y());
+// 				}
+// 			}
+		}
+			
 	}
-
 }
 
 void GLDrawable::mouseReleaseEvent(QGraphicsSceneMouseEvent * event)
@@ -1094,6 +1112,18 @@ void GLDrawable::mouseReleaseEvent(QGraphicsSceneMouseEvent * event)
 	{
 		QRectF newRect(pos(), rect().size());
 		setRect(newRect);
+		
+		GLEditorGraphicsScene *gls = dynamic_cast<GLEditorGraphicsScene*>(scene());
+		if(gls)
+		{
+			QList<GLDrawable*> sel = gls->selectedItems();
+			foreach(GLDrawable *item, sel)
+			{
+				QRectF newRect(item->pos(), item->rect().size());
+				if(item != this)
+					item->setRect(newRect);
+			}
+		}
 		//qDebug() << "GLDrawable::mouseReleaseEvent: Rect changed: "<<newRect; 
 	}
 }
