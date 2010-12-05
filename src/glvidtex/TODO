@@ -3,10 +3,78 @@ TARGET DATE: 12/11 9am
 		- Network Control of a player binary
 		- Player Binary must:
 			- Load scene groups and play the required group/scene/layout on demand over network
+				- TASKS:
+					Create a GLPlayerServer class, feature bullets:
+						Listen on a port
+						Accept data "frames", similar to the way the VideoReceiver accepts input (header + data block)
+							Data block is a byte array for a QVariantMap
+							Required Map Keys:
+								- Sequence # (auto incremented number)
+								- Command (e.g. loadSlideGroup, etc. - compile a list of valid comments)
+								- QVariantMap is passed enmass as a ref (&) to the command
+								- Command should be a slot that accepts a QVariantMap 
+							Think of commands as slot calls
+						Responds to conected client ala a signal
+							GLPlayerServer should have a slot that can be called with a QVariantMap 
+								One of the keys should be a "responseName"
+								The client should function like the server, responses are slots that accept a QVariantMap
+					Create command slots for the GLPlayerServer class:
+						- Functions needed:
+							- SetBlackout
+								- Black out the output 
+							- LoadSlideGroup
+								- Only one slide group is "Active" in the player at once
+								- Dont add items if items not in the viewport
+							- SetSlide
+								- Set the slide by ID
+							- SetLayout
+								- Set the layout on the slide by ID
+							- SetUserProperty
+								- Set the user prop on a GLDrawable by drawable ID
+							- SetVisibility
+								- Set visiblility flag on a drawable by ID
+							- DownloadFile
+								- Transmit a file from the controller to the player over the network so it can be loaded
+								- Need to adjust the file-based classes to load files from the "network download" location if not on disk
+									- GLImageDrawable
+									- GLVideoLoopDrawable
+									- GLVideoFileDrawable
+									- Others?
+							- QueryProperty
+								- Query a Q_PROPERTY on a drawable by drawable ID & property name
+								- Response is emitted as a "signal" (see above)
+							- QuerySlide
+							- QueryLayout
+								- Query the active slide/layout
+								- Response is emitted as a "signal" (see above)
+							- SetAlphaMask
+							- SetKeystone
+							- SetWindow
+							- SetFlip
+							- SetIgnoreAR
+							- SetViewport
+							- SetCanvasSize
+							- SetBCHS
+								- The above set various player parameters ala the INI file reading in the PlayerWindow.cpp class
+								- Provide corresponding query methods to read those player parameters back
+							- FUTURE:
+								- Add commands to set up system (OS) methods such as 
+									Time/Date
+									IP Address
+									Users/Passwords
+									etc
+					Add properties to GLTextDrawable for the text color/outlines/etc
+					
+						
 			- Set visibility/user props over network on demand
 			- IF TIME: Send back video
 			- IF TIME: Run playlists
 		- Director Screen
+			- TASKS:
+				- Create GLPlayerClient class
+					- Client half of the server above
+					- Sends command packets
+					- Accepts incoming response packets
 			- Must connect to more than one player for control
 				- For target date, we need at least two players:
 					- FoH (front of house, cloned output or double wide - not sure yet)
@@ -22,7 +90,27 @@ TARGET DATE: 12/11 9am
 				- Ignore AR
 				- Viewport/Canvas (loaded from slide group...)
 				- BCHS Adjustments
-				- Viewport rectangle selection
+				- Control Option:
+					- Control player individually
+						- UI will display player with List UI(below) in a "tab" ala firefox webpage
+					- Combined Player Control 
+						- Viewport rectangle selection
+						
+				- TASKS:
+					- Create UI for this setup screen in designer
+					- Create a simple widget for keystoning
+						- Widget displays a rectangle with four corners that are draggable
+						- Sends keystoning coordinates to player in real time
+						- Be sure to provide numerical inputs below the widget for manual entry of keystone values
+					- IMPORTANT:
+						- Try to integrate the cvFindPlanarHomagraphy function
+					- Create data structure to store player settings
+						- Some sort of orm class
+						- From/To bytearray
+						- PlayerList class
+							- Derive from a AbstractITemList
+							- Write/Load from byte array
+							- Save to QSettings?
 			- List UI:
 				- 1. List of slide groups available
 				- 2. List of slides in selected slide group
@@ -49,10 +137,19 @@ TARGET DATE: 12/11 9am
 			- Setup canvas size
 			- Property editor on right to change the main property 
 			
+			- TASKS:
+				- Add AbstractListModel methods to the GLSceneGroup and GLScene classes
+				- Add a user property flag to GLDrawables
+				- Create property editor panels based on the old livelayer work
+				- Create UI in Qt Creator
+				- Create GLSceneGroupCollection as a meta-group of scenes
+					- From/to byte array methods
+					- Write/read from file
+					- Index scene groups by ID as well
+					- Add a "editSequence" value to collection->group->scene classes for tracking edits and when to re-transmit changed slides
+				
 		- Need a document type containing multiple slide groups
 		- Need to consider not sending GLDrawables/slides to players that dont need them
-			
-
 
 
 
