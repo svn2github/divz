@@ -135,6 +135,8 @@ void GLWidget::initializeGL()
 		m_useShaders = true;
 	}
 	
+	qDebug() << "GLWidget::initGL: GLSL Shaders Enabled: "<<m_useShaders;
+	
 	initShaders();
 	
 	initAlphaMask();
@@ -320,6 +322,7 @@ void GLWidget::paintGL()
 	
 	qglClearColor(Qt::black);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glLoadIdentity(); // Reset The View
 	
 	QRectF viewport = m_viewport;
 	if(!viewport.isValid())
@@ -371,7 +374,7 @@ void GLWidget::paintGL()
 		}
 		
 		QRectF source = QRect(0,0,m_fbo->size().width(),m_fbo->size().height());
-		QRectF target = rect();
+		QRectF target = QRectF(0,0,width(),height());
 		
 // 		source = source.adjusted(
 // 			m_displayOpts.cropTopLeft.x(),
@@ -473,6 +476,15 @@ void GLWidget::paintGL()
 		};
 		
 		
+		//m_fbo->toImage().save("fbo.jpg");
+		
+//  		qDebug() << "GLWidget: vertexCoordArray: target: "<<target<<", points: " 
+//  			<< "BL: "<<vertexCoordArray[0]<<vertexCoordArray[1]
+//  			<< "BR: "<<vertexCoordArray[2]<<vertexCoordArray[3]
+//  			<< "TL: "<<vertexCoordArray[4]<<vertexCoordArray[5]
+//  			<< "TR: "<<vertexCoordArray[6]<<vertexCoordArray[7];
+
+		
 		const GLfloat txLeft   = m_flipHorizontal ? source.right()  / m_fbo->size().width() : source.left()  / m_fbo->size().width();
 		const GLfloat txRight  = m_flipHorizontal ? source.left()   / m_fbo->size().width() : source.right() / m_fbo->size().width();
 		
@@ -491,9 +503,11 @@ void GLWidget::paintGL()
 			txRight, txTop
 		};
 		
-// 		qDebug() << "GLWidget: Before Rotate: textureCoordArray: " 
-// 			<< "BL: "<<textureCoordArray[0]<<textureCoordArray[1]
-// 			<< "BR: "<<textureCoordArray[2]<<textureCoordArray[3]
+//  		qDebug() << "GLWidget: Before Rotate: textureCoordArray: " 
+//  			<< "BL: "<<textureCoordArray[0]<<textureCoordArray[1]
+//  			<< "BR: "<<textureCoordArray[2]<<textureCoordArray[3]
+//  			<< "TL: "<<textureCoordArray[4]<<textureCoordArray[5]
+//  			<< "TR: "<<textureCoordArray[6]<<textureCoordArray[7];
 			
 		if(m_cornerRotation == GLWidget::RotateLeft)
 		{
@@ -532,6 +546,12 @@ void GLWidget::paintGL()
 			textureCoordArray[6] = txLeft;
 			textureCoordArray[7] = txTop;
 		}
+		
+// 		qDebug() << "GLWidget: textureCoordArray: " 
+//  			<< "BL: "<<textureCoordArray[0]<<textureCoordArray[1]
+//  			<< "BR: "<<textureCoordArray[2]<<textureCoordArray[3]
+//  			<< "TL: "<<textureCoordArray[4]<<textureCoordArray[5]
+//  			<< "TR: "<<textureCoordArray[6]<<textureCoordArray[7];
 	
 		double liveOpacity = 1.;
 	
@@ -560,12 +580,11 @@ void GLWidget::paintGL()
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, m_fbo->texture());
 		
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+// 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+// 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+// 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+// 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 		
-	
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, m_alphaTextureId);
 		
@@ -577,6 +596,8 @@ void GLWidget::paintGL()
 		m_program->setUniformValue("colorMatrix", m_colorMatrix);
 		
 		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+		//glDrawArrays(GL_QUAD_STRIP, 0, 4);
+		
 	
 		m_program->release();
 	}
@@ -884,7 +905,7 @@ void GLWidget::resizeGL(int width, int height)
 		QSize size(width,height);
 		m_fbo = new QGLFramebufferObject(size);
 		
-		//qDebug() << "GLWidget::resizeGL(): New FBO size:"<<size;
+		//qDebug() << "GLWidget::resizeGL(): New FBO size:"<<m_fbo->size();
 	}
 	
 	if(height == 0)
