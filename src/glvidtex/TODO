@@ -1,3 +1,61 @@
+TARGET DATE: 12/11 9am
+	Features Required by 12/11 9am:
+		- Network Control of a player binary
+		- Player Binary must:
+			- Load scene groups and play the required group/scene/layout on demand over network
+			- Set visibility/user props over network on demand
+			- IF TIME: Send back video
+			- IF TIME: Run playlists
+		- Director Screen
+			- Must connect to more than one player for control
+				- For target date, we need at least two players:
+					- FoH (front of house, cloned output or double wide - not sure yet)
+					- Wash (player with double-wide canvas for output to two projectors)
+			- Player Setup UI:
+				- Player "Code"/Title
+				- IP Address/Port
+				- Alpha Mask
+					- Paintbrush-esque UI with simple rects/polygons....???
+				- Keystoning
+				- Window Pos/Size
+				- Flip H/V
+				- Ignore AR
+				- Viewport/Canvas (loaded from slide group...)
+				- BCHS Adjustments
+				- Viewport rectangle selection
+			- List UI:
+				- 1. List of slide groups available
+				- 2. List of slides in selected slide group
+				- 3. List of layouts in selected slide (selecting slide goes live)
+				- 4. List of user-conrollable items on current slide/layout
+				- 5. Panel for:
+					- Top: Layouts
+					- Mid: Live area
+					- Lower: Left: List of items, right: Top: Visible btn, Bottom: Value input
+			- Black/unblack Master UI btn
+			- All players get the live slide, Editor indexes viewports by player 
+				- E.g.  Player "FOH"  viewport (0,0)-(2048x768)
+					Player "Wash" viewport (0,1024)-(2048x768)
+				So canvas would be 2048x1536, with 1024x768 quads for each projector
+		- Editor Screen
+			- Edit one slidegroup at a time
+			- List of slides on left
+			- List of key frames on top
+				- Horizontal row of icons
+				- Always a blank icon on the right to edit
+				- Always editing the currently-selected icon
+			- Main editing area in center
+			- Toolbar for adding items
+			- Setup canvas size
+			- Property editor on right to change the main property 
+			
+		- Need a document type containing multiple slide groups
+		- Need to consider not sending GLDrawables/slides to players that dont need them
+			
+
+
+
+
 Note: Video Conversion Example:
 	for i in `ls .`; do(mencoder $i -ofps 23.976 -oac mp3lame -lameopts abr:br=92 -ovc xvid -xvidencopts bitrate=2000 -o $i-xvid.avi);done;
 
