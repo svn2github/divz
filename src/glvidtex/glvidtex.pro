@@ -4,6 +4,7 @@ OBJECTS_DIR = .build
 RCC_DIR = .build
 UI_DIR = .build
 
+FORMS += PlayerSetupDialog.ui
 
 HEADERS       = GLWidget.h \
 		../livemix/VideoSource.h \
@@ -29,7 +30,8 @@ HEADERS       = GLWidget.h \
 		../livemix/MjpegThread.h \
 		GLVideoMjpegDrawable.h \
 		CornerItem.h \
-		GLEditorGraphicsScene.h
+		GLEditorGraphicsScene.h \
+		PlayerSetupDialog.h
 		
 SOURCES       = GLWidget.cpp \
 		../livemix/VideoSource.cpp \
@@ -56,7 +58,8 @@ SOURCES       = GLWidget.cpp \
 		../livemix/MjpegThread.cpp \
 		GLVideoMjpegDrawable.cpp \
 		CornerItem.cpp \
-		GLEditorGraphicsScene.cpp
+		GLEditorGraphicsScene.cpp \
+		PlayerSetupDialog.cpp
 
 gleditor: {
 	TARGET = gleditor
@@ -137,6 +140,7 @@ symbian: include($$QT_SOURCE_TREE/examples/symbianpkgrules.pri)
 
 unix {
 	LIBS += -lavdevice -lavformat -lavcodec -lavutil -lswscale -lbz2 
+	INCLUDEPATH += /usr/include/ffmpeg
 }
 
 win32 {

@@ -9,7 +9,7 @@ GLVideoInputDrawable::GLVideoInputDrawable(QString file, QObject *parent)
 	if(!file.isEmpty())
 		setVideoInput(file);
 	
-	QTimer::singleShot(1500, this, SLOT(testXfade()));
+        //QTimer::singleShot(1500, this, SLOT(testXfade()));
 }
 	
 void GLVideoInputDrawable::testXfade()

@@ -203,9 +203,10 @@ int main(int argc, char *argv[])
 // 		glw->setAspectRatioMode(Qt::IgnoreAspectRatio);
 	}
 	
-	if(1)
+        if(0)
 	{
-		GLVideoInputDrawable *drawable = new GLVideoInputDrawable("/dev/video0");
+                GLVideoInputDrawable *drawable = new GLVideoInputDrawable("/dev/video0");
+                drawable->setCardInput("S-Video");
 		drawable->addShowAnimation(GLDrawable::AnimFade);
 		drawable->setRect(scene->sceneRect());
 		scene->addItem(drawable);
