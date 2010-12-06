@@ -109,6 +109,13 @@ QByteArray GLSceneLayout::toByteArray()
 	map["layoutId"]		= layoutId();
 	map["layoutName"] 	= m_layoutName;
 	
+	QByteArray bytes;
+	QBuffer buffer(&bytes);
+	buffer.open(QIODevice::WriteOnly);
+	m_pixmap.save(&buffer, "PNG"); // writes pixmap into bytes in PNG format
+	buffer.close();
+	map["pixmap"] = bytes;
+	
 	QVariantList items;
 	foreach(GLSceneLayoutItem *item, m_items)
 		items << item->toByteArray();
@@ -132,6 +139,13 @@ void GLSceneLayout::fromByteArray(QByteArray& array)
 	m_layoutId	= map["layoutId"].toInt();
 	m_layoutName	= map["layoutName"].toString();
 	
+	QByteArray bytes = map["pixmap"].toByteArray();
+	QImage image;
+	image.loadFromData(bytes);
+	//qDebug() << "GLSceneLayout::fromByteArray(): image size:"<<image.size()<<", isnull:"<<image.isNull();
+	
+	m_pixmap = QPixmap::fromImage(image);
+	
 	m_items.clear();
 	QVariantList items = map["items"].toList();
 	foreach(QVariant var, items)
@@ -143,8 +157,16 @@ void GLSceneLayout::fromByteArray(QByteArray& array)
 	
 void GLSceneLayout::setLayoutName(const QString& name)
 {
+	m_layoutName = name;
 	emit layoutNameChanged(name);
 }
+
+void GLSceneLayout::setPixmap(const QPixmap& pixmap)
+{
+	m_pixmap = pixmap;
+	emit pixmapChanged(pixmap);
+}
+
 
 /*private:
 	GLScene *m_scene;
@@ -154,19 +176,82 @@ void GLSceneLayout::setLayoutName(const QString& name)
 
 
 // ****************************
-// GLScene
+// GLSceneLayoutListModel
 // ****************************
+// We make a separate list model for the layouts because the
+// GLScene class can only implement a list model for a single datatype - in its case, the main data, GLDrawables
 
-GLScene::GLScene(QObject *parent)
-	: QObject(parent)
-	, m_sceneId(-1)
-	, m_glWidget(0)
+GLSceneLayoutListModel::GLSceneLayoutListModel(GLScene *scene)
+	: QAbstractListModel()
+	, m_scene(scene)
+{
+	connect(m_scene, SIGNAL(layoutAdded(GLSceneLayout*)),   this, SLOT(layoutAdded(GLSceneLayout*)));
+	connect(m_scene, SIGNAL(layoutRemoved(GLSceneLayout*)), this, SLOT(layoutRemoved(GLSceneLayout*)));
+}
+
+GLSceneLayoutListModel::~GLSceneLayoutListModel() 
 {
 
 }
 
+void GLSceneLayoutListModel::layoutAdded(GLSceneLayout*)
+{
+	QModelIndex top    = createIndex(m_scene->m_layouts.size()-2, 0),
+		    bottom = createIndex(m_scene->m_layouts.size()-1, 0);
+	dataChanged(top,bottom);
+
+}
+
+void GLSceneLayoutListModel::layoutRemoved(GLSceneLayout *lay)
+{
+	int idx = m_scene->m_layouts.indexOf(lay);
+	QModelIndex top    = createIndex(idx, 0),
+		    bottom = createIndex(m_scene->m_layouts.size(), 0);
+	dataChanged(top,bottom);
+}	
+	
+int GLSceneLayoutListModel::rowCount(const QModelIndex &/*parent*/) const
+{
+	return m_scene->m_layouts.size();
+}
+
+QVariant GLSceneLayoutListModel::data( const QModelIndex & index, int role) const
+{
+	if (!index.isValid())
+		return QVariant();
+	
+	if (index.row() >= rowCount(QModelIndex()))
+		return QVariant();
+	
+	if (role == Qt::DisplayRole || Qt::EditRole == role)
+	{
+		GLSceneLayout *lay = m_scene->m_layouts.at(index.row());
+		return lay->layoutName();
+	}
+	else if(Qt::DecorationRole == role)
+	{
+		GLSceneLayout *lay = m_scene->m_layouts.at(index.row());
+		return lay->pixmap();
+	}
+	else
+		return QVariant();
+}
+
+// ****************************
+// GLScene
+// ****************************
+
+GLScene::GLScene(QObject *parent)
+	: QAbstractListModel(parent)
+	, m_sceneId(-1)
+	, m_glWidget(0)
+	, m_layoutListModel(0)
+{
+	
+}
+
 GLScene::GLScene(QByteArray& ba, QObject *parent)
-	: QObject(parent)
+	: QAbstractListModel(parent)
 	, m_sceneId(-1)
 	, m_glWidget(0)
 {
@@ -174,6 +259,13 @@ GLScene::GLScene(QByteArray& ba, QObject *parent)
 }
 
 GLScene::~GLScene() {}
+
+GLSceneLayoutListModel *GLScene::layoutListModel()
+{
+	if(!m_layoutListModel)
+		m_layoutListModel = new GLSceneLayoutListModel(this);
+	return m_layoutListModel;
+}
 	
 int GLScene::sceneId()
 {
@@ -288,7 +380,27 @@ void GLScene::fromByteArray(QByteArray& array)
 		addDrawable(drawable);
 	}
 }
+
+QVariant GLScene::data( const QModelIndex & index, int role ) const
+{
+	if (!index.isValid())
+		return QVariant();
 	
+	if (index.row() >= rowCount(QModelIndex()))
+		return QVariant();
+	
+	if (role == Qt::DisplayRole || Qt::EditRole == role)
+	{
+		GLDrawable *d = m_itemList.at(index.row());
+		return d->itemName();
+	}
+// 	else if(Qt::DecorationRole == role)
+// 	{
+// 	}
+	else
+		return QVariant();
+}
+
 void GLScene::addDrawable(GLDrawable *d)
 {
 	if(!d)
@@ -297,6 +409,11 @@ void GLScene::addDrawable(GLDrawable *d)
 	m_drawableIdLookup[d->id()] = d;
 	emit drawableAdded(d);
 	
+	// Notify QListViews of change in data
+	QModelIndex top    = createIndex(m_itemList.size()-2, 0),
+		    bottom = createIndex(m_itemList.size()-1, 0);
+	dataChanged(top,bottom);
+
 	if(m_glWidget)
 		m_glWidget->addDrawable(d);
 }
@@ -305,10 +422,18 @@ void GLScene::removeDrawable(GLDrawable *d)
 {
 	if(!d)
 		return;
+	
+	int idx = m_itemList.indexOf(d);
+
+	emit drawableRemoved(d);
 	m_itemList.removeAll(d);
 	m_drawableIdLookup.remove(d->id());
-	emit drawableRemoved(d);
 	
+	// Notify QListViews of change in data
+	QModelIndex top    = createIndex(idx, 0),
+		    bottom = createIndex(m_itemList.size(), 0);
+	dataChanged(top,bottom);
+
 	if(m_glWidget)
 		m_glWidget->removeDrawable(d);
 }
@@ -358,9 +483,9 @@ void GLScene::removeLayout(GLSceneLayout *lay)
 {
 	if(!lay)
 		return;
+	emit layoutRemoved(lay);
 	m_layouts.removeAll(lay);
 	m_layoutIdLookup.remove(lay->layoutId());
-	emit layoutRemoved(lay);
 }
 
 GLSceneLayout * GLScene::lookupLayout(int id)
@@ -400,11 +525,11 @@ protected:
 // ****************************
 
 GLSceneGroup::GLSceneGroup(QObject *parent)
-	: QObject(parent)
+	: QAbstractListModel(parent)
 {}
 
 GLSceneGroup::GLSceneGroup(QByteArray& ba, QObject *parent)
-	: QObject(parent)
+	: QAbstractListModel(parent)
 {
 	fromByteArray(ba);
 }
@@ -465,6 +590,26 @@ void GLSceneGroup::fromByteArray(QByteArray& array)
 	}
 }
 	
+QVariant GLSceneGroup::data( const QModelIndex & index, int role) const
+{
+	if (!index.isValid())
+		return QVariant();
+	
+	if (index.row() >= rowCount(QModelIndex()))
+		return QVariant();
+	
+	if (role == Qt::DisplayRole || Qt::EditRole == role)
+	{
+		GLScene *d = m_scenes.at(index.row());
+		return d->sceneName();
+	}
+// 	else if(Qt::DecorationRole == role)
+// 	{
+// 	}
+	else
+		return QVariant();
+}
+
 // The core of the scene group is a list of scenes.
 // The order is explicit through their index in the QList, though not relevant
 // as the order they are played in is specified by the GLSchedule and GLScheduleItems.
@@ -476,15 +621,28 @@ void GLSceneGroup::addScene(GLScene* s)
 	m_scenes << s;
 	m_sceneIdLookup[s->sceneId()] = s;
 	emit sceneAdded(s);
+	
+	// Notify QListViews of change in data
+	QModelIndex top    = createIndex(m_scenes.size()-2, 0),
+		    bottom = createIndex(m_scenes.size()-1, 0);
+	dataChanged(top,bottom);
 }
 
 void GLSceneGroup::removeScene(GLScene* s)
 {
 	if(!s)
 		return;
+		
+	int idx = m_scenes.indexOf(s);
+
+	emit sceneRemoved(s);
 	m_scenes.removeAll(s);
 	m_sceneIdLookup.remove(s->sceneId());
-	emit sceneRemoved(s);
+	
+	// Notify QListViews of change in data
+	QModelIndex top    = createIndex(idx, 0),
+		    bottom = createIndex(m_scenes.size(), 0);
+	dataChanged(top,bottom);
 }
 
 GLScene * GLSceneGroup::lookupScene(int id)
@@ -515,3 +673,191 @@ void GLSceneGroup::setGroupName(const QString& name)
 // 	QHash<int,GLScene*> m_sceneIdLookup;
 // 
 // 	GLScene *m_overlayScene;
+
+
+// ****************************
+// GLSceneGroupCollection
+// ****************************
+
+GLSceneGroupCollection::GLSceneGroupCollection(QObject *parent)
+	: QAbstractListModel(parent)
+{}
+
+GLSceneGroupCollection::GLSceneGroupCollection(QByteArray& ba, QObject *parent)
+	: QAbstractListModel(parent)
+{
+	fromByteArray(ba);
+}
+
+GLSceneGroupCollection::GLSceneGroupCollection(const QString& file, QObject *parent)
+	: QAbstractListModel(parent)
+{
+	readFile(file);
+}
+
+GLSceneGroupCollection::~GLSceneGroupCollection()
+{
+}
+	
+int GLSceneGroupCollection::collectionId()
+{
+	if(m_collectionId<0)
+	{
+		QSettings s;
+		m_collectionId = s.value("GLSceneGroupCollection/collection-id-counter",100).toInt() + 1;
+		s.setValue("GLSceneGroupCollection/collection-id-counter", m_collectionId);
+	}
+	return m_collectionId;
+}
+
+QByteArray GLSceneGroupCollection::toByteArray()
+{
+	QByteArray array;
+	QDataStream stream(&array, QIODevice::WriteOnly);
+	
+	QVariantMap map;
+	map["collectionId"]	= collectionId();
+	map["collectionName"] 	= m_collectionName;
+	
+	QVariantList groups;
+	foreach(GLSceneGroup *group, m_groups)
+		groups << group->toByteArray();
+	
+	map["groups"] = groups;
+	
+	stream << map;
+	
+	return array;
+}
+
+void GLSceneGroupCollection::fromByteArray(QByteArray& array)
+{
+	QDataStream stream(&array, QIODevice::ReadOnly);
+	QVariantMap map;
+	stream >> map;
+	
+	if(map.isEmpty())
+		return;
+	
+	m_collectionId	= map["collectionId"].toInt();
+	m_collectionName	= map["collectionName"].toString();
+	
+	m_groups.clear();
+	QVariantList groups = map["groups"].toList();
+	foreach(QVariant var, groups)
+	{
+		QByteArray data = var.toByteArray();
+		m_groups << new GLSceneGroup(data, this);
+	}
+}
+	
+bool GLSceneGroupCollection::writeFile(const QString& name)
+{
+	if(name.isEmpty() && m_fileName.isEmpty())
+		return false;
+	
+	QString fileName = name.isEmpty() ? m_fileName : name;
+	m_fileName = fileName;
+	
+	QFile file(fileName);
+	// Open file
+	if (!file.open(QIODevice::WriteOnly))
+	{
+		qDebug() << "GLSceneGroupCollection::writeFile: Unable to open "<<fileName<<" for writing."; 
+		return false;
+	}
+	else
+	{
+		file.write(toByteArray());
+		file.close();
+		
+		//qDebug() << "Debug: Saved SceneID: "<< scene->sceneId();
+	}
+	return true;
+}
+
+bool GLSceneGroupCollection::readFile(const QString& name)
+{
+	m_fileName = name;
+	QFile file(name);
+	if (!file.open(QIODevice::ReadOnly)) 
+	{
+		qDebug() << "GLSceneGroupCollection::writeFile: Unable to open "<<name<<" for writing.";
+		return false;
+	}
+	else
+	{
+		QByteArray array = file.readAll();
+		fromByteArray(array);
+		
+		//qDebug() << "Debug: Loaded SceneID: "<< scene->sceneId();
+	}
+	return true;
+}
+	
+QVariant GLSceneGroupCollection::data( const QModelIndex & index, int role ) const
+{
+	if (!index.isValid())
+		return QVariant();
+	
+	if (index.row() >= rowCount(QModelIndex()))
+		return QVariant();
+	
+	if (role == Qt::DisplayRole || Qt::EditRole == role)
+	{
+		GLSceneGroup *d = m_groups.at(index.row());
+		return d->groupName();
+	}
+// 	else if(Qt::DecorationRole == role)
+// 	{
+// 	}
+	else
+		return QVariant();
+}
+
+// The core of the scene collection is a list of scenes.
+// The order is explicit through their index in the QList, though not relevant
+// as the order they are played in is specified by the GLSchedule and GLScheduleItems.
+// Although the scenes are displayed in order in the 'Director' program
+void GLSceneGroupCollection::addGroup(GLSceneGroup* s)
+{
+	if(!s)
+		return;
+	m_groups << s;
+	m_groupIdLookup[s->groupId()] = s;
+	emit groupAdded(s);
+	
+	// Notify QListViews of change in data
+	QModelIndex top    = createIndex(m_groups.size()-2, 0),
+		    bottom = createIndex(m_groups.size()-1, 0);
+	dataChanged(top,bottom);
+}
+
+void GLSceneGroupCollection::removeGroup(GLSceneGroup* s)
+{
+	if(!s)
+		return;
+		
+	int idx = m_groups.indexOf(s);
+
+	emit groupRemoved(s);
+	m_groups.removeAll(s);
+	m_groupIdLookup.remove(s->groupId());
+	
+	// Notify QListViews of change in data
+	QModelIndex top    = createIndex(idx, 0),
+		    bottom = createIndex(m_groups.size(), 0);
+	dataChanged(top,bottom);
+}
+
+GLSceneGroup * GLSceneGroupCollection::lookupGroup(int id)
+{
+	return m_groupIdLookup[id];
+}
+
+
+void GLSceneGroupCollection::setCollectionName(const QString& name)
+{
+	m_collectionName = name;
+	emit collectionNameChanged(name);
+}

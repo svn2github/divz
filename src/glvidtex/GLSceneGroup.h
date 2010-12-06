@@ -48,6 +48,8 @@ public:
 	
 	int layoutId() { return m_layoutId; }
 	QString layoutName() { return m_layoutName; }
+	QPixmap pixmap() { return m_pixmap; }
+	
 	
 	QList<GLSceneLayoutItem*> layoutItems() { return m_items; }
 	void addLayoutItem(GLSceneLayoutItem* x) { m_items << x; }
@@ -58,19 +60,41 @@ public:
 	
 public slots:
 	void setLayoutName(const QString& name);
+	void setPixmap(const QPixmap& pix);
 
 signals:
 	void layoutNameChanged(const QString& name);
+	void pixmapChanged(const QPixmap& pixmap);
 
 private:
 	GLScene *m_scene;
 	int m_layoutId;
 	QString m_layoutName;
+	QPixmap m_pixmap;
 	QList<GLSceneLayoutItem*> m_items;
 };
 
+class GLScene;
+class GLSceneLayoutListModel : public QAbstractListModel
+{
+	Q_OBJECT
+public:
+	GLSceneLayoutListModel(GLScene*);
+	~GLSceneLayoutListModel();
+	
+	int rowCount(const QModelIndex &/*parent*/) const;
+	QVariant data( const QModelIndex & index, int role = Qt::DisplayRole ) const;
+	
+private slots:
+	void layoutAdded(GLSceneLayout*);
+	void layoutRemoved(GLSceneLayout*);
+	
+private:
+	GLScene *m_scene;
 
-class GLScene : public QObject
+};
+
+class GLScene : public QAbstractListModel
 {
 	Q_OBJECT
 	Q_PROPERTY(int sceneId READ sceneId);
@@ -92,8 +116,12 @@ public:
 	
 	GLDrawable * lookupDrawable(int id);
 	
-	int size() { return m_itemList.size(); }
+	int size() const { return m_itemList.size(); }
 	GLDrawable * at(int idx) { return idx>-1 && idx<size() ? m_itemList[idx] : 0; }
+	
+	// QAbstractListModel
+	virtual int rowCount(const QModelIndex &/*parent*/) const { return size(); }
+	virtual QVariant data( const QModelIndex & index, int role = Qt::DisplayRole ) const;
 	
 	// This is the 'crossover' method which
 	// connects the drawables in this scene to an actual display widget.
@@ -106,6 +134,8 @@ public:
 	QList<GLSceneLayout*> layouts() { return m_layouts; }
 	void addLayout(GLSceneLayout*);
 	void removeLayout(GLSceneLayout*);
+	
+	GLSceneLayoutListModel *layoutListModel();
 	
 	GLSceneLayout * lookupLayout(int id);
 
@@ -121,6 +151,8 @@ signals:
 	void sceneNameChanged(const QString&);
 	
 protected:
+	friend class GLSceneLayoutListModel;
+	
 	int m_sceneId;
 	QString m_sceneName;
 	
@@ -131,10 +163,11 @@ protected:
 	QHash<int,GLSceneLayout*> m_layoutIdLookup;
 		
 	GLWidget *m_glWidget;
+	GLSceneLayoutListModel *m_layoutListModel;
 };
 	
 
-class GLSceneGroup : public QObject
+class GLSceneGroup : public QAbstractListModel
 {
 	Q_OBJECT
 	
@@ -161,6 +194,13 @@ public:
 	void removeScene(GLScene*);
 	
 	GLScene * lookupScene(int id);
+	
+	int size() const { return m_scenes.size(); }
+	GLScene * at(int idx) { return idx>-1 && idx<size() ? m_scenes[idx] : 0; }
+	
+	// QAbstractListModel
+	virtual int rowCount(const QModelIndex &/*parent*/) const { return size(); }
+	virtual QVariant data( const QModelIndex & index, int role = Qt::DisplayRole ) const;
 		
 	// Overlay scene, by definition, is a general scene that is to be overlayed on the content of 
 	// the other scenes in the list. 
@@ -185,6 +225,67 @@ protected:
 	QHash<int,GLScene*> m_sceneIdLookup;
 
 	GLScene *m_overlayScene;
+};
+
+
+class GLSceneGroupCollection : public QAbstractListModel
+{
+	Q_OBJECT
+	
+	Q_PROPERTY(int collectionId READ collectionId);
+	Q_PROPERTY(QString collectionName READ collectionName WRITE setCollectionName);
+	
+public:
+	GLSceneGroupCollection(QObject *parent=0);
+	GLSceneGroupCollection(QByteArray&, QObject *parent=0);
+	GLSceneGroupCollection(const QString& file, QObject *parent=0);
+	~GLSceneGroupCollection();
+	
+	int collectionId();
+	QString collectionName() { return m_collectionName; }
+	
+	QByteArray toByteArray();
+	void fromByteArray(QByteArray&);
+	
+	bool writeFile(const QString& name="");
+	bool readFile(const QString& name);
+	
+	QString fileName() { return m_fileName; }
+	
+	// The core of the scene group is a list of scenes.
+	// The order is explicit through their index in the QList, though not relevant
+	// as the order they are played in is specified by the GLSchedule and GLScheduleItems.
+	// Although the scenes are displayed in order in the 'Director' program
+	QList<GLSceneGroup*> groupList() { return m_groups; }
+	void addGroup(GLSceneGroup*);
+	void removeGroup(GLSceneGroup*);
+	
+	GLSceneGroup * lookupGroup(int id);
+	
+	int size() const { return m_groups.size(); }
+	GLSceneGroup * at(int idx) { return idx>-1 && idx<size() ? m_groups[idx] : 0; }
+	
+	// QAbstractListModel
+	virtual int rowCount(const QModelIndex &/*parent*/) const { return size(); }
+	virtual QVariant data( const QModelIndex & index, int role = Qt::DisplayRole ) const;
+		
+public slots:
+	void setCollectionName(const QString& name);
+	void setFileName(const QString& name) { m_fileName = name; }
+
+signals:
+	void groupAdded(GLSceneGroup*);
+	void groupRemoved(GLSceneGroup*);
+	
+	void collectionNameChanged(const QString&);
+
+protected:
+	int m_collectionId;
+	QString m_collectionName;
+	QString m_fileName;
+	
+	QList<GLSceneGroup*> m_groups;
+	QHash<int,GLSceneGroup*> m_groupIdLookup;
 };
 
 

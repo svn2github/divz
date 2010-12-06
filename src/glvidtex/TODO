@@ -138,14 +138,14 @@ TARGET DATE: 12/11 9am
 			- Property editor on right to change the main property 
 			
 			- TASKS:
-				- Add AbstractListModel methods to the GLSceneGroup and GLScene classes
+				- [DONE] Add AbstractListModel methods to the GLSceneGroup and GLScene classes
 				- Add a user property flag to GLDrawables
 				- Create property editor panels based on the old livelayer work
 				- Create UI in Qt Creator
 				- Create GLSceneGroupCollection as a meta-group of scenes
-					- From/to byte array methods
-					- Write/read from file
-					- Index scene groups by ID as well
+					- [DONE] From/to byte array methods
+					- [DONE] Write/read from file
+					- [DONE] Index scene groups by ID as well
 					- Add a "editSequence" value to collection->group->scene classes for tracking edits and when to re-transmit changed slides
 				
 		- Need a document type containing multiple slide groups
