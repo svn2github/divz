@@ -244,6 +244,8 @@ public:
 	int collectionId();
 	QString collectionName() { return m_collectionName; }
 	
+	QSizeF canvasSize() { return m_canvasSize; }
+	
 	QByteArray toByteArray();
 	void fromByteArray(QByteArray&);
 	
@@ -272,17 +274,21 @@ public:
 public slots:
 	void setCollectionName(const QString& name);
 	void setFileName(const QString& name) { m_fileName = name; }
+	void setCanvasSize(const QSizeF&);
 
 signals:
 	void groupAdded(GLSceneGroup*);
 	void groupRemoved(GLSceneGroup*);
 	
 	void collectionNameChanged(const QString&);
+	void canvasSizeChanged(const QSizeF&);
 
 protected:
 	int m_collectionId;
 	QString m_collectionName;
 	QString m_fileName;
+	
+	QSizeF m_canvasSize;
 	
 	QList<GLSceneGroup*> m_groups;
 	QHash<int,GLSceneGroup*> m_groupIdLookup;

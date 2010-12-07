@@ -16,6 +16,7 @@ public:
 	
 signals:
 	void selectionChanged();
+	void drawableSelected(GLDrawable*);
 	
 public slots:
 	void clearSelection(QList<GLDrawable*> ignoreList = QList<GLDrawable*>());

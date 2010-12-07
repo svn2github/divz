@@ -56,6 +56,12 @@ class GLDrawable : public QObject,
 	
 	// This is the usable area for arranging the drawable - if isNull, then it uses the GLWidget's canvas size
 	Q_PROPERTY(QSizeF canvasSize READ canvasSize WRITE setCanvasSize);
+	
+	Q_PROPERTY(bool fadeIn READ fadeIn WRITE setFadeIn);
+	Q_PROPERTY(bool fadeOut READ fadeOut WRITE setFadeOut);
+	
+	Q_PROPERTY(int fadeInLength READ fadeInLength WRITE setFadeInLength);
+	Q_PROPERTY(int fadeOutLength READ fadeOutLength WRITE setFadeOutLength);
 
 	Q_ENUMS(AnimationType);
 
@@ -151,6 +157,12 @@ public:
 	virtual QVariantMap propsToMap();
 	
 	bool isSelected() { return m_selected; }
+	
+	bool fadeIn() { return m_fadeIn; }
+	bool fadeOut() { return m_fadeOut; }
+	
+	int fadeInLength() { return m_fadeInLength; }
+	int fadeOutLength() { return m_fadeOutLength; }
 
 public slots:
 	void updateGL();
@@ -160,7 +172,9 @@ public slots:
 
 	void setRect(const QRectF& rect);
 	void setOpacity(double i);
+	void setOpacity(int o) { setOpacity(((double)o)/100.0); }
 	void setZIndex(double z);
+	void setZIndex(int z) { setZIndex((double)z); } // for sig/slot compat
 	void setZIndexModifier(double mod);
 
 	void show();
@@ -187,6 +201,12 @@ public slots:
 	
 	void setSelected(bool selected=true);
 	
+	void setFadeIn(bool);
+	void setFadeOut(bool);
+	
+	void setFadeInLength(int);
+	void setFadeOutLength(int);
+	
 signals:
 	void zIndexChanged(double newZIndex);
 	void drawableResized(const QSize& newSize);
@@ -202,6 +222,8 @@ protected slots:
 	void propAnimFinished();
 
 protected:
+	void updateAnimValues();
+	
 	virtual void updateAlignment(bool animateRect=false, int animLength=300, QEasingCurve animCurve = QEasingCurve::Linear);
 
 	friend class GLWidget;
@@ -293,6 +315,11 @@ private:
 	bool m_isUserControllable;
 	
 	bool m_selected;
+	
+	bool m_fadeIn;
+	bool m_fadeOut;
+	int m_fadeInLength;
+	int m_fadeOutLength;
 };
 
 bool operator==(const GLDrawable::AnimParam&a, const GLDrawable::AnimParam&b);

@@ -41,6 +41,10 @@ GLDrawable::GLDrawable(QObject *parent)
 	, m_idLoaded(false)
 	, m_isUserControllable(false)
 	, m_selected(false)
+	, m_fadeIn(true)
+	, m_fadeOut(true)
+	, m_fadeInLength(300)
+	, m_fadeOutLength(300)
 {
 	// QGraphicsItem
 	{
@@ -69,6 +73,42 @@ GLDrawable::GLDrawable(QObject *parent)
 		
 		setControlsVisible(false);
 	}
+	
+	updateAnimValues();
+}
+void GLDrawable::updateAnimValues()
+{
+	resetAllAnimations();
+	
+	if(m_fadeIn)
+		addShowAnimation(GLDrawable::AnimFade,m_fadeInLength);
+
+	if(m_fadeOut)
+		addHideAnimation(GLDrawable::AnimFade,m_fadeOutLength);
+}
+
+void GLDrawable::setFadeIn(bool f)
+{
+	m_fadeIn = f;
+	updateAnimValues();
+}
+
+void GLDrawable::setFadeOut(bool f)
+{
+	m_fadeOut = f;
+	updateAnimValues();
+}
+
+void GLDrawable::setFadeInLength(int f)
+{
+	m_fadeInLength = f;
+	updateAnimValues();
+}
+
+void GLDrawable::setFadeOutLength(int f)
+{
+	m_fadeOutLength = f;
+	updateAnimValues();
 }
 
 int GLDrawable::id()
@@ -461,6 +501,8 @@ void GLDrawable::setZIndex(double z)
 {
 	//qDebug() << "GLDrawable::setZIndex: "<<this<<", zIndex:"<<z;
 	m_zIndex = z;
+	setZValue((int)z); // for QGraphicsItem compat
+	
 	emit zIndexChanged(z);
 	updateGL();
 	propertyWasChanged("zIndex",z);

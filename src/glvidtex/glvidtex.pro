@@ -26,11 +26,8 @@ HEADERS       = GLWidget.h \
 		GLVideoReceiverDrawable.h \
 		GLTextDrawable.h \
 		GLSceneGroup.h \
-		PlayerWindow.h \
 		../livemix/MjpegThread.h \
 		GLVideoMjpegDrawable.h \
-		CornerItem.h \
-		GLEditorGraphicsScene.h \
 		PlayerSetupDialog.h
 		
 SOURCES       = GLWidget.cpp \
@@ -54,20 +51,36 @@ SOURCES       = GLWidget.cpp \
 		GLTextDrawable.cpp \
 		GLSceneGroup.cpp \
 		MetaObjectUtil.cpp \
-		PlayerWindow.cpp \
 		../livemix/MjpegThread.cpp \
 		GLVideoMjpegDrawable.cpp \
-		CornerItem.cpp \
-		GLEditorGraphicsScene.cpp \
-		PlayerSetupDialog.cpp
+		PlayerSetupDialog.cpp \
+		
 
 gleditor: {
 	TARGET = gleditor
-	SOURCES += editor-main.cpp
+	
+	HEADERS += GLEditorGraphicsScene.h \
+		CornerItem.h \
+		../livemix/EditorUtilityWidgets.h \
+		../livemix/ExpandableWidget.h \
+		EditorWindow.h
+		
+	SOURCES += editor-main.cpp \
+		CornerItem.cpp \
+		GLEditorGraphicsScene.cpp \
+		../livemix/EditorUtilityWidgets.cpp \
+		../livemix/ExpandableWidget.cpp \
+		EditorWindow.cpp
+		
+	include(../3rdparty/richtextedit/richtextedit.pri)
 }
 else: {
 	TARGET = glvidtex
-	SOURCES += main.cpp
+	
+	HEADERS += PlayerWindow.h 
+		
+	SOURCES += main.cpp \
+		PlayerWindow.cpp 
 }		
 
 

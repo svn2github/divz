@@ -74,6 +74,7 @@ void GLEditorGraphicsScene::itemSelected(GLDrawable *item)
 	m_selection.clear();
 	m_selection.append(item);
 	emit selectionChanged();
+	emit drawableSelected(item);
 }
 
 void GLEditorGraphicsScene::clearSelection(QList<GLDrawable*> ignoreList)

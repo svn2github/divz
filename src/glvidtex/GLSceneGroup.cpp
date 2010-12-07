@@ -681,16 +681,19 @@ void GLSceneGroup::setGroupName(const QString& name)
 
 GLSceneGroupCollection::GLSceneGroupCollection(QObject *parent)
 	: QAbstractListModel(parent)
+	, m_canvasSize(1000.,750.)
 {}
 
 GLSceneGroupCollection::GLSceneGroupCollection(QByteArray& ba, QObject *parent)
 	: QAbstractListModel(parent)
+	, m_canvasSize(1000.,750.)
 {
 	fromByteArray(ba);
 }
 
 GLSceneGroupCollection::GLSceneGroupCollection(const QString& file, QObject *parent)
 	: QAbstractListModel(parent)
+	, m_canvasSize(1000.,750.)
 {
 	readFile(file);
 }
@@ -718,6 +721,7 @@ QByteArray GLSceneGroupCollection::toByteArray()
 	QVariantMap map;
 	map["collectionId"]	= collectionId();
 	map["collectionName"] 	= m_collectionName;
+	map["canvasSize"] 	= m_canvasSize;
 	
 	QVariantList groups;
 	foreach(GLSceneGroup *group, m_groups)
@@ -739,8 +743,9 @@ void GLSceneGroupCollection::fromByteArray(QByteArray& array)
 	if(map.isEmpty())
 		return;
 	
-	m_collectionId	= map["collectionId"].toInt();
+	m_collectionId		= map["collectionId"].toInt();
 	m_collectionName	= map["collectionName"].toString();
+	m_canvasSize 		= map["canvasSize"].toSizeF();
 	
 	m_groups.clear();
 	QVariantList groups = map["groups"].toList();
@@ -860,4 +865,10 @@ void GLSceneGroupCollection::setCollectionName(const QString& name)
 {
 	m_collectionName = name;
 	emit collectionNameChanged(name);
+}
+
+void GLSceneGroupCollection::setCanvasSize(const QSizeF& size)
+{
+	m_canvasSize = size;
+	emit canvasSizeChanged(size);
 }

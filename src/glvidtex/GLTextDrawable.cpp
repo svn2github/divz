@@ -35,7 +35,8 @@ void GLTextDrawable::setText(const QString& text)
 	qDebug() << "GLTextDrawable::setText(): text:"<<text;
 	
 	m_renderer->setHtml(text);
-	m_renderer->changeFontSize(40);
+	if(!Qt::mightBeRichText(text))
+		m_renderer->changeFontSize(40);
 }
 
 
