@@ -1,8 +1,8 @@
 
 
 #include "EditorUtilityWidgets.h"
-#include "LiveLayer.h"
-#include "LiveScene.h"
+// #include "LiveLayer.h"
+// #include "LiveScene.h"
 
 #include <QVBoxLayout>
 #include <QFormLayout>
@@ -18,11 +18,38 @@
 #endif
 
 
+// Translated from a perl function I wrote to do basically
+// the same thing for an ERP project a few years back.
+QString PropertyEditorFactory::guessTitle(QString field)
+{
+	static const QRegExp rUpperCase = QRegExp("([a-z])([A-Z])");
+	static const QRegExp rFirstLetter = QRegExp("([a-z])");
+	static const QRegExp rLetterNumber = QRegExp("([a-z])([0-9])");
+	//$name =~ s/([a-z])_([a-z])/$1.' '.uc($2)/segi;
+	static const QRegExp rUnderScore = QRegExp("([a-z])_([a-z])");
+
+	QString tmp = field;
+	tmp.replace(rUnderScore,"\\1 \\2");
+	tmp.replace(rUpperCase,"\\1 \\2");
+	if(tmp.indexOf(rFirstLetter) == 0)
+	{
+		QChar x = tmp.at(0);
+		tmp.remove(0,1);
+		tmp.prepend(QString(x).toUpper());
+	}
+
+	tmp.replace(rLetterNumber,"\\1 #\\2");
+
+	return tmp;
+}
+
+
+
 QWidget * PropertyEditorFactory::generatePropertyEditor(QObject *object, const char *property, const char *slot, PropertyEditorOptions opts, const char *changeSignal)
 {
-	if(changeSignal == NULL &&
-		dynamic_cast<GLDrawable*>(object))
-		changeSignal = SIGNAL(propertyChanged(const QString&, const QVariant&));
+// 	if(changeSignal == NULL &&
+// 		dynamic_cast<GLDrawable*>(object))
+// 		changeSignal = SIGNAL(propertyChanged(const QString&, const QVariant&));
 		
 	QWidget *base = new QWidget();
 	QHBoxLayout *hbox = new QHBoxLayout(base);
@@ -666,301 +693,3 @@ void ColorEditorWidget::bValueChanged(int b)
 
 //////////////////////////////////////////////////////////////////////////////
 
-PositionWidget::PositionWidget(LiveLayer *layer)
-	: QWidget()
-	, m_layer(layer)
-{
-	m_lockAspectRatio = false;
-	m_lockToAR = 0.0;
-	m_lockValueUpdates = false;
-	
-	QGridLayout *grid = new QGridLayout(this);
-	int row =0;
-	
-	QHBoxLayout *hbox=0;
-	QWidget *box=0;
-	
-	#define NEW_PANEL {\
-		box = new QWidget(this); \
-		hbox = new QHBoxLayout(box); \
-		hbox->setContentsMargins(0,0,0,0); \
-		}
-	
-	NEW_PANEL;
-	
-	//////////////////////
-	// Fist row: Display type
-	
-	NEW_PANEL;
-	row++;
-	
-	QComboBox *m_aspectRatioBox = new QComboBox();
-	QStringList arNames;
-	
-	int idx = 0;
-	
-	QPointF ar = m_layer->desiredAspectRatio();
-	
-	int count = 0;
-	#define AddRatio(name,a,r) \
-		arNames << name; \
-		m_arList << QPoint(a,r); \
-		if(a == (int)ar.x() && r == (int)ar.y()) \
-			idx = count; \
-		count ++;
-		
-		
-	AddRatio("Manual (Any Ratio)", 0,0);
-	AddRatio("User Specified", -1,-1);
-	AddRatio("4:3   - Standard Screen", 4,3);
-	AddRatio("16:9  - HDTV",16,9);
-	AddRatio("16:10 - Widescreen Monitor", 16,10);
-	
-	#undef AddRatio
-	
-	m_aspectRatioBox->addItems(arNames);
-	connect(m_aspectRatioBox, SIGNAL(activated(int)), this, SLOT(setAspectRatioIdx(int)));
-	hbox->addWidget(m_aspectRatioBox);
-	
-	m_arLeft = new QSpinBox(box);
-	m_arLeft->setAlignment(Qt::AlignRight);
- 	connect(m_arLeft, SIGNAL(valueChanged(int)), this, SLOT(setARLeft(int)));
-	hbox->addWidget(m_arLeft);
-	
-	hbox->addWidget(new QLabel(":"));
-	
-	m_arRight = new QSpinBox(box);
-	m_arRight->setAlignment(Qt::AlignLeft);
- 	connect(m_arRight, SIGNAL(valueChanged(int)), this, SLOT(setARRight(int)));
-	hbox->addWidget(m_arRight);
-	
-	hbox->addStretch(1);
-	
-	                  // row col rspan cspan
-	grid->addWidget(box, row, 1, 1, 3);
-	
-	
-	//////////////////////
-	// 2nd row: position
-	
-	row++;
-	grid->addWidget(new QLabel("Position (X-Y):"), row, 0);
-	
-	NEW_PANEL;
-	
-	m_posX = new QDoubleSpinBox(box);
-	connect(m_posX, SIGNAL(valueChanged(double)), this, SLOT(setLayerX(double)));
-	hbox->addWidget(m_posX);
-	
-	m_posY = new QDoubleSpinBox(box);
-	connect(m_posY, SIGNAL(valueChanged(double)), this, SLOT(setLayerY(double)));
-	hbox->addWidget(m_posY);
-	
-	
-	grid->addWidget(box, row, 1);
-	
-	//////////////////////
-	// 3nd row: size
-	
-	row++;
-	grid->addWidget(new QLabel("Size (W-H):"), row, 0);
-	
-	NEW_PANEL;
-	
-	m_sizeWidth = new QDoubleSpinBox(box);
-	connect(m_sizeWidth, SIGNAL(valueChanged(double)), this, SLOT(setLayerWidth(double)));
-	hbox->addWidget(m_sizeWidth);
-	
-	m_sizeHeight = new QDoubleSpinBox(box);
-	connect(m_sizeHeight, SIGNAL(valueChanged(double)), this, SLOT(setLayerHeight(double)));
-	hbox->addWidget(m_sizeHeight);
-	
-	grid->addWidget(box, row, 1);
-	
-	#undef NEW_PANEL
-	
-// 	setEditPixels(false);
-
-
-	#define CHANGE_SPINBOX_PIXELS(spin) \
-		spin->setMinimum(-Q_MAX(m_layer->scene()->canvasSize().width(),m_layer->scene()->canvasSize().height()) * 10); \
-		spin->setMaximum( Q_MAX(m_layer->scene()->canvasSize().width(),m_layer->scene()->canvasSize().height()) * 10); \
-		spin->setSuffix(" px"); \
-		spin->setDecimals(0); \
-		spin->setAlignment(Qt::AlignRight);
-
-
-	m_lockValueUpdates = true;
-	CHANGE_SPINBOX_PIXELS(m_posY);
-	CHANGE_SPINBOX_PIXELS(m_posX);
-	CHANGE_SPINBOX_PIXELS(m_sizeWidth);
-	CHANGE_SPINBOX_PIXELS(m_sizeHeight);
-	
-	QRectF r = m_layer->rect();
-	m_posY->setValue(r.y());
-	m_posX->setValue(r.x());
-	m_sizeWidth->setValue(r.width());
-	m_sizeHeight->setValue(r.height());
-	
-	m_aspectRatioBox->setCurrentIndex(idx);
-	setAspectRatioIdx(idx);
-	
-	
-	m_lockValueUpdates = false;
-	
-	
-	#undef CHANGE_SPINBOX_PIXELS
-		
-	
-	// watch for position changes and update UI accordingly
-	//connect(m_layer, SIGNAL(layerPropertyChanged(const QString& propertyId, const QVariant& value, const QVariant& oldValue)), this, SLOT(layerPropertyChanged(const QString& propertyId, const QVariant& value, const QVariant& oldValue)));
-	
-}
-
-void PositionWidget::setAspectRatioIdx(int idx)
-{
-	if(idx<0 || idx>=m_arList.size())
-		return;
-		
-	QPoint ar = m_arList[idx];
-	
-	m_arLeft->setEnabled(idx == 1);
-	m_arRight->setEnabled(idx == 1);
-	
-	m_lockAspectRatio = idx > 0;
-	
-	if(idx > 1)
-	{
-		m_arLeft->setValue(ar.x());
-		m_arRight->setValue(ar.y());
-		
-		m_layer->setDesiredAspectRatio(QPointF(ar.x(),ar.y()));
-	}
-
-}
-
-void PositionWidget::layerPropertyChanged(const QString& /*propertyId*/, const QVariant& /*value*/, const QVariant& /*oldValue*/)
-{
-
-}
-
-
-	
-void PositionWidget::setLayerY(double value)
-{
-	if(m_lockValueUpdates)
-	{
-		//qDebug() << "PositionWidget::setLayerTop(): m_lockValueUpdates, returning";
-		return;
-	}
-	m_lockValueUpdates = true;
-		
-	m_layer->setY(value);
-	
-	m_lockValueUpdates = false;
-}
-
-void PositionWidget::setLayerX(double value)
-{
-	if(m_lockValueUpdates)
-		return;
-	m_lockValueUpdates = true;
-	
-	m_layer->setX(value);
-	
-	m_lockValueUpdates = false;
-}
-	
-void PositionWidget::setLayerWidth(double value)
-{
-	if(m_lockValueUpdates)
-		return;
-	m_lockValueUpdates = true;
-	
-	QRectF r = m_layer->rect();
-		
-	if(m_lockAspectRatio)
-	{
-		double newHeight = heightFromWidth(value);
-		m_layer->setRect(r.x(), r.y(), value, newHeight);
-		m_sizeHeight->setValue(newHeight);
-	}
-	else
-	{
-		m_layer->setRect(r.x(), r.y(), value, r.height());
-	}
-	
-	
-	m_lockValueUpdates = false;
-}
-
-void PositionWidget::setLayerHeight(double value)
-{
-	if(m_lockValueUpdates)
-		return;
-	m_lockValueUpdates = true;
-
-	QRectF r = m_layer->rect();
-		
-	if(m_lockAspectRatio)
-	{
-		double newWidth = widthFromHeight(value);
-		m_layer->setRect(r.x(), r.y(), newWidth, value);
-		m_sizeWidth->setValue(newWidth);
-	}
-	else
-	{
-		m_layer->setRect(r.x(), r.y(), r.width(), value);
-	}
-
-
-	
-	
-	m_lockValueUpdates = false;
-}
-	
-double PositionWidget::heightFromWidth(double value)
-{
-	double ar = ((double)m_arLeft->value()) / ((double)m_arRight->value());
-	return value/ar;
-}
-	
-double PositionWidget::widthFromHeight(double value)
-{
-	double ar = ((double)m_arLeft->value()) / ((double)m_arRight->value());
-	return value*ar;
-}
-
-void PositionWidget::setARLeft(int /*val*/)
-{
-	if(m_lockValueUpdates)
-		return;
-	m_lockValueUpdates = true;
-		
-// 	// AR = height/width
-// 	double ar = ((double)m_arLeft->value()) / ((double)val);
-	
-	// AR left = width ratio, so update with respective to height
-	// eg width for height using new AR
-	
-	QRectF r = m_layer->rect();
-	double newHeight = heightFromWidth(r.width());
-	m_layer->setRect(r.x(), r.y(), r.width(), newHeight);
-	m_sizeHeight->setValue(newHeight);
-	
-	m_lockValueUpdates = false;
-}
-
-void PositionWidget::setARRight(int /*val*/)
-{
-	if(m_lockValueUpdates)
-		return;
-	m_lockValueUpdates = true;
-	
-	QRectF r = m_layer->rect();
-	double newHeight = heightFromWidth(r.width());
-	m_layer->setRect(r.x(), r.y(), r.width(), newHeight);
-	m_sizeHeight->setValue(newHeight);
-		
-	m_lockValueUpdates = false;
-}

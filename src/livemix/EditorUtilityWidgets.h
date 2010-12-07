@@ -45,6 +45,8 @@ public:
 		bool stringIsFile;
 		QString fileTypeFilter;
 	};
+	
+	static QString guessTitle(QString value);
 
 	static QWidget * generatePropertyEditor(QObject *object, const char *property, const char *slot, PropertyEditorOptions opts = PropertyEditorOptions(), const char *changeSignal=0);
 
@@ -231,48 +233,6 @@ private:
 };*/
 
 
-class PositionWidget : public QWidget
-{
-	Q_OBJECT
-public:
-	PositionWidget(class LiveLayer *layer);
-
-signals:
-// 	void 
-
-private slots:
-	void setLayerY(double);
-	void setLayerX(double);
-	
-	void setLayerWidth(double);
-	void setLayerHeight(double);
-	
-	void setARLeft(int);
-	void setARRight(int);
-	
-	void layerPropertyChanged(const QString& propertyId, const QVariant& value, const QVariant& oldValue);
-	
-	void setAspectRatioIdx(int);
-	
-private:
-	double heightFromWidth(double);
-	double widthFromHeight(double);
-	
-	LiveLayer *m_layer;
-	bool m_lockAspectRatio;
-	double m_lockToAR;
-	
-	QSpinBox *m_arLeft;
-	QSpinBox *m_arRight;
-	QDoubleSpinBox *m_posY;
-	QDoubleSpinBox *m_posX;
-	QDoubleSpinBox *m_sizeWidth;
-	QDoubleSpinBox *m_sizeHeight;
-	
-	QList<QPoint> m_arList;
-	
-	bool m_lockValueUpdates;
-};
 
 #endif
 
