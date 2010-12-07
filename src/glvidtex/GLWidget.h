@@ -133,6 +133,7 @@ protected:
 private:
 	void initShaders();
 	void initAlphaMask();
+	void updateWarpMatrix();
 	
 	QList<GLDrawable*> m_drawables;
 	
@@ -176,6 +177,8 @@ private:
 	int m_saturation;
 	
 	RotateValue m_cornerRotation;
+	
+	GLfloat m_warpMatrix[4][4];
 };
 
 #endif

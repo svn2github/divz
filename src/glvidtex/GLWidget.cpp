@@ -4,6 +4,7 @@
 #include "GLDrawable.h"
 
 #include <math.h>
+#include <opencv/cv.h>
 
 #include <QGLFramebufferObject>
 
@@ -62,30 +63,35 @@ QSize GLWidget::sizeHint() const
 void GLWidget::setCornerTranslations(const QPolygonF& p)
 {
 	m_cornerTranslations = p;
+	updateWarpMatrix();
 	updateGL();
 }
 	
 void GLWidget::setTopLeftTranslation(const QPointF& p)
 {
 	m_cornerTranslations[0] = p;
+	updateWarpMatrix();
 	updateGL();
 }
 
 void GLWidget::setTopRightTranslation(const QPointF& p)
 {
 	m_cornerTranslations[1] = p;
+	updateWarpMatrix();
 	updateGL();
 }
 
 void GLWidget::setBottomLeftTranslation(const QPointF& p)
 {
 	m_cornerTranslations[2] = p;
+	updateWarpMatrix();
 	updateGL();
 }
 
 void GLWidget::setBottomRightTranslation(const QPointF& p)
 {
 	m_cornerTranslations[3] = p;
+	updateWarpMatrix();
 	updateGL();
 }
 
@@ -148,6 +154,7 @@ void GLWidget::initializeGL()
 		
 	//resizeGL(width(),height());
 	//setViewport(viewport());
+	updateWarpMatrix();
 	
 }
 
@@ -174,7 +181,7 @@ void GLWidget::initShaders()
 		return;// false;
 	} 
 	else 
-	if (!m_program->addShaderFromSourceCode(QGLShader::Vertex, qt_glsl_vertexShaderProgram)) 
+	if (!m_program->addShaderFromSourceCode(QGLShader::Vertex, qt_glsl_warpingVertexShaderProgram)) 
 	{
 		qWarning("GLWidget::initShaders: Vertex shader compile error %s",
 			qPrintable(m_program->log()));
@@ -315,6 +322,149 @@ void GLWidget::setAlphaMask(const QImage &mask)
 	
 }
 
+void GLWidget::updateWarpMatrix()
+{
+
+	// Handle flipping the corner translation points so that the top left is flipped 
+	// without the user having think about flipping the point inputs.
+	int cbl = 2,
+		cbr = 3,
+		ctl = 0,
+		ctr = 1;
+	
+	if(m_flipHorizontal && m_flipVertical)
+	{
+		cbl = 1;
+		cbr = 0;
+		ctl = 3;
+		ctr = 2;
+	}
+	else
+	if(m_flipVertical)
+	{
+		cbl = 0;
+		cbr = 1;
+		ctl = 2;
+		ctr = 3;
+	}
+	else
+	if(m_flipHorizontal)
+	{
+		cbl = 1;
+		cbr = 0;
+		ctl = 3;
+		ctr = 2;
+	}
+	
+	QRectF target = QRectF(0,0,width(),height());
+	
+	//qDebug() << "Original painting target: "<<target;
+	
+	//we need our points as opencv points
+	//be nice to do this without opencv?
+	CvPoint2D32f cvsrc[4];
+	CvPoint2D32f cvdst[4];	
+
+	// Warp source coordinates
+	cvsrc[0].x = target.left();
+	cvsrc[0].y = target.top();
+	cvsrc[1].x = target.right();
+	cvsrc[1].y = target.top();
+	cvsrc[2].x = target.right();
+	cvsrc[2].y = target.bottom();
+	cvsrc[3].x = target.left();
+	cvsrc[3].y = target.bottom();			
+	
+	// Warp destination coordinates
+	cvdst[0].x = target.left()	+ m_cornerTranslations[ctl].x();
+	cvdst[0].y = target.top()	+ m_cornerTranslations[ctl].y();
+	cvdst[1].x = target.right()	- m_cornerTranslations[ctr].x();
+	cvdst[1].y = target.top()	+ m_cornerTranslations[ctr].y();
+	cvdst[2].x = target.right()	- m_cornerTranslations[cbr].x();
+	cvdst[2].y = target.bottom()	- m_cornerTranslations[cbr].y();
+	cvdst[3].x = target.left()	+ m_cornerTranslations[cbl].x();
+	cvdst[3].y = target.bottom()	- m_cornerTranslations[cbl].y();
+	
+	
+	//we create a matrix that will store the results
+	//from openCV - this is a 3x3 2D matrix that is
+	//row ordered
+	CvMat * translate = cvCreateMat(3,3,CV_32FC1);
+	
+	//this is the slightly easier - but supposidly less
+	//accurate warping method 
+	//cvWarpPerspectiveQMatrix(cvsrc, cvdst, translate); 
+
+
+	//for the more accurate method we need to create
+	//a couple of matrixes that just act as containers
+	//to store our points  - the nice thing with this 
+	//method is you can give it more than four points!
+	
+	CvMat* src_mat = cvCreateMat( 4, 2, CV_32FC1 );
+	CvMat* dst_mat = cvCreateMat( 4, 2, CV_32FC1 );
+
+	//copy our points into the matrixes
+	cvSetData( src_mat, cvsrc, sizeof(CvPoint2D32f));
+	cvSetData( dst_mat, cvdst, sizeof(CvPoint2D32f));
+
+	//figure out the warping!
+	//warning - older versions of openCV had a bug
+	//in this function.
+	cvFindHomography(src_mat, dst_mat, translate);
+	
+	//get the matrix as a list of floats
+	float *matrix = translate->data.fl;
+
+	//we need to copy these values
+	//from the 3x3 2D openCV matrix which is row ordered
+	//
+	// ie:   [0][1][2] x
+	//       [3][4][5] y
+	//       [6][7][8] w
+	
+	//to openGL's 4x4 3D column ordered matrix
+	//        x  y  z  w   
+	// ie:   [0][3][ ][6]   [1-4]
+	//       [1][4][ ][7]   [5-8]
+	//	 [ ][ ][ ][ ]   [9-12]
+	//       [2][5][ ][9]   [13-16]
+	//       
+
+			
+	m_warpMatrix[0][0] = matrix[0];
+	m_warpMatrix[0][1] = matrix[3];
+	m_warpMatrix[0][2] = 0.;
+	m_warpMatrix[0][3] = matrix[6];
+	
+	m_warpMatrix[1][0] = matrix[1];
+	m_warpMatrix[1][1] = matrix[4];
+	m_warpMatrix[1][2] = 0.;
+	m_warpMatrix[1][3] = matrix[7];
+			
+	m_warpMatrix[2][0] = 0.;
+	m_warpMatrix[2][1] = 0.;
+	m_warpMatrix[2][2] = 0.;
+	m_warpMatrix[2][3] = 0.;
+	
+	m_warpMatrix[3][0] = matrix[2];
+	m_warpMatrix[3][1] = matrix[5];
+	m_warpMatrix[3][2] = 0.;
+	m_warpMatrix[3][3] = matrix[8];
+		
+			
+// 	qDebug() << "Warp Matrix: "
+// 		<<matrix[0]
+// 		<<matrix[1]
+// 		<<matrix[2]
+// 		<<matrix[3]
+// 		<<matrix[4]
+// 		<<matrix[5]
+// 		<<matrix[6]
+// 		<<matrix[7]
+// 		<<matrix[8];
+}
+
 void GLWidget::paintGL()
 {
 	// Render all drawables into the FBO
@@ -408,6 +558,8 @@ void GLWidget::paintGL()
 // 				.rotate(rot.z(),Qt::ZAxis)
 // 				.translate(-x,-y);
 // 		}
+		
+
 		const GLfloat positionMatrix[4][4] =
 		{
 			{
@@ -433,48 +585,13 @@ void GLWidget::paintGL()
 			}
 		};
 		
-		
-		// Handle flipping the corner translation points so that the top left is flipped 
-		// without the user having think about flipping the point inputs.
-		int cbl = 2,
-		    cbr = 3,
-		    ctl = 0,
-		    ctr = 1;
-		
-		if(m_flipHorizontal && m_flipVertical)
-		{
-			cbl = 1;
-			cbr = 0;
-			ctl = 3;
-			ctr = 2;
-		}
-		else
-		if(m_flipVertical)
-		{
-			cbl = 0;
-			cbr = 1;
-			ctl = 2;
-			ctr = 3;
-		}
-		else
-		if(m_flipHorizontal)
-		{
-			cbl = 1;
-			cbr = 0;
-			ctl = 3;
-			ctr = 2;
-		}
-		
-		//qDebug() << "cbl:"<<cbl<<",cbr:"<<cbr<<",ctl:"<<ctl<<",ctr:"<<ctr;
-
 		const GLfloat vertexCoordArray[] =
 		{
-			target.left()      + m_cornerTranslations[cbl].x(), target.bottom() + 1 - m_cornerTranslations[cbl].y(),
-			target.right() + 1 - m_cornerTranslations[cbr].x(), target.bottom() + 1 - m_cornerTranslations[cbr].y(),
-			target.left()      + m_cornerTranslations[ctl].x(), target.top()        + m_cornerTranslations[ctl].y(),
-			target.right() + 1 - m_cornerTranslations[ctr].x(), target.top()        + m_cornerTranslations[ctr].y()
+			target.left()      , target.bottom() + 1 ,
+			target.right() + 1 , target.bottom() + 1 ,
+			target.left()      , target.top()        ,
+			target.right() + 1 , target.top()        
 		};
-		
 		
 		//m_fbo->toImage().save("fbo.jpg");
 		
@@ -563,6 +680,7 @@ void GLWidget::paintGL()
 		m_program->setAttributeArray("vertexCoordArray",  vertexCoordArray,  2);
 		m_program->setAttributeArray("textureCoordArray", textureCoordArray, 2);
 		
+		m_program->setUniformValue("warpMatrix",          m_warpMatrix);
 		m_program->setUniformValue("positionMatrix",      positionMatrix);
 	// 	QMatrix4x4 mat4(
 	// 		positionMatrix[0][0], positionMatrix[0][1], positionMatrix[0][2], positionMatrix[0][3],
@@ -937,7 +1055,7 @@ void GLWidget::resizeGL(int width, int height)
 	//qDebug() << "GLWidget::resizeGL: "<<width<<","<<height;
 	setViewport(viewport());
 	setAlphaMask(m_alphaMask_preScaled);
-
+	updateWarpMatrix();
 }
 	
 	

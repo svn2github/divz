@@ -44,6 +44,18 @@ static const char *qt_glsl_vertexShaderProgram =
         "   textureCoord = textureCoordArray;\n"
         "}\n";
 
+static const char *qt_glsl_warpingVertexShaderProgram =
+        "attribute highp vec4 vertexCoordArray;\n"
+        "attribute highp vec2 textureCoordArray;\n"
+        "uniform highp mat4 positionMatrix;\n"
+        "uniform highp mat4 warpMatrix;\n"
+        "varying highp vec2 textureCoord;\n"
+        "void main(void)\n"
+        "{\n"
+        "   gl_Position = positionMatrix * warpMatrix * vertexCoordArray;\n"
+        "   textureCoord = textureCoordArray;\n"
+        "}\n";
+
 // Paints an RGB32 frame
 static const char *qt_glsl_xrgbShaderProgram =
         "uniform sampler2D texRgb;\n"

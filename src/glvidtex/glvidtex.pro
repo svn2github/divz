@@ -28,7 +28,10 @@ HEADERS       = GLWidget.h \
 		GLSceneGroup.h \
 		../livemix/MjpegThread.h \
 		GLVideoMjpegDrawable.h \
-		PlayerSetupDialog.h
+		PlayerSetupDialog.h \
+		CornerItem.h \
+		GLEditorGraphicsScene.h 
+		
 		
 SOURCES       = GLWidget.cpp \
 		../livemix/VideoSource.cpp \
@@ -54,20 +57,18 @@ SOURCES       = GLWidget.cpp \
 		../livemix/MjpegThread.cpp \
 		GLVideoMjpegDrawable.cpp \
 		PlayerSetupDialog.cpp \
+		CornerItem.cpp \
+		GLEditorGraphicsScene.cpp  
 		
 
 gleditor: {
 	TARGET = gleditor
 	
-	HEADERS += GLEditorGraphicsScene.h \
-		CornerItem.h \
-		../livemix/EditorUtilityWidgets.h \
+	HEADERS += ../livemix/EditorUtilityWidgets.h \
 		../livemix/ExpandableWidget.h \
 		EditorWindow.h
 		
 	SOURCES += editor-main.cpp \
-		CornerItem.cpp \
-		GLEditorGraphicsScene.cpp \
 		../livemix/EditorUtilityWidgets.cpp \
 		../livemix/ExpandableWidget.cpp \
 		EditorWindow.cpp
@@ -89,6 +90,8 @@ unix: {
 		../livemix/SimpleV4L2.h
 	SOURCES += \
 		../livemix/SimpleV4L2.cpp
+		
+	LIBS += -lcv
 }
 
 
