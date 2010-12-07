@@ -8,6 +8,94 @@
 class QGLFramebufferObject;
 
 class GLDrawable;
+
+class GLWidget;
+class GLWidgetSubview
+{
+public:
+	GLWidgetSubview();
+	GLWidgetSubview(QByteArray&);
+	
+	QByteArray toByteArray();
+	void fromByteArray(QByteArray&);
+	
+	int subviewId();
+	
+	QString title() const { return m_title; }
+	double top() const { return m_viewTop; }
+	double left() const { return m_viewLeft; }
+	double bottom() const { return m_viewBottom; }
+	double right() const { return m_viewRight; }
+	
+	bool flipHorizontal() { return m_flipHorizontal; }
+	bool flipVertical() { return m_flipVertical; }
+	
+	QImage alphaMask() { return m_alphaMask; }
+	
+	int brightness() const { return m_brightness; }
+	int contrast() const { return m_contrast; }
+	int hue() const { return m_hue; }
+	int saturation() const { return m_saturation; }
+	
+	const QPolygonF & cornerTranslations() { return m_cornerTranslations; }
+	
+	
+	void setTitle(const QString&);
+	
+	void setTop(double);
+	void setLeft(double);
+	void setBottom(double);
+	void setRight(double);
+	
+	void setAlphaMask(const QImage&);
+	
+	void setBrightness(int brightness);
+	void setContrast(int contrast);
+	void setHue(int hue);
+	void setSaturation(int saturation);
+	
+	void setFlipHorizontal(bool flip);
+	void setFlipVertical(bool flip);
+	
+	void setCornerTranslations(const QPolygonF&);
+	
+protected:
+	friend class GLWidget;
+	void uploadAlphaMask(GLWidget*);
+	
+private:
+	void updateColors(int brightness, int contrast, int hue, int saturation);
+	
+	int m_id;
+	QString m_title;
+	
+	double m_viewTop;
+	double m_viewLeft;
+	double m_viewBottom;
+	double m_viewRight;
+	
+	bool m_flipHorizontal;
+	bool m_flipVertical;
+// 	QPointF cropTopLeft;
+// 	QPointF cropBottomRight;
+	int m_brightness;
+	int m_contrast;
+	int m_hue;
+	int m_saturation;
+	
+	QImage m_alphaMask;
+	QImage m_alphaMask_preScaled;
+	GLuint m_alphaTextureId;
+	qint64 m_uploadedCacheKey;
+	
+	QMatrix4x4 m_colorMatrix;
+	bool m_colorsDirty;
+
+	QPolygonF m_cornerTranslations;
+};
+
+
+	
 class GLWidget : public QGLWidget
 {
 	Q_OBJECT
@@ -77,9 +165,9 @@ public:
 	};
 	
 	RotateValue cornerRotation() { return m_cornerRotation; }
-
-
 	
+	QList<GLWidgetSubview*> subviews() { return m_subviews; }
+
 signals:
 	void clicked();
 	void canvasSizeChanged(const QSizeF&);
@@ -112,6 +200,10 @@ public slots:
 	void setFlipVertical(bool flip);
 	
 	void setCornerRotation(RotateValue);
+	
+	void addSubview(GLWidgetSubview*);
+	void removeSubview(int subviewId);
+	void removeSubview(GLWidgetSubview*);
 	
 protected slots:
 	void zIndexChanged();
@@ -179,6 +271,9 @@ private:
 	RotateValue m_cornerRotation;
 	
 	GLfloat m_warpMatrix[4][4];
+	
+	QList<GLWidgetSubview*> m_subviews;
+	QHash<int,GLWidgetSubview*> m_subviewLookup;
 };
 
 #endif
