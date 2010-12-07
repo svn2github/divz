@@ -4,10 +4,16 @@
 #include "GLWidget.h"
 
 #include "GLPlayerServer.h"
-#include "GLPlayerClient.h"
+// #include "GLPlayerClient.h"
+
+#include "GLPlayerCommandNames.h"
+
+#include "GLSceneGroup.h"
 
 PlayerWindow::PlayerWindow(QWidget *parent)
 	: GLWidget(parent)
+	, m_group(0)
+	, m_scene(0)
 {
 	bool verbose = true;
 	QString configFile = "player.ini";
@@ -117,6 +123,8 @@ PlayerWindow::PlayerWindow(QWidget *parent)
 			setAlphaMask(alphamask);
 	}
 	
+	m_validUser = READ_STRING("user","player");
+	m_validPass = READ_STRING("pass","player");
 	
 	
 	m_server = new GLPlayerServer();
@@ -132,32 +140,187 @@ PlayerWindow::PlayerWindow(QWidget *parent)
 	
 	connect(m_server, SIGNAL(receivedMap(QVariantMap)), this, SLOT(receivedMap(QVariantMap)));
 	
-	// Send test map back to self
-	QTimer::singleShot(50, this, SLOT(sendTestMap()));
+// 	// Send test map back to self
+// 	QTimer::singleShot(50, this, SLOT(sendTestMap()));
+}
+
+void PlayerWindow::sendReply(QVariantList reply)
+{
+	QVariantMap map;
+	if(reply.size() % 2 != 0)
+	{
+		qDebug() << "PlayerWindow::sendReply: [WARNING]: Odd number of elelements in reply: "<<reply;
+	}
+	
+	for(int i=0; i<reply.size(); i+=2)
+	{
+		if(i+1 >= reply.size())
+			continue;
+		
+		QString key = reply[i].toString();
+		QVariant value = reply[i+1];
+		
+		map[key] = value;
+	}
+	
+	
+	qDebug() << "PlayerWindow::sendReply: [DEBUG] map:"<<map;
+	m_server->sendMap(map);
 }
 
 
 void PlayerWindow::receivedMap(QVariantMap map)
 {
 	qDebug() << "PlayerWindow::receivedMap: "<<map;
+	
+	QString cmd = map["cmd"].toString();
+	if(cmd == GLPlayer_Login)
+	{
+		if(map["user"].toString() != m_validUser ||
+			map["pass"].toString() != m_validPass)
+		{
+			qDebug() << "PlayerWindow::receivedMap: ["<<cmd<<"] Invalid user/pass combo";
+			
+			sendReply(QVariantList() 
+				<< "cmd" << GLPlayer_Login 
+				<< "status" << "error"
+				<< "message" << "Invalid username/password.");
+		}
+		else
+		{
+			m_loggedIn = true;
+			sendReply(QVariantList() 
+				<< "cmd" << GLPlayer_Login
+				<< "status" << "success"
+				<< "version" << m_playerVersionString
+				<< "ver" << m_playerVersion);
+					      
+		}
+	}
+	else
+	if(cmd == GLPlayer_Ping)
+	{
+		sendReply(QVariantList() 
+				<< "cmd" << GLPlayer_Ping
+				<< "version" << m_playerVersionString
+				<< "ver" << m_playerVersion);
+	}
+	else
+	if(!m_loggedIn)
+	{
+		sendReply(QVariantList() 
+				<< "cmd" << GLPlayer_Login 
+				<< "status" << "error"
+				<< "message" << "Not logged in, command will not succeed.");
+	}
+	else
+	if(cmd == GLPlayer_SetBlackout)
+	{
+		/// TODO implement blackout
+		sendReply(QVariantList() 
+				<< "cmd" << GLPlayer_SetBlackout
+				<< "status" << true);
+	}
+	else
+	if(cmd == GLPlayer_LoadSlideGroup)
+	{
+		QByteArray ba = map["data"].toByteArray();
+		GLSceneGroup *group = new GLSceneGroup(ba);
+		setGroup(group);
+		
+		if(group->size() > 0)
+			setScene(group->at(0));
+		
+		sendReply(QVariantList() 
+				<< "cmd" << GLPlayer_LoadSlideGroup
+				<< "status" << true);
+	}
+	else
+	if(cmd == GLPlayer_SetSlide)
+	{
+		if(!m_group)
+		{
+			sendReply(QVariantList() 
+					<< "cmd" << GLPlayer_SetSlide
+					<< "status" << "error"
+					<< "message" << "No group loaded. First transmit GLPlayer_LoadSlideGroup before calling GLPlayer_SetSlide.");
+		}
+		else
+		{
+			int id = map["sceneid"].toInt();
+			GLScene *scene = m_group->lookupScene(id);
+			if(!scene)
+			{
+				sendReply(QVariantList() 
+					<< "cmd" << GLPlayer_SetSlide
+					<< "status" << "error"
+					<< "message" << "Invalid SceneID");
+			}
+			else
+			{
+				setScene(scene);
+				
+				sendReply(QVariantList() 
+					<< "cmd" << GLPlayer_SetSlide
+					<< "status" << true);
+			}
+		}
+	}
+	
+	
+	
+// 	if(map["cmd"].toString() != "ping")
+// 	{
+// 		QVariantMap map2;
+// 		map2["cmd"] = "ping";
+// 		map2["text"] = "Got a map!";
+// 		map2["bday"] = 101010;
+// 		
+// 		qDebug() << "PlayerWindow::receivedMap: Sending response: "<<map2;
+// 		m_server->sendMap(map2);
+// 	}
 }
 
-void PlayerWindow::sendTestMap()
+// void PlayerWindow::sendTestMap()
+// {
+// 	qDebug() << "PlayerWindow::sendTestMap: Connecting...";
+// 	m_client = new GLPlayerClient();
+// 	m_client->connectTo("localhost",9977);
+// 	
+// 	connect(m_client, SIGNAL(socketConnected()), this, SLOT(slotConnected()));
+// 	connect(m_client, SIGNAL(receivedMap(QVariantMap)), this, SLOT(receivedMap(QVariantMap)));
+// }
+// 
+// void PlayerWindow::slotConnected()
+// {
+// 	QVariantMap map;
+// 	map["cmd"] = "testConn";
+// 	map["text"] = "Hello, World!";
+// 	map["bday"] = 103185;
+// 	
+// 	qDebug() << "PlayerWindow::slotConnected: Connected, sending map: "<<map;
+// 	m_client->sendMap(map);
+// }
+
+
+void PlayerWindow::setGroup(GLSceneGroup *group)
 {
-	qDebug() << "PlayerWindow::sendTestMap: Connecting...";
-	m_client = new GLPlayerClient();
-	m_client->connectTo("localhost",9977);
+	if(m_group)
+		delete m_group;
 	
-	connect(m_client, SIGNAL(socketConnected()), this, SLOT(slotConnected()));
+	m_group = group;
 }
 
-void PlayerWindow::slotConnected()
+void PlayerWindow::setScene(GLScene *scene)
 {
-	QVariantMap map;
-	map["cmd"] = "testConn";
-	map["text"] = "Hello, World!";
-	map["bday"] = 103185;
+	m_scene = scene;
 	
-	qDebug() << "PlayerWindow::slotConnected: Connected, sending map: "<<map;
-	m_client->sendMap(map);
+	QList<GLDrawable*> items = drawables();
+	
+	foreach(GLDrawable *drawable, items)
+		removeDrawable(drawable);
+	
+	GLDrawableList list = m_scene->drawableList();
+	foreach(GLDrawable *drawable, list)
+		addDrawable(drawable);
 }

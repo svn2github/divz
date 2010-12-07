@@ -30,7 +30,7 @@ signals:
 	void socketError(QAbstractSocket::SocketError);
 	void socketConnected();
 	
-	void receivedMap(const QVariant& map);
+	void receivedMap(QVariantMap);
 	
 private slots:
 	void dataReady();

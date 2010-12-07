@@ -50,6 +50,7 @@ void GLPlayerServer::incomingConnection(int socketDescriptor)
 
 void GLPlayerServer::sendMap(QVariantMap map)
 {
+	//qDebug() << "GLPlayerServer::sendMap: "<<map;
 	emit commandReady(map);
 }
 
@@ -93,8 +94,10 @@ void GLPlayerServerThread::run()
 	//connect(m_socket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(socketError(QAbstractSocket::SocketError)));
 }
 
-void GLPlayerServerThread::sendMap(const QVariantMap& map)
+void GLPlayerServerThread::sendMap(QVariantMap map)
 {
+	//qDebug() << "GLPlayerServerThread::sendMap: "<<map;
+	
 	QByteArray array;
 	QDataStream stream(&array, QIODevice::WriteOnly);
 	stream << map;
@@ -102,7 +105,7 @@ void GLPlayerServerThread::sendMap(const QVariantMap& map)
 	char data[256];
 	sprintf(data, "%d\n", array.size());
 	m_socket->write((const char*)&data,strlen((const char*)data));
-	//qDebug() << "block size: "<<strlen((const char*)data)<<", data:"<<data;
+	//qDebug() << "GLPlayerServerThread::sendMap: header block size: "<<strlen((const char*)data)<<", header data:"<<data;
 
 	m_socket->write(array);
 }

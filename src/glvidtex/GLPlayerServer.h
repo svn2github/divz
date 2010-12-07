@@ -59,7 +59,7 @@ signals:
 	
 public slots:
 	//void queueCommand(GLPlayerServer::Command,QVariant,QVariant,QVariant);
-	void sendMap(const QVariantMap &);
+	void sendMap(QVariantMap);
 
 private slots:
 	//void processCommandBuffer();

@@ -133,6 +133,8 @@ public:
 	void addDrawable(GLDrawable *);
 	void removeDrawable(GLDrawable*);
 	
+	QList<GLDrawable*> drawables() { return m_drawables; }
+	
 	QTransform transform() { return m_transform; }
 	void setTransform(const QTransform&);
 	

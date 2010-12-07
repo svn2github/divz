@@ -90,7 +90,7 @@ void GLPlayerClient::dataReady()
 		else
 			sscanf((const char*)&data,"%d",&m_blockSize);
 		//qDebug() << "Read:["<<data<<"], size:"<<m_blockSize;
-		//log(QString("[DEBUG] GLPlayerClient::dataReady(): blockSize: %1 (%2)").arg(m_blockSize).arg(m_socket->bytesAvailable()));
+		//qDebug() << "GLPlayerClient::dataReady(): blockSize: "<<m_blockSize<<", bytes avail: "<<m_socket->bytesAvailable();
 	}
 	
 	if (m_socket->bytesAvailable() < m_blockSize)
@@ -102,7 +102,7 @@ void GLPlayerClient::dataReady()
 	if(m_dataBlock.size() > 0)
 	{
 		//qDebug() << "Data ("<<m_dataBlock.size()<<"/"<<m_blockSize<<"): "<<m_dataBlock;
-		//log(QString("[DEBUG] GLPlayerClient::dataReady(): dataBlock: \n%1").arg(QString(m_dataBlock)));
+		//qDebug() << "GLPlayerClient::dataReady(): dataBlock: " << m_dataBlock;
 
 		processBlock();
 	}
@@ -116,10 +116,11 @@ void GLPlayerClient::dataReady()
 
 void GLPlayerClient::processBlock()
 {
-	bool ok;
 	QDataStream stream(&m_dataBlock, QIODevice::ReadOnly);
 	QVariantMap map;
 	stream >> map;
+	
+	//qDebug() << "GLPlayerClient::processBlock: map: "<<map;
 	
 	emit receivedMap(map);
 /*
