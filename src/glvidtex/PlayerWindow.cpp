@@ -3,6 +3,9 @@
 #include <QtGui>
 #include "GLWidget.h"
 
+#include "GLPlayerServer.h"
+#include "GLPlayerClient.h"
+
 PlayerWindow::PlayerWindow(QWidget *parent)
 	: GLWidget(parent)
 {
@@ -113,4 +116,48 @@ PlayerWindow::PlayerWindow(QWidget *parent)
 		else
 			setAlphaMask(alphamask);
 	}
+	
+	
+	
+	m_server = new GLPlayerServer();
+	
+	if (!m_server->listen(QHostAddress::Any,9977)) 
+	{
+		qDebug() << "GLPlayerServer could not start: "<<m_server->errorString();
+	}
+	else
+	{
+		qDebug() << "GLPlayerServer listening on "<<m_server->myAddress();
+	}
+	
+	connect(m_server, SIGNAL(receivedMap(QVariantMap)), this, SLOT(receivedMap(QVariantMap)));
+	
+	// Send test map back to self
+	QTimer::singleShot(50, this, SLOT(sendTestMap()));
+}
+
+
+void PlayerWindow::receivedMap(QVariantMap map)
+{
+	qDebug() << "PlayerWindow::receivedMap: "<<map;
+}
+
+void PlayerWindow::sendTestMap()
+{
+	qDebug() << "PlayerWindow::sendTestMap: Connecting...";
+	m_client = new GLPlayerClient();
+	m_client->connectTo("localhost",9977);
+	
+	connect(m_client, SIGNAL(socketConnected()), this, SLOT(slotConnected()));
+}
+
+void PlayerWindow::slotConnected()
+{
+	QVariantMap map;
+	map["cmd"] = "testConn";
+	map["text"] = "Hello, World!";
+	map["bday"] = 103185;
+	
+	qDebug() << "PlayerWindow::slotConnected: Connected, sending map: "<<map;
+	m_client->sendMap(map);
 }

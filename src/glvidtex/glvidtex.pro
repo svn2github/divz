@@ -31,7 +31,9 @@ HEADERS       = GLWidget.h \
 		PlayerSetupDialog.h \
 		CornerItem.h \
 		GLEditorGraphicsScene.h \
-		KeystonePointsEditor.h
+		KeystonePointsEditor.h \
+		GLPlayerServer.h \
+		GLPlayerClient.h
 		
 		
 SOURCES       = GLWidget.cpp \
@@ -60,7 +62,9 @@ SOURCES       = GLWidget.cpp \
 		PlayerSetupDialog.cpp \
 		CornerItem.cpp \
 		GLEditorGraphicsScene.cpp   \
-		KeystonePointsEditor.cpp
+		KeystonePointsEditor.cpp \
+		GLPlayerServer.cpp \
+		GLPlayerClient.cpp
 		
 
 gleditor: {
