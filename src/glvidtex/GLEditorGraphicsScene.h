@@ -14,6 +14,8 @@ public:
 	
 	QList<GLDrawable*> selectedItems() { return m_selection; }
 	
+	void clear();
+	
 signals:
 	void selectionChanged();
 	void drawableSelected(GLDrawable*);
@@ -21,6 +23,7 @@ signals:
 public slots:
 	void clearSelection(QList<GLDrawable*> ignoreList = QList<GLDrawable*>());
 	void setSceneRect(const QRectF&);
+	void removeDrawables();
 	
 protected:
 	friend class GLDrawable;
@@ -32,6 +35,8 @@ protected:
 	virtual void keyPressEvent(QKeyEvent * event);
 
 private:
+	void addInternalItems();
+	
 	QList<GLDrawable*> m_selection;
 	RectItem * m_bgRect;
 	RectItem * m_dragRect;

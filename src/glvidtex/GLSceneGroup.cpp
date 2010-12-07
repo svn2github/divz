@@ -225,8 +225,9 @@ QVariant GLSceneLayoutListModel::data( const QModelIndex & index, int role) cons
 	
 	if (role == Qt::DisplayRole || Qt::EditRole == role)
 	{
-		GLSceneLayout *lay = m_scene->m_layouts.at(index.row());
-		return lay->layoutName();
+		GLSceneLayout *d = m_scene->m_layouts.at(index.row());
+		QString value = d->layoutName().isEmpty() ? QString("Layout %1").arg(index.row()+1) : d->layoutName();
+		return value;
 	}
 	else if(Qt::DecorationRole == role)
 	{
@@ -246,6 +247,7 @@ GLScene::GLScene(QObject *parent)
 	, m_sceneId(-1)
 	, m_glWidget(0)
 	, m_layoutListModel(0)
+	, m_listOnlyUserItems(false)
 {
 	
 }
@@ -381,6 +383,32 @@ void GLScene::fromByteArray(QByteArray& array)
 	}
 }
 
+void GLScene::setListOnlyUserItems(bool flag)
+{
+	m_listOnlyUserItems = flag;
+	
+	if(flag)
+	{
+		m_userItemList.clear();
+		foreach(GLDrawable *d, m_itemList)
+			if(d->isUserControllable())
+				m_userItemList.append(d);
+	}
+	
+	// Notify QListViews of change in data
+	QModelIndex top    = createIndex(0, 0),
+		    bottom = createIndex(m_itemList.size() > m_userItemList.size() ? m_itemList.size() : m_userItemList.size(), 0);
+	dataChanged(top,bottom);
+}
+
+int GLScene::rowCount(const QModelIndex &/*parent*/) const
+{
+	if(m_listOnlyUserItems)
+		return m_userItemList.size();
+	else
+		return m_itemList.size();
+}
+
 QVariant GLScene::data( const QModelIndex & index, int role ) const
 {
 	if (!index.isValid())
@@ -391,7 +419,8 @@ QVariant GLScene::data( const QModelIndex & index, int role ) const
 	
 	if (role == Qt::DisplayRole || Qt::EditRole == role)
 	{
-		GLDrawable *d = m_itemList.at(index.row());
+		GLDrawable *d = m_listOnlyUserItems ? m_userItemList.at(index.row()) : m_itemList.at(index.row());
+		QString value = d->itemName().isEmpty() ? QString("Item %1").arg(index.row()+1) : d->itemName();
 		return d->itemName();
 	}
 // 	else if(Qt::DecorationRole == role)
@@ -405,6 +434,9 @@ void GLScene::addDrawable(GLDrawable *d)
 {
 	if(!d)
 		return;
+	
+	beginInsertRows(QModelIndex(),m_itemList.size()-1,m_itemList.size());
+
 	m_itemList << d;
 	m_drawableIdLookup[d->id()] = d;
 	emit drawableAdded(d);
@@ -416,12 +448,16 @@ void GLScene::addDrawable(GLDrawable *d)
 
 	if(m_glWidget)
 		m_glWidget->addDrawable(d);
+	
+	endInsertRows();
 }
 
 void GLScene::removeDrawable(GLDrawable *d)
 {
 	if(!d)
 		return;
+	
+	beginRemoveRows(QModelIndex(),0,m_itemList.size()+1);
 	
 	int idx = m_itemList.indexOf(d);
 
@@ -436,6 +472,8 @@ void GLScene::removeDrawable(GLDrawable *d)
 
 	if(m_glWidget)
 		m_glWidget->removeDrawable(d);
+	
+	endRemoveRows();
 }
 
 GLDrawable * GLScene::lookupDrawable(int id)
@@ -590,8 +628,17 @@ void GLSceneGroup::fromByteArray(QByteArray& array)
 	}
 }
 	
+
+int GLSceneGroup::rowCount(const QModelIndex &/*parent*/) const
+{
+	int sz = m_scenes.size();
+	//qDebug() << "GLSceneGroup::rowCount: "<<this<<" sz:"<<sz;
+	return sz;
+}
+
 QVariant GLSceneGroup::data( const QModelIndex & index, int role) const
 {
+	//qDebug() << "GLSceneGroup::data: index:"<<index;
 	if (!index.isValid())
 		return QVariant();
 	
@@ -601,7 +648,9 @@ QVariant GLSceneGroup::data( const QModelIndex & index, int role) const
 	if (role == Qt::DisplayRole || Qt::EditRole == role)
 	{
 		GLScene *d = m_scenes.at(index.row());
-		return d->sceneName();
+		QString value = d->sceneName().isEmpty() ? QString("Scene %1").arg(index.row()+1) : d->sceneName();
+		//qDebug() << "GLSceneGroup::data: "<<this<<" row:"<<index.row()<<", value:"<<value;
+		return value;
 	}
 // 	else if(Qt::DecorationRole == role)
 // 	{
@@ -609,6 +658,34 @@ QVariant GLSceneGroup::data( const QModelIndex & index, int role) const
 	else
 		return QVariant();
 }
+
+Qt::ItemFlags GLSceneGroup::flags(const QModelIndex &index) const
+{
+	if (index.isValid())	
+		return Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsEditable; //| Qt::ItemIsDragEnabled | Qt::ItemIsDropEnabled;
+	
+	return Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsDropEnabled ;
+}
+
+bool GLSceneGroup::setData(const QModelIndex &index, const QVariant & value, int role) 
+{
+	if (!index.isValid())
+		return false;
+	
+	if (index.row() >= rowCount(QModelIndex()))
+		return false;
+	
+	GLScene *d = m_scenes.at(index.row());
+	qDebug() << "GLSceneGroup::setData: "<<this<<" row:"<<index.row()<<", value:"<<value; 
+	if(value.isValid() && !value.isNull())
+	{
+		d->setSceneName(value.toString());
+		dataChanged(index,index);
+		return true;
+	}
+	return false;
+}
+
 
 // The core of the scene group is a list of scenes.
 // The order is explicit through their index in the QList, though not relevant
@@ -618,21 +695,27 @@ void GLSceneGroup::addScene(GLScene* s)
 {
 	if(!s)
 		return;
+	
+	beginInsertRows(QModelIndex(),m_scenes.size()-1,m_scenes.size());
+	
 	m_scenes << s;
 	m_sceneIdLookup[s->sceneId()] = s;
 	emit sceneAdded(s);
+	//qDebug() << "GLSceneGroup::addScene: "<<this<<" scene:"<<s<<", m_scenes.size():"<<m_scenes.size()<<", rowCount:"<<rowCount(QModelIndex());
 	
 	// Notify QListViews of change in data
 	QModelIndex top    = createIndex(m_scenes.size()-2, 0),
 		    bottom = createIndex(m_scenes.size()-1, 0);
 	dataChanged(top,bottom);
+	endInsertRows();
 }
 
 void GLSceneGroup::removeScene(GLScene* s)
 {
 	if(!s)
 		return;
-		
+	
+	beginRemoveRows(QModelIndex(),0,m_scenes.size()+1);
 	int idx = m_scenes.indexOf(s);
 
 	emit sceneRemoved(s);
@@ -643,6 +726,7 @@ void GLSceneGroup::removeScene(GLScene* s)
 	QModelIndex top    = createIndex(idx, 0),
 		    bottom = createIndex(m_scenes.size(), 0);
 	dataChanged(top,bottom);
+	endRemoveRows();
 }
 
 GLScene * GLSceneGroup::lookupScene(int id)
@@ -811,7 +895,9 @@ QVariant GLSceneGroupCollection::data( const QModelIndex & index, int role ) con
 	if (role == Qt::DisplayRole || Qt::EditRole == role)
 	{
 		GLSceneGroup *d = m_groups.at(index.row());
-		return d->groupName();
+		QString value = d->groupName().isEmpty() ? QString("Group %1").arg(index.row()+1) : d->groupName();
+		return value; 
+		
 	}
 // 	else if(Qt::DecorationRole == role)
 // 	{
@@ -828,6 +914,11 @@ void GLSceneGroupCollection::addGroup(GLSceneGroup* s)
 {
 	if(!s)
 		return;
+	
+	// Notify list view of intent to change list sizes
+	beginInsertRows(QModelIndex(),m_groups.size()-1,m_groups.size());
+	
+	// Effect appending
 	m_groups << s;
 	m_groupIdLookup[s->groupId()] = s;
 	emit groupAdded(s);
@@ -836,15 +927,21 @@ void GLSceneGroupCollection::addGroup(GLSceneGroup* s)
 	QModelIndex top    = createIndex(m_groups.size()-2, 0),
 		    bottom = createIndex(m_groups.size()-1, 0);
 	dataChanged(top,bottom);
+	
+	endInsertRows();
 }
 
 void GLSceneGroupCollection::removeGroup(GLSceneGroup* s)
 {
 	if(!s)
 		return;
-		
+	
+	// Notify list view of intent to change list size
+	beginRemoveRows(QModelIndex(),0,m_groups.size()+1);
+
 	int idx = m_groups.indexOf(s);
 
+	// Effect removal
 	emit groupRemoved(s);
 	m_groups.removeAll(s);
 	m_groupIdLookup.remove(s->groupId());
@@ -853,6 +950,8 @@ void GLSceneGroupCollection::removeGroup(GLSceneGroup* s)
 	QModelIndex top    = createIndex(idx, 0),
 		    bottom = createIndex(m_groups.size(), 0);
 	dataChanged(top,bottom);
+	
+	endRemoveRows();
 }
 
 GLSceneGroup * GLSceneGroupCollection::lookupGroup(int id)

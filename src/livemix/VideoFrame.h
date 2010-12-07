@@ -161,7 +161,7 @@ QVideoFrame::Format_RGB555	6	The frame is stored using a 16-bit RGB format (5-5-
 	bool isRaw;
 	
 	// If bufferType is POINTER, then the data is expected to reside in these pointers.
-	uint8_t *data[4];
+	uchar *data[4];
 	int linesize[4];
 	
 	// If bufferTYpe is BYTEARRAY, then, of course, data is expected to be in this bytearray
@@ -177,7 +177,7 @@ QVideoFrame::Format_RGB555	6	The frame is stored using a 16-bit RGB format (5-5-
 		rect = QRect(0,0,size.width(),size.height());
 	}
 
-	void setPointerData(uint8_t* const src[], const int stride[])
+	void setPointerData(uchar* const src[], const int stride[])
 	{
 		isRaw = true;
 		bufferType = BUFFER_POINTER;

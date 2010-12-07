@@ -16,79 +16,7 @@
 
 #include "../3rdparty/richtextedit/richtexteditor_p.h"
 
-class EditorGraphicsView : public QGraphicsView
-{
-	public:
-		EditorGraphicsView(QWidget * parent=0)
-			: QGraphicsView(parent)
-			, m_canZoom(true)
-		{
-			setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing | QPainter::SmoothPixmapTransform );
-			setCacheMode(QGraphicsView::CacheBackground);
-			setViewportUpdateMode(QGraphicsView::BoundingRectViewportUpdate);
-			setOptimizationFlags(QGraphicsView::DontSavePainterState);
-			setViewportUpdateMode(QGraphicsView::SmartViewportUpdate);
-			setTransformationAnchor(AnchorUnderMouse);
-			setResizeAnchor(AnchorViewCenter);
-			
-			//setFrameStyle(QFrame::NoFrame);
-			//setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-			//setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-			
-			setBackgroundBrush(Qt::gray);
-			
-		}
-
-		bool canZoom() { return m_canZoom; }
-		void setCanZoom(bool flag) { m_canZoom = flag; }
-
-
-	protected:
-		void keyPressEvent(QKeyEvent *event)
-		{
-			if(event->modifiers() & Qt::ControlModifier)
-			{
-
-				switch (event->key())
-				{
-					case Qt::Key_Plus:
-						scaleView(qreal(1.2));
-						break;
-					case Qt::Key_Minus:
-                                        case Qt::Key_Equal:
-						scaleView(1 / qreal(1.2));
-						break;
-					default:
-						QGraphicsView::keyPressEvent(event);
-				}
-			}
-			else
-				QGraphicsView::keyPressEvent(event);
-		}
-
-
-		void wheelEvent(QWheelEvent *event)
-		{
-                        scaleView(pow((double)2, event->delta() / 240.0));
-		}
-
-
-		void scaleView(qreal scaleFactor)
-		{
-			if(!m_canZoom)
-				return;
-
-			qreal factor = matrix().scale(scaleFactor, scaleFactor).mapRect(QRectF(0, 0, 1, 1)).width();
-			if (factor < 0.07 || factor > 100)
-				return;
-
-			scale(scaleFactor, scaleFactor);
-		}
-	private:
-		bool m_canZoom;
-};
-
-
+#include "EditorGraphicsView.h"
 
 EditorWindow::EditorWindow(QWidget *parent)
 	: QMainWindow(parent)
@@ -102,11 +30,53 @@ EditorWindow::EditorWindow(QWidget *parent)
 {
 	createUI();
 	setCanvasSize(m_canvasSize);
+	
+	setWindowTitle(tr("GLEditor"));
+	setUnifiedTitleAndToolBarOnMac(true);
+	
+	readSettings();
 }
 
 EditorWindow::~EditorWindow()
 {
 }
+
+
+void EditorWindow::closeEvent(QCloseEvent *event)
+{
+	writeSettings();
+	event->accept();
+}
+
+
+void EditorWindow::readSettings()
+{
+	QSettings settings;
+	QPoint pos = settings.value("EditorWindow/pos", QPoint(10, 10)).toPoint();
+	QSize size = settings.value("EditorWindow/size", QSize(640,480)).toSize();
+	move(pos);
+	resize(size);
+
+	m_mainSplitter->restoreState(settings.value("EditorWindow/main_splitter").toByteArray());
+	m_centerSplitter->restoreState(settings.value("EditorWindow/center_splitter").toByteArray());
+	
+	qreal scaleFactor = (qreal)settings.value("EditorWindow/scaleFactor", 1.).toDouble();
+	m_graphicsView->setScaleFactor(scaleFactor);
+
+}
+
+void EditorWindow::writeSettings()
+{
+	QSettings settings;
+	settings.setValue("EditorWindow/pos", pos());
+	settings.setValue("EditorWindow/size", size());
+
+	settings.setValue("EditorWindow/main_splitter",m_mainSplitter->saveState());
+	settings.setValue("EditorWindow/center_splitter",m_centerSplitter->saveState());
+	
+	settings.setValue("EditorWindow/scaleFactor",m_graphicsView->scaleFactor());
+}
+
 
 void EditorWindow::createUI()
 {
@@ -124,9 +94,9 @@ void EditorWindow::createUI()
 	
 	m_slideList->setViewMode(QListView::ListMode);
 	//m_layerListView->setViewMode(QListView::IconMode);
-	m_slideList->setMovement(QListView::Free);
-	m_slideList->setWordWrap(true);
-	m_slideList->setSelectionMode(QAbstractItemView::ExtendedSelection);
+//	m_slideList->setMovement(QListView::Free);
+//	m_slideList->setWordWrap(true);
+//	m_slideList->setSelectionMode(QAbstractItemView::ExtendedSelection);
 // 	m_slideList->setDragEnabled(true);
 // 	m_slideList->setAcceptDrops(true);
 // 	m_slideList->setDropIndicatorShown(true);
@@ -138,17 +108,17 @@ void EditorWindow::createUI()
 	m_mainSplitter->addWidget(m_slideList);
 	
 	// Now create the center panel - on top will be a list view, below it the graphics view
-	EditorGraphicsView *graphicsView = new EditorGraphicsView();
-	graphicsView->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
+	m_graphicsView = new EditorGraphicsView();
+	m_graphicsView->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
 	
 	m_graphicsScene = new GLEditorGraphicsScene();
-	graphicsView->setScene(m_graphicsScene);
+	m_graphicsView->setScene(m_graphicsScene);
 	m_graphicsScene->setSceneRect(QRectF(0,0,1000.,750.));
 	connect(m_graphicsScene, SIGNAL(drawableSelected(GLDrawable*)), this, SLOT(drawableSelected(GLDrawable*)));
 	
 	// Add the layout list (top), and GV (bottom), then add the middle splitter to the right side splitter
-	m_centerSplitter->addWidget(m_layoutList);
-	m_centerSplitter->addWidget(graphicsView);
+	//m_centerSplitter->addWidget(m_layoutList);
+	m_centerSplitter->addWidget(m_graphicsView);
 	m_mainSplitter->addWidget(m_centerSplitter);
 	
 	// Now create the control base for the other half of the right side splitter
@@ -207,6 +177,10 @@ void EditorWindow::setGroup(GLSceneGroup *group,  GLScene *currentScene)
 {
 	if(!group || group == m_group)
 		return;
+		
+	m_group = group;
+	
+	//qDebug() << "EditorWindow::setGroup: group:"<<group<<", currentScene:"<<currentScene;
 	
 	// deleting old selection model per http://doc.trolltech.com/4.5/qabstractitemview.html#setModel
 	QItemSelectionModel *m = m_slideList->selectionModel();
@@ -248,7 +222,7 @@ void EditorWindow::currentSlideChanged(const QModelIndex &idx,const QModelIndex 
 void EditorWindow::setCurrentScene(GLScene *scene)
 {
 	//qDebug() << "EditorWindow::setCurrentScene: [a] "<<scene;
-	if(!scene) // || scene == m_scene)
+	if(!scene || scene == m_scene)
 		return;
 	
 	if(m_scene)
@@ -257,12 +231,15 @@ void EditorWindow::setCurrentScene(GLScene *scene)
 		m_scene = 0;
 	}
 	
-	qDebug() << "EditorWindow::setCurrentScene: "<<scene;
+	//qDebug() << "EditorWindow::setCurrentScene: "<<scene;
 	m_scene = scene;
 	
 	m_layoutList->setModel(m_scene->layoutListModel());
 	
 	GLDrawableList list = m_scene->drawableList();
+	
+	m_graphicsScene->clear();
+	
 	foreach(GLDrawable *drawable, list)
 	{
 		m_graphicsScene->addItem(drawable);
@@ -274,7 +251,7 @@ void EditorWindow::setCurrentScene(GLScene *scene)
 
 void EditorWindow::drawableAdded(GLDrawable *d)
 {
-	qDebug() << "EditorWindow::drawableAdded: "<<(QObject*)d;
+	//qDebug() << "EditorWindow::drawableAdded: "<<(QObject*)d;
 	m_graphicsScene->addItem(d);
 }
 
@@ -286,10 +263,8 @@ void EditorWindow::drawableRemoved(GLDrawable *d)
 GLSceneGroup * EditorWindow::group()
 {
 	if(!m_group)
-	{
-		m_group = new GLSceneGroup();
-		setGroup(m_group);
-	}
+		setGroup(new GLSceneGroup());
+	
 	return m_group;
 }
 
@@ -297,18 +272,16 @@ GLScene *EditorWindow::scene()
 {
 	if(!m_scene)
 	{
-		m_scene = group()->at(0);
-		if(m_scene)
-		{
-			setCurrentScene(m_scene);
-		}
+		GLScene *scene = group()->at(0);
+		if(scene)
+			setCurrentScene(scene);
 	}
 		
 	if(!m_scene)
 	{
-		m_scene = new GLScene();
-		m_group->addScene(m_scene);
-		setCurrentScene(m_scene);
+		GLScene *scene = new GLScene();
+		m_group->addScene(scene);
+		setCurrentScene(scene);
 	}
 	
 	return m_scene;
@@ -319,6 +292,7 @@ void EditorWindow::addDrawable(GLDrawable *drawable)
 	drawable->addShowAnimation(GLDrawable::AnimFade);
 	drawable->setRect(m_graphicsScene->sceneRect());
 	scene()->addDrawable(drawable);
+	drawable->setSelected(true);
 	
 	drawable->show();
 }
@@ -541,9 +515,9 @@ void EditorWindow::setCanvasSize(const QSizeF& size)
 
 void EditorWindow::addScene()
 {
-	m_scene = new GLScene();
-	m_group->addScene(m_scene);
-	setCurrentScene(m_scene);
+	GLScene *scene = new GLScene();
+	m_group->addScene(scene);
+	setCurrentScene(scene);
 }
 
 void EditorWindow::delScene()
@@ -563,9 +537,9 @@ void EditorWindow::dupScene()
 		return;
 	
 	QByteArray ba = m_scene->toByteArray();
-	m_scene = new GLScene(ba, group());
+	GLScene *scene = new GLScene(ba, group());
 	
-	m_group->addScene(m_scene);
-	setCurrentScene(m_scene);
+	m_group->addScene(scene);
+	setCurrentScene(scene);
 }
 

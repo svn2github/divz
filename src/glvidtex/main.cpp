@@ -585,7 +585,7 @@ int main(int argc, char *argv[])
 			addButtons(tb, addQtSource(glw));
 		}
 		
-		if(0)
+		if(1)
 		{
 			//GLImageDrawable *drawable = new GLImageDrawable("me2.jpg");
 			GLImageDrawable *drawable = new GLImageDrawable("Pm5544.jpg");
@@ -599,7 +599,7 @@ int main(int argc, char *argv[])
 			drawable->show();
 		}
 		
-		if(1)
+		if(0)
 		{
 			//GLImageDrawable *drawable = new GLImageDrawable("me2.jpg");
 			GLVideoMjpegDrawable *drawable = new GLVideoMjpegDrawable("http://cameras:8082");

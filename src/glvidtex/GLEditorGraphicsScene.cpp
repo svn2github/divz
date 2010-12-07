@@ -42,12 +42,13 @@ public:
 GLEditorGraphicsScene::GLEditorGraphicsScene()
 	: QGraphicsScene()
 	, m_lockClearSelection(false)
+	, m_bgRect(0)
+	, m_dragRect(0)
 {
 	m_bgRect = new RectItem();
 	m_bgRect->brush = Qt::black;
 	m_bgRect->pen = QPen(Qt::black, 1.);
 	m_bgRect->setZValue(-999999999);
-	addItem(m_bgRect);
 	//qDebug() << "m_bgRect:"<<m_bgRect;
 	
 	m_dragRect = new RectItem();
@@ -56,8 +57,35 @@ GLEditorGraphicsScene::GLEditorGraphicsScene()
 	m_dragRect->setVisible(false);
 	m_dragRect->setZValue(999999999);
 	m_dragRect->rect = QRectF(0,0,0,0);
+	
+	addItem(m_bgRect);
 	addItem(m_dragRect);
 	//qDebug() << "m_dragRect:"<<m_dragRect;
+}
+
+void GLEditorGraphicsScene::clear()
+{
+	// Remove before clear, because ::clear() deletes all items
+	removeItem(m_bgRect);
+	removeItem(m_dragRect);
+	
+	// Drawables are owned by the GLScene they are a member of,
+	// remove so that ::clear() doesnt delete the items
+	removeDrawables();
+	
+	// Clear any remaining items
+	QGraphicsScene::clear();
+	
+	// Pokeyoke
+	QList<QGraphicsItem*> list = items();
+	if(list.size() > 0)
+	{
+		qDebug() << "GLEditorGraphicsScene::clear: Error clearing, still "<<list.size()<<" items in scene.";
+	}
+	
+	// Add back in our internal items
+	addItem(m_bgRect);
+	addItem(m_dragRect);
 }
 
 void GLEditorGraphicsScene::setSceneRect(const QRectF& rect)
@@ -132,6 +160,17 @@ void GLEditorGraphicsScene::mouseMoveEvent ( QGraphicsSceneMouseEvent * mouseEve
 	else
 	{
 		QGraphicsScene::mousePressEvent(mouseEvent);
+	}
+}
+
+void GLEditorGraphicsScene::removeDrawables()
+{
+	QList<QGraphicsItem*> list = items();
+	foreach(QGraphicsItem *item, list)
+	{
+		GLDrawable *gld = dynamic_cast<GLDrawable*>(item);	
+		if(gld)
+			removeItem(gld);
 	}
 }
 

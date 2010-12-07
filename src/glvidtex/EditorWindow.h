@@ -8,6 +8,7 @@ class GLSceneGroup;
 class GLScene;
 class GLDrawable;
 class RichTextEditorDialog;
+class EditorGraphicsView;
 
 class EditorWindow : public QMainWindow
 {
@@ -49,7 +50,11 @@ protected slots:
 	void rtfEditorSave();
 	
 protected:
+	void closeEvent(QCloseEvent *event);
+	
 	void createUI();
+	void readSettings();
+	void writeSettings();
 	
 	void addDrawable(GLDrawable*);
 	
@@ -73,7 +78,8 @@ protected:
 	
 	RichTextEditorDialog *m_rtfEditor;
 	GLDrawable *m_currentDrawable;
-	
+
+	EditorGraphicsView *m_graphicsView;
 };
 
 

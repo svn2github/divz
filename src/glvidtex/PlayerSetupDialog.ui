@@ -6,14 +6,14 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>931</width>
-    <height>600</height>
+    <width>807</width>
+    <height>619</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Dialog</string>
   </property>
-  <layout class="QHBoxLayout" name="horizontalLayout_5">
+  <layout class="QHBoxLayout" name="horizontalLayout_6">
    <item>
     <layout class="QVBoxLayout" name="verticalLayout_3">
      <item>
@@ -21,6 +21,19 @@
      </item>
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout_4">
+       <item>
+        <spacer name="horizontalSpacer_3">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
        <item>
         <widget class="QPushButton" name="addPlayerBtn">
          <property name="text">
@@ -52,20 +65,20 @@
           <item row="0" column="0">
            <widget class="QLabel" name="label">
             <property name="text">
-             <string>Player Name</string>
+             <string>Player Name:</string>
             </property>
             <property name="buddy">
              <cstring>playerName</cstring>
             </property>
            </widget>
           </item>
-          <item row="0" column="1">
+          <item row="0" column="1" colspan="5">
            <widget class="QLineEdit" name="playerName"/>
           </item>
           <item row="1" column="0">
            <widget class="QLabel" name="label_2">
             <property name="text">
-             <string>IP Address</string>
+             <string>IP Address:</string>
             </property>
             <property name="buddy">
              <cstring>playerHost</cstring>
@@ -78,7 +91,7 @@
           <item row="1" column="2">
            <widget class="QLabel" name="label_3">
             <property name="text">
-             <string>Username</string>
+             <string>Username:</string>
             </property>
             <property name="buddy">
              <cstring>playerUser</cstring>
@@ -95,7 +108,7 @@
           <item row="1" column="4">
            <widget class="QLabel" name="label_4">
             <property name="text">
-             <string>Password</string>
+             <string>Password:</string>
             </property>
             <property name="buddy">
              <cstring>playerPass</cstring>
@@ -106,6 +119,20 @@
            <widget class="QLineEdit" name="playerPass">
             <property name="text">
              <string>player</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QPushButton" name="testConnectionBtn">
+            <property name="text">
+             <string>Test Connection</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="2" colspan="4">
+           <widget class="QLabel" name="connectionTestResults">
+            <property name="text">
+             <string/>
             </property>
            </widget>
           </item>
@@ -151,7 +178,7 @@
              <string/>
             </property>
             <property name="minimum">
-             <number>-999</number>
+             <number>-9999</number>
             </property>
             <property name="maximum">
              <number>9999</number>
@@ -174,7 +201,7 @@
              <string> px</string>
             </property>
             <property name="minimum">
-             <number>-999</number>
+             <number>-9999</number>
             </property>
             <property name="maximum">
              <number>9999</number>
@@ -197,7 +224,7 @@
              <string> px</string>
             </property>
             <property name="minimum">
-             <number>-999</number>
+             <number>0</number>
             </property>
             <property name="maximum">
              <number>9999</number>
@@ -223,7 +250,7 @@
              <string> px</string>
             </property>
             <property name="minimum">
-             <number>-999</number>
+             <number>0</number>
             </property>
             <property name="maximum">
              <number>9999</number>
@@ -248,20 +275,6 @@
           </item>
          </layout>
         </item>
-        <item row="1" column="2">
-         <widget class="QCheckBox" name="optFlipV">
-          <property name="text">
-           <string>Flip Image Vertically</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="3">
-         <widget class="QCheckBox" name="optIgnoreAR">
-          <property name="text">
-           <string>Ignore Viewport Aspect Ratio</string>
-          </property>
-         </widget>
-        </item>
         <item row="1" column="1">
          <widget class="QCheckBox" name="optFlipH">
           <property name="text">
@@ -269,13 +282,27 @@
           </property>
          </widget>
         </item>
+        <item row="2" column="1">
+         <widget class="QCheckBox" name="optFlipV">
+          <property name="text">
+           <string>Flip Image Vertically</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="2" colspan="2">
+         <widget class="QCheckBox" name="optIgnoreAR">
+          <property name="text">
+           <string>Ignore Viewport Aspect Ratio</string>
+          </property>
+         </widget>
+        </item>
        </layout>
        <zorder>label_5</zorder>
        <zorder>horizontalLayoutWidget</zorder>
-       <zorder>optFlipV</zorder>
-       <zorder>optIgnoreAR</zorder>
        <zorder>platyerAdvancedBox</zorder>
        <zorder>optFlipH</zorder>
+       <zorder>optFlipV</zorder>
+       <zorder>optIgnoreAR</zorder>
       </widget>
      </item>
      <item>
@@ -283,8 +310,8 @@
        <property name="title">
         <string>Advanced Options</string>
        </property>
-       <layout class="QGridLayout" name="gridLayout_4">
-        <item row="0" column="0">
+       <layout class="QGridLayout" name="gridLayout_3">
+        <item row="0" column="0" colspan="2">
          <widget class="QLabel" name="label_14">
           <property name="text">
            <string>Content Viewport</string>
@@ -294,7 +321,7 @@
           </property>
          </widget>
         </item>
-        <item row="0" column="1" colspan="2">
+        <item row="0" column="2" colspan="2">
          <layout class="QHBoxLayout" name="horizontalLayout_2">
           <item>
            <widget class="QLabel" name="label_10">
@@ -307,7 +334,14 @@
            </widget>
           </item>
           <item>
-           <widget class="QSpinBox" name="viewportX"/>
+           <widget class="QSpinBox" name="viewportX">
+            <property name="suffix">
+             <string> px</string>
+            </property>
+            <property name="maximum">
+             <number>9999</number>
+            </property>
+           </widget>
           </item>
           <item>
            <widget class="QLabel" name="label_11">
@@ -320,7 +354,14 @@
            </widget>
           </item>
           <item>
-           <widget class="QSpinBox" name="viewportY"/>
+           <widget class="QSpinBox" name="viewportY">
+            <property name="suffix">
+             <string> px</string>
+            </property>
+            <property name="maximum">
+             <number>9999</number>
+            </property>
+           </widget>
           </item>
           <item>
            <widget class="QLabel" name="label_12">
@@ -333,7 +374,14 @@
            </widget>
           </item>
           <item>
-           <widget class="QSpinBox" name="viewportWidth"/>
+           <widget class="QSpinBox" name="viewportWidth">
+            <property name="suffix">
+             <string> px</string>
+            </property>
+            <property name="maximum">
+             <number>9999</number>
+            </property>
+           </widget>
           </item>
           <item>
            <widget class="QLabel" name="label_13">
@@ -346,7 +394,14 @@
            </widget>
           </item>
           <item>
-           <widget class="QSpinBox" name="viewportHeight"/>
+           <widget class="QSpinBox" name="viewportHeight">
+            <property name="suffix">
+             <string> px</string>
+            </property>
+            <property name="maximum">
+             <number>9999</number>
+            </property>
+           </widget>
           </item>
           <item>
            <spacer name="horizontalSpacer_2">
@@ -363,292 +418,342 @@
           </item>
          </layout>
         </item>
-        <item row="1" column="0" colspan="2">
-         <widget class="QGroupBox" name="groupBox_4">
-          <property name="title">
-           <string>Advanced Viewports (Subviews)</string>
+        <item row="1" column="0">
+         <widget class="QLabel" name="label_21">
+          <property name="text">
+           <string>Brightness</string>
           </property>
-          <layout class="QVBoxLayout" name="verticalLayout">
-           <item>
-            <widget class="QListWidget" name="listWidget"/>
-           </item>
-           <item>
-            <layout class="QHBoxLayout" name="horizontalLayout_3">
-             <item>
-              <widget class="QPushButton" name="addSubviewBtn">
-               <property name="text">
-                <string>Add Subview</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QPushButton" name="delSubviewBtn">
-               <property name="text">
-                <string>Remove Subview</string>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </item>
-          </layout>
+          <property name="buddy">
+           <cstring>subviewBrightnessSlider</cstring>
+          </property>
          </widget>
         </item>
-        <item row="1" column="2">
-         <widget class="QGroupBox" name="groupBox_5">
-          <property name="enabled">
-           <bool>false</bool>
+        <item row="1" column="1" colspan="2">
+         <widget class="QSlider" name="subviewBrightnessSlider">
+          <property name="minimum">
+           <number>-100</number>
           </property>
-          <property name="title">
-           <string>Subview Settings</string>
+          <property name="maximum">
+           <number>100</number>
           </property>
-          <layout class="QGridLayout" name="gridLayout_3">
-           <item row="0" column="0">
-            <widget class="QLabel" name="label_15">
-             <property name="text">
-              <string>Title</string>
-             </property>
-             <property name="buddy">
-              <cstring>subviewTitle</cstring>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="1" colspan="6">
-            <widget class="QLineEdit" name="subviewTitle"/>
-           </item>
-           <item row="1" column="0">
-            <widget class="QLabel" name="label_16">
-             <property name="text">
-              <string>Left</string>
-             </property>
-             <property name="buddy">
-              <cstring>subviewLeft</cstring>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="1" colspan="4">
-            <widget class="QDoubleSpinBox" name="subviewLeft">
-             <property name="suffix">
-              <string>%</string>
-             </property>
-             <property name="decimals">
-              <number>1</number>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="5">
-            <widget class="QLabel" name="label_17">
-             <property name="text">
-              <string>Top</string>
-             </property>
-             <property name="buddy">
-              <cstring>subviewTop</cstring>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="6">
-            <widget class="QDoubleSpinBox" name="subviewTop">
-             <property name="suffix">
-              <string>%</string>
-             </property>
-             <property name="decimals">
-              <number>1</number>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="0">
-            <widget class="QLabel" name="label_18">
-             <property name="text">
-              <string>Right</string>
-             </property>
-             <property name="buddy">
-              <cstring>subviewRight</cstring>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="1" colspan="4">
-            <widget class="QDoubleSpinBox" name="subviewRight">
-             <property name="suffix">
-              <string>%</string>
-             </property>
-             <property name="decimals">
-              <number>1</number>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="5">
-            <widget class="QLabel" name="label_19">
-             <property name="text">
-              <string>Bottom</string>
-             </property>
-             <property name="buddy">
-              <cstring>subviewBottom</cstring>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="6">
-            <widget class="QDoubleSpinBox" name="subviewBottom">
-             <property name="suffix">
-              <string>%</string>
-             </property>
-             <property name="decimals">
-              <number>1</number>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="4" colspan="2">
-            <widget class="QLineEdit" name="subviewAlphaMask"/>
-           </item>
-           <item row="3" column="6">
-            <widget class="QPushButton" name="subviewAlphaBrowseBtn">
-             <property name="text">
-              <string>Browse ...</string>
-             </property>
-            </widget>
-           </item>
-           <item row="4" column="0" colspan="2">
-            <widget class="QLabel" name="label_21">
-             <property name="text">
-              <string>Brightness</string>
-             </property>
-             <property name="buddy">
-              <cstring>subviewBrightnessSlider</cstring>
-             </property>
-            </widget>
-           </item>
-           <item row="5" column="0" colspan="2">
-            <widget class="QLabel" name="label_22">
-             <property name="text">
-              <string>Contrast</string>
-             </property>
-             <property name="buddy">
-              <cstring>subviewContrastSlider</cstring>
-             </property>
-            </widget>
-           </item>
-           <item row="5" column="4" colspan="2">
-            <widget class="QSlider" name="subviewContrastSlider">
-             <property name="minimum">
-              <number>-100</number>
-             </property>
-             <property name="maximum">
-              <number>100</number>
-             </property>
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-            </widget>
-           </item>
-           <item row="6" column="0" colspan="2">
-            <widget class="QLabel" name="label_23">
-             <property name="text">
-              <string>Hue</string>
-             </property>
-             <property name="buddy">
-              <cstring>subviewHueSlider</cstring>
-             </property>
-            </widget>
-           </item>
-           <item row="6" column="4" colspan="2">
-            <widget class="QSlider" name="subviewHueSlider">
-             <property name="minimum">
-              <number>-100</number>
-             </property>
-             <property name="maximum">
-              <number>100</number>
-             </property>
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-            </widget>
-           </item>
-           <item row="7" column="0" colspan="2">
-            <widget class="QLabel" name="label_24">
-             <property name="text">
-              <string>Saturation</string>
-             </property>
-             <property name="buddy">
-              <cstring>subviewSaturationSlider</cstring>
-             </property>
-            </widget>
-           </item>
-           <item row="7" column="4" colspan="2">
-            <widget class="QSlider" name="subviewSaturationSlider">
-             <property name="minimum">
-              <number>-100</number>
-             </property>
-             <property name="maximum">
-              <number>100</number>
-             </property>
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-            </widget>
-           </item>
-           <item row="4" column="6">
-            <widget class="QSpinBox" name="subviewBrightnessBox">
-             <property name="minimum">
-              <number>-100</number>
-             </property>
-             <property name="maximum">
-              <number>100</number>
-             </property>
-            </widget>
-           </item>
-           <item row="4" column="4" colspan="2">
-            <widget class="QSlider" name="subviewBrightnessSlider">
-             <property name="minimum">
-              <number>-100</number>
-             </property>
-             <property name="maximum">
-              <number>100</number>
-             </property>
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="0" colspan="2">
-            <widget class="QLabel" name="label_20">
-             <property name="text">
-              <string>Alpha Mask</string>
-             </property>
-             <property name="buddy">
-              <cstring>subviewAlphaMask</cstring>
-             </property>
-            </widget>
-           </item>
-           <item row="5" column="6">
-            <widget class="QSpinBox" name="subviewContrastBox">
-             <property name="minimum">
-              <number>-100</number>
-             </property>
-             <property name="maximum">
-              <number>100</number>
-             </property>
-            </widget>
-           </item>
-           <item row="6" column="6">
-            <widget class="QSpinBox" name="subviewHueBox">
-             <property name="minimum">
-              <number>-100</number>
-             </property>
-             <property name="maximum">
-              <number>100</number>
-             </property>
-            </widget>
-           </item>
-           <item row="7" column="6">
-            <widget class="QSpinBox" name="subviewSaturationBox">
-             <property name="minimum">
-              <number>-100</number>
-             </property>
-             <property name="maximum">
-              <number>100</number>
-             </property>
-            </widget>
-           </item>
-          </layout>
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
          </widget>
+        </item>
+        <item row="1" column="3">
+         <widget class="QSpinBox" name="subviewBrightnessBox">
+          <property name="minimum">
+           <number>-100</number>
+          </property>
+          <property name="maximum">
+           <number>100</number>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="0">
+         <widget class="QLabel" name="label_22">
+          <property name="text">
+           <string>Contrast</string>
+          </property>
+          <property name="buddy">
+           <cstring>subviewContrastSlider</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="1" colspan="2">
+         <widget class="QSlider" name="subviewContrastSlider">
+          <property name="minimum">
+           <number>-100</number>
+          </property>
+          <property name="maximum">
+           <number>100</number>
+          </property>
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="3">
+         <widget class="QSpinBox" name="subviewContrastBox">
+          <property name="minimum">
+           <number>-100</number>
+          </property>
+          <property name="maximum">
+           <number>100</number>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="0">
+         <widget class="QLabel" name="label_23">
+          <property name="text">
+           <string>Hue</string>
+          </property>
+          <property name="buddy">
+           <cstring>subviewHueSlider</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="1" colspan="2">
+         <widget class="QSlider" name="subviewHueSlider">
+          <property name="minimum">
+           <number>-100</number>
+          </property>
+          <property name="maximum">
+           <number>100</number>
+          </property>
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="3">
+         <widget class="QSpinBox" name="subviewHueBox">
+          <property name="minimum">
+           <number>-100</number>
+          </property>
+          <property name="maximum">
+           <number>100</number>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="0">
+         <widget class="QLabel" name="label_24">
+          <property name="text">
+           <string>Saturation</string>
+          </property>
+          <property name="buddy">
+           <cstring>subviewSaturationSlider</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="1" colspan="2">
+         <widget class="QSlider" name="subviewSaturationSlider">
+          <property name="minimum">
+           <number>-100</number>
+          </property>
+          <property name="maximum">
+           <number>100</number>
+          </property>
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="3">
+         <widget class="QSpinBox" name="subviewSaturationBox">
+          <property name="minimum">
+           <number>-100</number>
+          </property>
+          <property name="maximum">
+           <number>100</number>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item>
+      <widget class="QGroupBox" name="groupBox">
+       <property name="title">
+        <string>Digital Keystoning &amp;&amp; Blending</string>
+       </property>
+       <layout class="QVBoxLayout" name="verticalLayout">
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_3">
+          <item>
+           <widget class="QLabel" name="label_20">
+            <property name="text">
+             <string>Alpha Mask</string>
+            </property>
+            <property name="buddy">
+             <cstring>alphaMaskFile</cstring>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="alphaMaskFile"/>
+          </item>
+          <item>
+           <widget class="QPushButton" name="aphaMaskBrowseBtn">
+            <property name="text">
+             <string>Browse ...</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="alphaMaskPreview">
+            <property name="text">
+             <string>TextLabel</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_5">
+          <item>
+           <layout class="QGridLayout" name="gridLayout">
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_15">
+              <property name="text">
+               <string>Top-Left</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QSpinBox" name="keyTLx">
+              <property name="suffix">
+               <string> px</string>
+              </property>
+              <property name="prefix">
+               <string>X </string>
+              </property>
+              <property name="maximum">
+               <number>999</number>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="2">
+             <widget class="QSpinBox" name="keyTLy">
+              <property name="suffix">
+               <string> px</string>
+              </property>
+              <property name="prefix">
+               <string>Y </string>
+              </property>
+              <property name="maximum">
+               <number>999</number>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_16">
+              <property name="text">
+               <string>Top-Right</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QSpinBox" name="keyTRx">
+              <property name="suffix">
+               <string> px</string>
+              </property>
+              <property name="prefix">
+               <string>X </string>
+              </property>
+              <property name="minimum">
+               <number>-999</number>
+              </property>
+              <property name="maximum">
+               <number>0</number>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="2">
+             <widget class="QSpinBox" name="keyTRy">
+              <property name="suffix">
+               <string> px</string>
+              </property>
+              <property name="prefix">
+               <string>Y </string>
+              </property>
+              <property name="minimum">
+               <number>0</number>
+              </property>
+              <property name="maximum">
+               <number>999</number>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="label_17">
+              <property name="text">
+               <string>Bottom-Right</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QSpinBox" name="keyBRx">
+              <property name="suffix">
+               <string> px</string>
+              </property>
+              <property name="prefix">
+               <string>X </string>
+              </property>
+              <property name="minimum">
+               <number>-999</number>
+              </property>
+              <property name="maximum">
+               <number>0</number>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="2">
+             <widget class="QSpinBox" name="keyBRy">
+              <property name="suffix">
+               <string> px</string>
+              </property>
+              <property name="prefix">
+               <string>Y </string>
+              </property>
+              <property name="minimum">
+               <number>-999</number>
+              </property>
+              <property name="maximum">
+               <number>0</number>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="0">
+             <widget class="QLabel" name="label_18">
+              <property name="text">
+               <string>Bottom-Left</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="1">
+             <widget class="QSpinBox" name="keyBLx">
+              <property name="suffix">
+               <string> px</string>
+              </property>
+              <property name="prefix">
+               <string>X </string>
+              </property>
+              <property name="maximum">
+               <number>999</number>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="2">
+             <widget class="QSpinBox" name="keyBLy">
+              <property name="suffix">
+               <string> px</string>
+              </property>
+              <property name="prefix">
+               <string>Y </string>
+              </property>
+              <property name="minimum">
+               <number>-999</number>
+              </property>
+              <property name="maximum">
+               <number>0</number>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="KeystonePointsEditor" name="keystoneEditor" native="true">
+            <property name="minimumSize">
+             <size>
+              <width>100</width>
+              <height>0</height>
+             </size>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </item>
        </layout>
       </widget>
@@ -657,6 +762,14 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>KeystonePointsEditor</class>
+   <extends>QWidget</extends>
+   <header>KeystonePointsEditor.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections>
   <connection>

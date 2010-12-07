@@ -57,6 +57,7 @@ int main(int argc, char *argv[])
 	editor->setGroup(new GLSceneGroup());
 	editor->addText("Welcome to GLEditor");
 	editor->show();
+	//editor->move(800,0);
 	
 // 	EditorGraphicsView *graphicsView = new EditorGraphicsView();
 // 	graphicsView->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));

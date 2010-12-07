@@ -30,7 +30,8 @@ HEADERS       = GLWidget.h \
 		GLVideoMjpegDrawable.h \
 		PlayerSetupDialog.h \
 		CornerItem.h \
-		GLEditorGraphicsScene.h 
+		GLEditorGraphicsScene.h \
+		KeystonePointsEditor.h
 		
 		
 SOURCES       = GLWidget.cpp \
@@ -58,20 +59,27 @@ SOURCES       = GLWidget.cpp \
 		GLVideoMjpegDrawable.cpp \
 		PlayerSetupDialog.cpp \
 		CornerItem.cpp \
-		GLEditorGraphicsScene.cpp  
+		GLEditorGraphicsScene.cpp   \
+		KeystonePointsEditor.cpp
 		
 
 gleditor: {
 	TARGET = gleditor
 	
+	FORMS += DirectorWindow.ui
+	
 	HEADERS += ../livemix/EditorUtilityWidgets.h \
 		../livemix/ExpandableWidget.h \
-		EditorWindow.h
+		EditorWindow.h \
+		EditorGraphicsView.h \
+		DirectorWindow.h
 		
 	SOURCES += editor-main.cpp \
 		../livemix/EditorUtilityWidgets.cpp \
 		../livemix/ExpandableWidget.cpp \
-		EditorWindow.cpp
+		EditorWindow.cpp \
+		EditorGraphicsView.cpp \
+		DirectorWindow.cpp
 		
 	include(../3rdparty/richtextedit/richtextedit.pri)
 }
@@ -91,7 +99,7 @@ unix: {
 	SOURCES += \
 		../livemix/SimpleV4L2.cpp
 		
-	LIBS += -lcv
+	LIBS += -L/usr/local/lib -lcv -lcxcore
 }
 
 

@@ -120,7 +120,7 @@ public:
 	GLDrawable * at(int idx) { return idx>-1 && idx<size() ? m_itemList[idx] : 0; }
 	
 	// QAbstractListModel
-	virtual int rowCount(const QModelIndex &/*parent*/) const { return size(); }
+	virtual int rowCount(const QModelIndex &/*parent*/) const;
 	virtual QVariant data( const QModelIndex & index, int role = Qt::DisplayRole ) const;
 	
 	// This is the 'crossover' method which
@@ -138,9 +138,12 @@ public:
 	GLSceneLayoutListModel *layoutListModel();
 	
 	GLSceneLayout * lookupLayout(int id);
+	
+	bool listOnlyUserItems() { return m_listOnlyUserItems; }
 
 public slots:
 	void setSceneName(const QString& name);
+	void setListOnlyUserItems(bool);
 	
 signals:
 	void drawableAdded(GLDrawable*);
@@ -157,6 +160,8 @@ protected:
 	QString m_sceneName;
 	
 	GLDrawableList m_itemList;
+	GLDrawableList m_userItemList;
+	bool m_listOnlyUserItems;
 	QHash<int,GLDrawable*> m_drawableIdLookup;
 	
 	QList<GLSceneLayout*> m_layouts;
@@ -199,9 +204,11 @@ public:
 	GLScene * at(int idx) { return idx>-1 && idx<size() ? m_scenes[idx] : 0; }
 	
 	// QAbstractListModel
-	virtual int rowCount(const QModelIndex &/*parent*/) const { return size(); }
+	virtual int rowCount(const QModelIndex &/*parent*/) const;
 	virtual QVariant data( const QModelIndex & index, int role = Qt::DisplayRole ) const;
-		
+	virtual Qt::ItemFlags flags(const QModelIndex &index) const;
+	virtual bool setData(const QModelIndex &index, const QVariant & value, int role) ;
+
 	// Overlay scene, by definition, is a general scene that is to be overlayed on the content of 
 	// the other scenes in the list. 
 	GLScene * overlayScene() { return m_overlayScene; }

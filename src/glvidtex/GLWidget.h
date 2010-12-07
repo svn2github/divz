@@ -201,9 +201,9 @@ public slots:
 	
 	void setCornerRotation(RotateValue);
 	
-	void addSubview(GLWidgetSubview*);
-	void removeSubview(int subviewId);
-	void removeSubview(GLWidgetSubview*);
+// 	void addSubview(GLWidgetSubview*);
+// 	void removeSubview(int subviewId);
+// 	void removeSubview(GLWidgetSubview*);
 	
 protected slots:
 	void zIndexChanged();
