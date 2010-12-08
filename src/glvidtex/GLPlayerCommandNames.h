@@ -20,5 +20,7 @@
 #define GLPlayer_SetViewport "SetViewport"
 #define GLPlayer_SetCanvasSize "SetCanvasSize"
 #define GLPlayer_SetColors "SetColors"
+#define GLPlayer_AddSubview "AddSubview"
+#define GLPlayer_RemoveSubview "RemoveSubview"
 
 #endif

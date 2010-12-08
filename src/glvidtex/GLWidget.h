@@ -9,37 +9,62 @@ class QGLFramebufferObject;
 
 class GLDrawable;
 
-class GLWidget;
-class GLWidgetSubview
+typedef enum GLRotateValue
 {
+	GLRotateLeft =-1,
+	GLRotateNone = 0,
+	GLRotateRight=+1
+};
+	
+class GLWidget;
+class GLWidgetSubview : public QObject
+{
+	Q_OBJECT
 public:
 	GLWidgetSubview();
-	GLWidgetSubview(QByteArray&);
 	
 	QByteArray toByteArray();
 	void fromByteArray(QByteArray&);
 	
 	int subviewId();
-	
 	QString title() const { return m_title; }
+	
+	GLWidget *glWidget() { return m_glw; }
+	
+	/* TLBR is stored as a fraction of the FBO size.
+	   E.g. TLBR of (0,0,.5,.5) means the subview covers the top-left 50% of the FBO, or the upper-left 1/4th of the FBO */
 	double top() const { return m_viewTop; }
 	double left() const { return m_viewLeft; }
 	double bottom() const { return m_viewBottom; }
 	double right() const { return m_viewRight; }
 	
+	
 	bool flipHorizontal() { return m_flipHorizontal; }
 	bool flipVertical() { return m_flipVertical; }
 	
+	// When this is changed, the GLWidget must re-upload to the GPU.
+	// When a subview is created, a cooresponding texture ID must be
+	// created and stored in the subview
 	QImage alphaMask() { return m_alphaMask; }
 	
+	// When colors are changed, the color matrix needs recalculated
+	// and stored in the subview
 	int brightness() const { return m_brightness; }
 	int contrast() const { return m_contrast; }
 	int hue() const { return m_hue; }
 	int saturation() const { return m_saturation; }
 	
+	// When corner translations are changed, the warp matrix
+	// must be reclaculated and stored in the subview 
 	const QPolygonF & cornerTranslations() { return m_cornerTranslations; }
 	
+	GLRotateValue cornerRotation() { return m_cornerRotation; }
 	
+	// for use in re-transmitting to players
+signals:
+	void changed(GLWidgetSubview *);
+	
+public slots:	
 	void setTitle(const QString&);
 	
 	void setTop(double);
@@ -59,15 +84,30 @@ public:
 	
 	void setCornerTranslations(const QPolygonF&);
 	
+	void setCornerRotation(GLRotateValue);
+	
 protected:
 	friend class GLWidget;
-	void uploadAlphaMask(GLWidget*);
+	// Calling setGLWidget initalizes the alpha mask if GL already inited,
+	// otherwise initGL takes care of the alpha init 
+	void setGLWidget(GLWidget*);
+	//void initGL();
 	
-private:
-	void updateColors(int brightness, int contrast, int hue, int saturation);
+	void updateWarpMatrix();
+	void upateAlphaMask();
+	void initAlphaMask();
+	void updateColors();
 	
-	int m_id;
-	QString m_title;
+	GLfloat m_warpMatrix[4][4];
+	
+	QMatrix4x4 m_colorMatrix;
+	bool m_colorsDirty;
+	
+	QImage m_alphaMask;
+	QImage m_alphaMask_preScaled;
+	GLuint m_alphaTextureId;
+		
+	QPolygonF m_cornerTranslations;
 	
 	double m_viewTop;
 	double m_viewLeft;
@@ -83,19 +123,20 @@ private:
 	int m_hue;
 	int m_saturation;
 	
-	QImage m_alphaMask;
-	QImage m_alphaMask_preScaled;
-	GLuint m_alphaTextureId;
-	qint64 m_uploadedCacheKey;
+	GLRotateValue m_cornerRotation;
 	
-	QMatrix4x4 m_colorMatrix;
-	bool m_colorsDirty;
+private:
+	
+	GLWidget *m_glw;
+	
+	int m_id;
+	QString m_title;
+	
+	qint64 m_uploadedCacheKey;
 
-	QPolygonF m_cornerTranslations;
 };
 
 
-	
 class GLWidget : public QGLWidget
 {
 	Q_OBJECT
@@ -130,45 +171,42 @@ public:
 	QSize minimumSizeHint() const;
 	QSize sizeHint() const;
 	
+	GLWidgetSubview *defaultSubview(); 
+
 	void addDrawable(GLDrawable *);
 	void removeDrawable(GLDrawable*);
 	
-	QList<GLDrawable*> drawables() { return m_drawables; }
+ 	QList<GLDrawable*> drawables() { return m_drawables; }
 	
-	QTransform transform() { return m_transform; }
+ 	QTransform transform() { return m_transform; }
 	void setTransform(const QTransform&);
 	
-	const QRectF & viewport() const { return m_viewport; }
-	const QSizeF & canvasSize() const { return m_canvasSize; }
-	const QRectF canvasRect() const { return QRectF(QPointF(0,0), m_canvasSize); }
+ 	const QRectF & viewport() const { return m_viewport; }
+ 	const QSizeF & canvasSize() const { return m_canvasSize; }
+ 	const QRectF canvasRect() const { return QRectF(QPointF(0,0), m_canvasSize); }
 	
 	void makeRenderContextCurrent();
 	
-	const QPolygonF & cornerTranslations() { return m_cornerTranslations; }
-	bool cornerTranslationsEnabled() { return m_cornerTranslationsEnabled; }
+	const QPolygonF & cornerTranslations() { return defaultSubview()->cornerTranslations(); }
 	
-	Qt::AspectRatioMode aspectRatioMode() { return m_aspectRatioMode; }
+ 	Qt::AspectRatioMode aspectRatioMode() { return m_aspectRatioMode; }
 	
-	QImage alphaMask() { return m_alphaMask; }
+	QImage alphaMask() { return defaultSubview()->alphaMask(); }
 	
-	int brightness() const { return m_brightness; }
-	int contrast() const { return m_contrast; }
-	int hue() const { return m_hue; }
-	int saturation() const { return m_saturation; }
+	int brightness() { return defaultSubview()->brightness(); }
+	int contrast() { return defaultSubview()->contrast(); }
+	int hue() { return defaultSubview()->hue(); }
+	int saturation() { return defaultSubview()->saturation(); }
 	
-	bool flipHorizontal() { return m_flipHorizontal; }
-	bool flipVertical() { return m_flipVertical; }
+	bool flipHorizontal() { return defaultSubview()->flipHorizontal(); }
+	bool flipVertical() { return defaultSubview()->flipVertical(); }
 	
-	typedef enum RotateValue
-	{
-		RotateLeft =-1,
-		RotateNone = 0,
-		RotateRight=+1
-	};
-	
-	RotateValue cornerRotation() { return m_cornerRotation; }
+	GLRotateValue cornerRotation() { return defaultSubview()->cornerRotation(); }
 	
 	QList<GLWidgetSubview*> subviews() { return m_subviews; }
+	GLWidgetSubview *subview(int subviewId);
+	
+	bool glInited() { return m_glInited; }
 
 signals:
 	void clicked();
@@ -187,8 +225,6 @@ public slots:
 	void setBottomLeftTranslation(const QPointF&);
 	void setBottomRightTranslation(const QPointF&);
 	
-	void enableCornerTranslations(bool flag=true);
-	
 	void setAspectRatioMode(Qt::AspectRatioMode mode);
 	
 	void setAlphaMask(const QImage&);
@@ -201,11 +237,10 @@ public slots:
 	void setFlipHorizontal(bool flip);
 	void setFlipVertical(bool flip);
 	
-	void setCornerRotation(RotateValue);
+	void setCornerRotation(GLRotateValue);
 	
-// 	void addSubview(GLWidgetSubview*);
-// 	void removeSubview(int subviewId);
-// 	void removeSubview(GLWidgetSubview*);
+ 	void addSubview(GLWidgetSubview*);
+ 	void removeSubview(GLWidgetSubview*);
 	
 protected slots:
 	void zIndexChanged();
@@ -222,12 +257,12 @@ protected:
 	void mouseReleaseEvent(QMouseEvent *event);
 	void showEvent(QShowEvent *);
 	
-	void updateColors(int brightness, int contrast, int hue, int saturation);
+	//void updateColors(int brightness, int contrast, int hue, int saturation);
 
 private:
 	void initShaders();
-	void initAlphaMask();
-	void updateWarpMatrix();
+	//void initAlphaMask();
+	//void updateWarpMatrix();
 	
 	QList<GLDrawable*> m_drawables;
 	
@@ -239,9 +274,6 @@ private:
 	
 	QGLFramebufferObject * m_fbo;
 	
-	bool m_cornerTranslationsEnabled;
-	QPolygonF m_cornerTranslations;
-	
 	Qt::AspectRatioMode m_aspectRatioMode;
 	
 	QGLShaderProgram *m_program;
@@ -251,28 +283,6 @@ private:
 	typedef void (APIENTRY *_glActiveTexture) (GLenum);
 	_glActiveTexture glActiveTexture;
 	#endif
-	
-	QImage m_alphaMask;
-	QImage m_alphaMask_preScaled;
-	GLuint m_alphaTextureId;
-	qint64 m_uploadedCacheKey;
-	
-	QMatrix4x4 m_colorMatrix;
-	
-	bool m_colorsDirty;
-	
-	bool m_flipHorizontal;
-	bool m_flipVertical;
-// 	QPointF cropTopLeft;
-// 	QPointF cropBottomRight;
-	int m_brightness;
-	int m_contrast;
-	int m_hue;
-	int m_saturation;
-	
-	RotateValue m_cornerRotation;
-	
-	GLfloat m_warpMatrix[4][4];
 	
 	QList<GLWidgetSubview*> m_subviews;
 	QHash<int,GLWidgetSubview*> m_subviewLookup;

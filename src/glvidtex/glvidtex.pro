@@ -102,7 +102,10 @@ unix: {
 		../livemix/SimpleV4L2.h
 	SOURCES += \
 		../livemix/SimpleV4L2.cpp
-		
+}
+
+opencv: {
+	DEFINES += OPENCV_ENABLED
 	LIBS += -L/usr/local/lib -lcv -lcxcore
 }
 

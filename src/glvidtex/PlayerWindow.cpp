@@ -101,9 +101,9 @@ PlayerWindow::PlayerWindow(QWidget *parent)
 		qDebug() << "PlayerWindow: rotate: "<<rv;
 	
 	if(rv != 0)
-		setCornerRotation(rv == -1 ? GLWidget::RotateLeft  : 
-				  rv ==  1 ? GLWidget::RotateRight : 
-				             GLWidget::RotateNone);
+		setCornerRotation(rv == -1 ? GLRotateLeft  : 
+				  rv ==  1 ? GLRotateRight : 
+				             GLRotateNone);
 	
 	// Aspet Ratio Mode
 	setAspectRatioMode(READ_STRING("ignore-ar","false") == "true" ? Qt::IgnoreAspectRatio : Qt::KeepAspectRatio);
