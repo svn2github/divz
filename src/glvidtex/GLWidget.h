@@ -46,6 +46,7 @@ public:
 	// When a subview is created, a cooresponding texture ID must be
 	// created and stored in the subview
 	QImage alphaMask() { return m_alphaMask; }
+	QString alphaMaskFile() { return m_alphaMaskFile; }
 	
 	// When colors are changed, the color matrix needs recalculated
 	// and stored in the subview
@@ -72,6 +73,7 @@ public slots:
 	void setBottom(double);
 	void setRight(double);
 	
+	void setAlphaMaskFile(const QString&);
 	void setAlphaMask(const QImage&);
 	
 	void setBrightness(int brightness);
@@ -91,12 +93,14 @@ protected:
 	// Calling setGLWidget initalizes the alpha mask if GL already inited,
 	// otherwise initGL takes care of the alpha init 
 	void setGLWidget(GLWidget*);
-	//void initGL();
+	void initGL();
 	
 	void updateWarpMatrix();
 	void upateAlphaMask();
 	void initAlphaMask();
 	void updateColors();
+	
+	QRectF targetRect();
 	
 	GLfloat m_warpMatrix[4][4];
 	
@@ -126,6 +130,7 @@ protected:
 	GLRotateValue m_cornerRotation;
 	
 private:
+	QString m_alphaMaskFile;
 	
 	GLWidget *m_glw;
 	

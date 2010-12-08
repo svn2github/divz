@@ -67,7 +67,7 @@ QByteArray GLWidgetSubview::toByteArray()
 	map["title"]	= m_title;
 	map["id"]	= m_id;
 	
-	map["mask"]	= m_alphaMask;
+	map["maskfile"]	= m_alphaMaskFile;
 	map["top"] 	= m_viewTop;
 	map["left"] 	= m_viewLeft;
 	map["right"] 	= m_viewRight;
@@ -81,7 +81,15 @@ QByteArray GLWidgetSubview::toByteArray()
 	map["h"]	= m_hue;
 	map["s"]	= m_saturation;
 	
-	//map["key"]	= m_cornerTranslations;
+	map["c1x"]	= m_cornerTranslations[0].x();
+	map["c1y"]	= m_cornerTranslations[0].y();
+	map["c2x"]	= m_cornerTranslations[1].x();
+	map["c2y"]	= m_cornerTranslations[1].y();
+	map["c3x"]	= m_cornerTranslations[2].x();
+	map["c3y"]	= m_cornerTranslations[2].y();
+	map["c4x"]	= m_cornerTranslations[3].x();
+	map["c4y"]	= m_cornerTranslations[3].y();
+	
 	map["rot"]	= (int)m_cornerRotation;
 	
 	stream << map;
@@ -102,7 +110,8 @@ void GLWidgetSubview::fromByteArray(QByteArray& array)
 	m_title		= map["title"].toString();
 	m_id		= map["id"].toInt();
 	
-	//m_alphaMask 	= map["mask"]; /// TODO
+	m_alphaMaskFile	= map["maskfile"].toString();
+	
 	m_viewTop 	= map["top"].toDouble();
 	m_viewLeft	= map["left"].toDouble();
 	m_viewRight	= map["right"].toDouble();
@@ -116,9 +125,27 @@ void GLWidgetSubview::fromByteArray(QByteArray& array)
 	m_hue		= map["h"].toInt();
 	m_saturation	= map["s"].toInt();
 	
-	//m_cornerTranslations	= map["key"].toPolygonF();
+	m_cornerTranslations	= QPolygonF() 
+		<< QPointF(map["c1x"].toDouble(),map["c1y"].toDouble())
+		<< QPointF(map["c2x"].toDouble(),map["c2y"].toDouble())
+		<< QPointF(map["c3x"].toDouble(),map["c3y"].toDouble())
+		<< QPointF(map["c4x"].toDouble(),map["c4y"].toDouble());
+		
 	m_cornerRotation	= (GLRotateValue)map["rot"].toInt();
+	
+	setAlphaMaskFile(m_alphaMaskFile);
+	m_colorsDirty = true;
+	updateWarpMatrix();
+	
+	if(m_glw)
+		m_glw->updateGL();
 
+}
+
+void GLWidgetSubview::initGL()
+{
+	initAlphaMask();
+	updateWarpMatrix();
 }
 	
 void GLWidgetSubview::setTitle(const QString& s) { m_title = s; }
@@ -177,6 +204,7 @@ GLWidget::GLWidget(QWidget *parent, QGLWidget *shareWidget)
 	GLWidgetSubview *test = new GLWidgetSubview();
 	test->setLeft(.5);
 	test->setHue(-50);
+	test->setAlphaMaskFile("AlphaMaskTest2-right2.png");
 	addSubview(test);
 	
 }
@@ -198,11 +226,8 @@ QSize GLWidget::sizeHint() const
 
 GLWidgetSubview *GLWidget::defaultSubview()
 {
-	if(m_subviews.size() <= 0)
-	{
-		GLWidgetSubview *s = new GLWidgetSubview();
-		addSubview(s);
-	}
+	if(m_subviews.isEmpty())
+		addSubview(new GLWidgetSubview());
 	
 	return m_subviews[0];
 }
@@ -218,9 +243,12 @@ void GLWidget::addSubview(GLWidgetSubview *s)
 {
 	if(!s)
 		return;
-	s->setGLWidget(this);
 	m_subviews << s;
 	m_subviewLookup[s->subviewId()] = s;
+
+	s->setGLWidget(this);
+	if(m_glInited)
+		s->initGL();
 }
 
 void GLWidget::removeSubview(GLWidgetSubview *s)
@@ -324,10 +352,8 @@ void GLWidget::initializeGL()
 	m_glInited = true;
 	
 	foreach(GLWidgetSubview *view, m_subviews)
-	{
-		view->initAlphaMask();
-		view->updateWarpMatrix();
-	}
+		view->initGL();
+
 
 	//qDebug() << "GLWidget::initializeGL()";
 	foreach(GLDrawable *drawable, m_drawables)
@@ -451,6 +477,11 @@ void GLWidget::setAlphaMask(const QImage &mask)
 	defaultSubview()->setAlphaMask(mask);
 }
 
+void GLWidgetSubview::setAlphaMaskFile(const QString &file)
+{
+	setAlphaMask(QImage(file));
+}
+
 void GLWidgetSubview::setAlphaMask(const QImage &mask)
 {
 	m_alphaMask_preScaled = mask;
@@ -469,7 +500,7 @@ void GLWidgetSubview::setAlphaMask(const QImage &mask)
 	
 	if(m_glw && m_glw->glInited())
 	{
-		QSize targetSize = QSize(m_glw->width(),m_glw->height()); //m_fbo->size();
+		QSize targetSize = targetRect().size().toSize(); //QSize(m_glw->width(),m_glw->height()); //m_fbo->size();
 		if(targetSize == QSize(0,0))
 		{
 			//qDebug() << "GLVideoDrawable::setAlphaMask: "<<this<<", Not scaling or setting mask, video size is 0x0";
@@ -477,6 +508,9 @@ void GLWidgetSubview::setAlphaMask(const QImage &mask)
 		}
 		
 		m_glw->makeCurrent();
+		
+		//m_alphaMask = m_alphaMask.mirrored(m_flipHorizontal, m_flipVertical);
+		
 		if(m_alphaMask.size() != targetSize)
 		{
 			//qDebug() << "GLVideoDrawable::setAlphaMask: "<<this<<",  Mask size and source size different, scaling";
@@ -498,7 +532,7 @@ void GLWidgetSubview::setAlphaMask(const QImage &mask)
 		
 		m_uploadedCacheKey = m_alphaMask.cacheKey();
 
-		//qDebug() << "GLVideoDrawable::setAlphaMask: "<<this<<",  Valid mask, size:"<<m_alphaMask.size()<<", null?"<<m_alphaMask.isNull();
+		 //qDebug() << "GLVideoDrawable::setAlphaMask: "<<this<<",  Valid mask, size:"<<m_alphaMask.size()<<", null?"<<m_alphaMask.isNull();
 		
 		glBindTexture(GL_TEXTURE_2D, m_alphaTextureId);
 		glTexImage2D(
@@ -523,12 +557,30 @@ void GLWidgetSubview::setAlphaMask(const QImage &mask)
 	
 }
 
+QRectF GLWidgetSubview::targetRect()
+{
+	if(!m_glw)
+		return QRectF();
+	
+	double targetW = m_glw->width(),
+	       targetH = m_glw->height();
+	double targetX = targetW * left();
+	double targetY = targetH * top();
+	double targetW2 = (targetW * right()) - targetX;
+	double targetH2 = (targetH * bottom()) - targetY;
+	QRectF target = QRectF(targetX,targetY, targetW2, targetH2);	
+	return target;
+}
+
 void GLWidgetSubview::updateWarpMatrix()
 {
 	#ifdef OPENCV_ENABLED
+	if(!m_glw)
+		return;
+	
 	// Handle flipping the corner translation points so that the top left is flipped 
 	// without the user having think about flipping the point inputs.
-	int cbl = 2,
+	int     cbl = 2,
 		cbr = 3,
 		ctl = 0,
 		ctr = 1;
@@ -557,8 +609,8 @@ void GLWidgetSubview::updateWarpMatrix()
 		ctr = 2;
 	}
 	
-	QRectF target = QRectF(0,0,width(),height());
-	
+	QRectF target = targetRect();
+			
 	//qDebug() << "Original painting target: "<<target;
 	
 	//we need our points as opencv points
@@ -768,20 +820,13 @@ void GLWidget::paintGL()
 			
 			double sw = m_fbo->size().width(),
 			       sh = m_fbo->size().height();
-			double targetW = width(),
-			       targetH = height();
-			
 			double sx = sw * view->left();
 			double sy = sw * view->top();
 			double sw2 = (sw * view->right()) - sx;
 			double sh2 = (sh * view->bottom()) - sy;
 			QRectF source = QRectF(sx,sy,sw2,sh2);
 			
-			double targetX = targetW * view->left();
-			double targetY = targetH * view->top();
-			double targetW2 = (targetW * view->right()) - targetX;
-			double targetH2 = (targetH * view->bottom()) - targetY;
-			QRectF target = QRectF(targetX,targetY, targetW2, targetH2);
+			QRectF target = view->targetRect();
 			
 			#ifdef OPENCV_ENABLED
 			
