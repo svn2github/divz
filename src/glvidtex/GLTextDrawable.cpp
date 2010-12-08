@@ -32,7 +32,7 @@ void GLTextDrawable::testXfade()
 void GLTextDrawable::setText(const QString& text)
 {
 	m_text = text;
-	qDebug() << "GLTextDrawable::setText(): text:"<<text;
+	//qDebug() << "GLTextDrawable::setText(): text:"<<text;
 	
 	m_renderer->setHtml(text);
 	if(!Qt::mightBeRichText(text))

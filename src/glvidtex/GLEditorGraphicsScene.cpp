@@ -279,7 +279,7 @@ void GLEditorGraphicsScene::keyPressEvent(QKeyEvent * event)
 			switch(event->key())
 			{
 				case Qt::Key_Delete:
-					//slotDeleteContent();
+					deleteSelectedItems();
 					event->accept();
 					break;
 				case Qt::Key_Up:
@@ -349,3 +349,23 @@ void GLEditorGraphicsScene::keyPressEvent(QKeyEvent * event)
 	}
 }
 
+
+
+void GLEditorGraphicsScene::deleteSelectedItems()
+{
+	
+	if (m_selection.size() > 1)
+		if (QMessageBox::question(0, tr("Delete content"), tr("All the %1 selected content will be deleted, do you want to continue ?").arg(m_selection.size()), QMessageBox::Yes | QMessageBox::No) == QMessageBox::No)
+		return;
+	
+	foreach(GLDrawable *item, m_selection)
+	{
+		// unlink content from lists, myself(the Scene) and memory
+		removeItem(item);
+		//if(DEBUG_MYGRAPHICSSCENE_ITEM_MGMT)
+		//	qDebug() << "MyGraphicsScene::slotDeleteContent(): Disposing of item: "<<content->modelItem()->itemName();
+		//content->dispose();
+		item->deleteLater();
+		//delete content;
+	}
+}

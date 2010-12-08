@@ -15,7 +15,7 @@ class GLVideoInputDrawable : public GLVideoDrawable
 {
 	Q_OBJECT
 	
-	Q_PROPERTY(QString videoInput READ videoInput WRITE setVideoInput);
+	Q_PROPERTY(QString videoInput READ videoInput WRITE setVideoInput USER true);
 	Q_PROPERTY(QString cardInput READ cardInput WRITE setCardInput);
 	Q_PROPERTY(bool deinterlace READ deinterlace WRITE setDeinterlace);
 	

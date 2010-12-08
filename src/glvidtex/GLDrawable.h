@@ -171,6 +171,8 @@ public slots:
 	void setUserControllable(bool);
 
 	void setRect(const QRectF& rect);
+	void moveBy(double x, double y) { setRect(m_rect.translated(x,y)); }
+	void moveBy(const QPointF& pnt) { setRect(m_rect.translated(pnt)); }
 	void setOpacity(double i);
 	void setOpacity(int o) { setOpacity(((double)o)/100.0); }
 	void setZIndex(double z);

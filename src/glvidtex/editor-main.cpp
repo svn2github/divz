@@ -54,8 +54,8 @@ int main(int argc, char *argv[])
 
 	
 	EditorWindow *editor = new EditorWindow();
-	editor->setGroup(new GLSceneGroup());
-	editor->addText("Welcome to GLEditor");
+// 	editor->setGroup(new GLSceneGroup());
+// 	editor->addText("Welcome to GLEditor");
 	editor->show();
 	//editor->move(800,0);
 	

@@ -9,7 +9,7 @@ class GLTextDrawable : public GLImageDrawable
 {
 	Q_OBJECT
 	
-	Q_PROPERTY(QString text READ text WRITE setText);
+	Q_PROPERTY(QString text READ text WRITE setText USER true);
 	
 public:
 	GLTextDrawable(QString text="", QObject *parent=0);

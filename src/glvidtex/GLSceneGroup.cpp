@@ -441,6 +441,8 @@ void GLScene::addDrawable(GLDrawable *d)
 	m_drawableIdLookup[d->id()] = d;
 	emit drawableAdded(d);
 	
+	connect(d, SIGNAL(destroyed()), this, SLOT(drawableDestroyed()));
+	
 	// Notify QListViews of change in data
 	QModelIndex top    = createIndex(m_itemList.size()-2, 0),
 		    bottom = createIndex(m_itemList.size()-1, 0);
@@ -450,6 +452,13 @@ void GLScene::addDrawable(GLDrawable *d)
 		m_glWidget->addDrawable(d);
 	
 	endInsertRows();
+}
+
+void GLScene::drawableDestroyed()
+{
+	GLDrawable *d = dynamic_cast<GLDrawable*>(sender());
+	if(d)
+		removeDrawable(d);
 }
 
 void GLScene::removeDrawable(GLDrawable *d)
@@ -564,10 +573,12 @@ protected:
 
 GLSceneGroup::GLSceneGroup(QObject *parent)
 	: QAbstractListModel(parent)
+	, m_groupId(-1)
 {}
 
 GLSceneGroup::GLSceneGroup(QByteArray& ba, QObject *parent)
 	: QAbstractListModel(parent)
+	, m_groupId(-1)
 {
 	fromByteArray(ba);
 }
@@ -766,11 +777,13 @@ void GLSceneGroup::setGroupName(const QString& name)
 GLSceneGroupCollection::GLSceneGroupCollection(QObject *parent)
 	: QAbstractListModel(parent)
 	, m_canvasSize(1000.,750.)
+	, m_collectionId(-1)
 {}
 
 GLSceneGroupCollection::GLSceneGroupCollection(QByteArray& ba, QObject *parent)
 	: QAbstractListModel(parent)
 	, m_canvasSize(1000.,750.)
+	, m_collectionId(-1)
 {
 	fromByteArray(ba);
 }
@@ -778,6 +791,7 @@ GLSceneGroupCollection::GLSceneGroupCollection(QByteArray& ba, QObject *parent)
 GLSceneGroupCollection::GLSceneGroupCollection(const QString& file, QObject *parent)
 	: QAbstractListModel(parent)
 	, m_canvasSize(1000.,750.)
+	, m_collectionId(-1)
 {
 	readFile(file);
 }

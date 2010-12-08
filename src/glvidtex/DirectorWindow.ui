@@ -18,31 +18,15 @@
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout_3">
       <item>
-       <widget class="QListView" name="listView"/>
+       <widget class="QListView" name="collectionListview"/>
       </item>
       <item>
-       <widget class="QListView" name="listView_2"/>
+       <widget class="QListView" name="groupListview"/>
       </item>
       <item>
        <layout class="QVBoxLayout" name="verticalLayout_2">
         <item>
          <layout class="QHBoxLayout" name="playerSelectionLayout"/>
-        </item>
-        <item>
-         <widget class="QListView" name="listView">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="minimumSize">
-           <size>
-            <width>0</width>
-            <height>32</height>
-           </size>
-          </property>
-         </widget>
         </item>
         <item>
          <widget class="EditorGraphicsView" name="graphicsView">
@@ -57,7 +41,7 @@
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout_2">
           <item>
-           <widget class="QListView" name="listView_3"/>
+           <widget class="QListView" name="sceneListview"/>
           </item>
           <item>
            <widget class="QGroupBox" name="groupBox">

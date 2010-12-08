@@ -153,6 +153,9 @@ signals:
 	
 	void sceneNameChanged(const QString&);
 	
+private slots:
+	void drawableDestroyed();
+	
 protected:
 	friend class GLSceneLayoutListModel;
 	

@@ -27,7 +27,7 @@ GLDrawable::GLDrawable(QObject *parent)
 	, m_zIndex(0)
 	, m_zIndexModifier(0)
 	, m_opacity(1)
-	, m_isVisible(false)
+	, m_isVisible(true)
 	, m_animFinished(true)
 	, m_originalOpacity(-1)
 	, m_animationsEnabled(true)
@@ -474,6 +474,8 @@ void GLDrawable::setRect(const QRectF& rect)
 // 		updateAlignment();
 	updateGL();
 	layoutChildren();
+	
+	setPos(rect.topLeft());
 }
 
 void GLDrawable::setZIndexModifier(double mod)
@@ -882,13 +884,15 @@ void GLDrawable::loadPropsFromMap(const QVariantMap& map, bool onlyApplyIfChange
 		QVariant value = map[name];
 		
 		//if(QString(name) == "rect")
-		//	qDebug() << "LiveLayer::loadPropsFromMap():"<<this<<": i:"<<i<<", count:"<<count<<", prop:"<<name<<", value:"<<value;
+			//qDebug() << "GLDrawable::loadPropsFromMap():"<<(QObject*)this<<": i:"<<i<<", count:"<<count<<", prop:"<<name<<", value:"<<value;
+		
 		
 		// Hold setting visiblility flag till last so that way any properties that affect
 		// animations are set BEFORE animations start!
 		if(QString(name) == "isVisible")
 		{
 			vis = value.toBool();
+			//vis = true;
 		}
 		else
 		if(QString(name) == "id")
@@ -927,7 +931,7 @@ void GLDrawable::loadPropsFromMap(const QVariantMap& map, bool onlyApplyIfChange
 		}
 	}
 	
-	//qDebug() << "LiveLayer::fromByteArray():"<<this<<": *** Setting visibility to "<<vis;
+	//qDebug() << "GLDrawable::loadPropsFromMap():"<<(QObject*)this<<": *** Setting visibility to "<<vis;
 	if(!onlyApplyIfChanged || isVisible() != vis)
 		setVisible(vis);
 }
@@ -954,8 +958,8 @@ QVariantMap GLDrawable::propsToMap()
 		const char *name = metaproperty.name();
 		QVariant value = property(name);
 		
-		//if(name == "aspectRatioMode")
-		//	qDebug() << "LiveLayer::toByteArray():"<<this<<instanceName()<<": prop:"<<name<<", value:"<<value;
+		//if(name == "rect")
+			//qDebug() << "GLDrawable::propsToMap():"<<(QObject*)this<<": prop:"<<name<<", value:"<<value;
 			
 		map[name] = value;
 	}
@@ -1154,6 +1158,8 @@ void GLDrawable::mouseReleaseEvent(QGraphicsSceneMouseEvent * event)
 	{
 		QRectF newRect(pos(), rect().size());
 		setRect(newRect);
+		
+		qDebug() << "GLDrawable::mouseReleaseEvent: Rect changed: "<<newRect; 
 		
 		GLEditorGraphicsScene *gls = dynamic_cast<GLEditorGraphicsScene*>(scene());
 		if(gls)

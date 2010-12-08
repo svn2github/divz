@@ -2,10 +2,10 @@
 
 #include <QtGui>
 #include "GLWidget.h"
+#include "GLDrawable.h"
 
 #include "GLPlayerServer.h"
 // #include "GLPlayerClient.h"
-
 #include "GLPlayerCommandNames.h"
 
 #include "GLSceneGroup.h"
@@ -140,6 +140,35 @@ PlayerWindow::PlayerWindow(QWidget *parent)
 	
 	connect(m_server, SIGNAL(receivedMap(QVariantMap)), this, SLOT(receivedMap(QVariantMap)));
 	
+	QString loadGroup = READ_STRING("load-group","");
+	if(!loadGroup.isEmpty())
+	{
+		QFile file(loadGroup);
+		if (!file.open(QIODevice::ReadOnly)) 
+		{
+			qDebug() << "PlayerWindow: Unable to read group file: "<<loadGroup;
+		}
+		else
+		{
+			QByteArray array = file.readAll();
+			
+			GLSceneGroup *group = new GLSceneGroup();
+			group->fromByteArray(array);
+			
+			GLScene *scene = group->at(0);
+			if(scene)
+			{
+				scene->setGLWidget(this);
+				qDebug() << "PlayerWindow: [DEBUG]: Loaded File: "<<loadGroup<<", GroupID: "<<group->groupId()<<", SceneID: "<< scene->sceneId();
+			}
+			else
+			{
+				qDebug() << "PlayerWindow: [DEBUG]: Loaded File: "<<loadGroup<<", GroupID: "<<group->groupId()<<" - no scenes found at index 0";
+			}
+		}	
+	}
+	
+	
 // 	// Send test map back to self
 // 	QTimer::singleShot(50, this, SLOT(sendTestMap()));
 }
@@ -266,7 +295,165 @@ void PlayerWindow::receivedMap(QVariantMap map)
 			}
 		}
 	}
+	else
+	if(cmd == GLPlayer_SetLayout)
+	{
+		/// TODO implement layout setting
+		sendReply(QVariantList() 
+				<< "cmd" << GLPlayer_SetLayout
+				<< "status" << true);
+	}
+	if(cmd == GLPlayer_SetUserProperty  ||
+	   cmd == GLPlayer_SetVisibility    ||
+	   cmd == GLPlayer_QueryProperty)
+	{
+		if(!m_scene)
+		{
+			sendReply(QVariantList() 
+					<< "cmd" << cmd
+					<< "status" << "error"
+					<< "message" << "No scene selected. First transmit GLPlayer_SetSlide before calling GLPlayer_SetUserProperty.");
+		}
+		else
+		{
+			int id = map["drawableid"].toInt();
+			GLDrawable *gld = m_scene->lookupDrawable(id);
+			if(!gld)
+			{
+				sendReply(QVariantList() 
+					<< "cmd" << cmd
+					<< "status" << "error"
+					<< "message" << "Invalid DrawableID");
+			}
+			else
+			{
+				QString name = 
+					cmd == GLPlayer_SetVisibility ? "isVisible" : 
+					map["name"].toString();
+				
+				if(name.isEmpty())
+				{
+					name = QString(gld->metaObject()->userProperty().name());
+				}
+				
+				if(name.isEmpty())
+				{
+					sendReply(QVariantList() 
+						<< "cmd" << cmd
+						<< "status" << "error"
+						<< "message" << "No property name given in 'name', and could not find a USER-flagged Q_PROPERTY on the GLDrawable requested by 'drawableid'.");
+				}
+				else
+				{
+					if(cmd == GLPlayer_QueryProperty)
+					{
+						sendReply(QVariantList() 
+							<< "cmd" << cmd
+							<< "name" << name
+							<< "value" << gld->property(qPrintable(name)));
+					}
+					else
+					{
+						QVariant value = map["value"];
+						
+						gld->setProperty(qPrintable(name), value);
+						
+						sendReply(QVariantList() 
+							<< "cmd" << cmd
+							<< "status" << true);
+					}
+				}
+			}
+		}
+	}
+	else
+	if(cmd == GLPlayer_DownloadFile)
+	{
+		/// TODO implement download file
+		sendReply(QVariantList() 
+				<< "cmd" << GLPlayer_DownloadFile
+				<< "status" << true);
+	}
+	else
+	if(cmd == GLPlayer_QueryLayout)
+	{
+		/// TODO implement query layout
+		sendReply(QVariantList() 
+				<< "cmd" << GLPlayer_QueryLayout
+				<< "status" << true);
+	}
+	else
+	if(cmd == GLPlayer_SetViewport)
+	{
+		QRectF rect = map["viewport"].toRectF();
+		setViewport(rect);
+		
+		sendReply(QVariantList() 
+				<< "cmd" << cmd
+				<< "status" << true);
+	}
+	else
+	if(cmd == GLPlayer_SetCanvasSize)
+	{
+		QSizeF size = map["canvas"].toSizeF();
+		setCanvasSize(size);
+		
+		sendReply(QVariantList() 
+				<< "cmd" << cmd
+				<< "status" << true);
+	}
+	else
+	if(cmd == GLPlayer_AddSubview)
+	{
+		GLWidgetSubview *view = new GLWidgetSubview();
+		
+		QByteArray ba = map["data"].toByteArray();
+		view->fromByteArray(ba);
+		
+		if(GLWidgetSubview *oldSubview = subview(view->subviewId()))
+		{
+			removeSubview(oldSubview);
+			delete oldSubview;
+		}
 	
+		addSubview(view);
+		
+		sendReply(QVariantList() 
+				<< "cmd" << cmd
+				<< "status" << true);
+	}
+	else
+	if(cmd == GLPlayer_RemoveSubview)
+	{
+		int subviewId = map["subviewid"].toInt();
+		if(subviewId>0)
+		{
+			if(GLWidgetSubview *oldSubview = subview(subviewId))
+			{
+				removeSubview(oldSubview);
+				delete oldSubview;
+			}	
+		}
+		else
+		{
+			GLWidgetSubview *view = new GLWidgetSubview();
+			
+			QByteArray ba = map["data"].toByteArray();
+			view->fromByteArray(ba);
+			
+			if(GLWidgetSubview *oldSubview = subview(view->subviewId()))
+			{
+				removeSubview(oldSubview);
+				delete oldSubview;
+			}
+		
+			delete view;
+		}
+		
+		sendReply(QVariantList() 
+				<< "cmd" << cmd
+				<< "status" << true);
+	}
 	
 	
 // 	if(map["cmd"].toString() != "ping")

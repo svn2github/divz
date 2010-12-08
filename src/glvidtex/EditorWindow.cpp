@@ -18,6 +18,8 @@
 
 #include "EditorGraphicsView.h"
 
+#include <QApplication>
+
 EditorWindow::EditorWindow(QWidget *parent)
 	: QMainWindow(parent)
 	, m_canvasSize(1000.,750.)
@@ -35,6 +37,32 @@ EditorWindow::EditorWindow(QWidget *parent)
 	setUnifiedTitleAndToolBarOnMac(true);
 	
 	readSettings();
+	
+	QStringList argList = qApp->arguments();
+	if(argList.size() > 1)
+	{
+		QString fileArg = argList.at(1);
+		if(!fileArg.isEmpty())
+		{
+			m_fileName = fileArg;
+			QFile file(fileArg);
+			if (!file.open(QIODevice::ReadOnly)) 
+			{
+				qDebug() << "EditorWindow: Unable to read group file: "<<fileArg;
+			}
+			else
+			{
+				QByteArray array = file.readAll();
+				
+				GLSceneGroup *group = new GLSceneGroup();
+				group->fromByteArray(array);
+				
+				setGroup(group);
+				
+				qDebug() << "EditorWindow: [DEBUG]: Loaded File: "<<fileArg<<", GroupID: "<<group->groupId();
+			}
+		}
+	}
 }
 
 EditorWindow::~EditorWindow()
@@ -46,6 +74,30 @@ void EditorWindow::closeEvent(QCloseEvent *event)
 {
 	writeSettings();
 	event->accept();
+	
+	if(!m_fileName.isEmpty())
+	{
+		QFile file(m_fileName);
+		// Open file
+		if (!file.open(QIODevice::WriteOnly))
+		{
+			QMessageBox::warning(0, QObject::tr("File Error"), QObject::tr("Error saving writing file '%1'").arg(m_fileName));
+			//throw 0;
+			//return;
+		}
+		else
+		{
+			
+			//QByteArray array;
+			//QDataStream stream(&array, QIODevice::WriteOnly);
+			//QVariantMap map;
+			
+			file.write(group()->toByteArray());
+			file.close();
+			
+			qDebug() << "EditorWindow: Debug: Saved GroupID: "<< m_group->groupId();
+		}	
+	}
 }
 
 
@@ -234,19 +286,18 @@ void EditorWindow::setCurrentScene(GLScene *scene)
 	//qDebug() << "EditorWindow::setCurrentScene: "<<scene;
 	m_scene = scene;
 	
-	m_layoutList->setModel(m_scene->layoutListModel());
-	
 	GLDrawableList list = m_scene->drawableList();
 	
 	m_graphicsScene->clear();
 	
 	foreach(GLDrawable *drawable, list)
-	{
 		m_graphicsScene->addItem(drawable);
-	}
 	
 	connect(m_scene, SIGNAL(drawableAdded(GLDrawable*)), this, SLOT(drawableAdded(GLDrawable*)));
 	connect(m_scene, SIGNAL(drawableRemoved(GLDrawable*)), this, SLOT(drawableRemoved(GLDrawable*)));
+	
+	if(!list.isEmpty())
+		list.first()->setSelected(true);
 }
 
 void EditorWindow::drawableAdded(GLDrawable *d)
@@ -311,7 +362,8 @@ void EditorWindow::addVideoLoop()
 
 void EditorWindow::addVideoFile()
 {
-	addDrawable(new GLVideoFileDrawable("../data/Seasons_Loop_3_SD.mpg"));
+	//addDrawable(new GLVideoFileDrawable("../data/Seasons_Loop_3_SD.mpg"));
+	addDrawable(new GLVideoLoopDrawable("../data/Seasons_Loop_3_SD.mpg"));
 }
 
 void EditorWindow::addImage()

@@ -198,14 +198,14 @@ GLWidget::GLWidget(QWidget *parent, QGLWidget *shareWidget)
 	//qDebug() << "GLWidget::doubleBuffered: "<<doubleBuffer();
 	(void)defaultSubview();
 	
-	GLWidgetSubview *def = defaultSubview();
-	def->setRight(.5);
-	
-	GLWidgetSubview *test = new GLWidgetSubview();
-	test->setLeft(.5);
-	test->setHue(-50);
-	test->setAlphaMaskFile("AlphaMaskTest2-right2.png");
-	addSubview(test);
+// 	GLWidgetSubview *def = defaultSubview();
+// 	def->setRight(.5);
+// 	
+// 	GLWidgetSubview *test = new GLWidgetSubview();
+// 	test->setLeft(.5);
+// 	test->setHue(-50);
+// 	test->setAlphaMaskFile("AlphaMaskTest2-right2.png");
+// 	addSubview(test);
 	
 }
 
@@ -509,19 +509,18 @@ void GLWidgetSubview::setAlphaMask(const QImage &mask)
 		
 		m_glw->makeCurrent();
 		
-		//m_alphaMask = m_alphaMask.mirrored(m_flipHorizontal, m_flipVertical);
 		
-		if(m_alphaMask.size() != targetSize)
-		{
-			//qDebug() << "GLVideoDrawable::setAlphaMask: "<<this<<",  Mask size and source size different, scaling";
-			m_alphaMask = m_alphaMask.scaled(targetSize);
-		}
+// 		if(m_alphaMask.size() != targetSize)
+// 		{
+// 			//qDebug() << "GLVideoDrawable::setAlphaMask: "<<this<<",  Mask size and source size different, scaling";
+// 			m_alphaMask = m_alphaMask.scaled(targetSize);
+// 		}
 		
-		if(m_alphaMask.format() != QImage::Format_ARGB32)
-		{
-			//qDebug() << "GLVideoDrawable::setAlphaMask: "<<this<<",  Mask format not ARGB32, reformatting";
-			m_alphaMask = m_alphaMask.convertToFormat(QImage::Format_ARGB32);
-		}
+// 		if(m_alphaMask.format() != QImage::Format_ARGB32)
+// 		{
+// 			//qDebug() << "GLVideoDrawable::setAlphaMask: "<<this<<",  Mask format not ARGB32, reformatting";
+// 			m_alphaMask = m_alphaMask.convertToFormat(QImage::Format_ARGB32);
+// 		}
 			
 		if(m_alphaMask.cacheKey() == m_uploadedCacheKey)
 		{
@@ -529,6 +528,7 @@ void GLWidgetSubview::setAlphaMask(const QImage &mask)
 			return;
 		}
 			
+		m_alphaMask = m_alphaMask.mirrored(m_flipHorizontal, m_flipVertical ? false:true);
 		
 		m_uploadedCacheKey = m_alphaMask.cacheKey();
 
@@ -539,12 +539,12 @@ void GLWidgetSubview::setAlphaMask(const QImage &mask)
 			GL_TEXTURE_2D,
 			0,
 			GL_RGBA,
-			mask.width(),
-			mask.height(),
+			m_alphaMask.width(),
+			m_alphaMask.height(),
 			0,
 			GL_RGBA, 
 			GL_UNSIGNED_BYTE,
-			mask.scanLine(0)
+			m_alphaMask.scanLine(0)
 			);
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);

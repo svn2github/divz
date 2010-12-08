@@ -221,7 +221,7 @@ void CornerItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 // 		{
 			static int counter = 0;
 
-			QRect cr = m_content->boundingRect().toRect(); //contentsRect();
+			QRectF cr = m_content->rect(); //boundingRect().toRect(); //contentsRect();
 			//QPointF d = AppSettings::snapToGrid( event->pos() - m_startPos );
 			QPointF d = ( event->pos() - m_startPos );
 
@@ -237,7 +237,7 @@ void CornerItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 			//qDebug() << "#"<<counter<<" v:"<<v<<", W:"<<W<<", H:"<<H<<", d:"<<d<<", m_corner:"<<m_corner<<", pos:"<<pos()<<", event->pos:"<<event->pos()<<", startPos:"<<m_startPos<<", W2:"<<W2<<", H2:"<<H2;
 
 			QRectF br = boundingRect();
-			QPointF cpos = m_content->pos();
+			QPointF cpos = cr.topLeft(); //m_content->pos();
 // 			if(cpos.x() <=0)
 // 				d.setX(0);
 // 			if(cpos.y() <=0)
@@ -260,7 +260,8 @@ void CornerItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 						int newHeight = (int)(newWidth / m_startRatio);
 						int deltaY = cr.height() - newHeight;
 
-						m_content->moveBy(d.x(),deltaY);
+						//m_content->moveBy(d.x(),deltaY);
+						cr.translate(d.x(),deltaY);
 						cr.setWidth(newWidth); // adjust width (then height..) to compensate for moveBy()
 						cr.setHeight(newHeight); // adjust width (then height..) to compensate for moveBy()
 					}
@@ -270,7 +271,8 @@ void CornerItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 						int newWidth = (int)(newHeight * m_startRatio);
 						int deltaX = cr.width() - newWidth;
 
-						m_content->moveBy(deltaX,d.y());
+						//m_content->moveBy(deltaX,d.y());
+						cr.translate(deltaX,d.y());
 						cr.setWidth(newWidth); // adjust width (then height..) to compensate for moveBy()
 						cr.setHeight(newHeight); // adjust width (then height..) to compensate for moveBy()
 
@@ -278,7 +280,8 @@ void CornerItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 				}
 				else
 				{
-					m_content->moveBy(d.x(),d.y());
+					//m_content->moveBy(d.x(),d.y());
+					cr.translate(d.x(),d.y());
 					cr.setWidth((int)(cr.width()   - d.x())); // adjust width (then height..) to compensate for moveBy()
 					cr.setHeight((int)(cr.height() - d.y()));
 					
@@ -309,13 +312,15 @@ void CornerItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 					int newWidth = (int)(newHeight * m_startRatio);
 					int deltaX = cr.width() - newWidth;
 
-					m_content->moveBy(deltaX,d.y());
+					//m_content->moveBy(deltaX,d.y());
+					cr.translate(deltaX,d.y());
 					cr.setWidth(newWidth); // adjust width (then height..) to compensate for moveBy()
 					cr.setHeight(newHeight); // adjust width (then height..) to compensate for moveBy()
 				}
 				else
 				{
-					m_content->moveBy(0,d.y());
+					//m_content->moveBy(0,d.y());
+					cr.translate(0,d.y());
 					//cr.setWidth((int)(cr.width()  -d.x())); // adjust width (then height..) to compensate for moveBy()
 					cr.setHeight((int)(cr.height()-d.y()));
 					
@@ -341,13 +346,15 @@ void CornerItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 					int newHeight = (int)(newWidth / m_startRatio);
 					int deltaY = cr.height() - newHeight;
 
-					m_content->moveBy(d.x(),deltaY);
+					//m_content->moveBy(d.x(),deltaY);
+					cr.translate(d.x(),deltaY);
 					cr.setWidth(newWidth); // adjust width (then height..) to compensate for moveBy()
 					cr.setHeight(newHeight); // adjust width (then height..) to compensate for moveBy()
 				}
 				else
 				{
-					m_content->moveBy(d.x(),0);
+					//m_content->moveBy(d.x(),0);
+					cr.translate(d.x(),0);
 					cr.setWidth((int)(cr.width()  -d.x())); // adjust width (then height..) to compensate for moveBy()
 					//cr.setHeight((int)(cr.height()-d.y()));
 					
@@ -375,7 +382,8 @@ void CornerItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 			else
 			if(m_corner == BottomLeftCorner)
 			{
-				m_content->moveBy(d.x(),0);
+				//m_content->moveBy(d.x(),0);
+				cr.translate(d.x(),0);
 				cr.setWidth((int)(cr.width()-d.x()));
 
 // 				int hfw = m_content->contentHeightForWidth(W);
@@ -418,14 +426,16 @@ void CornerItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 					int newHeight = (int)(cr.height()  -d.y());
 					int newWidth = (int)(newHeight * m_startRatio);
 
-					m_content->moveBy(0,d.y());
+					//m_content->moveBy(0,d.y());
+					cr.translate(0,d.y());
 					cr.setWidth(newWidth); // adjust width (then height..) to compensate for moveBy()
 					cr.setHeight(newHeight); // adjust width (then height..) to compensate for moveBy()
 
 				}
 				else
 				{
-					m_content->moveBy(0,d.y());
+					//m_content->moveBy(0,d.y());
+					cr.translate(0,d.y());
 					cr.setWidth(W);
 					cr.setHeight((int)(cr.height()-d.y()));
 				}

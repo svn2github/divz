@@ -24,6 +24,7 @@ public slots:
 	void clearSelection(QList<GLDrawable*> ignoreList = QList<GLDrawable*>());
 	void setSceneRect(const QRectF&);
 	void removeDrawables();
+	void deleteSelectedItems();
 	
 protected:
 	friend class GLDrawable;

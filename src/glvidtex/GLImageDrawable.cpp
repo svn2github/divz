@@ -72,6 +72,8 @@ void GLImageDrawable::setImage(const QImage& image)
 bool GLImageDrawable::setImageFile(const QString& file)
 {
 	//qDebug() << "GLImageDrawable::setImageFile(): file:"<<file;
+	if(file.isEmpty())
+		return false;
 	
 	QFileInfo fileInfo(file);
 	if(!fileInfo.exists())

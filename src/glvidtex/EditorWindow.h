@@ -80,6 +80,8 @@ protected:
 	GLDrawable *m_currentDrawable;
 
 	EditorGraphicsView *m_graphicsView;
+	
+	QString m_fileName;
 };
 
 

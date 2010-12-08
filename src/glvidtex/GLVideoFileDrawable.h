@@ -8,7 +8,7 @@ class GLVideoFileDrawable : public GLVideoDrawable
 {
 	Q_OBJECT
 	
-	Q_PROPERTY(QString videoFile READ videoFile WRITE setVideoFile);
+	Q_PROPERTY(QString videoFile READ videoFile WRITE setVideoFile USER true);
 	
 public:
 	GLVideoFileDrawable(QString file="", QObject *parent=0);

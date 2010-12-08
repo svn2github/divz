@@ -8,7 +8,7 @@ class GLImageDrawable : public GLVideoDrawable
 	Q_OBJECT
 	
 	Q_PROPERTY(QImage image READ image WRITE setImage);
-	Q_PROPERTY(QString imageFile READ imageFile WRITE setImageFile);
+	Q_PROPERTY(QString imageFile READ imageFile WRITE setImageFile USER true);
 	
 public:
 	GLImageDrawable(QString file="", QObject *parent=0);
