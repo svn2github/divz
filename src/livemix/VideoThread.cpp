@@ -5,12 +5,12 @@
 #include <QStringList>
 #include <QDebug>
 
+#include "VideoThread.h"
+
 extern "C" {
 #include "libswscale/swscale.h"
 #include "libavdevice/avdevice.h"
 }
-
-#include "VideoThread.h"
 
 #define MAX_SKIPS_TILL_RESET 30
 

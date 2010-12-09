@@ -1,5 +1,10 @@
 #include <QApplication>
 
+#ifndef INT64_C
+#define INT64_C(c) (c ## LL)
+#define UINT64_C(c) (c ## ULL)
+#endif
+
 #include "GLWidget.h"
 #include "../livemix/VideoThread.h"
 #include "../livemix/CameraThread.h"

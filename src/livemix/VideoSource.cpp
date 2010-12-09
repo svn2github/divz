@@ -4,6 +4,20 @@
 
 //////////////
 
+//#ifndef UINT64_C
+//#define UINT64_C(val) val##ui64
+
+// 7.18.4.2 Macros for greatest-width integer constants
+//#define INTMAX_C   INT64_C
+//#define UINTMAX_C  UINT64_C
+
+#ifndef INT64_C
+#define INT64_C(c) (c ## LL)
+#define UINT64_C(c) (c ## ULL)
+#endif
+
+
+
 extern "C" {
 #include "libswscale/swscale.h"
 #include "libavdevice/avdevice.h"

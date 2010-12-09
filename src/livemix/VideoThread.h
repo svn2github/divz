@@ -2,6 +2,11 @@
 #define VideoThread_h
 
 
+#ifndef INT64_C
+#define INT64_C(c) (c ## LL)
+#define UINT64_C(c) (c ## ULL)
+#endif
+
 #include <QThread>
 
 // Defn from http://gcc.gnu.org/ml/gcc-bugs/2002-10/msg00259.html

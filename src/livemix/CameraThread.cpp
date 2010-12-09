@@ -10,6 +10,8 @@
 
 #include <QImageWriter>
 
+#include "CameraThread.h"
+
 extern "C" {
 #include "libswscale/swscale.h"
 #include "libavdevice/avdevice.h"
@@ -18,8 +20,6 @@ extern "C" {
 #include "SimpleV4L2.h"
 
 //#include "ccvt/ccvt.h"
-
-#include "CameraThread.h"
 
 //#define DEINTERLACE 1
 

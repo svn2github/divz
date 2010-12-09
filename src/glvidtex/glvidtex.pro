@@ -102,6 +102,9 @@ unix: {
 		../livemix/SimpleV4L2.h
 	SOURCES += \
 		../livemix/SimpleV4L2.cpp
+
+	# CentOS fix - see http://theitdepartment.wordpress.com/2009/03/15/centos-qt-fcfreetypequeryface/
+	LIBS += -L/opt/fontconfig-2.4.2/lib
 }
 
 opencv: {
