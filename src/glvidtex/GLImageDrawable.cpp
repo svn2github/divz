@@ -3,6 +3,8 @@
 GLImageDrawable::GLImageDrawable(QString file, QObject *parent)
 	: GLVideoDrawable(parent)
 {
+	//setImage(QImage("dot.gif"));
+	
 	if(!file.isEmpty())
 		setImageFile(file);
 	
@@ -54,6 +56,10 @@ void GLImageDrawable::setImage(const QImage& image)
 	m_frame.setSize(image.size());
 	
 	updateTexture();
+	
+// 	QString file = QString("debug-%1-%2.png").arg(metaObject()->className()).arg(QString().sprintf("%p",((void*)this)));
+// 	m_image.save(file);
+// 	qDebug() << "QImageDrawable::setImage: "<<(QObject*)this<<": Wrote: "<<file;
 	
 	if(fpsLimit() <= 0.0)
 		updateGL();

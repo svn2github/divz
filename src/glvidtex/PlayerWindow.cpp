@@ -10,11 +10,57 @@
 
 #include "GLSceneGroup.h"
 
+class ScaledGraphicsView : public QGraphicsView
+{
+public:
+	ScaledGraphicsView(QWidget *parent=0) : QGraphicsView(parent) 
+	{
+		setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing | QPainter::SmoothPixmapTransform );
+		setCacheMode(QGraphicsView::CacheBackground);
+		setViewportUpdateMode(QGraphicsView::BoundingRectViewportUpdate);
+		setOptimizationFlags(QGraphicsView::DontSavePainterState);
+		setViewportUpdateMode(QGraphicsView::SmartViewportUpdate);
+		setTransformationAnchor(AnchorUnderMouse);
+		setResizeAnchor(AnchorViewCenter);
+		setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+		setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+	} 
+
+protected:
+	void resizeEvent(QResizeEvent *)
+	{
+		adjustViewScaling();
+	}
+
+	void adjustViewScaling()
+	{
+		if(!scene())
+			return;
+		
+		float sx = ((float)width()) / scene()->width();
+		float sy = ((float)height()) / scene()->height();
+
+		float scale = qMin(sx,sy);
+		setTransform(QTransform().scale(scale,scale));
+		//qDebug("Scaling: %.02f x %.02f = %.02f",sx,sy,scale);
+		update();
+		//m_view->fitInView(m_scene->sceneRect(), Qt::KeepAspectRatioByExpanding);
+		//m_view->fitInView(m_scene->sceneRect(), Qt::KeepAspectRatio);
+	}
+	
+};
+
 PlayerWindow::PlayerWindow(QWidget *parent)
-	: GLWidget(parent)
+	: QWidget(parent)
 	, m_group(0)
 	, m_scene(0)
+	, m_useGLWidget(true)
+	, m_glWidget(0)
+	, m_graphicsView(0)
 {
+	QVBoxLayout *layout = new QVBoxLayout(this);
+	layout->setContentsMargins(0,0,0,0);
+	
 	bool verbose = true;
 	QString configFile = "player.ini";
 	
@@ -48,6 +94,28 @@ PlayerWindow::PlayerWindow(QWidget *parent)
 		point = QPoint(parts[0].toInt(),parts[1].toInt()); \
 		if(verbose) qDebug() << "PlayerWindow: " key ": " << point; 
 	
+		
+	m_useGLWidget = false; //READ_STRING("comapt","false") == "false";
+	if(m_useGLWidget)
+	{
+		m_glWidget = new GLWidget(this);
+		layout->addWidget(m_glWidget);
+		qDebug() << "PlayerWindow: Using OpenGL to provide high-quality graphics.";
+	}
+	else
+	{
+		m_graphicsView = new ScaledGraphicsView();
+		m_graphicsScene = new QGraphicsScene();
+		m_graphicsView->setScene(m_graphicsScene);
+		m_graphicsView->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
+		m_graphicsScene->setSceneRect(QRectF(0,0,1000.,750.));
+		m_graphicsView->setBackgroundBrush(Qt::black);
+		layout->addWidget(m_graphicsView);
+		
+		qDebug() << "PlayerWindow: Using vendor-provided stock graphics engine for compatibility with older hardware.";
+	}
+	
+	
 	// Window position and size
 	READ_POINT("window-pos","10x10");
 	QPoint windowPos = point;
@@ -65,66 +133,73 @@ PlayerWindow::PlayerWindow(QWidget *parent)
 	if(frameless)
 		setWindowFlags(Qt::FramelessWindowHint);// | Qt::ToolTip);
 	
-	// Keystoning / Corner Translations
-	READ_POINT("key-tl","0x0");
-	setTopLeftTranslation(point);
-	
-	READ_POINT("key-tr","0x0");
-	setTopRightTranslation(point);
-	
-	READ_POINT("key-bl","0x0");
-	setBottomLeftTranslation(point);
-	
-	READ_POINT("key-br","0x0");
-	setBottomRightTranslation(point);
-	
-	// Brightness/Contrast, Hue/Sat
-	setBrightness(READ_STRING("brightness","0").toInt());
-	setContrast(READ_STRING("contrast","0").toInt());
-	setHue(READ_STRING("hue","0").toInt());
-	setSaturation(READ_STRING("saturation","0").toInt());
-	
-	// Flip H/V
-	bool fliph = READ_STRING("flip-h","false") == "true";
-	if(verbose)
-		qDebug() << "PlayerWindow: flip-h: "<<fliph;
-	setFlipHorizontal(fliph);
-	
-	bool flipv = READ_STRING("flip-v","false") == "true";
-	if(verbose)
-		qDebug() << "PlayerWindow: flip-v: "<<flipv;
-	setFlipVertical(flipv);
-	
-	// Rotate
-	int rv = READ_STRING("rotate","0").toInt();
-	if(verbose)
-		qDebug() << "PlayerWindow: rotate: "<<rv;
-	
-	if(rv != 0)
-		setCornerRotation(rv == -1 ? GLRotateLeft  : 
-				  rv ==  1 ? GLRotateRight : 
-				             GLRotateNone);
-	
-	// Aspet Ratio Mode
-	setAspectRatioMode(READ_STRING("ignore-ar","false") == "true" ? Qt::IgnoreAspectRatio : Qt::KeepAspectRatio);
-	
-	// Canvas Size
-	READ_POINT("canvas-size","1000x750");
-	setCanvasSize(QSizeF((qreal)point.x(),(qreal)point.y()));
-	
-	// Alpha Mask
-	QString alphaFile = READ_STRING("alphamask","");
-	if(!alphaFile.isEmpty())
+	if(m_useGLWidget)
 	{
-		QImage alphamask(alphaFile);
-		if(alphamask.isNull())
-			qDebug() << "PlayerWindow: Error loading alphamask "<<alphaFile;
-		else
-			setAlphaMask(alphamask);
+		
+		// Keystoning / Corner Translations
+		READ_POINT("key-tl","0x0");
+		m_glWidget->setTopLeftTranslation(point);
+		
+		READ_POINT("key-tr","0x0");
+		m_glWidget->setTopRightTranslation(point);
+		
+		READ_POINT("key-bl","0x0");
+		m_glWidget->setBottomLeftTranslation(point);
+		
+		READ_POINT("key-br","0x0");
+		m_glWidget->setBottomRightTranslation(point);
+		
+		// Brightness/Contrast, Hue/Sat
+		m_glWidget->setBrightness(READ_STRING("brightness","0").toInt());
+		m_glWidget->setContrast(READ_STRING("contrast","0").toInt());
+		m_glWidget->setHue(READ_STRING("hue","0").toInt());
+		m_glWidget->setSaturation(READ_STRING("saturation","0").toInt());
+		
+		// Flip H/V
+		bool fliph = READ_STRING("flip-h","false") == "true";
+		if(verbose)
+			qDebug() << "PlayerWindow: flip-h: "<<fliph;
+		m_glWidget->setFlipHorizontal(fliph);
+		
+		bool flipv = READ_STRING("flip-v","false") == "true";
+		if(verbose)
+			qDebug() << "PlayerWindow: flip-v: "<<flipv;
+		m_glWidget->setFlipVertical(flipv);
+		
+		// Rotate
+		int rv = READ_STRING("rotate","0").toInt();
+		if(verbose)
+			qDebug() << "PlayerWindow: rotate: "<<rv;
+		
+		if(rv != 0)
+			m_glWidget->setCornerRotation(rv == -1 ? GLRotateLeft  : 
+						      rv ==  1 ? GLRotateRight : 
+							         GLRotateNone);
+		
+		// Aspet Ratio Mode
+		m_glWidget->setAspectRatioMode(READ_STRING("ignore-ar","false") == "true" ? Qt::IgnoreAspectRatio : Qt::KeepAspectRatio);
+		
+		// Alpha Mask
+		QString alphaFile = READ_STRING("alphamask","");
+		if(!alphaFile.isEmpty())
+		{
+			QImage alphamask(alphaFile);
+			if(alphamask.isNull())
+				qDebug() << "PlayerWindow: Error loading alphamask "<<alphaFile;
+			else
+				m_glWidget->setAlphaMask(alphamask);
+		}
 	}
 	
 	m_validUser = READ_STRING("user","player");
 	m_validPass = READ_STRING("pass","player");
+	
+	// Canvas Size
+	READ_POINT("canvas-size","1000x750");
+	if(m_useGLWidget)
+		m_glWidget->setCanvasSize(QSizeF((qreal)point.x(),(qreal)point.y()));
+	else
+		m_graphicsScene->setSceneRect(QRectF(0,0,(qreal)point.x(),(qreal)point.y()));
 	
 	
 	m_server = new GLPlayerServer();
@@ -154,11 +229,13 @@ PlayerWindow::PlayerWindow(QWidget *parent)
 			
 			GLSceneGroup *group = new GLSceneGroup();
 			group->fromByteArray(array);
+			setGroup(group);
 			
 			GLScene *scene = group->at(0);
 			if(scene)
 			{
-				scene->setGLWidget(this);
+				//scene->setGLWidget(this);
+				setScene(scene);
 				qDebug() << "PlayerWindow: [DEBUG]: Loaded File: "<<loadGroup<<", GroupID: "<<group->groupId()<<", SceneID: "<< scene->sceneId();
 			}
 			else
@@ -386,7 +463,7 @@ void PlayerWindow::receivedMap(QVariantMap map)
 	if(cmd == GLPlayer_SetViewport)
 	{
 		QRectF rect = map["viewport"].toRectF();
-		setViewport(rect);
+		m_glWidget->setViewport(rect);
 		
 		sendReply(QVariantList() 
 				<< "cmd" << cmd
@@ -396,7 +473,10 @@ void PlayerWindow::receivedMap(QVariantMap map)
 	if(cmd == GLPlayer_SetCanvasSize)
 	{
 		QSizeF size = map["canvas"].toSizeF();
-		setCanvasSize(size);
+		if(m_glWidget)
+			m_glWidget->setCanvasSize(size);
+		else
+			m_graphicsScene->setSceneRect(QRectF(QPointF(0,0),size));
 		
 		sendReply(QVariantList() 
 				<< "cmd" << cmd
@@ -410,13 +490,13 @@ void PlayerWindow::receivedMap(QVariantMap map)
 		QByteArray ba = map["data"].toByteArray();
 		view->fromByteArray(ba);
 		
-		if(GLWidgetSubview *oldSubview = subview(view->subviewId()))
+		if(GLWidgetSubview *oldSubview = m_glWidget->subview(view->subviewId()))
 		{
-			removeSubview(oldSubview);
+			m_glWidget->removeSubview(oldSubview);
 			delete oldSubview;
 		}
 	
-		addSubview(view);
+		m_glWidget->addSubview(view);
 		
 		sendReply(QVariantList() 
 				<< "cmd" << cmd
@@ -428,9 +508,9 @@ void PlayerWindow::receivedMap(QVariantMap map)
 		int subviewId = map["subviewid"].toInt();
 		if(subviewId>0)
 		{
-			if(GLWidgetSubview *oldSubview = subview(subviewId))
+			if(GLWidgetSubview *oldSubview = m_glWidget->subview(subviewId))
 			{
-				removeSubview(oldSubview);
+				m_glWidget->removeSubview(oldSubview);
 				delete oldSubview;
 			}	
 		}
@@ -441,9 +521,9 @@ void PlayerWindow::receivedMap(QVariantMap map)
 			QByteArray ba = map["data"].toByteArray();
 			view->fromByteArray(ba);
 			
-			if(GLWidgetSubview *oldSubview = subview(view->subviewId()))
+			if(GLWidgetSubview *oldSubview = m_glWidget->subview(view->subviewId()))
 			{
-				removeSubview(oldSubview);
+				m_glWidget->removeSubview(oldSubview);
 				delete oldSubview;
 			}
 		
@@ -502,12 +582,21 @@ void PlayerWindow::setScene(GLScene *scene)
 {
 	m_scene = scene;
 	
-	QList<GLDrawable*> items = drawables();
-	
-	foreach(GLDrawable *drawable, items)
-		removeDrawable(drawable);
-	
 	GLDrawableList list = m_scene->drawableList();
-	foreach(GLDrawable *drawable, list)
-		addDrawable(drawable);
+	
+	if(m_glWidget)
+	{
+		QList<GLDrawable*> items = m_glWidget->drawables();
+		foreach(GLDrawable *drawable, items)
+			m_glWidget->removeDrawable(drawable);
+		
+		foreach(GLDrawable *drawable, list)
+			m_glWidget->addDrawable(drawable);
+	}
+	else
+	{
+		m_graphicsScene->clear();
+		foreach(GLDrawable *drawable, list)
+			m_graphicsScene->addItem(drawable);
+	}
 }

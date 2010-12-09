@@ -12,6 +12,7 @@
 #include <QDoubleSpinBox>
 #include <QDirModel>
 #include <QCompleter>
+#include <QDateTimeEdit>
 
 #ifndef Q_MAX
    #define Q_MAX(a,b) (a>b?a:b)
@@ -179,6 +180,18 @@ QWidget * PropertyEditorFactory::generatePropertyEditor(QObject *object, const c
 			delete base;
 		}
 
+		return box;
+	}
+	else
+	if(opts.type == QVariant::DateTime)
+	{
+		QDateTimeEdit *box = new QDateTimeEdit();
+		
+		box->setDateTime( prop.toDateTime() );
+		QObject::connect(box, SIGNAL(dateTimeChanged(const QDateTime&)), object, slot);
+		
+		delete base;
+		
 		return box;
 	}
 	else

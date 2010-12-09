@@ -487,6 +487,11 @@ QWidget *EditorWindow::createPropertyEditors(GLDrawable *gld)
 		else
 		if(GLTextDrawable *item = dynamic_cast<GLTextDrawable*>(gld))
 		{
+			opts.reset();
+			
+			lay->addRow(PropertyEditorFactory::generatePropertyEditor(gld, "isCountdown", SLOT(setIsCountdown(bool)), opts));
+			lay->addRow(PropertyEditorFactory::generatePropertyEditor(gld, "targetDateTime", SLOT(setTargetDateTime(QDateTime)), opts));
+			
 			m_rtfEditor = new RichTextEditorDialog(this);
 			m_rtfEditor->setText(item->text());
 			//m_editor->initFontSize(m_model->findFontSize());

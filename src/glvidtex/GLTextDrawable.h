@@ -10,14 +10,22 @@ class GLTextDrawable : public GLImageDrawable
 	Q_OBJECT
 	
 	Q_PROPERTY(QString text READ text WRITE setText USER true);
+	Q_PROPERTY(bool isCountdown READ isCountdown WRITE setIsCountdown);
+	Q_PROPERTY(QDateTime targetDateTime READ targetDateTime WRITE setTargetDateTime);
 	
 public:
 	GLTextDrawable(QString text="", QObject *parent=0);
 	
 	QString text() { return m_text; }
+	bool isCountdown() { return m_isCountdown; }
+	QDateTime targetDateTime() { return m_targetTime; }
+	
 	
 public slots:
 	void setText(const QString&);
+	void setIsCountdown(bool);
+	void setTargetDateTime(const QDateTime&);
+	
 	
 	
 protected:
@@ -27,9 +35,17 @@ protected:
 private slots:
 	void testXfade();
 	
+	void countdownTick();
+	
 private:
+	QString formatTime(double time);
+	
 	QString m_text;
 	RichTextRenderer *m_renderer;
+	
+	bool m_isCountdown;
+	QTimer m_countdownTimer;
+	QDateTime m_targetTime;
 };
 
 #endif

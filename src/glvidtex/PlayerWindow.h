@@ -2,8 +2,7 @@
 #define PlayerWindow_H
 
 #include <QWidget>
-
-#include "GLWidget.h"
+#include <QVariant>
 
 class GLPlayerServer;
 
@@ -12,8 +11,11 @@ class GLPlayerServer;
 
 class GLSceneGroup;
 class GLScene;
+class GLWidget;
+class QGraphicsView;
+class QGraphicsScene ;
 
-class PlayerWindow : public GLWidget
+class PlayerWindow : public QWidget
 {
 	Q_OBJECT
 public:
@@ -49,6 +51,13 @@ private:
 
 	GLSceneGroup *m_group;
 	GLScene *m_scene;
+	
+	QGraphicsView *m_graphicsView;
+	QGraphicsScene *m_graphicsScene;
+	
+	GLWidget *m_glWidget;
+	
+	bool m_useGLWidget;
 	
 /*	// for testing
 	GLPlayerClient *m_client;*/

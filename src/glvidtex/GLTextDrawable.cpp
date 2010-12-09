@@ -6,6 +6,12 @@
 GLTextDrawable::GLTextDrawable(QString text, QObject *parent)
 	: GLImageDrawable("",parent)
 {
+	QDateTime now = QDateTime::currentDateTime();
+	m_targetTime = QDateTime(QDate(now.date().year()+1, 12, 25), QTime(0, 0));
+	
+	m_isCountdown = false;
+	
+
 	m_renderer = new RichTextRenderer(this);
 	connect(m_renderer, SIGNAL(textRendered(QImage)), this, SLOT(setImage(const QImage&)));
 	
@@ -21,6 +27,9 @@ GLTextDrawable::GLTextDrawable(QString text, QObject *parent)
 		corner->setDefaultLeftOp(CornerItem::Scale);
 		
 	//setAspectRatioMode(Qt::KeepAspectRatioByExpanding);
+		
+	connect(&m_countdownTimer, SIGNAL(timeout()), this, SLOT(countdownTick()));
+	m_countdownTimer.setInterval(1000);
 }
 	
 void GLTextDrawable::testXfade()
@@ -28,6 +37,90 @@ void GLTextDrawable::testXfade()
 	qDebug() << "GLTextDrawable::testXfade(): loading text #2";
 	setText("Friday 2010-11-26");
 }
+
+void GLTextDrawable::setIsCountdown(bool flag)
+{
+	m_isCountdown = flag;
+	if(m_countdownTimer.isActive() && !flag)
+		m_countdownTimer.stop();
+	
+	if(!m_countdownTimer.isActive() && flag)
+		m_countdownTimer.start();
+	
+	if(flag)
+	{
+		setXFadeEnabled(false);
+		countdownTick();
+	}
+	else
+		setXFadeEnabled(true);
+}
+
+void GLTextDrawable::setTargetDateTime(const QDateTime& date)
+{
+	m_targetTime = date;
+}
+
+
+QString GLTextDrawable::formatTime(double time)
+{
+	double hour = time/60/60;
+	double min = (hour - (int)(hour)) * 60;
+	double sec = (min  - (int)(min)) * 60;
+	//double ms  = (sec  - (int)(sec)) * 60;
+	return  QString::number((int)hour) + ":" +
+		(min<10? "0":"") + QString::number((int)min) + ":" +
+		(sec<10? "0":"") + QString::number((int)sec);// + "." +
+		//(ms <10? "0":"") + QString::number((int)ms );
+
+}
+
+void GLTextDrawable::countdownTick()
+{
+	QDateTime now = QDateTime::currentDateTime();
+	//QDateTime xmas(QDate(now.date().year(), 12, 25), QTime(0, 0));
+	//qDebug("There are %d seconds to Christmas", now.secsTo(xmas));
+	int secsTo = now.secsTo(m_targetTime);
+
+	//double time = ((double)m_currentTimeLength) - ((double)m_elapsedTime.elapsed())/1000;
+	//m_timeLabel->setText(QString("<font color='%1'>%2</font>").arg(time <= 3 ? "red" : "black").arg(formatTime(secsTo)));
+	
+	
+	//setText(formatTime(secsTo));
+	QString newText = formatTime(secsTo);
+	
+	QTextDocument doc;
+	QString origText = text();
+	if (Qt::mightBeRichText(origText))
+		doc.setHtml(origText);
+	else
+		doc.setPlainText(origText);
+
+	QTextCursor cursor(&doc);
+	cursor.select(QTextCursor::Document);
+
+	QTextCharFormat format = cursor.charFormat();
+	if(!format.isValid())
+		format = cursor.blockCharFormat();
+	//qDebug() << "Format at cursor: "<<format.fontPointSize()<<", "<<format.font()<<", "<<format.fontItalic()<<", "<<format.font().rawName();
+
+	if(format.fontPointSize() > 0)
+	{
+		cursor.insertText(newText);
+
+		// doesnt seem to be needed
+		//cursor.mergeCharFormat(format);
+
+		setText(doc.toHtml());
+
+	}
+	else
+	{
+		setText(newText);
+		//fitQuickSlideText();
+	}
+}
+
 
 void GLTextDrawable::setText(const QString& text)
 {

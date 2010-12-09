@@ -721,6 +721,8 @@ void GLWidgetSubview::updateWarpMatrix()
 
 void GLWidget::paintGL()
 {
+	//qDebug() << "GLWidget::paintGL(): Starting paint routines...";
+	
 	// Render all drawables into the FBO
 	m_fbo->bind();
 	
@@ -742,7 +744,7 @@ void GLWidget::paintGL()
 	{
 		//qDebug() << "GLWidget::paintGL(): ["<<counter++<<"] drawable->rect: "<<drawable->rect();
 		
-// 		qDebug() << "GLWidget::paintGL(): drawable:"<<((void*)drawable)<<", isvis:"<<drawable->isVisible();
+ 		//qDebug() << "GLWidget::paintGL(): drawable:"<<((QObject*)drawable)<<", vp:"<<viewport<<", rect:"<<drawable->rect(); //<<", isvis:"<<drawable->isVisible();
 		// Don't draw if not visible or if opacity == 0
 		if(drawable->isVisible() && 
 		   drawable->opacity() > 0 &&
@@ -751,6 +753,8 @@ void GLWidget::paintGL()
 // 		qDebug() << "GLWidget::paintGL(): drawable:"<<((void*)drawable)<<", draw done";
 	}
 
+	//qDebug() << "GLWidget::paintGL(): Drawable painting complete, drawing FBO";
+	
 	glFlush();
 	
 	m_fbo->release();
@@ -1101,6 +1105,8 @@ void GLWidget::paintGL()
 	//              glTexCoord2f(1,0); glVertex3f( 0, 256,0); //ro
 		glEnd();
 	}
+	
+	//qDebug() << "GLWidget::paintGL(): FBO painting complete";
 
 	
 // 	GLuint	texture[1]; // Storage For One Texture

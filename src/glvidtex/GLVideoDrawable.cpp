@@ -1335,10 +1335,10 @@ static void uploadTexture(GLuint tx_id, const QImage &image)
 
 void GLVideoDrawable::updateTexture(bool secondSource)
 {
-	//qDebug() << "GLVideoDrawable::updateTexture(): secondSource:"<<secondSource; 
+	//qDebug() << "GLVideoDrawable::updateTexture(): "<<(QObject*)this<<" secondSource:"<<secondSource; 
 	if(!secondSource ? !m_frame.isValid() : !m_frame2.isValid())
 	{
-		//qDebug() << "GLVideoDrawable::updateTexture(): Frame not valid";
+		//qDebug() << "GLVideoDrawable::updateTexture(): "<<(QObject*)this<<" Frame not valid";
 		return;
 	}
 	
@@ -1723,6 +1723,12 @@ void GLVideoDrawable::paintGL()
 	if(!m_validShader)
 	{
 		//qDebug() << "GLVideoDrawable::paintGL(): "<<this<<" No valid shader, not painting";
+		return;
+	}
+	
+	if(!m_texturesInited)
+	{
+		qDebug() << "GLVideoDrawable::paintGL(): "<<(QObject*)this<<" Textures not inited, not painting.";
 		return;
 	}
 	
