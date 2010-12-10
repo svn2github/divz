@@ -67,7 +67,7 @@ SOURCES       = GLWidget.cpp \
 		GLPlayerClient.cpp
 		
 
-gleditor: {
+editor: {
 	TARGET = gleditor
 	
 	FORMS += DirectorWindow.ui
@@ -87,15 +87,44 @@ gleditor: {
 		
 	include(../3rdparty/richtextedit/richtextedit.pri)
 }
-else: {
+director: {
+	TARGET = gldirector
+	
+	FORMS += DirectorWindow.ui
+	
+	HEADERS += ../livemix/EditorUtilityWidgets.h \
+		../livemix/ExpandableWidget.h \
+		EditorWindow.h \
+		EditorGraphicsView.h \
+		DirectorWindow.h \
+		PlayerConnection.h
+		
+	SOURCES += director-main.cpp \
+		../livemix/EditorUtilityWidgets.cpp \
+		../livemix/ExpandableWidget.cpp \
+		EditorWindow.cpp \
+		EditorGraphicsView.cpp \
+		DirectorWindow.cpp \
+		PlayerConnection.cpp
+		
+	include(../3rdparty/richtextedit/richtextedit.pri)
+}
+player: {
+	TARGET = glplayer
+	
+	HEADERS += PlayerWindow.h 
+		
+	SOURCES += player-main.cpp \
+		PlayerWindow.cpp 
+}
+glvidtex: {
 	TARGET = glvidtex
 	
 	HEADERS += PlayerWindow.h 
 		
 	SOURCES += main.cpp \
 		PlayerWindow.cpp 
-}		
-
+}
 
 unix: {
 	HEADERS += \

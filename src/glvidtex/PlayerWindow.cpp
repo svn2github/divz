@@ -95,12 +95,14 @@ PlayerWindow::PlayerWindow(QWidget *parent)
 		if(verbose) qDebug() << "PlayerWindow: " key ": " << point; 
 	
 		
-	m_useGLWidget = false; //READ_STRING("comapt","false") == "false";
+	m_useGLWidget = READ_STRING("compat","false") == "false";
 	if(m_useGLWidget)
 	{
 		m_glWidget = new GLWidget(this);
 		layout->addWidget(m_glWidget);
 		qDebug() << "PlayerWindow: Using OpenGL to provide high-quality graphics.";
+		
+		m_glWidget->setCursor(Qt::BlankCursor);
 	}
 	else
 	{
@@ -113,6 +115,8 @@ PlayerWindow::PlayerWindow(QWidget *parent)
 		layout->addWidget(m_graphicsView);
 		
 		qDebug() << "PlayerWindow: Using vendor-provided stock graphics engine for compatibility with older hardware.";
+		
+		m_graphicsView->setCursor(Qt::BlankCursor);
 	}
 	
 	
@@ -283,7 +287,7 @@ void PlayerWindow::receivedMap(QVariantMap map)
 	if(cmd == GLPlayer_Login)
 	{
 		if(map["user"].toString() != m_validUser ||
-			map["pass"].toString() != m_validPass)
+		   map["pass"].toString() != m_validPass)
 		{
 			qDebug() << "PlayerWindow::receivedMap: ["<<cmd<<"] Invalid user/pass combo";
 			
@@ -426,6 +430,7 @@ void PlayerWindow::receivedMap(QVariantMap map)
 					{
 						sendReply(QVariantList() 
 							<< "cmd" << cmd
+							<< "drawableid" << id
 							<< "name" << name
 							<< "value" << gld->property(qPrintable(name)));
 					}
@@ -483,6 +488,17 @@ void PlayerWindow::receivedMap(QVariantMap map)
 				<< "status" << true);
 	}
 	else
+	if(cmd == GLPlayer_SetScreen)
+	{
+		QRect size = map["rect"].toRect();
+		resize(size.x(),size.y());
+		move(size.width(),size.height());
+		
+		sendReply(QVariantList() 
+				<< "cmd" << cmd
+				<< "status" << true);
+	}
+	else
 	if(cmd == GLPlayer_AddSubview)
 	{
 		GLWidgetSubview *view = new GLWidgetSubview();
@@ -533,6 +549,13 @@ void PlayerWindow::receivedMap(QVariantMap map)
 		sendReply(QVariantList() 
 				<< "cmd" << cmd
 				<< "status" << true);
+	}
+	else
+	{
+		sendReply(QVariantList() 
+				<< "cmd" << cmd
+				<< "status" << "error"
+				<< "message" << "Unknown command.");
 	}
 	
 	

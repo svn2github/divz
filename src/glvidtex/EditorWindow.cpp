@@ -161,7 +161,7 @@ void EditorWindow::createUI()
 	
 	// Now create the center panel - on top will be a list view, below it the graphics view
 	m_graphicsView = new EditorGraphicsView();
-	m_graphicsView->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
+	//m_graphicsView->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
 	
 	m_graphicsScene = new GLEditorGraphicsScene();
 	m_graphicsView->setScene(m_graphicsScene);

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>865</width>
-    <height>681</height>
+    <width>873</width>
+    <height>685</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -612,14 +612,17 @@
               </item>
               <item>
                <widget class="QDoubleSpinBox" name="viewportX">
+                <property name="suffix">
+                 <string>%</string>
+                </property>
                 <property name="decimals">
-                 <number>3</number>
+                 <number>1</number>
                 </property>
                 <property name="maximum">
-                 <double>1.000000000000000</double>
+                 <double>100.000000000000000</double>
                 </property>
                 <property name="singleStep">
-                 <double>0.250000000000000</double>
+                 <double>25.000000000000000</double>
                 </property>
                </widget>
               </item>
@@ -632,14 +635,17 @@
               </item>
               <item>
                <widget class="QDoubleSpinBox" name="viewportY">
+                <property name="suffix">
+                 <string>%</string>
+                </property>
                 <property name="decimals">
-                 <number>3</number>
+                 <number>1</number>
                 </property>
                 <property name="maximum">
-                 <double>1.000000000000000</double>
+                 <double>100.000000000000000</double>
                 </property>
                 <property name="singleStep">
-                 <double>0.250000000000000</double>
+                 <double>25.000000000000000</double>
                 </property>
                </widget>
               </item>
@@ -652,17 +658,20 @@
               </item>
               <item>
                <widget class="QDoubleSpinBox" name="viewportWidth">
+                <property name="suffix">
+                 <string>%</string>
+                </property>
                 <property name="decimals">
-                 <number>3</number>
+                 <number>1</number>
                 </property>
                 <property name="maximum">
-                 <double>1.000000000000000</double>
+                 <double>100.000000000000000</double>
                 </property>
                 <property name="singleStep">
-                 <double>0.250000000000000</double>
+                 <double>25.000000000000000</double>
                 </property>
                 <property name="value">
-                 <double>1.000000000000000</double>
+                 <double>100.000000000000000</double>
                 </property>
                </widget>
               </item>
@@ -675,17 +684,20 @@
               </item>
               <item>
                <widget class="QDoubleSpinBox" name="viewportHeight">
+                <property name="suffix">
+                 <string>%</string>
+                </property>
                 <property name="decimals">
-                 <number>3</number>
+                 <number>1</number>
                 </property>
                 <property name="maximum">
-                 <double>1.000000000000000</double>
+                 <double>100.000000000000000</double>
                 </property>
                 <property name="singleStep">
-                 <double>0.250000000000000</double>
+                 <double>25.000000000000000</double>
                 </property>
                 <property name="value">
-                 <double>1.000000000000000</double>
+                 <double>100.000000000000000</double>
                 </property>
                </widget>
               </item>

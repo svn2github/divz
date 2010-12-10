@@ -22,7 +22,7 @@ class GLDrawable;
 class CornerItem : public QGraphicsItem
 {
     public:
-    	typedef enum CornerPosition { TopLeftCorner, TopRightCorner, BottomLeftCorner, BottomRightCorner, MidTop, MidLeft, MidBottom, MidRight };
+    	enum CornerPosition { TopLeftCorner, TopRightCorner, BottomLeftCorner, BottomRightCorner, MidTop, MidLeft, MidBottom, MidRight };
         CornerItem(CornerPosition corner, bool rotateOnly, GLDrawable * parent);
 
         void relayout(const QRect & rect);
@@ -35,7 +35,7 @@ class CornerItem : public QGraphicsItem
         void mouseReleaseEvent(QGraphicsSceneMouseEvent * event);
         void paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget = 0);
         
-        typedef enum Operation {
+        enum Operation {
             Off         = 0x0000,
             Rotate      = 0x0001,
             FixRotate   = 0x0002,

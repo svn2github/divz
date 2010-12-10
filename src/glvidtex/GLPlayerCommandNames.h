@@ -15,6 +15,7 @@
 #define GLPlayer_SetIgnoreAR "SetIgnoreAR"
 #define GLPlayer_SetViewport "SetViewport"
 #define GLPlayer_SetCanvasSize "SetCanvasSize"
+#define GLPlayer_SetScreen "SetScreen"
 #define GLPlayer_AddSubview "AddSubview"
 #define GLPlayer_RemoveSubview "RemoveSubview"
 // TODO not implemented below, should we implement these since they are all in subviews?

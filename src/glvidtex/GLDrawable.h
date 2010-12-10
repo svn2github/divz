@@ -30,6 +30,7 @@ private:
 	QVariant m_originalPropValue;
 };
 
+class GLDrawablePlaylist;
 class GLDrawable : public QObject,
 		   public QGraphicsItem
 {
@@ -84,7 +85,7 @@ public:
 
 	double opacity() { return m_opacity; }
 
-	typedef enum AnimationType
+	enum AnimationType
 	{
 		AnimNone = 0,
 
@@ -98,13 +99,13 @@ public:
 		AnimUser = 1000
 	};
 	
-	typedef enum AnimCondition
+	enum AnimCondition
 	{
 		OnHide,
 		OnShow,
 	};
 
-	typedef struct AnimParam
+	struct AnimParam
 	{
 		AnimCondition cond;
 		AnimationType type;
@@ -163,6 +164,8 @@ public:
 	
 	int fadeInLength() { return m_fadeInLength; }
 	int fadeOutLength() { return m_fadeOutLength; }
+	
+	GLDrawablePlaylist *playlist() { return m_playlist; }
 
 public slots:
 	void updateGL();
@@ -322,9 +325,128 @@ private:
 	bool m_fadeOut;
 	int m_fadeInLength;
 	int m_fadeOutLength;
+	
+	GLDrawablePlaylist *m_playlist;
 };
 
 bool operator==(const GLDrawable::AnimParam&a, const GLDrawable::AnimParam&b);
 Q_DECLARE_METATYPE(GLDrawable::AnimationType);
+
+
+
+class GLDrawablePlaylist;
+class GLPlaylistItem : public QObject
+{
+	Q_OBJECT
+	
+	Q_PROPERTY(QVariant value READ value WRITE setValue);
+	
+	Q_PROPERTY(double duration READ duration WRITE setDuration);
+	Q_PROPERTY(bool autoDuration READ autoDuration WRITE setAutoDuration);
+	
+	Q_PROPERTY(QDateTime scheduledTime READ scheduledTime WRITE setScheduledTime);
+	Q_PROPERTY(bool autoSchedule READ autoSchedule WRITE setAutoSchedule);
+public:
+	GLPlaylistItem(GLDrawablePlaylist *list=0);
+	GLPlaylistItem(QByteArray& array, GLDrawablePlaylist *list=0);
+	
+	QByteArray toByteArray();
+	void fromByteArray(QByteArray&);
+	
+	GLDrawablePlaylist *playlist() { return m_playlist; }
+	
+	QVariant value() { return m_value; }
+	double duration() { return m_duration; }
+	bool autoDuration() { return m_autoDuration; }
+	
+	QDateTime scheduledTime() { return m_scheduledTime; }
+	bool autoSchedule() { return m_autoSchedule; }
+	
+public slots:
+	void setValue(QVariant value);
+	void setDuration(double duration);
+	void setAutoDuration(bool flag);
+	void setScheduledTime(const QDateTime&);
+	void setAutoSchedule(bool flag);
+	
+	void setPlaylist(GLDrawablePlaylist *playlist);
+	
+signals:
+	void playlistItemChanged();
+
+private:
+	GLDrawablePlaylist *m_playlist;
+	
+	QVariant m_value;
+	double m_duration;
+	bool m_autoDuration;
+	QDateTime m_scheduledTime;
+	bool m_autoSchedule;
+};
+
+
+class GLDrawablePlaylist : public QAbstractListModel
+{
+	Q_OBJECT
+
+protected:
+	friend class GLDrawable;
+	GLDrawablePlaylist(GLDrawable *drawable);
+	
+public:
+	~GLDrawablePlaylist();
+	
+	int rowCount(const QModelIndex &/*parent*/) const;
+	QVariant data( const QModelIndex & index, int role = Qt::DisplayRole ) const;
+	Qt::ItemFlags flags(const QModelIndex &index) const;
+	bool setData(const QModelIndex &index, const QVariant & value, int role) ;
+	
+	QByteArray toByteArray();
+	void fromByteArray(QByteArray&);
+	
+	QList<GLPlaylistItem*> items() { return m_items; }
+	
+	int size() { return m_items.size(); }
+	GLPlaylistItem *at(int x) { return x>=0 && x<m_items.size()?m_items.at(x):0; }
+	
+	GLDrawable *drawable() { return m_drawable; }
+
+	bool isPlaying() { return m_isPlaying; }
+	double playTime() { return m_playTime; }
+
+public slots:
+	void addItem(GLPlaylistItem *);
+	void removeItem(GLPlaylistItem *);
+	
+	void setIsPlaying(bool flag);
+	void play(bool restart=false);
+	void stop();
+	
+	void playItem(GLPlaylistItem*);
+	bool setPlayTime(double time);
+		
+signals:
+	void itemAdded(GLPlaylistItem*);
+	void itemRemoved(GLPlaylistItem*);
+	
+	void currentItemChanged(GLPlaylistItem*);
+	void playerTimeChanged(double);
+	
+private slots:
+	void playlistItemChanged();
+	void timerTick();
+	
+private:
+	QList<GLPlaylistItem *> m_items;
+	GLDrawable *m_drawable;
+	
+	bool m_isPlaying;
+	QTimer m_tickTimer;
+	double m_playTime;
+	double m_timerTickLength;
+	int m_currentItemIndex;
+
+};
+
 
 #endif

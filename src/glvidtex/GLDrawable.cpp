@@ -45,6 +45,7 @@ GLDrawable::GLDrawable(QObject *parent)
 	, m_fadeOut(true)
 	, m_fadeInLength(300)
 	, m_fadeOutLength(300)
+	, m_playlist(0)
 {
 	// QGraphicsItem
 	{
@@ -75,7 +76,10 @@ GLDrawable::GLDrawable(QObject *parent)
 	}
 	
 	updateAnimValues();
+	
+	m_playlist = new GLDrawablePlaylist(this);
 }
+
 void GLDrawable::updateAnimValues()
 {
 	resetAllAnimations();
@@ -931,6 +935,9 @@ void GLDrawable::loadPropsFromMap(const QVariantMap& map, bool onlyApplyIfChange
 		}
 	}
 	
+	QByteArray ba = map["playlist"].toByteArray();
+	m_playlist->fromByteArray(ba);
+	
 	//qDebug() << "GLDrawable::loadPropsFromMap():"<<(QObject*)this<<": *** Setting visibility to "<<vis;
 	if(!onlyApplyIfChanged || isVisible() != vis)
 		setVisible(vis);
@@ -963,6 +970,9 @@ QVariantMap GLDrawable::propsToMap()
 			
 		map[name] = value;
 	}
+	
+	map["playlist"] = m_playlist->toByteArray();
+	
 	return map;
 }
 
@@ -1180,3 +1190,334 @@ QRectF GLDrawable::boundingRect() const
 {
 	return QRectF(QPointF(0,0), rect().size());
 }
+
+
+
+//////////////////////////////////////////////////////////////////////////////
+
+GLDrawablePlaylist::GLDrawablePlaylist(GLDrawable *drawable)
+	: m_drawable(drawable)
+	, m_playTime(0)
+	, m_timerTickLength(1./10.)
+	, m_currentItemIndex(-1)
+{
+	connect(&m_tickTimer, SIGNAL(timeout()), this, SLOT(timerTick()));
+	m_tickTimer.setInterval((int)(m_timerTickLength * 1000.));
+}
+GLDrawablePlaylist::~GLDrawablePlaylist()
+{
+	//disconnect(conn, 0, this, 0);
+}
+	
+int GLDrawablePlaylist::rowCount(const QModelIndex &/*parent*/) const
+{
+	return m_items.size();
+}
+
+QVariant GLDrawablePlaylist::data( const QModelIndex & index, int role ) const
+{
+	if (!index.isValid())
+		return QVariant();
+	
+	if (index.row() >= rowCount(QModelIndex()))
+		return QVariant();
+	
+	if (role == Qt::DisplayRole || Qt::EditRole == role)
+	{
+		GLPlaylistItem *d = m_items.at(index.row());
+		QString value = d->value().toString().isEmpty() ? QString("Item %1").arg(index.row()+1) : d->value().toString();
+		return value;
+	}
+// 	else if(Qt::DecorationRole == role)
+// 	{
+// 		GLSceneLayout *lay = m_scene->m_layouts.at(index.row());
+// 		return lay->pixmap();
+// 	}
+	else
+		return QVariant();
+}
+Qt::ItemFlags GLDrawablePlaylist::flags(const QModelIndex &index) const
+{
+	if (index.isValid())	
+		return Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsEditable; //| Qt::ItemIsDragEnabled | Qt::ItemIsDropEnabled;
+	
+	return Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsDropEnabled ;
+}
+bool GLDrawablePlaylist::setData(const QModelIndex &index, const QVariant & value, int /*role*/)
+{
+	if (!index.isValid())
+		return false;
+	
+	if (index.row() >= rowCount(QModelIndex()))
+		return false;
+	
+	GLPlaylistItem *d = m_items.at(index.row());
+	qDebug() << "GLDrawablePlaylist::setData: "<<this<<" row:"<<index.row()<<", value:"<<value; 
+	if(value.isValid() && !value.isNull())
+	{
+		d->setValue(value.toString());
+		dataChanged(index,index);
+		return true;
+	}
+	return false;
+}
+	
+void GLDrawablePlaylist::addItem(GLPlaylistItem *item)
+{
+	if(!item)
+		return;
+	
+	item->setPlaylist(this);
+	
+	m_items << item;
+	connect(item, SIGNAL(playlistItemChanged()), this, SLOT(playlistItemChanged()));
+	
+	beginInsertRows(QModelIndex(),m_items.size()-1,m_items.size());
+	
+	QModelIndex top    = createIndex(m_items.size()-2, 0),
+		    bottom = createIndex(m_items.size()-1, 0);
+	dataChanged(top,bottom);
+	
+	endInsertRows();
+	
+	emit itemAdded(item);
+}
+
+void GLDrawablePlaylist::removeItem(GLPlaylistItem *item)
+{
+	if(!item)
+		return;
+	
+	m_items.removeAll(item);
+	disconnect(item, 0, this, 0);
+	
+	beginRemoveRows(QModelIndex(),0,m_items.size()+1);
+	
+	int idx = m_items.indexOf(item);
+	QModelIndex top    = createIndex(idx, 0),
+		    bottom = createIndex(m_items.size(), 0);
+	dataChanged(top,bottom);
+	
+	endRemoveRows();
+
+	emit itemRemoved(item);
+
+}
+
+void GLDrawablePlaylist::playlistItemChanged()
+{
+	GLPlaylistItem *item = dynamic_cast<GLPlaylistItem *>(item);
+	if(!item)
+		return;
+	
+	int row = m_items.indexOf(item);
+	if(row < 0)
+		return;
+	
+	QModelIndex idx = createIndex(row, row);
+	dataChanged(idx, idx);
+	
+	/// TODO - rerun calculations for automatic durations/schedules
+}
+	
+
+QByteArray GLDrawablePlaylist::toByteArray()
+{
+	QByteArray array;
+	QDataStream stream(&array, QIODevice::WriteOnly);
+
+	QVariantList items;
+	foreach(GLPlaylistItem *item, m_items)
+		items << item->toByteArray();
+	
+	QVariantMap map;
+	map["items"] = items;
+	
+	stream << map;
+	
+	return array;
+}
+
+void GLDrawablePlaylist::fromByteArray(QByteArray& array)
+{
+	QDataStream stream(&array, QIODevice::ReadOnly);
+	QVariantMap map;
+	stream >> map;
+	
+	if(map.isEmpty())
+		return;
+	
+	m_items.clear();
+	QVariantList views = map["items"].toList();
+	foreach(QVariant var, views)
+	{
+		QByteArray data = var.toByteArray();
+		m_items << new GLPlaylistItem(data);
+	}
+}
+
+void GLDrawablePlaylist::setIsPlaying(bool flag)
+{
+	if(flag)
+		play();
+	else
+		stop();
+}
+void GLDrawablePlaylist::play(bool restart)
+{
+	if(restart)
+		m_playTime = 0;
+	m_tickTimer.start();
+}
+void GLDrawablePlaylist::stop()
+{
+	m_tickTimer.stop();
+}
+
+void GLDrawablePlaylist::playItem(GLPlaylistItem *item)
+{
+	int idx = m_items.indexOf(item);
+	if(idx < 0)
+		return;
+	if(idx == m_currentItemIndex)
+		return;
+
+	emit currentItemChanged(item);
+	m_currentItemIndex = idx;
+	
+	const char *propName = m_drawable->metaObject()->userProperty().name();
+	
+	qDebug() << "GLDrawablePlaylist::playItem: Showing "<<propName<<": "<<item->value();
+
+	m_drawable->setProperty(propName, item->value());
+}
+
+bool GLDrawablePlaylist::setPlayTime(double time)
+{
+	m_playTime = time;
+	
+	emit playerTimeChanged(time);
+	
+	double timeSum = 0;
+	GLPlaylistItem *foundItem =0;
+	foreach(GLPlaylistItem *item, m_items)
+	{
+		if(time >= timeSum && time < (timeSum + item->duration()))
+		{
+			foundItem = item;
+			break;
+		}
+		timeSum += item->duration();
+	}
+	if(foundItem)
+	{
+		playItem(foundItem);
+		return true;
+	}
+	else
+	{
+		qDebug() << "GLDrawablePlaylist::setPlayTime: "<<time<<": Could not find item at time "<<time;
+		return false;
+	}
+	
+}
+
+void GLDrawablePlaylist::timerTick()
+{
+	if(!setPlayTime(m_playTime + m_timerTickLength))
+		if(!setPlayTime(0))
+			stop();
+}
+
+
+//////////////////////////////////////////////////////////////////////////////
+
+GLPlaylistItem::GLPlaylistItem(GLDrawablePlaylist *list)
+	: QObject(list)
+	, m_playlist(list)
+	{}
+	
+GLPlaylistItem::GLPlaylistItem(QByteArray& array, GLDrawablePlaylist *list)
+	: QObject(list)
+	, m_playlist(list)
+{
+	fromByteArray(array);
+}
+	
+QByteArray GLPlaylistItem::toByteArray()
+{
+	QByteArray array;
+	QDataStream stream(&array, QIODevice::WriteOnly);
+	
+	QVariantMap map;
+	
+	map["value"]	= m_value;
+	map["dur"] 	= m_duration;
+	map["autod"] 	= m_autoDuration;
+	map["sched"] 	= m_scheduledTime;
+	map["autos"]	= m_autoSchedule;
+	
+	stream << map;
+	
+	return array;
+}
+
+void GLPlaylistItem::fromByteArray(QByteArray& array)
+{
+	QDataStream stream(&array, QIODevice::ReadOnly);
+	QVariantMap map;
+	stream >> map;
+	
+	if(map.isEmpty())
+		return;
+	
+	m_value		= map["value"];
+	m_duration	= map["dur"].toDouble();
+	m_autoDuration	= map["autod"].toBool();
+	m_scheduledTime	= map["sched"].toDateTime();
+	m_autoSchedule	= map["autos"].toBool();
+}
+	
+void GLPlaylistItem::setValue(QVariant value)
+{
+	m_value = value;
+	emit playlistItemChanged();
+}
+void GLPlaylistItem::setDuration(double duration)
+{
+	m_duration = duration;
+	emit playlistItemChanged();
+}
+void GLPlaylistItem::setAutoDuration(bool flag)
+{
+	m_autoDuration = flag;
+	emit playlistItemChanged();
+}
+void GLPlaylistItem::setScheduledTime(const QDateTime& value)
+{
+	m_scheduledTime = value;
+	emit playlistItemChanged();
+}
+void GLPlaylistItem::setAutoSchedule(bool flag)
+{
+	m_autoSchedule = flag;
+	emit playlistItemChanged();
+}
+
+void GLPlaylistItem::setPlaylist(GLDrawablePlaylist *playlist)
+{
+	m_playlist = playlist;
+}
+
+//	void playlistItemChanged();
+/*
+private:
+	GLDrawablePlaylist *m_playlist;
+	
+	QVariant m_value;
+	int m_duration;
+	bool m_autoDuration;
+	QDateTime m_scheduledTime;
+	bool m_autoSchedule;
+};*/
+

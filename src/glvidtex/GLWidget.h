@@ -9,7 +9,7 @@ class QGLFramebufferObject;
 
 class GLDrawable;
 
-typedef enum GLRotateValue
+enum GLRotateValue
 {
 	GLRotateLeft =-1,
 	GLRotateNone = 0,
@@ -72,6 +72,11 @@ public slots:
 	void setLeft(double);
 	void setBottom(double);
 	void setRight(double);
+	
+	void setTopPercent(double d)    { setTop(d/100.); }
+	void setLeftPercent(double d)   { setLeft(d/100.); }
+	void setBottomPercent(double d) { setBottom(d/100.); }
+	void setRightPercent(double d)  { setRight(d/100.); }
 	
 	void setAlphaMaskFile(const QString&);
 	void setAlphaMask(const QImage&);
