@@ -25,6 +25,7 @@ DirectorWindow::DirectorWindow(QWidget *parent)
 {
 	ui->setupUi(this);
 	setupUI();
+	readSettings();
 	
 	m_currentScene = 0;
 	m_currentGroup = 0;
@@ -33,12 +34,21 @@ DirectorWindow::DirectorWindow(QWidget *parent)
 	m_collection = 0;
 	m_players = 0;
 	
-	GLSceneGroupCollection *tmp = new GLSceneGroupCollection();
-	GLSceneGroup *group = new GLSceneGroup();
-	GLScene *scene = new GLScene();
-	group->addScene(scene);
-	tmp->addGroup(group);
-	setCollection(tmp);
+	bool loadedFile = false;
+	
+	QStringList argList = qApp->arguments();
+	if(argList.size() > 1)
+		loadedFile = readFile(argList.at(1));
+	
+	if(!loadedFile)
+	{
+		GLSceneGroupCollection *tmp = new GLSceneGroupCollection();
+		GLSceneGroup *group = new GLSceneGroup();
+		GLScene *scene = new GLScene();
+		group->addScene(scene);
+		tmp->addGroup(group);
+		setCollection(tmp);
+	}
 }
 
 
@@ -103,6 +113,7 @@ void DirectorWindow::readSettings()
 	ui->drawableSplitter->restoreState(settings.value("DirectorWindow/DrawableSplitter").toByteArray());
 
 	qreal scaleFactor = (qreal)settings.value("DirectorWindow/scaleFactor", 1.).toDouble();
+	//qDebug() << "DirectorWindow::readSettings: scaleFactor: "<<scaleFactor;
 	ui->graphicsView->setScaleFactor(scaleFactor);
 }
 
@@ -256,6 +267,7 @@ void DirectorWindow::showSaveAsDialog()
 }
 void DirectorWindow::saveFile()
 {
+	//m_fileName = "test.gld";
 	if(m_fileName.isEmpty())
 		showSaveAsDialog();
 	else
@@ -287,7 +299,20 @@ void DirectorWindow::addNewGroup()
 }
 void DirectorWindow::deleteGroup()
 {
-	/// TODO implement deletion confirmation and logic
+	if(!m_currentGroup)
+		return;
+	
+	if (QMessageBox::question(0, tr("Delete Group"), tr("Are you SURE you want to delete this group?"), QMessageBox::Yes | QMessageBox::No) == QMessageBox::No)
+		return;
+	
+	m_collection->removeGroup(m_currentGroup);
+	
+// 	if(m_collection && m_collection->size() > 0)
+// 		setGroup(m_collection->at(0));
+// 	else
+		setGroup(0);
+	
+	m_currentGroup->deleteLater();
 }
 
 bool DirectorWindow::readFile(const QString& fileArg)
@@ -310,7 +335,7 @@ bool DirectorWindow::readFile(const QString& fileArg)
 			
 			setCollection(collection);
 			
-			qDebug() << "DirectorWindow: [DEBUG]: Loaded File: "<<fileArg<<", CollectionID: "<<collection->collectionId();
+			qDebug() << "DirectorWindow: [DEBUG]: Loaded File: "<<fileArg<<", CollectionID: "<<collection->collectionId()<<", array: "<<array.size();
 			
 			setWindowTitle(QString("%1 - GLDirector").arg(QFileInfo(fileArg).fileName()));
 		}
@@ -382,17 +407,30 @@ void DirectorWindow::setCurrentScene(GLScene *scene)
 		m_currentScene = 0;
 	}
 	
-	//qDebug() << "EditorWindow::setCurrentScene: "<<scene;
+	//qDebug() << "DirectorWindow::setCurrentScene: "<<scene<<", size:"<<scene->rowCount(QModelIndex());
 	m_currentScene = scene;
-	ui->sceneListview->setModel(scene);
 
+	ui->sceneListview->setModel(scene);
+	scene->setListOnlyUserItems(true);
 	
 	GLDrawableList list = m_currentScene->drawableList();
+	
+	// removeItem() before calling clear() because clear() deletes the drawables
+	QList<QGraphicsItem*> itemlist = m_graphicsScene->items();
+	foreach(QGraphicsItem *item, itemlist)
+	{
+		GLDrawable *gld = dynamic_cast<GLDrawable*>(item);	
+		if(gld)
+			m_graphicsScene->removeItem(gld);
+	}
 	
 	m_graphicsScene->clear();
 	
 	foreach(GLDrawable *drawable, list)
+	{
+		drawable->setSelected(false);
 		m_graphicsScene->addItem(drawable);
+	}
 	
 	//connect(m_scene, SIGNAL(drawableAdded(GLDrawable*)), this, SLOT(drawableAdded(GLDrawable*)));
 	//connect(m_scene, SIGNAL(drawableRemoved(GLDrawable*)), this, SLOT(drawableRemoved(GLDrawable*)));

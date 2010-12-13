@@ -770,7 +770,8 @@ void GLDrawable::initGL()
 
 void GLDrawable::paint(QPainter * painter, const QStyleOptionGraphicsItem * /*option*/, QWidget * /*widget*/)
 {
-	if(isSelected())
+	if(isSelected() &&
+		dynamic_cast<GLEditorGraphicsScene*>(scene()))
 	{
 		painter->setRenderHint(QPainter::Antialiasing, true);
 		painter->setPen(QPen(qApp->palette().color(QPalette::Highlight), 1.0));
@@ -1078,6 +1079,8 @@ void GLDrawable::setControlsVisible(bool visible)
 {
 // 	if(m_contextHint != MyGraphicsScene::Editor)
 // 		return;
+	if(!dynamic_cast<GLEditorGraphicsScene*>(scene()))
+		visible = false;
 
 	m_controlsVisible = visible;
 	foreach (CornerItem * corner, m_cornerItems)

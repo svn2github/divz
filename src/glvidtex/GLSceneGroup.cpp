@@ -421,7 +421,8 @@ QVariant GLScene::data( const QModelIndex & index, int role ) const
 	{
 		GLDrawable *d = m_listOnlyUserItems ? m_userItemList.at(index.row()) : m_itemList.at(index.row());
 		QString value = d->itemName().isEmpty() ? QString("Item %1").arg(index.row()+1) : d->itemName();
-		return d->itemName();
+		//qDebug() << "GLScene::data: row:"<<index.row()<<", value:"<<value;
+		return value;
 	}
 // 	else if(Qt::DecorationRole == role)
 // 	{
@@ -827,6 +828,9 @@ QByteArray GLSceneGroupCollection::toByteArray()
 	
 	map["groups"] = groups;
 	
+	//qDebug() << "GLSceneGroupCollection::toByteArray(): Saved "<<groups.size()<<" groups";
+	
+	
 	stream << map;
 	
 	return array;
@@ -839,7 +843,10 @@ void GLSceneGroupCollection::fromByteArray(QByteArray& array)
 	stream >> map;
 	
 	if(map.isEmpty())
+	{
+		qDebug() << "GLSceneGroupCollection::fromByteArray(): [WARN] Unable to read collection from byte array because map is empty.";
 		return;
+	}
 	
 	m_collectionId		= map["collectionId"].toInt();
 	m_collectionName	= map["collectionName"].toString();
@@ -847,6 +854,9 @@ void GLSceneGroupCollection::fromByteArray(QByteArray& array)
 	
 	m_groups.clear();
 	QVariantList groups = map["groups"].toList();
+	
+	//qDebug() << "GLSceneGroupCollection::fromByteArray(): Loaded "<<groups.size()<<" groups";
+	
 	foreach(QVariant var, groups)
 	{
 		QByteArray data = var.toByteArray();
@@ -897,6 +907,34 @@ bool GLSceneGroupCollection::readFile(const QString& name)
 	}
 	return true;
 }
+
+Qt::ItemFlags GLSceneGroupCollection::flags(const QModelIndex &index) const
+{
+	if (index.isValid())	
+		return Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsEditable; //| Qt::ItemIsDragEnabled | Qt::ItemIsDropEnabled;
+	
+	return Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsDropEnabled ;
+}
+
+bool GLSceneGroupCollection::setData(const QModelIndex &index, const QVariant & value, int role) 
+{
+	if (!index.isValid())
+		return false;
+	
+	if (index.row() >= rowCount(QModelIndex()))
+		return false;
+	
+	GLSceneGroup *d = m_groups.at(index.row());
+	qDebug() << "GLSceneGroupCollection::setData: "<<this<<" row:"<<index.row()<<", value:"<<value; 
+	if(value.isValid() && !value.isNull())
+	{
+		d->setGroupName(value.toString());
+		dataChanged(index,index);
+		return true;
+	}
+	return false;
+}
+
 	
 QVariant GLSceneGroupCollection::data( const QModelIndex & index, int role ) const
 {
