@@ -242,7 +242,7 @@ QWidget * PropertyEditorFactory::generatePropertyEditor(QObject *object, const c
 	}
 	else
 	{
-		qDebug() << "PropertyEditorFactory::generatePropertyEditor(): No editor for type: "<<opts.type;
+		qDebug() << "PropertyEditorFactory::generatePropertyEditor(): No editor for type: "<<opts.type<<", property:"<<property;
 	}
 
 

@@ -116,8 +116,8 @@ public:
 	
 	GLDrawable * lookupDrawable(int id);
 	
-	int size() const { return m_itemList.size(); }
-	GLDrawable * at(int idx) { return idx>-1 && idx<size() ? m_itemList[idx] : 0; }
+	int size() const;
+	GLDrawable * at(int idx);
 	
 	// QAbstractListModel
 	virtual int rowCount(const QModelIndex &/*parent*/) const;

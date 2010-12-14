@@ -97,6 +97,7 @@ private:
 	
 	QGraphicsScene *m_graphicsScene;
 	
+	QWidget *m_drawablePropWidget;
 };
 
 #endif // DIRECTORWINDOW_H

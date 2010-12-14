@@ -460,6 +460,8 @@ RichTextEditorToolBar::RichTextEditorToolBar(RichTextEditor *editor,
 	m_paste_plain_action->setShortcut(QString("CTRL+SHIFT+V"));
 	addAction(m_paste_plain_action);
 	
+	addSeparator();
+	
 // 	m_zoomOut->setIcon(createIconSet(QLatin1String("stock-zoom-out.png")));
 // 	m_zoomOut->setText(tr("Zoom Out"));
 // 	connect(m_zoomOut, SIGNAL(triggered()), SLOT(zoomOut()));

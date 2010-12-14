@@ -140,7 +140,7 @@ QVideoFrame::Format_RGB555	6	The frame is stored using a 16-bit RGB format (5-5-
 	//	BUFFER_IMAGE	- The image data is in the .image : QImage member
 	//	BUFFER_POINTER	- The image data is in the .data[4] : unit8_t* member (related: linesize[4] : int)
 	//	BUFFER_BYTEARRAY- The image data is in the .byteArray : QByteArray member
-	typedef enum BufferType
+	enum BufferType
 	{
 		BUFFER_INVALID = 0,
 		BUFFER_IMAGE,

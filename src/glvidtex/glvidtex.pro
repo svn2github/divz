@@ -76,14 +76,14 @@ editor: {
 		../livemix/ExpandableWidget.h \
 		EditorWindow.h \
 		EditorGraphicsView.h \
-		DirectorWindow.h
+		RtfEditorWindow.h
 		
 	SOURCES += editor-main.cpp \
 		../livemix/EditorUtilityWidgets.cpp \
 		../livemix/ExpandableWidget.cpp \
 		EditorWindow.cpp \
 		EditorGraphicsView.cpp \
-		DirectorWindow.cpp
+		RtfEditorWindow.cpp
 		
 	include(../3rdparty/richtextedit/richtextedit.pri)
 }
@@ -97,7 +97,8 @@ director: {
 		EditorWindow.h \
 		EditorGraphicsView.h \
 		DirectorWindow.h \
-		PlayerConnection.h
+		PlayerConnection.h \
+		RtfEditorWindow.h
 		
 	SOURCES += director-main.cpp \
 		../livemix/EditorUtilityWidgets.cpp \
@@ -105,7 +106,8 @@ director: {
 		EditorWindow.cpp \
 		EditorGraphicsView.cpp \
 		DirectorWindow.cpp \
-		PlayerConnection.cpp
+		PlayerConnection.cpp \
+		RtfEditorWindow.cpp
 		
 	include(../3rdparty/richtextedit/richtextedit.pri)
 }
@@ -191,6 +193,8 @@ else: {
 	message("QtMobility not enabled (use qmake CONFIG+=mobility and ensure $$QT_MOBILITY_HOME exists), QtVideoSource will not be built.")
     	DEFINES -= QT_MOBILITY_ENABLED
 }
+
+RESOURCES += ../dviz.qrc
 
 # install
 target.path = $$[QT_INSTALL_EXAMPLES]/opengl/textures

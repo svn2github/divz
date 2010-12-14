@@ -399,14 +399,37 @@ void GLScene::setListOnlyUserItems(bool flag)
 	QModelIndex top    = createIndex(0, 0),
 		    bottom = createIndex(m_itemList.size() > m_userItemList.size() ? m_itemList.size() : m_userItemList.size(), 0);
 	dataChanged(top,bottom);
+	
+	//qDebug() << "GLScene::setListOnlyUserItems: "<<m_listOnlyUserItems;
 }
 
 int GLScene::rowCount(const QModelIndex &/*parent*/) const
+{
+	return size();
+}
+ 
+int GLScene::size() const
 {
 	if(m_listOnlyUserItems)
 		return m_userItemList.size();
 	else
 		return m_itemList.size();
+}
+
+GLDrawable * GLScene::at(int idx)
+{
+	if(idx<0 || idx >= size())
+		return 0;
+	
+	GLDrawable *gld = 0;
+	if(m_listOnlyUserItems)
+		gld = m_userItemList.at(idx);
+	else
+		gld = m_itemList.at(idx);
+	
+	//qDebug() << "GLScene::at: m_listOnlyUserItems:"<<m_listOnlyUserItems<<", idx:"<<idx<<", gld:"<<(QObject*)gld;
+	
+	return gld;
 }
 
 QVariant GLScene::data( const QModelIndex & index, int role ) const

@@ -169,6 +169,9 @@ void GLDrawable::setHidden(bool flag)
 
 void GLDrawable::setVisible(bool flag)
 {
+	//qDebug() << "QGraphicsItem::setVisible: "<<flag;
+	QGraphicsItem::setVisible(flag);
+	
 	if(m_lockVisibleSetter)
 		return;
 	m_lockVisibleSetter = true;

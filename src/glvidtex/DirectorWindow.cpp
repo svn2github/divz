@@ -2,14 +2,16 @@
 #include "ui_DirectorWindow.h"
 #include "PlayerSetupDialog.h"
 #include "EditorWindow.h"
-#include <QFileInfo>
+#include "../livemix/EditorUtilityWidgets.h"
+#include "RtfEditorWindow.h"
 
+#include <QFileInfo>
 #include <QFileDialog>
 #include <QApplication>
 #include <QGLWidget>
 
+#include "GLDrawables.h"
 #include "GLSceneGroup.h"
-#include "GLDrawable.h"
 #include "PlayerConnection.h"
 
 DirectorWindow::DirectorWindow(QWidget *parent)
@@ -201,7 +203,7 @@ void DirectorWindow::btnHideDrawable()
 	QPushButton *btn = dynamic_cast<QPushButton *>(sender());
 	if(!btn)
 		return;
-	m_currentDrawable->setVisible(btn->isChecked());
+	m_currentDrawable->setHidden(btn->isChecked());
 }
 void DirectorWindow::btnSendToPlayer()
 {
@@ -438,21 +440,119 @@ void DirectorWindow::setCurrentScene(GLScene *scene)
 	//if(!list.isEmpty())
 	//	list.first()->setSelected(true);
 }
-void DirectorWindow::setCurrentDrawable(GLDrawable *draw)
+void DirectorWindow::setCurrentDrawable(GLDrawable *gld)
 {
 	if(m_currentDrawable)
 	{
+		//disconnect(m_currentDrawable, 0, ui->hideBtn, 0);
 		disconnect(m_currentDrawable->playlist(), 0, this, 0);
 		m_currentDrawable = 0;
+		
 	}
 	
-	m_currentDrawable = draw;
-	ui->playlistView->setModel(draw->playlist());
+	m_currentDrawable = gld;
+	ui->playlistView->setModel(gld->playlist());
 	
-	connect(draw->playlist(), SIGNAL(currentItemChanged(GLPlaylistItem*)), this, SLOT(playlistItemChanged(GLPlaylistItem *)));
-	connect(draw->playlist(), SIGNAL(playerTimeChanged(double)), this, SLOT(playlistTimeChanged(double)));
+	connect(gld->playlist(), SIGNAL(currentItemChanged(GLPlaylistItem*)), this, SLOT(playlistItemChanged(GLPlaylistItem *)));
+	connect(gld->playlist(), SIGNAL(playerTimeChanged(double)), this, SLOT(playlistTimeChanged(double)));
 	
-	/// TODO create item property editor (and connect signals..?)
+	QString itemName = gld->itemName();
+	QString typeName;
+	
+// 	if(m_drawablePropWidget)
+// 	{
+// 		ui->itemPropLayout->removeWidget(m_drawablePropWidget);
+// 		m_drawablePropWidget->deleteLater();
+// 		m_drawablePropWidget = 0;
+// 	}
+	// Conf # is: 71.16 - 12/3 
+	while(ui->itemPropLayout->count() > 0)
+	{
+		QLayoutItem * item = ui->itemPropLayout->itemAt(ui->itemPropLayout->count() - 1);
+		ui->itemPropLayout->removeItem(item);
+		delete item;
+	}
+	
+// 	QWidget *widget = 0;
+	PropertyEditorFactory::PropertyEditorOptions opts;
+	opts.reset();	
+	
+	if(GLVideoInputDrawable *item = dynamic_cast<GLVideoInputDrawable*>(gld))
+	{
+		// show device selection box
+		// show deinterlace checkbox
+		Q_UNUSED(item);
+
+		typeName = "Video Input Item";
+	}
+	else
+	if(GLVideoLoopDrawable *item = dynamic_cast<GLVideoLoopDrawable*>(gld))
+	{
+		opts.reset();
+		opts.stringIsFile = true;
+		opts.fileTypeFilter = tr("Video Files (*.wmv *.mpeg *.mpg *.avi *.wmv *.flv *.mov *.mp4 *.m4a *.3gp *.3g2 *.mj2 *.mjpeg *.ipod *.m4v *.gsm *.swf *.dv *.dvd *.asf *.mtv *.roq *.aac *.ac3 *.aiff *.alaw *.iif);;Any File (*.*)");
+
+		ui->itemPropLayout->addRow(tr("&File:"), PropertyEditorFactory::generatePropertyEditor(item, "videoFile", SLOT(setVideoFile(const QString&)), opts));
+
+		typeName = "Video Loop Item";
+	}
+	else
+	if(GLVideoFileDrawable *item = dynamic_cast<GLVideoFileDrawable*>(gld))
+	{
+		PropertyEditorFactory::PropertyEditorOptions opts;
+		opts.stringIsFile = true;
+		opts.fileTypeFilter = tr("Video Files (*.wmv *.mpeg *.mpg *.avi *.wmv *.flv *.mov *.mp4 *.m4a *.3gp *.3g2 *.mj2 *.mjpeg *.ipod *.m4v *.gsm *.swf *.dv *.dvd *.asf *.mtv *.roq *.aac *.ac3 *.aiff *.alaw *.iif);;Any File (*.*)");
+		
+		ui->itemPropLayout->addRow(tr("&File:"), PropertyEditorFactory::generatePropertyEditor(item, "videoFile", SLOT(setVideoFile(const QString&)), opts));
+
+		typeName = "Video Item";
+	}
+	else
+	if(GLTextDrawable *item = dynamic_cast<GLTextDrawable*>(gld))
+	{
+		opts.reset();
+		
+		QWidget *edit = PropertyEditorFactory::generatePropertyEditor(gld, "plainText", SLOT(setPlainText(const QString&)), opts);
+		
+		QLineEdit *line = dynamic_cast<QLineEdit*>(edit);
+		if(line)
+			connect(gld, SIGNAL(plainTextChanged(const QString&)), line, SLOT(setText(const QString&)));
+		
+		QWidget *base = new QWidget();
+		
+		RtfEditorWindow *dlg = new RtfEditorWindow(item, base);
+		QPushButton *btn = new QPushButton("&Advanced...");
+		connect(btn, SIGNAL(clicked()), dlg, SLOT(show()));
+		
+		QHBoxLayout *hbox = new QHBoxLayout(base);
+		hbox->setContentsMargins(0,0,0,0);
+		hbox->addWidget(new QLabel("Text:"));
+		hbox->addWidget(edit);
+		hbox->addWidget(btn);
+		
+		ui->itemPropLayout->addRow(base); 
+
+		typeName = "Text Item";
+	}
+	else
+	if(GLImageDrawable *item = dynamic_cast<GLImageDrawable*>(gld))
+	{
+		PropertyEditorFactory::PropertyEditorOptions opts;
+		opts.stringIsFile = true;
+		opts.fileTypeFilter = tr("Image Files (*.png *.jpg *.bmp *.svg *.xpm *.gif);;Any File (*.*)");
+		ui->itemPropLayout->addRow(tr("&Image:"), PropertyEditorFactory::generatePropertyEditor(item, "imageFile", SLOT(setImageFile(const QString&)), opts));
+		
+		typeName = "Image Item";
+	} 
+	
+	
+	ui->itemNameLabel->setText(itemName.isEmpty() ? QString("<b>%1</b>").arg(typeName) : QString("<b>%1</b> (%2)").arg(itemName).arg(typeName));
+	
+	//connect(ui->hideBtn, SIGNAL(toggled(bool)), gld, SLOT(setHidden(bool)));
+	
+	
+	//if(widget)
+		//ui->itemPropLayout->addWidget(m_drawablePropWidget = widget);
 }
 
 void DirectorWindow::setCurrentItem(GLPlaylistItem *item)
@@ -463,3 +563,4 @@ void DirectorWindow::setCurrentItem(GLPlaylistItem *item)
 	m_currentDrawable->playlist()->playItem(item);
 	m_currentItem = item;
 }
+

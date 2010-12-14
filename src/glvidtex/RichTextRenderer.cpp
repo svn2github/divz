@@ -319,7 +319,7 @@ void RichTextRenderer::renderText()
 	}
 
 	format.setTextOutline(p);
-	format.setForeground(fillEnabled() ? fillBrush() : Qt::NoBrush); //Qt::white);
+	//format.setForeground(fillEnabled() ? fillBrush() : Qt::NoBrush); //Qt::white);
 
 	cursor.mergeCharFormat(format);
 	

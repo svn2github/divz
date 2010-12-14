@@ -39,7 +39,7 @@ public:
 
 	void setVideo(const QString&);
 
-	typedef enum Status {Running, NotRunning, Paused};
+	enum Status {Running, NotRunning, Paused};
 	Status status() { return m_status; }
 	
 	void registerConsumer(VideoWidget */*consumer*/) {}

@@ -5,6 +5,7 @@
 
 GLTextDrawable::GLTextDrawable(QString text, QObject *parent)
 	: GLImageDrawable("",parent)
+	, m_lockSetPlainText(false)
 {
 	QDateTime now = QDateTime::currentDateTime();
 	m_targetTime = QDateTime(QDate(now.date().year()+1, 12, 25), QTime(0, 0));
@@ -89,8 +90,45 @@ void GLTextDrawable::countdownTick()
 	//setText(formatTime(secsTo));
 	QString newText = formatTime(secsTo);
 	
+	setPlainText(newText);
+}
+
+
+void GLTextDrawable::setText(const QString& text)
+{
+	m_text = text;
+	//qDebug() << "GLTextDrawable::setText(): text:"<<text;
+	
+	m_renderer->setHtml(text);
+	if(!Qt::mightBeRichText(text))
+		m_renderer->changeFontSize(40);
+	
+	emit textChanged(text);
+	
+	
+	emit plainTextChanged(plainText());
+
+}
+
+QString GLTextDrawable::plainText()
+{
+	QString plain = m_text;
+	//plain = plain.replace( QRegExp("(<[bB][rR]>|\n)"), " / ");
+	plain = plain.replace( QRegExp("<style[^>]*>.*</style>", Qt::CaseInsensitive), "" );
+	plain = plain.replace( QRegExp("<[^>]*>"), "" );
+	plain = plain.replace( QRegExp("(^\\s+)"), "" );
+	return plain;
+}
+
+
+void GLTextDrawable::setPlainText(const QString& text, bool replaceNewlineSlash)
+{
+	if(m_lockSetPlainText)
+		return;
+	m_lockSetPlainText = true;
+	
 	QTextDocument doc;
-	QString origText = text();
+	QString origText = m_text;
 	if (Qt::mightBeRichText(origText))
 		doc.setHtml(origText);
 	else
@@ -103,6 +141,9 @@ void GLTextDrawable::countdownTick()
 	if(!format.isValid())
 		format = cursor.blockCharFormat();
 	//qDebug() << "Format at cursor: "<<format.fontPointSize()<<", "<<format.font()<<", "<<format.fontItalic()<<", "<<format.font().rawName();
+	QString newText = text;
+	//if(replaceNewlineSlash)
+	//	newText = newText.replace(QRegExp("\\s/\\s")," \n ");
 
 	if(format.fontPointSize() > 0)
 	{
@@ -112,26 +153,14 @@ void GLTextDrawable::countdownTick()
 		//cursor.mergeCharFormat(format);
 
 		setText(doc.toHtml());
-
 	}
 	else
 	{
 		setText(newText);
-		//fitQuickSlideText();
-	}
-}
-
-
-void GLTextDrawable::setText(const QString& text)
-{
-	m_text = text;
-	//qDebug() << "GLTextDrawable::setText(): text:"<<text;
+	}	
 	
-	m_renderer->setHtml(text);
-	if(!Qt::mightBeRichText(text))
-		m_renderer->changeFontSize(40);
+	m_lockSetPlainText = false;
 }
-
 
 void GLTextDrawable::drawableResized(const QSizeF& newSize)
 {

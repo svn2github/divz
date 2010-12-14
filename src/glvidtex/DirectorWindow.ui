@@ -60,7 +60,7 @@
              <widget class="QWidget" name="itemPropBase" native="true">
               <layout class="QHBoxLayout" name="horizontalLayout">
                <item>
-                <layout class="QFormLayout" name="formLayout"/>
+                <layout class="QFormLayout" name="itemPropLayout"/>
                </item>
               </layout>
              </widget>
@@ -210,12 +210,18 @@
   </action>
   <action name="actionEdit_Selected_Group">
    <property name="text">
-    <string>&amp;Edit Selected Group (F2)</string>
+    <string>&amp;Edit Selected Group (Shift+F2)</string>
+   </property>
+   <property name="shortcut">
+    <string>Shift+F2</string>
    </property>
   </action>
   <action name="actionAdd_New_Group">
    <property name="text">
-    <string>Add &amp;New Group</string>
+    <string>Add &amp;New Group (CTRL+N)</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+N</string>
    </property>
   </action>
   <action name="actionRemove_Selected_Group">

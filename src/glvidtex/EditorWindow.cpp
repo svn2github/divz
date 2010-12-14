@@ -3,13 +3,9 @@
 #include "GLSceneGroup.h"
 #include "GLEditorGraphicsScene.h"
 
-#include "GLImageDrawable.h"
-#include "GLVideoLoopDrawable.h"
-#include "GLVideoInputDrawable.h"
-#include "GLVideoFileDrawable.h"
-#include "GLVideoReceiverDrawable.h"
-#include "GLTextDrawable.h"
-#include "GLVideoMjpegDrawable.h"
+#include "GLDrawables.h"
+
+#include "RtfEditorWindow.h"
 
 #include "../livemix/ExpandableWidget.h"
 #include "../livemix/EditorUtilityWidgets.h"
@@ -489,24 +485,57 @@ QWidget *EditorWindow::createPropertyEditors(GLDrawable *gld)
 		{
 			opts.reset();
 			
-			lay->addRow(PropertyEditorFactory::generatePropertyEditor(gld, "isCountdown", SLOT(setIsCountdown(bool)), opts));
-			lay->addRow(PropertyEditorFactory::generatePropertyEditor(gld, "targetDateTime", SLOT(setTargetDateTime(QDateTime)), opts));
+// 			QHBoxLayout *countdown = new QHBoxLayout();
+// 			QWidget *boolEdit = PropertyEditorFactory::generatePropertyEditor(gld, "isCountdown", SLOT(setIsCountdown(bool)), opts);
+// 			QWidget *dateEdit  = PropertyEditorFactory::generatePropertyEditor(gld, "targetDateTime", SLOT(setTargetDateTime(QDateTime)), opts);
+// 			QCheckBox *box = dynamic_cast<QCheckBox*>(boolEdit);
+// 			if(box)
+// 			{
+// 				connect(boolEdit, SIGNAL(toggled(bool)), dateEdit, SLOT(setEnabled(bool)));
+// 				dateEdit->setEnabled(box->isChecked());
+// 			}
+// 			countdown->addWidget(boolEdit);
+// 			countdown->addWidget(dateEdit);
+// 			countdown->addStretch(1);
+// 			lay->addRow(countdown);
+// 			
+// 			m_rtfEditor = new RichTextEditorDialog(this);
+// 			m_rtfEditor->setText(item->text());
+// 			//m_editor->initFontSize(m_model->findFontSize());
+// 			
+// 			lay->addRow(m_rtfEditor);
+// 			m_rtfEditor->adjustSize();
+// 			m_rtfEditor->focusEditor();
+// 			
+// 			QPushButton *btn = new QPushButton("&Save Text");
+// 			connect(btn, SIGNAL(clicked()), this, SLOT(rtfEditorSave()));
+// 			
+// 			QHBoxLayout *hbox = new QHBoxLayout();
+// 			hbox->addStretch(1);
+// 			hbox->addWidget(btn);
+// 			lay->addRow(hbox); 
 			
-			m_rtfEditor = new RichTextEditorDialog(this);
-			m_rtfEditor->setText(item->text());
-			//m_editor->initFontSize(m_model->findFontSize());
+			opts.reset();
+		
+			QWidget *edit = PropertyEditorFactory::generatePropertyEditor(gld, "plainText", SLOT(setPlainText(const QString&)), opts);
 			
-			lay->addRow(m_rtfEditor);
-			m_rtfEditor->adjustSize();
-			m_rtfEditor->focusEditor();
+			QLineEdit *line = dynamic_cast<QLineEdit*>(edit);
+			if(line)
+				connect(gld, SIGNAL(plainTextChanged(const QString&)), line, SLOT(setText(const QString&)));
 			
-			QPushButton *btn = new QPushButton("&Save Text");
-			connect(btn, SIGNAL(clicked()), this, SLOT(rtfEditorSave()));
+			QWidget *base = new QWidget();
 			
-			QHBoxLayout *hbox = new QHBoxLayout();
-			hbox->addStretch(1);
+			RtfEditorWindow *dlg = new RtfEditorWindow(item, base);
+			QPushButton *btn = new QPushButton("&Advanced...");
+			connect(btn, SIGNAL(clicked()), dlg, SLOT(show()));
+			
+			QHBoxLayout *hbox = new QHBoxLayout(base);
+			hbox->setContentsMargins(0,0,0,0);
+			hbox->addWidget(new QLabel("Text:"));
+			hbox->addWidget(edit);
 			hbox->addWidget(btn);
-			lay->addRow(hbox); 
+			
+			lay->addRow(base); 
 		}
 		else
 		if(GLImageDrawable *item = dynamic_cast<GLImageDrawable*>(gld))
