@@ -42,7 +42,7 @@
          <enum>Qt::Horizontal</enum>
         </property>
         <widget class="QListView" name="sceneListview"/>
-        <widget class="QGroupBox" name="groupBox">
+        <widget class="QGroupBox" name="drawableGroupBox">
          <property name="title">
           <string>Item Settings</string>
          </property>
@@ -79,14 +79,14 @@
               </property>
              </widget>
             </item>
-            <item row="4" column="1">
+            <item row="3" column="1">
              <widget class="QLabel" name="label">
               <property name="text">
                <string>Length:</string>
               </property>
              </widget>
             </item>
-            <item row="4" column="2">
+            <item row="3" column="2">
              <widget class="QDoubleSpinBox" name="itemLengthBox">
               <property name="suffix">
                <string> sec</string>
@@ -110,19 +110,6 @@
               </property>
              </widget>
             </item>
-            <item row="8" column="1">
-             <spacer name="verticalSpacer">
-              <property name="orientation">
-               <enum>Qt::Vertical</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>20</width>
-                <height>40</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
             <item row="0" column="2">
              <widget class="QPushButton" name="hideBtn">
               <property name="text">
@@ -130,13 +117,6 @@
               </property>
               <property name="checkable">
                <bool>true</bool>
-              </property>
-             </widget>
-            </item>
-            <item row="3" column="1" colspan="2">
-             <widget class="QLabel" name="playlistItemLabel">
-              <property name="text">
-               <string>(Selected Playlist Item Name)</string>
               </property>
              </widget>
             </item>
@@ -149,6 +129,19 @@
             </item>
             <item row="2" column="0" rowspan="7">
              <widget class="QListView" name="playlistView"/>
+            </item>
+            <item row="4" column="1">
+             <spacer name="verticalSpacer">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>20</width>
+                <height>40</height>
+               </size>
+              </property>
+             </spacer>
             </item>
            </layout>
           </item>

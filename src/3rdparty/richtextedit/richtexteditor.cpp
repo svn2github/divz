@@ -780,6 +780,8 @@ RichTextEditor::RichTextEditor(QWidget *parent)
             this, SIGNAL(stateChanged()));
     connect(this, SIGNAL(cursorPositionChanged()),
             this, SIGNAL(stateChanged()));
+    //setBackgroundRole(QPalette::Window);
+    setStyleSheet("background: rgb(220,220,220)");
 }
 
 QToolBar *RichTextEditor::createToolBar(QWidget *parent)

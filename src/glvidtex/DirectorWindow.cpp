@@ -94,6 +94,12 @@ void DirectorWindow::setupUI()
 	connect(ui->hideBtn, SIGNAL(clicked()), this, SLOT(btnHideDrawable()));
 	connect(ui->sendToPlayerBtn, SIGNAL(clicked()), this, SLOT(btnSendToPlayer()));
 	connect(ui->addToPlaylistBtn, SIGNAL(clicked()), this, SLOT(btnAddToPlaylist()));
+	
+	ui->drawableGroupBox->setVisible(false);
+	ui->sceneListview->setVisible(false);
+	
+	ui->itemNameLabel->setText("");
+	ui->tmeLabel->setText("");
 }
 
 void DirectorWindow::closeEvent(QCloseEvent */*event*/)
@@ -134,6 +140,8 @@ void DirectorWindow::writeSettings()
 
 void DirectorWindow::groupSelected(const QModelIndex &idx)
 {
+	if(!m_collection)
+		return;
 	if(idx.isValid())
 		setGroup(m_collection->at(idx.row()));
 }
@@ -168,6 +176,8 @@ void DirectorWindow::currentSlideChanged(const QModelIndex &idx,const QModelInde
 
 void DirectorWindow::drawableSelected(const QModelIndex &idx)
 {
+	if(!m_currentScene)
+		return;
 	if(idx.isValid())
 		setCurrentDrawable(m_currentScene->at(idx.row()));
 }
@@ -179,6 +189,8 @@ void DirectorWindow::currentDrawableChanged(const QModelIndex &idx,const QModelI
 
 void DirectorWindow::itemSelected(const QModelIndex &idx)
 {
+	if(!m_currentDrawable)
+		return;
 	if(idx.isValid())
 		setCurrentItem(m_currentDrawable->playlist()->at(idx.row()));
 }
@@ -211,17 +223,45 @@ void DirectorWindow::btnSendToPlayer()
 }
 void DirectorWindow::btnAddToPlaylist()
 {
-	/// TODO
+	if(!m_currentDrawable)
+		return;
+	GLDrawablePlaylist *playlist = m_currentDrawable->playlist();
+	GLPlaylistItem * item = new GLPlaylistItem();
+	
+	QString userProp = QString(m_currentDrawable->metaObject()->userProperty().name());
+	QVariant prop = m_currentDrawable->property(qPrintable(userProp));
+	item->setValue(prop);
+	
+	/// TODO determine duration IF video etc
+	item->setDuration(5.0);
+	
+	playlist->addItem(item);
 }
 
-void DirectorWindow::playlistTimeChanged(double)
+void DirectorWindow::playlistTimeChanged(double value)
 {
-	/// TODO update label
+	/// TODO update playing counter label
 }
-void DirectorWindow::playlistItemChanged(GLPlaylistItem *)
+
+void DirectorWindow::playlistItemChanged(GLPlaylistItem *item)
 {
 	/// TODO update selected item in ui->playlistView
 	/// TODO send the value of the changed item to the conneted players
+	
+	if(m_currentItem)
+		disconnect(ui->itemLengthBox, 0, m_currentItem, 0);
+	
+	m_currentItem = item;
+	if(item)
+	{
+		ui->itemLengthBox->setValue(item->duration());
+		connect(ui->itemLengthBox, SIGNAL(valueChanged(double)), item, SLOT(setDuration(double)));
+		
+		QString userProp = QString(m_currentDrawable->metaObject()->userProperty().name());
+		QVariant prop = item->value();
+		
+		m_currentDrawable->setProperty(qPrintable(userProp), prop);
+	}
 }
 
 void DirectorWindow::showOpenFileDialog()
@@ -433,6 +473,12 @@ void DirectorWindow::setCurrentScene(GLScene *scene)
 		drawable->setSelected(false);
 		m_graphicsScene->addItem(drawable);
 	}
+	
+	bool hasUserItems = scene->size();
+	
+	ui->drawableGroupBox->setVisible(hasUserItems);
+	ui->sceneListview->setVisible(hasUserItems);
+	
 	
 	//connect(m_scene, SIGNAL(drawableAdded(GLDrawable*)), this, SLOT(drawableAdded(GLDrawable*)));
 	//connect(m_scene, SIGNAL(drawableRemoved(GLDrawable*)), this, SLOT(drawableRemoved(GLDrawable*)));

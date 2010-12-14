@@ -1232,6 +1232,12 @@ QVariant GLDrawablePlaylist::data( const QModelIndex & index, int role ) const
 	{
 		GLPlaylistItem *d = m_items.at(index.row());
 		QString value = d->value().toString().isEmpty() ? QString("Item %1").arg(index.row()+1) : d->value().toString();
+		if(Qt::mightBeRichText(value))
+		{
+			value = value.replace( QRegExp("<style[^>]*>.*</style>", Qt::CaseInsensitive), "" );
+			value = value.replace( QRegExp("<[^>]*>"), "" );
+			value = value.replace( QRegExp("(^\\s+)"), "" );	
+		}
 		return value;
 	}
 // 	else if(Qt::DecorationRole == role)
