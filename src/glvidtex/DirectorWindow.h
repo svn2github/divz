@@ -96,8 +96,6 @@ private:
 	GLPlaylistItem *m_currentItem;
 	
 	QGraphicsScene *m_graphicsScene;
-	
-	QWidget *m_drawablePropWidget;
 };
 
 #endif // DIRECTORWINDOW_H

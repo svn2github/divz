@@ -50,6 +50,8 @@ public:
 	
 	QString videoFile() { return m_videoFile; }
 	
+	double duration() { return m_duration; }
+	
 signals:
 	//void newImage(QImage,QTime);
 	//void frameReady(int frameHoldTime);

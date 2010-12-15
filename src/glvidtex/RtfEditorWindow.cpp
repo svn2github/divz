@@ -8,6 +8,9 @@ RtfEditorWindow::RtfEditorWindow(GLTextDrawable *gld, QWidget *parent)
 	: QDialog(parent)
 	, m_gld(gld)
 {
+	connect(gld, SIGNAL(textChanged(const QString&)), this, SLOT(textChanged(const QString&)));
+	connect(gld, SIGNAL(destroyed()), this, SLOT(deleteLater()));
+	
 	QVBoxLayout *layout = new QVBoxLayout();
 		
 	PropertyEditorFactory::PropertyEditorOptions opts;
@@ -58,6 +61,11 @@ RtfEditorWindow::RtfEditorWindow(GLTextDrawable *gld, QWidget *parent)
 	setLayout(layout);
 	
 	readSettings();
+}
+
+void RtfEditorWindow::textChanged(const QString& text)
+{
+	m_rtfEditor->setText(text);
 }
 
 void RtfEditorWindow::okClicked()

@@ -339,6 +339,7 @@ class GLPlaylistItem : public QObject
 {
 	Q_OBJECT
 	
+	Q_PROPERTY(QString title READ title WRITE setTitle);
 	Q_PROPERTY(QVariant value READ value WRITE setValue);
 	
 	Q_PROPERTY(double duration READ duration WRITE setDuration);
@@ -355,6 +356,7 @@ public:
 	
 	GLDrawablePlaylist *playlist() { return m_playlist; }
 	
+	QString title() { return m_title; }
 	QVariant value() { return m_value; }
 	double duration() { return m_duration; }
 	bool autoDuration() { return m_autoDuration; }
@@ -363,6 +365,7 @@ public:
 	bool autoSchedule() { return m_autoSchedule; }
 	
 public slots:
+	void setTitle(const QString& title);
 	void setValue(QVariant value);
 	void setDuration(double duration);
 	void setAutoDuration(bool flag);
@@ -377,6 +380,7 @@ signals:
 private:
 	GLDrawablePlaylist *m_playlist;
 	
+	QString m_title;
 	QVariant m_value;
 	double m_duration;
 	bool m_autoDuration;
@@ -400,6 +404,7 @@ public:
 	QVariant data( const QModelIndex & index, int role = Qt::DisplayRole ) const;
 	Qt::ItemFlags flags(const QModelIndex &index) const;
 	bool setData(const QModelIndex &index, const QVariant & value, int role) ;
+	QModelIndex indexOf(GLPlaylistItem*);
 	
 	QByteArray toByteArray();
 	void fromByteArray(QByteArray&);

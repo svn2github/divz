@@ -1231,13 +1231,17 @@ QVariant GLDrawablePlaylist::data( const QModelIndex & index, int role ) const
 	if (role == Qt::DisplayRole || Qt::EditRole == role)
 	{
 		GLPlaylistItem *d = m_items.at(index.row());
-		QString value = d->value().toString().isEmpty() ? QString("Item %1").arg(index.row()+1) : d->value().toString();
-		if(Qt::mightBeRichText(value))
-		{
-			value = value.replace( QRegExp("<style[^>]*>.*</style>", Qt::CaseInsensitive), "" );
-			value = value.replace( QRegExp("<[^>]*>"), "" );
-			value = value.replace( QRegExp("(^\\s+)"), "" );	
-		}
+		QString value = d->title().isEmpty() ? QString("Item %1").arg(index.row()+1) : d->title();
+// 		if(Qt::mightBeRichText(value))
+// 		{
+// 			value = value.replace( QRegExp("<style[^>]*>.*</style>", Qt::CaseInsensitive), "" );
+// 			value = value.replace( QRegExp("<[^>]*>"), "" );
+// 			value = value.replace( QRegExp("(^\\s+)"), "" );	
+// 		}
+// 		else
+// 		{
+// 			const char *propName = m_drawable->metaObject()->userProperty().name();	
+// 		}
 		return value;
 	}
 // 	else if(Qt::DecorationRole == role)
@@ -1253,7 +1257,7 @@ Qt::ItemFlags GLDrawablePlaylist::flags(const QModelIndex &index) const
 	if (index.isValid())	
 		return Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsEditable; //| Qt::ItemIsDragEnabled | Qt::ItemIsDropEnabled;
 	
-	return Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsDropEnabled ;
+	return Qt::ItemIsEnabled | Qt::ItemIsSelectable;// | Qt::ItemIsDropEnabled ;
 }
 bool GLDrawablePlaylist::setData(const QModelIndex &index, const QVariant & value, int /*role*/)
 {
@@ -1267,11 +1271,17 @@ bool GLDrawablePlaylist::setData(const QModelIndex &index, const QVariant & valu
 	qDebug() << "GLDrawablePlaylist::setData: "<<this<<" row:"<<index.row()<<", value:"<<value; 
 	if(value.isValid() && !value.isNull())
 	{
-		d->setValue(value.toString());
+		d->setTitle(value.toString());
 		dataChanged(index,index);
 		return true;
 	}
 	return false;
+}
+
+QModelIndex GLDrawablePlaylist::indexOf(GLPlaylistItem *item)
+{
+	int idx = m_items.indexOf(item);
+	return createIndex(idx, 0);
 }
 	
 void GLDrawablePlaylist::addItem(GLPlaylistItem *item)
@@ -1399,7 +1409,7 @@ void GLDrawablePlaylist::playItem(GLPlaylistItem *item)
 	
 	const char *propName = m_drawable->metaObject()->userProperty().name();
 	
-	qDebug() << "GLDrawablePlaylist::playItem: Showing "<<propName<<": "<<item->value();
+	//qDebug() << "GLDrawablePlaylist::playItem: Showing"<<propName<<": "<<item->value();
 
 	m_drawable->setProperty(propName, item->value());
 }
@@ -1463,6 +1473,7 @@ QByteArray GLPlaylistItem::toByteArray()
 	
 	QVariantMap map;
 	
+	map["title"]	= m_title;
 	map["value"]	= m_value;
 	map["dur"] 	= m_duration;
 	map["autod"] 	= m_autoDuration;
@@ -1483,6 +1494,7 @@ void GLPlaylistItem::fromByteArray(QByteArray& array)
 	if(map.isEmpty())
 		return;
 	
+	m_title		= map["title"].toString();
 	m_value		= map["value"];
 	m_duration	= map["dur"].toDouble();
 	m_autoDuration	= map["autod"].toBool();
@@ -1490,6 +1502,11 @@ void GLPlaylistItem::fromByteArray(QByteArray& array)
 	m_autoSchedule	= map["autos"].toBool();
 }
 	
+void GLPlaylistItem::setTitle(const QString& title)
+{
+	m_title = title;
+	emit playlistItemChanged();
+}
 void GLPlaylistItem::setValue(QVariant value)
 {
 	m_value = value;

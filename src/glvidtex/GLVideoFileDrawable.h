@@ -14,6 +14,7 @@ public:
 	GLVideoFileDrawable(QString file="", QObject *parent=0);
 	
 	QString videoFile() { return m_videoFile; }
+	double videoLength() { return m_videoLength; } // in seconds
 	
 public slots:
 	bool setVideoFile(const QString&);
@@ -23,6 +24,7 @@ private slots:
 	
 private:
 	QString m_videoFile;
+	double m_videoLength;
 };
 
 #endif

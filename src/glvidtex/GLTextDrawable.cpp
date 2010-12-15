@@ -112,14 +112,19 @@ void GLTextDrawable::setText(const QString& text)
 
 QString GLTextDrawable::plainText()
 {
-	QString plain = m_text;
+	return htmlToPlainText(m_text);
+}
+
+/* static */
+QString GLTextDrawable::htmlToPlainText(const QString& text)
+{
+	QString plain = text;
 	//plain = plain.replace( QRegExp("(<[bB][rR]>|\n)"), " / ");
 	plain = plain.replace( QRegExp("<style[^>]*>.*</style>", Qt::CaseInsensitive), "" );
 	plain = plain.replace( QRegExp("<[^>]*>"), "" );
 	plain = plain.replace( QRegExp("(^\\s+)"), "" );
 	return plain;
 }
-
 
 void GLTextDrawable::setPlainText(const QString& text, bool replaceNewlineSlash)
 {

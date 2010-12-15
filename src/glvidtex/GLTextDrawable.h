@@ -22,7 +22,8 @@ public:
 	bool isCountdown() { return m_isCountdown; }
 	QDateTime targetDateTime() { return m_targetTime; }
 	
-	
+	static QString htmlToPlainText(const QString&);
+
 public slots:
 	void setPlainText(const QString&, bool replaceNewlineSlash=true);
 	void setText(const QString&);

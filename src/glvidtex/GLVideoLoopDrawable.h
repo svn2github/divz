@@ -13,6 +13,7 @@ public:
 	GLVideoLoopDrawable(QString file="", QObject *parent=0);
 	
 	QString videoFile() { return m_videoFile; }
+	double videoLength() { return m_videoLength; } // in seconds
 	
 public slots:
 	bool setVideoFile(const QString&);
@@ -20,8 +21,11 @@ public slots:
 private slots:
 	void testXfade();
 	
+	void deleteSource(VideoSource*);
+	
 private:
 	QString m_videoFile;
+	double m_videoLength;
 };
 
 #endif

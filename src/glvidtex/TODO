@@ -1,3 +1,9 @@
+TODO:
+	BUGS:
+		- playlist keeps playing after switching slides...?
+		- playlist text looses formatting when playing?
+
+
 TARGET DATE: 12/11 9am
 	Features Required by 12/11 9am:
 		- Network Control of a player binary

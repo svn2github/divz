@@ -232,20 +232,57 @@ void DirectorWindow::btnAddToPlaylist()
 	QVariant prop = m_currentDrawable->property(qPrintable(userProp));
 	item->setValue(prop);
 	
-	/// TODO determine duration IF video etc
-	item->setDuration(5.0);
+	if(GLTextDrawable *casted = dynamic_cast<GLTextDrawable*>(m_currentDrawable))
+	{
+		item->setTitle(casted->plainText());
+		item->setDuration(5.0); /// just a guess
+	}
+	else
+	if(GLVideoFileDrawable *casted = dynamic_cast<GLVideoFileDrawable*>(m_currentDrawable))
+	{
+		item->setTitle(QFileInfo(casted->videoFile()).fileName());
+		item->setDuration(casted->videoLength());
+	}
+	else
+	if(GLVideoLoopDrawable *casted = dynamic_cast<GLVideoLoopDrawable*>(m_currentDrawable))
+	{
+		item->setTitle(QFileInfo(casted->videoFile()).fileName());
+		item->setDuration(casted->videoLength());
+	}
+	else
+	if(GLImageDrawable *casted = dynamic_cast<GLImageDrawable*>(m_currentDrawable))
+	{
+		item->setTitle(QFileInfo(casted->imageFile()).fileName());
+		item->setDuration(5.0); /// just a guess
+	}
+	else
+	{
+		item->setTitle(prop.toString());
+		item->setDuration(5.0); /// just a guess
+	}
+	
+	if(!item->duration())
+		item->setDuration(15.0);
 	
 	playlist->addItem(item);
 }
 
 void DirectorWindow::playlistTimeChanged(double value)
 {
-	/// TODO update playing counter label
+	QString time = "";
+	
+	double min = value/60;
+	double sec = (min - (int)(min)) * 60;
+	double ms  = (sec - (int)(sec)) * 60;
+	time =  (min<10? "0":"") + QString::number((int)min) + ":" +
+		(sec<10? "0":"") + QString::number((int)sec) + "." +
+		(ms <10? "0":"") + QString::number((int)ms );
+		
+	ui->tmeLabel->setText(time);
 }
 
 void DirectorWindow::playlistItemChanged(GLPlaylistItem *item)
 {
-	/// TODO update selected item in ui->playlistView
 	/// TODO send the value of the changed item to the conneted players
 	
 	if(m_currentItem)
@@ -257,10 +294,7 @@ void DirectorWindow::playlistItemChanged(GLPlaylistItem *item)
 		ui->itemLengthBox->setValue(item->duration());
 		connect(ui->itemLengthBox, SIGNAL(valueChanged(double)), item, SLOT(setDuration(double)));
 		
-		QString userProp = QString(m_currentDrawable->metaObject()->userProperty().name());
-		QVariant prop = item->value();
-		
-		m_currentDrawable->setProperty(qPrintable(userProp), prop);
+		ui->playlistView->setCurrentIndex(m_currentDrawable->playlist()->indexOf(item));
 	}
 }
 
@@ -430,11 +464,25 @@ void DirectorWindow::setCollection(GLSceneGroupCollection *collection)
 	
 	m_collection = collection;
 	ui->collectionListview->setModel(collection);
+	
+	if(collection->size() > 0)
+	{
+		QModelIndex idx = collection->index(0, 0);
+		ui->collectionListview->setCurrentIndex(idx);
+		groupSelected(idx);
+	}
 }
 void DirectorWindow::setGroup(GLSceneGroup *group, GLScene */*currentScene*/)
 {
 	m_currentGroup = group;
 	ui->groupListview->setModel(group);
+	
+	if(group->size() > 0)
+	{
+		QModelIndex idx = group->index(0, 0);
+		ui->groupListview->setCurrentIndex(idx);
+		slideSelected(idx);
+	}
 }
 void DirectorWindow::setCurrentScene(GLScene *scene)
 {
@@ -485,15 +533,24 @@ void DirectorWindow::setCurrentScene(GLScene *scene)
 	
 	//if(!list.isEmpty())
 	//	list.first()->setSelected(true);
+	
+	if(scene->size() > 0)
+	{
+		QModelIndex idx = scene->index(0, 0);
+		ui->sceneListview->setCurrentIndex(idx);
+		drawableSelected(idx);
+	}
 }
+
 void DirectorWindow::setCurrentDrawable(GLDrawable *gld)
 {
 	if(m_currentDrawable)
 	{
-		//disconnect(m_currentDrawable, 0, ui->hideBtn, 0);
+		if(m_currentDrawable->playlist()->isPlaying())
+			m_currentDrawable->playlist()->stop();
+		
 		disconnect(m_currentDrawable->playlist(), 0, this, 0);
 		m_currentDrawable = 0;
-		
 	}
 	
 	m_currentDrawable = gld;
@@ -502,24 +559,32 @@ void DirectorWindow::setCurrentDrawable(GLDrawable *gld)
 	connect(gld->playlist(), SIGNAL(currentItemChanged(GLPlaylistItem*)), this, SLOT(playlistItemChanged(GLPlaylistItem *)));
 	connect(gld->playlist(), SIGNAL(playerTimeChanged(double)), this, SLOT(playlistTimeChanged(double)));
 	
+	connect(ui->playBtn,  SIGNAL(clicked()), gld->playlist(), SLOT(play()));
+	connect(ui->pauseBtn, SIGNAL(clicked()), gld->playlist(), SLOT(stop()));
+	
 	QString itemName = gld->itemName();
 	QString typeName;
 	
-// 	if(m_drawablePropWidget)
-// 	{
-// 		ui->itemPropLayout->removeWidget(m_drawablePropWidget);
-// 		m_drawablePropWidget->deleteLater();
-// 		m_drawablePropWidget = 0;
-// 	}
-	// Conf # is: 71.16 - 12/3 
-	while(ui->itemPropLayout->count() > 0)
+	// Fun loop to clear out a QFormLayout - why doesn't QLayout just have a removeAll() or clear() method?
+	QFormLayout *form = ui->itemPropLayout;
+	while(form->count() > 0)
 	{
-		QLayoutItem * item = ui->itemPropLayout->itemAt(ui->itemPropLayout->count() - 1);
-		ui->itemPropLayout->removeItem(item);
+		QLayoutItem * item = form->itemAt(form->count() - 1);
+		form->removeItem(item);
+		if(QWidget *widget = item->widget())
+		{
+			//qDebug() << "DirectorWindow::setCurrentDrawable: Deleting "<<widget<<" from form, total:"<<form->count()<<" items remaining.";
+			form->removeWidget(widget);
+			if(QWidget *label = form->labelForField(widget))
+			{
+				form->removeWidget(label);
+				delete label;
+			}
+			delete widget;
+		}
 		delete item;
 	}
 	
-// 	QWidget *widget = 0;
 	PropertyEditorFactory::PropertyEditorOptions opts;
 	opts.reset();	
 	
@@ -593,12 +658,6 @@ void DirectorWindow::setCurrentDrawable(GLDrawable *gld)
 	
 	
 	ui->itemNameLabel->setText(itemName.isEmpty() ? QString("<b>%1</b>").arg(typeName) : QString("<b>%1</b> (%2)").arg(itemName).arg(typeName));
-	
-	//connect(ui->hideBtn, SIGNAL(toggled(bool)), gld, SLOT(setHidden(bool)));
-	
-	
-	//if(widget)
-		//ui->itemPropLayout->addWidget(m_drawablePropWidget = widget);
 }
 
 void DirectorWindow::setCurrentItem(GLPlaylistItem *item)

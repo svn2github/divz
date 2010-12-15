@@ -16,6 +16,7 @@ protected:
 	void closeEvent(QCloseEvent */*event*/);
 	
 private slots:
+	void textChanged(const QString&);
 	void okClicked();
 	
 private:

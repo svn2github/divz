@@ -6,6 +6,7 @@
 
 GLVideoFileDrawable::GLVideoFileDrawable(QString file, QObject *parent)
 	: GLVideoDrawable(parent)
+	, m_videoLength(-1)
 {
 	if(!file.isEmpty())
 		setVideoFile(file);
@@ -37,6 +38,9 @@ bool GLVideoFileDrawable::setVideoFile(const QString& file)
 		QtVideoSource *source = new QtVideoSource();
 		source->setFile(file);
 		source->start();
+		
+		// Duration is in milleseconds, we store length in seconds
+		m_videoLength = source->player()->duration() / 1000.;
 		
 		setVideoSource(source);
 		

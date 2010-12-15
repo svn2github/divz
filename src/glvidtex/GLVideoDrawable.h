@@ -201,6 +201,7 @@ public slots:
 
 signals:
 	void displayOptionsChanged(const VideoDisplayOptions&);
+	void sourceDiscarded(VideoSource*);
 
 protected:
 	/// PS
