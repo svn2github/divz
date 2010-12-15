@@ -302,12 +302,12 @@
              <string>X</string>
             </property>
             <property name="buddy">
-             <cstring>viewportX</cstring>
+             <cstring>subviewViewportX</cstring>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QSpinBox" name="viewportX_2">
+           <widget class="QSpinBox" name="viewportX">
             <property name="suffix">
              <string> px</string>
             </property>
@@ -325,12 +325,12 @@
              <string>Y</string>
             </property>
             <property name="buddy">
-             <cstring>viewportY</cstring>
+             <cstring>subviewViewportY</cstring>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QSpinBox" name="viewportY_2">
+           <widget class="QSpinBox" name="viewportY">
             <property name="suffix">
              <string> px</string>
             </property>
@@ -348,12 +348,12 @@
              <string>Width</string>
             </property>
             <property name="buddy">
-             <cstring>viewportWidth</cstring>
+             <cstring>subviewViewportX2</cstring>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QSpinBox" name="viewportWidth_2">
+           <widget class="QSpinBox" name="viewportWidth">
             <property name="suffix">
              <string> px</string>
             </property>
@@ -374,12 +374,12 @@
              <string>Height</string>
             </property>
             <property name="buddy">
-             <cstring>viewportHeight</cstring>
+             <cstring>subviewViewportY2</cstring>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QSpinBox" name="viewportHeight_2">
+           <widget class="QSpinBox" name="viewportHeight">
             <property name="suffix">
              <string> px</string>
             </property>
@@ -428,7 +428,7 @@
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_4">
           <item>
-           <widget class="QListView" name="subviewListView"/>
+           <widget class="QListView" name="subviewListview"/>
           </item>
           <item>
            <layout class="QHBoxLayout" name="horizontalLayout_7">
@@ -611,7 +611,7 @@
                </widget>
               </item>
               <item>
-               <widget class="QDoubleSpinBox" name="viewportX">
+               <widget class="QDoubleSpinBox" name="subviewViewportX">
                 <property name="suffix">
                  <string>%</string>
                 </property>
@@ -634,7 +634,7 @@
                </widget>
               </item>
               <item>
-               <widget class="QDoubleSpinBox" name="viewportY">
+               <widget class="QDoubleSpinBox" name="subviewViewportY">
                 <property name="suffix">
                  <string>%</string>
                 </property>
@@ -652,12 +652,12 @@
               <item>
                <widget class="QLabel" name="label_12">
                 <property name="text">
-                 <string>W</string>
+                 <string>X2</string>
                 </property>
                </widget>
               </item>
               <item>
-               <widget class="QDoubleSpinBox" name="viewportWidth">
+               <widget class="QDoubleSpinBox" name="subviewViewportX2">
                 <property name="suffix">
                  <string>%</string>
                 </property>
@@ -678,12 +678,12 @@
               <item>
                <widget class="QLabel" name="label_13">
                 <property name="text">
-                 <string>H</string>
+                 <string>Y2</string>
                 </property>
                </widget>
               </item>
               <item>
-               <widget class="QDoubleSpinBox" name="viewportHeight">
+               <widget class="QDoubleSpinBox" name="subviewViewportY2">
                 <property name="suffix">
                  <string>%</string>
                 </property>

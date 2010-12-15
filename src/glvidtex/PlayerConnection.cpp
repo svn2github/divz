@@ -152,6 +152,7 @@ QByteArray PlayerConnection::toByteArray()
 	map["pass"] 	= m_pass;
 	map["screen"] 	= m_screenRect;
 	map["viewport"]	= m_viewportRect;
+	map["armode"]	= (int)m_aspectRatioMode;
 	
 	QVariantList views;
 	foreach(GLWidgetSubview *view, m_subviews )
@@ -179,6 +180,7 @@ void PlayerConnection::fromByteArray(QByteArray& array)
 	m_pass = map["pass"].toString();
 	m_screenRect = map["screen"].toRect();
 	m_viewportRect = map["viewport"].toRect();
+	m_aspectRatioMode = (Qt::AspectRatioMode)map["armode"].toInt();
 	
 	m_subviews.clear();
 	QVariantList views = map["views"].toList();
@@ -294,6 +296,14 @@ void PlayerConnection::setViewportRect(const QRect& rect)
 	sendCommand(QVariantList() 
 		<< "cmd" 	<< GLPlayer_SetViewport
 		<< "viewport"	<< QRectF(rect));
+}
+void PlayerConnection::setAspectRatioMode(Qt::AspectRatioMode mode)
+{
+	m_aspectRatioMode = mode;
+	
+	sendCommand(QVariantList() 
+		<< "cmd" 	<< GLPlayer_SetIgnoreAR
+		<< "flag"	<< (mode == Qt::IgnoreAspectRatio ? true : false));
 }
 
 void PlayerConnection::setGroup(GLSceneGroup *group, GLScene *initialScene)

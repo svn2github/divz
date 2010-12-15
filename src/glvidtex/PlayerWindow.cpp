@@ -488,6 +488,16 @@ void PlayerWindow::receivedMap(QVariantMap map)
 				<< "status" << true);
 	}
 	else
+	if(cmd == GLPlayer_SetIgnoreAR)
+	{
+		bool flag = map["flag"].toBool();
+		if(m_glWidget)
+			m_glWidget->setAspectRatioMode(flag ? Qt::IgnoreAspectRatio : Qt::KeepAspectRatio);
+		
+		sendReply(QVariantList() 
+				<< "cmd" << cmd
+				<< "status" << true);
+	}
 	if(cmd == GLPlayer_SetScreen)
 	{
 		QRect size = map["rect"].toRect();

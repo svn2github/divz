@@ -99,7 +99,7 @@ void DirectorWindow::setupUI()
 	ui->sceneListview->setVisible(false);
 	
 	ui->itemNameLabel->setText("");
-	ui->tmeLabel->setText("");
+	ui->timeLabel->setText("");
 }
 
 void DirectorWindow::closeEvent(QCloseEvent */*event*/)
@@ -278,7 +278,7 @@ void DirectorWindow::playlistTimeChanged(double value)
 		(sec<10? "0":"") + QString::number((int)sec) + "." +
 		(ms <10? "0":"") + QString::number((int)ms );
 		
-	ui->tmeLabel->setText(time);
+	ui->timeLabel->setText(time);
 }
 
 void DirectorWindow::playlistItemChanged(GLPlaylistItem *item)
