@@ -162,7 +162,7 @@ public:
 	bool setData(const QModelIndex &index, const QVariant & value, int role) ;
 	
 	QByteArray toByteArray();
-	void fromByteArray(QByteArray&);
+	void fromByteArray(QByteArray);
 	
 	QList<PlayerConnection*> players() { return m_players; }
 	

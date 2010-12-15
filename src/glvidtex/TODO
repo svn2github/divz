@@ -1,8 +1,10 @@
 TODO:
 	BUGS:
-		- playlist keeps playing after switching slides...?
-		- playlist text looses formatting when playing?
-
+		- Director: playlist keeps playing after switching slides...?
+		- Director: playlist text looses formatting when playing?
+		- Director: After closing editor, the slide never re-appears in director view, even after clicking the slide again in the list
+		- Editor: Sometimes an item gets "stuck" while "selected" - and no wway to click it and get it to emit a selected signal again even after adding items or clicking other items
+		
 
 TARGET DATE: 12/11 9am
 	Features Required by 12/11 9am:

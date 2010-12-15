@@ -27,7 +27,6 @@ DirectorWindow::DirectorWindow(QWidget *parent)
 {
 	ui->setupUi(this);
 	setupUI();
-	readSettings();
 	
 	m_currentScene = 0;
 	m_currentGroup = 0;
@@ -35,6 +34,8 @@ DirectorWindow::DirectorWindow(QWidget *parent)
 	m_currentItem = 0;
 	m_collection = 0;
 	m_players = 0;
+	
+	readSettings();
 	
 	bool loadedFile = false;
 	
@@ -123,6 +124,9 @@ void DirectorWindow::readSettings()
 	qreal scaleFactor = (qreal)settings.value("DirectorWindow/scaleFactor", 1.).toDouble();
 	//qDebug() << "DirectorWindow::readSettings: scaleFactor: "<<scaleFactor;
 	ui->graphicsView->setScaleFactor(scaleFactor);
+	
+	m_players = new PlayerConnectionList();
+	m_players->fromByteArray(settings.value("DirectorWindow/players").toByteArray());
 }
 
 void DirectorWindow::writeSettings()
@@ -136,6 +140,8 @@ void DirectorWindow::writeSettings()
 	settings.setValue("DirectorWindow/DrawableSplitter",ui->drawableSplitter->saveState());
 
 	settings.setValue("DirectorWindow/scaleFactor",ui->graphicsView->scaleFactor());
+	
+	settings.setValue("DirectorWindow/players", m_players->toByteArray());
 }
 
 void DirectorWindow::groupSelected(const QModelIndex &idx)
@@ -353,8 +359,7 @@ void DirectorWindow::saveFile()
 void DirectorWindow::showPlayerSetupDialog()
 {
 	PlayerSetupDialog dlg;
-	/// TODO: create dialog api:
-	// 	dlg.setPlayerList(m_players);
+	dlg.setPlayerList(m_players);
 	dlg.exec();
 }
 

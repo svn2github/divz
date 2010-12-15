@@ -11,6 +11,8 @@
 PlayerSubviewsModel::PlayerSubviewsModel(PlayerConnection *conn)
 	: m_conn(conn)
 {
+	connect(m_conn, SIGNAL(subviewAdded(GLWidgetSubview*)), this, SLOT(subviewAdded(GLWidgetSubview*)));
+	connect(m_conn, SIGNAL(subviewRemoved(GLWidgetSubview*)), this, SLOT(subviewRemoved(GLWidgetSubview*)));
 }
 PlayerSubviewsModel::~PlayerSubviewsModel()
 {
@@ -197,6 +199,7 @@ void PlayerConnection::fromByteArray(QByteArray& array)
 void PlayerConnection::addSubview(GLWidgetSubview *sub)
 {
 	m_subviews << sub;
+	connect(sub, SIGNAL(subviewChanged(GLWidgetSubview*)), this, SLOT(subviewChanged(GLWidgetSubview*)));
 	emit subviewAdded(sub);
 	
 	sendCommand(QVariantList() 
@@ -207,6 +210,7 @@ void PlayerConnection::addSubview(GLWidgetSubview *sub)
 void PlayerConnection::removeSubview(GLWidgetSubview *sub)
 {
 	emit subviewRemoved(sub);
+	disconnect(sub, 0, this, 0);
 	m_subviews.removeAll(sub);
 	
 	sendCommand(QVariantList() 
@@ -644,7 +648,7 @@ QByteArray PlayerConnectionList::toByteArray()
 	return array;
 }
 
-void PlayerConnectionList::fromByteArray(QByteArray& array)
+void PlayerConnectionList::fromByteArray(QByteArray array)
 {
 	QDataStream stream(&array, QIODevice::ReadOnly);
 	QVariantMap map;

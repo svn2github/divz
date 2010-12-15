@@ -10,6 +10,9 @@ namespace Ui {
 
 class GLWidgetSubview;
 class PlayerConnection;
+class PlayerSubviewsModel;
+class PlayerConnectionList;
+
 class PlayerSetupDialog : public QDialog
 {
 	Q_OBJECT
@@ -18,18 +21,25 @@ public:
 	explicit PlayerSetupDialog(QWidget *parent = 0);
 	~PlayerSetupDialog();
 
+	PlayerConnectionList *playerList() { return m_playerList; }
+	
+public slots:
+	void setPlayerList(PlayerConnectionList*);
 	
 private slots:
 	void newPlayer();
-	void removePLayer();
+	void removePlayer();
+	
+	void newSubview();
+	void removeSubview();
 	
 	void testConnection();
 	
 	void playerSelected(const QModelIndex &);
-	void currentPlayerChanged(const QModelIndex &idx,const QModelIndex &);
+	//void currentPlayerChanged(const QModelIndex &idx,const QModelIndex &);
 	
 	void subviewSelected(const QModelIndex &);
-	void currentSubviewChanged(const QModelIndex &idx,const QModelIndex &);
+	//void currentSubviewChanged(const QModelIndex &idx,const QModelIndex &);
 	
 	void setCurrentPlayer(PlayerConnection*);
 	void setCurrentSubview(GLWidgetSubview*);
@@ -70,6 +80,8 @@ private:
 	
 	PlayerConnection *m_con;
 	GLWidgetSubview *m_sub;
+	PlayerSubviewsModel *m_subviewModel;
+	PlayerConnectionList *m_playerList;
 };
 
 #endif // PLAYERSETUPDIALOG_H
