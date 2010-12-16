@@ -72,6 +72,17 @@ private slots:
 	
 	void showAlphaMaskPreview(const QString&);
 	
+	void brightReset();
+	void contReset();
+	void hueReset();
+	void satReset();
+	
+	void conConnected();
+	void conDisconnected();
+	void conLoginFailure();
+	void conLoginSuccess();
+	void conPlayerError(const QString&);
+	
 	
 private:
 	void setupUI();
@@ -82,6 +93,8 @@ private:
 	GLWidgetSubview *m_sub;
 	PlayerSubviewsModel *m_subviewModel;
 	PlayerConnectionList *m_playerList;
+	
+	bool m_stickyConnectionMessage;
 };
 
 #endif // PLAYERSETUPDIALOG_H

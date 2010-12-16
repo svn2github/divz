@@ -47,7 +47,7 @@ public slots:
 	bool writeFile(const QString& fileName="");
 	
 	void setCollection(GLSceneGroupCollection *collection);
-	void setGroup(GLSceneGroup*, GLScene *currentScene=0);
+	void setCurrentGroup(GLSceneGroup*, GLScene *currentScene=0);
 	void setCurrentScene(GLScene *);
 	void setCurrentDrawable(GLDrawable *);
 	void setCurrentItem(GLPlaylistItem *);

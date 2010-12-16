@@ -13,14 +13,16 @@ PlayerSetupDialog::PlayerSetupDialog(QWidget *parent)
 	, m_sub(0)
 	, m_subviewModel(0)
 	, m_playerList(0)
+	, m_stickyConnectionMessage(false)
 {
 	ui->setupUi(this);
 	setupUI();
+	setWindowTitle("Players Setup");
 }
 
 PlayerSetupDialog::~PlayerSetupDialog()
 {
-    delete ui;
+	delete ui;
 }
 
 void PlayerSetupDialog::setupUI()
@@ -63,24 +65,40 @@ void PlayerSetupDialog::setupUI()
 
 	connect(ui->aphaMaskBrowseBtn, SIGNAL(clicked()), this, SLOT(alphamaskBrowse()));
 	connect(ui->alphaMaskFile, SIGNAL(textChanged(QString)), this, SLOT(showAlphaMaskPreview(QString)));
+	
+	connect(ui->brightnessResetBtn, SIGNAL(clicked()), this, SLOT(brightReset()));
+	connect(ui->contrastResetBtn, SIGNAL(clicked()), this, SLOT(contReset()));
+	connect(ui->hueResetBtn, SIGNAL(clicked()), this, SLOT(hueReset()));
+	connect(ui->saturationResetBtn, SIGNAL(clicked()), this, SLOT(satReset()));
 }
 
 void PlayerSetupDialog::setPlayerList(PlayerConnectionList *list)
 {
 	m_playerList = list;
 	ui->playerListview->setModel(list);
+	
+	if(list->size() > 0)
+	{ 
+		ui->playerListview->setCurrentIndex(list->index(0,0));
+		setCurrentPlayer(list->at(0));
+	}
+	else
+		newPlayer();
 }
 
 void PlayerSetupDialog::setCurrentPlayer(PlayerConnection* con)
 {
 	if(con == m_con)
 		return;
+		
+	m_stickyConnectionMessage = false;
 	if(m_con)
 	{
 		disconnect(ui->playerName, 0, m_con, 0);
 		disconnect(ui->playerHost, 0, m_con, 0);
 		disconnect(ui->playerUser, 0, m_con, 0);
 		disconnect(ui->playerPass, 0, m_con, 0);
+		disconnect(m_con, 0, this, 0);
 	}
 	
 	if(m_subviewModel)
@@ -101,28 +119,56 @@ void PlayerSetupDialog::setCurrentPlayer(PlayerConnection* con)
 		return;
 	}
 	
+	if(con->isConnected())
+		conConnected();
+	else
+		conDisconnected();
+	
+	// Set up the UI with values from the player before connecting slots so we dont needlessly update the object
+	ui->playerName->setText(con->name());
+	ui->playerHost->setText(con->host());
+	ui->playerUser->setText(con->user());
+	ui->playerPass->setText(con->pass());
+	ui->optIgnoreAR->setChecked(con->aspectRatioMode() == Qt::IgnoreAspectRatio);
+	
+	QRect screen = con->screenRect();
+	if(screen.isEmpty())
+		con->setScreenRect(screen = QRect(0,0,1024,768));
+	ui->outputX->setValue(screen.x());
+	ui->outputY->setValue(screen.y());
+	ui->outputWidth->setValue(screen.width());
+	ui->outputHeight->setValue(screen.height());
+	
+	QRect view = con->viewportRect();
+	if(view.isEmpty())
+		con->setViewportRect(view = QRect(0,0,1000,750));
+	ui->viewportX->setValue(view.x());
+	ui->viewportY->setValue(view.y());
+	ui->viewportWidth->setValue(view.width());
+	ui->viewportHeight->setValue(view.height());
+	
 	connect(ui->playerName, SIGNAL(textChanged(QString)), con, SLOT(setName(QString)));
 	connect(ui->playerHost, SIGNAL(textChanged(QString)), con, SLOT(setHost(QString)));
 	connect(ui->playerUser, SIGNAL(textChanged(QString)), con, SLOT(setUser(QString)));
 	connect(ui->playerPass, SIGNAL(textChanged(QString)), con, SLOT(setPass(QString)));
-
+	
+	connect(con, SIGNAL(connected()), this, SLOT(conConnected()));
+	connect(con, SIGNAL(disconnected()), this, SLOT(conDisconnected()));
+	connect(con, SIGNAL(loginSuccess()), this, SLOT(conLoginSuccess()));
+	connect(con, SIGNAL(loginFailure()), this, SLOT(conLoginFailure()));
+	connect(con, SIGNAL(playerError(QString)), this, SLOT(conPlayerError(QString)));
+	
 	ui->boxConnection->setEnabled(true);
 	ui->boxOutput->setEnabled(true);
-// 	ui->boxSubviewOpts->setEnabled(true);
-// 	ui->boxSubviews->setEnabled(true);
-// 	ui->boxKeystone->setEnabled(true);
 
 	m_subviewModel = new PlayerSubviewsModel(con);
 
 	ui->subviewListview->setModel(m_subviewModel);
 	ui->subviewListview->setCurrentIndex(m_subviewModel->index(0,0));
 	
-	GLWidgetSubview *sub = con->subviews().at(0);
+	GLWidgetSubview *sub = !con->subviews().isEmpty() ? con->subviews().at(0) : 0;
 	if(!sub)
-	{
-		sub = new GLWidgetSubview();
-		con->addSubview(sub);
-	}
+		con->addSubview(sub = new GLWidgetSubview());
 	if(sub->title().isEmpty())
 		sub->setTitle("Default Subview");
 		
@@ -158,6 +204,32 @@ void PlayerSetupDialog::setCurrentSubview(GLWidgetSubview * sub)
 
 		return;
 	}
+	
+	ui->subviewTitle->setText(sub->title());
+	ui->subviewViewportX->setValue(sub->left() * 100.);
+	ui->subviewViewportY->setValue(sub->top()  * 100.);
+	ui->subviewViewportX2->setValue(sub->right()  * 100.);
+	ui->subviewViewportY2->setValue(sub->bottom() * 100.);
+	
+	ui->alphaMaskFile->setText(sub->alphaMaskFile());
+	ui->subviewBrightnessSlider->setValue(sub->brightness());
+	ui->subviewContrastSlider->setValue(sub->contrast());
+	ui->subviewHueSlider->setValue(sub->hue());
+	ui->subviewSaturationSlider->setValue(sub->saturation());
+	
+	ui->optFlipH->setChecked(sub->flipHorizontal());
+	ui->optFlipV->setChecked(sub->flipVertical());
+	
+	QPolygonF poly = sub->cornerTranslations();
+	ui->keyTLx->setValue(poly[0].x());
+	ui->keyTLy->setValue(poly[0].y());
+	ui->keyTRx->setValue(poly[1].x());
+	ui->keyTRy->setValue(poly[1].y());
+	ui->keyBLx->setValue(poly[3].x());
+	ui->keyBLy->setValue(poly[3].y());
+	ui->keyBRx->setValue(poly[2].x());
+	ui->keyBRy->setValue(poly[2].y());
+
 
 	connect(ui->subviewTitle, SIGNAL(textChanged(QString)), sub, SLOT(setTitle(QString)));
 	connect(ui->subviewViewportX, SIGNAL(valueChanged(double)), sub, SLOT(setLeftPercent(double)));
@@ -215,6 +287,7 @@ void PlayerSetupDialog::newSubview()
 		return;
 		
 	GLWidgetSubview *sub = new GLWidgetSubview();
+	sub->setTitle(QString("Subview %1").arg(m_con->subviews().size()+1));
 	m_con->addSubview(sub);
 	setCurrentSubview(sub);
 	ui->subviewListview->setCurrentIndex(m_subviewModel->index(m_con->subviews().size()-1,0));
@@ -243,7 +316,8 @@ void PlayerSetupDialog::testConnection()
 {
 	if(!m_con) 
 		return;
-	/// TODO test connection
+	
+	m_con->connectPlayer();
 }
 
 void PlayerSetupDialog::playerSelected(const QModelIndex & idx)
@@ -437,3 +511,50 @@ void PlayerSetupDialog::showAlphaMaskPreview(const QString& value)
 	ui->alphaMaskPreview->setPixmap(QPixmap(value));
 }
 
+void PlayerSetupDialog::brightReset()
+{
+	ui->subviewBrightnessSlider->setValue(0);
+}
+
+void PlayerSetupDialog::contReset()
+{
+	ui->subviewContrastSlider->setValue(0);
+}
+
+void PlayerSetupDialog::hueReset()
+{
+	ui->subviewHueSlider->setValue(0);
+}
+
+void PlayerSetupDialog::satReset()
+{
+	ui->subviewSaturationSlider->setValue(0);
+}
+
+void PlayerSetupDialog::conConnected()
+{
+	ui->connectionTestResults->setText("<font color=green><b>Connected</b></font>");
+}
+
+void PlayerSetupDialog::conDisconnected()
+{
+	if(m_stickyConnectionMessage)
+		return;	
+	ui->connectionTestResults->setText("<font color=gray>Disconnected</font>");
+}
+
+void PlayerSetupDialog::conLoginFailure()
+{
+	ui->connectionTestResults->setText("<font color=red><b>Login Failed</b></font>");
+}
+
+void PlayerSetupDialog::conLoginSuccess()
+{
+	ui->connectionTestResults->setText(QString("<font color=green><b>Logged In, %1</b></font>").arg(m_con->playerVersion()));
+}
+
+void PlayerSetupDialog::conPlayerError(const QString& err)
+{
+	ui->connectionTestResults->setText(QString("<font color=red><b>Error:</b> %1</font>").arg(err));
+	m_stickyConnectionMessage = true;
+}

@@ -18,6 +18,7 @@
 #define GLPlayer_SetScreen "SetScreen"
 #define GLPlayer_AddSubview "AddSubview"
 #define GLPlayer_RemoveSubview "RemoveSubview"
+#define GLPlayer_ClearSubviews "ClearSubviews"
 // TODO not implemented below, should we implement these since they are all in subviews?
 #define GLPlayer_SetAlphaMask "SetAlphaMask"
 #define GLPlayer_SetKeystone "SetKeystone"

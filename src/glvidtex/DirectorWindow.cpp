@@ -149,7 +149,7 @@ void DirectorWindow::groupSelected(const QModelIndex &idx)
 	if(!m_collection)
 		return;
 	if(idx.isValid())
-		setGroup(m_collection->at(idx.row()));
+		setCurrentGroup(m_collection->at(idx.row()));
 }
 void DirectorWindow::currentGroupChanged(const QModelIndex &idx,const QModelIndex &)
 {
@@ -222,10 +222,16 @@ void DirectorWindow::btnHideDrawable()
 	if(!btn)
 		return;
 	m_currentDrawable->setHidden(btn->isChecked());
+	
+	foreach(PlayerConnection *con, m_players->players())
+		con->setVisibility(m_currentDrawable, m_currentDrawable->isVisible());
 }
 void DirectorWindow::btnSendToPlayer()
 {
-	/// TODO
+	const char *propName = m_currentDrawable->metaObject()->userProperty().name();
+	
+	foreach(PlayerConnection *con, m_players->players())
+		con->setUserProperty(m_currentDrawable, m_currentDrawable->property(propName), propName);
 }
 void DirectorWindow::btnAddToPlaylist()
 {
@@ -289,8 +295,6 @@ void DirectorWindow::playlistTimeChanged(double value)
 
 void DirectorWindow::playlistItemChanged(GLPlaylistItem *item)
 {
-	/// TODO send the value of the changed item to the conneted players
-	
 	if(m_currentItem)
 		disconnect(ui->itemLengthBox, 0, m_currentItem, 0);
 	
@@ -301,6 +305,9 @@ void DirectorWindow::playlistItemChanged(GLPlaylistItem *item)
 		connect(ui->itemLengthBox, SIGNAL(valueChanged(double)), item, SLOT(setDuration(double)));
 		
 		ui->playlistView->setCurrentIndex(m_currentDrawable->playlist()->indexOf(item));
+	
+		foreach(PlayerConnection *con, m_players->players())
+			con->setUserProperty(m_currentDrawable, item->value());
 	}
 }
 
@@ -376,7 +383,7 @@ void DirectorWindow::addNewGroup()
 {
 	GLSceneGroup *group = new GLSceneGroup();
 	m_collection->addGroup(group);
-	setGroup(group);
+	setCurrentGroup(group);
 }
 void DirectorWindow::deleteGroup()
 {
@@ -389,9 +396,9 @@ void DirectorWindow::deleteGroup()
 	m_collection->removeGroup(m_currentGroup);
 	
 // 	if(m_collection && m_collection->size() > 0)
-// 		setGroup(m_collection->at(0));
+// 		setCurrentGroup(m_collection->at(0));
 // 	else
-		setGroup(0);
+		setCurrentGroup(0);
 	
 	m_currentGroup->deleteLater();
 }
@@ -477,10 +484,16 @@ void DirectorWindow::setCollection(GLSceneGroupCollection *collection)
 		groupSelected(idx);
 	}
 }
-void DirectorWindow::setGroup(GLSceneGroup *group, GLScene */*currentScene*/)
+void DirectorWindow::setCurrentGroup(GLSceneGroup *group, GLScene */*currentScene*/)
 {
 	m_currentGroup = group;
+	if(!group)
+		return;
+		
 	ui->groupListview->setModel(group);
+	
+	foreach(PlayerConnection *con, m_players->players())
+		con->setGroup(group);
 	
 	if(group->size() > 0)
 	{
@@ -504,6 +517,9 @@ void DirectorWindow::setCurrentScene(GLScene *scene)
 	
 	//qDebug() << "DirectorWindow::setCurrentScene: "<<scene<<", size:"<<scene->rowCount(QModelIndex());
 	m_currentScene = scene;
+	
+	foreach(PlayerConnection *con, m_players->players())
+		con->setScene(scene);
 
 	ui->sceneListview->setModel(scene);
 	scene->setListOnlyUserItems(true);

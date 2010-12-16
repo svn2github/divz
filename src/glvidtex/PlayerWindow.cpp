@@ -57,6 +57,8 @@ PlayerWindow::PlayerWindow(QWidget *parent)
 	, m_useGLWidget(true)
 	, m_glWidget(0)
 	, m_graphicsView(0)
+	, m_playerVersionString("GLPlayer 0.5")
+	, m_playerVersion(15)
 {
 	QVBoxLayout *layout = new QVBoxLayout(this);
 	layout->setContentsMargins(0,0,0,0);
@@ -384,6 +386,7 @@ void PlayerWindow::receivedMap(QVariantMap map)
 				<< "cmd" << GLPlayer_SetLayout
 				<< "status" << true);
 	}
+	else
 	if(cmd == GLPlayer_SetUserProperty  ||
 	   cmd == GLPlayer_SetVisibility    ||
 	   cmd == GLPlayer_QueryProperty)
@@ -468,7 +471,10 @@ void PlayerWindow::receivedMap(QVariantMap map)
 	if(cmd == GLPlayer_SetViewport)
 	{
 		QRectF rect = map["viewport"].toRectF();
-		m_glWidget->setViewport(rect);
+		if(m_glWidget)
+			m_glWidget->setViewport(rect);
+		//else
+			//m_graphicsScene->setSceneRect(QRectF(0,0,(qreal)point.x(),(qreal)point.y()));
 		
 		sendReply(QVariantList() 
 				<< "cmd" << cmd
@@ -498,12 +504,16 @@ void PlayerWindow::receivedMap(QVariantMap map)
 				<< "cmd" << cmd
 				<< "status" << true);
 	}
+	else
 	if(cmd == GLPlayer_SetScreen)
 	{
 		QRect size = map["rect"].toRect();
-		resize(size.x(),size.y());
-		move(size.width(),size.height());
-		
+		if(!size.isEmpty())
+		{
+			move(size.x(),size.y());
+			resize(size.width(),size.height());
+		}
+			
 		sendReply(QVariantList() 
 				<< "cmd" << cmd
 				<< "status" << true);
@@ -511,18 +521,21 @@ void PlayerWindow::receivedMap(QVariantMap map)
 	else
 	if(cmd == GLPlayer_AddSubview)
 	{
-		GLWidgetSubview *view = new GLWidgetSubview();
-		
-		QByteArray ba = map["data"].toByteArray();
-		view->fromByteArray(ba);
-		
-		if(GLWidgetSubview *oldSubview = m_glWidget->subview(view->subviewId()))
+		if(m_glWidget)
 		{
-			m_glWidget->removeSubview(oldSubview);
-			delete oldSubview;
+			GLWidgetSubview *view = new GLWidgetSubview();
+			
+			QByteArray ba = map["data"].toByteArray();
+			view->fromByteArray(ba);
+		
+			if(GLWidgetSubview *oldSubview = m_glWidget->subview(view->subviewId()))
+			{
+				m_glWidget->removeSubview(oldSubview);
+				delete oldSubview;
+			}
+		
+			m_glWidget->addSubview(view);
 		}
-	
-		m_glWidget->addSubview(view);
 		
 		sendReply(QVariantList() 
 				<< "cmd" << cmd
@@ -531,29 +544,49 @@ void PlayerWindow::receivedMap(QVariantMap map)
 	else
 	if(cmd == GLPlayer_RemoveSubview)
 	{
-		int subviewId = map["subviewid"].toInt();
-		if(subviewId>0)
+		if(m_glWidget)
 		{
-			if(GLWidgetSubview *oldSubview = m_glWidget->subview(subviewId))
+			int subviewId = map["subviewid"].toInt();
+			if(subviewId>0)
 			{
-				m_glWidget->removeSubview(oldSubview);
-				delete oldSubview;
-			}	
-		}
-		else
-		{
-			GLWidgetSubview *view = new GLWidgetSubview();
-			
-			QByteArray ba = map["data"].toByteArray();
-			view->fromByteArray(ba);
-			
-			if(GLWidgetSubview *oldSubview = m_glWidget->subview(view->subviewId()))
-			{
-				m_glWidget->removeSubview(oldSubview);
-				delete oldSubview;
+				if(GLWidgetSubview *oldSubview = m_glWidget->subview(subviewId))
+				{
+					m_glWidget->removeSubview(oldSubview);
+					delete oldSubview;
+				}	
 			}
+			else
+			{
+				GLWidgetSubview *view = new GLWidgetSubview();
+				
+				QByteArray ba = map["data"].toByteArray();
+				view->fromByteArray(ba);
+				
+				if(GLWidgetSubview *oldSubview = m_glWidget->subview(view->subviewId()))
+				{
+					m_glWidget->removeSubview(oldSubview);
+					delete oldSubview;
+				}
+			
+				delete view;
+			}
+		}
 		
-			delete view;
+		sendReply(QVariantList() 
+				<< "cmd" << cmd
+				<< "status" << true);
+	}
+	else
+	if(cmd == GLPlayer_ClearSubviews)
+	{
+		if(m_glWidget)
+		{
+			QList<GLWidgetSubview*> views = m_glWidget->subviews();
+			foreach(GLWidgetSubview *view, views)
+			{
+				m_glWidget->removeSubview(view);
+				delete view;
+			}
 		}
 		
 		sendReply(QVariantList() 

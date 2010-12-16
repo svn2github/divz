@@ -11,7 +11,7 @@
 PlayerSubviewsModel::PlayerSubviewsModel(PlayerConnection *conn)
 	: m_conn(conn)
 {
-	connect(m_conn, SIGNAL(subviewAdded(GLWidgetSubview*)), this, SLOT(subviewAdded(GLWidgetSubview*)));
+	connect(m_conn, SIGNAL(subviewAdded(GLWidgetSubview*)),   this, SLOT(subviewAdded(GLWidgetSubview*)));
 	connect(m_conn, SIGNAL(subviewRemoved(GLWidgetSubview*)), this, SLOT(subviewRemoved(GLWidgetSubview*)));
 }
 PlayerSubviewsModel::~PlayerSubviewsModel()
@@ -74,7 +74,8 @@ bool PlayerSubviewsModel::setData(const QModelIndex &index, const QVariant & val
 	
 void PlayerSubviewsModel::subviewAdded(GLWidgetSubview *sub)
 {
-	connect(sub, SIGNAL(subviewChanged(GLWidgetSubview*)), this, SLOT(subviewChanged(GLWidgetSubview*)));
+	//qDebug() << "PlayerSubviewsModel::subviewAdded: Received sub "<<sub;
+	connect(sub, SIGNAL(changed(GLWidgetSubview*)), this, SLOT(subviewChanged(GLWidgetSubview*)));
 	
 	beginInsertRows(QModelIndex(),m_conn->m_subviews.size()-1,m_conn->m_subviews.size());
 	
@@ -117,7 +118,10 @@ void PlayerSubviewsModel::subviewChanged(GLWidgetSubview *sub)
 PlayerConnection::PlayerConnection(QObject *parent)
 	: QObject(parent)
 	, m_client(0)
+	, m_playerVersion("(Unknown)")
 	, m_isConnected(false)
+	, m_user("player")
+	, m_pass("player")
 {
 	
 }
@@ -193,13 +197,16 @@ void PlayerConnection::fromByteArray(QByteArray& array)
 		GLWidgetSubview *subview = new GLWidgetSubview();
 		subview->fromByteArray(data);
 		m_subviews << subview;
+		
+		connect(subview, SIGNAL(changed(GLWidgetSubview*)), this, SLOT(subviewChanged(GLWidgetSubview*)));
 	}
 }
 
 void PlayerConnection::addSubview(GLWidgetSubview *sub)
 {
+	//qDebug() << "PlayerConnection::addSubview: Adding sub "<<sub;
 	m_subviews << sub;
-	connect(sub, SIGNAL(subviewChanged(GLWidgetSubview*)), this, SLOT(subviewChanged(GLWidgetSubview*)));
+	connect(sub, SIGNAL(changed(GLWidgetSubview*)), this, SLOT(subviewChanged(GLWidgetSubview*)));
 	emit subviewAdded(sub);
 	
 	sendCommand(QVariantList() 
@@ -225,13 +232,26 @@ void PlayerConnection::connectPlayer()
 	
 	connect(m_client, SIGNAL(socketConnected()), this, SLOT(clientConnected()));
 	connect(m_client, SIGNAL(receivedMap(QVariantMap)), this, SLOT(receivedMap(QVariantMap)));
-	connect(m_client, SIGNAL(sockectDisconnected()), this, SLOT(clientDisconnected()));
+	connect(m_client, SIGNAL(socketDisconnected()), this, SLOT(clientDisconnected()));
 	connect(m_client, SIGNAL(socketError(QAbstractSocket::SocketError)), this, SLOT(socketError(QAbstractSocket::SocketError)));
 	
 	sendCommand(QVariantList() 
 		<< "cmd" 	<< GLPlayer_Login
 		<< "user"	<< m_user
 		<< "pass"	<< m_pass);
+		
+	if(!m_subviews.isEmpty())
+	{
+		sendCommand(QVariantList() 
+			<< "cmd" 	<< GLPlayer_ClearSubviews);
+			
+		foreach(GLWidgetSubview *sub, m_subviews)
+		{
+			sendCommand(QVariantList() 
+				<< "cmd" 	<< GLPlayer_AddSubview
+				<< "data"	<< sub->toByteArray());
+		}
+	}
 }
 
 void PlayerConnection::clientConnected()
@@ -382,6 +402,7 @@ void PlayerConnection::queryProperty(GLDrawable *gld, QString propertyName)
 	
 void PlayerConnection::subviewChanged(GLWidgetSubview *sub)
 {
+	qDebug() << "PlayerConnection::subviewChanged: Sub changed: "<<sub;
 	// The PlayerWindow class (the receiver) automatically removes the 
 	// subview and re-adds it, so we just send the add command
 	sendCommand(QVariantList() 

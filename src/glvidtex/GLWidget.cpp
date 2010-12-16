@@ -249,6 +249,8 @@ void GLWidget::addSubview(GLWidgetSubview *s)
 	s->setGLWidget(this);
 	if(m_glInited)
 		s->initGL();
+	
+	updateGL();
 }
 
 void GLWidget::removeSubview(GLWidgetSubview *s)
@@ -260,6 +262,7 @@ void GLWidget::removeSubview(GLWidgetSubview *s)
 	m_subviews.removeAll(s);
 	m_subviewLookup.remove(s->subviewId());
 
+	updateGL();
 }
 
 void GLWidget::setCornerTranslations(const QPolygonF& p)

@@ -4,8 +4,6 @@ OBJECTS_DIR = .build
 RCC_DIR = .build
 UI_DIR = .build
 
-FORMS += PlayerSetupDialog.ui
-
 HEADERS       = GLWidget.h \
 		../livemix/VideoSource.h \
 		../livemix/VideoThread.h \
@@ -28,10 +26,8 @@ HEADERS       = GLWidget.h \
 		GLSceneGroup.h \
 		../livemix/MjpegThread.h \
 		GLVideoMjpegDrawable.h \
-		PlayerSetupDialog.h \
 		CornerItem.h \
 		GLEditorGraphicsScene.h \
-		KeystonePointsEditor.h \
 		GLPlayerServer.h \
 		GLPlayerClient.h
 		
@@ -59,18 +55,14 @@ SOURCES       = GLWidget.cpp \
 		MetaObjectUtil.cpp \
 		../livemix/MjpegThread.cpp \
 		GLVideoMjpegDrawable.cpp \
-		PlayerSetupDialog.cpp \
 		CornerItem.cpp \
 		GLEditorGraphicsScene.cpp   \
-		KeystonePointsEditor.cpp \
 		GLPlayerServer.cpp \
 		GLPlayerClient.cpp
 		
 
 editor: {
 	TARGET = gleditor
-	
-	FORMS += DirectorWindow.ui
 	
 	HEADERS += ../livemix/EditorUtilityWidgets.h \
 		../livemix/ExpandableWidget.h \
@@ -90,7 +82,10 @@ editor: {
 director: {
 	TARGET = gldirector
 	
-	FORMS += DirectorWindow.ui
+	FORMS += DirectorWindow.ui \
+		 PlayerSetupDialog.ui
+
+
 	
 	HEADERS += ../livemix/EditorUtilityWidgets.h \
 		../livemix/ExpandableWidget.h \
@@ -98,7 +93,10 @@ director: {
 		EditorGraphicsView.h \
 		DirectorWindow.h \
 		PlayerConnection.h \
-		RtfEditorWindow.h
+		RtfEditorWindow.h \
+		PlayerSetupDialog.h \
+		KeystonePointsEditor.h
+		
 		
 	SOURCES += director-main.cpp \
 		../livemix/EditorUtilityWidgets.cpp \
@@ -107,7 +105,9 @@ director: {
 		EditorGraphicsView.cpp \
 		DirectorWindow.cpp \
 		PlayerConnection.cpp \
-		RtfEditorWindow.cpp
+		RtfEditorWindow.cpp \
+		PlayerSetupDialog.cpp \
+		KeystonePointsEditor.cpp
 		
 	include(../3rdparty/richtextedit/richtextedit.pri)
 }
@@ -152,7 +152,8 @@ win32 {
     QT_MOBILITY_HOME = C:/Qt/qt-mobility-opensource-src-1.0.2
 }
 unix {
-    QT_MOBILITY_HOME = /opt/qt-mobility-opensource-src-1.0.1
+    #QT_MOBILITY_HOME = /opt/qt-mobility-opensource-src-1.0.1
+     QT_MOBILITY_HOME = /opt/qt-mobility-opensource-src-1.1.0-beta2
 }
 	
 # To enable, use: qmake CONFIG+=mobility, and make sure QT_MOBILITY_HOME is correct

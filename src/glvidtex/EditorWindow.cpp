@@ -196,6 +196,10 @@ void EditorWindow::createUI()
 	act = new QAction(QIcon("../data/stock-panel-multimedia.png"), tr("New Video Layer"), this);
 	connect(act, SIGNAL(triggered()), this, SLOT(addVideoFile()));
 	toolbar->addAction(act);
+	
+	act = new QAction(QIcon("../data/stock-insert-object.png"), tr("New Video Loop Layer"), this);
+	connect(act, SIGNAL(triggered()), this, SLOT(addVideoLoop()));
+	toolbar->addAction(act);
 		
 	act = new QAction(QIcon("../data/stock-font.png"), tr("New Text Layer"), this);
 	connect(act, SIGNAL(triggered()), this, SLOT(addText()));
@@ -358,8 +362,8 @@ void EditorWindow::addVideoLoop()
 
 void EditorWindow::addVideoFile()
 {
-	//addDrawable(new GLVideoFileDrawable("../data/Seasons_Loop_3_SD.mpg"));
-	addDrawable(new GLVideoLoopDrawable("../data/Seasons_Loop_3_SD.mpg"));
+	addDrawable(new GLVideoFileDrawable("../data/Seasons_Loop_3_SD.mpg"));
+	//addDrawable(new GLVideoLoopDrawable("../data/Seasons_Loop_3_SD.mpg"));
 }
 
 void EditorWindow::addImage()
