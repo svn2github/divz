@@ -41,6 +41,7 @@ bool GLVideoFileDrawable::setVideoFile(const QString& file)
 		
 		// Duration is in milleseconds, we store length in seconds
 		m_videoLength = source->player()->duration() / 1000.;
+		qDebug() << "GLVideoFileDrawable::setvideoFile: "<<file<<": Duration: "<<m_videoLength;
 		
 		setVideoSource(source);
 		

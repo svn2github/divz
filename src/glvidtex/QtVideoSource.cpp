@@ -205,6 +205,8 @@ VideoFormat QtVideoSource::videoFormat()
 QtVideoSource::QtVideoSource(QObject *parent)
 	: VideoSource(parent)
 {
+	present(QImage("dot.gif"));
+	
 	m_player   = new QMediaPlayer(this);
 	m_playlist = new QMediaPlaylist(this);
 	m_player->setPlaylist(m_playlist);
