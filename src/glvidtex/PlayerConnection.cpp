@@ -158,6 +158,7 @@ QByteArray PlayerConnection::toByteArray()
 	map["pass"] 	= m_pass;
 	map["screen"] 	= m_screenRect;
 	map["viewport"]	= m_viewportRect;
+	map["canvas"]	= m_canvasSize;
 	map["armode"]	= (int)m_aspectRatioMode;
 	
 	QVariantList views;
@@ -186,6 +187,7 @@ void PlayerConnection::fromByteArray(QByteArray& array)
 	m_pass = map["pass"].toString();
 	m_screenRect = map["screen"].toRect();
 	m_viewportRect = map["viewport"].toRect();
+	m_canvasSize = map["canvas"].toSizeF();
 	m_aspectRatioMode = (Qt::AspectRatioMode)map["armode"].toInt();
 	
 	m_subviews.clear();
@@ -252,6 +254,11 @@ void PlayerConnection::connectPlayer()
 				<< "data"	<< sub->toByteArray());
 		}
 	}
+	
+	setViewportRect(viewportRect());
+	setScreenRect(screenRect());
+	setCanvasSize(canvasSize());
+	setAspectRatioMode(aspectRatioMode());
 }
 
 void PlayerConnection::clientConnected()
@@ -321,6 +328,15 @@ void PlayerConnection::setViewportRect(const QRect& rect)
 		<< "cmd" 	<< GLPlayer_SetViewport
 		<< "viewport"	<< QRectF(rect));
 }
+void PlayerConnection::setCanvasSize(const QSizeF& size)
+{
+	m_canvasSize = size;
+	
+	sendCommand(QVariantList() 
+		<< "cmd" 	<< GLPlayer_SetCanvasSize
+		<< "canvas"	<< size);
+}
+
 void PlayerConnection::setAspectRatioMode(Qt::AspectRatioMode mode)
 {
 	m_aspectRatioMode = mode;
@@ -402,7 +418,7 @@ void PlayerConnection::queryProperty(GLDrawable *gld, QString propertyName)
 	
 void PlayerConnection::subviewChanged(GLWidgetSubview *sub)
 {
-	qDebug() << "PlayerConnection::subviewChanged: Sub changed: "<<sub;
+	//qDebug() << "PlayerConnection::subviewChanged: Sub changed: "<<sub<<", id:"<<sub->subviewId();
 	// The PlayerWindow class (the receiver) automatically removes the 
 	// subview and re-adds it, so we just send the add command
 	sendCommand(QVariantList() 

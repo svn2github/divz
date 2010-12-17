@@ -530,10 +530,16 @@ void PlayerWindow::receivedMap(QVariantMap map)
 		
 			if(GLWidgetSubview *oldSubview = m_glWidget->subview(view->subviewId()))
 			{
+				qDebug() << "PlayerWindow: GLPlayer_AddSubview: Deleting oldSubview: "<<oldSubview; 
 				m_glWidget->removeSubview(oldSubview);
 				delete oldSubview;
 			}
+			else
+			{
+				qDebug() << "PlayerWindow: GLPlayer_AddSubview: NO OLD SUBVIEW DELETED, id:"<<view->subviewId();
+			}
 		
+			qDebug() << "PlayerWindow: GLPlayer_AddSubview: Added subview: "<<view<<", id: "<<view->subviewId();
 			m_glWidget->addSubview(view);
 		}
 		
@@ -639,7 +645,10 @@ void PlayerWindow::receivedMap(QVariantMap map)
 void PlayerWindow::setGroup(GLSceneGroup *group)
 {
 	if(m_group)
+	{
 		delete m_group;
+		m_group = 0;
+	}
 	
 	m_group = group;
 }
@@ -648,21 +657,32 @@ void PlayerWindow::setScene(GLScene *scene)
 {
 	m_scene = scene;
 	
-	GLDrawableList list = m_scene->drawableList();
+	GLDrawableList newSceneList = m_scene->drawableList();
 	
 	if(m_glWidget)
 	{
 		QList<GLDrawable*> items = m_glWidget->drawables();
 		foreach(GLDrawable *drawable, items)
+		{
 			m_glWidget->removeDrawable(drawable);
+// 			qDebug() << "PlayerWindow::setScene: Removing old drawable:" <<(QObject*)drawable;
+		}
 		
-		foreach(GLDrawable *drawable, list)
+		foreach(GLDrawable *drawable, newSceneList)
+		{
 			m_glWidget->addDrawable(drawable);
+// 			qDebug() << "PlayerWindow::setScene: Adding new drawable:" <<(QObject*)drawable;
+		}
 	}
 	else
 	{
+		QList<QGraphicsItem*> items = m_graphicsScene->items();
+		foreach(QGraphicsItem *item, items)
+			if(GLDrawable *gld = dynamic_cast<GLDrawable*>(item))
+				m_graphicsScene->removeItem(gld);
+		
 		m_graphicsScene->clear();
-		foreach(GLDrawable *drawable, list)
+		foreach(GLDrawable *drawable, newSceneList)
 			m_graphicsScene->addItem(drawable);
 	}
 }

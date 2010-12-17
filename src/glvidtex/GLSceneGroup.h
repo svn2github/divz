@@ -244,6 +244,7 @@ class GLSceneGroupCollection : public QAbstractListModel
 	
 	Q_PROPERTY(int collectionId READ collectionId);
 	Q_PROPERTY(QString collectionName READ collectionName WRITE setCollectionName);
+	Q_PROPERTY(QSizeF canvasSize READ canvasSize WRITE setCanvasSize);
 	
 public:
 	GLSceneGroupCollection(QObject *parent=0);

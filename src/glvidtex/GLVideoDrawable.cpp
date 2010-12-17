@@ -86,6 +86,7 @@ GLVideoDrawable::GLVideoDrawable(QObject *parent)
 	, m_videoSender(0)
 	, m_videoSenderEnabled(false)
 	, m_videoSenderPort(-1)
+	, m_ignoreAspectRatio(false)
 {
 	
 	m_imagePixelFormats
@@ -451,6 +452,12 @@ void GLVideoDrawable::setAspectRatioMode(Qt::AspectRatioMode mode)
 	updateRects();
 	updateAlignment();
 	updateGL();
+}
+
+void GLVideoDrawable::setIgnoreAspectRatio(bool flag)
+{
+	m_ignoreAspectRatio = flag;
+	setAspectRatioMode(flag ? Qt::IgnoreAspectRatio : Qt::KeepAspectRatio);
 }
 
 /*!

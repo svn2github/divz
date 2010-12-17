@@ -2,6 +2,11 @@
 #include <QMutex>
 #include <QMutexLocker>
 
+#ifndef UINT64_C
+#define INT64_C(c) (c ## LL)
+#define UINT64_C(c) (c ## ULL)
+#endif
+
 extern "C" {
 #include "libswscale/swscale.h"
 #include "libavdevice/avdevice.h"

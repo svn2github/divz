@@ -11,7 +11,7 @@ GLVideoFileDrawable::GLVideoFileDrawable(QString file, QObject *parent)
 	if(!file.isEmpty())
 		setVideoFile(file);
 	
-	//QTimer::singleShot(1500, this, SLOT(testXfade()));
+	connect(this, SIGNAL(sourceDiscarded(VideoSource*)), this, SLOT(deleteSource(VideoSource*)));
 }
 	
 void GLVideoFileDrawable::testXfade()
@@ -53,4 +53,21 @@ bool GLVideoFileDrawable::setVideoFile(const QString& file)
 	
 	return true;
 	
+}
+
+
+void GLVideoFileDrawable::deleteSource(VideoSource *source)
+{
+	QtVideoSource *vt = dynamic_cast<QtVideoSource*>(source);
+	if(vt)
+	{
+		qDebug() << "GLVideoFileDrawable::deleteSource: Deleting video thread:" <<vt;
+		delete vt;
+		vt = 0;
+		source = 0;
+	}
+	else
+	{
+		qDebug() << "GLVideoFileDrawable::deleteSource: Source not deleted because its not a 'QtVideoSource':" <<source;
+	}
 }

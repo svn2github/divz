@@ -659,7 +659,9 @@ void GLSceneGroup::fromByteArray(QByteArray& array)
 	foreach(QVariant var, scenes)
 	{
 		QByteArray data = var.toByteArray();
-		m_scenes << new GLScene(data, this);
+		GLScene *scene = new GLScene(data, this);
+		m_scenes << scene;
+		m_sceneIdLookup[scene->sceneId()] = scene;
 	}
 }
 	
@@ -874,6 +876,9 @@ void GLSceneGroupCollection::fromByteArray(QByteArray& array)
 	m_collectionId		= map["collectionId"].toInt();
 	m_collectionName	= map["collectionName"].toString();
 	m_canvasSize 		= map["canvasSize"].toSizeF();
+	
+	if(m_canvasSize.isEmpty())
+		m_canvasSize = QSizeF(1000.,750.);
 	
 	m_groups.clear();
 	QVariantList groups = map["groups"].toList();

@@ -4,6 +4,12 @@ TODO:
 		- Director: playlist text looses formatting when playing?
 		- Director: After closing editor, the slide never re-appears in director view, even after clicking the slide again in the list
 		- Editor: Sometimes an item gets "stuck" while "selected" - and no wway to click it and get it to emit a selected signal again even after adding items or clicking other items
+		- [FIXED] For some reason, changing lots of subview values (e.g. drag sliders) causes the player to "bog down" - is something not getting deleted properly on player?
+		- [CONFIRMED] Make sure that video threads are getting deleted on player when changing videos
+		- ...
+	NEEDED FEATURES:
+		- Fade speed control
+		- Need to set canvas size of the groups
 		
 
 TARGET DATE: 12/11 9am

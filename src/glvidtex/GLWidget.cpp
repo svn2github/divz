@@ -65,7 +65,7 @@ QByteArray GLWidgetSubview::toByteArray()
 	
 	QVariantMap map;
 	map["title"]	= m_title;
-	map["id"]	= m_id;
+	map["id"]	= subviewId(); //m_id;
 	
 	map["maskfile"]	= m_alphaMaskFile;
 	map["top"] 	= m_viewTop;
@@ -1339,6 +1339,8 @@ void GLWidget::addDrawable(GLDrawable *item)
 		item->initGL();
 	}
 	sortDrawables();
+	
+	updateGL();
 }
 
 void GLWidget::removeDrawable(GLDrawable *item)
@@ -1348,6 +1350,7 @@ void GLWidget::removeDrawable(GLDrawable *item)
 	item->setGLWidget(0);
 	disconnect(item, 0, this, 0);
 	// sort not needed since order implicitly stays the same
+	updateGL();
 }
 
 void GLWidget::zIndexChanged()

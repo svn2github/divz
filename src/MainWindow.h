@@ -1,6 +1,12 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+
+#ifndef UINT64_C
+#define INT64_C(c) (c ## LL)
+#define UINT64_C(c) (c ## ULL)
+#endif
+
 #include <QtGui/QMainWindow>
 #include <QCloseEvent>
 #include <QShowEvent>

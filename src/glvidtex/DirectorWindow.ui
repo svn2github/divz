@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>743</width>
-    <height>518</height>
+    <height>551</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -159,7 +159,7 @@
      <x>0</x>
      <y>0</y>
      <width>743</width>
-     <height>21</height>
+     <height>25</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -169,6 +169,8 @@
     <addaction name="actionOpen_Collection"/>
     <addaction name="actionSave"/>
     <addaction name="actionSave_As"/>
+    <addaction name="separator"/>
+    <addaction name="actionChange_Canvas_Size"/>
     <addaction name="separator"/>
     <addaction name="actionPlayer_Setup"/>
     <addaction name="separator"/>
@@ -230,6 +232,11 @@
   <action name="actionExit">
    <property name="text">
     <string>E&amp;xit</string>
+   </property>
+  </action>
+  <action name="actionChange_Canvas_Size">
+   <property name="text">
+    <string>Change Canvas Size...</string>
    </property>
   </action>
  </widget>

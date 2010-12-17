@@ -1,3 +1,10 @@
+
+
+#ifndef UINT64_C
+#define INT64_C(c) (c ## LL)
+#define UINT64_C(c) (c ## ULL)
+#endif
+
 #include "ImageContent.h"
 #include "model/ImageItem.h"
 #include "AppSettings.h"

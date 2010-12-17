@@ -44,6 +44,7 @@ class PlayerConnection : public QObject
 	Q_PROPERTY(QString pass		READ pass WRITE setPass);
 	Q_PROPERTY(QRect screenRect	READ screenRect WRITE setScreenRect);
 	Q_PROPERTY(QRect viewportRect	READ viewportRect WRITE setViewportRect);
+	Q_PROPERTY(QSizeF canvasSize READ canvasSize WRITE setCanvasSize);
 	Q_PROPERTY(Qt::AspectRatioMode aspectRatioMode READ aspectRatioMode WRITE setAspectRatioMode);
 
 	Q_PROPERTY(bool isConnected	READ isConnected);
@@ -67,6 +68,7 @@ public:
 	QString pass() { return m_pass; }
 	QRect screenRect() { return m_screenRect; }
 	QRect viewportRect() { return m_viewportRect; }
+	QSizeF canvasSize() { return m_canvasSize; }
 	Qt::AspectRatioMode aspectRatioMode() { return m_aspectRatioMode; }
 	
 	bool isConnected() { return m_isConnected; }
@@ -87,6 +89,7 @@ public slots:
 	void setPass(const QString&);
 	void setScreenRect(const QRect&);
 	void setViewportRect(const QRect&);
+	void setCanvasSize(const QSizeF&);
 	void setAspectRatioMode(Qt::AspectRatioMode);
 	
 	void setGroup(GLSceneGroup *group, GLScene *initialScene=0);
@@ -134,6 +137,7 @@ private:
 	QString m_pass;
 	QRect m_screenRect;
 	QRect m_viewportRect;
+	QSizeF m_canvasSize;
 	Qt::AspectRatioMode m_aspectRatioMode;
 	
 	QString m_playerVersion;

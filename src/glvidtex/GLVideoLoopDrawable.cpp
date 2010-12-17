@@ -66,7 +66,7 @@ void GLVideoLoopDrawable::deleteSource(VideoSource *source)
 	VideoThread *vt = dynamic_cast<VideoThread*>(source);
 	if(vt)
 	{
-		//qDebug() << "GLVideoLoopDrawable::deleteSource: Deleting video thread:" <<vt;
+		qDebug() << "GLVideoLoopDrawable::deleteSource: Deleting video thread:" <<vt;
 		delete vt;
 		vt = 0;
 		source = 0;

@@ -464,6 +464,9 @@ QWidget *EditorWindow::createPropertyEditors(GLDrawable *gld)
 			// show device selection box
 			// show deinterlace checkbox
 			
+			opts.text = "Ignore video aspect ratio";
+			lay->addRow(PropertyEditorFactory::generatePropertyEditor(item, "ignoreAspectRatio", SLOT(setIgnoreAspectRatio(bool)), opts));
+			
 		}
 		else
 		if(GLVideoLoopDrawable *item = dynamic_cast<GLVideoLoopDrawable*>(gld))
@@ -474,6 +477,9 @@ QWidget *EditorWindow::createPropertyEditors(GLDrawable *gld)
 			opts.fileTypeFilter = tr("Video Files (*.wmv *.mpeg *.mpg *.avi *.wmv *.flv *.mov *.mp4 *.m4a *.3gp *.3g2 *.mj2 *.mjpeg *.ipod *.m4v *.gsm *.swf *.dv *.dvd *.asf *.mtv *.roq *.aac *.ac3 *.aiff *.alaw *.iif);;Any File (*.*)");
 			
 			lay->addRow(tr("&File:"), PropertyEditorFactory::generatePropertyEditor(item, "videoFile", SLOT(setVideoFile(const QString&)), opts));
+			
+			opts.text = "Ignore video aspect ratio";
+			lay->addRow(PropertyEditorFactory::generatePropertyEditor(item, "ignoreAspectRatio", SLOT(setIgnoreAspectRatio(bool)), opts));
 		}
 		else
 		if(GLVideoFileDrawable *item = dynamic_cast<GLVideoFileDrawable*>(gld))
@@ -483,6 +489,9 @@ QWidget *EditorWindow::createPropertyEditors(GLDrawable *gld)
 			opts.fileTypeFilter = tr("Video Files (*.wmv *.mpeg *.mpg *.avi *.wmv *.flv *.mov *.mp4 *.m4a *.3gp *.3g2 *.mj2 *.mjpeg *.ipod *.m4v *.gsm *.swf *.dv *.dvd *.asf *.mtv *.roq *.aac *.ac3 *.aiff *.alaw *.iif);;Any File (*.*)");
 			
 			lay->addRow(tr("&File:"), PropertyEditorFactory::generatePropertyEditor(item, "videoFile", SLOT(setVideoFile(const QString&)), opts));
+			
+			opts.text = "Ignore video aspect ratio";
+			lay->addRow(PropertyEditorFactory::generatePropertyEditor(item, "ignoreAspectRatio", SLOT(setIgnoreAspectRatio(bool)), opts));
 		}
 		else
 		if(GLTextDrawable *item = dynamic_cast<GLTextDrawable*>(gld))
@@ -548,6 +557,9 @@ QWidget *EditorWindow::createPropertyEditors(GLDrawable *gld)
 			opts.stringIsFile = true;
 			opts.fileTypeFilter = tr("Image Files (*.png *.jpg *.bmp *.svg *.xpm *.gif);;Any File (*.*)");
 			lay->addRow(tr("&Image:"), PropertyEditorFactory::generatePropertyEditor(item, "imageFile", SLOT(setImageFile(const QString&)), opts));
+			
+			opts.text = "Ignore image aspect ratio";
+			lay->addRow(PropertyEditorFactory::generatePropertyEditor(item, "ignoreAspectRatio", SLOT(setIgnoreAspectRatio(bool)), opts));
 		}
 		
 		

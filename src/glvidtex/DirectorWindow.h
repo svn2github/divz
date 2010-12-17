@@ -74,6 +74,8 @@ private slots:
 	void playlistTimeChanged(double);
 	void playlistItemChanged(GLPlaylistItem *);
 	
+	void changeCanvasSize();
+	
 	
 protected:
 	void closeEvent(QCloseEvent *event);

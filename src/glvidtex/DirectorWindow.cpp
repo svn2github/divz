@@ -72,6 +72,7 @@ void DirectorWindow::setupUI()
 	
 	connect(ui->actionAdd_New_Group, SIGNAL(triggered()), this, SLOT(addNewGroup()));
 	connect(ui->actionEdit_Selected_Group, SIGNAL(triggered()), this, SLOT(showEditWindow()));
+	connect(ui->actionChange_Canvas_Size, SIGNAL(triggered()), this, SLOT(changeCanvasSize()));
 	connect(ui->actionExit, SIGNAL(triggered()), qApp, SLOT(quit()));
 	connect(ui->actionOpen_Collection, SIGNAL(triggered()), this, SLOT(showOpenFileDialog()));
 	connect(ui->actionPlayer_Setup, SIGNAL(triggered()), this, SLOT(showPlayerSetupDialog()));
@@ -224,7 +225,7 @@ void DirectorWindow::btnHideDrawable()
 	m_currentDrawable->setHidden(btn->isChecked());
 	
 	foreach(PlayerConnection *con, m_players->players())
-		con->setVisibility(m_currentDrawable, m_currentDrawable->isVisible());
+		con->setVisibility(m_currentDrawable, !btn->isChecked());
 }
 void DirectorWindow::btnSendToPlayer()
 {
@@ -273,7 +274,7 @@ void DirectorWindow::btnAddToPlaylist()
 		item->setDuration(5.0); /// just a guess
 	}
 	
-	if(!item->duration())
+	if(item->duration() <= 0.)
 		item->setDuration(15.0);
 	
 	playlist->addItem(item);
@@ -377,6 +378,7 @@ void DirectorWindow::showEditWindow()
 	
 	EditorWindow *edit = new EditorWindow();
 	edit->setGroup(m_currentGroup, m_currentScene);
+	edit->setCanvasSize(m_collection->canvasSize());
 	edit->show();
 }
 void DirectorWindow::addNewGroup()
@@ -483,6 +485,11 @@ void DirectorWindow::setCollection(GLSceneGroupCollection *collection)
 		ui->collectionListview->setCurrentIndex(idx);
 		groupSelected(idx);
 	}
+	
+	foreach(PlayerConnection *con, m_players->players())
+		con->setCanvasSize(m_collection->canvasSize());
+		
+	m_graphicsScene->setSceneRect(QRectF(QPointF(0,0),m_collection->canvasSize()));
 }
 void DirectorWindow::setCurrentGroup(GLSceneGroup *group, GLScene */*currentScene*/)
 {
@@ -565,12 +572,19 @@ void DirectorWindow::setCurrentScene(GLScene *scene)
 
 void DirectorWindow::setCurrentDrawable(GLDrawable *gld)
 {
+	if(m_currentDrawable == gld)
+		return;
+		
 	if(m_currentDrawable)
 	{
 		if(m_currentDrawable->playlist()->isPlaying())
 			m_currentDrawable->playlist()->stop();
 		
 		disconnect(m_currentDrawable->playlist(), 0, this, 0);
+		
+		disconnect(ui->playBtn,  0, m_currentDrawable->playlist(), 0);
+		disconnect(ui->pauseBtn, 0, m_currentDrawable->playlist(), 0);
+	
 		m_currentDrawable = 0;
 	}
 	
@@ -578,7 +592,7 @@ void DirectorWindow::setCurrentDrawable(GLDrawable *gld)
 	ui->playlistView->setModel(gld->playlist());
 	
 	connect(gld->playlist(), SIGNAL(currentItemChanged(GLPlaylistItem*)), this, SLOT(playlistItemChanged(GLPlaylistItem *)));
-	connect(gld->playlist(), SIGNAL(playerTimeChanged(double)), this, SLOT(playlistTimeChanged(double)));
+	connect(gld->playlist(), SIGNAL(playerTimeChanged(double)),           this, SLOT(playlistTimeChanged(double)));
 	
 	connect(ui->playBtn,  SIGNAL(clicked()), gld->playlist(), SLOT(play()));
 	connect(ui->pauseBtn, SIGNAL(clicked()), gld->playlist(), SLOT(stop()));
@@ -689,4 +703,65 @@ void DirectorWindow::setCurrentItem(GLPlaylistItem *item)
 	m_currentDrawable->playlist()->playItem(item);
 	m_currentItem = item;
 }
+
+void DirectorWindow::changeCanvasSize()
+{
+	if(!m_collection)
+		return;
+	
+	QDialog dlg;
+	dlg.setWindowTitle("Change Canvas Size");
+	
+	QVBoxLayout *vbox = new QVBoxLayout(&dlg);
+	
+		
+	QFormLayout *form = new QFormLayout();
+	QSpinBox *width = new QSpinBox();
+	width->setMinimum(0);
+	width->setMaximum(99999);
+	
+	QSpinBox *height = new QSpinBox();
+	height->setMinimum(0);
+	height->setMaximum(99999);
+	
+	QSizeF size = m_collection->canvasSize();
+	width->setValue(size.width());
+	height->setValue(size.height()); 
+	
+	form->addRow("Width:", width);
+	form->addRow("Height:", height);
+	 
+	QHBoxLayout *buttons = new QHBoxLayout();
+	buttons->addStretch(1);
+	QPushButton *cancel = new QPushButton("Cancel");
+	buttons->addWidget(cancel);
+	
+	QPushButton *ok = new QPushButton("ok");
+	buttons->addWidget(ok);
+	ok->setDefault(true);
+	
+	connect(cancel, SIGNAL(clicked()), &dlg, SLOT(reject()));
+	connect(ok, SIGNAL(clicked()), &dlg, SLOT(accept()));
+	
+	vbox->addLayout(form);
+	vbox->addStretch(1);
+	vbox->addLayout(buttons);
+	dlg.setLayout(vbox);
+	dlg.adjustSize();
+	if(dlg.exec())
+	{
+		m_collection->setCanvasSize(QSizeF((qreal)width->value(), (qreal)height->value()));
+		
+		foreach(PlayerConnection *con, m_players->players())
+			con->setCanvasSize(m_collection->canvasSize());
+			
+		m_graphicsScene->setSceneRect(QRectF(QPointF(0,0),m_collection->canvasSize()));
+		
+	}
+	
+}
+
+
+
+
 

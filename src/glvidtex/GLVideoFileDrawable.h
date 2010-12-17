@@ -21,6 +21,7 @@ public slots:
 	
 private slots:
 	void testXfade();
+	void deleteSource(VideoSource *source);
 	
 private:
 	QString m_videoFile;

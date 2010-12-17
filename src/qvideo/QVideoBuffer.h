@@ -1,6 +1,16 @@
 #ifndef QVIDEOBUFFER_H
 #define QVIDEOBUFFER_H
 
+
+#ifndef UINT64_C
+#define INT64_C(c) (c ## LL)
+#define UINT64_C(c) (c ## ULL)
+#endif
+
+// Defn from http://gcc.gnu.org/ml/gcc-bugs/2002-10/msg00259.html
+#ifndef INT64_C
+# define INT64_C(c) c ## LL
+#endif
 #include <QtCore>
 #include <QtGui>
 extern "C" {

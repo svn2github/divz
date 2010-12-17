@@ -115,6 +115,7 @@ class GLVideoDrawable : public GLDrawable
 	//Q_PROPERTY(VideoSource* videoSource READ videoSource WRITE setVideoSource);
 	
 	Q_PROPERTY(Qt::AspectRatioMode aspectRatioMode READ aspectRatioMode WRITE setAspectRatioMode);
+	Q_PROPERTY(bool ignoreAspectRatio READ ignoreAspectRatio WRITE setIgnoreAspectRatio);
 	
 	Q_PROPERTY(bool xfadeEnabled READ xfadeEnabled WRITE setXFadeEnabled);
 	Q_PROPERTY(int xfadeLength READ xfadeLength WRITE setXFadeLength);
@@ -149,6 +150,7 @@ public:
 	QPointF textureOffset() { return m_textureOffset; }
 	
 	Qt::AspectRatioMode aspectRatioMode() { return m_aspectRatioMode; }
+	bool ignoreAspectRatio() { return m_ignoreAspectRatio; }
 	
 	// This is the normal size of the content in pixels - independent of the specified rect().
 	// E.g. if its an image, this is the size of the image, if this is text, then the size
@@ -182,6 +184,7 @@ public slots:
 	void setCropBottomRight(QPointF);
 	
 	void setAspectRatioMode(Qt::AspectRatioMode mode);
+	void setIgnoreAspectRatio(bool flag);
 	
 	void setXFadeEnabled(bool flag);
 	void setXFadeLength(int length);
@@ -372,6 +375,8 @@ private:
 	class VideoSender *m_videoSender;
 	bool m_videoSenderEnabled;
 	int m_videoSenderPort;
+	
+	bool m_ignoreAspectRatio;
 	
 	static int m_videoSenderPortAllocator;
 };
