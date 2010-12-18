@@ -997,7 +997,7 @@
   <customwidget>
    <class>KeystonePointsEditor</class>
    <extends>QWidget</extends>
-   <header>KeystonePointsEditor.h</header>
+   <header>../KeystonePointsEditor.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>
