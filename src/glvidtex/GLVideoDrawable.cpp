@@ -1642,6 +1642,9 @@ void GLVideoDrawable::paint(QPainter * painter, const QStyleOptionGraphicsItem *
 					 imageFormat == QImage::Format_ARGB6666_Premultiplied ? 3 :
 					 4),
 				imageFormat);
+				
+			if(m_displayOpts.flipHorizontal || m_displayOpts.flipVertical)
+				image = image.mirrored(m_displayOpts.flipHorizontal, m_displayOpts.flipVertical);
 
 			painter->drawImage(target,image,source);
 			//qDebug() << "GLVideoDrawable::paint: Painted RAW frame, size:" << image.size()<<", source:"<<source<<", target:"<<target;

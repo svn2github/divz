@@ -169,7 +169,7 @@ void EditorWindow::createUI()
 	
 	// Now create the center panel - on top will be a list view, below it the graphics view
 	m_graphicsView = new EditorGraphicsView();
-	//m_graphicsView->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
+	m_graphicsView->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
 	
 // 	m_graphicsScene = new GLEditorGraphicsScene();
 // 	m_graphicsView->setScene(m_graphicsScene);
@@ -365,11 +365,15 @@ GLScene *EditorWindow::scene()
 void EditorWindow::addDrawable(GLDrawable *drawable)
 {
 	drawable->addShowAnimation(GLDrawable::AnimFade);
-	if(m_graphicsScene)
-		drawable->setRect(m_graphicsScene->sceneRect());
 	scene()->addDrawable(drawable);
-	drawable->setSelected(true);
 	
+	if(m_graphicsScene)
+	{
+		drawable->setRect(m_graphicsScene->sceneRect());
+		m_graphicsScene->setEditingMode(true);
+	}
+	
+	drawable->setSelected(true);
 	drawable->show();
 }
 
@@ -487,7 +491,13 @@ QWidget *EditorWindow::createPropertyEditors(GLDrawable *gld)
 		if(GLVideoInputDrawable *item = dynamic_cast<GLVideoInputDrawable*>(gld))
 		{
 			// show device selection box
-			// show deinterlace checkbox
+			
+			opts.type = QVariant::Bool;
+			opts.text = "Deinterlace video";
+			lay->addRow(PropertyEditorFactory::generatePropertyEditor(item, "deinterlace", SLOT(setDeinterlace(bool)), opts));
+			
+			opts.text = "Flip horizontal";
+			lay->addRow(PropertyEditorFactory::generatePropertyEditor(item, "flipHorizontal", SLOT(setFlipHorizontal(bool)), opts));
 			
 			opts.text = "Ignore video aspect ratio";
 			lay->addRow(PropertyEditorFactory::generatePropertyEditor(item, "ignoreAspectRatio", SLOT(setIgnoreAspectRatio(bool)), opts));
@@ -581,10 +591,10 @@ QWidget *EditorWindow::createPropertyEditors(GLDrawable *gld)
 			PropertyEditorFactory::PropertyEditorOptions opts;
 			opts.stringIsFile = true;
 			opts.fileTypeFilter = tr("Image Files (*.png *.jpg *.bmp *.svg *.xpm *.gif);;Any File (*.*)");
-			lay->addRow(tr("&Image:"), PropertyEditorFactory::generatePropertyEditor(item, "imageFile", SLOT(setImageFile(const QString&)), opts));
+			lay->addRow(tr("&Image:"), PropertyEditorFactory::generatePropertyEditor(item, "imageFile", SLOT(setImageFile(const QString&)), opts, SIGNAL(imageFileChanged(const QString&))));
 			
 			opts.text = "Ignore image aspect ratio";
-			lay->addRow(PropertyEditorFactory::generatePropertyEditor(item, "ignoreAspectRatio", SLOT(setIgnoreAspectRatio(bool)), opts, SIGNAL(imageFileChanged(const QString&))));
+			lay->addRow(PropertyEditorFactory::generatePropertyEditor(item, "ignoreAspectRatio", SLOT(setIgnoreAspectRatio(bool)), opts));
 		}
 		
 		
