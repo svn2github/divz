@@ -55,6 +55,8 @@ bool GLVideoLoopDrawable::setVideoFile(const QString& file)
 	
 	setVideoSource(source);
 	
+	emit videoFileChanged(file);
+	
 	//qDebug() << "GLVideoLoopDrawable::setVideoFile: Created video thread:"<<source;
 	
 	return true;

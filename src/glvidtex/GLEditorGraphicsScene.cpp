@@ -369,3 +369,18 @@ void GLEditorGraphicsScene::deleteSelectedItems()
 		//delete content;
 	}
 }
+
+void GLEditorGraphicsScene::setEditingMode(bool flag)
+{
+	m_editingMode = flag;
+	
+	QList<QGraphicsItem*> list = items();
+	foreach(QGraphicsItem *item, list)
+	{
+		GLDrawable *gld = dynamic_cast<GLDrawable*>(item);	
+		if(gld)
+			gld->editingModeChanged(flag);
+	}
+	
+	update();
+}

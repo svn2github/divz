@@ -15,6 +15,9 @@ public:
 	QString videoFile() { return m_videoFile; }
 	double videoLength() { return m_videoLength; } // in seconds
 	
+signals:
+	void videoFileChanged(const QString&);
+	
 public slots:
 	bool setVideoFile(const QString&);
 	

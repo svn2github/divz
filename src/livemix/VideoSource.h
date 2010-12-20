@@ -43,8 +43,8 @@ public:
 
 	
 	int refCount() { return m_refCount; }
-	virtual void registerConsumer(VideoWidget *consumer);
-	virtual void release(VideoWidget *consumer=0);
+	virtual void registerConsumer(QObject *consumer);
+	virtual void release(QObject *consumer=0);
 
 	virtual VideoFrame frame();
 	
@@ -56,6 +56,9 @@ public:
 signals:
 	void frameReady();
 
+protected slots:
+	void consumerDestroyed();
+	
 protected:
 	virtual void run();
 	virtual void enqueue(VideoFrame);
@@ -68,7 +71,7 @@ protected:
 
 	//QQueue<VideoFrame> m_frameQueue;
 	VideoFrameQueue m_frameQueue;
-	QList<VideoWidget*> m_consumerList;
+	QList<QObject*> m_consumerList;
 	int m_refCount;
 	bool m_isBuffered;
 	VideoFrame m_singleFrame;

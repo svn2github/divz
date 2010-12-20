@@ -15,7 +15,10 @@ public:
 	
 	QString imageFile() { return m_imageFile; }
 	QImage image() { return m_image; }
-	
+		
+signals:
+	void imageFileChanged(const QString&);
+
 public slots:
 	void setImage(const QImage&);
 	bool setImageFile(const QString&);

@@ -51,6 +51,8 @@ bool GLVideoFileDrawable::setVideoFile(const QString& file)
 	
 	#endif
 	
+	emit videoFileChanged(file);
+	
 	return true;
 	
 }

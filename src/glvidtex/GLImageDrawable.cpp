@@ -95,6 +95,9 @@ bool GLImageDrawable::setImageFile(const QString& file)
 		return false;
 	}
 	setImage(image);
+	
+	emit imageFileChanged(file);
+	
 	return true;
 	
 }

@@ -6,9 +6,9 @@
 class GLScene;
 class GLWidget;
 class GLDrawable;
+class GLEditorGraphicsScene;
 
 typedef QList<GLDrawable*> GLDrawableList;
-
 
 class GLSceneLayoutItem : public QObject
 {
@@ -140,6 +140,9 @@ public:
 	GLSceneLayout * lookupLayout(int id);
 	
 	bool listOnlyUserItems() { return m_listOnlyUserItems; }
+	
+	//void setGraphicsScene(QGraphicsScene *);
+	GLEditorGraphicsScene *graphicsScene();
 
 public slots:
 	void setSceneName(const QString& name);
@@ -172,6 +175,8 @@ protected:
 		
 	GLWidget *m_glWidget;
 	GLSceneLayoutListModel *m_layoutListModel;
+	
+	GLEditorGraphicsScene *m_graphicsScene;
 };
 	
 

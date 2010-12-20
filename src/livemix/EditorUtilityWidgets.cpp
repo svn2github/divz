@@ -304,45 +304,55 @@ PropertyChangeListener::PropertyChangeListener(QObject *source, const char *chan
 	, m_property(prop)
 {
 // 	qDebug() << "PropertyChangeListener: connecting "<<source<<"::"<<changeSignal<<" to "<<receiver<<"::"<<receiverSlot<<", value:"<<value<<", prop:"<<prop;
-	switch(value.type())
-	{
-		case QVariant::Int:
-			connect(this, SIGNAL(value(int)), receiver, receiverSlot);
-			break;
-		case QVariant::Bool:
-			connect(this, SIGNAL(value(bool)), receiver, receiverSlot);
-			break;
-		case QVariant::Double:
-			connect(this, SIGNAL(value(double)), receiver, receiverSlot);
-			break;
-		case QVariant::String:
-			connect(this, SIGNAL(value(const QString&)), receiver, receiverSlot);
-			break;
-		case QVariant::Size:
-			connect(this, SIGNAL(value(const QSize&)), receiver, receiverSlot);
-			break;
-		case QVariant::Point:
-			connect(this, SIGNAL(value(const QPoint&)), receiver, receiverSlot);
-			break;
-		case QVariant::SizeF:
-			connect(this, SIGNAL(value(const QSizeF&)), receiver, receiverSlot);
-			break;
-		case QVariant::PointF:
-			connect(this, SIGNAL(value(const QPointF&)), receiver, receiverSlot);
-			break;
-		default:
-			qDebug() << "PropertyChangeListener: Unable to handle value type:"<<value.type();
-			break;
-	};
-	
+
 	QString signal(changeSignal);
-	if(signal.indexOf("QString"))
+	if(signal.indexOf("QVariant") > 0)
 	{
-		connect(source, changeSignal, this, SLOT(receiver(const QString&, const QVariant&)));
+	
+		switch(value.type())
+		{
+			case QVariant::Int:
+				connect(this, SIGNAL(value(int)), receiver, receiverSlot);
+				break;
+			case QVariant::Bool:
+				connect(this, SIGNAL(value(bool)), receiver, receiverSlot);
+				break;
+			case QVariant::Double:
+				connect(this, SIGNAL(value(double)), receiver, receiverSlot);
+				break;
+			case QVariant::String:
+				connect(this, SIGNAL(value(const QString&)), receiver, receiverSlot);
+				break;
+			case QVariant::Size:
+				connect(this, SIGNAL(value(const QSize&)), receiver, receiverSlot);
+				break;
+			case QVariant::Point:
+				connect(this, SIGNAL(value(const QPoint&)), receiver, receiverSlot);
+				break;
+			case QVariant::SizeF:
+				connect(this, SIGNAL(value(const QSizeF&)), receiver, receiverSlot);
+				break;
+			case QVariant::PointF:
+				connect(this, SIGNAL(value(const QPointF&)), receiver, receiverSlot);
+				break;
+			default:
+				qDebug() << "PropertyChangeListener: Unable to handle value type:"<<value.type();
+				break;
+		};
+		
+		if(signal.indexOf("QString")  > 0 &&
+		   signal.indexOf("QVariant") > 0)
+		{
+			connect(source, changeSignal, this, SLOT(receiver(const QString&, const QVariant&)));
+		}
+		else
+		{
+			connect(source, changeSignal, this, SLOT(receiver(const QVariant&)));
+		}
 	}
 	else
 	{
-		connect(source, changeSignal, this, SLOT(receiver(const QVariant&)));
+		connect(source, changeSignal, receiver, receiverSlot);
 	}
 }
 

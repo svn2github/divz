@@ -48,20 +48,25 @@ VideoSource::VideoSource(QObject *parent)
 	, m_killed(false)
 	, m_isBuffered(true)
 {
-	m_frameQueue.setMaxByteSize(1024 * 1024 // 1 MB
-				         *  512 // 512 MB
+	m_frameQueue.setMaxByteSize(1024 * 1024 //  1 MB
+				         *   64 // 64 MB
 				   );
 
 	initAV();
 }
 
-void VideoSource::registerConsumer(VideoWidget *consumer)
+void VideoSource::registerConsumer(QObject *consumer)
 {
 	m_consumerList.append(consumer);
+	connect(consumer, SIGNAL(destroyed()), this, SLOT(consumerDestroyed()));
 	//qDebug() << "VideoSource::registerConsumer(): "<<this<<": consumer list:"<<m_consumerList.size(); //m_refCount:"<<m_refCount;
 }
 
-VideoSource::~VideoSource() {}
+VideoSource::~VideoSource() 
+{
+	if(!m_killed)
+		destroySource();
+}
 
 void VideoSource::run()
 {
@@ -96,7 +101,12 @@ void VideoSource::setIsBuffered(bool flag)
 		m_frameQueue.clear();
 }
 
-void VideoSource::release(VideoWidget *consumer)
+void VideoSource::consumerDestroyed()
+{
+	release(sender());
+}
+
+void VideoSource::release(QObject *consumer)
 {
 	if(!consumer)
 		return;

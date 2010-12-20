@@ -13,6 +13,7 @@
 #include "GLVideoReceiverDrawable.h"
 #include "GLVideoMjpegDrawable.h"
 
+#include "GLEditorGraphicsScene.h"
 
 // ****************************
 // GLSceneLayoutItem
@@ -248,6 +249,7 @@ GLScene::GLScene(QObject *parent)
 	, m_glWidget(0)
 	, m_layoutListModel(0)
 	, m_listOnlyUserItems(false)
+	, m_graphicsScene(0)
 {
 	
 }
@@ -256,6 +258,9 @@ GLScene::GLScene(QByteArray& ba, QObject *parent)
 	: QAbstractListModel(parent)
 	, m_sceneId(-1)
 	, m_glWidget(0)
+	, m_layoutListModel(0)
+	, m_listOnlyUserItems(false)
+	, m_graphicsScene(0)
 {
 	fromByteArray(ba);
 }
@@ -475,6 +480,8 @@ void GLScene::addDrawable(GLDrawable *d)
 	if(m_glWidget)
 		m_glWidget->addDrawable(d);
 	
+	graphicsScene()->addItem(d);
+		
 	endInsertRows();
 }
 
@@ -505,6 +512,8 @@ void GLScene::removeDrawable(GLDrawable *d)
 
 	if(m_glWidget)
 		m_glWidget->removeDrawable(d);
+		
+	graphicsScene()->removeItem(d);
 	
 	endRemoveRows();
 }
@@ -512,6 +521,13 @@ void GLScene::removeDrawable(GLDrawable *d)
 GLDrawable * GLScene::lookupDrawable(int id)
 {
 	return m_drawableIdLookup[id];
+}
+
+GLEditorGraphicsScene * GLScene::graphicsScene()
+{
+	if(!m_graphicsScene)
+		m_graphicsScene = new GLEditorGraphicsScene();
+	return m_graphicsScene;
 }
 
 // This is the 'crossover' method which

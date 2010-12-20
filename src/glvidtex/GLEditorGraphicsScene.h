@@ -16,6 +16,8 @@ public:
 	
 	void clear();
 	
+	bool isEditingMode() { return m_editingMode; }
+	
 signals:
 	void selectionChanged();
 	void drawableSelected(GLDrawable*);
@@ -25,6 +27,8 @@ public slots:
 	void setSceneRect(const QRectF&);
 	void removeDrawables();
 	void deleteSelectedItems();
+	
+	void setEditingMode(bool flag=true);
 	
 protected:
 	friend class GLDrawable;
@@ -42,7 +46,7 @@ private:
 	RectItem * m_bgRect;
 	RectItem * m_dragRect;
 	bool m_lockClearSelection;	
-	
+	bool m_editingMode;
 };
 
 #endif

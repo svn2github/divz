@@ -22,6 +22,10 @@ public:
 	
 	const QSizeF& canvasSize() { return m_canvasSize; }
 	
+	// isStandalone: If true, then the window will attempt to load the first argument
+	// 		on the command line as a group file, and save to it when closed.
+	bool isStandalone() { return m_isStandalone; }
+	
 public slots:
 	void setGroup(GLSceneGroup*, GLScene *currentScene=0);
 	void setCurrentScene(GLScene *);
@@ -37,6 +41,8 @@ public slots:
 	void dupScene();
 	
 	void setCanvasSize(const QSizeF&);
+	
+	void setIsStandalone(bool);
 	
 protected slots:
 	void slideSelected(const QModelIndex &);
@@ -82,6 +88,8 @@ protected:
 	EditorGraphicsView *m_graphicsView;
 	
 	QString m_fileName;
+	
+	bool m_isStandalone;
 };
 
 

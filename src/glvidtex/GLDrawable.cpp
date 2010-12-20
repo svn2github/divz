@@ -49,13 +49,13 @@ GLDrawable::GLDrawable(QObject *parent)
 {
 	// QGraphicsItem
 	{
-		// customize item's behavior
-		setFlags(QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsFocusable | QGraphicsItem::ItemIsSelectable);
+// 		// customize item's behavior
+ 		setFlag(QGraphicsItem::ItemIsFocusable, true);
 		#if QT_VERSION >= 0x040600
-			setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
+ 			setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
 		#endif
-		// allow some items (eg. the shape controls for text) to be shown
-		setFlag(QGraphicsItem::ItemClipsChildrenToShape, false);
+// 		// allow some items (eg. the shape controls for text) to be shown
+ 		setFlag(QGraphicsItem::ItemClipsChildrenToShape, false);
 		setAcceptHoverEvents(true);
 	
 		bool noRescale=false;
@@ -72,12 +72,30 @@ GLDrawable::GLDrawable(QObject *parent)
 		createCorner(CornerItem::MidRight, noRescale);
 		createCorner(CornerItem::MidBottom, noRescale);
 		
-		setControlsVisible(false);
+		//setControlsVisible(false);
+		editingModeChanged(false);
 	}
 	
 	updateAnimValues();
 	
 	m_playlist = new GLDrawablePlaylist(this);
+}
+
+void GLDrawable::editingModeChanged(bool flag)
+{
+	if(!flag)
+	{
+		setFlag(QGraphicsItem::ItemIsMovable, false);
+		setFlag(QGraphicsItem::ItemIsSelectable, false);
+		setControlsVisible(false);
+	}
+	else
+	{
+		setFlag(QGraphicsItem::ItemIsMovable, true);
+		setFlag(QGraphicsItem::ItemIsSelectable, true);
+	}
+	
+	updateGL();
 }
 
 void GLDrawable::updateAnimValues()
@@ -773,8 +791,10 @@ void GLDrawable::initGL()
 
 void GLDrawable::paint(QPainter * painter, const QStyleOptionGraphicsItem * /*option*/, QWidget * /*widget*/)
 {
-	if(isSelected() &&
-		dynamic_cast<GLEditorGraphicsScene*>(scene()))
+	GLEditorGraphicsScene *castedScene = dynamic_cast<GLEditorGraphicsScene*>(scene());
+	if(!castedScene)
+		return;
+	if(isSelected() && castedScene->isEditingMode())
 	{
 		painter->setRenderHint(QPainter::Antialiasing, true);
 		painter->setPen(QPen(qApp->palette().color(QPalette::Highlight), 1.0));
@@ -1082,7 +1102,8 @@ void GLDrawable::setControlsVisible(bool visible)
 {
 // 	if(m_contextHint != MyGraphicsScene::Editor)
 // 		return;
-	if(!dynamic_cast<GLEditorGraphicsScene*>(scene()))
+	GLEditorGraphicsScene *castedScene = dynamic_cast<GLEditorGraphicsScene*>(scene());
+	if(!castedScene || !castedScene->isEditingMode())
 		visible = false;
 
 	m_controlsVisible = visible;

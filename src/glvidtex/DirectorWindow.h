@@ -14,6 +14,7 @@ class GLScene;
 class GLDrawable;
 class GLPlaylistItem;
 class PlayerConnectionList;
+class GLEditorGraphicsScene;
 
 class DirectorWindow : public QMainWindow
 {
@@ -97,7 +98,7 @@ private:
 	GLDrawable *m_currentDrawable;
 	GLPlaylistItem *m_currentItem;
 	
-	QGraphicsScene *m_graphicsScene;
+	GLEditorGraphicsScene *m_graphicsScene;
 };
 
 #endif // DIRECTORWINDOW_H

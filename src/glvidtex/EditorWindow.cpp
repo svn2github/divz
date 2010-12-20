@@ -24,7 +24,8 @@ EditorWindow::EditorWindow(QWidget *parent)
 	, m_currentLayerPropsEditor(0)
 	, m_rtfEditor(0)
 	, m_currentDrawable(0)
-	
+	, m_graphicsScene(0)
+	, m_isStandalone(false)
 {
 	createUI();
 	setCanvasSize(m_canvasSize);
@@ -33,29 +34,37 @@ EditorWindow::EditorWindow(QWidget *parent)
 	setUnifiedTitleAndToolBarOnMac(true);
 	
 	readSettings();
+}
+
+void EditorWindow::setIsStandalone(bool flag)
+{
+	m_isStandalone = flag;
 	
-	QStringList argList = qApp->arguments();
-	if(argList.size() > 1)
+	if(flag && m_fileName.isEmpty())
 	{
-		QString fileArg = argList.at(1);
-		if(!fileArg.isEmpty())
+		QStringList argList = qApp->arguments();
+		if(argList.size() > 1)
 		{
-			m_fileName = fileArg;
-			QFile file(fileArg);
-			if (!file.open(QIODevice::ReadOnly)) 
+			QString fileArg = argList.at(1);
+			if(!fileArg.isEmpty())
 			{
-				qDebug() << "EditorWindow: Unable to read group file: "<<fileArg;
-			}
-			else
-			{
-				QByteArray array = file.readAll();
-				
-				GLSceneGroup *group = new GLSceneGroup();
-				group->fromByteArray(array);
-				
-				setGroup(group);
-				
-				qDebug() << "EditorWindow: [DEBUG]: Loaded File: "<<fileArg<<", GroupID: "<<group->groupId();
+				m_fileName = fileArg;
+				QFile file(fileArg);
+				if (!file.open(QIODevice::ReadOnly)) 
+				{
+					qDebug() << "EditorWindow: Unable to read group file: "<<fileArg;
+				}
+				else
+				{
+					QByteArray array = file.readAll();
+					
+					GLSceneGroup *group = new GLSceneGroup();
+					group->fromByteArray(array);
+					
+					setGroup(group);
+					
+					qDebug() << "EditorWindow: [DEBUG]: Loaded File: "<<fileArg<<", GroupID: "<<group->groupId();
+				}
 			}
 		}
 	}
@@ -68,10 +77,13 @@ EditorWindow::~EditorWindow()
 
 void EditorWindow::closeEvent(QCloseEvent *event)
 {
+	if(m_graphicsScene)
+		m_graphicsScene->setEditingMode(false);
+		
 	writeSettings();
 	event->accept();
 	
-	if(!m_fileName.isEmpty())
+	if(m_isStandalone && !m_fileName.isEmpty())
 	{
 		QFile file(m_fileName);
 		// Open file
@@ -159,10 +171,10 @@ void EditorWindow::createUI()
 	m_graphicsView = new EditorGraphicsView();
 	//m_graphicsView->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
 	
-	m_graphicsScene = new GLEditorGraphicsScene();
-	m_graphicsView->setScene(m_graphicsScene);
-	m_graphicsScene->setSceneRect(QRectF(0,0,1000.,750.));
-	connect(m_graphicsScene, SIGNAL(drawableSelected(GLDrawable*)), this, SLOT(drawableSelected(GLDrawable*)));
+// 	m_graphicsScene = new GLEditorGraphicsScene();
+// 	m_graphicsView->setScene(m_graphicsScene);
+// 	m_graphicsScene->setSceneRect(QRectF(0,0,1000.,750.));
+// 	connect(m_graphicsScene, SIGNAL(drawableSelected(GLDrawable*)), this, SLOT(drawableSelected(GLDrawable*)));
 	
 	// Add the layout list (top), and GV (bottom), then add the middle splitter to the right side splitter
 	//m_centerSplitter->addWidget(m_layoutList);
@@ -286,29 +298,41 @@ void EditorWindow::setCurrentScene(GLScene *scene)
 	//qDebug() << "EditorWindow::setCurrentScene: "<<scene;
 	m_scene = scene;
 	
-	GLDrawableList list = m_scene->drawableList();
-	
-	m_graphicsScene->clear();
-	
-	foreach(GLDrawable *drawable, list)
-		m_graphicsScene->addItem(drawable);
-	
-	connect(m_scene, SIGNAL(drawableAdded(GLDrawable*)), this, SLOT(drawableAdded(GLDrawable*)));
-	connect(m_scene, SIGNAL(drawableRemoved(GLDrawable*)), this, SLOT(drawableRemoved(GLDrawable*)));
-	
-	if(!list.isEmpty())
-		list.first()->setSelected(true);
+	if(m_scene)
+	{
+		if(m_graphicsScene)
+			m_graphicsScene->setEditingMode(false);
+		
+		m_graphicsScene = m_scene->graphicsScene();
+		m_graphicsScene->setEditingMode(true);
+		m_graphicsView->setScene(m_graphicsScene);
+		m_graphicsScene->setSceneRect(QRectF(0,0,1000.,750.));
+		connect(m_graphicsScene, SIGNAL(drawableSelected(GLDrawable*)), this, SLOT(drawableSelected(GLDrawable*)));
+		
+  		GLDrawableList list = m_scene->drawableList();
+// 		
+// 		m_graphicsScene->clear();
+// 		
+// 		foreach(GLDrawable *drawable, list)
+// 			m_graphicsScene->addItem(drawable);
+		
+// 		connect(m_scene, SIGNAL(drawableAdded(GLDrawable*)), this, SLOT(drawableAdded(GLDrawable*)));
+// 		connect(m_scene, SIGNAL(drawableRemoved(GLDrawable*)), this, SLOT(drawableRemoved(GLDrawable*)));
+		
+		if(!list.isEmpty())
+			list.first()->setSelected(true);
+	}
 }
 
 void EditorWindow::drawableAdded(GLDrawable *d)
 {
 	//qDebug() << "EditorWindow::drawableAdded: "<<(QObject*)d;
-	m_graphicsScene->addItem(d);
+	//m_graphicsScene->addItem(d);
 }
 
 void EditorWindow::drawableRemoved(GLDrawable *d)
 {
-	m_graphicsScene->removeItem(d);
+	//m_graphicsScene->removeItem(d);
 }
 
 GLSceneGroup * EditorWindow::group()
@@ -341,7 +365,8 @@ GLScene *EditorWindow::scene()
 void EditorWindow::addDrawable(GLDrawable *drawable)
 {
 	drawable->addShowAnimation(GLDrawable::AnimFade);
-	drawable->setRect(m_graphicsScene->sceneRect());
+	if(m_graphicsScene)
+		drawable->setRect(m_graphicsScene->sceneRect());
 	scene()->addDrawable(drawable);
 	drawable->setSelected(true);
 	
@@ -476,7 +501,7 @@ QWidget *EditorWindow::createPropertyEditors(GLDrawable *gld)
 			opts.stringIsFile = true;
 			opts.fileTypeFilter = tr("Video Files (*.wmv *.mpeg *.mpg *.avi *.wmv *.flv *.mov *.mp4 *.m4a *.3gp *.3g2 *.mj2 *.mjpeg *.ipod *.m4v *.gsm *.swf *.dv *.dvd *.asf *.mtv *.roq *.aac *.ac3 *.aiff *.alaw *.iif);;Any File (*.*)");
 			
-			lay->addRow(tr("&File:"), PropertyEditorFactory::generatePropertyEditor(item, "videoFile", SLOT(setVideoFile(const QString&)), opts));
+			lay->addRow(tr("&File:"), PropertyEditorFactory::generatePropertyEditor(item, "videoFile", SLOT(setVideoFile(const QString&)), opts, SIGNAL(videoFileChanged(const QString&))));
 			
 			opts.text = "Ignore video aspect ratio";
 			lay->addRow(PropertyEditorFactory::generatePropertyEditor(item, "ignoreAspectRatio", SLOT(setIgnoreAspectRatio(bool)), opts));
@@ -488,7 +513,7 @@ QWidget *EditorWindow::createPropertyEditors(GLDrawable *gld)
 			opts.stringIsFile = true;
 			opts.fileTypeFilter = tr("Video Files (*.wmv *.mpeg *.mpg *.avi *.wmv *.flv *.mov *.mp4 *.m4a *.3gp *.3g2 *.mj2 *.mjpeg *.ipod *.m4v *.gsm *.swf *.dv *.dvd *.asf *.mtv *.roq *.aac *.ac3 *.aiff *.alaw *.iif);;Any File (*.*)");
 			
-			lay->addRow(tr("&File:"), PropertyEditorFactory::generatePropertyEditor(item, "videoFile", SLOT(setVideoFile(const QString&)), opts));
+			lay->addRow(tr("&File:"), PropertyEditorFactory::generatePropertyEditor(item, "videoFile", SLOT(setVideoFile(const QString&)), opts, SIGNAL(videoFileChanged(const QString&))));
 			
 			opts.text = "Ignore video aspect ratio";
 			lay->addRow(PropertyEditorFactory::generatePropertyEditor(item, "ignoreAspectRatio", SLOT(setIgnoreAspectRatio(bool)), opts));
@@ -530,11 +555,11 @@ QWidget *EditorWindow::createPropertyEditors(GLDrawable *gld)
 			
 			opts.reset();
 		
-			QWidget *edit = PropertyEditorFactory::generatePropertyEditor(gld, "plainText", SLOT(setPlainText(const QString&)), opts);
+			QWidget *edit = PropertyEditorFactory::generatePropertyEditor(gld, "plainText", SLOT(setPlainText(const QString&)), opts, SIGNAL(plainTextChanged(const QString&)));
 			
-			QLineEdit *line = dynamic_cast<QLineEdit*>(edit);
-			if(line)
-				connect(gld, SIGNAL(plainTextChanged(const QString&)), line, SLOT(setText(const QString&)));
+// 			QLineEdit *line = dynamic_cast<QLineEdit*>(edit);
+// 			if(line)
+// 				connect(gld, SIGNAL(plainTextChanged(const QString&)), line, SLOT(setText(const QString&)));
 			
 			QWidget *base = new QWidget();
 			
@@ -559,7 +584,7 @@ QWidget *EditorWindow::createPropertyEditors(GLDrawable *gld)
 			lay->addRow(tr("&Image:"), PropertyEditorFactory::generatePropertyEditor(item, "imageFile", SLOT(setImageFile(const QString&)), opts));
 			
 			opts.text = "Ignore image aspect ratio";
-			lay->addRow(PropertyEditorFactory::generatePropertyEditor(item, "ignoreAspectRatio", SLOT(setIgnoreAspectRatio(bool)), opts));
+			lay->addRow(PropertyEditorFactory::generatePropertyEditor(item, "ignoreAspectRatio", SLOT(setIgnoreAspectRatio(bool)), opts, SIGNAL(imageFileChanged(const QString&))));
 		}
 		
 		
@@ -612,7 +637,8 @@ void EditorWindow::rtfEditorSave()
 void EditorWindow::setCanvasSize(const QSizeF& size)
 {
 	m_canvasSize = size;
-	m_graphicsScene->setSceneRect(QRectF(0,0,size.width(),size.height()));
+	if(m_graphicsScene)
+		m_graphicsScene->setSceneRect(QRectF(0,0,size.width(),size.height()));
 }
 
 void EditorWindow::addScene()

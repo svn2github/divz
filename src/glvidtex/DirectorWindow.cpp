@@ -4,6 +4,7 @@
 #include "EditorWindow.h"
 #include "../livemix/EditorUtilityWidgets.h"
 #include "RtfEditorWindow.h"
+#include "GLEditorGraphicsScene.h"
 
 #include <QFileInfo>
 #include <QFileDialog>
@@ -63,11 +64,11 @@ DirectorWindow::~DirectorWindow()
 
 void DirectorWindow::setupUI()
 {
-	m_graphicsScene = new QGraphicsScene();
-	ui->graphicsView->setScene(m_graphicsScene);
-	//ui->graphicsView->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
+// 	m_graphicsScene = new QGraphicsScene();
+// 	ui->graphicsView->setScene(m_graphicsScene);
+	ui->graphicsView->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
 	ui->graphicsView->setBackgroundBrush(Qt::black);
-	m_graphicsScene->setSceneRect(QRectF(0,0,1000.,750.));
+	//m_graphicsScene->setSceneRect(QRectF(0,0,1000.,750.));
 	
 	
 	connect(ui->actionAdd_New_Group, SIGNAL(triggered()), this, SLOT(addNewGroup()));
@@ -489,7 +490,8 @@ void DirectorWindow::setCollection(GLSceneGroupCollection *collection)
 	foreach(PlayerConnection *con, m_players->players())
 		con->setCanvasSize(m_collection->canvasSize());
 		
-	m_graphicsScene->setSceneRect(QRectF(QPointF(0,0),m_collection->canvasSize()));
+	if(m_graphicsScene)
+		m_graphicsScene->setSceneRect(QRectF(QPointF(0,0),m_collection->canvasSize()));
 }
 void DirectorWindow::setCurrentGroup(GLSceneGroup *group, GLScene */*currentScene*/)
 {
@@ -531,24 +533,30 @@ void DirectorWindow::setCurrentScene(GLScene *scene)
 	ui->sceneListview->setModel(scene);
 	scene->setListOnlyUserItems(true);
 	
-	GLDrawableList list = m_currentScene->drawableList();
-	
-	// removeItem() before calling clear() because clear() deletes the drawables
-	QList<QGraphicsItem*> itemlist = m_graphicsScene->items();
-	foreach(QGraphicsItem *item, itemlist)
-	{
-		GLDrawable *gld = dynamic_cast<GLDrawable*>(item);	
-		if(gld)
-			m_graphicsScene->removeItem(gld);
-	}
-	
-	m_graphicsScene->clear();
-	
-	foreach(GLDrawable *drawable, list)
-	{
-		drawable->setSelected(false);
-		m_graphicsScene->addItem(drawable);
-	}
+// 	GLDrawableList list = m_currentScene->drawableList();
+// 	
+// 	// removeItem() before calling clear() because clear() deletes the drawables
+// 	QList<QGraphicsItem*> itemlist = m_graphicsScene->items();
+// 	foreach(QGraphicsItem *item, itemlist)
+// 	{
+// 		GLDrawable *gld = dynamic_cast<GLDrawable*>(item);	
+// 		if(gld)
+// 			m_graphicsScene->removeItem(gld);
+// 	}
+// 	
+// 	m_graphicsScene->clear();
+// 	
+// 	foreach(GLDrawable *drawable, list)
+// 	{
+// 		drawable->setSelected(false);
+// 		m_graphicsScene->addItem(drawable);
+// 	}
+
+	m_graphicsScene = m_currentScene->graphicsScene();
+	if(!m_graphicsScene)
+		qDebug() << "Directorwindow::setCurrentScene: "<<scene<<" Internal Error: No graphics scene returned. Probably will crash now.";
+	m_graphicsScene->setSceneRect(QRectF(QPointF(0,0),m_collection->canvasSize()));
+	ui->graphicsView->setScene(m_graphicsScene);
 	
 	bool hasUserItems = scene->size();
 	
@@ -638,7 +646,7 @@ void DirectorWindow::setCurrentDrawable(GLDrawable *gld)
 		opts.stringIsFile = true;
 		opts.fileTypeFilter = tr("Video Files (*.wmv *.mpeg *.mpg *.avi *.wmv *.flv *.mov *.mp4 *.m4a *.3gp *.3g2 *.mj2 *.mjpeg *.ipod *.m4v *.gsm *.swf *.dv *.dvd *.asf *.mtv *.roq *.aac *.ac3 *.aiff *.alaw *.iif);;Any File (*.*)");
 
-		ui->itemPropLayout->addRow(tr("&File:"), PropertyEditorFactory::generatePropertyEditor(item, "videoFile", SLOT(setVideoFile(const QString&)), opts));
+		ui->itemPropLayout->addRow(tr("&File:"), PropertyEditorFactory::generatePropertyEditor(item, "videoFile", SLOT(setVideoFile(const QString&)), opts, SIGNAL(videoFileChanged(const QString&))));
 
 		typeName = "Video Loop Item";
 	}
@@ -649,7 +657,7 @@ void DirectorWindow::setCurrentDrawable(GLDrawable *gld)
 		opts.stringIsFile = true;
 		opts.fileTypeFilter = tr("Video Files (*.wmv *.mpeg *.mpg *.avi *.wmv *.flv *.mov *.mp4 *.m4a *.3gp *.3g2 *.mj2 *.mjpeg *.ipod *.m4v *.gsm *.swf *.dv *.dvd *.asf *.mtv *.roq *.aac *.ac3 *.aiff *.alaw *.iif);;Any File (*.*)");
 		
-		ui->itemPropLayout->addRow(tr("&File:"), PropertyEditorFactory::generatePropertyEditor(item, "videoFile", SLOT(setVideoFile(const QString&)), opts));
+		ui->itemPropLayout->addRow(tr("&File:"), PropertyEditorFactory::generatePropertyEditor(item, "videoFile", SLOT(setVideoFile(const QString&)), opts, SIGNAL(videoFileChanged(const QString&))));
 
 		typeName = "Video Item";
 	}
@@ -658,11 +666,11 @@ void DirectorWindow::setCurrentDrawable(GLDrawable *gld)
 	{
 		opts.reset();
 		
-		QWidget *edit = PropertyEditorFactory::generatePropertyEditor(gld, "plainText", SLOT(setPlainText(const QString&)), opts);
+		QWidget *edit = PropertyEditorFactory::generatePropertyEditor(gld, "plainText", SLOT(setPlainText(const QString&)), opts, SIGNAL(plainTextChanged(const QString&)));
 		
-		QLineEdit *line = dynamic_cast<QLineEdit*>(edit);
-		if(line)
-			connect(gld, SIGNAL(plainTextChanged(const QString&)), line, SLOT(setText(const QString&)));
+// 		QLineEdit *line = dynamic_cast<QLineEdit*>(edit);
+// 		if(line)
+// 			connect(gld, SIGNAL(plainTextChanged(const QString&)), line, SLOT(setText(const QString&)));
 		
 		QWidget *base = new QWidget();
 		
@@ -686,7 +694,14 @@ void DirectorWindow::setCurrentDrawable(GLDrawable *gld)
 		PropertyEditorFactory::PropertyEditorOptions opts;
 		opts.stringIsFile = true;
 		opts.fileTypeFilter = tr("Image Files (*.png *.jpg *.bmp *.svg *.xpm *.gif);;Any File (*.*)");
-		ui->itemPropLayout->addRow(tr("&Image:"), PropertyEditorFactory::generatePropertyEditor(item, "imageFile", SLOT(setImageFile(const QString&)), opts));
+		ui->itemPropLayout->addRow(tr("&Image:"), 
+			PropertyEditorFactory::generatePropertyEditor(
+				item,					// The QObject which contains the property to edit 
+				"imageFile", 				// The property name on the QObject to edit
+				SLOT(setImageFile(const QString&)), 	// The slot on the QObject which sets the property
+				opts, 					// PropertyEditorOptions controlling the display of the editor
+				SIGNAL(imageFileChanged(const QString&))	// An optional signal that is emitted by the QObject when the property is changed
+			));
 		
 		typeName = "Image Item";
 	} 
@@ -755,7 +770,8 @@ void DirectorWindow::changeCanvasSize()
 		foreach(PlayerConnection *con, m_players->players())
 			con->setCanvasSize(m_collection->canvasSize());
 			
-		m_graphicsScene->setSceneRect(QRectF(QPointF(0,0),m_collection->canvasSize()));
+		if(m_graphicsScene)
+			m_graphicsScene->setSceneRect(QRectF(QPointF(0,0),m_collection->canvasSize()));
 		
 	}
 	
