@@ -795,7 +795,7 @@ void DirectorWindow::loadVideoInputList(int idx)
 	{
 		QPointer<VideoReceiver> rx = m_receivers.takeFirst();
 		if(rx)
-			rx->deleteLater();
+			rx->release(this);
 	}
 	
 	while(m_videoViewerLayout->count() > 0)
@@ -827,13 +827,12 @@ void DirectorWindow::loadVideoInputList(int idx)
 				QString host = url[0];
 				int port = url.size() > 1 ? url[1].toInt() : 7755;
 				
-				VideoReceiver *rx = new VideoReceiver();
+				VideoReceiver *rx = VideoReceiver::getReceiver(host,port);
 				
-				if(!rx->connectTo(host,port))
+				if(!rx)
 				{
 					qDebug() << "DirectorWindow::loadVideoInputList: Unable to connect to "<<host<<":"<<port;
-					rx->quit();
-					rx->deleteLater();
+					QMessageBox::warning(this,"Video Connection",QString("Sorry, but we were unable to connect to the video transmitter at %1:%2 - not sure why.").arg(host).arg(port));
 				}
 				else
 				{

@@ -82,7 +82,7 @@ void GLVideoInputDrawable::setNetworkSource(const QString& src)
 		
 	QStringList url = src.split(":");
 	QString host = url[0];
-	int port = url.size() > 1 ? url[1].toInt() : 7755;
+// 	int port = url.size() > 1 ? url[1].toInt() : 7755;
 				
 // 	QUrl url(src);
 // 	if(!url.isValid())
@@ -132,19 +132,33 @@ void GLVideoInputDrawable::setUseNetworkSource(bool flag)
 		
 	if(flag)
 	{
-		if(m_rx)
-			m_rx->deleteLater();
+		VideoReceiver *oldRx = m_rx;
+// 		if(m_rx)
+// 			m_rx->release(this);
 			
-		m_rx = new VideoReceiver();
-		
 		//QUrl url(m_networkSource);
 		QStringList url = m_networkSource.split(":");
 		QString host = url[0];
 		int port = url.size() > 1 ? url[1].toInt() : 7755;
 		
-		m_rx->connectTo(host,port);
-		
-		setVideoSource(m_rx);
+		m_rx = VideoReceiver::getReceiver(host,port);
+		if(!m_rx)
+		{
+			qDebug() << "GLVideoInputDrawable::setUseNetworkSource: Error connecting to: "<<host<<":"<<port;
+		}
+		else
+		if(m_rx == oldRx)
+		{
+			// do nothing
+		}
+		else
+		{
+			m_rx->registerConsumer(this);
+			if(oldRx)
+				oldRx->release(this);
+			
+			setVideoSource(m_rx);
+		}
 	}
 	else
 	{

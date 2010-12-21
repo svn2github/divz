@@ -60,7 +60,7 @@ public:
 	
 	const QString & inputName() { return m_cameraFile; }
 	
-	bool inputInitalized() { bool m_inited; }
+	bool inputInitalized() { return m_inited; }
 	bool hasError() { return m_error; }
 
 public slots:

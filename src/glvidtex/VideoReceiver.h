@@ -18,12 +18,24 @@
 #include "../livemix/VideoSource.h"
 #include "../livemix/VideoFrame.h"
 
+#include <QMutex>
+
 class VideoReceiver: public VideoSource
 {
 	Q_OBJECT
-public:
+
+private:
+
+	//CameraThread(const QString& device, QObject *parent=0);
 	VideoReceiver(QObject *parent = 0);
+	static QMap<QString,VideoReceiver *> m_threadMap;
+	
+	static QString cacheKey(const QString&,int);
+
+public:
+	static VideoReceiver * getReceiver(const QString& host, int port=-1);
 	~VideoReceiver();
+	
 	
 	bool connectTo(const QString& host, int port=-1, QString url = "/", const QString& user="", const QString& pass="");
 	void exit();
@@ -57,6 +69,8 @@ private slots:
 	void connectionReady();
 
 private:
+	QString cacheKey();
+	
 	QTime timestampToQTime(int);
 	void log(const QString&);
 	QTcpSocket *m_socket;
@@ -89,6 +103,7 @@ private:
 	bool m_debugFps;
 #endif
 	bool m_connected;
+	static QMutex m_threadCacheMutex;
 };
 
 #endif // VideoReceiver_H

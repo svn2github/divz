@@ -3,6 +3,64 @@
 #include <QCoreApplication>
 #include <QTime>
 #include <QTimer>
+#include <QMutex>
+#include <QMutexLocker>
+
+#define DEBUG
+
+QMap<QString,VideoReceiver *> VideoReceiver::m_threadMap;
+QMutex VideoReceiver::m_threadCacheMutex;
+
+QString VideoReceiver::cacheKey(const QString& host, int port)
+{
+	return QString("%1:%2").arg(host).arg(port);
+}
+
+QString VideoReceiver::cacheKey()
+{
+	return cacheKey(m_host,m_port);
+}
+
+VideoReceiver * VideoReceiver::getReceiver(const QString& host, int port)
+{
+	if(host.isEmpty())
+		return 0;
+
+	QMutexLocker lock(&m_threadCacheMutex);
+
+	QString key = cacheKey(host,port);
+	
+	if(m_threadMap.contains(key))
+	{
+		VideoReceiver *v = m_threadMap[key];
+		#ifdef DEBUG
+ 		qDebug() << "VideoReceiver::getReceiver(): "<<v<<": "<<key<<": [CACHE HIT] +";
+ 		#endif
+		return v;
+	}
+	else
+	{
+		VideoReceiver *v = new VideoReceiver();
+		if(v->connectTo(host,port))
+		{
+			m_threadMap[key] = v;
+			#ifdef DEBUG
+			qDebug() << "VideoReceiver::getReceiver(): "<<v<<": "<<key<<": [CACHE MISS] -";
+			#endif
+	//  		v->initCamera();
+			//v->start(); //QThread::HighPriority);
+			//usleep(750 * 1000); // give it half a sec or so to init
+			
+			return v;
+		}
+		else
+		{
+			v->deleteLater();
+			qDebug() << "VideoReceiver::getReceiver(): "<<key<<": Unable to connect to requested host, removing connection.";
+			return 0;
+		}
+	}
+}
 
 VideoReceiver::VideoReceiver(QObject *parent) 
 	: VideoSource(parent)
@@ -25,12 +83,20 @@ VideoReceiver::VideoReceiver(QObject *parent)
 }
 VideoReceiver::~VideoReceiver()
 {
+	#ifdef DEBUG
+	qDebug() << "VideoReceiver::~VideoReceiver(): "<<this;
+	#endif
+	
+	QMutexLocker lock(&m_threadCacheMutex);
+	m_threadMap.remove(cacheKey());
+
 	if(m_socket)
 		exit();
 		
 	quit();
 	wait();
 }
+
   
 bool VideoReceiver::connectTo(const QString& host, int port, QString url, const QString& user, const QString& pass)
 {

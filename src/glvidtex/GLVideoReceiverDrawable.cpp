@@ -11,19 +11,30 @@ GLVideoReceiverDrawable::GLVideoReceiverDrawable(QString host, int port, QObject
 	setHost(host);
 	setPort(port);
 	
-	m_rx = new VideoReceiver();
-	setVideoSource(m_rx);
+	
 }
 	
 void GLVideoReceiverDrawable::setHost(const QString& host)
 {
-	m_rx->connectTo(host,m_port);
+	if(m_rx)
+		m_rx->release(this);
+	
+	m_rx = VideoReceiver::getReceiver(host,m_port);
+	m_rx->registerConsumer(this);
+	setVideoSource(m_rx);
+	
 	m_host = host;
 }
 
 void GLVideoReceiverDrawable::setPort(int port)
 {
-	m_rx->connectTo(m_host, port);
+	if(m_rx)
+		m_rx->release(this);
+	
+	m_rx = VideoReceiver::getReceiver(m_host,port);
+	m_rx->registerConsumer(this);
+	setVideoSource(m_rx);
+	
 	m_port = port;
 }
 
