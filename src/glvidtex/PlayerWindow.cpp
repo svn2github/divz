@@ -9,6 +9,7 @@
 #include "GLPlayerCommandNames.h"
 
 #include "GLSceneGroup.h"
+#include "VideoInputSenderManager.h"
 
 class ScaledGraphicsView : public QGraphicsView
 {
@@ -60,6 +61,9 @@ PlayerWindow::PlayerWindow(QWidget *parent)
 	, m_playerVersionString("GLPlayer 0.5")
 	, m_playerVersion(15)
 {
+	m_vidSendMgr = new VideoInputSenderManager();
+	m_vidSendMgr->setSendingEnabled(true);
+
 	QVBoxLayout *layout = new QVBoxLayout(this);
 	layout->setContentsMargins(0,0,0,0);
 	
@@ -251,7 +255,6 @@ PlayerWindow::PlayerWindow(QWidget *parent)
 		}	
 	}
 	
-	
 // 	// Send test map back to self
 // 	QTimer::singleShot(50, this, SLOT(sendTestMap()));
 }
@@ -276,7 +279,7 @@ void PlayerWindow::sendReply(QVariantList reply)
 	}
 	
 	
-	qDebug() << "PlayerWindow::sendReply: [DEBUG] map:"<<map;
+	//qDebug() << "PlayerWindow::sendReply: [DEBUG] map:"<<map;
 	m_server->sendMap(map);
 }
 
@@ -598,6 +601,19 @@ void PlayerWindow::receivedMap(QVariantMap map)
 		sendReply(QVariantList() 
 				<< "cmd" << cmd
 				<< "status" << true);
+	}
+	else
+	if(cmd == GLPlayer_ListVideoInputs)
+	{
+		QStringList inputs = m_vidSendMgr->videoConnections();
+		QVariantList varList;
+		foreach(QString str, inputs)
+			varList << str;
+		QVariant list = varList; // convert to a varient so sendReply() doesnt try to add each element to the map
+		sendReply(QVariantList() 
+				<< "cmd"  << cmd
+				<< "list" << list);
+		
 	}
 	else
 	{

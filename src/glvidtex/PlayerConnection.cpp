@@ -260,6 +260,8 @@ void PlayerConnection::connectPlayer()
 	setScreenRect(screenRect());
 	setCanvasSize(canvasSize());
 	setAspectRatioMode(aspectRatioMode());
+	
+	sendCommand(QVariantList() << "cmd" << GLPlayer_ListVideoInputs);
 }
 
 void PlayerConnection::clientConnected()
@@ -488,6 +490,17 @@ void PlayerConnection::receivedMap(QVariantMap map)
 		}
 	}
 	else
+	if(cmd == GLPlayer_ListVideoInputs)
+	{
+		QVariantList list = map["list"].toList();
+		if(!m_videoInputs.isEmpty())
+			m_videoInputs.clear();
+		foreach(QVariant item, list)
+			m_videoInputs << item.toString();
+		m_videoIputsReceived = true;
+		qDebug() << "PlayerConnection::receivedMap: [INFO] Received video input list: "<<m_videoInputs;
+	}
+	else
 	if(map["status"].toString() == "error")
 	{
 		setError(map["message"].toString(), cmd);
@@ -496,6 +509,13 @@ void PlayerConnection::receivedMap(QVariantMap map)
 	{
 		qDebug() << "PlayerConnection::receivedMap: [INFO] Command not handled: "<<cmd<<", map:"<<map;
 	}
+}
+
+QStringList PlayerConnection::videoInputs(bool *hasReceivedResponse)
+{
+	if(hasReceivedResponse)
+		*hasReceivedResponse = m_videoIputsReceived;
+	return m_videoInputs; 
 }
 
 void PlayerConnection::setError(const QString& error, const QString &cmd)
@@ -525,7 +545,7 @@ void PlayerConnection::sendCommand(QVariantList reply)
 	}
 	
 	
-	qDebug() << "PlayerConnection::sendCommand: [DEBUG] map:"<<map;
+	//qDebug() << "PlayerConnection::sendCommand: [DEBUG] map:"<<map;
 	
 	if(m_client && m_isConnected)
 		m_client->sendMap(map);

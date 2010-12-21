@@ -666,20 +666,41 @@ void DirectorWindow::setCurrentDrawable(GLDrawable *gld)
 		hbox->addWidget(new QLabel("Network Source:"));
 		
 		QComboBox *sourceBox = new QComboBox();
-		sourceBox->addItems(QStringList() << "This Machine");
+		QStringList itemList;
+		itemList << "(This Computer)";
+		m_videoPlayerList.clear();
+		foreach(PlayerConnection *con, m_players->players())
+			if(con->isConnected())
+			{
+				itemList << QString("Player: %1").arg(con->name());
+				m_videoPlayerList << con;
+			}
+		
+		sourceBox->addItems(itemList);
+				
 		hbox->addWidget(sourceBox);
 		hbox->addStretch();
 		
 		vbox->addLayout(hbox);
 		
-		// TODO: connect(sourceBox, SIGNAL(activated(int)), this, SLOT(videoInputNetworkSourceChanged(int)));
+		connect(sourceBox, SIGNAL(activated(int)), this, SLOT(loadVideoInputList(int)));
 		
 		m_videoViewerLayout = new FlowLayout();
 		vbox->addLayout(m_videoViewerLayout);
 		
 		ui->itemPropLayout->addRow(base);
 		
-		loadVideoInputList(0);
+		if(itemList.size() > 0)
+			loadVideoInputList(0);
+		else
+		{
+			sourceBox->setDisabled(true);
+			sourceBox->addItems(QStringList() << "(No Players Connected)");
+			
+			// Dont show the error box if the director window hasnt been shown yet
+			if(isVisible())
+				QMessageBox::warning(this, "No Players Connected","Sorry, no players are connected. You must connect to at least one video player before you can switch videos.");
+		}
 	}
 	else
 	if(GLVideoLoopDrawable *item = dynamic_cast<GLVideoLoopDrawable*>(gld))
@@ -754,9 +775,21 @@ void DirectorWindow::setCurrentDrawable(GLDrawable *gld)
 
 void DirectorWindow::loadVideoInputList(int idx)
 {
-	Q_UNUSED(idx);
+	//Q_UNUSED(idx);
+	if(idx <0 || idx>m_videoPlayerList.size())
+		return;
 	
-	QStringList inputs = m_vidSendMgr->videoConnections();
+	QStringList inputs;
+	
+	if(idx == 0)
+	{
+		inputs = m_vidSendMgr->videoConnections();;
+	}
+	else
+	{
+		PlayerConnection *con = m_videoPlayerList[idx-1];
+		inputs = con->videoInputs(); 
+	}
 	
 	while(!m_receivers.isEmpty())
 	{
@@ -838,6 +871,9 @@ void DirectorWindow::videoInputClicked()
 	
 	qDebug() << "DirectorWindow::videoInputClicked: Using con string: "<<con;
 	m_currentDrawable->setProperty("videoConnection", con);
+	
+	foreach(PlayerConnection *player, m_players->players())
+		player->setUserProperty(m_currentDrawable, con, "videoConnection");
 }
 
 void DirectorWindow::setCurrentItem(GLPlaylistItem *item)

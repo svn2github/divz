@@ -153,6 +153,7 @@ CameraThread::CameraThread(const QString& camera, QObject *parent)
 	, m_frameCount(0)
 	, m_deinterlace(false)
 	, m_v4l2(0)
+	, m_error(false)
 {
 	m_time_base_rational.num = 1;
 	m_time_base_rational.den = AV_TIME_BASE;
@@ -409,7 +410,6 @@ int CameraThread::initCamera()
 	QMutexLocker lock(&m_initMutex);
 	
 	
-	
 	m_inited = false;
 	
 	#if defined(Q_OS_LINUX)
@@ -431,12 +431,24 @@ int CameraThread::initCamera()
 			}
 
 			m_v4l2->initDevice();
-			m_v4l2->startCapturing();
-			m_inited = true;
-			
-// 			qDebug() << "CameraThread::initCamera(): finish2";
-
-			return 1;
+			if(!m_v4l2->startCapturing())
+			{
+				m_error = true;
+				return 0;
+			}
+			else
+			{
+				m_inited = true;
+				
+	// 			qDebug() << "CameraThread::initCamera(): finish2";
+	
+				return 1;
+			}
+		}
+		else
+		{
+			m_error = true;
+			return 0;
 		}
 	}
 	#endif
@@ -753,6 +765,12 @@ void CameraThread::readFrame()
 	#if defined(Q_OS_LINUX)
 	if(m_v4l2 && m_rawFrames)
 	{
+		if(!m_inited)
+		{
+			//qDebug() << "CameraThread::readFrame(): Unable to read raw from from V4L interface because not inited, error? "<<m_error;
+			return;
+		}
+			
 		VideoFrame frame = m_v4l2->readFrame();
 		if(frame.isValid())
 		{

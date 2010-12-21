@@ -13,6 +13,7 @@ VideoReceiver::VideoReceiver(QObject *parent)
 	, m_autoResize(-1,-1)
 	, m_autoReconnect(true)
 	, m_byteCount(-1)
+	, m_connected(false)
 	
 {
 // #ifdef MJPEG_TEST
@@ -42,14 +43,23 @@ bool VideoReceiver::connectTo(const QString& host, int port, QString url, const 
 	m_user = user;
 	m_pass = pass;
 	
+	m_connected = false;
+	
 	if(m_socket)
 	{
+		disconnect(m_socket, 0, this, 0);
+		m_dataBlock.clear();
+		
 		m_socket->abort();
-		delete m_socket;
+		m_socket->disconnectFromHost();
+		//m_socket->waitForDisconnected();
+		m_socket->deleteLater();
+// 		delete m_socket;
 		m_socket = 0;
 	}
 		
 	m_socket = new QTcpSocket(this);
+	
 	connect(m_socket, SIGNAL(readyRead()),    this,   SLOT(dataReady()));
 	connect(m_socket, SIGNAL(disconnected()), this,   SLOT(lostConnection()));
 	connect(m_socket, SIGNAL(disconnected()), this, SIGNAL(socketDisconnected()));
@@ -72,7 +82,8 @@ bool VideoReceiver::connectTo(const QString& host, int port, QString url, const 
 
 void VideoReceiver::connectionReady()
 {
-	qDebug() << "Connected";
+	//qDebug() << "Connected";
+	m_connected = true;
 }
 
 void VideoReceiver::log(const QString& str)
@@ -103,6 +114,11 @@ void VideoReceiver::reconnect()
 
 void VideoReceiver::dataReady()
 {
+	if(!m_connected)
+	{
+		m_dataBlock.clear();
+		return;
+	}
 	QByteArray bytes = m_socket->readAll();
 	if(bytes.size() > 0)
 	{
@@ -115,7 +131,9 @@ void VideoReceiver::dataReady()
 
 void VideoReceiver::processBlock()
 {
-				
+	if(!m_connected)
+		return;
+		
 	#define HEADER_SIZE 256
 	
 	// First thing server sends is a single 256-byte header containing the initial frame byte count
@@ -172,7 +190,7 @@ void VideoReceiver::processBlock()
 			{
 				m_byteCount = byteTmp;
 				frameSize = m_byteCount + HEADER_SIZE;
-				qDebug() << "Frame size changed: "<<frameSize;
+				qDebug() << "VideoReceiver::processBlock: Frame size changed: "<<frameSize;
 			}
 			//qDebug() << "processBlock(): header data:"<<headerData;
 			//QImage frame = QImage::fromData(block);

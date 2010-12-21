@@ -13,7 +13,8 @@ class GLSceneGroup;
 class GLScene;
 class GLWidget;
 class QGraphicsView;
-class QGraphicsScene ;
+class QGraphicsScene;
+class VideoInputSenderManager;
 
 class PlayerWindow : public QWidget
 {
@@ -61,6 +62,7 @@ private:
 	
 /*	// for testing
 	GLPlayerClient *m_client;*/
+	VideoInputSenderManager *m_vidSendMgr;
 };
 
 #endif

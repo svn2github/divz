@@ -79,7 +79,7 @@ void VideoSender::incomingConnection(int socketDescriptor)
 	thread->moveToThread(thread);
 	thread->setSender(this);
 	thread->start();
-	qDebug() << "VideoSender: Client Connected, Socket Descriptor:"<<socketDescriptor;
+	//qDebug() << "VideoSender: Client Connected, Socket Descriptor:"<<socketDescriptor;
 }
 
 
@@ -122,6 +122,9 @@ void VideoSenderThread::run()
 		return;
 	}
 	
+	qDebug() << "VideoSenderThread: Connection from "<<m_socket->peerAddress().toString(); //, Socket Descriptor:"<<socketDescriptor;
+	
+	
 	// enter event loop
 	exec();
 	
@@ -146,7 +149,7 @@ void VideoSenderThread::frameReady()
 	
 	if(m_adaptiveWriteEnabled && m_socket->bytesToWrite() > 0)
 	{
-		qDebug() << "VideoSenderThread::frameReady():"<<m_socket->bytesToWrite()<<"bytes pending write on socket, not sending image"<<frameCounter;
+		//qDebug() << "VideoSenderThread::frameReady():"<<m_socket->bytesToWrite()<<"bytes pending write on socket, not sending image"<<frameCounter;
 	}
 	else
 	{

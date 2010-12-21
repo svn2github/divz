@@ -14,6 +14,7 @@ class GLSceneGroup;
 class GLScene;
 class GLDrawable;
 class GLPlaylistItem;
+class PlayerConnection;
 class PlayerConnectionList;
 class GLEditorGraphicsScene;
 class FlowLayout;
@@ -110,6 +111,8 @@ private:
 	FlowLayout *m_videoViewerLayout;
 	VideoInputSenderManager *m_vidSendMgr;
 	QList<QPointer<VideoReceiver> > m_receivers;
+	
+	QList<PlayerConnection*> m_videoPlayerList;
 };
 
 #endif // DIRECTORWINDOW_H

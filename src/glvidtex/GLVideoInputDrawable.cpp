@@ -76,7 +76,10 @@ void GLVideoInputDrawable::setVideoConnection(const QString& con)
 void GLVideoInputDrawable::setNetworkSource(const QString& src)
 {
 	m_networkSource = src;
-	
+		
+	if(src.isEmpty())
+		return;
+		
 	QStringList url = src.split(":");
 	QString host = url[0];
 	int port = url.size() > 1 ? url[1].toInt() : 7755;
@@ -104,7 +107,14 @@ void GLVideoInputDrawable::setNetworkSource(const QString& src)
 	// if we did not find one, use IPv4 localhost
 	if (!isLocalHost)
 		isLocalHost = host == QHostAddress(QHostAddress::LocalHost).toString();
-		
+	
+	// If we already tried opening a local device, force to use the network
+	if(m_source && m_source->hasError())
+	{
+		qDebug() << "GLVideoInputDrawable::setNetworkSource: Forcing to use the network for src:"<<src<<" due to local device error.";
+		isLocalHost = false;
+	}
+	
 	if(isLocalHost)
 		setUseNetworkSource(false);
 	else
@@ -122,8 +132,10 @@ void GLVideoInputDrawable::setUseNetworkSource(bool flag)
 		
 	if(flag)
 	{
-		if(!m_rx)
-			m_rx = new VideoReceiver();
+		if(m_rx)
+			m_rx->deleteLater();
+			
+		m_rx = new VideoReceiver();
 		
 		//QUrl url(m_networkSource);
 		QStringList url = m_networkSource.split(":");

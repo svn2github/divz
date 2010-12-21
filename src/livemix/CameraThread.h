@@ -59,6 +59,9 @@ public:
 	virtual VideoFormat videoFormat();
 	
 	const QString & inputName() { return m_cameraFile; }
+	
+	bool inputInitalized() { bool m_inited; }
+	bool hasError() { return m_error; }
 
 public slots:
 	void setDeinterlace(bool);
@@ -150,6 +153,8 @@ private:
 	QMutex m_initMutex;
 	
 	QString m_inputName;
+	
+	bool m_error;
 	
 };
 

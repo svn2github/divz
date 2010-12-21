@@ -88,7 +88,7 @@ private:
 	QTime m_time;	
 	bool m_debugFps;
 #endif
-
+	bool m_connected;
 };
 
 #endif // VideoReceiver_H

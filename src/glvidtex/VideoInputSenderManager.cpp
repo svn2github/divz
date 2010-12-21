@@ -126,7 +126,7 @@ QStringList VideoInputSenderManager::videoConnections(bool justNetString)
 		list << con;
 	}
 	
-	qDebug() << "VideoInputSenderManager::videoConnections: List: "<<list; 
+	//qDebug() << "VideoInputSenderManager::videoConnections: List: "<<list; 
 
 	return list;
 }

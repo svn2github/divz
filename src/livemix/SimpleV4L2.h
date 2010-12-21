@@ -23,7 +23,7 @@ public:
 	
 	bool openDevice(const char *dev_name);
 	void initDevice();
-	void startCapturing();
+	bool startCapturing();
 	VideoFrame readFrame();
 	void stopCapturing();
 	void uninitDevice();

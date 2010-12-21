@@ -32,11 +32,21 @@ extern "C" {
 
 static void errno_exit(const char *s)
 {
-	fprintf (stderr, "%s error %d, %s\n",
+	fprintf (stderr, "%s error %d, %s\nExiting application.",
 		s, errno, strerror (errno));
 
 	exit (EXIT_FAILURE);
 }
+
+
+static void errno_print(const char *s)
+{
+	fprintf (stderr, "%s error %d, %s\n",
+		s, errno, strerror (errno));
+
+	//exit (EXIT_FAILURE);
+}
+
 
 static int xioctl(int    fd,
                   int    request,
@@ -79,6 +89,9 @@ VideoFrame SimpleV4L2::readFrame()
 	VideoFrame frame;
 	frame.pixelFormat = QVideoFrame::Format_RGB32;
 	frame.captureTime = QTime::currentTime();
+	
+	if(!m_startedCapturing)
+		return frame;
 	
 /*	struct timeval tv_start, tv_end;
 	
@@ -220,11 +233,12 @@ void SimpleV4L2::stopCapturing()
 	}
 }
 
-void SimpleV4L2::startCapturing()
+bool SimpleV4L2::startCapturing()
 {
 	unsigned int i;
 	enum v4l2_buf_type type;
 
+	m_startedCapturing = false;
 	switch (m_io) {
 	case IO_METHOD_READ:
 		/* Nothing to do. */
@@ -247,7 +261,10 @@ void SimpleV4L2::startCapturing()
 		type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 
 		if (-1 == xioctl (m_fd, VIDIOC_STREAMON, &type))
-			errno_exit ("VIDIOC_STREAMON");
+		{
+			errno_print ("VIDIOC_STREAMON");
+			return false;
+		}
 
 		break;
 
@@ -270,12 +287,16 @@ void SimpleV4L2::startCapturing()
 		type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 
 		if (-1 == xioctl (m_fd, VIDIOC_STREAMON, &type))
-			errno_exit ("VIDIOC_STREAMON");
+		{
+			errno_print ("VIDIOC_STREAMON");
+			return false;
+		}
 
 		break;
 	}
 	
 	m_startedCapturing = true;
+	return true;
 }
 
 void SimpleV4L2::uninitDevice()

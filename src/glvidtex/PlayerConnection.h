@@ -75,7 +75,9 @@ public:
 	QString lastError() { return m_lastError; }
 	
 	QString playerVersion() { return m_playerVersion; }
-	
+		
+	QStringList videoInputs(bool *hasReceivedResponse=0);
+
 public slots:
 	void addSubview(GLWidgetSubview*);
 	void removeSubview(GLWidgetSubview*);
@@ -150,6 +152,9 @@ private:
 	QString m_lastError;
 	
 	QVariantList m_preconnectionCommandQueue;
+	
+	QStringList m_videoInputs;
+	bool m_videoIputsReceived;
 };
 
 

@@ -209,8 +209,8 @@ void VideoWidget::oldFrameReady()
 		return;
 
 	VideoFrame frame = m_oldThread->frame();
-	if(frame.isEmpty())
-		qDebug() << "VideoWidget::oldFrameReady(): isEmpty: "<<frame.isEmpty();
+// 	if(frame.isEmpty())
+// 		qDebug() << "VideoWidget::oldFrameReady(): isEmpty: "<<frame.isEmpty();
 
 	if(!frame.isEmpty())
 		m_oldFrame = frame;
@@ -444,7 +444,7 @@ void VideoWidget::updateRects()
 	}
 
 	//qDebug() << "updateRects(): source: "<<m_sourceRect<<", target:" <<m_targetRect;
-	//updateOverlay();
+	updateOverlay();
 
 
 }
@@ -456,8 +456,8 @@ void VideoWidget::frameReady()
 		return;
 
 	VideoFrame frame = m_thread->frame();
-	if(frame.isEmpty())
-		qDebug() << "VideoWidget::frameReady(): isEmpty: "<<frame.isEmpty();
+// 	if(frame.isEmpty())
+// 		qDebug() << "VideoWidget::frameReady(): isEmpty: "<<frame.isEmpty();
 
 	if(!frame.isEmpty())
 		m_frame = frame;
@@ -480,7 +480,7 @@ void VideoWidget::updateTimer()
 
 	if(m_paintTimer.interval() != fps)
 	{
-		qDebug() << "VideoWidget::updateTimer: new hold time: "<<fps;
+		//qDebug() << "VideoWidget::updateTimer: new hold time: "<<fps;
 
 		m_paintTimer.setInterval(fps);
 	}

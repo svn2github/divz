@@ -130,10 +130,12 @@ player: {
 glvidtex: {
 	TARGET = glvidtex
 	
-	HEADERS += PlayerWindow.h 
+	HEADERS += PlayerWindow.h \
+		VideoInputSenderManager.h 
 		
 	SOURCES += main.cpp \
-		PlayerWindow.cpp 
+		PlayerWindow.cpp \
+		VideoInputSenderManager.cpp
 }
 
 unix: {
