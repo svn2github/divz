@@ -63,7 +63,7 @@ bool VideoReceiver::connectTo(const QString& host, int port, QString url, const 
 	
 	
 	m_time.start();
-	m_debugFps = true;
+	m_debugFps = false;
 	m_frameCount = 0;
 	m_latencyAccum = 0;
 	
@@ -285,7 +285,7 @@ void VideoReceiver::exit()
 {
 	if(m_socket)
 	{
-		qDebug() << "VideoReceiver::exit: Quiting video receivier";
+		//qDebug() << "VideoReceiver::exit: Quiting video receivier";
 		m_socket->abort();
 		m_socket->disconnectFromHost();
 		//m_socket->waitForDisconnected();
