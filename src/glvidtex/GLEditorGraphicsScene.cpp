@@ -41,9 +41,9 @@ public:
 
 GLEditorGraphicsScene::GLEditorGraphicsScene()
 	: QGraphicsScene()
-	, m_lockClearSelection(false)
 	, m_bgRect(0)
 	, m_dragRect(0)
+	, m_lockClearSelection(false)
 {
 	m_bgRect = new RectItem();
 	m_bgRect->brush = Qt::black;
@@ -121,7 +121,7 @@ void GLEditorGraphicsScene::clearSelection(QList<GLDrawable*> ignoreList)
 
 void GLEditorGraphicsScene::mousePressEvent ( QGraphicsSceneMouseEvent * mouseEvent )
 {
- 	QGraphicsItem *item = itemAt(mouseEvent->scenePos());
+//  	QGraphicsItem *item = itemAt(mouseEvent->scenePos());
 //  	if(!item || item == m_bgRect || item == m_dragRect)
 //  	{
 //  		//qDebug() << "GLEditorGraphicsScene::mousePressEvent: No item at:"<<mouseEvent->scenePos();

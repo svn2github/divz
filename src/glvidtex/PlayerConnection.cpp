@@ -117,11 +117,12 @@ void PlayerSubviewsModel::subviewChanged(GLWidgetSubview *sub)
 
 PlayerConnection::PlayerConnection(QObject *parent)
 	: QObject(parent)
-	, m_client(0)
-	, m_playerVersion("(Unknown)")
-	, m_isConnected(false)
 	, m_user("player")
 	, m_pass("player")
+	, m_playerVersion("(Unknown)")
+	, m_client(0)
+	, m_scene(0)
+	, m_isConnected(false)
 {
 	
 }

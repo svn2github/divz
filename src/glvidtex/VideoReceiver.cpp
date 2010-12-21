@@ -24,6 +24,11 @@ VideoReceiver::VideoReceiver(QObject *parent)
 }
 VideoReceiver::~VideoReceiver()
 {
+	if(m_socket)
+		exit();
+		
+	quit();
+	wait();
 }
   
 bool VideoReceiver::connectTo(const QString& host, int port, QString url, const QString& user, const QString& pass)
@@ -280,6 +285,7 @@ void VideoReceiver::exit()
 {
 	if(m_socket)
 	{
+		qDebug() << "VideoReceiver::exit: Quiting video receivier";
 		m_socket->abort();
 		m_socket->disconnectFromHost();
 		//m_socket->waitForDisconnected();

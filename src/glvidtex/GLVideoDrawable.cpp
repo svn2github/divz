@@ -831,11 +831,13 @@ bool GLVideoDrawable::setVideoFormat(const VideoFormat& format, bool secondSourc
 	else
 		m_validShader2 = false;
 	const char *fragmentProgram = resizeTextures(format.frameSize, secondSource);
-
+	
   	if(!samePixelFormat)
   	{
   		if(m_useShaders)
 		{
+			Q_UNUSED(qt_glsl_warpingVertexShaderProgram);
+			
 			QGLShaderProgram *program = !secondSource ? m_program : m_program2;
 
 			if(!program->shaders().isEmpty())
@@ -1991,11 +1993,11 @@ void GLVideoDrawable::paintGL()
  		//qDebug() << "target: "<<target;
  		//qDebug() << "texture: "<<txLeft<<txBottom<<txTop<<txRight;
 		glBegin(GL_QUADS);
-			qreal
-				vx1 = target.left(),
-				vx2 = target.right(),
-				vy1 = target.bottom(),
-				vy2 = target.top();
+// 			qreal
+// 				vx1 = target.left(),
+// 				vx2 = target.right(),
+// 				vy1 = target.bottom(),
+// 				vy2 = target.top();
 
 	// 		const GLfloat txLeft   = m_displayOpts.flipHorizontal ? source.right()  / m_frameSize.width() : source.left()  / m_frameSize.width();
 	// 		const GLfloat txRight  = m_displayOpts.flipHorizontal ? source.left()   / m_frameSize.width() : source.right() / m_frameSize.width();

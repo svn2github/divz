@@ -95,7 +95,10 @@ director: {
 		PlayerConnection.h \
 		RtfEditorWindow.h \
 		PlayerSetupDialog.h \
-		KeystonePointsEditor.h
+		KeystonePointsEditor.h \
+		FlowLayout.h \
+		../livemix/VideoWidget.h \
+		VideoInputSenderManager.h
 		
 		
 	SOURCES += director-main.cpp \
@@ -107,17 +110,22 @@ director: {
 		PlayerConnection.cpp \
 		RtfEditorWindow.cpp \
 		PlayerSetupDialog.cpp \
-		KeystonePointsEditor.cpp
+		KeystonePointsEditor.cpp \
+		FlowLayout.cpp \
+		../livemix/VideoWidget.cpp \
+		VideoInputSenderManager.cpp
 		
 	include(../3rdparty/richtextedit/richtextedit.pri)
 }
 player: {
 	TARGET = glplayer
 	
-	HEADERS += PlayerWindow.h 
+	HEADERS += PlayerWindow.h \
+		VideoInputSenderManager.h
 		
 	SOURCES += player-main.cpp \
-		PlayerWindow.cpp 
+		PlayerWindow.cpp \
+		VideoInputSenderManager.cpp
 }
 glvidtex: {
 	TARGET = glvidtex

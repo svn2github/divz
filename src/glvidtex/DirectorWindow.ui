@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>743</width>
+    <width>940</width>
     <height>551</height>
    </rect>
   </property>
@@ -48,69 +48,28 @@
          </property>
          <layout class="QVBoxLayout" name="verticalLayout">
           <item>
-           <layout class="QGridLayout" name="gridLayout">
-            <item row="0" column="0" colspan="2">
+           <layout class="QHBoxLayout" name="horizontalLayout_2">
+            <item>
              <widget class="QLabel" name="itemNameLabel">
               <property name="text">
                <string>(Item Name)</string>
               </property>
              </widget>
             </item>
-            <item row="1" column="0" colspan="4">
-             <widget class="QWidget" name="itemPropBase" native="true">
-              <layout class="QHBoxLayout" name="horizontalLayout">
-               <item>
-                <layout class="QFormLayout" name="itemPropLayout"/>
-               </item>
-              </layout>
-             </widget>
-            </item>
-            <item row="2" column="1">
-             <widget class="QPushButton" name="sendToPlayerBtn">
-              <property name="text">
-               <string>Sen&amp;d to Player</string>
+            <item>
+             <spacer name="horizontalSpacer">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
               </property>
-             </widget>
-            </item>
-            <item row="2" column="2">
-             <widget class="QPushButton" name="addToPlaylistBtn">
-              <property name="text">
-               <string>Add to Play&amp;list</string>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
               </property>
-             </widget>
+             </spacer>
             </item>
-            <item row="3" column="1">
-             <widget class="QLabel" name="label">
-              <property name="text">
-               <string>Length:</string>
-              </property>
-             </widget>
-            </item>
-            <item row="3" column="2">
-             <widget class="QDoubleSpinBox" name="itemLengthBox">
-              <property name="suffix">
-               <string> sec</string>
-              </property>
-              <property name="maximum">
-               <double>99999.000000000000000</double>
-              </property>
-             </widget>
-            </item>
-            <item row="6" column="1">
-             <widget class="QPushButton" name="pauseBtn">
-              <property name="text">
-               <string>&amp;Pause</string>
-              </property>
-             </widget>
-            </item>
-            <item row="6" column="2">
-             <widget class="QPushButton" name="playBtn">
-              <property name="text">
-               <string>Pl&amp;ay</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="2">
+            <item>
              <widget class="QPushButton" name="hideBtn">
               <property name="text">
                <string>&amp;Hide</string>
@@ -120,30 +79,90 @@
               </property>
              </widget>
             </item>
-            <item row="5" column="1">
-             <widget class="QLabel" name="timeLabel">
-              <property name="text">
-               <string>(Playlist Timer)</string>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="0" rowspan="7">
-             <widget class="QListView" name="playlistView"/>
-            </item>
-            <item row="4" column="1">
-             <spacer name="verticalSpacer">
-              <property name="orientation">
-               <enum>Qt::Vertical</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>20</width>
-                <height>40</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
            </layout>
+          </item>
+          <item>
+           <widget class="QWidget" name="itemPropBase" native="true">
+            <layout class="QHBoxLayout" name="horizontalLayout">
+             <item>
+              <layout class="QFormLayout" name="itemPropLayout"/>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item>
+           <widget class="QWidget" name="playlistSetupWidget" native="true">
+            <layout class="QGridLayout" name="gridLayout">
+             <item row="0" column="0" rowspan="5">
+              <widget class="QListView" name="playlistView"/>
+             </item>
+             <item row="0" column="1">
+              <widget class="QPushButton" name="addToPlaylistBtn">
+               <property name="text">
+                <string>Add to Play&amp;list</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="2">
+              <widget class="QPushButton" name="sendToPlayerBtn">
+               <property name="text">
+                <string>Sen&amp;d to Player</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1">
+              <widget class="QLabel" name="label">
+               <property name="text">
+                <string>Length:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="2">
+              <widget class="QDoubleSpinBox" name="itemLengthBox">
+               <property name="suffix">
+                <string> sec</string>
+               </property>
+               <property name="maximum">
+                <double>99999.000000000000000</double>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="1">
+              <spacer name="verticalSpacer">
+               <property name="orientation">
+                <enum>Qt::Vertical</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>91</width>
+                 <height>0</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item row="3" column="1">
+              <widget class="QLabel" name="timeLabel">
+               <property name="text">
+                <string>(Playlist Timer)</string>
+               </property>
+              </widget>
+             </item>
+             <item row="4" column="1">
+              <widget class="QPushButton" name="pauseBtn">
+               <property name="text">
+                <string>&amp;Pause</string>
+               </property>
+              </widget>
+             </item>
+             <item row="4" column="2">
+              <widget class="QPushButton" name="playBtn">
+               <property name="text">
+                <string>Pl&amp;ay</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
           </item>
          </layout>
         </widget>
@@ -158,7 +177,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>743</width>
+     <width>940</width>
      <height>25</height>
     </rect>
    </property>

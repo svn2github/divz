@@ -19,12 +19,12 @@
 EditorWindow::EditorWindow(QWidget *parent)
 	: QMainWindow(parent)
 	, m_canvasSize(1000.,750.)
+	, m_graphicsScene(0)
 	, m_group(0)
 	, m_scene(0)
 	, m_currentLayerPropsEditor(0)
 	, m_rtfEditor(0)
 	, m_currentDrawable(0)
-	, m_graphicsScene(0)
 	, m_isStandalone(false)
 {
 	createUI();
@@ -324,13 +324,13 @@ void EditorWindow::setCurrentScene(GLScene *scene)
 	}
 }
 
-void EditorWindow::drawableAdded(GLDrawable *d)
+void EditorWindow::drawableAdded(GLDrawable */*d*/)
 {
 	//qDebug() << "EditorWindow::drawableAdded: "<<(QObject*)d;
 	//m_graphicsScene->addItem(d);
 }
 
-void EditorWindow::drawableRemoved(GLDrawable *d)
+void EditorWindow::drawableRemoved(GLDrawable */*d*/)
 {
 	//m_graphicsScene->removeItem(d);
 }

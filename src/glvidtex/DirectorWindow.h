@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <QtGui>
+#include <QPointer>
 
 namespace Ui {
 	class DirectorWindow;
@@ -15,6 +16,9 @@ class GLDrawable;
 class GLPlaylistItem;
 class PlayerConnectionList;
 class GLEditorGraphicsScene;
+class FlowLayout;
+class VideoInputSenderManager;
+class VideoReceiver;
 
 class DirectorWindow : public QMainWindow
 {
@@ -77,6 +81,9 @@ private slots:
 	
 	void changeCanvasSize();
 	
+	void loadVideoInputList(int);
+	void videoInputClicked();
+	
 	
 protected:
 	void closeEvent(QCloseEvent *event);
@@ -99,6 +106,10 @@ private:
 	GLPlaylistItem *m_currentItem;
 	
 	GLEditorGraphicsScene *m_graphicsScene;
+	
+	FlowLayout *m_videoViewerLayout;
+	VideoInputSenderManager *m_vidSendMgr;
+	QList<QPointer<VideoReceiver> > m_receivers;
 };
 
 #endif // DIRECTORWINDOW_H

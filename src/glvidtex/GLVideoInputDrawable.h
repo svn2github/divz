@@ -17,7 +17,7 @@ class GLVideoInputDrawable : public GLVideoDrawable
 	Q_OBJECT
 	
 	// 'videoConnection' is like a DB connection string - options encoded into a single string.
-	// Example: dev=/dev/video0,input=S-Video0,deint=true,net=10.0.1.70:8877
+	// Example: dev=/dev/video0,input=S-Video0,net=10.0.1.70:8877
 	Q_PROPERTY(QString videoConnection READ videoConnection WRITE setVideoConnection USER true);
 	
 	Q_PROPERTY(QString videoInput READ videoInput WRITE setVideoInput);
@@ -30,6 +30,7 @@ class GLVideoInputDrawable : public GLVideoDrawable
 	
 public:
 	GLVideoInputDrawable(QString file=DEFAULT_INPUT, QObject *parent=0);
+	~GLVideoInputDrawable();
 	
 	QString videoConnection() { return m_videoConnection; }
 	
@@ -49,6 +50,8 @@ public slots:
 	bool setCardInput(const QString&);
 	void setDeinterlace(bool flag=true);
 	void setNetworkSource(const QString&);
+	
+	void setUseNetworkSource(bool);
 	
 private slots:
 	void testXfade();

@@ -232,8 +232,6 @@ protected slots:
 	void editingModeChanged(bool flag);
 
 protected:
-	friend class GLEditorGraphicsScene;
-	
 	void updateAnimValues();
 	
 	virtual void updateAlignment(bool animateRect=false, int animLength=300, QEasingCurve animCurve = QEasingCurve::Linear);

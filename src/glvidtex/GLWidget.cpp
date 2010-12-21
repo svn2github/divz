@@ -20,12 +20,10 @@
 GLWidgetSubview::GLWidgetSubview()
 	: QObject()
 	, m_colorsDirty(true)
-	, m_glw(0)
-	, m_id(-1)
 	, m_viewTop(0)
 	, m_viewLeft(0)
-	, m_viewRight(1.)
 	, m_viewBottom(1.)
+	, m_viewRight(1.)
 	, m_flipHorizontal(false)
 	, m_flipVertical(false)
 	, m_brightness(0)
@@ -33,6 +31,9 @@ GLWidgetSubview::GLWidgetSubview()
 	, m_hue(0)
 	, m_saturation(0)
 	, m_cornerRotation(GLRotateNone)
+	, m_glw(0)
+	, m_id(-1)
+	
 {
 	m_cornerTranslations 
 		<<  QPointF(0,0)
@@ -371,10 +372,14 @@ void GLWidget::initializeGL()
 void GLWidget::initShaders()
 {
 	
-	const char *fragmentProgram = 
-		qt_glsl_rgbShaderProgram;
-		//qt_glsl_argbShaderProgram;
-		//qt_glsl_xrgbShaderProgram;
+	const char *fragmentProgram = qt_glsl_rgbShaderProgram;
+	
+	Q_UNUSED(qt_glsl_warpingVertexShaderProgram);
+	Q_UNUSED(qt_glsl_xrgbShaderProgram);
+	Q_UNUSED(qt_glsl_argbShaderProgram);
+	Q_UNUSED(qt_glsl_yuvPlanarShaderProgram);
+	
+	
 	
 	if(!m_program->shaders().isEmpty())
 		m_program->removeAllShaders();

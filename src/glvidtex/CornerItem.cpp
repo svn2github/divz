@@ -258,7 +258,7 @@ void CornerItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 					{
 						int newWidth = (int)(cr.width()  -d.x());
 						int newHeight = (int)(newWidth / m_startRatio);
-						int deltaY = cr.height() - newHeight;
+						int deltaY = (int)(cr.height() - newHeight);
 
 						//m_content->moveBy(d.x(),deltaY);
 						cr.translate(d.x(),deltaY);
@@ -269,7 +269,7 @@ void CornerItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 					{
 						int newHeight = (int)(cr.height()  -d.y());
 						int newWidth = (int)(newHeight * m_startRatio);
-						int deltaX = cr.width() - newWidth;
+						int deltaX = (int)(cr.width() - newWidth);
 
 						//m_content->moveBy(deltaX,d.y());
 						cr.translate(deltaX,d.y());
@@ -310,7 +310,7 @@ void CornerItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 				{
 					int newHeight = (int)(cr.height()  -d.y());
 					int newWidth = (int)(newHeight * m_startRatio);
-					int deltaX = cr.width() - newWidth;
+					int deltaX = (int)(cr.width() - newWidth);
 
 					//m_content->moveBy(deltaX,d.y());
 					cr.translate(deltaX,d.y());
@@ -344,7 +344,7 @@ void CornerItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 				{
 					int newWidth = (int)(cr.width()  -d.x());
 					int newHeight = (int)(newWidth / m_startRatio);
-					int deltaY = cr.height() - newHeight;
+					int deltaY = (int)(cr.height() - newHeight);
 
 					//m_content->moveBy(d.x(),deltaY);
 					cr.translate(d.x(),deltaY);
@@ -386,12 +386,6 @@ void CornerItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 				cr.translate(d.x(),0);
 				cr.setWidth((int)(cr.width()-d.x()));
 
-// 				int hfw = m_content->contentHeightForWidth(W);
-// 				if (hfw > 1)
-// 					H = hfw;
-
-				int oldHeight = cr.height();
-				
 				if(op & FixScale)
 				{
 					cr.setHeight((int)(cr.width() / m_startRatio));
@@ -420,7 +414,7 @@ void CornerItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 			{
 
 
-				int oldWidth = cr.width();
+// 				int oldWidth = cr.width();
 				if(op & FixScale)
 				{
 					int newHeight = (int)(cr.height()  -d.y());
@@ -455,8 +449,8 @@ void CornerItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 			else
 			if(m_corner == BottomRightCorner)
 			{
-				int oldWidth = cr.width();
-				int oldHeight= cr.height();
+// 				int oldWidth = cr.width();
+// 				int oldHeight= cr.height();
 				
 				cr.setWidth(W);
 // 				int hfw = m_content->contentHeightForWidth(W);
@@ -486,7 +480,7 @@ void CornerItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 			else
 			if(m_corner == MidRight)
 			{
-				int oldWidth = cr.width();
+// 				int oldWidth = cr.width();
 				cr.setWidth(W);
 // 				int hfw = m_content->contentHeightForWidth(W);
 // 				if (hfw > 1)
@@ -507,7 +501,7 @@ void CornerItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 			else
 			if(m_corner == MidBottom)
 			{
-				int oldHeight= cr.height();
+// 				int oldHeight= cr.height();
 				
 				if(op & FixScale)
 				{
@@ -563,7 +557,7 @@ void CornerItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 void CornerItem::mouseReleaseEvent(QGraphicsSceneMouseEvent * event)
 {
 	event->accept();
-	bool accepted = m_operation != Off;
+// 	bool accepted = m_operation != Off;
 	m_operation = Off;
 	update();
 

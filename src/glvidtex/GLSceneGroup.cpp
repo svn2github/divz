@@ -246,9 +246,9 @@ QVariant GLSceneLayoutListModel::data( const QModelIndex & index, int role) cons
 GLScene::GLScene(QObject *parent)
 	: QAbstractListModel(parent)
 	, m_sceneId(-1)
+	, m_listOnlyUserItems(false)
 	, m_glWidget(0)
 	, m_layoutListModel(0)
-	, m_listOnlyUserItems(false)
 	, m_graphicsScene(0)
 {
 	
@@ -257,9 +257,9 @@ GLScene::GLScene(QObject *parent)
 GLScene::GLScene(QByteArray& ba, QObject *parent)
 	: QAbstractListModel(parent)
 	, m_sceneId(-1)
+	, m_listOnlyUserItems(false)
 	, m_glWidget(0)
 	, m_layoutListModel(0)
-	, m_listOnlyUserItems(false)
 	, m_graphicsScene(0)
 {
 	fromByteArray(ba);
@@ -720,7 +720,7 @@ Qt::ItemFlags GLSceneGroup::flags(const QModelIndex &index) const
 	return Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsDropEnabled ;
 }
 
-bool GLSceneGroup::setData(const QModelIndex &index, const QVariant & value, int role) 
+bool GLSceneGroup::setData(const QModelIndex &index, const QVariant & value, int /*role*/) 
 {
 	if (!index.isValid())
 		return false;
@@ -818,22 +818,22 @@ void GLSceneGroup::setGroupName(const QString& name)
 
 GLSceneGroupCollection::GLSceneGroupCollection(QObject *parent)
 	: QAbstractListModel(parent)
-	, m_canvasSize(1000.,750.)
 	, m_collectionId(-1)
+	, m_canvasSize(1000.,750.)
 {}
 
 GLSceneGroupCollection::GLSceneGroupCollection(QByteArray& ba, QObject *parent)
 	: QAbstractListModel(parent)
-	, m_canvasSize(1000.,750.)
 	, m_collectionId(-1)
+	, m_canvasSize(1000.,750.)
 {
 	fromByteArray(ba);
 }
 
 GLSceneGroupCollection::GLSceneGroupCollection(const QString& file, QObject *parent)
 	: QAbstractListModel(parent)
-	, m_canvasSize(1000.,750.)
 	, m_collectionId(-1)
+	, m_canvasSize(1000.,750.)
 {
 	readFile(file);
 }
@@ -960,7 +960,7 @@ Qt::ItemFlags GLSceneGroupCollection::flags(const QModelIndex &index) const
 	return Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsDropEnabled ;
 }
 
-bool GLSceneGroupCollection::setData(const QModelIndex &index, const QVariant & value, int role) 
+bool GLSceneGroupCollection::setData(const QModelIndex &index, const QVariant & value, int /*role*/) 
 {
 	if (!index.isValid())
 		return false;

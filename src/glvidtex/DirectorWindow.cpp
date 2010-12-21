@@ -6,6 +6,8 @@
 #include "RtfEditorWindow.h"
 #include "GLEditorGraphicsScene.h"
 
+#include "FlowLayout.h"
+
 #include <QFileInfo>
 #include <QFileDialog>
 #include <QApplication>
@@ -14,6 +16,10 @@
 #include "GLDrawables.h"
 #include "GLSceneGroup.h"
 #include "PlayerConnection.h"
+
+#include "../livemix/VideoWidget.h"
+#include "VideoInputSenderManager.h"
+#include "VideoReceiver.h"
 
 DirectorWindow::DirectorWindow(QWidget *parent)
 	: QMainWindow(parent)
@@ -35,6 +41,9 @@ DirectorWindow::DirectorWindow(QWidget *parent)
 	m_currentItem = 0;
 	m_collection = 0;
 	m_players = 0;
+	
+	m_vidSendMgr = new VideoInputSenderManager();
+	m_vidSendMgr->setSendingEnabled(true);
 	
 	readSettings();
 	
@@ -625,11 +634,18 @@ void DirectorWindow::setCurrentDrawable(GLDrawable *gld)
 			}
 			delete widget;
 		}
+// 		else
+// 		if(QLayout *layout = item->layout())
+// 		{
+// 			form->removeItem(item);
+// 		}
 		delete item;
 	}
 	
 	PropertyEditorFactory::PropertyEditorOptions opts;
 	opts.reset();	
+	
+	ui->playlistSetupWidget->setVisible(true);
 	
 	if(GLVideoInputDrawable *item = dynamic_cast<GLVideoInputDrawable*>(gld))
 	{
@@ -638,6 +654,32 @@ void DirectorWindow::setCurrentDrawable(GLDrawable *gld)
 		Q_UNUSED(item);
 
 		typeName = "Video Input Item";
+		
+		ui->playlistSetupWidget->setVisible(false);
+		
+		QWidget *base = new QWidget();
+		
+		QVBoxLayout *vbox = new QVBoxLayout(base);
+		
+		QHBoxLayout *hbox = new QHBoxLayout();
+		
+		hbox->addWidget(new QLabel("Network Source:"));
+		
+		QComboBox *sourceBox = new QComboBox();
+		sourceBox->addItems(QStringList() << "This Machine");
+		hbox->addWidget(sourceBox);
+		hbox->addStretch();
+		
+		vbox->addLayout(hbox);
+		
+		// TODO: connect(sourceBox, SIGNAL(activated(int)), this, SLOT(videoInputNetworkSourceChanged(int)));
+		
+		m_videoViewerLayout = new FlowLayout();
+		vbox->addLayout(m_videoViewerLayout);
+		
+		ui->itemPropLayout->addRow(base);
+		
+		loadVideoInputList(0);
 	}
 	else
 	if(GLVideoLoopDrawable *item = dynamic_cast<GLVideoLoopDrawable*>(gld))
@@ -710,6 +752,94 @@ void DirectorWindow::setCurrentDrawable(GLDrawable *gld)
 	ui->itemNameLabel->setText(itemName.isEmpty() ? QString("<b>%1</b>").arg(typeName) : QString("<b>%1</b> (%2)").arg(itemName).arg(typeName));
 }
 
+void DirectorWindow::loadVideoInputList(int idx)
+{
+	Q_UNUSED(idx);
+	
+	QStringList inputs = m_vidSendMgr->videoConnections();
+	
+	while(!m_receivers.isEmpty())
+	{
+		QPointer<VideoReceiver> rx = m_receivers.takeFirst();
+		if(rx)
+			rx->deleteLater();
+	}
+	
+	while(m_videoViewerLayout->count() > 0)
+	{
+		QLayoutItem * item = m_videoViewerLayout->itemAt(m_videoViewerLayout->count() - 1);
+		m_videoViewerLayout->removeItem(item);
+		delete item;
+	}
+
+	foreach(QString con, inputs)
+	{
+		QStringList opts = con.split(",");
+		//qDebug() << "DirectorWindow::loadVideoInputList: Con string: "<<con;
+		foreach(QString pair, opts)
+		{
+			QStringList values = pair.split("=");
+			QString name = values[0].toLower();
+			QString value = values[1];
+			
+			//qDebug() << "DirectorWindow::loadVideoInputList: Parsed name:"<<name<<", value:"<<value;
+			if(name == "net")
+			{
+// 				QUrl url(value);
+// 				
+// 				QString host = url.host();
+// 				int port = url.port();
+
+				QStringList url = value.split(":");
+				QString host = url[0];
+				int port = url.size() > 1 ? url[1].toInt() : 7755;
+				
+				VideoReceiver *rx = new VideoReceiver();
+				
+				if(!rx->connectTo(host,port))
+				{
+					qDebug() << "DirectorWindow::loadVideoInputList: Unable to connect to "<<host<<":"<<port;
+					rx->quit();
+					rx->deleteLater();
+				}
+				else
+				{
+					m_receivers << QPointer<VideoReceiver>(rx);
+					
+					qDebug() << "DirectorWindow::loadVideoInputList: Connected to "<<host<<":"<<port<<", creating widget...";
+					
+					VideoWidget *vid = new VideoWidget();
+					vid->setVideoSource(rx);
+					
+					vid->setProperty("-vid-con-string",con);
+		
+					m_videoViewerLayout->addWidget(vid);
+					
+					connect(vid, SIGNAL(clicked()), this, SLOT(videoInputClicked()));
+				}
+			}
+		}
+	}
+}
+
+void DirectorWindow::videoInputClicked()
+{
+	VideoWidget *vid = dynamic_cast<VideoWidget*>(sender());
+	if(!vid)
+	{
+		qDebug() << "DirectorWindow::videoInputClicked: Sender is not a video widget, ignoring.";
+		return;
+	}
+	
+	QString con = vid->property("-vid-con-string").toString();
+	
+	if(!m_currentDrawable)
+		return;
+	
+	qDebug() << "DirectorWindow::videoInputClicked: Using con string: "<<con;
+	m_currentDrawable->setProperty("videoConnection", con);
+}
+
 void DirectorWindow::setCurrentItem(GLPlaylistItem *item)
 {
 	if(!item)
@@ -740,8 +870,8 @@ void DirectorWindow::changeCanvasSize()
 	height->setMaximum(99999);
 	
 	QSizeF size = m_collection->canvasSize();
-	width->setValue(size.width());
-	height->setValue(size.height()); 
+	width->setValue((int)size.width());
+	height->setValue((int)size.height()); 
 	
 	form->addRow("Width:", width);
 	form->addRow("Height:", height);
