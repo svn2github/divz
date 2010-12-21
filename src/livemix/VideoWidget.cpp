@@ -406,12 +406,12 @@ void VideoWidget::setSourceRectAdjust( int dx1, int dy1, int dx2, int dy2 )
 
 void VideoWidget::updateRects()
 {
-	m_sourceRect = m_frame.image.rect();
+	m_sourceRect = m_frame.rect; //image.rect();
 	m_origSourceRect = m_sourceRect;
 
 	m_sourceRect.adjust(m_adjustDx1,m_adjustDy1,m_adjustDx2,m_adjustDy2);
 
-	QSize nativeSize = m_frame.image.size();
+	QSize nativeSize = m_frame.size; //.image.size();
 
 	if (nativeSize.isEmpty())
 	{
@@ -444,7 +444,7 @@ void VideoWidget::updateRects()
 	}
 
 	//qDebug() << "updateRects(): source: "<<m_sourceRect<<", target:" <<m_targetRect;
-	updateOverlay();
+	//updateOverlay();
 
 
 }
@@ -462,9 +462,10 @@ void VideoWidget::frameReady()
 	if(!frame.isEmpty())
 		m_frame = frame;
 
-	if(m_frame.image.size() != m_origSourceRect.size())
+	if(m_frame.size != m_origSourceRect.size() || m_targetRect.isEmpty() || m_sourceRect.isEmpty())
 		updateRects();
 
+	//qDebug() << "VideoWidget::frameReady: frame size:"<<m_frame.size<<", orig source rect size:" <<m_origSourceRect.size(); 
 	//QTimer::singleShot(0, this, SLOT(updateTimer()));
 }
 
@@ -530,9 +531,44 @@ void VideoWidget::paintEvent(QPaintEvent*)
 			{
 				if(m_frame.bufferType = VideoFrame::BUFFER_BYTEARRAY) // assume from SimpleV4L2 in ARGB32 format
 				{
-					QImage image((const uchar*)m_frame.byteArray.constData(),m_frame.size.width(),m_frame.size.height(),QImage::Format_RGB32);
-					p.drawImage(m_targetRect,image,m_sourceRect);
+					//QImage image((const uchar*)m_frame.byteArray.constData(),m_frame.size.width(),m_frame.size.height(),QImage::Format_RGB32);
+					const QImage::Format imageFormat = QVideoFrame::imageFormatFromPixelFormat(m_frame.pixelFormat);
+					if(imageFormat != QImage::Format_Invalid)
+					{
+						QImage image((const uchar*)m_frame.byteArray.constData(),
+							m_frame.size.width(),
+							m_frame.size.height(),
+							m_frame.size.width() *
+								(imageFormat == QImage::Format_RGB16  ||
+								 imageFormat == QImage::Format_RGB555 ||
+								 imageFormat == QImage::Format_RGB444 ||
+								 imageFormat == QImage::Format_ARGB4444_Premultiplied ? 2 :
+								 imageFormat == QImage::Format_RGB888 ||
+								 imageFormat == QImage::Format_RGB666 ||
+								 imageFormat == QImage::Format_ARGB6666_Premultiplied ? 3 :
+								 4),
+							imageFormat);
+							
+						//if(m_displayOpts.flipHorizontal || m_displayOpts.flipVertical)
+						//	image = image.mirrored(m_displayOpts.flipHorizontal, m_displayOpts.flipVertical);
+			
+						//painter->drawImage(target,image,source);
+						//updateRects();
+						p.drawImage(m_targetRect,image,m_sourceRect);
+						//qDebug() << "VideoWidget::paintEvent: Painted RAW frame, size:" << image.size()<<", source:"<<m_sourceRect<<", target:"<<m_targetRect<<", format:"<<image.format();
+					}
+					else
+					{
+						qDebug() << "VideoWidget::paintEvent: Invalid pixel format for byte array buffer";
+					}
+					
+					
+					
 					//qDebug() << "Simple bytearray format: isNull: "<<image.isNull();
+				}
+				else
+				{
+					qDebug() << "VideoWidget::paintEvent: Unknown buffer type: "<<m_frame.bufferType;
 				}
 				// else cannot use frame
 			}
