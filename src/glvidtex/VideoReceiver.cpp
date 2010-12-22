@@ -231,7 +231,7 @@ void VideoReceiver::processBlock()
 			const char *headerData = header.constData();
 			
 								
-			int byteTmp,imgX,imgY,pixelFormatId,imageFormatId,bufferType,timestamp,holdTime;
+			int byteTmp,imgX,imgY,pixelFormatId,imageFormatId,bufferType,timestamp,holdTime,origX,origY;
 			
 			sscanf(headerData,
 					"%d " // byteCount
@@ -241,7 +241,9 @@ void VideoReceiver::processBlock()
 					"%d " // image.format
 					"%d " // bufferType
 					"%d " // timestamp
-					"%d", // holdTime
+					"%d " // holdTime
+					"%d " // original width
+					"%d", // original height
 					&byteTmp, 
 					&imgX,
 					&imgY,
@@ -249,7 +251,9 @@ void VideoReceiver::processBlock()
 					&imageFormatId,
 					&bufferType,
 					&timestamp,
-					&holdTime);
+					&holdTime,
+					&origX,
+					&origY);
 					
 			//qDebug() << "header data:"<<headerData;
 			if(byteTmp != m_byteCount)
@@ -258,7 +262,7 @@ void VideoReceiver::processBlock()
 				frameSize = m_byteCount + HEADER_SIZE;
 				qDebug() << "VideoReceiver::processBlock: Frame size changed: "<<frameSize;
 			}
-			//qDebug() << "processBlock(): header data:"<<headerData;
+			//qDebug() << "VideoReceiver::processBlock: header data:"<<headerData;
 			//QImage frame = QImage::fromData(block);
 		
 			//QImage frame = QImage::fromData(block);
@@ -279,6 +283,15 @@ void VideoReceiver::processBlock()
 			{
 				m_frame.image = QImage((const uchar*)block.constData(), imgX, imgY, (QImage::Format)imageFormatId);
 				m_frame.isRaw = false;
+				
+				if(origX != imgX || origY != imgY)
+				{
+					QTime x;
+					x.start();
+					m_frame.image = m_frame.image.scaled(origX,origY);
+					//qDebug() << "VideoReceiver::processBlock: Upscaled frame from "<<imgX<<"x"<<imgY<<" to "<<origX<<"x"<<imgY<<" in "<<x.elapsed()<<"ms";
+					
+				} 
 			}
 			else
 			{
@@ -287,7 +300,10 @@ void VideoReceiver::processBlock()
 				m_frame.isRaw = true;
 			}
 			
-			m_frame.setSize(QSize(imgX,imgY));
+			if(origX != imgX || origY != imgY)
+				m_frame.setSize(QSize(origX,origY));
+			else
+				m_frame.setSize(QSize(imgX,imgY));
 
 			enqueue(m_frame);
 			/*

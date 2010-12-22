@@ -6,10 +6,25 @@ TODO:
 		- Editor: Sometimes an item gets "stuck" while "selected" - and no wway to click it and get it to emit a selected signal again even after adding items or clicking other items
 		- [FIXED] For some reason, changing lots of subview values (e.g. drag sliders) causes the player to "bog down" - is something not getting deleted properly on player?
 		- [CONFIRMED] Make sure that video threads are getting deleted on player when changing videos
-		- ...
+		- Rewrite VideoFrame and all usages to either inherit from QSharedData or some other pointer class
+			Because a race condition seems to develop when two video drawables attempt to use the same video source (such as a CameraThread) - and somehow C++ seems to call the 
+			destructor on VideoFrame causing a SIUGSEGV deep in QByteArray
+		- When viewing remote using vid send/receiver thru a VideoWidget, one of the video streams seems to 'back up' and only "unspools" when sent live thru a GLVideoDrawable... ???
+		
 	NEEDED FEATURES:
 		- Fade speed control
 		- Need to set canvas size of the groups
+		- Add 'setup' options to the video switcher to configure the video feed from director
+			- Input
+			- Should these be part of the editor?
+				- Flip
+				- BHCS
+				- Crop
+		- VideoSender/Receiver needs to be able to degrade quality over network to reduce bandwidth, reduce latency, and increase fps to ~10fps minimum
+			- Reduce transmission fps to minimum (10)
+			- Scale image down for transmission 
+		- Either (a) integrate with DViz songs.db and Bible functionality or (b) integrate VideoSender with DViz
+		
 		
 
 TARGET DATE: 12/11 9am

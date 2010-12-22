@@ -26,18 +26,25 @@ public:
 	
 	VideoSource *videoSource() { return m_source; }
 	VideoFrame frame() { return m_frame; }
+	VideoFrame scaledFrame() { return m_scaledFrame; }
 	
 	void setVideoSource(VideoSource *source);
 // 	QString myAddress();
 
+	int transmitFps() { return m_transmitFps; }
+	QSize transmitSize() { return m_transmitSize; }
+		
 signals: 
 	void receivedFrame();
 	
 public slots:
 	void disconnectVideoSource();
+	void setTransmitFps(int fps=-1); // auto fps based on source if -1
+	void setTransmitSize(const QSize& size=QSize()); // null size means auto size based on input
 
 private slots:
 	void frameReady();
+	void fpsTimer();
 	
 protected:
 	void incomingConnection(int socketDescriptor);
@@ -46,6 +53,10 @@ private:
 	bool m_adaptiveWriteEnabled;
 	VideoSource *m_source;
 	VideoFrame m_frame;
+	VideoFrame m_scaledFrame;
+	QSize m_transmitSize;
+	int m_transmitFps;
+	QTimer m_fpsTimer;
 	
 };
 
