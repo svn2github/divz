@@ -81,7 +81,6 @@ private:
 	VideoSurfaceAdapter *m_surfaceAdapter;
 	QMediaPlayer *m_player;
 	QMediaPlaylist *m_playlist;
-	VideoFrame m_frame;
 	QString m_file;
 };
 

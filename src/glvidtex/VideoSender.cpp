@@ -9,6 +9,8 @@ VideoSender::VideoSender(QObject *parent)
 	, m_source(0)
 	, m_transmitFps(10)
 	, m_transmitSize(160,120)
+	, m_scaledFrame()
+	, m_frame(0)
 {
 	connect(&m_fpsTimer, SIGNAL(timeout()), this, SLOT(fpsTimer()));
 	setTransmitFps(m_transmitFps);
@@ -85,13 +87,24 @@ void VideoSender::frameReady()
 	// before the app has finished initalizing.
 	//QMutexLocker lock(&m_frameReadyLock);
 	
-	VideoFrame f = m_source->frame();
-	if(f.isValid())
+	VideoFrame *f = m_source->frame();
+	if(f->isValid())
+	{
+		if(m_frame && 
+			m_frame->release())
+			delete m_frame;
+
 		m_frame = f;
+	}
+	else
+	{
+		if(f->release())
+			delete f;
+	}
 	
-	//QImage image((const uchar*)m_frame.byteArray.constData(),m_frame.size.width(),m_frame.size.height(),QImage::Format_RGB32);
-	//emit testImage(image.scaled(160,120), m_frame.captureTime);
-	//emit testImage(image, QTime::currentTime()); //m_frame.captureTime);
+	//QImage image((const uchar*)m_frame->byteArray().constData(),m_frame->size().width(),m_frame->size().height(),QImage::Format_RGB32);
+	//emit testImage(image.scaled(160,120), m_frame->captureTime());
+	//emit testImage(image, QTime::currentTime()); //m_frame->captureTime());
 	
 	if(!m_transmitSize.isEmpty())
 	{
@@ -100,19 +113,19 @@ void VideoSender::frameReady()
 		// If we're lucky, it already is. Otherwise, we have to jump thru hoops to convert the byte 
 		// array to a QImage then scale it.
 		QImage scaledImage;
-		if(!m_frame.image.isNull())
+		if(!m_frame->image().isNull())
 		{
-			scaledImage = m_frame.image.scaled(m_transmitSize);
+			scaledImage = m_frame->image().scaled(m_transmitSize);
 		}
 		else
 		{
-			const QImage::Format imageFormat = QVideoFrame::imageFormatFromPixelFormat(m_frame.pixelFormat);
+			const QImage::Format imageFormat = QVideoFrame::imageFormatFromPixelFormat(m_frame->pixelFormat());
 			if(imageFormat != QImage::Format_Invalid)
 			{
-				QImage image((const uchar*)m_frame.byteArray.constData(),
-					m_frame.size.width(),
-					m_frame.size.height(),
-					m_frame.size.width() *
+				QImage image(m_frame->pointer(),
+					m_frame->size().width(),
+					m_frame->size().height(),
+					m_frame->size().width() *
 						(imageFormat == QImage::Format_RGB16  ||
 						imageFormat == QImage::Format_RGB555 ||
 						imageFormat == QImage::Format_RGB444 ||
@@ -127,7 +140,7 @@ void VideoSender::frameReady()
 			}
 			else
 			{
-				qDebug() << "VideoSender::frameReady: Unable to convert pixel format to image format, cannot scale frame. Pixel Format:"<<m_frame.pixelFormat;
+				qDebug() << "VideoSender::frameReady: Unable to convert pixel format to image format, cannot scale frame. Pixel Format:"<<m_frame->pixelFormat();
 			}
 		}
 		
@@ -140,11 +153,12 @@ void VideoSender::frameReady()
 		}
 		else
 		{
-			m_scaledFrame.bufferType = VideoFrame::BUFFER_IMAGE;
-			m_scaledFrame.captureTime = m_frame.captureTime;
+			m_scaledFrame = new VideoFrame();
+			m_scaledFrame->setBufferType(VideoFrame::BUFFER_IMAGE);
+			m_scaledFrame->setCaptureTime(m_frame->captureTime());
 
 			QImage::Format format = scaledImage.format();
-			m_scaledFrame.pixelFormat =
+			m_scaledFrame->setPixelFormat(
 				format == QImage::Format_ARGB32 ? QVideoFrame::Format_ARGB32 :
 				format == QImage::Format_RGB32  ? QVideoFrame::Format_RGB32  :
 				format == QImage::Format_RGB888 ? QVideoFrame::Format_RGB24  :
@@ -152,26 +166,40 @@ void VideoSender::frameReady()
 				format == QImage::Format_RGB555 ? QVideoFrame::Format_RGB555 :
 				//format == QImage::Format_ARGB32_Premultiplied ? QVideoFrame::Format_ARGB32_Premultiplied :
 				// GLVideoDrawable doesn't support premultiplied - so the format conversion below will convert it to ARGB32 automatically
-				QVideoFrame::Format_Invalid;
+				QVideoFrame::Format_Invalid);
 				
-			if(m_scaledFrame.pixelFormat == QVideoFrame::Format_Invalid)
+			if(m_scaledFrame->pixelFormat() == QVideoFrame::Format_Invalid)
 			{
 				qDebug() << "VideoFrame: image was not in an acceptable format, converting to ARGB32 automatically.";
 				scaledImage = scaledImage.convertToFormat(QImage::Format_ARGB32);
-				m_scaledFrame.pixelFormat = QVideoFrame::Format_ARGB32;
+				m_scaledFrame->setPixelFormat(QVideoFrame::Format_ARGB32);
 			}
 			
-			m_scaledFrame.image = scaledImage;
-			m_scaledFrame.setSize(scaledImage.size());
-			m_scaledFrame.holdTime = m_transmitFps <= 0 ? m_frame.holdTime : 1000/m_transmitFps;
+			m_scaledFrame->setImage(scaledImage);
+			m_scaledFrame->setSize(scaledImage.size());
+			m_scaledFrame->setHoldTime(m_transmitFps <= 0 ? m_frame->holdTime() : 1000/m_transmitFps);
 		}
 	}
 	
 	if(m_transmitFps <= 0)
 		emit receivedFrame();
 	else
-		m_frame.holdTime = 1000/m_transmitFps;
+		m_frame->setHoldTime(1000/m_transmitFps);
 }
+
+VideoFrame *VideoSender::frame() 
+{ 
+	if(m_frame)
+		m_frame->incRef(); 
+	return m_frame; 
+}
+VideoFrame *VideoSender::scaledFrame()
+{
+	if(m_scaledFrame)
+		m_scaledFrame->incRef(); 
+	return m_scaledFrame; 
+}
+
 
 void VideoSender::incomingConnection(int socketDescriptor)
 {
@@ -256,19 +284,24 @@ void VideoSenderThread::frameReady()
 	else
 	{
 		QSize scaledSize   = m_sender->transmitSize();
-		VideoFrame frame   = scaledSize.isEmpty() ? m_sender->frame() : m_sender->scaledFrame();
-		QSize originalSize = scaledSize.isEmpty() ? frame.size        : m_sender->frame().size;
+		VideoFrame *origFrame   = m_sender->frame();
+		VideoFrame *scaledFrame = m_sender->scaledFrame();
+		VideoFrame *xmitFrame   = scaledSize.isEmpty() ? origFrame : scaledFrame;
+		QSize originalSize = scaledSize.isEmpty() ? xmitFrame->size() : origFrame->size();
+		if(!scaledSize.isEmpty() && origFrame->release())
+			delete origFrame;
+			
 		
-		QTime time = frame.captureTime;
+		QTime time = xmitFrame->captureTime();
 		int timestamp = time.hour()   * 60 * 60 * 1000 +
 				time.minute() * 60 * 1000      + 
 				time.second() * 1000           +
 				time.msec();
 		
 		int byteCount = 
-			frame.bufferType == VideoFrame::BUFFER_IMAGE ? 
-			frame.image.byteCount() : 
-			frame.byteArray.size();
+			xmitFrame->bufferType() == VideoFrame::BUFFER_IMAGE ? 
+				xmitFrame->image().byteCount() : 
+				xmitFrame->pointerLength();
 		
 		#define HEADER_SIZE 256
 		
@@ -298,28 +331,30 @@ void VideoSenderThread::frameReady()
 					"%d " // original size X
 					"%d", // original size Y
 					byteCount, 
-					frame.size.width(), frame.size.height(),
-					(int)frame.pixelFormat,(int)frame.image.format(),
-					(int)frame.bufferType,
-					timestamp,frame.holdTime,
+					xmitFrame->size().width(), xmitFrame->size().height(),
+					(int)xmitFrame->pixelFormat(),(int)xmitFrame->image().format(),
+					(int)xmitFrame->bufferType(),
+					timestamp,xmitFrame->holdTime(),
 					originalSize.width(), originalSize.height());
 		//qDebug() << "VideoSenderThread::frameReady: header data:"<<headerData;
 		
 		m_socket->write((const char*)&headerData,HEADER_SIZE);
 		
-		if(frame.bufferType == VideoFrame::BUFFER_IMAGE)
+		if(xmitFrame->bufferType() == VideoFrame::BUFFER_IMAGE)
 		{
-			const uchar *bits = (const uchar*)frame.image.bits();
+			const uchar *bits = (const uchar*)xmitFrame->image().bits();
 			m_socket->write((const char*)bits,byteCount);
 		}
 		else
-		if(frame.bufferType == VideoFrame::BUFFER_BYTEARRAY)
+		if(xmitFrame->bufferType() == VideoFrame::BUFFER_POINTER)
 		{
-			const uchar *bits = (const uchar*)frame.byteArray.constData();
-			m_socket->write((const char*)bits,byteCount);
+			m_socket->write((const char*)xmitFrame->pointer(),byteCount);
 		}
 
 		m_socket->flush();
+		
+		if(xmitFrame->release())
+			delete xmitFrame;
 
 		//QTime time2 = QTime::currentTime();
 		//int timestamp2 = time.hour() + time.minute() + time.second() + time.msec();

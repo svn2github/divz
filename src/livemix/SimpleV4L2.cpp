@@ -81,15 +81,19 @@ SimpleV4L2::~SimpleV4L2()
 }
 
 
-VideoFrame SimpleV4L2::readFrame()
+VideoFrame *SimpleV4L2::readFrame()
 {
 	struct v4l2_buffer buf;
 	unsigned int i;
 	
-	VideoFrame frame;
-	frame.pixelFormat = QVideoFrame::Format_RGB32;
-	frame.captureTime = QTime::currentTime();
-	
+	VideoFrame *frame = new VideoFrame();
+	frame->setPixelFormat(QVideoFrame::Format_RGB32);
+	frame->setCaptureTime(QTime::currentTime());
+	frame->setIsRaw(true);
+	frame->setBufferType(VideoFrame::BUFFER_POINTER);
+	frame->setHoldTime(1000/30);
+	frame->setSize(m_imageSize);
+		
 	if(!m_startedCapturing)
 		return frame;
 	
@@ -99,7 +103,8 @@ VideoFrame SimpleV4L2::readFrame()
 		errno_exit("Error getting time");
 	}*/
 	
-
+	//QByteArray array;
+		
 	switch (m_io) {
 	
 	case IO_METHOD_READ:
@@ -118,12 +123,12 @@ VideoFrame SimpleV4L2::readFrame()
 			}
 		}
 
-		frame.isRaw = true;
-		frame.bufferType = VideoFrame::BUFFER_BYTEARRAY;
-		frame.byteArray.append((char*)m_buffers[0].start, m_buffers[0].length);
-		frame.holdTime = 1000/30;
-		frame.setSize(m_imageSize);
-
+		//array.append((char*)m_buffers[0].start, m_buffers[0].length);
+		//frame->setByteArray(array);
+		
+		//frame->pointer = (uchar*)malloc(sizeof(uchar) * m_buffers[0].length);
+		memcpy(frame->allocPointer(m_buffers[0].length), m_buffers[0].start, m_buffers[0].length);
+	
 		break;
 
 	case IO_METHOD_MMAP:
@@ -149,11 +154,12 @@ VideoFrame SimpleV4L2::readFrame()
 
 		assert (buf.index < m_numBuffers);
 
-		frame.isRaw = true;
-		frame.bufferType = VideoFrame::BUFFER_BYTEARRAY;
-		frame.byteArray.append((char*)m_buffers[buf.index].start, m_buffers[buf.index].length);
-		frame.holdTime = 1000/30;
-		frame.setSize(m_imageSize);
+// 		array.append((char*)m_buffers[buf.index].start, m_buffers[buf.index].length);
+// 		frame->setByteArray(array);
+
+		//frame->pointer = (uchar*)malloc(sizeof(uchar) * m_buffers[buf.index].length);
+		memcpy(frame->allocPointer(m_buffers[buf.index].length), m_buffers[buf.index].start, m_buffers[buf.index].length);
+		
 		
 		if (-1 == xioctl (m_fd, VIDIOC_QBUF, &buf))
 			errno_exit ("VIDIOC_QBUF");
@@ -189,12 +195,12 @@ VideoFrame SimpleV4L2::readFrame()
 		assert (i < m_numBuffers);
 
 		//process_image ((void *) buf.m.userptr);
-		frame.isRaw = true;
-		frame.bufferType = VideoFrame::BUFFER_BYTEARRAY;
-		frame.byteArray.append((char*)buf.m.userptr, buf.length);
-		frame.holdTime = 1000/30;
-		frame.setSize(m_imageSize);
-
+// 		array.append((char*)buf.m.userptr, buf.length);
+// 		frame->setByteArray(array);
+		
+// 		frame->pointer = (uchar*)malloc(sizeof(uchar) * buf.length);
+// 		memcpy(frame->pointer, buf.m.userptr, buf.length);
+		
 		if (-1 == xioctl (m_fd, VIDIOC_QBUF, &buf))
 			errno_exit ("VIDIOC_QBUF");
 

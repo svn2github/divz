@@ -176,7 +176,7 @@ void GLTextDrawable::drawableResized(const QSizeF& newSize)
 
 void GLTextDrawable::updateRects(bool secondSource)
 {
-	QRectF sourceRect = m_frame.rect;
+	QRectF sourceRect = m_frame->rect();
 	
 	updateTextureOffsets();
 	

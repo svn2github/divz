@@ -126,7 +126,7 @@ class GLVideoDrawable : public GLDrawable
 	
 public:
 	GLVideoDrawable(QObject *parent=0);
-	~GLVideoDrawable();
+	virtual ~GLVideoDrawable();
 	
 	const VideoFormat& videoFormat();
 	
@@ -233,8 +233,8 @@ protected:
 	void updateTextureOffsets();
 	
 	/// PS
-	VideoFrame m_frame;
-	VideoFrame m_frame2;
+	QPointer<VideoFrame> m_frame;
+	QPointer<VideoFrame> m_frame2;
 	bool m_visiblePendingFrame;
 	bool m_tempVisibleValue;
 	

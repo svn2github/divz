@@ -271,41 +271,45 @@ void VideoReceiver::processBlock()
 				pixelFormatId = (int)QVideoFrame::Format_RGB32;
 				
 			//VideoFrame frame;
-			m_frame.holdTime    = holdTime;
-			m_frame.captureTime = timestampToQTime(timestamp);
-			m_frame.pixelFormat = (QVideoFrame::PixelFormat)pixelFormatId;
-			m_frame.bufferType  = (VideoFrame::BufferType)bufferType;
+			VideoFrame *frame = new VideoFrame();
+			frame->setHoldTime    (holdTime);
+			frame->setCaptureTime (timestampToQTime(timestamp));
+			frame->setPixelFormat ((QVideoFrame::PixelFormat)pixelFormatId);
+			frame->setBufferType  ((VideoFrame::BufferType)bufferType);
 			
 			//qDebug() << "final pixelformat:"<<pixelFormatId;
 			
 			
-			if(m_frame.bufferType == VideoFrame::BUFFER_IMAGE)
+			if(frame->bufferType() == VideoFrame::BUFFER_IMAGE)
 			{
-				m_frame.image = QImage((const uchar*)block.constData(), imgX, imgY, (QImage::Format)imageFormatId);
-				m_frame.isRaw = false;
+				frame->setImage(QImage((const uchar*)block.constData(), imgX, imgY, (QImage::Format)imageFormatId));
+				frame->setIsRaw(false);
 				
 				if(origX != imgX || origY != imgY)
 				{
 					QTime x;
 					x.start();
-					m_frame.image = m_frame.image.scaled(origX,origY);
+					frame->setImage(frame->image().scaled(origX,origY));
 					//qDebug() << "VideoReceiver::processBlock: Upscaled frame from "<<imgX<<"x"<<imgY<<" to "<<origX<<"x"<<imgY<<" in "<<x.elapsed()<<"ms";
 					
 				} 
 			}
 			else
 			{
-				m_frame.byteArray.clear();
-				m_frame.byteArray.append((const char*)block.constData(), m_byteCount);
-				m_frame.isRaw = true;
+				//QByteArray array;
+				uchar *pointer = frame->allocPointer(m_byteCount);
+				memcpy(pointer, (const char*)block.constData(), m_byteCount);
+				//array.append((const char*)block.constData(), m_byteCount);
+				//frame->setByteArray(array);
+				frame->setIsRaw(true);
 			}
 			
 			if(origX != imgX || origY != imgY)
-				m_frame.setSize(QSize(origX,origY));
+				frame->setSize(QSize(origX,origY));
 			else
-				m_frame.setSize(QSize(imgX,imgY));
+				frame->setSize(QSize(imgX,imgY));
 
-			enqueue(m_frame);
+			enqueue(frame);
 			/*
 			//480,480, QImage::Format_RGB32);
 			

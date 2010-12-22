@@ -29,7 +29,7 @@ MjpegThread::MjpegThread(QObject *parent)
 // 	painter.setPen(Qt::black);
 // 	painter.drawText(100,100,"Connecting...");
 // 	painter.end();
-	enqueue(VideoFrame(pixmap.toImage(),1000/30));
+	enqueue(new VideoFrame(pixmap.toImage(),1000/30));
 }
 
 MjpegThread::~MjpegThread()
@@ -231,7 +231,7 @@ void MjpegThread::processBlock()
 							
 // 							qDebug() << "processBlock(): Emitting new image, size:"<<frame.size();
 							emit newImage(frame);
-							enqueue(VideoFrame(frame,1000/20));
+							enqueue(new VideoFrame(frame,1000/20));
 						}	
 						
 						#ifdef MJPEG_TEST

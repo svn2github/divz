@@ -275,8 +275,7 @@ void QtVideoSource::present(QImage image)
 {
 	//qDebug() << "QtVideoSource::present()";
 	// TODO is there some way to get the FPS from the QMediaPlayer or friends?
-	m_frame = VideoFrame(image,1000/60);
- 	//qDebug()<< "QtVideoSource::present: Got image, size:"<<image.size();
-	enqueue(m_frame);
+	//qDebug()<< "QtVideoSource::present: Got image, size:"<<image.size();
+	enqueue(new VideoFrame(image,1000/60));
 	emit frameReady();
 }

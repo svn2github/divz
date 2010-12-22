@@ -35,10 +35,19 @@ int main(int argc, char *argv[])
 	MetaObjectUtil_Register(GLVideoLoopDrawable);
 	MetaObjectUtil_Register(GLVideoReceiverDrawable);
 
-	PlayerWindow *glw = new PlayerWindow();
-	
-// 	glw->setViewport(QRectF(0,0,1000,750));
-// 	
+ 	PlayerWindow *glw = new PlayerWindow();
+/*	GLWidget *glw = new GLWidget();
+	glw->resize(640,480);
+	glw->setViewport(QRectF(0,0,1000,750));*/
+ 	
+//  	GLVideoInputDrawable *gld = new GLVideoInputDrawable();
+//  	gld->setVideoInput("/dev/video0");
+// 	gld->setCardInput("S-Video");
+// 	//gld->setDeinterlace(true);
+// 	gld->setRect(glw->viewport());
+// 	gld->setVisible(true);
+// 	glw->addDrawable(gld);
+
 // 	GLTextDrawable *gld = new GLTextDrawable("Hello 1");
 // 	gld->setRect(glw->viewport());
 // 	gld->setVisible(true);

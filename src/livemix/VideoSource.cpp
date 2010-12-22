@@ -47,6 +47,7 @@ VideoSource::VideoSource(QObject *parent)
 	: QThread(parent)
 	, m_killed(false)
 	, m_isBuffered(true)
+	, m_singleFrame(0)
 {
 	m_frameQueue.setMaxByteSize(1024 * 1024 //  1 MB
 				         *   64 // 64 MB
@@ -73,16 +74,22 @@ void VideoSource::run()
 	exec();
 }
 
-VideoFrame VideoSource::frame()
+VideoFrame *VideoSource::frame()
 {
 	if(!m_isBuffered ||
 	    m_frameQueue.isEmpty())
+	    {
+		if(m_singleFrame)
+			m_singleFrame->incRef();
 		return m_singleFrame;
+	    }
 	//qDebug() << "VideoSource::frame(): Queue size: "<<m_frameQueue.size();
-	return m_frameQueue.dequeue();
+	VideoFrame *frame = m_frameQueue.dequeue();
+	frame->incRef();
+	return frame;
 }
 
-void VideoSource::enqueue(VideoFrame frame)
+void VideoSource::enqueue(VideoFrame *frame)
 {
 	if(m_isBuffered)
 		m_frameQueue.enqueue(frame);

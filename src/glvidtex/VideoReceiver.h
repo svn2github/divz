@@ -53,7 +53,7 @@ public:
 	
 	int msecTo(int timestamp);
 	
-	VideoFormat videoFormat() { return VideoFormat(VideoFrame::BUFFER_BYTEARRAY,QVideoFrame::Format_RGB32); }
+	VideoFormat videoFormat() { return VideoFormat(VideoFrame::BUFFER_POINTER,QVideoFrame::Format_RGB32); }
 	
 signals:
 	void socketDisconnected();
@@ -93,7 +93,7 @@ private:
 	
 	int m_byteCount;
 	
-	VideoFrame m_frame;
+	VideoFrame *m_frame;
 	
 #ifdef MJPEG_TEST
 	QLabel *m_label;

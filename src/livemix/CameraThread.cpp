@@ -637,6 +637,7 @@ void CameraThread::run()
 // 		}
 
 		msleep(int(1000 / m_fps / 1.5 / (m_deinterlace ? 1 : 2)));
+		//msleep(int(1000 / m_fps / 1.5));// (m_deinterlace ? 1 : 2)));
 	};
 }
 
@@ -736,11 +737,7 @@ VideoFormat CameraThread::videoFormat()
 
 	return VideoFormat(
 		m_rawFrames ?
-			#if defined(Q_OS_LINUX)
-				 VideoFrame::BUFFER_BYTEARRAY :
-			#else
-				 VideoFrame::BUFFER_POINTER   :
-			#endif
+				 VideoFrame::BUFFER_POINTER :
 				 VideoFrame::BUFFER_IMAGE,
 		m_rawFrames ?
 			#if defined(Q_OS_LINUX)
@@ -771,40 +768,42 @@ void CameraThread::readFrame()
 			return;
 		}
 			
-		VideoFrame frame = m_v4l2->readFrame();
-		if(frame.isValid())
+		VideoFrame *frame = m_v4l2->readFrame();
+		if(frame->isValid())
 		{
-			frame.captureTime = capTime;
-			frame.holdTime = 1000/m_fps;
+			frame->setCaptureTime(capTime);
+			frame->setHoldTime(1000/m_fps);
 
 			// We can do deinterlacing on these frames because SimpleV4L2 provides raw ARGB32 frames
 			//m_deinterlace = false;
-			if(m_deinterlace)
+			if(m_deinterlace && frame->pointerLength() > 0)
 			{
-				VideoFrame deinterlacedFrame = frame;
-// 				deinterlacedFrame.captureTime  = frame.captureTime;
-// 				deinterlacedFrame.holdTime     = frame.holdTime;
-// 				deinterlacedFrame.isRaw        = true;
-				deinterlacedFrame.bufferType   = VideoFrame::BUFFER_BYTEARRAY;
-				deinterlacedFrame.byteArray = QByteArray(); // give us a new array, dont mudge the original image
-				deinterlacedFrame.byteArray.resize(frame.byteArray.size());
-
+				VideoFrame *deinterlacedFrame = new VideoFrame();
+				deinterlacedFrame->setCaptureTime ( frame->captureTime() );
+ 				deinterlacedFrame->setHoldTime    ( frame->holdTime()    );
+ 				deinterlacedFrame->setSize	  ( frame->size()    );
+ 				deinterlacedFrame->setIsRaw(true);
+ 				deinterlacedFrame->setBufferType(VideoFrame::BUFFER_POINTER);
+				
+				 // give us a new array, dont mudge the original image
+				uchar * dest      = deinterlacedFrame->allocPointer(frame->pointerLength());
+				uchar * src       = frame->pointer();
+				const int h       = frame->size().height();
+				const int stride  = frame->size().width()*4; // I can  cheat because I know SimpleV4L2 sends ARGB32 frames, with 4 bytes per pixel
 				bool bottomFrame  = m_frameCount % 2 == 1;
-				const char * src  = frame.byteArray.constData();
-				char * dest       = deinterlacedFrame.byteArray.data();
-				const int h       = frame.size.height();
-				const int stride  = frame.size.width()*4; // I can  cheat because I know SimpleV4L2 sends ARGB32 frames, with 4 bytes per pixel
-
+				
 				bobDeinterlace( (uchar*)src,  (uchar*)src +h*stride,
 						(uchar*)dest, (uchar*)dest+h*stride,
 						h, stride, bottomFrame);
-
-				//qDebug() << "CameraThread::enqueue call: deinterlaced raw V4L2 frame";
+						
+				//qDebug() << "CameraThread::enqueue call: deinterlaced raw V4L2 frame:"<<deinterlacedFrame;
 				enqueue(deinterlacedFrame);
+				
+				delete frame;
 			}
 			else
 			{
-				//qDebug() << "CameraThread::enqueue call: raw V4L2 frame";
+				//qDebug() << "CameraThread::enqueue call: raw V4L2 frame:"<<frame;
 				enqueue(frame);
 			}
 		}
@@ -859,17 +858,17 @@ void CameraThread::readFrame()
 				if(frame_finished)
 				{
 
-					if(m_rawFrames)
-					{
- 						//qDebug() << "Decode Time: "<<capTime.msecsTo(QTime::currentTime())<<" ms";
-						VideoFrame frame(1000/m_fps,capTime);
-						frame.setPointerData(m_av_frame->data, m_av_frame->linesize);
-						frame.pixelFormat = QVideoFrame::Format_YUV420P;
-						frame.setSize(QSize(m_video_codec_context->width, m_video_codec_context->height));
-						//qDebug() << "CameraThread::enqueue call: raw LibAV YUV420P frame";
-						enqueue(frame);
-					}
-					else
+// 					if(m_rawFrames)
+// 					{
+//  						//qDebug() << "Decode Time: "<<capTime.msecsTo(QTime::currentTime())<<" ms";
+// 						VideoFrame *frame = new VideoFrame(1000/m_fps,capTime);
+// 						frame->setPointerData(m_av_frame->data, m_av_frame->linesize);
+// 						frame->setPixelFormat(QVideoFrame::Format_YUV420P);
+// 						frame->setSize(QSize(m_video_codec_context->width, m_video_codec_context->height));
+// 						//qDebug() << "CameraThread::enqueue call: raw LibAV YUV420P frame";
+// 						enqueue(frame);
+// 					}
+// 					else
 					{
 						// Convert the image from its native format to RGB, then copy the image data to a QImage
 						if(m_sws_context == NULL)
@@ -913,7 +912,7 @@ void CameraThread::readFrame()
 									h, stride, bottomFrame);
 
 							//qDebug() << "CameraThread::enqueue call: deinterlaced QImage ARGB32 frame";
-							enqueue(VideoFrame(frame.copy(),1000/m_fps,capTime));
+							enqueue(new VideoFrame(frame.copy(),1000/m_fps,capTime));
 						}
 						else
 						{
@@ -924,7 +923,7 @@ void CameraThread::readFrame()
 								QImage::Format_ARGB32); //_Premultiplied);
 
 							//qDebug() << "CameraThread::enqueue call: QImage ARGB32 frame";
-							enqueue(VideoFrame(frame.copy(),1000/m_fps,capTime));
+							enqueue(new VideoFrame(frame.copy(),1000/m_fps,capTime));
 						}
 					}
 

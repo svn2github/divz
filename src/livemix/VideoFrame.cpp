@@ -1,49 +1,172 @@
 #include "VideoFrame.h"
-/*
+
 VideoFrame::VideoFrame()
 {
-	d = new VideoFramePrivateData;
+	m_holdTime = -1; 
+	m_captureTime = QTime(); 
+	m_isRaw=false; 
+	m_pixelFormat = QVideoFrame::Format_Invalid;
+	m_bufferType = BUFFER_INVALID;
+	m_refCount = 0;
+	m_pointer = 0;
+	m_pointerLength = 0;
 }
 
-VideoFrame::VideoFrame(const QImage &frame, int holdTime)
+VideoFrame::VideoFrame(int holdTime, const QTime &captureTime)
+	: m_holdTime(holdTime)
+	, m_captureTime(captureTime) 
+	, m_pixelFormat(QVideoFrame::Format_Invalid)
+	, m_bufferType(BUFFER_INVALID)
+	, m_isRaw(false)
+	, m_refCount(0)
+	, m_pointer(0)
+	, m_pointerLength(0)
+{}
+
+
+VideoFrame::VideoFrame(const QImage &frame, int holdTime, const QTime &captureTime)
+	: m_holdTime(holdTime)
+	, m_captureTime(captureTime) 
+	, m_pixelFormat(QVideoFrame::Format_Invalid)
+	, m_bufferType(BUFFER_IMAGE)
+	, m_image(frame)
+	, m_isRaw(false)
+	, m_refCount(0)
+	, m_pointer(0)
+	, m_pointerLength(0)
 {
-	d = new VideoFramePrivateData;
-	setHoldTime(holdTime);
-	setImage(frame);
+	setSize(frame.size());
+	
+	QImage::Format format = m_image.format();
+	m_pixelFormat =
+		format == QImage::Format_ARGB32 ? QVideoFrame::Format_ARGB32 :
+		format == QImage::Format_RGB32  ? QVideoFrame::Format_RGB32  :
+		format == QImage::Format_RGB888 ? QVideoFrame::Format_RGB24  :
+		format == QImage::Format_RGB16  ? QVideoFrame::Format_RGB565 :
+		format == QImage::Format_RGB555 ? QVideoFrame::Format_RGB555 :
+		//format == QImage::Format_ARGB32_Premultiplied ? QVideoFrame::Format_ARGB32_Premultiplied :
+		// GLVideoDrawable doesn't support premultiplied - so the format conversion below will convert it to ARGB32 automatically
+		m_pixelFormat;
+		
+	if(m_pixelFormat == QVideoFrame::Format_Invalid)
+	{
+		qDebug() << "VideoFrame: image was not in an acceptable format, converting to ARGB32 automatically.";
+		m_image = m_image.convertToFormat(QImage::Format_ARGB32);
+		m_pixelFormat = QVideoFrame::Format_ARGB32;
+	}
 }
 
-VideoFrame::VideoFrame(const VideoFrame& other)
-	: d(other.d)
+VideoFrame::VideoFrame(VideoFrame *other)
+	: m_holdTime(other->m_holdTime)
+	, m_captureTime(other->m_captureTime)
+	, m_pixelFormat(other->m_pixelFormat)
+	, m_bufferType(other->m_bufferType)
+	, m_image(other->m_image)
+	, m_isRaw(other->m_isRaw)
+	, m_refCount(0)
+	, m_pointer(other->m_pointer)
+	, m_pointerLength(other->m_pointerLength)
+
 {
+	setSize(other->m_size);
 }
 
-bool VideoFrame::isEmpty()
+VideoFrame::~VideoFrame()
 {
-	return d->time < 0 || d->image.isNull();
+	if(m_pointer)
+		delete m_pointer;
+}
+	
+void VideoFrame::incRef()
+{
+	QMutexLocker lock(&m_refMutex);
+	m_refCount++;
 }
 
-QImage VideoFrame::image()
+bool VideoFrame::release()
 {
-	return d->image;
+	QMutexLocker lock(&m_refMutex);
+	m_refCount --;
+	return m_refCount <= 0;
 }
 
-int VideoFrame::holdTime()
+uchar *VideoFrame::allocPointer(int bytes)
 {
-	return d->time;
+	if(m_pointer)
+		delete m_pointer;
+	m_pointer = (uchar*)malloc(sizeof(uchar) * bytes);
+	m_pointerLength = bytes;
+	return m_pointer;
 }
 
-QSize VideoFrame::size() const
-{
-	return d->image.size();
-}
+bool VideoFrame::isEmpty() { return m_bufferType == BUFFER_INVALID; }
+bool VideoFrame::isValid() { return m_bufferType != BUFFER_INVALID; }
 
-void VideoFrame::setImage(const QImage& frame)
+// Returns the approx memory consumption of this frame.
+// 'approx' because it isn't perfect, especially when using
+// BUFFER_POINTER bufferType's. 
+int VideoFrame::byteSize() const
 {
-	d->image = frame.copy();
+	int mem = 0;
+	switch(m_bufferType)
+	{
+		case BUFFER_IMAGE:
+			mem = m_image.byteCount();
+			break;
+		case BUFFER_POINTER:
+			mem = m_pointerLength;
+			break;
+		default:
+			break;
+	}
+	return mem + sizeof(VideoFrame);
 }
 
 void VideoFrame::setHoldTime(int holdTime)
 {
-	d->time = holdTime; 
-}*/
+	m_holdTime = holdTime; 
+}
+	
+void VideoFrame::setCaptureTime(const QTime& time)
+{
+	m_captureTime = time;
+}
 
+void VideoFrame::setPixelFormat(QVideoFrame::PixelFormat format)
+{
+	m_pixelFormat = format;
+}
+
+void VideoFrame::setBufferType(BufferType type)
+{
+	m_bufferType = type;
+}
+
+void VideoFrame::setImage(const QImage& image)
+{
+	m_image = image; // .copy();
+}
+
+void VideoFrame::setIsRaw(bool flag)
+{
+	m_isRaw = flag;
+}
+	
+void VideoFrame::setSize(QSize newSize)
+{
+	m_size = newSize;
+	m_rect = QRect(0,0,m_size.width(),m_size.height());
+}
+
+void VideoFrame::setRect(QRect rect)
+{
+	setSize(rect.size());
+}
+
+void VideoFrame::setPointer(uchar *dat, int len)
+{
+	m_isRaw = true;
+	m_bufferType = BUFFER_POINTER;
+	m_pointer = dat;
+	m_pointerLength = len;
+}

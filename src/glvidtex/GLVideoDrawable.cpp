@@ -67,6 +67,8 @@ int GLVideoDrawable::m_videoSenderPortAllocator = 7755;
 
 GLVideoDrawable::GLVideoDrawable(QObject *parent)
 	: GLDrawable(parent)
+	, m_frame(0)
+	, m_frame2(0)
 	, m_visiblePendingFrame(false)
 	, m_aspectRatioMode(Qt::KeepAspectRatio)
 	, m_glInited(false)
@@ -210,9 +212,10 @@ void GLVideoDrawable::setVideoSource(VideoSource *source)
 
 			m_source2 = m_source;
 			connect(m_source2, SIGNAL(frameReady()), this, SLOT(frameReady2()));
-			connect(m_source2, SIGNAL(destroyed()), this, SLOT(disconnectVideoSource2()));
+			connect(m_source2, SIGNAL(destroyed()),  this, SLOT(disconnectVideoSource2()));
 
 			m_frame2 = m_frame;
+			m_frame2->incRef();
 			updateTexture(true);
 
 			xfadeStart();
@@ -223,9 +226,9 @@ void GLVideoDrawable::setVideoSource(VideoSource *source)
 	if(m_source)
 	{
 		connect(m_source, SIGNAL(frameReady()), this, SLOT(frameReady()));
-		connect(m_source, SIGNAL(destroyed()), this, SLOT(disconnectVideoSource()));
+		connect(m_source, SIGNAL(destroyed()),  this, SLOT(disconnectVideoSource()));
 
-		//qDebug() << "GLVideoDrawable::setVideoSource(): "<<objectName()<<" m_source:"<<m_source;
+		qDebug() << "GLVideoDrawable::setVideoSource(): "<<objectName()<<" m_source:"<<m_source;
 		setVideoFormat(m_source->videoFormat());
 
 		frameReady();
@@ -321,13 +324,35 @@ void GLVideoDrawable::frameReady()
 	// before the app has finished initalizing.
 	QMutexLocker lock(&m_frameReadyLock);
 
+// 	qDebug() << "GLVideoDrawable::frameReady(): "<<objectName()<<" m_source:"<<m_source;
 	if(m_source)
 	{
-		VideoFrame f = m_source->frame();
-		if(f.isValid())
+		VideoFrame *f = m_source->frame();
+// 		qDebug() << "GLVideoDrawable::frameReady(): "<<objectName()<<" f:"<<f;
+		if(!f)
+			return;
+		if(f->isValid())
+		{
+			if(m_frame && 
+			   m_frame->release())
+			{
+// 				qDebug() << "GLVideoDrawable::frameReady(): "<<objectName()<<" deleting old frame:"<<m_frame;
+				delete m_frame;
+			}
+
 			m_frame = f;
+		}
+		else
+		{
+			if(f->release())
+			{
+// 				qDebug() << "GLVideoDrawable::frameReady(): "<<objectName()<<" deleting invalid frame:"<<f;
+				delete f;
+			}
+		}
 	}
 
+// 	qDebug() << "GLVideoDrawable::frameReady(): "<<objectName()<<" going to updateTexture";
 	updateTexture();
 
 	if(m_rateLimitFps <= 0.0)
@@ -347,9 +372,22 @@ void GLVideoDrawable::frameReady2()
 {
 	if(m_source2)
 	{
-		VideoFrame f = m_source2->frame();
-		if(f.isValid())
+		VideoFrame *f = m_source2->frame();
+		if(!f)
+			return;
+		if(f->isValid())
+		{
+			if(m_frame2 && 
+			   m_frame2->release())
+			   delete m_frame2;
+
 			m_frame2 = f;
+		}
+		else
+		{
+			if(f->release())
+				delete f;
+		}
 	}
 
 	updateTexture(true);
@@ -786,7 +824,7 @@ void GLVideoDrawable::initGL()
 	if(m_source)
 		QTimer::singleShot(0,this,SLOT(frameReady()));
 	else
-		if(m_frame.isValid())
+		if(m_frame && m_frame->isValid())
 			QTimer::singleShot(0,this,SLOT(updateTexture()));
 
 
@@ -1014,9 +1052,11 @@ void GLVideoDrawable::updateRects(bool secondSource)
 {
 // 	if(!m_glInited)
 // 		return;
+	if(!m_frame)
+		return;
 
-	QRectF sourceRect = m_frame.rect;
-	//if(m_frame.rect != m_sourceRect)
+	QRectF sourceRect = m_frame->rect();
+	//if(m_frame->rect() != m_sourceRect)
 
 	updateTextureOffsets();
 
@@ -1033,7 +1073,7 @@ void GLVideoDrawable::updateRects(bool secondSource)
 //
 // 	m_sourceRect.adjust(m_adjustDx1,m_adjustDy1,m_adjustDx2,m_adjustDy2);
 
-	QSizeF nativeSize = adjustedSource.size(); //m_frame.size;
+	QSizeF nativeSize = adjustedSource.size(); //m_frame->size();
 
 	QRectF targetRect;
 
@@ -1354,58 +1394,60 @@ static void uploadTexture(GLuint tx_id, const QImage &image)
 
 void GLVideoDrawable::updateTexture(bool secondSource)
 {
-	//qDebug() << "GLVideoDrawable::updateTexture(): "<<(QObject*)this<<" secondSource:"<<secondSource;
-	if(!secondSource ? !m_frame.isValid() : !m_frame2.isValid())
+// 	qDebug() << "GLVideoDrawable::updateTexture(): "<<(QObject*)this<<" secondSource:"<<secondSource;
+	if(!secondSource ? (!m_frame || !m_frame->isValid()) : (!m_frame2 || !m_frame2->isValid()))
 	{
-		//qDebug() << "GLVideoDrawable::updateTexture(): "<<(QObject*)this<<" Frame not valid";
+		qDebug() << "GLVideoDrawable::updateTexture(): "<<(QObject*)this<<" Frame not valid";
 		return;
 	}
 
 	if(m_glInited && glWidget())
 	{
 		//if(objectName() != "StaticBackground")
-		//qDebug() << "GLVideoDrawable::paintGL(): "<<(QObject*)this<<" Got a frame, size:"<<m_frame.size;
+		//qDebug() << "GLVideoDrawable::paintGL(): "<<(QObject*)this<<" Got a frame, size:"<<m_frame->size();
 		//if()
-			//m_frameSize = m_frame.size;
+			//m_frameSize = m_frame->size();
+// 		qDebug() << "GLVideoDrawable::updateTexture(): "<<objectName()<<" Got frame size:"<<m_frame->size();
 
-		if(!secondSource ? (m_frameSize != m_frame.size   || m_frame.rect != m_sourceRect   || !m_texturesInited) :
-				   (m_frameSize2 != m_frame2.size || m_frame2.rect != m_sourceRect2 || !m_texturesInited2))
+		if(!secondSource ? (m_frameSize != m_frame->size()   || m_frame->rect() != m_sourceRect   || !m_texturesInited) :
+				   (m_frameSize2 != m_frame2->size() || m_frame2->rect() != m_sourceRect2 || !m_texturesInited2))
 		{
- 			//qDebug() << "GLVideoDrawable::paintGL(): m_frame.rect:"<<m_frame.rect<<", m_sourceRect:"<<m_sourceRect<<", m_frame.size:"<<m_frame.size;
- 			//qDebug() << "GLVideoDrawable::paintGL(): frame size changed or !m_texturesInited, resizing and adjusting pixels...";
+ 			//qDebug() << "GLVideoDrawable::paintGL(): m_frame->rect():"<<m_frame->rect()<<", m_sourceRect:"<<m_sourceRect<<", m_frame->size():"<<m_frame->size();
+//  			qDebug() << "GLVideoDrawable::updateTexture(): frame size changed or !m_texturesInited, resizing and adjusting pixels...";
 			//if(m_videoFormat.pixelFormat != m_source->videoFormat().pixelFormat)
 
 			if(!secondSource)
 			{
-				if(m_videoFormat.pixelFormat != m_frame.pixelFormat)
-					setVideoFormat(VideoFormat(m_frame.bufferType, m_frame.pixelFormat, m_frame.size), secondSource);
+				if(m_videoFormat.pixelFormat != m_frame->pixelFormat())
+					setVideoFormat(VideoFormat(m_frame->bufferType(), m_frame->pixelFormat(), m_frame->size()), secondSource);
 			}
 			else
 			{
-				if(m_videoFormat2.pixelFormat != m_frame2.pixelFormat)
-					setVideoFormat(VideoFormat(m_frame2.bufferType, m_frame2.pixelFormat, m_frame2.size), secondSource);
+				if(m_videoFormat2.pixelFormat != m_frame2->pixelFormat())
+					setVideoFormat(VideoFormat(m_frame2->bufferType(), m_frame2->pixelFormat(), m_frame2->size()), secondSource);
 			}
 
-			resizeTextures(!secondSource ? m_frame.size : m_frame2.size, secondSource);
+			resizeTextures(!secondSource ? m_frame->size() : m_frame2->size(), secondSource);
 			updateRects(secondSource);
 			updateAlignment();
 		}
 
 		if(!m_validShader)
 		{
-			qDebug() << "GLVideoDrawable::paintGL(): "<<(QObject*)this<<" No valid shader, not painting";
+			qDebug() << "GLVideoDrawable::updateTexture(): "<<(QObject*)this<<" No valid shader, not painting";
 			return;
 		}
 
 		glWidget()->makeRenderContextCurrent();
 
-		if(!secondSource ? m_frame.isEmpty() : m_frame2.isEmpty())
+		if(!secondSource ? m_frame->isEmpty() : m_frame2->isEmpty())
 		{
-			qDebug() << "GLVideoDrawable::paintGL(): Got empty frame, ignoring.";
+			qDebug() << "GLVideoDrawable::updateTexture(): Got empty frame, ignoring.";
 		}
 		else
-		if(!secondSource ? m_frame.isRaw : m_frame2.isRaw)
+		if(!secondSource ? m_frame->isRaw() : m_frame2->isRaw())
 		{
+// 			qDebug() << "GLVideoDrawable::updateTexture(): "<<objectName()<<" Mark: raw frame";
 			for (int i = 0; i < (!secondSource ? m_textureCount : m_textureCount2); ++i)
 			{
 				//qDebug() << "raw: "<<i<<m_textureWidths[i]<<m_textureHeights[i]<<m_textureOffsets[i]<<m_textureInternalFormat<<m_textureFormat<<m_textureType;
@@ -1423,9 +1465,10 @@ void GLVideoDrawable::updateTexture(bool secondSource)
 							0,
 							m_textureFormat,
 							m_textureType,
-							m_frame.byteArray.constData() + m_textureOffsets[i]
-							//m_frame.bufferType == VideoFrame::BUFFER_POINTER ? m_frame.data[i] :
-								//(uint8_t*)m_frame.byteArray.constData() + m_textureOffsets[i]
+							//m_frame->byteArray().constData() + m_textureOffsets[i]
+							m_frame->pointer() + m_textureOffsets[i]
+							//m_frame->bufferType() == VideoFrame::BUFFER_POINTER ? m_frame->data()[i] :
+								//(uint8_t*)m_frame->byteArray().constData() + m_textureOffsets[i]
 						);
 					}
 					else
@@ -1439,9 +1482,9 @@ void GLVideoDrawable::updateTexture(bool secondSource)
 							0,
 							m_textureFormat2,
 							m_textureType2,
-							m_frame2.byteArray.constData() + m_textureOffsets[i+3]
-							//m_frame.bufferType == VideoFrame::BUFFER_POINTER ? m_frame.data[i] :
-								//(uint8_t*)m_frame.byteArray.constData() + m_textureOffsets[i]
+							m_frame2->pointer() + m_textureOffsets[i+3]
+							//m_frame->bufferType() == VideoFrame::BUFFER_POINTER ? m_frame->data()[i] :
+								//(uint8_t*)m_frame->byteArray().constData() + m_textureOffsets[i]
 						);
 					}
 				}
@@ -1458,9 +1501,9 @@ void GLVideoDrawable::updateTexture(bool secondSource)
 							0,
 							GL_BGRA, //m_textureFormat,
 							GL_UNSIGNED_BYTE, //m_textureType,
-							m_frame.byteArray.constData() + m_textureOffsets[i]
-							//m_frame.bufferType == VideoFrame::BUFFER_POINTER ? m_frame.data[i] :
-								//(uint8_t*)m_frame.byteArray.constData() + m_textureOffsets[i]
+							m_frame->pointer() + m_textureOffsets[i]
+							//m_frame->bufferType() == VideoFrame::BUFFER_POINTER ? m_frame->data()[i] :
+								//(uint8_t*)m_frame->byteArray().constData() + m_textureOffsets[i]
 						);
 					}
 					else
@@ -1474,9 +1517,9 @@ void GLVideoDrawable::updateTexture(bool secondSource)
 							0,
 							GL_BGRA, //m_textureFormat,
 							GL_UNSIGNED_BYTE, //m_textureType,
-							m_frame2.byteArray.constData() + m_textureOffsets[i]
-							//m_frame.bufferType == VideoFrame::BUFFER_POINTER ? m_frame.data[i] :
-								//(uint8_t*)m_frame.byteArray.constData() + m_textureOffsets[i]
+							m_frame2->pointer() + m_textureOffsets[i]
+							//m_frame->bufferType() == VideoFrame::BUFFER_POINTER ? m_frame->data()[i] :
+								//(uint8_t*)m_frame->byteArray().constData() + m_textureOffsets[i]
 						);
 					}
 				}
@@ -1487,18 +1530,20 @@ void GLVideoDrawable::updateTexture(bool secondSource)
 // 				glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 				glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
 				glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+				
 			}
 		}
 		else
-		if(!m_frame.image.isNull())
+		if(!m_frame->image().isNull())
 		{
+// 			qDebug() << "GLVideoDrawable::updateTexture(): "<<objectName()<<" Mark: QImage frame";
 			for (int i = 0; i < (!secondSource ? m_textureCount : m_textureCount2); ++i)
 			{
 				//qDebug() << (QObject*)(this) << "normal: "<<i<<m_textureWidths[i]<<m_textureHeights[i]<<m_textureOffsets[i]<<m_textureInternalFormat<<m_textureFormat<<m_textureType;
 // 				QImageWriter writer("test.jpg");
-// 				writer.write(m_frame.image);
+// 				writer.write(m_frame->image());
 
-				const QImage &constRef = !secondSource ? m_frame.image : m_frame2.image; // avoid detach in .bits()
+				const QImage &constRef = !secondSource ? m_frame->image() : m_frame2->image(); // avoid detach in .bits()
 
 				glBindTexture(GL_TEXTURE_2D, !secondSource ? m_textureIds[i] : m_textureIds2[i]);
 				if(m_useShaders)
@@ -1534,27 +1579,27 @@ void GLVideoDrawable::updateTexture(bool secondSource)
 				}
 				else
 				{
-					//m_frame.image = m_frame.image.convertToFormat(QImage::Format_ARGB32);
+					//m_frame->image() = m_frame->image().convertToFormat(QImage::Format_ARGB32);
 					//qDebug() << "No shader, custom glTexImage2D arguments";
 
- 					//QImage texGL = m_frame.image;
+ 					//QImage texGL = m_frame->image();
 // 					//glTexImage2D( GL_TEXTURE_2D, 0, 3, texGL.width(), texGL.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, texGL.bits() );
  					//glTexImage2D( GL_TEXTURE_2D, 0, 3, texGL.width(), texGL.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, texGL.bits() );
 //  					qDebug() << (QObject*)(this) << "my args:      "<<m_textureInternalFormat<<m_textureFormat<<m_textureType;
 //  					qDebug() << (QObject*)(this) << "working args: "<<3<<GL_RGBA<<GL_UNSIGNED_BYTE;
-//  					qDebug() << (QObject*)(this) << "image format#:"<<m_frame.image.format();
+//  					qDebug() << (QObject*)(this) << "image format#:"<<m_frame->image().format();
 
-					// Why does this work?? m_frame.image.format == #4, RGB32, but tex format seems to require BGRA when using non-GLSL texture rendering...wierd...
+					// Why does this work?? m_frame->image().format == #4, RGB32, but tex format seems to require BGRA when using non-GLSL texture rendering...wierd...
 					m_textureFormat = GL_BGRA;
 
 					if(0)
 					{
-						m_textureIds[i] = m_glw->bindTexture(m_frame.image);
+						m_textureIds[i] = m_glw->bindTexture(m_frame->image());
 					}
 
 					if(1)
 					{
-						uploadTexture(m_textureIds[i],!secondSource ? m_frame.image : m_frame2.image);
+						uploadTexture(m_textureIds[i],!secondSource ? m_frame->image() : m_frame2->image());
 					}
 
 					if(0)
@@ -1569,7 +1614,7 @@ void GLVideoDrawable::updateTexture(bool secondSource)
 							m_textureFormat,
 							m_textureType,
 							(const uchar*)constRef.bits()
-							//m_frame.image.scanLine(0)
+							//m_frame->image().scanLine(0)
 						);
 					}
 
@@ -1588,13 +1633,15 @@ void GLVideoDrawable::updateTexture(bool secondSource)
 	}
 	else
 	{
-		if(!secondSource ? (m_frame.rect  != m_sourceRect) :
-		                   (m_frame2.rect != m_sourceRect2))
+		if(!secondSource ? (m_frame->rect()  != m_sourceRect) :
+		                   (m_frame2->rect() != m_sourceRect2))
 		{
 			updateRects(secondSource);
 			updateAlignment(secondSource);
 		}
 	}
+	
+// 	qDebug() << "GLVideoDrawable::updateTexture(): "<<objectName()<<" Done update";
 }
 
 
@@ -1621,20 +1668,20 @@ void GLVideoDrawable::paint(QPainter * painter, const QStyleOptionGraphicsItem *
 
 	painter->setOpacity(opacity() * (m_fadeActive ? m_fadeValue:1));
 
-	if(!m_frame.image.isNull())
+	if(!m_frame->image().isNull())
 	{
-		painter->drawImage(target,m_frame.image,source);
-		//qDebug() << "GLVideoDrawablle::paint: Painted frame, size:" << m_frame.image.size()<<", source:"<<source<<", target:"<<target;
+		painter->drawImage(target,m_frame->image(),source);
+		//qDebug() << "GLVideoDrawablle::paint: Painted frame, size:" << m_frame->image().size()<<", source:"<<source<<", target:"<<target;
 	}
 	else
 	{
-		const QImage::Format imageFormat = QVideoFrame::imageFormatFromPixelFormat(m_frame.pixelFormat);
+		const QImage::Format imageFormat = QVideoFrame::imageFormatFromPixelFormat(m_frame->pixelFormat());
 		if(imageFormat != QImage::Format_Invalid)
 		{
-			QImage image((const uchar*)m_frame.byteArray.constData(),
-				m_frame.size.width(),
-				m_frame.size.height(),
-				m_frame.size.width() *
+			QImage image(m_frame->pointer(),
+				m_frame->size().width(),
+				m_frame->size().height(),
+				m_frame->size().width() *
 					(imageFormat == QImage::Format_RGB16  ||
 					 imageFormat == QImage::Format_RGB555 ||
 					 imageFormat == QImage::Format_RGB444 ||
@@ -1653,7 +1700,7 @@ void GLVideoDrawable::paint(QPainter * painter, const QStyleOptionGraphicsItem *
 		}
 		else
 		{
-			//qDebug() << "GLVideoDrawable::paint: Unable to convert pixel format to image format, cannot paint frame. Pixel Format:"<<m_frame.pixelFormat;
+			//qDebug() << "GLVideoDrawable::paint: Unable to convert pixel format to image format, cannot paint frame. Pixel Format:"<<m_frame->pixelFormat();
 		}
 	}
 
@@ -1672,20 +1719,20 @@ void GLVideoDrawable::paint(QPainter * painter, const QStyleOptionGraphicsItem *
 
 		painter->setOpacity(opacity() * (m_fadeActive ? (1.-m_fadeValue):1));
 
-		if(!m_frame2.image.isNull())
+		if(!m_frame2->image().isNull())
 		{
-			painter->drawImage(target2,m_frame2.image,source2);
-			//qDebug() << "GLVideoDrawablle::paint: Painted frame, size:" << m_frame.image.size()<<", source:"<<source<<", target:"<<target;
+			painter->drawImage(target2,m_frame2->image(),source2);
+			//qDebug() << "GLVideoDrawablle::paint: Painted frame, size:" << m_frame->image().size()<<", source:"<<source<<", target:"<<target;
 		}
 		else
 		{
-			const QImage::Format imageFormat = QVideoFrame::imageFormatFromPixelFormat(m_frame2.pixelFormat);
+			const QImage::Format imageFormat = QVideoFrame::imageFormatFromPixelFormat(m_frame2->pixelFormat());
 			if(imageFormat != QImage::Format_Invalid)
 			{
-				QImage image((const uchar*)m_frame2.byteArray.constData(),
-					m_frame2.size.width(),
-					m_frame2.size.height(),
-					m_frame2.size.width() *
+				QImage image(m_frame2->pointer(),
+					m_frame2->size().width(),
+					m_frame2->size().height(),
+					m_frame2->size().width() *
 						(imageFormat == QImage::Format_RGB16  ||
 						imageFormat == QImage::Format_RGB555 ||
 						imageFormat == QImage::Format_RGB444 ||
@@ -1701,15 +1748,15 @@ void GLVideoDrawable::paint(QPainter * painter, const QStyleOptionGraphicsItem *
 			}
 			else
 			{
-				//qDebug() << "GLVideoDrawable::paint: Unable to convert pixel format to image format, cannot paint frame. Pixel Format:"<<m_frame.pixelFormat;
+				//qDebug() << "GLVideoDrawable::paint: Unable to convert pixel format to image format, cannot paint frame. Pixel Format:"<<m_frame->pixelFormat();
 			}
 		}
 	}
 
 
-	if(!m_frame.captureTime.isNull())
+	if(!m_frame->captureTime().isNull())
 	{
-		int msecLatency = m_frame.captureTime.msecsTo(QTime::currentTime());
+		int msecLatency = m_frame->captureTime().msecsTo(QTime::currentTime());
 
 		m_latencyAccum += msecLatency;
 	}
@@ -1723,7 +1770,7 @@ void GLVideoDrawable::paint(QPainter * painter, const QStyleOptionGraphicsItem *
 		latencyPerFrame.setNum((((double)m_latencyAccum) / ((double)m_frameCount)), 'f', 3);
 
 		if(m_debugFps && framesPerSecond!="0.00")
-			qDebug() << "GLVideoDrawable::paint: "<<objectName()<<" FPS: " << qPrintable(framesPerSecond) << (m_frame.captureTime.isNull() ? "" : qPrintable(QString(", Latency: %1 ms").arg(latencyPerFrame)));
+			qDebug() << "GLVideoDrawable::paint: "<<objectName()<<" FPS: " << qPrintable(framesPerSecond) << (m_frame->captureTime().isNull() ? "" : qPrintable(QString(", Latency: %1 ms").arg(latencyPerFrame)));
 
 		m_time.start();
 		m_frameCount = 0;
@@ -1744,7 +1791,7 @@ void GLVideoDrawable::paintGL()
 {
 	if(!m_validShader)
 	{
-		//qDebug() << "GLVideoDrawable::paintGL(): "<<this<<" No valid shader, not painting";
+		qDebug() << "GLVideoDrawable::paintGL(): "<<(QObject*)this<<" No valid shader, not painting";
 		return;
 	}
 
@@ -1761,9 +1808,10 @@ void GLVideoDrawable::paintGL()
 		m_colorsDirty = false;
         }
 
+// 	qDebug() << "GLVideoDrawable::paintGL(): "<<(QObject*)this<<" Mark - start";
 
 
-	//m_frame.unmap();
+	//m_frame->unmap()();
 
 	QRectF source = m_sourceRect;
 	QRectF target = m_targetRect;
@@ -2255,9 +2303,9 @@ void GLVideoDrawable::paintGL()
 
 	//renderText(10, 10, qPrintable(QString("%1 fps").arg(framesPerSecond)));
 
-	if(!m_frame.captureTime.isNull())
+	if(!m_frame->captureTime().isNull())
 	{
-		int msecLatency = m_frame.captureTime.msecsTo(QTime::currentTime());
+		int msecLatency = m_frame->captureTime().msecsTo(QTime::currentTime());
 
 		m_latencyAccum += msecLatency;
 	}
@@ -2271,7 +2319,7 @@ void GLVideoDrawable::paintGL()
 		latencyPerFrame.setNum((((double)m_latencyAccum) / ((double)m_frameCount)), 'f', 3);
 
 		if(m_debugFps && framesPerSecond!="0.00")
-			qDebug() << "GLVideoDrawable::paintGL: "<<objectName()<<" FPS: " << qPrintable(framesPerSecond) << (m_frame.captureTime.isNull() ? "" : qPrintable(QString(", Latency: %1 ms").arg(latencyPerFrame)));
+			qDebug() << "GLVideoDrawable::paintGL: "<<objectName()<<" FPS: " << qPrintable(framesPerSecond) << (m_frame->captureTime().isNull() ? "" : qPrintable(QString(", Latency: %1 ms").arg(latencyPerFrame)));
 
 		m_time.start();
 		m_frameCount = 0;
@@ -2281,6 +2329,8 @@ void GLVideoDrawable::paintGL()
 	}
 
 	m_frameCount ++;
+	
+// 	qDebug() << "GLVideoDrawable::paintGL(): "<<(QObject*)this<<" Mark - end";
 }
 
 

@@ -41,12 +41,10 @@ public:
 	VideoSource(QObject *parent=0);
 	virtual ~VideoSource();
 
-	
-	int refCount() { return m_refCount; }
 	virtual void registerConsumer(QObject *consumer);
 	virtual void release(QObject *consumer=0);
 
-	virtual VideoFrame frame();
+	virtual VideoFrame *frame();
 	
 	bool isBuffered() { return m_isBuffered; }
 	void setIsBuffered(bool);
@@ -61,7 +59,7 @@ protected slots:
 	
 protected:
 	virtual void run();
-	virtual void enqueue(VideoFrame);
+	virtual void enqueue(VideoFrame*);
 	virtual void destroySource();
 	
 	bool m_killed;
@@ -72,9 +70,8 @@ protected:
 	//QQueue<VideoFrame> m_frameQueue;
 	VideoFrameQueue m_frameQueue;
 	QList<QObject*> m_consumerList;
-	int m_refCount;
 	bool m_isBuffered;
-	VideoFrame m_singleFrame;
+	VideoFrame *m_singleFrame;
 };
 
 

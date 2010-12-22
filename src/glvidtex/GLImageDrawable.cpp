@@ -10,6 +10,12 @@ GLImageDrawable::GLImageDrawable(QString file, QObject *parent)
 	
 	//QTimer::singleShot(1500, this, SLOT(testXfade()));
 }
+
+GLImageDrawable::~GLImageDrawable()
+{
+	if(m_frame)
+		delete m_frame;
+}
 	
 void GLImageDrawable::testXfade()
 {
@@ -19,7 +25,7 @@ void GLImageDrawable::testXfade()
 	
 void GLImageDrawable::setImage(const QImage& image)
 {
-	if(m_frame.isValid() && xfadeEnabled())
+	if(m_frame && m_frame->isValid() && xfadeEnabled())
 	{
 		m_frame2 = m_frame;
 		updateTexture(true); // true = read from m_frame2
@@ -27,11 +33,14 @@ void GLImageDrawable::setImage(const QImage& image)
 	}
 		
 				
+	if(!m_frame)
+		m_frame = new VideoFrame();
+		
 	// Setup frame
-	m_frame.bufferType = VideoFrame::BUFFER_IMAGE;
+	m_frame->setBufferType(VideoFrame::BUFFER_IMAGE);
 
 	QImage::Format format = image.format();
-	m_frame.pixelFormat =
+	m_frame->setPixelFormat(
 		format == QImage::Format_ARGB32 ? QVideoFrame::Format_ARGB32 :
 		format == QImage::Format_RGB32  ? QVideoFrame::Format_RGB32  :
 		format == QImage::Format_RGB888 ? QVideoFrame::Format_RGB24  :
@@ -39,21 +48,21 @@ void GLImageDrawable::setImage(const QImage& image)
 		format == QImage::Format_RGB555 ? QVideoFrame::Format_RGB555 :
 		//format == QImage::Format_ARGB32_Premultiplied ? QVideoFrame::Format_ARGB32_Premultiplied :
 		// GLVideoDrawable doesn't support premultiplied - so the format conversion below will convert it to ARGB32 automatically
-		QVideoFrame::Format_Invalid;
+		QVideoFrame::Format_Invalid);
 		
-	if(m_frame.pixelFormat == QVideoFrame::Format_Invalid)
+	if(m_frame->pixelFormat() == QVideoFrame::Format_Invalid)
 	{
 		qDebug() << "VideoFrame: image was not in an acceptable format, converting to ARGB32 automatically.";
 		m_image = image.convertToFormat(QImage::Format_ARGB32);
-		m_frame.pixelFormat = QVideoFrame::Format_ARGB32;
+		m_frame->setPixelFormat(QVideoFrame::Format_ARGB32);
 	}
 	else
 	{
 		m_image = image;
 	}
 	
-	m_frame.image = m_image;
-	m_frame.setSize(image.size());
+	m_frame->setImage(m_image);
+	m_frame->setSize(image.size());
 	
 	updateTexture();
 	
@@ -64,7 +73,7 @@ void GLImageDrawable::setImage(const QImage& image)
 	if(fpsLimit() <= 0.0)
 		updateGL();
 		
-	//qDebug() << "GLImageDrawable::setImage(): Set image size:"<<m_frame.image.size();
+	//qDebug() << "GLImageDrawable::setImage(): Set image size:"<<m_frame->image().size();
 	
 	// TODO reimp so this code works
 // 	if(m_visiblePendingFrame)

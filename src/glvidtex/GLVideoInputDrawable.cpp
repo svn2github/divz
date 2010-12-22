@@ -178,7 +178,6 @@ void GLVideoInputDrawable::testXfade()
 bool GLVideoInputDrawable::setVideoInput(const QString& camera)
 {
 	m_videoInput = camera;
-	qDebug() << "GLVideoInputDrawable::setVideoInput(): camera:"<<camera;
 	
 	CameraThread *source = CameraThread::threadForCamera(camera.isEmpty() ?  DEFAULT_INPUT : camera);
 	
@@ -188,6 +187,10 @@ bool GLVideoInputDrawable::setVideoInput(const QString& camera)
 		return false;
 	}
 	
+	if(m_source == source)
+		return true;
+	
+	qDebug() << "GLVideoInputDrawable::setVideoInput(): camera:"<<camera;
 	if(m_source && m_source != source)
 	{
 		m_source->release(this);

@@ -9,11 +9,9 @@ HEADERS       = GLWidget.h \
 		../livemix/VideoThread.h \
 		../livemix/VideoFrame.h \
 		../livemix/CameraThread.h \
-		StaticVideoSource.h \
 		GLDrawable.h \
 		GLVideoDrawable.h \
 		../ImageFilters.h \
-		TextVideoSource.h \
 		RichTextRenderer.h \
 		VideoSender.h \
 		VideoReceiver.h \
@@ -29,19 +27,16 @@ HEADERS       = GLWidget.h \
 		CornerItem.h \
 		GLEditorGraphicsScene.h \
 		GLPlayerServer.h \
-		GLPlayerClient.h
-		
+		GLPlayerClient.h \
 		
 SOURCES       = GLWidget.cpp \
 		../livemix/VideoSource.cpp \
 		../livemix/VideoThread.cpp \
 		../livemix/VideoFrame.cpp \
 		../livemix/CameraThread.cpp \
-		StaticVideoSource.cpp \
 		GLDrawable.cpp \
 		GLVideoDrawable.cpp \
 		../ImageFilters.cpp \
-		TextVideoSource.cpp \
 		RichTextRenderer.cpp \
 		VideoSender.cpp \
 		VideoReceiver.cpp \
@@ -58,7 +53,7 @@ SOURCES       = GLWidget.cpp \
 		CornerItem.cpp \
 		GLEditorGraphicsScene.cpp   \
 		GLPlayerServer.cpp \
-		GLPlayerClient.cpp
+		GLPlayerClient.cpp 
 		
 
 editor: {

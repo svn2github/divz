@@ -40,7 +40,7 @@ VideoThread::VideoThread(QObject *parent)
 	m_sws_context = NULL;
 	
 	// primer...
-	enqueue(VideoFrame(QImage("../livemix/squares2.png"),1000/30));
+	enqueue(new VideoFrame(QImage("../glvidtex/dot.gif"),1000/30));
 // 	m_frame = NULL;
 
 }
@@ -53,8 +53,8 @@ void VideoThread::setVideo(const QString& name)
 VideoFormat VideoThread::videoFormat()
 {
 	//return VideoFormat(VideoFrame::BUFFER_IMAGE, QVideoFrame::Format_RGB565);
-	//return VideoFormat(VideoFrame::BUFFER_IMAGE, QVideoFrame::Format_ARGB32);
-	return VideoFormat(VideoFrame::BUFFER_BYTEARRAY, QVideoFrame::Format_ARGB32);
+	return VideoFormat(VideoFrame::BUFFER_IMAGE, QVideoFrame::Format_ARGB32);
+	//return VideoFormat(VideoFrame::BUFFER_POINTER, QVideoFrame::Format_ARGB32);
 	//return VideoFormat(VideoFrame::BUFFER_BYTEARRAY, QVideoFrame::Format_YUV420P);
 	
 	
@@ -571,7 +571,7 @@ void VideoThread::readFrame()
 						
 						//enqueue(VideoFrame(m_frame,frameDelay));
 						
-						enqueue(VideoFrame(frame.convertToFormat(QImage::Format_ARGB32),pts_delay*1000));
+						enqueue(new VideoFrame(frame.convertToFormat(QImage::Format_ARGB32),pts_delay*1000));
 						
 // 						VideoFrame vidframe;
 // 						vidframe.isRaw = true;

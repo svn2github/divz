@@ -12,6 +12,7 @@ class GLImageDrawable : public GLVideoDrawable
 	
 public:
 	GLImageDrawable(QString file="", QObject *parent=0);
+	virtual ~GLImageDrawable();
 	
 	QString imageFile() { return m_imageFile; }
 	QImage image() { return m_image; }

@@ -14,6 +14,8 @@ VideoWidget::VideoWidget()
 	, m_thread(0)
 	, m_frameCount(0)
 	, m_opacity(1)
+	, m_frame(0)
+	, m_oldFrame(0)
 	, m_aspectRatioMode(Qt::KeepAspectRatio)
 	, m_adjustDx1(0)
 	, m_adjustDy1(0)
@@ -28,6 +30,7 @@ VideoWidget::VideoWidget()
 	, m_latencyAccum(0)
 	, m_queuedSource(0)
 	, m_oldThread(0)
+	, m_overlayFrame(0)
 	, m_overlaySource(0)
 {
 	//setAttribute(Qt::WA_PaintOnScreen, true);
@@ -207,15 +210,26 @@ void VideoWidget::oldFrameReady()
 {
 	if(!m_oldThread)
 		return;
+		
+	VideoFrame *f = m_oldThread->frame();
+	if(!f)
+		return;
+		
+	if(f->isValid())
+	{
+		if(m_oldFrame && 
+			m_oldFrame->release())
+			delete m_oldFrame;
 
-	VideoFrame frame = m_oldThread->frame();
-// 	if(frame.isEmpty())
-// 		qDebug() << "VideoWidget::oldFrameReady(): isEmpty: "<<frame.isEmpty();
+		m_oldFrame = f;
+	}
+	else
+	{
+		if(f->release())
+			delete f;
+	}
 
-	if(!frame.isEmpty())
-		m_oldFrame = frame;
-
-// 	if(m_frame.image.size() != m_origSourceRect.size())
+// 	if(m_frame->image().size() != m_origSourceRect.size())
 // 		updateRects();
 }
 
@@ -406,12 +420,15 @@ void VideoWidget::setSourceRectAdjust( int dx1, int dy1, int dx2, int dy2 )
 
 void VideoWidget::updateRects()
 {
-	m_sourceRect = m_frame.rect; //image.rect();
+	if(!m_frame)
+		return;
+		
+	m_sourceRect = m_frame->rect(); //image.rect();
 	m_origSourceRect = m_sourceRect;
 
 	m_sourceRect.adjust(m_adjustDx1,m_adjustDy1,m_adjustDx2,m_adjustDy2);
 
-	QSize nativeSize = m_frame.size; //.image.size();
+	QSize nativeSize = m_frame->size(); //.image.size();
 
 	if (nativeSize.isEmpty())
 	{
@@ -455,17 +472,31 @@ void VideoWidget::frameReady()
 	if(!m_thread)
 		return;
 
-	VideoFrame frame = m_thread->frame();
 // 	if(frame.isEmpty())
 // 		qDebug() << "VideoWidget::frameReady(): isEmpty: "<<frame.isEmpty();
 
-	if(!frame.isEmpty())
-		m_frame = frame;
+	VideoFrame *f = m_thread->frame();
+	if(!f)
+		return;
+		
+	if(f->isValid())
+	{
+		if(m_frame && 
+			m_frame->release())
+			delete m_frame;
 
-	if(m_frame.size != m_origSourceRect.size() || m_targetRect.isEmpty() || m_sourceRect.isEmpty())
+		m_frame = f;
+	}
+	else
+	{
+		if(f->release())
+			delete f;
+	}
+
+	if(m_frame->size() != m_origSourceRect.size() || m_targetRect.isEmpty() || m_sourceRect.isEmpty())
 		updateRects();
 
-	//qDebug() << "VideoWidget::frameReady: frame size:"<<m_frame.size<<", orig source rect size:" <<m_origSourceRect.size(); 
+	//qDebug() << "VideoWidget::frameReady: frame size:"<<m_frame->size()<<", orig source rect size:" <<m_origSourceRect.size(); 
 	//QTimer::singleShot(0, this, SLOT(updateTimer()));
 }
 
@@ -473,10 +504,10 @@ void VideoWidget::updateTimer()
 {
 	// user has forced a different fps than the video stream has requested
 	// typically this is to increase performance of another video stream
-	if(m_forceFps > 0)
+	if(m_forceFps > 0 || !m_frame)
 		return;
 
-	int fps = qMax((!m_frame.holdTime ? 33 : m_frame.holdTime) * .75,5.0);
+	int fps = qMax((!m_frame->holdTime() ? 33 : m_frame->holdTime()) * .75,5.0);
 
 	if(m_paintTimer.interval() != fps)
 	{
@@ -516,29 +547,29 @@ void VideoWidget::paintEvent(QPaintEvent*)
 	}
 	else
 	{
-		if(m_oldThread)
+		if(m_oldThread && m_oldFrame)
 		{
 			//p.setOpacity(1.0-m_opacity);
 			p.setOpacity(1.0);
-			p.drawImage(m_oldTargetRect,m_oldFrame.image,m_oldSourceRect);
+			p.drawImage(m_oldTargetRect,m_oldFrame->image(),m_oldSourceRect);
 		}
 		
-		if(m_opacity > 0.0)
+		if(m_opacity > 0.0 && m_frame)
 		{ 
 			p.setOpacity(m_opacity);
 				
-			if(m_frame.isRaw)
+			if(m_frame->isRaw())
 			{
-				if(m_frame.bufferType = VideoFrame::BUFFER_BYTEARRAY) // assume from SimpleV4L2 in ARGB32 format
+				if(m_frame->bufferType() == VideoFrame::BUFFER_POINTER) // assume from SimpleV4L2 in ARGB32 format
 				{
-					//QImage image((const uchar*)m_frame.byteArray.constData(),m_frame.size.width(),m_frame.size.height(),QImage::Format_RGB32);
-					const QImage::Format imageFormat = QVideoFrame::imageFormatFromPixelFormat(m_frame.pixelFormat);
+					//QImage image((const uchar*)m_frame->byteArray().constData(),m_frame->size().width(),m_frame->size().height(),QImage::Format_RGB32);
+					const QImage::Format imageFormat = QVideoFrame::imageFormatFromPixelFormat(m_frame->pixelFormat());
 					if(imageFormat != QImage::Format_Invalid)
 					{
-						QImage image((const uchar*)m_frame.byteArray.constData(),
-							m_frame.size.width(),
-							m_frame.size.height(),
-							m_frame.size.width() *
+						QImage image(m_frame->pointer(),
+							m_frame->size().width(),
+							m_frame->size().height(),
+							m_frame->size().width() *
 								(imageFormat == QImage::Format_RGB16  ||
 								 imageFormat == QImage::Format_RGB555 ||
 								 imageFormat == QImage::Format_RGB444 ||
@@ -568,12 +599,12 @@ void VideoWidget::paintEvent(QPaintEvent*)
 				}
 				else
 				{
-					qDebug() << "VideoWidget::paintEvent: Unknown buffer type: "<<m_frame.bufferType;
+					qDebug() << "VideoWidget::paintEvent: Unknown buffer type: "<<m_frame->bufferType();
 				}
 				// else cannot use frame
 			}
 			else	
-				p.drawImage(m_targetRect,m_frame.image,m_sourceRect);
+				p.drawImage(m_targetRect,m_frame->image(),m_sourceRect);
 	
 			// If fading in from black (e.g. no old thread)
 			// then fade in the overlay with the frame, otherwise during
@@ -581,8 +612,8 @@ void VideoWidget::paintEvent(QPaintEvent*)
 			if(m_oldThread)
 				p.setOpacity(1.0);
 			
-			if(m_overlaySource && !m_overlayFrame.image.isNull())
-				p.drawImage(m_overlayTargetRect,m_overlayFrame.image,m_overlaySourceRect);
+			if(m_overlayFrame && m_overlaySource && !m_overlayFrame->image().isNull())
+				p.drawImage(m_overlayTargetRect,m_overlayFrame->image(),m_overlaySourceRect);
 				
 			p.drawPixmap(m_targetRect.topLeft(),m_overlay);
 		
@@ -594,9 +625,9 @@ void VideoWidget::paintEvent(QPaintEvent*)
 				
 				
 				QString latencyString;
-				if(!m_frame.captureTime.isNull())
+				if(!m_frame->captureTime().isNull())
 				{
-					int msecLatency = m_frame.captureTime.msecsTo(QTime::currentTime());
+					int msecLatency = m_frame->captureTime().msecsTo(QTime::currentTime());
 					
 					m_latencyAccum += msecLatency;
 					
@@ -659,22 +690,36 @@ void VideoWidget::overlayFrameReady()
 	if(!m_overlaySource)
 		return;
 
-	VideoFrame frame = m_overlaySource->frame();
-	if(frame.isEmpty())
-		qDebug() << "VideoWidget::overlayFrameReady(): isEmpty: "<<frame.isEmpty();
-
-	if(!frame.isEmpty())
-		m_overlayFrame = frame;
+	
+// 	if(!frame.isEmpty())
+// 		m_overlayFrame = frame;
+	VideoFrame *f = m_overlaySource->frame();
+	if(!f)
+		return;
 		
-	if(m_overlayFrame.image.size() != m_overlaySourceRect.size())
+	if(f->isValid())
+	{
+		if(m_overlayFrame && 
+			m_overlayFrame->release())
+			delete m_overlayFrame;
+
+		m_overlayFrame = f;
+	}
+	else
+	{
+		if(f->release())
+			delete f;
+	}
+		
+	if(m_overlayFrame->image().size() != m_overlaySourceRect.size())
 		updateOverlaySourceRects();
 }
 
 void VideoWidget::updateOverlaySourceRects()
 {
-	m_overlaySourceRect = m_overlayFrame.image.rect();
+	m_overlaySourceRect = m_overlayFrame->image().rect();
 	
-	QSize nativeSize = m_overlayFrame.image.size();
+	QSize nativeSize = m_overlayFrame->image().size();
 
 	if (nativeSize.isEmpty())
 	{
