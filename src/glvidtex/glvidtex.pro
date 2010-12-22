@@ -126,11 +126,14 @@ glvidtex: {
 	TARGET = glvidtex
 	
 	HEADERS += PlayerWindow.h \
-		VideoInputSenderManager.h 
+		VideoInputSenderManager.h \
+		../livemix/VideoWidget.h 
+		
 		
 	SOURCES += main.cpp \
 		PlayerWindow.cpp \
-		VideoInputSenderManager.cpp
+		VideoInputSenderManager.cpp \
+		../livemix/VideoWidget.cpp
 }
 
 unix: {

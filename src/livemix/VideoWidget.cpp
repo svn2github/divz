@@ -493,7 +493,7 @@ void VideoWidget::frameReady()
 			delete f;
 	}
 
-	if(m_frame->size() != m_origSourceRect.size() || m_targetRect.isEmpty() || m_sourceRect.isEmpty())
+	if(m_frame && (m_frame->size() != m_origSourceRect.size() || m_targetRect.isEmpty() || m_sourceRect.isEmpty()))
 		updateRects();
 
 	//qDebug() << "VideoWidget::frameReady: frame size:"<<m_frame->size()<<", orig source rect size:" <<m_origSourceRect.size(); 

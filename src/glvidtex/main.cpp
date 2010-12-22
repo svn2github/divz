@@ -19,6 +19,12 @@
 
 #include "PlayerWindow.h"
 
+#include "../livemix/VideoWidget.h"
+#include "../livemix/CameraThread.h"
+
+#include "VideoSender.h"
+#include "VideoReceiver.h"
+
 int main(int argc, char *argv[])
 {
 
@@ -36,9 +42,32 @@ int main(int argc, char *argv[])
 	MetaObjectUtil_Register(GLVideoReceiverDrawable);
 
  	PlayerWindow *glw = new PlayerWindow();
-/*	GLWidget *glw = new GLWidget();
-	glw->resize(640,480);
-	glw->setViewport(QRectF(0,0,1000,750));*/
+	
+// 	VideoWidget *glw = new VideoWidget();
+//  	//GLWidget *glw = new GLWidget();
+//  	glw->resize(640,480);
+//  	//glw->setViewport(QRectF(0,0,1000,750));
+//  	
+//  	CameraThread *source = CameraThread::threadForCamera("/dev/video0");
+//  	source->setInput("S-Video");
+//  	source->setFps(30);
+//  	//source->setDeinterlace(true);
+// 	source->registerConsumer(glw);
+// 	source->enableRawFrames(true);
+// 	
+// 	//glw->setVideoSource(source);
+// 	
+// 	VideoSender *sender = new VideoSender();
+// 	sender->setVideoSource(source);
+// 	if(!sender->listen(QHostAddress::Any,8899))
+// 	{
+// 		qDebug() << "Unable to setup server";
+// 		return -1;
+// 	}
+// 	
+// 	VideoReceiver *rx = VideoReceiver::getReceiver("localhost",8899);
+// 	glw->setVideoSource(rx);
+	
  	
 //  	GLVideoInputDrawable *gld = new GLVideoInputDrawable();
 //  	gld->setVideoInput("/dev/video0");
@@ -47,6 +76,12 @@ int main(int argc, char *argv[])
 // 	gld->setRect(glw->viewport());
 // 	gld->setVisible(true);
 // 	glw->addDrawable(gld);
+
+//  	GLImageDrawable *gld = new GLImageDrawable("Pm5544.jpg");
+// 	gld->setRect(glw->viewport());
+// 	gld->setVisible(true);
+// 	glw->addDrawable(gld);
+
 
 // 	GLTextDrawable *gld = new GLTextDrawable("Hello 1");
 // 	gld->setRect(glw->viewport());

@@ -9,7 +9,8 @@ VideoSender::VideoSender(QObject *parent)
 	, m_source(0)
 	, m_transmitFps(10)
 	, m_transmitSize(160,120)
-	, m_scaledFrame()
+	//, m_transmitSize(0,0)
+	, m_scaledFrame(0)
 	, m_frame(0)
 {
 	connect(&m_fpsTimer, SIGNAL(timeout()), this, SLOT(fpsTimer()));
@@ -91,7 +92,7 @@ void VideoSender::frameReady()
 	if(f->isValid())
 	{
 		if(m_frame && 
-			m_frame->release())
+		   m_frame->release())
 			delete m_frame;
 
 		m_frame = f;
@@ -106,8 +107,10 @@ void VideoSender::frameReady()
 	//emit testImage(image.scaled(160,120), m_frame->captureTime());
 	//emit testImage(image, QTime::currentTime()); //m_frame->captureTime());
 	
-	if(!m_transmitSize.isEmpty())
+	if(m_frame && m_frame->isValid() && !m_transmitSize.isEmpty())
 	{
+		m_frame->incRef();
+		
 		//qDebug() << "VideoSender::frameReady: Downscaling video for transmission to "<<m_transmitSize;
 		// To scale the video frame, first we must convert it to a QImage if its not already an image.
 		// If we're lucky, it already is. Otherwise, we have to jump thru hoops to convert the byte 
@@ -136,7 +139,9 @@ void VideoSender::frameReady()
 						4),
 					imageFormat);
 					
+				//scaledImage = image.isNull() ? image : image.scaled(m_transmitSize);
 				scaledImage = image.scaled(m_transmitSize);
+				//qDebug() << "Downscaled image from "<<image.byteCount()<<"bytes to "<<scaledImage.byteCount()<<"bytes, orig ptr len:"<<m_frame->pointerLength()<<", orig ptr:"<<m_frame->pointer();
 			}
 			else
 			{
@@ -147,13 +152,17 @@ void VideoSender::frameReady()
 		// Now that we've got the image out of the original frame and scaled it, we have to construct a new
 		// video frame to transmit on the wire from the scaledImage (assuming the sccaledImage is valid.)
 		// We attempt to transmit in its native format without converting it if we can to save local CPU power.
-		if(scaledImage.isNull())
+		if(!scaledImage.isNull())
+// 		{
+// 			m_scaledFrame = m_frame;
+// 		}
+// 		else
 		{
-			m_scaledFrame = m_frame;
-		}
-		else
-		{
+			if(m_scaledFrame && m_scaledFrame->release())
+				delete m_scaledFrame;
+				
 			m_scaledFrame = new VideoFrame();
+			//qDebug() << "VideoSender::frameReady: Allocated new scaledFrame:"<<m_scaledFrame;
 			m_scaledFrame->setBufferType(VideoFrame::BUFFER_IMAGE);
 			m_scaledFrame->setCaptureTime(m_frame->captureTime());
 
@@ -179,11 +188,15 @@ void VideoSender::frameReady()
 			m_scaledFrame->setSize(scaledImage.size());
 			m_scaledFrame->setHoldTime(m_transmitFps <= 0 ? m_frame->holdTime() : 1000/m_transmitFps);
 		}
+		
+		if(m_frame->release())
+			delete m_frame;
 	}
 	
 	if(m_transmitFps <= 0)
 		emit receivedFrame();
 	else
+	if(m_frame)
 		m_frame->setHoldTime(1000/m_transmitFps);
 }
 
@@ -195,6 +208,7 @@ VideoFrame *VideoSender::frame()
 }
 VideoFrame *VideoSender::scaledFrame()
 {
+	//qDebug() << "VideoSender::scaledFrame: m_scaledFrame:"<<m_scaledFrame; 
 	if(m_scaledFrame)
 		m_scaledFrame->incRef(); 
 	return m_scaledFrame; 
@@ -214,9 +228,6 @@ void VideoSender::incomingConnection(int socketDescriptor)
 
 
 /** Thread **/
-#define BOUNDARY "VideoSenderThread-uuid-0eda9b03a8314df4840c97113e3fe160"
-#include <QImageWriter>
-#include <QImage>
 
 VideoSenderThread::VideoSenderThread(int socketDescriptor, bool adaptiveWriteEnabled, QObject *parent)
     : QThread(parent)
@@ -284,77 +295,102 @@ void VideoSenderThread::frameReady()
 	else
 	{
 		QSize scaledSize   = m_sender->transmitSize();
-		VideoFrame *origFrame   = m_sender->frame();
-		VideoFrame *scaledFrame = m_sender->scaledFrame();
-		VideoFrame *xmitFrame   = scaledSize.isEmpty() ? origFrame : scaledFrame;
-		QSize originalSize = scaledSize.isEmpty() ? xmitFrame->size() : origFrame->size();
-		if(!scaledSize.isEmpty() && origFrame->release())
-			delete origFrame;
+		QPointer<VideoFrame> origFrame   = m_sender->frame();
+		QPointer<VideoFrame> scaledFrame = m_sender->scaledFrame();
+		QPointer<VideoFrame> xmitFrame   = scaledSize.isEmpty() ? origFrame : scaledFrame;
+		QSize originalSize = scaledSize.isEmpty() ? (xmitFrame ? xmitFrame->size() : QSize()) : (origFrame ? origFrame->size() : QSize());
+// 		if(!scaledSize.isEmpty() && origFrame->release())
+// 			delete origFrame;
+		if(xmitFrame)
+		{
 			
-		
-		QTime time = xmitFrame->captureTime();
-		int timestamp = time.hour()   * 60 * 60 * 1000 +
-				time.minute() * 60 * 1000      + 
-				time.second() * 1000           +
-				time.msec();
-		
-		int byteCount = 
-			xmitFrame->bufferType() == VideoFrame::BUFFER_IMAGE ? 
-				xmitFrame->image().byteCount() : 
-				xmitFrame->pointerLength();
-		
-		#define HEADER_SIZE 256
-		
-		if(!m_sentFirstHeader)
-		{
-			m_sentFirstHeader = true;
-			char headerData[HEADER_SIZE];
-			memset(&headerData, 0, HEADER_SIZE);
-			sprintf((char*)&headerData,"%d",byteCount);
-			//qDebug() << "header data:"<<headerData;
+			QTime time = xmitFrame->captureTime();
+			int timestamp = time.hour()   * 60 * 60 * 1000 +
+					time.minute() * 60 * 1000      + 
+					time.second() * 1000           +
+					time.msec();
 			
-			m_socket->write((const char*)&headerData,HEADER_SIZE);
-		}
-		
-		char headerData[HEADER_SIZE];
-		memset(&headerData, 0, HEADER_SIZE);
-		
-		sprintf((char*)&headerData,
-					"%d " // byteCount
-					"%d " // w
-					"%d " // h
-					"%d " // pixelFormat
-					"%d " // image.format
-					"%d " // bufferType
-					"%d " // timestamp
-					"%d " // holdTime
-					"%d " // original size X
-					"%d", // original size Y
-					byteCount, 
-					xmitFrame->size().width(), xmitFrame->size().height(),
-					(int)xmitFrame->pixelFormat(),(int)xmitFrame->image().format(),
-					(int)xmitFrame->bufferType(),
-					timestamp,xmitFrame->holdTime(),
-					originalSize.width(), originalSize.height());
-		//qDebug() << "VideoSenderThread::frameReady: header data:"<<headerData;
-		
-		m_socket->write((const char*)&headerData,HEADER_SIZE);
-		
-		if(xmitFrame->bufferType() == VideoFrame::BUFFER_IMAGE)
-		{
-			const uchar *bits = (const uchar*)xmitFrame->image().bits();
-			m_socket->write((const char*)bits,byteCount);
-		}
-		else
-		if(xmitFrame->bufferType() == VideoFrame::BUFFER_POINTER)
-		{
-			m_socket->write((const char*)xmitFrame->pointer(),byteCount);
+			int byteCount = 
+				xmitFrame->bufferType() == VideoFrame::BUFFER_IMAGE ? 
+					xmitFrame->image().byteCount() : 
+					xmitFrame->pointerLength();
+			
+			#define HEADER_SIZE 256
+			
+			if(!m_sentFirstHeader)
+			{
+				m_sentFirstHeader = true;
+				char headerData[HEADER_SIZE];
+				memset(&headerData, 0, HEADER_SIZE);
+				sprintf((char*)&headerData,"%d",byteCount);
+				//qDebug() << "header data:"<<headerData;
+				
+				m_socket->write((const char*)&headerData,HEADER_SIZE);
+			}
+			
+			if(byteCount > 0)
+			{
+				
+				char headerData[HEADER_SIZE];
+				memset(&headerData, 0, HEADER_SIZE);
+				
+				sprintf((char*)&headerData,
+							"%d " // byteCount
+							"%d " // w
+							"%d " // h
+							"%d " // pixelFormat
+							"%d " // image.format
+							"%d " // bufferType
+							"%d " // timestamp
+							"%d " // holdTime
+							"%d " // original size X
+							"%d", // original size Y
+							byteCount, 
+							xmitFrame->size().width(), xmitFrame->size().height(),
+							(int)xmitFrame->pixelFormat(),(int)xmitFrame->image().format(),
+							(int)xmitFrame->bufferType(),
+							timestamp,xmitFrame->holdTime(),
+							originalSize.width(), originalSize.height());
+				//qDebug() << "VideoSenderThread::frameReady: header data:"<<headerData;
+				
+				m_socket->write((const char*)&headerData,HEADER_SIZE);
+				
+				if(xmitFrame->bufferType() == VideoFrame::BUFFER_IMAGE)
+				{
+					const uchar *bits = (const uchar*)xmitFrame->image().bits();
+					m_socket->write((const char*)bits,byteCount);
+				}
+				else
+				if(xmitFrame->bufferType() == VideoFrame::BUFFER_POINTER)
+				{
+					//xmitFrame->incRef();
+					m_socket->write((const char*)xmitFrame->pointer(),byteCount);
+					//xmitFrame->release();
+					//if(xmitFrame->release())
+					//	delete xmitFrame;
+				}
+			}
+	
+			m_socket->flush();
+			
+			//if(xmitFrame->release())
+			//	delete xmitFrame;
+			
+	// 		if(xmitFrame->release())
+	// 			delete xmitFrame;
 		}
 
-		m_socket->flush();
-		
-		if(xmitFrame->release())
-			delete xmitFrame;
+ 		if(origFrame && origFrame->release())
+ 		{
+ 			//qDebug() << "VideoSenderThread::frameReady: Deleting origFrame:"<<origFrame;
+ 			delete origFrame;
+ 		}
+ 			
+ 		if(scaledFrame && scaledFrame->release())
+ 		{
+ 			//qDebug() << "VideoSenderThread::frameReady: Deleting scaledFrame:"<<scaledFrame; 
+ 			delete scaledFrame;
+ 		}
 
 		//QTime time2 = QTime::currentTime();
 		//int timestamp2 = time.hour() + time.minute() + time.second() + time.msec();

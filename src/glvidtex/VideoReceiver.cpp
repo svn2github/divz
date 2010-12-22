@@ -84,7 +84,7 @@ VideoReceiver::VideoReceiver(QObject *parent)
 VideoReceiver::~VideoReceiver()
 {
 	#ifdef DEBUG
-	qDebug() << "VideoReceiver::~VideoReceiver(): "<<this;
+	//qDebug() << "VideoReceiver::~VideoReceiver(): "<<this;
 	#endif
 	
 	QMutexLocker lock(&m_threadCacheMutex);

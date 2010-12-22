@@ -52,8 +52,8 @@ protected:
 private:
 	bool m_adaptiveWriteEnabled;
 	VideoSource *m_source;
-	VideoFrame *m_frame;
-	VideoFrame *m_scaledFrame;
+	QPointer<VideoFrame> m_frame;
+	QPointer<VideoFrame> m_scaledFrame;
 	QSize m_transmitSize;
 	int m_transmitFps;
 	QTimer m_fpsTimer;

@@ -158,7 +158,11 @@ VideoFrame *SimpleV4L2::readFrame()
 // 		frame->setByteArray(array);
 
 		//frame->pointer = (uchar*)malloc(sizeof(uchar) * m_buffers[buf.index].length);
-		memcpy(frame->allocPointer(m_buffers[buf.index].length), m_buffers[buf.index].start, m_buffers[buf.index].length);
+		{
+			uchar *pointer = frame->allocPointer(m_buffers[buf.index].length);
+			//qDebug() << "SimpleV4L2::readFrame: Read "<<m_buffers[buf.index].length<<" bytes into pointer "<<pointer;
+			memcpy(pointer, m_buffers[buf.index].start, m_buffers[buf.index].length);
+		}
 		
 		
 		if (-1 == xioctl (m_fd, VIDIOC_QBUF, &buf))

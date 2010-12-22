@@ -74,7 +74,10 @@ VideoFrame::VideoFrame(VideoFrame *other)
 VideoFrame::~VideoFrame()
 {
 	if(m_pointer)
+	{
+		//qDebug() << "VideoFrame::~VideoFrame(): "<<this<<" deleting m_pointer:"<<m_pointer; 
 		delete m_pointer;
+	}
 }
 	
 void VideoFrame::incRef()
@@ -100,7 +103,7 @@ uchar *VideoFrame::allocPointer(int bytes)
 }
 
 bool VideoFrame::isEmpty() { return m_bufferType == BUFFER_INVALID; }
-bool VideoFrame::isValid() { return m_bufferType != BUFFER_INVALID; }
+bool VideoFrame::isValid() { return m_bufferType != BUFFER_INVALID && (m_bufferType == BUFFER_IMAGE ? !m_image.isNull() : m_pointer != NULL); }
 
 // Returns the approx memory consumption of this frame.
 // 'approx' because it isn't perfect, especially when using

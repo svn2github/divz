@@ -6,6 +6,7 @@
 #include <QTimer>
 #include <QDebug>
 #include <QTime>
+#include <QPointer>
 
 #include <QMouseEvent>
 #include <QGLWidget>
@@ -100,8 +101,8 @@ private:
 	int    m_fadeLength;
 	QTimer m_fadeTimer;
 	
-	VideoFrame *m_frame;
-	VideoFrame *m_oldFrame;
+	QPointer<VideoFrame> m_frame;
+	QPointer<VideoFrame> m_oldFrame;
 	
 	Qt::AspectRatioMode m_aspectRatioMode;
 	int m_adjustDx1;
@@ -140,7 +141,7 @@ private:
 	// If setVideoSource called while cross fade is active, the source is changed AFTER the fade is complete
 	VideoSource * m_queuedSource;
 	 
-	VideoFrame  * m_overlayFrame;
+	QPointer<VideoFrame> m_overlayFrame;
 	VideoSource * m_overlaySource;
 	
 	QRect m_overlayTargetRect;
