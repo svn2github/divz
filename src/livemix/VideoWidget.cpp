@@ -478,25 +478,36 @@ void VideoWidget::frameReady()
 	VideoFrame *f = m_thread->frame();
 	if(!f)
 		return;
+	#ifdef DEBUG_VIDEOFRAME_POINTERS
 	qDebug() << "VideoWidget::frameReady(): Received frame ptr:"<<f;
+	#endif
 		
 	if(f->isValid())
 	{
 		if(m_frame && 
 		   m_frame->release())
 		{
+			#ifdef DEBUG_VIDEOFRAME_POINTERS
 			qDebug() << "VideoWidget::frameReady(): Deleting old m_frame:"<<m_frame;
+			#endif
+			
 			delete m_frame;
 		}
 
 		m_frame = f;
+		
+		#ifdef DEBUG_VIDEOFRAME_POINTERS
 		qDebug() << "VideoWidget::frameReady(): Received new m_frame:"<<m_frame;
+		#endif
 	}
 	else
 	{
 		if(f->release())
 		{
+			#ifdef DEBUG_VIDEOFRAME_POINTERS
 			qDebug() << "VideoWidget::frameReady(): Deleting invalid f ptr:"<<f;
+			#endif
+			
 			delete f;
 		}
 	}

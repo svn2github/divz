@@ -9,6 +9,8 @@
 #include <QMutex>
 #include <QObject>
 
+//#define DEBUG_VIDEOFRAME_POINTERS
+
 class VideoFrame : public QObject
 {
 	Q_OBJECT

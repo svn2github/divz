@@ -80,13 +80,22 @@ VideoFrame *VideoSource::frame()
 	if(!m_isBuffered ||
 	    m_frameQueue.isEmpty())
 	{
+		#ifdef DEBUG_VIDEOFRAME_POINTERS
 		qDebug() << "VideoSource::frame(): Testing validity of m_singleFrame:"<<m_singleFrame;
+		#endif
+		
 		if(m_singleFrame)
 		{
+			#ifdef DEBUG_VIDEOFRAME_POINTERS
 			qDebug() << "VideoSource::frame(): Calling incRef() on m_singleFrame:"<<m_singleFrame;
+			#endif
+			
 			m_singleFrame->incRef();
 		}
+		#ifdef DEBUG_VIDEOFRAME_POINTERS
 		qDebug() << "VideoSource::frame(): Returning m_singleFrame:"<<m_singleFrame;
+		#endif
+		
 		return m_singleFrame;
 	}
 	//qDebug() << "VideoSource::frame(): Queue size: "<<m_frameQueue.size();
@@ -97,7 +106,10 @@ VideoFrame *VideoSource::frame()
 		//qDebug() << "VideoSource::frame(): Calling incRef() on frame from queue:"<<frame;
 		//frame->incRef();
 	}
+	#ifdef DEBUG_VIDEOFRAME_POINTERS
 	qDebug() << "VideoSource::frame(): Returning frame from queue:"<<frame;
+	#endif
+	
 	return frame;
 }
 
@@ -109,23 +121,36 @@ void VideoSource::enqueue(VideoFrame *frame)
 	{
 		// incRef() here instead of when we take from the queue because if we dont, then the singleFrame code 
 		// below will try to release this frame and delete it when the next frame comes in.
+		#ifdef DEBUG_VIDEOFRAME_POINTERS
 		qDebug() << "VideoSource::enqueue(): Calling incRef() on frame going into queue:"<<frame;
+		#endif
+		
 		frame->incRef();
 		m_frameQueue.enqueue(frame);
 	}
 	//else
 	if(m_singleFrame)
 	{
+		#ifdef DEBUG_VIDEOFRAME_POINTERS
 		qDebug() << "VideoSource::enqueue(): Releasing old m_singleFrame:"<<m_singleFrame;
+		#endif
+		
 		if(m_singleFrame->release())
 		{
+			#ifdef DEBUG_VIDEOFRAME_POINTERS
 			qDebug() << "VideoSource::enqueue(): Deleting old m_singleFrame:"<<m_singleFrame;
+			#endif
+			
 			delete m_singleFrame;
 			m_singleFrame = 0;
 		}
 	}
 	m_singleFrame = frame;
+	
+	#ifdef DEBUG_VIDEOFRAME_POINTERS
 	qDebug() << "VideoSource::enqueue(): Calling incRef() on m_singleFrame:"<<m_singleFrame;
+	#endif
+	
 	m_singleFrame->incRef();
 	
  	//qDebug() << "VideoSource::enqueue(): "<<this<<" m_isBuffered:"<<m_isBuffered<<", Queue size: "<<m_frameQueue.size();

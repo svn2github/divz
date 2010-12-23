@@ -217,12 +217,16 @@ void GLVideoDrawable::setVideoSource(VideoSource *source)
 			if(m_frame2 &&
 			   m_frame2->release())
 			{
+				#ifdef DEBUG_VIDEOFRAME_POINTERS
 				qDebug() << "GLVideoDrawable::setVideoSource(): Deleting old m_frame2:"<<m_frame2;
+				#endif
 				delete m_frame2;
 				m_frame2 = 0;
 			}
 			m_frame2 = m_frame;
+			#ifdef DEBUG_VIDEOFRAME_POINTERS
 			qDebug() << "GLVideoDrawable::setVideoSource(): Copied m_frame:"<<m_frame<<"to m_frame2:"<<m_frame2<<", calling incRef() on m_frame2";
+			#endif
 			m_frame2->incRef();
 			updateTexture(true);
 
@@ -344,7 +348,9 @@ void GLVideoDrawable::frameReady()
 			if(m_frame && 
 			   m_frame->release())
 			{
+				#ifdef DEBUG_VIDEOFRAME_POINTERS
  				qDebug() << "GLVideoDrawable::frameReady(): "<<objectName()<<" deleting old frame:"<<m_frame;
+ 				#endif
 				delete m_frame;
 			}
 
@@ -354,7 +360,9 @@ void GLVideoDrawable::frameReady()
 		{
 			if(f->release())
 			{
+				#ifdef DEBUG_VIDEOFRAME_POINTERS
  				qDebug() << "GLVideoDrawable::frameReady(): "<<objectName()<<" deleting invalid frame:"<<f;
+ 				#endif
 				delete f;
 			}
 		}
@@ -388,7 +396,9 @@ void GLVideoDrawable::frameReady2()
 			if(m_frame2 && 
 			   m_frame2->release())
 			   {
+			   	#ifdef DEBUG_VIDEOFRAME_POINTERS
 			   	qDebug() << "GLVideoDrawable::frameReady2(): "<<objectName()<<" deleting old m_frame2:"<<m_frame2;
+			   	#endif
 			   	delete m_frame2;
 			   }
 
@@ -398,7 +408,9 @@ void GLVideoDrawable::frameReady2()
 		{
 			if(f->release())
 			{
+				#ifdef DEBUG_VIDEOFRAME_POINTERS
 				qDebug() << "GLVideoDrawable::frameReady2(): "<<objectName()<<" deleting invalid frame:"<<f;
+				#endif
 				delete f;
 			}
 		}
