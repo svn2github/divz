@@ -103,27 +103,33 @@ VideoFrame *VideoSource::frame()
 
 void VideoSource::enqueue(VideoFrame *frame)
 {
-	QMutexLocker lock(&m_queueMutex);
+	//QMutexLocker lock(&m_queueMutex);
+	m_queueMutex.lock();
 	if(m_isBuffered)
 	{
 		// incRef() here instead of when we take from the queue because if we dont, then the singleFrame code 
 		// below will try to release this frame and delete it when the next frame comes in.
+		qDebug() << "VideoSource::enqueue(): Calling incRef() on frame going into queue:"<<frame;
 		frame->incRef();
 		m_frameQueue.enqueue(frame);
 	}
 	//else
-	if(m_singleFrame && 
-	   m_singleFrame->release())
+	if(m_singleFrame)
 	{
-		qDebug() << "VideoSource::enqueue(): Deleting old m_singleFrame:"<<m_singleFrame;
-		delete m_singleFrame;
-		m_singleFrame = 0;
+		qDebug() << "VideoSource::enqueue(): Releasing old m_singleFrame:"<<m_singleFrame;
+		if(m_singleFrame->release())
+		{
+			qDebug() << "VideoSource::enqueue(): Deleting old m_singleFrame:"<<m_singleFrame;
+			delete m_singleFrame;
+			m_singleFrame = 0;
+		}
 	}
 	m_singleFrame = frame;
 	qDebug() << "VideoSource::enqueue(): Calling incRef() on m_singleFrame:"<<m_singleFrame;
 	m_singleFrame->incRef();
 	
  	//qDebug() << "VideoSource::enqueue(): "<<this<<" m_isBuffered:"<<m_isBuffered<<", Queue size: "<<m_frameQueue.size();
+	m_queueMutex.unlock();
 	
 	emit frameReady();
 }

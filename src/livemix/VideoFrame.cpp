@@ -159,9 +159,9 @@ void VideoFrame::setBufferType(BufferType type)
 	m_bufferType = type;
 }
 
-void VideoFrame::setImage(const QImage& image)
+void VideoFrame::setImage(QImage image)
 {
-	m_image = image; // .copy();
+	m_image = image;//.copy();
 }
 
 void VideoFrame::setIsRaw(bool flag)

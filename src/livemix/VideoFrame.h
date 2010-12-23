@@ -65,7 +65,7 @@ QVideoFrame::Format_RGB555	6	The frame is stored using a 16-bit RGB format (5-5-
 	void setBufferType(BufferType type);
 	
 	QImage image() { return m_image; }
-	void setImage(const QImage& image);
+	void setImage(QImage image);
 	
 	bool isRaw() { return m_isRaw; }
 	void setIsRaw(bool flag);

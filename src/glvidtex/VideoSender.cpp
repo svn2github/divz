@@ -92,13 +92,18 @@ void VideoSender::frameReady()
 	if(!f)
 		return;
 		
+	m_frameMutex.lock();
+	
 	if(f->isValid())
 	{
-		if(m_frame && 
-		   m_frame->release())
+		if(m_frame)
 		{
-			qDebug() << "VideoSender::frameReady(): Deleting old m_frame:"<<m_frame;
-			delete m_frame;
+			qDebug() << "VideoSender::frameReady(): Releasing old m_frame:"<<m_frame; 
+			if(m_frame->release())
+			{
+				qDebug() << "VideoSender::frameReady(): Deleting old m_frame:"<<m_frame;
+				delete m_frame;
+			}
 		}
 
 		m_frame = f;
@@ -106,6 +111,7 @@ void VideoSender::frameReady()
 	}
 	else
 	{
+		qDebug() << "VideoSender::frameReady(): Releasing invalid frame:"<<f;
 		if(f->release())
 		{
 			qDebug() << "VideoSender::frameReady(): Deleting invalid frame:"<<f;
@@ -173,11 +179,14 @@ void VideoSender::frameReady()
 // 		}
 // 		else
 		{
-			if(m_scaledFrame && 
-			   m_scaledFrame->release())
+			if(m_scaledFrame)
 			{
-				qDebug() << "VideoSender::frameReady(): Deleting old m_scaledFrame:"<<m_scaledFrame; 
-				delete m_scaledFrame;
+				qDebug() << "VideoSender::frameReady(): Releasing old m_scaledFrame:"<<m_scaledFrame;
+				if(m_scaledFrame->release())
+				{
+					qDebug() << "VideoSender::frameReady(): Deleting old m_scaledFrame:"<<m_scaledFrame; 
+					delete m_scaledFrame;
+				}
 			}
 				
 			qDebug() << "VideoSender::frameReady(): Mark3: m_frame:"<<m_frame;
@@ -187,6 +196,7 @@ void VideoSender::frameReady()
 			qDebug() << "VideoSender::frameReady(): Mark4: m_frame:"<<m_frame;
 			//qDebug() << "VideoSender::frameReady: Allocated new scaledFrame:"<<m_scaledFrame;
 			m_scaledFrame->setBufferType(VideoFrame::BUFFER_IMAGE);
+			//m_scaledFrame->setBufferType(VideoFrame::BUFFER_POINTER);
 			qDebug() << "VideoSender::frameReady(): Creating new scaled frame:"<<m_scaledFrame<<" from old m_frame:"<<m_frame;
 			m_scaledFrame->setCaptureTime(m_frame->captureTime());
 
@@ -208,24 +218,35 @@ void VideoSender::frameReady()
 				m_scaledFrame->setPixelFormat(QVideoFrame::Format_ARGB32);
 			}
 			
+			//scaledImage.scanLine(0);
 			m_scaledFrame->setImage(scaledImage);
+			/*uchar *ptr = m_scaledFrame->allocPointer(scaledImage.byteCount());
+			const uchar *src = (const uchar*)scaledImage.bits();
+			memcpy(ptr, src, scaledImage.byteCount());
+			qDebug() << "VideoSender::frameReady(): m_scaledFrame:"<<m_scaledFrame<<", Copied"<<scaledImage.byteCount()<<"bytes from img ptr:"<<src<<" into frame pointer:"<<ptr;*/  
+			
 			m_scaledFrame->setSize(scaledImage.size());
 			m_scaledFrame->setHoldTime(m_transmitFps <= 0 ? m_frame->holdTime() : 1000/m_transmitFps);
+			qDebug() << "VideoSender::frameReady(): Mark5: m_frame:"<<m_frame;
 		}
 		
 // 		if(m_frame->release())
 // 			delete m_frame;
 	}
 	
+	m_frameMutex.unlock();
+	
 	if(m_transmitFps <= 0)
 		emit receivedFrame();
 	else
 	if(m_frame)
 		m_frame->setHoldTime(1000/m_transmitFps);
+	qDebug() << "VideoSender::frameReady(): Mark6: m_frame:"<<m_frame;
 }
 
 VideoFrame *VideoSender::frame() 
 { 
+	QMutexLocker lock(&m_frameMutex);
 	if(m_frame)
 	{
 		qDebug() << "VideoSender::frame(): Calling incRef() on m_frame:"<<m_frame;
@@ -235,6 +256,7 @@ VideoFrame *VideoSender::frame()
 }
 VideoFrame *VideoSender::scaledFrame()
 {
+	QMutexLocker lock(&m_frameMutex);
 	//qDebug() << "VideoSender::scaledFrame: m_scaledFrame:"<<m_scaledFrame; 
 	if(m_scaledFrame)
 	{
@@ -387,7 +409,9 @@ void VideoSenderThread::frameReady()
 				
 				if(xmitFrame->bufferType() == VideoFrame::BUFFER_IMAGE)
 				{
-					const uchar *bits = (const uchar*)xmitFrame->image().bits();
+					QImage copy = xmitFrame->image().copy();
+					//copy.scanLine(0);
+					const uchar *bits = (const uchar*)copy.bits();
 					m_socket->write((const char*)bits,byteCount);
 				}
 				else
@@ -410,17 +434,25 @@ void VideoSenderThread::frameReady()
 	// 			delete xmitFrame;
 		}
 
- 		if(origFrame && origFrame->release())
+ 		if(origFrame)
  		{
- 			qDebug() << "VideoSenderThread::frameReady(): Deleting origFrame:"<<origFrame;
- 			delete origFrame;
- 		}
+ 			qDebug() << "VideoSenderThread::frameReady(): Releasing origFrame:"<<origFrame;
+ 			if(origFrame->release())
+			{
+				qDebug() << "VideoSenderThread::frameReady(): Deleting origFrame:"<<origFrame;
+				delete origFrame;
+			}
+		}
  			
- 		if(scaledFrame && scaledFrame->release())
+ 		if(scaledFrame)
  		{
- 			qDebug() << "VideoSenderThread::frameReady(): Deleting scaledFrame:"<<scaledFrame; 
- 			delete scaledFrame;
- 		}
+ 			qDebug() << "VideoSenderThread::frameReady(): Releasing scaledFrame:"<<scaledFrame;
+ 			if(scaledFrame->release())
+			{
+				qDebug() << "VideoSenderThread::frameReady(): Deleting scaledFrame:"<<scaledFrame; 
+				delete scaledFrame;
+			}
+		}
 
 		//QTime time2 = QTime::currentTime();
 		//int timestamp2 = time.hour() + time.minute() + time.second() + time.msec();

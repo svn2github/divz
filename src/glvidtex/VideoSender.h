@@ -7,6 +7,7 @@
 #include <QImageWriter>
 #include <QTimer>
 #include <QImage>
+#include <QMutex>
 
 class SimpleV4L2;
 #include "../livemix/VideoFrame.h"
@@ -57,6 +58,7 @@ private:
 	QSize m_transmitSize;
 	int m_transmitFps;
 	QTimer m_fpsTimer;
+	QMutex m_frameMutex;
 	
 };
 
