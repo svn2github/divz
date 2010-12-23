@@ -288,6 +288,7 @@ private:
 	
 	QGLShaderProgram *m_program;
 	bool m_useShaders;
+	bool m_shadersLinked;
 	
 	#ifndef QT_OPENGL_ES
 	typedef void (APIENTRY *_glActiveTexture) (GLenum);

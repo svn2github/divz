@@ -870,10 +870,10 @@
                    <string>x </string>
                   </property>
                   <property name="minimum">
-                   <number>-999</number>
+                   <number>0</number>
                   </property>
                   <property name="maximum">
-                   <number>0</number>
+                   <number>9999</number>
                   </property>
                  </widget>
                 </item>
@@ -889,7 +889,7 @@
                    <number>0</number>
                   </property>
                   <property name="maximum">
-                   <number>999</number>
+                   <number>9999</number>
                   </property>
                  </widget>
                 </item>
@@ -909,10 +909,10 @@
                    <string>x </string>
                   </property>
                   <property name="minimum">
-                   <number>-999</number>
+                   <number>0</number>
                   </property>
                   <property name="maximum">
-                   <number>0</number>
+                   <number>9999</number>
                   </property>
                  </widget>
                 </item>
@@ -925,10 +925,10 @@
                    <string>y </string>
                   </property>
                   <property name="minimum">
-                   <number>-999</number>
+                   <number>0</number>
                   </property>
                   <property name="maximum">
-                   <number>0</number>
+                   <number>9999</number>
                   </property>
                  </widget>
                 </item>
@@ -948,7 +948,7 @@
                    <string>x </string>
                   </property>
                   <property name="maximum">
-                   <number>999</number>
+                   <number>9999</number>
                   </property>
                  </widget>
                 </item>
@@ -961,10 +961,10 @@
                    <string>y </string>
                   </property>
                   <property name="minimum">
-                   <number>-999</number>
+                   <number>0</number>
                   </property>
                   <property name="maximum">
-                   <number>0</number>
+                   <number>9999</number>
                   </property>
                  </widget>
                 </item>

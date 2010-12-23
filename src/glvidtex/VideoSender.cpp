@@ -89,6 +89,9 @@ void VideoSender::frameReady()
 	//QMutexLocker lock(&m_frameReadyLock);
 	
 	VideoFrame *f = m_source->frame();
+	if(!f)
+		return;
+		
 	if(f->isValid())
 	{
 		if(m_frame && 
@@ -109,7 +112,7 @@ void VideoSender::frameReady()
 	
 	if(m_frame && m_frame->isValid() && !m_transmitSize.isEmpty())
 	{
-		m_frame->incRef();
+// 		m_frame->incRef();
 		
 		//qDebug() << "VideoSender::frameReady: Downscaling video for transmission to "<<m_transmitSize;
 		// To scale the video frame, first we must convert it to a QImage if its not already an image.
@@ -122,6 +125,7 @@ void VideoSender::frameReady()
 		}
 		else
 		{
+			qDebug() << "VideoSender::frameReady(): Scaling data from frame:"<<m_frame<<", pointer:"<<m_frame->pointer();
 			const QImage::Format imageFormat = QVideoFrame::imageFormatFromPixelFormat(m_frame->pixelFormat());
 			if(imageFormat != QImage::Format_Invalid)
 			{
@@ -158,8 +162,12 @@ void VideoSender::frameReady()
 // 		}
 // 		else
 		{
-			if(m_scaledFrame && m_scaledFrame->release())
+			if(m_scaledFrame && 
+			   m_scaledFrame->release())
+			{
+				qDebug() << "VideoSender::frameReady(): Deleting old m_scaledFrame:"<<m_scaledFrame; 
 				delete m_scaledFrame;
+			}
 				
 			m_scaledFrame = new VideoFrame();
 			//qDebug() << "VideoSender::frameReady: Allocated new scaledFrame:"<<m_scaledFrame;
@@ -189,8 +197,8 @@ void VideoSender::frameReady()
 			m_scaledFrame->setHoldTime(m_transmitFps <= 0 ? m_frame->holdTime() : 1000/m_transmitFps);
 		}
 		
-		if(m_frame->release())
-			delete m_frame;
+// 		if(m_frame->release())
+// 			delete m_frame;
 	}
 	
 	if(m_transmitFps <= 0)
@@ -382,13 +390,13 @@ void VideoSenderThread::frameReady()
 
  		if(origFrame && origFrame->release())
  		{
- 			//qDebug() << "VideoSenderThread::frameReady: Deleting origFrame:"<<origFrame;
+ 			qDebug() << "VideoSenderThread::frameReady(): Deleting origFrame:"<<origFrame;
  			delete origFrame;
  		}
  			
  		if(scaledFrame && scaledFrame->release())
  		{
- 			//qDebug() << "VideoSenderThread::frameReady: Deleting scaledFrame:"<<scaledFrame; 
+ 			qDebug() << "VideoSenderThread::frameReady(): Deleting scaledFrame:"<<scaledFrame; 
  			delete scaledFrame;
  		}
 

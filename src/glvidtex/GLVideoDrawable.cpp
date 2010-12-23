@@ -336,7 +336,7 @@ void GLVideoDrawable::frameReady()
 			if(m_frame && 
 			   m_frame->release())
 			{
-// 				qDebug() << "GLVideoDrawable::frameReady(): "<<objectName()<<" deleting old frame:"<<m_frame;
+ 				qDebug() << "GLVideoDrawable::frameReady(): "<<objectName()<<" deleting old frame:"<<m_frame;
 				delete m_frame;
 			}
 
@@ -346,7 +346,7 @@ void GLVideoDrawable::frameReady()
 		{
 			if(f->release())
 			{
-// 				qDebug() << "GLVideoDrawable::frameReady(): "<<objectName()<<" deleting invalid frame:"<<f;
+ 				qDebug() << "GLVideoDrawable::frameReady(): "<<objectName()<<" deleting invalid frame:"<<f;
 				delete f;
 			}
 		}
@@ -379,14 +379,20 @@ void GLVideoDrawable::frameReady2()
 		{
 			if(m_frame2 && 
 			   m_frame2->release())
-			   delete m_frame2;
+			   {
+			   	qDebug() << "GLVideoDrawable::frameReady2(): "<<objectName()<<" deleting old m_frame2:"<<m_frame2;
+			   	delete m_frame2;
+			   }
 
 			m_frame2 = f;
 		}
 		else
 		{
 			if(f->release())
+			{
+				qDebug() << "GLVideoDrawable::frameReady2(): "<<objectName()<<" deleting invalid frame:"<<f;
 				delete f;
+			}
 		}
 	}
 
@@ -1667,6 +1673,9 @@ void GLVideoDrawable::paint(QPainter * painter, const QStyleOptionGraphicsItem *
 	painter->setRenderHint(QPainter::SmoothPixmapTransform, true);
 
 	painter->setOpacity(opacity() * (m_fadeActive ? m_fadeValue:1));
+	
+	if(!m_frame)
+		return;
 
 	if(!m_frame->image().isNull())
 	{

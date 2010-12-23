@@ -191,6 +191,7 @@ GLWidget::GLWidget(QWidget *parent, QGLWidget *shareWidget)
 	, m_aspectRatioMode(Qt::KeepAspectRatio)
 	, m_program(0)
 	, m_useShaders(false)
+	, m_shadersLinked(false)
 {
 	
 	setCanvasSize(QSizeF(1000.,750.));
@@ -425,6 +426,8 @@ void GLWidget::initShaders()
 		m_program->removeAllShaders();
 		return;// false;
 	} 
+	
+	m_shadersLinked = true;
 }
 
 void GLWidgetSubview::initAlphaMask()
@@ -780,7 +783,8 @@ void GLWidget::paintGL()
 	
 	glEnable(GL_TEXTURE_2D);
 	
-	if(m_useShaders)
+	if(m_useShaders && 
+	   m_shadersLinked)
 	{
 				
 		const int devW = QGLContext::currentContext()->device()->width();

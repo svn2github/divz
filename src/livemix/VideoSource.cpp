@@ -96,7 +96,10 @@ void VideoSource::enqueue(VideoFrame *frame)
 	//else
 	if(m_singleFrame && 
 	   m_singleFrame->release())
+	   {
+	   	qDebug() << "VideoSource::enqueue(): Deleting old m_singleFrame:"<<m_singleFrame;
 		delete m_singleFrame;
+	   }
 	m_singleFrame = frame;
 	
  	//qDebug() << "VideoSource::enqueue(): "<<this<<" m_isBuffered:"<<m_isBuffered<<", Queue size: "<<m_frameQueue.size();

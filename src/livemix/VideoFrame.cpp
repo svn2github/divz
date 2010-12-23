@@ -73,10 +73,12 @@ VideoFrame::VideoFrame(VideoFrame *other)
 
 VideoFrame::~VideoFrame()
 {
+	qDebug() << "VideoFrame::~VideoFrame(): "<<this;
 	if(m_pointer)
 	{
-		//qDebug() << "VideoFrame::~VideoFrame(): "<<this<<" deleting m_pointer:"<<m_pointer; 
-		delete m_pointer;
+		qDebug() << "VideoFrame::~VideoFrame(): "<<this<<" deleting m_pointer:"<<m_pointer; 
+		free(m_pointer);
+		m_pointer = 0;
 	}
 }
 	
@@ -84,20 +86,25 @@ void VideoFrame::incRef()
 {
 	QMutexLocker lock(&m_refMutex);
 	m_refCount++;
+	qDebug() << "VideoFrame::incRef(): "<<this<<": m_refCount:"<<m_refCount; 	
 }
 
 bool VideoFrame::release()
 {
 	QMutexLocker lock(&m_refMutex);
 	m_refCount --;
-	return m_refCount <= 0;
+	qDebug() << "VideoFrame::release(): "<<this<<": m_refCount:"<<m_refCount;
+	if(m_refCount <= 0)
+		deleteLater();
+	return false;
 }
 
 uchar *VideoFrame::allocPointer(int bytes)
 {
-	if(m_pointer)
-		delete m_pointer;
+// 	if(m_pointer)
+// 		delete m_pointer;
 	m_pointer = (uchar*)malloc(sizeof(uchar) * bytes);
+	qDebug() << "VideoFrame::allocPointer(): "<<this<<" allocated m_pointer:"<<m_pointer<<", bytes:"<<bytes;
 	m_pointerLength = bytes;
 	return m_pointer;
 }
