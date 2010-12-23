@@ -478,19 +478,27 @@ void VideoWidget::frameReady()
 	VideoFrame *f = m_thread->frame();
 	if(!f)
 		return;
+	qDebug() << "VideoWidget::frameReady(): Received frame ptr:"<<f;
 		
 	if(f->isValid())
 	{
 		if(m_frame && 
-			m_frame->release())
+		   m_frame->release())
+		{
+			qDebug() << "VideoWidget::frameReady(): Deleting old m_frame:"<<m_frame;
 			delete m_frame;
+		}
 
 		m_frame = f;
+		qDebug() << "VideoWidget::frameReady(): Received new m_frame:"<<m_frame;
 	}
 	else
 	{
 		if(f->release())
+		{
+			qDebug() << "VideoWidget::frameReady(): Deleting invalid f ptr:"<<f;
 			delete f;
+		}
 	}
 
 	if(m_frame && (m_frame->size() != m_origSourceRect.size() || m_targetRect.isEmpty() || m_sourceRect.isEmpty()))

@@ -214,7 +214,15 @@ void GLVideoDrawable::setVideoSource(VideoSource *source)
 			connect(m_source2, SIGNAL(frameReady()), this, SLOT(frameReady2()));
 			connect(m_source2, SIGNAL(destroyed()),  this, SLOT(disconnectVideoSource2()));
 
+			if(m_frame2 &&
+			   m_frame2->release())
+			{
+				qDebug() << "GLVideoDrawable::setVideoSource(): Deleting old m_frame2:"<<m_frame2;
+				delete m_frame2;
+				m_frame2 = 0;
+			}
 			m_frame2 = m_frame;
+			qDebug() << "GLVideoDrawable::setVideoSource(): Copied m_frame:"<<m_frame<<"to m_frame2:"<<m_frame2<<", calling incRef() on m_frame2";
 			m_frame2->incRef();
 			updateTexture(true);
 

@@ -96,14 +96,21 @@ void VideoSender::frameReady()
 	{
 		if(m_frame && 
 		   m_frame->release())
+		{
+			qDebug() << "VideoSender::frameReady(): Deleting old m_frame:"<<m_frame;
 			delete m_frame;
+		}
 
 		m_frame = f;
+		qDebug() << "VideoSender::frameReady(): Received new m_frame:"<<m_frame;
 	}
 	else
 	{
 		if(f->release())
+		{
+			qDebug() << "VideoSender::frameReady(): Deleting invalid frame:"<<f;
 			delete f;
+		}
 	}
 	
 	//QImage image((const uchar*)m_frame->byteArray().constData(),m_frame->size().width(),m_frame->size().height(),QImage::Format_RGB32);
@@ -112,6 +119,8 @@ void VideoSender::frameReady()
 	
 	if(m_frame && m_frame->isValid() && !m_transmitSize.isEmpty())
 	{
+		qDebug() << "VideoSender::frameReady(): Mark1: m_frame:"<<m_frame;
+		
 // 		m_frame->incRef();
 		
 		//qDebug() << "VideoSender::frameReady: Downscaling video for transmission to "<<m_transmitSize;
@@ -153,6 +162,8 @@ void VideoSender::frameReady()
 			}
 		}
 		
+		qDebug() << "VideoSender::frameReady(): Mark2: m_frame:"<<m_frame;
+		
 		// Now that we've got the image out of the original frame and scaled it, we have to construct a new
 		// video frame to transmit on the wire from the scaledImage (assuming the sccaledImage is valid.)
 		// We attempt to transmit in its native format without converting it if we can to save local CPU power.
@@ -169,9 +180,14 @@ void VideoSender::frameReady()
 				delete m_scaledFrame;
 			}
 				
+			qDebug() << "VideoSender::frameReady(): Mark3: m_frame:"<<m_frame;
 			m_scaledFrame = new VideoFrame();
+			qDebug() << "VideoSender::frameReady(): Creating new scaled frame:"<<m_scaledFrame<<", calling incRef()";
+			m_scaledFrame->incRef();
+			qDebug() << "VideoSender::frameReady(): Mark4: m_frame:"<<m_frame;
 			//qDebug() << "VideoSender::frameReady: Allocated new scaledFrame:"<<m_scaledFrame;
 			m_scaledFrame->setBufferType(VideoFrame::BUFFER_IMAGE);
+			qDebug() << "VideoSender::frameReady(): Creating new scaled frame:"<<m_scaledFrame<<" from old m_frame:"<<m_frame;
 			m_scaledFrame->setCaptureTime(m_frame->captureTime());
 
 			QImage::Format format = scaledImage.format();
@@ -211,14 +227,20 @@ void VideoSender::frameReady()
 VideoFrame *VideoSender::frame() 
 { 
 	if(m_frame)
+	{
+		qDebug() << "VideoSender::frame(): Calling incRef() on m_frame:"<<m_frame;
 		m_frame->incRef(); 
+	}
 	return m_frame; 
 }
 VideoFrame *VideoSender::scaledFrame()
 {
 	//qDebug() << "VideoSender::scaledFrame: m_scaledFrame:"<<m_scaledFrame; 
 	if(m_scaledFrame)
+	{
+		qDebug() << "VideoSender::scaledFrame(): Calling incRef() on m_scaledFrame:"<<m_scaledFrame;
 		m_scaledFrame->incRef(); 
+	}
 	return m_scaledFrame; 
 }
 

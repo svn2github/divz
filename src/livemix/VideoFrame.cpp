@@ -10,6 +10,7 @@ VideoFrame::VideoFrame()
 	m_refCount = 0;
 	m_pointer = 0;
 	m_pointerLength = 0;
+	qDebug() << "VideoFrame::VideoFrame(): constructor(1): "<<this;
 }
 
 VideoFrame::VideoFrame(int holdTime, const QTime &captureTime)
@@ -21,7 +22,9 @@ VideoFrame::VideoFrame(int holdTime, const QTime &captureTime)
 	, m_refCount(0)
 	, m_pointer(0)
 	, m_pointerLength(0)
-{}
+{
+	qDebug() << "VideoFrame::VideoFrame(): constructor(2): "<<this;
+}
 
 
 VideoFrame::VideoFrame(const QImage &frame, int holdTime, const QTime &captureTime)
@@ -35,6 +38,8 @@ VideoFrame::VideoFrame(const QImage &frame, int holdTime, const QTime &captureTi
 	, m_pointer(0)
 	, m_pointerLength(0)
 {
+	qDebug() << "VideoFrame::VideoFrame(): constructor(3): "<<this;
+	
 	setSize(frame.size());
 	
 	QImage::Format format = m_image.format();
@@ -68,6 +73,7 @@ VideoFrame::VideoFrame(VideoFrame *other)
 	, m_pointerLength(other->m_pointerLength)
 
 {
+	qDebug() << "VideoFrame::VideoFrame(): constructor(4): "<<this;
 	setSize(other->m_size);
 }
 
@@ -95,7 +101,8 @@ bool VideoFrame::release()
 	m_refCount --;
 	qDebug() << "VideoFrame::release(): "<<this<<": m_refCount:"<<m_refCount;
 	if(m_refCount <= 0)
-		deleteLater();
+		//deleteLater();
+		return true;
 	return false;
 }
 

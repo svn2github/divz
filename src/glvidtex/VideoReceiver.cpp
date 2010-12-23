@@ -272,6 +272,7 @@ void VideoReceiver::processBlock()
 				
 			//VideoFrame frame;
 			VideoFrame *frame = new VideoFrame();
+			qDebug() << "VideoReceiver::processBlock(): Created new frame:"<<frame;
 			frame->setHoldTime    (holdTime);
 			frame->setCaptureTime (timestampToQTime(timestamp));
 			frame->setPixelFormat ((QVideoFrame::PixelFormat)pixelFormatId);
@@ -309,6 +310,7 @@ void VideoReceiver::processBlock()
 			else
 				frame->setSize(QSize(imgX,imgY));
 
+			qDebug() << "VideoReceiver::processBlock(): Enqueing new frame:"<<frame;
 			enqueue(frame);
 			/*
 			//480,480, QImage::Format_RGB32);

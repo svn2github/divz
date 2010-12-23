@@ -5,6 +5,7 @@
 #include <QImage>
 #include <QQueue>
 #include <QPointer>
+#include <QMutex>
 
 #include "VideoFrame.h"
 
@@ -73,6 +74,7 @@ protected:
 	QList<QObject*> m_consumerList;
 	bool m_isBuffered;
 	QPointer<VideoFrame> m_singleFrame;
+	QMutex m_queueMutex;
 };
 
 

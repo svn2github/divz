@@ -161,8 +161,8 @@ win32 {
 }
 unix {
     #QT_MOBILITY_HOME = /opt/qt-mobility-opensource-src-1.0.1
-    #QT_MOBILITY_HOME = /opt/qt-mobility-opensource-src-1.1.0-beta2
-     QT_MOBILITY_HOME = /opt/qt-mobility-opensource-src-1.1.0-tp
+     QT_MOBILITY_HOME = /opt/qt-mobility-opensource-src-1.1.0-beta2
+    #QT_MOBILITY_HOME = /opt/qt-mobility-opensource-src-1.1.0-tp
 }
 	
 # To enable, use: qmake CONFIG+=mobility, and make sure QT_MOBILITY_HOME is correct
