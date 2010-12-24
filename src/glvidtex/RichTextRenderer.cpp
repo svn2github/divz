@@ -281,9 +281,14 @@ void RichTextRenderer::update()
 void RichTextRenderer::renderText()
 {
 // 	qDebug()<<itemName()<<"TextBoxWarmingThread::run(): htmlCode:"<<htmlCode;
-	//qDebug() << "RichTextRenderer::update(): HTML:"<<html();
+	//qDebug() << "RichTextRenderer::renderText(): HTML:"<<html();
 	//qDebug() << "RichTextRenderer::update(): Update Start...";
-// 	qDebug() << "RichTextRenderer::renderText(): \t in thread:"<<QThread::currentThreadId();
+ 	//qDebug() << "RichTextRenderer::renderText(): \t in thread:"<<QThread::currentThreadId();
+	if(m_updateTimer.isActive())
+		m_updateTimer.stop();
+		
+	QTime renderTime;
+	renderTime.start();
 	
 	QTextDocument doc;
 	QTextDocument shadowDoc;
@@ -298,7 +303,6 @@ void RichTextRenderer::renderText()
 		doc.setPlainText(html());
 		shadowDoc.setPlainText(html());
 	}
-	
 	
 	int textWidth = m_textWidth;
 
@@ -408,7 +412,7 @@ void RichTextRenderer::renderText()
 	m_image = cache.convertToFormat(QImage::Format_ARGB32);
 	emit textRendered(m_image);
 	
-	//qDebug() << "RichTextRenderer::update(): Update Done.";
+	//qDebug() << "RichTextRenderer::renderText(): Render finished, elapsed:"<<renderTime.elapsed()<<"ms";
 }
 
 ITEM_PROPSET(RichTextRenderer, TextWidth,	int,	textWidth);

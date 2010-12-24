@@ -43,11 +43,11 @@ int main(int argc, char *argv[])
 
  	PlayerWindow *glw = new PlayerWindow();
 	
-// 	VideoWidget *glw = new VideoWidget();
-//  	//GLWidget *glw = new GLWidget();
+	//VideoWidget *glw = new VideoWidget();
+//  	GLWidget *glw = new GLWidget();
 //  	glw->resize(640,480);
-//  	//glw->setViewport(QRectF(0,0,1000,750));
-//  	
+ 	//glw->setViewport(QRectF(0,0,1000,750));
+ 	
 //  	CameraThread *source = CameraThread::threadForCamera("/dev/video0");
 //  	source->setInput("S-Video");
 //  	source->setFps(30);
@@ -68,19 +68,38 @@ int main(int argc, char *argv[])
 // 	VideoReceiver *rx = VideoReceiver::getReceiver("localhost",8899);
 // 	glw->setVideoSource(rx);
 	
- 	
-//  	GLVideoInputDrawable *gld = new GLVideoInputDrawable();
-//  	gld->setVideoInput("/dev/video0");
-// 	gld->setCardInput("S-Video");
-// 	//gld->setDeinterlace(true);
-// 	gld->setRect(glw->viewport());
-// 	gld->setVisible(true);
-// 	glw->addDrawable(gld);
+/* 	
+	{
+		GLVideoInputDrawable *gld = new GLVideoInputDrawable();
+		gld->setVideoInput("/dev/video0");
+		gld->setCardInput("S-Video");
+		//gld->setDeinterlace(true);
+		gld->setRect(glw->viewport());
+		gld->setVisible(true);
+		gld->setObjectName("camera");
+		glw->addDrawable(gld);
+	}
 
-//  	GLImageDrawable *gld = new GLImageDrawable("Pm5544.jpg");
-// 	gld->setRect(glw->viewport());
-// 	gld->setVisible(true);
-// 	glw->addDrawable(gld);
+	GLVideoDrawable *vid = new GLVideoDrawable();
+	vid->setVideoSource(glw->outputStream());
+	vid->setRect(QRectF(600,0,400,300));
+	vid->setVisible(true);
+	vid->setObjectName("stream");
+	glw->addDrawable(vid);*/
+
+//  	{
+// 		GLImageDrawable *gld = new GLImageDrawable("Pm5544.jpg");
+// 		gld->setRect(QRectF(0,0,400,300));
+// 		gld->setVisible(true);
+// 		glw->addDrawable(gld);
+// 	}
+	
+// 	GLImageDrawable *gld2 = new GLImageDrawable("Pm5544.jpg");
+// 	gld2->setRect(QRectF(0,0,1000,750));
+// 	gld2->setZIndex(-10);
+// 	gld2->setVisible(true);
+// 	glw->addDrawable(gld2);
+	
 
 
 // 	GLTextDrawable *gld = new GLTextDrawable("Hello 1");

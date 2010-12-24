@@ -30,7 +30,7 @@ GLTextDrawable::GLTextDrawable(QString text, QObject *parent)
 	//setAspectRatioMode(Qt::KeepAspectRatioByExpanding);
 		
 	connect(&m_countdownTimer, SIGNAL(timeout()), this, SLOT(countdownTick()));
-	m_countdownTimer.setInterval(1000);
+	m_countdownTimer.setInterval(250);
 }
 	
 void GLTextDrawable::testXfade()
@@ -71,7 +71,7 @@ QString GLTextDrawable::formatTime(double time)
 	//double ms  = (sec  - (int)(sec)) * 60;
 	return  QString::number((int)hour) + ":" +
 		(min<10? "0":"") + QString::number((int)min) + ":" +
-		(sec<10? "0":"") + QString::number((int)sec);// + "." +
+		(sec<10? "0":"") + QString::number((int)(sec+.5));// + "." +
 		//(ms <10? "0":"") + QString::number((int)ms );
 
 }
@@ -91,6 +91,11 @@ void GLTextDrawable::countdownTick()
 	QString newText = formatTime(secsTo);
 	
 	setPlainText(newText);
+	
+	// Force renderer to render text so it doesn't delay past another timer tick, thereby creating a gap in the countdown onscreen
+	setXFadeEnabled(false);
+	//qDebug() << "GLTextDrawable::countdownTick: "<<now<<secsTo<<newText;
+	m_renderer->renderText();
 }
 
 

@@ -5,6 +5,8 @@
 #include <QGLWidget>
 #include <QGLShaderProgram>
 
+#include "../livemix/VideoSource.h"
+
 class QGLFramebufferObject;
 
 class GLDrawable;
@@ -16,7 +18,39 @@ enum GLRotateValue
 	GLRotateRight=+1
 };
 	
+
 class GLWidget;
+class GLWidgetOutputStream : public VideoSource
+{
+	Q_OBJECT
+	
+protected:
+	friend class GLWidget;
+	GLWidgetOutputStream(GLWidget *parent=0);
+	void setImage(QImage);
+
+public:
+	//virtual ~StaticVideoSource() {}
+
+	VideoFormat videoFormat() { return VideoFormat(VideoFrame::BUFFER_IMAGE,QVideoFrame::Format_ARGB32); }
+	//VideoFormat videoFormat() { return VideoFormat(VideoFrame::BUFFER_BYTEARRAY,QVideoFrame::Format_ARGB32); }
+	
+	const QImage & image() { return m_image; }
+	int fps() { return m_fps; }
+
+public slots:
+	void setFps(int);
+
+signals:
+	void frameReady();
+
+private:
+	GLWidget *m_glWidget;
+	QImage m_image;
+	int m_fps;
+	QTimer m_frameReadyTimer;
+};
+
 class GLWidgetSubview : public QObject
 {
 	Q_OBJECT
@@ -217,11 +251,16 @@ public:
 	GLWidgetSubview *subview(int subviewId);
 	
 	bool glInited() { return m_glInited; }
+	
+	GLWidgetOutputStream *outputStream();
+	
+	QImage toImage();
 
 signals:
 	void clicked();
 	void canvasSizeChanged(const QSizeF&);
 	void viewportChanged(const QRectF&);
+	void updated();
 
 public slots:
 	void setViewport(const QRectF&);
@@ -297,6 +336,8 @@ private:
 	
 	QList<GLWidgetSubview*> m_subviews;
 	QHash<int,GLWidgetSubview*> m_subviewLookup;
+	
+	GLWidgetOutputStream *m_outputStream;
 };
 
 #endif

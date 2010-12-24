@@ -192,6 +192,7 @@ GLWidget::GLWidget(QWidget *parent, QGLWidget *shareWidget)
 	, m_program(0)
 	, m_useShaders(false)
 	, m_shadersLinked(false)
+	, m_outputStream(0)
 {
 	
 	setCanvasSize(QSizeF(1000.,750.));
@@ -899,6 +900,8 @@ void GLWidget::paintGL()
 			#endif
 			
 			//m_fbo->toImage().save("fbo.jpg");
+			if(m_outputStream)
+				m_outputStream->setImage(m_fbo->toImage());
 			
 	//  		qDebug() << "GLWidget: vertexCoordArray: target: "<<target<<", points: " 
 	//  			<< "BL: "<<vertexCoordArray[0]<<vertexCoordArray[1]
@@ -1175,7 +1178,8 @@ void GLWidget::paintGL()
 // // 		glTexCoord2f(1,0); glVertex3f( 0, 256,0); //ro
 // 	glEnd();
 // 	
-	
+	//QTimer::singleShot(0, this, SIGNAL(updated()));
+	emit updated();	
 }
 
 
@@ -1545,4 +1549,49 @@ void GLWidget::mouseMoveEvent(QMouseEvent */*event*/)
 void GLWidget::mouseReleaseEvent(QMouseEvent * /* event */)
 {
 	emit clicked();
+}
+
+GLWidgetOutputStream *GLWidget::outputStream()
+{
+	if(!m_outputStream)
+		m_outputStream = new GLWidgetOutputStream(this);
+	return m_outputStream;
+}
+
+QImage GLWidget::toImage()
+{
+	if(m_fbo)
+		return m_fbo->toImage();
+	return QImage();
+}
+
+/// GLWidgetOutputStream
+
+GLWidgetOutputStream::GLWidgetOutputStream(GLWidget *parent)
+	: VideoSource(parent)
+	, m_glWidget(parent)
+	, m_fps(35)
+{
+ 	setIsBuffered(false);
+	setImage(QImage("dot.gif"));
+	connect(&m_frameReadyTimer, SIGNAL(timeout()), this, SIGNAL(frameReady()));
+	m_frameReadyTimer.setSingleShot(true);
+	setFps(m_fps);
+}
+
+void GLWidgetOutputStream::setImage(QImage img)
+{
+	m_image = img;
+	
+	//qDebug() << "GLWidgetOutputStream::setImage(): Received frame buffer, size:"<<m_image.size()<<", img format:"<<m_image.format();
+	enqueue(new VideoFrame(m_image,1000/m_fps, QTime::currentTime()));
+	
+	if(!m_frameReadyTimer.isActive())
+		m_frameReadyTimer.start();
+}
+
+void GLWidgetOutputStream::setFps(int fps)
+{
+	m_fps = fps;
+	m_frameReadyTimer.setInterval(1000/m_fps);
 }

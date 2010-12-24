@@ -240,7 +240,7 @@ void GLVideoDrawable::setVideoSource(VideoSource *source)
 		connect(m_source, SIGNAL(frameReady()), this, SLOT(frameReady()));
 		connect(m_source, SIGNAL(destroyed()),  this, SLOT(disconnectVideoSource()));
 
-		qDebug() << "GLVideoDrawable::setVideoSource(): "<<objectName()<<" m_source:"<<m_source;
+		//qDebug() << "GLVideoDrawable::setVideoSource(): "<<(QObject*)this()<<" m_source:"<<m_source;
 		setVideoFormat(m_source->videoFormat());
 
 		frameReady();
@@ -1420,7 +1420,7 @@ static void uploadTexture(GLuint tx_id, const QImage &image)
 
 void GLVideoDrawable::updateTexture(bool secondSource)
 {
-// 	qDebug() << "GLVideoDrawable::updateTexture(): "<<(QObject*)this<<" secondSource:"<<secondSource;
+//  	qDebug() << "GLVideoDrawable::updateTexture(): "<<(QObject*)this<<" secondSource:"<<secondSource;
 	if(!secondSource ? (!m_frame || !m_frame->isValid()) : (!m_frame2 || !m_frame2->isValid()))
 	{
 		qDebug() << "GLVideoDrawable::updateTexture(): "<<(QObject*)this<<" Frame not valid";
@@ -1430,7 +1430,7 @@ void GLVideoDrawable::updateTexture(bool secondSource)
 	if(m_glInited && glWidget())
 	{
 		//if(objectName() != "StaticBackground")
-		//qDebug() << "GLVideoDrawable::paintGL(): "<<(QObject*)this<<" Got a frame, size:"<<m_frame->size();
+// 		qDebug() << "GLVideoDrawable::updateTexture(): "<<(QObject*)this<<" Got a frame, size:"<<m_frame->size();
 		//if()
 			//m_frameSize = m_frame->size();
 // 		qDebug() << "GLVideoDrawable::updateTexture(): "<<objectName()<<" Got frame size:"<<m_frame->size();
@@ -1439,7 +1439,7 @@ void GLVideoDrawable::updateTexture(bool secondSource)
 				   (m_frameSize2 != m_frame2->size() || m_frame2->rect() != m_sourceRect2 || !m_texturesInited2))
 		{
  			//qDebug() << "GLVideoDrawable::paintGL(): m_frame->rect():"<<m_frame->rect()<<", m_sourceRect:"<<m_sourceRect<<", m_frame->size():"<<m_frame->size();
-//  			qDebug() << "GLVideoDrawable::updateTexture(): frame size changed or !m_texturesInited, resizing and adjusting pixels...";
+//   			qDebug() << "GLVideoDrawable::updateTexture(): "<<(QObject*)this<<" frame size changed or !m_texturesInited, resizing and adjusting pixels...";
 			//if(m_videoFormat.pixelFormat != m_source->videoFormat().pixelFormat)
 
 			if(!secondSource)
@@ -1562,7 +1562,7 @@ void GLVideoDrawable::updateTexture(bool secondSource)
 		else
 		if(!m_frame->image().isNull())
 		{
-// 			qDebug() << "GLVideoDrawable::updateTexture(): "<<objectName()<<" Mark: QImage frame";
+//  			qDebug() << "GLVideoDrawable::updateTexture(): "<<(QObject*)this<<" Mark: QImage frame";
 			for (int i = 0; i < (!secondSource ? m_textureCount : m_textureCount2); ++i)
 			{
 				//qDebug() << (QObject*)(this) << "normal: "<<i<<m_textureWidths[i]<<m_textureHeights[i]<<m_textureOffsets[i]<<m_textureInternalFormat<<m_textureFormat<<m_textureType;
@@ -1667,7 +1667,7 @@ void GLVideoDrawable::updateTexture(bool secondSource)
 		}
 	}
 	
-// 	qDebug() << "GLVideoDrawable::updateTexture(): "<<objectName()<<" Done update";
+//  	qDebug() << "GLVideoDrawable::updateTexture(): "<<(QObject*)this<<" Done update";
 }
 
 

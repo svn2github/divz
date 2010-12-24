@@ -67,17 +67,16 @@ public:
 public slots:
 	void setHtml(const QString&);
 	void update();
+	void renderText();
 	
 	void setShadowColor(const QColor& c) { setShadowBrush(c); }
 	void setFillColor(const QColor& c) { setFillBrush(c); }
 	void setOutlineColor(const QColor& c) { setOutlinePen(QPen(c, outlinePen().widthF())); }
 	void setOutlineWidth(double w) { setOutlinePen(QPen(outlinePen().color(), w)); }
+
 signals:
 	void textRendered(QImage img);
 
-private slots:
-	void renderText();
-	
 private:
 	QString m_html;
 	QImage m_image;

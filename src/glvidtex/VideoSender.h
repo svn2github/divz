@@ -26,8 +26,19 @@ public:
 	bool adaptiveWriteEnabled() { return m_adaptiveWriteEnabled; }
 	
 	VideoSource *videoSource() { return m_source; }
-	VideoFramePtr frame();
-	VideoFramePtr scaledFrame();
+// 	VideoFramePtr frame();
+// 	VideoFramePtr scaledFrame();
+	QSharedPointer<uchar> dataPtr() { return m_dataPtr; }
+	int byteCount() { return m_byteCount; }
+	QImage::Format imageFormat() { return m_imageFormat; }
+	QSize imageSize() { return m_imageSize; }
+	QSize origSize() { return m_origSize; }
+	QVideoFrame::PixelFormat pixelFormat() { return m_pixelFormat; }
+	int holdTime() { return m_holdTime; }
+	QTime captureTime() { return m_captureTime; }
+	
+	void sendLock() { m_sendMutex.lock(); }
+	void sendUnlock() { m_sendMutex.unlock(); }
 	
 	void setVideoSource(VideoSource *source);
 // 	QString myAddress();
@@ -53,12 +64,21 @@ protected:
 private:
 	bool m_adaptiveWriteEnabled;
 	VideoSource *m_source;
-	VideoFramePtr m_frame;
-	VideoFramePtr m_scaledFrame;
+//	VideoFramePtr m_frame;
+// 	VideoFramePtr m_scaledFrame;
+	QSharedPointer<uchar> m_dataPtr;
+	int m_byteCount;
+	QImage::Format m_imageFormat;
+	QSize m_imageSize;
+	QSize m_origSize;
+	QVideoFrame::PixelFormat m_pixelFormat;
+	int m_holdTime;
+	QTime m_captureTime;
 	QSize m_transmitSize;
 	int m_transmitFps;
 	QTimer m_fpsTimer;
 	QMutex m_frameMutex;
+	QMutex m_sendMutex;
 	
 };
 

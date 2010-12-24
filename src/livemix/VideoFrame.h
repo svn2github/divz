@@ -12,9 +12,9 @@
 
 //#define DEBUG_VIDEOFRAME_POINTERS
 
-class VideoFrame : public QObject
+class VideoFrame //: public QObject
 {
-	Q_OBJECT
+// 	//Q_OBJECT
 public:
 	VideoFrame(); 
 	
