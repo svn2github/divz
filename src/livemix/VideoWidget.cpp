@@ -211,23 +211,23 @@ void VideoWidget::oldFrameReady()
 	if(!m_oldThread)
 		return;
 		
-	VideoFrame *f = m_oldThread->frame();
+	VideoFramePtr f = m_oldThread->frame();
 	if(!f)
 		return;
 		
 	if(f->isValid())
 	{
-		if(m_oldFrame && 
-			m_oldFrame->release())
-			delete m_oldFrame;
+// 		if(m_oldFrame && 
+// 			m_oldFrame->release())
+// 			delete m_oldFrame;
 
 		m_oldFrame = f;
 	}
-	else
-	{
-		if(f->release())
-			delete f;
-	}
+// 	else
+// 	{
+// 		if(f->release())
+// 			delete f;
+// 	}
 
 // 	if(m_frame->image().size() != m_origSourceRect.size())
 // 		updateRects();
@@ -475,7 +475,7 @@ void VideoWidget::frameReady()
 // 	if(frame.isEmpty())
 // 		qDebug() << "VideoWidget::frameReady(): isEmpty: "<<frame.isEmpty();
 
-	VideoFrame *f = m_thread->frame();
+	VideoFramePtr f = m_thread->frame();
 	if(!f)
 		return;
 	#ifdef DEBUG_VIDEOFRAME_POINTERS
@@ -484,15 +484,15 @@ void VideoWidget::frameReady()
 		
 	if(f->isValid())
 	{
-		if(m_frame && 
-		   m_frame->release())
-		{
-			#ifdef DEBUG_VIDEOFRAME_POINTERS
-			qDebug() << "VideoWidget::frameReady(): Deleting old m_frame:"<<m_frame;
-			#endif
-			
-			delete m_frame;
-		}
+// 		if(m_frame && 
+// 		   m_frame->release())
+// 		{
+// 			#ifdef DEBUG_VIDEOFRAME_POINTERS
+// 			qDebug() << "VideoWidget::frameReady(): Deleting old m_frame:"<<m_frame;
+// 			#endif
+// 			
+// 			delete m_frame;
+// 		}
 
 		m_frame = f;
 		
@@ -500,17 +500,17 @@ void VideoWidget::frameReady()
 		qDebug() << "VideoWidget::frameReady(): Received new m_frame:"<<m_frame;
 		#endif
 	}
-	else
-	{
-		if(f->release())
-		{
-			#ifdef DEBUG_VIDEOFRAME_POINTERS
-			qDebug() << "VideoWidget::frameReady(): Deleting invalid f ptr:"<<f;
-			#endif
-			
-			delete f;
-		}
-	}
+// 	else
+// 	{
+// 		if(f->release())
+// 		{
+// 			#ifdef DEBUG_VIDEOFRAME_POINTERS
+// 			qDebug() << "VideoWidget::frameReady(): Deleting invalid f ptr:"<<f;
+// 			#endif
+// 			
+// 			delete f;
+// 		}
+// 	}
 
 	if(m_frame && (m_frame->size() != m_origSourceRect.size() || m_targetRect.isEmpty() || m_sourceRect.isEmpty()))
 		updateRects();
@@ -712,23 +712,23 @@ void VideoWidget::overlayFrameReady()
 	
 // 	if(!frame.isEmpty())
 // 		m_overlayFrame = frame;
-	VideoFrame *f = m_overlaySource->frame();
+	VideoFramePtr f = m_overlaySource->frame();
 	if(!f)
 		return;
 		
 	if(f->isValid())
 	{
-		if(m_overlayFrame && 
-			m_overlayFrame->release())
-			delete m_overlayFrame;
+// 		if(m_overlayFrame && 
+// 			m_overlayFrame->release())
+// 			delete m_overlayFrame;
 
 		m_overlayFrame = f;
 	}
-	else
-	{
-		if(f->release())
-			delete f;
-	}
+// 	else
+// 	{
+// 		if(f->release())
+// 			delete f;
+// 	}
 		
 	if(m_overlayFrame->image().size() != m_overlaySourceRect.size())
 		updateOverlaySourceRects();

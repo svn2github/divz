@@ -8,6 +8,7 @@
 #include <QQueue>
 #include <QMutex>
 #include <QObject>
+#include <QSharedPointer>
 
 //#define DEBUG_VIDEOFRAME_POINTERS
 
@@ -122,11 +123,13 @@ protected:
 	int m_refCount;
 };
 
-class VideoFrameQueue : public QQueue<VideoFrame*>
+typedef QSharedPointer<VideoFrame> VideoFramePtr;
+
+class VideoFrameQueue : public QQueue<VideoFramePtr>
 {
 public:
 	VideoFrameQueue(int maxBytes=0)
-		: QQueue<VideoFrame*>()
+		: QQueue<VideoFramePtr>()
 		, m_maxBytes(maxBytes)
 		{}
 		
@@ -153,11 +156,24 @@ public:
 // 			while(byteSize() > m_maxBytes)
 // 				dequeue();	
 		
-		QQueue<VideoFrame*>::enqueue(frame);
+		QQueue<VideoFramePtr>::enqueue(VideoFramePtr(frame));
+		//enqueue(VideoFramePtr(frame));
+	};
+	
+	void enqueue(VideoFramePtr frame)
+	{
+// 		if(m_maxBytes > 0)
+// 			while(byteSize() > m_maxBytes)
+// 				dequeue();	
+		
+		QQueue<VideoFramePtr>::enqueue(frame);
+		//enqueue(VideoFramePtr(frame));
 	};
 	
 protected:
 	int m_maxBytes;
 };
+
+
 
 #endif

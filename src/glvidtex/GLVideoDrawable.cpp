@@ -214,15 +214,15 @@ void GLVideoDrawable::setVideoSource(VideoSource *source)
 			connect(m_source2, SIGNAL(frameReady()), this, SLOT(frameReady2()));
 			connect(m_source2, SIGNAL(destroyed()),  this, SLOT(disconnectVideoSource2()));
 
-			if(m_frame2 &&
-			   m_frame2->release())
-			{
-				#ifdef DEBUG_VIDEOFRAME_POINTERS
-				qDebug() << "GLVideoDrawable::setVideoSource(): Deleting old m_frame2:"<<m_frame2;
-				#endif
-				delete m_frame2;
-				m_frame2 = 0;
-			}
+// 			if(m_frame2 &&
+// 			   m_frame2->release())
+// 			{
+// 				#ifdef DEBUG_VIDEOFRAME_POINTERS
+// 				qDebug() << "GLVideoDrawable::setVideoSource(): Deleting old m_frame2:"<<m_frame2;
+// 				#endif
+// 				delete m_frame2;
+// 				m_frame2 = 0;
+// 			}
 			m_frame2 = m_frame;
 			#ifdef DEBUG_VIDEOFRAME_POINTERS
 			qDebug() << "GLVideoDrawable::setVideoSource(): Copied m_frame:"<<m_frame<<"to m_frame2:"<<m_frame2<<", calling incRef() on m_frame2";
@@ -339,33 +339,33 @@ void GLVideoDrawable::frameReady()
 // 	qDebug() << "GLVideoDrawable::frameReady(): "<<objectName()<<" m_source:"<<m_source;
 	if(m_source)
 	{
-		VideoFrame *f = m_source->frame();
+		VideoFramePtr f = m_source->frame();
 // 		qDebug() << "GLVideoDrawable::frameReady(): "<<objectName()<<" f:"<<f;
 		if(!f)
 			return;
 		if(f->isValid())
 		{
-			if(m_frame && 
-			   m_frame->release())
-			{
-				#ifdef DEBUG_VIDEOFRAME_POINTERS
- 				qDebug() << "GLVideoDrawable::frameReady(): "<<objectName()<<" deleting old frame:"<<m_frame;
- 				#endif
-				delete m_frame;
-			}
+// 			if(m_frame && 
+// 			   m_frame->release())
+// 			{
+// 				#ifdef DEBUG_VIDEOFRAME_POINTERS
+//  				qDebug() << "GLVideoDrawable::frameReady(): "<<objectName()<<" deleting old frame:"<<m_frame;
+//  				#endif
+// 				delete m_frame;
+// 			}
 
 			m_frame = f;
 		}
-		else
-		{
-			if(f->release())
-			{
-				#ifdef DEBUG_VIDEOFRAME_POINTERS
- 				qDebug() << "GLVideoDrawable::frameReady(): "<<objectName()<<" deleting invalid frame:"<<f;
- 				#endif
-				delete f;
-			}
-		}
+// 		else
+// 		{
+// 			if(f->release())
+// 			{
+// 				#ifdef DEBUG_VIDEOFRAME_POINTERS
+//  				qDebug() << "GLVideoDrawable::frameReady(): "<<objectName()<<" deleting invalid frame:"<<f;
+//  				#endif
+// 				delete f;
+// 			}
+// 		}
 	}
 
 // 	qDebug() << "GLVideoDrawable::frameReady(): "<<objectName()<<" going to updateTexture";
@@ -388,32 +388,32 @@ void GLVideoDrawable::frameReady2()
 {
 	if(m_source2)
 	{
-		VideoFrame *f = m_source2->frame();
+		VideoFramePtr f = m_source2->frame();
 		if(!f)
 			return;
 		if(f->isValid())
 		{
-			if(m_frame2 && 
-			   m_frame2->release())
-			   {
-			   	#ifdef DEBUG_VIDEOFRAME_POINTERS
-			   	qDebug() << "GLVideoDrawable::frameReady2(): "<<objectName()<<" deleting old m_frame2:"<<m_frame2;
-			   	#endif
-			   	delete m_frame2;
-			   }
+// 			if(m_frame2 && 
+// 			   m_frame2->release())
+// 			   {
+// 			   	#ifdef DEBUG_VIDEOFRAME_POINTERS
+// 			   	qDebug() << "GLVideoDrawable::frameReady2(): "<<objectName()<<" deleting old m_frame2:"<<m_frame2;
+// 			   	#endif
+// 			   	delete m_frame2;
+// 			   }
 
 			m_frame2 = f;
 		}
-		else
-		{
-			if(f->release())
-			{
-				#ifdef DEBUG_VIDEOFRAME_POINTERS
-				qDebug() << "GLVideoDrawable::frameReady2(): "<<objectName()<<" deleting invalid frame:"<<f;
-				#endif
-				delete f;
-			}
-		}
+// 		else
+// 		{
+// 			if(f->release())
+// 			{
+// 				#ifdef DEBUG_VIDEOFRAME_POINTERS
+// 				qDebug() << "GLVideoDrawable::frameReady2(): "<<objectName()<<" deleting invalid frame:"<<f;
+// 				#endif
+// 				delete f;
+// 			}
+// 		}
 	}
 
 	updateTexture(true);
@@ -1961,7 +1961,7 @@ void GLVideoDrawable::paintGL()
 		txRight, txTop
 	};
 
-	double liveOpacity = (opacity() * (m_fadeActive ? m_fadeValue : 1.));
+	double liveOpacity = (opacity());// * (m_fadeActive ? m_fadeValue : 1.));
 
 	if(m_useShaders)
 	{

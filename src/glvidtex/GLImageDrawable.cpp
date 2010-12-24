@@ -13,8 +13,8 @@ GLImageDrawable::GLImageDrawable(QString file, QObject *parent)
 
 GLImageDrawable::~GLImageDrawable()
 {
-	if(m_frame)
-		delete m_frame;
+// 	if(m_frame)
+// 		delete m_frame;
 }
 	
 void GLImageDrawable::testXfade()
@@ -34,7 +34,7 @@ void GLImageDrawable::setImage(const QImage& image)
 		
 				
 	if(!m_frame)
-		m_frame = new VideoFrame();
+		m_frame = VideoFramePtr(new VideoFrame());
 		
 	// Setup frame
 	m_frame->setBufferType(VideoFrame::BUFFER_IMAGE);

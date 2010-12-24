@@ -116,10 +116,14 @@ bool VideoFrame::release()
 	#ifdef DEBUG_VIDEOFRAME_POINTERS
 	qDebug() << "VideoFrame::release(): "<<this<<": m_refCount:"<<m_refCount;
 	#endif
-	if(m_refCount <= 0)
-		//deleteLater();
-		return true;
-	return false;
+// 	if(m_refCount <= 0)
+// 		//deleteLater();
+// 		return true;
+	/// NB Now all pointers should be VideoFramePtr, which is a typedef for QSharedPointer<T> which will
+	/// automatically delete the VideoFrame when the pointer goes out of scope if no other QSharedPointers
+	/// are referencing the frame.
+	/// Therefore, return false for now until I can remove all the 'if(release()) delete' blocks to prevent deleting.
+ 	return false;
 }
 
 uchar *VideoFrame::allocPointer(int bytes)

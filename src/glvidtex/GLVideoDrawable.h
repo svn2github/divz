@@ -233,8 +233,8 @@ protected:
 	void updateTextureOffsets();
 	
 	/// PS
-	QPointer<VideoFrame> m_frame;
-	QPointer<VideoFrame> m_frame2;
+	VideoFramePtr m_frame;
+	VideoFramePtr m_frame2;
 	bool m_visiblePendingFrame;
 	bool m_tempVisibleValue;
 	

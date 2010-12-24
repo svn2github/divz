@@ -101,8 +101,8 @@ private:
 	int    m_fadeLength;
 	QTimer m_fadeTimer;
 	
-	QPointer<VideoFrame> m_frame;
-	QPointer<VideoFrame> m_oldFrame;
+	VideoFramePtr m_frame;
+	VideoFramePtr m_oldFrame;
 	
 	Qt::AspectRatioMode m_aspectRatioMode;
 	int m_adjustDx1;
@@ -141,7 +141,7 @@ private:
 	// If setVideoSource called while cross fade is active, the source is changed AFTER the fade is complete
 	VideoSource * m_queuedSource;
 	 
-	QPointer<VideoFrame> m_overlayFrame;
+	VideoFramePtr m_overlayFrame;
 	VideoSource * m_overlaySource;
 	
 	QRect m_overlayTargetRect;

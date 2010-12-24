@@ -27,6 +27,7 @@ TODO:
 		- Border/Dropshadow control for items
 			- Right now, text and images
 		- Black button
+		- Make GLDirector NOT crash when the player is disconnected!
 	
 	IDEAS:
 		- Text scroller
@@ -48,7 +49,7 @@ TODO:
 			[DONE] - Text autofit
 			- Item autofit 
 		- Add copy/paste
-		
+>>>>>>> .r777
 		
 		
 

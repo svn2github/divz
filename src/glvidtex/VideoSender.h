@@ -26,8 +26,8 @@ public:
 	bool adaptiveWriteEnabled() { return m_adaptiveWriteEnabled; }
 	
 	VideoSource *videoSource() { return m_source; }
-	VideoFrame *frame();
-	VideoFrame *scaledFrame();
+	VideoFramePtr frame();
+	VideoFramePtr scaledFrame();
 	
 	void setVideoSource(VideoSource *source);
 // 	QString myAddress();
@@ -53,8 +53,8 @@ protected:
 private:
 	bool m_adaptiveWriteEnabled;
 	VideoSource *m_source;
-	QPointer<VideoFrame> m_frame;
-	QPointer<VideoFrame> m_scaledFrame;
+	VideoFramePtr m_frame;
+	VideoFramePtr m_scaledFrame;
 	QSize m_transmitSize;
 	int m_transmitFps;
 	QTimer m_fpsTimer;

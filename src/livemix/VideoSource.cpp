@@ -74,7 +74,7 @@ void VideoSource::run()
 	exec();
 }
 
-VideoFrame *VideoSource::frame()
+VideoFramePtr VideoSource::frame()
 {
 	QMutexLocker lock(&m_queueMutex);
 	if(!m_isBuffered ||
@@ -99,7 +99,7 @@ VideoFrame *VideoSource::frame()
 		return m_singleFrame;
 	}
 	//qDebug() << "VideoSource::frame(): Queue size: "<<m_frameQueue.size();
-	VideoFrame *frame = m_frameQueue.dequeue();
+	VideoFramePtr frame = m_frameQueue.dequeue();
 	if(frame)
 	{
 		/// NB: Don't need to incRef here because we called incRef() when adding to the queue
@@ -117,6 +117,7 @@ void VideoSource::enqueue(VideoFrame *frame)
 {
 	//QMutexLocker lock(&m_queueMutex);
 	m_queueMutex.lock();
+	VideoFramePtr ptr(frame);
 	if(m_isBuffered)
 	{
 		// incRef() here instead of when we take from the queue because if we dont, then the singleFrame code 
@@ -125,35 +126,50 @@ void VideoSource::enqueue(VideoFrame *frame)
 		qDebug() << "VideoSource::enqueue(): Calling incRef() on frame going into queue:"<<frame;
 		#endif
 		
-		frame->incRef();
-		m_frameQueue.enqueue(frame);
+		//frame->incRef();
+		m_frameQueue.enqueue(ptr);
 	}
 	//else
-	if(m_singleFrame)
-	{
-		#ifdef DEBUG_VIDEOFRAME_POINTERS
-		qDebug() << "VideoSource::enqueue(): Releasing old m_singleFrame:"<<m_singleFrame;
-		#endif
-		
-		if(m_singleFrame->release())
-		{
-			#ifdef DEBUG_VIDEOFRAME_POINTERS
-			qDebug() << "VideoSource::enqueue(): Deleting old m_singleFrame:"<<m_singleFrame;
-			#endif
-			
-			delete m_singleFrame;
-			m_singleFrame = 0;
-		}
-	}
-	m_singleFrame = frame;
+// 	if(m_singleFrame)
+// 	{
+// 		#ifdef DEBUG_VIDEOFRAME_POINTERS
+// 		qDebug() << "VideoSource::enqueue(): Releasing old m_singleFrame:"<<m_singleFrame;
+// 		#endif
+// 		
+// 		if(m_singleFrame->release())
+// 		{
+// 			#ifdef DEBUG_VIDEOFRAME_POINTERS
+// 			qDebug() << "VideoSource::enqueue(): Deleting old m_singleFrame:"<<m_singleFrame;
+// 			#endif
+// 			
+// 			delete m_singleFrame;
+// 			m_singleFrame = 0;
+// 		}
+// 	}
+	m_singleFrame = ptr;
 	
 	#ifdef DEBUG_VIDEOFRAME_POINTERS
 	qDebug() << "VideoSource::enqueue(): Calling incRef() on m_singleFrame:"<<m_singleFrame;
 	#endif
 	
-	m_singleFrame->incRef();
+	//m_singleFrame->incRef();
 	
  	//qDebug() << "VideoSource::enqueue(): "<<this<<" m_isBuffered:"<<m_isBuffered<<", Queue size: "<<m_frameQueue.size();
+	m_queueMutex.unlock();
+	
+	emit frameReady();
+}
+
+
+void VideoSource::enqueue(VideoFramePtr ptr)
+{
+	//QMutexLocker lock(&m_queueMutex);
+	m_queueMutex.lock();
+	if(m_isBuffered)
+		m_frameQueue.enqueue(ptr);
+	m_singleFrame = ptr;
+	
+	//qDebug() << "VideoSource::enqueue(): "<<this<<" m_isBuffered:"<<m_isBuffered<<", Queue size: "<<m_frameQueue.size();
 	m_queueMutex.unlock();
 	
 	emit frameReady();

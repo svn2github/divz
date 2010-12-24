@@ -46,7 +46,7 @@ public:
 	virtual void registerConsumer(QObject *consumer);
 	virtual void release(QObject *consumer=0);
 
-	virtual VideoFrame *frame();
+	virtual VideoFramePtr frame();
 	
 	bool isBuffered() { return m_isBuffered; }
 	void setIsBuffered(bool);
@@ -62,6 +62,7 @@ protected slots:
 protected:
 	virtual void run();
 	virtual void enqueue(VideoFrame*);
+	virtual void enqueue(VideoFramePtr);
 	virtual void destroySource();
 	
 	bool m_killed;
@@ -73,7 +74,7 @@ protected:
 	VideoFrameQueue m_frameQueue;
 	QList<QObject*> m_consumerList;
 	bool m_isBuffered;
-	QPointer<VideoFrame> m_singleFrame;
+	VideoFramePtr m_singleFrame;
 	QMutex m_queueMutex;
 };
 
