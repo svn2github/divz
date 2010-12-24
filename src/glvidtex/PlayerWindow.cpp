@@ -10,6 +10,7 @@
 
 #include "GLSceneGroup.h"
 #include "VideoInputSenderManager.h"
+#include "VideoEncoder.h"
 
 class ScaledGraphicsView : public QGraphicsView
 {
@@ -60,6 +61,7 @@ PlayerWindow::PlayerWindow(QWidget *parent)
 	, m_graphicsView(0)
 	, m_playerVersionString("GLPlayer 0.5")
 	, m_playerVersion(15)
+	, m_outputEncoder(0)
 {
 	m_vidSendMgr = new VideoInputSenderManager();
 	m_vidSendMgr->setSendingEnabled(true);
@@ -255,6 +257,19 @@ PlayerWindow::PlayerWindow(QWidget *parent)
 		}	
 	}
 	
+	QString outputFile = READ_STRING("output","output.avi");
+	if(!outputFile.isEmpty())
+	{
+		if(!m_glWidget)
+		{
+			qDebug() << "PlayerWindow: Unable to output video to"<<outputFile<<" because OpenGL is not enabled. (Set comapt=false in player.ini to use OpenGL)";
+		}
+		
+		m_outputEncoder = new VideoEncoder(outputFile, this);
+		m_outputEncoder->setVideoSource(m_glWidget->outputStream());
+		//m_outputEncoder->startEncoder();
+	}
+	
 // 	// Send test map back to self
 // 	QTimer::singleShot(50, this, SLOT(sendTestMap()));
 }
@@ -310,6 +325,11 @@ void PlayerWindow::receivedMap(QVariantMap map)
 				<< "version" << m_playerVersionString
 				<< "ver" << m_playerVersion);
 					      
+				
+			if(m_outputEncoder && 
+			  !m_outputEncoder->encodingStarted())
+				m_outputEncoder->startEncoder();
+
 		}
 	}
 	else

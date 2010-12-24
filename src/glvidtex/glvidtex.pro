@@ -28,6 +28,7 @@ HEADERS       = GLWidget.h \
 		GLEditorGraphicsScene.h \
 		GLPlayerServer.h \
 		GLPlayerClient.h \
+		VideoEncoder.h
 		
 SOURCES       = GLWidget.cpp \
 		../livemix/VideoSource.cpp \
@@ -53,7 +54,8 @@ SOURCES       = GLWidget.cpp \
 		CornerItem.cpp \
 		GLEditorGraphicsScene.cpp   \
 		GLPlayerServer.cpp \
-		GLPlayerClient.cpp 
+		GLPlayerClient.cpp \
+		VideoEncoder.cpp
 		
 
 editor: {
@@ -133,7 +135,7 @@ glvidtex: {
 	SOURCES += main.cpp \
 		PlayerWindow.cpp \
 		VideoInputSenderManager.cpp \
-		../livemix/VideoWidget.cpp
+		../livemix/VideoWidget.cpp 
 }
 
 unix: {

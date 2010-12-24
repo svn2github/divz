@@ -189,7 +189,9 @@ double GLTextDrawable::findFontSize()
 
 void GLTextDrawable::changeFontSize(double size)
 {
-	return m_renderer->changeFontSize(size);
+	m_renderer->changeFontSize(size);
+	m_text = m_renderer->html();
+	emit textChanged(m_text);
 }
 
 

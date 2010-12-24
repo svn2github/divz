@@ -451,7 +451,20 @@ void EditorWindow::addText(const QString& tmp)
 {
 	QString str = tmp;
 	if(str.isEmpty())
-		str = "<span style='font-size:68px;color:white'><b>Lorem Ipsum</b></span>";
+		//str = "<span style='font-size:68px;color:white'><b>Lorem Ipsum</b></span>";
+		str = 
+			"<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd\">"
+			"<html><head><meta name=\"qrichtext\" content=\"1\" />"
+			"<style type=\"text/css\">p, li { white-space: pre-wrap; }</style>"
+			"</head>"
+			"<body style=\"font-family:'Sans Serif'; font-size:9pt; font-weight:400; font-style:normal;\">"
+			"<table style=\"-qt-table-type: root; margin-top:4px; margin-bottom:4px; margin-left:4px; margin-right:4px;\">"
+			"<tr><td style=\"border: none;\">"
+			"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">"
+			"<span style=\" font-size:68pt; font-weight:600; color:#ffffff;\">"
+			"Lorem Ipsum"
+			"</span></p></td></tr></table></body></html>";
+
 	GLTextDrawable *text = new GLTextDrawable(str);
 	addDrawable(text);
 	textFitNaturally();
