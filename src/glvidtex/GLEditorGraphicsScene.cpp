@@ -368,6 +368,8 @@ void GLEditorGraphicsScene::deleteSelectedItems()
 		item->deleteLater();
 		//delete content;
 	}
+	
+	m_selection.clear();
 }
 
 void GLEditorGraphicsScene::setEditingMode(bool flag)

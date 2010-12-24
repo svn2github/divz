@@ -23,6 +23,10 @@ public:
 	QDateTime targetDateTime() { return m_targetTime; }
 	
 	static QString htmlToPlainText(const QString&);
+	
+	QSize findNaturalSize(int atWidth);
+	void changeFontSize(double);
+	double findFontSize();
 
 public slots:
 	void setPlainText(const QString&, bool replaceNewlineSlash=true);

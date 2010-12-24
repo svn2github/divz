@@ -294,6 +294,14 @@ QByteArray GLScene::toByteArray()
 	map["sceneId"]		= sceneId();
 	map["sceneName"] 	= m_sceneName;
 	
+	QByteArray bytes;
+	QBuffer buffer(&bytes);
+	buffer.open(QIODevice::WriteOnly);
+	m_pixmap.save(&buffer, "PNG"); // writes pixmap into bytes in PNG format
+	buffer.close();
+	map["pixmap"] = bytes;
+	
+	
 	QVariantList layouts;
 	foreach(GLSceneLayout *layout, m_layouts)
 		layouts << layout->toByteArray();
@@ -327,6 +335,11 @@ void GLScene::fromByteArray(QByteArray& array)
 	
 	m_sceneId	= map["sceneId"].toInt();
 	m_sceneName	= map["sceneName"].toString();
+	
+	QByteArray bytes = map["pixmap"].toByteArray();
+	QImage image;
+	image.loadFromData(bytes);
+	m_pixmap = QPixmap::fromImage(image);
 	
 	m_layouts.clear();
 	QVariantList layouts = map["layouts"].toList();
@@ -586,6 +599,12 @@ void GLScene::setSceneName(const QString& name)
 	emit sceneNameChanged(name);
 }
 
+void GLScene::setPixmap(const QPixmap& pixmap)
+{
+	m_pixmap = pixmap;
+	emit pixmapChanged(pixmap);
+}
+
 	
 /*signals:
 	void drawableAdded(GLDrawable*);
@@ -647,6 +666,14 @@ QByteArray GLSceneGroup::toByteArray()
 	map["groupId"]		= groupId();
 	map["groupName"] 	= m_groupName;
 	
+	QByteArray bytes;
+	QBuffer buffer(&bytes);
+	buffer.open(QIODevice::WriteOnly);
+	m_pixmap.save(&buffer, "PNG"); // writes pixmap into bytes in PNG format
+	buffer.close();
+	map["pixmap"] = bytes;
+	
+	
 	QVariantList scenes;
 	foreach(GLScene *scene, m_scenes)
 		scenes << scene->toByteArray();
@@ -669,6 +696,11 @@ void GLSceneGroup::fromByteArray(QByteArray& array)
 	
 	m_groupId	= map["groupId"].toInt();
 	m_groupName	= map["groupName"].toString();
+		
+	QByteArray bytes = map["pixmap"].toByteArray();
+	QImage image;
+	image.loadFromData(bytes);
+	m_pixmap = QPixmap::fromImage(image);
 	
 	m_scenes.clear();
 	QVariantList scenes = map["scenes"].toList();
@@ -705,9 +737,11 @@ QVariant GLSceneGroup::data( const QModelIndex & index, int role) const
 		//qDebug() << "GLSceneGroup::data: "<<this<<" row:"<<index.row()<<", value:"<<value;
 		return value;
 	}
-// 	else if(Qt::DecorationRole == role)
-// 	{
-// 	}
+	else if(Qt::DecorationRole == role)
+	{
+		GLScene *d = m_scenes.at(index.row());
+		return d->pixmap();
+	}
 	else
 		return QVariant();
 }
@@ -753,6 +787,9 @@ void GLSceneGroup::addScene(GLScene* s)
 	
 	m_scenes << s;
 	m_sceneIdLookup[s->sceneId()] = s;
+	connect(s, SIGNAL(sceneNameChanged(const QString&)), this, SLOT(sceneChanged()));
+	connect(s, SIGNAL(pixmapChanged(const QPixmap&)), this, SLOT(sceneChanged()));
+	
 	emit sceneAdded(s);
 	//qDebug() << "GLSceneGroup::addScene: "<<this<<" scene:"<<s<<", m_scenes.size():"<<m_scenes.size()<<", rowCount:"<<rowCount(QModelIndex());
 	
@@ -772,6 +809,8 @@ void GLSceneGroup::removeScene(GLScene* s)
 	int idx = m_scenes.indexOf(s);
 
 	emit sceneRemoved(s);
+	
+	disconnect(s, 0, this, 0);
 	m_scenes.removeAll(s);
 	m_sceneIdLookup.remove(s->sceneId());
 	
@@ -780,6 +819,17 @@ void GLSceneGroup::removeScene(GLScene* s)
 		    bottom = createIndex(m_scenes.size(), 0);
 	dataChanged(top,bottom);
 	endRemoveRows();
+}
+
+void GLSceneGroup::sceneChanged()
+{
+	GLScene *scene = dynamic_cast<GLScene*>(sender());
+	if(!scene)
+		return;
+	int row = m_scenes.indexOf(scene); 
+	// Notify QListViews of change in data
+	QModelIndex idx = createIndex(row, 0);
+	dataChanged(idx, idx);
 }
 
 GLScene * GLSceneGroup::lookupScene(int id)
@@ -800,6 +850,14 @@ void GLSceneGroup::setGroupName(const QString& name)
 	m_groupName = name;
 	emit groupNameChanged(name);
 }
+
+
+void GLSceneGroup::setPixmap(const QPixmap& pixmap)
+{
+	m_pixmap = pixmap;
+	emit pixmapChanged(pixmap);
+}
+
 
 	
 // protected:
@@ -995,9 +1053,11 @@ QVariant GLSceneGroupCollection::data( const QModelIndex & index, int role ) con
 		return value; 
 		
 	}
-// 	else if(Qt::DecorationRole == role)
-// 	{
-// 	}
+	else if(Qt::DecorationRole == role)
+	{
+		GLSceneGroup *d = m_groups.at(index.row());
+		return d->pixmap();
+	}
 	else
 		return QVariant();
 }
@@ -1017,6 +1077,10 @@ void GLSceneGroupCollection::addGroup(GLSceneGroup* s)
 	// Effect appending
 	m_groups << s;
 	m_groupIdLookup[s->groupId()] = s;
+	
+	connect(s, SIGNAL(groupNameChanged(const QString&)), this, SLOT(groupChanged()));
+	connect(s, SIGNAL(pixmapChanged(const QPixmap&)), this, SLOT(groupChanged()));
+	
 	emit groupAdded(s);
 	
 	// Notify QListViews of change in data
@@ -1039,6 +1103,7 @@ void GLSceneGroupCollection::removeGroup(GLSceneGroup* s)
 
 	// Effect removal
 	emit groupRemoved(s);
+	disconnect(s, 0, this, 0);
 	m_groups.removeAll(s);
 	m_groupIdLookup.remove(s->groupId());
 	
@@ -1066,4 +1131,16 @@ void GLSceneGroupCollection::setCanvasSize(const QSizeF& size)
 {
 	m_canvasSize = size;
 	emit canvasSizeChanged(size);
+}
+
+
+void GLSceneGroupCollection::groupChanged()
+{
+	GLSceneGroup *scene = dynamic_cast<GLSceneGroup*>(sender());
+	if(!scene)
+		return;
+	int row = m_groups.indexOf(scene); 
+	// Notify QListViews of change in data
+	QModelIndex idx = createIndex(row, 0);
+	dataChanged(idx, idx);
 }

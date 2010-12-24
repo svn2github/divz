@@ -60,6 +60,7 @@ bool GLVideoFileDrawable::setVideoFile(const QString& file)
 
 void GLVideoFileDrawable::deleteSource(VideoSource *source)
 {
+#ifdef HAS_QT_VIDEO_SOURCE
 	QtVideoSource *vt = dynamic_cast<QtVideoSource*>(source);
 	if(vt)
 	{
@@ -72,4 +73,5 @@ void GLVideoFileDrawable::deleteSource(VideoSource *source)
 	{
 		qDebug() << "GLVideoFileDrawable::deleteSource: Source not deleted because its not a 'QtVideoSource':" <<source;
 	}
+#endif
 }

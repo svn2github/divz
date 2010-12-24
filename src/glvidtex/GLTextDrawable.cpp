@@ -101,13 +101,11 @@ void GLTextDrawable::setText(const QString& text)
 	
 	m_renderer->setHtml(text);
 	if(!Qt::mightBeRichText(text))
-		m_renderer->changeFontSize(40);
+		changeFontSize(40);
 	
 	emit textChanged(text);
 	
-	
 	emit plainTextChanged(plainText());
-
 }
 
 QString GLTextDrawable::plainText()
@@ -173,6 +171,22 @@ void GLTextDrawable::drawableResized(const QSizeF& newSize)
 		m_renderer->setTextWidth((int)newSize.width());
 	GLVideoDrawable::drawableResized(newSize);
 }
+
+QSize GLTextDrawable::findNaturalSize(int atWidth)
+{
+	return m_renderer->findNaturalSize(atWidth);
+}
+
+double GLTextDrawable::findFontSize()
+{
+	return m_renderer->findFontSize();
+}
+
+void GLTextDrawable::changeFontSize(double size)
+{
+	return m_renderer->changeFontSize(size);
+}
+
 
 void GLTextDrawable::updateRects(bool secondSource)
 {

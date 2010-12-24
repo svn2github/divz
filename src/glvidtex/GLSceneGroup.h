@@ -106,6 +106,7 @@ public:
 	
 	int sceneId();
 	QString sceneName() { return m_sceneName; }
+	QPixmap pixmap() { return m_pixmap; }
 	
 	QByteArray toByteArray();
 	void fromByteArray(QByteArray&);
@@ -147,6 +148,7 @@ public:
 public slots:
 	void setSceneName(const QString& name);
 	void setListOnlyUserItems(bool);
+	void setPixmap(const QPixmap&);
 	
 signals:
 	void drawableAdded(GLDrawable*);
@@ -155,6 +157,7 @@ signals:
 	void layoutRemoved(GLSceneLayout*);
 	
 	void sceneNameChanged(const QString&);
+	void pixmapChanged(const QPixmap&);
 	
 private slots:
 	void drawableDestroyed();
@@ -164,6 +167,7 @@ protected:
 	
 	int m_sceneId;
 	QString m_sceneName;
+	QPixmap m_pixmap;
 	
 	GLDrawableList m_itemList;
 	GLDrawableList m_userItemList;
@@ -194,6 +198,7 @@ public:
 	
 	int groupId();
 	QString groupName() { return m_groupName; }
+	QPixmap pixmap() { return m_pixmap; }
 	
 	QByteArray toByteArray();
 	void fromByteArray(QByteArray&);
@@ -224,6 +229,10 @@ public:
 
 public slots:
 	void setGroupName(const QString& name);
+	void setPixmap(const QPixmap&);
+	
+private slots:
+	void sceneChanged();
 	
 signals:
 	void sceneAdded(GLScene*);
@@ -231,10 +240,12 @@ signals:
 	
 	void groupNameChanged(const QString&);
 	void overlaySceneChanged(GLScene*);
+	void pixmapChanged(const QPixmap&);
 	
 protected:
 	int m_groupId;
 	QString m_groupName;
+	QPixmap m_pixmap;
 	
 	QList<GLScene*> m_scenes;
 	QHash<int,GLScene*> m_sceneIdLookup;
@@ -293,6 +304,9 @@ public slots:
 	void setCollectionName(const QString& name);
 	void setFileName(const QString& name) { m_fileName = name; }
 	void setCanvasSize(const QSizeF&);
+
+private slots:
+	void groupChanged();
 
 signals:
 	void groupAdded(GLSceneGroup*);

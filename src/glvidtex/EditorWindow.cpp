@@ -16,6 +16,8 @@
 
 #include <QApplication>
 
+#define TOOLBAR_TEXT_SIZE_INC 4
+
 EditorWindow::EditorWindow(QWidget *parent)
 	: QMainWindow(parent)
 	, m_canvasSize(1000.,750.)
@@ -234,6 +236,16 @@ void EditorWindow::createUI()
 	act = new QAction(QIcon("../data/stock-convert.png"), tr("Duplicate Current Slide"), this);
 	connect(act, SIGNAL(triggered()), this, SLOT(dupScene()));
 	toolbar->addAction(act);
+	
+	toolbar->addSeparator();
+	
+	QAction  *centerHor = toolbar->addAction(QIcon("../data/obj-center-hor.png"), tr("Center Items Horizontally"));
+	centerHor->setShortcut(QString(tr("CTRL+SHIFT+H")));
+	connect(centerHor, SIGNAL(triggered()), this, SLOT(centerSelectionHorizontally()));
+
+	QAction  *centerVer = toolbar->addAction(QIcon("../data/obj-center-ver.png"), tr("Center Items Vertically"));
+	centerVer->setShortcut(QString(tr("CTRL+SHIFT+V")));
+	connect(centerVer, SIGNAL(triggered()), this, SLOT(centerSelectionVertically()));
 }
 
 
@@ -294,20 +306,24 @@ void EditorWindow::setCurrentScene(GLScene *scene)
 		disconnect(m_scene, 0, this, 0);
 		m_scene = 0;
 	}
+	if(m_graphicsScene)
+	{
+		disconnect(m_graphicsScene, 0, this, 0);
+		m_graphicsScene->setEditingMode(false);
+		m_graphicsScene = 0;
+	}
 	
 	//qDebug() << "EditorWindow::setCurrentScene: "<<scene;
 	m_scene = scene;
 	
 	if(m_scene)
 	{
-		if(m_graphicsScene)
-			m_graphicsScene->setEditingMode(false);
-		
 		m_graphicsScene = m_scene->graphicsScene();
 		m_graphicsScene->setEditingMode(true);
 		m_graphicsView->setScene(m_graphicsScene);
 		m_graphicsScene->setSceneRect(QRectF(0,0,1000.,750.));
 		connect(m_graphicsScene, SIGNAL(drawableSelected(GLDrawable*)), this, SLOT(drawableSelected(GLDrawable*)));
+		connect(m_graphicsScene, SIGNAL(changed ( const QList<QRectF> & )), this, SLOT(graphicsSceneChanged ( const QList<QRectF> & )));
 		
   		GLDrawableList list = m_scene->drawableList();
 // 		
@@ -324,15 +340,46 @@ void EditorWindow::setCurrentScene(GLScene *scene)
 	}
 }
 
+void EditorWindow::graphicsSceneChanged ( const QList<QRectF> & )
+{
+	if(!m_graphicsScene)
+		return;
+	if(!m_scene)
+		return;
+	QPixmap pixmap;
+	
+	QSize iconSize = m_graphicsScene->sceneRect().size().toSize();
+	iconSize.scale(32,32, Qt::KeepAspectRatio);
+	
+	int icon_w = iconSize.width();
+	int icon_h = iconSize.height();
+		
+	QPixmap icon(icon_w,icon_h);
+	QPainter painter(&icon);
+	painter.fillRect(0,0,icon_w,icon_h,Qt::white);
+	painter.setRenderHint(QPainter::SmoothPixmapTransform, true);
+	painter.setRenderHint(QPainter::Antialiasing, true);
+	painter.setRenderHint(QPainter::TextAntialiasing, true);
+	
+	m_graphicsScene->render(&painter,QRectF(0,0,icon_w,icon_h),m_graphicsScene->sceneRect());
+	painter.setPen(Qt::black);
+	painter.setBrush(Qt::NoBrush);
+	painter.drawRect(0,0,icon_w-1,icon_h-1);
+	
+	m_scene->setPixmap(pixmap);
+}
+
 void EditorWindow::drawableAdded(GLDrawable */*d*/)
 {
 	//qDebug() << "EditorWindow::drawableAdded: "<<(QObject*)d;
 	//m_graphicsScene->addItem(d);
+	graphicsSceneChanged(QList<QRectF>());
 }
 
 void EditorWindow::drawableRemoved(GLDrawable */*d*/)
 {
 	//m_graphicsScene->removeItem(d);
+	graphicsSceneChanged(QList<QRectF>());
 }
 
 GLSceneGroup * EditorWindow::group()
@@ -400,9 +447,67 @@ void EditorWindow::addImage()
 	addDrawable(new GLImageDrawable("Pm5544.jpg"));
 }
 
-void EditorWindow::addText(const QString& str)
+void EditorWindow::addText(const QString& tmp)
 {
-	addDrawable(new GLTextDrawable(str));
+	QString str = tmp;
+	if(str.isEmpty())
+		str = "<span style='font-size:68px;color:white'><b>Lorem Ipsum</b></span>";
+	GLTextDrawable *text = new GLTextDrawable(str);
+	addDrawable(text);
+	textFitNaturally();
+	centerSelectionHorizontally();
+	centerSelectionVertically();
+}
+
+void EditorWindow::textFitNaturally()
+{
+	if(!m_currentDrawable)
+		return;
+		
+	if(GLTextDrawable *text = dynamic_cast<GLTextDrawable*>(m_currentDrawable))
+	{
+		QSizeF size = text->findNaturalSize(m_graphicsScene->sceneRect().width());
+		text->setRect(QRectF(text->rect().topLeft(),size));
+	}
+}
+
+void EditorWindow::textPlus()
+{
+	if(!m_textSizeBox)
+		return;
+	
+	double value = m_textSizeBox->value();
+	value += TOOLBAR_TEXT_SIZE_INC;
+	m_textSizeBox->setValue(value);
+	textSizeBoxChanged();
+}
+
+void EditorWindow::textMinus()
+{
+	if(!m_textSizeBox)
+		return;
+
+	double value = m_textSizeBox->value();
+	value -= TOOLBAR_TEXT_SIZE_INC;
+	m_textSizeBox->setValue(value);
+	textSizeBoxChanged();
+
+}
+void EditorWindow::textSizeBoxChanged()
+{
+	if(!m_textSizeBox)
+		return;
+	
+	double pt = m_textSizeBox->value();
+	
+	if(!m_currentDrawable)
+		return;
+		
+	if(GLTextDrawable *text = dynamic_cast<GLTextDrawable*>(m_currentDrawable))
+	{
+		text->changeFontSize(pt);
+		textFitNaturally();
+	}
 }
 
 void EditorWindow::drawableSelected(GLDrawable *d)
@@ -563,6 +668,41 @@ QWidget *EditorWindow::createPropertyEditors(GLDrawable *gld)
 // 			hbox->addWidget(btn);
 // 			lay->addRow(hbox); 
 			
+			QWidget *buttons = new QWidget();
+			QHBoxLayout *buttonLayout = new QHBoxLayout(buttons);
+			
+			QPushButton *btn;
+			btn = new QPushButton(QIcon("../data/stock-fit-in.png"),"");
+			btn->setToolTip(tr("Fit Box to Text Naturally"));
+			connect(btn, SIGNAL(clicked()), this, SLOT(textFitNaturally()));
+			buttonLayout->addWidget(btn);
+			
+			btn = new QPushButton(QIcon(":/data/stock-sort-descending.png"), "");
+			btn->setToolTip(tr("Increase Font Size"));
+			//btn->setShortcut(QString(tr("CTRL+SHFIT++")));
+			connect(btn, SIGNAL(clicked()), this, SLOT(textPlus()));
+			buttonLayout->addWidget(btn);
+			
+			btn = new QPushButton(QIcon("../data/stock-sort-ascending.png"), "");
+			btn->setToolTip(tr("Decrease Font Size"));
+			//btn->setShortcut(QString(tr("CTRL+SHFIT+-")));
+			connect(btn, SIGNAL(clicked()), this, SLOT(textMinus()));
+			buttonLayout->addWidget(btn);
+			
+			m_textSizeBox = new QDoubleSpinBox(buttons);
+			m_textSizeBox->setSuffix(tr("pt"));
+			m_textSizeBox->setMinimum(1);
+			m_textSizeBox->setValue(38);
+			m_textSizeBox->setDecimals(1);
+			m_textSizeBox->setMaximum(5000);
+			m_textSizeBox->setValue(item->findFontSize());
+			//connect(m_textSizeBox, SIGNAL(returnPressed()), this, SLOT(textSizeChanged(double)));
+			connect(m_textSizeBox, SIGNAL(editingFinished()), this, SLOT(textSizeBoxChanged()));
+			buttonLayout->addWidget(m_textSizeBox);
+			
+			buttonLayout->addStretch(1);
+			lay->addRow(buttons);
+			
 			opts.reset();
 		
 			QWidget *edit = PropertyEditorFactory::generatePropertyEditor(gld, "plainText", SLOT(setPlainText(const QString&)), opts, SIGNAL(plainTextChanged(const QString&)));
@@ -574,7 +714,7 @@ QWidget *EditorWindow::createPropertyEditors(GLDrawable *gld)
 			QWidget *base = new QWidget();
 			
 			RtfEditorWindow *dlg = new RtfEditorWindow(item, base);
-			QPushButton *btn = new QPushButton("&Advanced...");
+			btn = new QPushButton("&Advanced...");
 			connect(btn, SIGNAL(clicked()), dlg, SLOT(show()));
 			
 			QHBoxLayout *hbox = new QHBoxLayout(base);
@@ -679,5 +819,40 @@ void EditorWindow::dupScene()
 	
 	m_group->addScene(scene);
 	setCurrentScene(scene);
+}
+
+void EditorWindow::centerSelectionHorizontally()
+{
+	QList<GLDrawable *> selection = m_graphicsScene->selectedItems();
+	QRectF scene = m_graphicsScene->sceneRect();
+
+	qreal halfX = scene.width()/2;
+// 	qreal halfY = scene.height()/2;
+	foreach(GLDrawable *item, selection)
+	{
+		QRectF r = item->rect();
+		item->setRect( QRectF( 
+			halfX - r.width()/2, // - r.left() + scene.left(), 
+			r.top(), r.width(), r.height() 
+		) );
+	}
+}
+
+
+void EditorWindow::centerSelectionVertically()
+{
+	QList<GLDrawable *> selection = m_graphicsScene->selectedItems();
+	QRectF scene = m_graphicsScene->sceneRect();
+
+// 	qreal halfX = scene.width()/2;
+	qreal halfY = scene.height()/2;
+	foreach(GLDrawable *item, selection)
+	{
+		QRectF r = item->rect();
+		item->setRect( QRectF( 
+			r.left(), halfY - r.height()/2,// - r.top() + scene.top(),
+			r.width(), r.height() 
+		));
+	}
 }
 

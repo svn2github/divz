@@ -34,7 +34,7 @@ public slots:
 	void addVideoLoop();
 	void addVideoFile();
 	void addImage();
-	void addText(const QString& text="Hello, World");
+	void addText(const QString& text="");
 	
 	void addScene();
 	void delScene();
@@ -43,6 +43,13 @@ public slots:
 	void setCanvasSize(const QSizeF&);
 	
 	void setIsStandalone(bool);
+	
+	void centerSelectionHorizontally();
+	void centerSelectionVertically();
+	
+	void textFitNaturally();
+	void textPlus();
+	void textMinus();
 	
 protected slots:
 	void slideSelected(const QModelIndex &);
@@ -54,6 +61,10 @@ protected slots:
 	void drawableRemoved(GLDrawable*);
 	
 	void rtfEditorSave();
+	
+	void textSizeBoxChanged();
+	
+	void graphicsSceneChanged ( const QList<QRectF> & region );
 	
 protected:
 	void closeEvent(QCloseEvent *event);
@@ -90,6 +101,8 @@ protected:
 	QString m_fileName;
 	
 	bool m_isStandalone;
+	
+	QPointer<QDoubleSpinBox> m_textSizeBox;
 };
 
 
