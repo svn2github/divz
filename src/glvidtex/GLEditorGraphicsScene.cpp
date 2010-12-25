@@ -44,6 +44,7 @@ GLEditorGraphicsScene::GLEditorGraphicsScene()
 	, m_bgRect(0)
 	, m_dragRect(0)
 	, m_lockClearSelection(false)
+	, m_ctrlPressedWithMouse(false)
 {
 	m_bgRect = new RectItem();
 	m_bgRect->brush = Qt::black;
@@ -96,10 +97,11 @@ void GLEditorGraphicsScene::setSceneRect(const QRectF& rect)
 
 void GLEditorGraphicsScene::itemSelected(GLDrawable *item)
 {
-	//qDebug() << "GLEditorGraphicsScene::itemSelected: item:"<<(QObject*)item;
-	clearSelection(QList<GLDrawable*>() << item);
+// 	qDebug() << "GLEditorGraphicsScene::itemSelected: item:"<<(QObject*)item;
+	if(!m_ctrlPressedWithMouse)
+		clearSelection(QList<GLDrawable*>() << item);
 			
-	m_selection.clear();
+	//m_selection.clear();
 	m_selection.append(item);
 	emit selectionChanged();
 	emit drawableSelected(item);
@@ -110,31 +112,47 @@ void GLEditorGraphicsScene::clearSelection(QList<GLDrawable*> ignoreList)
 	if(m_lockClearSelection)
 		return;
 		
-	if(!m_selection.isEmpty())
-		foreach(GLDrawable *tmp, m_selection)
-			if(ignoreList.isEmpty() || !ignoreList.contains(tmp))
-			{
-				//qDebug() << "GLEditorGraphicsScene::clearSelection: clearing selection on item:"<<(QObject*)tmp;
-				tmp->setSelected(false);
-			}
+	//foreach(GLDrawable *tmp, m_selection)
+	while(!m_selection.isEmpty())
+	{
+		GLDrawable *tmp = m_selection.takeFirst();
+		if(ignoreList.isEmpty() || !ignoreList.contains(tmp))
+		{
+			//qDebug() << "GLEditorGraphicsScene::clearSelection: clearing selection on item:"<<(QObject*)tmp;
+			tmp->setSelected(false);
+			
+		}
+// 		else
+// 			qDebug() << "GLEditorGraphicsScene::clearSelection: ignoring item:"<<(QObject*)tmp;
+	}
+	
+	// Re-add what we ignored
+	m_selection << ignoreList;
 }
 
 void GLEditorGraphicsScene::mousePressEvent ( QGraphicsSceneMouseEvent * mouseEvent )
 {
-//  	QGraphicsItem *item = itemAt(mouseEvent->scenePos());
-//  	if(!item || item == m_bgRect || item == m_dragRect)
-//  	{
-//  		//qDebug() << "GLEditorGraphicsScene::mousePressEvent: No item at:"<<mouseEvent->scenePos();
-// // 		clearSelection();
-// 		m_dragRect->rect = QRectF(0,0,0,0);
-// 		m_dragRect->setPos(mouseEvent->scenePos());
-// 		m_dragRect->setVisible(true);
-// 		m_dragRect->update();
-//  	}
-//  	else
-//  	{
+  	m_ctrlPressedWithMouse = mouseEvent->modifiers() & Qt::ControlModifier;
+	
+  	QGraphicsItem *item = itemAt(mouseEvent->scenePos());
+ 	if(!item || item == m_bgRect || item == m_dragRect)
+ 	{
+ 		//qDebug() << "GLEditorGraphicsScene::mousePressEvent: No item at:"<<mouseEvent->scenePos();
+ 		if(!m_ctrlPressedWithMouse)
+ 			clearSelection();
+		m_dragRect->rect = QRectF(0,0,0,0);
+		m_dragRect->setPos(mouseEvent->scenePos());
+		m_dragRect->setVisible(true);
+		m_dragRect->update();
+ 	}
+ 	else
+ 	{
+ 		QPointF pos = mouseEvent->scenePos();
+ 		foreach(GLDrawable *tmp, m_selection)
+ 			tmp->setProperty("-mouse-diff", tmp->pos() - pos);
+ 		
  		QGraphicsScene::mousePressEvent(mouseEvent);
-//	}
+	}
 }
 
 void GLEditorGraphicsScene::mouseMoveEvent ( QGraphicsSceneMouseEvent * mouseEvent )
@@ -184,6 +202,7 @@ void GLEditorGraphicsScene::mouseReleaseEvent ( QGraphicsSceneMouseEvent * mouse
 // 	}
 // 	else
 	//setFocus();
+	m_ctrlPressedWithMouse = false;
 	if(m_dragRect->isVisible())
 	{
 		m_dragRect->setVisible(false);
@@ -191,7 +210,8 @@ void GLEditorGraphicsScene::mouseReleaseEvent ( QGraphicsSceneMouseEvent * mouse
 		clearSelection();
 		
 		m_lockClearSelection = true;
-		QRectF selRect(m_dragRect->pos(), m_dragRect->rect.normalized().size());
+		QRectF tmpRect = m_dragRect->rect.normalized();
+		QRectF selRect = QRectF(m_dragRect->pos() + tmpRect.topLeft(), tmpRect.size());
 		//qDebug() << "selRect:"<<selRect;
 		QList<QGraphicsItem*> list = items(selRect);
 		foreach(QGraphicsItem *item, list)

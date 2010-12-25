@@ -227,6 +227,23 @@ PlayerWindow::PlayerWindow(QWidget *parent)
 	
 	connect(m_server, SIGNAL(receivedMap(QVariantMap)), this, SLOT(receivedMap(QVariantMap)));
 	
+	
+	
+	QString outputFile = READ_STRING("output","output.avi");
+	if(!outputFile.isEmpty())
+	{
+		if(!m_glWidget)
+		{
+			qDebug() << "PlayerWindow: Unable to output video to"<<outputFile<<" because OpenGL is not enabled. (Set comapt=false in player.ini to use OpenGL)";
+		}
+		
+		m_outputEncoder = new VideoEncoder(outputFile, this);
+		m_outputEncoder->setVideoSource(m_glWidget->outputStream());
+		//m_outputEncoder->startEncoder();
+	}
+	
+	
+	
 	QString loadGroup = READ_STRING("load-group","");
 	if(!loadGroup.isEmpty())
 	{
@@ -249,6 +266,11 @@ PlayerWindow::PlayerWindow(QWidget *parent)
 				//scene->setGLWidget(this);
 				setScene(scene);
 				qDebug() << "PlayerWindow: [DEBUG]: Loaded File: "<<loadGroup<<", GroupID: "<<group->groupId()<<", SceneID: "<< scene->sceneId();
+				
+				if(m_outputEncoder && 
+				  !m_outputEncoder->encodingStarted())
+					m_outputEncoder->startEncoder();
+
 			}
 			else
 			{
@@ -256,20 +278,7 @@ PlayerWindow::PlayerWindow(QWidget *parent)
 			}
 		}	
 	}
-	
-	QString outputFile = READ_STRING("output","output.avi");
-	if(!outputFile.isEmpty())
-	{
-		if(!m_glWidget)
-		{
-			qDebug() << "PlayerWindow: Unable to output video to"<<outputFile<<" because OpenGL is not enabled. (Set comapt=false in player.ini to use OpenGL)";
-		}
-		
-		m_outputEncoder = new VideoEncoder(outputFile, this);
-		m_outputEncoder->setVideoSource(m_glWidget->outputStream());
-		//m_outputEncoder->startEncoder();
-	}
-	
+
 // 	// Send test map back to self
 // 	QTimer::singleShot(50, this, SLOT(sendTestMap()));
 }

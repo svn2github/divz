@@ -182,7 +182,8 @@ AVStream *VideoEncoder::addVideoStream(AVFormatContext *oc, enum CodecID codec_i
 	c->codec_type = CODEC_TYPE_VIDEO;
 	
 	/* put sample parameters */
-	c->bit_rate = 400000;
+	//c->bit_rate = 400000;
+	c->bit_rate  = 2000000;
 	
 	/* resolution must be a multiple of two */
 	c->width  = 640;
@@ -737,7 +738,7 @@ void VideoEncoder::run()
 		}
 		else
 		{
-			printf("VideoEncoder::run(): Video PTS: %f | Audio PTS: %f | Runtime: %.02f\n",m_videoPts,m_audioPts,m_runtime.elapsed() / 1000.);
+			//printf("VideoEncoder::run(): Video PTS: %f | Audio PTS: %f | Runtime: %.02f\n",m_videoPts,m_audioPts,m_runtime.elapsed() / 1000.);
 		
 // 			/* write interleaved audio and video frames */
 // 			if (!m_videoStream || (m_videoStream && m_audioStream && m_audioPts < m_videoPts)) 
@@ -755,9 +756,9 @@ void VideoEncoder::run()
 		double diff = m_videoPts - (m_runtime.elapsed() /1000.);
 		if(diff > 0)
 		{
-			diff *= .75;
+			//diff *= .75;
 			diff *= 1000;
-			qDebug() << "VideoEncoder::run(): Sleeping for "<<diff<<"ms";
+			//qDebug() << "VideoEncoder::run(): Sleeping for "<<diff<<"ms";
 			msleep((int)diff);
 		}
 			//msleep(1000 / m_frameRate * .75);

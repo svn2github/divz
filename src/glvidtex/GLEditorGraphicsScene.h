@@ -47,6 +47,7 @@ private:
 	RectItem * m_dragRect;
 	bool m_lockClearSelection;	
 	bool m_editingMode;
+	bool m_ctrlPressedWithMouse;
 };
 
 #endif

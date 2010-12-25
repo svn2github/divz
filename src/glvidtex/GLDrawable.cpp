@@ -148,6 +148,7 @@ int GLDrawable::id()
 void GLDrawable::setItemName(const QString& name)
 {
 	m_itemName = name;
+	setObjectName(qPrintable(name));
 	propertyWasChanged("itemName",name);
 }
 
@@ -1156,31 +1157,24 @@ void GLDrawable::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 	QGraphicsItem::mouseMoveEvent(event);
 	if(pos() != rect().topLeft())
 	{
-		//qDebug() << "New Pos:"<<pos();
-		QSizeF sz(10.,10.);// = AppSettings::gridSize();
-		bool halfGrid = false;
-		QPointF newPos = pos();
-		qreal x = sz.width()  / (halfGrid ? 2:1);
-		qreal y = sz.height() / (halfGrid ? 2:1);
-		newPos.setX(((int)(newPos.x() / x)) * x);
-		newPos.setY(((int)(newPos.y() / y)) * y);
-		if(newPos != pos())
+ 		QSizeF sz(10.,10.);// = AppSettings::gridSize();
+ 		bool halfGrid = false;
+
+		GLEditorGraphicsScene *gls = dynamic_cast<GLEditorGraphicsScene*>(scene());
+		if(gls)
 		{
-			setPos(newPos);
-			
-// 			QPointF posDiff = event->scenePos() - event->lastScenePos(); 
-// 		
-// 			GLEditorGraphicsScene *gls = dynamic_cast<GLEditorGraphicsScene*>(scene());
-// 			if(gls)
-// 			{
-// 				//qDebug() << "posDiff: "<<posDiff;
-// 				QList<GLDrawable*> sel = gls->selectedItems();
-// 				foreach(GLDrawable *item, sel)
-// 				{
-// 					if(item != this)
-// 						item->moveBy(posDiff.x(), posDiff.y());
-// 				}
-// 			}
+			QList<GLDrawable*> sel = gls->selectedItems();
+			foreach(GLDrawable *item, sel)
+			{
+				QPointF dif = item->property("-mouse-diff").toPointF();
+				QPointF posDiff = event->scenePos() + dif;
+				
+				qreal x = sz.width()  / (halfGrid ? 2:1);
+				qreal y = sz.height() / (halfGrid ? 2:1);
+				posDiff.setX(((int)(posDiff.x() / x + .5)) * x);
+				posDiff.setY(((int)(posDiff.y() / y + .5)) * y);
+				item->setPos(posDiff);
+			}
 		}
 			
 	}

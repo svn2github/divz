@@ -80,6 +80,7 @@ VideoReceiver::VideoReceiver(QObject *parent)
 // 	m_label->setGeometry(QRect(0,0,320,240));
 // 	m_label->show();
 // #endif
+	setIsBuffered(false);
 }
 VideoReceiver::~VideoReceiver()
 {
