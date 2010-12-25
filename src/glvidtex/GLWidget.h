@@ -208,6 +208,8 @@ class GLWidget : public QGLWidget
 	Q_PROPERTY(bool flipHorizontal READ flipHorizontal WRITE setFlipHorizontal);
 	Q_PROPERTY(bool flipVertical READ flipVertical WRITE setFlipVertical);
 	
+	Q_PROPERTY(bool opacity READ opacity WRITE setOpacity);
+	
 public:
 	GLWidget(QWidget *parent = 0, QGLWidget *shareWidget = 0);
 	~GLWidget();
@@ -255,6 +257,11 @@ public:
 	GLWidgetOutputStream *outputStream();
 	
 	QImage toImage();
+	
+	double opacity() { return m_opacity; }
+	
+	bool isBlackEnabled() { return m_isBlack; }
+	int crossfadeSpeed() { return m_crossfadeSpeed; }
 
 signals:
 	void clicked();
@@ -290,6 +297,12 @@ public slots:
 	
  	void addSubview(GLWidgetSubview*);
  	void removeSubview(GLWidgetSubview*);
+ 	
+ 	void setOpacity(double);
+ 	
+ 	void fadeBlack(bool toBlack=true);
+ 	
+ 	void setCrossfadeSpeed(int);
 	
 protected slots:
 	void zIndexChanged();
@@ -338,6 +351,12 @@ private:
 	QHash<int,GLWidgetSubview*> m_subviewLookup;
 	
 	GLWidgetOutputStream *m_outputStream;
+	
+	double m_opacity;
+	QPropertyAnimation *m_blackAnim;
+	bool m_isBlack;
+	
+	int m_crossfadeSpeed;
 };
 
 #endif

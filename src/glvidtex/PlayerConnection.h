@@ -101,6 +101,9 @@ public slots:
 	
 	void queryProperty(GLDrawable *, QString propertyName="");
 	
+	void fadeBlack(bool flag);
+	void setCrossfadeSpeed(int ms);
+	
 signals:
 	void subviewAdded(GLWidgetSubview*);
 	void subviewRemoved(GLWidgetSubview*);

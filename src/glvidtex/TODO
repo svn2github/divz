@@ -13,9 +13,10 @@ TODO:
 			destructor on VideoFrame causing a SIUGSEGV deep in QByteArray
 		- [FIXED] When viewing remote using vid send/receiver thru a VideoWidget, one of the video streams seems to 'back up' and only "unspools" when sent live thru a GLVideoDrawable... ???
 			- Disabled buffering on VideoReceiver - hackish fix, I know.
+		- Fade to black should work, but the QPropertyAnimation doesnt seem to run at all
 		
 	NEEDED FEATURES:
-		- Fade speed control
+		[DONE] - Fade speed control
 		[DONE] - Need to set canvas size of the groups
 		- Add 'setup' options to the video switcher to configure the video feed from director
 			- Input
@@ -29,10 +30,11 @@ TODO:
 		- Either (a) integrate with DViz songs.db and Bible functionality or (b) integrate VideoSender with DViz
 		- Border/Dropshadow control for items
 			- Right now, text and images
-		- Black button
+		[DONE] - Black button
 		- Make GLDirector NOT crash when the player is disconnected!
 		- Preview feed back from the player - what's really on the screen 
 		[DONE] - Editor: Select and drag multiple items at once
+		- Crossfading between scenes
 	
 	IDEAS:
 		- Text scroller
@@ -54,6 +56,7 @@ TODO:
 			[DONE] - Text autofit
 			- Item autofit 
 		- Add copy/paste
+		- Undo/redo
 
 TARGET DATE: 12/11 9am
 	Features Required by 12/11 9am:

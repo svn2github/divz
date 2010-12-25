@@ -79,6 +79,9 @@ void DirectorWindow::setupUI()
 	ui->graphicsView->setBackgroundBrush(Qt::black);
 	//m_graphicsScene->setSceneRect(QRectF(0,0,1000.,750.));
 	
+	ui->fadeSpeedSlider->setValue((int)(300. / 3000. * 100));
+	connect(ui->fadeBlackBtn, SIGNAL(toggled(bool)), this, SLOT(fadeBlack(bool)));
+	connect(ui->fadeSpeedSlider, SIGNAL(valueChanged(int)), this, SLOT(setFadeSpeedPercent(int)));
 	
 	connect(ui->actionAdd_New_Group, SIGNAL(triggered()), this, SLOT(addNewGroup()));
 	connect(ui->actionEdit_Selected_Group, SIGNAL(triggered()), this, SLOT(showEditWindow()));
@@ -223,6 +226,22 @@ void DirectorWindow::itemLengthChanged(double len)
 		return;
 	
 	m_currentItem->setDuration(len);
+}
+
+void DirectorWindow::fadeBlack(bool toBlack)
+{
+	foreach(PlayerConnection *con, m_players->players())
+		con->fadeBlack(toBlack);
+}
+
+void DirectorWindow::setFadeSpeedPercent(int value)
+{
+	double perc = ((double)value)/100.;
+	int ms = (int)(3000 * perc);
+	qDebug() << "DirectorWindow::setFadeSpeedPercent: value:"<<value<<", ms:"<<ms;
+	foreach(PlayerConnection *con, m_players->players())
+		con->setCrossfadeSpeed(ms);
+	
 }
 
 void DirectorWindow::btnHideDrawable()

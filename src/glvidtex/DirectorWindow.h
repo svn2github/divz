@@ -57,6 +57,8 @@ public slots:
 	void setCurrentScene(GLScene *);
 	void setCurrentDrawable(GLDrawable *);
 	void setCurrentItem(GLPlaylistItem *);
+	void fadeBlack(bool toBlack=true);
+	void setFadeSpeedPercent(int);
 
 private slots:
 	

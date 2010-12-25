@@ -3,6 +3,7 @@
 #include <QtGui>
 #include "GLWidget.h"
 #include "GLDrawable.h"
+#include "GLVideoDrawable.h"
 
 #include "GLPlayerServer.h"
 // #include "GLPlayerClient.h"
@@ -62,6 +63,7 @@ PlayerWindow::PlayerWindow(QWidget *parent)
 	, m_playerVersionString("GLPlayer 0.5")
 	, m_playerVersion(15)
 	, m_outputEncoder(0)
+	, m_xfadeSpeed(300)
 {
 	m_vidSendMgr = new VideoInputSenderManager();
 	m_vidSendMgr->setSendingEnabled(true);
@@ -360,10 +362,24 @@ void PlayerWindow::receivedMap(QVariantMap map)
 	else
 	if(cmd == GLPlayer_SetBlackout)
 	{
-		/// TODO implement blackout
+		if(m_glWidget)
+			m_glWidget->fadeBlack(map["flag"].toBool());
+			
 		sendReply(QVariantList() 
 				<< "cmd" << GLPlayer_SetBlackout
 				<< "status" << true);
+	}
+	else
+	if(cmd == GLPlayer_SetCrossfadeSpeed)
+	{
+		int ms = map["ms"].toInt();
+		if(m_glWidget)
+			m_glWidget->setCrossfadeSpeed(ms);
+		m_xfadeSpeed = ms;
+		
+		sendReply(QVariantList() 
+				<< "cmd" << cmd
+				<< "status" << true);	
 	}
 	else
 	if(cmd == GLPlayer_LoadSlideGroup)
@@ -473,6 +489,9 @@ void PlayerWindow::receivedMap(QVariantMap map)
 					{
 						QVariant value = map["value"];
 						
+						if(GLVideoDrawable *vid = dynamic_cast<GLVideoDrawable*>(gld))
+							vid->setXFadeLength(m_xfadeSpeed);
+							
 						gld->setProperty(qPrintable(name), value);
 						
 						sendReply(QVariantList() 

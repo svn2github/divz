@@ -193,6 +193,10 @@ GLWidget::GLWidget(QWidget *parent, QGLWidget *shareWidget)
 	, m_useShaders(false)
 	, m_shadersLinked(false)
 	, m_outputStream(0)
+	, m_opacity(1.)
+	, m_blackAnim(0)
+	, m_isBlack(false)
+	, m_crossfadeSpeed(300)
 {
 	
 	setCanvasSize(QSizeF(1000.,750.));
@@ -978,8 +982,6 @@ void GLWidget::paintGL()
 	//  			<< "TL: "<<textureCoordArray[4]<<textureCoordArray[5]
 	//  			<< "TR: "<<textureCoordArray[6]<<textureCoordArray[7];
 		
-			double liveOpacity = 1.;
-		
 			m_program->bind();
 		
 			m_program->enableAttributeArray("vertexCoordArray");
@@ -1002,7 +1004,7 @@ void GLWidget::paintGL()
 		// 	m_program->setUniformValue("positionMatrix",      mat4);
 			
 			//qDebug() << "GLVideoDrawable:paintGL():"<<this<<", rendering with opacity:"<<opacity();
-			m_program->setUniformValue("alpha",               (GLfloat)liveOpacity);
+			m_program->setUniformValue("alpha",               (GLfloat)m_opacity);
 			m_program->setUniformValue("texOffsetX",          (GLfloat)0.);//m_invertedOffset.x());
 			m_program->setUniformValue("texOffsetY",          (GLfloat)0.);//m_invertedOffset.y());
 				
@@ -1550,6 +1552,49 @@ void GLWidget::mouseReleaseEvent(QMouseEvent * /* event */)
 {
 	emit clicked();
 }
+
+void GLWidget::setOpacity(double d)
+{
+	m_opacity = d;
+	qDebug() << "GLWidget::setOpacity: "<<d;
+	
+	updateGL();
+}
+
+void GLWidget::fadeBlack(bool toBlack)
+{
+	if(m_blackAnim)
+	{
+		if(m_blackAnim->state() == QPropertyAnimation::Running)
+			m_blackAnim->pause();
+		delete m_blackAnim;
+	}
+	
+	//
+	//if(!m_blackAnim)
+	m_blackAnim = new QPropertyAnimation(this, "opacity");
+	
+	
+	qDebug() << "GLWidget::fadeBlack: toBlack:"<<toBlack<<", duration:"<<m_crossfadeSpeed<<", current opac:"<<opacity();
+	//setOpacity(0.5);
+	m_blackAnim->setDuration(m_crossfadeSpeed);
+	m_blackAnim->setStartValue(opacity());
+	
+	if(toBlack)
+		m_blackAnim->setEndValue(0);
+	else
+		m_blackAnim->setEndValue(1);
+		
+	m_blackAnim->start();
+	
+	m_isBlack = toBlack;
+}
+
+void GLWidget::setCrossfadeSpeed(int m)
+{
+	m_crossfadeSpeed = m;
+}
+
 
 GLWidgetOutputStream *GLWidget::outputStream()
 {

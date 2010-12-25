@@ -66,6 +66,8 @@ private:
 	VideoInputSenderManager *m_vidSendMgr;
 	
 	VideoEncoder *m_outputEncoder;
+	
+	int m_xfadeSpeed;
 };
 
 #endif

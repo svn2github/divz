@@ -407,7 +407,21 @@ void PlayerConnection::queryProperty(GLDrawable *gld, QString propertyName)
 		<< "drawableid"	<< gld->id()
 		<< "name"	<< propertyName);	
 }
+
+void PlayerConnection::fadeBlack(bool flag)
+{
+	sendCommand(QVariantList() 
+		<< "cmd" 	<< GLPlayer_SetBlackout
+		<< "flag"	<< flag);	
+}
 	
+void PlayerConnection::setCrossfadeSpeed(int ms)
+{
+	sendCommand(QVariantList() 
+		<< "cmd" 	<< GLPlayer_SetCrossfadeSpeed
+		<< "ms"		<< ms);	
+}
+
 /*signals:
 	void subviewAdded(GLWidgetSubview*);
 	void subviewRemoved(GLWidgetSubview*);

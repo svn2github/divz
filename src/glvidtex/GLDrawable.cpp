@@ -2,6 +2,7 @@
 
 #include "GLWidget.h"
 #include "GLEditorGraphicsScene.h"
+#include "GLVideoDrawable.h"
 
 QAutoDelPropertyAnimation::QAutoDelPropertyAnimation(QObject * target, const QByteArray & propertyName, QObject * parent)
 	: QPropertyAnimation(target,propertyName,parent)
@@ -381,7 +382,12 @@ void GLDrawable::startAnimation(const GLDrawable::AnimParam& p)
 	if(ani)
 	{
 		ani->setEasingCurve(p.curve); //inFlag ? QEasingCurve::OutCubic : QEasingCurve::InCubic);
-		ani->setDuration(p.length);
+		
+		int len = p.length;
+		if(GLVideoDrawable *vid = dynamic_cast<GLVideoDrawable*>(this))
+			len = vid->xfadeLength();
+							
+		ani->setDuration(len);
 
 // 		//qDebug() << "GLDrawable::startAnimation: type:"<<p.type<<", length:"<<p.length<<", curve:"<<p.curve.type();
 

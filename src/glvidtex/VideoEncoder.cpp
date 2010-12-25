@@ -590,7 +590,7 @@ void VideoEncoder::frameReady()
 	
 	if(img.format() != QImage::Format_ARGB32)
 	{
-		qDebug() << "VideoEncoder::frameReady: Converting to QImage::Format_ARGB32"; 
+		//qDebug() << "VideoEncoder::frameReady: Converting to QImage::Format_ARGB32"; 
 		img = img.convertToFormat(QImage::Format_ARGB32);
 	}
 	
@@ -598,7 +598,7 @@ void VideoEncoder::frameReady()
 		
 	if(img.size() != QSize(c->width,c->height))
 	{
-		qDebug() << "VideoEncoder::frameReady: Scaling from:"<<img.size()<<" to "<<c->width<<"x"<<c->height;
+		//qDebug() << "VideoEncoder::frameReady: Scaling from:"<<img.size()<<" to "<<c->width<<"x"<<c->height;
 		img = img.scaled(c->width,c->height);
 	}
 	

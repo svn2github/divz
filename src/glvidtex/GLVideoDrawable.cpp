@@ -1961,7 +1961,7 @@ void GLVideoDrawable::paintGL()
 		txRight, txTop
 	};
 
-	double liveOpacity = (opacity());// * (m_fadeActive ? m_fadeValue : 1.));
+	double liveOpacity = (opacity() * (m_fadeActive ? m_fadeValue - .1 : 1.));
 
 	if(m_useShaders)
 	{
