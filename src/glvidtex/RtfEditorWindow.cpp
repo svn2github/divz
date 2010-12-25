@@ -28,9 +28,21 @@ RtfEditorWindow::RtfEditorWindow(GLTextDrawable *gld, QWidget *parent)
 	}
 	countdown->addWidget(boolEdit);
 	countdown->addWidget(dateEdit);
+	
+	QWidget *boolEdit2 = PropertyEditorFactory::generatePropertyEditor(gld, "isClock", SLOT(setIsClock(bool)), opts);
+	QWidget *stringEdit = PropertyEditorFactory::generatePropertyEditor(gld, "clockFormat", SLOT(setClockFormat(const QString&)), opts);
+	box = dynamic_cast<QCheckBox*>(boolEdit2);
+	if(box)
+	{
+		connect(boolEdit2, SIGNAL(toggled(bool)), stringEdit, SLOT(setEnabled(bool)));
+		stringEdit->setEnabled(box->isChecked());
+	}
+		
+	countdown->addWidget(boolEdit2);
+	countdown->addWidget(stringEdit);
+	
 	countdown->addStretch(1);
 	layout->addLayout(countdown);
-	
 	
 	m_rtfEditor = new RichTextEditorDialog();
 	m_rtfEditor->setText(gld->text());

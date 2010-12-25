@@ -24,6 +24,10 @@ GLWidgetSubview::GLWidgetSubview()
 	, m_viewLeft(0)
 	, m_viewBottom(1.)
 	, m_viewRight(1.)
+	, m_sourceTop(-1)
+	, m_sourceLeft(-1)
+	, m_sourceBottom(-1)
+	, m_sourceRight(-1)
 	, m_flipHorizontal(false)
 	, m_flipVertical(false)
 	, m_brightness(0)
@@ -74,6 +78,11 @@ QByteArray GLWidgetSubview::toByteArray()
 	map["right"] 	= m_viewRight;
 	map["bottom"] 	= m_viewBottom;
 	
+	map["stop"] 	= m_sourceTop;
+	map["sleft"] 	= m_sourceLeft;
+	map["sright"] 	= m_sourceRight;
+	map["sbottom"] 	= m_sourceBottom;
+	
 	map["fliph"]	= m_flipHorizontal;
 	map["flipv"]	= m_flipVertical;
 	
@@ -117,6 +126,14 @@ void GLWidgetSubview::fromByteArray(QByteArray& array)
 	m_viewLeft	= map["left"].toDouble();
 	m_viewRight	= map["right"].toDouble();
 	m_viewBottom	= map["bottom"].toDouble();
+	
+	if(map["stop"].isValid())
+	{
+		m_sourceTop 	= map["stop"].toDouble();
+		m_sourceLeft	= map["sleft"].toDouble();
+		m_sourceRight	= map["sright"].toDouble();
+		m_sourceBottom	= map["sbottom"].toDouble();
+	}
 	
 	m_flipHorizontal = map["fliph"].toBool();
 	m_flipVertical   = map["flipv"].toBool();
@@ -184,6 +201,39 @@ void GLWidgetSubview::setRight(double d)
 }
 
 
+void GLWidgetSubview::setSourceTop(double d)
+{
+	m_sourceTop = d;
+	if(m_glw)
+		m_glw->updateGL();
+	emit changed(this);
+}
+
+void GLWidgetSubview::setSourceLeft(double d)
+{
+	m_sourceLeft = d;
+	if(m_glw)
+		m_glw->updateGL();
+	emit changed(this);
+}
+
+void GLWidgetSubview::setSourceBottom(double d)
+{
+	m_sourceBottom = d;
+	if(m_glw)
+		m_glw->updateGL();
+	emit changed(this);
+}
+
+void GLWidgetSubview::setSourceRight(double d)
+{
+	m_sourceRight = d;
+	if(m_glw)
+		m_glw->updateGL();
+	emit changed(this);
+}
+
+
 GLWidget::GLWidget(QWidget *parent, QGLWidget *shareWidget)
 	: QGLWidget(QGLFormat(QGL::SampleBuffers),parent, shareWidget)
 	, m_glInited(false)
@@ -194,7 +244,7 @@ GLWidget::GLWidget(QWidget *parent, QGLWidget *shareWidget)
 	, m_shadersLinked(false)
 	, m_outputStream(0)
 	, m_opacity(1.)
-	, m_blackAnim(0)
+// 	, m_blackAnim(0)
 	, m_isBlack(false)
 	, m_crossfadeSpeed(300)
 {
@@ -204,6 +254,9 @@ GLWidget::GLWidget(QWidget *parent, QGLWidget *shareWidget)
 	//setViewport(QRectF(QPointF(0,0),canvasSize()));
 	//qDebug() << "GLWidget::doubleBuffered: "<<doubleBuffer();
 	(void)defaultSubview();
+		
+	connect(&m_fadeBlackTimer, SIGNAL(timeout()), this, SLOT(fadeBlackTick()));
+
 	
 // 	GLWidgetSubview *def = defaultSubview();
 // 	def->setRight(.5);
@@ -841,10 +894,16 @@ void GLWidget::paintGL()
 			
 			double sw = m_fbo->size().width(),
 			       sh = m_fbo->size().height();
-			double sx = sw * view->left();
-			double sy = sw * view->top();
-			double sw2 = (sw * view->right()) - sx;
-			double sh2 = (sh * view->bottom()) - sy;
+			
+			double sl = view->sourceLeft()   < 0 ? view->left()   : view->sourceLeft();
+			double st = view->sourceTop()    < 0 ? view->top()    : view->sourceTop();
+			double sr = view->sourceRight()  < 0 ? view->right()  : view->sourceRight();
+			double sb = view->sourceBottom() < 0 ? view->bottom() : view->sourceBottom();
+			
+			double sx = sw * sl;
+			double sy = sw * st;
+			double sw2 = (sw * sr) - sx;
+			double sh2 = (sh * sb) - sy;
 			QRectF source = QRectF(sx,sy,sw2,sh2);
 			
 			QRectF target = view->targetRect();
@@ -1556,39 +1615,43 @@ void GLWidget::mouseReleaseEvent(QMouseEvent * /* event */)
 void GLWidget::setOpacity(double d)
 {
 	m_opacity = d;
-	qDebug() << "GLWidget::setOpacity: "<<d;
+	//qDebug() << "GLWidget::setOpacity: "<<d;
 	
 	updateGL();
 }
 
 void GLWidget::fadeBlack(bool toBlack)
 {
-	if(m_blackAnim)
-	{
-		if(m_blackAnim->state() == QPropertyAnimation::Running)
-			m_blackAnim->pause();
-		delete m_blackAnim;
-	}
+	//qDebug() << "GLWidget::fadeBlack: toBlack:"<<toBlack<<", duration:"<<m_crossfadeSpeed<<", current opac:"<<opacity();
+
+	m_fadeBlackTimer.setInterval(1000 / 30); // 30fps fade
 	
-	//
-	//if(!m_blackAnim)
-	m_blackAnim = new QPropertyAnimation(this, "opacity");
+	m_fadeBlackDirection = toBlack ?  -1 : 1;
 	
-	
-	qDebug() << "GLWidget::fadeBlack: toBlack:"<<toBlack<<", duration:"<<m_crossfadeSpeed<<", current opac:"<<opacity();
-	//setOpacity(0.5);
-	m_blackAnim->setDuration(m_crossfadeSpeed);
-	m_blackAnim->setStartValue(opacity());
-	
-	if(toBlack)
-		m_blackAnim->setEndValue(0);
-	else
-		m_blackAnim->setEndValue(1);
-		
-	m_blackAnim->start();
+	m_fadeBlackClock.start();
+	m_fadeBlackTimer.start();
 	
 	m_isBlack = toBlack;
 }
+
+void GLWidget::fadeBlackTick()
+{
+	int time = m_fadeBlackClock.elapsed();
+	if(time >= m_crossfadeSpeed)
+	{
+		m_fadeBlackTimer.stop();
+		setOpacity(m_fadeBlackDirection > 0 ? 1 : 0);
+	}
+	else
+	{
+		double fadeVal = ((double)time) / ((double)m_crossfadeSpeed);
+		if(m_fadeBlackDirection < 0)
+			fadeVal = 1.0 - fadeVal;
+		//qDebug() << "GLWidget::fadeBlackTick: dir:"<<m_fadeBlackDirection<<", time:"<<time<<", len:"<<m_crossfadeSpeed<<", fadeVal:"<<fadeVal; 
+		setOpacity(fadeVal);
+	}
+}
+
 
 void GLWidget::setCrossfadeSpeed(int m)
 {

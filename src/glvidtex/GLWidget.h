@@ -72,6 +72,15 @@ public:
 	double bottom() const { return m_viewBottom; }
 	double right() const { return m_viewRight; }
 	
+	/* Source TLBR defaults to (-1,-1,-1,-1), which causes GLWidget to use the same
+	   percentage coordinates as the positional fractions above. The main reason
+	   for using a different source coordinates than the position coordinates would
+	   be for, say, duplicating the content (two views side by side, say, for projector
+	   overlaying and alightnment.) */
+	double sourceTop() const { return m_sourceTop; }
+	double sourceLeft() const { return m_sourceLeft; }
+	double sourceBottom() const { return m_sourceBottom; }
+	double sourceRight() const { return m_sourceRight; }
 	
 	bool flipHorizontal() { return m_flipHorizontal; }
 	bool flipVertical() { return m_flipVertical; }
@@ -111,6 +120,16 @@ public slots:
 	void setLeftPercent(double d)   { setLeft(d/100.); }
 	void setBottomPercent(double d) { setBottom(d/100.); }
 	void setRightPercent(double d)  { setRight(d/100.); }
+	
+	void setSourceTop(double);
+	void setSourceLeft(double);
+	void setSourceBottom(double);
+	void setSourceRight(double);
+	
+	void setSourceTopPercent(double d) 	{ setSourceTop(d/100.); }
+	void setSourceLeftPercent(double d) 	{ setSourceLeft(d/100.); }
+	void setSourceBottomPercent(double d) 	{ setSourceBottom(d/100.); }
+	void setSourceRightPercent(double d) 	{ setSourceRight(d/100.); }
 	
 	void setAlphaMaskFile(const QString&);
 	void setAlphaMask(const QImage&);
@@ -156,6 +175,11 @@ protected:
 	double m_viewLeft;
 	double m_viewBottom;
 	double m_viewRight;
+	
+	double m_sourceTop;
+	double m_sourceLeft;
+	double m_sourceBottom;
+	double m_sourceRight;
 	
 	bool m_flipHorizontal;
 	bool m_flipVertical;
@@ -309,6 +333,8 @@ protected slots:
 	
 	void postInitGL();
 	
+	void fadeBlackTick();
+	
 protected:
 	void sortDrawables();
 	void initializeGL();
@@ -353,8 +379,12 @@ private:
 	GLWidgetOutputStream *m_outputStream;
 	
 	double m_opacity;
-	QPropertyAnimation *m_blackAnim;
 	bool m_isBlack;
+	
+	QTimer m_fadeBlackTimer;
+	QTime m_fadeBlackClock;
+	int m_fadeBlackDirection;
+
 	
 	int m_crossfadeSpeed;
 };

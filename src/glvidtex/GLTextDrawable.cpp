@@ -2,9 +2,12 @@
 
 #include "RichTextRenderer.h"
 
+#define DEFAULT_CLOCK_FORMAT "yyyy-MM-dd h:mm:ss ap"
 
 GLTextDrawable::GLTextDrawable(QString text, QObject *parent)
 	: GLImageDrawable("",parent)
+	, m_isClock(false)
+	, m_clockFormat(DEFAULT_CLOCK_FORMAT)
 	, m_lockSetPlainText(false)
 {
 	QDateTime now = QDateTime::currentDateTime();
@@ -31,6 +34,10 @@ GLTextDrawable::GLTextDrawable(QString text, QObject *parent)
 		
 	connect(&m_countdownTimer, SIGNAL(timeout()), this, SLOT(countdownTick()));
 	m_countdownTimer.setInterval(250);
+
+	connect(&m_clockTimer, SIGNAL(timeout()), this, SLOT(clockTick()));
+	m_clockTimer.setInterval(250);
+
 }
 	
 void GLTextDrawable::testXfade()
@@ -98,6 +105,42 @@ void GLTextDrawable::countdownTick()
 	m_renderer->renderText();
 }
 
+void GLTextDrawable::setIsClock(bool flag)
+{
+	m_isClock = flag;
+	if(m_clockTimer.isActive() && !flag)
+		m_clockTimer.stop();
+	
+	if(!m_clockTimer.isActive() && flag)
+		m_clockTimer.start();
+	
+	if(flag)
+	{
+		setXFadeEnabled(false);
+		clockTick();
+	}
+	else
+		setXFadeEnabled(true);
+}
+
+void GLTextDrawable::setClockFormat(const QString& format)
+{
+	m_clockFormat = format;
+	if(m_clockFormat.isEmpty())
+		m_clockFormat = DEFAULT_CLOCK_FORMAT;
+}
+
+void GLTextDrawable::clockTick()
+{
+	QDateTime now = QDateTime::currentDateTime();
+	QString newText = now.toString(clockFormat());
+	//qDebug() << "GLTextDrawable::clockTick: now:"<<now<<", format:"<<clockFormat()<<", newText:"<<newText;
+	
+	setPlainText(newText);
+	
+	setXFadeEnabled(false);
+	m_renderer->renderText();
+}
 
 void GLTextDrawable::setText(const QString& text)
 {

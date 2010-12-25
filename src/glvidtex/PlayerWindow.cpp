@@ -13,6 +13,9 @@
 #include "VideoInputSenderManager.h"
 #include "VideoEncoder.h"
 
+#include <QTimer>
+#include <QApplication>
+
 class ScaledGraphicsView : public QGraphicsView
 {
 public:
@@ -283,6 +286,30 @@ PlayerWindow::PlayerWindow(QWidget *parent)
 
 // 	// Send test map back to self
 // 	QTimer::singleShot(50, this, SLOT(sendTestMap()));
+
+	/// NB REMOVE FOR PRODUCTION
+	/// NB REMOVE FOR PRODUCTION
+	/// NB REMOVE FOR PRODUCTION
+	/// NB REMOVE FOR PRODUCTION
+	/// NB REMOVE FOR PRODUCTION
+	/// NB REMOVE FOR PRODUCTION
+	/// NB REMOVE FOR PRODUCTION
+	/// NB REMOVE FOR PRODUCTION
+	
+	/// THIS IS ONLY TO TEST FILE SIZES AND ENCODER PERFORMANCE
+	
+	//QTimer::singleShot(1000 * 60, qApp, SLOT(quit()));
+	
+	/// THIS IS ONLY TO TEST FILE SIZES AND ENCODER PERFORMANCE
+	
+	/// NB REMOVE FOR PRODUCTION
+	/// NB REMOVE FOR PRODUCTION
+	/// NB REMOVE FOR PRODUCTION
+	/// NB REMOVE FOR PRODUCTION
+	/// NB REMOVE FOR PRODUCTION
+	/// NB REMOVE FOR PRODUCTION
+	/// NB REMOVE FOR PRODUCTION
+	/// NB REMOVE FOR PRODUCTION
 }
 
 void PlayerWindow::sendReply(QVariantList reply)

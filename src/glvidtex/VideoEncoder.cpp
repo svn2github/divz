@@ -754,7 +754,7 @@ void VideoEncoder::run()
 		}
 		
 		double diff = m_videoPts - (m_runtime.elapsed() /1000.);
-		if(diff > 0)
+		if(diff > 0 && diff <= 30) // arbitrary max
 		{
 			//diff *= .75;
 			diff *= 1000;
@@ -781,17 +781,23 @@ void VideoEncoder::stopEncoder()
 void VideoEncoder::teardownInternal()
 {
 	
+	qDebug() << "VideoEncoder::teardownInternal(): Teardown starting...";
+	
 	/* write the trailer, if any.  the trailer must be written
 	* before you close the CodecContexts open when you wrote the
 	* header; otherwise write_trailer may try to use memory that
 	* was freed on av_codec_close() */
 	av_write_trailer(m_outputContext);
 	
+	qDebug() << "VideoEncoder::teardownInternal(): Closing streams...";
+	
 	/* close each codec */
 	if (m_videoStream)
 		closeVideo(m_outputContext, m_videoStream);
 	if (m_audioStream)
 		closeAudio(m_outputContext, m_audioStream);
+	
+	qDebug() << "VideoEncoder::teardownInternal(): Freeing streams...";
 	
 	/* free the streams */
 	for(uint i = 0; i < m_outputContext->nb_streams; i++) 
@@ -800,11 +806,15 @@ void VideoEncoder::teardownInternal()
 		av_freep(&m_outputContext->streams[i]);
 	}
 	
+	qDebug() << "VideoEncoder::teardownInternal(): Closing the output file...";
+	
 	if (!(m_fmt->flags & AVFMT_NOFILE)) 
 	{
 		/* close the output file */
 		url_fclose(m_outputContext->pb);
 	}
+	
+	qDebug() << "VideoEncoder::teardownInternal(): Closing the output context...";
 	
 	/* free the stream */
 	av_free(m_outputContext);

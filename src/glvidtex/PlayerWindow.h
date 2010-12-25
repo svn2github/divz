@@ -36,7 +36,7 @@ private slots:
 /*	// for testing
 	void sendTestMap();
 	void slotConnected();*/
-	
+
 private:
 	void sendReply(QVariantList);
 	
