@@ -18,6 +18,7 @@ class GLTextDrawable : public GLImageDrawable
 	
 public:
 	GLTextDrawable(QString text="", QObject *parent=0);
+	~GLTextDrawable();
 	
 	QString plainText();
 	QString text() { return m_text; }

@@ -16,7 +16,7 @@ GLTextDrawable::GLTextDrawable(QString text, QObject *parent)
 	m_isCountdown = false;
 	
 
-	m_renderer = new RichTextRenderer(this);
+	m_renderer = new RichTextRenderer();
 	connect(m_renderer, SIGNAL(textRendered(QImage)), this, SLOT(setImage(const QImage&)));
 	
 	m_renderer->setTextWidth(1000); // just a guess
@@ -38,6 +38,14 @@ GLTextDrawable::GLTextDrawable(QString text, QObject *parent)
 	connect(&m_clockTimer, SIGNAL(timeout()), this, SLOT(clockTick()));
 	m_clockTimer.setInterval(250);
 
+}
+GLTextDrawable::~GLTextDrawable()
+{
+	if(m_renderer)
+	{
+		delete m_renderer;
+		m_renderer = 0;
+	}
 }
 	
 void GLTextDrawable::testXfade()
@@ -102,7 +110,7 @@ void GLTextDrawable::countdownTick()
 	// Force renderer to render text so it doesn't delay past another timer tick, thereby creating a gap in the countdown onscreen
 	setXFadeEnabled(false);
 	//qDebug() << "GLTextDrawable::countdownTick: "<<now<<secsTo<<newText;
-	m_renderer->renderText();
+	//m_renderer->renderText();
 }
 
 void GLTextDrawable::setIsClock(bool flag)
@@ -139,7 +147,7 @@ void GLTextDrawable::clockTick()
 	setPlainText(newText);
 	
 	setXFadeEnabled(false);
-	m_renderer->renderText();
+	//m_renderer->renderText();
 }
 
 void GLTextDrawable::setText(const QString& text)

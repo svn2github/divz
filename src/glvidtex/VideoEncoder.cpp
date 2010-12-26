@@ -535,6 +535,11 @@ bool VideoEncoder::startEncoder(const QString& filename, double duration, int fr
 	
 	start();
 	
+	// TODO Will this work? The idea is to move
+	// the scaling done in frameReady() into the
+	// encoder thread as opposed to the source thread.
+	moveToThread(this);
+	
 	return true;
 }
 

@@ -1460,7 +1460,7 @@ void GLVideoDrawable::updateTexture(bool secondSource)
 
 		if(!m_validShader)
 		{
-			qDebug() << "GLVideoDrawable::updateTexture(): "<<(QObject*)this<<" No valid shader, not painting";
+			//qDebug() << "GLVideoDrawable::updateTexture(): "<<(QObject*)this<<" No valid shader, not painting";
 			return;
 		}
 
@@ -1820,7 +1820,7 @@ void GLVideoDrawable::paintGL()
 {
 	if(!m_validShader)
 	{
-		qDebug() << "GLVideoDrawable::paintGL(): "<<(QObject*)this<<" No valid shader, not painting";
+		//qDebug() << "GLVideoDrawable::paintGL(): "<<(QObject*)this<<" No valid shader, not painting";
 		return;
 	}
 

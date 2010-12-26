@@ -4,7 +4,7 @@
 QCache<QString,double> RichTextRenderer::static_autoTextSizeCache;
 
 RichTextRenderer::RichTextRenderer(QObject *parent)
-	: QObject(parent)
+	: QThread(parent)
 	, m_textWidth(640)
 	, m_outlineEnabled(true)
 	, m_outlinePen(Qt::black, 2.0)
@@ -16,18 +16,52 @@ RichTextRenderer::RichTextRenderer(QObject *parent)
 	, m_shadowOffsetY(3)
 	, m_updatesLocked(false)
 {
-// 	qDebug() << "RichTextRenderer::ctor(): \t in thread:"<<QThread::currentThreadId();
-	connect(&m_updateTimer, SIGNAL(timeout()), this, SLOT(renderText()));
+	//qDebug() << "RichTextRenderer::ctor(): \t in thread:"<<QThread::currentThreadId();
+	
+ 	connect(&m_updateTimer, SIGNAL(timeout()), this, SLOT(renderText()));
 	m_updateTimer.setInterval(100);
 	m_updateTimer.setSingleShot(true);
+	
+	
+// 	// This *should* be sufficient to move the rendering into another thread,
+// 	// since the renderText() is normally called as part of a timer signal
+// 	start();
+// 	moveToThread(this);
+
+}
+
+RichTextRenderer::~RichTextRenderer()
+{
+	// shutdown thread
+	quit();
+	wait();
 }
 
 void RichTextRenderer::setHtml(const QString& html)
 {
+	if(html == m_html)
+	{
+		update();
+		return;
+	}
+		
 	m_html = html;
 	// dont block calling thread by updating - since we are in a thread ourself, 
 	// this should put the update into our thread
 	//QTimer::singleShot(0,this,SLOT(update()));
+	
+	if (Qt::mightBeRichText(html))
+	{
+		m_doc.setHtml(html);
+		m_shadowDoc.setHtml(html);
+	}
+	else
+	{
+		m_doc.setPlainText(html);
+		m_shadowDoc.setPlainText(html);
+	}
+	
+	
 	update();
 }
 
@@ -41,13 +75,7 @@ bool RichTextRenderer::lockUpdates(bool flag)
 
 void RichTextRenderer::changeFontSize(double size)
 {
-	QTextDocument doc;
-	if (Qt::mightBeRichText(html()))
-		doc.setHtml(html());
-	else
-		doc.setPlainText(html());
-
-	QTextCursor cursor(&doc);
+	QTextCursor cursor(&m_doc);
 	cursor.select(QTextCursor::Document);
 
 	QTextCharFormat format;
@@ -55,19 +83,13 @@ void RichTextRenderer::changeFontSize(double size)
 	cursor.mergeCharFormat(format);
 	cursor.mergeBlockCharFormat(format);
 
-	setHtml(doc.toHtml());
+	//setHtml(doc.toHtml());
 }
 
 
 double RichTextRenderer::findFontSize()
 {
-	QTextDocument doc;
-	if (Qt::mightBeRichText(html()))
-		doc.setHtml(html());
-	else
-		doc.setPlainText(html());
-
-	QTextCursor cursor(&doc);
+	QTextCursor cursor(&m_doc);
 	cursor.select(QTextCursor::Document);
 	QTextCharFormat format = cursor.charFormat();
 	return format.fontPointSize();
@@ -274,7 +296,7 @@ void RichTextRenderer::update()
 {
  	if(m_updateTimer.isActive())
  		m_updateTimer.stop();
-// 	qDebug() << "RichTextRenderer::update(): \t in thread:"<<QThread::currentThreadId();
+ 	//qDebug() << "RichTextRenderer::update(): \t in thread:"<<QThread::currentThreadId();
 	m_updateTimer.start();
 }
 
@@ -290,27 +312,13 @@ void RichTextRenderer::renderText()
 	QTime renderTime;
 	renderTime.start();
 	
-	QTextDocument doc;
-	QTextDocument shadowDoc;
-	
-	if (Qt::mightBeRichText(html()))
-	{
-		doc.setHtml(html());
-		shadowDoc.setHtml(html());
-	}
-	else
-	{
-		doc.setPlainText(html());
-		shadowDoc.setPlainText(html());
-	}
-	
 	int textWidth = m_textWidth;
 
-	doc.setTextWidth(textWidth);
-	shadowDoc.setTextWidth(textWidth);
+	m_doc.setTextWidth(textWidth);
+	m_shadowDoc.setTextWidth(textWidth);
 	
 	// Apply outline pen to the html
-	QTextCursor cursor(&doc);
+	QTextCursor cursor(&m_doc);
 	cursor.select(QTextCursor::Document);
 
 	QTextCharFormat format;
@@ -332,7 +340,7 @@ void RichTextRenderer::renderText()
 	{
 		if(shadowBlurRadius() <= 0.05)
 		{
-			QTextCursor cursor(&shadowDoc);
+			QTextCursor cursor(&m_shadowDoc);
 			cursor.select(QTextCursor::Document);
 	
 			QTextCharFormat format;
@@ -345,7 +353,7 @@ void RichTextRenderer::renderText()
 	
 			
 	QSizeF shadowSize = shadowEnabled() ? QSizeF(shadowOffsetX(),shadowOffsetY()) : QSizeF(0,0);
-	QSizeF docSize = doc.size();
+	QSizeF docSize = m_doc.size();
 	QSize sumSize = (docSize + shadowSize).toSize();
 	//qDebug() << "RichTextRenderer::update(): textWidth: "<<textWidth<<", shadowSize:"<<shadowSize<<", docSize:"<<docSize<<", sumSize:"<<sumSize;
 	QImage cache(sumSize,QImage::Format_ARGB32); //_Premultiplied);
@@ -356,6 +364,7 @@ void RichTextRenderer::renderText()
 	
 	QAbstractTextDocumentLayout::PaintContext pCtx;
 
+	m_shadowEnabled = false;
 	if(shadowEnabled())
 	{
 		if(shadowBlurRadius() <= 0.05)
@@ -364,7 +373,7 @@ void RichTextRenderer::renderText()
 			textPainter.save();
 
 			textPainter.translate(shadowOffsetX(),shadowOffsetY());
-			shadowDoc.documentLayout()->draw(&textPainter, pCtx);
+			m_shadowDoc.documentLayout()->draw(&textPainter, pCtx);
 
 			textPainter.restore();
 		}
@@ -373,7 +382,7 @@ void RichTextRenderer::renderText()
 			double radius = shadowBlurRadius();
 			
 			// create temporary pixmap to hold a copy of the text
-			QSizeF blurSize = ImageFilters::blurredSizeFor(doc.size(), (int)radius);
+			QSizeF blurSize = ImageFilters::blurredSizeFor(m_doc.size(), (int)radius);
 			//qDebug() << "Blur size:"<<blurSize<<", doc:"<<doc.size()<<", radius:"<<radius;
 			QImage tmpImage(blurSize.toSize(),QImage::Format_ARGB32_Premultiplied);
 			memset(tmpImage.scanLine(0),0,tmpImage.byteCount());
@@ -383,7 +392,7 @@ void RichTextRenderer::renderText()
 			
 			tmpPainter.save();
 			tmpPainter.translate(radius, radius);
-			doc.documentLayout()->draw(&tmpPainter, pCtx);
+			m_doc.documentLayout()->draw(&tmpPainter, pCtx);
 			tmpPainter.restore();
 			
 			// blacken the text by applying a color to the copy using a QPainter::CompositionMode_DestinationIn operation. 
@@ -405,7 +414,7 @@ void RichTextRenderer::renderText()
 		}
 	}
 	
-	doc.documentLayout()->draw(&textPainter, pCtx);
+	m_doc.documentLayout()->draw(&textPainter, pCtx);
 	
 	textPainter.end();
 	

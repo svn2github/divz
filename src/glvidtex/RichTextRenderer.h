@@ -13,7 +13,7 @@
 #define V_ITEM_PROPDEF(setterName,typeName,memberName) virtual void set##setterName(typeName value); virtual typeName memberName() const { return m_##memberName; }
 #endif
 
-class RichTextRenderer : public QObject
+class RichTextRenderer : public QThread
 {
 	Q_OBJECT
 	
@@ -35,7 +35,7 @@ class RichTextRenderer : public QObject
 
 public:
 	RichTextRenderer(QObject *parent=0);
-	virtual ~RichTextRenderer() {}
+	virtual ~RichTextRenderer();
 
 	const QString & html() { return m_html; }
 	
@@ -106,6 +106,9 @@ private:
 	bool m_updatesLocked;
 	
 	QTimer m_updateTimer;
+	
+	QTextDocument m_doc;
+	QTextDocument m_shadowDoc;
 };
 
 #endif
