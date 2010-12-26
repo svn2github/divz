@@ -59,6 +59,8 @@ public slots:
 	void setCurrentItem(GLPlaylistItem *);
 	void fadeBlack(bool toBlack=true);
 	void setFadeSpeedPercent(int);
+	
+	void showPlayerLiveMonitor();
 
 private slots:
 	

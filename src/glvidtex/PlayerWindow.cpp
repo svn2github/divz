@@ -12,6 +12,7 @@
 #include "GLSceneGroup.h"
 #include "VideoInputSenderManager.h"
 #include "VideoEncoder.h"
+#include "VideoSender.h"
 
 #include <QTimer>
 #include <QApplication>
@@ -300,6 +301,21 @@ PlayerWindow::PlayerWindow(QWidget *parent)
 			}
 		}	
 	}
+	
+	if(m_glWidget)
+	{
+		VideoSender *sender = new VideoSender(this);
+		sender->setVideoSource(m_glWidget->outputStream());
+		if(sender->listen(QHostAddress::Any,9978))
+		{
+			qDebug() << "PlayerWindow: Live monitor available on port 9978";
+		}
+		else
+		{
+			qDebug() << "PlayerWindow: [ERROR] Unable start Live Monitor server on port 9978!";
+		}
+	}
+	
 
 // 	// Send test map back to self
 // 	QTimer::singleShot(50, this, SLOT(sendTestMap()));

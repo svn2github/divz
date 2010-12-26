@@ -235,6 +235,7 @@
     <addaction name="actionChange_Canvas_Size"/>
     <addaction name="separator"/>
     <addaction name="actionPlayer_Setup"/>
+    <addaction name="actionMonitor_Players_Live"/>
     <addaction name="separator"/>
     <addaction name="actionExit"/>
    </widget>
@@ -298,7 +299,12 @@
   </action>
   <action name="actionChange_Canvas_Size">
    <property name="text">
-    <string>Change Canvas Size...</string>
+    <string>Change &amp;Canvas Size...</string>
+   </property>
+  </action>
+  <action name="actionMonitor_Players_Live">
+   <property name="text">
+    <string>&amp;Monitor Players Live ...</string>
    </property>
   </action>
  </widget>

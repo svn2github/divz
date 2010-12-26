@@ -70,6 +70,82 @@ DirectorWindow::~DirectorWindow()
 	delete ui;
 }
 
+void DirectorWindow::showPlayerLiveMonitor()
+{
+	QComboBox *sourceBox = new QComboBox();
+	QStringList itemList;
+	QList<PlayerConnection*> players;
+	foreach(PlayerConnection *con, m_players->players())
+		if(con->isConnected())
+		{
+			itemList << QString("Player: %1").arg(con->name());
+			players << con;
+		}
+	sourceBox->addItems(itemList);
+	QDialog dlg;
+	dlg.setWindowTitle("Change Canvas Size");
+	
+	QVBoxLayout *vbox = new QVBoxLayout(&dlg);
+	
+	QFormLayout *form = new QFormLayout();
+	 
+	form->addRow("Player to View:", sourceBox);
+	 
+	QHBoxLayout *buttons = new QHBoxLayout();
+	buttons->addStretch(1);
+	QPushButton *cancel = new QPushButton("Cancel");
+	buttons->addWidget(cancel);
+	
+	QPushButton *ok = new QPushButton("ok");
+	buttons->addWidget(ok);
+	ok->setDefault(true);
+	
+	connect(cancel, SIGNAL(clicked()), &dlg, SLOT(reject()));
+	connect(ok, SIGNAL(clicked()), &dlg, SLOT(accept()));
+	
+	vbox->addLayout(form);
+	vbox->addStretch(1);
+	vbox->addLayout(buttons);
+	dlg.setLayout(vbox);
+	dlg.adjustSize();
+	if(dlg.exec())
+	{
+		int idx = sourceBox->currentIndex();
+		if(idx < 0 || idx >= players.size())
+		{
+			qDebug() << "Player selection error";
+			return;	
+		}
+		
+		PlayerConnection *con = players[idx];
+		
+		QString host = con->host();
+		int port = 9978;
+		VideoReceiver *rx = VideoReceiver::getReceiver(host,port);
+				
+		if(!rx)
+		{
+			qDebug() << "DirectorWindow::showPlayerLiveMonitor: Unable to connect to "<<host<<":"<<port;
+			QMessageBox::warning(this,"Video Connection",QString("Sorry, but we were unable to connect to the video transmitter at %1:%2 - not sure why.").arg(host).arg(port));
+		}
+		else
+		{
+			m_receivers << QPointer<VideoReceiver>(rx);
+			
+			qDebug() << "DirectorWindow::showPlayerLiveMonitor: Connected to "<<host<<":"<<port<<", creating widget...";
+			
+			VideoWidget *vid = new VideoWidget();
+			vid->setVideoSource(rx);
+			
+			vid->setWindowTitle(QString("Player '%1' - Live Player Monitor").arg(con->name()));
+			vid->resize(320,240);
+			vid->show();
+			
+		}
+		
+	}
+}
+
 
 void DirectorWindow::setupUI()
 {
@@ -82,6 +158,8 @@ void DirectorWindow::setupUI()
 	ui->fadeSpeedSlider->setValue((int)(300. / 3000. * 100));
 	connect(ui->fadeBlackBtn, SIGNAL(toggled(bool)), this, SLOT(fadeBlack(bool)));
 	connect(ui->fadeSpeedSlider, SIGNAL(valueChanged(int)), this, SLOT(setFadeSpeedPercent(int)));
+	
+	connect(ui->actionMonitor_Players_Live, SIGNAL(triggered()), this, SLOT(showPlayerLiveMonitor()));
 	
 	connect(ui->actionAdd_New_Group, SIGNAL(triggered()), this, SLOT(addNewGroup()));
 	connect(ui->actionEdit_Selected_Group, SIGNAL(triggered()), this, SLOT(showEditWindow()));

@@ -235,7 +235,8 @@ void GLWidgetSubview::setSourceRight(double d)
 
 
 GLWidget::GLWidget(QWidget *parent, QGLWidget *shareWidget)
-	: QGLWidget(QGLFormat(QGL::SampleBuffers),parent, shareWidget)
+	//: QGLWidget(QGLFormat(QGL::SampleBuffers),parent, shareWidget)
+	: QGLWidget(parent, shareWidget)
 	, m_glInited(false)
 	, m_fbo(0)
 	, m_aspectRatioMode(Qt::KeepAspectRatio)
