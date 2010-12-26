@@ -242,6 +242,23 @@ PlayerWindow::PlayerWindow(QWidget *parent)
 			qDebug() << "PlayerWindow: Unable to output video to"<<outputFile<<" because OpenGL is not enabled. (Set comapt=false in player.ini to use OpenGL)";
 		}
 		
+		QFileInfo info(outputFile);
+		if(info.exists())
+		{
+			int counter = 1;
+			QString newFile;
+			while(QFileInfo(newFile = QString("%1-%2.%3")
+				.arg(info.baseName())
+				.arg(counter)
+				.arg(info.completeSuffix()))
+				.exists())
+				
+				counter++;
+			
+			qDebug() << "PlayerWindow: Video output file"<<outputFile<<"exists, writing to"<<newFile<<"instead.";
+			outputFile = newFile;
+		}
+		
 		m_outputEncoder = new VideoEncoder(outputFile, this);
 		m_outputEncoder->setVideoSource(m_glWidget->outputStream());
 		//m_outputEncoder->startEncoder();
