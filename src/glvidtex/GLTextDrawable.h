@@ -32,6 +32,9 @@ public:
 	QSize findNaturalSize(int atWidth);
 	void changeFontSize(double);
 	double findFontSize();
+	
+	virtual void loadPropsFromMap(const QVariantMap&, bool onlyApplyIfChanged = false);
+	virtual QVariantMap propsToMap();
 
 public slots:
 	void setPlainText(const QString&, bool replaceNewlineSlash=true);
@@ -70,6 +73,9 @@ private:
 	QTimer m_clockTimer;
 	
 	bool m_lockSetPlainText;
+	
+	QString m_cachedImageText;
+	QImage m_cachedImage;
 };
 
 #endif

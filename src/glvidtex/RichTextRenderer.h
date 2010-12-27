@@ -13,7 +13,7 @@
 #define V_ITEM_PROPDEF(setterName,typeName,memberName) virtual void set##setterName(typeName value); virtual typeName memberName() const { return m_##memberName; }
 #endif
 
-class RichTextRenderer : public QThread
+class RichTextRenderer : public QObject
 {
 	Q_OBJECT
 	
@@ -77,6 +77,9 @@ public slots:
 signals:
 	void textRendered(QImage img);
 
+// protected:
+// 	void run();
+
 private:
 	QString m_html;
 	QImage m_image;
@@ -109,6 +112,10 @@ private:
 	
 	QTextDocument m_doc;
 	QTextDocument m_shadowDoc;
+	
+/*	QMutex m_flagMutex;
+	bool m_renderNeeded;
+	bool m_killed;*/
 };
 
 #endif

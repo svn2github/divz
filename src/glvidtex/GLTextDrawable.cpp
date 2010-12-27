@@ -154,10 +154,21 @@ void GLTextDrawable::setText(const QString& text)
 {
 	m_text = text;
 	//qDebug() << "GLTextDrawable::setText(): text:"<<text;
+	bool lock = false;
 	
+	if(m_cachedImageText == text && 
+	  !m_cachedImage.isNull())
+	{
+		qDebug() << "GLTextDrawable::setText: Cached image matches text, not re-rendering.";
+		lock = m_renderer->lockUpdates(true);
+		setImage(m_cachedImage);
+	}
+		
 	m_renderer->setHtml(text);
 	if(!Qt::mightBeRichText(text))
 		changeFontSize(40);
+		
+	m_renderer->lockUpdates(lock);
 	
 	emit textChanged(text);
 	
@@ -273,3 +284,37 @@ void GLTextDrawable::updateRects(bool secondSource)
 		m_targetRect2 = targetRect;
 	}
 }
+
+void GLTextDrawable::loadPropsFromMap(const QVariantMap& map, bool onlyApplyIfChanged)
+{
+	
+	QByteArray bytes = map["text_image"].toByteArray();
+	QImage image;
+	image.loadFromData(bytes);
+	//qDebug() << "GLSceneLayout::fromByteArray(): image size:"<<image.size()<<", isnull:"<<image.isNull();
+	
+	if(!image.isNull())
+		setImage(image);
+	m_cachedImageText = map["text_image_alt"].toString();
+	
+	GLDrawable::loadPropsFromMap(map);
+}
+
+QVariantMap GLTextDrawable::propsToMap()
+{
+	QVariantMap map = GLDrawable::propsToMap();
+	
+	// Save the image to the map for sending a cached render over the network so the player
+	// can cheat and use this image that was rendered by the director as opposed to re-rendering
+	// the same text
+	QByteArray bytes;
+	QBuffer buffer(&bytes);
+	buffer.open(QIODevice::WriteOnly);
+	image().save(&buffer, "PNG"); // writes pixmap into bytes in PNG format
+	buffer.close();
+	map["text_image"] = bytes;
+	map["text_image_alt"] = m_text;
+	
+	return map;
+}
+

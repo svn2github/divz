@@ -4,7 +4,7 @@
 QCache<QString,double> RichTextRenderer::static_autoTextSizeCache;
 
 RichTextRenderer::RichTextRenderer(QObject *parent)
-	: QThread(parent)
+	: QObject(parent)
 	, m_textWidth(640)
 	, m_outlineEnabled(true)
 	, m_outlinePen(Qt::black, 2.0)
@@ -16,32 +16,53 @@ RichTextRenderer::RichTextRenderer(QObject *parent)
 	, m_shadowOffsetY(3)
 	, m_updatesLocked(false)
 {
-	//qDebug() << "RichTextRenderer::ctor(): \t in thread:"<<QThread::currentThreadId();
-	
- 	connect(&m_updateTimer, SIGNAL(timeout()), this, SLOT(renderText()));
-	m_updateTimer.setInterval(100);
+// 	qDebug() << "RichTextRenderer::ctor(): \t in thread:"<<QThread::currentThreadId();
+	connect(&m_updateTimer, SIGNAL(timeout()), this, SLOT(renderText()));
+	m_updateTimer.setInterval(50);
 	m_updateTimer.setSingleShot(true);
 	
 	
-// 	// This *should* be sufficient to move the rendering into another thread,
-// 	// since the renderText() is normally called as part of a timer signal
-// 	start();
-// 	moveToThread(this);
+	// NB QTextDocument doesn't seem to be able to be used from another thread other than the GUI thread under X11 - wierd crashes/freezes if we try to thread it
+// // 	// This *should* be sufficient to move the rendering into another thread,
+// // 	// since the renderText() is normally called as part of a timer signal
+//  	m_killed = false;
+// 	
+//  	start();
+// // 	moveToThread(this);
 
 }
 
 RichTextRenderer::~RichTextRenderer()
 {
-	// shutdown thread
-	quit();
-	wait();
+// 	// shutdown thread
+// 	m_killed = true;
+// 	quit();
+// 	wait();
 }
+
+// void RichTextRenderer::run()
+// {
+// 	while(!m_killed)
+// 	{
+// 		m_flagMutex.lock();
+// 		bool localFlag = m_renderNeeded;
+// 		m_flagMutex.unlock();
+// 		if(localFlag)
+// 		{
+// 			renderText();
+// 			m_flagMutex.lock();
+// 			m_renderNeeded = false;
+// 			m_flagMutex.unlock();
+// 		}
+// 		msleep(50);
+// 	}
+// }
 
 void RichTextRenderer::setHtml(const QString& html)
 {
 	if(html == m_html)
 	{
-		update();
+		//update();
 		return;
 	}
 		
@@ -61,8 +82,13 @@ void RichTextRenderer::setHtml(const QString& html)
 		m_shadowDoc.setPlainText(html);
 	}
 	
-	
+	if(outlineEnabled())
+		setOutlinePen(outlinePen());
+		
 	update();
+// 	m_flagMutex.lock();
+// 	m_renderNeeded = true;
+// 	m_flagMutex.unlock();
 }
 
 bool RichTextRenderer::lockUpdates(bool flag)
@@ -84,6 +110,7 @@ void RichTextRenderer::changeFontSize(double size)
 	cursor.mergeBlockCharFormat(format);
 
 	//setHtml(doc.toHtml());
+	update();
 }
 
 
@@ -117,7 +144,7 @@ int RichTextRenderer::fitToSize(const QSize& size, int minimumFontSize, int maxi
 		// etc, just so we can get the document height after
 		// setting the font size inorder to use it to center the textbox.
 		// If we didnt nead the height, we could just use autoText->setFontSize()
-		
+		/*
 		QTextDocument doc;
 		doc.setTextWidth(width);
 		if (Qt::mightBeRichText(html()))
@@ -125,17 +152,18 @@ int RichTextRenderer::fitToSize(const QSize& size, int minimumFontSize, int maxi
 		else
 			doc.setPlainText(html());
 
-			
-		QTextCursor cursor(&doc);
+			*/
+		QTextCursor cursor(&m_doc);
 		cursor.select(QTextCursor::Document);
 		
 		QTextCharFormat format;
 		format.setFontPointSize(ptSize);
 		cursor.mergeCharFormat(format);
 		
-		boxHeight = doc.documentLayout()->documentSize().height();
+		boxHeight = m_doc.documentLayout()->documentSize().height();
 		
-		setHtml(doc.toHtml());
+		//setHtml(doc.toHtml());
+		update();
 	}
 	else
 	{
@@ -148,18 +176,18 @@ int RichTextRenderer::fitToSize(const QSize& size, int minimumFontSize, int maxi
 		double lastGoodSize = ptSize;
 		QString lastGoodHtml = html();
 		
-		QTextDocument doc;
+// 		QTextDocument doc;
 		
 		qreal heightTmp;
 		
-		doc.setTextWidth(width);
-		if (Qt::mightBeRichText(html()))
-			doc.setHtml(html());
-		else
-			doc.setPlainText(html());
+// 		doc.setTextWidth(width);
+// 		if (Qt::mightBeRichText(html()))
+// 			doc.setHtml(html());
+// 		else
+// 			doc.setPlainText(html());
 
 			
-		QTextCursor cursor(&doc);
+		QTextCursor cursor(&m_doc);
 		cursor.select(QTextCursor::Document);
 		
 		QTextCharFormat format;
@@ -169,7 +197,7 @@ int RichTextRenderer::fitToSize(const QSize& size, int minimumFontSize, int maxi
 			format.setFontPointSize(ptSize);
 			cursor.mergeCharFormat(format);
 			
-			heightTmp = doc.documentLayout()->documentSize().height();
+			heightTmp = m_doc.documentLayout()->documentSize().height();
 			
 			if(heightTmp < height &&
 			      ptSize < maximumFontSize)
@@ -206,7 +234,7 @@ int RichTextRenderer::fitToSize(const QSize& size, int minimumFontSize, int maxi
 				format.setFontPointSize(ptSize);
 				cursor.mergeCharFormat(format);
 				
-				heightTmp = doc.documentLayout()->documentSize().height();
+				heightTmp = m_doc.documentLayout()->documentSize().height();
 				
 				if(heightTmp < height)
 				{
@@ -230,7 +258,8 @@ int RichTextRenderer::fitToSize(const QSize& size, int minimumFontSize, int maxi
 		format.setFontPointSize(lastGoodSize);
 		cursor.mergeCharFormat(format);
 		
-		setHtml(doc.toHtml());
+// 		//setHtml(doc.toHtml());
+		update();
 		
 		//qDebug()<<"RichTextRenderer::fitToSize(): size search: caching ptsize:"<<lastGoodSize<<", count: "<<count<<"( minimum size was:"<<minimumFontSize<<")";
 		boxHeight = heightTmp;
@@ -302,38 +331,21 @@ void RichTextRenderer::update()
 
 void RichTextRenderer::renderText()
 {
+// 	m_flagMutex.lock();
+// 	if(!m_renderNeeded)
+// 		return;
+// 	m_renderNeeded = false;
+// 	m_flagMutex.unlock();
+	
 // 	qDebug()<<itemName()<<"TextBoxWarmingThread::run(): htmlCode:"<<htmlCode;
 	//qDebug() << "RichTextRenderer::renderText(): HTML:"<<html();
 	//qDebug() << "RichTextRenderer::update(): Update Start...";
- 	//qDebug() << "RichTextRenderer::renderText(): \t in thread:"<<QThread::currentThreadId();
+//  	qDebug() << "RichTextRenderer::renderText(): \t in thread:"<<QThread::currentThreadId();
 	if(m_updateTimer.isActive())
 		m_updateTimer.stop();
 		
 	QTime renderTime;
 	renderTime.start();
-	
-	int textWidth = m_textWidth;
-
-	m_doc.setTextWidth(textWidth);
-	m_shadowDoc.setTextWidth(textWidth);
-	
-	// Apply outline pen to the html
-	QTextCursor cursor(&m_doc);
-	cursor.select(QTextCursor::Document);
-
-	QTextCharFormat format;
-
-	QPen p(Qt::NoPen);
-	if(outlineEnabled())
-	{
-		p = outlinePen();
-		p.setJoinStyle(Qt::MiterJoin);
-	}
-
-	format.setTextOutline(p);
-	//format.setForeground(fillEnabled() ? fillBrush() : Qt::NoBrush); //Qt::white);
-
-	cursor.mergeCharFormat(format);
 	
 	// Setup the shadow text formatting if enabled
 	if(shadowEnabled())
@@ -364,7 +376,7 @@ void RichTextRenderer::renderText()
 	
 	QAbstractTextDocumentLayout::PaintContext pCtx;
 
-	m_shadowEnabled = false;
+	//m_shadowEnabled = false;
 	if(shadowEnabled())
 	{
 		if(shadowBlurRadius() <= 0.05)
@@ -424,10 +436,50 @@ void RichTextRenderer::renderText()
 	//qDebug() << "RichTextRenderer::renderText(): Render finished, elapsed:"<<renderTime.elapsed()<<"ms";
 }
 
-ITEM_PROPSET(RichTextRenderer, TextWidth,	int,	textWidth);
+//ITEM_PROPSET(RichTextRenderer, TextWidth,	int,	textWidth);
+void RichTextRenderer::setTextWidth(int x)
+{
+	//qDebug() << "RichTextRenderer::setTextWidth: "<<x;
+	m_textWidth = x;
+	
+	m_doc.setTextWidth(x);
+	m_shadowDoc.setTextWidth(x);
+}
 
-ITEM_PROPSET(RichTextRenderer, OutlineEnabled,	bool,	outlineEnabled);
-ITEM_PROPSET(RichTextRenderer, OutlinePen,	QPen,	outlinePen);
+//ITEM_PROPSET(RichTextRenderer, OutlineEnabled,	bool,	outlineEnabled);
+//ITEM_PROPSET(RichTextRenderer, OutlinePen,	QPen,	outlinePen);
+
+void RichTextRenderer::setOutlineEnabled(bool flag)
+{
+	//qDebug() << "RichTextRenderer::setOutlineEnabled: "<<flag;
+	m_outlineEnabled = flag;
+	setOutlinePen(outlinePen());
+}
+
+void RichTextRenderer::setOutlinePen(QPen pen)
+{
+	//qDebug() << "RichTextRenderer::setOutlinePen: "<<pen;
+	m_outlinePen = pen;
+	
+	// Apply outline pen to the html
+	QTextCursor cursor(&m_doc);
+	cursor.select(QTextCursor::Document);
+
+	QTextCharFormat format;
+
+	QPen p(Qt::NoPen);
+	if(outlineEnabled())
+	{
+		p = pen;
+		p.setJoinStyle(Qt::MiterJoin);
+	}
+
+	format.setTextOutline(p);
+	//format.setForeground(fillEnabled() ? fillBrush() : Qt::NoBrush); //Qt::white);
+
+	cursor.mergeCharFormat(format);
+}
+
 
 ITEM_PROPSET(RichTextRenderer, FillEnabled,	bool,	fillEnabled);
 ITEM_PROPSET(RichTextRenderer, FillBrush,	QBrush,	fillBrush);
