@@ -23,8 +23,88 @@ void GLImageDrawable::testXfade()
 	setImageFile("dsc_6645.jpg");
 }
 	
+QImage makeHistogram(const QImage& image)
+{
+	QSize smallSize = image.size();
+	smallSize.scale(160,120,Qt::KeepAspectRatio);
+	
+	QImage origScaled = image.scaled(smallSize);
+	
+	int rgbHisto[256];
+	memset(&rgbHisto, 0, 256);
+	for(int i=0;i<256;i++)
+		rgbHisto[i] = 0;
+	
+	for(int y=0; y<smallSize.height(); y++)
+	{
+		const uchar *line = (const uchar*)origScaled.scanLine(y);
+		for(int x=0; x<smallSize.width(); x+=3)
+		{
+			const uchar r = line[x];
+			const uchar g = x+1 >= smallSize.width() ? 0 : line[x+1];
+			const uchar b = x+2 >= smallSize.width() ? 0 : line[x+2];
+			if(r || g || b)
+			{
+				//const QRgb pixel = (QRgb)val;
+				//int gray = qRed(pixel) * .30 + qGreen(pixel) * .59 + qBlue(pixel) * .11;
+				int gray = r * .30 + g * .59 + b * .11;
+				//qDebug() << "val:"<<(int)val<<", r:"<<qRed(pixel)<<", g:"<<qGreen(pixel)<<", b:"<<qBlue(pixel)<<", gray:"<<gray;
+				//qDebug() << "r:"<<r<<", g:"<<g<<", b:"<<b<<", gray:"<<gray;
+				rgbHisto[gray] ++;
+			} 
+		}
+	}
+	
+ 	int max=0;
+ 	int avg=0;
+ 	for(int i=0;i<256;i++)
+ 	{
+ 		int count = rgbHisto[i];
+ 		if(count > max)
+ 			max = count;
+ 		avg += count;
+ 	}
+ 		
+ 	avg /= 255;
+ 	//qDebug() << "Avg:"<<avg<<", max:"<<max;
+
+	QImage histogram(QSize(255,128), QImage::Format_RGB32);
+	int maxHeight = 128;
+	QPainter p(&histogram);
+	p.setPen(Qt::blue);
+	p.fillRect(histogram.rect(), Qt::gray);
+	for(int i=0;i<256;i++)
+	{
+		int count = rgbHisto[i];
+// 		if(count > avg*4)
+// 			count = avg*4;
+		double perc = ((double)count)/((double)(max*.5));
+		double val = perc * maxHeight;
+		int scaled = (int)val;
+		//qDebug() << "i:"<<i<<", count:"<<count<<", perc:"<<perc<<", val:"<<val<<", scaled:"<<scaled;
+		
+		p.drawLine(i,maxHeight-scaled, i,maxHeight);
+		
+	}
+	p.end();
+	
+		
+	// 30, 59, 11%
+	
+	
+	QImage histogramOutput(smallSize.width() + 255, smallSize.height(), QImage::Format_RGB32);
+	QPainter p2(&histogramOutput);
+	p2.fillRect(histogramOutput.rect(),Qt::gray);
+	p2.drawImage(QPointF(0,0),origScaled);
+	p2.drawImage(QPointF(smallSize.width(),0),histogram);
+	
+	return histogramOutput;
+}
+
+
 void GLImageDrawable::setImage(const QImage& image)
 {
+	//QImage image = makeHistogram(tmp);
 	if(m_frame && m_frame->isValid() && xfadeEnabled())
 	{
 		m_frame2 = m_frame;

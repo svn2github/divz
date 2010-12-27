@@ -57,18 +57,34 @@ void GLSvgDrawable::renderSvg()
 		return;
 	}
 	
+	#define MAX_WIDTH  1000
+	#define MAX_HEIGHT 1000
+	
 	QSize imageSize = m_renderer->viewBox().size();
 	imageSize.scale(rect().size().toSize(), Qt::KeepAspectRatio);
+	if(imageSize.width()  > MAX_WIDTH || imageSize.height() > MAX_HEIGHT)
+		imageSize.scale(QSize(MAX_WIDTH, MAX_HEIGHT), Qt::KeepAspectRatio);
 	
 	QImage image(imageSize, QImage::Format_ARGB32);
+	memset(image.scanLine(0),0,image.byteCount());
+	
 	QPainter painter(&image);
 	m_renderer->render(&painter);//, m_renderer->viewBoxF());
-	qDebug() << "GLSvgDrawable::renderSvg: Rendered image, size:"<<image.size();
+	painter.end();
+	//qDebug() << "GLSvgDrawable::renderSvg: Rendered image, size:"<<image.size();
+	
+	//image = makeHistogram(image);
+	
 	setImage(image); 
 }
 
 void GLSvgDrawable::drawableResized(const QSizeF& newSize)
 {
+	QSize imageSize = m_renderer->viewBox().size();
+	imageSize.scale(newSize.toSize(), Qt::KeepAspectRatio);
+	if(imageSize == image().size())
+		return;
+	
 	if(m_updateTimer.isActive())
 		m_updateTimer.stop();
 	m_updateTimer.start();	
