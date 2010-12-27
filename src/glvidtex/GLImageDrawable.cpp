@@ -96,7 +96,8 @@ bool GLImageDrawable::setImageFile(const QString& file)
 		qDebug() << "GLImageDrawable::setImageFile: "<<file<<" does not exist!";
 		return false;
 	}
-	m_imageFile = file;
+	internalSetFilename(file);
+	
 	QImage image(file);
 	if(image.isNull())
 	{
@@ -105,10 +106,14 @@ bool GLImageDrawable::setImageFile(const QString& file)
 	}
 	setImage(image);
 	
-	emit imageFileChanged(file);
-	
 	return true;
 	
+}
+
+void GLImageDrawable::internalSetFilename(QString file)
+{
+	m_imageFile = file;
+	emit imageFileChanged(file);
 }
 
 void GLImageDrawable::setVideoSource(VideoSource*)

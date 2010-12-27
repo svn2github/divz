@@ -22,16 +22,19 @@ signals:
 
 public slots:
 	void setImage(const QImage&);
-	bool setImageFile(const QString&);
+	virtual bool setImageFile(const QString&);
 	
 private slots:
 	void testXfade();
 	
-private:
-	void setVideoSource(VideoSource*);
+protected:
+	void internalSetFilename(QString);
 	
 	QImage m_image;
 	QString m_imageFile;
+
+private:
+	void setVideoSource(VideoSource*);
 };
 
 #endif

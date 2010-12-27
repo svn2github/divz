@@ -34,6 +34,7 @@ public slots:
 	void addVideoLoop();
 	void addVideoFile();
 	void addImage();
+	void addSvg();
 	void addText(const QString& text="");
 	
 	void addScene();
@@ -50,6 +51,8 @@ public slots:
 	void textFitNaturally();
 	void textPlus();
 	void textMinus();
+	
+	void naturalItemFit();
 	
 protected slots:
 	void slideSelected(const QModelIndex &);

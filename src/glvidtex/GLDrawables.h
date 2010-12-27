@@ -5,3 +5,5 @@
 #include "GLVideoReceiverDrawable.h"
 #include "GLTextDrawable.h"
 #include "GLVideoMjpegDrawable.h"
+#include "GLSvgDrawable.h"
+

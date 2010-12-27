@@ -223,6 +223,10 @@ void EditorWindow::createUI()
 	connect(act, SIGNAL(triggered()), this, SLOT(addImage()));
 	toolbar->addAction(act);
 	
+	act = new QAction(QIcon("../data/stock-jump-to.png"), tr("New SVG Layer"), this);
+	connect(act, SIGNAL(triggered()), this, SLOT(addSvg()));
+	toolbar->addAction(act);
+	
 	toolbar->addSeparator();
 	
 	act = new QAction(QIcon("../data/action-add.png"), tr("Add New Slide"), this);
@@ -246,6 +250,12 @@ void EditorWindow::createUI()
 	QAction  *centerVer = toolbar->addAction(QIcon("../data/obj-center-ver.png"), tr("Center Items Vertically"));
 	centerVer->setShortcut(QString(tr("CTRL+SHIFT+V")));
 	connect(centerVer, SIGNAL(triggered()), this, SLOT(centerSelectionVertically()));
+	
+	act = toolbar->addAction(QIcon("../data/stock-fit-in.png"), tr("Fit Items to Natural Size"));
+	act ->setShortcut(QString(tr("CTRL+SHIFT+F")));
+	connect(act , SIGNAL(triggered()), this, SLOT(naturalItemFit()));
+	
+	
 }
 
 
@@ -445,6 +455,11 @@ void EditorWindow::addVideoFile()
 void EditorWindow::addImage()
 {
 	addDrawable(new GLImageDrawable("Pm5544.jpg"));
+}
+
+void EditorWindow::addSvg()
+{
+	addDrawable(new GLSvgDrawable("animated-clock.svg"));
 }
 
 void EditorWindow::addText(const QString& tmp)
@@ -739,6 +754,17 @@ QWidget *EditorWindow::createPropertyEditors(GLDrawable *gld)
 			lay->addRow(base); 
 		}
 		else
+		if(GLSvgDrawable *item = dynamic_cast<GLSvgDrawable*>(gld))
+		{
+			PropertyEditorFactory::PropertyEditorOptions opts;
+			opts.stringIsFile = true;
+			opts.fileTypeFilter = tr("SVG Files (*.svg);;Any File (*.*)");
+			lay->addRow(tr("&SVG File:"), PropertyEditorFactory::generatePropertyEditor(item, "imageFile", SLOT(setImageFile(const QString&)), opts, SIGNAL(imageFileChanged(const QString&))));
+			
+			opts.text = "Ignore aspect ratio";
+			lay->addRow(PropertyEditorFactory::generatePropertyEditor(item, "ignoreAspectRatio", SLOT(setIgnoreAspectRatio(bool)), opts));
+		}
+		else
 		if(GLImageDrawable *item = dynamic_cast<GLImageDrawable*>(gld))
 		{
 			PropertyEditorFactory::PropertyEditorOptions opts;
@@ -788,6 +814,28 @@ QWidget *EditorWindow::createPropertyEditors(GLDrawable *gld)
 	return base;
 	
 }
+
+void EditorWindow::naturalItemFit()
+{
+	if(!m_currentDrawable)
+		return;
+		
+	if(GLTextDrawable *text = dynamic_cast<GLTextDrawable*>(m_currentDrawable))
+	{
+		textFitNaturally();
+		
+// 		QSizeF size = text->findNaturalSize(m_graphicsScene->sceneRect().width());
+// 		text->setRect(QRectF(text->rect().topLeft(),size));
+	}
+	else
+	if(GLVideoDrawable *item = dynamic_cast<GLVideoDrawable*>(m_currentDrawable))
+	{
+		QRectF nat(item->rect().topLeft(), item->sourceRect().size());
+		qDebug() << "EditorWindow::naturalItemFit(): item:"<<(QObject*)m_currentDrawable<<", rect:"<<nat;
+		item->setRect(nat);
+	}
+}
+
 
 void EditorWindow::rtfEditorSave()
 {

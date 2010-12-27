@@ -149,6 +149,7 @@ private:
 	
 	GLPlayerClient *m_client;	
 	
+	GLSceneGroup *m_group;
 	GLScene *m_scene;
 	
 	bool m_isConnected;

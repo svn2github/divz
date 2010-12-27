@@ -121,6 +121,7 @@ PlayerConnection::PlayerConnection(QObject *parent)
 	, m_pass("player")
 	, m_playerVersion("(Unknown)")
 	, m_client(0)
+	, m_group(0)
 	, m_scene(0)
 	, m_isConnected(false)
 {
@@ -262,6 +263,8 @@ void PlayerConnection::connectPlayer()
 	setAspectRatioMode(aspectRatioMode());
 	
 	sendCommand(QVariantList() << "cmd" << GLPlayer_ListVideoInputs);
+	
+	setGroup(m_group, m_scene);
 }
 
 void PlayerConnection::clientConnected()
@@ -353,6 +356,8 @@ void PlayerConnection::setGroup(GLSceneGroup *group, GLScene *initialScene)
 {
 	if(!group)
 		return;
+		
+	m_group = group;
 	
 	sendCommand(QVariantList() 
 		<< "cmd" 	<< GLPlayer_LoadSlideGroup

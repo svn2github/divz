@@ -28,7 +28,8 @@ HEADERS       = GLWidget.h \
 		GLEditorGraphicsScene.h \
 		GLPlayerServer.h \
 		GLPlayerClient.h \
-		VideoEncoder.h
+		VideoEncoder.h \
+		GLSvgDrawable.h
 		
 SOURCES       = GLWidget.cpp \
 		../livemix/VideoSource.cpp \
@@ -55,7 +56,8 @@ SOURCES       = GLWidget.cpp \
 		GLEditorGraphicsScene.cpp   \
 		GLPlayerServer.cpp \
 		GLPlayerClient.cpp \
-		VideoEncoder.cpp
+		VideoEncoder.cpp \
+		GLSvgDrawable.cpp
 		
 
 editor: {
@@ -155,7 +157,7 @@ opencv: {
 
 
 RESOURCES     = glvidtex.qrc
-QT           += opengl multimedia network
+QT           += opengl multimedia network svg
 
 
 win32 {

@@ -11,11 +11,15 @@ TODO:
 				- Dont put a message box - just a simple QLabel
 		- Make the video input control panel automatically update when players are connected
 		- Change the shortcut key in the file menu in director for the Connections and Live Monitor (both use "C")
-		- Video Encoding "problems"
+		- [TMP-FIX] Video Encoding "problems"
 			- Way to much CPU usage - 157%-ish on a dual-core 2.4 GHz...causing live video to stutter
 			- Consider putting it either in another thread or in a whole other process with shared memory
 				- Can we push it off onto the network somehow??
-		- Need to push text rendering into another thread, causing live video to stutter (see the 4fps clock over live video)
+			- Temporarily disabled encoder in PlayerWindow till this is addressed.
+		- [WONTFIX] Need to push text rendering into another thread, causing live video to stutter (see the 4fps clock over live video)
+			- Optimized as much as I can right now, but rendering still takes ~80-100ms with shadow and outline
+			- Can't push QTextDocument into another thread for some reason
+			- Added a 'cached image' feature for transmitting text from director to player so the player won't have to re-render static text already rendered on the director (but will have to re-render new text)
 		 
 		
 	NEEDED FEATURES:
@@ -24,7 +28,7 @@ TODO:
 		- Add button to "Connect To" beside "Test"
 		- Make an "option" to reconfig the item control area as mini windows...?
 			- So you can access the video switcher and text settings without switching between the two...?
-		- Transmit slide group to player when connected
+		- [DONE] Transmit slide group to player when connected
 		- Transmit slide group changes to player when editor window closed
 			- Need to cross fade between slides
 			- Prompt to send?
@@ -42,9 +46,14 @@ TODO:
 		- Make GLDirector NOT crash when the player is disconnected!
 		- Crossfading between scenes
 		- MUST have per-camera BCHS controls
+		- Add copy/paste to editor
+		- Add Item autofit to editor
+		
 	
 	IDEAS:
-		- SVG animation playback/rendering
+		- [STARTED] SVG animation playback/rendering
+			- Dont have an animated SVG to test with yet...
+		- Add a Weather Item based on Google API code in $QT_HOME/qt/demos/embedded/weatherinfo.cpp
 		- Some method to auto-balance/tune camera's HSV so they match each other?
 		- Adjust color curves wtih matrixes? (Not just shift entire hues/sats, but curves.)
 		- Add in "Levels"/Gamma adjustment vis a vi:
@@ -59,6 +68,8 @@ TODO:
 			- Calc the current # of items to fill the screen layed out H or V, then render that many + 1 as a QImage
 				- Use QImage::copy() to render a moving rectangle
 				- When one item falls off the "left", re-render
+				- OR just thought of this - upload the entire rendered QImage (many+1) to a texture, then only render the subrect part of the texture by adjusting the 
+				  texture coordinates of the render output (the sourc rect in updateRects())
 		- HTML snippet widget
 			- Embed a QWebKit widget's output for view-only content
 		- Store pixmaps/images of scenes, groups, and drawables in the GLScene/GLSceneGroup/GLDrawable for rendering as icon in the appros list models
@@ -68,9 +79,6 @@ TODO:
 			- Songs
 			- Image Slideshows
 			- Each generates a GLSceneGroup containing multiple GLScenes with appros GLDrawables to represent the content
-		- Add item layout helpers to editor
-			- Item autofit 
-		- Add copy/paste
 		- Undo/redo
 
 TARGET DATE: 12/11 9am

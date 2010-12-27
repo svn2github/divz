@@ -849,6 +849,23 @@ void DirectorWindow::setCurrentDrawable(GLDrawable *gld)
 		typeName = "Text Item";
 	}
 	else
+	if(GLSvgDrawable *item = dynamic_cast<GLSvgDrawable*>(gld))
+	{
+		PropertyEditorFactory::PropertyEditorOptions opts;
+		opts.stringIsFile = true;
+		opts.fileTypeFilter = tr("SVG Files (*.svg);;Any File (*.*)");
+		ui->itemPropLayout->addRow(tr("&SVG File:"), 
+			PropertyEditorFactory::generatePropertyEditor(
+				item,					// The QObject which contains the property to edit 
+				"imageFile", 				// The property name on the QObject to edit
+				SLOT(setImageFile(const QString&)), 	// The slot on the QObject which sets the property
+				opts, 					// PropertyEditorOptions controlling the display of the editor
+				SIGNAL(imageFileChanged(const QString&))	// An optional signal that is emitted by the QObject when the property is changed
+			));
+		
+		typeName = "SVG Item";
+	} 
+	else
 	if(GLImageDrawable *item = dynamic_cast<GLImageDrawable*>(gld))
 	{
 		PropertyEditorFactory::PropertyEditorOptions opts;

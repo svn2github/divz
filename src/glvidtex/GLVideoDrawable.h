@@ -165,6 +165,9 @@ public:
 	bool videoSenderEnabled() { return m_videoSenderEnabled; }
 	int videoSenderPort() { return m_videoSenderPort; }
 	
+	QRectF sourceRect() { return m_sourceRect; }
+	QSize sourceSize() { return m_sourceRect.size().toSize(); }
+	
 public slots:
 	void setFpsLimit(float);
 	void setVisible(bool flag, bool waitOnFrameSignal=false);
