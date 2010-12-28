@@ -1,15 +1,8 @@
 TODO:
 	BUGS:
-		- Director: playlist text looses formatting when playing?
 		- [FIXED] When viewing remote using vid send/receiver thru a VideoWidget, one of the video streams seems to 'back up' and only "unspools" when sent live thru a GLVideoDrawable... ???
 			- Disabled buffering on VideoReceiver - hackish fix, I know.
-		- Cross-fading between CameraThread's in GLVideoDrawable *seems* to 'fade thru black' - but only in the OpenGL painter version. The QGraphicsItem version fades front in.
-			* Can't test till at a workstation with dual video inputs - tomorrow or Tuesday
-		- Live monitor from player seems to be buffered - check on that
-		- Make the Video Input control panel in director default to last network source
-			- Consider removing "(This Machine)" as an option
-				- Dont put a message box - just a simple QLabel
-		- Make the video input control panel automatically update when players are connected
+		- [DONE] Live monitor from player seems to be buffered - check on that
 		- [DONE] Change the shortcut key in the file menu in director for the Connections and Live Monitor (both use "C")
 		- [TMP-FIX] Video Encoding "problems"
 			- Way to much CPU usage - 157%-ish on a dual-core 2.4 GHz...causing live video to stutter
@@ -20,24 +13,28 @@ TODO:
 			- Optimized as much as I can right now, but rendering still takes ~80-100ms with shadow and outline
 			- Can't push QTextDocument into another thread for some reason
 			- Added a 'cached image' feature for transmitting text from director to player so the player won't have to re-render static text already rendered on the director (but will have to re-render new text)
-		- Deleting an item will then crash the editor on save
+		- [FIXED] Deleting an item will then crash the editor on save
 		- [CANTFIX] Make GLDirector NOT crash when the player is disconnected!
 			- Crash seems to be deep inside the Qt networking code (!!!!!!!)
 			- Short of recompiling Qt, I don't have a workaround for the crash...yet...
 			- Not a showstoper yet, so moving on to other problems for now.
+		- [FIXED] PlayerSetupDialog: Clicking CONNECT before TEST crashes
+		- [FIXED] PlayerSetupDialog: Must click TEST then CONNECT 2x to connect
+		- [FIXED] Director: The playerlist item changed signal from the player doesnt highlight the right item
+		- [FIXED] Director: Remove the fractional seconds from the director playlist time
+		
+		- Director: playlist text looses formatting when playing?
+		- Cross-fading between CameraThread's in GLVideoDrawable *seems* to 'fade thru black' - but only in the OpenGL painter version. The QGraphicsItem version fades front in.
+			* Can't test till at a workstation with dual video inputs - tomorrow or Tuesday
+		- Make the Video Input control panel in director default to last network source
+			- [DONE] Consider removing "(This Machine)" as an option
+				- Dont put a message box - just a simple QLabel
+		- Make the video input control panel automatically update when players are connected
 		- Text crossfading seems to be broken - at least in player via the setProperty command - seems to set text THEN try to crossfade...
-		- PlayerSetupDialog: Clicking CONNECT before TEST crashes
-		- PlayerSetupDialog: Must click TEST then CONNECT 2x to connect
-		- Director: The playerlist item changed signal from the player doesnt highlight the right item
-		- Director: Remove the fractional seconds from the director playlist time
 		
 	NEEDED FEATURES:
-		- [DONE] Make "Test Connection" just TEST in player setup
-		- [DONE] Make a checkbox for "connect on startup"
-		- [DONE] Add button to "Connect To" beside "Test"
 		- Make an "option" to reconfig the item control area as mini windows...?
 			- So you can access the video switcher and text settings without switching between the two...?
-		- [DONE] Transmit slide group to player when connected
 		- Transmit slide group changes to player when editor window closed
 			- Need to cross fade between slides
 			- Prompt to send?
@@ -55,10 +52,15 @@ TODO:
 		- Crossfading between scenes
 		- MUST have per-camera BCHS controls
 		- Add copy/paste to editor
-		- [DONE] Add Item autofit to editor
-		- Allow player to run playlists on items by itself without being connected to the director
 		- Add a simple rectangle item to draw boxes, panels, lines with
 		- Add a 'remove from playlist' button
+		
+		- [DONE] Make "Test Connection" just TEST in player setup
+		- [DONE] Make a checkbox for "connect on startup"
+		- [DONE] Add button to "Connect To" beside "Test"
+		- [DONE] Transmit slide group to player when connected
+		- [DONE] Add Item autofit to editor
+		- [DONE] Allow player to run playlists on items by itself without being connected to the director
 	
 	IDEAS:
 		- [STARTED] SVG animation playback/rendering
