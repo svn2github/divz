@@ -25,12 +25,16 @@ TODO:
 			- Crash seems to be deep inside the Qt networking code (!!!!!!!)
 			- Short of recompiling Qt, I don't have a workaround for the crash...yet...
 			- Not a showstoper yet, so moving on to other problems for now.
-		 
+		- Text crossfading seems to be broken - at least in player via the setProperty command - seems to set text THEN try to crossfade...
+		- PlayerSetupDialog: Clicking CONNECT before TEST crashes
+		- PlayerSetupDialog: Must click TEST then CONNECT 2x to connect
+		- Director: The playerlist item changed signal from the player doesnt highlight the right item
+		- Director: Remove the fractional seconds from the director playlist time
 		
 	NEEDED FEATURES:
-		- Make "Test Connection" just TEST in player setup
-		- Make a checkbox for "connect on startup"
-		- Add button to "Connect To" beside "Test"
+		- [DONE] Make "Test Connection" just TEST in player setup
+		- [DONE] Make a checkbox for "connect on startup"
+		- [DONE] Add button to "Connect To" beside "Test"
 		- Make an "option" to reconfig the item control area as mini windows...?
 			- So you can access the video switcher and text settings without switching between the two...?
 		- [DONE] Transmit slide group to player when connected
@@ -52,7 +56,9 @@ TODO:
 		- MUST have per-camera BCHS controls
 		- Add copy/paste to editor
 		- [DONE] Add Item autofit to editor
-		
+		- Allow player to run playlists on items by itself without being connected to the director
+		- Add a simple rectangle item to draw boxes, panels, lines with
+		- Add a 'remove from playlist' button
 	
 	IDEAS:
 		- [STARTED] SVG animation playback/rendering

@@ -34,6 +34,8 @@ void PlayerSetupDialog::setupUI()
 	connect(ui->delSubviewBtn, SIGNAL(clicked()), this, SLOT(removeSubview()));
 
 	connect(ui->testConnectionBtn, SIGNAL(clicked()), this, SLOT(testConnection()));
+	connect(ui->connectBtn, SIGNAL(clicked()), this, SLOT(connectPlayer()));
+	connect(ui->autoconnectBox, SIGNAL(toggled(bool)), this, SLOT(autoconBoxChanged(bool)));
 
 	connect(ui->playerListview, SIGNAL(activated(const QModelIndex &)), this, SLOT(playerSelected(const QModelIndex &)));
 	connect(ui->playerListview, SIGNAL(clicked(const QModelIndex &)),   this, SLOT(playerSelected(const QModelIndex &)));
@@ -157,6 +159,7 @@ void PlayerSetupDialog::setCurrentPlayer(PlayerConnection* con)
 	connect(con, SIGNAL(loginSuccess()), this, SLOT(conLoginSuccess()));
 	connect(con, SIGNAL(loginFailure()), this, SLOT(conLoginFailure()));
 	connect(con, SIGNAL(playerError(QString)), this, SLOT(conPlayerError(QString)));
+	connect(con, SIGNAL(pingResponseReceived(QString)), this, SLOT(conPingResponseReceived(QString)));
 	
 	ui->boxConnection->setEnabled(true);
 	ui->boxOutput->setEnabled(true);
@@ -221,14 +224,14 @@ void PlayerSetupDialog::setCurrentSubview(GLWidgetSubview * sub)
 	ui->optFlipV->setChecked(sub->flipVertical());
 	
 	QPolygonF poly = sub->cornerTranslations();
-	ui->keyTLx->setValue(poly[0].x());
-	ui->keyTLy->setValue(poly[0].y());
-	ui->keyTRx->setValue(poly[1].x());
-	ui->keyTRy->setValue(poly[1].y());
-	ui->keyBLx->setValue(poly[3].x());
-	ui->keyBLy->setValue(poly[3].y());
-	ui->keyBRx->setValue(poly[2].x());
-	ui->keyBRy->setValue(poly[2].y());
+	ui->keyTLx->setValue((int)poly[0].x());
+	ui->keyTLy->setValue((int)poly[0].y());
+	ui->keyTRx->setValue((int)poly[1].x());
+	ui->keyTRy->setValue((int)poly[1].y());
+	ui->keyBLx->setValue((int)poly[3].x());
+	ui->keyBLy->setValue((int)poly[3].y());
+	ui->keyBRx->setValue((int)poly[2].x());
+	ui->keyBRy->setValue((int)poly[2].y());
 
 
 	connect(ui->subviewTitle, SIGNAL(textChanged(QString)), sub, SLOT(setTitle(QString)));
@@ -317,7 +320,21 @@ void PlayerSetupDialog::testConnection()
 	if(!m_con) 
 		return;
 	
-	m_con->connectPlayer();
+	m_con->testConnection();
+}
+
+void PlayerSetupDialog::connectPlayer()
+{
+	if(!m_con)
+		return;
+	
+	if(m_con->isConnected())
+		m_con->disconnectPlayer();
+	else
+		m_con->connectPlayer();
+		
+	ui->testConnectionBtn->setEnabled(false);
+//	ui->connectBtn->setEnabled(false);
 }
 
 void PlayerSetupDialog::playerSelected(const QModelIndex & idx)
@@ -534,6 +551,10 @@ void PlayerSetupDialog::satReset()
 void PlayerSetupDialog::conConnected()
 {
 	ui->connectionTestResults->setText("<font color=green><b>Connected</b></font>");
+	
+	ui->connectBtn->setEnabled(true);
+	ui->connectBtn->setText("&Disconnect");
+	ui->testConnectionBtn->setEnabled(false);
 }
 
 void PlayerSetupDialog::conDisconnected()
@@ -541,6 +562,9 @@ void PlayerSetupDialog::conDisconnected()
 	if(m_stickyConnectionMessage)
 		return;	
 	ui->connectionTestResults->setText("<font color=gray>Disconnected</font>");
+	
+	ui->connectBtn->setText("&Connect");
+	ui->testConnectionBtn->setEnabled(true);
 }
 
 void PlayerSetupDialog::conLoginFailure()
@@ -557,4 +581,29 @@ void PlayerSetupDialog::conPlayerError(const QString& err)
 {
 	ui->connectionTestResults->setText(QString("<font color=red><b>Error:</b> %1</font>").arg(err));
 	m_stickyConnectionMessage = true;
+}
+
+void PlayerSetupDialog::conPingResponseReceived(const QString& str)
+{
+	ui->connectionTestResults->setText(QString("<font color=green><b>%1</b></font>").arg(str));
+}
+
+void PlayerSetupDialog::conTestStarted()
+{
+	ui->connectionTestResults->setText("<font color=black><b>Testing...</b></font>");
+	ui->connectBtn->setEnabled(false);
+	ui->testConnectionBtn->setEnabled(false);
+}
+
+void PlayerSetupDialog::conTestEnded()
+{
+	ui->connectBtn->setEnabled(false);
+	ui->testConnectionBtn->setEnabled(false);
+}
+
+void PlayerSetupDialog::autoconBoxChanged(bool flag)
+{
+	if(!m_con)
+		return;
+	m_con->setAutoconnect(flag);
 }

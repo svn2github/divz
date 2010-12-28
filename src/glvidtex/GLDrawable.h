@@ -344,6 +344,7 @@ class GLPlaylistItem : public QObject
 {
 	Q_OBJECT
 	
+	Q_PROPERTY(QString id READ id);
 	Q_PROPERTY(QString title READ title WRITE setTitle);
 	Q_PROPERTY(QVariant value READ value WRITE setValue);
 	
@@ -360,6 +361,8 @@ public:
 	void fromByteArray(QByteArray&);
 	
 	GLDrawablePlaylist *playlist() { return m_playlist; }
+	
+	int id(); 
 	
 	QString title() { return m_title; }
 	QVariant value() { return m_value; }
@@ -384,6 +387,8 @@ signals:
 
 private:
 	GLDrawablePlaylist *m_playlist;
+	
+	int m_id;
 	
 	QString m_title;
 	QVariant m_value;
@@ -418,6 +423,7 @@ public:
 	
 	int size() { return m_items.size(); }
 	GLPlaylistItem *at(int x) { return x>=0 && x<m_items.size()?m_items.at(x):0; }
+	GLPlaylistItem *lookup(int id) { return m_itemLookup[id]; }
 	
 	GLDrawable *drawable() { return m_drawable; }
 
@@ -448,6 +454,7 @@ private slots:
 	
 private:
 	QList<GLPlaylistItem *> m_items;
+	QHash<int, GLPlaylistItem *> m_itemLookup; 
 	GLDrawable *m_drawable;
 	
 	bool m_isPlaying;

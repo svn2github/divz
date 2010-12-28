@@ -239,32 +239,41 @@ void PlayerConnection::connectPlayer()
 	connect(m_client, SIGNAL(socketDisconnected()), this, SLOT(clientDisconnected()));
 	connect(m_client, SIGNAL(socketError(QAbstractSocket::SocketError)), this, SLOT(socketError(QAbstractSocket::SocketError)));
 	
-	sendCommand(QVariantList() 
-		<< "cmd" 	<< GLPlayer_Login
-		<< "user"	<< m_user
-		<< "pass"	<< m_pass);
-		
-	if(!m_subviews.isEmpty())
+	if(m_justTesting)
+	{
+		m_preconnectionCommandQueue.clear();
+		sendCommand(QVariantList() 
+			<< "cmd" 	<< GLPlayer_Ping);
+	}
+	else
 	{
 		sendCommand(QVariantList() 
-			<< "cmd" 	<< GLPlayer_ClearSubviews);
+			<< "cmd" 	<< GLPlayer_Login
+			<< "user"	<< m_user
+			<< "pass"	<< m_pass);
 			
-		foreach(GLWidgetSubview *sub, m_subviews)
+		if(!m_subviews.isEmpty())
 		{
 			sendCommand(QVariantList() 
-				<< "cmd" 	<< GLPlayer_AddSubview
-				<< "data"	<< sub->toByteArray());
+				<< "cmd" 	<< GLPlayer_ClearSubviews);
+				
+			foreach(GLWidgetSubview *sub, m_subviews)
+			{
+				sendCommand(QVariantList() 
+					<< "cmd" 	<< GLPlayer_AddSubview
+					<< "data"	<< sub->toByteArray());
+			}
 		}
+		
+		setViewportRect(viewportRect());
+		setScreenRect(screenRect());
+		setCanvasSize(canvasSize());
+		setAspectRatioMode(aspectRatioMode());
+		
+		sendCommand(QVariantList() << "cmd" << GLPlayer_ListVideoInputs);
+		
+		setGroup(m_group, m_scene);
 	}
-	
-	setViewportRect(viewportRect());
-	setScreenRect(screenRect());
-	setCanvasSize(canvasSize());
-	setAspectRatioMode(aspectRatioMode());
-	
-	sendCommand(QVariantList() << "cmd" << GLPlayer_ListVideoInputs);
-	
-	setGroup(m_group, m_scene);
 }
 
 void PlayerConnection::clientConnected()
@@ -275,7 +284,8 @@ void PlayerConnection::clientConnected()
 		foreach(QVariant var, m_preconnectionCommandQueue)
 			m_client->sendMap(var.toMap());
 		
-	emit connected();
+	if(!m_justTesting)
+		emit connected();
 }
 
 void PlayerConnection::disconnectPlayer()
@@ -289,7 +299,13 @@ void PlayerConnection::disconnectPlayer()
 	m_client->deleteLater();
 	m_client = 0;
 	
-	emit disconnected();
+	if(m_justTesting)
+	{
+		m_justTesting = false;
+		emit testEnded();
+	}
+	else
+		emit disconnected();
 }
 
 void PlayerConnection::socketError(QAbstractSocket::SocketError)
@@ -319,6 +335,22 @@ void PlayerConnection::setPass(const QString& value)
 {
 	m_pass = value;
 }
+
+
+void PlayerConnection::setAutoconnect(bool flag)
+{
+	m_autoconnect = flag;
+}
+
+
+void PlayerConnection::testConnection()
+{
+	m_justTesting = true;
+	emit testStarted();
+	connectPlayer();
+}
+
+
 void PlayerConnection::setScreenRect(const QRect& rect)
 {
 	m_screenRect = rect;	
@@ -402,6 +434,30 @@ void PlayerConnection::setVisibility(GLDrawable *gld, bool isVisible)
 		<< "value"	<< isVisible);	
 }
 
+
+void PlayerConnection::setPlaylistPlaying(GLDrawable *gld, bool flag)
+{
+	if(!gld)
+		return;
+	
+	sendCommand(QVariantList() 
+		<< "cmd" 	<< GLPlayer_SetPlaylistPlaying
+		<< "drawableid"	<< gld->id()
+		<< "flag"	<< flag);	
+}
+
+void PlayerConnection::updatePlaylist(GLDrawable *gld)
+{
+	if(!gld)
+		return;
+	
+	sendCommand(QVariantList() 
+		<< "cmd" 	<< GLPlayer_UpdatePlaylist
+		<< "drawableid"	<< gld->id()
+		<< "data"	<< gld->playlist()->toByteArray());	
+}
+
+
 void PlayerConnection::queryProperty(GLDrawable *gld, QString propertyName)
 {
 	if(!gld)
@@ -462,6 +518,19 @@ void PlayerConnection::receivedMap(QVariantMap map)
 	
 	m_lastError = "";
 	
+	if(cmd == GLPlayer_Ping)
+	{
+		// parse login response
+		
+		m_playerVersion = map["version"].toString();
+		int inputs = map["inputs"].toInt();
+		QString str = QString("Player Version '%1' (%2 video inputs)").arg(m_playerVersion).arg(inputs);
+		emit pingResponseReceived(str);
+		
+		if(m_justTesting)
+			disconnectPlayer();
+	}
+	else
 	if(cmd == GLPlayer_Login)
 	{
 		// parse login response
@@ -520,13 +589,55 @@ void PlayerConnection::receivedMap(QVariantMap map)
 		qDebug() << "PlayerConnection::receivedMap: [INFO] Received video input list: "<<m_videoInputs;
 	}
 	else
+	if(cmd == GLPlayer_CurrentPlaylistItemChanged ||
+	   cmd == GLPlayer_PlaylistTimeChanged)
+	{
+		int id = map["drawableid"].toInt();
+		if(!m_scene)
+		{
+			qDebug() << "PlayerConnection::receivedMap: [WARN] Received "<<cmd<<", but no active scene!";
+			return;
+		}
+		
+		GLDrawable *gld = m_scene->lookupDrawable(id);
+		if(!gld)
+		{
+			qDebug() << "PlayerConnection::receivedMap: [ERROR] Received "<<cmd<<" for drawable ID "<<id<<", but no such drawable exists on the current scene.";
+			return;
+		}
+		
+		if(cmd == GLPlayer_PlaylistTimeChanged)
+		{
+			emit playlistTimeChanged(gld, map["time"].toDouble());
+		}
+		else
+		{
+			id = map["itemid"].toInt();
+			GLPlaylistItem *item = gld->playlist()->lookup(id);
+			if(!item)
+			{
+				qDebug() << "PlayerConnection::receivedMap: [WARN] Received "<<cmd<<" for playlist item ID "<<id<<" on drawable "<<(QObject*)gld<<", but no such item exists in the drawable's playlist.";
+				return;
+			}
+			 
+			emit currentPlaylistItemChanged(gld, item);
+		}
+	}	
+	else
 	if(map["status"].toString() == "error")
 	{
 		setError(map["message"].toString(), cmd);
 	}
 	else
 	{
-		qDebug() << "PlayerConnection::receivedMap: [INFO] Command not handled: "<<cmd<<", map:"<<map;
+		if(map["status"].toBool())
+		{
+			qDebug() << "PlayerConnection::receivedMap: [CONFIRMED] Player received command: "<<cmd;
+		}
+		else
+		{	
+			qDebug() << "PlayerConnection::receivedMap: [INFO] Command not handled: "<<cmd<<", map:"<<map;
+		}
 	}
 }
 
@@ -569,7 +680,11 @@ void PlayerConnection::sendCommand(QVariantList reply)
 	if(m_client && m_isConnected)
 		m_client->sendMap(map);
 	else 
-		m_preconnectionCommandQueue << map;
+	{
+		// m_justTesting will go false after disconnected from test
+		if(!m_justTesting)
+			m_preconnectionCommandQueue << map;
+	}
 }
 
 
@@ -739,6 +854,7 @@ void PlayerConnectionList::fromByteArray(QByteArray array)
 	foreach(QVariant var, views)
 	{
 		QByteArray data = var.toByteArray();
-		m_players << new PlayerConnection(data);
+		// call addPlayer so the signal gets emitted and the slots get connected
+		addPlayer(new PlayerConnection(data));
 	}
 }

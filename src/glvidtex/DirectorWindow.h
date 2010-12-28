@@ -62,6 +62,7 @@ public slots:
 	void setCurrentItem(GLPlaylistItem *);
 	void fadeBlack(bool toBlack=true);
 	void setFadeSpeedPercent(int);
+	void setFadeSpeedTime(double);
 	
 	void showPlayerLiveMonitor();
 
@@ -84,8 +85,14 @@ private slots:
 	void btnSendToPlayer();
 	void btnAddToPlaylist();
 
-	void playlistTimeChanged(double);
-	void playlistItemChanged(GLPlaylistItem *);
+	void playlistTimeChanged(GLDrawable*, double);
+	void playlistItemChanged(GLDrawable*, GLPlaylistItem *);
+	
+	void pausePlaylist();
+	void playPlaylist();
+	
+	void playerAdded(PlayerConnection *);
+	void playerRemoved(PlayerConnection *);
 	
 	void changeCanvasSize();
 	

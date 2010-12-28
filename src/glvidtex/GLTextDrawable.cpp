@@ -86,7 +86,7 @@ QString GLTextDrawable::formatTime(double time)
 	//double ms  = (sec  - (int)(sec)) * 60;
 	return  QString::number((int)hour) + ":" +
 		(min<10? "0":"") + QString::number((int)min) + ":" +
-		(sec<10? "0":"") + QString::number((int)(sec+.5));// + "." +
+		(sec<10.5? "0":"") + QString::number((int)(sec+.5));// + "." +
 		//(ms <10? "0":"") + QString::number((int)ms );
 
 }

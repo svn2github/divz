@@ -469,10 +469,13 @@ void PlayerWindow::receivedMap(QVariantMap map)
 	else
 	if(cmd == GLPlayer_Ping)
 	{
+		QStringList inputs = m_vidSendMgr->videoConnections();
+		
 		sendReply(QVariantList() 
 				<< "cmd" << GLPlayer_Ping
 				<< "version" << m_playerVersionString
-				<< "ver" << m_playerVersion);
+				<< "ver" << m_playerVersion
+				<< "inputs" << inputs.size());
 	}
 	else
 	if(!m_loggedIn)
@@ -558,16 +561,18 @@ void PlayerWindow::receivedMap(QVariantMap map)
 				<< "status" << true);
 	}
 	else
-	if(cmd == GLPlayer_SetUserProperty  ||
-	   cmd == GLPlayer_SetVisibility    ||
-	   cmd == GLPlayer_QueryProperty)
+	if(cmd == GLPlayer_SetUserProperty    ||
+	   cmd == GLPlayer_SetVisibility      ||
+	   cmd == GLPlayer_QueryProperty      || 
+	   cmd == GLPlayer_SetPlaylistPlaying ||
+	   cmd == GLPlayer_UpdatePlaylist)
 	{
 		if(!m_scene)
 		{
 			sendReply(QVariantList() 
 					<< "cmd" << cmd
 					<< "status" << "error"
-					<< "message" << "No scene selected. First transmit GLPlayer_SetSlide before calling GLPlayer_SetUserProperty.");
+					<< "message" << QString("No scene selected. First transmit GLPlayer_SetSlide before sending %1").arg(cmd));
 		}
 		else
 		{
@@ -582,44 +587,59 @@ void PlayerWindow::receivedMap(QVariantMap map)
 			}
 			else
 			{
-				QString name = 
-					cmd == GLPlayer_SetVisibility ? "isVisible" : 
-					map["name"].toString();
-				
-				if(name.isEmpty())
+				if(cmd == GLPlayer_SetPlaylistPlaying)
 				{
-					name = QString(gld->metaObject()->userProperty().name());
+				 	bool flag = map["flag"].toBool();
+				 	gld->playlist()->setIsPlaying(flag);
+				 	
 				}
-				
-				if(name.isEmpty())
+				else
+				if(cmd == GLPlayer_UpdatePlaylist)
 				{
-					sendReply(QVariantList() 
-						<< "cmd" << cmd
-						<< "status" << "error"
-						<< "message" << "No property name given in 'name', and could not find a USER-flagged Q_PROPERTY on the GLDrawable requested by 'drawableid'.");
+					QByteArray ba = map["data"].toByteArray();
+					gld->playlist()->fromByteArray(ba);
 				}
 				else
 				{
-					if(cmd == GLPlayer_QueryProperty)
+					QString name = 
+						cmd == GLPlayer_SetVisibility ? "isVisible" : 
+						map["name"].toString();
+					
+					if(name.isEmpty())
+					{
+						name = QString(gld->metaObject()->userProperty().name());
+					}
+					
+					if(name.isEmpty())
 					{
 						sendReply(QVariantList() 
 							<< "cmd" << cmd
-							<< "drawableid" << id
-							<< "name" << name
-							<< "value" << gld->property(qPrintable(name)));
+							<< "status" << "error"
+							<< "message" << "No property name given in 'name', and could not find a USER-flagged Q_PROPERTY on the GLDrawable requested by 'drawableid'.");
 					}
 					else
 					{
-						QVariant value = map["value"];
-						
-						if(GLVideoDrawable *vid = dynamic_cast<GLVideoDrawable*>(gld))
-							vid->setXFadeLength(m_xfadeSpeed);
+						if(cmd == GLPlayer_QueryProperty)
+						{
+							sendReply(QVariantList() 
+								<< "cmd" << cmd
+								<< "drawableid" << id
+								<< "name" << name
+								<< "value" << gld->property(qPrintable(name)));
+						}
+						else
+						{
+							QVariant value = map["value"];
 							
-						gld->setProperty(qPrintable(name), value);
-						
-						sendReply(QVariantList() 
-							<< "cmd" << cmd
-							<< "status" << true);
+							if(GLVideoDrawable *vid = dynamic_cast<GLVideoDrawable*>(gld))
+								vid->setXFadeLength(m_xfadeSpeed);
+								
+							gld->setProperty(qPrintable(name), value);
+							
+							sendReply(QVariantList() 
+								<< "cmd" << cmd
+								<< "status" << true);
+						}
 					}
 				}
 			}
@@ -851,12 +871,15 @@ void PlayerWindow::setScene(GLScene *scene)
 		QList<GLDrawable*> items = m_glWidget->drawables();
 		foreach(GLDrawable *drawable, items)
 		{
+			disconnect(drawable->playlist(), 0, this, 0);
 			m_glWidget->removeDrawable(drawable);
 // 			qDebug() << "PlayerWindow::setScene: Removing old drawable:" <<(QObject*)drawable;
 		}
 		
 		foreach(GLDrawable *drawable, newSceneList)
 		{
+			connect(drawable->playlist(), SIGNAL(currentItemChanged(GLPlaylistItem*)), this, SLOT(currentPlaylistItemChanged(GLPlaylistItem*)));
+			connect(drawable->playlist(), SIGNAL(playerTimeChanged(double)), this, SLOT(playlistTimeChanged(double)));
 			m_glWidget->addDrawable(drawable);
 // 			qDebug() << "PlayerWindow::setScene: Adding new drawable:" <<(QObject*)drawable;
 		}
@@ -865,11 +888,53 @@ void PlayerWindow::setScene(GLScene *scene)
 	{
 		QList<QGraphicsItem*> items = m_graphicsScene->items();
 		foreach(QGraphicsItem *item, items)
+		{
 			if(GLDrawable *gld = dynamic_cast<GLDrawable*>(item))
+			{
+				disconnect(gld->playlist(), 0, this, 0);
 				m_graphicsScene->removeItem(gld);
+			}
+		}
 		
 		m_graphicsScene->clear();
 		foreach(GLDrawable *drawable, newSceneList)
+		{
+			connect(drawable->playlist(), SIGNAL(currentItemChanged(GLPlaylistItem*)), this, SLOT(currentPlaylistItemChanged(GLPlaylistItem*)));
+			connect(drawable->playlist(), SIGNAL(playerTimeChanged(double)), this, SLOT(playlistTimeChanged(double)));
 			m_graphicsScene->addItem(drawable);
+		}
 	}
 }
+
+void PlayerWindow::currentPlaylistItemChanged(GLPlaylistItem* item)
+{
+	GLDrawablePlaylist *playlist = dynamic_cast<GLDrawablePlaylist*>(sender());
+	if(!playlist)
+		return;
+		
+	GLDrawable *drawable = playlist->drawable();
+	if(!drawable)
+		return;
+	 
+	sendReply(QVariantList() 
+			<< "cmd"	<< GLPlayer_CurrentPlaylistItemChanged
+			<< "drawableid"	<< drawable->id()
+			<< "itemid"	<< item->id());
+}
+
+void PlayerWindow::playlistTimeChanged(double time)
+{
+	GLDrawablePlaylist *playlist = dynamic_cast<GLDrawablePlaylist*>(sender());
+	if(!playlist)
+		return;
+		
+	GLDrawable *drawable = playlist->drawable();
+	if(!drawable)
+		return;
+	 
+	sendReply(QVariantList() 
+			<< "cmd"	<< GLPlayer_PlaylistTimeChanged
+			<< "drawableid"	<< drawable->id()
+			<< "time"	<< time);
+}
+

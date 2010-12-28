@@ -1225,7 +1225,7 @@ QRectF GLDrawable::boundingRect() const
 GLDrawablePlaylist::GLDrawablePlaylist(GLDrawable *drawable)
 	: m_drawable(drawable)
 	, m_playTime(0)
-	, m_timerTickLength(1./10.)
+	, m_timerTickLength(1./2.)
 	, m_currentItemIndex(-1)
 {
 	connect(&m_tickTimer, SIGNAL(timeout()), this, SLOT(timerTick()));
@@ -1234,6 +1234,9 @@ GLDrawablePlaylist::GLDrawablePlaylist(GLDrawable *drawable)
 GLDrawablePlaylist::~GLDrawablePlaylist()
 {
 	//disconnect(conn, 0, this, 0);
+	m_itemLookup.clear();
+	qDeleteAll(m_items);
+	m_items.clear();
 }
 	
 int GLDrawablePlaylist::rowCount(const QModelIndex &/*parent*/) const
@@ -1312,6 +1315,7 @@ void GLDrawablePlaylist::addItem(GLPlaylistItem *item)
 	
 	item->setPlaylist(this);
 	
+	m_itemLookup[item->id()] = item;
 	m_items << item;
 	connect(item, SIGNAL(playlistItemChanged()), this, SLOT(playlistItemChanged()));
 	
@@ -1331,6 +1335,7 @@ void GLDrawablePlaylist::removeItem(GLPlaylistItem *item)
 	if(!item)
 		return;
 	
+	m_itemLookup.remove(item->id());
 	m_items.removeAll(item);
 	disconnect(item, 0, this, 0);
 	
@@ -1390,12 +1395,19 @@ void GLDrawablePlaylist::fromByteArray(QByteArray& array)
 	if(map.isEmpty())
 		return;
 	
-	m_items.clear();
+	if(!m_items.isEmpty())
+	{
+		qDeleteAll(m_items);
+		m_items.clear();
+	}
+	
 	QVariantList views = map["items"].toList();
 	foreach(QVariant var, views)
 	{
 		QByteArray data = var.toByteArray();
-		m_items << new GLPlaylistItem(data);
+		GLPlaylistItem *item = new GLPlaylistItem(data);
+		m_items << item;
+		m_itemLookup[item->id()] = item;
 	}
 }
 
@@ -1478,6 +1490,7 @@ void GLDrawablePlaylist::timerTick()
 GLPlaylistItem::GLPlaylistItem(GLDrawablePlaylist *list)
 	: QObject(list)
 	, m_playlist(list)
+	, m_id(-1)
 	{}
 	
 GLPlaylistItem::GLPlaylistItem(QByteArray& array, GLDrawablePlaylist *list)
@@ -1494,6 +1507,7 @@ QByteArray GLPlaylistItem::toByteArray()
 	
 	QVariantMap map;
 	
+	map["id"]	= id();
 	map["title"]	= m_title;
 	map["value"]	= m_value;
 	map["dur"] 	= m_duration;
@@ -1515,12 +1529,25 @@ void GLPlaylistItem::fromByteArray(QByteArray& array)
 	if(map.isEmpty())
 		return;
 	
+	m_id		= map["id"].toInt();
 	m_title		= map["title"].toString();
 	m_value		= map["value"];
 	m_duration	= map["dur"].toDouble();
 	m_autoDuration	= map["autod"].toBool();
 	m_scheduledTime	= map["sched"].toDateTime();
 	m_autoSchedule	= map["autos"].toBool();
+}
+
+int GLPlaylistItem::id()
+{
+	if(m_id < 0)
+	{
+		QSettings set;
+		m_id = set.value("GLPlaylistItem/id-counter",0).toInt() + 1;
+		set.setValue("GLPlaylistItem/id-counter",m_id);
+	}
+	
+	return m_id;
 }
 	
 void GLPlaylistItem::setTitle(const QString& title)

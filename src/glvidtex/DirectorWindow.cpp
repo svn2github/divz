@@ -42,8 +42,9 @@ DirectorWindow::DirectorWindow(QWidget *parent)
 	m_collection = 0;
 	m_players = 0;
 	
-	m_vidSendMgr = new VideoInputSenderManager();
-	m_vidSendMgr->setSendingEnabled(true);
+	m_vidSendMgr = 0;
+// 	m_vidSendMgr = new VideoInputSenderManager();
+// 	m_vidSendMgr->setSendingEnabled(true);
 	
 	readSettings();
 	
@@ -171,6 +172,10 @@ void DirectorWindow::setupUI()
 	ui->fadeSpeedSlider->setValue((int)(300. / 3000. * 100));
 	connect(ui->fadeBlackBtn, SIGNAL(toggled(bool)), this, SLOT(fadeBlack(bool)));
 	connect(ui->fadeSpeedSlider, SIGNAL(valueChanged(int)), this, SLOT(setFadeSpeedPercent(int)));
+	connect(ui->fadeSpeedBox, SIGNAL(valueChanged(double)), this, SLOT(setFadeSpeedTime(double)));
+	
+	connect(ui->playBtn,  SIGNAL(clicked()), this, SLOT(playPlaylist()));
+	connect(ui->pauseBtn, SIGNAL(clicked()), this, SLOT(pausePlaylist()));
 	
 	connect(ui->actionMonitor_Players_Live, SIGNAL(triggered()), this, SLOT(showPlayerLiveMonitor()));
 	
@@ -232,6 +237,10 @@ void DirectorWindow::readSettings()
 	ui->graphicsView->setScaleFactor(scaleFactor);
 	
 	m_players = new PlayerConnectionList();
+	
+	connect(m_players, SIGNAL(playerAdded(PlayerConnection *)), this, SLOT(playerAdded(PlayerConnection *)));
+	connect(m_players, SIGNAL(playerRemoved(PlayerConnection *)), this, SLOT(playerRemoved(PlayerConnection *)));
+	
 	m_players->fromByteArray(settings.value("DirectorWindow/players").toByteArray());
 }
 
@@ -330,7 +339,38 @@ void DirectorWindow::setFadeSpeedPercent(int value)
 {
 	double perc = ((double)value)/100.;
 	int ms = (int)(3000 * perc);
+	
+	double sec = ((double)ms) / 1000.;
+	if(ui->fadeSpeedBox->value() != sec)
+	{
+		bool block = ui->fadeSpeedBox->blockSignals(true);
+		ui->fadeSpeedBox->setValue(sec);
+		ui->fadeSpeedBox->blockSignals(block);
+	}
+	
 	qDebug() << "DirectorWindow::setFadeSpeedPercent: value:"<<value<<", ms:"<<ms;
+	foreach(PlayerConnection *con, m_players->players())
+		con->setCrossfadeSpeed(ms);
+	
+}
+
+void DirectorWindow::setFadeSpeedTime(double sec)
+{
+	int ms = (int)(sec * 1000.);
+	if(ms < 1)
+		ms = 1;
+	if(ms > 3000)
+		ms = 3000;
+		
+	int perc = (int)((((double)ms) / 1000.) * 100);
+	if(ui->fadeSpeedSlider->value() != perc)
+	{
+		bool block = ui->fadeSpeedSlider->blockSignals(true);
+		ui->fadeSpeedSlider->setValue(perc);
+		ui->fadeSpeedSlider->blockSignals(block);
+	}
+	
+	qDebug() << "DirectorWindow::setFadeSpeedTime: sec:"<<sec<<", ms:"<<ms;
 	foreach(PlayerConnection *con, m_players->players())
 		con->setCrossfadeSpeed(ms);
 	
@@ -399,10 +439,16 @@ void DirectorWindow::btnAddToPlaylist()
 		item->setDuration(15.0);
 	
 	playlist->addItem(item);
+	
+	foreach(PlayerConnection *con, m_players->players())
+		con->updatePlaylist(m_currentDrawable);
 }
 
-void DirectorWindow::playlistTimeChanged(double value)
+void DirectorWindow::playlistTimeChanged(GLDrawable *gld, double value)
 {
+	if(m_currentDrawable != gld)
+		return;
+		
 	QString time = "";
 	
 	double min = value/60;
@@ -415,8 +461,11 @@ void DirectorWindow::playlistTimeChanged(double value)
 	ui->timeLabel->setText(time);
 }
 
-void DirectorWindow::playlistItemChanged(GLPlaylistItem *item)
+void DirectorWindow::playlistItemChanged(GLDrawable *gld, GLPlaylistItem *item)
 {
+	if(m_currentDrawable != gld)
+		return;
+		
 	if(m_currentItem)
 		disconnect(ui->itemLengthBox, 0, m_currentItem, 0);
 	
@@ -425,11 +474,13 @@ void DirectorWindow::playlistItemChanged(GLPlaylistItem *item)
 	{
 		ui->itemLengthBox->setValue(item->duration());
 		connect(ui->itemLengthBox, SIGNAL(valueChanged(double)), item, SLOT(setDuration(double)));
+		/// TODO connect the changed slot to a slot on this window so we can send the updated playlist to the player
 		
 		ui->playlistView->setCurrentIndex(m_currentDrawable->playlist()->indexOf(item));
 	
-		foreach(PlayerConnection *con, m_players->players())
-			con->setUserProperty(m_currentDrawable, item->value());
+		// Dont need to do this now, since this signal is now just informing us of a change on the player
+// 		foreach(PlayerConnection *con, m_players->players())
+// 			con->setUserProperty(m_currentDrawable, item->value());
 	}
 }
 
@@ -708,10 +759,10 @@ void DirectorWindow::setCurrentDrawable(GLDrawable *gld)
 		if(m_currentDrawable->playlist()->isPlaying())
 			m_currentDrawable->playlist()->stop();
 		
-		disconnect(m_currentDrawable->playlist(), 0, this, 0);
-		
-		disconnect(ui->playBtn,  0, m_currentDrawable->playlist(), 0);
-		disconnect(ui->pauseBtn, 0, m_currentDrawable->playlist(), 0);
+// 		disconnect(m_currentDrawable->playlist(), 0, this, 0);
+// 		
+// 		disconnect(ui->playBtn,  0, m_currentDrawable->playlist(), 0);
+// 		disconnect(ui->pauseBtn, 0, m_currentDrawable->playlist(), 0);
 	
 		m_currentDrawable = 0;
 	}
@@ -719,11 +770,15 @@ void DirectorWindow::setCurrentDrawable(GLDrawable *gld)
 	m_currentDrawable = gld;
 	ui->playlistView->setModel(gld->playlist());
 	
-	connect(gld->playlist(), SIGNAL(currentItemChanged(GLPlaylistItem*)), this, SLOT(playlistItemChanged(GLPlaylistItem *)));
-	connect(gld->playlist(), SIGNAL(playerTimeChanged(double)),           this, SLOT(playlistTimeChanged(double)));
+	// Update the playlist on the player just to make sure its up-to-date with what we see
+	foreach(PlayerConnection *con, m_players->players())
+		con->updatePlaylist(m_currentDrawable);
 	
-	connect(ui->playBtn,  SIGNAL(clicked()), gld->playlist(), SLOT(play()));
-	connect(ui->pauseBtn, SIGNAL(clicked()), gld->playlist(), SLOT(stop()));
+// 	connect(gld->playlist(), SIGNAL(currentItemChanged(GLPlaylistItem*)), this, SLOT(playlistItemChanged(GLPlaylistItem *)));
+// 	connect(gld->playlist(), SIGNAL(playerTimeChanged(double)),           this, SLOT(playlistTimeChanged(double)));
+// 	
+// 	connect(ui->playBtn,  SIGNAL(clicked()), gld->playlist(), SLOT(play()));
+// 	connect(ui->pauseBtn, SIGNAL(clicked()), gld->playlist(), SLOT(stop()));
 	
 	QString itemName = gld->itemName();
 	QString typeName;
@@ -778,7 +833,7 @@ void DirectorWindow::setCurrentDrawable(GLDrawable *gld)
 		
 		QComboBox *sourceBox = new QComboBox();
 		QStringList itemList;
-		itemList << "(This Computer)";
+		//itemList << "(This Computer)";
 		m_videoPlayerList.clear();
 		foreach(PlayerConnection *con, m_players->players())
 			if(con->isConnected())
@@ -809,8 +864,8 @@ void DirectorWindow::setCurrentDrawable(GLDrawable *gld)
 			sourceBox->addItems(QStringList() << "(No Players Connected)");
 			
 			// Dont show the error box if the director window hasnt been shown yet
-			if(isVisible())
-				QMessageBox::warning(this, "No Players Connected","Sorry, no players are connected. You must connect to at least one video player before you can switch videos.");
+// 			if(isVisible())
+// 				QMessageBox::warning(this, "No Players Connected","Sorry, no players are connected. You must connect to at least one video player before you can switch videos.");
 		}
 	}
 	else
@@ -904,20 +959,20 @@ void DirectorWindow::setCurrentDrawable(GLDrawable *gld)
 void DirectorWindow::loadVideoInputList(int idx)
 {
 	//Q_UNUSED(idx);
-	if(idx <0 || idx>m_videoPlayerList.size())
+	if(idx <0 || idx>=m_videoPlayerList.size())
 		return;
 	
 	QStringList inputs;
 	
-	if(idx == 0)
-	{
-		inputs = m_vidSendMgr->videoConnections();;
-	}
-	else
-	{
-		PlayerConnection *con = m_videoPlayerList[idx-1];
+// 	if(idx == 0)
+// 	{
+// 		inputs = m_vidSendMgr->videoConnections();;
+// 	}
+// 	else
+// 	{
+		PlayerConnection *con = m_videoPlayerList[idx]; //-1];
 		inputs = con->videoInputs(); 
-	}
+// 	}
 	
 	while(!m_receivers.isEmpty())
 	{
@@ -1070,7 +1125,37 @@ void DirectorWindow::changeCanvasSize()
 	
 }
 
+void DirectorWindow::playerAdded(PlayerConnection * con)
+{
+	if(!con)
+		return;
+	
+	connect(con, SIGNAL(playlistTimeChanged(GLDrawable*, double)), this, SLOT(playlistTimeChanged(GLDrawable*, double)));
+	connect(con, SIGNAL(currentPlaylistItemChanged(GLDrawable*, GLPlaylistItem*)), this, SLOT(playlistItemChanged(GLDrawable*, GLPlaylistItem *)));
+}
 
+void DirectorWindow::playerRemoved(PlayerConnection * con)
+{
+	if(!con)
+		return;
+	disconnect(con, 0, this, 0);
+}
+
+void DirectorWindow::pausePlaylist()
+{
+	if(!m_currentDrawable)
+		return;
+	foreach(PlayerConnection *con, m_players->players())
+		con->setPlaylistPlaying(m_currentDrawable, false);
+}
+
+void DirectorWindow::playPlaylist()
+{
+	if(!m_currentDrawable)
+		return;
+	foreach(PlayerConnection *con, m_players->players())
+		con->setPlaylistPlaying(m_currentDrawable, true);
+}
 
 
 

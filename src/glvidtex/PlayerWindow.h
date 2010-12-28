@@ -17,6 +17,7 @@ class QGraphicsView;
 class QGraphicsScene;
 class VideoInputSenderManager;
 class VideoEncoder;
+class GLPlaylistItem;
 
 #include "../livemix/VideoSource.h"
 
@@ -75,6 +76,9 @@ private slots:
 /*	// for testing
 	void sendTestMap();
 	void slotConnected();*/
+	
+	void currentPlaylistItemChanged(GLPlaylistItem*);
+	void playlistTimeChanged(double);
 
 protected:
 	friend class PlayerCompatOutputStream;

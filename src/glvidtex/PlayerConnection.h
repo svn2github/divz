@@ -7,6 +7,7 @@
 class GLPlayerClient;
 class GLWidgetSubview;
 class GLDrawable;
+class GLPlaylistItem;
 class GLSceneGroup;
 class GLScene;
 
@@ -47,6 +48,8 @@ class PlayerConnection : public QObject
 	Q_PROPERTY(QSizeF canvasSize READ canvasSize WRITE setCanvasSize);
 	Q_PROPERTY(Qt::AspectRatioMode aspectRatioMode READ aspectRatioMode WRITE setAspectRatioMode);
 
+	Q_PROPERTY(bool autoconnect READ autoconnect WRITE setAutoconnect);
+	
 	Q_PROPERTY(bool isConnected	READ isConnected);
 	Q_PROPERTY(QString lastError	READ lastError);
 	
@@ -60,8 +63,6 @@ public:
 	
 	QList<GLWidgetSubview*> subviews() { return m_subviews; }
 	
-	bool testConnection();
-	
 	QString name() { return m_name; }
 	QString host() { return m_host; }
 	QString user() { return m_user; }
@@ -70,6 +71,8 @@ public:
 	QRect viewportRect() { return m_viewportRect; }
 	QSizeF canvasSize() { return m_canvasSize; }
 	Qt::AspectRatioMode aspectRatioMode() { return m_aspectRatioMode; }
+	
+	bool autoconnect() { return m_autoconnect; }
 	
 	bool isConnected() { return m_isConnected; }
 	QString lastError() { return m_lastError; }
@@ -94,6 +97,10 @@ public slots:
 	void setCanvasSize(const QSizeF&);
 	void setAspectRatioMode(Qt::AspectRatioMode);
 	
+	void setAutoconnect(bool flag);
+	
+	void testConnection();
+	
 	void setGroup(GLSceneGroup *group, GLScene *initialScene=0);
 	void setScene(GLScene*); // must be part of 'group'
 	void setUserProperty(GLDrawable *, QVariant value, QString propertyName="");
@@ -103,6 +110,9 @@ public slots:
 	
 	void fadeBlack(bool flag);
 	void setCrossfadeSpeed(int ms);
+	
+	void setPlaylistPlaying(GLDrawable *, bool play=true);
+	void updatePlaylist(GLDrawable *);
 	
 signals:
 	void subviewAdded(GLWidgetSubview*);
@@ -114,11 +124,18 @@ signals:
 	void loginSuccess();
 	void loginFailure();
 	
+	void pingResponseReceived(const QString&);
+	void testStarted();
+	void testEnded();
+	
 	void playerError(const QString&);
 	
 	void propQueryResponse(GLDrawable *drawable, QString propertyName, const QVariant& value);
 	
 	void playerNameChanged(const QString&);
+	
+	void playlistTimeChanged(GLDrawable*, double time);
+	void currentPlaylistItemChanged(GLDrawable*, GLPlaylistItem*);
 	
 protected:
 	friend class PlayerSubviewsModel;
@@ -144,6 +161,10 @@ private:
 	QRect m_viewportRect;
 	QSizeF m_canvasSize;
 	Qt::AspectRatioMode m_aspectRatioMode;
+	
+	bool m_autoconnect;
+	
+	bool m_justTesting;
 	
 	QString m_playerVersion;
 	

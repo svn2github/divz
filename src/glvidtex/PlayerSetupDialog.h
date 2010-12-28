@@ -82,6 +82,12 @@ private slots:
 	void conLoginFailure();
 	void conLoginSuccess();
 	void conPlayerError(const QString&);
+	void conPingResponseReceived(const QString&);
+	void conTestStarted();
+	void conTestEnded();
+	
+	void connectPlayer();
+	void autoconBoxChanged(bool);
 	
 	
 private:
