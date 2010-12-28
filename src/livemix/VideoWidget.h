@@ -20,7 +20,7 @@ class VideoWidget  : public QGLWidget
 {
 	Q_OBJECT
 public:
-	VideoWidget();
+	VideoWidget(QWidget *parent=0);
 	~VideoWidget();
 
 	void setVideoSource(VideoSource *);

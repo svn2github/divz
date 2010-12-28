@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include <QVariant>
+#include <QTimer>
 
 class GLPlayerServer;
 
@@ -16,6 +17,44 @@ class QGraphicsView;
 class QGraphicsScene;
 class VideoInputSenderManager;
 class VideoEncoder;
+
+#include "../livemix/VideoSource.h"
+
+class PlayerWindow;	
+class PlayerCompatOutputStream : public VideoSource
+{
+	Q_OBJECT
+	
+protected:
+	friend class PlayerWindow;
+	PlayerCompatOutputStream(PlayerWindow *parent=0);
+
+public:
+	//virtual ~StaticVideoSource() {}
+
+	VideoFormat videoFormat() { return VideoFormat(VideoFrame::BUFFER_IMAGE,QVideoFrame::Format_ARGB32); }
+	//VideoFormat videoFormat() { return VideoFormat(VideoFrame::BUFFER_BYTEARRAY,QVideoFrame::Format_ARGB32); }
+	
+	const QImage & image() { return m_image; }
+	int fps() { return m_fps; }
+
+public slots:
+	void setFps(int);
+
+signals:
+	void frameReady();
+
+private slots:
+	void renderScene();
+	void setImage(QImage);
+	
+private:
+	PlayerWindow *m_win;
+	QImage m_image;
+	int m_fps;
+	QTimer m_frameReadyTimer;
+};
+
 
 class PlayerWindow : public QWidget
 {
@@ -36,6 +75,10 @@ private slots:
 /*	// for testing
 	void sendTestMap();
 	void slotConnected();*/
+
+protected:
+	friend class PlayerCompatOutputStream;
+	QGraphicsScene *graphicsScene() { return m_graphicsScene; }
 
 private:
 	void sendReply(QVariantList);
@@ -68,6 +111,8 @@ private:
 	VideoEncoder *m_outputEncoder;
 	
 	int m_xfadeSpeed;
+	
+	PlayerCompatOutputStream *m_compatStream;
 };
 
 #endif

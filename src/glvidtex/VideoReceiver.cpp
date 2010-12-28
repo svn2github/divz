@@ -298,6 +298,10 @@ void VideoReceiver::processBlock()
 					//qDebug() << "VideoReceiver::processBlock: Upscaled frame from "<<imgX<<"x"<<imgY<<" to "<<origX<<"x"<<imgY<<" in "<<x.elapsed()<<"ms";
 					
 				} 
+				else
+				{
+					frame->setImage(frame->image().copy()); // disconnect from the QByteArray by calling copy() to make an internal copy of the buffer
+				}
 			}
 			else
 			{

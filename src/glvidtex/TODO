@@ -10,16 +10,21 @@ TODO:
 			- Consider removing "(This Machine)" as an option
 				- Dont put a message box - just a simple QLabel
 		- Make the video input control panel automatically update when players are connected
-		- Change the shortcut key in the file menu in director for the Connections and Live Monitor (both use "C")
+		- [DONE] Change the shortcut key in the file menu in director for the Connections and Live Monitor (both use "C")
 		- [TMP-FIX] Video Encoding "problems"
 			- Way to much CPU usage - 157%-ish on a dual-core 2.4 GHz...causing live video to stutter
 			- Consider putting it either in another thread or in a whole other process with shared memory
 				- Can we push it off onto the network somehow??
 			- Temporarily disabled encoder in PlayerWindow till this is addressed.
-		- [WONTFIX] Need to push text rendering into another thread, causing live video to stutter (see the 4fps clock over live video)
+		- [CANTFIX] Need to push text rendering into another thread, causing live video to stutter (see the 4fps clock over live video)
 			- Optimized as much as I can right now, but rendering still takes ~80-100ms with shadow and outline
 			- Can't push QTextDocument into another thread for some reason
 			- Added a 'cached image' feature for transmitting text from director to player so the player won't have to re-render static text already rendered on the director (but will have to re-render new text)
+		- Deleting an item will then crash the editor on save
+		- [CANTFIX] Make GLDirector NOT crash when the player is disconnected!
+			- Crash seems to be deep inside the Qt networking code (!!!!!!!)
+			- Short of recompiling Qt, I don't have a workaround for the crash...yet...
+			- Not a showstoper yet, so moving on to other problems for now.
 		 
 		
 	NEEDED FEATURES:
@@ -43,11 +48,10 @@ TODO:
 		- Either (a) integrate with DViz songs.db and Bible functionality or (b) integrate VideoSender with DViz
 		- Border/Dropshadow control for items
 			- Right now, text and images
-		- Make GLDirector NOT crash when the player is disconnected!
 		- Crossfading between scenes
 		- MUST have per-camera BCHS controls
 		- Add copy/paste to editor
-		- Add Item autofit to editor
+		- [DONE] Add Item autofit to editor
 		
 	
 	IDEAS:

@@ -152,6 +152,9 @@ void GLTextDrawable::clockTick()
 
 void GLTextDrawable::setText(const QString& text)
 {
+	if(text == m_text)
+		return;
+		
 	m_text = text;
 	//qDebug() << "GLTextDrawable::setText(): text:"<<text;
 	bool lock = false;

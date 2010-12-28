@@ -81,6 +81,14 @@ void DirectorWindow::showPlayerLiveMonitor()
 			itemList << QString("Player: %1").arg(con->name());
 			players << con;
 		}
+	
+	// Dont prompt the user if only one player is connected
+	if(players.size() == 1)
+	{
+		showPlayerLiveMonitor(players.first());
+		return;
+	}
+		
 	sourceBox->addItems(itemList);
 	QDialog dlg;
 	dlg.setWindowTitle("Change Canvas Size");
@@ -119,33 +127,38 @@ void DirectorWindow::showPlayerLiveMonitor()
 		
 		PlayerConnection *con = players[idx];
 		
-		QString host = con->host();
-		int port = 9978;
-		VideoReceiver *rx = VideoReceiver::getReceiver(host,port);
-				
-		if(!rx)
-		{
-			qDebug() << "DirectorWindow::showPlayerLiveMonitor: Unable to connect to "<<host<<":"<<port;
-			QMessageBox::warning(this,"Video Connection",QString("Sorry, but we were unable to connect to the video transmitter at %1:%2 - not sure why.").arg(host).arg(port));
-		}
-		else
-		{
-			m_receivers << QPointer<VideoReceiver>(rx);
-			
-			qDebug() << "DirectorWindow::showPlayerLiveMonitor: Connected to "<<host<<":"<<port<<", creating widget...";
-			
-			VideoWidget *vid = new VideoWidget();
-			vid->setVideoSource(rx);
-			
-			vid->setWindowTitle(QString("Player '%1' - Live Player Monitor").arg(con->name()));
-			vid->resize(320,240);
-			vid->show();
-			
-		}
+		showPlayerLiveMonitor(con);
 		
 	}
 }
 
+void DirectorWindow::showPlayerLiveMonitor(PlayerConnection *con)
+{
+	QString host = con->host();
+	int port = 9978;
+	VideoReceiver *rx = VideoReceiver::getReceiver(host,port);
+			
+	if(!rx)
+	{
+		qDebug() << "DirectorWindow::showPlayerLiveMonitor: Unable to connect to "<<host<<":"<<port;
+		QMessageBox::warning(this,"Video Connection",QString("Sorry, but we were unable to connect to the video transmitter at %1:%2 - not sure why.").arg(host).arg(port));
+	}
+	else
+	{
+		m_receivers << QPointer<VideoReceiver>(rx);
+		
+		qDebug() << "DirectorWindow::showPlayerLiveMonitor: Connected to "<<host<<":"<<port<<", creating widget...";
+		
+		VideoWidget *vid = new VideoWidget();
+		vid->setVideoSource(rx);
+		
+		vid->setWindowTitle(QString("Player '%1' - Live Player Monitor").arg(con->name()));
+		vid->resize(320,240);
+		vid->show();
+		
+		connect(this, SIGNAL(closed()), vid, SLOT(deleteLater()));
+	}
+}
 
 void DirectorWindow::setupUI()
 {
@@ -199,6 +212,7 @@ void DirectorWindow::closeEvent(QCloseEvent */*event*/)
 {
 	writeSettings();
 	saveFile();
+	emit closed();
 }
 
 void DirectorWindow::readSettings()

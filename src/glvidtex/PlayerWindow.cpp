@@ -57,6 +57,61 @@ protected:
 	
 };
 
+
+
+/// PlayerCompatOutputStream
+
+PlayerCompatOutputStream::PlayerCompatOutputStream(PlayerWindow *parent)
+	: VideoSource(parent)
+	, m_win(parent)
+	, m_fps(5)
+{
+ 	setIsBuffered(false);
+	setImage(QImage("dot.gif"));
+	
+	connect(&m_frameReadyTimer, SIGNAL(timeout()), this, SLOT(renderScene()));
+	setFps(m_fps);
+	
+	m_frameReadyTimer.start();
+}
+
+void PlayerCompatOutputStream::setImage(QImage img)
+{
+	m_image = img;
+	
+	//qDebug() << "PlayerCompatOutputStream::setImage(): Received frame buffer, size:"<<m_image.size()<<", img format:"<<m_image.format();
+	enqueue(new VideoFrame(m_image,1000/m_fps, QTime::currentTime()));
+	
+	emit frameReady();
+}
+
+void PlayerCompatOutputStream::renderScene()
+{
+	QImage image(320,240,QImage::Format_ARGB32);
+	QPainter p(&image);
+	
+	if(m_win->graphicsScene())
+		m_win->graphicsScene()->render(&p);
+	else
+		qDebug() << "PlayerCompatOutputStream::renderScene: No graphics scene available, unable to render.";
+	
+	p.end();
+	
+// 	qDebug() << "PlayerCompatOutputStream::renderScene: Image size:"<<image.size();
+// 	image.save("comapt.jpg");
+	
+	setImage(image);
+}
+
+void PlayerCompatOutputStream::setFps(int fps)
+{
+	m_fps = fps;
+	m_frameReadyTimer.setInterval(1000/m_fps);
+}
+
+
+/// PlayerWindow
+
 PlayerWindow::PlayerWindow(QWidget *parent)
 	: QWidget(parent)
 	, m_group(0)
@@ -68,6 +123,7 @@ PlayerWindow::PlayerWindow(QWidget *parent)
 	, m_playerVersion(15)
 	, m_outputEncoder(0)
 	, m_xfadeSpeed(300)
+	, m_compatStream(0)
 {
 	m_vidSendMgr = new VideoInputSenderManager();
 	m_vidSendMgr->setSendingEnabled(true);
@@ -302,17 +358,24 @@ PlayerWindow::PlayerWindow(QWidget *parent)
 		}	
 	}
 	
-	if(m_glWidget)
+	if(!m_glWidget)
+		m_compatStream = new PlayerCompatOutputStream(this);
+		
+	int outputPort = READ_STRING("output-port",9978).toInt();
+	
+	if(outputPort > 0 )
 	{
 		VideoSender *sender = new VideoSender(this);
-		sender->setVideoSource(m_glWidget->outputStream());
-		if(sender->listen(QHostAddress::Any,9978))
+		sender->setTransmitSize(320,240);
+		//sender->setTransmitFps(5);
+		sender->setVideoSource(m_compatStream ? (VideoSource*)m_compatStream : (VideoSource*)m_glWidget->outputStream());
+		if(sender->listen(QHostAddress::Any,outputPort))
 		{
-			qDebug() << "PlayerWindow: Live monitor available on port 9978";
+			qDebug() << "PlayerWindow: Live monitor available on port"<<outputPort;
 		}
 		else
 		{
-			qDebug() << "PlayerWindow: [ERROR] Unable start Live Monitor server on port 9978!";
+			qDebug() << "PlayerWindow: [ERROR] Unable start Live Monitor server on port"<<outputPort;
 		}
 	}
 	

@@ -9,8 +9,8 @@
 #include <QApplication>
 #include <QMessageBox>
 
-VideoWidget::VideoWidget()
-	: QGLWidget()
+VideoWidget::VideoWidget(QWidget *parent)
+	: QGLWidget(parent)
 	, m_thread(0)
 	, m_frameCount(0)
 	, m_opacity(1)
@@ -623,7 +623,14 @@ void VideoWidget::paintEvent(QPaintEvent*)
 				// else cannot use frame
 			}
 			else	
-				p.drawImage(m_targetRect,m_frame->image(),m_sourceRect);
+			{
+// 				if(!m_frame->image().isNull())
+// 				{
+// 					QImage img = m_frame->image().copy();
+// 					img = img.convertToFormat(QImage::Format_ARGB32_Premultiplied);
+					p.drawImage(m_targetRect,m_frame->image(),m_sourceRect);
+// 				}
+			}
 	
 			// If fading in from black (e.g. no old thread)
 			// then fade in the overlay with the frame, otherwise during

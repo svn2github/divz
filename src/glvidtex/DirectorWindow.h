@@ -38,6 +38,9 @@ public:
 	
 	QString fileName() { return m_fileName; }
 
+signals:
+	void closed();
+	
 public slots:
 	void showOpenFileDialog();
 	void showSaveAsDialog();
@@ -97,6 +100,7 @@ protected:
 	void readSettings();
 	void writeSettings();
 	
+	void showPlayerLiveMonitor(PlayerConnection *con);
 
 private:
 	Ui::DirectorWindow *ui;
