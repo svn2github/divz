@@ -19,7 +19,7 @@ int main(int argc, char **argv)
 // 	#ifdef Q_WS_X11
 // 		XInitThreads();
 // 	#endif
-// 	
+//
 	#if !defined(Q_OS_MAC) // raster on OSX == b0rken
 		// use the Raster GraphicsSystem as default on 4.5+
 		#if QT_VERSION >= 0x040500
@@ -40,23 +40,24 @@ int main(int argc, char **argv)
 	//if(s.value("first-run-date").isValid())
 	//{
 		QDate today = QDate::currentDate();
-		QDate expires(2010,3,31);
+		QDate expires(2010,12,31);
 		//QDate f = s.value("first-run-date").toDate();
 		//int days = f.daysTo(d);
 		QString ver = "DViz Beta";
+		#define VER "r701"
 #ifdef VER
 		ver += QString(", Build %1").arg(VER);
 #endif
 
-// 		if(today > expires)
-// 		{
-// 			QMessageBox::critical(0,QString("%1 Expired").arg(ver),"Sorry, but this beta copy of DViz has expired. You can download the latest beta or buy the released version (if available) at:\n\n    http://code.google.com/p/dviz\n\nOr, you can set your computer's clock back a day or two and keep using this beta till you make up your mind. Thanks for trying out DViz!");
-// 			return 0;
-// 		}
-// 		else
-// 		{
-// 			QMessageBox::information(0,ver,QString("Thanks for trying %1! This beta is valid until 2010-03-31, at which time you'll be asked to download a newer version. If you find ANY issues or have any ideas for improvement, PLEASE speak up and log a new issue at:\n\n    http://code.google.com/p/dviz/issues/list\n").arg(ver));
-// 		}
+ 		if(today > expires)
+ 		{
+ 			QMessageBox::critical(0,QString("%1 Expired").arg(ver),"Sorry, but this evaluation copy of DViz has expired. You can buy the non-eval version from Josiah Bryan - email josiahbryan@gmail.com for more information.\n\nOr, you can set your computer's clock back a day or two and keep using this evaluation version till you make up your mind. Thanks for trying out DViz!");
+ 			return 0;
+ 		}
+ 		else
+ 		{
+ 			QMessageBox::information(0,ver,QString("Thanks for trying %1! This evaluation copy is valid until 2010-12-31, at which time you'll be asked to purchase the non-eval verson from Josiah Bryan. If you find ANY issues or have any ideas for improvement, PLEASE speak up and log a new issue at:\n\n    http://code.google.com/p/dviz/issues/list\n").arg(ver));
+ 		}
 
 	//}
 

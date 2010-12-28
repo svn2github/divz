@@ -18,7 +18,7 @@ PlayerSubviewsModel::~PlayerSubviewsModel()
 {
 	disconnect(m_conn, 0, this, 0);
 }
-	
+
 int PlayerSubviewsModel::rowCount(const QModelIndex &/*parent*/) const
 {
 	return m_conn->m_subviews.size();
@@ -28,10 +28,10 @@ QVariant PlayerSubviewsModel::data( const QModelIndex & index, int role ) const
 {
 	if (!index.isValid())
 		return QVariant();
-	
+
 	if (index.row() >= rowCount(QModelIndex()))
 		return QVariant();
-	
+
 	if (role == Qt::DisplayRole || Qt::EditRole == role)
 	{
 		GLWidgetSubview *d = m_conn->m_subviews.at(index.row());
@@ -48,21 +48,21 @@ QVariant PlayerSubviewsModel::data( const QModelIndex & index, int role ) const
 }
 Qt::ItemFlags PlayerSubviewsModel::flags(const QModelIndex &index) const
 {
-	if (index.isValid())	
+	if (index.isValid())
 		return Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsEditable; //| Qt::ItemIsDragEnabled | Qt::ItemIsDropEnabled;
-	
+
 	return Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsDropEnabled ;
 }
 bool PlayerSubviewsModel::setData(const QModelIndex &index, const QVariant & value, int /*role*/)
 {
 	if (!index.isValid())
 		return false;
-	
+
 	if (index.row() >= rowCount(QModelIndex()))
 		return false;
-	
+
 	GLWidgetSubview *d = m_conn->m_subviews.at(index.row());
-	qDebug() << "PlayerSubviewsModel::setData: "<<this<<" row:"<<index.row()<<", value:"<<value; 
+	qDebug() << "PlayerSubviewsModel::setData: "<<this<<" row:"<<index.row()<<", value:"<<value;
 	if(value.isValid() && !value.isNull())
 	{
 		d->setTitle(value.toString());
@@ -71,32 +71,32 @@ bool PlayerSubviewsModel::setData(const QModelIndex &index, const QVariant & val
 	}
 	return false;
 }
-	
+
 void PlayerSubviewsModel::subviewAdded(GLWidgetSubview *sub)
 {
 	//qDebug() << "PlayerSubviewsModel::subviewAdded: Received sub "<<sub;
 	connect(sub, SIGNAL(changed(GLWidgetSubview*)), this, SLOT(subviewChanged(GLWidgetSubview*)));
-	
+
 	beginInsertRows(QModelIndex(),m_conn->m_subviews.size()-1,m_conn->m_subviews.size());
-	
+
 	QModelIndex top    = createIndex(m_conn->m_subviews.size()-2, 0),
 		    bottom = createIndex(m_conn->m_subviews.size()-1, 0);
 	dataChanged(top,bottom);
-	
+
 	endInsertRows();
 }
 
 void PlayerSubviewsModel::subviewRemoved(GLWidgetSubview *sub)
 {
 	disconnect(sub, 0, this, 0);
-	
+
 	beginRemoveRows(QModelIndex(),0,m_conn->m_subviews.size()+1);
-	
+
 	int idx = m_conn->m_subviews.indexOf(sub);
 	QModelIndex top    = createIndex(idx, 0),
 		    bottom = createIndex(m_conn->m_subviews.size(), 0);
 	dataChanged(top,bottom);
-	
+
 	endRemoveRows();
 }
 
@@ -104,15 +104,15 @@ void PlayerSubviewsModel::subviewChanged(GLWidgetSubview *sub)
 {
 	if(!sub)
 		return;
-	
+
 	int row = m_conn->m_subviews.indexOf(sub);
 	if(row < 0)
 		return;
-	
+
 	QModelIndex idx = createIndex(row, row);
 	dataChanged(idx, idx);
 }
-	
+
 //////////////////////////////////////////////////////////////////////////////
 
 PlayerConnection::PlayerConnection(QObject *parent)
@@ -124,8 +124,9 @@ PlayerConnection::PlayerConnection(QObject *parent)
 	, m_group(0)
 	, m_scene(0)
 	, m_isConnected(false)
+	, m_justTesting(false)
 {
-	
+
 }
 
 PlayerConnection::PlayerConnection(QByteArray& ba, QObject *parent)
@@ -145,14 +146,14 @@ PlayerConnection::~PlayerConnection()
 		m_client = 0;
 	}
 }
-	
+
 
 QByteArray PlayerConnection::toByteArray()
 {
 	QByteArray array;
 	QDataStream stream(&array, QIODevice::WriteOnly);
 
-	
+
 	QVariantMap map;
 	map["name"]	= m_name;
 	map["host"] 	= m_host;
@@ -162,15 +163,15 @@ QByteArray PlayerConnection::toByteArray()
 	map["viewport"]	= m_viewportRect;
 	map["canvas"]	= m_canvasSize;
 	map["armode"]	= (int)m_aspectRatioMode;
-	
+
 	QVariantList views;
 	foreach(GLWidgetSubview *view, m_subviews )
 		views << view->toByteArray();
-	
+
 	map["views"] = views;
-	
+
 	stream << map;
-	
+
 	return array;
 }
 
@@ -179,10 +180,10 @@ void PlayerConnection::fromByteArray(QByteArray& array)
 	QDataStream stream(&array, QIODevice::ReadOnly);
 	QVariantMap map;
 	stream >> map;
-	
+
 	if(map.isEmpty())
 		return;
-	
+
 	m_name = map["name"].toString();
 	m_host = map["host"].toString();
 	m_user = map["user"].toString();
@@ -191,17 +192,17 @@ void PlayerConnection::fromByteArray(QByteArray& array)
 	m_viewportRect = map["viewport"].toRect();
 	m_canvasSize = map["canvas"].toSizeF();
 	m_aspectRatioMode = (Qt::AspectRatioMode)map["armode"].toInt();
-	
+
 	m_subviews.clear();
 	QVariantList views = map["views"].toList();
 	foreach(QVariant var, views)
 	{
 		QByteArray data = var.toByteArray();
-		
+
 		GLWidgetSubview *subview = new GLWidgetSubview();
 		subview->fromByteArray(data);
 		m_subviews << subview;
-		
+
 		connect(subview, SIGNAL(changed(GLWidgetSubview*)), this, SLOT(subviewChanged(GLWidgetSubview*)));
 	}
 }
@@ -212,8 +213,8 @@ void PlayerConnection::addSubview(GLWidgetSubview *sub)
 	m_subviews << sub;
 	connect(sub, SIGNAL(changed(GLWidgetSubview*)), this, SLOT(subviewChanged(GLWidgetSubview*)));
 	emit subviewAdded(sub);
-	
-	sendCommand(QVariantList() 
+
+	sendCommand(QVariantList()
 		<< "cmd" 	<< GLPlayer_AddSubview
 		<< "data"	<< sub->toByteArray());
 }
@@ -223,8 +224,8 @@ void PlayerConnection::removeSubview(GLWidgetSubview *sub)
 	emit subviewRemoved(sub);
 	disconnect(sub, 0, this, 0);
 	m_subviews.removeAll(sub);
-	
-	sendCommand(QVariantList() 
+
+	sendCommand(QVariantList()
 		<< "cmd" 	<< GLPlayer_RemoveSubview
 		<< "subviewid"	<< sub->subviewId());
 }
@@ -233,45 +234,45 @@ void PlayerConnection::connectPlayer()
 {
 	m_client = new GLPlayerClient();
 	m_client->connectTo(m_host,9977);
-	
+
 	connect(m_client, SIGNAL(socketConnected()), this, SLOT(clientConnected()));
 	connect(m_client, SIGNAL(receivedMap(QVariantMap)), this, SLOT(receivedMap(QVariantMap)));
 	connect(m_client, SIGNAL(socketDisconnected()), this, SLOT(clientDisconnected()));
 	connect(m_client, SIGNAL(socketError(QAbstractSocket::SocketError)), this, SLOT(socketError(QAbstractSocket::SocketError)));
-	
+
 	if(m_justTesting)
 	{
 		m_preconnectionCommandQueue.clear();
-		sendCommand(QVariantList() 
+		sendCommand(QVariantList()
 			<< "cmd" 	<< GLPlayer_Ping);
 	}
 	else
 	{
-		sendCommand(QVariantList() 
+		sendCommand(QVariantList()
 			<< "cmd" 	<< GLPlayer_Login
 			<< "user"	<< m_user
 			<< "pass"	<< m_pass);
-			
+
 		if(!m_subviews.isEmpty())
 		{
-			sendCommand(QVariantList() 
+			sendCommand(QVariantList()
 				<< "cmd" 	<< GLPlayer_ClearSubviews);
-				
+
 			foreach(GLWidgetSubview *sub, m_subviews)
 			{
-				sendCommand(QVariantList() 
+				sendCommand(QVariantList()
 					<< "cmd" 	<< GLPlayer_AddSubview
 					<< "data"	<< sub->toByteArray());
 			}
 		}
-		
+
 		setViewportRect(viewportRect());
 		setScreenRect(screenRect());
 		setCanvasSize(canvasSize());
 		setAspectRatioMode(aspectRatioMode());
-		
+
 		sendCommand(QVariantList() << "cmd" << GLPlayer_ListVideoInputs);
-		
+
 		setGroup(m_group, m_scene);
 	}
 }
@@ -279,11 +280,11 @@ void PlayerConnection::connectPlayer()
 void PlayerConnection::clientConnected()
 {
 	m_isConnected = true;
-	
+
 	if(!m_preconnectionCommandQueue.isEmpty())
 		foreach(QVariant var, m_preconnectionCommandQueue)
 			m_client->sendMap(var.toMap());
-		
+
 	if(!m_justTesting)
 		emit connected();
 }
@@ -298,7 +299,7 @@ void PlayerConnection::disconnectPlayer()
 	m_client->exit();
 	m_client->deleteLater();
 	m_client = 0;
-	
+
 	if(m_justTesting)
 	{
 		m_justTesting = false;
@@ -353,24 +354,24 @@ void PlayerConnection::testConnection()
 
 void PlayerConnection::setScreenRect(const QRect& rect)
 {
-	m_screenRect = rect;	
-	sendCommand(QVariantList() 
+	m_screenRect = rect;
+	sendCommand(QVariantList()
 		<< "cmd" 	<< GLPlayer_SetScreen
 		<< "rect"	<< QRectF(rect));
 }
 void PlayerConnection::setViewportRect(const QRect& rect)
 {
 	m_viewportRect = rect;
-	
-	sendCommand(QVariantList() 
+
+	sendCommand(QVariantList()
 		<< "cmd" 	<< GLPlayer_SetViewport
 		<< "viewport"	<< QRectF(rect));
 }
 void PlayerConnection::setCanvasSize(const QSizeF& size)
 {
 	m_canvasSize = size;
-	
-	sendCommand(QVariantList() 
+
+	sendCommand(QVariantList()
 		<< "cmd" 	<< GLPlayer_SetCanvasSize
 		<< "canvas"	<< size);
 }
@@ -378,8 +379,8 @@ void PlayerConnection::setCanvasSize(const QSizeF& size)
 void PlayerConnection::setAspectRatioMode(Qt::AspectRatioMode mode)
 {
 	m_aspectRatioMode = mode;
-	
-	sendCommand(QVariantList() 
+
+	sendCommand(QVariantList()
 		<< "cmd" 	<< GLPlayer_SetIgnoreAR
 		<< "flag"	<< (mode == Qt::IgnoreAspectRatio ? true : false));
 }
@@ -388,10 +389,10 @@ void PlayerConnection::setGroup(GLSceneGroup *group, GLScene *initialScene)
 {
 	if(!group)
 		return;
-		
+
 	m_group = group;
-	
-	sendCommand(QVariantList() 
+
+	sendCommand(QVariantList()
 		<< "cmd" 	<< GLPlayer_LoadSlideGroup
 		<< "data"	<< group->toByteArray());
 
@@ -403,35 +404,35 @@ void PlayerConnection::setScene(GLScene* scene) // must be part of 'group'
 {
 	if(!scene)
 		return;
-	
+
 	m_scene = scene;
-	
-	sendCommand(QVariantList() 
+
+	sendCommand(QVariantList()
 		<< "cmd" 	<< GLPlayer_SetSlide
-		<< "sceneid"	<< scene->sceneId());	
+		<< "sceneid"	<< scene->sceneId());
 }
 
 void PlayerConnection::setUserProperty(GLDrawable *gld, QVariant value, QString propertyName)
 {
 	if(!gld)
 		return;
-	
-	sendCommand(QVariantList() 
+
+	sendCommand(QVariantList()
 		<< "cmd" 	<< GLPlayer_SetUserProperty
 		<< "drawableid"	<< gld->id()
 		<< "name"	<< propertyName
-		<< "value"	<< value);	
+		<< "value"	<< value);
 }
 
 void PlayerConnection::setVisibility(GLDrawable *gld, bool isVisible)
 {
 	if(!gld)
 		return;
-	
-	sendCommand(QVariantList() 
+
+	sendCommand(QVariantList()
 		<< "cmd" 	<< GLPlayer_SetVisibility
 		<< "drawableid"	<< gld->id()
-		<< "value"	<< isVisible);	
+		<< "value"	<< isVisible);
 }
 
 
@@ -439,22 +440,22 @@ void PlayerConnection::setPlaylistPlaying(GLDrawable *gld, bool flag)
 {
 	if(!gld)
 		return;
-	
-	sendCommand(QVariantList() 
+
+	sendCommand(QVariantList()
 		<< "cmd" 	<< GLPlayer_SetPlaylistPlaying
 		<< "drawableid"	<< gld->id()
-		<< "flag"	<< flag);	
+		<< "flag"	<< flag);
 }
 
 void PlayerConnection::updatePlaylist(GLDrawable *gld)
 {
 	if(!gld)
 		return;
-	
-	sendCommand(QVariantList() 
+
+	sendCommand(QVariantList()
 		<< "cmd" 	<< GLPlayer_UpdatePlaylist
 		<< "drawableid"	<< gld->id()
-		<< "data"	<< gld->playlist()->toByteArray());	
+		<< "data"	<< gld->playlist()->toByteArray());
 }
 
 
@@ -462,44 +463,44 @@ void PlayerConnection::queryProperty(GLDrawable *gld, QString propertyName)
 {
 	if(!gld)
 		return;
-	
-	sendCommand(QVariantList() 
+
+	sendCommand(QVariantList()
 		<< "cmd" 	<< GLPlayer_QueryProperty
 		<< "drawableid"	<< gld->id()
-		<< "name"	<< propertyName);	
+		<< "name"	<< propertyName);
 }
 
 void PlayerConnection::fadeBlack(bool flag)
 {
-	sendCommand(QVariantList() 
+	sendCommand(QVariantList()
 		<< "cmd" 	<< GLPlayer_SetBlackout
-		<< "flag"	<< flag);	
+		<< "flag"	<< flag);
 }
-	
+
 void PlayerConnection::setCrossfadeSpeed(int ms)
 {
-	sendCommand(QVariantList() 
+	sendCommand(QVariantList()
 		<< "cmd" 	<< GLPlayer_SetCrossfadeSpeed
-		<< "ms"		<< ms);	
+		<< "ms"		<< ms);
 }
 
 /*signals:
 	void subviewAdded(GLWidgetSubview*);
 	void subviewRemoved(GLWidgetSubview*);
-	
+
 	void connected();
 	void disconnected();
-	
+
 	void playerError(const QString&);
-	
+
 	void propQueryResponse(GLDrawable *drawable, QString propertyName, const QVariant& value);*/
-	
+
 void PlayerConnection::subviewChanged(GLWidgetSubview *sub)
 {
 	//qDebug() << "PlayerConnection::subviewChanged: Sub changed: "<<sub<<", id:"<<sub->subviewId();
-	// The PlayerWindow class (the receiver) automatically removes the 
+	// The PlayerWindow class (the receiver) automatically removes the
 	// subview and re-adds it, so we just send the add command
-	sendCommand(QVariantList() 
+	sendCommand(QVariantList()
 		<< "cmd" 	<< GLPlayer_AddSubview
 		<< "data"	<< sub->toByteArray());
 }
@@ -508,25 +509,25 @@ void PlayerConnection::receivedMap(QVariantMap map)
 {
 	// TODO parse map response and emit signals based on contents
 	// right now, we handle:
-	// - login responses 
+	// - login responses
 	//	  if okay, emit connected, else emit playerError and close socket
 	//      - set m_playerVersion when we get it
 	// - property query responses
-	//	- emit propQueryResponse 
-	
+	//	- emit propQueryResponse
+
 	QString cmd = map["cmd"].toString();
-	
+
 	m_lastError = "";
-	
+
 	if(cmd == GLPlayer_Ping)
 	{
 		// parse login response
-		
+
 		m_playerVersion = map["version"].toString();
 		int inputs = map["inputs"].toInt();
 		QString str = QString("Player Version '%1' (%2 video inputs)").arg(m_playerVersion).arg(inputs);
 		emit pingResponseReceived(str);
-		
+
 		if(m_justTesting)
 			disconnectPlayer();
 	}
@@ -545,7 +546,7 @@ void PlayerConnection::receivedMap(QVariantMap map)
 			m_playerVersion = map["version"].toString();
 			emit loginSuccess();
 		}
-		
+
 	}
 	else
 	if(cmd == GLPlayer_QueryProperty)
@@ -565,7 +566,7 @@ void PlayerConnection::receivedMap(QVariantMap map)
 			QString name = map["cmd"].toString();
 			QVariant value = map["value"];
 			int id = map["drawableid"].toInt();
-			
+
 			GLDrawable *gld = m_scene->lookupDrawable(id);
 			if(!gld)
 			{
@@ -598,14 +599,14 @@ void PlayerConnection::receivedMap(QVariantMap map)
 			qDebug() << "PlayerConnection::receivedMap: [WARN] Received "<<cmd<<", but no active scene!";
 			return;
 		}
-		
+
 		GLDrawable *gld = m_scene->lookupDrawable(id);
 		if(!gld)
 		{
 			qDebug() << "PlayerConnection::receivedMap: [ERROR] Received "<<cmd<<" for drawable ID "<<id<<", but no such drawable exists on the current scene.";
 			return;
 		}
-		
+
 		if(cmd == GLPlayer_PlaylistTimeChanged)
 		{
 			emit playlistTimeChanged(gld, map["time"].toDouble());
@@ -619,10 +620,10 @@ void PlayerConnection::receivedMap(QVariantMap map)
 				qDebug() << "PlayerConnection::receivedMap: [WARN] Received "<<cmd<<" for playlist item ID "<<id<<" on drawable "<<(QObject*)gld<<", but no such item exists in the drawable's playlist.";
 				return;
 			}
-			 
+
 			emit currentPlaylistItemChanged(gld, item);
 		}
-	}	
+	}
 	else
 	if(map["status"].toString() == "error")
 	{
@@ -635,7 +636,7 @@ void PlayerConnection::receivedMap(QVariantMap map)
 			qDebug() << "PlayerConnection::receivedMap: [CONFIRMED] Player received command: "<<cmd;
 		}
 		else
-		{	
+		{
 			qDebug() << "PlayerConnection::receivedMap: [INFO] Command not handled: "<<cmd<<", map:"<<map;
 		}
 	}
@@ -645,7 +646,7 @@ QStringList PlayerConnection::videoInputs(bool *hasReceivedResponse)
 {
 	if(hasReceivedResponse)
 		*hasReceivedResponse = m_videoIputsReceived;
-	return m_videoInputs; 
+	return m_videoInputs;
 }
 
 void PlayerConnection::setError(const QString& error, const QString &cmd)
@@ -662,24 +663,24 @@ void PlayerConnection::sendCommand(QVariantList reply)
 	{
 		qDebug() << "PlayerConnection::sendCommand: [WARNING]: Odd number of elelements in reply: "<<reply;
 	}
-	
+
 	for(int i=0; i<reply.size(); i+=2)
 	{
 		if(i+1 >= reply.size())
 			continue;
-		
+
 		QString key = reply[i].toString();
 		QVariant value = reply[i+1];
-		
+
 		map[key] = value;
 	}
-	
-	
+
+
 	//qDebug() << "PlayerConnection::sendCommand: [DEBUG] map:"<<map;
-	
+
 	if(m_client && m_isConnected)
 		m_client->sendMap(map);
-	else 
+	else
 	{
 		// m_justTesting will go false after disconnected from test
 		if(!m_justTesting)
@@ -689,7 +690,7 @@ void PlayerConnection::sendCommand(QVariantList reply)
 
 
 
-	
+
 /*protected:
 	QString m_name;
 	QString m_host;
@@ -697,13 +698,13 @@ void PlayerConnection::sendCommand(QVariantList reply)
 	QString m_pass;
 	QRect m_screenRect;
 	QRect m_viewportRect;
-	
+
 	QString m_playerVersion;
-	
+
 	QList<GLWidgetSubview*> m_subviews;
-	
+
 	GLPlayerClient *m_client;*/
-	
+
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -714,7 +715,7 @@ PlayerConnectionList::~PlayerConnectionList()
 {
 	//disconnect(conn, 0, this, 0);
 }
-	
+
 int PlayerConnectionList::rowCount(const QModelIndex &/*parent*/) const
 {
 	return m_players.size();
@@ -724,10 +725,10 @@ QVariant PlayerConnectionList::data( const QModelIndex & index, int role ) const
 {
 	if (!index.isValid())
 		return QVariant();
-	
+
 	if (index.row() >= rowCount(QModelIndex()))
 		return QVariant();
-	
+
 	if (role == Qt::DisplayRole || Qt::EditRole == role)
 	{
 		PlayerConnection *d = m_players.at(index.row());
@@ -744,21 +745,21 @@ QVariant PlayerConnectionList::data( const QModelIndex & index, int role ) const
 }
 Qt::ItemFlags PlayerConnectionList::flags(const QModelIndex &index) const
 {
-	if (index.isValid())	
+	if (index.isValid())
 		return Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsEditable; //| Qt::ItemIsDragEnabled | Qt::ItemIsDropEnabled;
-	
+
 	return Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsDropEnabled ;
 }
 bool PlayerConnectionList::setData(const QModelIndex &index, const QVariant & value, int /*role*/)
 {
 	if (!index.isValid())
 		return false;
-	
+
 	if (index.row() >= rowCount(QModelIndex()))
 		return false;
-	
+
 	PlayerConnection *d = m_players.at(index.row());
-	qDebug() << "PlayerConnectionList::setData: "<<this<<" row:"<<index.row()<<", value:"<<value; 
+	qDebug() << "PlayerConnectionList::setData: "<<this<<" row:"<<index.row()<<", value:"<<value;
 	if(value.isValid() && !value.isNull())
 	{
 		d->setName(value.toString());
@@ -767,23 +768,23 @@ bool PlayerConnectionList::setData(const QModelIndex &index, const QVariant & va
 	}
 	return false;
 }
-	
+
 void PlayerConnectionList::addPlayer(PlayerConnection *player)
 {
 	if(!player)
 		return;
-	
+
 	m_players << player;
 	connect(player, SIGNAL(playerNameChanged(const QString&)), this, SLOT(playerNameChanged(const QString&)));
-	
+
 	beginInsertRows(QModelIndex(),m_players.size()-1,m_players.size());
-	
+
 	QModelIndex top    = createIndex(m_players.size()-2, 0),
 		    bottom = createIndex(m_players.size()-1, 0);
 	dataChanged(top,bottom);
-	
+
 	endInsertRows();
-	
+
 	emit playerAdded(player);
 }
 
@@ -791,17 +792,17 @@ void PlayerConnectionList::removePlayer(PlayerConnection *player)
 {
 	if(!player)
 		return;
-	
+
 	m_players.removeAll(player);
 	disconnect(player, 0, this, 0);
-	
+
 	beginRemoveRows(QModelIndex(),0,m_players.size()+1);
-	
+
 	int idx = m_players.indexOf(player);
 	QModelIndex top    = createIndex(idx, 0),
 		    bottom = createIndex(m_players.size(), 0);
 	dataChanged(top,bottom);
-	
+
 	endRemoveRows();
 
 	emit playerRemoved(player);
@@ -813,15 +814,15 @@ void PlayerConnectionList::playerNameChanged(const QString&)
 	PlayerConnection *player = dynamic_cast<PlayerConnection *>(player);
 	if(!player)
 		return;
-	
+
 	int row = m_players.indexOf(player);
 	if(row < 0)
 		return;
-	
+
 	QModelIndex idx = createIndex(row, row);
 	dataChanged(idx, idx);
 }
-	
+
 
 QByteArray PlayerConnectionList::toByteArray()
 {
@@ -831,12 +832,12 @@ QByteArray PlayerConnectionList::toByteArray()
 	QVariantList players;
 	foreach(PlayerConnection *player, m_players)
 		players << player->toByteArray();
-	
+
 	QVariantMap map;
 	map["players"] = players;
-	
+
 	stream << map;
-	
+
 	return array;
 }
 
@@ -845,10 +846,10 @@ void PlayerConnectionList::fromByteArray(QByteArray array)
 	QDataStream stream(&array, QIODevice::ReadOnly);
 	QVariantMap map;
 	stream >> map;
-	
+
 	if(map.isEmpty())
 		return;
-	
+
 	m_players.clear();
 	QVariantList views = map["players"].toList();
 	foreach(QVariant var, views)

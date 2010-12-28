@@ -335,7 +335,7 @@
   <customwidget>
    <class>EditorGraphicsView</class>
    <extends>QGraphicsView</extends>
-   <header>EditorGraphicsView.h</header>
+   <header>../EditorGraphicsView.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

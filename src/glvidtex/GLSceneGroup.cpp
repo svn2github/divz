@@ -20,7 +20,7 @@ GLSceneLayoutItem::GLSceneLayoutItem(int id, const QVariantMap& props)
 }
 GLSceneLayoutItem::GLSceneLayoutItem(GLDrawable *drawable, const QVariantMap& props)
 	: m_drawableId(drawable ? drawable->id() : -1)
-	, m_props(props) 
+	, m_props(props)
 {
 }
 GLSceneLayoutItem::GLSceneLayoutItem(QByteArray& ba)
@@ -32,18 +32,18 @@ GLSceneLayoutItem::GLSceneLayoutItem(QByteArray& ba)
 GLSceneLayoutItem::~GLSceneLayoutItem()
 {
 }
-	
+
 QByteArray GLSceneLayoutItem::toByteArray()
 {
 	QByteArray array;
 	QDataStream stream(&array, QIODevice::WriteOnly);
-	
+
 	QVariantMap map;
 	map["drawableId"]	= m_drawableId;
 	map["props"] 		= m_props;
-	
+
 	stream << map;
-	
+
 	return array;
 }
 
@@ -52,14 +52,14 @@ void GLSceneLayoutItem::fromByteArray(QByteArray& array)
 	QDataStream stream(&array, QIODevice::ReadOnly);
 	QVariantMap map;
 	stream >> map;
-	
+
 	if(map.isEmpty())
 		return;
-	
+
 	m_drawableId	= map["drawableId"].toInt();
 	m_props		= map["props"].toMap();
 }
-	
+
 void GLSceneLayoutItem::setDrawable(GLDrawable* d)
 {
 	setDrawableId(d ? d->id() : -1);
@@ -74,7 +74,7 @@ void GLSceneLayoutItem::setPropertyHash(const QVariantMap& props)
 {
 	m_props = props;
 }
-	
+
 
 // ****************************
 // GLSceneLayoutItem
@@ -94,31 +94,31 @@ GLSceneLayout::GLSceneLayout(QByteArray& ba, GLScene* s)
 GLSceneLayout::~GLSceneLayout()
 {
 }
-	
+
 QByteArray GLSceneLayout::toByteArray()
 {
 	QByteArray array;
 	QDataStream stream(&array, QIODevice::WriteOnly);
-	
+
 	QVariantMap map;
 	map["layoutId"]		= layoutId();
 	map["layoutName"] 	= m_layoutName;
-	
+
 	QByteArray bytes;
 	QBuffer buffer(&bytes);
 	buffer.open(QIODevice::WriteOnly);
 	m_pixmap.save(&buffer, "PNG"); // writes pixmap into bytes in PNG format
 	buffer.close();
 	map["pixmap"] = bytes;
-	
+
 	QVariantList items;
 	foreach(GLSceneLayoutItem *item, m_items)
 		items << item->toByteArray();
-	
+
 	map["items"] = items;
-	
+
 	stream << map;
-	
+
 	return array;
 }
 
@@ -127,20 +127,20 @@ void GLSceneLayout::fromByteArray(QByteArray& array)
 	QDataStream stream(&array, QIODevice::ReadOnly);
 	QVariantMap map;
 	stream >> map;
-	
+
 	if(map.isEmpty())
 		return;
-	
+
 	m_layoutId	= map["layoutId"].toInt();
 	m_layoutName	= map["layoutName"].toString();
-	
+
 	QByteArray bytes = map["pixmap"].toByteArray();
 	QImage image;
 	image.loadFromData(bytes);
 	//qDebug() << "GLSceneLayout::fromByteArray(): image size:"<<image.size()<<", isnull:"<<image.isNull();
-	
+
 	m_pixmap = QPixmap::fromImage(image);
-	
+
 	m_items.clear();
 	QVariantList items = map["items"].toList();
 	foreach(QVariant var, items)
@@ -149,7 +149,7 @@ void GLSceneLayout::fromByteArray(QByteArray& array)
 		m_items << new GLSceneLayoutItem(data);
 	}
 }
-	
+
 void GLSceneLayout::setLayoutName(const QString& name)
 {
 	m_layoutName = name;
@@ -184,7 +184,7 @@ GLSceneLayoutListModel::GLSceneLayoutListModel(GLScene *scene)
 	connect(m_scene, SIGNAL(layoutRemoved(GLSceneLayout*)), this, SLOT(layoutRemoved(GLSceneLayout*)));
 }
 
-GLSceneLayoutListModel::~GLSceneLayoutListModel() 
+GLSceneLayoutListModel::~GLSceneLayoutListModel()
 {
 
 }
@@ -203,8 +203,8 @@ void GLSceneLayoutListModel::layoutRemoved(GLSceneLayout *lay)
 	QModelIndex top    = createIndex(idx, 0),
 		    bottom = createIndex(m_scene->m_layouts.size(), 0);
 	dataChanged(top,bottom);
-}	
-	
+}
+
 int GLSceneLayoutListModel::rowCount(const QModelIndex &/*parent*/) const
 {
 	return m_scene->m_layouts.size();
@@ -214,10 +214,10 @@ QVariant GLSceneLayoutListModel::data( const QModelIndex & index, int role) cons
 {
 	if (!index.isValid())
 		return QVariant();
-	
+
 	if (index.row() >= rowCount(QModelIndex()))
 		return QVariant();
-	
+
 	if (role == Qt::DisplayRole || Qt::EditRole == role)
 	{
 		GLSceneLayout *d = m_scene->m_layouts.at(index.row());
@@ -245,7 +245,7 @@ GLScene::GLScene(QObject *parent)
 	, m_layoutListModel(0)
 	, m_graphicsScene(0)
 {
-	
+
 }
 
 GLScene::GLScene(QByteArray& ba, QObject *parent)
@@ -267,7 +267,7 @@ GLSceneLayoutListModel *GLScene::layoutListModel()
 		m_layoutListModel = new GLSceneLayoutListModel(this);
 	return m_layoutListModel;
 }
-	
+
 int GLScene::sceneId()
 {
 	if(m_sceneId<0)
@@ -283,25 +283,25 @@ QByteArray GLScene::toByteArray()
 {
 	QByteArray array;
 	QDataStream stream(&array, QIODevice::WriteOnly);
-	
+
 	QVariantMap map;
 	map["sceneId"]		= sceneId();
 	map["sceneName"] 	= m_sceneName;
-	
+
 	QByteArray bytes;
 	QBuffer buffer(&bytes);
 	buffer.open(QIODevice::WriteOnly);
 	m_pixmap.save(&buffer, "PNG"); // writes pixmap into bytes in PNG format
 	buffer.close();
 	map["pixmap"] = bytes;
-	
-	
+
+
 	QVariantList layouts;
 	foreach(GLSceneLayout *layout, m_layouts)
 		layouts << layout->toByteArray();
-	
+
 	map["layouts"] = layouts;
-	
+
 	QVariantList drawables;
 	foreach(GLDrawable *d, m_itemList)
 	{
@@ -310,11 +310,11 @@ QByteArray GLScene::toByteArray()
 		drawableData["bytes"] = d->toByteArray();
 		drawables << drawableData;
 	}
-	
+
 	map["drawables"] = drawables;
-	
+
 	stream << map;
-	
+
 	return array;
 }
 
@@ -323,18 +323,18 @@ void GLScene::fromByteArray(QByteArray& array)
 	QDataStream stream(&array, QIODevice::ReadOnly);
 	QVariantMap map;
 	stream >> map;
-	
+
 	if(map.isEmpty())
 		return;
-	
+
 	m_sceneId	= map["sceneId"].toInt();
 	m_sceneName	= map["sceneName"].toString();
-	
+
 	QByteArray bytes = map["pixmap"].toByteArray();
 	QImage image;
 	image.loadFromData(bytes);
 	m_pixmap = QPixmap::fromImage(image);
-	
+
 	m_layouts.clear();
 	QVariantList layouts = map["layouts"].toList();
 	foreach(QVariant var, layouts)
@@ -342,7 +342,7 @@ void GLScene::fromByteArray(QByteArray& array)
 		QByteArray data = var.toByteArray();
 		addLayout(new GLSceneLayout(data, this));
 	}
-		
+
 	m_itemList.clear();
 	QVariantList drawables = map["drawables"].toList();
 	foreach(QVariant var, drawables)
@@ -355,9 +355,9 @@ void GLScene::fromByteArray(QByteArray& array)
 // 			qDebug() << "Error: GLScene::fromByteArray(): Unable to create drawable of type:"<<className;
 // 			continue;
 // 		}
-// 		
+//
 // 		//qDebug() << "LiveScene::fromByteArray(): Debug: metaObject classname: "<<metaObject->className()<<", asked for:"<<className;
-// 		
+//
 // 		QObject *instance = metaObject->newInstance(Q_ARG(QObject*,0));
 // 		if(!instance)
 // 		{
@@ -366,9 +366,9 @@ void GLScene::fromByteArray(QByteArray& array)
 // 		}
 
 		GLDrawable *drawable = 0;
-		
+
 		#define IF_CLASS(x) if(className == #x) { drawable = new x(); }
-		
+
 		IF_CLASS(GLImageDrawable);
 		IF_CLASS(GLTextDrawable);
 		IF_CLASS(GLVideoFileDrawable);
@@ -377,10 +377,10 @@ void GLScene::fromByteArray(QByteArray& array)
 		IF_CLASS(GLVideoReceiverDrawable);
 		IF_CLASS(GLVideoMjpegDrawable);
 		IF_CLASS(GLSvgDrawable);
-		
+
 		#undef IF_CLASS
-		
-		
+
+
 		//GLDrawable *drawable = dynamic_cast<GLDrawable*>(instance);
 		if(!drawable)
 		{
@@ -388,10 +388,10 @@ void GLScene::fromByteArray(QByteArray& array)
  			qDebug() << "Error: GLScene::fromByteArray(): Creation of "<<className<<" failed.";
 			continue;
 		}
-		
+
 		QByteArray bytes = meta["bytes"].toByteArray();
 		drawable->fromByteArray(bytes);
-		
+
 		addDrawable(drawable);
 	}
 }
@@ -399,7 +399,7 @@ void GLScene::fromByteArray(QByteArray& array)
 void GLScene::setListOnlyUserItems(bool flag)
 {
 	m_listOnlyUserItems = flag;
-	
+
 	if(flag)
 	{
 		m_userItemList.clear();
@@ -407,12 +407,12 @@ void GLScene::setListOnlyUserItems(bool flag)
 			if(d->isUserControllable())
 				m_userItemList.append(d);
 	}
-	
+
 	// Notify QListViews of change in data
 	QModelIndex top    = createIndex(0, 0),
 		    bottom = createIndex(m_itemList.size() > m_userItemList.size() ? m_itemList.size() : m_userItemList.size(), 0);
 	dataChanged(top,bottom);
-	
+
 	//qDebug() << "GLScene::setListOnlyUserItems: "<<m_listOnlyUserItems;
 }
 
@@ -420,7 +420,7 @@ int GLScene::rowCount(const QModelIndex &/*parent*/) const
 {
 	return size();
 }
- 
+
 int GLScene::size() const
 {
 	if(m_listOnlyUserItems)
@@ -433,15 +433,15 @@ GLDrawable * GLScene::at(int idx)
 {
 	if(idx<0 || idx >= size())
 		return 0;
-	
+
 	GLDrawable *gld = 0;
 	if(m_listOnlyUserItems)
 		gld = m_userItemList.at(idx);
 	else
 		gld = m_itemList.at(idx);
-	
+
 	//qDebug() << "GLScene::at: m_listOnlyUserItems:"<<m_listOnlyUserItems<<", idx:"<<idx<<", gld:"<<(QObject*)gld;
-	
+
 	return gld;
 }
 
@@ -449,10 +449,10 @@ QVariant GLScene::data( const QModelIndex & index, int role ) const
 {
 	if (!index.isValid())
 		return QVariant();
-	
+
 	if (index.row() >= rowCount(QModelIndex()))
 		return QVariant();
-	
+
 	if (role == Qt::DisplayRole || Qt::EditRole == role)
 	{
 		GLDrawable *d = m_listOnlyUserItems ? m_userItemList.at(index.row()) : m_itemList.at(index.row());
@@ -471,15 +471,15 @@ void GLScene::addDrawable(GLDrawable *d)
 {
 	if(!d)
 		return;
-	
-	beginInsertRows(QModelIndex(),m_itemList.size()-1,m_itemList.size());
 
 	m_itemList << d;
 	m_drawableIdLookup[d->id()] = d;
 	emit drawableAdded(d);
-	
+
 	connect(d, SIGNAL(destroyed()), this, SLOT(drawableDestroyed()));
-	
+
+	beginInsertRows(QModelIndex(),m_itemList.size()-1,m_itemList.size());
+
 	// Notify QListViews of change in data
 	QModelIndex top    = createIndex(m_itemList.size()-2, 0),
 		    bottom = createIndex(m_itemList.size()-1, 0);
@@ -487,9 +487,9 @@ void GLScene::addDrawable(GLDrawable *d)
 
 	if(m_glWidget)
 		m_glWidget->addDrawable(d);
-	
+
 	graphicsScene()->addItem(d);
-		
+
 	endInsertRows();
 }
 
@@ -504,15 +504,15 @@ void GLScene::removeDrawable(GLDrawable *d)
 {
 	if(!d)
 		return;
-	
+
 	beginRemoveRows(QModelIndex(),0,m_itemList.size()+1);
-	
+
 	int idx = m_itemList.indexOf(d);
 
 	emit drawableRemoved(d);
 	m_itemList.removeAll(d);
 	m_drawableIdLookup.remove(d->id());
-	
+
 	// Notify QListViews of change in data
 	QModelIndex top    = createIndex(idx, 0),
 		    bottom = createIndex(m_itemList.size(), 0);
@@ -520,9 +520,9 @@ void GLScene::removeDrawable(GLDrawable *d)
 
 	if(m_glWidget)
 		m_glWidget->removeDrawable(d);
-		
+
 	graphicsScene()->removeItem(d);
-	
+
 	endRemoveRows();
 }
 
@@ -546,9 +546,9 @@ void GLScene::setGLWidget(GLWidget *glw, int /*zIndexOffset*/)
 {
 	if(m_glWidget)
 		detachGLWidget();
-		
+
 	m_glWidget = glw;
-	
+
 	foreach(GLDrawable *d, m_itemList)
 		m_glWidget->addDrawable(d);
 }
@@ -557,10 +557,10 @@ void GLScene::detachGLWidget()
 {
 	if(!m_glWidget)
 		return;
-		
+
 	foreach(GLDrawable *d, m_itemList)
 		m_glWidget->removeDrawable(d);
-	
+
 	m_glWidget = 0;
 }
 
@@ -600,23 +600,23 @@ void GLScene::setPixmap(const QPixmap& pixmap)
 	emit pixmapChanged(pixmap);
 }
 
-	
+
 /*signals:
 	void drawableAdded(GLDrawable*);
 	void drawableRemoved(GLDrawable*);
 	void layoutAdded(GLSceneLayout*);
 	void layoutRemoved(GLSceneLayout*);*/
-/*	
+/*
 protected:
 	int m_sceneId;
 	QString m_sceneName;
-	
+
 	GLDrawableList m_itemList;
 	QHash<int,GLDrawable*> m_drawableIdLookup;
-	
+
 	QList<GLSceneLayout*> m_layouts;
 	QHash<int,GLSceneLayout*> m_layoutIdLookup;
-		
+
 	GLWidget *m_widget;*/
 
 
@@ -640,7 +640,7 @@ GLSceneGroup::GLSceneGroup(QByteArray& ba, QObject *parent)
 GLSceneGroup::~GLSceneGroup()
 {
 }
-	
+
 int GLSceneGroup::groupId()
 {
 	if(m_groupId<0)
@@ -656,27 +656,27 @@ QByteArray GLSceneGroup::toByteArray()
 {
 	QByteArray array;
 	QDataStream stream(&array, QIODevice::WriteOnly);
-	
+
 	QVariantMap map;
 	map["groupId"]		= groupId();
 	map["groupName"] 	= m_groupName;
-	
+
 	QByteArray bytes;
 	QBuffer buffer(&bytes);
 	buffer.open(QIODevice::WriteOnly);
 	m_pixmap.save(&buffer, "PNG"); // writes pixmap into bytes in PNG format
 	buffer.close();
 	map["pixmap"] = bytes;
-	
-	
+
+
 	QVariantList scenes;
 	foreach(GLScene *scene, m_scenes)
 		scenes << scene->toByteArray();
-	
+
 	map["scenes"] = scenes;
-	
+
 	stream << map;
-	
+
 	return array;
 }
 
@@ -685,18 +685,18 @@ void GLSceneGroup::fromByteArray(QByteArray& array)
 	QDataStream stream(&array, QIODevice::ReadOnly);
 	QVariantMap map;
 	stream >> map;
-	
+
 	if(map.isEmpty())
 		return;
-	
+
 	m_groupId	= map["groupId"].toInt();
 	m_groupName	= map["groupName"].toString();
-		
+
 	QByteArray bytes = map["pixmap"].toByteArray();
 	QImage image;
 	image.loadFromData(bytes);
 	m_pixmap = QPixmap::fromImage(image);
-	
+
 	m_scenes.clear();
 	QVariantList scenes = map["scenes"].toList();
 	foreach(QVariant var, scenes)
@@ -707,7 +707,7 @@ void GLSceneGroup::fromByteArray(QByteArray& array)
 		m_sceneIdLookup[scene->sceneId()] = scene;
 	}
 }
-	
+
 
 int GLSceneGroup::rowCount(const QModelIndex &/*parent*/) const
 {
@@ -721,10 +721,10 @@ QVariant GLSceneGroup::data( const QModelIndex & index, int role) const
 	//qDebug() << "GLSceneGroup::data: index:"<<index;
 	if (!index.isValid())
 		return QVariant();
-	
+
 	if (index.row() >= rowCount(QModelIndex()))
 		return QVariant();
-	
+
 	if (role == Qt::DisplayRole || Qt::EditRole == role)
 	{
 		GLScene *d = m_scenes.at(index.row());
@@ -743,22 +743,22 @@ QVariant GLSceneGroup::data( const QModelIndex & index, int role) const
 
 Qt::ItemFlags GLSceneGroup::flags(const QModelIndex &index) const
 {
-	if (index.isValid())	
+	if (index.isValid())
 		return Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsEditable; //| Qt::ItemIsDragEnabled | Qt::ItemIsDropEnabled;
-	
+
 	return Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsDropEnabled ;
 }
 
-bool GLSceneGroup::setData(const QModelIndex &index, const QVariant & value, int /*role*/) 
+bool GLSceneGroup::setData(const QModelIndex &index, const QVariant & value, int /*role*/)
 {
 	if (!index.isValid())
 		return false;
-	
+
 	if (index.row() >= rowCount(QModelIndex()))
 		return false;
-	
+
 	GLScene *d = m_scenes.at(index.row());
-	qDebug() << "GLSceneGroup::setData: "<<this<<" row:"<<index.row()<<", value:"<<value; 
+	qDebug() << "GLSceneGroup::setData: "<<this<<" row:"<<index.row()<<", value:"<<value;
 	if(value.isValid() && !value.isNull())
 	{
 		d->setSceneName(value.toString());
@@ -777,17 +777,17 @@ void GLSceneGroup::addScene(GLScene* s)
 {
 	if(!s)
 		return;
-	
-	beginInsertRows(QModelIndex(),m_scenes.size()-1,m_scenes.size());
-	
+
 	m_scenes << s;
 	m_sceneIdLookup[s->sceneId()] = s;
 	connect(s, SIGNAL(sceneNameChanged(const QString&)), this, SLOT(sceneChanged()));
 	connect(s, SIGNAL(pixmapChanged(const QPixmap&)), this, SLOT(sceneChanged()));
-	
+
 	emit sceneAdded(s);
 	//qDebug() << "GLSceneGroup::addScene: "<<this<<" scene:"<<s<<", m_scenes.size():"<<m_scenes.size()<<", rowCount:"<<rowCount(QModelIndex());
-	
+
+	beginInsertRows(QModelIndex(),m_scenes.size()-1,m_scenes.size());
+
 	// Notify QListViews of change in data
 	QModelIndex top    = createIndex(m_scenes.size()-2, 0),
 		    bottom = createIndex(m_scenes.size()-1, 0);
@@ -799,16 +799,16 @@ void GLSceneGroup::removeScene(GLScene* s)
 {
 	if(!s)
 		return;
-	
+
 	beginRemoveRows(QModelIndex(),0,m_scenes.size()+1);
 	int idx = m_scenes.indexOf(s);
 
 	emit sceneRemoved(s);
-	
+
 	disconnect(s, 0, this, 0);
 	m_scenes.removeAll(s);
 	m_sceneIdLookup.remove(s->sceneId());
-	
+
 	// Notify QListViews of change in data
 	QModelIndex top    = createIndex(idx, 0),
 		    bottom = createIndex(m_scenes.size(), 0);
@@ -821,7 +821,7 @@ void GLSceneGroup::sceneChanged()
 	GLScene *scene = dynamic_cast<GLScene*>(sender());
 	if(!scene)
 		return;
-	int row = m_scenes.indexOf(scene); 
+	int row = m_scenes.indexOf(scene);
 	// Notify QListViews of change in data
 	QModelIndex idx = createIndex(row, 0);
 	dataChanged(idx, idx);
@@ -831,9 +831,9 @@ GLScene * GLSceneGroup::lookupScene(int id)
 {
 	return m_sceneIdLookup[id];
 }
-	
-// Overlay scene, by definition, is a general scene that is to be overlayed on the content of 
-// the other scenes in the list. 
+
+// Overlay scene, by definition, is a general scene that is to be overlayed on the content of
+// the other scenes in the list.
 void GLSceneGroup::setOverlayScene(GLScene* s)
 {
 	m_overlayScene = s;
@@ -854,14 +854,14 @@ void GLSceneGroup::setPixmap(const QPixmap& pixmap)
 }
 
 
-	
+
 // protected:
 // 	int m_groupId;
 // 	QString m_groupName;
-// 	
+//
 // 	QList<GLScene*> m_scenes;
 // 	QHash<int,GLScene*> m_sceneIdLookup;
-// 
+//
 // 	GLScene *m_overlayScene;
 
 
@@ -894,7 +894,7 @@ GLSceneGroupCollection::GLSceneGroupCollection(const QString& file, QObject *par
 GLSceneGroupCollection::~GLSceneGroupCollection()
 {
 }
-	
+
 int GLSceneGroupCollection::collectionId()
 {
 	if(m_collectionId<0)
@@ -910,23 +910,23 @@ QByteArray GLSceneGroupCollection::toByteArray()
 {
 	QByteArray array;
 	QDataStream stream(&array, QIODevice::WriteOnly);
-	
+
 	QVariantMap map;
 	map["collectionId"]	= collectionId();
 	map["collectionName"] 	= m_collectionName;
 	map["canvasSize"] 	= m_canvasSize;
-	
+
 	QVariantList groups;
 	foreach(GLSceneGroup *group, m_groups)
 		groups << group->toByteArray();
-	
+
 	map["groups"] = groups;
-	
+
 	//qDebug() << "GLSceneGroupCollection::toByteArray(): Saved "<<groups.size()<<" groups";
-	
-	
+
+
 	stream << map;
-	
+
 	return array;
 }
 
@@ -935,52 +935,52 @@ void GLSceneGroupCollection::fromByteArray(QByteArray& array)
 	QDataStream stream(&array, QIODevice::ReadOnly);
 	QVariantMap map;
 	stream >> map;
-	
+
 	if(map.isEmpty())
 	{
 		qDebug() << "GLSceneGroupCollection::fromByteArray(): [WARN] Unable to read collection from byte array because map is empty.";
 		return;
 	}
-	
+
 	m_collectionId		= map["collectionId"].toInt();
 	m_collectionName	= map["collectionName"].toString();
 	m_canvasSize 		= map["canvasSize"].toSizeF();
-	
+
 	if(m_canvasSize.isEmpty())
 		m_canvasSize = QSizeF(1000.,750.);
-	
+
 	m_groups.clear();
 	QVariantList groups = map["groups"].toList();
-	
+
 	//qDebug() << "GLSceneGroupCollection::fromByteArray(): Loaded "<<groups.size()<<" groups";
-	
+
 	foreach(QVariant var, groups)
 	{
 		QByteArray data = var.toByteArray();
 		m_groups << new GLSceneGroup(data, this);
 	}
 }
-	
+
 bool GLSceneGroupCollection::writeFile(const QString& name)
 {
 	if(name.isEmpty() && m_fileName.isEmpty())
 		return false;
-	
+
 	QString fileName = name.isEmpty() ? m_fileName : name;
 	m_fileName = fileName;
-	
+
 	QFile file(fileName);
 	// Open file
 	if (!file.open(QIODevice::WriteOnly))
 	{
-		qDebug() << "GLSceneGroupCollection::writeFile: Unable to open "<<fileName<<" for writing."; 
+		qDebug() << "GLSceneGroupCollection::writeFile: Unable to open "<<fileName<<" for writing.";
 		return false;
 	}
 	else
 	{
 		file.write(toByteArray());
 		file.close();
-		
+
 		//qDebug() << "Debug: Saved SceneID: "<< scene->sceneId();
 	}
 	return true;
@@ -990,7 +990,7 @@ bool GLSceneGroupCollection::readFile(const QString& name)
 {
 	m_fileName = name;
 	QFile file(name);
-	if (!file.open(QIODevice::ReadOnly)) 
+	if (!file.open(QIODevice::ReadOnly))
 	{
 		qDebug() << "GLSceneGroupCollection::writeFile: Unable to open "<<name<<" for writing.";
 		return false;
@@ -999,7 +999,7 @@ bool GLSceneGroupCollection::readFile(const QString& name)
 	{
 		QByteArray array = file.readAll();
 		fromByteArray(array);
-		
+
 		//qDebug() << "Debug: Loaded SceneID: "<< scene->sceneId();
 	}
 	return true;
@@ -1007,22 +1007,22 @@ bool GLSceneGroupCollection::readFile(const QString& name)
 
 Qt::ItemFlags GLSceneGroupCollection::flags(const QModelIndex &index) const
 {
-	if (index.isValid())	
+	if (index.isValid())
 		return Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsEditable; //| Qt::ItemIsDragEnabled | Qt::ItemIsDropEnabled;
-	
+
 	return Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsDropEnabled ;
 }
 
-bool GLSceneGroupCollection::setData(const QModelIndex &index, const QVariant & value, int /*role*/) 
+bool GLSceneGroupCollection::setData(const QModelIndex &index, const QVariant & value, int /*role*/)
 {
 	if (!index.isValid())
 		return false;
-	
+
 	if (index.row() >= rowCount(QModelIndex()))
 		return false;
-	
+
 	GLSceneGroup *d = m_groups.at(index.row());
-	qDebug() << "GLSceneGroupCollection::setData: "<<this<<" row:"<<index.row()<<", value:"<<value; 
+	qDebug() << "GLSceneGroupCollection::setData: "<<this<<" row:"<<index.row()<<", value:"<<value;
 	if(value.isValid() && !value.isNull())
 	{
 		d->setGroupName(value.toString());
@@ -1032,21 +1032,21 @@ bool GLSceneGroupCollection::setData(const QModelIndex &index, const QVariant & 
 	return false;
 }
 
-	
+
 QVariant GLSceneGroupCollection::data( const QModelIndex & index, int role ) const
 {
 	if (!index.isValid())
 		return QVariant();
-	
+
 	if (index.row() >= rowCount(QModelIndex()))
 		return QVariant();
-	
+
 	if (role == Qt::DisplayRole || Qt::EditRole == role)
 	{
 		GLSceneGroup *d = m_groups.at(index.row());
 		QString value = d->groupName().isEmpty() ? QString("Group %1").arg(index.row()+1) : d->groupName();
-		return value; 
-		
+		return value;
+
 	}
 	else if(Qt::DecorationRole == role)
 	{
@@ -1065,24 +1065,24 @@ void GLSceneGroupCollection::addGroup(GLSceneGroup* s)
 {
 	if(!s)
 		return;
-	
-	// Notify list view of intent to change list sizes
-	beginInsertRows(QModelIndex(),m_groups.size()-1,m_groups.size());
-	
+
 	// Effect appending
 	m_groups << s;
 	m_groupIdLookup[s->groupId()] = s;
-	
+
 	connect(s, SIGNAL(groupNameChanged(const QString&)), this, SLOT(groupChanged()));
 	connect(s, SIGNAL(pixmapChanged(const QPixmap&)), this, SLOT(groupChanged()));
-	
+
 	emit groupAdded(s);
-	
+
+	// Notify list view of intent to change list sizes
+	beginInsertRows(QModelIndex(),m_groups.size()-1,m_groups.size());
+
 	// Notify QListViews of change in data
 	QModelIndex top    = createIndex(m_groups.size()-2, 0),
 		    bottom = createIndex(m_groups.size()-1, 0);
 	dataChanged(top,bottom);
-	
+
 	endInsertRows();
 }
 
@@ -1090,7 +1090,7 @@ void GLSceneGroupCollection::removeGroup(GLSceneGroup* s)
 {
 	if(!s)
 		return;
-	
+
 	// Notify list view of intent to change list size
 	beginRemoveRows(QModelIndex(),0,m_groups.size()+1);
 
@@ -1101,12 +1101,12 @@ void GLSceneGroupCollection::removeGroup(GLSceneGroup* s)
 	disconnect(s, 0, this, 0);
 	m_groups.removeAll(s);
 	m_groupIdLookup.remove(s->groupId());
-	
+
 	// Notify QListViews of change in data
 	QModelIndex top    = createIndex(idx, 0),
 		    bottom = createIndex(m_groups.size(), 0);
 	dataChanged(top,bottom);
-	
+
 	endRemoveRows();
 }
 
@@ -1134,7 +1134,7 @@ void GLSceneGroupCollection::groupChanged()
 	GLSceneGroup *scene = dynamic_cast<GLSceneGroup*>(sender());
 	if(!scene)
 		return;
-	int row = m_groups.indexOf(scene); 
+	int row = m_groups.indexOf(scene);
 	// Notify QListViews of change in data
 	QModelIndex idx = createIndex(row, 0);
 	dataChanged(idx, idx);

@@ -58,27 +58,27 @@ GLDrawable::GLDrawable(QObject *parent)
 // 		// allow some items (eg. the shape controls for text) to be shown
  		setFlag(QGraphicsItem::ItemClipsChildrenToShape, false);
 		setAcceptHoverEvents(true);
-	
+
 		bool noRescale=false;
-		
+
 		// create child controls
 		createCorner(CornerItem::TopLeftCorner, noRescale);
 		createCorner(CornerItem::TopRightCorner, noRescale);
 		createCorner(CornerItem::BottomLeftCorner, noRescale);
 		createCorner(CornerItem::BottomRightCorner, noRescale);
-		
+
 		// create midpoint handles
 		createCorner(CornerItem::MidTop, noRescale);
 		createCorner(CornerItem::MidLeft, noRescale);
 		createCorner(CornerItem::MidRight, noRescale);
 		createCorner(CornerItem::MidBottom, noRescale);
-		
+
 		//setControlsVisible(false);
 		editingModeChanged(false);
 	}
-	
+
 	updateAnimValues();
-	
+
 	m_playlist = new GLDrawablePlaylist(this);
 }
 
@@ -95,14 +95,14 @@ void GLDrawable::editingModeChanged(bool flag)
 		setFlag(QGraphicsItem::ItemIsMovable, true);
 		setFlag(QGraphicsItem::ItemIsSelectable, true);
 	}
-	
+
 	updateGL();
 }
 
 void GLDrawable::updateAnimValues()
 {
 	resetAllAnimations();
-	
+
 	if(m_fadeIn)
 		addShowAnimation(GLDrawable::AnimFade,m_fadeInLength);
 
@@ -142,7 +142,7 @@ int GLDrawable::id()
 		m_id = set.value("gldrawable/id-counter",0).toInt() + 1;
 		set.setValue("gldrawable/id-counter",m_id);
 	}
-	
+
 	return m_id;
 }
 
@@ -191,19 +191,19 @@ void GLDrawable::setVisible(bool flag)
 {
 	//qDebug() << "QGraphicsItem::setVisible: "<<flag;
 	QGraphicsItem::setVisible(flag);
-	
+
 	if(m_lockVisibleSetter)
 		return;
 	m_lockVisibleSetter = true;
-	
-	//if(m_animFinished && 
+
+	//if(m_animFinished &&
 	if(m_isVisible == flag)
 	{
 		m_lockVisibleSetter = false;
 		emit isVisible(flag);
 		return;
 	}
-		
+
 	//qDebug() << "GLDrawable::setVisible(): "<<this<<": Flag:"<<flag;
 	if(flag)
 		emit isVisible(flag);
@@ -219,7 +219,7 @@ void GLDrawable::setVisible(bool flag)
 		if(!flag)
 			emit isVisible(flag);
 	}
-	
+
 	m_lockVisibleSetter = false;
 
 }
@@ -247,9 +247,9 @@ void GLDrawable::startAnimations()
 		m_animPendingGlWidget = true;
 		return;
 	}
-	
+
 	//qDebug() << "GLDrawable::startAnimations(): "<<this<<": At start, rect:"<<rect()<<", opacity:"<<opacity();
-	
+
 	if(m_animDirection)
 		m_isVisible = m_animDirection;
 
@@ -288,7 +288,7 @@ void GLDrawable::startAnimations()
 
 bool GLDrawable::setAnimationsEnabled(bool flag)
 {
-	bool oldValue = m_animationsEnabled; 
+	bool oldValue = m_animationsEnabled;
 	m_animationsEnabled = flag;
 	return oldValue;
 }
@@ -382,11 +382,11 @@ void GLDrawable::startAnimation(const GLDrawable::AnimParam& p)
 	if(ani)
 	{
 		ani->setEasingCurve(p.curve); //inFlag ? QEasingCurve::OutCubic : QEasingCurve::InCubic);
-		
+
 		int len = p.length;
 		if(GLVideoDrawable *vid = dynamic_cast<GLVideoDrawable*>(this))
 			len = vid->xfadeLength();
-							
+
 		ani->setDuration(len);
 
 // 		//qDebug() << "GLDrawable::startAnimation: type:"<<p.type<<", length:"<<p.length<<", curve:"<<p.curve.type();
@@ -407,7 +407,7 @@ void GLDrawable::startAnimation(const GLDrawable::AnimParam& p)
 		{
 			ani->start();
 		}
-		
+
 		//qDebug() << "GLDrawable::startAnimation(): "<<this<<": added animation:"<<ani;
 
 		m_runningAnimations << ani;
@@ -486,10 +486,10 @@ void GLDrawable::setRect(const QRectF& rect)
 {
 	if(m_rect == rect)
 		return;
-	
+
 	// Notify QGraphicsItem of upcoming change
 	prepareGeometryChange();
-		
+
 	m_rect = rect;
 	if(m_rect.width()<0)
 		m_rect.setWidth(0);
@@ -499,14 +499,14 @@ void GLDrawable::setRect(const QRectF& rect)
 	//qDebug() << "GLDrawable::setRect: "<<this<<rect;
 	//qDebug() << "GLDrawable::setRect: "<<rect;
 // 	qDebug() << "GLDrawable::setRect: size: "<<rect.size();
-	
+
 	drawableResized(rect.size());
 	emit drawableResized(rect.size());
 // 	if(!m_inAlignment)
 // 		updateAlignment();
 	updateGL();
 	layoutChildren();
-	
+
 	setPos(rect.topLeft());
 }
 
@@ -523,10 +523,10 @@ double GLDrawable::zIndex()
 		double fract = m_zIndex / (Z_MAX/2) + 0.5;
 		double final = fract * m_zIndexModifier;
 		//qDebug() << "GLDrawable::zIndex: m_zIndexModifier:"<<m_zIndexModifier<<", m_zIndex:"<<m_zIndex<<", final: "<<final;
-		
+
 		return final;
 	}
-	
+
 	return m_zIndex;
 }
 
@@ -536,7 +536,7 @@ void GLDrawable::setZIndex(double z)
 	//qDebug() << "GLDrawable::setZIndex: "<<this<<", zIndex:"<<z;
 	m_zIndex = z;
 	setZValue((int)z); // for QGraphicsItem compat
-	
+
 	emit zIndexChanged(z);
 	updateGL();
 	propertyWasChanged("zIndex",z);
@@ -599,7 +599,7 @@ void GLDrawable::updateAlignment(bool animateRect, int animLength, QEasingCurve 
 		m_inAlignment = false;
 		return;
 	}
-		
+
 	//qDebug() << "GLDrawable::updateAlignment(): "<<this<<", m_animFinished:"<<m_animFinished<<", m_animDirection:"<<m_animDirection;;
 // 	bool restartAnimations = false;
 	if(!m_animFinished && m_animDirection)
@@ -617,7 +617,7 @@ void GLDrawable::updateAlignment(bool animateRect, int animLength, QEasingCurve 
 //   	qDebug() << "GLDrawable::updateAlignment(): "<<this<<", size:"<<size<<", m_alignment:"<<m_alignment;
 
 	QRectF rect;
-	qreal   x = m_rect.left(), 
+	qreal   x = m_rect.left(),
 	        y = m_rect.top(),
 		w = m_rect.width(),
 		h = m_rect.height();
@@ -625,7 +625,7 @@ void GLDrawable::updateAlignment(bool animateRect, int animLength, QEasingCurve 
 	      vh = canvasSize().height();
 
 	//qDebug() << "GLDrawable::updateAlignment: w:"<<w<<", h:"<<h<<", alignedSizeScale:"<<alignedSizeScale();
-	
+
 	//qDebug() << "GLDrawable::updateAlignment(): "<<this<<" m_alignment: "<<m_alignment ;
 
 	if(!m_alignment || (m_alignment & Qt::AlignAbsolute) == Qt::AlignAbsolute)
@@ -634,12 +634,12 @@ void GLDrawable::updateAlignment(bool animateRect, int animLength, QEasingCurve 
 // 		y = vh * m_topPercent;
 // // 		qDebug() << "GLDrawable::updateAlignment(): "<<this<<objectName()<<", absolute: m_leftPercent:"<<m_leftPercent<<", x:"<<x;
   		//qDebug() << "GLDrawable::updateAlignment(): "<<this<<", [AlignAbsolute]: m_rect:"<<m_rect;
-// 		
+//
 // 		double b = vh * m_bottomPercent;
 // 		double r = vw * m_rightPercent;
 // 		h = b - y;
 // 		w = r - x;
-		
+
 // 		x = m_rect.left();
 // 		y = m_rect.top();
 // 		w = m_rect.width();
@@ -651,9 +651,9 @@ void GLDrawable::updateAlignment(bool animateRect, int animLength, QEasingCurve 
 		y = 0;
 		w = size.width()  * alignedSizeScale();
 		h = size.height() * alignedSizeScale();
-		
+
 		//qDebug() << "GLDrawable::updateAlignment(): "<<this<<", [NON ABSOLUTE]";
-		
+
 		if ((m_alignment & Qt::AlignHCenter) == Qt::AlignHCenter)
 		{
 			//qDebug() << "GLDrawable::updateAlignment(): "<<this<<", [AlignHCenter]";
@@ -699,12 +699,12 @@ void GLDrawable::updateAlignment(bool animateRect, int animLength, QEasingCurve 
 	}
 
 	rect = QRectF(x,y,w,h);
-	
+
 	if((m_alignment & Qt::AlignAbsolute) == Qt::AlignAbsolute)
 	{
 		//qDebug() << "GLDrawable::updateAlignment(): "<<this<<", final rect: "<<rect;
 	}
-	
+
 	if(QPropertyAnimation *ani = propAnim("rect"))
 	{
 // 		qDebug() << "GLDrawable::updateAlignment(): "<<this<<", Killing running rect animation...";
@@ -713,7 +713,7 @@ void GLDrawable::updateAlignment(bool animateRect, int animLength, QEasingCurve 
 		m_propAnims.remove("rect");
 // 		qDebug() << "GLDrawable::updateAlignment(): "<<this<<", done killing.";
 	}
-	
+
 	if(animateRect)
 	{
 		QPropertyAnimation *animation = new QPropertyAnimation(this, "rect");
@@ -721,7 +721,7 @@ void GLDrawable::updateAlignment(bool animateRect, int animLength, QEasingCurve 
 		animation->setEasingCurve(animCurve);
 		animation->setEndValue(rect);
 		animation->start(QAbstractAnimation::DeleteWhenStopped);
-		
+
 		registerPropAnim("rect", animation);
 // 		qDebug() << "GLDrawable::updateAlignment(): "<<this<<", setting rect, animating change to:"<<rect;
 	}
@@ -730,9 +730,9 @@ void GLDrawable::updateAlignment(bool animateRect, int animLength, QEasingCurve 
 // 		qDebug() << "GLDrawable::updateAlignment(): "<<this<<", setting rect, no anim to:"<<rect;
 		setRect(rect);
 	}
-	
+
 	m_inAlignment = false;
-	
+
 // 	if(restartAnimations)
 // 	{
 // 		startAnimations();
@@ -750,7 +750,7 @@ void GLDrawable::setGLWidget(GLWidget* w)
 		m_rect = QRectF(QPointF(0,0),canvasSize());
 
 	updateAlignment();
-	
+
 	if(m_animPendingGlWidget)
 	{
 		m_animPendingGlWidget = false;
@@ -873,10 +873,10 @@ void GLDrawable::registerPropAnim(const QString& prop, QPropertyAnimation *anim)
 
 void GLDrawable::propAnimFinished()
 {
-	QPropertyAnimation *ani = dynamic_cast<QPropertyAnimation*>(sender());	
+	QPropertyAnimation *ani = dynamic_cast<QPropertyAnimation*>(sender());
 	if(!ani)
 		return;
-	
+
 	QString prop(ani->propertyName().constData());
 	m_propAnims.remove(prop);
 }
@@ -884,29 +884,29 @@ void GLDrawable::propAnimFinished()
 void GLDrawable::fromByteArray(QByteArray& array)
 {
 	bool animEnabled = setAnimationsEnabled(false);
-	
+
 	QDataStream stream(&array, QIODevice::ReadOnly);
 	QVariantMap map;
 	stream >> map;
-	
+
 	//qDebug() << "LiveScene::fromByteArray(): "<<map;
 	if(map.isEmpty())
 	{
 		qDebug() << "Error: GLDrawable::fromByteArray(): Map is empty, unable to load item.";
 		return;
 	}
-	
+
 	loadPropsFromMap(map);
-	
+
 	setAnimationsEnabled(animEnabled);
-	
-	
+
+
 }
 
 void GLDrawable::loadPropsFromMap(const QVariantMap& map, bool onlyApplyIfChanged)
 {
 	bool vis = false;
-	
+
 	// So we dont have to engineer our own method of tracking
 	// properties, just assume all inherited objects delcare the relevant
 	// properties using Q_PROPERTY macro
@@ -917,11 +917,11 @@ void GLDrawable::loadPropsFromMap(const QVariantMap& map, bool onlyApplyIfChange
 		QMetaProperty metaproperty = metaobject->property(i);
 		const char *name = metaproperty.name();
 		QVariant value = map[name];
-		
+
 		//if(QString(name) == "rect")
 			//qDebug() << "GLDrawable::loadPropsFromMap():"<<(QObject*)this<<": i:"<<i<<", count:"<<count<<", prop:"<<name<<", value:"<<value;
-		
-		
+
+
 		// Hold setting visiblility flag till last so that way any properties that affect
 		// animations are set BEFORE animations start!
 		if(QString(name) == "isVisible")
@@ -941,7 +941,7 @@ void GLDrawable::loadPropsFromMap(const QVariantMap& map, bool onlyApplyIfChange
 		}
 		else
 		{
-			
+
 			if(value.isValid())
 			{
 				if(onlyApplyIfChanged)
@@ -956,7 +956,7 @@ void GLDrawable::loadPropsFromMap(const QVariantMap& map, bool onlyApplyIfChange
 				{
 					//if(QString(name) == "alignment")
 					//	qDebug() << "LiveLayer::loadPropsFromMap():"<<this<<": i:"<<i<<", count:"<<count<<", prop:"<<name<<", value:"<<value<<" (calling set prop)";
-						
+
 					setProperty(name,value);
 					//m_props[name] = value;
 				}
@@ -965,10 +965,10 @@ void GLDrawable::loadPropsFromMap(const QVariantMap& map, bool onlyApplyIfChange
 				qDebug() << "GLDrawable::loadPropsFromMap: Unable to load property for "<<name<<", got invalid property from map";
 		}
 	}
-	
+
 	QByteArray ba = map["playlist"].toByteArray();
 	m_playlist->fromByteArray(ba);
-	
+
 	//qDebug() << "GLDrawable::loadPropsFromMap():"<<(QObject*)this<<": *** Setting visibility to "<<vis;
 	if(!onlyApplyIfChanged || isVisible() != vis)
 		setVisible(vis);
@@ -995,15 +995,15 @@ QVariantMap GLDrawable::propsToMap()
 		QMetaProperty metaproperty = metaobject->property(i);
 		const char *name = metaproperty.name();
 		QVariant value = property(name);
-		
+
 		//if(name == "rect")
 			//qDebug() << "GLDrawable::propsToMap():"<<(QObject*)this<<": prop:"<<name<<", value:"<<value;
-			
+
 		map[name] = value;
 	}
-	
+
 	map["playlist"] = m_playlist->toByteArray();
-	
+
 	return map;
 }
 
@@ -1013,9 +1013,9 @@ QVariant GLDrawable::itemChange(GraphicsItemChange change, const QVariant & valu
 	bool retValOverride = false;
 	if(change != ItemFlagsChange &&
 		change != ItemFlagsHaveChanged &&
-		change != ItemChildAddedChange) 
+		change != ItemChildAddedChange)
 		qDebug() << "GLDrawable::itemChange: change:"<<change<<", value:"<<value;
-		
+
 	// keep the AbstractContent's center inside the scene rect..
 // 	if (change == ItemPositionChange && scene() && AppSettings::gridEnabled())
 // 	{
@@ -1026,13 +1026,13 @@ QVariant GLDrawable::itemChange(GraphicsItemChange change, const QVariant & valu
 //  		}
 //  		else
 //  		{
-// 				
+//
 // 			QPointF newPos = AppSettings::snapToGrid(value.toPointF(),m_kbdMotivated);
-// 			
+//
 // 			// reset the keyboard flag - if another key press comes, it will be set again by the scene
 // 			if(m_kbdMotivated)
 // 				m_kbdMotivated = false;
-// 	
+//
 // 			if (newPos != value.toPointF())
 // 			{
 // 				retVal = QVariant(newPos);
@@ -1055,7 +1055,7 @@ QVariant GLDrawable::itemChange(GraphicsItemChange change, const QVariant & valu
 		case ItemPositionHasChanged:
 // 			if(DEBUG_ABSTRACTCONTENT)
 // 				qDebug() << "AbstractContent::itemChange: " << modelItem()->itemName() << " ItemPositionHasChanged:"<<value;
-			
+
 			//syncToModelItem(modelItem());
 			break;
 
@@ -1174,7 +1174,7 @@ void GLDrawable::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 			{
 				QPointF dif = item->property("-mouse-diff").toPointF();
 				QPointF posDiff = event->scenePos() + dif;
-				
+
 				qreal x = sz.width()  / (halfGrid ? 2:1);
 				qreal y = sz.height() / (halfGrid ? 2:1);
 				posDiff.setX(((int)(posDiff.x() / x + .5)) * x);
@@ -1182,7 +1182,7 @@ void GLDrawable::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 				item->setPos(posDiff);
 			}
 		}
-			
+
 	}
 }
 
@@ -1190,14 +1190,14 @@ void GLDrawable::mouseReleaseEvent(QGraphicsSceneMouseEvent * event)
 {
 	//qDebug() << "GLDrawable::mouseReleaseEvent";
 	QGraphicsItem::mouseReleaseEvent(event);
-	
+
 	if(pos() != rect().topLeft())
 	{
 		QRectF newRect(pos(), rect().size());
 		setRect(newRect);
-		
-		qDebug() << "GLDrawable::mouseReleaseEvent: Rect changed: "<<newRect; 
-		
+
+		qDebug() << "GLDrawable::mouseReleaseEvent: Rect changed: "<<newRect;
+
 		GLEditorGraphicsScene *gls = dynamic_cast<GLEditorGraphicsScene*>(scene());
 		if(gls)
 		{
@@ -1209,7 +1209,7 @@ void GLDrawable::mouseReleaseEvent(QGraphicsSceneMouseEvent * event)
 					item->setRect(newRect);
 			}
 		}
-		//qDebug() << "GLDrawable::mouseReleaseEvent: Rect changed: "<<newRect; 
+		//qDebug() << "GLDrawable::mouseReleaseEvent: Rect changed: "<<newRect;
 	}
 }
 
@@ -1238,7 +1238,7 @@ GLDrawablePlaylist::~GLDrawablePlaylist()
 	qDeleteAll(m_items);
 	m_items.clear();
 }
-	
+
 int GLDrawablePlaylist::rowCount(const QModelIndex &/*parent*/) const
 {
 	return m_items.size();
@@ -1248,10 +1248,10 @@ QVariant GLDrawablePlaylist::data( const QModelIndex & index, int role ) const
 {
 	if (!index.isValid())
 		return QVariant();
-	
+
 	if (index.row() >= rowCount(QModelIndex()))
 		return QVariant();
-	
+
 	if (role == Qt::DisplayRole || Qt::EditRole == role)
 	{
 		GLPlaylistItem *d = m_items.at(index.row());
@@ -1260,11 +1260,11 @@ QVariant GLDrawablePlaylist::data( const QModelIndex & index, int role ) const
 // 		{
 // 			value = value.replace( QRegExp("<style[^>]*>.*</style>", Qt::CaseInsensitive), "" );
 // 			value = value.replace( QRegExp("<[^>]*>"), "" );
-// 			value = value.replace( QRegExp("(^\\s+)"), "" );	
+// 			value = value.replace( QRegExp("(^\\s+)"), "" );
 // 		}
 // 		else
 // 		{
-// 			const char *propName = m_drawable->metaObject()->userProperty().name();	
+// 			const char *propName = m_drawable->metaObject()->userProperty().name();
 // 		}
 		return value;
 	}
@@ -1278,21 +1278,21 @@ QVariant GLDrawablePlaylist::data( const QModelIndex & index, int role ) const
 }
 Qt::ItemFlags GLDrawablePlaylist::flags(const QModelIndex &index) const
 {
-	if (index.isValid())	
+	if (index.isValid())
 		return Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsEditable; //| Qt::ItemIsDragEnabled | Qt::ItemIsDropEnabled;
-	
+
 	return Qt::ItemIsEnabled | Qt::ItemIsSelectable;// | Qt::ItemIsDropEnabled ;
 }
 bool GLDrawablePlaylist::setData(const QModelIndex &index, const QVariant & value, int /*role*/)
 {
 	if (!index.isValid())
 		return false;
-	
+
 	if (index.row() >= rowCount(QModelIndex()))
 		return false;
-	
+
 	GLPlaylistItem *d = m_items.at(index.row());
-	qDebug() << "GLDrawablePlaylist::setData: "<<this<<" row:"<<index.row()<<", value:"<<value; 
+	qDebug() << "GLDrawablePlaylist::setData: "<<this<<" row:"<<index.row()<<", value:"<<value;
 	if(value.isValid() && !value.isNull())
 	{
 		d->setTitle(value.toString());
@@ -1307,26 +1307,27 @@ QModelIndex GLDrawablePlaylist::indexOf(GLPlaylistItem *item)
 	int idx = m_items.indexOf(item);
 	return createIndex(idx, 0);
 }
-	
+
 void GLDrawablePlaylist::addItem(GLPlaylistItem *item)
 {
 	if(!item)
 		return;
-	
+
 	item->setPlaylist(this);
-	
+
 	m_itemLookup[item->id()] = item;
 	m_items << item;
 	connect(item, SIGNAL(playlistItemChanged()), this, SLOT(playlistItemChanged()));
-	
+
+
 	beginInsertRows(QModelIndex(),m_items.size()-1,m_items.size());
-	
+
 	QModelIndex top    = createIndex(m_items.size()-2, 0),
 		    bottom = createIndex(m_items.size()-1, 0);
 	dataChanged(top,bottom);
-	
+
 	endInsertRows();
-	
+
 	emit itemAdded(item);
 }
 
@@ -1334,18 +1335,18 @@ void GLDrawablePlaylist::removeItem(GLPlaylistItem *item)
 {
 	if(!item)
 		return;
-	
+
 	m_itemLookup.remove(item->id());
 	m_items.removeAll(item);
 	disconnect(item, 0, this, 0);
-	
+
 	beginRemoveRows(QModelIndex(),0,m_items.size()+1);
-	
+
 	int idx = m_items.indexOf(item);
 	QModelIndex top    = createIndex(idx, 0),
 		    bottom = createIndex(m_items.size(), 0);
 	dataChanged(top,bottom);
-	
+
 	endRemoveRows();
 
 	emit itemRemoved(item);
@@ -1357,17 +1358,17 @@ void GLDrawablePlaylist::playlistItemChanged()
 	GLPlaylistItem *item = dynamic_cast<GLPlaylistItem *>(item);
 	if(!item)
 		return;
-	
+
 	int row = m_items.indexOf(item);
 	if(row < 0)
 		return;
-	
+
 	QModelIndex idx = createIndex(row, row);
 	dataChanged(idx, idx);
-	
+
 	/// TODO - rerun calculations for automatic durations/schedules
 }
-	
+
 
 QByteArray GLDrawablePlaylist::toByteArray()
 {
@@ -1377,12 +1378,12 @@ QByteArray GLDrawablePlaylist::toByteArray()
 	QVariantList items;
 	foreach(GLPlaylistItem *item, m_items)
 		items << item->toByteArray();
-	
+
 	QVariantMap map;
 	map["items"] = items;
-	
+
 	stream << map;
-	
+
 	return array;
 }
 
@@ -1391,16 +1392,16 @@ void GLDrawablePlaylist::fromByteArray(QByteArray& array)
 	QDataStream stream(&array, QIODevice::ReadOnly);
 	QVariantMap map;
 	stream >> map;
-	
+
 	if(map.isEmpty())
 		return;
-	
+
 	if(!m_items.isEmpty())
 	{
 		qDeleteAll(m_items);
 		m_items.clear();
 	}
-	
+
 	QVariantList views = map["items"].toList();
 	foreach(QVariant var, views)
 	{
@@ -1439,9 +1440,9 @@ void GLDrawablePlaylist::playItem(GLPlaylistItem *item)
 
 	emit currentItemChanged(item);
 	m_currentItemIndex = idx;
-	
+
 	const char *propName = m_drawable->metaObject()->userProperty().name();
-	
+
 	//qDebug() << "GLDrawablePlaylist::playItem: Showing"<<propName<<": "<<item->value();
 
 	m_drawable->setProperty(propName, item->value());
@@ -1450,9 +1451,9 @@ void GLDrawablePlaylist::playItem(GLPlaylistItem *item)
 bool GLDrawablePlaylist::setPlayTime(double time)
 {
 	m_playTime = time;
-	
+
 	emit playerTimeChanged(time);
-	
+
 	double timeSum = 0;
 	GLPlaylistItem *foundItem =0;
 	foreach(GLPlaylistItem *item, m_items)
@@ -1474,7 +1475,7 @@ bool GLDrawablePlaylist::setPlayTime(double time)
 		qDebug() << "GLDrawablePlaylist::setPlayTime: "<<time<<": Could not find item at time "<<time;
 		return false;
 	}
-	
+
 }
 
 void GLDrawablePlaylist::timerTick()
@@ -1492,21 +1493,21 @@ GLPlaylistItem::GLPlaylistItem(GLDrawablePlaylist *list)
 	, m_playlist(list)
 	, m_id(-1)
 	{}
-	
+
 GLPlaylistItem::GLPlaylistItem(QByteArray& array, GLDrawablePlaylist *list)
 	: QObject(list)
 	, m_playlist(list)
 {
 	fromByteArray(array);
 }
-	
+
 QByteArray GLPlaylistItem::toByteArray()
 {
 	QByteArray array;
 	QDataStream stream(&array, QIODevice::WriteOnly);
-	
+
 	QVariantMap map;
-	
+
 	map["id"]	= id();
 	map["title"]	= m_title;
 	map["value"]	= m_value;
@@ -1514,9 +1515,9 @@ QByteArray GLPlaylistItem::toByteArray()
 	map["autod"] 	= m_autoDuration;
 	map["sched"] 	= m_scheduledTime;
 	map["autos"]	= m_autoSchedule;
-	
+
 	stream << map;
-	
+
 	return array;
 }
 
@@ -1525,10 +1526,10 @@ void GLPlaylistItem::fromByteArray(QByteArray& array)
 	QDataStream stream(&array, QIODevice::ReadOnly);
 	QVariantMap map;
 	stream >> map;
-	
+
 	if(map.isEmpty())
 		return;
-	
+
 	m_id		= map["id"].toInt();
 	m_title		= map["title"].toString();
 	m_value		= map["value"];
@@ -1546,10 +1547,10 @@ int GLPlaylistItem::id()
 		m_id = set.value("GLPlaylistItem/id-counter",0).toInt() + 1;
 		set.setValue("GLPlaylistItem/id-counter",m_id);
 	}
-	
+
 	return m_id;
 }
-	
+
 void GLPlaylistItem::setTitle(const QString& title)
 {
 	m_title = title;
@@ -1590,7 +1591,7 @@ void GLPlaylistItem::setPlaylist(GLDrawablePlaylist *playlist)
 /*
 private:
 	GLDrawablePlaylist *m_playlist;
-	
+
 	QVariant m_value;
 	int m_duration;
 	bool m_autoDuration;

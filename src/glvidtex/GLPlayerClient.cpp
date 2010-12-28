@@ -13,7 +13,7 @@
 
 #include "GLPlayerServer.h" // GLPlayerServer::Command enum is needed
 
-GLPlayerClient::GLPlayerClient(QObject *parent) 
+GLPlayerClient::GLPlayerClient(QObject *parent)
 	: QObject(parent)
 	, m_socket(0)
 // 	, m_log(0)
@@ -25,7 +25,7 @@ GLPlayerClient::GLPlayerClient(QObject *parent)
 GLPlayerClient::~GLPlayerClient()
 {
 }
-	
+
 // void GLPlayerClient::setLogger(MainWindow *log)
 // {
 // 	m_log = log;
@@ -40,16 +40,16 @@ bool GLPlayerClient::connectTo(const QString& host, int port)
 {
 	if(m_socket)
 		m_socket->abort();
-		
+
 	m_socket = new QTcpSocket(this);
 	connect(m_socket, SIGNAL(readyRead()), this, SLOT(dataReady()));
 	connect(m_socket, SIGNAL(disconnected()), this, SIGNAL(socketDisconnected()));
 	connect(m_socket, SIGNAL(connected()), this, SIGNAL(socketConnected()));
 	connect(m_socket, SIGNAL(error(QAbstractSocket::SocketError)), this, SIGNAL(socketError(QAbstractSocket::SocketError)));
-	
+
 	m_blockSize = 0;
 	m_socket->connectToHost(host,port);
-	
+
 	return true;
 }
 
@@ -80,11 +80,11 @@ void GLPlayerClient::sendMap(const QVariantMap& map)
 
 void GLPlayerClient::dataReady()
 {
-	if (m_blockSize == 0) 
+	if (m_blockSize == 0)
 	{
 		char data[256];
 		int bytes = m_socket->readLine((char*)&data,256);
-		
+
 		if(bytes == -1)
 			qDebug() << "GLPlayerClient::dataReady: Could not read line from socket";
 		else
@@ -92,13 +92,13 @@ void GLPlayerClient::dataReady()
 		//qDebug() << "Read:["<<data<<"], size:"<<m_blockSize;
 		//qDebug() << "GLPlayerClient::dataReady(): blockSize: "<<m_blockSize<<", bytes avail: "<<m_socket->bytesAvailable();
 	}
-	
+
 	if (m_socket->bytesAvailable() < m_blockSize)
 		return;
-	
+
 	m_dataBlock = m_socket->read(m_blockSize);
 	m_blockSize = 0;
-	
+
 	if(m_dataBlock.size() > 0)
 	{
 		//qDebug() << "Data ("<<m_dataBlock.size()<<"/"<<m_blockSize<<"): "<<m_dataBlock;
@@ -106,8 +106,7 @@ void GLPlayerClient::dataReady()
 
 		processBlock();
 	}
-	
-	
+
 	if(m_socket->bytesAvailable())
 	{
 		QTimer::singleShot(0, this, SLOT(dataReady()));
@@ -119,9 +118,9 @@ void GLPlayerClient::processBlock()
 	QDataStream stream(&m_dataBlock, QIODevice::ReadOnly);
 	QVariantMap map;
 	stream >> map;
-	
+
 	//qDebug() << "GLPlayerClient::processBlock: map: "<<map;
-	
+
 	emit receivedMap(map);
 /*
 	GLPlayerServer::Command cmd = (GLPlayerServer::Command)map["cmd"].toInt();
@@ -134,7 +133,7 @@ void GLPlayerClient::processBlock()
 // {
 // 	if(!m_inst)
 // 		return;
-// 		
+//
 // 	switch(cmd)
 // 	{
 // 		case GLPlayerServer::SetSlideGroup:
@@ -148,55 +147,55 @@ void GLPlayerClient::processBlock()
 // 		case GLPlayerServer::AddFilter:
 // 			log(QString("[INFO] Added Filter # %1").arg(a.toInt()));
 // 			cmdAddfilter(a.toInt());
-// 			break; 
+// 			break;
 // 		case GLPlayerServer::DelFilter:
 // 			log(QString("[INFO] Removed Filter # %1").arg(a.toInt()));
 // 			cmdDelFilter(a.toInt());
-// 			break; 
+// 			break;
 // // 		case GLPlayerServer::FadeClear:
 // // 			log(QString("[INFO] Background-Only (\"Clear\") Frame %1").arg(a.toBool() ? "On":"Off"));
 // // 			m_inst->fadeClearFrame(a.toBool());
-// // 			break; 
+// // 			break;
 // 		case GLPlayerServer::FadeBlack:
 // 			log(QString("[INFO] Black Frame %1").arg(a.toBool() ? "On":"Off"));
 // 			m_inst->fadeBlackFrame(a.toBool());
-// 			break; 
+// 			break;
 // 		case GLPlayerServer::SetBackgroundColor:
 // 			m_inst->setBackground(QColor(a.toString()));
-// 			break; 
+// 			break;
 // 		case GLPlayerServer::SetOverlaySlide:
 // 			log(QString("[INFO] Downloading new Overlay Slide from Server..."));
 // 			cmdSetOverlaySlide(a);
-// 			break; 
+// 			break;
 // 		case GLPlayerServer::SetLiveBackground:
 // 			cmdSetLiveBackground(a.toString(),b.toBool());
-// 			break; 
+// 			break;
 // 		case GLPlayerServer::SetTextResize:
 // 			log(QString("[INFO] Set Text Resize: %1").arg(a.toBool()));
 // 			m_inst->setAutoResizeTextEnabled(a.toBool());
-// 			break; 
+// 			break;
 // 		case GLPlayerServer::SetFadeSpeed:
 // 			log(QString("[INFO] Set Fade Speed to %1 ms").arg(a.toInt()));
 // 			m_inst->setFadeSpeed(a.toInt());
-// 			break; 
+// 			break;
 // 		case GLPlayerServer::SetFadeQuality:
 // 			log(QString("[INFO] Set Fade Quality to %1 fps").arg(a.toInt()));
 // 			m_inst->setFadeQuality(a.toInt());
-// 			break; 
+// 			break;
 // 		case GLPlayerServer::SetAspectRatio:
 // 			log(QString("[INFO] Set Aspect Ratio %1").arg(a.toDouble()));
 // 			emit aspectRatioChanged(a.toDouble());
 // 			break;
-// 		case GLPlayerServer::SetSlideObject: 
+// 		case GLPlayerServer::SetSlideObject:
 // 			log(QString("[INFO] Downloading new out-of-group Slide from Server..."));
 // 			cmdSetSlideObject(a);
 // 			break;
 // 		default:
 // 			qDebug() << "Command Not Handled: "<<(int)cmd;
 // 			log(QString("[DEBUG] Unknown Command: '%1'").arg(cmd));
-// 	}; 
+// 	};
 // }
-// 
+//
 // void GLPlayerClient::cmdSetSlideGroup(const QVariant& var, int start)
 // {
 // 	QByteArray ba = var.toByteArray();
@@ -205,16 +204,16 @@ void GLPlayerClient::processBlock()
 // 	{
 // 		if(group->groupNumber()<0)
 // 			group->setGroupNumber(1);
-// 
+//
 // 		log(QString("[INFO] Slide Group # %1 (\"%2\") Downloaded, Showing on Live Output").arg(group->groupNumber()).arg(group->groupTitle()));
-// 
+//
 // 		m_inst->setSlideGroup(group,start);
-// 
+//
 // 		//log(QString("[DEBUG] Slide Group Display routines completed."));
-// 
+//
 // 	}
 // }
-// 
+//
 // void GLPlayerClient::cmdAddfilter(int id)
 // {
 // 	AbstractItemFilter * filter = AbstractItemFilter::filterById(id);
@@ -223,7 +222,7 @@ void GLPlayerClient::processBlock()
 // 	else
 // 		log(QString("[ERROR] Add Filter: Server requested filter# %1 which is not installed in this viewer. This may mean that the server is newer than the client. You may want to check for an update to the DViz viewer on the DViz website.").arg(id));
 // }
-// 
+//
 // void GLPlayerClient::cmdDelFilter(int id)
 // {
 // 	AbstractItemFilter * filter = AbstractItemFilter::filterById(id);
@@ -232,41 +231,42 @@ void GLPlayerClient::processBlock()
 // 	else
 // 		log(QString("[ERROR] Remove Filter: Server requested filter# %1 which is not installed in this viewer. This may mean that the server is newer than the client. You may want to check for an update to the DViz viewer on the DViz website.").arg(id));
 // }
-// 
+//
 // void GLPlayerClient::cmdSetOverlaySlide(const QVariant& var)
 // {
 // 	QByteArray ba = var.toByteArray();
 // 	Slide * slide = new Slide();
 // 	slide->fromByteArray(ba);
-// 
+//
 // 	log(QString("[INFO] Overlay slide downloaded, showing on Live Output"));
 // 	m_inst->setOverlaySlide(slide);
 // }
-// 
+//
 // void GLPlayerClient::cmdSetSlideObject(const QVariant& var)
 // {
 // 	QByteArray ba = var.toByteArray();
 // 	Slide * slide = new Slide();
 // 	slide->fromByteArray(ba);
-// 
+//
 // 	log(QString("[INFO] New out-of-group slide downloaded, showing on Live Output"));
 // 	m_inst->setSlide(slide);
 // }
-// 
+//
 // void GLPlayerClient::cmdSetLiveBackground(const QString& file, bool flag)
 // {
 // 	m_inst->setLiveBackground(QFileInfo(file),flag);
 // }
-// 	
+//
 
 void GLPlayerClient::exit()
 {
 	if(m_socket)
 	{
+		//qDebug() << "GLPlayerClient::exit(): Closing and deleting socket.";
 		m_socket->abort();
 		m_socket->disconnectFromHost();
 		//m_socket->waitForDisconnected();
-		delete m_socket;
+		m_socket->deleteLater();
 		m_socket = 0;
 	}
 }
