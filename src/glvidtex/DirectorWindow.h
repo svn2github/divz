@@ -21,6 +21,8 @@ class FlowLayout;
 class VideoInputSenderManager;
 class VideoReceiver;
 
+#include "GLDrawable.h"
+
 class DirectorWindow : public QMainWindow
 {
 	Q_OBJECT
@@ -33,7 +35,7 @@ public:
 	
 	GLSceneGroup *currentGroup() { return m_currentGroup; }
 	GLScene *currentScene() { return m_currentScene; }
-	GLDrawable *currentDrawable() { return m_currentDrawable; }
+	GLDrawable *currentDrawable() { return m_currentDrawable.data(); }
 	GLPlaylistItem *currentItem() { return m_currentItem; }
 	
 	QString fileName() { return m_fileName; }
@@ -58,7 +60,7 @@ public slots:
 	void setCollection(GLSceneGroupCollection *collection);
 	void setCurrentGroup(GLSceneGroup*, GLScene *currentScene=0);
 	void setCurrentScene(GLScene *);
-	void setCurrentDrawable(GLDrawable *);
+	void setCurrentDrawable(GLDrawable *drawable=0);
 	void setCurrentItem(GLPlaylistItem *);
 	void fadeBlack(bool toBlack=true);
 	void setFadeSpeedPercent(int);
@@ -87,6 +89,7 @@ private slots:
 
 	void playlistTimeChanged(GLDrawable*, double);
 	void playlistItemChanged(GLDrawable*, GLPlaylistItem *);
+	void playlistItemDurationChanged(double);
 	
 	void pausePlaylist();
 	void playPlaylist();
@@ -116,10 +119,10 @@ private:
 	PlayerConnectionList *m_players;
 	GLSceneGroupCollection *m_collection;
 	
-	GLSceneGroup *m_currentGroup;
-	GLScene *m_currentScene;
-	GLDrawable *m_currentDrawable;
-	GLPlaylistItem *m_currentItem;
+	GLSceneGroup * m_currentGroup;
+	GLScene * m_currentScene;
+	QPointer<GLDrawable> m_currentDrawable;
+	GLPlaylistItem * m_currentItem;
 	
 	GLEditorGraphicsScene *m_graphicsScene;
 	

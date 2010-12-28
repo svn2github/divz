@@ -8,6 +8,7 @@
 class QPropertyAnimation;
 class GLWidget;
 class GLEditorGraphicsScene;
+class GLScene;
 
 // GLDrawable uses Z_MAX combined with the zIndexModifier to scale the zIndex to where zIndexModifier=<z<zIndexModifier
 #define Z_MAX 10000
@@ -167,6 +168,9 @@ public:
 	int fadeOutLength() { return m_fadeOutLength; }
 	
 	GLDrawablePlaylist *playlist() { return m_playlist; }
+	
+	GLScene *glScene() { return m_scene; }
+	void setGLScene(GLScene *scene);  
 
 public slots:
 	void updateGL();
@@ -332,6 +336,8 @@ private:
 	int m_fadeOutLength;
 	
 	GLDrawablePlaylist *m_playlist;
+	
+	GLScene *m_scene;
 };
 
 bool operator==(const GLDrawable::AnimParam&a, const GLDrawable::AnimParam&b);

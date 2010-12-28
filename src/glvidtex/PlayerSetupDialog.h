@@ -85,6 +85,7 @@ private slots:
 	void conPingResponseReceived(const QString&);
 	void conTestStarted();
 	void conTestEnded();
+	void conTestResults(bool ok);
 	
 	void connectPlayer();
 	void autoconBoxChanged(bool);

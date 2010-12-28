@@ -160,6 +160,9 @@ void PlayerSetupDialog::setCurrentPlayer(PlayerConnection* con)
 	connect(con, SIGNAL(loginFailure()), this, SLOT(conLoginFailure()));
 	connect(con, SIGNAL(playerError(QString)), this, SLOT(conPlayerError(QString)));
 	connect(con, SIGNAL(pingResponseReceived(QString)), this, SLOT(conPingResponseReceived(QString)));
+	connect(con, SIGNAL(testStarted()), this, SLOT(conTestStarted()));
+	connect(con, SIGNAL(testEnded()), this, SLOT(conTestEnded()));
+	connect(con, SIGNAL(testResults(bool)), this, SLOT(conTestResults(bool)));
 	
 	ui->boxConnection->setEnabled(true);
 	ui->boxOutput->setEnabled(true);
@@ -321,6 +324,10 @@ void PlayerSetupDialog::testConnection()
 		return;
 	
 	m_con->testConnection();
+	
+	ui->testConnectionBtn->setEnabled(false);
+	ui->connectBtn->setEnabled(false);
+	ui->testConnectionBtn->setText("Testing...");
 }
 
 void PlayerSetupDialog::connectPlayer()
@@ -334,7 +341,8 @@ void PlayerSetupDialog::connectPlayer()
 		m_con->connectPlayer();
 		
 	ui->testConnectionBtn->setEnabled(false);
-//	ui->connectBtn->setEnabled(false);
+	ui->connectBtn->setEnabled(false);
+	ui->connectBtn->setText("Connecting...");
 }
 
 void PlayerSetupDialog::playerSelected(const QModelIndex & idx)
@@ -597,8 +605,9 @@ void PlayerSetupDialog::conTestStarted()
 
 void PlayerSetupDialog::conTestEnded()
 {
-	ui->connectBtn->setEnabled(false);
-	ui->testConnectionBtn->setEnabled(false);
+	ui->connectBtn->setEnabled(true);
+	ui->testConnectionBtn->setEnabled(true);
+	ui->testConnectionBtn->setText("&Test");
 }
 
 void PlayerSetupDialog::autoconBoxChanged(bool flag)
@@ -606,4 +615,10 @@ void PlayerSetupDialog::autoconBoxChanged(bool flag)
 	if(!m_con)
 		return;
 	m_con->setAutoconnect(flag);
+}
+
+void PlayerSetupDialog::conTestResults(bool flag)
+{
+	if(flag)
+		ui->connectionTestResults->setText(QString("<font color=green><b>Player OK, %1</b></font>").arg(m_con->playerVersion()));
 }

@@ -127,6 +127,7 @@ signals:
 	void pingResponseReceived(const QString&);
 	void testStarted();
 	void testEnded();
+	void testResults(bool);
 	
 	void playerError(const QString&);
 	

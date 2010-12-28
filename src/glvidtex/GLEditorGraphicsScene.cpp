@@ -102,7 +102,8 @@ void GLEditorGraphicsScene::itemSelected(GLDrawable *item)
 		clearSelection(QList<GLDrawable*>() << item);
 			
 	//m_selection.clear();
-	m_selection.append(item);
+	if(!m_selection.contains(item))
+		m_selection.append(item);
 	emit selectionChanged();
 	emit drawableSelected(item);
 }
@@ -381,9 +382,10 @@ void GLEditorGraphicsScene::deleteSelectedItems()
 	foreach(GLDrawable *item, m_selection)
 	{
 		// unlink content from lists, myself(the Scene) and memory
-		removeItem(item);
+		//removeItem(item);
 		//if(DEBUG_MYGRAPHICSSCENE_ITEM_MGMT)
-		//	qDebug() << "MyGraphicsScene::slotDeleteContent(): Disposing of item: "<<content->modelItem()->itemName();
+		qDebug() << "GLEditorGraphicsScene::deleteSelectedItems(): Disposing of item: "<<(QObject*)item;
+		item->setGLScene(0);
 		//content->dispose();
 		item->deleteLater();
 		//delete content;

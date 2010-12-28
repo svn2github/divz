@@ -3,6 +3,7 @@
 #include "GLWidget.h"
 #include "GLEditorGraphicsScene.h"
 #include "GLVideoDrawable.h"
+#include "GLSceneGroup.h"
 
 QAutoDelPropertyAnimation::QAutoDelPropertyAnimation(QObject * target, const QByteArray & propertyName, QObject * parent)
 	: QPropertyAnimation(target,propertyName,parent)
@@ -47,6 +48,7 @@ GLDrawable::GLDrawable(QObject *parent)
 	, m_fadeInLength(300)
 	, m_fadeOutLength(300)
 	, m_playlist(0)
+	, m_scene(0)
 {
 	// QGraphicsItem
 	{
@@ -1218,6 +1220,19 @@ QRectF GLDrawable::boundingRect() const
 	return QRectF(QPointF(0,0), rect().size());
 }
 
+void GLDrawable::setGLScene(GLScene *scene)
+{
+	if(m_scene == scene)
+		return;
+		
+	if(m_scene)
+ 		m_scene->removeDrawable(this);
+ 		
+ 	m_scene = scene;
+ 	if(m_scene)
+ 		m_scene->addDrawable(this);
+ }
+
 
 
 //////////////////////////////////////////////////////////////////////////////
@@ -1541,10 +1556,10 @@ void GLPlaylistItem::fromByteArray(QByteArray& array)
 
 int GLPlaylistItem::id()
 {
-	if(m_id < 0)
+	if(m_id <= 0)
 	{
 		QSettings set;
-		m_id = set.value("GLPlaylistItem/id-counter",0).toInt() + 1;
+		m_id = set.value("GLPlaylistItem/id-counter",100).toInt() + 1;
 		set.setValue("GLPlaylistItem/id-counter",m_id);
 	}
 

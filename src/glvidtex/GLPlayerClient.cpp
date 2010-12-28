@@ -107,7 +107,8 @@ void GLPlayerClient::dataReady()
 		processBlock();
 	}
 
-	if(m_socket->bytesAvailable())
+	if(m_socket &&
+	   m_socket->bytesAvailable())
 	{
 		QTimer::singleShot(0, this, SLOT(dataReady()));
 	}

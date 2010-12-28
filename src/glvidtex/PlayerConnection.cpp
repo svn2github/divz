@@ -240,13 +240,7 @@ void PlayerConnection::connectPlayer()
 	connect(m_client, SIGNAL(socketDisconnected()), this, SLOT(clientDisconnected()));
 	connect(m_client, SIGNAL(socketError(QAbstractSocket::SocketError)), this, SLOT(socketError(QAbstractSocket::SocketError)));
 
-	if(m_justTesting)
-	{
-		m_preconnectionCommandQueue.clear();
-		sendCommand(QVariantList()
-			<< "cmd" 	<< GLPlayer_Ping);
-	}
-	else
+	if(!m_justTesting)
 	{
 		sendCommand(QVariantList()
 			<< "cmd" 	<< GLPlayer_Login
@@ -279,19 +273,28 @@ void PlayerConnection::connectPlayer()
 
 void PlayerConnection::clientConnected()
 {
+	//qDebug() << "PlayerConnection::clientConnected(): m_justTesting:"<<m_justTesting;
 	m_isConnected = true;
-
-	if(!m_preconnectionCommandQueue.isEmpty())
-		foreach(QVariant var, m_preconnectionCommandQueue)
-			m_client->sendMap(var.toMap());
-
-	if(!m_justTesting)
+		
+	if(m_justTesting)
+	{
+		sendCommand(QVariantList()
+			<< "cmd" 	<< GLPlayer_Login
+			<< "user"	<< m_user
+			<< "pass"	<< m_pass);
+	}
+	else
+	{
+		if(!m_preconnectionCommandQueue.isEmpty())
+			foreach(QVariant var, m_preconnectionCommandQueue)
+				m_client->sendMap(var.toMap());
+	
 		emit connected();
+	}
 }
 
 void PlayerConnection::disconnectPlayer()
 {
-	/// TODO disconnect socket and lost
 	disconnect(m_client, 0, this, 0);
 
 	m_isConnected = false;
@@ -303,15 +306,35 @@ void PlayerConnection::disconnectPlayer()
 	if(m_justTesting)
 	{
 		m_justTesting = false;
+		emit testResults(m_lastError.isEmpty());
+			
 		emit testEnded();
 	}
 	else
 		emit disconnected();
 }
 
-void PlayerConnection::socketError(QAbstractSocket::SocketError)
+void PlayerConnection::socketError(QAbstractSocket::SocketError socketError)
 {
-	/// TODO handle error conditions
+	switch (socketError)
+	{
+		case QAbstractSocket::RemoteHostClosedError:
+			setError("Remote player closed the connection unexpectedly.","Network Error");
+			break;
+		case QAbstractSocket::HostNotFoundError:
+			//QMessageBox::critical(0,"Host Not Found",tr("The host was not found. Please check the host name and port settings."));
+			setError("The host specified was not found.","Host Not Found");
+			break;
+		case QAbstractSocket::ConnectionRefusedError:
+			setError("The host specified actively refused the connection.","Connection Refused");
+			break;
+		default:
+			//QMessageBox::critical(0,"Connection Problem",);
+			setError(m_client->errorString(),"Connection Problem");
+	}
+	
+	if(m_justTesting)
+		disconnectPlayer();
 }
 
 void PlayerConnection::clientDisconnected()
@@ -515,17 +538,21 @@ void PlayerConnection::receivedMap(QVariantMap map)
 	// - property query responses
 	//	- emit propQueryResponse
 
+	if(m_justTesting)
+		qDebug() << "PlayerConnection::receivedMap: In testing mode, map received:"<<map; 
+	
 	QString cmd = map["cmd"].toString();
 
 	m_lastError = "";
 
 	if(cmd == GLPlayer_Ping)
 	{
-		// parse login response
-
 		m_playerVersion = map["version"].toString();
 		int inputs = map["inputs"].toInt();
-		QString str = QString("Player Version '%1' (%2 video inputs)").arg(m_playerVersion).arg(inputs);
+		QString str = 
+			inputs > 0 ?
+				QString("Player Version '%1' (%2 video inputs)").arg(m_playerVersion).arg(inputs) :
+				QString("Player Version '%1'").arg(m_playerVersion);
 		emit pingResponseReceived(str);
 
 		if(m_justTesting)
@@ -539,14 +566,19 @@ void PlayerConnection::receivedMap(QVariantMap map)
 		if(status == "error")
 		{
 			setError(map["message"].toString(), "Login Error");
-			emit loginFailure();
+			if(!m_justTesting)
+				emit loginFailure();
 		}
 		else
 		{
 			m_playerVersion = map["version"].toString();
-			emit loginSuccess();
+			if(!m_justTesting)
+				emit loginSuccess();
 		}
-
+		
+		//qDebug() << "cmd login, disconnecting";
+		if(m_justTesting)
+			disconnectPlayer();
 	}
 	else
 	if(cmd == GLPlayer_QueryProperty)
@@ -620,7 +652,11 @@ void PlayerConnection::receivedMap(QVariantMap map)
 				qDebug() << "PlayerConnection::receivedMap: [WARN] Received "<<cmd<<" for playlist item ID "<<id<<" on drawable "<<(QObject*)gld<<", but no such item exists in the drawable's playlist.";
 				return;
 			}
-
+			else
+			{
+				//qDebug() << "PlayerConnection::receivedMap: [INFO] Received "<<cmd<<" for playlist item ID "<<id<<", ptr:"<<item<<", on drawable "<<(QObject*)gld;
+			}
+			
 			emit currentPlaylistItemChanged(gld, item);
 		}
 	}
@@ -854,7 +890,7 @@ void PlayerConnectionList::fromByteArray(QByteArray array)
 	QVariantList views = map["players"].toList();
 	foreach(QVariant var, views)
 	{
-		QByteArray data = var.toByteArray();
+			QByteArray data = var.toByteArray();
 		// call addPlayer so the signal gets emitted and the slots get connected
 		addPlayer(new PlayerConnection(data));
 	}

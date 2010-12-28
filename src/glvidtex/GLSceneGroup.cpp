@@ -471,11 +471,16 @@ void GLScene::addDrawable(GLDrawable *d)
 {
 	if(!d)
 		return;
-
+	
+	if(m_itemList.contains(d))
+		return;
+		
 	m_itemList << d;
 	m_drawableIdLookup[d->id()] = d;
 	emit drawableAdded(d);
-
+	
+	d->setGLScene(this);
+	
 	connect(d, SIGNAL(destroyed()), this, SLOT(drawableDestroyed()));
 
 	beginInsertRows(QModelIndex(),m_itemList.size()-1,m_itemList.size());
@@ -496,12 +501,14 @@ void GLScene::addDrawable(GLDrawable *d)
 void GLScene::drawableDestroyed()
 {
 	GLDrawable *d = dynamic_cast<GLDrawable*>(sender());
+	//qDebug() << "GLScene::drawableDestroyed(): "<<(QObject*)d;
 	if(d)
 		removeDrawable(d);
 }
 
 void GLScene::removeDrawable(GLDrawable *d)
 {
+	//qDebug() << "GLScene::removeDrawable(): "<<(QObject*)d;
 	if(!d)
 		return;
 
@@ -511,6 +518,7 @@ void GLScene::removeDrawable(GLDrawable *d)
 
 	emit drawableRemoved(d);
 	m_itemList.removeAll(d);
+	m_userItemList.removeAll(d);
 	m_drawableIdLookup.remove(d->id());
 
 	// Notify QListViews of change in data

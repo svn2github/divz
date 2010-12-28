@@ -177,6 +177,8 @@ void DirectorWindow::setupUI()
 	connect(ui->playBtn,  SIGNAL(clicked()), this, SLOT(playPlaylist()));
 	connect(ui->pauseBtn, SIGNAL(clicked()), this, SLOT(pausePlaylist()));
 	
+	connect(ui->itemLengthBox, SIGNAL(valueChanged(double)), this, SLOT(playlistItemDurationChanged(double)));
+	
 	connect(ui->actionMonitor_Players_Live, SIGNAL(triggered()), this, SLOT(showPlayerLiveMonitor()));
 	
 	connect(ui->actionAdd_New_Group, SIGNAL(triggered()), this, SLOT(addNewGroup()));
@@ -406,25 +408,26 @@ void DirectorWindow::btnAddToPlaylist()
 	QVariant prop = m_currentDrawable->property(qPrintable(userProp));
 	item->setValue(prop);
 	
-	if(GLTextDrawable *casted = dynamic_cast<GLTextDrawable*>(m_currentDrawable))
+	GLDrawable *gld = m_currentDrawable;
+	if(GLTextDrawable *casted = dynamic_cast<GLTextDrawable*>(gld))
 	{
 		item->setTitle(casted->plainText());
 		item->setDuration(5.0); /// just a guess
 	}
 	else
-	if(GLVideoFileDrawable *casted = dynamic_cast<GLVideoFileDrawable*>(m_currentDrawable))
+	if(GLVideoFileDrawable *casted = dynamic_cast<GLVideoFileDrawable*>(gld))
 	{
 		item->setTitle(QFileInfo(casted->videoFile()).fileName());
 		item->setDuration(casted->videoLength());
 	}
 	else
-	if(GLVideoLoopDrawable *casted = dynamic_cast<GLVideoLoopDrawable*>(m_currentDrawable))
+	if(GLVideoLoopDrawable *casted = dynamic_cast<GLVideoLoopDrawable*>(gld))
 	{
 		item->setTitle(QFileInfo(casted->videoFile()).fileName());
 		item->setDuration(casted->videoLength());
 	}
 	else
-	if(GLImageDrawable *casted = dynamic_cast<GLImageDrawable*>(m_currentDrawable))
+	if(GLImageDrawable *casted = dynamic_cast<GLImageDrawable*>(gld))
 	{
 		item->setTitle(QFileInfo(casted->imageFile()).fileName());
 		item->setDuration(5.0); /// just a guess
@@ -455,8 +458,8 @@ void DirectorWindow::playlistTimeChanged(GLDrawable *gld, double value)
 	double sec = (min - (int)(min)) * 60;
 	double ms  = (sec - (int)(sec)) * 60;
 	time =  (min<10? "0":"") + QString::number((int)min) + ":" +
-		(sec<10? "0":"") + QString::number((int)sec) + "." +
-		(ms <10? "0":"") + QString::number((int)ms );
+		(sec<10? "0":"") + QString::number((int)sec);/* + "." +
+		(ms <10? "0":"") + QString::number((int)ms );*/
 		
 	ui->timeLabel->setText(time);
 }
@@ -481,6 +484,9 @@ void DirectorWindow::playlistItemChanged(GLDrawable *gld, GLPlaylistItem *item)
 		// Dont need to do this now, since this signal is now just informing us of a change on the player
 // 		foreach(PlayerConnection *con, m_players->players())
 // 			con->setUserProperty(m_currentDrawable, item->value());
+		
+		const char *propName = m_currentDrawable->metaObject()->userProperty().name();
+		m_currentDrawable->setProperty(propName, item->value());
 	}
 }
 
@@ -767,21 +773,14 @@ void DirectorWindow::setCurrentDrawable(GLDrawable *gld)
 		m_currentDrawable = 0;
 	}
 	
+	connect(gld, SIGNAL(destroyed()), this, SLOT(setCurrentDrawable()));
+	
 	m_currentDrawable = gld;
-	ui->playlistView->setModel(gld->playlist());
 	
-	// Update the playlist on the player just to make sure its up-to-date with what we see
-	foreach(PlayerConnection *con, m_players->players())
-		con->updatePlaylist(m_currentDrawable);
-	
-// 	connect(gld->playlist(), SIGNAL(currentItemChanged(GLPlaylistItem*)), this, SLOT(playlistItemChanged(GLPlaylistItem *)));
-// 	connect(gld->playlist(), SIGNAL(playerTimeChanged(double)),           this, SLOT(playlistTimeChanged(double)));
-// 	
-// 	connect(ui->playBtn,  SIGNAL(clicked()), gld->playlist(), SLOT(play()));
-// 	connect(ui->pauseBtn, SIGNAL(clicked()), gld->playlist(), SLOT(stop()));
-	
-	QString itemName = gld->itemName();
-	QString typeName;
+	if(gld)
+		ui->playlistView->setModel(gld->playlist());
+	else
+		ui->playlistView->setModel(0);
 	
 	// Fun loop to clear out a QFormLayout - why doesn't QLayout just have a removeAll() or clear() method?
 	QFormLayout *form = ui->itemPropLayout;
@@ -808,152 +807,163 @@ void DirectorWindow::setCurrentDrawable(GLDrawable *gld)
 		delete item;
 	}
 	
-	PropertyEditorFactory::PropertyEditorOptions opts;
-	opts.reset();	
-	
-	ui->playlistSetupWidget->setVisible(true);
-	
-	if(GLVideoInputDrawable *item = dynamic_cast<GLVideoInputDrawable*>(gld))
+	if(m_currentDrawable)
 	{
-		// show device selection box
-		// show deinterlace checkbox
-		Q_UNUSED(item);
-
-		typeName = "Video Input Item";
-		
-		ui->playlistSetupWidget->setVisible(false);
-		
-		QWidget *base = new QWidget();
-		
-		QVBoxLayout *vbox = new QVBoxLayout(base);
-		
-		QHBoxLayout *hbox = new QHBoxLayout();
-		
-		hbox->addWidget(new QLabel("Network Source:"));
-		
-		QComboBox *sourceBox = new QComboBox();
-		QStringList itemList;
-		//itemList << "(This Computer)";
-		m_videoPlayerList.clear();
+		// Update the playlist on the player just to make sure its up-to-date with what we see
 		foreach(PlayerConnection *con, m_players->players())
-			if(con->isConnected())
-			{
-				itemList << QString("Player: %1").arg(con->name());
-				m_videoPlayerList << con;
-			}
+			con->updatePlaylist(m_currentDrawable);
+	
+
+		QString itemName = gld->itemName();
+		QString typeName;
+	
+		PropertyEditorFactory::PropertyEditorOptions opts;
+		opts.reset();	
 		
-		sourceBox->addItems(itemList);
-				
-		hbox->addWidget(sourceBox);
-		hbox->addStretch();
+		ui->playlistSetupWidget->setVisible(true);
 		
-		vbox->addLayout(hbox);
-		
-		connect(sourceBox, SIGNAL(activated(int)), this, SLOT(loadVideoInputList(int)));
-		
-		m_videoViewerLayout = new FlowLayout();
-		vbox->addLayout(m_videoViewerLayout);
-		
-		ui->itemPropLayout->addRow(base);
-		
-		if(itemList.size() > 0)
-			loadVideoInputList(0);
-		else
+		if(GLVideoInputDrawable *item = dynamic_cast<GLVideoInputDrawable*>(gld))
 		{
-			sourceBox->setDisabled(true);
-			sourceBox->addItems(QStringList() << "(No Players Connected)");
+			// show device selection box
+			// show deinterlace checkbox
+			Q_UNUSED(item);
+	
+			typeName = "Video Input Item";
 			
-			// Dont show the error box if the director window hasnt been shown yet
-// 			if(isVisible())
-// 				QMessageBox::warning(this, "No Players Connected","Sorry, no players are connected. You must connect to at least one video player before you can switch videos.");
+			ui->playlistSetupWidget->setVisible(false);
+			
+			QWidget *base = new QWidget();
+			
+			QVBoxLayout *vbox = new QVBoxLayout(base);
+			
+			QHBoxLayout *hbox = new QHBoxLayout();
+			
+			hbox->addWidget(new QLabel("Network Source:"));
+			
+			QComboBox *sourceBox = new QComboBox();
+			QStringList itemList;
+			//itemList << "(This Computer)";
+			m_videoPlayerList.clear();
+			foreach(PlayerConnection *con, m_players->players())
+				if(con->isConnected())
+				{
+					itemList << QString("Player: %1").arg(con->name());
+					m_videoPlayerList << con;
+				}
+			
+			sourceBox->addItems(itemList);
+					
+			hbox->addWidget(sourceBox);
+			hbox->addStretch();
+			
+			vbox->addLayout(hbox);
+			
+			connect(sourceBox, SIGNAL(activated(int)), this, SLOT(loadVideoInputList(int)));
+			
+			m_videoViewerLayout = new FlowLayout();
+			vbox->addLayout(m_videoViewerLayout);
+			
+			ui->itemPropLayout->addRow(base);
+			
+			if(itemList.size() > 0)
+				loadVideoInputList(0);
+			else
+			{
+				sourceBox->setDisabled(true);
+				sourceBox->addItems(QStringList() << "(No Players Connected)");
+				
+				// Dont show the error box if the director window hasnt been shown yet
+	// 			if(isVisible())
+	// 				QMessageBox::warning(this, "No Players Connected","Sorry, no players are connected. You must connect to at least one video player before you can switch videos.");
+			}
 		}
-	}
-	else
-	if(GLVideoLoopDrawable *item = dynamic_cast<GLVideoLoopDrawable*>(gld))
-	{
-		opts.reset();
-		opts.stringIsFile = true;
-		opts.fileTypeFilter = tr("Video Files (*.wmv *.mpeg *.mpg *.avi *.wmv *.flv *.mov *.mp4 *.m4a *.3gp *.3g2 *.mj2 *.mjpeg *.ipod *.m4v *.gsm *.swf *.dv *.dvd *.asf *.mtv *.roq *.aac *.ac3 *.aiff *.alaw *.iif);;Any File (*.*)");
-
-		ui->itemPropLayout->addRow(tr("&File:"), PropertyEditorFactory::generatePropertyEditor(item, "videoFile", SLOT(setVideoFile(const QString&)), opts, SIGNAL(videoFileChanged(const QString&))));
-
-		typeName = "Video Loop Item";
-	}
-	else
-	if(GLVideoFileDrawable *item = dynamic_cast<GLVideoFileDrawable*>(gld))
-	{
-		PropertyEditorFactory::PropertyEditorOptions opts;
-		opts.stringIsFile = true;
-		opts.fileTypeFilter = tr("Video Files (*.wmv *.mpeg *.mpg *.avi *.wmv *.flv *.mov *.mp4 *.m4a *.3gp *.3g2 *.mj2 *.mjpeg *.ipod *.m4v *.gsm *.swf *.dv *.dvd *.asf *.mtv *.roq *.aac *.ac3 *.aiff *.alaw *.iif);;Any File (*.*)");
-		
-		ui->itemPropLayout->addRow(tr("&File:"), PropertyEditorFactory::generatePropertyEditor(item, "videoFile", SLOT(setVideoFile(const QString&)), opts, SIGNAL(videoFileChanged(const QString&))));
-
-		typeName = "Video Item";
-	}
-	else
-	if(GLTextDrawable *item = dynamic_cast<GLTextDrawable*>(gld))
-	{
-		opts.reset();
-		
-		QWidget *edit = PropertyEditorFactory::generatePropertyEditor(gld, "plainText", SLOT(setPlainText(const QString&)), opts, SIGNAL(plainTextChanged(const QString&)));
-		
-// 		QLineEdit *line = dynamic_cast<QLineEdit*>(edit);
-// 		if(line)
-// 			connect(gld, SIGNAL(plainTextChanged(const QString&)), line, SLOT(setText(const QString&)));
-		
-		QWidget *base = new QWidget();
-		
-		RtfEditorWindow *dlg = new RtfEditorWindow(item, base);
-		QPushButton *btn = new QPushButton("&Advanced...");
-		connect(btn, SIGNAL(clicked()), dlg, SLOT(show()));
-		
-		QHBoxLayout *hbox = new QHBoxLayout(base);
-		hbox->setContentsMargins(0,0,0,0);
-		hbox->addWidget(new QLabel("Text:"));
-		hbox->addWidget(edit);
-		hbox->addWidget(btn);
-		
-		ui->itemPropLayout->addRow(base); 
-
-		typeName = "Text Item";
-	}
-	else
-	if(GLSvgDrawable *item = dynamic_cast<GLSvgDrawable*>(gld))
-	{
-		PropertyEditorFactory::PropertyEditorOptions opts;
-		opts.stringIsFile = true;
-		opts.fileTypeFilter = tr("SVG Files (*.svg);;Any File (*.*)");
-		ui->itemPropLayout->addRow(tr("&SVG File:"), 
-			PropertyEditorFactory::generatePropertyEditor(
-				item,					// The QObject which contains the property to edit 
-				"imageFile", 				// The property name on the QObject to edit
-				SLOT(setImageFile(const QString&)), 	// The slot on the QObject which sets the property
-				opts, 					// PropertyEditorOptions controlling the display of the editor
-				SIGNAL(imageFileChanged(const QString&))	// An optional signal that is emitted by the QObject when the property is changed
-			));
-		
-		typeName = "SVG Item";
-	} 
-	else
-	if(GLImageDrawable *item = dynamic_cast<GLImageDrawable*>(gld))
-	{
-		PropertyEditorFactory::PropertyEditorOptions opts;
-		opts.stringIsFile = true;
-		opts.fileTypeFilter = tr("Image Files (*.png *.jpg *.bmp *.svg *.xpm *.gif);;Any File (*.*)");
-		ui->itemPropLayout->addRow(tr("&Image:"), 
-			PropertyEditorFactory::generatePropertyEditor(
-				item,					// The QObject which contains the property to edit 
-				"imageFile", 				// The property name on the QObject to edit
-				SLOT(setImageFile(const QString&)), 	// The slot on the QObject which sets the property
-				opts, 					// PropertyEditorOptions controlling the display of the editor
-				SIGNAL(imageFileChanged(const QString&))	// An optional signal that is emitted by the QObject when the property is changed
-			));
-		
-		typeName = "Image Item";
-	} 
+		else
+		if(GLVideoLoopDrawable *item = dynamic_cast<GLVideoLoopDrawable*>(gld))
+		{
+			opts.reset();
+			opts.stringIsFile = true;
+			opts.fileTypeFilter = tr("Video Files (*.wmv *.mpeg *.mpg *.avi *.wmv *.flv *.mov *.mp4 *.m4a *.3gp *.3g2 *.mj2 *.mjpeg *.ipod *.m4v *.gsm *.swf *.dv *.dvd *.asf *.mtv *.roq *.aac *.ac3 *.aiff *.alaw *.iif);;Any File (*.*)");
 	
+			ui->itemPropLayout->addRow(tr("&File:"), PropertyEditorFactory::generatePropertyEditor(item, "videoFile", SLOT(setVideoFile(const QString&)), opts, SIGNAL(videoFileChanged(const QString&))));
 	
-	ui->itemNameLabel->setText(itemName.isEmpty() ? QString("<b>%1</b>").arg(typeName) : QString("<b>%1</b> (%2)").arg(itemName).arg(typeName));
+			typeName = "Video Loop Item";
+		}
+		else
+		if(GLVideoFileDrawable *item = dynamic_cast<GLVideoFileDrawable*>(gld))
+		{
+			PropertyEditorFactory::PropertyEditorOptions opts;
+			opts.stringIsFile = true;
+			opts.fileTypeFilter = tr("Video Files (*.wmv *.mpeg *.mpg *.avi *.wmv *.flv *.mov *.mp4 *.m4a *.3gp *.3g2 *.mj2 *.mjpeg *.ipod *.m4v *.gsm *.swf *.dv *.dvd *.asf *.mtv *.roq *.aac *.ac3 *.aiff *.alaw *.iif);;Any File (*.*)");
+			
+			ui->itemPropLayout->addRow(tr("&File:"), PropertyEditorFactory::generatePropertyEditor(item, "videoFile", SLOT(setVideoFile(const QString&)), opts, SIGNAL(videoFileChanged(const QString&))));
+	
+			typeName = "Video Item";
+		}
+		else
+		if(GLTextDrawable *item = dynamic_cast<GLTextDrawable*>(gld))
+		{
+			opts.reset();
+			
+			QWidget *edit = PropertyEditorFactory::generatePropertyEditor(gld, "plainText", SLOT(setPlainText(const QString&)), opts, SIGNAL(plainTextChanged(const QString&)));
+			
+	// 		QLineEdit *line = dynamic_cast<QLineEdit*>(edit);
+	// 		if(line)
+	// 			connect(gld, SIGNAL(plainTextChanged(const QString&)), line, SLOT(setText(const QString&)));
+			
+			QWidget *base = new QWidget();
+			
+			RtfEditorWindow *dlg = new RtfEditorWindow(item, base);
+			QPushButton *btn = new QPushButton("&Advanced...");
+			connect(btn, SIGNAL(clicked()), dlg, SLOT(show()));
+			
+			QHBoxLayout *hbox = new QHBoxLayout(base);
+			hbox->setContentsMargins(0,0,0,0);
+			hbox->addWidget(new QLabel("Text:"));
+			hbox->addWidget(edit);
+			hbox->addWidget(btn);
+			
+			ui->itemPropLayout->addRow(base); 
+	
+			typeName = "Text Item";
+		}
+		else
+		if(GLSvgDrawable *item = dynamic_cast<GLSvgDrawable*>(gld))
+		{
+			PropertyEditorFactory::PropertyEditorOptions opts;
+			opts.stringIsFile = true;
+			opts.fileTypeFilter = tr("SVG Files (*.svg);;Any File (*.*)");
+			ui->itemPropLayout->addRow(tr("&SVG File:"), 
+				PropertyEditorFactory::generatePropertyEditor(
+					item,					// The QObject which contains the property to edit 
+					"imageFile", 				// The property name on the QObject to edit
+					SLOT(setImageFile(const QString&)), 	// The slot on the QObject which sets the property
+					opts, 					// PropertyEditorOptions controlling the display of the editor
+					SIGNAL(imageFileChanged(const QString&))	// An optional signal that is emitted by the QObject when the property is changed
+				));
+			
+			typeName = "SVG Item";
+		} 
+		else
+		if(GLImageDrawable *item = dynamic_cast<GLImageDrawable*>(gld))
+		{
+			PropertyEditorFactory::PropertyEditorOptions opts;
+			opts.stringIsFile = true;
+			opts.fileTypeFilter = tr("Image Files (*.png *.jpg *.bmp *.svg *.xpm *.gif);;Any File (*.*)");
+			ui->itemPropLayout->addRow(tr("&Image:"), 
+				PropertyEditorFactory::generatePropertyEditor(
+					item,					// The QObject which contains the property to edit 
+					"imageFile", 				// The property name on the QObject to edit
+					SLOT(setImageFile(const QString&)), 	// The slot on the QObject which sets the property
+					opts, 					// PropertyEditorOptions controlling the display of the editor
+					SIGNAL(imageFileChanged(const QString&))	// An optional signal that is emitted by the QObject when the property is changed
+				));
+			
+			typeName = "Image Item";
+		} 
+		
+		
+		ui->itemNameLabel->setText(itemName.isEmpty() ? QString("<b>%1</b>").arg(typeName) : QString("<b>%1</b> (%2)").arg(itemName).arg(typeName));
+	}
 }
 
 void DirectorWindow::loadVideoInputList(int idx)
@@ -1157,5 +1167,12 @@ void DirectorWindow::playPlaylist()
 		con->setPlaylistPlaying(m_currentDrawable, true);
 }
 
+void DirectorWindow::playlistItemDurationChanged(double)
+{
+	if(!m_currentDrawable)
+		return;
+	foreach(PlayerConnection *con, m_players->players())
+		con->updatePlaylist(m_currentDrawable);
+}
 
 

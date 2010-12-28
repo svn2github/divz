@@ -5,6 +5,7 @@
 #include <QObject>
 #include <QByteArray>
 #include <QTcpSocket>
+#include <QPointer>
 
 //#include "GLPlayerServer.h"
 
@@ -53,7 +54,6 @@ private:
 	
 	int m_blockSize;
 	QByteArray m_dataBlock;
-
 };
 
 #endif
