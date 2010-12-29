@@ -36,6 +36,7 @@ public slots:
 	void addImage();
 	void addSvg();
 	void addText(const QString& text="");
+	void addRect();
 	
 	void addScene();
 	void delScene();

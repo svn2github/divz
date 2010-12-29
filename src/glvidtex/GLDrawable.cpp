@@ -1011,6 +1011,7 @@ QVariantMap GLDrawable::propsToMap()
 
 QVariant GLDrawable::itemChange(GraphicsItemChange change, const QVariant & value)
 {
+/*
 	QVariant retVal;
 	bool retValOverride = false;
 	if(change != ItemFlagsChange &&
@@ -1018,39 +1019,6 @@ QVariant GLDrawable::itemChange(GraphicsItemChange change, const QVariant & valu
 		change != ItemChildAddedChange)
 		qDebug() << "GLDrawable::itemChange: change:"<<change<<", value:"<<value;
 
-	// keep the AbstractContent's center inside the scene rect..
-// 	if (change == ItemPositionChange && scene() && AppSettings::gridEnabled())
-// 	{
-// 		if(modelItem() && modelItem()->itemClass() == BackgroundItem::ItemClass)
-// 		{
-// 			retVal = QVariant(pos());
-//  			retValOverride = true;
-//  		}
-//  		else
-//  		{
-//
-// 			QPointF newPos = AppSettings::snapToGrid(value.toPointF(),m_kbdMotivated);
-//
-// 			// reset the keyboard flag - if another key press comes, it will be set again by the scene
-// 			if(m_kbdMotivated)
-// 				m_kbdMotivated = false;
-//
-// 			if (newPos != value.toPointF())
-// 			{
-// 				retVal = QVariant(newPos);
-// 				retValOverride = true;
-// 			}
-// 		}
-// 	}
-
-	// tell subclasses about selection changes
-// 	if (change == ItemSelectedHasChanged)
-// 		selectionChanged(value.toBool());
-
-	//qDebug() << "itemChange(): value:"<<value;
-
-	// changes that affect the mirror item
-	//if (m_mirrorItem) {
 	switch (change)
 	{
 		// notify about setPos
@@ -1074,26 +1042,12 @@ QVariant GLDrawable::itemChange(GraphicsItemChange change, const QVariant & valu
 #if QT_VERSION >= 0x040500
 		case ItemOpacityHasChanged:
 #endif
-/*			if(DEBUG_ABSTRACTCONTENT)
-				qDebug() << "AbstractContent::itemChange: " << modelItem()->itemName() << " ItemTransformHasChanged - ItemOpacityHasChanged:"<<value;
-			//syncToModelItem(modelItem());
-			GFX_CHANGED();*/
 			break;
 
 		case ItemZValueHasChanged:
-/*			//syncToModelItem(modelItem());
-			if(DEBUG_ABSTRACTCONTENT)
-				qDebug() << "AbstractContent::itemChange: " << modelItem()->itemName() << " ItemZValueHasChanged:"<<value;
-			if(m_mirrorItem)
-				m_mirrorItem->setZValue(zValue());*/
 			break;
 
 		case ItemVisibleHasChanged:
-/*			if(DEBUG_ABSTRACTCONTENT)
-				qDebug() << "AbstractContent::itemChange: " << modelItem()->itemName() << " ItemVisibleHasChanged:"<<value;
-			//syncToModelItem(modelItem());
-			if(m_mirrorItem)
-				m_mirrorItem->setVisible(isVisible());*/
 			break;
 
 		default:
@@ -1104,6 +1058,8 @@ QVariant GLDrawable::itemChange(GraphicsItemChange change, const QVariant & valu
 
 	QVariant otherVal = QGraphicsItem::itemChange(change, value);
 	return retValOverride ? retVal : otherVal;
+*/
+	return QGraphicsItem::itemChange(change, value);
 }
 
 

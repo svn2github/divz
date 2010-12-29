@@ -29,7 +29,8 @@ HEADERS       = GLWidget.h \
 		GLPlayerServer.h \
 		GLPlayerClient.h \
 		VideoEncoder.h \
-		GLSvgDrawable.h
+		GLSvgDrawable.h \
+		GLRectDrawable.h
 		
 SOURCES       = GLWidget.cpp \
 		../livemix/VideoSource.cpp \
@@ -57,7 +58,8 @@ SOURCES       = GLWidget.cpp \
 		GLPlayerServer.cpp \
 		GLPlayerClient.cpp \
 		VideoEncoder.cpp \
-		GLSvgDrawable.cpp
+		GLSvgDrawable.cpp \
+		GLRectDrawable.cpp
 		
 
 editor: {

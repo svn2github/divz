@@ -227,6 +227,10 @@ void EditorWindow::createUI()
 	connect(act, SIGNAL(triggered()), this, SLOT(addSvg()));
 	toolbar->addAction(act);
 	
+	act = toolbar->addAction(QIcon(":/data/insert-rect-24.png"), tr("New Rectangle"));
+	act->setShortcut(QString(tr("CTRL+SHIFT+B")));
+	connect(act, SIGNAL(triggered()), this, SLOT(addRect()));
+	
 	toolbar->addSeparator();
 	
 	act = new QAction(QIcon("../data/action-add.png"), tr("Add New Slide"), this);
@@ -422,6 +426,7 @@ GLScene *EditorWindow::scene()
 void EditorWindow::addDrawable(GLDrawable *drawable)
 {
 	drawable->addShowAnimation(GLDrawable::AnimFade);
+	drawable->setZIndex(scene()->size());
 	scene()->addDrawable(drawable);
 	
 	if(m_graphicsScene)
@@ -460,6 +465,19 @@ void EditorWindow::addImage()
 void EditorWindow::addSvg()
 {
 	addDrawable(new GLSvgDrawable("animated-clock.svg"));
+}
+
+void EditorWindow::addRect()
+{
+	GLRectDrawable *rect = new GLRectDrawable();
+	addDrawable(rect);
+	
+	if(m_graphicsScene)
+	{
+		QRectF r = m_graphicsScene->sceneRect();
+		r = QRectF(r.width() * .25, r.height() * .25, r.width() * .5, r.height() * .5);
+		rect->setRect(r);
+	}
 }
 
 void EditorWindow::addText(const QString& tmp)

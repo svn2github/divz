@@ -377,6 +377,7 @@ void GLScene::fromByteArray(QByteArray& array)
 		IF_CLASS(GLVideoReceiverDrawable);
 		IF_CLASS(GLVideoMjpegDrawable);
 		IF_CLASS(GLSvgDrawable);
+		IF_CLASS(GLRectDrawable);
 
 		#undef IF_CLASS
 

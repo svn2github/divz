@@ -44,6 +44,7 @@ TODO:
 		- Transmit slide group changes to player when editor window closed
 			- Need to cross fade between slides
 			- Prompt to send?
+		- When an item is edited in the editor, it needs to update the filtered item list in the director
 		- Need to drag/drop to re-arrange slide list
 		- Add 'setup' options to the video switcher to configure the video feed from director
 			- Input
@@ -66,8 +67,14 @@ TODO:
 				 	- Generate a ControlWidget which emits a 'setProperty' signal to change settings in the director
 				 	- (Maybe) Generate an EditorWidget to setup the scene in the editor
 				- GroupTypes are a GroupTypeID and the GroupTypeFactor gives a GroupTypeEngine which:
-					- TBD.....
-					- Generate scenes?
+					- GroupTypes use scenes as templates for generating multiple scenes 
+						- Similar to above, they look for required elements in the template
+						- Then they duplicate the template to make scenes in a new group
+					- The new group has its GroupType set to the id of the engine
+					- The engine is then responsible for generating the QAbstractListModel for the list of scenes in the group
+					- The engine also gets a pointer to the list view so it can reconfig the list view as it desires
+						- The default engine must be sure to reset the list view
+					- Group engines can generate slides that either use the default SceneType or a custom scene type
 		- Border/Dropshadow control for items
 			- Right now, text and images
 		- Crossfading between scenes
@@ -75,6 +82,14 @@ TODO:
 		- Add copy/paste to editor
 		- Add a simple rectangle item to draw boxes, panels, lines with
 		- Add a 'remove from playlist' button
+		- Durations on scenes
+			- Auto calced based on max length playlist of items
+			- Or manually set
+		- Durations on groups
+			- Auto calced based on durations of all the scenes
+		- Add a "play" interface to groups to loop thru scenes
+			- Some how emit a signal when need to change scenes?
+		- Add a play interface to collection to loop thru groups
 		
 		- [DONE] Make "Test Connection" just TEST in player setup
 		- [DONE] Make a checkbox for "connect on startup"
@@ -84,6 +99,11 @@ TODO:
 		- [DONE] Allow player to run playlists on items by itself without being connected to the director
 	
 	IDEAS:
+		- Add an "output analysis" to the PlayerSetupDialog
+			- Auto-updated histogram when connected
+			- Need a histo of rgb values not just grayscale
+			- Add graphs of min/max/avg for hue/sat/value
+		- Add image slow-zoom animation (zoom in/out, setc)
 		- [DONE] SVG animation playback/rendering
 			- Not the smoothest thing around, but it works...
 		- Add a Weather Item based on Google API code in $QT_HOME/qt/demos/embedded/weatherinfo.cpp

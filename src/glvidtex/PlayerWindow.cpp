@@ -88,6 +88,7 @@ void PlayerCompatOutputStream::setImage(QImage img)
 void PlayerCompatOutputStream::renderScene()
 {
 	QImage image(320,240,QImage::Format_ARGB32);
+	memset(image.scanLine(0),0,image.byteCount());
 	QPainter p(&image);
 	
 	if(m_win->graphicsScene())
