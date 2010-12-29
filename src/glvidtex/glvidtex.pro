@@ -79,6 +79,7 @@ editor: {
 		RtfEditorWindow.cpp
 		
 	include(../3rdparty/richtextedit/richtextedit.pri)
+	include(../qtcolorpicker/qtcolorpicker.pri)
 }
 director: {
 	TARGET = gldirector
@@ -117,6 +118,7 @@ director: {
 		VideoInputSenderManager.cpp
 		
 	include(../3rdparty/richtextedit/richtextedit.pri)
+	include(../qtcolorpicker/qtcolorpicker.pri)
 }
 player: {
 	TARGET = glplayer

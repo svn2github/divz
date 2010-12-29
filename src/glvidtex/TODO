@@ -32,11 +32,14 @@ TODO:
 			- Not a showstoper yet, so moving on to other problems for now.
 			- Updated: Seems to not crash at the same point now - now when player closes, it gets caught in a loop in VideoReceiver - then when player comes back, THEN it crashes
 			- Need to figure out where the latest crash is an if we can fix this one.
+			- Seems to be caused *by* VideoReceiver - when no videoreceiver active, player can close and reopen without crashing the director
 		- Director: playlist text looses formatting when playing?
 		- Make the Video Input control panel in director default to last network source
 			- [DONE] Consider removing "(This Machine)" as an option
 				- Dont put a message box - just a simple QLabel
 		- Make the video input control panel automatically update when players are connected
+		- Sometimes, clicking Connect on the player doesnt fully connect - logs in, but nothing transmitted, window not moved, etc - clicking connect again works
+		- Changing scenes doesnt always work in player - I'd say 1/10th of the timer, it stays black
 		
 	NEEDED FEATURES:
 		- Make an "option" to reconfig the item control area as mini windows...?
@@ -80,7 +83,6 @@ TODO:
 		- Crossfading between scenes
 		- MUST have per-camera BCHS controls
 		- Add copy/paste to editor
-		- Add a simple rectangle item to draw boxes, panels, lines with
 		- Add a 'remove from playlist' button
 		- Durations on scenes
 			- Auto calced based on max length playlist of items
@@ -91,6 +93,7 @@ TODO:
 			- Some how emit a signal when need to change scenes?
 		- Add a play interface to collection to loop thru groups
 		
+		- [DONE] Add a simple rectangle item to draw boxes, panels, lines with
 		- [DONE] Make "Test Connection" just TEST in player setup
 		- [DONE] Make a checkbox for "connect on startup"
 		- [DONE] Add button to "Connect To" beside "Test"

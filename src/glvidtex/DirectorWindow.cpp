@@ -5,6 +5,7 @@
 #include "../livemix/EditorUtilityWidgets.h"
 #include "RtfEditorWindow.h"
 #include "GLEditorGraphicsScene.h"
+#include "../qtcolorpicker/qtcolorpicker.h"
 
 #include "FlowLayout.h"
 
@@ -944,6 +945,18 @@ void DirectorWindow::setCurrentDrawable(GLDrawable *gld)
 			typeName = "SVG Item";
 		} 
 		else
+		if(GLRectDrawable *item = dynamic_cast<GLRectDrawable*>(gld))
+		{
+			QtColorPicker * fillColor = new QtColorPicker;
+			fillColor->setStandardColors();
+			fillColor->setCurrentColor(item->fillColor());
+			connect(fillColor, SIGNAL(colorChanged(const QColor &)), item, SLOT(setFillColor(QColor)));
+			
+			ui->itemPropLayout->addRow(tr("Fill:"), fillColor);
+			
+			typeName = "Rectangle";
+		}
+		else
 		if(GLImageDrawable *item = dynamic_cast<GLImageDrawable*>(gld))
 		{
 			PropertyEditorFactory::PropertyEditorOptions opts;
@@ -1073,8 +1086,10 @@ void DirectorWindow::setCurrentItem(GLPlaylistItem *item)
 	if(!item)
 		return;
 	
-	m_currentDrawable->playlist()->playItem(item);
+	//m_currentDrawable->playlist()->playItem(item);
 	m_currentItem = item;
+	
+	playlistItemChanged(m_currentDrawable, item);
 }
 
 void DirectorWindow::changeCanvasSize()

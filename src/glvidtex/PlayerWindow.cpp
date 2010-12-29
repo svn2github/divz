@@ -4,6 +4,7 @@
 #include "GLWidget.h"
 #include "GLDrawable.h"
 #include "GLVideoDrawable.h"
+#include "GLRectDrawable.h"
 
 #include "GLPlayerServer.h"
 // #include "GLPlayerClient.h"
@@ -165,6 +166,10 @@ PlayerWindow::PlayerWindow(QWidget *parent)
 		point = QPoint(parts[0].toInt(),parts[1].toInt()); \
 		if(verbose) qDebug() << "PlayerWindow: " key ": " << point; 
 	
+	m_blackOverlay = new GLRectDrawable();
+	m_blackOverlay->setZIndex(99999);
+	m_blackOverlay->setItemName("Black Overlay");
+	m_blackOverlay->setXFadeEnabled(false);
 		
 	m_useGLWidget = READ_STRING("compat","false") == "false";
 	if(m_useGLWidget)
@@ -174,6 +179,7 @@ PlayerWindow::PlayerWindow(QWidget *parent)
 		qDebug() << "PlayerWindow: Using OpenGL to provide high-quality graphics.";
 		
 		m_glWidget->setCursor(Qt::BlankCursor);
+		m_glWidget->addDrawable(m_blackOverlay);
 	}
 	else
 	{
@@ -188,6 +194,7 @@ PlayerWindow::PlayerWindow(QWidget *parent)
 		qDebug() << "PlayerWindow: Using vendor-provided stock graphics engine for compatibility with older hardware.";
 		
 		m_graphicsView->setCursor(Qt::BlankCursor);
+		m_graphicsScene->addItem(m_blackOverlay);
 	}
 	
 	
@@ -272,13 +279,22 @@ PlayerWindow::PlayerWindow(QWidget *parent)
 	// Canvas Size
 	READ_POINT("canvas-size","1000x750");
 	if(m_useGLWidget)
+	{
 		m_glWidget->setCanvasSize(QSizeF((qreal)point.x(),(qreal)point.y()));
+		m_blackOverlay->setRect(QRectF(0,0,(qreal)point.x(),(qreal)point.y()));
+	}
 	else
-		m_graphicsScene->setSceneRect(QRectF(0,0,(qreal)point.x(),(qreal)point.y()));
+	{
+		QRectF r = QRectF(0,0,(qreal)point.x(),(qreal)point.y());
+		m_graphicsScene->setSceneRect(r);
+		m_blackOverlay->setRect(r);
+	}
+	
+	m_blackOverlay->setVisible(false);
 	
 	
-	m_xfadeSpeed = READ_STRING("xfade-speed","300").toInt();
-	qDebug() << "PlayerWindow: Crossfade speed: "<<m_xfadeSpeed;
+	m_xfadeSpeed = READ_STRING("xfade-speed",300).toInt();
+	//qDebug() << "PlayerWindow: Crossfade speed: "<<m_xfadeSpeed;
 	
 	
 	m_server = new GLPlayerServer();
@@ -538,8 +554,13 @@ void PlayerWindow::receivedMap(QVariantMap map)
 	else
 	if(cmd == GLPlayer_SetBlackout)
 	{
-		if(m_glWidget)
-			m_glWidget->fadeBlack(map["flag"].toBool());
+// 		if(m_glWidget)
+// 			m_glWidget->fadeBlack(map["flag"].toBool());
+
+		m_blackOverlay->setXFadeLength(m_xfadeSpeed);
+		bool flag = map["flag"].toBool();
+		//qDebug() << "PlayerWindow: blackout flag:"<<flag<<", using overlay:"<<(QObject*)m_blackOverlay<<", speed:"<<m_xfadeSpeed;
+		m_blackOverlay->setVisible(flag);
 			
 		sendReply(QVariantList() 
 				<< "cmd" << GLPlayer_SetBlackout
@@ -918,48 +939,166 @@ void PlayerWindow::setScene(GLScene *scene)
 	
 	if(m_glWidget)
 	{
+// 		if(!m_oldDrawables.isEmpty())
+// 		{
+// 			foreach(GLDrawable *drawable, m_oldDrawables)
+// 			{
+// 				disconnect(drawable, 0, this, 0);
+// 				m_glWidget->removeDrawable(drawable);
+// 			}
+// 		}
+		
+		int max = -9999;
 		QList<GLDrawable*> items = m_glWidget->drawables();
 		foreach(GLDrawable *drawable, items)
 		{
-			disconnect(drawable->playlist(), 0, this, 0);
-			m_glWidget->removeDrawable(drawable);
-// 			qDebug() << "PlayerWindow::setScene: Removing old drawable:" <<(QObject*)drawable;
+			if(drawable == m_blackOverlay)
+				m_glWidget->removeDrawable(m_blackOverlay);
+			else
+			{
+				disconnect(drawable->playlist(), 0, this, 0);
+ 				m_glWidget->removeDrawable(drawable);
+				
+// 				connect(drawable, SIGNAL(isVisible(bool)), this, SLOT(drawableIsVisible(bool)));
+// 				m_oldDrawables << drawable; 
+// 				
+				if(drawable->zIndex() > max)
+					max = drawable->zIndex();
+				
+				//qDebug() << "PlayerWindow::setScene: [remove] drawable:"<<(QObject*)drawable<<", zIndex:"<<drawable->zIndex()<<", max:"<<max;
+				/*
+				drawable->setFadeOut(true);
+				drawable->setVisible(false);*/
+				
+	// 			qDebug() << "PlayerWindow::setScene: Removing old drawable:" <<(QObject*)drawable;
+			}
 		}
 		
+		m_glWidget->addDrawable(m_blackOverlay);
+		m_blackOverlay->setFillColor(Qt::black);
+		
+		int newMax = max;
 		foreach(GLDrawable *drawable, newSceneList)
 		{
+// 			drawable->setFadeOut(false);
+// 			drawable->setVisible(false);
+// 			drawable->setFadeOut(true);
+			
 			connect(drawable->playlist(), SIGNAL(currentItemChanged(GLPlaylistItem*)), this, SLOT(currentPlaylistItemChanged(GLPlaylistItem*)));
 			connect(drawable->playlist(), SIGNAL(playerTimeChanged(double)), this, SLOT(playlistTimeChanged(double)));
 			m_glWidget->addDrawable(drawable);
 			
 			if(GLVideoDrawable *vid = dynamic_cast<GLVideoDrawable*>(drawable))
+			{
+				//qDebug() << "GLWidget mode, item:"<<(QObject*)drawable<<", xfade length:"<<m_xfadeSpeed;
 				vid->setXFadeLength(m_xfadeSpeed);
+			}
+			
+// 			if(drawable->zIndex() < max)
+// 				drawable->setZIndex(max + abs(drawable->zIndex()));
+// 			if(drawable->zIndex() > newMax)
+// 				newMax = drawable->zIndex();
+// 				
+// 			//qDebug() << "PlayerWindow::setScene: [add] drawable:"<<(QObject*)drawable<<", zIndex:"<<drawable->zIndex()<<", max:"<<max<<", newMax:"<<newMax;
+// 			
+// 			drawable->setFadeIn(true);
+// 			drawable->setVisible(true);
 // 			qDebug() << "PlayerWindow::setScene: Adding new drawable:" <<(QObject*)drawable;
 		}
+		
+		if(newMax < 99999)
+			newMax = 99999;
+		m_blackOverlay->setZIndex(newMax);
+		//qDebug() << "PlayerWindow::setScene: adding black overlay:"<<(QObject*)m_blackOverlay<<", rect:"<<m_blackOverlay->rect();
 	}
 	else
 	{
+// 		if(!m_oldDrawables.isEmpty())
+// 		{
+// 			foreach(GLDrawable *drawable, m_oldDrawables)
+// 			{
+// 				disconnect(drawable, 0, this, 0);
+// 				m_graphicsScene->removeItem(drawable);
+// 			}
+// 		}
+		
+		int max = 9999;
 		QList<QGraphicsItem*> items = m_graphicsScene->items();
 		foreach(QGraphicsItem *item, items)
 		{
-			if(GLDrawable *gld = dynamic_cast<GLDrawable*>(item))
+			if(GLDrawable *drawable = dynamic_cast<GLDrawable*>(item))
 			{
-				disconnect(gld->playlist(), 0, this, 0);
-				m_graphicsScene->removeItem(gld);
+				//disconnect(gld->playlist(), 0, this, 0);
+				//m_graphicsScene->removeItem(gld);
+				if(drawable == m_blackOverlay)
+					m_graphicsScene->removeItem(m_blackOverlay);
+				else
+				{
+					disconnect(drawable->playlist(), 0, this, 0);
+					m_glWidget->removeDrawable(drawable);
+					
+// 					connect(drawable, SIGNAL(isVisible(bool)), this, SLOT(drawableIsVisible(bool)));
+// 					m_oldDrawables << drawable;
+					 
+					if(drawable->zIndex() > max)
+						max = drawable->zIndex();
+						
+// 					drawable->setFadeOut(true);
+// 						drawable->setVisible(false);
+					
+		// 			qDebug() << "PlayerWindow::setScene: Removing old drawable:" <<(QObject*)drawable;
+				}
 			}
 		}
 		
-		m_graphicsScene->clear();
+		//m_graphicsScene->clear();
+		
+		m_graphicsScene->addItem(m_blackOverlay);
+		m_blackOverlay->setFillColor(Qt::black);
+		 
+		int newMax = max;
 		foreach(GLDrawable *drawable, newSceneList)
 		{
+// 			drawable->setFadeOut(false);
+// 			drawable->setVisible(false);
+// 			drawable->setFadeOut(true);
+			
 			connect(drawable->playlist(), SIGNAL(currentItemChanged(GLPlaylistItem*)), this, SLOT(currentPlaylistItemChanged(GLPlaylistItem*)));
 			connect(drawable->playlist(), SIGNAL(playerTimeChanged(double)), this, SLOT(playlistTimeChanged(double)));
 			m_graphicsScene->addItem(drawable);
 			
 			if(GLVideoDrawable *vid = dynamic_cast<GLVideoDrawable*>(drawable))
+			{
+				//qDebug() << "QGraphicsView mode, item:"<<(QObject*)drawable<<", xfade length:"<<m_xfadeSpeed;
 				vid->setXFadeLength(m_xfadeSpeed);
+			}
+			
+			if(drawable->zIndex() < max)
+				drawable->setZIndex(max + drawable->zIndex());
+			if(drawable->zIndex() > newMax)
+				newMax = drawable->zIndex();
+			
+// 			drawable->setVisible(true);
 		}
+		
+		m_blackOverlay->setZIndex(newMax);
 	}
+}
+
+void PlayerWindow::drawableIsVisible(bool flag)
+{
+	GLDrawable *drawable = dynamic_cast<GLDrawable*>(sender());
+	if(!drawable || flag)
+		return;
+		
+	disconnect(drawable, 0, this, 0);
+	
+	if(m_graphicsScene)
+		m_graphicsScene->removeItem(drawable);
+	else
+		m_glWidget->removeDrawable(drawable);
+		
+	qDebug() << "PlayerWindow::drawableIsVisible: drawable expired:"<<(QObject*)drawable;	
 }
 
 void PlayerWindow::currentPlaylistItemChanged(GLPlaylistItem* item)

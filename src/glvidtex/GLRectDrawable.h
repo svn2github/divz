@@ -1,13 +1,13 @@
 #ifndef GLRectDrawable_H
 #define GLRectDrawable_H
 
-#include "GLDrawable.h"
+#include "GLImageDrawable.h"
 
-class GLRectDrawable : public GLDrawable
+class GLRectDrawable : public GLImageDrawable
 {
 	Q_OBJECT
 	
-	Q_PROPERTY(QColor fillColor READ fillColor WRITE setFillColor);
+	Q_PROPERTY(QColor fillColor READ fillColor WRITE setFillColor USER true);
 	Q_PROPERTY(QColor borderColor READ borderColor WRITE setBorderColor);
 	Q_PROPERTY(double borderWidth READ borderWidth WRITE setBorderWidth);
 	Q_PROPERTY(double cornerRounding READ cornerRounding WRITE setCornerRounding);
@@ -24,20 +24,18 @@ public slots:
 	void setBorderColor(QColor c);
 	void setBorderWidth(double d);
 	void setCornerRounding(double d);
-
+	
 protected:
-	virtual void paintGL();
-	virtual void initGL();
+	void renderImage();
 	
 	// For compat with QGraphicsItem
 	virtual void paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget);
-
+	
 protected:
 	QColor m_fillColor;
 	QColor m_borderColor;
 	double m_borderWidth;
-	double m_cornerRounding;	
-
+	double m_cornerRounding;
 };
 
 #endif

@@ -1838,7 +1838,7 @@ void GLVideoDrawable::paintGL()
 		m_colorsDirty = false;
         }
 
-// 	qDebug() << "GLVideoDrawable::paintGL(): "<<(QObject*)this<<" Mark - start";
+ 	//qDebug() << "GLVideoDrawable::paintGL(): "<<(QObject*)this;
 
 
 	//m_frame->unmap()();

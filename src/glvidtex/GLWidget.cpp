@@ -814,7 +814,7 @@ void GLWidget::paintGL()
 	{
 		//qDebug() << "GLWidget::paintGL(): ["<<counter++<<"] drawable->rect: "<<drawable->rect();
 		
- 		//qDebug() << "GLWidget::paintGL(): drawable:"<<((QObject*)drawable)<<", vp:"<<viewport<<", rect:"<<drawable->rect(); //<<", isvis:"<<drawable->isVisible();
+ 		//qDebug() << "GLWidget::paintGL(): drawable:"<<((QObject*)drawable)<<", vp:"<<viewport<<", rect:"<<drawable->rect()<<", isvis:"<<drawable->isVisible()<<", opac:"<<drawable->opacity()<<", intersects:"<<drawable->rect().intersects(viewport)<<", z:"<<drawable->zIndex();
 		// Don't draw if not visible or if opacity == 0
 		if(drawable->isVisible() && 
 		   drawable->opacity() > 0 &&
@@ -1403,8 +1403,8 @@ void GLWidget::addDrawable(GLDrawable *item)
 {
 	//makeCurrent();
 	
-	QString newName = QString("%1/%2").arg(objectName()).arg(item->objectName());
-	item->setObjectName(qPrintable(newName));
+// 	QString newName = QString("%1/%2").arg(objectName()).arg(item->objectName());
+// 	item->setObjectName(qPrintable(newName));
 	item->setGLWidget(this);
 	m_drawables << item;
 	connect(item, SIGNAL(zIndexChanged(double)), this, SLOT(zIndexChanged()));

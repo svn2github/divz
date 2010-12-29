@@ -18,6 +18,8 @@ class QGraphicsScene;
 class VideoInputSenderManager;
 class VideoEncoder;
 class GLPlaylistItem;
+class GLRectDrawable;
+class GLDrawable;
 
 #include "../livemix/VideoSource.h"
 
@@ -79,6 +81,8 @@ private slots:
 	
 	void currentPlaylistItemChanged(GLPlaylistItem*);
 	void playlistTimeChanged(double);
+	
+	void drawableIsVisible(bool);
 
 protected:
 	friend class PlayerCompatOutputStream;
@@ -117,6 +121,9 @@ private:
 	int m_xfadeSpeed;
 	
 	PlayerCompatOutputStream *m_compatStream;
+	
+	GLRectDrawable *m_blackOverlay;
+	QList<GLDrawable*> m_oldDrawables;
 };
 
 #endif

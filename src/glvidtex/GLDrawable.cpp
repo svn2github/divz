@@ -193,20 +193,24 @@ void GLDrawable::setVisible(bool flag)
 {
 	//qDebug() << "QGraphicsItem::setVisible: "<<flag;
 	QGraphicsItem::setVisible(flag);
+	//qDebug() << "GLDrawable::setVisible(): "<<(QObject*)this<<": Flag:"<<flag<<" mark1";
 
 	if(m_lockVisibleSetter)
 		return;
 	m_lockVisibleSetter = true;
+	
+	//qDebug() << "GLDrawable::setVisible(): "<<(QObject*)this<<": Flag:"<<flag<<" mark2";	
 
 	//if(m_animFinished &&
 	if(m_isVisible == flag)
 	{
+		//qDebug() << "GLDrawable::setVisible(): "<<(QObject*)this<<": Flag:"<<flag<<" mark3";
 		m_lockVisibleSetter = false;
 		emit isVisible(flag);
 		return;
 	}
 
-	//qDebug() << "GLDrawable::setVisible(): "<<this<<": Flag:"<<flag;
+	//qDebug() << "GLDrawable::setVisible(): "<<(QObject*)this<<": Flag:"<<flag<<" mark4";
 	if(flag)
 		emit isVisible(flag);
 	forceStopAnimations();
@@ -221,6 +225,8 @@ void GLDrawable::setVisible(bool flag)
 		if(!flag)
 			emit isVisible(flag);
 	}
+	
+	//qDebug() << "GLDrawable::setVisible(): "<<(QObject*)this<<": Flag:"<<flag<<" mark5";
 
 	m_lockVisibleSetter = false;
 
@@ -233,7 +239,7 @@ void GLDrawable::forceStopAnimations()
 		foreach(QAutoDelPropertyAnimation *ani, m_runningAnimations)
 		{
 			ani->stop();
-			//qDebug() << "GLDrawable::setVisible while anim running, resetting property on "<<ani->propertyName().constData();
+			//qDebug() << (QObject*)this<<"GLDrawable::setVisible while anim running, resetting property on "<<ani->propertyName().constData();
 			ani->resetProperty();
 			ani->deleteLater();
 		}
@@ -250,7 +256,7 @@ void GLDrawable::startAnimations()
 		return;
 	}
 
-	//qDebug() << "GLDrawable::startAnimations(): "<<this<<": At start, rect:"<<rect()<<", opacity:"<<opacity();
+	//qDebug() << "GLDrawable::startAnimations(): "<<(QObject*)this<<": At start, rect:"<<rect()<<", opacity:"<<opacity()<<", m_animDirection:"<<m_animDirection<<", m_animationsEnabled:"<<m_animationsEnabled;
 
 	if(m_animDirection)
 		m_isVisible = m_animDirection;
@@ -310,6 +316,7 @@ GLDrawable::AnimParam & GLDrawable::addShowAnimation(AnimationType value, int le
 	p.curve = value == GLDrawable::AnimFade ? QEasingCurve::Linear : QEasingCurve::OutCubic;
 	m_animations << p;
 
+	//qDebug() << "GLDrawable::addShowAnimation:"<<(QObject*)this<<value<<", len:"<<length;
 	return m_animations.last();
 }
 
@@ -323,6 +330,7 @@ GLDrawable::AnimParam & GLDrawable::addHideAnimation(AnimationType value, int le
 	p.curve = value == GLDrawable::AnimFade ? QEasingCurve::Linear : QEasingCurve::InCubic;
 	m_animations << p;
 
+	//qDebug() << "GLDrawable::addHideAnimation:"<<(QObject*)this<<value<<", len:"<<length;
 	return m_animations.last();
 }
 
@@ -391,7 +399,7 @@ void GLDrawable::startAnimation(const GLDrawable::AnimParam& p)
 
 		ani->setDuration(len);
 
-// 		//qDebug() << "GLDrawable::startAnimation: type:"<<p.type<<", length:"<<p.length<<", curve:"<<p.curve.type();
+		//qDebug() << "GLDrawable::startAnimation: "<<(QObject*)this<<" type:"<<p.type<<", length:"<<len<<", curve:"<<p.curve.type()<<", delay:"<<p.startDelay;
 
 		connect(ani, SIGNAL(finished()), this, SLOT(animationFinished()));
 

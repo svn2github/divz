@@ -2,16 +2,15 @@
 
 #include "GLSceneGroup.h"
 #include "GLEditorGraphicsScene.h"
-
 #include "GLDrawables.h"
-
-#include "RtfEditorWindow.h"
 
 #include "../livemix/ExpandableWidget.h"
 #include "../livemix/EditorUtilityWidgets.h"
 
 #include "../3rdparty/richtextedit/richtexteditor_p.h"
+#include "../qtcolorpicker/qtcolorpicker.h"
 
+#include "RtfEditorWindow.h"
 #include "EditorGraphicsView.h"
 
 #include <QApplication>
@@ -781,6 +780,35 @@ QWidget *EditorWindow::createPropertyEditors(GLDrawable *gld)
 			
 			opts.text = "Ignore aspect ratio";
 			lay->addRow(PropertyEditorFactory::generatePropertyEditor(item, "ignoreAspectRatio", SLOT(setIgnoreAspectRatio(bool)), opts));
+		}
+		else
+		if(GLRectDrawable *item = dynamic_cast<GLRectDrawable*>(gld))
+		{
+			QtColorPicker * fillColor = new QtColorPicker;
+			fillColor->setStandardColors();
+			fillColor->setCurrentColor(item->fillColor());
+			connect(fillColor, SIGNAL(colorChanged(const QColor &)), item, SLOT(setFillColor(QColor)));
+			
+			QtColorPicker * borderColor = new QtColorPicker;
+			borderColor->setStandardColors();
+			borderColor->setCurrentColor(item->borderColor());
+			connect(borderColor, SIGNAL(colorChanged(const QColor &)), item, SLOT(setBorderColor(QColor)));
+			
+			lay->addRow(tr("Fill:"), fillColor);
+			
+			QHBoxLayout *hbox = new QHBoxLayout();
+			QDoubleSpinBox *box = new QDoubleSpinBox();
+			box->setSuffix(tr("px"));
+			box->setMinimum(0);
+			box->setDecimals(2);
+			box->setMaximum(50);
+			box->setValue(item->borderWidth());
+			//connect(m_textSizeBox, SIGNAL(returnPressed()), this, SLOT(textSizeChanged(double)));
+			connect(box, SIGNAL(valueChanged(double)), item, SLOT(setBorderWidth(double)));
+			hbox->addWidget(box);
+			hbox->addWidget(borderColor);
+			
+			lay->addRow(tr("Border:"), hbox);
 		}
 		else
 		if(GLImageDrawable *item = dynamic_cast<GLImageDrawable*>(gld))
