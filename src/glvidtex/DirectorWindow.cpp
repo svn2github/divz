@@ -364,7 +364,7 @@ void DirectorWindow::setFadeSpeedTime(double sec)
 	if(ms > 3000)
 		ms = 3000;
 		
-	int perc = (int)((((double)ms) / 1000.) * 100);
+	int perc = (int)((((double)ms) / 3000.) * 100);
 	if(ui->fadeSpeedSlider->value() != perc)
 	{
 		bool block = ui->fadeSpeedSlider->blockSignals(true);

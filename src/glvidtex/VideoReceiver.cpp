@@ -161,7 +161,14 @@ void VideoReceiver::log(const QString& str)
 void VideoReceiver::lostConnection()
 {
 	if(m_autoReconnect)
+	{
+		enqueue(new VideoFrame(QImage("dot.gif"),1000/30));
 		QTimer::singleShot(1000,this,SLOT(reconnect()));
+	}
+	else
+	{
+		exit();
+	}
 }
 
 void VideoReceiver::lostConnection(QAbstractSocket::SocketError error)

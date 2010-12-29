@@ -4,6 +4,7 @@ GLImageDrawable::GLImageDrawable(QString file, QObject *parent)
 	: GLVideoDrawable(parent)
 {
 	//setImage(QImage("dot.gif"));
+	setCrossFadeMode(GLVideoDrawable::FrontAndBack);
 	
 	if(!file.isEmpty())
 		setImageFile(file);
@@ -25,16 +26,24 @@ void GLImageDrawable::testXfade()
 	
 QImage makeHistogram(const QImage& image)
 {
+	if(image.isNull())
+		return image;
+		
 	QSize smallSize = image.size();
 	smallSize.scale(160,120,Qt::KeepAspectRatio);
 	
 	QImage origScaled = image.scaled(smallSize);
+	if(origScaled.format() != QImage::Format_RGB32)
+		origScaled = origScaled.convertToFormat(QImage::Format_RGB32);
 	
+	// Setup our list of grayscale values and set to 0
 	int rgbHisto[256];
 	memset(&rgbHisto, 0, 256);
 	for(int i=0;i<256;i++)
 		rgbHisto[i] = 0;
 	
+	// Convert each pixel to grayscale and count the number of times each
+	// grayscale value appears in the image
 	for(int y=0; y<smallSize.height(); y++)
 	{
 		const uchar *line = (const uchar*)origScaled.scanLine(y);
@@ -55,6 +64,7 @@ QImage makeHistogram(const QImage& image)
 		}
 	}
 	
+	// Calc the max and avg pixel counts
  	int max=0;
  	int avg=0;
  	for(int i=0;i<256;i++)
@@ -68,6 +78,7 @@ QImage makeHistogram(const QImage& image)
  	avg /= 255;
  	//qDebug() << "Avg:"<<avg<<", max:"<<max;
 
+	// Draw a very simple bar graph of the pixel counts
 	QImage histogram(QSize(255,128), QImage::Format_RGB32);
 	int maxHeight = 128;
 	QPainter p(&histogram);
@@ -88,10 +99,7 @@ QImage makeHistogram(const QImage& image)
 	}
 	p.end();
 	
-		
-	// 30, 59, 11%
-	
-	
+	// Render side by side with the original image
 	QImage histogramOutput(smallSize.width() + 255, smallSize.height(), QImage::Format_RGB32);
 	QPainter p2(&histogramOutput);
 	p2.fillRect(histogramOutput.rect(),Qt::gray);
@@ -104,10 +112,13 @@ QImage makeHistogram(const QImage& image)
 
 void GLImageDrawable::setImage(const QImage& image)
 {
+	//qDebug() << "GLImageDrawable::setImage: Size:"<<image.size();
 	//QImage image = makeHistogram(tmp);
-	if(m_frame && m_frame->isValid() && xfadeEnabled())
+	//if(m_frame && m_frame->isValid() && ())
+	if(!m_image.isNull() && xfadeEnabled())
 	{
-		m_frame2 = m_frame;
+// 		m_frame2 = m_frame;
+		m_frame2 = VideoFramePtr(new VideoFrame(m_image,1000/30));
 		updateTexture(true); // true = read from m_frame2
 		xfadeStart();
 	}

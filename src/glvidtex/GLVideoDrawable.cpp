@@ -97,6 +97,7 @@ GLVideoDrawable::GLVideoDrawable(QObject *parent)
 	, m_videoSenderEnabled(false)
 	, m_videoSenderPort(-1)
 	, m_ignoreAspectRatio(false)
+	, m_crossFadeMode(JustFront)
 {
 
 	m_imagePixelFormats
@@ -428,7 +429,7 @@ void GLVideoDrawable::setAlphaMask(const QImage &mask)
 	{
 		//qDebug() << "GLVideoDrawable::setAlphaMask: "<<this<<",  Got null mask, size:"<<mask.size();
 		//return;
-		m_alphaMask = QImage(1,1,QImage::Format_RGB32);
+		m_alphaMask = QImage(16,16,QImage::Format_RGB32);
 		m_alphaMask.fill(Qt::black);
  		//qDebug() << "GLVideoDrawable::initGL: BLACK m_alphaMask.size:"<<m_alphaMask.size();
  		setAlphaMask(m_alphaMask);
@@ -1700,7 +1701,7 @@ void GLVideoDrawable::paint(QPainter * painter, const QStyleOptionGraphicsItem *
 	if(!m_frame->image().isNull())
 	{
 		painter->drawImage(target,m_frame->image(),source);
-		//qDebug() << "GLVideoDrawablle::paint: Painted frame, size:" << m_frame->image().size()<<", source:"<<source<<", target:"<<target;
+		//qDebug() << "GLVideoDrawablle::paint: Painted m_frame, size:" << m_frame->image().size()<<", source:"<<source<<", target:"<<target;
 	}
 	else
 	{
@@ -1708,9 +1709,9 @@ void GLVideoDrawable::paint(QPainter * painter, const QStyleOptionGraphicsItem *
 		if(imageFormat != QImage::Format_Invalid)
 		{
 			QImage image(m_frame->pointer(),
-				m_frame->size().width(),
-				m_frame->size().height(),
-				m_frame->size().width() *
+				     m_frame->size().width(),
+				     m_frame->size().height(),
+				     m_frame->size().width() *
 					(imageFormat == QImage::Format_RGB16  ||
 					 imageFormat == QImage::Format_RGB555 ||
 					 imageFormat == QImage::Format_RGB444 ||
@@ -1719,7 +1720,7 @@ void GLVideoDrawable::paint(QPainter * painter, const QStyleOptionGraphicsItem *
 					 imageFormat == QImage::Format_RGB666 ||
 					 imageFormat == QImage::Format_ARGB6666_Premultiplied ? 3 :
 					 4),
-				imageFormat);
+				     imageFormat);
 				
 			if(m_displayOpts.flipHorizontal || m_displayOpts.flipVertical)
 				image = image.mirrored(m_displayOpts.flipHorizontal, m_displayOpts.flipVertical);
@@ -1746,12 +1747,12 @@ void GLVideoDrawable::paint(QPainter * painter, const QStyleOptionGraphicsItem *
 
 
 
-		painter->setOpacity(opacity() * (m_fadeActive ? (1.-m_fadeValue):1));
+		painter->setOpacity(opacity() * (1.-m_fadeValue));
 
 		if(!m_frame2->image().isNull())
 		{
 			painter->drawImage(target2,m_frame2->image(),source2);
-			//qDebug() << "GLVideoDrawablle::paint: Painted frame, size:" << m_frame->image().size()<<", source:"<<source<<", target:"<<target;
+			//qDebug() << "GLVideoDrawablle::paint: Painted m_frame2, size:" << m_frame2->image().size()<<", source:"<<source2<<", target:"<<target2;
 		}
 		else
 		{
@@ -1759,9 +1760,9 @@ void GLVideoDrawable::paint(QPainter * painter, const QStyleOptionGraphicsItem *
 			if(imageFormat != QImage::Format_Invalid)
 			{
 				QImage image(m_frame2->pointer(),
-					m_frame2->size().width(),
-					m_frame2->size().height(),
-					m_frame2->size().width() *
+					     m_frame2->size().width(),
+					     m_frame2->size().height(),
+					     m_frame2->size().width() *
 						(imageFormat == QImage::Format_RGB16  ||
 						imageFormat == QImage::Format_RGB555 ||
 						imageFormat == QImage::Format_RGB444 ||
@@ -1770,7 +1771,7 @@ void GLVideoDrawable::paint(QPainter * painter, const QStyleOptionGraphicsItem *
 						imageFormat == QImage::Format_RGB666 ||
 						imageFormat == QImage::Format_ARGB6666_Premultiplied ? 3 :
 						4),
-					imageFormat);
+					     imageFormat);
 
 				painter->drawImage(target2,image,source2);
 				//qDebug() << "GLVideoDrawable::paint: Painted RAW frame, size:" << image.size()<<", source:"<<source<<", target:"<<target;
@@ -1961,7 +1962,9 @@ void GLVideoDrawable::paintGL()
 		txRight, txTop
 	};
 
-	double liveOpacity = (opacity() * (m_fadeActive ? m_fadeValue - .1 : 1.));
+	double liveOpacity = m_crossFadeMode == JustFront ? 
+				 opacity() :
+				(opacity() * (m_fadeActive ? m_fadeValue + .5 : 1.));
 
 	if(m_useShaders)
 	{
@@ -2360,6 +2363,11 @@ void GLVideoDrawable::paintGL()
 	m_frameCount ++;
 	
 // 	qDebug() << "GLVideoDrawable::paintGL(): "<<(QObject*)this<<" Mark - end";
+}
+
+void GLVideoDrawable::setCrossFadeMode(CrossFadeMode mode)
+{
+	m_crossFadeMode = mode;
 }
 
 

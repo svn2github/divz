@@ -168,6 +168,9 @@ public:
 	QRectF sourceRect() { return m_sourceRect; }
 	QSize sourceSize() { return m_sourceRect.size().toSize(); }
 	
+	enum CrossFadeMode { FrontAndBack, JustFront };
+	CrossFadeMode crossFadeMode() { return m_crossFadeMode; }
+	
 public slots:
 	void setFpsLimit(float);
 	void setVisible(bool flag, bool waitOnFrameSignal=false);
@@ -204,6 +207,8 @@ public slots:
 	
 	void setVideoSenderEnabled(bool);
 	void setVideoSenderPort(int);
+	
+	void setCrossFadeMode(CrossFadeMode mode);
 
 signals:
 	void displayOptionsChanged(const VideoDisplayOptions&);
@@ -380,6 +385,8 @@ private:
 	int m_videoSenderPort;
 	
 	bool m_ignoreAspectRatio;
+	
+	CrossFadeMode m_crossFadeMode;
 	
 	static int m_videoSenderPortAllocator;
 };

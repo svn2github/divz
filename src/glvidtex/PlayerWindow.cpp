@@ -276,6 +276,10 @@ PlayerWindow::PlayerWindow(QWidget *parent)
 		m_graphicsScene->setSceneRect(QRectF(0,0,(qreal)point.x(),(qreal)point.y()));
 	
 	
+	m_xfadeSpeed = READ_STRING("xfade-speed","300").toInt();
+	qDebug() << "PlayerWindow: Crossfade speed: "<<m_xfadeSpeed;
+	
+	
 	m_server = new GLPlayerServer();
 	
 	if (!m_server->listen(QHostAddress::Any,9977)) 
@@ -357,6 +361,51 @@ PlayerWindow::PlayerWindow(QWidget *parent)
 			}
 		}	
 	}
+	else
+	{
+		QString loadGroup = READ_STRING("collection","");
+		if(!loadGroup.isEmpty())
+		{
+			QFile file(loadGroup);
+			if (!file.open(QIODevice::ReadOnly)) 
+			{
+				qDebug() << "PlayerWindow: Unable to read group file: "<<loadGroup;
+			}
+			else
+			{
+				QByteArray array = file.readAll();
+				
+				GLSceneGroupCollection *collection = new GLSceneGroupCollection();
+				collection->fromByteArray(array);
+				setGroup(collection->at(0));
+				
+				if(m_group)
+				{
+					GLScene *scene = m_group->at(0);
+					if(scene)
+					{
+						//scene->setGLWidget(this);
+						setScene(scene);
+						qDebug() << "PlayerWindow: [DEBUG]: Loaded File: "<<loadGroup<<", GroupID: "<<m_group->groupId()<<", SceneID: "<< scene->sceneId();
+						
+						GLDrawableList list = scene->drawableList();
+						foreach(GLDrawable *gld, list)
+							if(gld->playlist()->size() > 0)
+								gld->playlist()->play();	
+						
+						if(m_outputEncoder && 
+						!m_outputEncoder->encodingStarted())
+							m_outputEncoder->startEncoder();
+		
+					}
+					else
+					{
+						qDebug() << "PlayerWindow: [DEBUG]: Loaded File: "<<loadGroup<<", GroupID: "<<m_group->groupId()<<" - no scenes found at index 0";
+					}
+				}
+			}	
+		}
+	}
 	
 	if(!m_glWidget)
 		m_compatStream = new PlayerCompatOutputStream(this);
@@ -435,7 +484,7 @@ void PlayerWindow::sendReply(QVariantList reply)
 
 void PlayerWindow::receivedMap(QVariantMap map)
 {
-	qDebug() << "PlayerWindow::receivedMap: "<<map;
+	//qDebug() << "PlayerWindow::receivedMap: "<<map;
 	
 	QString cmd = map["cmd"].toString();
 	if(cmd == GLPlayer_Login)
@@ -881,6 +930,9 @@ void PlayerWindow::setScene(GLScene *scene)
 			connect(drawable->playlist(), SIGNAL(currentItemChanged(GLPlaylistItem*)), this, SLOT(currentPlaylistItemChanged(GLPlaylistItem*)));
 			connect(drawable->playlist(), SIGNAL(playerTimeChanged(double)), this, SLOT(playlistTimeChanged(double)));
 			m_glWidget->addDrawable(drawable);
+			
+			if(GLVideoDrawable *vid = dynamic_cast<GLVideoDrawable*>(drawable))
+				vid->setXFadeLength(m_xfadeSpeed);
 // 			qDebug() << "PlayerWindow::setScene: Adding new drawable:" <<(QObject*)drawable;
 		}
 	}
@@ -902,6 +954,9 @@ void PlayerWindow::setScene(GLScene *scene)
 			connect(drawable->playlist(), SIGNAL(currentItemChanged(GLPlaylistItem*)), this, SLOT(currentPlaylistItemChanged(GLPlaylistItem*)));
 			connect(drawable->playlist(), SIGNAL(playerTimeChanged(double)), this, SLOT(playlistTimeChanged(double)));
 			m_graphicsScene->addItem(drawable);
+			
+			if(GLVideoDrawable *vid = dynamic_cast<GLVideoDrawable*>(drawable))
+				vid->setXFadeLength(m_xfadeSpeed);
 		}
 	}
 }

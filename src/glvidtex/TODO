@@ -14,23 +14,29 @@ TODO:
 			- Can't push QTextDocument into another thread for some reason
 			- Added a 'cached image' feature for transmitting text from director to player so the player won't have to re-render static text already rendered on the director (but will have to re-render new text)
 		- [FIXED] Deleting an item will then crash the editor on save
-		- [CANTFIX] Make GLDirector NOT crash when the player is disconnected!
-			- Crash seems to be deep inside the Qt networking code (!!!!!!!)
-			- Short of recompiling Qt, I don't have a workaround for the crash...yet...
-			- Not a showstoper yet, so moving on to other problems for now.
 		- [FIXED] PlayerSetupDialog: Clicking CONNECT before TEST crashes
 		- [FIXED] PlayerSetupDialog: Must click TEST then CONNECT 2x to connect
 		- [FIXED] Director: The playerlist item changed signal from the player doesnt highlight the right item
 		- [FIXED] Director: Remove the fractional seconds from the director playlist time
-		
-		- Director: playlist text looses formatting when playing?
-		- Cross-fading between CameraThread's in GLVideoDrawable *seems* to 'fade thru black' - but only in the OpenGL painter version. The QGraphicsItem version fades front in.
+		- [FIXED] Cross-fading between CameraThread's in GLVideoDrawable *seems* to 'fade thru black' - but only in the OpenGL painter version. The QGraphicsItem version fades front in.
 			* Can't test till at a workstation with dual video inputs - tomorrow or Tuesday
+			- Something to do with glBlendFunc - only fades thru black using OpenGL - using QGraphicsScene, it paints fine
+			- "Fixed" by adding a CrossFadeMode enum - videos and cameras only fade the front image out, not the back image in. 
+				Whereas text and images, fade front out AND back in - rather a "ductape" fix - but seems to work for now. 
+		- [FIXED] Text crossfading seems to be broken - at least in player via the setProperty command - seems to set text THEN try to crossfade...
+			- Problem was added when we switched to using the QSharedPointer for VideoFrames. Fixed by making a new m_frame2 in GLImageDrawable before crossfading.
+		
+		- Make GLDirector NOT crash when the player is disconnected!
+			- Crash seems to be deep inside the Qt networking code (!!!!!!!)
+			- Short of recompiling Qt, I don't have a workaround for the crash...yet...
+			- Not a showstoper yet, so moving on to other problems for now.
+			- Updated: Seems to not crash at the same point now - now when player closes, it gets caught in a loop in VideoReceiver - then when player comes back, THEN it crashes
+			- Need to figure out where the latest crash is an if we can fix this one.
+		- Director: playlist text looses formatting when playing?
 		- Make the Video Input control panel in director default to last network source
 			- [DONE] Consider removing "(This Machine)" as an option
 				- Dont put a message box - just a simple QLabel
 		- Make the video input control panel automatically update when players are connected
-		- Text crossfading seems to be broken - at least in player via the setProperty command - seems to set text THEN try to crossfade...
 		
 	NEEDED FEATURES:
 		- Make an "option" to reconfig the item control area as mini windows...?
@@ -47,6 +53,21 @@ TODO:
 				- Crop
 		- Need to add controls to the VideoSender to remotly control transmission size/fps
 		- Either (a) integrate with DViz songs.db and Bible functionality or (b) integrate VideoSender with DViz
+			- Add a GroupType and SceneType to GLSceneGroup and GLScene, respectively.
+				 - SceneTypes are a SceneTypeID, and the SceneTypeFactory gives a SceneTypeEngine which:
+				 	- Lists the needed item names/types
+				 		E.g. for a WeatherScene, it might need:
+				 			#WeatherIcon	- SVG
+				 			#Temp		- Text
+				 			#MinTemp 	- Text
+				 			#MaxTemp	- Text
+				 	- Audit the scene to make sure the names above are present
+				 	- Apply the content to tthe scene before going live with the scene
+				 	- Generate a ControlWidget which emits a 'setProperty' signal to change settings in the director
+				 	- (Maybe) Generate an EditorWidget to setup the scene in the editor
+				- GroupTypes are a GroupTypeID and the GroupTypeFactor gives a GroupTypeEngine which:
+					- TBD.....
+					- Generate scenes?
 		- Border/Dropshadow control for items
 			- Right now, text and images
 		- Crossfading between scenes
@@ -63,8 +84,8 @@ TODO:
 		- [DONE] Allow player to run playlists on items by itself without being connected to the director
 	
 	IDEAS:
-		- [STARTED] SVG animation playback/rendering
-			- Dont have an animated SVG to test with yet...
+		- [DONE] SVG animation playback/rendering
+			- Not the smoothest thing around, but it works...
 		- Add a Weather Item based on Google API code in $QT_HOME/qt/demos/embedded/weatherinfo.cpp
 		- Some method to auto-balance/tune camera's HSV so they match each other?
 		- Adjust color curves wtih matrixes? (Not just shift entire hues/sats, but curves.)
@@ -92,6 +113,7 @@ TODO:
 			- Image Slideshows
 			- Each generates a GLSceneGroup containing multiple GLScenes with appros GLDrawables to represent the content
 		- Undo/redo
+		- Idea: Can we reduce network latency by breaking the frame apart into subsections and transmitting them in parallel over seperate sockets? 
 
 TARGET DATE: 12/11 9am
 	Features Required by 12/11 9am:
