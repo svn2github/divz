@@ -85,7 +85,7 @@ public:
 	
 	double zIndexModifier();
 
-	double opacity() { return m_opacity; }
+	double opacity();
 
 	enum AnimationType
 	{
@@ -224,6 +224,9 @@ signals:
 	void isVisible(bool);
 	
 	void propertyChanged(const QString& propName, const QVariant& value);
+	
+	// emitted right before the name is changed
+	void itemNameChanging(const QString& name);
 
 protected slots:
 	friend class GLEditorGraphicsScene;

@@ -286,8 +286,11 @@ void PlayerConnection::clientConnected()
 	else
 	{
 		if(!m_preconnectionCommandQueue.isEmpty())
+		{
 			foreach(QVariant var, m_preconnectionCommandQueue)
 				m_client->sendMap(var.toMap());
+			m_preconnectionCommandQueue.clear();
+		}
 	
 		emit connected();
 	}

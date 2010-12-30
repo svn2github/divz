@@ -150,6 +150,7 @@ int GLDrawable::id()
 
 void GLDrawable::setItemName(const QString& name)
 {
+	emit itemNameChanging(name);
 	m_itemName = name;
 	setObjectName(qPrintable(name));
 	propertyWasChanged("itemName",name);
@@ -540,6 +541,18 @@ double GLDrawable::zIndex()
 	return m_zIndex;
 }
 
+double GLDrawable::zIndexModifier()
+{
+	return m_zIndexModifier;
+}
+
+double GLDrawable::opacity()
+{
+	if(m_scene)
+		return m_opacity * m_scene->opacity();
+	else
+		return m_opacity;
+}
 
 void GLDrawable::setZIndex(double z)
 {

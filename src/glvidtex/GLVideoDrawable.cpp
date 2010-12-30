@@ -1965,7 +1965,7 @@ void GLVideoDrawable::paintGL()
 	double liveOpacity = m_crossFadeMode == JustFront ? 
 				 opacity() :
 				(opacity() * (m_fadeActive ? m_fadeValue + .5 : 1.));
-
+				
 	if(m_useShaders)
 	{
 

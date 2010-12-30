@@ -66,7 +66,7 @@ public:
 	PlayerWindow(QWidget *parent=0);
 	
 	GLSceneGroup *group() { return m_group; }
-	GLScene *scene() {  return m_scene; }
+	//GLScene *scene() {  return m_scene; }
 	
 public slots:
 	void setGroup(GLSceneGroup*);
@@ -82,7 +82,8 @@ private slots:
 	void currentPlaylistItemChanged(GLPlaylistItem*);
 	void playlistTimeChanged(double);
 	
-	void drawableIsVisible(bool);
+	//void drawableIsVisible(bool);
+	void opacityAnimationFinished();
 
 protected:
 	friend class PlayerCompatOutputStream;
@@ -103,7 +104,8 @@ private:
 	
 
 	GLSceneGroup *m_group;
-	GLScene *m_scene;
+	QPointer<GLScene> m_scene;
+	QPointer<GLScene> m_oldScene;
 	
 	QGraphicsView *m_graphicsView;
 	QGraphicsScene *m_graphicsScene;

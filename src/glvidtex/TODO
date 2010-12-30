@@ -40,6 +40,7 @@ TODO:
 		- Make the video input control panel automatically update when players are connected
 		- Sometimes, clicking Connect on the player doesnt fully connect - logs in, but nothing transmitted, window not moved, etc - clicking connect again works
 		- Changing scenes doesnt always work in player - I'd say 1/10th of the timer, it stays black
+		- If player errors out during connect, button stays grayed out till close and re-open dialog
 		
 	NEEDED FEATURES:
 		- Make an "option" to reconfig the item control area as mini windows...?
@@ -80,7 +81,6 @@ TODO:
 					- Group engines can generate slides that either use the default SceneType or a custom scene type
 		- Border/Dropshadow control for items
 			- Right now, text and images
-		- Crossfading between scenes
 		- MUST have per-camera BCHS controls
 		- Add copy/paste to editor
 		- Add a 'remove from playlist' button
@@ -93,6 +93,7 @@ TODO:
 			- Some how emit a signal when need to change scenes?
 		- Add a play interface to collection to loop thru groups
 		
+		- [DONE] Crossfading between scenes
 		- [DONE] Add a simple rectangle item to draw boxes, panels, lines with
 		- [DONE] Make "Test Connection" just TEST in player setup
 		- [DONE] Make a checkbox for "connect on startup"

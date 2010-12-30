@@ -99,6 +99,8 @@ class GLScene : public QAbstractListModel
 	Q_OBJECT
 	Q_PROPERTY(int sceneId READ sceneId);
 	Q_PROPERTY(QString sceneName READ sceneName WRITE setSceneName);
+	
+	Q_PROPERTY(double opacity READ opacity WRITE setOpacity);
 public:
 	GLScene(QObject *parent=0);
 	GLScene(QByteArray&, QObject *parent=0);
@@ -116,6 +118,7 @@ public:
 	void removeDrawable(GLDrawable*);
 	
 	GLDrawable * lookupDrawable(int id);
+	GLDrawable * lookupDrawable(const QString& name);
 	
 	int size() const;
 	GLDrawable * at(int idx);
@@ -144,11 +147,17 @@ public:
 	
 	//void setGraphicsScene(QGraphicsScene *);
 	GLEditorGraphicsScene *graphicsScene();
+	
+	double opacity() { return m_opacity; }
+	double zIndex() { return m_zIndex; }
 
 public slots:
 	void setSceneName(const QString& name);
 	void setListOnlyUserItems(bool);
 	void setPixmap(const QPixmap&);
+	
+	void setZIndex(double zIndex);
+	void setOpacity(double opacity, bool animate=false, double animDuration=750);
 	
 signals:
 	void drawableAdded(GLDrawable*);
@@ -159,8 +168,13 @@ signals:
 	void sceneNameChanged(const QString&);
 	void pixmapChanged(const QPixmap&);
 	
+	void opacityChanged(double d);
+	void zIndexChanged(double d);
+	void opacityAnimationFinished();
+	
 private slots:
 	void drawableDestroyed();
+	void drawableNameChanging(QString);
 	
 protected:
 	friend class GLSceneLayoutListModel;
@@ -169,10 +183,14 @@ protected:
 	QString m_sceneName;
 	QPixmap m_pixmap;
 	
+	double m_opacity;
+	double m_zIndex;
+	
 	GLDrawableList m_itemList;
 	GLDrawableList m_userItemList;
 	bool m_listOnlyUserItems;
 	QHash<int,GLDrawable*> m_drawableIdLookup;
+	QHash<QString,GLDrawable*> m_drawableNameLookup;
 	
 	QList<GLSceneLayout*> m_layouts;
 	QHash<int,GLSceneLayout*> m_layoutIdLookup;

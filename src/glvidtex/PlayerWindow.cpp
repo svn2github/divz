@@ -118,6 +118,7 @@ PlayerWindow::PlayerWindow(QWidget *parent)
 	: QWidget(parent)
 	, m_group(0)
 	, m_scene(0)
+	, m_oldScene(0)
 	, m_useGLWidget(true)
 	, m_glWidget(0)
 	, m_graphicsView(0)
@@ -933,57 +934,44 @@ void PlayerWindow::setGroup(GLSceneGroup *group)
 
 void PlayerWindow::setScene(GLScene *scene)
 {
+	m_oldScene = m_scene;
 	m_scene = scene;
 	
 	GLDrawableList newSceneList = m_scene->drawableList();
 	
 	if(m_glWidget)
 	{
-// 		if(!m_oldDrawables.isEmpty())
-// 		{
-// 			foreach(GLDrawable *drawable, m_oldDrawables)
-// 			{
-// 				disconnect(drawable, 0, this, 0);
-// 				m_glWidget->removeDrawable(drawable);
-// 			}
-// 		}
-		
-		int max = -9999;
-		QList<GLDrawable*> items = m_glWidget->drawables();
-		foreach(GLDrawable *drawable, items)
+		if(m_oldScene)
 		{
-			if(drawable == m_blackOverlay)
-				m_glWidget->removeDrawable(m_blackOverlay);
-			else
+			m_oldScene->setOpacity(0,true,m_xfadeSpeed); // animate fade out
+			// remove drawables from oldScene in finished slot
+			connect(m_oldScene, SIGNAL(opacityAnimationFinished()), this, SLOT(opacityAnimationFinished()));
+		}
+		else
+		{
+			QList<GLDrawable*> items = m_glWidget->drawables();
+			foreach(GLDrawable *drawable, items)
 			{
-				disconnect(drawable->playlist(), 0, this, 0);
- 				m_glWidget->removeDrawable(drawable);
-				
-// 				connect(drawable, SIGNAL(isVisible(bool)), this, SLOT(drawableIsVisible(bool)));
-// 				m_oldDrawables << drawable; 
-// 				
-				if(drawable->zIndex() > max)
-					max = drawable->zIndex();
-				
-				//qDebug() << "PlayerWindow::setScene: [remove] drawable:"<<(QObject*)drawable<<", zIndex:"<<drawable->zIndex()<<", max:"<<max;
-				/*
-				drawable->setFadeOut(true);
-				drawable->setVisible(false);*/
-				
-	// 			qDebug() << "PlayerWindow::setScene: Removing old drawable:" <<(QObject*)drawable;
+				if(drawable == m_blackOverlay)
+				{
+					// IGNORE
+					//m_glWidget->removeDrawable(m_blackOverlay);
+				}
+				else
+				{
+					disconnect(drawable->playlist(), 0, this, 0);
+					m_glWidget->removeDrawable(drawable);
+				}
 			}
 		}
 		
-		m_glWidget->addDrawable(m_blackOverlay);
+		//m_glWidget->addDrawable(m_blackOverlay);
 		m_blackOverlay->setFillColor(Qt::black);
 		
-		int newMax = max;
+		m_scene->setOpacity(0); // no anim yet...
+		
 		foreach(GLDrawable *drawable, newSceneList)
 		{
-// 			drawable->setFadeOut(false);
-// 			drawable->setVisible(false);
-// 			drawable->setFadeOut(true);
-			
 			connect(drawable->playlist(), SIGNAL(currentItemChanged(GLPlaylistItem*)), this, SLOT(currentPlaylistItemChanged(GLPlaylistItem*)));
 			connect(drawable->playlist(), SIGNAL(playerTimeChanged(double)), this, SLOT(playlistTimeChanged(double)));
 			m_glWidget->addDrawable(drawable);
@@ -993,76 +981,50 @@ void PlayerWindow::setScene(GLScene *scene)
 				//qDebug() << "GLWidget mode, item:"<<(QObject*)drawable<<", xfade length:"<<m_xfadeSpeed;
 				vid->setXFadeLength(m_xfadeSpeed);
 			}
-			
-// 			if(drawable->zIndex() < max)
-// 				drawable->setZIndex(max + abs(drawable->zIndex()));
-// 			if(drawable->zIndex() > newMax)
-// 				newMax = drawable->zIndex();
-// 				
-// 			//qDebug() << "PlayerWindow::setScene: [add] drawable:"<<(QObject*)drawable<<", zIndex:"<<drawable->zIndex()<<", max:"<<max<<", newMax:"<<newMax;
-// 			
-// 			drawable->setFadeIn(true);
-// 			drawable->setVisible(true);
-// 			qDebug() << "PlayerWindow::setScene: Adding new drawable:" <<(QObject*)drawable;
 		}
 		
-		if(newMax < 99999)
-			newMax = 99999;
-		m_blackOverlay->setZIndex(newMax);
+		m_scene->setOpacity(1,true,m_xfadeSpeed); // animate fade in
+		
+		//m_blackOverlay->setZIndex(newMax);
 		//qDebug() << "PlayerWindow::setScene: adding black overlay:"<<(QObject*)m_blackOverlay<<", rect:"<<m_blackOverlay->rect();
 	}
 	else
 	{
-// 		if(!m_oldDrawables.isEmpty())
-// 		{
-// 			foreach(GLDrawable *drawable, m_oldDrawables)
-// 			{
-// 				disconnect(drawable, 0, this, 0);
-// 				m_graphicsScene->removeItem(drawable);
-// 			}
-// 		}
-		
-		int max = 9999;
-		QList<QGraphicsItem*> items = m_graphicsScene->items();
-		foreach(QGraphicsItem *item, items)
+		if(m_oldScene)
 		{
-			if(GLDrawable *drawable = dynamic_cast<GLDrawable*>(item))
+			m_oldScene->setOpacity(0,true,m_xfadeSpeed); // animate fade out
+			// remove drawables from oldScene in finished slot
+			connect(m_oldScene, SIGNAL(opacityAnimationFinished()), this, SLOT(opacityAnimationFinished()));
+		}
+		else
+		{
+			QList<QGraphicsItem*> items = m_graphicsScene->items();
+			foreach(QGraphicsItem *item, items)
 			{
-				//disconnect(gld->playlist(), 0, this, 0);
-				//m_graphicsScene->removeItem(gld);
-				if(drawable == m_blackOverlay)
-					m_graphicsScene->removeItem(m_blackOverlay);
-				else
+				if(GLDrawable *drawable = dynamic_cast<GLDrawable*>(item))
 				{
-					disconnect(drawable->playlist(), 0, this, 0);
-					m_glWidget->removeDrawable(drawable);
-					
-// 					connect(drawable, SIGNAL(isVisible(bool)), this, SLOT(drawableIsVisible(bool)));
-// 					m_oldDrawables << drawable;
-					 
-					if(drawable->zIndex() > max)
-						max = drawable->zIndex();
-						
-// 					drawable->setFadeOut(true);
-// 						drawable->setVisible(false);
-					
-		// 			qDebug() << "PlayerWindow::setScene: Removing old drawable:" <<(QObject*)drawable;
+					if(drawable == m_blackOverlay)
+					{
+						// IGNORE
+						//m_glWidget->removeDrawable(m_blackOverlay);
+					}
+					else
+					{
+						disconnect(drawable->playlist(), 0, this, 0);
+						m_graphicsScene->removeItem(drawable);
+					}
 				}
 			}
 		}
 		
 		//m_graphicsScene->clear();
+		m_scene->setOpacity(0); // no anim yet...
 		
-		m_graphicsScene->addItem(m_blackOverlay);
+		//m_graphicsScene->addItem(m_blackOverlay);
 		m_blackOverlay->setFillColor(Qt::black);
 		 
-		int newMax = max;
 		foreach(GLDrawable *drawable, newSceneList)
 		{
-// 			drawable->setFadeOut(false);
-// 			drawable->setVisible(false);
-// 			drawable->setFadeOut(true);
-			
 			connect(drawable->playlist(), SIGNAL(currentItemChanged(GLPlaylistItem*)), this, SLOT(currentPlaylistItemChanged(GLPlaylistItem*)));
 			connect(drawable->playlist(), SIGNAL(playerTimeChanged(double)), this, SLOT(playlistTimeChanged(double)));
 			m_graphicsScene->addItem(drawable);
@@ -1072,33 +1034,35 @@ void PlayerWindow::setScene(GLScene *scene)
 				//qDebug() << "QGraphicsView mode, item:"<<(QObject*)drawable<<", xfade length:"<<m_xfadeSpeed;
 				vid->setXFadeLength(m_xfadeSpeed);
 			}
-			
-			if(drawable->zIndex() < max)
-				drawable->setZIndex(max + drawable->zIndex());
-			if(drawable->zIndex() > newMax)
-				newMax = drawable->zIndex();
-			
-// 			drawable->setVisible(true);
 		}
 		
-		m_blackOverlay->setZIndex(newMax);
+		//m_blackOverlay->setZIndex(newMax);
+		m_scene->setOpacity(1,true,m_xfadeSpeed); // animate fade in
 	}
 }
 
-void PlayerWindow::drawableIsVisible(bool flag)
+void PlayerWindow::opacityAnimationFinished()
 {
-	GLDrawable *drawable = dynamic_cast<GLDrawable*>(sender());
-	if(!drawable || flag)
+	//GLScene *scene = dynamic_cast<GLScene*>(sender());
+		
+	//disconnect(drawable, 0, this, 0);
+	
+	if(!m_oldScene)
 		return;
 		
-	disconnect(drawable, 0, this, 0);
-	
-	if(m_graphicsScene)
-		m_graphicsScene->removeItem(drawable);
-	else
-		m_glWidget->removeDrawable(drawable);
+	GLDrawableList list = m_oldScene->drawableList();
+	foreach(GLDrawable *drawable, list)
+	{
+		if(m_graphicsScene)
+			m_graphicsScene->removeItem(drawable);
+		else
+			m_glWidget->removeDrawable(drawable);
 		
-	qDebug() << "PlayerWindow::drawableIsVisible: drawable expired:"<<(QObject*)drawable;	
+		qDebug() << "PlayerWindow::opacityAnimationFinished: removing drawable:"<<(QObject*)drawable;	
+	}
+	
+	disconnect(m_oldScene, 0, this, 0);
+	m_oldScene = 0;
 }
 
 void PlayerWindow::currentPlaylistItemChanged(GLPlaylistItem* item)

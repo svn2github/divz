@@ -240,6 +240,8 @@ QVariant GLSceneLayoutListModel::data( const QModelIndex & index, int role) cons
 GLScene::GLScene(QObject *parent)
 	: QAbstractListModel(parent)
 	, m_sceneId(-1)
+	, m_opacity(1)
+	, m_zIndex(1)
 	, m_listOnlyUserItems(false)
 	, m_glWidget(0)
 	, m_layoutListModel(0)
@@ -251,6 +253,8 @@ GLScene::GLScene(QObject *parent)
 GLScene::GLScene(QByteArray& ba, QObject *parent)
 	: QAbstractListModel(parent)
 	, m_sceneId(-1)
+	, m_opacity(1)
+	, m_zIndex(1)
 	, m_listOnlyUserItems(false)
 	, m_glWidget(0)
 	, m_layoutListModel(0)
@@ -478,11 +482,13 @@ void GLScene::addDrawable(GLDrawable *d)
 		
 	m_itemList << d;
 	m_drawableIdLookup[d->id()] = d;
+	m_drawableNameLookup[d->itemName()] = d;
 	emit drawableAdded(d);
 	
 	d->setGLScene(this);
 	
 	connect(d, SIGNAL(destroyed()), this, SLOT(drawableDestroyed()));
+	connect(d, SIGNAL(itemNameChanging(QString)), this, SLOT(drawableNameChanging(QString)));
 
 	beginInsertRows(QModelIndex(),m_itemList.size()-1,m_itemList.size());
 
@@ -521,6 +527,8 @@ void GLScene::removeDrawable(GLDrawable *d)
 	m_itemList.removeAll(d);
 	m_userItemList.removeAll(d);
 	m_drawableIdLookup.remove(d->id());
+	m_drawableNameLookup.remove(d->itemName());
+	disconnect(d, 0, this, 0);
 
 	// Notify QListViews of change in data
 	QModelIndex top    = createIndex(idx, 0),
@@ -538,6 +546,21 @@ void GLScene::removeDrawable(GLDrawable *d)
 GLDrawable * GLScene::lookupDrawable(int id)
 {
 	return m_drawableIdLookup[id];
+}
+
+GLDrawable * GLScene::lookupDrawable(const QString &name)
+{
+	return m_drawableNameLookup[name];
+}
+
+void GLScene::drawableNameChanging(QString name)
+{
+	GLDrawable *gld = dynamic_cast<GLDrawable *>(sender());
+	if(!gld)
+		return;
+		
+	m_drawableNameLookup.remove(gld->itemName());
+	m_drawableNameLookup[name] = gld;
 }
 
 GLEditorGraphicsScene * GLScene::graphicsScene()
@@ -607,6 +630,33 @@ void GLScene::setPixmap(const QPixmap& pixmap)
 {
 	m_pixmap = pixmap;
 	emit pixmapChanged(pixmap);
+}
+
+void GLScene::setOpacity(double d, bool animate, double animDuration)
+{
+	if(animate)
+	{
+		QPropertyAnimation *anim = new QPropertyAnimation(this, "opacity");
+		anim->setDuration(animDuration);
+		anim->setEndValue(d);
+		connect(anim, SIGNAL(finished()), this, SIGNAL(opacityAnimationFinished()));
+		anim->start(QAbstractAnimation::DeleteWhenStopped);
+		return;
+	}
+	
+	m_opacity = d;
+	emit opacityChanged(d);
+	foreach(GLDrawable *d, m_itemList)
+		d->updateGL();
+}
+
+void GLScene::setZIndex(double d)
+{
+	m_zIndex = d;
+	emit zIndexChanged(d);
+	
+	foreach(GLDrawable *gld, m_itemList)
+		gld->setZIndexModifier(d);
 }
 
 
