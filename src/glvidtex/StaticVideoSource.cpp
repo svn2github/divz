@@ -5,13 +5,13 @@ StaticVideoSource::StaticVideoSource(QObject *parent)
 	, m_frameUpdated(false)
 {
 // 	setIsBuffered(false);
-	setImage(QImage());
+	setImage(QImage("dot.gif"));
 }
 
 void StaticVideoSource::setImage(const QImage& img)
 {
-	m_image = img.convertToFormat(QImage::Format_ARGB32);
-	m_frame = VideoFrame(m_image,1000/30);
+	m_image = img.convertToFormat(QImage::Format_ARGB32).copy();
+	//m_frame = new VideoFrame(m_image,1000/30);
 	
 // 	VideoFrame frame;
 // 	//frame.captureTime = QTime::currentTime();
@@ -28,9 +28,9 @@ void StaticVideoSource::setImage(const QImage& img)
 //	
 //	m_frame = frame;
 	
-	enqueue(m_frame);
-	emit frameReady();
-	m_frameUpdated = true;
+	//enqueue(new VideoFrame(m_image,1000/30));
+	//emit frameReady();
+ 	m_frameUpdated = true;
 }
 
 void StaticVideoSource::run()
@@ -39,7 +39,7 @@ void StaticVideoSource::run()
 	{
  		if(m_frameUpdated)
  		{
-			enqueue(m_frame);
+			enqueue(new VideoFrame(m_image,1000/30));
 			m_frameUpdated = false;
 			emit frameReady();
 		}

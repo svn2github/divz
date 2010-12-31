@@ -4,11 +4,6 @@ TODO:
 			- Disabled buffering on VideoReceiver - hackish fix, I know.
 		- [DONE] Live monitor from player seems to be buffered - check on that
 		- [DONE] Change the shortcut key in the file menu in director for the Connections and Live Monitor (both use "C")
-		- [TMP-FIX] Video Encoding "problems"
-			- Way to much CPU usage - 157%-ish on a dual-core 2.4 GHz...causing live video to stutter
-			- Consider putting it either in another thread or in a whole other process with shared memory
-				- Can we push it off onto the network somehow??
-			- Temporarily disabled encoder in PlayerWindow till this is addressed.
 		- [CANTFIX] Need to push text rendering into another thread, causing live video to stutter (see the 4fps clock over live video)
 			- Optimized as much as I can right now, but rendering still takes ~80-100ms with shadow and outline
 			- Can't push QTextDocument into another thread for some reason
@@ -26,6 +21,11 @@ TODO:
 		- [FIXED] Text crossfading seems to be broken - at least in player via the setProperty command - seems to set text THEN try to crossfade...
 			- Problem was added when we switched to using the QSharedPointer for VideoFrames. Fixed by making a new m_frame2 in GLImageDrawable before crossfading.
 		
+		- [TMP-FIX] Video Encoding "problems"
+			- Way to much CPU usage - 157%-ish on a dual-core 2.4 GHz...causing live video to stutter
+			- Consider putting it either in another thread or in a whole other process with shared memory
+				- Can we push it off onto the network somehow??
+			- Temporarily disabled encoder in PlayerWindow till this is addressed.
 		- Make GLDirector NOT crash when the player is disconnected!
 			- Crash seems to be deep inside the Qt networking code (!!!!!!!)
 			- Short of recompiling Qt, I don't have a workaround for the crash...yet...
@@ -43,6 +43,8 @@ TODO:
 		- If player errors out during connect, button stays grayed out till close and re-open dialog
 		
 	NEEDED FEATURES:
+		- Need a way to enable/disable encoding from the director
+		- Need to set the AR of the encoder from director
 		- Make an "option" to reconfig the item control area as mini windows...?
 			- So you can access the video switcher and text settings without switching between the two...?
 		- Transmit slide group changes to player when editor window closed

@@ -30,7 +30,11 @@ HEADERS       = GLWidget.h \
 		GLPlayerClient.h \
 		VideoEncoder.h \
 		GLSvgDrawable.h \
-		GLRectDrawable.h
+		GLRectDrawable.h \
+		VideoConsumer.h \
+		VideoFilter.h \
+		HistogramFilter.h \ 
+		StaticVideoSource.h
 		
 SOURCES       = GLWidget.cpp \
 		../livemix/VideoSource.cpp \
@@ -59,7 +63,11 @@ SOURCES       = GLWidget.cpp \
 		GLPlayerClient.cpp \
 		VideoEncoder.cpp \
 		GLSvgDrawable.cpp \
-		GLRectDrawable.cpp
+		GLRectDrawable.cpp \
+		VideoConsumer.cpp \
+		VideoFilter.cpp \
+		HistogramFilter.cpp \
+		StaticVideoSource.cpp
 		
 
 editor: {
