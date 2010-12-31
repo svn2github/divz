@@ -1053,10 +1053,10 @@ void PlayerWindow::opacityAnimationFinished()
 	GLDrawableList list = m_oldScene->drawableList();
 	foreach(GLDrawable *drawable, list)
 	{
-		if(m_graphicsScene)
-			m_graphicsScene->removeItem(drawable);
-		else
+		if(m_glWidget)
 			m_glWidget->removeDrawable(drawable);
+		else
+			m_graphicsScene->removeItem(drawable);
 		
 		qDebug() << "PlayerWindow::opacityAnimationFinished: removing drawable:"<<(QObject*)drawable;	
 	}

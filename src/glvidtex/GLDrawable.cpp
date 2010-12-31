@@ -167,10 +167,10 @@ void GLDrawable::propertyWasChanged(const QString& propName, const QVariant& val
 	emit propertyChanged(propName,value);
 }
 
-void GLDrawable::updateGL()
+void GLDrawable::updateGL(bool now)
 {
 	if(m_glw)
-		m_glw->updateGL();
+		m_glw->updateGL(now);
 	else
 		update(); // compat with QGraphicsItem
 }

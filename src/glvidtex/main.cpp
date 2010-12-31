@@ -45,12 +45,12 @@ int main(int argc, char *argv[])
 	MetaObjectUtil_Register(GLVideoLoopDrawable);
 	MetaObjectUtil_Register(GLVideoReceiverDrawable);
 
-// 	PlayerWindow *glw = new PlayerWindow();
+ 	PlayerWindow *glw = new PlayerWindow();
 	
-	VideoWidget *glw = new VideoWidget();
-//  	GLWidget *glw = new GLWidget();
-  	glw->resize(640,480);
- 	//glw->setViewport(QRectF(0,0,1000,750));
+//	VideoWidget *glw = new VideoWidget();
+//   	GLWidget *glw = new GLWidget();
+//   	glw->resize(640,480);
+//  	glw->setViewport(QRectF(0,0,1000,750));
  	
 //  	CameraThread *source = CameraThread::threadForCamera("/dev/video0");
 //  	source->setInput("S-Video");
@@ -91,9 +91,9 @@ int main(int argc, char *argv[])
 	vid->setObjectName("stream");
 	glw->addDrawable(vid);*/
 	
-	VideoThread * source = new VideoThread();
-	source->setVideo("../data/Seasons_Loop_3_SD.mpg");
-	source->start();
+// 	VideoThread * source = new VideoThread();
+// 	source->setVideo("../data/Seasons_Loop_3_SD.mpg");
+// 	source->start();
 
 // 	StaticVideoSource *source = new StaticVideoSource();
 //  	//source->setImage(QImage("colors.png"));
@@ -101,8 +101,8 @@ int main(int argc, char *argv[])
 //  	source->start();
 
 	
-	HistogramFilter *histo = new HistogramFilter();
-	histo->setVideoSource(source);
+// 	HistogramFilter *histo = new HistogramFilter();
+// 	histo->setVideoSource(source);
 	
 	/*
 	HsvInfoFilter *hsvInfo = new HsvInfoFilter();
@@ -110,7 +110,15 @@ int main(int argc, char *argv[])
 	
 	
 	//glw->setVideoSource(hsvInfo);
-	glw->setVideoSource(histo);
+	//glw->setVideoSource(histo);
+	
+// 	GLVideoDrawable *vid = new GLVideoDrawable();
+// 	vid->setVideoSource(histo);
+// 	vid->setRect(glw->viewport());
+// 	vid->setVisible(true);
+// 	vid->setObjectName("histo");
+// 	glw->addDrawable(vid);
+	
 	
 	
 // 	loop->setRect(QRectF(0,0,1000,750));

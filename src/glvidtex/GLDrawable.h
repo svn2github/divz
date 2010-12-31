@@ -173,7 +173,7 @@ public:
 	void setGLScene(GLScene *scene);  
 
 public slots:
-	void updateGL();
+	void updateGL(bool now=false);
 	
 	void setItemName(const QString&);
 	void setUserControllable(bool);

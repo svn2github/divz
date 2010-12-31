@@ -5,6 +5,7 @@
 #include <QVideoFrame>
 #include <QAbstractVideoSurface>
 #include "../livemix/VideoSource.h"
+#include "../livemix/CameraThread.h"
 
 #include "VideoSender.h"
 
@@ -238,6 +239,9 @@ void GLVideoDrawable::setVideoSource(VideoSource *source)
 	m_source = source;
 	if(m_source)
 	{
+		// If m_isCameraThread, then we tell GLWidget to updateGL *now* instead of using a 0-length timer to batch updateGL() calls into a single call
+		m_isCameraThread = (NULL != dynamic_cast<CameraThread*>(source));
+		
 		connect(m_source, SIGNAL(frameReady()), this, SLOT(frameReady()));
 		connect(m_source, SIGNAL(destroyed()),  this, SLOT(disconnectVideoSource()));
 
@@ -373,7 +377,7 @@ void GLVideoDrawable::frameReady()
 	updateTexture();
 
 	if(m_rateLimitFps <= 0.0)
-		updateGL();
+		updateGL(m_isCameraThread);
 	//else
 	//	qDebug() << "GLVideoDrawable::frameReady(): "<<(QObject*)this<<" rate limited, waiting on timer";
 

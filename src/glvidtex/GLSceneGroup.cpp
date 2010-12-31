@@ -246,8 +246,9 @@ GLScene::GLScene(QObject *parent)
 	, m_glWidget(0)
 	, m_layoutListModel(0)
 	, m_graphicsScene(0)
+	, m_crossfadeSpeed(300)
 {
-
+	connect(&m_fadeTimer, SIGNAL(timeout()), this, SLOT(fadeTick()));
 }
 
 GLScene::GLScene(QByteArray& ba, QObject *parent)
@@ -259,7 +260,9 @@ GLScene::GLScene(QByteArray& ba, QObject *parent)
 	, m_glWidget(0)
 	, m_layoutListModel(0)
 	, m_graphicsScene(0)
+	, m_crossfadeSpeed(300)
 {
+	connect(&m_fadeTimer, SIGNAL(timeout()), this, SLOT(fadeTick()));
 	fromByteArray(ba);
 }
 
@@ -636,11 +639,24 @@ void GLScene::setOpacity(double d, bool animate, double animDuration)
 {
 	if(animate)
 	{
-		QPropertyAnimation *anim = new QPropertyAnimation(this, "opacity");
-		anim->setDuration(animDuration);
-		anim->setEndValue(d);
-		connect(anim, SIGNAL(finished()), this, SIGNAL(opacityAnimationFinished()));
-		anim->start(QAbstractAnimation::DeleteWhenStopped);
+// 		QPropertyAnimation *anim = new QPropertyAnimation(this, "opacity");
+// 		anim->setDuration(animDuration);
+// 		anim->setEndValue(d);
+// 		connect(anim, SIGNAL(finished()), this, SIGNAL(opacityAnimationFinished()));
+// 		anim->start(QAbstractAnimation::DeleteWhenStopped);
+// 		
+// 		//qDebug() << "GLWidget::fadeBlack: toBlack:"<<toBlack<<", duration:"<<m_crossfadeSpeed<<", current opac:"<<opacity();
+
+		m_fadeTimer.setInterval(1000 / 25); // 25fps fade
+		m_crossfadeSpeed = animDuration;
+		
+		m_fadeDirection = d < opacity() ?  -1 : 1;
+		m_endOpacity = d;
+		m_startOpacity = opacity();
+		
+		m_fadeClock.start();
+		m_fadeTimer.start();
+		
 		return;
 	}
 	
@@ -649,6 +665,38 @@ void GLScene::setOpacity(double d, bool animate, double animDuration)
 	foreach(GLDrawable *d, m_itemList)
 		d->updateGL();
 }
+
+
+
+void GLScene::fadeTick()
+{
+	int time = m_fadeClock.elapsed();
+	if(time >= m_crossfadeSpeed)
+	{
+		m_fadeTimer.stop();
+		setOpacity(m_endOpacity);
+	}
+	else
+	{
+		double progress = ((double)time) / ((double)m_crossfadeSpeed);
+		double valueLength = fabs(m_endOpacity - m_startOpacity);
+		double fadeVal = valueLength * progress;
+		if(m_fadeDirection < 0)
+			//fadeVal = 1.0 - fadeVal;
+			fadeVal = m_startOpacity - fadeVal;
+		/*
+		qDebug() << "GLScene::fadeTick: dir:"<<m_fadeDirection
+			<<", time:"<<time
+			<<", len:"<<m_crossfadeSpeed
+			<<", progress:"<<progress
+			<<", valueLength:"<<valueLength
+			<<", fadeVal:"<<fadeVal;
+		*/ 
+		setOpacity(fadeVal);
+	}
+}
+
+
 
 void GLScene::setZIndex(double d)
 {

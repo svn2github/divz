@@ -175,6 +175,7 @@ signals:
 private slots:
 	void drawableDestroyed();
 	void drawableNameChanging(QString);
+	void fadeTick();
 	
 protected:
 	friend class GLSceneLayoutListModel;
@@ -199,6 +200,14 @@ protected:
 	GLSceneLayoutListModel *m_layoutListModel;
 	
 	GLEditorGraphicsScene *m_graphicsScene;
+	
+	QTimer m_fadeTimer;
+	QTime m_fadeClock;
+	int m_fadeDirection;
+	double m_endOpacity;
+	double m_startOpacity;
+	
+	int m_crossfadeSpeed;
 };
 	
 

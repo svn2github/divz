@@ -286,6 +286,8 @@ public:
 	
 	bool isBlackEnabled() { return m_isBlack; }
 	int crossfadeSpeed() { return m_crossfadeSpeed; }
+	
+	bool fboEnabled() { return m_fboEnabled; }
 
 signals:
 	void clicked();
@@ -327,6 +329,9 @@ public slots:
  	void fadeBlack(bool toBlack=true);
  	
  	void setCrossfadeSpeed(int);
+ 	void setFboEnabled(bool);
+ 	
+ 	void updateGL(bool now=false);
 	
 protected slots:
 	void zIndexChanged();
@@ -334,6 +339,8 @@ protected slots:
 	void postInitGL();
 	
 	void fadeBlackTick();
+	
+	void callSuperUpdateGL();
 	
 protected:
 	void sortDrawables();
@@ -344,6 +351,7 @@ protected:
 	void mouseMoveEvent(QMouseEvent *event);
 	void mouseReleaseEvent(QMouseEvent *event);
 	void showEvent(QShowEvent *);
+	
 	
 	//void updateColors(int brightness, int contrast, int hue, int saturation);
 
@@ -384,9 +392,12 @@ private:
 	QTimer m_fadeBlackTimer;
 	QTime m_fadeBlackClock;
 	int m_fadeBlackDirection;
-
 	
 	int m_crossfadeSpeed;
+	
+	bool m_fboEnabled;
+	
+	QTimer m_updateTimer;
 };
 
 #endif

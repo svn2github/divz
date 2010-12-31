@@ -388,6 +388,8 @@ private:
 	
 	CrossFadeMode m_crossFadeMode;
 	
+	bool m_isCameraThread;
+	
 	static int m_videoSenderPortAllocator;
 };
 
