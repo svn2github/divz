@@ -75,3 +75,4 @@ void GLVideoFileDrawable::deleteSource(VideoSource *source)
 	}
 #endif
 }
+

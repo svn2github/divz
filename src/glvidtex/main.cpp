@@ -29,6 +29,8 @@
 #include "StaticVideoSource.h"
 #include "HistogramFilter.h"
 
+#include "VideoInputColorBalancer.h"
+
 int main(int argc, char *argv[])
 {
 
@@ -45,11 +47,12 @@ int main(int argc, char *argv[])
 	MetaObjectUtil_Register(GLVideoLoopDrawable);
 	MetaObjectUtil_Register(GLVideoReceiverDrawable);
 
- 	PlayerWindow *glw = new PlayerWindow();
+// 	PlayerWindow *glw = new PlayerWindow();
 	
 //	VideoWidget *glw = new VideoWidget();
 //   	GLWidget *glw = new GLWidget();
-//   	glw->resize(640,480);
+	VideoInputColorBalancer *glw = new VideoInputColorBalancer();
+   	glw->resize(640,480);
 //  	glw->setViewport(QRectF(0,0,1000,750));
  	
 //  	CameraThread *source = CameraThread::threadForCamera("/dev/video0");
@@ -69,8 +72,8 @@ int main(int argc, char *argv[])
 // 		return -1;
 // 	}
 // 	
-// 	VideoReceiver *rx = VideoReceiver::getReceiver("localhost",8899);
-// 	glw->setVideoSource(rx);
+// 	VideoReceiver *source = VideoReceiver::getReceiver("localhost",7755);
+// 	glw->setVideoSource(source);
 	
 /* 	
 	{
@@ -110,7 +113,7 @@ int main(int argc, char *argv[])
 	
 	
 	//glw->setVideoSource(hsvInfo);
-	//glw->setVideoSource(histo);
+//	glw->setVideoSource(histo);
 	
 // 	GLVideoDrawable *vid = new GLVideoDrawable();
 // 	vid->setVideoSource(histo);

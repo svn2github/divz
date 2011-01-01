@@ -754,7 +754,9 @@ void PlayerWindow::receivedMap(QVariantMap map)
 			m_glWidget->setCanvasSize(size);
 		else
 			m_graphicsScene->setSceneRect(QRectF(QPointF(0,0),size));
-		
+
+		m_blackOverlay->setRect(QRectF(QPointF(0,0),size));
+
 		sendReply(QVariantList() 
 				<< "cmd" << cmd
 				<< "status" << true);

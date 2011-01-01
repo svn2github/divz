@@ -89,7 +89,11 @@ QStringList VideoInputSenderManager::videoConnections(bool justNetString)
 	{
 		if (ipAddressesList.at(i) != QHostAddress::LocalHost &&
 		    ipAddressesList.at(i).toIPv4Address())
-			ipAddress = ipAddressesList.at(i).toString();
+		{
+			QString tmp = ipAddressesList.at(i).toString();
+			if(!tmp.startsWith("192.168.122."))
+				ipAddress = tmp;
+		}
 	}
 
 	// if we did not find one, use IPv4 localhost

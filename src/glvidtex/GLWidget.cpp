@@ -285,7 +285,8 @@ void GLWidget::updateGL(bool now)
 {
 	if(m_updateTimer.isActive())
 		m_updateTimer.stop();
-	
+
+	//now = false;	
 	if(now)
 	{
 		QGLWidget::updateGL();
@@ -1446,6 +1447,12 @@ void GLWidget::addDrawable(GLDrawable *item)
 	
 // 	QString newName = QString("%1/%2").arg(objectName()).arg(item->objectName());
 // 	item->setObjectName(qPrintable(newName));
+	if(m_drawables.contains(item))
+	{
+		qDebug() << "GLWidget::addDrawable: "<<(QObject*)item<<" already on display, not re-adding.";
+		return;
+	}
+
 	item->setGLWidget(this);
 	m_drawables << item;
 	connect(item, SIGNAL(zIndexChanged(double)), this, SLOT(zIndexChanged()));
