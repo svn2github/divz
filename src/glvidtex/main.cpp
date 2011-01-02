@@ -52,7 +52,8 @@ int main(int argc, char *argv[])
 //	VideoWidget *glw = new VideoWidget();
 //   	GLWidget *glw = new GLWidget();
 	VideoInputColorBalancer *glw = new VideoInputColorBalancer();
-   	glw->resize(640,480);
+   	//glw->resize(640,480);
+   	glw->adjustSize();
 //  	glw->setViewport(QRectF(0,0,1000,750));
  	
 //  	CameraThread *source = CameraThread::threadForCamera("/dev/video0");

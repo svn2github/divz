@@ -4,6 +4,8 @@
 #include <QtGui>
 
 class HistogramFilter;
+class VideoReceiver;
+
 class VideoInputColorBalancer : public QWidget
 {
 	Q_OBJECT
@@ -16,16 +18,49 @@ protected slots:
 	                     int sMin, int sMax, int sAvg,
 	                     int vMin, int vMax, int vAvg);
 
+	void setAutoAdjust(bool);
+	void setAdjustMaster(bool);
+	void setHue(int);
+	void setSat(int);
+	void setBright(int);
+	void setContrast(int);
+	
+	void rxConnected(VideoReceiver *rx=0);
+	
+	void setAutoAdjustThreshold(int);
+	
 private:
 	HistogramFilter *m_histoMaster;
 	HistogramFilter *m_histoSlave;
+	
+	VideoReceiver *m_sourceMaster;
+	VideoReceiver *m_sourceSlave;
 
 	int m_masterStats[9];
 	int m_slaveStats[9];
 	
 	int m_deltas[9];
 	
-	int m_vals[3];
+	int m_vals[8];
+	
+	QSpinBox *m_hueBox;
+	QSpinBox *m_satBox;
+	QSpinBox *m_brightBox;
+	QSpinBox *m_contrastBox;
+	
+	QLabel *m_hueDiff;
+	QLabel *m_satDiff;
+	QLabel *m_valDiff;
+	
+	QRadioButton *m_radioMaster;
+	QRadioButton *m_radioSlave;
+	bool m_adjustMaster;
+	bool m_autoAdjust;
+	QGroupBox *m_manulAdjustments;
+	
+	QSpinBox *m_frameAccumNumBox;
+	
+	int m_autoAdjustThreshold;
 };
 
 #endif

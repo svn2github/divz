@@ -101,6 +101,12 @@ signals:
 
 public slots:
 	void frameReady();
+	
+protected slots:
+	void dataReady();
+	
+protected:
+	void processBlock();
 
 private:
 	int m_socketDescriptor;
@@ -109,6 +115,10 @@ private:
 	bool m_adaptiveWriteEnabled;
 	bool m_sentFirstHeader;
 	VideoSender *m_sender;
+
+	int m_blockSize;
+	QByteArray m_dataBlock;
+
 };
 
 

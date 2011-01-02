@@ -351,7 +351,7 @@ void VideoWidget::updateOverlay()
 			textSize = QFontMetrics(font).size(Qt::TextSingleLine, m_overlayText);
 		}
 
-		QRect textRect(target.x() + target.width() / 2  - textSize.width() / 2,
+		QRect textRect(target.x() + 10, // + target.width() / 2  - textSize.width() / 2,
 			       target.y() + target.height() / 2 - textSize.height () / 2 + size,
 			       textSize.width(), textSize.height());
 

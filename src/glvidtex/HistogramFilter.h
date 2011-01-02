@@ -18,6 +18,9 @@ public:
 	
 	bool chartHsv() { return m_chartHsv; }
 	bool calcHsvStats() { return m_calcHsvStats; }
+	
+	bool frameAccumEnabled() { return m_frameAccumEnabled; }
+	int frameAccumNum() { return m_frameAccumNum; }
 
 public slots:
 	void setHistoType(HistoType type);
@@ -25,6 +28,9 @@ public slots:
 	
 	void setChartHsv(bool flag);
 	void setCalcHsvStats(bool flag);
+	
+	void setFrameAccumEnabled(bool);
+	void setFrameAccumNum(int);
 
 signals:
 	void hsvStatsUpdated(int hMin, int hMax, int hAvg, 
@@ -43,6 +49,13 @@ protected:
 
 	bool m_chartHsv;
 	bool m_calcHsvStats;
+	
+	bool m_frameAccumEnabled;
+	int m_frameAccumNum;
+	
+	QQueue<QImage> m_frameAccum;
+	
+	
 };
 
 #endif

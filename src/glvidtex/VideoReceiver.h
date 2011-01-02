@@ -55,10 +55,25 @@ public:
 	
 	VideoFormat videoFormat() { return VideoFormat(VideoFrame::BUFFER_POINTER,QVideoFrame::Format_RGB32); }
 	
+	void sendCommand(QVariantList);
+	void sendCommand(QVariantMap);
+	
+	bool isConnected() { return m_connected; }
+	
+public slots:
+	void setHue(int);
+	void setSaturation(int);
+	void setContrast(int);
+	void setBrightness(int);
+	
+	void setFPS(int);
+	void setSize(int, int);
+	
 signals:
 	void socketDisconnected();
 	void socketError(QAbstractSocket::SocketError);
 	void socketConnected();
+	void connected();
 	
 private slots:
 	void dataReady();

@@ -1,4 +1,5 @@
 #include "VideoReceiver.h"
+#include "VideoSenderCommands.h"
 
 #include <QCoreApplication>
 #include <QTime>
@@ -151,6 +152,8 @@ void VideoReceiver::connectionReady()
 {
 	//qDebug() << "Connected";
 	m_connected = true;
+	
+	emit connected();
 }
 
 void VideoReceiver::log(const QString& str)
@@ -184,6 +187,95 @@ void VideoReceiver::reconnect()
 {
 	log(QString("Attempting to reconnect to %1:%2%3").arg(m_host).arg(m_port).arg(m_url));
 	connectTo(m_host,m_port,m_url);
+}
+
+
+void VideoReceiver::sendCommand(QVariantMap map)
+{
+	if(!m_connected)
+		return;
+		
+	//QByteArray json = m_stringy->serialize(map);
+	QByteArray array;
+	QDataStream stream(&array, QIODevice::WriteOnly);
+	stream << map;
+
+	//qDebug() << "GLPlayerServerThread: Send Map:"<<map<<", JSON:"<<json;
+
+	char data[256];
+	sprintf(data, "%d\n", array.size());
+	m_socket->write((const char*)&data,strlen((const char*)data));
+	//qDebug() << "block size: "<<strlen((const char*)data)<<", data:"<<data;
+
+	m_socket->write(array);
+}
+
+void VideoReceiver::sendCommand(QVariantList reply)
+{
+	QVariantMap map;
+	if(reply.size() % 2 != 0)
+	{
+		qDebug() << "VideoReceiver::sendCommand: [WARNING]: Odd number of elelements in reply: "<<reply;
+	}
+
+	for(int i=0; i<reply.size(); i+=2)
+	{
+		if(i+1 >= reply.size())
+			continue;
+
+		QString key = reply[i].toString();
+		QVariant value = reply[i+1];
+
+		map[key] = value;
+	}
+
+
+	//qDebug() << "VideoReceiver::sendCommand: [DEBUG] port:"<<m_port<<", map:"<<map;
+
+	sendCommand(map);
+}
+
+void VideoReceiver::setHue(int x)
+{
+	sendCommand(QVariantList() 
+		<< "cmd"   << Video_SetHue
+		<< "value" << x);
+}
+
+void VideoReceiver::setSaturation(int x)
+{
+	sendCommand(QVariantList() 
+		<< "cmd"   << Video_SetSaturation
+		<< "value" << x);
+}
+
+void VideoReceiver::setContrast(int x)
+{
+	sendCommand(QVariantList() 
+		<< "cmd"   << Video_SetContrast
+		<< "value" << x);
+}
+
+void VideoReceiver::setBrightness(int x)
+{
+	sendCommand(QVariantList() 
+		<< "cmd"   << Video_SetBright
+		<< "value" << x);
+}
+
+void VideoReceiver::setFPS(int x)
+{
+	sendCommand(QVariantList() 
+		<< "cmd" << Video_SetFPS
+		<< "fps" << x);
+}
+
+void VideoReceiver::setSize(int w, int h)
+{
+	sendCommand(QVariantList() 
+		<< "cmd" << Video_SetSize
+		<< "w"   << w
+		<< "h"   << h);
 }
 
 void VideoReceiver::dataReady()

@@ -6,7 +6,10 @@ HistogramFilter::HistogramFilter(QObject* parent)
 	, m_includeOriginalImage(true)
 	, m_chartHsv(true)
 	, m_calcHsvStats(true)
+	, m_frameAccumEnabled(false)
+	, m_frameAccumNum(10) // just a guess
 {
+	setFrameAccumEnabled(true);
 	setIsThreaded(true);
 }
 
@@ -36,6 +39,16 @@ void HistogramFilter::setCalcHsvStats(bool flag)
 	m_calcHsvStats = flag;
 }
 
+void HistogramFilter::setFrameAccumEnabled(bool enab)
+{
+	m_frameAccumEnabled = enab;
+}
+
+void HistogramFilter::setFrameAccumNum(int n)
+{
+	m_frameAccumNum = n;
+}
+
 void HistogramFilter::processFrame()
 {
 	QImage image = frameImage();
@@ -43,8 +56,6 @@ void HistogramFilter::processFrame()
 	
 	enqueue(new VideoFrame(histo,m_frame->holdTime()));
 }
-
-
 	
 void HistogramFilter::drawBarRect(QPainter *p, int min, int max, int avg, int startX, int startY, int w, int h)
 {
@@ -84,6 +95,30 @@ QImage HistogramFilter::makeHistogram(const QImage& image)
 	QImage origScaled = image.scaled(smallSize);
 	if(origScaled.format() != QImage::Format_RGB32)
 		origScaled = origScaled.convertToFormat(QImage::Format_RGB32);
+		
+	if(m_frameAccumEnabled)
+	{
+		m_frameAccum.enqueue(origScaled);
+		
+		if(m_frameAccum.size() >= m_frameAccumNum)
+			m_frameAccum.dequeue();
+		
+		QPainter p(&origScaled);
+		p.fillRect(origScaled.rect(), Qt::black);
+		
+		double opac = 1. / (double)m_frameAccum.size();
+		//qDebug() << "HistogramFilter::makeHistogram: [FRAME ACCUM] Queue Size: "<<m_frameAccum.size()<<", opac:"<<opac; 
+		
+		int counter = 0;
+		foreach(QImage img, m_frameAccum)
+		{
+			p.setOpacity(counter == 0 ? 1 : opac);
+			p.drawImage(0,0,img);
+			counter ++;
+		}
+	}
+	
+
 	
 	// Setup our list of color values and set to 0
 	int histo[7][256];
@@ -191,7 +226,6 @@ QImage HistogramFilter::makeHistogram(const QImage& image)
 		"\t H: "<<hsvMin[0]<<hsvMax[0]<<hsvAvg[0]<<
 		"\t S: "<<hsvMin[1]<<hsvMax[1]<<hsvAvg[1]<<
 		"\t V: "<<hsvMin[2]<<hsvMax[2]<<hsvAvg[2];*/
-	
 	
 	// Calc the max and avg pixel counts
  	int min[7] = {255,255,255,255,255,255,255};

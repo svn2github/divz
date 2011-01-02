@@ -145,13 +145,15 @@ glvidtex: {
 	
 	HEADERS += PlayerWindow.h \
 		VideoInputSenderManager.h \
-		../livemix/VideoWidget.h 
+		../livemix/VideoWidget.h \
+		../livemix/EditorUtilityWidgets.h
 		
 		
 	SOURCES += main.cpp \
 		PlayerWindow.cpp \
 		VideoInputSenderManager.cpp \
-		../livemix/VideoWidget.cpp 
+		../livemix/VideoWidget.cpp \
+		../livemix/EditorUtilityWidgets.cpp 
 }
 
 unix: {

@@ -1,4 +1,8 @@
 #include "VideoSender.h"
+#include "VideoSenderCommands.h"
+
+// for setting hue, color, etc
+#include "../livemix/CameraThread.h"
 
 #include <QNetworkInterface>
 #include <QTime>
@@ -221,6 +225,7 @@ VideoSenderThread::VideoSenderThread(int socketDescriptor, bool adaptiveWriteEna
     , m_socketDescriptor(socketDescriptor)
     , m_adaptiveWriteEnabled(adaptiveWriteEnabled)
     , m_sentFirstHeader(false)
+    , m_blockSize(0)
 {
 	//connect(m_sender, SIGNAL(destroyed()),    this, SLOT(quit()));
 }
@@ -243,6 +248,7 @@ void VideoSenderThread::run()
 {
 	m_socket = new QTcpSocket();
 	connect(m_socket, SIGNAL(disconnected()), this, SLOT(deleteLater()));
+	connect(m_socket, SIGNAL(readyRead()), 	  this, SLOT(dataReady()));
 	
 	if (!m_socket->setSocketDescriptor(m_socketDescriptor)) 
 	{
@@ -350,5 +356,147 @@ void VideoSenderThread::frameReady()
 		m_sender->sendUnlock();
 	}
 
+}
+
+
+void VideoSenderThread::dataReady()
+{
+	if (m_blockSize == 0) 
+	{
+		char data[256];
+		int bytes = m_socket->readLine((char*)&data,256);
+		
+		if(bytes == -1)
+			qDebug() << "VideoSenderThread::dataReady: Could not read line from socket";
+		else
+			sscanf((const char*)&data,"%d",&m_blockSize);
+		//qDebug() << "VideoSenderThread::dataReady: Read:["<<data<<"], size:"<<m_blockSize;
+		//log(QString("[DEBUG] GLPlayerClient::dataReady(): blockSize: %1 (%2)").arg(m_blockSize).arg(m_socket->bytesAvailable()));
+	}
+	
+	if (m_socket->bytesAvailable() < m_blockSize)
+	{
+		//qDebug() << "VideoSenderThread::dataReady: Bytes avail:"<<m_socket->bytesAvailable()<<", block size:"<<m_blockSize<<", waiting for more data";
+		return;
+	}
+	
+	m_dataBlock = m_socket->read(m_blockSize);
+	m_blockSize = 0;
+	
+	if(m_dataBlock.size() > 0)
+	{
+		//qDebug() << "Data ("<<m_dataBlock.size()<<"/"<<m_blockSize<<"): "<<m_dataBlock;
+		//log(QString("[DEBUG] GLPlayerClient::dataReady(): dataBlock: \n%1").arg(QString(m_dataBlock)));
+
+		processBlock();
+	}
+	else
+	{
+		//qDebug() << "VideoSenderThread::dataReady: Didnt read any data from m_socket->read()";
+	}
+	
+	
+	if(m_socket->bytesAvailable())
+	{
+		QTimer::singleShot(0, this, SLOT(dataReady()));
+	}
+}
+
+void VideoSenderThread::processBlock()
+{
+	bool ok;
+	QDataStream stream(&m_dataBlock, QIODevice::ReadOnly);
+	QVariantMap map;
+	stream >> map;
+	
+	if(!m_sender)
+	{
+		qDebug() << "VideoSenderThread::processBlock: m_sender went away, can't process";
+		return;
+	}
+	
+	QString cmd = map["cmd"].toString();
+	//qDebug() << "VideoSenderThread::processBlock: map:"<<map;
+	
+	if(cmd == Video_SetHue ||
+	   cmd == Video_SetSaturation ||
+	   cmd == Video_SetBright ||
+	   cmd == Video_SetContrast)
+	{
+		//qDebug() << "VideoSenderThread::processBlock: Color command:"<<cmd;
+		VideoSource *source = m_sender->videoSource();
+		CameraThread *camera = dynamic_cast<CameraThread*>(source);
+		if(!camera)
+		{
+			// error
+			qDebug() << "VideoSenderThread::processBlock: "<<cmd<<": Video source is not a video input class ('CameraThread'), unable to determine system device to adjust."; 
+			return;
+		}
+		
+		/// TODO: The setting of BCHS should be done inside CamereaThread instead of here!
+		
+		QString colorCmd = cmd == Video_SetHue		? "hue" :
+				   cmd == Video_SetSaturation	? "color" :
+				   cmd == Video_SetBright	? "bright" :
+				   cmd == Video_SetContrast	? "contrast" : "";
+		
+		if(colorCmd.isEmpty())
+		{
+			// error
+			qDebug() << "VideoSenderThread::processBlock: "<<cmd<<": Unknown color command.";
+			return;
+		}
+			
+		QString device = camera->inputName();
+		int value = map["value"].toInt();
+		
+		if(value > 100)
+			value = 100;
+		if(value < 0)
+			value = 0;
+		
+		QString shellCommand = QString("v4lctl -c %1 %2 %3%").arg(device).arg(colorCmd).arg(value);
+			
+		qDebug() << "VideoSenderThread::processBlock: "<<cmd<<": Executing shell command: "<<shellCommand;
+			
+		system(qPrintable(shellCommand));
+	}
+	else
+	if(cmd == Video_SetFPS)
+	{
+		int fps = map["fps"].toInt();
+		if(fps < 1)
+			fps = 1;
+		if(fps > 60)
+			fps = 60;
+		qDebug() << "VideoSenderThread::processBlock: "<<cmd<<": Setting fps:"<<fps;
+		
+		m_sender->setTransmitFps(fps);
+	}
+	else
+	if(cmd == Video_SetSize)
+	{
+		int w = map["w"].toInt();
+		int h = map["h"].toInt();
+		QSize originalSize = m_sender->origSize();
+		if(w > originalSize.width())
+			w = originalSize.width();
+		if(h > originalSize.height())
+			h = originalSize.height();
+		if(w < 16)
+			w = 16;
+		if(h < 16)
+			h = 16;
+			
+		originalSize.scale(w,h,Qt::KeepAspectRatio);
+		qDebug() << "VideoSenderThread::processBlock: "<<cmd<<": Setting size:"<<originalSize;
+		
+		m_sender->setTransmitSize(originalSize);
+	}
+	else
+	{
+		// Unknown Command
+		qDebug() << "VideoSenderThread::processBlock: "<<cmd<<": Unknown command.";
+	}
 }
 
