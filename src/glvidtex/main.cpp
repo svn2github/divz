@@ -28,6 +28,8 @@
 #include "../livemix/VideoThread.h"
 #include "StaticVideoSource.h"
 #include "HistogramFilter.h"
+#include "FaceDetectFilter.h"
+#include "VideoDifferenceFilter.h"
 
 #include "VideoInputColorBalancer.h"
 
@@ -49,11 +51,11 @@ int main(int argc, char *argv[])
 
 // 	PlayerWindow *glw = new PlayerWindow();
 	
-//	VideoWidget *glw = new VideoWidget();
+	VideoWidget *glw = new VideoWidget();
 //   	GLWidget *glw = new GLWidget();
-	VideoInputColorBalancer *glw = new VideoInputColorBalancer();
-   	//glw->resize(640,480);
-   	glw->adjustSize();
+	//VideoInputColorBalancer *glw = new VideoInputColorBalancer();
+   	glw->resize(640,480);
+   	//glw->adjustSize();
 //  	glw->setViewport(QRectF(0,0,1000,750));
  	
 //  	CameraThread *source = CameraThread::threadForCamera("/dev/video0");
@@ -73,8 +75,8 @@ int main(int argc, char *argv[])
 // 		return -1;
 // 	}
 // 	
-// 	VideoReceiver *source = VideoReceiver::getReceiver("localhost",7755);
-// 	glw->setVideoSource(source);
+	VideoReceiver *source = VideoReceiver::getReceiver("192.168.0.17",7755);
+	//glw->setVideoSource(source);
 	
 /* 	
 	{
@@ -105,8 +107,14 @@ int main(int argc, char *argv[])
 //  	source->start();
 
 	
-// 	HistogramFilter *histo = new HistogramFilter();
-// 	histo->setVideoSource(source);
+	//HistogramFilter *histo = new HistogramFilter();
+	//histo->setVideoSource(source);
+	
+// 	FaceDetectFilter *faceFilter = new FaceDetectFilter();
+// 	faceFilter->setVideoSource(source);
+	
+	VideoDifferenceFilter *diffFilter = new VideoDifferenceFilter();
+	diffFilter->setVideoSource(source);
 	
 	/*
 	HsvInfoFilter *hsvInfo = new HsvInfoFilter();
@@ -114,7 +122,9 @@ int main(int argc, char *argv[])
 	
 	
 	//glw->setVideoSource(hsvInfo);
-//	glw->setVideoSource(histo);
+	//glw->setVideoSource(histo);
+	//glw->setVideoSource(faceFilter);
+	glw->setVideoSource(diffFilter);
 	
 // 	GLVideoDrawable *vid = new GLVideoDrawable();
 // 	vid->setVideoSource(histo);

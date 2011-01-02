@@ -33,6 +33,7 @@ TODO:
 			- Updated: Seems to not crash at the same point now - now when player closes, it gets caught in a loop in VideoReceiver - then when player comes back, THEN it crashes
 			- Need to figure out where the latest crash is an if we can fix this one.
 			- Seems to be caused *by* VideoReceiver - when no videoreceiver active, player can close and reopen without crashing the director
+				- Confirmed this is the cause of crashing - VideoReceiver...
 		- Director: playlist text looses formatting when playing?
 		- Make the Video Input control panel in director default to last network source
 			- [DONE] Consider removing "(This Machine)" as an option
@@ -113,7 +114,8 @@ TODO:
 		- [DONE] SVG animation playback/rendering
 			- Not the smoothest thing around, but it works...
 		- Add a Weather Item based on Google API code in $QT_HOME/qt/demos/embedded/weatherinfo.cpp
-		- Some method to auto-balance/tune camera's HSV so they match each other?
+		- [DONE] Some method to auto-balance/tune camera's HSV so they match each other?
+			- VideoInputColorBalancer.cpp
 		- Adjust color curves wtih matrixes? (Not just shift entire hues/sats, but curves.)
 		- Add in "Levels"/Gamma adjustment vis a vi:
 			outPixel = (pow(((inPixel * 255.0) - inBlack) / (inWhite - inBlack),

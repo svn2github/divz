@@ -35,7 +35,10 @@ HEADERS       = GLWidget.h \
 		VideoFilter.h \
 		HistogramFilter.h \ 
 		StaticVideoSource.h \
-		VideoInputColorBalancer.h
+		VideoInputColorBalancer.h \
+		FaceDetectFilter.h \
+		EyeCounter.h \
+		VideoDifferenceFilter.h
 		
 SOURCES       = GLWidget.cpp \
 		../livemix/VideoSource.cpp \
@@ -69,7 +72,10 @@ SOURCES       = GLWidget.cpp \
 		VideoFilter.cpp \
 		HistogramFilter.cpp \
 		StaticVideoSource.cpp \
-		VideoInputColorBalancer.cpp
+		VideoInputColorBalancer.cpp \
+		FaceDetectFilter.cpp \
+		EyeCounter.cpp \
+		VideoDifferenceFilter.cpp
 		
 
 editor: {

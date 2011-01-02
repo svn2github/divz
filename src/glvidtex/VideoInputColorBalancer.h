@@ -52,6 +52,10 @@ private:
 	QLabel *m_satDiff;
 	QLabel *m_valDiff;
 	
+	int m_hueDecay;
+	int m_satDecay;
+	int m_valDecay;
+	
 	QRadioButton *m_radioMaster;
 	QRadioButton *m_radioSlave;
 	bool m_adjustMaster;

@@ -16,6 +16,9 @@ VideoInputColorBalancer::VideoInputColorBalancer(QWidget *parent)
 	, m_adjustMaster(false)
 	, m_autoAdjust(true)
 	, m_autoAdjustThreshold(15)
+	, m_hueDecay(0)
+	, m_satDecay(0)
+	, m_valDecay(0)
 {
 	connect(m_histoMaster, SIGNAL(hsvStatsUpdated(int , int , int , 
 						      int , int , int ,
@@ -297,10 +300,10 @@ VideoInputColorBalancer::VideoInputColorBalancer(QWidget *parent)
 	m_autoAdjust = true;
 	m_manulAdjustments->setEnabled(false);
 	
-	radioAuto->setChecked(true);
-	radioManual->setChecked(false);
+	radioAuto->setChecked(false);
+	radioManual->setChecked(true);
 	
-	setAutoAdjust(true);
+	setAutoAdjust(false);
 	setAdjustMaster(false);
 	
 }
@@ -336,6 +339,26 @@ void VideoInputColorBalancer::hsvStatsUpdated(int hMin, int hMax, int hAvg,
 	m_satDiff->setText(QString("<font color=green><b>%1</b></font").arg(m_deltas[1]));
 	m_valDiff->setText(QString("<font color=blue><b>%1</b></font") .arg(m_deltas[2]));
 	
+	int decayReset = m_histoMaster->frameAccumNum();
+	
+	// The HSV 'decay' is to soften the effects of the requested change while the frames with the change accumlate in the histo buffer
+	if(m_hueDecay >0)
+		m_hueDecay --;
+	if(m_hueDecay >0)
+		m_deltas[0] /= m_hueDecay;
+		
+	if(m_satDecay >0)
+		m_satDecay --;
+	if(m_satDecay >0)
+		m_deltas[1] /= m_satDecay;
+	
+	if(m_valDecay >0)
+		m_valDecay --;
+	if(m_valDecay >0)
+		m_deltas[2] /= m_valDecay;
+	
+		
+	
 	if(m_autoAdjust)
 	{
 		int threshold = m_autoAdjustThreshold; //15; //(int) ( 255 * .075 );
@@ -370,6 +393,8 @@ void VideoInputColorBalancer::hsvStatsUpdated(int hMin, int hMax, int hAvg,
 						m_sourceMaster->setHue(m_vals[idx]);
 						qDebug() << "Hue hit top threshold, but at 100% for slave, moving master down:" << m_vals[idx];
 						
+						m_hueDecay = decayReset; 
+						
 						setAdjustMaster(true);
 						if(m_adjustMaster)
 							m_hueBox->setValue(m_vals[idx]);
@@ -381,6 +406,8 @@ void VideoInputColorBalancer::hsvStatsUpdated(int hMin, int hMax, int hAvg,
 					{
 						m_sourceSlave->setHue(m_vals[idx]);
 						qDebug() << "Hue hit top threshold, new hue:" << m_vals[idx];
+						
+						m_hueDecay = decayReset;
 						
 						setAdjustMaster(false);
 						if(!m_adjustMaster)
@@ -409,6 +436,8 @@ void VideoInputColorBalancer::hsvStatsUpdated(int hMin, int hMax, int hAvg,
 						m_sourceMaster->setHue(m_vals[idx]);
 						qDebug() << "Hue hit bottom threshold, but slave 0% for slave, moving master up:" << m_vals[idx];
 						
+						m_hueDecay = decayReset;
+						
 						setAdjustMaster(true);
 						if(m_adjustMaster)
 							m_hueBox->setValue(m_vals[idx]);
@@ -420,6 +449,8 @@ void VideoInputColorBalancer::hsvStatsUpdated(int hMin, int hMax, int hAvg,
 					{
 						qDebug() << "Hue hit bottom threshold, new hue:" << m_vals[idx];
 						m_sourceSlave->setHue(m_vals[idx]);
+						
+						m_hueDecay = decayReset;
 						
 						setAdjustMaster(false);
 						if(!m_adjustMaster)
@@ -453,6 +484,8 @@ void VideoInputColorBalancer::hsvStatsUpdated(int hMin, int hMax, int hAvg,
 						m_sourceMaster->setSaturation(m_vals[idx]);
 						qDebug() << "Saturation hit top threshold, but at 100% for slave, moving master down:" << m_vals[idx];
 						
+						m_satDecay = decayReset;
+						
 						setAdjustMaster(true);
 						if(m_adjustMaster)
 							m_satBox->setValue(m_vals[idx]);
@@ -464,6 +497,8 @@ void VideoInputColorBalancer::hsvStatsUpdated(int hMin, int hMax, int hAvg,
 					{
 						m_sourceSlave->setSaturation(m_vals[idx]);
 						qDebug() << "Saturation hit top threshold, new sat:" << m_vals[idx];
+						
+						m_satDecay = decayReset;
 						
 						setAdjustMaster(false);
 						if(!m_adjustMaster)
@@ -492,6 +527,8 @@ void VideoInputColorBalancer::hsvStatsUpdated(int hMin, int hMax, int hAvg,
 						m_sourceMaster->setSaturation(m_vals[idx]);
 						qDebug() << "Saturation hit bottom threshold, but slave 0% for slave, moving master up:" << m_vals[idx];
 						
+						m_satDecay = decayReset;
+						
 						setAdjustMaster(true);
 						if(m_adjustMaster)
 							m_satBox->setValue(m_vals[idx]);
@@ -503,6 +540,8 @@ void VideoInputColorBalancer::hsvStatsUpdated(int hMin, int hMax, int hAvg,
 					{
 						qDebug() << "Saturation hit bottom threshold, new sat:" << m_vals[idx];
 						m_sourceSlave->setSaturation(m_vals[idx]);
+						
+						m_satDecay = decayReset;
 						
 						setAdjustMaster(false);
 						if(!m_adjustMaster)
@@ -528,6 +567,8 @@ void VideoInputColorBalancer::hsvStatsUpdated(int hMin, int hMax, int hAvg,
 					m_sourceSlave->setBrightness(m_vals[idx]);
 					qDebug() << "Value hit top threshold, new value:" << m_vals[idx];
 					
+					m_valDecay = decayReset;
+					
 					setAdjustMaster(true);
 					if(!m_adjustMaster)
 						m_brightBox->setValue(m_vals[idx]);
@@ -545,6 +586,8 @@ void VideoInputColorBalancer::hsvStatsUpdated(int hMin, int hMax, int hAvg,
 				{
 					qDebug() << "Value hit bottom threshold, new value:" << m_vals[idx];
 					m_sourceSlave->setBrightness(m_vals[idx]);
+					
+					m_valDecay = decayReset;
 					
 					setAdjustMaster(false);
 					if(!m_adjustMaster)
