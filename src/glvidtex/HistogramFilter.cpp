@@ -9,7 +9,6 @@ HistogramFilter::HistogramFilter(QObject* parent)
 	, m_frameAccumEnabled(false)
 	, m_frameAccumNum(10) // just a guess
 {
-	setFrameAccumEnabled(true);
 	setIsThreaded(true);
 }
 

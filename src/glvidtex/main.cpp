@@ -58,12 +58,12 @@ int main(int argc, char *argv[])
    	//glw->adjustSize();
 //  	glw->setViewport(QRectF(0,0,1000,750));
  	
-//  	CameraThread *source = CameraThread::threadForCamera("/dev/video0");
-//  	source->setInput("S-Video");
-//  	source->setFps(30);
-//  	//source->setDeinterlace(true);
-// 	source->registerConsumer(glw);
-// 	source->enableRawFrames(true);
+ 	CameraThread *source = CameraThread::threadForCamera("/dev/video1");
+ 	//source->setInput("S-Video");
+ 	source->setFps(30);
+ 	//source->setDeinterlace(true);
+	source->registerConsumer(glw);
+	source->enableRawFrames(true);
 // 	
 // 	//glw->setVideoSource(source);
 // 	
@@ -75,7 +75,7 @@ int main(int argc, char *argv[])
 // 		return -1;
 // 	}
 // 	
-	VideoReceiver *source = VideoReceiver::getReceiver("192.168.0.17",7755);
+	//VideoReceiver *source = VideoReceiver::getReceiver("192.168.0.17",7755);
 	//glw->setVideoSource(source);
 	
 /* 	

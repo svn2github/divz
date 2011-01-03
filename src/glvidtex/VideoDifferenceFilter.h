@@ -4,9 +4,6 @@
 #include <QtGui>
 #include "VideoFilter.h"
 
-#include "opencv/cv.h"
-#include "opencv/highgui.h"
-
 class VideoDifferenceFilter : public VideoFilter
 {
 	Q_OBJECT
@@ -19,10 +16,8 @@ protected:
 	
 	QImage createDifferenceImage(QImage);
 	
-	IplImage* m_image;
-	IplImage* m_lastImage;
-	IplImage* m_diffImage;
-	IplImage* m_bitImage;
+	QImage m_lastImage;
+	bool m_includeOriginalImage;
 };
 
 #endif
