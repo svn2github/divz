@@ -1825,7 +1825,8 @@ void GLVideoDrawable::paintGL()
 {
 	if(!m_validShader)
 	{
-		//qDebug() << "GLVideoDrawable::paintGL(): "<<(QObject*)this<<" No valid shader, not painting";
+		if(property("-debug").toBool())
+			qDebug() << "GLVideoDrawable::paintGL(): "<<(QObject*)this<<" No valid shader, not painting";
 		return;
 	}
 
@@ -1842,7 +1843,8 @@ void GLVideoDrawable::paintGL()
 		m_colorsDirty = false;
         }
 
- 	//qDebug() << "GLVideoDrawable::paintGL(): "<<(QObject*)this;
+ 	if(property("-debug").toBool())
+ 		qDebug() << "GLVideoDrawable::paintGL():"<<(QObject*)this;
 
 
 	//m_frame->unmap()();
@@ -1856,7 +1858,8 @@ void GLVideoDrawable::paintGL()
 		m_displayOpts.cropBottomRight.x(),
 		m_displayOpts.cropBottomRight.y());
 
-	//qDebug() << "source:"<<source<<", target:"<<target;
+	if(property("-debug").toBool())
+		qDebug() << "GLVideoDrawable::paintGL():"<<(QObject*)this<<": source:"<<source<<", target:"<<target;
 
 
 	const int width  = QGLContext::currentContext()->device()->width();
@@ -1969,7 +1972,9 @@ void GLVideoDrawable::paintGL()
 	double liveOpacity = m_crossFadeMode == JustFront ? 
 				 opacity() :
 				(opacity() * (m_fadeActive ? m_fadeValue + .5 : 1.));
-				
+		
+// 	if(property("-debug").toBool())
+// 		qDebug() << "m_useShaders:"<<m_useShaders;
 	if(m_useShaders)
 	{
 
@@ -1990,7 +1995,8 @@ void GLVideoDrawable::paintGL()
 	// 		);
 	// 	m_program->setUniformValue("positionMatrix",      mat4);
 
-		//qDebug() << "GLVideoDrawable:paintGL():"<<this<<", rendering with opacity:"<<opacity();
+		if(property("-debug").toBool())
+			qDebug() << "GLVideoDrawable::paintGL():"<<(QObject*)this<<": rendering with opacity:"<<opacity();
 		m_program->setUniformValue("alpha",               (GLfloat)liveOpacity);
 		m_program->setUniformValue("texOffsetX",          (GLfloat)m_invertedOffset.x());
 		m_program->setUniformValue("texOffsetY",          (GLfloat)m_invertedOffset.y());
@@ -2220,7 +2226,7 @@ void GLVideoDrawable::paintGL()
 		// 		);
 		// 	m_program->setUniformValue("positionMatrix",      mat4);
 
-			//qDebug() << "GLVideoDrawable:paintGL():"<<this<<", rendering with opacity:"<<opacity();
+			//qDebug() << "GLVideoDrawable::paintGL():"<<this<<", rendering with opacity:"<<opacity();
 			m_program2->setUniformValue("alpha",               (GLfloat)fadeOpacity);
 			m_program2->setUniformValue("texOffsetX",          (GLfloat)m_invertedOffset.x());
 			m_program2->setUniformValue("texOffsetY",          (GLfloat)m_invertedOffset.y());

@@ -403,7 +403,7 @@ void GLWidget::setBottomRightTranslation(const QPointF& p)
 
 void GLWidget::initializeGL()
 {
-	makeCurrent();
+	makeCurrentIfNeeded();
 	
 	glDisable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
@@ -556,9 +556,30 @@ void GLWidget::postInitGL()
 void GLWidget::makeRenderContextCurrent()
 {
 	if(m_fbo)
-		m_fbo->bind();
+	{
+		if(!m_fbo->isBound())
+		{
+			//QTime t;
+			//t.start();
+			m_fbo->bind();
+			//qDebug() << "GLWidget::makeRenderContextCurrent: Called FBO bind(), time:"<<t.elapsed();
+		}
+	}
 	else
+	{
+		makeCurrentIfNeeded();
+	}
+}
+
+void GLWidget::makeCurrentIfNeeded()
+{
+	if(QGLContext::currentContext() != context())
+	{
+		//QTime t;
+		//t.start();
 		makeCurrent();
+		//qDebug() << "GLWidget::makeCurrentIfNeeded: Called makeCurrent(), time:"<<t.elapsed();
+	}
 }
 
 void GLWidget::setCornerRotation(GLRotateValue rv)
@@ -610,7 +631,7 @@ void GLWidgetSubview::setAlphaMask(const QImage &mask)
 			return;
 		}
 		
-		m_glw->makeCurrent();
+		m_glw->makeCurrentIfNeeded();
 		
 		
 // 		if(m_alphaMask.size() != targetSize)
@@ -829,8 +850,9 @@ void GLWidget::paintGL()
 	time.start();
 	
 	// Render all drawables into the FBO
-	if(m_fbo)
-		m_fbo->bind();
+	//if(m_fbo)
+	//	m_fbo->bind();
+	makeRenderContextCurrent();
 	
 	qglClearColor(Qt::black);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -855,7 +877,10 @@ void GLWidget::paintGL()
 		if(drawable->isVisible() && 
 		   drawable->opacity() > 0 &&
 		   drawable->rect().intersects(viewport))
+		   {
+			//qDebug() << "GLWidget::paintGL(): drawable:"<<((QObject*)drawable);
 			drawable->paintGL();
+		   }
 // 		qDebug() << "GLWidget::paintGL(): drawable:"<<((void*)drawable)<<", draw done";
 	}
 
@@ -865,9 +890,7 @@ void GLWidget::paintGL()
 	
 	if(m_fbo)
 	{
-		
-		m_fbo->release();
-		
+		m_fbo->release();	
 	
 		// Now render the FBO to the screen, applying a variety of transforms/effects:
 		// 1. Corner distortion ("keystoning") - can move any of the four corners individually
@@ -1443,7 +1466,7 @@ void GLWidgetSubview::updateColors()
 
 void GLWidget::addDrawable(GLDrawable *item)
 {
-	//makeCurrent();
+	//makeCurrentIfNeeded();
 	
 // 	QString newName = QString("%1/%2").arg(objectName()).arg(item->objectName());
 // 	item->setObjectName(qPrintable(newName));

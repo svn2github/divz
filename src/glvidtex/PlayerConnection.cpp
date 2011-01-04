@@ -123,15 +123,24 @@ PlayerConnection::PlayerConnection(QObject *parent)
 	, m_client(0)
 	, m_group(0)
 	, m_scene(0)
-	, m_isConnected(false)
+	, m_autoconnect(true)
+	, m_autoReconnect(true)
 	, m_justTesting(false)
+	, m_isConnected(false)
 {
-
 }
 
 PlayerConnection::PlayerConnection(QByteArray& ba, QObject *parent)
 	: QObject(parent)
+	, m_user("player")
+	, m_pass("player")
+	, m_playerVersion("(Unknown)")
 	, m_client(0)
+	, m_group(0)
+	, m_scene(0)
+	, m_autoconnect(true)
+	, m_autoReconnect(true)
+	, m_justTesting(false)
 	, m_isConnected(false)
 {
 	fromByteArray(ba);
@@ -242,6 +251,7 @@ void PlayerConnection::connectPlayer()
 
 	if(!m_justTesting)
 	{
+		m_preconnectionCommandQueue.clear();
 		sendCommand(QVariantList()
 			<< "cmd" 	<< GLPlayer_Login
 			<< "user"	<< m_user
@@ -323,6 +333,7 @@ void PlayerConnection::socketError(QAbstractSocket::SocketError socketError)
 	{
 		case QAbstractSocket::RemoteHostClosedError:
 			setError("Remote player closed the connection unexpectedly.","Network Error");
+			lostConnection();
 			break;
 		case QAbstractSocket::HostNotFoundError:
 			//QMessageBox::critical(0,"Host Not Found",tr("The host was not found. Please check the host name and port settings."));
@@ -330,6 +341,7 @@ void PlayerConnection::socketError(QAbstractSocket::SocketError socketError)
 			break;
 		case QAbstractSocket::ConnectionRefusedError:
 			setError("The host specified actively refused the connection.","Connection Refused");
+			lostConnection();
 			break;
 		default:
 			//QMessageBox::critical(0,"Connection Problem",);
@@ -338,6 +350,25 @@ void PlayerConnection::socketError(QAbstractSocket::SocketError socketError)
 	
 	if(m_justTesting)
 		disconnectPlayer();
+}
+
+void PlayerConnection::lostConnection()
+{
+	//qDebug() << "PlayerConnection::lostConnection: m_autoReconnect:"<<m_autoReconnect; 
+	if(m_autoReconnect)
+	{
+		QTimer::singleShot(1000,this,SLOT(reconnect()));
+	}
+	else
+	{
+		disconnectPlayer();
+	}
+}
+
+void PlayerConnection::reconnect()
+{
+	qDebug() << "PlayerConnection::reconnect: Attempting to reconnect.";
+	connectPlayer();
 }
 
 void PlayerConnection::clientDisconnected()
@@ -367,6 +398,11 @@ void PlayerConnection::setPass(const QString& value)
 void PlayerConnection::setAutoconnect(bool flag)
 {
 	m_autoconnect = flag;
+}
+
+void PlayerConnection::setAutoReconnect(bool flag)
+{
+	m_autoReconnect = flag;
 }
 
 

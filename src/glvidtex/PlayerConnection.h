@@ -73,6 +73,7 @@ public:
 	Qt::AspectRatioMode aspectRatioMode() { return m_aspectRatioMode; }
 	
 	bool autoconnect() { return m_autoconnect; }
+	bool autoReconnect() { return m_autoReconnect; }
 	
 	bool isConnected() { return m_isConnected; }
 	QString lastError() { return m_lastError; }
@@ -98,6 +99,7 @@ public slots:
 	void setAspectRatioMode(Qt::AspectRatioMode);
 	
 	void setAutoconnect(bool flag);
+	void setAutoReconnect(bool flag);
 	
 	void testConnection();
 	
@@ -149,6 +151,8 @@ private slots:
 	void clientConnected();
 	void clientDisconnected();
 	void socketError(QAbstractSocket::SocketError);
+	void lostConnection();
+	void reconnect();
 	
 private:
 	void setError(const QString&, const QString& cmd="");
@@ -164,6 +168,7 @@ private:
 	Qt::AspectRatioMode m_aspectRatioMode;
 	
 	bool m_autoconnect;
+	bool m_autoReconnect;
 	
 	bool m_justTesting;
 	

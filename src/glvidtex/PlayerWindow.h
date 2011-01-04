@@ -85,6 +85,8 @@ private slots:
 	//void drawableIsVisible(bool);
 	void opacityAnimationFinished();
 
+	void setBlack(bool black=true);
+
 protected:
 	friend class PlayerCompatOutputStream;
 	QGraphicsScene *graphicsScene() { return m_graphicsScene; }

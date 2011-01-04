@@ -351,6 +351,9 @@ protected:
 	void mouseMoveEvent(QMouseEvent *event);
 	void mouseReleaseEvent(QMouseEvent *event);
 	void showEvent(QShowEvent *);
+
+	friend class GLWidgetSubview;
+	void makeCurrentIfNeeded();
 	
 	
 	//void updateColors(int brightness, int contrast, int hue, int saturation);

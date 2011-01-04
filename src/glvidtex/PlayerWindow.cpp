@@ -171,6 +171,9 @@ PlayerWindow::PlayerWindow(QWidget *parent)
 	m_blackOverlay->setZIndex(99999);
 	m_blackOverlay->setItemName("Black Overlay");
 	m_blackOverlay->setXFadeEnabled(false);
+
+	/// JUST FOR DEBUGGING
+	m_blackOverlay->setProperty("-debug",true);
 		
 	m_useGLWidget = READ_STRING("compat","false") == "false";
 	if(m_useGLWidget)
@@ -473,6 +476,8 @@ PlayerWindow::PlayerWindow(QWidget *parent)
 	/// NB REMOVE FOR PRODUCTION
 	/// NB REMOVE FOR PRODUCTION
 	/// NB REMOVE FOR PRODUCTION
+
+	//QTimer::singleShot(1000, this, SLOT(setBlack()));
 }
 
 void PlayerWindow::sendReply(QVariantList reply)
@@ -557,11 +562,12 @@ void PlayerWindow::receivedMap(QVariantMap map)
 	{
 // 		if(m_glWidget)
 // 			m_glWidget->fadeBlack(map["flag"].toBool());
-
-		m_blackOverlay->setXFadeLength(m_xfadeSpeed);
 		bool flag = map["flag"].toBool();
-		qDebug() << "PlayerWindow: blackout flag:"<<flag<<", using overlay:"<<(QObject*)m_blackOverlay<<", speed:"<<m_xfadeSpeed;
-		m_blackOverlay->setVisible(flag);
+		setBlack(flag);
+
+		//m_blackOverlay->setXFadeLength(m_xfadeSpeed);
+		//qDebug() << "PlayerWindow: blackout flag:"<<flag<<", using overlay:"<<(QObject*)m_blackOverlay<<", speed:"<<m_xfadeSpeed;
+		//m_blackOverlay->setVisible(flag);
 			
 		sendReply(QVariantList() 
 				<< "cmd" << GLPlayer_SetBlackout
@@ -901,6 +907,13 @@ void PlayerWindow::receivedMap(QVariantMap map)
 // 	}
 }
 
+void PlayerWindow::setBlack(bool flag)
+{
+	m_blackOverlay->setXFadeLength(m_xfadeSpeed);
+        qDebug() << "PlayerWindow::setBlack: blackout flag:"<<flag<<", using overlay:"<<(QObject*)m_blackOverlay<<", speed:"<<m_xfadeSpeed;
+        m_blackOverlay->setVisible(flag);
+}
+
 // void PlayerWindow::sendTestMap()
 // {
 // 	qDebug() << "PlayerWindow::sendTestMap: Connecting...";
@@ -972,6 +985,7 @@ void PlayerWindow::setScene(GLScene *scene)
 		
 		m_scene->setOpacity(0); // no anim yet...
 		
+		double maxZIndex = -100000;
 		foreach(GLDrawable *drawable, newSceneList)
 		{
 			connect(drawable->playlist(), SIGNAL(currentItemChanged(GLPlaylistItem*)), this, SLOT(currentPlaylistItemChanged(GLPlaylistItem*)));
@@ -983,12 +997,15 @@ void PlayerWindow::setScene(GLScene *scene)
 				//qDebug() << "GLWidget mode, item:"<<(QObject*)drawable<<", xfade length:"<<m_xfadeSpeed;
 				vid->setXFadeLength(m_xfadeSpeed);
 			}
+			
+			if(drawable->zIndex() > maxZIndex)
+				maxZIndex = drawable->zIndex();
 		}
 		
 		m_scene->setOpacity(1,true,m_xfadeSpeed); // animate fade in
 		
 		//m_blackOverlay->setZIndex(newMax);
-		qDebug() << "PlayerWindow::setScene: adding black overlay:"<<(QObject*)m_blackOverlay<<", rect:"<<m_blackOverlay->rect()<<", z:"<<m_blackOverlay->zIndex();
+		qDebug() << "PlayerWindow::setScene: [OpenGL] adding black overlay:"<<(QObject*)m_blackOverlay<<", rect:"<<m_blackOverlay->rect()<<", z:"<<m_blackOverlay->zIndex()<<", maxZIndex:"<<maxZIndex;
 	}
 	else
 	{
@@ -1040,7 +1057,7 @@ void PlayerWindow::setScene(GLScene *scene)
 		
 		//m_blackOverlay->setZIndex(newMax);
 		m_scene->setOpacity(1,true,m_xfadeSpeed); // animate fade in
-		qDebug() << "PlayerWindow::setScene: adding black overlay:"<<(QObject*)m_blackOverlay<<", rect:"<<m_blackOverlay->rect()<<", z:"<<m_blackOverlay->zIndex();
+		qDebug() << "PlayerWindow::setScene: [Compat] adding black overlay:"<<(QObject*)m_blackOverlay<<", rect:"<<m_blackOverlay->rect()<<", z:"<<m_blackOverlay->zIndex();
 	}
 }
 

@@ -28,6 +28,7 @@ TODO:
 			- Need to figure out where the latest crash is an if we can fix this one.
 			- Seems to be caused *by* VideoReceiver - when no videoreceiver active, player can close and reopen without crashing the director
 				- Confirmed this is the cause of crashing - VideoReceiver...
+		- [FIXED] Sometimes, clicking Connect on the player doesnt fully connect - logs in, but nothing transmitted, window not moved, etc - clicking connect again works
 		
 		- [TMP-FIX] Video Encoding "problems"
 			- Way to much CPU usage - 157%-ish on a dual-core 2.4 GHz...causing live video to stutter
@@ -40,9 +41,9 @@ TODO:
 			- [DONE] Consider removing "(This Machine)" as an option
 				- Dont put a message box - just a simple QLabel
 		- Make the video input control panel automatically update when players are connected
-		- Sometimes, clicking Connect on the player doesnt fully connect - logs in, but nothing transmitted, window not moved, etc - clicking connect again works
 		- Changing scenes doesnt always work in player - I'd say 1/10th of the timer, it stays black
 		- If player errors out during connect, button stays grayed out till close and re-open dialog
+		- Clicking 'Black' doesnt always fade in black overlay
 		
 	NEEDED FEATURES:
 		- Need a way to enable/disable encoding from the director
