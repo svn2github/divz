@@ -80,13 +80,16 @@ void GLTextDrawable::setTargetDateTime(const QDateTime& date)
 
 QString GLTextDrawable::formatTime(double time)
 {
-	double hour = time/60/60;
-	double min = (hour - (int)(hour)) * 60;
-	double sec = (min  - (int)(min)) * 60;
+	double dhour = time/60/60;
+	double dmin = (dhour - (int)(dhour)) * 60;
+	double dsec = (dmin  - (int)(dmin)) * 60;
+	int hour = (int)dhour;
+	int min = (int)dmin;
+	int sec = (int)dsec;
 	//double ms  = (sec  - (int)(sec)) * 60;
 	return  QString::number((int)hour) + ":" +
 		(min<10? "0":"") + QString::number((int)min) + ":" +
-		(sec<10.5? "0":"") + QString::number((int)(sec+.5));// + "." +
+		(sec<10? "0":"") + QString::number((int)(sec));// + "." +
 		//(ms <10? "0":"") + QString::number((int)ms );
 
 }
@@ -94,23 +97,12 @@ QString GLTextDrawable::formatTime(double time)
 void GLTextDrawable::countdownTick()
 {
 	QDateTime now = QDateTime::currentDateTime();
-	//QDateTime xmas(QDate(now.date().year(), 12, 25), QTime(0, 0));
-	//qDebug("There are %d seconds to Christmas", now.secsTo(xmas));
+	
 	int secsTo = now.secsTo(m_targetTime);
-
-	//double time = ((double)m_currentTimeLength) - ((double)m_elapsedTime.elapsed())/1000;
-	//m_timeLabel->setText(QString("<font color='%1'>%2</font>").arg(time <= 3 ? "red" : "black").arg(formatTime(secsTo)));
 	
-	
-	//setText(formatTime(secsTo));
 	QString newText = formatTime(secsTo);
-	
-	setPlainText(newText);
-	
-	// Force renderer to render text so it doesn't delay past another timer tick, thereby creating a gap in the countdown onscreen
 	setXFadeEnabled(false);
-	//qDebug() << "GLTextDrawable::countdownTick: "<<now<<secsTo<<newText;
-	//m_renderer->renderText();
+	setPlainText(newText);
 }
 
 void GLTextDrawable::setIsClock(bool flag)
@@ -144,10 +136,8 @@ void GLTextDrawable::clockTick()
 	QString newText = now.toString(clockFormat());
 	//qDebug() << "GLTextDrawable::clockTick: now:"<<now<<", format:"<<clockFormat()<<", newText:"<<newText;
 	
-	setPlainText(newText);
-	
 	setXFadeEnabled(false);
-	//m_renderer->renderText();
+	setPlainText(newText);
 }
 
 void GLTextDrawable::setText(const QString& text)

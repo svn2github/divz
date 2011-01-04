@@ -8,8 +8,8 @@ VideoDifferenceFilter::VideoDifferenceFilter(QObject *parent)
 	, m_includeOriginalImage(true)
 	, m_frameAccumEnabled(false)
 	, m_frameAccumNum(5) // just a guess
-	, m_threshold(20)
-	, m_minThreshold(25)
+	, m_threshold(25)
+	, m_minThreshold(19)
 	, m_filterType(FrameToFirstFrame)
 	//, m_outputType(BinarySmoothed)
 	, m_outputType(BackgroundReplace)
@@ -223,6 +223,7 @@ void bobDeinterlace(const uchar* src, const uchar* const srcend,
 
 }
 
+
 QImage VideoDifferenceFilter::createDifferenceImage(QImage image)
 {
 	if(image.isNull())
@@ -237,6 +238,24 @@ QImage VideoDifferenceFilter::createDifferenceImage(QImage image)
 	if(origScaled.format() != QImage::Format_RGB32)
 		origScaled = origScaled.convertToFormat(QImage::Format_RGB32);
 		
+// 	if(!m_lastImage.isNull())
+// 	{
+// 		QImage smooth = QImage(smallSize, QImage::Format_RGB32);
+// 		{
+// 			unsigned int *dest = (unsigned int *)smooth.bits(); // use scanLine() instead of bits() to prevent deep copy
+// 			/*const*/ unsigned int *src  = (/*const*/ unsigned int *)origScaled.bits();
+// 			/*const*/ unsigned int *last = (/*const*/ unsigned int *)m_lastImage.bits();
+// 			const int height = origScaled.height();
+// 			const int stride = origScaled.bytesPerLine();
+// 			
+// 			smooth_native_32bit(last, dest, src, origScaled.byteCount());
+// 		}
+// 	
+// 		origScaled = smooth.copy();
+// 		origScaled.bits();
+// 	}
+	
+	
 	QImage deint = QImage(smallSize, QImage::Format_RGB32);
 	bool bottomFrame = false;//m_frameCount ++ % 2 == 1;
 
@@ -250,6 +269,7 @@ QImage VideoDifferenceFilter::createDifferenceImage(QImage image)
 					height, stride, bottomFrame);
 		
 	origScaled = deint;
+	
 	
 	if(m_frameAccumEnabled)
 	{
@@ -274,36 +294,53 @@ QImage VideoDifferenceFilter::createDifferenceImage(QImage image)
 	}
 	else
 	{
+		// do fast 32bit smoothing of images
+
+
 // 		QSize big = smallSize;
 // 		big.scale(image.size() * 1.5,Qt::KeepAspectRatio);
 // 		origScaled = origScaled.scaled(big,Qt::KeepAspectRatio,Qt::SmoothTransformation);
 // 		origScaled = origScaled.scaled(smallSize,Qt::KeepAspectRatio,Qt::SmoothTransformation);
 	}
 	
-	if(m_filterType == FrameToRefImage)
-		m_lastImage = m_refImage;
-	else
+	QImage baseFrame;
+	
 	if(m_lastImage.isNull())
 		m_lastImage = origScaled.copy();
-		
-	if(m_filterType == FrameToFirstFrame &&
-	   m_firstFrameAccum.size() < 20)
+
+	
+	if(m_filterType == FrameToRefImage)
+		baseFrame = m_refImage;
+	else
+	if(m_filterType == FrameToFirstFrame)
 	{
-		m_firstFrameAccum.enqueue(origScaled);
-		
-		QPainter p(&m_lastImage);
-		p.fillRect(m_lastImage.rect(), Qt::black);
-		
-		double opac = 1. / (double)m_firstFrameAccum.size();
-		//qDebug() << "HistogramFilter::makeHistogram: [FRAME ACCUM] Queue Size: "<<m_firstFrameAccum.size()<<", opac:"<<opac; 
-		
-		int counter = 0;
-		foreach(QImage img, m_firstFrameAccum)
+		if(m_firstImage.isNull())
+			m_firstImage = QImage(origScaled.size(), origScaled.format());
+			
+		if(m_firstFrameAccum.size() < 3)
 		{
-			p.setOpacity(counter == 0 ? 1 : opac);
-			p.drawImage(0,0,img);
-			counter ++;
+			m_firstFrameAccum.enqueue(origScaled);
+			
+			QPainter p(&m_firstImage);
+			p.fillRect(m_lastImage.rect(), Qt::black);
+			
+			double opac = 1. / (double)m_firstFrameAccum.size();
+			//qDebug() << "HistogramFilter::makeHistogram: [FRAME ACCUM] Queue Size: "<<m_firstFrameAccum.size()<<", opac:"<<opac; 
+			
+			int counter = 0;
+			foreach(QImage img, m_firstFrameAccum)
+			{
+				p.setOpacity(counter == 0 ? 1 : opac);
+				p.drawImage(0,0,img);
+				counter ++;
+			}
 		}
+		
+		baseFrame = m_firstImage;
+	}
+	else
+	{
+		baseFrame = m_lastImage;
 	}
 		
 		
@@ -342,7 +379,8 @@ QImage VideoDifferenceFilter::createDifferenceImage(QImage image)
 	for(int y=0; y<smallSize.height(); y++)
 	{
 		const uchar *lastLine = (const uchar*)m_lastImage.scanLine(y);
-		const uchar *thisLine = (const uchar*)origScaled.scanLine(y);
+		const uchar *baseLine = (const uchar*)baseFrame.scanLine(y);
+		/*const*/ uchar *thisLine = (/*const*/ uchar*)origScaled.scanLine(y);
 		const uchar *backLine = (const uchar*)backgroundImage.scanLine(y);
 		uchar *destLine = outputImage.scanLine(y);
 // 		huePos1 = 0;
@@ -360,18 +398,31 @@ QImage VideoDifferenceFilter::createDifferenceImage(QImage image)
 			// Docs say QImage::Format_RGB32 stores colors as 0xffRRGGBB - 
 			// - but when testing with a 4x1 image of (white,red,green,blue),
 			//   I find that the colors (on linux 32bit anyway) were stored BGRA...is that only linux or is that all Qt platforms with Format_RGB32?  
-			const uchar xb = lastLine[x];
-			const uchar xg = x+1 >= bytesPerLine ? 0 : lastLine[x+1];
-			const uchar xr = x+2 >= bytesPerLine ? 0 : lastLine[x+2];
+			const uchar lb = lastLine[x];
+			const uchar lg = x+1 >= bytesPerLine ? 0 : lastLine[x+1];
+			const uchar lr = x+2 >= bytesPerLine ? 0 : lastLine[x+2];
 			
-			const uchar tb = thisLine[x];
-			const uchar tg = x+1 >= bytesPerLine ? 0 : thisLine[x+1];
-			const uchar tr = x+2 >= bytesPerLine ? 0 : thisLine[x+2];
+			const uchar xb = baseLine[x];
+			const uchar xg = x+1 >= bytesPerLine ? 0 : baseLine[x+1];
+			const uchar xr = x+2 >= bytesPerLine ? 0 : baseLine[x+2];
+			
+			uchar tb = thisLine[x];
+			uchar tg = x+1 >= bytesPerLine ? 0 : thisLine[x+1];
+			uchar tr = x+2 >= bytesPerLine ? 0 : thisLine[x+2];
+			
+			tr = (tr+lr)/2;
+			tg = (tg+lg)/2;
+			tb = (tb+lb)/2;
+			
+			thisLine[x]   = tb;
+			thisLine[x+1] = tg;
+			thisLine[x+2] = tr;
+			
 // 			const uchar a = x+3 >= bytesPerLine ? 0 : line[x+3];
 			
 			// These grayscale conversion values are just rough estimates based on my google research - adjust to suit your tastes
-			int thisGray = (int)( tr * .30 + tg * .59 + tb * .11 );
-			int lastGray = (int)( xr * .30 + xg * .59 + xb * .11 );
+// 			int thisGray = (int)( tr * .30 + tg * .59 + tb * .11 );
+// 			int lastGray = (int)( xr * .30 + xg * .59 + xb * .11 );
 			//qDebug() << "val:"<<(int)val<<", r:"<<qRed(pixel)<<", g:"<<qGreen(pixel)<<", b:"<<qBlue(pixel)<<", gray:"<<gray;
 			//qDebug() << "r:"<<r<<", g:"<<g<<", b:"<<b<<", gray:"<<gray;
 			
@@ -422,7 +473,7 @@ QImage VideoDifferenceFilter::createDifferenceImage(QImage image)
 			h = abs(h1-h2);
 			s = abs(s1-s2);
 			v = abs(v1-v2);
-			gray = thisGray - lastGray;
+			//gray = thisGray - lastGray;
 			
 			//h = (int) ( (((double)h)/359.)*255 );
 			
@@ -482,7 +533,7 @@ QImage VideoDifferenceFilter::createDifferenceImage(QImage image)
 					if(testVal > m_threshold)
 						testVal = m_threshold;
 					double size = (double)(m_threshold - m_minThreshold);
-					int v = 255.;//(int)( ((double)(testVal - m_minThreshold)) / size * 255. );
+					int v = (int)( ((double)(testVal - m_minThreshold)) / size * 255. );
 					destLine[columnNum  ] = v ; //b
 					destLine[columnNum+1] = v; //g
 					destLine[columnNum+2] = v; //r
@@ -574,8 +625,8 @@ QImage VideoDifferenceFilter::createDifferenceImage(QImage image)
 		}
 	}
 	
-	if(m_filterType == FrameToFrame)
-		m_lastImage = origScaled.copy();
+	//if(m_filterType == FrameToFrame)
+	m_lastImage = origScaled.copy();
 	
 	//qDebug() << "avgCounter:"<<avgCounter;
 	//if(m_calcHsvStats)

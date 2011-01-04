@@ -49,21 +49,21 @@ int main(int argc, char *argv[])
 	MetaObjectUtil_Register(GLVideoLoopDrawable);
 	MetaObjectUtil_Register(GLVideoReceiverDrawable);
 
-// 	PlayerWindow *glw = new PlayerWindow();
+ 	PlayerWindow *glw = new PlayerWindow();
 	
-	VideoWidget *glw = new VideoWidget();
+	//VideoWidget *glw = new VideoWidget();
 //   	GLWidget *glw = new GLWidget();
 	//VideoInputColorBalancer *glw = new VideoInputColorBalancer();
-   	glw->resize(640,480);
+   	//glw->resize(640,480);
    	//glw->adjustSize();
 //  	glw->setViewport(QRectF(0,0,1000,750));
  	
- 	CameraThread *source = CameraThread::threadForCamera("/dev/video1");
- 	//source->setInput("S-Video");
- 	source->setFps(30);
- 	//source->setDeinterlace(true);
-	source->registerConsumer(glw);
-	source->enableRawFrames(true);
+//  	CameraThread *source = CameraThread::threadForCamera("/dev/video1");
+//  	//source->setInput("S-Video");
+//  	source->setFps(30);
+//  	//source->setDeinterlace(true);
+// 	source->registerConsumer(glw);
+// 	source->enableRawFrames(true);
 // 	
 // 	//glw->setVideoSource(source);
 // 	
@@ -113,8 +113,8 @@ int main(int argc, char *argv[])
 // 	FaceDetectFilter *faceFilter = new FaceDetectFilter();
 // 	faceFilter->setVideoSource(source);
 	
-	VideoDifferenceFilter *diffFilter = new VideoDifferenceFilter();
-	diffFilter->setVideoSource(source);
+// 	VideoDifferenceFilter *diffFilter = new VideoDifferenceFilter();
+// 	diffFilter->setVideoSource(source);
 	
 	/*
 	HsvInfoFilter *hsvInfo = new HsvInfoFilter();
@@ -124,7 +124,7 @@ int main(int argc, char *argv[])
 	//glw->setVideoSource(hsvInfo);
 	//glw->setVideoSource(histo);
 	//glw->setVideoSource(faceFilter);
-	glw->setVideoSource(diffFilter);
+	//glw->setVideoSource(diffFilter);
 	
 // 	GLVideoDrawable *vid = new GLVideoDrawable();
 // 	vid->setVideoSource(histo);

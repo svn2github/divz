@@ -20,13 +20,7 @@ TODO:
 				Whereas text and images, fade front out AND back in - rather a "ductape" fix - but seems to work for now. 
 		- [FIXED] Text crossfading seems to be broken - at least in player via the setProperty command - seems to set text THEN try to crossfade...
 			- Problem was added when we switched to using the QSharedPointer for VideoFrames. Fixed by making a new m_frame2 in GLImageDrawable before crossfading.
-		
-		- [TMP-FIX] Video Encoding "problems"
-			- Way to much CPU usage - 157%-ish on a dual-core 2.4 GHz...causing live video to stutter
-			- Consider putting it either in another thread or in a whole other process with shared memory
-				- Can we push it off onto the network somehow??
-			- Temporarily disabled encoder in PlayerWindow till this is addressed.
-		- Make GLDirector NOT crash when the player is disconnected!
+		- [FIXED] Make GLDirector NOT crash when the player is disconnected!
 			- Crash seems to be deep inside the Qt networking code (!!!!!!!)
 			- Short of recompiling Qt, I don't have a workaround for the crash...yet...
 			- Not a showstoper yet, so moving on to other problems for now.
@@ -34,6 +28,13 @@ TODO:
 			- Need to figure out where the latest crash is an if we can fix this one.
 			- Seems to be caused *by* VideoReceiver - when no videoreceiver active, player can close and reopen without crashing the director
 				- Confirmed this is the cause of crashing - VideoReceiver...
+		
+		- [TMP-FIX] Video Encoding "problems"
+			- Way to much CPU usage - 157%-ish on a dual-core 2.4 GHz...causing live video to stutter
+			- Consider putting it either in another thread or in a whole other process with shared memory
+				- Can we push it off onto the network somehow??
+			- Temporarily disabled encoder in PlayerWindow till this is addressed.
+		
 		- Director: playlist text looses formatting when playing?
 		- Make the Video Input control panel in director default to last network source
 			- [DONE] Consider removing "(This Machine)" as an option

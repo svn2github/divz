@@ -4,6 +4,7 @@ EditorGraphicsView::EditorGraphicsView(QWidget * parent)
 			: QGraphicsView(parent)
 			, m_canZoom(true)
 			, m_scaleFactor(1.)
+			, m_autoResize(false)
 {
 	setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing | QPainter::SmoothPixmapTransform );
 	setCacheMode(QGraphicsView::CacheBackground);
@@ -73,4 +74,46 @@ void EditorGraphicsView::setScaleFactor(qreal scaleFactor)
 		return;
 
 	scale(scaleFactor, scaleFactor);
+}
+
+void EditorGraphicsView::resizeEvent(QResizeEvent *)
+{
+	adjustViewScaling();
+}
+
+void EditorGraphicsView::adjustViewScaling()
+{
+	if(!scene())
+		return;
+		
+	if(!m_autoResize)
+		return;
+	
+	float sx = ((float)width()) / scene()->width();
+	float sy = ((float)height()) / scene()->height();
+
+	float scale = qMin(sx,sy);
+	setTransform(QTransform().scale(scale,scale));
+	//qDebug("Scaling: %.02f x %.02f = %.02f",sx,sy,scale);
+	update();
+	//m_view->fitInView(m_scene->sceneRect(), Qt::KeepAspectRatioByExpanding);
+	//m_view->fitInView(m_scene->sceneRect(), Qt::KeepAspectRatio);
+}
+
+void EditorGraphicsView::setAutoResize(bool flag)
+{
+	m_autoResize = flag;
+	if(flag)
+	{
+		//setFrameStyle(QFrame::NoFrame);
+		setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+		setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+		adjustViewScaling();
+	}
+	else
+	{
+		//setFrameStyle(QFrame::NoFrame);
+		setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+		setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+	}
 }

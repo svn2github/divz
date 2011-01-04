@@ -560,7 +560,7 @@ void PlayerWindow::receivedMap(QVariantMap map)
 
 		m_blackOverlay->setXFadeLength(m_xfadeSpeed);
 		bool flag = map["flag"].toBool();
-		//qDebug() << "PlayerWindow: blackout flag:"<<flag<<", using overlay:"<<(QObject*)m_blackOverlay<<", speed:"<<m_xfadeSpeed;
+		qDebug() << "PlayerWindow: blackout flag:"<<flag<<", using overlay:"<<(QObject*)m_blackOverlay<<", speed:"<<m_xfadeSpeed;
 		m_blackOverlay->setVisible(flag);
 			
 		sendReply(QVariantList() 
@@ -967,7 +967,7 @@ void PlayerWindow::setScene(GLScene *scene)
 			}
 		}
 		
-		//m_glWidget->addDrawable(m_blackOverlay);
+		m_glWidget->addDrawable(m_blackOverlay);
 		m_blackOverlay->setFillColor(Qt::black);
 		
 		m_scene->setOpacity(0); // no anim yet...
@@ -988,7 +988,7 @@ void PlayerWindow::setScene(GLScene *scene)
 		m_scene->setOpacity(1,true,m_xfadeSpeed); // animate fade in
 		
 		//m_blackOverlay->setZIndex(newMax);
-		//qDebug() << "PlayerWindow::setScene: adding black overlay:"<<(QObject*)m_blackOverlay<<", rect:"<<m_blackOverlay->rect();
+		qDebug() << "PlayerWindow::setScene: adding black overlay:"<<(QObject*)m_blackOverlay<<", rect:"<<m_blackOverlay->rect()<<", z:"<<m_blackOverlay->zIndex();
 	}
 	else
 	{
@@ -1022,7 +1022,7 @@ void PlayerWindow::setScene(GLScene *scene)
 		//m_graphicsScene->clear();
 		m_scene->setOpacity(0); // no anim yet...
 		
-		//m_graphicsScene->addItem(m_blackOverlay);
+		m_graphicsScene->addItem(m_blackOverlay);
 		m_blackOverlay->setFillColor(Qt::black);
 		 
 		foreach(GLDrawable *drawable, newSceneList)
@@ -1040,6 +1040,7 @@ void PlayerWindow::setScene(GLScene *scene)
 		
 		//m_blackOverlay->setZIndex(newMax);
 		m_scene->setOpacity(1,true,m_xfadeSpeed); // animate fade in
+		qDebug() << "PlayerWindow::setScene: adding black overlay:"<<(QObject*)m_blackOverlay<<", rect:"<<m_blackOverlay->rect()<<", z:"<<m_blackOverlay->zIndex();
 	}
 }
 

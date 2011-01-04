@@ -115,6 +115,7 @@ bool VideoReceiver::connectTo(const QString& host, int port, QString url, const 
 	
 	if(m_socket)
 	{
+		//qDebug() << "VideoReceiver::connectTo: Discarding old socket:"<<m_socket;
 		disconnect(m_socket, 0, this, 0);
 		m_dataBlock.clear();
 		
@@ -138,6 +139,8 @@ bool VideoReceiver::connectTo(const QString& host, int port, QString url, const 
 	
 	m_socket->connectToHost(host,port);
 	m_socket->setReadBufferSize(1024 * 1024);
+	
+	//qDebug() << "VideoReceiver::connectTo: Connecting to"<<host<<"with socket:"<<m_socket;
 	
 	
 	m_time.start();
@@ -165,6 +168,8 @@ void VideoReceiver::lostConnection()
 {
 	if(m_autoReconnect)
 	{
+		//qDebug() << "VideoReceiver::lostSonnection: Lost server, attempting to reconnect in 1sec";
+		
 		enqueue(new VideoFrame(QImage("dot.gif"),1000/30));
 		QTimer::singleShot(1000,this,SLOT(reconnect()));
 	}
@@ -176,7 +181,7 @@ void VideoReceiver::lostConnection()
 
 void VideoReceiver::lostConnection(QAbstractSocket::SocketError error)
 {
-	qDebug() << "VideoReceiver::lostConnection("<<error<<"):" << m_socket->errorString();
+	//qDebug() << "VideoReceiver::lostConnection("<<error<<"):" << m_socket->errorString();
 	
 	if(error == QAbstractSocket::ConnectionRefusedError)
 		lostConnection();
@@ -286,6 +291,7 @@ void VideoReceiver::dataReady()
 		return;
 	}
 	QByteArray bytes = m_socket->readAll();
+	//qDebug() << "VideoReceiver::dataReady(): Reading from socket:"<<m_socket<<", read:"<<bytes.size()<<" bytes"; 
 	if(bytes.size() > 0)
 	{
 		m_dataBlock.append(bytes);
@@ -354,13 +360,24 @@ void VideoReceiver::processBlock()
 					&holdTime,
 					&origX,
 					&origY);
-					
-			//qDebug() << "header data:"<<headerData;
+				
+			//qDebug() << "raw header scan: byteTmp:"<<byteTmp<<", size:"<<imgX<<"x"<<imgY;
+			
+			//qDebug() << "VideoReceiver::processBlock: raw header data:"<<headerData;
+			if(byteTmp > 1024*1024*1024 ||
+				imgX > 1900 || imgX < 0 ||
+				imgY > 1900 || imgY < 0)
+			{
+				qDebug() << "VideoReceiver::processBlock: Frame too large (bytes > 1GB or invalid W/H)";
+				m_dataBlock.clear();
+				return;
+			}
+			 
 			if(byteTmp != m_byteCount)
 			{
 				m_byteCount = byteTmp;
 				frameSize = m_byteCount + HEADER_SIZE;
-				qDebug() << "VideoReceiver::processBlock: Frame size changed: "<<frameSize;
+				//qDebug() << "VideoReceiver::processBlock: Frame size changed: "<<frameSize;
 			}
 			//qDebug() << "VideoReceiver::processBlock: header data:"<<headerData;
 			//QImage frame = QImage::fromData(block);
@@ -405,6 +422,7 @@ void VideoReceiver::processBlock()
 			else
 			{
 				//QByteArray array;
+				//qDebug() << "m_byteCount:"<<m_byteCount<<", size:"<<imgX<<"x"<<imgY;
 				uchar *pointer = frame->allocPointer(m_byteCount);
 				memcpy(pointer, (const char*)block.constData(), m_byteCount);
 				//array.append((const char*)block.constData(), m_byteCount);
@@ -501,6 +519,10 @@ void VideoReceiver::exit()
 {
 	if(m_socket)
 	{
+		qDebug() << "VideoReceiver::exit: Discarding old socket:"<<m_socket;
+		disconnect(m_socket,0,this,0);
+		m_dataBlock.clear();
+		
 		//qDebug() << "VideoReceiver::exit: Quiting video receivier";
 		m_socket->abort();
 		m_socket->disconnectFromHost();

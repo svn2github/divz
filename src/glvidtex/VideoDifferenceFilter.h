@@ -45,6 +45,7 @@ protected:
 	
 	QImage createDifferenceImage(QImage);
 	
+	QImage m_firstImage;
 	QImage m_lastImage;
 	bool m_includeOriginalImage;
 

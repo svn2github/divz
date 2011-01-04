@@ -168,6 +168,7 @@ void DirectorWindow::setupUI()
 // 	ui->graphicsView->setScene(m_graphicsScene);
 	ui->graphicsView->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
 	ui->graphicsView->setBackgroundBrush(Qt::black);
+	ui->graphicsView->setAutoResize(true);
 	//m_graphicsScene->setSceneRect(QRectF(0,0,1000.,750.));
 	
 	ui->fadeSpeedSlider->setValue((int)(300. / 3000. * 100));
@@ -258,6 +259,7 @@ void DirectorWindow::writeSettings()
 	settings.setValue("DirectorWindow/DrawableSplitter",ui->drawableSplitter->saveState());
 
 	settings.setValue("DirectorWindow/scaleFactor",ui->graphicsView->scaleFactor());
+	//qDebug() << "DirectorWindow::writeSettings: scaleFactor: "<<ui->graphicsView->scaleFactor();
 	
 	settings.setValue("DirectorWindow/players", m_players->toByteArray());
 }
