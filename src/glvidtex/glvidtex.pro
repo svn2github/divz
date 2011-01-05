@@ -35,10 +35,8 @@ HEADERS       = GLWidget.h \
 		VideoFilter.h \
 		HistogramFilter.h \ 
 		StaticVideoSource.h \
-		VideoInputColorBalancer.h \
-		FaceDetectFilter.h \
-		EyeCounter.h \
-		VideoDifferenceFilter.h
+		VideoDifferenceFilter.h \
+		FaceDetectFilter.h 
 		
 SOURCES       = GLWidget.cpp \
 		../livemix/VideoSource.cpp \
@@ -72,10 +70,8 @@ SOURCES       = GLWidget.cpp \
 		VideoFilter.cpp \
 		HistogramFilter.cpp \
 		StaticVideoSource.cpp \
-		VideoInputColorBalancer.cpp \
-		FaceDetectFilter.cpp \
-		EyeCounter.cpp \
-		VideoDifferenceFilter.cpp
+		VideoDifferenceFilter.cpp \
+		FaceDetectFilter.cpp 
 		
 
 editor: {
@@ -161,6 +157,29 @@ glvidtex: {
 		../livemix/VideoWidget.cpp \
 		../livemix/EditorUtilityWidgets.cpp 
 }
+inputbalance: {
+	TARGET = glinputbalance
+	
+	HEADERS += VideoInputColorBalancer.h \
+		../livemix/VideoWidget.h \
+		../livemix/EditorUtilityWidgets.h
+		
+		
+	SOURCES += inputbalance-main.cpp \
+		VideoInputColorBalancer.cpp \
+		../livemix/VideoWidget.cpp \
+		../livemix/EditorUtilityWidgets.cpp 
+}
+slideshow: {
+	TARGET = glslideshow
+	
+	HEADERS += SlideShowWindow.h
+		
+	SOURCES += slideshow-main.cpp \
+		SlideShowWindow.cpp
+		  
+	include(../imgtool/exiv2-0.18.2-qtbuild/qt_build_root.pri)
+}
 
 unix: {
 	HEADERS += \
@@ -175,6 +194,10 @@ unix: {
 opencv: {
 	DEFINES += OPENCV_ENABLED
 	LIBS += -L/usr/local/lib -lcv -lcxcore
+			
+	HEADERS += EyeCounter.h
+	SOURCES += EyeCounter.cpp
+
 }
 
 

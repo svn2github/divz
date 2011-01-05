@@ -13,6 +13,9 @@ public:
 	FaceDetectFilter(QObject *parent=0);
 	~FaceDetectFilter();
 	
+signals:
+	void facesFound(QList<QRect>);
+	
 protected:
 	virtual void processFrame();
 	
