@@ -126,7 +126,10 @@ private:
 	
 	PlayerCompatOutputStream *m_compatStream;
 	
-	GLRectDrawable *m_blackOverlay;
+	//GLRectDrawable *m_blackOverlay;
+	bool m_isBlack;
+	GLScene *m_blackScene;
+	QPointer<GLScene> m_scenePreBlack;
 	QList<GLDrawable*> m_oldDrawables;
 };
 

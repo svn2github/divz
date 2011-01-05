@@ -127,6 +127,8 @@ PlayerWindow::PlayerWindow(QWidget *parent)
 	, m_outputEncoder(0)
 	, m_xfadeSpeed(300)
 	, m_compatStream(0)
+	, m_isBlack(false)
+	, m_blackScene(new GLScene)
 {
 	m_vidSendMgr = new VideoInputSenderManager();
 	m_vidSendMgr->setSendingEnabled(true);
@@ -167,14 +169,6 @@ PlayerWindow::PlayerWindow(QWidget *parent)
 		point = QPoint(parts[0].toInt(),parts[1].toInt()); \
 		if(verbose) qDebug() << "PlayerWindow: " key ": " << point; 
 	
-	m_blackOverlay = new GLRectDrawable();
-	m_blackOverlay->setZIndex(99999);
-	m_blackOverlay->setItemName("Black Overlay");
-	m_blackOverlay->setXFadeEnabled(false);
-
-	/// JUST FOR DEBUGGING
-	m_blackOverlay->setProperty("-debug",true);
-		
 	m_useGLWidget = READ_STRING("compat","false") == "false";
 	if(m_useGLWidget)
 	{
@@ -183,7 +177,6 @@ PlayerWindow::PlayerWindow(QWidget *parent)
 		qDebug() << "PlayerWindow: Using OpenGL to provide high-quality graphics.";
 		
 		m_glWidget->setCursor(Qt::BlankCursor);
-		m_glWidget->addDrawable(m_blackOverlay);
 	}
 	else
 	{
@@ -198,7 +191,6 @@ PlayerWindow::PlayerWindow(QWidget *parent)
 		qDebug() << "PlayerWindow: Using vendor-provided stock graphics engine for compatibility with older hardware.";
 		
 		m_graphicsView->setCursor(Qt::BlankCursor);
-		m_graphicsScene->addItem(m_blackOverlay);
 	}
 	
 	
@@ -285,17 +277,12 @@ PlayerWindow::PlayerWindow(QWidget *parent)
 	if(m_useGLWidget)
 	{
 		m_glWidget->setCanvasSize(QSizeF((qreal)point.x(),(qreal)point.y()));
-		m_blackOverlay->setRect(QRectF(0,0,(qreal)point.x(),(qreal)point.y()));
 	}
 	else
 	{
 		QRectF r = QRectF(0,0,(qreal)point.x(),(qreal)point.y());
 		m_graphicsScene->setSceneRect(r);
-		m_blackOverlay->setRect(r);
 	}
-	
-	m_blackOverlay->setVisible(false);
-	
 	
 	m_xfadeSpeed = READ_STRING("xfade-speed",300).toInt();
 	//qDebug() << "PlayerWindow: Crossfade speed: "<<m_xfadeSpeed;
@@ -565,10 +552,6 @@ void PlayerWindow::receivedMap(QVariantMap map)
 		bool flag = map["flag"].toBool();
 		setBlack(flag);
 
-		//m_blackOverlay->setXFadeLength(m_xfadeSpeed);
-		//qDebug() << "PlayerWindow: blackout flag:"<<flag<<", using overlay:"<<(QObject*)m_blackOverlay<<", speed:"<<m_xfadeSpeed;
-		//m_blackOverlay->setVisible(flag);
-			
 		sendReply(QVariantList() 
 				<< "cmd" << GLPlayer_SetBlackout
 				<< "status" << true);
@@ -593,7 +576,12 @@ void PlayerWindow::receivedMap(QVariantMap map)
 		setGroup(group);
 		
 		if(group->size() > 0)
-			setScene(group->at(0));
+		{
+			if(m_isBlack)
+				m_scenePreBlack = group->at(0);
+			else
+				setScene(group->at(0));
+		}
 		
 		sendReply(QVariantList() 
 				<< "cmd" << GLPlayer_LoadSlideGroup
@@ -622,7 +610,10 @@ void PlayerWindow::receivedMap(QVariantMap map)
 			}
 			else
 			{
-				setScene(scene);
+				if(m_isBlack)
+					m_scenePreBlack = scene;
+				else	
+					setScene(scene);
 				
 				sendReply(QVariantList() 
 					<< "cmd" << GLPlayer_SetSlide
@@ -760,8 +751,6 @@ void PlayerWindow::receivedMap(QVariantMap map)
 			m_glWidget->setCanvasSize(size);
 		else
 			m_graphicsScene->setSceneRect(QRectF(QPointF(0,0),size));
-
-		m_blackOverlay->setRect(QRectF(QPointF(0,0),size));
 
 		sendReply(QVariantList() 
 				<< "cmd" << cmd
@@ -909,9 +898,22 @@ void PlayerWindow::receivedMap(QVariantMap map)
 
 void PlayerWindow::setBlack(bool flag)
 {
-	m_blackOverlay->setXFadeLength(m_xfadeSpeed);
-        qDebug() << "PlayerWindow::setBlack: blackout flag:"<<flag<<", using overlay:"<<(QObject*)m_blackOverlay<<", speed:"<<m_xfadeSpeed;
-        m_blackOverlay->setVisible(flag);
+        //qDebug() << "PlayerWindow::setBlack: blackout flag:"<<flag<<", m_isBlack:"<<m_isBlack; 
+	if(flag == m_isBlack)
+		return;
+		
+	m_isBlack = flag;
+	
+	if(flag)
+	{
+		m_scenePreBlack = m_scene;
+		setScene(m_blackScene);
+	}
+	else
+	{
+		setScene(m_scenePreBlack);
+	}
+	
 }
 
 // void PlayerWindow::sendTestMap()
@@ -967,21 +969,10 @@ void PlayerWindow::setScene(GLScene *scene)
 			QList<GLDrawable*> items = m_glWidget->drawables();
 			foreach(GLDrawable *drawable, items)
 			{
-				if(drawable == m_blackOverlay)
-				{
-					// IGNORE
-					//m_glWidget->removeDrawable(m_blackOverlay);
-				}
-				else
-				{
-					disconnect(drawable->playlist(), 0, this, 0);
-					m_glWidget->removeDrawable(drawable);
-				}
+				disconnect(drawable->playlist(), 0, this, 0);
+				m_glWidget->removeDrawable(drawable);
 			}
 		}
-		
-		m_glWidget->addDrawable(m_blackOverlay);
-		m_blackOverlay->setFillColor(Qt::black);
 		
 		m_scene->setOpacity(0); // no anim yet...
 		
@@ -1003,9 +994,6 @@ void PlayerWindow::setScene(GLScene *scene)
 		}
 		
 		m_scene->setOpacity(1,true,m_xfadeSpeed); // animate fade in
-		
-		//m_blackOverlay->setZIndex(newMax);
-		qDebug() << "PlayerWindow::setScene: [OpenGL] adding black overlay:"<<(QObject*)m_blackOverlay<<", rect:"<<m_blackOverlay->rect()<<", z:"<<m_blackOverlay->zIndex()<<", maxZIndex:"<<maxZIndex;
 	}
 	else
 	{
@@ -1022,16 +1010,8 @@ void PlayerWindow::setScene(GLScene *scene)
 			{
 				if(GLDrawable *drawable = dynamic_cast<GLDrawable*>(item))
 				{
-					if(drawable == m_blackOverlay)
-					{
-						// IGNORE
-						//m_glWidget->removeDrawable(m_blackOverlay);
-					}
-					else
-					{
-						disconnect(drawable->playlist(), 0, this, 0);
-						m_graphicsScene->removeItem(drawable);
-					}
+					disconnect(drawable->playlist(), 0, this, 0);
+					m_graphicsScene->removeItem(drawable);
 				}
 			}
 		}
@@ -1039,9 +1019,6 @@ void PlayerWindow::setScene(GLScene *scene)
 		//m_graphicsScene->clear();
 		m_scene->setOpacity(0); // no anim yet...
 		
-		m_graphicsScene->addItem(m_blackOverlay);
-		m_blackOverlay->setFillColor(Qt::black);
-		 
 		foreach(GLDrawable *drawable, newSceneList)
 		{
 			connect(drawable->playlist(), SIGNAL(currentItemChanged(GLPlaylistItem*)), this, SLOT(currentPlaylistItemChanged(GLPlaylistItem*)));
@@ -1055,9 +1032,7 @@ void PlayerWindow::setScene(GLScene *scene)
 			}
 		}
 		
-		//m_blackOverlay->setZIndex(newMax);
 		m_scene->setOpacity(1,true,m_xfadeSpeed); // animate fade in
-		qDebug() << "PlayerWindow::setScene: [Compat] adding black overlay:"<<(QObject*)m_blackOverlay<<", rect:"<<m_blackOverlay->rect()<<", z:"<<m_blackOverlay->zIndex();
 	}
 }
 

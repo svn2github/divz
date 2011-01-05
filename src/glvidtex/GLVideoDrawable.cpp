@@ -1425,7 +1425,8 @@ static void uploadTexture(GLuint tx_id, const QImage &image)
 
 void GLVideoDrawable::updateTexture(bool secondSource)
 {
-//  	qDebug() << "GLVideoDrawable::updateTexture(): "<<(QObject*)this<<" secondSource:"<<secondSource;
+//   	if(property("-debug").toBool())
+//   		qDebug() << "GLVideoDrawable::updateTexture(): "<<(QObject*)this<<" secondSource:"<<secondSource;
 	if(!secondSource ? (!m_frame || !m_frame->isValid()) : (!m_frame2 || !m_frame2->isValid()))
 	{
 		qDebug() << "GLVideoDrawable::updateTexture(): "<<(QObject*)this<<" Frame not valid";
@@ -1435,7 +1436,8 @@ void GLVideoDrawable::updateTexture(bool secondSource)
 	if(m_glInited && glWidget())
 	{
 		//if(objectName() != "StaticBackground")
-// 		qDebug() << "GLVideoDrawable::updateTexture(): "<<(QObject*)this<<" Got a frame, size:"<<m_frame->size();
+// 		if(property("-debug").toBool())
+//  			qDebug() << "GLVideoDrawable::updateTexture(): "<<(QObject*)this<<" Got a frame, size:"<<m_frame->size();
 		//if()
 			//m_frameSize = m_frame->size();
 // 		qDebug() << "GLVideoDrawable::updateTexture(): "<<objectName()<<" Got frame size:"<<m_frame->size();
@@ -1444,7 +1446,8 @@ void GLVideoDrawable::updateTexture(bool secondSource)
 				   (m_frameSize2 != m_frame2->size() || m_frame2->rect() != m_sourceRect2 || !m_texturesInited2))
 		{
  			//qDebug() << "GLVideoDrawable::paintGL(): m_frame->rect():"<<m_frame->rect()<<", m_sourceRect:"<<m_sourceRect<<", m_frame->size():"<<m_frame->size();
-//   			qDebug() << "GLVideoDrawable::updateTexture(): "<<(QObject*)this<<" frame size changed or !m_texturesInited, resizing and adjusting pixels...";
+//    			if(property("-debug").toBool())
+//    				qDebug() << "GLVideoDrawable::updateTexture(): "<<(QObject*)this<<" frame size changed or !m_texturesInited, resizing and adjusting pixels...";
 			//if(m_videoFormat.pixelFormat != m_source->videoFormat().pixelFormat)
 
 			if(!secondSource)
@@ -1465,7 +1468,8 @@ void GLVideoDrawable::updateTexture(bool secondSource)
 
 		if(!m_validShader)
 		{
-			//qDebug() << "GLVideoDrawable::updateTexture(): "<<(QObject*)this<<" No valid shader, not painting";
+// 			if(property("-debug").toBool())
+// 				qDebug() << "GLVideoDrawable::updateTexture(): "<<(QObject*)this<<" No valid shader, not painting";
 			return;
 		}
 
@@ -1478,7 +1482,8 @@ void GLVideoDrawable::updateTexture(bool secondSource)
 		else
 		if(!secondSource ? m_frame->isRaw() : m_frame2->isRaw())
 		{
-// 			qDebug() << "GLVideoDrawable::updateTexture(): "<<objectName()<<" Mark: raw frame";
+//  			if(property("-debug").toBool())
+//  				qDebug() << "GLVideoDrawable::updateTexture(): "<<objectName()<<" Mark: raw frame";
 			for (int i = 0; i < (!secondSource ? m_textureCount : m_textureCount2); ++i)
 			{
 				//qDebug() << "raw: "<<i<<m_textureWidths[i]<<m_textureHeights[i]<<m_textureOffsets[i]<<m_textureInternalFormat<<m_textureFormat<<m_textureType;
@@ -1567,10 +1572,16 @@ void GLVideoDrawable::updateTexture(bool secondSource)
 		else
 		if(!m_frame->image().isNull())
 		{
-//  			qDebug() << "GLVideoDrawable::updateTexture(): "<<(QObject*)this<<" Mark: QImage frame";
+//   			if(property("-debug").toBool())
+//   			{
+//   				qDebug() << "GLVideoDrawable::updateTexture(): "<<(QObject*)this<<" Mark: QImage frame";
+//   				m_frame->image().save("debug.jpg");
+//   			}
+  			
 			for (int i = 0; i < (!secondSource ? m_textureCount : m_textureCount2); ++i)
 			{
-				//qDebug() << (QObject*)(this) << "normal: "<<i<<m_textureWidths[i]<<m_textureHeights[i]<<m_textureOffsets[i]<<m_textureInternalFormat<<m_textureFormat<<m_textureType;
+// 				if(property("-debug").toBool())
+// 					qDebug() << (QObject*)(this) << "normal: "<<i<<m_textureWidths[i]<<m_textureHeights[i]<<m_textureOffsets[i]<<m_textureInternalFormat<<m_textureFormat<<m_textureType;
 // 				QImageWriter writer("test.jpg");
 // 				writer.write(m_frame->image());
 
@@ -1611,7 +1622,8 @@ void GLVideoDrawable::updateTexture(bool secondSource)
 				else
 				{
 					//m_frame->image() = m_frame->image().convertToFormat(QImage::Format_ARGB32);
-					//qDebug() << "No shader, custom glTexImage2D arguments";
+// 					if(property("-debug").toBool())
+// 						qDebug() << "No shader, custom glTexImage2D arguments";
 
  					//QImage texGL = m_frame->image();
 // 					//glTexImage2D( GL_TEXTURE_2D, 0, 3, texGL.width(), texGL.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, texGL.bits() );
@@ -1672,7 +1684,8 @@ void GLVideoDrawable::updateTexture(bool secondSource)
 		}
 	}
 	
-//  	qDebug() << "GLVideoDrawable::updateTexture(): "<<(QObject*)this<<" Done update";
+// 	if(property("-debug").toBool())
+// 		qDebug() << "GLVideoDrawable::updateTexture(): "<<(QObject*)this<<" Done update";
 }
 
 
@@ -1825,8 +1838,8 @@ void GLVideoDrawable::paintGL()
 {
 	if(!m_validShader)
 	{
-		if(property("-debug").toBool())
-			qDebug() << "GLVideoDrawable::paintGL(): "<<(QObject*)this<<" No valid shader, not painting";
+// 		if(property("-debug").toBool())
+// 			qDebug() << "GLVideoDrawable::paintGL(): "<<(QObject*)this<<" No valid shader, not painting";
 		return;
 	}
 
@@ -1843,8 +1856,11 @@ void GLVideoDrawable::paintGL()
 		m_colorsDirty = false;
         }
 
- 	if(property("-debug").toBool())
- 		qDebug() << "GLVideoDrawable::paintGL():"<<(QObject*)this;
+//  	if(property("-debug").toBool())
+//  	{
+//  		updateTexture();
+//  		qDebug() << "GLVideoDrawable::paintGL():"<<(QObject*)this;
+//  	}
 
 
 	//m_frame->unmap()();
@@ -1858,8 +1874,8 @@ void GLVideoDrawable::paintGL()
 		m_displayOpts.cropBottomRight.x(),
 		m_displayOpts.cropBottomRight.y());
 
-	if(property("-debug").toBool())
-		qDebug() << "GLVideoDrawable::paintGL():"<<(QObject*)this<<": source:"<<source<<", target:"<<target;
+// 	if(property("-debug").toBool())
+// 		qDebug() << "GLVideoDrawable::paintGL():"<<(QObject*)this<<": source:"<<source<<", target:"<<target;
 
 
 	const int width  = QGLContext::currentContext()->device()->width();
@@ -1995,8 +2011,8 @@ void GLVideoDrawable::paintGL()
 	// 		);
 	// 	m_program->setUniformValue("positionMatrix",      mat4);
 
-		if(property("-debug").toBool())
-			qDebug() << "GLVideoDrawable::paintGL():"<<(QObject*)this<<": rendering with opacity:"<<opacity();
+// 		if(property("-debug").toBool())
+// 			qDebug() << "GLVideoDrawable::paintGL():"<<(QObject*)this<<": rendering with opacity:"<<opacity();
 		m_program->setUniformValue("alpha",               (GLfloat)liveOpacity);
 		m_program->setUniformValue("texOffsetX",          (GLfloat)m_invertedOffset.x());
 		m_program->setUniformValue("texOffsetY",          (GLfloat)m_invertedOffset.y());
