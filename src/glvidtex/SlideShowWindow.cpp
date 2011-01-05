@@ -341,7 +341,7 @@ SlideShowWindow::SlideShowWindow(QWidget *parent)
 			setSceneNum(0);
 			
 		connect(&m_sceneTimer, SIGNAL(timeout()), this, SLOT(timerTick()));
-		m_sceneTimer.setInterval(4000);
+		m_sceneTimer.setInterval(2000);
 		m_sceneTimer.start();
 	}
 	else
@@ -385,6 +385,12 @@ void SlideShowWindow::setGroup(GLSceneGroup *group)
 
 void SlideShowWindow::setScene(GLScene *scene)
 {
+	if(scene == m_scene)
+	{
+		qDebug() << "SlideShowWindow::setScene: Scene pointers match, not setting new scene";
+		return;
+	}
+	
 	m_oldScene = m_scene;
 	m_scene = scene;
 	
@@ -413,9 +419,9 @@ void SlideShowWindow::setScene(GLScene *scene)
 		double maxZIndex = -100000;
 		foreach(GLDrawable *drawable, newSceneList)
 		{
-// 			connect(drawable->playlist(), SIGNAL(currentItemChanged(GLPlaylistItem*)), this, SLOT(currentPlaylistItemChanged(GLPlaylistItem*)));
-// 			connect(drawable->playlist(), SIGNAL(playerTimeChanged(double)), this, SLOT(playlistTimeChanged(double)));
-			m_glWidget->addDrawable(drawable);
+			/*connect(drawable->playlist(), SIGNAL(currentItemChanged(GLPlaylistItem*)), this, SLOT(currentPlaylistItemChanged(GLPlaylistItem*)));
+			connect(drawable->playlist(), SIGNAL(playerTimeChanged(double)), this, SLOT(playlistTimeChanged(double)));
+			*/m_glWidget->addDrawable(drawable);
 			
 			if(GLVideoDrawable *vid = dynamic_cast<GLVideoDrawable*>(drawable))
 			{
@@ -455,9 +461,9 @@ void SlideShowWindow::setScene(GLScene *scene)
 		
 		foreach(GLDrawable *drawable, newSceneList)
 		{
-// 			connect(drawable->playlist(), SIGNAL(currentItemChanged(GLPlaylistItem*)), this, SLOT(currentPlaylistItemChanged(GLPlaylistItem*)));
-// 			connect(drawable->playlist(), SIGNAL(playerTimeChanged(double)), this, SLOT(playlistTimeChanged(double)));
-			m_graphicsScene->addItem(drawable);
+			/*connect(drawable->playlist(), SIGNAL(currentItemChanged(GLPlaylistItem*)), this, SLOT(currentPlaylistItemChanged(GLPlaylistItem*)));
+			connect(drawable->playlist(), SIGNAL(playerTimeChanged(double)), this, SLOT(playlistTimeChanged(double)));
+			*/m_graphicsScene->addItem(drawable);
 			
 			if(GLVideoDrawable *vid = dynamic_cast<GLVideoDrawable*>(drawable))
 			{
@@ -477,9 +483,13 @@ void SlideShowWindow::opacityAnimationFinished()
 	//disconnect(drawable, 0, this, 0);
 	
 	if(!m_oldScene)
+	{
+		qDebug() << "SlideShowWindow::opacityAnimationFinished: No m_oldScene, nothing removed.";
 		return;
+	}
 		
 	GLDrawableList list = m_oldScene->drawableList();
+	//qDebug() << "SlideShowWindow::opacityAnimationFinished: Found "<<list.size()<<" drawables to remove";
 	foreach(GLDrawable *drawable, list)
 	{
 		if(m_glWidget)
@@ -487,7 +497,7 @@ void SlideShowWindow::opacityAnimationFinished()
 		else
 			m_graphicsScene->removeItem(drawable);
 		
-		qDebug() << "SlideShowWindow::opacityAnimationFinished: removing drawable:"<<(QObject*)drawable;	
+		//qDebug() << "SlideShowWindow::opacityAnimationFinished: removing drawable:"<<(QObject*)drawable;	
 	}
 	
 	disconnect(m_oldScene, 0, this, 0);

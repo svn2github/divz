@@ -1,124 +1,45 @@
 #include "GLImageDrawable.h"
 
+int GLImageDrawable::m_allocatedMemory = 0;
+int GLImageDrawable::m_activeMemory    = 0;
+
+#define IMAGE_ALLOCATION_CAP_MB 128
+#define MAX_IMAGE_WIDTH 2000
+#define MAX_IMAGE_HEIGHT 2000
+
 GLImageDrawable::GLImageDrawable(QString file, QObject *parent)
 	: GLVideoDrawable(parent)
+	, m_releasedImage(false)
 {
 	//setImage(QImage("dot.gif"));
 	setCrossFadeMode(GLVideoDrawable::FrontAndBack);
 	
 	if(!file.isEmpty())
 		setImageFile(file);
-	
-	//QTimer::singleShot(1500, this, SLOT(testXfade()));
 }
 
 GLImageDrawable::~GLImageDrawable()
-{
-// 	if(m_frame)
-// 		delete m_frame;
-}
-	
-void GLImageDrawable::testXfade()
-{
-	qDebug() << "GLImageDrawable::testXfade(): loading file #2";
-	setImageFile("dsc_6645.jpg");
-}
-	
-QImage makeHistogram(const QImage& image)
-{
-	if(image.isNull())
-		return image;
-		
-	QSize smallSize = image.size();
-	smallSize.scale(160,120,Qt::KeepAspectRatio);
-	
-	QImage origScaled = image.scaled(smallSize);
-	if(origScaled.format() != QImage::Format_RGB32)
-		origScaled = origScaled.convertToFormat(QImage::Format_RGB32);
-	
-	// Setup our list of grayscale values and set to 0
-	int rgbHisto[256];
-	memset(&rgbHisto, 0, 256);
-	for(int i=0;i<256;i++)
-		rgbHisto[i] = 0;
-	
-	// Convert each pixel to grayscale and count the number of times each
-	// grayscale value appears in the image
-	for(int y=0; y<smallSize.height(); y++)
-	{
-		const uchar *line = (const uchar*)origScaled.scanLine(y);
-		for(int x=0; x<smallSize.width(); x+=3)
-		{
-			const uchar r = line[x];
-			const uchar g = x+1 >= smallSize.width() ? 0 : line[x+1];
-			const uchar b = x+2 >= smallSize.width() ? 0 : line[x+2];
-			if(r || g || b)
-			{
-				//const QRgb pixel = (QRgb)val;
-				//int gray = qRed(pixel) * .30 + qGreen(pixel) * .59 + qBlue(pixel) * .11;
-				int gray = r * .30 + g * .59 + b * .11;
-				//qDebug() << "val:"<<(int)val<<", r:"<<qRed(pixel)<<", g:"<<qGreen(pixel)<<", b:"<<qBlue(pixel)<<", gray:"<<gray;
-				//qDebug() << "r:"<<r<<", g:"<<g<<", b:"<<b<<", gray:"<<gray;
-				rgbHisto[gray] ++;
-			} 
-		}
-	}
-	
-	// Calc the max and avg pixel counts
- 	int max=0;
- 	int avg=0;
- 	for(int i=0;i<256;i++)
- 	{
- 		int count = rgbHisto[i];
- 		if(count > max)
- 			max = count;
- 		avg += count;
- 	}
- 		
- 	avg /= 255;
- 	//qDebug() << "Avg:"<<avg<<", max:"<<max;
-
-	// Draw a very simple bar graph of the pixel counts
-	QImage histogram(QSize(255,128), QImage::Format_RGB32);
-	int maxHeight = 128;
-	QPainter p(&histogram);
-	p.setPen(Qt::blue);
-	p.fillRect(histogram.rect(), Qt::gray);
-	for(int i=0;i<256;i++)
-	{
-		int count = rgbHisto[i];
-// 		if(count > avg*4)
-// 			count = avg*4;
-		double perc = ((double)count)/((double)(max*.5));
-		double val = perc * maxHeight;
-		int scaled = (int)val;
-		//qDebug() << "i:"<<i<<", count:"<<count<<", perc:"<<perc<<", val:"<<val<<", scaled:"<<scaled;
-		
-		p.drawLine(i,maxHeight-scaled, i,maxHeight);
-		
-	}
-	p.end();
-	
-	// Render side by side with the original image
-	QImage histogramOutput(smallSize.width() + 255, smallSize.height(), QImage::Format_RGB32);
-	QPainter p2(&histogramOutput);
-	p2.fillRect(histogramOutput.rect(),Qt::gray);
-	p2.drawImage(QPointF(0,0),origScaled);
-	p2.drawImage(QPointF(smallSize.width(),0),histogram);
-	
-	return histogramOutput;
-}
-
+{}
 
 void GLImageDrawable::setImage(const QImage& image)
 {
+// 	if(m_allocatedMemory > IMAGE_ALLOCATION_CAP_MB*1024*1024 && 
+// 		!glWidget() && 
+// 		!scene() && 
+// 		canReleaseImage())
+// 	{
+// 		m_releasedImage = true;
+// 		qDebug() << "GLImagedDrawable::setImage(): Allocated memory ("<<(m_allocatedMemory/1024/1024)<<"MB ) exceedes" << IMAGE_ALLOCATION_CAP_MB << "MB cap - delaying load until go-live";
+// 		return;
+// 	}
+	
 	//qDebug() << "GLImageDrawable::setImage: Size:"<<image.size();
 	//QImage image = makeHistogram(tmp);
 	//if(m_frame && m_frame->isValid() && ())
 	QImage localImage = image;
-	if(image.width() > 2000 || image.height() > 2000)
+	if(image.width() > MAX_IMAGE_WIDTH || image.height() > MAX_IMAGE_HEIGHT)
 	{
-		localImage = image.scaled(2000,2000,Qt::KeepAspectRatio);
+		localImage = image.scaled(MAX_IMAGE_WIDTH,MAX_IMAGE_HEIGHT,Qt::KeepAspectRatio);
 		qDebug() << "GLImageDrawable::setImage: Scaled image to"<<localImage.size()<<"with"<<(localImage.byteCount()/1024/1024)<<"MB memory usage";
 	}
 	
@@ -128,13 +49,16 @@ void GLImageDrawable::setImage(const QImage& image)
 		//m_frame2 = VideoFramePtr(new VideoFrame(m_image,1000/30));
 		updateTexture(true); // true = read from m_frame2
 		xfadeStart();
+		
+		// Take the memory off the list because when crossfade is done, the frame should get freed
+		m_allocatedMemory -= m_frame->pointerLength();
 	}
 		
 				
 	//m_frame = VideoFramePtr(new VideoFrame(localImage, 1000/30));
 	m_frame = VideoFramePtr(new VideoFrame());
 	//m_frame->setPixelFormat(QVideoFrame::Format_RGB32);
-	m_frame->setCaptureTime(QTime::currentTime());
+	//m_frame->setCaptureTime(QTime::currentTime());
 	m_frame->setIsRaw(true);
 	m_frame->setBufferType(VideoFrame::BUFFER_POINTER);
 	m_frame->setHoldTime(1000/30);
@@ -170,6 +94,8 @@ void GLImageDrawable::setImage(const QImage& image)
 	m_frame->setImage(m_image);
 	m_frame->setSize(localImage.size());*/
 	memcpy(m_frame->allocPointer(localImage.byteCount()), (const uchar*)localImage.bits(), localImage.byteCount());
+	m_allocatedMemory += localImage.byteCount();
+// 	qDebug() << "GLImagedDrawable::setImage(): Allocated memory up to:"<<(m_allocatedMemory/1024/1024)<<"MB";
 	
 	updateTexture();
 	
@@ -205,6 +131,17 @@ bool GLImageDrawable::setImageFile(const QString& file)
 	}
 	internalSetFilename(file);
 	
+	if(m_allocatedMemory > IMAGE_ALLOCATION_CAP_MB*1024*1024 && 
+		!glWidget() && 
+		!scene() && 
+		canReleaseImage())
+	{
+		m_releasedImage = true;
+ 		qDebug() << "GLImagedDrawable::setImageFile(): Allocated memory ("<<(m_allocatedMemory/1024/1024)<<"MB ) exceedes" << IMAGE_ALLOCATION_CAP_MB << "MB cap - delaying load until go-live";
+		return true;
+	}
+	
+	
 	QImage image(file);
 	if(image.isNull())
 	{
@@ -212,6 +149,7 @@ bool GLImageDrawable::setImageFile(const QString& file)
 		return false;
 	}
 	setImage(image);
+	setObjectName(fileInfo.fileName());
 	
 	return true;
 	
@@ -226,4 +164,61 @@ void GLImageDrawable::internalSetFilename(QString file)
 void GLImageDrawable::setVideoSource(VideoSource*)
 {
 	// Hide access to this method by making it private and reimpl to do nothing
+}
+
+void GLImageDrawable::reloadImage()
+{
+	if(!m_imageFile.isEmpty())
+	{
+		//qDebug() << "GLImageDrawable::reloadImage(): Reloading image from disk:"<<m_imageFile;
+		setImageFile(m_imageFile);
+	}
+// 	else
+// 		qDebug() << "GLImageDrawable::reloadImage(): No image file, unable to reload image.";
+}
+
+void GLImageDrawable::releaseImage()
+{
+	if(!canReleaseImage())
+	{
+// 		qDebug() << "GLImageDrawable::releaseImage(): No image file, cannot release image.";
+		return;
+	}
+	m_releasedImage = true;
+	if(m_frame)
+		m_allocatedMemory -= m_frame->pointerLength();
+	m_image = QImage();
+	m_frame = VideoFramePtr(new VideoFrame());
+	//qDebug() << "GLImagedDrawable::releaseImage(): Released memory, allocated down to:"<<(m_allocatedMemory/1024/1024)<<"MB";
+}
+
+void GLImageDrawable::setGLWidget(GLWidget* widget)
+{
+	if(widget)
+	{
+		if(m_releasedImage)
+			reloadImage();
+		
+		if(m_frame)
+			m_activeMemory += m_frame->pointerLength();;
+		//qDebug() << "GLImagedDrawable::setGLWidget(): Active memory usage up to:"<<(m_activeMemory/1024/1024)<<"MB";
+		
+		GLDrawable::setGLWidget(widget);
+	}
+	else
+	{
+		GLDrawable::setGLWidget(widget);
+	
+		if(m_frame)
+			m_activeMemory -= m_frame->pointerLength();;
+		//qDebug() << "GLImagedDrawable::setGLWidget(): Active memory usage down to:"<<(m_activeMemory/1024/1024)<<"MB";
+		if(canReleaseImage() &&
+		   m_allocatedMemory > IMAGE_ALLOCATION_CAP_MB*1024*1024) // 10 MB
+			releaseImage();
+	}
+}
+
+bool GLImageDrawable::canReleaseImage()
+{
+	return !m_imageFile.isEmpty();
 }

@@ -951,6 +951,12 @@ void PlayerWindow::setGroup(GLSceneGroup *group)
 
 void PlayerWindow::setScene(GLScene *scene)
 {
+	if(scene == m_scene)
+	{
+		qDebug() << "PlayerWindow::setScene: Scene pointers match, not setting new scene";
+		return;
+	}
+	
 	m_oldScene = m_scene;
 	m_scene = scene;
 	
@@ -1043,9 +1049,13 @@ void PlayerWindow::opacityAnimationFinished()
 	//disconnect(drawable, 0, this, 0);
 	
 	if(!m_oldScene)
+	{
+		qDebug() << "PlayerWindow::opacityAnimationFinished: No m_oldScene, nothing removed.";
 		return;
+	}
 		
 	GLDrawableList list = m_oldScene->drawableList();
+	//qDebug() << "PlayerWindow::opacityAnimationFinished: Found "<<list.size()<<" drawables to remove";
 	foreach(GLDrawable *drawable, list)
 	{
 		if(m_glWidget)

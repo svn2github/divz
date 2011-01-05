@@ -203,6 +203,7 @@ protected:
 	
 	QTimer m_fadeTimer;
 	QTime m_fadeClock;
+	bool m_fadeClockActive;
 	int m_fadeDirection;
 	double m_endOpacity;
 	double m_startOpacity;

@@ -24,15 +24,22 @@ public slots:
 	void setImage(const QImage&);
 	virtual bool setImageFile(const QString&);
 	
-private slots:
-	void testXfade();
-	
 protected:
 	void internalSetFilename(QString);
 	
+	virtual void reloadImage();
+	virtual void releaseImage();
+	virtual bool canReleaseImage();
+	virtual void setGLWidget(GLWidget*);
+	
 	QImage m_image;
 	QString m_imageFile;
-
+	
+	bool m_releasedImage;
+	
+	static int m_allocatedMemory;
+	static int m_activeMemory;
+	
 private:
 	void setVideoSource(VideoSource*);
 };

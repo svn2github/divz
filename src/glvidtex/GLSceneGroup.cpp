@@ -247,6 +247,7 @@ GLScene::GLScene(QObject *parent)
 	, m_layoutListModel(0)
 	, m_graphicsScene(0)
 	, m_crossfadeSpeed(300)
+	, m_fadeClockActive(false)
 {
 	connect(&m_fadeTimer, SIGNAL(timeout()), this, SLOT(fadeTick()));
 }
@@ -654,7 +655,7 @@ void GLScene::setOpacity(double d, bool animate, double animDuration)
 		m_endOpacity = d;
 		m_startOpacity = opacity();
 		
-		m_fadeClock.start();
+		m_fadeClockActive = false;
 		m_fadeTimer.start();
 		
 		return;
@@ -670,11 +671,17 @@ void GLScene::setOpacity(double d, bool animate, double animDuration)
 
 void GLScene::fadeTick()
 {
+	if(!m_fadeClockActive)
+	{
+		m_fadeClockActive = true;
+		m_fadeClock.start();
+	}
 	int time = m_fadeClock.elapsed();
 	if(time >= m_crossfadeSpeed)
 	{
 		m_fadeTimer.stop();
 		setOpacity(m_endOpacity);
+		emit opacityAnimationFinished();
 	}
 	else
 	{
@@ -684,14 +691,14 @@ void GLScene::fadeTick()
 		if(m_fadeDirection < 0)
 			//fadeVal = 1.0 - fadeVal;
 			fadeVal = m_startOpacity - fadeVal;
-		/*
-		qDebug() << "GLScene::fadeTick: dir:"<<m_fadeDirection
-			<<", time:"<<time
-			<<", len:"<<m_crossfadeSpeed
-			<<", progress:"<<progress
-			<<", valueLength:"<<valueLength
-			<<", fadeVal:"<<fadeVal;
-		*/ 
+		
+// 		qDebug() << "GLScene::fadeTick: dir:"<<m_fadeDirection
+// 			<<", time:"<<time
+// 			<<", len:"<<m_crossfadeSpeed
+// 			<<", progress:"<<progress
+// 			<<", valueLength:"<<valueLength
+// 			<<", fadeVal:"<<fadeVal;
+		 
 		setOpacity(fadeVal);
 	}
 }

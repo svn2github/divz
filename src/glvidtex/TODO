@@ -30,6 +30,12 @@ TODO:
 				- Confirmed this is the cause of crashing - VideoReceiver...
 		- [FIXED] Sometimes, clicking Connect on the player doesnt fully connect - logs in, but nothing transmitted, window not moved, etc - clicking connect again works
 		- [FIXED] Clicking 'Black' doesnt always fade in black overlay
+		- [FIXED] HUGE memory leaks/problems with 12 megapixel images in SlideShowWindow - when running thru a list of 6x 12MP images, by the 4th image the computer is already out of RAM - out of 4 GB!! Crikey. 
+			- Memory usage grows each scene change - not sure why. Texture upload, sure - but I thought that would use GPU RAM. Need to investigate and add some sort of scaling-down.
+			- Converted GLImageDrawable to use a BUFFER_POINTEr video frame - still uses memory each time it goes visible tho
+			- Are images not getting removed from the screen when faded off?
+			- Free buffer_pointer when off screen?
+			- Implemented aggressive memory management in GLImageDrawable by freeing memory by overriding GLDrawalle::setGLWidget. Only frees memory that has an m_imageFile to reload it as needed.
 		
 		- [TMP-FIX] Video Encoding "problems"
 			- Way to much CPU usage - 157%-ish on a dual-core 2.4 GHz...causing live video to stutter
@@ -44,11 +50,6 @@ TODO:
 		- Make the video input control panel automatically update when players are connected
 		- Changing scenes doesnt always work in player - I'd say 1/10th of the timer, it stays black
 		- If player errors out during connect, button stays grayed out till close and re-open dialog
-		- HUGE memory leaks/problems with 12 megapixel images in SlideShowWindow - when running thru a list of 6x 12MP images, by the 4th image the computer is already out of RAM - out of 4 GB!! Crikey. 
-			- Memory usage grows each scene change - not sure why. Texture upload, sure - but I thought that would use GPU RAM. Need to investigate and add some sort of scaling-down.
-			- Converted GLImageDrawable to use a BUFFER_POINTEr video frame - still uses memory each time it goes visible tho
-			- Are images not getting removed from the screen when faded off?
-			- Free buffer_pointer when off screen?
 		
 	NEEDED FEATURES:
 		- Need a way to enable/disable encoding from the director
