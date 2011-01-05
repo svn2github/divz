@@ -45,7 +45,10 @@ TODO:
 		- Changing scenes doesnt always work in player - I'd say 1/10th of the timer, it stays black
 		- If player errors out during connect, button stays grayed out till close and re-open dialog
 		- HUGE memory leaks/problems with 12 megapixel images in SlideShowWindow - when running thru a list of 6x 12MP images, by the 4th image the computer is already out of RAM - out of 4 GB!! Crikey. 
-			- Memory usage grows each scene change - not sure why. Texture upload, sure - but I thought that would use GPU RAM. Need to investigate and add some sort of scaling-down. 
+			- Memory usage grows each scene change - not sure why. Texture upload, sure - but I thought that would use GPU RAM. Need to investigate and add some sort of scaling-down.
+			- Converted GLImageDrawable to use a BUFFER_POINTEr video frame - still uses memory each time it goes visible tho
+			- Are images not getting removed from the screen when faded off?
+			- Free buffer_pointer when off screen?
 		
 	NEEDED FEATURES:
 		- Need a way to enable/disable encoding from the director

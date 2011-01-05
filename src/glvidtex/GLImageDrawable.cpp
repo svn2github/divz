@@ -115,22 +115,36 @@ void GLImageDrawable::setImage(const QImage& image)
 	//qDebug() << "GLImageDrawable::setImage: Size:"<<image.size();
 	//QImage image = makeHistogram(tmp);
 	//if(m_frame && m_frame->isValid() && ())
+	QImage localImage = image;
+	if(image.width() > 2000 || image.height() > 2000)
+	{
+		localImage = image.scaled(2000,2000,Qt::KeepAspectRatio);
+		qDebug() << "GLImageDrawable::setImage: Scaled image to"<<localImage.size()<<"with"<<(localImage.byteCount()/1024/1024)<<"MB memory usage";
+	}
+	
 	if(!m_image.isNull() && xfadeEnabled())
 	{
-// 		m_frame2 = m_frame;
-		m_frame2 = VideoFramePtr(new VideoFrame(m_image,1000/30));
+ 		m_frame2 = m_frame;
+		//m_frame2 = VideoFramePtr(new VideoFrame(m_image,1000/30));
 		updateTexture(true); // true = read from m_frame2
 		xfadeStart();
 	}
 		
 				
-	if(!m_frame)
-		m_frame = VideoFramePtr(new VideoFrame());
-		
+	//m_frame = VideoFramePtr(new VideoFrame(localImage, 1000/30));
+	m_frame = VideoFramePtr(new VideoFrame());
+	//m_frame->setPixelFormat(QVideoFrame::Format_RGB32);
+	m_frame->setCaptureTime(QTime::currentTime());
+	m_frame->setIsRaw(true);
+	m_frame->setBufferType(VideoFrame::BUFFER_POINTER);
+	m_frame->setHoldTime(1000/30);
+	m_frame->setSize(localImage.size());
+	
+	/*	
 	// Setup frame
 	m_frame->setBufferType(VideoFrame::BUFFER_IMAGE);
-
-	QImage::Format format = image.format();
+	*/
+	QImage::Format format = localImage.format();
 	m_frame->setPixelFormat(
 		format == QImage::Format_ARGB32 ? QVideoFrame::Format_ARGB32 :
 		format == QImage::Format_RGB32  ? QVideoFrame::Format_RGB32  :
@@ -144,7 +158,7 @@ void GLImageDrawable::setImage(const QImage& image)
 	if(m_frame->pixelFormat() == QVideoFrame::Format_Invalid)
 	{
 		qDebug() << "VideoFrame: image was not in an acceptable format, converting to ARGB32 automatically.";
-		m_image = image.convertToFormat(QImage::Format_ARGB32);
+		m_image = localImage.convertToFormat(QImage::Format_ARGB32);
 		m_frame->setPixelFormat(QVideoFrame::Format_ARGB32);
 	}
 	else
@@ -152,8 +166,10 @@ void GLImageDrawable::setImage(const QImage& image)
 		m_image = image;
 	}
 	
+	/*
 	m_frame->setImage(m_image);
-	m_frame->setSize(image.size());
+	m_frame->setSize(localImage.size());*/
+	memcpy(m_frame->allocPointer(localImage.byteCount()), (const uchar*)localImage.bits(), localImage.byteCount());
 	
 	updateTexture();
 	
