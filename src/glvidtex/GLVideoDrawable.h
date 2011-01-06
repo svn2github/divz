@@ -215,6 +215,8 @@ signals:
 	void sourceDiscarded(VideoSource*);
 
 protected:
+	virtual void aboutToPaint();
+	
 	/// PS
 	void paintGL();
 	void paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget);

@@ -1094,7 +1094,7 @@ void GLVideoDrawable::updateRects(bool secondSource)
 	updateTextureOffsets();
 
 	// force mask to be re-scaled
-	//qDebug() << "GLVideoDrawable::updateRects(): "<<(this)<<",  New source rect: "<<m_sourceRect<<", mask size:"<<m_alphaMask.size()<<", isNull?"<<m_alphaMask.isNull();
+	//qDebug() << "GLVideoDrawable::updateRects(): "<<(QObject*)this<<",  New source rect: "<<m_sourceRect<<", mask size:"<<m_alphaMask.size()<<", isNull?"<<m_alphaMask.isNull();
 
 
 	QRectF adjustedSource = sourceRect.adjusted(
@@ -1152,7 +1152,7 @@ void GLVideoDrawable::updateRects(bool secondSource)
 	}
 
 	setAlphaMask(m_alphaMask_preScaled);
-	//qDebug() << "GLVideoDrawable::updateRects(): "<<(this)<<" m_sourceRect:"<<m_sourceRect<<", m_targetRect:"<<m_targetRect;
+	//sqDebug() << "GLVideoDrawable::updateRects(): "<<(QObject*)this<<" m_sourceRect:"<<m_sourceRect<<", m_targetRect:"<<m_targetRect<<", rect:"<<rect();
 }
 
 // float opacity = 0.5;
@@ -1697,6 +1697,21 @@ void GLVideoDrawable::paint(QPainter * painter, const QStyleOptionGraphicsItem *
 // 	painter->setBrush(brush);
 // 	painter->drawRect(m_contentsRect);
 
+// 	if(m_frame &&
+// 		(m_frameSize != m_frame->size() || m_frame->rect() != m_sourceRect || m_targetRect.isEmpty()))
+// 	{
+// 		updateRects(false);
+// 		updateAlignment();
+// 	}
+// 	
+// 	if(m_frame2 &&
+// 		(m_frameSize2 != m_frame2->size() || m_frame2->rect() != m_sourceRect2))
+// 	{
+// 		updateRects(true);
+// 		updateAlignment();
+// 	}
+	
+	aboutToPaint();
 
 	QRectF source = m_sourceRect;
 	QRectF target = QRectF(m_targetRect.topLeft() - rect().topLeft(),m_targetRect.size());
@@ -1720,7 +1735,7 @@ void GLVideoDrawable::paint(QPainter * painter, const QStyleOptionGraphicsItem *
 	if(!m_frame->image().isNull())
 	{
 		painter->drawImage(target,m_frame->image(),source);
-		//qDebug() << "GLVideoDrawablle::paint: Painted m_frame, size:" << m_frame->image().size()<<", source:"<<source<<", target:"<<target;
+// 		//qDebug() << "GLVideoDrawablle::paint: Painted m_frame, size:" << m_frame->image().size()<<", source:"<<source<<", target:"<<target<<", m_targetRect:"<<m_targetRect;
 	}
 	else
 	{
@@ -1835,6 +1850,10 @@ void GLVideoDrawable::paint(QPainter * painter, const QStyleOptionGraphicsItem *
 
 }
 
+void GLVideoDrawable::aboutToPaint()
+{
+	// NOOP
+}
 
 void GLVideoDrawable::paintGL()
 {

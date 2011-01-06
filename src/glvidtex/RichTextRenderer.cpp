@@ -369,7 +369,8 @@ void RichTextRenderer::renderText()
 	QSize sumSize = (docSize + shadowSize).toSize();
 	//qDebug() << "RichTextRenderer::update(): textWidth: "<<textWidth<<", shadowSize:"<<shadowSize<<", docSize:"<<docSize<<", sumSize:"<<sumSize;
 	QImage cache(sumSize,QImage::Format_ARGB32); //_Premultiplied);
-	memset(cache.scanLine(0),0,cache.byteCount());
+	//memset(cache.scanLine(0),0,cache.byteCount());
+	cache.fill(Qt::transparent);
 	//cache.fill(Qt::black);
 	
 	QPainter textPainter(&cache);
@@ -398,7 +399,8 @@ void RichTextRenderer::renderText()
 			QSizeF blurSize = ImageFilters::blurredSizeFor(m_doc.size(), (int)radius);
 			//qDebug() << "Blur size:"<<blurSize<<", doc:"<<doc.size()<<", radius:"<<radius;
 			QImage tmpImage(blurSize.toSize(),QImage::Format_ARGB32_Premultiplied);
-			memset(tmpImage.scanLine(0),0,tmpImage.byteCount());
+			//memset(tmpImage.scanLine(0),0,tmpImage.byteCount());
+			tmpImage.fill(Qt::transparent);
 			
 			// render the text
 			QPainter tmpPainter(&tmpImage);

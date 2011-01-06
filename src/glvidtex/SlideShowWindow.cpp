@@ -327,6 +327,7 @@ SlideShowWindow::SlideShowWindow(QWidget *parent)
 			qDebug() << "SlideShowWindow: Loading "<<fullFile;//<<" (ext:"<<ext<<")";
 			GLScene *scene = new GLScene();
 			GLImageDrawable *image = new GLImageDrawable(fullFile);
+			image->setRect(QRectF(0,0,1000,750));
 			//image->setCrossFadeMode(GLVideoDrawable::JustFront);
 			scene->addDrawable(image);
 			m_scenes << scene;
