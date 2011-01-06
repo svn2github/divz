@@ -70,6 +70,7 @@ class GLDrawable : public QObject,
 
 public:
 	GLDrawable(QObject *parent=0);
+	~GLDrawable();
 	
 	int id();
 	QString itemName() { return m_itemName; }

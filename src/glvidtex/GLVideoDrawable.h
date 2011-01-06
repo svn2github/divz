@@ -259,7 +259,7 @@ protected:
 	
 	
 	// QGraphicsItem::
-	QVariant itemChange(GraphicsItemChange change, const QVariant &value);
+	virtual QVariant itemChange(GraphicsItemChange change, const QVariant &value);
  
 	void xfadeStart();
 	void xfadeStop();

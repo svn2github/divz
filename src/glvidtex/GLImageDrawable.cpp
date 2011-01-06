@@ -36,26 +36,36 @@ void GLImageDrawable::setImage(const QImage& image)
 	//qDebug() << "GLImageDrawable::setImage: Size:"<<image.size();
 	//QImage image = makeHistogram(tmp);
 	//if(m_frame && m_frame->isValid() && ())
-	QImage localImage = image;
+	QImage localImage;
 	if(image.width() > MAX_IMAGE_WIDTH || image.height() > MAX_IMAGE_HEIGHT)
 	{
 		localImage = image.scaled(MAX_IMAGE_WIDTH,MAX_IMAGE_HEIGHT,Qt::KeepAspectRatio);
 		qDebug() << "GLImageDrawable::setImage: Scaled image to"<<localImage.size()<<"with"<<(localImage.byteCount()/1024/1024)<<"MB memory usage";
 	}
+	else
+	{
+		localImage = image.copy();
+	}
 	
-	if(!m_image.isNull() && xfadeEnabled())
+	//if(!m_image.isNull() && xfadeEnabled())
+	if(m_frame && xfadeEnabled())
 	{
  		m_frame2 = m_frame;
 		//m_frame2 = VideoFramePtr(new VideoFrame(m_image,1000/30));
 		updateTexture(true); // true = read from m_frame2
 		xfadeStart();
-		
-		// Take the memory off the list because when crossfade is done, the frame should get freed
+	}
+	
+	// Take the memory off the list because when crossfade is done, the frame should get freed
+	if(m_frame)
+	{
 		m_allocatedMemory -= m_frame->pointerLength();
+		//qDebug() << "GLImagedDrawable::setImage(): Allocated memory down to:"<<(m_allocatedMemory/1024/1024)<<"MB";
 	}
 		
 				
 	//m_frame = VideoFramePtr(new VideoFrame(localImage, 1000/30));
+	
 	m_frame = VideoFramePtr(new VideoFrame());
 	//m_frame->setPixelFormat(QVideoFrame::Format_RGB32);
 	//m_frame->setCaptureTime(QTime::currentTime());
@@ -63,11 +73,8 @@ void GLImageDrawable::setImage(const QImage& image)
 	m_frame->setBufferType(VideoFrame::BUFFER_POINTER);
 	m_frame->setHoldTime(1000/30);
 	m_frame->setSize(localImage.size());
+	//m_frame->setDebugPtr(true);
 	
-	/*	
-	// Setup frame
-	m_frame->setBufferType(VideoFrame::BUFFER_IMAGE);
-	*/
 	QImage::Format format = localImage.format();
 	m_frame->setPixelFormat(
 		format == QImage::Format_ARGB32 ? QVideoFrame::Format_ARGB32 :
@@ -82,20 +89,19 @@ void GLImageDrawable::setImage(const QImage& image)
 	if(m_frame->pixelFormat() == QVideoFrame::Format_Invalid)
 	{
 		qDebug() << "VideoFrame: image was not in an acceptable format, converting to ARGB32 automatically.";
-		m_image = localImage.convertToFormat(QImage::Format_ARGB32);
+		localImage = localImage.convertToFormat(QImage::Format_ARGB32);
 		m_frame->setPixelFormat(QVideoFrame::Format_ARGB32);
 	}
-	else
-	{
-		m_image = image;
-	}
 	
-	/*
-	m_frame->setImage(m_image);
-	m_frame->setSize(localImage.size());*/
 	memcpy(m_frame->allocPointer(localImage.byteCount()), (const uchar*)localImage.bits(), localImage.byteCount());
+	
 	m_allocatedMemory += localImage.byteCount();
-// 	qDebug() << "GLImagedDrawable::setImage(): Allocated memory up to:"<<(m_allocatedMemory/1024/1024)<<"MB";
+	m_image = localImage;
+	
+	// explicitly release the original image to see if that helps with memory...
+	localImage = QImage();
+	
+ 	//qDebug() << "GLImagedDrawable::setImage(): Allocated memory up to:"<<(m_allocatedMemory/1024/1024)<<"MB";
 	
 	updateTexture();
 	
@@ -213,7 +219,7 @@ void GLImageDrawable::setGLWidget(GLWidget* widget)
 			m_activeMemory -= m_frame->pointerLength();;
 		//qDebug() << "GLImagedDrawable::setGLWidget(): Active memory usage down to:"<<(m_activeMemory/1024/1024)<<"MB";
 		if(canReleaseImage() &&
-		   m_allocatedMemory > IMAGE_ALLOCATION_CAP_MB*1024*1024) // 10 MB
+		   m_allocatedMemory > IMAGE_ALLOCATION_CAP_MB*1024*1024) 
 			releaseImage();
 	}
 }
@@ -221,4 +227,34 @@ void GLImageDrawable::setGLWidget(GLWidget* widget)
 bool GLImageDrawable::canReleaseImage()
 {
 	return !m_imageFile.isEmpty();
+}
+
+
+QVariant GLImageDrawable::itemChange(GraphicsItemChange change, const QVariant & value)
+{
+	if(change == ItemSceneChange)
+	{
+		QGraphicsScene *scene = value.value<QGraphicsScene*>();
+		//qDebug() << "GLImageDrawable::itemChange: value:"<<value<<", scene:"<<scene;
+		if(!scene)
+		{
+			if(m_frame)
+				m_activeMemory -= m_frame->pointerLength();;
+			//qDebug() << "GLImagedDrawable::setGLWidget(): Active memory usage down to:"<<(m_activeMemory/1024/1024)<<"MB";
+			if(canReleaseImage() &&
+			m_allocatedMemory > IMAGE_ALLOCATION_CAP_MB*1024*1024)
+				releaseImage();
+		}
+		else
+		{
+			if(m_releasedImage)
+				reloadImage();
+			
+			if(m_frame)
+				m_activeMemory += m_frame->pointerLength();
+			//qDebug() << "GLImagedDrawable::setGLWidget(): Active memory usage up to:"<<(m_activeMemory/1024/1024)<<"MB";
+		}
+	}
+
+	return GLDrawable::itemChange(change, value);
 }

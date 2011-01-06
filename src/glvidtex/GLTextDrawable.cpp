@@ -81,15 +81,15 @@ void GLTextDrawable::setTargetDateTime(const QDateTime& date)
 QString GLTextDrawable::formatTime(double time)
 {
 	double dhour = time/60/60;
-	double dmin = (dhour - (int)(dhour)) * 60;
-	double dsec = (dmin  - (int)(dmin)) * 60;
-	int hour = (int)dhour;
-	int min = (int)dmin;
-	int sec = (int)dsec;
-	//double ms  = (sec  - (int)(sec)) * 60;
+	int    hour = (int)dhour;
+	double dmin = (dhour - hour) * 60;
+	int    min  = (int)dmin;
+	double dsec = (dmin  - min ) * 60;
+	if(dsec > 59)
+		dsec = 0;
 	return  QString::number((int)hour) + ":" +
 		(min<10? "0":"") + QString::number((int)min) + ":" +
-		(sec<10? "0":"") + QString::number((int)(sec));// + "." +
+		(dsec<10? "0":"") + QString::number(dsec);// + "." +
 		//(ms <10? "0":"") + QString::number((int)ms );
 
 }
@@ -101,6 +101,7 @@ void GLTextDrawable::countdownTick()
 	int secsTo = now.secsTo(m_targetTime);
 	
 	QString newText = formatTime(secsTo);
+	//qDebug() << "GLTextDrawable::countdownTick: secsTo:"<<secsTo<<", newText:"<<newText;
 	setXFadeEnabled(false);
 	setPlainText(newText);
 }

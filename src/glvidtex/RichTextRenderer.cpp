@@ -370,6 +370,7 @@ void RichTextRenderer::renderText()
 	//qDebug() << "RichTextRenderer::update(): textWidth: "<<textWidth<<", shadowSize:"<<shadowSize<<", docSize:"<<docSize<<", sumSize:"<<sumSize;
 	QImage cache(sumSize,QImage::Format_ARGB32); //_Premultiplied);
 	memset(cache.scanLine(0),0,cache.byteCount());
+	//cache.fill(Qt::black);
 	
 	QPainter textPainter(&cache);
 	//textPainter.fillRect(cache.rect(),Qt::transparent);

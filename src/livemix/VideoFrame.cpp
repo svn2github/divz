@@ -10,6 +10,7 @@ VideoFrame::VideoFrame()
 	m_refCount = 0;
 	m_pointer = 0;
 	m_pointerLength = 0;
+	m_debugPtr = false;
 	#ifdef DEBUG_VIDEOFRAME_POINTERS
 	qDebug() << "VideoFrame::VideoFrame(): constructor(1): "<<this;
 	#endif
@@ -24,6 +25,7 @@ VideoFrame::VideoFrame(int holdTime, const QTime &captureTime)
 	, m_refCount(0)
 	, m_pointer(0)
 	, m_pointerLength(0)
+	, m_debugPtr(false)
 {
 	#ifdef DEBUG_VIDEOFRAME_POINTERS
 	qDebug() << "VideoFrame::VideoFrame(): constructor(2): "<<this;
@@ -41,6 +43,7 @@ VideoFrame::VideoFrame(const QImage &frame, int holdTime, const QTime &captureTi
 	, m_refCount(0)
 	, m_pointer(0)
 	, m_pointerLength(0)
+	, m_debugPtr(false)
 {
 	#ifdef DEBUG_VIDEOFRAME_POINTERS
 	qDebug() << "VideoFrame::VideoFrame(): constructor(3): "<<this;
@@ -77,6 +80,7 @@ VideoFrame::VideoFrame(VideoFrame *other)
 	, m_refCount(0)
 	, m_pointer(other->m_pointer)
 	, m_pointerLength(other->m_pointerLength)
+	, m_debugPtr(false)
 
 {
 	#ifdef DEBUG_VIDEOFRAME_POINTERS
@@ -92,9 +96,10 @@ VideoFrame::~VideoFrame()
 	#endif
 	if(m_pointer)
 	{
-		#ifdef DEBUG_VIDEOFRAME_POINTERS
-		qDebug() << "VideoFrame::~VideoFrame(): "<<this<<" deleting m_pointer:"<<m_pointer;
-		#endif 
+		//#ifdef DEBUG_VIDEOFRAME_POINTERS
+		if(m_debugPtr)
+			qDebug() << "VideoFrame::~VideoFrame(): "<<this<<" deleting m_pointer:"<<m_pointer;
+		//#endif 
 		free(m_pointer);
 		m_pointer = 0;
 	}
@@ -131,9 +136,9 @@ uchar *VideoFrame::allocPointer(int bytes)
 // 	if(m_pointer)
 // 		delete m_pointer;
 	m_pointer = (uchar*)malloc(sizeof(uchar) * bytes);
-	#ifdef DEBUG_VIDEOFRAME_POINTERS
-	qDebug() << "VideoFrame::allocPointer(): "<<this<<" allocated m_pointer:"<<m_pointer<<", bytes:"<<bytes;
-	#endif
+	//#ifdef DEBUG_VIDEOFRAME_POINTERS
+	if(m_debugPtr)
+		qDebug() << "VideoFrame::allocPointer(): "<<this<<" allocated m_pointer:"<<m_pointer<<", bytes:"<<bytes;
 	m_pointerLength = bytes;
 	return m_pointer;
 }

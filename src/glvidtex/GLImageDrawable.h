@@ -32,6 +32,9 @@ protected:
 	virtual bool canReleaseImage();
 	virtual void setGLWidget(GLWidget*);
 	
+	// QGraphicsItem::	
+	virtual QVariant itemChange(GraphicsItemChange change, const QVariant &value);
+	
 	QImage m_image;
 	QString m_imageFile;
 	

@@ -84,6 +84,9 @@ QVideoFrame::Format_RGB555	6	The frame is stored using a 16-bit RGB format (5-5-
 	QRect rect() { return m_rect; }
 	void setRect(QRect rect);
 	
+	bool debugPtr() { return m_debugPtr; }
+	void setDebugPtr(bool flag) { m_debugPtr = flag; }	
+	
 protected:
 	
 	// Variable holdTime : int:
@@ -121,6 +124,8 @@ protected:
 	
 	QMutex m_refMutex;
 	int m_refCount;
+	
+	bool m_debugPtr;
 };
 
 typedef QSharedPointer<VideoFrame> VideoFramePtr;

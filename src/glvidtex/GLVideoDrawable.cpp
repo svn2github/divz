@@ -776,8 +776,10 @@ void GLVideoDrawable::initYv12TextureInfo(const QSize &size, bool secondSource)
 }
 
 
- QVariant GLVideoDrawable::itemChange(GraphicsItemChange change, const QVariant &value)
- {
+QVariant GLVideoDrawable::itemChange(GraphicsItemChange change, const QVariant &value)
+{
+/*	if(change == ItemSceneChange)
+		qDebug() << "GLVideoDrawable::itemChange: change:"<<change<<", value:"<<value;*/
 	if (change == ItemSceneChange)
 	{
 // 		// value is the new position.
@@ -810,7 +812,7 @@ void GLVideoDrawable::initYv12TextureInfo(const QSize &size, bool secondSource)
 		}
 */
 	}
-	return QGraphicsItem::itemChange(change, value);
+	return GLDrawable::itemChange(change, value);
  }
 
 void GLVideoDrawable::initGL()

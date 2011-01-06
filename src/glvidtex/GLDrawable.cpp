@@ -84,6 +84,12 @@ GLDrawable::GLDrawable(QObject *parent)
 	m_playlist = new GLDrawablePlaylist(this);
 }
 
+GLDrawable::~GLDrawable()
+{
+	qDeleteAll(m_cornerItems);
+	m_cornerItems.clear();
+}
+
 void GLDrawable::editingModeChanged(bool flag)
 {
 	if(!flag)
@@ -1032,54 +1038,58 @@ QVariantMap GLDrawable::propsToMap()
 
 QVariant GLDrawable::itemChange(GraphicsItemChange change, const QVariant & value)
 {
-/*
-	QVariant retVal;
-	bool retValOverride = false;
-	if(change != ItemFlagsChange &&
-		change != ItemFlagsHaveChanged &&
-		change != ItemChildAddedChange)
-		qDebug() << "GLDrawable::itemChange: change:"<<change<<", value:"<<value;
+// 	//if(change == ItemSceneChange)
+// 		//qDebug() << "GLDrawable::itemChange: change:"<<change<<", value:"<<value;
+// 
+// 	QVariant retVal;
+// 	bool retValOverride = false;
+// // 	if(change != ItemFlagsChange &&
+// // 		change != ItemFlagsHaveChanged &&
+// // 		change != ItemChildAddedChange)
+// // 		qDebug() << "GLDrawable::itemChange: change:"<<change<<", value:"<<value;
+// 
+// 	switch (change)
+// 	{
+// 		// notify about setPos
+// 		case ItemPositionHasChanged:
+// // 			if(DEBUG_ABSTRACTCONTENT)
+// // 				qDebug() << "AbstractContent::itemChange: " << modelItem()->itemName() << " ItemPositionHasChanged:"<<value;
+// 
+// 			//syncToModelItem(modelItem());
+// 			break;
+// 
+// 		// notify about graphics changes
+// 		case ItemSelectedHasChanged:
+// // 			if(DEBUG_ABSTRACTCONTENT)
+// // 				qDebug() << "AbstractContent::itemChange: " << modelItem()->itemName() << " ItemSelectedHasChanged:"<<value;
+// 			//setControlsVisible(value.toBool() ? true : false);
+// 
+// 		case ItemTransformHasChanged:
+// 		case ItemEnabledHasChanged:
+// 
+// 		case ItemParentHasChanged:
+// #if QT_VERSION >= 0x040500
+// 		case ItemOpacityHasChanged:
+// #endif
+// 			break;
+// 
+// 		case ItemZValueHasChanged:
+// 			break;
+// 
+// 		case ItemVisibleHasChanged:
+// 			break;
+// 		
+// 		case ItemSceneChange:
+// 			break;
+// 		default:
+// 			break;
+// 	}
+// 
+// 	// ..or just apply the value
+// 
+// 	QVariant otherVal = QGraphicsItem::itemChange(change, value);
+// 	return retValOverride ? retVal : otherVal;
 
-	switch (change)
-	{
-		// notify about setPos
-		case ItemPositionHasChanged:
-// 			if(DEBUG_ABSTRACTCONTENT)
-// 				qDebug() << "AbstractContent::itemChange: " << modelItem()->itemName() << " ItemPositionHasChanged:"<<value;
-
-			//syncToModelItem(modelItem());
-			break;
-
-		// notify about graphics changes
-		case ItemSelectedHasChanged:
-// 			if(DEBUG_ABSTRACTCONTENT)
-// 				qDebug() << "AbstractContent::itemChange: " << modelItem()->itemName() << " ItemSelectedHasChanged:"<<value;
-			setControlsVisible(value.toBool() ? true : false);
-
-		case ItemTransformHasChanged:
-		case ItemEnabledHasChanged:
-
-		case ItemParentHasChanged:
-#if QT_VERSION >= 0x040500
-		case ItemOpacityHasChanged:
-#endif
-			break;
-
-		case ItemZValueHasChanged:
-			break;
-
-		case ItemVisibleHasChanged:
-			break;
-
-		default:
-			break;
-	}
-
-	// ..or just apply the value
-
-	QVariant otherVal = QGraphicsItem::itemChange(change, value);
-	return retValOverride ? retVal : otherVal;
-*/
 	return QGraphicsItem::itemChange(change, value);
 }
 
