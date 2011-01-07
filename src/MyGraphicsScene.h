@@ -146,6 +146,8 @@ class MyGraphicsScene : public QGraphicsScene
 		QGraphicsItem * m_staticRoot;
 		
 		BackgroundItem * m_bg;
+		
+		bool m_fadeClockStarted;
 			
 	private slots:
 		friend class AbstractConfig; // HACK here, only to call 1 method

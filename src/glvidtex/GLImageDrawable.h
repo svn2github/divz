@@ -45,6 +45,8 @@ protected:
 	QImage m_image;
 	QString m_imageFile;
 	
+	QString m_fileLastModified;
+	
 	bool m_releasedImage;
 	
 	bool m_allowAutoRotate;

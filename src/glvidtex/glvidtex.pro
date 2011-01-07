@@ -36,7 +36,8 @@ HEADERS       = GLWidget.h \
 		HistogramFilter.h \ 
 		StaticVideoSource.h \
 		VideoDifferenceFilter.h \
-		FaceDetectFilter.h 
+		FaceDetectFilter.h \
+		GLSceneGroupType.h
 		
 SOURCES       = GLWidget.cpp \
 		../livemix/VideoSource.cpp \
@@ -71,8 +72,12 @@ SOURCES       = GLWidget.cpp \
 		HistogramFilter.cpp \
 		StaticVideoSource.cpp \
 		VideoDifferenceFilter.cpp \
-		FaceDetectFilter.cpp 
+		FaceDetectFilter.cpp \
+		GLSceneGroupType.cpp
 		
+include(../3rdparty/md5/md5.pri)
+include(../imgtool/exiv2-0.18.2-qtbuild/qt_build_root.pri)
+
 
 editor: {
 	TARGET = gleditor
@@ -177,8 +182,6 @@ slideshow: {
 		
 	SOURCES += slideshow-main.cpp \
 		SlideShowWindow.cpp
-		  
-	include(../imgtool/exiv2-0.18.2-qtbuild/qt_build_root.pri)
 }
 
 unix: {

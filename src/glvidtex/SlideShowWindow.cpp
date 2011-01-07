@@ -2,9 +2,7 @@
 
 #include <QtGui>
 #include "GLWidget.h"
-#include "GLDrawable.h"
-#include "GLVideoDrawable.h"
-#include "GLRectDrawable.h"
+#include "GLDrawables.h"
 
 #include "GLPlayerServer.h"
 // #include "GLPlayerClient.h"
@@ -15,6 +13,9 @@
 
 #include <QTimer>
 #include <QApplication>
+
+#include "../imgtool/exiv2-0.18.2-qtbuild/src/image.hpp"
+
 
 class ScaledGraphicsView : public QGraphicsView
 {
@@ -207,14 +208,15 @@ SlideShowWindow::SlideShowWindow(QWidget *parent)
 	
 	// Canvas Size
 	READ_POINT("canvas-size","1000x750");
+	QSizeF canvasSize((qreal)point.x(),(qreal)point.y());
+	canvasSize = QSizeF(2000,750);
 	if(m_useGLWidget)
 	{
-		m_glWidget->setCanvasSize(QSizeF((qreal)point.x(),(qreal)point.y()));
+		m_glWidget->setCanvasSize(canvasSize);
 	}
 	else
 	{
-		QRectF r = QRectF(0,0,(qreal)point.x(),(qreal)point.y());
-		m_graphicsScene->setSceneRect(r);
+		m_graphicsScene->setSceneRect(QRectF(QPointF(0,0),canvasSize));
 	}
 	
 	m_xfadeSpeed = READ_STRING("xfade-speed",300).toInt();
@@ -326,14 +328,142 @@ SlideShowWindow::SlideShowWindow(QWidget *parent)
 			QString fullFile = info.absoluteFilePath();
 			qDebug() << "SlideShowWindow: Loading "<<fullFile;//<<" (ext:"<<ext<<")";
 			GLScene *scene = new GLScene();
-			GLImageDrawable *image = new GLImageDrawable(fullFile);
-			image->setRect(QRectF(0,0,1000,750));
-			//image->setCrossFadeMode(GLVideoDrawable::JustFront);
-			scene->addDrawable(image);
+			{
+				QString comment = "";
+				try
+				{
+					Exiv2::Image::AutoPtr exiv = Exiv2::ImageFactory::open(fullFile.toStdString()); 
+					if(exiv.get() != 0)
+					{
+						exiv->readMetadata();
+						Exiv2::ExifData& exifData = exiv->exifData();
+						if (exifData.empty()) 
+						{
+							qDebug() << fullFile << ": No Exif data found in the file";
+						}
+		
+						comment = exifData["Exif.Image.ImageDescription"].toString().c_str();
+						
+						if(comment.isEmpty())
+						{
+							Exiv2::IptcData& iptcData = exiv->iptcData();
+							comment = iptcData["Iptc.Application2.Caption"].toString().c_str();
+							
+							if (exifData.empty()) 
+							{
+								qDebug() << fullFile << ": No IPTC data found in the file";
+							}
+						}
+							
+						
+					}
+				}
+				catch (Exiv2::AnyError& e) 
+				{
+					std::cout << "Caught Exiv2 exception '" << e << "'\n";
+					//return -1;
+				}
+				
+				GLImageDrawable *image = new GLImageDrawable(fullFile);
+				
+				if(canvasSize.width() > 1000)
+				{
+					image->setRect(QRectF(QPointF(0,0),QSize(1000,canvasSize.height())));
+				}
+				else
+				{
+					image->setRect(QRectF(QPointF(0,0),canvasSize));
+				}
+				//image->setCrossFadeMode(GLVideoDrawable::JustFront);
+				scene->addDrawable(image);
+				
+				if(!comment.isEmpty())
+				{
+					GLTextDrawable *text = new GLTextDrawable();
+					QString ptSize = "36";
+					QString html = 
+						"<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd\">"
+						"<html><head><meta name=\"qrichtext\" content=\"1\"/>"
+						"<style type=\"text/css\">p, li { white-space: pre-wrap; }</style>"
+						"</head>"
+						"<body style=\"font-family:'Sans Serif'; font-size:" + ptSize +"pt; font-weight:600; font-style:normal;\">"
+						"<table style=\"-qt-table-type: root; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px;\">"
+						"<tr><td style=\"border: none;\">"
+						"<p style=\"margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">"
+						"<span style=\"font-size:" + ptSize + "pt; font-weight:600; color:#ffffff;\">"
+						+ comment +
+						"</span></p></td></tr></table></body></html>";
+						
+					text->setText(html);
+					
+					//qDebug() << "File # text size:"<<size<<" @ width:"<<w<<", html:"<<html;
+					if(canvasSize.width() > 1000)
+					{
+						QSize size = text->findNaturalSize(1000);
+						
+						QRectF targetRect = QRectF(0, 0, size.width(), size.height());
+						targetRect.moveCenter(QRectF(1000,0,canvasSize.width()-1000,canvasSize.height()).center());
+		
+						text->setRect(targetRect);
+					}
+					else
+					{
+						int w = (int)canvasSize.width();
+						QSize size = text->findNaturalSize(w);
+						
+						double x = (canvasSize.width() - size.width()) / 2;
+						double y = canvasSize.height() - size.height() - 2;
+						text->setRect(QRectF(QPointF(x,y),size));
+					}
+					text->setZIndex(5.);
+					scene->addDrawable(text);
+					
+					qDebug() << "Loaded caption:"<<comment;
+				}
+				
+				QFileInfo fileInfo(fullFile);
+				QString fileName = fileInfo.baseName().toLower();
+				if(fileName.startsWith("dsc_"))
+					fileName = fileName.replace("dsc_", "");
+				
+				if(!fileName.isEmpty())
+				{
+					GLTextDrawable *text = new GLTextDrawable();
+					//QString html = QString("<span style='font-color:white;font-size:20px'>%1</font>").arg(fileName);
+					
+					QString ptSize = "16";
+					QString html = 
+						"<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd\">"
+						"<html><head><meta name=\"qrichtext\" content=\"1\"/>"
+						"<style type=\"text/css\">p, li { white-space: pre-wrap; }</style>"
+						"</head>"
+						"<body style=\"font-family:'Sans Serif'; font-size:" + ptSize +"pt; font-weight:600; font-style:normal;\">"
+						"<table style=\"-qt-table-type: root; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px;\">"
+						"<tr><td style=\"border: none;\">"
+						"<p style=\"margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">"
+						"<span style=\"font-size:" + ptSize + "pt; font-weight:600; color:#ffffff;\">"
+						"Photograph # "+ fileName +
+						"</span></p></td></tr></table></body></html>";
+						
+					text->setText(html);
+					int w = (int)canvasSize.width();
+					QSize size = text->findNaturalSize(w);
+					//qDebug() << "File # text size:"<<size<<" @ width:"<<w<<", html:"<<html;
+					double x = canvasSize.width() - size.width() - 2;
+					double y = 2;
+					text->setRect(QRectF(QPointF(x,y),size));
+					text->setZIndex(5.);
+					scene->addDrawable(text);
+				}
+			}
+			
+			
 			m_scenes << scene;
 		}
 		
 		m_currentIdx = -1;
+		
+		//sleep(10);
 		
 		qDebug() << "SlideShowWindow: Loaded"<<m_scenes.size()<<"images";
 		if(list.isEmpty())
@@ -342,7 +472,7 @@ SlideShowWindow::SlideShowWindow(QWidget *parent)
 			setSceneNum(0);
 			
 		connect(&m_sceneTimer, SIGNAL(timeout()), this, SLOT(timerTick()));
-		m_sceneTimer.setInterval(2000);
+		m_sceneTimer.setInterval(10000);
 		m_sceneTimer.start();
 	}
 	else

@@ -108,6 +108,7 @@ MyGraphicsScene::MyGraphicsScene(ContextHint hint, QObject * parent)
     , m_contextHint(hint)
     , m_masterSlide(0)
     , m_bg(0)
+    , m_fadeClockStarted(false)
 {
 	m_staticRoot = new RootObject(this);
 	m_staticRoot->setPos(0,0);
@@ -405,7 +406,8 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans, int speed, i
 		m_fadeFrameMs = ms;
 		m_fadeLength = speed;
 		m_currentFadeTime = 0;
-		m_fadeTime.start();
+		//m_fadeTime.start();
+		m_fadeClockStarted = false;
 
  		double inc = (double)1 / m_fadeSteps;
 
@@ -656,6 +658,14 @@ void MyGraphicsScene::endTransition()
 
 void MyGraphicsScene::slotTransitionStep()
 {
+	// We dont start the fade clock until the first slot is hit so that any first-frame initalization (like loading images)
+	// doesnt eat up the fade clock and cause us to make visually unappealing jumps in opacity (like from 0 to 0.5 or whatever)
+	if(!m_fadeClockStarted)
+	{
+		m_fadeClockStarted = true;
+		m_fadeTime.start();
+	}
+	
 	int elapsed = m_fadeTime.elapsed();
 	double fadeVal = ((double)elapsed) / ((double)m_fadeLength); 
 		

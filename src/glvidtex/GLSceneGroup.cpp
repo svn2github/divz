@@ -295,6 +295,8 @@ QByteArray GLScene::toByteArray()
 	QVariantMap map;
 	map["sceneId"]		= sceneId();
 	map["sceneName"] 	= m_sceneName;
+	map["duration"]		= m_duration;
+	map["autoDuration"]	= m_autoDuration;
 
 	QByteArray bytes;
 	QBuffer buffer(&bytes);
@@ -337,6 +339,8 @@ void GLScene::fromByteArray(QByteArray& array)
 
 	m_sceneId	= map["sceneId"].toInt();
 	m_sceneName	= map["sceneName"].toString();
+	m_duration 	= map["duration"].toDouble();
+	m_autoDuration	= map["autoDuration"].toBool();
 
 	QByteArray bytes = map["pixmap"].toByteArray();
 	QImage image;
@@ -403,6 +407,11 @@ void GLScene::fromByteArray(QByteArray& array)
 
 		addDrawable(drawable);
 	}
+}
+
+void GLScene::setSceneType(GLSceneType *type)
+{
+	m_sceneType = type;
 }
 
 void GLScene::setListOnlyUserItems(bool flag)
@@ -714,6 +723,16 @@ void GLScene::setZIndex(double d)
 		gld->setZIndexModifier(d);
 }
 
+void GLScene::setDuration(double duration)
+{
+	m_duration = duration;
+}
+
+void GLScene::setAutoDuration(bool flag)
+{
+	m_autoDuration = flag;
+}
+
 
 /*signals:
 	void drawableAdded(GLDrawable*);
@@ -820,6 +839,11 @@ void GLSceneGroup::fromByteArray(QByteArray& array)
 		m_scenes << scene;
 		m_sceneIdLookup[scene->sceneId()] = scene;
 	}
+}
+
+void GLSceneGroup::setGroupType(GLSceneGroupType *type)
+{
+	m_groupType = type;
 }
 
 

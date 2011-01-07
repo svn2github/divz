@@ -94,6 +94,7 @@ private:
 
 };
 
+class GLSceneType;
 class GLScene : public QAbstractListModel
 {
 	Q_OBJECT
@@ -101,6 +102,12 @@ class GLScene : public QAbstractListModel
 	Q_PROPERTY(QString sceneName READ sceneName WRITE setSceneName);
 	
 	Q_PROPERTY(double opacity READ opacity WRITE setOpacity);
+	
+	Q_PROPERTY(double duration READ duration WRITE setDuration);
+	Q_PROPERTY(bool autoDuration READ autoDuration WRITE setAutoDuration);
+	
+	Q_PROPERTY(GLSceneType* sceneType READ sceneType WRITE setSceneType);
+	
 public:
 	GLScene(QObject *parent=0);
 	GLScene(QByteArray&, QObject *parent=0);
@@ -150,6 +157,11 @@ public:
 	
 	double opacity() { return m_opacity; }
 	double zIndex() { return m_zIndex; }
+	
+	double duration() { return m_duration; }
+	bool autoDuration() { return m_autoDuration; }
+	
+	GLSceneType *sceneType() { return m_sceneType; }
 
 public slots:
 	void setSceneName(const QString& name);
@@ -158,6 +170,11 @@ public slots:
 	
 	void setZIndex(double zIndex);
 	void setOpacity(double opacity, bool animate=false, double animDuration=750);
+	
+	void setDuration(double duration);
+	void setAutoDuration(bool flag);
+	
+	void setSceneType(GLSceneType *);
 	
 signals:
 	void drawableAdded(GLDrawable*);
@@ -209,15 +226,22 @@ protected:
 	double m_startOpacity;
 	
 	int m_crossfadeSpeed;
+	
+	double m_duration;
+	bool m_autoDuration;
+	
+	GLSceneType *m_sceneType;
 };
 	
-
+class GLSceneGroupType;
 class GLSceneGroup : public QAbstractListModel
 {
 	Q_OBJECT
 	
 	Q_PROPERTY(int groupId READ groupId);
 	Q_PROPERTY(QString groupName READ groupName WRITE setGroupName);
+	
+	Q_PROPERTY(GLSceneGroupType* groupType READ groupType WRITE setGroupType);
 	
 public:
 	GLSceneGroup(QObject *parent=0);
@@ -254,10 +278,14 @@ public:
 	// the other scenes in the list. 
 	GLScene * overlayScene() { return m_overlayScene; }
 	void setOverlayScene(GLScene*);
+	
+	GLSceneGroupType *groupType() { return m_groupType; }	
 
 public slots:
 	void setGroupName(const QString& name);
 	void setPixmap(const QPixmap&);
+	
+	void setGroupType(GLSceneGroupType*);
 	
 private slots:
 	void sceneChanged();
@@ -279,6 +307,8 @@ protected:
 	QHash<int,GLScene*> m_sceneIdLookup;
 
 	GLScene *m_overlayScene;
+	
+	GLSceneGroupType *m_groupType;
 };
 
 

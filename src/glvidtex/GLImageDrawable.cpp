@@ -8,6 +8,7 @@ int GLImageDrawable::m_activeMemory    = 0;
 #define MAX_IMAGE_HEIGHT 1600
 
 #include "../imgtool/exiv2-0.18.2-qtbuild/src/image.hpp"
+#include "../3rdparty/md5/qtmd5.h"
 
 //#define DEBUG_MEMORY_USAGE
 
@@ -43,24 +44,6 @@ void GLImageDrawable::setImage(const QImage& image)
 	
 	m_releasedImage = false;
 	
-	//qDebug() << "GLImageDrawable::setImage: Size:"<<image.size();
-	//QImage image = makeHistogram(tmp);
-	//if(m_frame && m_frame->isValid() && ())
-	QImage localImage;
-	if(image.width()  > MAX_IMAGE_WIDTH || 
-	   image.height() > MAX_IMAGE_HEIGHT)
-	{
-		localImage = image.scaled(MAX_IMAGE_WIDTH,MAX_IMAGE_HEIGHT,Qt::KeepAspectRatio);
-		#ifdef DEBUG_MEMORY_USAGE
-		qDebug() << "GLImageDrawable::setImage: Scaled image to"<<localImage.size()<<"with"<<(localImage.byteCount()/1024/1024)<<"MB memory usage";
-		#endif
-	}
-	else
-	{
-		localImage = image.copy();
-	}
-	
-	//if(!m_image.isNull() && xfadeEnabled())
 	if(m_frame && 
 	   m_frame->isValid() &&
 	   xfadeEnabled())
@@ -80,6 +63,8 @@ void GLImageDrawable::setImage(const QImage& image)
 		#endif
 	}
 		
+	QImage localImage = image;
+	
 	if(0)
 	{
 		m_frame = VideoFramePtr(new VideoFrame(localImage, 1000/30));
@@ -118,10 +103,10 @@ void GLImageDrawable::setImage(const QImage& image)
 	}
 		
 	m_allocatedMemory += localImage.byteCount();
-	//m_image = localImage;
+	//m_image = image;
 	
 	// explicitly release the original image to see if that helps with memory...
-	localImage = QImage();
+	//image = QImage();
 	
  	#ifdef DEBUG_MEMORY_USAGE
  	qDebug() << "GLImagedDrawable::setImage(): Allocated memory up to:"<<(m_allocatedMemory/1024/1024)<<"MB";
@@ -173,66 +158,121 @@ bool GLImageDrawable::setImageFile(const QString& file)
 		return true;
 	}
 	
-	
-	QImage image(file);
-	if(image.isNull())
-	{
-		qDebug() << "GLImageDrawable::setImageFile: "<<file<<" - Image loaded is Null!";
-		return false;
-	}
+// 	QString fileMod = fileInfo.lastModified().toString();
+// 	if(file == m_imageFile && fileMod == m_fileLastModified)
+// 	{
+// 		qDebug() << "GLImagedDrawable::setImageFile(): "<<file<<": no change, not reloading";
+// 		return;
+// 	}
+
 	//setImage(image);
 	setObjectName(fileInfo.fileName());
 	
-	bool imageSet = false;
-	if(m_allowAutoRotate)
-	{
-		try
-		{
-			Exiv2::Image::AutoPtr exiv = Exiv2::ImageFactory::open(file.toStdString()); 
-			if(exiv.get() != 0)
-			{
-				exiv->readMetadata();
-				Exiv2::ExifData& exifData = exiv->exifData();
-				if (exifData.empty()) 
-				{
-					qDebug() << file << ": No Exif data found in the file";
-				}
+	QSize size = rect().size().toSize();
+	
+	
+	
+	QString tempDir = QDir::temp().absolutePath();
+	QString glTempDir = QString("%1/glvidtex").arg(tempDir);
+	QString imgTempDir = QString("%1/glimagedrawable").arg(glTempDir);
+	
+	if(!QDir(glTempDir).exists())
+		QDir(tempDir).mkdir("glvidtex");
+	if(!QDir(imgTempDir).exists())
+		QDir(glTempDir).mkdir("glimagedrawable");
+	
+	QString md5sum = MD5::md5sum(fileInfo.absoluteFilePath());
+	QString cachedImageKey = QString("%1/%2.jpg")
+		.arg(imgTempDir)
+		.arg(md5sum);
 
-				QString rotateSensor = exifData["Exif.Image.Orientation"].toString().c_str();
-				int rotationFlag = rotateSensor.toInt(); 
-				int rotateDegrees = rotationFlag == 1 ||
-						    rotationFlag == 2 ? 0 :
-						    rotationFlag == 7 ||
-						    rotationFlag == 8 ? -90 :
-						    rotationFlag == 3 ||
-						    rotationFlag == 4 ? -180 :
-						    rotationFlag == 5 ||
-						    rotationFlag == 6 ? -270 :
-						    0;
-				
-				if(rotateDegrees != 0)
-				{
-					qDebug() << "GLImageDrawable::setImageFile: "<<file<<" - Rotating "<<rotateDegrees<<" degrees";
-					 
-					QTransform t = QTransform().rotate(rotateDegrees);
-					image = image.transformed(t);
-					
-					setImage(image);
-					
-					imageSet = true;
-				}
-						
-			}
-		}
-		catch (Exiv2::AnyError& e) 
+	QImage image;
+	
+	if(QFile(cachedImageKey).exists() && 
+	   QFileInfo(file).lastModified() <= QFileInfo(cachedImageKey).lastModified())
+	{
+		qDebug() << "GLImageDrawable::setImageFile: "<<file<<" - Loaded image from cache: "<<cachedImageKey;
+		image = QImage(cachedImageKey);	
+	}
+	else
+	{
+		// We only need to cache it if we do something *more* than just load the bits - like rotate or scale it.
+		bool cacheNeeded = false;
+		
+		image = QImage(file);
+		if(image.isNull())
 		{
-			std::cout << "Caught Exiv2 exception '" << e << "'\n";
-			//return -1;
-		}	
+			qDebug() << "GLImageDrawable::setImageFile: "<<file<<" - Image loaded is Null!";
+			return false;
+		}
+		
+		if(image.width()  > MAX_IMAGE_WIDTH ||
+		   image.height() > MAX_IMAGE_HEIGHT)
+		{
+			image = image.scaled(MAX_IMAGE_WIDTH,MAX_IMAGE_HEIGHT,Qt::KeepAspectRatio);
+			
+			#ifdef DEBUG_MEMORY_USAGE
+			qDebug() << "GLImageDrawable::setImageFile: Scaled image to"<<image.size()<<"with"<<(image.byteCount()/1024/1024)<<"MB memory usage";
+			#endif
+			
+			cacheNeeded = true;
+		}
+		
+		if(m_allowAutoRotate)
+		{
+			try
+			{
+				Exiv2::Image::AutoPtr exiv = Exiv2::ImageFactory::open(file.toStdString()); 
+				if(exiv.get() != 0)
+				{
+					exiv->readMetadata();
+					Exiv2::ExifData& exifData = exiv->exifData();
+					if (exifData.empty()) 
+					{
+						qDebug() << file << ": No Exif data found in the file";
+					}
+	
+					QString rotateSensor = exifData["Exif.Image.Orientation"].toString().c_str();
+					int rotationFlag = rotateSensor.toInt(); 
+					int rotateDegrees = rotationFlag == 1 ||
+							    rotationFlag == 2 ? 0 :
+							    rotationFlag == 7 ||
+							    rotationFlag == 8 ? -90 :
+							    rotationFlag == 3 ||
+							    rotationFlag == 4 ? -180 :
+							    rotationFlag == 5 ||
+							    rotationFlag == 6 ? -270 :
+							    0;
+					
+					if(rotateDegrees != 0)
+					{
+						qDebug() << "GLImageDrawable::setImageFile: "<<file<<" - Rotating "<<rotateDegrees<<" degrees";
+						
+						QTransform t = QTransform().rotate(rotateDegrees);
+						image = image.transformed(t);
+						
+						cacheNeeded = true;
+					}
+							
+				}
+			}
+			catch (Exiv2::AnyError& e) 
+			{
+				std::cout << "Caught Exiv2 exception '" << e << "'\n";
+				//return -1;
+			}	
+		}
+		
+		// Write out cached image
+		if(cacheNeeded)
+		{
+			qDebug() << "GLImageDrawable::setImageFile: "<<file<<" - Cache needed, loaded original image, writing cache:"<<cachedImageKey;
+		
+			image.save(cachedImageKey,"JPEG");
+		}
 	}
 	
-	if(!imageSet)
-		setImage(image);
+	setImage(image);
 	
 	return true;
 	
