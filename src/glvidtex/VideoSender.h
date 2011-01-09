@@ -57,7 +57,7 @@ public slots:
 
 private slots:
 	void frameReady();
-	void fpsTimer();
+	void processFrame();
 	
 protected:
 	void incomingConnection(int socketDescriptor);
@@ -65,7 +65,7 @@ protected:
 private:
 	bool m_adaptiveWriteEnabled;
 	VideoSource *m_source;
-//	VideoFramePtr m_frame;
+	VideoFramePtr m_frame;
 // 	VideoFramePtr m_scaledFrame;
 	QSharedPointer<uchar> m_dataPtr;
 	int m_byteCount;

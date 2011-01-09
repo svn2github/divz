@@ -803,7 +803,7 @@ void CameraThread::readFrame()
 			}
 			else
 			{
-				//qDebug() << "CameraThread::enqueue call: raw V4L2 frame:"<<frame;
+				//qDebug() << "CameraThread::enqueue call: raw V4L2 frame:"<<frame<<", reading at fps:"<<m_fps;
 				enqueue(frame);
 			}
 		}

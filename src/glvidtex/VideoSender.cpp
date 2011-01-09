@@ -17,7 +17,7 @@ VideoSender::VideoSender(QObject *parent)
 	//, m_scaledFrame(0)
 	//, m_frame(0)
 {
-	connect(&m_fpsTimer, SIGNAL(timeout()), this, SLOT(fpsTimer()));
+	connect(&m_fpsTimer, SIGNAL(timeout()), this, SLOT(processFrame()));
 	setTransmitFps(m_transmitFps);
 }
 
@@ -38,13 +38,125 @@ void VideoSender::setTransmitFps(int fps)
 		m_fpsTimer.stop();
 	else
 	{
+		//qDebug() << "VideoSender::setTransmitFps(): fps:"<<fps;
 		m_fpsTimer.setInterval(1000 / fps);
 		m_fpsTimer.start();
 	}
 }
 
-void VideoSender::fpsTimer()
+void VideoSender::processFrame()
 {
+	//qDebug() << "VideoSender::processFrame(): mark";
+	sendLock();
+	
+	if(m_frame && m_frame->isValid())
+	{
+		m_origSize = m_frame->size();
+		#ifdef DEBUG_VIDEOFRAME_POINTERS
+		qDebug() << "VideoSender::processFrame(): Mark1: m_frame:"<<m_frame;
+		#endif
+		
+// 		m_frame->incRef();
+		if(m_transmitSize.isEmpty())
+			m_transmitSize = m_origSize;
+		
+		//qDebug() << "VideoSender::processFrame: Downscaling video for transmission to "<<m_transmitSize;
+		// To scale the video frame, first we must convert it to a QImage if its not already an image.
+		// If we're lucky, it already is. Otherwise, we have to jump thru hoops to convert the byte 
+		// array to a QImage then scale it.
+		QImage scaledImage;
+		if(!m_frame->image().isNull())
+		{
+			scaledImage = m_transmitSize == m_origSize ? 
+				m_frame->image() : 
+				m_frame->image().scaled(m_transmitSize);
+		}
+		else
+		{
+			#ifdef DEBUG_VIDEOFRAME_POINTERS
+			qDebug() << "VideoSender::processFrame(): Scaling data from frame:"<<m_frame<<", pointer:"<<m_frame->pointer();
+			#endif
+			const QImage::Format imageFormat = QVideoFrame::imageFormatFromPixelFormat(m_frame->pixelFormat());
+			if(imageFormat != QImage::Format_Invalid)
+			{
+				QImage image(m_frame->pointer(),
+					m_frame->size().width(),
+					m_frame->size().height(),
+					m_frame->size().width() *
+						(imageFormat == QImage::Format_RGB16  ||
+						imageFormat == QImage::Format_RGB555 ||
+						imageFormat == QImage::Format_RGB444 ||
+						imageFormat == QImage::Format_ARGB4444_Premultiplied ? 2 :
+						imageFormat == QImage::Format_RGB888 ||
+						imageFormat == QImage::Format_RGB666 ||
+						imageFormat == QImage::Format_ARGB6666_Premultiplied ? 3 :
+						4),
+					imageFormat);
+					
+				scaledImage = m_transmitSize == m_origSize ? 
+					image.copy() : 
+					image.scaled(m_transmitSize);
+				//qDebug() << "Downscaled image from "<<image.byteCount()<<"bytes to "<<scaledImage.byteCount()<<"bytes, orig ptr len:"<<m_frame->pointerLength()<<", orig ptr:"<<m_frame->pointer();
+			}
+			else
+			{
+				qDebug() << "VideoSender::processFrame: Unable to convert pixel format to image format, cannot scale frame. Pixel Format:"<<m_frame->pixelFormat();
+			}
+		}
+		
+		#ifdef DEBUG_VIDEOFRAME_POINTERS
+		qDebug() << "VideoSender::processFrame(): Mark2: frame:"<<m_frame;
+		#endif
+		
+		// Now that we've got the image out of the original frame and scaled it, we have to construct a new
+		// video frame to transmit on the wire from the scaledImage (assuming the sccaledImage is valid.)
+		// We attempt to transmit in its native format without converting it if we can to save local CPU power.
+		if(!scaledImage.isNull())
+		{
+			m_captureTime = m_frame->captureTime();
+
+			QImage::Format format = scaledImage.format();
+			m_pixelFormat = 
+				format == QImage::Format_ARGB32 ? QVideoFrame::Format_ARGB32 :
+				format == QImage::Format_RGB32  ? QVideoFrame::Format_RGB32  :
+				format == QImage::Format_RGB888 ? QVideoFrame::Format_RGB24  :
+				format == QImage::Format_RGB16  ? QVideoFrame::Format_RGB565 :
+				format == QImage::Format_RGB555 ? QVideoFrame::Format_RGB555 :
+				//format == QImage::Format_ARGB32_Premultiplied ? QVideoFrame::Format_ARGB32_Premultiplied :
+				// GLVideoDrawable doesn't support premultiplied - so the format conversion below will convert it to ARGB32 automatically
+				QVideoFrame::Format_Invalid;
+				
+			if(m_pixelFormat == QVideoFrame::Format_Invalid)
+			{
+				qDebug() << "VideoFrame: image was not in an acceptable format, converting to ARGB32 automatically.";
+				scaledImage = scaledImage.convertToFormat(QImage::Format_ARGB32);
+				m_pixelFormat = QVideoFrame::Format_ARGB32;
+			}
+			
+			uchar *ptr = (uchar*)malloc(sizeof(uchar) * scaledImage.byteCount());
+			const uchar *src = (const uchar*)scaledImage.bits();
+			memcpy(ptr, src, scaledImage.byteCount());
+			
+			m_dataPtr = QSharedPointer<uchar>(ptr);
+			m_byteCount = scaledImage.byteCount();
+			m_imageFormat = scaledImage.format();
+			m_imageSize = scaledImage.size();
+			
+			m_holdTime = m_transmitFps <= 0 ? m_frame->holdTime() : 1000/m_transmitFps;
+			
+			#ifdef DEBUG_VIDEOFRAME_POINTERS
+			qDebug() << "VideoSender::processFrame(): Mark5: frame:"<<m_frame;
+			#endif
+		}
+	}
+	
+	sendUnlock();
+	
+	#ifdef DEBUG_VIDEOFRAME_POINTERS
+	qDebug() << "VideoSender::processFrame(): Mark6: m_frame:"<<m_frame;
+	#endif
+	
+	//qDebug() << "VideoSender::processFrame(): mark end";
 	emit receivedFrame();
 }
 	
@@ -89,120 +201,16 @@ void VideoSender::frameReady()
 		return;
 	
 	VideoFramePtr frame = m_source->frame();
-	if(!frame)
-		return;
-		
-	sendLock();
-	
-	if(frame && frame->isValid())
+	if(!frame || !frame->isValid())
 	{
-		m_origSize = frame->size();
-		#ifdef DEBUG_VIDEOFRAME_POINTERS
-		qDebug() << "VideoSender::frameReady(): Mark1: frame:"<<frame;
-		#endif
-		
-// 		frame->incRef();
-		if(m_transmitSize.isEmpty())
-			m_transmitSize = m_origSize;
-		
-		//qDebug() << "VideoSender::frameReady: Downscaling video for transmission to "<<m_transmitSize;
-		// To scale the video frame, first we must convert it to a QImage if its not already an image.
-		// If we're lucky, it already is. Otherwise, we have to jump thru hoops to convert the byte 
-		// array to a QImage then scale it.
-		QImage scaledImage;
-		if(!frame->image().isNull())
-		{
-			scaledImage = m_transmitSize == m_origSize ? 
-				frame->image() : 
-				frame->image().scaled(m_transmitSize);
-		}
-		else
-		{
-			#ifdef DEBUG_VIDEOFRAME_POINTERS
-			qDebug() << "VideoSender::frameReady(): Scaling data from frame:"<<frame<<", pointer:"<<frame->pointer();
-			#endif
-			const QImage::Format imageFormat = QVideoFrame::imageFormatFromPixelFormat(frame->pixelFormat());
-			if(imageFormat != QImage::Format_Invalid)
-			{
-				QImage image(frame->pointer(),
-					frame->size().width(),
-					frame->size().height(),
-					frame->size().width() *
-						(imageFormat == QImage::Format_RGB16  ||
-						imageFormat == QImage::Format_RGB555 ||
-						imageFormat == QImage::Format_RGB444 ||
-						imageFormat == QImage::Format_ARGB4444_Premultiplied ? 2 :
-						imageFormat == QImage::Format_RGB888 ||
-						imageFormat == QImage::Format_RGB666 ||
-						imageFormat == QImage::Format_ARGB6666_Premultiplied ? 3 :
-						4),
-					imageFormat);
-					
-				scaledImage = m_transmitSize == m_origSize ? 
-					image.copy() : 
-					image.scaled(m_transmitSize);
-				//qDebug() << "Downscaled image from "<<image.byteCount()<<"bytes to "<<scaledImage.byteCount()<<"bytes, orig ptr len:"<<frame->pointerLength()<<", orig ptr:"<<frame->pointer();
-			}
-			else
-			{
-				qDebug() << "VideoSender::frameReady: Unable to convert pixel format to image format, cannot scale frame. Pixel Format:"<<frame->pixelFormat();
-			}
-		}
-		
-		#ifdef DEBUG_VIDEOFRAME_POINTERS
-		qDebug() << "VideoSender::frameReady(): Mark2: frame:"<<frame;
-		#endif
-		
-		// Now that we've got the image out of the original frame and scaled it, we have to construct a new
-		// video frame to transmit on the wire from the scaledImage (assuming the sccaledImage is valid.)
-		// We attempt to transmit in its native format without converting it if we can to save local CPU power.
-		if(!scaledImage.isNull())
-		{
-			m_captureTime = frame->captureTime();
-
-			QImage::Format format = scaledImage.format();
-			m_pixelFormat = 
-				format == QImage::Format_ARGB32 ? QVideoFrame::Format_ARGB32 :
-				format == QImage::Format_RGB32  ? QVideoFrame::Format_RGB32  :
-				format == QImage::Format_RGB888 ? QVideoFrame::Format_RGB24  :
-				format == QImage::Format_RGB16  ? QVideoFrame::Format_RGB565 :
-				format == QImage::Format_RGB555 ? QVideoFrame::Format_RGB555 :
-				//format == QImage::Format_ARGB32_Premultiplied ? QVideoFrame::Format_ARGB32_Premultiplied :
-				// GLVideoDrawable doesn't support premultiplied - so the format conversion below will convert it to ARGB32 automatically
-				QVideoFrame::Format_Invalid;
-				
-			if(m_pixelFormat == QVideoFrame::Format_Invalid)
-			{
-				qDebug() << "VideoFrame: image was not in an acceptable format, converting to ARGB32 automatically.";
-				scaledImage = scaledImage.convertToFormat(QImage::Format_ARGB32);
-				m_pixelFormat = QVideoFrame::Format_ARGB32;
-			}
-			
-			uchar *ptr = (uchar*)malloc(sizeof(uchar) * scaledImage.byteCount());
-			const uchar *src = (const uchar*)scaledImage.bits();
-			memcpy(ptr, src, scaledImage.byteCount());
-			
-			m_dataPtr = QSharedPointer<uchar>(ptr);
-			m_byteCount = scaledImage.byteCount();
-			m_imageFormat = scaledImage.format();
-			m_imageSize = scaledImage.size();
-			
-			m_holdTime = m_transmitFps <= 0 ? frame->holdTime() : 1000/m_transmitFps;
-			
-			#ifdef DEBUG_VIDEOFRAME_POINTERS
-			qDebug() << "VideoSender::frameReady(): Mark5: frame:"<<frame;
-			#endif
-		}
+		//qDebug() << "VideoSender::frameReady(): Invalid frame or no frame";
+		return;
 	}
 	
-	sendUnlock();
+	m_frame = frame;
 	
 	if(m_transmitFps <= 0)
-		emit receivedFrame();
-	
-	#ifdef DEBUG_VIDEOFRAME_POINTERS
-	qDebug() << "VideoSender::frameReady(): Mark6: m_frame:"<<m_frame;
-	#endif
+		processFrame();
 }
 
 

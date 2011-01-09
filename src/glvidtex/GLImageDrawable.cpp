@@ -65,7 +65,7 @@ void GLImageDrawable::setImage(const QImage& image)
 		
 	QImage localImage = image;
 	
-	if(0)
+	if(1)
 	{
 		m_frame = VideoFramePtr(new VideoFrame(localImage, 1000/30));
 	}

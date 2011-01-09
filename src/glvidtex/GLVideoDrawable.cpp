@@ -339,9 +339,9 @@ void GLVideoDrawable::frameReady()
 {
 	// This seems to prevent crashes during startup of an application when a thread is pumping out frames
 	// before the app has finished initalizing.
-	QMutexLocker lock(&m_frameReadyLock);
+	//QMutexLocker lock(&m_frameReadyLock);
 
-// 	qDebug() << "GLVideoDrawable::frameReady(): "<<objectName()<<" m_source:"<<m_source;
+ 	//qDebug() << "GLVideoDrawable::frameReady(): "<<(QObject*)this<<" m_source:"<<m_source;
 	if(m_source)
 	{
 		VideoFramePtr f = m_source->frame();
@@ -349,28 +349,7 @@ void GLVideoDrawable::frameReady()
 		if(!f)
 			return;
 		if(f->isValid())
-		{
-// 			if(m_frame && 
-// 			   m_frame->release())
-// 			{
-// 				#ifdef DEBUG_VIDEOFRAME_POINTERS
-//  				qDebug() << "GLVideoDrawable::frameReady(): "<<objectName()<<" deleting old frame:"<<m_frame;
-//  				#endif
-// 				delete m_frame;
-// 			}
-
 			m_frame = f;
-		}
-// 		else
-// 		{
-// 			if(f->release())
-// 			{
-// 				#ifdef DEBUG_VIDEOFRAME_POINTERS
-//  				qDebug() << "GLVideoDrawable::frameReady(): "<<objectName()<<" deleting invalid frame:"<<f;
-//  				#endif
-// 				delete f;
-// 			}
-// 		}
 	}
 
 // 	qDebug() << "GLVideoDrawable::frameReady(): "<<objectName()<<" going to updateTexture";
@@ -397,28 +376,7 @@ void GLVideoDrawable::frameReady2()
 		if(!f)
 			return;
 		if(f->isValid())
-		{
-// 			if(m_frame2 && 
-// 			   m_frame2->release())
-// 			   {
-// 			   	#ifdef DEBUG_VIDEOFRAME_POINTERS
-// 			   	qDebug() << "GLVideoDrawable::frameReady2(): "<<objectName()<<" deleting old m_frame2:"<<m_frame2;
-// 			   	#endif
-// 			   	delete m_frame2;
-// 			   }
-
 			m_frame2 = f;
-		}
-// 		else
-// 		{
-// 			if(f->release())
-// 			{
-// 				#ifdef DEBUG_VIDEOFRAME_POINTERS
-// 				qDebug() << "GLVideoDrawable::frameReady2(): "<<objectName()<<" deleting invalid frame:"<<f;
-// 				#endif
-// 				delete f;
-// 			}
-// 		}
 	}
 
 	updateTexture(true);

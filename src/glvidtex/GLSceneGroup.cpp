@@ -655,7 +655,10 @@ void GLScene::setOpacity(double d, bool animate, double animDuration)
 // 		connect(anim, SIGNAL(finished()), this, SIGNAL(opacityAnimationFinished()));
 // 		anim->start(QAbstractAnimation::DeleteWhenStopped);
 // 		
-// 		//qDebug() << "GLWidget::fadeBlack: toBlack:"<<toBlack<<", duration:"<<m_crossfadeSpeed<<", current opac:"<<opacity();
+		if(m_fadeTimer.isActive())
+			m_fadeTimer.stop();
+			
+ 		//qDebug() << "GLScene::setOpacity: "<<this<<" opac:"<<d<<", duration:"<<animDuration<<", current opac:"<<opacity();
 
 		m_fadeTimer.setInterval(1000 / 25); // 25fps fade
 		m_crossfadeSpeed = animDuration;
@@ -667,9 +670,12 @@ void GLScene::setOpacity(double d, bool animate, double animDuration)
 		m_fadeClockActive = false;
 		m_fadeTimer.start();
 		
+		//qDebug() << "GLScene::setOpacity: Timer started";
+		
 		return;
 	}
 	
+	//qDebug() << "GLScene::setOpacity: "<<d;
 	m_opacity = d;
 	emit opacityChanged(d);
 	foreach(GLDrawable *d, m_itemList)
@@ -680,6 +686,7 @@ void GLScene::setOpacity(double d, bool animate, double animDuration)
 
 void GLScene::fadeTick()
 {
+	//qDebug() << "GLScene::fadeTick: mark";
 	if(!m_fadeClockActive)
 	{
 		m_fadeClockActive = true;
@@ -688,6 +695,7 @@ void GLScene::fadeTick()
 	int time = m_fadeClock.elapsed();
 	if(time >= m_crossfadeSpeed)
 	{
+		//qDebug() << "GLScene::fadeTick: fade ended ("<<time<<" > "<<m_crossfadeSpeed<<")";
 		m_fadeTimer.stop();
 		setOpacity(m_endOpacity);
 		emit opacityAnimationFinished();

@@ -951,6 +951,7 @@ void PlayerWindow::setGroup(GLSceneGroup *group)
 
 void PlayerWindow::setScene(GLScene *scene)
 {
+	//qDebug() << "PlayerWindow::setScene: New scene:"<<scene; 
 	if(scene == m_scene)
 	{
 		qDebug() << "PlayerWindow::setScene: Scene pointers match, not setting new scene";
@@ -966,6 +967,8 @@ void PlayerWindow::setScene(GLScene *scene)
 	{
 		if(m_oldScene)
 		{
+			//qDebug() << "PlayerWindow::setScene: Old scene:"<<m_oldScene<<", doing fade out";
+			
 			m_oldScene->setOpacity(0,true,m_xfadeSpeed); // animate fade out
 			// remove drawables from oldScene in finished slot
 			connect(m_oldScene, SIGNAL(opacityAnimationFinished()), this, SLOT(opacityAnimationFinished()));
@@ -981,13 +984,15 @@ void PlayerWindow::setScene(GLScene *scene)
 		}
 		
 		m_scene->setOpacity(0); // no anim yet...
+		//qDebug() << "PlayerWindow::setScene: Set new scene opac to 0";
 		
-		double maxZIndex = -100000;
+// 		//double maxZIndex = -100000;
 		foreach(GLDrawable *drawable, newSceneList)
 		{
 			connect(drawable->playlist(), SIGNAL(currentItemChanged(GLPlaylistItem*)), this, SLOT(currentPlaylistItemChanged(GLPlaylistItem*)));
 			connect(drawable->playlist(), SIGNAL(playerTimeChanged(double)), this, SLOT(playlistTimeChanged(double)));
 			m_glWidget->addDrawable(drawable);
+			//qDebug() << "PlayerWindow::setScene: Adding drawable:"<<(QObject*)drawable;
 			
 			if(GLVideoDrawable *vid = dynamic_cast<GLVideoDrawable*>(drawable))
 			{
@@ -995,10 +1000,11 @@ void PlayerWindow::setScene(GLScene *scene)
 				vid->setXFadeLength(m_xfadeSpeed);
 			}
 			
-			if(drawable->zIndex() > maxZIndex)
-				maxZIndex = drawable->zIndex();
+// 			if(drawable->zIndex() > maxZIndex)
+// 				maxZIndex = drawable->zIndex();
 		}
 		
+		//qDebug() << "PlayerWindow::setScene: Animating fade in";
 		m_scene->setOpacity(1,true,m_xfadeSpeed); // animate fade in
 	}
 	else
