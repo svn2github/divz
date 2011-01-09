@@ -366,6 +366,67 @@ void VideoSenderThread::frameReady()
 
 }
 
+void VideoSenderThread::sendMap(QVariantMap map)
+{
+	//qDebug() << "VideoSenderThread::sendMap: "<<map;
+	
+	QByteArray array;
+	QDataStream stream(&array, QIODevice::WriteOnly);
+	stream << map;
+	
+	int byteCount = array.size();
+	if(byteCount > 0)
+	{
+		char headerData[HEADER_SIZE];
+		memset(&headerData, 0, HEADER_SIZE);
+		
+		sprintf((char*)&headerData,
+					"%d " // byteCount
+					"%d " // w
+					"%d " // h
+					"%d " // pixelFormat
+					"%d " // image.format
+					"%d " // bufferType
+					"%d " // timestamp
+					"%d " // holdTime
+					"%d " // original size X
+					"%d", // original size Y
+					byteCount, 
+					-1, -1, -1,
+					-1, -1, -1, 
+					-1, -1, -1);
+		//qDebug() << "VideoSenderThread::frameReady: header data:"<<headerData;
+		
+		m_socket->write((const char*)&headerData,HEADER_SIZE);
+		m_socket->write(array);
+	}
+
+	m_socket->flush();
+}
+
+void VideoSenderThread::sendReply(QVariantList reply)
+{
+	QVariantMap map;
+	if(reply.size() % 2 != 0)
+	{
+		qDebug() << "VideoSenderThread::sendReply: [WARNING]: Odd number of elelements in reply: "<<reply;
+	}
+	
+	for(int i=0; i<reply.size(); i+=2)
+	{
+		if(i+1 >= reply.size())
+			continue;
+		
+		QString key = reply[i].toString();
+		QVariant value = reply[i+1];
+		
+		map[key] = value;
+	}
+	
+	
+	//qDebug() << "VideoSenderThread::sendReply: [DEBUG] map:"<<map;
+	sendMap(map);
+}
 
 void VideoSenderThread::dataReady()
 {
@@ -470,6 +531,50 @@ void VideoSenderThread::processBlock()
 		system(qPrintable(shellCommand));
 	}
 	else
+	if(cmd == Video_GetHue ||
+	   cmd == Video_GetSaturation ||
+	   cmd == Video_GetBright ||
+	   cmd == Video_GetContrast)
+	{
+		//qDebug() << "VideoSenderThread::processBlock: Color command:"<<cmd;
+		VideoSource *source = m_sender->videoSource();
+		CameraThread *camera = dynamic_cast<CameraThread*>(source);
+		if(!camera)
+		{
+			// error
+			qDebug() << "VideoSenderThread::processBlock: "<<cmd<<": Video source is not a video input class ('CameraThread'), unable to determine system device to adjust."; 
+			return;
+		}
+		
+		/// TODO: The Getting of BCHS should be done inside CamereaThread instead of here!
+		
+		QString colorCmd = cmd == Video_GetHue		? "hue" :
+				   cmd == Video_GetSaturation	? "color" :
+				   cmd == Video_GetBright	? "bright" :
+				   cmd == Video_GetContrast	? "contrast" : "";
+		
+		if(colorCmd.isEmpty())
+		{
+			// error
+			qDebug() << "VideoSenderThread::processBlock: "<<cmd<<": Unknown color command.";
+			return;
+		}
+			
+		QString device = camera->inputName();
+		
+		QString program = "v4lctl";
+		QStringList args = QStringList() << "-c" << device << "list";
+		QProcess proc.
+		proc.start(program, args);
+		proc.waitForFinished();
+		QByteArray rawData = proc.readAllStandardOutput();
+		QString output(rawData);
+		
+		//qDebug() << "VideoSenderThread::processBlock: "<<cmd<<": Executing shell command: "<<shellCommand;
+			
+		/// TODO: parse output, extract value of 'colorCmd' and return via sendReply
+	}
+	else
 	if(cmd == Video_SetFPS)
 	{
 		int fps = map["fps"].toInt();
@@ -480,6 +585,13 @@ void VideoSenderThread::processBlock()
 		qDebug() << "VideoSenderThread::processBlock: "<<cmd<<": Setting fps:"<<fps;
 		
 		m_sender->setTransmitFps(fps);
+	}
+	else
+	if(cmd == Video_GetFPS)
+	{
+		qDebug() << "VideoSenderThread::processBlock: "<<cmd<<": Getting fps:"<<fps;
+		
+		sendReply(QVariantList() << "cmd" << cmd << "value" << m_sender->transmitFps());
 	}
 	else
 	if(cmd == Video_SetSize)
