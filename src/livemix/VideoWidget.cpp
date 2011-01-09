@@ -10,7 +10,7 @@
 #include <QMessageBox>
 
 VideoWidget::VideoWidget(QWidget *parent)
-	: QGLWidget(parent)
+	: QWidget(parent)
 	, m_thread(0)
 	, m_frameCount(0)
 	, m_opacity(1)

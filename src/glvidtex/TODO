@@ -51,6 +51,16 @@ TODO:
 		- Changing scenes doesnt always work in player - I'd say 1/10th of the timer, it stays black
 		- If player errors out during connect, button stays grayed out till close and re-open dialog
 		
+		- Player cant crossfade between two scenes that each have a videoinput drawable on them
+			- E.g. if only one of the two scenes in the crossfade have a videoinput drawable, crossfade executes fine
+			- But if both scenes have a vidinput on them, then the eventloop appears to get overwhelmed (or something is)
+			  that causes all other events (including the crossfade timer events) to be ignored
+			  
+		- Director: Length of videos from QtVideoSource aren't automatically detected for use in playlists
+		- Director: QtVidSrc videos play only a few seconds in director preview
+		- Director: QtVidSrc videos are behind the player - need to sync
+		- Player: QtVidSrc videos should fade out volume when cross-fading to a different video in the playlist
+		
 	NEEDED FEATURES:
 		- Need a way to enable/disable encoding from the director
 		- Need to set the AR of the encoder from director

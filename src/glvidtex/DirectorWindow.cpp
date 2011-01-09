@@ -166,7 +166,7 @@ void DirectorWindow::setupUI()
 {
 // 	m_graphicsScene = new QGraphicsScene();
 // 	ui->graphicsView->setScene(m_graphicsScene);
-	ui->graphicsView->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
+	//ui->graphicsView->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
 	ui->graphicsView->setBackgroundBrush(Qt::black);
 	ui->graphicsView->setAutoResize(true);
 	//m_graphicsScene->setSceneRect(QRectF(0,0,1000.,750.));
@@ -1050,6 +1050,10 @@ void DirectorWindow::loadVideoInputList(int idx)
 					
 					VideoWidget *vid = new VideoWidget();
 					vid->setVideoSource(rx);
+					
+					rx->setFPS(5);
+					vid->setFps(5);
+					vid->setRenderFps(true);
 					
 					vid->setProperty("-vid-con-string",con);
 		
