@@ -107,6 +107,8 @@ protected slots:
 	
 protected:
 	void processBlock();
+	void sendMap(QVariantMap map);
+	void sendReply(QVariantList reply);
 
 private:
 	int m_socketDescriptor;

@@ -6,6 +6,7 @@
 
 #include <QNetworkInterface>
 #include <QTime>
+#include <QProcess>
 
 VideoSender::VideoSender(QObject *parent)
 	: QTcpServer(parent)
@@ -564,7 +565,7 @@ void VideoSenderThread::processBlock()
 		
 		QString program = "v4lctl";
 		QStringList args = QStringList() << "-c" << device << "list";
-		QProcess proc.
+		QProcess proc;
 		proc.start(program, args);
 		proc.waitForFinished();
 		QByteArray rawData = proc.readAllStandardOutput();
@@ -589,9 +590,10 @@ void VideoSenderThread::processBlock()
 	else
 	if(cmd == Video_GetFPS)
 	{
+		int fps = m_sender->transmitFps();
 		qDebug() << "VideoSenderThread::processBlock: "<<cmd<<": Getting fps:"<<fps;
 		
-		sendReply(QVariantList() << "cmd" << cmd << "value" << m_sender->transmitFps());
+		sendReply(QVariantList() << "cmd" << cmd << "value" << fps);
 	}
 	else
 	if(cmd == Video_SetSize)
