@@ -4,6 +4,8 @@
 #include "GLWidget.h"
 #include "GLDrawables.h"
 
+#include "GLSpinnerDrawable.h"
+
 #include "GLPlayerServer.h"
 // #include "GLPlayerClient.h"
 #include "GLPlayerCommandNames.h"
@@ -137,6 +139,7 @@ SlideShowWindow::SlideShowWindow(QWidget *parent)
 	
 	READ_POINT("window-size","640x480");
 	QPoint windowSize = point;
+	windowSize = QPoint(3120,1050);
 	
 	if(verbose)
 		qDebug() << "SlideShowWindow: pos:"<<windowPos<<", size:"<<windowSize;
@@ -204,12 +207,24 @@ SlideShowWindow::SlideShowWindow(QWidget *parent)
 			else
 				m_glWidget->setAlphaMask(alphamask);
 		}
+		
+// 		GLWidgetSubview *sub1 = m_glWidget->defaultSubview();
+// 		sub1->setRight(1680./3120.);
+// 		
+// 		GLWidgetSubview *sub2 = new GLWidgetSubview();
+// 		sub2->setLeft(sub1->right());
+// 		sub2->setBrightness(75);
+// 		sub2->setFlipVertical(true);
+// 		sub2->setFlipHorizontal(true);
+// 		
+// 		m_glWidget->addSubview(sub2);
 	}
 	
 	// Canvas Size
 	READ_POINT("canvas-size","1000x750");
 	QSizeF canvasSize((qreal)point.x(),(qreal)point.y());
-	canvasSize = QSizeF(2000,750);
+	//canvasSize = QSizeF(2000,750);
+	canvasSize = QSizeF(3120,1050);
 	if(m_useGLWidget)
 	{
 		m_glWidget->setCanvasSize(canvasSize);
@@ -314,6 +329,9 @@ SlideShowWindow::SlideShowWindow(QWidget *parent)
 		if(m_glWidget)
 			m_glWidget->setFboEnabled(false);
 		
+		int spinSize = 28;
+			
+			
 		//QStringList list = dir.entryList();
 		//foreach(QString file, list)
 		foreach(QFileInfo info, list)
@@ -324,6 +342,8 @@ SlideShowWindow::SlideShowWindow(QWidget *parent)
 			//QString ext = info.suffix().toLower();
 			//if(ext != "jpg" || ext != "png" || ext != "jpeg")
 			//	continue;
+			
+			bool flipText = true;
 			
 			QString fullFile = info.absoluteFilePath();
 			qDebug() << "SlideShowWindow: Loading "<<fullFile;//<<" (ext:"<<ext<<")";
@@ -343,17 +363,28 @@ SlideShowWindow::SlideShowWindow(QWidget *parent)
 						}
 		
 						comment = exifData["Exif.Image.ImageDescription"].toString().c_str();
+						comment = GLTextDrawable::htmlToPlainText(comment);
 						
-						if(comment.isEmpty())
+						if(comment.trimmed().isEmpty())
 						{
 							Exiv2::IptcData& iptcData = exiv->iptcData();
 							comment = iptcData["Iptc.Application2.Caption"].toString().c_str();
+							comment = GLTextDrawable::htmlToPlainText(comment);
 							
 							if (exifData.empty()) 
 							{
 								qDebug() << fullFile << ": No IPTC data found in the file";
 							}
+							else
+							{
+								qDebug() << "SlideShowWindow: IPTC Caption:"<<comment;
+							}
 						}
+						else
+						{
+							qDebug() << "SlideShowWindow: EXIF Caption:"<<comment;
+						}
+
 							
 						
 					}
@@ -368,7 +399,7 @@ SlideShowWindow::SlideShowWindow(QWidget *parent)
 				
 				if(canvasSize.width() > 1000)
 				{
-					image->setRect(QRectF(QPointF(0,0),QSize(1000,canvasSize.height())));
+					image->setRect(QRectF(QPointF(0,0),QSize(1680,canvasSize.height())));
 				}
 				else
 				{
@@ -399,12 +430,18 @@ SlideShowWindow::SlideShowWindow(QWidget *parent)
 					//qDebug() << "File # text size:"<<size<<" @ width:"<<w<<", html:"<<html;
 					if(canvasSize.width() > 1000)
 					{
-						QSize size = text->findNaturalSize(1000);
+						QSize size = text->findNaturalSize(1400);
 						
 						QRectF targetRect = QRectF(0, 0, size.width(), size.height());
-						targetRect.moveCenter(QRectF(1000,0,canvasSize.width()-1000,canvasSize.height()).center());
+						targetRect.moveCenter(QRectF(1680,0,1440,900).center());
 		
 						text->setRect(targetRect);
+						
+						if(flipText)
+						{
+							text->setFlipVertical(true);
+							text->setFlipHorizontal(true);
+						}
 					}
 					else
 					{
@@ -423,15 +460,15 @@ SlideShowWindow::SlideShowWindow(QWidget *parent)
 				
 				QFileInfo fileInfo(fullFile);
 				QString fileName = fileInfo.baseName().toLower();
-				if(fileName.startsWith("dsc_"))
-					fileName = fileName.replace("dsc_", "");
+				fileName = fileName.replace(QRegExp("\\d{2,6}-\\{\\d\\}"),"");
+				fileName = fileName.replace(QRegExp("(dsc_|sdc)"), "");
 				
 				if(!fileName.isEmpty())
 				{
 					GLTextDrawable *text = new GLTextDrawable();
 					//QString html = QString("<span style='font-color:white;font-size:20px'>%1</font>").arg(fileName);
 					
-					QString ptSize = "16";
+					QString ptSize = "24";
 					QString html = 
 						"<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd\">"
 						"<html><head><meta name=\"qrichtext\" content=\"1\"/>"
@@ -449,9 +486,40 @@ SlideShowWindow::SlideShowWindow(QWidget *parent)
 					int w = (int)canvasSize.width();
 					QSize size = text->findNaturalSize(w);
 					//qDebug() << "File # text size:"<<size<<" @ width:"<<w<<", html:"<<html;
-					double x = canvasSize.width() - size.width() - 2;
-					double y = 2;
-					text->setRect(QRectF(QPointF(x,y),size));
+					
+					if(flipText)
+					{
+						if(canvasSize.width() > 1000)
+						{
+							int spinSpace = spinSize + 10;
+							
+							size = text->findNaturalSize(1440);
+							
+							//QRectF targetRect = QRectF(0, 0, size.width(), size.height());
+							//targetRect.moveCenter(QRectF(1680,0,1440,900).center());
+							double x = 1680 + 10 + spinSpace;
+							double y =  900 - 10 - size.height();
+							QRectF rect(QPointF(x,y),size);
+							//qDebug() << "Rect: "<<rect;
+							text->setRect(rect);
+							
+							text->setFlipVertical(true);
+							text->setFlipHorizontal(true);
+						}
+						else
+						{
+							// TODO flip here too
+							double x = canvasSize.width() - size.width() - 2;
+							double y = 2;
+							text->setRect(QRectF(QPointF(x,y),size));
+						}
+					}
+					else
+					{
+						double x = canvasSize.width() - size.width() - 2;
+						double y = 2;
+						text->setRect(QRectF(QPointF(x,y),size));
+					}
 					text->setZIndex(5.);
 					scene->addDrawable(text);
 				}
@@ -470,10 +538,30 @@ SlideShowWindow::SlideShowWindow(QWidget *parent)
 			qDebug() << "SlideShowWindow: Unable to find any images in folder:"<<dirName;
 		else
 			setSceneNum(0);
+		
+		int slideTime = 30 * 1000;
+		
+		if(m_glWidget)
+		{
+			GLSpinnerDrawable *spinner = new GLSpinnerDrawable();;
+			spinner->setCycleDuration(slideTime);
+			QRectF spinnerRect(1680 + spinSize - 15, 900 - spinSize - 10, spinSize, spinSize);
+			spinner->setRect(spinnerRect);
+			spinner->setFlipVertical(true);
+			spinner->setFlipHorizontal(true);
+			spinner->setZIndex(10.);
+			spinner->start();
+			//scene->addDrawable(spinner);
+			m_glWidget->addDrawable(spinner);
 			
-		connect(&m_sceneTimer, SIGNAL(timeout()), this, SLOT(timerTick()));
-		m_sceneTimer.setInterval(10000);
-		m_sceneTimer.start();
+			connect(spinner, SIGNAL(cycleFinished()), this, SLOT(timerTick()));
+		}
+		else
+		{
+			connect(&m_sceneTimer, SIGNAL(timeout()), this, SLOT(timerTick()));
+			m_sceneTimer.setInterval(slideTime);
+			m_sceneTimer.start();
+		}
 	}
 	else
 	{

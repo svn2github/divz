@@ -1530,6 +1530,8 @@ void GLWidget::resizeGL(int width, int height)
 		)
 	  )
 	{
+		makeCurrentIfNeeded();
+		
 		if(m_fbo)
 			delete m_fbo;
 			
