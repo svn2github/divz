@@ -350,6 +350,7 @@ SlideShowWindow::SlideShowWindow(QWidget *parent)
 			GLScene *scene = new GLScene();
 			{
 				QString comment = "";
+				QString datetime = "";
 				try
 				{
 					Exiv2::Image::AutoPtr exiv = Exiv2::ImageFactory::open(fullFile.toStdString()); 
@@ -365,6 +366,8 @@ SlideShowWindow::SlideShowWindow(QWidget *parent)
 						comment = exifData["Exif.Image.ImageDescription"].toString().c_str();
 						comment = GLTextDrawable::htmlToPlainText(comment);
 						
+						datetime = exifData["Exif.Photo.DateTimeOriginal"].toString().c_str();
+			
 						if(comment.trimmed().isEmpty())
 						{
 							Exiv2::IptcData& iptcData = exiv->iptcData();
@@ -384,8 +387,7 @@ SlideShowWindow::SlideShowWindow(QWidget *parent)
 						{
 							qDebug() << "SlideShowWindow: EXIF Caption:"<<comment;
 						}
-
-							
+						
 						
 					}
 				}
@@ -410,6 +412,8 @@ SlideShowWindow::SlideShowWindow(QWidget *parent)
 				
 				if(!comment.isEmpty())
 				{
+					comment = comment.replace(QRegExp("^\\s*\"([^\"]+)\"\\s*-\\s*"), "<center>\"\\1\"</center><br>");
+					 
 					GLTextDrawable *text = new GLTextDrawable();
 					QString ptSize = "36";
 					QString html = 
@@ -519,6 +523,72 @@ SlideShowWindow::SlideShowWindow(QWidget *parent)
 						double x = canvasSize.width() - size.width() - 2;
 						double y = 2;
 						text->setRect(QRectF(QPointF(x,y),size));
+					}
+					text->setZIndex(5.);
+					scene->addDrawable(text);
+				}
+				
+				if(!datetime.isEmpty())
+				{
+					GLTextDrawable *text = new GLTextDrawable();
+					//QString html = QString("<span style='font-color:white;font-size:20px'>%1</font>").arg(fileName);
+					
+					// 2009:10:25 12:13:34
+					QDateTime parsedDate = QDateTime::fromString(datetime, "yyyy:MM:dd hh:mm:ss");
+					QString dateString = "Photographed " + parsedDate.toString("dddd, MMMM d, yyyy");
+					
+					QString ptSize = "24";
+					QString html = 
+						"<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd\">"
+						"<html><head><meta name=\"qrichtext\" content=\"1\"/>"
+						"<style type=\"text/css\">p, li { white-space: pre-wrap; }</style>"
+						"</head>"
+						"<body style=\"font-family:'Sans Serif'; font-size:" + ptSize +"pt; font-weight:600; font-style:normal;\">"
+						"<table style=\"-qt-table-type: root; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px;\">"
+						"<tr><td style=\"border: none;\">"
+						"<p style=\"margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">"
+						"<span style=\"font-size:" + ptSize + "pt; font-weight:600; color:#ffffff;\">"
+						+ dateString +
+						"</span></p></td></tr></table></body></html>";
+						
+					text->setText(html);
+					int w = (int)canvasSize.width();
+					QSize size = text->findNaturalSize(w);
+					//qDebug() << "File # text size:"<<size<<" @ width:"<<w<<", html:"<<html;
+					
+					if(flipText)
+					{
+						if(canvasSize.width() > 1000)
+						{
+							//int spinSpace = spinSize + 10;
+							
+							size = text->findNaturalSize(1440);
+							
+							//QRectF targetRect = QRectF(0, 0, size.width(), size.height());
+							//targetRect.moveCenter(QRectF(1680,0,1440,900).center());
+							double x = 1680 + (1440 - size.width()) / 2;
+							double y =  10; //900 - 10 - size.height();
+							QRectF rect(QPointF(x,y),size);
+							//qDebug() << "Rect: "<<rect;
+							text->setRect(rect);
+							
+							text->setFlipVertical(true);
+							text->setFlipHorizontal(true);
+						}
+						else
+						{
+							// TODO 
+// 							double x = canvasSize.width() - size.width() - 2;
+// 							double y = 2;
+// 							text->setRect(QRectF(QPointF(x,y),size));
+						}
+					}
+					else
+					{
+						// TODO
+// 						double x = canvasSize.width() - size.width() - 2;
+// 						double y = 2;
+// 						text->setRect(QRectF(QPointF(x,y),size));
 					}
 					text->setZIndex(5.);
 					scene->addDrawable(text);
