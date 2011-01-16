@@ -12,7 +12,9 @@ SharedMemorySender::SharedMemorySender(QString key, QObject *parent)
 	QImage testImage(FRAME_WIDTH,
 			 FRAME_HEIGHT,
 			 FRAME_FORMAT);
-	m_memorySize = testImage.byteCount();	
+	//testImage.fill(Qt::black);
+	m_memorySize = testImage.byteCount();
+	//qDebug() << "SharedMemorySender::ctor: size:"<<testImage.size()<<", bytes:"<<m_memorySize<<", format:"<<testImage.format();
 	
 // 	m_timeAccum = 0;
 // 	m_frameCount = 0;
@@ -147,12 +149,16 @@ void SharedMemorySender::processFrame()
 	if(image.format() != FRAME_FORMAT)
 		image = image.convertToFormat(FRAME_FORMAT);
 		
+	//image.save("/mnt/phc/Video/tests/sent-frame.jpg");
+		
 	int size = image.byteCount();
 	const uchar *from = (const uchar*)image.bits();
 	
 	m_sharedMemory.lock();
 	uchar *to = (uchar*)m_sharedMemory.data();
 	memset(to, 0, m_sharedMemory.size());
+	
+	//qDebug() << "SharedMemorySender::processFrame: ShMem size: "<<m_sharedMemory.size()<<", image bytes:"<<size<<", size:"<<image.size()<<", format:"<<image.format();
 	memcpy(to, from, qMin(m_sharedMemory.size(), size));
 	m_sharedMemory.unlock();
 }

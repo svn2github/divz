@@ -337,7 +337,7 @@ PlayerWindow::PlayerWindow(QWidget *parent)
 
 	if(m_glWidget)
 	{
-		m_shMemSend = new SharedMemorySender("PlayerWindow",this);
+		m_shMemSend = new SharedMemorySender("PlayerWindow-2",this);
 		m_shMemSend->setVideoSource(m_glWidget->outputStream());
 	}
 	else

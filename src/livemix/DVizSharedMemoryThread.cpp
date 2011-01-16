@@ -11,7 +11,7 @@
 #include "DVizSharedMemoryThread.h"
 
 // For defenition of FRAME_*
-#include "../SharedMemoryImageWriter.h"
+#include "../glvidtex/SharedMemorySender.h"
 
 QMap<QString,DVizSharedMemoryThread *> DVizSharedMemoryThread::m_threadMap;
 QMutex DVizSharedMemoryThread::threadCacheMutex;
@@ -51,8 +51,9 @@ DVizSharedMemoryThread * DVizSharedMemoryThread::threadForKey(const QString& key
 	{
 		DVizSharedMemoryThread *v = new DVizSharedMemoryThread(key);
 		m_threadMap[key] = v;
-		qDebug() << "DVizSharedMemoryThread::threadForCamera(): "<<v<<": "<<key<<": [CACHE MISS] -";
+		qDebug() << "DVizSharedMemoryThread::threadForKey(): "<<v<<": "<<key<<": [CACHE MISS] -";
 		v->start();
+		v->moveToThread(v);
 
 		return v;
 	}
@@ -89,10 +90,14 @@ void DVizSharedMemoryThread::run()
 			m_sharedMemory.lock();
 			const uchar *from = (uchar*)m_sharedMemory.data();
 			memcpy(to, from, qMin(m_sharedMemory.size(), image.byteCount()));
+			//qDebug() << "DVizSharedMemoryThread::run: ShMem size: "<<m_sharedMemory.size()<<", image size:"<<image.byteCount();
 		
 			m_sharedMemory.unlock();
 			
-			enqueue(VideoFrame(image.convertToFormat(QImage::Format_RGB555),1000/m_fps));
+			//image.save("/mnt/phc/Video/tests/frame.jpg");
+			
+			//enqueue(new VideoFrame(image.convertToFormat(QImage::Format_RGB555),1000/m_fps));
+			enqueue(new VideoFrame(image,1000/m_fps));
 		}
 		
 		

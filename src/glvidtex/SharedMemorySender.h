@@ -6,8 +6,8 @@
 #include "../livemix/VideoFrame.h"
 #include "VideoConsumer.h"
 
-#define FRAME_WIDTH  640
-#define FRAME_HEIGHT 480
+#define FRAME_WIDTH  1024
+#define FRAME_HEIGHT 768
 #define FRAME_FORMAT QImage::Format_ARGB32
 
 class SharedMemorySender : public QObject, 
@@ -15,7 +15,7 @@ class SharedMemorySender : public QObject,
 {
 	Q_OBJECT
 public:
-	SharedMemorySender(QString key = "SharedMemorySender", QObject *parent=0);
+	SharedMemorySender(QString key = "SharedMemorySender-1.0", QObject *parent=0);
 	~SharedMemorySender();
 	
 	void setVideoSource(VideoSource *source);
