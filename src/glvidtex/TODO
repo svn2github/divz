@@ -62,6 +62,8 @@ TODO:
 		- Player: QtVidSrc videos should fade out volume when cross-fading to a different video in the playlist
 		
 	NEEDED FEATURES:
+		- Sharpening Filter (GLSL or image based, scaled up)
+		
 		- Need a way to enable/disable encoding from the director
 		- Need to set the AR of the encoder from director
 		- Make an "option" to reconfig the item control area as mini windows...?
@@ -77,7 +79,8 @@ TODO:
 				- Flip
 				- BHCS
 				- Crop
-		- Need to add controls to the VideoSender to remotly control transmission size/fps
+		- [STARTED] Need to add controls to the VideoSender to remotly control transmission size/fps
+			- The code is there to control size, but possibly need UI for it...maybe...
 		- Either (a) integrate with DViz songs.db and Bible functionality or (b) integrate VideoSender with DViz
 			- Add a GroupType and SceneType to GLSceneGroup and GLScene, respectively.
 				 - SceneTypes are a SceneTypeID, and the SceneTypeFactory gives a SceneTypeEngine which:

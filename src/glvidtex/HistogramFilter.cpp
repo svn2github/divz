@@ -53,7 +53,12 @@ void HistogramFilter::processFrame()
 	QImage image = frameImage();
 	QImage histo = makeHistogram(image);
 	
-	enqueue(new VideoFrame(histo,m_frame->holdTime()));
+	VideoFrame *frame = new VideoFrame(histo,m_frame->holdTime());
+	
+	if(m_includeOriginalImage)
+		frame->setCaptureTime(m_frame->captureTime());
+	
+	enqueue(frame);
 }
 	
 void HistogramFilter::drawBarRect(QPainter *p, int min, int max, int avg, int startX, int startY, int w, int h)

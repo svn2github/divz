@@ -9,6 +9,8 @@
 
 #define VIDEO_HOST "192.168.0.17"
 
+#define VIDEO_FPS 5
+
 VideoInputColorBalancer::VideoInputColorBalancer(QWidget *parent)
 	: QWidget(parent)
 	, m_histoMaster(new HistogramFilter())
@@ -19,6 +21,8 @@ VideoInputColorBalancer::VideoInputColorBalancer(QWidget *parent)
 	, m_hueDecay(0)
 	, m_satDecay(0)
 	, m_valDecay(0)
+	, m_hasResetMaster(false)
+	, m_hasResetSlave(false)
 {
 	connect(m_histoMaster, SIGNAL(hsvStatsUpdated(int , int , int , 
 						      int , int , int ,
@@ -27,7 +31,7 @@ VideoInputColorBalancer::VideoInputColorBalancer(QWidget *parent)
 		         this,   SLOT(hsvStatsUpdated(int , int , int , 
 						      int , int , int ,
 						      int , int , int )));
-
+	
 	connect(m_histoSlave,  SIGNAL(hsvStatsUpdated(int , int , int , 
 						      int , int , int ,
 						      int , int , int )),
@@ -35,7 +39,7 @@ VideoInputColorBalancer::VideoInputColorBalancer(QWidget *parent)
 		         this,   SLOT(hsvStatsUpdated(int , int , int , 
 						      int , int , int ,
 						      int , int , int )));
-						      
+	
 	
 	for(int i=0;i<9;i++)
 		m_slaveStats[i]=0;
@@ -80,16 +84,24 @@ VideoInputColorBalancer::VideoInputColorBalancer(QWidget *parent)
 	VideoWidget *vidMaster = new VideoWidget();
 	m_sourceMaster = VideoReceiver::getReceiver(VIDEO_HOST,7756);
 	
-	connect(m_sourceMaster, SIGNAL(connected()), this, SLOT(rxConnected()));
-	if(m_sourceMaster->isConnected())
-		rxConnected(m_sourceMaster);
+	m_sourceMaster->setFPS(VIDEO_FPS);
+	vidMaster->setFps(VIDEO_FPS);
+	vidMaster->setRenderFps(true);
+	
+// 	connect(m_sourceMaster, SIGNAL(connected()), this, SLOT(rxConnected()));
+// 	if(m_sourceMaster->isConnected())
+// 		rxConnected(m_sourceMaster);
 	
 	VideoWidget *vidSlave = new VideoWidget();
 	m_sourceSlave = VideoReceiver::getReceiver(VIDEO_HOST,7755);
 	
-	connect(m_sourceSlave, SIGNAL(connected()), this, SLOT(rxConnected()));
-	if(m_sourceSlave->isConnected())
-		rxConnected(m_sourceSlave);
+	m_sourceSlave->setFPS(VIDEO_FPS);
+	vidSlave->setFps(VIDEO_FPS);
+	vidSlave->setRenderFps(true);
+	
+// 	connect(m_sourceSlave, SIGNAL(connected()), this, SLOT(rxConnected()));
+// 	if(m_sourceSlave->isConnected())
+// 		rxConnected(m_sourceSlave);
 	
 	m_histoMaster->setVideoSource(m_sourceMaster);
 	vidMaster->setVideoSource(m_histoMaster);
@@ -315,6 +327,19 @@ void VideoInputColorBalancer::hsvStatsUpdated(int hMin, int hMax, int hAvg,
 					      int sMin, int sMax, int sAvg,
 					      int vMin, int vMax, int vAvg)
 {
+	//qDebug() << "hAvg:"<<hAvg<<", m_hasResetMaster:"<<m_hasResetMaster<<",  m_sourceMaster:"<<m_sourceMaster<<", isConnected:"<<m_sourceMaster->isConnected();
+	if(hAvg > 0 && !m_hasResetMaster && m_sourceMaster && m_sourceMaster->isConnected())
+	{
+		m_hasResetMaster = true;
+		rxConnected(m_sourceMaster);
+	}
+	
+	if(hAvg > 0 && !m_hasResetSlave && m_sourceSlave && m_sourceSlave->isConnected())
+	{
+		m_hasResetSlave = true;
+		rxConnected(m_sourceSlave);
+	}
+	
 	HistogramFilter *filter = dynamic_cast<HistogramFilter*>(sender());
 	
 	if(filter == m_histoMaster)

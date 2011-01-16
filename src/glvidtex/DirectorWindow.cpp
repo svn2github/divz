@@ -152,6 +152,7 @@ void DirectorWindow::showPlayerLiveMonitor(PlayerConnection *con)
 		qDebug() << "DirectorWindow::showPlayerLiveMonitor: Connected to "<<host<<":"<<port<<", creating widget...";
 		
 		VideoWidget *vid = new VideoWidget();
+		//qDebug() << "DirectorWindow::showPlayerLiveMonitor: Created VideoWidget:"<<vid;
 		vid->setVideoSource(rx);
 		
 		vid->setWindowTitle(QString("Player '%1' - Live Player Monitor").arg(con->name()));

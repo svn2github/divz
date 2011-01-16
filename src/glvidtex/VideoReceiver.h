@@ -66,14 +66,30 @@ public slots:
 	void setContrast(int);
 	void setBrightness(int);
 	
+	void queryHue();
+	void querySaturation();
+	void queryContrast();
+	void queryBrightness();
+	
 	void setFPS(int);
 	void setSize(int, int);
+	
+	void queryFPS();
+	void querySize();
 	
 signals:
 	void socketDisconnected();
 	void socketError(QAbstractSocket::SocketError);
 	void socketConnected();
 	void connected();
+	
+	void currentHue(int);
+	void currentSaturation(int);
+	void currentContrast(int);
+	void currentBrightness(int);
+	
+	void currentFPS(int);
+	void currentSize(int, int);
 	
 private slots:
 	void dataReady();

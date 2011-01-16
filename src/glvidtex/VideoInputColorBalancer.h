@@ -65,6 +65,9 @@ private:
 	QSpinBox *m_frameAccumNumBox;
 	
 	int m_autoAdjustThreshold;
+	
+	bool m_hasResetMaster;
+	bool m_hasResetSlave;
 };
 
 #endif

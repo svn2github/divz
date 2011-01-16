@@ -63,7 +63,12 @@ void VideoDifferenceFilter::processFrame()
 	QImage image = frameImage();	
 	QImage histo = createDifferenceImage(image);
 	
-	enqueue(new VideoFrame(histo,m_frame->holdTime()));
+	VideoFrame *frame = new VideoFrame(histo,m_frame->holdTime());
+	
+	if(m_includeOriginalImage)
+		frame->setCaptureTime(m_frame->captureTime());
+	
+	enqueue(frame);
 }
 
 // QImage IplImageToQImage(IplImage *iplImg)

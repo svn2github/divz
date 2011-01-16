@@ -297,6 +297,8 @@ void VideoWidget::discardOldThread()
 void VideoWidget::callUpdate()
 {
 	update();
+	//repaint();
+	//qDebug() << "VideoWidget::callUpdate()";
 }
 
 
@@ -517,6 +519,8 @@ void VideoWidget::frameReady()
 
 	//qDebug() << "VideoWidget::frameReady: frame size:"<<m_frame->size()<<", orig source rect size:" <<m_origSourceRect.size(); 
 	//QTimer::singleShot(0, this, SLOT(updateTimer()));
+	
+	repaint();
 }
 
 void VideoWidget::updateTimer()
@@ -530,7 +534,7 @@ void VideoWidget::updateTimer()
 
 	if(m_paintTimer.interval() != fps)
 	{
-		//qDebug() << "VideoWidget::updateTimer: new hold time: "<<fps;
+		qDebug() << "VideoWidget::updateTimer: new hold time: "<<fps;
 
 		m_paintTimer.setInterval(fps);
 	}
@@ -541,6 +545,7 @@ void VideoWidget::setFps(int fps)
 	m_forceFps = fps;
 	if(m_forceFps > 0)
 	{
+		qDebug() << "VideoWidget::setFps: New m_forceFps:"<<m_forceFps;
 		m_paintTimer.setInterval(1000/m_forceFps);
 
 	}

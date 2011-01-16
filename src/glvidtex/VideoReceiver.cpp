@@ -283,6 +283,43 @@ void VideoReceiver::setSize(int w, int h)
 		<< "h"   << h);
 }
 
+
+void VideoReceiver::queryHue()
+{
+	sendCommand(QVariantList() 
+		<< "cmd"   << Video_GetHue);
+}
+
+void VideoReceiver::querySaturation()
+{
+	sendCommand(QVariantList() 
+		<< "cmd"   << Video_GetSaturation);
+}
+
+void VideoReceiver::queryContrast()
+{
+	sendCommand(QVariantList() 
+		<< "cmd"   << Video_GetContrast);
+}
+
+void VideoReceiver::queryBrightness()
+{
+	sendCommand(QVariantList() 
+		<< "cmd"   << Video_GetBright);
+}
+
+void VideoReceiver::queryFPS()
+{
+	sendCommand(QVariantList() 
+		<< "cmd" << Video_GetFPS);
+}
+
+void VideoReceiver::querySize()
+{
+	sendCommand(QVariantList() 
+		<< "cmd" << Video_GetSize);
+}
+
 void VideoReceiver::dataReady()
 {
 	if(!m_connected)
@@ -360,131 +397,148 @@ void VideoReceiver::processBlock()
 					&holdTime,
 					&origX,
 					&origY);
-				
-			//qDebug() << "raw header scan: byteTmp:"<<byteTmp<<", size:"<<imgX<<"x"<<imgY;
-			
-			//qDebug() << "VideoReceiver::processBlock: raw header data:"<<headerData;
-			if(byteTmp > 1024*1024*1024 ||
-				imgX > 1900 || imgX < 0 ||
-				imgY > 1900 || imgY < 0)
-			{
-				qDebug() << "VideoReceiver::processBlock: Frame too large (bytes > 1GB or invalid W/H)";
-				m_dataBlock.clear();
-				return;
-			}
-			 
-			if(byteTmp != m_byteCount)
-			{
-				m_byteCount = byteTmp;
-				frameSize = m_byteCount + HEADER_SIZE;
-				//qDebug() << "VideoReceiver::processBlock: Frame size changed: "<<frameSize;
-			}
-			//qDebug() << "VideoReceiver::processBlock: header data:"<<headerData;
-			//QImage frame = QImage::fromData(block);
-		
-			//QImage frame = QImage::fromData(block);
-			//QImage frame((const uchar*)block.constData(), imgX, imgY, (QImage::Format)formatId); 
-			if(pixelFormatId == 0)
-				pixelFormatId = (int)QVideoFrame::Format_RGB32;
-				
-			//VideoFrame frame;
-			VideoFrame *frame = new VideoFrame();
-			#ifdef DEBUG_VIDEOFRAME_POINTERS
-			qDebug() << "VideoReceiver::processBlock(): Created new frame:"<<frame;
-			#endif
-			
-			frame->setHoldTime    (holdTime);
-			frame->setCaptureTime (timestampToQTime(timestamp));
-			frame->setPixelFormat ((QVideoFrame::PixelFormat)pixelFormatId);
-			frame->setBufferType  ((VideoFrame::BufferType)bufferType);
-			
-			//qDebug() << "final pixelformat:"<<pixelFormatId;
-			
-			
-			if(frame->bufferType() == VideoFrame::BUFFER_IMAGE)
-			{
-				frame->setImage(QImage((const uchar*)block.constData(), imgX, imgY, (QImage::Format)imageFormatId));
-				frame->setIsRaw(false);
-				
-				if(origX != imgX || origY != imgY)
-				{
-					QTime x;
-					x.start();
-					frame->setImage(frame->image().scaled(origX,origY));
-					//qDebug() << "VideoReceiver::processBlock: Upscaled frame from "<<imgX<<"x"<<imgY<<" to "<<origX<<"x"<<imgY<<" in "<<x.elapsed()<<"ms";
 					
-				} 
+			if(imgX < 0 && imgY < 0 && holdTime < 0)
+			{
+				// data frame from VideoSender in response to a query request (Video_Get* command)
+				
+				if(byteTmp != m_byteCount)
+				{
+					m_byteCount = byteTmp;
+					frameSize = m_byteCount + HEADER_SIZE;
+					//qDebug() << "VideoReceiver::processBlock: Frame size changed: "<<frameSize;
+				}
+				
+				
+				/// TODO: The parsing code here wont work for data replies. Need to rework to parse header, get byte count, THEN get data packet from header
+			}
+			else
+			{
+				//qDebug() << "raw header scan: byteTmp:"<<byteTmp<<", size:"<<imgX<<"x"<<imgY;
+				
+				//qDebug() << "VideoReceiver::processBlock: raw header data:"<<headerData;
+				if(byteTmp > 1024*1024*1024 ||
+					imgX > 1900 || imgX < 0 ||
+					imgY > 1900 || imgY < 0)
+				{
+					qDebug() << "VideoReceiver::processBlock: Frame too large (bytes > 1GB or invalid W/H)";
+					m_dataBlock.clear();
+					return;
+				}
+				
+				if(byteTmp != m_byteCount)
+				{
+					m_byteCount = byteTmp;
+					frameSize = m_byteCount + HEADER_SIZE;
+					//qDebug() << "VideoReceiver::processBlock: Frame size changed: "<<frameSize;
+				}
+				//qDebug() << "VideoReceiver::processBlock: header data:"<<headerData;
+				//QImage frame = QImage::fromData(block);
+			
+				//QImage frame = QImage::fromData(block);
+				//QImage frame((const uchar*)block.constData(), imgX, imgY, (QImage::Format)formatId); 
+				if(pixelFormatId == 0)
+					pixelFormatId = (int)QVideoFrame::Format_RGB32;
+					
+				//VideoFrame frame;
+				VideoFrame *frame = new VideoFrame();
+				#ifdef DEBUG_VIDEOFRAME_POINTERS
+				qDebug() << "VideoReceiver::processBlock(): Created new frame:"<<frame;
+				#endif
+				
+				frame->setHoldTime    (holdTime);
+				frame->setCaptureTime (timestampToQTime(timestamp));
+				frame->setPixelFormat ((QVideoFrame::PixelFormat)pixelFormatId);
+				frame->setBufferType  ((VideoFrame::BufferType)bufferType);
+				
+				//qDebug() << "final pixelformat:"<<pixelFormatId;
+				
+				
+				if(frame->bufferType() == VideoFrame::BUFFER_IMAGE)
+				{
+					frame->setImage(QImage((const uchar*)block.constData(), imgX, imgY, (QImage::Format)imageFormatId));
+					frame->setIsRaw(false);
+					
+					if(origX != imgX || origY != imgY)
+					{
+						QTime x;
+						x.start();
+						frame->setImage(frame->image().scaled(origX,origY));
+						//qDebug() << "VideoReceiver::processBlock: Upscaled frame from "<<imgX<<"x"<<imgY<<" to "<<origX<<"x"<<imgY<<" in "<<x.elapsed()<<"ms";
+						
+					} 
+					else
+					{
+						frame->setImage(frame->image().copy()); // disconnect from the QByteArray by calling copy() to make an internal copy of the buffer
+					}
+				}
 				else
 				{
-					frame->setImage(frame->image().copy()); // disconnect from the QByteArray by calling copy() to make an internal copy of the buffer
+					//QByteArray array;
+					//qDebug() << "m_byteCount:"<<m_byteCount<<", size:"<<imgX<<"x"<<imgY;
+					uchar *pointer = frame->allocPointer(m_byteCount);
+					memcpy(pointer, (const char*)block.constData(), m_byteCount);
+					//array.append((const char*)block.constData(), m_byteCount);
+					//frame->setByteArray(array);
+					frame->setIsRaw(true);
 				}
+				
+				if(origX != imgX || origY != imgY)
+					frame->setSize(QSize(origX,origY));
+				else
+					frame->setSize(QSize(imgX,imgY));
+	
+				#ifdef DEBUG_VIDEOFRAME_POINTERS
+				qDebug() << "VideoReceiver::processBlock(): Enqueing new frame:"<<frame;
+				#endif
+				
+				enqueue(frame);
+				/*
+				//480,480, QImage::Format_RGB32);
+				
+				if(!frame.isNull())
+				{
+					//qDebug() << "processBlock(): New image received, original size:"<<frame.size()<<", bytes:"<<block.length()<<", format:"<<formatId;
+					
+					if(m_autoResize.width()>0 && m_autoResize.height()>0 && 
+					m_autoResize != frame.size())
+						frame = frame.scaled(m_autoResize);
+				
+					
+					//		qDebug() << "processBlock(): Emitting new image, size:"<<frame.size();
+					emit newImage(frame);
+				}	*/
+				
+				
+				#ifdef MJPEG_TEST
+	// 			QPixmap pix = QPixmap::fromImage(frame);
+	// 			m_label->setPixmap(pix);
+	// 			m_label->resize(pix.width(),pix.height());
+	// 			//qDebug() << "processBlock(): latency: "<<;
+				#endif
+				
+				int msecLatency = msecTo(timestamp);
+				m_latencyAccum += msecLatency;
+				
+				if (!(m_frameCount % 100)) 
+				{
+					QString framesPerSecond;
+					framesPerSecond.setNum(m_frameCount /(m_time.elapsed() / 1000.0), 'f', 2);
+					
+					QString latencyPerFrame;
+					latencyPerFrame.setNum((((double)m_latencyAccum) / ((double)m_frameCount)), 'f', 3);
+					
+					if(m_debugFps && framesPerSecond!="0.00")
+						qDebug() << "VideoReceiver: Receive FPS: " << qPrintable(framesPerSecond) << qPrintable(QString(", Receive Latency: %1 ms").arg(latencyPerFrame));
+			
+					m_time.start();
+					m_frameCount = 0;
+					m_latencyAccum = 0;
+					
+					//lastFrameTime = time.elapsed();
+				}
+				m_frameCount++;
 			}
-			else
-			{
-				//QByteArray array;
-				//qDebug() << "m_byteCount:"<<m_byteCount<<", size:"<<imgX<<"x"<<imgY;
-				uchar *pointer = frame->allocPointer(m_byteCount);
-				memcpy(pointer, (const char*)block.constData(), m_byteCount);
-				//array.append((const char*)block.constData(), m_byteCount);
-				//frame->setByteArray(array);
-				frame->setIsRaw(true);
-			}
-			
-			if(origX != imgX || origY != imgY)
-				frame->setSize(QSize(origX,origY));
-			else
-				frame->setSize(QSize(imgX,imgY));
-
-			#ifdef DEBUG_VIDEOFRAME_POINTERS
-			qDebug() << "VideoReceiver::processBlock(): Enqueing new frame:"<<frame;
-			#endif
-			
-			enqueue(frame);
-			/*
-			//480,480, QImage::Format_RGB32);
-			
-			if(!frame.isNull())
-			{
-				//qDebug() << "processBlock(): New image received, original size:"<<frame.size()<<", bytes:"<<block.length()<<", format:"<<formatId;
-				
-				if(m_autoResize.width()>0 && m_autoResize.height()>0 && 
-				m_autoResize != frame.size())
-					frame = frame.scaled(m_autoResize);
-			
-				
-				//		qDebug() << "processBlock(): Emitting new image, size:"<<frame.size();
-				emit newImage(frame);
-			}	*/
-			
-			
-			#ifdef MJPEG_TEST
-// 			QPixmap pix = QPixmap::fromImage(frame);
-// 			m_label->setPixmap(pix);
-// 			m_label->resize(pix.width(),pix.height());
-// 			//qDebug() << "processBlock(): latency: "<<;
-			#endif
-			
-			int msecLatency = msecTo(timestamp);
-			m_latencyAccum += msecLatency;
-			
-			if (!(m_frameCount % 100)) 
-			{
-				QString framesPerSecond;
-				framesPerSecond.setNum(m_frameCount /(m_time.elapsed() / 1000.0), 'f', 2);
-				
-				QString latencyPerFrame;
-				latencyPerFrame.setNum((((double)m_latencyAccum) / ((double)m_frameCount)), 'f', 3);
-				
-				if(m_debugFps && framesPerSecond!="0.00")
-					qDebug() << "VideoReceiver: Receive FPS: " << qPrintable(framesPerSecond) << qPrintable(QString(", Receive Latency: %1 ms").arg(latencyPerFrame));
-		
-				m_time.start();
-				m_frameCount = 0;
-				m_latencyAccum = 0;
-				
-				//lastFrameTime = time.elapsed();
-			}
-			m_frameCount++;
 		}
 	}
 }
