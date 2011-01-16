@@ -18,5 +18,6 @@
 #define Video_GetFPS "GetFPS"
 // Size: Arg 'w', type 'int', Arg 'h', type 'int'
 #define Video_SetSize "SetSize"
+#define Video_GetSize "GetSize"
 
 #endif

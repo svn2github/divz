@@ -570,10 +570,37 @@ void VideoSenderThread::processBlock()
 		proc.waitForFinished();
 		QByteArray rawData = proc.readAllStandardOutput();
 		QString output(rawData);
+		QStringList outputLines = output.split("\n");
 		
-		//qDebug() << "VideoSenderThread::processBlock: "<<cmd<<": Executing shell command: "<<shellCommand;
-			
-		/// TODO: parse output, extract value of 'colorCmd' and return via sendReply
+		//qDebug() << "VideoSenderThread::processBlock: "<<cmd<<": args:"<<args<<", raw output:"<<output; 
+		
+		int colorValue = -1;
+		foreach(QString line, outputLines)
+		{
+			qDebug() << "VideoSenderThread::processBlock: "<<cmd<<": "<<colorCmd<<": checking line:"<<line;
+			QStringList values = line.split("|");
+			if(values.length() >= 5)
+			{
+				QString key = values.at(0).trimmed();
+				qDebug() << "VideoSenderThread::processBlock: "<<cmd<<": "<<colorCmd<<": \t checking key:"<<key;
+				if(key == colorCmd)
+				{
+					int value = values.at(2).trimmed().toInt();
+					
+					QString comment = values.at(4).trimmed();
+					QStringList commentParts = comment.split(">");
+					int rangeTop = commentParts.last().trimmed().toInt();
+					
+					colorValue = (int)( (((double)value) / ((double)rangeTop)) * 100 );
+					
+					qDebug() << "VideoSenderThread::processBlock: "<<cmd<<": "<<colorCmd<<": \t \t found key, value:"<<value<<", rangeTop:"<<rangeTop<<", colorValue:"<<colorValue;
+				}
+			}
+		}
+		
+		sendReply(QVariantList() 
+			<< "cmd"	<< cmd
+			<< "value"	<< colorValue);
 	}
 	else
 	if(cmd == Video_SetFPS)
@@ -600,11 +627,13 @@ void VideoSenderThread::processBlock()
 	{
 		int w = map["w"].toInt();
 		int h = map["h"].toInt();
+		
 		QSize originalSize = m_sender->origSize();
 		if(w > originalSize.width())
 			w = originalSize.width();
 		if(h > originalSize.height())
 			h = originalSize.height();
+			
 		if(w < 16)
 			w = 16;
 		if(h < 16)
@@ -614,6 +643,15 @@ void VideoSenderThread::processBlock()
 		qDebug() << "VideoSenderThread::processBlock: "<<cmd<<": Setting size:"<<originalSize;
 		
 		m_sender->setTransmitSize(originalSize);
+	}
+	else
+	if(cmd == Video_GetFPS)
+	{
+		int fps = m_sender->transmitFps();
+		QSize size = m_sender->transmitSize();
+		qDebug() << "VideoSenderThread::processBlock: "<<cmd<<": Getting size:"<<size;
+		
+		sendReply(QVariantList() << "cmd" << cmd << "w" << size.width() << "h" << size.height());
 	}
 	else
 	{

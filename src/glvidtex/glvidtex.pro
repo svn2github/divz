@@ -164,6 +164,13 @@ glvidtex: {
 		../livemix/VideoWidget.cpp \
 		../livemix/EditorUtilityWidgets.cpp 
 }
+encoder: {
+	TARGET = glstreamenc
+	HEADERS += StreamEncoderProcess.h
+	SOURCES += StreamEncoderProcess.cpp \
+		streamenc-main.cpp
+}
+
 inputbalance: {
 	TARGET = glinputbalance
 	
