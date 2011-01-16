@@ -20,6 +20,7 @@ class VideoEncoder;
 class GLPlaylistItem;
 class GLRectDrawable;
 class GLDrawable;
+class SharedMemorySender;
 
 #include "../livemix/VideoSource.h"
 
@@ -121,6 +122,7 @@ private:
 	VideoInputSenderManager *m_vidSendMgr;
 	
 	VideoEncoder *m_outputEncoder;
+	SharedMemorySender *m_shMemSend;
 	
 	int m_xfadeSpeed;
 	

@@ -38,7 +38,9 @@ HEADERS       = GLWidget.h \
 		VideoDifferenceFilter.h \
 		FaceDetectFilter.h \
 		GLSceneGroupType.h \
-		GLSpinnerDrawable.h
+		GLSpinnerDrawable.h \
+		../livemix/DVizSharedMemoryThread.h \
+		SharedMemorySender.h
 		
 SOURCES       = GLWidget.cpp \
 		../livemix/VideoSource.cpp \
@@ -75,7 +77,9 @@ SOURCES       = GLWidget.cpp \
 		VideoDifferenceFilter.cpp \
 		FaceDetectFilter.cpp \
 		GLSceneGroupType.cpp \
-		GLSpinnerDrawable.cpp
+		GLSpinnerDrawable.cpp \
+		../livemix/DVizSharedMemoryThread.cpp \
+		SharedMemorySender.cpp
 		
 include(../3rdparty/md5/md5.pri)
 include(../imgtool/exiv2-0.18.2-qtbuild/qt_build_root.pri)

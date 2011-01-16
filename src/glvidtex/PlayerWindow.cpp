@@ -15,6 +15,8 @@
 #include "VideoEncoder.h"
 #include "VideoSender.h"
 
+#include "SharedMemorySender.h"
+
 #include <QTimer>
 #include <QApplication>
 
@@ -332,6 +334,17 @@ PlayerWindow::PlayerWindow(QWidget *parent)
 // 		m_outputEncoder->setVideoSource(m_glWidget->outputStream());
 // 		//m_outputEncoder->startEncoder();
 // 	}
+
+	if(m_glWidget)
+	{
+		m_shMemSend = new SharedMemorySender("PlayerWindow",this);
+		m_shMemSend->setVideoSource(m_glWidget->outputStream());
+	}
+	else
+	{
+		m_shMemSend = 0;
+		qDebug() << "Playerwindow: Unable to stream output via shared memory because OpenGL is not enabled.";
+	}
 	
 	
 	
