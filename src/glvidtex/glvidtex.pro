@@ -39,7 +39,7 @@ HEADERS       = GLWidget.h \
 		FaceDetectFilter.h \
 		GLSceneGroupType.h \
 		GLSpinnerDrawable.h \
-		getopt.h \
+		QtGetOpt.h \
 		../livemix/DVizSharedMemoryThread.h \
 		SharedMemorySender.h
 		
@@ -78,7 +78,7 @@ SOURCES       = GLWidget.cpp \
 		VideoDifferenceFilter.cpp \
 		FaceDetectFilter.cpp \
 		GLSceneGroupType.cpp \
-		getopt.cpp  \
+		QtGetOpt.cpp  \
 		GLSpinnerDrawable.cpp \
 		../livemix/DVizSharedMemoryThread.cpp \
 		SharedMemorySender.cpp

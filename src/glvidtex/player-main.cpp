@@ -4,7 +4,8 @@
 #include "GLDrawables.h"
 #include "MetaObjectUtil.h"
 #include "PlayerWindow.h"
-#include "getopt.h"
+
+#include "QtGetOpt.h"
 
 int main(int argc, char *argv[])
 {
