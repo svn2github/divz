@@ -182,12 +182,12 @@ AVStream *VideoEncoder::addVideoStream(AVFormatContext *oc, enum CodecID codec_i
 	c->codec_type = CODEC_TYPE_VIDEO;
 
 	/* put sample parameters */
-	//c->bit_rate = 400000;
-	c->bit_rate  = 2000000;
+	c->bit_rate = 2000000;
+	//c->bit_rate = 2000000;
 
 	/* resolution must be a multiple of two */
-	c->width  = 640;
-	c->height = 480;
+	c->width  = 1024;
+	c->height = 768;
 
 	/* time base: this is the fundamental unit of time (in seconds) in terms
 	   of which frame timestamps are represented. for fixed-fps content,
@@ -326,12 +326,19 @@ void VideoEncoder::fillDummyYuvImage(AVFrame *pict, int frame_index, int width, 
 
 void VideoEncoder::fillAvPicture(AVFrame *pict, int frame_index, int width, int height)
 {
+	// If no data pending, pull the frame from the video source in order to compensate
+	// for idiotic sources like DVizSharedMEmoryThread which sometimes doesnt emit frameReady() signals
+	if(!m_dataPtr || m_byteCount<=0)
+		frameReady();
+
 	if(!m_dataPtr || m_byteCount<=0)
 		return;
 
 	m_dataLock.lock();
 	memcpy(pict->data[0], m_dataPtr.data(), m_byteCount);
 	m_dataLock.unlock();
+	
+	m_byteCount =0;
 }
 
 void VideoEncoder::writeVideoFrame(AVFormatContext *oc, AVStream *st)
@@ -547,6 +554,8 @@ bool VideoEncoder::startEncoder(const QString& filename, double duration, int fr
 
 void VideoEncoder::frameReady()
 {
+	QTime t;
+	t.start();	
 	if(!m_source)
 		return;
 
@@ -603,8 +612,8 @@ void VideoEncoder::frameReady()
 
 	if(img.size() != QSize(c->width,c->height))
 	{
-		//qDebug() << "VideoEncoder::frameReady: Scaling from:"<<img.size()<<" to "<<c->width<<"x"<<c->height;
-		img = img.scaled(c->width,c->height);
+		qDebug() << "VideoEncoder::frameReady: Scaling from:"<<img.size()<<" to "<<c->width<<"x"<<c->height;
+		img = img.scaled(c->width,c->height, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
 	}
 
 	uchar *ptr = (uchar*)malloc(sizeof(uchar) * img.byteCount());
@@ -614,6 +623,9 @@ void VideoEncoder::frameReady()
 	m_dataPtr = QSharedPointer<uchar>(ptr);
 	m_byteCount = img.byteCount();
 	m_dataLock.unlock();
+	
+	qDebug() << "VideoEncoder::frameReady(): Run time:"<<t.elapsed();
+
 }
 
 bool VideoEncoder::setupInternal()
@@ -747,7 +759,7 @@ void VideoEncoder::run()
 		}
 		else
 		{
-			//printf("VideoEncoder::run(): Video PTS: %f | Audio PTS: %f | Runtime: %.02f\n",m_videoPts,m_audioPts,m_runtime.elapsed() / 1000.);
+			printf("VideoEncoder::run(): Video PTS: %f | Audio PTS: %f | Runtime: %.02f\n",m_videoPts,m_audioPts,m_runtime.elapsed() / 1000.);
 
 // 			/* write interleaved audio and video frames */
 // 			if (!m_videoStream || (m_videoStream && m_audioStream && m_audioPts < m_videoPts))
@@ -767,9 +779,11 @@ void VideoEncoder::run()
 		{
 			//diff *= .75;
 			diff *= 1000;
-			//qDebug() << "VideoEncoder::run(): Sleeping for "<<diff<<"ms";
+			qDebug() << "VideoEncoder::run(): Sleeping for "<<diff<<"ms";
 			msleep((int)diff);
 		}
+		else
+			qDebug() << "VideoEncoder::run(): Not sleeping, diff is "<<diff<<"ms";
 			//msleep(1000 / m_frameRate * .75);
 	}
 

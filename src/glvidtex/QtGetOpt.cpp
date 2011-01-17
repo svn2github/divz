@@ -1,7 +1,7 @@
 #define QT_NO_CAST_ASCII
 #define QT_NO_ASCII_CAST
 
-#include "getopt.h"
+#include "QtGetOpt.h"
 
 #include <QCoreApplication>
 #include <QFileInfo>

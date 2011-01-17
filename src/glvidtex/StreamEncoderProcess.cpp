@@ -9,7 +9,7 @@ StreamEncoderProcess::StreamEncoderProcess(QObject *parent)
 {
 	m_shMemRec = DVizSharedMemoryThread::threadForKey("PlayerWindow-2");
 	
-	QString outputFile = "/mnt/phc/Video/tests/output.avi";
+	QString outputFile = "test-output/output.avi";
 	
 // 	QFileInfo info(outputFile);
 // 	if(info.exists())

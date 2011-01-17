@@ -1,8 +1,8 @@
 
 MOC_DIR = .build
-OBJECTS_DIR = .build
 RCC_DIR = .build
-UI_DIR = .build
+UI_DIR  = .build
+OBJECTS_DIR = .build
 
 HEADERS       = GLWidget.h \
 		../livemix/VideoSource.h \
@@ -83,10 +83,18 @@ SOURCES       = GLWidget.cpp \
 		../livemix/DVizSharedMemoryThread.cpp \
 		SharedMemorySender.cpp
 		
+# MD5 is used for caching in GLImageDrawable
 include(../3rdparty/md5/md5.pri)
+
+# Exiv is used for EXIF data extraction in GLImageDrawable to auto-rotate
+# and in 'glslideshow' to caption images
 include(../imgtool/exiv2-0.18.2-qtbuild/qt_build_root.pri)
 
+# Include dviz resources to get the rich text editor icons
+RESOURCES += ../dviz.qrc
 
+
+# 'editor' compile target
 editor: {
 	TARGET = gleditor
 	
@@ -106,6 +114,8 @@ editor: {
 	include(../3rdparty/richtextedit/richtextedit.pri)
 	include(../qtcolorpicker/qtcolorpicker.pri)
 }
+
+# 'gldirector' compile target
 director: {
 	TARGET = gldirector
 	
@@ -145,6 +155,8 @@ director: {
 	include(../3rdparty/richtextedit/richtextedit.pri)
 	include(../qtcolorpicker/qtcolorpicker.pri)
 }
+
+# 'glplayer' ('glvidtex') compile target
 player | glvidtex: {
 	
 	HEADERS += PlayerWindow.h \
@@ -171,6 +183,7 @@ player : {
 	TARGET = glplayer
 }
 
+# 'glstreamenc' compile target - encodes output of glplayer from frames received via shared memory
 encoder: {
 	TARGET = glstreamenc
 	HEADERS += StreamEncoderProcess.h
@@ -178,6 +191,7 @@ encoder: {
 		streamenc-main.cpp
 }
 
+# 'glinputbalance' compile target - use to balance two video inputs to each other
 inputbalance: {
 	TARGET = glinputbalance
 	
@@ -191,6 +205,8 @@ inputbalance: {
 		../livemix/VideoWidget.cpp \
 		../livemix/EditorUtilityWidgets.cpp 
 }
+
+# 'glslideshow' compile target - used for my art show in Union City
 slideshow: {
 	TARGET = glslideshow
 	
@@ -210,6 +226,10 @@ unix: {
 	LIBS += -L/opt/fontconfig-2.4.2/lib
 }
 
+# OpenCV not required - but it nice to have.
+# It's used to calculate deformation matrices in GLWidget for keystoning.
+# Without OpenCV, the keystone deformations are downright ugly.
+# Specify via: qmake CONFIG+=opencv 
 opencv: {
 	DEFINES += OPENCV_ENABLED
 	LIBS += -L/usr/local/lib -lcv -lcxcore
@@ -265,24 +285,14 @@ mobility: {
 	SOURCES += \
 		QtVideoSource.cpp
 		
-	message("QtMobility enabled. Before running, ensure \$QT_PLUGIN_PATH contains $$QT_MOBILITY_HOME/plugins, otherwise media will not play.")
+	#message("QtMobility enabled. Before running, ensure \$QT_PLUGIN_PATH contains $$QT_MOBILITY_HOME/plugins, otherwise media will not play.")
 }
 else: {
 	message("QtMobility not enabled (use qmake CONFIG+=mobility and ensure $$QT_MOBILITY_HOME exists), QtVideoSource will not be built.")
     	DEFINES -= QT_MOBILITY_ENABLED
 }
 
-RESOURCES += ../dviz.qrc
-
-# install
-target.path = $$[QT_INSTALL_EXAMPLES]/opengl/textures
-sources.files = $$SOURCES $$HEADERS $$RESOURCES $$FORMS textures.pro images
-sources.path = $$[QT_INSTALL_EXAMPLES]/opengl/textures
-INSTALLS += target sources
-
-symbian: include($$QT_SOURCE_TREE/examples/symbianpkgrules.pri)
-
-
+# FFMPEG is needed for looped videos and video input on Win32
 unix {
 	LIBS += -lavdevice -lavformat -lavcodec -lavutil -lswscale -lbz2 
 	INCLUDEPATH += /usr/include/ffmpeg
@@ -306,3 +316,9 @@ win32 {
 		-lswscale-0
 }
 
+
+# install
+target.path = /opt/glvidtex/
+sources.files = $$SOURCES $$HEADERS $$RESOURCES $$FORMS glvidtex.pro
+sources.path = /opt/glvidtex/src
+INSTALLS += target sources

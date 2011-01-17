@@ -8,7 +8,7 @@
 
 #include "VideoSource.h"
 
-class DVizSharedMemoryThread: public VideoSource
+class DVizSharedMemoryThread : public VideoSource
 {
 	Q_OBJECT
 
@@ -23,7 +23,12 @@ public:
 	
 	void setFps(int fps=30);
 	int fps() { return m_fps; }
-	
+
+signals:
+	void frameReady();
+
+private slots:
+	void readFrame();
 
 protected:
 	void run();
@@ -38,6 +43,8 @@ private:
 	int m_timeAccum;
 	int m_frameCount;
 	QTime m_readTime;
+	
+	QTimer m_readTimer;
 	
 	static QMutex threadCacheMutex;
 };

@@ -828,6 +828,11 @@ void GLWidgetSubview::updateWarpMatrix()
 	m_warpMatrix[3][1] = matrix[5];
 	m_warpMatrix[3][2] = 0.;
 	m_warpMatrix[3][3] = matrix[8];
+	
+	cvReleaseMat(&translate);
+	cvReleaseMat(&src_mat);
+	cvReleaseMat(&dst_mat);
+	
 		
 			
 // 	qDebug() << "Warp Matrix: "

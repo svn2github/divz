@@ -35,7 +35,7 @@ class RichTextRenderer : public QObject
 
 public:
 	RichTextRenderer(QObject *parent=0);
-	virtual ~RichTextRenderer();
+	virtual ~RichTextRenderer() {}
 
 	const QString & html() { return m_html; }
 	
@@ -77,9 +77,6 @@ public slots:
 signals:
 	void textRendered(QImage img);
 
-// protected:
-// 	void run();
-
 private:
 	QString m_html;
 	QImage m_image;
@@ -109,13 +106,6 @@ private:
 	bool m_updatesLocked;
 	
 	QTimer m_updateTimer;
-	
-	QTextDocument m_doc;
-	QTextDocument m_shadowDoc;
-	
-/*	QMutex m_flagMutex;
-	bool m_renderNeeded;
-	bool m_killed;*/
 };
 
 #endif
