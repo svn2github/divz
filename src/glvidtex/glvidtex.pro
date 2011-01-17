@@ -39,6 +39,7 @@ HEADERS       = GLWidget.h \
 		FaceDetectFilter.h \
 		GLSceneGroupType.h \
 		GLSpinnerDrawable.h \
+		getopt.h \
 		../livemix/DVizSharedMemoryThread.h \
 		SharedMemorySender.h
 		
@@ -77,6 +78,7 @@ SOURCES       = GLWidget.cpp \
 		VideoDifferenceFilter.cpp \
 		FaceDetectFilter.cpp \
 		GLSceneGroupType.cpp \
+		getopt.cpp  \
 		GLSpinnerDrawable.cpp \
 		../livemix/DVizSharedMemoryThread.cpp \
 		SharedMemorySender.cpp
@@ -143,31 +145,32 @@ director: {
 	include(../3rdparty/richtextedit/richtextedit.pri)
 	include(../qtcolorpicker/qtcolorpicker.pri)
 }
-player: {
-	TARGET = glplayer
-	
-	HEADERS += PlayerWindow.h \
-		VideoInputSenderManager.h
-		
-	SOURCES += player-main.cpp \
-		PlayerWindow.cpp \
-		VideoInputSenderManager.cpp
-}
-glvidtex: {
-	TARGET = glvidtex
+player | glvidtex: {
 	
 	HEADERS += PlayerWindow.h \
 		VideoInputSenderManager.h \
 		../livemix/VideoWidget.h \
 		../livemix/EditorUtilityWidgets.h
-		
-		
-	SOURCES += main.cpp \
+				
+	SOURCES += player-main.cpp \
 		PlayerWindow.cpp \
 		VideoInputSenderManager.cpp \
 		../livemix/VideoWidget.cpp \
 		../livemix/EditorUtilityWidgets.cpp 
+		
+	win32 {
+		CONFIG += console
+	}
 }
+
+glvidtex: {
+	TARGET = glvidtex
+}
+
+player : {
+	TARGET = glplayer
+}
+
 encoder: {
 	TARGET = glstreamenc
 	HEADERS += StreamEncoderProcess.h

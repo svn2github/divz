@@ -12,26 +12,26 @@ GLTextDrawable::GLTextDrawable(QString text, QObject *parent)
 {
 	QDateTime now = QDateTime::currentDateTime();
 	m_targetTime = QDateTime(QDate(now.date().year()+1, 12, 25), QTime(0, 0));
-	
+
 	m_isCountdown = false;
-	
+
 
 	m_renderer = new RichTextRenderer();
 	connect(m_renderer, SIGNAL(textRendered(QImage)), this, SLOT(setImage(const QImage&)));
-	
+
 	m_renderer->setTextWidth(1000); // just a guess
 	setImage(QImage("dot.gif"));
-	
+
 	if(!text.isEmpty())
 		setText(text);
-	
+
 	//QTimer::singleShot(1500, this, SLOT(testXfade()));
-	
+
 	foreach(CornerItem *corner, m_cornerItems)
 		corner->setDefaultLeftOp(CornerItem::Scale);
-		
+
 	//setAspectRatioMode(Qt::KeepAspectRatioByExpanding);
-		
+
 	connect(&m_countdownTimer, SIGNAL(timeout()), this, SLOT(countdownTick()));
 	m_countdownTimer.setInterval(250);
 
@@ -47,7 +47,7 @@ GLTextDrawable::~GLTextDrawable()
 		m_renderer = 0;
 	}
 }
-	
+
 void GLTextDrawable::testXfade()
 {
 	qDebug() << "GLTextDrawable::testXfade(): loading text #2";
@@ -59,10 +59,10 @@ void GLTextDrawable::setIsCountdown(bool flag)
 	m_isCountdown = flag;
 	if(m_countdownTimer.isActive() && !flag)
 		m_countdownTimer.stop();
-	
+
 	if(!m_countdownTimer.isActive() && flag)
 		m_countdownTimer.start();
-	
+
 	if(flag)
 	{
 		setXFadeEnabled(false);
@@ -80,12 +80,16 @@ void GLTextDrawable::setTargetDateTime(const QDateTime& date)
 
 QString GLTextDrawable::formatTime(double time)
 {
+	bool isNeg = time < 0;
+	if(isNeg)
+		time *= -1;
 	double h = time/60/60;
 	int hour = (int)(h);
 	int min  = (int)(h * 60) % 60;
 	int sec  = (int)( time ) % 60;
-	return  QString::number(hour) + ":" +
-		(min<10? "0":"") + QString::number(min) + ":" +
+	return  (isNeg ? "+" : "") +
+	                       QString::number(hour) + ":" +
+		(min<10? "0":"") + QString::number(min)  + ":" +
 		(sec<10? "0":"") + QString::number(sec);// + "." +
 		//(ms <10? "0":"") + QString::number((int)ms );
 }
@@ -93,9 +97,9 @@ QString GLTextDrawable::formatTime(double time)
 void GLTextDrawable::countdownTick()
 {
 	QDateTime now = QDateTime::currentDateTime();
-	
+
 	int secsTo = now.secsTo(m_targetTime);
-	
+
 	QString newText = formatTime(secsTo);
 	//qDebug() << "GLTextDrawable::countdownTick: secsTo:"<<secsTo<<", newText:"<<newText;
 	setXFadeEnabled(false);
@@ -107,10 +111,10 @@ void GLTextDrawable::setIsClock(bool flag)
 	m_isClock = flag;
 	if(m_clockTimer.isActive() && !flag)
 		m_clockTimer.stop();
-	
+
 	if(!m_clockTimer.isActive() && flag)
 		m_clockTimer.start();
-	
+
 	if(flag)
 	{
 		setXFadeEnabled(false);
@@ -132,7 +136,7 @@ void GLTextDrawable::clockTick()
 	QDateTime now = QDateTime::currentDateTime();
 	QString newText = now.toString(clockFormat());
 	//qDebug() << "GLTextDrawable::clockTick: now:"<<now<<", format:"<<clockFormat()<<", newText:"<<newText;
-	
+
 	setXFadeEnabled(false);
 	setPlainText(newText);
 }
@@ -141,27 +145,27 @@ void GLTextDrawable::setText(const QString& text)
 {
 	if(text == m_text)
 		return;
-		
+
 	m_text = text;
 	//qDebug() << "GLTextDrawable::setText(): text:"<<text;
 	bool lock = false;
-	
-	if(m_cachedImageText == text && 
+
+	if(m_cachedImageText == text &&
 	  !m_cachedImage.isNull())
 	{
 		qDebug() << "GLTextDrawable::setText: Cached image matches text, not re-rendering.";
 		lock = m_renderer->lockUpdates(true);
 		setImage(m_cachedImage);
 	}
-		
+
 	m_renderer->setHtml(text);
 	if(!Qt::mightBeRichText(text))
 		changeFontSize(40);
-		
+
 	m_renderer->lockUpdates(lock);
-	
+
 	emit textChanged(text);
-	
+
 	emit plainTextChanged(plainText());
 }
 
@@ -186,7 +190,7 @@ void GLTextDrawable::setPlainText(const QString& text, bool replaceNewlineSlash)
 	if(m_lockSetPlainText)
 		return;
 	m_lockSetPlainText = true;
-	
+
 	QTextDocument doc;
 	QString origText = m_text;
 	if (Qt::mightBeRichText(origText))
@@ -217,8 +221,8 @@ void GLTextDrawable::setPlainText(const QString& text, bool replaceNewlineSlash)
 	else
 	{
 		setText(newText);
-	}	
-	
+	}
+
 	m_lockSetPlainText = false;
 }
 
@@ -250,18 +254,18 @@ void GLTextDrawable::changeFontSize(double size)
 void GLTextDrawable::updateRects(bool secondSource)
 {
 	QRectF sourceRect = m_frame->rect();
-	
+
 	updateTextureOffsets();
-	
+
 	// Honor croping since the rendering will honor croping - but not really needed for text.
 	QRectF adjustedSource = sourceRect.adjusted(
 		m_displayOpts.cropTopLeft.x(),
 		m_displayOpts.cropTopLeft.y(),
 		m_displayOpts.cropBottomRight.x(),
 		m_displayOpts.cropBottomRight.y());
-		
-	QRectF targetRect = QRectF(rect().topLeft(),adjustedSource.size()); 
-	
+
+	QRectF targetRect = QRectF(rect().topLeft(),adjustedSource.size());
+
 	if(!secondSource)
 	{
 		//qDebug() << "GLTextDrawable::updateRects: source:"<<sourceRect<<", target:"<<targetRect;
@@ -277,23 +281,23 @@ void GLTextDrawable::updateRects(bool secondSource)
 
 void GLTextDrawable::loadPropsFromMap(const QVariantMap& map, bool onlyApplyIfChanged)
 {
-	
+
 	QByteArray bytes = map["text_image"].toByteArray();
 	QImage image;
 	image.loadFromData(bytes);
 	//qDebug() << "GLSceneLayout::fromByteArray(): image size:"<<image.size()<<", isnull:"<<image.isNull();
-	
+
 	if(!image.isNull())
 		setImage(image);
 	m_cachedImageText = map["text_image_alt"].toString();
-	
+
 	GLDrawable::loadPropsFromMap(map);
 }
 
 QVariantMap GLTextDrawable::propsToMap()
 {
 	QVariantMap map = GLDrawable::propsToMap();
-	
+
 	// Save the image to the map for sending a cached render over the network so the player
 	// can cheat and use this image that was rendered by the director as opposed to re-rendering
 	// the same text
@@ -304,7 +308,7 @@ QVariantMap GLTextDrawable::propsToMap()
 	buffer.close();
 	map["text_image"] = bytes;
 	map["text_image_alt"] = m_text;
-	
+
 	return map;
 }
 
