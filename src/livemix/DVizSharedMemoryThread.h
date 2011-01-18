@@ -46,6 +46,8 @@ private:
 	
 	QTimer m_readTimer;
 	
+	int m_v4lOutputDev;
+	
 	static QMutex threadCacheMutex;
 };
 

@@ -29,9 +29,9 @@ StreamEncoderProcess::StreamEncoderProcess(QObject *parent)
 // 	}
 
 	
-	m_encoder = new VideoEncoder(outputFile);
+	/*m_encoder = new VideoEncoder(outputFile);
 	m_encoder->setVideoSource(m_shMemRec);
-	m_encoder->startEncoder(); 
+	m_encoder->startEncoder();*/ 
 };
 
 StreamEncoderProcess::~StreamEncoderProcess()

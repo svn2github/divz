@@ -1,0 +1,41 @@
+Video Encoding
+
+You can record the output of glvidtex/gplayer to a video file through a rather convoluted process as detailed below.
+ 
+Basic overview:
+1. Make and load vloopback kernel module in src/glvidtex/vloopback using 'insmod vloopback.ko pipes=2'
+2. Configure player.ini to output to V4L ('v4l-output=/dev/video2' or the first input pipe as shown by dmesg or /var/log/messages)
+3. Optional: Start 'resize' to resize the stream from the window output size to a smaller, more recording-friendly size.
+	Example:
+		If player.ini sets up a 1024x768 output window, you may want to resize the video stream to 640x480.
+		To resize the stream on the fly, use src/glvidtex/vloopback/examples/resize to resize the stream:
+		
+			resize  /dev/video3 /dev/video4 1024x768 640x480 rgb24
+		
+		'video3' is the output pipe paired with 'video2' as shown by dmesg output after calling insmod.
+		'video4' is the next input pipe as shown by dmesg
+		'1024x768' is the window size in player.ini
+		'640x480' is the size at which you want your video to record
+		'rgb24' is the pixel format of the video stream output by V4LOutput.cpp 
+			- 'resize' cannot change pixel formats, it just needs to know the pixel format of the stream
+			- We use rgb24 in V4lOutput.cpp to be compatible with the 'mjpeg' AVI output format of 'streamer' from the xawtv package (next section)
+4. Start the recording process using 'streamer' from the xawtv package:
+	
+	streamer  -c /dev/video5 -s 640x480 -r 24 -o outputfile.avi -f jpeg -F stereo -t 1:00:00
+	
+	Where:
+		-c /dev/video5 - video5 is the output pipe paired with 'video4' from the resize step (#3, above) - find it in the dmesg output after insmod
+		-s 640x480 - specifies the stream size that resize puts out (or, if recording straight from player, use the window size in player.ini)
+		-f 24 - the target FPS
+			- NB: streamer does not enforce this FPS!!!!
+				- I.e. if there are no frames output by glvidtex, then it will wont repeat a frame - it will "squeeze" the frame into the next spot, shortening the final output
+		-t 1:00:00 - record for an hour
+		
+5. Optional: Convert to mpg:
+
+	ffmpeg -i outputfile.avi outputfile.mpg
+	 
+	This shrinks the output by a significant amount, ex 1min from avi is about 11 MB, to 778 kB in mpg
+	
+	Now, this needs some quality tweaking - the resulting mpg file has lousy quality.
+	

@@ -413,7 +413,33 @@ void VideoEncoder::writeVideoFrame(AVFormatContext *oc, AVStream *st)
 			av_init_packet(&pkt);
 
 			if (c->coded_frame->pts != (int)AV_NOPTS_VALUE)
+			{
+				if(m_starTime.isNull())
+					m_starTime = m_captureTime;
+				int timecode = m_starTime.msecsTo(m_captureTime);
+				
+				int my_pts = (int)(timecode / 1000. * c->time_base.den);
+				if(m_lastPts < 0)
+					m_lastPts = my_pts;
+				if(my_pts == m_lastPts)
+					my_pts ++;
+				if(my_pts < m_lastPts)
+					my_pts = m_lastPts+1; 
+				
+				//int my_pts = (int)(m_runtime.elapsed() / 1000. * 30);
 				pkt.pts = av_rescale_q(c->coded_frame->pts, c->time_base, st->time_base);
+				
+				qDebug() << "VideoEncoder::writeFrame: pkt.pts:"<<pkt.pts<<", c->coded_frame->pts:"<<c->coded_frame->pts
+					//<<", c->time_base:"<<c->time_base.num<<"/"<<c->time_base.den
+					//<<", st->time_base:"<<st->time_base.num<<"/"<<st->time_base.den
+					<<", my_pts:"<<my_pts
+					;//<<", m_lastPts:"<<m_lastPts
+					//<<", m_captureTime:"<<m_captureTime.second() * 1000 + m_captureTime.msec();
+					
+				pkt.pts   = my_pts;
+				m_lastPts = my_pts;
+			}
+				
 			if(c->coded_frame->key_frame)
 				pkt.flags |= AV_PKT_FLAG_KEY;
 			pkt.stream_index = st->index;
@@ -539,6 +565,8 @@ bool VideoEncoder::startEncoder(const QString& filename, double duration, int fr
 	m_duration  = duration;
 	m_frameRate = frameRate;
 	m_numFrames = ((int)(m_duration * m_frameRate));
+	
+	m_lastPts   = -1;
 
 	start();
 
@@ -565,8 +593,6 @@ void VideoEncoder::frameReady()
 	VideoFramePtr frame = m_source->frame();
 	if(!frame)
 		return;
-
-	m_dataLock.lock();
 
 	QImage img;
 	if(!frame->image().isNull())
@@ -612,7 +638,7 @@ void VideoEncoder::frameReady()
 
 	if(img.size() != QSize(c->width,c->height))
 	{
-		qDebug() << "VideoEncoder::frameReady: Scaling from:"<<img.size()<<" to "<<c->width<<"x"<<c->height;
+		//qDebug() << "VideoEncoder::frameReady: Scaling from:"<<img.size()<<" to "<<c->width<<"x"<<c->height;
 		img = img.scaled(c->width,c->height, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
 	}
 
@@ -620,11 +646,15 @@ void VideoEncoder::frameReady()
 	const uchar *src = (const uchar*)img.bits();
 	memcpy(ptr, src, img.byteCount());
 
+	m_dataLock.lock();
+
 	m_dataPtr = QSharedPointer<uchar>(ptr);
 	m_byteCount = img.byteCount();
+	m_captureTime = frame->captureTime();
+	
 	m_dataLock.unlock();
 	
-	qDebug() << "VideoEncoder::frameReady(): Run time:"<<t.elapsed();
+	//qDebug() << "VideoEncoder::frameReady(): Run time:"<<t.elapsed();
 
 }
 
@@ -759,7 +789,7 @@ void VideoEncoder::run()
 		}
 		else
 		{
-			printf("VideoEncoder::run(): Video PTS: %f | Audio PTS: %f | Runtime: %.02f\n",m_videoPts,m_audioPts,m_runtime.elapsed() / 1000.);
+			//printf("VideoEncoder::run(): Video PTS: %f | Audio PTS: %f | Runtime: %.02f\n",m_videoPts,m_audioPts,m_runtime.elapsed() / 1000.);
 
 // 			/* write interleaved audio and video frames */
 // 			if (!m_videoStream || (m_videoStream && m_audioStream && m_audioPts < m_videoPts))
@@ -774,17 +804,19 @@ void VideoEncoder::run()
 //		 	}
 		}
 
-		double diff = m_videoPts - (m_runtime.elapsed() /1000.);
-		if(diff > 0 && diff <= 30) // arbitrary max
-		{
-			//diff *= .75;
-			diff *= 1000;
-			qDebug() << "VideoEncoder::run(): Sleeping for "<<diff<<"ms";
-			msleep((int)diff);
-		}
-		else
-			qDebug() << "VideoEncoder::run(): Not sleeping, diff is "<<diff<<"ms";
-			//msleep(1000 / m_frameRate * .75);
+// 		double diff = m_videoPts - (m_runtime.elapsed() /1000.);
+// 		if(diff > 0 && diff <= 30) // arbitrary max
+// 		{
+// 			//diff *= .75;
+// 			diff *= 1000;
+// 			qDebug() << "VideoEncoder::run(): Sleeping for "<<diff<<"ms";
+// 			msleep((int)diff);
+// 		}
+// 		else
+// 			qDebug() << "VideoEncoder::run(): Not sleeping, diff is "<<diff<<"ms";
+// 			//msleep(1000 / m_frameRate * .75);
+		msleep(40);
+		//yieldCurrentThread();
 	}
 
 	teardownInternal();

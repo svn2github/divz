@@ -21,6 +21,7 @@ class GLPlaylistItem;
 class GLRectDrawable;
 class GLDrawable;
 class SharedMemorySender;
+class V4LOutput;
 
 #include "../livemix/VideoSource.h"
 
@@ -125,7 +126,8 @@ private:
 
 	VideoEncoder *m_outputEncoder;
 
-	SharedMemorySender *m_shMemSend;
+	//SharedMemorySender *m_shMemSend;
+	V4LOutput *m_v4lOutput;
 
 	int m_xfadeSpeed;
 

@@ -41,7 +41,8 @@ HEADERS       = GLWidget.h \
 		GLSpinnerDrawable.h \
 		QtGetOpt.h \
 		../livemix/DVizSharedMemoryThread.h \
-		SharedMemorySender.h
+		SharedMemorySender.h \
+		V4LOutput.h
 		
 SOURCES       = GLWidget.cpp \
 		../livemix/VideoSource.cpp \
@@ -81,7 +82,8 @@ SOURCES       = GLWidget.cpp \
 		QtGetOpt.cpp  \
 		GLSpinnerDrawable.cpp \
 		../livemix/DVizSharedMemoryThread.cpp \
-		SharedMemorySender.cpp
+		SharedMemorySender.cpp \
+		V4LOutput.cpp
 		
 # MD5 is used for caching in GLImageDrawable
 include(../3rdparty/md5/md5.pri)

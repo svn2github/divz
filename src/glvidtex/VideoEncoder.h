@@ -121,6 +121,9 @@ private:
 	
 	QSharedPointer<uchar> m_dataPtr;
 	int m_byteCount;
+	QTime m_captureTime;
+	QTime m_starTime;
+	int m_lastPts;
 	QMutex m_dataLock;
 };
 

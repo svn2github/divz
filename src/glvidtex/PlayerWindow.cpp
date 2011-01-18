@@ -15,7 +15,8 @@
 #include "VideoEncoder.h"
 #include "VideoSender.h"
 
-#include "SharedMemorySender.h"
+//#include "SharedMemorySender.h"
+#include "V4LOutput.h"
 
 #include <QTimer>
 #include <QApplication>
@@ -345,13 +346,34 @@ void PlayerWindow::loadConfig(const QString& configFile, bool verbose)
 
 	if(m_glWidget)
 	{
-		m_shMemSend = new SharedMemorySender("PlayerWindow-2",this);
-		m_shMemSend->setVideoSource(m_glWidget->outputStream());
+		//m_shMemSend = new SharedMemorySender("PlayerWindow-2",this);
+		//m_shMemSend->setVideoSource(m_glWidget->outputStream());
+		m_v4lOutput = 0;
+		
+		bool v4l_out_enab = READ_STRING("v4l-output-enabled","true") == "true";
+		
+		/// NB: v4l output is designed to be used with vloopback (http://www.lavrsen.dk/svn/vloopback/trunk or ./vloopback)
+		/// To use with vloopback, first build the kernel mod in vloopback and do 'insmod vloopback.ko', then
+		/// make sure you adjust the output device to the device shown in dmesg or /var/log/messages as the output
+		/// device.
+		
+		if(v4l_out_enab)
+		{
+			QString v4lOutputDev = READ_STRING("v4l-output","/dev/video2");
+			
+			m_v4lOutput = new V4LOutput(v4lOutputDev);
+			m_v4lOutput->setVideoSource(m_glWidget->outputStream());
+			
+			qDebug() << "PlayerWindow: Streaming to V4L device: "<<v4lOutputDev;
+		}
 	}
 	else
 	{
-		m_shMemSend = 0;
-		qDebug() << "Playerwindow: Unable to stream output via shared memory because OpenGL is not enabled.";
+		//m_shMemSend = 0;
+		//qDebug() << "Playerwindow: Unable to stream output via shared memory because OpenGL is not enabled.";
+		
+		m_v4lOutput = 0;
+		qDebug() << "Playerwindow: Unable to stream output via V4L because OpenGL is not enabled.";
 	}
 
 
