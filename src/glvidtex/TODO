@@ -107,7 +107,6 @@ TODO:
 			- Right now, text and images
 		- MUST have per-camera BCHS controls
 		- Add copy/paste to editor
-		- Add a 'remove from playlist' button
 		- Durations on scenes
 			- Auto calced based on max length playlist of items
 			- Or manually set
@@ -117,6 +116,7 @@ TODO:
 			- Some how emit a signal when need to change scenes?
 		- Add a play interface to collection to loop thru groups
 		
+		- [DONE] Add a 'remove from playlist' button
 		- [DONE] Crossfading between scenes
 		- [DONE] Add a simple rectangle item to draw boxes, panels, lines with
 		- [DONE] Make "Test Connection" just TEST in player setup

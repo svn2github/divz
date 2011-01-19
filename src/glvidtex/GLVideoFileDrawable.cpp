@@ -7,6 +7,7 @@
 GLVideoFileDrawable::GLVideoFileDrawable(QString file, QObject *parent)
 	: GLVideoDrawable(parent)
 	, m_videoLength(-1)
+	, m_qtSource(0)
 {
 	if(!file.isEmpty())
 		setVideoFile(file);
@@ -35,15 +36,14 @@ bool GLVideoFileDrawable::setVideoFile(const QString& file)
 	
 	#ifdef HAS_QT_VIDEO_SOURCE
 		
-		QtVideoSource *source = new QtVideoSource();
-		source->setFile(file);
-		source->start();
+		m_qtSource = new QtVideoSource();
+		m_qtSource->setFile(file);
+		m_qtSource->start();
 		
-		// Duration is in milleseconds, we store length in seconds
-		m_videoLength = source->player()->duration() / 1000.;
-		qDebug() << "GLVideoFileDrawable::setvideoFile: "<<file<<": Duration: "<<m_videoLength;
+		// Reset length for next query to videoLength(), below 
+		m_videoLength = -1;
 		
-		setVideoSource(source);
+		setVideoSource(m_qtSource);
 		
 	#else
 	
@@ -57,6 +57,25 @@ bool GLVideoFileDrawable::setVideoFile(const QString& file)
 	
 }
 
+double GLVideoFileDrawable::videoLength()
+{
+	if(m_videoLength < 0)
+	{
+		if(!m_qtSource)
+		{
+			qDebug() << "GLVideoFileDrawable::videoLength: No source set, unable to find length.";
+		}
+		else
+		{ 
+			// Duration is in milleseconds, we store length in seconds
+			m_videoLength = m_qtSource->player()->duration() / 1000.;
+			qDebug() << "GLVideoFileDrawable::videoLength: "<<m_qtSource->file()<<": Duration: "<<m_videoLength;
+		}
+	}
+	
+	return m_videoLength;
+}	
+		
 
 void GLVideoFileDrawable::deleteSource(VideoSource *source)
 {

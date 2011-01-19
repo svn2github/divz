@@ -205,11 +205,11 @@ void DirectorWindow::setupUI()
 
 	connect(ui->playlistView, SIGNAL(activated(const QModelIndex &)), this, SLOT(itemSelected(const QModelIndex &)));
 	connect(ui->playlistView, SIGNAL(clicked(const QModelIndex &)),   this, SLOT(itemSelected(const QModelIndex &)));
-
 	connect(ui->itemLengthBox, SIGNAL(valueChanged(double)), this, SLOT(itemLengthChanged(double)));
 	connect(ui->hideBtn, SIGNAL(clicked()), this, SLOT(btnHideDrawable()));
 	connect(ui->sendToPlayerBtn, SIGNAL(clicked()), this, SLOT(btnSendToPlayer()));
 	connect(ui->addToPlaylistBtn, SIGNAL(clicked()), this, SLOT(btnAddToPlaylist()));
+	connect(ui->playlistRemoveBtn, SIGNAL(clicked()), this, SLOT(btnRemoveFromPlaylist()));
 	
 	ui->drawableGroupBox->setVisible(false);
 	ui->sceneListview->setVisible(false);
@@ -449,6 +449,25 @@ void DirectorWindow::btnAddToPlaylist()
 	
 	foreach(PlayerConnection *con, m_players->players())
 		con->updatePlaylist(m_currentDrawable);
+}
+
+void DirectorWindow::btnRemoveFromPlaylist()
+{
+	if(!m_currentItem)
+		return;
+	if(!m_currentDrawable)
+		return;
+	GLDrawablePlaylist *playlist = m_currentDrawable->playlist();
+	
+	playlist->removeItem(m_currentItem);
+	
+	foreach(PlayerConnection *con, m_players->players())
+		con->updatePlaylist(m_currentDrawable);
+	
+	GLPlaylistItem *newItem = playlist->at(0);
+	ui->playlistView->setCurrentIndex(playlist->indexOf(newItem));
+	if(newItem)
+		setCurrentItem(newItem);
 }
 
 void DirectorWindow::playlistTimeChanged(GLDrawable *gld, double value)

@@ -3,7 +3,7 @@
 
 #include "GLVideoDrawable.h"
 
-
+class QtVideoSource;
 class GLVideoFileDrawable : public GLVideoDrawable
 {
 	Q_OBJECT
@@ -14,7 +14,7 @@ public:
 	GLVideoFileDrawable(QString file="", QObject *parent=0);
 	
 	QString videoFile() { return m_videoFile; }
-	double videoLength() { return m_videoLength; } // in seconds
+	double videoLength();
 	
 signals:
 	void videoFileChanged(const QString&);
@@ -29,6 +29,8 @@ private slots:
 private:
 	QString m_videoFile;
 	double m_videoLength;
+	
+	QtVideoSource * m_qtSource;
 };
 
 #endif
