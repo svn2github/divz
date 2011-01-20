@@ -177,10 +177,24 @@ void DirectorWindow::setupUI()
 	connect(ui->fadeSpeedSlider, SIGNAL(valueChanged(int)), this, SLOT(setFadeSpeedPercent(int)));
 	connect(ui->fadeSpeedBox, SIGNAL(valueChanged(double)), this, SLOT(setFadeSpeedTime(double)));
 	
-	connect(ui->playBtn,  SIGNAL(clicked()), this, SLOT(playPlaylist()));
-	connect(ui->pauseBtn, SIGNAL(clicked()), this, SLOT(pausePlaylist()));
+	ui->playBtn->setText("");
+	ui->playBtn->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
 	
-	connect(ui->itemLengthBox, SIGNAL(valueChanged(double)), this, SLOT(playlistItemDurationChanged(double)));
+	ui->moveUpBtn->setText("");
+	ui->moveUpBtn->setIcon(style()->standardIcon(QStyle::SP_ArrowUp));
+	
+	ui->moveDownBtn->setText("");
+	ui->moveDownBtn->setIcon(style()->standardIcon(QStyle::SP_ArrowDown));
+	
+	ui->delBtn->setText("");
+	ui->delBtn->setIcon(style()->standardIcon(QStyle::SP_TrashIcon));
+	
+	
+	
+	connect(ui->playBtn,  SIGNAL(clicked()), this, SLOT(playPlaylist()));
+	//connect(ui->pauseBtn, SIGNAL(clicked()), this, SLOT(pausePlaylist()));
+	connect(ui->moveUpBtn,  SIGNAL(clicked()), this, SLOT(btnMoveUp()));
+	connect(ui->moveDownBtn,  SIGNAL(clicked()), this, SLOT(btnMoveDown()));
 	
 	connect(ui->actionMonitor_Players_Live, SIGNAL(triggered()), this, SLOT(showPlayerLiveMonitor()));
 	
@@ -205,16 +219,21 @@ void DirectorWindow::setupUI()
 
 	connect(ui->playlistView, SIGNAL(activated(const QModelIndex &)), this, SLOT(itemSelected(const QModelIndex &)));
 	connect(ui->playlistView, SIGNAL(clicked(const QModelIndex &)),   this, SLOT(itemSelected(const QModelIndex &)));
-	connect(ui->itemLengthBox, SIGNAL(valueChanged(double)), this, SLOT(itemLengthChanged(double)));
+	
+	//ui->playlistView->horizontalHeader()->setVisible(false);
+	ui->playlistView->verticalHeader()->setVisible(false);
+	ui->playlistView->setSelectionBehavior(QAbstractItemView::SelectRows);
+	
+	//connect(ui->itemLengthBox, SIGNAL(valueChanged(double)), this, SLOT(itemLengthChanged(double)));
+	
 	connect(ui->hideBtn, SIGNAL(clicked()), this, SLOT(btnHideDrawable()));
 	connect(ui->sendToPlayerBtn, SIGNAL(clicked()), this, SLOT(btnSendToPlayer()));
 	connect(ui->addToPlaylistBtn, SIGNAL(clicked()), this, SLOT(btnAddToPlaylist()));
-	connect(ui->playlistRemoveBtn, SIGNAL(clicked()), this, SLOT(btnRemoveFromPlaylist()));
+	connect(ui->delBtn, SIGNAL(clicked()), this, SLOT(btnRemoveFromPlaylist()));
 	
 	ui->drawableGroupBox->setVisible(false);
 	ui->sceneListview->setVisible(false);
 	
-	ui->itemNameLabel->setText("");
 	ui->timeLabel->setText("");
 }
 
@@ -443,9 +462,16 @@ void DirectorWindow::btnAddToPlaylist()
 	}
 	
 	if(item->duration() <= 0.)
-		item->setDuration(15.0);
+		item->setDuration(5.0);
 	
 	playlist->addItem(item);
+	
+	ui->playlistView->setModel(0);
+	ui->playlistView->setModel(m_currentDrawable->playlist());
+	ui->playlistView->resizeRowsToContents();
+	ui->playlistView->resizeColumnsToContents();
+	//ui->playlistView->setCurrentIndex(playlist->indexOf(item));
+	setCurrentItem(item);
 	
 	foreach(PlayerConnection *con, m_players->players())
 		con->updatePlaylist(m_currentDrawable);
@@ -464,10 +490,79 @@ void DirectorWindow::btnRemoveFromPlaylist()
 	foreach(PlayerConnection *con, m_players->players())
 		con->updatePlaylist(m_currentDrawable);
 	
+	// HACK-ish
+	ui->playlistView->setModel(0);
+	ui->playlistView->setModel(m_currentDrawable->playlist());
+ 	ui->playlistView->resizeRowsToContents();
+ 	ui->playlistView->resizeColumnsToContents();
+ 	
 	GLPlaylistItem *newItem = playlist->at(0);
-	ui->playlistView->setCurrentIndex(playlist->indexOf(newItem));
 	if(newItem)
+	{
+		ui->playlistView->setCurrentIndex(playlist->indexOf(newItem));
+	
 		setCurrentItem(newItem);
+	}
+}
+
+void DirectorWindow::btnMoveUp()
+{
+	if(!m_currentItem)
+		return;
+	if(!m_currentDrawable)
+		return;
+	GLDrawablePlaylist *playlist = m_currentDrawable->playlist();
+	
+	int row = playlist->rowOf(m_currentItem);
+	if(row > 0)
+	{
+		playlist->removeItem(m_currentItem);
+		
+		GLPlaylistItem *prev = playlist->at(row-1);
+		playlist->addItem(m_currentItem, prev);
+		
+		// HACK-ish
+		ui->playlistView->setModel(0);
+		ui->playlistView->setModel(m_currentDrawable->playlist());
+		ui->playlistView->resizeRowsToContents();
+		ui->playlistView->resizeColumnsToContents();
+		
+		ui->playlistView->setCurrentIndex(playlist->indexOf(m_currentItem));
+		
+		foreach(PlayerConnection *con, m_players->players())
+			con->updatePlaylist(m_currentDrawable);
+
+	}
+}
+
+void DirectorWindow::btnMoveDown()
+{
+	if(!m_currentItem)
+		return;
+	if(!m_currentDrawable)
+		return;
+	GLDrawablePlaylist *playlist = m_currentDrawable->playlist();
+	
+	int row = playlist->rowOf(m_currentItem);
+	if(row < playlist->size() - 1)
+	{
+		playlist->removeItem(m_currentItem);
+		
+		GLPlaylistItem *next = playlist->at(row+1);
+		playlist->addItem(m_currentItem, next);
+		
+		// HACK-ish
+		ui->playlistView->setModel(0);
+		ui->playlistView->setModel(m_currentDrawable->playlist());
+		ui->playlistView->resizeRowsToContents();
+		ui->playlistView->resizeColumnsToContents();
+		
+		ui->playlistView->setCurrentIndex(playlist->indexOf(m_currentItem));
+		
+		foreach(PlayerConnection *con, m_players->players())
+			con->updatePlaylist(m_currentDrawable);
+
+	}
 }
 
 void DirectorWindow::playlistTimeChanged(GLDrawable *gld, double value)
@@ -479,7 +574,7 @@ void DirectorWindow::playlistTimeChanged(GLDrawable *gld, double value)
 	
 	double min = value/60;
 	double sec = (min - (int)(min)) * 60;
-	double ms  = (sec - (int)(sec)) * 60;
+	//double ms  = (sec - (int)(sec)) * 60;
 	time =  (min<10? "0":"") + QString::number((int)min) + ":" +
 		(sec<10? "0":"") + QString::number((int)sec);/* + "." +
 		(ms <10? "0":"") + QString::number((int)ms );*/
@@ -491,26 +586,10 @@ void DirectorWindow::playlistItemChanged(GLDrawable *gld, GLPlaylistItem *item)
 {
 	if(m_currentDrawable != gld)
 		return;
-		
-	if(m_currentItem)
-		disconnect(ui->itemLengthBox, 0, m_currentItem, 0);
 	
-	m_currentItem = item;
-	if(item)
-	{
-		ui->itemLengthBox->setValue(item->duration());
-		connect(ui->itemLengthBox, SIGNAL(valueChanged(double)), item, SLOT(setDuration(double)));
-		/// TODO connect the changed slot to a slot on this window so we can send the updated playlist to the player
-		
-		ui->playlistView->setCurrentIndex(m_currentDrawable->playlist()->indexOf(item));
-	
-		// Dont need to do this now, since this signal is now just informing us of a change on the player
-// 		foreach(PlayerConnection *con, m_players->players())
-// 			con->setUserProperty(m_currentDrawable, item->value());
-		
-		const char *propName = m_currentDrawable->metaObject()->userProperty().name();
-		m_currentDrawable->setProperty(propName, item->value());
-	}
+	if(m_currentItem != item)
+		setCurrentItem(item);
+
 }
 
 void DirectorWindow::showOpenFileDialog()
@@ -788,7 +867,7 @@ void DirectorWindow::setCurrentDrawable(GLDrawable *gld)
 		if(m_currentDrawable->playlist()->isPlaying())
 			m_currentDrawable->playlist()->stop();
 		
-// 		disconnect(m_currentDrawable->playlist(), 0, this, 0);
+ 		disconnect(m_currentDrawable->playlist(), 0, this, 0);
 // 		
 // 		disconnect(ui->playBtn,  0, m_currentDrawable->playlist(), 0);
 // 		disconnect(ui->pauseBtn, 0, m_currentDrawable->playlist(), 0);
@@ -804,6 +883,10 @@ void DirectorWindow::setCurrentDrawable(GLDrawable *gld)
 		ui->playlistView->setModel(gld->playlist());
 	else
 		ui->playlistView->setModel(0);
+		
+ 	ui->playlistView->resizeColumnsToContents();
+ 	ui->playlistView->resizeRowsToContents();
+	
 	
 	// Fun loop to clear out a QFormLayout - why doesn't QLayout just have a removeAll() or clear() method?
 	QFormLayout *form = ui->itemPropLayout;
@@ -836,6 +919,7 @@ void DirectorWindow::setCurrentDrawable(GLDrawable *gld)
 		foreach(PlayerConnection *con, m_players->players())
 			con->updatePlaylist(m_currentDrawable);
 	
+		connect(gld->playlist(), SIGNAL(itemDurationEdited(GLPlaylistItem*)), this, SLOT(playlistItemDurationChanged()));
 
 		QString itemName = gld->itemName();
 		QString typeName;
@@ -997,7 +1081,7 @@ void DirectorWindow::setCurrentDrawable(GLDrawable *gld)
 		} 
 		
 		
-		ui->itemNameLabel->setText(itemName.isEmpty() ? QString("<b>%1</b>").arg(typeName) : QString("<b>%1</b> (%2)").arg(itemName).arg(typeName));
+		ui->drawableGroupBox->setTitle(itemName.isEmpty() ? typeName : QString("%1 (%2)").arg(itemName).arg(typeName));
 	}
 }
 
@@ -1113,9 +1197,27 @@ void DirectorWindow::setCurrentItem(GLPlaylistItem *item)
 		return;
 	
 	//m_currentDrawable->playlist()->playItem(item);
-	m_currentItem = item;
+// 	if(m_currentItem)
+// 		disconnect(ui->itemLengthBox, 0, m_currentItem, 0);
 	
-	playlistItemChanged(m_currentDrawable, item);
+	m_currentItem = item;
+	if(item)
+	{
+		qDebug() << "DirectorWindow::setCurrentItem: title:"<<item->title()<<", duration: "<<item->duration();
+		
+// 		ui->itemLengthBox->setValue(item->duration());
+// 		connect(ui->itemLengthBox, SIGNAL(valueChanged(double)), item, SLOT(setDuration(double)));
+		/// TODO connect the changed slot to a slot on this window so we can send the updated playlist to the player
+		
+		ui->playlistView->setCurrentIndex(m_currentDrawable->playlist()->indexOf(item));
+	
+		// Dont need to do this now, since this signal is now just informing us of a change on the player
+// 		foreach(PlayerConnection *con, m_players->players())
+// 			con->setUserProperty(m_currentDrawable, item->value());
+		
+		const char *propName = m_currentDrawable->metaObject()->userProperty().name();
+		m_currentDrawable->setProperty(propName, item->value());
+	}
 }
 
 void DirectorWindow::changeCanvasSize()
@@ -1204,11 +1306,24 @@ void DirectorWindow::playPlaylist()
 {
 	if(!m_currentDrawable)
 		return;
+	
+	bool isPlaying = ui->playBtn->property("-playlist-isPlaying").toBool();
+	if(!isPlaying)
+	{
+		ui->playBtn->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
+	}
+	else
+	{
+		ui->playBtn->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
+	}
+	 
+	ui->playBtn->setProperty("-playlist-isPlaying", !isPlaying);
+	
 	foreach(PlayerConnection *con, m_players->players())
-		con->setPlaylistPlaying(m_currentDrawable, true);
+		con->setPlaylistPlaying(m_currentDrawable, !isPlaying);
 }
 
-void DirectorWindow::playlistItemDurationChanged(double)
+void DirectorWindow::playlistItemDurationChanged()
 {
 	if(!m_currentDrawable)
 		return;

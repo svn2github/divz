@@ -409,7 +409,7 @@ private:
 };
 
 
-class GLDrawablePlaylist : public QAbstractListModel
+class GLDrawablePlaylist : public QAbstractItemModel
 {
 	Q_OBJECT
 
@@ -422,15 +422,21 @@ public:
 	
 	int rowCount(const QModelIndex &/*parent*/) const;
 	QVariant data( const QModelIndex & index, int role = Qt::DisplayRole ) const;
+	QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const; 
 	Qt::ItemFlags flags(const QModelIndex &index) const;
-	bool setData(const QModelIndex &index, const QVariant & value, int role) ;
+	bool setData(const QModelIndex &index, const QVariant & value, int role);
 	QModelIndex indexOf(GLPlaylistItem*);
 	
+	QModelIndex index(int row, int column, const QModelIndex & parent = QModelIndex()) const;
+	QModelIndex parent(const QModelIndex&) const;
+	int columnCount(const QModelIndex&) const;
+
 	QByteArray toByteArray();
 	void fromByteArray(QByteArray&);
 	
 	QList<GLPlaylistItem*> items() { return m_items; }
 	
+	int rowOf(GLPlaylistItem *item) { return m_items.indexOf(item); }
 	int size() { return m_items.size(); }
 	GLPlaylistItem *at(int x) { return x>=0 && x<m_items.size()?m_items.at(x):0; }
 	GLPlaylistItem *lookup(int id) { return m_itemLookup[id]; }
@@ -441,7 +447,7 @@ public:
 	double playTime() { return m_playTime; }
 
 public slots:
-	void addItem(GLPlaylistItem *);
+	void addItem(GLPlaylistItem *, GLPlaylistItem *insertAfter=0);
 	void removeItem(GLPlaylistItem *);
 	
 	void setIsPlaying(bool flag);
@@ -457,6 +463,8 @@ signals:
 	
 	void currentItemChanged(GLPlaylistItem*);
 	void playerTimeChanged(double);
+	
+	void itemDurationEdited(GLPlaylistItem*);
 	
 private slots:
 	void playlistItemChanged();

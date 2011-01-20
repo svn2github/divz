@@ -9,6 +9,94 @@
 #include <qmediaservice.h>
 #include <qvideorenderercontrol.h>
 
+VideoFormat QtVideoSource::videoFormat()
+{ 
+	//qDebug() << "QtVideoSource::videoFormat()";
+	
+	return VideoFormat(VideoFrame::BUFFER_IMAGE,m_surfaceAdapter ? m_surfaceAdapter->pixelFormat() : QVideoFrame::Format_RGB32); 
+}
+
+QtVideoSource::QtVideoSource(QObject *parent)
+	: VideoSource(parent)
+{
+	present(QImage("dot.gif"));
+	
+	m_player   = new QMediaPlayer(this);
+	m_playlist = new QMediaPlaylist(this);
+	m_player->setPlaylist(m_playlist);
+	
+	//m_playlist->setPlaybackMode(QMediaPlaylist::Loop);
+	
+	m_surfaceAdapter = new VideoSurfaceAdapter(this);
+	
+	QVideoRendererControl* rendererControl = m_player->service()->requestControl<QVideoRendererControl*>();
+	if (rendererControl)
+		rendererControl->setSurface(m_surfaceAdapter);
+	else
+		qDebug() << "QtVideoSource: Unable to get QVideoRenderControl for video integration. No video will be emitted from this video source.";
+	
+
+}
+
+QtVideoSource::~QtVideoSource()
+{
+	m_player->stop();
+	m_playlist->clear();
+	m_surfaceAdapter->stop();
+}
+
+void QtVideoSource::start(QThread::Priority /*priority*/)
+{
+	//qDebug() << "QtVideoSource::start: starting...";
+	m_player->play();
+}
+	
+void QtVideoSource::setFile(const QString& file)
+{
+	m_file = file;
+	
+	m_playlist->clear();
+
+	QFileInfo fileInfo(file);
+	if (fileInfo.exists()) 
+	{
+		QUrl url = QUrl::fromLocalFile(fileInfo.absoluteFilePath());
+		if (fileInfo.suffix().toLower() == QLatin1String("m3u"))
+			m_playlist->load(url);
+		else
+			m_playlist->addMedia(url);
+			
+		//qDebug() << "QtVideoSource::setFile: Added file:"<<url;
+	} 
+	else 
+	{
+		QUrl url(file);
+		if (url.isValid()) 
+		{
+			m_playlist->addMedia(url);
+			//qDebug() << "QtVideoSource::setFile: Added URL:"<<url;
+		}
+	}
+	
+}
+
+void QtVideoSource::run()
+{
+
+}
+
+void QtVideoSource::present(QImage image)
+{
+	//qDebug() << "QtVideoSource::present()";
+	// TODO is there some way to get the FPS from the QMediaPlayer or friends?
+	//qDebug()<< "QtVideoSource::present: Got image, size:"<<image.size();
+	enqueue(new VideoFrame(image,1000/60));
+	emit frameReady();
+}
+
+/// VideoSurfaceAdapter
+
+
 VideoSurfaceAdapter::VideoSurfaceAdapter(QtVideoSource *e, QObject *parent)
 	: QAbstractVideoSurface(parent)
 	, emitter(e)
@@ -75,7 +163,7 @@ bool VideoSurfaceAdapter::start(const QVideoSurfaceFormat &format)
 		//widget->updateGeometry();
 		updateVideoRect();
 		
-		qDebug()<< "VideoSurfaceAdapter::start: Started with imageFormat:"<<imageFormat<<", pixelFormat:"<<format.pixelFormat();
+		//qDebug()<< "VideoSurfaceAdapter::start: Started with imageFormat:"<<imageFormat<<", pixelFormat:"<<format.pixelFormat();
 	
 		return true;
 	} 
@@ -195,87 +283,4 @@ void VideoSurfaceAdapter::updateVideoRect()
 // 	}
 // }
 
-VideoFormat QtVideoSource::videoFormat()
-{ 
-	//qDebug() << "QtVideoSource::videoFormat()";
-	
-	return VideoFormat(VideoFrame::BUFFER_IMAGE,m_surfaceAdapter ? m_surfaceAdapter->pixelFormat() : QVideoFrame::Format_RGB32); 
-}
 
-QtVideoSource::QtVideoSource(QObject *parent)
-	: VideoSource(parent)
-{
-	present(QImage("dot.gif"));
-	
-	m_player   = new QMediaPlayer(this);
-	m_playlist = new QMediaPlaylist(this);
-	m_player->setPlaylist(m_playlist);
-	
-	m_playlist->setPlaybackMode(QMediaPlaylist::Loop);
-	
-	m_surfaceAdapter = new VideoSurfaceAdapter(this);
-	
-	QVideoRendererControl* rendererControl = m_player->service()->requestControl<QVideoRendererControl*>();
-	if (rendererControl)
-		rendererControl->setSurface(m_surfaceAdapter);
-	else
-		qDebug() << "QtVideoSource: Unable to get QVideoRenderControl for video integration. No video will be emitted from this video source.";
-	
-
-}
-
-QtVideoSource::~QtVideoSource()
-{
-	m_player->stop();
-	m_playlist->clear();
-	m_surfaceAdapter->stop();
-}
-
-void QtVideoSource::start(QThread::Priority /*priority*/)
-{
-	//qDebug() << "QtVideoSource::start: starting...";
-	m_player->play();
-}
-	
-void QtVideoSource::setFile(const QString& file)
-{
-	m_file = file;
-	
-	m_playlist->clear();
-
-	QFileInfo fileInfo(file);
-	if (fileInfo.exists()) 
-	{
-		QUrl url = QUrl::fromLocalFile(fileInfo.absoluteFilePath());
-		if (fileInfo.suffix().toLower() == QLatin1String("m3u"))
-			m_playlist->load(url);
-		else
-			m_playlist->addMedia(url);
-			
-		qDebug() << "QtVideoSource::setFile: Added file:"<<url;
-	} 
-	else 
-	{
-		QUrl url(file);
-		if (url.isValid()) 
-		{
-			m_playlist->addMedia(url);
-			qDebug() << "QtVideoSource::setFile: Added URL:"<<url;
-		}
-	}
-	
-}
-
-void QtVideoSource::run()
-{
-
-}
-
-void QtVideoSource::present(QImage image)
-{
-	//qDebug() << "QtVideoSource::present()";
-	// TODO is there some way to get the FPS from the QMediaPlayer or friends?
-	//qDebug()<< "QtVideoSource::present: Got image, size:"<<image.size();
-	enqueue(new VideoFrame(image,1000/60));
-	emit frameReady();
-}

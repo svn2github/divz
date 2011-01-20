@@ -87,10 +87,12 @@ private slots:
 	void btnSendToPlayer();
 	void btnAddToPlaylist();
 	void btnRemoveFromPlaylist();
+	void btnMoveUp();
+	void btnMoveDown();
 
 	void playlistTimeChanged(GLDrawable*, double);
 	void playlistItemChanged(GLDrawable*, GLPlaylistItem *);
-	void playlistItemDurationChanged(double);
+	void playlistItemDurationChanged();
 	
 	void pausePlaylist();
 	void playPlaylist();

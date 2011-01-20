@@ -1225,7 +1225,8 @@ void GLDrawable::setGLScene(GLScene *scene)
 //////////////////////////////////////////////////////////////////////////////
 
 GLDrawablePlaylist::GLDrawablePlaylist(GLDrawable *drawable)
-	: m_drawable(drawable)
+	: QAbstractItemModel(drawable)
+	, m_drawable(drawable)
 	, m_playTime(0)
 	, m_timerTickLength(1./2.)
 	, m_currentItemIndex(-1)
@@ -1233,6 +1234,7 @@ GLDrawablePlaylist::GLDrawablePlaylist(GLDrawable *drawable)
 	connect(&m_tickTimer, SIGNAL(timeout()), this, SLOT(timerTick()));
 	m_tickTimer.setInterval((int)(m_timerTickLength * 1000.));
 }
+
 GLDrawablePlaylist::~GLDrawablePlaylist()
 {
 	//disconnect(conn, 0, this, 0);
@@ -1246,6 +1248,21 @@ int GLDrawablePlaylist::rowCount(const QModelIndex &/*parent*/) const
 	return m_items.size();
 }
 
+QModelIndex GLDrawablePlaylist::index(int row, int column, const QModelIndex&) const
+{
+	return createIndex(row,column);
+}
+
+QModelIndex GLDrawablePlaylist::parent(const QModelIndex&) const
+{
+	return QModelIndex();
+}
+
+int GLDrawablePlaylist::columnCount(const QModelIndex&) const
+{
+	return 2;
+}
+
 QVariant GLDrawablePlaylist::data( const QModelIndex & index, int role ) const
 {
 	if (!index.isValid())
@@ -1257,19 +1274,24 @@ QVariant GLDrawablePlaylist::data( const QModelIndex & index, int role ) const
 	if (role == Qt::DisplayRole || Qt::EditRole == role)
 	{
 		GLPlaylistItem *d = m_items.at(index.row());
-		QString value = d->title().isEmpty() ? QString("Item %1").arg(index.row()+1) : d->title();
-// 		if(Qt::mightBeRichText(value))
-// 		{
-// 			value = value.replace( QRegExp("<style[^>]*>.*</style>", Qt::CaseInsensitive), "" );
-// 			value = value.replace( QRegExp("<[^>]*>"), "" );
-// 			value = value.replace( QRegExp("(^\\s+)"), "" );
-// 		}
-// 		else
-// 		{
-// 			const char *propName = m_drawable->metaObject()->userProperty().name();
-// 		}
-		return value;
+			
+		if(index.column() == 0)
+		{
+			QString value = d->title().isEmpty() ? QString("Item %1").arg(index.row()+1) : d->title();
+			return value;
+		}
+		else
+		{
+			QString dur = QString().sprintf("%.02f", d->duration());
+			return dur; 
+		}
 	}
+	else 
+	if(role == Qt::TextAlignmentRole && index.column() == 1)
+	{
+		return Qt::AlignRight;
+	}
+	
 // 	else if(Qt::DecorationRole == role)
 // 	{
 // 		GLSceneLayout *lay = m_scene->m_layouts.at(index.row());
@@ -1278,10 +1300,26 @@ QVariant GLDrawablePlaylist::data( const QModelIndex & index, int role ) const
 	else
 		return QVariant();
 }
+
+QVariant GLDrawablePlaylist::headerData(int section, Qt::Orientation orientation, int role) const
+{
+	if(orientation != Qt::Horizontal ||
+		section < 0 || 
+		section > 1 ||
+		role != Qt::DisplayRole)
+		return QVariant();
+		
+	
+	return section == 0 ? "Item" : "Duration";
+}
+
 Qt::ItemFlags GLDrawablePlaylist::flags(const QModelIndex &index) const
 {
 	if (index.isValid())
-		return Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsEditable; //| Qt::ItemIsDragEnabled | Qt::ItemIsDropEnabled;
+		if(index.column() == 1)
+			return Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsEditable; //| Qt::ItemIsDragEnabled | Qt::ItemIsDropEnabled;
+		else
+			return Qt::ItemIsEnabled | Qt::ItemIsSelectable; //| Qt::ItemIsDragEnabled | Qt::ItemIsDropEnabled;
 
 	return Qt::ItemIsEnabled | Qt::ItemIsSelectable;// | Qt::ItemIsDropEnabled ;
 }
@@ -1295,9 +1333,19 @@ bool GLDrawablePlaylist::setData(const QModelIndex &index, const QVariant & valu
 
 	GLPlaylistItem *d = m_items.at(index.row());
 	qDebug() << "GLDrawablePlaylist::setData: "<<this<<" row:"<<index.row()<<", value:"<<value;
+	
 	if(value.isValid() && !value.isNull())
 	{
-		d->setTitle(value.toString());
+		if(index.column() == 0)
+		{	
+			d->setTitle(value.toString());
+		}
+		else
+		{
+			d->setDuration(value.toDouble());
+			emit itemDurationEdited(d);
+		}
+		
 		dataChanged(index,index);
 		return true;
 	}
@@ -1310,7 +1358,7 @@ QModelIndex GLDrawablePlaylist::indexOf(GLPlaylistItem *item)
 	return createIndex(idx, 0);
 }
 
-void GLDrawablePlaylist::addItem(GLPlaylistItem *item)
+void GLDrawablePlaylist::addItem(GLPlaylistItem *item, GLPlaylistItem *insertAfter)
 {
 	if(!item)
 		return;
@@ -1318,7 +1366,17 @@ void GLDrawablePlaylist::addItem(GLPlaylistItem *item)
 	item->setPlaylist(this);
 
 	m_itemLookup[item->id()] = item;
-	m_items << item;
+	if(!insertAfter)
+		m_items << item;
+	else
+	{
+		int row = m_items.indexOf(insertAfter);
+		if(row > -1)
+			m_items.insert(row, item);
+		else
+			m_items.append(item);
+	}
+	
 	connect(item, SIGNAL(playlistItemChanged()), this, SLOT(playlistItemChanged()));
 
 
@@ -1352,6 +1410,13 @@ void GLDrawablePlaylist::removeItem(GLPlaylistItem *item)
 	endRemoveRows();
 
 	emit itemRemoved(item);
+	
+// 	qDebug() << "GLDrawablePlaylist::removeItem: Removed: "<<item;
+// 	qDebug() << "GLDrawablePlaylist::removeItem: List is now:";
+// 	foreach(GLPlaylistItem *x, m_items)
+// 		qDebug() << "GLDrawablePlaylist::removeItem: \t "<<x->title();
+// 	
+// 	qDebug() << "GLDrawablePlaylist::removeItem: End of"<<m_items.size()<<"items";
 
 }
 

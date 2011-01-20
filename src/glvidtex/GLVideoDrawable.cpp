@@ -306,6 +306,7 @@ void GLVideoDrawable::disconnectVideoSource()
 	if(!m_source)
 		return;
 	disconnect(m_source, 0, this, 0);
+	emit sourceDiscarded(m_source);
 	m_source = 0;
 }
 

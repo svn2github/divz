@@ -4,6 +4,8 @@
 #include "QtVideoSource.h"
 #endif
 
+#include <QPropertyAnimation>
+
 GLVideoFileDrawable::GLVideoFileDrawable(QString file, QObject *parent)
 	: GLVideoDrawable(parent)
 	, m_videoLength(-1)
@@ -34,22 +36,36 @@ bool GLVideoFileDrawable::setVideoFile(const QString& file)
 	
 	m_videoFile = file;
 	
-	#ifdef HAS_QT_VIDEO_SOURCE
-		
-		m_qtSource = new QtVideoSource();
-		m_qtSource->setFile(file);
-		m_qtSource->start();
-		
-		// Reset length for next query to videoLength(), below 
-		m_videoLength = -1;
-		
-		setVideoSource(m_qtSource);
-		
-	#else
+#ifdef HAS_QT_VIDEO_SOURCE
+	if(m_qtSource)
+	{
+		QPropertyAnimation *anim = new QPropertyAnimation(m_qtSource->player(), "volume");
+		anim->setEndValue(0);
+		anim->setDuration(xfadeLength());
+		anim->start();
+	}
 	
-		qDebug() << "GLVideoFileDrawable::setVideoFile: "<<file<<": GLVidTex Graphics Engine not compiled with QtMobility support, therefore, unable to play back video files with sound. Use GLVideoLoopDrawable to play videos as loops without QtMobility.";
+	m_qtSource = new QtVideoSource();
+	m_qtSource->setFile(file);
+	m_qtSource->start();
 	
-	#endif
+	// Reset length for next query to videoLength(), below 
+	m_videoLength = -1;
+	
+	setVideoSource(m_qtSource);
+	
+	m_qtSource->player()->setVolume(0);
+	
+	QPropertyAnimation *anim = new QPropertyAnimation(m_qtSource->player(), "volume");
+	anim->setEndValue(100);
+	anim->setDuration(xfadeLength());
+	anim->start();
+	
+#else
+
+	qDebug() << "GLVideoFileDrawable::setVideoFile: "<<file<<": GLVidTex Graphics Engine not compiled with QtMobility support, therefore, unable to play back video files with sound. Use GLVideoLoopDrawable to play videos as loops without QtMobility.";
+
+#endif
 	
 	emit videoFileChanged(file);
 	
@@ -59,6 +75,7 @@ bool GLVideoFileDrawable::setVideoFile(const QString& file)
 
 double GLVideoFileDrawable::videoLength()
 {
+#ifdef HAS_QT_VIDEO_SOURCE
 	if(m_videoLength < 0)
 	{
 		if(!m_qtSource)
@@ -72,7 +89,7 @@ double GLVideoFileDrawable::videoLength()
 			qDebug() << "GLVideoFileDrawable::videoLength: "<<m_qtSource->file()<<": Duration: "<<m_videoLength;
 		}
 	}
-	
+#endif	
 	return m_videoLength;
 }	
 		

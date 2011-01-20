@@ -36,6 +36,10 @@ TODO:
 			- Are images not getting removed from the screen when faded off?
 			- Free buffer_pointer when off screen?
 			- Implemented aggressive memory management in GLImageDrawable by freeing memory by overriding GLDrawalle::setGLWidget. Only frees memory that has an m_imageFile to reload it as needed.
+		- [FIXED] Player: QtVidSrc videos should fade out volume when cross-fading to a different video in the playlist
+		- [FIXED] Director: Length of videos from QtVideoSource aren't automatically detected for use in playlists
+		- [FIXED] Director: Duration box bug - duration of previous item seems to propogate to the next item selected, instead of the new item updating the box correctly
+			- Totally reworked the playlist area - changed the list to an editable table
 		
 		- [TMP-FIX] Video Encoding "problems"
 			- Way to much CPU usage - 157%-ish on a dual-core 2.4 GHz...causing live video to stutter
@@ -56,10 +60,9 @@ TODO:
 			- But if both scenes have a vidinput on them, then the eventloop appears to get overwhelmed (or something is)
 			  that causes all other events (including the crossfade timer events) to be ignored
 			  
-		- Director: Length of videos from QtVideoSource aren't automatically detected for use in playlists
 		- Director: QtVidSrc videos play only a few seconds in director preview
+			- Not repeatable at office
 		- Director: QtVidSrc videos are behind the player - need to sync
-		- Player: QtVidSrc videos should fade out volume when cross-fading to a different video in the playlist
 		
 	NEEDED FEATURES:
 		- Sharpening Filter (GLSL or image based, scaled up)
