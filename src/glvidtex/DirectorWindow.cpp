@@ -220,10 +220,6 @@ void DirectorWindow::setupUI()
 	connect(ui->playlistView, SIGNAL(activated(const QModelIndex &)), this, SLOT(itemSelected(const QModelIndex &)));
 	connect(ui->playlistView, SIGNAL(clicked(const QModelIndex &)),   this, SLOT(itemSelected(const QModelIndex &)));
 	
-	//ui->playlistView->horizontalHeader()->setVisible(false);
-	ui->playlistView->verticalHeader()->setVisible(false);
-	ui->playlistView->setSelectionBehavior(QAbstractItemView::SelectRows);
-	
 	//connect(ui->itemLengthBox, SIGNAL(valueChanged(double)), this, SLOT(itemLengthChanged(double)));
 	
 	connect(ui->hideBtn, SIGNAL(clicked()), this, SLOT(btnHideDrawable()));
@@ -776,11 +772,15 @@ void DirectorWindow::setCollection(GLSceneGroupCollection *collection)
 }
 void DirectorWindow::setCurrentGroup(GLSceneGroup *group, GLScene */*currentScene*/)
 {
+	if(m_currentGroup)
+		disconnect(m_currentGroup, 0, this, 0);
+		
 	m_currentGroup = group;
 	if(!group)
 		return;
 		
 	ui->groupListview->setModel(group);
+	connect(group, SIGNAL(sceneDataChanged()), this, SLOT(sceneDataChanged()));
 	
 	foreach(PlayerConnection *con, m_players->players())
 		con->setGroup(group);
@@ -792,6 +792,13 @@ void DirectorWindow::setCurrentGroup(GLSceneGroup *group, GLScene */*currentScen
 		slideSelected(idx);
 	}
 }
+
+void DirectorWindow::sceneDataChanged()
+{
+	ui->groupListview->resizeColumnsToContents();
+ 	ui->groupListview->resizeRowsToContents();
+}
+
 void DirectorWindow::setCurrentScene(GLScene *scene)
 {
 	if(!scene || scene == m_currentScene)
@@ -921,7 +928,7 @@ void DirectorWindow::setCurrentDrawable(GLDrawable *gld)
 		foreach(PlayerConnection *con, m_players->players())
 			con->updatePlaylist(m_currentDrawable);
 	
-		connect(gld->playlist(), SIGNAL(itemDurationEdited(GLPlaylistItem*)), this, SLOT(playlistItemDurationChanged()));
+		connect(gld->playlist(), SIGNAL(playlistItemChanged()), this, SLOT(playlistItemDurationChanged()));
 
 		QString itemName = gld->itemName();
 		QString typeName;

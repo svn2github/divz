@@ -105,6 +105,7 @@ private slots:
 	void loadVideoInputList(int);
 	void videoInputClicked();
 	
+	void sceneDataChanged();
 	
 protected:
 	void closeEvent(QCloseEvent *event);

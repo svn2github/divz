@@ -208,9 +208,12 @@ signals:
 private slots:
 	void drawableDestroyed();
 	void drawableNameChanging(QString);
+	void drawablePlaylistItemChanged();
 	void fadeTick();
 	
 protected:
+	double calcDuration();
+	
 	friend class GLSceneLayoutListModel;
 	
 	int m_sceneId;
@@ -253,7 +256,7 @@ protected:
 };
 	
 class GLSceneGroupType;
-class GLSceneGroup : public QAbstractListModel
+class GLSceneGroup : public QAbstractItemModel
 {
 	Q_OBJECT
 	
@@ -292,6 +295,11 @@ public:
 	virtual QVariant data( const QModelIndex & index, int role = Qt::DisplayRole ) const;
 	virtual Qt::ItemFlags flags(const QModelIndex &index) const;
 	virtual bool setData(const QModelIndex &index, const QVariant & value, int role) ;
+	
+	QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const;
+	QModelIndex index(int row, int column, const QModelIndex & parent = QModelIndex()) const;
+	QModelIndex parent(const QModelIndex&) const;
+	int columnCount(const QModelIndex&) const;
 
 	// Overlay scene, by definition, is a general scene that is to be overlayed on the content of 
 	// the other scenes in the list. 
@@ -334,6 +342,8 @@ signals:
 	
 	void scheduledTimeChanged(QDateTime);
 	void autoScheduleChanged(bool);
+	
+	void sceneDataChanged();
 
 protected:
 	int m_groupId;

@@ -445,6 +445,8 @@ public:
 
 	bool isPlaying() { return m_isPlaying; }
 	double playTime() { return m_playTime; }
+	
+	double duration();
 
 public slots:
 	void addItem(GLPlaylistItem *, GLPlaylistItem *insertAfter=0);
@@ -464,10 +466,10 @@ signals:
 	void currentItemChanged(GLPlaylistItem*);
 	void playerTimeChanged(double);
 	
-	void itemDurationEdited(GLPlaylistItem*);
+	void playlistItemChanged();
 	
 private slots:
-	void playlistItemChanged();
+	void playlistItemChangedSlot();
 	void timerTick();
 	
 private:

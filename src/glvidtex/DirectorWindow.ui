@@ -20,8 +20,28 @@
       <property name="orientation">
        <enum>Qt::Horizontal</enum>
       </property>
-      <widget class="QListView" name="collectionListview"/>
-      <widget class="QListView" name="groupListview"/>
+      <widget class="QTableView" name="collectionListview">
+       <property name="selectionBehavior">
+        <enum>QAbstractItemView::SelectRows</enum>
+       </property>
+       <attribute name="verticalHeaderVisible">
+        <bool>false</bool>
+       </attribute>
+       <attribute name="verticalHeaderVisible">
+        <bool>false</bool>
+       </attribute>
+      </widget>
+      <widget class="QTableView" name="groupListview">
+       <property name="selectionBehavior">
+        <enum>QAbstractItemView::SelectRows</enum>
+       </property>
+       <attribute name="verticalHeaderVisible">
+        <bool>false</bool>
+       </attribute>
+       <attribute name="verticalHeaderVisible">
+        <bool>false</bool>
+       </attribute>
+      </widget>
       <widget class="QSplitter" name="sceneSplitter">
        <property name="orientation">
         <enum>Qt::Vertical</enum>
@@ -110,7 +130,17 @@
               </layout>
              </item>
              <item>
-              <widget class="QTableView" name="playlistView"/>
+              <widget class="QTableView" name="playlistView">
+               <property name="selectionBehavior">
+                <enum>QAbstractItemView::SelectRows</enum>
+               </property>
+               <attribute name="verticalHeaderVisible">
+                <bool>false</bool>
+               </attribute>
+               <attribute name="verticalHeaderVisible">
+                <bool>false</bool>
+               </attribute>
+              </widget>
              </item>
              <item>
               <layout class="QHBoxLayout" name="horizontalLayout_4">

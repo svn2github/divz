@@ -1365,7 +1365,7 @@ bool GLDrawablePlaylist::setData(const QModelIndex &index, const QVariant & valu
 				d->setDuration(val);
 				d->setAutoDuration(false);
 			}
-			emit itemDurationEdited(d);
+			emit playlistItemChanged();
 		}
 		
 		dataChanged(index,index);
@@ -1378,6 +1378,14 @@ QModelIndex GLDrawablePlaylist::indexOf(GLPlaylistItem *item)
 {
 	int idx = m_items.indexOf(item);
 	return createIndex(idx, 0);
+}
+
+double GLDrawablePlaylist::duration()
+{
+	double dur=0;
+	foreach(GLPlaylistItem *item, m_items)
+		dur += item->duration();
+	return dur;
 }
 
 void GLDrawablePlaylist::addItem(GLPlaylistItem *item, GLPlaylistItem *insertAfter)
@@ -1399,7 +1407,7 @@ void GLDrawablePlaylist::addItem(GLPlaylistItem *item, GLPlaylistItem *insertAft
 			m_items.append(item);
 	}
 	
-	connect(item, SIGNAL(playlistItemChanged()), this, SLOT(playlistItemChanged()));
+	connect(item, SIGNAL(playlistItemChanged()), this, SLOT(playlistItemChangedSlot()));
 
 
 	beginInsertRows(QModelIndex(),m_items.size()-1,m_items.size());
@@ -1442,7 +1450,7 @@ void GLDrawablePlaylist::removeItem(GLPlaylistItem *item)
 
 }
 
-void GLDrawablePlaylist::playlistItemChanged()
+void GLDrawablePlaylist::playlistItemChangedSlot()
 {
 	GLPlaylistItem *item = dynamic_cast<GLPlaylistItem *>(item);
 	if(!item)
@@ -1456,6 +1464,8 @@ void GLDrawablePlaylist::playlistItemChanged()
 	dataChanged(idx, idx);
 
 	/// TODO - rerun calculations for automatic durations/schedules
+	
+	emit playlistItemChanged();
 }
 
 

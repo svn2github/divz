@@ -509,6 +509,7 @@ void GLScene::addDrawable(GLDrawable *d)
 	
 	connect(d, SIGNAL(destroyed()), this, SLOT(drawableDestroyed()));
 	connect(d, SIGNAL(itemNameChanging(QString)), this, SLOT(drawableNameChanging(QString)));
+	connect(d->playlist(), SIGNAL(playlistItemChanged()), this, SLOT(drawablePlaylistItemChanged()));
 
 	beginInsertRows(QModelIndex(),m_itemList.size()-1,m_itemList.size());
 
@@ -741,6 +742,7 @@ void GLScene::setZIndex(double d)
 void GLScene::setDuration(double duration)
 {
 	m_duration = duration;
+	//qDebug() << "GLScene::setDuration(): new duration:"<<duration;
 	emit durationChanged(duration);
 }
 
@@ -748,6 +750,29 @@ void GLScene::setAutoDuration(bool flag)
 {
 	m_autoDuration = flag;
 	emit autoDurationChanged(flag);
+	
+	if(flag)
+		setDuration(calcDuration());
+}
+
+double GLScene::calcDuration()
+{
+	double max = -1;
+	foreach(GLDrawable *gld, m_itemList)
+	{
+		double dur = gld->playlist()->duration();
+		
+		if(dur > max)
+			max = dur;
+	}
+	return max;
+}
+
+void GLScene::drawablePlaylistItemChanged()
+{
+	//qDebug() << "GLScene::drawablePlaylistItemChanged()";
+	if(autoDuration())
+		setDuration(calcDuration());
 }
 
 void GLScene::setScheduledTime(const QDateTime& date)
@@ -768,7 +793,7 @@ void GLScene::setAutoSchedule(bool flag)
 // ****************************
 
 GLSceneGroup::GLSceneGroup(QObject *parent)
-	: QAbstractListModel(parent)
+	: QAbstractItemModel(parent)
 	, m_groupId(-1)
 	, m_duration(5.)
 	, m_autoDuration(true)
@@ -776,7 +801,7 @@ GLSceneGroup::GLSceneGroup(QObject *parent)
 {}
 
 GLSceneGroup::GLSceneGroup(QByteArray& ba, QObject *parent)
-	: QAbstractListModel(parent)
+	: QAbstractItemModel(parent)
 	, m_groupId(-1)
 	, m_duration(5.)
 	, m_autoDuration(true)
@@ -851,8 +876,9 @@ void GLSceneGroup::fromByteArray(QByteArray& array)
 	{
 		QByteArray data = var.toByteArray();
 		GLScene *scene = new GLScene(data, this);
-		m_scenes << scene;
-		m_sceneIdLookup[scene->sceneId()] = scene;
+		//m_scenes << scene;
+		//m_sceneIdLookup[scene->sceneId()] = scene;
+		addScene(scene);
 	}
 }
 
@@ -869,6 +895,34 @@ int GLSceneGroup::rowCount(const QModelIndex &/*parent*/) const
 	return sz;
 }
 
+QVariant GLSceneGroup::headerData(int section, Qt::Orientation orientation, int role) const
+{
+	if(orientation != Qt::Horizontal ||
+		section < 0 || 
+		section > 1 ||
+		role != Qt::DisplayRole)
+		return QVariant();
+		
+	
+	return section == 0 ? "Title" : "Duration";
+}
+
+QModelIndex GLSceneGroup::index(int row, int column, const QModelIndex&) const
+{
+	return createIndex(row,column);
+}
+
+QModelIndex GLSceneGroup::parent(const QModelIndex&) const
+{
+	return QModelIndex();
+}
+
+int GLSceneGroup::columnCount(const QModelIndex&) const
+{
+	return 2;
+}
+
+
 QVariant GLSceneGroup::data( const QModelIndex & index, int role) const
 {
 	//qDebug() << "GLSceneGroup::data: index:"<<index;
@@ -878,28 +932,53 @@ QVariant GLSceneGroup::data( const QModelIndex & index, int role) const
 	if (index.row() >= rowCount(QModelIndex()))
 		return QVariant();
 
-	if (role == Qt::DisplayRole || Qt::EditRole == role)
+	GLScene *d = m_scenes.at(index.row());
+			
+	if(index.column() == 0)
 	{
-		GLScene *d = m_scenes.at(index.row());
-		QString value = d->sceneName().isEmpty() ? QString("Scene %1").arg(index.row()+1) : d->sceneName();
-		//qDebug() << "GLSceneGroup::data: "<<this<<" row:"<<index.row()<<", value:"<<value;
-		return value;
+		if (role == Qt::DisplayRole || Qt::EditRole == role)
+		{
+			QString value = d->sceneName().isEmpty() ? QString("Scene %1").arg(index.row()+1) : d->sceneName();
+			//qDebug() << "GLSceneGroup::data: "<<this<<" row:"<<index.row()<<", value:"<<value;
+			return value;
+		}
+		else if(Qt::DecorationRole == role)
+		{
+			return d->pixmap();
+		}
 	}
-	else if(Qt::DecorationRole == role)
+	else 
+	if(index.column() == 1)
 	{
-		GLScene *d = m_scenes.at(index.row());
-		return d->pixmap();
+		if(role == Qt::DisplayRole || Qt::EditRole == role)
+		{
+			QString dur = QString().sprintf("%.02f", d->duration());
+			return dur;
+		}
+		else
+		if(role == Qt::TextAlignmentRole)
+		{
+			return Qt::AlignRight;
+		}
+		else
+		if(role == Qt::BackgroundRole)
+		{
+			if(d->autoDuration())
+				return Qt::gray;
+			else
+				return QVariant();	
+		}
 	}
-	else
-		return QVariant();
+	
+	return QVariant();
 }
 
 Qt::ItemFlags GLSceneGroup::flags(const QModelIndex &index) const
 {
 	if (index.isValid())
 		return Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsEditable; //| Qt::ItemIsDragEnabled | Qt::ItemIsDropEnabled;
-
-	return Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsDropEnabled ;
+		
+	return Qt::ItemIsEnabled | Qt::ItemIsSelectable;// | Qt::ItemIsDropEnabled ;
 }
 
 bool GLSceneGroup::setData(const QModelIndex &index, const QVariant & value, int /*role*/)
@@ -911,13 +990,32 @@ bool GLSceneGroup::setData(const QModelIndex &index, const QVariant & value, int
 		return false;
 
 	GLScene *d = m_scenes.at(index.row());
-	qDebug() << "GLSceneGroup::setData: "<<this<<" row:"<<index.row()<<", value:"<<value;
+	//qDebug() << "GLSceneGroup::setData: "<<this<<" row:"<<index.row()<<", value:"<<value;
 	if(value.isValid() && !value.isNull())
 	{
-		d->setSceneName(value.toString());
+		if(index.column() == 0)
+		{	
+			d->setSceneName(value.toString());
+		}
+		else
+		{
+			double val = value.toDouble();
+			if(!val)
+			{
+				d->setAutoDuration(true);
+			}
+			else
+			{
+				d->setDuration(val);
+				d->setAutoDuration(false);
+			}
+			//emit itemDurationEdited(d);
+		}
+		
 		dataChanged(index,index);
 		return true;
 	}
+
 	return false;
 }
 
@@ -978,10 +1076,14 @@ void GLSceneGroup::sceneChanged()
 	GLScene *scene = dynamic_cast<GLScene*>(sender());
 	if(!scene)
 		return;
+		
 	int row = m_scenes.indexOf(scene);
 	// Notify QListViews of change in data
-	QModelIndex idx = createIndex(row, 0);
-	dataChanged(idx, idx);
+	QModelIndex idx1 = createIndex(row, 0);
+	QModelIndex idx2 = createIndex(row, 1);
+	dataChanged(idx1, idx2);
+	
+	emit sceneDataChanged();
 	
 	/// TODO recalc scene datetimes if they are auto scheduled based on cumulative duration 
 	/// TODO recalc our duration based on scene durations IF our duration is 'autoDuration'
@@ -1140,7 +1242,9 @@ void GLSceneGroupCollection::fromByteArray(QByteArray& array)
 	foreach(QVariant var, groups)
 	{
 		QByteArray data = var.toByteArray();
-		m_groups << new GLSceneGroup(data, this);
+		//m_groups << new GLSceneGroup(data, this);
+		GLSceneGroup *group = new GLSceneGroup(data, this);
+		addGroup(group);
 	}
 }
 
