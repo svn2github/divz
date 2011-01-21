@@ -106,6 +106,10 @@ class GLScene : public QAbstractListModel
 	Q_PROPERTY(double duration READ duration WRITE setDuration);
 	Q_PROPERTY(bool autoDuration READ autoDuration WRITE setAutoDuration);
 	
+	Q_PROPERTY(QDateTime scheduledTime READ scheduledTime WRITE setScheduledTime);
+	Q_PROPERTY(bool autoSchedule READ autoSchedule WRITE setAutoSchedule);
+
+	
 	Q_PROPERTY(GLSceneType* sceneType READ sceneType WRITE setSceneType);
 	
 public:
@@ -161,6 +165,9 @@ public:
 	double duration() { return m_duration; }
 	bool autoDuration() { return m_autoDuration; }
 	
+	QDateTime scheduledTime() { return m_scheduledTime; }
+	bool autoSchedule() { return m_autoSchedule; }
+	
 	GLSceneType *sceneType() { return m_sceneType; }
 
 public slots:
@@ -173,6 +180,9 @@ public slots:
 	
 	void setDuration(double duration);
 	void setAutoDuration(bool flag);
+	
+	void setScheduledTime(const QDateTime&);
+	void setAutoSchedule(bool flag);
 	
 	void setSceneType(GLSceneType *);
 	
@@ -188,6 +198,12 @@ signals:
 	void opacityChanged(double d);
 	void zIndexChanged(double d);
 	void opacityAnimationFinished();
+	
+	void durationChanged(double);
+	void autoDurationChanged(bool);
+	
+	void scheduledTimeChanged(QDateTime);
+	void autoScheduleChanged(bool);
 	
 private slots:
 	void drawableDestroyed();
@@ -229,6 +245,9 @@ protected:
 	
 	double m_duration;
 	bool m_autoDuration;
+	
+	QDateTime m_scheduledTime;
+	bool m_autoSchedule;
 	
 	GLSceneType *m_sceneType;
 };
@@ -279,6 +298,12 @@ public:
 	GLScene * overlayScene() { return m_overlayScene; }
 	void setOverlayScene(GLScene*);
 	
+	double duration() { return m_duration; }
+	bool autoDuration() { return m_autoDuration; }
+	
+	QDateTime scheduledTime() { return m_scheduledTime; }
+	bool autoSchedule() { return m_autoSchedule; }
+	
 	GLSceneGroupType *groupType() { return m_groupType; }	
 
 public slots:
@@ -286,6 +311,12 @@ public slots:
 	void setPixmap(const QPixmap&);
 	
 	void setGroupType(GLSceneGroupType*);
+	
+	void setDuration(double duration);
+	void setAutoDuration(bool flag);
+	
+	void setScheduledTime(const QDateTime&);
+	void setAutoSchedule(bool flag);
 	
 private slots:
 	void sceneChanged();
@@ -298,6 +329,12 @@ signals:
 	void overlaySceneChanged(GLScene*);
 	void pixmapChanged(const QPixmap&);
 	
+	void durationChanged(double);
+	void autoDurationChanged(bool);
+	
+	void scheduledTimeChanged(QDateTime);
+	void autoScheduleChanged(bool);
+
 protected:
 	int m_groupId;
 	QString m_groupName;
@@ -307,6 +344,12 @@ protected:
 	QHash<int,GLScene*> m_sceneIdLookup;
 
 	GLScene *m_overlayScene;
+	
+	double m_duration;
+	bool m_autoDuration;
+	
+	QDateTime m_scheduledTime;
+	bool m_autoSchedule;
 	
 	GLSceneGroupType *m_groupType;
 };

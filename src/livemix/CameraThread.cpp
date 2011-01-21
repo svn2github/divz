@@ -207,7 +207,7 @@ CameraThread * CameraThread::threadForCamera(const QString& camera)
  		qDebug() << "CameraThread::threadForCamera(): "<<v<<": "<<camera<<": [CACHE MISS] -";
  		#endif
 //  		v->initCamera();
-		v->start(QThread::HighPriority);
+		v->start(QThread::NormalPriority); //QThread::HighPriority);
 		usleep(750 * 1000); // give it half a sec or so to init
 
 		return v;

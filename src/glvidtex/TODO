@@ -63,6 +63,7 @@ TODO:
 		- Director: QtVidSrc videos play only a few seconds in director preview
 			- Not repeatable at office
 		- Director: QtVidSrc videos are behind the player - need to sync
+		- GLPlaylist: When erasing duration (user set duration to 0 to re-enable auto-dur), need a way to re-calc the auto dur, say get length of video, etc. 
 		
 	NEEDED FEATURES:
 		- Sharpening Filter (GLSL or image based, scaled up)
@@ -130,6 +131,9 @@ TODO:
 		- [DONE] Allow player to run playlists on items by itself without being connected to the director
 	
 	IDEAS:
+		- Players need to communicate with each other if in a "group"
+			- E.g. part of a wall display
+			- Elect one as the master coorinator for timing/sync of video playback, etc
 		- Add an "output analysis" to the PlayerSetupDialog
 			- Auto-updated histogram when connected
 			- Need a histo of rgb values not just grayscale

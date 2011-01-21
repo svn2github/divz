@@ -464,6 +464,8 @@ void DirectorWindow::btnAddToPlaylist()
 	if(item->duration() <= 0.)
 		item->setDuration(5.0);
 	
+	item->setAutoDuration(true);
+	
 	playlist->addItem(item);
 	
 	ui->playlistView->setModel(0);

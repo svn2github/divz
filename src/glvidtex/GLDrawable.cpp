@@ -1271,10 +1271,10 @@ QVariant GLDrawablePlaylist::data( const QModelIndex & index, int role ) const
 	if (index.row() >= rowCount(QModelIndex()))
 		return QVariant();
 
+	GLPlaylistItem *d = m_items.at(index.row());
+		
 	if (role == Qt::DisplayRole || Qt::EditRole == role)
 	{
-		GLPlaylistItem *d = m_items.at(index.row());
-			
 		if(index.column() == 0)
 		{
 			QString value = d->title().isEmpty() ? QString("Item %1").arg(index.row()+1) : d->title();
@@ -1283,13 +1283,24 @@ QVariant GLDrawablePlaylist::data( const QModelIndex & index, int role ) const
 		else
 		{
 			QString dur = QString().sprintf("%.02f", d->duration());
-			return dur; 
+			return dur;
 		}
 	}
 	else 
-	if(role == Qt::TextAlignmentRole && index.column() == 1)
+	if(index.column() == 1)
 	{
-		return Qt::AlignRight;
+		if(role == Qt::TextAlignmentRole)
+		{
+			return Qt::AlignRight;
+		}
+		else
+		if(role == Qt::BackgroundRole)
+		{
+			if(d->autoDuration())
+				return Qt::gray;
+			else
+				return QVariant();	
+		}
 	}
 	
 // 	else if(Qt::DecorationRole == role)
@@ -1297,8 +1308,8 @@ QVariant GLDrawablePlaylist::data( const QModelIndex & index, int role ) const
 // 		GLSceneLayout *lay = m_scene->m_layouts.at(index.row());
 // 		return lay->pixmap();
 // 	}
-	else
-		return QVariant();
+	
+	return QVariant();
 }
 
 QVariant GLDrawablePlaylist::headerData(int section, Qt::Orientation orientation, int role) const
@@ -1332,7 +1343,7 @@ bool GLDrawablePlaylist::setData(const QModelIndex &index, const QVariant & valu
 		return false;
 
 	GLPlaylistItem *d = m_items.at(index.row());
-	qDebug() << "GLDrawablePlaylist::setData: "<<this<<" row:"<<index.row()<<", value:"<<value;
+	qDebug() << "GLDrawablePlaylist::setData: "<<this<<" row:"<<index.row()<<", col:"<<index.column()<<", value:"<<value;
 	
 	if(value.isValid() && !value.isNull())
 	{
@@ -1342,7 +1353,18 @@ bool GLDrawablePlaylist::setData(const QModelIndex &index, const QVariant & valu
 		}
 		else
 		{
-			d->setDuration(value.toDouble());
+			double val = value.toDouble();
+			if(!val)
+			{
+				/// TODO Need a way to re-calc the auto duration for this item
+				d->setDuration(15.);
+				d->setAutoDuration(true);
+			}
+			else
+			{
+				d->setDuration(val);
+				d->setAutoDuration(false);
+			}
 			emit itemDurationEdited(d);
 		}
 		
@@ -1559,11 +1581,17 @@ GLPlaylistItem::GLPlaylistItem(GLDrawablePlaylist *list)
 	: QObject(list)
 	, m_playlist(list)
 	, m_id(-1)
+	, m_duration(5.)
+	, m_autoDuration(true)
+	, m_autoSchedule(true)
 	{}
 
 GLPlaylistItem::GLPlaylistItem(QByteArray& array, GLDrawablePlaylist *list)
 	: QObject(list)
 	, m_playlist(list)
+	, m_duration(5.)
+	, m_autoDuration(true)
+	, m_autoSchedule(true)
 {
 	fromByteArray(array);
 }

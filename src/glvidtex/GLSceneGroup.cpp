@@ -248,6 +248,9 @@ GLScene::GLScene(QObject *parent)
 	, m_graphicsScene(0)
 	, m_crossfadeSpeed(300)
 	, m_fadeClockActive(false)
+	, m_duration(5.)
+	, m_autoDuration(true)
+	, m_autoSchedule(true)
 {
 	connect(&m_fadeTimer, SIGNAL(timeout()), this, SLOT(fadeTick()));
 }
@@ -262,6 +265,10 @@ GLScene::GLScene(QByteArray& ba, QObject *parent)
 	, m_layoutListModel(0)
 	, m_graphicsScene(0)
 	, m_crossfadeSpeed(300)
+	, m_fadeClockActive(false)
+	, m_duration(5.)
+	, m_autoDuration(true)
+	, m_autoSchedule(true)
 {
 	connect(&m_fadeTimer, SIGNAL(timeout()), this, SLOT(fadeTick()));
 	fromByteArray(ba);
@@ -734,32 +741,26 @@ void GLScene::setZIndex(double d)
 void GLScene::setDuration(double duration)
 {
 	m_duration = duration;
+	emit durationChanged(duration);
 }
 
 void GLScene::setAutoDuration(bool flag)
 {
 	m_autoDuration = flag;
+	emit autoDurationChanged(flag);
 }
 
+void GLScene::setScheduledTime(const QDateTime& date)
+{
+	m_scheduledTime = date;
+	emit scheduledTimeChanged(date);
+}
 
-/*signals:
-	void drawableAdded(GLDrawable*);
-	void drawableRemoved(GLDrawable*);
-	void layoutAdded(GLSceneLayout*);
-	void layoutRemoved(GLSceneLayout*);*/
-/*
-protected:
-	int m_sceneId;
-	QString m_sceneName;
-
-	GLDrawableList m_itemList;
-	QHash<int,GLDrawable*> m_drawableIdLookup;
-
-	QList<GLSceneLayout*> m_layouts;
-	QHash<int,GLSceneLayout*> m_layoutIdLookup;
-
-	GLWidget *m_widget;*/
-
+void GLScene::setAutoSchedule(bool flag)
+{
+	m_autoSchedule = flag;
+	emit autoScheduleChanged(flag);
+}
 
 
 // ****************************
@@ -769,11 +770,17 @@ protected:
 GLSceneGroup::GLSceneGroup(QObject *parent)
 	: QAbstractListModel(parent)
 	, m_groupId(-1)
+	, m_duration(5.)
+	, m_autoDuration(true)
+	, m_autoSchedule(true)
 {}
 
 GLSceneGroup::GLSceneGroup(QByteArray& ba, QObject *parent)
 	: QAbstractListModel(parent)
 	, m_groupId(-1)
+	, m_duration(5.)
+	, m_autoDuration(true)
+	, m_autoSchedule(true)
 {
 	fromByteArray(ba);
 }
@@ -926,8 +933,12 @@ void GLSceneGroup::addScene(GLScene* s)
 
 	m_scenes << s;
 	m_sceneIdLookup[s->sceneId()] = s;
-	connect(s, SIGNAL(sceneNameChanged(const QString&)), this, SLOT(sceneChanged()));
-	connect(s, SIGNAL(pixmapChanged(const QPixmap&)), this, SLOT(sceneChanged()));
+	connect(s, SIGNAL(sceneNameChanged(const QString&)), 	this, SLOT(sceneChanged()));
+	connect(s, SIGNAL(pixmapChanged(const QPixmap&)), 	this, SLOT(sceneChanged()));
+	connect(s, SIGNAL(durationChanged(double)), 		this, SLOT(sceneChanged()));
+	connect(s, SIGNAL(autoDurationChanged(bool)), 		this, SLOT(sceneChanged()));
+	connect(s, SIGNAL(scheduledTimeChanged(QDateTime)), 	this, SLOT(sceneChanged()));
+	connect(s, SIGNAL(autoScheduleChanged(bool)), 		this, SLOT(sceneChanged()));
 
 	emit sceneAdded(s);
 	//qDebug() << "GLSceneGroup::addScene: "<<this<<" scene:"<<s<<", m_scenes.size():"<<m_scenes.size()<<", rowCount:"<<rowCount(QModelIndex());
@@ -971,6 +982,9 @@ void GLSceneGroup::sceneChanged()
 	// Notify QListViews of change in data
 	QModelIndex idx = createIndex(row, 0);
 	dataChanged(idx, idx);
+	
+	/// TODO recalc scene datetimes if they are auto scheduled based on cumulative duration 
+	/// TODO recalc our duration based on scene durations IF our duration is 'autoDuration'
 }
 
 GLScene * GLSceneGroup::lookupScene(int id)
@@ -999,6 +1013,29 @@ void GLSceneGroup::setPixmap(const QPixmap& pixmap)
 	emit pixmapChanged(pixmap);
 }
 
+void GLSceneGroup::setDuration(double duration)
+{
+	m_duration = duration;
+	emit durationChanged(duration);
+}
+
+void GLSceneGroup::setAutoDuration(bool flag)
+{
+	m_autoDuration = flag;
+	emit autoDurationChanged(flag);
+}
+
+void GLSceneGroup::setScheduledTime(const QDateTime& date)
+{
+	m_scheduledTime = date;
+	emit scheduledTimeChanged(date);
+}
+
+void GLSceneGroup::setAutoSchedule(bool flag)
+{
+	m_autoSchedule = flag;
+	emit autoScheduleChanged(flag);
+}
 
 
 // protected:
@@ -1216,8 +1253,12 @@ void GLSceneGroupCollection::addGroup(GLSceneGroup* s)
 	m_groups << s;
 	m_groupIdLookup[s->groupId()] = s;
 
-	connect(s, SIGNAL(groupNameChanged(const QString&)), this, SLOT(groupChanged()));
-	connect(s, SIGNAL(pixmapChanged(const QPixmap&)), this, SLOT(groupChanged()));
+	connect(s, SIGNAL(groupNameChanged(const QString&)), 	this, SLOT(groupChanged()));
+	connect(s, SIGNAL(pixmapChanged(const QPixmap&)), 	this, SLOT(groupChanged()));
+	connect(s, SIGNAL(durationChanged(double)), 		this, SLOT(groupChanged()));
+	connect(s, SIGNAL(autoDurationChanged(bool)), 		this, SLOT(groupChanged()));
+	connect(s, SIGNAL(scheduledTimeChanged(QDateTime)), 	this, SLOT(groupChanged()));
+	connect(s, SIGNAL(autoScheduleChanged(bool)), 		this, SLOT(groupChanged()));
 
 	emit groupAdded(s);
 
@@ -1284,4 +1325,8 @@ void GLSceneGroupCollection::groupChanged()
 	// Notify QListViews of change in data
 	QModelIndex idx = createIndex(row, 0);
 	dataChanged(idx, idx);
+	
+	/// TODO recalc group datetimes if they are auto scheduled based on cumulative duration 
+	/// TODO recalc our duration based on group durations IF our duration is 'autoDuration'
+
 }
