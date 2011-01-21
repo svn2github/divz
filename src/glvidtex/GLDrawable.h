@@ -447,6 +447,8 @@ public:
 	double playTime() { return m_playTime; }
 	
 	double duration();
+	
+	double timeFor(GLPlaylistItem*);
 
 public slots:
 	void addItem(GLPlaylistItem *, GLPlaylistItem *insertAfter=0);

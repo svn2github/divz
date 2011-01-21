@@ -33,6 +33,8 @@
 // playlist commands
 #define GLPlayer_SetPlaylistPlaying "SetPlaylistPlaying"
 #define GLPlayer_UpdatePlaylist "UpdatePlaylist"
+#define GLPlayer_SetPlaylistTime "SetPlaylistTime"
+// The next 2 are sent FROM the player TO the director
 #define GLPlayer_PlaylistTimeChanged "PlaylistTimeChanged"
 #define GLPlayer_CurrentPlaylistItemChanged "CurrentPlaylistItemChanged"
 

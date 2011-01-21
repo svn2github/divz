@@ -520,6 +520,16 @@ void PlayerConnection::updatePlaylist(GLDrawable *gld)
 		<< "data"	<< gld->playlist()->toByteArray());
 }
 
+void PlayerConnection::setPlaylistTime(GLDrawable *gld, double time)
+{
+	if(!gld)
+		return;
+
+	sendCommand(QVariantList()
+		<< "cmd" 	<< GLPlayer_SetPlaylistTime
+		<< "drawableid"	<< gld->id()
+		<< "time"	<< time);
+}
 
 void PlayerConnection::queryProperty(GLDrawable *gld, QString propertyName)
 {
@@ -545,17 +555,6 @@ void PlayerConnection::setCrossfadeSpeed(int ms)
 		<< "cmd" 	<< GLPlayer_SetCrossfadeSpeed
 		<< "ms"		<< ms);
 }
-
-/*signals:
-	void subviewAdded(GLWidgetSubview*);
-	void subviewRemoved(GLWidgetSubview*);
-
-	void connected();
-	void disconnected();
-
-	void playerError(const QString&);
-
-	void propQueryResponse(GLDrawable *drawable, QString propertyName, const QVariant& value);*/
 
 void PlayerConnection::subviewChanged(GLWidgetSubview *sub)
 {

@@ -679,7 +679,8 @@ void PlayerWindow::receivedMap(QVariantMap map)
 	   cmd == GLPlayer_SetVisibility      ||
 	   cmd == GLPlayer_QueryProperty      ||
 	   cmd == GLPlayer_SetPlaylistPlaying ||
-	   cmd == GLPlayer_UpdatePlaylist)
+	   cmd == GLPlayer_UpdatePlaylist     ||
+	   cmd == GLPlayer_SetPlaylistTime)
 	{
 		if(!m_scene)
 		{
@@ -712,6 +713,12 @@ void PlayerWindow::receivedMap(QVariantMap map)
 				{
 					QByteArray ba = map["data"].toByteArray();
 					gld->playlist()->fromByteArray(ba);
+				}
+				else
+				if(cmd == GLPlayer_SetPlaylistTime)
+				{
+					double time = map["time"].toDouble();
+					gld->playlist()->setPlayTime(time);
 				}
 				else
 				{

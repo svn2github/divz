@@ -116,6 +116,8 @@ public slots:
 	void setPlaylistPlaying(GLDrawable *, bool play=true);
 	void updatePlaylist(GLDrawable *);
 	
+	void setPlaylistTime(GLDrawable *, double time=0);
+	
 signals:
 	void subviewAdded(GLWidgetSubview*);
 	void subviewRemoved(GLWidgetSubview*);

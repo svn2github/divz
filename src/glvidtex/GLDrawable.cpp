@@ -1388,6 +1388,19 @@ double GLDrawablePlaylist::duration()
 	return dur;
 }
 
+double GLDrawablePlaylist::timeFor(GLPlaylistItem* timeForItem)
+{
+	double time=0;
+	foreach(GLPlaylistItem *item, m_items)
+	{
+		if(item == timeForItem)
+			return time;
+		else
+			time += item->duration();
+	}
+	return -1;
+}
+
 void GLDrawablePlaylist::addItem(GLPlaylistItem *item, GLPlaylistItem *insertAfter)
 {
 	if(!item)

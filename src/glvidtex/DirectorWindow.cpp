@@ -334,7 +334,14 @@ void DirectorWindow::itemSelected(const QModelIndex &idx)
 	if(!m_currentDrawable)
 		return;
 	if(idx.isValid())
-		setCurrentItem(m_currentDrawable->playlist()->at(idx.row()));
+	{
+		GLPlaylistItem *item = m_currentDrawable->playlist()->at(idx.row());
+		setCurrentItem(item);
+		
+		foreach(PlayerConnection *con, m_players->players())
+			con->setPlaylistTime(m_currentDrawable, m_currentDrawable->playlist()->timeFor(item));
+	}
+		
 }
 void DirectorWindow::currentItemChanged(const QModelIndex &idx,const QModelIndex &)
 {
@@ -577,7 +584,7 @@ void DirectorWindow::playlistTimeChanged(GLDrawable *gld, double value)
 		(sec<10? "0":"") + QString::number((int)sec);/* + "." +
 		(ms <10? "0":"") + QString::number((int)ms );*/
 		
-	ui->timeLabel->setText(time);
+	ui->timeLabel->setText("<b><font style='font-family:Monospace'>"+ time +"</font></b>");
 }
 
 void DirectorWindow::playlistItemChanged(GLDrawable *gld, GLPlaylistItem *item)
@@ -756,6 +763,8 @@ void DirectorWindow::setCollection(GLSceneGroupCollection *collection)
 	
 	m_collection = collection;
 	ui->collectionListview->setModel(collection);
+	ui->collectionListview->resizeColumnsToContents();
+ 	ui->collectionListview->resizeRowsToContents();
 	
 	if(collection->size() > 0)
 	{
@@ -780,6 +789,8 @@ void DirectorWindow::setCurrentGroup(GLSceneGroup *group, GLScene */*currentScen
 		return;
 		
 	ui->groupListview->setModel(group);
+	ui->groupListview->resizeColumnsToContents();
+ 	ui->groupListview->resizeRowsToContents();
 	connect(group, SIGNAL(sceneDataChanged()), this, SLOT(sceneDataChanged()));
 	
 	foreach(PlayerConnection *con, m_players->players())
