@@ -168,6 +168,7 @@ QByteArray PlayerConnection::toByteArray()
 	map["host"] 	= m_host;
 	map["user"] 	= m_user;
 	map["pass"] 	= m_pass;
+	map["autoconnect"] = m_autoconnect;
 	map["screen"] 	= m_screenRect;
 	map["viewport"]	= m_viewportRect;
 	map["canvas"]	= m_canvasSize;
@@ -197,6 +198,7 @@ void PlayerConnection::fromByteArray(QByteArray& array)
 	m_host = map["host"].toString();
 	m_user = map["user"].toString();
 	m_pass = map["pass"].toString();
+	m_autoconnect = map["autoconnect"].toBool();
 	m_screenRect = map["screen"].toRect();
 	m_viewportRect = map["viewport"].toRect();
 	m_canvasSize = map["canvas"].toSizeF();
@@ -239,7 +241,7 @@ void PlayerConnection::removeSubview(GLWidgetSubview *sub)
 		<< "subviewid"	<< sub->subviewId());
 }
 
-void PlayerConnection::connectPlayer()
+void PlayerConnection::connectPlayer(bool sendDefaults)
 {
 	m_client = new GLPlayerClient();
 	m_client->connectTo(m_host,9977);
@@ -257,23 +259,26 @@ void PlayerConnection::connectPlayer()
 			<< "user"	<< m_user
 			<< "pass"	<< m_pass);
 
-		if(!m_subviews.isEmpty())
+		if(sendDefaults)
 		{
-			sendCommand(QVariantList()
-				<< "cmd" 	<< GLPlayer_ClearSubviews);
-
-			foreach(GLWidgetSubview *sub, m_subviews)
+			if(!m_subviews.isEmpty())
 			{
 				sendCommand(QVariantList()
-					<< "cmd" 	<< GLPlayer_AddSubview
-					<< "data"	<< sub->toByteArray());
+					<< "cmd" 	<< GLPlayer_ClearSubviews);
+	
+				foreach(GLWidgetSubview *sub, m_subviews)
+				{
+					sendCommand(QVariantList()
+						<< "cmd" 	<< GLPlayer_AddSubview
+						<< "data"	<< sub->toByteArray());
+				}
 			}
+	
+			setViewportRect(viewportRect());
+			setScreenRect(screenRect());
+			setCanvasSize(canvasSize());
+			setAspectRatioMode(aspectRatioMode());
 		}
-
-		setViewportRect(viewportRect());
-		setScreenRect(screenRect());
-		setCanvasSize(canvasSize());
-		setAspectRatioMode(aspectRatioMode());
 
 		sendCommand(QVariantList() << "cmd" << GLPlayer_ListVideoInputs);
 
@@ -751,6 +756,7 @@ void PlayerConnection::sendCommand(QVariantList reply)
 
 
 	//qDebug() << "PlayerConnection::sendCommand: [DEBUG] map:"<<map;
+	qDebug() << "PlayerConnection::sendCommand: [COMMAND] "<<map["cmd"].toString()<<", map:"<<map;
 
 	if(m_client && m_isConnected)
 		m_client->sendMap(map);

@@ -36,6 +36,7 @@ DirectorWindow::DirectorWindow(QWidget *parent)
 	ui->setupUi(this);
 	setupUI();
 	
+	// For some reason, these get unset from NULL between the ctor init above and here, so reset to zero
 	m_currentScene = 0;
 	m_currentGroup = 0;
 	m_currentDrawable = 0;
@@ -51,10 +52,12 @@ DirectorWindow::DirectorWindow(QWidget *parent)
 	
 	bool loadedFile = false;
 	
+	// Attempt to load the first argument on the command line
 	QStringList argList = qApp->arguments();
 	if(argList.size() > 1)
 		loadedFile = readFile(argList.at(1));
 	
+	// If no file loaded, create an empty collection 
 	if(!loadedFile)
 	{
 		GLSceneGroupCollection *tmp = new GLSceneGroupCollection();
@@ -64,6 +67,11 @@ DirectorWindow::DirectorWindow(QWidget *parent)
 		tmp->addGroup(group);
 		setCollection(tmp);
 	}
+	
+	// Connect to any players that have the 'autoconnect' option checked in the PlayerSetupDialog
+	foreach(PlayerConnection *con, m_players->players())
+		if(!con->isConnected() && con->autoconnect())
+			con->connectPlayer();
 }
 
 
@@ -74,6 +82,7 @@ DirectorWindow::~DirectorWindow()
 
 void DirectorWindow::showPlayerLiveMonitor()
 {
+	// Compile list of connected player names for the combo box selection
 	QComboBox *sourceBox = new QComboBox();
 	QStringList itemList;
 	QList<PlayerConnection*> players;
@@ -90,7 +99,8 @@ void DirectorWindow::showPlayerLiveMonitor()
 		showPlayerLiveMonitor(players.first());
 		return;
 	}
-		
+	
+	// Create the dialog box layout
 	sourceBox->addItems(itemList);
 	QDialog dlg;
 	dlg.setWindowTitle("Change Canvas Size");
@@ -118,6 +128,7 @@ void DirectorWindow::showPlayerLiveMonitor()
 	vbox->addLayout(buttons);
 	dlg.setLayout(vbox);
 	dlg.adjustSize();
+	
 	if(dlg.exec())
 	{
 		int idx = sourceBox->currentIndex();

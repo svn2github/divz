@@ -86,7 +86,7 @@ public slots:
 	void addSubview(GLWidgetSubview*);
 	void removeSubview(GLWidgetSubview*);
 	
-	void connectPlayer();
+	void connectPlayer(bool sendDefaults=true);
 	void disconnectPlayer();
 	
 	void setName(const QString&);

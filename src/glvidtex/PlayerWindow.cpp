@@ -539,6 +539,8 @@ void PlayerWindow::receivedMap(QVariantMap map)
 	//qDebug() << "PlayerWindow::receivedMap: "<<map;
 
 	QString cmd = map["cmd"].toString();
+	qDebug() << "PlayerWindow::receivedMap: [COMMAND]: "<<cmd;
+	
 	if(cmd == GLPlayer_Login)
 	{
 		if(map["user"].toString() != m_validUser ||
@@ -827,6 +829,7 @@ void PlayerWindow::receivedMap(QVariantMap map)
 		{
 			move(size.x(),size.y());
 			resize(size.width(),size.height());
+			raise();
 		}
 
 		sendReply(QVariantList()

@@ -193,6 +193,16 @@ encoder: {
 		streamenc-main.cpp
 }
 
+# 'glplayercmd' compile target - Player 'remote control' from the command line
+playercmd: {
+	TARGET = glplayercmd
+	HEADERS += PlayerCommandLineInterface.h \
+		PlayerConnection.h 
+	SOURCES += PlayerCommandLineInterface.cpp \
+		PlayerConnection.cpp \
+		playercmd-main.cpp
+}
+
 # 'glinputbalance' compile target - use to balance two video inputs to each other
 inputbalance: {
 	TARGET = glinputbalance

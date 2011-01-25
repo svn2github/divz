@@ -131,6 +131,7 @@ void PlayerSetupDialog::setCurrentPlayer(PlayerConnection* con)
 	ui->playerHost->setText(con->host());
 	ui->playerUser->setText(con->user());
 	ui->playerPass->setText(con->pass());
+	ui->autoconnectBox->setChecked(con->autoconnect());
 	ui->optIgnoreAR->setChecked(con->aspectRatioMode() == Qt::IgnoreAspectRatio);
 	
 	QRect screen = con->screenRect();
