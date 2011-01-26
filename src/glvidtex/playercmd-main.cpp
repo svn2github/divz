@@ -5,7 +5,7 @@
 int main(int argc, char *argv[])
 {
 
-	QCoreApplication app(argc, argv);
+	QApplication app(argc, argv);
 	
 	qApp->setApplicationName("GLPlayerCommand");
 	qApp->setOrganizationName("Josiah Bryan");

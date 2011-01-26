@@ -278,12 +278,16 @@ void PlayerConnection::connectPlayer(bool sendDefaults)
 			setScreenRect(screenRect());
 			setCanvasSize(canvasSize());
 			setAspectRatioMode(aspectRatioMode());
+			requestVideoInputList();
 		}
-
-		sendCommand(QVariantList() << "cmd" << GLPlayer_ListVideoInputs);
 
 		setGroup(m_group, m_scene);
 	}
+}
+
+void PlayerConnection::requestVideoInputList()
+{
+	sendCommand(QVariantList() << "cmd" << GLPlayer_ListVideoInputs);
 }
 
 void PlayerConnection::clientConnected()
@@ -583,6 +587,8 @@ void PlayerConnection::receivedMap(QVariantMap map)
 
 	if(m_justTesting)
 		qDebug() << "PlayerConnection::receivedMap: In testing mode, map received:"<<map; 
+		
+	//qDebug() << "PlayerConnection::receivedMap: "<<map;
 	
 	QString cmd = map["cmd"].toString();
 
@@ -719,6 +725,8 @@ void PlayerConnection::receivedMap(QVariantMap map)
 			qDebug() << "PlayerConnection::receivedMap: [INFO] Command not handled: "<<cmd<<", map:"<<map;
 		}
 	}
+	
+	emit dataReceived();
 }
 
 QStringList PlayerConnection::videoInputs(bool *hasReceivedResponse)
@@ -769,6 +777,8 @@ void PlayerConnection::sendCommand(QVariantList reply)
 }
 
 
+bool PlayerConnection::waitForData(int msec) { return m_client ? m_client->waitForData(msec) : false; }
+bool PlayerConnection::waitForWrite(int msec) { return m_client ? m_client->waitForWrite(msec) : false; }
 
 
 /*protected:
@@ -939,3 +949,4 @@ void PlayerConnectionList::fromByteArray(QByteArray array)
 		addPlayer(new PlayerConnection(data));
 	}
 }
+

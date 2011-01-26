@@ -81,6 +81,9 @@ public:
 	QString playerVersion() { return m_playerVersion; }
 		
 	QStringList videoInputs(bool *hasReceivedResponse=0);
+	
+	bool waitForData(int msec=30000);
+	bool waitForWrite(int msec=30000);
 
 public slots:
 	void addSubview(GLWidgetSubview*);
@@ -118,6 +121,8 @@ public slots:
 	
 	void setPlaylistTime(GLDrawable *, double time=0);
 	
+	void requestVideoInputList();
+	
 signals:
 	void subviewAdded(GLWidgetSubview*);
 	void subviewRemoved(GLWidgetSubview*);
@@ -141,6 +146,8 @@ signals:
 	
 	void playlistTimeChanged(GLDrawable*, double time);
 	void currentPlaylistItemChanged(GLDrawable*, GLPlaylistItem*);
+	
+	void dataReceived();
 	
 protected:
 	friend class PlayerSubviewsModel;

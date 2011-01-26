@@ -21,6 +21,9 @@ public:
 	bool connectTo(const QString& host, int port);
 	void exit();
 	QString errorString(){ return m_socket->errorString(); }
+	
+	bool waitForData(int msec) { return m_socket ? m_socket->waitForReadyRead(msec) : false;  }
+	bool waitForWrite(int msec) { return m_socket ? m_socket->waitForBytesWritten(msec) : false;  }
 
 public slots:
 	void sendMap(const QVariantMap& map);

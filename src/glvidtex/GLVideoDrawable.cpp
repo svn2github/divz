@@ -1390,7 +1390,7 @@ void GLVideoDrawable::updateTexture(bool secondSource)
 //   		qDebug() << "GLVideoDrawable::updateTexture(): "<<(QObject*)this<<" secondSource:"<<secondSource;
 	if(!secondSource ? (!m_frame || !m_frame->isValid()) : (!m_frame2 || !m_frame2->isValid()))
 	{
-		qDebug() << "GLVideoDrawable::updateTexture(): "<<(QObject*)this<<" Frame not valid";
+		//qDebug() << "GLVideoDrawable::updateTexture(): "<<(QObject*)this<<" Frame not valid";
 		return;
 	}
 

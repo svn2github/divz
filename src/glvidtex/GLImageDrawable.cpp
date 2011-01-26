@@ -229,7 +229,7 @@ bool GLImageDrawable::setImageFile(const QString& file)
 					Exiv2::ExifData& exifData = exiv->exifData();
 					if (exifData.empty()) 
 					{
-						qDebug() << file << ": No Exif data found in the file";
+						//qDebug() << file << ": No Exif data found in the file";
 					}
 	
 					QString rotateSensor = exifData["Exif.Image.Orientation"].toString().c_str();
