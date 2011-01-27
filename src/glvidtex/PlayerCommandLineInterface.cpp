@@ -475,7 +475,7 @@ void PlayerCommandLineInterface::startConnection()
 	
 	QString rawCon = shiftArgs();
 	
-	QRegExp rx("(?:(\\w+):(\\w+)@)?(\\w+)",Qt::CaseInsensitive);
+	QRegExp rx("(?:(\\w+):(\\w+)@)?([A-Za-z0-9\\.-]+)",Qt::CaseInsensitive);
 	rx.indexIn(rawCon);
 	
 	QString user = rx.cap(1);
@@ -500,7 +500,7 @@ void PlayerCommandLineInterface::startConnection()
 	con->setHost(host);
 	con->setAutoReconnect(false);
 	
-	//qDebug() << "PlayerCommandLineInterface::startConnection: Connecting to "<<host<<" with creds:"<<user<<":"<<pass<<", raw:"<<rawCon;
+	qDebug() << "PlayerCommandLineInterface::startConnection: Connecting to "<<host<<" with creds:"<<user<<":"<<pass<<", raw:"<<rawCon;
 	
 	con->connectPlayer(false); // false = dont send defaults
 	
