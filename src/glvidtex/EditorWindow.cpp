@@ -331,7 +331,9 @@ void EditorWindow::setCurrentScene(GLScene *scene)
 	
 	if(m_scene)
 	{
-		m_graphicsScene = m_scene->graphicsScene();
+		if(!dynamic_cast<GLEditorGraphicsScene*>(m_scene->graphicsScene()))
+			m_scene->setGraphicsScene(new GLEditorGraphicsScene);
+		m_graphicsScene = dynamic_cast<GLEditorGraphicsScene*>(m_scene->graphicsScene());
 		m_graphicsScene->setEditingMode(true);
 		m_graphicsView->setScene(m_graphicsScene);
 		m_graphicsScene->setSceneRect(QRectF(0,0,1000.,750.));

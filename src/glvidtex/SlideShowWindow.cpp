@@ -139,7 +139,7 @@ SlideShowWindow::SlideShowWindow(QWidget *parent)
 	
 	READ_POINT("window-size","640x480");
 	QPoint windowSize = point;
-	windowSize = QPoint(3120,1050);
+	//windowSize = QPoint(3120,1050);
 	
 	if(verbose)
 		qDebug() << "SlideShowWindow: pos:"<<windowPos<<", size:"<<windowSize;
@@ -609,7 +609,7 @@ SlideShowWindow::SlideShowWindow(QWidget *parent)
 		else
 			setSceneNum(0);
 		
-		int slideTime = 30 * 1000;
+		int slideTime = 15 * 1000;
 		
 		if(m_glWidget)
 		{

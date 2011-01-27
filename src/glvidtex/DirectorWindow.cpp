@@ -862,7 +862,9 @@ void DirectorWindow::setCurrentScene(GLScene *scene)
 // 		m_graphicsScene->addItem(drawable);
 // 	}
 
-	m_graphicsScene = m_currentScene->graphicsScene();
+	if(!dynamic_cast<GLEditorGraphicsScene*>(m_currentScene->graphicsScene()))
+		m_currentScene->setGraphicsScene(new GLEditorGraphicsScene);
+	m_graphicsScene = dynamic_cast<GLEditorGraphicsScene*>(m_currentScene->graphicsScene());
 	if(!m_graphicsScene)
 		qDebug() << "Directorwindow::setCurrentScene: "<<scene<<" Internal Error: No graphics scene returned. Probably will crash now.";
 	m_graphicsScene->setSceneRect(QRectF(QPointF(0,0),m_collection->canvasSize()));

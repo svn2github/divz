@@ -43,7 +43,8 @@ private slots:
 	void deleteSource(VideoSource *source);
 	
 protected:
-	virtual QVariant itemChange(GraphicsItemChange change, const QVariant &value);
+	// GLVideoDrawable::
+	virtual void setLiveStatus(bool);
 	
 private:
 	QString m_videoFile;

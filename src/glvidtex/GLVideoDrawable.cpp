@@ -99,6 +99,8 @@ GLVideoDrawable::GLVideoDrawable(QObject *parent)
 	, m_videoSenderPort(-1)
 	, m_ignoreAspectRatio(false)
 	, m_crossFadeMode(JustFront)
+	, m_isCameraThread(false)
+	, m_liveStatus(false)
 {
 
 	m_imagePixelFormats
@@ -735,12 +737,40 @@ void GLVideoDrawable::initYv12TextureInfo(const QSize &size, bool secondSource)
 }
 
 
+void GLVideoDrawable::setGLWidget(GLWidget* widget)
+{
+	if(widget)
+	{
+		if(!liveStatus())
+			setLiveStatus(true);
+		
+		GLDrawable::setGLWidget(widget);
+	}
+	else
+	{
+		GLDrawable::setGLWidget(widget);
+	
+		if(liveStatus())
+			setLiveStatus(false);
+	}
+}
+
+void GLVideoDrawable::setLiveStatus(bool flag)
+{
+	m_liveStatus = flag;
+}
+
 QVariant GLVideoDrawable::itemChange(GraphicsItemChange change, const QVariant &value)
 {
 /*	if(change == ItemSceneChange)
 		qDebug() << "GLVideoDrawable::itemChange: change:"<<change<<", value:"<<value;*/
 	if (change == ItemSceneChange)
 	{
+		QGraphicsScene *scene = value.value<QGraphicsScene*>();
+		//qDebug() << "GLImageDrawable::itemChange(): value:"<<value<<", scene:"<<scene;
+		if(!scene && liveStatus())
+			setLiveStatus(false);
+
 // 		// value is the new position.
 // 		QPointF newPos = value.toPointF();
 // 		QRectF rect = scene()->sceneRect();
@@ -1671,6 +1701,8 @@ void GLVideoDrawable::paint(QPainter * painter, const QStyleOptionGraphicsItem *
 // 	}
 	
 	aboutToPaint();
+	if(!m_liveStatus) // dont trust compiler to inline liveStatus() ... should I?
+		setLiveStatus(true);
 
 	QRectF source = m_sourceRect;
 	QRectF target = QRectF(m_targetRect.topLeft() - rect().topLeft(),m_targetRect.size());

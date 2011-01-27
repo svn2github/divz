@@ -32,15 +32,11 @@ protected:
 	void internalSetFilename(QString);
 	
 	// GLVideoDrawable::
-	virtual void aboutToPaint();
+	virtual void setLiveStatus(bool);
 	
 	virtual void reloadImage();
 	virtual void releaseImage();
 	virtual bool canReleaseImage();
-	virtual void setGLWidget(GLWidget*);
-	
-	// QGraphicsItem::	
-	virtual QVariant itemChange(GraphicsItemChange change, const QVariant &value);
 	
 	QImage m_image;
 	QString m_imageFile;

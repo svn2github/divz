@@ -521,7 +521,8 @@ void GLScene::addDrawable(GLDrawable *d)
 	if(m_glWidget)
 		m_glWidget->addDrawable(d);
 
-	graphicsScene()->addItem(d);
+	if(m_graphicsScene)
+		m_graphicsScene->addItem(d);
 
 	endInsertRows();
 }
@@ -559,7 +560,8 @@ void GLScene::removeDrawable(GLDrawable *d)
 	if(m_glWidget)
 		m_glWidget->removeDrawable(d);
 
-	graphicsScene()->removeItem(d);
+	if(m_graphicsScene)
+		m_graphicsScene->removeItem(d);
 
 	endRemoveRows();
 }
@@ -584,10 +586,25 @@ void GLScene::drawableNameChanging(QString name)
 	m_drawableNameLookup[name] = gld;
 }
 
-GLEditorGraphicsScene * GLScene::graphicsScene()
+void GLScene::setGraphicsScene(QGraphicsScene *scene)
 {
-	if(!m_graphicsScene)
-		m_graphicsScene = new GLEditorGraphicsScene();
+	if(scene)
+	{
+		foreach(GLDrawable *gld, m_itemList)
+			scene->addItem(gld);
+	}
+	else
+	if(m_graphicsScene)
+	{
+		foreach(GLDrawable *gld, m_itemList)
+			m_graphicsScene->removeItem(gld);
+	}
+	
+	m_graphicsScene = scene;
+}
+
+QGraphicsScene * GLScene::graphicsScene()
+{
 	return m_graphicsScene;
 }
 

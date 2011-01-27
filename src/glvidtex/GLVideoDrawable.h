@@ -171,6 +171,8 @@ public:
 	enum CrossFadeMode { FrontAndBack, JustFront };
 	CrossFadeMode crossFadeMode() { return m_crossFadeMode; }
 	
+	bool liveStatus() { return m_liveStatus; }
+	
 public slots:
 	void setFpsLimit(float);
 	void setVisible(bool flag, bool waitOnFrameSignal=false);
@@ -215,7 +217,15 @@ signals:
 	void sourceDiscarded(VideoSource*);
 
 protected:
+	// Overridden from GLDrawable
+	virtual void setGLWidget(GLWidget* widget);
+	
 	virtual void aboutToPaint();
+	
+	/* This WILL be called BEFORE 'going live' and AFTER going 'not live' */
+	// Default Impl sets m_liveStatus=live - MUST call this to make sure flag is set if you override in subclass.
+	virtual void setLiveStatus(bool live);
+	
 	
 	/// PS
 	void paintGL();
@@ -391,6 +401,8 @@ private:
 	CrossFadeMode m_crossFadeMode;
 	
 	bool m_isCameraThread;
+	
+	bool m_liveStatus;
 	
 	static int m_videoSenderPortAllocator;
 };

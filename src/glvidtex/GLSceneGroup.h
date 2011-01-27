@@ -6,7 +6,6 @@
 class GLScene;
 class GLWidget;
 class GLDrawable;
-class GLEditorGraphicsScene;
 
 typedef QList<GLDrawable*> GLDrawableList;
 
@@ -156,8 +155,8 @@ public:
 	
 	bool listOnlyUserItems() { return m_listOnlyUserItems; }
 	
-	//void setGraphicsScene(QGraphicsScene *);
-	GLEditorGraphicsScene *graphicsScene();
+	void setGraphicsScene(QGraphicsScene *);
+	QGraphicsScene *graphicsScene();
 	
 	double opacity() { return m_opacity; }
 	double zIndex() { return m_zIndex; }
@@ -235,7 +234,7 @@ protected:
 	GLWidget *m_glWidget;
 	GLSceneLayoutListModel *m_layoutListModel;
 	
-	GLEditorGraphicsScene *m_graphicsScene;
+	QGraphicsScene *m_graphicsScene;
 	
 	QTimer m_fadeTimer;
 	QTime m_fadeClock;

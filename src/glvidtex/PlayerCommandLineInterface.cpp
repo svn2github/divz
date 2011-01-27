@@ -439,6 +439,60 @@ public:
 "        of datatypes above. If this is a problem, email someone or patch."; }
 };
 
+
+class CmdSetVisible : public PlayerCommandLineInterface::Command 
+{
+public:
+	QString name() { return "setitemvisible"; }
+	bool execute(PlayerCommandLineInterface* api)
+	{
+		QString arg = api->shiftArgs();
+		GLSceneGroupCollection col;
+		if(!col.readFile(arg))
+		{
+			qDebug() << qPrintable(name()) << ": Error reading collection file"<<arg;
+			printHelp();
+			return true; 
+		}
+		
+		int groupId = api->shiftArgs().toInt();
+		GLSceneGroup *group = col.lookupGroup(groupId);
+		if(!group)
+		{
+			qDebug() << qPrintable(name()) << ": Invalid groupId"<<groupId;
+			printHelp();
+			return true;
+		}
+		
+		int sceneId = api->shiftArgs().toInt();
+		GLScene *scene = group->lookupScene(sceneId);
+		if(!group)
+		{
+			qDebug() << qPrintable(name()) << ": Invalid sceneId"<<sceneId;
+			printHelp();
+			return true;
+		}
+		
+		int itemId = api->shiftArgs().toInt();
+		GLDrawable *gld = scene->lookupDrawable(itemId);
+		if(!gld)
+		{
+			qDebug() << qPrintable(name()) << ": Invalid itemId"<<itemId;
+			printHelp();
+			return true;
+		}
+		
+		bool visible = api->shiftArgs() == "true";
+		
+		api->con()->setVisibility(gld, visible);
+			
+		return true;
+	};
+	QString help() { return 
+"  setitemvisible (file) (groupid) (sceneid) (itemid) (true|false)\n"
+"        Sets the item visible or hidden."; }
+};
+
 PlayerCommandLineInterface::PlayerCommandLineInterface()
 {
 	m_rawArgs = qApp->arguments();
@@ -456,6 +510,7 @@ PlayerCommandLineInterface::PlayerCommandLineInterface()
 	m_commands << new CmdListItems;
 	m_commands << new CmdListItemProps;
 	m_commands << new CmdSetItemProp;
+	m_commands << new CmdSetVisible;
 	
 	startConnection();	
 }

@@ -40,7 +40,7 @@ bool GLVideoFileDrawable::setVideoFile(const QString& file)
 #ifdef HAS_QT_VIDEO_SOURCE
 	if(m_qtSource)
 	{
-		QPropertyAnimation *anim = new QPropertyAnimation(m_qtSource->player(), "volume");
+		QPropertyAnimation *anim = new QPropertyAnimation(this, "volume");
 		anim->setEndValue(0);
 		anim->setDuration(xfadeLength());
 		anim->start();
@@ -51,7 +51,6 @@ bool GLVideoFileDrawable::setVideoFile(const QString& file)
 	m_qtSource = new QtVideoSource();
 	m_qtSource->setFile(file);
 	m_qtSource->start();
-	//qDebug() << "GLVideoFileDrawable::setVideoFile(): file:"<<file<<", mark1, m_qtSource:"<<m_qtSource; 
 	
 	connect(m_qtSource->player(), SIGNAL(positionChanged(qint64)), this, SIGNAL(positionChanged(qint64))); 
 	
@@ -59,22 +58,13 @@ bool GLVideoFileDrawable::setVideoFile(const QString& file)
 	m_videoLength = -1;
 	
 	setVideoSource(m_qtSource);
-	//qDebug() << "GLVideoFileDrawable::setVideoFile(): file:"<<file<<", mark2, m_qtSource:"<<m_qtSource;
 	
+	// Volume will be raised in setLiveStatus() below
 	m_qtSource->player()->setVolume(0);
 	
-	//GLEditorGraphicsScene *scenePtr = dynamic_cast<GLEditorGraphicsScene*>(scene());
-	//if(!scenePtr && scene())
-	if(1)
-	{
-		QPropertyAnimation *anim = new QPropertyAnimation(m_qtSource->player(), "volume");
-		anim->setEndValue(100);
-		anim->setDuration(xfadeLength());
-		anim->start();
-	}
-	//qDebug() << "GLVideoFileDrawable::setVideoFile(): file:"<<file<<", mark3, m_qtSource:"<<m_qtSource;
-	//qDebug() << "GLVideoFileDrawable::setVideoFile: "<<file<<": scenePtr:"<<scenePtr<<", scene():"<<scene();
-	
+	if(liveStatus())
+		setLiveStatus(true);
+
 #else
 
 	qDebug() << "GLVideoFileDrawable::setVideoFile: "<<file<<": GLVidTex Graphics Engine not compiled with QtMobility support, therefore, unable to play back video files with sound. Use GLVideoLoopDrawable to play videos as loops without QtMobility.";
@@ -82,7 +72,6 @@ bool GLVideoFileDrawable::setVideoFile(const QString& file)
 #endif
 	
 	emit videoFileChanged(file);
-	//qDebug() << "GLVideoFileDrawable::setVideoFile(): file:"<<file<<", mark4, m_qtSource:"<<m_qtSource;
 	return true;
 	
 }
@@ -132,7 +121,7 @@ void GLVideoFileDrawable::setVolume(int v)
 	//qDebug() << "GLVideoFileDrawable::setVolume(): "<<(QObject*)this<<" source:"<<m_qtSource;
 	if(m_qtSource)
 	{
-		qDebug() << "GLVideoFileDrawable::setVolume(): "<<(QObject*)this<<" New volume:"<<v;
+		//qDebug() << "GLVideoFileDrawable::setVolume(): "<<(QObject*)this<<" New volume:"<<v;
 		m_qtSource->player()->setVolume(v);
 	}
 	else
@@ -220,17 +209,53 @@ quint64 GLVideoFileDrawable::position()
 #endif
 }
 
-
-
-QVariant GLVideoFileDrawable::itemChange(GraphicsItemChange change, const QVariant &value)
+void GLVideoFileDrawable::setLiveStatus(bool flag)
 {
-/*	if(change == ItemSceneChange)
-		qDebug() << "GLVideoDrawable::itemChange: change:"<<change<<", value:"<<value;*/
-	if (change == ItemSceneChange)
+	GLVideoDrawable::setLiveStatus(flag);
+#ifdef HAS_QT_VIDEO_SOURCE	
+
+	qDebug() << "GLVideoFileDrawable::setLiveStatus: new status:"<<flag;
+	
+	if(flag)
 	{
-// 		 QGraphicsScene *newScene = value.value<QGraphicsScene *>();
-// 		 if(newScene)
-// 		 	setVolume(0);
+		GLEditorGraphicsScene *scenePtr = dynamic_cast<GLEditorGraphicsScene*>(scene());
+		if(!scenePtr)
+		{
+			if(m_qtSource)
+			{
+				m_qtSource->player()->play();
+				
+				QPropertyAnimation *anim = new QPropertyAnimation(this, "volume");
+				anim->setEndValue(100);
+				anim->setDuration(xfadeLength());
+				anim->start();
+			}
+			else
+			{
+				qDebug() << "GLVideoFileDrawable::setLiveStatus: Can't fade in volume - no video source.";
+			}
+		}
+		else
+		{
+			qDebug() << "GLVideoFileDrawable::setLiveStatus: Not going live due to the fact we're in the editor scene. Also, limiting frame rate to 10fps for CPU usage's sake.";
+			setFpsLimit(10.);
+		}
 	}
-	return GLDrawable::itemChange(change, value);
+	else
+	{
+		if(m_qtSource)
+		{
+			QPropertyAnimation *anim = new QPropertyAnimation(this, "volume");
+			anim->setEndValue(0);
+			anim->setDuration(xfadeLength());
+			anim->start();
+			
+			QTimer::singleShot(xfadeLength(), m_qtSource->player(), SLOT(pause())); 
+		}
+		else
+		{
+			qDebug() << "GLVideoFileDrawable::setLiveStatus: Can't fade out volume - no video source.";
+		}
+	}
+#endif
 }

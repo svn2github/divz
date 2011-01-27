@@ -64,7 +64,7 @@ VideoFrame::VideoFrame(const QImage &frame, int holdTime, const QTime &captureTi
 		
 	if(m_pixelFormat == QVideoFrame::Format_Invalid)
 	{
-		qDebug() << "VideoFrame: image was not in an acceptable format, converting to ARGB32 automatically.";
+		//qDebug() << "VideoFrame: image was not in an acceptable format, converting to ARGB32 automatically.";
 		m_image = m_image.convertToFormat(QImage::Format_ARGB32);
 		m_pixelFormat = QVideoFrame::Format_ARGB32;
 	}
