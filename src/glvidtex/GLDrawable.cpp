@@ -1356,8 +1356,25 @@ bool GLDrawablePlaylist::setData(const QModelIndex &index, const QVariant & valu
 			double val = value.toDouble();
 			if(!val)
 			{
-				/// TODO Need a way to re-calc the auto duration for this item
-				d->setDuration(15.);
+				if(!m_durationProperty.isEmpty())
+				{
+					if(m_currentItemIndex != index.row())
+						playItem(d);
+					
+					double dur = m_drawable->property(qPrintable(m_durationProperty)).toDouble();
+					
+					qDebug() << "GLDrawablePlaylist::setData: "<<this<<" Read duration from "<<m_durationProperty<<", value is:"<<dur;
+					
+					if(dur < 0)
+						dur = 0;
+						
+					d->setDuration(dur);
+				}
+				else
+				{
+					d->setDuration(15.);
+				}
+				
 				d->setAutoDuration(true);
 			}
 			else
@@ -1542,6 +1559,42 @@ void GLDrawablePlaylist::stop()
 	m_tickTimer.stop();
 }
 
+GLPlaylistItem *GLDrawablePlaylist::currentItem()
+{
+	if(m_currentItemIndex < 0 || m_currentItemIndex >= m_items.size())
+		return 0;
+	return m_items.at(m_currentItemIndex);
+}
+
+void GLDrawablePlaylist::nextItem()
+{
+	if(m_items.isEmpty())
+		return;
+	
+	int next = m_currentItemIndex + 1;
+	if(next >= m_items.size())
+		next = 0;
+		
+	playItem(m_items.at(next));
+}
+
+void GLDrawablePlaylist::prevItem()
+{
+	if(m_items.isEmpty())
+		return;
+	
+	int next = m_currentItemIndex - 1;
+	if(next < 0)
+		next = m_items.size() - 1;
+		
+	playItem(m_items.at(next));
+}
+
+void GLDrawablePlaylist::setDurationProperty(const QString& prop)
+{
+	m_durationProperty = prop; 
+}
+
 void GLDrawablePlaylist::playItem(GLPlaylistItem *item)
 {
 	int idx = m_items.indexOf(item);
@@ -1555,7 +1608,7 @@ void GLDrawablePlaylist::playItem(GLPlaylistItem *item)
 
 	const char *propName = m_drawable->metaObject()->userProperty().name();
 
-	//qDebug() << "GLDrawablePlaylist::playItem: Showing"<<propName<<": "<<item->value();
+	qDebug() << "GLDrawablePlaylist::playItem: Showing"<<propName<<": "<<item->value();
 
 	m_drawable->setProperty(propName, item->value());
 }
@@ -1563,6 +1616,7 @@ void GLDrawablePlaylist::playItem(GLPlaylistItem *item)
 bool GLDrawablePlaylist::setPlayTime(double time)
 {
 	m_playTime = time;
+	qDebug() << "GLDrawablePlaylist::setPlayTime: "<<time;
 
 	emit playerTimeChanged(time);
 

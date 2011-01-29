@@ -446,9 +446,16 @@ public:
 	bool isPlaying() { return m_isPlaying; }
 	double playTime() { return m_playTime; }
 	
+	GLPlaylistItem *currentItem();
+	
 	double duration();
 	
 	double timeFor(GLPlaylistItem*);
+	
+	// durationProperty is the prop on the drawable to read inorder to determine the
+	// automatic duration of the current item. 
+	void setDurationProperty(const QString&);
+	QString durationProperty() { return m_durationProperty; }
 
 public slots:
 	void addItem(GLPlaylistItem *, GLPlaylistItem *insertAfter=0);
@@ -460,6 +467,9 @@ public slots:
 	
 	void playItem(GLPlaylistItem*);
 	bool setPlayTime(double time);
+	
+	void nextItem();
+	void prevItem();
 		
 signals:
 	void itemAdded(GLPlaylistItem*);
@@ -484,6 +494,8 @@ private:
 	double m_playTime;
 	double m_timerTickLength;
 	int m_currentItemIndex;
+	
+	QString m_durationProperty;
 
 };
 

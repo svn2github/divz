@@ -65,8 +65,6 @@ TODO:
 		- Director: QtVidSrc videos are behind the player - need to sync
 		- GLPlaylist: When erasing duration (user set duration to 0 to re-enable auto-dur), need a way to re-calc the auto dur, say get length of video, etc.
 		 
-		- Player: A video playlist doesnt seem to continue to play if director is closed!
-		
 	NEEDED FEATURES:
 		- Sharpening Filter (GLSL or image based, scaled up)
 		

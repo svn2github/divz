@@ -762,44 +762,11 @@ void GLVideoDrawable::setLiveStatus(bool flag)
 
 QVariant GLVideoDrawable::itemChange(GraphicsItemChange change, const QVariant &value)
 {
-/*	if(change == ItemSceneChange)
-		qDebug() << "GLVideoDrawable::itemChange: change:"<<change<<", value:"<<value;*/
 	if (change == ItemSceneChange)
 	{
 		QGraphicsScene *scene = value.value<QGraphicsScene*>();
-		//qDebug() << "GLImageDrawable::itemChange(): value:"<<value<<", scene:"<<scene;
 		if(!scene && liveStatus())
 			setLiveStatus(false);
-
-// 		// value is the new position.
-// 		QPointF newPos = value.toPointF();
-// 		QRectF rect = scene()->sceneRect();
-// 		if (!rect.contains(newPos)) {
-// 		// Keep the item inside the scene rect.
-// 		newPos.setX(qMin(rect.right(), qMax(newPos.x(), rect.left())));
-// 		newPos.setY(qMin(rect.bottom(), qMax(newPos.y(), rect.top())));
-// 		return newPos;
-// 		}
-/*
-		if(videoSource() && dynamic_cast<QtVideoSource*>(videoSource()))// && !m_videoWidgetItem)
-		{
-			QGraphicsProxyWidget *m_videoWidgetProxy = new QGraphicsProxyWidget(this);
-			QVideoWidget *m_videoWidgetItem = new QVideoWidget();
-			m_videoWidgetProxy->setWidget(m_videoWidgetItem);
-			//m_videoWidgetProxy->setVisible(true);
-			m_videoWidgetItem->show();
-
-			QtVideoSource *src = dynamic_cast<QtVideoSource*>(videoSource());
-			src->player()->setVideoOutput(m_videoWidgetItem);
-
-
-			qDebug() << "Setup Video Proxy";
-		}
-		else
-		{
-			qDebug() << "Added to scene, but no qt video source";
-		}
-*/
 	}
 	return GLDrawable::itemChange(change, value);
  }

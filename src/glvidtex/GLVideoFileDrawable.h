@@ -3,7 +3,11 @@
 
 #include "GLVideoDrawable.h"
 
-class QtVideoSource;
+#ifdef HAS_QT_VIDEO_SOURCE
+#include "QtVideoSource.h"
+#endif
+
+
 class GLVideoFileDrawable : public GLVideoDrawable
 {
 	Q_OBJECT
@@ -14,6 +18,8 @@ class GLVideoFileDrawable : public GLVideoDrawable
 	Q_PROPERTY(bool muted READ isMuted WRITE setMuted);
 	Q_PROPERTY(int status READ status WRITE setStatus);
 	Q_PROPERTY(quint64 position READ position WRITE setPosition);
+	
+	Q_PROPERTY(double videoLength READ videoLength);
 	
 public:
 	GLVideoFileDrawable(QString file="", QObject *parent=0);
@@ -41,7 +47,15 @@ public slots:
 private slots:
 	void testXfade();
 	void deleteSource(VideoSource *source);
-	
+#ifdef HAS_QT_VIDEO_SOURCE
+	void durationChanged ( qint64 duration );
+	void error ( QMediaPlayer::Error error );
+	//void mediaStatusChanged ( QMediaPlayer::MediaStatus status )
+	//void positionChanged ( qint64 position )
+	//void seekableChanged ( bool seekable )
+	void stateChanged ( QMediaPlayer::State state );
+#endif 
+
 protected:
 	// GLVideoDrawable::
 	virtual void setLiveStatus(bool);

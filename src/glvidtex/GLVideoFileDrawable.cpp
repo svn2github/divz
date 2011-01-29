@@ -15,6 +15,8 @@ GLVideoFileDrawable::GLVideoFileDrawable(QString file, QObject *parent)
 	if(!file.isEmpty())
 		setVideoFile(file);
 	
+	playlist()->setDurationProperty("videoLength");
+	
 	connect(this, SIGNAL(sourceDiscarded(VideoSource*)), this, SLOT(deleteSource(VideoSource*)));
 }
 	
@@ -54,6 +56,10 @@ bool GLVideoFileDrawable::setVideoFile(const QString& file)
 	
 	connect(m_qtSource->player(), SIGNAL(positionChanged(qint64)), this, SIGNAL(positionChanged(qint64))); 
 	
+	connect(m_qtSource->player(), SIGNAL(durationChanged ( qint64 )), this, SLOT(durationChanged ( qint64 )));
+	connect(m_qtSource->player(), SIGNAL(error ( QMediaPlayer::Error )), this, SLOT(error ( QMediaPlayer::Error )));
+	connect(m_qtSource->player(), SIGNAL(stateChanged ( QMediaPlayer::State )), this, SLOT(stateChanged ( QMediaPlayer::State )));
+	
 	// Reset length for next query to videoLength(), below 
 	m_videoLength = -1;
 	
@@ -74,6 +80,31 @@ bool GLVideoFileDrawable::setVideoFile(const QString& file)
 	emit videoFileChanged(file);
 	return true;
 	
+}
+
+void GLVideoFileDrawable::durationChanged ( qint64 duration )
+{
+	duration /= 1000;
+	qDebug() << "GLVideoFileDrawable::durationChanged: "<<m_videoFile<<" Duration changed to:"<<duration;
+	m_videoLength = (double)duration;
+}
+
+void GLVideoFileDrawable::error ( QMediaPlayer::Error error )
+{
+	qDebug() << "GLVideoFileDrawable::error: "<<m_videoFile<<" "<<error;
+}
+
+void GLVideoFileDrawable::stateChanged ( QMediaPlayer::State state )
+{
+	qDebug() << "GLVideoFileDrawable::stateChanged: "<<m_videoFile<<" "<<state;
+	
+	if(state == QMediaPlayer::StoppedState)
+	{
+		//if(playlist()->isPlaying())
+			playlist()->nextItem();
+		//else
+		//	qDebug() << "GLVideoFileDrawable::stateChanged: "<<m_videoFile<<" Stopped, but no playlist going to move on in.";
+	}
 }
 
 double GLVideoFileDrawable::videoLength()
