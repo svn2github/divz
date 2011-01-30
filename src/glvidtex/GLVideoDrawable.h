@@ -273,7 +273,7 @@ protected:
 	// QGraphicsItem::
 	virtual QVariant itemChange(GraphicsItemChange change, const QVariant &value);
  
-	void xfadeStart();
+	void xfadeStart(bool invertStart=false);
 	void xfadeStop();
 	
 protected slots:
@@ -391,6 +391,9 @@ private:
 	QTime m_fadeTime;
 	double m_fadeValue;
 	bool m_fadeActive;
+	bool m_fadeTimeStarted;
+	QEasingCurve m_fadeCurve;
+	double m_startOpacity;
 	
 	class VideoSender *m_videoSender;
 	bool m_videoSenderEnabled;

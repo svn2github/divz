@@ -685,7 +685,7 @@ void GLScene::setOpacity(double d, bool animate, double animDuration)
 			
  		//qDebug() << "GLScene::setOpacity: "<<this<<" opac:"<<d<<", duration:"<<animDuration<<", current opac:"<<opacity();
 
-		m_fadeTimer.setInterval(1000 / 60); // 25fps fade
+		m_fadeTimer.setInterval(1000 / 25); // 25fps fade
 		m_crossfadeSpeed = animDuration;
 		
 		m_fadeDirection = d < opacity() ?  -1 : 1;

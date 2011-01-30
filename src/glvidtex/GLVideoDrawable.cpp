@@ -95,6 +95,7 @@ GLVideoDrawable::GLVideoDrawable(QObject *parent)
 	, m_xfadeLength(300)
 	, m_fadeValue(0.)
 	, m_fadeActive(false)
+	, m_fadeTimeStarted(false)
 	, m_videoSender(0)
 	, m_videoSenderEnabled(false)
 	, m_videoSenderPort(-1)
@@ -213,6 +214,8 @@ void GLVideoDrawable::setVideoSource(VideoSource *source)
 		}
 		else
 		{
+			bool invertFadeStart = source == m_source2;			
+	
 			disconnect(m_source, 0, this, 0);
 
 			m_source2 = m_source;
@@ -235,7 +238,7 @@ void GLVideoDrawable::setVideoSource(VideoSource *source)
 			m_frame2->incRef();
 			updateTexture(true);
 
-			xfadeStart();
+			xfadeStart(invertFadeStart);
 		}
 	}
 
@@ -263,20 +266,36 @@ void GLVideoDrawable::setVideoSource(VideoSource *source)
 
 }
 
-void GLVideoDrawable::xfadeStart()
+void GLVideoDrawable::xfadeStart(bool invertStart)
 {
 	m_fadeTick.start();
-	m_fadeTime.start();
+	//m_fadeTime.start();
 	m_fadeActive = true;
-	m_fadeValue = 0.0;
+	m_fadeTimeStarted = false;
+	m_startOpacity = invertStart ? 1.0 - m_fadeValue : m_fadeValue;
+//	m_fadeValue = 0.0;
 	//qDebug() << "GLVideoDrawable::xfadeStart()";
+
+	m_fadeCurve.setType(QEasingCurve::InOutQuad);
+//	m_fadeCurve.setType(QEasingCurve::OutCubic);
 }
 
 void GLVideoDrawable::xfadeTick(bool callUpdate)
 {
-	int elapsed = m_fadeTime.elapsed();
-	m_fadeValue = ((double)elapsed) / ((double)m_xfadeLength);
-	//qDebug() << "GLVideoDrawable::xfadeTick(): elapsed:"<<elapsed<<", length:"<<m_xfadeLength<<", fadeValue:"<<m_fadeValue;
+	// Only start the counter once we actually get the first 'tick' of the timer
+	// because there may be a significant delay between the time the timer is started
+	// and the first 'tick' is received, which (if we started the counter above), would
+	// cause a noticable and undesirable jump in the opacity
+	if(!m_fadeTimeStarted)
+	{
+		m_fadeTime.start();
+		m_fadeTimeStarted = true;
+	}
+        
+	int elapsed = m_fadeTime.elapsed() + (m_startOpacity * m_xfadeLength);
+	double progress = ((double)elapsed) / ((double)m_xfadeLength);
+	m_fadeValue = m_fadeCurve.valueForProgress(progress);
+	//qDebug() << "GLVideoDrawable::xfadeTick(): elapsed:"<<elapsed<<", start:"<<m_startOpacity<<", progress:"<<progress<<", fadeValue:"<<m_fadeValue;
 
 	if(elapsed >= m_xfadeLength)
 		xfadeStop();
@@ -290,6 +309,7 @@ void GLVideoDrawable::xfadeStop()
 	//qDebug() << "GLVideoDrawable::xfadeStop()";
 	m_fadeActive = false;
 	m_fadeTick.stop();
+	m_fadeValue = 0.0;
 
 	disconnectVideoSource2();
 	updateGL();
@@ -1976,8 +1996,10 @@ void GLVideoDrawable::paintGL()
 
 	double liveOpacity = m_crossFadeMode == JustFront ? 
 				 opacity() :
-				(opacity() * (m_fadeActive ? m_fadeValue + .5 : 1.));
+				(opacity() * (m_fadeActive ? m_fadeValue : 1.));
 		
+//if(m_fadeActive)
+//qDebug() << "GLVideoDrawable::paintGL: Fade active, liveOpacity:
 // 	if(property("-debug").toBool())
 // 		qDebug() << "m_useShaders:"<<m_useShaders;
 	if(m_useShaders)
@@ -2125,6 +2147,10 @@ void GLVideoDrawable::paintGL()
  	if(m_fadeActive)
  	{
  		double fadeOpacity = opacity() * (1.0-m_fadeValue);
+//		if(fadeOpacity < 0.001)
+//			fadeOpacity = 0;
+
+//		qDebug() << "GLVideoDrawable::paintGL: [source2] fadeOpacity: "<<fadeOpacity;
 
 		QRectF source2 = m_sourceRect2;
 		QRectF target2 = m_targetRect2;
@@ -2273,7 +2299,8 @@ void GLVideoDrawable::paintGL()
 			}
 			m_program->setUniformValue("colorMatrix", m_colorMatrix);
 
-			glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+//			if(fadeOpacity > 0.001)
+				glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
 			m_program->release();
 
