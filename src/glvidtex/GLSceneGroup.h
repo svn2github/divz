@@ -169,6 +169,8 @@ public:
 	
 	GLSceneType *sceneType() { return m_sceneType; }
 
+	bool fadeActive() { return m_fadeActive; }
+
 public slots:
 	void setSceneName(const QString& name);
 	void setListOnlyUserItems(bool);
@@ -211,6 +213,9 @@ private slots:
 	void fadeTick();
 	
 protected:
+	friend class GLVideoDrawable;
+	void recalcFadeOpacity(bool setOpac=true);
+
 	double calcDuration();
 	
 	friend class GLSceneLayoutListModel;
@@ -242,6 +247,7 @@ protected:
 	int m_fadeDirection;
 	double m_endOpacity;
 	double m_startOpacity;
+	bool m_fadeActive;
 	
 	int m_crossfadeSpeed;
 	

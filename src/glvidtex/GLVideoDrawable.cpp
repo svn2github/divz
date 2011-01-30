@@ -1,4 +1,5 @@
 #include "GLVideoDrawable.h"
+#include "GLSceneGroup.h"
 
 #include "GLWidget.h"
 
@@ -271,7 +272,7 @@ void GLVideoDrawable::xfadeStart()
 	//qDebug() << "GLVideoDrawable::xfadeStart()";
 }
 
-void GLVideoDrawable::xfadeTick()
+void GLVideoDrawable::xfadeTick(bool callUpdate)
 {
 	int elapsed = m_fadeTime.elapsed();
 	m_fadeValue = ((double)elapsed) / ((double)m_xfadeLength);
@@ -279,8 +280,9 @@ void GLVideoDrawable::xfadeTick()
 
 	if(elapsed >= m_xfadeLength)
 		xfadeStop();
-
-	updateGL();
+	
+	if(callUpdate)
+		updateGL();
 }
 
 void GLVideoDrawable::xfadeStop()
@@ -1843,6 +1845,14 @@ void GLVideoDrawable::paintGL()
 
 
 	//m_frame->unmap()();
+
+	// Call the fade update function directly for both
+	// our local crossfade and the scene crossfade 
+	if(m_fadeActive)
+		xfadeTick(false); // dont update GL
+
+	if(glScene() && glScene()->fadeActive())
+		glScene()->recalcFadeOpacity(false); // dont call setOpacity internally, which calls updateGL on each drawable in the scene
 
 	QRectF source = m_sourceRect;
 	QRectF target = m_targetRect;

@@ -716,33 +716,36 @@ void GLScene::fadeTick()
 	{
 		m_fadeClockActive = true;
 		m_fadeClock.start();
+		m_fadeActive = true;
 	}
-	int time = m_fadeClock.elapsed();
-	if(time >= m_crossfadeSpeed)
+	if(m_fadeClock.elapsed() >= m_crossfadeSpeed)
 	{
 		//qDebug() << "GLScene::fadeTick: fade ended ("<<time<<" > "<<m_crossfadeSpeed<<")";
+		m_fadeActive = false;
 		m_fadeTimer.stop();
 		setOpacity(m_endOpacity);
 		emit opacityAnimationFinished();
 	}
 	else
 	{
-		double progress = ((double)time) / ((double)m_crossfadeSpeed);
-		double valueLength = fabs(m_endOpacity - m_startOpacity);
-		double fadeVal = valueLength * progress;
-		if(m_fadeDirection < 0)
-			//fadeVal = 1.0 - fadeVal;
-			fadeVal = m_startOpacity - fadeVal;
-		
-// 		qDebug() << "GLScene::fadeTick: dir:"<<m_fadeDirection
-// 			<<", time:"<<time
-// 			<<", len:"<<m_crossfadeSpeed
-// 			<<", progress:"<<progress
-// 			<<", valueLength:"<<valueLength
-// 			<<", fadeVal:"<<fadeVal;
-		 
-		setOpacity(fadeVal);
+		recalcFadeOpacity();
 	}
+}
+
+void GLScene::recalcFadeOpacity(bool setOpac)
+{
+	int time = m_fadeClock.elapsed();
+        
+	double progress = ((double)time) / ((double)m_crossfadeSpeed);
+        double valueLength = fabs(m_endOpacity - m_startOpacity);
+        double fadeVal = valueLength * progress;
+        if(m_fadeDirection < 0)
+        	fadeVal = m_startOpacity - fadeVal;
+
+	if(setOpac)
+		setOpacity(fadeVal);
+	else
+		m_opacity = fadeVal;
 }
 
 

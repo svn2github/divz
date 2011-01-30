@@ -283,7 +283,7 @@ protected slots:
 	void updateTexture(bool secondSource=false);
 	
 	void disconnectVideoSource2();
-	void xfadeTick();
+	void xfadeTick(bool updateGL=true);
 	
 	
 private:
