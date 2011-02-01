@@ -103,12 +103,13 @@ QByteArray Serializer::serialize( const QVariant &v )
     {
       QByteArray serializedValue = serialize( v );
       if ( serializedValue.isNull() ) {
-        error = true;
-        break;
+        //error = true;
+        //break;
+        serializedValue = "null";
       }
       values << serializedValue;
     }
-    str = "[ " + join( values, ", " ) + " ]";
+    str = "[ " + join( values, ", " ) + " ]\n";
   } else if ( v.type() == QVariant::Map ) { // variant is a map?
     const QVariantMap vmap = v.toMap();
     QMapIterator<QString, QVariant> it( vmap );
@@ -118,13 +119,14 @@ QByteArray Serializer::serialize( const QVariant &v )
       it.next();
       QByteArray serializedValue = serialize( it.value() );
       if ( serializedValue.isNull() ) {
-        error = true;
-        break;
+        //error = true;
+        //break;
+        serializedValue = "null";
       }
       pairs << sanitizeString( it.key() ).toUtf8() + " : " + serializedValue;
     }
     str += join( pairs, ", " );
-    str += " }";
+    str += " }\n";
   } else if (( v.type() == QVariant::String ) ||  ( v.type() == QVariant::ByteArray )) { // a string or a byte array?
     str = sanitizeString( v.toString() ).toUtf8();
   } else if ( v.type() == QVariant::Double ) { // a double?
@@ -139,7 +141,8 @@ QByteArray Serializer::serialize( const QVariant &v )
   } else if ( v.canConvert<qulonglong>() ) { // large unsigned number?
     str = QByteArray::number( v.value<qulonglong>() );
   } else {
-    error = true;
+    //error = true;
+    str = "null";
   }
   if ( !error )
     return str;

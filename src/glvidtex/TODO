@@ -66,6 +66,15 @@ TODO:
 		- GLPlaylist: When erasing duration (user set duration to 0 to re-enable auto-dur), need a way to re-calc the auto dur, say get length of video, etc.
 		 
 	NEEDED FEATURES:
+		- Icons bad - toolbars going bad
+		- Slides auto change - for changing automatically
+		- Slide types - for rendering the automatic slides
+		- Text shadow rendering outside box
+		- Scene overlay - for stuff that doesnt change
+		- Text crawler - for showing RSS feeds 
+		- JSON interface for web API
+	
+	
 		- Sharpening Filter (GLSL or image based, scaled up)
 		
 		- Need a way to enable/disable encoding from the director

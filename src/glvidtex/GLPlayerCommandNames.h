@@ -38,6 +38,17 @@
 #define GLPlayer_PlaylistTimeChanged "PlaylistTimeChanged"
 #define GLPlayer_CurrentPlaylistItemChanged "CurrentPlaylistItemChanged"
 
+/// Right now, the following are only used by the json server
+
+// Give a tree list of all the Groups (name/ids), scenes in each group (name/ids), drawables in each scene (names/ids), props on each drawable (name, type, value)
+#define GLPlayer_ExamineCollection	 "ExamineCollection"
+// Using the list of group IDs from GLPlayer_ExamineCollection, load a specific group from the collection file as the current group
+#define GLPlayer_LoadGroupFromCollection "LoadGroupFromCollection"
+// Give a tree list of all scenes in current group (name/ids), drawables in each scene (names/ids), props on each drawable (name, type, value)
+#define GLPlayer_ExamineCurrentGroup	 "ExamineCurrentGroup"
+// Give a tree list of all drawables in current scene (names/ids), props on each drawable (name, type, value)
+#define GLPlayer_ExamineCurrentScene	 "ExamineCurrentScene"
+
 // TODO not implemented below, should we implement these since they are all in subviews?
 #define GLPlayer_SetAlphaMask "SetAlphaMask"
 #define GLPlayer_SetKeystone "SetKeystone"

@@ -22,7 +22,9 @@ class GLRectDrawable;
 class GLDrawable;
 class SharedMemorySender;
 class V4LOutput;
+class GLWidgetSubview;
 
+#include "../3rdparty/qjson/serializer.h"
 #include "../livemix/VideoSource.h"
 
 class PlayerWindow;
@@ -61,6 +63,31 @@ private:
 };
 
 
+#include "../http/HttpServer.h"
+
+class PlayerJsonServer : public HttpServer
+{
+	Q_OBJECT
+
+protected:
+	
+	friend class PlayerWindow;
+	PlayerJsonServer(quint16 port, PlayerWindow* parent = 0);
+	
+	void dispatch(QTcpSocket *socket, const QStringList &pathElements, const QStringMap &query);
+	
+private:
+	void sendReply(QTcpSocket *socket, QVariantList list);
+	
+	QVariantList examineScene(GLScene *scene=0);
+	QVariantList examineGroup(GLSceneGroup *group=0);
+	QVariantList examineDrawable(GLDrawable *gld=0);
+	
+	PlayerWindow * m_win;
+	QJson::Serializer * m_jsonOut;
+
+};
+
 class PlayerWindow : public QWidget
 {
 	Q_OBJECT
@@ -68,10 +95,10 @@ public:
 	PlayerWindow(QWidget *parent=0);
 
 	GLSceneGroup *group() { return m_group; }
-	//GLScene *scene() {  return m_scene; }
+	QPointer<GLScene> scene() {  return m_scene; }
 
 	void loadConfig(const QString& file="player.ini", bool verbose=false);
-
+	
 public slots:
 	void setGroup(GLSceneGroup*);
 	void setScene(GLScene*);
@@ -89,14 +116,34 @@ private slots:
 	//void drawableIsVisible(bool);
 	void opacityAnimationFinished();
 
-	void setBlack(bool black=true);
-
 protected:
 	friend class PlayerCompatOutputStream;
 	QGraphicsScene *graphicsScene() { return m_graphicsScene; }
-
+	
+	QRectF stringToRectF(const QString&);
+	QPointF stringToPointF(const QString&);
+	
+	double xfadeSpeed() { return m_xfadeSpeed; }
+	
+protected slots:
+	friend class PlayerJsonServer;
+	
+	void setBlack(bool black=true);
+	void setCrossfadeSpeed(int ms);
+	void setCanvasSize(const QSizeF&);
+	void setScreen(QRect geom);
+	void setIgnoreAR(bool);
+	void setViewport(const QRectF&);
+	
+	QStringList videoInputs();
+	void clearSubviews();
+	void removeSubview(int id);
+	void addSubview(GLWidgetSubview *view);
+	
 private:
 	void sendReply(QVariantList);
+	
+	void displayScene(GLScene*);
 
 	GLPlayerServer *m_server;
 
@@ -140,6 +187,8 @@ private:
 	QList<GLDrawable*> m_oldDrawables;
 
 	bool m_configLoaded;
+	
+	PlayerJsonServer *m_jsonServer;
 };
 
 #endif

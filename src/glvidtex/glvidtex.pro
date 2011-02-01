@@ -172,6 +172,11 @@ player | glvidtex: {
 		../livemix/VideoWidget.cpp \
 		../livemix/EditorUtilityWidgets.cpp 
 		
+	include(../3rdparty/qjson/qjson.pri)
+	
+	HEADERS += ../http/HttpServer.h ../http/SimpleTemplate.h
+	SOURCES += ../http/HttpServer.cpp ../http/SimpleTemplate.cpp
+	
 	win32 {
 		CONFIG += console
 	}
