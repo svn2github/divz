@@ -121,6 +121,7 @@ PlayerWindow::PlayerWindow(QWidget *parent)
 	: QWidget(parent)
 	, m_playerVersionString("GLPlayer 0.5")
 	, m_playerVersion(15)
+	, m_col(0)
 	, m_group(0)
 	, m_scene(0)
 	, m_oldScene(0)
@@ -1043,6 +1044,16 @@ void PlayerWindow::setBlack(bool flag)
 // 	m_client->sendMap(map);
 // }
 
+void PlayerWindow::setCollection(GLSceneGroupCollection *col)
+{
+	if(m_col)
+	{
+		delete m_col;
+		m_col = 0;
+	}
+	
+	m_col = col;
+}
 
 void PlayerWindow::setGroup(GLSceneGroup *group)
 {
@@ -1363,6 +1374,11 @@ void PlayerJsonServer::dispatch(QTcpSocket *socket, const QStringList &pathEleme
 			else
 			{
 				m_win->setScene(scene);
+				
+				GLDrawableList list = scene->drawableList();
+				foreach(GLDrawable *gld, list)
+					if(gld->playlist()->size() > 0)
+						gld->playlist()->play();
 
 				sendReply(socket, QVariantList()
 					<< "cmd" << GLPlayer_SetSlide
@@ -1459,33 +1475,7 @@ void PlayerJsonServer::dispatch(QTcpSocket *socket, const QStringList &pathEleme
 							QString string = map["value"];
 							QString type = map["type"];
 							
-							QVariant value = string;
-							if(!type.isEmpty())
-							{
-								if(type == "string")
-								{
-									// Not needed, default type
-								}
-								else
-								if(type == "int")
-								{
-									value = string.toInt();
-								}
-								else
-								if(type == "double")
-								{
-									value = string.toDouble();
-								}
-								else
-								if(type == "bool")
-								{
-									value = string == "true";
-								}
-								else
-								{
-									qDebug() << "GLPlayer_SetUserProperty: Unknown data type:"<<type<<", defaulting to 'string'";
-								}
-							}
+							QVariant value = stringToVariant(string,type);
 
 							if(GLVideoDrawable *vid = dynamic_cast<GLVideoDrawable*>(gld))
 								vid->setXFadeLength((int)m_win->xfadeSpeed());
@@ -1637,8 +1627,8 @@ void PlayerJsonServer::dispatch(QTcpSocket *socket, const QStringList &pathEleme
 	if(cmd == GLPlayer_ExamineCollection ||
 	   cmd == GLPlayer_LoadGroupFromCollection)
 	{
-		GLSceneGroupCollection col;
-		if(!col.readFile(map["file"]))
+		GLSceneGroupCollection *col = new GLSceneGroupCollection();
+		if(!col->readFile(map["file"]))
 		{
 			//qDebug() << qPrintable(name()) << ": Error reading collection file"<<arg;
 			sendReply(socket, QVariantList()
@@ -1651,7 +1641,7 @@ void PlayerJsonServer::dispatch(QTcpSocket *socket, const QStringList &pathEleme
 			if(cmd == GLPlayer_LoadGroupFromCollection)
 			{
 				int groupId = map["id"].toInt();
-				GLSceneGroup *group = col.lookupGroup(groupId);
+				GLSceneGroup *group = col->lookupGroup(groupId);
 				if(!group)
 				{
 					sendReply(socket, QVariantList()
@@ -1661,17 +1651,30 @@ void PlayerJsonServer::dispatch(QTcpSocket *socket, const QStringList &pathEleme
 				}
 				else
 				{
+					m_win->setCollection(col);
 					m_win->setGroup(group);
 
 					if(group->size() > 0)
-						m_win->setScene(group->at(0));
+					{
+						GLScene *scene = group->at(0);
+						m_win->setScene(scene);
+						
+						GLDrawableList list = scene->drawableList();
+						foreach(GLDrawable *gld, list)
+							if(gld->playlist()->size() > 0)
+								gld->playlist()->play();
+					}
+					
+					sendReply(socket, QVariantList()
+						<< "cmd"    << cmd
+						<< "status" << "true");
 				}
 			}
 			else
 			{
 				//GLPlayer_ExamineCollection
 				QVariantList groups;
-				foreach(GLSceneGroup *group, col.groupList())
+				foreach(GLSceneGroup *group, col->groupList())
 				{
 					//qDebug() << group->groupId() << "\"" << qPrintable(group->groupName().replace("\"","\\\"")) << "\"";
 					//qDebug() << group->groupId() << group->groupName();
@@ -1689,7 +1692,133 @@ void PlayerJsonServer::dispatch(QTcpSocket *socket, const QStringList &pathEleme
 					<< "cmd"    << cmd
 					<< "status" << "true"
 					<< "groups"  << QVariant(groups));
+					
+				delete col;
 			}
+		}
+	}
+	else
+	if(cmd == GLPlayer_WriteCollection)
+	{
+		QString file = map["file"];
+		if(!m_win->collection())
+		{
+			sendReply(socket, QVariantList()
+				<< "cmd"     << cmd
+				<< "status"  << "error"
+				<< "message" << "No collection loaded.");
+		}
+		else
+		{
+			if(!m_win->collection()->writeFile(file))
+				sendReply(socket, QVariantList()
+					<< "cmd"     << cmd
+					<< "status"  << "error"
+					<< "message" << "Error writing collection.");
+			else
+				sendReply(socket, QVariantList()
+					<< "cmd"     << cmd
+					<< "status"  << "true");
+		}
+	}
+	else
+	if(cmd == GLPlayer_SetSceneProperty)
+	{
+		int id = map["sceneid"].toInt();
+		GLScene *scene = m_win->group()->lookupScene(id);
+		if(!scene)
+		{
+			sendReply(socket, QVariantList()
+				<< "cmd" << cmd
+				<< "status" << "error"
+				<< "message" << "Invalid SceneID");
+		}
+		else
+		{
+			QString name   = map["name"];
+			QString string = map["value"];
+			QString type   = map["type"];
+			
+			QVariant value = stringToVariant(string,type);
+			
+			name = name == "autodur"  ? "autoDuration" :
+			       name == "datetime" ? "scheduledTime" : 
+			       name == "autotime" ? "autoSchedule" : 
+			       name;
+			
+			type = name == "scheduledTime" ? "datetime" :
+			       name == "autodur" || name == "autotime" ? "bool" :
+			       name == "duration" ? "double" : 
+			       type;
+		
+			scene->setProperty(qPrintable(name), value);
+			
+			sendReply(socket, QVariantList()
+				<< "cmd"     << cmd
+				<< "status"  << "true");
+		}
+	}
+	else
+	if(cmd == GLPlayer_RemovePlaylistItem)
+	{
+		int id = map["drawableid"].toInt();
+		GLDrawable *gld = m_win->scene()->lookupDrawable(id);
+		if(!gld)
+		{
+			sendReply(socket, QVariantList()
+				<< "cmd" << cmd
+				<< "status" << "error"
+				<< "message" << "Invalid DrawableID");
+		}
+		else
+		{
+			int itemId = map["itemid"].toInt();
+			GLPlaylistItem *item = gld->playlist()->lookup(itemId);
+			if(!item)
+			{
+				sendReply(socket, QVariantList()
+					<< "cmd" << cmd
+					<< "status" << "error"
+					<< "message" << "Invalid ItemID");
+			}
+			else
+			{
+				gld->playlist()->removeItem(item);
+				sendReply(socket, QVariantList()
+					<< "cmd"     << cmd
+					<< "status"  << "true");
+			}
+		}
+	}
+	else
+	if(cmd == GLPlayer_AddPlaylistItem)
+	{
+		int id = map["drawableid"].toInt();
+		GLDrawable *gld = m_win->scene()->lookupDrawable(id);
+		if(!gld)
+		{
+			sendReply(socket, QVariantList()
+				<< "cmd" << cmd
+				<< "status" << "error"
+				<< "message" << "Invalid DrawableID");
+		}
+		else
+		{
+			GLPlaylistItem *item = new GLPlaylistItem();
+			
+			item->setTitle(		map["title"]);
+			item->setValue(		stringToVariant(map["value"],map["type"]));
+			item->setDuration(	map["duration"].toDouble());
+			item->setAutoDuration(	map["autodur"] == "true");
+			item->setScheduledTime(	stringToVariant(map["datetime"],"datetime").toDateTime());
+			item->setAutoSchedule(	map["autotime"] == "true");
+			
+			gld->playlist()->addItem(item);
+			
+			sendReply(socket, QVariantList()
+				<< "cmd"     << cmd
+				<< "status"  << "true"
+				<< "itemid"  << item->id());
 		}
 	}
 	else
@@ -1699,6 +1828,68 @@ void PlayerJsonServer::dispatch(QTcpSocket *socket, const QStringList &pathEleme
 				<< "status"  << "error"
 				<< "message" << "Unknown command.");
 	}
+}
+
+QVariant PlayerJsonServer::stringToVariant(QString string, QString type)
+{
+	QVariant value = string;
+	if(!type.isEmpty())
+	{
+		if(type == "string")
+		{
+			// Not needed, default type
+		}
+		else
+		if(type == "int")
+		{
+			value = string.toInt();
+		}
+		else
+		if(type == "double")
+		{
+			value = string.toDouble();
+		}
+		else
+		if(type == "bool")
+		{
+			value = string == "true";
+		}
+		else
+		if(type == "color")
+		{
+			QStringList z = string.split(",");
+			value = QColor(	z[0].toInt(), 
+					z[1].toInt(),
+					z[2].toInt(),
+					z.size() >= 4 ? z[3].toInt() : 255);
+		}
+		else
+		if(type == "point")
+		{
+			QStringList z = string.split(",");
+			value = QPointF(z[0].toDouble(), 
+					z[1].toDouble());
+		}
+		else
+		if(type == "rect")
+		{
+			QStringList z = string.split(",");
+			value = QRectF(	z[0].toDouble(), 
+					z[1].toDouble(),
+					z[2].toDouble(),
+					z[3].toDouble());
+		}
+		else
+		if(type == "datetime")
+		{
+			value = QDateTime::fromString(string, "yyyy-MM-dd HH:mm:ss");
+		}
+		else
+		{
+			qDebug() << "PlayerJsonServer::stringToVariant: Unknown data type:"<<type<<", defaulting to 'string'";
+		}
+	}
+	return value;
 }
 
 QVariantList PlayerJsonServer::examineGroup(GLSceneGroup *group)
@@ -1713,6 +1904,10 @@ QVariantList PlayerJsonServer::examineGroup(GLSceneGroup *group)
 		
 		map["id"] = scene->sceneId();
 		map["name"] = scene->sceneName();
+		map["duration"] = scene->duration();
+		map["autodur"] = scene->autoDuration();
+		map["datetime"] = scene->scheduledTime();
+		map["autotime"] = scene->autoSchedule();
 		
 		map["items"] = examineScene(scene);
 		
@@ -1767,6 +1962,25 @@ QVariantList PlayerJsonServer::examineScene(GLScene *scene)
 		}
 		
 		map["props"] = proplist;
+		
+		QVariantList playlist;
+		QList<GLPlaylistItem*> items = gld->playlist()->items();
+		foreach(GLPlaylistItem *item, items)
+		{
+			QVariantMap map2;
+			map2["id"] = item->id();
+			map2["title"] = item->title();
+			map2["value"] = item->value();
+			map2["duration"] = item->duration();
+			map2["autodur"] = item->autoDuration();
+			map2["datetime"] = item->scheduledTime();
+			map2["autotime"] = item->autoSchedule();
+			
+			playlist << map2;
+		}
+		
+		map["playlist"] = playlist;
+		
 		
 		gldlist << map;
 	}

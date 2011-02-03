@@ -257,7 +257,7 @@ opencv: {
 }
 
 
-RESOURCES     = glvidtex.qrc
+#RESOURCES     = glvidtex.qrc
 QT           += opengl multimedia network svg
 
 

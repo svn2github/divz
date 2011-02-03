@@ -10,6 +10,7 @@ class GLPlayerServer;
 // // for testing
 // class GLPlayerClient;
 
+class GLSceneGroupCollection;
 class GLSceneGroup;
 class GLScene;
 class GLWidget;
@@ -78,6 +79,7 @@ protected:
 	
 private:
 	void sendReply(QTcpSocket *socket, QVariantList list);
+	QVariant stringToVariant(QString string, QString type);
 	
 	QVariantList examineScene(GLScene *scene=0);
 	QVariantList examineGroup(GLSceneGroup *group=0);
@@ -94,12 +96,14 @@ class PlayerWindow : public QWidget
 public:
 	PlayerWindow(QWidget *parent=0);
 
+	GLSceneGroupCollection *collection() { return m_col; }
 	GLSceneGroup *group() { return m_group; }
 	QPointer<GLScene> scene() {  return m_scene; }
 
 	void loadConfig(const QString& file="player.ini", bool verbose=false);
 	
 public slots:
+	void setCollection(GLSceneGroupCollection*);
 	void setGroup(GLSceneGroup*);
 	void setScene(GLScene*);
 
@@ -155,7 +159,7 @@ private:
 	QString m_playerVersionString;
 	int m_playerVersion;
 
-
+	GLSceneGroupCollection *m_col;
 	GLSceneGroup *m_group;
 	QPointer<GLScene> m_scene;
 	QPointer<GLScene> m_oldScene;

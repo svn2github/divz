@@ -8,6 +8,12 @@ GLTextDrawable::GLTextDrawable(QString text, QObject *parent)
 	: GLImageDrawable("",parent)
 	, m_isClock(false)
 	, m_clockFormat(DEFAULT_CLOCK_FORMAT)
+	, m_isScroller(false)
+	, m_scrollerSpeed(10.)
+	, m_iconFile("../data/stock-media-rec.png")
+	, m_rssRefreshTime(0)
+	, m_dataReceived(false)
+	, m_lockScrollerRender(false)
 	, m_lockSetPlainText(false)
 {
 	QDateTime now = QDateTime::currentDateTime();
@@ -32,11 +38,24 @@ GLTextDrawable::GLTextDrawable(QString text, QObject *parent)
 
 	//setAspectRatioMode(Qt::KeepAspectRatioByExpanding);
 
+	// Countdown timer
 	connect(&m_countdownTimer, SIGNAL(timeout()), this, SLOT(countdownTick()));
 	m_countdownTimer.setInterval(250);
 
+	// Clock timer
 	connect(&m_clockTimer, SIGNAL(timeout()), this, SLOT(clockTick()));
 	m_clockTimer.setInterval(250);
+	
+	// Scroller timer
+	connect(&m_scrollerTimer, SIGNAL(timeout()), this, SLOT(scrollerTick()));
+	m_scrollerTimer.setInterval(1000 / 30);
+	
+	connect(&m_rssHttp, SIGNAL(readyRead(const QHttpResponseHeader &)), this, SLOT(rssReadData(const QHttpResponseHeader &)));
+	connect(&m_rssRefreshTimer, SIGNAL(timeout()), this, SLOT(reloadRss()));
+	
+	setIsScroller(true);
+	//setRssUrl(QUrl("http://www.mypleasanthillchurch.org/phc/boards/rss"));
+	QTimer::singleShot(100,this,SLOT(testXfade()));
 
 }
 GLTextDrawable::~GLTextDrawable()
@@ -50,8 +69,10 @@ GLTextDrawable::~GLTextDrawable()
 
 void GLTextDrawable::testXfade()
 {
-	qDebug() << "GLTextDrawable::testXfade(): loading text #2";
-	setText("Friday 2010-11-26");
+	//qDebug() << "GLTextDrawable::testXfade(): loading text #2";
+	//setText("Friday 2010-11-26");
+	//setIconFile("/home/josiah/Downloads/phc-logo-transparent.png");
+	setRssUrl(QUrl("http://www.mypleasanthillchurch.org/phc/boards/rss"));
 }
 
 void GLTextDrawable::setIsCountdown(bool flag)
@@ -88,7 +109,7 @@ QString GLTextDrawable::formatTime(double time)
 	int min  = (int)(h * 60) % 60;
 	int sec  = (int)( time ) % 60;
 	return  (isNeg ? "+" : "") +
-	                       QString::number(hour) + ":" +
+	                           QString::number(hour) + ":" +
 		(min<10? "0":"") + QString::number(min)  + ":" +
 		(sec<10? "0":"") + QString::number(sec);// + "." +
 		//(ms <10? "0":"") + QString::number((int)ms );
@@ -141,12 +162,332 @@ void GLTextDrawable::clockTick()
 	setPlainText(newText);
 }
 
+void GLTextDrawable::setIsScroller(bool flag)
+{
+	m_isScroller = flag;
+	if(m_scrollerTimer.isActive() && !flag)
+		m_scrollerTimer.stop();
+
+	if(!m_scrollerTimer.isActive() && flag)
+		m_scrollerTimer.start();
+
+	m_scrollPos = (int)(-rect().width());
+	//m_lastItem = 0;
+	if(flag)
+	{
+		scrollerTick();
+		//setXFadeEnabled(false);
+		connect(playlist(), SIGNAL(itemAdded(GLPlaylistItem*)),   this, SLOT(playlistChanged()));
+		connect(playlist(), SIGNAL(itemRemoved(GLPlaylistItem*)), this, SLOT(playlistChanged()));
+	}
+	else
+	{
+		//setXFadeEnabled(true);
+		disconnect(playlist(), SIGNAL(itemAdded(GLPlaylistItem*)),   this, SLOT(playlistChanged()));
+		disconnect(playlist(), SIGNAL(itemRemoved(GLPlaylistItem*)), this, SLOT(playlistChanged()));
+	}
+}
+
+void GLTextDrawable::setIconFile(const QString& file)
+{
+	m_iconFile = file;
+	m_scrollerImage = QImage();
+}
+
+void GLTextDrawable::setRssUrl(const QUrl& url)
+{
+	m_rssUrl = url;
+	
+	
+	m_dataReceived = false;
+	QList<GLPlaylistItem*> items = playlist()->items();
+	m_lockScrollerRender = true;
+	
+	if(!items.isEmpty())
+		m_rssTextTemplate = items.first()->value().toString();
+	else
+		m_rssTextTemplate = text();
+	
+	foreach(GLPlaylistItem *item, items) 
+		playlist()->removeItem(item);
+	
+	m_lockScrollerRender = false;
+	if(isScroller())
+	{
+		m_scrollerImage = QImage();
+		scrollerTick();
+	}
+	
+	m_rssHttp.setHost(url.host());
+        m_rssHttp.get(url.path());
+}
+
+void GLTextDrawable::setRssRefreshTime(int x)
+{
+	if(m_rssRefreshTimer.isActive())
+		m_rssRefreshTimer.stop();
+		
+	m_rssRefreshTimer.setInterval(x);
+	
+	if(x > 0)
+		m_rssRefreshTimer.start();
+}
+
+void GLTextDrawable::reloadRss()
+{
+	setRssUrl(m_rssUrl);
+}
+
+void GLTextDrawable::rssReadData(const QHttpResponseHeader &resp)
+{
+	if (resp.statusCode() != 200)
+		m_rssHttp.abort();
+	else 
+	{
+		m_rssXml.addData(m_rssHttp.readAll());
+		m_lockScrollerRender = true;
+		
+		parseRssXml();
+		
+		m_lockScrollerRender = false;
+		if(isScroller())
+		{
+			m_scrollerImage = QImage();
+			scrollerTick();
+		}
+		
+		m_dataReceived = true;
+	}
+
+}
+
+void GLTextDrawable::parseRssXml()
+{
+	QString currentTag;
+	QString linkString;
+	QString titleString;
+	QString dateString;
+	QString urlString;
+	
+	QTextDocument doc;
+	QString origText = m_rssTextTemplate;
+	if (Qt::mightBeRichText(origText))
+		doc.setHtml(origText);
+	else
+		doc.setPlainText(origText);
+		
+	while (!m_rssXml.atEnd()) 
+	{
+		m_rssXml.readNext();
+		if (m_rssXml.isStartElement()) 
+		{
+			if (m_rssXml.name() == "item")
+			{
+		
+				if (titleString!="")
+				{
+// 					feed = new QTreeWidgetItem;
+// 					feed->setText(0, titleString);
+// 					feed->setText(2, linkString);
+// 					ui->treeWidget->addTopLevelItem(feed);
+				}
+		
+				linkString.clear();
+				titleString.clear();
+				dateString.clear();
+				urlString.clear();
+			}
+		
+			currentTag = m_rssXml.name().toString();
+		} 
+		else 
+		if (m_rssXml.isEndElement()) 
+		{
+			if (m_rssXml.name() == "item") 
+			{
+// 				QTreeWidgetItem *item = new QTreeWidgetItem(feed);
+// 				item->setText(0, titleString);
+// 				item->setText(1, dateString);
+// 				item->setText(2, linkString);
+// 				ui->treeWidget->addTopLevelItem(item);
+				GLPlaylistItem *item = new GLPlaylistItem();
+				item->setTitle(titleString);
+				
+				
+				QTextCursor cursor(&doc);
+				cursor.select(QTextCursor::Document);
+			
+				QTextCharFormat format = cursor.charFormat();
+				if(!format.isValid())
+					format = cursor.blockCharFormat();
+				//qDebug() << "Format at cursor: "<<format.fontPointSize()<<", "<<format.font()<<", "<<format.fontItalic()<<", "<<format.font().rawName();
+				QString newText = titleString;
+				//if(replaceNewlineSlash)
+				//	newText = newText.replace(QRegExp("\\s/\\s")," \n ");
+			
+				if(format.fontPointSize() > 0)
+				{
+					cursor.insertText(newText);
+			
+					// doesnt seem to be needed
+					//cursor.mergeCharFormat(format);
+			
+					item->setValue(doc.toHtml());
+				}
+				else
+				{
+					item->setValue(newText);
+				}
+				
+				
+				
+				if(!titleString.isEmpty())
+				{
+					qDebug() << "GLTextDrawable::parseRssXml(): Added item:"<<titleString;//<<", value:"<<item->value().toString();
+					
+					//if(playlist()->items().size() < 10)
+						playlist()->addItem(item);
+				}
+				
+		
+				titleString.clear();
+				linkString.clear();
+				dateString.clear();
+				urlString.clear();
+			}
+			else
+			if (m_rssXml.name() == "image")
+			{
+				// TODO handle image downloading
+			}
+	
+		} 
+		else 
+		if (m_rssXml.isCharacters() && !m_rssXml.isWhitespace()) 
+		{
+			if (currentTag == "title")
+				titleString += m_rssXml.text().toString();
+			else if (currentTag == "link")
+				linkString += m_rssXml.text().toString();
+			else if (currentTag == "pubDate")
+				dateString += m_rssXml.text().toString();
+			else if (currentTag == "url")
+				urlString += m_rssXml.text().toString();
+		}
+	}
+	if (m_rssXml.error() && m_rssXml.error() != QXmlStreamReader::PrematureEndOfDocumentError) 
+	{
+		qWarning() << "XML ERROR:" << m_rssXml.lineNumber() << ": " << m_rssXml.errorString();
+		m_rssHttp.abort();
+	}
+	
+	playlist()->play();
+}
+
+
+void GLTextDrawable::scrollerTick()
+{
+	m_scrollPos += m_scrollerSpeed; // random increment
+	if(m_scrollerImage.isNull())
+	{
+		QList<QImage> images;
+		RichTextRenderer r;
+		QList<GLPlaylistItem*> items = playlist()->items();
+		int maxHeight = 0;
+		int widthSum = 0;
+		QImage iconImg(m_iconFile);
+		iconImg = iconImg.scaled(64,64,Qt::KeepAspectRatio);
+		#define _ADD_IMAGE() \
+			if(img.height() > maxHeight) \
+				maxHeight = img.height(); \
+			widthSum += img.width(); \
+			images << img;
+		int minFont = 99999; 
+		foreach(GLPlaylistItem *item, items)
+		{
+			QString text = item->value().toString();
+			
+			r.setHtml(text);
+			if(!Qt::mightBeRichText(text))
+				r.changeFontSize(40);
+				
+			
+			int fontSize = r.findFontSize();
+				
+			if(fontSize == 9.)
+			{
+				r.changeFontSize(40);
+				fontSize = 40.;
+			}
+			
+			if(fontSize < minFont)
+				fontSize = minFont;
+			
+			r.setTextWidth(r.findNaturalSize().width());
+			
+			
+			QImage img = r.renderText();
+			_ADD_IMAGE();
+			
+			if(item != items.last())
+			{
+				img = iconImg;
+				_ADD_IMAGE();
+			}
+		}
+		#undef _ADD_IMAGE
+		
+		m_scrollerImage = QImage(widthSum, maxHeight, QImage::Format_ARGB32_Premultiplied);
+		QPainter p(&m_scrollerImage);
+		int pos = 0;
+		foreach(QImage img, images)
+		{
+			int y = (maxHeight - img.height()) / 2;
+			p.drawImage(pos,y,img);
+			pos += img.width();
+		}
+		qDebug() << "GLTextDrawable::scrollerTick(): Rendered "<<images.size()<<" images to final size "<<m_scrollerImage.size()<<", bytes: "<<m_scrollerImage.byteCount() / 1024 / 1024<<" MB";
+		m_scrollPos = (int)(-rect().width());
+	}
+	
+	QRect sub = QRect((int)m_scrollPos,0,(int)rect().width(),m_scrollerImage.height());
+	qDebug() << "GLTextDrawable::scrollerTick(): m_scrollPos:"<<m_scrollPos<<"/"<<m_scrollerImage.width()<<", sub rect:"<<sub;
+	QImage copy = m_scrollerImage.copy(sub);
+	setImage(copy);
+	
+	if(m_scrollPos > m_scrollerImage.width())
+	{
+		m_scrollPos = (int)(-rect().width());
+		qDebug() << "GLTextDrawable::scrollerTick(): Reset m_scrollPos to 0";
+	}
+}
+
+void GLTextDrawable::playlistChanged()
+{
+	if(m_lockScrollerRender)
+		return;
+		
+	m_scrollerImage = QImage();
+	scrollerTick();
+}
+
+void GLTextDrawable::setScrollerSpeed(double x)
+{
+	m_scrollerSpeed = x;
+}
+
 void GLTextDrawable::setText(const QString& text)
 {
 	if(text == m_text)
 		return;
 
 	m_text = text;
+	if(m_isScroller)
+	{
+		qDebug() << "GLTextDrawable::setText(): Scrolling enabled, not setting text the normal method.";
+		return;
+	}
+	
 	//qDebug() << "GLTextDrawable::setText(): text:"<<text;
 	bool lock = false;
 
@@ -185,7 +526,7 @@ QString GLTextDrawable::htmlToPlainText(const QString& text)
 	return plain;
 }
 
-void GLTextDrawable::setPlainText(const QString& text, bool replaceNewlineSlash)
+void GLTextDrawable::setPlainText(const QString& text, bool /*replaceNewlineSlash*/)
 {
 	if(m_lockSetPlainText)
 		return;
@@ -279,7 +620,7 @@ void GLTextDrawable::updateRects(bool secondSource)
 	}
 }
 
-void GLTextDrawable::loadPropsFromMap(const QVariantMap& map, bool onlyApplyIfChanged)
+void GLTextDrawable::loadPropsFromMap(const QVariantMap& map, bool /*onlyApplyIfChanged*/)
 {
 
 	QByteArray bytes = map["text_image"].toByteArray();

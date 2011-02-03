@@ -67,7 +67,7 @@ public:
 public slots:
 	void setHtml(const QString&);
 	void update();
-	void renderText();
+	QImage renderText();
 	
 	void setShadowColor(const QColor& c) { setShadowBrush(c); }
 	void setFillColor(const QColor& c) { setFillBrush(c); }

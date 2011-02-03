@@ -1616,7 +1616,7 @@ void GLDrawablePlaylist::playItem(GLPlaylistItem *item)
 bool GLDrawablePlaylist::setPlayTime(double time)
 {
 	m_playTime = time;
-	qDebug() << "GLDrawablePlaylist::setPlayTime: "<<time;
+	//qDebug() << "GLDrawablePlaylist::setPlayTime: "<<time;
 
 	emit playerTimeChanged(time);
 

@@ -278,7 +278,7 @@ void RichTextRenderer::update()
 	m_updateTimer.start();
 }
 
-void RichTextRenderer::renderText()
+QImage RichTextRenderer::renderText()
 {
 // 	qDebug()<<itemName()<<"TextBoxWarmingThread::run(): htmlCode:"<<htmlCode;
 	//qDebug() << "RichTextRenderer::renderText(): HTML:"<<html();
@@ -346,10 +346,15 @@ void RichTextRenderer::renderText()
 			
 	QSizeF shadowSize = shadowEnabled() ? QSizeF(shadowOffsetX(),shadowOffsetY()) : QSizeF(0,0);
 	QSizeF docSize = doc.size();
-	QSize sumSize = (docSize + shadowSize).toSize();
+	QSizeF padSize(12.,12.);
+	QSize sumSize = (docSize + shadowSize + padSize).toSize();
 	//qDebug() << "RichTextRenderer::update(): textWidth: "<<textWidth<<", shadowSize:"<<shadowSize<<", docSize:"<<docSize<<", sumSize:"<<sumSize;
 	QImage cache(sumSize,QImage::Format_ARGB32); //_Premultiplied);
 	memset(cache.scanLine(0),0,cache.byteCount());
+	
+	double padSizeHalfX = padSize.width() / 2;
+	double padSizeHalfY = padSize.height() / 2;
+			
 	
 	QPainter textPainter(&cache);
 	//textPainter.fillRect(cache.rect(),Qt::transparent);
@@ -382,7 +387,7 @@ void RichTextRenderer::renderText()
 			QPainter tmpPainter(&tmpImage);
 			
 			tmpPainter.save();
-			tmpPainter.translate(radius, radius);
+			tmpPainter.translate(radius + padSizeHalfX, radius + padSizeHalfY);
 			doc.documentLayout()->draw(&tmpPainter, pCtx);
 			tmpPainter.restore();
 			
@@ -405,6 +410,7 @@ void RichTextRenderer::renderText()
 		}
 	}
 	
+	textPainter.translate(padSizeHalfX, padSizeHalfY);
 	doc.documentLayout()->draw(&textPainter, pCtx);
 	
 	textPainter.end();
@@ -412,6 +418,9 @@ void RichTextRenderer::renderText()
 	m_image = cache.convertToFormat(QImage::Format_ARGB32);
 	emit textRendered(m_image);
 	
+	
+	//m_image.save("debug-text.png");
+	return m_image;
 	//qDebug() << "RichTextRenderer::renderText(): Render finished, elapsed:"<<renderTime.elapsed()<<"ms";
 }
 

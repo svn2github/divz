@@ -48,6 +48,14 @@
 #define GLPlayer_ExamineCurrentGroup	 "ExamineCurrentGroup"
 // Give a tree list of all drawables in current scene (names/ids), props on each drawable (name, type, value)
 #define GLPlayer_ExamineCurrentScene	 "ExamineCurrentScene"
+// Using the sceneId from one of the Examine commands above, set a property on the scene such as duration, datetime, etc
+#define GLPlayer_SetSceneProperty	 "SetSceneProperty"
+// Using the ID of a playlist item and a drawableid, remove the item from the drawable's playlist
+#define GLPlayer_RemovePlaylistItem	 "RemovePlaylistItem"
+// Add an item to a drawables playlist
+#define GLPlayer_AddPlaylistItem	 "AddPlaylistItem"
+// Write the currently loaded collection (loaded using LoadGroupFromCollection) to a file
+#define GLPlayer_WriteCollection	 "WriteCollection"
 
 // TODO not implemented below, should we implement these since they are all in subviews?
 #define GLPlayer_SetAlphaMask "SetAlphaMask"
