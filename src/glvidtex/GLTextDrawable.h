@@ -106,8 +106,11 @@ private:
 	QTimer m_scrollerTimer;
 	QImage m_scrollerImage;
 	double m_scrollPos;
-// 	int m_firstItem;
-// 	int m_lastItem;
+ 	int m_scrollerFirstItem;
+ 	int m_scrollerLastItem;
+ 	int m_scrollerWindowPos;
+ 	int m_scrollerMaxHeight;
+ 	int m_scrollerTotalWidth;
 	QHttp m_rssHttp;
 	QXmlStreamReader m_rssXml;
 	int m_rssRefreshTime;
@@ -121,6 +124,25 @@ private:
 	
 	QString m_cachedImageText;
 	QImage m_cachedImage;
+	
+	class ScrollableItem
+	{
+	public:
+		ScrollableItem(int _x,  QImage _img, GLPlaylistItem *_item=0)
+			: item(_item)
+			, x(_x)
+			, x2(_x+img.width())
+			, w(img.width())
+			, img(_img) {}
+			
+		GLPlaylistItem *item;
+		int x;
+		int x2;
+		int w;
+		QImage img;
+	};
+	
+	QList<ScrollableItem> m_scrollItems;
 };
 
 #endif

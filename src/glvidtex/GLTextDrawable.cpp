@@ -9,7 +9,7 @@ GLTextDrawable::GLTextDrawable(QString text, QObject *parent)
 	, m_isClock(false)
 	, m_clockFormat(DEFAULT_CLOCK_FORMAT)
 	, m_isScroller(false)
-	, m_scrollerSpeed(10.)
+	, m_scrollerSpeed(25.)
 	, m_iconFile("../data/stock-media-rec.png")
 	, m_rssRefreshTime(0)
 	, m_dataReceived(false)
@@ -53,8 +53,8 @@ GLTextDrawable::GLTextDrawable(QString text, QObject *parent)
 	connect(&m_rssHttp, SIGNAL(readyRead(const QHttpResponseHeader &)), this, SLOT(rssReadData(const QHttpResponseHeader &)));
 	connect(&m_rssRefreshTimer, SIGNAL(timeout()), this, SLOT(reloadRss()));
 	
-	setIsScroller(true);
-	//setRssUrl(QUrl("http://www.mypleasanthillchurch.org/phc/boards/rss"));
+	//setIsScroller(true);
+	//setRssUrl(QUrl()); //"http://www.mypleasanthillchurch.org/phc/boards/rss"));
 	QTimer::singleShot(100,this,SLOT(testXfade()));
 
 }
@@ -72,7 +72,10 @@ void GLTextDrawable::testXfade()
 	//qDebug() << "GLTextDrawable::testXfade(): loading text #2";
 	//setText("Friday 2010-11-26");
 	//setIconFile("/home/josiah/Downloads/phc-logo-transparent.png");
-	setRssUrl(QUrl("http://www.mypleasanthillchurch.org/phc/boards/rss"));
+	//setRssUrl(QUrl("http://www.mypleasanthillchurch.org/phc/boards/rss"));
+	setIsScroller(true);
+	
+	setRssUrl(QUrl());
 }
 
 void GLTextDrawable::setIsCountdown(bool flag)
@@ -175,6 +178,7 @@ void GLTextDrawable::setIsScroller(bool flag)
 	//m_lastItem = 0;
 	if(flag)
 	{
+		m_scrollItems.clear();
 		scrollerTick();
 		//setXFadeEnabled(false);
 		connect(playlist(), SIGNAL(itemAdded(GLPlaylistItem*)),   this, SLOT(playlistChanged()));
@@ -191,18 +195,20 @@ void GLTextDrawable::setIsScroller(bool flag)
 void GLTextDrawable::setIconFile(const QString& file)
 {
 	m_iconFile = file;
-	m_scrollerImage = QImage();
+	m_scrollItems.clear();
 }
 
 void GLTextDrawable::setRssUrl(const QUrl& url)
 {
 	m_rssUrl = url;
 	
+	if(!m_rssUrl.isValid())
+		return;
 	
 	m_dataReceived = false;
-	QList<GLPlaylistItem*> items = playlist()->items();
 	m_lockScrollerRender = true;
 	
+	QList<GLPlaylistItem*> items = playlist()->items();
 	if(!items.isEmpty())
 		m_rssTextTemplate = items.first()->value().toString();
 	else
@@ -210,11 +216,13 @@ void GLTextDrawable::setRssUrl(const QUrl& url)
 	
 	foreach(GLPlaylistItem *item, items) 
 		playlist()->removeItem(item);
+		
+	//qDebug() << "GLTextDrawable::setRssUrl: RSS URL is:"<<url;
 	
 	m_lockScrollerRender = false;
 	if(isScroller())
 	{
-		m_scrollerImage = QImage();
+		m_scrollItems.clear();
 		scrollerTick();
 	}
 	
@@ -240,6 +248,9 @@ void GLTextDrawable::reloadRss()
 
 void GLTextDrawable::rssReadData(const QHttpResponseHeader &resp)
 {
+	if(!m_rssUrl.isValid())
+		return;
+		
 	if (resp.statusCode() != 200)
 		m_rssHttp.abort();
 	else 
@@ -252,7 +263,7 @@ void GLTextDrawable::rssReadData(const QHttpResponseHeader &resp)
 		m_lockScrollerRender = false;
 		if(isScroller())
 		{
-			m_scrollerImage = QImage();
+			m_scrollItems.clear();
 			scrollerTick();
 		}
 		
@@ -270,7 +281,7 @@ void GLTextDrawable::parseRssXml()
 	QString urlString;
 	
 	QTextDocument doc;
-	QString origText = m_rssTextTemplate;
+	QString origText = ""; //m_rssTextTemplate;
 	if (Qt::mightBeRichText(origText))
 		doc.setHtml(origText);
 	else
@@ -343,10 +354,15 @@ void GLTextDrawable::parseRssXml()
 				
 				if(!titleString.isEmpty())
 				{
-					qDebug() << "GLTextDrawable::parseRssXml(): Added item:"<<titleString;//<<", value:"<<item->value().toString();
+					//qDebug() << "GLTextDrawable::parseRssXml(): Added item:"<<titleString;//<<", value:"<<item->value().toString();
 					
 					//if(playlist()->items().size() < 10)
 						playlist()->addItem(item);
+					//qDebug() << "GLTextDrawable::parseRssXml(): After addition, playlist size:"<<playlist()->size();
+				}
+				else
+				{
+					delete item;
 				}
 				
 		
@@ -388,21 +404,27 @@ void GLTextDrawable::parseRssXml()
 void GLTextDrawable::scrollerTick()
 {
 	m_scrollPos += m_scrollerSpeed; // random increment
-	if(m_scrollerImage.isNull())
+	
+	// Render the list of items to be scrolled
+	if(m_scrollItems.isEmpty())
 	{
-		QList<QImage> images;
 		RichTextRenderer r;
 		QList<GLPlaylistItem*> items = playlist()->items();
-		int maxHeight = 0;
+		m_scrollerMaxHeight = 0;
 		int widthSum = 0;
 		QImage iconImg(m_iconFile);
-		iconImg = iconImg.scaled(64,64,Qt::KeepAspectRatio);
+		if(iconImg.size().height() > 64)
+			iconImg = iconImg.scaled(64,64,Qt::KeepAspectRatio);
+			
+		m_scrollItems.clear();
+		
 		#define _ADD_IMAGE() \
-			if(img.height() > maxHeight) \
-				maxHeight = img.height(); \
-			widthSum += img.width(); \
-			images << img;
-		int minFont = 99999; 
+			if(img.height() > m_scrollerMaxHeight) \
+				m_scrollerMaxHeight = img.height(); \
+			widthSum += img.width(); 
+		
+//		int minFont = 99999; 
+		
 		foreach(GLPlaylistItem *item, items)
 		{
 			QString text = item->value().toString();
@@ -412,53 +434,117 @@ void GLTextDrawable::scrollerTick()
 				r.changeFontSize(40);
 				
 			
-			int fontSize = r.findFontSize();
+			int fontSize = (int)r.findFontSize();
 				
-			if(fontSize == 9.)
+			if(fontSize == 9)
 			{
 				r.changeFontSize(40);
-				fontSize = 40.;
+				fontSize = 40;
 			}
 			
-			if(fontSize < minFont)
-				fontSize = minFont;
+// 			if(fontSize < minFont)
+// 				fontSize = minFont;
 			
 			r.setTextWidth(r.findNaturalSize().width());
 			
-			
 			QImage img = r.renderText();
+			//img = img.copy();
+			//uchar *tmp = img.bits();
+			/// BUG: first image is WAY too wide - like 100x....why???
+			ScrollableItem s1(widthSum, img, item);
+			m_scrollItems << s1;
 			_ADD_IMAGE();
+			qDebug() << "GLTextDrawable::scrollerTick():  x:"<<s1.x<<", x2:"<<s1.x2<<", w:"<<s1.w<<", text:"<<htmlToPlainText(r.html());
 			
 			if(item != items.last())
 			{
 				img = iconImg;
+				ScrollableItem s2(widthSum, img);
+				m_scrollItems << s2;
 				_ADD_IMAGE();
+				qDebug() << "GLTextDrawable::scrollerTick():  x:"<<s2.x<<", x2:"<<s2.x2<<", w:"<<s2.w<<", [ICON]";
 			}
 		}
 		#undef _ADD_IMAGE
 		
-		m_scrollerImage = QImage(widthSum, maxHeight, QImage::Format_ARGB32_Premultiplied);
-		QPainter p(&m_scrollerImage);
-		int pos = 0;
-		foreach(QImage img, images)
-		{
-			int y = (maxHeight - img.height()) / 2;
-			p.drawImage(pos,y,img);
-			pos += img.width();
-		}
-		qDebug() << "GLTextDrawable::scrollerTick(): Rendered "<<images.size()<<" images to final size "<<m_scrollerImage.size()<<", bytes: "<<m_scrollerImage.byteCount() / 1024 / 1024<<" MB";
-		m_scrollPos = (int)(-rect().width());
+		m_scrollerTotalWidth = widthSum;
+		
+		m_scrollerFirstItem = -1;
+		m_scrollerLastItem  = -1;
 	}
 	
-	QRect sub = QRect((int)m_scrollPos,0,(int)rect().width(),m_scrollerImage.height());
-	qDebug() << "GLTextDrawable::scrollerTick(): m_scrollPos:"<<m_scrollPos<<"/"<<m_scrollerImage.width()<<", sub rect:"<<sub;
-	QImage copy = m_scrollerImage.copy(sub);
-	setImage(copy);
+	// Now we have a list of images and their horizontal (X) positions
+	// Now we just need to do horizontal tile-based image scrolling
 	
-	if(m_scrollPos > m_scrollerImage.width())
+	// 1. Calculate which "tiles" the current window (m_scrollPos - m_scrollPos+rect().width) covers
+	// 2. If tiles changed, render buffer, store starting window pos of buffer into m_scrollerWindowPos
+	// 3. Copy rect starting at (m_scrollPos - m_scrollerWindowPos) to output image for rendering
+	
+	// Calculate window tile coverage
+	int wx = (int)m_scrollPos;
+	int wx2 = (int)m_scrollPos + (int)rect().width();
+	
+	int item1=-1,item2=-1;
+	int count = 0;
+	foreach(ScrollableItem item, m_scrollItems)
+	{
+		if(wx >= item.x && wx <= item.x2)
+			item1 = count;
+		if(wx2 >= item.x && wx2 <= item.x2)
+		{
+			item2 = count;
+			break;
+		}
+		qDebug() << "GLTextDrawable::scrollerTick(): find tiles: wx:"<<wx<<", wx2:"<<wx2<<", count:"<<count<<", item.x:"<<item.x<<", item.x2:"<<item.x2<<", item1:"<<item1<<", item2:"<<item2; 
+		
+		count ++; 
+	}
+	
+	qDebug() << "GLTextDrawable::scrollerTick(): m_scrollPos:"<<m_scrollPos<<"/"<<m_scrollerTotalWidth<<", item1:"<<item1<<", item2:"<<item2<<", first:"<<m_scrollerFirstItem<<", last:"<<m_scrollerLastItem;
+	
+	if(//item1 >=0 && item2 >=0 &&
+	   (item1 != m_scrollerFirstItem ||
+	    item2 != m_scrollerLastItem))
+	{
+		int width = 0;
+		for(int i=item1; i<=item2; i++)
+			width += m_scrollItems[i].w;
+		
+		m_scrollerWindowPos = m_scrollItems[item1].x;
+		m_scrollerImage = QImage(width, m_scrollerMaxHeight, QImage::Format_ARGB32_Premultiplied);
+	
+		QPainter p(&m_scrollerImage);
+		int pos = 0;
+		for(int i=item1; i<=item2; i++)
+		{
+			QImage img = m_scrollItems[i].img;
+			
+			int y = (m_scrollerMaxHeight - img.height()) / 2;
+			p.drawImage(pos,y,img);
+// 			p.setPen(Qt::blue);
+// 			p.setBrush(QBrush());
+// 			p.drawRect(QRect(pos,y,img.width(),img.height()));
+			pos += img.width();
+		}
+		qDebug() << "GLTextDrawable::scrollerTick(): Rendered "<<(item2-item1+1)<<" images to final size "<<m_scrollerImage.size()<<", bytes: "<<m_scrollerImage.byteCount() / 1024 / 1024<<" MB";
+		
+		m_scrollerFirstItem = item1;
+		m_scrollerLastItem  = item2;
+	}
+	
+	
+	if(!m_scrollerImage.isNull())
+	{
+		QRect sub = QRect((int)m_scrollPos - m_scrollerWindowPos,0,(int)rect().width(),m_scrollerImage.height());
+		qDebug() << "GLTextDrawable::scrollerTick(): m_scrollPos:"<<m_scrollPos<<"/"<<m_scrollerTotalWidth<<", sub rect:"<<sub;
+		QImage copy = m_scrollerImage.copy(sub);
+		setImage(copy);
+	}
+	
+	if(m_scrollPos > m_scrollerTotalWidth)
 	{
 		m_scrollPos = (int)(-rect().width());
-		qDebug() << "GLTextDrawable::scrollerTick(): Reset m_scrollPos to 0";
+		//qDebug() << "GLTextDrawable::scrollerTick(): Reset m_scrollPos to 0";
 	}
 }
 
@@ -467,7 +553,7 @@ void GLTextDrawable::playlistChanged()
 	if(m_lockScrollerRender)
 		return;
 		
-	m_scrollerImage = QImage();
+	m_scrollItems.clear();
 	scrollerTick();
 }
 
@@ -484,7 +570,7 @@ void GLTextDrawable::setText(const QString& text)
 	m_text = text;
 	if(m_isScroller)
 	{
-		qDebug() << "GLTextDrawable::setText(): Scrolling enabled, not setting text the normal method.";
+		//qDebug() << "GLTextDrawable::setText(): Scrolling enabled, not setting text the normal method.";
 		return;
 	}
 	
@@ -519,7 +605,7 @@ QString GLTextDrawable::plainText()
 QString GLTextDrawable::htmlToPlainText(const QString& text)
 {
 	QString plain = text;
-	//plain = plain.replace( QRegExp("(<[bB][rR]>|\n)"), " / ");
+	plain = plain.replace( QRegExp("&amp;"), "&");
 	plain = plain.replace( QRegExp("<style[^>]*>.*</style>", Qt::CaseInsensitive), "" );
 	plain = plain.replace( QRegExp("<[^>]*>"), "" );
 	plain = plain.replace( QRegExp("(^\\s+)"), "" );

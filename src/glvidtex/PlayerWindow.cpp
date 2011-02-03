@@ -439,11 +439,6 @@ void PlayerWindow::loadConfig(const QString& configFile, bool verbose)
 						displayScene(scene);
 						qDebug() << "PlayerWindow: [DEBUG]: Loaded File: "<<loadGroup<<", GroupID: "<<m_group->groupId()<<", SceneID: "<< scene->sceneId();
 
-						GLDrawableList list = scene->drawableList();
-						foreach(GLDrawable *gld, list)
-							if(gld->playlist()->size() > 0)
-								gld->playlist()->play();
-
 						if(m_outputEncoder &&
 						  !m_outputEncoder->encodingStarted())
 							m_outputEncoder->startEncoder();
@@ -1059,11 +1054,18 @@ void PlayerWindow::setGroup(GLSceneGroup *group)
 {
 	if(m_group)
 	{
+		disconnect(m_group->playlist(), 0, this, 0);
 		delete m_group;
 		m_group = 0;
 	}
-
+	
 	m_group = group;
+	
+	if(m_group)
+	{
+		connect(m_group->playlist(), SIGNAL(currentItemChanged(GLScene*)), this, SLOT(setScene(GLScene*)));
+		m_group->playlist()->play();
+	}
 }
 
 void PlayerWindow::displayScene(GLScene *scene)
@@ -1163,6 +1165,13 @@ void PlayerWindow::displayScene(GLScene *scene)
 
 		m_scene->setOpacity(1,true,m_xfadeSpeed); // animate fade in
 	}
+	
+	GLDrawableList list = scene->drawableList();
+	foreach(GLDrawable *gld, list)
+		if(gld->playlist()->size() > 0)
+			gld->playlist()->play();
+
+	
 }
 
 void PlayerWindow::opacityAnimationFinished()
@@ -1375,11 +1384,6 @@ void PlayerJsonServer::dispatch(QTcpSocket *socket, const QStringList &pathEleme
 			{
 				m_win->setScene(scene);
 				
-				GLDrawableList list = scene->drawableList();
-				foreach(GLDrawable *gld, list)
-					if(gld->playlist()->size() > 0)
-						gld->playlist()->play();
-
 				sendReply(socket, QVariantList()
 					<< "cmd" << GLPlayer_SetSlide
 					<< "status" << true);
@@ -1658,11 +1662,6 @@ void PlayerJsonServer::dispatch(QTcpSocket *socket, const QStringList &pathEleme
 					{
 						GLScene *scene = group->at(0);
 						m_win->setScene(scene);
-						
-						GLDrawableList list = scene->drawableList();
-						foreach(GLDrawable *gld, list)
-							if(gld->playlist()->size() > 0)
-								gld->playlist()->play();
 					}
 					
 					sendReply(socket, QVariantList()

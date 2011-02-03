@@ -259,7 +259,8 @@ protected:
 	
 	GLSceneType *m_sceneType;
 };
-	
+
+class GLSceneGroupPlaylist;
 class GLSceneGroupType;
 class GLSceneGroup : public QAbstractItemModel
 {
@@ -292,6 +293,7 @@ public:
 	
 	GLScene * lookupScene(int id);
 	
+	bool isEmpty() const { return size() <= 0; }
 	int size() const { return m_scenes.size(); }
 	GLScene * at(int idx) { return idx>-1 && idx<size() ? m_scenes[idx] : 0; }
 	
@@ -318,6 +320,8 @@ public:
 	bool autoSchedule() { return m_autoSchedule; }
 	
 	GLSceneGroupType *groupType() { return m_groupType; }	
+	
+	GLSceneGroupPlaylist *playlist() { return m_playlist; }
 
 public slots:
 	void setGroupName(const QString& name);
@@ -367,8 +371,59 @@ protected:
 	bool m_autoSchedule;
 	
 	GLSceneGroupType *m_groupType;
+	GLSceneGroupPlaylist *m_playlist;
 };
 
+class GLSceneGroupPlaylist : public QObject
+{
+	Q_OBJECT
+public:
+	GLSceneGroupPlaylist(GLSceneGroup *group);
+	~GLSceneGroupPlaylist();
+	
+	bool isPlaying() { return m_isPlaying; }
+	double playTime() { return m_playTime; }
+	
+	GLSceneGroup *group() { return m_group; } 
+	GLScene *currentItem();
+	
+	double duration();
+	
+	double timeFor(GLScene*);
+	
+signals:
+	void currentItemChanged(GLScene*);
+	void timeChanged(double);
+	
+	void playlistItemChanged();
+	
+public slots:
+	void setIsPlaying(bool flag);
+	void play(bool restart=false);
+	void stop();
+	
+	void playItem(GLScene*);
+	bool setPlayTime(double time);
+	
+	void nextItem();
+	void prevItem();
+
+private slots:
+// 	void sceneAdded(GLScene*);
+// 	void sceneRemoved(GLScene*);
+	
+// 	void playlistItemChangedSlot();
+	void timerTick();
+
+private:
+	GLSceneGroup *m_group;
+	
+	bool m_isPlaying;
+	QTimer m_tickTimer;
+	double m_playTime;
+	double m_timerTickLength;
+	int m_currentItemIndex;
+};
 
 class GLSceneGroupCollection : public QAbstractListModel
 {

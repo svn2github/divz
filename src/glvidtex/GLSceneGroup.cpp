@@ -246,8 +246,8 @@ GLScene::GLScene(QObject *parent)
 	, m_glWidget(0)
 	, m_layoutListModel(0)
 	, m_graphicsScene(0)
-	, m_crossfadeSpeed(300)
 	, m_fadeClockActive(false)
+	, m_crossfadeSpeed(300)
 	, m_duration(5.)
 	, m_autoDuration(true)
 	, m_autoSchedule(true)
@@ -264,8 +264,8 @@ GLScene::GLScene(QByteArray& ba, QObject *parent)
 	, m_glWidget(0)
 	, m_layoutListModel(0)
 	, m_graphicsScene(0)
-	, m_crossfadeSpeed(300)
 	, m_fadeClockActive(false)
+	, m_crossfadeSpeed(300)
 	, m_duration(5.)
 	, m_autoDuration(true)
 	, m_autoSchedule(true)
@@ -509,6 +509,8 @@ void GLScene::addDrawable(GLDrawable *d)
 	
 	connect(d, SIGNAL(destroyed()), this, SLOT(drawableDestroyed()));
 	connect(d, SIGNAL(itemNameChanging(QString)), this, SLOT(drawableNameChanging(QString)));
+	connect(d->playlist(), SIGNAL(itemAdded(GLPlaylistItem*)), this, SLOT(drawablePlaylistItemChanged()));
+	connect(d->playlist(), SIGNAL(itemRemoved(GLPlaylistItem*)), this, SLOT(drawablePlaylistItemChanged()));
 	connect(d->playlist(), SIGNAL(playlistItemChanged()), this, SLOT(drawablePlaylistItemChanged()));
 
 	beginInsertRows(QModelIndex(),m_itemList.size()-1,m_itemList.size());
@@ -686,7 +688,7 @@ void GLScene::setOpacity(double d, bool animate, double animDuration)
  		//qDebug() << "GLScene::setOpacity: "<<this<<" opac:"<<d<<", duration:"<<animDuration<<", current opac:"<<opacity();
 
 		m_fadeTimer.setInterval(1000 / 25); // 25fps fade
-		m_crossfadeSpeed = animDuration;
+		m_crossfadeSpeed = (int)animDuration;
 		
 		m_fadeDirection = d < opacity() ?  -1 : 1;
 		m_endOpacity = d;
@@ -818,6 +820,8 @@ GLSceneGroup::GLSceneGroup(QObject *parent)
 	, m_duration(5.)
 	, m_autoDuration(true)
 	, m_autoSchedule(true)
+	, m_groupType(0)
+	, m_playlist(new GLSceneGroupPlaylist(this))
 {}
 
 GLSceneGroup::GLSceneGroup(QByteArray& ba, QObject *parent)
@@ -826,6 +830,8 @@ GLSceneGroup::GLSceneGroup(QByteArray& ba, QObject *parent)
 	, m_duration(5.)
 	, m_autoDuration(true)
 	, m_autoSchedule(true)
+	, m_groupType(0)
+	, m_playlist(new GLSceneGroupPlaylist(this))
 {
 	fromByteArray(ba);
 }
@@ -1010,7 +1016,7 @@ bool GLSceneGroup::setData(const QModelIndex &index, const QVariant & value, int
 		return false;
 
 	GLScene *d = m_scenes.at(index.row());
-	//qDebug() << "GLSceneGroup::setData: "<<this<<" row:"<<index.row()<<", value:"<<value;
+	qDebug() << "GLSceneGroup::setData: "<<this<<" row:"<<index.row()<<", value:"<<value;
 	if(value.isValid() && !value.isNull())
 	{
 		if(index.column() == 0)
@@ -1158,6 +1164,154 @@ void GLSceneGroup::setAutoSchedule(bool flag)
 	m_autoSchedule = flag;
 	emit autoScheduleChanged(flag);
 }
+
+// ****************************
+// GLSceneGroupPlaylist
+// ****************************
+
+GLSceneGroupPlaylist::GLSceneGroupPlaylist(GLSceneGroup *group)
+	: QObject(group)
+	, m_group(group)
+	, m_playTime(0)
+	, m_timerTickLength(1./2.)
+	, m_currentItemIndex(-1)
+{
+	connect(&m_tickTimer, SIGNAL(timeout()), this, SLOT(timerTick()));
+	m_tickTimer.setInterval((int)(m_timerTickLength * 1000.));
+}
+
+GLSceneGroupPlaylist::~GLSceneGroupPlaylist()
+{
+
+}
+
+GLScene *GLSceneGroupPlaylist::currentItem()
+{
+	if(m_currentItemIndex < 0 || m_currentItemIndex >= m_group->size())
+		return 0;
+	return m_group->at(m_currentItemIndex);
+}
+
+double GLSceneGroupPlaylist::duration()
+{
+	double dur=0;
+	foreach(GLScene *item, m_group->sceneList())
+		dur += item->duration();
+	return dur;
+}
+
+double GLSceneGroupPlaylist::timeFor(GLScene* timeForItem)
+{
+	double time=0;
+	foreach(GLScene *item, m_group->sceneList())
+	{
+		if(item == timeForItem)
+			return time;
+		else
+			time += item->duration();
+	}
+	return -1;
+}
+
+
+void GLSceneGroupPlaylist::setIsPlaying(bool flag)
+{
+	if(flag)
+		play();
+	else
+		stop();
+}
+void GLSceneGroupPlaylist::play(bool restart)
+{
+	if(restart)
+		m_playTime = 0;
+	m_tickTimer.start();
+}
+void GLSceneGroupPlaylist::stop()
+{
+	m_tickTimer.stop();
+}
+
+void GLSceneGroupPlaylist::playItem(GLScene *item)
+{
+	int idx = m_group->sceneList().indexOf(item);
+	if(idx < 0)
+		return;
+	if(idx == m_currentItemIndex)
+		return;
+
+	emit currentItemChanged(item);
+	m_currentItemIndex = idx;
+
+	//const char *propName = m_drawable->metaObject()->userProperty().name();
+
+	//qDebug() << "GLSceneGroupPlaylist::playItem: Showing"<<propName<<": "<<item->value();
+
+	//m_drawable->setProperty(propName, item->value());
+}
+
+bool GLSceneGroupPlaylist::setPlayTime(double time)
+{
+	m_playTime = time;
+	//qDebug() << "GLSceneGroupPlaylist::setPlayTime: "<<time<<"/"<<duration();
+
+	emit timeChanged(time);
+
+	double timeSum = 0;
+	GLScene *foundItem =0;
+	foreach(GLScene *item, m_group->sceneList())
+	{
+		if(time >= timeSum && time < (timeSum + item->duration()))
+		{
+			foundItem = item;
+			break;
+		}
+		timeSum += item->duration();
+	}
+	if(foundItem)
+	{
+		playItem(foundItem);
+		return true;
+	}
+	else
+	{
+		qDebug() << "GLSceneGroupPlaylist::setPlayTime: "<<time<<": Could not find item at time "<<time;
+		return false;
+	}
+
+}
+
+void GLSceneGroupPlaylist::nextItem()
+{
+	if(m_group->isEmpty())
+		return;
+	
+	int next = m_currentItemIndex + 1;
+	if(next >= m_group->size())
+		next = 0;
+		
+	playItem(m_group->at(next));
+}
+
+void GLSceneGroupPlaylist::prevItem()
+{
+	if(m_group->isEmpty())
+		return;
+	
+	int next = m_currentItemIndex - 1;
+	if(next < 0)
+		next = m_group->size() - 1;
+		
+	playItem(m_group->at(next));
+}
+
+void GLSceneGroupPlaylist::timerTick()
+{
+	if(!setPlayTime(m_playTime + m_timerTickLength))
+		if(!setPlayTime(0))
+			stop();
+}
+
 
 
 // protected:

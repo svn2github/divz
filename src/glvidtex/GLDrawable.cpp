@@ -1608,7 +1608,7 @@ void GLDrawablePlaylist::playItem(GLPlaylistItem *item)
 
 	const char *propName = m_drawable->metaObject()->userProperty().name();
 
-	qDebug() << "GLDrawablePlaylist::playItem: Showing"<<propName<<": "<<item->value();
+	//qDebug() << "GLDrawablePlaylist::playItem: Showing"<<propName<<": "<<item->value();
 
 	m_drawable->setProperty(propName, item->value());
 }
