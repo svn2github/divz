@@ -9,7 +9,7 @@ GLTextDrawable::GLTextDrawable(QString text, QObject *parent)
 	, m_isClock(false)
 	, m_clockFormat(DEFAULT_CLOCK_FORMAT)
 	, m_isScroller(false)
-	, m_scrollerSpeed(25.)
+	, m_scrollerSpeed(15.)
 	, m_iconFile("../data/stock-media-rec.png")
 	, m_rssRefreshTime(0)
 	, m_dataReceived(false)
@@ -71,11 +71,11 @@ void GLTextDrawable::testXfade()
 {
 	//qDebug() << "GLTextDrawable::testXfade(): loading text #2";
 	//setText("Friday 2010-11-26");
-	//setIconFile("/home/josiah/Downloads/phc-logo-transparent.png");
-	//setRssUrl(QUrl("http://www.mypleasanthillchurch.org/phc/boards/rss"));
+	setIconFile("/home/josiah/Downloads/phc-logo-transparent.png");
 	setIsScroller(true);
+	setRssUrl(QUrl("http://www.mypleasanthillchurch.org/phc/boards/rss"));
 	
-	setRssUrl(QUrl());
+	//setRssUrl(QUrl());
 }
 
 void GLTextDrawable::setIsCountdown(bool flag)
@@ -180,13 +180,13 @@ void GLTextDrawable::setIsScroller(bool flag)
 	{
 		m_scrollItems.clear();
 		scrollerTick();
-		//setXFadeEnabled(false);
+		setXFadeEnabled(false);
 		connect(playlist(), SIGNAL(itemAdded(GLPlaylistItem*)),   this, SLOT(playlistChanged()));
 		connect(playlist(), SIGNAL(itemRemoved(GLPlaylistItem*)), this, SLOT(playlistChanged()));
 	}
 	else
 	{
-		//setXFadeEnabled(true);
+		setXFadeEnabled(true);
 		disconnect(playlist(), SIGNAL(itemAdded(GLPlaylistItem*)),   this, SLOT(playlistChanged()));
 		disconnect(playlist(), SIGNAL(itemRemoved(GLPlaylistItem*)), this, SLOT(playlistChanged()));
 	}
@@ -280,13 +280,6 @@ void GLTextDrawable::parseRssXml()
 	QString dateString;
 	QString urlString;
 	
-	QTextDocument doc;
-	QString origText = ""; //m_rssTextTemplate;
-	if (Qt::mightBeRichText(origText))
-		doc.setHtml(origText);
-	else
-		doc.setPlainText(origText);
-		
 	while (!m_rssXml.atEnd()) 
 	{
 		m_rssXml.readNext();
@@ -324,6 +317,13 @@ void GLTextDrawable::parseRssXml()
 				GLPlaylistItem *item = new GLPlaylistItem();
 				item->setTitle(titleString);
 				
+				
+				QTextDocument doc;
+				QString origText = m_rssTextTemplate;
+				if (Qt::mightBeRichText(origText))
+					doc.setHtml(origText);
+				else
+					doc.setPlainText(origText);
 				
 				QTextCursor cursor(&doc);
 				cursor.select(QTextCursor::Document);
@@ -424,7 +424,7 @@ void GLTextDrawable::scrollerTick()
 			widthSum += img.width(); 
 		
 //		int minFont = 99999; 
-		
+		int count = 0;
 		foreach(GLPlaylistItem *item, items)
 		{
 			QString text = item->value().toString();
@@ -448,9 +448,13 @@ void GLTextDrawable::scrollerTick()
 			r.setTextWidth(r.findNaturalSize().width());
 			
 			QImage img = r.renderText();
-			//img = img.copy();
-			//uchar *tmp = img.bits();
-			/// BUG: first image is WAY too wide - like 100x....why???
+			
+			img = img.convertToFormat(QImage::Format_ARGB32_Premultiplied);
+			
+			//qDebug() << "Debug: img.width:"<<img.width();
+			if(img.isNull() || img.width()<0)
+				continue;
+				
 			ScrollableItem s1(widthSum, img, item);
 			m_scrollItems << s1;
 			_ADD_IMAGE();
@@ -469,7 +473,7 @@ void GLTextDrawable::scrollerTick()
 		
 		m_scrollerTotalWidth = widthSum;
 		
-		m_scrollerFirstItem = -1;
+		m_scrollerFirstItem = 0;
 		m_scrollerLastItem  = -1;
 	}
 	
@@ -485,33 +489,45 @@ void GLTextDrawable::scrollerTick()
 	int wx2 = (int)m_scrollPos + (int)rect().width();
 	
 	int item1=-1,item2=-1;
-	int count = 0;
-	foreach(ScrollableItem item, m_scrollItems)
+	for(int i=m_scrollerFirstItem;i<m_scrollItems.size();i++)
 	{
+		const ScrollableItem& item = m_scrollItems.at(i);
 		if(wx >= item.x && wx <= item.x2)
-			item1 = count;
+			item1 = i;
 		if(wx2 >= item.x && wx2 <= item.x2)
 		{
-			item2 = count;
+			item2 = i;
 			break;
 		}
-		qDebug() << "GLTextDrawable::scrollerTick(): find tiles: wx:"<<wx<<", wx2:"<<wx2<<", count:"<<count<<", item.x:"<<item.x<<", item.x2:"<<item.x2<<", item1:"<<item1<<", item2:"<<item2; 
 		
-		count ++; 
+		//qDebug() << "GLTextDrawable::scrollerTick(): find tiles: wx:"<<wx<<", wx2:"<<wx2<<", i:"<<i<<", item.x:"<<item.x<<", item.x2:"<<item.x2<<", item1:"<<item1<<", item2:"<<item2; 
 	}
 	
-	qDebug() << "GLTextDrawable::scrollerTick(): m_scrollPos:"<<m_scrollPos<<"/"<<m_scrollerTotalWidth<<", item1:"<<item1<<", item2:"<<item2<<", first:"<<m_scrollerFirstItem<<", last:"<<m_scrollerLastItem;
+	if(item2 < 0)
+		item2 = m_scrollItems.size() - 1;
+	if(item1 < 0)
+		item1 = 0;
 	
-	if(//item1 >=0 && item2 >=0 &&
-	   (item1 != m_scrollerFirstItem ||
-	    item2 != m_scrollerLastItem))
+	//qDebug() << "GLTextDrawable::scrollerTick(): find tiles: wx:"<<wx<<", wx2:"<<wx2<<", item1:"<<item1<<", item2:"<<item2;
+	
+	// Re-render the scrolling window only if the tile coverage changes
+	if(item1 != m_scrollerFirstItem ||
+	   item2 != m_scrollerLastItem)
 	{
+		if(item2 < item1)
+			item2 = item1;
+		
+		//qDebug() << "GLTextDrawable::scrollerTick(): m_scrollPos:"<<m_scrollPos<<"/"<<m_scrollerTotalWidth<<", item1:"<<item1<<", item2:"<<item2<<", first:"<<m_scrollerFirstItem<<", last:"<<m_scrollerLastItem;
+	
 		int width = 0;
 		for(int i=item1; i<=item2; i++)
 			width += m_scrollItems[i].w;
 		
 		m_scrollerWindowPos = m_scrollItems[item1].x;
 		m_scrollerImage = QImage(width, m_scrollerMaxHeight, QImage::Format_ARGB32_Premultiplied);
+		
+		// The memset is necessary for /some reason/ on linux...dunno why - otherwise, corrupted memory is visible
+		memset(m_scrollerImage.scanLine(0),0,m_scrollerImage.byteCount());
 	
 		QPainter p(&m_scrollerImage);
 		int pos = 0;
@@ -521,12 +537,9 @@ void GLTextDrawable::scrollerTick()
 			
 			int y = (m_scrollerMaxHeight - img.height()) / 2;
 			p.drawImage(pos,y,img);
-// 			p.setPen(Qt::blue);
-// 			p.setBrush(QBrush());
-// 			p.drawRect(QRect(pos,y,img.width(),img.height()));
 			pos += img.width();
 		}
-		qDebug() << "GLTextDrawable::scrollerTick(): Rendered "<<(item2-item1+1)<<" images to final size "<<m_scrollerImage.size()<<", bytes: "<<m_scrollerImage.byteCount() / 1024 / 1024<<" MB";
+		//qDebug() << "GLTextDrawable::scrollerTick(): Rendered "<<(item2-item1+1)<<" images to final size "<<m_scrollerImage.size()<<", bytes: "<<m_scrollerImage.byteCount() / 1024 / 1024<<" MB";
 		
 		m_scrollerFirstItem = item1;
 		m_scrollerLastItem  = item2;
@@ -535,15 +548,21 @@ void GLTextDrawable::scrollerTick()
 	
 	if(!m_scrollerImage.isNull())
 	{
-		QRect sub = QRect((int)m_scrollPos - m_scrollerWindowPos,0,(int)rect().width(),m_scrollerImage.height());
-		qDebug() << "GLTextDrawable::scrollerTick(): m_scrollPos:"<<m_scrollPos<<"/"<<m_scrollerTotalWidth<<", sub rect:"<<sub;
+		QRect sub((int)m_scrollPos - m_scrollerWindowPos,0,(int)rect().width(),m_scrollerImage.height());
+		//qDebug() << "GLTextDrawable::scrollerTick(): m_scrollPos:"<<m_scrollPos<<"/"<<m_scrollerTotalWidth<<", sub rect:"<<sub<<", buffer:"<<m_scrollerImage.rect().size();
 		QImage copy = m_scrollerImage.copy(sub);
 		setImage(copy);
+	}
+	else
+	{
+		//qDebug() << "GLTextDrawable::scrollerTick(): m_scrollPos:"<<m_scrollPos<<"/"<<m_scrollerTotalWidth<<" - null image"; 
 	}
 	
 	if(m_scrollPos > m_scrollerTotalWidth)
 	{
 		m_scrollPos = (int)(-rect().width());
+		m_scrollerFirstItem = 0;
+		m_scrollerLastItem  = -1;
 		//qDebug() << "GLTextDrawable::scrollerTick(): Reset m_scrollPos to 0";
 	}
 }

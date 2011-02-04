@@ -131,8 +131,8 @@ private:
 		ScrollableItem(int _x,  QImage _img, GLPlaylistItem *_item=0)
 			: item(_item)
 			, x(_x)
-			, x2(_x+img.width())
-			, w(img.width())
+			, x2(_x+_img.width())
+			, w(_img.width())
 			, img(_img) {}
 			
 		GLPlaylistItem *item;
