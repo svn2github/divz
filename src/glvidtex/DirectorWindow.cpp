@@ -188,6 +188,9 @@ void DirectorWindow::setupUI()
 	connect(ui->fadeSpeedSlider, SIGNAL(valueChanged(int)), this, SLOT(setFadeSpeedPercent(int)));
 	connect(ui->fadeSpeedBox, SIGNAL(valueChanged(double)), this, SLOT(setFadeSpeedTime(double)));
 	
+	ui->slidePlayBtn->setText("");
+	ui->slidePlayBtn->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
+	
 	ui->playBtn->setText("");
 	ui->playBtn->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
 	
@@ -241,6 +244,7 @@ void DirectorWindow::setupUI()
 	ui->drawableGroupBox->setVisible(false);
 	ui->sceneListview->setVisible(false);
 	
+	ui->slideTimeLabel->setText("");
 	ui->timeLabel->setText("");
 }
 
