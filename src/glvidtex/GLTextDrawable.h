@@ -62,6 +62,7 @@ public slots:
 	void setClockFormat(const QString&);
 	void setIsScroller(bool);
 	void setScrollerSpeed(double);
+	void setScrollerSpeed(int value) { setScrollerSpeed((double)value); } // explicit casting for sig/slot compat 
 	void setIconFile(const QString&);
 	void setRssUrl(const QUrl&);
 	void setRssRefreshTime(int);

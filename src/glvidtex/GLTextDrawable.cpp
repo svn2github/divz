@@ -71,9 +71,9 @@ void GLTextDrawable::testXfade()
 {
 	//qDebug() << "GLTextDrawable::testXfade(): loading text #2";
 	//setText("Friday 2010-11-26");
-	setIconFile("/home/josiah/Downloads/phc-logo-transparent.png");
-	setIsScroller(true);
-	setRssUrl(QUrl("http://www.mypleasanthillchurch.org/phc/boards/rss"));
+// 	setIconFile("/home/josiah/Downloads/phc-logo-transparent.png");
+// 	setIsScroller(true);
+// 	setRssUrl(QUrl("http://www.mypleasanthillchurch.org/phc/boards/rss"));
 	
 	//setRssUrl(QUrl());
 }
@@ -186,6 +186,8 @@ void GLTextDrawable::setIsScroller(bool flag)
 	}
 	else
 	{
+		// rerender text
+		m_renderer->setHtml(m_text);
 		setXFadeEnabled(true);
 		disconnect(playlist(), SIGNAL(itemAdded(GLPlaylistItem*)),   this, SLOT(playlistChanged()));
 		disconnect(playlist(), SIGNAL(itemRemoved(GLPlaylistItem*)), this, SLOT(playlistChanged()));
@@ -424,7 +426,7 @@ void GLTextDrawable::scrollerTick()
 			widthSum += img.width(); 
 		
 //		int minFont = 99999; 
-		int count = 0;
+// 		int count = 0;
 		foreach(GLPlaylistItem *item, items)
 		{
 			QString text = item->value().toString();
