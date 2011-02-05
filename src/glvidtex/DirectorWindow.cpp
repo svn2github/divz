@@ -72,6 +72,8 @@ DirectorWindow::DirectorWindow(QWidget *parent)
 	foreach(PlayerConnection *con, m_players->players())
 		if(!con->isConnected() && con->autoconnect())
 			con->connectPlayer();
+
+	setFocusPolicy(Qt::StrongFocus);
 }
 
 
@@ -1067,7 +1069,38 @@ void DirectorWindow::setCurrentDrawable(GLDrawable *gld)
 			hbox->addWidget(btn);
 			
 			ui->itemPropLayout->addRow(base); 
-	
+			
+			QHBoxLayout *hbox2 = new QHBoxLayout();
+			opts.text = "Load RSS Feed";
+			QWidget *boolEdit = PropertyEditorFactory::generatePropertyEditor(gld, "isRssReader", SLOT(setIsRssReader(bool)), opts);
+			
+			opts.type = QVariant::String;
+			QWidget *stringEdit = PropertyEditorFactory::generatePropertyEditor(gld, "rssUrl", SLOT(setRssUrl(const QString&)), opts);
+			
+			opts.reset();
+			opts.value = item->rssRefreshTime() / 60 / 1000;
+			opts.suffix = " min";
+			opts.min = 1;
+			opts.max = 60 * 3;
+			QWidget *refreshEdit = PropertyEditorFactory::generatePropertyEditor(gld, "rssRefreshTime", SLOT(setRssRefreshTimeInMinutes(int)), opts);
+			
+			QCheckBox *box = dynamic_cast<QCheckBox*>(boolEdit);
+			if(box)
+			{
+				connect(boolEdit, SIGNAL(toggled(bool)), stringEdit, SLOT(setEnabled(bool)));
+				connect(boolEdit, SIGNAL(toggled(bool)), refreshEdit, SLOT(setEnabled(bool)));
+				connect(boolEdit, SIGNAL(toggled(bool)), ui->playlistSetupWidget, SLOT(setDisabled(bool)));
+				stringEdit->setEnabled(box->isChecked());
+				refreshEdit->setEnabled(box->isChecked());
+				ui->playlistSetupWidget->setDisabled(box->isChecked());
+			}
+			
+			hbox2->addWidget(boolEdit);
+			hbox2->addWidget(stringEdit);
+			hbox2->addWidget(new QLabel("Reload After"));
+			hbox2->addWidget(refreshEdit);
+			ui->itemPropLayout->addRow(hbox2);	
+			
 			typeName = "Text Item";
 		}
 		else
@@ -1153,6 +1186,8 @@ void DirectorWindow::loadVideoInputList(int idx)
 		m_videoViewerLayout->removeItem(item);
 		delete item;
 	}
+	
+	m_currentVideoWidgets.clear();
 
 	foreach(QString con, inputs)
 	{
@@ -1190,7 +1225,10 @@ void DirectorWindow::loadVideoInputList(int idx)
 					qDebug() << "DirectorWindow::loadVideoInputList: Connected to "<<host<<":"<<port<<", creating widget...";
 					
 					VideoWidget *vid = new VideoWidget();
+					m_currentVideoWidgets << vid;
+					
 					vid->setVideoSource(rx);
+					vid->setOverlayText(QString("# %1").arg(m_currentVideoWidgets.size()));
 					
 					rx->setFPS(5);
 					vid->setFps(5);
@@ -1215,7 +1253,11 @@ void DirectorWindow::videoInputClicked()
 		qDebug() << "DirectorWindow::videoInputClicked: Sender is not a video widget, ignoring.";
 		return;
 	}
-	
+	activateVideoInput(vid);
+}
+
+void DirectorWindow::activateVideoInput(VideoWidget *vid)
+{
 	QString con = vid->property("-vid-con-string").toString();
 	
 	if(!m_currentDrawable)
@@ -1228,29 +1270,29 @@ void DirectorWindow::videoInputClicked()
 		player->setUserProperty(m_currentDrawable, con, "videoConnection");
 }
 
+void DirectorWindow::keyPressEvent(QKeyEvent *event)
+{
+	int idx = event->text().toInt();
+	if(idx > 0 && idx <= m_currentVideoWidgets.size())
+	{
+		qDebug() << "DirectorWindow::keyPressEvent(): "<<event->text()<<", activating input #"<<idx;
+		idx --; 
+		VideoWidget *vid = m_currentVideoWidgets.at(idx);
+		activateVideoInput(vid);
+	}
+}
+
 void DirectorWindow::setCurrentItem(GLPlaylistItem *item)
 {
 	if(!item)
 		return;
 	
-	//m_currentDrawable->playlist()->playItem(item);
-// 	if(m_currentItem)
-// 		disconnect(ui->itemLengthBox, 0, m_currentItem, 0);
-	
 	m_currentItem = item;
 	if(item)
 	{
-		qDebug() << "DirectorWindow::setCurrentItem: title:"<<item->title()<<", duration: "<<item->duration();
-		
-// 		ui->itemLengthBox->setValue(item->duration());
-// 		connect(ui->itemLengthBox, SIGNAL(valueChanged(double)), item, SLOT(setDuration(double)));
-		/// TODO connect the changed slot to a slot on this window so we can send the updated playlist to the player
+		//qDebug() << "DirectorWindow::setCurrentItem: title:"<<item->title()<<", duration: "<<item->duration();
 		
 		ui->playlistView->setCurrentIndex(m_currentDrawable->playlist()->indexOf(item));
-	
-		// Dont need to do this now, since this signal is now just informing us of a change on the player
-// 		foreach(PlayerConnection *con, m_players->players())
-// 			con->setUserProperty(m_currentDrawable, item->value());
 		
 		const char *propName = m_currentDrawable->metaObject()->userProperty().name();
 		m_currentDrawable->setProperty(propName, item->value());

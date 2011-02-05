@@ -24,6 +24,8 @@ class GLTextDrawable : public GLImageDrawable
 	Q_PROPERTY(bool isScroller READ isScroller WRITE setIsScroller);
 	Q_PROPERTY(double scrollerSpeed READ scrollerSpeed WRITE setScrollerSpeed);
 	Q_PROPERTY(QString iconFile READ iconFile WRITE setIconFile);
+	
+	Q_PROPERTY(bool isRssReader READ isRssReader WRITE setIsRssReader);
 	Q_PROPERTY(QUrl rssUrl READ rssUrl WRITE setRssUrl);
 	Q_PROPERTY(int rssRefreshTime READ rssRefreshTime  WRITE setRssRefreshTime);
 	
@@ -41,6 +43,7 @@ public:
 	bool isScroller() { return m_isScroller; }
 	double scrollerSpeed() { return m_scrollerSpeed; }
 	QString iconFile() { return m_iconFile; }
+	bool isRssReader() { return m_isRssReader; }
 	QUrl rssUrl() { return m_rssUrl; }
 	int rssRefreshTime() { return m_rssRefreshTime; }
 	
@@ -64,8 +67,12 @@ public slots:
 	void setScrollerSpeed(double);
 	void setScrollerSpeed(int value) { setScrollerSpeed((double)value); } // explicit casting for sig/slot compat 
 	void setIconFile(const QString&);
+	
+	void setIsRssReader(bool);
 	void setRssUrl(const QUrl&);
+	void setRssUrl(const QString& string) { setRssUrl(QUrl(string)); }
 	void setRssRefreshTime(int);
+	void setRssRefreshTimeInMinutes(int minutes) { setRssRefreshTime(1000 * 60 * minutes); };
 	
 signals:
 	void textChanged(const QString& html);
@@ -116,14 +123,16 @@ private:
  	int m_scrollerTotalWidth;
  	double m_idealScrollFrameLength; // in ms
  	QTime m_scrollFrameTime;
+ 	
+ 	bool m_isRssReader;
 	QHttp m_rssHttp;
 	QXmlStreamReader m_rssXml;
 	int m_rssRefreshTime;
 	QTimer m_rssRefreshTimer;
 	QString m_rssTextTemplate;
 	bool m_dataReceived;
+	
 	bool m_lockScrollerRender;
-		
 	
 	bool m_lockSetPlainText;
 	

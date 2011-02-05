@@ -11,7 +11,8 @@ GLTextDrawable::GLTextDrawable(QString text, QObject *parent)
 	, m_isScroller(false)
 	, m_scrollerSpeed(15.)
 	, m_iconFile("../data/stock-media-rec.png")
-	, m_rssRefreshTime(0)
+	, m_isRssReader(false)
+	, m_rssRefreshTime(1000 * 60 * 30) // 30 min
 	, m_dataReceived(false)
 	, m_lockScrollerRender(false)
 	, m_lockSetPlainText(false)
@@ -73,7 +74,7 @@ void GLTextDrawable::testXfade()
 	//qDebug() << "GLTextDrawable::testXfade(): loading text #2";
 	//setText("Friday 2010-11-26");
 // 	setIconFile("/home/josiah/Downloads/phc-logo-transparent.png");
-// 	setIsScroller(true);
+ 	//setIsScroller(false);
 // 	setRssUrl(QUrl("http://www.mypleasanthillchurch.org/phc/boards/rss"));
 	
 	//setRssUrl(QUrl());
@@ -201,6 +202,11 @@ void GLTextDrawable::setIconFile(const QString& file)
 {
 	m_iconFile = file;
 	m_scrollItems.clear();
+}
+
+void GLTextDrawable::setIsRssReader(bool flag)
+{
+	m_isRssReader = flag;
 }
 
 void GLTextDrawable::setRssUrl(const QUrl& url)
@@ -407,7 +413,8 @@ void GLTextDrawable::parseRssXml()
 
 void GLTextDrawable::updateAnimations(bool insidePaint)
 {
-	scrollerTick(insidePaint);
+	if(m_isScroller)
+		scrollerTick(insidePaint);
 	GLVideoDrawable::updateAnimations(insidePaint);
 }
 
@@ -432,12 +439,12 @@ void GLTextDrawable::scrollerTick(bool insidePaint)
 	// dont re-process the code below if no visible change (QImage::copy does not work on sub-pixel values)
 	if(m_lastScrollPos == (int)m_scrollPos)
 	{
-		m_lastScrollPos = m_scrollPos; 
+		m_lastScrollPos = (int)m_scrollPos; 
 		//qDebug() <<  "GLTextDrawable::scrollerTick(): Not enoughs scroll pos change, not re-rendering";
 		return; 
 	}
 	
-	m_lastScrollPos = m_scrollPos;
+	m_lastScrollPos = (int)m_scrollPos;
 	
 	// Render the list of items to be scrolled
 	if(m_scrollItems.isEmpty())
@@ -446,10 +453,19 @@ void GLTextDrawable::scrollerTick(bool insidePaint)
 		QList<GLPlaylistItem*> items = playlist()->items();
 		m_scrollerMaxHeight = 0;
 		int widthSum = 0;
-		QImage iconImg(m_iconFile);
-		if(iconImg.size().height() > 64)
-			iconImg = iconImg.scaled(64,64,Qt::KeepAspectRatio);
+		
+		// Load the separator icon
+		QImage iconImgTmp(m_iconFile);
+		if(iconImgTmp.size().height() > 64)
+			iconImgTmp = iconImgTmp.scaled(64,64,Qt::KeepAspectRatio);
 			
+		// Add a 50% horizontal padding around the separator icon
+		QImage iconImg(iconImgTmp.width() * 2, iconImgTmp.height(), iconImgTmp.format());
+		memset(iconImg.scanLine(0),0,iconImg.byteCount());
+		QPainter iconPainter(&iconImg);
+		iconPainter.drawImage(iconImgTmp.width()/2,0,iconImgTmp);
+		iconPainter.end();
+		
 		m_scrollItems.clear();
 		
 		#define _ADD_IMAGE() \

@@ -20,7 +20,7 @@ class GLEditorGraphicsScene;
 class FlowLayout;
 class VideoInputSenderManager;
 class VideoReceiver;
-
+class VideoWidget;
 #include "GLDrawable.h"
 
 class DirectorWindow : public QMainWindow
@@ -104,11 +104,13 @@ private slots:
 	
 	void loadVideoInputList(int);
 	void videoInputClicked();
+	void activateVideoInput(VideoWidget*);
 	
 	void sceneDataChanged();
 	
 protected:
 	void closeEvent(QCloseEvent *event);
+	void keyPressEvent(QKeyEvent *event); 
 	
 	void setupUI();
 	void readSettings();
@@ -133,6 +135,8 @@ private:
 	FlowLayout *m_videoViewerLayout;
 	VideoInputSenderManager *m_vidSendMgr;
 	QList<QPointer<VideoReceiver> > m_receivers;
+	
+	QList<QPointer<VideoWidget> > m_currentVideoWidgets;
 	
 	QList<PlayerConnection*> m_videoPlayerList;
 };
