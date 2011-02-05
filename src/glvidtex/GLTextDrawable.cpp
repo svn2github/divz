@@ -47,8 +47,9 @@ GLTextDrawable::GLTextDrawable(QString text, QObject *parent)
 	m_clockTimer.setInterval(250);
 	
 	// Scroller timer
+	m_idealScrollFrameLength = 1000 / 30;
 	connect(&m_scrollerTimer, SIGNAL(timeout()), this, SLOT(scrollerTick()));
-	m_scrollerTimer.setInterval(1000 / 30);
+	m_scrollerTimer.setInterval((int)m_idealScrollFrameLength);
 	
 	connect(&m_rssHttp, SIGNAL(readyRead(const QHttpResponseHeader &)), this, SLOT(rssReadData(const QHttpResponseHeader &)));
 	connect(&m_rssRefreshTimer, SIGNAL(timeout()), this, SLOT(reloadRss()));
@@ -179,6 +180,8 @@ void GLTextDrawable::setIsScroller(bool flag)
 	if(flag)
 	{
 		m_scrollItems.clear();
+		m_scrollFrameTime.start();
+		m_lastScrollPos = 0;
 		scrollerTick();
 		setXFadeEnabled(false);
 		connect(playlist(), SIGNAL(itemAdded(GLPlaylistItem*)),   this, SLOT(playlistChanged()));
@@ -402,10 +405,39 @@ void GLTextDrawable::parseRssXml()
 	playlist()->play();
 }
 
-
-void GLTextDrawable::scrollerTick()
+void GLTextDrawable::updateAnimations(bool insidePaint)
 {
-	m_scrollPos += m_scrollerSpeed; // random increment
+	scrollerTick(insidePaint);
+	GLVideoDrawable::updateAnimations(insidePaint);
+}
+
+void GLTextDrawable::scrollerTick(bool insidePaint)
+{
+	// Smooth out the increment by which we scroll by adjusting the increment up or down based on how long 
+	// the thread spent processing before calling scrollerTick() compared to the ideal length of time
+	int elapsed = m_scrollFrameTime.elapsed();
+	double fractionOfFrame = ((double)elapsed) / m_idealScrollFrameLength;
+	double realInc = m_scrollerSpeed * fractionOfFrame;
+	m_scrollFrameTime.start();
+	
+	// dont waste time on (relativly) small increments
+	if(realInc < 2.0)
+		return;
+		
+	//if(fractionOfFrame < 0.5)
+	//	qDebug() <<  "GLTextDrawable::scrollerTick(): m_idealScrollFrameLength:"<<m_idealScrollFrameLength<<", m_scrollerSpeed:"<<m_scrollerSpeed<<", elapsed:"<<elapsed<<", fractionOfFrame:"<<fractionOfFrame<<", realInc:"<<realInc;
+	
+	m_scrollPos += realInc;
+	
+	// dont re-process the code below if no visible change (QImage::copy does not work on sub-pixel values)
+	if(m_lastScrollPos == (int)m_scrollPos)
+	{
+		m_lastScrollPos = m_scrollPos; 
+		//qDebug() <<  "GLTextDrawable::scrollerTick(): Not enoughs scroll pos change, not re-rendering";
+		return; 
+	}
+	
+	m_lastScrollPos = m_scrollPos;
 	
 	// Render the list of items to be scrolled
 	if(m_scrollItems.isEmpty())
@@ -553,7 +585,7 @@ void GLTextDrawable::scrollerTick()
 		QRect sub((int)m_scrollPos - m_scrollerWindowPos,0,(int)rect().width(),m_scrollerImage.height());
 		//qDebug() << "GLTextDrawable::scrollerTick(): m_scrollPos:"<<m_scrollPos<<"/"<<m_scrollerTotalWidth<<", sub rect:"<<sub<<", buffer:"<<m_scrollerImage.rect().size();
 		QImage copy = m_scrollerImage.copy(sub);
-		setImage(copy);
+		setImage(copy,insidePaint);
 	}
 	else
 	{

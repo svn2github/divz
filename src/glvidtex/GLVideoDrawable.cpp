@@ -1689,6 +1689,8 @@ void GLVideoDrawable::paint(QPainter * painter, const QStyleOptionGraphicsItem *
 // 		updateAlignment();
 // 	}
 	
+	updateAnimations(true);
+	
 	aboutToPaint();
 	if(!m_liveStatus) // dont trust compiler to inline liveStatus() ... should I?
 		setLiveStatus(true);
@@ -1835,6 +1837,17 @@ void GLVideoDrawable::aboutToPaint()
 	// NOOP
 }
 
+void GLVideoDrawable::updateAnimations(bool insidePaint)
+{
+	// Call the fade update function directly for both
+	// our local crossfade and the scene crossfade 
+	if(m_fadeActive)
+		xfadeTick(!insidePaint); // dont update GL
+
+	if(glScene() && glScene()->fadeActive())
+		glScene()->recalcFadeOpacity(!insidePaint); // dont call setOpacity internally, which calls updateGL on each drawable in the scene
+}
+
 void GLVideoDrawable::paintGL()
 {
 	if(!m_validShader)
@@ -1865,14 +1878,8 @@ void GLVideoDrawable::paintGL()
 
 
 	//m_frame->unmap()();
-
-	// Call the fade update function directly for both
-	// our local crossfade and the scene crossfade 
-	if(m_fadeActive)
-		xfadeTick(false); // dont update GL
-
-	if(glScene() && glScene()->fadeActive())
-		glScene()->recalcFadeOpacity(false); // dont call setOpacity internally, which calls updateGL on each drawable in the scene
+	
+	updateAnimations(true);
 
 	QRectF source = m_sourceRect;
 	QRectF target = m_targetRect;

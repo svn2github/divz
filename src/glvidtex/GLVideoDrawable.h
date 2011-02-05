@@ -247,6 +247,8 @@ protected:
 	/// PS
 	virtual void updateRects(bool secondSource=false);
 	
+	virtual void updateAnimations(bool insidePaint = false);
+	
 	/// PS
 	const char * resizeTextures(const QSize& size, bool secondSource=false);
 	

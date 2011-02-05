@@ -27,7 +27,7 @@ GLImageDrawable::GLImageDrawable(QString file, QObject *parent)
 GLImageDrawable::~GLImageDrawable()
 {}
 
-void GLImageDrawable::setImage(const QImage& image)
+void GLImageDrawable::setImage(const QImage& image, bool insidePaint)
 {
 	if(m_allocatedMemory > IMAGE_ALLOCATION_CAP_MB*1024*1024 && 
 		!glWidget() && 
@@ -46,7 +46,8 @@ void GLImageDrawable::setImage(const QImage& image)
 	
 	if(m_frame && 
 	   m_frame->isValid() &&
-	   xfadeEnabled())
+	   xfadeEnabled() &&
+	   !insidePaint)
 	{
  		m_frame2 = m_frame;
 		//m_frame2 = VideoFramePtr(new VideoFrame(m_image,1000/30));
@@ -118,7 +119,8 @@ void GLImageDrawable::setImage(const QImage& image)
 // 	m_image.save(file);
 // 	qDebug() << "QImageDrawable::setImage: "<<(QObject*)this<<": Wrote: "<<file;
 	
-	if(fpsLimit() <= 0.0)
+	if(fpsLimit() <= 0.0 &&
+	   !insidePaint)
 		updateGL();
 		
 	//qDebug() << "GLImageDrawable::setImage(): "<<(QObject*)this<<" Set image size:"<<m_frame->image().size();

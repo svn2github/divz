@@ -23,7 +23,7 @@ signals:
 	void imageFileChanged(const QString&);
 
 public slots:
-	void setImage(const QImage&);
+	void setImage(const QImage&, bool insidePaint=false);
 	virtual bool setImageFile(const QString&);
 	
 	void setAllowAutoRotate(bool flag);

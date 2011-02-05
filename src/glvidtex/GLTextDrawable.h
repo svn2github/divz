@@ -74,13 +74,14 @@ signals:
 protected:
 	virtual void drawableResized(const QSizeF& /*newSize*/);
 	virtual void updateRects(bool secondSource=false);
+	virtual void updateAnimations(bool insidePaint = false);
 	
 private slots:
 	void testXfade();
 	
 	void countdownTick();
 	void clockTick();
-	void scrollerTick();
+	void scrollerTick(bool insidePaint=false);
 	void playlistChanged();
 	void rssReadData(const QHttpResponseHeader &);
 	void parseRssXml();
@@ -107,11 +108,14 @@ private:
 	QTimer m_scrollerTimer;
 	QImage m_scrollerImage;
 	double m_scrollPos;
+	int m_lastScrollPos;
  	int m_scrollerFirstItem;
  	int m_scrollerLastItem;
  	int m_scrollerWindowPos;
  	int m_scrollerMaxHeight;
  	int m_scrollerTotalWidth;
+ 	double m_idealScrollFrameLength; // in ms
+ 	QTime m_scrollFrameTime;
 	QHttp m_rssHttp;
 	QXmlStreamReader m_rssXml;
 	int m_rssRefreshTime;

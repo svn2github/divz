@@ -54,6 +54,7 @@ bool GLVideoLoopDrawable::setVideoFile(const QString& file)
 	source->start();
 	
 	setVideoSource(source);
+	setObjectName(qPrintable(file));
 	
 	emit videoFileChanged(file);
 	
