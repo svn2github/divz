@@ -248,7 +248,7 @@ GLWidget::GLWidget(QWidget *parent, QGLWidget *shareWidget)
 // 	, m_blackAnim(0)
 	, m_isBlack(false)
 	, m_crossfadeSpeed(300)
-	, m_fboEnabled(true)
+	, m_fboEnabled(false)//true)
 {
 	
 	setCanvasSize(QSizeF(1000.,750.));
@@ -891,9 +891,15 @@ void GLWidget::paintGL()
 
 	//qDebug() << "GLWidget::paintGL(): Drawable painting complete, drawing FBO";
 	
-	glFlush();
+	//glFlush();
 	
-	if(m_fbo)
+	if(!m_fbo)
+	{
+		//qDebug() << "GLWidget::paintGL(): NOT drawing FBO";
+		//if(m_outputStream)
+                //	m_outputStream->setImage(grabFrameBuffer());
+	}
+	else
 	{
 		m_fbo->release();	
 	
@@ -910,7 +916,7 @@ void GLWidget::paintGL()
 		glEnable(GL_TEXTURE_2D);
 		
 		if(m_useShaders && 
-		m_shadersLinked)
+		   m_shadersLinked)
 		{
 					
 			const int devW = QGLContext::currentContext()->device()->width();
@@ -1755,7 +1761,8 @@ QImage GLWidget::toImage()
 {
 	if(m_fbo)
 		return m_fbo->toImage();
-	return QImage();
+	else
+		return grabFrameBuffer();
 }
 
 void GLWidget::setFboEnabled(bool flag)

@@ -26,6 +26,7 @@ class ScaledGraphicsView : public QGraphicsView
 public:
 	ScaledGraphicsView(QWidget *parent=0) : QGraphicsView(parent)
 	{
+		setFrameStyle(QFrame::NoFrame);
 		setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing | QPainter::SmoothPixmapTransform );
 		setCacheMode(QGraphicsView::CacheBackground);
 		setViewportUpdateMode(QGraphicsView::BoundingRectViewportUpdate);
@@ -344,8 +345,10 @@ void PlayerWindow::loadConfig(const QString& configFile, bool verbose)
 // 		//m_outputEncoder->startEncoder();
 // 	}
 
+	if(!m_glWidget)
+                m_compatStream = new PlayerCompatOutputStream(this);
 
-	if(m_glWidget)
+	if(m_glWidget) // || m_compatStream)
 	{
 		//m_shMemSend = new SharedMemorySender("PlayerWindow-2",this);
 		//m_shMemSend->setVideoSource(m_glWidget->outputStream());
@@ -363,7 +366,7 @@ void PlayerWindow::loadConfig(const QString& configFile, bool verbose)
 			QString v4lOutputDev = READ_STRING("v4l-output","/dev/video2");
 			
 			m_v4lOutput = new V4LOutput(v4lOutputDev);
-			m_v4lOutput->setVideoSource(m_glWidget->outputStream());
+			m_v4lOutput->setVideoSource(m_glWidget ? (VideoSource*)m_glWidget->outputStream() : (VideoSource*)m_compatStream);
 			
 			qDebug() << "PlayerWindow: Streaming to V4L device: "<<v4lOutputDev;
 		}
@@ -374,7 +377,7 @@ void PlayerWindow::loadConfig(const QString& configFile, bool verbose)
 		//qDebug() << "Playerwindow: Unable to stream output via shared memory because OpenGL is not enabled.";
 		
 		m_v4lOutput = 0;
-		qDebug() << "Playerwindow: Unable to stream output via V4L because OpenGL is not enabled.";
+		qDebug() << "Playerwindow: Unable to stream output via V4L because OpenGL is not enabled or no output stream available (m_compatStream)";
 	}
 
 
@@ -452,9 +455,6 @@ void PlayerWindow::loadConfig(const QString& configFile, bool verbose)
 			}
 		}
 	}
-
-	if(!m_glWidget)
-		m_compatStream = new PlayerCompatOutputStream(this);
 
 	int outputPort = READ_STRING("output-port",9978).toInt();
 
@@ -1064,7 +1064,7 @@ void PlayerWindow::setGroup(GLSceneGroup *group)
 	if(m_group)
 	{
 		connect(m_group->playlist(), SIGNAL(currentItemChanged(GLScene*)), this, SLOT(setScene(GLScene*)));
-		m_group->playlist()->play();
+		//m_group->playlist()->play();
 	}
 }
 
@@ -1165,12 +1165,12 @@ void PlayerWindow::displayScene(GLScene *scene)
 
 		m_scene->setOpacity(1,true,m_xfadeSpeed); // animate fade in
 	}
-	
+	/*
 	GLDrawableList list = scene->drawableList();
 	foreach(GLDrawable *gld, list)
 		if(gld->playlist()->size() > 0)
 			gld->playlist()->play();
-
+	*/
 	
 }
 
