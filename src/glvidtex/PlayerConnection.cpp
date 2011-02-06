@@ -127,6 +127,7 @@ PlayerConnection::PlayerConnection(QObject *parent)
 	, m_autoReconnect(true)
 	, m_justTesting(false)
 	, m_isConnected(false)
+	, m_crossfadeSpeed(750)
 {
 }
 
@@ -142,6 +143,7 @@ PlayerConnection::PlayerConnection(QByteArray& ba, QObject *parent)
 	, m_autoReconnect(true)
 	, m_justTesting(false)
 	, m_isConnected(false)
+	, m_crossfadeSpeed(750)
 {
 	fromByteArray(ba);
 }
@@ -278,6 +280,7 @@ void PlayerConnection::connectPlayer(bool sendDefaults)
 			setScreenRect(screenRect());
 			setCanvasSize(canvasSize());
 			setAspectRatioMode(aspectRatioMode());
+			setCrossfadeSpeed(crossfadeSpeed());
 			requestVideoInputList();
 		}
 
@@ -560,6 +563,7 @@ void PlayerConnection::fadeBlack(bool flag)
 
 void PlayerConnection::setCrossfadeSpeed(int ms)
 {
+	m_crossfadeSpeed = ms;
 	sendCommand(QVariantList()
 		<< "cmd" 	<< GLPlayer_SetCrossfadeSpeed
 		<< "ms"		<< ms);

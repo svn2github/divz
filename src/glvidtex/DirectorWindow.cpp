@@ -1070,7 +1070,8 @@ void DirectorWindow::setCurrentDrawable(GLDrawable *gld)
 			
 			ui->itemPropLayout->addRow(base); 
 			
-			QHBoxLayout *hbox2 = new QHBoxLayout();
+			QWidget *base2 = new QWidget();
+			QHBoxLayout *hbox2 = new QHBoxLayout(base2);
 			opts.text = "Load RSS Feed";
 			QWidget *boolEdit = PropertyEditorFactory::generatePropertyEditor(gld, "isRssReader", SLOT(setIsRssReader(bool)), opts);
 			
@@ -1099,7 +1100,7 @@ void DirectorWindow::setCurrentDrawable(GLDrawable *gld)
 			hbox2->addWidget(stringEdit);
 			hbox2->addWidget(new QLabel("Reload After"));
 			hbox2->addWidget(refreshEdit);
-			ui->itemPropLayout->addRow(hbox2);	
+			ui->itemPropLayout->addRow(base2);	
 			
 			typeName = "Text Item";
 		}

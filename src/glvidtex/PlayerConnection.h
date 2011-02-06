@@ -85,6 +85,8 @@ public:
 	bool waitForData(int msec=30000);
 	bool waitForWrite(int msec=30000);
 
+	int crossfadeSpeed() { return m_crossfadeSpeed; }
+
 public slots:
 	void addSubview(GLWidgetSubview*);
 	void removeSubview(GLWidgetSubview*);
@@ -195,6 +197,8 @@ private:
 	
 	QStringList m_videoInputs;
 	bool m_videoIputsReceived;
+
+	int m_crossfadeSpeed;
 };
 
 
