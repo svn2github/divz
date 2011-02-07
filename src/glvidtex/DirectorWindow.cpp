@@ -22,6 +22,10 @@
 #include "VideoInputSenderManager.h"
 #include "VideoReceiver.h"
 
+#include "DrawableDirectorWidget.h"
+
+#include <QCDEStyle>
+
 DirectorWindow::DirectorWindow(QWidget *parent)
 	: QMainWindow(parent)
 	, ui(new Ui::DirectorWindow)
@@ -29,18 +33,19 @@ DirectorWindow::DirectorWindow(QWidget *parent)
 	, m_collection(0)
 	, m_currentGroup(0)
 	, m_currentScene(0)
-	, m_currentDrawable(0)
-	, m_currentItem(0)
-	, m_graphicsScene(0)
+// 	, m_currentDrawable(0)
+// 	, m_currentItem(0)
+// 	, m_graphicsScene(0)
 {
 	ui->setupUi(this);
+	
 	setupUI();
 	
 	// For some reason, these get unset from NULL between the ctor init above and here, so reset to zero
 	m_currentScene = 0;
 	m_currentGroup = 0;
-	m_currentDrawable = 0;
-	m_currentItem = 0;
+// 	m_currentDrawable = 0;
+// 	m_currentItem = 0;
 	m_collection = 0;
 	m_players = 0;
 	
@@ -59,14 +64,7 @@ DirectorWindow::DirectorWindow(QWidget *parent)
 	
 	// If no file loaded, create an empty collection 
 	if(!loadedFile)
-	{
-		GLSceneGroupCollection *tmp = new GLSceneGroupCollection();
-		GLSceneGroup *group = new GLSceneGroup();
-		GLScene *scene = new GLScene();
-		group->addScene(scene);
-		tmp->addGroup(group);
-		setCollection(tmp);
-	}
+		newFile();
 	
 	// Connect to any players that have the 'autoconnect' option checked in the PlayerSetupDialog
 	foreach(PlayerConnection *con, m_players->players())
@@ -80,6 +78,24 @@ DirectorWindow::DirectorWindow(QWidget *parent)
 DirectorWindow::~DirectorWindow()
 {
 	delete ui;
+}
+
+void DirectorWindow::newFile()
+{
+	if(m_collection)
+	{
+		if(m_fileName.isEmpty())
+			showSaveAsDialog();
+		else
+			writeFile(m_fileName);
+	}
+		
+	GLSceneGroupCollection *tmp = new GLSceneGroupCollection();
+	GLSceneGroup *group = new GLSceneGroup();
+	GLScene *scene = new GLScene();
+	group->addScene(scene);
+	tmp->addGroup(group);
+	setCollection(tmp);
 }
 
 void DirectorWindow::showPlayerLiveMonitor()
@@ -181,8 +197,8 @@ void DirectorWindow::setupUI()
 // 	m_graphicsScene = new QGraphicsScene();
 // 	ui->graphicsView->setScene(m_graphicsScene);
 	//ui->graphicsView->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
-	ui->graphicsView->setBackgroundBrush(Qt::black);
-	ui->graphicsView->setAutoResize(true);
+// 	ui->graphicsView->setBackgroundBrush(Qt::black);
+// 	ui->graphicsView->setAutoResize(true);
 	//m_graphicsScene->setSceneRect(QRectF(0,0,1000.,750.));
 	
 	ui->fadeSpeedSlider->setValue((int)(300. / 3000. * 100));
@@ -190,27 +206,8 @@ void DirectorWindow::setupUI()
 	connect(ui->fadeSpeedSlider, SIGNAL(valueChanged(int)), this, SLOT(setFadeSpeedPercent(int)));
 	connect(ui->fadeSpeedBox, SIGNAL(valueChanged(double)), this, SLOT(setFadeSpeedTime(double)));
 	
-	ui->slidePlayBtn->setText("");
-	ui->slidePlayBtn->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
-	
-	ui->playBtn->setText("");
-	ui->playBtn->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
-	
-	ui->moveUpBtn->setText("");
-	ui->moveUpBtn->setIcon(style()->standardIcon(QStyle::SP_ArrowUp));
-	
-	ui->moveDownBtn->setText("");
-	ui->moveDownBtn->setIcon(style()->standardIcon(QStyle::SP_ArrowDown));
-	
-	ui->delBtn->setText("");
-	ui->delBtn->setIcon(style()->standardIcon(QStyle::SP_TrashIcon));
-	
-	
-	
-	connect(ui->playBtn,  SIGNAL(clicked()), this, SLOT(playPlaylist()));
-	//connect(ui->pauseBtn, SIGNAL(clicked()), this, SLOT(pausePlaylist()));
-	connect(ui->moveUpBtn,  SIGNAL(clicked()), this, SLOT(btnMoveUp()));
-	connect(ui->moveDownBtn,  SIGNAL(clicked()), this, SLOT(btnMoveDown()));
+// 	ui->slidePlayBtn->setText("");
+// 	ui->slidePlayBtn->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
 	
 	connect(ui->actionMonitor_Players_Live, SIGNAL(triggered()), this, SLOT(showPlayerLiveMonitor()));
 	
@@ -223,31 +220,22 @@ void DirectorWindow::setupUI()
 	connect(ui->actionRemove_Selected_Group, SIGNAL(triggered()), this, SLOT(deleteGroup()));
 	connect(ui->actionSave, SIGNAL(triggered()), this, SLOT(saveFile()));
 	connect(ui->actionSave_As, SIGNAL(triggered()), this, SLOT(showSaveAsDialog()));
+	connect(ui->actionNew, SIGNAL(triggered()), this, SLOT(newFile()));
 
-	connect(ui->collectionListview, SIGNAL(activated(const QModelIndex &)), this, SLOT(groupSelected(const QModelIndex &)));
-	connect(ui->collectionListview, SIGNAL(clicked(const QModelIndex &)),   this, SLOT(groupSelected(const QModelIndex &)));
+	connect(ui->groupsListView, SIGNAL(activated(const QModelIndex &)), this, SLOT(groupSelected(const QModelIndex &)));
+	connect(ui->groupsListView, SIGNAL(clicked(const QModelIndex &)),   this, SLOT(groupSelected(const QModelIndex &)));
 
-	connect(ui->groupListview, SIGNAL(activated(const QModelIndex &)), this, SLOT(slideSelected(const QModelIndex &)));
-	connect(ui->groupListview, SIGNAL(clicked(const QModelIndex &)),   this, SLOT(slideSelected(const QModelIndex &)));
+	connect(ui->scenesListView, SIGNAL(activated(const QModelIndex &)), this, SLOT(slideSelected(const QModelIndex &)));
+	connect(ui->scenesListView, SIGNAL(clicked(const QModelIndex &)),   this, SLOT(slideSelected(const QModelIndex &)));
 
-	connect(ui->sceneListview, SIGNAL(activated(const QModelIndex &)), this, SLOT(drawableSelected(const QModelIndex &)));
-	connect(ui->sceneListview, SIGNAL(clicked(const QModelIndex &)),   this, SLOT(drawableSelected(const QModelIndex &)));
+// 	connect(ui->sceneListview, SIGNAL(activated(const QModelIndex &)), this, SLOT(drawableSelected(const QModelIndex &)));
+// 	connect(ui->sceneListview, SIGNAL(clicked(const QModelIndex &)),   this, SLOT(drawableSelected(const QModelIndex &)));
 
-	connect(ui->playlistView, SIGNAL(activated(const QModelIndex &)), this, SLOT(itemSelected(const QModelIndex &)));
-	connect(ui->playlistView, SIGNAL(clicked(const QModelIndex &)),   this, SLOT(itemSelected(const QModelIndex &)));
 	
-	//connect(ui->itemLengthBox, SIGNAL(valueChanged(double)), this, SLOT(itemLengthChanged(double)));
+	//ui->drawableGroupBox->setVisible(false);
+	//ui->sceneListview->setVisible(false);
 	
-	connect(ui->hideBtn, SIGNAL(clicked()), this, SLOT(btnHideDrawable()));
-	connect(ui->sendToPlayerBtn, SIGNAL(clicked()), this, SLOT(btnSendToPlayer()));
-	connect(ui->addToPlaylistBtn, SIGNAL(clicked()), this, SLOT(btnAddToPlaylist()));
-	connect(ui->delBtn, SIGNAL(clicked()), this, SLOT(btnRemoveFromPlaylist()));
-	
-	ui->drawableGroupBox->setVisible(false);
-	ui->sceneListview->setVisible(false);
-	
-	ui->slideTimeLabel->setText("");
-	ui->timeLabel->setText("");
+	//ui->slideTimeLabel->setText("");
 }
 
 void DirectorWindow::closeEvent(QCloseEvent */*event*/)
@@ -265,13 +253,13 @@ void DirectorWindow::readSettings()
 	move(pos);
 	resize(size);
 
-	ui->mainSplitter->restoreState(settings.value("DirectorWindow/MainSplitter").toByteArray());
-	ui->sceneSplitter->restoreState(settings.value("DirectorWindow/SceneSplitter").toByteArray());
-	ui->drawableSplitter->restoreState(settings.value("DirectorWindow/DrawableSplitter").toByteArray());
+	ui->mainSplitter->restoreState(settings.value("DirectorWindow/MainSplitter2").toByteArray());
+	ui->sceneSplitter->restoreState(settings.value("DirectorWindow/SceneSplitter2").toByteArray());
+	//ui->drawableSplitter->restoreState(settings.value("DirectorWindow/DrawableSplitter").toByteArray());
 
-	qreal scaleFactor = (qreal)settings.value("DirectorWindow/scaleFactor", 1.).toDouble();
-	//qDebug() << "DirectorWindow::readSettings: scaleFactor: "<<scaleFactor;
-	ui->graphicsView->setScaleFactor(scaleFactor);
+// 	qreal scaleFactor = (qreal)settings.value("DirectorWindow/scaleFactor", 1.).toDouble();
+// 	//qDebug() << "DirectorWindow::readSettings: scaleFactor: "<<scaleFactor;
+// 	ui->graphicsView->setScaleFactor(scaleFactor);
 	
 	m_players = new PlayerConnectionList();
 	
@@ -287,11 +275,11 @@ void DirectorWindow::writeSettings()
 	settings.setValue("DirectorWindow/pos", pos());
 	settings.setValue("DirectorWindow/size", size());
 
-	settings.setValue("DirectorWindow/MainSplitter",ui->mainSplitter->saveState());
-	settings.setValue("DirectorWindow/SceneSplitter",ui->sceneSplitter->saveState());
-	settings.setValue("DirectorWindow/DrawableSplitter",ui->drawableSplitter->saveState());
+	settings.setValue("DirectorWindow/MainSplitter2",ui->mainSplitter->saveState());
+	settings.setValue("DirectorWindow/SceneSplitter2",ui->sceneSplitter->saveState());
+	//settings.setValue("DirectorWindow/DrawableSplitter",ui->drawableSplitter->saveState());
 
-	settings.setValue("DirectorWindow/scaleFactor",ui->graphicsView->scaleFactor());
+	//settings.setValue("DirectorWindow/scaleFactor",ui->graphicsView->scaleFactor());
 	//qDebug() << "DirectorWindow::writeSettings: scaleFactor: "<<ui->graphicsView->scaleFactor();
 	
 	settings.setValue("DirectorWindow/players", m_players->toByteArray());
@@ -333,46 +321,18 @@ void DirectorWindow::currentSlideChanged(const QModelIndex &idx,const QModelInde
 		slideSelected(idx);
 }
 
-void DirectorWindow::drawableSelected(const QModelIndex &idx)
-{
-	if(!m_currentScene)
-		return;
-	if(idx.isValid())
-		setCurrentDrawable(m_currentScene->at(idx.row()));
-}
-void DirectorWindow::currentDrawableChanged(const QModelIndex &idx,const QModelIndex &)
-{
-	if(idx.isValid())
-		drawableSelected(idx);
-}
-
-void DirectorWindow::itemSelected(const QModelIndex &idx)
-{
-	if(!m_currentDrawable)
-		return;
-	if(idx.isValid())
-	{
-		GLPlaylistItem *item = m_currentDrawable->playlist()->at(idx.row());
-		setCurrentItem(item);
-		
-		foreach(PlayerConnection *con, m_players->players())
-			con->setPlaylistTime(m_currentDrawable, m_currentDrawable->playlist()->timeFor(item));
-	}
-		
-}
-void DirectorWindow::currentItemChanged(const QModelIndex &idx,const QModelIndex &)
-{
-	if(idx.isValid())
-		itemSelected(idx);
-}
-
-void DirectorWindow::itemLengthChanged(double len)
-{
-	if(!m_currentItem)
-		return;
-	
-	m_currentItem->setDuration(len);
-}
+// void DirectorWindow::drawableSelected(const QModelIndex &idx)
+// {
+// 	if(!m_currentScene)
+// 		return;
+// 	if(idx.isValid())
+// 		setCurrentDrawable(m_currentScene->at(idx.row()));
+// }
+// void DirectorWindow::currentDrawableChanged(const QModelIndex &idx,const QModelIndex &)
+// {
+// 	if(idx.isValid())
+// 		drawableSelected(idx);
+// }
 
 void DirectorWindow::fadeBlack(bool toBlack)
 {
@@ -421,198 +381,6 @@ void DirectorWindow::setFadeSpeedTime(double sec)
 	
 }
 
-void DirectorWindow::btnHideDrawable()
-{
-	if(!m_currentDrawable)
-		return;
-	QPushButton *btn = dynamic_cast<QPushButton *>(sender());
-	if(!btn)
-		return;
-	m_currentDrawable->setHidden(btn->isChecked());
-	
-	foreach(PlayerConnection *con, m_players->players())
-		con->setVisibility(m_currentDrawable, !btn->isChecked());
-}
-void DirectorWindow::btnSendToPlayer()
-{
-	const char *propName = m_currentDrawable->metaObject()->userProperty().name();
-	
-	foreach(PlayerConnection *con, m_players->players())
-		con->setUserProperty(m_currentDrawable, m_currentDrawable->property(propName), propName);
-}
-void DirectorWindow::btnAddToPlaylist()
-{
-	if(!m_currentDrawable)
-		return;
-	GLDrawablePlaylist *playlist = m_currentDrawable->playlist();
-	GLPlaylistItem * item = new GLPlaylistItem();
-	
-	QString userProp = QString(m_currentDrawable->metaObject()->userProperty().name());
-	QVariant prop = m_currentDrawable->property(qPrintable(userProp));
-	item->setValue(prop);
-	
-	GLDrawable *gld = m_currentDrawable;
-	if(GLTextDrawable *casted = dynamic_cast<GLTextDrawable*>(gld))
-	{
-		item->setTitle(casted->plainText());
-		item->setDuration(5.0); /// just a guess
-	}
-	else
-	if(GLVideoFileDrawable *casted = dynamic_cast<GLVideoFileDrawable*>(gld))
-	{
-		item->setTitle(QFileInfo(casted->videoFile()).fileName());
-		item->setDuration(casted->videoLength());
-	}
-	else
-	if(GLVideoLoopDrawable *casted = dynamic_cast<GLVideoLoopDrawable*>(gld))
-	{
-		item->setTitle(QFileInfo(casted->videoFile()).fileName());
-		item->setDuration(casted->videoLength());
-	}
-	else
-	if(GLImageDrawable *casted = dynamic_cast<GLImageDrawable*>(gld))
-	{
-		item->setTitle(QFileInfo(casted->imageFile()).fileName());
-		item->setDuration(5.0); /// just a guess
-	}
-	else
-	{
-		item->setTitle(prop.toString());
-		item->setDuration(5.0); /// just a guess
-	}
-	
-	if(item->duration() <= 0.)
-		item->setDuration(5.0);
-	
-	item->setAutoDuration(true);
-	
-	playlist->addItem(item);
-	
-	ui->playlistView->setModel(0);
-	ui->playlistView->setModel(m_currentDrawable->playlist());
-	ui->playlistView->resizeRowsToContents();
-	ui->playlistView->resizeColumnsToContents();
-	//ui->playlistView->setCurrentIndex(playlist->indexOf(item));
-	setCurrentItem(item);
-	
-	foreach(PlayerConnection *con, m_players->players())
-		con->updatePlaylist(m_currentDrawable);
-}
-
-void DirectorWindow::btnRemoveFromPlaylist()
-{
-	if(!m_currentItem)
-		return;
-	if(!m_currentDrawable)
-		return;
-	GLDrawablePlaylist *playlist = m_currentDrawable->playlist();
-	
-	playlist->removeItem(m_currentItem);
-	
-	foreach(PlayerConnection *con, m_players->players())
-		con->updatePlaylist(m_currentDrawable);
-	
-	// HACK-ish
-	ui->playlistView->setModel(0);
-	ui->playlistView->setModel(m_currentDrawable->playlist());
- 	ui->playlistView->resizeRowsToContents();
- 	ui->playlistView->resizeColumnsToContents();
- 	
-	GLPlaylistItem *newItem = playlist->at(0);
-	if(newItem)
-	{
-		ui->playlistView->setCurrentIndex(playlist->indexOf(newItem));
-	
-		setCurrentItem(newItem);
-	}
-}
-
-void DirectorWindow::btnMoveUp()
-{
-	if(!m_currentItem)
-		return;
-	if(!m_currentDrawable)
-		return;
-	GLDrawablePlaylist *playlist = m_currentDrawable->playlist();
-	
-	int row = playlist->rowOf(m_currentItem);
-	if(row > 0)
-	{
-		playlist->removeItem(m_currentItem);
-		
-		GLPlaylistItem *prev = playlist->at(row-1);
-		playlist->addItem(m_currentItem, prev);
-		
-		// HACK-ish
-		ui->playlistView->setModel(0);
-		ui->playlistView->setModel(m_currentDrawable->playlist());
-		ui->playlistView->resizeRowsToContents();
-		ui->playlistView->resizeColumnsToContents();
-		
-		ui->playlistView->setCurrentIndex(playlist->indexOf(m_currentItem));
-		
-		foreach(PlayerConnection *con, m_players->players())
-			con->updatePlaylist(m_currentDrawable);
-
-	}
-}
-
-void DirectorWindow::btnMoveDown()
-{
-	if(!m_currentItem)
-		return;
-	if(!m_currentDrawable)
-		return;
-	GLDrawablePlaylist *playlist = m_currentDrawable->playlist();
-	
-	int row = playlist->rowOf(m_currentItem);
-	if(row < playlist->size() - 1)
-	{
-		playlist->removeItem(m_currentItem);
-		
-		GLPlaylistItem *next = playlist->at(row+1);
-		playlist->addItem(m_currentItem, next);
-		
-		// HACK-ish
-		ui->playlistView->setModel(0);
-		ui->playlistView->setModel(m_currentDrawable->playlist());
-		ui->playlistView->resizeRowsToContents();
-		ui->playlistView->resizeColumnsToContents();
-		
-		ui->playlistView->setCurrentIndex(playlist->indexOf(m_currentItem));
-		
-		foreach(PlayerConnection *con, m_players->players())
-			con->updatePlaylist(m_currentDrawable);
-
-	}
-}
-
-void DirectorWindow::playlistTimeChanged(GLDrawable *gld, double value)
-{
-	if(m_currentDrawable != gld)
-		return;
-		
-	QString time = "";
-	
-	double min = value/60;
-	double sec = (min - (int)(min)) * 60;
-	//double ms  = (sec - (int)(sec)) * 60;
-	time =  (min<10? "0":"") + QString::number((int)min) + ":" +
-		(sec<10? "0":"") + QString::number((int)sec);/* + "." +
-		(ms <10? "0":"") + QString::number((int)ms );*/
-		
-	ui->timeLabel->setText("<b><font style='font-family:Monospace'>"+ time +"</font></b>");
-}
-
-void DirectorWindow::playlistItemChanged(GLDrawable *gld, GLPlaylistItem *item)
-{
-	if(m_currentDrawable != gld)
-		return;
-	
-	if(m_currentItem != item)
-		setCurrentItem(item);
-
-}
 
 void DirectorWindow::showOpenFileDialog()
 {
@@ -779,22 +547,22 @@ void DirectorWindow::setCollection(GLSceneGroupCollection *collection)
 	}
 	
 	m_collection = collection;
-	ui->collectionListview->setModel(collection);
-	ui->collectionListview->resizeColumnsToContents();
- 	ui->collectionListview->resizeRowsToContents();
+	ui->groupsListView->setModel(collection);
+// 	ui->groupsListView->resizeColumnsToContents();
+//  	ui->groupsListView->resizeRowsToContents();
 	
 	if(collection->size() > 0)
 	{
 		QModelIndex idx = collection->index(0, 0);
-		ui->collectionListview->setCurrentIndex(idx);
+		ui->groupsListView->setCurrentIndex(idx);
 		groupSelected(idx);
 	}
 	
 	foreach(PlayerConnection *con, m_players->players())
 		con->setCanvasSize(m_collection->canvasSize());
 		
-	if(m_graphicsScene)
-		m_graphicsScene->setSceneRect(QRectF(QPointF(0,0),m_collection->canvasSize()));
+// 	if(m_graphicsScene)
+// 		m_graphicsScene->setSceneRect(QRectF(QPointF(0,0),m_collection->canvasSize()));
 }
 void DirectorWindow::setCurrentGroup(GLSceneGroup *group, GLScene */*currentScene*/)
 {
@@ -805,9 +573,9 @@ void DirectorWindow::setCurrentGroup(GLSceneGroup *group, GLScene */*currentScen
 	if(!group)
 		return;
 		
-	ui->groupListview->setModel(group);
-	ui->groupListview->resizeColumnsToContents();
- 	ui->groupListview->resizeRowsToContents();
+	ui->scenesListView->setModel(group);
+// 	ui->scenesListView->resizeColumnsToContents();
+//  	ui->scenesListView->resizeRowsToContents();
 	connect(group, SIGNAL(sceneDataChanged()), this, SLOT(sceneDataChanged()));
 	
 	foreach(PlayerConnection *con, m_players->players())
@@ -816,15 +584,15 @@ void DirectorWindow::setCurrentGroup(GLSceneGroup *group, GLScene */*currentScen
 	if(group->size() > 0)
 	{
 		QModelIndex idx = group->index(0, 0);
-		ui->groupListview->setCurrentIndex(idx);
+		ui->scenesListView->setCurrentIndex(idx);
 		slideSelected(idx);
 	}
 }
 
 void DirectorWindow::sceneDataChanged()
 {
-	ui->groupListview->resizeColumnsToContents();
- 	ui->groupListview->resizeRowsToContents();
+// 	ui->scenesListView->resizeColumnsToContents();
+//  	ui->scenesListView->resizeRowsToContents();
 }
 
 void DirectorWindow::setCurrentScene(GLScene *scene)
@@ -838,466 +606,59 @@ void DirectorWindow::setCurrentScene(GLScene *scene)
 	{
 		disconnect(m_currentScene, 0, this, 0);
 		m_currentScene = 0;
+		
+		ui->mdiArea->closeAllSubWindows();
 	}
 	
-	//qDebug() << "DirectorWindow::setCurrentScene: "<<scene<<", size:"<<scene->rowCount(QModelIndex());
 	m_currentScene = scene;
 	
 	foreach(PlayerConnection *con, m_players->players())
 		con->setScene(scene);
 
-	ui->sceneListview->setModel(scene);
+	//ui->sceneListview->setModel(scene);
 	scene->setListOnlyUserItems(true);
+	qDebug() << "DirectorWindow::setCurrentScene: "<<scene<<": size:"<<scene->size();
 	
-// 	GLDrawableList list = m_currentScene->drawableList();
+	for(int i=0; i<scene->size(); i++)
+	{
+		GLDrawable *item = scene->at(i);
+		
+ 		QMdiSubWindow *subWindow = new QMdiSubWindow;
+ 		//subWindow->setStyle(new QCDEStyle());
+		//subWindow->setWidget(new QPushButton(item->itemName()));
+		DrawableDirectorWidget *widget = new DrawableDirectorWidget(item, scene, this); 
+		subWindow->setWidget(widget);
+ 		subWindow->setAttribute(Qt::WA_DeleteOnClose);
+ 		//subWindow->adjustSize();
+ 		//subWindow->setWindowFlags(Qt::FramelessWindowHint);
+ 		
+ 		ui->mdiArea->addSubWindow(subWindow);
+ 		subWindow->show();
+		
+		qDebug() << "DirectorWindow::setCurrentScene: "<<scene<<": Created subwindow for item:"<<item->itemName();
+	}
+	
+	
+// 	if(!dynamic_cast<GLEditorGraphicsScene*>(m_currentScene->graphicsScene()))
+// 		m_currentScene->setGraphicsScene(new GLEditorGraphicsScene);
+// 	m_graphicsScene = dynamic_cast<GLEditorGraphicsScene*>(m_currentScene->graphicsScene());
+// 	if(!m_graphicsScene)
+// 		qDebug() << "Directorwindow::setCurrentScene: "<<scene<<" Internal Error: No graphics scene returned. Probably will crash now.";
+// 	m_graphicsScene->setSceneRect(QRectF(QPointF(0,0),m_collection->canvasSize()));
+// 	ui->graphicsView->setScene(m_graphicsScene);
+	
+// 	bool hasUserItems = scene->size();
 // 	
-// 	// removeItem() before calling clear() because clear() deletes the drawables
-// 	QList<QGraphicsItem*> itemlist = m_graphicsScene->items();
-// 	foreach(QGraphicsItem *item, itemlist)
-// 	{
-// 		GLDrawable *gld = dynamic_cast<GLDrawable*>(item);	
-// 		if(gld)
-// 			m_graphicsScene->removeItem(gld);
-// 	}
-// 	
-// 	m_graphicsScene->clear();
-// 	
-// 	foreach(GLDrawable *drawable, list)
-// 	{
-// 		drawable->setSelected(false);
-// 		m_graphicsScene->addItem(drawable);
-// 	}
-
-	if(!dynamic_cast<GLEditorGraphicsScene*>(m_currentScene->graphicsScene()))
-		m_currentScene->setGraphicsScene(new GLEditorGraphicsScene);
-	m_graphicsScene = dynamic_cast<GLEditorGraphicsScene*>(m_currentScene->graphicsScene());
-	if(!m_graphicsScene)
-		qDebug() << "Directorwindow::setCurrentScene: "<<scene<<" Internal Error: No graphics scene returned. Probably will crash now.";
-	m_graphicsScene->setSceneRect(QRectF(QPointF(0,0),m_collection->canvasSize()));
-	ui->graphicsView->setScene(m_graphicsScene);
+// 	ui->drawableGroupBox->setVisible(hasUserItems);
+// 	ui->sceneListview->setVisible(hasUserItems);
 	
-	bool hasUserItems = scene->size();
-	
-	ui->drawableGroupBox->setVisible(hasUserItems);
-	ui->sceneListview->setVisible(hasUserItems);
-	
-	
-	//connect(m_scene, SIGNAL(drawableAdded(GLDrawable*)), this, SLOT(drawableAdded(GLDrawable*)));
-	//connect(m_scene, SIGNAL(drawableRemoved(GLDrawable*)), this, SLOT(drawableRemoved(GLDrawable*)));
-	
-	//if(!list.isEmpty())
-	//	list.first()->setSelected(true);
-	
+	/*
 	if(scene->size() > 0)
 	{
 		QModelIndex idx = scene->index(0, 0);
 		ui->sceneListview->setCurrentIndex(idx);
 		drawableSelected(idx);
-	}
-}
-
-void DirectorWindow::setCurrentDrawable(GLDrawable *gld)
-{
-	if(m_currentDrawable == gld)
-		return;
-		
-	if(m_currentDrawable)
-	{
-		if(m_currentDrawable->playlist()->isPlaying())
-			m_currentDrawable->playlist()->stop();
-		
- 		disconnect(m_currentDrawable->playlist(), 0, this, 0);
-// 		
-// 		disconnect(ui->playBtn,  0, m_currentDrawable->playlist(), 0);
-// 		disconnect(ui->pauseBtn, 0, m_currentDrawable->playlist(), 0);
-	
-		m_currentDrawable = 0;
-	}
-	
-	connect(gld, SIGNAL(destroyed()), this, SLOT(setCurrentDrawable()));
-	
-	m_currentDrawable = gld;
-	
-	if(gld)
-		ui->playlistView->setModel(gld->playlist());
-	else
-		ui->playlistView->setModel(0);
-		
- 	ui->playlistView->resizeColumnsToContents();
- 	ui->playlistView->resizeRowsToContents();
-	
-	
-	// Fun loop to clear out a QFormLayout - why doesn't QLayout just have a removeAll() or clear() method?
-	QFormLayout *form = ui->itemPropLayout;
-	while(form->count() > 0)
-	{
-		QLayoutItem * item = form->itemAt(form->count() - 1);
-		form->removeItem(item);
-		if(QWidget *widget = item->widget())
-		{
-			//qDebug() << "DirectorWindow::setCurrentDrawable: Deleting "<<widget<<" from form, total:"<<form->count()<<" items remaining.";
-			form->removeWidget(widget);
-			if(QWidget *label = form->labelForField(widget))
-			{
-				form->removeWidget(label);
-				delete label;
-			}
-			delete widget;
-		}
-// 		else
-// 		if(QLayout *layout = item->layout())
-// 		{
-// 			form->removeItem(item);
-// 		}
-		delete item;
-	}
-	
-	if(m_currentDrawable)
-	{
-		// Update the playlist on the player just to make sure its up-to-date with what we see
-		foreach(PlayerConnection *con, m_players->players())
-			con->updatePlaylist(m_currentDrawable);
-	
-		connect(gld->playlist(), SIGNAL(playlistItemChanged()), this, SLOT(playlistItemDurationChanged()));
-
-		QString itemName = gld->itemName();
-		QString typeName;
-	
-		PropertyEditorFactory::PropertyEditorOptions opts;
-		opts.reset();	
-		
-		ui->playlistSetupWidget->setVisible(true);
-		
-		if(GLVideoInputDrawable *item = dynamic_cast<GLVideoInputDrawable*>(gld))
-		{
-			// show device selection box
-			// show deinterlace checkbox
-			Q_UNUSED(item);
-	
-			typeName = "Video Input Item";
-			
-			ui->playlistSetupWidget->setVisible(false);
-			
-			QWidget *base = new QWidget();
-			
-			QVBoxLayout *vbox = new QVBoxLayout(base);
-			
-			QHBoxLayout *hbox = new QHBoxLayout();
-			
-			hbox->addWidget(new QLabel("Network Source:"));
-			
-			QComboBox *sourceBox = new QComboBox();
-			QStringList itemList;
-			//itemList << "(This Computer)";
-			m_videoPlayerList.clear();
-			foreach(PlayerConnection *con, m_players->players())
-				if(con->isConnected())
-				{
-					itemList << QString("Player: %1").arg(con->name());
-					m_videoPlayerList << con;
-				}
-			
-			sourceBox->addItems(itemList);
-					
-			hbox->addWidget(sourceBox);
-			hbox->addStretch();
-			
-			vbox->addLayout(hbox);
-			
-			connect(sourceBox, SIGNAL(activated(int)), this, SLOT(loadVideoInputList(int)));
-			
-			m_videoViewerLayout = new FlowLayout();
-			vbox->addLayout(m_videoViewerLayout);
-			
-			ui->itemPropLayout->addRow(base);
-			
-			if(itemList.size() > 0)
-				loadVideoInputList(0);
-			else
-			{
-				sourceBox->setDisabled(true);
-				sourceBox->addItems(QStringList() << "(No Players Connected)");
-				
-				// Dont show the error box if the director window hasnt been shown yet
-	// 			if(isVisible())
-	// 				QMessageBox::warning(this, "No Players Connected","Sorry, no players are connected. You must connect to at least one video player before you can switch videos.");
-			}
-		}
-		else
-		if(GLVideoLoopDrawable *item = dynamic_cast<GLVideoLoopDrawable*>(gld))
-		{
-			opts.reset();
-			opts.stringIsFile = true;
-			opts.fileTypeFilter = tr("Video Files (*.wmv *.mpeg *.mpg *.avi *.wmv *.flv *.mov *.mp4 *.m4a *.3gp *.3g2 *.mj2 *.mjpeg *.ipod *.m4v *.gsm *.swf *.dv *.dvd *.asf *.mtv *.roq *.aac *.ac3 *.aiff *.alaw *.iif);;Any File (*.*)");
-	
-			ui->itemPropLayout->addRow(tr("&File:"), PropertyEditorFactory::generatePropertyEditor(item, "videoFile", SLOT(setVideoFile(const QString&)), opts, SIGNAL(videoFileChanged(const QString&))));
-	
-			typeName = "Video Loop Item";
-		}
-		else
-		if(GLVideoFileDrawable *item = dynamic_cast<GLVideoFileDrawable*>(gld))
-		{
-			PropertyEditorFactory::PropertyEditorOptions opts;
-			opts.stringIsFile = true;
-			opts.fileTypeFilter = tr("Video Files (*.wmv *.mpeg *.mpg *.avi *.wmv *.flv *.mov *.mp4 *.m4a *.3gp *.3g2 *.mj2 *.mjpeg *.ipod *.m4v *.gsm *.swf *.dv *.dvd *.asf *.mtv *.roq *.aac *.ac3 *.aiff *.alaw *.iif);;Any File (*.*)");
-			
-			ui->itemPropLayout->addRow(tr("&File:"), PropertyEditorFactory::generatePropertyEditor(item, "videoFile", SLOT(setVideoFile(const QString&)), opts, SIGNAL(videoFileChanged(const QString&))));
-	
-			typeName = "Video Item";
-		}
-		else
-		if(GLTextDrawable *item = dynamic_cast<GLTextDrawable*>(gld))
-		{
-			opts.reset();
-			
-			QWidget *edit = PropertyEditorFactory::generatePropertyEditor(gld, "plainText", SLOT(setPlainText(const QString&)), opts, SIGNAL(plainTextChanged(const QString&)));
-			
-	// 		QLineEdit *line = dynamic_cast<QLineEdit*>(edit);
-	// 		if(line)
-	// 			connect(gld, SIGNAL(plainTextChanged(const QString&)), line, SLOT(setText(const QString&)));
-			
-			QWidget *base = new QWidget();
-			
-			RtfEditorWindow *dlg = new RtfEditorWindow(item, base);
-			QPushButton *btn = new QPushButton("&Advanced...");
-			connect(btn, SIGNAL(clicked()), dlg, SLOT(show()));
-			
-			QHBoxLayout *hbox = new QHBoxLayout(base);
-			hbox->setContentsMargins(0,0,0,0);
-			hbox->addWidget(new QLabel("Text:"));
-			hbox->addWidget(edit);
-			hbox->addWidget(btn);
-			
-			ui->itemPropLayout->addRow(base); 
-			
-			QWidget *base2 = new QWidget();
-			QHBoxLayout *hbox2 = new QHBoxLayout(base2);
-			opts.text = "Load RSS Feed";
-			QWidget *boolEdit = PropertyEditorFactory::generatePropertyEditor(gld, "isRssReader", SLOT(setIsRssReader(bool)), opts);
-			
-			opts.type = QVariant::String;
-			QWidget *stringEdit = PropertyEditorFactory::generatePropertyEditor(gld, "rssUrl", SLOT(setRssUrl(const QString&)), opts);
-			
-			opts.reset();
-			opts.value = item->rssRefreshTime() / 60 / 1000;
-			opts.suffix = " min";
-			opts.min = 1;
-			opts.max = 60 * 3;
-			QWidget *refreshEdit = PropertyEditorFactory::generatePropertyEditor(gld, "rssRefreshTime", SLOT(setRssRefreshTimeInMinutes(int)), opts);
-			
-			QCheckBox *box = dynamic_cast<QCheckBox*>(boolEdit);
-			if(box)
-			{
-				connect(boolEdit, SIGNAL(toggled(bool)), stringEdit, SLOT(setEnabled(bool)));
-				connect(boolEdit, SIGNAL(toggled(bool)), refreshEdit, SLOT(setEnabled(bool)));
-				connect(boolEdit, SIGNAL(toggled(bool)), ui->playlistSetupWidget, SLOT(setDisabled(bool)));
-				stringEdit->setEnabled(box->isChecked());
-				refreshEdit->setEnabled(box->isChecked());
-				ui->playlistSetupWidget->setDisabled(box->isChecked());
-			}
-			
-			hbox2->addWidget(boolEdit);
-			hbox2->addWidget(stringEdit);
-			hbox2->addWidget(new QLabel("Reload After"));
-			hbox2->addWidget(refreshEdit);
-			ui->itemPropLayout->addRow(base2);	
-			
-			typeName = "Text Item";
-		}
-		else
-		if(GLSvgDrawable *item = dynamic_cast<GLSvgDrawable*>(gld))
-		{
-			PropertyEditorFactory::PropertyEditorOptions opts;
-			opts.stringIsFile = true;
-			opts.fileTypeFilter = tr("SVG Files (*.svg);;Any File (*.*)");
-			ui->itemPropLayout->addRow(tr("&SVG File:"), 
-				PropertyEditorFactory::generatePropertyEditor(
-					item,					// The QObject which contains the property to edit 
-					"imageFile", 				// The property name on the QObject to edit
-					SLOT(setImageFile(const QString&)), 	// The slot on the QObject which sets the property
-					opts, 					// PropertyEditorOptions controlling the display of the editor
-					SIGNAL(imageFileChanged(const QString&))	// An optional signal that is emitted by the QObject when the property is changed
-				));
-			
-			typeName = "SVG Item";
-		} 
-		else
-		if(GLRectDrawable *item = dynamic_cast<GLRectDrawable*>(gld))
-		{
-			QtColorPicker * fillColor = new QtColorPicker;
-			fillColor->setStandardColors();
-			fillColor->setCurrentColor(item->fillColor());
-			connect(fillColor, SIGNAL(colorChanged(const QColor &)), item, SLOT(setFillColor(QColor)));
-			
-			ui->itemPropLayout->addRow(tr("Fill:"), fillColor);
-			
-			typeName = "Rectangle";
-		}
-		else
-		if(GLImageDrawable *item = dynamic_cast<GLImageDrawable*>(gld))
-		{
-			PropertyEditorFactory::PropertyEditorOptions opts;
-			opts.stringIsFile = true;
-			opts.fileTypeFilter = tr("Image Files (*.png *.jpg *.bmp *.svg *.xpm *.gif);;Any File (*.*)");
-			ui->itemPropLayout->addRow(tr("&Image:"), 
-				PropertyEditorFactory::generatePropertyEditor(
-					item,					// The QObject which contains the property to edit 
-					"imageFile", 				// The property name on the QObject to edit
-					SLOT(setImageFile(const QString&)), 	// The slot on the QObject which sets the property
-					opts, 					// PropertyEditorOptions controlling the display of the editor
-					SIGNAL(imageFileChanged(const QString&))	// An optional signal that is emitted by the QObject when the property is changed
-				));
-			
-			typeName = "Image Item";
-		} 
-		
-		
-		ui->drawableGroupBox->setTitle(itemName.isEmpty() ? typeName : QString("%1 (%2)").arg(itemName).arg(typeName));
-	}
-}
-
-void DirectorWindow::loadVideoInputList(int idx)
-{
-	//Q_UNUSED(idx);
-	if(idx <0 || idx>=m_videoPlayerList.size())
-		return;
-	
-	QStringList inputs;
-	
-// 	if(idx == 0)
-// 	{
-// 		inputs = m_vidSendMgr->videoConnections();;
-// 	}
-// 	else
-// 	{
-		PlayerConnection *con = m_videoPlayerList[idx]; //-1];
-		inputs = con->videoInputs(); 
-// 	}
-	
-	while(!m_receivers.isEmpty())
-	{
-		QPointer<VideoReceiver> rx = m_receivers.takeFirst();
-		if(rx)
-			rx->release(this);
-	}
-	
-	while(m_videoViewerLayout->count() > 0)
-	{
-		QLayoutItem * item = m_videoViewerLayout->itemAt(m_videoViewerLayout->count() - 1);
-		m_videoViewerLayout->removeItem(item);
-		delete item;
-	}
-	
-	m_currentVideoWidgets.clear();
-
-	foreach(QString con, inputs)
-	{
-		QStringList opts = con.split(",");
-		//qDebug() << "DirectorWindow::loadVideoInputList: Con string: "<<con;
-		foreach(QString pair, opts)
-		{
-			QStringList values = pair.split("=");
-			QString name = values[0].toLower();
-			QString value = values[1];
-			
-			//qDebug() << "DirectorWindow::loadVideoInputList: Parsed name:"<<name<<", value:"<<value;
-			if(name == "net")
-			{
-// 				QUrl url(value);
-// 				
-// 				QString host = url.host();
-// 				int port = url.port();
-
-				QStringList url = value.split(":");
-				QString host = url[0];
-				int port = url.size() > 1 ? url[1].toInt() : 7755;
-				
-				VideoReceiver *rx = VideoReceiver::getReceiver(host,port);
-				
-				if(!rx)
-				{
-					qDebug() << "DirectorWindow::loadVideoInputList: Unable to connect to "<<host<<":"<<port;
-					QMessageBox::warning(this,"Video Connection",QString("Sorry, but we were unable to connect to the video transmitter at %1:%2 - not sure why.").arg(host).arg(port));
-				}
-				else
-				{
-					m_receivers << QPointer<VideoReceiver>(rx);
-					
-					qDebug() << "DirectorWindow::loadVideoInputList: Connected to "<<host<<":"<<port<<", creating widget...";
-					
-					VideoWidget *vid = new VideoWidget();
-					m_currentVideoWidgets << vid;
-					
-					vid->setVideoSource(rx);
-					vid->setOverlayText(QString("# %1").arg(m_currentVideoWidgets.size()));
-					
-					rx->setFPS(5);
-					vid->setFps(5);
-					vid->setRenderFps(true);
-					
-					vid->setProperty("-vid-con-string",con);
-		
-					m_videoViewerLayout->addWidget(vid);
-					
-					connect(vid, SIGNAL(clicked()), this, SLOT(videoInputClicked()));
-				}
-			}
-		}
-	}
-}
-
-void DirectorWindow::videoInputClicked()
-{
-	VideoWidget *vid = dynamic_cast<VideoWidget*>(sender());
-	if(!vid)
-	{
-		qDebug() << "DirectorWindow::videoInputClicked: Sender is not a video widget, ignoring.";
-		return;
-	}
-	activateVideoInput(vid);
-}
-
-void DirectorWindow::activateVideoInput(VideoWidget *vid)
-{
-	QString con = vid->property("-vid-con-string").toString();
-	
-	if(!m_currentDrawable)
-		return;
-	
-	qDebug() << "DirectorWindow::videoInputClicked: Using con string: "<<con;
-	m_currentDrawable->setProperty("videoConnection", con);
-	
-	foreach(PlayerConnection *player, m_players->players())
-		player->setUserProperty(m_currentDrawable, con, "videoConnection");
-}
-
-void DirectorWindow::keyPressEvent(QKeyEvent *event)
-{
-	int idx = event->text().toInt();
-	if(idx > 0 && idx <= m_currentVideoWidgets.size())
-	{
-		qDebug() << "DirectorWindow::keyPressEvent(): "<<event->text()<<", activating input #"<<idx;
-		idx --; 
-		VideoWidget *vid = m_currentVideoWidgets.at(idx);
-		activateVideoInput(vid);
-	}
-}
-
-void DirectorWindow::setCurrentItem(GLPlaylistItem *item)
-{
-	if(!item)
-		return;
-	
-	m_currentItem = item;
-	if(item)
-	{
-		//qDebug() << "DirectorWindow::setCurrentItem: title:"<<item->title()<<", duration: "<<item->duration();
-		
-		ui->playlistView->setCurrentIndex(m_currentDrawable->playlist()->indexOf(item));
-		
-		const char *propName = m_currentDrawable->metaObject()->userProperty().name();
-		m_currentDrawable->setProperty(propName, item->value());
-	}
+	}*/
 }
 
 void DirectorWindow::changeCanvasSize()
@@ -1351,8 +712,8 @@ void DirectorWindow::changeCanvasSize()
 		foreach(PlayerConnection *con, m_players->players())
 			con->setCanvasSize(m_collection->canvasSize());
 			
-		if(m_graphicsScene)
-			m_graphicsScene->setSceneRect(QRectF(QPointF(0,0),m_collection->canvasSize()));
+// 		if(m_graphicsScene)
+// 			m_graphicsScene->setSceneRect(QRectF(QPointF(0,0),m_collection->canvasSize()));
 		
 	}
 	
@@ -1363,8 +724,8 @@ void DirectorWindow::playerAdded(PlayerConnection * con)
 	if(!con)
 		return;
 	
-	connect(con, SIGNAL(playlistTimeChanged(GLDrawable*, double)), this, SLOT(playlistTimeChanged(GLDrawable*, double)));
-	connect(con, SIGNAL(currentPlaylistItemChanged(GLDrawable*, GLPlaylistItem*)), this, SLOT(playlistItemChanged(GLDrawable*, GLPlaylistItem *)));
+// 	connect(con, SIGNAL(playlistTimeChanged(GLDrawable*, double)), this, SLOT(playlistTimeChanged(GLDrawable*, double)));
+// 	connect(con, SIGNAL(currentPlaylistItemChanged(GLDrawable*, GLPlaylistItem*)), this, SLOT(playlistItemChanged(GLDrawable*, GLPlaylistItem *)));
 }
 
 void DirectorWindow::playerRemoved(PlayerConnection * con)
@@ -1372,43 +733,6 @@ void DirectorWindow::playerRemoved(PlayerConnection * con)
 	if(!con)
 		return;
 	disconnect(con, 0, this, 0);
-}
-
-void DirectorWindow::pausePlaylist()
-{
-	if(!m_currentDrawable)
-		return;
-	foreach(PlayerConnection *con, m_players->players())
-		con->setPlaylistPlaying(m_currentDrawable, false);
-}
-
-void DirectorWindow::playPlaylist()
-{
-	if(!m_currentDrawable)
-		return;
-	
-	bool isPlaying = ui->playBtn->property("-playlist-isPlaying").toBool();
-	if(!isPlaying)
-	{
-		ui->playBtn->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
-	}
-	else
-	{
-		ui->playBtn->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
-	}
-	 
-	ui->playBtn->setProperty("-playlist-isPlaying", !isPlaying);
-	
-	foreach(PlayerConnection *con, m_players->players())
-		con->setPlaylistPlaying(m_currentDrawable, !isPlaying);
-}
-
-void DirectorWindow::playlistItemDurationChanged()
-{
-	if(!m_currentDrawable)
-		return;
-	foreach(PlayerConnection *con, m_players->players())
-		con->updatePlaylist(m_currentDrawable);
 }
 
 

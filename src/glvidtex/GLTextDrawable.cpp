@@ -420,6 +420,9 @@ void GLTextDrawable::updateAnimations(bool insidePaint)
 
 void GLTextDrawable::scrollerTick(bool insidePaint)
 {
+	if(!liveStatus())
+		return;
+		
 	// Smooth out the increment by which we scroll by adjusting the increment up or down based on how long 
 	// the thread spent processing before calling scrollerTick() compared to the ideal length of time
 	int elapsed = m_scrollFrameTime.elapsed();
@@ -599,7 +602,7 @@ void GLTextDrawable::scrollerTick(bool insidePaint)
 	if(!m_scrollerImage.isNull())
 	{
 		QRect sub((int)m_scrollPos - m_scrollerWindowPos,0,(int)rect().width(),m_scrollerImage.height());
-		//qDebug() << "GLTextDrawable::scrollerTick(): m_scrollPos:"<<m_scrollPos<<"/"<<m_scrollerTotalWidth<<", sub rect:"<<sub<<", buffer:"<<m_scrollerImage.rect().size();
+		qDebug() << "GLTextDrawable::scrollerTick(): m_scrollPos:"<<m_scrollPos<<"/"<<m_scrollerTotalWidth<<", sub rect:"<<sub<<", buffer:"<<m_scrollerImage.rect().size();
 		QImage copy = m_scrollerImage.copy(sub);
 		setImage(copy,insidePaint);
 	}

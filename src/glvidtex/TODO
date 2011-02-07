@@ -148,6 +148,15 @@ TODO:
 		- [DONE] Allow player to run playlists on items by itself without being connected to the director
 	
 	IDEAS:
+		- RSS Feeds:
+			- Happy News: http://www.happynews.com/rss/.aspx
+			- Top News: http://news.google.com/news?ned=us&topic=h&output=rss
+			- Google News Feeds List: http://www.google.com/support/news/bin/answer.py?hl=en&answer=59255
+			- Good News: http://www.goodnewsnetwork.org/feed/rss/all-content.html
+			- Yahoo Top News: http://rss.news.yahoo.com/rss/topstories
+				- http://news.yahoo.com/page/rss
+			- CNN: http://www.cnn.com/services/rss/
+			
 		- Players need to communicate with each other if in a "group"
 			- E.g. part of a wall display
 			- Elect one as the master coorinator for timing/sync of video playback, etc

@@ -23,12 +23,12 @@ int main(int argc, char *argv[])
 	qApp->setOrganizationName("Josiah Bryan");
 	qApp->setOrganizationDomain("mybryanlife.com");
 	
-	MetaObjectUtil_Register(GLImageDrawable);
-	MetaObjectUtil_Register(GLTextDrawable);
-	MetaObjectUtil_Register(GLVideoFileDrawable);
-	MetaObjectUtil_Register(GLVideoInputDrawable);
-	MetaObjectUtil_Register(GLVideoLoopDrawable);
-	MetaObjectUtil_Register(GLVideoReceiverDrawable);
+// 	MetaObjectUtil_Register(GLImageDrawable);
+// 	MetaObjectUtil_Register(GLTextDrawable);
+// 	MetaObjectUtil_Register(GLVideoFileDrawable);
+// 	MetaObjectUtil_Register(GLVideoInputDrawable);
+// 	MetaObjectUtil_Register(GLVideoLoopDrawable);
+// 	MetaObjectUtil_Register(GLVideoReceiverDrawable);
 
 	
 	DirectorWindow *director = new DirectorWindow();

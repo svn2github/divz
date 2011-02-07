@@ -651,6 +651,9 @@ QWidget *EditorWindow::createPropertyEditors(GLDrawable *gld)
 			opts.text = "Flip horizontal";
 			lay->addRow(PropertyEditorFactory::generatePropertyEditor(item, "flipHorizontal", SLOT(setFlipHorizontal(bool)), opts));
 			
+			opts.text = "Flip vertical";
+			lay->addRow(PropertyEditorFactory::generatePropertyEditor(item, "flipVertical", SLOT(setFlipVertical(bool)), opts));
+			
 			opts.text = "Ignore video aspect ratio";
 			lay->addRow(PropertyEditorFactory::generatePropertyEditor(item, "ignoreAspectRatio", SLOT(setIgnoreAspectRatio(bool)), opts));
 			

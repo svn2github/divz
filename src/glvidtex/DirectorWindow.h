@@ -35,10 +35,11 @@ public:
 	
 	GLSceneGroup *currentGroup() { return m_currentGroup; }
 	GLScene *currentScene() { return m_currentScene; }
-	GLDrawable *currentDrawable() { return m_currentDrawable.data(); }
-	GLPlaylistItem *currentItem() { return m_currentItem; }
+	//GLDrawable *currentDrawable() { return m_currentDrawable.data(); }
 	
 	QString fileName() { return m_fileName; }
+	
+	PlayerConnectionList *players() { return m_players; }
 
 signals:
 	void closed();
@@ -47,6 +48,7 @@ public slots:
 	void showOpenFileDialog();
 	void showSaveAsDialog();
 	void saveFile();
+	void newFile();
 	
 	void showPlayerSetupDialog();
 	
@@ -60,8 +62,7 @@ public slots:
 	void setCollection(GLSceneGroupCollection *collection);
 	void setCurrentGroup(GLSceneGroup*, GLScene *currentScene=0);
 	void setCurrentScene(GLScene *);
-	void setCurrentDrawable(GLDrawable *drawable=0);
-	void setCurrentItem(GLPlaylistItem *);
+	//void setCurrentDrawable(GLDrawable *drawable=0);
 	void fadeBlack(bool toBlack=true);
 	void setFadeSpeedPercent(int);
 	void setFadeSpeedTime(double);
@@ -76,41 +77,18 @@ private slots:
 	void slideSelected(const QModelIndex &);
 	void currentSlideChanged(const QModelIndex &idx,const QModelIndex &);
 	
-	void drawableSelected(const QModelIndex &);
-	void currentDrawableChanged(const QModelIndex &idx,const QModelIndex &);
-	
-	void itemSelected(const QModelIndex &);
-	void currentItemChanged(const QModelIndex &idx,const QModelIndex &);
-	
-	void itemLengthChanged(double);
-	void btnHideDrawable();
-	void btnSendToPlayer();
-	void btnAddToPlaylist();
-	void btnRemoveFromPlaylist();
-	void btnMoveUp();
-	void btnMoveDown();
-
-	void playlistTimeChanged(GLDrawable*, double);
-	void playlistItemChanged(GLDrawable*, GLPlaylistItem *);
-	void playlistItemDurationChanged();
-	
-	void pausePlaylist();
-	void playPlaylist();
+// 	void drawableSelected(const QModelIndex &);
+// 	void currentDrawableChanged(const QModelIndex &idx,const QModelIndex &);
 	
 	void playerAdded(PlayerConnection *);
 	void playerRemoved(PlayerConnection *);
 	
 	void changeCanvasSize();
 	
-	void loadVideoInputList(int);
-	void videoInputClicked();
-	void activateVideoInput(VideoWidget*);
-	
 	void sceneDataChanged();
 	
 protected:
 	void closeEvent(QCloseEvent *event);
-	void keyPressEvent(QKeyEvent *event); 
 	
 	void setupUI();
 	void readSettings();
@@ -127,18 +105,16 @@ private:
 	
 	GLSceneGroup * m_currentGroup;
 	GLScene * m_currentScene;
-	QPointer<GLDrawable> m_currentDrawable;
-	GLPlaylistItem * m_currentItem;
+	//QPointer<GLDrawable> m_currentDrawable;
 	
 	GLEditorGraphicsScene *m_graphicsScene;
 	
-	FlowLayout *m_videoViewerLayout;
 	VideoInputSenderManager *m_vidSendMgr;
+	
 	QList<QPointer<VideoReceiver> > m_receivers;
 	
-	QList<QPointer<VideoWidget> > m_currentVideoWidgets;
 	
-	QList<PlayerConnection*> m_videoPlayerList;
+	
 };
 
 #endif // DIRECTORWINDOW_H

@@ -122,7 +122,8 @@ director: {
 	TARGET = gldirector
 	
 	FORMS += DirectorWindow.ui \
-		 PlayerSetupDialog.ui
+		 PlayerSetupDialog.ui \
+		 DrawableDirectorWidget.ui
 
 
 	
@@ -137,7 +138,8 @@ director: {
 		KeystonePointsEditor.h \
 		FlowLayout.h \
 		../livemix/VideoWidget.h \
-		VideoInputSenderManager.h
+		VideoInputSenderManager.h \
+		DrawableDirectorWidget.h
 		
 		
 	SOURCES += director-main.cpp \
@@ -152,7 +154,8 @@ director: {
 		KeystonePointsEditor.cpp \
 		FlowLayout.cpp \
 		../livemix/VideoWidget.cpp \
-		VideoInputSenderManager.cpp
+		VideoInputSenderManager.cpp \
+		DrawableDirectorWidget.cpp
 		
 	include(../3rdparty/richtextedit/richtextedit.pri)
 	include(../qtcolorpicker/qtcolorpicker.pri)
