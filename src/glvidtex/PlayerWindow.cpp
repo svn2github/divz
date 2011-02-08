@@ -1077,6 +1077,14 @@ void PlayerWindow::displayScene(GLScene *scene)
 		return;
 	}
 
+	if(m_scene)
+	{
+		GLDrawableList list = m_scene->drawableList();
+		foreach(GLDrawable *gld, list)
+			if(gld->playlist()->size() > 0)
+				gld->playlist()->pauses();
+	}
+
 	m_oldScene = m_scene;
 	m_scene = scene;
 
@@ -1165,12 +1173,12 @@ void PlayerWindow::displayScene(GLScene *scene)
 
 		m_scene->setOpacity(1,true,m_xfadeSpeed); // animate fade in
 	}
-	/*
+	
 	GLDrawableList list = scene->drawableList();
 	foreach(GLDrawable *gld, list)
 		if(gld->playlist()->size() > 0)
 			gld->playlist()->play();
-	*/
+	
 	
 }
 

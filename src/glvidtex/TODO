@@ -46,6 +46,7 @@ TODO:
 			- Added 12px padding internally to RichTextRenderer's output 
 		- [FIXED] GLTextDrawable scroller code for some reason is reporting the first image's width as WAY too large (like 100x or 1000x)
 			- Problem was in the ScrollableItem constructor - it was reading the width from the 'img' field, not the _img argument - crikey!
+		- [CANTREPEAT] Changing scenes doesnt always work in player - I'd say 1/10th of the timer, it stays black
 		 		
 		- [TMP-FIX] Video Encoding "problems"
 			- Way to much CPU usage - 157%-ish on a dual-core 2.4 GHz...causing live video to stutter
@@ -58,7 +59,6 @@ TODO:
 			- [DONE] Consider removing "(This Machine)" as an option
 				- Dont put a message box - just a simple QLabel
 		- Make the video input control panel automatically update when players are connected
-		- Changing scenes doesnt always work in player - I'd say 1/10th of the timer, it stays black
 		- If player errors out during connect, button stays grayed out till close and re-open dialog
 		
 		- Player cant crossfade between two scenes that each have a videoinput drawable on them
@@ -67,31 +67,49 @@ TODO:
 			  that causes all other events (including the crossfade timer events) to be ignored
 			  
 		- Director: QtVidSrc videos play only a few seconds in director preview
-			- Not repeatable at office
+			- This seems due to gstreamer problems on linux:
+				- When the low-level gstreamer code cannot play audio for some reason (audio subsystem locked by another app maybe), it only 
+				  sends a few seconds of video up to QtVideoSource before the audio thread times out and the video playback stops
+				- The fix is just to ensure audio playback in linux general is working (maybe do lsof | grep pcm and kill the apps that have it open?)
+				- Longterm, need someway to detect this error condition and give a nice pleasant UI to user...?
 		- Director: QtVidSrc videos are behind the player - need to sync
 		- GLPlaylist: When erasing duration (user set duration to 0 to re-enable auto-dur), need a way to re-calc the auto dur, say get length of video, etc.
 		
 		- Director: When text drawable in scroller mode, adding an item to the playlist after typing in th text box does not work
 		- Director: Cannot pause playlist while scroller mode active
 		
+		
 	NEEDED FEATURES:
 		- Slide types - for rendering the automatic slides
 		- Scene overlay - for stuff that doesnt change
-		- [DONE] Slides auto change - for changing automatically
-		- [DONE] Text crawler - for showing RSS feeds
-		- [DONE] JSON interface for web API
+		- Transmit slide group changes to player when editor window closed
+			- Need to cross fade between slides
+			- Prompt to send?
 		
 		- UI in DirectorWindow to control scene playlist playing functionality
-	
+		
+		- UI in DirectorWindow to play/pause/stop/seek/volume-adjust a local/remote QtVideoSource
+			- Should be easy since all those are properties on QtVideoSource, just use the GLPLayer_SetUserProperty command to handle the network transmission
+			- Just need to update DrawableDirectorWidget as time allows
+		
+		- CameraThread-related Revisions:
+			- CameraThread:
+				- Add 'flip H/V' properties
+				- Add BCHS properties to CameraThread and get/set using v4l API on linux, noop on windows
+				- Add methods to CameraThread to load/save flip, BCHS, and deint props based on the device name
+			- Misc:
+				- Adapt drawables to honor camera's flip H/V props (Consider: Override the drawables flip H/V?)
+				- Adapt VideoSender thread to use the CameraThread BCHS API instead of calling out directly to command line
+			- Director:
+				- Add UI in Director to set the flip, BCHS, and de-int props on remote player using VideoReceiver API
+				- Integrate VideoInputColorBalance widget with Director
+					- Add ability to select master/slaves (right now, they are hardcoded to PHC's test cameras!!)
+		
 		- Sharpening Filter (GLSL or image based, scaled up)
 		
 		- Need a way to enable/disable encoding from the director
 		- Need to set the AR of the encoder from director
-		- Make an "option" to reconfig the item control area as mini windows...?
-			- So you can access the video switcher and text settings without switching between the two...?
-		- Transmit slide group changes to player when editor window closed
-			- Need to cross fade between slides
-			- Prompt to send?
+			
 		- When an item is edited in the editor, it needs to update the filtered item list in the director
 		- Need to drag/drop to re-arrange slide list
 		- Add 'setup' options to the video switcher to configure the video feed from director
@@ -128,15 +146,21 @@ TODO:
 			- Right now, text and images
 		- MUST have per-camera BCHS controls
 		- Add copy/paste to editor
-		- Durations on scenes
-			- Auto calced based on max length playlist of items
-			- Or manually set
 		- Durations on groups
 			- Auto calced based on durations of all the scenes
-		- Add a "play" interface to groups to loop thru scenes
-			- Some how emit a signal when need to change scenes?
 		- Add a play interface to collection to loop thru groups
 		
+		- [DONE] Slides auto change - for changing automatically
+		- [DONE] Text crawler - for showing RSS feeds
+		- [DONE] JSON interface for web API
+		- [DONE]  Durations on scenes
+			- [DONE] Auto calced based on max length playlist of items
+			- [DONE] Or manually set
+		- [DONE] Add a "play" interface to groups to loop thru scenes
+			- [DONE] Some how emit a signal when need to change scenes?
+		- [DONE] Make an "option" to reconfig the item control area as mini windows...?
+			- [DONE] So you can access the video switcher and text settings without switching between the two...?
+			- Not optional, just redesigned the UI
 		- [DONE] Add a 'remove from playlist' button
 		- [DONE] Crossfading between scenes
 		- [DONE] Add a simple rectangle item to draw boxes, panels, lines with
@@ -156,6 +180,7 @@ TODO:
 			- Yahoo Top News: http://rss.news.yahoo.com/rss/topstories
 				- http://news.yahoo.com/page/rss
 			- CNN: http://www.cnn.com/services/rss/
+			- BBC Top News: http://newsrss.bbc.co.uk/rss/newsonline_world_edition/front_page/rss.xml
 			
 		- Players need to communicate with each other if in a "group"
 			- E.g. part of a wall display

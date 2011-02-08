@@ -7,6 +7,7 @@
 #endif
 
 #include "../livemix/VideoThread.h"
+#include "GLEditorGraphicsScene.h"
 
 GLVideoLoopDrawable::GLVideoLoopDrawable(QString file, QObject *parent)
 	: GLVideoDrawable(parent)
@@ -42,18 +43,18 @@ bool GLVideoLoopDrawable::setVideoFile(const QString& file)
 	
 	m_videoFile = file;
 	
-	VideoThread * source = new VideoThread();
-	source->setVideo(file);
+	m_videoThread = new VideoThread();
+	m_videoThread->setVideo(file);
 	
 	// Assuming duration in seconds
-	m_videoLength = source->duration(); // / 1000.;
+	m_videoLength = m_videoThread->duration(); // / 1000.;
 		
 	//source->setVideo("../samples/BlueFish/EssentialsVol05_Abstract_Media/HD/Countdowns/Abstract_Countdown_3_HD.mp4");
 	//source->setVideo("../samples/BlueFish/EssentialsVol05_Abstract_Media/SD/Countdowns/Abstract_Countdown_3_SD.mpg");
 	
-	source->start();
+	m_videoThread->start(true); // true = start paused
 	
-	setVideoSource(source);
+	setVideoSource(m_videoThread);
 	setObjectName(qPrintable(file));
 	
 	emit videoFileChanged(file);
@@ -77,5 +78,45 @@ void GLVideoLoopDrawable::deleteSource(VideoSource *source)
 	else
 	{
 		qDebug() << "GLVideoLoopDrawable::deleteSource: Source not deleted because its not a 'VideoThread':" <<source;
+	}
+}
+
+
+void GLVideoLoopDrawable::setLiveStatus(bool flag)
+{
+	GLVideoDrawable::setLiveStatus(flag);
+
+	qDebug() << "GLVideoLoopDrawable::setLiveStatus: new status:"<<flag;
+	
+	if(flag)
+	{
+		GLEditorGraphicsScene *scenePtr = dynamic_cast<GLEditorGraphicsScene*>(scene());
+		if(!scenePtr)
+		{
+			if(m_videoThread)
+			{
+				m_videoThread->play();
+			}
+			else
+			{
+				qDebug() << "GLVideoFileDrawable::setLiveStatus: Can't fade in volume - no video source.";
+			}
+		}
+		else
+		{
+			qDebug() << "GLVideoFileDrawable::setLiveStatus: Not going live due to the fact we're in the editor scene. Also, limiting frame rate to 10fps for CPU usage's sake.";
+			setFpsLimit(10.);
+		}
+	}
+	else
+	{
+		if(m_videoThread)
+		{
+			QTimer::singleShot(xfadeLength(), m_videoThread, SLOT(pause())); 
+		}
+		else
+		{
+			qDebug() << "GLVideoFileDrawable::setLiveStatus: Can't fade out volume - no video source.";
+		}
 	}
 }

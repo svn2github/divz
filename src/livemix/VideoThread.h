@@ -52,6 +52,8 @@ public:
 	
 	double duration() { return m_duration; }
 	
+	virtual void start(bool startPaused=false);
+	
 signals:
 	//void newImage(QImage,QTime);
 	//void frameReady(int frameHoldTime);
@@ -146,6 +148,8 @@ private:
 	
 	int m_frameSmoothCount;
 	int m_frameSmoothAccum;
+	
+	bool m_startPaused;
 };
 
 

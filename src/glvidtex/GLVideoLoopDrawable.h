@@ -3,6 +3,8 @@
 
 #include "GLVideoDrawable.h"
 
+class VideoThread;
+
 class GLVideoLoopDrawable : public GLVideoDrawable
 {
 	Q_OBJECT
@@ -26,9 +28,15 @@ private slots:
 	
 	void deleteSource(VideoSource*);
 	
+
+protected:
+	// GLVideoDrawable::
+	virtual void setLiveStatus(bool);
+	
 private:
 	QString m_videoFile;
 	double m_videoLength;
+	VideoThread *m_videoThread;
 };
 
 #endif

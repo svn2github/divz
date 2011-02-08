@@ -71,6 +71,9 @@ protected:
 
 	void setupUI();
 	
+	void setPlaylistEditingEnabled(bool);
+	bool playlistEditingEnabled() { return m_playlistEditingEnabled; }
+	
 private:
 	Ui::DrawableDirectorWidget *ui;
 	
@@ -86,6 +89,8 @@ private:
 	QList<QPointer<VideoWidget> > m_currentVideoWidgets;
 	
 	QList<PlayerConnection*> m_videoPlayerList;
+	
+	bool m_playlistEditingEnabled
 };
 
 #endif // DRAWABLEDIRECTORWIDGET_H

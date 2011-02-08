@@ -303,8 +303,14 @@ void DrawableDirectorWidget::playlistItemChanged(GLDrawable *gld, GLPlaylistItem
 
 	if(m_currentItem != item)
 		setCurrentItem(item);
-
 }
+
+void DrawableDirectorWidget::::setPlaylistEditingEnabled(bool flag)
+{
+	m_playlistEditingEnabled = flag;
+	ui->playlistSetupWidget->setVisible(flag);
+}
+
 void DrawableDirectorWidget::setDrawable(GLDrawable *gld)
 {
 	if(m_drawable == gld)
@@ -375,7 +381,7 @@ void DrawableDirectorWidget::setDrawable(GLDrawable *gld)
 		PropertyEditorFactory::PropertyEditorOptions opts;
 		opts.reset();	
 		
-		ui->playlistSetupWidget->setVisible(true);
+		setPlaylistEditingEnabled(true);
 		
 		if(GLVideoInputDrawable *item = dynamic_cast<GLVideoInputDrawable*>(gld))
 		{
@@ -385,7 +391,7 @@ void DrawableDirectorWidget::setDrawable(GLDrawable *gld)
 	
 			typeName = "Video Input Item";
 			
-			ui->playlistSetupWidget->setVisible(false);
+			setPlaylistEditingEnabled(false);
 			
 			QWidget *base = new QWidget();
 			

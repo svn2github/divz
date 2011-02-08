@@ -28,6 +28,7 @@ VideoThread::VideoThread(QObject *parent)
 	, m_frameLockCount(0)
 	, m_frameSmoothCount(0)
 	, m_frameSmoothAccum(0)
+	, m_startPaused(false)
 {
 	m_time_base_rational.num = 1;
 	m_time_base_rational.den = AV_TIME_BASE;
@@ -43,6 +44,12 @@ VideoThread::VideoThread(QObject *parent)
 	enqueue(new VideoFrame(QImage("../glvidtex/dot.gif"),1000/30));
 // 	m_frame = NULL;
 
+}
+
+void VideoThread::start(bool paused)
+{
+	m_startPaused = paused;
+	VideoSource::start();
 }
 
 void VideoThread::setVideo(const QString& name)
@@ -198,7 +205,8 @@ void VideoThread::run()
 	initVideo();
 	
 	//m_readTimer->start();
-	play();
+	if(!m_startPaused)
+		play();
 	
 	//exec();
 	while(!m_killed)
@@ -311,14 +319,15 @@ void VideoThread::play()
 		
 	m_status = Running;
 	
-	if(m_readTimer->isActive())
+	if(m_readTimer && m_readTimer->isActive())
 	{
 		//qDebug() << "VideoThread::play(): timer active";
  		m_total_runtime += m_run_time.restart();
  	}
 	else
 	{
-		m_readTimer->start();
+		if(m_readTimer)
+			m_readTimer->start();
 		m_run_time.start();
 		//qDebug() << "VideoThread::play(): starting timer";
 	}
@@ -335,7 +344,8 @@ void VideoThread::pause()
 	//qDebug() << "QVideo::pause(): m_total_runtime:"<<m_total_runtime;
 	
 	//emit startDecode();
-	m_readTimer->stop();
+	if(m_inited)
+		m_readTimer->stop();
 	emit movieStateChanged(QMovie::Paused);
 }
 
@@ -514,7 +524,7 @@ void VideoThread::readFrame()
 					if(m_frameTimer < curTime-1.)
 						m_frameTimer = curTime;
 					double actual_delay = m_frameTimer - curTime;
-					//qDebug() << "VideoThread::readFrame(): frame timer: "<<m_frameTimer<<", curTime:"<<curTime<<", \t actual_delay:"<<((int)(actual_delay*1000))<<", pts_delay:"<<((int)(pts_delay*1000))<<", m_run_time:"<<m_run_time.elapsed()<<", m_total_runtime:"<<m_total_runtime;
+					qDebug() << "VideoThread::readFrame(): frame timer: "<<m_frameTimer<<", curTime:"<<curTime<<", \t actual_delay:"<<((int)(actual_delay*1000))<<", pts_delay:"<<((int)(pts_delay*1000))<<", m_run_time:"<<m_run_time.elapsed()<<", m_total_runtime:"<<m_total_runtime;
 					if(actual_delay < 0.010)
 					{
 						// This should just skip this frame
