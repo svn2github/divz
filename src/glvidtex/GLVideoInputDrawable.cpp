@@ -54,7 +54,8 @@ void GLVideoInputDrawable::setVideoConnection(const QString& con)
 		
 		if(name == "dev")
 		{
-			setVideoInput(value);
+			if(!m_localHasError[value])
+				setVideoInput(value);
 		}
 		else
 		if(name == "input")
@@ -113,6 +114,7 @@ void GLVideoInputDrawable::setNetworkSource(const QString& src)
 	{
 		qDebug() << "GLVideoInputDrawable::setNetworkSource: Forcing to use the network for src:"<<src<<" due to local device error.";
 		isLocalHost = false;
+		m_localHasError[m_videoInput] = true;
 	}
 	
 	if(isLocalHost)

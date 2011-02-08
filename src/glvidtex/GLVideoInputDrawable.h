@@ -63,6 +63,7 @@ private:
 	QString m_networkSource;
 	VideoReceiver *m_rx;
 	bool m_useNetworkSource;
+	QHash<QString,bool> m_localHasError;
 };
 
 #endif

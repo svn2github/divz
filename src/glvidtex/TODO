@@ -47,6 +47,12 @@ TODO:
 		- [FIXED] GLTextDrawable scroller code for some reason is reporting the first image's width as WAY too large (like 100x or 1000x)
 			- Problem was in the ScrollableItem constructor - it was reading the width from the 'img' field, not the _img argument - crikey!
 		- [CANTREPEAT] Changing scenes doesnt always work in player - I'd say 1/10th of the timer, it stays black
+		- [FIXED] Director: When GLVideoInputDrawable used in director tries to switch to a videoinput (local /dev/video0) that is already being used by a 
+				player on the same local machine as the director, director locks for a few moments till the read times out and defaults to
+				network read. 
+			- Need to change GLVideoInputDrawable to 'remember' that the dev is 'locked' and default to network faster
+		- [FIXED] Crossfade speed not being applied to items when set speed in director then change playlist item
+			- Fixed by just proactivly setting xfade speed on all video drawables in PlayerWindow::setCrossfadeSpeed
 		 		
 		- [TMP-FIX] Video Encoding "problems"
 			- Way to much CPU usage - 157%-ish on a dual-core 2.4 GHz...causing live video to stutter

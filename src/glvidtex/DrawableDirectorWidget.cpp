@@ -305,7 +305,7 @@ void DrawableDirectorWidget::playlistItemChanged(GLDrawable *gld, GLPlaylistItem
 		setCurrentItem(item);
 }
 
-void DrawableDirectorWidget::::setPlaylistEditingEnabled(bool flag)
+void DrawableDirectorWidget::setPlaylistEditingEnabled(bool flag)
 {
 	m_playlistEditingEnabled = flag;
 	ui->playlistSetupWidget->setVisible(flag);

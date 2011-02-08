@@ -90,7 +90,7 @@ private:
 	
 	QList<PlayerConnection*> m_videoPlayerList;
 	
-	bool m_playlistEditingEnabled
+	bool m_playlistEditingEnabled;
 };
 
 #endif // DRAWABLEDIRECTORWIDGET_H

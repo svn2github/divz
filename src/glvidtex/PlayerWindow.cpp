@@ -745,9 +745,10 @@ void PlayerWindow::receivedMap(QVariantMap map)
 						{
 							QVariant value = map["value"];
 
-							if(GLVideoDrawable *vid = dynamic_cast<GLVideoDrawable*>(gld))
+							GLVideoDrawable *vid = dynamic_cast<GLVideoDrawable*>(gld);
+							if(vid)
 								vid->setXFadeLength(m_xfadeSpeed);
-
+							
 							gld->setProperty(qPrintable(name), value);
 
 							sendReply(QVariantList()
@@ -995,6 +996,15 @@ void PlayerWindow::setCrossfadeSpeed(int ms)
 {
 	if(m_glWidget)
 		m_glWidget->setCrossfadeSpeed(ms);
+	
+	if(m_scene)
+	{
+		GLDrawableList list = m_scene->drawableList();
+		foreach(GLDrawable *drawable, list)
+			if(GLVideoDrawable *vid = dynamic_cast<GLVideoDrawable*>(drawable))
+				vid->setXFadeLength(ms);
+	}
+	
 	m_xfadeSpeed = ms;
 }
 
@@ -1082,7 +1092,7 @@ void PlayerWindow::displayScene(GLScene *scene)
 		GLDrawableList list = m_scene->drawableList();
 		foreach(GLDrawable *gld, list)
 			if(gld->playlist()->size() > 0)
-				gld->playlist()->pauses();
+				gld->playlist()->stop();
 	}
 
 	m_oldScene = m_scene;
