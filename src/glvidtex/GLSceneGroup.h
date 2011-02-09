@@ -122,6 +122,7 @@ public:
 	
 	QByteArray toByteArray();
 	void fromByteArray(QByteArray&);
+	GLScene *clone(); 
 	
 	GLDrawableList drawableList() { return m_itemList; }
 	void addDrawable(GLDrawable*);

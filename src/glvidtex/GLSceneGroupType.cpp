@@ -1,8 +1,13 @@
 
 #include "GLSceneGroupType.h"
+#include "GLSceneGroup.h"
+#include "GLDrawable.h"
+
+#include "GLSceneTypes.h"
 
 
-/// GLSceneType
+//============================================================================
+//	GLSceneType 
 
 GLSceneType::GLSceneType(QObject *parent)
 	: QObject(parent)
@@ -11,7 +16,7 @@ GLSceneType::GLSceneType(QObject *parent)
 	
 }
 
-QString GLSceneType::id() const
+QString GLSceneType::id() 
 {
 	return m_id;
 }
@@ -26,33 +31,120 @@ QString GLSceneType::description()
 	return "Undefined Scene Type";
 }
 
-QList<GLSceneType::ParameterInfo> GLSceneType::parameters()
+QList<GLSceneType::AuditError> GLSceneType::auditTemplate(GLScene *scene)
 {
-	return QList<GLSceneType::ParameterInfo>();
+	AuditErrorList list;
+	if(!scene)
+	{
+		list << AuditError("Invalid scene pointer");
+	}
+	else
+	{
+		GLDrawableList drawables = scene->drawableList();
+		QHash<QString,GLDrawable*> hash;
+		foreach(GLDrawable *gld, drawables)
+			hash[gld->itemName()] = gld;
+			
+		foreach(FieldInfo info, m_fieldInfoList)
+		{
+			if(hash.contains(info.name))
+			{
+				QString type = info.expectedType;
+				if(!type.startsWith("GL"))
+					type = "GL" + type;
+				if(!type.endsWith("Drawable"))
+					type += "Drawable";
+					
+				QString className = QString(hash[info.name]->metaObject()->className());
+				if(className != type)
+				{
+					list << AuditError(QString("Item '%1' has wrong type - expected '%1', found '%2'").arg(info.name).arg(type).arg(className), 0, info, info.required);
+				}
+			}
+			else
+			{
+				list << AuditError(QString("Cannot find field '%1'").arg(info.name), 0, info, info.required);
+			}
+		}
+	}
+	
+	return list;
 }
 
-QList<GLSceneType::FieldInfo> GLSceneType::fields()
+bool GLSceneType::applyFieldData(QString field)
 {
-	return QList<GLSceneType::FieldInfo>();
+	if(!scene())
+	{
+		return false;
+	}
+	else
+	{
+		GLDrawableList drawables = scene()->drawableList();
+		QHash<QString,GLDrawable*> hash;
+		foreach(GLDrawable *gld, drawables)
+			hash[gld->itemName()] = gld;
+			
+		if(!field.isEmpty())
+		{
+			GLDrawable *gld = hash[field];
+			if(gld)
+			{
+				const char *propName = gld->metaObject()->userProperty().name();
+				gld->setProperty(propName, m_fields[field]);
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
+		
+		bool error = false;
+		foreach(FieldInfo info, m_fieldInfoList)
+		{
+			GLDrawable *gld = hash[field];
+			if(gld)
+			{
+				const char *propName = gld->metaObject()->userProperty().name();
+				gld->setProperty(propName, m_fields[field]);
+			}
+			else
+			{
+				error = true;
+			}
+		}
+		
+		return error;
+	}
 }
 
-GLSceneType::AuditError::AuditError()
-	: item(0)
-{}
-
-QList<GLSceneType::AuditError> GLSceneType::auditTemplate(GLScene*)
+void GLSceneType::setField(QString field, QVariant data)
 {
-	return QList<GLSceneType::AuditError>();
+	m_fields[field] = data;
+	applyFieldData(field);
 }
 
-GLScene *GLSceneType::generateScene(GLScene */*sceneTemplate*/)
+GLScene *GLSceneType::generateScene(GLScene *sceneTemplate)
 {
-	return 0;
+	if(!sceneTemplate)
+		return 0;
+		
+	GLScene *scene = sceneTemplate->clone();
+	GLSceneType *type = GLSceneTypeFactory::newInstance(id());
+	
+	type->attachToScene(scene);
+	
+	return scene;
 }
 
-GLSceneType *GLSceneType::attachToScene(GLScene */*sceneTemplate*/)
+void GLSceneType::attachToScene(GLScene *scene)
 {
-	return 0;
+	if(!scene)
+		return;
+	
+	m_scene = scene;
+	scene->setSceneType(this);
+	applyFieldData();
 }
 	
 QList<QWidget*> GLSceneType::createEditorWidgets(GLScene*, DirectorWindow */*director*/)
@@ -61,19 +153,25 @@ QList<QWidget*> GLSceneType::createEditorWidgets(GLScene*, DirectorWindow */*dir
 }
 
 
-GLSceneType *GLSceneType::fromByteArray(GLScene */*sceneTemplate*/, QByteArray /*ba*/)
-{
-	return 0;
-}
-
 QByteArray GLSceneType::toByteArray()
 {
-	return QByteArray();
+	QByteArray array;
+	QDataStream stream(&array, QIODevice::WriteOnly);
+
+	QVariantMap map;
+	map["id"]	= id();
+	map["fields"]	= m_fields;
+	map["params"]	= m_params;
+	
+	stream << map;
+
+	return array;
+
 }
 
 void GLSceneType::setParam(QString param, QString value)
 {
-	m_params[param] = value;
+	setParam(param,QVariant(value));
 }
 
 void GLSceneType::setParam(QString param, QVariant value)
@@ -83,13 +181,13 @@ void GLSceneType::setParam(QString param, QVariant value)
 
 void GLSceneType::setParam(QString param, QVariantList value)
 {
-	m_params[param] = value;
+	setParam(param,QVariant(value));
 }
 
 void GLSceneType::setParams(QVariantMap map)
 {
 	foreach(QString param, map.keys())
-		m_params[param] = map.value(param);
+		setParam(param,map.value(param));
 }
 
 void GLSceneType::setLiveStatus(bool flag)
@@ -97,7 +195,8 @@ void GLSceneType::setLiveStatus(bool flag)
 	m_liveStatus = flag;
 }
 
-/// GLSceneGroupType
+//============================================================================
+//	GLSceneGroupType 
 
 GLSceneGroupType::GLSceneGroupType(QObject *parent)
 	: QObject(parent)
@@ -106,7 +205,7 @@ GLSceneGroupType::GLSceneGroupType(QObject *parent)
 	
 }
 
-QString GLSceneGroupType::id() const
+QString GLSceneGroupType::id() 
 {
 	return m_id; 
 }
@@ -121,22 +220,12 @@ QString GLSceneGroupType::description()
 	return "Undefined Scene Type";
 }
 
-QList<GLSceneType::ParameterInfo> GLSceneGroupType::parameters()
-{
-	return QList<GLSceneType::ParameterInfo>();
-}
-
-QList<GLSceneType*> GLSceneGroupType::sceneTypes()
-{
-	return QList<GLSceneType*>();
-}
-
 GLSceneGroup *GLSceneGroupType::generateGroup(GLSceneGroup */*sceneTemplate*/)
 {
 	return 0;
 }
 
-GLSceneGroupType *GLSceneGroupType::attachToGroup (GLSceneGroup */*sceneTemplate*/)
+GLSceneGroupType *GLSceneGroupType::attachToGroup (GLSceneGroup */*sceneTemplate*/, QByteArray)
 {
 	return 0;
 }
@@ -144,11 +233,6 @@ GLSceneGroupType *GLSceneGroupType::attachToGroup (GLSceneGroup */*sceneTemplate
 QList<QWidget*> GLSceneGroupType::createEditorWidgets(GLSceneGroup*, GLScene*, DirectorWindow */*director*/)
 {
 	return QList<QWidget*>();
-}
-
-GLSceneGroupType *GLSceneGroupType::fromByteArray(GLSceneGroup */*sceneTemplate*/, QByteArray /*ba*/)
-{
-	return 0;
 }
 
 QByteArray GLSceneGroupType::toByteArray()
@@ -182,11 +266,18 @@ void GLSceneGroupType::setLiveStatus(bool flag)
 	m_liveStatus = flag;
 }
 
-/// GLSceneTypeFactory
+//============================================================================
+//	GLSceneTypeFactory 
+ 
 GLSceneTypeFactory *GLSceneTypeFactory::m_inst = 0;
 
 GLSceneTypeFactory::GLSceneTypeFactory()
 {
+	#define ADD_CLASS(x) addType(new x());
+	
+	ADD_CLASS(GLSceneTypeCurrentWeather);
+	
+	#undef ADD_CLASS
 }
 
 GLSceneTypeFactory *GLSceneTypeFactory::d()
@@ -199,6 +290,46 @@ GLSceneTypeFactory *GLSceneTypeFactory::d()
 GLSceneType *GLSceneTypeFactory::lookup(QString id)
 {
 	return d()->m_lookup[id];
+}
+
+GLSceneType *GLSceneTypeFactory::newInstance(QString id)
+{
+	GLSceneType *inst = lookup(id);
+	if(!inst)
+		 return 0;
+	
+	QString className = QString(inst->metaObject()->className());
+	
+	GLSceneType *newInst = 0;
+	#define IF_CLASS(x) if(className == #x) { newInst = new x(); }
+	
+	IF_CLASS(GLSceneTypeCurrentWeather);
+	
+	#undef IF_CLASS
+	
+	return newInst;
+}
+
+GLSceneType *GLSceneTypeFactory::fromByteArray(QByteArray array, GLScene *sceneToAttach)
+{
+	if(!sceneToAttach)
+		return 0;
+		
+	QDataStream stream(&array, QIODevice::ReadOnly);
+	QVariantMap map;
+	stream >> map;
+	
+	QString id = map["id"].toString();
+	GLSceneType *type = newInstance(id);
+	if(!type)
+		return 0;
+	
+	type->m_params = map["params"].toMap();
+	type->m_fields = map["fields"].toMap();
+	
+	type->attachToScene(sceneToAttach);
+	
+	return type;
 }
 
 QList<GLSceneType*> GLSceneTypeFactory::list()
@@ -214,16 +345,18 @@ void GLSceneTypeFactory::addType(GLSceneType *type)
 	d()->m_lookup[type->id()] = type;
 }
 
-void GLSceneTypeFactory::removeType(GLSceneType *type)
-{
-	if(!type)
-		return;
-	d()->m_list.removeAll(type);
-	d()->m_lookup[type->id()] = 0;
-}
+// void GLSceneTypeFactory::removeType(GLSceneType *type)
+// {
+// 	if(!type)
+// 		return;
+// 	d()->m_list.removeAll(type);
+// 	d()->m_lookup[type->id()] = 0;
+// }
 
 
-/// GLSceneGroupTypeFactory
+//============================================================================
+//	GLSceneGroupTypeFactory
+ 
 GLSceneGroupTypeFactory *GLSceneGroupTypeFactory::m_inst = 0;
 
 GLSceneGroupTypeFactory::GLSceneGroupTypeFactory()
@@ -237,7 +370,7 @@ GLSceneGroupTypeFactory *GLSceneGroupTypeFactory::d()
 	return m_inst;
 }
 
-GLSceneGroupType *GLSceneGroupTypeFactory::lookup(QString id)
+GLSceneGroupType *GLSceneGroupTypeFactory::newInstance(QString id)
 {
 	return d()->m_lookup[id];
 }
@@ -255,11 +388,11 @@ void GLSceneGroupTypeFactory::addType(GLSceneGroupType *type)
 	d()->m_lookup[type->id()] = type;
 }
 
-void GLSceneGroupTypeFactory::removeType(GLSceneGroupType *type)
-{
-	if(!type)
-		return;
-	d()->m_list.removeAll(type);
-	d()->m_lookup[type->id()] = 0;
-}
+// void GLSceneGroupTypeFactory::removeType(GLSceneGroupType *type)
+// {
+// 	if(!type)
+// 		return;
+// 	d()->m_list.removeAll(type);
+// 	d()->m_lookup[type->id()] = 0;
+// }
 

@@ -15,6 +15,8 @@
 #include "VideoEncoder.h"
 #include "VideoSender.h"
 
+#include "GLSceneTypes.h"
+
 //#include "SharedMemorySender.h"
 #include "V4LOutput.h"
 

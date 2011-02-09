@@ -1,5 +1,5 @@
 #include "GLSceneGroup.h"
-
+#include "GLSceneGroupType.h"
 #include "GLDrawable.h"
 #include "GLWidget.h"
 
@@ -251,6 +251,7 @@ GLScene::GLScene(QObject *parent)
 	, m_duration(5.)
 	, m_autoDuration(true)
 	, m_autoSchedule(true)
+	, m_sceneType(0)
 {
 	connect(&m_fadeTimer, SIGNAL(timeout()), this, SLOT(fadeTick()));
 }
@@ -269,6 +270,7 @@ GLScene::GLScene(QByteArray& ba, QObject *parent)
 	, m_duration(5.)
 	, m_autoDuration(true)
 	, m_autoSchedule(true)
+	, m_sceneType(0)
 {
 	connect(&m_fadeTimer, SIGNAL(timeout()), this, SLOT(fadeTick()));
 	fromByteArray(ba);
@@ -329,7 +331,10 @@ QByteArray GLScene::toByteArray()
 	}
 
 	map["drawables"] = drawables;
-
+	
+	if(sceneType())
+		map["typedata"]  = sceneType()->toByteArray();
+	
 	stream << map;
 
 	return array;
@@ -414,10 +419,30 @@ void GLScene::fromByteArray(QByteArray& array)
 
 		addDrawable(drawable);
 	}
+	
+	if(map["typedata"].isValid())
+	{
+		QByteArray ba = map["typedata"].toByteArray();
+		// fromByteArray() calls our setSceneType function for us
+		GLSceneTypeFactory::fromByteArray(ba, this);
+	} 
+
+}
+
+GLScene *GLScene::clone()
+{
+	QByteArray ba = toByteArray();
+	return new GLScene(ba);
 }
 
 void GLScene::setSceneType(GLSceneType *type)
 {
+	if(m_sceneType)
+	{
+		delete m_sceneType;
+		m_sceneType = 0;
+	}
+	
 	m_sceneType = type;
 }
 

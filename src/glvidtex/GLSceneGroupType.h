@@ -67,25 +67,35 @@ public:
 	
 	
 	/** \class ParameterInfo
-		Describes a parameter that can be set on an instance of this GLSceneType.
+		Describes a parameter that can be set on an instance of this GLSceneType. See GLSceneType and GLSceneType::parameters().
 	*/ 
 	class ParameterInfo
 	{
 	public:
-		/** The constructor just initalizes ParameterInfo::required to false */
-		ParameterInfo() { required = false; } 
+		/** Setup the fields in this ParameterInfo object with the convenience of a single line of code. */
+		ParameterInfo(QString _name="", QString _title="", QString _description="", QVariant::Type _type=QVariant::Invalid, bool _required=false, const char *_slot=0) 
+		{ 
+			name		= _name;
+			title		= _title;
+			description	= _description;
+			type		= _type;
+			required	= _required;
+			slot		= _slot;
+		} 
 		
 		/** The internal name of the parameter. For example, 'zipcode' */
 		QString name;
 		/** The title of the parameter, suitable for displaying as a prompt. For example, 'Zip Code'. If blank, the title
 			is guessed from the ParameterInfo::name using PropertyEditorFactory::guessTitle() 
 			 
-			Example: 'Zip Code' */
+			Example: 'Zip Code'
+		*/
 		QString title;
 		
 		/** A description of the parameter, suitable for display as a tooltip or a 'hint' text below the field in a UI.
 		 
-		 	Example: 'The 5-digit US Postal ZIP code of the area for which to retrieve the weather. */ 
+			Example: 'The 5-digit US Postal ZIP code of the area for which to retrieve the weather.'
+		*/ 
 		QString description;
 		
 		/** The type of value expected to be provided. */
@@ -94,19 +104,29 @@ public:
 		/** Extra hints describing how this field should be displayed to the user for editing, suitable for passing to PropertyEditorFactory::generatePropertyEditor() */
 		PropertyEditorFactory::PropertyEditorOptions hints;
 		
+		/** The Qt slot on the scene which can be used to set this parameter */
+		const char *slot;
+		
 		/** If true, this parameter must be provided. Primarily for use in a UI - not currently enforced internally. */
 		bool required;
 	};
 	
 	/** \class FieldInfo
 		Describes a field that may/must be present in a scene template 
-		inorder for this scene type's logic to work properly.
+		inorder for this scene type's logic to work properly. See GLSceneType and GLSceneType::fields().
 	*/ 
 	class FieldInfo
 	{
 	public:
-		/** The constructor just initalizes FieldInfo::required to false */
-		FieldInfo() { required = false; }
+		/** Setup the fields in this FieldInfo object with the convenience of a single line of code. */
+		FieldInfo(QString _name="", QString _title="", QString _description="", QString _type="", bool _required=true)
+		{
+			name		= _name;
+			title		= _title;
+			description	= _description;
+			expectedType	= _type;
+			required	= _required;
+		};
 		
 		/** The name of this field as expected to be specified in the 'Item Name' parameter on a drawable.
 		
@@ -147,7 +167,13 @@ public:
 	{
 	public:
 		/** The constructor initalizes AuditError::item to NULL and AuditError::isWarning to false */ 
-		AuditError();
+		AuditError(QString _error="", GLDrawable *_item = 0, GLSceneType::FieldInfo _info = GLSceneType::FieldInfo(), bool _warning=false)
+		{
+			item		= _item;
+			fieldInfo 	= _info;
+			error		= _error;
+			isWarning	= _warning;
+		};
 		
 		/** The GLDrawable to which this error refers. This will be set if
 			the FieldInfo matches this drawable, but the FieldInfo::expectedType does not 
@@ -180,10 +206,19 @@ public:
  		}
 	};
 	
+	/** A convenience typedef for a list of ParameterInfo objects */
+	typedef QList<GLSceneType::ParameterInfo> ParamInfoList;
+	
+	/** A convenience typedef for a list of FieldInfo objects */
+	typedef QList<GLSceneType::FieldInfo> FieldInfoList;
+	
+	/** A convenience typedef for a list of AuditError objects */
+	typedef QList<GLSceneType::AuditError> AuditErrorList;
+	
 	/** The ID of this GLSceneType. Note this ID should not change between instances - it should uniquely identify a GLSceneType subclass, not a unique instance.
 		GLScene will store and use this ID to request an instance of this GLSceneType from GLSceneType factory. You could generate this
 		ID for your subclass using a command like \em uuidgen on linux, for example. */
-	virtual QString id() const;
+	virtual QString id();
 	
 	/** The scene type title. For example, "Current Weather Conditions" */ 
 	virtual QString title();
@@ -207,10 +242,10 @@ public:
 	virtual QList<AuditError> auditTemplate(GLScene* sceneTemplate);
 	
 	/** Returns a list of parameters that a user may configure. */
-	virtual QList<ParameterInfo> parameters(); 
+	virtual QList<ParameterInfo> parameters() { return m_paramInfoList; }
 	
 	/** Returns a list of fields that may/must be present in the template for auditTemplate() to pass the template. */
-	virtual QList<FieldInfo> fields();
+	virtual QList<FieldInfo> fields() { return m_fieldInfoList; }
 	
 	/** A GLSceneType instance is 'valid' only if its been applied/attached to a scene.
 		
@@ -237,16 +272,19 @@ public:
 		with new ID numbers for each of the drawables. Creates a new
 		instance of this scene type and calls GLScene::setSceneType() on the
 		new scene instance, and sets scene() to the new scene pointer.
+		
+		@note The GLScene will take ownership of the new GLSceneType instance and the 
+		scenetype instance will be deleted when the scene is deleted.
+		
+		@note The caller will assume ownership of the returned GLScene pointer and
+		must be responsible for deleting it when no longer needed. The caller
+		may simply add the GLScene to a GLSceneGroup, which will take care
+		of ownership of the GLScene internally.
+		
+		@param scene The template to use for making the new scene
+		@return The new GLScene created from the templates
 	*/	 
 	virtual GLScene *generateScene(GLScene *sceneTemplate);
-	
-	/** Creates a new instance of this scene type, sets scene() to the \scene
-		and calls \a scene->setSceneType() with the new instance's pointer.
-		Also sets up any fields to their initial values.
-		@param scene The scene to which to attach.
-		@return The new instance of this scene type
-	*/
-	virtual GLSceneType *attachToScene(GLScene *scene);
 	
 	/** Called by DirectorWindow to create widgets to be used to control the scene.
 		For example, for a sports broadcast scene, you might return a widget
@@ -254,20 +292,7 @@ public:
 	*/
 	virtual QList<QWidget*> createEditorWidgets(GLScene *scene, DirectorWindow *director);
 
-	/** Used in the loading of a GLScene from disk to re-attach a GLSceneType to a GLScene.
-	    Returns the new GLSceneType instance unique to the scene.
-	    Note that the \a generatedScene passed must be the same scene that called 
-	    toByteArray() because GLSceneType will store IDs of drawables on the scene
-	    into the bytearray for future reference.
-		@param scene The scene that for this scene type - will call GLScene::setSceneType
-		@param ba The byte array containing the data used to reconstitute the scene type instance
-		@return The new instance of this scene type which has been setup for the scene.
-	*/
-	virtual GLSceneType *fromByteArray(GLScene *scene, QByteArray ba);
-	
-	/** Condenses this scene type's settings
-		and the field->drawable ID pairings for the scene into a byte array.
-		Settings would be things such as, for a weather scene, possibly the zip code or other unique paramters to the type's instance.
+	/** Condenses this scene type's parameters and field data into a byte array.
 		 
 		Note that this should be called like:
 		\code
@@ -275,6 +300,21 @@ public:
 		QByteArray data = scene->sceneType()->toByteArray();
 		\endcode
 		Of course, make sure sceneType() is valid or you'll segfault.
+		
+		To restore, use and re-attach to a scene, use GLSceneTypeFactory::fromByteArray():
+		
+		\code
+		GLScene *storedScene = ...;
+		QByteArray storedData = ...;
+		
+		GLSceneTypeFactory::fromByteArray(storedData, storedScene);
+		\endcode	
+		
+		GLSceneTypeFactory::fromByteArray() will automatically create a new instance of the
+		proper subclass of GLSceneType and attach the new instance to the \em storedScene 
+		pointer given. It does return the new GLSceneType* instance, but you dont need to
+		keep it if you're just restoring from disk - GLScene will delete the instance
+		when itself is deleted.
 	*/
 	virtual QByteArray toByteArray();
 	
@@ -287,17 +327,17 @@ public:
 		You can also use generateScene() to duplicate a scene and a pointer to the new scene. The new scene will have a
 		new instance of GLSceneType on it with this method returning the same GLScene pointer - the original
 		GLSceneType instance will not be changed.
-		 
-		This is also set by using fromByteArray() to create a new instance of a type from a stored QByteArray.
 	*/	
 	virtual GLScene *scene() { return m_scene; }
 	
 	/** If true, then this scenetype (or rather, the scene ()) is currently live in a player. */ 
 	bool liveStatus() { return m_liveStatus; }
-		
+	
 public slots:
 	/** Sets the given \a param to \a value.
 		\todo Update PropertyEditorFactory::generatePropertyEditor() to be able to call a slot with the name of the property as the first argument for easy use with these generat slots.
+		Each of the setParam() variations below call this setParam(QString,QVariant) internally - therefore, you can safely override this setParam() in your subclass to intercept
+		all setParam() calls.
 	 */
 	virtual void setParam(QString param, QVariant value);
 	/** Overloaded for convenience. Sets \a param to \a value. */
@@ -313,13 +353,39 @@ public slots:
 	virtual void setLiveStatus(bool flag=true);
 	
 protected:
+	friend class GLSceneTypeFactory;
+	
+	/** Apply the field data to the scene. 
+		If \a fieldName is given, only that field is applied, otherwise all fields are applied. */
+	bool applyFieldData(QString fieldName = "");
+	
+	/** Attach this scene type to a scene.
+		@note This will modify this type - so don't use this if you're not sure this is a fresh scene type.
+		This should only be used from GLSceneTypeFactory as part of the fromByteArray() routine
+		or as part of the generateScene() routine.
+	*/
+	virtual void attachToScene(GLScene *scene);
+	
+	/** Updates the internal value of \a field to \a value. 
+		If a scene is bound, it will update the field in the scene as well. */ 
+	virtual void setField(QString field, QVariant value);
+	
 	/** The ID of the subclass. This is an empty string in the GLSceneType base class. When subclassing,
 		you should set this to a unique ID for your subclass - consider generating a uuid with a tool
 		such as \em uuidgen to ensure your ID is unique. */
 	QString m_id;
 	
+	/** A list of parameters. This list should be populated by subclasses to describe what parameters they expect. */
+	ParamInfoList m_paramInfoList;
+	
+	/** A list of fields. This list should be populated by subclasses to describe what fields they require/expect. */
+	FieldInfoList m_fieldInfoList;
+	
 	/** A list of parameter values as set by setParam() */
 	QVariantMap m_params;
+	
+	/** The current value of fields, indexed by FieldInfo::name */
+	QVariantMap m_fields;
 	
 	/** The scene to which this instance is bound */
 	GLScene *m_scene;
@@ -328,7 +394,9 @@ protected:
 	bool m_liveStatus;
 };
 
-
+/** Convenience typedef since the Q_FOREACH macro doesn't like multiple brackets ('>') inside the typde of the first argument. */ 
+typedef QList<GLSceneType *> GLSceneTypeList;
+	
 /** \class GLSceneGroupType 
 	A generic base class for group 'types'.
 	
@@ -389,7 +457,7 @@ public:
 	/** The ID of this GLSceneGroupType. Note this ID should not change between instances - it should uniquely identify a GLSceneGroupType subclass, not a unique instance.
 		GLSceneGroup will store and use this ID to request an instance of this GLSceneGroupType from GLSceneGroupTypeFactory. You could generate this
 		ID for your subclass using a command like \em uuidgen on linux, for example. */
-	virtual QString id() const;
+	virtual QString id();
 	
 	/** The group type title. For example, "Current Weather Conditions" */ 
 	virtual QString title();
@@ -398,11 +466,11 @@ public:
 	virtual QString description();
 	
 	/** Returns a list of parameters that a user may configure. */
-	virtual QList<GLSceneType::ParameterInfo> parameters();
+	virtual QList<GLSceneType::ParameterInfo> parameters() { return m_paramInfoList; }
 	
 	/** Returns a list of GLSceneType instances that will be used to configure/create the GLScene instances to be added in the final group
 		returned from generateGroup() or attachToGroup() */ 
-	virtual QList<GLSceneType *> sceneTypes();
+	virtual GLSceneTypeList sceneTypes() { return m_sceneTypeList; }
 	
 	/** A GLSceneGroupType instance is 'valid' only if its been applied/attached to a group.
 		
@@ -438,7 +506,7 @@ public:
 		@param group The group to which to attach.
 		@return The new instance of this group type
 	*/
-	virtual GLSceneGroupType *attachToGroup(GLSceneGroup *group);
+	virtual GLSceneGroupType *attachToGroup(GLSceneGroup *group, QByteArray ba = QByteArray());
 	
 	/** Called by DirectorWindow to create widgets to be used to control the group.
 		For example, for a sports broadcast group, you might return a widget
@@ -447,21 +515,7 @@ public:
 		\todo Will this conflict with the group type method of same name in normal usage?
 	*/
 	virtual QList<QWidget*> createEditorWidgets(GLSceneGroup *, GLScene*, DirectorWindow *director);
-	
 
-	/** Used in the loading of a GLSceneGroup from disk to re-attach a GLSceneGroupType to a GLSceneGroup.
-		
-		Returns the new GLSceneGroupType instance unique to the group.
-		
-		@note Note that the \a generatedScene passed must be the same group that called 
-		toByteArray() because GLSceneGroupType will store IDs of scenes in the group
-		into the bytearray for future reference.
-
-		@param group The group that for this group type - will call GLSceneGroup::setSceneType
-		@param ba The byte array containing the data used to reconstitute the group type instance
-		@return The new instance of this group type which has been setup for the group.
-	*/
-	virtual GLSceneGroupType *fromByteArray(GLSceneGroup *group, QByteArray ba);
 	
 	/** Condenses this group type's settings
 		and the field->drawable ID pairings for the group into a byte array.
@@ -511,10 +565,26 @@ public slots:
 	virtual void setLiveStatus(bool flag=true);
 	
 protected:
+	/** Used in the loading of a GLSceneGroup from disk to re-attach a GLSceneGroupType to a GLSceneGroup.
+		
+		Returns a new GLSceneGroupType instance unique to the data given.
+		
+		@param ba The byte array containing the data used to reconstitute the group type instance
+		@return The new instance of this group type which has been setup for the group.
+	*/
+	//virtual GLSceneGroupType *fromByteArray(QByteArray ba);
+		
 	/** The ID of the subclass. This is an empty string in the GLSceneType base class. When subclassing,
 		you should set this to a unique ID for your subclass - consider generating a uuid with a tool
 		such as \em uuidgen to ensure your ID is unique. */
 	QString m_id;
+	
+	
+	/** A list of parameters. This list should be populated by subclasses to describe what parameters they expect. */
+	GLSceneType::ParamInfoList m_paramInfoList;
+	
+	/** A list of scene types. This list should be populated by subclasses to describe what scene types they implement/use. */
+	GLSceneTypeList m_sceneTypeList;
 	
 	/** A list of parameter values as set by setParam() */
 	QVariantMap m_params;
@@ -527,17 +597,34 @@ protected:
 	
 };
 
+/** \class GLSceneTypeFactory
+	A simple factory for enumerating available GLSceneType subclasses and looking up subclasses by their ID.
+*/
 class GLSceneTypeFactory
 {
 	GLSceneTypeFactory();
 public:
+	/** Lookup a GLSceneType type given the ID.
+		@retval NULL if the ID is invalid or not a known scene type
+		@retval GLSceneType* if the ID is valid
+	*/
 	static GLSceneType *lookup(QString id);
-	static QList<GLSceneType*> list();
 	
-	static void addType(GLSceneType*);
-	static void removeType(GLSceneType*);
+	/** Create a new instance of the GLSceneType given the ID. */
+	static GLSceneType *newInstance(QString id);
+	
+	/** Restore a stored GLSceneType from a QByteArray produced by GLSceneType::toByteArray(). */
+	static GLSceneType *fromByteArray(QByteArray array, GLScene *sceneToAttach);
+	
+	/** List all known GLSceneType subcalsses.
+		All GLSceneGroupType pointers returned in this list are not bound to any scene - they are just to be used for informational
+		purposes. You may call the attachToScene() or generateScene() methods, both of which will duplicate the GLSceneType internally,
+		not modifying the original GLSceneType pointer.  */
+	static QList<GLSceneType*> list();
 
 private:
+	static void addType(GLSceneType*);
+
 	QList<GLSceneType*> m_list;
 	QHash<QString,GLSceneType*> m_lookup;
 
@@ -545,17 +632,27 @@ private:
 	static GLSceneTypeFactory *m_inst;
 };
 
+/** \class GLSceneGroupTypeFactory
+	A simple factory for enumerating available GLSceneGroupType subclasses and looking up subclasses by their ID.
+*/
 class GLSceneGroupTypeFactory
 {
 	GLSceneGroupTypeFactory();
 public:
-	static GLSceneGroupType *lookup(QString id);
+	/** Create a new instance of the scene type given by ID.
+		@retval NULL if the ID is invalid or not a known scene type
+		@retval GLSceneType*-subclass if the ID is valid
+	*/
+	static GLSceneGroupType *newInstance(QString id);
+	/** List all known GLSceneGroupType subcalsses.
+		All GLSceneGroupType pointers returned in this list are not bound to any group - they are just to be used for informational
+		purposes. You may call the attachToGroup() or generateGroup() methods, both of which will duplicate the GLSceneGroupType internally,
+		not modifying the original GLSceneGroupType pointer.  */
 	static QList<GLSceneGroupType*> list();
-	
-	static void addType(GLSceneGroupType*);
-	static void removeType(GLSceneGroupType*);
 
 private:
+	void addType(GLSceneGroupType*);
+	
 	QList<GLSceneGroupType*> m_list;
 	QHash<QString,GLSceneGroupType*> m_lookup;
 	

@@ -38,6 +38,7 @@ HEADERS       = GLWidget.h \
 		VideoDifferenceFilter.h \
 		FaceDetectFilter.h \
 		GLSceneGroupType.h \
+		GLSceneTypeCurrentWeather.h \
 		GLSpinnerDrawable.h \
 		QtGetOpt.h \
 		../livemix/DVizSharedMemoryThread.h \
@@ -83,7 +84,8 @@ SOURCES       = GLWidget.cpp \
 		GLSpinnerDrawable.cpp \
 		../livemix/DVizSharedMemoryThread.cpp \
 		SharedMemorySender.cpp \
-		V4LOutput.cpp
+		V4LOutput.cpp \
+		GLSceneTypeCurrentWeather.cpp
 		
 # MD5 is used for caching in GLImageDrawable
 include(../3rdparty/md5/md5.pri)
