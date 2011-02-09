@@ -379,7 +379,6 @@ void DrawableDirectorWidget::setDrawable(GLDrawable *gld)
 		QString typeName;
 	
 		PropertyEditorFactory::PropertyEditorOptions opts;
-		opts.reset();	
 		
 		setPlaylistEditingEnabled(true);
 		

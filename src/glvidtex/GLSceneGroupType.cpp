@@ -6,14 +6,14 @@
 
 GLSceneType::GLSceneType(QObject *parent)
 	: QObject(parent)
-	, m_id(-1)
+	, m_id("")
 {
 	
 }
 
-int GLSceneType::id()
+QString GLSceneType::id() const
 {
-	return m_id; /// TODO 
+	return m_id;
 }
 
 QString GLSceneType::title()
@@ -24,6 +24,16 @@ QString GLSceneType::title()
 QString GLSceneType::description()
 {
 	return "Undefined Scene Type";
+}
+
+QList<GLSceneType::ParameterInfo> GLSceneType::parameters()
+{
+	return QList<GLSceneType::ParameterInfo>();
+}
+
+QList<GLSceneType::FieldInfo> GLSceneType::fields()
+{
+	return QList<GLSceneType::FieldInfo>();
 }
 
 GLSceneType::AuditError::AuditError()
@@ -39,10 +49,26 @@ GLScene *GLSceneType::generateScene(GLScene */*sceneTemplate*/)
 {
 	return 0;
 }
+
+GLSceneType *GLSceneType::attachToScene(GLScene */*sceneTemplate*/)
+{
+	return 0;
+}
 	
 QList<QWidget*> GLSceneType::createEditorWidgets(GLScene*, DirectorWindow */*director*/)
 {
 	return QList<QWidget*>();
+}
+
+
+GLSceneType *GLSceneType::fromByteArray(GLScene */*sceneTemplate*/, QByteArray /*ba*/)
+{
+	return 0;
+}
+
+QByteArray GLSceneType::toByteArray()
+{
+	return QByteArray();
 }
 
 void GLSceneType::setParam(QString param, QString value)
@@ -66,19 +92,23 @@ void GLSceneType::setParams(QVariantMap map)
 		m_params[param] = map.value(param);
 }
 
+void GLSceneType::setLiveStatus(bool flag)
+{
+	m_liveStatus = flag;
+}
 
 /// GLSceneGroupType
 
 GLSceneGroupType::GLSceneGroupType(QObject *parent)
 	: QObject(parent)
-	, m_id(-1)
+	, m_id("")
 {
 	
 }
 
-int GLSceneGroupType::id()
+QString GLSceneGroupType::id() const
 {
-	return m_id; /// TODO 
+	return m_id; 
 }
 
 QString GLSceneGroupType::title()
@@ -91,17 +121,22 @@ QString GLSceneGroupType::description()
 	return "Undefined Scene Type";
 }
 
-GLSceneGroupType::AuditError::AuditError()
-	: scene(0)
-	, item(0)
-{}
-
-QList<GLSceneGroupType::AuditError> GLSceneGroupType::auditTemplate(GLSceneGroup*)
+QList<GLSceneType::ParameterInfo> GLSceneGroupType::parameters()
 {
-	return QList<GLSceneGroupType::AuditError>();
+	return QList<GLSceneType::ParameterInfo>();
+}
+
+QList<GLSceneType*> GLSceneGroupType::sceneTypes()
+{
+	return QList<GLSceneType*>();
 }
 
 GLSceneGroup *GLSceneGroupType::generateGroup(GLSceneGroup */*sceneTemplate*/)
+{
+	return 0;
+}
+
+GLSceneGroupType *GLSceneGroupType::attachToGroup (GLSceneGroup */*sceneTemplate*/)
 {
 	return 0;
 }
@@ -109,6 +144,16 @@ GLSceneGroup *GLSceneGroupType::generateGroup(GLSceneGroup */*sceneTemplate*/)
 QList<QWidget*> GLSceneGroupType::createEditorWidgets(GLSceneGroup*, GLScene*, DirectorWindow */*director*/)
 {
 	return QList<QWidget*>();
+}
+
+GLSceneGroupType *GLSceneGroupType::fromByteArray(GLSceneGroup */*sceneTemplate*/, QByteArray /*ba*/)
+{
+	return 0;
+}
+
+QByteArray GLSceneGroupType::toByteArray()
+{
+	return QByteArray();
 }
 
 void GLSceneGroupType::setParam(QString param, QString value)
@@ -132,6 +177,10 @@ void GLSceneGroupType::setParams(QVariantMap map)
 		m_params[param] = map.value(param);
 }
 
+void GLSceneGroupType::setLiveStatus(bool flag)
+{
+	m_liveStatus = flag;
+}
 
 /// GLSceneTypeFactory
 GLSceneTypeFactory *GLSceneTypeFactory::m_inst = 0;
@@ -147,7 +196,7 @@ GLSceneTypeFactory *GLSceneTypeFactory::d()
 	return m_inst;
 }
 
-GLSceneType *GLSceneTypeFactory::lookup(int id)
+GLSceneType *GLSceneTypeFactory::lookup(QString id)
 {
 	return d()->m_lookup[id];
 }
@@ -188,7 +237,7 @@ GLSceneGroupTypeFactory *GLSceneGroupTypeFactory::d()
 	return m_inst;
 }
 
-GLSceneGroupType *GLSceneGroupTypeFactory::lookup(int id)
+GLSceneGroupType *GLSceneGroupTypeFactory::lookup(QString id)
 {
 	return d()->m_lookup[id];
 }
