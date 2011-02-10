@@ -11,6 +11,7 @@
 GLSceneType::GLSceneType(QObject *parent)
 	: QObject(parent)
 	, m_id("")
+	, m_factoryFresh(false)
 {
 	
 }
@@ -157,9 +158,19 @@ bool GLSceneType::attachToScene(GLScene *scene)
 		return false;
 	}
 	
-	m_scene = scene;
-	scene->setSceneType(this);
-	return applyFieldData();
+	GLSceneType *type = this;
+	
+	if(type->m_factoryFresh)
+	{
+		type = GLSceneTypeFactory::newInstance(type->id());
+		type->m_fields = m_fields;
+		type->m_params = m_params;
+	}
+	
+	type->m_scene = scene;
+	scene->setSceneType(type);
+	
+	return type->applyFieldData();
 }
 	
 QList<QWidget*> GLSceneType::createEditorWidgets(GLScene*, DirectorWindow */*director*/)
@@ -304,7 +315,9 @@ GLSceneTypeFactory *GLSceneTypeFactory::d()
 
 GLSceneType *GLSceneTypeFactory::lookup(QString id)
 {
-	return d()->m_lookup[id];
+	GLSceneType *t = d()->m_lookup[id];
+	t->m_factoryFresh = true;
+	return t;
 }
 
 GLSceneType *GLSceneTypeFactory::newInstance(QString id)

@@ -296,22 +296,33 @@ public:
 	virtual GLScene *generateScene(GLScene *sceneTemplate);
 	
 	/** Attach this scene type to a scene.
-		@note This will modify this type - so don't use this if you're not sure this is a fresh scene type.
-		Current this is designed to be used from GLSceneTypeFactory as part of the fromByteArray() routine
-		or as part of the generateScene() routine. However, for testing or programtic scene type assignment,
-		you can do something like:
 		
-		\code
-			GLSceneTypeCurrentWeather *weather = new GLSceneTypeCurrentWeather();
+		@note If \em this instance of GLSceneType that you call this method on is from the GLSceneTypeFactory::lookup() routine or the GLSceneTypeFactory::list(),
+			then attachToScene() will create a new instance of this GLSceneType using GLSceneTypeFactory::newInstance() before attaching to the scene. The GLScene 
+			will take ownership of the new instance and delete it when the GLScene is deleted or a new scene type is set.
+			 
+			
+		That means that GLScene::sceneType() will return a different GLSceneType pointer than what you used to call attachToScene() on if the GLSceneType pointer is 
+		from the GLSceneTypeFactory class. The following example will cause a new instance of the scene type to be created:
+		 
+		 \code
+			// Assuming GLSceneTypeCurrentWeather.h defines GLSceneTypeCurrentWeather_ID as the ID of the class..
+			GLScene *scene = ...;
+			GLSceneTypeCurrentWeather *weather = GLSceneTypeFactory::lookup(GLSceneTypeCurrentWeather_ID);
 			weather->attachToScene(scene);
+			// Now, scene->sceneType() != weather since attachToScene() created a new instance internally
 		\endcode
 		
-		Note that you created the \em weather object directly instead of loading from the factory, it it's safe
-		to modify this object and not affect the factory pointer.
+		However, if you created GLSceneType directly as in the example below, no new instance is created:
+		
+		\code
+			GLScene *scene = ...;
+			GLSceneTypeCurrentWeather *weather = new GLSceneTypeCurrentWeather();
+			weather->attachToScene(scene);
+			// Now, scene->sceneType() = weather
+		\endcode
 		
 		Calls applyFieldData() internally to apply the current data to the fields in the template.
-		
-		\todo Consider some way of making the factory pointer COW...?
 		
 		@retval true if applyFieldData() found all the required fields
 		@retval false if applyFieldData() did not find required fields (scene is still attached though)
@@ -417,6 +428,10 @@ protected:
 	
 	/** Stores the live status of this scene type. See liveStatus() and setLiveStatus() for more information. */
 	bool m_liveStatus;
+	
+	/** GLSceneTypeFactory sets this to \em true when it returns it via GLSceneTypeFactory::lookup() so that attachToScene() knows to call GLSceneTypeFactory::newInstance() internally
+		before attaching to the scene. If this is \em false, then attachToScene() won't duplicate the instance prior to attaching */
+	bool m_factoryFresh;
 };
 
 /** Convenience typedef since the Q_FOREACH macro doesn't like multiple brackets ('>') inside the typde of the first argument. */ 
