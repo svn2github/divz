@@ -16,6 +16,7 @@ GLTextDrawable::GLTextDrawable(QString text, QObject *parent)
 	, m_dataReceived(false)
 	, m_lockScrollerRender(false)
 	, m_lockSetPlainText(false)
+	, m_lockSetText(false)
 {
 	QDateTime now = QDateTime::currentDateTime();
 	m_targetTime = QDateTime(QDate(now.date().year()+1, 12, 25), QTime(0, 0));
@@ -636,6 +637,19 @@ void GLTextDrawable::setScrollerSpeed(double x)
 
 void GLTextDrawable::setText(const QString& text)
 {
+	
+	if(!Qt::mightBeRichText(text))
+	{
+		if(m_lockSetText)
+			return;
+		m_lockSetText = true;
+	
+		setPlainText(text);
+		
+		m_lockSetText = false;
+		return;
+	}
+	
 	if(text == m_text)
 		return;
 

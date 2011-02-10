@@ -969,7 +969,10 @@ bool GLVideoDrawable::setVideoFormat(const VideoFormat& format, bool secondSourc
 			//qDebug() << "GLVideoDrawable::setVideoFormat(): \t Initalized 1 textures, no shader used";
 		}
  	}
-	m_validShader = true;
+	if(!secondSource)
+		m_validShader = true;
+	else
+		m_validShader2 = true;
 	return true;
 }
 
@@ -1446,10 +1449,10 @@ void GLVideoDrawable::updateTexture(bool secondSource)
 			updateAlignment();
 		}
 
-		if(!m_validShader)
+		if(secondSource ? !m_validShader2 : !m_validShader)
 		{
 // 			if(property("-debug").toBool())
-// 				qDebug() << "GLVideoDrawable::updateTexture(): "<<(QObject*)this<<" No valid shader, not painting";
+// 				qDebug() << "GLVideoDrawable::updateTexture(): "<<(QObject*)this<<" No valid shader, not updating, secondSource:"<<secondSource;
 			return;
 		}
 
@@ -2012,69 +2015,72 @@ void GLVideoDrawable::paintGL()
 	if(m_useShaders)
 	{
 
-		m_program->bind();
-
-		m_program->enableAttributeArray("vertexCoordArray");
-		m_program->enableAttributeArray("textureCoordArray");
-
-		m_program->setAttributeArray("vertexCoordArray",  vertexCoordArray,  2);
-		m_program->setAttributeArray("textureCoordArray", textureCoordArray, 2);
-
-		m_program->setUniformValue("positionMatrix",      positionMatrix);
-	// 	QMatrix4x4 mat4(
-	// 		positionMatrix[0][0], positionMatrix[0][1], positionMatrix[0][2], positionMatrix[0][3],
-	// 		positionMatrix[1][0], positionMatrix[1][1], positionMatrix[1][2], positionMatrix[1][3],
-	// 		positionMatrix[2][0], positionMatrix[2][1], positionMatrix[2][2], positionMatrix[2][3],
-	// 		positionMatrix[3][0], positionMatrix[3][1], positionMatrix[3][2], positionMatrix[3][3]
-	// 		);
-	// 	m_program->setUniformValue("positionMatrix",      mat4);
-
-// 		if(property("-debug").toBool())
-// 			qDebug() << "GLVideoDrawable::paintGL():"<<(QObject*)this<<": rendering with opacity:"<<opacity();
-		m_program->setUniformValue("alpha",               (GLfloat)liveOpacity);
-		m_program->setUniformValue("texOffsetX",          (GLfloat)m_invertedOffset.x());
-		m_program->setUniformValue("texOffsetY",          (GLfloat)m_invertedOffset.y());
-
-
-		if (m_textureCount == 3)
+		if(m_validShader)
 		{
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, m_textureIds[0]);
-
-			glActiveTexture(GL_TEXTURE1);
-			glBindTexture(GL_TEXTURE_2D, m_textureIds[1]);
-
-			glActiveTexture(GL_TEXTURE2);
-			glBindTexture(GL_TEXTURE_2D, m_textureIds[2]);
-
-			glActiveTexture(GL_TEXTURE3);
-			glBindTexture(GL_TEXTURE_2D, m_alphaTextureId);
-
-			glActiveTexture(GL_TEXTURE0);
-
-			m_program->setUniformValue("texY", 0);
-			m_program->setUniformValue("texU", 1);
-			m_program->setUniformValue("texV", 2);
-			m_program->setUniformValue("alphaMask", 3);
+			m_program->bind();
+	
+			m_program->enableAttributeArray("vertexCoordArray");
+			m_program->enableAttributeArray("textureCoordArray");
+	
+			m_program->setAttributeArray("vertexCoordArray",  vertexCoordArray,  2);
+			m_program->setAttributeArray("textureCoordArray", textureCoordArray, 2);
+	
+			m_program->setUniformValue("positionMatrix",      positionMatrix);
+		// 	QMatrix4x4 mat4(
+		// 		positionMatrix[0][0], positionMatrix[0][1], positionMatrix[0][2], positionMatrix[0][3],
+		// 		positionMatrix[1][0], positionMatrix[1][1], positionMatrix[1][2], positionMatrix[1][3],
+		// 		positionMatrix[2][0], positionMatrix[2][1], positionMatrix[2][2], positionMatrix[2][3],
+		// 		positionMatrix[3][0], positionMatrix[3][1], positionMatrix[3][2], positionMatrix[3][3]
+		// 		);
+		// 	m_program->setUniformValue("positionMatrix",      mat4);
+	
+	// 		if(property("-debug").toBool())
+	// 			qDebug() << "GLVideoDrawable::paintGL():"<<(QObject*)this<<": rendering with opacity:"<<opacity();
+			m_program->setUniformValue("alpha",               (GLfloat)liveOpacity);
+			m_program->setUniformValue("texOffsetX",          (GLfloat)m_invertedOffset.x());
+			m_program->setUniformValue("texOffsetY",          (GLfloat)m_invertedOffset.y());
+	
+	
+			if (m_textureCount == 3)
+			{
+				glActiveTexture(GL_TEXTURE0);
+				glBindTexture(GL_TEXTURE_2D, m_textureIds[0]);
+	
+				glActiveTexture(GL_TEXTURE1);
+				glBindTexture(GL_TEXTURE_2D, m_textureIds[1]);
+	
+				glActiveTexture(GL_TEXTURE2);
+				glBindTexture(GL_TEXTURE_2D, m_textureIds[2]);
+	
+				glActiveTexture(GL_TEXTURE3);
+				glBindTexture(GL_TEXTURE_2D, m_alphaTextureId);
+	
+				glActiveTexture(GL_TEXTURE0);
+	
+				m_program->setUniformValue("texY", 0);
+				m_program->setUniformValue("texU", 1);
+				m_program->setUniformValue("texV", 2);
+				m_program->setUniformValue("alphaMask", 3);
+			}
+			else
+			{
+				glActiveTexture(GL_TEXTURE0);
+				glBindTexture(GL_TEXTURE_2D, m_textureIds[0]);
+	
+				glActiveTexture(GL_TEXTURE1);
+				glBindTexture(GL_TEXTURE_2D, m_alphaTextureId);
+	
+				glActiveTexture(GL_TEXTURE0);
+	
+				m_program->setUniformValue("texRgb", 0);
+				m_program->setUniformValue("alphaMask", 1);
+			}
+			m_program->setUniformValue("colorMatrix", m_colorMatrix);
+	
+			glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+	
+			m_program->release();
 		}
-		else
-		{
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, m_textureIds[0]);
-
-			glActiveTexture(GL_TEXTURE1);
-			glBindTexture(GL_TEXTURE_2D, m_alphaTextureId);
-
-			glActiveTexture(GL_TEXTURE0);
-
-			m_program->setUniformValue("texRgb", 0);
-			m_program->setUniformValue("alphaMask", 1);
-		}
-		m_program->setUniformValue("colorMatrix", m_colorMatrix);
-
-		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-		m_program->release();
 
 	}
 	else
@@ -2247,69 +2253,72 @@ void GLVideoDrawable::paintGL()
 		if(m_useShaders)
 		{
 
-			m_program2->bind();
-
-			m_program2->enableAttributeArray("vertexCoordArray");
-			m_program2->enableAttributeArray("textureCoordArray");
-
-			m_program2->setAttributeArray("vertexCoordArray",  vertexCoordArray,  2);
-			m_program2->setAttributeArray("textureCoordArray", textureCoordArray, 2);
-
-			m_program2->setUniformValue("positionMatrix",      positionMatrix);
-		// 	QMatrix4x4 mat4(
-		// 		positionMatrix[0][0], positionMatrix[0][1], positionMatrix[0][2], positionMatrix[0][3],
-		// 		positionMatrix[1][0], positionMatrix[1][1], positionMatrix[1][2], positionMatrix[1][3],
-		// 		positionMatrix[2][0], positionMatrix[2][1], positionMatrix[2][2], positionMatrix[2][3],
-		// 		positionMatrix[3][0], positionMatrix[3][1], positionMatrix[3][2], positionMatrix[3][3]
-		// 		);
-		// 	m_program->setUniformValue("positionMatrix",      mat4);
-
-			//qDebug() << "GLVideoDrawable::paintGL():"<<this<<", rendering with opacity:"<<opacity();
-			m_program2->setUniformValue("alpha",               (GLfloat)fadeOpacity);
-			m_program2->setUniformValue("texOffsetX",          (GLfloat)m_invertedOffset.x());
-			m_program2->setUniformValue("texOffsetY",          (GLfloat)m_invertedOffset.y());
-
-
-			if (m_textureCount2 == 3)
+			if(m_validShader2)
 			{
-				glActiveTexture(GL_TEXTURE0);
-				glBindTexture(GL_TEXTURE_2D, m_textureIds2[0]);
-
-				glActiveTexture(GL_TEXTURE1);
-				glBindTexture(GL_TEXTURE_2D, m_textureIds2[1]);
-
-				glActiveTexture(GL_TEXTURE2);
-				glBindTexture(GL_TEXTURE_2D, m_textureIds2[2]);
-
-				glActiveTexture(GL_TEXTURE3);
-				glBindTexture(GL_TEXTURE_2D, m_alphaTextureId);
-
-				glActiveTexture(GL_TEXTURE0);
-
-				m_program->setUniformValue("texY", 0);
-				m_program->setUniformValue("texU", 1);
-				m_program->setUniformValue("texV", 2);
-				m_program->setUniformValue("alphaMask", 3);
+				m_program2->bind();
+	
+				m_program2->enableAttributeArray("vertexCoordArray");
+				m_program2->enableAttributeArray("textureCoordArray");
+	
+				m_program2->setAttributeArray("vertexCoordArray",  vertexCoordArray,  2);
+				m_program2->setAttributeArray("textureCoordArray", textureCoordArray, 2);
+	
+				m_program2->setUniformValue("positionMatrix",      positionMatrix);
+			// 	QMatrix4x4 mat4(
+			// 		positionMatrix[0][0], positionMatrix[0][1], positionMatrix[0][2], positionMatrix[0][3],
+			// 		positionMatrix[1][0], positionMatrix[1][1], positionMatrix[1][2], positionMatrix[1][3],
+			// 		positionMatrix[2][0], positionMatrix[2][1], positionMatrix[2][2], positionMatrix[2][3],
+			// 		positionMatrix[3][0], positionMatrix[3][1], positionMatrix[3][2], positionMatrix[3][3]
+			// 		);
+			// 	m_program->setUniformValue("positionMatrix",      mat4);
+	
+				//qDebug() << "GLVideoDrawable::paintGL():"<<this<<", rendering with opacity:"<<opacity();
+				m_program2->setUniformValue("alpha",               (GLfloat)fadeOpacity);
+				m_program2->setUniformValue("texOffsetX",          (GLfloat)m_invertedOffset.x());
+				m_program2->setUniformValue("texOffsetY",          (GLfloat)m_invertedOffset.y());
+	
+	
+				if (m_textureCount2 == 3)
+				{
+					glActiveTexture(GL_TEXTURE0);
+					glBindTexture(GL_TEXTURE_2D, m_textureIds2[0]);
+	
+					glActiveTexture(GL_TEXTURE1);
+					glBindTexture(GL_TEXTURE_2D, m_textureIds2[1]);
+	
+					glActiveTexture(GL_TEXTURE2);
+					glBindTexture(GL_TEXTURE_2D, m_textureIds2[2]);
+	
+					glActiveTexture(GL_TEXTURE3);
+					glBindTexture(GL_TEXTURE_2D, m_alphaTextureId);
+	
+					glActiveTexture(GL_TEXTURE0);
+	
+					m_program->setUniformValue("texY", 0);
+					m_program->setUniformValue("texU", 1);
+					m_program->setUniformValue("texV", 2);
+					m_program->setUniformValue("alphaMask", 3);
+				}
+				else
+				{
+					glActiveTexture(GL_TEXTURE0);
+					glBindTexture(GL_TEXTURE_2D, m_textureIds2[0]);
+	
+					glActiveTexture(GL_TEXTURE1);
+					glBindTexture(GL_TEXTURE_2D, m_alphaTextureId);
+	
+					glActiveTexture(GL_TEXTURE0);
+	
+					m_program->setUniformValue("texRgb", 0);
+					m_program->setUniformValue("alphaMask", 1);
+				}
+				m_program->setUniformValue("colorMatrix", m_colorMatrix);
+	
+	//			if(fadeOpacity > 0.001)
+					glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+	
+				m_program->release();
 			}
-			else
-			{
-				glActiveTexture(GL_TEXTURE0);
-				glBindTexture(GL_TEXTURE_2D, m_textureIds2[0]);
-
-				glActiveTexture(GL_TEXTURE1);
-				glBindTexture(GL_TEXTURE_2D, m_alphaTextureId);
-
-				glActiveTexture(GL_TEXTURE0);
-
-				m_program->setUniformValue("texRgb", 0);
-				m_program->setUniformValue("alphaMask", 1);
-			}
-			m_program->setUniformValue("colorMatrix", m_colorMatrix);
-
-//			if(fadeOpacity > 0.001)
-				glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-			m_program->release();
 
 		}
 		else

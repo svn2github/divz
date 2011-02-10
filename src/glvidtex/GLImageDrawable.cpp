@@ -50,6 +50,7 @@ void GLImageDrawable::setImage(const QImage& image, bool insidePaint)
 	   !insidePaint)
 	{
  		m_frame2 = m_frame;
+ 		//qDebug() << "GLImageDrawable::setImage(): Starting crossfade with m_frame2";
 		//m_frame2 = VideoFramePtr(new VideoFrame(m_image,1000/30));
 		updateTexture(true); // true = read from m_frame2
 		xfadeStart();
@@ -68,6 +69,7 @@ void GLImageDrawable::setImage(const QImage& image, bool insidePaint)
 	
 	if(1)
 	{
+		//qDebug() << "GLImageDrawable::setImage(): Setting new m_frame";
 		m_frame = VideoFramePtr(new VideoFrame(localImage, 1000/30));
 	}
 	else

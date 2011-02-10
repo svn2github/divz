@@ -2,7 +2,6 @@
 #include "GLSceneGroupType.h"
 #include "GLSceneGroup.h"
 #include "GLDrawable.h"
-#include "GLTextDrawable.h"
 #include "GLSceneTypes.h"
 
 
@@ -91,13 +90,8 @@ bool GLSceneType::applyFieldData(QString field)
 			if(gld)
 			{
 				const char *propName = gld->metaObject()->userProperty().name();
-				if(QString(propName) == "text" && 
-					dynamic_cast<GLTextDrawable*>(gld) && 
-					!Qt::mightBeRichText(m_fields[field].toString()))
-					propName = "plainText";
-					
 				gld->setProperty(propName, m_fields[field]);
-				qDebug() << "GLSceneType::applyFieldData("<<field<<"): Set field:"<<field<<", property:"<<propName<<", data:"<<m_fields[field];
+				//qDebug() << "GLSceneType::applyFieldData("<<field<<"): Set field:"<<field<<", property:"<<propName<<", data:"<<m_fields[field];
 				return true;
 			}
 			else
@@ -114,13 +108,8 @@ bool GLSceneType::applyFieldData(QString field)
 			if(gld)
 			{
 				const char *propName = gld->metaObject()->userProperty().name();
-				if(QString(propName) == "text" && 
-					dynamic_cast<GLTextDrawable*>(gld) && 
-					!Qt::mightBeRichText(m_fields[field].toString()))
-					propName = "plainText";
-					
 				gld->setProperty(propName, m_fields[field]);
-				qDebug() << "GLSceneType::applyFieldData("<<field<<"): Set field:"<<info.name<<", property:"<<propName<<", data:"<<m_fields[field];
+				//qDebug() << "GLSceneType::applyFieldData("<<field<<"): Set field:"<<info.name<<", property:"<<propName<<", data:"<<m_fields[field];
 			}
 			else
 			{

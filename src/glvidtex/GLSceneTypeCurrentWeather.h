@@ -23,7 +23,7 @@
 			- Example: Partly Cloudy
 		- Temp
 			- Text
-			- Example: 9*F
+			- Example: 9*
 		- Icon
 			- Svg
 		- Wind
@@ -36,6 +36,10 @@
 class GLSceneTypeCurrentWeather : public GLSceneType
 {
 	Q_OBJECT
+	
+	Q_PROPERTY(QString location READ location WRITE setLocation);
+	Q_PROPERTY(int updateTime READ updateTime WRITE setUpdateTime);
+	
 public:
 	GLSceneTypeCurrentWeather(QObject *parent=0);
 	virtual ~GLSceneTypeCurrentWeather() {};
@@ -68,6 +72,8 @@ private slots:
 	void requestData(const QString &location);
 	void handleNetworkData(QNetworkReply *networkReply);
 	void parseData(const QString &data);
+
+private:
 	QString extractIcon(const QString &data);
 	
 private:

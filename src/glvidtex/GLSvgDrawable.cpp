@@ -6,9 +6,10 @@ GLSvgDrawable::GLSvgDrawable(QString file, QObject *parent)
 	: GLImageDrawable("",parent)
 {
 	m_renderer = new QSvgRenderer(this);
-	connect(m_renderer, SIGNAL(repaintNeeded()), this, SLOT(renderSvg()));
+	//connect(m_renderer, SIGNAL(repaintNeeded()), this, SLOT(renderSvg()));
 	
-	setImage(QImage("dot.gif"));
+	setImage(QImage("Pm5544.jpg"));
+	//setImage(QImage("dot.gif"));
 	
 	connect(&m_updateTimer, SIGNAL(timeout()), this, SLOT(renderSvg()));
 	m_updateTimer.setInterval(250);
@@ -43,10 +44,12 @@ bool GLSvgDrawable::setImageFile(const QString& file)
 
 
 	m_renderer->load(file);
-	qDebug() << "GLSvgDrawable::setImageFile: Loaded SVG file:"<<file<<", is valid?"<<m_renderer->isValid()<<", is animated?"<<m_renderer->animated();
+	//qDebug() << "GLSvgDrawable::setImageFile: Loaded SVG file:"<<file<<", is valid?"<<m_renderer->isValid()<<", is animated?"<<m_renderer->animated();
 	
 	internalSetFilename(file);
 	renderSvg();
+	
+	return true;
 }
 
 void GLSvgDrawable::renderSvg()
@@ -71,11 +74,14 @@ void GLSvgDrawable::renderSvg()
 	QPainter painter(&image);
 	m_renderer->render(&painter);//, m_renderer->viewBoxF());
 	painter.end();
+	
 	//qDebug() << "GLSvgDrawable::renderSvg: Rendered image, size:"<<image.size();
 	
 	//image = makeHistogram(image);
 	
 	setImage(image); 
+	
+	//qDebug() << "GLSvgDrawable::renderSvg: Done from setimage";
 }
 
 void GLSvgDrawable::drawableResized(const QSizeF& newSize)
@@ -88,6 +94,7 @@ void GLSvgDrawable::drawableResized(const QSizeF& newSize)
 	if(m_updateTimer.isActive())
 		m_updateTimer.stop();
 	m_updateTimer.start();	
+	//qDebug() << "GLSvgDrawable::drawableResized(): New size:"<<newSize;
 	GLVideoDrawable::drawableResized(newSize);
 }
 

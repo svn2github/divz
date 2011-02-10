@@ -209,7 +209,7 @@ void GLSceneTypeCurrentWeather::parseData(const QString &data)
 							QString s = GET_DATA_ATTR + QChar(176);
 							setField("temp", s);
 						}
-						if (xml.name() == "wind_condition ") 
+						if (xml.name() == "wind_condition") 
 						{
 							setField("winds", GET_DATA_ATTR);
 						}

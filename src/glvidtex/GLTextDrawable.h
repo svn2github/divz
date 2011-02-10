@@ -157,6 +157,8 @@ private:
 	};
 	
 	QList<ScrollableItem> m_scrollItems;
+	
+	bool m_lockSetText;
 };
 
 #endif
