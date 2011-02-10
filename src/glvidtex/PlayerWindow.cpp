@@ -440,6 +440,24 @@ void PlayerWindow::loadConfig(const QString& configFile, bool verbose)
 					GLScene *scene = m_group->at(0);
 					if(scene)
 					{
+						
+						GLSceneTypeCurrentWeather *weather = new GLSceneTypeCurrentWeather();
+						weather->setLocation("47390");
+						GLSceneType::AuditErrorList errors = weather->auditTemplate(scene);
+						if(!errors.isEmpty())
+						{
+							qDebug() << "PlayerWindow: [DEBUG]: Errors found attaching weather type to scene:";
+							foreach(GLSceneType::AuditError error, errors)
+							{
+								qDebug() << "PlayerWindow: [DEBUG]: \t" << error.toString(); 
+							}
+						}
+						
+						if(!weather->attachToScene(scene))
+						{
+							qDebug() << "PlayerWindow: [DEBUG]: weather->attachToScene() returned FALSE";
+						}
+						
 						//scene->setGLWidget(this);
 						displayScene(scene);
 						qDebug() << "PlayerWindow: [DEBUG]: Loaded File: "<<loadGroup<<", GroupID: "<<m_group->groupId()<<", SceneID: "<< scene->sceneId();
@@ -447,7 +465,6 @@ void PlayerWindow::loadConfig(const QString& configFile, bool verbose)
 						if(m_outputEncoder &&
 						  !m_outputEncoder->encodingStarted())
 							m_outputEncoder->startEncoder();
-
 					}
 					else
 					{
@@ -1099,6 +1116,9 @@ void PlayerWindow::displayScene(GLScene *scene)
 
 	m_oldScene = m_scene;
 	m_scene = scene;
+	
+	if(scene->sceneType())
+		scene->sceneType()->setLiveStatus(true);
 
 	GLDrawableList newSceneList = m_scene->drawableList();
 
@@ -1191,7 +1211,6 @@ void PlayerWindow::displayScene(GLScene *scene)
 		if(gld->playlist()->size() > 0)
 			gld->playlist()->play();
 	
-	
 }
 
 void PlayerWindow::opacityAnimationFinished()
@@ -1219,6 +1238,10 @@ void PlayerWindow::opacityAnimationFinished()
 	}
 
 	disconnect(m_oldScene, 0, this, 0);
+	
+	if(m_oldScene->sceneType())
+		m_oldScene->sceneType()->setLiveStatus(false);
+		
 	m_oldScene = 0;
 }
 

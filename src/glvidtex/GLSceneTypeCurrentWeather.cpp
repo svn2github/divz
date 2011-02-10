@@ -25,7 +25,7 @@ GLSceneTypeCurrentWeather::GLSceneTypeCurrentWeather(QObject *parent)
 		<< FieldInfo("icon", 
 			"Weather Icon", 
 			"A scalable vector graphic (SVG) icon representing the current weather conditions.", 
-			"Image", 
+			"Svg", 
 			true)
 		
 		<< FieldInfo("location", 
@@ -33,7 +33,6 @@ GLSceneTypeCurrentWeather::GLSceneTypeCurrentWeather(QObject *parent)
 			"The normalized location description given by the server, such as 'Chicago, IL'", 
 			"Text", 
 			false)
-			
 		;
 		
 	m_paramInfoList
@@ -42,10 +41,17 @@ GLSceneTypeCurrentWeather::GLSceneTypeCurrentWeather(QObject *parent)
 			"Can be a ZIP code or a location name (Chicago, IL)",
 			QVariant::String,
 			true,
-			SLOT(setLocation(const QString&)));
+			SLOT(setLocation(const QString&)))
+			
+		<< ParameterInfo("updateTime",
+			"Update Time",
+			"Time in seconds to wait between updates",
+			QVariant::Int,
+			true,
+			SLOT(setUpdateTime(int)));
 			
 	connect(&m_reloadTimer, SIGNAL(timeout()), this, SLOT(reloadData()));
-	m_reloadTimer.setInterval(15 * 60 * 1000); // every 15 minutes
+	m_reloadTimer.setInterval(1 * 60 * 1000); // every 1 minute
 			
 }
 
@@ -54,7 +60,14 @@ void GLSceneTypeCurrentWeather::setLiveStatus(bool flag)
 	GLSceneType::setLiveStatus(flag);
 	
 	if(flag)
+	{
+		m_reloadTimer.start();
 		applyFieldData();
+	}
+	else
+	{
+		m_reloadTimer.stop();
+	}
 }
 
 void GLSceneTypeCurrentWeather::setParam(QString param, QVariant value)
@@ -63,6 +76,9 @@ void GLSceneTypeCurrentWeather::setParam(QString param, QVariant value)
 	
 	if(param == "location")
 		reloadData();
+	else
+	if(param == "updateTime")
+		m_reloadTimer.setInterval(value.toInt() * 1000); 
 }
 
 void GLSceneTypeCurrentWeather::reloadData()
@@ -75,11 +91,22 @@ void GLSceneTypeCurrentWeather::requestData(const QString &location)
 	QUrl url("http://www.google.com/ig/api");
 	url.addEncodedQueryItem("hl", "en");
 	url.addEncodedQueryItem("weather", QUrl::toPercentEncoding(location));
+	
+	qDebug() << "GLSceneTypeCurrentWeather::requestData("<<location<<"): url:"<<url;
 
 	QNetworkAccessManager *manager = new QNetworkAccessManager(this);
 	connect(manager, SIGNAL(finished(QNetworkReply*)),
 		this, SLOT(handleNetworkData(QNetworkReply*)));
 	manager->get(QNetworkRequest(url));
+}
+
+void GLSceneTypeCurrentWeather::handleNetworkData(QNetworkReply *networkReply) 
+{
+	QUrl url = networkReply->url();
+	if (!networkReply->error())
+		parseData(QString::fromUtf8(networkReply->readAll()));
+	networkReply->deleteLater();
+	networkReply->manager()->deleteLater();
 }
 
 QString GLSceneTypeCurrentWeather::extractIcon(const QString &data) 
@@ -139,6 +166,7 @@ QString GLSceneTypeCurrentWeather::extractIcon(const QString &data)
 
 void GLSceneTypeCurrentWeather::parseData(const QString &data) 
 {
+	qDebug() << "GLSceneTypeCurrentWeather::parseData()";
 	QString unitSystem;
 
 	QXmlStreamReader xml(data);

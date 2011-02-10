@@ -84,6 +84,11 @@ TODO:
 		- Director: When text drawable in scroller mode, adding an item to the playlist after typing in th text box does not work
 		- Director: Cannot pause playlist while scroller mode active
 		
+		- Editor: Extreem errors when LMB-dragging - frequently jumps way out of place
+		- Editor: CPU usage seems to increase when dragging or clicking by a huge amount
+		- Editor: New items get a zero Z index - should be max+1
+		- Editor: SVG item (and others) imgage jumps when resize (resize, image moves correctly, stop resize, image "jumps" back to old spot, then jumps to correct new spot)
+		
 		
 	NEEDED FEATURES:
 		- Slide types - for rendering the automatic slides

@@ -10,6 +10,7 @@
 	
 	Parameters:
 		- Location - Can be a ZIP code or a location name (Chicago, IL)
+		- UpdateTime - Time in seconds to wait between reloading the weather data from the server
 	 
 	Fields Required:
 		- Location
@@ -24,7 +25,7 @@
 			- Text
 			- Example: 9*F
 		- Icon
-			- Image
+			- Svg
 		- Wind
 			- Text
 			- Example: Wind: SW at 9 mph
@@ -44,6 +45,7 @@ public:
 	virtual QString description()	{ return "Displays the current weather conditions (wind, temperature, cloud cover) for a given location."; }
 	
 	QString location() { return m_params["location"].toString(); }
+	int updateTime() { return m_params["updateTime"].toInt(); }
 	
 public slots:
 	virtual void setLiveStatus (bool flag=true);
@@ -55,11 +57,14 @@ public slots:
 		\a local may be any valid location descriptor accepted by Google, 
 		such as a zip/postal code, a city/state pair such as "Chicago, IL", etc. */
 	void setLocation(const QString& local) { setParam("location", local); }
+	
+	/** Set the time to wait between updates to \a seconds */
+	void setUpdateTime(int seconds) { setParam("updateTime", seconds); }
 		
 	/** Reload the weather data for the current 'location' parameter. */
 	void reloadData();
 	
-private:
+private slots:
 	void requestData(const QString &location);
 	void handleNetworkData(QNetworkReply *networkReply);
 	void parseData(const QString &data);

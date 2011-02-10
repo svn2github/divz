@@ -2,7 +2,7 @@
 #include "GLSceneGroupType.h"
 #include "GLSceneGroup.h"
 #include "GLDrawable.h"
-
+#include "GLTextDrawable.h"
 #include "GLSceneTypes.h"
 
 
@@ -43,11 +43,11 @@ QList<GLSceneType::AuditError> GLSceneType::auditTemplate(GLScene *scene)
 		GLDrawableList drawables = scene->drawableList();
 		QHash<QString,GLDrawable*> hash;
 		foreach(GLDrawable *gld, drawables)
-			hash[gld->itemName()] = gld;
+			hash[gld->itemName().toLower()] = gld;
 			
 		foreach(FieldInfo info, m_fieldInfoList)
 		{
-			if(hash.contains(info.name))
+			if(hash.contains(info.name.toLower()))
 			{
 				QString type = info.expectedType;
 				if(!type.startsWith("GL"))
@@ -75,6 +75,7 @@ bool GLSceneType::applyFieldData(QString field)
 {
 	if(!scene())
 	{
+		qDebug() << "GLSceneType::applyFieldData("<<field<<"): No scene bound, nothing done.";
 		return false;
 	}
 	else
@@ -82,45 +83,63 @@ bool GLSceneType::applyFieldData(QString field)
 		GLDrawableList drawables = scene()->drawableList();
 		QHash<QString,GLDrawable*> hash;
 		foreach(GLDrawable *gld, drawables)
-			hash[gld->itemName()] = gld;
+			hash[gld->itemName().toLower()] = gld;
 			
 		if(!field.isEmpty())
 		{
-			GLDrawable *gld = hash[field];
+			GLDrawable *gld = hash[field.toLower()];
 			if(gld)
 			{
 				const char *propName = gld->metaObject()->userProperty().name();
+				if(QString(propName) == "text" && 
+					dynamic_cast<GLTextDrawable*>(gld) && 
+					!Qt::mightBeRichText(m_fields[field].toString()))
+					propName = "plainText";
+					
 				gld->setProperty(propName, m_fields[field]);
+				qDebug() << "GLSceneType::applyFieldData("<<field<<"): Set field:"<<field<<", property:"<<propName<<", data:"<<m_fields[field];
 				return true;
 			}
 			else
 			{
+				qDebug() << "GLSceneType::applyFieldData("<<field<<"): Unable to find requested field:"<<field;
 				return false;
 			}
 		}
 		
-		bool error = false;
+		bool ok = true;
 		foreach(FieldInfo info, m_fieldInfoList)
 		{
-			GLDrawable *gld = hash[field];
+			GLDrawable *gld = hash[info.name.toLower()];
 			if(gld)
 			{
 				const char *propName = gld->metaObject()->userProperty().name();
+				if(QString(propName) == "text" && 
+					dynamic_cast<GLTextDrawable*>(gld) && 
+					!Qt::mightBeRichText(m_fields[field].toString()))
+					propName = "plainText";
+					
 				gld->setProperty(propName, m_fields[field]);
+				qDebug() << "GLSceneType::applyFieldData("<<field<<"): Set field:"<<info.name<<", property:"<<propName<<", data:"<<m_fields[field];
 			}
 			else
 			{
-				error = true;
+				if(info.required)
+				{
+					qDebug() << "GLSceneType::applyFieldData("<<field<<"): Unable to find required field:"<<info.name;
+					ok = false;
+				}
 			}
 		}
 		
-		return error;
+		return ok;
 	}
 }
 
 void GLSceneType::setField(QString field, QVariant data)
 {
 	m_fields[field] = data;
+	qDebug() << "GLSceneType::setField(): field:"<<field<<", data:"<<data; 
 	applyFieldData(field);
 }
 
@@ -132,19 +151,26 @@ GLScene *GLSceneType::generateScene(GLScene *sceneTemplate)
 	GLScene *scene = sceneTemplate->clone();
 	GLSceneType *type = GLSceneTypeFactory::newInstance(id());
 	
-	type->attachToScene(scene);
+	if(!type->attachToScene(scene))
+	{
+		delete scene;
+		return 0;
+	}
 	
 	return scene;
 }
 
-void GLSceneType::attachToScene(GLScene *scene)
+bool GLSceneType::attachToScene(GLScene *scene)
 {
 	if(!scene)
-		return;
+	{
+		qDebug() << "GLSceneType::attachToScene(): Given scene pointer is NULL";
+		return false;
+	}
 	
 	m_scene = scene;
 	scene->setSceneType(this);
-	applyFieldData();
+	return applyFieldData();
 }
 	
 QList<QWidget*> GLSceneType::createEditorWidgets(GLScene*, DirectorWindow */*director*/)
@@ -320,6 +346,7 @@ GLSceneType *GLSceneTypeFactory::fromByteArray(QByteArray array, GLScene *sceneT
 	stream >> map;
 	
 	QString id = map["id"].toString();
+	
 	GLSceneType *type = newInstance(id);
 	if(!type)
 		return 0;

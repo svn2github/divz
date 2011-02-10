@@ -192,6 +192,12 @@ public:
 			in the template, but the FieldInfo::required field is false. */
  		bool isWarning;
  		
+ 		/** Convenience method to quickly stringify the relevant information from this error for output to console or other output. */
+ 		QString toString()
+ 		{
+ 			return QString("[%1] %2 %3").arg(isWarning ? "WARN" : "ERROR").arg(error).arg(!fieldInfo.name.isEmpty() ? QString("(Field '%1')").arg(fieldInfo.name) : ""); 
+ 		}
+ 		
  		/** A static utility function that can be used to easily check the output of GLSceneType::auditTemplate() to see if 
  			the list of errors returned has any erorrs or is just warnings.
  			
@@ -281,10 +287,36 @@ public:
 		may simply add the GLScene to a GLSceneGroup, which will take care
 		of ownership of the GLScene internally.
 		
+		Calls attachToScene() internally with the new GLScene instance to setup the scene and scene type.
+		
 		@param scene The template to use for making the new scene
-		@return The new GLScene created from the templates
+		@return The new GLScene created from the templates (assuming attachToScene() likes the new template)
+		@retval NULL if attachToScene() returns false.
 	*/	 
 	virtual GLScene *generateScene(GLScene *sceneTemplate);
+	
+	/** Attach this scene type to a scene.
+		@note This will modify this type - so don't use this if you're not sure this is a fresh scene type.
+		Current this is designed to be used from GLSceneTypeFactory as part of the fromByteArray() routine
+		or as part of the generateScene() routine. However, for testing or programtic scene type assignment,
+		you can do something like:
+		
+		\code
+			GLSceneTypeCurrentWeather *weather = new GLSceneTypeCurrentWeather();
+			weather->attachToScene(scene);
+		\endcode
+		
+		Note that you created the \em weather object directly instead of loading from the factory, it it's safe
+		to modify this object and not affect the factory pointer.
+		
+		Calls applyFieldData() internally to apply the current data to the fields in the template.
+		
+		\todo Consider some way of making the factory pointer COW...?
+		
+		@retval true if applyFieldData() found all the required fields
+		@retval false if applyFieldData() did not find required fields (scene is still attached though)
+	*/
+	virtual bool attachToScene(GLScene *scene);
 	
 	/** Called by DirectorWindow to create widgets to be used to control the scene.
 		For example, for a sports broadcast scene, you might return a widget
@@ -358,13 +390,6 @@ protected:
 	/** Apply the field data to the scene. 
 		If \a fieldName is given, only that field is applied, otherwise all fields are applied. */
 	bool applyFieldData(QString fieldName = "");
-	
-	/** Attach this scene type to a scene.
-		@note This will modify this type - so don't use this if you're not sure this is a fresh scene type.
-		This should only be used from GLSceneTypeFactory as part of the fromByteArray() routine
-		or as part of the generateScene() routine.
-	*/
-	virtual void attachToScene(GLScene *scene);
 	
 	/** Updates the internal value of \a field to \a value. 
 		If a scene is bound, it will update the field in the scene as well. */ 
