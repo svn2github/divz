@@ -57,12 +57,12 @@ QList<GLSceneType::AuditError> GLSceneType::auditTemplate(GLScene *scene)
 				QString className = QString(hash[info.name]->metaObject()->className());
 				if(className != type)
 				{
-					list << AuditError(QString("Item '%1' has wrong type - expected '%1', found '%2'").arg(info.name).arg(type).arg(className), 0, info, info.required);
+					list << AuditError(QString("Item '%1' has wrong type - expected '%1', found '%2'").arg(info.name).arg(type).arg(className), 0, info, !info.required);
 				}
 			}
 			else
 			{
-				list << AuditError(QString("Cannot find field '%1'").arg(info.name), 0, info, info.required);
+				list << AuditError(QString("Cannot find field '%1'").arg(info.name), 0, info, !info.required);
 			}
 		}
 	}

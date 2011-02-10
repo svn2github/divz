@@ -73,7 +73,7 @@ public:
 	{
 	public:
 		/** Setup the fields in this ParameterInfo object with the convenience of a single line of code. */
-		ParameterInfo(QString _name="", QString _title="", QString _description="", QVariant::Type _type=QVariant::Invalid, bool _required=false, const char *_slot=0) 
+		ParameterInfo(QString _name="", QString _title="", QString _description="", QVariant::Type _type=QVariant::Invalid, bool _required=true, const char *_slot=0) 
 		{ 
 			name		= _name;
 			title		= _title;

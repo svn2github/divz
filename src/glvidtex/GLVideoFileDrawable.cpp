@@ -10,7 +10,9 @@
 GLVideoFileDrawable::GLVideoFileDrawable(QString file, QObject *parent)
 	: GLVideoDrawable(parent)
 	, m_videoLength(-1)
+#ifdef HAS_QT_VIDEO_SOURCE
 	, m_qtSource(0)
+#endif
 {
 	if(!file.isEmpty())
 		setVideoFile(file);
@@ -82,6 +84,7 @@ bool GLVideoFileDrawable::setVideoFile(const QString& file)
 	
 }
 
+#ifdef HAS_QT_VIDEO_SOURCE
 void GLVideoFileDrawable::durationChanged ( qint64 duration )
 {
 	duration /= 1000;
@@ -106,6 +109,7 @@ void GLVideoFileDrawable::stateChanged ( QMediaPlayer::State state )
 		//	qDebug() << "GLVideoFileDrawable::stateChanged: "<<m_videoFile<<" Stopped, but no playlist going to move on in.";
 	}
 }
+#endif
 
 double GLVideoFileDrawable::videoLength()
 {

@@ -48,7 +48,12 @@ public:
 	virtual QString title()		{ return "Current Weather Conditions"; }
 	virtual QString description()	{ return "Displays the current weather conditions (wind, temperature, cloud cover) for a given location."; }
 	
+	/** Returns the current location parameter value.
+		\sa setLocation() */
 	QString location() { return m_params["location"].toString(); }
+	
+	/** Returns the current update time parameter value.
+		\sa setUpdateTime() */
 	int updateTime() { return m_params["updateTime"].toInt(); }
 	
 public slots:

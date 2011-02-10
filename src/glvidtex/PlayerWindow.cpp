@@ -440,9 +440,9 @@ void PlayerWindow::loadConfig(const QString& configFile, bool verbose)
 					GLScene *scene = m_group->at(0);
 					if(scene)
 					{
-						
 						GLSceneTypeCurrentWeather *weather = new GLSceneTypeCurrentWeather();
 						weather->setLocation("47390");
+						
 						GLSceneType::AuditErrorList errors = weather->auditTemplate(scene);
 						if(!errors.isEmpty())
 						{

@@ -63,8 +63,10 @@ protected:
 private:
 	QString m_videoFile;
 	double m_videoLength;
-	
+#ifdef HAS_QT_VIDEO_SOURCE	
 	QtVideoSource * m_qtSource;
+#endif
+
 };
 
 #endif
