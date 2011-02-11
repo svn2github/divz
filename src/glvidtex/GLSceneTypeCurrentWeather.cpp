@@ -45,13 +45,26 @@ GLSceneTypeCurrentWeather::GLSceneTypeCurrentWeather(QObject *parent)
 			
 		<< ParameterInfo("updateTime",
 			"Update Time",
-			"Time in seconds to wait between updates",
+			"Time in minutes to wait between updates",
 			QVariant::Int,
 			true,
 			SLOT(setUpdateTime(int)));
 			
+	PropertyEditorFactory::PropertyEditorOptions opts;
+	
+	opts.reset();
+	opts.maxLength = 9;
+	m_paramInfoList[0].hints = opts;
+	 
+	opts.reset();
+	opts.min = 1;
+	opts.max = 15;
+	m_paramInfoList[1].hints = opts;
+	
 	connect(&m_reloadTimer, SIGNAL(timeout()), this, SLOT(reloadData()));
-	m_reloadTimer.setInterval(1 * 60 * 1000); // every 1 minute
+	//m_reloadTimer.setInterval(1 * 60 * 1000); // every 1 minute
+	//setParam
+	setParam("updateTime", 1);
 			
 }
 
@@ -78,7 +91,7 @@ void GLSceneTypeCurrentWeather::setParam(QString param, QVariant value)
 		reloadData();
 	else
 	if(param == "updateTime")
-		m_reloadTimer.setInterval(value.toInt() * 1000); 
+		m_reloadTimer.setInterval(value.toInt() * 60 * 1000);
 }
 
 void GLSceneTypeCurrentWeather::reloadData()

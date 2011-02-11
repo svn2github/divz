@@ -8,6 +8,8 @@ class GLScene;
 class GLSceneGroup;
 class DirectorWindow;
 
+#include "GLSceneGroup.h"
+
 #include "../livemix/EditorUtilityWidgets.h"
 
 /** \class GLSceneType 
@@ -272,7 +274,7 @@ public:
 		\sa attachToScene()
 		\sa generateScene()
 	*/ 
-	virtual bool isValidInstance() { return m_scene != NULL; }
+	virtual bool isValidInstance() { return m_scene.isNull(); }
 
 	/** Duplicates the \a sceneTemplate and generates a new GLScene instance 
 		with new ID numbers for each of the drawables. Creates a new
@@ -371,7 +373,7 @@ public:
 		new instance of GLSceneType on it with this method returning the same GLScene pointer - the original
 		GLSceneType instance will not be changed.
 	*/	
-	virtual GLScene *scene() { return m_scene; }
+	virtual GLScene *scene() { return (GLScene*)m_scene; }
 	
 	/** If true, then this scenetype (or rather, the scene ()) is currently live in a player. */ 
 	bool liveStatus() { return m_liveStatus; }
@@ -424,7 +426,7 @@ protected:
 	QVariantMap m_fields;
 	
 	/** The scene to which this instance is bound */
-	GLScene *m_scene;
+	QPointer<GLScene> m_scene;
 	
 	/** Stores the live status of this scene type. See liveStatus() and setLiveStatus() for more information. */
 	bool m_liveStatus;
@@ -663,7 +665,7 @@ public:
 	static QList<GLSceneType*> list();
 
 private:
-	static void addType(GLSceneType*);
+// 	static void addType(GLSceneType*);
 
 	QList<GLSceneType*> m_list;
 	QHash<QString,GLSceneType*> m_lookup;

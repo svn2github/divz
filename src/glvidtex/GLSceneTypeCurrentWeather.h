@@ -10,7 +10,7 @@
 	
 	Parameters:
 		- Location - Can be a ZIP code or a location name (Chicago, IL)
-		- UpdateTime - Time in seconds to wait between reloading the weather data from the server
+		- UpdateTime - Time in minutes to wait between reloading the weather data from the server
 	 
 	Fields Required:
 		- Location
@@ -67,8 +67,8 @@ public slots:
 		such as a zip/postal code, a city/state pair such as "Chicago, IL", etc. */
 	void setLocation(const QString& local) { setParam("location", local); }
 	
-	/** Set the time to wait between updates to \a seconds */
-	void setUpdateTime(int seconds) { setParam("updateTime", seconds); }
+	/** Set the time to wait between updates to \a minutes */
+	void setUpdateTime(int minutes) { setParam("updateTime", minutes); }
 		
 	/** Reload the weather data for the current 'location' parameter. */
 	void reloadData();

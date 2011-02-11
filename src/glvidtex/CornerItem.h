@@ -19,6 +19,8 @@
 #include <QPointF>
 class GLDrawable;
 
+#define GRID_SIZE 10
+
 class CornerItem : public QGraphicsItem
 {
     public:
@@ -61,6 +63,8 @@ class CornerItem : public QGraphicsItem
         int m_defaultRightOp;
         double m_startRatio;
         QPointF m_startPos;
+        QPointF m_startScenePos;
+        QRectF m_startRect;
 };
 
 #endif

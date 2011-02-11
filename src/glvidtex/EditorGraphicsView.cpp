@@ -1,12 +1,42 @@
 #include "EditorGraphicsView.h"
 
+#include <QCommonStyle>
+class RubberBandStyle : public QCommonStyle
+{
+	public:
+		void drawControl(ControlElement element, const QStyleOption * option, QPainter * painter, const QWidget * widget = 0) const
+		{
+			if (element == CE_RubberBand)
+			{
+				painter->save();
+				QColor color = option->palette.color(QPalette::Highlight);
+				painter->setPen(color);
+				color.setAlpha(80); painter->setBrush(color);
+				painter->drawRect(option->rect.adjusted(0,0,-1,-1));
+				painter->restore();
+				return;
+			}
+			return QCommonStyle::drawControl(element, option, painter, widget);
+		}
+
+		int styleHint(StyleHint hint, const QStyleOption * option, const QWidget * widget, QStyleHintReturn * returnData) const
+		{
+			if (hint == SH_RubberBand_Mask)
+				return false;
+			return QCommonStyle::styleHint(hint, option, widget, returnData);
+		}
+};
+
 EditorGraphicsView::EditorGraphicsView(QWidget * parent)
 			: QGraphicsView(parent)
 			, m_canZoom(true)
 			, m_scaleFactor(1.)
 			, m_autoResize(false)
 {
+	setInteractive(true);
+	
 	setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing | QPainter::SmoothPixmapTransform );
+	
 	setCacheMode(QGraphicsView::CacheBackground);
 	setViewportUpdateMode(QGraphicsView::BoundingRectViewportUpdate);
 	setOptimizationFlags(QGraphicsView::DontSavePainterState);
@@ -19,6 +49,10 @@ EditorGraphicsView::EditorGraphicsView(QWidget * parent)
 	//setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 	
 	setBackgroundBrush(Qt::gray);
+	
+	setDragMode(QGraphicsView::RubberBandDrag);
+	// use own style for drawing the RubberBand (opened on the viewport)
+	viewport()->setStyle(new RubberBandStyle);
 	
 }
 

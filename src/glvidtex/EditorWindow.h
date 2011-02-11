@@ -59,7 +59,7 @@ protected slots:
 	void slideSelected(const QModelIndex &);
 	void currentSlideChanged(const QModelIndex &idx,const QModelIndex &);
 	
-	void drawableSelected(GLDrawable *);
+	void selectionChanged();
 	
 	void drawableAdded(GLDrawable*);
 	void drawableRemoved(GLDrawable*);
@@ -69,6 +69,8 @@ protected slots:
 	void textSizeBoxChanged();
 	
 	void graphicsSceneChanged ( const QList<QRectF> & region );
+	
+	void slideProperties();
 	
 protected:
 	void closeEvent(QCloseEvent *event);

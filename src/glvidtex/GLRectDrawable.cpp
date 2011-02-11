@@ -1,5 +1,5 @@
 #include "GLRectDrawable.h"
-
+#include "CornerItem.h"
 GLRectDrawable::GLRectDrawable(QObject *parent)
 	: GLImageDrawable("",parent)
 	, m_fillColor(Qt::white)
@@ -7,8 +7,8 @@ GLRectDrawable::GLRectDrawable(QObject *parent)
 	, m_borderWidth(3.0)
 	, m_cornerRounding(0)
 {
-	foreach(CornerItem *corner, m_cornerItems)
-		corner->setDefaultLeftOp(CornerItem::Scale);
+	// Dont lock scaling to aspect ratio
+	setFreeScaling(true);
 		
 	renderImage();
 }
@@ -42,16 +42,19 @@ void GLRectDrawable::renderImage()
 	QImage image(rect().size().toSize(),QImage::Format_ARGB32);
 	memset(image.scanLine(0),0,image.byteCount());
 	QPainter painter(&image);
-	if(m_borderWidth > 0.0)
-		painter.setPen(QPen(m_borderColor,m_borderWidth));
-	else
-		painter.setPen(QPen());
-	painter.setBrush(m_fillColor);
-	QRect target = image.rect();
-	int v = m_borderWidth / 2;
-	target = target.adjusted(v,v,-v,-v);
-	painter.drawRect(target);
-	painter.end();
+	if(painter.isActive())
+	{
+		if(m_borderWidth > 0.0)
+			painter.setPen(QPen(m_borderColor,m_borderWidth));
+		else
+			painter.setPen(QPen());
+		painter.setBrush(m_fillColor);
+		QRect target = image.rect();
+		int v = m_borderWidth / 2;
+		target = target.adjusted(v,v,-v,-v);
+		painter.drawRect(target);
+		painter.end();
+	}
 	
 	setImage(image);
 }
@@ -59,6 +62,9 @@ void GLRectDrawable::renderImage()
 // Reimpl rather than rely on GLVideoDrawable for speed on older hardware AND for speed in the editor
 void GLRectDrawable::paint(QPainter * painter, const QStyleOptionGraphicsItem * /*option*/, QWidget * /*widget*/)
 {
+	if(!painter->isActive())
+		return;
+		
 	painter->setOpacity(opacity());
 	if(m_borderWidth > 0.0)
 		painter->setPen(QPen(m_borderColor,m_borderWidth));

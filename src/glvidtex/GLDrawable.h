@@ -3,7 +3,8 @@
 
 #include <QtGui>
 
-#include "CornerItem.h"
+//#include "CornerItem.h"
+class CornerItem;
 
 class QPropertyAnimation;
 class GLWidget;
@@ -210,7 +211,7 @@ public slots:
 	
 	void setCanvasSize(const QSizeF&);
 	
-	void setSelected(bool selected=true);
+	//void setSelected(bool selected=true);
 	
 	void setFadeIn(bool);
 	void setFadeOut(bool);
@@ -257,15 +258,18 @@ protected:
 	// For compat with QGraphicsItem
 	virtual void paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget);
 	// QGraphicsItem::
-	virtual void mousePressEvent(QGraphicsSceneMouseEvent * event);
-	virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent * event);
-	virtual void mouseMoveEvent(QGraphicsSceneMouseEvent * event);
+// 	virtual void mousePressEvent(QGraphicsSceneMouseEvent * event);
+// 	virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent * event);
+// 	virtual void mouseMoveEvent(QGraphicsSceneMouseEvent * event);
 	virtual QVariant itemChange(GraphicsItemChange change, const QVariant & value);
 	
 	// For corner items
-	void createCorner(CornerItem::CornerPosition corner, bool noRescale);
+	void createCorner(int corner, bool noRescale);
 	void layoutChildren();
 	void setControlsVisible(bool visible);
+	
+	/** If true, scaling (dragging corners in the editor) is not restricted to the current aspect ratio. Default is false - scaling is aspect-ratio limited */
+	void setFreeScaling(bool flag);
 
 
 	void propertyWasChanged(const QString& propName, const QVariant& value);

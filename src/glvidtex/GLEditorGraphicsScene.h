@@ -12,18 +12,18 @@ class GLEditorGraphicsScene : public QGraphicsScene
 public:
 	GLEditorGraphicsScene();
 	
-	QList<GLDrawable*> selectedItems() { return m_selection; }
+	QList<GLDrawable*> selectedDrawables();
 	
 	void clear();
 	
 	bool isEditingMode() { return m_editingMode; }
 	
-signals:
-	void selectionChanged();
-	void drawableSelected(GLDrawable*);
+// signals:
+// 	void selectionChanged();
+// 	void drawableSelected(GLDrawable*);
 	
 public slots:
-	void clearSelection(QList<GLDrawable*> ignoreList = QList<GLDrawable*>());
+// 	void clearSelection(QList<GLDrawable*> ignoreList = QList<GLDrawable*>());
 	void setSceneRect(const QRectF&);
 	void removeDrawables();
 	void deleteSelectedItems();
@@ -31,23 +31,23 @@ public slots:
 	void setEditingMode(bool flag=true);
 	
 protected:
-	friend class GLDrawable;
-	void itemSelected(GLDrawable*);
+// 	friend class GLDrawable;
+// 	void itemSelected(GLDrawable*);
 	
-	virtual void mousePressEvent ( QGraphicsSceneMouseEvent * mouseEvent );
-	virtual void mouseMoveEvent ( QGraphicsSceneMouseEvent * mouseEvent );
-	virtual void mouseReleaseEvent ( QGraphicsSceneMouseEvent * mouseEvent );
+// 	virtual void mousePressEvent ( QGraphicsSceneMouseEvent * mouseEvent );
+// 	virtual void mouseMoveEvent ( QGraphicsSceneMouseEvent * mouseEvent );
+// 	virtual void mouseReleaseEvent ( QGraphicsSceneMouseEvent * mouseEvent );
 	virtual void keyPressEvent(QKeyEvent * event);
 
 private:
 	void addInternalItems();
 	
-	QList<GLDrawable*> m_selection;
+	//QList<GLDrawable*> m_selection;
 	RectItem * m_bgRect;
-	RectItem * m_dragRect;
-	bool m_lockClearSelection;	
+	//RectItem * m_dragRect;
+	//bool m_lockClearSelection;	
 	bool m_editingMode;
-	bool m_ctrlPressedWithMouse;
+	//bool m_ctrlPressedWithMouse;
 };
 
 #endif

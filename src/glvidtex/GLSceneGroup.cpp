@@ -276,7 +276,11 @@ GLScene::GLScene(QByteArray& ba, QObject *parent)
 	fromByteArray(ba);
 }
 
-GLScene::~GLScene() {}
+GLScene::~GLScene() 
+{
+	if(m_sceneType)
+		delete m_sceneType;
+}
 
 GLSceneLayoutListModel *GLScene::layoutListModel()
 {
@@ -334,6 +338,8 @@ QByteArray GLScene::toByteArray()
 	
 	if(sceneType())
 		map["typedata"]  = sceneType()->toByteArray();
+/*	else
+		qDebug() << "GLSceneType::toByteArray: No scene type assigned, not storing byteArray data";*/
 	
 	stream << map;
 
@@ -426,6 +432,10 @@ void GLScene::fromByteArray(QByteArray& array)
 		// fromByteArray() calls our setSceneType function for us
 		GLSceneTypeFactory::fromByteArray(ba, this);
 	} 
+	else
+	{
+//		qDebug() << "GLScene::fromByteArray: typedata not valid:"<<map["typedata"]; 
+	}
 
 }
 

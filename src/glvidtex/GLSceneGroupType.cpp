@@ -299,9 +299,12 @@ GLSceneTypeFactory *GLSceneTypeFactory::m_inst = 0;
 
 GLSceneTypeFactory::GLSceneTypeFactory()
 {
-	#define ADD_CLASS(x) addType(new x());
+	
+	GLSceneType *type;
+	#define ADD_CLASS(x) type = new x(); m_list.append(type); m_lookup[type->id()] = type;
 	
 	ADD_CLASS(GLSceneTypeCurrentWeather);
+	ADD_CLASS(GLSceneTypeNewsFeed);
 	
 	#undef ADD_CLASS
 }
@@ -340,6 +343,7 @@ GLSceneType *GLSceneTypeFactory::newInstance(QString id)
 
 GLSceneType *GLSceneTypeFactory::fromByteArray(QByteArray array, GLScene *sceneToAttach)
 {
+//	qDebug() << "GLSceneTypeFactory::fromByteArray(): array.size:"<<array.size()<<", sceneToAttach:"<<sceneToAttach; 
 	if(!sceneToAttach)
 		return 0;
 		
@@ -349,15 +353,22 @@ GLSceneType *GLSceneTypeFactory::fromByteArray(QByteArray array, GLScene *sceneT
 	
 	QString id = map["id"].toString();
 	
+//	qDebug() << "GLSceneTypeFactory::fromByteArray(): id:"<<id;
+	
 	GLSceneType *type = newInstance(id);
 	if(!type)
+	{
+		qDebug() << "GLSceneTypeFactory::fromByteArray(): No type matching id:"<<id<<", nothing done";
 		return 0;
+	}
 	
 	type->m_params = map["params"].toMap();
 	type->m_fields = map["fields"].toMap();
+//	qDebug() << "GLSceneTypeFactory::fromByteArray(): Loaded parameters:"<<type->m_params;
 	
 	type->attachToScene(sceneToAttach);
 	
+//	qDebug() << "GLSceneTypeFactory::fromByteArray(): Attached "<<type<<" to "<<sceneToAttach;
 	return type;
 }
 
@@ -366,13 +377,13 @@ QList<GLSceneType*> GLSceneTypeFactory::list()
 	return d()->m_list;
 }
 
-void GLSceneTypeFactory::addType(GLSceneType *type)
-{
-	if(!type)
-		return;
-	d()->m_list.append(type);
-	d()->m_lookup[type->id()] = type;
-}
+// void GLSceneTypeFactory::addType(GLSceneType *type)
+// {
+// 	if(!type)
+// 		return;
+// 	d()->m_list.append(type);
+// 	d()->m_lookup[type->id()] = type;
+// }
 
 // void GLSceneTypeFactory::removeType(GLSceneType *type)
 // {

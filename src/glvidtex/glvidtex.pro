@@ -43,7 +43,8 @@ HEADERS       = GLWidget.h \
 		QtGetOpt.h \
 		../livemix/DVizSharedMemoryThread.h \
 		SharedMemorySender.h \
-		V4LOutput.h
+		V4LOutput.h \
+		GLSceneTypeNewsFeed.h
 		
 SOURCES       = GLWidget.cpp \
 		../livemix/VideoSource.cpp \
@@ -85,7 +86,8 @@ SOURCES       = GLWidget.cpp \
 		../livemix/DVizSharedMemoryThread.cpp \
 		SharedMemorySender.cpp \
 		V4LOutput.cpp \
-		GLSceneTypeCurrentWeather.cpp
+		GLSceneTypeCurrentWeather.cpp \
+		GLSceneTypeNewsFeed.cpp
 		
 # MD5 is used for caching in GLImageDrawable
 include(../3rdparty/md5/md5.pri)
@@ -102,18 +104,22 @@ RESOURCES += ../dviz.qrc
 editor: {
 	TARGET = gleditor
 	
+	FORMS += ScenePropertiesDialog.ui
+	
 	HEADERS += ../livemix/EditorUtilityWidgets.h \
 		../livemix/ExpandableWidget.h \
 		EditorWindow.h \
 		EditorGraphicsView.h \
-		RtfEditorWindow.h
+		RtfEditorWindow.h \
+		ScenePropertiesDialog.h
 		
 	SOURCES += editor-main.cpp \
 		../livemix/EditorUtilityWidgets.cpp \
 		../livemix/ExpandableWidget.cpp \
 		EditorWindow.cpp \
 		EditorGraphicsView.cpp \
-		RtfEditorWindow.cpp
+		RtfEditorWindow.cpp \
+		ScenePropertiesDialog.cpp
 		
 	include(../3rdparty/richtextedit/richtextedit.pri)
 	include(../qtcolorpicker/qtcolorpicker.pri)
@@ -125,7 +131,8 @@ director: {
 	
 	FORMS += DirectorWindow.ui \
 		 PlayerSetupDialog.ui \
-		 DrawableDirectorWidget.ui
+		 DrawableDirectorWidget.ui \
+		 ScenePropertiesDialog.ui
 
 
 	
@@ -141,7 +148,8 @@ director: {
 		FlowLayout.h \
 		../livemix/VideoWidget.h \
 		VideoInputSenderManager.h \
-		DrawableDirectorWidget.h
+		DrawableDirectorWidget.h \
+		ScenePropertiesDialog.h
 		
 		
 	SOURCES += director-main.cpp \
@@ -157,7 +165,8 @@ director: {
 		FlowLayout.cpp \
 		../livemix/VideoWidget.cpp \
 		VideoInputSenderManager.cpp \
-		DrawableDirectorWidget.cpp
+		DrawableDirectorWidget.cpp \
+		ScenePropertiesDialog.cpp
 		
 	include(../3rdparty/richtextedit/richtextedit.pri)
 	include(../qtcolorpicker/qtcolorpicker.pri)

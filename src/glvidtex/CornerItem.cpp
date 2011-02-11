@@ -170,6 +170,8 @@ void CornerItem::mousePressEvent(QGraphicsSceneMouseEvent * event)
     QRect contentsRect = m_content->boundingRect().toRect(); //contentsRect();
     m_startRatio = (double)contentsRect.width() / (double)contentsRect.height();
     m_startPos = event->pos(); //m_content->pos();
+    m_startScenePos = event->scenePos();
+    m_startRect = m_content->rect();
 
     update();
 }
@@ -224,6 +226,8 @@ void CornerItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 			QRectF cr = m_content->rect(); //boundingRect().toRect(); //contentsRect();
 			//QPointF d = AppSettings::snapToGrid( event->pos() - m_startPos );
 			QPointF d = ( event->pos() - m_startPos );
+			
+			QPointF sceneDelta = ( event->scenePos() - m_startScenePos );
 
 			int W = (int)(cr.width()  + d.x());
 			int H = (int)(cr.height() + d.y());
@@ -234,7 +238,8 @@ void CornerItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 // 			qreal W2 = 2 * v2.x();
 //             		qreal H2 = 2 * v2.y();
 
-			//qDebug() << "#"<<counter<<" v:"<<v<<", W:"<<W<<", H:"<<H<<", d:"<<d<<", m_corner:"<<m_corner<<", pos:"<<pos()<<", event->pos:"<<event->pos()<<", startPos:"<<m_startPos<<", W2:"<<W2<<", H2:"<<H2;
+			//qDebug() << "#"<<counter<<" v:"<<v<<", W:"<<W<<", H:"<<H<<", d:"<<d<<", m_corner:"<<m_corner<<", pos:"<<pos()<<", event->pos:"<<event->pos()<<", startPos:"<<m_startPos;//<<", W2:"<<W2<<", H2:"<<H2;
+			//qDebug() << "#"<<counter<<" sceneDelta:"<<sceneDelta<<", d:"<<d<<", m_corner:"<<m_corner<<", pos:"<<pos()<<", event->pos:"<<event->pos()<<", startPos:"<<m_startPos;//<<", W2:"<<W2<<", H2:"<<H2;
 
 			QRectF br = boundingRect();
 			QPointF cpos = cr.topLeft(); //m_content->pos();
@@ -256,34 +261,120 @@ void CornerItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 
 					if(d.x() > d.y())
 					{
-						int newWidth = (int)(cr.width()  -d.x());
-						int newHeight = (int)(newWidth / m_startRatio);
-						int deltaY = (int)(cr.height() - newHeight);
+// 						int newWidth = (int)(cr.width()  -d.x());
+// 						int newHeight = (int)(newWidth / m_startRatio);
+// 						int deltaY = (int)(cr.height() - newHeight);
+// 
+// 						//m_content->moveBy(d.x(),deltaY);
+// 						cr.translate(d.x(),deltaY);
+// 						cr.setWidth(newWidth); // adjust width (then height..) to compensate for moveBy()
+// 						cr.setHeight(newHeight); // adjust width (then height..) to compensate for moveBy()
 
-						//m_content->moveBy(d.x(),deltaY);
-						cr.translate(d.x(),deltaY);
-						cr.setWidth(newWidth); // adjust width (then height..) to compensate for moveBy()
-						cr.setHeight(newHeight); // adjust width (then height..) to compensate for moveBy()
+						double newWidth = m_startRect.width() - sceneDelta.x();
+						double newHeight = newWidth / m_startRatio;
+						double delta = m_startRect.height() - newHeight;
+						double newY = m_startRect.y() + delta;
+							
+						double setX = cr.x();
+						double setW = cr.width();
+						double setY = cr.y();
+						double setH = cr.height();
+						
+						if(((int)sceneDelta.x()) % GRID_SIZE == 0)
+						{
+							setX = m_startRect.x() + sceneDelta.x();
+							setW = newWidth;
+						}
+						
+						if(((int)newY) % GRID_SIZE == 0)
+						{
+							setY = newY;
+							setH = newHeight;
+						}
+							
+						cr = QRectF(
+						/* X */ setX,	
+						/* Y */ setY,
+						/* W */ setW,
+						/* H */ setH
+						);
 					}
 					else
 					{
-						int newHeight = (int)(cr.height()  -d.y());
-						int newWidth = (int)(newHeight * m_startRatio);
-						int deltaX = (int)(cr.width() - newWidth);
+// 						int newHeight = (int)(cr.height()  -d.y());
+// 						int newWidth = (int)(newHeight * m_startRatio);
+// 						int deltaX = (int)(cr.width() - newWidth);
+// 
+// 						//m_content->moveBy(deltaX,d.y());
+// 						cr.translate(deltaX,d.y());
+// 						cr.setWidth(newWidth); // adjust width (then height..) to compensate for moveBy()
+// 						cr.setHeight(newHeight); // adjust width (then height..) to compensate for moveBy()
 
-						//m_content->moveBy(deltaX,d.y());
-						cr.translate(deltaX,d.y());
-						cr.setWidth(newWidth); // adjust width (then height..) to compensate for moveBy()
-						cr.setHeight(newHeight); // adjust width (then height..) to compensate for moveBy()
+
+						double newHeight = m_startRect.height() - sceneDelta.y();
+						double newWidth = newHeight * m_startRatio;
+						double delta = m_startRect.width() - newWidth;
+						double newX = m_startRect.x() + delta;
+						
+						double setX = cr.x();
+						double setY = cr.y();
+						double setW = cr.width();
+						double setH = cr.height();
+						
+						if(((int)newX) % GRID_SIZE == 0)
+						{
+							setX = newX; //m_startRect.x() + sceneDelta.x();
+							setW = newWidth;
+						}
+						
+						//qDebug() << "m_startRatio:"<<m_startRatio<<", setX:"<<setX<<", setW:"<<setW<<", newX:"<<newX<<", newWidth:"<<newWidth<<", delta:"<<delta;
+		
+						if(((int)sceneDelta.y()) % GRID_SIZE == 0)
+						{
+							setY = m_startRect.y() + sceneDelta.y();
+							setH = newHeight;
+						}
+						
+						cr = QRectF(
+						/* X */ setX,	
+						/* Y */ setY,
+						/* W */ setW,
+						/* H */ setH
+						);
 
 					}
 				}
 				else
 				{
 					//m_content->moveBy(d.x(),d.y());
-					cr.translate(d.x(),d.y());
-					cr.setWidth((int)(cr.width()   - d.x())); // adjust width (then height..) to compensate for moveBy()
-					cr.setHeight((int)(cr.height() - d.y()));
+// 					cr.translate(d.x(),d.y());
+// 					cr.setWidth((int)(cr.width()   - d.x())); // adjust width (then height..) to compensate for moveBy()
+// 					cr.setHeight((int)(cr.height() - d.y()));
+
+					double setX = cr.x();
+					double setY = cr.y();
+					double setW = cr.width();
+					double setH = cr.height();
+					
+					if(((int)sceneDelta.x()) % GRID_SIZE == 0)
+					{
+						setX = m_startRect.x() + sceneDelta.x();
+						setW = m_startRect.width() - sceneDelta.x();
+					}
+					//qDebug() << "m_startRatio:"<<m_startRatio<<", setX:"<<setX<<", setW:"<<setW<<", newX:"<<newX<<", newWidth:"<<newWidth<<", delta:"<<delta;
+	
+					if(((int)sceneDelta.y()) % GRID_SIZE == 0)
+					{
+						setY = m_startRect.y() + sceneDelta.y();
+						setH = m_startRect.height() - sceneDelta.y();
+					}
+					
+					cr = QRectF(
+					/* X */ setX,	
+					/* Y */ setY,
+					/* W */ setW,
+					/* H */ setH
+					);
 					
 // 					if(op & Crop)
 // 					{
@@ -305,57 +396,146 @@ void CornerItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 			if(m_corner == MidTop)
 			{
 				//m_content->setPos(m_startPos + (event->pos() - pos()));
-
+				
 				if(op & FixScale)
 				{
-					int newHeight = (int)(cr.height()  -d.y());
-					int newWidth = (int)(newHeight * m_startRatio);
-					int deltaX = (int)(cr.width() - newWidth);
+// 					int newHeight = (int)(cr.height()  -d.y());
+// 					int newWidth = (int)(newHeight * m_startRatio);
+// 					int deltaX = (int)(cr.width() - newWidth);
+
+					double newHeight = m_startRect.height() - sceneDelta.y();
+					double newWidth = newHeight * m_startRatio;
+					double delta = m_startRect.width() - newWidth;
+					double newX = m_startRect.x() + delta;
+					
+					double setX = cr.x();
+					double setY = cr.y();
+					double setW = cr.width();
+					double setH = cr.height();
+					
+					if(((int)newX) % GRID_SIZE == 0)
+					{
+						setX = newX; //m_startRect.x() + sceneDelta.x();
+						setW = newWidth;
+					}
+					
+					//qDebug() << "m_startRatio:"<<m_startRatio<<", setX:"<<setX<<", setW:"<<setW<<", newX:"<<newX<<", newWidth:"<<newWidth<<", delta:"<<delta;
+	
+					if(((int)sceneDelta.y()) % GRID_SIZE == 0)
+					{
+						setY = m_startRect.y() + sceneDelta.y();
+						setH = newHeight;
+					}
+					
+					cr = QRectF(
+					/* X */ setX,	
+					/* Y */ setY,
+					/* W */ setW,
+					/* H */ setH
+					);
 
 					//m_content->moveBy(deltaX,d.y());
-					cr.translate(deltaX,d.y());
-					cr.setWidth(newWidth); // adjust width (then height..) to compensate for moveBy()
-					cr.setHeight(newHeight); // adjust width (then height..) to compensate for moveBy()
+// 					cr.translate(deltaX,d.y());
+// 					cr.setWidth(newWidth); // adjust width (then height..) to compensate for moveBy()
+// 					cr.setHeight(newHeight); // adjust width (then height..) to compensate for moveBy()
 				}
 				else
 				{
-					//m_content->moveBy(0,d.y());
-					cr.translate(0,d.y());
-					//cr.setWidth((int)(cr.width()  -d.x())); // adjust width (then height..) to compensate for moveBy()
-					cr.setHeight((int)(cr.height()-d.y()));
-					
-// 					if(op & Crop)
-// 					{
-// 					
-// 						QPointF pre = srcTL;
-// 						qreal perc = d.y() / cr.height();
-// 						srcTL.setY( srcTL.y() + perc);
-// 						
-// 						//qDebug() << "CornerItem::mouseMoveEvent(): /Scale/MidTop/Crop: pre:"<<pre<<", perc:"<<perc<<", post:"<<srcTL;
-// 					}
+// 					//m_content->moveBy(0,d.y());
+// 					cr.translate(0,d.y());
+// 					//cr.setWidth((int)(cr.width()  -d.x())); // adjust width (then height..) to compensate for moveBy()
+// 					cr.setHeight((int)(cr.height()-d.y()));
+
+					// moved 10 pixels
+					if(((int)sceneDelta.y()) % GRID_SIZE == 0)
+					{
+						cr = QRectF(
+						/* X */	m_startRect.x(),
+						/* Y */ m_startRect.y() + sceneDelta.y(),
+						/* W */ m_startRect.width(),
+						/* H */ m_startRect.height() - sceneDelta.y()
+						);
+					}
  				}
 			}
 			else
 			if(m_corner == MidLeft)
 			{
-				//m_content->setPos(m_startPos + (event->pos() - pos()));
-
 				if(op & FixScale)
 				{
-					int newWidth = (int)(cr.width()  -d.x());
-					int newHeight = (int)(newWidth / m_startRatio);
-					int deltaY = (int)(cr.height() - newHeight);
-
-					//m_content->moveBy(d.x(),deltaY);
-					cr.translate(d.x(),deltaY);
-					cr.setWidth(newWidth); // adjust width (then height..) to compensate for moveBy()
-					cr.setHeight(newHeight); // adjust width (then height..) to compensate for moveBy()
+					/// WORKING
+// 					int newWidth = (int)(cr.width()  -d.x());
+// 					int newHeight = (int)(newWidth / m_startRatio);
+// 					int deltaY = (int)(cr.height() - newHeight);
+// 
+// 					//m_content->moveBy(d.x(),deltaY);
+// 					cr.translate(d.x(),deltaY);
+// 					cr.setWidth(newWidth); // adjust width (then height..) to compensate for moveBy()
+// 					cr.setHeight(newHeight); // adjust width (then height..) to compensate for moveBy()
+					
+					double newWidth = m_startRect.width() - sceneDelta.x();
+					double newHeight = newWidth / m_startRatio;
+					double delta = m_startRect.height() - newHeight;
+					double newY = m_startRect.y() + delta;
+						
+					double setX = cr.x();
+					double setW = cr.width();
+					double setY = cr.y();
+					double setH = cr.height();
+					
+					if(((int)sceneDelta.x()) % GRID_SIZE == 0)
+					{
+						setX = m_startRect.x() + sceneDelta.x();
+						setW = newWidth;
+					}
+					
+					if(((int)newY) % GRID_SIZE == 0)
+					{
+						setY = newY;
+						setH = newHeight;
+					}
+						
+					cr = QRectF(
+					/* X */ setX,	
+					/* Y */ setY,
+					/* W */ setW,
+					/* H */ setH
+					);
 				}
 				else
 				{
 					//m_content->moveBy(d.x(),0);
-					cr.translate(d.x(),0);
-					cr.setWidth((int)(cr.width()  -d.x())); // adjust width (then height..) to compensate for moveBy()
+					
+					/// WORKING
+					//cr.translate(d.x(),0);
+					//cr.setWidth((int)(cr.width()  -d.x())); // adjust width (then height..) to compensate for moveBy()
+					
+					// moved 10 pixels
+					if(((int)sceneDelta.x()) % GRID_SIZE == 0)
+					{
+						cr = QRectF(
+						/* X */	m_startRect.x() + sceneDelta.x(),
+						/* Y */ m_startRect.y(),
+						/* W */ m_startRect.width() - sceneDelta.x(),
+						/* H */ m_startRect.height()
+						);
+					}
+					
+					/*QPointF origPos = cr.topLeft();
+					QPointF newPos = origPos;
+					QSizeF sz(10.,10.); // = AppSettings::gridSize();
+					bool halfGrid = false;
+					qreal x = sz.width()  / (halfGrid ? 2:1);
+					qreal y = sz.height() / (halfGrid ? 2:1);
+					newPos.setX(((int)(newPos.x() / x)) * x);
+					newPos.setY(((int)(newPos.y() / y)) * y);
+					
+					cr.setLeft(newPos.x());
+					double delta = origPos.x() - newPos.x();
+					*/
+					
+					//cr.setWidth((int)(cr.width()  - delta)); // adjust width (then height..) to compensate for moveBy()
+					
 					//cr.setHeight((int)(cr.height()-d.y()));
 					
 // 					if(op & Crop)
@@ -382,69 +562,196 @@ void CornerItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 			else
 			if(m_corner == BottomLeftCorner)
 			{
-				//m_content->moveBy(d.x(),0);
-				cr.translate(d.x(),0);
-				cr.setWidth((int)(cr.width()-d.x()));
+// 				//m_content->moveBy(d.x(),0);
+// 				cr.translate(d.x(),0);
+// 				cr.setWidth((int)(cr.width()-d.x()));
+// 
+// 				if(op & FixScale)
+// 				{
+// 					cr.setHeight((int)(cr.width() / m_startRatio));
+// 				}
+// 				else
+// 				{
+// 					cr.setHeight(H);
+// 				}
 
 				if(op & FixScale)
 				{
-					cr.setHeight((int)(cr.width() / m_startRatio));
+					double newWidth = m_startRect.width() - sceneDelta.x();
+					double newHeight = newWidth / m_startRatio;
+					double delta = m_startRect.height() - newHeight;
+					double newY = m_startRect.y() + delta;
+						
+					double setX = cr.x();
+					double setW = cr.width();
+					double setY = cr.y();
+					double setH = cr.height();
+					
+					if(((int)sceneDelta.x()) % GRID_SIZE == 0)
+					{
+						setX = m_startRect.x() + sceneDelta.x();
+						setW = newWidth;
+					}
+					
+					if(((int)newY) % GRID_SIZE == 0)
+					{
+						//setY = newY;
+						setH = newHeight;
+					}
+						
+					cr = QRectF(
+					/* X */ setX,	
+					/* Y */ setY,
+					/* W */ setW,
+					/* H */ setH
+					);
+
 				}
 				else
 				{
-					cr.setHeight(H);
-				}
-				
-// 				if(op & Crop)
-// 				{
-// 					QPointF pre = srcTL;
-// 					qreal perc = d.x() / cr.width();
-// 					srcTL.setX( srcTL.x() + perc);
-// 					
-// 					pre = srcBR;
-// 					perc = d.y() / cr.height();
-// 					srcBR.setY( srcBR.y() + perc);
-// 				}
+					//m_content->moveBy(d.x(),d.y());
+// 					cr.translate(d.x(),d.y());
+// 					cr.setWidth((int)(cr.width()   - d.x())); // adjust width (then height..) to compensate for moveBy()
+// 					cr.setHeight((int)(cr.height() - d.y()));
+
+					double setX = cr.x();
+					double setY = cr.y();
+					double setW = cr.width();
+					double setH = cr.height();
+					
+					if(((int)sceneDelta.x()) % GRID_SIZE == 0)
+					{
+						setX = m_startRect.x() + sceneDelta.x();
+						setW = m_startRect.width() - sceneDelta.x();
+					}
+					//qDebug() << "m_startRatio:"<<m_startRatio<<", setX:"<<setX<<", setW:"<<setW<<", newX:"<<newX<<", newWidth:"<<newWidth<<", delta:"<<delta;
+	
+					if(((int)sceneDelta.y()) % GRID_SIZE == 0)
+					{
+						//setY = m_startRect.y() + sceneDelta.y();
+						setH = m_startRect.height() + sceneDelta.y();
+					}
+					
+					cr = QRectF(
+					/* X */ setX,	
+					/* Y */ setY,
+					/* W */ setW,
+					/* H */ setH
+					);
+					
+// 					if(op & Crop)
+// 					{
+// 						QPointF pre = srcTL;
+// 						
+// 						qreal perc = d.x() / cr.width();
+// 						srcTL.setX( srcTL.x() + perc);
+// 						
+// 						perc = d.y() / cr.height();
+// 						srcTL.setY( srcTL.y() + perc);
+// 					}
+ 				}
 
 
-				//qDebug("- BottomLeft (%.02f,%d)",d.x(),H);
 			}
 			else
 			if(m_corner == TopRightCorner)
 			{
-
-
-// 				int oldWidth = cr.width();
+// 				if(op & FixScale)
+// 				{
+// 					int newHeight = (int)(cr.height()  -d.y());
+// 					int newWidth = (int)(newHeight * m_startRatio);
+// 
+// 					//m_content->moveBy(0,d.y());
+// 					cr.translate(0,d.y());
+// 					cr.setWidth(newWidth); // adjust width (then height..) to compensate for moveBy()
+// 					cr.setHeight(newHeight); // adjust width (then height..) to compensate for moveBy()
+// 
+// 				}
+// 				else
+// 				{
+// 					//m_content->moveBy(0,d.y());
+// 					cr.translate(0,d.y());
+// 					cr.setWidth(W);
+// 					cr.setHeight((int)(cr.height()-d.y()));
+// 				}
+			
+			
 				if(op & FixScale)
 				{
-					int newHeight = (int)(cr.height()  -d.y());
-					int newWidth = (int)(newHeight * m_startRatio);
-
-					//m_content->moveBy(0,d.y());
-					cr.translate(0,d.y());
-					cr.setWidth(newWidth); // adjust width (then height..) to compensate for moveBy()
-					cr.setHeight(newHeight); // adjust width (then height..) to compensate for moveBy()
-
+					double newHeight = m_startRect.height() - sceneDelta.y();
+					double newWidth = newHeight * m_startRatio;
+					double delta = m_startRect.width() - newWidth;
+					double newX = m_startRect.x() + delta;
+					
+					double setX = cr.x();
+					double setY = cr.y();
+					double setW = cr.width();
+					double setH = cr.height();
+					
+					if(((int)newX) % GRID_SIZE == 0)
+					{
+						//setX = newX; //m_startRect.x() + sceneDelta.x();
+						setW = newWidth;
+					}
+					
+					//qDebug() << "m_startRatio:"<<m_startRatio<<", setX:"<<setX<<", setW:"<<setW<<", newX:"<<newX<<", newWidth:"<<newWidth<<", delta:"<<delta;
+	
+					if(((int)sceneDelta.y()) % GRID_SIZE == 0)
+					{
+						setY = m_startRect.y() + sceneDelta.y();
+						setH = newHeight;
+					}
+					
+					cr = QRectF(
+					/* X */ setX,	
+					/* Y */ setY,
+					/* W */ setW,
+					/* H */ setH
+					);
 				}
 				else
 				{
-					//m_content->moveBy(0,d.y());
-					cr.translate(0,d.y());
-					cr.setWidth(W);
-					cr.setHeight((int)(cr.height()-d.y()));
-				}
+					//m_content->moveBy(d.x(),d.y());
+// 					cr.translate(d.x(),d.y());
+// 					cr.setWidth((int)(cr.width()   - d.x())); // adjust width (then height..) to compensate for moveBy()
+// 					cr.setHeight((int)(cr.height() - d.y()));
 
-// 				if(op & Crop)
-// 				{
-// 					QPointF pre = srcTL;
-// 					qreal perc = d.x() / cr.width();
-// 					srcTL.setX( srcTL.x() + perc);
-// 					
-// 					pre = srcBR;
-// 					perc = d.y() / cr.height();
-// 					srcBR.setY( srcBR.y() + perc);
-// 				}
-				//qDebug("- TopRight (%.02f,%d)",d.y(),W);
+					double setX = cr.x();
+					double setY = cr.y();
+					double setW = cr.width();
+					double setH = cr.height();
+					
+					if(((int)sceneDelta.x()) % GRID_SIZE == 0)
+					{
+						//setX = m_startRect.x() + sceneDelta.x();
+						setW = m_startRect.width() + sceneDelta.x();
+					}
+					//qDebug() << "m_startRatio:"<<m_startRatio<<", setX:"<<setX<<", setW:"<<setW<<", newX:"<<newX<<", newWidth:"<<newWidth<<", delta:"<<delta;
+	
+					if(((int)sceneDelta.y()) % GRID_SIZE == 0)
+					{
+						setY = m_startRect.y() + sceneDelta.y();
+						setH = m_startRect.height() - sceneDelta.y();
+					}
+					
+					cr = QRectF(
+					/* X */ setX,	
+					/* Y */ setY,
+					/* W */ setW,
+					/* H */ setH
+					);
+					
+// 					if(op & Crop)
+// 					{
+// 						QPointF pre = srcTL;
+// 						
+// 						qreal perc = d.x() / cr.width();
+// 						srcTL.setX( srcTL.x() + perc);
+// 						
+// 						perc = d.y() / cr.height();
+// 						srcTL.setY( srcTL.y() + perc);
+// 					}
+ 				}			
 			}
 			else
 			if(m_corner == BottomRightCorner)
@@ -452,71 +759,105 @@ void CornerItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 // 				int oldWidth = cr.width();
 // 				int oldHeight= cr.height();
 				
-				cr.setWidth(W);
-// 				int hfw = m_content->contentHeightForWidth(W);
-// 				if (hfw > 1)
-// 					H = hfw;
+// 				cr.setWidth(W);
+// // 				int hfw = m_content->contentHeightForWidth(W);
+// // 				if (hfw > 1)
+// // 					H = hfw;
+// 				if(op & FixScale)
+// 				{
+// 					cr.setHeight((int)(cr.width() / m_startRatio));
+// 				}
+// 				else
+// 				{
+// 					cr.setHeight(H);
+// 				}
+				
+				double setW = cr.width();
+				double setH = cr.height();
+				
+				bool yDominate = d.y() > d.x();
+				double newW = m_startRect.width() + sceneDelta.x();
+				double newH = m_startRect.height() + sceneDelta.y();
 				if(op & FixScale)
 				{
-					cr.setHeight((int)(cr.width() / m_startRatio));
-				}
-				else
-				{
-					cr.setHeight(H);
+					if(d.y() > d.x())
+						newW = newH * m_startRatio;
+					else
+						newH = newW / m_startRatio;
 				}
 				
-// 				if(op & Crop)
-// 				{
-// 					QPointF pre = srcBR;
-// 					
-// 					qreal perc = d.x() / cr.width();
-// 					srcBR.setX( srcBR.x() + perc);
-// 					
-// 					perc = d.y() / cr.height();
-// 					srcBR.setY( srcBR.y() + perc);
-// 				}
-				//qDebug("- BottomRight (%d,%d)",W,H);
+				if(((int)sceneDelta.x()) % GRID_SIZE == 0)
+					setW = newW;
+				
+				if(((int)sceneDelta.y()) % GRID_SIZE == 0)
+					setH = newH;
+				
+				cr = QRectF(
+				/* X */ cr.x(),	
+				/* Y */ cr.y(),
+				/* W */ setW,
+				/* H */ setH
+				);
 			}
 			else
 			if(m_corner == MidRight)
 			{
-// 				int oldWidth = cr.width();
-				cr.setWidth(W);
-// 				int hfw = m_content->contentHeightForWidth(W);
-// 				if (hfw > 1)
-// 					H = hfw;
+/*				cr.setWidth(W);
 				if(op & FixScale)
 				{
 					cr.setHeight((int)(cr.width() / m_startRatio));
-				}
+				}*/
 				
-// 				if(op & Crop)
-// 				{
-// 					QPointF pre = srcBR;
-// 					
-// 					qreal perc = d.x() / cr.width();
-// 					srcBR.setX( srcBR.x() + perc);
-// 				}
+				double setW = cr.width();
+				double setH = cr.height();
+				
+				double newW = m_startRect.width() + sceneDelta.x();
+				
+				if(((int)sceneDelta.x()) % GRID_SIZE == 0)
+					setW = newW;
+				
+				if(op & FixScale &&
+				  ((int)sceneDelta.y()) % GRID_SIZE == 0)
+					setH = newW / m_startRatio;
+				
+				cr = QRectF(
+				/* X */ cr.x(),	
+				/* Y */ cr.y(),
+				/* W */ setW,
+				/* H */ setH
+				);
 			}
 			else
 			if(m_corner == MidBottom)
 			{
 // 				int oldHeight= cr.height();
 				
-				if(op & FixScale)
-				{
-					int newWidth = (int)(H * m_startRatio);
-					cr.setWidth(newWidth); // adjust width (then height..) to compensate for moveBy()
-				}
-				
-				cr.setHeight(H);
-				
-// 				if(op & Crop)
+// 				if(op & FixScale)
 // 				{
-// 					QPointF pre = srcBR;
-// 					qreal perc = d.y() / cr.height();
-// 					srcBR.setY( srcBR.y() + perc);
+// 					int newWidth = (int)(H * m_startRatio);
+// 					cr.setWidth(newWidth); // adjust width (then height..) to compensate for moveBy()
 // 				}
+// 				
+// 				cr.setHeight(H);
+			
+				double setW = cr.width();
+				double setH = cr.height();
+				
+				double newH = m_startRect.height() + sceneDelta.y();
+				
+				if(op & FixScale &&
+				  ((int)sceneDelta.x()) % GRID_SIZE == 0)
+					setW = newH * m_startRatio;
+				
+				if(((int)sceneDelta.y()) % GRID_SIZE == 0)
+					setH = newH;
+				
+				cr = QRectF(
+				/* X */ cr.x(),	
+				/* Y */ cr.y(),
+				/* W */ setW,
+				/* H */ setH
+				);
 			}
 
 			//m_content->dirtyCache();

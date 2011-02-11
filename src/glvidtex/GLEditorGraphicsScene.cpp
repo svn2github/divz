@@ -2,6 +2,8 @@
 
 #include "GLDrawable.h"
 
+/// \class GLEditorGraphicsScene 
+/// Internal to GLEditorGraphicsScene
 class RectItem : public QGraphicsItem
 {
 public:
@@ -42,9 +44,9 @@ public:
 GLEditorGraphicsScene::GLEditorGraphicsScene()
 	: QGraphicsScene()
 	, m_bgRect(0)
-	, m_dragRect(0)
-	, m_lockClearSelection(false)
-	, m_ctrlPressedWithMouse(false)
+// 	, m_dragRect(0)
+// 	, m_lockClearSelection(false)
+// 	, m_ctrlPressedWithMouse(false)
 {
 	m_bgRect = new RectItem();
 	m_bgRect->brush = Qt::black;
@@ -52,15 +54,15 @@ GLEditorGraphicsScene::GLEditorGraphicsScene()
 	m_bgRect->setZValue(-999999999);
 	//qDebug() << "m_bgRect:"<<m_bgRect;
 	
-	m_dragRect = new RectItem();
-	m_dragRect->diff = true;
-	m_dragRect->filled = false;
-	m_dragRect->setVisible(false);
-	m_dragRect->setZValue(999999999);
-	m_dragRect->rect = QRectF(0,0,0,0);
+// 	m_dragRect = new RectItem();
+// 	m_dragRect->diff = true;
+// 	m_dragRect->filled = false;
+// 	m_dragRect->setVisible(false);
+// 	m_dragRect->setZValue(999999999);
+// 	m_dragRect->rect = QRectF(0,0,0,0);
 	
 	addItem(m_bgRect);
-	addItem(m_dragRect);
+//	addItem(m_dragRect);
 	//qDebug() << "m_dragRect:"<<m_dragRect;
 }
 
@@ -68,7 +70,7 @@ void GLEditorGraphicsScene::clear()
 {
 	// Remove before clear, because ::clear() deletes all items
 	removeItem(m_bgRect);
-	removeItem(m_dragRect);
+	//removeItem(m_dragRect);
 	
 	// Drawables are owned by the GLScene they are a member of,
 	// remove so that ::clear() doesnt delete the items
@@ -86,7 +88,7 @@ void GLEditorGraphicsScene::clear()
 	
 	// Add back in our internal items
 	addItem(m_bgRect);
-	addItem(m_dragRect);
+//	addItem(m_dragRect);
 }
 
 void GLEditorGraphicsScene::setSceneRect(const QRectF& rect)
@@ -95,42 +97,42 @@ void GLEditorGraphicsScene::setSceneRect(const QRectF& rect)
 	m_bgRect->setBoundingRect(rect);
 }
 
-void GLEditorGraphicsScene::itemSelected(GLDrawable *item)
-{
-// 	qDebug() << "GLEditorGraphicsScene::itemSelected: item:"<<(QObject*)item;
-	if(!m_ctrlPressedWithMouse)
-		clearSelection(QList<GLDrawable*>() << item);
-			
-	//m_selection.clear();
-	if(!m_selection.contains(item))
-		m_selection.append(item);
-	emit selectionChanged();
-	emit drawableSelected(item);
-}
+// void GLEditorGraphicsScene::itemSelected(GLDrawable *item)
+// {
+// // 	qDebug() << "GLEditorGraphicsScene::itemSelected: item:"<<(QObject*)item;
+// 	if(!m_ctrlPressedWithMouse)
+// 		clearSelection(QList<GLDrawable*>() << item);
+// 			
+// 	//m_selection.clear();
+// 	if(!m_selection.contains(item))
+// 		m_selection.append(item);
+// 	emit selectionChanged();
+// 	emit drawableSelected(item);
+// }
 
-void GLEditorGraphicsScene::clearSelection(QList<GLDrawable*> ignoreList)
-{
-	if(m_lockClearSelection)
-		return;
-		
-	//foreach(GLDrawable *tmp, m_selection)
-	while(!m_selection.isEmpty())
-	{
-		GLDrawable *tmp = m_selection.takeFirst();
-		if(ignoreList.isEmpty() || !ignoreList.contains(tmp))
-		{
-			//qDebug() << "GLEditorGraphicsScene::clearSelection: clearing selection on item:"<<(QObject*)tmp;
-			tmp->setSelected(false);
-			
-		}
-// 		else
-// 			qDebug() << "GLEditorGraphicsScene::clearSelection: ignoring item:"<<(QObject*)tmp;
-	}
-	
-	// Re-add what we ignored
-	m_selection << ignoreList;
-}
-
+// void GLEditorGraphicsScene::clearSelection(QList<GLDrawable*> ignoreList)
+// {
+// 	if(m_lockClearSelection)
+// 		return;
+// 		
+// 	//foreach(GLDrawable *tmp, m_selection)
+// 	while(!m_selection.isEmpty())
+// 	{
+// 		GLDrawable *tmp = m_selection.takeFirst();
+// 		if(ignoreList.isEmpty() || !ignoreList.contains(tmp))
+// 		{
+// 			//qDebug() << "GLEditorGraphicsScene::clearSelection: clearing selection on item:"<<(QObject*)tmp;
+// 			tmp->setSelected(false);
+// 			
+// 		}
+// // 		else
+// // 			qDebug() << "GLEditorGraphicsScene::clearSelection: ignoring item:"<<(QObject*)tmp;
+// 	}
+// 	
+// 	// Re-add what we ignored
+// 	m_selection << ignoreList;
+// }
+/*
 void GLEditorGraphicsScene::mousePressEvent ( QGraphicsSceneMouseEvent * mouseEvent )
 {
   	m_ctrlPressedWithMouse = mouseEvent->modifiers() & Qt::ControlModifier;
@@ -180,7 +182,7 @@ void GLEditorGraphicsScene::mouseMoveEvent ( QGraphicsSceneMouseEvent * mouseEve
 	{
 		QGraphicsScene::mousePressEvent(mouseEvent);
 	}
-}
+}*/
 
 void GLEditorGraphicsScene::removeDrawables()
 {
@@ -192,7 +194,7 @@ void GLEditorGraphicsScene::removeDrawables()
 			removeItem(gld);
 	}
 }
-
+/*
 void GLEditorGraphicsScene::mouseReleaseEvent ( QGraphicsSceneMouseEvent * mouseEvent )
 {
 // 	QGraphicsItem *item = itemAt(mouseEvent->pos());
@@ -230,7 +232,7 @@ void GLEditorGraphicsScene::mouseReleaseEvent ( QGraphicsSceneMouseEvent * mouse
 		QGraphicsScene::mousePressEvent(mouseEvent);
 	}
 }
-
+*/
 
 void GLEditorGraphicsScene::keyPressEvent(QKeyEvent * event)
 {
@@ -289,10 +291,10 @@ void GLEditorGraphicsScene::keyPressEvent(QKeyEvent * event)
 		if(y<=5)
 			y = 5;
 		
-		//QList<GLDrawable *> selection = selectedItems();
+		QList<GLDrawable *> selection = selectedDrawables();
 		if(DEBUG_KEYHANDLER)
-			qDebug() << "GLEditorGraphicsScene::keyPressEvent(): key:"<<event->key()<<", path 2, selection size:"<<m_selection.size();
-		if(m_selection.size() > 0)
+			qDebug() << "GLEditorGraphicsScene::keyPressEvent(): key:"<<event->key()<<", path 2, selection size:"<<selection.size();
+		if(selection.size() > 0)
 		{
 			
 			if(DEBUG_KEYHANDLER)
@@ -306,7 +308,7 @@ void GLEditorGraphicsScene::keyPressEvent(QKeyEvent * event)
 				case Qt::Key_Up:
 					if(DEBUG_KEYHANDLER)
 						qDebug() << "GLEditorGraphicsScene::keyPressEvent(): key:"<<event->key()<<", path 2: move up:"<<y;
-					foreach(GLDrawable *item, m_selection)
+					foreach(GLDrawable *item, selection)
 					{
 						item->moveBy(0,-y);
 					}
@@ -315,7 +317,7 @@ void GLEditorGraphicsScene::keyPressEvent(QKeyEvent * event)
 				case Qt::Key_Down:
 					if(DEBUG_KEYHANDLER)
 						qDebug() << "GLEditorGraphicsScene::keyPressEvent(): key:"<<event->key()<<", path 2: move down:"<<y;
-					foreach(GLDrawable *item, m_selection)
+					foreach(GLDrawable *item, selection)
 					{
 						item->moveBy(0,+y);
 					}
@@ -324,7 +326,7 @@ void GLEditorGraphicsScene::keyPressEvent(QKeyEvent * event)
 				case Qt::Key_Left:
 					if(DEBUG_KEYHANDLER)
 						qDebug() << "GLEditorGraphicsScene::keyPressEvent(): key:"<<event->key()<<", path 2: move left:"<<x;
-					foreach(GLDrawable *item, m_selection)
+					foreach(GLDrawable *item, selection)
 					{
 						item->moveBy(-x,0);
 					}
@@ -333,7 +335,7 @@ void GLEditorGraphicsScene::keyPressEvent(QKeyEvent * event)
 				case Qt::Key_Right:
 					if(DEBUG_KEYHANDLER)
 						qDebug() << "GLEditorGraphicsScene::keyPressEvent(): key:"<<event->key()<<", path 2: move right:"<<x;
-					foreach(GLDrawable *item, m_selection)
+					foreach(GLDrawable *item, selection)
 					{
 						item->moveBy(+x,0);
 					}
@@ -344,7 +346,7 @@ void GLEditorGraphicsScene::keyPressEvent(QKeyEvent * event)
 				//case Qt::Key_Enter:
 					if(DEBUG_KEYHANDLER)
 						qDebug() << "GLEditorGraphicsScene::keyPressEvent(): key:"<<event->key()<<", path 2: config content key";
-// 					foreach(GLDrawable *item, m_selection)
+// 					foreach(GLDrawable *item, selection)
 // 					{
 // 						//configureContent(content);
 // 					}
@@ -374,12 +376,13 @@ void GLEditorGraphicsScene::keyPressEvent(QKeyEvent * event)
 
 void GLEditorGraphicsScene::deleteSelectedItems()
 {
-	
-	if (m_selection.size() > 1)
-		if (QMessageBox::question(0, tr("Delete content"), tr("All the %1 selected content will be deleted, do you want to continue ?").arg(m_selection.size()), QMessageBox::Yes | QMessageBox::No) == QMessageBox::No)
+	QList<GLDrawable*> selection = selectedDrawables();
+	 
+	if (selection.size() > 1)
+		if (QMessageBox::question(0, tr("Delete content"), tr("All the %1 selected content will be deleted, do you want to continue ?").arg(selection.size()), QMessageBox::Yes | QMessageBox::No) == QMessageBox::No)
 		return;
 	
-	foreach(GLDrawable *item, m_selection)
+	foreach(GLDrawable *item, selection)
 	{
 		// unlink content from lists, myself(the Scene) and memory
 		//removeItem(item);
@@ -391,7 +394,7 @@ void GLEditorGraphicsScene::deleteSelectedItems()
 		//delete content;
 	}
 	
-	m_selection.clear();
+	clearSelection();
 }
 
 void GLEditorGraphicsScene::setEditingMode(bool flag)
@@ -407,4 +410,14 @@ void GLEditorGraphicsScene::setEditingMode(bool flag)
 	}
 	
 	update();
+}
+
+QList<GLDrawable*> GLEditorGraphicsScene::selectedDrawables()
+{
+	QList<QGraphicsItem *> items = selectedItems();
+	QList<GLDrawable*> list;
+	foreach(QGraphicsItem *item, items)
+		if(GLDrawable *gld = dynamic_cast<GLDrawable*>(item))
+			list << gld;
+	return list; 
 }

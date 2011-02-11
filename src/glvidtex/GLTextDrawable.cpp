@@ -1,5 +1,4 @@
 #include "GLTextDrawable.h"
-
 #include "RichTextRenderer.h"
 
 #define DEFAULT_CLOCK_FORMAT "yyyy-MM-dd h:mm:ss ap"
@@ -35,9 +34,9 @@ GLTextDrawable::GLTextDrawable(QString text, QObject *parent)
 
 	//QTimer::singleShot(1500, this, SLOT(testXfade()));
 
-	foreach(CornerItem *corner, m_cornerItems)
-		corner->setDefaultLeftOp(CornerItem::Scale);
-
+	// dont restrict to aspect ratio
+	setFreeScaling(true);
+	
 	//setAspectRatioMode(Qt::KeepAspectRatioByExpanding);
 
 	// Countdown timer

@@ -13,6 +13,8 @@
 #include "RtfEditorWindow.h"
 #include "EditorGraphicsView.h"
 
+#include "ScenePropertiesDialog.h"
+
 #include <QApplication>
 
 #define TOOLBAR_TEXT_SIZE_INC 4
@@ -54,6 +56,10 @@ void EditorWindow::setIsStandalone(bool flag)
 				if (!file.open(QIODevice::ReadOnly)) 
 				{
 					qDebug() << "EditorWindow: Unable to read group file: "<<fileArg;
+					GLSceneGroup *group = new GLSceneGroup();
+					GLScene *scene = new GLScene();
+					group->addScene(scene);
+					setGroup(group);
 				}
 				else
 				{
@@ -258,6 +264,12 @@ void EditorWindow::createUI()
 	act ->setShortcut(QString(tr("CTRL+SHIFT+F")));
 	connect(act , SIGNAL(triggered()), this, SLOT(naturalItemFit()));
 	
+	toolbar->addSeparator();
+	
+	QAction  *slideProp = toolbar->addAction(QIcon(":/data/stock-properties.png"), tr("Scene Properties"));
+	slideProp->setShortcut(QString(tr("SHIFT+F2")));
+	connect(slideProp, SIGNAL(triggered()), this, SLOT(slideProperties()));
+	
 	
 }
 
@@ -337,7 +349,7 @@ void EditorWindow::setCurrentScene(GLScene *scene)
 		m_graphicsScene->setEditingMode(true);
 		m_graphicsView->setScene(m_graphicsScene);
 		m_graphicsScene->setSceneRect(QRectF(0,0,1000.,750.));
-		connect(m_graphicsScene, SIGNAL(drawableSelected(GLDrawable*)), this, SLOT(drawableSelected(GLDrawable*)));
+		connect(m_graphicsScene, SIGNAL(selectionChanged()), this, SLOT(selectionChanged()));
 		connect(m_graphicsScene, SIGNAL(changed ( const QList<QRectF> & )), this, SLOT(graphicsSceneChanged ( const QList<QRectF> & )));
 		
   		GLDrawableList list = m_scene->drawableList();
@@ -351,7 +363,10 @@ void EditorWindow::setCurrentScene(GLScene *scene)
 // 		connect(m_scene, SIGNAL(drawableRemoved(GLDrawable*)), this, SLOT(drawableRemoved(GLDrawable*)));
 		
 		if(!list.isEmpty())
+		{
+			m_graphicsScene->clearSelection();
 			list.first()->setSelected(true);
+		}
 	}
 }
 
@@ -434,6 +449,7 @@ void EditorWindow::addDrawable(GLDrawable *drawable)
 	{
 		drawable->setRect(m_graphicsScene->sceneRect());
 		m_graphicsScene->setEditingMode(true);
+		m_graphicsScene->clearSelection();
 	}
 	
 	drawable->setSelected(true);
@@ -513,7 +529,7 @@ void EditorWindow::textFitNaturally()
 		
 	if(GLTextDrawable *text = dynamic_cast<GLTextDrawable*>(m_currentDrawable))
 	{
-		QSizeF size = text->findNaturalSize(m_graphicsScene->sceneRect().width());
+		QSizeF size = text->findNaturalSize((int)m_graphicsScene->sceneRect().width());
 		text->setRect(QRectF(text->rect().topLeft(),size));
 	}
 }
@@ -557,8 +573,16 @@ void EditorWindow::textSizeBoxChanged()
 	}
 }
 
-void EditorWindow::drawableSelected(GLDrawable *d)
+void EditorWindow::selectionChanged()
 {
+	if(!m_graphicsScene)
+		return;
+	QList<GLDrawable*> list = m_graphicsScene->selectedDrawables();
+	if(list.isEmpty())
+		return;
+		
+	GLDrawable *d = list.first();
+	
 	if(m_currentLayerPropsEditor)
 	{
 		m_controlBase->layout()->removeWidget(m_currentLayerPropsEditor);
@@ -570,7 +594,7 @@ void EditorWindow::drawableSelected(GLDrawable *d)
 	QWidget *props = createPropertyEditors(d);
 	//m_currentLayer->lockLayerPropertyUpdates(false);
 
-	/// TODO What am I doing here??
+	/// TODO What am I doing here?? This should have already been deleted above.
 	QVBoxLayout *layout = dynamic_cast<QVBoxLayout*>(m_controlBase->layout());
 	while(layout->count() > 0)
 	{
@@ -873,6 +897,7 @@ void EditorWindow::naturalItemFit()
 		
 	if(GLTextDrawable *text = dynamic_cast<GLTextDrawable*>(m_currentDrawable))
 	{
+		Q_UNUSED(text);
 		textFitNaturally();
 		
 // 		QSizeF size = text->findNaturalSize(m_graphicsScene->sceneRect().width());
@@ -905,6 +930,9 @@ void EditorWindow::setCanvasSize(const QSizeF& size)
 
 void EditorWindow::addScene()
 {
+	if(!m_group)
+		qDebug() << "EditorWindow::addScene(): No group, planning on crashing now...";
+		
 	GLScene *scene = new GLScene();
 	m_group->addScene(scene);
 	setCurrentScene(scene);
@@ -933,9 +961,17 @@ void EditorWindow::dupScene()
 	setCurrentScene(scene);
 }
 
+void EditorWindow::slideProperties()
+{
+	if(!m_scene)
+		return;
+	ScenePropertiesDialog d(m_scene,this);
+	d.exec();
+}
+
 void EditorWindow::centerSelectionHorizontally()
 {
-	QList<GLDrawable *> selection = m_graphicsScene->selectedItems();
+	QList<GLDrawable *> selection = m_graphicsScene->selectedDrawables();
 	QRectF scene = m_graphicsScene->sceneRect();
 
 	qreal halfX = scene.width()/2;
@@ -953,7 +989,7 @@ void EditorWindow::centerSelectionHorizontally()
 
 void EditorWindow::centerSelectionVertically()
 {
-	QList<GLDrawable *> selection = m_graphicsScene->selectedItems();
+	QList<GLDrawable *> selection = m_graphicsScene->selectedDrawables();
 	QRectF scene = m_graphicsScene->sceneRect();
 
 // 	qreal halfX = scene.width()/2;

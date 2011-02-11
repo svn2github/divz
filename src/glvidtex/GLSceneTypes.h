@@ -7,5 +7,6 @@
 */
 
 #include "GLSceneTypeCurrentWeather.h"
+#include "GLSceneTypeNewsFeed.h"
 
 #endif
