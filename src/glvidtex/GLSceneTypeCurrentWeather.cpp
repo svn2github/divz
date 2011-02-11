@@ -133,13 +133,49 @@ QString GLSceneTypeCurrentWeather::extractIcon(const QString &data)
 		m_icons["chance_of_storm"]  = "weather-storm";
 		m_icons["thunderstorm"]     = "weather-thundershower";
 		m_icons["chance_of_tstorm"] = "weather-thundershower";
+		
+		m_icons["night:sunny"]            = "weather-night-waxingcrescent-clear";
+		m_icons["night:mostly_cloudy"]    = "weather-night-waxingcrescent-partially-cloudy";
+		m_icons["night:cloudy"]           = "weather-night-waxingcrescent-cloudy";
+		m_icons["night:mostly_sunny"]     = "weather-night-waxingcrescent-partially-cloudy";
+		m_icons["night:partly_cloudy"]    = "weather-night-waxingcrescent-partially-cloudy";
+		m_icons["night:flurries"]         = "weather-night-waxingcrescent-snow";
+		m_icons["night:fog"]              = "weather-night-foggy";
+// 		m_icons["haze"]             = "weather-haze";
+// 		m_icons["icy"]              = "weather-icy";
+// 		m_icons["sleet"]            = "weather-sleet";
+// 		m_icons["chance_of_sleet"]  = "weather-sleet";
+		m_icons["night:snow"]             = "weather-night-waxingcrescent-snow";
+		m_icons["night:chance_of_snow"]   = "weather-night-waxingcrescent-snow";
+// 		m_icons["mist"]             = "weather-showers";
+// 		m_icons["rain"]             = "weather-showers";
+// 		m_icons["chance_of_rain"]   = "weather-showers";
+		m_icons["night:storm"]            = "weather-night-waxingcrescent-rain";
+		m_icons["night:chance_of_storm"]  = "weather-night-waxingcrescent-rain";
+		m_icons["night:thunderstorm"]     = "weather-night-waxingcrescent-thunderstorms";
+		m_icons["night:chance_of_tstorm"] = "weather-night-waxingcrescent-thunderstorms";
 	}
 	QRegExp regex("([\\w]+).gif$");
 	if (regex.indexIn(data) != -1) 
 	{
 		QString i = regex.cap();
 		i = i.left(i.length() - 4);
-		QString name = m_icons.value(i);
+		
+		QTime time = QTime::currentTime();
+		
+		// The *right* way todo this in the future would be to check the LOCAL sunrise/sunset times
+		// and then compare the current min/hour to the local sunrise/sunset!
+		// For now, this is Good Enough.
+		bool isNight = time.hour() <= 6 ||
+		               time.hour() >= 6 + 12;
+		
+		QString name;
+		if(isNight)
+			name = m_icons.value("night:" + i);
+		
+		if(!isNight || name.isEmpty())
+			name = m_icons.value(i);
+		
 		if (!name.isEmpty()) 
 		{
 			name.prepend("images/icons/");
