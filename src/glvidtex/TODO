@@ -183,6 +183,23 @@ TODO:
 		- [DONE] Allow player to run playlists on items by itself without being connected to the director
 	
 	IDEAS:
+		- Next few steps:
+			- Add an 'assign scene type' feature in editor
+			- Try to put scene type subclasses in a namespace
+			- Figure out how to set parameters in UI
+			- Add more scenetype subclasses, possibly based on Gogle News API and/or RSS reader
+			- Add an 'import scene' function because related to:
+			- Add an 'add scene from template' function which...
+				- Lists templates based on directory
+				- Directory name based on ID of scene type
+			- Get a sample group type working
+				- Slideshow...?
+				- ...?
+		
+		- Adapt the weather scenetype to use this possibly?
+			http://m.wund.com/cgi-bin/findweather/getForecast?query=47390
+			
+			
 		- Content List from a TV at a bank:
 			- Weather conditions
 				Right Now its XYZ
