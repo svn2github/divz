@@ -1,4 +1,6 @@
 #include "GLSceneTypeNewsFeed.h"
+#include "GLImageDrawable.h"
+#include "qrencode-3.1.0/qrencode.h"
 
 GLSceneTypeNewsFeed::GLSceneTypeNewsFeed(QObject *parent)
 	: GLSceneType(parent)
@@ -55,7 +57,6 @@ GLSceneTypeNewsFeed::GLSceneTypeNewsFeed(QObject *parent)
 	setParam("updateTime", 15);
 	
 	reloadData();
-			
 }
 
 void GLSceneTypeNewsFeed::setLiveStatus(bool flag)
@@ -88,7 +89,40 @@ void GLSceneTypeNewsFeed::showNextItem()
 	setField("text", 	item.text);
 	setField("source",	item.source);
 	setField("date",	item.date);
-	/// \todo Generate QR code and show the image!
+	
+	GLDrawable *qrdest = lookupField("qrcode");
+	if(qrdest)
+	{
+		QRcode* rawcode = QRcode_encodeString(qPrintable(item.url), 0, QR_ECLEVEL_M, QR_MODE_AN,  0);
+		if(!rawcode)
+			qDebug() << "GLSceneTypeNewsFeed::showNextItem(): Error generating qrcode.";
+		else
+		{
+			QImage image(rawcode->width*4,rawcode->width*4,QImage::Format_ARGB32);
+			memset(image.scanLine(0),0,image.byteCount());
+			
+			QPainter painter(&image);
+			painter.setBrush(Qt::black);
+			int w = rawcode->width;
+			for(int x=0;x<w;x++)
+			{
+				for(int y=0;y<w;y++)
+				{
+					uchar data = rawcode->data[y*w+x];
+					bool hasDot = data & 0xFF;
+					if(hasDot)
+					{
+						painter.drawRect(QRect(x*4,y*4,4,4));
+					}
+				}
+			}
+			
+			
+			painter.end();
+			
+			dynamic_cast<GLImageDrawable*>(qrdest)->setImage(image);
+		}
+	}
 	
 	m_currentIndex++;
 }
@@ -112,7 +146,7 @@ void GLSceneTypeNewsFeed::requestData(const QString &location)
 // 	url.addEncodedQueryItem("hl", "en");
 // 	url.addEncodedQueryItem("weather", QUrl::toPercentEncoding(location));
 	
-	qDebug() << "GLSceneTypeNewsFeed::requestData("<<location<<"): url:"<<url;
+	//qDebug() << "GLSceneTypeNewsFeed::requestData("<<location<<"): url:"<<url;
 
 	QNetworkAccessManager *manager = new QNetworkAccessManager(this);
 	connect(manager, SIGNAL(finished(QNetworkReply*)),
@@ -136,7 +170,7 @@ void GLSceneTypeNewsFeed::handleNetworkData(QNetworkReply *networkReply)
 
 void GLSceneTypeNewsFeed::parseData(const QString &data) 
 {
-	qDebug() << "GLSceneTypeNewsFeed::parseData()";
+	//qDebug() << "GLSceneTypeNewsFeed::parseData()";
 	m_news.clear();
 	m_currentIndex = 0;
 
@@ -182,5 +216,6 @@ void GLSceneTypeNewsFeed::parseData(const QString &data)
 		}
 	}
 	
-	showNextItem();
+	if(scene())
+		showNextItem();
 }

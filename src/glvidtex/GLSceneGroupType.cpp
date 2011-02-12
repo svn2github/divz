@@ -71,6 +71,19 @@ QList<GLSceneType::AuditError> GLSceneType::auditTemplate(GLScene *scene)
 	return list;
 }
 
+GLDrawable *GLSceneType::lookupField(QString field)
+{
+	GLDrawableList drawables = scene()->drawableList();
+	QHash<QString,GLDrawable*> hash;
+	foreach(GLDrawable *gld, drawables)
+		hash[gld->itemName().toLower()] = gld;
+		
+	if(!field.isEmpty())
+		return hash[field.toLower()];
+		
+	return 0;
+}
+
 bool GLSceneType::applyFieldData(QString field)
 {
 	if(!scene())

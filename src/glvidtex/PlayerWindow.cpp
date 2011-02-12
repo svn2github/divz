@@ -1093,7 +1093,7 @@ void PlayerWindow::setGroup(GLSceneGroup *group)
 	if(m_group)
 	{
 		connect(m_group->playlist(), SIGNAL(currentItemChanged(GLScene*)), this, SLOT(setScene(GLScene*)));
-		//m_group->playlist()->play();
+		m_group->playlist()->play();
 	}
 }
 

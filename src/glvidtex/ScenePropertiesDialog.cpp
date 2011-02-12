@@ -87,7 +87,7 @@ void ScenePropertiesDialog::typeComboChanged(int idx)
 		htmlBuffer << QString("<font color='%1'><b>Errors found while attaching the scene type:</b></font><br>").arg(color);
 		foreach(GLSceneType::AuditError error, errors)
 		{
-			htmlBuffer << QString("<font color='%1'>%2</font><br>").arg(error.toString()).arg(error.isWarning ? "yellow" : "red"); 
+			htmlBuffer << QString("<font color='%2'>%1</font><br>").arg(error.toString()).arg(error.isWarning ? "yellow" : "red"); 
 		}
 	}
 	

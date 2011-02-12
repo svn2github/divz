@@ -31,15 +31,14 @@ void GLImageDrawable::setImage(const QImage& image, bool insidePaint)
 {
 	//qDebug() << "GLImageDrawable::setImage(): "<<(QObject*)this<<" mark1: insidePaint:"<<insidePaint;
 	if(m_allocatedMemory > IMAGE_ALLOCATION_CAP_MB*1024*1024 && 
-		!glWidget() && 
-		!scene() && 
+		!liveStatus() &&
 		canReleaseImage())
 	{
 		m_releasedImage = true;
 		//qDebug() << "GLImageDrawable::setImage(): "<<(QObject*)this<<" NOT LOADING";
 		
 		#ifdef DEBUG_MEMORY_USAGE
-		qDebug() << "GLImagedDrawable::setImage(): "<<(QObject*)this<<" Allocated memory ("<<(m_allocatedMemory/1024/1024)<<"MB ) exceedes" << IMAGE_ALLOCATION_CAP_MB << "MB cap - delaying load until go-live";
+		qDebug() << "GLImageDrawable::setImage(): "<<(QObject*)this<<" Allocated memory ("<<(m_allocatedMemory/1024/1024)<<"MB ) exceedes" << IMAGE_ALLOCATION_CAP_MB << "MB cap - delaying load until go-live";
 		#endif
 		return;
 	}
@@ -64,7 +63,7 @@ void GLImageDrawable::setImage(const QImage& image, bool insidePaint)
 	{
 		m_allocatedMemory -= m_frame->pointerLength();
 		#ifdef DEBUG_MEMORY_USAGE
-		qDebug() << "GLImagedDrawable::setImage(): "<<(QObject*)this<<" Allocated memory down to:"<<(m_allocatedMemory/1024/1024)<<"MB";
+		qDebug() << "GLImageDrawable::setImage(): "<<(QObject*)this<<" Allocated memory down to:"<<(m_allocatedMemory/1024/1024)<<"MB";
 		#endif
 		//qDebug() << "GLImageDrawable::setImage(): "<<(QObject*)this<<" mark4";
 	}
@@ -117,7 +116,7 @@ void GLImageDrawable::setImage(const QImage& image, bool insidePaint)
 	//image = QImage();
 	
  	#ifdef DEBUG_MEMORY_USAGE
- 	qDebug() << "GLImagedDrawable::setImage(): "<<(QObject*)this<<" Allocated memory up to:"<<(m_allocatedMemory/1024/1024)<<"MB";
+ 	qDebug() << "GLImageDrawable::setImage(): "<<(QObject*)this<<" Allocated memory up to:"<<(m_allocatedMemory/1024/1024)<<"MB";
  	#endif
 	//qDebug() << "GLImageDrawable::setImage(): "<<(QObject*)this<<" mark7";
 	updateTexture();
@@ -161,13 +160,12 @@ bool GLImageDrawable::setImageFile(const QString& file)
 	internalSetFilename(file);
 	
 	if(m_allocatedMemory > IMAGE_ALLOCATION_CAP_MB*1024*1024 && 
-		!glWidget() && 
-		!scene() &&
+		!liveStatus() &&
 		canReleaseImage())
 	{
 		m_releasedImage = true;
  		#ifdef DEBUG_MEMORY_USAGE
- 		qDebug() << "GLImagedDrawable::setImageFile(): "<<(QObject*)this<<" Allocated memory ("<<(m_allocatedMemory/1024/1024)<<"MB ) exceedes" << IMAGE_ALLOCATION_CAP_MB << "MB cap - delaying load until go-live";
+ 		qDebug() << "GLImageDrawable::setImageFile(): "<<(QObject*)this<<" Allocated memory ("<<(m_allocatedMemory/1024/1024)<<"MB ) exceedes" << IMAGE_ALLOCATION_CAP_MB << "MB cap - delaying load until go-live";
  		#endif
 		return true;
 	}
@@ -175,7 +173,7 @@ bool GLImageDrawable::setImageFile(const QString& file)
 // 	QString fileMod = fileInfo.lastModified().toString();
 // 	if(file == m_imageFile && fileMod == m_fileLastModified)
 // 	{
-// 		qDebug() << "GLImagedDrawable::setImageFile(): "<<(QObject*)this<<" "<<file<<": no change, not reloading";
+// 		qDebug() << "GLImageDrawable::setImageFile(): "<<(QObject*)this<<" "<<file<<": no change, not reloading";
 // 		return;
 // 	}
 
@@ -330,7 +328,7 @@ void GLImageDrawable::releaseImage()
 		m_frame = VideoFramePtr(new VideoFrame());
 		
 		#ifdef DEBUG_MEMORY_USAGE
-		qDebug() << "GLImagedDrawable::releaseImage(): "<<(QObject*)this<<" Released memory, allocated down to:"<<(m_allocatedMemory/1024/1024)<<"MB";
+		qDebug() << "GLImageDrawable::releaseImage(): "<<(QObject*)this<<" Released memory, allocated down to:"<<(m_allocatedMemory/1024/1024)<<"MB";
 		#endif
 	}
 }
@@ -347,7 +345,7 @@ void GLImageDrawable::setLiveStatus(bool flag)
 			m_activeMemory += m_frame->pointerLength();;
 		
 		#ifdef DEBUG_MEMORY_USAGE
-		qDebug() << "GLImagedDrawable::setLiveStatus("<<flag<<"): "<<(QObject*)this<<" Active memory usage up to:"<<(m_activeMemory/1024/1024)<<"MB";
+		qDebug() << "GLImageDrawable::setLiveStatus("<<flag<<"): "<<(QObject*)this<<" Active memory usage up to:"<<(m_activeMemory/1024/1024)<<"MB";
 		#endif
 		
 		if(m_needUpdate)
@@ -362,7 +360,7 @@ void GLImageDrawable::setLiveStatus(bool flag)
 		if(m_frame)
 			m_activeMemory -= m_frame->pointerLength();;
 		#ifdef DEBUG_MEMORY_USAGE
-		qDebug() << "GLImagedDrawable::setLiveStatus("<<flag<<"): "<<(QObject*)this<<" Active memory usage down to:"<<(m_activeMemory/1024/1024)<<"MB";
+		qDebug() << "GLImageDrawable::setLiveStatus("<<flag<<"): "<<(QObject*)this<<" Active memory usage down to:"<<(m_activeMemory/1024/1024)<<"MB";
 		#endif
 		if(canReleaseImage() &&
 		   m_allocatedMemory > IMAGE_ALLOCATION_CAP_MB*1024*1024) 

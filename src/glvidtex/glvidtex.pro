@@ -92,6 +92,9 @@ SOURCES       = GLWidget.cpp \
 # MD5 is used for caching in GLImageDrawable
 include(../3rdparty/md5/md5.pri)
 
+# Generating QR Codes in GLSceneTypeNewsFeed
+include(qrencode-3.1.0/qrencode-3.1.0.pri)
+
 # Exiv is used for EXIF data extraction in GLImageDrawable to auto-rotate
 # and in 'glslideshow' to caption images
 include(../imgtool/exiv2-0.18.2-qtbuild/qt_build_root.pri)

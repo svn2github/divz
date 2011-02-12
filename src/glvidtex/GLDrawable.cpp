@@ -1066,17 +1066,17 @@ QVariant GLDrawable::itemChange(GraphicsItemChange change, const QVariant & valu
 //  		else
  		{
 				
-			QPointF newPos = AppSettings_snapToGrid(value.toPointF(),false);//m_kbdMotivated);
-			
-			// reset the keyboard flag - if another key press comes, it will be set again by the scene
-// 			if(m_kbdMotivated)
-// 				m_kbdMotivated = false;
-	
-			if (newPos != value.toPointF())
-			{
-				retVal = QVariant(newPos);
-				retValOverride = true;
-			}
+// 			QPointF newPos = AppSettings_snapToGrid(value.toPointF(),false);//m_kbdMotivated);
+// 			
+// 			// reset the keyboard flag - if another key press comes, it will be set again by the scene
+// // 			if(m_kbdMotivated)
+// // 				m_kbdMotivated = false;
+// 	
+// 			if (newPos != value.toPointF())
+// 			{
+// 				retVal = QVariant(newPos);
+// 				retValOverride = true;
+// 			}
 		}
 	}
 

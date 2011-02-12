@@ -404,6 +404,9 @@ protected:
 		If \a fieldName is given, only that field is applied, otherwise all fields are applied. */
 	bool applyFieldData(QString fieldName = "");
 	
+	/** Find the drawable for the given field name. Returns NULL if not found. */
+	GLDrawable *lookupField(QString fieldName);
+	
 	/** Updates the internal value of \a field to \a value. 
 		If a scene is bound, it will update the field in the scene as well. */ 
 	virtual void setField(QString field, QVariant value);

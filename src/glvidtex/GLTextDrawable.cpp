@@ -700,7 +700,7 @@ QString GLTextDrawable::htmlToPlainText(const QString& text)
 
 void GLTextDrawable::setPlainText(const QString& text, bool /*replaceNewlineSlash*/)
 {
-	qDebug() << "GLTextDrawable::setPlainText(): text:"<<text;
+	//qDebug() << "GLTextDrawable::setPlainText(): text:"<<text;
 	if(m_lockSetPlainText)
 		return;
 	m_lockSetPlainText = true;
