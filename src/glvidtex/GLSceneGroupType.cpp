@@ -92,7 +92,7 @@ bool GLSceneType::applyFieldData(QString field)
 			{
 				const char *propName = gld->metaObject()->userProperty().name();
 				gld->setProperty(propName, m_fields[field]);
-				//qDebug() << "GLSceneType::applyFieldData("<<field<<"): Set field:"<<field<<", property:"<<propName<<", data:"<<m_fields[field];
+				//qDebug() << "GLSceneType::applyFieldData("<<field<<"): Set field:"<<field<<", drawable:"<<(QObject*)gld<<", property:"<<propName<<", data:"<<m_fields[field];
 				return true;
 			}
 			else
@@ -162,9 +162,20 @@ bool GLSceneType::attachToScene(GLScene *scene)
 	
 	if(type->m_factoryFresh)
 	{
-		type = GLSceneTypeFactory::newInstance(type->id());
-		type->m_fields = m_fields;
-		type->m_params = m_params;
+		GLSceneType *newInst = GLSceneTypeFactory::newInstance(type->id());
+		
+		if(!newInst)
+		{
+			qDebug() << "GLSceneType::attachToScene(): [factory fresh] Error creating new instance of type: "<<type<<", id:"<<type->id()<<", not attaching to scene.";
+			return false;
+		}
+		
+		qDebug() << "GLSceneType::attachToScene(): [factory fresh] created new instance, old:"<<type<<", new:"<<newInst;
+		
+		newInst->m_fields = type->m_fields;
+		newInst->m_params = type->m_params;
+		
+		type = newInst;
 	}
 	
 	type->m_scene = scene;
@@ -303,6 +314,7 @@ GLSceneTypeFactory::GLSceneTypeFactory()
 	GLSceneType *type;
 	#define ADD_CLASS(x) type = new x(); m_list.append(type); m_lookup[type->id()] = type;
 	
+	// NOTE DONT FORGET to add new classes to newInstance() as well!!!
 	ADD_CLASS(GLSceneTypeCurrentWeather);
 	ADD_CLASS(GLSceneTypeNewsFeed);
 	
@@ -319,7 +331,8 @@ GLSceneTypeFactory *GLSceneTypeFactory::d()
 GLSceneType *GLSceneTypeFactory::lookup(QString id)
 {
 	GLSceneType *t = d()->m_lookup[id];
-	t->m_factoryFresh = true;
+	if(t)
+		t->m_factoryFresh = true;
 	return t;
 }
 
@@ -335,6 +348,7 @@ GLSceneType *GLSceneTypeFactory::newInstance(QString id)
 	#define IF_CLASS(x) if(className == #x) { newInst = new x(); }
 	
 	IF_CLASS(GLSceneTypeCurrentWeather);
+	IF_CLASS(GLSceneTypeNewsFeed);
 	
 	#undef IF_CLASS
 	

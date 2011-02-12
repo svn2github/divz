@@ -767,6 +767,12 @@ void GLVideoDrawable::setGLWidget(GLWidget* widget)
 			setLiveStatus(true);
 		
 		GLDrawable::setGLWidget(widget);
+		
+		if(m_textureUpdateNeeded)
+		{
+			updateTexture();
+			m_textureUpdateNeeded = false;
+		}
 	}
 	else
 	{
@@ -1665,6 +1671,8 @@ void GLVideoDrawable::updateTexture(bool secondSource)
 			updateRects(secondSource);
 			updateAlignment(secondSource);
 		}
+		
+		m_textureUpdateNeeded = true;
 	}
 	
 // 	if(property("-debug").toBool())
@@ -1878,6 +1886,12 @@ void GLVideoDrawable::paintGL()
 //  		updateTexture();
 //  		qDebug() << "GLVideoDrawable::paintGL():"<<(QObject*)this;
 //  	}
+
+	if(m_textureUpdateNeeded)
+	{
+		updateTexture();
+		m_textureUpdateNeeded = false;
+	}
 
 
 	//m_frame->unmap()();

@@ -62,8 +62,8 @@ void GLSceneTypeNewsFeed::setLiveStatus(bool flag)
 {
 	GLSceneType::setLiveStatus(flag);
 	
-	if(m_news.size() > 0)
-		showNextItem();
+// 	if(m_news.size() > 0)
+// 		showNextItem();
 	
 	if(flag)
 	{
@@ -73,6 +73,7 @@ void GLSceneTypeNewsFeed::setLiveStatus(bool flag)
 	else
 	{
 		m_reloadTimer.stop();
+		QTimer::singleShot( 0, this, SLOT(showNextItem()) );
 	}
 }
 
@@ -128,7 +129,10 @@ void GLSceneTypeNewsFeed::handleNetworkData(QNetworkReply *networkReply)
 	networkReply->manager()->deleteLater();
 }
 
-#define GET_DATA_ATTR xml.attributes().value("data").toString()
+#define GET_DATA_ATTR xml.attributes().value("data").toString() \
+	.replace("&amp;#39;","'") \
+	.replace("&amp;quot;","\"")
+	
 
 void GLSceneTypeNewsFeed::parseData(const QString &data) 
 {
@@ -154,15 +158,15 @@ void GLSceneTypeNewsFeed::parseData(const QString &data)
 						if (!item.title.isEmpty()) 
 						{
 							m_news << item;
+							//qDebug() << "GLSceneTypeNewsFeed::parseData(): Added item: "<<item.title;
 							item = NewsItem();
-							qDebug() << "GLSceneTypeNewsFeed::parseData(): Added item: "<<item.title;
 						} 
 						break;
 					}
 					
 					if (xml.tokenType() == QXmlStreamReader::StartElement) 
 					{
-						if (xml.name() == "title") 
+						if (xml.name() == "title")
 							item.title = GET_DATA_ATTR;
 						if (xml.name() == "url") 
 							item.url = GET_DATA_ATTR;
@@ -170,11 +174,13 @@ void GLSceneTypeNewsFeed::parseData(const QString &data)
 							item.source = GET_DATA_ATTR;
 						if (xml.name() == "date") 
 							item.date = GET_DATA_ATTR;
-						if (xml.name() == "text") 
+						if (xml.name() == "snippet")
 							item.text = GET_DATA_ATTR;
 					}
 				}
 			}
 		}
 	}
+	
+	showNextItem();
 }

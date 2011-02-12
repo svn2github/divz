@@ -1234,7 +1234,7 @@ void PlayerWindow::opacityAnimationFinished()
 		else
 			m_graphicsScene->removeItem(drawable);
 
-		qDebug() << "PlayerWindow::opacityAnimationFinished: removing drawable:"<<(QObject*)drawable;
+		//qDebug() << "PlayerWindow::opacityAnimationFinished: removing drawable:"<<(QObject*)drawable;
 	}
 
 	disconnect(m_oldScene, 0, this, 0);

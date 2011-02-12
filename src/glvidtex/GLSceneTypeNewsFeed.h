@@ -69,6 +69,8 @@ private slots:
 	void requestData(const QString &location);
 	void handleNetworkData(QNetworkReply *networkReply);
 	void parseData(const QString &data);
+	
+	void showNextItem();
 
 private:
 	QTimer m_reloadTimer;
@@ -85,8 +87,6 @@ private:
 	
 	QList<NewsItem> m_news;
 	int m_currentIndex;
-	
-	void showNextItem();
 };
 
 #endif

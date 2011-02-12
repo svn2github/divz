@@ -47,6 +47,8 @@ protected:
 	
 	bool m_allowAutoRotate;
 	
+	bool m_needUpdate;
+	
 	static int m_allocatedMemory;
 	static int m_activeMemory;
 	

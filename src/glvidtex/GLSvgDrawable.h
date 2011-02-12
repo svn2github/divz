@@ -26,6 +26,7 @@ signals:
 protected:
 	virtual void drawableResized(const QSizeF&);
 /*	virtual void updateRects(bool secondSource=false);*/
+	virtual bool canReleaseImage() { return false; }
 	
 private slots:
 	void renderSvg();

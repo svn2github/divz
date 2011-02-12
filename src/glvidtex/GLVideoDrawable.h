@@ -409,6 +409,8 @@ private:
 	
 	bool m_liveStatus;
 	
+	bool m_textureUpdateNeeded;
+	
 	static int m_videoSenderPortAllocator;
 };
 

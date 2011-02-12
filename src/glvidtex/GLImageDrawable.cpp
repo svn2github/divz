@@ -29,12 +29,14 @@ GLImageDrawable::~GLImageDrawable()
 
 void GLImageDrawable::setImage(const QImage& image, bool insidePaint)
 {
+	//qDebug() << "GLImageDrawable::setImage(): "<<(QObject*)this<<" mark1: insidePaint:"<<insidePaint;
 	if(m_allocatedMemory > IMAGE_ALLOCATION_CAP_MB*1024*1024 && 
 		!glWidget() && 
 		!scene() && 
 		canReleaseImage())
 	{
 		m_releasedImage = true;
+		//qDebug() << "GLImageDrawable::setImage(): "<<(QObject*)this<<" NOT LOADING";
 		
 		#ifdef DEBUG_MEMORY_USAGE
 		qDebug() << "GLImagedDrawable::setImage(): "<<(QObject*)this<<" Allocated memory ("<<(m_allocatedMemory/1024/1024)<<"MB ) exceedes" << IMAGE_ALLOCATION_CAP_MB << "MB cap - delaying load until go-live";
@@ -43,18 +45,19 @@ void GLImageDrawable::setImage(const QImage& image, bool insidePaint)
 	}
 	
 	m_releasedImage = false;
+	//qDebug() << "GLImageDrawable::setImage(): "<<(QObject*)this<<" mark2";
 	
-	if(m_frame && 
-	   m_frame->isValid() &&
-	   xfadeEnabled() &&
-	   !insidePaint)
-	{
- 		m_frame2 = m_frame;
- 		//qDebug() << "GLImageDrawable::setImage(): Starting crossfade with m_frame2";
-		//m_frame2 = VideoFramePtr(new VideoFrame(m_image,1000/30));
-		updateTexture(true); // true = read from m_frame2
-		xfadeStart();
-	}
+// 	if(m_frame && 
+// 	   m_frame->isValid() &&
+// 	   xfadeEnabled() &&
+// 	   !insidePaint)
+// 	{
+//  		m_frame2 = m_frame;
+//  		//qDebug() << "GLImageDrawable::setImage(): "<<(QObject*)this<<" Starting crossfade with m_frame2";
+// 		//m_frame2 = VideoFramePtr(new VideoFrame(m_image,1000/30));
+// 		updateTexture(true); // true = read from m_frame2
+// 		xfadeStart();
+// 	}
 	
 	// Take the memory off the list because when crossfade is done, the frame should get freed
 	if(m_frame)
@@ -63,13 +66,15 @@ void GLImageDrawable::setImage(const QImage& image, bool insidePaint)
 		#ifdef DEBUG_MEMORY_USAGE
 		qDebug() << "GLImagedDrawable::setImage(): "<<(QObject*)this<<" Allocated memory down to:"<<(m_allocatedMemory/1024/1024)<<"MB";
 		#endif
+		//qDebug() << "GLImageDrawable::setImage(): "<<(QObject*)this<<" mark4";
 	}
 		
 	QImage localImage = image;
+	//qDebug() << "GLImageDrawable::setImage(): "<<(QObject*)this<<" mark5";
 	
 	if(1)
 	{
-		//qDebug() << "GLImageDrawable::setImage(): Setting new m_frame";
+		//qDebug() << "GLImageDrawable::setImage(): "<<(QObject*)this<<" Setting new m_frame";
 		m_frame = VideoFramePtr(new VideoFrame(localImage, 1000/30));
 	}
 	else
@@ -97,7 +102,7 @@ void GLImageDrawable::setImage(const QImage& image, bool insidePaint)
 			
 		if(m_frame->pixelFormat() == QVideoFrame::Format_Invalid)
 		{
-			qDebug() << "VideoFrame: image was not in an acceptable format, converting to ARGB32 automatically.";
+			qDebug() << "GLImageDrawable::setImage(): "<<(QObject*)this<<": image was not in an acceptable format, converting to ARGB32 automatically.";
 			localImage = localImage.convertToFormat(QImage::Format_ARGB32);
 			m_frame->setPixelFormat(QVideoFrame::Format_ARGB32);
 		}
@@ -114,7 +119,7 @@ void GLImageDrawable::setImage(const QImage& image, bool insidePaint)
  	#ifdef DEBUG_MEMORY_USAGE
  	qDebug() << "GLImagedDrawable::setImage(): "<<(QObject*)this<<" Allocated memory up to:"<<(m_allocatedMemory/1024/1024)<<"MB";
  	#endif
-	
+	//qDebug() << "GLImageDrawable::setImage(): "<<(QObject*)this<<" mark7";
 	updateTexture();
 	
 // 	QString file = QString("debug-%1-%2.png").arg(metaObject()->className()).arg(QString().sprintf("%p",((void*)this)));
@@ -123,7 +128,12 @@ void GLImageDrawable::setImage(const QImage& image, bool insidePaint)
 	
 	if(fpsLimit() <= 0.0 &&
 	   !insidePaint)
+	{
+		//qDebug() << "GLImageDrawable::setImage(): "<<(QObject*)this<<" mark8";
 		updateGL();
+		if(!liveStatus())
+			m_needUpdate = true; 
+	}
 		
 	//qDebug() << "GLImageDrawable::setImage(): "<<(QObject*)this<<" Set image size:"<<m_frame->image().size();
 	
@@ -339,6 +349,13 @@ void GLImageDrawable::setLiveStatus(bool flag)
 		#ifdef DEBUG_MEMORY_USAGE
 		qDebug() << "GLImagedDrawable::setLiveStatus("<<flag<<"): "<<(QObject*)this<<" Active memory usage up to:"<<(m_activeMemory/1024/1024)<<"MB";
 		#endif
+		
+		if(m_needUpdate)
+		{
+			m_needUpdate = false;
+// 			updateTexture();
+// 			updateGL();
+		}
 	}
 	else
 	{

@@ -122,6 +122,9 @@ QString GLTextDrawable::formatTime(double time)
 
 void GLTextDrawable::countdownTick()
 {
+	if(!liveStatus())
+		return;
+		
 	QDateTime now = QDateTime::currentDateTime();
 
 	int secsTo = now.secsTo(m_targetTime);
@@ -159,6 +162,9 @@ void GLTextDrawable::setClockFormat(const QString& format)
 
 void GLTextDrawable::clockTick()
 {
+	if(!liveStatus())
+		return;
+		
 	QDateTime now = QDateTime::currentDateTime();
 	QString newText = now.toString(clockFormat());
 	//qDebug() << "GLTextDrawable::clockTick: now:"<<now<<", format:"<<clockFormat()<<", newText:"<<newText;
@@ -320,11 +326,6 @@ void GLTextDrawable::parseRssXml()
 		{
 			if (m_rssXml.name() == "item") 
 			{
-// 				QTreeWidgetItem *item = new QTreeWidgetItem(feed);
-// 				item->setText(0, titleString);
-// 				item->setText(1, dateString);
-// 				item->setText(2, linkString);
-// 				ui->treeWidget->addTopLevelItem(item);
 				GLPlaylistItem *item = new GLPlaylistItem();
 				item->setTitle(titleString);
 				
@@ -699,10 +700,13 @@ QString GLTextDrawable::htmlToPlainText(const QString& text)
 
 void GLTextDrawable::setPlainText(const QString& text, bool /*replaceNewlineSlash*/)
 {
+	qDebug() << "GLTextDrawable::setPlainText(): text:"<<text;
 	if(m_lockSetPlainText)
 		return;
 	m_lockSetPlainText = true;
+	//qDebug() << "GLTextDrawable::setPlainText(): mark1";
 
+	
 	QTextDocument doc;
 	QString origText = m_text;
 	if (Qt::mightBeRichText(origText))
