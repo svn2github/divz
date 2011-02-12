@@ -77,10 +77,10 @@ void GLSceneTypeCurrentWeather::setLiveStatus(bool flag)
 		m_reloadTimer.start();
 		applyFieldData();
 	}
-	else
-	{
-		m_reloadTimer.stop();
-	}
+// 	else
+// 	{
+// 		m_reloadTimer.stop();
+// 	}
 }
 
 void GLSceneTypeCurrentWeather::setParam(QString param, QVariant value)

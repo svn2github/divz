@@ -93,17 +93,20 @@ void GLSceneTypeNewsFeed::showNextItem()
 	GLDrawable *qrdest = lookupField("qrcode");
 	if(qrdest)
 	{
-		QRcode* rawcode = QRcode_encodeString(qPrintable(item.url), 0, QR_ECLEVEL_M, QR_MODE_AN,  0);
+		QRcode* rawcode = QRcode_encodeString(qPrintable(item.url), 0, QR_ECLEVEL_L, QR_MODE_8,  1);
 		if(!rawcode)
 			qDebug() << "GLSceneTypeNewsFeed::showNextItem(): Error generating qrcode.";
 		else
 		{
-			QImage image(rawcode->width*4,rawcode->width*4,QImage::Format_ARGB32);
+			int w = rawcode->width;
+			qDebug() << "Got a"<<w<<"px barcode";
+			
+			int dotSize = 3;
+			QImage image(rawcode->width*dotSize,rawcode->width*dotSize,QImage::Format_ARGB32);
 			memset(image.scanLine(0),0,image.byteCount());
 			
 			QPainter painter(&image);
-			painter.setBrush(Qt::black);
-			int w = rawcode->width;
+			painter.setBrush(Qt::white);
 			for(int x=0;x<w;x++)
 			{
 				for(int y=0;y<w;y++)
@@ -112,14 +115,17 @@ void GLSceneTypeNewsFeed::showNextItem()
 					bool hasDot = data & 0xFF;
 					if(hasDot)
 					{
-						painter.drawRect(QRect(x*4,y*4,4,4));
+						painter.drawRect(QRect(x*dotSize,y*dotSize,dotSize,dotSize));
+						qDebug() << "Dot at:"<<x<<"x"<<y;
 					}
 				}
 			}
 			
 			
+			
 			painter.end();
 			
+			dynamic_cast<GLImageDrawable*>(qrdest)->setImageFile("");
 			dynamic_cast<GLImageDrawable*>(qrdest)->setImage(image);
 		}
 	}

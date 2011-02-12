@@ -149,7 +149,10 @@ bool GLImageDrawable::setImageFile(const QString& file)
 {
 	//qDebug() << "GLImageDrawable::setImageFile(): "<<(QObject*)this<<" file:"<<file;
 	if(file.isEmpty())
+	{
+		internalSetFilename(file);
 		return false;
+	}
 	
 	QFileInfo fileInfo(file);
 	if(!fileInfo.exists())
