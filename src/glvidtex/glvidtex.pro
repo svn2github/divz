@@ -94,6 +94,8 @@ include(../3rdparty/md5/md5.pri)
 
 # Generating QR Codes in GLSceneTypeNewsFeed
 include(qrencode-3.1.0/qrencode-3.1.0.pri)
+HEADERS += QRCodeQtUtil.h
+SOURCES += QRCodeQtUtil.cpp
 
 # Exiv is used for EXIF data extraction in GLImageDrawable to auto-rotate
 # and in 'glslideshow' to caption images

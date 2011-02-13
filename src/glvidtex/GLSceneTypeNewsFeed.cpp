@@ -1,6 +1,6 @@
 #include "GLSceneTypeNewsFeed.h"
 #include "GLImageDrawable.h"
-#include "qrencode-3.1.0/qrencode.h"
+#include "QRCodeQtUtil.h"
 
 GLSceneTypeNewsFeed::GLSceneTypeNewsFeed(QObject *parent)
 	: GLSceneType(parent)
@@ -90,43 +90,25 @@ void GLSceneTypeNewsFeed::showNextItem()
 	setField("source",	item.source);
 	setField("date",	item.date);
 	
+	// Not sure which method to use - render to a file, then set the file using the "setField()" method,
+	// or set the QImage on the drawable directly. For now, we'll got with the latter route.
+	
+// 	QImage image = QRCodeQtUtil::encode(item.url);
+// 	image.save("qrcode.png");
+// 	setField("qrcode",	"qrcode.png");
+	
+	
 	GLDrawable *qrdest = lookupField("qrcode");
 	if(qrdest)
 	{
-		QRcode* rawcode = QRcode_encodeString(qPrintable(item.url), 0, QR_ECLEVEL_L, QR_MODE_8,  1);
-		if(!rawcode)
-			qDebug() << "GLSceneTypeNewsFeed::showNextItem(): Error generating qrcode.";
-		else
+		GLImageDrawable *dest = dynamic_cast<GLImageDrawable*>(qrdest);
+		if(dest)
 		{
-			int w = rawcode->width;
-			qDebug() << "Got a"<<w<<"px barcode";
+			QImage image = QRCodeQtUtil::encode(item.url);
+			//image.save("qrcode.png");
 			
-			int dotSize = 3;
-			QImage image(rawcode->width*dotSize,rawcode->width*dotSize,QImage::Format_ARGB32);
-			memset(image.scanLine(0),0,image.byteCount());
-			
-			QPainter painter(&image);
-			painter.setBrush(Qt::white);
-			for(int x=0;x<w;x++)
-			{
-				for(int y=0;y<w;y++)
-				{
-					uchar data = rawcode->data[y*w+x];
-					bool hasDot = data & 0xFF;
-					if(hasDot)
-					{
-						painter.drawRect(QRect(x*dotSize,y*dotSize,dotSize,dotSize));
-						qDebug() << "Dot at:"<<x<<"x"<<y;
-					}
-				}
-			}
-			
-			
-			
-			painter.end();
-			
-			dynamic_cast<GLImageDrawable*>(qrdest)->setImageFile("");
-			dynamic_cast<GLImageDrawable*>(qrdest)->setImage(image);
+			dest->setImageFile(""); //qrcode.png");
+			dest->setImage(image);
 		}
 	}
 	
