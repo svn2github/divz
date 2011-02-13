@@ -44,15 +44,19 @@ void GLRectDrawable::renderImage()
 	QPainter painter(&image);
 	if(painter.isActive())
 	{
-		if(m_borderWidth > 0.0)
-			painter.setPen(QPen(m_borderColor,m_borderWidth));
-		else
-			painter.setPen(QPen());
-		painter.setBrush(m_fillColor);
 		QRect target = image.rect();
-		int v = m_borderWidth / 2;
-		target = target.adjusted(v,v,-v,-v);
-		painter.drawRect(target);
+		if(m_borderWidth > 0.0)
+		{
+			painter.setPen(QPen(m_borderColor,m_borderWidth));
+			painter.setBrush(m_fillColor);
+			int v = m_borderWidth / 2;
+			target = target.adjusted(v,v,-v,-v);
+			painter.drawRect(target);
+		}
+		else
+		{
+			painter.fillRect(target, m_fillColor);
+		}
 		painter.end();
 	}
 	
@@ -66,14 +70,20 @@ void GLRectDrawable::paint(QPainter * painter, const QStyleOptionGraphicsItem * 
 		return;
 		
 	painter->setOpacity(opacity());
-	if(m_borderWidth > 0.0)
-		painter->setPen(QPen(m_borderColor,m_borderWidth));
-	else
-		painter->setPen(QPen());
-	painter->setBrush(m_fillColor);
+	
 	QRectF target = QRectF(QPointF(0,0),rect().size());
-	double v = m_borderWidth / 2;
-	target = target.adjusted(v,v,-v,-v);
-	painter->drawRect(target);
+		
+	if(m_borderWidth > 0.0)
+	{
+		painter->setPen(QPen(m_borderColor,m_borderWidth));
+		painter->setBrush(m_fillColor);
+		double v = m_borderWidth / 2;
+		target = target.adjusted(v,v,-v,-v);
+		painter->drawRect(target);
+	}
+	else
+	{
+		painter->fillRect(target, m_fillColor);
+	}
 }
 

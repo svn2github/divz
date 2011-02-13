@@ -44,7 +44,8 @@ HEADERS       = GLWidget.h \
 		../livemix/DVizSharedMemoryThread.h \
 		SharedMemorySender.h \
 		V4LOutput.h \
-		GLSceneTypeNewsFeed.h
+		GLSceneTypeNewsFeed.h \
+		GLSceneTypeRandomImage.h
 		
 SOURCES       = GLWidget.cpp \
 		../livemix/VideoSource.cpp \
@@ -87,7 +88,8 @@ SOURCES       = GLWidget.cpp \
 		SharedMemorySender.cpp \
 		V4LOutput.cpp \
 		GLSceneTypeCurrentWeather.cpp \
-		GLSceneTypeNewsFeed.cpp
+		GLSceneTypeNewsFeed.cpp \
+		GLSceneTypeRandomImage.cpp
 		
 # MD5 is used for caching in GLImageDrawable
 include(../3rdparty/md5/md5.pri)

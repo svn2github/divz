@@ -330,6 +330,7 @@ GLSceneTypeFactory::GLSceneTypeFactory()
 	// NOTE DONT FORGET to add new classes to newInstance() as well!!!
 	ADD_CLASS(GLSceneTypeCurrentWeather);
 	ADD_CLASS(GLSceneTypeNewsFeed);
+	ADD_CLASS(GLSceneTypeRandomImage);
 	
 	#undef ADD_CLASS
 }
@@ -362,6 +363,7 @@ GLSceneType *GLSceneTypeFactory::newInstance(QString id)
 	
 	IF_CLASS(GLSceneTypeCurrentWeather);
 	IF_CLASS(GLSceneTypeNewsFeed);
+	IF_CLASS(GLSceneTypeRandomImage);
 	
 	#undef IF_CLASS
 	

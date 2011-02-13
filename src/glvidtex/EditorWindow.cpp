@@ -442,7 +442,14 @@ GLScene *EditorWindow::scene()
 void EditorWindow::addDrawable(GLDrawable *drawable)
 {
 	drawable->addShowAnimation(GLDrawable::AnimFade);
-	drawable->setZIndex(scene()->size());
+	//double idx = scene()->size();
+	GLDrawableList list = scene()->drawableList();
+	double max = 0;
+	foreach(GLDrawable *gld, list)
+		if(gld->zIndex() > max)
+			max = gld->zIndex();
+	//qDebug() << "EditorWindow::addDrawable(): drawable:"<<(QObject*)drawable<<", idx:"<<idx;
+	drawable->setZIndex(max+1.);
 	scene()->addDrawable(drawable);
 	
 	if(m_graphicsScene)

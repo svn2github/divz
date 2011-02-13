@@ -93,9 +93,10 @@ void GLSceneTypeNewsFeed::showNextItem()
 	// Not sure which method to use - render to a file, then set the file using the "setField()" method,
 	// or set the QImage on the drawable directly. For now, we'll got with the latter route.
 	
-// 	QImage image = QRCodeQtUtil::encode(item.url);
-// 	image.save("qrcode.png");
-// 	setField("qrcode",	"qrcode.png");
+//  	QImage image = QRCodeQtUtil::encode(item.url);
+//  	QString file = QString("qrcode-%1.png").arg(m_currentIndex);
+//  	image.save(file);
+//  	setField("qrcode", file);
 	
 	
 	GLDrawable *qrdest = lookupField("qrcode");
@@ -105,9 +106,8 @@ void GLSceneTypeNewsFeed::showNextItem()
 		if(dest)
 		{
 			QImage image = QRCodeQtUtil::encode(item.url);
-			//image.save("qrcode.png");
 			
-			dest->setImageFile(""); //qrcode.png");
+			dest->setImageFile("");
 			dest->setImage(image);
 		}
 	}

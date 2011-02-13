@@ -562,7 +562,7 @@ double GLDrawable::opacity()
 
 void GLDrawable::setZIndex(double z)
 {
-	//qDebug() << "GLDrawable::setZIndex: "<<this<<", zIndex:"<<z;
+	//qDebug() << "GLDrawable::setZIndex: "<<(QObject*)this<<", zIndex:"<<z;
 	m_zIndex = z;
 	setZValue((int)z); // for QGraphicsItem compat
 

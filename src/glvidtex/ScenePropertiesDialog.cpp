@@ -83,7 +83,7 @@ void ScenePropertiesDialog::typeComboChanged(int idx)
 	if(!errors.isEmpty())
 	{
 		//qDebug() << "PlayerWindow: [DEBUG]: Errors found attaching weather type to scene:";
-		QString color = GLSceneType::AuditError::hasErrors(errors) ? "red" : "yellow";
+		QString color = GLSceneType::AuditError::hasErrors(errors) ? "red" : "orange";
 		htmlBuffer << QString("<font color='%1'><b>Errors found while attaching the scene type:</b></font><br>").arg(color);
 		foreach(GLSceneType::AuditError error, errors)
 		{
@@ -126,9 +126,19 @@ void ScenePropertiesDialog::typeComboChanged(int idx)
 	GLSceneType::ParamInfoList params = type->parameters();
 	foreach(GLSceneType::ParameterInfo info, params)
 	{
-		form->addRow(info.title.isEmpty() ? 
-			PropertyEditorFactory::guessTitle(info.name) : info.title, 
-			PropertyEditorFactory::generatePropertyEditor(m_scene->sceneType(), qPrintable(info.name), info.slot, info.hints));
+		QWidget * widget = PropertyEditorFactory::generatePropertyEditor(m_scene->sceneType(), qPrintable(info.name), info.slot, info.hints);
+		if(dynamic_cast<QCheckBox*>(widget))
+		{
+			// checkbox already has text
+			form->addRow("", widget);
+			// Empty field to allign widget with other input items
+		}
+		else
+		{
+			form->addRow(info.title.isEmpty() ? 
+				PropertyEditorFactory::guessTitle(info.name) : info.title, 
+				widget);
+		}
 		form->addRow("", new QLabel(QString("<i><font size='small'>%1</font></i>"). arg(info.description)));
 	}
 	

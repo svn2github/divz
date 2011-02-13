@@ -8,5 +8,6 @@
 
 #include "GLSceneTypeCurrentWeather.h"
 #include "GLSceneTypeNewsFeed.h"
+#include "GLSceneTypeRandomImage.h"
 
 #endif

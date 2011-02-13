@@ -17,7 +17,7 @@ GLImageDrawable::GLImageDrawable(QString file, QObject *parent)
 	, m_releasedImage(false)
 	, m_allowAutoRotate(true)
 {
-	//setImage(QImage("dot.gif"));
+	setImage(QImage("dot.gif"));
 	setCrossFadeMode(GLVideoDrawable::FrontAndBack);
 	
 	if(!file.isEmpty())
@@ -45,6 +45,7 @@ void GLImageDrawable::setImage(const QImage& image, bool insidePaint)
 	
 	m_releasedImage = false;
 	//qDebug() << "GLImageDrawable::setImage(): "<<(QObject*)this<<" mark2";
+	//image.save("whitedebug.png");
 	
 // 	if(m_frame && 
 // 	   m_frame->isValid() &&
@@ -354,8 +355,8 @@ void GLImageDrawable::setLiveStatus(bool flag)
 		if(m_needUpdate)
 		{
 			m_needUpdate = false;
-// 			updateTexture();
-// 			updateGL();
+ 			//updateTexture();
+ 			//updateGL();
 		}
 	}
 	else
