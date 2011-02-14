@@ -39,6 +39,7 @@ public:
 			defaultValue = QVariant();
 			stringIsFile = false;
 			fileTypeFilter = "";
+			stringIsDir = false;
 			step = 1;
 		}
 
@@ -85,6 +86,9 @@ public:
 			\endcode
 		*/
 		QString fileTypeFilter;
+		
+		/** If true and type is a QVariant::String, generatePropertyEditor() will configure the text field for a directory lookup auto-complete mode and add a 'Browse' button and dialog configured to choose a directory. */ 
+		bool stringIsDir;
 	};
 	
 	/** Attempts to magically guess the title for a string based on a simple set of string replacements and basic logic.
@@ -145,7 +149,7 @@ class BrowseDialogLauncher : public QObject
 {
 	Q_OBJECT
 public:
-	BrowseDialogLauncher(QObject *attached, const char *slot, QVariant value);
+	BrowseDialogLauncher(QObject *attached, const char *slot, QVariant value, bool isFileBrowser=true);
 	
 public slots:
 	void browse();
@@ -163,6 +167,7 @@ private:
 	QString m_settingsKey;
 	QString m_title;
 	QString m_filter;
+	bool m_isFileBrowser;
 };
 
 

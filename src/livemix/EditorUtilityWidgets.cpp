@@ -150,7 +150,7 @@ QWidget * PropertyEditorFactory::generatePropertyEditor(QObject *object, const c
 		if(changeSignal)
 			new PropertyChangeListener(object, changeSignal, box, SLOT(setText(const QString&)), prop, property);
 		
-		if(opts.stringIsFile)
+		if(opts.stringIsFile || opts.stringIsDir)
 		{
 			
 			QCompleter *completer = new QCompleter(box);
@@ -165,7 +165,7 @@ QWidget * PropertyEditorFactory::generatePropertyEditor(QObject *object, const c
 			hbox->addWidget(box);
 			
 			QPushButton *browseButton = new QPushButton(QPixmap("../data/stock-open.png"), "");
-			BrowseDialogLauncher *setter = new BrowseDialogLauncher(box, SLOT(setText(const QString&)), box->text());
+			BrowseDialogLauncher *setter = new BrowseDialogLauncher(box, SLOT(setText(const QString&)), box->text(), !opts.stringIsDir);
 			connect(browseButton, SIGNAL(clicked()), setter, SLOT(browse()));
 			
 			if(!opts.fileTypeFilter.isEmpty())
@@ -401,13 +401,14 @@ void PropertyChangeListener::receiver(const QVariant& data)
 
 //////////////////////////////////////////////////////////////////////////////
 
-BrowseDialogLauncher::BrowseDialogLauncher(QObject *attached, const char *slot, QVariant value)
+BrowseDialogLauncher::BrowseDialogLauncher(QObject *attached, const char *slot, QVariant value, bool filebrowser)
 	: QObject(attached)
 	, m_attached(attached)
 	, m_value(value)
 	, m_settingsKey("default")
 	, m_title("Browse")
 	, m_filter("Any File (*.*)")
+	, m_isFileBrowser(filebrowser)
 {
 	connect(this, SIGNAL(setValue(const QString&)), attached, slot);
 }
@@ -438,7 +439,18 @@ void BrowseDialogLauncher::browse()
 		text = QSettings().value(settingsPath,"").toString();
 	}
 
-	QString fileName = QFileDialog::getOpenFileName(dynamic_cast<QWidget*>(m_attached), m_title, text, m_filter);
+	QString fileName;
+	if(m_isFileBrowser)
+	{
+		fileName = QFileDialog::getOpenFileName(dynamic_cast<QWidget*>(m_attached), m_title, text, m_filter);
+	}
+	else
+	{
+	 	fileName = QFileDialog::getExistingDirectory(dynamic_cast<QWidget*>(m_attached), 
+	 		m_title,
+			text,
+			QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
+	}
 	if(fileName != "")
 	{
 		emit setValue(fileName);
