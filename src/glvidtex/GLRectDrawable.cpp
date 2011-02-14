@@ -49,7 +49,7 @@ void GLRectDrawable::renderImage()
 		{
 			painter.setPen(QPen(m_borderColor,m_borderWidth));
 			painter.setBrush(m_fillColor);
-			int v = m_borderWidth / 2;
+			int v = (int)m_borderWidth / 2;
 			target = target.adjusted(v,v,-v,-v);
 			painter.drawRect(target);
 		}

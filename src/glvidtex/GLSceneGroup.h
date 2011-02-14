@@ -392,6 +392,8 @@ public:
 	
 	double timeFor(GLScene*);
 	
+	bool isRandom() { return m_isRandom; }
+	
 signals:
 	void currentItemChanged(GLScene*);
 	void timeChanged(double);
@@ -424,6 +426,7 @@ private:
 	double m_playTime;
 	double m_timerTickLength;
 	int m_currentItemIndex;
+	bool m_isRandom;
 };
 
 class GLSceneGroupCollection : public QAbstractListModel
