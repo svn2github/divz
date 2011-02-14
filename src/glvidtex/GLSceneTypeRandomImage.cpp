@@ -184,13 +184,15 @@ void GLSceneTypeRandomImage::readFolder(const QString &folder)
 				Exiv2::ExifData& exifData = exiv->exifData();
 				if (exifData.empty()) 
 				{
-					qDebug() << fullFile << ": No Exif data found in the file";
+					//qDebug() << fullFile << ": No Exif data found in the file";
 				}
-
-				comment = exifData["Exif.Image.ImageDescription"].toString().c_str();
-				comment = GLTextDrawable::htmlToPlainText(comment);
-				
-				datetime = exifData["Exif.Photo.DateTimeOriginal"].toString().c_str();
+				else
+				{
+					comment = exifData["Exif.Image.ImageDescription"].toString().c_str();
+					comment = GLTextDrawable::htmlToPlainText(comment);
+					
+					datetime = exifData["Exif.Photo.DateTimeOriginal"].toString().c_str();
+				}
 	
 				if(comment.trimmed().isEmpty())
 				{
@@ -198,9 +200,9 @@ void GLSceneTypeRandomImage::readFolder(const QString &folder)
 					comment = iptcData["Iptc.Application2.Caption"].toString().c_str();
 					comment = GLTextDrawable::htmlToPlainText(comment);
 					
-					if (exifData.empty()) 
+					if (iptcData.empty()) 
 					{
-						qDebug() << fullFile << ": No IPTC data found in the file";
+						//qDebug() << fullFile << ": No IPTC data found in the file";
 					}
 					else
 					{
@@ -217,7 +219,7 @@ void GLSceneTypeRandomImage::readFolder(const QString &folder)
 		}
 		catch (Exiv2::AnyError& e) 
 		{
-			std::cout << "Caught Exiv2 exception '" << e << "'\n";
+			//std::cout << "Caught Exiv2 exception '" << e << "'\n";
 			//return -1;
 		}
 		

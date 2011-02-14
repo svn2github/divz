@@ -851,8 +851,8 @@ void GLWidgetSubview::updateWarpMatrix()
 void GLWidget::paintGL()
 {
 	//qDebug() << "GLWidget::paintGL(): Starting paint routines...";
-	QTime time;
-	time.start();
+// 	QTime time;
+// 	time.start();
 	
 	// Render all drawables into the FBO
 	//if(m_fbo)
@@ -896,8 +896,34 @@ void GLWidget::paintGL()
 	if(!m_fbo)
 	{
 		//qDebug() << "GLWidget::paintGL(): NOT drawing FBO";
-		//if(m_outputStream)
-                //	m_outputStream->setImage(grabFrameBuffer());
+		
+		if(m_outputStream)
+		{
+// 			QTime t;
+// 			t.start();
+			
+			// Calling glReadPixels ourselves is quicker than calling grabFrameBuffer() because Qt calls 
+			// glReadPixels with GL_RGBA, but for some reason using GL_BGRA works just fine - and avoids
+			// the internal convertFromGLFormat() call in Qt that converts from BGRA->RGBA.
+			// On average, this code runs at about 9-10ms, whereas the grabFrameBuffer() method runs
+			// on average at 13-14ms - a gain of approx 5ms on the extreem end, 3ms on the low end - still
+			// a good gain when pinching milliseconds in very demanding low-latency instances such as live
+			// video feed from cameras straight to screen. 
+			QImage img(size(), QImage::Format_ARGB32);
+			glReadPixels(0, 0, width(), height(), GL_BGRA, GL_UNSIGNED_BYTE, img.bits());
+			
+			// OpenGL returns the image upside down and horizontally flipped - therefore, we must mirror the image to get it right-sided
+			m_outputStream->setImage(img.mirrored());
+		
+			//m_outputStream->setImage(grabFrameBuffer());
+			
+// 			static int testcount =0;
+// 			static int sum = 0;
+// 			testcount++;
+// 			
+// 			sum += t.elapsed();
+//			qDebug() << "Read for"<<size()<<":"<<t.elapsed()<<"ms, count:"<<testcount<<", avg:" << (sum/testcount);
+		}
 	}
 	else
 	{

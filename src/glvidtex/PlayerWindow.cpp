@@ -440,23 +440,23 @@ void PlayerWindow::loadConfig(const QString& configFile, bool verbose)
 					GLScene *scene = m_group->at(0);
 					if(scene)
 					{
-						GLSceneTypeCurrentWeather *weather = new GLSceneTypeCurrentWeather();
-						weather->setLocation("47390");
-						
-						GLSceneType::AuditErrorList errors = weather->auditTemplate(scene);
-						if(!errors.isEmpty())
-						{
-							qDebug() << "PlayerWindow: [DEBUG]: Errors found attaching weather type to scene:";
-							foreach(GLSceneType::AuditError error, errors)
-							{
-								qDebug() << "PlayerWindow: [DEBUG]: \t" << error.toString(); 
-							}
-						}
-						
-						if(!weather->attachToScene(scene))
-						{
-							qDebug() << "PlayerWindow: [DEBUG]: weather->attachToScene() returned FALSE";
-						}
+// 						GLSceneTypeCurrentWeather *weather = new GLSceneTypeCurrentWeather();
+// 						weather->setLocation("47390");
+// 						
+// 						GLSceneType::AuditErrorList errors = weather->auditTemplate(scene);
+// 						if(!errors.isEmpty())
+// 						{
+// 							qDebug() << "PlayerWindow: [DEBUG]: Errors found attaching weather type to scene:";
+// 							foreach(GLSceneType::AuditError error, errors)
+// 							{
+// 								qDebug() << "PlayerWindow: [DEBUG]: \t" << error.toString(); 
+// 							}
+// 						}
+// 						
+// 						if(!weather->attachToScene(scene))
+// 						{
+// 							qDebug() << "PlayerWindow: [DEBUG]: weather->attachToScene() returned FALSE";
+// 						}
 						
 						//scene->setGLWidget(this);
 						displayScene(scene);

@@ -184,10 +184,11 @@ TODO:
 	
 	IDEAS:
 		- Next few steps:
-			- Add an 'assign scene type' feature in editor
+			- [DONE] Add an 'assign scene type' feature in editor
 			- Try to put scene type subclasses in a namespace
-			- Figure out how to set parameters in UI
-			- Add more scenetype subclasses, possibly based on Gogle News API and/or RSS reader
+			- [DONE] Figure out how to set parameters in UI
+			- [DONE] Add more scenetype subclasses, possibly based on Gogle News API and/or RSS reader
+				- Added a weather, random image, and google news type
 			- Add an 'import scene' function because related to:
 			- Add an 'add scene from template' function which...
 				- Lists templates based on directory
