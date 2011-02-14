@@ -781,6 +781,16 @@ void GLTextDrawable::updateRects(bool secondSource)
 		m_displayOpts.cropBottomRight.y());
 
 	QRectF targetRect = QRectF(rect().topLeft(),adjustedSource.size());
+	
+	bool centerVertical = text().indexOf("vertical-align:middle") > 0;
+	
+	if(centerVertical)
+	{
+		QRectF origTarget = targetRect;
+		targetRect = QRectF(0, 0, adjustedSource.width(), sourceRect.height());
+		targetRect.moveCenter(rect().center());
+		//qDebug() << "GLTextDrawable::updateRects: "<<(QObject*)this<<" origTarget:"<<origTarget<<", newTarget:"<<targetRect;
+	}
 
 	if(!secondSource)
 	{

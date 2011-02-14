@@ -406,25 +406,31 @@ public slots:
 	void stop();
 	
 	void playItem(GLScene*);
+	
+	/** Notifies the playlist that the current item has been changed, likely by the user. The playlist will start
+	    a new timer for this item and stop any current timers. 
+	    Neither the currentItemChanged() signal nor the timeChanged() signal are emitted by this method. */
+	void setCurrentItem(GLScene*);
 	bool setPlayTime(double time);
 	
 	void nextItem();
 	void prevItem();
+	
+	void setIsRandom(bool random=true);
 
 private slots:
 // 	void sceneAdded(GLScene*);
 // 	void sceneRemoved(GLScene*);
 	
 // 	void playlistItemChangedSlot();
-	void timerTick();
+// 	void timerTick();
 
 private:
 	GLSceneGroup *m_group;
 	
 	bool m_isPlaying;
-	QTimer m_tickTimer;
+	QTimer m_currentItemTimer;
 	double m_playTime;
-	double m_timerTickLength;
 	int m_currentItemIndex;
 	bool m_isRandom;
 };

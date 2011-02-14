@@ -1434,7 +1434,7 @@ void GLVideoDrawable::updateTexture(bool secondSource)
 		if(!secondSource ? (m_frameSize != m_frame->size()   || m_frame->rect() != m_sourceRect   || !m_texturesInited) :
 				   (m_frameSize2 != m_frame2->size() || m_frame2->rect() != m_sourceRect2 || !m_texturesInited2))
 		{
- 			//qDebug() << "GLVideoDrawable::paintGL(): m_frame->rect():"<<m_frame->rect()<<", m_sourceRect:"<<m_sourceRect<<", m_frame->size():"<<m_frame->size();
+ 			//qDebug() << "GLVideoDrawable::updateTexture(): m_frame->rect():"<<m_frame->rect()<<", m_sourceRect:"<<m_sourceRect<<", m_frame->size():"<<m_frame->size();
 //    			if(property("-debug").toBool())
 //    				qDebug() << "GLVideoDrawable::updateTexture(): "<<(QObject*)this<<" frame size changed or !m_texturesInited, resizing and adjusting pixels...";
 			//if(m_videoFormat.pixelFormat != m_source->videoFormat().pixelFormat)

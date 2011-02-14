@@ -48,7 +48,7 @@ GLSceneTypeRandomImage::GLSceneTypeRandomImage(QObject *parent)
 			SLOT(setUpdateTime(int)))
 		
 		<< ParameterInfo("changeTime",
-			"Update Time",
+			"Change Time",
 			"Time in seconds to wait between changing images if needed",
 			QVariant::Int,
 			true,
@@ -115,15 +115,11 @@ GLSceneTypeRandomImage::GLSceneTypeRandomImage(QObject *parent)
 	setParam("notRandom",  false);
 	setParam("autoRotate", true);
 	setParam("ignoreAR",   false);
-	
-	// Create seed for the random
-	// That is needed only once on application startup
-	QTime time = QTime::currentTime();
-	qsrand((uint)time.msec());
 }
 
 void GLSceneTypeRandomImage::setLiveStatus(bool flag)
 {
+	//qDebug() << "GLSceneTypeRandomImage::setLiveStats(): "<<flag;
 	GLSceneType::setLiveStatus(flag);
 	
 	if(flag)
@@ -135,11 +131,13 @@ void GLSceneTypeRandomImage::setLiveStatus(bool flag)
 	else
 	{
 		m_changeTimer.stop();
+		QTimer::singleShot( 0, this, SLOT(showNextImage()) );
 	}
 }
 
 void GLSceneTypeRandomImage::setParam(QString param, QVariant value)
 {
+	//qDebug() << "GLSceneTypeRandomImage::setParam(): "<<param<<": "<<value;
 	GLSceneType::setParam(param, value);
 	
 	if(param == "folder")
@@ -148,28 +146,32 @@ void GLSceneTypeRandomImage::setParam(QString param, QVariant value)
 	if(param == "updateTime")
 		m_reloadTimer.setInterval(value.toInt() * 60 * 1000);
 	else
-	if(param == "updateTime")
+	if(param == "changeTime")
 		m_changeTimer.setInterval(value.toInt() * 1000);
 }
 
 void GLSceneTypeRandomImage::reloadData()
 {
+	//qDebug() << "GLSceneTypeRandomImage::reloadData()";
 	readFolder(folder());
 }
 
 void GLSceneTypeRandomImage::readFolder(const QString &folder) 
 {
+	//qDebug() << "GLSceneTypeRandomImage::readFolder()";
 	QDir dir(folder);
 	dir.setNameFilters(QStringList() << "*.jpg" << "*.JPG" << "*.jpeg" << "*.png" << "*.PNG");
 	QFileInfoList list = dir.entryInfoList(QDir::Files, QDir::Name);
 	
 	m_images.clear();
 	
+	//qDebug() << "GLSceneTypeRandomImage::readFolder(): Found "<<list.size()<<" images in "<<folder;
+	
 	foreach(QFileInfo info, list)
 	{
 		ImageItem item;
 		QString fullFile = info.absoluteFilePath();
-		qDebug() << "GLSceneTypeRandomImage: Loading "<<fullFile;//<<" (ext:"<<ext<<")";
+		//qDebug() << "GLSceneTypeRandomImage::readFolder(): Loading "<<fullFile;//<<" (ext:"<<ext<<")";
 		
 		QString comment = "";
 		QString datetime = "";
@@ -202,12 +204,12 @@ void GLSceneTypeRandomImage::readFolder(const QString &folder)
 					}
 					else
 					{
-						qDebug() << "GLSceneTypeRandomImage: IPTC Caption:"<<comment;
+						//qDebug() << "GLSceneTypeRandomImage: IPTC Caption:"<<comment;
 					}
 				}
 				else
 				{
-					qDebug() << "GLSceneTypeRandomImage: EXIF Caption:"<<comment;
+					//qDebug() << "GLSceneTypeRandomImage: EXIF Caption:"<<comment;
 				}
 				
 				
@@ -250,11 +252,20 @@ void GLSceneTypeRandomImage::readFolder(const QString &folder)
 
 void GLSceneTypeRandomImage::showNextImage()
 {
+	//qDebug() << "GLSceneTypeRandomImage::showNextImage()";
+	if(m_images.isEmpty())
+	{
+		qDebug() << "GLSceneTypeRandomImage::showNextImage(): No images loaded, nothing to show.";
+		return;
+	}
+		
 	if(!notRandom())
 	{
 		int high = m_images.size() - 1;
+		if(high <= 0)
+			high = 1;
 		int low = 0;
-		m_currentIndex = qrand() % ((high + 1) - low) + low;
+		m_currentIndex = qrand() % (high + 1);
 	}
 	
 	if(m_currentIndex < 0 || m_currentIndex >= m_images.size())
@@ -268,4 +279,12 @@ void GLSceneTypeRandomImage::showNextImage()
 	setField("datetime",	item.datetime);
 	
 	m_currentIndex++;
+}
+
+void GLSceneTypeRandomImage::sceneAttached(GLScene *)
+{
+	if(m_images.isEmpty() && !folder().isEmpty())
+		reloadData();
+		
+	showNextImage();
 }

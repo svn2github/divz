@@ -83,11 +83,12 @@ void ScenePropertiesDialog::typeComboChanged(int idx)
 	if(!errors.isEmpty())
 	{
 		//qDebug() << "PlayerWindow: [DEBUG]: Errors found attaching weather type to scene:";
-		QString color = GLSceneType::AuditError::hasErrors(errors) ? "red" : "orange";
-		htmlBuffer << QString("<font color='%1'><b>Errors found while attaching the scene type:</b></font><br>").arg(color);
+		bool allErrors = GLSceneType::AuditError::hasErrors(errors);
+		QString color = allErrors ? "red" : "orange";
+		htmlBuffer << QString("<font color='%1'><b>%2 found while attaching the scene type:</b></font><br>").arg(color).arg(allErrors ? "Errors" : "Warnings");
 		foreach(GLSceneType::AuditError error, errors)
 		{
-			htmlBuffer << QString("<font color='%2'>%1</font><br>").arg(error.toString()).arg(error.isWarning ? "yellow" : "red"); 
+			htmlBuffer << QString("<font color='%2'>%1</font><br>").arg(error.toString()).arg(error.isWarning ? "orange" : "red"); 
 		}
 	}
 	

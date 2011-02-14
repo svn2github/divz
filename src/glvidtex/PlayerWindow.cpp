@@ -139,12 +139,12 @@ PlayerWindow::PlayerWindow(QWidget *parent)
 	, m_configLoaded(false)
 {
 	// WinXP - m_vidSendMgr causes the app to freeze
-	#ifdef Q_OS_WIN
+//	#ifdef Q_OS_WIN
 		m_vidSendMgr = 0;
-	#else
-		m_vidSendMgr = new VideoInputSenderManager();
-		m_vidSendMgr->setSendingEnabled(true);
-	#endif
+// 	#else
+// 		m_vidSendMgr = new VideoInputSenderManager();
+// 		m_vidSendMgr->setSendingEnabled(true);
+// 	#endif
 
 	QVBoxLayout *layout = new QVBoxLayout(this);
 	layout->setContentsMargins(0,0,0,0);
@@ -1113,12 +1113,18 @@ void PlayerWindow::displayScene(GLScene *scene)
 			if(gld->playlist()->size() > 0)
 				gld->playlist()->stop();
 	}
+	
+	if(m_oldScene)
+		opacityAnimationFinished(m_oldScene);
 
 	m_oldScene = m_scene;
 	m_scene = scene;
 	
 	if(scene->sceneType())
 		scene->sceneType()->setLiveStatus(true);
+		
+	if(m_group)
+		m_group->playlist()->setCurrentItem(m_scene);
 
 	GLDrawableList newSceneList = m_scene->drawableList();
 
@@ -1213,19 +1219,20 @@ void PlayerWindow::displayScene(GLScene *scene)
 	
 }
 
-void PlayerWindow::opacityAnimationFinished()
+void PlayerWindow::opacityAnimationFinished(GLScene *scene)
 {
-	//GLScene *scene = dynamic_cast<GLScene*>(sender());
+	if(!scene)
+		scene = dynamic_cast<GLScene*>(sender());
 
 	//disconnect(drawable, 0, this, 0);
 
-	if(!m_oldScene)
-	{
-		qDebug() << "PlayerWindow::opacityAnimationFinished: No m_oldScene, nothing removed.";
-		return;
-	}
+// 	if(!m_oldScene)
+// 	{
+// 		qDebug() << "PlayerWindow::opacityAnimationFinished: No m_oldScene, nothing removed.";
+// 		return;
+// 	}
 
-	GLDrawableList list = m_oldScene->drawableList();
+	GLDrawableList list = scene->drawableList();
 	//qDebug() << "PlayerWindow::opacityAnimationFinished: Found "<<list.size()<<" drawables to remove";
 	foreach(GLDrawable *drawable, list)
 	{
@@ -1237,12 +1244,13 @@ void PlayerWindow::opacityAnimationFinished()
 		//qDebug() << "PlayerWindow::opacityAnimationFinished: removing drawable:"<<(QObject*)drawable;
 	}
 
-	disconnect(m_oldScene, 0, this, 0);
+	disconnect(scene, 0, this, 0);
 	
-	if(m_oldScene->sceneType())
-		m_oldScene->sceneType()->setLiveStatus(false);
+	if(scene->sceneType())
+		scene->sceneType()->setLiveStatus(false);
 		
-	m_oldScene = 0;
+	if(scene == m_oldScene)
+		m_oldScene = 0;
 }
 
 void PlayerWindow::currentPlaylistItemChanged(GLPlaylistItem* item)

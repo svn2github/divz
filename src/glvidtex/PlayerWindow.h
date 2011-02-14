@@ -118,7 +118,7 @@ private slots:
 	void playlistTimeChanged(double);
 
 	//void drawableIsVisible(bool);
-	void opacityAnimationFinished();
+	void opacityAnimationFinished(GLScene *scene =0);
 
 protected:
 	friend class PlayerCompatOutputStream;

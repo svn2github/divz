@@ -400,6 +400,9 @@ public slots:
 protected:
 	friend class GLSceneTypeFactory;
 	
+	/** This method is available for subclasses to hook into when a scene is actually attached. The default implementation does nothing. */
+	virtual void sceneAttached(GLScene *);
+	
 	/** Apply the field data to the scene. 
 		If \a fieldName is given, only that field is applied, otherwise all fields are applied. */
 	bool applyFieldData(QString fieldName = "");

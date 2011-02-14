@@ -84,6 +84,11 @@ GLDrawable *GLSceneType::lookupField(QString field)
 	return 0;
 }
 
+void GLSceneType::sceneAttached(GLScene *)
+{
+	// NOOP
+}
+
 bool GLSceneType::applyFieldData(QString field)
 {
 	if(!scene())
@@ -110,7 +115,7 @@ bool GLSceneType::applyFieldData(QString field)
 			}
 			else
 			{
-				qDebug() << "GLSceneType::applyFieldData("<<field<<"): Unable to find requested field:"<<field;
+				//qDebug() << "GLSceneType::applyFieldData("<<field<<"): Unable to find requested field:"<<field;
 				return false;
 			}
 		}
@@ -129,7 +134,7 @@ bool GLSceneType::applyFieldData(QString field)
 			{
 				if(info.required)
 				{
-					qDebug() << "GLSceneType::applyFieldData("<<field<<"): Unable to find required field:"<<info.name;
+					//qDebug() << "GLSceneType::applyFieldData("<<field<<"): Unable to find required field:"<<info.name;
 					ok = false;
 				}
 			}
@@ -142,7 +147,7 @@ bool GLSceneType::applyFieldData(QString field)
 void GLSceneType::setField(QString field, QVariant data)
 {
 	m_fields[field] = data;
-	qDebug() << "GLSceneType::setField(): field:"<<field<<", data:"<<data; 
+	//qDebug() << "GLSceneType::setField(): field:"<<field<<", data:"<<data; 
 	applyFieldData(field);
 }
 
@@ -186,13 +191,16 @@ bool GLSceneType::attachToScene(GLScene *scene)
 		qDebug() << "GLSceneType::attachToScene(): [factory fresh] created new instance, old:"<<type<<", new:"<<newInst;
 		
 		newInst->m_fields = type->m_fields;
-		newInst->m_params = type->m_params;
+		newInst->setParams(type->m_params);
 		
 		type = newInst;
 	}
 	
 	type->m_scene = scene;
 	scene->setSceneType(type);
+	
+	// call subclass hook
+	type->sceneAttached(scene);
 	
 	return type->applyFieldData();
 }
@@ -308,7 +316,7 @@ void GLSceneGroupType::setParam(QString param, QVariantList value)
 void GLSceneGroupType::setParams(QVariantMap map)
 {
 	foreach(QString param, map.keys())
-		m_params[param] = map.value(param);
+		setParam(param, map.value(param));
 }
 
 void GLSceneGroupType::setLiveStatus(bool flag)
@@ -323,7 +331,11 @@ GLSceneTypeFactory *GLSceneTypeFactory::m_inst = 0;
 
 GLSceneTypeFactory::GLSceneTypeFactory()
 {
-	
+	// Create seed for the random
+	// That is needed only once on application startup
+	QTime time = QTime::currentTime();
+	qsrand((uint)time.msec());
+
 	GLSceneType *type;
 	#define ADD_CLASS(x) type = new x(); m_list.append(type); m_lookup[type->id()] = type;
 	
@@ -391,7 +403,7 @@ GLSceneType *GLSceneTypeFactory::fromByteArray(QByteArray array, GLScene *sceneT
 		return 0;
 	}
 	
-	type->m_params = map["params"].toMap();
+	type->setParams(map["params"].toMap());
 	type->m_fields = map["fields"].toMap();
 //	qDebug() << "GLSceneTypeFactory::fromByteArray(): Loaded parameters:"<<type->m_params;
 	

@@ -1208,11 +1208,12 @@ GLSceneGroupPlaylist::GLSceneGroupPlaylist(GLSceneGroup *group)
 	: QObject(group)
 	, m_group(group)
 	, m_playTime(0)
-	, m_timerTickLength(1./2.)
 	, m_currentItemIndex(-1)
+	, m_isRandom(false)
 {
-	connect(&m_tickTimer, SIGNAL(timeout()), this, SLOT(timerTick()));
-	m_tickTimer.setInterval((int)(m_timerTickLength * 1000.));
+	connect(&m_currentItemTimer, SIGNAL(timeout()), this, SLOT(nextItem()));
+	m_currentItemTimer.setSingleShot(true);
+	m_currentItemTimer.setInterval(0);
 }
 
 GLSceneGroupPlaylist::~GLSceneGroupPlaylist()
@@ -1260,11 +1261,11 @@ void GLSceneGroupPlaylist::play(bool restart)
 {
 	if(restart)
 		m_playTime = 0;
-	m_tickTimer.start();
+	m_currentItemTimer.start();
 }
 void GLSceneGroupPlaylist::stop()
 {
-	m_tickTimer.stop();
+	m_currentItemTimer.stop();
 }
 
 void GLSceneGroupPlaylist::playItem(GLScene *item)
@@ -1272,25 +1273,57 @@ void GLSceneGroupPlaylist::playItem(GLScene *item)
 	int idx = m_group->sceneList().indexOf(item);
 	if(idx < 0)
 		return;
+		
 	if(idx == m_currentItemIndex)
 		return;
-
-	emit currentItemChanged(item);
+		
+	if(!item)
+		return;
+	
 	m_currentItemIndex = idx;
+	
+	if(item->duration() <= 0)
+	{
+		nextItem();
+		return;
+	}
+		
+	emit currentItemChanged(item);
+	
+	m_playTime = timeFor(item);
+	emit timeChanged(m_playTime);
+	
+	setCurrentItem(item);
+	//qDebug() << "GLSceneGroupPlaylist::playItem: Showing scene:"<<item<<", num:"<<m_currentItemIndex<<"for"<<item->duration()<<"sec";
+	
+}
 
-	//const char *propName = m_drawable->metaObject()->userProperty().name();
-
-	//qDebug() << "GLSceneGroupPlaylist::playItem: Showing"<<propName<<": "<<item->value();
-
-	//m_drawable->setProperty(propName, item->value());
+void GLSceneGroupPlaylist::setCurrentItem(GLScene *item)
+{
+	int idx = m_group->sceneList().indexOf(item);
+	if(idx < 0)
+		return;
+	
+	m_currentItemIndex = idx;
+	m_playTime = timeFor(item);
+	
+	m_currentItemTimer.stop();
+	
+	int dur = (int)(item->duration() * 1000);
+		
+	if(item->duration() <= 0)
+		return;
+	else
+	{
+		//qDebug() << "GLSceneGroupPlaylist::setCurrentItem: Starting timer on item:"<<item<<", num:"<<m_currentItemIndex<<"for"<<item->duration()<<"sec";
+		m_currentItemTimer.setInterval(dur);
+		m_currentItemTimer.start();
+	}
 }
 
 bool GLSceneGroupPlaylist::setPlayTime(double time)
 {
-	m_playTime = time;
 	//qDebug() << "GLSceneGroupPlaylist::setPlayTime: "<<time<<"/"<<duration();
-
-	emit timeChanged(time);
 
 	double timeSum = 0;
 	GLScene *foundItem =0;
@@ -1310,6 +1343,9 @@ bool GLSceneGroupPlaylist::setPlayTime(double time)
 	}
 	else
 	{
+		m_playTime = time;
+		emit timeChanged(time);
+
 		qDebug() << "GLSceneGroupPlaylist::setPlayTime: "<<time<<": Could not find item at time "<<time;
 		return false;
 	}
@@ -1321,7 +1357,19 @@ void GLSceneGroupPlaylist::nextItem()
 	if(m_group->isEmpty())
 		return;
 	
-	int next = m_currentItemIndex + 1;
+	int next = 0;
+	
+	if(m_isRandom)
+	{
+		int high = m_group->size() - 1;
+		int low = 0;
+		next = qrand() % ((high + 1) - low) + low;
+	}
+	else
+	{
+		next = m_currentItemIndex + 1;
+	}
+	
 	if(next >= m_group->size())
 		next = 0;
 		
@@ -1340,12 +1388,17 @@ void GLSceneGroupPlaylist::prevItem()
 	playItem(m_group->at(next));
 }
 
-void GLSceneGroupPlaylist::timerTick()
+void GLSceneGroupPlaylist::setIsRandom(bool flag)
 {
-	if(!setPlayTime(m_playTime + m_timerTickLength))
-		if(!setPlayTime(0))
-			stop();
+	m_isRandom = flag;
 }
+
+// void GLSceneGroupPlaylist::timerTick()
+// {
+// 	if(!setPlayTime(m_playTime + m_timerTickLength))
+// 		if(!setPlayTime(0))
+// 			stop();
+// }
 
 
 

@@ -111,6 +111,10 @@ public slots:
 	/** Show the next image in the list (or choose a random image, depending on the value of the 'notRandom' parameter.) */
 	void showNextImage();
 	
+protected:
+	/** Calls showNextImage() as soon as a scene is attached */
+	virtual void sceneAttached(GLScene *);
+	
 private slots:
 	void readFolder(const QString &folder);
 	
