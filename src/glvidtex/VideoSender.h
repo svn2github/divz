@@ -81,6 +81,8 @@ private:
 	QMutex m_frameMutex;
 	QMutex m_sendMutex;
 	
+	bool m_consumerRegistered;
+	
 };
 
 

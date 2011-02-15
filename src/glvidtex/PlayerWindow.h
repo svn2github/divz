@@ -56,6 +56,10 @@ private slots:
 	void renderScene();
 	void setImage(QImage);
 
+protected:
+	virtual void consumerRegistered(QObject*);
+	virtual void consumerReleased(QObject*);
+	
 private:
 	PlayerWindow *m_win;
 	QImage m_image;

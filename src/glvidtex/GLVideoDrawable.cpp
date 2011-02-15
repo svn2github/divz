@@ -1703,7 +1703,10 @@ void GLVideoDrawable::paint(QPainter * painter, const QStyleOptionGraphicsItem *
 	updateAnimations(true);
 	
 	aboutToPaint();
-	if(!m_liveStatus) // dont trust compiler to inline liveStatus() ... should I?
+	
+	// Since QGraphicsScene/QGraphicsView doesn't have (that I know of) a way to hook into when the scene gets added to the view,
+	// then we have to 'guess' by finding out when we start painting here.
+	if(!liveStatus())
 		setLiveStatus(true);
 
 	QRectF source = m_sourceRect;
@@ -1728,7 +1731,7 @@ void GLVideoDrawable::paint(QPainter * painter, const QStyleOptionGraphicsItem *
 	if(!m_frame->image().isNull())
 	{
 		painter->drawImage(target,m_frame->image(),source);
-// 		//qDebug() << "GLVideoDrawablle::paint: Painted m_frame, size:" << m_frame->image().size()<<", source:"<<source<<", target:"<<target<<", m_targetRect:"<<m_targetRect;
+ 		//qDebug() << "GLVideoDrawable::paint(): "<<(QObject*)this<<" Painted m_frame, size:" << m_frame->image().size()<<", source:"<<source<<", target:"<<target<<", m_targetRect:"<<m_targetRect;
 	}
 	else
 	{
@@ -1753,11 +1756,11 @@ void GLVideoDrawable::paint(QPainter * painter, const QStyleOptionGraphicsItem *
 				image = image.mirrored(m_displayOpts.flipHorizontal, m_displayOpts.flipVertical);
 
 			painter->drawImage(target,image,source);
-			//qDebug() << "GLVideoDrawable::paint: Painted RAW frame, size:" << image.size()<<", source:"<<source<<", target:"<<target;
+			//qDebug() << "GLVideoDrawable::paint(): "<<(QObject*)this<<" Painted RAW frame, size:" << image.size()<<", source:"<<source<<", target:"<<target;
 		}
 		else
 		{
-			//qDebug() << "GLVideoDrawable::paint: Unable to convert pixel format to image format, cannot paint frame. Pixel Format:"<<m_frame->pixelFormat();
+			qDebug() << "GLVideoDrawable::paint(): "<<(QObject*)this<<" Unable to convert pixel format to image format, cannot paint frame. Pixel Format:"<<m_frame->pixelFormat();
 		}
 	}
 
@@ -1779,7 +1782,7 @@ void GLVideoDrawable::paint(QPainter * painter, const QStyleOptionGraphicsItem *
 		if(!m_frame2->image().isNull())
 		{
 			painter->drawImage(target2,m_frame2->image(),source2);
-			//qDebug() << "GLVideoDrawablle::paint: Painted m_frame2, size:" << m_frame2->image().size()<<", source:"<<source2<<", target:"<<target2;
+			//qDebug() << "GLVideoDrawable::paint(): "<<(QObject*)this<<" Painted m_frame2, size:" << m_frame2->image().size()<<", source:"<<source2<<", target:"<<target2;
 		}
 		else
 		{
@@ -1801,11 +1804,11 @@ void GLVideoDrawable::paint(QPainter * painter, const QStyleOptionGraphicsItem *
 					     imageFormat);
 
 				painter->drawImage(target2,image,source2);
-				//qDebug() << "GLVideoDrawable::paint: Painted RAW frame, size:" << image.size()<<", source:"<<source<<", target:"<<target;
+				//qDebug() << "GLVideoDrawable::paint(): "<<(QObject*)this<<" Painted RAW frame2, size:" << image.size()<<", source:"<<source<<", target:"<<target;
 			}
 			else
 			{
-				//qDebug() << "GLVideoDrawable::paint: Unable to convert pixel format to image format, cannot paint frame. Pixel Format:"<<m_frame->pixelFormat();
+				//qDebug() << "GLVideoDrawable::paint(): "<<(QObject*)this<<" Unable to convert pixel format to image format, cannot paint frame2. Pixel Format:"<<m_frame->pixelFormat();
 			}
 		}
 	}

@@ -977,7 +977,6 @@ void GLDrawable::loadPropsFromMap(const QVariantMap& map, bool onlyApplyIfChange
 		}
 		else
 		{
-
 			if(value.isValid())
 			{
 				if(onlyApplyIfChanged)

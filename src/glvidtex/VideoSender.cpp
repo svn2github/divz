@@ -17,6 +17,7 @@ VideoSender::VideoSender(QObject *parent)
 	//, m_transmitSize(0,0)
 	//, m_scaledFrame(0)
 	//, m_frame(0)
+	, m_consumerRegistered(false)
 {
 	connect(&m_fpsTimer, SIGNAL(timeout()), this, SLOT(processFrame()));
 	setTransmitFps(m_transmitFps);
@@ -177,6 +178,7 @@ void VideoSender::setVideoSource(VideoSource *source)
 		
 		//qDebug() << "GLVideoDrawable::setVideoSource(): "<<objectName()<<" m_source:"<<m_source;
 		//setVideoFormat(m_source->videoFormat());
+		m_consumerRegistered = false;
 		
 		frameReady();
 	}
@@ -191,6 +193,7 @@ void VideoSender::disconnectVideoSource()
 {
 	if(!m_source)
 		return;
+	m_source->release(this);
 	disconnect(m_source, 0, this, 0);
 	m_source = 0;
 }
@@ -223,6 +226,14 @@ void VideoSender::incomingConnection(int socketDescriptor)
 	thread->moveToThread(thread);
 	thread->setSender(this);
 	thread->start();
+	
+	if(!m_consumerRegistered)
+	{
+		m_consumerRegistered = true;
+		m_source->registerConsumer(this);
+	}
+		
+		
 	//qDebug() << "VideoSender: Client Connected, Socket Descriptor:"<<socketDescriptor;
 }
 

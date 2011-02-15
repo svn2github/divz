@@ -53,6 +53,9 @@ public:
 	
 	virtual VideoFormat videoFormat() { return VideoFormat(); }
 	
+	void setAutoDestroy(bool);
+	bool autoDestroy() { return m_autoDestroy; }
+	
 signals:
 	void frameReady();
 
@@ -60,6 +63,11 @@ protected slots:
 	void consumerDestroyed();
 	
 protected:
+	// subclass hook
+	virtual void consumerRegistered(QObject*) {}
+	// subclass hook 
+	virtual void consumerReleased(QObject*) {}
+	
 	virtual void run();
 	virtual void enqueue(VideoFrame*);
 	virtual void enqueue(VideoFramePtr);
@@ -76,6 +84,8 @@ protected:
 	bool m_isBuffered;
 	VideoFramePtr m_singleFrame;
 	QMutex m_queueMutex;
+	
+	bool m_autoDestroy;
 };
 
 

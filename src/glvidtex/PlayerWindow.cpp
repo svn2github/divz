@@ -79,9 +79,23 @@ PlayerCompatOutputStream::PlayerCompatOutputStream(PlayerWindow *parent)
 	connect(&m_frameReadyTimer, SIGNAL(timeout()), this, SLOT(renderScene()));
 	setFps(m_fps);
 
-	m_frameReadyTimer.start();
+	//m_frameReadyTimer.start();
+	
+	setAutoDestroy(false);
 }
 
+void PlayerCompatOutputStream::consumerRegistered(QObject*)
+{
+	if(!m_frameReadyTimer.isActive())
+		m_frameReadyTimer.start();
+}
+
+void PlayerCompatOutputStream::consumerReleased(QObject*)
+{
+	if(m_consumerList.isEmpty())
+		m_frameReadyTimer.stop();
+}
+	
 void PlayerCompatOutputStream::setImage(QImage img)
 {
 	m_image = img;
@@ -97,6 +111,9 @@ void PlayerCompatOutputStream::renderScene()
 	QImage image(320,240,QImage::Format_ARGB32);
 	memset(image.scanLine(0),0,image.byteCount());
 	QPainter p(&image);
+	
+	//qDebug() << "PlayerCompatOutputStream::renderScene(): Image size:"<<image.size(); 
+	
 
 	if(m_win->graphicsScene())
 		m_win->graphicsScene()->render(&p);
