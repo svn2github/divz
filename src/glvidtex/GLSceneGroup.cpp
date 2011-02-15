@@ -408,6 +408,7 @@ void GLScene::fromByteArray(QByteArray& array)
 		IF_CLASS(GLVideoMjpegDrawable);
 		IF_CLASS(GLSvgDrawable);
 		IF_CLASS(GLRectDrawable);
+		IF_CLASS(GLSpinnerDrawable);
 
 		#undef IF_CLASS
 

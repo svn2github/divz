@@ -7,4 +7,4 @@
 #include "GLVideoMjpegDrawable.h"
 #include "GLSvgDrawable.h"
 #include "GLRectDrawable.h"
-
+#include "GLSpinnerDrawable.h"

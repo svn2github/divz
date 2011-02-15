@@ -210,6 +210,21 @@ QWidget * PropertyEditorFactory::generatePropertyEditor(QObject *object, const c
 		return editor;
 	}
 	else
+// 	if(opts.type == QVariant::QRectF)
+// 	{
+// 		RectEditorWidget *editor = new RectEditorWidget();
+// 		delete base;
+// 
+// 		QRectF rect = prop.toRectF();
+// 		editor->setValue(rect);
+// 
+// 		connect(editor, SIGNAL(valueChanged(const QRectF&)), object, slot);
+// 		if(changeSignal)
+// 			new PropertyChangeListener(object, changeSignal, editor, SLOT(setValue(const QRectF&)), prop, property);
+// 
+// 		return editor;
+// 	}
+// 	else
 	if(opts.type == QVariant::PointF)
 	{
 		PointEditorWidget *editor = new PointEditorWidget();
@@ -565,7 +580,9 @@ void PointEditorWidget::setValue(const QPointF& point)
 	m_point = point;
 	x_box->setValue((int)point.x());
 	y_box->setValue((int)point.y());
-	m_orig = point;
+	
+	if(!m_orig.isNull())
+		m_orig = point;
 }
 
 void PointEditorWidget::reset()
@@ -635,6 +652,9 @@ void SizeEditorWidget::setValue(const QSizeF& size)
 	m_size = size;
 	w_box->setValue((int)size.width());
 	h_box->setValue((int)size.height());
+	
+	if(!m_orig.isValid())
+		m_orig = size;
 }
 
 void SizeEditorWidget::reset()

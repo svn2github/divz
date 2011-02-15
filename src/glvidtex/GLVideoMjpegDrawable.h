@@ -9,10 +9,11 @@ class GLVideoMjpegDrawable : public GLVideoDrawable
 {
 	Q_OBJECT
 	
-	Q_PROPERTY(QString url READ url WRITE setUrl);
+	Q_PROPERTY(QString url READ url WRITE setUrl USER true);
 	
 public:
 	GLVideoMjpegDrawable(QString url="", QObject *parent=0);
+	~GLVideoMjpegDrawable();
 	
 	QString url() { return m_url; }
 	

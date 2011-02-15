@@ -266,7 +266,7 @@ void GLSceneTypeRandomImage::showNextImage()
 		int high = m_images.size() - 1;
 		if(high <= 0)
 			high = 1;
-		int low = 0;
+// 		int low = 0;
 		m_currentIndex = qrand() % (high + 1);
 	}
 	

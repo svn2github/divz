@@ -225,6 +225,11 @@ TODO:
 			- CNN: http://www.cnn.com/services/rss/
 			- BBC Top News: http://newsrss.bbc.co.uk/rss/newsonline_world_edition/front_page/rss.xml
 			
+			- Reuters RSS Mobile: http://www.reuters.com/tools/mobile/rss
+			- AP News: http://hosted2.ap.org/APDEFAULT/APNewsFeeds
+				- Fairly clean, just has location at start of text
+			
+			
 		- Players need to communicate with each other if in a "group"
 			- E.g. part of a wall display
 			- Elect one as the master coorinator for timing/sync of video playback, etc

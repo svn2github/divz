@@ -296,7 +296,44 @@ private:
 	QSpinBox *w_box;
 	QSpinBox *h_box;
 	QSizeF m_orig;
+	bool m_lockOrig;
+	bool m_lockValue;
 };
+
+/*class RectEditorWidget : public QWidget
+{
+	Q_OBJECT
+public:
+	RectEditorWidget(QWidget *parent=0);
+
+public slots:
+	void setValue(const QRectF&);
+	void setXMinMax(int,int);
+	void setYMinMax(int,int);
+	void setWMinMax(int,int);
+	void setHMinMax(int,int);
+	void setSufix(const QString&);
+	
+	void reset();
+
+signals:
+	void valueChanged(const QRectF&);
+
+private slots:
+	void wValueChanged(double);
+	void hValueChanged(double);
+	void xValueChanged(double);
+	void yValueChanged(double);
+
+
+private:
+	QRectF m_rect;
+	QSpinBox *w_box;
+	QSpinBox *h_box;
+	QSpinBox *x_box;
+	QSpinBox *y_box;
+	QRectF m_orig;
+};*/
 /*
 class ColorEditorWidget : public QWidget
 {

@@ -134,7 +134,7 @@ void GLSceneTypeNewsFeed::requestData(const QString &location)
 // 	url.addEncodedQueryItem("hl", "en");
 // 	url.addEncodedQueryItem("weather", QUrl::toPercentEncoding(location));
 	
-	//qDebug() << "GLSceneTypeNewsFeed::requestData("<<location<<"): url:"<<url;
+	qDebug() << "GLSceneTypeNewsFeed::requestData(): url:"<<url;
 
 	QNetworkAccessManager *manager = new QNetworkAccessManager(this);
 	connect(manager, SIGNAL(finished(QNetworkReply*)),
@@ -153,7 +153,8 @@ void GLSceneTypeNewsFeed::handleNetworkData(QNetworkReply *networkReply)
 
 #define GET_DATA_ATTR xml.attributes().value("data").toString() \
 	.replace("&amp;#39;","'") \
-	.replace("&amp;quot;","\"")
+	.replace("&amp;quot;","\"") \
+	.replace("&amp;amp;","&")
 	
 
 void GLSceneTypeNewsFeed::parseData(const QString &data) 

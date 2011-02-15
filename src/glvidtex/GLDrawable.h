@@ -46,6 +46,9 @@ class GLDrawable : public QObject,
 	Q_PROPERTY(double zIndex READ zIndex WRITE setZIndex);
 	Q_PROPERTY(double opacity READ opacity WRITE setOpacity);
 	Q_PROPERTY(double isVisible READ isVisible WRITE setVisible);
+	
+	Q_PROPERTY(QSizeF size READ size WRITE setSize);
+	Q_PROPERTY(QPointF position READ position WRITE setPosition);
 
 // 	Q_PROPERTY(bool showFullScreen READ showFullScreen WRITE setShowFullScreen);
 	Q_PROPERTY(Qt::Alignment alignment READ alignment WRITE setAlignment);
@@ -172,7 +175,10 @@ public:
 	GLDrawablePlaylist *playlist() { return m_playlist; }
 	
 	GLScene *glScene() { return m_scene; }
-	void setGLScene(GLScene *scene);  
+	void setGLScene(GLScene *scene);
+	  
+	QSizeF size() { return rect().size(); }
+	QPointF position() { return rect().topLeft(); }
 
 public slots:
 	void updateGL(bool now=false);
@@ -180,6 +186,8 @@ public slots:
 	void setItemName(const QString&);
 	void setUserControllable(bool);
 
+	void setPosition(const QPointF& val) { setRect(QRectF(val, size())); }
+	void setSize(const QSizeF& size) { setRect(QRectF(position(), size)); }
 	void setRect(const QRectF& rect);
 	void moveBy(double x, double y) { setRect(m_rect.translated(x,y)); }
 	void moveBy(const QPointF& pnt) { setRect(m_rect.translated(pnt)); }
@@ -220,6 +228,9 @@ public slots:
 	void setFadeOutLength(int);
 	
 signals:
+	void sizeChanged(const QSizeF&);
+	void positionChanged(const QPointF&);
+	void rectChanged(const QRectF&);
 	void zIndexChanged(double newZIndex);
 	void drawableResized(const QSize& newSize);
 

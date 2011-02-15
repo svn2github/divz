@@ -13,6 +13,16 @@ GLVideoMjpegDrawable::GLVideoMjpegDrawable(QString file, QObject *parent)
 	
 }
 
+GLVideoMjpegDrawable::~GLVideoMjpegDrawable()
+{
+	if(m_thread)
+	{
+		m_thread->exit();
+		delete m_thread;
+		m_thread = 0;
+	}
+}
+
 bool GLVideoMjpegDrawable::setUrl(const QString& file)
 {
 	qDebug() << "GLVideoMjpegDrawable::setUrl(): url:"<<file;
@@ -20,7 +30,8 @@ bool GLVideoMjpegDrawable::setUrl(const QString& file)
 	m_url = file;
 	
 	
-	QUrl url("http://cameras:8082");
+	//QUrl url("http://cameras:8082");
+	QUrl url(file);
 	//QUrl url("http://cameras:9041");
 	if(!url.isValid())
 	{

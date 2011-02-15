@@ -525,6 +525,9 @@ void GLDrawable::setRect(const QRectF& rect)
 	layoutChildren();
 
 	setPos(rect.topLeft());
+	
+	emit sizeChanged(rect.size());
+	emit positionChanged(rect.topLeft());
 }
 
 void GLDrawable::setZIndexModifier(double mod)
@@ -949,17 +952,21 @@ void GLDrawable::loadPropsFromMap(const QVariantMap& map, bool onlyApplyIfChange
 
 		//if(QString(name) == "rect")
 			//qDebug() << "GLDrawable::loadPropsFromMap():"<<(QObject*)this<<": i:"<<i<<", count:"<<count<<", prop:"<<name<<", value:"<<value;
-
+		QString propName(name);
+		
+		// These props are only for convenience - they just set the rect() property internally
+		if(propName == "size" || propName == "position")
+			continue;
 
 		// Hold setting visiblility flag till last so that way any properties that affect
 		// animations are set BEFORE animations start!
-		if(QString(name) == "isVisible")
+		if(propName == "isVisible")
 		{
 			vis = value.toBool();
 			//vis = true;
 		}
 		else
-		if(QString(name) == "id")
+		if(propName == "id")
 		{
 			// m_layerId is only set ONCE by this method, overwriting any ID assigned at creation time
 			if(!m_idLoaded && value.isValid())

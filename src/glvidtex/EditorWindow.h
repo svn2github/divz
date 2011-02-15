@@ -37,6 +37,8 @@ public slots:
 	void addSvg();
 	void addText(const QString& text="");
 	void addRect();
+	void addMjpeg();
+	void addSpinner();
 	
 	void addScene();
 	void delScene();
@@ -89,11 +91,15 @@ protected:
 	GLSceneGroup *m_group;
 	GLScene *m_scene;
 	
-	QListView *m_slideList;
-	QListView *m_layoutList;
+	QTableView *m_slideList;
+	QListView  *m_layoutList;
 	
 	QSplitter *m_mainSplitter;
 	QSplitter *m_centerSplitter;
+	QSplitter *m_sideSplitter;
+	
+	QScrollArea *m_toolList;
+	QToolBar *m_toolbar;
 	
 	QScrollArea *m_controlArea;	
 	QWidget *m_controlBase;

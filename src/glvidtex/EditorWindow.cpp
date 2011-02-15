@@ -126,6 +126,7 @@ void EditorWindow::readSettings()
 
 	m_mainSplitter->restoreState(settings.value("EditorWindow/main_splitter").toByteArray());
 	m_centerSplitter->restoreState(settings.value("EditorWindow/center_splitter").toByteArray());
+	m_sideSplitter->restoreState(settings.value("EditorWindow/side_splitter").toByteArray());
 	
 	qreal scaleFactor = (qreal)settings.value("EditorWindow/scaleFactor", 1.).toDouble();
 	m_graphicsView->setScaleFactor(scaleFactor);
@@ -140,6 +141,7 @@ void EditorWindow::writeSettings()
 
 	settings.setValue("EditorWindow/main_splitter",m_mainSplitter->saveState());
 	settings.setValue("EditorWindow/center_splitter",m_centerSplitter->saveState());
+	settings.setValue("EditorWindow/side_splitter",m_sideSplitter->saveState());
 	
 	settings.setValue("EditorWindow/scaleFactor",m_graphicsView->scaleFactor());
 }
@@ -150,16 +152,19 @@ void EditorWindow::createUI()
 	// Create splitters
 	m_mainSplitter = new QSplitter();
 	m_centerSplitter = new QSplitter();
+	m_sideSplitter = new QSplitter();
 	
 	// Setup splitter orientations
 	m_mainSplitter->setOrientation(Qt::Horizontal);
 	m_centerSplitter->setOrientation(Qt::Vertical);
+	m_sideSplitter->setOrientation(Qt::Vertical);
 	
 	// Create two main lsit views
-	m_slideList = new QListView();
+	m_slideList  = new QTableView();
 	m_layoutList = new QListView();
 	
-	m_slideList->setViewMode(QListView::ListMode);
+	//m_slideList->setViewMode(QListView::ListMode);
+	
 	//m_layerListView->setViewMode(QListView::IconMode);
 //	m_slideList->setMovement(QListView::Free);
 //	m_slideList->setWordWrap(true);
@@ -172,7 +177,28 @@ void EditorWindow::createUI()
 	connect(m_slideList, SIGNAL(clicked(const QModelIndex &)),   this, SLOT(slideSelected(const QModelIndex &)));
 
 	// First, create left panel - the slide list, then everything on the right
-	m_mainSplitter->addWidget(m_slideList);
+	m_toolList = new QScrollArea(m_sideSplitter);
+	m_toolList->setWidgetResizable(true);
+	m_toolbar = new QToolBar("Items", m_toolList);
+	m_toolbar->setOrientation(Qt::Vertical);
+	m_toolbar->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+	m_toolList->setWidget(m_toolbar);
+	
+	m_sideSplitter->addWidget(m_toolList);
+	
+	// Create the toolbar for the new slide/delete slide actions
+	QWidget *slideListBase = new QWidget(m_sideSplitter);
+	QVBoxLayout *slideListBaseLayout = new QVBoxLayout(slideListBase);
+	slideListBaseLayout->setContentsMargins(0,0,0,0);
+	
+	QToolBar *sceneActionToolbar = new QToolBar("Scene Actions", slideListBase); 
+	slideListBaseLayout->addWidget(sceneActionToolbar);
+	slideListBaseLayout->addWidget(m_slideList);
+	
+	// Add the two toolbars and side splitter to the main splitter
+	m_sideSplitter->addWidget(slideListBase);
+	
+	m_mainSplitter->addWidget(m_sideSplitter);
 	
 	// Now create the center panel - on top will be a list view, below it the graphics view
 	m_graphicsView = new EditorGraphicsView();
@@ -189,8 +215,17 @@ void EditorWindow::createUI()
 	m_mainSplitter->addWidget(m_centerSplitter);
 	
 	// Now create the control base for the other half of the right side splitter
+	QWidget *controlLayoutBase = new QWidget(m_mainSplitter);
+	QVBoxLayout *controlLayout = new QVBoxLayout(controlLayoutBase);
+	controlLayout->setContentsMargins(0,0,0,0);
+	
+	QToolBar *itemActionToolbar = new QToolBar("Item Actions", slideListBase); 
+	controlLayout->addWidget(itemActionToolbar);
+	
 	m_controlArea = new QScrollArea(m_mainSplitter);
 	m_controlArea->setWidgetResizable(true);
+	controlLayout->addWidget(m_controlArea);
+	
 	m_controlBase = new QWidget(m_controlArea);
 	
 	QVBoxLayout *layout = new QVBoxLayout(m_controlBase);
@@ -198,17 +233,18 @@ void EditorWindow::createUI()
 	
 	m_controlArea->setWidget(m_controlBase);
 	
-	m_mainSplitter->addWidget(m_controlArea);
+	//m_mainSplitter->addWidget(m_controlArea);
+	m_mainSplitter->addWidget(controlLayoutBase);
 	
 	setCentralWidget(m_mainSplitter);
 	
 	// Now create the toolbar that users can use to add items to the current slide
-	QToolBar * toolbar = addToolBar(tr("Editor Actions"));
+	QToolBar * toolbar = m_toolbar; //addToolBar(tr("Editor Actions"));
 	
 	
 	QAction *act;
 	
-	act = new QAction(QIcon("../data/stock-panel-screenshot.png"), tr("New Video Input Layer"), this);
+	act = new QAction(QIcon("../data/stock-panel-screenshot.png"), tr("Add Video Input"), this);
 	connect(act, SIGNAL(triggered()), this, SLOT(addVideoInput()));
 	toolbar->addAction(act);
 	
@@ -216,7 +252,7 @@ void EditorWindow::createUI()
 	connect(act, SIGNAL(triggered()), this, SLOT(addVideoFile()));
 	toolbar->addAction(act);
 	
-	act = new QAction(QIcon("../data/stock-insert-object.png"), tr("New Video Loop Layer"), this);
+	act = new QAction(QIcon("../data/stock-insert-object.png"), tr("Add Video Loop"), this);
 	connect(act, SIGNAL(triggered()), this, SLOT(addVideoLoop()));
 	toolbar->addAction(act);
 		
@@ -233,10 +269,19 @@ void EditorWindow::createUI()
 	toolbar->addAction(act);
 	
 	act = toolbar->addAction(QIcon(":/data/insert-rect-24.png"), tr("New Rectangle"));
-	act->setShortcut(QString(tr("CTRL+SHIFT+B")));
+	act->setShortcut(QString(tr("CTRL+SHIFT+R")));
 	connect(act, SIGNAL(triggered()), this, SLOT(addRect()));
 	
-	toolbar->addSeparator();
+	act = toolbar->addAction(QIcon(":/data/stock-connect.png"), tr("Add MJPEG Feed"));
+	act->setShortcut(QString(tr("CTRL+SHIFT+M")));
+	connect(act, SIGNAL(triggered()), this, SLOT(addMjpeg()));
+	
+	act = toolbar->addAction(QIcon(":/data/stock-refresh.png"), tr("Add Spinner"));
+	act->setShortcut(QString(tr("CTRL+SHIFT+S")));
+	connect(act, SIGNAL(triggered()), this, SLOT(addSpinner()));
+	
+	//toolbar->addSeparator();
+	toolbar = sceneActionToolbar;
 	
 	act = new QAction(QIcon("../data/action-add.png"), tr("Add New Slide"), this);
 	connect(act, SIGNAL(triggered()), this, SLOT(addScene()));
@@ -252,6 +297,14 @@ void EditorWindow::createUI()
 	
 	toolbar->addSeparator();
 	
+	QAction  *slideProp = toolbar->addAction(QIcon(":/data/stock-properties.png"), tr("Scene Properties"));
+	slideProp->setShortcut(QString(tr("SHIFT+F2")));
+	connect(slideProp, SIGNAL(triggered()), this, SLOT(slideProperties()));
+
+	//toolbar->addSeparator();
+	toolbar = itemActionToolbar;
+	//addToolBar(tr("Editor Actions"));
+	
 	QAction  *centerHor = toolbar->addAction(QIcon("../data/obj-center-hor.png"), tr("Center Items Horizontally"));
 	centerHor->setShortcut(QString(tr("CTRL+SHIFT+H")));
 	connect(centerHor, SIGNAL(triggered()), this, SLOT(centerSelectionHorizontally()));
@@ -264,11 +317,6 @@ void EditorWindow::createUI()
 	act ->setShortcut(QString(tr("CTRL+SHIFT+F")));
 	connect(act , SIGNAL(triggered()), this, SLOT(naturalItemFit()));
 	
-	toolbar->addSeparator();
-	
-	QAction  *slideProp = toolbar->addAction(QIcon(":/data/stock-properties.png"), tr("Scene Properties"));
-	slideProp->setShortcut(QString(tr("SHIFT+F2")));
-	connect(slideProp, SIGNAL(triggered()), this, SLOT(slideProperties()));
 	
 	
 }
@@ -491,6 +539,24 @@ void EditorWindow::addSvg()
 	addDrawable(new GLSvgDrawable("animated-clock.svg"));
 }
 
+void EditorWindow::addMjpeg()
+{
+	addDrawable(new GLVideoMjpegDrawable());
+}
+
+void EditorWindow::addSpinner()
+{
+	GLSpinnerDrawable *rect = new GLSpinnerDrawable();
+	addDrawable(rect);
+	
+	if(m_graphicsScene)
+	{
+		QRectF r = m_graphicsScene->sceneRect();
+		r = QRectF(r.width() * .25, r.height() * .25, r.width() * .5, r.height() * .5);
+		rect->setRect(r);
+	}
+}
+
 void EditorWindow::addRect()
 {
 	GLRectDrawable *rect = new GLRectDrawable();
@@ -656,6 +722,43 @@ QWidget *EditorWindow::createPropertyEditors(GLDrawable *gld)
 		opts.type = QVariant::Int;
 		opts.defaultValue = 0;
 		lay->addRow(tr("&Z Value:"), PropertyEditorFactory::generatePropertyEditor(gld, "zIndex", SLOT(setZIndex(int)), opts));
+		
+	}
+	
+	{
+		ExpandableWidget *group = new ExpandableWidget("Size and Position",base);
+		blay->addWidget(group);
+	
+		QWidget *cont = new QWidget;
+		QFormLayout *lay = new QFormLayout(cont);
+		lay->setContentsMargins(3,3,3,3);
+		
+		group->setWidget(cont);
+		
+		opts.reset();
+		opts.value = gld->rect().topLeft();
+		
+		lay->addRow(tr("&Position:"), PropertyEditorFactory::generatePropertyEditor(gld, "position", SLOT(setPosition(const QPointF&)), opts, SIGNAL(positionChanged(const QPointF&))));
+		
+		opts.reset();
+		opts.value = gld->rect().size();
+		
+		lay->addRow(tr("&Size:"), PropertyEditorFactory::generatePropertyEditor(gld, "size", SLOT(setSize(const QSizeF&)), opts, SIGNAL(sizeChanged(const QSizeF&))));
+		
+// 		opts.reset();
+// 		opts.suffix = "%";
+// 		opts.min = 0;
+// 		opts.max = 100;
+// 		opts.defaultValue = 100;
+// 		opts.type = QVariant::Int;
+// 		opts.doubleIsPercentage = true;
+// 		lay->addRow(tr("&Opacity:"), PropertyEditorFactory::generatePropertyEditor(gld, "opacity", SLOT(setOpacity(int)), opts));
+// 		
+// 		opts.reset();
+// 		opts.noSlider = true;
+// 		opts.type = QVariant::Int;
+// 		opts.defaultValue = 0;
+// 		lay->addRow(tr("&Z Value:"), PropertyEditorFactory::generatePropertyEditor(gld, "zIndex", SLOT(setZIndex(int)), opts));
 		
 	}
 	
@@ -847,9 +950,48 @@ QWidget *EditorWindow::createPropertyEditors(GLDrawable *gld)
 			lay->addRow(tr("Border:"), hbox);
 		}
 		else
+		if(GLSpinnerDrawable *item = dynamic_cast<GLSpinnerDrawable*>(gld))
+		{
+			QtColorPicker * fillColor = new QtColorPicker;
+			fillColor->setStandardColors();
+			fillColor->setCurrentColor(item->fillColor());
+			connect(fillColor, SIGNAL(colorChanged(const QColor &)), item, SLOT(setFillColor(QColor)));
+			
+			QtColorPicker * borderColor = new QtColorPicker;
+			borderColor->setStandardColors();
+			borderColor->setCurrentColor(item->borderColor());
+			connect(borderColor, SIGNAL(colorChanged(const QColor &)), item, SLOT(setBorderColor(QColor)));
+			
+			lay->addRow(tr("Fill:"), fillColor);
+			
+			QHBoxLayout *hbox = new QHBoxLayout();
+			QDoubleSpinBox *box = new QDoubleSpinBox();
+			box->setSuffix(tr("px"));
+			box->setMinimum(0);
+			box->setDecimals(2);
+			box->setMaximum(50);
+			box->setValue(item->borderWidth());
+			//connect(m_textSizeBox, SIGNAL(returnPressed()), this, SLOT(textSizeChanged(double)));
+			connect(box, SIGNAL(valueChanged(double)), item, SLOT(setBorderWidth(double)));
+			hbox->addWidget(box);
+			hbox->addWidget(borderColor);
+			
+			lay->addRow(tr("Border:"), hbox);
+			
+			opts.reset();
+			opts.min = 1;
+			opts.max = 500;
+			lay->addRow(tr("Duration:"), PropertyEditorFactory::generatePropertyEditor(item, "cycleDuration", SLOT(setCycleDuration(int)), opts));
+			
+			opts.reset();
+			opts.text = "Loop at End";
+			opts.defaultValue = true;
+			lay->addRow("", PropertyEditorFactory::generatePropertyEditor(item, "loopAtEnd", SLOT(setLoopAtEnd(bool)), opts));
+		}
+		else
 		if(GLImageDrawable *item = dynamic_cast<GLImageDrawable*>(gld))
 		{
-			PropertyEditorFactory::PropertyEditorOptions opts;
+			opts.reset();
 			opts.stringIsFile = true;
 			opts.fileTypeFilter = tr("Image Files (*.png *.jpg *.bmp *.svg *.xpm *.gif);;Any File (*.*)");
 			lay->addRow(tr("&Image:"), PropertyEditorFactory::generatePropertyEditor(item, "imageFile", SLOT(setImageFile(const QString&)), opts, SIGNAL(imageFileChanged(const QString&))));
@@ -857,9 +999,16 @@ QWidget *EditorWindow::createPropertyEditors(GLDrawable *gld)
 			opts.text = "Ignore image aspect ratio";
 			lay->addRow(PropertyEditorFactory::generatePropertyEditor(item, "ignoreAspectRatio", SLOT(setIgnoreAspectRatio(bool)), opts));
 		}
-		
-		
-		
+		else
+		if(GLVideoMjpegDrawable *item = dynamic_cast<GLVideoMjpegDrawable*>(gld))
+		{
+			opts.reset();
+			//opts.fileTypeFilter = tr("Image Files (*.png *.jpg *.bmp *.svg *.xpm *.gif);;Any File (*.*)");
+			lay->addRow(tr("&MJPEG URL:"), PropertyEditorFactory::generatePropertyEditor(item, "url", SLOT(setUrl(const QString&)), opts));
+			
+			//opts.text = "Ignore image aspect ratio";
+			//lay->addRow(PropertyEditorFactory::generatePropertyEditor(item, "ignoreAspectRatio", SLOT(setIgnoreAspectRatio(bool)), opts));
+		}
 	}
 	
 	
