@@ -417,6 +417,8 @@ public slots:
 	void prevItem();
 	
 	void setIsRandom(bool random=true);
+	
+	void sceneDurationChanged(double);
 
 private slots:
 // 	void sceneAdded(GLScene*);
@@ -433,6 +435,9 @@ private:
 	double m_playTime;
 	int m_currentItemIndex;
 	bool m_isRandom;
+	
+	QTime m_currentElapsedTime;
+	GLScene *m_currentItem;
 };
 
 class GLSceneGroupCollection : public QAbstractListModel

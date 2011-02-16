@@ -9,5 +9,6 @@
 #include "GLSceneTypeCurrentWeather.h"
 #include "GLSceneTypeNewsFeed.h"
 #include "GLSceneTypeRandomImage.h"
+#include "GLSceneTypeRandomVideo.h"
 
 #endif

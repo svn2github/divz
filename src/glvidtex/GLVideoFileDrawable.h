@@ -35,6 +35,8 @@ public:
 signals:
 	void videoFileChanged(const QString&);
 	void positionChanged(qint64 position);
+	void durationChanged(double duration); // in seconds
+	void statusChanged(int);
 	
 public slots:
 	bool setVideoFile(const QString&);
@@ -48,7 +50,7 @@ private slots:
 	void testXfade();
 	void deleteSource(VideoSource *source);
 #ifdef HAS_QT_VIDEO_SOURCE
-	void durationChanged ( qint64 duration );
+	void setDuration ( qint64 duration );
 	void error ( QMediaPlayer::Error error );
 	//void mediaStatusChanged ( QMediaPlayer::MediaStatus status )
 	//void positionChanged ( qint64 position )

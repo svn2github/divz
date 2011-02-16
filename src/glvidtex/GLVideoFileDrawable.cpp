@@ -54,11 +54,11 @@ bool GLVideoFileDrawable::setVideoFile(const QString& file)
 	
 	m_qtSource = new QtVideoSource();
 	m_qtSource->setFile(file);
-	m_qtSource->start();
+	//m_qtSource->start();
 	
 	connect(m_qtSource->player(), SIGNAL(positionChanged(qint64)), this, SIGNAL(positionChanged(qint64))); 
 	
-	connect(m_qtSource->player(), SIGNAL(durationChanged ( qint64 )), this, SLOT(durationChanged ( qint64 )));
+	connect(m_qtSource->player(), SIGNAL(durationChanged ( qint64 )), this, SLOT(setDuration ( qint64 )));
 	connect(m_qtSource->player(), SIGNAL(error ( QMediaPlayer::Error )), this, SLOT(error ( QMediaPlayer::Error )));
 	connect(m_qtSource->player(), SIGNAL(stateChanged ( QMediaPlayer::State )), this, SLOT(stateChanged ( QMediaPlayer::State )));
 	
@@ -85,11 +85,12 @@ bool GLVideoFileDrawable::setVideoFile(const QString& file)
 }
 
 #ifdef HAS_QT_VIDEO_SOURCE
-void GLVideoFileDrawable::durationChanged ( qint64 duration )
+void GLVideoFileDrawable::setDuration ( qint64 duration )
 {
-	duration /= 1000;
-	qDebug() << "GLVideoFileDrawable::durationChanged: "<<m_videoFile<<" Duration changed to:"<<duration;
-	m_videoLength = (double)duration;
+	double newDuration = ((double)duration) / 1000.;
+	qDebug() << "GLVideoFileDrawable::durChanged: "<<m_videoFile<<" Duration changed to:"<<newDuration;
+	m_videoLength = newDuration;
+	emit durationChanged(m_videoLength);
 }
 
 void GLVideoFileDrawable::error ( QMediaPlayer::Error error )
@@ -212,6 +213,7 @@ void GLVideoFileDrawable::setStatus(int status)
 			default:
 				break;
 		}
+		emit statusChanged(status);
 	}
 			
 #endif

@@ -1211,6 +1211,7 @@ GLSceneGroupPlaylist::GLSceneGroupPlaylist(GLSceneGroup *group)
 	, m_playTime(0)
 	, m_currentItemIndex(-1)
 	, m_isRandom(false)
+	, m_currentItem(0)
 {
 	connect(&m_currentItemTimer, SIGNAL(timeout()), this, SLOT(nextItem()));
 	m_currentItemTimer.setSingleShot(true);
@@ -1316,9 +1317,41 @@ void GLSceneGroupPlaylist::setCurrentItem(GLScene *item)
 		return;
 	else
 	{
-		//qDebug() << "GLSceneGroupPlaylist::setCurrentItem: Starting timer on item:"<<item<<", num:"<<m_currentItemIndex<<"for"<<item->duration()<<"sec";
+		qDebug() << "GLSceneGroupPlaylist::setCurrentItem: Starting timer on item:"<<item<<", num:"<<m_currentItemIndex<<"for"<<item->duration()<<"sec";
+		m_currentItemTimer.stop();
 		m_currentItemTimer.setInterval(dur);
 		m_currentItemTimer.start();
+		m_currentElapsedTime.restart();
+		
+		if(m_currentItem)
+			disconnect(m_currentItem, 0, this, 0);
+			
+		connect(m_currentItem, SIGNAL(durationChanged(double)), this, SLOT(sceneDurationChanged(double)));
+		
+		m_currentItem = item;
+	}
+}
+
+void GLSceneGroupPlaylist::sceneDurationChanged(double d)
+{
+	if(sender() != m_currentItem)
+		return;
+		
+	double e = ((double)m_currentElapsedTime.elapsed()) / 1000.;
+	double newDur = d - e;
+	if(newDur < 0)
+		newDur = d;
+	if(newDur > 0)
+	{
+		qDebug() << "GLSceneGroupPlaylist::sceneDurationChanged: New duration:"<<d<<", already elapsed:"<<e<<", new timer length:"<<newDur;
+		m_currentItemTimer.stop();
+		m_currentItemTimer.setInterval((int)( /*newDur */ d * 1000. ));
+		m_currentItemTimer.start();
+		m_currentElapsedTime.restart();
+	}
+	else
+	{
+		qDebug() << "GLSceneGroupPlaylist::sceneDurationChanged: Not restarting timer because newDur<0:"<<newDur<<", d:"<<d<<", already elapsed:"<<e;
 	}
 }
 
@@ -1374,6 +1407,8 @@ void GLSceneGroupPlaylist::nextItem()
 	if(next >= m_group->size())
 		next = 0;
 		
+	double e = ((double)m_currentElapsedTime.elapsed()) / 1000.;
+	qDebug() << "GLSceneGroupPlaylist::nextItem(): Scene#:"<<next<<", elapsed:"<<e;
 	playItem(m_group->at(next));
 }
 

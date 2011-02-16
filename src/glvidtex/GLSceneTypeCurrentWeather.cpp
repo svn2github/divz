@@ -221,9 +221,10 @@ bool GLSceneTypeCurrentWeather::isNight()
 	// The *right* way todo this in the future would be to check the LOCAL sunrise/sunset times
 	// and then compare the current min/hour to the local sunrise/sunset!
 	// For now, this is Good Enough.
-	bool isNight =  time.hour() <= 6 ||
-			time.hour() >= 6 + 12;
 
+	bool isNight = time.hour() <= 6 ||
+		       time.hour() >= 6 + 12;
+	
 	if(m_fields["conditions"].toString() == "Sunny")
 		isNight = false;
 

@@ -343,6 +343,7 @@ GLSceneTypeFactory::GLSceneTypeFactory()
 	ADD_CLASS(GLSceneTypeCurrentWeather);
 	ADD_CLASS(GLSceneTypeNewsFeed);
 	ADD_CLASS(GLSceneTypeRandomImage);
+	ADD_CLASS(GLSceneTypeRandomVideo);
 	
 	#undef ADD_CLASS
 }
@@ -376,6 +377,7 @@ GLSceneType *GLSceneTypeFactory::newInstance(QString id)
 	IF_CLASS(GLSceneTypeCurrentWeather);
 	IF_CLASS(GLSceneTypeNewsFeed);
 	IF_CLASS(GLSceneTypeRandomImage);
+	IF_CLASS(GLSceneTypeRandomVideo);
 	
 	#undef IF_CLASS
 	
