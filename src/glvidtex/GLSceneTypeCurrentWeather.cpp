@@ -1,5 +1,7 @@
 #include "GLSceneTypeCurrentWeather.h"
 
+#include "GLDrawable.h"
+
 GLSceneTypeCurrentWeather::GLSceneTypeCurrentWeather(QObject *parent)
 	: GLSceneType(parent)
 {
@@ -33,6 +35,12 @@ GLSceneTypeCurrentWeather::GLSceneTypeCurrentWeather(QObject *parent)
 			"The normalized location description given by the server, such as 'Chicago, IL'", 
 			"Text", 
 			false)
+		
+		<< FieldInfo("background", 
+			"Background", 
+			"The background image, if included, can optionally be dimmed at night.", 
+			"Image", 
+			false)
 		;
 		
 	m_paramInfoList
@@ -48,7 +56,14 @@ GLSceneTypeCurrentWeather::GLSceneTypeCurrentWeather(QObject *parent)
 			"Time in minutes to wait between updates",
 			QVariant::Int,
 			true,
-			SLOT(setUpdateTime(int)));
+			SLOT(setUpdateTime(int)))
+			
+		<< ParameterInfo("setDimBackground",
+			"Dim Background",
+			"Dim background by 50% at night",
+			QVariant::Bool,
+			true,
+			SLOT(setDimBackground(bool)));
 			
 	PropertyEditorFactory::PropertyEditorOptions opts;
 	
@@ -61,10 +76,16 @@ GLSceneTypeCurrentWeather::GLSceneTypeCurrentWeather(QObject *parent)
 	opts.max = 15;
 	m_paramInfoList[1].hints = opts;
 	
+	opts.reset();
+	opts.text = "Dim Background";
+	m_paramInfoList[2].hints = opts;
+	
 	connect(&m_reloadTimer, SIGNAL(timeout()), this, SLOT(reloadData()));
 	//m_reloadTimer.setInterval(1 * 60 * 1000); // every 1 minute
 	//setParam
 	setParam("updateTime", 1);
+	
+	setParam("dimBackground", true);
 			
 }
 
@@ -174,19 +195,13 @@ QString GLSceneTypeCurrentWeather::extractIcon(const QString &data)
 		QString i = regex.cap();
 		i = i.left(i.length() - 4);
 		
-		QTime time = QTime::currentTime();
-		
-		// The *right* way todo this in the future would be to check the LOCAL sunrise/sunset times
-		// and then compare the current min/hour to the local sunrise/sunset!
-		// For now, this is Good Enough.
-		bool isNight = time.hour() <= 6 ||
-		               time.hour() >= 6 + 12;
+		bool night = isNight();
 		
 		QString name;
-		if(isNight)
+		if(night)
 			name = m_icons.value("night:" + i);
 		
-		if(!isNight || name.isEmpty())
+		if(!night || name.isEmpty())
 			name = m_icons.value(i);
 		
 		if (!name.isEmpty()) 
@@ -197,6 +212,22 @@ QString GLSceneTypeCurrentWeather::extractIcon(const QString &data)
 		}
 	}
 	return QString();
+}
+
+bool GLSceneTypeCurrentWeather::isNight()
+{
+	QTime time = QTime::currentTime();
+		
+	// The *right* way todo this in the future would be to check the LOCAL sunrise/sunset times
+	// and then compare the current min/hour to the local sunrise/sunset!
+	// For now, this is Good Enough.
+	bool isNight =  time.hour() <= 6 ||
+			time.hour() >= 6 + 12;
+			
+	if(m_fields["conditions"].toString() == "Sunny")
+		isNight = false;
+	
+	return isNight;
 }
 
 // static QString toCelcius(QString t, QString unit) 
@@ -332,5 +363,12 @@ void GLSceneTypeCurrentWeather::parseData(const QString &data)
 // 				}
 // 			}
 		}
+	}
+	
+	if(isNight())
+	{
+		GLDrawable *background = lookupField("background");
+		if(background)
+			background->setOpacity(.5);
 	}
 }

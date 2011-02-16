@@ -5,7 +5,7 @@ GLSpinnerDrawable::GLSpinnerDrawable(QObject *parent)
 	, m_fillColor(Qt::white)
 	, m_borderColor(Qt::black)
 	, m_borderWidth(0.0)
-	, m_cycleDuration(1000)
+	, m_cycleDuration(15.)
 	, m_loopAtEnd(true)
 	, m_animClockStarted(false)
 	, m_sceneTickLock(true)
@@ -18,6 +18,8 @@ GLSpinnerDrawable::GLSpinnerDrawable(QObject *parent)
 	
 	setXFadeEnabled(false);
 	renderImage(0);
+	
+	start();
 }
 
 void GLSpinnerDrawable::setFillColor(QColor c)
@@ -38,7 +40,7 @@ void GLSpinnerDrawable::setBorderWidth(double d)
 	tick();
 }
 
-void GLSpinnerDrawable::setCycleDuration(int d)
+void GLSpinnerDrawable::setCycleDuration(double d)
 {
 	m_cycleDuration = d;
 }
@@ -59,13 +61,16 @@ void GLSpinnerDrawable::tick()
 	//if(!glWidget() && (!scene() || m_sceneTickLock))
 	//   return;
 	
+	if(!liveStatus())
+		return;
+		
 	if(!m_animClockStarted)
 	{
 		m_animClockStarted = true;
 		m_animClock.start();
 	}
 	
-	double progress = ((double)m_animClock.elapsed()) / ((double)m_cycleDuration);
+	double progress = ((double)m_animClock.elapsed()) / (m_cycleDuration * 1000.);
 	if(progress > 1.0)
 	{
 		if(m_loopAtEnd)

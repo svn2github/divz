@@ -53,7 +53,10 @@ TODO:
 			- Need to change GLVideoInputDrawable to 'remember' that the dev is 'locked' and default to network faster
 		- [FIXED] Crossfade speed not being applied to items when set speed in director then change playlist item
 			- Fixed by just proactivly setting xfade speed on all video drawables in PlayerWindow::setCrossfadeSpeed
-		 		
+		- [FIXED] Editor: Extreem errors when LMB-dragging - frequently jumps way out of place
+		- [FIXED] Editor: CPU usage seems to increase when dragging or clicking by a huge amount
+		- [FIXED] Editor: New items get a zero Z index - should be max+1
+		
 		- [TMP-FIX] Video Encoding "problems"
 			- Way to much CPU usage - 157%-ish on a dual-core 2.4 GHz...causing live video to stutter
 			- Consider putting it either in another thread or in a whole other process with shared memory
@@ -84,14 +87,18 @@ TODO:
 		- Director: When text drawable in scroller mode, adding an item to the playlist after typing in th text box does not work
 		- Director: Cannot pause playlist while scroller mode active
 		
-		- Editor: Extreem errors when LMB-dragging - frequently jumps way out of place
-		- Editor: CPU usage seems to increase when dragging or clicking by a huge amount
-		- Editor: New items get a zero Z index - should be max+1
 		- Editor: SVG item (and others) imgage jumps when resize (resize, image moves correctly, stop resize, image "jumps" back to old spot, then jumps to correct new spot)
 		
 		
 	NEEDED FEATURES:
-		- Slide types - for rendering the automatic slides
+		- Border/Dropshadow control for items
+			- Right now, text and images
+			- Really needed
+		- Add copy/paste to editor
+		- RSS "engine" to drive news and other uses
+		- Weather - dim background at night?
+		- Random Video scenetype
+		
 		- Scene overlay - for stuff that doesnt change
 		- Transmit slide group changes to player when editor window closed
 			- Need to cross fade between slides
@@ -153,14 +160,12 @@ TODO:
 					- The engine also gets a pointer to the list view so it can reconfig the list view as it desires
 						- The default engine must be sure to reset the list view
 					- Group engines can generate slides that either use the default SceneType or a custom scene type
-		- Border/Dropshadow control for items
-			- Right now, text and images
 		- MUST have per-camera BCHS controls
-		- Add copy/paste to editor
 		- Durations on groups
 			- Auto calced based on durations of all the scenes
 		- Add a play interface to collection to loop thru groups
 		
+		- [DONE] Slide types - for rendering the automatic slides
 		- [DONE] Slides auto change - for changing automatically
 		- [DONE] Text crawler - for showing RSS feeds
 		- [DONE] JSON interface for web API

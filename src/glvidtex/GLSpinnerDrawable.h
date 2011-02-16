@@ -11,7 +11,7 @@ class GLSpinnerDrawable : public GLImageDrawable
 	Q_PROPERTY(QColor borderColor READ borderColor WRITE setBorderColor);
 	Q_PROPERTY(double borderWidth READ borderWidth WRITE setBorderWidth);
 	
-	Q_PROPERTY(int cycleDuration READ cycleDuration WRITE setCycleDuration);
+	Q_PROPERTY(double cycleDuration READ cycleDuration WRITE setCycleDuration);
 	Q_PROPERTY(bool loopAtEnd READ loopAtEnd WRITE setLoopAtEnd);
 
 public:
@@ -21,7 +21,7 @@ public:
 	QColor borderColor() { return m_borderColor; }
 	double borderWidth() { return m_borderWidth; }
 	
-	int cycleDuration() { return m_cycleDuration; }
+	double cycleDuration() { return m_cycleDuration; }
 	bool loopAtEnd() { return m_loopAtEnd; }
 	
 signals:
@@ -32,7 +32,7 @@ public slots:
 	void setBorderColor(QColor c);
 	void setBorderWidth(double d);
 	
-	void setCycleDuration(int);
+	void setCycleDuration(double);
 	void setLoopAtEnd(bool);
 	
 	void start();
@@ -51,7 +51,7 @@ protected:
 	QColor m_borderColor;
 	double m_borderWidth;
 	
-	int m_cycleDuration;
+	double m_cycleDuration;
 	bool m_loopAtEnd;
 	
 	QTimer m_animTimer;

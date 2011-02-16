@@ -552,7 +552,8 @@ void EditorWindow::addSpinner()
 	if(m_graphicsScene)
 	{
 		QRectF r = m_graphicsScene->sceneRect();
-		r = QRectF(r.width() * .25, r.height() * .25, r.width() * .5, r.height() * .5);
+		// Make square
+		r = QRectF(r.width() * .25, r.height() * .25, r.width() * .5, r.width() * .5);
 		rect->setRect(r);
 	}
 }
@@ -981,7 +982,7 @@ QWidget *EditorWindow::createPropertyEditors(GLDrawable *gld)
 			opts.reset();
 			opts.min = 1;
 			opts.max = 500;
-			lay->addRow(tr("Duration:"), PropertyEditorFactory::generatePropertyEditor(item, "cycleDuration", SLOT(setCycleDuration(int)), opts));
+			lay->addRow(tr("Duration:"), PropertyEditorFactory::generatePropertyEditor(item, "cycleDuration", SLOT(setCycleDuration(double)), opts));
 			
 			opts.reset();
 			opts.text = "Loop at End";

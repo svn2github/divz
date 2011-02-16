@@ -39,6 +39,7 @@ class GLSceneTypeCurrentWeather : public GLSceneType
 	
 	Q_PROPERTY(QString location READ location WRITE setLocation);
 	Q_PROPERTY(int updateTime READ updateTime WRITE setUpdateTime);
+	Q_PROPERTY(bool dimBackground READ dimBackground WRITE setDimBackground);
 	
 public:
 	GLSceneTypeCurrentWeather(QObject *parent=0);
@@ -56,6 +57,10 @@ public:
 		\sa setUpdateTime() */
 	int updateTime() { return m_params["updateTime"].toInt(); }
 	
+	/** Returns \em true if automatic background dimming is enabled 
+		\sa setDimBackground() */
+	bool dimBackground() { return m_params["dimBackground"].toBool(); }
+	
 public slots:
 	virtual void setLiveStatus (bool flag=true);
 	
@@ -69,6 +74,9 @@ public slots:
 	
 	/** Set the time to wait between updates to \a minutes */
 	void setUpdateTime(int minutes) { setParam("updateTime", minutes); }
+	
+	/** Enable/disable automatic background diming by 50% at night */
+	void setDimBackground(bool flag) { setParam("dimBackground", flag); }
 		
 	/** Reload the weather data for the current 'location' parameter. */
 	void reloadData();
@@ -83,6 +91,8 @@ private:
 	
 private:
 	QHash<QString, QString> m_icons;
+	
+	bool isNight();
 	
 	QTimer m_reloadTimer;
 };
