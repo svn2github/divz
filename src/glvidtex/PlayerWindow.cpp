@@ -18,7 +18,9 @@
 #include "GLSceneTypes.h"
 
 //#include "SharedMemorySender.h"
+#ifndef Q_OS_WIN
 #include "V4LOutput.h"
+#endif
 
 #include <QTimer>
 #include <QApplication>
@@ -80,7 +82,7 @@ PlayerCompatOutputStream::PlayerCompatOutputStream(PlayerWindow *parent)
 	setFps(m_fps);
 
 	//m_frameReadyTimer.start();
-	
+
 	setAutoDestroy(false);
 }
 
@@ -95,7 +97,7 @@ void PlayerCompatOutputStream::consumerReleased(QObject*)
 	if(m_consumerList.isEmpty())
 		m_frameReadyTimer.stop();
 }
-	
+
 void PlayerCompatOutputStream::setImage(QImage img)
 {
 	m_image = img;
@@ -111,9 +113,9 @@ void PlayerCompatOutputStream::renderScene()
 	QImage image(320,240,QImage::Format_ARGB32);
 	memset(image.scanLine(0),0,image.byteCount());
 	QPainter p(&image);
-	
-	//qDebug() << "PlayerCompatOutputStream::renderScene(): Image size:"<<image.size(); 
-	
+
+	//qDebug() << "PlayerCompatOutputStream::renderScene(): Image size:"<<image.size();
+
 
 	if(m_win->graphicsScene())
 		m_win->graphicsScene()->render(&p);
@@ -156,12 +158,12 @@ PlayerWindow::PlayerWindow(QWidget *parent)
 	, m_configLoaded(false)
 {
 	// WinXP - m_vidSendMgr causes the app to freeze
-//	#ifdef Q_OS_WIN
+	#ifdef Q_OS_WIN
 		m_vidSendMgr = 0;
-// 	#else
-// 		m_vidSendMgr = new VideoInputSenderManager();
-// 		m_vidSendMgr->setSendingEnabled(true);
-// 	#endif
+ 	#else
+ 		m_vidSendMgr = new VideoInputSenderManager();
+ 		m_vidSendMgr->setSendingEnabled(true);
+ 	#endif
 
 	QVBoxLayout *layout = new QVBoxLayout(this);
 	layout->setContentsMargins(0,0,0,0);
@@ -372,29 +374,33 @@ void PlayerWindow::loadConfig(const QString& configFile, bool verbose)
 		//m_shMemSend = new SharedMemorySender("PlayerWindow-2",this);
 		//m_shMemSend->setVideoSource(m_glWidget->outputStream());
 		m_v4lOutput = 0;
-		
+
+		#ifndef Q_OS_WIN
 		bool v4l_out_enab = READ_STRING("v4l-output-enabled","true") == "true";
-		
+
 		/// NB: v4l output is designed to be used with vloopback (http://www.lavrsen.dk/svn/vloopback/trunk or ./vloopback)
 		/// To use with vloopback, first build the kernel mod in vloopback and do 'insmod vloopback.ko', then
 		/// make sure you adjust the output device to the device shown in dmesg or /var/log/messages as the output
 		/// device.
-		
+
 		if(v4l_out_enab)
 		{
 			QString v4lOutputDev = READ_STRING("v4l-output","/dev/video2");
-			
+
 			m_v4lOutput = new V4LOutput(v4lOutputDev);
 			m_v4lOutput->setVideoSource(m_glWidget ? (VideoSource*)m_glWidget->outputStream() : (VideoSource*)m_compatStream);
-			
+
 			qDebug() << "PlayerWindow: Streaming to V4L device: "<<v4lOutputDev;
 		}
+		#else
+		qDebug() << "PlayerWindow: Unable to stream via V4L because this player was compiled for Windows.";
+		#endif
 	}
 	else
 	{
 		//m_shMemSend = 0;
 		//qDebug() << "Playerwindow: Unable to stream output via shared memory because OpenGL is not enabled.";
-		
+
 		m_v4lOutput = 0;
 		qDebug() << "Playerwindow: Unable to stream output via V4L because OpenGL is not enabled or no output stream available (m_compatStream)";
 	}
@@ -459,22 +465,22 @@ void PlayerWindow::loadConfig(const QString& configFile, bool verbose)
 					{
 // 						GLSceneTypeCurrentWeather *weather = new GLSceneTypeCurrentWeather();
 // 						weather->setLocation("47390");
-// 						
+//
 // 						GLSceneType::AuditErrorList errors = weather->auditTemplate(scene);
 // 						if(!errors.isEmpty())
 // 						{
 // 							qDebug() << "PlayerWindow: [DEBUG]: Errors found attaching weather type to scene:";
 // 							foreach(GLSceneType::AuditError error, errors)
 // 							{
-// 								qDebug() << "PlayerWindow: [DEBUG]: \t" << error.toString(); 
+// 								qDebug() << "PlayerWindow: [DEBUG]: \t" << error.toString();
 // 							}
 // 						}
-// 						
+//
 // 						if(!weather->attachToScene(scene))
 // 						{
 // 							qDebug() << "PlayerWindow: [DEBUG]: weather->attachToScene() returned FALSE";
 // 						}
-						
+
 						//scene->setGLWidget(this);
 						displayScene(scene);
 						qDebug() << "PlayerWindow: [DEBUG]: Loaded File: "<<loadGroup<<", GroupID: "<<m_group->groupId()<<", SceneID: "<< scene->sceneId();
@@ -509,12 +515,12 @@ void PlayerWindow::loadConfig(const QString& configFile, bool verbose)
 			qDebug() << "PlayerWindow: [ERROR] Unable start Live Monitor server on port"<<outputPort;
 		}
 	}
-	
+
 	int jsonPort = READ_STRING("json-port",9979).toInt();
 
 	if(jsonPort > 0 )
-		m_jsonServer = new PlayerJsonServer(jsonPort, this); 
-	
+		m_jsonServer = new PlayerJsonServer(jsonPort, this);
+
 
 // 	// Send test map back to self
 // 	QTimer::singleShot(50, this, SLOT(sendTestMap()));
@@ -577,7 +583,7 @@ void PlayerWindow::receivedMap(QVariantMap map)
 
 	QString cmd = map["cmd"].toString();
 	qDebug() << "PlayerWindow::receivedMap: [COMMAND]: "<<cmd;
-	
+
 	if(cmd == GLPlayer_Login)
 	{
 		if(map["user"].toString() != m_validUser ||
@@ -784,7 +790,7 @@ void PlayerWindow::receivedMap(QVariantMap map)
 							GLVideoDrawable *vid = dynamic_cast<GLVideoDrawable*>(gld);
 							if(vid)
 								vid->setXFadeLength(m_xfadeSpeed);
-							
+
 							gld->setProperty(qPrintable(name), value);
 
 							sendReply(QVariantList()
@@ -887,7 +893,7 @@ void PlayerWindow::receivedMap(QVariantMap map)
 				view->fromByteArray(ba);
 
 				removeSubview(view->subviewId());
-				
+
 				delete view;
 			}
 		}
@@ -960,7 +966,7 @@ void PlayerWindow::removeSubview(int id)
 {
 	if(!m_glWidget)
 		return;
-		
+
 	if(GLWidgetSubview *oldSubview = m_glWidget->subview(id))
 	{
 		m_glWidget->removeSubview(oldSubview);
@@ -970,16 +976,16 @@ void PlayerWindow::removeSubview(int id)
 
 QStringList PlayerWindow::videoInputs()
 {
-	return m_vidSendMgr ? 
-		m_vidSendMgr->videoConnections() :  
-		QStringList(); 
+	return m_vidSendMgr ?
+		m_vidSendMgr->videoConnections() :
+		QStringList();
 }
- 
+
 void PlayerWindow::clearSubviews()
 {
 	if(!m_glWidget)
 		return;
-		
+
 	QList<GLWidgetSubview*> views = m_glWidget->subviews();
 	foreach(GLWidgetSubview *view, views)
 	{
@@ -1032,7 +1038,7 @@ void PlayerWindow::setCrossfadeSpeed(int ms)
 {
 	if(m_glWidget)
 		m_glWidget->setCrossfadeSpeed(ms);
-	
+
 	if(m_scene)
 	{
 		GLDrawableList list = m_scene->drawableList();
@@ -1040,7 +1046,7 @@ void PlayerWindow::setCrossfadeSpeed(int ms)
 			if(GLVideoDrawable *vid = dynamic_cast<GLVideoDrawable*>(drawable))
 				vid->setXFadeLength(ms);
 	}
-	
+
 	m_xfadeSpeed = ms;
 }
 
@@ -1092,7 +1098,7 @@ void PlayerWindow::setCollection(GLSceneGroupCollection *col)
 		delete m_col;
 		m_col = 0;
 	}
-	
+
 	m_col = col;
 }
 
@@ -1104,9 +1110,9 @@ void PlayerWindow::setGroup(GLSceneGroup *group)
 		delete m_group;
 		m_group = 0;
 	}
-	
+
 	m_group = group;
-	
+
 	if(m_group)
 	{
 		connect(m_group->playlist(), SIGNAL(currentItemChanged(GLScene*)), this, SLOT(setScene(GLScene*)));
@@ -1130,16 +1136,16 @@ void PlayerWindow::displayScene(GLScene *scene)
 			if(gld->playlist()->size() > 0)
 				gld->playlist()->stop();
 	}
-	
+
 	if(m_oldScene)
 		opacityAnimationFinished(m_oldScene);
 
 	m_oldScene = m_scene;
 	m_scene = scene;
-	
+
 	if(scene->sceneType())
 		scene->sceneType()->setLiveStatus(true);
-		
+
 	if(m_group)
 		m_group->playlist()->setCurrentItem(m_scene);
 
@@ -1228,12 +1234,12 @@ void PlayerWindow::displayScene(GLScene *scene)
 
 		m_scene->setOpacity(1,true,m_xfadeSpeed); // animate fade in
 	}
-	
+
 	GLDrawableList list = scene->drawableList();
 	foreach(GLDrawable *gld, list)
 		if(gld->playlist()->size() > 0)
 			gld->playlist()->play();
-	
+
 }
 
 void PlayerWindow::opacityAnimationFinished(GLScene *scene)
@@ -1262,10 +1268,10 @@ void PlayerWindow::opacityAnimationFinished(GLScene *scene)
 	}
 
 	disconnect(scene, 0, this, 0);
-	
+
 	if(scene->sceneType())
 		scene->sceneType()->setLiveStatus(false);
-		
+
 	if(scene == m_oldScene)
 		m_oldScene = 0;
 }
@@ -1305,17 +1311,17 @@ void PlayerWindow::playlistTimeChanged(double time)
 QRectF PlayerWindow::stringToRectF(const QString& string)
 {
 	QStringList z = string.split(",");
-	return QRectF(	z[0].toDouble(), 
+	return QRectF(	z[0].toDouble(),
 			z[1].toDouble(),
 			z[2].toDouble(),
-			z[3].toDouble());	
+			z[3].toDouble());
 }
-	
+
 QPointF PlayerWindow::stringToPointF(const QString& string)
 {
 	QStringList z = string.split(",");
-	return QPointF(	z[0].toDouble(), 
-			z[1].toDouble());	
+	return QPointF(	z[0].toDouble(),
+			z[1].toDouble());
 }
 
 /// PlayerJsonServer
@@ -1324,28 +1330,28 @@ PlayerJsonServer::PlayerJsonServer(quint16 port, PlayerWindow* parent)
 	, m_win(parent)
 	, m_jsonOut(new QJson::Serializer())
 {
-	 
+
 }
-	
+
 void PlayerJsonServer::dispatch(QTcpSocket *socket, const QStringList &pathElements, const QStringMap &map)
 {
 	//QString pathStr = path.join("/");
-	
+
 	QStringList path = pathElements;
-	
+
 	QString cmd = path.isEmpty() ? "" : path.takeFirst();
-	
-	
+
+
 	//QString cmd = map["cmd"].toString();
 	qDebug() << "PlayerJsonServer::receivedMap: [COMMAND]: "<<cmd;
-	
+
 // 	if(cmd == GLPlayer_Login)
 // 	{
 // 		if(map["user"].toString() != m_validUser ||
 // 		   map["pass"].toString() != m_validPass)
 // 		{
 // 			qDebug() << "PlayerWindow::receivedMap: ["<<cmd<<"] Invalid user/pass combo";
-// 
+//
 // 			sendReply(QVariantList()
 // 				<< "cmd" << GLPlayer_Login
 // 				<< "status" << "error"
@@ -1359,12 +1365,12 @@ void PlayerJsonServer::dispatch(QTcpSocket *socket, const QStringList &pathEleme
 // 				<< "status" << "success"
 // 				<< "version" << m_playerVersionString
 // 				<< "ver" << m_playerVersion);
-// 
-// 
+//
+//
 // 			if(m_outputEncoder &&
 // 			  !m_outputEncoder->encodingStarted())
 // 				m_outputEncoder->startEncoder();
-// 
+//
 // 		}
 // 	}
 // 	else
@@ -1373,7 +1379,7 @@ void PlayerJsonServer::dispatch(QTcpSocket *socket, const QStringList &pathEleme
 // 		if(m_vidSendMgr)
 // 		{
 // 			QStringList inputs = m_vidSendMgr->videoConnections();
-// 
+//
 // 			sendReply(QVariantList()
 // 					<< "cmd" << GLPlayer_Ping
 // 					<< "version" << m_playerVersionString
@@ -1417,7 +1423,7 @@ void PlayerJsonServer::dispatch(QTcpSocket *socket, const QStringList &pathEleme
 // 		QByteArray ba = map["data"].toByteArray();
 // 		GLSceneGroup *group = new GLSceneGroup(ba);
 // 		setGroup(group);
-// 
+//
 // 		if(group->size() > 0)
 // 			setScene(group->at(0));
 
@@ -1451,7 +1457,7 @@ void PlayerJsonServer::dispatch(QTcpSocket *socket, const QStringList &pathEleme
 			else
 			{
 				m_win->setScene(scene);
-				
+
 				sendReply(socket, QVariantList()
 					<< "cmd" << GLPlayer_SetSlide
 					<< "status" << true);
@@ -1546,7 +1552,7 @@ void PlayerJsonServer::dispatch(QTcpSocket *socket, const QStringList &pathEleme
 						{
 							QString string = map["value"];
 							QString type = map["type"];
-							
+
 							QVariant value = stringToVariant(string,type);
 
 							if(GLVideoDrawable *vid = dynamic_cast<GLVideoDrawable*>(gld))
@@ -1626,10 +1632,10 @@ void PlayerJsonServer::dispatch(QTcpSocket *socket, const QStringList &pathEleme
 // 		if(m_glWidget)
 // 		{
 // 			GLWidgetSubview *view = new GLWidgetSubview();
-// 
+//
 // 			QByteArray ba = map["data"].toByteArray();
 // 			view->fromByteArray(ba);
-// 
+//
 // 			addSubview(view);
 // 		}
 		qDebug() << "PlayerJsonServer: Command Not Implemented: "<<cmd;
@@ -1676,10 +1682,10 @@ void PlayerJsonServer::dispatch(QTcpSocket *socket, const QStringList &pathEleme
 	else
 	if(cmd == GLPlayer_ExamineCurrentScene)
 	{
-		// foreach drawable in scene, list prop 
-		
+		// foreach drawable in scene, list prop
+
 		QVariantList gldlist = examineScene();
-		
+
 		sendReply(socket, QVariantList()
 				<< "cmd"    << cmd
 				<< "status" << "true"
@@ -1689,7 +1695,7 @@ void PlayerJsonServer::dispatch(QTcpSocket *socket, const QStringList &pathEleme
 	if(cmd == GLPlayer_ExamineCurrentGroup)
 	{
 		QVariantList scenelist = examineGroup();
-		
+
 		sendReply(socket, QVariantList()
 				<< "cmd"    << cmd
 				<< "status" << "true"
@@ -1706,7 +1712,7 @@ void PlayerJsonServer::dispatch(QTcpSocket *socket, const QStringList &pathEleme
 			sendReply(socket, QVariantList()
 				<< "cmd"     << cmd
 				<< "status"  << "error"
-				<< "message" << "Unable to read collection file."); 
+				<< "message" << "Unable to read collection file.");
 		}
 		else
 		{
@@ -1731,7 +1737,7 @@ void PlayerJsonServer::dispatch(QTcpSocket *socket, const QStringList &pathEleme
 						GLScene *scene = group->at(0);
 						m_win->setScene(scene);
 					}
-					
+
 					sendReply(socket, QVariantList()
 						<< "cmd"    << cmd
 						<< "status" << "true");
@@ -1746,20 +1752,20 @@ void PlayerJsonServer::dispatch(QTcpSocket *socket, const QStringList &pathEleme
 					//qDebug() << group->groupId() << "\"" << qPrintable(group->groupName().replace("\"","\\\"")) << "\"";
 					//qDebug() << group->groupId() << group->groupName();
 					QVariantMap map;
-		
+
 					map["id"] = group->groupId();
 					map["name"] = group->groupName();
-					
+
 					map["scenes"] = examineGroup(group);
-					
+
 					groups << map;
 				}
-				
+
 				sendReply(socket, QVariantList()
 					<< "cmd"    << cmd
 					<< "status" << "true"
 					<< "groups"  << QVariant(groups));
-					
+
 				delete col;
 			}
 		}
@@ -1805,21 +1811,21 @@ void PlayerJsonServer::dispatch(QTcpSocket *socket, const QStringList &pathEleme
 			QString name   = map["name"];
 			QString string = map["value"];
 			QString type   = map["type"];
-			
+
 			QVariant value = stringToVariant(string,type);
-			
+
 			name = name == "autodur"  ? "autoDuration" :
-			       name == "datetime" ? "scheduledTime" : 
-			       name == "autotime" ? "autoSchedule" : 
+			       name == "datetime" ? "scheduledTime" :
+			       name == "autotime" ? "autoSchedule" :
 			       name;
-			
+
 			type = name == "scheduledTime" ? "datetime" :
 			       name == "autodur" || name == "autotime" ? "bool" :
-			       name == "duration" ? "double" : 
+			       name == "duration" ? "double" :
 			       type;
-		
+
 			scene->setProperty(qPrintable(name), value);
-			
+
 			sendReply(socket, QVariantList()
 				<< "cmd"     << cmd
 				<< "status"  << "true");
@@ -1872,16 +1878,16 @@ void PlayerJsonServer::dispatch(QTcpSocket *socket, const QStringList &pathEleme
 		else
 		{
 			GLPlaylistItem *item = new GLPlaylistItem();
-			
+
 			item->setTitle(		map["title"]);
 			item->setValue(		stringToVariant(map["value"],map["type"]));
 			item->setDuration(	map["duration"].toDouble());
 			item->setAutoDuration(	map["autodur"] == "true");
 			item->setScheduledTime(	stringToVariant(map["datetime"],"datetime").toDateTime());
 			item->setAutoSchedule(	map["autotime"] == "true");
-			
+
 			gld->playlist()->addItem(item);
-			
+
 			sendReply(socket, QVariantList()
 				<< "cmd"     << cmd
 				<< "status"  << "true"
@@ -1925,7 +1931,7 @@ QVariant PlayerJsonServer::stringToVariant(QString string, QString type)
 		if(type == "color")
 		{
 			QStringList z = string.split(",");
-			value = QColor(	z[0].toInt(), 
+			value = QColor(	z[0].toInt(),
 					z[1].toInt(),
 					z[2].toInt(),
 					z.size() >= 4 ? z[3].toInt() : 255);
@@ -1934,14 +1940,14 @@ QVariant PlayerJsonServer::stringToVariant(QString string, QString type)
 		if(type == "point")
 		{
 			QStringList z = string.split(",");
-			value = QPointF(z[0].toDouble(), 
+			value = QPointF(z[0].toDouble(),
 					z[1].toDouble());
 		}
 		else
 		if(type == "rect")
 		{
 			QStringList z = string.split(",");
-			value = QRectF(	z[0].toDouble(), 
+			value = QRectF(	z[0].toDouble(),
 					z[1].toDouble(),
 					z[2].toDouble(),
 					z[3].toDouble());
@@ -1963,26 +1969,26 @@ QVariantList PlayerJsonServer::examineGroup(GLSceneGroup *group)
 {
 	if(!group)
 		group = m_win->group();
-		
+
 	QVariantList outlist;
 	foreach(GLScene *scene, group->sceneList())
 	{
 		QVariantMap map;
-		
+
 		map["id"] = scene->sceneId();
 		map["name"] = scene->sceneName();
 		map["duration"] = scene->duration();
 		map["autodur"] = scene->autoDuration();
 		map["datetime"] = scene->scheduledTime();
 		map["autotime"] = scene->autoSchedule();
-		
+
 		map["items"] = examineScene(scene);
-		
+
 		outlist << map;
 	}
-	
+
 	qDebug() << "PlayerJsonServer::examineGroup: list:"<<outlist;
-	
+
 	return outlist;
 }
 
@@ -1990,18 +1996,18 @@ QVariantList PlayerJsonServer::examineScene(GLScene *scene)
 {
 	if(!scene)
 		scene = m_win->scene();
-		
+
 	GLDrawableList list = scene->drawableList();
 	if(list.isEmpty())
 		qDebug() << "Warning: Found "<<list.size()<<"items in scene "<<scene->sceneId();
-		
+
 	QVariantList gldlist;
-		
+
 	foreach(GLDrawable *gld, list)
 	{
 		QVariantMap map;
 		QVariantList proplist;
-		
+
 		QString typeName = gld->metaObject()->className();
 		typeName = typeName.replace(QRegExp("^GL"),"");
 		typeName = typeName.replace(QRegExp("Drawable$"),"");
@@ -2009,27 +2015,27 @@ QVariantList PlayerJsonServer::examineScene(GLScene *scene)
 		map["id"] = gld->id();
 		map["type"] = typeName;
 		map["name"] = gld->itemName();
-		
+
 		const QMetaObject *metaobject = gld->metaObject();
 		int count = metaobject->propertyCount();
 		for (int i=0; i<count; ++i)
 		{
 			QVariantMap map2;
-			
+
 			QMetaProperty meta = metaobject->property(i);
 			const char *name = meta.name();
 			QVariant value = gld->property(name);
-	
+
 			//qDebug() << QString(name) << meta.type() << value.toString();
 			map2["name"] = QString(name);
 			map2["type"] = QVariant::typeToName(meta.type());
 			map2["value"] = value.toString();
-			
+
 			proplist << map2;
 		}
-		
+
 		map["props"] = proplist;
-		
+
 		QVariantList playlist;
 		QList<GLPlaylistItem*> items = gld->playlist()->items();
 		foreach(GLPlaylistItem *item, items)
@@ -2042,18 +2048,18 @@ QVariantList PlayerJsonServer::examineScene(GLScene *scene)
 			map2["autodur"] = item->autoDuration();
 			map2["datetime"] = item->scheduledTime();
 			map2["autotime"] = item->autoSchedule();
-			
+
 			playlist << map2;
 		}
-		
+
 		map["playlist"] = playlist;
-		
-		
+
+
 		gldlist << map;
 	}
-	
+
 	qDebug() << "PlayerJsonServer::examineScene: list:"<<gldlist;
-	
+
 	return gldlist;
 }
 
@@ -2078,11 +2084,11 @@ void PlayerJsonServer::sendReply(QTcpSocket *socket, QVariantList reply)
 
 	QByteArray json = m_jsonOut->serialize( map );
 	qDebug() << "PlayerJsonServer::sendReply: [DEBUG] map:"<<map<<", json:"<<json;
-	
+
 	Http_Send_Response(socket,"HTTP/1.0 200 OK\r\nContent-Type: text/javascript\r\n\r\n") << json;
 }
 
 
-	
+
 // 	PlayerWindow * m_win;
 // 	QJson::Serializer m_jsonOut;

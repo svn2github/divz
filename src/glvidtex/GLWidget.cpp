@@ -15,6 +15,10 @@
 #define GL_MULTISAMPLE  0x809D
 #endif
 
+#ifndef GL_BGRA
+#define GL_BGRA 0x80E1
+#endif
+
 #include "GLCommonShaders.h"
 
 GLWidgetSubview::GLWidgetSubview()
@@ -37,9 +41,9 @@ GLWidgetSubview::GLWidgetSubview()
 	, m_cornerRotation(GLRotateNone)
 	, m_glw(0)
 	, m_id(-1)
-	
+
 {
-	m_cornerTranslations 
+	m_cornerTranslations
 		<<  QPointF(0,0)
 		<<  QPointF(0,0)
 		<<  QPointF(0,0)
@@ -67,30 +71,30 @@ QByteArray GLWidgetSubview::toByteArray()
 {
 	QByteArray array;
 	QDataStream stream(&array, QIODevice::WriteOnly);
-	
+
 	QVariantMap map;
 	map["title"]	= m_title;
 	map["id"]	= subviewId(); //m_id;
-	
+
 	map["maskfile"]	= m_alphaMaskFile;
 	map["top"] 	= m_viewTop;
 	map["left"] 	= m_viewLeft;
 	map["right"] 	= m_viewRight;
 	map["bottom"] 	= m_viewBottom;
-	
+
 	map["stop"] 	= m_sourceTop;
 	map["sleft"] 	= m_sourceLeft;
 	map["sright"] 	= m_sourceRight;
 	map["sbottom"] 	= m_sourceBottom;
-	
+
 	map["fliph"]	= m_flipHorizontal;
 	map["flipv"]	= m_flipVertical;
-	
+
 	map["b"]	= m_brightness;
 	map["c"]	= m_contrast;
 	map["h"]	= m_hue;
 	map["s"]	= m_saturation;
-	
+
 	map["c1x"]	= m_cornerTranslations[0].x();
 	map["c1y"]	= m_cornerTranslations[0].y();
 	map["c2x"]	= m_cornerTranslations[1].x();
@@ -99,11 +103,11 @@ QByteArray GLWidgetSubview::toByteArray()
 	map["c3y"]	= m_cornerTranslations[2].y();
 	map["c4x"]	= m_cornerTranslations[3].x();
 	map["c4y"]	= m_cornerTranslations[3].y();
-	
+
 	map["rot"]	= (int)m_cornerRotation;
-	
+
 	stream << map;
-	
+
 	return array;
 
 }
@@ -113,20 +117,20 @@ void GLWidgetSubview::fromByteArray(QByteArray& array)
 	QDataStream stream(&array, QIODevice::ReadOnly);
 	QVariantMap map;
 	stream >> map;
-	
+
 	if(map.isEmpty())
 		return;
-	
+
 	m_title		= map["title"].toString();
 	m_id		= map["id"].toInt();
-	
+
 	m_alphaMaskFile	= map["maskfile"].toString();
-	
+
 	m_viewTop 	= map["top"].toDouble();
 	m_viewLeft	= map["left"].toDouble();
 	m_viewRight	= map["right"].toDouble();
 	m_viewBottom	= map["bottom"].toDouble();
-	
+
 	if(map["stop"].isValid())
 	{
 		m_sourceTop 	= map["stop"].toDouble();
@@ -134,27 +138,27 @@ void GLWidgetSubview::fromByteArray(QByteArray& array)
 		m_sourceRight	= map["sright"].toDouble();
 		m_sourceBottom	= map["sbottom"].toDouble();
 	}
-	
+
 	m_flipHorizontal = map["fliph"].toBool();
 	m_flipVertical   = map["flipv"].toBool();
-	
+
 	m_brightness	= map["b"].toInt();
 	m_contrast	= map["c"].toInt();
 	m_hue		= map["h"].toInt();
 	m_saturation	= map["s"].toInt();
-	
-	m_cornerTranslations	= QPolygonF() 
+
+	m_cornerTranslations	= QPolygonF()
 		<< QPointF(map["c1x"].toDouble(),map["c1y"].toDouble())
 		<< QPointF(map["c2x"].toDouble(),map["c2y"].toDouble())
 		<< QPointF(map["c3x"].toDouble(),map["c3y"].toDouble())
 		<< QPointF(map["c4x"].toDouble(),map["c4y"].toDouble());
-		
+
 	m_cornerRotation	= (GLRotateValue)map["rot"].toInt();
-	
+
 	setAlphaMaskFile(m_alphaMaskFile);
 	m_colorsDirty = true;
 	updateWarpMatrix();
-	
+
 	if(m_glw)
 		m_glw->updateGL();
 
@@ -165,7 +169,7 @@ void GLWidgetSubview::initGL()
 	initAlphaMask();
 	updateWarpMatrix();
 }
-	
+
 void GLWidgetSubview::setTitle(const QString& s) { m_title = s; }
 
 void GLWidgetSubview::setTop(double d)
@@ -250,29 +254,29 @@ GLWidget::GLWidget(QWidget *parent, QGLWidget *shareWidget)
 	, m_crossfadeSpeed(300)
 	, m_fboEnabled(false)//true)
 {
-	
+
 	setCanvasSize(QSizeF(1000.,750.));
 	// setViewport() will use canvas size by default to construct a rect
 	//setViewport(QRectF(QPointF(0,0),canvasSize()));
 	//qDebug() << "GLWidget::doubleBuffered: "<<doubleBuffer();
 	(void)defaultSubview();
-		
+
 	connect(&m_fadeBlackTimer, SIGNAL(timeout()), this, SLOT(fadeBlackTick()));
-	
+
 	connect(&m_updateTimer, SIGNAL(timeout()), this, SLOT(callSuperUpdateGL()));
 	m_updateTimer.setSingleShot(true);
 	m_updateTimer.setInterval(0);
 
-	
+
 // 	GLWidgetSubview *def = defaultSubview();
 // 	def->setRight(.5);
-// 	
+//
 // 	GLWidgetSubview *test = new GLWidgetSubview();
 // 	test->setLeft(.5);
 // 	test->setHue(-50);
 // 	test->setAlphaMaskFile("AlphaMaskTest2-right2.png");
 // 	addSubview(test);
-	
+
 }
 
 void GLWidget::callSuperUpdateGL()
@@ -286,20 +290,20 @@ void GLWidget::updateGL(bool now)
 	if(m_updateTimer.isActive())
 		m_updateTimer.stop();
 
-	//now = false;	
+	//now = false;
 	if(now)
 	{
 		QGLWidget::updateGL();
 		return;
 	}
-	
+
 	m_updateTimer.start();
 }
 
 GLWidget::~GLWidget()
 {
 	if(m_fbo)
-	{	
+	{
 		delete m_fbo;
 		m_fbo = 0;
 	}
@@ -319,7 +323,7 @@ GLWidgetSubview *GLWidget::defaultSubview()
 {
 	if(m_subviews.isEmpty())
 		addSubview(new GLWidgetSubview());
-	
+
 	return m_subviews[0];
 }
 
@@ -340,10 +344,10 @@ void GLWidget::addSubview(GLWidgetSubview *s)
 	s->setGLWidget(this);
 	if(m_glInited)
 		s->initGL();
-	
+
 	if(m_subviews.size() > 1)
 		setFboEnabled(true);
-		
+
 	updateGL();
 }
 
@@ -351,8 +355,8 @@ void GLWidget::removeSubview(GLWidgetSubview *s)
 {
 	if(!s)
 		return;
-	
-	s->setGLWidget(0);	
+
+	s->setGLWidget(0);
 	m_subviews.removeAll(s);
 	m_subviewLookup.remove(s->subviewId());
 
@@ -363,7 +367,7 @@ void GLWidget::setCornerTranslations(const QPolygonF& p)
 {
 	defaultSubview()->setCornerTranslations(p);
 }
-	
+
 void GLWidgetSubview::setCornerTranslations(const QPolygonF& p)
 {
 	m_cornerTranslations = p;
@@ -404,50 +408,50 @@ void GLWidget::setBottomRightTranslation(const QPointF& p)
 void GLWidget::initializeGL()
 {
 	makeCurrentIfNeeded();
-	
+
 	glDisable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
-	
-	glEnable(GL_BLEND); 
+
+	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	//glEnable(GL_MULTISAMPLE) 
-	
+	//glEnable(GL_MULTISAMPLE)
+
 	glPolygonMode (GL_FRONT_AND_BACK, GL_FILL);
 	glEnable(GL_LINE_SMOOTH);
-	
+
 // 	glClearDepth(1.0f);						// Depth Buffer Setup
 // 	glEnable(GL_DEPTH_TEST);					// Enables Depth Testing
 // 	glDepthFunc(GL_LEQUAL);						// The Type Of Depth Testing To Do
 // 	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);		// Really Nice Perspective Calculations
-	
+
 	//m_fbo = new QGLFramebufferObject(QSize(16,16));
 	m_program = new QGLShaderProgram(context(), this);
-	
+
 	#ifndef QT_OPENGL_ES
 	glActiveTexture = (_glActiveTexture)context()->getProcAddress(QLatin1String("glActiveTexture"));
 	#endif
-	
-	const GLubyte *str = glGetString(GL_EXTENSIONS); 
+
+	const GLubyte *str = glGetString(GL_EXTENSIONS);
 	m_useShaders = (strstr((const char *)str, "GL_ARB_fragment_shader") != NULL);
-	
+
 	if(0)
 	{
 		qDebug() << "GLWidget::initGL: Forcing NO GLSL shaders";
 		m_useShaders = false;
 	}
-	
+
 	if(0)
 	{
 		qDebug() << "GLWidget::initGL: Forcing GLSL shaders";
 		m_useShaders = true;
 	}
-	
+
 	qDebug() << "GLWidget::initGL: GLSL Shaders Enabled: "<<m_useShaders;
-	
+
 	initShaders();
-		
+
 	m_glInited = true;
-	
+
 	foreach(GLWidgetSubview *view, m_subviews)
 		view->initGL();
 
@@ -455,77 +459,77 @@ void GLWidget::initializeGL()
 	//qDebug() << "GLWidget::initializeGL()";
 	foreach(GLDrawable *drawable, m_drawables)
 		drawable->initGL();
-		
+
 	//resizeGL(width(),height());
 	//setViewport(viewport());
 	//updateWarpMatrix();
-	
+
 }
 
 void GLWidget::initShaders()
 {
-	
+
 	const char *fragmentProgram = qt_glsl_rgbShaderProgram;
-	
+
 	Q_UNUSED(qt_glsl_warpingVertexShaderProgram);
 	Q_UNUSED(qt_glsl_xrgbShaderProgram);
 	Q_UNUSED(qt_glsl_argbShaderProgram);
 	Q_UNUSED(qt_glsl_yuvPlanarShaderProgram);
-	
-	
-	
+
+
+
 	if(!m_program->shaders().isEmpty())
 		m_program->removeAllShaders();
-	
+
 	if(!QGLShaderProgram::hasOpenGLShaderPrograms())
 	{
 		qDebug() << "GLWidget::initShaders: GLSL Shaders Not Supported by this driver, this program will NOT function as expected and will likely crash.";
 		return;// false;
 	}
 
-	if (!fragmentProgram) 
+	if (!fragmentProgram)
 	{
 		qDebug() << "GLWidget::initShaders: No shader program found - format not supported.";
 		return;// false;
-	} 
-	else 
-	if (!m_program->addShaderFromSourceCode(QGLShader::Vertex, 
+	}
+	else
+	if (!m_program->addShaderFromSourceCode(QGLShader::Vertex,
 		#ifdef OPENCV_ENABLED
 		qt_glsl_warpingVertexShaderProgram
 		#else
 		qt_glsl_vertexShaderProgram
 		#endif
-		)) 
+		))
 	{
 		qWarning("GLWidget::initShaders: Vertex shader compile error %s",
 			qPrintable(m_program->log()));
 		//error = QAbstractVideoSurface::ResourceError;
 		return;// false;
-		
-	} 
-	else 
-	if (!m_program->addShaderFromSourceCode(QGLShader::Fragment, fragmentProgram)) 
+
+	}
+	else
+	if (!m_program->addShaderFromSourceCode(QGLShader::Fragment, fragmentProgram))
 	{
 		qWarning("GLWidget::initShaders: Shader compile error %s", qPrintable(m_program->log()));
 		//error = QAbstractVideoSurface::ResourceError;
 		m_program->removeAllShaders();
 		return;// false;
-	} 
-	else 
-	if(!m_program->link()) 
+	}
+	else
+	if(!m_program->link())
 	{
 		qWarning("GLWidget::initShaders: Shader link error %s", qPrintable(m_program->log()));
 		m_program->removeAllShaders();
 		return;// false;
-	} 
-	
+	}
+
 	m_shadersLinked = true;
 }
 
 void GLWidgetSubview::initAlphaMask()
 {
 	glGenTextures(1, &m_alphaTextureId);
-	
+
 	// Alpha mask may have been set prior to initAlphaMask() due to the fact init...() is called from initalizeGL()
 	if(m_alphaMask.isNull())
 	{
@@ -610,7 +614,7 @@ void GLWidgetSubview::setAlphaMask(const QImage &mask)
 {
 	m_alphaMask_preScaled = mask;
 	m_alphaMask = mask;
-	
+
 	if(mask.isNull())
 	{
 		//qDebug() << "GLVideoDrawable::setAlphaMask: "<<this<<",  Got null mask, size:"<<mask.size();
@@ -621,7 +625,7 @@ void GLWidgetSubview::setAlphaMask(const QImage &mask)
  		setAlphaMask(m_alphaMask);
  		return;
 	}
-	
+
 	if(m_glw && m_glw->glInited())
 	{
 		QSize targetSize = targetRect().size().toSize(); //QSize(m_glw->width(),m_glw->height()); //m_fbo->size();
@@ -630,34 +634,34 @@ void GLWidgetSubview::setAlphaMask(const QImage &mask)
 			//qDebug() << "GLVideoDrawable::setAlphaMask: "<<this<<", Not scaling or setting mask, video size is 0x0";
 			return;
 		}
-		
+
 		m_glw->makeCurrentIfNeeded();
-		
-		
+
+
 // 		if(m_alphaMask.size() != targetSize)
 // 		{
 // 			//qDebug() << "GLVideoDrawable::setAlphaMask: "<<this<<",  Mask size and source size different, scaling";
 // 			m_alphaMask = m_alphaMask.scaled(targetSize);
 // 		}
-		
+
 // 		if(m_alphaMask.format() != QImage::Format_ARGB32)
 // 		{
 // 			//qDebug() << "GLVideoDrawable::setAlphaMask: "<<this<<",  Mask format not ARGB32, reformatting";
 // 			m_alphaMask = m_alphaMask.convertToFormat(QImage::Format_ARGB32);
 // 		}
-			
+
 		if(m_alphaMask.cacheKey() == m_uploadedCacheKey)
 		{
 			//qDebug() << "GLVideoDrawable::setAlphaMask: "<<this<<",  Current mask already uploaded to GPU, not re-uploading.";
 			return;
 		}
-			
+
 		m_alphaMask = m_alphaMask.mirrored(m_flipHorizontal, m_flipVertical ? false:true);
-		
+
 		m_uploadedCacheKey = m_alphaMask.cacheKey();
 
 		 //qDebug() << "GLVideoDrawable::setAlphaMask: "<<this<<",  Valid mask, size:"<<m_alphaMask.size()<<", null?"<<m_alphaMask.isNull();
-		
+
 		glBindTexture(GL_TEXTURE_2D, m_alphaTextureId);
 		glTexImage2D(
 			GL_TEXTURE_2D,
@@ -666,7 +670,7 @@ void GLWidgetSubview::setAlphaMask(const QImage &mask)
 			m_alphaMask.width(),
 			m_alphaMask.height(),
 			0,
-			GL_RGBA, 
+			GL_RGBA,
 			GL_UNSIGNED_BYTE,
 			m_alphaMask.scanLine(0)
 			);
@@ -675,24 +679,24 @@ void GLWidgetSubview::setAlphaMask(const QImage &mask)
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	}
-	
+
 	emit changed(this);
 // 	qDebug() << "GLVideoDrawable::setAlphaMask: "<<this<<",  AT END :"<<m_alphaMask.size()<<", null?"<<m_alphaMask.isNull();
-	
+
 }
 
 QRectF GLWidgetSubview::targetRect()
 {
 	if(!m_glw)
 		return QRectF();
-	
+
 	double targetW = m_glw->width(),
 	       targetH = m_glw->height();
 	double targetX = targetW * left();
 	double targetY = targetH * top();
 	double targetW2 = (targetW * right()) - targetX;
 	double targetH2 = (targetH * bottom()) - targetY;
-	QRectF target = QRectF(targetX,targetY, targetW2, targetH2);	
+	QRectF target = QRectF(targetX,targetY, targetW2, targetH2);
 	return target;
 }
 
@@ -701,14 +705,14 @@ void GLWidgetSubview::updateWarpMatrix()
 	#ifdef OPENCV_ENABLED
 	if(!m_glw)
 		return;
-	
-	// Handle flipping the corner translation points so that the top left is flipped 
+
+	// Handle flipping the corner translation points so that the top left is flipped
 	// without the user having think about flipping the point inputs.
 	int     cbl = 2,
 		cbr = 3,
 		ctl = 0,
 		ctr = 1;
-	
+
 	if(m_flipHorizontal && m_flipVertical)
 	{
 		cbl = 1;
@@ -732,15 +736,15 @@ void GLWidgetSubview::updateWarpMatrix()
 		ctl = 3;
 		ctr = 2;
 	}
-	
+
 	QRectF target = targetRect();
-			
+
 	//qDebug() << "Original painting target: "<<target;
-	
+
 	//we need our points as opencv points
 	//be nice to do this without opencv?
 	CvPoint2D32f cvsrc[4];
-	CvPoint2D32f cvdst[4];	
+	CvPoint2D32f cvdst[4];
 
 	// Warp source coordinates
 	cvsrc[0].x = target.left();
@@ -750,8 +754,8 @@ void GLWidgetSubview::updateWarpMatrix()
 	cvsrc[2].x = target.right();
 	cvsrc[2].y = target.bottom();
 	cvsrc[3].x = target.left();
-	cvsrc[3].y = target.bottom();			
-	
+	cvsrc[3].y = target.bottom();
+
 	// Warp destination coordinates
 	cvdst[0].x = target.left()	+ m_cornerTranslations[ctl].x();
 	cvdst[0].y = target.top()	+ m_cornerTranslations[ctl].y();
@@ -761,23 +765,23 @@ void GLWidgetSubview::updateWarpMatrix()
 	cvdst[2].y = target.bottom()	- m_cornerTranslations[cbr].y();
 	cvdst[3].x = target.left()	+ m_cornerTranslations[cbl].x();
 	cvdst[3].y = target.bottom()	- m_cornerTranslations[cbl].y();
-	
-	
+
+
 	//we create a matrix that will store the results
 	//from openCV - this is a 3x3 2D matrix that is
 	//row ordered
 	CvMat * translate = cvCreateMat(3,3,CV_32FC1);
-	
+
 	//this is the slightly easier - but supposidly less
-	//accurate warping method 
-	//cvWarpPerspectiveQMatrix(cvsrc, cvdst, translate); 
+	//accurate warping method
+	//cvWarpPerspectiveQMatrix(cvsrc, cvdst, translate);
 
 
 	//for the more accurate method we need to create
 	//a couple of matrixes that just act as containers
-	//to store our points  - the nice thing with this 
+	//to store our points  - the nice thing with this
 	//method is you can give it more than four points!
-	
+
 	CvMat* src_mat = cvCreateMat( 4, 2, CV_32FC1 );
 	CvMat* dst_mat = cvCreateMat( 4, 2, CV_32FC1 );
 
@@ -789,7 +793,7 @@ void GLWidgetSubview::updateWarpMatrix()
 	//warning - older versions of openCV had a bug
 	//in this function.
 	cvFindHomography(src_mat, dst_mat, translate);
-	
+
 	//get the matrix as a list of floats
 	float *matrix = translate->data.fl;
 
@@ -799,42 +803,42 @@ void GLWidgetSubview::updateWarpMatrix()
 	// ie:   [0][1][2] x
 	//       [3][4][5] y
 	//       [6][7][8] w
-	
+
 	//to openGL's 4x4 3D column ordered matrix
-	//        x  y  z  w   
+	//        x  y  z  w
 	// ie:   [0][3][ ][6]   [1-4]
 	//       [1][4][ ][7]   [5-8]
 	//	 [ ][ ][ ][ ]   [9-12]
 	//       [2][5][ ][9]   [13-16]
-	//       
+	//
 
-			
+
 	m_warpMatrix[0][0] = matrix[0];
 	m_warpMatrix[0][1] = matrix[3];
 	m_warpMatrix[0][2] = 0.;
 	m_warpMatrix[0][3] = matrix[6];
-	
+
 	m_warpMatrix[1][0] = matrix[1];
 	m_warpMatrix[1][1] = matrix[4];
 	m_warpMatrix[1][2] = 0.;
 	m_warpMatrix[1][3] = matrix[7];
-			
+
 	m_warpMatrix[2][0] = 0.;
 	m_warpMatrix[2][1] = 0.;
 	m_warpMatrix[2][2] = 0.;
 	m_warpMatrix[2][3] = 0.;
-	
+
 	m_warpMatrix[3][0] = matrix[2];
 	m_warpMatrix[3][1] = matrix[5];
 	m_warpMatrix[3][2] = 0.;
 	m_warpMatrix[3][3] = matrix[8];
-	
+
 	cvReleaseMat(&translate);
 	cvReleaseMat(&src_mat);
 	cvReleaseMat(&dst_mat);
-	
-		
-			
+
+
+
 // 	qDebug() << "Warp Matrix: "
 // 		<<matrix[0]
 // 		<<matrix[1]
@@ -853,16 +857,16 @@ void GLWidget::paintGL()
 	//qDebug() << "GLWidget::paintGL(): Starting paint routines...";
 // 	QTime time;
 // 	time.start();
-	
+
 	// Render all drawables into the FBO
 	//if(m_fbo)
 	//	m_fbo->bind();
 	makeRenderContextCurrent();
-	
+
 	qglClearColor(Qt::black);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glLoadIdentity(); // Reset The View
-	
+
 	QRectF viewport = m_viewport;
 	if(!viewport.isValid())
 	{
@@ -871,15 +875,15 @@ void GLWidget::paintGL()
 			canvas = QSizeF(1000.,750.);
 		viewport = QRectF(QPointF(0.,0.),canvas);
 	}
-	
+
 	//int counter = 0;
 	foreach(GLDrawable *drawable, m_drawables)
 	{
 		//qDebug() << "GLWidget::paintGL(): ["<<counter++<<"] drawable->rect: "<<drawable->rect();
-		
+
  		//qDebug() << "GLWidget::paintGL(): drawable:"<<((QObject*)drawable)<<", vp:"<<viewport<<", rect:"<<drawable->rect()<<", isvis:"<<drawable->isVisible()<<", opac:"<<drawable->opacity()<<", intersects:"<<drawable->rect().intersects(viewport)<<", z:"<<drawable->zIndex();
 		// Don't draw if not visible or if opacity == 0
-		if(drawable->isVisible() && 
+		if(drawable->isVisible() &&
 		   drawable->opacity() > 0 &&
 		   drawable->rect().intersects(viewport))
 		   {
@@ -890,45 +894,45 @@ void GLWidget::paintGL()
 	}
 
 	//qDebug() << "GLWidget::paintGL(): Drawable painting complete, drawing FBO";
-	
+
 	//glFlush();
-	
+
 	if(!m_fbo)
 	{
 		//qDebug() << "GLWidget::paintGL(): NOT drawing FBO";
-		
+
 		if(m_outputStream)
 		{
 // 			QTime t;
 // 			t.start();
-			
-			// Calling glReadPixels ourselves is quicker than calling grabFrameBuffer() because Qt calls 
+
+			// Calling glReadPixels ourselves is quicker than calling grabFrameBuffer() because Qt calls
 			// glReadPixels with GL_RGBA, but for some reason using GL_BGRA works just fine - and avoids
 			// the internal convertFromGLFormat() call in Qt that converts from BGRA->RGBA.
 			// On average, this code runs at about 9-10ms, whereas the grabFrameBuffer() method runs
 			// on average at 13-14ms - a gain of approx 5ms on the extreem end, 3ms on the low end - still
 			// a good gain when pinching milliseconds in very demanding low-latency instances such as live
-			// video feed from cameras straight to screen. 
+			// video feed from cameras straight to screen.
 			QImage img(size(), QImage::Format_ARGB32);
 			glReadPixels(0, 0, width(), height(), GL_BGRA, GL_UNSIGNED_BYTE, img.bits());
-			
+
 			// OpenGL returns the image upside down and horizontally flipped - therefore, we must mirror the image to get it right-sided
 			m_outputStream->setImage(img.mirrored());
-		
+
 			//m_outputStream->setImage(grabFrameBuffer());
-			
+
 // 			static int testcount =0;
 // 			static int sum = 0;
 // 			testcount++;
-// 			
+//
 // 			sum += t.elapsed();
 //			qDebug() << "Read for"<<size()<<":"<<t.elapsed()<<"ms, count:"<<testcount<<", avg:" << (sum/testcount);
 		}
 	}
 	else
 	{
-		m_fbo->release();	
-	
+		m_fbo->release();
+
 		// Now render the FBO to the screen, applying a variety of transforms/effects:
 		// 1. Corner distortion ("keystoning") - can move any of the four corners individually
 		// 2. Alpha masking - using a PNG image as a mask, using only the alpha channel to blend/black out areas of the final image
@@ -938,21 +942,21 @@ void GLWidget::paintGL()
 		qglClearColor(Qt::black);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glLoadIdentity(); // Reset The View
-		
+
 		glEnable(GL_TEXTURE_2D);
-		
-		if(m_useShaders && 
+
+		if(m_useShaders &&
 		   m_shadersLinked)
 		{
-					
+
 			const int devW = QGLContext::currentContext()->device()->width();
 			const int devH = QGLContext::currentContext()->device()->height();
-		
-			QTransform transform =  QTransform(); 
-			
+
+			QTransform transform =  QTransform();
+
 			const GLfloat wfactor =  2.0 / devW;
 			const GLfloat hfactor = -2.0 / devH;
-	
+
 			const GLfloat positionMatrix[4][4] =
 			{
 				{
@@ -977,56 +981,56 @@ void GLWidget::paintGL()
 					/*(3,3)*/ transform.m33()
 				}
 			};
-				
-				
+
+
 			foreach(GLWidgetSubview *view, m_subviews)
 			{
-	
-				if (view->m_colorsDirty) 
+
+				if (view->m_colorsDirty)
 				{
 					//qDebug() << "Updating color matrix";
 					view->updateColors();
 					view->m_colorsDirty = false;
 				}
-				
-				
-		
-				
+
+
+
+
 				double sw = m_fbo->size().width(),
 				sh = m_fbo->size().height();
-				
+
 				double sl = view->sourceLeft()   < 0 ? view->left()   : view->sourceLeft();
 				double st = view->sourceTop()    < 0 ? view->top()    : view->sourceTop();
 				double sr = view->sourceRight()  < 0 ? view->right()  : view->sourceRight();
 				double sb = view->sourceBottom() < 0 ? view->bottom() : view->sourceBottom();
-				
+
 				double sx = sw * sl;
 				double sy = sw * st;
 				double sw2 = (sw * sr) - sx;
 				double sh2 = (sh * sb) - sy;
 				QRectF source = QRectF(sx,sy,sw2,sh2);
-				
+
 				QRectF target = view->targetRect();
-				
+
 				#ifdef OPENCV_ENABLED
-				
+
 				const GLfloat vertexCoordArray[] =
 				{
 					target.left()      , target.bottom() + 1 ,
 					target.right() + 1 , target.bottom() + 1 ,
 					target.left()      , target.top()        ,
-					target.right() + 1 , target.top()        
+					target.right() + 1 , target.top()
 				};
-				
+
 				#else
-				
+
 				// Handle flipping the corner translation points so that the top left is flipped
 				// without the user having think about flipping the point inputs.
 				int cbl = 2,
 				cbr = 3,
 				ctl = 0,
 				ctr = 1;
-		
+
 				if(view->m_flipHorizontal && view->m_flipVertical)
 				{
 					cbl = 1;
@@ -1050,9 +1054,9 @@ void GLWidget::paintGL()
 					ctl = 3;
 					ctr = 2;
 				}
-		
+
 				//qDebug() << "cbl:"<<cbl<<",cbr:"<<cbr<<",ctl:"<<ctl<<",ctr:"<<ctr;
-		
+
 				const GLfloat vertexCoordArray[] =
 				{
 					target.left()      + view->m_cornerTranslations[cbl].x(), target.bottom() + 1 - view->m_cornerTranslations[cbl].y(),
@@ -1061,28 +1065,28 @@ void GLWidget::paintGL()
 					target.right() + 1 - view->m_cornerTranslations[ctr].x(), target.top()        + view->m_cornerTranslations[ctr].y()
 				};
 				#endif
-				
+
 				//m_fbo->toImage().save("fbo.jpg");
 				if(m_outputStream)
 					m_outputStream->setImage(m_fbo->toImage());
-				
-		//  		qDebug() << "GLWidget: vertexCoordArray: target: "<<target<<", points: " 
+
+		//  		qDebug() << "GLWidget: vertexCoordArray: target: "<<target<<", points: "
 		//  			<< "BL: "<<vertexCoordArray[0]<<vertexCoordArray[1]
 		//  			<< "BR: "<<vertexCoordArray[2]<<vertexCoordArray[3]
 		//  			<< "TL: "<<vertexCoordArray[4]<<vertexCoordArray[5]
 		//  			<< "TR: "<<vertexCoordArray[6]<<vertexCoordArray[7];
-		
-				
+
+
 				const GLfloat txLeft   = view->m_flipHorizontal ? source.right()  / m_fbo->size().width() : source.left()  / m_fbo->size().width();
 				const GLfloat txRight  = view->m_flipHorizontal ? source.left()   / m_fbo->size().width() : source.right() / m_fbo->size().width();
-				
+
 				const GLfloat txTop    = view->m_flipVertical //m_scanLineDirection == QVideoSurfaceFormat::TopToBottom
 					? source.top()    / m_fbo->size().height()
 					: source.bottom() / m_fbo->size().height();
 				const GLfloat txBottom = view->m_flipVertical //m_scanLineDirection == QVideoSurfaceFormat::TopToBottom
 					? source.bottom() / m_fbo->size().height()
 					: source.top()    / m_fbo->size().height();
-					
+
 				GLfloat textureCoordArray[] =
 				{
 					txLeft , txBottom,
@@ -1090,27 +1094,27 @@ void GLWidget::paintGL()
 					txLeft , txTop,
 					txRight, txTop
 				};
-				
-		//  		qDebug() << "GLWidget: Before Rotate: textureCoordArray: " 
+
+		//  		qDebug() << "GLWidget: Before Rotate: textureCoordArray: "
 		//  			<< "BL: "<<textureCoordArray[0]<<textureCoordArray[1]
 		//  			<< "BR: "<<textureCoordArray[2]<<textureCoordArray[3]
 		//  			<< "TL: "<<textureCoordArray[4]<<textureCoordArray[5]
 		//  			<< "TR: "<<textureCoordArray[6]<<textureCoordArray[7];
-					
+
 				if(view->m_cornerRotation == GLRotateLeft)
 				{
 					// Bottom Left = Top Left
 					textureCoordArray[0] = txLeft;
 					textureCoordArray[1] = txTop;
-					
+
 					// Bottom Right = Bottom Left
 					textureCoordArray[2] = txLeft;
 					textureCoordArray[3] = txBottom;
-					
+
 					// Top Left = Top Right
 					textureCoordArray[4] = txRight;
 					textureCoordArray[5] = txTop;
-					
+
 					// Top Right = Bottom Right
 					textureCoordArray[6] = txRight;
 					textureCoordArray[7] = txBottom;
@@ -1121,117 +1125,117 @@ void GLWidget::paintGL()
 					// Bottom Left = Bottom Right
 					textureCoordArray[0] = txRight;
 					textureCoordArray[1] = txBottom;
-					
+
 					// Bottom Right = Top Right
 					textureCoordArray[2] = txRight;
 					textureCoordArray[3] = txTop;
-					
+
 					// Top Left = Bottom Left
 					textureCoordArray[4] = txLeft;
 					textureCoordArray[5] = txBottom;
-					
+
 					// Top Right = Top Left
 					textureCoordArray[6] = txLeft;
 					textureCoordArray[7] = txTop;
 				}
-				
-		// 		qDebug() << "GLWidget: textureCoordArray: " 
+
+		// 		qDebug() << "GLWidget: textureCoordArray: "
 		//  			<< "BL: "<<textureCoordArray[0]<<textureCoordArray[1]
 		//  			<< "BR: "<<textureCoordArray[2]<<textureCoordArray[3]
 		//  			<< "TL: "<<textureCoordArray[4]<<textureCoordArray[5]
 		//  			<< "TR: "<<textureCoordArray[6]<<textureCoordArray[7];
-			
+
 				m_program->bind();
-			
+
 				m_program->enableAttributeArray("vertexCoordArray");
 				m_program->enableAttributeArray("textureCoordArray");
-				
+
 				m_program->setAttributeArray("vertexCoordArray",  vertexCoordArray,  2);
 				m_program->setAttributeArray("textureCoordArray", textureCoordArray, 2);
-				
+
 				#ifdef OPENCV_ENABLED
 				m_program->setUniformValue("warpMatrix",          view->m_warpMatrix);
 				#endif
-				
+
 				m_program->setUniformValue("positionMatrix",      positionMatrix);
 			// 	QMatrix4x4 mat4(
 			// 		positionMatrix[0][0], positionMatrix[0][1], positionMatrix[0][2], positionMatrix[0][3],
-			// 		positionMatrix[1][0], positionMatrix[1][1], positionMatrix[1][2], positionMatrix[1][3], 
-			// 		positionMatrix[2][0], positionMatrix[2][1], positionMatrix[2][2], positionMatrix[2][3], 
+			// 		positionMatrix[1][0], positionMatrix[1][1], positionMatrix[1][2], positionMatrix[1][3],
+			// 		positionMatrix[2][0], positionMatrix[2][1], positionMatrix[2][2], positionMatrix[2][3],
 			// 		positionMatrix[3][0], positionMatrix[3][1], positionMatrix[3][2], positionMatrix[3][3]
-			// 		); 
+			// 		);
 			// 	m_program->setUniformValue("positionMatrix",      mat4);
-				
+
 				//qDebug() << "GLVideoDrawable:paintGL():"<<this<<", rendering with opacity:"<<opacity();
 				m_program->setUniformValue("alpha",               (GLfloat)m_opacity);
 				m_program->setUniformValue("texOffsetX",          (GLfloat)0.);//m_invertedOffset.x());
 				m_program->setUniformValue("texOffsetY",          (GLfloat)0.);//m_invertedOffset.y());
-					
+
 				glActiveTexture(GL_TEXTURE0);
 				glBindTexture(GL_TEXTURE_2D, m_fbo->texture());
-				
+
 		// 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		// 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		// 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 		// 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-				
+
 				glActiveTexture(GL_TEXTURE1);
 				glBindTexture(GL_TEXTURE_2D, view->m_alphaTextureId);
-				
+
 				glActiveTexture(GL_TEXTURE0);
-			
+
 				m_program->setUniformValue("texRgb", 0);
 				m_program->setUniformValue("alphaMask", 1);
-				
+
 				m_program->setUniformValue("colorMatrix", view->m_colorMatrix);
-				
+
 				glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 				//glDrawArrays(GL_QUAD_STRIP, 0, 4);
-				
-			
+
+
 				m_program->release();
 			}
 		}
 		else
 		{
 			glBindTexture(GL_TEXTURE_2D, m_fbo->texture());
-		
+
 			//glTranslatef(0.0f,0.0f,-3.42f);
-			
+
 			glBegin(GL_QUADS);
 				// Front Face
 		//              glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0f, -1.0f,  1.0f);
 		//              glTexCoord2f(1.0f, 0.0f); glVertex3f( 1.0f, -1.0f,  1.0f);
 		//              glTexCoord2f(1.0f, 1.0f); glVertex3f( 1.0f,  1.0f,  1.0f);
 		//              glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0f,  1.0f,  1.0f);
-		
+
 				//QRectF rect(10,10,320,240);
 				QRectF rect(0,0,width(),height());
-		
+
 				qreal
 					vx1 = rect.left(),
 					vx2 = rect.right(),
 					vy1 = rect.bottom(),
 					vy2 = rect.top();
-		
+
 		//                 glTexCoord2f(0.0f, 0.0f); glVertex3f(vx1,vy1,  0.0f); // top left
 		//                 glTexCoord2f(1.0f, 0.0f); glVertex3f(vx2,vy1,  0.0f); // top right
 		//                 glTexCoord2f(1.0f, 1.0f); glVertex3f(vx2,vy2,  0.0f); // bottom right
 		//                 glTexCoord2f(0.0f, 1.0f); glVertex3f(vx1,vy2,  0.0f); // bottom left
-		
+
 				if(1)
 				{
 	// 				glTexCoord2f(0.0f, 0.0f); glVertex3f(vx1 + m_cornerTranslations[3].x(),vy1 + m_cornerTranslations[3].y(),  0.0f); // bottom left // 3
 	// 				glTexCoord2f(1.0f, 0.0f); glVertex3f(vx2 - m_cornerTranslations[2].x(),vy1 + m_cornerTranslations[2].y(),  0.0f); // bottom right // 2
 	// 				glTexCoord2f(1.0f, 1.0f); glVertex3f(vx2 - m_cornerTranslations[1].x(),vy2 - m_cornerTranslations[1].y(),  0.0f); // top right  // 1
 	// 				glTexCoord2f(0.0f, 1.0f); glVertex3f(vx1 + m_cornerTranslations[0].x(),vy2 - m_cornerTranslations[0].y(),  0.0f); // top left // 0
-	
+
 					glTexCoord2f(0.0f, 0.0f); glVertex3f(vx1,vy1,  0.0f); // bottom left // 3
 					glTexCoord2f(1.0f, 0.0f); glVertex3f(vx2,vy1,  0.0f); // bottom right // 2
 					glTexCoord2f(1.0f, 1.0f); glVertex3f(vx2,vy2,  0.0f); // top right  // 1
 					glTexCoord2f(0.0f, 1.0f); glVertex3f(vx1,vy2,  0.0f); // top left // 0
 				}
-		
+
 				if(0)
 				{
 					qreal inc = fabs(vy2-vy1)/10.;
@@ -1253,38 +1257,38 @@ void GLWidget::paintGL()
 		// 					glTexCoord2f(1.0f, 0.0f); glVertex3f(x+inc,y,  0.0f); // bottom right
 		// 					glTexCoord2f(1.0f, 1.0f); glVertex3f(x+inc,y+inc,  0.0f); // top right
 		// 					glTexCoord2f(0.0f, 1.0f); glVertex3f(x,y+inc,  0.0f); // top left
-							
-							
+
+
 		// 					glTexCoord2f(0.0f, 0.0f); glVertex3f(x,y+inc,  0.0f); // bottom left
 		// 					glTexCoord2f(1.0f, 0.0f); glVertex3f(x+inc,y+inc,  0.0f); // bottom right
 		// 					glTexCoord2f(1.0f, 1.0f); glVertex3f(x+inc,y,  0.0f); // top right
 		// 					glTexCoord2f(0.0f, 1.0f); glVertex3f(x,y,  0.0f); // top left
-		
+
 							glTexCoord2f(tx, ty);
 										glVertex3f(x,y+inc,  0.0f); // bottom left
-							
-							glTexCoord2f(tx+xf, ty);	
+
+							glTexCoord2f(tx+xf, ty);
 										glVertex3f(x+inc,y+inc,  0.0f); // bottom right
-							
-							glTexCoord2f(tx+xf, ty+yf); 
+
+							glTexCoord2f(tx+xf, ty+yf);
 										glVertex3f(x+inc,y,  0.0f); // top right
-							
-							glTexCoord2f(tx, ty+yf); 
+
+							glTexCoord2f(tx, ty+yf);
 										glVertex3f(x,y,  0.0f); // top left
 						}
 					}
 				}
-		
+
 		//              glTexCoord2f(0,0); glVertex3f( 0, 0,0); //lo
 		//              glTexCoord2f(0,1); glVertex3f(256, 0,0); //lu
 		//              glTexCoord2f(1,1); glVertex3f(256, 256,0); //ru
 		//              glTexCoord2f(1,0); glVertex3f( 0, 256,0); //ro
 			glEnd();
 		}
-		
+
 		//qDebug() << "GLWidget::paintGL(): FBO painting complete";
-	
-		
+
+
 	// 	GLuint	texture[1]; // Storage For One Texture
 	// 	QImage texOrig, texGL;
 	// 	if ( !texOrig.load( "me2.jpg" ) )
@@ -1293,7 +1297,7 @@ void GLWidget::paintGL()
 	// 		texOrig = QImage( 16, 16, QImage::Format_RGB32 );
 	// 		texOrig.fill( Qt::green );
 	// 	}
-	// 	
+	//
 	// 	// Setup inital texture
 	// 	texGL = QGLWidget::convertToGLFormat( texOrig );
 	// 	glGenTextures( 1, &texture[0] );
@@ -1301,48 +1305,48 @@ void GLWidget::paintGL()
 	// 	glTexImage2D( GL_TEXTURE_2D, 0, 3, texGL.width(), texGL.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, texGL.bits() );
 	// 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
 	// 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-	// 	
+	//
 	// 	glEnable(GL_TEXTURE_2D);					// Enable Texture Mapping ( NEW )
-	// 	
+	//
 	// 	glClearColor(0.1f, 0.1f, 0.2f, 1.0f);
 	// 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	// 	
+	//
 	// 	glLoadIdentity(); // Reset The View
 	// 	//glTranslatef(0.0f,0.0f,-3.42f);
-	// 	
+	//
 	// 	glBindTexture(GL_TEXTURE_2D, texture[0]);
-	// 	
-	// 	
+	//
+	//
 	// 	glBegin(GL_QUADS);
 	// 		// Front Face
 	// // 		glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0f, -1.0f,  1.0f);
 	// // 		glTexCoord2f(1.0f, 0.0f); glVertex3f( 1.0f, -1.0f,  1.0f);
 	// // 		glTexCoord2f(1.0f, 1.0f); glVertex3f( 1.0f,  1.0f,  1.0f);
 	// // 		glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0f,  1.0f,  1.0f);
-	// 	
+	//
 	// 		QRectF rect(0,0,764,572);
-	// 		
-	// 		qreal 
+	//
+	// 		qreal
 	// 			vx1 = rect.left(),
 	// 			vx2 = rect.right(),
 	// 			vy1 = rect.bottom(),
 	// 			vy2 = rect.top();
-	// 		
+	//
 	// 		glTexCoord2f(0.0f, 0.0f); glVertex3f(vx1,vy1,  0.0f); // top left
 	// 		glTexCoord2f(1.0f, 0.0f); glVertex3f(vx2,vy1,  0.0f); // top right
 	// 		glTexCoord2f(1.0f, 1.0f); glVertex3f(vx2,vy2,  0.0f); // bottom right
 	// 		glTexCoord2f(0.0f, 1.0f); glVertex3f(vx1,vy2,  0.0f); // bottom left
-	// 
+	//
 	// // 		glTexCoord2f(0,0); glVertex3f( 0, 0,0); //lo
 	// // 		glTexCoord2f(0,1); glVertex3f(256, 0,0); //lu
 	// // 		glTexCoord2f(1,1); glVertex3f(256, 256,0); //ru
 	// // 		glTexCoord2f(1,0); glVertex3f( 0, 256,0); //ro
 	// 	glEnd();
 	}
-// 	
+//
 	//QTimer::singleShot(0, this, SIGNAL(updated()));
 	emit updated();
-		
+
 	//qDebug() << "GLWidget::paintGL: elapsed:"<<time.elapsed()<<"ms";
 }
 
@@ -1449,52 +1453,52 @@ void GLWidgetSubview::setSaturation(int saturation)
 void GLWidgetSubview::updateColors()
 {
 	//qDebug() << "GLWidget::updateColors: b:"<<brightness<<", c:"<<contrast<<", h:"<<hue<<", s:"<<saturation;
-	
+
 	const qreal b = m_brightness / 200.0;
 	const qreal c = m_contrast / 200.0 + 1.0;
 	const qreal h = m_hue / 200.0;
 	const qreal s = m_saturation / 200.0 + 1.0;
-	
+
 	const qreal cosH = qCos(M_PI * h);
 	const qreal sinH = qSin(M_PI * h);
-	
+
 	const qreal h11 = -0.4728 * cosH + 0.7954 * sinH + 1.4728;
 	const qreal h21 = -0.9253 * cosH - 0.0118 * sinH + 0.9523;
 	const qreal h31 =  0.4525 * cosH + 0.8072 * sinH - 0.4524;
-	
+
 	const qreal h12 =  1.4728 * cosH - 1.3728 * sinH - 1.4728;
 	const qreal h22 =  1.9253 * cosH + 0.5891 * sinH - 0.9253;
 	const qreal h32 = -0.4525 * cosH - 1.9619 * sinH + 0.4525;
-	
+
 	const qreal h13 =  1.4728 * cosH - 0.2181 * sinH - 1.4728;
 	const qreal h23 =  0.9253 * cosH + 1.1665 * sinH - 0.9253;
 	const qreal h33 =  0.5475 * cosH - 1.3846 * sinH + 0.4525;
-	
+
 	const qreal sr = (1.0 - s) * 0.3086;
 	const qreal sg = (1.0 - s) * 0.6094;
 	const qreal sb = (1.0 - s) * 0.0820;
-	
+
 	const qreal sr_s = sr + s;
 	const qreal sg_s = sg + s;
 	const qreal sb_s = sr + s;
-	
+
 	const float m4 = (s + sr + sg + sb) * (0.5 - 0.5 * c + b);
-	
+
 	m_colorMatrix(0, 0) = c * (sr_s * h11 + sg * h21 + sb * h31);
 	m_colorMatrix(0, 1) = c * (sr_s * h12 + sg * h22 + sb * h32);
 	m_colorMatrix(0, 2) = c * (sr_s * h13 + sg * h23 + sb * h33);
 	m_colorMatrix(0, 3) = m4;
-	
+
 	m_colorMatrix(1, 0) = c * (sr * h11 + sg_s * h21 + sb * h31);
 	m_colorMatrix(1, 1) = c * (sr * h12 + sg_s * h22 + sb * h32);
 	m_colorMatrix(1, 2) = c * (sr * h13 + sg_s * h23 + sb * h33);
 	m_colorMatrix(1, 3) = m4;
-	
+
 	m_colorMatrix(2, 0) = c * (sr * h11 + sg * h21 + sb_s * h31);
 	m_colorMatrix(2, 1) = c * (sr * h12 + sg * h22 + sb_s * h32);
 	m_colorMatrix(2, 2) = c * (sr * h13 + sg * h23 + sb_s * h33);
 	m_colorMatrix(2, 3) = m4;
-	
+
 	m_colorMatrix(3, 0) = 0.0;
 	m_colorMatrix(3, 1) = 0.0;
 	m_colorMatrix(3, 2) = 0.0;
@@ -1504,7 +1508,7 @@ void GLWidgetSubview::updateColors()
 void GLWidget::addDrawable(GLDrawable *item)
 {
 	//makeCurrentIfNeeded();
-	
+
 // 	QString newName = QString("%1/%2").arg(objectName()).arg(item->objectName());
 // 	item->setObjectName(qPrintable(newName));
 	if(m_drawables.contains(item))
@@ -1522,7 +1526,7 @@ void GLWidget::addDrawable(GLDrawable *item)
 		item->initGL();
 	}
 	sortDrawables();
-	
+
 	updateGL();
 }
 
@@ -1555,12 +1559,12 @@ void GLWidget::sortDrawables()
 void GLWidget::resizeGL(int width, int height)
 {
 	glViewport(0,0,width,height); //(width - side) / 2, (height - side) / 2, side, side);
-	
+
 	//qDebug() << "GLWidget::resizeGL(): width:"<<width<<", height:"<<height;
-	
+
 	if(m_fboEnabled &&
-		(!m_fbo || 
-			(m_fbo && 
+		(!m_fbo ||
+			(m_fbo &&
 				(m_fbo->size().width()  != width ||
 				 m_fbo->size().height() != height)
 			)
@@ -1568,19 +1572,19 @@ void GLWidget::resizeGL(int width, int height)
 	  )
 	{
 		makeCurrentIfNeeded();
-		
+
 		if(m_fbo)
 			delete m_fbo;
-			
+
 		QSize size(width,height);
 		m_fbo = new QGLFramebufferObject(size);
-		
+
 		//qDebug() << "GLWidget::resizeGL(): New FBO size:"<<m_fbo->size();
 	}
-	
+
 	if(height == 0)
 		height = 1;
-		
+
 	glMatrixMode(GL_PROJECTION);						// Select The Projection Matrix
 	glLoadIdentity();							// Reset The Projection Matrix
 
@@ -1590,9 +1594,9 @@ void GLWidget::resizeGL(int width, int height)
 
 	glMatrixMode(GL_MODELVIEW);						// Select The Modelview Matrix
 	glLoadIdentity();							// Reset The Modelview Matrix
-	
-	
-	
+
+
+
 // 	glMatrixMode(GL_PROJECTION);
 // 	glLoadIdentity();
 // 	qreal aspect = (qreal)width / (qreal)(height ? height : 1);
@@ -1602,19 +1606,19 @@ void GLWidget::resizeGL(int width, int height)
 // 	glFrustum(-aspect, +aspect, -1.0, +1.0, 4.0, 15.0);
 // 	#endif
 // 	glMatrixMode(GL_MODELVIEW);
-	
-	
+
+
 	//qDebug() << "GLWidget::resizeGL: "<<width<<","<<height;
 	setViewport(viewport());
-	
+
 	foreach(GLWidgetSubview *view, m_subviews)
 	{
 		view->setAlphaMask(view->m_alphaMask_preScaled);
 		view->updateWarpMatrix();
 	}
 }
-	
-	
+
+
 void GLWidget::setAspectRatioMode(Qt::AspectRatioMode mode)
 {
 	//qDebug() << "GLVideoDrawable::setAspectRatioMode: "<<this<<", mode:"<<mode<<", int:"<<(int)mode;
@@ -1627,7 +1631,7 @@ void GLWidget::setAspectRatioMode(Qt::AspectRatioMode mode)
 void GLWidget::setViewport(const QRectF& rect)
 {
 	m_viewport = rect;
-	
+
 	QRectF viewport = m_viewport;
 	if(!viewport.isValid())
 	{
@@ -1636,19 +1640,19 @@ void GLWidget::setViewport(const QRectF& rect)
 			canvas = QSizeF(1000.,750.);
 		viewport = QRectF(QPointF(0.,0.),canvas);
 	}
-	
+
 	//qDebug() << "GLWidget::setViewport: "<<viewport;
-	
+
 	float vw = viewport.width();
 	float vh = viewport.height();
-	
+
 	// Scale viewport size to our size
 	float winWidth  = (float)(m_fbo ? m_fbo->size().width()  : width());
 	float winHeight = (float)(m_fbo ? m_fbo->size().height() : height());
-	
+
 	float sx = winWidth  / vw;
 	float sy = winHeight / vh;
-	
+
 	//qDebug() << "
 
 	//float scale = qMin(sx,sy);
@@ -1659,27 +1663,27 @@ void GLWidget::setViewport(const QRectF& rect)
 		else
 			sx = sy;
 	}
-	
+
 	// Center viewport in our rectangle
 	float scaledWidth  = vw * sx;//scale;
 	float scaledHeight = vh * sy;//scale;
-	
-	// Calculate centering 
+
+	// Calculate centering
 	float xt = (winWidth  - scaledWidth) /2;
 	float yt = (winHeight - scaledHeight)/2;
-	
+
 	// Apply top-left translation for viewport location
 	float xtv = xt - viewport.left() * sx;//scale;
 	float ytv = yt - viewport.top()  * sy;//scale;
-	
+
 	setTransform(QTransform().translate(xtv,ytv).scale(sx,sy));//scale,scale));
-	
+
 	//QSize size(width,height);
 	QSize size = viewport.size().toSize();
 	//qDebug() <<"GLWidget::setViewport:  size:"<<size<<", sx:"<<sx<<",sy:"<<sy<<", xtv:"<<xtv<<", ytv:"<<ytv<<", scaled size:"<<scaledWidth<<scaledHeight;
 	foreach(GLDrawable *drawable, m_drawables)
 		drawable->viewportResized(size);
-	
+
 	updateGL();
 
 /*#if !defined(QT_OPENGL_ES_2)
@@ -1715,7 +1719,7 @@ void GLWidget::mouseMoveEvent(QMouseEvent */*event*/)
 {
 // 	int dx = event->x() - lastPos.x();
 // 	int dy = event->y() - lastPos.y();
-// 	
+//
 // 	if (event->buttons() & Qt::LeftButton) {
 // 		rotateBy(8 * dy, 8 * dx, 0);
 // 	} else if (event->buttons() & Qt::RightButton) {
@@ -1733,7 +1737,7 @@ void GLWidget::setOpacity(double d)
 {
 	m_opacity = d;
 	//qDebug() << "GLWidget::setOpacity: "<<d;
-	
+
 	updateGL();
 }
 
@@ -1742,12 +1746,12 @@ void GLWidget::fadeBlack(bool toBlack)
 	//qDebug() << "GLWidget::fadeBlack: toBlack:"<<toBlack<<", duration:"<<m_crossfadeSpeed<<", current opac:"<<opacity();
 
 	m_fadeBlackTimer.setInterval(1000 / 30); // 30fps fade
-	
+
 	m_fadeBlackDirection = toBlack ?  -1 : 1;
-	
+
 	m_fadeBlackClock.start();
 	m_fadeBlackTimer.start();
-	
+
 	m_isBlack = toBlack;
 }
 
@@ -1764,7 +1768,7 @@ void GLWidget::fadeBlackTick()
 		double fadeVal = ((double)time) / ((double)m_crossfadeSpeed);
 		if(m_fadeBlackDirection < 0)
 			fadeVal = 1.0 - fadeVal;
-		//qDebug() << "GLWidget::fadeBlackTick: dir:"<<m_fadeBlackDirection<<", time:"<<time<<", len:"<<m_crossfadeSpeed<<", fadeVal:"<<fadeVal; 
+		//qDebug() << "GLWidget::fadeBlackTick: dir:"<<m_fadeBlackDirection<<", time:"<<time<<", len:"<<m_crossfadeSpeed<<", fadeVal:"<<fadeVal;
 		setOpacity(fadeVal);
 	}
 }
@@ -1800,7 +1804,7 @@ void GLWidget::setFboEnabled(bool flag)
 		delete m_fbo;
 		m_fbo = 0;
 	}
-	
+
 	// resizeGL() will re-create m_fbo as needed
 	resizeGL(width(),height());
 	updateGL();
@@ -1823,10 +1827,10 @@ GLWidgetOutputStream::GLWidgetOutputStream(GLWidget *parent)
 void GLWidgetOutputStream::setImage(QImage img)
 {
 	m_image = img;
-	
+
 	//qDebug() << "GLWidgetOutputStream::setImage(): Received frame buffer, size:"<<m_image.size()<<", img format:"<<m_image.format();
 	enqueue(new VideoFrame(m_image,1000/m_fps, QTime::currentTime()));
-	
+
 	if(!m_frameReadyTimer.isActive())
 		m_frameReadyTimer.start();
 }

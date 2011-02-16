@@ -43,7 +43,6 @@ HEADERS       = GLWidget.h \
 		QtGetOpt.h \
 		../livemix/DVizSharedMemoryThread.h \
 		SharedMemorySender.h \
-		V4LOutput.h \
 		GLSceneTypeNewsFeed.h \
 		GLSceneTypeRandomImage.h
 		
@@ -86,7 +85,6 @@ SOURCES       = GLWidget.cpp \
 		GLSpinnerDrawable.cpp \
 		../livemix/DVizSharedMemoryThread.cpp \
 		SharedMemorySender.cpp \
-		V4LOutput.cpp \
 		GLSceneTypeCurrentWeather.cpp \
 		GLSceneTypeNewsFeed.cpp \
 		GLSceneTypeRandomImage.cpp
@@ -256,9 +254,13 @@ slideshow: {
 
 unix: {
 	HEADERS += \
-		../livemix/SimpleV4L2.h
+		../livemix/SimpleV4L2.h \
+		V4LOutput.h
+		
 	SOURCES += \
-		../livemix/SimpleV4L2.cpp
+		../livemix/SimpleV4L2.cpp \
+		V4LOutput.cpp
+		
 
 	# CentOS fix - see http://theitdepartment.wordpress.com/2009/03/15/centos-qt-fcfreetypequeryface/
 	LIBS += -L/opt/fontconfig-2.4.2/lib

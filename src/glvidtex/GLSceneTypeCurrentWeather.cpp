@@ -5,44 +5,44 @@
 GLSceneTypeCurrentWeather::GLSceneTypeCurrentWeather(QObject *parent)
 	: GLSceneType(parent)
 {
-	m_fieldInfoList 
-		<< FieldInfo("conditions", 
-			"Weather Conditions", 
-			"Text string describing the current weather conditions, such as 'Partly Cloudy.'", 
-			"Text", 
+	m_fieldInfoList
+		<< FieldInfo("conditions",
+			"Weather Conditions",
+			"Text string describing the current weather conditions, such as 'Partly Cloudy.'",
+			"Text",
 			true)
-			
-		<< FieldInfo("temp", 
-			"Current Temperature", 
-			"A short numerical text giving the current temperature in farenheit, for example: 9*F", 
-			"Text", 
+
+		<< FieldInfo("temp",
+			"Current Temperature",
+			"A short numerical text giving the current temperature in farenheit, for example: 9*F",
+			"Text",
 			true)
-			
-		<< FieldInfo("winds", 
-			"Wind Conditions", 
-			"A short string giving the current wind conditions, such as 'Wind: SW at 9 mph'", 
-			"Text", 
+
+		<< FieldInfo("winds",
+			"Wind Conditions",
+			"A short string giving the current wind conditions, such as 'Wind: SW at 9 mph'",
+			"Text",
 			true)
-			
-		<< FieldInfo("icon", 
-			"Weather Icon", 
-			"A scalable vector graphic (SVG) icon representing the current weather conditions.", 
-			"Svg", 
+
+		<< FieldInfo("icon",
+			"Weather Icon",
+			"A scalable vector graphic (SVG) icon representing the current weather conditions.",
+			"Svg",
 			true)
-		
-		<< FieldInfo("location", 
-			"Location", 
-			"The normalized location description given by the server, such as 'Chicago, IL'", 
-			"Text", 
+
+		<< FieldInfo("location",
+			"Location",
+			"The normalized location description given by the server, such as 'Chicago, IL'",
+			"Text",
 			false)
-		
-		<< FieldInfo("background", 
-			"Background", 
-			"The background image, if included, can optionally be dimmed at night.", 
-			"Image", 
+
+		<< FieldInfo("background",
+			"Background",
+			"The background image, if included, can optionally be dimmed at night.",
+			"Image",
 			false)
 		;
-		
+
 	m_paramInfoList
 		<< ParameterInfo("location",
 			"Location",
@@ -50,49 +50,49 @@ GLSceneTypeCurrentWeather::GLSceneTypeCurrentWeather(QObject *parent)
 			QVariant::String,
 			true,
 			SLOT(setLocation(const QString&)))
-			
+
 		<< ParameterInfo("updateTime",
 			"Update Time",
 			"Time in minutes to wait between updates",
 			QVariant::Int,
 			true,
 			SLOT(setUpdateTime(int)))
-			
+
 		<< ParameterInfo("setDimBackground",
 			"Dim Background",
 			"Dim background by 50% at night",
 			QVariant::Bool,
 			true,
 			SLOT(setDimBackground(bool)));
-			
+
 	PropertyEditorFactory::PropertyEditorOptions opts;
-	
+
 	opts.reset();
 	opts.maxLength = 9;
 	m_paramInfoList[0].hints = opts;
-	 
+
 	opts.reset();
 	opts.min = 1;
 	opts.max = 15;
 	m_paramInfoList[1].hints = opts;
-	
+
 	opts.reset();
 	opts.text = "Dim Background";
 	m_paramInfoList[2].hints = opts;
-	
+
 	connect(&m_reloadTimer, SIGNAL(timeout()), this, SLOT(reloadData()));
 	//m_reloadTimer.setInterval(1 * 60 * 1000); // every 1 minute
 	//setParam
 	setParam("updateTime", 1);
-	
+
 	setParam("dimBackground", true);
-			
+
 }
 
 void GLSceneTypeCurrentWeather::setLiveStatus(bool flag)
 {
 	GLSceneType::setLiveStatus(flag);
-	
+
 	if(flag)
 	{
 		m_reloadTimer.start();
@@ -107,7 +107,7 @@ void GLSceneTypeCurrentWeather::setLiveStatus(bool flag)
 void GLSceneTypeCurrentWeather::setParam(QString param, QVariant value)
 {
 	GLSceneType::setParam(param, value);
-	
+
 	if(param == "location")
 		reloadData();
 	else
@@ -120,12 +120,12 @@ void GLSceneTypeCurrentWeather::reloadData()
 	requestData(location());
 }
 
-void GLSceneTypeCurrentWeather::requestData(const QString &location) 
+void GLSceneTypeCurrentWeather::requestData(const QString &location)
 {
 	QUrl url("http://www.google.com/ig/api");
 	url.addEncodedQueryItem("hl", "en");
 	url.addEncodedQueryItem("weather", QUrl::toPercentEncoding(location));
-	
+
 	qDebug() << "GLSceneTypeCurrentWeather::requestData("<<location<<"): url:"<<url;
 
 	QNetworkAccessManager *manager = new QNetworkAccessManager(this);
@@ -134,7 +134,7 @@ void GLSceneTypeCurrentWeather::requestData(const QString &location)
 	manager->get(QNetworkRequest(url));
 }
 
-void GLSceneTypeCurrentWeather::handleNetworkData(QNetworkReply *networkReply) 
+void GLSceneTypeCurrentWeather::handleNetworkData(QNetworkReply *networkReply)
 {
 	QUrl url = networkReply->url();
 	if (!networkReply->error())
@@ -143,9 +143,9 @@ void GLSceneTypeCurrentWeather::handleNetworkData(QNetworkReply *networkReply)
 	networkReply->manager()->deleteLater();
 }
 
-QString GLSceneTypeCurrentWeather::extractIcon(const QString &data) 
+QString GLSceneTypeCurrentWeather::extractIcon(const QString &data)
 {
-	if (m_icons.isEmpty()) 
+	if (m_icons.isEmpty())
 	{
 		m_icons["mostly_cloudy"]    = "weather-few-clouds";
 		m_icons["cloudy"]           = "weather-overcast";
@@ -167,7 +167,7 @@ QString GLSceneTypeCurrentWeather::extractIcon(const QString &data)
 		m_icons["chance_of_storm"]  = "weather-storm";
 		m_icons["thunderstorm"]     = "weather-thundershower";
 		m_icons["chance_of_tstorm"] = "weather-thundershower";
-		
+
 		m_icons["night:sunny"]            = "weather-night-waxingcrescent-clear";
 		m_icons["night:mostly_cloudy"]    = "weather-night-waxingcrescent-partially-cloudy";
 		m_icons["night:cloudy"]           = "weather-night-waxingcrescent-cloudy";
@@ -190,21 +190,21 @@ QString GLSceneTypeCurrentWeather::extractIcon(const QString &data)
 		m_icons["night:chance_of_tstorm"] = "weather-night-waxingcrescent-thunderstorms";
 	}
 	QRegExp regex("([\\w]+).gif$");
-	if (regex.indexIn(data) != -1) 
+	if (regex.indexIn(data) != -1)
 	{
 		QString i = regex.cap();
 		i = i.left(i.length() - 4);
-		
+
 		bool night = isNight();
-		
+
 		QString name;
 		if(night)
 			name = m_icons.value("night:" + i);
-		
+
 		if(!night || name.isEmpty())
 			name = m_icons.value(i);
-		
-		if (!name.isEmpty()) 
+
+		if (!name.isEmpty())
 		{
 			name.prepend("images/icons/");
 			name.append(".svg");
@@ -217,20 +217,20 @@ QString GLSceneTypeCurrentWeather::extractIcon(const QString &data)
 bool GLSceneTypeCurrentWeather::isNight()
 {
 	QTime time = QTime::currentTime();
-		
+
 	// The *right* way todo this in the future would be to check the LOCAL sunrise/sunset times
 	// and then compare the current min/hour to the local sunrise/sunset!
 	// For now, this is Good Enough.
 	bool isNight =  time.hour() <= 6 ||
 			time.hour() >= 6 + 12;
-			
+
 	if(m_fields["conditions"].toString() == "Sunny")
 		isNight = false;
-	
+
 	return isNight;
 }
 
-// static QString toCelcius(QString t, QString unit) 
+// static QString toCelcius(QString t, QString unit)
 // {
 // 	bool ok = false;
 // 	int degree = t.toInt(&ok);
@@ -244,52 +244,52 @@ bool GLSceneTypeCurrentWeather::isNight()
 
 #define GET_DATA_ATTR xml.attributes().value("data").toString()
 
-void GLSceneTypeCurrentWeather::parseData(const QString &data) 
+void GLSceneTypeCurrentWeather::parseData(const QString &data)
 {
 	qDebug() << "GLSceneTypeCurrentWeather::parseData()";
 	QString unitSystem;
 
 	QXmlStreamReader xml(data);
-	while (!xml.atEnd()) 
+	while (!xml.atEnd())
 	{
 		xml.readNext();
-		if (xml.tokenType() == QXmlStreamReader::StartElement) 
+		if (xml.tokenType() == QXmlStreamReader::StartElement)
 		{
-			if (xml.name() == "city") 
+			if (xml.name() == "city")
 			{
 				QString city = GET_DATA_ATTR;
-				setField("location", city); 
+				setField("location", city);
 			}
 			if (xml.name() == "unit_system")
 				unitSystem = xml.attributes().value("data").toString();
-			
+
 			// Parse current weather conditions
-			if (xml.name() == "current_conditions") 
+			if (xml.name() == "current_conditions")
 			{
-				while (!xml.atEnd()) 
+				while (!xml.atEnd())
 				{
 					xml.readNext();
 					if (xml.name() == "current_conditions")
 						break;
-						
-					if (xml.tokenType() == QXmlStreamReader::StartElement) 
+
+					if (xml.tokenType() == QXmlStreamReader::StartElement)
 					{
-						if (xml.name() == "condition") 
+						if (xml.name() == "condition")
 						{
 							setField("conditions", GET_DATA_ATTR);
 						}
-						if (xml.name() == "icon") 
+						if (xml.name() == "icon")
 						{
 							QString name = extractIcon(GET_DATA_ATTR);
-							if (!name.isEmpty()) 
+							if (!name.isEmpty())
 								setField("icon", name);
 						}
-						if (xml.name() == "temp_f") 
+						if (xml.name() == "temp_f")
 						{
 							QString s = GET_DATA_ATTR + QChar(176);
 							setField("temp", s);
 						}
-						if (xml.name() == "wind_condition") 
+						if (xml.name() == "wind_condition")
 						{
 							setField("winds", GET_DATA_ATTR);
 						}
@@ -297,59 +297,59 @@ void GLSceneTypeCurrentWeather::parseData(const QString &data)
 				}
 			}
 // 			// Parse and collect the forecast conditions
-// 			if (xml.name() == "forecast_conditions") 
+// 			if (xml.name() == "forecast_conditions")
 // 			{
 // 				QGraphicsTextItem *dayItem  = 0;
 // 				QGraphicsSvgItem *statusItem = 0;
 // 				QString lowT, highT;
-// 				while (!xml.atEnd()) 
+// 				while (!xml.atEnd())
 // 				{
 // 					xml.readNext();
-// 					if (xml.name() == "forecast_conditions") 
+// 					if (xml.name() == "forecast_conditions")
 // 					{
-// 						if (dayItem && 
+// 						if (dayItem &&
 // 						    statusItem &&
-// 						    !lowT.isEmpty() && 
-// 						    !highT.isEmpty()) 
+// 						    !lowT.isEmpty() &&
+// 						    !highT.isEmpty())
 // 						{
 // 							m_dayItems << dayItem;
 // 							m_conditionItems << statusItem;
-// 							
+//
 // 							QString txt = highT + '/' + lowT;
 // 							QGraphicsTextItem* rangeItem;
 // 							rangeItem = m_scene.addText(txt);
 // 							rangeItem->setDefaultTextColor(textColor);
 // 							m_rangeItems << rangeItem;
-// 							
+//
 // 							QGraphicsRectItem *box;
 // 							box = m_scene.addRect(0, 0, 10, 10);
 // 							box->setPen(Qt::NoPen);
 // 							box->setBrush(Qt::NoBrush);
 // 							m_forecastItems << box;
-// 							
+//
 // 							dayItem->setParentItem(box);
 // 							statusItem->setParentItem(box);
 // 							rangeItem->setParentItem(box);
-// 						} 
-// 						else 
+// 						}
+// 						else
 // 						{
 // 							delete dayItem;
 // 							delete statusItem;
 // 						}
 // 						break;
 // 					}
-// 					if (xml.tokenType() == QXmlStreamReader::StartElement) 
+// 					if (xml.tokenType() == QXmlStreamReader::StartElement)
 // 					{
-// 						if (xml.name() == "day_of_week") 
+// 						if (xml.name() == "day_of_week")
 // 						{
 // 							QString s = GET_DATA_ATTR;
 // 							dayItem = m_scene.addText(s.left(3));
 // 							dayItem->setDefaultTextColor(textColor);
 // 						}
-// 						if (xml.name() == "icon") 
+// 						if (xml.name() == "icon")
 // 						{
 // 							QString name = extractIcon(GET_DATA_ATTR);
-// 							if (!name.isEmpty()) 
+// 							if (!name.isEmpty())
 // 							{
 // 								statusItem = new QGraphicsSvgItem(name);
 // 								m_scene.addItem(statusItem);
@@ -364,11 +364,11 @@ void GLSceneTypeCurrentWeather::parseData(const QString &data)
 // 			}
 		}
 	}
-	
-	if(isNight())
+
+	if(dimBackground())
 	{
 		GLDrawable *background = lookupField("background");
 		if(background)
-			background->setOpacity(.5);
+			background->setOpacity(isNight() ? .5 : 1.);
 	}
 }
