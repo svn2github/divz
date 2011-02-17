@@ -118,9 +118,12 @@ QStringList VideoInputSenderManager::videoConnections(bool justNetString)
 		}
 		else
 		{
+			QStringList inputs = camera->inputs();
+			QString input = inputs.isEmpty() ? "" : inputs.at(camera->input());
+			
 			con = QString("dev=%1,input=%2,net=%3:%4")
 				.arg(dev)
-				.arg(camera->inputs().at(camera->input()))
+				.arg(input)
 				.arg(ipAddress)
 				.arg(sender->serverPort());
 		}

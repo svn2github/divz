@@ -281,6 +281,18 @@ opencv: {
 
 }
 
+# Blackmagic DeckLink Capture Support
+blackmagic: {
+
+	BMD_SDK_HOME = /opt/DeckLink-SDK-7.9.5/Linux
+	
+	#message("Blackmagic DeckLink API enabled, using: $$BMD_SDK_HOME")
+	DEFINES += ENABLE_DECKLINK_CAPTURE
+		
+	INCLUDEPATH += $$BMD_SDK_HOME/include
+	SOURCES     += $$BMD_SDK_HOME/include/DeckLinkAPIDispatch.cpp
+}
+
 
 #RESOURCES     = glvidtex.qrc
 QT           += opengl multimedia network svg

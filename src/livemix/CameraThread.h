@@ -27,6 +27,9 @@ extern "C" {
 #include "VideoSource.h"
 class SimpleV4L2;
 
+// For capturing from a Blackmagic DeckLink-compatible device (such as the Intensity PRo)
+class BMDCaptureDelegate;
+
 class CameraThread: public VideoSource
 {
 	Q_OBJECT
@@ -86,6 +89,10 @@ protected slots:
 	int initCamera();
 	
 	void destroySource();
+	
+protected:
+	friend class BMDCaptureDelegate;
+	void rawDataAvailable(uchar *bytes, int size, QSize pxSize, QTime captureTime = QTime());
 	
 private:
 	int m_fps;
@@ -149,6 +156,7 @@ private:
 	QByteArray m_frameData;
 	
 	SimpleV4L2 * m_v4l2;
+	BMDCaptureDelegate *m_bmd;
 	
 	QMutex m_initMutex;
 	

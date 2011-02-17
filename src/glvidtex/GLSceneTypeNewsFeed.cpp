@@ -82,6 +82,9 @@ void GLSceneTypeNewsFeed::showNextItem()
 {
 	if(m_currentIndex < 0 || m_currentIndex >= m_news.size())
 		m_currentIndex = 0;
+	
+	if(m_news.isEmpty())
+		return;
 		
 	NewsItem item = m_news[m_currentIndex];
 	

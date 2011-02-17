@@ -19,6 +19,54 @@ extern "C" {
 
 #include "SimpleV4L2.h"
 
+
+#ifdef ENABLE_DECKLINK_CAPTURE
+
+// BMD needs to be integrated in these areas:
+// Enumeration (create custom string, something like /dev/blackmagic/card0)
+// Read Frame
+// Input enumration/setting
+
+#include "DeckLinkAPI.h"
+
+/// \class BMDCaptureDelegate 
+///	Provides integration with Blackmagic DeckLink-compatible device (such as the Intensity Prso) for
+///	raw video capturing.
+class BMDCaptureDelegate : public IDeckLinkInputCallback
+{
+	BMDCaptureDelegate(CameraThread *, IDeckLink *);
+	
+public:
+	~BMDCaptureDelegate();
+
+	virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID /*iid*/, LPVOID */*ppv*/) { return E_NOINTERFACE; }
+	virtual ULONG STDMETHODCALLTYPE AddRef(void);
+	virtual ULONG STDMETHODCALLTYPE  Release(void);
+	virtual HRESULT STDMETHODCALLTYPE VideoInputFormatChanged(BMDVideoInputFormatChangedEvents, IDeckLinkDisplayMode*, BMDDetectedVideoInputFormatFlags);
+	virtual HRESULT STDMETHODCALLTYPE VideoInputFrameArrived(IDeckLinkVideoInputFrame*, IDeckLinkAudioInputPacket*);
+	
+	static QStringList enumDeviceNames(bool forceReload=false);
+	static BMDCaptureDelegate *openDevice(QString deviceName, CameraThread *api);
+
+private:
+	static QStringList	s_knownDevices;
+	
+	ULONG			m_refCount;
+	pthread_mutex_t		m_mutex;
+	CameraThread *		m_api;
+	int			m_frameCount;
+	
+	IDeckLink *		m_deckLink;
+	IDeckLinkInput *	m_deckLinkInput;
+	IDeckLinkOutput *	m_deckLinkOutput;
+	IDeckLinkDisplayModeIterator	*m_displayModeIterator;
+	IDeckLinkVideoConversion *m_deckLinkConverter;
+};
+
+QStringList BMDCaptureDelegate::s_knownDevices = QStringList();
+
+#endif
+
 //#include "ccvt/ccvt.h"
 
 //#define DEINTERLACE 1
@@ -153,6 +201,7 @@ CameraThread::CameraThread(const QString& camera, QObject *parent)
 	, m_frameCount(0)
 	, m_deinterlace(false)
 	, m_v4l2(0)
+	, m_bmd(0)
 	, m_error(false)
 {
 	m_time_base_rational.num = 1;
@@ -281,18 +330,23 @@ QStringList CameraThread::enumerateDevices(bool forceReenum)
 		}
 	}
 
+	#ifdef ENABLE_DECKLINK_CAPTURE
+	list << BMDCaptureDelegate::enumDeviceNames(forceReenum);
+	#endif
+	
 	#ifdef DEBUG
 	qDebug() << "enumerateDevices: Found: "<<list;
 	#endif
 
 	m_enumeratedDevices = list;
+	
 	return list;
 }
 
 QStringList CameraThread::inputs()
 {
 	#if !defined(Q_OS_LINUX)
-		return QStringList();
+		return QStringList() << "Default";
 	#endif
 
 	SimpleV4L2 * api = m_v4l2;
@@ -304,7 +358,7 @@ QStringList CameraThread::inputs()
 		if(!api->openDevice(qPrintable(m_cameraFile)))
 		{
 			delete api;
-			return QStringList();
+			return QStringList() << "Default";
 		}
 	}
 
@@ -318,7 +372,7 @@ QStringList CameraThread::inputs()
 int CameraThread::input()
 {
 	#if !defined(Q_OS_LINUX)
-		return -1;
+		return 0;
 	#endif
 
 	SimpleV4L2 * api = m_v4l2;
@@ -330,7 +384,7 @@ int CameraThread::input()
 		if(!api->openDevice(qPrintable(m_cameraFile)))
 		{
 			delete api;
-			return -1;
+			return 0;
 		}
 	}
 
@@ -409,8 +463,24 @@ int CameraThread::initCamera()
 // 	qDebug() << "CameraThread::initCamera(): start";
 	QMutexLocker lock(&m_initMutex);
 	
-	
 	m_inited = false;
+	
+	#ifdef ENABLE_DECKLINK_CAPTURE
+	if(m_cameraFile.startsWith("bmd:"))
+	{
+		m_bmd = BMDCaptureDelegate::openDevice(m_cameraFile, this);
+		if(!m_bmd)
+		{
+			qDebug() << "CameraThread::initCamera(): Unable to open Blackmagic input:"<<m_cameraFile<<". No capturing will be done.";
+			return 0;
+		}
+		else
+		{
+			qDebug() << "CameraThread::initCamera(): Opened Blackmagic input:"<<m_cameraFile;
+			return 1;
+		}
+	}
+	#endif
 	
 	#if defined(Q_OS_LINUX)
 	if(m_rawFrames)
@@ -600,7 +670,7 @@ int CameraThread::initCamera()
 
 	m_inited = true;
 // 	qDebug() << "CameraThread::initCamera(): finish";
-	return 0;
+	return true;
 }
 
 void CameraThread::start(QThread::Priority priority)
@@ -625,7 +695,10 @@ void CameraThread::run()
 // 	int counter = 0;
 	while(!m_killed)
 	{
-		readFrame();
+		#ifdef ENABLE_DECKLINK_CAPTURE
+		if(!m_bmd)
+		#endif
+			readFrame();
 
 // 		counter ++;
 // 		if(m_singleFrame.holdTime>0)
@@ -663,6 +736,14 @@ CameraThread::~CameraThread()
 	{
 		delete m_v4l2;
 		m_v4l2 = 0;
+	}
+	#endif
+	
+	#ifdef ENABLE_DECKLINK_CAPTURE
+	if(m_bmd)
+	{
+		delete m_bmd;
+		m_bmd = 0;
 	}
 	#endif
 
@@ -749,6 +830,61 @@ VideoFormat CameraThread::videoFormat()
 	);
 
 	// Size defaults to 640,480
+}
+
+void CameraThread::rawDataAvailable(uchar *bytes, int size, QSize pxSize, QTime capTime)
+{
+	QMutexLocker lock(&m_readMutex);
+
+	VideoFrame *frame = new VideoFrame();
+	frame->setPixelFormat(QVideoFrame::Format_RGB32);
+	frame->setCaptureTime(capTime);
+	frame->setIsRaw(true);
+	frame->setBufferType(VideoFrame::BUFFER_POINTER);
+	frame->setHoldTime(1000/30);
+	frame->setSize(pxSize);
+	
+	memcpy(frame->allocPointer(size), bytes, size);
+	
+	qDebug() << "CameraThread::rawDataAvailable: raw BMD frame:"<<frame<<", KB:"<<size/1024<<", pixels:"<<pxSize;
+	
+	enqueue(frame);
+
+			
+			
+// 	// We can do deinterlacing on these frames because SimpleV4L2 provides raw ARGB32 frames
+// 	//m_deinterlace = false;
+// 	if(m_deinterlace && frame->pointerLength() > 0)
+// 	{
+// 		VideoFrame *deinterlacedFrame = new VideoFrame();
+// 		deinterlacedFrame->setCaptureTime ( frame->captureTime() );
+// 		deinterlacedFrame->setHoldTime    ( frame->holdTime()    );
+// 		deinterlacedFrame->setSize	  ( frame->size()    );
+// 		deinterlacedFrame->setIsRaw(true);
+// 		deinterlacedFrame->setBufferType(VideoFrame::BUFFER_POINTER);
+// 		
+// 			// give us a new array, dont mudge the original image
+// 		uchar * dest      = deinterlacedFrame->allocPointer(frame->pointerLength());
+// 		uchar * src       = frame->pointer();
+// 		const int h       = frame->size().height();
+// 		const int stride  = frame->size().width()*4; // I can  cheat because I know SimpleV4L2 sends ARGB32 frames, with 4 bytes per pixel
+// 		bool bottomFrame  = m_frameCount % 2 == 1;
+// 		
+// 		bobDeinterlace( (uchar*)src,  (uchar*)src +h*stride,
+// 				(uchar*)dest, (uchar*)dest+h*stride,
+// 				h, stride, bottomFrame);
+// 				
+// 		//qDebug() << "CameraThread::enqueue call: deinterlaced raw V4L2 frame:"<<deinterlacedFrame;
+// 		enqueue(deinterlacedFrame);
+// 		
+// 		delete frame;
+// 	}
+// 	else
+// 	{
+// 		//qDebug() << "CameraThread::enqueue call: raw V4L2 frame:"<<frame<<", reading at fps:"<<m_fps;
+// 		enqueue(frame);
+// 	}
+// 	
 }
 
 void CameraThread::readFrame()
@@ -950,3 +1086,346 @@ void CameraThread::readFrame()
 		}
 	}
 }
+
+
+#ifdef ENABLE_DECKLINK_CAPTURE
+
+BMDCaptureDelegate::BMDCaptureDelegate(CameraThread *api, IDeckLink *deck) 
+	: m_refCount(0)
+	, m_api(api)
+	, m_frameCount(0)
+	, m_deckLink(deck)
+	, m_deckLinkOutput(0)
+	, m_deckLinkConverter(0)	
+{
+	pthread_mutex_init(&m_mutex, NULL);
+	
+	if(m_deckLink && 
+	   m_deckLink->QueryInterface(IID_IDeckLinkInput, (void**)&m_deckLinkInput) == S_OK)
+	{
+		m_deckLinkInput->SetCallback(this);
+	}
+	else
+	{
+		qDebug() << "BMDCaptureDelegate: IDeckLink given does not support video input. Video will not be captured.";
+	}
+	
+	if (m_deckLink && 
+	    m_deckLink->QueryInterface(IID_IDeckLinkOutput, (void**)&m_deckLinkOutput) != S_OK)
+	{
+		qDebug() << "BMDCaptureDelegate: IDeckLink can not create new frames, therefore cannot convert YUV->RGB, therefore we will not capture video now.";
+		m_deckLinkOutput = NULL;
+		return;
+	}
+	
+	if (m_deckLink && 
+	    m_deckLink->QueryInterface(IID_IDeckLinkVideoConversion, (void**)&m_deckLinkConverter) != S_OK)
+	{
+		qDebug() << "BMDCaptureDelegate: Cannot create an instance of IID_IDeckLinkVideoConversion, therefore cannot convert YUV->RGB, therefore we will not capture video now.";
+		m_deckLinkConverter = NULL;
+		return;
+		
+	}
+	
+	if(m_deckLinkInput)
+	{
+		HRESULT result;
+		
+		// Obtain an IDeckLinkDisplayModeIterator to enumerate the display modes supported on output
+		result = m_deckLinkInput->GetDisplayModeIterator(&m_displayModeIterator);
+		if (result != S_OK)
+		{
+			fprintf(stderr, "Could not obtain the video output display mode iterator - result = %08x\n", result);
+			qDebug() << "BMDCaptureDelegate: DeckLink setup failed. Video will not be captured";
+			return;
+		}
+		
+		IDeckLinkDisplayMode	*displayMode;
+		BMDPixelFormat		pixelFormat = bmdFormat8BitYUV;
+		BMDVideoInputFlags	inputFlags = 0;
+		BMDDisplayMode		selectedDisplayMode = bmdModeNTSC;
+		int			displayModeCount = 0;
+		int			videoModeIndex = 0;
+		bool			foundDisplayMode = false;
+		
+		while (m_displayModeIterator->Next(&displayMode) == S_OK)
+		{
+			if (videoModeIndex == displayModeCount)
+			{
+				BMDDisplayModeSupport result;
+				const char *displayModeName;
+				
+				foundDisplayMode = true;
+				displayMode->GetName(&displayModeName);
+				selectedDisplayMode = displayMode->GetDisplayMode();
+				
+				m_deckLinkInput->DoesSupportVideoMode(selectedDisplayMode, pixelFormat, bmdVideoInputFlagDefault, &result, NULL);
+	
+				if (result == bmdDisplayModeNotSupported)
+				{
+					fprintf(stderr, "The display mode %s is not supported with the selected pixel format\n", displayModeName);
+					qDebug() << "BMDCaptureDelegate: DeckLink setup failed. Video will not be captured";
+					return;
+				}
+	
+				if (inputFlags & bmdVideoInputDualStream3D)
+				{
+					if (!(displayMode->GetFlags() & bmdDisplayModeSupports3D))
+					{
+						fprintf(stderr, "The display mode %s is not supported with 3D\n", displayModeName);
+						qDebug() << "BMDCaptureDelegate: DeckLink setup failed. Video will not be captured";
+						return;
+					}
+				}
+				
+				break;
+			}
+			displayModeCount++;
+			displayMode->Release();
+		}
+	
+		if (!foundDisplayMode)
+		{
+			fprintf(stderr, "Invalid mode %d specified\n", videoModeIndex);
+			qDebug() << "BMDCaptureDelegate: DeckLink setup failed. Video will not be captured";
+			return;
+		}
+		
+		result = m_deckLinkInput->EnableVideoInput(selectedDisplayMode, pixelFormat, inputFlags);
+		if(result != S_OK)
+		{
+			fprintf(stderr, "Failed to enable video input. Is another application using the card? Does the card need a firmware update?\n");
+			qDebug() << "BMDCaptureDelegate: DeckLink setup failed. Video will not be captured";
+			return;
+		}
+		
+		result = m_deckLinkInput->StartStreams();
+		if(result != S_OK)
+		{
+			qDebug() << "BMDCaptureDelegate: DeckLink StartStreams() failed. Video will not be captured";
+			return;
+		}
+	}
+}
+
+BMDCaptureDelegate::~BMDCaptureDelegate()
+{
+	pthread_mutex_destroy(&m_mutex);
+	
+	if(m_displayModeIterator != NULL)
+	{
+		m_displayModeIterator->Release();
+		m_displayModeIterator = NULL;
+	}
+	
+	if(m_deckLinkInput)
+	{
+		m_deckLinkInput->Release();
+		m_deckLinkInput = NULL;
+	}
+	
+	if(m_deckLink)
+	{
+		m_deckLink->Release();
+		m_deckLink = NULL;
+	}
+}
+
+ULONG BMDCaptureDelegate::AddRef(void)
+{
+	pthread_mutex_lock(&m_mutex);
+		m_refCount++;
+	pthread_mutex_unlock(&m_mutex);
+
+	return (ULONG)m_refCount;
+}
+
+ULONG BMDCaptureDelegate::Release(void)
+{
+	pthread_mutex_lock(&m_mutex);
+		m_refCount--;
+	pthread_mutex_unlock(&m_mutex);
+
+	if (m_refCount == 0)
+	{
+		delete this;
+		return 0;
+	}
+
+	return (ULONG)m_refCount;
+}
+
+HRESULT BMDCaptureDelegate::VideoInputFrameArrived(IDeckLinkVideoInputFrame* videoFrame, IDeckLinkAudioInputPacket* /*audioFrame*/)
+{
+	// These two objects are necessary to create frames and convert from YUV -> RGB
+	if(!m_deckLinkOutput)
+		return 0;
+		
+	if(!m_deckLinkConverter)
+		return 0;
+		
+	void*	frameBytes;
+// 	void*	audioFrameBytes;
+	QTime   capTime = QTime::currentTime();
+	
+	// Handle Video Frame
+	if(videoFrame)
+	{
+		if (videoFrame->GetFlags() & bmdFrameHasNoInputSource)
+		{
+			fprintf(stderr, "Frame received (#%d) - No input signal detected\n", m_frameCount);
+		}
+		else
+		{
+// 			fprintf(stderr, "BMDCaptureDelegate::VideoInputFrameArrived: Frame received (#%lu) - Valid Frame - Size: %d bytes\n", 
+// 				m_frameCount,
+// 				videoFrame->GetRowBytes() * videoFrame->GetHeight());
+
+			qDebug() << "BMDCaptureDelegate::VideoInputFrameArrived: Frame received: "<<m_frameCount << ", Bytes: "<< videoFrame->GetRowBytes() * videoFrame->GetHeight();
+
+			IDeckLinkMutableVideoFrame *rgbFrame = NULL;
+			if(m_deckLinkOutput->CreateVideoFrame(
+				videoFrame->GetWidth(),
+				videoFrame->GetHeight(),
+				videoFrame->GetWidth() * 4,
+				bmdFormat8BitBGRA, // TBD: BGRA or RGBA ...or ARGB ?? (ref 8_8_8_8_REV..?)
+				bmdFrameFlagDefault,
+				&rgbFrame) != S_OK)
+			{
+				qDebug() << "BMDCaptureDelegate::VideoInputFrameArrived: Error creating RGB frame, nothing captured.";
+				return 0;
+			}
+			
+			// 	Pixel conversions
+			//  Source frame      Target frame
+			//  bmdFormat8BitRGBA bmdFormat8BitYUV
+			//                    bmdFormat8BitARGB
+			//  bmdFormat8BitBGRA bmdFormat8BitYUV
+			//  bmdFormat8BitARGB bmdFormat8BitYUV
+			m_deckLinkConverter->ConvertFrame(videoFrame, rgbFrame);
+			
+			rgbFrame->GetBytes(&frameBytes);
+			m_api->rawDataAvailable((uchar*)frameBytes, rgbFrame->GetRowBytes() * rgbFrame->GetHeight(), QSize(rgbFrame->GetWidth(), rgbFrame->GetHeight()), capTime);
+			
+
+			
+// 			if (videoOutputFile != -1)
+// 			{
+// 			
+// 				videoFrame->GetBytes(&frameBytes);
+// 				write(videoOutputFile, frameBytes, videoFrame->GetRowBytes() * videoFrame->GetHeight());
+// 				
+// 				
+// 				if (rightEyeFrame)
+// 				{
+// 					rightEyeFrame->GetBytes(&frameBytes);
+// 					write(videoOutputFile, frameBytes, videoFrame->GetRowBytes() * videoFrame->GetHeight());
+// 				}
+// 			}
+		}
+ 		
+ 		m_frameCount++;
+	}
+
+	// Handle Audio Frame
+// 	if (audioFrame)
+// 	{
+// 		if (audioOutputFile != -1)
+// 		{
+// 			audioFrame->GetBytes(&audioFrameBytes);
+// 			write(audioOutputFile, audioFrameBytes, audioFrame->GetSampleFrameCount() * g_audioChannels * (g_audioSampleDepth / 8));
+// 		}
+// 	}
+	return S_OK;
+}
+
+HRESULT BMDCaptureDelegate::VideoInputFormatChanged(BMDVideoInputFormatChangedEvents /*events*/, IDeckLinkDisplayMode */*mode*/, BMDDetectedVideoInputFormatFlags)
+{
+	return S_OK;
+}
+
+QStringList BMDCaptureDelegate::enumDeviceNames(bool forceReload)
+{
+	if(!s_knownDevices.isEmpty())
+	{
+		if(!forceReload)
+			return s_knownDevices;
+		else	
+			s_knownDevices.clear();
+	}
+		
+	IDeckLinkIterator *deckLinkIterator = CreateDeckLinkIteratorInstance();
+	if (deckLinkIterator == NULL)
+	{
+		fprintf(stderr, "BMDCaptureDelegate::enumDeviceNames: A DeckLink iterator could not be created.  The DeckLink drivers may not be installed.\n");
+		return QStringList();
+	}
+	
+	IDeckLink	*deckLink;
+	IDeckLinkInput	*deckLinkInput;
+	
+	int index = 0;
+	
+	// Enumerate all cards in this system
+	while (deckLinkIterator->Next(&deckLink) == S_OK)
+	{
+		if (deckLink->QueryInterface(IID_IDeckLinkInput, (void**)&deckLinkInput) == S_OK)
+		{
+			s_knownDevices << QString("bmd:%1").arg(index);
+			
+			deckLinkInput->Release();
+			deckLinkInput = NULL;
+		}
+		
+		
+		index ++;
+		
+		// Release the IDeckLink instance when we've finished with it to prevent leaks
+		deckLink->Release();
+	}
+	
+	deckLinkIterator->Release();
+	
+	return s_knownDevices;
+
+}
+
+BMDCaptureDelegate *BMDCaptureDelegate::openDevice(QString deviceName, CameraThread *api)
+{
+	if(s_knownDevices.indexOf(deviceName) < 0)
+		return 0;
+		
+	QString name = deviceName.replace("bmd:","");
+	int cardNum = name.toInt();
+	
+	IDeckLinkIterator *deckLinkIterator = CreateDeckLinkIteratorInstance();
+	if (deckLinkIterator == NULL)
+	{
+		fprintf(stderr, "BMDCaptureDelegate::enumDeviceNames: A DeckLink iterator could not be created.  The DeckLink drivers may not be installed.\n");
+		return 0;
+	}
+		
+	
+	int index = 0;
+	
+	IDeckLink* deckLink;
+	
+	// Find the card requested
+	while (deckLinkIterator->Next(&deckLink) == S_OK)
+	{
+		if(index == cardNum)
+			return new BMDCaptureDelegate(api, deckLink);
+		
+		index ++;
+		
+		// Release the IDeckLink instance when we've finished with it to prevent leaks
+		deckLink->Release();
+	}
+	
+	deckLinkIterator->Release();
+		
+	return 0;
+}
+
+
+#endif

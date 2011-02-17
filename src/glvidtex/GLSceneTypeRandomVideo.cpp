@@ -136,9 +136,13 @@ void GLSceneTypeRandomVideo::readFolder(const QString &folder)
 	foreach(QFileInfo info, list)
 		m_videos << info.absoluteFilePath();;
 	
-	//qDebug() << "GLSceneTypeRandomVideo::readFolder()";
 	if(scene() && !liveStatus())
-		showNextVideo();
+	{
+		if(m_videos.isEmpty())
+	   		scene()->setDuration(0);
+		else
+			showNextVideo();
+	}
 }
 
 void GLSceneTypeRandomVideo::showNextVideo()
@@ -146,7 +150,9 @@ void GLSceneTypeRandomVideo::showNextVideo()
 	//qDebug() << "GLSceneTypeRandomVideo::showNextVideo()";
 	if(m_videos.isEmpty())
 	{
-		qDebug() << "GLSceneTypeRandomVideo::showNextVideo(): No images loaded, nothing to show.";
+		qDebug() << "GLSceneTypeRandomVideo::showNextVideo(): No videos loaded, nothing to show.";
+		if(scene())
+			scene()->setDuration(0);
 		return;
 	}
 		

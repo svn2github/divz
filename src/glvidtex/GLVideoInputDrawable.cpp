@@ -225,7 +225,7 @@ QString GLVideoInputDrawable::cardInput()
 QStringList GLVideoInputDrawable::cardInputs()
 {
 	if(!m_source)
-		return QStringList();
+		return QStringList("default");
 	return m_source->inputs();	
 }
 

@@ -2410,7 +2410,7 @@ void GLVideoDrawable::paintGL()
 
 	//renderText(10, 10, qPrintable(QString("%1 fps").arg(framesPerSecond)));
 
-	if(!m_frame->captureTime().isNull())
+	if(m_frame && !m_frame->captureTime().isNull())
 	{
 		int msecLatency = m_frame->captureTime().msecsTo(QTime::currentTime());
 
@@ -2426,7 +2426,7 @@ void GLVideoDrawable::paintGL()
 		latencyPerFrame.setNum((((double)m_latencyAccum) / ((double)m_frameCount)), 'f', 3);
 
 		if(m_debugFps && framesPerSecond!="0.00")
-			qDebug() << "GLVideoDrawable::paintGL: "<<objectName()<<" FPS: " << qPrintable(framesPerSecond) << (m_frame->captureTime().isNull() ? "" : qPrintable(QString(", Latency: %1 ms").arg(latencyPerFrame)));
+			qDebug() << "GLVideoDrawable::paintGL: "<<objectName()<<" FPS: " << qPrintable(framesPerSecond) << (!m_frame || m_frame->captureTime().isNull() ? "" : qPrintable(QString(", Latency: %1 ms").arg(latencyPerFrame)));
 
 		m_time.start();
 		m_frameCount = 0;
