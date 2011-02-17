@@ -480,6 +480,7 @@ void GLVideoDrawable::setAlphaMask(const QImage &mask)
 void GLVideoDrawable::setFlipHorizontal(bool value)
 {
 	m_displayOpts.flipHorizontal = value;
+	//qDebug() << "GLVideoDrawable::setFlipHorizontal(): "<<value;
 	emit displayOptionsChanged(m_displayOpts);
 	updateGL();
 }
@@ -487,6 +488,7 @@ void GLVideoDrawable::setFlipHorizontal(bool value)
 void GLVideoDrawable::setFlipVertical(bool value)
 {
 	m_displayOpts.flipVertical = value;
+	//qDebug() << "GLVideoDrawable::setFlipVertical(): "<<value;
 	emit displayOptionsChanged(m_displayOpts);
 	updateGL();
 }
@@ -1147,6 +1149,7 @@ void GLVideoDrawable::updateRects(bool secondSource)
 
 void GLVideoDrawable::setDisplayOptions(const VideoDisplayOptions& opts)
 {
+	//qDebug() << "GLVideoDrawable::setDisplayOptions: opts.flipVertical:"<<opts.flipVertical<<", opts.flipHorizontal:"<<opts.flipHorizontal;
 	m_displayOpts = opts;
 	m_colorsDirty = true;
 	emit displayOptionsChanged(opts);

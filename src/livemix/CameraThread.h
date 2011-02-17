@@ -93,6 +93,7 @@ protected slots:
 protected:
 	friend class BMDCaptureDelegate;
 	void rawDataAvailable(uchar *bytes, int size, QSize pxSize, QTime captureTime = QTime());
+	void imageDataAvailable(QImage img, QTime captureTime = QTime());
 	
 private:
 	int m_fps;
