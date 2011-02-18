@@ -156,14 +156,15 @@ PlayerWindow::PlayerWindow(QWidget *parent)
 	, m_isBlack(false)
 	, m_blackScene(new GLScene)
 	, m_configLoaded(false)
+	, m_vidSendMgr(0)
 {
-	// WinXP - m_vidSendMgr causes the app to freeze
-// 	#ifdef Q_OS_WIN
-// 		m_vidSendMgr = 0;
-//  	#else
-//  		m_vidSendMgr = new VideoInputSenderManager();
-//  		m_vidSendMgr->setSendingEnabled(true);
-//  	#endif
+	//WinXP - m_vidSendMgr causes the app to freeze
+	#ifdef Q_OS_WIN
+		m_vidSendMgr = 0;
+ 	#else
+ 		m_vidSendMgr = new VideoInputSenderManager();
+ 		m_vidSendMgr->setSendingEnabled(true);
+ 	#endif
 
 	QVBoxLayout *layout = new QVBoxLayout(this);
 	layout->setContentsMargins(0,0,0,0);

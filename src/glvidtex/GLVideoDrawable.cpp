@@ -1075,7 +1075,7 @@ const char * GLVideoDrawable::resizeTextures(const QSize& frameSize, bool second
 	m_yuv = false;
 	m_yuv2 = false;
 	
-	bool debugShaderName = true;
+	bool debugShaderName = false;
 	switch (m_videoFormat.pixelFormat)
 	{
 	case QVideoFrame::Format_RGB32:
@@ -2040,7 +2040,7 @@ void GLVideoDrawable::paint(QPainter * painter, const QStyleOptionGraphicsItem *
 
 		if(m_debugFps && framesPerSecond!="0.00")
 			qDebug() << "GLVideoDrawable::paint: "<<objectName()<<" FPS: " << qPrintable(framesPerSecond) << (m_frame->captureTime().isNull() ? "" : qPrintable(QString(", Latency: %1 ms").arg(latencyPerFrame)));
-
+		
 		m_time.start();
 		m_frameCount = 0;
 		m_latencyAccum = 0;
@@ -2650,6 +2650,42 @@ void GLVideoDrawable::paintGL()
 
 		if(m_debugFps && framesPerSecond!="0.00")
 			qDebug() << "GLVideoDrawable::paintGL: "<<objectName()<<" FPS: " << qPrintable(framesPerSecond) << (!m_frame || m_frame->captureTime().isNull() ? "" : qPrintable(QString(", Latency: %1 ms").arg(latencyPerFrame)));
+			
+			
+// 		if(m_isCameraThread && m_frame)// && !m_frame->isRaw() && !m_frame->image().isNull())
+// 		{
+// 			//CameraThread *source = dynamic_cast<CameraThread*>(m_source);
+// 			QImage image;
+// 			if(m_frame->isRaw())
+// 			{
+// 				const QImage::Format imageFormat = QVideoFrame::imageFormatFromPixelFormat(m_frame->pixelFormat());
+// 				if(imageFormat != QImage::Format_Invalid)
+// 				{//517-617-2907
+// 					image = QImage(m_frame->pointer(),
+// 						m_frame->size().width(),
+// 						m_frame->size().height(),
+// 						m_frame->size().width() *
+// 							(imageFormat == QImage::Format_RGB16  ||
+// 							imageFormat == QImage::Format_RGB555 ||
+// 							imageFormat == QImage::Format_RGB444 ||
+// 							imageFormat == QImage::Format_ARGB4444_Premultiplied ? 2 :
+// 							imageFormat == QImage::Format_RGB888 ||
+// 							imageFormat == QImage::Format_RGB666 ||
+// 							imageFormat == QImage::Format_ARGB6666_Premultiplied ? 3 :
+// 							4),
+// 						imageFormat);
+// 				}
+// 			}
+// 			else
+// 			{
+// 				image = m_frame->image();
+// 			}
+// 				
+// 			QString name = QString().sprintf("debug/cam-%p.png",(void*)m_source);
+// 			qDebug() << "Writing to "<<name;
+// 			image.save(name);
+// 		}
+
 
 		m_time.start();
 		m_frameCount = 0;

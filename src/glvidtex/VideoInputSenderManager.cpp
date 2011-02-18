@@ -41,6 +41,8 @@ VideoInputSenderManager::~VideoInputSenderManager()
 void VideoInputSenderManager::setSendingEnabled(bool flag)
 {
 	m_sendingEnabled = flag;
+	
+	//return;
 
 	if(m_sendingEnabled)
 	{
@@ -133,7 +135,7 @@ QStringList VideoInputSenderManager::videoConnections(bool justNetString)
 		list << con;
 	}
 	
-	//qDebug() << "VideoInputSenderManager::videoConnections: List: "<<list; 
+	qDebug() << "VideoInputSenderManager::videoConnections: List: "<<list; 
 
 	return list;
 }

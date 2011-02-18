@@ -171,7 +171,7 @@ void VideoReceiver::lostConnection()
 		//qDebug() << "VideoReceiver::lostSonnection: Lost server, attempting to reconnect in 1sec";
 		
 		enqueue(new VideoFrame(QImage("dot.gif"),1000/30));
-		QTimer::singleShot(1000,this,SLOT(reconnect()));
+		QTimer::singleShot(5000,this,SLOT(reconnect()));
 	}
 	else
 	{
@@ -190,8 +190,9 @@ void VideoReceiver::lostConnection(QAbstractSocket::SocketError error)
 
 void VideoReceiver::reconnect()
 {
-	log(QString("Attempting to reconnect to %1:%2%3").arg(m_host).arg(m_port).arg(m_url));
-	connectTo(m_host,m_port,m_url);
+	//log(QString("Attempting to reconnect to %1:%2%3").arg(m_host).arg(m_port).arg(m_url));
+	if(m_port > 0)
+		connectTo(m_host,m_port,m_url);
 }
 
 

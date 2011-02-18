@@ -48,8 +48,9 @@ void VideoSender::setTransmitFps(int fps)
 
 void VideoSender::processFrame()
 {
-	//qDebug() << "VideoSender::processFrame(): mark";
-	sendLock();
+	//qDebug() << "VideoSender::processFrame(): "<<this<<" mark";
+	//sendLock();
+	QMutexLocker lock(&m_sendMutex);
 	
 	if(m_frame && m_frame->isValid())
 	{
@@ -102,7 +103,8 @@ void VideoSender::processFrame()
 			}
 			else
 			{
-				qDebug() << "VideoSender::processFrame: Unable to convert pixel format to image format, cannot scale frame. Pixel Format:"<<m_frame->pixelFormat();
+				//qDebug() << "VideoSender::processFrame: Unable to convert pixel format to image format, cannot scale frame. Pixel Format:"<<m_frame->pixelFormat();
+				return;
 			}
 		}
 		
@@ -152,13 +154,13 @@ void VideoSender::processFrame()
 		}
 	}
 	
-	sendUnlock();
+	//sendUnlock();
 	
 	#ifdef DEBUG_VIDEOFRAME_POINTERS
 	qDebug() << "VideoSender::processFrame(): Mark6: m_frame:"<<m_frame;
 	#endif
 	
-	//qDebug() << "VideoSender::processFrame(): mark end";
+	//qDebug() << "VideoSender::processFrame(): "<<this<<" mark end";
 	emit receivedFrame();
 }
 	

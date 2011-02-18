@@ -10,6 +10,10 @@
 
 #include <QImageWriter>
 
+//#define DEBUG
+
+//#undef ENABLE_DECKLINK_CAPTURE
+
 #include "CameraThread.h"
 
 extern "C" {
@@ -37,13 +41,15 @@ class BMDCaptureDelegate : public IDeckLinkInputCallback
 	BMDCaptureDelegate(CameraThread *, IDeckLink *);
 	
 public:
-	~BMDCaptureDelegate();
+	virtual ~BMDCaptureDelegate();
 
 	virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID /*iid*/, LPVOID */*ppv*/) { return E_NOINTERFACE; }
 	virtual ULONG STDMETHODCALLTYPE AddRef(void);
 	virtual ULONG STDMETHODCALLTYPE  Release(void);
 	virtual HRESULT STDMETHODCALLTYPE VideoInputFormatChanged(BMDVideoInputFormatChangedEvents, IDeckLinkDisplayMode*, BMDDetectedVideoInputFormatFlags);
 	virtual HRESULT STDMETHODCALLTYPE VideoInputFrameArrived(IDeckLinkVideoInputFrame*, IDeckLinkAudioInputPacket*);
+	
+	virtual void enableRawFrames(bool flag) { m_rawFrames = flag; }
 	
 	static QStringList enumDeviceNames(bool forceReload=false);
 	static BMDCaptureDelegate *openDevice(QString deviceName, CameraThread *api);
@@ -68,6 +74,8 @@ private:
 	QSize 			m_swsInitSize;
 	AVFrame *		m_yuvPicture;
 	AVFrame *		m_rgbPicture;
+	
+	bool			m_rawFrames;
 };
 
 QStringList BMDCaptureDelegate::s_knownDevices = QStringList();
@@ -210,6 +218,8 @@ CameraThread::CameraThread(const QString& camera, QObject *parent)
 	, m_v4l2(0)
 	, m_bmd(0)
 	, m_error(false)
+	, m_buffer(0)
+	, m_av_rgb_frame(0)
 {
 	m_time_base_rational.num = 1;
 	m_time_base_rational.den = AV_TIME_BASE;
@@ -307,7 +317,7 @@ QStringList CameraThread::enumerateDevices(bool forceReenum)
 		inFmt = av_find_input_format(qPrintable(formatName));
 		if( !inFmt )
 		{
-			qDebug() << "[ERROR] CameraThread::load(): Unable to find input format:"<<formatName;
+			qDebug() << "[ERROR] CameraThread::enumerateDevices(): Unable to find input format:"<<formatName;
 			break;
 		}
 
@@ -342,7 +352,7 @@ QStringList CameraThread::enumerateDevices(bool forceReenum)
 	#endif
 	
 	#ifdef DEBUG
-	qDebug() << "enumerateDevices: Found: "<<list;
+	qDebug() << "CameraThread::enumerateDevices: Found: "<<list;
 	#endif
 
 	m_enumeratedDevices = list;
@@ -467,7 +477,9 @@ bool CameraThread::setInput(const QString& name)
 
 int CameraThread::initCamera()
 {
-// 	qDebug() << "CameraThread::initCamera(): start";
+ 	#ifdef DEBUG
+ 	qDebug() << "CameraThread::initCamera(): "<<this<<" start";
+ 	#endif
 	QMutexLocker lock(&m_initMutex);
 	
 	m_inited = false;
@@ -478,12 +490,12 @@ int CameraThread::initCamera()
 		m_bmd = BMDCaptureDelegate::openDevice(m_cameraFile, this);
 		if(!m_bmd)
 		{
-			qDebug() << "CameraThread::initCamera(): Unable to open Blackmagic input:"<<m_cameraFile<<". No capturing will be done.";
+			qDebug() << "CameraThread::initCamera(): "<<this<<" Unable to open Blackmagic input:"<<m_cameraFile<<". No capturing will be done.";
 			return 0;
 		}
 		else
 		{
-			qDebug() << "CameraThread::initCamera(): Opened Blackmagic input:"<<m_cameraFile;
+			qDebug() << "CameraThread::initCamera(): "<<this<<" Opened Blackmagic input:"<<m_cameraFile;
 			return 1;
 		}
 	}
@@ -517,7 +529,9 @@ int CameraThread::initCamera()
 			{
 				m_inited = true;
 				
-	// 			qDebug() << "CameraThread::initCamera(): finish2";
+	 			#ifdef DEBUG
+	 			qDebug() << "CameraThread::initCamera(): "<<this<<" finish2";
+	 			#endif
 	
 				return 1;
 			}
@@ -532,7 +546,9 @@ int CameraThread::initCamera()
 	
 	if(m_inited)
 	{
-// 		qDebug() << "CameraThread::initCamera(): finish3";
+		#ifdef DEBUG
+ 		qDebug() << "CameraThread::initCamera(): "<<this<<" finish3";
+ 		#endif
 		return 1;
 	}
 
@@ -558,13 +574,13 @@ int CameraThread::initCamera()
 	#endif
 
 	#ifdef DEBUG
-	qDebug() << "[DEBUG] CameraThread::load(): fmt:"<<fmt<<", filetmp:"<<fileTmp;
+	qDebug() << "[DEBUG] CameraThread::load(): "<<this<<" fmt:"<<fmt<<", filetmp:"<<fileTmp;
 	#endif
 
 	inFmt = av_find_input_format(qPrintable(fmt));
 	if( !inFmt )
 	{
-		qDebug() << "[ERROR] CameraThread::load(): Unable to find input format:"<<fmt;
+		qDebug() << "[ERROR] CameraThread::load(): "<<this<<" Unable to find input format:"<<fmt;
 		return -1;
 	}
 
@@ -583,13 +599,13 @@ int CameraThread::initCamera()
 	if(av_open_input_file(&m_av_format_context, qPrintable(fileTmp), inFmt, 0, &formatParams) != 0)
 	//if(av_open_input_file(&m_av_format_context, "1", inFmt, 0, NULL) != 0)
 	{
-		qDebug() << "[WARN] CameraThread::load(): av_open_input_file() failed, fileTmp:"<<fileTmp;
+		qDebug() << "[WARN] CameraThread::load(): "<<this<<" av_open_input_file() failed, fileTmp:"<<fileTmp;
 		return false;
 	}
 
 	//dump_format(m_av_format_context, 0, qPrintable(m_cameraFile), 0);
 	#ifdef DEBUG
-	qDebug() << "[DEBUG] dump_format():";
+	qDebug() << "[DEBUG] dump_format(): "<<this<<" ";
 	dump_format(m_av_format_context, 0, qPrintable(fileTmp), false);
 	#endif
 
@@ -611,7 +627,7 @@ int CameraThread::initCamera()
 	}
 	if(m_video_stream == -1)
 	{
-		qDebug() << "[WARN] CameraThread::load(): Cannot find video stream.";
+		qDebug() << "[WARN] CameraThread::load(): "<<this<<" Cannot find video stream.";
 		return false;
 	}
 
@@ -624,14 +640,14 @@ int CameraThread::initCamera()
 	m_video_codec = avcodec_find_decoder(m_video_codec_context->codec_id);
 	if(m_video_codec == NULL)
 	{
-		qDebug() << "[WARN] CameraThread::load(): avcodec_find_decoder() failed for codec_id:" << m_video_codec_context->codec_id;
+		qDebug() << "[WARN] CameraThread::load(): "<<this<<" avcodec_find_decoder() failed for codec_id:" << m_video_codec_context->codec_id;
 		//return false;
 	}
 
 	// Open codec
 	if(avcodec_open(m_video_codec_context, m_video_codec) < 0)
 	{
-		qDebug() << "[WARN] CameraThread::load(): avcodec_open() failed.";
+		qDebug() << "[WARN] CameraThread::load(): "<<this<<" avcodec_open() failed.";
 		//return false;
 	}
 
@@ -642,12 +658,12 @@ int CameraThread::initCamera()
 	m_av_rgb_frame =avcodec_alloc_frame();
 	if(m_av_rgb_frame == NULL)
 	{
-		qDebug() << "[WARN] CameraThread::load(): avcodec_alloc_frame() failed.";
+		qDebug() << "[WARN] CameraThread::load(): "<<this<<" avcodec_alloc_frame() failed.";
 		return false;
 	}
 
 	#ifdef DEBUG
-	qDebug() << "[DEBUG] codec context size:"<<m_video_codec_context->width<<"x"<<m_video_codec_context->height;
+	qDebug() << "[DEBUG] "<<this<<" codec context size:"<<m_video_codec_context->width<<"x"<<m_video_codec_context->height;
 	#endif
 
 	// Determine required buffer size and allocate buffer
@@ -676,7 +692,9 @@ int CameraThread::initCamera()
 	m_timebase = m_av_format_context->streams[m_video_stream]->time_base;
 
 	m_inited = true;
-// 	qDebug() << "CameraThread::initCamera(): finish";
+	#ifdef DEBUG
+ 	qDebug() << "CameraThread::initCamera(): "<<this<<" finish";
+ 	#endif
 	return true;
 }
 
@@ -698,7 +716,11 @@ void CameraThread::run()
 {
  	initCamera();
 
-	//qDebug() << "CameraThread::run: In Thread ID "<<QThread::currentThreadId();
+	
+	#ifdef DEBUG
+	qDebug() << "CameraThread::run: "<<this<<" In Thread ID "<<QThread::currentThreadId();
+	#endif
+	
 // 	int counter = 0;
 	while(!m_killed)
 	{
@@ -776,9 +798,15 @@ void CameraThread::freeResources()
 
 	// Free the RGB image
 	if(m_buffer != NULL)
+	{
 		av_free(m_buffer);
+		m_buffer = 0;
+	}
 	if(m_av_rgb_frame != NULL)
+	{
 		av_free(m_av_rgb_frame);
+		m_av_rgb_frame = 0;
+	}
 
 	// Free the YUV frame
 	//av_free(m_av_frame);
@@ -786,11 +814,17 @@ void CameraThread::freeResources()
 
 	// Close the codec
 	if(m_video_codec_context != NULL)
+	{
 		avcodec_close(m_video_codec_context);
+		m_video_codec_context = 0;
+	}
 
 	// Close the video file
 	if(m_av_format_context != NULL)
+	{
 		av_close_input_file(m_av_format_context);
+		m_av_format_context = 0;
+	}
 }
 
 void CameraThread::enableRawFrames(bool enable)
@@ -803,19 +837,32 @@ void CameraThread::enableRawFrames(bool enable)
 	
 	if(old != enable)
 	{
- 		//qDebug() << "CameraThread::enableRawFrames(): start, flag:"<<enable;
-		m_initMutex.lock(); // make sure init isnt running, block while it is
-		// switch from raw V4L2 to LibAV* (or visa versa based on m_rawFrames, since SimpleV4L2 only outputs raw ARGB32)
-		//qDebug() << "CameraThread::enableRawFrames: flag changed, status: "<<m_rawFrames;
-		
-		freeResources();
-		
-		m_initMutex.unlock(); // dont block init now
-		
-// 		qDebug() << "CameraThread::enableRawFrames(): mark1";
-		initCamera();
-		
- 		//qDebug() << "CameraThread::enableRawFrames(): finish";
+		#ifdef ENABLE_DECKLINK_CAPTURE
+		if(m_bmd)
+		{
+			#ifdef DEBUG
+			qDebug() << "CameraThread::enableRawFrames(): "<<this<<" flag:"<<enable<<", telling BMDCaptureDelegate "<<m_bmd<<" about the new flag";
+			#endif
+			
+			m_bmd->enableRawFrames(enable);
+		}
+		else
+		#endif
+		{
+			//qDebug() << "CameraThread::enableRawFrames(): "<<this<<" start, flag:"<<enable;
+			m_initMutex.lock(); // make sure init isnt running, block while it is
+			// switch from raw V4L2 to LibAV* (or visa versa based on m_rawFrames, since SimpleV4L2 only outputs raw ARGB32)
+			//qDebug() << "CameraThread::enableRawFrames(): "<<this<<" flag changed, status: "<<m_rawFrames;
+			
+			freeResources();
+			
+			m_initMutex.unlock(); // dont block init now
+			
+			//qDebug() << "CameraThread::enableRawFrames(): "<<this<<" mark1";
+			initCamera();
+			
+			//qDebug() << "CameraThread::enableRawFrames(): "<<this<<" finish";
+		}
 	}
 
 }
@@ -1120,6 +1167,7 @@ BMDCaptureDelegate::BMDCaptureDelegate(CameraThread *api, IDeckLink *deck)
 	, m_swsContext(0)
 	, m_yuvPicture(0)
 	, m_rgbPicture(0)
+	, m_rawFrames(false)
 {
 	pthread_mutex_init(&m_mutex, NULL);
 	
@@ -1130,13 +1178,13 @@ BMDCaptureDelegate::BMDCaptureDelegate(CameraThread *api, IDeckLink *deck)
 	}
 	else
 	{
-		qDebug() << "BMDCaptureDelegate: IDeckLink given does not support video input. Video will not be captured.";
+		qDebug() << "BMDCaptureDelegate: "<<api<<" IDeckLink given does not support video input. Video will not be captured.";
 	}
 	
  	if (m_deckLink && 
  	    m_deckLink->QueryInterface(IID_IDeckLinkOutput, (void**)&m_deckLinkOutput) != S_OK)
  	{
- 		qDebug() << "BMDCaptureDelegate: IDeckLink can not create new frames, therefore cannot convert YUV->RGB, therefore we will not capture video now.";
+ 		qDebug() << "BMDCaptureDelegate: "<<api<<" IDeckLink can not create new frames, therefore cannot convert YUV->RGB, therefore we will not capture video now.";
  		m_deckLinkOutput = NULL;
  		return;
  	}
@@ -1147,7 +1195,7 @@ BMDCaptureDelegate::BMDCaptureDelegate(CameraThread *api, IDeckLink *deck)
 	if(!(m_deckLinkConverter = CreateVideoConversionInstance()))
 	#endif
  	{
- 		qDebug() << "BMDCaptureDelegate: Cannot create an instance of IID_IDeckLinkVideoConversion, therefore cannot convert YUV->RGB, therefore we will not emit proper RGB frames now.";
+ 		qDebug() << "BMDCaptureDelegate: "<<api<<" Cannot create an instance of IID_IDeckLinkVideoConversion, therefore cannot convert YUV->RGB, therefore we will not emit proper RGB frames now.";
  		m_deckLinkConverter = NULL;
  		//return;
  	}
@@ -1161,7 +1209,7 @@ BMDCaptureDelegate::BMDCaptureDelegate(CameraThread *api, IDeckLink *deck)
 		if (result != S_OK)
 		{
 			fprintf(stderr, "Could not obtain the video output display mode iterator - result = %08x\n", result);
-			qDebug() << "BMDCaptureDelegate: DeckLink setup failed. Video will not be captured";
+			qDebug() << "BMDCaptureDelegate: "<<api<<" DeckLink setup failed. Video will not be captured";
 			return;
 		}
 		
@@ -1189,7 +1237,7 @@ BMDCaptureDelegate::BMDCaptureDelegate(CameraThread *api, IDeckLink *deck)
 				if (result == bmdDisplayModeNotSupported)
 				{
 					fprintf(stderr, "The display mode %s is not supported with the selected pixel format\n", displayModeName);
-					qDebug() << "BMDCaptureDelegate: DeckLink setup failed. Video will not be captured";
+					qDebug() << "BMDCaptureDelegate: "<<api<<" DeckLink setup failed. Video will not be captured";
 					return;
 				}
 	
@@ -1198,7 +1246,7 @@ BMDCaptureDelegate::BMDCaptureDelegate(CameraThread *api, IDeckLink *deck)
 					if (!(displayMode->GetFlags() & bmdDisplayModeSupports3D))
 					{
 						fprintf(stderr, "The display mode %s is not supported with 3D\n", displayModeName);
-						qDebug() << "BMDCaptureDelegate: DeckLink setup failed. Video will not be captured";
+						qDebug() << "BMDCaptureDelegate: "<<api<<" DeckLink setup failed. Video will not be captured";
 						return;
 					}
 				}
@@ -1212,7 +1260,7 @@ BMDCaptureDelegate::BMDCaptureDelegate(CameraThread *api, IDeckLink *deck)
 		if (!foundDisplayMode)
 		{
 			fprintf(stderr, "Invalid mode %d specified\n", videoModeIndex);
-			qDebug() << "BMDCaptureDelegate: DeckLink setup failed. Video will not be captured";
+			qDebug() << "BMDCaptureDelegate: "<<api<<" DeckLink setup failed. Video will not be captured";
 			return;
 		}
 		
@@ -1220,14 +1268,14 @@ BMDCaptureDelegate::BMDCaptureDelegate(CameraThread *api, IDeckLink *deck)
 		if(result != S_OK)
 		{
 			fprintf(stderr, "Failed to enable video input. Is another application using the card? Does the card need a firmware update?\n");
-			qDebug() << "BMDCaptureDelegate: DeckLink setup failed. Video will not be captured";
+			qDebug() << "BMDCaptureDelegate: "<<api<<" DeckLink setup failed. Video will not be captured";
 			return;
 		}
 		
 		result = m_deckLinkInput->StartStreams();
 		if(result != S_OK)
 		{
-			qDebug() << "BMDCaptureDelegate: DeckLink StartStreams() failed. Video will not be captured";
+			qDebug() << "BMDCaptureDelegate: "<<api<<" DeckLink StartStreams() failed. Video will not be captured";
 			return;
 		}
 	}
@@ -1307,7 +1355,7 @@ AVFrame *BMDCaptureDelegate::allocPicture(enum PixelFormat pix_fmt, int width, i
 	if (!picture_buf)
 	{
 		av_free(picture);
-		qDebug() << "BMDCaptureDelegate::allocPicture: Error allocating a new avpicture, size:"<<width<<"x"<<height<<", pix_fmt:"<<pix_fmt<<" - probably out of memory.";
+		qDebug() << "BMDCaptureDelegate::allocPicture: "<<m_api<<" Error allocating a new avpicture, size:"<<width<<"x"<<height<<", pix_fmt:"<<pix_fmt<<" - probably out of memory.";
 		return NULL;
 	}
 	avpicture_fill((AVPicture *)picture, picture_buf, pix_fmt, width, height);
@@ -1333,7 +1381,9 @@ HRESULT BMDCaptureDelegate::VideoInputFrameArrived(IDeckLinkVideoInputFrame* vid
 	{
 		if (videoFrame->GetFlags() & bmdFrameHasNoInputSource)
 		{
-			fprintf(stderr, "Frame received (#%d) - No input signal detected\n", m_frameCount);
+			//fprintf(stderr, "Frame received (#%d) - No input signal detected\n", m_frameCount);
+			qDebug() << "BMDCaptureDelegate::VideoInputFrameArrived: "<<m_api<<" Frame "<<m_frameCount << " - No input signal detected";
+			
 		}
 		else
 		{
@@ -1341,7 +1391,7 @@ HRESULT BMDCaptureDelegate::VideoInputFrameArrived(IDeckLinkVideoInputFrame* vid
 // 				m_frameCount,
 // 				videoFrame->GetRowBytes() * videoFrame->GetHeight());
 
-			//qDebug() << "BMDCaptureDelegate::VideoInputFrameArrived: Frame received: "<<m_frameCount << ", Bytes: "<< videoFrame->GetRowBytes() * videoFrame->GetHeight();
+			//qDebug() << "BMDCaptureDelegate::VideoInputFrameArrived: "<<m_api<<" Frame received: "<<m_frameCount << ", Bytes: "<< videoFrame->GetRowBytes() * videoFrame->GetHeight();
 			
 			int vWidth = videoFrame->GetWidth();
 			int vHeight = videoFrame->GetHeight();
@@ -1372,14 +1422,14 @@ HRESULT BMDCaptureDelegate::VideoInputFrameArrived(IDeckLinkVideoInputFrame* vid
 				m_yuvPicture = allocPicture(PIX_FMT_UYVY422, vWidth, vHeight);
 				if(!m_yuvPicture)
 				{
-					qDebug() << "BMDCaptureDelegate::VideoInputFrameArrived: Error allocating m_yuvPicture for sws format conversion.";
+					qDebug() << "BMDCaptureDelegate::VideoInputFrameArrived: "<<m_api<<" Error allocating m_yuvPicture for sws format conversion.";
 					return 0; 
 				}
 				
 				m_rgbPicture = allocPicture(PIX_FMT_RGB32, vWidth, vHeight);
 				if(!m_rgbPicture)
 				{
-					qDebug() << "BMDCaptureDelegate::VideoInputFrameArrived: Error allocating m_yuvPicture for sws format conversion.";
+					qDebug() << "BMDCaptureDelegate::VideoInputFrameArrived: "<<m_api<<" Error allocating m_yuvPicture for sws format conversion.";
 					return 0; 
 				}
 		
@@ -1399,13 +1449,16 @@ HRESULT BMDCaptureDelegate::VideoInputFrameArrived(IDeckLinkVideoInputFrame* vid
 				
 				m_swsInitSize = QSize(vWidth, vHeight);
 				
-				qDebug() << "BMDCaptureDelegate::VideoInputFrameArrived: Created new SWS conversion context for size: "<<m_swsInitSize; 
+				qDebug() << "BMDCaptureDelegate::VideoInputFrameArrived: "<<m_api<<" Created new SWS conversion context for size: "<<m_swsInitSize; 
 			}
 			
 			videoFrame->GetBytes(&frameBytes);
- 			m_api->rawDataAvailable((uchar*)frameBytes, videoFrame->GetRowBytes() * vHeight, QSize(vWidth, vHeight), capTime);
-			
-			if(0)
+// 			if(m_rawFrames)
+// 			{
+//  				m_api->rawDataAvailable((uchar*)frameBytes, videoFrame->GetRowBytes() * vHeight, QSize(vWidth, vHeight), capTime);
+//  			}
+// 			else
+			if(1)
 			{
 				m_yuvPicture->data[0] = (uchar*)frameBytes; 
 				
@@ -1439,7 +1492,7 @@ HRESULT BMDCaptureDelegate::VideoInputFrameArrived(IDeckLinkVideoInputFrame* vid
 					&rgbFrame);
 				if(res != S_OK)
 				{
-					qDebug() << "BMDCaptureDelegate::VideoInputFrameArrived: Error creating RGB frame, nothing captured, res:"<<res;
+					qDebug() << "BMDCaptureDelegate::VideoInputFrameArrived: "<<m_api<<" Error creating RGB frame, nothing captured, res:"<<res;
 	// 				return 0;
 				}
 				else
@@ -1465,7 +1518,7 @@ HRESULT BMDCaptureDelegate::VideoInputFrameArrived(IDeckLinkVideoInputFrame* vid
 				}
 				else
 				{
-					qDebug() << "BMDCaptureDelegate::VideoInputFrameArrived: No m_deckLinkConverter available, unable to convert frame.";
+					qDebug() << "BMDCaptureDelegate::VideoInputFrameArrived: "<<m_api<<" No m_deckLinkConverter available, unable to convert frame.";
 				}
 			}
 			
@@ -1563,7 +1616,7 @@ BMDCaptureDelegate *BMDCaptureDelegate::openDevice(QString deviceName, CameraThr
 	IDeckLinkIterator *deckLinkIterator = CreateDeckLinkIteratorInstance();
 	if (deckLinkIterator == NULL)
 	{
-		fprintf(stderr, "BMDCaptureDelegate::enumDeviceNames: A DeckLink iterator could not be created.  The DeckLink drivers may not be installed.\n");
+		qDebug() << "BMDCaptureDelegate::openDevice: "<<api<<" A DeckLink iterator could not be created.  The DeckLink drivers may not be installed.";
 		return 0;
 	}
 		

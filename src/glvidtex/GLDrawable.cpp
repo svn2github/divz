@@ -1756,7 +1756,7 @@ bool GLDrawablePlaylist::setPlayTime(double time)
 	}
 	else
 	{
-		qDebug() << "GLDrawablePlaylist::setPlayTime: "<<time<<": Could not find item at time "<<time;
+		//qDebug() << "GLDrawablePlaylist::setPlayTime: "<<time<<": Could not find item at time "<<time;
 		return false;
 	}
 
