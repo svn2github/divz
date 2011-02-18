@@ -913,11 +913,14 @@ void GLWidget::paintGL()
 			// on average at 13-14ms - a gain of approx 5ms on the extreem end, 3ms on the low end - still
 			// a good gain when pinching milliseconds in very demanding low-latency instances such as live
 			// video feed from cameras straight to screen.
+			
+			/*
 			QImage img(size(), QImage::Format_ARGB32);
 			glReadPixels(0, 0, width(), height(), GL_BGRA, GL_UNSIGNED_BYTE, img.bits());
 
 			// OpenGL returns the image upside down and horizontally flipped - therefore, we must mirror the image to get it right-sided
 			m_outputStream->setImage(img.mirrored());
+			*/
 
 			//m_outputStream->setImage(grabFrameBuffer());
 

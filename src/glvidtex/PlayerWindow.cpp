@@ -158,12 +158,12 @@ PlayerWindow::PlayerWindow(QWidget *parent)
 	, m_configLoaded(false)
 {
 	// WinXP - m_vidSendMgr causes the app to freeze
-	#ifdef Q_OS_WIN
-		m_vidSendMgr = 0;
- 	#else
- 		m_vidSendMgr = new VideoInputSenderManager();
- 		m_vidSendMgr->setSendingEnabled(true);
- 	#endif
+// 	#ifdef Q_OS_WIN
+// 		m_vidSendMgr = 0;
+//  	#else
+//  		m_vidSendMgr = new VideoInputSenderManager();
+//  		m_vidSendMgr->setSendingEnabled(true);
+//  	#endif
 
 	QVBoxLayout *layout = new QVBoxLayout(this);
 	layout->setContentsMargins(0,0,0,0);

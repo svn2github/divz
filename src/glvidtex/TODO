@@ -89,6 +89,9 @@ TODO:
 		
 		- Editor: SVG item (and others) imgage jumps when resize (resize, image moves correctly, stop resize, image "jumps" back to old spot, then jumps to correct new spot)
 		
+		- Player: Show/Hide fadein/fadeouts are jumpy when done over live video (and even can cause live video to stutter)
+			- Nedt o integrate to use the "updateAnimations()" call or something similar like that
+		
 		
 	NEEDED FEATURES:
 		- Border/Dropshadow control for items

@@ -58,16 +58,16 @@ private:
 	
 	IDeckLink *		m_deckLink;
 	IDeckLinkInput *	m_deckLinkInput;
-	IDeckLinkDisplayModeIterator	*m_displayModeIterator;
+	IDeckLinkDisplayModeIterator * m_displayModeIterator;
 	
-	//IDeckLinkOutput *	m_deckLinkOutput;
-	//IDeckLinkVideoConversion *m_deckLinkConverter;
+	IDeckLinkOutput *	   m_deckLinkOutput;
+	IDeckLinkVideoConversion * m_deckLinkConverter;
 	
 	AVFrame *allocPicture(enum PixelFormat pix_fmt, int width, int height);
-	struct SwsContext 	*m_swsContext;
+	struct SwsContext *	m_swsContext;
 	QSize 			m_swsInitSize;
-	AVFrame 		*m_yuvPicture;
-	AVFrame			*m_rgbPicture;
+	AVFrame *		m_yuvPicture;
+	AVFrame *		m_rgbPicture;
 };
 
 QStringList BMDCaptureDelegate::s_knownDevices = QStringList();
@@ -856,7 +856,8 @@ void CameraThread::rawDataAvailable(uchar *bytes, int size, QSize pxSize, QTime 
 	QMutexLocker lock(&m_readMutex);
 
 	VideoFrame *frame = new VideoFrame();
-	frame->setPixelFormat(QVideoFrame::Format_RGB32);
+	//frame->setPixelFormat(QVideoFrame::Format_RGB32);
+	frame->setPixelFormat(QVideoFrame::Format_UYVY);
 	frame->setCaptureTime(capTime);
 	frame->setIsRaw(true);
 	frame->setBufferType(VideoFrame::BUFFER_POINTER);
@@ -865,7 +866,7 @@ void CameraThread::rawDataAvailable(uchar *bytes, int size, QSize pxSize, QTime 
 	
 	memcpy(frame->allocPointer(size), bytes, size);
 	
-	qDebug() << "CameraThread::rawDataAvailable: raw BMD frame:"<<frame<<", KB:"<<size/1024<<", pixels:"<<pxSize;
+	//qDebug() << "CameraThread::rawDataAvailable: raw BMD frame:"<<frame<<", KB:"<<size/1024<<", pixels:"<<pxSize;
 	
 	enqueue(frame);
 
@@ -1114,8 +1115,8 @@ BMDCaptureDelegate::BMDCaptureDelegate(CameraThread *api, IDeckLink *deck)
 	, m_api(api)
 	, m_frameCount(0)
 	, m_deckLink(deck)
-	//, m_deckLinkOutput(0)
-	//, m_deckLinkConverter(0)
+	, m_deckLinkOutput(0)
+	, m_deckLinkConverter(0)
 	, m_swsContext(0)
 	, m_yuvPicture(0)
 	, m_rgbPicture(0)
@@ -1132,22 +1133,24 @@ BMDCaptureDelegate::BMDCaptureDelegate(CameraThread *api, IDeckLink *deck)
 		qDebug() << "BMDCaptureDelegate: IDeckLink given does not support video input. Video will not be captured.";
 	}
 	
-// 	if (m_deckLink && 
-// 	    m_deckLink->QueryInterface(IID_IDeckLinkOutput, (void**)&m_deckLinkOutput) != S_OK)
-// 	{
-// 		qDebug() << "BMDCaptureDelegate: IDeckLink can not create new frames, therefore cannot convert YUV->RGB, therefore we will not capture video now.";
-// 		m_deckLinkOutput = NULL;
-// 		return;
-// 	}
-// 	
-// 	if (m_deckLink && 
-// 	    m_deckLink->QueryInterface(IID_IDeckLinkVideoConversion, (void**)&m_deckLinkConverter) != S_OK)
-// 	{
-// 		qDebug() << "BMDCaptureDelegate: Cannot create an instance of IID_IDeckLinkVideoConversion, therefore cannot convert YUV->RGB, therefore we will not emit proper RGB frames now.";
-// 		m_deckLinkConverter = NULL;
-// 		//return;
-// 		
-// 	}
+ 	if (m_deckLink && 
+ 	    m_deckLink->QueryInterface(IID_IDeckLinkOutput, (void**)&m_deckLinkOutput) != S_OK)
+ 	{
+ 		qDebug() << "BMDCaptureDelegate: IDeckLink can not create new frames, therefore cannot convert YUV->RGB, therefore we will not capture video now.";
+ 		m_deckLinkOutput = NULL;
+ 		return;
+ 	}
+
+	#ifdef Q_OS_WIN
+	if(CoCreateInstance(CLSID_CDeckLinkVideoConversion, NULL, CLSCTX_ALL,IID_IDeckLinkVideoConversion, (void**)&m_deckLinkConverter) != S_OK)
+	#else
+	if(!(m_deckLinkConverter = CreateVideoConversionInstance()))
+	#endif
+ 	{
+ 		qDebug() << "BMDCaptureDelegate: Cannot create an instance of IID_IDeckLinkVideoConversion, therefore cannot convert YUV->RGB, therefore we will not emit proper RGB frames now.";
+ 		m_deckLinkConverter = NULL;
+ 		//return;
+ 	}
 
 	if(m_deckLinkInput)
 	{
@@ -1395,60 +1398,76 @@ HRESULT BMDCaptureDelegate::VideoInputFrameArrived(IDeckLinkVideoInputFrame* vid
 				}
 				
 				m_swsInitSize = QSize(vWidth, vHeight);
+				
+				qDebug() << "BMDCaptureDelegate::VideoInputFrameArrived: Created new SWS conversion context for size: "<<m_swsInitSize; 
 			}
 			
-			// fill m_tmpPicture
 			videoFrame->GetBytes(&frameBytes);
-			m_yuvPicture->data[0] = (uchar*)frameBytes; 
+ 			m_api->rawDataAvailable((uchar*)frameBytes, videoFrame->GetRowBytes() * vHeight, QSize(vWidth, vHeight), capTime);
 			
-			sws_scale(m_swsContext,
-				m_yuvPicture->data,
-				m_yuvPicture->linesize, 
-				0, vHeight,
-				m_rgbPicture->data,
-				m_rgbPicture->linesize);
-			
-			//m_api->rawDataAvailable(m_rgbPicture->data[0], m_rgbPicture->linesize[0], m_swsInitSize, capTime);
-			
-			QImage frame = QImage(m_rgbPicture->data[0],
-						vWidth,
-						vHeight,
-						//QImage::Format_RGB16);
-						QImage::Format_ARGB32);
-			//m_bufferMutex.unlock();
-			m_api->imageDataAvailable(frame, capTime);
+			if(0)
+			{
+				m_yuvPicture->data[0] = (uchar*)frameBytes; 
 				
+				sws_scale(m_swsContext,
+					m_yuvPicture->data,
+					m_yuvPicture->linesize, 
+					0, vHeight,
+					m_rgbPicture->data,
+					m_rgbPicture->linesize);
+				
+				//m_api->rawDataAvailable(m_rgbPicture->data[0], m_rgbPicture->linesize[0], m_swsInitSize, capTime);
+				
+				QImage frame = QImage(m_rgbPicture->data[0],
+							vWidth,
+							vHeight,
+							//QImage::Format_RGB16);
+							QImage::Format_ARGB32);
+				//m_bufferMutex.unlock();
+				m_api->imageDataAvailable(frame, capTime);
+			}
 			
-// 			IDeckLinkMutableVideoFrame *rgbFrame = NULL;
-// 			if(m_deckLinkOutput->CreateVideoFrame(
-// 				videoFrame->GetWidth(),
-// 				videoFrame->GetHeight(),
-// 				videoFrame->GetWidth() * 4,
-// 				bmdFormat8BitBGRA, // TBD: BGRA or RGBA ...or ARGB ?? (ref 8_8_8_8_REV..?)
-// 				bmdFrameFlagDefault,
-// 				&rgbFrame) != S_OK)
-// 			{
-// 				qDebug() << "BMDCaptureDelegate::VideoInputFrameArrived: Error creating RGB frame, nothing captured.";
-// 				return 0;
-// 			}
-// 			
-// 			// 	Pixel conversions
-// 			//  Source frame      Target frame
-// 			//  bmdFormat8BitRGBA bmdFormat8BitYUV
-// 			//                    bmdFormat8BitARGB
-// 			//  bmdFormat8BitBGRA bmdFormat8BitYUV
-// 			//  bmdFormat8BitARGB bmdFormat8BitYUV
-// 			if(m_deckLinkConverter)
-// 			{
-// 				m_deckLinkConverter->ConvertFrame(videoFrame, rgbFrame);
-// 				
-// 				rgbFrame->GetBytes(&frameBytes);
-// 				m_api->rawDataAvailable((uchar*)frameBytes, rgbFrame->GetRowBytes() * rgbFrame->GetHeight(), QSize(rgbFrame->GetWidth(), rgbFrame->GetHeight()), capTime);
-// 			}
-// 			else
-// 			{
-// 				qDebug() << "BMDCaptureDelegate::VideoInputFrameArrived: No m_deckLinkConverter available, unable to convert frame.";
-// 			}
+			if(0)
+			{
+				IDeckLinkMutableVideoFrame *rgbFrame = NULL;
+				HRESULT res = m_deckLinkOutput->CreateVideoFrame(
+					videoFrame->GetWidth(),
+					videoFrame->GetHeight(),
+					videoFrame->GetWidth() * 4,
+					bmdFormat8BitBGRA, // TBD: BGRA or RGBA ...or ARGB ?? (ref 8_8_8_8_REV..?)
+					bmdFrameFlagDefault,
+					&rgbFrame);
+				if(res != S_OK)
+				{
+					qDebug() << "BMDCaptureDelegate::VideoInputFrameArrived: Error creating RGB frame, nothing captured, res:"<<res;
+	// 				return 0;
+				}
+				else
+				{
+					//qDebug() << "Created frame of size:"<<videoFrame->GetWidth() << "x"<<videoFrame->GetHeight()<<", frame:"<<rgbFrame;
+				}
+				
+				// 	Pixel conversions
+				//  Source frame      Target frame
+				//  bmdFormat8BitRGBA bmdFormat8BitYUV
+				//                    bmdFormat8BitARGB
+				//  bmdFormat8BitBGRA bmdFormat8BitYUV
+				//  bmdFormat8BitARGB bmdFormat8BitYUV
+				if(m_deckLinkConverter)
+				{
+					m_deckLinkConverter->ConvertFrame(videoFrame, rgbFrame);
+					
+					rgbFrame->GetBytes(&frameBytes);
+					m_api->rawDataAvailable((uchar*)frameBytes, rgbFrame->GetRowBytes() * rgbFrame->GetHeight(), QSize(rgbFrame->GetWidth(), rgbFrame->GetHeight()), capTime);
+					
+					rgbFrame->Release();
+					rgbFrame = NULL;
+				}
+				else
+				{
+					qDebug() << "BMDCaptureDelegate::VideoInputFrameArrived: No m_deckLinkConverter available, unable to convert frame.";
+				}
+			}
 			
 
 			

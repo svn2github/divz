@@ -240,6 +240,7 @@ protected:
 	/// PS
 	void initYv12TextureInfo(const QSize &size, bool secondSource=false);
 	void initYuv420PTextureInfo(const QSize &size, bool secondSource=false);
+	void initYuv442TextureInfo( const QSize &size, bool secondSource=false );
 	void initRgbTextureInfo(GLenum internalFormat, GLuint format, GLenum type, const QSize &size, bool secondSource=false);
 	
 	void updateColors(int brightness, int contrast, int hue, int saturation);
@@ -331,8 +332,17 @@ private:
 	int m_textureOffsets[6];
 	
 	/// PS
+	// new YUV format support...
+	GLuint m_textureFormats[6];
+	GLuint m_textureInternalFormats[6];
+	
+	
+	/// PS
 	bool m_yuv;
 	bool m_yuv2;
+	
+	bool m_packed_yuv;
+	bool m_packed_yuv2;
 	
 	bool m_colorsDirty;
 	

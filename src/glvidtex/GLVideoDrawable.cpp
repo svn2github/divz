@@ -761,6 +761,64 @@ void GLVideoDrawable::initYv12TextureInfo(const QSize &size, bool secondSource)
 }
 
 
+void GLVideoDrawable::initYuv442TextureInfo( const QSize &size, bool /*secondSource */)
+{
+	// YUV 4:2:2 pixel format is a packed YUV format.
+	// One pixel(4 bytes) contains chrome and luminence values
+	// for two pixels(horizontally).
+	//
+	//
+	// A packed UYVY pixel consist of four components
+	//
+	//      U Y1 V Y2
+	//
+	// A packed YUYV pixel consist of four components
+	//
+	//      Y1 U Y2 V
+	//
+	// When a packed pixel is unpacked we get two pixels:
+	//      Y1 U V
+	//      Y2 U V
+	//
+	//
+	// Two textures are created. One for luminance values and the other
+	// one for chrominance values. Width of the chrominance texture is
+	// half of the luminance texture's width because the same chrominance
+	// values are used for two sequential pixels(pixels packed togerther).
+	// Fragment shader takes care of reading correct components from
+	// textures for a YUV color and converting the YUV color to RGB.
+	
+	// Make sure that widht is even value
+	QSize unpackedSize = size;
+	if( unpackedSize.width() % 2 != 0 )
+	{
+		unpackedSize.setWidth( unpackedSize.width() - 1 );
+	}
+	
+	m_yuv = true;
+	m_packed_yuv = true;
+	m_textureType = GL_UNSIGNED_BYTE;
+	m_textureCount = 2;
+	
+	// Luminance(Y) texture. Luminance value is stored to alpha component.
+	m_textureWidths[0] = unpackedSize.width();
+	m_textureHeights[0] = unpackedSize.height();
+	m_textureOffsets[0] = 0;
+	m_textureFormats[0] = GL_LUMINANCE_ALPHA;
+	m_textureInternalFormats[0] = GL_LUMINANCE_ALPHA;
+	
+	// Chrome texture. Chrome values are stored to red and blue components.
+	// U = red
+	// V = blue
+	m_textureWidths[1] = unpackedSize.width() / 2;
+	m_textureHeights[1] = unpackedSize.height();;
+	m_textureOffsets[1] = 0;
+	m_textureFormats[1] = GL_RGBA;
+	m_textureInternalFormats[1] = GL_RGBA;
+}
+
+
+
 void GLVideoDrawable::setGLWidget(GLWidget* widget)
 {
 	if(widget)
@@ -995,50 +1053,91 @@ const char * GLVideoDrawable::resizeTextures(const QSize& frameSize, bool second
 	else
 		m_frameSize2 = frameSize;
 
-	bool debugShaderName = false;
+	m_packed_yuv = false;
+	m_yuv = false;
+	
+	bool debugShaderName = true;
 	switch (m_videoFormat.pixelFormat)
 	{
 	case QVideoFrame::Format_RGB32:
  		if(debugShaderName)
- 			qDebug() << "GLVideoDrawable::resizeTextures(): \t Format RGB32, using qt_glsl_xrgbShaderProgram";
+ 			qDebug() << "GLVideoDrawable::resizeTextures(): "<<(QObject*)this<<"\t Format RGB32, using qt_glsl_xrgbShaderProgram";
 		initRgbTextureInfo(GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE, frameSize, secondSource);
 		fragmentProgram = qt_glsl_xrgbShaderProgram;
 		break;
         case QVideoFrame::Format_ARGB32:
          	if(debugShaderName)
-         		qDebug() << "GLVideoDrawable::resizeTextures(): \t Format ARGB, using qt_glsl_argbShaderProgram";
+         		qDebug() << "GLVideoDrawable::resizeTextures(): "<<(QObject*)this<<"\t Format ARGB, using qt_glsl_argbShaderProgram";
 		initRgbTextureInfo(GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE, frameSize, secondSource);
 		fragmentProgram = qt_glsl_argbShaderProgram;
 		break;
 #ifndef QT_OPENGL_ES
         case QVideoFrame::Format_RGB24:
         	if(debugShaderName)
-         		qDebug() << "GLVideoDrawable::resizeTextures(): \t Format RGB24, using qt_glsl_rgbShaderProgram";
+         		qDebug() << "GLVideoDrawable::resizeTextures(): "<<(QObject*)this<<"\t Format RGB24, using qt_glsl_rgbShaderProgram";
 		initRgbTextureInfo(GL_RGB8, GL_RGB, GL_UNSIGNED_BYTE, frameSize, secondSource);
 		fragmentProgram = qt_glsl_rgbShaderProgram;
 		break;
 #endif
 	case QVideoFrame::Format_RGB565:
 		if(debugShaderName)
-			qDebug() << "GLVideoDrawable::resizeTextures(): \t Format RGB565, using qt_glsl_rgbShaderProgram";
+			qDebug() << "GLVideoDrawable::resizeTextures(): "<<(QObject*)this<<"\t Format RGB565, using qt_glsl_rgbShaderProgram";
 		initRgbTextureInfo(GL_RGB, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, frameSize, secondSource);
 		fragmentProgram = qt_glsl_rgbShaderProgram;
 		break;
 	case QVideoFrame::Format_YV12:
 		if(debugShaderName)
-			qDebug() << "GLVideoDrawable::resizeTextures(): \t Format YV12, using qt_glsl_yuvPlanarShaderProgram";
+			qDebug() << "GLVideoDrawable::resizeTextures(): "<<(QObject*)this<<"\t Format YV12, using qt_glsl_yuvPlanarShaderProgram";
 		initYv12TextureInfo(frameSize, secondSource);
 		fragmentProgram = qt_glsl_yuvPlanarShaderProgram;
 		break;
 	case QVideoFrame::Format_YUV420P:
 		if(debugShaderName)
-			qDebug() << "GLVideoDrawable::resizeTextures(): \t Format YUV420P, using qt_glsl_yuvPlanarShaderProgram";
+			qDebug() << "GLVideoDrawable::resizeTextures(): "<<(QObject*)this<<"\t Format YUV420P, using qt_glsl_yuvPlanarShaderProgram";
 		initYuv420PTextureInfo(frameSize, secondSource);
 		fragmentProgram = qt_glsl_yuvPlanarShaderProgram;
 		break;
+		
+	case QVideoFrame::Format_YUV444:
+		if(debugShaderName)
+			qDebug() << "GLVideoDrawable::resizeTextures(): "<<(QObject*)this<<"\t Format YUV444, using qt_glsl_xyuvShaderProgram";
+			
+		initRgbTextureInfo(GL_RGB, GL_RGB, GL_UNSIGNED_BYTE, frameSize);
+		fragmentProgram = qt_glsl_xyuvShaderProgram;
+		m_yuv = true;
+	break;
+	case QVideoFrame::Format_AYUV444:
+		if(debugShaderName)
+			qDebug() << "GLVideoDrawable::resizeTextures(): "<<(QObject*)this<<"\t Format_AYUV444, using qt_glsl_ayuvShaderProgram";
+			
+		initRgbTextureInfo(GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE, frameSize);
+		fragmentProgram = qt_glsl_ayuvShaderProgram;
+		m_yuv = true;
+	break;
+// 	case QVideoFrame::Format_YV12:
+// 	initYv12TextureInfo(format.frameSize());
+// 	fragmentProgram = qt_glsl_yuvPlanarShaderProgram;
+// 	break;
+// 	case QVideoFrame::Format_YUV420P:
+// 	initYuv420PTextureInfo(format.frameSize());
+// 	fragmentProgram = qt_glsl_yuvPlanarShaderProgram;
+// 	break;
+	case QVideoFrame::Format_UYVY:
+		if(debugShaderName)
+			qDebug() << "GLVideoDrawable::resizeTextures(): "<<(QObject*)this<<"\t Format_UYVY, using qt_glsl_uyvyShaderProgram";
+		initYuv442TextureInfo(frameSize);
+		fragmentProgram = qt_glsl_uyvyShaderProgram;
+	break;
+	case QVideoFrame::Format_YUYV:
+		if(debugShaderName)
+			qDebug() << "GLVideoDrawable::resizeTextures(): "<<(QObject*)this<<"\t Format_YUYV, using qt_glsl_yuyvShaderProgram";
+		initYuv442TextureInfo(frameSize);
+		fragmentProgram = qt_glsl_yuyvShaderProgram;
+	break;
+				
 	default:
 		if(debugShaderName)
-			qDebug() << "GLVideoDrawable::resizeTextures(): \t Unknown pixel format:"<<m_videoFormat.pixelFormat;
+			qDebug() << "GLVideoDrawable::resizeTextures(): "<<(QObject*)this<<"\t Unknown pixel format:"<<m_videoFormat.pixelFormat;
 		break;
 	}
 
@@ -1484,20 +1583,40 @@ void GLVideoDrawable::updateTexture(bool secondSource)
 				{
 					if(!secondSource)
 					{
-						glTexImage2D(
-							GL_TEXTURE_2D,
-							0,
-							m_textureInternalFormat,
-							m_textureWidths[i],
-							m_textureHeights[i],
-							0,
-							m_textureFormat,
-							m_textureType,
-							//m_frame->byteArray().constData() + m_textureOffsets[i]
-							m_frame->pointer() + m_textureOffsets[i]
-							//m_frame->bufferType() == VideoFrame::BUFFER_POINTER ? m_frame->data()[i] :
-								//(uint8_t*)m_frame->byteArray().constData() + m_textureOffsets[i]
-						);
+						if(m_packed_yuv)
+						{
+							glTexImage2D(
+								GL_TEXTURE_2D,
+								0,
+								m_textureInternalFormats[i],
+								m_textureWidths[i],
+								m_textureHeights[i],
+								0,
+								m_textureFormats[i],
+								m_textureType,
+								//m_frame->byteArray().constData() + m_textureOffsets[i]
+								m_frame->pointer() + m_textureOffsets[i]
+								//m_frame->bufferType() == VideoFrame::BUFFER_POINTER ? m_frame->data()[i] :
+									//(uint8_t*)m_frame->byteArray().constData() + m_textureOffsets[i]
+							);
+						}
+						else
+						{
+							glTexImage2D(
+								GL_TEXTURE_2D,
+								0,
+								m_textureInternalFormat,
+								m_textureWidths[i],
+								m_textureHeights[i],
+								0,
+								m_textureFormat,
+								m_textureType,
+								//m_frame->byteArray().constData() + m_textureOffsets[i]
+								m_frame->pointer() + m_textureOffsets[i]
+								//m_frame->bufferType() == VideoFrame::BUFFER_POINTER ? m_frame->data()[i] :
+									//(uint8_t*)m_frame->byteArray().constData() + m_textureOffsets[i]
+							);
+						}
 					}
 					else
 					{
@@ -1552,8 +1671,19 @@ void GLVideoDrawable::updateTexture(bool secondSource)
 					}
 				}
 
-				glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-				glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+				if( m_yuv && m_packed_yuv )
+				{
+					// In case of packed yuv pixel formats(like UYVY and YUY2)
+					// GL_LINEAR filtering doesn't work because pixels are packed
+					// inside texture. Unpacking is done fragment shader.
+					glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+					glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+				}
+				else
+				{
+					glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+					glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+				}
 // 				glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 // 				glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 				glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
@@ -2081,6 +2211,20 @@ void GLVideoDrawable::paintGL()
 				m_program->setUniformValue("texU", 1);
 				m_program->setUniformValue("texV", 2);
 				m_program->setUniformValue("alphaMask", 3);
+			}
+			else 
+			if (m_textureCount == 2) 
+			{
+				glActiveTexture(GL_TEXTURE0);
+				glBindTexture(GL_TEXTURE_2D, m_textureIds[0]);
+				
+				glActiveTexture(GL_TEXTURE1);
+				glBindTexture(GL_TEXTURE_2D, m_textureIds[1]);
+				
+				glActiveTexture(GL_TEXTURE0);
+			
+				m_program->setUniformValue("texY", 0);
+				m_program->setUniformValue("texC", 1);
 			}
 			else
 			{
