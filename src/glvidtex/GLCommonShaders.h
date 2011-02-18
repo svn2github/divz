@@ -138,9 +138,10 @@ static const char *qt_glsl_xyuvShaderProgram =
         "uniform sampler2D texRgb;\n"
         "uniform mediump mat4 colorMatrix;\n"
         "varying highp vec2 textureCoord;\n"
+        "uniform mediump float alpha;\n"
         "void main(void)\n"
         "{\n"
-        "    highp vec4 color = vec4(texture2D(texRgb, textureCoord.st).gba, 1.0);\n"
+        "    highp vec4 color = vec4(texture2D(texRgb, textureCoord.st).gba, alpha);\n"
         "    gl_FragColor = colorMatrix * color;\n"
         "}\n";
 
@@ -149,11 +150,12 @@ static const char *qt_glsl_ayuvShaderProgram =
         "uniform sampler2D texRgb;\n"
         "uniform mediump mat4 colorMatrix;\n"
         "varying highp vec2 textureCoord;\n"
+        "uniform mediump float alpha;\n"
         "void main(void)\n"
         "{\n"
         "    highp vec4 color = vec4(texture2D(texRgb, textureCoord.st).gba, 1.0);\n"
         "    color = colorMatrix * color;\n"
-        "    gl_FragColor = vec4(color.rgb, texture2D(texRgb, textureCoord.st).r);\n"
+        "    gl_FragColor = vec4(color.rgb, texture2D(texRgb, textureCoord.st).r * alpha);\n"
         "}\n";
 
 // Paints a UYVY(YUV422) frame.
@@ -162,11 +164,13 @@ static const char *qt_glsl_uyvyShaderProgram =
         "uniform sampler2D texC;\n"
         "uniform mediump mat4 colorMatrix;\n"
         "varying highp vec2 textureCoord;\n"
+        "uniform mediump float alpha;\n"
         "void main(void)\n"
         "{\n"
         "    highp vec4 color = vec4( texture2D(texY, textureCoord.st).a, 0.0, 0.0, 1.0);\n"
         "    color.gb = texture2D(texC, textureCoord.st).rb;\n"
-        "    gl_FragColor = colorMatrix * color;\n"
+        "    color = colorMatrix * color;\n"
+        "    gl_FragColor = vec4(color.rgb, alpha);\n"
         "}\n";
 
 // Paints a YUYV(YUY2) frame.
@@ -175,11 +179,13 @@ static const char *qt_glsl_yuyvShaderProgram =
         "uniform sampler2D texC;\n"
         "uniform mediump mat4 colorMatrix;\n"
         "varying highp vec2 textureCoord;\n"
+        "uniform mediump float alpha;\n"
         "void main(void)\n"
         "{\n"
         "    highp vec4 color = vec4( texture2D(texY, textureCoord.st).r, 0.0, 0.0, 1.0);\n"
         "    color.gb = texture2D(texC, textureCoord.st).ga;\n"
-        "    gl_FragColor = colorMatrix * color;\n"
+        "    color = colorMatrix * color;\n"
+        "    gl_FragColor = vec4(color.rgb, alpha);\n"
         "}\n";
 
 

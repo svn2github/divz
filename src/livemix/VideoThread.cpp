@@ -40,6 +40,8 @@ VideoThread::VideoThread(QObject *parent)
 	
 	m_sws_context = NULL;
 	
+	m_run_time.restart();
+	
 	// primer...
 	enqueue(new VideoFrame(QImage("../glvidtex/dot.gif"),1000/30));
 // 	m_frame = NULL;
@@ -524,7 +526,7 @@ void VideoThread::readFrame()
 					if(m_frameTimer < curTime-1.)
 						m_frameTimer = curTime;
 					double actual_delay = m_frameTimer - curTime;
-					qDebug() << "VideoThread::readFrame(): frame timer: "<<m_frameTimer<<", curTime:"<<curTime<<", \t actual_delay:"<<((int)(actual_delay*1000))<<", pts_delay:"<<((int)(pts_delay*1000))<<", m_run_time:"<<m_run_time.elapsed()<<", m_total_runtime:"<<m_total_runtime;
+					//qDebug() << "VideoThread::readFrame(): frame timer: "<<m_frameTimer<<", curTime:"<<curTime<<", \t actual_delay:"<<((int)(actual_delay*1000))<<", pts_delay:"<<((int)(pts_delay*1000))<<", m_run_time:"<<m_run_time.elapsed()<<", m_total_runtime:"<<m_total_runtime;
 					if(actual_delay < 0.010)
 					{
 						// This should just skip this frame

@@ -6,6 +6,7 @@
 #endif
 
 #include "../livemix/CameraThread.h"
+#include "../livemix/VideoThread.h"
 
 #include "VideoReceiver.h"
 #include <QNetworkInterface>
@@ -19,7 +20,7 @@ GLVideoInputDrawable::GLVideoInputDrawable(QString file, QObject *parent)
 	if(!file.isEmpty())
 		setVideoInput(file);
 	
-        //QTimer::singleShot(1500, this, SLOT(testXfade()));
+        //QTimer::singleShot(2500, this, SLOT(testXfade()));
 }
 
 GLVideoInputDrawable::~GLVideoInputDrawable()
@@ -172,13 +173,30 @@ void GLVideoInputDrawable::setUseNetworkSource(bool flag)
 
 void GLVideoInputDrawable::testXfade()
 {
-	qDebug() << "GLVideoInputDrawable::testXfade(): loading input /dev/video1";
-	setVideoInput("/dev/video1");
-	setCardInput("S-Video");
+	qDebug() << "GLVideoInputDrawable::testXfade(): loading video thread";
+// 	setVideoInput("/dev/video1");
+// 	setCardInput("S-Video");
+	QString file = "../data/Seasons_Loop_3_SD.mpg";
+	
+	VideoThread *m_videoThread = new VideoThread();
+	m_videoThread->setVideo(file);
+	
+	// Assuming duration in seconds
+	//m_videoLength = m_videoThread->duration(); // / 1000.;
+		
+	//source->setVideo("../samples/BlueFish/EssentialsVol05_Abstract_Media/HD/Countdowns/Abstract_Countdown_3_HD.mp4");
+	//source->setVideo("../samples/BlueFish/EssentialsVol05_Abstract_Media/SD/Countdowns/Abstract_Countdown_3_SD.mpg");
+	
+	m_videoThread->start(true); // true = start paused
+	
+	setVideoSource(m_videoThread);
 }
 	
 bool GLVideoInputDrawable::setVideoInput(const QString& camera)
 {
+// 	testXfade();
+// 	return true;
+	
 	m_videoInput = camera;
 	
 	CameraThread *source = CameraThread::threadForCamera(camera.isEmpty() ?  DEFAULT_INPUT : camera);

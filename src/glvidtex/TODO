@@ -94,6 +94,20 @@ TODO:
 		
 		
 	NEEDED FEATURES:
+		- Convert VideoSurfaceAdapter in QtVideoSource to allow YUV formats thru as raw frames inorder to reduce CPU usage
+			- Same with VideoThread
+		- Use GL to:
+			- Flip image prior to readback for output for output to an encoder
+			- Convert buffer TO YUV422 (UYVY) for output (or just use libwswscale for now...)
+			- Output preview RGB image of camera input for transmission to director
+				- Draw off screen somewhere...?
+				- Draw to a framebuffer ...?
+					- Has the advantage of downscaling and formatconversion all on the GPU...
+					- Could be put in a separate thread (see qq06-...)
+					- See YUV format conversion FROM RGB to YUV on line 322, symbol 'text_shader_download_YUY2_UYVY' from: 
+						gstreamer-gl-plugins-0.10.1/gst-libs/gst/gl/gstgldisplay.c
+					
+			
 		- Border/Dropshadow control for items
 			- Right now, text and images
 			- Really needed

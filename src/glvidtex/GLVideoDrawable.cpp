@@ -111,7 +111,11 @@ GLVideoDrawable::GLVideoDrawable(QObject *parent)
 		<< QVideoFrame::Format_RGB24
 		<< QVideoFrame::Format_RGB565
 		<< QVideoFrame::Format_YV12
-		<< QVideoFrame::Format_YUV420P;
+		<< QVideoFrame::Format_YUV420P
+		<< QVideoFrame::Format_YUV444
+		<< QVideoFrame::Format_AYUV444
+		<< QVideoFrame::Format_UYVY
+		<< QVideoFrame::Format_YUYV;
 
 	connect(&m_fpsRateLimiter, SIGNAL(timeout()), this, SLOT(updateGL()));
 	m_fpsRateLimiter.setInterval(1000/30);
@@ -761,7 +765,7 @@ void GLVideoDrawable::initYv12TextureInfo(const QSize &size, bool secondSource)
 }
 
 
-void GLVideoDrawable::initYuv442TextureInfo( const QSize &size, bool /*secondSource */)
+void GLVideoDrawable::initYuv442TextureInfo( const QSize &size, bool secondSource )
 {
 	// YUV 4:2:2 pixel format is a packed YUV format.
 	// One pixel(4 bytes) contains chrome and luminence values
@@ -795,26 +799,39 @@ void GLVideoDrawable::initYuv442TextureInfo( const QSize &size, bool /*secondSou
 		unpackedSize.setWidth( unpackedSize.width() - 1 );
 	}
 	
-	m_yuv = true;
-	m_packed_yuv = true;
-	m_textureType = GL_UNSIGNED_BYTE;
-	m_textureCount = 2;
+	if(!secondSource)
+	{
+		m_yuv = true;
+		m_packed_yuv = true;
+		m_textureType = GL_UNSIGNED_BYTE;
+		m_textureCount = 2;
+	}
+	else
+	{
+		m_yuv2 = true;
+		m_packed_yuv2 = true;
+		m_textureType2 = GL_UNSIGNED_BYTE;
+		m_textureCount2 = 2;
+
+	}
+	
+	int idx = secondSource ? 3:0;
 	
 	// Luminance(Y) texture. Luminance value is stored to alpha component.
-	m_textureWidths[0] = unpackedSize.width();
-	m_textureHeights[0] = unpackedSize.height();
-	m_textureOffsets[0] = 0;
-	m_textureFormats[0] = GL_LUMINANCE_ALPHA;
-	m_textureInternalFormats[0] = GL_LUMINANCE_ALPHA;
+	m_textureWidths [0 + idx] = unpackedSize.width();
+	m_textureHeights[0 + idx] = unpackedSize.height();
+	m_textureOffsets[0 + idx] = 0;
+	m_textureFormats[0 + idx] = GL_LUMINANCE_ALPHA;
+	m_textureInternalFormats[0 + idx] = GL_LUMINANCE_ALPHA;
 	
 	// Chrome texture. Chrome values are stored to red and blue components.
 	// U = red
 	// V = blue
-	m_textureWidths[1] = unpackedSize.width() / 2;
-	m_textureHeights[1] = unpackedSize.height();;
-	m_textureOffsets[1] = 0;
-	m_textureFormats[1] = GL_RGBA;
-	m_textureInternalFormats[1] = GL_RGBA;
+	m_textureWidths [1 + idx] = unpackedSize.width() / 2;
+	m_textureHeights[1 + idx] = unpackedSize.height();;
+	m_textureOffsets[1 + idx] = 0;
+	m_textureFormats[1 + idx] = GL_RGBA;
+	m_textureInternalFormats[1 + idx] = GL_RGBA;
 }
 
 
@@ -1054,7 +1071,9 @@ const char * GLVideoDrawable::resizeTextures(const QSize& frameSize, bool second
 		m_frameSize2 = frameSize;
 
 	m_packed_yuv = false;
+	m_packed_yuv2 = false;
 	m_yuv = false;
+	m_yuv2 = false;
 	
 	bool debugShaderName = true;
 	switch (m_videoFormat.pixelFormat)
@@ -1575,14 +1594,26 @@ void GLVideoDrawable::updateTexture(bool secondSource)
 		{
 //  			if(property("-debug").toBool())
 //  				qDebug() << "GLVideoDrawable::updateTexture(): "<<objectName()<<" Mark: raw frame";
+
+			// Raw frames are just a pointer to a block of memory containing the image data 
+			// (as opposed to a QImage, which holds to memory internally). Raw frames are 
+			// especially useful for things like the YUV formats and derivatives where the
+			// conversion from YUV to RGB needs to happen on the GPU
 			for (int i = 0; i < (!secondSource ? m_textureCount : m_textureCount2); ++i)
 			{
 				//qDebug() << "raw: "<<i<<m_textureWidths[i]<<m_textureHeights[i]<<m_textureOffsets[i]<<m_textureInternalFormat<<m_textureFormat<<m_textureType;
 				glBindTexture(GL_TEXTURE_2D, (!secondSource ? m_textureIds[i] : m_textureIds2[i]));
 				if(m_useShaders)
 				{
+					// Use different upload blocks because the
+					// texture widths/heights/type/formats are stored
+					// in different variables. It might be good to switch this code
+					// to remove the almost-duplicate blocks and combine them in some way...we'll see...
 					if(!secondSource)
 					{
+						// Use a different upload call for packed YUV because
+						// it has different tex format/internal format per
+						// texture due to the packed nature of the format.
 						if(m_packed_yuv)
 						{
 							glTexImage2D(
@@ -1617,26 +1648,81 @@ void GLVideoDrawable::updateTexture(bool secondSource)
 									//(uint8_t*)m_frame->byteArray().constData() + m_textureOffsets[i]
 							);
 						}
+						
+						if( m_yuv && m_packed_yuv )
+						{
+							// In case of packed yuv pixel formats(like UYVY and YUY2)
+							// GL_LINEAR filtering doesn't work because pixels are packed
+							// inside texture. Unpacking is done fragment shader.
+							glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+							glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+						}
+						else
+						{
+							glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+							glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+						}
+		// 				
 					}
 					else
 					{
-						glTexImage2D(
-							GL_TEXTURE_2D,
-							0,
-							m_textureInternalFormat2,
-							m_textureWidths[i+3],
-							m_textureHeights[i+3],
-							0,
-							m_textureFormat2,
-							m_textureType2,
-							m_frame2->pointer() + m_textureOffsets[i+3]
-							//m_frame->bufferType() == VideoFrame::BUFFER_POINTER ? m_frame->data()[i] :
-								//(uint8_t*)m_frame->byteArray().constData() + m_textureOffsets[i]
-						);
+						// Use a different upload call for packed YUV because
+						// it has different tex format/internal format per
+						// texture due to the packed nature of the format.
+						if(m_packed_yuv2)
+						{
+							glTexImage2D(
+								GL_TEXTURE_2D,
+								0,
+								m_textureInternalFormats[i+3],
+								m_textureWidths[i+3],
+								m_textureHeights[i+3],
+								0,
+								m_textureFormats[i+3],
+								m_textureType2,
+								//m_frame->byteArray().constData() + m_textureOffsets[i]
+								m_frame->pointer() + m_textureOffsets[i+3]
+								//m_frame->bufferType() == VideoFrame::BUFFER_POINTER ? m_frame->data()[i] :
+									//(uint8_t*)m_frame->byteArray().constData() + m_textureOffsets[i]
+							);
+						}
+						else
+						{
+							glTexImage2D(
+								GL_TEXTURE_2D,
+								0,
+								m_textureInternalFormat2,
+								m_textureWidths[i+3],
+								m_textureHeights[i+3],
+								0,
+								m_textureFormat2,
+								m_textureType2,
+								m_frame2->pointer() + m_textureOffsets[i+3]
+								//m_frame->bufferType() == VideoFrame::BUFFER_POINTER ? m_frame->data()[i] :
+									//(uint8_t*)m_frame->byteArray().constData() + m_textureOffsets[i]
+							);
+						}
+						
+						if( m_yuv2 && m_packed_yuv2 )
+						{
+							// In case of packed yuv pixel formats(like UYVY and YUY2)
+							// GL_LINEAR filtering doesn't work because pixels are packed
+							// inside texture. Unpacking is done fragment shader.
+							glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+							glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+						}
+						else
+						{
+							glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+							glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+						}
+		// 				
 					}
 				}
 				else
 				{
+					// Not going to worry about the 'packed yuv' formats (or even YUV in general) 
+					// because we need GLSL shaders inorder to handle those - without shaders, we only to RGB variants 
 					if(!secondSource)
 					{
 						glTexImage2D(
@@ -1669,22 +1755,12 @@ void GLVideoDrawable::updateTexture(bool secondSource)
 								//(uint8_t*)m_frame->byteArray().constData() + m_textureOffsets[i]
 						);
 					}
-				}
-
-				if( m_yuv && m_packed_yuv )
-				{
-					// In case of packed yuv pixel formats(like UYVY and YUY2)
-					// GL_LINEAR filtering doesn't work because pixels are packed
-					// inside texture. Unpacking is done fragment shader.
-					glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-					glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-				}
-				else
-				{
+					
 					glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 					glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 				}
-// 				glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+
+				glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 // 				glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 				glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
 				glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
