@@ -52,14 +52,16 @@ GLSceneTypeNewsFeed::GLSceneTypeNewsFeed(QObject *parent)
 	opts.min = 1;
 	opts.max = 30;
 	m_paramInfoList[0].hints = opts;
+
+	m_parser = new RssParser("http://www.mypleasanthillchurch.org/phc/boards/rss", this);
+        connect(m_parser, SIGNAL(itemsAvailable(QList<RssParser::RssItem>)), this, SLOT(itemsAvailable(QList<RssParser::RssItem>)));
+
 	
 	connect(&m_reloadTimer, SIGNAL(timeout()), this, SLOT(reloadData()));
 	setParam("updateTime", 15);
 	
 	reloadData();
 	
-	RssParser *parser = new RssParser("http://www.mypleasanthillchurch.org/phc/boards/rss", this);
-	connect(parser, SIGNAL(itemsAvailable(QList<RssParser::RssItem>)), this, SLOT(itemsAvailable(QList<RssParser::RssItem>)));
 }
 
 void GLSceneTypeNewsFeed::setLiveStatus(bool flag)
@@ -134,7 +136,8 @@ void GLSceneTypeNewsFeed::setParam(QString param, QVariant value)
 	GLSceneType::setParam(param, value);
 	
 	if(param == "updateTime")
-		m_reloadTimer.setInterval(value.toInt() * 60 * 1000);
+		m_parser->setUpdateTime(value.toInt());
+//		m_reloadTimer.setInterval(value.toInt() * 60 * 1000);
 }
 
 void GLSceneTypeNewsFeed::reloadData()

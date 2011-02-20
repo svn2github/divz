@@ -144,6 +144,8 @@ private:
 	
 	QList<NewsItem> m_news;
 	int m_currentIndex;
+
+	RssParser *m_parser;
 };
 
 #endif
