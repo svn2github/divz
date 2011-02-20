@@ -64,6 +64,8 @@ sub main
 			my $source_size = shift @ARGV || '1024x768';
 			my $dest_size   = shift @ARGV || '640x480';
 			
+			my $audio_config = lc shift @argv ne 'noaudio' ? '-F stereo' : '';
+			
 				
 			if($OutputFile =~ /\.mpg$/i)
 			{
@@ -92,7 +94,7 @@ sub main
 			
 			if(!fork)
 			{
-				system("streamer -c $streamer_input -s $dest_size -r 24 -o $StreamerFile -f jpeg -F stereo -t 3:00:00 2>&1 1>/dev/null");
+				system("streamer -c $streamer_input -s $dest_size -r 24 -o $StreamerFile -f jpeg $audio_config -t 3:00:00 2>&1 1>/dev/null");
 			}
 			
 			sleep 1;
