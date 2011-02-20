@@ -51,6 +51,7 @@ public:
 	
 	QSize findNaturalSize(int atWidth);
 	void changeFontSize(double);
+	void changeFontColor(QColor);
 	double findFontSize();
 	
 	virtual void loadPropsFromMap(const QVariantMap&, bool onlyApplyIfChanged = false);

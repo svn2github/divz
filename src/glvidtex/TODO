@@ -182,6 +182,10 @@ TODO:
 			- Auto calced based on durations of all the scenes
 		- Add a play interface to collection to loop thru groups
 		
+		- [DONE] Add an 'assign scene type' feature in editor
+		- [DONE] Figure out how to set parameters in UI
+		- [DONE] Add more scenetype subclasses, possibly based on Gogle News API and/or RSS reader
+			- Added a weather, random image, and google news type
 		- [DONE] Slide types - for rendering the automatic slides
 		- [DONE] Slides auto change - for changing automatically
 		- [DONE] Text crawler - for showing RSS feeds
@@ -203,14 +207,26 @@ TODO:
 		- [DONE] Transmit slide group to player when connected
 		- [DONE] Add Item autofit to editor
 		- [DONE] Allow player to run playlists on items by itself without being connected to the director
-	
+		- [DONE] SVG animation playback/rendering
+			- Not the smoothest thing around, but it works...
+		- [DONE] Some method to auto-balance/tune camera's HSV so they match each other?
+			- VideoInputColorBalancer.cpp
+		- [DONE] Add a Weather Item based on Google API code in $QT_HOME/qt/demos/embedded/weatherinfo.cpp
+			GLSceneTypeCurrentWeather.cpp
+		- [DONE] Text scroller
+			- Renders a playlist of text items 
+			- Calc the current # of items to fill the screen layed out H or V, then render that many + 1 as a QImage
+				- Use QImage::copy() to render a moving rectangle
+				- When one item falls off the "left", re-render
+				- OR just thought of this - upload the entire rendered QImage (many+1) to a texture, then only render the subrect part of the texture by adjusting the 
+				  texture coordinates of the render output (the sourc rect in updateRects())
+		
 	IDEAS:
+		
+		
+		
 		- Next few steps:
-			- [DONE] Add an 'assign scene type' feature in editor
 			- Try to put scene type subclasses in a namespace
-			- [DONE] Figure out how to set parameters in UI
-			- [DONE] Add more scenetype subclasses, possibly based on Gogle News API and/or RSS reader
-				- Added a weather, random image, and google news type
 			- Add an 'import scene' function because related to:
 			- Add an 'add scene from template' function which...
 				- Lists templates based on directory
@@ -260,11 +276,6 @@ TODO:
 			- Need a histo of rgb values not just grayscale
 			- Add graphs of min/max/avg for hue/sat/value
 		- Add image slow-zoom animation (zoom in/out, setc)
-		- [DONE] SVG animation playback/rendering
-			- Not the smoothest thing around, but it works...
-		- Add a Weather Item based on Google API code in $QT_HOME/qt/demos/embedded/weatherinfo.cpp
-		- [DONE] Some method to auto-balance/tune camera's HSV so they match each other?
-			- VideoInputColorBalancer.cpp
 		- Adjust color curves wtih matrixes? (Not just shift entire hues/sats, but curves.)
 		- Add in "Levels"/Gamma adjustment vis a vi:
 			outPixel = (pow(((inPixel * 255.0) - inBlack) / (inWhite - inBlack),
@@ -272,14 +283,8 @@ TODO:
                 	From Graphics Gems ch 22, Fig 22-2, http://http.developer.nvidia.com/GPUGems/gpugems_ch22.html
                 - Add method to VideoFrame to store a GLuint textureId so multiple GLVideoDrawables rendering the same VideoFrame don't have to upload the buffer/QImage to the video card multiple times
                 	- the first drawable to get the frame checks for a textureId - if none is set, then upload the texture and set the textureId on the frame. But if one is set,
-                		then use that textureId to paint the frame  
-		- Text scroller
-			- Renders a playlist of text items 
-			- Calc the current # of items to fill the screen layed out H or V, then render that many + 1 as a QImage
-				- Use QImage::copy() to render a moving rectangle
-				- When one item falls off the "left", re-render
-				- OR just thought of this - upload the entire rendered QImage (many+1) to a texture, then only render the subrect part of the texture by adjusting the 
-				  texture coordinates of the render output (the sourc rect in updateRects())
+                		then use that textureId to paint the frame
+                	- Necessary if we do GPU conversion to RGB for raw frames for use in the VideoSender - a second thread will want to repaint the YUV texture to a smaller quad for download from the GPU  
 		- HTML snippet widget
 			- Embed a QWebKit widget's output for view-only content
 		- Store pixmaps/images of scenes, groups, and drawables in the GLScene/GLSceneGroup/GLDrawable for rendering as icon in the appros list models
@@ -290,7 +295,9 @@ TODO:
 			- Image Slideshows
 			- Each generates a GLSceneGroup containing multiple GLScenes with appros GLDrawables to represent the content
 		- Undo/redo
-		- Idea: Can we reduce network latency by breaking the frame apart into subsections and transmitting them in parallel over seperate sockets? 
+		- Idea: Can we reduce network latency by breaking the frame apart into subsections and transmitting them in parallel over seperate sockets?
+		 
+		
 
 TARGET DATE: 12/11 9am
 	Features Required by 12/11 9am:

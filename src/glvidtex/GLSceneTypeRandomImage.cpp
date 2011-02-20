@@ -280,6 +280,16 @@ void GLSceneTypeRandomImage::showNextImage()
 	setField("filename",	item.parsedFilename);
 	setField("datetime",	item.datetime);
 	
+	if(ignoreAR())
+	{
+		GLDrawable *gld = lookupField("image");
+		
+		if(GLImageDrawable *image = dynamic_cast<GLImageDrawable*>(gld))
+			image->setAspectRatioMode(ignoreAR() ? 
+				Qt::IgnoreAspectRatio :
+				Qt::KeepAspectRatio   );
+	}
+	
 	m_currentIndex++;
 }
 

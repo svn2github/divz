@@ -485,7 +485,10 @@ void GLTextDrawable::scrollerTick(bool insidePaint)
 			
 			r.setHtml(text);
 			if(!Qt::mightBeRichText(text))
+			{
 				r.changeFontSize(40);
+				r.changeFontColor(Qt::white);
+			}
 				
 			
 			int fontSize = (int)r.findFontSize();
@@ -493,6 +496,7 @@ void GLTextDrawable::scrollerTick(bool insidePaint)
 			if(fontSize == 9)
 			{
 				r.changeFontSize(40);
+				r.changeFontColor(Qt::white);
 				fontSize = 40;
 			}
 			
@@ -673,7 +677,10 @@ void GLTextDrawable::setText(const QString& text)
 
 	m_renderer->setHtml(text);
 	if(!Qt::mightBeRichText(text))
+	{
 		changeFontSize(40);
+		changeFontColor(Qt::white);
+	}
 
 	m_renderer->lockUpdates(lock);
 
@@ -762,6 +769,13 @@ double GLTextDrawable::findFontSize()
 void GLTextDrawable::changeFontSize(double size)
 {
 	m_renderer->changeFontSize(size);
+	m_text = m_renderer->html();
+	emit textChanged(m_text);
+}
+
+void GLTextDrawable::changeFontColor(QColor color)
+{
+	m_renderer->changeFontColor(color);
 	m_text = m_renderer->html();
 	emit textChanged(m_text);
 }

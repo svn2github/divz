@@ -40,6 +40,7 @@ public:
 	const QString & html() { return m_html; }
 	
 	void changeFontSize(double); // force change the html font size
+	void changeFontColor(QColor); // force change the html font color
 	double findFontSize();
 	int fitToSize(const QSize &, int minimumFontSize = 0, int maximumFontSize = 500);
 	QSize findNaturalSize(int atWidth = -1);

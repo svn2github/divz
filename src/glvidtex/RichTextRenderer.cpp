@@ -59,6 +59,27 @@ void RichTextRenderer::changeFontSize(double size)
 }
 
 
+void RichTextRenderer::changeFontColor(QColor color)
+{
+	QTextDocument doc;
+	if (Qt::mightBeRichText(html()))
+		doc.setHtml(html());
+	else
+		doc.setPlainText(html());
+
+	QTextCursor cursor(&doc);
+	cursor.select(QTextCursor::Document);
+
+	QTextCharFormat format;
+	//format.setFontPointSize(size);
+	format.setForeground(color);
+	cursor.mergeCharFormat(format);
+	cursor.mergeBlockCharFormat(format);
+
+	setHtml(doc.toHtml());
+}
+
+
 double RichTextRenderer::findFontSize()
 {
 	QTextDocument doc;
