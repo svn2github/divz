@@ -308,7 +308,7 @@ void RssParser::parseData(const QString &data)
 						if (!item.title.isEmpty()) 
 						{
 							item.date = item.date.replace("T"," ");
-							item.date = item.date.replace("-05:00","");
+							item.date = item.date.replace(QRegExp("[+-]\\d{2}:\\d{2}"),"");
 						
 							m_items << item;
 							qDebug() << "RssParser::parseData(): Added item: title:"<<item.title
@@ -332,15 +332,15 @@ void RssParser::parseData(const QString &data)
 // 						if(tag != "description")
 // 							qDebug() << "RssParser::parseData(): 		isCharacters/tag:"<<tag<<", text:"<<xml.text().toString();
 						if (tag == "title")
-							item.title += xml.text().toString();
+							item.title 	+= xml.text().toString();
 						if (tag == "link") 
-							item.url += xml.text().toString();
+							item.url 	+= xml.text().toString();
 						if (tag == "creator") 
-							item.source += xml.text().toString();;
+							item.source 	+= xml.text().toString();
 						if (tag == "date")
-							item.date += xml.text().toString();;
+							item.date 	+= xml.text().toString();
 						if (tag == "description")
-							item.text += xml.text().toString();;
+							item.text 	+= xml.text().toString();
 					}
 				}
 			}
