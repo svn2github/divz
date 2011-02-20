@@ -1,7 +1,7 @@
 #include "GLSceneTypeNewsFeed.h"
 #include "GLImageDrawable.h"
 #include "QRCodeQtUtil.h"
-
+#include "GLTextDrawable.h"
 GLSceneTypeNewsFeed::GLSceneTypeNewsFeed(QObject *parent)
 	: GLSceneType(parent)
 	, m_currentIndex(0)
@@ -91,6 +91,8 @@ void GLSceneTypeNewsFeed::showNextItem()
 		
 	NewsItem item = m_news[m_currentIndex];
 	
+	item.title = item.title.replace("\n","");
+
 	setField("title", 	item.title);
 	setField("text", 	item.text);
 	setField("source",	item.source);
@@ -104,6 +106,12 @@ void GLSceneTypeNewsFeed::showNextItem()
 //  	image.save(file);
 //  	setField("qrcode", file);
 	
+	GLDrawable *gld = lookupField("text");
+	if(GLTextDrawable *text = dynamic_cast<GLTextDrawable*>(gld))
+	{
+		text->changeFontSize(48);
+		text->changeFontColor(Qt::white);
+	}
 	
 	GLDrawable *qrdest = lookupField("qrcode");
 	if(qrdest)
