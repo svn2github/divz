@@ -44,11 +44,20 @@ public slots:
 signals:
 	void frameReady();
 
+
+protected:
+	void run();
+	
 private:
 	GLWidget *m_glWidget;
 	QImage m_image;
 	int m_fps;
 	QTimer m_frameReadyTimer;
+	bool m_frameUpdated;
+	QSharedPointer<uchar> m_data;
+	QImage::Format m_format;
+	QSize m_size;
+	QMutex m_dataMutex;
 };
 
 class GLWidgetSubview : public QObject
@@ -332,6 +341,8 @@ public slots:
  	void setFboEnabled(bool);
  	
  	void updateGL(bool now=false);
+ 	
+ 	void setOutputSize(QSize);
 	
 protected slots:
 	void zIndexChanged();
@@ -401,6 +412,28 @@ private:
 	bool m_fboEnabled;
 	
 	QTimer m_updateTimer;
+	
+	// Readback size can be set lower than the size of
+	// the widget inorder to reduce resource usage
+	QSize m_readbackSize;
+	// If m_readbackSizeAuto is true, m_readbackSize is set to the size of the widget in resizeGL()
+	// Call setOutputSize(QSize) to override the readback size to a user-specified size.
+	// Calling setOutputSize(QSize()) will reset the auto flag to true
+	bool m_readbackSizeAuto;
+	
+	GLuint m_readbackTextureId;
+	QSize m_readbackTextureSize; // cached size so dont have to regen if resizeGL() called with same size
+	
+	// FBO used to render the texture to then read from
+	QGLFramebufferObject * m_readbackFbo;
+	
+	//  Use two PBOs to make use of DMA streaming  
+	GLuint m_pboIds[2];
+	bool m_pboEnabled;
+	bool m_firstPbo;
+	
+	// Called when the widget size has changed or when setOutputSize() is called
+	void setupReadbackBuffers();
 };
 
 #endif

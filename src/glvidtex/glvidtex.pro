@@ -91,6 +91,7 @@ SOURCES       = GLWidget.cpp \
 		GLSceneTypeNewsFeed.cpp \
 		GLSceneTypeRandomImage.cpp \
 		GLSceneTypeRandomVideo.cpp \
+		glInfo.cpp \ 
 		EntityList.cpp
 		
 		

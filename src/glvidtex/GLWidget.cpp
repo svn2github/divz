@@ -1,3 +1,5 @@
+#define GL_GLEXT_PROTOTYPES
+
 #include <QtGui>
 #include <QtOpenGL>
 #include "GLWidget.h"
@@ -21,6 +23,32 @@
 
 #include "GLCommonShaders.h"
 
+#include "glInfo.h"
+
+// function pointers for PBO Extension
+// Windows needs to get function pointers from ICD OpenGL drivers,
+// because opengl32.dll does not support extensions higher than v1.1.
+#ifdef Q_OS_WIN32
+#ifndef glGenBuffersARB
+PFNGLGENBUFFERSARBPROC pglGenBuffersARB = 0;                     // VBO Name Generation Procedure
+PFNGLBINDBUFFERARBPROC pglBindBufferARB = 0;                     // VBO Bind Procedure
+PFNGLBUFFERDATAARBPROC pglBufferDataARB = 0;                     // VBO Data Loading Procedure
+PFNGLBUFFERSUBDATAARBPROC pglBufferSubDataARB = 0;               // VBO Sub Data Loading Procedure
+PFNGLDELETEBUFFERSARBPROC pglDeleteBuffersARB = 0;               // VBO Deletion Procedure
+PFNGLGETBUFFERPARAMETERIVARBPROC pglGetBufferParameterivARB = 0; // return various parameters of VBO
+PFNGLMAPBUFFERARBPROC pglMapBufferARB = 0;                       // map VBO procedure
+PFNGLUNMAPBUFFERARBPROC pglUnmapBufferARB = 0;                   // unmap VBO procedure
+#define glGenBuffersARB           pglGenBuffersARB
+#define glBindBufferARB           pglBindBufferARB
+#define glBufferDataARB           pglBufferDataARB
+#define glBufferSubDataARB        pglBufferSubDataARB
+#define glDeleteBuffersARB        pglDeleteBuffersARB
+#define glGetBufferParameterivARB pglGetBufferParameterivARB
+#define glMapBufferARB            pglMapBufferARB
+#define glUnmapBufferARB          pglUnmapBufferARB
+#endif
+#endif
+
 GLWidgetSubview::GLWidgetSubview()
 	: QObject()
 	, m_colorsDirty(true)
@@ -41,7 +69,6 @@ GLWidgetSubview::GLWidgetSubview()
 	, m_cornerRotation(GLRotateNone)
 	, m_glw(0)
 	, m_id(-1)
-
 {
 	m_cornerTranslations
 		<<  QPointF(0,0)
@@ -238,6 +265,7 @@ void GLWidgetSubview::setSourceRight(double d)
 }
 
 
+
 GLWidget::GLWidget(QWidget *parent, QGLWidget *shareWidget)
 	//: QGLWidget(QGLFormat(QGL::SampleBuffers),parent, shareWidget)
 	: QGLWidget(parent, shareWidget)
@@ -253,8 +281,13 @@ GLWidget::GLWidget(QWidget *parent, QGLWidget *shareWidget)
 	, m_isBlack(false)
 	, m_crossfadeSpeed(300)
 	, m_fboEnabled(false)//true)
+	, m_readbackSizeAuto(true)
+	, m_readbackFbo(0)
+	, m_firstPbo(false)
 {
 
+	//m_readbackSize = QSize(640,480);
+	
 	setCanvasSize(QSizeF(1000.,750.));
 	// setViewport() will use canvas size by default to construct a rect
 	//setViewport(QRectF(QPointF(0,0),canvasSize()));
@@ -266,7 +299,10 @@ GLWidget::GLWidget(QWidget *parent, QGLWidget *shareWidget)
 	connect(&m_updateTimer, SIGNAL(timeout()), this, SLOT(callSuperUpdateGL()));
 	m_updateTimer.setSingleShot(true);
 	m_updateTimer.setInterval(0);
-
+	
+	
+	
+	
 
 // 	GLWidgetSubview *def = defaultSubview();
 // 	def->setRight(.5);
@@ -460,6 +496,65 @@ void GLWidget::initializeGL()
 	foreach(GLDrawable *drawable, m_drawables)
 		drawable->initGL();
 
+	
+	
+	// get OpenGL info
+	glInfo glInfo;
+	glInfo.getInfo();
+	//glInfo.printSelf();
+	
+	#ifdef Q_OS_WIN32
+	// check PBO is supported by your video card
+	if(glInfo.isExtensionSupported("GL_ARB_pixel_buffer_object"))
+	{
+		// get pointers to GL functions
+// 		glGenBuffersARB = (PFNGLGENBUFFERSARBPROC)context()->getProcAddress(QLatin1String("glGenBuffersARB"));
+// 		glBindBufferARB = (PFNGLBINDBUFFERARBPROC)context()->getProcAddress(QLatin1String("glBindBufferARB"));
+// 		glBufferDataARB = (PFNGLBUFFERDATAARBPROC)context()->getProcAddress(QLatin1String("glBufferDataARB"));
+// 		glBufferSubDataARB = (PFNGLBUFFERSUBDATAARBPROC)context()->getProcAddress(QLatin1String("glBufferSubDataARB"));
+// 		glDeleteBuffersARB = (PFNGLDELETEBUFFERSARBPROC)context()->getProcAddress(QLatin1String("glDeleteBuffersARB"));
+// 		glGetBufferParameterivARB = (PFNGLGETBUFFERPARAMETERIVARBPROC)context()->getProcAddress(QLatin1String("glGetBufferParameterivARB"));
+// 		glMapBufferARB = (PFNGLMAPBUFFERARBPROC)context()->getProcAddress(QLatin1String("glMapBufferARB"));
+// 		glUnmapBufferARB = (PFNGLUNMAPBUFFERARBPROC)context()->getProcAddress(QLatin1String("glUnmapBufferARB"));
+
+		// get pointers to GL functions
+		glGenBuffersARB = (PFNGLGENBUFFERSARBPROC)wglGetProcAddress("glGenBuffersARB");
+		glBindBufferARB = (PFNGLBINDBUFFERARBPROC)wglGetProcAddress("glBindBufferARB");
+		glBufferDataARB = (PFNGLBUFFERDATAARBPROC)wglGetProcAddress("glBufferDataARB");
+		glBufferSubDataARB = (PFNGLBUFFERSUBDATAARBPROC)wglGetProcAddress("glBufferSubDataARB");
+		glDeleteBuffersARB = (PFNGLDELETEBUFFERSARBPROC)wglGetProcAddress("glDeleteBuffersARB");
+		glGetBufferParameterivARB = (PFNGLGETBUFFERPARAMETERIVARBPROC)wglGetProcAddress("glGetBufferParameterivARB");
+		glMapBufferARB = (PFNGLMAPBUFFERARBPROC)wglGetProcAddress("glMapBufferARB");
+		glUnmapBufferARB = (PFNGLUNMAPBUFFERARBPROC)wglGetProcAddress("glUnmapBufferARB");
+
+	
+		// check once again PBO extension
+		if(glGenBuffersARB && glBindBufferARB && glBufferDataARB && glBufferSubDataARB &&
+		glMapBufferARB && glUnmapBufferARB && glDeleteBuffersARB && glGetBufferParameterivARB)
+		{
+			m_pboEnabled = true;
+			qDebug() << "Video card supports GL_ARB_pixel_buffer_object.";
+		}
+		else
+		{
+			m_pboEnabled = false;
+			qDebug() << "Video card does NOT support GL_ARB_pixel_buffer_object.";
+		}
+	}
+	
+	#else // for linux, do not need to get function pointers, it is up-to-date
+	if(glInfo.isExtensionSupported("GL_ARB_pixel_buffer_object"))
+	{
+		m_pboEnabled = true;
+		qDebug() << "Video card supports GL_ARB_pixel_buffer_object.";
+	}
+	else
+	{
+		m_pboEnabled = false;
+		qDebug() << "Video card does NOT support GL_ARB_pixel_buffer_object.";
+	}
+	#endif
+	
 	//resizeGL(width(),height());
 	//setViewport(viewport());
 	//updateWarpMatrix();
@@ -475,6 +570,11 @@ void GLWidget::initShaders()
 	Q_UNUSED(qt_glsl_xrgbShaderProgram);
 	Q_UNUSED(qt_glsl_argbShaderProgram);
 	Q_UNUSED(qt_glsl_yuvPlanarShaderProgram);
+	Q_UNUSED(qt_glsl_vertexShaderProgram);
+	Q_UNUSED(qt_glsl_xyuvShaderProgram);
+	Q_UNUSED(qt_glsl_ayuvShaderProgram);
+	Q_UNUSED(qt_glsl_uyvyShaderProgram);
+	Q_UNUSED(qt_glsl_yuyvShaderProgram);
 
 
 
@@ -905,6 +1005,162 @@ void GLWidget::paintGL()
 		{
 // 			QTime t;
 // 			t.start();
+
+			/*
+			Considerations:
+				1. Getting the image from the System FB to a temporary texture
+					glCopyTexSubImage2D
+				2. Flipping (mirroring) the image, either:
+					A: During movement from FB->temp tex
+					B: By repainting the temp tex onto an offscreen-FBO
+				3. Getting the FINAL frame OFF the GPU to main memory
+					- Use dual-PBO streaming
+						http://www.songho.ca/opengl/gl_pbo.html#pack
+					
+			*/
+		/*
+			glReadBuffer(GL_BACK);
+			
+			// 1. Extract final rendered on screen image to a texture
+			glBindTexture(GL_TEXTURE_2D, m_readbackTextureId);
+			glCopyTexSubImage2D(
+				GL_TEXTURE_2D,
+				0, 0,
+				0, 0,
+				0,
+				width(),
+				height());
+				
+			
+			QSize sz = size();
+			QImage img(sz, QImage::Format_RGB32);
+			//### glGetTexImage not in GL ES 2.0, need to do something else here!
+			glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, img.bits());
+// 			static int outCount = 0;
+// 			outCount ++;
+// 			img.save(QString("debug/gettex-%1.png").arg(outCount % 2 == 0 ? 0 : 1));
+			
+			
+			img = img.scaled(m_readbackSize, Qt::IgnoreAspectRatio);
+			
+			// 2. Render texture to an FBO and flip (mirror) the image
+			
+			//if(m_readbackFbo)
+ 			if(!m_readbackFbo->bind())
+ 			{
+ 				qDebug() << "m_readbackFbo not BOUND!";
+ 			} 
+			//glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER_EXT, m_readbackFbo->handle());
+			
+ 			glRasterPos2i(0, 0);
+     			glDrawPixels(m_readbackSize.width(), m_readbackSize.height(), GL_RGBA, GL_UNSIGNED_BYTE, img.bits());
+
+// 			qglClearColor(Qt::black);
+// 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+// 			glLoadIdentity(); // Reset The View
+
+			glEnable(GL_TEXTURE_2D);
+			glBindTexture(GL_TEXTURE_2D, m_readbackTextureId);
+		*/
+			
+			//glBindTexture(GL_TEXTURE_2D, m_readbackTextureId);
+			
+			/// TODO: Adjust the texture coordinates to mirror the image
+			// Right now, just testing to make sure this even works!
+			/*
+			glBegin(GL_QUADS);
+				// Front Face
+		//              glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0f, -1.0f,  1.0f);
+		//              glTexCoord2f(1.0f, 0.0f); glVertex3f( 1.0f, -1.0f,  1.0f);
+		//              glTexCoord2f(1.0f, 1.0f); glVertex3f( 1.0f,  1.0f,  1.0f);
+		//              glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0f,  1.0f,  1.0f);
+
+				//QRectF rect(10,10,320,240);
+				QRectF rect(0,0,m_readbackSize.width(),m_readbackSize.height());
+
+				qreal
+					vx1 = rect.left(),
+					vx2 = rect.right(),
+					vy1 = rect.bottom(),
+					vy2 = rect.top();
+
+		//                 glTexCoord2f(0.0f, 0.0f); glVertex3f(vx1,vy1,  0.0f); // top left
+		//                 glTexCoord2f(1.0f, 0.0f); glVertex3f(vx2,vy1,  0.0f); // top right
+		//                 glTexCoord2f(1.0f, 1.0f); glVertex3f(vx2,vy2,  0.0f); // bottom right
+		//                 glTexCoord2f(0.0f, 1.0f); glVertex3f(vx1,vy2,  0.0f); // bottom left
+
+				if(1)
+				{
+	// 				glTexCoord2f(0.0f, 0.0f); glVertex3f(vx1 + m_cornerTranslations[3].x(),vy1 + m_cornerTranslations[3].y(),  0.0f); // bottom left // 3
+	// 				glTexCoord2f(1.0f, 0.0f); glVertex3f(vx2 - m_cornerTranslations[2].x(),vy1 + m_cornerTranslations[2].y(),  0.0f); // bottom right // 2
+	// 				glTexCoord2f(1.0f, 1.0f); glVertex3f(vx2 - m_cornerTranslations[1].x(),vy2 - m_cornerTranslations[1].y(),  0.0f); // top right  // 1
+	// 				glTexCoord2f(0.0f, 1.0f); glVertex3f(vx1 + m_cornerTranslations[0].x(),vy2 - m_cornerTranslations[0].y(),  0.0f); // top left // 0
+
+					glTexCoord2f(0.0f, 0.0f); glVertex3f(vx1,vy1,  0.0f); // bottom left // 3
+					glTexCoord2f(1.0f, 0.0f); glVertex3f(vx2,vy1,  0.0f); // bottom right // 2
+					glTexCoord2f(1.0f, 1.0f); glVertex3f(vx2,vy2,  0.0f); // top right  // 1
+					glTexCoord2f(0.0f, 1.0f); glVertex3f(vx1,vy2,  0.0f); // top left // 0
+				}
+
+				
+
+		//              glTexCoord2f(0,0); glVertex3f( 0, 0,0); //lo
+		//              glTexCoord2f(0,1); glVertex3f(256, 0,0); //lu
+		//              glTexCoord2f(1,1); glVertex3f(256, 256,0); //ru
+		//              glTexCoord2f(1,0); glVertex3f( 0, 256,0); //ro
+			glEnd();
+			*/
+		
+			//m_readbackFbo->release();
+			
+			//glBindFramebufferEXT(GL_READ_FRAMEBUFFER_EXT, m_readbackFbo->handle());
+			//glDrawBuffer (GL_COLOR_ATTACHMENT0_EXT);
+			
+			// 3. Stream FBO to a PBO via DMA 
+			// 3a. Copy data previous PBO to a QImage output 
+			m_firstPbo = ! m_firstPbo;
+			int processIdx = m_firstPbo ? 0 : 1;
+			int readIdx = m_firstPbo ? 1 :0;
+			
+			//qDebug() << "GLWidget::paintGL(): Read texture size:"<<size()<<", output size:"<<m_readbackSize<<", readIdx:"<<readIdx<<", processIdx:"<<processIdx;
+			
+			
+			
+			// read pixels from framebuffer to PBO
+			// glReadPixels() should return immediately.
+			glBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, m_pboIds[readIdx]);
+			QTime t;
+			t.start();
+			glReadPixels(0, 0, m_readbackSize.width(), m_readbackSize.height(), GL_BGRA, GL_UNSIGNED_BYTE, 0);
+			int elapsed = t.elapsed();
+			
+			// map the PBO to process its data by CPU
+			glBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, m_pboIds[processIdx]);
+			GLubyte* ptr = (GLubyte*)glMapBufferARB(GL_PIXEL_PACK_BUFFER_ARB,
+								GL_READ_ONLY_ARB);
+			if(ptr)
+			{
+				QImage img(m_readbackSize, QImage::Format_ARGB32);
+				memcpy(img.bits(), ptr, img.byteCount());
+				//QImage img = m_readbackFbo->toImage();
+				m_outputStream->setImage(img);
+			
+				//m_outputStream->setImage(img);
+				QString file = QString("debug/pboread-%1.png").arg(readIdx);
+				//img.save(file);
+				//qDebug() << "Writing to file:"<<QString("debug/pboread-%1.png").arg(readIdx)<<", elapsed:"<<elapsed;
+				
+				glUnmapBufferARB(GL_PIXEL_PACK_BUFFER_ARB);
+			}
+			else
+			{
+				qDebug() << "GLWidget::paintGL(): No ptr received from glMapBufferARB()";
+			}
+			
+			// back to conventional pixel operation
+			glBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, 0);
+			
+
 
 			// Calling glReadPixels ourselves is quicker than calling grabFrameBuffer() because Qt calls
 			// glReadPixels with GL_RGBA, but for some reason using GL_BGRA works just fine - and avoids
@@ -1597,7 +1853,32 @@ void GLWidget::resizeGL(int width, int height)
 
 	glMatrixMode(GL_MODELVIEW);						// Select The Modelview Matrix
 	glLoadIdentity();							// Reset The Modelview Matrix
-
+	
+	if(m_readbackTextureSize != size())
+	{
+		m_readbackTextureSize = size();
+		makeCurrentIfNeeded();
+		
+		// Setup readback texture
+		glGenTextures(1, &m_readbackTextureId);
+		glBindTexture(GL_TEXTURE_2D, m_readbackTextureId);
+		glTexImage2D(
+			GL_TEXTURE_2D,
+			0,
+			GL_RGB,
+			width,
+			height,
+			0,
+			GL_RGB,
+			GL_UNSIGNED_BYTE,
+			NULL);
+			
+		setupReadbackBuffers();
+	}
+	
+	if(!m_readbackFbo)
+		setupReadbackBuffers();
+	
 
 
 // 	glMatrixMode(GL_PROJECTION);
@@ -1621,7 +1902,64 @@ void GLWidget::resizeGL(int width, int height)
 	}
 }
 
+void GLWidget::setOutputSize(QSize size)
+{
+	if(size.isValid())
+	{
+		m_readbackSize = size;
+		m_readbackSizeAuto = false;
+	}
+	else
+	{
+		m_readbackSizeAuto = true;
+	}
+	
+	setupReadbackBuffers();
+}
 
+
+void GLWidget::setupReadbackBuffers()
+{
+	QSize widgetSize = size();
+	
+	if(m_readbackSizeAuto && widgetSize != m_readbackSize)
+	{
+		m_readbackSize = widgetSize;
+	}
+	
+	if(!m_readbackFbo || m_readbackSize != m_readbackFbo->size())
+	{	
+		// Setup readback FBO
+		if(m_readbackFbo)
+			delete m_readbackFbo;
+			
+		m_readbackFbo = new QGLFramebufferObject(m_readbackSize);
+		
+		// Setup readback PBOs
+		
+		if(m_pboEnabled)
+		{
+			// 4 = channel count (RGBA)
+			int dataSize = m_readbackSize.width() * m_readbackSize.height() * 4;
+	
+			// create 2 pixel buffer objects, you need to delete them when program exits.
+			// glBufferDataARB with NULL pointer reserves only memory space.
+			glGenBuffersARB(2, m_pboIds);
+			glBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, m_pboIds[0]);
+			glBufferDataARB(GL_PIXEL_PACK_BUFFER_ARB, dataSize, 0, GL_STREAM_READ_ARB);
+			glBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, m_pboIds[1]);
+			glBufferDataARB(GL_PIXEL_PACK_BUFFER_ARB, dataSize, 0, GL_STREAM_READ_ARB);
+		
+			glBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, 0);
+			
+			qDebug() << "GLWidget::setupReadbackBuffers(): Generated FBO size:"<<m_readbackSize<<", PBO data size: "<<dataSize/1024<<" Kb";
+		}
+		else
+		{
+			qDebug() << "GLWidget::setupReadbackBuffers(): [*** ERROR ***]: PBOs not enabled, output will not work.";
+		}
+	}
+}
 void GLWidget::setAspectRatioMode(Qt::AspectRatioMode mode)
 {
 	//qDebug() << "GLVideoDrawable::setAspectRatioMode: "<<this<<", mode:"<<mode<<", int:"<<(int)mode;
@@ -1786,7 +2124,10 @@ void GLWidget::setCrossfadeSpeed(int m)
 GLWidgetOutputStream *GLWidget::outputStream()
 {
 	if(!m_outputStream)
+	{
 		m_outputStream = new GLWidgetOutputStream(this);
+		m_outputStream->start();
+	}
 	return m_outputStream;
 }
 
@@ -1819,6 +2160,7 @@ GLWidgetOutputStream::GLWidgetOutputStream(GLWidget *parent)
 	: VideoSource(parent)
 	, m_glWidget(parent)
 	, m_fps(35)
+	, m_frameUpdated(false)
 {
  	setIsBuffered(false);
 	setImage(QImage("dot.gif"));
@@ -1829,14 +2171,54 @@ GLWidgetOutputStream::GLWidgetOutputStream(GLWidget *parent)
 
 void GLWidgetOutputStream::setImage(QImage img)
 {
-	m_image = img;
+	QMutexLocker lock(&m_dataMutex);
+	//m_image = img.copy();
+	//m_image = QImage(img.size(), img.format());
+	//memcpy(m_image.bits(), img.bits(), img.byteCount());
+	m_format = img.format();
+	m_size = img.size();
+	uchar *ptr = (uchar*)malloc(sizeof(uchar) * img.byteCount());
+	memcpy((uchar*)ptr, img.bits(), img.byteCount());
+	
+	//m_data = ptr;
+	m_data = QSharedPointer<uchar>(ptr);
 
 	//qDebug() << "GLWidgetOutputStream::setImage(): Received frame buffer, size:"<<m_image.size()<<", img format:"<<m_image.format();
-	enqueue(new VideoFrame(m_image,1000/m_fps, QTime::currentTime()));
+	//enqueue(new VideoFrame(m_image,1000/m_fps, QTime::currentTime()));
 
-	if(!m_frameReadyTimer.isActive())
-		m_frameReadyTimer.start();
+// 	if(!m_frameReadyTimer.isActive())
+// 		m_frameReadyTimer.start();
+	m_frameUpdated = true;
 }
+
+
+void GLWidgetOutputStream::run()
+{
+	int count = 0;
+	while(!m_killed)
+	{
+ 		if(m_frameUpdated)
+ 		{
+			if(m_data)
+			{
+				QMutexLocker lock(&m_dataMutex);
+				QImage img((uchar*)m_data.data(), m_size.width(), m_size.height(), m_format);
+				img = img.mirrored();
+				
+				enqueue(new VideoFrame(img,1000/m_fps));
+				m_frameUpdated = false;
+				emit frameReady();
+				//qDebug() << "GLWidgetOutputStream::run(): new frame, size: "<<img.byteCount()/1024<<" Kb";
+				
+				/*count ++;
+				QString file = QString("debug/output-%1.png").arg(count % 2 == 0 ? 0 : 1);
+				img.save(file);*/	
+			} 
+		}
+		msleep(1000/m_fps);
+	}
+}
+
 
 void GLWidgetOutputStream::setFps(int fps)
 {
