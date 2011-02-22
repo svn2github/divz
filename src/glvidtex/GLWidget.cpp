@@ -1,3 +1,7 @@
+
+// Neede to get the prototypes for glGenBuffersARB() and friends
+// Must be defined before glext.h is included, which is included
+// deep in the QtOpenGL include (or even earlier, hence this top-posting.)
 #define GL_GLEXT_PROTOTYPES
 
 #include <QtGui>
@@ -22,8 +26,6 @@
 #endif
 
 #include "GLCommonShaders.h"
-
-#include "glInfo.h"
 
 // function pointers for PBO Extension
 // Windows needs to get function pointers from ICD OpenGL drivers,
@@ -267,8 +269,8 @@ void GLWidgetSubview::setSourceRight(double d)
 
 
 GLWidget::GLWidget(QWidget *parent, QGLWidget *shareWidget)
-	//: QGLWidget(QGLFormat(QGL::SampleBuffers),parent, shareWidget)
-	: QGLWidget(parent, shareWidget)
+	: QGLWidget(QGLFormat(QGL::SampleBuffers | QGL::AlphaChannel),parent, shareWidget)
+	//: QGLWidget(parent, shareWidget)
 	, m_glInited(false)
 	, m_fbo(0)
 	, m_aspectRatioMode(Qt::KeepAspectRatio)
@@ -468,7 +470,9 @@ void GLWidget::initializeGL()
 	#endif
 
 	const GLubyte *str = glGetString(GL_EXTENSIONS);
-	m_useShaders = (strstr((const char *)str, "GL_ARB_fragment_shader") != NULL);
+	QString extensionList = QString((const char*)str);
+	//m_useShaders = (strstr((const char *)str, "GL_ARB_fragment_shader") != NULL);
+	m_useShaders = extensionList.indexOf("GL_ARB_fragment_shader") > -1;
 
 	if(0)
 	{
@@ -496,16 +500,9 @@ void GLWidget::initializeGL()
 	foreach(GLDrawable *drawable, m_drawables)
 		drawable->initGL();
 
-	
-	
-	// get OpenGL info
-	glInfo glInfo;
-	glInfo.getInfo();
-	//glInfo.printSelf();
-	
 	#ifdef Q_OS_WIN32
 	// check PBO is supported by your video card
-	if(glInfo.isExtensionSupported("GL_ARB_pixel_buffer_object"))
+	if(extensionList.indexOf("GL_ARB_pixel_buffer_object") > -1)
 	{
 		// get pointers to GL functions
 // 		glGenBuffersARB = (PFNGLGENBUFFERSARBPROC)context()->getProcAddress(QLatin1String("glGenBuffersARB"));
@@ -542,8 +539,8 @@ void GLWidget::initializeGL()
 		}
 	}
 	
-	#else // for linux, do not need to get function pointers, it is up-to-date
-	if(glInfo.isExtensionSupported("GL_ARB_pixel_buffer_object"))
+ 	#else // for linux, do not need to get function pointers, it is up-to-date
+	if(extensionList.indexOf("GL_ARB_pixel_buffer_object") > -1)
 	{
 		m_pboEnabled = true;
 		qDebug() << "Video card supports GL_ARB_pixel_buffer_object.";
@@ -553,7 +550,7 @@ void GLWidget::initializeGL()
 		m_pboEnabled = false;
 		qDebug() << "Video card does NOT support GL_ARB_pixel_buffer_object.";
 	}
-	#endif
+ 	#endif
 	
 	//resizeGL(width(),height());
 	//setViewport(viewport());
@@ -1014,15 +1011,20 @@ void GLWidget::paintGL()
 				
 				//qDebug() << "GLWidget::paintGL(): Read texture size:"<<size()<<", output size:"<<m_readbackSize<<", readIdx:"<<readIdx<<", processIdx:"<<processIdx;
 				
+				//glFinish();
 				
-				
+				//glReadBuffer(GL_FRONT);
 				// read pixels from framebuffer to PBO
 				// glReadPixels() should return immediately.
 				glBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, m_pboIds[readIdx]);
+				
 				QTime t;
 				t.start();
+				
 				glReadPixels(0, 0, m_readbackSize.width(), m_readbackSize.height(), GL_BGRA, GL_UNSIGNED_BYTE, 0);
+				
 				int elapsed = t.elapsed();
+				t.restart();
 				
 				// map the PBO to process its data by CPU
 				glBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, m_pboIds[processIdx]);
@@ -1030,15 +1032,17 @@ void GLWidget::paintGL()
 									GL_READ_ONLY_ARB);
 				if(ptr)
 				{
-					QImage img(m_readbackSize, QImage::Format_ARGB32);
-					memcpy(img.bits(), ptr, img.byteCount());
-					//QImage img = m_readbackFbo->toImage();
-					m_outputStream->setImage(img);
-				
+// 					QImage img(m_readbackSize, QImage::Format_ARGB32);
+// 					memcpy(img.bits(), ptr, img.byteCount());
+// 					m_outputStream->setImage(img);
+					m_outputStream->copyPtr(ptr, size());
+					
+					int elapsed2 = t.elapsed();
 					//m_outputStream->setImage(img);
-					QString file = QString("debug/pboread-%1.png").arg(readIdx);
+					//QString file = QString("debug/pboread-%1.png").arg(readIdx);
 					//img.save(file);
 					//qDebug() << "Writing to file:"<<QString("debug/pboread-%1.png").arg(readIdx)<<", elapsed:"<<elapsed;
+					//qDebug() << "Download from buffer "<<readIdx<<" completed, "<<elapsed<<"ms. Image buffer "<<processIdx<<" processed, "<<elapsed2<<" ms";
 					
 					glUnmapBufferARB(GL_PIXEL_PACK_BUFFER_ARB);
 				}
@@ -1049,6 +1053,17 @@ void GLWidget::paintGL()
 				
 				// back to conventional pixel operation
 				glBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, 0);
+			}
+			else
+			{
+			
+				QTime t;
+				t.start();
+				
+				QImage img(size(), QImage::Format_ARGB32);
+				glReadPixels(0, 0, width(), height(), GL_BGRA, GL_UNSIGNED_BYTE, img.bits());
+				m_outputStream->setImage(img);
+				//qDebug() << "glReadPixels elapsed:"<<t.elapsed()<<"ms";
 			}
 
 		}
@@ -2079,6 +2094,24 @@ void GLWidgetOutputStream::setImage(QImage img)
 	m_frameUpdated = true;
 }
 
+
+// By allowing GLWidget to pass in the pointer directly instead of 
+// first copying to a QImage, we can save a memcpy()
+void GLWidgetOutputStream::copyPtr(GLubyte *ptrIn, QSize size)
+{
+	QMutexLocker lock(&m_dataMutex);
+	
+	m_format = QImage::Format_ARGB32;
+	m_size = size;
+	
+	int bytes = m_size.width() * m_size.height() * 4;
+	uchar *ptr = (uchar*)malloc(sizeof(uchar) * bytes);
+	memcpy((uchar*)ptr, ptrIn, bytes);
+	
+	m_data = QSharedPointer<uchar>(ptr);
+	
+	m_frameUpdated = true;
+}
 
 void GLWidgetOutputStream::run()
 {

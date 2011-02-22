@@ -28,7 +28,8 @@ protected:
 	friend class GLWidget;
 	GLWidgetOutputStream(GLWidget *parent=0);
 	void setImage(QImage);
-
+	void copyPtr(GLubyte *ptr, QSize size);
+	
 public:
 	//virtual ~StaticVideoSource() {}
 
@@ -49,6 +50,7 @@ protected:
 	void run();
 	
 private:
+	
 	GLWidget *m_glWidget;
 	QImage m_image;
 	int m_fps;
