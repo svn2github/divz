@@ -72,11 +72,14 @@ int V4LOutput::startPipe (int dev, int width, int height)
 
 
 V4LOutput::V4LOutput(QString key, QObject *parent)
-	: QObject(parent)
+	: QThread(parent)
 	, m_v4lOutputDev(-1)
 	, m_v4lOutputName(key)
+	, m_frameReady(false)
+	, m_started(false)
 {
 	m_source = 0;
+	//start();
 }
 
 
@@ -103,6 +106,12 @@ void V4LOutput::setupOutput()
 V4LOutput::~V4LOutput()
 {
 	setVideoSource(0);
+	if(!m_killed)
+	{
+		m_killed = true;
+		quit();
+		wait();
+	}
 }
 	
 void V4LOutput::setVideoSource(VideoSource *source)
@@ -144,7 +153,14 @@ void V4LOutput::frameReady()
 {
 	if(!m_source)
 		return;
-	
+		
+	m_frameReady = true;
+	if(!m_started)
+		getFrame();
+}
+
+void V4LOutput::getFrame()
+{
 	VideoFramePtr frame = m_source->frame();
 	if(!frame || !frame->isValid())
 	{
@@ -163,6 +179,19 @@ void V4LOutput::frameReady()
 	//if(m_transmitFps <= 0)
 		processFrame();
 }
+
+void V4LOutput::run()
+{
+	m_started = true;
+	while(!m_killed)
+	{
+		if(m_frameReady)
+			getFrame();
+		
+		msleep(1);
+	}
+}
+
 
 
 void V4LOutput::processFrame()

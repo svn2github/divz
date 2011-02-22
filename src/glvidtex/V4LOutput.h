@@ -6,7 +6,7 @@
 #include "../livemix/VideoFrame.h"
 #include "VideoConsumer.h"
 
-class V4LOutput : public QObject, 
+class V4LOutput : public QThread, 
 		  public VideoConsumer
 {
 	Q_OBJECT
@@ -23,7 +23,11 @@ private slots:
 	void frameReady();
 	void processFrame();
 	
+protected:
+	void run();
+	
 private:
+	void getFrame();
 	void setupOutput();
 	int startPipe(int dev, int width, int height);
 	
@@ -33,6 +37,9 @@ private:
 	QSize m_outputSize;
 	
 	VideoFramePtr m_frame;
+	bool m_frameReady;
+	bool m_killed;
+	bool m_started;
 };
 
 
