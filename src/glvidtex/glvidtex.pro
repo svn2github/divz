@@ -46,7 +46,8 @@ HEADERS       = GLWidget.h \
 		GLSceneTypeNewsFeed.h \
 		GLSceneTypeRandomImage.h \
 		GLSceneTypeRandomVideo.h \
-		EntityList.h
+		EntityList.h \
+		BMDOutput.h
 		
 SOURCES       = GLWidget.cpp \
 		../livemix/VideoSource.cpp \
@@ -91,8 +92,9 @@ SOURCES       = GLWidget.cpp \
 		GLSceneTypeNewsFeed.cpp \
 		GLSceneTypeRandomImage.cpp \
 		GLSceneTypeRandomVideo.cpp \
-		EntityList.cpp
-		
+		EntityList.cpp \
+		BMDOutput.cpp
+		 
 		
 # MD5 is used for caching in GLImageDrawable
 include(../3rdparty/md5/md5.pri)

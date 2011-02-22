@@ -64,7 +64,7 @@ sub main
 			my $source_size = shift @ARGV || '1024x768';
 			my $dest_size   = shift @ARGV || '640x480';
 			
-			my $audio_config = lc shift @argv ne 'noaudio' ? '-F stereo' : '';
+			my $audio_config = lc shift @ARGV ne 'noaudio' ? '-F stereo' : '';
 			
 				
 			if($OutputFile =~ /\.mpg$/i)

@@ -79,7 +79,7 @@ V4LOutput::V4LOutput(QString key, QObject *parent)
 	, m_started(false)
 {
 	m_source = 0;
-	//start();
+	start();
 }
 
 
@@ -155,8 +155,9 @@ void V4LOutput::frameReady()
 		return;
 		
 	m_frameReady = true;
-	if(!m_started)
-		getFrame();
+	
+// 	if(!m_started)
+// 		getFrame();
 }
 
 void V4LOutput::getFrame()

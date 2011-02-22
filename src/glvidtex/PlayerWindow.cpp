@@ -22,6 +22,8 @@
 #include "V4LOutput.h"
 #endif
 
+#include "BMDOutput.h"
+
 #include <QTimer>
 #include <QApplication>
 
@@ -377,7 +379,7 @@ void PlayerWindow::loadConfig(const QString& configFile, bool verbose)
 		m_v4lOutput = 0;
 
 		#ifndef Q_OS_WIN
-		bool v4l_out_enab = READ_STRING("v4l-output-enabled","true") == "true";
+		bool v4l_out_enab = READ_STRING("v4l-output-enabled","false") == "true";
 
 		/// NB: v4l output is designed to be used with vloopback (http://www.lavrsen.dk/svn/vloopback/trunk or ./vloopback)
 		/// To use with vloopback, first build the kernel mod in vloopback and do 'insmod vloopback.ko', then
@@ -396,6 +398,17 @@ void PlayerWindow::loadConfig(const QString& configFile, bool verbose)
 		#else
 		qDebug() << "PlayerWindow: Unable to stream via V4L because this player was compiled for Windows.";
 		#endif
+		
+		bool bmd_out_enab = READ_STRING("bmd-output-enabled","false") == "true";
+		
+		if(bmd_out_enab)
+		{
+			QString bmdOutputDev = READ_STRING("bmd-output","bmd:0");
+		
+			BMDOutput *bmd = new BMDOutput(bmdOutputDev);
+			bmd->setVideoSource(m_glWidget ? (VideoSource*)m_glWidget->outputStream() : (VideoSource*)m_compatStream);
+			qDebug() << "PlayerWindow: Streaming to BMD output: "<<bmdOutputDev;
+		}
 	}
 	else
 	{
