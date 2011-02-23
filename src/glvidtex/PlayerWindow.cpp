@@ -372,8 +372,9 @@ void PlayerWindow::loadConfig(const QString& configFile, bool verbose)
 	if(!m_glWidget)
                 m_compatStream = new PlayerCompatOutputStream(this);
 
-	if(m_glWidget) // || m_compatStream)
-	{
+	// TODO Why disable V4L/BMD output if not using OpenGL...? - JB 20110223
+// 	if(m_glWidget) // || m_compatStream)
+// 	{
 		//m_shMemSend = new SharedMemorySender("PlayerWindow-2",this);
 		//m_shMemSend->setVideoSource(m_glWidget->outputStream());
 		m_v4lOutput = 0;
@@ -409,15 +410,16 @@ void PlayerWindow::loadConfig(const QString& configFile, bool verbose)
 			bmd->setVideoSource(m_glWidget ? (VideoSource*)m_glWidget->outputStream() : (VideoSource*)m_compatStream);
 			qDebug() << "PlayerWindow: Streaming to BMD output: "<<bmdOutputDev;
 		}
-	}
-	else
-	{
-		//m_shMemSend = 0;
-		//qDebug() << "Playerwindow: Unable to stream output via shared memory because OpenGL is not enabled.";
-
-		m_v4lOutput = 0;
-		qDebug() << "Playerwindow: Unable to stream output via V4L because OpenGL is not enabled or no output stream available (m_compatStream)";
-	}
+		
+// 	}
+// 	else
+// 	{
+// 		//m_shMemSend = 0;
+// 		//qDebug() << "Playerwindow: Unable to stream output via shared memory because OpenGL is not enabled.";
+// 
+// 		m_v4lOutput = 0;
+// 		qDebug() << "Playerwindow: Unable to stream output via V4L because OpenGL is not enabled or no output stream available (m_compatStream)";
+// 	}
 
 
 	QString loadGroup = READ_STRING("load-group","");
@@ -517,6 +519,7 @@ void PlayerWindow::loadConfig(const QString& configFile, bool verbose)
 	if(outputPort > 0 )
 	{
 		VideoSender *sender = new VideoSender(this);
+		sender->setTransmitFps(20);
 		sender->setTransmitSize(320,240);
 		//sender->setTransmitFps(5);
 		sender->setVideoSource(m_compatStream ? (VideoSource*)m_compatStream : (VideoSource*)m_glWidget->outputStream());

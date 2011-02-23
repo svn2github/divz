@@ -55,6 +55,10 @@ private slots:
 	
 	void chooseOutput();
 	
+	void updateWindowMenu();
+	void updateMenus();
+	void setActiveSubWindow(QWidget *window);
+	
 protected:
 	void closeEvent(QCloseEvent *event);
 	
@@ -77,7 +81,17 @@ private:
 	
 	bool m_connected;
 	
+	QSignalMapper *m_windowMapper;
+	QAction *m_closeAct;
+	QAction *m_closeAllAct;
+	QAction *m_tileAct;
+	QAction *m_cascadeAct;
+	QAction *m_nextAct;
+	QAction *m_previousAct;
+	QAction *m_separatorAct;
 	
+	
+		
 	
 };
 

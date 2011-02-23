@@ -10,7 +10,7 @@
 #include <QMessageBox>
 
 VideoWidget::VideoWidget(QWidget *parent)
-	: QWidget(parent)
+	: QGLWidget(parent)
 	, m_thread(0)
 	, m_frameCount(0)
 	, m_opacity(1)
@@ -21,7 +21,7 @@ VideoWidget::VideoWidget(QWidget *parent)
 	, m_adjustDy1(0)
 	, m_adjustDx2(0)
 	, m_adjustDy2(0)
-	, m_showOverlayText(true)
+	, m_showOverlayText(false)
 	, m_overlayText("")
 	, m_forceFps(-1)
 	, m_renderFps(false)
@@ -305,6 +305,7 @@ void VideoWidget::callUpdate()
 void VideoWidget::setOverlayText(const QString& text)
 {
 	m_overlayText = text;
+	m_showOverlayText = !text.isEmpty();
 	updateOverlay();
 }
 
@@ -645,8 +646,9 @@ void VideoWidget::paintEvent(QPaintEvent*)
 			
 			if(m_overlayFrame && m_overlaySource && !m_overlayFrame->image().isNull())
 				p.drawImage(m_overlayTargetRect,m_overlayFrame->image(),m_overlaySourceRect);
-				
-			p.drawPixmap(m_targetRect.topLeft(),m_overlay);
+			
+			if(m_showOverlayText)
+				p.drawPixmap(m_targetRect.topLeft(),m_overlay);
 		
 			m_frameCount ++;
 			if(m_renderFps)

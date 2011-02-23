@@ -249,6 +249,8 @@ void GLVideoDrawable::setVideoSource(VideoSource *source)
 	m_source = source;
 	if(m_source)
 	{
+		m_source->registerConsumer(this);
+		
 		// If m_isCameraThread, then we tell GLWidget to updateGL *now* instead of using a 0-length timer to batch updateGL() calls into a single call
 		m_isCameraThread = (NULL != dynamic_cast<CameraThread*>(source));
 		
@@ -347,6 +349,7 @@ void GLVideoDrawable::disconnectVideoSource()
 {
 	if(!m_source)
 		return;
+	m_source->release(this);
 	disconnect(m_source, 0, this, 0);
 	emit sourceDiscarded(m_source);
 	m_source = 0;
@@ -356,6 +359,7 @@ void GLVideoDrawable::disconnectVideoSource2()
 {
 	if(!m_source2)
 		return;
+	m_source2->release(this);
 	disconnect(m_source2, 0, this, 0);
 	emit sourceDiscarded(m_source2);
 	m_source2 = 0;

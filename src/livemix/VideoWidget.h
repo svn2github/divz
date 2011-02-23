@@ -16,7 +16,7 @@
 class VideoSource;
 class VideoFrame;
 // class CameraServer;
-class VideoWidget  : public QWidget
+class VideoWidget  : public QGLWidget
 {
 	Q_OBJECT
 public:

@@ -414,6 +414,8 @@ void VideoReceiver::processBlock()
 				/// TODO: The parsing code here wont work for data replies. Need to rework to parse header, get byte count, THEN get data packet from header
 			}
 			else
+			// No need to create and emit frames if noone is listeneing for frames!
+			if(!m_consumerList.isEmpty())
 			{
 				//qDebug() << "raw header scan: byteTmp:"<<byteTmp<<", size:"<<imgX<<"x"<<imgY;
 				
@@ -460,18 +462,24 @@ void VideoReceiver::processBlock()
 					frame->setImage(QImage((const uchar*)block.constData(), imgX, imgY, (QImage::Format)imageFormatId));
 					frame->setIsRaw(false);
 					
-					if(origX != imgX || origY != imgY)
-					{
-						QTime x;
-						x.start();
-						frame->setImage(frame->image().scaled(origX,origY));
-						//qDebug() << "VideoReceiver::processBlock: Upscaled frame from "<<imgX<<"x"<<imgY<<" to "<<origX<<"x"<<imgY<<" in "<<x.elapsed()<<"ms";
-						
-					} 
-					else
-					{
-						frame->setImage(frame->image().copy()); // disconnect from the QByteArray by calling copy() to make an internal copy of the buffer
-					}
+					// Disabled upscaling for now because:
+					// 1. It was taking approx 20ms to upscale 320x240->1024x758
+					// 2. Why upscale here?? If user wants a larger image, he can make the thing drawing this frame larger,
+					//    which will scale the frame at that point - which probably will be on the GPU anyway
+					// Therefore, given the 20ms (or, even 10ms if it was) and the fact that the GPU can do scaling anyway,
+					// no need to waste valuable time upscaling here for little to no benefit at all. 
+// 					if(origX != imgX || origY != imgY)
+// 					{
+// 						QTime x;
+// 						x.start();
+// 						frame->setImage(frame->image().scaled(origX,origY));
+// 						qDebug() << "VideoReceiver::processBlock: Upscaled frame from "<<imgX<<"x"<<imgY<<" to "<<origX<<"x"<<imgY<<" in "<<x.elapsed()<<"ms";
+// 						
+// 					} 
+// 					else
+// 					{
+						//frame->setImage(frame->image().copy()); // disconnect from the QByteArray by calling copy() to make an internal copy of the buffer
+//					}
 				}
 				else
 				{
@@ -484,9 +492,9 @@ void VideoReceiver::processBlock()
 					frame->setIsRaw(true);
 				}
 				
-				if(origX != imgX || origY != imgY)
-					frame->setSize(QSize(origX,origY));
-				else
+// 				if(origX != imgX || origY != imgY)
+// 					frame->setSize(QSize(origX,origY));
+// 				else
 					frame->setSize(QSize(imgX,imgY));
 	
 				#ifdef DEBUG_VIDEOFRAME_POINTERS
@@ -521,7 +529,7 @@ void VideoReceiver::processBlock()
 				int msecLatency = msecTo(timestamp);
 				m_latencyAccum += msecLatency;
 				
-				if (!(m_frameCount % 100)) 
+				if (m_debugFps && !(m_frameCount % 100)) 
 				{
 					QString framesPerSecond;
 					framesPerSecond.setNum(m_frameCount /(m_time.elapsed() / 1000.0), 'f', 2);

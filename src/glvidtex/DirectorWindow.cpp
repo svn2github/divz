@@ -226,9 +226,6 @@ void DirectorWindow::showPlayerLiveMonitor(PlayerConnection *con)
 		subWindow->show();
 		subWindow->resize(320,270);
 		
-		// Bug workaround - resizeGL doesnt seem to be valid for a second or so....
-		QTimer::singleShot(1000,vid,SLOT(postInitGL()));
-		
 		connect(this, SIGNAL(closed()), vid, SLOT(deleteLater()));
 	}
 }
@@ -251,6 +248,47 @@ void DirectorWindow::setupUI()
 	connect(ui->actionChange_Canvas_Size, SIGNAL(triggered()), this, SLOT(changeCanvasSize()));
 	connect(ui->actionExit, SIGNAL(triggered()), qApp, SLOT(quit()));
 	connect(ui->actionPlayer_Setup, SIGNAL(triggered()), this, SLOT(showPlayerSetupDialog()));
+	
+	connect(ui->mdiArea, SIGNAL(subWindowActivated(QMdiSubWindow*)), this, SLOT(updateMenus()));
+	m_windowMapper = new QSignalMapper(this);
+	connect(m_windowMapper, SIGNAL(mapped(QWidget*)), this, SLOT(setActiveSubWindow(QWidget*)));
+	
+	m_closeAct = new QAction(tr("Cl&ose"), this);
+	m_closeAct->setStatusTip(tr("Close the active window"));
+	connect(m_closeAct, SIGNAL(triggered()),
+		ui->mdiArea, SLOT(closeActiveSubWindow()));
+	
+	m_closeAllAct = new QAction(tr("Close &All"), this);
+	m_closeAllAct->setStatusTip(tr("Close all the windows"));
+	connect(m_closeAllAct, SIGNAL(triggered()),
+		ui->mdiArea, SLOT(closeAllSubWindows()));
+	
+	m_tileAct = new QAction(tr("&Tile"), this);
+	m_tileAct->setStatusTip(tr("Tile the windows"));
+	connect(m_tileAct, SIGNAL(triggered()), ui->mdiArea, SLOT(tileSubWindows()));
+	
+	m_cascadeAct = new QAction(tr("&Cascade"), this);
+	m_cascadeAct->setStatusTip(tr("Cascade the windows"));
+	connect(m_cascadeAct, SIGNAL(triggered()), ui->mdiArea, SLOT(cascadeSubWindows()));
+	
+	m_nextAct = new QAction(tr("Ne&xt"), this);
+	m_nextAct->setShortcuts(QKeySequence::NextChild);
+	m_nextAct->setStatusTip(tr("Move the focus to the next window"));
+	connect(m_nextAct, SIGNAL(triggered()),
+		ui->mdiArea, SLOT(activateNextSubWindow()));
+	
+	m_previousAct = new QAction(tr("Pre&vious"), this);
+	m_previousAct->setShortcuts(QKeySequence::PreviousChild);
+	m_previousAct->setStatusTip(tr("Move the focus to the previous "
+					"window"));
+	connect(m_previousAct, SIGNAL(triggered()),
+		ui->mdiArea, SLOT(activatePreviousSubWindow()));
+	
+	m_separatorAct = new QAction(this);
+	m_separatorAct->setSeparator(true);
+	
+	updateWindowMenu();
+	connect(ui->menuWindow, SIGNAL(aboutToShow()), this, SLOT(updateWindowMenu()));
 }
 
 void DirectorWindow::closeEvent(QCloseEvent */*event*/)
@@ -451,3 +489,53 @@ void DirectorWindow::playerRemoved(PlayerConnection * con)
 }
 
 
+void DirectorWindow::updateMenus()
+{
+    bool hasMdiChild = (ui->mdiArea->activeSubWindow() != 0);
+    m_closeAct->setEnabled(hasMdiChild);
+    m_closeAllAct->setEnabled(hasMdiChild);
+    m_tileAct->setEnabled(hasMdiChild);
+    m_cascadeAct->setEnabled(hasMdiChild);
+    m_nextAct->setEnabled(hasMdiChild);
+    m_previousAct->setEnabled(hasMdiChild);
+    m_separatorAct->setVisible(hasMdiChild);
+}
+
+void DirectorWindow::updateWindowMenu()
+{
+	ui->menuWindow->clear();
+	ui->menuWindow->addAction(m_closeAct);
+	ui->menuWindow->addAction(m_closeAllAct);
+	ui->menuWindow->addSeparator();
+	ui->menuWindow->addAction(m_tileAct);
+	ui->menuWindow->addAction(m_cascadeAct);
+	ui->menuWindow->addSeparator();
+	ui->menuWindow->addAction(m_nextAct);
+	ui->menuWindow->addAction(m_previousAct);
+	ui->menuWindow->addAction(m_separatorAct);
+	
+	QList<QMdiSubWindow *> windows = ui->mdiArea->subWindowList();
+	m_separatorAct->setVisible(!windows.isEmpty());
+	
+	for (int i = 0; i < windows.size(); ++i) 
+	{
+		QWidget *widget = windows.at(i);
+	
+		QString text = tr("%1%2 %3").arg(i < 9 ? "&" : "")
+					    .arg(i + 1)
+					    .arg(widget->windowTitle());
+
+		QAction *action = ui->menuWindow->addAction(text);
+		action->setCheckable(true);
+		action->setChecked(widget == ui->mdiArea->activeSubWindow());
+		connect(action, SIGNAL(triggered()), m_windowMapper, SLOT(map()));
+		m_windowMapper->setMapping(action, windows.at(i));
+	}
+}
+
+void DirectorWindow::setActiveSubWindow(QWidget *window)
+{
+	if (!window)
+		return;
+	ui->mdiArea->setActiveSubWindow(qobject_cast<QMdiSubWindow *>(window));
+}

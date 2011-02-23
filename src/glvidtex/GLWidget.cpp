@@ -340,6 +340,17 @@ void GLWidget::updateGL(bool now)
 
 GLWidget::~GLWidget()
 {
+	while(!m_drawables.isEmpty())
+	{
+		GLDrawable *gld = m_drawables.takeFirst();
+		removeDrawable(gld);
+		if(!gld->scene())
+		{
+			delete gld;
+			gld = 0;
+		}
+	}
+		
 	if(m_fbo)
 	{
 		delete m_fbo;
@@ -644,7 +655,8 @@ void GLWidgetSubview::initAlphaMask()
 
 void GLWidget::showEvent(QShowEvent *)
 {
-	QTimer::singleShot(50,this,SLOT(postInitGL()));
+	//qDebug() << "GLWidget::showEvent(QShowEvent *)";
+	QTimer::singleShot(1050,this,SLOT(postInitGL()));
 }
 
 

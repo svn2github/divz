@@ -1382,7 +1382,7 @@ HRESULT BMDCaptureDelegate::VideoInputFrameArrived(IDeckLinkVideoInputFrame* vid
 		if (videoFrame->GetFlags() & bmdFrameHasNoInputSource)
 		{
 			//fprintf(stderr, "Frame received (#%d) - No input signal detected\n", m_frameCount);
-			qDebug() << "BMDCaptureDelegate::VideoInputFrameArrived: "<<m_api<<" Frame "<<m_frameCount << " - No input signal detected";
+			//qDebug() << "BMDCaptureDelegate::VideoInputFrameArrived: "<<m_api<<" Frame "<<m_frameCount << " - No input signal detected";
 			
 		}
 		else
@@ -1607,7 +1607,7 @@ QStringList BMDCaptureDelegate::enumDeviceNames(bool forceReload)
 
 BMDCaptureDelegate *BMDCaptureDelegate::openDevice(QString deviceName, CameraThread *api)
 {
-	if(s_knownDevices.indexOf(deviceName) < 0)
+	if(enumDeviceNames().indexOf(deviceName) < 0)
 		return 0;
 		
 	QString name = deviceName.replace("bmd:","");

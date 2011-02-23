@@ -13,7 +13,7 @@ VideoSender::VideoSender(QObject *parent)
 	, m_adaptiveWriteEnabled(true)
 	, m_source(0)
 	, m_transmitFps(10)
-	, m_transmitSize(160,120)
+	, m_transmitSize(240,180)
 	//, m_transmitSize(0,0)
 	//, m_scaledFrame(0)
 	//, m_frame(0)
@@ -62,7 +62,12 @@ void VideoSender::processFrame()
 // 		m_frame->incRef();
 		if(m_transmitSize.isEmpty())
 			m_transmitSize = m_origSize;
-		
+			
+		// Use 16bit format for transmission because:
+		//  320x240x16bits / 8bits/byte = 153,600 bytes
+		//  320x240x32bits / 8bits/byte = 307,200 bytes
+		//  Half as much bandwidth required to transmit the same image - at the expense of 1ms on the sending side.
+
 		//qDebug() << "VideoSender::processFrame: Downscaling video for transmission to "<<m_transmitSize;
 		// To scale the video frame, first we must convert it to a QImage if its not already an image.
 		// If we're lucky, it already is. Otherwise, we have to jump thru hoops to convert the byte 
@@ -73,6 +78,8 @@ void VideoSender::processFrame()
 			scaledImage = m_transmitSize == m_origSize ? 
 				m_frame->image() : 
 				m_frame->image().scaled(m_transmitSize);
+			
+			scaledImage = scaledImage.convertToFormat(QImage::Format_RGB16);
 		}
 		else
 		{
@@ -96,10 +103,14 @@ void VideoSender::processFrame()
 						4),
 					imageFormat);
 					
+				//QTime t; t.start();
 				scaledImage = m_transmitSize == m_origSize ? 
-					image.copy() : 
-					image.scaled(m_transmitSize);
+					image.convertToFormat(QImage::Format_RGB16) : // call convertToFormat instead of copy() because conversion does an implicit copy 
+					image.scaled(m_transmitSize).convertToFormat(QImage::Format_RGB16); // do convertToFormat() after scaled() because less bytes to convert
+					
 				//qDebug() << "Downscaled image from "<<image.byteCount()<<"bytes to "<<scaledImage.byteCount()<<"bytes, orig ptr len:"<<m_frame->pointerLength()<<", orig ptr:"<<m_frame->pointer();
+				//convertToFormat(QImage::Format_RGB16).
+				//qDebug() << "VideoSender::processFrame: [QImage] downscale and 16bit conversion took"<<t.elapsed()<<"ms";
 			}
 			else
 			{
