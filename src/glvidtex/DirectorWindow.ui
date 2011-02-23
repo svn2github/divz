@@ -14,74 +14,60 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QVBoxLayout" name="verticalLayout">
+   <layout class="QHBoxLayout" name="horizontalLayout">
     <item>
-     <widget class="QSplitter" name="mainSplitter">
-      <property name="orientation">
-       <enum>Qt::Horizontal</enum>
+     <widget class="QMdiArea" name="mdiArea">
+      <property name="frameShape">
+       <enum>QFrame::Panel</enum>
       </property>
-      <widget class="QListView" name="groupsListView"/>
-      <widget class="QSplitter" name="sceneSplitter">
-       <property name="orientation">
-        <enum>Qt::Vertical</enum>
-       </property>
-       <widget class="QWidget" name="layoutWidget">
-        <layout class="QHBoxLayout" name="horizontalLayout">
-         <item>
-          <widget class="QMdiArea" name="mdiArea">
-           <property name="frameShape">
-            <enum>QFrame::Panel</enum>
-           </property>
-           <property name="frameShadow">
-            <enum>QFrame::Plain</enum>
-           </property>
-           <property name="midLineWidth">
-            <number>1</number>
-           </property>
-           <property name="verticalScrollBarPolicy">
-            <enum>Qt::ScrollBarAsNeeded</enum>
-           </property>
-           <property name="horizontalScrollBarPolicy">
-            <enum>Qt::ScrollBarAsNeeded</enum>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <layout class="QGridLayout" name="gridLayout">
-           <item row="1" column="0">
-            <widget class="QLabel" name="label">
-             <property name="text">
-              <string>X-Fade:</string>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="0">
-            <widget class="QSlider" name="fadeSpeedSlider">
-             <property name="orientation">
-              <enum>Qt::Vertical</enum>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="0">
-            <widget class="QDoubleSpinBox" name="fadeSpeedBox"/>
-           </item>
-           <item row="0" column="0">
-            <widget class="QPushButton" name="fadeBlackBtn">
-             <property name="text">
-              <string>Black</string>
-             </property>
-             <property name="checkable">
-              <bool>true</bool>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
-        </layout>
-       </widget>
-       <widget class="QListView" name="scenesListView"/>
-      </widget>
+      <property name="frameShadow">
+       <enum>QFrame::Plain</enum>
+      </property>
+      <property name="midLineWidth">
+       <number>1</number>
+      </property>
+      <property name="verticalScrollBarPolicy">
+       <enum>Qt::ScrollBarAsNeeded</enum>
+      </property>
+      <property name="horizontalScrollBarPolicy">
+       <enum>Qt::ScrollBarAsNeeded</enum>
+      </property>
      </widget>
+    </item>
+    <item>
+     <layout class="QGridLayout" name="gridLayout">
+      <item row="1" column="0">
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>X-Fade:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QSlider" name="fadeSpeedSlider">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QDoubleSpinBox" name="fadeSpeedBox">
+        <property name="suffix">
+         <string>s</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QPushButton" name="fadeBlackBtn">
+        <property name="text">
+         <string>Black</string>
+        </property>
+        <property name="checkable">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </item>
    </layout>
   </widget>
@@ -114,9 +100,8 @@
     <property name="title">
      <string>&amp;Edit</string>
     </property>
-    <addaction name="actionEdit_Selected_Group"/>
-    <addaction name="actionAdd_New_Group"/>
-    <addaction name="actionRemove_Selected_Group"/>
+    <addaction name="actionAdd_Video_Player"/>
+    <addaction name="actionAdd_Overlay"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
@@ -135,27 +120,6 @@
   <action name="actionSave_As">
    <property name="text">
     <string>Save &amp;As...</string>
-   </property>
-  </action>
-  <action name="actionEdit_Selected_Group">
-   <property name="text">
-    <string>&amp;Edit Selected Group (Shift+F2)</string>
-   </property>
-   <property name="shortcut">
-    <string>Shift+F2</string>
-   </property>
-  </action>
-  <action name="actionAdd_New_Group">
-   <property name="text">
-    <string>Add &amp;New Group (CTRL+N)</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+N</string>
-   </property>
-  </action>
-  <action name="actionRemove_Selected_Group">
-   <property name="text">
-    <string>&amp;Delete Selected Group</string>
    </property>
   </action>
   <action name="actionPlayer_Setup">
@@ -181,6 +145,16 @@
   <action name="actionNew">
    <property name="text">
     <string>New</string>
+   </property>
+  </action>
+  <action name="actionAdd_Video_Player">
+   <property name="text">
+    <string>Add Video Player</string>
+   </property>
+  </action>
+  <action name="actionAdd_Overlay">
+   <property name="text">
+    <string>Add Overlay</string>
    </property>
   </action>
  </widget>

@@ -60,6 +60,7 @@ private:
 	QImage::Format m_format;
 	QSize m_size;
 	QMutex m_dataMutex;
+	QTime m_stamp;
 };
 
 class GLWidgetSubview : public QObject
@@ -346,10 +347,10 @@ public slots:
  	
  	void setOutputSize(QSize);
 	
+	void postInitGL();
+	
 protected slots:
 	void zIndexChanged();
-	
-	void postInitGL();
 	
 	void fadeBlackTick();
 	

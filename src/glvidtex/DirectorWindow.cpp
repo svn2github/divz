@@ -24,29 +24,20 @@
 
 #include "DrawableDirectorWidget.h"
 
+#include "GLWidget.h"
+
 #include <QCDEStyle>
 
 DirectorWindow::DirectorWindow(QWidget *parent)
 	: QMainWindow(parent)
 	, ui(new Ui::DirectorWindow)
 	, m_players(0)
-	, m_collection(0)
-	, m_currentGroup(0)
-	, m_currentScene(0)
-// 	, m_currentDrawable(0)
-// 	, m_currentItem(0)
-// 	, m_graphicsScene(0)
 {
 	ui->setupUi(this);
 	
 	setupUI();
 	
 	// For some reason, these get unset from NULL between the ctor init above and here, so reset to zero
-	m_currentScene = 0;
-	m_currentGroup = 0;
-// 	m_currentDrawable = 0;
-// 	m_currentItem = 0;
-	m_collection = 0;
 	m_players = 0;
 	
 	m_vidSendMgr = 0;
@@ -55,21 +46,12 @@ DirectorWindow::DirectorWindow(QWidget *parent)
 	
 	readSettings();
 	
-	bool loadedFile = false;
-	
-	// Attempt to load the first argument on the command line
-	QStringList argList = qApp->arguments();
-	if(argList.size() > 1)
-		loadedFile = readFile(argList.at(1));
-	
-	// If no file loaded, create an empty collection 
-	if(!loadedFile)
-		newFile();
-	
 	// Connect to any players that have the 'autoconnect' option checked in the PlayerSetupDialog
-	foreach(PlayerConnection *con, m_players->players())
-		if(!con->isConnected() && con->autoconnect())
-			con->connectPlayer();
+// 	foreach(PlayerConnection *con, m_players->players())
+// 		if(!con->isConnected() && con->autoconnect())
+// 			con->connectPlayer();
+
+	chooseOutput();
 
 	setFocusPolicy(Qt::StrongFocus);
 }
@@ -80,23 +62,61 @@ DirectorWindow::~DirectorWindow()
 	delete ui;
 }
 
-void DirectorWindow::newFile()
+void DirectorWindow::chooseOutput()
 {
-	if(m_collection)
-	{
-		if(m_fileName.isEmpty())
-			showSaveAsDialog();
-		else
-			writeFile(m_fileName);
-	}
+	QDialog dlg;
+	dlg.setWindowTitle("Choose Output");
+	
+	QVBoxLayout *vbox = new QVBoxLayout(&dlg);
 		
-	GLSceneGroupCollection *tmp = new GLSceneGroupCollection();
-	GLSceneGroup *group = new GLSceneGroup();
-	GLScene *scene = new GLScene();
-	group->addScene(scene);
-	tmp->addGroup(group);
-	setCollection(tmp);
+	QHBoxLayout *lay1 = new QHBoxLayout();
+	
+	QComboBox *sourceBox = new QComboBox();
+	QStringList itemList;
+	foreach(PlayerConnection *con, m_players->players())
+		itemList << QString("Player: %1").arg(con->name());
+	sourceBox->addItems(itemList);
+	sourceBox->setCurrentIndex(0);
+	
+	lay1->addWidget(new QLabel("Output:"));
+	lay1->addWidget(sourceBox);
+	 
+	vbox->addLayout(lay1);
+	
+	QHBoxLayout *buttons = new QHBoxLayout();
+	QPushButton *setup = new QPushButton("Setup");
+	buttons->addWidget(setup);
+	
+	buttons->addStretch(1);
+	
+	QPushButton *ok = new QPushButton("ok");
+	buttons->addWidget(ok);
+	ok->setDefault(true);
+	
+	connect(setup, SIGNAL(clicked()), &dlg, SLOT(reject()));
+	connect(ok, SIGNAL(clicked()), &dlg, SLOT(accept()));
+	
+	m_connected = false;
+	
+	//vbox->addStretch(1);
+	vbox->addLayout(buttons);
+	dlg.setLayout(vbox);
+	dlg.adjustSize();
+	if(dlg.exec())
+	{
+		int idx = sourceBox->currentIndex();
+		PlayerConnection *player = m_players->players().at(idx);
+		player->connectPlayer();
+		m_connected = true;
+		
+		showPlayerLiveMonitor(player);
+	}
+	else
+	{
+		showPlayerSetupDialog();
+	}
 }
+
 
 void DirectorWindow::showPlayerLiveMonitor()
 {
@@ -121,7 +141,7 @@ void DirectorWindow::showPlayerLiveMonitor()
 	// Create the dialog box layout
 	sourceBox->addItems(itemList);
 	QDialog dlg;
-	dlg.setWindowTitle("Change Canvas Size");
+	dlg.setWindowTitle("Choose Player");
 	
 	QVBoxLayout *vbox = new QVBoxLayout(&dlg);
 	
@@ -180,13 +200,34 @@ void DirectorWindow::showPlayerLiveMonitor(PlayerConnection *con)
 		
 		qDebug() << "DirectorWindow::showPlayerLiveMonitor: Connected to "<<host<<":"<<port<<", creating widget...";
 		
-		VideoWidget *vid = new VideoWidget();
+		//VideoWidget *vid = new VideoWidget();
 		//qDebug() << "DirectorWindow::showPlayerLiveMonitor: Created VideoWidget:"<<vid;
-		vid->setVideoSource(rx);
+		//vid->setVideoSource(rx);
 		
-		vid->setWindowTitle(QString("Player '%1' - Live Player Monitor").arg(con->name()));
+		GLWidget *vid = new GLWidget();
+		
+		GLVideoDrawable *gld = new GLVideoDrawable();
+		gld->setVideoSource(rx);
+		vid->addDrawable(gld);
+		
+		vid->setWindowTitle(QString("Live - %1").arg(con->name()));
 		vid->resize(320,240);
-		vid->show();
+		//vid->show();
+		
+		QMdiSubWindow *subWindow = new QMdiSubWindow;
+		//subWindow->setStyle(new QCDEStyle());
+		//subWindow->setWidget(new QPushButton(item->itemName()));
+		subWindow->setWidget(vid);
+		subWindow->setAttribute(Qt::WA_DeleteOnClose);
+		//subWindow->adjustSize();
+		//subWindow->setWindowFlags(Qt::FramelessWindowHint);
+	
+		ui->mdiArea->addSubWindow(subWindow);
+		subWindow->show();
+		subWindow->resize(320,270);
+		
+		// Bug workaround - resizeGL doesnt seem to be valid for a second or so....
+		QTimer::singleShot(1000,vid,SLOT(postInitGL()));
 		
 		connect(this, SIGNAL(closed()), vid, SLOT(deleteLater()));
 	}
@@ -206,42 +247,15 @@ void DirectorWindow::setupUI()
 	connect(ui->fadeSpeedSlider, SIGNAL(valueChanged(int)), this, SLOT(setFadeSpeedPercent(int)));
 	connect(ui->fadeSpeedBox, SIGNAL(valueChanged(double)), this, SLOT(setFadeSpeedTime(double)));
 	
-// 	ui->slidePlayBtn->setText("");
-// 	ui->slidePlayBtn->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
-	
 	connect(ui->actionMonitor_Players_Live, SIGNAL(triggered()), this, SLOT(showPlayerLiveMonitor()));
-	
-	connect(ui->actionAdd_New_Group, SIGNAL(triggered()), this, SLOT(addNewGroup()));
-	connect(ui->actionEdit_Selected_Group, SIGNAL(triggered()), this, SLOT(showEditWindow()));
 	connect(ui->actionChange_Canvas_Size, SIGNAL(triggered()), this, SLOT(changeCanvasSize()));
 	connect(ui->actionExit, SIGNAL(triggered()), qApp, SLOT(quit()));
-	connect(ui->actionOpen_Collection, SIGNAL(triggered()), this, SLOT(showOpenFileDialog()));
 	connect(ui->actionPlayer_Setup, SIGNAL(triggered()), this, SLOT(showPlayerSetupDialog()));
-	connect(ui->actionRemove_Selected_Group, SIGNAL(triggered()), this, SLOT(deleteGroup()));
-	connect(ui->actionSave, SIGNAL(triggered()), this, SLOT(saveFile()));
-	connect(ui->actionSave_As, SIGNAL(triggered()), this, SLOT(showSaveAsDialog()));
-	connect(ui->actionNew, SIGNAL(triggered()), this, SLOT(newFile()));
-
-	connect(ui->groupsListView, SIGNAL(activated(const QModelIndex &)), this, SLOT(groupSelected(const QModelIndex &)));
-	connect(ui->groupsListView, SIGNAL(clicked(const QModelIndex &)),   this, SLOT(groupSelected(const QModelIndex &)));
-
-	connect(ui->scenesListView, SIGNAL(activated(const QModelIndex &)), this, SLOT(slideSelected(const QModelIndex &)));
-	connect(ui->scenesListView, SIGNAL(clicked(const QModelIndex &)),   this, SLOT(slideSelected(const QModelIndex &)));
-
-// 	connect(ui->sceneListview, SIGNAL(activated(const QModelIndex &)), this, SLOT(drawableSelected(const QModelIndex &)));
-// 	connect(ui->sceneListview, SIGNAL(clicked(const QModelIndex &)),   this, SLOT(drawableSelected(const QModelIndex &)));
-
-	
-	//ui->drawableGroupBox->setVisible(false);
-	//ui->sceneListview->setVisible(false);
-	
-	//ui->slideTimeLabel->setText("");
 }
 
 void DirectorWindow::closeEvent(QCloseEvent */*event*/)
 {
 	writeSettings();
-	saveFile();
 	emit closed();
 }
 
@@ -253,10 +267,7 @@ void DirectorWindow::readSettings()
 	move(pos);
 	resize(size);
 
-	ui->mainSplitter->restoreState(settings.value("DirectorWindow/MainSplitter2").toByteArray());
-	ui->sceneSplitter->restoreState(settings.value("DirectorWindow/SceneSplitter2").toByteArray());
-	//ui->drawableSplitter->restoreState(settings.value("DirectorWindow/DrawableSplitter").toByteArray());
-
+	
 // 	qreal scaleFactor = (qreal)settings.value("DirectorWindow/scaleFactor", 1.).toDouble();
 // 	//qDebug() << "DirectorWindow::readSettings: scaleFactor: "<<scaleFactor;
 // 	ui->graphicsView->setScaleFactor(scaleFactor);
@@ -275,28 +286,13 @@ void DirectorWindow::writeSettings()
 	settings.setValue("DirectorWindow/pos", pos());
 	settings.setValue("DirectorWindow/size", size());
 
-	settings.setValue("DirectorWindow/MainSplitter2",ui->mainSplitter->saveState());
-	settings.setValue("DirectorWindow/SceneSplitter2",ui->sceneSplitter->saveState());
-	//settings.setValue("DirectorWindow/DrawableSplitter",ui->drawableSplitter->saveState());
-
+	
 	//settings.setValue("DirectorWindow/scaleFactor",ui->graphicsView->scaleFactor());
 	//qDebug() << "DirectorWindow::writeSettings: scaleFactor: "<<ui->graphicsView->scaleFactor();
 	
 	settings.setValue("DirectorWindow/players", m_players->toByteArray());
 }
 
-void DirectorWindow::groupSelected(const QModelIndex &idx)
-{
-	if(!m_collection)
-		return;
-	if(idx.isValid())
-		setCurrentGroup(m_collection->at(idx.row()));
-}
-void DirectorWindow::currentGroupChanged(const QModelIndex &idx,const QModelIndex &)
-{
-	if(idx.isValid())
-		groupSelected(idx);
-}
 /*
 
 	Ui::DirectorWindow *ui;
@@ -310,29 +306,6 @@ void DirectorWindow::currentGroupChanged(const QModelIndex &idx,const QModelInde
 	GLPlaylistItem *m_currentItem;
 
 */
-void DirectorWindow::slideSelected(const QModelIndex &idx)
-{
-	if(idx.isValid())
-		setCurrentScene(m_currentGroup->at(idx.row()));
-}
-void DirectorWindow::currentSlideChanged(const QModelIndex &idx,const QModelIndex &)
-{
-	if(idx.isValid())
-		slideSelected(idx);
-}
-
-// void DirectorWindow::drawableSelected(const QModelIndex &idx)
-// {
-// 	if(!m_currentScene)
-// 		return;
-// 	if(idx.isValid())
-// 		setCurrentDrawable(m_currentScene->at(idx.row()));
-// }
-// void DirectorWindow::currentDrawableChanged(const QModelIndex &idx,const QModelIndex &)
-// {
-// 	if(idx.isValid())
-// 		drawableSelected(idx);
-// }
 
 void DirectorWindow::fadeBlack(bool toBlack)
 {
@@ -382,340 +355,82 @@ void DirectorWindow::setFadeSpeedTime(double sec)
 }
 
 
-void DirectorWindow::showOpenFileDialog()
-{
-	QSettings settings;
-	
-	QString curFile = m_fileName;
-	if(curFile.trimmed().isEmpty())
-		curFile = settings.value("last-collection-file").toString();
-
-	QString fileName = QFileDialog::getOpenFileName(this, tr("Select Group Collection File"), curFile, tr("GLDirector File (*.gld);;Any File (*.*)"));
-	if(fileName != "")
-	{
-		settings.setValue("last-collection-file",fileName);
-		if(readFile(fileName))
-		{
-			return;
-		}
-		else
-		{
-			QMessageBox::critical(this,tr("File Does Not Exist"),tr("Sorry, but the file you chose does not exist. Please try again."));
-		}
-	}
-}
-void DirectorWindow::showSaveAsDialog()
-{
-	QSettings settings;
-	
-	QString curFile = m_fileName;
-	if(curFile.trimmed().isEmpty())
-		curFile = settings.value("last-collection-file").toString();
-
-	QString fileName = QFileDialog::getSaveFileName(this, tr("Choose a Filename"), curFile, tr("GLDirector File (*.gld);;Any File (*.*)"));
-	if(fileName != "")
-	{
-		QFileInfo info(fileName);
-		//if(info.suffix().isEmpty())
-			//fileName += ".dviz";
-		settings.setValue("last-collection-file",fileName);
-		writeFile(fileName);
-// 		return true;
-	}
-
-// 	return false;
-}
-void DirectorWindow::saveFile()
-{
-	//m_fileName = "test.gld";
-	if(m_fileName.isEmpty())
-		showSaveAsDialog();
-	else
-		writeFile(m_fileName);
-}
-
 void DirectorWindow::showPlayerSetupDialog()
 {
 	PlayerSetupDialog dlg;
 	dlg.setPlayerList(m_players);
 	dlg.exec();
+	
+	if(!m_connected)
+		chooseOutput();
 }
 
-void DirectorWindow::showEditWindow()
+/*void DirectorWindow::showEditWindow()
 {
 	if(!m_currentGroup)
 		return;
 	
-	EditorWindow *edit = new EditorWindow();
-	edit->setGroup(m_currentGroup, m_currentScene);
-	edit->setCanvasSize(m_collection->canvasSize());
-	edit->show();
+// 	EditorWindow *edit = new EditorWindow();
+// 	edit->setGroup(m_currentGroup, m_currentScene);
+// 	edit->setCanvasSize(m_collection->canvasSize());
+// 	edit->show();
 }
-void DirectorWindow::addNewGroup()
-{
-	GLSceneGroup *group = new GLSceneGroup();
-	m_collection->addGroup(group);
-	setCurrentGroup(group);
-}
-void DirectorWindow::deleteGroup()
-{
-	if(!m_currentGroup)
-		return;
-	
-	if (QMessageBox::question(0, tr("Delete Group"), tr("Are you SURE you want to delete this group?"), QMessageBox::Yes | QMessageBox::No) == QMessageBox::No)
-		return;
-	
-	m_collection->removeGroup(m_currentGroup);
-	
-// 	if(m_collection && m_collection->size() > 0)
-// 		setCurrentGroup(m_collection->at(0));
-// 	else
-		setCurrentGroup(0);
-	
-	m_currentGroup->deleteLater();
-}
-
-bool DirectorWindow::readFile(const QString& fileArg)
-{
-	if(!fileArg.isEmpty())
-	{
-		m_fileName = fileArg;
-		QFile file(fileArg);
-		if (!file.open(QIODevice::ReadOnly)) 
-		{
-			qDebug() << "DirectorWindow: Unable to read collection file: "<<fileArg;
-			return false;
-		}
-		else
-		{
-			QByteArray array = file.readAll();
-			
-			GLSceneGroupCollection *collection = new GLSceneGroupCollection();
-			collection->fromByteArray(array);
-			
-			setCollection(collection);
-			
-			qDebug() << "DirectorWindow: [DEBUG]: Loaded File: "<<fileArg<<", CollectionID: "<<collection->collectionId()<<", array: "<<array.size();
-			
-			setWindowTitle(QString("%1 - GLDirector").arg(QFileInfo(fileArg).fileName()));
-		}
-	}
-	
-	return true;
-}
-bool DirectorWindow::writeFile(const QString& fileName)
-{
-	QString fileArg = fileName;
-	if(fileArg.isEmpty())
-		fileArg = m_fileName;
-	
-	if(!fileArg.isEmpty())
-	{
-		m_fileName = fileArg;
-		setWindowTitle(QString("%1 - GLDirector").arg(QFileInfo(fileArg).fileName()));
-		
-		QFile file(fileArg);
-		// Open file
-		if (!file.open(QIODevice::WriteOnly))
-		{
-			QMessageBox::warning(0, QObject::tr("File Error"), QObject::tr("Error opening file '%1' for writing").arg(fileArg));
-			//throw 0;
-			return false;
-		}
-		else
-		{
-			
-			//QByteArray array;
-			//QDataStream stream(&array, QIODevice::WriteOnly);
-			//QVariantMap map;
-			
-			file.write(collection()->toByteArray());
-			file.close();
-			
-			qDebug() << "DirectorWindow: Debug: Saved CollectionID: "<< collection()->collectionId()<<" to file: "<<fileArg;
-		}	
-	}
-	return true;
-}
-
-void DirectorWindow::setCollection(GLSceneGroupCollection *collection)
-{
-	if(m_collection)
-	{
-		m_collection->deleteLater();
-		m_collection = 0;
-	}
-	
-	m_collection = collection;
-	ui->groupsListView->setModel(collection);
-// 	ui->groupsListView->resizeColumnsToContents();
-//  	ui->groupsListView->resizeRowsToContents();
-	
-	if(collection->size() > 0)
-	{
-		QModelIndex idx = collection->index(0, 0);
-		ui->groupsListView->setCurrentIndex(idx);
-		groupSelected(idx);
-	}
-	
-	foreach(PlayerConnection *con, m_players->players())
-		con->setCanvasSize(m_collection->canvasSize());
-		
-// 	if(m_graphicsScene)
-// 		m_graphicsScene->setSceneRect(QRectF(QPointF(0,0),m_collection->canvasSize()));
-}
-void DirectorWindow::setCurrentGroup(GLSceneGroup *group, GLScene */*currentScene*/)
-{
-	if(m_currentGroup)
-		disconnect(m_currentGroup, 0, this, 0);
-		
-	m_currentGroup = group;
-	if(!group)
-		return;
-		
-	ui->scenesListView->setModel(group);
-// 	ui->scenesListView->resizeColumnsToContents();
-//  	ui->scenesListView->resizeRowsToContents();
-	connect(group, SIGNAL(sceneDataChanged()), this, SLOT(sceneDataChanged()));
-	
-	foreach(PlayerConnection *con, m_players->players())
-		con->setGroup(group);
-	
-	if(group->size() > 0)
-	{
-		QModelIndex idx = group->index(0, 0);
-		ui->scenesListView->setCurrentIndex(idx);
-		slideSelected(idx);
-	}
-}
-
-void DirectorWindow::sceneDataChanged()
-{
-// 	ui->scenesListView->resizeColumnsToContents();
-//  	ui->scenesListView->resizeRowsToContents();
-}
-
-void DirectorWindow::setCurrentScene(GLScene *scene)
-{
-	if(!scene || scene == m_currentScene)
-		return;
-	
-	//qDebug() << "DirectorWindow::setCurrentScene: scene:"<<scene<<", m_currentScene:"<<(void*)m_currentScene;
-	
-	if(m_currentScene)
-	{
-		disconnect(m_currentScene, 0, this, 0);
-		m_currentScene = 0;
-		
-		ui->mdiArea->closeAllSubWindows();
-	}
-	
-	m_currentScene = scene;
-	
-	foreach(PlayerConnection *con, m_players->players())
-		con->setScene(scene);
-
-	//ui->sceneListview->setModel(scene);
-	scene->setListOnlyUserItems(true);
-	qDebug() << "DirectorWindow::setCurrentScene: "<<scene<<": size:"<<scene->size();
-	
-	for(int i=0; i<scene->size(); i++)
-	{
-		GLDrawable *item = scene->at(i);
-		
- 		QMdiSubWindow *subWindow = new QMdiSubWindow;
- 		//subWindow->setStyle(new QCDEStyle());
-		//subWindow->setWidget(new QPushButton(item->itemName()));
-		DrawableDirectorWidget *widget = new DrawableDirectorWidget(item, scene, this); 
-		subWindow->setWidget(widget);
- 		subWindow->setAttribute(Qt::WA_DeleteOnClose);
- 		//subWindow->adjustSize();
- 		//subWindow->setWindowFlags(Qt::FramelessWindowHint);
- 		
- 		ui->mdiArea->addSubWindow(subWindow);
- 		subWindow->show();
-		
-		qDebug() << "DirectorWindow::setCurrentScene: "<<scene<<": Created subwindow for item:"<<item->itemName();
-	}
-	
-	
-// 	if(!dynamic_cast<GLEditorGraphicsScene*>(m_currentScene->graphicsScene()))
-// 		m_currentScene->setGraphicsScene(new GLEditorGraphicsScene);
-// 	m_graphicsScene = dynamic_cast<GLEditorGraphicsScene*>(m_currentScene->graphicsScene());
-// 	if(!m_graphicsScene)
-// 		qDebug() << "Directorwindow::setCurrentScene: "<<scene<<" Internal Error: No graphics scene returned. Probably will crash now.";
-// 	m_graphicsScene->setSceneRect(QRectF(QPointF(0,0),m_collection->canvasSize()));
-// 	ui->graphicsView->setScene(m_graphicsScene);
-	
-// 	bool hasUserItems = scene->size();
-// 	
-// 	ui->drawableGroupBox->setVisible(hasUserItems);
-// 	ui->sceneListview->setVisible(hasUserItems);
-	
-	/*
-	if(scene->size() > 0)
-	{
-		QModelIndex idx = scene->index(0, 0);
-		ui->sceneListview->setCurrentIndex(idx);
-		drawableSelected(idx);
-	}*/
-}
-
+*/
 void DirectorWindow::changeCanvasSize()
 {
-	if(!m_collection)
-		return;
-	
-	QDialog dlg;
-	dlg.setWindowTitle("Change Canvas Size");
-	
-	QVBoxLayout *vbox = new QVBoxLayout(&dlg);
-	
-		
-	QFormLayout *form = new QFormLayout();
-	QSpinBox *width = new QSpinBox();
-	width->setMinimum(0);
-	width->setMaximum(99999);
-	
-	QSpinBox *height = new QSpinBox();
-	height->setMinimum(0);
-	height->setMaximum(99999);
-	
-	QSizeF size = m_collection->canvasSize();
-	width->setValue((int)size.width());
-	height->setValue((int)size.height()); 
-	
-	form->addRow("Width:", width);
-	form->addRow("Height:", height);
-	 
-	QHBoxLayout *buttons = new QHBoxLayout();
-	buttons->addStretch(1);
-	QPushButton *cancel = new QPushButton("Cancel");
-	buttons->addWidget(cancel);
-	
-	QPushButton *ok = new QPushButton("ok");
-	buttons->addWidget(ok);
-	ok->setDefault(true);
-	
-	connect(cancel, SIGNAL(clicked()), &dlg, SLOT(reject()));
-	connect(ok, SIGNAL(clicked()), &dlg, SLOT(accept()));
-	
-	vbox->addLayout(form);
-	vbox->addStretch(1);
-	vbox->addLayout(buttons);
-	dlg.setLayout(vbox);
-	dlg.adjustSize();
-	if(dlg.exec())
-	{
-		m_collection->setCanvasSize(QSizeF((qreal)width->value(), (qreal)height->value()));
-		
-		foreach(PlayerConnection *con, m_players->players())
-			con->setCanvasSize(m_collection->canvasSize());
-			
-// 		if(m_graphicsScene)
-// 			m_graphicsScene->setSceneRect(QRectF(QPointF(0,0),m_collection->canvasSize()));
-		
-	}
+// 	if(!m_collection)
+// 		return;
+// 	
+// 	QDialog dlg;
+// 	dlg.setWindowTitle("Change Canvas Size");
+// 	
+// 	QVBoxLayout *vbox = new QVBoxLayout(&dlg);
+// 	
+// 		
+// 	QFormLayout *form = new QFormLayout();
+// 	QSpinBox *width = new QSpinBox();
+// 	width->setMinimum(0);
+// 	width->setMaximum(99999);
+// 	
+// 	QSpinBox *height = new QSpinBox();
+// 	height->setMinimum(0);
+// 	height->setMaximum(99999);
+// 	
+// 	QSizeF size = m_collection->canvasSize();
+// 	width->setValue((int)size.width());
+// 	height->setValue((int)size.height()); 
+// 	
+// 	form->addRow("Width:", width);
+// 	form->addRow("Height:", height);
+// 	 
+// 	QHBoxLayout *buttons = new QHBoxLayout();
+// 	buttons->addStretch(1);
+// 	QPushButton *cancel = new QPushButton("Cancel");
+// 	buttons->addWidget(cancel);
+// 	
+// 	QPushButton *ok = new QPushButton("ok");
+// 	buttons->addWidget(ok);
+// 	ok->setDefault(true);
+// 	
+// 	connect(cancel, SIGNAL(clicked()), &dlg, SLOT(reject()));
+// 	connect(ok, SIGNAL(clicked()), &dlg, SLOT(accept()));
+// 	
+// 	vbox->addLayout(form);
+// 	vbox->addStretch(1);
+// 	vbox->addLayout(buttons);
+// 	dlg.setLayout(vbox);
+// 	dlg.adjustSize();
+// 	if(dlg.exec())
+// 	{
+// 		m_collection->setCanvasSize(QSizeF((qreal)width->value(), (qreal)height->value()));
+// 		
+// 		foreach(PlayerConnection *con, m_players->players())
+// 			con->setCanvasSize(m_collection->canvasSize());
+// 			
+// // 		if(m_graphicsScene)
+// // 			m_graphicsScene->setSceneRect(QRectF(QPointF(0,0),m_collection->canvasSize()));
+// 		
+// 	}
 	
 }
 

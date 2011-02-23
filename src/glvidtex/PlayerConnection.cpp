@@ -681,7 +681,7 @@ void PlayerConnection::receivedMap(QVariantMap map)
 		int id = map["drawableid"].toInt();
 		if(!m_scene)
 		{
-			qDebug() << "PlayerConnection::receivedMap: [WARN] Received "<<cmd<<", but no active scene!";
+			//qDebug() << "PlayerConnection::receivedMap: [WARN] Received "<<cmd<<", but no active scene!";
 			return;
 		}
 
@@ -702,7 +702,7 @@ void PlayerConnection::receivedMap(QVariantMap map)
 			GLPlaylistItem *item = gld->playlist()->lookup(id);
 			if(!item)
 			{
-				qDebug() << "PlayerConnection::receivedMap: [WARN] Received "<<cmd<<" for playlist item ID "<<id<<" on drawable "<<(QObject*)gld<<", but no such item exists in the drawable's playlist.";
+				//qDebug() << "PlayerConnection::receivedMap: [WARN] Received "<<cmd<<" for playlist item ID "<<id<<" on drawable "<<(QObject*)gld<<", but no such item exists in the drawable's playlist.";
 				return;
 			}
 			else

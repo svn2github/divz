@@ -297,7 +297,36 @@ TODO:
 		- Undo/redo
 		- Idea: Can we reduce network latency by breaking the frame apart into subsections and transmitting them in parallel over seperate sockets?
 		 
+
+	DIRECTOR REDESIGN:
 		
+			On startup, give list of outputs....
+				Combined list of:
+					Screens on this computer
+					Players registered
+				
+				[Combobox--------\/]
+				[Setup]       [Open]
+				
+			On connect...
+				[If local, open local player binary automatically and connect via IP]
+				
+				- Query for list of video inputs
+					- Create video windows for each input
+				
+				- Create program window (monitor live output feed from player...?)
+				- Create preview window 
+					Local GLWidget composits selected preview options
+				
+				- User can use menu to add multiple Overlay windows
+					- Overlay windows load a group collection file/first group
+						- Combox in overlay window selects current overlay to use
+				
+					- If overlay window contains text box that is user controllable,
+						overlay window should present text input
+						+ Advanced btn
+						
+				- User can add Video Player windows
 
 TARGET DATE: 12/11 9am
 	Features Required by 12/11 9am:

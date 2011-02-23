@@ -1000,6 +1000,7 @@ void GLWidget::paintGL()
 
 		if(m_outputStream)
 		{
+			//qDebug() << "GLWidget::paintGL(): Downloading from GPU to m_outputStream";
 // 			QTime t;
 // 			t.start();
 			if(m_pboEnabled)
@@ -1071,6 +1072,7 @@ void GLWidget::paintGL()
 	else
 	{
 		m_fbo->release();
+		//qDebug() << "GLWidget::paintGL(): Downloading from GPU to m_outputStream - via FBO";
 
 		// Now render the FBO to the screen, applying a variety of transforms/effects:
 		// 1. Corner distortion ("keystoning") - can move any of the four corners individually
@@ -2109,7 +2111,7 @@ void GLWidgetOutputStream::copyPtr(GLubyte *ptrIn, QSize size)
 	memcpy((uchar*)ptr, ptrIn, bytes);
 	
 	m_data = QSharedPointer<uchar>(ptr);
-	
+	m_stamp = QTime::currentTime();
 	m_frameUpdated = true;
 }
 
@@ -2126,7 +2128,9 @@ void GLWidgetOutputStream::run()
 				QImage img((uchar*)m_data.data(), m_size.width(), m_size.height(), m_format);
 				img = img.mirrored();
 				
-				enqueue(new VideoFrame(img,1000/m_fps));
+				VideoFrame *frame = new VideoFrame(img,1000/m_fps);
+				frame->setCaptureTime(m_stamp);
+				enqueue(frame);
 				m_frameUpdated = false;
 				emit frameReady();
 				//qDebug() << "GLWidgetOutputStream::run(): new frame, size: "<<img.byteCount()/1024<<" Kb";
