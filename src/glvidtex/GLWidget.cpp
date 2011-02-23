@@ -350,6 +350,14 @@ GLWidget::~GLWidget()
 			gld = 0;
 		}
 	}
+	
+	while(!m_subviews.isEmpty())
+	{
+		GLWidgetSubview *sub = m_subviews.takeFirst();
+		removeSubview(sub);
+		delete sub;
+		sub = 0;
+	}
 		
 	if(m_fbo)
 	{

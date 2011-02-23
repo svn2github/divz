@@ -567,6 +567,18 @@ void PlayerWindow::loadConfig(const QString& configFile, bool verbose)
 	/// NB REMOVE FOR PRODUCTION
 
 	//QTimer::singleShot(1000, this, SLOT(setBlack()));
+	
+	
+	m_overlays = new GLSceneGroup();
+	
+// 	GLScene *scene = new GLScene();
+// 	GLImageDrawable *img = new GLImageDrawable();
+// 	img->setImageFile("Pm5544.jpg");
+// 	img->setRect(QRectF(10,10,200,200));
+// 	scene->addDrawable(img);
+	
+	//addOverlay(scene);
+	
 }
 
 void PlayerWindow::sendReply(QVariantList reply)
@@ -672,6 +684,45 @@ void PlayerWindow::receivedMap(QVariantMap map)
 		sendReply(QVariantList()
 				<< "cmd" << cmd
 				<< "status" << true);
+	}
+	else
+	if(cmd == GLPlayer_AddOverlay)
+	{
+		QByteArray ba = map["data"].toByteArray();
+		GLScene *scene = new GLScene(ba);
+		
+		if(GLScene *old = m_overlays->lookupScene(scene->sceneId()))
+		{
+			//m_overlays->removeScene(old);
+			removeOverlay(old);
+		}
+		
+		addOverlay(scene);
+
+		sendReply(QVariantList()
+				<< "cmd" << cmd
+				<< "status" << true);
+	}
+	else
+	if(cmd == GLPlayer_RemoveOverlay)
+	{
+		int id = map["id"].toInt();
+		
+		if(GLScene *old = m_overlays->lookupScene(id))
+		{
+			removeOverlay(old);
+			sendReply(QVariantList()
+					<< "cmd" << cmd
+					<< "status" << true);
+		}
+		else
+		{
+			sendReply(QVariantList()
+					<< "cmd" << cmd
+					<< "status" << "error"
+					<< "message" << "Invalid overlay ID");
+		
+		}
 	}
 	else
 	if(cmd == GLPlayer_LoadSlideGroup)
@@ -1124,8 +1175,17 @@ void PlayerWindow::setGroup(GLSceneGroup *group)
 	if(m_group)
 	{
 		disconnect(m_group->playlist(), 0, this, 0);
-		delete m_group;
-		m_group = 0;
+		if(m_group->sceneList().indexOf(m_scene) > -1)
+		{
+			// active scene is in this group, dont delete till active scene released;
+			m_oldGroup = m_group;
+		}
+		else
+		{
+			delete m_group;
+			m_group = 0;
+			m_oldGroup = 0;
+		}
 	}
 
 	m_group = group;
@@ -1140,18 +1200,18 @@ void PlayerWindow::setGroup(GLSceneGroup *group)
 void PlayerWindow::displayScene(GLScene *scene)
 {
 	//qDebug() << "PlayerWindow::displayScene: New scene:"<<scene;
-	if(scene == m_scene)
-	{
-		qDebug() << "PlayerWindow::displayScene: Scene pointers match, not setting new scene";
-		return;
-	}
+// 	if(scene == m_scene)
+// 	{
+// 		qDebug() << "PlayerWindow::displayScene: Scene pointers match, not setting new scene";
+// 		return;
+// 	}
 
-	if(m_scene)
+	if(scene   && 
+	   m_scene &&
+	   scene->sceneId() == m_scene->sceneId())
 	{
-		GLDrawableList list = m_scene->drawableList();
-		foreach(GLDrawable *gld, list)
-			if(gld->playlist()->size() > 0)
-				gld->playlist()->stop();
+		qDebug() << "PlayerWindow::displayScene: Scene IDs match, not setting new scene.";
+		return;
 	}
 
 	if(m_oldScene)
@@ -1160,40 +1220,101 @@ void PlayerWindow::displayScene(GLScene *scene)
 	m_oldScene = m_scene;
 	m_scene = scene;
 
-	if(scene->sceneType())
-		scene->sceneType()->setLiveStatus(true);
-
 	if(m_group)
 		m_group->playlist()->setCurrentItem(m_scene);
 
-	GLDrawableList newSceneList = m_scene->drawableList();
+	removeScene(m_oldScene);
+	addScene(m_scene);
+}
 
+void PlayerWindow::addOverlay(GLScene *scene)
+{
+	if(!scene)
+		return;
+		
+	if(m_overlays->lookupScene(scene->sceneId()))
+	{
+		qDebug() << "PlayerWindow::addOverlay: overlay"<<scene<<"already present in window, not readding";
+		return;
+	}
+	
+	m_overlays->addScene(scene);
+	addScene(scene, m_overlays->size() + 1);
+}
+
+void PlayerWindow::removeOverlay(GLScene *scene)
+{
+	if(!m_overlays->lookupScene(scene->sceneId()))
+	{
+		qDebug() << "PlayerWindow::addOverlay: overlay"<<scene<<"not present in window, nothing to remove";
+		return;
+	}
+	
+	m_overlays->removeScene(scene);
+	removeScene(scene);
+}
+
+void PlayerWindow::removeScene(GLScene *scene)
+{
+	if(scene)
+	{
+		GLDrawableList list = scene->drawableList();
+		foreach(GLDrawable *gld, list)
+			if(gld->playlist()->size() > 0)
+				gld->playlist()->stop();
+
+		scene->setOpacity(0,true,m_xfadeSpeed); // animate fade out
+		// remove drawables from oldScene in finished slot
+		connect(scene, SIGNAL(opacityAnimationFinished()), this, SLOT(opacityAnimationFinished()));
+	}
+	else
+	{
+// 		if(m_glWidget)
+// 		{
+// 			QList<GLDrawable*> items = m_glWidget->drawables();
+// 			foreach(GLDrawable *drawable, items)
+// 			{
+// 				disconnect(drawable->playlist(), 0, this, 0);
+// 				m_glWidget->removeDrawable(drawable);
+// 			}
+// 		}
+// 		else
+// 		{
+// 			QList<QGraphicsItem*> items = m_graphicsScene->items();
+// 			foreach(QGraphicsItem *item, items)
+// 			{
+// 				if(GLDrawable *drawable = dynamic_cast<GLDrawable*>(item))
+// 				{
+// 					disconnect(drawable->playlist(), 0, this, 0);
+// 					m_graphicsScene->removeItem(drawable);
+// 				}
+// 			}
+// 		}
+	}
+}
+
+void PlayerWindow::addScene(GLScene *scene, int zmod)
+{
+	if(!scene)
+		return;
+		
+	scene->setOpacity(0); // no anim yet...
+
+	if(scene->sceneType())
+		scene->sceneType()->setLiveStatus(true);
+
+	GLDrawableList newSceneList = scene->drawableList();
+
+	
 	if(m_glWidget)
 	{
-		if(m_oldScene)
-		{
-			//qDebug() << "PlayerWindow::displayScene: Old scene:"<<m_oldScene<<", doing fade out";
-
-			m_oldScene->setOpacity(0,true,m_xfadeSpeed); // animate fade out
-			// remove drawables from oldScene in finished slot
-			connect(m_oldScene, SIGNAL(opacityAnimationFinished()), this, SLOT(opacityAnimationFinished()));
-		}
-		else
-		{
-			QList<GLDrawable*> items = m_glWidget->drawables();
-			foreach(GLDrawable *drawable, items)
-			{
-				disconnect(drawable->playlist(), 0, this, 0);
-				m_glWidget->removeDrawable(drawable);
-			}
-		}
-
-		m_scene->setOpacity(0); // no anim yet...
 		//qDebug() << "PlayerWindow::displayScene: Set new scene opac to 0";
 
 // 		//double maxZIndex = -100000;
 		foreach(GLDrawable *drawable, newSceneList)
 		{
+			drawable->setZIndexModifier(zmod);
+			
 			connect(drawable->playlist(), SIGNAL(currentItemChanged(GLPlaylistItem*)), this, SLOT(currentPlaylistItemChanged(GLPlaylistItem*)));
 			connect(drawable->playlist(), SIGNAL(playerTimeChanged(double)), this, SLOT(playlistTimeChanged(double)));
 			m_glWidget->addDrawable(drawable);
@@ -1209,60 +1330,47 @@ void PlayerWindow::displayScene(GLScene *scene)
 // 				maxZIndex = drawable->zIndex();
 		}
 
-		//qDebug() << "PlayerWindow::displayScene: Animating fade in";
-		m_scene->setOpacity(1,true,m_xfadeSpeed); // animate fade in
+		//qDebug() << "PlayerWindow::displayScene: Animating fade in
+		
 	}
 	else
 	{
-		if(m_oldScene)
-		{
-			m_oldScene->setOpacity(0,true,m_xfadeSpeed); // animate fade out
-			// remove drawables from oldScene in finished slot
-			connect(m_oldScene, SIGNAL(opacityAnimationFinished()), this, SLOT(opacityAnimationFinished()));
-		}
-		else
-		{
-			QList<QGraphicsItem*> items = m_graphicsScene->items();
-			foreach(QGraphicsItem *item, items)
-			{
-				if(GLDrawable *drawable = dynamic_cast<GLDrawable*>(item))
-				{
-					disconnect(drawable->playlist(), 0, this, 0);
-					m_graphicsScene->removeItem(drawable);
-				}
-			}
-		}
-
-		//m_graphicsScene->clear();
-		m_scene->setOpacity(0); // no anim yet...
-
+		
 		foreach(GLDrawable *drawable, newSceneList)
 		{
+			drawable->setZIndexModifier(zmod);
+			
 			connect(drawable->playlist(), SIGNAL(currentItemChanged(GLPlaylistItem*)), this, SLOT(currentPlaylistItemChanged(GLPlaylistItem*)));
 			connect(drawable->playlist(), SIGNAL(playerTimeChanged(double)), this, SLOT(playlistTimeChanged(double)));
 			m_graphicsScene->addItem(drawable);
-
+	
 			if(GLVideoDrawable *vid = dynamic_cast<GLVideoDrawable*>(drawable))
 			{
 				//qDebug() << "QGraphicsView mode, item:"<<(QObject*)drawable<<", xfade length:"<<m_xfadeSpeed;
 				vid->setXFadeLength(m_xfadeSpeed);
 			}
 		}
-
-		m_scene->setOpacity(1,true,m_xfadeSpeed); // animate fade in
 	}
+
+	scene->setOpacity(1,true,m_xfadeSpeed); // animate fade in
+	
 
 	GLDrawableList list = scene->drawableList();
 	foreach(GLDrawable *gld, list)
 		if(gld->playlist()->size() > 0)
 			gld->playlist()->play();
-
 }
 
 void PlayerWindow::opacityAnimationFinished(GLScene *scene)
 {
 	if(!scene)
 		scene = dynamic_cast<GLScene*>(sender());
+		
+	if(!scene)
+	{
+ 		qDebug() << "PlayerWindow::opacityAnimationFinished: No scene given, nothing removed.";
+ 		return;
+	}
 
 	//disconnect(drawable, 0, this, 0);
 
@@ -1291,6 +1399,13 @@ void PlayerWindow::opacityAnimationFinished(GLScene *scene)
 
 	if(scene == m_oldScene)
 		m_oldScene = 0;
+	
+	if(scene->sceneGroup() == m_oldGroup)
+	{
+		qDebug() << "PlayerWindow::opacityAnimationFinished: deleting old group:"<<(QObject*)m_oldGroup;
+		delete m_oldGroup;
+		m_oldGroup = 0;
+	}
 }
 
 void PlayerWindow::currentPlaylistItemChanged(GLPlaylistItem* item)

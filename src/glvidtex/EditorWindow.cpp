@@ -43,6 +43,8 @@ void EditorWindow::setIsStandalone(bool flag)
 {
 	m_isStandalone = flag;
 	
+	m_collection = new GLSceneGroupCollection();
+			
 	if(flag && m_fileName.isEmpty())
 	{
 		QStringList argList = qApp->arguments();
@@ -52,29 +54,23 @@ void EditorWindow::setIsStandalone(bool flag)
 			if(!fileArg.isEmpty())
 			{
 				m_fileName = fileArg;
-				QFile file(fileArg);
-				if (!file.open(QIODevice::ReadOnly)) 
-				{
-					qDebug() << "EditorWindow: Unable to read group file: "<<fileArg;
-					GLSceneGroup *group = new GLSceneGroup();
-					GLScene *scene = new GLScene();
-					group->addScene(scene);
-					setGroup(group);
-				}
+				
+				if(!m_collection->readFile(fileArg))
+					qDebug() << "EditorWindow: [DEBUG]: Unable to load"<<fileArg<<", created new scene";
 				else
-				{
-					QByteArray array = file.readAll();
-					
-					GLSceneGroup *group = new GLSceneGroup();
-					group->fromByteArray(array);
-					
-					setGroup(group);
-					
-					qDebug() << "EditorWindow: [DEBUG]: Loaded File: "<<fileArg<<", GroupID: "<<group->groupId();
-				}
+					qDebug() << "EditorWindow: [DEBUG]: Loaded File: "<<fileArg;
 			}
 		}
 	}
+	
+	if(m_collection->size() <= 0)
+	{
+		GLSceneGroup *group = new GLSceneGroup();
+		group->addScene(new GLScene());
+		m_collection->addGroup(group);
+	}
+	
+	setGroup(m_collection->at(0));
 }
 
 EditorWindow::~EditorWindow()
@@ -90,28 +86,17 @@ void EditorWindow::closeEvent(QCloseEvent *event)
 	writeSettings();
 	event->accept();
 	
-	if(m_isStandalone && !m_fileName.isEmpty())
+	if(m_isStandalone && 
+	   m_collection)
 	{
-		QFile file(m_fileName);
-		// Open file
-		if (!file.open(QIODevice::WriteOnly))
+		if(m_fileName.isEmpty())
+			m_fileName = QFileDialog::getSaveFileName(this, tr("Choose a Filename"), m_fileName, tr("GLDirector File (*.gld);;Any File (*.*)"));
+			
+		if(!m_fileName.isEmpty())
 		{
-			QMessageBox::warning(0, QObject::tr("File Error"), QObject::tr("Error saving writing file '%1'").arg(m_fileName));
-			//throw 0;
-			//return;
+			m_collection->writeFile(m_fileName);
+			qDebug() << "EditorWindow: Debug: Saved CollectionID: "<< m_collection->collectionId();
 		}
-		else
-		{
-			
-			//QByteArray array;
-			//QDataStream stream(&array, QIODevice::WriteOnly);
-			//QVariantMap map;
-			
-			file.write(group()->toByteArray());
-			file.close();
-			
-			qDebug() << "EditorWindow: Debug: Saved GroupID: "<< m_group->groupId();
-		}	
 	}
 }
 

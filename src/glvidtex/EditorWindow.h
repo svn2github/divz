@@ -4,6 +4,7 @@
 #include <QtGui>
 
 class GLEditorGraphicsScene;
+class GLSceneGroupCollection;
 class GLSceneGroup;
 class GLScene;
 class GLDrawable;
@@ -113,6 +114,7 @@ protected:
 	QString m_fileName;
 	
 	bool m_isStandalone;
+	GLSceneGroupCollection *m_collection;
 	
 	QPointer<QDoubleSpinBox> m_textSizeBox;
 };

@@ -103,6 +103,7 @@ GLVideoDrawable::GLVideoDrawable(QObject *parent)
 	, m_crossFadeMode(JustFront)
 	, m_isCameraThread(false)
 	, m_liveStatus(false)
+	, m_textureUpdateNeeded(false)
 {
 
 	m_imagePixelFormats
@@ -1300,7 +1301,7 @@ void GLVideoDrawable::updateRects(bool secondSource)
 	}
 
 	setAlphaMask(m_alphaMask_preScaled);
-	//qDebug() << "GLVideoDrawable::updateRects(): "<<(QObject*)this<<" m_sourceRect:"<<m_sourceRect<<", adjustedSource:"<<adjustedSource<<", m_targetRect:"<<m_targetRect<<", rect:"<<rect();
+	//qDebug() << "GLVideoDrawable::updateRects(): "<<(QObject*)this<<m_source<<" m_sourceRect:"<<m_sourceRect<<", adjustedSource:"<<adjustedSource<<", m_targetRect:"<<m_targetRect<<", rect:"<<rect();
 }
 
 // float opacity = 0.5;
@@ -2275,8 +2276,8 @@ void GLVideoDrawable::paintGL()
 				 opacity() :
 				(opacity() * (m_fadeActive ? m_fadeValue : 1.));
 		
-//if(m_fadeActive)
-//qDebug() << "GLVideoDrawable::paintGL: Fade active, liveOpacity:
+	//if(m_fadeActive)
+//		qDebug() << "GLVideoDrawable::paintGL: "<<(QObject*)this<<m_source<<" liveOpacity: "<<liveOpacity;
 // 	if(property("-debug").toBool())
 // 		qDebug() << "m_useShaders:"<<m_useShaders;
 	if(m_useShaders)
@@ -2303,6 +2304,9 @@ void GLVideoDrawable::paintGL()
 	
 	// 		if(property("-debug").toBool())
 	// 			qDebug() << "GLVideoDrawable::paintGL():"<<(QObject*)this<<": rendering with opacity:"<<opacity();
+		
+			//qDebug() << "GLVideoDrawable::paintGL: "<<(QObject*)this<<m_source<<" painting with shaders, target:"<<target<<", tx:"<<txLeft<<txTop<<txRight<<txBottom; 
+			
 			m_program->setUniformValue("alpha",               (GLfloat)liveOpacity);
 			m_program->setUniformValue("texOffsetX",          (GLfloat)m_invertedOffset.x());
 			m_program->setUniformValue("texOffsetY",          (GLfloat)m_invertedOffset.y());

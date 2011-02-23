@@ -38,6 +38,10 @@
 #define GLPlayer_PlaylistTimeChanged "PlaylistTimeChanged"
 #define GLPlayer_CurrentPlaylistItemChanged "CurrentPlaylistItemChanged"
 
+// overlays
+#define GLPlayer_AddOverlay "AddOverlay"
+#define GLPlayer_RemoveOverlay "RemoveOverlay"
+
 /// Right now, the following are only used by the json server
 
 // Give a tree list of all the Groups (name/ids), scenes in each group (name/ids), drawables in each scene (names/ids), props on each drawable (name, type, value)

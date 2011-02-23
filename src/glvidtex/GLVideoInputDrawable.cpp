@@ -40,6 +40,7 @@ void GLVideoInputDrawable::setVideoConnection(const QString& con)
 	if(con.isEmpty())
 		return;
 	
+	QHash<QString,QString> map;
 	QStringList opts = con.split(",");
 	foreach(QString pair, opts)
 	{
@@ -53,26 +54,18 @@ void GLVideoInputDrawable::setVideoConnection(const QString& con)
 		QString name = values[0].toLower();
 		QString value = values[1];
 		
-		if(name == "dev")
-		{
-			if(!m_localHasError[value])
-				setVideoInput(value);
-		}
-		else
-		if(name == "input")
-		{
-			setCardInput(value);
-		}
-		else
-		if(name == "net" || name == "remote")
-		{
-			setNetworkSource(value);
-		}
-		else
-		{
-			qDebug() << "GLVideoInputDrawable::setVideoConnection: Unknown option:"<<name<<", value:"<<value<<", ignored.";
-		}
+		map[name] = value;
 	}
+		
+	setNetworkSource(map["net"]);
+
+	if(m_isLocal[map["net"]] &&
+	   !m_localHasError[map["dev"]])
+		setVideoInput(map["dev"]);
+		
+	setCardInput(map["input"]);
+
+	//qDebug() << "GLVideoInputDrawable::setVideoConnection: Unknown option:"<<name<<", value:"<<value<<", ignored.";
 }
 
 void GLVideoInputDrawable::setNetworkSource(const QString& src)
@@ -118,10 +111,9 @@ void GLVideoInputDrawable::setNetworkSource(const QString& src)
 		m_localHasError[m_videoInput] = true;
 	}
 	
-	if(isLocalHost)
-		setUseNetworkSource(false);
-	else
-		setUseNetworkSource(true);
+	setUseNetworkSource(!isLocalHost);
+		
+	m_isLocal[src] = isLocalHost;
 		
 	qDebug() << "GLVideoInputDrawable::setNetworkSource: src:"<<src<<", isLocalHost:"<<isLocalHost;
 }
@@ -211,7 +203,8 @@ bool GLVideoInputDrawable::setVideoInput(const QString& camera)
 		return true;
 	
 	qDebug() << "GLVideoInputDrawable::setVideoInput(): camera:"<<camera;
-	if(m_source && m_source != source)
+	if(m_source && 
+	   m_source != source)
 	{
 		m_source->release(this);
 	}

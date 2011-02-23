@@ -58,8 +58,12 @@ private slots:
 	void setActiveSubWindow(QWidget *window);
 	
 	void videoInputListReceived(const QStringList&);
-	
 	void videoInputClicked();
+	
+	void addVideoPlayer();
+	void addGroupPlayer();
+	void addOverlay();
+	void addPreviewWindow();
 	
 protected:
 	void closeEvent(QCloseEvent *event);
@@ -93,8 +97,65 @@ private:
 	QAction *m_separatorAct;
 	
 	bool m_hasVideoInputsList;	
+	GLSceneGroup *m_camSceneGroup;
 		
 	
 };
+
+class GroupPlayerWidget : public QWidget
+{
+	Q_OBJECT
+public:
+	GroupPlayerWidget(DirectorWindow*);
+	~GroupPlayerWidget();
+	
+public slots:
+// 	void loadFile(QString&);
+	void saveFile();
+	void openEditor();
+	void browse();
+ 
+private slots:
+	void clicked();
+ 	void selectedGroupIndexChanged(int);
+
+private:
+	GLWidget *m_glw;
+	GLSceneGroup *m_setGroup;
+	GLScene *m_scene;
+	GLSceneGroupCollection *m_collection;
+	DirectorWindow *m_director;
+	QComboBox *m_combo;
+};
+
+class OverlayWidget : public QWidget
+{
+	Q_OBJECT
+public:
+	OverlayWidget(DirectorWindow*);
+	~OverlayWidget();
+	
+public slots:
+// 	void loadFile(QString&);
+	void showOverlay();
+	void hideOverlay();
+	
+	void saveFile();
+	void openEditor();
+	void browse();
+ 
+private slots:
+	//void clicked();
+ 	void selectedGroupIndexChanged(int);
+
+private:
+	GLWidget *m_glw;
+	GLSceneGroup *m_setGroup;
+	GLScene *m_scene;
+	GLSceneGroupCollection *m_collection;
+	DirectorWindow *m_director;
+	QComboBox *m_combo;
+};
+
 
 #endif // DIRECTORWINDOW_H

@@ -14,8 +14,8 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QHBoxLayout" name="horizontalLayout">
-    <item>
+   <layout class="QGridLayout" name="gridLayout_2">
+    <item row="0" column="0">
      <widget class="QMdiArea" name="mdiArea">
       <property name="frameShape">
        <enum>QFrame::Panel</enum>
@@ -34,7 +34,7 @@
       </property>
      </widget>
     </item>
-    <item>
+    <item row="0" column="1">
      <layout class="QGridLayout" name="gridLayout">
       <item row="1" column="0">
        <widget class="QLabel" name="label">
@@ -97,7 +97,9 @@
     </property>
     <addaction name="actionMonitor_Players_Live"/>
     <addaction name="actionAdd_Video_Player"/>
+    <addaction name="actionAdd_Group_Player"/>
     <addaction name="actionAdd_Overlay"/>
+    <addaction name="actionAdd_Preview"/>
    </widget>
    <widget class="QMenu" name="menuWindow">
     <property name="title">
@@ -137,6 +139,16 @@
   <action name="actionAdd_Overlay">
    <property name="text">
     <string>Add &amp;Overlay</string>
+   </property>
+  </action>
+  <action name="actionAdd_Group_Player">
+   <property name="text">
+    <string>Add &amp;Group Player</string>
+   </property>
+  </action>
+  <action name="actionAdd_Preview">
+   <property name="text">
+    <string>Add &amp;Preview</string>
    </property>
   </action>
  </widget>

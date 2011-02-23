@@ -94,6 +94,7 @@ private:
 };
 
 class GLSceneType;
+class GLSceneGroup;
 class GLScene : public QAbstractListModel
 {
 	Q_OBJECT
@@ -138,12 +139,18 @@ public:
 	virtual int rowCount(const QModelIndex &/*parent*/) const;
 	virtual QVariant data( const QModelIndex & index, int role = Qt::DisplayRole ) const;
 	
-	// This is the 'crossover' method which
+	/// This is the 'crossover' method which
 	// connects the drawables in this scene to an actual display widget.
 	// Only one widget can be set at a time - if the widget is changed,
 	// the drawables are removed from the old and added to the new
 	void setGLWidget(GLWidget*, int zIndexOffset=0);
+	/// Detech from the current glWidget(), if any.
 	void detachGLWidget();
+	/// Returns the currently attached GLWidget.
+	GLWidget *glWidget() { return m_glWidget; }
+	
+	void setSceneGroup(GLSceneGroup *group);
+	GLSceneGroup *sceneGroup() { return m_group; }
 	
 	// Layouts specify properties of the drawbles in the scene
 	QList<GLSceneLayout*> layouts() { return m_layouts; }
@@ -259,6 +266,7 @@ protected:
 	bool m_autoSchedule;
 	
 	GLSceneType *m_sceneType;
+	GLSceneGroup *m_group;
 };
 
 class GLSceneGroupPlaylist;

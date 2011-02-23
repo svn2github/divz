@@ -53,8 +53,8 @@ GLSceneTypeNewsFeed::GLSceneTypeNewsFeed(QObject *parent)
 	opts.max = 30;
 	m_paramInfoList[0].hints = opts;
 
-	m_parser = new RssParser("http://www.mypleasanthillchurch.org/phc/boards/rss", this);
-        connect(m_parser, SIGNAL(itemsAvailable(QList<RssParser::RssItem>)), this, SLOT(itemsAvailable(QList<RssParser::RssItem>)));
+// 	m_parser = new RssParser("http://www.mypleasanthillchurch.org/phc/boards/rss", this);
+//         connect(m_parser, SIGNAL(itemsAvailable(QList<RssParser::RssItem>)), this, SLOT(itemsAvailable(QList<RssParser::RssItem>)));
 
 	
 	connect(&m_reloadTimer, SIGNAL(timeout()), this, SLOT(reloadData()));
@@ -147,7 +147,7 @@ void GLSceneTypeNewsFeed::reloadData()
 
 void GLSceneTypeNewsFeed::requestData(const QString &/*location*/) 
 {
-/*
+
 	QUrl url("http://www.google.com/ig/api?news");
 // 	url.addEncodedQueryItem("hl", "en");
 // 	url.addEncodedQueryItem("weather", QUrl::toPercentEncoding(location));
@@ -158,7 +158,7 @@ void GLSceneTypeNewsFeed::requestData(const QString &/*location*/)
 	connect(manager, SIGNAL(finished(QNetworkReply*)),
 		this, SLOT(handleNetworkData(QNetworkReply*)));
 	manager->get(QNetworkRequest(url));
-*/
+
 }
 
 void GLSceneTypeNewsFeed::handleNetworkData(QNetworkReply *networkReply) 
@@ -230,7 +230,7 @@ void GLSceneTypeNewsFeed::parseData(const QString &data)
 
 void GLSceneTypeNewsFeed::itemsAvailable(QList<RssParser::RssItem> list)
 {
-	m_news = list;
+	//m_news = list;
 	m_currentIndex = 0;
 	if(scene())
 		showNextItem();

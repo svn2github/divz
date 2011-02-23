@@ -93,6 +93,9 @@ public:
 	
 	int useCount() { return m_useCount; }
 	
+	GLSceneGroup *lastGroup() { return m_group; }
+	GLScene *lastScene() { return m_scene; }
+	
 /* static: */
 	/// Sort by the useCount() property in ascending order (Z-A). For use as a 'LessThan' argument to a qSort() call (See http://doc.qt.nokia.com/latest/qtalgorithms.html#qSort)
 	static bool sortByUseCount(PlayerConnection *a, PlayerConnection *b);
@@ -102,6 +105,9 @@ public:
 public slots:
 	void addSubview(GLWidgetSubview*);
 	void removeSubview(GLWidgetSubview*);
+	
+	void addOverlay(GLScene*);
+	void removeOverlay(GLScene*);
 	
 	void connectPlayer(bool sendDefaults=true);
 	void disconnectPlayer();
@@ -215,6 +221,8 @@ private:
 	int m_crossfadeSpeed;
 	
 	int m_useCount;
+	
+	QList<GLScene*> m_overlays;
 };
 
 class PlayerConnectionList : public QAbstractListModel

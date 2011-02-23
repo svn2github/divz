@@ -131,16 +131,16 @@ private slots:
 private:
 	QTimer m_reloadTimer;
 	
-	typedef RssParser::RssItem NewsItem;
-// 	class NewsItem
-// 	{
-// 	public:
-// 		QString title;
-// 		QString text;
-// 		QString source;
-// 		QString url;
-// 		QString date;
-// 	};
+	//typedef RssParser::RssItem NewsItem;
+	class NewsItem
+	{
+	public:
+		QString title;
+		QString text;
+		QString source;
+		QString url;
+		QString date;
+	};
 	
 	QList<NewsItem> m_news;
 	int m_currentIndex;

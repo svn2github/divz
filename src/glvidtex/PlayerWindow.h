@@ -110,6 +110,10 @@ public slots:
 	void setCollection(GLSceneGroupCollection*);
 	void setGroup(GLSceneGroup*);
 	void setScene(GLScene*);
+	
+	void addOverlay(GLScene*);
+	void removeOverlay(GLScene*);
+	
 
 private slots:
 	void receivedMap(QVariantMap);
@@ -152,6 +156,8 @@ private:
 	void sendReply(QVariantList);
 	
 	void displayScene(GLScene*);
+	void addScene(GLScene*, int layer=1);
+	void removeScene(GLScene*);
 
 	GLPlayerServer *m_server;
 
@@ -165,6 +171,7 @@ private:
 
 	GLSceneGroupCollection *m_col;
 	GLSceneGroup *m_group;
+	GLSceneGroup *m_oldGroup;
 	QPointer<GLScene> m_scene;
 	QPointer<GLScene> m_oldScene;
 
@@ -197,6 +204,8 @@ private:
 	bool m_configLoaded;
 	
 	PlayerJsonServer *m_jsonServer;
+	
+	GLSceneGroup *m_overlays;
 };
 
 #endif

@@ -246,6 +246,26 @@ void PlayerConnection::removeSubview(GLWidgetSubview *sub)
 		<< "subviewid"	<< sub->subviewId());
 }
 
+
+void PlayerConnection::addOverlay(GLScene *scene)
+{
+	//qDebug() << "PlayerConnection::addOverlay: Adding "<<scene;
+	m_overlays << scene;
+
+	sendCommand(QVariantList()
+		<< "cmd" 	<< GLPlayer_AddOverlay
+		<< "data"	<< scene->toByteArray());
+}
+
+void PlayerConnection::removeOverlay(GLScene *scene)
+{
+	m_overlays.removeAll(scene);
+
+	sendCommand(QVariantList()
+		<< "cmd" 	<< GLPlayer_RemoveOverlay
+		<< "id"		<< scene->sceneId());
+}
+
 void PlayerConnection::connectPlayer(bool sendDefaults)
 {
 	m_client = new GLPlayerClient();

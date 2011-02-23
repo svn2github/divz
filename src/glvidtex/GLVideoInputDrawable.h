@@ -59,11 +59,12 @@ private slots:
 private:
 	QString m_videoConnection;
 	QString m_videoInput;
-	CameraThread *m_source;
+	QPointer<CameraThread> m_source;
 	QString m_networkSource;
 	VideoReceiver *m_rx;
 	bool m_useNetworkSource;
 	QHash<QString,bool> m_localHasError;
+	QHash<QString,bool> m_isLocal;
 };
 
 #endif

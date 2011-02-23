@@ -51,7 +51,14 @@ DirectorWindow::DirectorWindow(QWidget *parent)
 // 		if(!con->isConnected() && con->autoconnect())
 // 			con->connectPlayer();
 
+	m_camSceneGroup = new GLSceneGroup();
+	GLScene *scene = new GLScene();
+	GLVideoInputDrawable *vid = new GLVideoInputDrawable();
+	scene->addDrawable(vid);
+	m_camSceneGroup->addScene(scene);
+	
 	chooseOutput();
+	
 
 	setFocusPolicy(Qt::StrongFocus);
 }
@@ -248,10 +255,18 @@ void DirectorWindow::videoInputClicked()
 	
 	qDebug() << "DirectorWindow::videoInputClicked: Using con string: "<<con;
 	
-// 	m_drawable->setProperty("videoConnection", con);
+	GLDrawable *gld = m_camSceneGroup->at(0)->at(0);
+ 	gld->setProperty("videoConnection", con);
 // 	
-// 	foreach(PlayerConnection *player, m_directorWindow->players()->players())
-// 		player->setUserProperty(m_drawable, con, "videoConnection");
+ 	foreach(PlayerConnection *player, m_players->players())
+ 	{
+ 		if(player->isConnected())
+ 		{
+ 			if(player->lastGroup() != m_camSceneGroup)
+ 				player->setGroup(m_camSceneGroup, m_camSceneGroup->at(0));
+	 		player->setUserProperty(gld, con, "videoConnection");
+	 	}
+	 }
 }
 
 
@@ -387,6 +402,11 @@ void DirectorWindow::setupUI()
 	connect(ui->actionChoose_Output, SIGNAL(triggered()), this, SLOT(chooseOutput()));
 	connect(ui->actionExit, SIGNAL(triggered()), qApp, SLOT(quit()));
 	connect(ui->actionPlayer_Setup, SIGNAL(triggered()), this, SLOT(showPlayerSetupDialog()));
+	
+	connect(ui->actionAdd_Video_Player, SIGNAL(triggered()), this, SLOT(addVideoPlayer()));
+	connect(ui->actionAdd_Group_Player, SIGNAL(triggered()), this, SLOT(addGroupPlayer()));
+	connect(ui->actionAdd_Overlay, SIGNAL(triggered()), this, SLOT(addOverlay()));
+	connect(ui->actionAdd_Preview, SIGNAL(triggered()), this, SLOT(addPreviewWindow()));
 	
 	connect(ui->mdiArea, SIGNAL(subWindowActivated(QMdiSubWindow*)), this, SLOT(updateMenus()));
 	m_windowMapper = new QSignalMapper(this);
@@ -621,3 +641,379 @@ void DirectorWindow::setActiveSubWindow(QWidget *window)
 		return;
 	ui->mdiArea->setActiveSubWindow(qobject_cast<QMdiSubWindow *>(window));
 }
+
+
+void DirectorWindow::addVideoPlayer()
+{
+}
+
+void DirectorWindow::addGroupPlayer()
+{
+	GroupPlayerWidget *vid = new GroupPlayerWidget(this); 
+	
+	QMdiSubWindow *subWindow = new QMdiSubWindow;
+	//subWindow->setStyle(new QCDEStyle());
+	//subWindow->setWidget(new QPushButton(item->itemName()));
+	subWindow->setWidget(vid);
+	subWindow->setAttribute(Qt::WA_DeleteOnClose);
+	//subWindow->adjustSize();
+	//subWindow->setWindowFlags(Qt::FramelessWindowHint);
+
+	ui->mdiArea->addSubWindow(subWindow);
+	subWindow->show();
+	subWindow->resize(320,270);
+	
+	connect(this, SIGNAL(closed()), vid, SLOT(deleteLater()));
+}
+
+void DirectorWindow::addOverlay()
+{
+	OverlayWidget *vid = new OverlayWidget(this); 
+	
+	QMdiSubWindow *subWindow = new QMdiSubWindow;
+	//subWindow->setStyle(new QCDEStyle());
+	//subWindow->setWidget(new QPushButton(item->itemName()));
+	subWindow->setWidget(vid);
+	subWindow->setAttribute(Qt::WA_DeleteOnClose);
+	//subWindow->adjustSize();
+	//subWindow->setWindowFlags(Qt::FramelessWindowHint);
+
+	ui->mdiArea->addSubWindow(subWindow);
+	subWindow->show();
+	subWindow->resize(320,270);
+	
+	connect(this, SIGNAL(closed()), vid, SLOT(deleteLater()));
+}
+
+void DirectorWindow::addPreviewWindow()
+{
+}
+
+
+//////////////////////////
+
+GroupPlayerWidget::GroupPlayerWidget(DirectorWindow *d)
+	: QWidget(d)
+	, m_setGroup(0)
+	, m_scene(0)
+	, m_collection(0)
+	, m_director(d)
+{
+	m_collection = new GLSceneGroupCollection();
+	GLSceneGroup *group = new GLSceneGroup();
+	GLScene *scene = new GLScene();
+	scene->setSceneName("New Scene");
+	group->addScene(scene);
+	m_collection->addGroup(group);
+	
+	QVBoxLayout *vbox = new QVBoxLayout(this);
+	m_glw = new GLWidget(this);
+	vbox->addWidget(m_glw);
+	
+	QHBoxLayout *hbox = new QHBoxLayout();
+	
+	m_combo = new QComboBox();
+	hbox->addWidget(m_combo);
+	hbox->addStretch(1);
+	
+	QPushButton *edit = new QPushButton(QPixmap(":/data/stock-edit.png"), "");
+	QPushButton *browse = new QPushButton(QPixmap(":/data/stock-open.png"), "");
+	hbox->addWidget(edit);
+	hbox->addWidget(browse);
+	
+	vbox->addLayout(hbox);
+	
+	connect(edit, SIGNAL(clicked()), this, SLOT(openEditor()));
+	connect(browse, SIGNAL(clicked()), this, SLOT(browse()));
+	connect(m_glw, SIGNAL(clicked()), this, SLOT(clicked()));
+	
+	m_combo->setModel(m_collection->at(0));
+	connect(m_combo, SIGNAL(currentIndexChanged(int)), this, SLOT(selectedGroupIndexChanged(int)));
+	
+	setWindowTitle("Group Player");
+}
+
+void GroupPlayerWidget::openEditor()
+{
+	int idx = m_combo->currentIndex();
+	
+	EditorWindow *edit = new EditorWindow();
+	edit->setGroup(m_collection->at(0), 
+		       m_collection->at(0)->at(idx));
+	edit->setCanvasSize(m_collection->canvasSize());
+	edit->show();
+	edit->setAttribute(Qt::WA_DeleteOnClose, true);
+	
+	connect(edit, SIGNAL(destroyed()), this, SLOT(saveFile()));
+}
+
+void GroupPlayerWidget::browse()
+{
+	QSettings settings;
+	QString curFile = m_collection->fileName();
+	if(curFile.trimmed().isEmpty())
+		curFile = settings.value("last-collection-file").toString();
+
+	QString fileName = QFileDialog::getOpenFileName(this, tr("Select Group Collection File"), curFile, tr("GLDirector File (*.gld);;Any File (*.*)"));
+	if(fileName != "")
+	{
+		settings.setValue("last-collection-file",fileName);
+		if(m_collection->readFile(fileName))
+		{
+			setWindowTitle(QString("Player - %1").arg(QFileInfo(fileName).fileName()));
+			m_combo->setModel(m_collection->at(0));
+		}
+		else
+		{
+			QMessageBox::critical(this,tr("File Does Not Exist"),tr("Sorry, but the file you chose does not exist. Please try again."));
+		}
+	}
+}
+
+void GroupPlayerWidget::saveFile()
+{
+	QString curFile = m_collection->fileName();
+	
+	QSettings settings;
+	
+	if(curFile.trimmed().isEmpty())
+	{
+		curFile = settings.value("last-collection-file").toString();
+
+		QString fileName = QFileDialog::getSaveFileName(this, tr("Choose a Filename"), curFile, tr("GLDirector File (*.gld);;Any File (*.*)"));
+		if(fileName != "")
+		{
+			QFileInfo info(fileName);
+			settings.setValue("last-collection-file",fileName);
+			
+			curFile = fileName;
+		}
+	}
+	
+	if(!curFile.isEmpty())
+	{
+		m_collection->writeFile(curFile);
+	}
+}
+
+void GroupPlayerWidget::clicked()
+{
+	int idx = m_combo->currentIndex();
+	
+	GLSceneGroup *group = m_collection->at(0); 
+	GLScene *scene = group->at(idx);
+	
+	foreach(PlayerConnection *player, m_director->players()->players())
+ 	{
+ 		if(player->isConnected())
+ 		{
+ 			//if(player->lastGroup() != group)
+ 				player->setGroup(group, scene);
+ 			m_setGroup = group;
+	 		//player->setUserProperty(gld, con, "videoConnection");
+	 	}
+	 }
+}
+
+GroupPlayerWidget::~GroupPlayerWidget()
+{
+	// TODO...?
+}
+
+
+void GroupPlayerWidget::selectedGroupIndexChanged(int idx)
+{
+	GLSceneGroup *group = m_collection->at(0); 
+	GLScene *scene = group->at(idx);
+	
+	if(m_scene)
+		m_scene->detachGLWidget();
+		
+	if(scene)
+	{
+		scene->setGLWidget(m_glw);
+		m_scene = scene;
+	}
+	
+// 	foreach(PlayerConnection *player, m_director->players()->players())
+// 	{
+// 		if(player->isConnected())
+// 		{
+// 			if(player->lastGroup() == m_setGroup)
+// 				player->setGroup(m_setGroup, scene);
+// 		}
+// 	}
+}
+
+//////////////////////////
+
+OverlayWidget::OverlayWidget(DirectorWindow *d)
+	: QWidget(d)
+	, m_setGroup(0)
+	, m_scene(0)
+	, m_collection(0)
+	, m_director(d)
+{
+	m_collection = new GLSceneGroupCollection();
+	GLSceneGroup *group = new GLSceneGroup();
+	GLScene *scene = new GLScene();
+	scene->setSceneName("New Scene");
+	group->addScene(scene);
+	m_collection->addGroup(group);
+	
+	QVBoxLayout *vbox = new QVBoxLayout(this);
+	m_glw = new GLWidget(this);
+	vbox->addWidget(m_glw);
+	
+	QHBoxLayout *hbox = new QHBoxLayout();
+	
+	m_combo = new QComboBox();
+	hbox->addWidget(m_combo);
+	hbox->addStretch(1);
+	
+	QPushButton *show = new QPushButton(QPixmap(":/data/stock-media-play.png"), "");
+	QPushButton *hide = new QPushButton(QPixmap(":/data/stock-media-stop.png"), "");
+	
+	QPushButton *edit = new QPushButton(QPixmap(":/data/stock-edit.png"), "");
+	QPushButton *browse = new QPushButton(QPixmap(":/data/stock-open.png"), "");
+	
+	hbox->addWidget(show);
+	hbox->addWidget(hide);
+	hbox->addWidget(edit);
+	hbox->addWidget(browse);
+	
+	vbox->addLayout(hbox);
+	
+	connect(show, SIGNAL(clicked()), this, SLOT(showOverlay()));
+	connect(hide, SIGNAL(clicked()), this, SLOT(hideOverlay()));
+	connect(edit, SIGNAL(clicked()), this, SLOT(openEditor()));
+	connect(browse, SIGNAL(clicked()), this, SLOT(browse()));
+	//connect(m_glw, SIGNAL(clicked()), this, SLOT(clicked()));
+	
+// 	show->setCheckable(true);
+// 	hide->setCheckable(true);
+	
+	
+	m_combo->setModel(m_collection->at(0));
+	connect(m_combo, SIGNAL(currentIndexChanged(int)), this, SLOT(selectedGroupIndexChanged(int)));
+	
+	setWindowTitle("Overlay Player");
+}
+
+void OverlayWidget::openEditor()
+{
+	int idx = m_combo->currentIndex();
+	
+	EditorWindow *edit = new EditorWindow();
+	edit->setGroup(m_collection->at(0), 
+		       m_collection->at(0)->at(idx));
+	edit->setCanvasSize(m_collection->canvasSize());
+	edit->show();
+	edit->setAttribute(Qt::WA_DeleteOnClose, true);
+	
+	connect(edit, SIGNAL(destroyed()), this, SLOT(saveFile()));
+}
+
+void OverlayWidget::browse()
+{
+	QSettings settings;
+	QString curFile = m_collection->fileName();
+	if(curFile.trimmed().isEmpty())
+		curFile = settings.value("last-collection-file").toString();
+
+	QString fileName = QFileDialog::getOpenFileName(this, tr("Select Group Collection File"), curFile, tr("GLDirector File (*.gld);;Any File (*.*)"));
+	if(fileName != "")
+	{
+		settings.setValue("last-collection-file",fileName);
+		if(m_collection->readFile(fileName))
+		{
+			setWindowTitle(QString("Overlay - %1").arg(QFileInfo(fileName).fileName()));
+			m_combo->setModel(m_collection->at(0));
+		}
+		else
+		{
+			QMessageBox::critical(this,tr("File Does Not Exist"),tr("Sorry, but the file you chose does not exist. Please try again."));
+		}
+	}
+}
+
+void OverlayWidget::saveFile()
+{
+	QString curFile = m_collection->fileName();
+	
+	QSettings settings;
+	
+	if(curFile.trimmed().isEmpty())
+	{
+		curFile = settings.value("last-collection-file").toString();
+
+		QString fileName = QFileDialog::getSaveFileName(this, tr("Choose a Filename"), curFile, tr("GLDirector File (*.gld);;Any File (*.*)"));
+		if(fileName != "")
+		{
+			QFileInfo info(fileName);
+			settings.setValue("last-collection-file",fileName);
+			
+			curFile = fileName;
+		}
+	}
+	
+	if(!curFile.isEmpty())
+	{
+		m_collection->writeFile(curFile);
+	}
+}
+
+void OverlayWidget::showOverlay()
+{
+	int idx = m_combo->currentIndex();
+	
+	GLSceneGroup *group = m_collection->at(0); 
+	GLScene *scene = group->at(idx);
+	
+	foreach(PlayerConnection *player, m_director->players()->players())
+		if(player->isConnected())
+			player->addOverlay(scene);
+}
+
+void OverlayWidget::hideOverlay()
+{
+	int idx = m_combo->currentIndex();
+	
+	GLSceneGroup *group = m_collection->at(0); 
+	GLScene *scene = group->at(idx);
+	
+	foreach(PlayerConnection *player, m_director->players()->players())
+		if(player->isConnected())
+			player->removeOverlay(scene);
+}
+
+OverlayWidget::~OverlayWidget()
+{
+	// TODO...?
+}
+
+
+void OverlayWidget::selectedGroupIndexChanged(int idx)
+{
+	GLSceneGroup *group = m_collection->at(0); 
+	GLScene *scene = group->at(idx);
+	
+	if(m_scene)
+		m_scene->detachGLWidget();
+		
+	if(scene)
+	{
+		scene->setGLWidget(m_glw);
+		m_scene = scene;
+	}
+	
+// 	foreach(PlayerConnection *player, m_director->players()->players())
+// 	{
+// 		if(player->isConnected())
+// 		{
+// 			if(player->lastGroup() == m_setGroup)
+// 				player->setGroup(m_setGroup, scene);
+// 		}
+// 	}
+}
+

@@ -533,6 +533,7 @@ void GLDrawable::setRect(const QRectF& rect)
 void GLDrawable::setZIndexModifier(double mod)
 {
 	m_zIndexModifier = mod;
+	//qDebug() << "GLDrawable::setZIndexModifier: "<<(QObject*)this<<" m_zIndexModifier:"<<m_zIndexModifier;
 	emit zIndexChanged(zIndex());
 }
 
@@ -542,7 +543,7 @@ double GLDrawable::zIndex()
 	{
 		double fract = m_zIndex / (Z_MAX/2) + 0.5;
 		double final = fract * m_zIndexModifier;
-		//qDebug() << "GLDrawable::zIndex: m_zIndexModifier:"<<m_zIndexModifier<<", m_zIndex:"<<m_zIndex<<", final: "<<final;
+		//qDebug() << "GLDrawable::zIndex: "<<(QObject*)this<<" m_zIndexModifier:"<<m_zIndexModifier<<", m_zIndex:"<<m_zIndex<<", final: "<<final;
 
 		return final;
 	}
@@ -773,13 +774,14 @@ void GLDrawable::updateAlignment(bool animateRect, int animLength, QEasingCurve 
 
 void GLDrawable::setGLWidget(GLWidget* w)
 {
-	//qDebug() << "GLDrawable::setGLWidget(): "<<this<<", w:"<<w;
+	//qDebug() << "GLDrawable::setGLWidget(): "<<(QObject*)this<<", w:"<<w<<", rect:"<<m_rect<<", isNull?"<<m_rect.isNull();
 	m_glw = w;
 	if(!w)
 		return;
 
 	if(m_rect.isNull())
-		m_rect = QRectF(QPointF(0,0),canvasSize());
+		//m_rect = QRectF(QPointF(0,0),canvasSize());
+		setRect(QRectF(QPointF(0,0),canvasSize()));
 
 	updateAlignment();
 

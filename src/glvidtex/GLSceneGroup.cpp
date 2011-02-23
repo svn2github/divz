@@ -252,6 +252,7 @@ GLScene::GLScene(QObject *parent)
 	, m_autoDuration(true)
 	, m_autoSchedule(true)
 	, m_sceneType(0)
+	, m_group(0)
 {
 	connect(&m_fadeTimer, SIGNAL(timeout()), this, SLOT(fadeTick()));
 }
@@ -271,6 +272,7 @@ GLScene::GLScene(QByteArray& ba, QObject *parent)
 	, m_autoDuration(true)
 	, m_autoSchedule(true)
 	, m_sceneType(0)
+	, m_group(0)
 {
 	connect(&m_fadeTimer, SIGNAL(timeout()), this, SLOT(fadeTick()));
 	fromByteArray(ba);
@@ -455,6 +457,11 @@ void GLScene::setSceneType(GLSceneType *type)
 	}
 	
 	m_sceneType = type;
+}
+
+void GLScene::setSceneGroup(GLSceneGroup *g)
+{
+	m_group = g;
 }
 
 void GLScene::setListOnlyUserItems(bool flag)
@@ -1100,6 +1107,8 @@ void GLSceneGroup::addScene(GLScene* s)
 	connect(s, SIGNAL(scheduledTimeChanged(QDateTime)), 	this, SLOT(sceneChanged()));
 	connect(s, SIGNAL(autoScheduleChanged(bool)), 		this, SLOT(sceneChanged()));
 
+	s->setSceneGroup(this);
+	
 	emit sceneAdded(s);
 	//qDebug() << "GLSceneGroup::addScene: "<<this<<" scene:"<<s<<", m_scenes.size():"<<m_scenes.size()<<", rowCount:"<<rowCount(QModelIndex());
 
@@ -1125,6 +1134,8 @@ void GLSceneGroup::removeScene(GLScene* s)
 	disconnect(s, 0, this, 0);
 	m_scenes.removeAll(s);
 	m_sceneIdLookup.remove(s->sceneId());
+	
+	s->setSceneGroup(0);
 
 	// Notify QListViews of change in data
 	QModelIndex top    = createIndex(idx, 0),
