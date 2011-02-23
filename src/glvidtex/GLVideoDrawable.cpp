@@ -262,6 +262,20 @@ void GLVideoDrawable::setVideoSource(VideoSource *source)
 
 		if(m_videoSender)
 			m_videoSender->setVideoSource(m_source);
+		
+		
+		// Automatically add "overscan" using 3.5% (approx) based on 'Overscan amounts' recommended at http://en.wikipedia.org/wiki/Overscan 
+		if(m_isCameraThread)
+		{
+			double assumedFrameWidth  = 680;
+			double assumedFrameHeight = 480;
+			double overscanAmount = .035 * .5; // 3.5% * .5 = .0175
+			double cropX = assumedFrameWidth  * overscanAmount; // 11.2
+			double cropY = assumedFrameHeight * overscanAmount; // 8.4
+			
+			m_displayOpts.cropTopLeft = QPointF(cropX,cropY);
+			m_displayOpts.cropBottomRight = QPointF(-cropX,-cropY);
+		}
 	}
 	else
 	{
@@ -499,15 +513,23 @@ void GLVideoDrawable::setFlipVertical(bool value)
 
 void GLVideoDrawable::setCropTopLeft(QPointF value)
 {
+	if(m_isCameraThread)
+		return;
+		
 	m_displayOpts.cropTopLeft = value;
+	updateRects();
 	emit displayOptionsChanged(m_displayOpts);
 	updateGL();
 }
 
 void GLVideoDrawable::setCropBottomRight(QPointF value)
 {
+	if(m_isCameraThread)
+		return;
+		
 	m_displayOpts.cropBottomRight = value;
 	emit displayOptionsChanged(m_displayOpts);
+	updateRects();
 	updateGL();
 }
 
@@ -1202,6 +1224,19 @@ void GLVideoDrawable::updateRects(bool secondSource)
 
 	// force mask to be re-scaled
 	//qDebug() << "GLVideoDrawable::updateRects(): "<<(QObject*)this<<",  New source rect: "<<m_sourceRect<<", mask size:"<<m_alphaMask.size()<<", isNull?"<<m_alphaMask.isNull();
+	
+	// Automatically add "overscan" using 3.5% (approx) based on 'Overscan amounts' recommended at http://en.wikipedia.org/wiki/Overscan 
+	if(m_isCameraThread)
+	{
+		double assumedFrameWidth  = sourceRect.width();
+		double assumedFrameHeight = sourceRect.height();
+		double overscanAmount = .035 * .5; // 3.5% * .5 = .0175
+		double cropX = assumedFrameWidth  * overscanAmount;
+		double cropY = assumedFrameHeight * overscanAmount;
+		
+		m_displayOpts.cropTopLeft = QPointF(cropX,cropY);
+		m_displayOpts.cropBottomRight = QPointF(-cropX,-cropY);
+	}
 
 
 	QRectF adjustedSource = sourceRect.adjusted(
@@ -1209,6 +1244,8 @@ void GLVideoDrawable::updateRects(bool secondSource)
 		m_displayOpts.cropTopLeft.y(),
 		m_displayOpts.cropBottomRight.x(),
 		m_displayOpts.cropBottomRight.y());
+		
+	//qDebug() << "GLVideoDrawable::updateRects(): "<<(QObject*)this<<",  Source rect: "<<sourceRect<<", adjustedSource:"<<adjustedSource
 // 	m_origSourceRect = m_sourceRect;
 //
 // 	m_sourceRect.adjust(m_adjustDx1,m_adjustDy1,m_adjustDx2,m_adjustDy2);
@@ -1259,7 +1296,7 @@ void GLVideoDrawable::updateRects(bool secondSource)
 	}
 
 	setAlphaMask(m_alphaMask_preScaled);
-	//sqDebug() << "GLVideoDrawable::updateRects(): "<<(QObject*)this<<" m_sourceRect:"<<m_sourceRect<<", m_targetRect:"<<m_targetRect<<", rect:"<<rect();
+	//qDebug() << "GLVideoDrawable::updateRects(): "<<(QObject*)this<<" m_sourceRect:"<<m_sourceRect<<", adjustedSource:"<<adjustedSource<<", m_targetRect:"<<m_targetRect<<", rect:"<<rect();
 }
 
 // float opacity = 0.5;
@@ -2120,7 +2157,7 @@ void GLVideoDrawable::paintGL()
 		m_displayOpts.cropBottomRight.y());
 
 // 	if(property("-debug").toBool())
-// 		qDebug() << "GLVideoDrawable::paintGL():"<<(QObject*)this<<": source:"<<source<<", target:"<<target;
+// 		qDebug() << "GLVideoDrawable::paintGL():"<<(QObject*)this<<": source:"<<source<<", target:"<<target<<" ( crop:"<<m_displayOpts.cropTopLeft<<"/"<<m_displayOpts.cropBottomRight<<")";
 
 
 	const int width  = QGLContext::currentContext()->device()->width();
