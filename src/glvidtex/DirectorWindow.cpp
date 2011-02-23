@@ -64,6 +64,9 @@ DirectorWindow::~DirectorWindow()
 
 void DirectorWindow::chooseOutput()
 {
+	if(!ui->mdiArea->subWindowList().isEmpty())
+		ui->mdiArea->closeAllSubWindows();
+	
 	QDialog dlg;
 	dlg.setWindowTitle("Choose Output");
 	
@@ -73,8 +76,14 @@ void DirectorWindow::chooseOutput()
 	
 	QComboBox *sourceBox = new QComboBox();
 	QStringList itemList;
-	foreach(PlayerConnection *con, m_players->players())
+	
+	QList<PlayerConnection*> playerList = m_players->players();
+	qSort(playerList.begin(), playerList.end(), PlayerConnection::sortByUseCount);
+	foreach(PlayerConnection *con, playerList)
+	{
 		itemList << QString("Player: %1").arg(con->name());
+		//qDebug() << "DirectorWindow::choseOutput:"<<con->name()<<" useCount:"<<con->useCount();
+	}
 	sourceBox->addItems(itemList);
 	sourceBox->setCurrentIndex(0);
 	
@@ -104,9 +113,25 @@ void DirectorWindow::chooseOutput()
 	dlg.adjustSize();
 	if(dlg.exec())
 	{
+		m_hasVideoInputsList = false;
+		
 		int idx = sourceBox->currentIndex();
-		PlayerConnection *player = m_players->players().at(idx);
-		player->connectPlayer();
+		PlayerConnection *player = playerList.at(idx);
+		
+		connect(player, SIGNAL(videoInputListReceived(const QStringList&)), this, SLOT(videoInputListReceived(const QStringList&)));
+		
+		foreach(PlayerConnection *con, m_players->players())
+		{
+			if(con->isConnected() && con != player)
+				con->disconnectPlayer();
+		}
+		
+		if(!player->isConnected())
+			player->connectPlayer();
+			
+		if(player->videoIputsReceived())
+			videoInputListReceived(player->videoInputs());
+		
 		m_connected = true;
 		
 		showPlayerLiveMonitor(player);
@@ -115,6 +140,118 @@ void DirectorWindow::chooseOutput()
 	{
 		showPlayerSetupDialog();
 	}
+}
+
+
+void DirectorWindow::videoInputListReceived(const QStringList& inputs)
+{
+	if(m_hasVideoInputsList)
+		return;
+	m_hasVideoInputsList = true;
+	int index = 0;
+	//qDebug() << "DirectorWindow::videoInputListReceived: "<<inputs;
+	foreach(QString con, inputs)
+	{
+		QStringList opts = con.split(",");
+		//qDebug() << "DirectorWindow::videoInputListReceived: Con string: "<<con;
+		foreach(QString pair, opts)
+		{
+			QStringList values = pair.split("=");
+			QString name = values[0].toLower();
+			QString value = values[1];
+			
+			//qDebug() << "DirectorWindow::videoInputListReceived: Parsed name:"<<name<<", value:"<<value;
+			if(name == "net")
+			{
+// 				QUrl url(value);
+// 				
+// 				QString host = url.host();
+// 				int port = url.port();
+
+				QStringList url = value.split(":");
+				QString host = url[0];
+				int port = url.size() > 1 ? url[1].toInt() : 7755;
+				
+				VideoReceiver *rx = VideoReceiver::getReceiver(host,port);
+				
+				if(!rx)
+				{
+					qDebug() << "DirectorWindow::videoInputListReceived: Unable to connect to "<<host<<":"<<port;
+					QMessageBox::warning(this,"Video Connection",QString("Sorry, but we were unable to connect to the video transmitter at %1:%2 - not sure why.").arg(host).arg(port));
+				}
+				else
+				{
+					m_receivers << QPointer<VideoReceiver>(rx);
+					
+					qDebug() << "DirectorWindow::videoInputListReceived: Connected to "<<host<<":"<<port<<", creating widget...";
+					
+// 					VideoWidget *vid = new VideoWidget();
+// 					m_currentVideoWidgets << vid;
+// 					
+// 					vid->setVideoSource(rx);
+// 					vid->setOverlayText(QString("# %1").arg(m_currentVideoWidgets.size()));
+// 					
+// 					rx->setFPS(5);
+// 					vid->setFps(5);
+// 					vid->setRenderFps(true);
+
+					GLWidget *vid = new GLWidget();
+		
+					GLVideoDrawable *gld = new GLVideoDrawable();
+					gld->setVideoSource(rx);
+					vid->addDrawable(gld);
+					
+					vid->setWindowTitle(QString("Camera %1").arg(++ index));
+					gld->setObjectName(qPrintable(vid->windowTitle()));
+					vid->resize(320,240);
+					//vid->show();
+					
+					QMdiSubWindow *subWindow = new QMdiSubWindow;
+					//subWindow->setStyle(new QCDEStyle());
+					//subWindow->setWidget(new QPushButton(item->itemName()));
+					subWindow->setWidget(vid);
+					subWindow->setAttribute(Qt::WA_DeleteOnClose);
+					//subWindow->adjustSize();
+					//subWindow->setWindowFlags(Qt::FramelessWindowHint);
+				
+					ui->mdiArea->addSubWindow(subWindow);
+					subWindow->show();
+					subWindow->resize(320,270);
+					
+					connect(this, SIGNAL(closed()), vid, SLOT(deleteLater()));
+					
+					vid->setProperty("-vid-con-string",con);
+		
+					//m_videoViewerLayout->addWidget(vid);
+					
+					connect(vid, SIGNAL(clicked()), this, SLOT(videoInputClicked()));
+				}
+			}
+		}
+	}
+}
+
+void DirectorWindow::videoInputClicked()
+{
+	GLWidget *vid = dynamic_cast<GLWidget*>(sender());
+	if(!vid)
+	{
+		qDebug() << "DirectorWindow::videoInputClicked: Sender is not a video widget, ignoring.";
+		return;
+	}
+	//activateVideoInput(vid);
+	
+	QString con = vid->property("-vid-con-string").toString();
+	
+// 	if(!m_drawable)
+// 		return;
+	
+	qDebug() << "DirectorWindow::videoInputClicked: Using con string: "<<con;
+	
+// 	m_drawable->setProperty("videoConnection", con);
+// 	
+// 	foreach(PlayerConnection *player, m_directorWindow->players()->players())
+// 		player->setUserProperty(m_drawable, con, "videoConnection");
 }
 
 
@@ -211,6 +348,7 @@ void DirectorWindow::showPlayerLiveMonitor(PlayerConnection *con)
 		vid->addDrawable(gld);
 		
 		vid->setWindowTitle(QString("Live - %1").arg(con->name()));
+		gld->setObjectName(qPrintable(vid->windowTitle()));
 		vid->resize(320,240);
 		//vid->show();
 		
@@ -230,6 +368,7 @@ void DirectorWindow::showPlayerLiveMonitor(PlayerConnection *con)
 	}
 }
 
+
 void DirectorWindow::setupUI()
 {
 // 	m_graphicsScene = new QGraphicsScene();
@@ -245,7 +384,7 @@ void DirectorWindow::setupUI()
 	connect(ui->fadeSpeedBox, SIGNAL(valueChanged(double)), this, SLOT(setFadeSpeedTime(double)));
 	
 	connect(ui->actionMonitor_Players_Live, SIGNAL(triggered()), this, SLOT(showPlayerLiveMonitor()));
-	connect(ui->actionChange_Canvas_Size, SIGNAL(triggered()), this, SLOT(changeCanvasSize()));
+	connect(ui->actionChoose_Output, SIGNAL(triggered()), this, SLOT(chooseOutput()));
 	connect(ui->actionExit, SIGNAL(triggered()), qApp, SLOT(quit()));
 	connect(ui->actionPlayer_Setup, SIGNAL(triggered()), this, SLOT(showPlayerSetupDialog()));
 	
@@ -414,63 +553,6 @@ void DirectorWindow::showPlayerSetupDialog()
 // 	edit->show();
 }
 */
-void DirectorWindow::changeCanvasSize()
-{
-// 	if(!m_collection)
-// 		return;
-// 	
-// 	QDialog dlg;
-// 	dlg.setWindowTitle("Change Canvas Size");
-// 	
-// 	QVBoxLayout *vbox = new QVBoxLayout(&dlg);
-// 	
-// 		
-// 	QFormLayout *form = new QFormLayout();
-// 	QSpinBox *width = new QSpinBox();
-// 	width->setMinimum(0);
-// 	width->setMaximum(99999);
-// 	
-// 	QSpinBox *height = new QSpinBox();
-// 	height->setMinimum(0);
-// 	height->setMaximum(99999);
-// 	
-// 	QSizeF size = m_collection->canvasSize();
-// 	width->setValue((int)size.width());
-// 	height->setValue((int)size.height()); 
-// 	
-// 	form->addRow("Width:", width);
-// 	form->addRow("Height:", height);
-// 	 
-// 	QHBoxLayout *buttons = new QHBoxLayout();
-// 	buttons->addStretch(1);
-// 	QPushButton *cancel = new QPushButton("Cancel");
-// 	buttons->addWidget(cancel);
-// 	
-// 	QPushButton *ok = new QPushButton("ok");
-// 	buttons->addWidget(ok);
-// 	ok->setDefault(true);
-// 	
-// 	connect(cancel, SIGNAL(clicked()), &dlg, SLOT(reject()));
-// 	connect(ok, SIGNAL(clicked()), &dlg, SLOT(accept()));
-// 	
-// 	vbox->addLayout(form);
-// 	vbox->addStretch(1);
-// 	vbox->addLayout(buttons);
-// 	dlg.setLayout(vbox);
-// 	dlg.adjustSize();
-// 	if(dlg.exec())
-// 	{
-// 		m_collection->setCanvasSize(QSizeF((qreal)width->value(), (qreal)height->value()));
-// 		
-// 		foreach(PlayerConnection *con, m_players->players())
-// 			con->setCanvasSize(m_collection->canvasSize());
-// 			
-// // 		if(m_graphicsScene)
-// // 			m_graphicsScene->setSceneRect(QRectF(QPointF(0,0),m_collection->canvasSize()));
-// 		
-// 	}
-	
-}
 
 void DirectorWindow::playerAdded(PlayerConnection * con)
 {

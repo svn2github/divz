@@ -51,13 +51,15 @@ private slots:
 	void playerAdded(PlayerConnection *);
 	void playerRemoved(PlayerConnection *);
 	
-	void changeCanvasSize();
-	
 	void chooseOutput();
 	
 	void updateWindowMenu();
 	void updateMenus();
 	void setActiveSubWindow(QWidget *window);
+	
+	void videoInputListReceived(const QStringList&);
+	
+	void videoInputClicked();
 	
 protected:
 	void closeEvent(QCloseEvent *event);
@@ -90,7 +92,7 @@ private:
 	QAction *m_previousAct;
 	QAction *m_separatorAct;
 	
-	
+	bool m_hasVideoInputsList;	
 		
 	
 };

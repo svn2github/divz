@@ -53,6 +53,9 @@ class PlayerConnection : public QObject
 	Q_PROPERTY(bool isConnected	READ isConnected);
 	Q_PROPERTY(QString lastError	READ lastError);
 	
+	
+	Q_PROPERTY(int useCount	READ useCount);
+	
 public:
 	PlayerConnection(QObject *parent=0);
 	PlayerConnection(QByteArray&, QObject *parent=0);
@@ -80,12 +83,21 @@ public:
 	
 	QString playerVersion() { return m_playerVersion; }
 		
+	bool videoIputsReceived() { return m_videoIputsReceived; }
 	QStringList videoInputs(bool *hasReceivedResponse=0);
 	
 	bool waitForData(int msec=30000);
 	bool waitForWrite(int msec=30000);
 
 	int crossfadeSpeed() { return m_crossfadeSpeed; }
+	
+	int useCount() { return m_useCount; }
+	
+/* static: */
+	/// Sort by the useCount() property in ascending order (Z-A). For use as a 'LessThan' argument to a qSort() call (See http://doc.qt.nokia.com/latest/qtalgorithms.html#qSort)
+	static bool sortByUseCount(PlayerConnection *a, PlayerConnection *b);
+	/// Sort by the useCount() property in descending order (A-Z). For use as a 'LessThan' argument to a qSort() call (See http://doc.qt.nokia.com/latest/qtalgorithms.html#qSort)
+	static bool sortByUseCountDesc(PlayerConnection *a, PlayerConnection *b);
 
 public slots:
 	void addSubview(GLWidgetSubview*);
@@ -151,6 +163,8 @@ signals:
 	
 	void dataReceived();
 	
+	void videoInputListReceived(const QStringList&);
+	
 protected:
 	friend class PlayerSubviewsModel;
 	
@@ -199,8 +213,9 @@ private:
 	bool m_videoIputsReceived;
 
 	int m_crossfadeSpeed;
+	
+	int m_useCount;
 };
-
 
 class PlayerConnectionList : public QAbstractListModel
 {

@@ -175,6 +175,7 @@ QByteArray PlayerConnection::toByteArray()
 	map["viewport"]	= m_viewportRect;
 	map["canvas"]	= m_canvasSize;
 	map["armode"]	= (int)m_aspectRatioMode;
+	map["usecount"] = m_useCount;
 
 	QVariantList views;
 	foreach(GLWidgetSubview *view, m_subviews )
@@ -205,6 +206,8 @@ void PlayerConnection::fromByteArray(QByteArray& array)
 	m_viewportRect = map["viewport"].toRect();
 	m_canvasSize = map["canvas"].toSizeF();
 	m_aspectRatioMode = (Qt::AspectRatioMode)map["armode"].toInt();
+	m_useCount = map["usecount"].toInt();
+	//qDebug() << "PlayerConnection::fromByteArray:"<<this<<" "<<m_name<<" m_useCount:"<<m_useCount;
 
 	m_subviews.clear();
 	QVariantList views = map["views"].toList();
@@ -252,6 +255,8 @@ void PlayerConnection::connectPlayer(bool sendDefaults)
 	connect(m_client, SIGNAL(receivedMap(QVariantMap)), this, SLOT(receivedMap(QVariantMap)));
 	connect(m_client, SIGNAL(socketDisconnected()), this, SLOT(clientDisconnected()));
 	connect(m_client, SIGNAL(socketError(QAbstractSocket::SocketError)), this, SLOT(socketError(QAbstractSocket::SocketError)));
+	
+	m_useCount ++;
 
 	if(!m_justTesting)
 	{
@@ -672,7 +677,8 @@ void PlayerConnection::receivedMap(QVariantMap map)
 		foreach(QVariant item, list)
 			m_videoInputs << item.toString();
 		m_videoIputsReceived = true;
-		qDebug() << "PlayerConnection::receivedMap: [INFO] Received video input list: "<<m_videoInputs;
+		emit videoInputListReceived(m_videoInputs);
+		//qDebug() << "PlayerConnection::receivedMap: [INFO] Received video input list: "<<m_videoInputs;
 	}
 	else
 	if(cmd == GLPlayer_CurrentPlaylistItemChanged ||
@@ -954,3 +960,16 @@ void PlayerConnectionList::fromByteArray(QByteArray array)
 	}
 }
 
+bool PlayerConnection::sortByUseCount(PlayerConnection *a, PlayerConnection *b)
+{
+	if(!a || !b)
+		return false;
+	return a->useCount() > b->useCount();
+}
+
+bool PlayerConnection::sortByUseCountDesc(PlayerConnection *a, PlayerConnection *b)
+{
+	if(!a || !b)
+		return false;
+	return a->useCount() < b->useCount();
+}

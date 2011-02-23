@@ -85,10 +85,9 @@
      <string>&amp;File</string>
     </property>
     <addaction name="separator"/>
-    <addaction name="actionChange_Canvas_Size"/>
-    <addaction name="separator"/>
+    <addaction name="actionChoose_Output"/>
     <addaction name="actionPlayer_Setup"/>
-    <addaction name="actionMonitor_Players_Live"/>
+    <addaction name="separator"/>
     <addaction name="separator"/>
     <addaction name="actionExit"/>
    </widget>
@@ -96,6 +95,7 @@
     <property name="title">
      <string>&amp;Edit</string>
     </property>
+    <addaction name="actionMonitor_Players_Live"/>
     <addaction name="actionAdd_Video_Player"/>
     <addaction name="actionAdd_Overlay"/>
    </widget>
@@ -119,24 +119,24 @@
     <string>E&amp;xit</string>
    </property>
   </action>
-  <action name="actionChange_Canvas_Size">
+  <action name="actionChoose_Output">
    <property name="text">
-    <string>Change Can&amp;vas Size...</string>
+    <string>Choose &amp;Output...</string>
    </property>
   </action>
   <action name="actionMonitor_Players_Live">
    <property name="text">
-    <string>&amp;Monitor Players Live ...</string>
+    <string>&amp;Show Live Monitor</string>
    </property>
   </action>
   <action name="actionAdd_Video_Player">
    <property name="text">
-    <string>Add Video Player</string>
+    <string>Add &amp;Video Player</string>
    </property>
   </action>
   <action name="actionAdd_Overlay">
    <property name="text">
-    <string>Add Overlay</string>
+    <string>Add &amp;Overlay</string>
    </property>
   </action>
  </widget>
