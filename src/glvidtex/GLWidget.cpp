@@ -664,7 +664,7 @@ void GLWidgetSubview::initAlphaMask()
 void GLWidget::showEvent(QShowEvent *)
 {
 	//qDebug() << "GLWidget::showEvent(QShowEvent *)";
-	QTimer::singleShot(1050,this,SLOT(postInitGL()));
+	//QTimer::singleShot(1050,this,SLOT(postInitGL()));
 }
 
 
@@ -1721,7 +1721,7 @@ void GLWidget::resizeGL(int width, int height)
 {
 	glViewport(0,0,width,height); //(width - side) / 2, (height - side) / 2, side, side);
 
-	//qDebug() << "GLWidget::resizeGL(): width:"<<width<<", height:"<<height;
+	//qDebug() << "GLWidget::resizeGL(): "<<windowTitle()<<" width:"<<width<<", height:"<<height;
 
 	if(m_fboEnabled &&
 		(!m_fbo ||
@@ -1793,7 +1793,7 @@ void GLWidget::resizeGL(int width, int height)
 		
 			glBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, 0);
 			
-			qDebug() << "GLWidget::setupReadbackBuffers(): Generated FBO size:"<<m_readbackSize<<", PBO data size: "<<dataSize/1024<<" Kb";
+			//qDebug() << "GLWidget::setupReadbackBuffers(): Generated FBO size:"<<m_readbackSize<<", PBO data size: "<<dataSize/1024<<" Kb";
 		}
 		else
 		{
@@ -1946,7 +1946,7 @@ void GLWidget::setViewport(const QRectF& rect)
 
 	//QSize size(width,height);
 	QSize size = viewport.size().toSize();
-	//qDebug() <<"GLWidget::setViewport:  size:"<<size<<", sx:"<<sx<<",sy:"<<sy<<", xtv:"<<xtv<<", ytv:"<<ytv<<", scaled size:"<<scaledWidth<<scaledHeight;
+	//qDebug() <<"GLWidget::setViewport: "<<windowTitle()<<" size:"<<size<<", sx:"<<sx<<",sy:"<<sy<<", xtv:"<<xtv<<", ytv:"<<ytv<<", scaled size:"<<scaledWidth<<scaledHeight;
 	foreach(GLDrawable *drawable, m_drawables)
 		drawable->viewportResized(size);
 

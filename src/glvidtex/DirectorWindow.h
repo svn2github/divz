@@ -21,6 +21,8 @@ class FlowLayout;
 class VideoInputSenderManager;
 class VideoReceiver;
 class VideoWidget;
+class GroupPlayerWidget;
+class OverlayWidget;
 #include "GLDrawable.h"
 
 class DirectorWindow : public QMainWindow
@@ -61,19 +63,29 @@ private slots:
 	void videoInputClicked();
 	
 	void addVideoPlayer();
-	void addGroupPlayer();
-	void addOverlay();
+	GroupPlayerWidget * addGroupPlayer();
+	OverlayWidget * addOverlay();
 	void addPreviewWindow();
+	
+	void showAllSubwindows();
+	void createUserSubwindows();
+	void applyTiling();
 	
 protected:
 	void closeEvent(QCloseEvent *event);
+	void showEvent(QShowEvent *event);
 	
 	void setupUI();
 	void readSettings();
 	void writeSettings();
 	
+	
 	void showPlayerLiveMonitor(PlayerConnection *con);
-
+	
+	friend class DirectorMdiSubwindow;
+	static QMap<QString,QRect> s_storedSystemWindowsGeometry;
+	
+	
 private:
 	Ui::DirectorWindow *ui;
 	
@@ -98,6 +110,8 @@ private:
 	
 	bool m_hasVideoInputsList;	
 	GLSceneGroup *m_camSceneGroup;
+	
+	QVariantList m_storedWindowOptions;
 		
 	
 };
@@ -109,8 +123,13 @@ public:
 	GroupPlayerWidget(DirectorWindow*);
 	~GroupPlayerWidget();
 	
+	QString file();// { return m_collection->fileName(); }
+	int currentIndex() { return m_combo->currentIndex(); }
+	
 public slots:
-// 	void loadFile(QString&);
+	void setCurrentIndex(int x) { m_combo->setCurrentIndex(x); }
+ 	bool loadFile(QString);
+ 	
 	void saveFile();
 	void openEditor();
 	void browse();
@@ -136,8 +155,13 @@ public:
 	OverlayWidget(DirectorWindow*);
 	~OverlayWidget();
 	
+	QString file();// { return m_collection->fileName(); }
+	int currentIndex() { return m_combo->currentIndex(); }
+	
 public slots:
-// 	void loadFile(QString&);
+	void setCurrentIndex(int x) { m_combo->setCurrentIndex(x); }
+	bool loadFile(QString);
+	
 	void showOverlay();
 	void hideOverlay();
 	
@@ -159,5 +183,24 @@ private:
 	QComboBox *m_combo;
 };
 
+
+class DirectorMdiSubwindow : public QMdiSubWindow
+{
+	Q_OBJECT
+public:
+	DirectorMdiSubwindow(QWidget *child=0);
+	
+	void setWidget(QWidget *);
+	
+protected slots:
+	void applyGeom();
+
+protected:
+	void showEvent(QShowEvent *event);
+	void moveEvent(QMoveEvent * moveEvent);
+	
+	QRect m_geom;
+	 
+};
 
 #endif // DIRECTORWINDOW_H
