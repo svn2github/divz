@@ -108,7 +108,7 @@ public:
 	
 public slots:
 	void setCollection(GLSceneGroupCollection*);
-	void setGroup(GLSceneGroup*);
+	bool setGroup(GLSceneGroup*);
 	void setScene(GLScene*);
 	
 	void addOverlay(GLScene*);

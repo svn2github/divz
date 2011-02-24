@@ -1328,7 +1328,7 @@ void GLSceneGroupPlaylist::setCurrentItem(GLScene *item)
 		return;
 	else
 	{
-		qDebug() << "GLSceneGroupPlaylist::setCurrentItem: Starting timer on item:"<<item<<", num:"<<m_currentItemIndex<<"for"<<item->duration()<<"sec";
+		//qDebug() << "GLSceneGroupPlaylist::setCurrentItem: Starting timer on item:"<<item<<", num:"<<m_currentItemIndex<<"for"<<item->duration()<<"sec";
 		m_currentItemTimer.stop();
 		m_currentItemTimer.setInterval(dur);
 		m_currentItemTimer.start();
@@ -1337,9 +1337,8 @@ void GLSceneGroupPlaylist::setCurrentItem(GLScene *item)
 		if(m_currentItem)
 			disconnect(m_currentItem, 0, this, 0);
 			
-		connect(m_currentItem, SIGNAL(durationChanged(double)), this, SLOT(sceneDurationChanged(double)));
-		
 		m_currentItem = item;
+		connect(m_currentItem, SIGNAL(durationChanged(double)), this, SLOT(sceneDurationChanged(double)));
 	}
 }
 

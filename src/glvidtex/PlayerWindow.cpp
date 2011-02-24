@@ -729,11 +729,10 @@ void PlayerWindow::receivedMap(QVariantMap map)
 	{
 		QByteArray ba = map["data"].toByteArray();
 		GLSceneGroup *group = new GLSceneGroup(ba);
-		setGroup(group);
-
-		if(group->size() > 0)
+		if(setGroup(group) && 
+		   group->size() > 0)
 			setScene(group->at(0));
-
+		
 		sendReply(QVariantList()
 				<< "cmd" << GLPlayer_LoadSlideGroup
 				<< "status" << true);
@@ -1170,12 +1169,24 @@ void PlayerWindow::setCollection(GLSceneGroupCollection *col)
 	m_col = col;
 }
 
-void PlayerWindow::setGroup(GLSceneGroup *group)
+bool PlayerWindow::setGroup(GLSceneGroup *group)
 {
+	if(m_group && group &&
+	   m_group->groupId() == group->groupId())
+	{
+		if(group != m_group)
+			delete group;
+		group = 0;
+		return false;
+	}
+	
+	if(group == m_group)
+		return false;
+			
 	if(m_group)
 	{
 		disconnect(m_group->playlist(), 0, this, 0);
-		if(m_group->sceneList().indexOf(m_scene) > -1)
+		if(m_scene && m_group->lookupScene(m_scene->sceneId()))
 		{
 			// active scene is in this group, dont delete till active scene released;
 			m_oldGroup = m_group;
@@ -1202,24 +1213,25 @@ void PlayerWindow::setGroup(GLSceneGroup *group)
 void PlayerWindow::displayScene(GLScene *scene)
 {
 	//qDebug() << "PlayerWindow::displayScene: New scene:"<<scene;
-// 	if(scene == m_scene)
-// 	{
-// 		qDebug() << "PlayerWindow::displayScene: Scene pointers match, not setting new scene";
-// 		return;
-// 	}
-
-	if(scene   && 
-	   m_scene &&
-	   scene->sceneId() == m_scene->sceneId())
+	if(scene == m_scene)
 	{
-		qDebug() << "PlayerWindow::displayScene: Scene IDs match, not setting new scene.";
+		qDebug() << "PlayerWindow::displayScene: Scene pointers match, not setting new scene";
 		return;
 	}
+
+// 	if(scene   && 
+// 	   m_scene &&
+// 	   scene->sceneId() == m_scene->sceneId())
+// 	{
+// 		qDebug() << "PlayerWindow::displayScene: Scene IDs match, not setting new scene.";
+// 		return;
+// 	}
 
 	if(m_oldScene)
 		opacityAnimationFinished(m_oldScene);
 
-	m_oldScene = m_scene;
+	if(m_scene)
+		m_oldScene = m_scene;
 	m_scene = scene;
 
 	if(m_group)

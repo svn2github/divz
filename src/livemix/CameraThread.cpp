@@ -10,7 +10,7 @@
 
 #include <QImageWriter>
 
-//#define DEBUG
+#define DEBUG
 
 //#undef ENABLE_DECKLINK_CAPTURE
 

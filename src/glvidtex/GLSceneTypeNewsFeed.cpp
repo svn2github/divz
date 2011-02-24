@@ -1,7 +1,8 @@
 #include "GLSceneTypeNewsFeed.h"
 #include "GLImageDrawable.h"
-#include "QRCodeQtUtil.h"
 #include "GLTextDrawable.h"
+#include "QRCodeQtUtil.h"
+
 GLSceneTypeNewsFeed::GLSceneTypeNewsFeed(QObject *parent)
 	: GLSceneType(parent)
 	, m_currentIndex(0)
@@ -40,6 +41,13 @@ GLSceneTypeNewsFeed::GLSceneTypeNewsFeed(QObject *parent)
 		;
 		
 	m_paramInfoList
+		<< ParameterInfo("newsUrl",
+			"News Feed URL",
+			"RSS URL to download or type 'google' to use Google News",
+			QVariant::String,
+			true,
+			SLOT(setNewsUrl(QString)))
+			
 		<< ParameterInfo("updateTime",
 			"Update Time",
 			"Time in minutes to wait between updates",
@@ -52,12 +60,11 @@ GLSceneTypeNewsFeed::GLSceneTypeNewsFeed(QObject *parent)
 	opts.reset();
 	opts.min = 1;
 	opts.max = 30;
-	m_paramInfoList[0].hints = opts;
+	m_paramInfoList[1].hints = opts;
 
-// 	m_parser = new RssParser("http://www.mypleasanthillchurch.org/phc/boards/rss", this);
-//         connect(m_parser, SIGNAL(itemsAvailable(QList<RssParser::RssItem>)), this, SLOT(itemsAvailable(QList<RssParser::RssItem>)));
+	m_parser = new RssParser("", this);
+        connect(m_parser, SIGNAL(itemsAvailable(QList<RssParser::RssItem>)), this, SLOT(itemsAvailable(QList<RssParser::RssItem>)));
 
-	
 	connect(&m_reloadTimer, SIGNAL(timeout()), this, SLOT(reloadData()));
 	setParam("updateTime", 15);
 	
@@ -69,9 +76,6 @@ void GLSceneTypeNewsFeed::setLiveStatus(bool flag)
 {
 	GLSceneType::setLiveStatus(flag);
 	
-// 	if(m_news.size() > 0)
-// 		showNextItem();
-	
 	if(flag)
 	{
 		m_reloadTimer.start();
@@ -79,7 +83,7 @@ void GLSceneTypeNewsFeed::setLiveStatus(bool flag)
 	}
 	else
 	{
-		m_reloadTimer.stop();
+		//m_reloadTimer.stop();
 		QTimer::singleShot( 0, this, SLOT(showNextItem()) );
 	}
 }
@@ -92,27 +96,20 @@ void GLSceneTypeNewsFeed::showNextItem()
 	if(m_news.isEmpty())
 		return;
 		
-	NewsItem item = m_news[m_currentIndex];
+	RssParser::RssItem item = m_news[m_currentIndex];
 	
 	item.title = item.title.replace("\n","");
 
 	setField("title", 	item.title);
-	setField("text", 	item.text);
+	setField("text", 	item.text.left(1024)); // only use the first 1k of text
 	setField("source",	item.source);
 	setField("date",	item.date);
-	
-	// Not sure which method to use - render to a file, then set the file using the "setField()" method,
-	// or set the QImage on the drawable directly. For now, we'll got with the latter route.
-	
-//  	QImage image = QRCodeQtUtil::encode(item.url);
-//  	QString file = QString("qrcode-%1.png").arg(m_currentIndex);
-//  	image.save(file);
-//  	setField("qrcode", file);
-	
+
+	// Override RSS feeds that include HTML in their output
 	GLDrawable *gld = lookupField("text");
 	if(GLTextDrawable *text = dynamic_cast<GLTextDrawable*>(gld))
 	{
-		text->changeFontSize(48);
+		text->changeFontSize(42);
 		text->changeFontColor(Qt::white);
 	}
 	
@@ -136,33 +133,43 @@ void GLSceneTypeNewsFeed::setParam(QString param, QVariant value)
 {
 	GLSceneType::setParam(param, value);
 	
+	if(param == "newsUrl")
+	{
+		requestData(value.toString());
+	}
+	else
 	if(param == "updateTime")
 	{
-		if(m_parser)
-			m_parser->setUpdateTime(value.toInt());
-		else
-			m_reloadTimer.setInterval(value.toInt() * 60 * 1000);
+// 		if(m_parser)
+// 			m_parser->setUpdateTime(value.toInt());
+		
+		m_reloadTimer.setInterval(value.toInt() * 60 * 1000);
 	}
 }
 
 void GLSceneTypeNewsFeed::reloadData()
 {
-	requestData("");//location());
+	requestData(newsUrl());
 }
 
-void GLSceneTypeNewsFeed::requestData(const QString &/*location*/) 
+void GLSceneTypeNewsFeed::requestData(const QString &location) 
 {
-
-	QUrl url("http://www.google.com/ig/api?news");
-// 	url.addEncodedQueryItem("hl", "en");
-// 	url.addEncodedQueryItem("weather", QUrl::toPercentEncoding(location));
+	if(location.toLower() == "google")
+	{
+		QUrl url("http://www.google.com/ig/api?news");
+	// 	url.addEncodedQueryItem("hl", "en");
+		
+		qDebug() << "GLSceneTypeNewsFeed::requestData(): url:"<<url;
 	
-	qDebug() << "GLSceneTypeNewsFeed::requestData(): url:"<<url;
-
-	QNetworkAccessManager *manager = new QNetworkAccessManager(this);
-	connect(manager, SIGNAL(finished(QNetworkReply*)),
-		this, SLOT(handleNetworkData(QNetworkReply*)));
-	manager->get(QNetworkRequest(url));
+		QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+		connect(manager, SIGNAL(finished(QNetworkReply*)),
+			this, SLOT(handleNetworkData(QNetworkReply*)));
+		manager->get(QNetworkRequest(url));
+	}
+	else
+	{
+		m_parser->setUrl(location);
+	}
 
 }
 
@@ -179,7 +186,6 @@ void GLSceneTypeNewsFeed::handleNetworkData(QNetworkReply *networkReply)
 	.replace("&amp;#39;","'") \
 	.replace("&amp;quot;","\"") \
 	.replace("&amp;amp;","&")
-	
 
 void GLSceneTypeNewsFeed::parseData(const QString &data) 
 {
@@ -196,7 +202,7 @@ void GLSceneTypeNewsFeed::parseData(const QString &data)
 			// Parse and collect the news items
 			if (xml.name() == "news_entry") 
 			{
-				NewsItem item;
+				RssParser::RssItem item;
 				while (!xml.atEnd()) 
 				{
 					xml.readNext();
@@ -206,7 +212,7 @@ void GLSceneTypeNewsFeed::parseData(const QString &data)
 						{
 							m_news << item;
 							//qDebug() << "GLSceneTypeNewsFeed::parseData(): Added item: "<<item.title;
-							item = NewsItem();
+							item = RssParser::RssItem();
 						} 
 						break;
 					}
@@ -235,133 +241,9 @@ void GLSceneTypeNewsFeed::parseData(const QString &data)
 
 void GLSceneTypeNewsFeed::itemsAvailable(QList<RssParser::RssItem> list)
 {
-	//m_news = list;
+	m_news = list;
 	m_currentIndex = 0;
+	
 	if(scene())
 		showNextItem();
-}
-
-/////////////////////////////////////////////
-
-RssParser::RssParser(QString url, QObject *parent)
-	: QObject(parent)
-{
-	if(!url.isEmpty())
-		setUrl(url);
-
-	connect(&m_reloadTimer, SIGNAL(timeout()), this, SLOT(reloadData()));
-	setUpdateTime(60);
-}
-
-void RssParser::setUpdateTime(int min)
-{
-	m_reloadTimer.setInterval(min * 60 * 1000);
-}
-
-void RssParser::reloadData()
-{
-	loadUrl(m_url);
-}
-
-void RssParser::setUrl(const QString& url)
-{
-	m_url = url;
-	reloadData();
-}
-
-
-void RssParser::loadUrl(const QString &location) 
-{
-	QUrl url(location);
-// 	url.addEncodedQueryItem("hl", "en");
-// 	url.addEncodedQueryItem("weather", QUrl::toPercentEncoding(location));
-	
-	qDebug() << "RssParser::loadUrl(): url:"<<url;
-
-	QNetworkAccessManager *manager = new QNetworkAccessManager(this);
-	connect(manager, SIGNAL(finished(QNetworkReply*)),
-		this, SLOT(handleNetworkData(QNetworkReply*)));
-	manager->get(QNetworkRequest(url));
-}
-
-void RssParser::handleNetworkData(QNetworkReply *networkReply) 
-{
-	QUrl url = networkReply->url();
-	if (!networkReply->error())
-		parseData(QString::fromUtf8(networkReply->readAll()));
-	networkReply->deleteLater();
-	networkReply->manager()->deleteLater();
-}
-/*
-#define GET_DATA_ATTR xml.attributes().value("data").toString() \
-	.replace("&amp;#39;","'") \
-	.replace("&amp;quot;","\"") \
-	.replace("&amp;amp;","&")
-	*/
-
-void RssParser::parseData(const QString &data) 
-{
-	qDebug() << "RssParser::parseData()";//: "<<data;
-	m_items.clear();
-	
-	QXmlStreamReader xml(data);
-	while (!xml.atEnd()) 
-	{
-		xml.readNext();
-		if (xml.tokenType() == QXmlStreamReader::StartElement) 
-		{
-// 			qDebug() << "RssParser::parseData(): StartElement/xml.name():"<<xml.name();
-			// Parse and collect the news items
-			if (xml.name() == "item") 
-			{
-				QString tag;
-				RssItem item;
-				while (!xml.atEnd()) 
-				{
-					xml.readNext();
-					if (xml.name() == "item") 
-					{
-						if (!item.title.isEmpty()) 
-						{
-							item.date = item.date.replace("T"," ");
-							item.date = item.date.replace(QRegExp("[+-]\\d{2}:\\d{2}"),"");
-						
-							m_items << item;
-							qDebug() << "RssParser::parseData(): Added item: title:"<<item.title
-								<<", "<<item.url
-								<<", "<<item.date
-								<<", "<<item.source; 
-							
-							item = RssItem();
-						} 
-						break;
-					}
-					
-					if (xml.tokenType() == QXmlStreamReader::StartElement) 
-					{
-						tag = xml.name().toString();
-// 						qDebug() << "RssParser::parseData(): 	StartElement/xml.name():"<<xml.name();
-					}
-					else 
-					if (xml.isCharacters() && !xml.isWhitespace()) 
-					{
-// 						if(tag != "description")
-// 							qDebug() << "RssParser::parseData(): 		isCharacters/tag:"<<tag<<", text:"<<xml.text().toString();
-						if (tag == "title")
-							item.title 	+= xml.text().toString();
-						if (tag == "link") 
-							item.url 	+= xml.text().toString();
-						if (tag == "creator") 
-							item.source 	+= xml.text().toString();
-						if (tag == "date")
-							item.date 	+= xml.text().toString();
-						if (tag == "description")
-							item.text 	+= xml.text().toString();
-					}
-				}
-			}
-		}
-	}
-	
-	emit itemsAvailable(m_items);
 }

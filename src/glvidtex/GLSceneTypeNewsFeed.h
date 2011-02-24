@@ -2,6 +2,7 @@
 #define GLSceneTypeNewsFeed_H
 
 #include "GLSceneGroupType.h"
+#include "RssParser.h"
 
 #include <QNetworkReply>
 
@@ -35,64 +36,11 @@
 */			
 
 
-class RssParser : public QObject
-{
-	Q_OBJECT
-	
-	Q_PROPERTY(QString url READ url WRITE setUrl);
-	Q_PROPERTY(int updateTime READ updateTime WRITE setUpdateTime);
-	
-public:
-	RssParser(QString url="", QObject *parent=0);
-	
-	class RssItem
-	{
-	public:
-		QString title;
-		QString text;
-		QString source;
-		QString url;
-		QString date;
-	};
-	
-	QString url() { return m_url; }
-	int updateTime() { return m_updateTime; }
-
-	QList<RssItem> items() { return m_items; }
-
-signals:
-	void itemsAvailable(QList<RssParser::RssItem>);
-
-	
-public slots:
-	/** Set the time to wait between updates to \a minutes */
-	void setUpdateTime(int minutes);
-		
-	/** Reload the data from server*/
-	void reloadData();
-	
-	void setUrl(const QString&);
-
-private slots:
-	void loadUrl(const QString &url);
-	void handleNetworkData(QNetworkReply *networkReply);
-	void parseData(const QString &data);
-
-private:
-	QTimer m_reloadTimer;
-		
-	QString m_url;
-	int m_updateTime;
-	QList<RssItem> m_items;
-
-};
-
-
-
 class GLSceneTypeNewsFeed : public GLSceneType
 {
 	Q_OBJECT
 	
+	Q_PROPERTY(QString newsUrl READ newsUrl WRITE setNewsUrl);
 	Q_PROPERTY(int updateTime READ updateTime WRITE setUpdateTime);
 	
 public:
@@ -103,6 +51,10 @@ public:
 	virtual QString title()		{ return "News Feed"; }
 	virtual QString description()	{ return "Displays a news feed from the Google News Data API"; }
 	
+	/** Returns the current News Feed URL 
+		\sa setNewsUrl() */
+	QString newsUrl() { return m_params["newsUrl"].toString(); }
+	
 	/** Returns the current update time parameter value.
 		\sa setUpdateTime() */
 	int updateTime() { return m_params["updateTime"].toInt(); }
@@ -112,6 +64,11 @@ public slots:
 	
 	/** Overridden to intercept changes to the 'updateTime' parameter. */
 	virtual void setParam(QString param, QVariant value);
+	
+	/** Sets the news feeed URL to \a url. If you specify the special value "google", 
+		it will use the internal parser to download "http://www.google.com/ig/api?news".
+		Otherwise, it will pass the given URL to RssParser and assume its an RSS feed. */
+	void setNewsUrl(QString url) { setParam("newsUrl", url); }
 	
 	/** Set the time to wait between updates to \a minutes */
 	void setUpdateTime(int minutes) { setParam("updateTime", minutes); }
@@ -131,18 +88,7 @@ private slots:
 private:
 	QTimer m_reloadTimer;
 	
-	//typedef RssParser::RssItem NewsItem;
-	class NewsItem
-	{
-	public:
-		QString title;
-		QString text;
-		QString source;
-		QString url;
-		QString date;
-	};
-	
-	QList<NewsItem> m_news;
+	QList<RssParser::RssItem> m_news;
 	int m_currentIndex;
 
 	RssParser *m_parser;
