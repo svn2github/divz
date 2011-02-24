@@ -219,8 +219,8 @@ void GLVideoDrawable::setVideoSource(VideoSource *source)
 		}
 		else
 		{
-			bool invertFadeStart = source == m_source2;			
-	
+			bool invertFadeStart = source == m_source2;
+
 			disconnect(m_source, 0, this, 0);
 
 			m_source2 = m_source;
@@ -254,7 +254,7 @@ void GLVideoDrawable::setVideoSource(VideoSource *source)
 		
 		// If m_isCameraThread, then we tell GLWidget to updateGL *now* instead of using a 0-length timer to batch updateGL() calls into a single call
 		m_isCameraThread = (NULL != dynamic_cast<CameraThread*>(source));
-		
+
 		connect(m_source, SIGNAL(frameReady()), this, SLOT(frameReady()));
 		connect(m_source, SIGNAL(destroyed()),  this, SLOT(disconnectVideoSource()));
 
@@ -320,7 +320,7 @@ void GLVideoDrawable::xfadeTick(bool callUpdate)
 
 	if(elapsed >= m_xfadeLength)
 		xfadeStop();
-	
+
 	if(callUpdate)
 		updateGL();
 }
@@ -869,9 +869,9 @@ void GLVideoDrawable::setGLWidget(GLWidget* widget)
 	{
 		if(!liveStatus())
 			setLiveStatus(true);
-		
+
 		GLDrawable::setGLWidget(widget);
-		
+
 		if(m_textureUpdateNeeded)
 		{
 			updateTexture();
@@ -881,7 +881,7 @@ void GLVideoDrawable::setGLWidget(GLWidget* widget)
 	else
 	{
 		GLDrawable::setGLWidget(widget);
-	
+
 		if(liveStatus())
 			setLiveStatus(false);
 	}
@@ -990,13 +990,13 @@ bool GLVideoDrawable::setVideoFormat(const VideoFormat& format, bool secondSourc
 	else
 		m_validShader2 = false;
 	const char *fragmentProgram = resizeTextures(format.frameSize, secondSource);
-	
+
   	if(!samePixelFormat)
   	{
   		if(m_useShaders)
 		{
 			Q_UNUSED(qt_glsl_warpingVertexShaderProgram);
-			
+
 			QGLShaderProgram *program = !secondSource ? m_program : m_program2;
 
 			if(!program->shaders().isEmpty())
@@ -1578,7 +1578,8 @@ static void uploadTexture(GLuint tx_id, const QImage &image)
 void GLVideoDrawable::updateTexture(bool secondSource)
 {
 //   	if(property("-debug").toBool())
-//   		qDebug() << "GLVideoDrawable::updateTexture(): "<<(QObject*)this<<" secondSource:"<<secondSource;
+   		//qDebug() << "GLVideoDrawable::updateTexture(): "<<(QObject*)this<<" secondSource:"<<secondSource;
+		//qDebug() << "GLVideoDrawable::updateTexture(): "<<(QObject*)this;
 	if(!secondSource ? (!m_frame || !m_frame->isValid()) : (!m_frame2 || !m_frame2->isValid()))
 	{
 		//qDebug() << "GLVideoDrawable::updateTexture(): "<<(QObject*)this<<" Frame not valid";
@@ -1592,7 +1593,9 @@ void GLVideoDrawable::updateTexture(bool secondSource)
 //  			qDebug() << "GLVideoDrawable::updateTexture(): "<<(QObject*)this<<" Got a frame, size:"<<m_frame->size();
 		//if()
 			//m_frameSize = m_frame->size();
-// 		qDebug() << "GLVideoDrawable::updateTexture(): "<<objectName()<<" Got frame size:"<<m_frame->size();
+ 		//qDebug() << "GLVideoDrawable::updateTexture(): "<<objectName()<<" Got frame size:"<<m_frame->size();
+ 		//qDebug() << "GLVideoDrawable::updateTexture(): "<<objectName()<<" Got frame size:"<<m_frame->size();
+		//qDebug() << "GLVideoDrawable::updateTexture(): "<<(QObject*)this<<" Got frame size:"<<m_frame->size();
 
 		if(!secondSource ? (m_frameSize != m_frame->size()   || m_frame->rect() != m_sourceRect   || !m_texturesInited) :
 				   (m_frameSize2 != m_frame2->size() || m_frame2->rect() != m_sourceRect2 || !m_texturesInited2))
@@ -1806,7 +1809,7 @@ void GLVideoDrawable::updateTexture(bool secondSource)
 // 				glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 				glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
 				glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-				
+
 			}
 		}
 		else
@@ -1817,7 +1820,7 @@ void GLVideoDrawable::updateTexture(bool secondSource)
 //   				qDebug() << "GLVideoDrawable::updateTexture(): "<<(QObject*)this<<" Mark: QImage frame";
 //   				m_frame->image().save("debug.jpg");
 //   			}
-  			
+
 			for (int i = 0; i < (!secondSource ? m_textureCount : m_textureCount2); ++i)
 			{
 // 				if(property("-debug").toBool())
@@ -1922,10 +1925,10 @@ void GLVideoDrawable::updateTexture(bool secondSource)
 			updateRects(secondSource);
 			updateAlignment(secondSource);
 		}
-		
+
 		m_textureUpdateNeeded = true;
 	}
-	
+
 // 	if(property("-debug").toBool())
 // 		qDebug() << "GLVideoDrawable::updateTexture(): "<<(QObject*)this<<" Done update";
 }
@@ -1943,18 +1946,18 @@ void GLVideoDrawable::paint(QPainter * painter, const QStyleOptionGraphicsItem *
 // 		updateRects(false);
 // 		updateAlignment();
 // 	}
-// 	
+//
 // 	if(m_frame2 &&
 // 		(m_frameSize2 != m_frame2->size() || m_frame2->rect() != m_sourceRect2))
 // 	{
 // 		updateRects(true);
 // 		updateAlignment();
 // 	}
-	
+
 	updateAnimations(true);
-	
+
 	aboutToPaint();
-	
+
 	// Since QGraphicsScene/QGraphicsView doesn't have (that I know of) a way to hook into when the scene gets added to the view,
 	// then we have to 'guess' by finding out when we start painting here.
 	if(!liveStatus())
@@ -1974,8 +1977,10 @@ void GLVideoDrawable::paint(QPainter * painter, const QStyleOptionGraphicsItem *
 	painter->setRenderHint(QPainter::HighQualityAntialiasing, true);
 	painter->setRenderHint(QPainter::SmoothPixmapTransform, true);
 
-	painter->setOpacity(opacity() * (m_fadeActive ? m_fadeValue:1));
-	
+	double opac = opacity() * (m_fadeActive ? m_fadeValue:1);
+	//qDebug() << "GLVideoDrawable::paint(): "<<(QObject*)this<<" opac used:"<<opac<<", m_:"<<opacity()<<", fade act:"<<m_fadeActive<<", fade val:"<<m_fadeValue;
+	painter->setOpacity(opac);
+
 	if(!m_frame)
 		return;
 
@@ -2002,7 +2007,7 @@ void GLVideoDrawable::paint(QPainter * painter, const QStyleOptionGraphicsItem *
 					 imageFormat == QImage::Format_ARGB6666_Premultiplied ? 3 :
 					 4),
 				     imageFormat);
-				
+
 			if(m_displayOpts.flipHorizontal || m_displayOpts.flipVertical)
 				image = image.mirrored(m_displayOpts.flipHorizontal, m_displayOpts.flipVertical);
 
@@ -2105,7 +2110,7 @@ void GLVideoDrawable::aboutToPaint()
 void GLVideoDrawable::updateAnimations(bool insidePaint)
 {
 	// Call the fade update function directly for both
-	// our local crossfade and the scene crossfade 
+	// our local crossfade and the scene crossfade
 	if(m_fadeActive)
 		xfadeTick(!insidePaint); // dont update GL
 
@@ -2149,7 +2154,7 @@ void GLVideoDrawable::paintGL()
 
 
 	//m_frame->unmap()();
-	
+
 	updateAnimations(true);
 
 	QRectF source = m_sourceRect;
@@ -2272,10 +2277,12 @@ void GLVideoDrawable::paintGL()
 		txRight, txTop
 	};
 
-	double liveOpacity = m_crossFadeMode == JustFront ? 
+	double liveOpacity = m_crossFadeMode == JustFront ?
 				 opacity() :
 				(opacity() * (m_fadeActive ? m_fadeValue : 1.));
-		
+
+	//qDebug() << "GLVideoDrawable::paintGL(): "<<(QObject*)this<<" opac used:"<<liveOpacity<<", m_:"<<opacity()<<", fade act:"<<m_fadeActive<<", fade val:"<<m_fadeValue;
+
 	//if(m_fadeActive)
 //		qDebug() << "GLVideoDrawable::paintGL: "<<(QObject*)this<<m_source<<" liveOpacity: "<<liveOpacity;
 // 	if(property("-debug").toBool())
@@ -2286,13 +2293,13 @@ void GLVideoDrawable::paintGL()
 		if(m_validShader)
 		{
 			m_program->bind();
-	
+
 			m_program->enableAttributeArray("vertexCoordArray");
 			m_program->enableAttributeArray("textureCoordArray");
-	
+
 			m_program->setAttributeArray("vertexCoordArray",  vertexCoordArray,  2);
 			m_program->setAttributeArray("textureCoordArray", textureCoordArray, 2);
-	
+
 			m_program->setUniformValue("positionMatrix",      positionMatrix);
 		// 	QMatrix4x4 mat4(
 		// 		positionMatrix[0][0], positionMatrix[0][1], positionMatrix[0][2], positionMatrix[0][3],
@@ -2301,7 +2308,7 @@ void GLVideoDrawable::paintGL()
 		// 		positionMatrix[3][0], positionMatrix[3][1], positionMatrix[3][2], positionMatrix[3][3]
 		// 		);
 		// 	m_program->setUniformValue("positionMatrix",      mat4);
-	
+
 	// 		if(property("-debug").toBool())
 	// 			qDebug() << "GLVideoDrawable::paintGL():"<<(QObject*)this<<": rendering with opacity:"<<opacity();
 		
@@ -2310,24 +2317,24 @@ void GLVideoDrawable::paintGL()
 			m_program->setUniformValue("alpha",               (GLfloat)liveOpacity);
 			m_program->setUniformValue("texOffsetX",          (GLfloat)m_invertedOffset.x());
 			m_program->setUniformValue("texOffsetY",          (GLfloat)m_invertedOffset.y());
-	
-	
+
+
 			if (m_textureCount == 3)
 			{
 				glActiveTexture(GL_TEXTURE0);
 				glBindTexture(GL_TEXTURE_2D, m_textureIds[0]);
-	
+
 				glActiveTexture(GL_TEXTURE1);
 				glBindTexture(GL_TEXTURE_2D, m_textureIds[1]);
-	
+
 				glActiveTexture(GL_TEXTURE2);
 				glBindTexture(GL_TEXTURE_2D, m_textureIds[2]);
-	
+
 				glActiveTexture(GL_TEXTURE3);
 				glBindTexture(GL_TEXTURE_2D, m_alphaTextureId);
-	
+
 				glActiveTexture(GL_TEXTURE0);
-	
+
 				m_program->setUniformValue("texY", 0);
 				m_program->setUniformValue("texU", 1);
 				m_program->setUniformValue("texV", 2);
@@ -2351,19 +2358,19 @@ void GLVideoDrawable::paintGL()
 			{
 				glActiveTexture(GL_TEXTURE0);
 				glBindTexture(GL_TEXTURE_2D, m_textureIds[0]);
-	
+
 				glActiveTexture(GL_TEXTURE1);
 				glBindTexture(GL_TEXTURE_2D, m_alphaTextureId);
-	
+
 				glActiveTexture(GL_TEXTURE0);
-	
+
 				m_program->setUniformValue("texRgb", 0);
 				m_program->setUniformValue("alphaMask", 1);
 			}
 			m_program->setUniformValue("colorMatrix", m_colorMatrix);
-	
+
 			glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-	
+
 			m_program->release();
 		}
 
@@ -2541,13 +2548,13 @@ void GLVideoDrawable::paintGL()
 			if(m_validShader2)
 			{
 				m_program2->bind();
-	
+
 				m_program2->enableAttributeArray("vertexCoordArray");
 				m_program2->enableAttributeArray("textureCoordArray");
-	
+
 				m_program2->setAttributeArray("vertexCoordArray",  vertexCoordArray,  2);
 				m_program2->setAttributeArray("textureCoordArray", textureCoordArray, 2);
-	
+
 				m_program2->setUniformValue("positionMatrix",      positionMatrix);
 			// 	QMatrix4x4 mat4(
 			// 		positionMatrix[0][0], positionMatrix[0][1], positionMatrix[0][2], positionMatrix[0][3],
@@ -2556,29 +2563,29 @@ void GLVideoDrawable::paintGL()
 			// 		positionMatrix[3][0], positionMatrix[3][1], positionMatrix[3][2], positionMatrix[3][3]
 			// 		);
 			// 	m_program->setUniformValue("positionMatrix",      mat4);
-	
+
 				//qDebug() << "GLVideoDrawable::paintGL():"<<this<<", rendering with opacity:"<<opacity();
 				m_program2->setUniformValue("alpha",               (GLfloat)fadeOpacity);
 				m_program2->setUniformValue("texOffsetX",          (GLfloat)m_invertedOffset.x());
 				m_program2->setUniformValue("texOffsetY",          (GLfloat)m_invertedOffset.y());
-	
-	
+
+
 				if (m_textureCount2 == 3)
 				{
 					glActiveTexture(GL_TEXTURE0);
 					glBindTexture(GL_TEXTURE_2D, m_textureIds2[0]);
-	
+
 					glActiveTexture(GL_TEXTURE1);
 					glBindTexture(GL_TEXTURE_2D, m_textureIds2[1]);
-	
+
 					glActiveTexture(GL_TEXTURE2);
 					glBindTexture(GL_TEXTURE_2D, m_textureIds2[2]);
-	
+
 					glActiveTexture(GL_TEXTURE3);
 					glBindTexture(GL_TEXTURE_2D, m_alphaTextureId);
-	
+
 					glActiveTexture(GL_TEXTURE0);
-	
+
 					m_program->setUniformValue("texY", 0);
 					m_program->setUniformValue("texU", 1);
 					m_program->setUniformValue("texV", 2);
@@ -2588,20 +2595,20 @@ void GLVideoDrawable::paintGL()
 				{
 					glActiveTexture(GL_TEXTURE0);
 					glBindTexture(GL_TEXTURE_2D, m_textureIds2[0]);
-	
+
 					glActiveTexture(GL_TEXTURE1);
 					glBindTexture(GL_TEXTURE_2D, m_alphaTextureId);
-	
+
 					glActiveTexture(GL_TEXTURE0);
-	
+
 					m_program->setUniformValue("texRgb", 0);
 					m_program->setUniformValue("alphaMask", 1);
 				}
 				m_program->setUniformValue("colorMatrix", m_colorMatrix);
-	
+
 	//			if(fadeOpacity > 0.001)
 					glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-	
+
 				m_program->release();
 			}
 
@@ -2743,7 +2750,7 @@ void GLVideoDrawable::paintGL()
 	}
 
 	m_frameCount ++;
-	
+
 // 	qDebug() << "GLVideoDrawable::paintGL(): "<<(QObject*)this<<" Mark - end";
 }
 

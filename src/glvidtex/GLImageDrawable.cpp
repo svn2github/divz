@@ -19,7 +19,7 @@ GLImageDrawable::GLImageDrawable(QString file, QObject *parent)
 {
 	setImage(QImage("dot.gif"));
 	setCrossFadeMode(GLVideoDrawable::FrontAndBack);
-	
+
 	if(!file.isEmpty())
 		setImageFile(file);
 }
@@ -30,24 +30,25 @@ GLImageDrawable::~GLImageDrawable()
 void GLImageDrawable::setImage(const QImage& image, bool insidePaint)
 {
 	//qDebug() << "GLImageDrawable::setImage(): "<<(QObject*)this<<" mark1: insidePaint:"<<insidePaint;
-	if(m_allocatedMemory > IMAGE_ALLOCATION_CAP_MB*1024*1024 && 
+	if(m_allocatedMemory > IMAGE_ALLOCATION_CAP_MB*1024*1024 &&
 		!liveStatus() &&
 		canReleaseImage())
 	{
 		m_releasedImage = true;
 		//qDebug() << "GLImageDrawable::setImage(): "<<(QObject*)this<<" NOT LOADING";
-		
+
 		#ifdef DEBUG_MEMORY_USAGE
 		qDebug() << "GLImageDrawable::setImage(): "<<(QObject*)this<<" Allocated memory ("<<(m_allocatedMemory/1024/1024)<<"MB ) exceedes" << IMAGE_ALLOCATION_CAP_MB << "MB cap - delaying load until go-live";
 		#endif
 		return;
 	}
-	
+
 	m_releasedImage = false;
 	//qDebug() << "GLImageDrawable::setImage(): "<<(QObject*)this<<" mark2";
 	//image.save("whitedebug.png");
-	
-	if(m_frame && 
+
+/*
+	if(m_frame &&
 	   m_frame->isValid() &&
 	   xfadeEnabled() &&
 	   !insidePaint)
@@ -58,7 +59,8 @@ void GLImageDrawable::setImage(const QImage& image, bool insidePaint)
 		updateTexture(true); // true = read from m_frame2
 		xfadeStart();
 	}
-	
+*/
+
 	// Take the memory off the list because when crossfade is done, the frame should get freed
 	if(m_frame)
 	{
@@ -68,10 +70,10 @@ void GLImageDrawable::setImage(const QImage& image, bool insidePaint)
 		#endif
 		//qDebug() << "GLImageDrawable::setImage(): "<<(QObject*)this<<" mark4";
 	}
-		
+
 	QImage localImage = image;
 	//qDebug() << "GLImageDrawable::setImage(): "<<(QObject*)this<<" mark5";
-	
+
 	if(1)
 	{
 		//qDebug() << "GLImageDrawable::setImage(): "<<(QObject*)this<<" Setting new m_frame";
@@ -79,7 +81,7 @@ void GLImageDrawable::setImage(const QImage& image, bool insidePaint)
 	}
 	else
 	{
-		
+
 		m_frame = VideoFramePtr(new VideoFrame());
 		//m_frame->setPixelFormat(QVideoFrame::Format_RGB32);
 		//m_frame->setCaptureTime(QTime::currentTime());
@@ -88,7 +90,7 @@ void GLImageDrawable::setImage(const QImage& image, bool insidePaint)
 		m_frame->setHoldTime(1000/30);
 		m_frame->setSize(localImage.size());
 		//m_frame->setDebugPtr(true);
-		
+
 		QImage::Format format = localImage.format();
 		m_frame->setPixelFormat(
 			format == QImage::Format_ARGB32 ? QVideoFrame::Format_ARGB32 :
@@ -99,44 +101,44 @@ void GLImageDrawable::setImage(const QImage& image, bool insidePaint)
 			//format == QImage::Format_ARGB32_Premultiplied ? QVideoFrame::Format_ARGB32_Premultiplied :
 			// GLVideoDrawable doesn't support premultiplied - so the format conversion below will convert it to ARGB32 automatically
 			QVideoFrame::Format_Invalid);
-			
+
 		if(m_frame->pixelFormat() == QVideoFrame::Format_Invalid)
 		{
 			qDebug() << "GLImageDrawable::setImage(): "<<(QObject*)this<<": image was not in an acceptable format, converting to ARGB32 automatically.";
 			localImage = localImage.convertToFormat(QImage::Format_ARGB32);
 			m_frame->setPixelFormat(QVideoFrame::Format_ARGB32);
 		}
-		
+
 		memcpy(m_frame->allocPointer(localImage.byteCount()), (const uchar*)localImage.bits(), localImage.byteCount());
 	}
-		
+
 	m_allocatedMemory += localImage.byteCount();
 	//m_image = image;
-	
+
 	// explicitly release the original image to see if that helps with memory...
 	//image = QImage();
-	
+
  	#ifdef DEBUG_MEMORY_USAGE
  	qDebug() << "GLImageDrawable::setImage(): "<<(QObject*)this<<" Allocated memory up to:"<<(m_allocatedMemory/1024/1024)<<"MB";
  	#endif
 	//qDebug() << "GLImageDrawable::setImage(): "<<(QObject*)this<<" mark7";
 	updateTexture();
-	
+
 // 	QString file = QString("debug-%1-%2.png").arg(metaObject()->className()).arg(QString().sprintf("%p",((void*)this)));
 // 	m_image.save(file);
 // 	qDebug() << "QImageDrawable::setImage: "<<(QObject*)this<<": Wrote: "<<file;
-	
+
 	if(fpsLimit() <= 0.0 &&
 	   !insidePaint)
 	{
 		//qDebug() << "GLImageDrawable::setImage(): "<<(QObject*)this<<" mark8";
 		updateGL();
 		if(!liveStatus())
-			m_needUpdate = true; 
+			m_needUpdate = true;
 	}
-		
+
 	//qDebug() << "GLImageDrawable::setImage(): "<<(QObject*)this<<" Set image size:"<<m_frame->image().size();
-	
+
 	// TODO reimp so this code works
 // 	if(m_visiblePendingFrame)
 // 	{
@@ -154,7 +156,7 @@ bool GLImageDrawable::setImageFile(const QString& file)
 		internalSetFilename(file);
 		return false;
 	}
-	
+
 	QFileInfo fileInfo(file);
 	if(!fileInfo.exists())
 	{
@@ -162,8 +164,8 @@ bool GLImageDrawable::setImageFile(const QString& file)
 		return false;
 	}
 	internalSetFilename(file);
-	
-	if(m_allocatedMemory > IMAGE_ALLOCATION_CAP_MB*1024*1024 && 
+
+	if(m_allocatedMemory > IMAGE_ALLOCATION_CAP_MB*1024*1024 &&
 		!liveStatus() &&
 		canReleaseImage())
 	{
@@ -173,7 +175,7 @@ bool GLImageDrawable::setImageFile(const QString& file)
  		#endif
 		return true;
 	}
-	
+
 // 	QString fileMod = fileInfo.lastModified().toString();
 // 	if(file == m_imageFile && fileMod == m_fileLastModified)
 // 	{
@@ -183,73 +185,73 @@ bool GLImageDrawable::setImageFile(const QString& file)
 
 	//setImage(image);
 	setObjectName(fileInfo.fileName());
-	
+
 	QSize size = rect().size().toSize();
-	
-	
-	
+
+
+
 	QString tempDir = QDir::temp().absolutePath();
 	QString glTempDir = QString("%1/glvidtex").arg(tempDir);
 	QString imgTempDir = QString("%1/glimagedrawable").arg(glTempDir);
-	
+
 	if(!QDir(glTempDir).exists())
 		QDir(tempDir).mkdir("glvidtex");
 	if(!QDir(imgTempDir).exists())
 		QDir(glTempDir).mkdir("glimagedrawable");
-	
+
 	QString md5sum = MD5::md5sum(fileInfo.absoluteFilePath());
 	QString cachedImageKey = QString("%1/%2.jpg")
 		.arg(imgTempDir)
 		.arg(md5sum);
 
 	QImage image;
-	
-	if(QFile(cachedImageKey).exists() && 
+
+	if(QFile(cachedImageKey).exists() &&
 	   QFileInfo(file).lastModified() <= QFileInfo(cachedImageKey).lastModified())
 	{
 		qDebug() << "GLImageDrawable::setImageFile: "<<file<<" - Loaded image from cache: "<<cachedImageKey;
-		image = QImage(cachedImageKey);	
+		image = QImage(cachedImageKey);
 	}
 	else
 	{
 		// We only need to cache it if we do something *more* than just load the bits - like rotate or scale it.
 		bool cacheNeeded = false;
-		
+
 		image = QImage(file);
 		if(image.isNull())
 		{
 			qDebug() << "GLImageDrawable::setImageFile: "<<file<<" - Image loaded is Null!";
 			return false;
 		}
-		
+
 		if(image.width()  > MAX_IMAGE_WIDTH ||
 		   image.height() > MAX_IMAGE_HEIGHT)
 		{
 			image = image.scaled(MAX_IMAGE_WIDTH,MAX_IMAGE_HEIGHT,Qt::KeepAspectRatio);
-			
+
 			#ifdef DEBUG_MEMORY_USAGE
 			qDebug() << "GLImageDrawable::setImageFile: Scaled image to"<<image.size()<<"with"<<(image.byteCount()/1024/1024)<<"MB memory usage";
 			#endif
-			
+
 			cacheNeeded = true;
 		}
-		
+
 		if(m_allowAutoRotate)
 		{
 			try
 			{
-				Exiv2::Image::AutoPtr exiv = Exiv2::ImageFactory::open(file.toStdString()); 
+				Exiv2::Image::AutoPtr exiv = Exiv2::ImageFactory::open(file.toStdString());
 				if(exiv.get() != 0)
 				{
 					exiv->readMetadata();
 					Exiv2::ExifData& exifData = exiv->exifData();
-					if (exifData.empty()) 
+					if (exifData.empty())
 					{
 						//qDebug() << file << ": No Exif data found in the file";
 					}
-	
+
 					QString rotateSensor = exifData["Exif.Image.Orientation"].toString().c_str();
-					int rotationFlag = rotateSensor.toInt(); 
+					int rotationFlag = rotateSensor.toInt();
 					int rotateDegrees = rotationFlag == 1 ||
 							    rotationFlag == 2 ? 0 :
 							    rotationFlag == 7 ||
@@ -259,39 +261,39 @@ bool GLImageDrawable::setImageFile(const QString& file)
 							    rotationFlag == 5 ||
 							    rotationFlag == 6 ? -270 :
 							    0;
-					
+
 					if(rotateDegrees != 0)
 					{
 						qDebug() << "GLImageDrawable::setImageFile: "<<file<<" - Rotating "<<rotateDegrees<<" degrees";
-						
+
 						QTransform t = QTransform().rotate(rotateDegrees);
 						image = image.transformed(t);
-						
+
 						cacheNeeded = true;
 					}
-							
+
 				}
 			}
-			catch (Exiv2::AnyError& e) 
+			catch (Exiv2::AnyError& e)
 			{
 				std::cout << "Caught Exiv2 exception '" << e << "'\n";
 				//return -1;
-			}	
+			}
 		}
-		
+
 		// Write out cached image
 		if(cacheNeeded)
 		{
 			qDebug() << "GLImageDrawable::setImageFile: "<<file<<" - Cache needed, loaded original image, writing cache:"<<cachedImageKey;
-		
+
 			image.save(cachedImageKey,"JPEG");
 		}
 	}
-	
+
 	setImage(image);
-	
+
 	return true;
-	
+
 }
 
 void GLImageDrawable::internalSetFilename(QString file)
@@ -310,7 +312,7 @@ void GLImageDrawable::reloadImage()
 	if(!m_imageFile.isEmpty())
 	{
 		qDebug() << "GLImageDrawable::reloadImage(): "<<(QObject*)this<<" Reloading image from disk:"<<m_imageFile;
-		
+
 		setImageFile(m_imageFile);
 	}
 // 	else
@@ -330,7 +332,7 @@ void GLImageDrawable::releaseImage()
 		m_allocatedMemory -= m_frame->pointerLength();
 		//m_image = QImage();
 		m_frame = VideoFramePtr(new VideoFrame());
-		
+
 		#ifdef DEBUG_MEMORY_USAGE
 		qDebug() << "GLImageDrawable::releaseImage(): "<<(QObject*)this<<" Released memory, allocated down to:"<<(m_allocatedMemory/1024/1024)<<"MB";
 		#endif
@@ -344,14 +346,14 @@ void GLImageDrawable::setLiveStatus(bool flag)
 	{
 		if(m_releasedImage)
 			reloadImage();
-		
+
 		if(m_frame)
 			m_activeMemory += m_frame->pointerLength();;
-		
+
 		#ifdef DEBUG_MEMORY_USAGE
 		qDebug() << "GLImageDrawable::setLiveStatus("<<flag<<"): "<<(QObject*)this<<" Active memory usage up to:"<<(m_activeMemory/1024/1024)<<"MB";
 		#endif
-		
+
 		if(m_needUpdate)
 		{
 			m_needUpdate = false;
@@ -367,7 +369,7 @@ void GLImageDrawable::setLiveStatus(bool flag)
 		qDebug() << "GLImageDrawable::setLiveStatus("<<flag<<"): "<<(QObject*)this<<" Active memory usage down to:"<<(m_activeMemory/1024/1024)<<"MB";
 		#endif
 		if(canReleaseImage() &&
-		   m_allocatedMemory > IMAGE_ALLOCATION_CAP_MB*1024*1024) 
+		   m_allocatedMemory > IMAGE_ALLOCATION_CAP_MB*1024*1024)
 			releaseImage();
 	}
 }

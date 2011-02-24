@@ -205,8 +205,8 @@ void GLDrawable::setVisible(bool flag)
 	if(m_lockVisibleSetter)
 		return;
 	m_lockVisibleSetter = true;
-	
-	//qDebug() << "GLDrawable::setVisible(): "<<(QObject*)this<<": Flag:"<<flag<<" mark2";	
+
+	//qDebug() << "GLDrawable::setVisible(): "<<(QObject*)this<<": Flag:"<<flag<<" mark2";
 
 	//if(m_animFinished &&
 	if(m_isVisible == flag)
@@ -232,7 +232,7 @@ void GLDrawable::setVisible(bool flag)
 		if(!flag)
 			emit isVisible(flag);
 	}
-	
+
 	//qDebug() << "GLDrawable::setVisible(): "<<(QObject*)this<<": Flag:"<<flag<<" mark5";
 
 	m_lockVisibleSetter = false;
@@ -525,7 +525,7 @@ void GLDrawable::setRect(const QRectF& rect)
 	layoutChildren();
 
 	setPos(rect.topLeft());
-	
+
 	emit sizeChanged(rect.size());
 	emit positionChanged(rect.topLeft());
 }
@@ -577,7 +577,7 @@ void GLDrawable::setZIndex(double z)
 
 void GLDrawable::setOpacity(double o)
 {
-	//qDebug() << "GLDrawable::setOpacity: "<<this<<", opacity:"<<o;
+	//qDebug() << "GLDrawable::setOpacity: "<<(QObject*)this<<", opacity:"<<o;
 	m_opacity = o;
 	updateGL();
 	propertyWasChanged("opacity",o);
@@ -946,6 +946,7 @@ void GLDrawable::loadPropsFromMap(const QVariantMap& map, bool onlyApplyIfChange
 	// properties using Q_PROPERTY macro
 	const QMetaObject *metaobject = metaObject();
 	int count = metaobject->propertyCount();
+	bool gotOpac = false;
 	for (int i=0; i<count; ++i)
 	{
 		QMetaProperty metaproperty = metaobject->property(i);
@@ -955,7 +956,7 @@ void GLDrawable::loadPropsFromMap(const QVariantMap& map, bool onlyApplyIfChange
 		//if(QString(name) == "rect")
 			//qDebug() << "GLDrawable::loadPropsFromMap():"<<(QObject*)this<<": i:"<<i<<", count:"<<count<<", prop:"<<name<<", value:"<<value;
 		QString propName(name);
-		
+
 		// These props are only for convenience - they just set the rect() property internally
 		if(propName == "size" || propName == "position")
 			continue;
@@ -979,6 +980,17 @@ void GLDrawable::loadPropsFromMap(const QVariantMap& map, bool onlyApplyIfChange
 		}
 		else
 		{
+			// assume a saved opacity of 0 is an error...now where it came from, I dont know yet...
+			/*
+			if(propName == "opacity" && value.toDouble() <= 0)
+			{
+				qDebug() << "GLDrawable::loadPropsFromMap(): Got invalid opacity:"<<value;
+				value = 1.0;
+			}
+
+			if(propName == "opacity")
+				gotOpac = true;
+			*/
 			if(value.isValid())
 			{
 				if(onlyApplyIfChanged)
@@ -1002,6 +1014,16 @@ void GLDrawable::loadPropsFromMap(const QVariantMap& map, bool onlyApplyIfChange
 				qDebug() << "GLDrawable::loadPropsFromMap: Unable to load property for "<<name<<", got invalid property from map";
 		}
 	}
+
+	if(!gotOpac)
+	{
+			//qDebug() << "GLDrawable::loadPropsFromMap(): Didn't find an opacity property!!!";
+			//setOpacity(1.);
+	}
+
+	//qDebug() << "GLDrawable::loadPropsFromMap():"<<(QObject*)this<<": Original opac:"<<opacity();
+	//setOpacity(1);
+
 
 	QByteArray ba = map["playlist"].toByteArray();
 	m_playlist->fromByteArray(ba);
@@ -1073,13 +1095,13 @@ QVariant GLDrawable::itemChange(GraphicsItemChange change, const QVariant & valu
 //  		}
 //  		else
  		{
-				
+
 // 			QPointF newPos = AppSettings_snapToGrid(value.toPointF(),false);//m_kbdMotivated);
-// 			
+//
 // 			// reset the keyboard flag - if another key press comes, it will be set again by the scene
 // // 			if(m_kbdMotivated)
 // // 				m_kbdMotivated = false;
-// 	
+//
 // 			if (newPos != value.toPointF())
 // 			{
 // 				retVal = QVariant(newPos);
@@ -1110,7 +1132,7 @@ QVariant GLDrawable::itemChange(GraphicsItemChange change, const QVariant & valu
 				QRectF newRect(pos(), rect().size());
 				setRect(newRect);
 			}
-				
+
 			break;
 
 		// notify about graphics changes
@@ -1155,53 +1177,53 @@ QVariant GLDrawable::itemChange(GraphicsItemChange change, const QVariant & valu
 
 // 	//if(change == ItemSceneChange)
 // 		//qDebug() << "GLDrawable::itemChange: change:"<<change<<", value:"<<value;
-// 
+//
 // 	QVariant retVal;
 // 	bool retValOverride = false;
 // // 	if(change != ItemFlagsChange &&
 // // 		change != ItemFlagsHaveChanged &&
 // // 		change != ItemChildAddedChange)
 // // 		qDebug() << "GLDrawable::itemChange: change:"<<change<<", value:"<<value;
-// 
+//
 // 	switch (change)
 // 	{
 // 		// notify about setPos
 // 		case ItemPositionHasChanged:
 // // 			if(DEBUG_ABSTRACTCONTENT)
 // // 				qDebug() << "AbstractContent::itemChange: " << modelItem()->itemName() << " ItemPositionHasChanged:"<<value;
-// 
+//
 // 			//syncToModelItem(modelItem());
 // 			break;
-// 
+//
 // 		// notify about graphics changes
 // 		case ItemSelectedHasChanged:
 // // 			if(DEBUG_ABSTRACTCONTENT)
 // // 				qDebug() << "AbstractContent::itemChange: " << modelItem()->itemName() << " ItemSelectedHasChanged:"<<value;
 // 			//setControlsVisible(value.toBool() ? true : false);
-// 
+//
 // 		case ItemTransformHasChanged:
 // 		case ItemEnabledHasChanged:
-// 
+//
 // 		case ItemParentHasChanged:
 // #if QT_VERSION >= 0x040500
 // 		case ItemOpacityHasChanged:
 // #endif
 // 			break;
-// 
+//
 // 		case ItemZValueHasChanged:
 // 			break;
-// 
+//
 // 		case ItemVisibleHasChanged:
 // 			break;
-// 		
+//
 // 		case ItemSceneChange:
 // 			break;
 // 		default:
 // 			break;
 // 	}
-// 
+//
 // 	// ..or just apply the value
-// 
+//
 // 	QVariant otherVal = QGraphicsItem::itemChange(change, value);
 // 	return retValOverride ? retVal : otherVal;
 
@@ -1256,14 +1278,14 @@ void GLDrawable::layoutChildren()
 // 			gls->itemSelected(this);
 // 	}
 // }
-// 
+//
 // void GLDrawable::mousePressEvent(QGraphicsSceneMouseEvent * event)
 // {
 // 	//qDebug() << "GLDrawable::mousePressEvent";
 // 	QGraphicsItem::mousePressEvent(event);
 // 	if(!isSelected())
 // 		setSelected(true);
-// 
+//
 // }
 /*
 void GLDrawable::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
@@ -1331,10 +1353,10 @@ void GLDrawable::setGLScene(GLScene *scene)
 {
 	if(m_scene == scene)
 		return;
-		
+
 	if(m_scene)
  		m_scene->removeDrawable(this);
- 		
+
  	m_scene = scene;
  	if(m_scene)
  		m_scene->addDrawable(this);
@@ -1392,7 +1414,7 @@ QVariant GLDrawablePlaylist::data( const QModelIndex & index, int role ) const
 		return QVariant();
 
 	GLPlaylistItem *d = m_items.at(index.row());
-		
+
 	if (role == Qt::DisplayRole || Qt::EditRole == role)
 	{
 		if(index.column() == 0)
@@ -1406,7 +1428,7 @@ QVariant GLDrawablePlaylist::data( const QModelIndex & index, int role ) const
 			return dur;
 		}
 	}
-	else 
+	else
 	if(index.column() == 1)
 	{
 		if(role == Qt::TextAlignmentRole)
@@ -1419,38 +1441,40 @@ QVariant GLDrawablePlaylist::data( const QModelIndex & index, int role ) const
 			if(d->autoDuration())
 				return Qt::gray;
 			else
-				return QVariant();	
+				return QVariant();
 		}
 	}
-	
+
 // 	else if(Qt::DecorationRole == role)
 // 	{
 // 		GLSceneLayout *lay = m_scene->m_layouts.at(index.row());
 // 		return lay->pixmap();
 // 	}
-	
+
 	return QVariant();
 }
 
 QVariant GLDrawablePlaylist::headerData(int section, Qt::Orientation orientation, int role) const
 {
 	if(orientation != Qt::Horizontal ||
-		section < 0 || 
+		section < 0 ||
 		section > 1 ||
 		role != Qt::DisplayRole)
 		return QVariant();
-		
-	
+
+
 	return section == 0 ? "Item" : "Duration";
 }
 
 Qt::ItemFlags GLDrawablePlaylist::flags(const QModelIndex &index) const
 {
 	if (index.isValid())
+	{
 		if(index.column() == 1)
 			return Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsEditable; //| Qt::ItemIsDragEnabled | Qt::ItemIsDropEnabled;
 		else
 			return Qt::ItemIsEnabled | Qt::ItemIsSelectable; //| Qt::ItemIsDragEnabled | Qt::ItemIsDropEnabled;
+    }
 
 	return Qt::ItemIsEnabled | Qt::ItemIsSelectable;// | Qt::ItemIsDropEnabled ;
 }
@@ -1464,11 +1488,11 @@ bool GLDrawablePlaylist::setData(const QModelIndex &index, const QVariant & valu
 
 	GLPlaylistItem *d = m_items.at(index.row());
 	qDebug() << "GLDrawablePlaylist::setData: "<<this<<" row:"<<index.row()<<", col:"<<index.column()<<", value:"<<value;
-	
+
 	if(value.isValid() && !value.isNull())
 	{
 		if(index.column() == 0)
-		{	
+		{
 			d->setTitle(value.toString());
 		}
 		else
@@ -1480,21 +1504,21 @@ bool GLDrawablePlaylist::setData(const QModelIndex &index, const QVariant & valu
 				{
 					if(m_currentItemIndex != index.row())
 						playItem(d);
-					
+
 					double dur = m_drawable->property(qPrintable(m_durationProperty)).toDouble();
-					
+
 					qDebug() << "GLDrawablePlaylist::setData: "<<this<<" Read duration from "<<m_durationProperty<<", value is:"<<dur;
-					
+
 					if(dur < 0)
 						dur = 0;
-						
+
 					d->setDuration(dur);
 				}
 				else
 				{
 					d->setDuration(15.);
 				}
-				
+
 				d->setAutoDuration(true);
 			}
 			else
@@ -1504,7 +1528,7 @@ bool GLDrawablePlaylist::setData(const QModelIndex &index, const QVariant & valu
 			}
 			emit playlistItemChanged();
 		}
-		
+
 		dataChanged(index,index);
 		return true;
 	}
@@ -1556,7 +1580,7 @@ void GLDrawablePlaylist::addItem(GLPlaylistItem *item, GLPlaylistItem *insertAft
 		else
 			m_items.append(item);
 	}
-	
+
 	connect(item, SIGNAL(playlistItemChanged()), this, SLOT(playlistItemChangedSlot()));
 
 
@@ -1590,12 +1614,12 @@ void GLDrawablePlaylist::removeItem(GLPlaylistItem *item)
 	endRemoveRows();
 
 	emit itemRemoved(item);
-	
+
 // 	qDebug() << "GLDrawablePlaylist::removeItem: Removed: "<<item;
 // 	qDebug() << "GLDrawablePlaylist::removeItem: List is now:";
 // 	foreach(GLPlaylistItem *x, m_items)
 // 		qDebug() << "GLDrawablePlaylist::removeItem: \t "<<x->title();
-// 	
+//
 // 	qDebug() << "GLDrawablePlaylist::removeItem: End of"<<m_items.size()<<"items";
 
 }
@@ -1614,7 +1638,7 @@ void GLDrawablePlaylist::playlistItemChangedSlot()
 	dataChanged(idx, idx);
 
 	/// TODO - rerun calculations for automatic durations/schedules
-	
+
 	emit playlistItemChanged();
 }
 
@@ -1690,11 +1714,11 @@ void GLDrawablePlaylist::nextItem()
 {
 	if(m_items.isEmpty())
 		return;
-	
+
 	int next = m_currentItemIndex + 1;
 	if(next >= m_items.size())
 		next = 0;
-		
+
 	playItem(m_items.at(next));
 }
 
@@ -1702,17 +1726,17 @@ void GLDrawablePlaylist::prevItem()
 {
 	if(m_items.isEmpty())
 		return;
-	
+
 	int next = m_currentItemIndex - 1;
 	if(next < 0)
 		next = m_items.size() - 1;
-		
+
 	playItem(m_items.at(next));
 }
 
 void GLDrawablePlaylist::setDurationProperty(const QString& prop)
 {
-	m_durationProperty = prop; 
+	m_durationProperty = prop;
 }
 
 void GLDrawablePlaylist::playItem(GLPlaylistItem *item)
