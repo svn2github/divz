@@ -5,6 +5,7 @@
 GLSceneTypeNewsFeed::GLSceneTypeNewsFeed(QObject *parent)
 	: GLSceneType(parent)
 	, m_currentIndex(0)
+	, m_parser(0)
 {
 	m_fieldInfoList 
 		<< FieldInfo("title", 
@@ -136,8 +137,12 @@ void GLSceneTypeNewsFeed::setParam(QString param, QVariant value)
 	GLSceneType::setParam(param, value);
 	
 	if(param == "updateTime")
-		m_parser->setUpdateTime(value.toInt());
-//		m_reloadTimer.setInterval(value.toInt() * 60 * 1000);
+	{
+		if(m_parser)
+			m_parser->setUpdateTime(value.toInt());
+		else
+			m_reloadTimer.setInterval(value.toInt() * 60 * 1000);
+	}
 }
 
 void GLSceneTypeNewsFeed::reloadData()

@@ -1179,9 +1179,11 @@ void PlayerWindow::setGroup(GLSceneGroup *group)
 		{
 			// active scene is in this group, dont delete till active scene released;
 			m_oldGroup = m_group;
+//			qDebug()<<"PlayerWindow::setGroup: m_scene "<<m_scene<<" found in group "<<m_group<<", delaying deletion.";
 		}
 		else
 		{
+//			qDebug()<<"PlayerWindow::setGroup: m_scene "<<m_scene<<" not in this group "<<m_group<<", deleting.";
 			delete m_group;
 			m_group = 0;
 			m_oldGroup = 0;
@@ -1263,6 +1265,7 @@ void PlayerWindow::removeScene(GLScene *scene)
 			if(gld->playlist()->size() > 0)
 				gld->playlist()->stop();
 
+		//qDebug() << "PlayerWindow::removeScene: fade out scene:"<<scene<<" at "<<m_xfadeSpeed<<"ms";
 		scene->setOpacity(0,true,m_xfadeSpeed); // animate fade out
 		// remove drawables from oldScene in finished slot
 		connect(scene, SIGNAL(opacityAnimationFinished()), this, SLOT(opacityAnimationFinished()));
@@ -1304,6 +1307,8 @@ void PlayerWindow::addScene(GLScene *scene, int zmod)
 		scene->sceneType()->setLiveStatus(true);
 
 	GLDrawableList newSceneList = scene->drawableList();
+
+	//qDebug() << "PlayerWindow::addScene: Adding scene "<<scene<<" at layer"<<zmod;
 
 	
 	if(m_glWidget)

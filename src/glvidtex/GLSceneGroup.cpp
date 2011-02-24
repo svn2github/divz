@@ -1324,7 +1324,7 @@ void GLSceneGroupPlaylist::setCurrentItem(GLScene *item)
 	
 	int dur = (int)(item->duration() * 1000);
 		
-	if(item->duration() <= 0)
+	if(item->duration() <= 0.01)
 		return;
 	else
 	{
