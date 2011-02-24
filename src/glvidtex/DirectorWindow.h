@@ -114,6 +114,7 @@ public slots:
 	void saveFile();
 	void openEditor();
 	void browse();
+	void newFile();
  
 private slots:
 	void clicked();
@@ -143,6 +144,7 @@ public slots:
 	void saveFile();
 	void openEditor();
 	void browse();
+	void newFile();
  
 private slots:
 	//void clicked();

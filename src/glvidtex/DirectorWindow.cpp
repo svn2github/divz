@@ -716,21 +716,36 @@ GroupPlayerWidget::GroupPlayerWidget(DirectorWindow *d)
 	hbox->addWidget(m_combo);
 	hbox->addStretch(1);
 	
+	QPushButton *newf = new QPushButton(QPixmap(":/data/stock-new.png"), "");
 	QPushButton *edit = new QPushButton(QPixmap(":/data/stock-edit.png"), "");
 	QPushButton *browse = new QPushButton(QPixmap(":/data/stock-open.png"), "");
+	hbox->addWidget(newf);
 	hbox->addWidget(edit);
 	hbox->addWidget(browse);
 	
 	vbox->addLayout(hbox);
 	
+	connect(newf, SIGNAL(clicked()), this, SLOT(newFile()));
 	connect(edit, SIGNAL(clicked()), this, SLOT(openEditor()));
 	connect(browse, SIGNAL(clicked()), this, SLOT(browse()));
 	connect(m_glw, SIGNAL(clicked()), this, SLOT(clicked()));
-	
-	m_combo->setModel(m_collection->at(0));
 	connect(m_combo, SIGNAL(currentIndexChanged(int)), this, SLOT(selectedGroupIndexChanged(int)));
 	
-	setWindowTitle("Group Player");
+	newFile();
+}
+
+void GroupPlayerWidget::newFile()
+{
+	m_collection = new GLSceneGroupCollection();
+	GLSceneGroup *group = new GLSceneGroup();
+	GLScene *scene = new GLScene();
+	scene->setSceneName("New Scene");
+	group->addScene(scene);
+	m_collection->addGroup(group);
+	
+	m_combo->setModel(m_collection->at(0));
+	
+	setWindowTitle("Player - New File");
 }
 
 void GroupPlayerWidget::openEditor()
@@ -794,6 +809,10 @@ void GroupPlayerWidget::saveFile()
 	{
 		m_collection->writeFile(curFile);
 	}
+	
+	int idx = m_combo->currentIndex();
+	m_combo->setModel(m_collection->at(0));
+	selectedGroupIndexChanged(idx);
 }
 
 void GroupPlayerWidget::clicked()
@@ -854,12 +873,6 @@ OverlayWidget::OverlayWidget(DirectorWindow *d)
 	, m_collection(0)
 	, m_director(d)
 {
-	m_collection = new GLSceneGroupCollection();
-	GLSceneGroup *group = new GLSceneGroup();
-	GLScene *scene = new GLScene();
-	scene->setSceneName("New Scene");
-	group->addScene(scene);
-	m_collection->addGroup(group);
 	
 	QVBoxLayout *vbox = new QVBoxLayout(this);
 	m_glw = new GLWidget(this);
@@ -874,11 +887,13 @@ OverlayWidget::OverlayWidget(DirectorWindow *d)
 	QPushButton *show = new QPushButton(QPixmap(":/data/stock-media-play.png"), "");
 	QPushButton *hide = new QPushButton(QPixmap(":/data/stock-media-stop.png"), "");
 	
+	QPushButton *newf = new QPushButton(QPixmap(":/data/stock-new.png"), "");
 	QPushButton *edit = new QPushButton(QPixmap(":/data/stock-edit.png"), "");
 	QPushButton *browse = new QPushButton(QPixmap(":/data/stock-open.png"), "");
 	
 	hbox->addWidget(show);
 	hbox->addWidget(hide);
+	hbox->addWidget(newf);
 	hbox->addWidget(edit);
 	hbox->addWidget(browse);
 	
@@ -886,18 +901,26 @@ OverlayWidget::OverlayWidget(DirectorWindow *d)
 	
 	connect(show, SIGNAL(clicked()), this, SLOT(showOverlay()));
 	connect(hide, SIGNAL(clicked()), this, SLOT(hideOverlay()));
+	connect(newf, SIGNAL(clicked()), this, SLOT(newFile()));
 	connect(edit, SIGNAL(clicked()), this, SLOT(openEditor()));
 	connect(browse, SIGNAL(clicked()), this, SLOT(browse()));
-	//connect(m_glw, SIGNAL(clicked()), this, SLOT(clicked()));
-	
-// 	show->setCheckable(true);
-// 	hide->setCheckable(true);
-	
-	
-	m_combo->setModel(m_collection->at(0));
 	connect(m_combo, SIGNAL(currentIndexChanged(int)), this, SLOT(selectedGroupIndexChanged(int)));
 	
-	setWindowTitle("Overlay Player");
+	newFile();
+}
+
+void OverlayWidget::newFile()
+{
+	m_collection = new GLSceneGroupCollection();
+	GLSceneGroup *group = new GLSceneGroup();
+	GLScene *scene = new GLScene();
+	scene->setSceneName("New Scene");
+	group->addScene(scene);
+	m_collection->addGroup(group);
+	
+	m_combo->setModel(m_collection->at(0));
+	
+	setWindowTitle("Overlay - New File");
 }
 
 void OverlayWidget::openEditor()
@@ -961,6 +984,10 @@ void OverlayWidget::saveFile()
 	{
 		m_collection->writeFile(curFile);
 	}
+	
+	int idx = m_combo->currentIndex();
+	m_combo->setModel(m_collection->at(0));
+	selectedGroupIndexChanged(idx);
 }
 
 void OverlayWidget::showOverlay()
