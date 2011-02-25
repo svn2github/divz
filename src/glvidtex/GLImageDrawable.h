@@ -18,6 +18,9 @@ public:
 	QImage image() { return m_image; }
 	
 	bool allowAutoRotate() { return m_allowAutoRotate; }
+	
+	virtual void loadPropsFromMap(const QVariantMap&, bool onlyApplyIfChanged = false);
+	virtual QVariantMap propsToMap();
 		
 signals:
 	void imageFileChanged(const QString&);
@@ -48,6 +51,11 @@ protected:
 	bool m_allowAutoRotate;
 	
 	bool m_needUpdate;
+	
+	QString    m_cachedImageFilename;
+	QDateTime  m_cachedImageMtime;
+	QImage     m_cachedImage;
+	QByteArray m_cachedImageBytes;
 	
 	static int m_allocatedMemory;
 	static int m_activeMemory;

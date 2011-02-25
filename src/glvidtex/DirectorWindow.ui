@@ -88,7 +88,6 @@
     <addaction name="actionChoose_Output"/>
     <addaction name="actionPlayer_Setup"/>
     <addaction name="separator"/>
-    <addaction name="separator"/>
     <addaction name="actionExit"/>
    </widget>
    <widget class="QMenu" name="menuEdit">
@@ -96,10 +95,13 @@
      <string>&amp;Edit</string>
     </property>
     <addaction name="actionMonitor_Players_Live"/>
-    <addaction name="actionAdd_Video_Player"/>
+    <addaction name="actionShow_Switcher"/>
+    <addaction name="actionShow_Property_Editor"/>
+    <addaction name="actionShow_Preview"/>
+    <addaction name="separator"/>
     <addaction name="actionAdd_Group_Player"/>
     <addaction name="actionAdd_Overlay"/>
-    <addaction name="actionAdd_Preview"/>
+    <addaction name="actionAdd_Video_Player"/>
    </widget>
    <widget class="QMenu" name="menuWindow">
     <property name="title">
@@ -113,7 +115,7 @@
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionPlayer_Setup">
    <property name="text">
-    <string>Players &amp;Connections...</string>
+    <string>Set&amp;up Outputs...</string>
    </property>
   </action>
   <action name="actionExit">
@@ -132,6 +134,9 @@
    </property>
   </action>
   <action name="actionAdd_Video_Player">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Add &amp;Video Player</string>
    </property>
@@ -146,9 +151,22 @@
     <string>Add &amp;Group Player</string>
    </property>
   </action>
-  <action name="actionAdd_Preview">
+  <action name="actionShow_Preview">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
-    <string>Add &amp;Preview</string>
+    <string>Show &amp;Preview Window</string>
+   </property>
+  </action>
+  <action name="actionShow_Switcher">
+   <property name="text">
+    <string>Show &amp;Switcher Controls</string>
+   </property>
+  </action>
+  <action name="actionShow_Property_Editor">
+   <property name="text">
+    <string>Show &amp;Property Editor Window</string>
    </property>
   </action>
  </widget>

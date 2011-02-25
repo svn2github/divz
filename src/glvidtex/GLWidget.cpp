@@ -670,7 +670,7 @@ void GLWidgetSubview::initAlphaMask()
 void GLWidget::showEvent(QShowEvent *)
 {
 	//qDebug() << "GLWidget::showEvent(QShowEvent *)";
-	//QTimer::singleShot(1050,this,SLOT(postInitGL()));
+	QTimer::singleShot(1050,this,SLOT(postInitGL()));
 }
 
 

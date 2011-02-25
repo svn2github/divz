@@ -113,7 +113,7 @@ void GLImageDrawable::setImage(const QImage& image, bool insidePaint)
 	}
 
 	m_allocatedMemory += localImage.byteCount();
-	//m_image = image;
+	m_image = image;
 
 	// explicitly release the original image to see if that helps with memory...
 	//image = QImage();
@@ -156,13 +156,26 @@ bool GLImageDrawable::setImageFile(const QString& file)
 		internalSetFilename(file);
 		return false;
 	}
-
+	
+	
 	QFileInfo fileInfo(file);
 	if(!fileInfo.exists())
 	{
-		qDebug() << "GLImageDrawable::setImageFile: "<<file<<" does not exist!";
-		return false;
+		if(!m_cachedImageFilename.isEmpty() && 
+		    m_cachedImageFilename == file)
+		{
+			qDebug() << "GLImageDrawable::setImageFile: "<<file<<" does not exist, used cached image packed in drawable";
+			internalSetFilename(file);
+			setImage(m_cachedImage);
+			return true;
+		}
+		else
+		{
+			qDebug() << "GLImageDrawable::setImageFile: "<<file<<" does not exist!";
+			return false;
+		}
 	}
+	
 	internalSetFilename(file);
 
 	if(m_allocatedMemory > IMAGE_ALLOCATION_CAP_MB*1024*1024 &&
@@ -184,10 +197,16 @@ bool GLImageDrawable::setImageFile(const QString& file)
 // 	}
 
 	//setImage(image);
-	setObjectName(fileInfo.fileName());
-
+	
+	if(!m_cachedImageFilename.isEmpty() &&
+	    QFileInfo(file).lastModified() <= m_cachedImageMtime)
+	{
+		qDebug() << "GLImageDrawable::setImageFile: "<<file<<" - Loaded image from bytes packed in drawable";
+		setImage(m_cachedImage);
+		return true;
+	}
+	
 	QSize size = rect().size().toSize();
-
 
 
 	QString tempDir = QDir::temp().absolutePath();
@@ -298,6 +317,7 @@ bool GLImageDrawable::setImageFile(const QString& file)
 
 void GLImageDrawable::internalSetFilename(QString file)
 {
+	setObjectName(QFileInfo(file).fileName());
 	m_imageFile = file;
 	emit imageFileChanged(file);
 }
@@ -383,3 +403,76 @@ void GLImageDrawable::setAllowAutoRotate(bool flag)
 {
 	m_allowAutoRotate = flag;
 }
+
+
+void GLImageDrawable::loadPropsFromMap(const QVariantMap& map, bool /*onlyApplyIfChanged*/)
+{
+
+	m_cachedImageFilename = map["cached_image_filename"].toString();
+	
+	if(!m_cachedImageFilename.isEmpty())
+	{
+		QTime t;
+		t.start();
+			
+		m_cachedImageBytes = map["cached_image_bytes"].toByteArray();
+		if(!m_cachedImageBytes.isEmpty())
+		{
+			QImage image;
+			image.loadFromData(m_cachedImageBytes);
+			
+			if(!image.isNull())
+			{
+				m_cachedImage = image;
+				m_cachedImageMtime = map["cached_image_mtime"].toDateTime();
+				
+				qDebug() << "GLImageDrawable::loadPropsFromMap: Unpacked "<<m_cachedImageBytes.size()/1024<<" Kb from map for cached image "<<m_cachedImageFilename<<" in "<<t.elapsed()<<"ms";
+			}
+			else
+			{
+				qDebug() << "GLImageDrawable::loadPropsFromMap: Unpacked "<<m_cachedImageBytes.size()/1024<<" Kb from map for cached image "<<m_cachedImageFilename<<" in "<<t.elapsed()<<"ms - NULL IMAGE";
+				m_cachedImageFilename = "";
+			}
+		}
+		else
+		{
+			qDebug() << "GLImageDrawable::loadPropsFromMap: Unpacked "<<m_cachedImageBytes.size()/1024<<" Kb from map for cached image "<<m_cachedImageFilename<<" in "<<t.elapsed()<<"ms - NO DATA STORED";
+			m_cachedImageFilename = "";
+		}
+	}
+
+	GLDrawable::loadPropsFromMap(map);
+}
+
+QVariantMap GLImageDrawable::propsToMap()
+{
+	QVariantMap map = GLDrawable::propsToMap();
+
+	// Pack the image into the map so that when unpacked,
+	// if the file doesnt exist, we can use the cached image
+	if(!m_imageFile.isEmpty())
+	{
+		QTime t;
+		t.start();
+		
+		if(m_cachedImageBytes.isEmpty() || 
+		   QFileInfo(m_imageFile).lastModified() > m_cachedImageMtime)
+		{
+			QFile file(m_imageFile);
+			if (file.open(QIODevice::ReadOnly))
+			{
+				m_cachedImageMtime = QFileInfo(m_imageFile).lastModified();
+				m_cachedImageBytes = file.readAll();
+			}
+		}
+			
+		map["cached_image_bytes"]    = m_cachedImageBytes;
+		map["cached_image_filename"] = m_imageFile;
+		map["cached_image_mtime"]    = m_cachedImageMtime;
+		
+		qDebug() << "GLImageDrawable::propsToMap: Packed "<<m_cachedImageBytes.size()/1024<<" Kb into map for cached image "<<m_imageFile<<" in "<<t.elapsed()<<"ms";
+	}
+
+	return map;
+}
+

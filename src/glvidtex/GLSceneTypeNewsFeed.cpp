@@ -7,6 +7,7 @@ GLSceneTypeNewsFeed::GLSceneTypeNewsFeed(QObject *parent)
 	: GLSceneType(parent)
 	, m_currentIndex(0)
 	, m_parser(0)
+	, m_requestLocked(false)
 {
 	m_fieldInfoList 
 		<< FieldInfo("title", 
@@ -67,6 +68,8 @@ GLSceneTypeNewsFeed::GLSceneTypeNewsFeed(QObject *parent)
 
 	connect(&m_reloadTimer, SIGNAL(timeout()), this, SLOT(reloadData()));
 	setParam("updateTime", 15);
+	
+	setParam("newsUrl", "google");
 	
 	reloadData();
 	
@@ -154,12 +157,23 @@ void GLSceneTypeNewsFeed::reloadData()
 
 void GLSceneTypeNewsFeed::requestData(const QString &location) 
 {
+	if(location.isEmpty())
+		return;
+		
+	if(location == m_lastLocation &&
+	   m_requestLocked)
+	   return;
+	
+	m_requestLocked = true;
+	m_lastLocation = location;
+		
+	qDebug() << "GLSceneTypeNewsFeed::requestData("<<location<<")";
 	if(location.toLower() == "google")
 	{
 		QUrl url("http://www.google.com/ig/api?news");
 	// 	url.addEncodedQueryItem("hl", "en");
 		
-		qDebug() << "GLSceneTypeNewsFeed::requestData(): url:"<<url;
+		//qDebug() << "GLSceneTypeNewsFeed::requestData(): url:"<<url;
 	
 		QNetworkAccessManager *manager = new QNetworkAccessManager(this);
 		connect(manager, SIGNAL(finished(QNetworkReply*)),
@@ -175,9 +189,18 @@ void GLSceneTypeNewsFeed::requestData(const QString &location)
 
 void GLSceneTypeNewsFeed::handleNetworkData(QNetworkReply *networkReply) 
 {
+	//qDebug() << "GLSceneTypeNewsFeed::handleNetworkData()";
 	QUrl url = networkReply->url();
 	if (!networkReply->error())
+	{
+		//qDebug() << "GLSceneTypeNewsFeed::handleNetworkData(): No error";
 		parseData(QString::fromUtf8(networkReply->readAll()));
+	}
+	else
+	{
+		qDebug() << "GLSceneTypeNewsFeed::handleNetworkData(): ERROR: "<<networkReply->error()<<" - "<<networkReply->errorString();
+		m_requestLocked = false;
+	}
 	networkReply->deleteLater();
 	networkReply->manager()->deleteLater();
 }
@@ -235,6 +258,8 @@ void GLSceneTypeNewsFeed::parseData(const QString &data)
 		}
 	}
 	
+	m_requestLocked = false;
+	
 	if(scene())
 		showNextItem();
 }
@@ -243,6 +268,7 @@ void GLSceneTypeNewsFeed::itemsAvailable(QList<RssParser::RssItem> list)
 {
 	m_news = list;
 	m_currentIndex = 0;
+	m_requestLocked = false;
 	
 	if(scene())
 		showNextItem();

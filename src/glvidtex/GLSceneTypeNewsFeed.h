@@ -92,6 +92,8 @@ private:
 	int m_currentIndex;
 
 	RssParser *m_parser;
+	bool m_requestLocked;
+	QString m_lastLocation;
 };
 
 #endif

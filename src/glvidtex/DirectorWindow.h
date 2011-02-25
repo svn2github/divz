@@ -23,6 +23,9 @@ class VideoReceiver;
 class VideoWidget;
 class GroupPlayerWidget;
 class OverlayWidget;
+class SwitcherWindow;
+class PropertyEditorWindow;
+class DirectorSourceWidget;
 #include "GLDrawable.h"
 
 class DirectorWindow : public QMainWindow
@@ -34,9 +37,14 @@ public:
 	~DirectorWindow();
 	
 	PlayerConnectionList *players() { return m_players; }
+	
+	QList<QMdiSubWindow*> subwindows(); 
 
 signals:
 	void closed();
+	
+	void subwindowAdded(QMdiSubWindow*);
+	void subwindowActivated(QMdiSubWindow*);
 	
 public slots:
 	
@@ -48,6 +56,9 @@ public slots:
 	void setFadeSpeedTime(double);
 	
 	void showPlayerLiveMonitor();
+	
+	/// DirectorSourceWidget subclasses can use this to request the property editor be displayed for their instance.
+	void showPropertyEditor(DirectorSourceWidget*);
 
 private slots:
 	void playerAdded(PlayerConnection *);
@@ -60,16 +71,19 @@ private slots:
 	void setActiveSubWindow(QWidget *window);
 	
 	void videoInputListReceived(const QStringList&);
-	void videoInputClicked();
 	
+// 	VideoPlayerWidget * addVideoPlayer();
 	void addVideoPlayer();
 	GroupPlayerWidget * addGroupPlayer();
 	OverlayWidget * addOverlay();
-	void addPreviewWindow();
 	
 	void showAllSubwindows();
 	void createUserSubwindows();
 	void applyTiling();
+	
+	void showPreviewWin();
+	void showPropEditor();
+	void showSwitcher();
 	
 protected:
 	void closeEvent(QCloseEvent *event);
@@ -85,6 +99,7 @@ protected:
 	friend class DirectorMdiSubwindow;
 	static QMap<QString,QRect> s_storedSystemWindowsGeometry;
 	
+	QMdiSubWindow *windowForWidget(QWidget*);
 	
 private:
 	Ui::DirectorWindow *ui;
@@ -112,11 +127,48 @@ private:
 	GLSceneGroup *m_camSceneGroup;
 	
 	QVariantList m_storedWindowOptions;
+	
+	QPointer<PropertyEditorWindow> m_propWin;
+	QPointer<SwitcherWindow> m_switcherWin;
 		
 	
 };
 
-class GroupPlayerWidget : public QWidget
+class DirectorSourceWidget : public QWidget
+{
+public:
+	DirectorSourceWidget(DirectorWindow *dir)
+		: QWidget(dir)
+		, m_dir(dir)
+		, m_switcher(0)
+	{}
+	
+	/// Returns the SwitcherWindow currently in use
+	virtual SwitcherWindow *switcher() { return m_switcher; }
+	
+	/// Subclasses are expected to call SwitcherWindow::notifyIsLive(DirectorSourceWidget*) to notify the switcher when they are spontaneously switched live.
+	virtual void setSwitcher(SwitcherWindow* switcher) { m_switcher = switcher; }
+	
+	/// The SwitcherWindow will call this method to request subclasses to go live.
+	/// Subclasses may return false if there is some reason they could not go live.
+	virtual bool switchTo() { return false; };
+	
+	/// If, for some reason, a subclass is not able to be switched to (for example, OverlayWidget), then overload this to return false so the SwitcherWindow can ignore this subclass.
+	virtual bool canSwitchTo() { return true; }
+	
+	/// Subclasses are to use these two methods (saveToMap() and loadFromMap()) to load/save properties between sessions
+	virtual void saveToMap(const QVariantMap&) {}
+	virtual void loadFromMap(const QVariantMap&) {}
+	
+	/// Subclasses are expected to return the currently "active" scene displayed in the window
+	virtual GLScene *scene() { return 0; }
+
+protected:
+	DirectorWindow *m_dir;
+	SwitcherWindow *m_switcher;
+};
+
+class GroupPlayerWidget : public DirectorSourceWidget
 {
 	Q_OBJECT
 public:
@@ -126,6 +178,11 @@ public:
 	QString file();// { return m_collection->fileName(); }
 	int currentIndex() { return m_combo->currentIndex(); }
 	
+	// DirectorSourceWidget::	
+	virtual bool switchTo();
+	virtual void saveToMap(const QVariantMap&);
+	virtual void loadFromMap(const QVariantMap&);
+
 public slots:
 	void setCurrentIndex(int x) { m_combo->setCurrentIndex(x); }
  	bool loadFile(QString);
@@ -148,7 +205,34 @@ private:
 	QComboBox *m_combo;
 };
 
-class OverlayWidget : public QWidget
+class CameraWidget : public DirectorSourceWidget
+{
+	Q_OBJECT
+public:
+	CameraWidget(DirectorWindow*, VideoReceiver*, QString con, GLSceneGroup *camSceneGroup, int index);
+	~CameraWidget();
+	
+	// DirectorSourceWidget::	
+	virtual bool switchTo();
+	virtual void saveToMap(const QVariantMap&);
+	virtual void loadFromMap(const QVariantMap&);
+	
+private slots:
+	void clicked();
+	void setDeinterlace(bool);
+	
+protected:
+	void contextMenuEvent(QContextMenuEvent * event);
+
+private:
+	VideoReceiver *m_rx;
+	QMenu *m_configMenu;
+	QString m_con;
+	GLSceneGroup *m_camSceneGroup;
+	bool m_deinterlace;
+};
+
+class OverlayWidget : public DirectorSourceWidget
 {
 	Q_OBJECT
 public:
@@ -157,6 +241,13 @@ public:
 	
 	QString file();// { return m_collection->fileName(); }
 	int currentIndex() { return m_combo->currentIndex(); }
+	
+	// DirectorSourceWidget::	
+	virtual bool canSwitchTo() { return false; } // overlays are added, not switched to
+	virtual bool switchTo();
+	virtual void saveToMap(const QVariantMap&);
+	virtual void loadFromMap(const QVariantMap&);
+
 	
 public slots:
 	void setCurrentIndex(int x) { m_combo->setCurrentIndex(x); }
@@ -182,6 +273,84 @@ private:
 	DirectorWindow *m_director;
 	QComboBox *m_combo;
 };
+
+class SwitcherWindow : public QWidget
+{
+	Q_OBJECT
+public:
+	SwitcherWindow(DirectorWindow *);
+	
+public slots:
+	void notifyIsLive(DirectorSourceWidget*);
+
+protected:
+	 bool eventFilter(QObject *, QEvent *);
+	
+private slots:
+	void buttonClicked();
+	void subwindowAdded(QMdiSubWindow*);
+	
+private:
+	DirectorWindow *m_dir;
+};
+
+
+class PropertyEditorWindow : public QWidget
+{
+	Q_OBJECT
+public:
+	PropertyEditorWindow(DirectorWindow *);
+	
+	void setSourceWidget(DirectorSourceWidget*);
+	
+private slots:
+	void subwindowActivated(QMdiSubWindow*);
+	
+};
+
+// class VideoPlayerWidget : public QWidget
+// {
+// 	Q_OBJECT
+// public:
+// 	VideoPlayerWidget(DirectorWindow*);
+// 	~VideoPlayerWidget();
+// 	
+// 	QString file() { return m_filename; }
+// 	double inPoint() { return m_in; }
+// 	double outPoint() { return m_out; }
+// 	double position() { return m_pos; }
+// 	bool isMuted() { return m_muted; }
+// 	int volume() { return m_volume; } 
+// 	
+// public slots:
+// 	void setInPoint(double in);
+// 	void setOutPoint(double out);
+// 	void setMuted(bool muted);
+// 	void setVolume(int volume);
+// 	void setPosition(double);
+// 	
+//  	bool loadFile(QString);
+//  	
+// 	void browse();
+//  
+// private slots:
+// 	void clicked();
+//  	void receivedPosition(int);
+// 
+// private:
+// 	GLWidget *m_glw;
+// 	GLSceneGroup *m_setGroup;
+// 	GLScene *m_scene;
+// 	DirectorWindow *m_director;
+// 	
+// 	QString m_filename;
+// 	double m_in;
+// 	double m_out;
+// 	double m_pos;
+// 	bool m_muted;
+// 	int volume;
+// 	
+// };
 
 
 class DirectorMdiSubwindow : public QMdiSubWindow

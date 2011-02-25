@@ -37,6 +37,8 @@ DirectorWindow::DirectorWindow(QWidget *parent)
 {
 	ui->setupUi(this);
 	
+	setWindowTitle("LiveMix Director");
+	
 	setupUI();
 	
 	// For some reason, these get unset from NULL between the ctor init above and here, so reset to zero
@@ -157,7 +159,7 @@ void DirectorWindow::videoInputListReceived(const QStringList& inputs)
 	if(m_hasVideoInputsList)
 		return;
 	m_hasVideoInputsList = true;
-	int index = 0;
+ 	int index = 0;
 	//qDebug() << "DirectorWindow::videoInputListReceived: "<<inputs;
 	foreach(QString con, inputs)
 	{
@@ -172,11 +174,6 @@ void DirectorWindow::videoInputListReceived(const QStringList& inputs)
 			//qDebug() << "DirectorWindow::videoInputListReceived: Parsed name:"<<name<<", value:"<<value;
 			if(name == "net")
 			{
-// 				QUrl url(value);
-// 				
-// 				QString host = url.host();
-// 				int port = url.port();
-
 				QStringList url = value.split(":");
 				QString host = url[0];
 				int port = url.size() > 1 ? url[1].toInt() : 7755;
@@ -193,74 +190,16 @@ void DirectorWindow::videoInputListReceived(const QStringList& inputs)
 					m_receivers << QPointer<VideoReceiver>(rx);
 					
 					qDebug() << "DirectorWindow::videoInputListReceived: Connected to "<<host<<":"<<port<<", creating widget...";
-					
-// 					VideoWidget *vid = new VideoWidget();
-// 					m_currentVideoWidgets << vid;
-// 					
-// 					vid->setVideoSource(rx);
-// 					vid->setOverlayText(QString("# %1").arg(m_currentVideoWidgets.size()));
-// 					
-// 					rx->setFPS(5);
-// 					vid->setFps(5);
-// 					vid->setRenderFps(true);
 
-					GLWidget *vid = new GLWidget();
-		
-					GLVideoDrawable *gld = new GLVideoDrawable();
-					gld->setVideoSource(rx);
-					vid->addDrawable(gld);
+					CameraWidget *camera = new CameraWidget(this, rx, con, m_camSceneGroup, ++ index);
 					
-					vid->setWindowTitle(QString("Camera %1").arg(++ index));
-					gld->setObjectName(qPrintable(vid->windowTitle()));
-					vid->resize(320,240);
-					//vid->show();
-					
-					vid->setProperty("-vid-con-string",con);
-					
-					ui->mdiArea->addSubWindow(new DirectorMdiSubwindow(vid));
-	
-		
-					//m_videoViewerLayout->addWidget(vid);
-					
-					connect(vid, SIGNAL(clicked()), this, SLOT(videoInputClicked()));
+					ui->mdiArea->addSubWindow(new DirectorMdiSubwindow(camera));
 				}
 			}
 		}
 	}
 	
 }
-
-void DirectorWindow::videoInputClicked()
-{
-	GLWidget *vid = dynamic_cast<GLWidget*>(sender());
-	if(!vid)
-	{
-		qDebug() << "DirectorWindow::videoInputClicked: Sender is not a video widget, ignoring.";
-		return;
-	}
-	//activateVideoInput(vid);
-	
-	QString con = vid->property("-vid-con-string").toString();
-	
-// 	if(!m_drawable)
-// 		return;
-	
-	qDebug() << "DirectorWindow::videoInputClicked: Using con string: "<<con;
-	
-	GLDrawable *gld = m_camSceneGroup->at(0)->at(0);
- 	gld->setProperty("videoConnection", con);
-// 	
- 	foreach(PlayerConnection *player, m_players->players())
- 	{
- 		if(player->isConnected())
- 		{
- 			if(player->lastGroup() != m_camSceneGroup)
- 				player->setGroup(m_camSceneGroup, m_camSceneGroup->at(0));
-	 		player->setUserProperty(gld, con, "videoConnection");
-	 	}
-	 }
-}
-
 
 void DirectorWindow::showPlayerLiveMonitor()
 {
@@ -388,10 +327,10 @@ void DirectorWindow::setupUI()
 // 	ui->graphicsView->setAutoResize(true);
 	//m_graphicsScene->setSceneRect(QRectF(0,0,1000.,750.));
 	
-	ui->fadeSpeedSlider->setValue((int)(300. / 3000. * 100));
 	connect(ui->fadeBlackBtn, SIGNAL(toggled(bool)), this, SLOT(fadeBlack(bool)));
 	connect(ui->fadeSpeedSlider, SIGNAL(valueChanged(int)), this, SLOT(setFadeSpeedPercent(int)));
 	connect(ui->fadeSpeedBox, SIGNAL(valueChanged(double)), this, SLOT(setFadeSpeedTime(double)));
+	ui->fadeSpeedSlider->setValue((int)(300. / 3000. * 100));
 	
 	connect(ui->actionMonitor_Players_Live, SIGNAL(triggered()), this, SLOT(showPlayerLiveMonitor()));
 	connect(ui->actionChoose_Output, SIGNAL(triggered()), this, SLOT(chooseOutput()));
@@ -401,7 +340,7 @@ void DirectorWindow::setupUI()
 	connect(ui->actionAdd_Video_Player, SIGNAL(triggered()), this, SLOT(addVideoPlayer()));
 	connect(ui->actionAdd_Group_Player, SIGNAL(triggered()), this, SLOT(addGroupPlayer()));
 	connect(ui->actionAdd_Overlay, SIGNAL(triggered()), this, SLOT(addOverlay()));
-	connect(ui->actionAdd_Preview, SIGNAL(triggered()), this, SLOT(addPreviewWindow()));
+	connect(ui->actionShow_Preview, SIGNAL(triggered()), this, SLOT(showPreviewWin()));
 	
 	connect(ui->mdiArea, SIGNAL(subWindowActivated(QMdiSubWindow*)), this, SLOT(updateMenus()));
 	m_windowMapper = new QSignalMapper(this);
@@ -503,6 +442,7 @@ void DirectorWindow::createUserSubwindows()
 		QString className = opts["class"].toString();
 		//qDebug() << "DirectorWindow::readSettings(): Class:"<<className<<", opts:"<<opts;
 		
+		QWidget *widgetPtr = 0;
 		if(className == "OverlayWidget")
 		{
 			OverlayWidget *widget = addOverlay();
@@ -511,6 +451,8 @@ void DirectorWindow::createUserSubwindows()
 			widget->setCurrentIndex(opts["idx"].toInt());
 			
 			qDebug() << "DirectorWindow::createUserSubwindows(): Added overlay widget:"<<widget;
+			
+			widgetPtr = widget;
 		}
 		else
 		if(className == "GroupPlayerWidget")
@@ -521,11 +463,34 @@ void DirectorWindow::createUserSubwindows()
 			widget->setCurrentIndex(opts["idx"].toInt());
 			
 			qDebug() << "DirectorWindow::createUserSubwindows(): Added group player widget:"<<widget;
+			
+			widgetPtr = widget;
 		}
+		
+		if(QMdiSubWindow *win = windowForWidget(widgetPtr))
+		{
+			QRect rect = opts["geom"].toRect();
+			qDebug() << "DirectorWindow::createUserSubwindows(): Win:"<<win<<", Widget Ptr:"<<widgetPtr<<", geom:"<<rect;
+			win->setGeometry(rect);
+		}
+		else
+		{
+			qDebug() << "DirectorWindow::createUserSubwindows(): Can't find window for widget ptr:"<<widgetPtr;
+		}
+			
 		// TODO add more...
 	}
 		
-	QTimer::singleShot(1000, this, SLOT(applyTiling()));
+	//QTimer::singleShot(1000, this, SLOT(applyTiling()));
+}
+
+QMdiSubWindow *DirectorWindow::windowForWidget(QWidget *widget)
+{
+	QList<QMdiSubWindow *> windows = ui->mdiArea->subWindowList();
+	foreach(QMdiSubWindow *win, windows)
+		if(win->widget() == widget)
+			return win;
+	return 0;
 }
 
 void DirectorWindow::applyTiling()
@@ -576,6 +541,7 @@ void DirectorWindow::writeSettings()
 		{
 			QVariantMap opts;
 			opts["class"] = "OverlayWidget";
+			opts["geom"]  = win->geometry();
 			opts["file"]  = tmp->file();
 			opts["idx"]   = tmp->currentIndex(); 
 			m_storedWindowOptions << opts;
@@ -585,6 +551,7 @@ void DirectorWindow::writeSettings()
 		{
 			QVariantMap opts;
 			opts["class"] = "GroupPlayerWidget";
+			opts["geom"]  = win->geometry();
 			opts["file"]  = tmp->file();
 			opts["idx"]   = tmp->currentIndex(); 
 			m_storedWindowOptions << opts;
@@ -645,8 +612,9 @@ void DirectorWindow::setFadeSpeedPercent(int value)
 	}
 	
 	qDebug() << "DirectorWindow::setFadeSpeedPercent: value:"<<value<<", ms:"<<ms;
-	foreach(PlayerConnection *con, m_players->players())
-		con->setCrossfadeSpeed(ms);
+	if(m_players)
+		foreach(PlayerConnection *con, m_players->players())
+			con->setCrossfadeSpeed(ms);
 	
 }
 
@@ -814,15 +782,32 @@ OverlayWidget *DirectorWindow::addOverlay()
 	return vid;
 }
 
-void DirectorWindow::addPreviewWindow()
+void DirectorWindow::showPreviewWin()
 {
+	/// TODO
 }
+
+void DirectorWindow::showPropEditor()
+{
+	/// TODO
+}
+
+void DirectorWindow::showPropertyEditor(DirectorSourceWidget*)
+{
+	/// TODO
+}
+
+void DirectorWindow::showSwitcher()
+{
+	/// TODO
+}
+
 
 
 //////////////////////////
 
 GroupPlayerWidget::GroupPlayerWidget(DirectorWindow *d)
-	: QWidget(d)
+	: DirectorSourceWidget(d)
 	, m_setGroup(0)
 	, m_scene(0)
 	, m_collection(0)
@@ -1006,7 +991,7 @@ void GroupPlayerWidget::selectedGroupIndexChanged(int idx)
 //////////////////////////
 
 OverlayWidget::OverlayWidget(DirectorWindow *d)
-	: QWidget(d)
+	: DirectorSourceWidget(d)
 	, m_setGroup(0)
 	, m_scene(0)
 	, m_collection(0)
@@ -1215,16 +1200,19 @@ void DirectorMdiSubwindow::setWidget(QWidget *widget)
 	resize(320,270);
 	
 	m_geom = DirectorWindow::s_storedSystemWindowsGeometry[windowTitle()];
+	qDebug() << "DirectorMdiSubwindow::setWidget(): windowTitle:"<<windowTitle()<<", m_geom:"<<m_geom;
 }
 
 void DirectorMdiSubwindow::showEvent(QShowEvent *)
 {
-	QTimer::singleShot(5, this, SLOT(applyGeom()));
+	//QTimer::singleShot(5, this, SLOT(applyGeom()));
+	applyGeom();
 }
 
 void DirectorMdiSubwindow::applyGeom()
 {
-	setGeometry(m_geom);
+	if(m_geom.isValid())
+		setGeometry(m_geom);
 		
 	qDebug() << "DirectorMdiSubwindow::applyGeometry(): windowTitle:"<<windowTitle()<<", m_geom:"<<m_geom<<", confirming geom:"<<geometry();
 } 
@@ -1236,3 +1224,180 @@ void DirectorMdiSubwindow::moveEvent(QMoveEvent * moveEvent)
 {
 	QMdiSubWindow::moveEvent(moveEvent);
 }
+
+///////////////////////////////////////////////////////////
+
+
+
+CameraWidget::CameraWidget(DirectorWindow* dir, VideoReceiver *rx, QString con, GLSceneGroup *group, int index)
+	: DirectorSourceWidget(dir)
+	, m_rx(rx)
+	, m_con(con)
+	, m_camSceneGroup(group)
+{
+	QVBoxLayout *vbox = new QVBoxLayout(this);
+	GLWidget *vid = new GLWidget();
+	vbox->addWidget(vid);
+
+	GLVideoDrawable *gld = new GLVideoDrawable();
+	gld->setVideoSource(rx);
+	vid->addDrawable(gld);
+	
+	setWindowTitle(QString("Camera %1").arg(index));
+	gld->setObjectName(qPrintable(vid->windowTitle()));
+	resize(320,240);
+	//vid->show();
+	
+	m_configMenu = new QMenu(this);
+	QAction * action;
+	QSettings settings;
+	m_deinterlace = settings.value(QString("%1/deint").arg(con),false).toBool();
+	
+	action = m_configMenu->addAction("Deinterlace");
+	action->setCheckable(true);
+	action->setChecked(m_deinterlace);
+	connect(action, SIGNAL(toggled(bool)), this, SLOT(setDeinterlace(bool)));
+	
+	connect(vid, SIGNAL(clicked()), this, SLOT(clicked()));
+}
+	
+void CameraWidget::contextMenuEvent(QContextMenuEvent * event)
+{
+	if(m_configMenu)
+		m_configMenu->popup(event->globalPos());
+}
+
+CameraWidget::~CameraWidget() {}
+	
+// DirectorSourceWidget::	
+bool CameraWidget::switchTo()
+{
+	qDebug() << "CameraWidget::switchTo: Using con string: "<<m_con;
+	
+	GLDrawable *gld = m_camSceneGroup->at(0)->at(0);
+	gld->setProperty("videoConnection", m_con);
+	
+	if(!m_dir->players())
+		return false;
+		
+	foreach(PlayerConnection *player, m_dir->players()->players())
+	{
+		if(player->isConnected())
+		{
+			if(player->lastGroup() != m_camSceneGroup)
+				player->setGroup(m_camSceneGroup, m_camSceneGroup->at(0));
+			player->setUserProperty(gld, m_con, "videoConnection");
+		}
+	}
+	 
+	setDeinterlace(m_deinterlace);
+	
+	return true;
+}
+
+void CameraWidget::setDeinterlace(bool flag)
+{
+	if(!m_dir->players())
+ 		return;
+ 		
+ 	m_deinterlace = flag;
+ 	
+ 	GLDrawable *gld = m_camSceneGroup->at(0)->at(0);
+ 	
+ 	if(gld->property("videoConnection").toString() == m_con)
+ 		return;
+ 	
+ 	foreach(PlayerConnection *player, m_dir->players()->players())
+ 	{
+ 		if(player->isConnected())
+ 		{
+ 			if(player->lastGroup() == m_camSceneGroup)
+ 			{
+ 				//player->setGroup(m_camSceneGroup, m_camSceneGroup->at(0));
+	 			player->setUserProperty(gld, flag, "deinterlace");
+	 		}
+	 	}
+	 }
+}
+
+void CameraWidget::saveToMap(const QVariantMap&) {}
+void CameraWidget::loadFromMap(const QVariantMap&) {}
+	
+void CameraWidget::clicked()
+{
+	switchTo();
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+SwitcherWindow::SwitcherWindow(DirectorWindow * dir)
+	: QWidget(dir)
+	, m_dir(dir)
+{
+	/// TODO
+	
+	connect(dir, SIGNAL(subwindowAdded(QMdiSubWindow*)), this, SLOT(subwindowAdded(QMdiSubWindow*)));
+	
+	// Loop tru all open windows
+	// Find DirectorSourceWidgets
+	// Set switcher pointer on DirectorSourceWidget
+	// Create buttons for all widgets (call subwindowAdded() directly)
+	// Insert event filter
+	// ....
+}
+	
+void SwitcherWindow::notifyIsLive(DirectorSourceWidget*)
+{
+	/// TODO
+	// DirectorSourceWidget* will call this to notify of live
+	// - find button for this DirectorSourceWidget* pointer and change status (background color...?)
+}
+
+bool SwitcherWindow::eventFilter(QObject *, QEvent *)
+{
+	/// TODO
+	// Translate keypress into a specific DirectorSourceWidget* and call switchTo() on that window
+	return false
+}
+	
+void SwitcherWindow::buttonClicked()
+{
+	/// TODO
+	// Figure out which DirectorSourceWidget* goes to this button and call switchTo()
+}
+
+void SwitcherWindow::subwindowAdded(QMdiSubWindow*)
+{
+	/// TODO
+	// When window added, add button to layout
+	// Connect listern for window destruction to remove button
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+PropertyEditorWindow::PropertyEditorWindow(DirectorWindow *)
+{
+	/// TODO
+	// Just create a static UI, possibly with dropdown of DirectorSourceWidget* to select from...?
+}
+	
+
+void PropertyEditorWindow::setSourceWidget(DirectorSourceWidget*)
+{
+	/// TODO
+	// Core - create the UI for this DirectorSourceWidget* scene() based on user controllable items
+	// However, specialcase based on subclass:
+	// If it's a CameraWidget then provide different controls than for other widgets
+}
+	
+void PropertyEditorWindow::subwindowActivated(QMdiSubWindow*)
+{
+	/// TODO
+	// This should just check for DirectorSourceWidget* subclass and call setSourceWidget()	
+}
+
+
+

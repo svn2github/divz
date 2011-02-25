@@ -1129,10 +1129,16 @@ void PlayerWindow::setBlack(bool flag)
 	{
 		m_scenePreBlack = m_scene;
 		displayScene(m_blackScene);
+		
+		foreach(GLScene *scene, m_overlays->sceneList())
+			scene->setOpacity(0,true,m_xfadeSpeed); // animate fade out
 	}
 	else
 	{
 		displayScene(m_scenePreBlack);
+		
+		foreach(GLScene *scene, m_overlays->sceneList())
+			scene->setOpacity(1,true,m_xfadeSpeed); // animate fade in
 	}
 
 }
