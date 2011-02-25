@@ -671,6 +671,8 @@ void GLWidget::showEvent(QShowEvent *)
 {
 	//qDebug() << "GLWidget::showEvent(QShowEvent *)";
 	QTimer::singleShot(1050,this,SLOT(postInitGL()));
+	QTimer::singleShot(2050,this,SLOT(postInitGL()));
+	QTimer::singleShot(3050,this,SLOT(postInitGL()));
 }
 
 
@@ -1726,6 +1728,8 @@ void GLWidget::sortDrawables()
 
 void GLWidget::resizeGL(int width, int height)
 {
+	makeCurrentIfNeeded();
+	
 	glViewport(0,0,width,height); //(width - side) / 2, (height - side) / 2, side, side);
 
 	//qDebug() << "GLWidget::resizeGL(): "<<windowTitle()<<" width:"<<width<<", height:"<<height;

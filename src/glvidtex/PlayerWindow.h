@@ -103,6 +103,7 @@ public:
 	GLSceneGroupCollection *collection() { return m_col; }
 	GLSceneGroup *group() { return m_group; }
 	QPointer<GLScene> scene() {  return m_scene; }
+	GLSceneGroup *overlays() { return m_overlays; }
 
 	void loadConfig(const QString& file="player.ini", bool verbose=false);
 	

@@ -797,6 +797,13 @@ void PlayerWindow::receivedMap(QVariantMap map)
 			GLDrawable *gld = m_scene->lookupDrawable(id);
 			if(!gld)
 			{
+				foreach(GLScene *scene, m_overlays->sceneList())
+					if(gld = scene->lookupDrawable(id))
+						break;
+			}
+			
+			if(!gld)
+			{
 				sendReply(QVariantList()
 					<< "cmd" << cmd
 					<< "status" << "error"
@@ -1646,6 +1653,13 @@ void PlayerJsonServer::dispatch(QTcpSocket *socket, const QStringList &pathEleme
 		{
 			int id = map["drawableid"].toInt();
 			GLDrawable *gld = m_win->scene()->lookupDrawable(id);
+			if(!gld)
+			{
+				foreach(GLScene *scene, m_win->overlays()->sceneList())
+					if(gld = scene->lookupDrawable(id))
+						break;
+			}
+			
 			if(!gld)
 			{
 				sendReply(socket, QVariantList()

@@ -47,7 +47,7 @@ void GLImageDrawable::setImage(const QImage& image, bool insidePaint)
 	//qDebug() << "GLImageDrawable::setImage(): "<<(QObject*)this<<" mark2";
 	//image.save("whitedebug.png");
 
-/*
+
 	if(m_frame &&
 	   m_frame->isValid() &&
 	   xfadeEnabled() &&
@@ -59,7 +59,7 @@ void GLImageDrawable::setImage(const QImage& image, bool insidePaint)
 		updateTexture(true); // true = read from m_frame2
 		xfadeStart();
 	}
-*/
+
 
 	// Take the memory off the list because when crossfade is done, the frame should get freed
 	if(m_frame)

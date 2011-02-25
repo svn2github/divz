@@ -26,6 +26,7 @@ class OverlayWidget;
 class SwitcherWindow;
 class PropertyEditorWindow;
 class DirectorSourceWidget;
+class DirectorMdiSubwindow;
 #include "GLDrawable.h"
 
 class DirectorWindow : public QMainWindow
@@ -85,6 +86,8 @@ private slots:
 	void showPropEditor();
 	void showSwitcher();
 	
+	DirectorMdiSubwindow *addSubwindow(QWidget*);
+	
 protected:
 	void closeEvent(QCloseEvent *event);
 	void showEvent(QShowEvent *event);
@@ -143,6 +146,8 @@ public:
 		, m_switcher(0)
 	{}
 	
+	virtual ~DirectorSourceWidget() {}
+	
 	/// Returns the SwitcherWindow currently in use
 	virtual SwitcherWindow *switcher() { return m_switcher; }
 	
@@ -157,7 +162,7 @@ public:
 	virtual bool canSwitchTo() { return true; }
 	
 	/// Subclasses are to use these two methods (saveToMap() and loadFromMap()) to load/save properties between sessions
-	virtual void saveToMap(const QVariantMap&) {}
+	virtual QVariantMap saveToMap() { return QVariantMap(); }
 	virtual void loadFromMap(const QVariantMap&) {}
 	
 	/// Subclasses are expected to return the currently "active" scene displayed in the window
@@ -178,12 +183,14 @@ public:
 	QString file();// { return m_collection->fileName(); }
 	int currentIndex() { return m_combo->currentIndex(); }
 	
-	// DirectorSourceWidget::	
-	virtual bool switchTo();
-	virtual void saveToMap(const QVariantMap&);
+	virtual QVariantMap saveToMap();
 	virtual void loadFromMap(const QVariantMap&);
+	virtual GLScene *scene() { return m_scene; }
 
 public slots:
+	// DirectorSourceWidget::	
+	virtual bool switchTo();
+	
 	void setCurrentIndex(int x) { m_combo->setCurrentIndex(x); }
  	bool loadFile(QString);
  	
@@ -193,8 +200,7 @@ public slots:
 	void newFile();
  
 private slots:
-	void clicked();
- 	void selectedGroupIndexChanged(int);
+	void selectedGroupIndexChanged(int);
 
 private:
 	GLWidget *m_glw;
@@ -212,13 +218,12 @@ public:
 	CameraWidget(DirectorWindow*, VideoReceiver*, QString con, GLSceneGroup *camSceneGroup, int index);
 	~CameraWidget();
 	
-	// DirectorSourceWidget::	
-	virtual bool switchTo();
-	virtual void saveToMap(const QVariantMap&);
+	virtual QVariantMap saveToMap();
 	virtual void loadFromMap(const QVariantMap&);
 	
 private slots:
-	void clicked();
+	// DirectorSourceWidget::	
+	virtual bool switchTo();
 	void setDeinterlace(bool);
 	
 protected:
@@ -244,10 +249,9 @@ public:
 	
 	// DirectorSourceWidget::	
 	virtual bool canSwitchTo() { return false; } // overlays are added, not switched to
-	virtual bool switchTo();
-	virtual void saveToMap(const QVariantMap&);
+	virtual QVariantMap saveToMap();
 	virtual void loadFromMap(const QVariantMap&);
-
+	virtual GLScene *scene() { return m_scene; }
 	
 public slots:
 	void setCurrentIndex(int x) { m_combo->setCurrentIndex(x); }
@@ -260,9 +264,9 @@ public slots:
 	void openEditor();
 	void browse();
 	void newFile();
- 
+	
 private slots:
-	//void clicked();
+	void clicked();
  	void selectedGroupIndexChanged(int);
 
 private:
@@ -305,6 +309,12 @@ public:
 	
 private slots:
 	void subwindowActivated(QMdiSubWindow*);
+	void sourceDestroyed();
+	
+private:
+	QVBoxLayout *m_layout;
+	QPointer<DirectorSourceWidget> m_source;
+	DirectorWindow *m_dir;
 	
 };
 
