@@ -75,6 +75,11 @@ DirectorWindow::~DirectorWindow()
 	delete ui;
 }
 
+QList<QMdiSubWindow*> DirectorWindow::subwindows()
+{
+	return ui->mdiArea->subWindowList();
+}
+
 void DirectorWindow::chooseOutput()
 {
 	if(!ui->mdiArea->subWindowList().isEmpty())
@@ -337,6 +342,8 @@ void DirectorWindow::setupUI()
 	connect(ui->actionAdd_Group_Player, SIGNAL(triggered()), this, SLOT(addGroupPlayer()));
 	connect(ui->actionAdd_Overlay, SIGNAL(triggered()), this, SLOT(addOverlay()));
 	connect(ui->actionShow_Preview, SIGNAL(triggered()), this, SLOT(showPreviewWin()));
+	connect(ui->actionShow_Switcher, SIGNAL(triggered()), this, SLOT(showSwitcher()));
+	
 	
 	connect(ui->mdiArea, SIGNAL(subWindowActivated(QMdiSubWindow*)), this, SLOT(updateMenus()));
 	connect(ui->mdiArea, SIGNAL(subWindowActivated(QMdiSubWindow*)), this, SIGNAL(subwindowActivated(QMdiSubWindow*)));
@@ -773,7 +780,16 @@ void DirectorWindow::showPropertyEditor(DirectorSourceWidget *source)
 
 void DirectorWindow::showSwitcher()
 {
-	/// TODO
+	if(m_switcherWin)
+	{
+		m_switcherWin->raise();
+		m_switcherWin->show();
+	}
+	else
+	{
+		m_switcherWin = new SwitcherWindow(this);
+		ui->mdiArea->addSubWindow(new DirectorMdiSubwindow(m_switcherWin));
+	} 
 }
 
 
@@ -1364,13 +1380,31 @@ SwitcherWindow::SwitcherWindow(DirectorWindow * dir)
 	// Create buttons for all widgets (call subwindowAdded() directly)
 	// Insert event filter
 	// ....
+	
+	m_layout = new QHBoxLayout(this);  
+	m_lastBtn = 0;
+	setupButtons();
+	
 }
 	
-void SwitcherWindow::notifyIsLive(DirectorSourceWidget*)
+void SwitcherWindow::notifyIsLive(DirectorSourceWidget* src)
 {
 	/// TODO
 	// DirectorSourceWidget* will call this to notify of live
 	// - find button for this DirectorSourceWidget* pointer and change status (background color...?)
+	
+	if(!src)
+		return;
+		
+	QPushButton *btn = m_buttons[src];
+	if(!btn)
+		return;
+	
+	if(m_lastBtn)
+		m_lastBtn->setIcon(QPixmap(":/data/stock-media-play.png"));
+	m_lastBtn = btn;
+	
+	btn->setIcon(QPixmap(":/data/stock-media-rec.png"));
 }
 
 bool SwitcherWindow::eventFilter(QObject *, QEvent *)
@@ -1384,13 +1418,90 @@ void SwitcherWindow::buttonClicked()
 {
 	/// TODO
 	// Figure out which DirectorSourceWidget* goes to this button and call switchTo()
+	
+	QPushButton *btn = dynamic_cast<QPushButton*>(sender());
+	if(!btn)
+		return;
+	
+	DirectorSourceWidget *src = m_sources[btn];
+	if(!src)
+		return;
+		
+	if(m_lastBtn)
+		m_lastBtn->setIcon(QPixmap(":/data/stock-media-play.png"));
+	m_lastBtn = btn;
+	
+	btn->setIcon(QPixmap(":/data/stock-media-rec.png"));
+	
+	//src->setFocus(Qt::OtherFocusReason);
+	src->raise();
+	src->switchTo();
+	
 }
 
-void SwitcherWindow::subwindowAdded(QMdiSubWindow*)
+void SwitcherWindow::subwindowAdded(QMdiSubWindow* /*win*/)
 {
 	/// TODO
 	// When window added, add button to layout
 	// Connect listern for window destruction to remove button
+	
+	setupButtons();
+	
+}
+
+void SwitcherWindow::windowClosed()
+{
+	setupButtons();
+}
+
+void SwitcherWindow::setupButtons()
+{
+	
+	while(m_layout->count() > 0)
+	{
+		QLayoutItem *item = m_layout->itemAt(m_layout->count() - 1);
+		m_layout->removeItem(item);
+		if(QWidget *widget = item->widget())
+		{
+			m_layout->removeWidget(widget);
+			delete widget;
+		}
+			
+		delete item;
+		item = 0;
+	}
+	
+	QList<QMdiSubWindow*> windows = m_dir->subwindows();
+	int count = 1;
+	foreach(QMdiSubWindow *win, windows)
+	{
+		if(DirectorSourceWidget *src = dynamic_cast<DirectorSourceWidget*>(win->widget()))
+		{	
+			if(!src->canSwitchTo())
+				continue;
+				
+			connect(src, SIGNAL(destroyed()), this, SLOT(windowClosed()));
+			
+			QPushButton *btn = new QPushButton(QPixmap(":/data/stock-media-play.png"),QString("%1").arg(count++));
+			btn->setToolTip(src->windowTitle());
+			
+			connect(btn, SIGNAL(clicked()), this, SLOT(buttonClicked()));
+			m_layout->addWidget(btn);
+			
+			
+			m_sources[btn] = src;
+			m_buttons[src] = btn;
+		}
+	}
+	
+	adjustSize();
+	
+	setWindowTitle("Switcher");
+}
+
+void SwitcherWindow::showEvent(QShowEvent*)
+{
+	adjustSize();
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1485,6 +1596,8 @@ void PropertyEditorWindow::setSourceWidget(DirectorSourceWidget* source)
 		m_layout->addStretch(1);
 		setWindowTitle(QString("Properties - %1").arg(source->windowTitle()));
 	}
+	
+	adjustSize();
 	
 	
 }

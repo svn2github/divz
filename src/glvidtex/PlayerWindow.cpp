@@ -1266,7 +1266,8 @@ void PlayerWindow::addOverlay(GLScene *scene)
 	}
 	
 	m_overlays->addScene(scene);
-	addScene(scene, m_overlays->size() + 1);
+	
+	addScene(scene, m_overlays->size() + 1, !m_isBlack);
 }
 
 void PlayerWindow::removeOverlay(GLScene *scene)
@@ -1321,11 +1322,11 @@ void PlayerWindow::removeScene(GLScene *scene)
 	}
 }
 
-void PlayerWindow::addScene(GLScene *scene, int zmod)
+void PlayerWindow::addScene(GLScene *scene, int zmod, bool fadeInOpac)
 {
 	if(!scene)
 		return;
-		
+	
 	scene->setOpacity(0); // no anim yet...
 
 	if(scene->sceneType())
@@ -1382,7 +1383,8 @@ void PlayerWindow::addScene(GLScene *scene, int zmod)
 		}
 	}
 
-	scene->setOpacity(1,true,m_xfadeSpeed); // animate fade in
+	if(fadeInOpac)
+		scene->setOpacity(1,true,m_xfadeSpeed); // animate fade in
 	
 
 	GLDrawableList list = scene->drawableList();

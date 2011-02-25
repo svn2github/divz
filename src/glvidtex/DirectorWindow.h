@@ -288,14 +288,23 @@ public slots:
 	void notifyIsLive(DirectorSourceWidget*);
 
 protected:
-	 bool eventFilter(QObject *, QEvent *);
+	bool eventFilter(QObject *, QEvent *);
+	void showEvent(QShowEvent*);
 	
 private slots:
 	void buttonClicked();
 	void subwindowAdded(QMdiSubWindow*);
+	void windowClosed();
 	
 private:
+	void setupButtons();
+	
 	DirectorWindow *m_dir;
+	QHBoxLayout *m_layout;
+	QMap<DirectorSourceWidget*,QPushButton*> m_buttons;
+	QMap<QPushButton*,DirectorSourceWidget*> m_sources;
+	QPushButton *m_lastBtn;
+	
 };
 
 

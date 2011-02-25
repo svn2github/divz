@@ -157,7 +157,7 @@ private:
 	void sendReply(QVariantList);
 	
 	void displayScene(GLScene*);
-	void addScene(GLScene*, int layer=1);
+	void addScene(GLScene*, int layer=1, bool fadeInOpac=true);
 	void removeScene(GLScene*);
 
 	GLPlayerServer *m_server;
