@@ -8,6 +8,9 @@
 #include "GLEditorGraphicsScene.h"
 #include "../qtcolorpicker/qtcolorpicker.h"
 
+#include "VideoInputColorBalancer.h"
+#include "HistogramFilter.h"
+
 #include "FlowLayout.h"
 
 #include <QFileInfo>
@@ -85,6 +88,14 @@ void DirectorWindow::chooseOutput()
 	if(!ui->mdiArea->subWindowList().isEmpty())
 		ui->mdiArea->closeAllSubWindows();
 	
+	// Dont prompt the user if only one player is connected
+	QList<PlayerConnection*> playerList = m_players->players();
+	if(playerList.size() == 1)
+	{
+		initConnection(playerList.first());
+		return;
+	}
+	
 	QDialog dlg;
 	dlg.setWindowTitle("Choose Output");
 	
@@ -95,13 +106,14 @@ void DirectorWindow::chooseOutput()
 	QComboBox *sourceBox = new QComboBox();
 	QStringList itemList;
 	
-	QList<PlayerConnection*> playerList = m_players->players();
 	qSort(playerList.begin(), playerList.end(), PlayerConnection::sortByUseCount);
 	foreach(PlayerConnection *con, playerList)
 	{
 		itemList << QString("Player: %1").arg(con->name());
 		//qDebug() << "DirectorWindow::choseOutput:"<<con->name()<<" useCount:"<<con->useCount();
 	}
+	
+	
 	sourceBox->addItems(itemList);
 	sourceBox->setCurrentIndex(0);
 	
@@ -136,23 +148,7 @@ void DirectorWindow::chooseOutput()
 		int idx = sourceBox->currentIndex();
 		PlayerConnection *player = playerList.at(idx);
 		
-		connect(player, SIGNAL(videoInputListReceived(const QStringList&)), this, SLOT(videoInputListReceived(const QStringList&)));
-		
-		foreach(PlayerConnection *con, m_players->players())
-		{
-			if(con->isConnected() && con != player)
-				con->disconnectPlayer();
-		}
-		
-		if(!player->isConnected())
-			player->connectPlayer();
-			
-		if(player->videoIputsReceived())
-			videoInputListReceived(player->videoInputs());
-		
-		m_connected = true;
-		
-		showPlayerLiveMonitor(player);
+		initConnection(player);
 	}
 	else
 	{
@@ -160,6 +156,27 @@ void DirectorWindow::chooseOutput()
 	}
 }
 
+
+void DirectorWindow::initConnection(PlayerConnection *player)
+{
+	connect(player, SIGNAL(videoInputListReceived(const QStringList&)), this, SLOT(videoInputListReceived(const QStringList&)));
+	
+	foreach(PlayerConnection *con, m_players->players())
+	{
+		if(con->isConnected() && con != player)
+			con->disconnectPlayer();
+	}
+	
+	if(!player->isConnected())
+		player->connectPlayer();
+		
+	if(player->videoIputsReceived())
+		videoInputListReceived(player->videoInputs());
+	
+	m_connected = true;
+	
+	showPlayerLiveMonitor(player);
+}
 
 void DirectorWindow::videoInputListReceived(const QStringList& inputs)
 {
@@ -212,6 +229,7 @@ DirectorMdiSubwindow *DirectorWindow::addSubwindow(QWidget *widget)
 {
 	DirectorMdiSubwindow *win = new DirectorMdiSubwindow(widget);
 	ui->mdiArea->addSubWindow(win);
+	//qDebug() << "DirectorWindow::addSubwindow: win:"<<win<<", widget:"<<widget;
 	emit subwindowAdded(win);
 	return win;
 }
@@ -312,7 +330,7 @@ void DirectorWindow::showPlayerLiveMonitor(PlayerConnection *con)
 		gld->setObjectName(qPrintable(vid->windowTitle()));
 		vid->resize(320,240);
 				
-		ui->mdiArea->addSubWindow(new DirectorMdiSubwindow(vid));
+		addSubwindow(vid);
 		
 		connect(this, SIGNAL(closed()), vid, SLOT(deleteLater()));
 	}
@@ -343,6 +361,8 @@ void DirectorWindow::setupUI()
 	connect(ui->actionAdd_Overlay, SIGNAL(triggered()), this, SLOT(addOverlay()));
 	connect(ui->actionShow_Preview, SIGNAL(triggered()), this, SLOT(showPreviewWin()));
 	connect(ui->actionShow_Switcher, SIGNAL(triggered()), this, SLOT(showSwitcher()));
+	connect(ui->actionShow_Histogram, SIGNAL(triggered()), this, SLOT(showHistoWin()));
+	connect(ui->actionShow_InputBalance, SIGNAL(triggered()), this, SLOT(showCamColorWin()));
 	
 	
 	connect(ui->mdiArea, SIGNAL(subWindowActivated(QMdiSubWindow*)), this, SLOT(updateMenus()));
@@ -468,6 +488,21 @@ void DirectorWindow::createUserSubwindows()
 			
 			widgetPtr = widget;
 		}
+		else
+		if(className == "SwitcherWindow")
+		{
+			showSwitcher();
+		}
+		else
+		if(className == "HistogramWindow")
+		{
+			showHistoWin();
+		}
+		else
+		if(className == "InputBalanceWindow")
+		{
+			showCamColorWin();
+		}
 		
 		if(QMdiSubWindow *win = windowForWidget(widgetPtr))
 		{
@@ -551,6 +586,13 @@ void DirectorWindow::writeSettings()
 		{
 			QVariantMap opts = tmp->saveToMap();
 			opts["_class"] = "GroupPlayerWidget";
+			opts["_geom"]  = win->geometry();
+			m_storedWindowOptions << opts;
+		}
+		else
+		{
+			QVariantMap opts;
+			opts["_class"] = "OverlayWidget";
 			opts["_geom"]  = win->geometry();
 			m_storedWindowOptions << opts;
 		}
@@ -738,7 +780,7 @@ GroupPlayerWidget *DirectorWindow::addGroupPlayer()
 {
 	GroupPlayerWidget *vid = new GroupPlayerWidget(this); 
 
-	ui->mdiArea->addSubWindow(new DirectorMdiSubwindow(vid));
+	addSubwindow(vid);
 	
 	return vid;
 }
@@ -747,7 +789,7 @@ OverlayWidget *DirectorWindow::addOverlay()
 {
 	OverlayWidget *vid = new OverlayWidget(this); 
 	
-	ui->mdiArea->addSubWindow(new DirectorMdiSubwindow(vid));
+	addSubwindow(vid);
 	
 	return vid;
 }
@@ -767,7 +809,7 @@ void DirectorWindow::showPropEditor()
 	else
 	{
 		m_propWin = new PropertyEditorWindow(this);
-		ui->mdiArea->addSubWindow(new DirectorMdiSubwindow(m_propWin));
+		addSubwindow(m_propWin);
 	}
 }
 
@@ -788,9 +830,39 @@ void DirectorWindow::showSwitcher()
 	else
 	{
 		m_switcherWin = new SwitcherWindow(this);
-		ui->mdiArea->addSubWindow(new DirectorMdiSubwindow(m_switcherWin));
+		addSubwindow(m_switcherWin);
 	} 
 }
+
+void DirectorWindow::showHistoWin()
+{
+	if(m_histoWin)
+	{
+		m_histoWin->raise();
+		m_histoWin->show();
+	}
+	else
+	{
+		m_histoWin = new HistogramWindow(this);
+		addSubwindow(m_histoWin);
+	} 
+}
+
+void DirectorWindow::showCamColorWin()
+{
+	if(m_inputBalanceWin)
+	{
+		m_inputBalanceWin->raise();
+		m_inputBalanceWin->show();
+	}
+	else
+	{
+		m_inputBalanceWin = new InputBalanceWindow(this);
+		addSubwindow(m_inputBalanceWin);
+	} 
+}
+
+
 
 
 
@@ -1252,6 +1324,7 @@ void DirectorMdiSubwindow::applyGeom()
 	
 void DirectorMdiSubwindow::moveEvent(QMoveEvent * moveEvent)
 {
+	qDebug() << "DirectorMdiSubwindow::moveEvent: newpos:"<<moveEvent->pos()<<", oldpos:"<<moveEvent->oldPos();
 	QMdiSubWindow::moveEvent(moveEvent);
 }
 
@@ -1381,7 +1454,7 @@ SwitcherWindow::SwitcherWindow(DirectorWindow * dir)
 	// Insert event filter
 	// ....
 	
-	m_layout = new QHBoxLayout(this);  
+	m_layout = new QHBoxLayout(this);
 	m_lastBtn = 0;
 	setupButtons();
 	
@@ -1439,13 +1512,19 @@ void SwitcherWindow::buttonClicked()
 	
 }
 
-void SwitcherWindow::subwindowAdded(QMdiSubWindow* /*win*/)
+void SwitcherWindow::subwindowAdded(QMdiSubWindow* win)
 {
 	/// TODO
 	// When window added, add button to layout
 	// Connect listern for window destruction to remove button
-	
-	setupButtons();
+	//qDebug() << "SwitcherWindow::subwindowAdded: win:"<<win<<", widget:"<<win->widget();
+	 
+	if(!win)
+		return;
+		
+	if(DirectorSourceWidget *src = dynamic_cast<DirectorSourceWidget*>(win->widget()))
+		if(src->canSwitchTo())
+			setupButtons();
 	
 }
 
@@ -1471,6 +1550,10 @@ void SwitcherWindow::setupButtons()
 		item = 0;
 	}
 	
+	m_sourceList.clear();
+	m_sources.clear();
+	m_buttons.clear();
+	
 	QList<QMdiSubWindow*> windows = m_dir->subwindows();
 	int count = 1;
 	foreach(QMdiSubWindow *win, windows)
@@ -1488,9 +1571,10 @@ void SwitcherWindow::setupButtons()
 			connect(btn, SIGNAL(clicked()), this, SLOT(buttonClicked()));
 			m_layout->addWidget(btn);
 			
-			
 			m_sources[btn] = src;
 			m_buttons[src] = btn;
+			
+			m_sourceList << src;
 		}
 	}
 	
@@ -1503,6 +1587,21 @@ void SwitcherWindow::showEvent(QShowEvent*)
 {
 	adjustSize();
 }
+
+void SwitcherWindow::keyPressEvent(QKeyEvent *event)
+{
+	int idx = event->text().toInt();
+	if(idx > 0 && idx <= m_sourceList.size())
+	{
+		qDebug() << "SwitcherWindow::keyPressEvent(): "<<event->text()<<", activating input #"<<idx;
+		idx --; 
+		DirectorSourceWidget *src = m_sourceList.at(idx);
+		src->raise();
+		src->switchTo();
+		notifyIsLive(src);
+	}
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1620,5 +1719,87 @@ void PropertyEditorWindow::subwindowActivated(QMdiSubWindow* win)
 	}
 }
 
+////////////////////////////////////////////////////////
 
+HistogramWindow::HistogramWindow(DirectorWindow *dir)
+	: QWidget(dir)
+{
+	setWindowTitle("Histogram");
+}
+
+bool HistogramWindow::setInput(QMdiSubWindow*)
+{
+	return false;
+}
+	
+void HistogramWindow::inputIdxChanged(int )
+{
+	/// TODO 
+	// lookup source from m_sources
+}
+	
+void HistogramWindow::subwindowAdded(QMdiSubWindow*)
+{
+}
+void HistogramWindow::windowClosed()
+{
+}
+
+void HistogramWindow::buildCombo()
+{
+}
+	
+/*private:
+	class Source
+	{
+	public:
+		QString title;
+		VideoSource *source;
+	};
+	
+	
+	HistogramFilter *m_filter;
+	QList<Source> m_sources;*/
+
+////////////////////////////////////////////////////
+
+InputBalanceWindow::InputBalanceWindow(DirectorWindow *dir)
+	: QWidget(dir)
+{
+	setWindowTitle("Camera Color Balancer");
+}
+	
+void InputBalanceWindow::masterChanged(int)
+{
+}
+
+void InputBalanceWindow::slaveChanged(int)
+{
+}
+
+void InputBalanceWindow::subwindowAdded(QMdiSubWindow*)
+{
+}
+
+void InputBalanceWindow::windowClosed()
+{
+}
+
+void InputBalanceWindow::buildCombo()
+{
+}
+
+	
+// private:
+// 	class Source
+// 	{
+// 	public:
+// 		QString title;
+// 		VideoSource *source;
+// 	};
+// 	
+// 	VideoInputColorBalancer *m_balancer;
+// 	QList<Source> m_sources;
+// 
+// 
 

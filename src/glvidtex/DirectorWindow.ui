@@ -97,6 +97,8 @@
     <addaction name="actionMonitor_Players_Live"/>
     <addaction name="actionShow_Switcher"/>
     <addaction name="actionShow_Property_Editor"/>
+    <addaction name="actionShow_Histogram"/>
+    <addaction name="actionShow_InputBalance"/>
     <addaction name="actionShow_Preview"/>
     <addaction name="separator"/>
     <addaction name="actionAdd_Group_Player"/>
@@ -167,6 +169,16 @@
   <action name="actionShow_Property_Editor">
    <property name="text">
     <string>Show &amp;Property Editor Window</string>
+   </property>
+  </action>
+  <action name="actionShow_Histogram">
+   <property name="text">
+    <string>Show &amp;Histogram Window</string>
+   </property>
+  </action>
+  <action name="actionShow_InputBalance">
+   <property name="text">
+    <string>Show &amp;Camera Color Balancer</string>
    </property>
   </action>
  </widget>

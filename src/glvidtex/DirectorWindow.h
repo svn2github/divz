@@ -27,6 +27,8 @@ class SwitcherWindow;
 class PropertyEditorWindow;
 class DirectorSourceWidget;
 class DirectorMdiSubwindow;
+class HistogramWindow;
+class InputBalanceWindow;
 #include "GLDrawable.h"
 
 class DirectorWindow : public QMainWindow
@@ -86,6 +88,9 @@ private slots:
 	void showPropEditor();
 	void showSwitcher();
 	
+	void showHistoWin();
+	void showCamColorWin();
+	
 	DirectorMdiSubwindow *addSubwindow(QWidget*);
 	
 protected:
@@ -105,6 +110,8 @@ protected:
 	QMdiSubWindow *windowForWidget(QWidget*);
 	
 private:
+	void initConnection(PlayerConnection*);
+	
 	Ui::DirectorWindow *ui;
 	
 	PlayerConnectionList *m_players;
@@ -133,6 +140,8 @@ private:
 	
 	QPointer<PropertyEditorWindow> m_propWin;
 	QPointer<SwitcherWindow> m_switcherWin;
+	QPointer<HistogramWindow> m_histoWin;
+	QPointer<InputBalanceWindow> m_inputBalanceWin;
 		
 	
 };
@@ -290,6 +299,7 @@ public slots:
 protected:
 	bool eventFilter(QObject *, QEvent *);
 	void showEvent(QShowEvent*);
+	void keyPressEvent(QKeyEvent *event);
 	
 private slots:
 	void buttonClicked();
@@ -304,6 +314,7 @@ private:
 	QMap<DirectorSourceWidget*,QPushButton*> m_buttons;
 	QMap<QPushButton*,DirectorSourceWidget*> m_sources;
 	QPushButton *m_lastBtn;
+	QList<DirectorSourceWidget*> m_sourceList;
 	
 };
 
@@ -326,6 +337,64 @@ private:
 	DirectorWindow *m_dir;
 	
 };
+
+class HistogramFilter;
+class VideoSource;
+class HistogramWindow : public QWidget
+{
+	Q_OBJECT
+public:
+	HistogramWindow(DirectorWindow *);
+	bool setInput(QMdiSubWindow*);
+	
+private slots:
+	void inputIdxChanged(int);
+	
+	void subwindowAdded(QMdiSubWindow*);
+	void windowClosed();
+	void buildCombo();
+	
+private:
+	class Source
+	{
+	public:
+		QString title;
+		VideoSource *source;
+	};
+	
+	
+	HistogramFilter *m_filter;
+	QList<Source> m_sources;
+};
+
+class VideoInputColorBalancer;
+class InputBalanceWindow : public QWidget
+{
+	Q_OBJECT
+public:
+	InputBalanceWindow(DirectorWindow*);
+	
+private slots:
+	void masterChanged(int);
+	void slaveChanged(int);
+	
+	void subwindowAdded(QMdiSubWindow*);
+	void windowClosed();
+	void buildCombo();
+	
+private:
+	class Source
+	{
+	public:
+		QString title;
+		VideoSource *source;
+	};
+	
+	VideoInputColorBalancer *m_balancer;
+	QList<Source> m_sources;
+
+};
+
 
 // class VideoPlayerWidget : public QWidget
 // {
