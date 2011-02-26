@@ -265,6 +265,10 @@ void EditorWindow::createUI()
 	act->setShortcut(QString(tr("CTRL+SHIFT+S")));
 	connect(act, SIGNAL(triggered()), this, SLOT(addSpinner()));
 	
+	act = toolbar->addAction(QIcon(":/data/stock-insert-image.png"), tr("Add HTTP Image"));
+	act->setShortcut(QString(tr("CTRL+SHIFT+H")));
+	connect(act, SIGNAL(triggered()), this, SLOT(addHttpImage()));
+	
 	//toolbar->addSeparator();
 	toolbar = sceneActionToolbar;
 	
@@ -539,6 +543,19 @@ void EditorWindow::addSpinner()
 		QRectF r = m_graphicsScene->sceneRect();
 		// Make square
 		r = QRectF(r.width() * .25, r.height() * .25, r.width() * .5, r.width() * .5);
+		rect->setRect(r);
+	}
+}
+
+void EditorWindow::addHttpImage()
+{
+	GLImageHttpDrawable *rect = new GLImageHttpDrawable();
+	addDrawable(rect);
+	
+	if(m_graphicsScene)
+	{
+		QRectF r = m_graphicsScene->sceneRect();
+		r = QRectF(r.width() * .25, r.height() * .25, r.width() * .5, r.height() * .5);
 		rect->setRect(r);
 	}
 }
@@ -905,6 +922,17 @@ QWidget *EditorWindow::createPropertyEditors(GLDrawable *gld)
 			
 			opts.text = "Ignore aspect ratio";
 			lay->addRow(PropertyEditorFactory::generatePropertyEditor(item, "ignoreAspectRatio", SLOT(setIgnoreAspectRatio(bool)), opts));
+		}
+		else
+		if(GLImageHttpDrawable *item = dynamic_cast<GLImageHttpDrawable*>(gld))
+		{
+			PropertyEditorFactory::PropertyEditorOptions opts;
+			//opts.stringIsFile = true;
+			//opts.fileTypeFilter = tr("SVG Files (*.svg);;Any File (*.*)");
+			lay->addRow(tr("&Image URL:"), PropertyEditorFactory::generatePropertyEditor(item, "url", SLOT(setUrl(const QString&)), opts));//, SIGNAL(imageFileChanged(const QString&))));
+			
+			opts.text = "Is a DViz Server";
+			lay->addRow(PropertyEditorFactory::generatePropertyEditor(item, "pollDviz", SLOT(setPollDviz(bool)), opts));
 		}
 		else
 		if(GLRectDrawable *item = dynamic_cast<GLRectDrawable*>(gld))

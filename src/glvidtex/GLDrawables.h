@@ -8,3 +8,4 @@
 #include "GLSvgDrawable.h"
 #include "GLRectDrawable.h"
 #include "GLSpinnerDrawable.h"
+#include "GLImageHttpDrawable.h"

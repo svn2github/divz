@@ -40,6 +40,7 @@ public slots:
 	void addRect();
 	void addMjpeg();
 	void addSpinner();
+	void addHttpImage();
 	
 	void addScene();
 	void delScene();

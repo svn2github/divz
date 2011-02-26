@@ -48,7 +48,8 @@ HEADERS       = GLWidget.h \
 		GLSceneTypeRandomVideo.h \
 		EntityList.h \
 		BMDOutput.h \
-		RssParser.h
+		RssParser.h \
+		GLImageHttpDrawable.h
 		
 SOURCES       = GLWidget.cpp \
 		../livemix/VideoSource.cpp \
@@ -95,9 +96,12 @@ SOURCES       = GLWidget.cpp \
 		GLSceneTypeRandomVideo.cpp \
 		EntityList.cpp \
 		BMDOutput.cpp \
-		RssParser.cpp
+		RssParser.cpp \
+		GLImageHttpDrawable.cpp
 		 
-		
+# Used in GLImageHttpDrawable
+include(../3rdparty/qjson/qjson.pri)
+	
 # MD5 is used for caching in GLImageDrawable
 include(../3rdparty/md5/md5.pri)
 
@@ -200,8 +204,6 @@ player | glvidtex: {
 		../livemix/VideoWidget.cpp \
 		../livemix/EditorUtilityWidgets.cpp 
 		
-	include(../3rdparty/qjson/qjson.pri)
-	
 	HEADERS += ../http/HttpServer.h ../http/SimpleTemplate.h
 	SOURCES += ../http/HttpServer.cpp ../http/SimpleTemplate.cpp
 	

@@ -411,6 +411,7 @@ void GLScene::fromByteArray(QByteArray& array)
 		IF_CLASS(GLSvgDrawable);
 		IF_CLASS(GLRectDrawable);
 		IF_CLASS(GLSpinnerDrawable);
+		IF_CLASS(GLImageHttpDrawable);
 
 		#undef IF_CLASS
 
