@@ -230,6 +230,8 @@ public:
 	virtual QVariantMap saveToMap();
 	virtual void loadFromMap(const QVariantMap&);
 	
+	VideoReceiver *receiver() { return m_rx; }
+	
 private slots:
 	// DirectorSourceWidget::	
 	virtual bool switchTo();
@@ -355,16 +357,19 @@ private slots:
 	void buildCombo();
 	
 private:
-	class Source
-	{
-	public:
-		QString title;
-		VideoSource *source;
-	};
+// 	class Source
+// 	{
+// 	public:
+// 		QString title;
+// 		VideoSource *source;
+// 	};
+	
+	QComboBox *m_combo;
 	
 	
+	DirectorWindow *m_dir;
 	HistogramFilter *m_filter;
-	QList<Source> m_sources;
+	QList<VideoSource*> m_sources;
 };
 
 class VideoInputColorBalancer;

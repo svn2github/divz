@@ -156,6 +156,7 @@ void BibleBrowser::setupUI()
 	
 	QPushButton *configBtn = new QPushButton(QPixmap(":/data/stock-preferences.png"),"");
 	configBtn->setToolTip("Setup Slide Creator Options");
+	connect(configBtn, SIGNAL(clicked()), this, SLOT(showConfigMenu()));
 	
 	QMenu *configMenu = new QMenu(configBtn);
 	QAction * action;
@@ -220,7 +221,8 @@ void BibleBrowser::setupUI()
 	action->setChecked(appendToExistingGroup());
 	connect(action, SIGNAL(toggled(bool)), this, SLOT(setAppendToExistingGroup(bool)));
 	
-	configBtn->setMenu(configMenu);
+	//configBtn->setMenu(configMenu);
+	m_configMenu = configMenu;
 	hboxTop->addWidget(configBtn);
 	
 	
@@ -344,6 +346,11 @@ void BibleBrowser::setupUI()
 	vbox->addWidget(m_tmplWidget);
 	
 	
+}
+
+void BibleBrowser::showConfigMenu()
+{
+	m_configMenu->exec(QCursor::pos());
 }
 
 void BibleBrowser::templateChanged(SlideGroup* group)

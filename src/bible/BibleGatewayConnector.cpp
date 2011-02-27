@@ -101,6 +101,8 @@ BibleVerseList BibleGatewayConnector::parseHtmlReply(QByteArray &ba)
 		
 		raw = raw.replace(rxVerseNum, "");
 		raw = html2text(raw);
+		raw = raw.replace("‘","\'");
+		raw = raw.replace("…","...");
 		raw = raw.trimmed();
 		
 		if(raw.isEmpty() && 

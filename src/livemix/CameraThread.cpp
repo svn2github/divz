@@ -1013,6 +1013,8 @@ void CameraThread::readFrame()
 		return;
 	}
 	#endif
+	
+	return;
 
 	if(!m_inited)
 	{

@@ -469,24 +469,30 @@ void DirectorWindow::createUserSubwindows()
 		QWidget *widgetPtr = 0;
 		if(className == "OverlayWidget")
 		{
-			OverlayWidget *widget = addOverlay();
-			
-			widget->loadFromMap(opts);
-			
-			qDebug() << "DirectorWindow::createUserSubwindows(): Added overlay widget:"<<widget;
-			
-			widgetPtr = widget;
+			if(!opts["file"].toString().isEmpty())
+			{
+				OverlayWidget *widget = addOverlay();
+				
+				widget->loadFromMap(opts);
+				
+				qDebug() << "DirectorWindow::createUserSubwindows(): Added overlay widget:"<<widget;
+				
+				widgetPtr = widget;
+			}
 		}
 		else
 		if(className == "GroupPlayerWidget")
 		{
-			GroupPlayerWidget *widget = addGroupPlayer();
-			
-			widget->loadFromMap(opts);
-			
-			qDebug() << "DirectorWindow::createUserSubwindows(): Added group player widget:"<<widget;
-			
-			widgetPtr = widget;
+			if(!opts["file"].toString().isEmpty())
+			{
+				GroupPlayerWidget *widget = addGroupPlayer();
+				
+				widget->loadFromMap(opts);
+				
+				qDebug() << "DirectorWindow::createUserSubwindows(): Added group player widget:"<<widget;
+				
+				widgetPtr = widget;
+			}
 		}
 		else
 		if(className == "SwitcherWindow")
@@ -504,15 +510,18 @@ void DirectorWindow::createUserSubwindows()
 			showCamColorWin();
 		}
 		
-		if(QMdiSubWindow *win = windowForWidget(widgetPtr))
+		if(widgetPtr)
 		{
-			QRect rect = opts["_geom"].toRect();
-			qDebug() << "DirectorWindow::createUserSubwindows(): Win:"<<win<<", Widget Ptr:"<<widgetPtr<<", geom:"<<rect;
-			win->setGeometry(rect);
-		}
-		else
-		{
-			qDebug() << "DirectorWindow::createUserSubwindows(): Can't find window for widget ptr:"<<widgetPtr;
+			if(QMdiSubWindow *win = windowForWidget(widgetPtr))
+			{
+				QRect rect = opts["_geom"].toRect();
+				qDebug() << "DirectorWindow::createUserSubwindows(): Win:"<<win<<", Widget Ptr:"<<widgetPtr<<", geom:"<<rect;
+				win->setGeometry(rect);
+			}
+			else
+			{
+				qDebug() << "DirectorWindow::createUserSubwindows(): Can't find window for widget ptr:"<<widgetPtr;
+			}
 		}
 			
 		// TODO add more...
@@ -1578,7 +1587,7 @@ void SwitcherWindow::setupButtons()
 		}
 	}
 	
-	adjustSize();
+	//adjustSize();
 	
 	setWindowTitle("Switcher");
 }
@@ -1696,7 +1705,7 @@ void PropertyEditorWindow::setSourceWidget(DirectorSourceWidget* source)
 		setWindowTitle(QString("Properties - %1").arg(source->windowTitle()));
 	}
 	
-	adjustSize();
+	//adjustSize();
 	
 	
 }
@@ -1723,8 +1732,31 @@ void PropertyEditorWindow::subwindowActivated(QMdiSubWindow* win)
 
 HistogramWindow::HistogramWindow(DirectorWindow *dir)
 	: QWidget(dir)
+	, m_dir(dir)
 {
 	setWindowTitle("Histogram");
+	
+	QVBoxLayout *vbox = new QVBoxLayout(this);
+	vbox->setContentsMargins(0,0,0,0);
+	
+	m_combo = new QComboBox();
+	connect(m_combo, SIGNAL(activated(int)), this, SLOT(inputIdxChanged(int)));
+	vbox->addWidget(m_combo);
+	
+	GLWidget *vid = new GLWidget();
+	vbox->addWidget(vid);
+
+	m_filter = new HistogramFilter ();
+	
+	GLVideoDrawable *gld = new GLVideoDrawable();
+	gld->setVideoSource(m_filter);
+	vid->addDrawable(gld);
+	
+	setWindowTitle("Histogram");
+	gld->setObjectName(qPrintable(windowTitle()));
+	resize(320,240);
+	
+	buildCombo();
 }
 
 bool HistogramWindow::setInput(QMdiSubWindow*)
@@ -1732,21 +1764,47 @@ bool HistogramWindow::setInput(QMdiSubWindow*)
 	return false;
 }
 	
-void HistogramWindow::inputIdxChanged(int )
+void HistogramWindow::inputIdxChanged(int x)
 {
-	/// TODO 
-	// lookup source from m_sources
+	if(x<0 || x>=m_sources.size())
+		return;
+		
+	qDebug() << "HistogramWindow::inputIdxChanged: x:"<<x<<", new source:"<<m_sources[x];
+	m_filter->setVideoSource(m_sources[x]);
 }
 	
 void HistogramWindow::subwindowAdded(QMdiSubWindow*)
 {
+	buildCombo();
 }
 void HistogramWindow::windowClosed()
 {
+	buildCombo();
 }
 
 void HistogramWindow::buildCombo()
 {
+	QStringList names;
+	QList<QMdiSubWindow*> windows = m_dir->subwindows();
+	foreach(QMdiSubWindow *win, windows)
+	{
+		//if(DirectorSourceWidget *src = dynamic_cast<DirectorSourceWidget*>(win->widget()))
+		
+		if(CameraWidget *src = dynamic_cast<CameraWidget*>(win->widget()))
+		{	
+			connect(src, SIGNAL(destroyed()), this, SLOT(windowClosed()));
+			
+			names << src->windowTitle();
+			m_sources << src->receiver();
+		}
+	}
+	
+	m_combo->clear();
+	m_combo->addItems(names);
+	if(!names.isEmpty())
+		m_combo->setCurrentIndex(0);
+	
+	//adjustSize();
 }
 	
 /*private:

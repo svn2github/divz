@@ -10,6 +10,7 @@ class QPushButton;
 class QTextEdit;
 class QLabel;
 class QComboBox;
+class QMenu;
 
 class TextBoxItem;
 class SlideGroup;
@@ -87,6 +88,8 @@ protected slots:
 	
 	void templateChanged(SlideGroup*);
 	
+	void showConfigMenu();
+	
 protected:
 	SlideGroup * createSlideGroup(bool allowAppend=false);
 	
@@ -116,6 +119,7 @@ protected:
 	BibleGatewayConnector * m_bible;
 	BibleVerseList	m_currentList;
 	BibleVerseRef	m_currentRef;
+	QMenu         * m_configMenu;
 	
 	bool m_showEachVerseOnSeperateSlide;
 	

@@ -7,7 +7,8 @@
 #include "HistogramFilter.h"
 #include "VideoReceiver.h"
 
-#define VIDEO_HOST "192.168.0.17"
+#define VIDEO_HOST "192.168.0.18"
+//#define VIDEO_HOST "10.10.9.177"
 
 #define VIDEO_FPS 5
 
