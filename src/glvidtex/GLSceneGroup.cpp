@@ -667,6 +667,9 @@ void GLScene::setGLWidget(GLWidget *glw, int /*zIndexOffset*/)
 
 	foreach(GLDrawable *d, m_itemList)
 		m_glWidget->addDrawable(d);
+		
+	if(sceneType())		
+		sceneType()->setLiveStatus(true);
 }
 
 void GLScene::detachGLWidget()
@@ -677,6 +680,9 @@ void GLScene::detachGLWidget()
 	foreach(GLDrawable *d, m_itemList)
 		m_glWidget->removeDrawable(d);
 
+	if(sceneType())		
+		sceneType()->setLiveStatus(false);
+		
 	m_glWidget = 0;
 }
 

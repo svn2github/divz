@@ -247,7 +247,7 @@ void VideoSender::incomingConnection(int socketDescriptor)
 	}
 		
 		
-	//qDebug() << "VideoSender: Client Connected, Socket Descriptor:"<<socketDescriptor;
+	//qDebug() << "VideoSender: "<<this<<" Client Connected, Socket Descriptor:"<<socketDescriptor;
 }
 
 
@@ -376,7 +376,7 @@ void VideoSenderThread::frameReady()
 							m_sender->holdTime(),
 							originalSize.width(), 
 							originalSize.height());
-				//qDebug() << "VideoSenderThread::frameReady: header data:"<<headerData;
+				//qDebug() << "VideoSenderThread::frameReady: "<<this<<" header data:"<<headerData;
 				
 				m_socket->write((const char*)&headerData,HEADER_SIZE);
 				m_socket->write((const char*)dataPtr.data(),byteCount);

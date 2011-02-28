@@ -171,15 +171,16 @@ void ViewServer::reqCheckForChange(QTcpSocket *socket, const QStringList &path, 
 	}
 	
 	int id = query["slide_id"].toInt();
-	QString name = query["slide_name"];
-	if(id != slideId ||
+	QString name = QUrl::fromPercentEncoding(query["slide_name"].toAscii());
+	if(id   != slideId ||
 	   name != slideName)
 	{
 // 		qDebug() << "ViewServer::reqCheckForchange: Changed!";
-		Http_Send_Response(socket,"HTTP/1.0 200 Slide Changed") << "{slide_id:"<<id<<","<<
-									    "slide_name:\""<<slideName<<"\","<<
-									    "group_name:\""<<groupName<<"\","<<
-									    "doc_name:\""<<docName<<"\"};";
+		Http_Send_Response(socket,"HTTP/1.0 200 Slide Changed") << 
+			"{slide_id:"	 <<slideId<<","<<
+			 "slide_name:\"" <<slideName<<"\","<<
+			 "group_name:\"" <<groupName<<"\","<<
+			 "doc_name:\""	 <<docName<<"\"};";
 	}
 	else
 	{

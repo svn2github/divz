@@ -1683,6 +1683,7 @@ void PropertyEditorWindow::setSourceWidget(DirectorSourceWidget* source)
 				
 				DrawableDirectorWidget *editor = new DrawableDirectorWidget(gld, scene, m_dir);
 				widget->setWidget(editor);
+				widget->setExpandedIfNoDefault(true);
 				
 				m_layout->addWidget(widget);
 				
@@ -1737,7 +1738,7 @@ HistogramWindow::HistogramWindow(DirectorWindow *dir)
 	setWindowTitle("Histogram");
 	
 	QVBoxLayout *vbox = new QVBoxLayout(this);
-	vbox->setContentsMargins(0,0,0,0);
+	//vbox->setContentsMargins(0,0,0,0);
 	
 	m_combo = new QComboBox();
 	connect(m_combo, SIGNAL(activated(int)), this, SLOT(inputIdxChanged(int)));

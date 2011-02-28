@@ -9,6 +9,7 @@
 #include <assert.h>
 
 #include <QImageWriter>
+#include <QColor>
 
 //#define DEBUG
 
@@ -1385,6 +1386,11 @@ HRESULT BMDCaptureDelegate::VideoInputFrameArrived(IDeckLinkVideoInputFrame* vid
 		{
 			//fprintf(stderr, "Frame received (#%d) - No input signal detected\n", m_frameCount);
 			//qDebug() << "BMDCaptureDelegate::VideoInputFrameArrived: "<<m_api<<" Frame "<<m_frameCount << " - No input signal detected";
+			
+			// Nice blue 'no signal' frame
+			QImage frame(320,240, QImage::Format_ARGB32);
+			frame.fill(QColor(0,0,198).rgba());
+			m_api->imageDataAvailable(frame, capTime);
 			
 		}
 		else

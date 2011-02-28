@@ -50,7 +50,7 @@ void HistogramFilter::setFrameAccumNum(int n)
 
 void HistogramFilter::processFrame()
 {
-	qDebug() << "HistogramFilter::processFrame(): source:"<<m_source;
+	//qDebug() << "HistogramFilter::processFrame(): source:"<<m_source;
 	
 	QImage image = frameImage();
 	QImage histo = makeHistogram(image);

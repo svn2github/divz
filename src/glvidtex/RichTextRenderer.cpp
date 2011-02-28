@@ -28,6 +28,14 @@ void RichTextRenderer::setHtml(const QString& html)
 	// dont block calling thread by updating - since we are in a thread ourself, 
 	// this should put the update into our thread
 	//QTimer::singleShot(0,this,SLOT(update()));
+	//qDebug() << "RichTextRenderer::setHtml: m_updatesLocked:"<<m_updatesLocked; 
+	if(m_updatesLocked)
+	{
+		if(m_updateTimer.isActive())
+ 			m_updateTimer.stop();
+		return;
+	}
+		
 	update();
 }
 
@@ -295,7 +303,7 @@ void RichTextRenderer::update()
 {
  	if(m_updateTimer.isActive())
  		m_updateTimer.stop();
-// 	qDebug() << "RichTextRenderer::update(): \t in thread:"<<QThread::currentThreadId();
+ 	//qDebug() << "RichTextRenderer::update(): \t in thread:"<<QThread::currentThreadId();
 	m_updateTimer.start();
 }
 
@@ -439,10 +447,10 @@ QImage RichTextRenderer::renderText()
 	m_image = cache.convertToFormat(QImage::Format_ARGB32);
 	emit textRendered(m_image);
 	
-	
+	//qDebug() << "RichTextRenderer::renderText(): Render finished, elapsed:"<<renderTime.elapsed()<<"ms";
 	//m_image.save("debug-text.png");
 	return m_image;
-	//qDebug() << "RichTextRenderer::renderText(): Render finished, elapsed:"<<renderTime.elapsed()<<"ms";
+	
 }
 
 ITEM_PROPSET(RichTextRenderer, TextWidth,	int,	textWidth);

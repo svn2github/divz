@@ -56,6 +56,18 @@ TODO:
 		- [FIXED] Editor: Extreem errors when LMB-dragging - frequently jumps way out of place
 		- [FIXED] Editor: CPU usage seems to increase when dragging or clicking by a huge amount
 		- [FIXED] Editor: New items get a zero Z index - should be max+1
+		- [FIXED] Text "load from image" - well, it loads from image but it still re-renders the text, causing a wierd cross fade when the re-rendered text is slightly "off" from the transmitted image
+			- Needs to do one or the other
+			- Several areas changed: Took out the 'image' property on GLImageDrawable, RichTextRenderer wasnt honoring updatesLocked flag, and it didnt turn off the update timer if updates were locked
+		- [WONTFIX] Make the Video Input control panel in director default to last network source
+			- [DONE] Consider removing "(This Machine)" as an option
+				- Dont put a message box - just a simple QLabel
+			- Director UI changed making this bug irrelevant 
+		- [WONTFIX] Make the video input control panel automatically update when players are connected
+			- Director UI changed making this bug irrelevant 
+		- [DONE] Finish DViz HTTP image poller
+			- Functions as an interface to DViz by polling the dviz ViewServer (see ../http/ViewServer.cpp)
+			- Also can poll images from any URL via HTTP
 		
 		- [TMP-FIX] Video Encoding "problems"
 			- Way to much CPU usage - 157%-ish on a dual-core 2.4 GHz...causing live video to stutter
@@ -64,10 +76,7 @@ TODO:
 			- Temporarily disabled encoder in PlayerWindow till this is addressed.
 		
 		- Director: playlist text looses formatting when playing?
-		- Make the Video Input control panel in director default to last network source
-			- [DONE] Consider removing "(This Machine)" as an option
-				- Dont put a message box - just a simple QLabel
-		- Make the video input control panel automatically update when players are connected
+			
 		- If player errors out during connect, button stays grayed out till close and re-open dialog
 		
 		- Player cant crossfade between two scenes that each have a videoinput drawable on them
@@ -91,9 +100,36 @@ TODO:
 		
 		- Player: Show/Hide fadein/fadeouts are jumpy when done over live video (and even can cause live video to stutter)
 			- Nedt o integrate to use the "updateAnimations()" call or something similar like that
+			
 		
+		- Cross-fading from a BMD capture device freezes "old" stream, but new stream works fine
+		
+		- Histogram window severaly broken - really, the HistogramFilter or the drawable - not sure wich
+			
 		
 	NEEDED FEATURES:
+		- GLSL Sharpening filter
+		- GLSL blur filter
+			- Render to intermediat FBO
+		- GLSL color curve/color contrast adjustments
+			- Not value contrast, but hue contrast and brightness adjustment for projection system
+		- Store textureid in VideoFrame for duplicate rendering 
+			- So we can render the scene twice - of course, we could do that at a "system" level ...
+				- Reasoning:
+					- For projection on a screen, we want to apply color curves and brightness adjustments, but not on the S-Video out we send for recording
+					- So setup S-Video out and VGA out as a dual-screen output, render the VGA half with color curves, etc, then render S-Video "plain"
+					- But that would requre render-to-FBO...
+						Would it be better to apply curves to the GLVideoDrawable shader?
+						- Then we would need two separate scenes, two separate GLVIdeoDrawables
+						- Then we would need the texture ID in the video frame so both video drawables dont upload the same frame to the GPU
+		
+		- Audio delay module
+			- When recording via S-Video cloned output, the final recording was 200ms out of sync
+			- Need to add an audio delay module that can buffer the audio and before it gets to the recording system by an adjustable amount
+		
+		- SwitcherWindow in Director needs little icons on the buttons or below the buttons as to what input is what
+		- DirectorWindow should store window geometry by a WindowID of some sort
+		
 		- Convert VideoSurfaceAdapter in QtVideoSource to allow YUV formats thru as raw frames inorder to reduce CPU usage
 			- Same with VideoThread
 		- Use GL to:
@@ -116,7 +152,6 @@ TODO:
 		- [DONE] Weather - dim background at night?
 		- Random Video scenetype
 		
-		- Scene overlay - for stuff that doesnt change
 		- Transmit slide group changes to player when editor window closed
 			- Need to cross fade between slides
 			- Prompt to send?
@@ -182,6 +217,7 @@ TODO:
 			- Auto calced based on durations of all the scenes
 		- Add a play interface to collection to loop thru groups
 		
+		- [DONE] Scene overlay - for stuff that doesnt change
 		- [DONE] Add an 'assign scene type' feature in editor
 		- [DONE] Figure out how to set parameters in UI
 		- [DONE] Add more scenetype subclasses, possibly based on Gogle News API and/or RSS reader

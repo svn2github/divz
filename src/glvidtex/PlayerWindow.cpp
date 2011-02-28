@@ -1434,7 +1434,7 @@ void PlayerWindow::opacityAnimationFinished(GLScene *scene)
 	
 	if(scene->sceneGroup() == m_oldGroup)
 	{
-		qDebug() << "PlayerWindow::opacityAnimationFinished: deleting old group:"<<(QObject*)m_oldGroup;
+		//qDebug() << "PlayerWindow::opacityAnimationFinished: deleting old group:"<<(QObject*)m_oldGroup;
 		delete m_oldGroup;
 		m_oldGroup = 0;
 	}

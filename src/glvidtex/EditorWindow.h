@@ -10,6 +10,7 @@ class GLScene;
 class GLDrawable;
 class RichTextEditorDialog;
 class EditorGraphicsView;
+class GLImageDrawable;
 
 class EditorWindow : public QMainWindow
 {
@@ -86,6 +87,8 @@ protected:
 	void addDrawable(GLDrawable*);
 	
 	QWidget *createPropertyEditors(GLDrawable*);
+	
+	void addImageBorderShadowEditors(QFormLayout *lay, GLImageDrawable *item);
 	
 	QSizeF m_canvasSize;
 	GLEditorGraphicsScene *m_graphicsScene;

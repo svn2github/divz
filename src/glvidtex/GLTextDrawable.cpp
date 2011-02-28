@@ -1,5 +1,6 @@
 #include "GLTextDrawable.h"
 #include "RichTextRenderer.h"
+#include "EntityList.h"
 
 #define DEFAULT_CLOCK_FORMAT "yyyy-MM-dd h:mm:ss ap"
 
@@ -175,6 +176,7 @@ void GLTextDrawable::clockTick()
 
 void GLTextDrawable::setIsScroller(bool flag)
 {
+	bool wasScroller = m_isScroller;
 	m_isScroller = flag;
 	if(m_scrollerTimer.isActive() && !flag)
 		m_scrollerTimer.stop();
@@ -196,8 +198,10 @@ void GLTextDrawable::setIsScroller(bool flag)
 	}
 	else
 	{
-		// rerender text
-		m_renderer->setHtml(m_text);
+		// rerender text, only if wasScroller tho - this prevents rerendering text
+		// received as a cached image via the network if not needed
+		if(wasScroller)
+			m_renderer->setHtml(m_text);
 		setXFadeEnabled(true);
 		disconnect(playlist(), SIGNAL(itemAdded(GLPlaylistItem*)),   this, SLOT(playlistChanged()));
 		disconnect(playlist(), SIGNAL(itemRemoved(GLPlaylistItem*)), this, SLOT(playlistChanged()));
@@ -664,13 +668,13 @@ void GLTextDrawable::setText(const QString& text)
 		return;
 	}
 	
-	//qDebug() << "GLTextDrawable::setText(): text:"<<text;
+	//qDebug() << "GLTextDrawable::setText(): "<<(QObject*)this<<" text:"<<htmlToPlainText(text);
 	bool lock = false;
 
 	if(m_cachedImageText == text &&
 	  !m_cachedImage.isNull())
 	{
-		qDebug() << "GLTextDrawable::setText: Cached image matches text, not re-rendering.";
+		//qDebug() << "GLTextDrawable::setText: Cached image matches text, not re-rendering.";
 		lock = m_renderer->lockUpdates(true);
 		setImage(m_cachedImage);
 	}
@@ -699,6 +703,7 @@ QString GLTextDrawable::htmlToPlainText(const QString& text)
 {
 	QString plain = text;
 	plain = plain.replace( QRegExp("&amp;"), "&");
+	//plain = EntityList::decodeEntities(plain);
 	plain = plain.replace( QRegExp("<style[^>]*>.*</style>", Qt::CaseInsensitive), "" );
 	plain = plain.replace( QRegExp("<[^>]*>"), "" );
 	plain = plain.replace( QRegExp("(^\\s+)"), "" );
@@ -825,11 +830,13 @@ void GLTextDrawable::loadPropsFromMap(const QVariantMap& map, bool /*onlyApplyIf
 	QByteArray bytes = map["text_image"].toByteArray();
 	QImage image;
 	image.loadFromData(bytes);
-	//qDebug() << "GLSceneLayout::fromByteArray(): image size:"<<image.size()<<", isnull:"<<image.isNull();
-
+	m_cachedImage = image;
+	
 	if(!image.isNull())
 		setImage(image);
 	m_cachedImageText = map["text_image_alt"].toString();
+	//qDebug() << "GLTextDrawable::loadPropsFromMap(): image size:"<<image.size()<<", isnull:"<<image.isNull()<<", m_cachedImageText:"<<m_cachedImageText;
+
 
 	GLDrawable::loadPropsFromMap(map);
 }
@@ -841,13 +848,20 @@ QVariantMap GLTextDrawable::propsToMap()
 	// Save the image to the map for sending a cached render over the network so the player
 	// can cheat and use this image that was rendered by the director as opposed to re-rendering
 	// the same text
-	QByteArray bytes;
-	QBuffer buffer(&bytes);
-	buffer.open(QIODevice::WriteOnly);
-	image().save(&buffer, "PNG"); // writes pixmap into bytes in PNG format
-	buffer.close();
-	map["text_image"] = bytes;
-	map["text_image_alt"] = m_text;
+	if(!m_isClock &&
+	   !m_isScroller)
+	{
+		// Only send if NOT a clock/scroller - because clocks/scrollers will update the text image anyway 
+		// so its a waste of time to transmit the rendered image
+		
+		QByteArray bytes;
+		QBuffer buffer(&bytes);
+		buffer.open(QIODevice::WriteOnly);
+		image().save(&buffer, "PNG"); // writes pixmap into bytes in PNG format
+		buffer.close();
+		map["text_image"] = bytes;
+		map["text_image_alt"] = m_text;
+	}
 
 	return map;
 }

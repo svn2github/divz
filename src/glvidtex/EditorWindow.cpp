@@ -685,6 +685,83 @@ void EditorWindow::selectionChanged()
 	m_currentLayerPropsEditor = props;
 }
 
+void EditorWindow::addImageBorderShadowEditors(QFormLayout *lay, GLImageDrawable *item)
+{
+	QtColorPicker * borderColor = new QtColorPicker;
+	borderColor->setStandardColors();
+	borderColor->setCurrentColor(item->borderColor());
+	connect(borderColor, SIGNAL(colorChanged(const QColor &)), item, SLOT(setBorderColor(QColor)));
+	
+	QHBoxLayout *hbox = new QHBoxLayout();
+	QDoubleSpinBox *box = new QDoubleSpinBox();
+	box->setSuffix(tr("px"));
+	box->setMinimum(0);
+	box->setDecimals(2);
+	box->setMaximum(50);
+	box->setValue(item->borderWidth());
+	//connect(m_textSizeBox, SIGNAL(returnPressed()), this, SLOT(textSizeChanged(double)));
+	connect(box, SIGNAL(valueChanged(double)), item, SLOT(setBorderWidth(double)));
+	hbox->addWidget(box);
+	hbox->addWidget(borderColor);
+	
+	lay->addRow(tr("Border:"), hbox);
+	
+	QCheckBox *checkbox = new QCheckBox("Enable Dropshadow");
+	checkbox->setChecked(item->isShadowEnabled());
+	connect(checkbox, SIGNAL(toggled(bool)), item, SLOT(setShadowEnabled(bool)));
+	lay->addRow(checkbox);
+
+
+	QtColorPicker * shadowColor = new QtColorPicker;
+	shadowColor->setStandardColors();
+	shadowColor->setCurrentColor(item->shadowColor());
+	connect(borderColor, SIGNAL(colorChanged(const QColor &)), item, SLOT(setShadowColor(QColor)));
+	
+	connect(checkbox, SIGNAL(toggled(bool)), shadowColor, SLOT(setEnabled(bool)));
+	shadowColor->setEnabled(item->isShadowEnabled());
+	
+	lay->addRow(tr("Color:"), shadowColor);
+	
+	
+	QHBoxLayout *hbox2 = new QHBoxLayout();
+	QDoubleSpinBox *box2 = new QDoubleSpinBox();
+	box2->setSuffix(tr("px"));
+	box2->setMinimum(1);
+	box2->setDecimals(2);
+	box2->setMaximum(16);
+	box2->setValue(item->shadowBlurRadius());
+	//connect(m_textSizeBox, SIGNAL(returnPressed()), this, SLOT(textSizeChanged(double)));
+	connect(box2, SIGNAL(valueChanged(double)), item, SLOT(setShadowBlurRadius(double)));
+	connect(checkbox, SIGNAL(toggled(bool)), box2, SLOT(setEnabled(bool)));
+	box2->setEnabled(item->isShadowEnabled());
+	
+	lay->addRow(tr("Blur:"), box2);
+	
+	
+	PropertyEditorFactory::PropertyEditorOptions opts;
+	
+	QWidget *widget = 0;
+	opts.reset();
+	opts.type = QVariant::Int;
+	opts.min = 1;
+	opts.max = 100;
+	opts.step = 5;
+	opts.suffix = "%";
+	opts.doubleIsPercentage = true;
+	widget = PropertyEditorFactory::generatePropertyEditor(item, "shadowOpacity", SLOT(setShadowOpacity(int)), opts);
+	connect(checkbox, SIGNAL(toggled(bool)), widget, SLOT(setEnabled(bool)));
+	widget->setEnabled(item->isShadowEnabled());
+	
+	lay->addRow(tr("Opacity:"), widget);
+	
+	opts.reset();
+	widget = PropertyEditorFactory::generatePropertyEditor(item, "shadowOffset", SLOT(setShadowOffset(QPointF)), opts);
+	connect(checkbox, SIGNAL(toggled(bool)), widget, SLOT(setEnabled(bool)));
+	widget->setEnabled(item->isShadowEnabled());
+	
+	lay->addRow(tr("Position:"), widget);
+}
+
 QWidget *EditorWindow::createPropertyEditors(GLDrawable *gld)
 {
 	m_currentDrawable = gld;
@@ -922,6 +999,21 @@ QWidget *EditorWindow::createPropertyEditors(GLDrawable *gld)
 			
 			opts.text = "Ignore aspect ratio";
 			lay->addRow(PropertyEditorFactory::generatePropertyEditor(item, "ignoreAspectRatio", SLOT(setIgnoreAspectRatio(bool)), opts));
+			
+			{
+				ExpandableWidget *groupAnim = new ExpandableWidget("Border and Shadow",base);
+				blay->addWidget(groupAnim);
+			
+				QWidget *groupAnimContainer = new QWidget;
+				QFormLayout *lay = new QFormLayout(groupAnimContainer);
+				lay->setContentsMargins(3,3,3,3);
+			
+				groupAnim->setWidget(groupAnimContainer);
+			
+				addImageBorderShadowEditors(lay,item);
+				
+				groupAnim->setExpandedIfNoDefault(true);
+			}
 		}
 		else
 		if(GLImageHttpDrawable *item = dynamic_cast<GLImageHttpDrawable*>(gld))
@@ -933,6 +1025,21 @@ QWidget *EditorWindow::createPropertyEditors(GLDrawable *gld)
 			
 			opts.text = "Is a DViz Server";
 			lay->addRow(PropertyEditorFactory::generatePropertyEditor(item, "pollDviz", SLOT(setPollDviz(bool)), opts));
+			
+			{
+				ExpandableWidget *groupAnim = new ExpandableWidget("Border and Shadow",base);
+				blay->addWidget(groupAnim);
+			
+				QWidget *groupAnimContainer = new QWidget;
+				QFormLayout *lay = new QFormLayout(groupAnimContainer);
+				lay->setContentsMargins(3,3,3,3);
+			
+				groupAnim->setWidget(groupAnimContainer);
+			
+				addImageBorderShadowEditors(lay,item);
+				
+				groupAnim->setExpandedIfNoDefault(true);
+			}
 		}
 		else
 		if(GLRectDrawable *item = dynamic_cast<GLRectDrawable*>(gld))
@@ -949,19 +1056,34 @@ QWidget *EditorWindow::createPropertyEditors(GLDrawable *gld)
 			
 			lay->addRow(tr("Fill:"), fillColor);
 			
-			QHBoxLayout *hbox = new QHBoxLayout();
-			QDoubleSpinBox *box = new QDoubleSpinBox();
-			box->setSuffix(tr("px"));
-			box->setMinimum(0);
-			box->setDecimals(2);
-			box->setMaximum(50);
-			box->setValue(item->borderWidth());
-			//connect(m_textSizeBox, SIGNAL(returnPressed()), this, SLOT(textSizeChanged(double)));
-			connect(box, SIGNAL(valueChanged(double)), item, SLOT(setBorderWidth(double)));
-			hbox->addWidget(box);
-			hbox->addWidget(borderColor);
+// 			QHBoxLayout *hbox = new QHBoxLayout();
+// 			QDoubleSpinBox *box = new QDoubleSpinBox();
+// 			box->setSuffix(tr("px"));
+// 			box->setMinimum(0);
+// 			box->setDecimals(2);
+// 			box->setMaximum(50);
+// 			box->setValue(item->borderWidth());
+// 			//connect(m_textSizeBox, SIGNAL(returnPressed()), this, SLOT(textSizeChanged(double)));
+// 			connect(box, SIGNAL(valueChanged(double)), item, SLOT(setBorderWidth(double)));
+// 			hbox->addWidget(box);
+// 			hbox->addWidget(borderColor);
+// 			
+// 			lay->addRow(tr("Border:"), hbox);
+
+			{
+				ExpandableWidget *groupAnim = new ExpandableWidget("Border and Shadow",base);
+				blay->addWidget(groupAnim);
 			
-			lay->addRow(tr("Border:"), hbox);
+				QWidget *groupAnimContainer = new QWidget;
+				QFormLayout *lay = new QFormLayout(groupAnimContainer);
+				lay->setContentsMargins(3,3,3,3);
+			
+				groupAnim->setWidget(groupAnimContainer);
+			
+				addImageBorderShadowEditors(lay,item);
+				
+				groupAnim->setExpandedIfNoDefault(true);
+			}
 		}
 		else
 		if(GLSpinnerDrawable *item = dynamic_cast<GLSpinnerDrawable*>(gld))
@@ -1012,6 +1134,21 @@ QWidget *EditorWindow::createPropertyEditors(GLDrawable *gld)
 			
 			opts.text = "Ignore image aspect ratio";
 			lay->addRow(PropertyEditorFactory::generatePropertyEditor(item, "ignoreAspectRatio", SLOT(setIgnoreAspectRatio(bool)), opts));
+			
+			{
+				ExpandableWidget *groupAnim = new ExpandableWidget("Border and Shadow",base);
+				blay->addWidget(groupAnim);
+			
+				QWidget *groupAnimContainer = new QWidget;
+				QFormLayout *lay = new QFormLayout(groupAnimContainer);
+				lay->setContentsMargins(3,3,3,3);
+			
+				groupAnim->setWidget(groupAnimContainer);
+			
+				addImageBorderShadowEditors(lay,item);
+				
+				groupAnim->setExpandedIfNoDefault(true);
+			}
 		}
 		else
 		if(GLVideoMjpegDrawable *item = dynamic_cast<GLVideoMjpegDrawable*>(gld))
@@ -1025,36 +1162,35 @@ QWidget *EditorWindow::createPropertyEditors(GLDrawable *gld)
 		}
 	}
 	
-	
-	{
-		
-		ExpandableWidget *groupAnim = new ExpandableWidget("Show/Hide Effects",base);
-		blay->addWidget(groupAnim);
-	
-		QWidget *groupAnimContainer = new QWidget;
-		QGridLayout *animLayout = new QGridLayout(groupAnimContainer);
-		animLayout->setContentsMargins(3,3,3,3);
-	
-		groupAnim->setWidget(groupAnimContainer);
-	
-		opts.reset();
-		opts.suffix = " ms";
-		opts.min = 10;
-		opts.max = 8000;
-		opts.defaultValue = 300;
-	
-		int row = 0;
-		animLayout->addWidget(PropertyEditorFactory::generatePropertyEditor(gld, "fadeIn", SLOT(setFadeIn(bool)), opts), row, 0);
-		animLayout->addWidget(PropertyEditorFactory::generatePropertyEditor(gld, "fadeInLength", SLOT(setFadeInLength(int)), opts), row, 1);
-	
-		row++;
-		animLayout->addWidget(PropertyEditorFactory::generatePropertyEditor(gld, "fadeOut", SLOT(setFadeOut(bool)), opts), row, 0);
-		animLayout->addWidget(PropertyEditorFactory::generatePropertyEditor(gld, "fadeOutLength", SLOT(setFadeOutLength(int)), opts), row, 1);
-	
-		opts.reset();
-	
-		groupAnim->setExpandedIfNoDefault(false);
-	}
+// 	{
+// 		
+// 		ExpandableWidget *groupAnim = new ExpandableWidget("Show/Hide Effects",base);
+// 		blay->addWidget(groupAnim);
+// 	
+// 		QWidget *groupAnimContainer = new QWidget;
+// 		QGridLayout *animLayout = new QGridLayout(groupAnimContainer);
+// 		animLayout->setContentsMargins(3,3,3,3);
+// 	
+// 		groupAnim->setWidget(groupAnimContainer);
+// 	
+// 		opts.reset();
+// 		opts.suffix = " ms";
+// 		opts.min = 10;
+// 		opts.max = 8000;
+// 		opts.defaultValue = 300;
+// 	
+// 		int row = 0;
+// 		animLayout->addWidget(PropertyEditorFactory::generatePropertyEditor(gld, "fadeIn", SLOT(setFadeIn(bool)), opts), row, 0);
+// 		animLayout->addWidget(PropertyEditorFactory::generatePropertyEditor(gld, "fadeInLength", SLOT(setFadeInLength(int)), opts), row, 1);
+// 	
+// 		row++;
+// 		animLayout->addWidget(PropertyEditorFactory::generatePropertyEditor(gld, "fadeOut", SLOT(setFadeOut(bool)), opts), row, 0);
+// 		animLayout->addWidget(PropertyEditorFactory::generatePropertyEditor(gld, "fadeOutLength", SLOT(setFadeOutLength(int)), opts), row, 1);
+// 	
+// 		opts.reset();
+// 	
+// 		groupAnim->setExpandedIfNoDefault(false);
+// 	}
 	
 	return base;
 	

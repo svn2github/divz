@@ -4,7 +4,6 @@
 #include "GLImageDrawable.h"
 
 #include <QtNetwork>
-#include "../3rdparty/qjson/parser.h"
 
 class GLImageHttpDrawable : public GLImageDrawable
 {
@@ -58,7 +57,6 @@ private:
 	// for polling DViz
 	int m_slideId;
 	QString m_slideName;
-	QJson::Parser m_parser;
 	
 };
 

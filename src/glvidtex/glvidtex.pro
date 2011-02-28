@@ -98,9 +98,6 @@ SOURCES       = GLWidget.cpp \
 		BMDOutput.cpp \
 		RssParser.cpp \
 		GLImageHttpDrawable.cpp
-		 
-# Used in GLImageHttpDrawable
-include(../3rdparty/qjson/qjson.pri)
 	
 # MD5 is used for caching in GLImageDrawable
 include(../3rdparty/md5/md5.pri)
@@ -207,6 +204,8 @@ player | glvidtex: {
 	HEADERS += ../http/HttpServer.h ../http/SimpleTemplate.h
 	SOURCES += ../http/HttpServer.cpp ../http/SimpleTemplate.cpp
 	
+	include(../3rdparty/qjson/qjson.pri)
+
 	win32 {
 		CONFIG += console
 	}

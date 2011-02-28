@@ -14,6 +14,8 @@ GLImageHttpDrawable::GLImageHttpDrawable(QObject *parent)
 	
 	connect(&m_pollDvizTimer, SIGNAL(timeout()), this, SLOT(initDvizPoll()));
 	connect(&m_pollImageTimer, SIGNAL(timeout()), this, SLOT(initImagePoll()));
+	
+	setUpdateTime(m_updateTime);
 }
 
 void GLImageHttpDrawable::setUpdateTime(int ms)
@@ -45,20 +47,34 @@ void GLImageHttpDrawable::setUrl(const QString& url)
 void GLImageHttpDrawable::setPollDviz(bool flag)
 {
 	m_pollDviz = flag;
-	if(flag)
+	
+	if(!liveStatus())
 	{
-		m_pollDvizTimer.start();
-		m_pollImageTimer.stop();
+		// If not live, only do one poll
+		if(flag)
+			initDvizPoll();
+		else
+			initImagePoll();
 	}
 	else
 	{
-		m_pollDvizTimer.stop();
-		m_pollImageTimer.start();
+		if(flag)
+		{
+			m_pollDvizTimer.start();
+			m_pollImageTimer.stop();
+		}
+		else
+		{
+			m_pollDvizTimer.stop();
+			m_pollImageTimer.start();
+		}
 	}
 }
 
 void GLImageHttpDrawable::setLiveStatus(bool flag)
 {
+	GLVideoDrawable::setLiveStatus(flag);
+	
 	if(flag)
 	{
 		// start correct timers
@@ -79,7 +95,8 @@ void GLImageHttpDrawable::initDvizPoll()
 		.arg(parser.host())
 		.arg(parser.port())
 		.arg(m_slideId)
-		.arg(QString(QUrl::toPercentEncoding(m_slideName)));
+		//.arg(QString(QUrl::toPercentEncoding(m_slideName)));
+		.arg(m_slideName);
 
 	
 	m_isDataPoll = true;
@@ -96,7 +113,7 @@ void GLImageHttpDrawable::loadUrl(const QString &location)
 {
 	QUrl url(location);
 	
-	qDebug() << "GLImageHttpDrawable::loadUrl(): url:"<<url;
+	//qDebug() << "GLImageHttpDrawable::loadUrl(): url:"<<url;
 
 	QNetworkAccessManager *manager = new QNetworkAccessManager(this);
 	connect(manager, SIGNAL(finished(QNetworkReply*)),
@@ -113,19 +130,23 @@ void GLImageHttpDrawable::handleNetworkData(QNetworkReply *networkReply)
 		{
 			QByteArray ba = networkReply->readAll();
 			QString str = QString::fromUtf8(ba);
-			qDebug() << "GLImageHttpDrawable::handleNetworkData(): [DEBUG] Result:"<<str;
-			QVariantMap data = m_parser.parse(ba).toMap();
-			if(data["no_change"].toString() == "true")
+			//qDebug() << "GLImageHttpDrawable::handleNetworkData(): [DEBUG] Result:"<<str;
+			//QVariantMap data = m_parser.parse(ba).toMap();
+			if(str.indexOf("no_change") > -1) //data["no_change"].toString() == "true")
 			{
 				// do nothing
-				qDebug() << "GLImageHttpDrawable::handleNetworkData(): [DEBUG] No change, current slide:"<<m_slideName;
+				//qDebug() << "GLImageHttpDrawable::handleNetworkData(): [DEBUG] No change, current slide:"<<m_slideName;
 			}
 			else
 			{
-				m_slideId = data["slide_id"].toInt();
-				m_slideName = data["slide_name"].toString();
+				static QRegExp dataExtract("slide_id:(-?\\d+),slide_name:\"([^\"]+)\"",Qt::CaseInsensitive);
+				if(dataExtract.indexIn(str))
+				{
+					m_slideId   = dataExtract.cap(1).toInt();
+					m_slideName = dataExtract.cap(2);
+				}
 				
-				qDebug() << "GLImageHttpDrawable::handleNetworkData(): [DEBUG] Changed to slide:"<<m_slideName<<", polling image";
+				//qDebug() << "GLImageHttpDrawable::handleNetworkData(): [DEBUG] Changed to slide:"<<m_slideName<<", m_slideId:"<<m_slideId<<", polling image";
 				initImagePoll();
 			}
 			
@@ -139,7 +160,7 @@ void GLImageHttpDrawable::handleNetworkData(QNetworkReply *networkReply)
 			}
 			else
 			{
-				qDebug() << "GLImageHttpDrawable::handleNetworkData(): [DEBUG] Received image, size:"<<image.size();
+				//qDebug() << "GLImageHttpDrawable::handleNetworkData(): [DEBUG] Received image, size:"<<image.size();
 				setImage(image);
 			}
 		}
