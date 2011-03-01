@@ -18,6 +18,8 @@ GLTextDrawable::GLTextDrawable(QString text, QObject *parent)
 	, m_lockSetPlainText(false)
 	, m_lockSetText(false)
 {
+	m_borderWidth = 2.0;
+	
 	QDateTime now = QDateTime::currentDateTime();
 	m_targetTime = QDateTime(QDate(now.date().year()+1, 12, 25), QTime(0, 0));
 

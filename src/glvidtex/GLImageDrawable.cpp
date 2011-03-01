@@ -22,7 +22,7 @@ GLImageDrawable::GLImageDrawable(QString file, QObject *parent)
 	, m_borderWidth(0.0) // start off disabled
 	// Shadow attributes
 	, m_shadowEnabled(false)
-	, m_shadowBlurRadius(11.0)
+	, m_shadowBlurRadius(16.0)
 	, m_shadowOffset(3.0,3.0) 
 	, m_shadowColor(Qt::black)
 	, m_shadowOpacity(1.0)
@@ -561,7 +561,7 @@ QImage GLImageDrawable::applyBorderAndShadow(const QImage& sourceImg)
 	if(renderBorder() && m_borderWidth > 0.001)
 	{
 		double x = m_borderWidth * 2;
-		originalSizeWithBorder.rwidth() += x;
+		originalSizeWithBorder.rwidth()  += x;
 		originalSizeWithBorder.rheight() += x;
 		
 		if(!m_shadowEnabled)
@@ -577,10 +577,25 @@ QImage GLImageDrawable::applyBorderAndShadow(const QImage& sourceImg)
 	double radius = m_shadowBlurRadius;
 	
 	// create temporary pixmap to hold a copy of the text
-	QSizeF blurSize = ImageFilters::blurredSizeFor(originalSizeWithBorder, (int)radius);
-	blurSize.rwidth()  += fabs(m_shadowOffset.x()) + (renderBorder() ? m_borderWidth : 0);
-	blurSize.rheight() += fabs(m_shadowOffset.y()) + (renderBorder() ? m_borderWidth : 0);
-	//qDebug() << "Blur size:"<<blurSize<<", doc:"<<doc.size()<<", radius:"<<radius;
+	double radiusSpacing = radius;// / 1.75;// * 1.5;
+	//QSizeF blurSize = ImageFilters::blurredSizeFor(originalSizeWithBorder, (int)radius);
+	
+	//blurSize.rwidth()  += fabs(m_shadowOffset.x()) + radiusSpacing + (renderBorder() ? m_borderWidth : 0);
+	//blurSize.rheight() += fabs(m_shadowOffset.y()) + radiusSpacing + (renderBorder() ? m_borderWidth : 0);
+	double radius2 = radius * 2;
+	double offx = fabs(m_shadowOffset.x());
+	double offy = fabs(m_shadowOffset.y());
+	double newWidth  = originalSizeWithBorder.width() 
+			 + radius2 // blur on both sides
+			 + offx; //( offx > radius2 ? offx - radius2 : 0 );
+	
+	double newHeight = originalSizeWithBorder.height() 
+			 + radius2 // blur on both sides
+			 + offy; //( offy > radius2 ? offy - radius2 : 0 );
+			
+	QSizeF blurSize(newWidth,newHeight);
+	
+	//qDebug() << "Blur size:"<<blurSize<<", originalSizeWithBorder:"<<originalSizeWithBorder<<", radius:"<<radius<<", radius2:"<<radius2<<", m_shadowOffset:"<<m_shadowOffset<<", offx:"<<offx<<", offy:"<<offy;
 	QImage tmpImage(blurSize.toSize(),QImage::Format_ARGB32_Premultiplied);
 	memset(tmpImage.scanLine(0),0,tmpImage.byteCount());
 	
@@ -588,7 +603,6 @@ QImage GLImageDrawable::applyBorderAndShadow(const QImage& sourceImg)
 	QPainter tmpPainter(&tmpImage);
 	
 	tmpPainter.save();
-	double radiusSpacing = radius;// / 1.5;// * 1.5;
 	QPointF translate1(radiusSpacing + (m_shadowOffset.x() > 0 ? m_shadowOffset.x() : 0), 
 			   radiusSpacing + (m_shadowOffset.y() > 0 ? m_shadowOffset.y() : 0));
 	//qDebug() << "stage1: radiusSpacing:"<<radiusSpacing<<", m_shadowOffset:"<<m_shadowOffset<<", translate1:"<<translate1; 
@@ -608,7 +622,7 @@ QImage GLImageDrawable::applyBorderAndShadow(const QImage& sourceImg)
 	tmpPainter.setCompositionMode(QPainter::CompositionMode_SourceIn);
 	
 	QColor color = m_shadowColor;
-	// clamp m_shadowOpacity to 1.0 because we handle values >1.0 by repainting the blurred image over itself (m_shadowOpacity-1) times, with the last time being painted at opacity (m_shadowOpacity-int(m_shadowOpacity))
+	// clamp m_shadowOpacity to 1.0 because we handle values >1.0 by repainting the blurred image over itself (m_shadowOpacity-1) times.
 	color.setAlpha((int)(255.0 * (m_shadowOpacity > 1.0 ? 1.0 : m_shadowOpacity)));
 	tmpPainter.fillRect(rect, color);
 	
@@ -622,6 +636,10 @@ QImage GLImageDrawable::applyBorderAndShadow(const QImage& sourceImg)
 	if(m_shadowOpacity > 1.0)
 	{
 		int times = (int)(m_shadowOpacity - 1.0);
+		// Cap at 10 - an arbitrary cap just to prevent the user from taxing the CPU too much.
+		if(times > 10)
+			times = 10;
+			
 		double finalOpacity = m_shadowOpacity - ((int)m_shadowOpacity);
 		if(finalOpacity < 0.001)
 			finalOpacity = 1.0;
@@ -633,8 +651,7 @@ QImage GLImageDrawable::applyBorderAndShadow(const QImage& sourceImg)
 		//qDebug() << "Overpaint feature: times:"<<times<<", finalOpacity:"<<finalOpacity;
 		painter2.setOpacity(finalOpacity);
 		painter2.drawImage(0,0,copy);
-		if(finalOpacity < 1.0)
-			painter2.setOpacity(1.0);
+		painter2.setOpacity(1.0);
 	}
 	
 	painter2.save();

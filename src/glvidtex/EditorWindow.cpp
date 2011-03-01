@@ -726,7 +726,7 @@ void EditorWindow::addImageBorderShadowEditors(QFormLayout *lay, GLImageDrawable
 	QtColorPicker * shadowColor = new QtColorPicker;
 	shadowColor->setStandardColors();
 	shadowColor->setCurrentColor(item->shadowColor());
-	connect(borderColor, SIGNAL(colorChanged(const QColor &)), item, SLOT(setShadowColor(QColor)));
+	connect(shadowColor, SIGNAL(colorChanged(const QColor &)), item, SLOT(setShadowColor(QColor)));
 	
 	connect(checkbox, SIGNAL(toggled(bool)), shadowColor, SLOT(setEnabled(bool)));
 	shadowColor->setEnabled(item->isShadowEnabled());
