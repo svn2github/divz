@@ -4,13 +4,12 @@ VideoFrame::VideoFrame()
 {
 	m_holdTime = -1; 
 	m_captureTime = QTime(); 
-	m_isRaw=false; 
 	m_pixelFormat = QVideoFrame::Format_Invalid;
 	m_bufferType = BUFFER_INVALID;
-	m_refCount = 0;
 	m_pointer = 0;
 	m_pointerLength = 0;
 	m_debugPtr = false;
+	m_hasTextureId = false;
 	#ifdef DEBUG_VIDEOFRAME_POINTERS
 	qDebug() << "VideoFrame::VideoFrame(): constructor(1): "<<this;
 	#endif
@@ -21,11 +20,10 @@ VideoFrame::VideoFrame(int holdTime, const QTime &captureTime)
 	, m_captureTime(captureTime) 
 	, m_pixelFormat(QVideoFrame::Format_Invalid)
 	, m_bufferType(BUFFER_INVALID)
-	, m_isRaw(false)
-	, m_refCount(0)
 	, m_pointer(0)
 	, m_pointerLength(0)
 	, m_debugPtr(false)
+	, m_hasTextureId(false)
 {
 	#ifdef DEBUG_VIDEOFRAME_POINTERS
 	qDebug() << "VideoFrame::VideoFrame(): constructor(2): "<<this;
@@ -39,35 +37,16 @@ VideoFrame::VideoFrame(const QImage &frame, int holdTime, const QTime &captureTi
 	, m_pixelFormat(QVideoFrame::Format_Invalid)
 	, m_bufferType(BUFFER_IMAGE)
 	, m_image(frame)
-	, m_isRaw(false)
-	, m_refCount(0)
 	, m_pointer(0)
 	, m_pointerLength(0)
 	, m_debugPtr(false)
+	, m_hasTextureId(false)
 {
 	#ifdef DEBUG_VIDEOFRAME_POINTERS
 	qDebug() << "VideoFrame::VideoFrame(): constructor(3): "<<this;
 	#endif
 	
-	setSize(frame.size());
-	
-	QImage::Format format = m_image.format();
-	m_pixelFormat =
-		format == QImage::Format_ARGB32 ? QVideoFrame::Format_ARGB32 :
-		format == QImage::Format_RGB32  ? QVideoFrame::Format_RGB32  :
-		format == QImage::Format_RGB888 ? QVideoFrame::Format_RGB24  :
-		format == QImage::Format_RGB16  ? QVideoFrame::Format_RGB565 :
-		format == QImage::Format_RGB555 ? QVideoFrame::Format_RGB555 :
-		//format == QImage::Format_ARGB32_Premultiplied ? QVideoFrame::Format_ARGB32_Premultiplied :
-		// GLVideoDrawable doesn't support premultiplied - so the format conversion below will convert it to ARGB32 automatically
-		m_pixelFormat;
-		
-	if(m_pixelFormat == QVideoFrame::Format_Invalid)
-	{
-		//qDebug() << "VideoFrame: image was not in an acceptable format, converting to ARGB32 automatically.";
-		m_image = m_image.convertToFormat(QImage::Format_ARGB32);
-		m_pixelFormat = QVideoFrame::Format_ARGB32;
-	}
+	setImage(frame);
 }
 
 VideoFrame::VideoFrame(VideoFrame *other)
@@ -76,11 +55,11 @@ VideoFrame::VideoFrame(VideoFrame *other)
 	, m_pixelFormat(other->m_pixelFormat)
 	, m_bufferType(other->m_bufferType)
 	, m_image(other->m_image)
-	, m_isRaw(other->m_isRaw)
-	, m_refCount(0)
 	, m_pointer(other->m_pointer)
 	, m_pointerLength(other->m_pointerLength)
 	, m_debugPtr(false)
+	, m_hasTextureId(other->m_hasTextureId)
+	, m_textureId(other->m_textureId)
 
 {
 	#ifdef DEBUG_VIDEOFRAME_POINTERS
@@ -105,31 +84,6 @@ VideoFrame::~VideoFrame()
 	}
 }
 	
-void VideoFrame::incRef()
-{
-	QMutexLocker lock(&m_refMutex);
-	m_refCount++;
-	#ifdef DEBUG_VIDEOFRAME_POINTERS
-	qDebug() << "VideoFrame::incRef(): "<<this<<": m_refCount:"<<m_refCount;
-	#endif 	
-}
-
-bool VideoFrame::release()
-{
-	QMutexLocker lock(&m_refMutex);
-	m_refCount --;
-	#ifdef DEBUG_VIDEOFRAME_POINTERS
-	qDebug() << "VideoFrame::release(): "<<this<<": m_refCount:"<<m_refCount;
-	#endif
-// 	if(m_refCount <= 0)
-// 		//deleteLater();
-// 		return true;
-	/// NB Now all pointers should be VideoFramePtr, which is a typedef for QSharedPointer<T> which will
-	/// automatically delete the VideoFrame when the pointer goes out of scope if no other QSharedPointers
-	/// are referencing the frame.
-	/// Therefore, return false for now until I can remove all the 'if(release()) delete' blocks to prevent deleting.
- 	return false;
-}
 
 uchar *VideoFrame::allocPointer(int bytes)
 {
@@ -140,6 +94,7 @@ uchar *VideoFrame::allocPointer(int bytes)
 	if(m_debugPtr)
 		qDebug() << "VideoFrame::allocPointer(): "<<this<<" allocated m_pointer:"<<m_pointer<<", bytes:"<<bytes;
 	m_pointerLength = bytes;
+	m_bufferType = BUFFER_POINTER;
 	return m_pointer;
 }
 
@@ -188,14 +143,32 @@ void VideoFrame::setBufferType(BufferType type)
 
 void VideoFrame::setImage(QImage image)
 {
-	m_image = image;//.copy();
+	QImage::Format format = m_image.format();
+	m_pixelFormat =
+		format == QImage::Format_ARGB32 ? QVideoFrame::Format_ARGB32 :
+		format == QImage::Format_RGB32  ? QVideoFrame::Format_RGB32  :
+		format == QImage::Format_RGB888 ? QVideoFrame::Format_RGB24  :
+		format == QImage::Format_RGB16  ? QVideoFrame::Format_RGB565 :
+		format == QImage::Format_RGB555 ? QVideoFrame::Format_RGB555 :
+		//format == QImage::Format_ARGB32_Premultiplied ? QVideoFrame::Format_ARGB32_Premultiplied :
+		// GLVideoDrawable doesn't support premultiplied - so the format conversion below will convert it to ARGB32 automatically
+		m_pixelFormat;
+		
+	if(m_pixelFormat == QVideoFrame::Format_Invalid)
+	{
+		//qDebug() << "VideoFrame: image was not in an acceptable format, converting to ARGB32 automatically.";
+		m_image = m_image.convertToFormat(QImage::Format_ARGB32);
+		m_pixelFormat = QVideoFrame::Format_ARGB32;
+	}
+	else
+	{
+		m_image = image;//.copy();
+	}
+	
+	setSize(image.size());
+	m_bufferType = BUFFER_IMAGE;
 }
 
-void VideoFrame::setIsRaw(bool flag)
-{
-	m_isRaw = flag;
-}
-	
 void VideoFrame::setSize(QSize newSize)
 {
 	m_size = newSize;
@@ -204,13 +177,56 @@ void VideoFrame::setSize(QSize newSize)
 
 void VideoFrame::setRect(QRect rect)
 {
+	m_rect = rect;
 	setSize(rect.size());
 }
 
 void VideoFrame::setPointer(uchar *dat, int len)
 {
-	m_isRaw = true;
 	m_bufferType = BUFFER_POINTER;
 	m_pointer = dat;
 	m_pointerLength = len;
 }
+
+void VideoFrame::setTextureId(GLuint id)
+{
+	QMutexLocker lock(&m_textureIdMutex);
+	m_hasTextureId = true;
+	m_textureId = id;
+}
+
+QImage VideoFrame::toImage(bool detachImage)
+{
+	if(!isRaw())
+		return image();
+		
+	if(!isValid())
+		return QImage();
+			
+	const QImage::Format imageFormat = QVideoFrame::imageFormatFromPixelFormat(pixelFormat());
+	if(imageFormat != QImage::Format_Invalid)
+	{
+		m_image = QImage( pointer(),
+				  size().width(),
+				  size().height(),
+				  size().width() *
+					(imageFormat == QImage::Format_RGB16  ||
+					 imageFormat == QImage::Format_RGB555 ||
+					 imageFormat == QImage::Format_RGB444 ||
+					 imageFormat == QImage::Format_ARGB4444_Premultiplied ? 2 :
+					 imageFormat == QImage::Format_RGB888 ||
+					 imageFormat == QImage::Format_RGB666 ||
+					 imageFormat == QImage::Format_ARGB6666_Premultiplied ? 3 :
+					 4),
+				  imageFormat);
+		
+		return detachImage ? m_image.copy() : m_image;
+	}
+	else
+	{
+		qDebug() << "VideoFrame::toImage: Unable to convert pixel format to image format, cannot convert frame. Pixel Format:"<<pixelFormat();
+	}
+	
+	return QImage();
+}
+

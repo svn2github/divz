@@ -907,7 +907,6 @@ void CameraThread::rawDataAvailable(uchar *bytes, int size, QSize pxSize, QTime 
 	//frame->setPixelFormat(QVideoFrame::Format_RGB32);
 	frame->setPixelFormat(QVideoFrame::Format_UYVY);
 	frame->setCaptureTime(capTime);
-	frame->setIsRaw(true);
 	frame->setBufferType(VideoFrame::BUFFER_POINTER);
 	frame->setHoldTime(1000/30);
 	frame->setSize(pxSize);
@@ -928,7 +927,6 @@ void CameraThread::rawDataAvailable(uchar *bytes, int size, QSize pxSize, QTime 
 // 		deinterlacedFrame->setCaptureTime ( frame->captureTime() );
 // 		deinterlacedFrame->setHoldTime    ( frame->holdTime()    );
 // 		deinterlacedFrame->setSize	  ( frame->size()    );
-// 		deinterlacedFrame->setIsRaw(true);
 // 		deinterlacedFrame->setBufferType(VideoFrame::BUFFER_POINTER);
 // 		
 // 			// give us a new array, dont mudge the original image
@@ -986,7 +984,6 @@ void CameraThread::readFrame()
 				deinterlacedFrame->setCaptureTime ( frame->captureTime() );
  				deinterlacedFrame->setHoldTime    ( frame->holdTime()    );
  				deinterlacedFrame->setSize	  ( frame->size()    );
- 				deinterlacedFrame->setIsRaw(true);
  				deinterlacedFrame->setBufferType(VideoFrame::BUFFER_POINTER);
 				
 				 // give us a new array, dont mudge the original image

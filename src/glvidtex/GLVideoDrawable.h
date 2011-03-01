@@ -415,7 +415,23 @@ private:
 	
 	CrossFadeMode m_crossFadeMode;
 	
+	// If setVideoSource() receives a CameraThread(), then this is called to hold an election among all the GLVideoDrawables
+	// on the GLWidget with a CameraThread source. The video drawable with the highest avg FPS is elected the
+	// updateLeader and will be the only drawable with a camerathread that calls updateGL() on frameReady() - all other 
+	// drawables with camera threads will NOT call updateGL() in frameReady() unless they are elected updateLeader() later.
+	void electUpdateLeader();
+	
+	// True if m_source is a CameraThread
 	bool m_isCameraThread;
+	// If this is a camera thread, elections among all the CameraThread-sourced-GLVideoDrawables in the GLWidget's drawable list
+	// are held (in electUpdateLeader()) to find the one with the highest avg FPS. Elections are held by the update leader every
+	// 100 frames, or when setVideoSource() receives a CameraThread. 
+	GLVideoDrawable *m_updateLeader;
+	// true if need election. 
+	// Also, calls to setVideoSource() prior to setGLWidget() will set this true - then setGLWidget() will trigger election.
+	bool m_electionNeeded;
+	// Store avg FPS for use in election.
+	double m_avgFps;
 	
 	bool m_liveStatus;
 	

@@ -19,6 +19,22 @@ void QAutoDelPropertyAnimation::resetProperty()
 	targetObject()->setProperty(propertyName().constData(), m_originalPropValue);
 }
 
+QAbsoluteTimeAnimation::QAbsoluteTimeAnimation(QObject * target, const QByteArray & propertyName, QObject * parent)
+	: QAutoDelPropertyAnimation(target,propertyName,parent)
+{
+}
+
+void QAbsoluteTimeAnimation::updateTime()
+{
+	if(state() == QAbstractAnimation::Running)
+		setCurrentTime(m_timeElapsed.elapsed());
+}
+
+void QAbsoluteTimeAnimation::start(QAbstractAnimation::DeletionPolicy policy)
+{
+	QAutoDelPropertyAnimation::start(policy);
+	m_timeElapsed.restart();
+}
 
 // class GLDrawable
 GLDrawable::GLDrawable(QObject *parent)
@@ -49,6 +65,7 @@ GLDrawable::GLDrawable(QObject *parent)
 	, m_fadeOutLength(300)
 	, m_playlist(0)
 	, m_scene(0)
+	, m_updatesLocked(false)
 {
 	// QGraphicsItem
 	{
@@ -173,8 +190,44 @@ void GLDrawable::propertyWasChanged(const QString& propName, const QVariant& val
 	emit propertyChanged(propName,value);
 }
 
+void GLDrawable::registerAbsoluteTimeAnimation(QAbsoluteTimeAnimation *ani)
+{
+	if(!m_absoluteTimeAnimations.contains(ani))
+	{
+		connect(ani, SIGNAL(finished()), this, SLOT(absoluteTimeAnimationFinished()));
+		connect(ani, SIGNAL(destroyed()), this, SLOT(absoluteTimeAnimationFinished()));
+		m_absoluteTimeAnimations << QAbsoluteTimeAnimationPtr(ani);
+	}
+}
+
+void GLDrawable::absoluteTimeAnimationFinished()
+{
+// 	QAbsoluteTimeAnimation *ani = dynamic_cast<QAbsoluteTimeAnimation*>(sender());
+// 	if(ani)
+// 		m_absoluteTimeAnimations.removeAll(ani);
+}
+
+void GLDrawable::updateAbsoluteTimeAnimations()
+{
+	foreach(QAbsoluteTimeAnimationPtr ani, m_absoluteTimeAnimations)
+		if(ani)
+			ani->updateTime();
+		else
+			m_absoluteTimeAnimations.removeAll(ani);
+}
+
+bool GLDrawable::lockUpdates(bool flag)
+{
+	bool oldValue   = m_updatesLocked;
+	m_updatesLocked = flag;
+	return oldValue;
+}
+
 void GLDrawable::updateGL(bool now)
 {
+	if(m_updatesLocked)
+		return;
+		
 	if(m_glw)
 		m_glw->updateGL(now);
 	if(scene())
@@ -243,7 +296,7 @@ void GLDrawable::forceStopAnimations()
 {
 	if(!m_animFinished)
 	{
-		foreach(QAutoDelPropertyAnimation *ani, m_runningAnimations)
+		foreach(QAbsoluteTimeAnimation *ani, m_runningAnimations)
 		{
 			ani->stop();
 			//qDebug() << (QObject*)this<<"GLDrawable::setVisible while anim running, resetting property on "<<ani->propertyName().constData();
@@ -361,7 +414,7 @@ void GLDrawable::startAnimation(const GLDrawable::AnimParam& p)
 	QSizeF viewport = canvasSize();
 	bool inFlag = m_animDirection;
 
-	QAutoDelPropertyAnimation *ani = 0;
+	QAbsoluteTimeAnimation *ani = 0;
 
 	switch(p.type)
 	{
@@ -371,7 +424,7 @@ void GLDrawable::startAnimation(const GLDrawable::AnimParam& p)
 // 			else
 				m_originalOpacity = opacity();
 			//qDebug() << "GLDrawable::startAnimation(): m_originalOpacity:"<<m_originalOpacity;
-			ani = new QAutoDelPropertyAnimation(this, "opacity");
+			ani = new QAbsoluteTimeAnimation(this, "opacity");
 			ani->setStartValue(inFlag ? 0.0 : opacity());
 			ani->setEndValue(inFlag ?   opacity() : 0.0);
 			break;
@@ -428,13 +481,15 @@ void GLDrawable::startAnimation(const GLDrawable::AnimParam& p)
 		//qDebug() << "GLDrawable::startAnimation(): "<<this<<": added animation:"<<ani;
 
 		m_runningAnimations << ani;
+		
+		registerAbsoluteTimeAnimation(ani);
 	}
 }
 
 
-QAutoDelPropertyAnimation * GLDrawable::setupRectAnimation(const QRectF& otherRect, bool inFlag)
+QAbsoluteTimeAnimation * GLDrawable::setupRectAnimation(const QRectF& otherRect, bool inFlag)
 {
-	QAutoDelPropertyAnimation *ani = new QAutoDelPropertyAnimation(this, "rect");
+	QAbsoluteTimeAnimation *ani = new QAbsoluteTimeAnimation(this, "rect");
 
 	m_originalRect = m_rect; // will be restored when anim done
 
@@ -447,7 +502,7 @@ QAutoDelPropertyAnimation * GLDrawable::setupRectAnimation(const QRectF& otherRe
 
 void GLDrawable::animationFinished()
 {
-	QAutoDelPropertyAnimation *ani = dynamic_cast<QAutoDelPropertyAnimation*>(sender());
+	QAbsoluteTimeAnimation *ani = dynamic_cast<QAbsoluteTimeAnimation*>(sender());
 	//qDebug() << "GLDrawable::animationFinished(): "<<this<<": animation finished:"<<ani;
 	if(ani)
 	{
@@ -462,7 +517,7 @@ void GLDrawable::animationFinished()
 			m_animFinished = true;
 			updateGL();
 
-			foreach(QAutoDelPropertyAnimation *ani, m_finishedAnimations)
+			foreach(QAbsoluteTimeAnimation *ani, m_finishedAnimations)
 			{
 				ani->resetProperty();
 				//ani->deleteLater();
@@ -486,7 +541,7 @@ void GLDrawable::animationFinished()
 	else
 	{
 		m_runningAnimations.clear();
-		foreach(QAutoDelPropertyAnimation *ani, m_finishedAnimations)
+		foreach(QAbsoluteTimeAnimation *ani, m_finishedAnimations)
 		{
 			ani->resetProperty();
 			//ani->deleteLater();
@@ -1010,8 +1065,8 @@ void GLDrawable::loadPropsFromMap(const QVariantMap& map, bool onlyApplyIfChange
 					//m_props[name] = value;
 				}
 			}
-			else
-				qDebug() << "GLDrawable::loadPropsFromMap: Unable to load property for "<<name<<", got invalid property from map";
+// 			else
+// 				qDebug() << "GLDrawable::loadPropsFromMap: Unable to load property for "<<name<<", got invalid property from map";
 		}
 	}
 

@@ -439,7 +439,7 @@ void GLTextDrawable::scrollerTick(bool insidePaint)
 	m_scrollFrameTime.start();
 	
 	// dont waste time on (relativly) small increments
-	if(realInc < 2.0)
+	if(realInc < 1.0)
 		return;
 		
 	//if(fractionOfFrame < 0.5)

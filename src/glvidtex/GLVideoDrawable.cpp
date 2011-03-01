@@ -102,6 +102,9 @@ GLVideoDrawable::GLVideoDrawable(QObject *parent)
 	, m_ignoreAspectRatio(false)
 	, m_crossFadeMode(JustFront)
 	, m_isCameraThread(false)
+	, m_updateLeader(0)
+	, m_electionNeeded(false)
+	, m_avgFps(30)
 	, m_liveStatus(false)
 	, m_textureUpdateNeeded(false)
 {
@@ -240,7 +243,6 @@ void GLVideoDrawable::setVideoSource(VideoSource *source)
 			#ifdef DEBUG_VIDEOFRAME_POINTERS
 			qDebug() << "GLVideoDrawable::setVideoSource(): Copied m_frame:"<<m_frame<<"to m_frame2:"<<m_frame2<<", calling incRef() on m_frame2";
 			#endif
-			m_frame2->incRef();
 			updateTexture(true);
 
 			xfadeStart(invertFadeStart);
@@ -254,6 +256,9 @@ void GLVideoDrawable::setVideoSource(VideoSource *source)
 		
 		// If m_isCameraThread, then we tell GLWidget to updateGL *now* instead of using a 0-length timer to batch updateGL() calls into a single call
 		m_isCameraThread = (NULL != dynamic_cast<CameraThread*>(source));
+		
+		if(m_isCameraThread)
+			electUpdateLeader();
 
 		connect(m_source, SIGNAL(frameReady()), this, SLOT(frameReady()));
 		connect(m_source, SIGNAL(destroyed()),  this, SLOT(disconnectVideoSource()));
@@ -404,7 +409,15 @@ void GLVideoDrawable::frameReady()
 	updateTexture();
 
 	if(m_rateLimitFps <= 0.0)
-		updateGL(m_isCameraThread);
+	{
+		if(m_isCameraThread && 
+		   m_updateLeader == this)
+			updateGL(true);
+		else
+		if(!m_isCameraThread)	
+			updateGL();
+		//updateGL(m_isCameraThread);
+	}
 	//else
 	//	qDebug() << "GLVideoDrawable::frameReady(): "<<(QObject*)this<<" rate limited, waiting on timer";
 
@@ -414,6 +427,70 @@ void GLVideoDrawable::frameReady()
 		m_visiblePendingFrame = false;
 		GLDrawable::setVisible(m_tempVisibleValue);
 	}
+}
+
+void GLVideoDrawable::electUpdateLeader()
+{
+	if(!m_isCameraThread)
+	{
+		//qDebug() << "GLVideoDrawable::electUpdateLeader(): "<<(QObject*)this<<" No camera thread, no update leader needed.";
+		m_updateLeader = NULL;
+		return;
+	} 
+	
+	if(!m_glw)
+	{
+		qDebug() << "GLVideoDrawable::electUpdateLeader(): "<<(QObject*)this<<" No GLWidget set yet, temporarily setting self as update leader and requesting election.";
+		m_electionNeeded = true;
+		m_updateLeader = this;
+		return;
+	}
+	
+	QList<GLDrawable*> list = m_glw->drawables();
+	GLVideoDrawable *newLead = 0;
+	GLVideoDrawable *firstCameraFound = 0;	
+	int maxFps = 0;
+	foreach(GLDrawable *gld, list)
+	{
+		if(GLVideoDrawable *vid = dynamic_cast<GLVideoDrawable*>(gld))
+		{
+			if(vid->m_isCameraThread)
+			{
+				firstCameraFound = vid;
+				if(((int)vid->m_avgFps) > maxFps)
+				{
+					newLead = vid;
+					maxFps = (int)vid->m_avgFps;
+				}
+			}
+		}
+	}
+	
+	if(!newLead)
+		newLead = firstCameraFound;
+	
+	if(newLead == m_updateLeader)
+	{
+		//qDebug() << "GLVideoDrawable::electUpdateLeader(): "<<(QObject*)this<<" Update leader not changed.";
+	}
+	else
+	{
+		qDebug() << "GLVideoDrawable::electUpdateLeader(): "<<(QObject*)this<<" New update leader:"<<(QObject*)newLead;
+		if(m_updateLeader)
+			qDebug() << "GLVideoDrawable::electUpdateLeader(): "<<(QObject*)this<<" Old leader:"<<(QObject*)m_updateLeader;
+	}
+	
+	foreach(GLDrawable *gld, list)
+	{
+		if(GLVideoDrawable *vid = dynamic_cast<GLVideoDrawable*>(gld))
+		{
+			if(vid->m_isCameraThread)
+				vid->m_updateLeader = newLead;
+			else
+				vid->m_updateLeader = NULL;
+		}
+	}
+	
 }
 
 void GLVideoDrawable::frameReady2()
@@ -428,6 +505,8 @@ void GLVideoDrawable::frameReady2()
 	}
 
 	updateTexture(true);
+	
+	updateGL();
 }
 
 void GLVideoDrawable::setAlphaMask(const QImage &mask)
@@ -876,6 +955,12 @@ void GLVideoDrawable::setGLWidget(GLWidget* widget)
 		{
 			updateTexture();
 			m_textureUpdateNeeded = false;
+		}
+		
+		if(m_electionNeeded)
+		{
+			electUpdateLeader();
+			m_electionNeeded = false;
 		}
 	}
 	else
@@ -2079,8 +2164,10 @@ void GLVideoDrawable::paint(QPainter * painter, const QStyleOptionGraphicsItem *
 
 	if (!(m_frameCount % 100))
 	{
+		m_avgFps = m_frameCount /(m_time.elapsed() / 1000.0);
+		
 		QString framesPerSecond;
-		framesPerSecond.setNum(m_frameCount /(m_time.elapsed() / 1000.0), 'f', 2);
+		framesPerSecond.setNum(m_avgFps, 'f', 2);
 
 		QString latencyPerFrame;
 		latencyPerFrame.setNum((((double)m_latencyAccum) / ((double)m_frameCount)), 'f', 3);
@@ -2093,6 +2180,7 @@ void GLVideoDrawable::paint(QPainter * painter, const QStyleOptionGraphicsItem *
 		m_latencyAccum = 0;
 
 		//lastFrameTime = time.elapsed();
+		electUpdateLeader();
 	}
 
 	m_frameCount ++;
@@ -2109,6 +2197,18 @@ void GLVideoDrawable::aboutToPaint()
 
 void GLVideoDrawable::updateAnimations(bool insidePaint)
 {
+	// Because the QAbsoluteTimeAnimations could potentially call another updateGL()
+	// we lock calls to updateGL() via lockUpdates() prior to updating the anim times
+	// only if we're insidePaint though. 
+	bool lock = false;
+	if(insidePaint)
+		lock = lockUpdates(true);
+	
+	updateAbsoluteTimeAnimations();
+	
+	if(insidePaint)
+		lockUpdates(lock);
+	
 	// Call the fade update function directly for both
 	// our local crossfade and the scene crossfade
 	if(m_fadeActive)
@@ -2694,8 +2794,10 @@ void GLVideoDrawable::paintGL()
 
 	if (!(m_frameCount % 100))
 	{
+		m_avgFps = m_frameCount /(m_time.elapsed() / 1000.0);
+		
 		QString framesPerSecond;
-		framesPerSecond.setNum(m_frameCount /(m_time.elapsed() / 1000.0), 'f', 2);
+		framesPerSecond.setNum(m_avgFps, 'f', 2);
 
 		QString latencyPerFrame;
 		latencyPerFrame.setNum((((double)m_latencyAccum) / ((double)m_frameCount)), 'f', 3);
@@ -2745,6 +2847,8 @@ void GLVideoDrawable::paintGL()
 		m_time.start();
 		m_frameCount = 0;
 		m_latencyAccum = 0;
+		
+		electUpdateLeader();
 
 		//lastFrameTime = time.elapsed();
 	}

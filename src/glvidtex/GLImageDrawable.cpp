@@ -104,7 +104,6 @@ void GLImageDrawable::setImage(const QImage& image, bool insidePaint)
 		m_frame = VideoFramePtr(new VideoFrame());
 		//m_frame->setPixelFormat(QVideoFrame::Format_RGB32);
 		//m_frame->setCaptureTime(QTime::currentTime());
-		m_frame->setIsRaw(true);
 		m_frame->setBufferType(VideoFrame::BUFFER_POINTER);
 		m_frame->setHoldTime(1000/30);
 		m_frame->setSize(localImage.size());
@@ -578,20 +577,16 @@ QImage GLImageDrawable::applyBorderAndShadow(const QImage& sourceImg)
 	
 	// create temporary pixmap to hold a copy of the text
 	double radiusSpacing = radius;// / 1.75;// * 1.5;
-	//QSizeF blurSize = ImageFilters::blurredSizeFor(originalSizeWithBorder, (int)radius);
-	
-	//blurSize.rwidth()  += fabs(m_shadowOffset.x()) + radiusSpacing + (renderBorder() ? m_borderWidth : 0);
-	//blurSize.rheight() += fabs(m_shadowOffset.y()) + radiusSpacing + (renderBorder() ? m_borderWidth : 0);
 	double radius2 = radius * 2;
 	double offx = fabs(m_shadowOffset.x());
 	double offy = fabs(m_shadowOffset.y());
 	double newWidth  = originalSizeWithBorder.width() 
 			 + radius2 // blur on both sides
-			 + offx; //( offx > radius2 ? offx - radius2 : 0 );
+			 + offx;
 	
 	double newHeight = originalSizeWithBorder.height() 
 			 + radius2 // blur on both sides
-			 + offy; //( offy > radius2 ? offy - radius2 : 0 );
+			 + offy;
 			
 	QSizeF blurSize(newWidth,newHeight);
 	

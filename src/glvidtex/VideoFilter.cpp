@@ -115,43 +115,44 @@ void VideoFilter::run()
 
 QImage VideoFilter::frameImage()
 {
-	//qDebug() << "VideoSender::frameReady: Downscaling video for transmission to "<<m_transmitSize;
-	// To scale the video frame, first we must convert it to a QImage if its not already an image.
-	// If we're lucky, it already is. Otherwise, we have to jump thru hoops to convert the byte 
-	// array to a QImage then scale it.
-	QImage image;
-	if(!m_frame->image().isNull())
-	{
-		image = m_frame->image();
-	}
-	else
-	{
-		const QImage::Format imageFormat = QVideoFrame::imageFormatFromPixelFormat(m_frame->pixelFormat());
-		if(imageFormat != QImage::Format_Invalid)
-		{
-			image = QImage(m_frame->pointer(),
-				m_frame->size().width(),
-				m_frame->size().height(),
-				m_frame->size().width() *
-					(imageFormat == QImage::Format_RGB16  ||
-					imageFormat == QImage::Format_RGB555 ||
-					imageFormat == QImage::Format_RGB444 ||
-					imageFormat == QImage::Format_ARGB4444_Premultiplied ? 2 :
-					imageFormat == QImage::Format_RGB888 ||
-					imageFormat == QImage::Format_RGB666 ||
-					imageFormat == QImage::Format_ARGB6666_Premultiplied ? 3 :
-					4),
-				imageFormat);
-				
-			image = image.copy();
-			//qDebug() << "Downscaled image from "<<image.byteCount()<<"bytes to "<<scaledImage.byteCount()<<"bytes, orig ptr len:"<<m_frame->pointerLength()<<", orig ptr:"<<m_frame->pointer();
-		}
-		else
-		{
-			qDebug() << "VideoFilter::frameImage: Unable to convert pixel format to image format, cannot scale frame. Pixel Format:"<<m_frame->pixelFormat();
-		}
-	}
-	
-	return image;
+	return m_frame->toImage();
+// 	//qDebug() << "VideoSender::frameReady: Downscaling video for transmission to "<<m_transmitSize;
+// 	// To scale the video frame, first we must convert it to a QImage if its not already an image.
+// 	// If we're lucky, it already is. Otherwise, we have to jump thru hoops to convert the byte 
+// 	// array to a QImage then scale it.
+// 	QImage image;
+// 	if(!m_frame->image().isNull())
+// 	{
+// 		image = m_frame->image();
+// 	}
+// 	else
+// 	{
+// 		const QImage::Format imageFormat = QVideoFrame::imageFormatFromPixelFormat(m_frame->pixelFormat());
+// 		if(imageFormat != QImage::Format_Invalid)
+// 		{
+// 			image = QImage(m_frame->pointer(),
+// 				m_frame->size().width(),
+// 				m_frame->size().height(),
+// 				m_frame->size().width() *
+// 					(imageFormat == QImage::Format_RGB16  ||
+// 					imageFormat == QImage::Format_RGB555 ||
+// 					imageFormat == QImage::Format_RGB444 ||
+// 					imageFormat == QImage::Format_ARGB4444_Premultiplied ? 2 :
+// 					imageFormat == QImage::Format_RGB888 ||
+// 					imageFormat == QImage::Format_RGB666 ||
+// 					imageFormat == QImage::Format_ARGB6666_Premultiplied ? 3 :
+// 					4),
+// 				imageFormat);
+// 				
+// 			image = image.copy();
+// 			//qDebug() << "Downscaled image from "<<image.byteCount()<<"bytes to "<<scaledImage.byteCount()<<"bytes, orig ptr len:"<<m_frame->pointerLength()<<", orig ptr:"<<m_frame->pointer();
+// 		}
+// 		else
+// 		{
+// 			qDebug() << "VideoFilter::frameImage: Unable to convert pixel format to image format, cannot scale frame. Pixel Format:"<<m_frame->pixelFormat();
+// 		}
+// 	}
+// 	
+// 	return image;
 	
 }

@@ -89,7 +89,6 @@ VideoFrame *SimpleV4L2::readFrame()
 	VideoFrame *frame = new VideoFrame();
 	frame->setPixelFormat(QVideoFrame::Format_RGB32);
 	frame->setCaptureTime(QTime::currentTime());
-	frame->setIsRaw(true);
 	frame->setBufferType(VideoFrame::BUFFER_POINTER);
 	frame->setHoldTime(1000/30);
 	frame->setSize(m_imageSize);

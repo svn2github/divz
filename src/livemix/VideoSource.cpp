@@ -86,14 +86,6 @@ VideoFramePtr VideoSource::frame()
 		qDebug() << "VideoSource::frame(): Testing validity of m_singleFrame:"<<m_singleFrame;
 		#endif
 		
-		if(m_singleFrame)
-		{
-			#ifdef DEBUG_VIDEOFRAME_POINTERS
-			qDebug() << "VideoSource::frame(): Calling incRef() on m_singleFrame:"<<m_singleFrame;
-			#endif
-			
-			m_singleFrame->incRef();
-		}
 		#ifdef DEBUG_VIDEOFRAME_POINTERS
 		qDebug() << "VideoSource::frame(): Returning m_singleFrame:"<<m_singleFrame;
 		#endif
@@ -102,12 +94,6 @@ VideoFramePtr VideoSource::frame()
 	}
 	//qDebug() << "VideoSource::frame(): Queue size: "<<m_frameQueue.size();
 	VideoFramePtr frame = m_frameQueue.dequeue();
-	if(frame)
-	{
-		/// NB: Don't need to incRef here because we called incRef() when adding to the queue
-		//qDebug() << "VideoSource::frame(): Calling incRef() on frame from queue:"<<frame;
-		//frame->incRef();
-	}
 	#ifdef DEBUG_VIDEOFRAME_POINTERS
 	qDebug() << "VideoSource::frame(): Returning frame from queue:"<<frame;
 	#endif

@@ -29,9 +29,24 @@ public:
 public slots:
 	void resetProperty();
 
-private:
+protected:
 	QVariant m_originalPropValue;
 };
+
+class QAbsoluteTimeAnimation : public QAutoDelPropertyAnimation
+{
+	Q_OBJECT
+public:
+	QAbsoluteTimeAnimation(QObject * target, const QByteArray & propertyName, QObject * parent = 0);
+	
+public slots:
+	void updateTime();
+	void start(QAbstractAnimation::DeletionPolicy policy = QAbstractAnimation::KeepWhenStopped);
+	
+protected:
+	QTime m_timeElapsed;
+};
+typedef QPointer<QAbsoluteTimeAnimation> QAbsoluteTimeAnimationPtr;
 
 class GLDrawablePlaylist;
 class GLDrawable : public QObject,
@@ -179,9 +194,16 @@ public:
 	  
 	QSizeF size() { return rect().size(); }
 	QPointF position() { return rect().topLeft(); }
-
+	
+	void registerAbsoluteTimeAnimation(QAbsoluteTimeAnimation*);
+	//QList<QAbsoluteTimeAnimation*> absoluteTimeAnimations() { return m_absoluteTimeAnimations; }
+	
+	bool updatesLocked() { return m_updatesLocked; }
+	
 public slots:
+	bool lockUpdates(bool flag);
 	void updateGL(bool now=false);
+	void updateAbsoluteTimeAnimations();
 	
 	void setItemName(const QString&);
 	void setUserControllable(bool);
@@ -246,6 +268,8 @@ protected slots:
 	
 	virtual void animationFinished();
 	
+	virtual void absoluteTimeAnimationFinished();
+	
 	// remove it from m_propAnims
 	void propAnimFinished();
 	
@@ -296,9 +320,11 @@ protected:
 	GLWidget 	   *m_glw;
 	QList<CornerItem *> m_cornerItems;
 	bool                m_controlsVisible;
+	
+	QList<QAbsoluteTimeAnimationPtr> m_absoluteTimeAnimations;
 
 private:
-	QAutoDelPropertyAnimation * setupRectAnimation(const QRectF& other, bool animateIn);
+	QAbsoluteTimeAnimation* setupRectAnimation(const QRectF& other, bool animateIn);
 
 	QRectF m_rect;
 	double m_zIndex;
@@ -312,8 +338,8 @@ private:
 	double m_originalOpacity;
 
 	QList<GLDrawable::AnimParam> m_animations;
-	QList<QAutoDelPropertyAnimation*> m_runningAnimations;
-	QList<QAutoDelPropertyAnimation*> m_finishedAnimations;
+	QList<QAbsoluteTimeAnimation*> m_runningAnimations;
+	QList<QAbsoluteTimeAnimation*> m_finishedAnimations;
 
 	bool m_animationsEnabled;
 
@@ -357,6 +383,8 @@ private:
 	GLDrawablePlaylist *m_playlist;
 	
 	GLScene *m_scene;
+	
+	bool m_updatesLocked;
 };
 
 bool operator==(const GLDrawable::AnimParam&a, const GLDrawable::AnimParam&b);

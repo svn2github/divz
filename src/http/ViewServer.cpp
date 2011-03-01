@@ -197,6 +197,28 @@ void ViewServer::reqSendImage(QTcpSocket *socket, const QStringList &path, const
 	
 	Document * doc = mw->currentDocument();
 	
+	QSize size = m_iconSize;
+	
+	if(!query["size"].trimmed().isEmpty())
+	{
+		QStringList sizeStr = query["size"].toLower().trimmed().split("x");
+		if(sizeStr.size() >= 2)
+		{
+			int w = sizeStr[0].toInt();
+			int h = sizeStr[1].toInt();
+			size.scale(w,h,Qt::KeepAspectRatio);
+		}
+	}
+	
+	
+	QString format = query["format"].toLower().trimmed();
+	
+	if(format.isEmpty())
+		format = "jpeg";
+	if(format != "jpeg" && format != "png")
+		format = "jpeg";
+	
+	
 	if(doc)
 	{
 		int liveId = AppSettings::taggedOutput("live")->id();
@@ -216,12 +238,12 @@ void ViewServer::reqSendImage(QTcpSocket *socket, const QStringList &path, const
 				m_scene->setMasterSlide(liveGroup->masterSlide());
 				m_scene->setSlide(liveSlide);
 					
-				int icon_w = m_iconSize.width();
-				int icon_h = m_iconSize.height();
+				int icon_w = size.width();
+				int icon_h = size.height();
 					
 				QPixmap icon(icon_w,icon_h);
 				QPainter painter(&icon);
-				painter.fillRect(0,0,icon_w,icon_h,Qt::white);
+				painter.fillRect(0,0,icon_w,icon_h, format == "jpeg" ? Qt::white : Qt::transparent);
 				painter.setRenderHint(QPainter::SmoothPixmapTransform, true);
 				painter.setRenderHint(QPainter::Antialiasing, true);
 				painter.setRenderHint(QPainter::TextAntialiasing, true);
@@ -240,16 +262,24 @@ void ViewServer::reqSendImage(QTcpSocket *socket, const QStringList &path, const
 	
 	// Send Header
 	QHttpResponseHeader header(QString("HTTP/1.0 200 OK"));
-	header.setValue("Content-Type", "image/jpeg");
+	header.setValue("Content-Type", QString("image/%1").arg(format));
 	respond(socket,header);
 	
-	if(image.format() != QImage::Format_RGB32)
-		image = image.convertToFormat(QImage::Format_RGB32);
+	if(format == "jpeg")
+	{
+		if(image.format() != QImage::Format_RGB32)
+			image = image.convertToFormat(QImage::Format_RGB32);
+	}
+	else
+	{
+		if(image.format() != QImage::Format_ARGB32)
+			image = image.convertToFormat(QImage::Format_ARGB32);
+	}
 			
 	// Write Jpeg Image
 	QImageWriter writer;	
 	writer.setDevice(socket);
-	writer.setFormat("jpg");
+	writer.setFormat(format == "png" ? "png" : "jpg");
 	
 	if(!writer.write(image))
 		qDebug() << "ViewServer::reqSendImage(): QImageWriter reported error:"<<writer.errorString();
