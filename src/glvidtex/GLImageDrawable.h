@@ -53,6 +53,7 @@ public slots:
 	
 	void setShadowEnabled(bool);
 	void setShadowBlurRadius(double);
+	void setShadowBlurRadius(int value) { setShadowBlurRadius((double)value); }
 	void setShadowOffset(const QPointF&);
 	void setShadowColor(const QColor&);
 	void setShadowOpacity(double);
@@ -68,6 +69,11 @@ protected:
 	virtual void reloadImage();
 	virtual void releaseImage();
 	virtual bool canReleaseImage();
+	
+	/// Hook for subclasses that handle their own border rendering such as GLTextDrawable
+	virtual void borderSettingsChanged() {}
+	/// Hook for subclasses that handle their own border rendering such as GLTextDrawable - return false to disable rendering of the border in GLImageDrawable
+	virtual bool renderBorder() { return true; }
 	
 	QImage m_image;
 	QString m_imageFile;

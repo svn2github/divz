@@ -498,12 +498,14 @@ QVariantMap GLImageDrawable::propsToMap()
 void GLImageDrawable::setBorderColor(const QColor& value)
 {
 	m_borderColor = value;
+	borderSettingsChanged();
 	shadowOrBorderDirty();
 }
 
 void GLImageDrawable::setBorderWidth(double value)
 {
 	m_borderWidth = value;
+	borderSettingsChanged();
 	shadowOrBorderDirty();
 }
 
@@ -552,11 +554,11 @@ void GLImageDrawable::reapplyBorderAndShadow()
 
 QImage GLImageDrawable::applyBorderAndShadow(const QImage& sourceImg)
 {
-	if(!m_shadowEnabled && m_borderWidth < 0.001)
+	if(!m_shadowEnabled && (!renderBorder() || m_borderWidth < 0.001))
 		return sourceImg;
 		
 	QSizeF originalSizeWithBorder = sourceImg.size();
-	if(m_borderWidth > 0.001)
+	if(renderBorder() && m_borderWidth > 0.001)
 	{
 		double x = m_borderWidth * 2;
 		originalSizeWithBorder.rwidth() += x;
@@ -572,23 +574,12 @@ QImage GLImageDrawable::applyBorderAndShadow(const QImage& sourceImg)
 		}
 	}
 	
-	
-	QSizeF shadowSize = m_shadowEnabled ? QSizeF(shadowOffset().x(),shadowOffset().y()) : QSizeF(0,0);
-	QSizeF padSize(12.,12.); // ???
-	QSize sumSize = (originalSizeWithBorder + shadowSize + padSize).toSize();
-	//qDebug() << "RichTextRenderer::update(): textWidth: "<<textWidth<<", shadowSize:"<<shadowSize<<", docSize:"<<docSize<<", sumSize:"<<sumSize;
-	QImage cache(sumSize,QImage::Format_ARGB32); //_Premultiplied);
-	memset(cache.scanLine(0),0,cache.byteCount());
-	
-	QPainter cachePainter(&cache);
-	
-	double padSizeHalfX = 0;//adSize.width() / 2;
-	double padSizeHalfY = 0;//padSize.height() / 2;
-	
-	double radius = shadowBlurRadius();
+	double radius = m_shadowBlurRadius;
 	
 	// create temporary pixmap to hold a copy of the text
 	QSizeF blurSize = ImageFilters::blurredSizeFor(originalSizeWithBorder, (int)radius);
+	blurSize.rwidth()  += fabs(m_shadowOffset.x()) + (renderBorder() ? m_borderWidth : 0);
+	blurSize.rheight() += fabs(m_shadowOffset.y()) + (renderBorder() ? m_borderWidth : 0);
 	//qDebug() << "Blur size:"<<blurSize<<", doc:"<<doc.size()<<", radius:"<<radius;
 	QImage tmpImage(blurSize.toSize(),QImage::Format_ARGB32_Premultiplied);
 	memset(tmpImage.scanLine(0),0,tmpImage.byteCount());
@@ -597,60 +588,70 @@ QImage GLImageDrawable::applyBorderAndShadow(const QImage& sourceImg)
 	QPainter tmpPainter(&tmpImage);
 	
 	tmpPainter.save();
-	tmpPainter.translate(radius + padSizeHalfX, radius + padSizeHalfY);
+	double radiusSpacing = radius;// / 1.5;// * 1.5;
+	QPointF translate1(radiusSpacing + (m_shadowOffset.x() > 0 ? m_shadowOffset.x() : 0), 
+			   radiusSpacing + (m_shadowOffset.y() > 0 ? m_shadowOffset.y() : 0));
+	//qDebug() << "stage1: radiusSpacing:"<<radiusSpacing<<", m_shadowOffset:"<<m_shadowOffset<<", translate1:"<<translate1; 
 	
-	if(m_borderWidth > 0.001)
+	tmpPainter.translate(translate1);
+	
+	if(renderBorder() && m_borderWidth > 0.001)
 		drawImageWithBorder(&tmpPainter, sourceImg);
 	else
 		tmpPainter.drawImage(0,0,sourceImg);
 	
 	tmpPainter.restore();
 	
-	bool debug = false;
-	
-	if(debug)
-		tmpImage.save("debug/shadow-stage1.png");
-	
 	// color the orignal image by applying a color to the copy using a QPainter::CompositionMode_DestinationIn operation. 
 	// This produces a homogeneously-colored pixmap.
 	QRect rect = tmpImage.rect();
 	tmpPainter.setCompositionMode(QPainter::CompositionMode_SourceIn);
 	
-	QColor color = shadowColor();
-	color.setAlpha((int)(255.0 * m_shadowOpacity));
+	QColor color = m_shadowColor;
+	// clamp m_shadowOpacity to 1.0 because we handle values >1.0 by repainting the blurred image over itself (m_shadowOpacity-1) times, with the last time being painted at opacity (m_shadowOpacity-int(m_shadowOpacity))
+	color.setAlpha((int)(255.0 * (m_shadowOpacity > 1.0 ? 1.0 : m_shadowOpacity)));
 	tmpPainter.fillRect(rect, color);
 	
 	tmpPainter.end();
-	
-	if(debug)
-		tmpImage.save("debug/shadow-stage2.png");
 
 	// blur the colored text
 	ImageFilters::blurImage(tmpImage, (int)radius);
 	
-	if(debug)
-		tmpImage.save("debug/shadow-stage3.png");
+	QPainter painter2(&tmpImage);
 	
-	// render the blurred text at an offset into the cache
-	cachePainter.save();
-	cachePainter.translate(shadowOffset().x() - radius,
-			       shadowOffset().y() - radius);
-	cachePainter.drawImage(0, 0, tmpImage);
-	cachePainter.restore();
+	if(m_shadowOpacity > 1.0)
+	{
+		int times = (int)(m_shadowOpacity - 1.0);
+		double finalOpacity = m_shadowOpacity - ((int)m_shadowOpacity);
+		if(finalOpacity < 0.001)
+			finalOpacity = 1.0;
+		
+		QImage copy = tmpImage.copy();
+		for(int i=0; i<times-1; i++)
+			painter2.drawImage(0,0,copy);
+		
+		//qDebug() << "Overpaint feature: times:"<<times<<", finalOpacity:"<<finalOpacity;
+		painter2.setOpacity(finalOpacity);
+		painter2.drawImage(0,0,copy);
+		if(finalOpacity < 1.0)
+			painter2.setOpacity(1.0);
+	}
 	
-	if(debug)
-		cache.save("debug/shadow-stage4.png");
+	painter2.save();
+	QPointF translate2(radiusSpacing + (m_shadowOffset.x() < 0 ? m_shadowOffset.x() * -1 : 0), 
+			   radiusSpacing + (m_shadowOffset.y() < 0 ? m_shadowOffset.y() * -1 : 0));
+	//qDebug() << "stage12 radiusSpacing:"<<radiusSpacing<<", m_shadowOffset:"<<m_shadowOffset<<", translate2:"<<translate2;
+	painter2.translate(translate2);
 	
 	// Render the original image (with or without the border) on top of the blurred copy
-	if(m_borderWidth > 0.001)
-		drawImageWithBorder(&cachePainter,sourceImg);
+	if(renderBorder() && m_borderWidth > 0.001)
+		drawImageWithBorder(&painter2,sourceImg);
 	else
-		cachePainter.drawImage(0,0,sourceImg);
+		painter2.drawImage(0,0,sourceImg);
 	
-	if(debug)
-		cache.save("debug/shadow-stage5.png");
+	painter2.restore();
 	
-	return cache;
+	return tmpImage;
 }
 
 void GLImageDrawable::drawImageWithBorder(QPainter *p, const QImage &sourceImg)

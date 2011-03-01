@@ -4,7 +4,7 @@
 // I'll just hook into their implementation here, instead of reinventing the wheel.
 extern void qt_blurImage(QImage &blurImage, qreal radius, bool quality, int transposed = 0);
 
-const qreal radiusScale = qreal(2.5);
+const qreal radiusScale = qreal(1.5);
 
 // Copied from QPixmapBlurFilter::boundingRectFor(const QRectF &rect)
 QRectF ImageFilters::blurredBoundingRectFor(const QRectF &rect, int radius) 
@@ -16,8 +16,8 @@ QRectF ImageFilters::blurredBoundingRectFor(const QRectF &rect, int radius)
 QSizeF ImageFilters::blurredSizeFor(const QSizeF &size, int radius)
 {
 	const qreal delta = radiusScale * radius + 1;
-	QSizeF newSize(size.width()  + delta * 2.0, 
-	               size.height() + delta * 2.0);
+	QSizeF newSize(size.width()  + delta, 
+	               size.height() + delta);
 	
 	return newSize;
 }

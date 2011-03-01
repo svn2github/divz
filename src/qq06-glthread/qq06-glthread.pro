@@ -16,8 +16,11 @@ UI_DIR = .build
 
 
 # Input
-HEADERS += AppWindow.h GLThread.h GLWidget.h ../livemix/VideoSource.h ../livemix/VideoThread.h ../livemix/VideoFrame.h ../livemix/CameraThread.h
-SOURCES += AppWindow.cpp GLThread.cpp GLWidget.cpp main.cpp ../livemix/VideoSource.cpp ../livemix/VideoThread.cpp ../livemix/VideoFrame.cpp ../livemix/CameraThread.cpp
+HEADERS += AppWindow.h GLThread.h GLWidget.h ../livemix/VideoSource.h ../livemix/VideoThread.h ../livemix/VideoFrame.h ../livemix/CameraThread.h \
+	../livemix/SimpleV4L2.h
+SOURCES += AppWindow.cpp GLThread.cpp GLWidget.cpp main.cpp ../livemix/VideoSource.cpp ../livemix/VideoThread.cpp ../livemix/VideoFrame.cpp \ 
+	../livemix/CameraThread.cpp \
+	../livemix/SimpleV4L2.cpp
 
 
 unix {
@@ -42,3 +45,52 @@ win32 {
 		-lswscale-0
 }
 
+
+
+win32 {
+    QT_MOBILITY_HOME = C:/Qt/qt-mobility-opensource-src-1.0.2
+}
+unix {
+    #QT_MOBILITY_HOME = /opt/qt-mobility-opensource-src-1.0.1
+     QT_MOBILITY_HOME = /opt/qt-mobility-opensource-src-1.1.0-beta2
+    #QT_MOBILITY_HOME = /opt/qt-mobility-opensource-src-1.1.0-tp
+}
+	
+# To enable, use: qmake CONFIG+=mobility, and make sure QT_MOBILITY_HOME is correct
+# To run: Make sure QT_PLUGIN_PATH has $QT_MOBILITY_HOME/plugins added, else media will not play
+# 	  ..and make sure $LD_LIBRARY_PATH has $QT_MOBILITY_HOME/lib - otherwise app will not start.
+mobility: {
+	isEmpty(QT_MOBILITY_SOURCE_TREE):QT_MOBILITY_SOURCE_TREE = $$QT_MOBILITY_HOME 
+	isEmpty(QT_MOBILITY_BUILD_TREE):QT_MOBILITY_BUILD_TREE = $$QT_MOBILITY_HOME 
+	
+	#now include the dynamic config
+	include($$QT_MOBILITY_BUILD_TREE/config.pri)
+	
+	CONFIG += mobility multimedia
+	MOBILITY = multimedia
+
+	INCLUDEPATH += \
+		$$QT_MOBILITY_HOME/src \
+		$$QT_MOBILITY_HOME/src/global \
+		$$QT_MOBILITY_HOME/src/multimedia \
+		$$QT_MOBILITY_HOME/src/multimedia/audio \
+		$$QT_MOBILITY_HOME/src/multimedia/video
+		
+	LIBS += -L$$QT_MOBILITY_BUILD_TREE/lib \
+		-lQtMultimediaKit
+	
+	DEFINES += \
+		QT_MOBILITY_ENABLED \
+		HAS_QT_VIDEO_SOURCE
+	
+	#HEADERS += \
+	#	QtVideoSource.h
+	#SOURCES += \
+	#	QtVideoSource.cpp
+		
+	#message("QtMobility enabled. Before running, ensure \$QT_PLUGIN_PATH contains $$QT_MOBILITY_HOME/plugins, otherwise media will not play.")
+}
+else: {
+	message("QtMobility not enabled (use qmake CONFIG+=mobility and ensure $$QT_MOBILITY_HOME exists), QtVideoSource will not be built.")
+    	DEFINES -= QT_MOBILITY_ENABLED
+}

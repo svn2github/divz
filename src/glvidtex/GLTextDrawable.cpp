@@ -25,6 +25,7 @@ GLTextDrawable::GLTextDrawable(QString text, QObject *parent)
 
 
 	m_renderer = new RichTextRenderer();
+	m_renderer->setShadowEnabled(false);
 	connect(m_renderer, SIGNAL(textRendered(QImage)), this, SLOT(setImage(const QImage&)));
 
 	m_renderer->setTextWidth(1000); // just a guess
@@ -785,6 +786,13 @@ void GLTextDrawable::changeFontColor(QColor color)
 	emit textChanged(m_text);
 }
 
+void GLTextDrawable::borderSettingsChanged()
+{
+	m_renderer->setOutlineEnabled(borderWidth() > 0.001 ? true : false);
+	m_renderer->setOutlinePen(QPen(borderColor(),borderWidth()));
+	/// TODO does this break the loading of cached text renders over the network??
+	m_renderer->setHtml(m_text);
+}
 
 void GLTextDrawable::updateRects(bool secondSource)
 {

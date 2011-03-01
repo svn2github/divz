@@ -48,8 +48,10 @@ GLEditorGraphicsScene::GLEditorGraphicsScene()
 // 	, m_lockClearSelection(false)
 // 	, m_ctrlPressedWithMouse(false)
 {
+	QBrush bgTexture(QPixmap("../livemix/squares2.png"));
+	
 	m_bgRect = new RectItem();
-	m_bgRect->brush = Qt::black;
+	m_bgRect->brush = bgTexture; //Qt::black;
 	m_bgRect->pen = QPen(Qt::black, 1.);
 	m_bgRect->setZValue(-999999999);
 	//qDebug() << "m_bgRect:"<<m_bgRect;

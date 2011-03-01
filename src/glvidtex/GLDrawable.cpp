@@ -177,7 +177,7 @@ void GLDrawable::updateGL(bool now)
 {
 	if(m_glw)
 		m_glw->updateGL(now);
-	else
+	if(scene())
 		update(); // compat with QGraphicsItem
 }
 

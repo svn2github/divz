@@ -21,30 +21,30 @@ GLThread::GLThread(GLWidget *gl)
 	
 	frames = 0;
 	
-	frame.image = QImage( 16, 16, QImage::Format_RGB32 );
-	frame.image.fill( Qt::green );
-		
-	#ifdef Q_OS_WIN
-		QString defaultCamera = "vfwcap://0";
-	#else
-		QString defaultCamera = "/dev/video0";
-	#endif
-	
-	videoSource = CameraThread::threadForCamera(defaultCamera);
-	
-	if(videoSource)
-	{
-		CameraThread *camera = dynamic_cast<CameraThread*>(videoSource);
-		camera->setFps(30);
-	}
-	else
-	{
-	 	videoSource = new VideoThread();
-		dynamic_cast<VideoThread*>(videoSource)->setVideo("../data/Seasons_Loop_3_SD.mpg");
-	}
-	
-	videoSource->start();
-	connect(videoSource, SIGNAL(frameReady()), this, SLOT(frameReady()), Qt::QueuedConnection);
+// 	frame.image = QImage( 16, 16, QImage::Format_RGB32 );
+// 	frame.image.fill( Qt::green );
+// 		
+// 	#ifdef Q_OS_WIN
+// 		QString defaultCamera = "vfwcap://0";
+// 	#else
+// 		QString defaultCamera = "/dev/video0";
+// 	#endif
+// 	
+// 	videoSource = CameraThread::threadForCamera(defaultCamera);
+// 	
+// 	if(videoSource)
+// 	{
+// 		CameraThread *camera = dynamic_cast<CameraThread*>(videoSource);
+// 		camera->setFps(30);
+// 	}
+// 	else
+// 	{
+// 	 	videoSource = new VideoThread();
+// 		dynamic_cast<VideoThread*>(videoSource)->setVideo("../data/Seasons_Loop_3_SD.mpg");
+// 	}
+// 	
+// 	videoSource->start();
+// 	connect(videoSource, SIGNAL(frameReady()), this, SLOT(frameReady()), Qt::QueuedConnection);
 }
 
 void GLThread::stop()
@@ -63,8 +63,8 @@ void GLThread::resizeViewport(const QSize &size)
 void GLThread::frameReady()
 {
 	//QMutexLocker lock(&videoMutex);
-	frame = videoSource->frame();
-	newFrame = true;
+// 	frame = videoSource->frame();
+// 	newFrame = true;
 }
 
 
@@ -178,7 +178,7 @@ void GLThread::run()
 	
 		
 		
-		
+		/*
 		if(newFrame) // && (time.elapsed() - lastFrameTime) >= frame.holdTime)
 		{
 			lastFrameTime = time.elapsed();
@@ -205,7 +205,7 @@ void GLThread::run()
 			}
 			
 			// update texture
-		}
+		}*/
 		
 		glBindTexture(GL_TEXTURE_2D, texture[0]);
 		
@@ -277,7 +277,7 @@ void GLThread::run()
 		frames ++;
 
 		glw->swapBuffers();
-		//msleep(1000/80);
+		msleep(1000/80);
 		//msleep(sleep);
 	}
 }

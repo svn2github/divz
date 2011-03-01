@@ -84,6 +84,10 @@ protected:
 	virtual void updateRects(bool secondSource=false);
 	virtual void updateAnimations(bool insidePaint = false);
 	
+	// From GLImageDrawable
+	virtual void borderSettingsChanged();
+	virtual bool renderBorder() { return false; }
+	
 private slots:
 	void testXfade();
 	

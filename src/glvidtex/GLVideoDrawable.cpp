@@ -897,7 +897,7 @@ QVariant GLVideoDrawable::itemChange(GraphicsItemChange change, const QVariant &
 	if (change == ItemSceneChange)
 	{
 		QGraphicsScene *scene = value.value<QGraphicsScene*>();
-		if(!scene && liveStatus())
+		if(!scene && liveStatus() && !m_glw)
 			setLiveStatus(false);
 	}
 	return GLDrawable::itemChange(change, value);

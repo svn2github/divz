@@ -10,6 +10,8 @@
 #include "../3rdparty/richtextedit/richtexteditor_p.h"
 #include "../qtcolorpicker/qtcolorpicker.h"
 
+#include "../ImageFilters.h"
+
 #include "RtfEditorWindow.h"
 #include "EditorGraphicsView.h"
 
@@ -606,6 +608,15 @@ void EditorWindow::textFitNaturally()
 	if(GLTextDrawable *text = dynamic_cast<GLTextDrawable*>(m_currentDrawable))
 	{
 		QSizeF size = text->findNaturalSize((int)m_graphicsScene->sceneRect().width());
+		
+		if(text->isShadowEnabled())
+		{
+			QSizeF blurSize = ImageFilters::blurredSizeFor(size, (int)text->shadowBlurRadius());
+			blurSize.rwidth()  += fabs(text->shadowOffset().x());
+			blurSize.rheight() += fabs(text->shadowOffset().y());
+			size = blurSize;
+		}
+		
 		text->setRect(QRectF(text->rect().topLeft(),size));
 	}
 }
@@ -723,28 +734,38 @@ void EditorWindow::addImageBorderShadowEditors(QFormLayout *lay, GLImageDrawable
 	lay->addRow(tr("Color:"), shadowColor);
 	
 	
-	QHBoxLayout *hbox2 = new QHBoxLayout();
-	QDoubleSpinBox *box2 = new QDoubleSpinBox();
-	box2->setSuffix(tr("px"));
-	box2->setMinimum(1);
-	box2->setDecimals(2);
-	box2->setMaximum(16);
-	box2->setValue(item->shadowBlurRadius());
-	//connect(m_textSizeBox, SIGNAL(returnPressed()), this, SLOT(textSizeChanged(double)));
-	connect(box2, SIGNAL(valueChanged(double)), item, SLOT(setShadowBlurRadius(double)));
-	connect(checkbox, SIGNAL(toggled(bool)), box2, SLOT(setEnabled(bool)));
-	box2->setEnabled(item->isShadowEnabled());
-	
-	lay->addRow(tr("Blur:"), box2);
-	
-	
 	PropertyEditorFactory::PropertyEditorOptions opts;
-	
 	QWidget *widget = 0;
+	
+	
+// 	QDoubleSpinBox *box2 = new QDoubleSpinBox();
+// 	box2->setSuffix(tr("px"));
+// 	box2->setMinimum(1);
+// 	box2->setDecimals(2);
+// 	box2->setMaximum(16);
+// 	box2->setValue(item->shadowBlurRadius());
+// 	//connect(m_textSizeBox, SIGNAL(returnPressed()), this, SLOT(textSizeChanged(double)));
+// 	connect(box2, SIGNAL(valueChanged(double)), item, SLOT(setShadowBlurRadius(double)));
+// 	connect(checkbox, SIGNAL(toggled(bool)), box2, SLOT(setEnabled(bool)));
+// 	box2->setEnabled(item->isShadowEnabled());
+
+
 	opts.reset();
 	opts.type = QVariant::Int;
 	opts.min = 1;
-	opts.max = 100;
+	opts.max = 30;
+	opts.step = 2;
+	opts.suffix = " px";
+	widget = PropertyEditorFactory::generatePropertyEditor(item, "shadowBlurRadius", SLOT(setShadowBlurRadius(int)), opts);
+	connect(checkbox, SIGNAL(toggled(bool)), widget, SLOT(setEnabled(bool)));
+	widget->setEnabled(item->isShadowEnabled());
+	
+	lay->addRow(tr("Blur:"), widget);
+	
+	opts.reset();
+	opts.type = QVariant::Int;
+	opts.min = 1;
+	opts.max = 400;
 	opts.step = 5;
 	opts.suffix = "%";
 	opts.doubleIsPercentage = true;
@@ -987,7 +1008,22 @@ QWidget *EditorWindow::createPropertyEditors(GLDrawable *gld)
 			hbox->addWidget(edit);
 			hbox->addWidget(btn);
 			
-			lay->addRow(base); 
+			lay->addRow(base);
+			 
+			{
+				ExpandableWidget *groupAnim = new ExpandableWidget("Border and Shadow",base);
+				blay->addWidget(groupAnim);
+			
+				QWidget *groupAnimContainer = new QWidget;
+				QFormLayout *lay = new QFormLayout(groupAnimContainer);
+				lay->setContentsMargins(3,3,3,3);
+			
+				groupAnim->setWidget(groupAnimContainer);
+			
+				addImageBorderShadowEditors(lay,item);
+				
+				groupAnim->setExpandedIfNoDefault(true);
+			}
 		}
 		else
 		if(GLSvgDrawable *item = dynamic_cast<GLSvgDrawable*>(gld))
@@ -1056,34 +1092,20 @@ QWidget *EditorWindow::createPropertyEditors(GLDrawable *gld)
 			
 			lay->addRow(tr("Fill:"), fillColor);
 			
-// 			QHBoxLayout *hbox = new QHBoxLayout();
-// 			QDoubleSpinBox *box = new QDoubleSpinBox();
-// 			box->setSuffix(tr("px"));
-// 			box->setMinimum(0);
-// 			box->setDecimals(2);
-// 			box->setMaximum(50);
-// 			box->setValue(item->borderWidth());
-// 			//connect(m_textSizeBox, SIGNAL(returnPressed()), this, SLOT(textSizeChanged(double)));
-// 			connect(box, SIGNAL(valueChanged(double)), item, SLOT(setBorderWidth(double)));
-// 			hbox->addWidget(box);
-// 			hbox->addWidget(borderColor);
-// 			
-// 			lay->addRow(tr("Border:"), hbox);
+			QHBoxLayout *hbox = new QHBoxLayout();
+			QDoubleSpinBox *box = new QDoubleSpinBox();
+			box->setSuffix(tr("px"));
+			box->setMinimum(0);
+			box->setDecimals(2);
+			box->setMaximum(50);
+			box->setValue(item->borderWidth());
+			//connect(m_textSizeBox, SIGNAL(returnPressed()), this, SLOT(textSizeChanged(double)));
+			connect(box, SIGNAL(valueChanged(double)), item, SLOT(setBorderWidth(double)));
+			hbox->addWidget(box);
+			hbox->addWidget(borderColor);
+			
+			lay->addRow(tr("Border:"), hbox);
 
-			{
-				ExpandableWidget *groupAnim = new ExpandableWidget("Border and Shadow",base);
-				blay->addWidget(groupAnim);
-			
-				QWidget *groupAnimContainer = new QWidget;
-				QFormLayout *lay = new QFormLayout(groupAnimContainer);
-				lay->setContentsMargins(3,3,3,3);
-			
-				groupAnim->setWidget(groupAnimContainer);
-			
-				addImageBorderShadowEditors(lay,item);
-				
-				groupAnim->setExpandedIfNoDefault(true);
-			}
 		}
 		else
 		if(GLSpinnerDrawable *item = dynamic_cast<GLSpinnerDrawable*>(gld))

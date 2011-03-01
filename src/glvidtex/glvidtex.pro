@@ -211,6 +211,13 @@ player | glvidtex: {
 	}
 }
 
+shadowtest: {
+	TARGET = shadowtest
+	#HEADERS += ShadowTestWindow.h
+	SOURCES += shadowtest-main.cpp
+		#ShadowTestWindow.cpp
+}
+
 glvidtex: {
 	TARGET = glvidtex
 }

@@ -1092,6 +1092,30 @@ OverlayWidget::OverlayWidget(DirectorWindow *d)
 	m_glw->setWindowTitle("OverlayWidget");
 	vbox->addWidget(m_glw);
 	
+	// Setup Square Background
+	if(true)
+	{
+		QSize size = QSize(1000,750);//m_glw->viewport().size().toSize();
+		size /= 2.5;
+		//qDebug() << "MainWindow::createLeftPanel(): size:"<<size;
+		QImage bgImage(size, QImage::Format_ARGB32_Premultiplied);
+		QBrush bgTexture(QPixmap("../livemix/squares2.png"));
+		QPainter bgPainter(&bgImage);
+		bgPainter.fillRect(bgImage.rect(), bgTexture);
+		bgPainter.end();
+		
+		//bgImage.save("debug/bgimage.png");
+
+		GLImageDrawable *drawable = new GLImageDrawable();
+		drawable->setImage(bgImage);
+		drawable->setRect(QRectF(0,0,1000,750));
+		drawable->setZIndex(-100);
+		drawable->setObjectName("StaticBackground");
+		drawable->show();
+
+		m_glw->addDrawable(drawable);
+	}
+	
 	QHBoxLayout *hbox = new QHBoxLayout();
 	
 	m_combo = new QComboBox();
