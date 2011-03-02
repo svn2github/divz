@@ -457,12 +457,12 @@ public:
 	bool isMuted() { return m_muted; }
 	int volume() { return m_volume; }
 	
-	virtual bool switchTo();
 	virtual GLScene *scene() { return m_scene; }
 	virtual QVariantMap saveToMap();
 	virtual void loadFromMap(const QVariantMap&);
 	
 public slots:
+	virtual bool switchTo();
 // 	void setInPoint(double in);
 // 	void setOutPoint(double out);
 	void setMuted(bool muted);
@@ -486,6 +486,7 @@ private slots:
 
 private:
 	void syncProperty(QString prop, QVariant value);
+	void updatePositionUI(int);
 	
 	GLWidget *m_glw;
 	GLSceneGroup *m_group;
@@ -499,6 +500,8 @@ private:
 	QLabel *m_timeLabel;
 	QSlider *m_volumeSlider;
 	QPushButton *m_muteButton;
+	
+	bool m_lockSetPosition;
 	
 	QString m_filename;
 // 	double m_in;

@@ -71,7 +71,14 @@ bool GLVideoFileDrawable::setVideoFile(const QString& file)
 	m_qtSource->player()->setVolume(0);
 	
 	if(liveStatus())
+	{
+		qDebug() << "GLVideoFileDrawable::setVideoFile: "<<file<<": Live, calling setLiveStatus to play";
 		setLiveStatus(true);
+	}
+	else
+	{
+		qDebug() << "GLVideoFileDrawable::setVideoFile: "<<file<<": Waiting to play till live";
+	}
 
 #else
 
@@ -109,6 +116,8 @@ void GLVideoFileDrawable::stateChanged ( QMediaPlayer::State state )
 		//else
 		//	qDebug() << "GLVideoFileDrawable::stateChanged: "<<m_videoFile<<" Stopped, but no playlist going to move on in.";
 	}
+	
+	emit statusChanged((int)state);
 }
 #endif
 
@@ -196,6 +205,7 @@ bool GLVideoFileDrawable::isMuted()
 
 void GLVideoFileDrawable::setStatus(int status)
 { 
+	qDebug() << "GLVideoFileDrawable::setStatus: "<<status;
 #ifdef HAS_QT_VIDEO_SOURCE
 	if(m_qtSource)
 	{
@@ -249,6 +259,7 @@ quint64 GLVideoFileDrawable::position()
 void GLVideoFileDrawable::setLiveStatus(bool flag)
 {
 	GLVideoDrawable::setLiveStatus(flag);
+	qDebug() << "GLVideoFileDrawable::setLiveStatus: "<<flag;
 #ifdef HAS_QT_VIDEO_SOURCE	
 
 	qDebug() << "GLVideoFileDrawable::setLiveStatus: new status:"<<flag;

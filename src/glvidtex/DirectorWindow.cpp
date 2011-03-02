@@ -2168,10 +2168,11 @@ VideoPlayerWidget::VideoPlayerWidget(DirectorWindow *d)
 {
 	m_collection = new GLSceneGroupCollection();
 	m_group = new GLSceneGroup();
-	m_scene = new GLScene();
-	m_video = new GLVideoFileDrawable();
-	m_scene->setSceneName("Video Player");
-	m_group->addScene(m_scene);
+		m_scene = new GLScene();
+			m_scene->setSceneName("Video Player");
+				m_video = new GLVideoFileDrawable();
+			m_scene->addDrawable(m_video);
+		m_group->addScene(m_scene);
 	m_collection->addGroup(m_group);
 	
 	connect(m_video, SIGNAL(positionChanged(qint64)), this, SLOT(positionChanged(qint64)));
@@ -2181,6 +2182,7 @@ VideoPlayerWidget::VideoPlayerWidget(DirectorWindow *d)
 	QVBoxLayout *vbox = new QVBoxLayout(this);
 	m_glw = new GLWidget(this);
 	m_glw->setWindowTitle("VideoPlayerWidget");
+	m_glw->addDrawable(m_video);
 	vbox->addWidget(m_glw);
 	
 	QHBoxLayout *hbox = new QHBoxLayout();
@@ -2207,6 +2209,13 @@ VideoPlayerWidget::VideoPlayerWidget(DirectorWindow *d)
 	m_timeLabel	= new QLabel("00:00/00:00");
 	hbox->addWidget(m_timeLabel);
 	
+	m_muteButton	= new QPushButton(QPixmap("../data/stock-volume.png"),""); // stock-volume-muted when muited
+	{
+		m_muteButton->setCheckable(true);
+		connect(m_muteButton, SIGNAL(toggled(bool)), this, SLOT(setMuted(bool)));
+		hbox->addWidget(m_muteButton);
+	}
+	
 	m_volumeSlider	= new QSlider();
 	{
 		m_volumeSlider->setMinimum(0);
@@ -2218,13 +2227,6 @@ VideoPlayerWidget::VideoPlayerWidget(DirectorWindow *d)
 		hbox->addWidget(m_volumeSlider);
 	}
 	
-	m_muteButton	= new QPushButton(QPixmap("../data/stock-volume.png"),""); // stock-volume-muted when muited
-	{
-		m_muteButton->setCheckable(true);
-		connect(m_muteButton, SIGNAL(toggled(bool)), this, SLOT(setMuted(bool)));
-		hbox->addWidget(m_muteButton);
-	}
-	
 	QPushButton *browse = new QPushButton(QPixmap(":/data/stock-open.png"), "");
 	{
 		connect(browse, SIGNAL(clicked()), this, SLOT(browse()));
@@ -2234,17 +2236,35 @@ VideoPlayerWidget::VideoPlayerWidget(DirectorWindow *d)
 	vbox->addLayout(hbox);
 	
 	connect(m_glw, SIGNAL(clicked()), this, SLOT(switchTo()));
+	//loadFile("hd_vid/Dolphins_720.wmv-xvid.avi");
 }
 
 void VideoPlayerWidget::positionChanged(qint64 position)
 {
+	if(m_video->status() != 1)
+		return;
+		
+	position = position / 1000;
+	
+	m_lockSetPosition = true;
+	
+	qDebug() << "VideoPlayerWidget::positionChanged():"<<position;
+	updatePositionUI(position);
+	
+	m_lockSetPosition = false;
+}
+
+void VideoPlayerWidget::updatePositionUI(int position)
+{
 	if(m_seekSlider->value() != (int)position)
 		m_seekSlider->setValue((int)position);
-	m_timeLabel->setText(QString().sprintf("%.02f/%.02f",((double)position)/1000.,m_dur));
+		
+	m_timeLabel->setText(QString().sprintf("%d/%d",(int)position,(int)m_dur));
 }
 
 void VideoPlayerWidget::durationChanged(double duration)
 {
+	qDebug() << "VideoPlayerWidget::durationChanged(): "<<duration;
 	m_dur = duration;
 	m_seekSlider->setMaximum((int)(duration+.5));
 	positionChanged(m_video->position());
@@ -2252,6 +2272,7 @@ void VideoPlayerWidget::durationChanged(double duration)
 
 void VideoPlayerWidget::statusChanged(int status)
 {
+	qDebug() << "VideoPlayerWidget::statusChanged(): status:"<<status; 
 	switch(status)
 	{
 		case 0:
@@ -2315,6 +2336,7 @@ bool VideoPlayerWidget::loadFile(QString fileName)
 // DirectorSourceWidget::	
 bool VideoPlayerWidget::switchTo()
 {
+	qDebug() << "VideoPlayerWidget::switchTo()";
 	foreach(PlayerConnection *player, m_director->players()->players())
  	{
  		if(player->isConnected())
@@ -2325,6 +2347,7 @@ bool VideoPlayerWidget::switchTo()
  			player->setUserProperty(m_video, m_video->position(), "position");
  			player->setUserProperty(m_video, m_video->volume(), "volume");
  			player->setUserProperty(m_video, m_video->isMuted(), "muted");
+ 			player->setUserProperty(m_video, m_video->status(), "status");
 		}
 	}
 	
@@ -2342,6 +2365,7 @@ VideoPlayerWidget::~VideoPlayerWidget()
 
 void VideoPlayerWidget::setMuted(bool flag)
 {
+	qDebug() << "VideoPlayerWidget::setMuted(): "<<flag;
 	m_video->setMuted(flag);
 	syncProperty("muted", flag);
 	m_muteButton->setIcon( flag ? QPixmap("../data/stock-volume-mute.png") : QPixmap("../data/stock-volume.png") );
@@ -2349,14 +2373,27 @@ void VideoPlayerWidget::setMuted(bool flag)
 
 void VideoPlayerWidget::setVolume(int v)
 {
+	//qDebug() << "VideoPlayerWidget::setVolume(): "<<v;
 	m_video->setVolume(v);
 	syncProperty("volume", v);
 }
 
 void VideoPlayerWidget::setPosition(double d)
 {
-	m_video->setPosition((int)(d * 1000.0));
-	syncProperty("position", d);
+	if(m_lockSetPosition)
+		return;
+	m_lockSetPosition = true;
+	
+	qDebug() << "VideoPlayerWidget::setPosition(): "<<d;
+	
+	int pos = (int)(d * 1000.0);
+	
+	m_video->setPosition(pos);
+	syncProperty("position", pos);
+	
+	updatePositionUI((int)d);
+	
+	m_lockSetPosition = false;
 }
 
 void VideoPlayerWidget::play()
