@@ -801,8 +801,13 @@ void DirectorWindow::setActiveSubWindow(QWidget *window)
 }
 
 
-void DirectorWindow::addVideoPlayer()
+VideoPlayerWidget *DirectorWindow::addVideoPlayer()
 {
+	VideoPlayerWidget *vid = new VideoPlayerWidget(this); 
+
+	addSubwindow(vid);
+	
+	return vid;
 }
 
 GroupPlayerWidget *DirectorWindow::addGroupPlayer()
@@ -2148,16 +2153,239 @@ void CameraMixerWidget::buildCombos()
 		
 	//adjustSize();
 }
+
+
+
+
+//////////////////////////
+
+VideoPlayerWidget::VideoPlayerWidget(DirectorWindow *d)
+	: DirectorSourceWidget(d)
+	, m_group(0)
+	, m_scene(0)
+	, m_collection(0)
+	, m_director(d)
+{
+	m_collection = new GLSceneGroupCollection();
+	m_group = new GLSceneGroup();
+	m_scene = new GLScene();
+	m_video = new GLVideoFileDrawable();
+	m_scene->setSceneName("Video Player");
+	m_group->addScene(m_scene);
+	m_collection->addGroup(m_group);
 	
-/*private:
-	class Source
+	connect(m_video, SIGNAL(positionChanged(qint64)), this, SLOT(positionChanged(qint64)));
+	connect(m_video, SIGNAL(durationChanged(double)), this, SLOT(durationChanged(double)));
+	connect(m_video, SIGNAL(statusChanged(int)), this, SLOT(statusChanged(int)));
+	
+	QVBoxLayout *vbox = new QVBoxLayout(this);
+	m_glw = new GLWidget(this);
+	m_glw->setWindowTitle("VideoPlayerWidget");
+	vbox->addWidget(m_glw);
+	
+	QHBoxLayout *hbox = new QHBoxLayout();
+	
+	//QPushButton *hide = new QPushButton(QPixmap(":/data/stock-media-stop.png"), "");
+	
+	m_playPauseBtn	= new QPushButton(QPixmap(":/data/stock-media-play.png"), ""); // stock-media-stop.png when playing
 	{
-	public:
-		QString title;
-		VideoSource *source;
-	};
+		connect(m_playPauseBtn, SIGNAL(clicked()), this, SLOT(togglePlay()));
+		hbox->addWidget(m_playPauseBtn);
+	}
 	
+	m_seekSlider	= new QSlider();
+	{
+		m_seekSlider->setMinimum(0);
+		m_seekSlider->setMaximum(100);
+		m_seekSlider->setOrientation(Qt::Horizontal);
+		m_seekSlider->setSingleStep(1);
+		m_seekSlider->setPageStep(30);
+		connect(m_seekSlider, SIGNAL(valueChanged(int)), this, SLOT(setPosition(int)));
+		hbox->addWidget(m_seekSlider);
+	}
 	
-	HistogramFilter *m_filter;
-	QList<Source> m_sources;*/
+	m_timeLabel	= new QLabel("00:00/00:00");
+	hbox->addWidget(m_timeLabel);
+	
+	m_volumeSlider	= new QSlider();
+	{
+		m_volumeSlider->setMinimum(0);
+		m_volumeSlider->setMaximum(100);
+		m_volumeSlider->setOrientation(Qt::Horizontal);
+		m_volumeSlider->setSingleStep(5);
+		m_volumeSlider->setPageStep(10);
+		connect(m_volumeSlider, SIGNAL(valueChanged(int)), this, SLOT(setVolume(int)));
+		hbox->addWidget(m_volumeSlider);
+	}
+	
+	m_muteButton	= new QPushButton(QPixmap("../data/stock-volume.png"),""); // stock-volume-muted when muited
+	{
+		m_muteButton->setCheckable(true);
+		connect(m_muteButton, SIGNAL(toggled(bool)), this, SLOT(setMuted(bool)));
+		hbox->addWidget(m_muteButton);
+	}
+	
+	QPushButton *browse = new QPushButton(QPixmap(":/data/stock-open.png"), "");
+	{
+		connect(browse, SIGNAL(clicked()), this, SLOT(browse()));
+		hbox->addWidget(browse);
+	}
+	
+	vbox->addLayout(hbox);
+	
+	connect(m_glw, SIGNAL(clicked()), this, SLOT(switchTo()));
+}
+
+void VideoPlayerWidget::positionChanged(qint64 position)
+{
+	if(m_seekSlider->value() != (int)position)
+		m_seekSlider->setValue((int)position);
+	m_timeLabel->setText(QString().sprintf("%.02f/%.02f",((double)position)/1000.,m_dur));
+}
+
+void VideoPlayerWidget::durationChanged(double duration)
+{
+	m_dur = duration;
+	m_seekSlider->setMaximum((int)(duration+.5));
+	positionChanged(m_video->position());
+}
+
+void VideoPlayerWidget::statusChanged(int status)
+{
+	switch(status)
+	{
+		case 0:
+			m_playPauseBtn->setIcon(QPixmap(":/data/stock-media-play.png"));
+			break;
+		case 1:
+			m_playPauseBtn->setIcon(QPixmap(":/data/stock-media-pause.png"));
+			break;
+		case 2:
+		default:
+			m_playPauseBtn->setIcon(QPixmap(":/data/stock-media-play.png"));
+			break;
+	}
+}
+	
+QVariantMap VideoPlayerWidget::saveToMap()
+{
+	QVariantMap map;
+	map["file"] = file();
+	map["pos"] = position();
+	map["vol"] = volume();
+	return map;
+}
+
+void VideoPlayerWidget::loadFromMap(const QVariantMap& map)
+{
+	loadFile(map["file"].toString());
+	setPosition(map["pos"].toDouble());
+	setVolume(map["vol"].toInt());
+}
+
+void VideoPlayerWidget::browse()
+{
+	QSettings settings;
+	QString curFile = file();
+	if(curFile.trimmed().isEmpty())
+		curFile = settings.value("last-video-file").toString();
+		
+	QString fileName = QFileDialog::getOpenFileName(this, tr("Select Video File"), curFile, tr("Video Files (*.wmv *.mpeg *.mpg *.avi *.wmv *.flv *.mov *.mp4 *.m4a *.3gp *.3g2 *.mj2 *.mjpeg *.ipod *.m4v *.gsm *.swf *.dv *.dvd *.asf *.mtv *.roq *.aac *.ac3 *.aiff *.alaw *.iif);;Any File (*.*)"));
+	if(fileName != "")
+	{
+		settings.setValue("last-video-file",fileName);
+		if(!loadFile(fileName))
+		{
+			QMessageBox::critical(this,tr("File Does Not Exist"),tr("Sorry, but the file you chose does not exist. Please try again."));
+		}
+	}
+}
+
+bool VideoPlayerWidget::loadFile(QString fileName)
+{
+	if(m_video->setVideoFile(fileName))
+	{
+		m_filename = fileName;
+		setWindowTitle(QString("Video - %1").arg(QFileInfo(fileName).fileName()));
+		return true;
+	}
+	return false;
+}
+
+// DirectorSourceWidget::	
+bool VideoPlayerWidget::switchTo()
+{
+	foreach(PlayerConnection *player, m_director->players()->players())
+ 	{
+ 		if(player->isConnected())
+ 		{
+ 			//if(player->lastGroup() != group)
+ 				player->setGroup(m_group, m_scene);
+ 			player->setUserProperty(m_video, m_video->videoFile(), "videoFile");
+ 			player->setUserProperty(m_video, m_video->position(), "position");
+ 			player->setUserProperty(m_video, m_video->volume(), "volume");
+ 			player->setUserProperty(m_video, m_video->isMuted(), "muted");
+		}
+	}
+	
+	if(m_switcher)
+		m_switcher->notifyIsLive(this);
+	
+	return true;
+}
+
+
+VideoPlayerWidget::~VideoPlayerWidget()
+{
+	// TODO...?
+}
+
+void VideoPlayerWidget::setMuted(bool flag)
+{
+	m_video->setMuted(flag);
+	syncProperty("muted", flag);
+	m_muteButton->setIcon( flag ? QPixmap("../data/stock-volume-mute.png") : QPixmap("../data/stock-volume.png") );
+}
+
+void VideoPlayerWidget::setVolume(int v)
+{
+	m_video->setVolume(v);
+	syncProperty("volume", v);
+}
+
+void VideoPlayerWidget::setPosition(double d)
+{
+	m_video->setPosition((int)(d * 1000.0));
+	syncProperty("position", d);
+}
+
+void VideoPlayerWidget::play()
+{
+	m_video->setStatus(1);
+	syncProperty("status", 1);
+	m_playPauseBtn->setIcon(QPixmap(":/data/stock-media-pause.png"));
+}
+
+void VideoPlayerWidget::pause()
+{
+	m_video->setStatus(2);
+	syncProperty("status", 2);
+	m_playPauseBtn->setIcon(QPixmap(":/data/stock-media-play.png"));
+}
+
+void VideoPlayerWidget::togglePlay()
+{
+	if(m_video->status() == 1)
+		pause();
+	else
+		play();
+}
+
+void VideoPlayerWidget::syncProperty(QString prop, QVariant value)
+{
+	foreach(PlayerConnection *player, m_director->players()->players())
+		if(player->isConnected() &&
+		   player->lastGroup() == m_group)
+			player->setUserProperty(m_video, value, prop);
+}
 

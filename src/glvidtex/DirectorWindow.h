@@ -31,6 +31,8 @@ class HistogramWindow;
 class InputBalanceWindow;
 class CameraMixerWidget;
 class GLVideoInputDrawable;
+class VideoPlayerWidget;
+class GLVideoFileDrawable;
 #include "GLDrawable.h"
 
 class DirectorWindow : public QMainWindow
@@ -77,11 +79,10 @@ private slots:
 	
 	void videoInputListReceived(const QStringList&);
 	
-// 	VideoPlayerWidget * addVideoPlayer();
-	void addVideoPlayer();
 	GroupPlayerWidget * addGroupPlayer();
 	OverlayWidget * addOverlay();
 	CameraMixerWidget * addCameraMixer();
+	VideoPlayerWidget * addVideoPlayer();
 	
 	void showAllSubwindows();
 	void createUserSubwindows();
@@ -442,49 +443,72 @@ private:
 };
 
 
-// class VideoPlayerWidget : public QWidget
-// {
-// 	Q_OBJECT
-// public:
-// 	VideoPlayerWidget(DirectorWindow*);
-// 	~VideoPlayerWidget();
-// 	
-// 	QString file() { return m_filename; }
+class VideoPlayerWidget : public DirectorSourceWidget
+{
+	Q_OBJECT
+public:
+	VideoPlayerWidget(DirectorWindow*);
+	~VideoPlayerWidget();
+	
+	QString file() { return m_filename; }
 // 	double inPoint() { return m_in; }
 // 	double outPoint() { return m_out; }
-// 	double position() { return m_pos; }
-// 	bool isMuted() { return m_muted; }
-// 	int volume() { return m_volume; } 
-// 	
-// public slots:
+	double position() { return m_pos; }
+	bool isMuted() { return m_muted; }
+	int volume() { return m_volume; }
+	
+	virtual bool switchTo();
+	virtual GLScene *scene() { return m_scene; }
+	virtual QVariantMap saveToMap();
+	virtual void loadFromMap(const QVariantMap&);
+	
+public slots:
 // 	void setInPoint(double in);
 // 	void setOutPoint(double out);
-// 	void setMuted(bool muted);
-// 	void setVolume(int volume);
-// 	void setPosition(double);
-// 	
-//  	bool loadFile(QString);
-//  	
-// 	void browse();
-//  
-// private slots:
-// 	void clicked();
-//  	void receivedPosition(int);
-// 
-// private:
-// 	GLWidget *m_glw;
-// 	GLSceneGroup *m_setGroup;
-// 	GLScene *m_scene;
-// 	DirectorWindow *m_director;
-// 	
-// 	QString m_filename;
+	void setMuted(bool muted);
+	void setVolume(int volume);
+	void setPosition(double);
+	void setPosition(int value) { setPosition((double)value); }
+	void play();
+	void pause();
+	void togglePlay();
+	
+ 	bool loadFile(QString);
+ 	
+	void browse();
+ 
+private slots:
+	//void receivedPosition(int);
+	
+	void positionChanged(qint64 position);
+	void durationChanged(double duration); // in seconds
+	void statusChanged(int);
+
+private:
+	void syncProperty(QString prop, QVariant value);
+	
+	GLWidget *m_glw;
+	GLSceneGroup *m_group;
+	GLScene *m_scene;
+	GLSceneGroupCollection *m_collection;
+	DirectorWindow *m_director;
+	GLVideoFileDrawable *m_video;
+	
+	QPushButton *m_playPauseBtn;
+	QSlider *m_seekSlider;
+	QLabel *m_timeLabel;
+	QSlider *m_volumeSlider;
+	QPushButton *m_muteButton;
+	
+	QString m_filename;
 // 	double m_in;
 // 	double m_out;
-// 	double m_pos;
-// 	bool m_muted;
-// 	int volume;
-// 	
-// };
+	double m_pos;
+	bool m_muted;
+	int m_volume;
+	double m_dur;
+	
+};
 
 
 class DirectorMdiSubwindow : public QMdiSubWindow
