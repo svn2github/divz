@@ -288,7 +288,6 @@ protected slots:
 	void disconnectVideoSource2();
 	void xfadeTick(bool updateGL=true);
 	
-	
 private:
 	/// PS
 	VideoFormat m_videoFormat;
@@ -419,7 +418,7 @@ private:
 	// on the GLWidget with a CameraThread source. The video drawable with the highest avg FPS is elected the
 	// updateLeader and will be the only drawable with a camerathread that calls updateGL() on frameReady() - all other 
 	// drawables with camera threads will NOT call updateGL() in frameReady() unless they are elected updateLeader() later.
-	void electUpdateLeader();
+	void electUpdateLeader(GLVideoDrawable *ignore=0);
 	
 	// True if m_source is a CameraThread
 	bool m_isCameraThread;
@@ -432,6 +431,8 @@ private:
 	bool m_electionNeeded;
 	// Store avg FPS for use in election.
 	double m_avgFps;
+	// Count the number of unrendered frames - if this gets too high, then the updateLeader probably was deleted or some other problem - time to trigger a reelection
+	int m_unrenderedFrames;
 	
 	bool m_liveStatus;
 	

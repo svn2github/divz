@@ -105,6 +105,7 @@ GLVideoDrawable::GLVideoDrawable(QObject *parent)
 	, m_updateLeader(0)
 	, m_electionNeeded(false)
 	, m_avgFps(30)
+	, m_unrenderedFrames(0)
 	, m_liveStatus(false)
 	, m_textureUpdateNeeded(false)
 {
@@ -132,6 +133,11 @@ GLVideoDrawable::GLVideoDrawable(QObject *parent)
 GLVideoDrawable::~GLVideoDrawable()
 {
 	setVideoSource(0);
+	if(m_isCameraThread) //m_updateLeader) // == this)
+	{
+		//qDebug() << "GLVideoDrawable::~GLVideoDrawable(): "<<(QObject*)this<<" In destructor, calling electUpdateLeader() to elect new leader";
+		electUpdateLeader(this); // reelect an update leader, ignore this drawable
+	} 
 }
 
 void GLVideoDrawable::setFpsLimit(float fps)
@@ -410,12 +416,26 @@ void GLVideoDrawable::frameReady()
 
 	if(m_rateLimitFps <= 0.0)
 	{
-		if(m_isCameraThread && 
-		   m_updateLeader == this)
-			updateGL(true);
+		if(m_isCameraThread)
+		{
+			if(m_updateLeader == this)
+				updateGL(true);
+			else
+			{
+				m_unrenderedFrames ++;
+				
+				if(m_unrenderedFrames > 1)
+				{
+					qDebug() << "GLVideoDrawable::frameReady(): "<<(QObject*)this<<" m_unrenderedFrames greater than threshold, electing new update leader, ignoring "<<(QObject*)m_updateLeader;
+					electUpdateLeader(m_updateLeader); // ignore current update leader
+					m_unrenderedFrames = 0;
+				}
+			}
+		}
 		else
-		if(!m_isCameraThread)	
+		{
 			updateGL();
+		}
 		//updateGL(m_isCameraThread);
 	}
 	//else
@@ -429,7 +449,7 @@ void GLVideoDrawable::frameReady()
 	}
 }
 
-void GLVideoDrawable::electUpdateLeader()
+void GLVideoDrawable::electUpdateLeader(GLVideoDrawable *ignore)
 {
 	if(!m_isCameraThread)
 	{
@@ -440,7 +460,7 @@ void GLVideoDrawable::electUpdateLeader()
 	
 	if(!m_glw)
 	{
-		qDebug() << "GLVideoDrawable::electUpdateLeader(): "<<(QObject*)this<<" No GLWidget set yet, temporarily setting self as update leader and requesting election.";
+		//qDebug() << "GLVideoDrawable::electUpdateLeader(): "<<(QObject*)this<<" No GLWidget set yet, temporarily setting self as update leader and requesting election.";
 		m_electionNeeded = true;
 		m_updateLeader = this;
 		return;
@@ -454,7 +474,8 @@ void GLVideoDrawable::electUpdateLeader()
 	{
 		if(GLVideoDrawable *vid = dynamic_cast<GLVideoDrawable*>(gld))
 		{
-			if(vid->m_isCameraThread)
+			if(vid != ignore && 
+			   vid->m_isCameraThread)
 			{
 				firstCameraFound = vid;
 				if(((int)vid->m_avgFps) > maxFps)
@@ -475,16 +496,17 @@ void GLVideoDrawable::electUpdateLeader()
 	}
 	else
 	{
-		qDebug() << "GLVideoDrawable::electUpdateLeader(): "<<(QObject*)this<<" New update leader:"<<(QObject*)newLead;
-		if(m_updateLeader)
-			qDebug() << "GLVideoDrawable::electUpdateLeader(): "<<(QObject*)this<<" Old leader:"<<(QObject*)m_updateLeader;
+		//qDebug() << "GLVideoDrawable::electUpdateLeader(): "<<(QObject*)this<<" New update leader:"<<(QObject*)newLead;
+		//if(m_updateLeader)
+		//	qDebug() << "GLVideoDrawable::electUpdateLeader(): "<<(QObject*)this<<" Old leader:"<<(QObject*)m_updateLeader;
 	}
 	
 	foreach(GLDrawable *gld, list)
 	{
 		if(GLVideoDrawable *vid = dynamic_cast<GLVideoDrawable*>(gld))
 		{
-			if(vid->m_isCameraThread)
+			if(vid != ignore &&
+			   vid->m_isCameraThread)
 				vid->m_updateLeader = newLead;
 			else
 				vid->m_updateLeader = NULL;
@@ -957,16 +979,24 @@ void GLVideoDrawable::setGLWidget(GLWidget* widget)
 			m_textureUpdateNeeded = false;
 		}
 		
-		if(m_electionNeeded)
-		{
-			electUpdateLeader();
-			m_electionNeeded = false;
-		}
+// 		if(m_electionNeeded)
+// 		{
+// 			qDebug() << "GLVideoDrawable::setGLWidget(): "<<(QObject*)this<<" m_electionNeeded, calling elect"; 
+// 			electUpdateLeader();
+// 			m_electionNeeded = false;
+// 		}
+
+		//qDebug() << "GLVideoDrawable::setGLWidget(): "<<(QObject*)this<<" live status going UP, calling elect";
+		if(m_isCameraThread) 
+			electUpdateLeader(); // reelect an update leader
 	}
 	else
 	{
+		//qDebug() << "GLVideoDrawable::setGLWidget(): "<<(QObject*)this<<" live status going down, calling elect";
+		if(m_isCameraThread || m_updateLeader) 
+			electUpdateLeader(this); // reelect an update leader, ignore this drawable if going down
+		
 		GLDrawable::setGLWidget(widget);
-
 		if(liveStatus())
 			setLiveStatus(false);
 	}
@@ -2021,6 +2051,8 @@ void GLVideoDrawable::updateTexture(bool secondSource)
 
 void GLVideoDrawable::paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget)
 {
+	m_unrenderedFrames --;
+	
 // 	painter->setPen(pen);
 // 	painter->setBrush(brush);
 // 	painter->drawRect(m_contentsRect);
@@ -2220,6 +2252,8 @@ void GLVideoDrawable::updateAnimations(bool insidePaint)
 
 void GLVideoDrawable::paintGL()
 {
+	m_unrenderedFrames --;
+	
 	if(!m_validShader)
 	{
 // 		if(property("-debug").toBool())
@@ -2848,6 +2882,7 @@ void GLVideoDrawable::paintGL()
 		m_frameCount = 0;
 		m_latencyAccum = 0;
 		
+		//qDebug() << "GLVideoDrawable::paintGL(): "<<(QObject*)this<<" 100 frames, calling electUpdateLeader";
 		electUpdateLeader();
 
 		//lastFrameTime = time.elapsed();

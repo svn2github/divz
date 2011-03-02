@@ -29,6 +29,8 @@ class DirectorSourceWidget;
 class DirectorMdiSubwindow;
 class HistogramWindow;
 class InputBalanceWindow;
+class CameraMixerWidget;
+class GLVideoInputDrawable;
 #include "GLDrawable.h"
 
 class DirectorWindow : public QMainWindow
@@ -79,6 +81,7 @@ private slots:
 	void addVideoPlayer();
 	GroupPlayerWidget * addGroupPlayer();
 	OverlayWidget * addOverlay();
+	CameraMixerWidget * addCameraMixer();
 	
 	void showAllSubwindows();
 	void createUserSubwindows();
@@ -231,8 +234,9 @@ public:
 	virtual void loadFromMap(const QVariantMap&);
 	
 	VideoReceiver *receiver() { return m_rx; }
+	QString con() { return m_con; }
 	
-private slots:
+public slots:
 	// DirectorSourceWidget::	
 	virtual bool switchTo();
 	void setDeinterlace(bool);
@@ -370,6 +374,43 @@ private:
 	DirectorWindow *m_dir;
 	HistogramFilter *m_filter;
 	QList<VideoSource*> m_sources;
+};
+
+class CameraMixerWidget : public DirectorSourceWidget
+{
+	Q_OBJECT
+public:
+	CameraMixerWidget(DirectorWindow *);
+	
+// 	virtual QVariantMap saveToMap();
+// 	virtual void loadFromMap(const QVariantMap&);
+	virtual GLScene *scene() { return m_scene; }
+	
+public slots:
+	virtual bool switchTo();
+	
+private slots:
+	void input1Changed(int);
+	void input2Changed(int);
+	void layoutChanged(int);
+	
+	void subwindowAdded(QMdiSubWindow*);
+	void windowClosed();
+	void buildCombos();
+	
+private:
+	QComboBox *m_combo1;
+	QComboBox *m_combo2;
+	QComboBox *m_layoutCombo;
+	
+	QStringList m_conList;
+	
+	GLWidget *m_glw;
+	GLSceneGroup *m_setGroup;
+	GLScene *m_scene;
+	GLVideoInputDrawable *m_cam1;
+	GLVideoInputDrawable *m_cam2;
+	GLSceneGroupCollection *m_collection;
 };
 
 class VideoInputColorBalancer;

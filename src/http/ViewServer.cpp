@@ -215,9 +215,12 @@ void ViewServer::reqSendImage(QTcpSocket *socket, const QStringList &path, const
 	
 	if(format.isEmpty())
 		format = "jpeg";
-	if(format != "jpeg" && format != "png")
+	if(format == "jpg")
 		format = "jpeg";
 	
+	if(format != "jpeg" && 
+	   format != "png")
+		format = "jpeg";
 	
 	if(doc)
 	{

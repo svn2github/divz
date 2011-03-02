@@ -358,6 +358,7 @@ void DirectorWindow::setupUI()
 	
 	connect(ui->actionAdd_Video_Player, SIGNAL(triggered()), this, SLOT(addVideoPlayer()));
 	connect(ui->actionAdd_Group_Player, SIGNAL(triggered()), this, SLOT(addGroupPlayer()));
+	connect(ui->actionAdd_Camera_Mixer, SIGNAL(triggered()), this, SLOT(addCameraMixer()));
 	connect(ui->actionAdd_Overlay, SIGNAL(triggered()), this, SLOT(addOverlay()));
 	connect(ui->actionShow_Preview, SIGNAL(triggered()), this, SLOT(showPreviewWin()));
 	connect(ui->actionShow_Switcher, SIGNAL(triggered()), this, SLOT(showSwitcher()));
@@ -481,6 +482,17 @@ void DirectorWindow::createUserSubwindows()
 			}
 		}
 		else
+// 		if(className == "CameraMixerWidget")
+// 		{
+// 			CameraMixerWidget *widget = addCameraMixer();
+// 			
+// 			widget->loadFromMap(opts);
+// 			
+// 			qDebug() << "DirectorWindow::createUserSubwindows(): Added CameraMixerWidget widget:"<<widget;
+// 			
+// 			widgetPtr = widget;
+// 		}
+// 		else
 		if(className == "GroupPlayerWidget")
 		{
 			if(!opts["file"].toString().isEmpty())
@@ -599,11 +611,19 @@ void DirectorWindow::writeSettings()
 			m_storedWindowOptions << opts;
 		}
 		else
+		if(CameraMixerWidget *tmp = dynamic_cast<CameraMixerWidget*>(widget))
 		{
-			QVariantMap opts;
-			opts["_class"] = "OverlayWidget";
+			QVariantMap opts = tmp->saveToMap();
+			opts["_class"] = "CameraMixerWidget";
 			opts["_geom"]  = win->geometry();
 			m_storedWindowOptions << opts;
+		}
+		else
+		{
+// 			QVariantMap opts;
+// 			opts["_class"] = "OverlayWidget";
+// 			opts["_geom"]  = win->geometry();
+// 			m_storedWindowOptions << opts;
 		}
 	}
 	
@@ -789,6 +809,16 @@ GroupPlayerWidget *DirectorWindow::addGroupPlayer()
 {
 	GroupPlayerWidget *vid = new GroupPlayerWidget(this); 
 
+	addSubwindow(vid);
+	
+	return vid;
+}
+
+
+CameraMixerWidget *DirectorWindow::addCameraMixer()
+{
+	CameraMixerWidget *vid = new CameraMixerWidget(this); 
+	
 	addSubwindow(vid);
 	
 	return vid;
@@ -1042,6 +1072,9 @@ bool GroupPlayerWidget::switchTo()
 			//player->setUserProperty(gld, con, "videoConnection");
 		}
 	}
+	
+	if(m_switcher)
+		m_switcher->notifyIsLive(this);
 	
 	return true;
 }
@@ -1371,6 +1404,14 @@ CameraWidget::CameraWidget(DirectorWindow* dir, VideoReceiver *rx, QString con, 
 	, m_con(con)
 	, m_camSceneGroup(group)
 {
+
+	m_camSceneGroup = new GLSceneGroup();
+	GLScene *scene = new GLScene();
+	GLVideoInputDrawable *vidgld = new GLVideoInputDrawable();
+	vidgld->setVideoConnection(con);
+	scene->addDrawable(vidgld);
+	m_camSceneGroup->addScene(scene);
+	
 	QVBoxLayout *vbox = new QVBoxLayout(this);
 	vbox->setContentsMargins(0,0,0,0);
 	
@@ -1412,9 +1453,9 @@ bool CameraWidget::switchTo()
 {
 	qDebug() << "CameraWidget::switchTo: Using con string: "<<m_con;
 	
-	GLDrawable *gld = m_camSceneGroup->at(0)->at(0);
-	gld->setProperty("videoConnection", m_con);
-	
+ 	GLDrawable *gld = m_camSceneGroup->at(0)->at(0);
+ 	gld->setProperty("videoConnection", m_con);
+// 	
 	if(!m_dir->players())
 		return false;
 		
@@ -1429,6 +1470,9 @@ bool CameraWidget::switchTo()
 	}
 	 
 	setDeinterlace(m_deinterlace);
+	
+	if(m_switcher)
+		m_switcher->notifyIsLive(this);
 	
 	return true;
 }
@@ -1885,4 +1929,235 @@ void InputBalanceWindow::buildCombo()
 // 	QList<Source> m_sources;
 // 
 // 
+
+
+////////////////////////////////////////////////////////
+
+CameraMixerWidget::CameraMixerWidget(DirectorWindow *dir)
+	: DirectorSourceWidget(dir)
+{
+	setWindowTitle("Camera Mixer");
+	
+	m_setGroup = new GLSceneGroup();
+	m_scene = new GLScene();
+	m_cam1  = new GLVideoInputDrawable();
+	m_cam2  = new GLVideoInputDrawable();
+	m_cam1->setZIndex(1);
+	m_cam2->setZIndex(2);
+	m_scene->addDrawable(m_cam1);
+	m_scene->addDrawable(m_cam2);
+	m_setGroup->addScene(m_scene);
+	
+	QVBoxLayout *vbox = new QVBoxLayout(this);
+	//vbox->setContentsMargins(0,0,0,0);
+	
+	QHBoxLayout *hbox = new QHBoxLayout();
+	m_combo1 = new QComboBox();
+	connect(m_combo1, SIGNAL(activated(int)), this, SLOT(input1Changed(int)));
+	hbox->addWidget(m_combo1);
+	
+	m_combo2 = new QComboBox();
+	connect(m_combo2, SIGNAL(activated(int)), this, SLOT(input2Changed(int)));
+	hbox->addWidget(m_combo2);
+	
+	vbox->addLayout(hbox);
+	
+	GLWidget *glw = new GLWidget();
+	vbox->addWidget(glw);
+	
+	connect(glw, SIGNAL(clicked()), this, SLOT(switchTo()));
+	m_scene->setGLWidget(glw);
+	
+	m_layoutCombo = new QComboBox();
+	connect(m_layoutCombo, SIGNAL(activated(int)), this, SLOT(layoutChanged(int)));
+	
+	QStringList layouts;
+	layouts << "Side-by-side" 
+		<< "PiP - Top-Left"
+		<< "PiP - Top-Right"
+		<< "PiP - Bottom-Right"
+		<< "PiP - Bottom-Left"
+		<< "3D";
+	m_layoutCombo->addItems(layouts);
+	layoutChanged(0);
+	
+	vbox->addWidget(m_layoutCombo);
+	
+	//gld->setObjectName(qPrintable(windowTitle()));
+	resize(320,240);
+	
+	buildCombos();
+}
+
+void CameraMixerWidget::layoutChanged(int idx)
+{
+	int pipW = 320;
+	int pipH = 240;
+	int pipXMargin = 10;
+	int pipYMargin = 10;
+	
+	int sceneW = 1000;
+	int sceneH = 750;
+	
+	m_cam1->setRotation(QVector3D(0,0,0));
+	m_cam2->setRotation(QVector3D(0,0,0));
+			
+	switch(idx)
+	{
+		case 1: // Top-Left
+			m_cam1->setRect(QRectF(0,0,sceneW,sceneH));
+			m_cam2->setRect(QRectF(pipXMargin,pipYMargin,pipW,pipH));
+		break;
+		
+		case 2: // Top-Right
+			m_cam1->setRect(QRectF(0,0,sceneW,sceneH));
+			m_cam2->setRect(QRectF(sceneW - pipW - pipXMargin,pipYMargin,pipW,pipH));
+		break;
+				
+		case 3: // Bottom-Right
+			m_cam1->setRect(QRectF(0,0,sceneW,sceneH));
+			m_cam2->setRect(QRectF(sceneW - pipW - pipXMargin,sceneH - pipH - pipYMargin,pipW,pipH));
+		break;
+		
+		case 4: // Bottom-Left
+			m_cam1->setRect(QRectF(0,0,sceneW,sceneH));
+			m_cam2->setRect(QRectF(pipXMargin,sceneH - pipH - pipYMargin,pipW,pipH));
+		break;
+		
+		case 5: // 3d
+		{
+			int overlap = 100; //sceneW / 4;
+			m_cam1->setRect(QRectF(0,0,sceneW/2 + overlap,sceneH));
+			m_cam2->setRect(QRectF(sceneW/2 - overlap,0,sceneW/2 + overlap,sceneH));
+			m_cam1->setRotation(QVector3D(0,-45,0));
+			m_cam2->setRotation(QVector3D(0,45,0));
+		}
+		break;
+		
+		case 0:
+		default:
+			m_cam1->setRect(QRectF(0,0,sceneW/2,sceneH));
+			m_cam2->setRect(QRectF(sceneW/2,0,sceneW/2,sceneH));
+		break;
+	};
+}
+
+// DirectorSourceWidget::	
+bool CameraMixerWidget::switchTo()
+{
+	//int idx = m_combo->currentIndex();
+	
+// 	GLSceneGroup *group = m_collection->at(0); 
+// 	GLScene *scene = group->at(idx);
+	
+	foreach(PlayerConnection *player, m_dir->players()->players())
+ 	{
+ 		if(player->isConnected())
+ 		{
+ 			//if(player->lastGroup() != m_setGroup)
+ 				player->setGroup(m_setGroup, m_scene);
+ 			//m_setGroup = group;
+			//player->setUserProperty(gld, con, "videoConnection");
+			player->setUserProperty(m_cam1, m_cam1->videoConnection(), "videoConnection");
+			player->setUserProperty(m_cam2, m_cam2->videoConnection(), "videoConnection");
+		}
+	}
+	
+	if(m_switcher)
+		m_switcher->notifyIsLive(this);
+	
+	return true;
+}
+
+
+void CameraMixerWidget::input1Changed(int x)
+{
+	if(x<0 || x>=m_conList.size())
+		return;
+		
+	qDebug() << "CameraMixerWidget::input1changed: x:"<<x<<", new source:"<<m_conList[x];
+	m_cam1->setVideoConnection(m_conList[x]);
+	
+	foreach(PlayerConnection *player, m_dir->players()->players())
+ 	{
+ 		if(player->isConnected())
+ 		{
+ 			if(player->lastGroup() == m_setGroup)
+ 				//player->setGroup(m_setGroup, m_scene);
+ 			//m_setGroup = group;
+				player->setUserProperty(m_cam1, m_conList[x], "videoConnection");
+		}
+	}
+}
+	
+void CameraMixerWidget::input2Changed(int x)
+{
+	if(x<0 || x>=m_conList.size())
+		return;
+		
+	qDebug() << "CameraMixerWidget::input2changed: x:"<<x<<", new source:"<<m_conList[x];
+	m_cam2->setVideoConnection(m_conList[x]);
+	
+	foreach(PlayerConnection *player, m_dir->players()->players())
+ 	{
+ 		if(player->isConnected())
+ 		{
+ 			if(player->lastGroup() == m_setGroup)
+ 				//player->setGroup(m_setGroup, m_scene);
+ 			//m_setGroup = group;
+				player->setUserProperty(m_cam2, m_conList[x], "videoConnection");
+		}
+	}
+}
+
+void CameraMixerWidget::subwindowAdded(QMdiSubWindow*)
+{
+	buildCombos();
+}
+void CameraMixerWidget::windowClosed()
+{
+	buildCombos();
+}
+
+void CameraMixerWidget::buildCombos()
+{
+	QStringList names;
+	QList<QMdiSubWindow*> windows = m_dir->subwindows();
+	foreach(QMdiSubWindow *win, windows)
+	{
+		//if(DirectorSourceWidget *src = dynamic_cast<DirectorSourceWidget*>(win->widget()))
+		
+		if(CameraWidget *src = dynamic_cast<CameraWidget*>(win->widget()))
+		{	
+			connect(src, SIGNAL(destroyed()), this, SLOT(windowClosed()));
+			
+			names << src->windowTitle();
+			m_conList << src->con();
+		}
+	}
+	
+	m_combo1->clear();
+	m_combo1->addItems(names);
+	if(!names.isEmpty())
+		m_combo1->setCurrentIndex(0);
+	
+	m_combo2->clear();
+	m_combo2->addItems(names);
+	if(!names.isEmpty())
+		m_combo2->setCurrentIndex(0);
+		
+	//adjustSize();
+}
+	
+/*private:
+	class Source
+	{
+	public:
+		QString title;
+		VideoSource *source;
+	};
+	
+	
+	HistogramFilter *m_filter;
+	QList<Source> m_sources;*/
 

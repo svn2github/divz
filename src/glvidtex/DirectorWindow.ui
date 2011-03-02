@@ -103,6 +103,7 @@
     <addaction name="separator"/>
     <addaction name="actionAdd_Group_Player"/>
     <addaction name="actionAdd_Overlay"/>
+    <addaction name="actionAdd_Camera_Mixer"/>
     <addaction name="actionAdd_Video_Player"/>
    </widget>
    <widget class="QMenu" name="menuWindow">
@@ -179,6 +180,11 @@
   <action name="actionShow_InputBalance">
    <property name="text">
     <string>Show &amp;Camera Color Balancer</string>
+   </property>
+  </action>
+  <action name="actionAdd_Camera_Mixer">
+   <property name="text">
+    <string>Add Camera &amp;Mixer</string>
    </property>
   </action>
  </widget>
