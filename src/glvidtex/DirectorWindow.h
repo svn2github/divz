@@ -427,18 +427,21 @@ private slots:
 	
 	void subwindowAdded(QMdiSubWindow*);
 	void windowClosed();
-	void buildCombo();
+	void buildCombos();
 	
 private:
-	class Source
-	{
-	public:
-		QString title;
-		VideoSource *source;
-	};
-	
+// 	class Source
+// 	{
+// 	public:
+// 		QString title;
+// 		VideoSource *source;
+// 	};
+// 	
 	VideoInputColorBalancer *m_balancer;
-	QList<Source> m_sources;
+	QList<VideoReceiver*> m_sources;
+	QComboBox *m_combo1;
+	QComboBox *m_combo2;
+	DirectorWindow *m_director;
 
 };
 

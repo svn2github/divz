@@ -288,6 +288,7 @@ GLWidget::GLWidget(QWidget *parent, QGLWidget *shareWidget)
 	, m_readbackSizeAuto(true)
 	, m_readbackFbo(0)
 	, m_firstPbo(false)
+	, m_backgroundColor(Qt::black) 
 {
 
 	//m_readbackSize = QSize(640,480);
@@ -988,7 +989,7 @@ void GLWidget::paintGL()
 	//	m_fbo->bind();
 	makeRenderContextCurrent();
 
-	qglClearColor(Qt::black);
+	qglClearColor(m_backgroundColor); //Qt::black);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glLoadIdentity(); // Reset The View
 
@@ -1109,7 +1110,7 @@ void GLWidget::paintGL()
 		// 3. Brightness/Contrast/Hue/Saturation adjustments - Adjust the B/C/H/S over the entire output image, not just individual drawables
 		// The alpha masking and BCHS adjustments require pixel shaders - therefore, if the system does not support them (<OpenGL 2), then
 		// only the first item (corner distortion) will work.
-		qglClearColor(Qt::black);
+		qglClearColor(m_backgroundColor);//Qt::black);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glLoadIdentity(); // Reset The View
 
@@ -2084,6 +2085,13 @@ void GLWidget::setFboEnabled(bool flag)
 
 	// resizeGL() will re-create m_fbo as needed
 	resizeGL(width(),height());
+	updateGL();
+}
+
+
+void GLWidget::setBackgroundColor(QColor bg)
+{
+	m_backgroundColor = bg;
 	updateGL();
 }
 

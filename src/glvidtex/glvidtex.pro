@@ -164,7 +164,9 @@ director: {
 		../livemix/VideoWidget.h \
 		VideoInputSenderManager.h \
 		DrawableDirectorWidget.h \
-		ScenePropertiesDialog.h
+		ScenePropertiesDialog.h \
+		VideoInputColorBalancer.h 
+	
 		
 		
 	SOURCES += director-main.cpp \
@@ -181,7 +183,8 @@ director: {
 		../livemix/VideoWidget.cpp \
 		VideoInputSenderManager.cpp \
 		DrawableDirectorWidget.cpp \
-		ScenePropertiesDialog.cpp
+		ScenePropertiesDialog.cpp \
+		VideoInputColorBalancer.cpp 
 		
 	include(../3rdparty/richtextedit/richtextedit.pri)
 	include(../qtcolorpicker/qtcolorpicker.pri)

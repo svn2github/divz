@@ -34,6 +34,7 @@ void VideoFilter::setVideoSource(VideoSource* source)
 	{
 		connect(m_source, SIGNAL(frameReady()), this, SLOT(frameAvailable()));
 		connect(m_source, SIGNAL(destroyed()),  this, SLOT(disconnectVideoSource()));
+		m_source->registerConsumer(this);
 		
 		// pull in the first frame
 		frameAvailable();
@@ -49,6 +50,7 @@ void VideoFilter::disconnectVideoSource()
 	if(!m_source)
 		return;
 	disconnect(m_source, 0, this, 0);
+	m_source->release(this);
 	m_source = 0;
 }
 
@@ -58,6 +60,9 @@ void VideoFilter::frameAvailable()
 	if(m_source)
 	{
 		VideoFramePtr f = m_source->frame();
+// 		enqueue(f);
+// 		return;
+		
 // 		qDebug() << "GLVideoDrawable::frameReady(): "<<objectName()<<" f:"<<f;
 		if(!f)
 			return;

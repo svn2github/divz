@@ -459,7 +459,7 @@ void VideoReceiver::processBlock()
 				
 				if(frame->bufferType() == VideoFrame::BUFFER_IMAGE)
 				{
-					frame->setImage(QImage((const uchar*)block.constData(), imgX, imgY, (QImage::Format)imageFormatId));
+					frame->setImage(QImage((const uchar*)block.constData(), imgX, imgY, (QImage::Format)imageFormatId).copy());
 					
 					// Disabled upscaling for now because:
 					// 1. It was taking approx 20ms to upscale 320x240->1024x758

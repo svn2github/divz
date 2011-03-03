@@ -1818,6 +1818,8 @@ HistogramWindow::HistogramWindow(DirectorWindow *dir)
 	vbox->addWidget(m_combo);
 	
 	GLWidget *vid = new GLWidget();
+	vid->setBackgroundColor(palette().color(QPalette::Window));
+	vid->setViewport(QRectF(0,0,425,128)); // approx histogram output size for a 4:3 video frame
 	vbox->addWidget(vid);
 
 	m_filter = new HistogramFilter ();
@@ -1825,10 +1827,11 @@ HistogramWindow::HistogramWindow(DirectorWindow *dir)
 	GLVideoDrawable *gld = new GLVideoDrawable();
 	gld->setVideoSource(m_filter);
 	vid->addDrawable(gld);
+	gld->setRect(vid->viewport());
 	
 	setWindowTitle("Histogram");
 	gld->setObjectName(qPrintable(windowTitle()));
-	resize(320,240);
+	//resize(320,150);
 	
 	buildCombo();
 }
@@ -1876,7 +1879,10 @@ void HistogramWindow::buildCombo()
 	m_combo->clear();
 	m_combo->addItems(names);
 	if(!names.isEmpty())
+	{
 		m_combo->setCurrentIndex(0);
+		inputIdxChanged(0);
+	}
 	
 	//adjustSize();
 }
@@ -1897,28 +1903,99 @@ void HistogramWindow::buildCombo()
 
 InputBalanceWindow::InputBalanceWindow(DirectorWindow *dir)
 	: QWidget(dir)
+	, m_director(dir)
 {
 	setWindowTitle("Camera Color Balancer");
-}
 	
-void InputBalanceWindow::masterChanged(int)
-{
+	QVBoxLayout *vbox = new QVBoxLayout(this);
+	//vbox->setContentsMargins(0,0,0,0);
+	
+	QHBoxLayout *hbox = new QHBoxLayout();
+	hbox->addWidget(new QLabel("Master:"));
+	m_combo1 = new QComboBox();
+	connect(m_combo1, SIGNAL(activated(int)), this, SLOT(masterChanged(int)));
+	hbox->addWidget(m_combo1);
+	hbox->addStretch(1);
+	
+	hbox->addWidget(new QLabel("Slave:"));
+	m_combo2 = new QComboBox();
+	connect(m_combo2, SIGNAL(activated(int)), this, SLOT(slaveChanged(int)));
+	hbox->addWidget(m_combo2);
+	
+	vbox->addLayout(hbox);
+	
+	m_balancer = new VideoInputColorBalancer(this); 
+	vbox->addWidget(m_balancer);
+	
+	//gld->setObjectName(qPrintable(windowTitle()));
+	//resize(320,240);
+	
+	buildCombos();
 }
 
-void InputBalanceWindow::slaveChanged(int)
+
+void InputBalanceWindow::masterChanged(int x)
 {
+	if(x<0 || x>=m_sources.size())
+		return;
+		
+	qDebug() << "InputBalanceWindow::masterChanged: x:"<<x<<", new source:"<<m_sources[x];
+	m_balancer->setMasterSource(m_sources[x]);
+}
+	
+void InputBalanceWindow::slaveChanged(int x)
+{
+	if(x<0 || x>=m_sources.size())
+		return;
+		
+	qDebug() << "InputBalanceWindow::slaveChangedhanged: x:"<<x<<", new source:"<<m_sources[x];
+	m_balancer->setSlaveSource(m_sources[x]);
 }
 
 void InputBalanceWindow::subwindowAdded(QMdiSubWindow*)
 {
+	buildCombos();
 }
-
 void InputBalanceWindow::windowClosed()
 {
+	buildCombos();
 }
 
-void InputBalanceWindow::buildCombo()
+void InputBalanceWindow::buildCombos()
 {
+	m_sources.clear();
+	QStringList names;
+	QList<QMdiSubWindow*> windows = m_director->subwindows();
+	foreach(QMdiSubWindow *win, windows)
+	{
+		//if(DirectorSourceWidget *src = dynamic_cast<DirectorSourceWidget*>(win->widget()))
+		
+		if(CameraWidget *src = dynamic_cast<CameraWidget*>(win->widget()))
+		{	
+			connect(src, SIGNAL(destroyed()), this, SLOT(windowClosed()));
+			
+			names << src->windowTitle();
+			m_sources << src->receiver();
+		}
+	}
+	
+	m_combo1->clear();
+	m_combo1->addItems(names);
+	if(!names.isEmpty())
+	{
+		m_combo1->setCurrentIndex(0);
+		masterChanged(0);
+	}
+	
+	m_combo2->clear();
+	m_combo2->addItems(names);
+	if(names.size() > 1)
+	{
+		m_combo2->setCurrentIndex(1);
+		slaveChanged(1);
+	}
+		
+	//adjustSize();
 }
 
 	
@@ -2144,12 +2221,18 @@ void CameraMixerWidget::buildCombos()
 	m_combo1->clear();
 	m_combo1->addItems(names);
 	if(!names.isEmpty())
+	{
 		m_combo1->setCurrentIndex(0);
+		input1Changed(0);
+	}
 	
 	m_combo2->clear();
 	m_combo2->addItems(names);
-	if(!names.isEmpty())
-		m_combo2->setCurrentIndex(0);
+	if(names.size() > 1)
+	{
+		m_combo2->setCurrentIndex(1);
+		input2Changed(1);
+	}
 		
 	//adjustSize();
 }

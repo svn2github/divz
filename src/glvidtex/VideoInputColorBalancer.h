@@ -13,6 +13,10 @@ public:
 	VideoInputColorBalancer(QWidget *parent=0);
 	~VideoInputColorBalancer();
 	
+public slots:
+	void setMasterSource(VideoReceiver *rx);
+	void setSlaveSource(VideoReceiver *rx);
+	
 protected slots:
 	void hsvStatsUpdated(int hMin, int hMax, int hAvg, 
 	                     int sMin, int sMax, int sAvg,

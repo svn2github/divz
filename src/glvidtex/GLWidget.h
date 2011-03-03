@@ -300,6 +300,8 @@ public:
 	int crossfadeSpeed() { return m_crossfadeSpeed; }
 	
 	bool fboEnabled() { return m_fboEnabled; }
+	
+	QColor backgroundColor() { return m_backgroundColor; }
 
 signals:
 	void clicked();
@@ -348,6 +350,8 @@ public slots:
  	void setOutputSize(QSize);
 	
 	void postInitGL();
+	
+	void setBackgroundColor(QColor);
 	
 protected slots:
 	void zIndexChanged();
@@ -437,6 +441,9 @@ private:
 	
 	// Called when the widget size has changed or when setOutputSize() is called
 	void setupReadbackBuffers();
+	
+	// default is black
+	QColor m_backgroundColor;
 };
 
 #endif

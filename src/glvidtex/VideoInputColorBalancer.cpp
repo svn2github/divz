@@ -7,8 +7,8 @@
 #include "HistogramFilter.h"
 #include "VideoReceiver.h"
 
-#define VIDEO_HOST "192.168.0.18"
-//#define VIDEO_HOST "10.10.9.177"
+//#define VIDEO_HOST "192.168.0.18"
+#define VIDEO_HOST "10.10.9.177"
 
 #define VIDEO_FPS 5
 
@@ -83,7 +83,7 @@ VideoInputColorBalancer::VideoInputColorBalancer(QWidget *parent)
 	
 	// Setup video receiver and displays
 	VideoWidget *vidMaster = new VideoWidget();
-	m_sourceMaster = VideoReceiver::getReceiver(VIDEO_HOST,7756);
+	m_sourceMaster = VideoReceiver::getReceiver(VIDEO_HOST,7755);
 	
 	m_sourceMaster->setFPS(VIDEO_FPS);
 	vidMaster->setFps(VIDEO_FPS);
@@ -93,10 +93,18 @@ VideoInputColorBalancer::VideoInputColorBalancer(QWidget *parent)
 // 	if(m_sourceMaster->isConnected())
 // 		rxConnected(m_sourceMaster);
 	
-	VideoWidget *vidSlave = new VideoWidget();
-	m_sourceSlave = VideoReceiver::getReceiver(VIDEO_HOST,7755);
+	m_histoMaster->setVideoSource(m_sourceMaster);
+	vidMaster->setVideoSource(m_histoMaster);
+	vidMaster->setOverlayText("Master");
 	
+	vbox->addWidget(vidMaster);
+	
+	//m_sourceSlave = 0;
+	
+	m_sourceSlave = VideoReceiver::getReceiver(VIDEO_HOST,7756);
 	m_sourceSlave->setFPS(VIDEO_FPS);
+	
+	VideoWidget *vidSlave = new VideoWidget();
 	vidSlave->setFps(VIDEO_FPS);
 	vidSlave->setRenderFps(true);
 	
@@ -104,15 +112,10 @@ VideoInputColorBalancer::VideoInputColorBalancer(QWidget *parent)
 // 	if(m_sourceSlave->isConnected())
 // 		rxConnected(m_sourceSlave);
 	
-	m_histoMaster->setVideoSource(m_sourceMaster);
-	vidMaster->setVideoSource(m_histoMaster);
-	vidMaster->setOverlayText("Master");
-	
 	m_histoSlave->setVideoSource(m_sourceSlave);
 	vidSlave->setVideoSource(m_histoSlave);
 	vidSlave->setOverlayText("Slave");
 	
-	vbox->addWidget(vidMaster);
 	vbox->addWidget(vidSlave);
 	
 	// Setup frame accum signal/slots
@@ -324,6 +327,19 @@ VideoInputColorBalancer::VideoInputColorBalancer(QWidget *parent)
 VideoInputColorBalancer::~VideoInputColorBalancer()
 {}
 	
+	
+void VideoInputColorBalancer::setMasterSource(VideoReceiver *rx)
+{
+	m_sourceMaster = rx;
+	m_histoMaster->setVideoSource(m_sourceMaster);
+}
+
+void VideoInputColorBalancer::setSlaveSource(VideoReceiver *rx)
+{
+	m_sourceSlave = rx;
+	m_histoSlave->setVideoSource(m_sourceSlave);
+}
+
 void VideoInputColorBalancer::hsvStatsUpdated(int hMin, int hMax, int hAvg, 
 					      int sMin, int sMax, int sAvg,
 					      int vMin, int vMax, int vAvg)
@@ -654,7 +670,8 @@ void VideoInputColorBalancer::setHue(int val)
 	{
 		m_vals[idx] = val;
 		VideoReceiver *rx = m_adjustMaster ? m_sourceMaster : m_sourceSlave;
-		rx->setHue(val);
+		if(rx)
+			rx->setHue(val);
 	}
 }
 
@@ -665,7 +682,8 @@ void VideoInputColorBalancer::setSat(int val)
 	{
 		m_vals[idx] = val;
 		VideoReceiver *rx = m_adjustMaster ? m_sourceMaster : m_sourceSlave;
-		rx->setSaturation(val);
+		if(rx)
+			rx->setSaturation(val);
 	}
 }
 
@@ -677,7 +695,8 @@ void VideoInputColorBalancer::setBright(int val)
 	{
 		m_vals[idx] = val;
 		VideoReceiver *rx = m_adjustMaster ? m_sourceMaster : m_sourceSlave;
-		rx->setBrightness(val);
+		if(rx)
+			rx->setBrightness(val);
 		
 		//qDebug() << "VideoInputColorBalancer::setBright:  * setting *";
 	}
@@ -691,7 +710,8 @@ void VideoInputColorBalancer::setContrast(int val)
 	{
 		m_vals[idx] = val;
 		VideoReceiver *rx = m_adjustMaster ? m_sourceMaster : m_sourceSlave;
-		rx->setContrast(val);
+		if(rx)
+			rx->setContrast(val);
 	}
 }
 

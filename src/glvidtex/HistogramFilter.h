@@ -21,6 +21,7 @@ public:
 	
 	bool frameAccumEnabled() { return m_frameAccumEnabled; }
 	int frameAccumNum() { return m_frameAccumNum; }
+	bool drawBorder() { return m_drawBorder; }
 
 public slots:
 	void setHistoType(HistoType type);
@@ -31,6 +32,8 @@ public slots:
 	
 	void setFrameAccumEnabled(bool);
 	void setFrameAccumNum(int);
+	
+	void setDrawBorder(bool flag) { m_drawBorder = flag; }
 
 signals:
 	void hsvStatsUpdated(int hMin, int hMax, int hAvg, 
@@ -54,6 +57,8 @@ protected:
 	int m_frameAccumNum;
 	
 	QQueue<QImage> m_frameAccum;
+	
+	bool m_drawBorder;
 	
 	
 };

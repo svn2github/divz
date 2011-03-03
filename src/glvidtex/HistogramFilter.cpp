@@ -8,6 +8,7 @@ HistogramFilter::HistogramFilter(QObject* parent)
 	, m_calcHsvStats(true)
 	, m_frameAccumEnabled(false)
 	, m_frameAccumNum(10) // just a guess
+	, m_drawBorder(true)
 {
 	setIsThreaded(true);
 }
@@ -98,7 +99,7 @@ QImage HistogramFilter::makeHistogram(const QImage& image)
 	//smallSize.scale(4,1,Qt::KeepAspectRatio);
 	//smallSize.scale(160,120,Qt::KeepAspectRatio);
 	
-	QImage origScaled = image.scaled(smallSize);
+	QImage origScaled = image.scaled(640,480).scaled(smallSize);
 	if(origScaled.format() != QImage::Format_RGB32)
 		origScaled = origScaled.convertToFormat(QImage::Format_RGB32);
 		
@@ -359,6 +360,12 @@ QImage HistogramFilter::makeHistogram(const QImage& image)
 		p2.fillRect(histogramOutput.rect(),Qt::gray);
 		p2.drawImage(QPointF(0,0),origScaled);
 		p2.drawImage(QPointF(smallSize.width(),0),histogram);
+		if(m_drawBorder)
+		{
+			p2.setPen(QPen(Qt::black,1.5));
+			p2.drawRect(histogramOutput.rect().adjusted(0,0,-1,-1));
+		}
+		//qDebug() << "Histo size:"<<histogramOutput.size();
 	
 		return histogramOutput;
 	}
