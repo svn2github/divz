@@ -1023,83 +1023,82 @@ void GLWidget::paintGL()
 
 	//glFlush();
 
-	if(!m_fbo)
+	if(m_outputStream)
 	{
-		//qDebug() << "GLWidget::paintGL(): NOT drawing FBO";
-
-		if(m_outputStream)
+		if(m_fbo && !m_fbo->isBound())
+			m_fbo->bind();
+			
+		//qDebug() << "GLWidget::paintGL(): Downloading from GPU to m_outputStream";
+// 		QTime t;
+// 		t.start();
+		#ifndef Q_OS_WIN32
+		if(m_pboEnabled)
 		{
-			//qDebug() << "GLWidget::paintGL(): Downloading from GPU to m_outputStream";
+			m_firstPbo = ! m_firstPbo;
+			int processIdx = m_firstPbo ? 0 : 1;
+			int readIdx = m_firstPbo ? 1 :0;
+
+			//qDebug() << "GLWidget::paintGL(): Read texture size:"<<size()<<", output size:"<<m_readbackSize<<", readIdx:"<<readIdx<<", processIdx:"<<processIdx;
+
+			//glFinish();
+
+			//glReadBuffer(GL_FRONT);
+			// read pixels from framebuffer to PBO
+			// glReadPixels() should return immediately.
+			glBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, m_pboIds[readIdx]);
+
 // 			QTime t;
 // 			t.start();
-			#ifndef Q_OS_WIN32
-			if(m_pboEnabled)
+
+			glReadPixels(0, 0, m_readbackSize.width(), m_readbackSize.height(), GL_BGRA, GL_UNSIGNED_BYTE, 0);
+
+// 			int elapsed = t.elapsed();
+// 			t.restart();
+
+			// map the PBO to process its data by CPU
+			glBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, m_pboIds[processIdx]);
+			GLubyte* ptr = (GLubyte*)glMapBufferARB(GL_PIXEL_PACK_BUFFER_ARB,
+								GL_READ_ONLY_ARB);
+			if(ptr)
 			{
-				m_firstPbo = ! m_firstPbo;
-				int processIdx = m_firstPbo ? 0 : 1;
-				int readIdx = m_firstPbo ? 1 :0;
+// 				QImage img(m_readbackSize, QImage::Format_ARGB32);
+// 				memcpy(img.bits(), ptr, img.byteCount());
+// 				m_outputStream->setImage(img);
+				m_outputStream->copyPtr(ptr, size());
 
-				//qDebug() << "GLWidget::paintGL(): Read texture size:"<<size()<<", output size:"<<m_readbackSize<<", readIdx:"<<readIdx<<", processIdx:"<<processIdx;
+				//int elapsed2 = t.elapsed();
+				//m_outputStream->setImage(img);
+				//QString file = QString("debug/pboread-%1.png").arg(readIdx);
+				//img.save(file);
+				//qDebug() << "Writing to file:"<<QString("debug/pboread-%1.png").arg(readIdx)<<", elapsed:"<<elapsed;
+				//qDebug() << "Download from buffer "<<readIdx<<" completed, "<<elapsed<<"ms. Image buffer "<<processIdx<<" processed, "<<elapsed2<<" ms";
 
-				//glFinish();
-
-				//glReadBuffer(GL_FRONT);
-				// read pixels from framebuffer to PBO
-				// glReadPixels() should return immediately.
-				glBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, m_pboIds[readIdx]);
-
-				QTime t;
-				t.start();
-
-				glReadPixels(0, 0, m_readbackSize.width(), m_readbackSize.height(), GL_BGRA, GL_UNSIGNED_BYTE, 0);
-
-				int elapsed = t.elapsed();
-				t.restart();
-
-				// map the PBO to process its data by CPU
-				glBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, m_pboIds[processIdx]);
-				GLubyte* ptr = (GLubyte*)glMapBufferARB(GL_PIXEL_PACK_BUFFER_ARB,
-									GL_READ_ONLY_ARB);
-				if(ptr)
-				{
-// 					QImage img(m_readbackSize, QImage::Format_ARGB32);
-// 					memcpy(img.bits(), ptr, img.byteCount());
-// 					m_outputStream->setImage(img);
-					m_outputStream->copyPtr(ptr, size());
-
-					int elapsed2 = t.elapsed();
-					//m_outputStream->setImage(img);
-					//QString file = QString("debug/pboread-%1.png").arg(readIdx);
-					//img.save(file);
-					//qDebug() << "Writing to file:"<<QString("debug/pboread-%1.png").arg(readIdx)<<", elapsed:"<<elapsed;
-					//qDebug() << "Download from buffer "<<readIdx<<" completed, "<<elapsed<<"ms. Image buffer "<<processIdx<<" processed, "<<elapsed2<<" ms";
-
-					glUnmapBufferARB(GL_PIXEL_PACK_BUFFER_ARB);
-				}
-				else
-				{
-					qDebug() << "GLWidget::paintGL(): No ptr received from glMapBufferARB()";
-				}
-
-				// back to conventional pixel operation
-				glBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, 0);
+				glUnmapBufferARB(GL_PIXEL_PACK_BUFFER_ARB);
 			}
 			else
-			#endif
 			{
-
-				QTime t;
-				t.start();
-
-				QImage img(size(), QImage::Format_ARGB32);
-				glReadPixels(0, 0, width(), height(), GL_BGRA, GL_UNSIGNED_BYTE, img.bits());
-				m_outputStream->setImage(img);
-				//qDebug() << "glReadPixels elapsed:"<<t.elapsed()<<"ms";
+				qDebug() << "GLWidget::paintGL(): No ptr received from glMapBufferARB()";
 			}
 
+			// back to conventional pixel operation
+			glBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, 0);
 		}
+		else
+		#endif
+		{
+
+// 			QTime t;
+// 			t.start();
+
+			QImage img(size(), QImage::Format_ARGB32);
+			glReadPixels(0, 0, width(), height(), GL_BGRA, GL_UNSIGNED_BYTE, img.bits());
+			m_outputStream->setImage(img);
+			//qDebug() << "glReadPixels elapsed:"<<t.elapsed()<<"ms";
+		}
+
 	}
-	else
+	
+	if(m_fbo)
 	{
 		m_fbo->release();
 		//qDebug() << "GLWidget::paintGL(): Downloading from GPU to m_outputStream - via FBO";
@@ -1236,10 +1235,7 @@ void GLWidget::paintGL()
 					target.right() + 1 - view->m_cornerTranslations[ctr].x(), target.top()        + view->m_cornerTranslations[ctr].y()
 				};
 				#endif
-
-				//m_fbo->toImage().save("fbo.jpg");
-				if(m_outputStream)
-					m_outputStream->setImage(m_fbo->toImage());
+				
 
 		//  		qDebug() << "GLWidget: vertexCoordArray: target: "<<target<<", points: "
 		//  			<< "BL: "<<vertexCoordArray[0]<<vertexCoordArray[1]
