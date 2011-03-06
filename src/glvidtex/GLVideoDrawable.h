@@ -107,8 +107,19 @@ class GLVideoDrawable : public GLDrawable
 	Q_PROPERTY(bool flipHorizontal READ flipHorizontal WRITE setFlipHorizontal);
 	Q_PROPERTY(bool flipVertical READ flipVertical WRITE setFlipVertical);
 	
-	Q_PROPERTY(QPointF cropTopLeft READ cropTopLeft WRITE setCropTopLeft);
-	Q_PROPERTY(QPointF cropBottomRight READ cropBottomRight WRITE setCropBottomRight);
+	//Q_PROPERTY(QPointF cropTopLeft READ cropTopLeft WRITE setCropTopLeft);
+	//Q_PROPERTY(QPointF cropBottomRight READ cropBottomRight WRITE setCropBottomRight);
+	
+	Q_PROPERTY(double cropTop READ cropTop WRITE setCropTop);
+	Q_PROPERTY(double cropLeft READ cropLeft WRITE setCropLeft);
+	Q_PROPERTY(double cropBottom READ cropBottom WRITE setCropBottom);
+	Q_PROPERTY(double cropRight READ cropRight WRITE setCropRight);
+	
+	Q_PROPERTY(int whiteLevel READ whiteLevel WRITE setWhiteLevel);
+	Q_PROPERTY(int blackLevel READ blackLevel WRITE setBlackLevel);
+	Q_PROPERTY(int midLevel READ midLevel WRITE setMidLevel);
+	Q_PROPERTY(double gamma READ gamma WRITE setGamma);
+	
 	
 	Q_PROPERTY(QPointF textureOffset READ textureOffset WRITE setTextureOffset);
 	
@@ -173,6 +184,18 @@ public:
 	
 	bool liveStatus() { return m_liveStatus; }
 	
+	int blackLevel() { return m_blackLevel; }
+	int whiteLevel() { return m_whiteLevel; }
+	int midLevel() { return m_midLevel; }
+	double gamma() { return m_gamma; } // used in levels adjustment
+	
+	bool isLevelsEnabled() { return m_levelsEnabled; }
+	
+	double cropTop() { return cropTopLeft().y(); }
+	double cropLeft() { return cropTopLeft().x(); }
+	double cropRight() { return cropBottomRight().x(); }
+	double cropBottom() { return cropBottomRight().y(); }
+	
 public slots:
 	void setFpsLimit(float);
 	void setVisible(bool flag, bool waitOnFrameSignal=false);
@@ -190,6 +213,23 @@ public slots:
 	void setFlipVertical(bool);
 	void setCropTopLeft(QPointF);
 	void setCropBottomRight(QPointF);
+	void setCropTop(double value) { setCropTopLeft(QPointF(cropTopLeft().x(),value)); }
+	void setCropLeft(double value) { setCropTopLeft(QPointF(value,cropTopLeft().y())); }
+	void setCropBottom(double value) { setCropBottomRight(QPointF(cropBottomRight().x(),value)); }
+	void setCropRight(double value) { setCropBottomRight(QPointF(value,cropBottomRight().y())); }
+	
+	void setCropTop(int value) { setCropTopLeft(QPointF(cropTopLeft().x(),(double)value)); }
+	void setCropLeft(int value) { setCropTopLeft(QPointF((double)value,cropTopLeft().y())); }
+	void setCropBottom(int value) { setCropBottomRight(QPointF(cropBottomRight().x(),(double)value)); }
+	void setCropRight(int value) { setCropBottomRight(QPointF((double)value,cropBottomRight().y())); }
+	
+	
+	//void setLevels(int black=0, int white=255, int mid=-1, double gamma=1.61);
+	void setLevelsEnabled(bool);
+	void setBlackLevel(int black=0);
+	void setWhiteLevel(int white=255);
+	void setMidLevel(int mid=-1);
+	void setGamma(double gamma=1.61);
 	
 	void setAspectRatioMode(Qt::AspectRatioMode mode);
 	void setIgnoreAspectRatio(bool flag);
@@ -437,6 +477,12 @@ private:
 	bool m_liveStatus;
 	
 	bool m_textureUpdateNeeded;
+	
+	bool m_levelsEnabled;
+	int m_blackLevel;
+	int m_whiteLevel;
+	int m_midLevel;
+	double m_gamma;
 	
 	static int m_videoSenderPortAllocator;
 };

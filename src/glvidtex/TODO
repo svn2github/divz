@@ -317,6 +317,9 @@ TODO:
 			outPixel = (pow(((inPixel * 255.0) - inBlack) / (inWhite - inBlack),
                 		inGamma) * (outWhite - outBlack) + outBlack) / 255.0;
                 	From Graphics Gems ch 22, Fig 22-2, http://http.developer.nvidia.com/GPUGems/gpugems_ch22.html
+
+                	cf http://www.cise.ufl.edu/~awhig/vision/vision_projects.html
+
                 - Add method to VideoFrame to store a GLuint textureId so multiple GLVideoDrawables rendering the same VideoFrame don't have to upload the buffer/QImage to the video card multiple times
                 	- the first drawable to get the frame checks for a textureId - if none is set, then upload the texture and set the textureId on the frame. But if one is set,
                 		then use that textureId to paint the frame

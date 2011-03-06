@@ -246,7 +246,7 @@ QWidget * PropertyEditorFactory::generatePropertyEditor(QObject *object, const c
 		delete base;
 
 		editor->setShowSlider(!opts.noSlider);
-
+		editor->setMinMax(opts.min,opts.max);
 		editor->setValue(prop.toDouble());
 
 		connect(editor, SIGNAL(valueChanged(double)), object, slot);

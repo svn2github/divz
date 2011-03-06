@@ -108,6 +108,11 @@ GLVideoDrawable::GLVideoDrawable(QObject *parent)
 	, m_unrenderedFrames(0)
 	, m_liveStatus(false)
 	, m_textureUpdateNeeded(false)
+	, m_levelsEnabled(true)
+	, m_blackLevel(0)
+	, m_whiteLevel(255)
+	, m_midLevel(128)
+	, m_gamma(1.0)
 {
 
 	m_imagePixelFormats
@@ -1217,14 +1222,14 @@ const char * GLVideoDrawable::resizeTextures(const QSize& frameSize, bool second
 	m_yuv = false;
 	m_yuv2 = false;
 	
-	bool debugShaderName = false;
+	bool debugShaderName = true;
 	switch (m_videoFormat.pixelFormat)
 	{
 	case QVideoFrame::Format_RGB32:
  		if(debugShaderName)
  			qDebug() << "GLVideoDrawable::resizeTextures(): "<<(QObject*)this<<"\t Format RGB32, using qt_glsl_xrgbShaderProgram";
 		initRgbTextureInfo(GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE, frameSize, secondSource);
-		fragmentProgram = qt_glsl_xrgbShaderProgram;
+		fragmentProgram = m_levelsEnabled ? qt_glsl_xrgbLevelsShaderProgram : qt_glsl_xrgbShaderProgram;
 		break;
         case QVideoFrame::Format_ARGB32:
          	if(debugShaderName)
@@ -2452,6 +2457,14 @@ void GLVideoDrawable::paintGL()
 			m_program->setUniformValue("texOffsetX",          (GLfloat)m_invertedOffset.x());
 			m_program->setUniformValue("texOffsetY",          (GLfloat)m_invertedOffset.y());
 
+			if(m_levelsEnabled)
+			{
+				m_program->setUniformValue("whiteLevel", (GLfloat)m_whiteLevel);
+				m_program->setUniformValue("blackLevel", (GLfloat)m_blackLevel);
+				m_program->setUniformValue("gamma",      (GLfloat)m_gamma);
+				/// TODO
+				//m_program->setUniformValue("midLevel",   (GLfloat)midLevel); 
+			}
 
 			if (m_textureCount == 3)
 			{
@@ -2898,6 +2911,39 @@ void GLVideoDrawable::setCrossFadeMode(CrossFadeMode mode)
 	m_crossFadeMode = mode;
 }
 
+void GLVideoDrawable::setLevelsEnabled(bool flag)
+{
+	m_levelsEnabled = flag;
+	
+	// force reload shaders
+	setVideoFormat(m_videoFormat);
+	
+	updateGL();
+}
+
+void GLVideoDrawable::setBlackLevel(int x)
+{
+	m_blackLevel = x;
+	updateGL();
+}
+
+void GLVideoDrawable::setWhiteLevel(int x)
+{
+	m_whiteLevel = x;
+	updateGL();
+}
+
+void GLVideoDrawable::setMidLevel(int x)
+{
+	m_midLevel = x;
+	updateGL();
+}
+
+void GLVideoDrawable::setGamma(double g)
+{
+	m_gamma = g;
+	updateGL();
+}
 
 VideoDisplayOptionWidget::VideoDisplayOptionWidget(GLVideoDrawable *drawable, QWidget *parent)
 	: QWidget(parent)
@@ -3192,4 +3238,5 @@ void VideoDisplayOptionWidget::sChanged(int value)
 	m_opts.saturation = value;
 	emit displayOptionsChanged(m_opts);
 }
+
 

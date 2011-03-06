@@ -864,8 +864,32 @@ void PlayerWindow::receivedMap(QVariantMap map)
 							GLVideoDrawable *vid = dynamic_cast<GLVideoDrawable*>(gld);
 							if(vid)
 								vid->setXFadeLength(m_xfadeSpeed);
+								
+							QVariant::Type propType = gld->metaObject()->property(gld->metaObject()->indexOfProperty(qPrintable(name))).type();
+							if(propType == QVariant::Int ||
+							   propType == QVariant::Double ||
+							   propType == QVariant::PointF ||
+							   propType == QVariant::Point ||
+							   propType == QVariant::RectF ||
+							   propType == QVariant::Rect)
+							{
+								QAbsoluteTimeAnimation *anim = new QAbsoluteTimeAnimation(gld, qPrintable(name));
+								anim->setEndValue(value);
+								anim->setDuration((int)xfadeSpeed());
+								anim->start(QAbstractAnimation::DeleteWhenStopped);
+								
+								gld->registerAbsoluteTimeAnimation(anim);
+								qDebug() << "PlayerWindow: Set Property:"<<name<<" - "<<value<<" - Animated, Duration:"<<xfadeSpeed();
+							
+							}
+							else
+							{
+								
+								qDebug() << "PlayerWindow: Set Property:"<<name<<" - "<<value;
+								gld->setProperty(qPrintable(name), value);
+							}	
 
-							gld->setProperty(qPrintable(name), value);
+							//gld->setProperty(qPrintable(name), value);
 
 							sendReply(QVariantList()
 								<< "cmd" << cmd
@@ -1729,7 +1753,25 @@ void PlayerJsonServer::dispatch(QTcpSocket *socket, const QStringList &pathEleme
 							if(GLVideoDrawable *vid = dynamic_cast<GLVideoDrawable*>(gld))
 								vid->setXFadeLength((int)m_win->xfadeSpeed());
 
-							gld->setProperty(qPrintable(name), value);
+							QVariant::Type propType = gld->metaObject()->property(gld->metaObject()->indexOfProperty(qPrintable(name))).type();
+							if(propType == QVariant::Int ||
+							   propType == QVariant::Double ||
+							   propType == QVariant::PointF ||
+							   propType == QVariant::Point ||
+							   propType == QVariant::RectF ||
+							   propType == QVariant::Rect)
+							{
+								QAbsoluteTimeAnimation *anim = new QAbsoluteTimeAnimation(gld, qPrintable(name));
+								anim->setEndValue(value);
+								anim->setDuration((int)m_win->xfadeSpeed());
+								anim->start(QAbstractAnimation::DeleteWhenStopped);
+								
+								gld->registerAbsoluteTimeAnimation(anim);
+							}
+							else
+							{
+								gld->setProperty(qPrintable(name), value);
+							}
 
 							sendReply(socket, QVariantList()
 								<< "cmd" << cmd

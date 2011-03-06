@@ -33,6 +33,7 @@ class CameraMixerWidget;
 class GLVideoInputDrawable;
 class VideoPlayerWidget;
 class GLVideoFileDrawable;
+class GLVideoDrawable;
 #include "GLDrawable.h"
 
 class DirectorWindow : public QMainWindow
@@ -237,15 +238,20 @@ public:
 	VideoReceiver *receiver() { return m_rx; }
 	QString con() { return m_con; }
 	
+	GLVideoDrawable *drawable() { return m_drawable; }
+	
 public slots:
 	// DirectorSourceWidget::	
 	virtual bool switchTo();
 	void setDeinterlace(bool);
 	
+	void showPropertyEditor();
+	
 protected:
 	void contextMenuEvent(QContextMenuEvent * event);
 
 private:
+	GLVideoDrawable *m_drawable;
 	VideoReceiver *m_rx;
 	QMenu *m_configMenu;
 	QString m_con;
@@ -338,10 +344,13 @@ private slots:
 	void subwindowActivated(QMdiSubWindow*);
 	void sourceDestroyed();
 	
+	void sendVidOpts();
+	
 private:
 	QVBoxLayout *m_layout;
 	QPointer<DirectorSourceWidget> m_source;
 	DirectorWindow *m_dir;
+	GLVideoDrawable *m_vid;
 	
 };
 
@@ -453,6 +462,8 @@ public:
 	VideoPlayerWidget(DirectorWindow*);
 	~VideoPlayerWidget();
 	
+	GLVideoDrawable *drawable() { return (GLVideoDrawable*)m_video; }
+	
 	QString file() { return m_filename; }
 // 	double inPoint() { return m_in; }
 // 	double outPoint() { return m_out; }
@@ -479,6 +490,7 @@ public slots:
  	bool loadFile(QString);
  	
 	void browse();
+	void showPropertyEditor();
  
 private slots:
 	//void receivedPosition(int);

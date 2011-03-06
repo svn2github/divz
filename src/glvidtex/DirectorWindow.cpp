@@ -1442,8 +1442,19 @@ CameraWidget::CameraWidget(DirectorWindow* dir, VideoReceiver *rx, QString con, 
 	action->setChecked(m_deinterlace);
 	connect(action, SIGNAL(toggled(bool)), this, SLOT(setDeinterlace(bool)));
 	
+	action = m_configMenu->addAction("Properties...");
+	//action->setCheckable(true);
+	//action->setChecked(m_deinterlace);
+	connect(action, SIGNAL(triggered()), this, SLOT(showPropertyEditor()));
+	
 	connect(vid, SIGNAL(clicked()), this, SLOT(switchTo()));
 }
+	
+void CameraWidget::showPropertyEditor()
+{	
+	if(m_dir)
+		m_dir->showPropertyEditor(this);
+}	
 	
 void CameraWidget::contextMenuEvent(QContextMenuEvent * event)
 {
@@ -1743,46 +1754,214 @@ void PropertyEditorWindow::setSourceWidget(DirectorSourceWidget* source)
 	
 	connect(source, SIGNAL(destroyed()), this, SLOT(sourceDestroyed()));
 	
-	GLScene *scene = source->scene();
-	if(scene)
+	VideoPlayerWidget *widgetVid = dynamic_cast<VideoPlayerWidget*>(source);
+	CameraWidget *widgetCam = dynamic_cast<CameraWidget*>(source);
+	if(widgetVid || widgetCam)
 	{
-		bool foundWidget = false;
-		GLDrawableList list = scene->drawableList();
-		foreach(GLDrawable *gld, list)
+		// croping
+		// color adjustments
+		// levels
+		// flip h/v
+		
+		/*
+		Q_PROPERTY(int brightness READ brightness WRITE setBrightness);
+		Q_PROPERTY(int contrast READ contrast WRITE setContrast);
+		Q_PROPERTY(int hue READ hue WRITE setHue);
+		Q_PROPERTY(int saturation READ saturation WRITE setSaturation);
+		
+		Q_PROPERTY(bool flipHorizontal READ flipHorizontal WRITE setFlipHorizontal);
+		Q_PROPERTY(bool flipVertical READ flipVertical WRITE setFlipVertical);
+		
+		Q_PROPERTY(QPointF cropTopLeft READ cropTopLeft WRITE setCropTopLeft);
+		Q_PROPERTY(QPointF cropBottomRight READ cropBottomRight WRITE setCropBottomRight);
+		*/
+		
+		setWindowTitle(QString("Properties - %1").arg(source->windowTitle()));
+		
+		#define NEW_SECTION(title) \
+			ExpandableWidget *expand = new ExpandableWidget(title); \
+			expand->setExpandedIfNoDefault(true); \
+			QWidget *base = new QWidget(); \
+			QFormLayout *form = new QFormLayout(base); \
+			expand->setWidget(base); \
+			m_layout->addWidget(expand); \
+			PropertyEditorFactory::PropertyEditorOptions opts; \
+			opts.reset();
+		
+		GLVideoDrawable *item = widgetVid ? widgetVid->drawable() : widgetCam->drawable();
+		m_vid = item;
+		
+		// Levels
 		{
-			if(gld->isUserControllable())
-			{
-				ExpandableWidget *widget = new ExpandableWidget(gld->itemName().isEmpty() ? "Item" : gld->itemName());
-				
-				DrawableDirectorWidget *editor = new DrawableDirectorWidget(gld, scene, m_dir);
-				widget->setWidget(editor);
-				widget->setExpandedIfNoDefault(true);
-				
-				m_layout->addWidget(widget);
-				
-				foundWidget = true;
-			}
+			NEW_SECTION("White/Black Levels");
+			
+			opts.min = 0;
+			opts.max = 255;
+			opts.step = 5;
+			
+			form->addRow(tr("&Black:"), PropertyEditorFactory::generatePropertyEditor(item, "blackLevel", SLOT(setBlackLevel(int)), opts));
+			form->addRow(tr("&Mid:"),   PropertyEditorFactory::generatePropertyEditor(item, "midLevel", SLOT(setMidLevel(int)), opts));
+			form->addRow(tr("&White:"), PropertyEditorFactory::generatePropertyEditor(item, "whiteLevel", SLOT(setWhiteLevel(int)), opts));
+			
+			opts.min = 0.1;
+			opts.max = 3.0;
+			form->addRow(tr("&Gamma:"), PropertyEditorFactory::generatePropertyEditor(item, "gamma", SLOT(setGamma(double)), opts));
+			
+			QPushButton *btn = new QPushButton("Apply to Player");
+			connect(btn, SIGNAL(clicked()), this, SLOT(sendVidOpts()));
+			form->addRow("",btn);
 		}
 		
-		setWindowTitle(QString("Properties - %1").arg(scene->sceneName()));
+		// Croping
+		{
+			NEW_SECTION("Color Adjustments");
+			
+			opts.min = -100;
+			opts.max = +100;
+			opts.step = 5;
+			
+			form->addRow(tr("&Brightness:"), 	PropertyEditorFactory::generatePropertyEditor(item, "brightness", SLOT(setBrightness(int)), opts));
+			form->addRow(tr("&Contrast:"), 		PropertyEditorFactory::generatePropertyEditor(item, "contrast", SLOT(setContrast(int)), opts));
+			form->addRow(tr("&Saturation:"), 	PropertyEditorFactory::generatePropertyEditor(item, "saturation", SLOT(setSaturation(int)), opts));
+			form->addRow(tr("&Hue:"), 		PropertyEditorFactory::generatePropertyEditor(item, "hue", SLOT(setHue(int)), opts));
+			
+			QPushButton *btn = new QPushButton("Apply to Player");
+			connect(btn, SIGNAL(clicked()), this, SLOT(sendVidOpts()));
+			form->addRow("",btn);
+		}
+			
+		// Croping
+		{
+			NEW_SECTION("Croping");
+			
+			opts.type = QVariant::Int;
+			
+			opts.min = 0; 
+			opts.max =  1000;
+			form->addRow(tr("Crop &Left:"),		PropertyEditorFactory::generatePropertyEditor(item, "cropLeft", SLOT(setCropLeft(int)), opts));
+			opts.min = -1000; 
+			opts.max =  0;
+			form->addRow(tr("Crop &Right:"),	PropertyEditorFactory::generatePropertyEditor(item, "cropRight", SLOT(setCropRight(int)), opts));
+			opts.min = 0; 
+			opts.max =  1000;
+			form->addRow(tr("Crop &Top:"),		PropertyEditorFactory::generatePropertyEditor(item, "cropTop", SLOT(setCropTop(int)), opts));
+			opts.min = -1000; 
+			opts.max =  0;
+			form->addRow(tr("Crop &Bottom:"),	PropertyEditorFactory::generatePropertyEditor(item, "cropBottom", SLOT(setCropBottom(int)), opts));
+			
+			QPushButton *btn = new QPushButton("Apply to Player");
+			connect(btn, SIGNAL(clicked()), this, SLOT(sendVidOpts()));
+			form->addRow("",btn);
+		}
 		
-		if(!foundWidget)
-			m_layout->addWidget(new QLabel("<i>No modifiable items found in the active window.</i>"));
+		// Flip
+		{
+			NEW_SECTION("Flip/Mirror");
+			
+			opts.text = "Flip Horizontal";
+			form->addRow(PropertyEditorFactory::generatePropertyEditor(item, "flipHorizontal", SLOT(setFlipHorizontal(bool)), opts));
+			
+			opts.text = "Flip Vertical";
+			form->addRow(PropertyEditorFactory::generatePropertyEditor(item, "flipVertical", SLOT(setFlipVertical(bool)), opts));
+			
+			QPushButton *btn = new QPushButton("Apply to Player");
+			connect(btn, SIGNAL(clicked()), this, SLOT(sendVidOpts()));
+			form->addRow("",btn);
+		}
+		
 		
 		m_layout->addStretch(1);
+		
 	}
 	else
 	{
-		//setSourceWidget(0);
-		m_layout->addWidget(new QLabel("<i>No active scene loaded in the selected window.</i>"));
-		m_layout->addStretch(1);
-		setWindowTitle(QString("Properties - %1").arg(source->windowTitle()));
+		m_vid = 0;
+		GLScene *scene = source->scene();
+		if(scene)
+		{
+			bool foundWidget = false;
+			GLDrawableList list = scene->drawableList();
+			foreach(GLDrawable *gld, list)
+			{
+				if(gld->isUserControllable())
+				{
+					ExpandableWidget *widget = new ExpandableWidget(gld->itemName().isEmpty() ? "Item" : gld->itemName());
+					
+					DrawableDirectorWidget *editor = new DrawableDirectorWidget(gld, scene, m_dir);
+					widget->setWidget(editor);
+					widget->setExpandedIfNoDefault(true);
+					
+					m_layout->addWidget(widget);
+					
+					foundWidget = true;
+				}
+			}
+			
+			setWindowTitle(QString("Properties - %1").arg(scene->sceneName()));
+			
+			if(!foundWidget)
+				m_layout->addWidget(new QLabel("<i>No modifiable items found in the active window.</i>"));
+			
+			m_layout->addStretch(1);
+		}
+		else
+		{
+			//setSourceWidget(0);
+			m_layout->addWidget(new QLabel("<i>No active scene loaded in the selected window.</i>"));
+			m_layout->addStretch(1);
+			setWindowTitle(QString("Properties - %1").arg(source->windowTitle()));
+		}
 	}
 	
 	//adjustSize();
 	
 	
 }
+
+void PropertyEditorWindow::sendVidOpts()
+{
+	if(!m_dir->players() || !m_vid)
+		return;
+		
+	/*
+		Q_PROPERTY(int brightness READ brightness WRITE setBrightness);
+		Q_PROPERTY(int contrast READ contrast WRITE setContrast);
+		Q_PROPERTY(int hue READ hue WRITE setHue);
+		Q_PROPERTY(int saturation READ saturation WRITE setSaturation);
+		
+		Q_PROPERTY(bool flipHorizontal READ flipHorizontal WRITE setFlipHorizontal);
+		Q_PROPERTY(bool flipVertical READ flipVertical WRITE setFlipVertical);
+		
+		Q_PROPERTY(QPointF cropTopLeft READ cropTopLeft WRITE setCropTopLeft);
+		Q_PROPERTY(QPointF cropBottomRight READ cropBottomRight WRITE setCropBottomRight);
+	*/
+	
+	QStringList props = QStringList() 
+		<< "brightness"
+		<< "contrast" 
+		<< "hue"
+		<< "saturation"
+		<< "flipHorizontal"
+		<< "flipVertical"
+		<< "cropTop"
+		<< "cropBottom"
+		<< "cropLeft"
+		<< "cropRight";
+		
+		
+		
+	foreach(PlayerConnection *player, m_dir->players()->players())
+	{
+		if(player->isConnected())
+		{
+			foreach(QString prop, props)
+			{
+				player->setUserProperty(m_vid, m_vid->property(qPrintable(prop)), prop);
+			}
+		}
+	}
+}
+
 
 void PropertyEditorWindow::sourceDestroyed() { setSourceWidget(0); }
 	
@@ -2316,11 +2495,23 @@ VideoPlayerWidget::VideoPlayerWidget(DirectorWindow *d)
 		hbox->addWidget(browse);
 	}
 	
+	QPushButton *props = new QPushButton(QPixmap(":/data/stock-properties.png"), "");
+	{
+		connect(browse, SIGNAL(clicked()), this, SLOT(showPropertyEditor()));
+		hbox->addWidget(props);
+	}
+	
 	vbox->addLayout(hbox);
 	
 	connect(m_glw, SIGNAL(clicked()), this, SLOT(switchTo()));
 	//loadFile("hd_vid/Dolphins_720.wmv-xvid.avi");
 }
+
+void VideoPlayerWidget::showPropertyEditor()
+{	
+	if(m_dir)
+		m_dir->showPropertyEditor(this);
+}	
 
 void VideoPlayerWidget::positionChanged(qint64 position)
 {

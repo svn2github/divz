@@ -73,6 +73,30 @@ static const char *qt_glsl_xrgbShaderProgram =
         "    gl_FragColor = vec4(color.rgb, alpha * texture2D(alphaMask, textureCoord.st).a);\n"
         "}\n";
 
+// Paints an RGB32 frame with Levels adjustments
+static const char *qt_glsl_xrgbLevelsShaderProgram =
+        "uniform sampler2D texRgb;\n"
+        "uniform sampler2D alphaMask;\n"
+        "uniform mediump mat4 colorMatrix;\n"
+        "uniform mediump float alpha;\n"
+        "uniform mediump float texOffsetX;\n"
+        "uniform mediump float texOffsetY;\n"
+        "uniform mediump float blackLevel;\n"
+        "uniform mediump float whiteLevel;\n"  /// TODO add midLevel adjustments
+        "uniform mediump float gamma;\n"
+        "varying highp vec2 textureCoord;\n"
+        "void main(void)\n"
+        "{\n"
+        "    mediump vec2 texPoint = vec2(textureCoord.s + texOffsetX, textureCoord.t + texOffsetY);\n"
+        "    highp vec4 color = vec4(texture2D(texRgb, texPoint).bgr, 1.0);\n"
+        "    color.r = (pow(((color.r * 255.0) - blackLevel) / (whiteLevel - blackLevel), gamma) * 255) / 255.0;\n"
+        "    color.g = (pow(((color.g * 255.0) - blackLevel) / (whiteLevel - blackLevel), gamma) * 255) / 255.0;\n"
+        "    color.b = (pow(((color.b * 255.0) - blackLevel) / (whiteLevel - blackLevel), gamma) * 255) / 255.0;\n"
+        "    color = colorMatrix * color;\n"
+        "    gl_FragColor = vec4(color.rgb, alpha * texture2D(alphaMask, textureCoord.st).a);\n"
+        "}\n";
+
+
 //
 // Paints an ARGB frame.
 static const char *qt_glsl_argbShaderProgram =
@@ -91,6 +115,31 @@ static const char *qt_glsl_argbShaderProgram =
 	"    gl_FragColor = vec4(color.rgb, texture2D(texRgb, texPoint).a * alpha * texture2D(alphaMask, textureCoord.st).a);\n"
 	"}\n";
 
+//
+// Paints an ARGB frame with levels adjustment
+static const char *qt_glsl_argbLevelsShaderProgram =
+	"uniform sampler2D texRgb;\n"
+	"uniform sampler2D alphaMask;\n"
+	"uniform mediump mat4 colorMatrix;\n"
+	"uniform mediump float alpha;\n"
+	"uniform mediump float texOffsetX;\n"
+        "uniform mediump float texOffsetY;\n"
+	"uniform mediump float blackLevel;\n"
+        "uniform mediump float whiteLevel;\n"  /// TODO add midLevel adjustments
+        "uniform mediump float gamma;\n"
+        "varying highp vec2 textureCoord;\n"
+	"void main(void)\n"
+	"{\n"
+	"    mediump vec2 texPoint = vec2(textureCoord.s + texOffsetX, textureCoord.t + texOffsetY);\n"
+	"    highp vec4 color = vec4(texture2D(texRgb, texPoint).bgr, 1.0);\n"
+        "    color.r = (pow(((color.r * 255.0) - blackLevel) / (whiteLevel - blackLevel), gamma) * 255) / 255.0;\n"
+        "    color.g = (pow(((color.g * 255.0) - blackLevel) / (whiteLevel - blackLevel), gamma) * 255) / 255.0;\n"
+        "    color.b = (pow(((color.b * 255.0) - blackLevel) / (whiteLevel - blackLevel), gamma) * 255) / 255.0;\n"
+	"    color = colorMatrix * color;\n"
+	"    gl_FragColor = vec4(color.rgb, texture2D(texRgb, texPoint).a * alpha * texture2D(alphaMask, textureCoord.st).a);\n"
+	"}\n";
+	
+
 // Paints an RGB(A) frame.
 static const char *qt_glsl_rgbShaderProgram =
         "uniform sampler2D texRgb;\n"
@@ -105,6 +154,29 @@ static const char *qt_glsl_rgbShaderProgram =
         "    mediump vec2 texPoint = vec2(textureCoord.s + texOffsetX, textureCoord.t + texOffsetY);\n"
         "    highp vec4 color = vec4(texture2D(texRgb, texPoint).rgb, 1.0);\n"
         "    color = colorMatrix * color;\n"
+        "    gl_FragColor = vec4(color.rgb, texture2D(texRgb, texPoint).a * alpha * texture2D(alphaMask, textureCoord.st).a);\n"
+        "}\n";
+
+// Paints an RGB(A) frame with levels adjustments
+static const char *qt_glsl_rgbLevelsShaderProgram =
+        "uniform sampler2D texRgb;\n"
+        "uniform sampler2D alphaMask;\n"
+        "uniform mediump mat4 colorMatrix;\n"
+        "uniform mediump float alpha;\n"
+        "uniform mediump float texOffsetX;\n"
+        "uniform mediump float texOffsetY;\n"
+	"uniform mediump float blackLevel;\n"
+        "uniform mediump float whiteLevel;\n"  /// TODO add midLevel adjustments
+        "uniform mediump float gamma;\n"
+	"varying highp vec2 textureCoord;\n"
+        "void main(void)\n"
+        "{\n"
+        "    mediump vec2 texPoint = vec2(textureCoord.s + texOffsetX, textureCoord.t + texOffsetY);\n"
+        "    highp vec4 color = vec4(texture2D(texRgb, texPoint).rgb, 1.0);\n"
+        "    color.r = (pow(((color.r * 255.0) - blackLevel) / (whiteLevel - blackLevel), gamma) * 255) / 255.0;\n"
+        "    color.g = (pow(((color.g * 255.0) - blackLevel) / (whiteLevel - blackLevel), gamma) * 255) / 255.0;\n"
+        "    color.b = (pow(((color.b * 255.0) - blackLevel) / (whiteLevel - blackLevel), gamma) * 255) / 255.0;\n"
+	"    color = colorMatrix * color;\n"
         "    gl_FragColor = vec4(color.rgb, texture2D(texRgb, texPoint).a * alpha * texture2D(alphaMask, textureCoord.st).a);\n"
         "}\n";
 
