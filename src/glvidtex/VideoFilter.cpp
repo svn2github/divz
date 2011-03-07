@@ -5,12 +5,13 @@ VideoFilter::VideoFilter(QObject *parent)
 	, VideoConsumer()
 	, m_frameDirty(false)
 	, m_threadFps(30)
+	, m_fpsLimit(-1)
 	, m_isThreaded(false)
 	
 {
 	connect(&m_processTimer, SIGNAL(timeout()), this, SLOT(processFrame()));
 	m_processTimer.setSingleShot(true);
-	m_processTimer.setInterval(0);
+	m_processTimer.setInterval(50);
 }
 
 VideoFilter::~VideoFilter()
@@ -77,6 +78,8 @@ void VideoFilter::frameAvailable()
 			}
 			else
 			{
+				if(m_processTimer.isActive())
+					m_processTimer.stop();
 				m_processTimer.start();
 			}
 		}
@@ -120,6 +123,8 @@ void VideoFilter::run()
 
 QImage VideoFilter::frameImage()
 {
+	if(!m_frame)
+		return QImage();
 	return m_frame->toImage();
 // 	//qDebug() << "VideoSender::frameReady: Downscaling video for transmission to "<<m_transmitSize;
 // 	// To scale the video frame, first we must convert it to a QImage if its not already an image.
@@ -160,4 +165,10 @@ QImage VideoFilter::frameImage()
 // 	
 // 	return image;
 	
+}
+
+void VideoFilter::setFpsLimit(int limit)
+{
+	m_fpsLimit = limit;
+	m_processTimer.setInterval(m_fpsLimit > 0 ? 1000 / m_fpsLimit : 50);
 }

@@ -14,10 +14,12 @@ class VideoFilter : public VideoSource,
 public:
 	VideoFilter(QObject *parent=0);
 	virtual ~VideoFilter();
+	int fpsLimit() { return m_fpsLimit; }
 
 public slots:
 	virtual void setVideoSource(VideoSource*);
 	virtual void disconnectVideoSource();
+	virtual void setFpsLimit(int);
 	
 protected slots:
 	void frameAvailable();
@@ -43,6 +45,7 @@ protected:
 	QMutex m_frameAccessMutex;
 	bool m_frameDirty;
 	int m_threadFps;
+	int m_fpsLimit;
 
 private:	
 	bool m_isThreaded;

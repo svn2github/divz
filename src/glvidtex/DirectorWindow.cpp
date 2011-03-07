@@ -85,8 +85,13 @@ QList<QMdiSubWindow*> DirectorWindow::subwindows()
 
 void DirectorWindow::chooseOutput()
 {
+	bool wasOpen = false;
 	if(!ui->mdiArea->subWindowList().isEmpty())
+	{
+		wasOpen = true;
 		ui->mdiArea->closeAllSubWindows();
+		writeSettings();
+	}
 	
 	// Dont prompt the user if only one player is connected
 	QList<PlayerConnection*> playerList = m_players->players();
@@ -153,6 +158,13 @@ void DirectorWindow::chooseOutput()
 	else
 	{
 		showPlayerSetupDialog();
+	}
+	
+	if(wasOpen)
+	{
+		readSettings();
+		QTimer::singleShot(5, this, SLOT(showAllSubwindows()));
+		QTimer::singleShot(10, this, SLOT(createUserSubwindows()));
 	}
 }
 
@@ -1422,14 +1434,14 @@ CameraWidget::CameraWidget(DirectorWindow* dir, VideoReceiver *rx, QString con, 
 	QVBoxLayout *vbox = new QVBoxLayout(this);
 	vbox->setContentsMargins(0,0,0,0);
 	
-	GLWidget *vid = new GLWidget();
-	vbox->addWidget(vid);
+	m_glWidget = new GLWidget();
+	vbox->addWidget(m_glWidget);
 
 	//GLVideoDrawable *gld = new GLVideoDrawable();
 	//gld->setVideoSource(rx);
 	//vid->addDrawable(gld);
 	vidgld->setVideoConnection(con);
-	vid->addDrawable(vidgld);
+	m_glWidget->addDrawable(vidgld);
 	
 	setWindowTitle(QString("Camera %1").arg(index));
 	//gld->setObjectName(qPrintable(windowTitle()));
@@ -1452,7 +1464,7 @@ CameraWidget::CameraWidget(DirectorWindow* dir, VideoReceiver *rx, QString con, 
 	//action->setChecked(m_deinterlace);
 	connect(action, SIGNAL(triggered()), this, SLOT(showPropertyEditor()));
 	
-	connect(vid, SIGNAL(clicked()), this, SLOT(switchTo()));
+	connect(m_glWidget, SIGNAL(clicked()), this, SLOT(switchTo()));
 }
 	
 void CameraWidget::showPropertyEditor()
@@ -1802,7 +1814,7 @@ void PropertyEditorWindow::setSourceWidget(DirectorSourceWidget* source)
 			
 			GLWidget *vid = new GLWidget();
 			vid->setBackgroundColor(palette().color(QPalette::Window));
-			vid->setViewport(QRectF(0,0,255,128)); // approx histogram output size for a 4:3 video frame
+			vid->setViewport(QRectF(0,0,255*3,128*3)); // approx histogram output size for a 4:3 video frame
 			
 			HistogramFilter *filter = new HistogramFilter();
 			
@@ -1813,8 +1825,12 @@ void PropertyEditorWindow::setSourceWidget(DirectorSourceWidget* source)
 			
 			form->addWidget(vid);
 			
-			//filter->setIncludeOriginalImage(false);
-			filter->setVideoSource(item->videoSource());
+			filter->setHistoType(HistogramFilter::Gray);
+			//filter->setVideoSource(item->videoSource());
+			filter->setVideoSource(item->glWidget()->outputStream());
+			filter->setIncludeOriginalImage(false);
+			filter->setFpsLimit(10);
+			filter->setDrawBorder(true);
 		}
 		
 		// Levels
@@ -1860,20 +1876,21 @@ void PropertyEditorWindow::setSourceWidget(DirectorSourceWidget* source)
 		{
 			NEW_SECTION("Croping");
 			
+			opts.doubleIsPercentage = true;
+			opts.suffix = "%";
 			opts.type = QVariant::Int;
 			
-			opts.min = 0; 
-			opts.max =  1000;
+			opts.min = 0;
+			opts.max = 100;
 			form->addRow(tr("Crop &Left:"),		PropertyEditorFactory::generatePropertyEditor(item, "cropLeft",   SLOT(setCropLeft(int)), opts));
-			opts.min = -1000; 
-			opts.max =  0;
+			opts.min = -100;
+			opts.max = 0;
 			form->addRow(tr("Crop &Right:"),	PropertyEditorFactory::generatePropertyEditor(item, "cropRight",  SLOT(setCropRight(int)), opts));
-			
-			opts.min = 0; 
-			opts.max =  1000;
+			opts.min = 0;
+			opts.max = 100;
 			form->addRow(tr("Crop &Top:"),		PropertyEditorFactory::generatePropertyEditor(item, "cropTop",    SLOT(setCropTop(int)), opts));
-			opts.min = -1000; 
-			opts.max =  0;
+			opts.min = -100;
+			opts.max = 0;
 			form->addRow(tr("Crop &Bottom:"),	PropertyEditorFactory::generatePropertyEditor(item, "cropBottom", SLOT(setCropBottom(int)), opts));
 			
 			QPushButton *btn = new QPushButton("Apply to Player");

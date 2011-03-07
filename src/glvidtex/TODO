@@ -258,8 +258,30 @@ TODO:
 				  texture coordinates of the render output (the sourc rect in updateRects())
 		
 	IDEAS:
-		
-		
+		- Stream using FFMPEG to Justin.TV at rtmp://live.justin.tv/app 
+			cf http://community.justin.tv/mediawiki/index.php/Desktop_Broadcasting_using_VH_ScreenCap
+			cf http://forums.adobe.com/message/2903163?tstart=0
+			
+			Code for streaming via ffmpeg/libav code:
+			cf http://libav-users.943685.n4.nabble.com/problem-opening-a-UDP-multicast-stream-with-av-open-input-file-td946200.html
+			
+			One mans attempt of streaming with ffmpeg/audio/video/other programs to an icecast server:
+			http://workingdirectory.net/posts/2010/video4linux-and-audio/
+			
+			FFMPEG rtmp url spec docs:
+			http://www.ffmpeg.org/ffmpeg-doc.html#SEC42
+			
+			
+		- Adapt PlayerWindow to enable it to remotely start/stop ffmpeg.
+			Here's the command I used to record video and audio from the vloopback pipe:
+				fmpeg -async 24 -f oss -i /dev/dsp -f video4linux -r 60000/1001 -i /dev/video3 -s 640x480 -r 24 -b 2Mb -ab 128k /root/livemix-dir-demo4.mpg
+				
+				-async 		needed for audio sync
+				-r 60000... 	needed to get ffmpeg to read from vloopback
+				-s 640...	ffmpeg scales the stream down for us
+				-r 24		fps of the recorded video
+				-b 2Mb		bitrate - needed to make better quality output
+				-ab 128k	audio bitrate - not sure if it helps or not
 		
 		- Next few steps:
 			- Try to put scene type subclasses in a namespace

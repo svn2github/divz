@@ -1,6 +1,3 @@
-//#include "../audio/qaudio.h"
-//##include "../audio/qaudioformat.h"
-//#include "../audio/qaudioinput.h"
 
 //#include <QAudio>
 #include <QAudioFormat>

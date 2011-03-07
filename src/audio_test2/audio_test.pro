@@ -3,8 +3,6 @@ TARGET =
 DEPENDPATH += .
 INCLUDEPATH += ../
 
-#include(../audio/audio.pri)
-
 QT += multimedia
 
 # Input

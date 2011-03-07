@@ -213,15 +213,16 @@ public slots:
 	void setFlipVertical(bool);
 	void setCropTopLeft(QPointF);
 	void setCropBottomRight(QPointF);
-	void setCropTop(double value) { setCropTopLeft(QPointF(cropTopLeft().x(),value)); }
-	void setCropLeft(double value) { setCropTopLeft(QPointF(value,cropTopLeft().y())); }
-	void setCropBottom(double value) { setCropBottomRight(QPointF(cropBottomRight().x(),value)); }
-	void setCropRight(double value) { setCropBottomRight(QPointF(value,cropBottomRight().y())); }
 	
-	void setCropTop(int value) { setCropTopLeft(QPointF(cropTopLeft().x(),(double)value)); }
-	void setCropLeft(int value) { setCropTopLeft(QPointF((double)value,cropTopLeft().y())); }
-	void setCropBottom(int value) { setCropBottomRight(QPointF(cropBottomRight().x(),(double)value)); }
-	void setCropRight(int value) { setCropBottomRight(QPointF((double)value,cropBottomRight().y())); }
+	void setCropTop(double value) 		{ setCropTopLeft(QPointF(cropTopLeft().x(),value)); }
+	void setCropLeft(double value) 		{ setCropTopLeft(QPointF(value,cropTopLeft().y())); }
+	void setCropBottom(double value) 	{ setCropBottomRight(QPointF(cropBottomRight().x(),value)); }
+	void setCropRight(double value) 	{ setCropBottomRight(QPointF(value,cropBottomRight().y())); }
+	
+	void setCropTop(int value) 		{ setCropTopLeft(QPointF(cropTopLeft().x(),((double)value)/100.)); }
+	void setCropLeft(int value) 		{ setCropTopLeft(QPointF(((double)value)/100.,cropTopLeft().y())); }
+	void setCropBottom(int value) 		{ setCropBottomRight(QPointF(cropBottomRight().x(),((double)value)/100.)); }
+	void setCropRight(int value) 		{ setCropBottomRight(QPointF(((double)value)/100.,cropBottomRight().y())); }
 	
 	
 	//void setLevels(int black=0, int white=255, int mid=-1, double gamma=1.61);

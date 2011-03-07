@@ -7,14 +7,14 @@
 
 Recorder::Recorder()
 {
-	QList<QAudioDeviceId> list = QAudioDeviceInfo::deviceList(QAudio::AudioInput);
-	foreach(QAudioDeviceId devid, list)
+	qDebug() << "Listing...";
+	foreach(const QAudioDeviceInfo &deviceInfo, QAudioDeviceInfo::availableDevices(QAudio::AudioInput))
 	{
-		QAudioDeviceInfo deviceInfo(devid);
-		qDebug() << "Device name: " << deviceInfo.deviceName();
+     		qDebug() << "Device name: " << deviceInfo.deviceName();
 		QStringList codecs = deviceInfo.supportedCodecs();
 		qDebug() << "       Supported Codecs: "<<codecs;
 	}
+	qDebug() << "Done.";
 
 	//outputFile.setFileName("/test.raw");
 	//outputFile.open( QIODevice::WriteOnly | QIODevice::Truncate );
@@ -30,7 +30,7 @@ Recorder::Recorder()
 	format.setSampleType(QAudioFormat::UnSignedInt);
 	
 	qDebug() << "Going to create input...";
-	audio = new QAudioInput(list[1], format, this); //, format, this);
+	audio = new QAudioInput(QAudioDeviceInfo::defaultInputDevice(), format, this); //, format, this);
 	qDebug() << "Created input...";
 	QTimer::singleShot(10000, this, SLOT(stopRecording()));
 

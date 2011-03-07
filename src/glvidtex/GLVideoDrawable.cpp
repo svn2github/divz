@@ -1363,13 +1363,37 @@ void GLVideoDrawable::updateRects(bool secondSource)
 	}
 
 
+	double x1 = m_displayOpts.cropTopLeft.x();
+	double y1 = m_displayOpts.cropTopLeft.y();
+	double x2 = m_displayOpts.cropBottomRight.x();
+	double y2 = m_displayOpts.cropBottomRight.y();
+	double w = sourceRect.width();
+	double h =  sourceRect.height();
+	double c_x1 = x1 * w;
+	double c_y1 = y1 * h;
+	double c_x2 = x2 * w;
+	double c_y2 = y2 * h;
+	
 	QRectF adjustedSource = sourceRect.adjusted(
-		m_displayOpts.cropTopLeft.x(),
-		m_displayOpts.cropTopLeft.y(),
-		m_displayOpts.cropBottomRight.x(),
-		m_displayOpts.cropBottomRight.y());
+		c_x1,
+		c_y1,
+		c_x2,
+		c_y2);
 		
-	qDebug() << "GLVideoDrawable::updateRects(): "<<(QObject*)this<<",  Source rect: "<<sourceRect<<", adjustedSource:"<<adjustedSource << "cropBottomRight:"<<m_displayOpts.cropBottomRight<<",cropTopLeft:"<<m_displayOpts.cropTopLeft;
+// 	qDebug() << "GLVideoDrawable::updateRects(): "<<(QObject*)this<<",  Source rect: "<<sourceRect<<", adjustedSource:"<<adjustedSource << "\n" //crop:"<<m_displayOpts.cropTopLeft<<"/:"<<m_displayOpts.cropBottomRight;
+// 		<< "x1:"<<x1
+// 		<< "y1:"<<y1
+// 		<< "x2:"<<x2
+// 		<< "y2:"<<y2
+// 		<< "\n"
+// 		<< "w:"<<w
+// 		<< "h:"<<h
+// 		<< "\n"
+// 		<< "c_x1:"<<c_x1
+// 		<< "c_y1:"<<c_y1
+// 		<< "c_x2:"<<c_x2
+// 		<< "c_y2:"<<c_y2
+// 		;
 // 	m_origSourceRect = m_sourceRect;
 //
 // 	m_sourceRect.adjust(m_adjustDx1,m_adjustDy1,m_adjustDx2,m_adjustDy2);
@@ -2088,10 +2112,10 @@ void GLVideoDrawable::paint(QPainter * painter, const QStyleOptionGraphicsItem *
 	QRectF target = QRectF(m_targetRect.topLeft() - rect().topLeft(),m_targetRect.size());
 
 	source = source.adjusted(
-		m_displayOpts.cropTopLeft.x(),
-		m_displayOpts.cropTopLeft.y(),
-		m_displayOpts.cropBottomRight.x(),
-		m_displayOpts.cropBottomRight.y());
+		m_displayOpts.cropTopLeft.x() * source.width(),
+		m_displayOpts.cropTopLeft.y() * source.height(),
+		m_displayOpts.cropBottomRight.x() * source.width(),
+		m_displayOpts.cropBottomRight.y() * source.height());
 
 	//const QImage::Format imageFormat = QVideoFrame::imageFormatFromPixelFormat(format.pixelFormat());
 
@@ -2299,10 +2323,10 @@ void GLVideoDrawable::paintGL()
 	QRectF target = m_targetRect;
 
 	source = source.adjusted(
-		m_displayOpts.cropTopLeft.x(),
-		m_displayOpts.cropTopLeft.y(),
-		m_displayOpts.cropBottomRight.x(),
-		m_displayOpts.cropBottomRight.y());
+		m_displayOpts.cropTopLeft.x() * source.width(),
+		m_displayOpts.cropTopLeft.y() * source.height(),
+		m_displayOpts.cropBottomRight.x() * source.width(),
+		m_displayOpts.cropBottomRight.y() * source.height());
 
 // 	if(property("-debug").toBool())
 // 		qDebug() << "GLVideoDrawable::paintGL():"<<(QObject*)this<<": source:"<<source<<", target:"<<target<<" ( crop:"<<m_displayOpts.cropTopLeft<<"/"<<m_displayOpts.cropBottomRight<<")";
@@ -2414,6 +2438,8 @@ void GLVideoDrawable::paintGL()
 		txLeft , txTop,
 		txRight, txTop
 	};
+	
+	//qDebug() << "GLVideoDrawable::paintGL():"<<(QObject*)this<<": source:"<<source<<", target:"<<target<<" ( crop:"<<m_displayOpts.cropTopLeft<<"/"<<m_displayOpts.cropBottomRight<<"), tx:"<<txRight<<txTop<<txLeft<<txBottom;
 
 	double liveOpacity = m_crossFadeMode == JustFront ?
 				 opacity() :

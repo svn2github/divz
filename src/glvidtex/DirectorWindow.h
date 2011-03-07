@@ -239,6 +239,7 @@ public:
 	QString con() { return m_con; }
 	
 	GLVideoDrawable *drawable() { return m_drawable; }
+	GLWidget *glWidget() { return m_glWidget; }
 	
 public slots:
 	// DirectorSourceWidget::	
@@ -251,6 +252,7 @@ protected:
 	void contextMenuEvent(QContextMenuEvent * event);
 
 private:
+	GLWidget *m_glWidget;
 	GLVideoDrawable *m_drawable;
 	VideoReceiver *m_rx;
 	QMenu *m_configMenu;
@@ -474,6 +476,8 @@ public:
 	virtual GLScene *scene() { return m_scene; }
 	virtual QVariantMap saveToMap();
 	virtual void loadFromMap(const QVariantMap&);
+	
+	GLWidget *glWidget() { return m_glw; }
 	
 public slots:
 	virtual bool switchTo();

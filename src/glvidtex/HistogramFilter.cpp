@@ -10,7 +10,7 @@ HistogramFilter::HistogramFilter(QObject* parent)
 	, m_frameAccumNum(10) // just a guess
 	, m_drawBorder(true)
 {
-	setIsThreaded(true);
+	//setIsThreaded(true);
 }
 
 HistogramFilter::~HistogramFilter() {}
@@ -52,6 +52,8 @@ void HistogramFilter::setFrameAccumNum(int n)
 void HistogramFilter::processFrame()
 {
 	//qDebug() << "HistogramFilter::processFrame(): source:"<<m_source;
+	if(!m_frame)
+		return;
 	
 	QImage image = frameImage();
 	QImage histo = makeHistogram(image);
@@ -368,6 +370,14 @@ QImage HistogramFilter::makeHistogram(const QImage& image)
 		//qDebug() << "Histo size:"<<histogramOutput.size();
 	
 		return histogramOutput;
+	}
+	else
+	if(m_drawBorder)
+	{
+		QPainter p2(&histogram);
+		p2.setPen(QPen(Qt::black,1.5));
+		p2.drawRect(histogram.rect().adjusted(0,0,-1,-1));
+		p2.end();
 	}
 	
 	return histogram; 

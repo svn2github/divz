@@ -371,7 +371,7 @@ GLWidget::~GLWidget()
 
 QSize GLWidget::minimumSizeHint() const
 {
-	return QSize(60, 45);
+	return QSize(160, 145);
 }
 
 QSize GLWidget::sizeHint() const
@@ -983,6 +983,10 @@ void GLWidget::paintGL()
 	//qDebug() << "GLWidget::paintGL(): Starting paint routines...";
 // 	QTime time;
 // 	time.start();
+	if(!isVisible())
+		return;
+		
+	//qDebug() << "GLWidget::paintGL(): Starting paint routines...";
 
 	// Render all drawables into the FBO
 	//if(m_fbo)
