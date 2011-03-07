@@ -1605,6 +1605,7 @@ QStringList BMDCaptureDelegate::enumDeviceNames(bool forceReload)
 	}
 	
 	deckLinkIterator->Release();
+	qDebug() << "BMDCaptureDelegate::enumDeviceNames(): s_knownDevices:"<<s_knownDevices;
 	
 	return s_knownDevices;
 

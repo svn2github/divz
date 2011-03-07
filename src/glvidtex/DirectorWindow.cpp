@@ -1417,18 +1417,23 @@ CameraWidget::CameraWidget(DirectorWindow* dir, VideoReceiver *rx, QString con, 
 	scene->addDrawable(vidgld);
 	m_camSceneGroup->addScene(scene);
 	
+	m_drawable = vidgld;
+	
 	QVBoxLayout *vbox = new QVBoxLayout(this);
 	vbox->setContentsMargins(0,0,0,0);
 	
 	GLWidget *vid = new GLWidget();
 	vbox->addWidget(vid);
 
-	GLVideoDrawable *gld = new GLVideoDrawable();
-	gld->setVideoSource(rx);
-	vid->addDrawable(gld);
+	//GLVideoDrawable *gld = new GLVideoDrawable();
+	//gld->setVideoSource(rx);
+	//vid->addDrawable(gld);
+	vidgld->setVideoConnection(con);
+	vid->addDrawable(vidgld);
 	
 	setWindowTitle(QString("Camera %1").arg(index));
-	gld->setObjectName(qPrintable(windowTitle()));
+	//gld->setObjectName(qPrintable(windowTitle()));
+	vidgld->setObjectName(qPrintable(windowTitle()));
 	resize(320,240);
 	//vid->show();
 	
@@ -1470,7 +1475,7 @@ bool CameraWidget::switchTo()
 	qDebug() << "CameraWidget::switchTo: Using con string: "<<m_con;
 	
  	GLDrawable *gld = m_camSceneGroup->at(0)->at(0);
- 	gld->setProperty("videoConnection", m_con);
+ 	//gld->setProperty("videoConnection", m_con);
 // 	
 	if(!m_dir->players())
 		return false;
@@ -1791,6 +1796,27 @@ void PropertyEditorWindow::setSourceWidget(DirectorSourceWidget* source)
 		GLVideoDrawable *item = widgetVid ? widgetVid->drawable() : widgetCam->drawable();
 		m_vid = item;
 		
+		// Histo
+		{
+			NEW_SECTION("Histogram");
+			
+			GLWidget *vid = new GLWidget();
+			vid->setBackgroundColor(palette().color(QPalette::Window));
+			vid->setViewport(QRectF(0,0,255,128)); // approx histogram output size for a 4:3 video frame
+			
+			HistogramFilter *filter = new HistogramFilter();
+			
+			GLVideoDrawable *gld = new GLVideoDrawable();
+			gld->setVideoSource(filter);
+			vid->addDrawable(gld);
+			gld->setRect(vid->viewport());
+			
+			form->addWidget(vid);
+			
+			//filter->setIncludeOriginalImage(false);
+			filter->setVideoSource(item->videoSource());
+		}
+		
 		// Levels
 		{
 			NEW_SECTION("White/Black Levels");
@@ -1800,7 +1826,7 @@ void PropertyEditorWindow::setSourceWidget(DirectorSourceWidget* source)
 			opts.step = 5;
 			
 			form->addRow(tr("&Black:"), PropertyEditorFactory::generatePropertyEditor(item, "blackLevel", SLOT(setBlackLevel(int)), opts));
-			form->addRow(tr("&Mid:"),   PropertyEditorFactory::generatePropertyEditor(item, "midLevel", SLOT(setMidLevel(int)), opts));
+			//form->addRow(tr("&Mid:"),   PropertyEditorFactory::generatePropertyEditor(item, "midLevel",   SLOT(setMidLevel(int)), opts));
 			form->addRow(tr("&White:"), PropertyEditorFactory::generatePropertyEditor(item, "whiteLevel", SLOT(setWhiteLevel(int)), opts));
 			
 			opts.min = 0.1;
@@ -1821,9 +1847,9 @@ void PropertyEditorWindow::setSourceWidget(DirectorSourceWidget* source)
 			opts.step = 5;
 			
 			form->addRow(tr("&Brightness:"), 	PropertyEditorFactory::generatePropertyEditor(item, "brightness", SLOT(setBrightness(int)), opts));
-			form->addRow(tr("&Contrast:"), 		PropertyEditorFactory::generatePropertyEditor(item, "contrast", SLOT(setContrast(int)), opts));
+			form->addRow(tr("&Contrast:"), 		PropertyEditorFactory::generatePropertyEditor(item, "contrast",   SLOT(setContrast(int)), opts));
 			form->addRow(tr("&Saturation:"), 	PropertyEditorFactory::generatePropertyEditor(item, "saturation", SLOT(setSaturation(int)), opts));
-			form->addRow(tr("&Hue:"), 		PropertyEditorFactory::generatePropertyEditor(item, "hue", SLOT(setHue(int)), opts));
+			form->addRow(tr("&Hue:"), 		PropertyEditorFactory::generatePropertyEditor(item, "hue",        SLOT(setHue(int)), opts));
 			
 			QPushButton *btn = new QPushButton("Apply to Player");
 			connect(btn, SIGNAL(clicked()), this, SLOT(sendVidOpts()));
@@ -1838,13 +1864,14 @@ void PropertyEditorWindow::setSourceWidget(DirectorSourceWidget* source)
 			
 			opts.min = 0; 
 			opts.max =  1000;
-			form->addRow(tr("Crop &Left:"),		PropertyEditorFactory::generatePropertyEditor(item, "cropLeft", SLOT(setCropLeft(int)), opts));
+			form->addRow(tr("Crop &Left:"),		PropertyEditorFactory::generatePropertyEditor(item, "cropLeft",   SLOT(setCropLeft(int)), opts));
 			opts.min = -1000; 
 			opts.max =  0;
-			form->addRow(tr("Crop &Right:"),	PropertyEditorFactory::generatePropertyEditor(item, "cropRight", SLOT(setCropRight(int)), opts));
+			form->addRow(tr("Crop &Right:"),	PropertyEditorFactory::generatePropertyEditor(item, "cropRight",  SLOT(setCropRight(int)), opts));
+			
 			opts.min = 0; 
 			opts.max =  1000;
-			form->addRow(tr("Crop &Top:"),		PropertyEditorFactory::generatePropertyEditor(item, "cropTop", SLOT(setCropTop(int)), opts));
+			form->addRow(tr("Crop &Top:"),		PropertyEditorFactory::generatePropertyEditor(item, "cropTop",    SLOT(setCropTop(int)), opts));
 			opts.min = -1000; 
 			opts.max =  0;
 			form->addRow(tr("Crop &Bottom:"),	PropertyEditorFactory::generatePropertyEditor(item, "cropBottom", SLOT(setCropBottom(int)), opts));
@@ -1937,6 +1964,10 @@ void PropertyEditorWindow::sendVidOpts()
 	*/
 	
 	QStringList props = QStringList() 
+		<< "whiteLevel"
+		<< "blackLevel"
+		<< "midLevel"
+		<< "gamma"
 		<< "brightness"
 		<< "contrast" 
 		<< "hue"

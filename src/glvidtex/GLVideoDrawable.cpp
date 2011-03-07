@@ -284,17 +284,19 @@ void GLVideoDrawable::setVideoSource(VideoSource *source)
 		
 		
 		// Automatically add "overscan" using 3.5% (approx) based on 'Overscan amounts' recommended at http://en.wikipedia.org/wiki/Overscan 
-		if(m_isCameraThread)
-		{
-			double assumedFrameWidth  = 680;
-			double assumedFrameHeight = 480;
-			double overscanAmount = .035 * .5; // 3.5% * .5 = .0175
-			double cropX = assumedFrameWidth  * overscanAmount; // 11.2
-			double cropY = assumedFrameHeight * overscanAmount; // 8.4
-			
-			m_displayOpts.cropTopLeft = QPointF(cropX,cropY);
-			m_displayOpts.cropBottomRight = QPointF(-cropX,-cropY);
-		}
+// 		if(m_isCameraThread)
+// 		{
+// 			double assumedFrameWidth  = 680;
+// 			double assumedFrameHeight = 480;
+// 			double overscanAmount = .035 * .5; // 3.5% * .5 = .0175
+// 			double cropX = assumedFrameWidth  * overscanAmount; // 11.2
+// 			double cropY = assumedFrameHeight * overscanAmount; // 8.4
+// 			
+// 			m_displayOpts.cropTopLeft = QPointF(cropX,cropY);
+// 			m_displayOpts.cropBottomRight = QPointF(-cropX,-cropY);
+// 		}
+
+		updateRects();
 	}
 	else
 	{
@@ -624,8 +626,8 @@ void GLVideoDrawable::setFlipVertical(bool value)
 
 void GLVideoDrawable::setCropTopLeft(QPointF value)
 {
-	if(m_isCameraThread)
-		return;
+	//if(m_isCameraThread)
+	//	return;
 		
 	m_displayOpts.cropTopLeft = value;
 	updateRects();
@@ -635,8 +637,8 @@ void GLVideoDrawable::setCropTopLeft(QPointF value)
 
 void GLVideoDrawable::setCropBottomRight(QPointF value)
 {
-	if(m_isCameraThread)
-		return;
+	//if(m_isCameraThread)
+	//	return;
 		
 	m_displayOpts.cropBottomRight = value;
 	emit displayOptionsChanged(m_displayOpts);
@@ -1225,6 +1227,7 @@ const char * GLVideoDrawable::resizeTextures(const QSize& frameSize, bool second
 	bool debugShaderName = true;
 	switch (m_videoFormat.pixelFormat)
 	{
+	/// RGB Formats
 	case QVideoFrame::Format_RGB32:
  		if(debugShaderName)
  			qDebug() << "GLVideoDrawable::resizeTextures(): "<<(QObject*)this<<"\t Format RGB32, using qt_glsl_xrgbShaderProgram";
@@ -1235,22 +1238,24 @@ const char * GLVideoDrawable::resizeTextures(const QSize& frameSize, bool second
          	if(debugShaderName)
          		qDebug() << "GLVideoDrawable::resizeTextures(): "<<(QObject*)this<<"\t Format ARGB, using qt_glsl_argbShaderProgram";
 		initRgbTextureInfo(GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE, frameSize, secondSource);
-		fragmentProgram = qt_glsl_argbShaderProgram;
+		fragmentProgram = m_levelsEnabled ? qt_glsl_argbLevelsShaderProgram : qt_glsl_argbShaderProgram;
 		break;
 #ifndef QT_OPENGL_ES
         case QVideoFrame::Format_RGB24:
         	if(debugShaderName)
          		qDebug() << "GLVideoDrawable::resizeTextures(): "<<(QObject*)this<<"\t Format RGB24, using qt_glsl_rgbShaderProgram";
 		initRgbTextureInfo(GL_RGB8, GL_RGB, GL_UNSIGNED_BYTE, frameSize, secondSource);
-		fragmentProgram = qt_glsl_rgbShaderProgram;
+		fragmentProgram = m_levelsEnabled ? qt_glsl_rgbLevelsShaderProgram : qt_glsl_rgbShaderProgram;
 		break;
 #endif
 	case QVideoFrame::Format_RGB565:
 		if(debugShaderName)
 			qDebug() << "GLVideoDrawable::resizeTextures(): "<<(QObject*)this<<"\t Format RGB565, using qt_glsl_rgbShaderProgram";
 		initRgbTextureInfo(GL_RGB, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, frameSize, secondSource);
-		fragmentProgram = qt_glsl_rgbShaderProgram;
+		fragmentProgram = m_levelsEnabled ? qt_glsl_rgbLevelsShaderProgram : qt_glsl_rgbShaderProgram;
 		break;
+		
+	/// YUV Formats
 	case QVideoFrame::Format_YV12:
 		if(debugShaderName)
 			qDebug() << "GLVideoDrawable::resizeTextures(): "<<(QObject*)this<<"\t Format YV12, using qt_glsl_yuvPlanarShaderProgram";
@@ -1280,14 +1285,6 @@ const char * GLVideoDrawable::resizeTextures(const QSize& frameSize, bool second
 		fragmentProgram = qt_glsl_ayuvShaderProgram;
 		m_yuv = true;
 	break;
-// 	case QVideoFrame::Format_YV12:
-// 	initYv12TextureInfo(format.frameSize());
-// 	fragmentProgram = qt_glsl_yuvPlanarShaderProgram;
-// 	break;
-// 	case QVideoFrame::Format_YUV420P:
-// 	initYuv420PTextureInfo(format.frameSize());
-// 	fragmentProgram = qt_glsl_yuvPlanarShaderProgram;
-// 	break;
 	case QVideoFrame::Format_UYVY:
 		if(debugShaderName)
 			qDebug() << "GLVideoDrawable::resizeTextures(): "<<(QObject*)this<<"\t Format_UYVY, using qt_glsl_uyvyShaderProgram";
@@ -1359,8 +1356,10 @@ void GLVideoDrawable::updateRects(bool secondSource)
 		double cropX = assumedFrameWidth  * overscanAmount;
 		double cropY = assumedFrameHeight * overscanAmount;
 		
-		m_displayOpts.cropTopLeft = QPointF(cropX,cropY);
-		m_displayOpts.cropBottomRight = QPointF(-cropX,-cropY);
+// 		if(m_displayOpts.cropTopLeft == QPointF(0,0))
+// 			m_displayOpts.cropTopLeft = QPointF(cropX,cropY);
+// 		if(m_displayOpts.cropBottomRight == QPointF(0,0))
+// 			m_displayOpts.cropBottomRight = QPointF(-cropX,-cropY);
 	}
 
 
@@ -1370,7 +1369,7 @@ void GLVideoDrawable::updateRects(bool secondSource)
 		m_displayOpts.cropBottomRight.x(),
 		m_displayOpts.cropBottomRight.y());
 		
-	//qDebug() << "GLVideoDrawable::updateRects(): "<<(QObject*)this<<",  Source rect: "<<sourceRect<<", adjustedSource:"<<adjustedSource
+	qDebug() << "GLVideoDrawable::updateRects(): "<<(QObject*)this<<",  Source rect: "<<sourceRect<<", adjustedSource:"<<adjustedSource << "cropBottomRight:"<<m_displayOpts.cropBottomRight<<",cropTopLeft:"<<m_displayOpts.cropTopLeft;
 // 	m_origSourceRect = m_sourceRect;
 //
 // 	m_sourceRect.adjust(m_adjustDx1,m_adjustDy1,m_adjustDx2,m_adjustDy2);
