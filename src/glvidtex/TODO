@@ -100,11 +100,13 @@ TODO:
 		
 		- Player: Show/Hide fadein/fadeouts are jumpy when done over live video (and even can cause live video to stutter)
 			- Nedt o integrate to use the "updateAnimations()" call or something similar like that
-			
 		
 		- Cross-fading from a BMD capture device freezes "old" stream, but new stream works fine
 		
-		- Histogram window severaly broken - really, the HistogramFilter or the drawable - not sure wich
+		- [FIXED] Histogram window severaly broken - really, the HistogramFilter or the drawable - not sure wich
+		
+		- GLVideoDrawable: when m_levelsEnabled, opacity fade *in* (not fade out) causes white flash at start -- ????? Why??? 
+		- DViz integration in GLImageHttpDrawable: Messes up on slides with '%' in their names from encoding things like ':' 
 			
 		
 	NEEDED FEATURES:

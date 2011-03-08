@@ -301,16 +301,41 @@ QImage HistogramFilter::makeHistogram(const QImage& image)
 			
 		// Decide on an appropriate scaling value to keep the graph somewhat "pretty"
 		// The 4 is just a magic number I guessed at...
-		double scaler = (double) ( max[c] );/// (!avg[c]?1:avg[c]) > 4 ? avg[c] * 4 : max[c] );
+		//double scaler = (double) ( max[c] );/// (!avg[c]?1:avg[c]) > 4 ? avg[c] * 4 : max[c] );
 		
+		int av = avg[c] * 3;
+		double scaler = (double) ( max[c] > av ? av : max[c] );
+		//qDebug() << "scaler:"<<scaler<<" (max[c]:"<<max[c]<<", avg:"<<av<<")";
+		
+		int last = -1;
+		int next = -1;
 		if(!scaler)
 			scaler = 1; 
 		for(int i=0;i<256;i++)
 		{
 			int count   = histo[c][i];
+			int oldCount = count;
+			
+			next = i<255 ? histo[c][i+1] : -1; 
+			
+			if(last > -1 && next > -1)
+			{
+				count = (count+last+next)/3;	
+			}
+			else
+			if(last > -1)
+			{
+				count = (count+last)/2;
+			}
+			
+			last = oldCount;
+			
 			double perc = ((double)count)/scaler;
 			double val  = perc * maxHeight;
 			int scaled  = (int)val;
+			
+			
+			
 			//qDebug() << "c:"<<c<<",i:"<<i<<", count:"<<count<<", perc:"<<perc<<", val:"<<val<<", scaled:"<<scaled<<",maxv:"<<maxv<<",max[c]:"<<max[c]<<",avg[c]:"<<avg[c]<<",scaler:"<<scaler;
 			
 			p.drawLine(i,maxHeight-scaled, i,maxHeight);

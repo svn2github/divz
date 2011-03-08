@@ -857,16 +857,16 @@ void DirectorWindow::showPreviewWin()
 
 void DirectorWindow::showPropEditor()
 {
-	if(m_propWin)
-	{
-		m_propWin->raise();
-		m_propWin->show();
-	}
-	else
-	{
+// 	if(m_propWin)
+// 	{
+// 		m_propWin->raise();
+// 		m_propWin->show();
+// 	}
+// 	else
+// 	{
 		m_propWin = new PropertyEditorWindow(this);
 		addSubwindow(m_propWin);
-	}
+//	}
 }
 
 void DirectorWindow::showPropertyEditor(DirectorSourceWidget *source)

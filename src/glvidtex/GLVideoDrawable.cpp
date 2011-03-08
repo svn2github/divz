@@ -108,7 +108,7 @@ GLVideoDrawable::GLVideoDrawable(QObject *parent)
 	, m_unrenderedFrames(0)
 	, m_liveStatus(false)
 	, m_textureUpdateNeeded(false)
-	, m_levelsEnabled(true)
+	, m_levelsEnabled(false)
 	, m_blackLevel(0)
 	, m_whiteLevel(255)
 	, m_midLevel(128)
@@ -2488,7 +2488,9 @@ void GLVideoDrawable::paintGL()
 				m_program->setUniformValue("blackLevel", (GLfloat)m_blackLevel);
 				m_program->setUniformValue("gamma",      (GLfloat)m_gamma);
 				/// TODO
-				//m_program->setUniformValue("midLevel",   (GLfloat)midLevel); 
+				//m_program->setUniformValue("midLevel",   (GLfloat)midLevel);
+				 
+				//qDebug() << "GLVideoDrawable::paintGL():"<<(QObject*)this<<": levels:"<<m_blackLevel<<"/"<<m_whiteLevel<<", g:"<<m_gamma; 
 			}
 
 			if (m_textureCount == 3)

@@ -371,7 +371,7 @@ GLWidget::~GLWidget()
 
 QSize GLWidget::minimumSizeHint() const
 {
-	return QSize(160, 145);
+	return QSize(160, 120);
 }
 
 QSize GLWidget::sizeHint() const
@@ -983,8 +983,8 @@ void GLWidget::paintGL()
 	//qDebug() << "GLWidget::paintGL(): Starting paint routines...";
 // 	QTime time;
 // 	time.start();
-	if(!isVisible())
-		return;
+// 	if(!isVisible())
+// 		return;
 		
 	//qDebug() << "GLWidget::paintGL(): Starting paint routines...";
 
@@ -2103,6 +2103,7 @@ GLWidgetOutputStream::GLWidgetOutputStream(GLWidget *parent)
 	, m_fps(35)
 	, m_frameUpdated(false)
 {
+	setAutoDestroy(false);
  	setIsBuffered(false);
 	setImage(QImage("dot.gif"));
 	connect(&m_frameReadyTimer, SIGNAL(timeout()), this, SIGNAL(frameReady()));

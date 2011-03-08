@@ -98,7 +98,7 @@ void GLImageHttpDrawable::initDvizPoll()
 		//.arg(QString(QUrl::toPercentEncoding(m_slideName)));
 		.arg(m_slideName);
 
-	
+	qDebug()<< "GLImageHttpDrawable::initDvizPoll(): url:"<<newUrl;
 	m_isDataPoll = true;
 	loadUrl(newUrl);
 }
@@ -106,14 +106,28 @@ void GLImageHttpDrawable::initDvizPoll()
 void GLImageHttpDrawable::initImagePoll()
 {
 	m_isDataPoll = false;
-	loadUrl(m_url);
+	
+	QString imageUrl = m_url;
+	if(m_pollDviz)
+	{
+		QString newUrl = QString("%1?size=%2x%3")
+			.arg(imageUrl)
+			.arg((int)rect().width())
+			.arg((int)rect().height());
+	
+		qDebug()<< "GLImageHttpDrawable::initImagePoll(): url:"<<newUrl;
+		
+		imageUrl = newUrl;
+	}
+	
+	loadUrl(imageUrl);
 }
 
 void GLImageHttpDrawable::loadUrl(const QString &location) 
 {
 	QUrl url(location);
 	
-	//qDebug() << "GLImageHttpDrawable::loadUrl(): url:"<<url;
+	qDebug() << "GLImageHttpDrawable::loadUrl(): url:"<<url;
 
 	QNetworkAccessManager *manager = new QNetworkAccessManager(this);
 	connect(manager, SIGNAL(finished(QNetworkReply*)),
@@ -146,7 +160,7 @@ void GLImageHttpDrawable::handleNetworkData(QNetworkReply *networkReply)
 					m_slideName = dataExtract.cap(2);
 				}
 				
-				//qDebug() << "GLImageHttpDrawable::handleNetworkData(): [DEBUG] Changed to slide:"<<m_slideName<<", m_slideId:"<<m_slideId<<", polling image";
+				qDebug() << "GLImageHttpDrawable::handleNetworkData(): [DEBUG] Changed to slide:"<<m_slideName<<", m_slideId:"<<m_slideId<<", polling image";
 				initImagePoll();
 			}
 			

@@ -172,6 +172,7 @@ void ViewServer::reqCheckForChange(QTcpSocket *socket, const QStringList &path, 
 	
 	int id = query["slide_id"].toInt();
 	QString name = QUrl::fromPercentEncoding(query["slide_name"].toAscii());
+	qDebug() << "ViewServer::reqCheckForchange: client id:"<<id<<", our id:"<<slideId<<", client name:"<<name<<", our name:"<<slideName;
 	if(id   != slideId ||
 	   name != slideName)
 	{

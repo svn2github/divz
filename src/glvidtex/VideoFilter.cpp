@@ -11,7 +11,7 @@ VideoFilter::VideoFilter(QObject *parent)
 {
 	connect(&m_processTimer, SIGNAL(timeout()), this, SLOT(processFrame()));
 	m_processTimer.setSingleShot(true);
-	m_processTimer.setInterval(50);
+	m_processTimer.setInterval(0);
 }
 
 VideoFilter::~VideoFilter()
@@ -64,7 +64,7 @@ void VideoFilter::frameAvailable()
 // 		enqueue(f);
 // 		return;
 		
-// 		qDebug() << "GLVideoDrawable::frameReady(): "<<objectName()<<" f:"<<f;
+ 		//qDebug() << "GLVideoDrawable::frameReady(): "<<objectName()<<" f:"<<f;
 		if(!f)
 			return;
 		if(f->isValid())
@@ -170,5 +170,5 @@ QImage VideoFilter::frameImage()
 void VideoFilter::setFpsLimit(int limit)
 {
 	m_fpsLimit = limit;
-	m_processTimer.setInterval(m_fpsLimit > 0 ? 1000 / m_fpsLimit : 50);
+	//m_processTimer.setInterval(m_fpsLimit > 0 ? 1000 / m_fpsLimit : 50);
 }

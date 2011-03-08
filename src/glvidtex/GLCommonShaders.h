@@ -135,14 +135,25 @@ static const char *qt_glsl_argbLevelsShaderProgram =
 	"{\n"
 	"    mediump vec2 texPoint = vec2(textureCoord.s + texOffsetX, textureCoord.t + texOffsetY);\n"
 	"    highp vec4 color = vec4(texture2D(texRgb, texPoint).bgr, 1.0);\n"
+
+/// Works, no clamp
 //         "    color.r = (pow(((color.r * 255.0) - blackLevel) / (whiteLevel - blackLevel), gamma) * 255) / 255.0;\n"
 //         "    color.g = (pow(((color.g * 255.0) - blackLevel) / (whiteLevel - blackLevel), gamma) * 255) / 255.0;\n"
 //         "    color.b = (pow(((color.b * 255.0) - blackLevel) / (whiteLevel - blackLevel), gamma) * 255) / 255.0;\n"
-	"    color.r = clamp((pow(((color.r * 255.0) - blackLevel) / (whiteLevel - blackLevel), gamma) * 255.0) / 255.0, 0.0, 1.0);\n"
-        "    color.g = clamp((pow(((color.g * 255.0) - blackLevel) / (whiteLevel - blackLevel), gamma) * 255.0) / 255.0, 0.0, 1.0);\n"
-        "    color.b = clamp((pow(((color.b * 255.0) - blackLevel) / (whiteLevel - blackLevel), gamma) * 255.0) / 255.0, 0.0, 1.0);\n"
-	"    color = colorMatrix * color;\n"
-	"    gl_FragColor = vec4(color.rgb, texture2D(texRgb, texPoint).a * alpha * texture2D(alphaMask, textureCoord.st).a);\n"
+
+/// Works, clamped
+// 	"    color.r = clamp((pow(((color.r * 255.0) - blackLevel) / (whiteLevel - blackLevel), gamma) * 255.0) / 255.0, 0.0, 1.0);\n"
+//         "    color.g = clamp((pow(((color.g * 255.0) - blackLevel) / (whiteLevel - blackLevel), gamma) * 255.0) / 255.0, 0.0, 1.0);\n"
+//         "    color.b = clamp((pow(((color.b * 255.0) - blackLevel) / (whiteLevel - blackLevel), gamma) * 255.0) / 255.0, 0.0, 1.0);\n"
+        
+        //"    mediump float range = whiteLevel - blackLevel;
+	//"    color = colorMatrix * color;\n"
+	"    color.r = clamp(((color.r * 255.0) - blackLevel) / (whiteLevel - blackLevel), 0.0, 1.0);\n"
+        "    color.g = clamp(((color.g * 255.0) - blackLevel) / (whiteLevel - blackLevel), 0.0, 1.0);\n"
+        "    color.b = clamp(((color.b * 255.0) - blackLevel) / (whiteLevel - blackLevel), 0.0, 1.0);\n"
+        
+	//"    gl_FragColor = vec4(color.rgb, texture2D(texRgb, texPoint).a * alpha * texture2D(alphaMask, textureCoord.st).a);\n"
+	"    gl_FragColor = vec4(color.rgb, 1);"//texture2D(texRgb, texPoint).a * alpha * texture2D(alphaMask, textureCoord.st).a);\n"
 	"}\n";
 	
 
