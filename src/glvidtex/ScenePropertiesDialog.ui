@@ -46,6 +46,9 @@
          <property name="suffix">
           <string> seconds</string>
          </property>
+         <property name="maximum">
+          <double>99999.990000000005239</double>
+         </property>
         </widget>
        </item>
        <item>

@@ -2,7 +2,16 @@
 MOC_DIR = .build
 RCC_DIR = .build
 UI_DIR  = .build
-OBJECTS_DIR = .build
+;OBJECTS_DIR = .build
+
+tvbox: {
+	OBJECTS_DIR = .build-tvbox
+	message("TVBOX Output director enabled: $$OBJECTS_DIR")
+} 
+else: {
+	message("No TVBOX defined on cmd line")
+	OBJECTS_DIR = .build
+}
 
 HEADERS       = GLWidget.h \
 		../livemix/VideoSource.h \
