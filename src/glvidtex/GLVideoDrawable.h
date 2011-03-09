@@ -329,6 +329,8 @@ protected slots:
 	void disconnectVideoSource2();
 	void xfadeTick(bool updateGL=true);
 	
+	virtual void transformChanged();
+	
 private:
 	/// PS
 	VideoFormat m_videoFormat;
@@ -484,6 +486,8 @@ private:
 	int m_whiteLevel;
 	int m_midLevel;
 	double m_gamma;
+	
+	QTransform m_lastKnownTransform;
 	
 	static int m_videoSenderPortAllocator;
 };

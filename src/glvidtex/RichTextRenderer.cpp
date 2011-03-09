@@ -15,6 +15,7 @@ RichTextRenderer::RichTextRenderer(QObject *parent)
 	, m_shadowOffsetX(3)
 	, m_shadowOffsetY(3)
 	, m_updatesLocked(false)
+	, m_scaling(1.,1.)
 {
 // 	qDebug() << "RichTextRenderer::ctor(): \t in thread:"<<QThread::currentThreadId();
 	connect(&m_updateTimer, SIGNAL(timeout()), this, SLOT(renderText()));
@@ -46,6 +47,10 @@ bool RichTextRenderer::lockUpdates(bool flag)
 	return oldValue;
 }
 
+void RichTextRenderer::setScaling(QPointF scale)
+{
+	m_scaling = scale;
+}
 
 void RichTextRenderer::changeFontSize(double size)
 {
@@ -376,9 +381,16 @@ QImage RichTextRenderer::renderText()
 	QSizeF shadowSize = shadowEnabled() ? QSizeF(shadowOffsetX(),shadowOffsetY()) : QSizeF(0,0);
 	QSizeF docSize = doc.size();
 	QSizeF padSize(12.,12.);
-	QSize sumSize = (docSize + shadowSize + padSize).toSize();
+	QSizeF sumSize = (docSize + shadowSize + padSize);//.toSize();
+	
+	QSizeF scaledSize = QSizeF(sumSize.width() * m_scaling.x(), sumSize.height() * m_scaling.y());
+	if(m_scaling.x() != 1. || m_scaling.y() != 1.)
+	{
+		//qDebug() << "RichTextRenderer::renderText(): Orig size:"<<sumSize<<", scaled size:"<<scaledSize<<", scaling:"<<m_scaling;
+		m_rawSize = sumSize;
+	}
 	//qDebug() << "RichTextRenderer::update(): textWidth: "<<textWidth<<", shadowSize:"<<shadowSize<<", docSize:"<<docSize<<", sumSize:"<<sumSize;
-	QImage cache(sumSize,QImage::Format_ARGB32); //_Premultiplied);
+	QImage cache(scaledSize.toSize(),QImage::Format_ARGB32); //_Premultiplied);
 	memset(cache.scanLine(0),0,cache.byteCount());
 	
 	double padSizeHalfX = padSize.width() / 2;
@@ -386,10 +398,12 @@ QImage RichTextRenderer::renderText()
 			
 	
 	QPainter textPainter(&cache);
+	textPainter.scale(m_scaling.x(), m_scaling.y());
 	//textPainter.fillRect(cache.rect(),Qt::transparent);
 	
 	QAbstractTextDocumentLayout::PaintContext pCtx;
 
+	//qDebug() << "RichTextRenderer::renderText(): shadowEnabled():"<<shadowEnabled()<<", shadowBlurRadius():"<<shadowBlurRadius(); 
 	if(shadowEnabled())
 	{
 		if(shadowBlurRadius() <= 0.05)
@@ -408,12 +422,19 @@ QImage RichTextRenderer::renderText()
 			
 			// create temporary pixmap to hold a copy of the text
 			QSizeF blurSize = ImageFilters::blurredSizeFor(doc.size(), (int)radius);
+			
+			QSizeF scaledBlurSize = QSize(blurSize.width() * m_scaling.x(), blurSize.height() * m_scaling.y());
+			//QSize docSize = doc.size();
+			//qDebug() << "RichTextRenderer::renderText(): [shadow] radius:"<<radius<<" blurSize:"<<blurSize<<", scaling:"<<m_scaling<<", scaledBlurSize:"<<scaledBlurSize;
+			
+			
 			//qDebug() << "Blur size:"<<blurSize<<", doc:"<<doc.size()<<", radius:"<<radius;
-			QImage tmpImage(blurSize.toSize(),QImage::Format_ARGB32_Premultiplied);
+			QImage tmpImage(scaledBlurSize.toSize(),QImage::Format_ARGB32_Premultiplied);
 			memset(tmpImage.scanLine(0),0,tmpImage.byteCount());
 			
 			// render the text
 			QPainter tmpPainter(&tmpImage);
+			tmpPainter.scale(m_scaling.x(), m_scaling.y());
 			
 			tmpPainter.save();
 			tmpPainter.translate(radius + padSizeHalfX, radius + padSizeHalfY);

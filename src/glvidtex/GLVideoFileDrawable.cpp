@@ -134,7 +134,7 @@ double GLVideoFileDrawable::videoLength()
 		{ 
 			// Duration is in milleseconds, we store length in seconds
 			m_videoLength = m_qtSource->player()->duration() / 1000.;
-			qDebug() << "GLVideoFileDrawable::videoLength: "<<m_qtSource->file()<<": Duration: "<<m_videoLength;
+			//qDebug() << "GLVideoFileDrawable::videoLength: "<<m_qtSource->file()<<": Duration: "<<m_videoLength;
 		}
 	}
 #endif	
@@ -205,7 +205,7 @@ bool GLVideoFileDrawable::isMuted()
 
 void GLVideoFileDrawable::setStatus(int status)
 { 
-	qDebug() << "GLVideoFileDrawable::setStatus: "<<status;
+	//qDebug() << "GLVideoFileDrawable::setStatus: "<<status;
 #ifdef HAS_QT_VIDEO_SOURCE
 	if(m_qtSource)
 	{

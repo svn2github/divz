@@ -110,9 +110,7 @@ void GLSceneTypeRandomVideo::readFolder(const QString &folder)
 	//qDebug() << "GLSceneTypeRandomVideo::readFolder()";
 	QDir dir(folder);
 	dir.setNameFilters(QStringList()  
-		#ifdef Q_OS_WIN
 			<< "*.wmv"
-		#endif
 			<< "*.mpeg" 
 			<< "*.mpg" 
 			<< "*.avi" 
@@ -178,12 +176,12 @@ void GLSceneTypeRandomVideo::showNextVideo()
 		double d = vidfile->videoLength();
 		if(d > 1)
 		{
-			qDebug() << "GLSceneTypeRandomVideo::showNextVideo(): d:"<<d;
+			//qDebug() << "GLSceneTypeRandomVideo::showNextVideo(): d:"<<d;
 			scene()->setDuration(d);
 		}
 		else
 		{
-			qDebug() << "GLSceneTypeRandomVideo::showNextVideo(): d:"<<d<<", overriding to 30.0";
+			//qDebug() << "GLSceneTypeRandomVideo::showNextVideo(): d:"<<d<<", overriding to 30.0";
 			scene()->setDuration(30.0);
 		}
 	}
@@ -195,7 +193,7 @@ void GLSceneTypeRandomVideo::durationChanged(double d)
 {
 	if(scene())
 	{
-		qDebug() << "GLSceneTypeRandomVideo::durationChanged: "<<d;
+		//qDebug() << "GLSceneTypeRandomVideo::durationChanged: "<<d;
 		scene()->setDuration(d);
 	}
 }
@@ -204,7 +202,7 @@ void GLSceneTypeRandomVideo::statusChanged(int status)
 {
 	if(!status && scene())
 	{
-		qDebug() << "GLSceneTypeRandomVideo::statusChanged: "<<status<<", setting duration to zero";
+		//qDebug() << "GLSceneTypeRandomVideo::statusChanged: "<<status<<", setting duration to zero";
 		scene()->setDuration(0);
 	}
 

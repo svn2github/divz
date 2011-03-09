@@ -1,6 +1,7 @@
 #include "GLTextDrawable.h"
 #include "RichTextRenderer.h"
 #include "EntityList.h"
+#include "GLWidget.h"
 
 #define DEFAULT_CLOCK_FORMAT "yyyy-MM-dd h:mm:ss ap"
 
@@ -646,6 +647,17 @@ void GLTextDrawable::setScrollerSpeed(double x)
 	m_scrollerSpeed = x;
 }
 
+void GLTextDrawable::transformChanged()
+{
+	if(m_renderer && m_glw)
+	{
+		QTransform tx = m_glw->transform();
+		m_renderer->setScaling(tx.m11(), tx.m22());
+		//qDebug() << "GLTextDrawable::transformChanged(): New scale:"<<tx.m11()<<"x"<<tx.m22();
+		m_renderer->update();
+	}
+}
+
 void GLTextDrawable::setText(const QString& text)
 {
 	
@@ -673,6 +685,15 @@ void GLTextDrawable::setText(const QString& text)
 	
 	//qDebug() << "GLTextDrawable::setText(): "<<(QObject*)this<<" text:"<<htmlToPlainText(text);
 	bool lock = false;
+	
+	QPointF scale = m_glw ? QPointF(m_glw->transform().m11(), m_glw->transform().m22()) : QPointF(1,1);
+	if(scale.x() != 1. || scale.y() != 1.)
+	{
+		m_cachedImageText = "";
+		m_cachedImage = QImage();
+		
+		m_renderer->setScaling(scale);
+	}
 
 	if(m_cachedImageText == text &&
 	  !m_cachedImage.isNull())
@@ -808,6 +829,24 @@ void GLTextDrawable::updateRects(bool secondSource)
 		m_displayOpts.cropTopLeft.y(),
 		m_displayOpts.cropBottomRight.x(),
 		m_displayOpts.cropBottomRight.y());
+		
+	if(m_renderer && m_glw)
+	{
+		QPointF scale = m_renderer->scaling();
+		if(scale.x() != 1. || scale.y() != 1.)
+		{
+			adjustedSource = QRectF(
+				adjustedSource.topLeft(),
+				//m_renderer->unscaledImageSize()
+				QSize(
+					adjustedSource.width() / scale.x(),
+					adjustedSource.height() / scale.y()
+				)
+			);
+		}
+		
+		//qDebug() << "GLTextDrawable::updateRects: adjustedSource:"<<adjustedSource;
+	}
 
 	QRectF targetRect = QRectF(rect().topLeft(),adjustedSource.size());
 	

@@ -14,7 +14,19 @@ GLSceneTypeCurrentWeather::GLSceneTypeCurrentWeather(QObject *parent)
 
 		<< FieldInfo("temp",
 			"Current Temperature",
-			"A short numerical text giving the current temperature in farenheit, for example: 9*F",
+			"A short numerical text giving the current temperature in farenheit, for example: 72*F",
+			"Text",
+			true)
+			
+		<< FieldInfo("high",
+			"Today's Forecasted High Temperature",
+			"A short numerical text giving the forecasted high temperature in farenheit, for example: 125*F",
+			"Text",
+			true)
+			
+		<< FieldInfo("temp",
+			"Today's Forecasted Low Temperature",
+			"A short numerical text giving the forecasted low temperature in farenheit, for example: -50*F",
 			"Text",
 			true)
 
@@ -250,6 +262,7 @@ void GLSceneTypeCurrentWeather::parseData(const QString &data)
 	qDebug() << "GLSceneTypeCurrentWeather::parseData()";
 	QString unitSystem;
 
+	int temp = -1;
 	QXmlStreamReader xml(data);
 	while (!xml.atEnd())
 	{
@@ -287,7 +300,9 @@ void GLSceneTypeCurrentWeather::parseData(const QString &data)
 						}
 						if (xml.name() == "temp_f")
 						{
-							QString s = GET_DATA_ATTR + QChar(176);
+							QString tempStr = GET_DATA_ATTR;
+							QString s = tempStr + QChar(176);
+							temp = tempStr.toInt();
 							setField("temp", s);
 						}
 						if (xml.name() == "wind_condition")
@@ -297,72 +312,57 @@ void GLSceneTypeCurrentWeather::parseData(const QString &data)
 					}
 				}
 			}
-// 			// Parse and collect the forecast conditions
-// 			if (xml.name() == "forecast_conditions")
-// 			{
-// 				QGraphicsTextItem *dayItem  = 0;
-// 				QGraphicsSvgItem *statusItem = 0;
-// 				QString lowT, highT;
-// 				while (!xml.atEnd())
-// 				{
-// 					xml.readNext();
-// 					if (xml.name() == "forecast_conditions")
-// 					{
-// 						if (dayItem &&
-// 						    statusItem &&
-// 						    !lowT.isEmpty() &&
-// 						    !highT.isEmpty())
-// 						{
-// 							m_dayItems << dayItem;
-// 							m_conditionItems << statusItem;
-//
-// 							QString txt = highT + '/' + lowT;
-// 							QGraphicsTextItem* rangeItem;
-// 							rangeItem = m_scene.addText(txt);
-// 							rangeItem->setDefaultTextColor(textColor);
-// 							m_rangeItems << rangeItem;
-//
-// 							QGraphicsRectItem *box;
-// 							box = m_scene.addRect(0, 0, 10, 10);
-// 							box->setPen(Qt::NoPen);
-// 							box->setBrush(Qt::NoBrush);
-// 							m_forecastItems << box;
-//
-// 							dayItem->setParentItem(box);
-// 							statusItem->setParentItem(box);
-// 							rangeItem->setParentItem(box);
-// 						}
-// 						else
-// 						{
-// 							delete dayItem;
-// 							delete statusItem;
-// 						}
-// 						break;
-// 					}
-// 					if (xml.tokenType() == QXmlStreamReader::StartElement)
-// 					{
-// 						if (xml.name() == "day_of_week")
-// 						{
-// 							QString s = GET_DATA_ATTR;
-// 							dayItem = m_scene.addText(s.left(3));
-// 							dayItem->setDefaultTextColor(textColor);
-// 						}
-// 						if (xml.name() == "icon")
-// 						{
-// 							QString name = extractIcon(GET_DATA_ATTR);
-// 							if (!name.isEmpty())
-// 							{
-// 								statusItem = new QGraphicsSvgItem(name);
-// 								m_scene.addItem(statusItem);
-// 							}
-// 						}
-// 						if (xml.name() == "low")
-// 							lowT = toCelcius(GET_DATA_ATTR, unitSystem);
-// 						if (xml.name() == "high")
-// 							highT = toCelcius(GET_DATA_ATTR, unitSystem);
-// 					}
-// 				}
-// 			}
+			// Parse and collect the forecast conditions
+			if (xml.name() == "forecast_conditions")
+			{
+				QString lowT, highT, day;
+				while (!xml.atEnd())
+				{
+					xml.readNext();
+					if (xml.name() == "forecast_conditions")
+					{
+						if (!day.isEmpty() && 
+						    !lowT.isEmpty() &&
+						    !highT.isEmpty())
+						{
+							QString today = QDate::shortDayName(QDate::currentDate().dayOfWeek());//, QDate::StandaloneFormat);
+							if(day == today)
+							{
+								qDebug() << "forecast_conditions: day:"<<day<<"/"<<today<<", lowT:"<<lowT<<", highT:"<<highT<<", temp:"<<temp;
+								if(temp > highT.toInt())
+									highT = QString("%1").arg(temp);
+								qDebug() << "forecast_conditions: highT:"<<highT;
+								if(temp < lowT.toInt())
+									lowT = QString("%1").arg(temp);
+								setField("high", highT + QChar(176));
+								setField("low",  lowT + QChar(176));
+							}
+							
+							
+						}
+						break;
+					}
+					if (xml.tokenType() == QXmlStreamReader::StartElement)
+					{
+						if (xml.name() == "day_of_week")
+						{
+							day = GET_DATA_ATTR;
+						}
+						if (xml.name() == "icon")
+						{
+							QString name = extractIcon(GET_DATA_ATTR);
+							if (!name.isEmpty())
+							{
+								//
+							}
+						}
+						if (xml.name() == "low")
+							lowT = GET_DATA_ATTR;//toCelcius(GET_DATA_ATTR, unitSystem);
+						if (xml.name() == "high")
+							highT = GET_DATA_ATTR;//toCelcius(GET_DATA_ATTR, unitSystem);
+					}
+				}
+			}
 		}
 	}
 

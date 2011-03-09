@@ -27,6 +27,7 @@ protected:
 	virtual void drawableResized(const QSizeF&);
 /*	virtual void updateRects(bool secondSource=false);*/
 	virtual bool canReleaseImage() { return false; }
+	virtual void transformChanged();
 	
 private slots:
 	void renderSvg();

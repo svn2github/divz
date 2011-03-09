@@ -1,5 +1,5 @@
 #include "GLSvgDrawable.h"
-
+#include "GLWidget.h"
 #include <QSvgRenderer>
 
 GLSvgDrawable::GLSvgDrawable(QString file, QObject *parent)
@@ -52,6 +52,14 @@ bool GLSvgDrawable::setImageFile(const QString& file)
 	return true;
 }
 
+
+void GLSvgDrawable::transformChanged()
+{
+	if(m_updateTimer.isActive())
+		m_updateTimer.stop();
+	m_updateTimer.start();
+}
+
 void GLSvgDrawable::renderSvg()
 {
 	if(!m_renderer->isValid())
@@ -60,11 +68,23 @@ void GLSvgDrawable::renderSvg()
 		return;
 	}
 	
-	#define MAX_WIDTH  1000
-	#define MAX_HEIGHT 1000
+	#define MAX_WIDTH  2000
+	#define MAX_HEIGHT 2000
 	
 	QSize imageSize = m_renderer->viewBox().size();
 	imageSize.scale(rect().size().toSize(), Qt::KeepAspectRatio);
+	
+	QPointF scale = m_glw ? QPointF(m_glw->transform().m11(), 
+					m_glw->transform().m22()) : 
+				QPointF(1.,1.);
+	if(scale.x() != 1. || scale.y() != 1.)
+	{
+		QSize size2 = QSize(imageSize.width()  * scale.x(), 
+		                    imageSize.height() * scale.y());
+		//qDebug() << "GLSvgDrawable::renderSvg: Scaled from:"<<imageSize<<"to"<<size2<<", transform:"<<scale;
+		imageSize = size2;
+	}
+	
 	if(imageSize.width()  > MAX_WIDTH || imageSize.height() > MAX_HEIGHT)
 		imageSize.scale(QSize(MAX_WIDTH, MAX_HEIGHT), Qt::KeepAspectRatio);
 	

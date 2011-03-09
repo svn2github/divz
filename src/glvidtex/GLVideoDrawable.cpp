@@ -1132,8 +1132,8 @@ bool GLVideoDrawable::setVideoFormat(const VideoFormat& format, bool secondSourc
 
 			if (!fragmentProgram)
 			{
-				if(format.pixelFormat != QVideoFrame::Format_Invalid)
-					qDebug() << "GLVideoDrawable: No shader program found - format not supported.";
+// 				if(format.pixelFormat != QVideoFrame::Format_Invalid)
+// 					qDebug() << "GLVideoDrawable: No shader program found - format not supported.";
 				return false;
 			}
 			else
@@ -1224,7 +1224,7 @@ const char * GLVideoDrawable::resizeTextures(const QSize& frameSize, bool second
 	m_yuv = false;
 	m_yuv2 = false;
 	
-	bool debugShaderName = true;
+	bool debugShaderName = false;
 	switch (m_videoFormat.pixelFormat)
 	{
 	/// RGB Formats
@@ -1353,8 +1353,8 @@ void GLVideoDrawable::updateRects(bool secondSource)
 		double assumedFrameWidth  = sourceRect.width();
 		double assumedFrameHeight = sourceRect.height();
 		double overscanAmount = .035 * .5; // 3.5% * .5 = .0175
-		double cropX = assumedFrameWidth  * overscanAmount;
-		double cropY = assumedFrameHeight * overscanAmount;
+// 		double cropX = assumedFrameWidth  * overscanAmount;
+// 		double cropY = assumedFrameHeight * overscanAmount;
 		
 // 		if(m_displayOpts.cropTopLeft == QPointF(0,0))
 // 			m_displayOpts.cropTopLeft = QPointF(cropX,cropY);
@@ -2337,6 +2337,12 @@ void GLVideoDrawable::paintGL()
 
 	//QPainter painter(this);
 	QTransform transform =  m_glw->transform(); //= painter.deviceTransform();
+	if(m_lastKnownTransform != transform)
+	{
+		m_lastKnownTransform = transform;
+		QTimer::singleShot(20, this, SLOT(transformChanged()));
+	}
+	
 	//transform = transform.scale(1.25,1.);
 	if(!translation().isNull())
 		transform *= QTransform().translate(translation().x(),translation().y());
@@ -2931,6 +2937,11 @@ void GLVideoDrawable::paintGL()
 	m_frameCount ++;
 
 // 	qDebug() << "GLVideoDrawable::paintGL(): "<<(QObject*)this<<" Mark - end";
+}
+
+void GLVideoDrawable::transformChanged()
+{	
+	// NOOP in this class - this is a hook for subclasses
 }
 
 void GLVideoDrawable::setCrossFadeMode(CrossFadeMode mode)

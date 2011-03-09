@@ -1,5 +1,7 @@
 #include "GLImageDrawable.h"
 
+#include "GLWidget.h"
+
 int GLImageDrawable::m_allocatedMemory = 0;
 int GLImageDrawable::m_activeMemory    = 0;
 
@@ -573,6 +575,8 @@ QImage GLImageDrawable::applyBorderAndShadow(const QImage& sourceImg)
 		}
 	}
 	
+	QPointF scale = m_glw ? QPointF(m_glw->transform().m11(), m_glw->transform().m22()) : QPointF(1.,1.);
+	
 	double radius = m_shadowBlurRadius;
 	
 	// create temporary pixmap to hold a copy of the text
@@ -581,25 +585,30 @@ QImage GLImageDrawable::applyBorderAndShadow(const QImage& sourceImg)
 	double offx = fabs(m_shadowOffset.x());
 	double offy = fabs(m_shadowOffset.y());
 	double newWidth  = originalSizeWithBorder.width() 
-			 + radius2 // blur on both sides
-			 + offx;
+			 + radius2 * scale.x()// blur on both sides
+			 + offx * scale.x();
 	
 	double newHeight = originalSizeWithBorder.height() 
-			 + radius2 // blur on both sides
-			 + offy;
+			 + radius2 * scale.y()// blur on both sides
+			 + offy * scale.y();
 			
 	QSizeF blurSize(newWidth,newHeight);
+// 	blurSize.rwidth()  *= scale.x();
+// 	blurSize.rheight() *= scale.y();
 	
-	//qDebug() << "Blur size:"<<blurSize<<", originalSizeWithBorder:"<<originalSizeWithBorder<<", radius:"<<radius<<", radius2:"<<radius2<<", m_shadowOffset:"<<m_shadowOffset<<", offx:"<<offx<<", offy:"<<offy;
+	//qDebug() << "GLImageDrawable::applyBorderAndShadow(): Blur size:"<<blurSize<<", originalSizeWithBorder:"<<originalSizeWithBorder<<", radius:"<<radius<<", radius2:"<<radius2<<", m_shadowOffset:"<<m_shadowOffset<<", offx:"<<offx<<", offy:"<<offy<<", scale:"<<scale;
 	QImage tmpImage(blurSize.toSize(),QImage::Format_ARGB32_Premultiplied);
 	memset(tmpImage.scanLine(0),0,tmpImage.byteCount());
 	
 	// render the source image into a temporary buffer for bluring
 	QPainter tmpPainter(&tmpImage);
+	//tmpPainter.scale(scale.x(),scale.y());
 	
 	tmpPainter.save();
 	QPointF translate1(radiusSpacing + (m_shadowOffset.x() > 0 ? m_shadowOffset.x() : 0), 
 			   radiusSpacing + (m_shadowOffset.y() > 0 ? m_shadowOffset.y() : 0));
+	translate1.rx() *= scale.x();
+	translate1.ry() *= scale.y();
 	//qDebug() << "stage1: radiusSpacing:"<<radiusSpacing<<", m_shadowOffset:"<<m_shadowOffset<<", translate1:"<<translate1; 
 	
 	tmpPainter.translate(translate1);
@@ -607,7 +616,10 @@ QImage GLImageDrawable::applyBorderAndShadow(const QImage& sourceImg)
 	if(renderBorder() && m_borderWidth > 0.001)
 		drawImageWithBorder(&tmpPainter, sourceImg);
 	else
+	{
+		//tmpPainter.scale(1,1);
 		tmpPainter.drawImage(0,0,sourceImg);
+	}
 	
 	tmpPainter.restore();
 	
@@ -624,7 +636,7 @@ QImage GLImageDrawable::applyBorderAndShadow(const QImage& sourceImg)
 	tmpPainter.end();
 
 	// blur the colored text
-	ImageFilters::blurImage(tmpImage, (int)radius);
+	ImageFilters::blurImage(tmpImage, (int)(radius * scale.x()));
 	
 	QPainter painter2(&tmpImage);
 	
@@ -652,8 +664,12 @@ QImage GLImageDrawable::applyBorderAndShadow(const QImage& sourceImg)
 	painter2.save();
 	QPointF translate2(radiusSpacing + (m_shadowOffset.x() < 0 ? m_shadowOffset.x() * -1 : 0), 
 			   radiusSpacing + (m_shadowOffset.y() < 0 ? m_shadowOffset.y() * -1 : 0));
+	translate2.rx() *= scale.x();
+	translate2.ry() *= scale.y();
 	//qDebug() << "stage12 radiusSpacing:"<<radiusSpacing<<", m_shadowOffset:"<<m_shadowOffset<<", translate2:"<<translate2;
 	painter2.translate(translate2);
+	
+	//qDebug() << "stage13: sourceImg.size():"<<sourceImg.size();
 	
 	// Render the original image (with or without the border) on top of the blurred copy
 	if(renderBorder() && m_borderWidth > 0.001)

@@ -65,6 +65,10 @@ public:
 	bool updatesLocked() { return m_updatesLocked; }
 	bool lockUpdates(bool); // returns old status
 	
+	QPointF scaling() { return m_scaling; }
+	
+	QSizeF unscaledImageSize() { return m_rawSize; }
+	
 public slots:
 	void setHtml(const QString&);
 	void update();
@@ -74,6 +78,9 @@ public slots:
 	void setFillColor(const QColor& c) { setFillBrush(c); }
 	void setOutlineColor(const QColor& c) { setOutlinePen(QPen(c, outlinePen().widthF())); }
 	void setOutlineWidth(double w) { setOutlinePen(QPen(outlinePen().color(), w)); }
+	
+	void setScaling(double x, double y) {  setScaling(QPointF(x,y)); }
+	void setScaling(QPointF);
 
 signals:
 	void textRendered(QImage img);
@@ -107,6 +114,9 @@ private:
 	bool m_updatesLocked;
 	
 	QTimer m_updateTimer;
+	
+	QPointF m_scaling;
+	QSizeF m_rawSize;
 };
 
 #endif

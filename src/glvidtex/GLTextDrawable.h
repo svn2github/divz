@@ -83,6 +83,7 @@ protected:
 	virtual void drawableResized(const QSizeF& /*newSize*/);
 	virtual void updateRects(bool secondSource=false);
 	virtual void updateAnimations(bool insidePaint = false);
+	virtual void transformChanged();
 	
 	// From GLImageDrawable
 	virtual void borderSettingsChanged();
