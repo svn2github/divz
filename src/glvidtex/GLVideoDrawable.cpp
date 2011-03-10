@@ -24,6 +24,8 @@
 #define GL_BGRA 0x80E1
 #endif
 
+#define CAMERA_OVERSCAN .02
+
 QByteArray VideoDisplayOptions::toByteArray()
 {
 	QByteArray array;
@@ -626,8 +628,15 @@ void GLVideoDrawable::setFlipVertical(bool value)
 
 void GLVideoDrawable::setCropTopLeft(QPointF value)
 {
-	//if(m_isCameraThread)
-	//	return;
+	if(m_isCameraThread)
+	{
+		//double overscanAmount = .02; //035 * .5; // 3.5% * .5 = .0175
+		if(value.x() < CAMERA_OVERSCAN)
+			value.setX(0);
+		if(value.y() < CAMERA_OVERSCAN)
+			value.setY(0);
+	}
+	//qDebug() << "GLVideoDrawable::setCropTopLeft(): "<<value;
 		
 	m_displayOpts.cropTopLeft = value;
 	updateRects();
@@ -637,8 +646,14 @@ void GLVideoDrawable::setCropTopLeft(QPointF value)
 
 void GLVideoDrawable::setCropBottomRight(QPointF value)
 {
-	//if(m_isCameraThread)
-	//	return;
+	if(m_isCameraThread)
+	{
+		if(value.x() > -CAMERA_OVERSCAN)
+			value.setX(0);
+		if(value.y() > -CAMERA_OVERSCAN)
+			value.setY(0);
+	}
+	//qDebug() << "GLVideoDrawable::setCropBottomRight(): "<<value;
 		
 	m_displayOpts.cropBottomRight = value;
 	emit displayOptionsChanged(m_displayOpts);
@@ -1350,16 +1365,19 @@ void GLVideoDrawable::updateRects(bool secondSource)
 	// Automatically add "overscan" using 3.5% (approx) based on 'Overscan amounts' recommended at http://en.wikipedia.org/wiki/Overscan 
 	if(m_isCameraThread)
 	{
-		double assumedFrameWidth  = sourceRect.width();
-		double assumedFrameHeight = sourceRect.height();
-		double overscanAmount = .035 * .5; // 3.5% * .5 = .0175
-// 		double cropX = assumedFrameWidth  * overscanAmount;
-// 		double cropY = assumedFrameHeight * overscanAmount;
+// 		double assumedFrameWidth  = sourceRect.width();
+// 		double assumedFrameHeight = sourceRect.height();
+		//double overscanAmount = .02; //035 * .5; // 3.5% * .5 = .0175
 		
-// 		if(m_displayOpts.cropTopLeft == QPointF(0,0))
-// 			m_displayOpts.cropTopLeft = QPointF(cropX,cropY);
-// 		if(m_displayOpts.cropBottomRight == QPointF(0,0))
-// 			m_displayOpts.cropBottomRight = QPointF(-cropX,-cropY);
+		//qDebug() << "m_displayOpts.cropTopLeft:"<<m_displayOpts.cropTopLeft<<", m_displayOpts.cropBottomRight:"<<m_displayOpts.cropBottomRight;
+		if(m_displayOpts.cropTopLeft.x() == 0)
+			m_displayOpts.cropTopLeft.setX(CAMERA_OVERSCAN);
+		if(m_displayOpts.cropTopLeft.y() == 0)
+			m_displayOpts.cropTopLeft.setY(CAMERA_OVERSCAN);
+		if(m_displayOpts.cropBottomRight.x() == 0)
+			m_displayOpts.cropBottomRight.setX(-CAMERA_OVERSCAN);
+		if(m_displayOpts.cropBottomRight.y() == 0)
+			m_displayOpts.cropBottomRight.setY(-CAMERA_OVERSCAN);
 	}
 
 

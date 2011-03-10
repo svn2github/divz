@@ -328,10 +328,9 @@ void GLSceneTypeCurrentWeather::parseData(const QString &data)
 							QString today = QDate::shortDayName(QDate::currentDate().dayOfWeek());//, QDate::StandaloneFormat);
 							if(day == today)
 							{
-								qDebug() << "forecast_conditions: day:"<<day<<"/"<<today<<", lowT:"<<lowT<<", highT:"<<highT<<", temp:"<<temp;
+								//qDebug() << "forecast_conditions: day:"<<day<<"/"<<today<<", lowT:"<<lowT<<", highT:"<<highT<<", temp:"<<temp;
 								if(temp > highT.toInt())
 									highT = QString("%1").arg(temp);
-								qDebug() << "forecast_conditions: highT:"<<highT;
 								if(temp < lowT.toInt())
 									lowT = QString("%1").arg(temp);
 								setField("high", highT + QChar(176));
