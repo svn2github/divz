@@ -441,6 +441,7 @@ private:
 	
 	// Called when the widget size has changed or when setOutputSize() is called
 	void setupReadbackBuffers();
+	void setupReadbackFBO();
 	
 	// default is black
 	QColor m_backgroundColor;
