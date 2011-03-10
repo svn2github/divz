@@ -48,6 +48,7 @@
 #include <QFile>
 
 #include "qtmultimedia/audio/qaudioinput.h"
+#include "qtmultimedia/audio/qaudiooutput.h"
 class BlockAnalyzer;
 namespace Analyzer {
 	class Base;
@@ -63,7 +64,7 @@ public:
     AudioInfo(QObject* parent, QAudioInput* device, Analyzer::Base *analyzer);
     ~AudioInfo();
 
-    void start();
+    void start(QIODevice *output);
     void stop();
 
     int LinearMax();
@@ -73,11 +74,18 @@ public:
 
     QAudioInput*   input;
 
+public slots:
+	void setBufferMs(int);
+
 private:
     int m_maxValue;
     QFile outputFile;
 	Analyzer::Base *analyzer;
 	Analyzer::Scope scope;
+	QIODevice *outputDev;
+	char *buffer;
+	int bufferWritePos;
+	int bufferLengthMs;
 
 signals:
     void update();
@@ -110,9 +118,14 @@ public:
 
     QAudioDeviceInfo device;
     QAudioFormat   format;
+
     QAudioInput*   audioInput;
     AudioInfo*     audioinfo;
     QIODevice*     input;
+
+    QAudioOutput*  audioOutput;
+    QIODevice*     output;
+
     RenderArea*    canvas;
 
     bool           pullMode;

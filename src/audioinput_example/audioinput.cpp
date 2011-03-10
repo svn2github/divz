@@ -42,6 +42,8 @@
 #include <stdlib.h>
 #include <math.h>
 
+#include <QLabel>
+#include <QSpinBox>
 #include <QDebug>
 #include <QPainter>
 #include <QVBoxLayout>
@@ -52,6 +54,12 @@
 
 
 #define BUFFER_SIZE 4096
+
+// Max 60 seconds
+#define OUT_BUFF_LEN_MS 60 * 1000
+#define OUT_FREQ 8000
+#define OUT_MS_SIZE (OUT_FREQ / 1000)
+#define OUT_BUFF_SIZE (OUT_MS_SIZE * OUT_BUFF_LEN_MS)
 
 AudioInfo::AudioInfo(QObject* parent, QAudioInput* device, Analyzer::Base *an)
     :QIODevice( parent ),
@@ -65,16 +73,21 @@ AudioInfo::AudioInfo(QObject* parent, QAudioInput* device, Analyzer::Base *an)
     outputFile.setFileName("/test.pcm");
     outputFile.open( QIODevice::WriteOnly | QIODevice::Truncate );
 
+	buffer = (char*)malloc(sizeof(char) * OUT_BUFF_SIZE);
+	bufferWritePos = 0;
+	bufferLengthMs = 1500; //1.5 sec
 }
 
 AudioInfo::~AudioInfo()
 {
     outputFile.close();
+    delete buffer;
 }
 
-void AudioInfo::start()
+void AudioInfo::start(QIODevice *output)
 {
     open(QIODevice::WriteOnly);
+    outputDev = output;
 }
 
 void AudioInfo::stop()
@@ -90,6 +103,13 @@ qint64 AudioInfo::readData(char *data, qint64 maxlen)
     return 0;
 }
 
+/*
+#define OUT_BUFF_LEN_MS 500
+#define OUT_FREQ 8000
+#define OUT_MS_SIZE (OUT_FREQ / 1000)
+#define OUT_BUFF_SIZE (OUT_MS_SIZE * OUT_BUFF_LEN_MS)
+*/
+
 qint64 AudioInfo::writeData(const char *data, qint64 len)
 {
     int samples = len/2; // 2 bytes per sample
@@ -101,6 +121,49 @@ qint64 AudioInfo::writeData(const char *data, qint64 len)
     m_maxValue = 0;
 
     qint16* s = (qint16*)data;
+
+    int bufferTop = OUT_MS_SIZE * bufferLengthMs;
+    if(bufferTop > len)
+    {
+		if(bufferWritePos >= bufferTop) //OUT_BUFF_SIZE)
+		{
+			qint64 bytes = len < bufferTop ? len : bufferTop;
+			outputDev->write(buffer, bytes);
+			qDebug() << "wrote "<<bytes<<" output";
+
+			// move data from end to start
+			// e.g.:
+			// here's the buffer:
+			// |xxxxxxxxxx|yyyyyyyyyy|
+			// We just wrote 'xxx...' to the output device above,
+			// so here we copy 'yyyy...' over top of 'xxxx..'...
+			char *from = buffer;
+			from += len;
+			memcpy(buffer, from, bufferTop - len);
+
+			bufferWritePos = bufferTop - len;
+		}
+
+
+		// Now we write over top of where 'yyyy...' just was in the buffer...
+
+		// buff: 200
+		// len: 30
+		// now we have a 30 byte hole at end...
+		char *writeTo = buffer;
+		writeTo += bufferWritePos;
+
+		if(len + bufferWritePos > bufferTop)
+		{
+			len = bufferTop - bufferWritePos;
+		}
+
+		bufferWritePos += len;
+		qDebug() << "buffered "<<len<<" bytes, buffer at "<<bufferWritePos<<"/"<<bufferTop;
+
+		memcpy(writeTo, data, len);
+}
+
 
 	scope.clear();
 
@@ -129,6 +192,11 @@ qint64 AudioInfo::writeData(const char *data, qint64 len)
     	analyzer->analyze(scope);
 
     return len;
+}
+
+void AudioInfo::setBufferMs(int ms)
+{
+	bufferLengthMs = ms;
 }
 
 int AudioInfo::LinearMax()
@@ -183,6 +251,8 @@ void RenderArea::setLevel(int value)
 
 InputTest::InputTest()
 {
+    setWindowTitle("Audio Delay Buffer");
+
     QWidget *window = new QWidget;
     QVBoxLayout* layout = new QVBoxLayout;
     /*
@@ -215,6 +285,32 @@ InputTest::InputTest()
     layout->addWidget(button2);
     */
 
+    QHBoxLayout *hbox = new QHBoxLayout();
+    hbox->addWidget(new QLabel("Buffer Milliseconds:"));
+
+    QSlider *slider = new QSlider();
+	slider->setOrientation(Qt::Horizontal);
+	slider->setMinimum((int)40);
+	slider->setMaximum((int)5 * 1000);
+	slider->setSingleStep(5);
+	slider->setPageStep(10);
+	hbox->addWidget(slider);
+
+	QSpinBox *spin = new QSpinBox();
+	spin->setMinimum(slider->minimum());
+	spin->setMaximum(slider->maximum());
+	spin->setSuffix(" ms");
+	hbox->addWidget(spin);
+
+	QObject::connect(spin, SIGNAL(valueChanged(int)), slider, SLOT(setValue(int)));
+	QObject::connect(slider, SIGNAL(valueChanged(int)), spin, SLOT(setValue(int)));
+
+	spin->setValue(1500);
+	slider->setValue(1500);
+
+	layout->addLayout(hbox);
+
+
     window->setLayout(layout);
     setCentralWidget(window);
     window->show();
@@ -236,7 +332,20 @@ InputTest::InputTest()
     connect(audioInput,SIGNAL(stateChanged(QAudio::State)),SLOT(state(QAudio::State)));
     audioinfo  = new AudioInfo(this,audioInput,analyzer);
     //connect(audioinfo,SIGNAL(update()),SLOT(refreshDisplay()));
-    audioinfo->start();
+
+    QAudioDeviceInfo info(QAudioDeviceInfo::defaultOutputDevice());
+	if (!info.isFormatSupported(format)) {
+	     qWarning()<<"raw audio format not supported by backend, cannot play audio.";
+	    //return;
+	}
+
+	audioOutput = new QAudioOutput(format, this);
+	//connect(audio,SIGNAL(stateChanged(QAudio::State)),SLOT(finishedPlaying(QAudio::State)));
+	output = audioOutput->start();
+
+	QObject::connect(slider, SIGNAL(valueChanged(int)), audioinfo, SLOT(setBufferMs(int)));
+
+    audioinfo->start(output);
     audioInput->start(audioinfo);
 
     setWindowFlags(Qt::WindowStaysOnTopHint);
@@ -313,6 +422,7 @@ void InputTest::refreshDisplay()
 
 void InputTest::deviceChanged(int idx)
 {
+	/*
     audioinfo->stop();
     audioInput->stop();
     audioInput->disconnect(this);
@@ -324,4 +434,5 @@ void InputTest::deviceChanged(int idx)
     connect(audioInput,SIGNAL(stateChanged(QAudio::State)),SLOT(state(QAudio::State)));
     audioinfo->start();
     audioInput->start(audioinfo);
+    */
 }

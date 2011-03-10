@@ -7,6 +7,8 @@ TARGET =
 DEPENDPATH += .
 INCLUDEPATH += ../
 
+#CONFIG+=console
+
 #include(../audio/audio.pri)
 include(../qtmultimedia/audio/audio.pri)
 include(../qtmultimedia/video/video.pri)
