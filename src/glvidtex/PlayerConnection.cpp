@@ -128,6 +128,7 @@ PlayerConnection::PlayerConnection(QObject *parent)
 	, m_justTesting(false)
 	, m_isConnected(false)
 	, m_crossfadeSpeed(750)
+	, m_useCount(0)
 {
 }
 
@@ -144,6 +145,7 @@ PlayerConnection::PlayerConnection(QByteArray& ba, QObject *parent)
 	, m_justTesting(false)
 	, m_isConnected(false)
 	, m_crossfadeSpeed(750)
+	, m_useCount(0)
 {
 	fromByteArray(ba);
 }
@@ -207,6 +209,8 @@ void PlayerConnection::fromByteArray(QByteArray& array)
 	m_canvasSize = map["canvas"].toSizeF();
 	m_aspectRatioMode = (Qt::AspectRatioMode)map["armode"].toInt();
 	m_useCount = map["usecount"].toInt();
+	if(m_useCount > 5000)
+		m_useCount = 100;
 	//qDebug() << "PlayerConnection::fromByteArray:"<<this<<" "<<m_name<<" m_useCount:"<<m_useCount;
 
 	m_subviews.clear();

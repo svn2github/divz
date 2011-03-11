@@ -115,7 +115,7 @@ void DirectorWindow::chooseOutput()
 	foreach(PlayerConnection *con, playerList)
 	{
 		itemList << QString("Player: %1").arg(con->name());
-		//qDebug() << "DirectorWindow::choseOutput:"<<con->name()<<" useCount:"<<con->useCount();
+		qDebug() << "DirectorWindow::choseOutput:"<<con->name()<<" useCount:"<<con->useCount();
 	}
 	
 	

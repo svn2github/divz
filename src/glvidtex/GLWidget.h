@@ -433,11 +433,15 @@ private:
 	
 	// FBO used to render the texture to then read from
 	QGLFramebufferObject * m_readbackFbo;
+	QGLShaderProgram *m_readbackProgram;
+	bool m_readbackShadersLinked;
+	
 	
 	//  Use two PBOs to make use of DMA streaming  
 	GLuint m_pboIds[2];
 	bool m_pboEnabled;
 	bool m_firstPbo;
+	QSize m_pboSize;
 	
 	// Called when the widget size has changed or when setOutputSize() is called
 	void setupReadbackBuffers();

@@ -284,16 +284,18 @@ GLWidget::GLWidget(QWidget *parent, QGLWidget *shareWidget)
 // 	, m_blackAnim(0)
 	, m_isBlack(false)
 	, m_crossfadeSpeed(300)
-	, m_fboEnabled(true)
+	, m_fboEnabled(false)
 	//, m_fboEnabled(true)
-	//, m_readbackSizeAuto(false)
-	, m_readbackSizeAuto(true)
+	, m_readbackSizeAuto(false)
+	//, m_readbackSizeAuto(true)
 	, m_readbackFbo(0)
 	, m_firstPbo(false)
 	, m_backgroundColor(Qt::black) 
 {
 
 	m_readbackSize = QSize(640,480);
+	if(!m_fboEnabled)
+		m_readbackSizeAuto= true;
 
 	setCanvasSize(QSizeF(1000.,750.));
 	// setViewport() will use canvas size by default to construct a rect
@@ -488,6 +490,7 @@ void GLWidget::initializeGL()
 
 	//m_fbo = new QGLFramebufferObject(QSize(16,16));
 	m_program = new QGLShaderProgram(context(), this);
+	m_readbackProgram = new QGLShaderProgram(context(), this);
 
 	#ifndef QT_OPENGL_ES
 	glActiveTexture = (_glActiveTexture)context()->getProcAddress(QLatin1String("glActiveTexture"));
@@ -586,36 +589,67 @@ void GLWidget::initializeGL()
 
 }
 
+static const char *glwidget_glsl_simpleVertexShaderProgram =
+        "attribute highp vec4 vertexCoordArray;\n"
+        "attribute highp vec2 textureCoordArray;\n"
+        "uniform highp mat4 positionMatrix;\n"
+        "varying highp vec2 textureCoord;\n"
+        "void main(void)\n"
+        "{\n"
+        "   gl_Position = positionMatrix * vertexCoordArray;\n"
+        //"   gl_Position = vertexCoordArray\n"// * gl_ModelViewProjectionMatrix;\n"
+        "   textureCoord = textureCoordArray;\n"
+        "}\n";
+
+
+static const char *glwidget_glsl_rgbNoAlphaShaderProgram =
+        "uniform sampler2D texRgb;\n"
+        //"uniform mediump mat4 colorMatrix;\n"
+        "varying highp vec2 textureCoord;\n"
+        "void main(void)\n"
+        "{\n"
+        "    mediump vec2 texPoint = vec2(textureCoord.s, textureCoord.t);\n"
+        "    highp vec4 color = vec4(texture2D(texRgb, texPoint).rgb, 1.0);\n"
+        //"    color = colorMatrix * color;\n"
+        "    gl_FragColor = color;\n"
+        //vec4(color.rgb, texture2D(texRgb, texPoint).a * alpha * texture2D(alphaMask, textureCoord.st).a);\n"
+        "}\n";
+
+
 void GLWidget::initShaders()
 {
-
-	const char *fragmentProgram = qt_glsl_rgbShaderProgram;
-
+	#ifdef OPENCV_ENABLED
+	Q_UNUSED(qt_glsl_vertexShaderProgram);
+	#else
 	Q_UNUSED(qt_glsl_warpingVertexShaderProgram);
+	#endif
+	
 	Q_UNUSED(qt_glsl_xrgbShaderProgram);
 	Q_UNUSED(qt_glsl_argbShaderProgram);
+	Q_UNUSED(qt_glsl_xrgbLevelsShaderProgram);
+	Q_UNUSED(qt_glsl_argbLevelsShaderProgram);
+	Q_UNUSED(qt_glsl_rgbLevelsShaderProgram);
 	Q_UNUSED(qt_glsl_yuvPlanarShaderProgram);
-	Q_UNUSED(qt_glsl_vertexShaderProgram);
 	Q_UNUSED(qt_glsl_xyuvShaderProgram);
 	Q_UNUSED(qt_glsl_ayuvShaderProgram);
 	Q_UNUSED(qt_glsl_uyvyShaderProgram);
 	Q_UNUSED(qt_glsl_yuyvShaderProgram);
 
-
-
+	const char *fragmentProgram = qt_glsl_rgbShaderProgram;
+	
 	if(!m_program->shaders().isEmpty())
 		m_program->removeAllShaders();
 
 	if(!QGLShaderProgram::hasOpenGLShaderPrograms())
 	{
 		qDebug() << "GLWidget::initShaders: GLSL Shaders Not Supported by this driver, this program will NOT function as expected and will likely crash.";
-		return;// false;
+		return;
 	}
 
 	if (!fragmentProgram)
 	{
 		qDebug() << "GLWidget::initShaders: No shader program found - format not supported.";
-		return;// false;
+		return;
 	}
 	else
 	if (!m_program->addShaderFromSourceCode(QGLShader::Vertex,
@@ -626,29 +660,57 @@ void GLWidget::initShaders()
 		#endif
 		))
 	{
-		qWarning("GLWidget::initShaders: Vertex shader compile error %s",
-			qPrintable(m_program->log()));
-		//error = QAbstractVideoSurface::ResourceError;
-		return;// false;
+		qWarning("GLWidget::initShaders: Vertex shader compile error %s", qPrintable(m_program->log()));
+		return;
 
 	}
 	else
 	if (!m_program->addShaderFromSourceCode(QGLShader::Fragment, fragmentProgram))
 	{
 		qWarning("GLWidget::initShaders: Shader compile error %s", qPrintable(m_program->log()));
-		//error = QAbstractVideoSurface::ResourceError;
 		m_program->removeAllShaders();
-		return;// false;
+		return;
 	}
 	else
 	if(!m_program->link())
 	{
 		qWarning("GLWidget::initShaders: Shader link error %s", qPrintable(m_program->log()));
 		m_program->removeAllShaders();
-		return;// false;
+		return;
 	}
 
 	m_shadersLinked = true;
+	
+	
+	// Setup readback shaders
+	const char *readbackFragment = glwidget_glsl_rgbNoAlphaShaderProgram;
+	
+	if(!m_readbackProgram->shaders().isEmpty())
+		m_readbackProgram->removeAllShaders();
+
+	if (!m_readbackProgram->addShaderFromSourceCode(QGLShader::Vertex, 
+		glwidget_glsl_simpleVertexShaderProgram))
+		//qt_glsl_vertexShaderProgram))
+	{
+		qWarning("GLWidget::initShaders: Readback Shader: Vertex shader compile error %s", qPrintable(m_readbackProgram->log()));
+		return;
+	}
+	else
+	if (!m_readbackProgram->addShaderFromSourceCode(QGLShader::Fragment, readbackFragment))
+	{
+		qWarning("GLWidget::initShaders: Readback Shader: Shader compile error %s", qPrintable(m_readbackProgram->log()));
+		m_readbackProgram->removeAllShaders();
+		return;
+	}
+	else
+	if(!m_readbackProgram->link())
+	{
+		qWarning("GLWidget::initShaders: Readback Shader: Shader link error %s", qPrintable(m_readbackProgram->log()));
+		m_readbackProgram->removeAllShaders();
+		return;
+	}
+
+	m_readbackShadersLinked = true;
 }
 
 void GLWidgetSubview::initAlphaMask()
@@ -980,6 +1042,70 @@ void GLWidgetSubview::updateWarpMatrix()
 	#endif
 }
 
+
+/*
+   Read back the contents of the currently bound framebuffer, used in
+   QGLWidget::grabFrameBuffer(), QGLPixelbuffer::toImage() and
+   QGLFramebufferObject::toImage()
+*/
+
+static void convertFromGLImage(QImage &img, int w, int h, bool alpha_format, bool include_alpha)
+{
+    if (QSysInfo::ByteOrder == QSysInfo::BigEndian) {
+        // OpenGL gives RGBA; Qt wants ARGB
+        uint *p = (uint*)img.bits();
+        uint *end = p + w*h;
+        if (alpha_format && include_alpha) {
+            while (p < end) {
+                uint a = *p << 24;
+                *p = (*p >> 8) | a;
+                p++;
+            }
+        } else {
+            // This is an old legacy fix for PowerPC based Macs, which
+            // we shouldn't remove
+            while (p < end) {
+                *p = 0xff000000 | (*p>>8);
+                ++p;
+            }
+        }
+    } else {
+        // OpenGL gives ABGR (i.e. RGBA backwards); Qt wants ARGB
+        for (int y = 0; y < h; y++) {
+            uint *q = (uint*)img.scanLine(y);
+            for (int x=0; x < w; ++x) {
+                const uint pixel = *q;
+                *q = ((pixel << 16) & 0xff0000) | ((pixel >> 16) & 0xff) | (pixel & 0xff00ff00);
+                q++;
+            }
+        }
+
+    }
+    img = img.mirrored();
+}
+
+QImage qt_gl_read_framebuffer(const QSize &size, bool alpha_format, bool include_alpha)
+{
+    QImage img(size, alpha_format ? QImage::Format_ARGB32 : QImage::Format_RGB32);
+    int w = size.width();
+    int h = size.height();
+    glReadPixels(0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, img.bits());
+    convertFromGLImage(img, w, h, alpha_format, include_alpha);
+    return img;
+}
+
+QImage qt_gl_read_texture(const QSize &size, bool alpha_format, bool include_alpha)
+{
+    QImage img(size, alpha_format ? QImage::Format_ARGB32_Premultiplied : QImage::Format_RGB32);
+    int w = size.width();
+    int h = size.height();
+#if !defined(QT_OPENGL_ES_2) && !defined(QT_OPENGL_ES_1) && !defined(QT_OPENGL_ES_1_CL)
+    //### glGetTexImage not in GL ES 2.0, need to do something else here!
+    glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, img.bits());
+#endif
+    convertFromGLImage(img, w, h, alpha_format, include_alpha);
+    return img;
+}
 void GLWidget::paintGL()
 {
 	//qDebug() << "GLWidget::paintGL(): Starting paint routines...";
@@ -1031,66 +1157,261 @@ void GLWidget::paintGL()
 
 	if(m_outputStream)
 	{
-		if(m_fbo)
-		{
-			qDebug() << "GLWidget::paintGL(): Rendering framebuffer to readback buffer";
-			if(m_fbo &&
-			   m_fbo->isBound())
-				m_fbo->release();
+ 		if(m_fbo)
+ 		{
+			
+			QTime t;
+			t.start();
+			//qDebug() << "GLWidget::paintGL(): ----------------------------------------------";
+			
+			if(m_fbo)
+			{
+				if(m_fbo->isBound())
+					m_fbo->release();
+				//qDebug() << "GLWidget::paintGL(): FBO enabled, releasing FBO for read";
+			}
+			else
+			{
+// 				glFlush();
+// 				glFinish();
+				glReadBuffer(GL_FRONT);
+ 				glBindTexture(GL_TEXTURE_2D, m_readbackTextureId);
+ 				glCopyTexSubImage2D(GL_TEXTURE_2D,
+ 					0, // level 
+ 					0, 0, // x,y offset
+ 					0, 0, // x,y
+ 					width(), height());
+// 			
+				//glBindTexture(GL_TEXTURE_2D, 0);
+				qDebug() << "GLWidget::paintGL(): Read from screen buffer to m_readbackTextureId took"<<t.restart()<<"ms";
 				
+				qDebug() << "GLWidget::paintGL(): ----------------------------------------------";
+				
+				QSize sz = size();
+				//QImage img(sz, QImage::Format_RGB32);
+				//### glGetTexImage not in GL ES 2.0, need to do something else here!
+				//glGetTexImage(GL_TEXTURE_2D, 0, GL_BGRA, GL_UNSIGNED_BYTE, img.bits());
+				
+//				QImage img = qt_gl_read_texture(sz, true, true);
+				
+// 				bool alpha_format = true;
+// 				bool include_alpha = true;
+// 				
+// 				QImage img(sz, alpha_format ? QImage::Format_ARGB32_Premultiplied : QImage::Format_RGB32);
+// 				int w = sz.width();
+// 				int h = sz.height();
+// 				#if !defined(QT_OPENGL_ES_2) && !defined(QT_OPENGL_ES_1) && !defined(QT_OPENGL_ES_1_CL)
+// 				//### glGetTexImage not in GL ES 2.0, need to do something else here!
+// 				glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, img.bits());
+// 				#endif
+// 				convertFromGLImage(img, w, h, alpha_format, include_alpha);
+// 				//return img;
+	
+				
+// 				static int outCount = 0;
+// 				outCount ++;
+// 				QString file = QString("debug/gettex-%1.png").arg(outCount % 2 == 0 ? 0 : 1);
+// 				img.save(file);
+// 	                        qDebug() << "GLWidget::paintGL(): Saving debug copy of m_readbackTextureId to "<<file<<" took"<<t.restart()<<"ms";
+				
+			}
+				
+			//qDebug() << "GLWidget::paintGL(): Rendering screen image to readback FBO";
 			m_readbackFbo->bind();
 			
-			 
+			// Dont need to clear since we KNOW we are filling the entire FBO with the texture
 			qglClearColor(m_backgroundColor);//Qt::black);
+			
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 			glLoadIdentity(); // Reset The View
 			glEnable(GL_TEXTURE_2D);
+// 			
+ 			//glBindTexture(GL_TEXTURE_2D, m_fbo ? m_fbo->texture() : m_readbackTextureId);
+ 			
+//  			QImage texOrig, texGL;
+// 			if ( !texOrig.load( "me2.jpg" ) )
+// 			{
+// 				texOrig = QImage( 16, 16, QImage::Format_RGB32 );
+// 				texOrig.fill( Qt::green );
+// 			}
+// 			
+// 		// 	if(texOrig.format() != QImage::Format_RGB32)
+// 		// 		texOrig = texOrig.convertToFormat(QImage::Format_RGB32);
+// 			
+// 			texGL = QGLWidget::convertToGLFormat( texOrig );
+// 			
+//  			
+//  			glBindTexture(GL_TEXTURE_2D, m_readbackTextureId);
+//  			
+//  			glTexImage2D( GL_TEXTURE_2D, 0, 3, texGL.width(), texGL.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, texGL.bits() );
+// 			glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+// 			glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+// 
+// 			//glTranslatef(0.0f,0.0f,-3.42f);
+// 
+			//qDebug() << "GLWidget::paintGL(): Readback FBO setup took"<<t.restart()<<"ms";
 			
-			glBindTexture(GL_TEXTURE_2D, m_fbo->texture());
+ 			//QRectF rect(0,0,m_readbackFbo->width(),m_readbackFbo->height());
+ 			//qDebug() << "GLWidget::paintGL(): Readback rect:"<<rect;
 
-			//glTranslatef(0.0f,0.0f,-3.42f);
+//  			glBegin(GL_QUADS);
+// // 			
+// 
+// 			qreal
+// 				vx1 = rect.left(),
+// 				vx2 = rect.right(),
+// 				vy1 = rect.bottom(),
+// 				vy2 = rect.top();
+// 
+// 			glTexCoord2f(0.0f, 0.0f); glVertex3f(vx1,vy1,  0.0f); // bottom left // 3
+// 			glTexCoord2f(1.0f, 0.0f); glVertex3f(vx2,vy1,  0.0f); // bottom right // 2
+// 			glTexCoord2f(1.0f, 1.0f); glVertex3f(vx2,vy2,  0.0f); // top right  // 1
+// 			glTexCoord2f(0.0f, 1.0f); glVertex3f(vx1,vy2,  0.0f); // top left // 0
+// 
+// 			glEnd();
 
-			glBegin(GL_QUADS);
-			// Front Face
-	//              glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0f, -1.0f,  1.0f);
-	//              glTexCoord2f(1.0f, 0.0f); glVertex3f( 1.0f, -1.0f,  1.0f);
-	//              glTexCoord2f(1.0f, 1.0f); glVertex3f( 1.0f,  1.0f,  1.0f);
-	//              glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0f,  1.0f,  1.0f);
 
-			//QRectF rect(10,10,320,240);
-			QRectF rect(0,0,m_readbackFbo->width(),m_readbackFbo->height());
-			qDebug() << "GLWidget::paintGL(): Readback rect:"<<rect;
+			{
+			
+				const int devW = m_readbackFbo->width(); //QGLContext::currentContext()->device()->width();
+				const int devH = m_readbackFbo->height(); //QGLContext::currentContext()->device()->height();
+	
+				QTransform transform =  QTransform();
+	
+				const GLfloat wfactor =  2.0 / devW;
+				const GLfloat hfactor = -2.0 / devH;
+	
+				const GLfloat positionMatrix[4][4] =
+				{
+					{
+						/*(0,0)*/ wfactor * transform.m11() - transform.m13(),
+						/*(0,1)*/ hfactor * transform.m12() + transform.m13(),
+						/*(0,2)*/ 0.0,
+						/*(0,3)*/ transform.m13()
+					}, {
+						/*(1,0)*/ wfactor * transform.m21() - transform.m23(),
+						/*(1,1)*/ hfactor * transform.m22() + transform.m23(),
+						/*(1,2)*/ 0.0,
+						/*(1,3)*/ transform.m23()
+					}, {
+						/*(2,0)*/ 0.0,
+						/*(2,1)*/ 0.0,
+						/*(2,2)*/ -1.0,
+						/*(2,3)*/ 0.0
+					}, {
+						/*(3,0)*/ wfactor * transform.dx() - transform.m33(),
+						/*(3,1)*/ hfactor * transform.dy() + transform.m33(),
+						/*(3,2)*/ 0.0,
+						/*(3,3)*/ transform.m33()
+					}
+				};
+				
+				//
+				QRectF source = QRectF(m_readbackFbo->height() - height(),width() + (width() - m_readbackFbo->width()),width(),height());
 
-			qreal
-				vx1 = rect.left(),
-				vx2 = rect.right(),
-				vy1 = rect.bottom(),
-				vy2 = rect.top();
+				QRectF target = QRectF(0,0,m_readbackFbo->width(),m_readbackFbo->height());
 
-	//                 glTexCoord2f(0.0f, 0.0f); glVertex3f(vx1,vy1,  0.0f); // top left
-	//                 glTexCoord2f(1.0f, 0.0f); glVertex3f(vx2,vy1,  0.0f); // top right
-	//                 glTexCoord2f(1.0f, 1.0f); glVertex3f(vx2,vy2,  0.0f); // bottom right
-	//                 glTexCoord2f(0.0f, 1.0f); glVertex3f(vx1,vy2,  0.0f); // bottom left
+				const GLfloat vertexCoordArray[] =
+				{
+					target.left()      , target.bottom() + 1 ,
+					target.right() + 1 , target.bottom() + 1 ,
+					target.left()      , target.top()        ,
+					target.right() + 1 , target.top()
+				};
+				
+				bool flipHorizontal = false;
+				bool flipVertical = false;
+				
+				double sourceWidth  = (double)width();
+				double sourceHeight = (double)height();
+				
+				const GLfloat txLeft   = 0; //flipHorizontal ? source.right()  / sourceWidth : source.left()  / sourceWidth;
+				const GLfloat txRight  = 1.25; //flipHorizontal ? source.left()   / sourceWidth : source.right() / sourceWidth;
+				
+				const GLfloat txTop    = -.25;
+				const GLfloat txBottom = 1;
 
-			glTexCoord2f(0.0f, 0.0f); glVertex3f(vx1,vy1,  0.0f); // bottom left // 3
-			glTexCoord2f(1.0f, 0.0f); glVertex3f(vx2,vy1,  0.0f); // bottom right // 2
-			glTexCoord2f(1.0f, 1.0f); glVertex3f(vx2,vy2,  0.0f); // top right  // 1
-			glTexCoord2f(0.0f, 1.0f); glVertex3f(vx1,vy2,  0.0f); // top left // 0
-		}
+// 				const GLfloat txTop    = flipVertical //m_scanLineDirection == QVideoSurfaceFormat::TopToBottom
+// 					? source.top()    / sourceHeight
+// 					: source.bottom() / sourceHeight;
+// 				const GLfloat txBottom = flipVertical //m_scanLineDirection == QVideoSurfaceFormat::TopToBottom
+// 					? source.bottom() / sourceHeight
+// 					: source.top()    / sourceHeight;
+
+				GLfloat textureCoordArray[] =
+				{
+					txLeft , txBottom,
+					txRight, txBottom,
+					txLeft , txTop,
+					txRight, txTop
+				};
+				
+				//qDebug() << "GLWidget::paintGL(): tx coords:"<<txLeft<<","<<txTop<<","<<txRight<<","<<txBottom;
+				//qDebug() << "GLWidget::paintGL(): target:"<<target;
+
+				m_readbackProgram->bind();
+
+				m_readbackProgram->enableAttributeArray("vertexCoordArray");
+				m_readbackProgram->enableAttributeArray("textureCoordArray");
+
+				m_readbackProgram->setAttributeArray("vertexCoordArray",  vertexCoordArray,  2);
+				m_readbackProgram->setAttributeArray("textureCoordArray", textureCoordArray, 2);
+
+				m_readbackProgram->setUniformValue("positionMatrix",      positionMatrix);
+			
+				glActiveTexture(GL_TEXTURE0);
+				//glBindTexture(GL_TEXTURE_2D, m_fbo->texture());
+				//glBindTexture(GL_TEXTURE_2D, m_readbackTextureId);
+				glBindTexture(GL_TEXTURE_2D, m_fbo ? m_fbo->texture() : m_readbackTextureId);
+
+		// 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		// 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		// 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		// 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+				m_readbackProgram->setUniformValue("texRgb", 0);
+				
+				glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+				//glDrawArrays(GL_QUAD_STRIP, 0, 4);
+
+				m_readbackProgram->release();
+			
+			
+			}
+			
+			
+			
+			//qDebug() << "GLWidget::paintGL(): Readback FBO render took"<<t.restart()<<"ms";
+			
+ 			QImage tmp = m_readbackFbo->toImage();
+ 			m_outputStream->setImage(tmp);
+			
+			
+// 			static int outCount = 0;
+// 			outCount ++;
+// 			QString file = QString("debug/readback-%1.png").arg(outCount % 2 == 0 ? 0 : 1);
+// 			tmp.save(file);
+// 			
+// 			qDebug() << "GLWidget::paintGL(): Readback FBO debugging write to "<<file<<" took "<<t.restart()<<"ms";
+// 			m_readbackFbo->release();
+// 			m_readbackFbo->bind();
+ 		}
+// 		else
+// 		{
+// 			if(m_fbo && 
+// 			  !m_fbo->isBound())
+// 				m_fbo->bind();
+// 		}
+			
 		else
-		{
-			if(m_fbo && 
-			  !m_fbo->isBound())
-				m_fbo->bind();
-		}
 			
-		qDebug() << "GLWidget::paintGL(): Downloading from GPU to m_outputStream";
+		//qDebug() << "GLWidget::paintGL(): Downloading from GPU to m_outputStream";
 // 		QTime t;
 // 		t.start();
 		#ifndef Q_OS_WIN32
 		if(m_pboEnabled)
 		{
-			m_readbackFbo->bind();
+			//m_readbackFbo->bind();
 			
 			m_firstPbo = ! m_firstPbo;
 			int processIdx = m_firstPbo ? 0 : 1;
@@ -1106,13 +1427,13 @@ void GLWidget::paintGL()
 			
 			glBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, m_pboIds[readIdx]);
 
- 			QTime t;
- 			t.start();
+//  			QTime t;
+//  			t.start();
 
 			glReadPixels(0, 0, m_readbackSize.width(), m_readbackSize.height(), GL_BGRA, GL_UNSIGNED_BYTE, 0);
 
- 			int elapsed = t.elapsed();
- 			t.restart();
+//  			int elapsed = t.elapsed();
+//  			t.restart();
 
 			// map the PBO to process its data by CPU
 			glBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, m_pboIds[processIdx]);
@@ -1120,17 +1441,17 @@ void GLWidget::paintGL()
 								GL_READ_ONLY_ARB);
 			if(ptr)
 			{
-// 				QImage img(m_readbackSize, QImage::Format_ARGB32);
-// 				memcpy(img.bits(), ptr, img.byteCount());
+//  				QImage img(m_readbackSize, QImage::Format_ARGB32);
+//  				memcpy(img.bits(), ptr, img.byteCount());
 // 				m_outputStream->setImage(img);
 				m_outputStream->copyPtr(ptr, size());
 
-				int elapsed2 = t.elapsed();
-				//m_outputStream->setImage(img);
-				//QString file = QString("debug/pboread-%1.png").arg(readIdx);
-				//img.save(file);
-				//qDebug() << "Writing to file:"<<QString("debug/pboread-%1.png").arg(readIdx)<<", elapsed:"<<elapsed;
-				qDebug() << "Download from buffer "<<readIdx<<" completed, "<<elapsed<<"ms. Image buffer "<<processIdx<<" processed, "<<elapsed2<<" ms";
+// 				int elapsed2 = t.elapsed();
+// 				//m_outputStream->setImage(img);
+// 				QString file = QString("debug/pboread-%1.png").arg(readIdx);
+// 				img.save(file);
+// 				qDebug() << "Writing to file:"<<QString("debug/pboread-%1.png").arg(readIdx)<<", elapsed:"<<elapsed;
+// 				qDebug() << "Download from buffer "<<readIdx<<" completed, "<<elapsed<<"ms. Image buffer "<<processIdx<<" processed, "<<elapsed2<<" ms";
 
 				glUnmapBufferARB(GL_PIXEL_PACK_BUFFER_ARB);
 			}
@@ -1142,8 +1463,8 @@ void GLWidget::paintGL()
 			// back to conventional pixel operation
 			glBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, 0);
 		}
-		else
-		#endif
+// 		else
+ 		#else
 		{
 
 // 			QTime t;
@@ -1154,6 +1475,7 @@ void GLWidget::paintGL()
 			m_outputStream->setImage(img);
 			//qDebug() << "glReadPixels elapsed:"<<t.elapsed()<<"ms";
 		}
+		#endif
 		
 		if(m_readbackFbo && 
 		   m_readbackFbo->isBound())
@@ -1860,17 +2182,57 @@ void GLWidget::setOutputSize(QSize size)
 
 void GLWidget::setupReadbackBuffers()
 {
+	if(m_readbackSizeAuto)
+		m_readbackSize = size();
+		
 	if(m_readbackTextureSize != size())
 	{
 		m_readbackTextureSize = size();
 		
+		makeCurrentIfNeeded();
+			
+		glGenTextures(1, &m_readbackTextureId);
+		glBindTexture(GL_TEXTURE_2D, m_readbackTextureId);
+		glTexImage2D(
+			GL_TEXTURE_2D,
+			0,
+			//GL_RGBA8,
+			//GL_BGRA,
+			GL_BGR,
+			width(),
+			height(),
+			0,
+			GL_RGB, //_EXT,
+			GL_UNSIGNED_BYTE,
+			NULL
+			);
+		
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		
+				
+			
+// 		glTexImage2D(GL_TEXTURE_2D,
+// 			0, GL_RGB,
+// 			width(),
+// 			height(),
+// 			0, GL_RGB, 
+// 			GL_UNSIGNED_BYTE,
+// 			NULL);
+	}
+	
+		
+	if(m_pboSize != m_readbackSize)
+	{
+		m_pboSize = m_readbackSize;
+		
+		makeCurrentIfNeeded();
+			
 		#ifndef Q_OS_WIN32
 		if(m_pboEnabled)
 		{
-			makeCurrentIfNeeded();
-		
-			if(m_readbackSizeAuto)
-				m_readbackSize = size();
 			// 4 = channel count (RGBA)
 			int dataSize = m_readbackSize.width() * m_readbackSize.height() * 4;
 

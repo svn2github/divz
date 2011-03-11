@@ -1056,7 +1056,9 @@ void GLVideoDrawable::initGL()
 	#endif
 
 	const GLubyte *str = glGetString(GL_EXTENSIONS);
-	m_useShaders = (strstr((const char *)str, "GL_ARB_fragment_shader") != NULL);
+	QString extensionList = QString((const char*)str);
+	
+	m_useShaders = extensionList.indexOf("GL_ARB_fragment_shader") > -1;
 
 	if(0)
 	{
