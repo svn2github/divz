@@ -284,7 +284,7 @@ GLWidget::GLWidget(QWidget *parent, QGLWidget *shareWidget)
 // 	, m_blackAnim(0)
 	, m_isBlack(false)
 	, m_crossfadeSpeed(300)
-	, m_fboEnabled(false)
+	, m_fboEnabled(true)
 	//, m_fboEnabled(true)
 	//, m_readbackSizeAuto(false)
 	, m_readbackSizeAuto(true)
@@ -1031,10 +1031,11 @@ void GLWidget::paintGL()
 
 	if(m_outputStream)
 	{
-		if(0) //m_fbo)
+		if(m_fbo)
 		{
 			qDebug() << "GLWidget::paintGL(): Rendering framebuffer to readback buffer";
-			if(m_fbo)
+			if(m_fbo &&
+			   m_fbo->isBound())
 				m_fbo->release();
 				
 			m_readbackFbo->bind();
@@ -1078,9 +1079,8 @@ void GLWidget::paintGL()
 		}
 		else
 		{
-		
-		
-			if(m_fbo && !m_fbo->isBound())
+			if(m_fbo && 
+			  !m_fbo->isBound())
 				m_fbo->bind();
 		}
 			
@@ -1090,6 +1090,8 @@ void GLWidget::paintGL()
 		#ifndef Q_OS_WIN32
 		if(m_pboEnabled)
 		{
+			m_readbackFbo->bind();
+			
 			m_firstPbo = ! m_firstPbo;
 			int processIdx = m_firstPbo ? 0 : 1;
 			int readIdx = m_firstPbo ? 1 :0;
@@ -1101,6 +1103,7 @@ void GLWidget::paintGL()
 			//glReadBuffer(GL_FRONT);
 			// read pixels from framebuffer to PBO
 			// glReadPixels() should return immediately.
+			
 			glBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, m_pboIds[readIdx]);
 
  			QTime t;
@@ -1151,6 +1154,11 @@ void GLWidget::paintGL()
 			m_outputStream->setImage(img);
 			//qDebug() << "glReadPixels elapsed:"<<t.elapsed()<<"ms";
 		}
+		
+		if(m_readbackFbo && 
+		   m_readbackFbo->isBound())
+			m_readbackFbo->release();
+
 
 	}
 	
