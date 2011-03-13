@@ -705,14 +705,14 @@ void GLTextDrawable::setText(const QString& text)
 	else
 	{
 		m_renderer->setScaling(QPointF(1,1));
-	}
-
-	if(m_cachedImageText == text &&
-	  !m_cachedImage.isNull())
-	{
-		//qDebug() << "GLTextDrawable::setText: Cached image matches text, not re-rendering.";
-		lock = m_renderer->lockUpdates(true);
-		setImage(m_cachedImage);
+	
+		if(m_cachedImageText == text &&
+		  !m_cachedImage.isNull())
+		{
+			//qDebug() << "GLTextDrawable::setText: Cached image matches text, not re-rendering.";
+			//lock = m_renderer->lockUpdates(true);
+			//setImage(m_cachedImage);
+		}
 	}
 
 	m_renderer->setHtml(text);

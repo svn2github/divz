@@ -577,6 +577,9 @@ QImage GLImageDrawable::applyBorderAndShadow(const QImage& sourceImg)
 	
 	QPointF scale = m_glw ? QPointF(m_glw->transform().m11(), m_glw->transform().m22()) : QPointF(1.,1.);
 	
+	if(scale.x() < 1.25 && scale.y() < 1.25)
+		scale = QPointF(1,1);
+	
 	double radius = m_shadowBlurRadius;
 	
 	// create temporary pixmap to hold a copy of the text

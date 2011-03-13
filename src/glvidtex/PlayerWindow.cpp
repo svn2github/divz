@@ -1445,7 +1445,7 @@ void PlayerWindow::opacityAnimationFinished(GLScene *scene)
 		else
 			m_graphicsScene->removeItem(drawable);
 
-		//qDebug() << "PlayerWindow::opacityAnimationFinished: removing drawable:"<<(QObject*)drawable;
+		qDebug() << "PlayerWindow::opacityAnimationFinished: removing drawable:"<<(QObject*)drawable;
 	}
 
 	disconnect(scene, 0, this, 0);
@@ -1461,6 +1461,15 @@ void PlayerWindow::opacityAnimationFinished(GLScene *scene)
 		//qDebug() << "PlayerWindow::opacityAnimationFinished: deleting old group:"<<(QObject*)m_oldGroup;
 		delete m_oldGroup;
 		m_oldGroup = 0;
+	}
+	
+	if(m_glWidget)
+	{
+		// This is necessary to do a final repaint after fading out objects...
+		// Without this, fading out (for example) an overlay will leave a barely-visible (like 5%) opacity
+		// version visible only in the output stream, not on screen. This forces a redraw which
+		// sends a 'clean' frame out....need to debug the root of the problem later.
+		QTimer::singleShot(100,m_glWidget,SLOT(updateGL()));
 	}
 }
 
