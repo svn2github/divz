@@ -1241,7 +1241,7 @@ const char * GLVideoDrawable::resizeTextures(const QSize& frameSize, bool second
 	m_yuv = false;
 	m_yuv2 = false;
 	
-	bool debugShaderName = false;
+	bool debugShaderName = true;
 	switch (m_videoFormat.pixelFormat)
 	{
 	/// RGB Formats
@@ -2507,6 +2507,9 @@ void GLVideoDrawable::paintGL()
 			m_program->setUniformValue("alpha",               (GLfloat)liveOpacity);
 			m_program->setUniformValue("texOffsetX",          (GLfloat)m_invertedOffset.x());
 			m_program->setUniformValue("texOffsetY",          (GLfloat)m_invertedOffset.y());
+			
+			m_program->setUniformValue("width",          (GLfloat)m_frameSize.width());
+			m_program->setUniformValue("height",         (GLfloat)m_frameSize.height());
 
 			if(m_levelsEnabled)
 			{

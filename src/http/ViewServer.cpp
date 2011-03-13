@@ -152,9 +152,10 @@ void ViewServer::reqCheckForChange(QTcpSocket *socket, const QStringList &path, 
 		slideName = "No Slide Loaded";
 	int slideId = -1;
 	
+	int liveId = AppSettings::taggedOutput("live")->id();
+		
 	if(doc)
 	{
-		int liveId = AppSettings::taggedOutput("live")->id();
 		SlideGroup *liveGroup = mw->outputInst(liveId)->slideGroup();
 		
 		SlideGroupViewControl *viewControl = mw->viewControl(liveId);
@@ -173,8 +174,9 @@ void ViewServer::reqCheckForChange(QTcpSocket *socket, const QStringList &path, 
 	int id = query["slide_id"].toInt();
 	QString name = QUrl::fromPercentEncoding(query["slide_name"].toAscii());
 	qDebug() << "ViewServer::reqCheckForchange: client id:"<<id<<", our id:"<<slideId<<", client name:"<<name<<", our name:"<<slideName;
-	if(id   != slideId ||
-	   name != slideName)
+	if(!mw->outputInst(liveId)->isTransitionActive() &&
+	   (id   != slideId ||
+	    name != slideName))
 	{
 // 		qDebug() << "ViewServer::reqCheckForchange: Changed!";
 		Http_Send_Response(socket,"HTTP/1.0 200 Slide Changed") << 

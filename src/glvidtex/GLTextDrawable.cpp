@@ -652,9 +652,17 @@ void GLTextDrawable::transformChanged()
 	if(m_renderer && m_glw)
 	{
 		QTransform tx = m_glw->transform();
-		m_renderer->setScaling(tx.m11(), tx.m22());
+		if(tx.m11() > 1.25 || tx.m22() > 1.25)
+		{
+			m_renderer->setScaling(tx.m11(), tx.m22());
+			m_renderer->update();
+		}
+		else
+		{
+			//m_renderer->setScaling(1,1);
+		}
 		//qDebug() << "GLTextDrawable::transformChanged(): New scale:"<<tx.m11()<<"x"<<tx.m22();
-		m_renderer->update();
+		
 	}
 }
 
@@ -687,12 +695,16 @@ void GLTextDrawable::setText(const QString& text)
 	bool lock = false;
 	
 	QPointF scale = m_glw ? QPointF(m_glw->transform().m11(), m_glw->transform().m22()) : QPointF(1,1);
-	if(scale.x() != 1. || scale.y() != 1.)
+	if(scale.x() > 1.25 || scale.y() > 1.25)
 	{
 		m_cachedImageText = "";
 		m_cachedImage = QImage();
 		
 		m_renderer->setScaling(scale);
+	}
+	else
+	{
+		m_renderer->setScaling(QPointF(1,1));
 	}
 
 	if(m_cachedImageText == text &&
@@ -833,7 +845,7 @@ void GLTextDrawable::updateRects(bool secondSource)
 	if(m_renderer && m_glw)
 	{
 		QPointF scale = m_renderer->scaling();
-		if(scale.x() != 1. || scale.y() != 1.)
+		if(scale.x() > 1.25 || scale.y() > 1.25)
 		{
 			adjustedSource = QRectF(
 				adjustedSource.topLeft(),
