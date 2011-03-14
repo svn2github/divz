@@ -45,6 +45,7 @@ GLImageDrawable::~GLImageDrawable()
 
 void GLImageDrawable::setImage(const QImage& image, bool insidePaint)
 {
+	
 	//qDebug() << "GLImageDrawable::setImage(): "<<(QObject*)this<<" mark1: insidePaint:"<<insidePaint;
 	if(m_allocatedMemory > IMAGE_ALLOCATION_CAP_MB*1024*1024 &&
 		!liveStatus() &&
@@ -92,6 +93,15 @@ void GLImageDrawable::setImage(const QImage& image, bool insidePaint)
 		localImage = applyBorderAndShadow(image);
 	else
 		localImage = image;
+		
+// 	QImage bgImage(QSize(1000,750), QImage::Format_ARGB32_Premultiplied);
+// 	QBrush bgTexture(QPixmap("ColorTile2.png"));
+// 	QPainter bgPainter(&bgImage);
+// 	bgPainter.fillRect(bgImage.rect(), bgTexture);
+// 	bgPainter.end();
+// 	bgImage = bgImage.convertToFormat(QImage::Format_RGB32);
+	
+//	localImage = bgImage;
 		
 	//qDebug() << "GLImageDrawable::setImage(): "<<(QObject*)this<<" mark5";
 
@@ -328,9 +338,9 @@ bool GLImageDrawable::setImageFile(const QString& file)
 			image.save(cachedImageKey,"JPEG");
 		}
 	}
-
+	//FilterCompare1.png
 	setImage(image);
-
+	
 	return true;
 
 }

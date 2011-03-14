@@ -134,6 +134,11 @@ class GLVideoDrawable : public GLDrawable
 	Q_PROPERTY(bool videoSenderEnabled READ videoSenderEnabled WRITE setVideoSenderEnabled);
 	Q_PROPERTY(int videoSenderPort READ videoSenderPort WRITE setVideoSenderPort);
 	
+	Q_PROPERTY(ConvFilterType convFilterType READ convFilterType WRITE setConvFilterType);
+	Q_PROPERTY(double sharpAmount READ sharpAmount WRITE setSharpAmount);
+	Q_PROPERTY(double blurAmount READ blurAmount WRITE setBlurAmount); 
+	Q_PROPERTY(int kernelSize READ kernelSize WRITE setKernelSize);
+	Q_PROPERTY(QVariantList customKernel READ customKernel WRITE setCustomKernel);
 	
 public:
 	GLVideoDrawable(QObject *parent=0);
@@ -196,6 +201,25 @@ public:
 	double cropRight() { return cropBottomRight().x(); }
 	double cropBottom() { return cropBottomRight().y(); }
 	
+	typedef enum ConvFilterType {
+		ConvBlur,
+		ConvEmboss,
+		ConvBloom,
+		ConvMean,
+		ConvSharp,
+		ConvEdge,
+		ConvCustom
+	};
+	
+	Q_ENUMS(ConvFilterType);
+	
+	QVariantList customKernel() { return m_customKernel; }
+	int convFilterTypeInt() { return (int)m_convFilterType; }
+	ConvFilterType convFilterType() { return m_convFilterType; }
+	double sharpAmount() { return m_sharpAmount; }
+	double blurAmount() { return m_blurAmount; } 
+	int kernelSize() { return m_kernelSize; }
+	
 public slots:
 	void setFpsLimit(float);
 	void setVisible(bool flag, bool waitOnFrameSignal=false);
@@ -252,7 +276,14 @@ public slots:
 	void setVideoSenderPort(int);
 	
 	void setCrossFadeMode(CrossFadeMode mode);
-
+	
+	void setConvFilterType(int type) { setConvFilterType((ConvFilterType)type); }
+	void setConvFilterType(ConvFilterType convFilterType); 
+	void setSharpAmount(double value);
+	void setBlurAmount(double value);
+	void setKernelSize(int size);
+	void setCustomKernel(QVariantList list);
+	
 signals:
 	void displayOptionsChanged(const VideoDisplayOptions&);
 	void sourceDiscarded(VideoSource*);
@@ -292,7 +323,7 @@ protected:
 	virtual void updateAnimations(bool insidePaint = false);
 	
 	/// PS
-	const char * resizeTextures(const QSize& size, bool secondSource=false);
+	QByteArray resizeTextures(const QSize& size, bool secondSource=false);
 	
 	void updateTextureOffsets();
 	
@@ -488,6 +519,16 @@ private:
 	double m_gamma;
 	
 	QTransform m_lastKnownTransform;
+	
+	QSize m_lastConvOffsetSize;
+	QVarLengthArray<GLfloat> m_convOffsets;
+	QVarLengthArray<GLfloat> m_convKernel;
+	int m_kernelSize;
+	
+	ConvFilterType m_convFilterType;
+	double m_sharpAmount;
+	double m_blurAmount;
+	QVariantList m_customKernel;
 	
 	static int m_videoSenderPortAllocator;
 };

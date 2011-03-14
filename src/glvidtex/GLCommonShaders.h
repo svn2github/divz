@@ -87,87 +87,12 @@ static const char *qt_glsl_xrgbLevelsShaderProgram =
         "uniform mediump float whiteLevel;\n"  /// TODO add midLevel adjustments
         "uniform mediump float gamma;\n"
         "varying highp vec2 textureCoord;\n"
-        #ifdef ENABLE_ATI_CONVOLUTION_KERNELS
-        "#define KERNEL_SIZE 9\n"
-	"float kernel[KERNEL_SIZE];\n"
-	"uniform float width;\n"
-	"uniform float height;\n"
-	"float step_w = 1.0/width;\n"
-	"float step_h = 1.0/height;\n"
-	"vec2 offset[KERNEL_SIZE];\n"
-	#endif
-        "void main(void)\n"
+        "%1" // filter uniform definitions 
+	"void main(void)\n"
         "{\n"
         "    mediump vec2 texPoint = vec2(textureCoord.s + texOffsetX, textureCoord.t + texOffsetY);\n"
-        #ifdef ENABLE_ATI_CONVOLUTION_KERNELS
-        "	highp vec4 color = vec4(0.0);\n"
-        "	int i = 0;\n"
-	"	vec4 sum = vec4(0.0);\n"
-	"	\n"
-	"	offset[0] = vec2(-step_w, -step_h);\n"
-	"	offset[1] = vec2(0.0, -step_h);\n"
-	"	offset[2] = vec2(step_w, -step_h);\n"
-	"	\n"
-	"	offset[3] = vec2(-step_w, 0.0);\n"
-	"	offset[4] = vec2(0.0, 0.0);\n"
-	"	offset[5] = vec2(step_w, 0.0);\n"
-	"	\n"
-	"	offset[6] = vec2(-step_w, step_h);\n"
-	"	offset[7] = vec2(0.0, step_h);\n"
-	"	offset[8] = vec2(step_w, step_h);\n"
-	"	\n"
+	"    %2" // filter code or the generic pass thru if no filter defined
 	
-	#define KERNEL_SHARP
-
-
-	#ifdef KERNEL_BLUR
-	"	kernel[0] = 1.0/16.0; 	kernel[1] = 2.0/16.0;	kernel[2] = 1.0/16.0;\n"
-	"	kernel[3] = 2.0/16.0;	kernel[4] = 4.0/16.0;	kernel[5] = 2.0/16.0;\n"
-	"	kernel[6] = 1.0/16.0;  	kernel[7] = 2.0/16.0;	kernel[8] = 1.0/16.0;\n"
-	#endif
-	#ifdef KERNEL_EMBOSS
-	"	kernel[0] = 2.0/16.0; 	kernel[1] = 0.0/16.0;	kernel[2] = 0.0/16.0;\n"
-	"	kernel[3] = 0.0/16.0;	kernel[4] = -1.0/16.0;	kernel[5] = 0.0/16.0;\n"
-	"	kernel[6] = 0.0/16.0;  	kernel[7] = 0.0/16.0;	kernel[8] = -1.0/16.0;\n"
-	#endif
-	#ifdef KERNEL_BLOOM
-	"	kernel[0] = 5.0/9.0; 	kernel[1] = 0.0/9.0;	kernel[2] = 10.0/9.0;\n"
-	"	kernel[3] = 0.0/9.0;	kernel[4] = 10.0/9.0;	kernel[5] = 0.0/9.0;\n"
-	"	kernel[6] = 10.0/9.0;  	kernel[7] = 0.0/9.0;	kernel[8] = 5.0/9.0;\n"
-	#endif
-	#ifdef KERNEL_MEAN
-	"	kernel[0] = 1.0/9.0; 	kernel[1] = 1.0/9.0;	kernel[2] = 1.0/9.0;\n"
-	"	kernel[3] = 1.0/9.0;	kernel[4] = 1.0/9.0;	kernel[5] = 1.0/9.0;\n"
-	"	kernel[6] = 1.0/9.0;  	kernel[7] = 1.0/9.0;	kernel[8] = 1.0/9.0;\n"
-	#endif
-	#ifdef KERNEL_SHARP
-	"	kernel[0] = 0.0; 	kernel[1] = -0.5;	kernel[2] = 0.0;\n"
-	"	kernel[3] = -0.5;	kernel[4] =  3.0;	kernel[5] = -0.5;\n"
-	"	kernel[6] = 0.0;  	kernel[7] = -0.5;	kernel[8] = 0.0;\n"
-	#endif
-	#ifdef KERNEL_EDGE
-	"	kernel[0] = 0.0/16.0; 	kernel[1] = 1.0/16.0;	kernel[2] = 0.0/16.0;\n"
-	"	kernel[3] = 1.0/16.0;	kernel[4] = -4.0/16.0;	kernel[5] = 1.0/16.0;\n"
-	"	kernel[6] = 0.0/16.0;  	kernel[7] = 1.0/16.0;	kernel[8] = 0.0/16.0;\n"
-	#endif
-	"	\n"
-	"	if(texPoint.s<0.595) {\n"
-	"	for( i=0; i<KERNEL_SIZE; i++ )\n"
-	"	{\n"
-	//"		vec4 tmp = texture2D(texRgb, texPoint + offset[i]);\n"
-	"		vec4 tmp = vec4(texture2D(texRgb, texPoint + offset[i]).bgr, 1.0);\n"
-	"		sum += tmp * kernel[i];\n"
-	"	}\n"
-	"	color = clamp(sum,0.0,1.0);\n"
-	"	} else if(texPoint.s>0.605) {\n"
-	"		color = vec4(texture2D(texRgb, texPoint).bgr, 1.0);\n"
-	"	} else {\n"
-	"		color = vec4(1.0, 0.0, 0.0, 1.0);\n" 
-	"	}\n"
-	#else
-	"    highp vec4 color = vec4(texture2D(texRgb, texPoint).bgr, 1.0);\n"
-        #endif
-
 //         "    color.r = (pow(((color.r * 255.0) - blackLevel) / (whiteLevel - blackLevel), gamma) * 255) / 255.0;\n"
 //         "    color.g = (pow(((color.g * 255.0) - blackLevel) / (whiteLevel - blackLevel), gamma) * 255) / 255.0;\n"
 //         "    color.b = (pow(((color.b * 255.0) - blackLevel) / (whiteLevel - blackLevel), gamma) * 255) / 255.0;\n"

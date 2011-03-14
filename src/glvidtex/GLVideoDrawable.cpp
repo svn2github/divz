@@ -115,6 +115,9 @@ GLVideoDrawable::GLVideoDrawable(QObject *parent)
 	, m_whiteLevel(255)
 	, m_midLevel(128)
 	, m_gamma(1.0)
+	, m_kernelSize(9)
+	, m_sharpAmount(1.0)
+	, m_blurAmount(1.0)
 {
 
 	m_imagePixelFormats
@@ -1128,7 +1131,7 @@ bool GLVideoDrawable::setVideoFormat(const VideoFormat& format, bool secondSourc
 		m_validShader = false;
 	else
 		m_validShader2 = false;
-	const char *fragmentProgram = resizeTextures(format.frameSize, secondSource);
+	QByteArray fragmentProgram = resizeTextures(format.frameSize, secondSource);
 
   	if(!samePixelFormat)
   	{
@@ -1140,6 +1143,8 @@ bool GLVideoDrawable::setVideoFormat(const VideoFormat& format, bool secondSourc
 
 			if(!program->shaders().isEmpty())
 				program->removeAllShaders();
+				
+			//qDebug() << "GLVideoDrawable::setVideoFormat: fragmentProgram:"<<fragmentProgram.constData();
 
 			if(!QGLShaderProgram::hasOpenGLShaderPrograms())
 			{
@@ -1147,10 +1152,10 @@ bool GLVideoDrawable::setVideoFormat(const VideoFormat& format, bool secondSourc
 				return false;
 			}
 
-			if (!fragmentProgram)
+			if (fragmentProgram.isEmpty())
 			{
-// 				if(format.pixelFormat != QVideoFrame::Format_Invalid)
-// 					qDebug() << "GLVideoDrawable: No shader program found - format not supported.";
+ 				//if(format.pixelFormat != QVideoFrame::Format_Invalid)
+ 					qDebug() << "GLVideoDrawable: No shader program found - format not supported.";
 				return false;
 			}
 			else
@@ -1165,6 +1170,7 @@ bool GLVideoDrawable::setVideoFormat(const VideoFormat& format, bool secondSourc
 			else
 			if (!program->addShaderFromSourceCode(QGLShader::Fragment, fragmentProgram))
 			{
+				qDebug() << "Fragment used:"<<fragmentProgram.constData();
 				qWarning("GLVideoDrawable: Shader compile error %s", qPrintable(program->log()));
 				//error = QAbstractVideoSurface::ResourceError;
 				program->removeAllShaders();
@@ -1173,6 +1179,8 @@ bool GLVideoDrawable::setVideoFormat(const VideoFormat& format, bool secondSourc
 			else
 			if(!program->link())
 			{
+// 				qDebug() << "Vertex used:"<<qt_glsl_vertexShaderProgram;
+// 				qDebug() << "Fragment used:"<<fragmentProgram.constData();
 				qWarning("GLVideoDrawable: Shader link error %s", qPrintable(program->log()));
 				program->removeAllShaders();
 				return false;
@@ -1225,7 +1233,7 @@ bool GLVideoDrawable::setVideoFormat(const VideoFormat& format, bool secondSourc
 	return true;
 }
 
-const char * GLVideoDrawable::resizeTextures(const QSize& frameSize, bool secondSource)
+QByteArray GLVideoDrawable::resizeTextures(const QSize& frameSize, bool secondSource)
 {
 	const char * fragmentProgram = 0;
 
@@ -1249,7 +1257,297 @@ const char * GLVideoDrawable::resizeTextures(const QSize& frameSize, bool second
  		if(debugShaderName)
  			qDebug() << "GLVideoDrawable::resizeTextures(): "<<(QObject*)this<<"\t Format RGB32, using qt_glsl_xrgbShaderProgram";
 		initRgbTextureInfo(GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE, frameSize, secondSource);
-		fragmentProgram = m_levelsEnabled ? qt_glsl_xrgbLevelsShaderProgram : qt_glsl_xrgbShaderProgram;
+		//fragmentProgram = m_levelsEnabled ? qt_glsl_xrgbLevelsShaderProgram : qt_glsl_xrgbShaderProgram;
+		if(!m_levelsEnabled)
+		{
+			fragmentProgram = qt_glsl_xrgbShaderProgram;
+		}
+		else
+		{
+			QString prog(qt_glsl_xrgbLevelsShaderProgram);
+			
+			m_kernelSize = 25;
+			
+			int kernelSize = m_kernelSize;
+			
+			QString uniformDefs = QString(
+				"#define KERNEL_SIZE %1\n"
+				"uniform mediump float kernel[KERNEL_SIZE];\n"
+				"uniform highp vec2 offset[KERNEL_SIZE];\n"
+				).arg(m_kernelSize);
+			
+			float step_w = 1.0/frameSize.width();
+			float step_h = 1.0/frameSize.height();
+				
+			m_convOffsets.clear();
+			m_convOffsets.resize(kernelSize * 2);
+			m_convKernel.resize(kernelSize);
+			
+			// TODO just do sqrt to get W/H ..?
+			int kernelWidth  = kernelSize == 9 ? 3 : 5;
+			int kernelHeight = kernelSize == 9 ? 3 : 5;
+			for(int y = 0; y < kernelHeight; ++y) 
+			{
+				for(int x = 0; x < kernelWidth; ++x) 
+				{
+					m_convOffsets[(y * kernelWidth + x) * 2]     = step_w * (x - (kernelWidth  / 2));
+					m_convOffsets[(y * kernelWidth + x) * 2 + 1] = step_h * (    (kernelHeight / 2) - y);
+				}
+			}
+			
+/*			if(kernelSize == 9)
+			{
+				// row 1
+				m_convOffsets[0]  = -step_w;
+				m_convOffsets[1]  = -step_h;
+				 
+				m_convOffsets[2]  =  0.0;
+				m_convOffsets[3]  = -step_h;
+				
+				m_convOffsets[4]  =  step_w;
+				m_convOffsets[5]  = -step_h;
+				
+				// row 2
+				m_convOffsets[6]  = -step_w;
+				m_convOffsets[7]  =  0.0;
+				
+				m_convOffsets[8]  =  0.0;
+				m_convOffsets[9]  =  0.0;
+				
+				m_convOffsets[10] =  step_w;
+				m_convOffsets[11] =  0.0;
+				
+				// row 3
+				m_convOffsets[12] = -step_w;
+				m_convOffsets[13] =  step_h;
+				
+				m_convOffsets[14] =  0.0;
+				m_convOffsets[15] =  step_h;
+				
+				m_convOffsets[16] =  step_w;
+				m_convOffsets[17] =  step_h;
+			}
+			else
+			{
+				// TODO add offsets for kernel 25
+			}*/
+			
+			QString kernelType = "BLUR";
+		
+			QList<float> kernel;
+			float divisor = 1;
+				
+			if(kernelType == "BLUR")
+			{
+				if(kernelSize == 9)
+				{
+// 					kernel << 1 << 2 << 1 <<
+// 						  2 << 4 << 2 <<
+// 						  1 << 2 << 1;
+// 					divisor = 16;
+
+					kernel << 1 << 0 << 1 <<
+						  0 << 1 << 0 <<
+						  1 << 0 << 1;
+					divisor = -1;
+
+
+				}
+				else if(kernelSize == 25)
+				{
+// 					kernel << 1 <<  4 <<  6 <<  4 << 1 << 
+// 					          4 << 16 << 24 << 16 << 4 << 
+// 					          6 << 24 << 36 << 24 << 6 << 
+// 					          4 << 16 << 24 << 16 << 4 << 
+// 					          1 <<  4 <<  6 <<  4 << 1;
+// 					divisor = -1;
+
+					m_blurAmount = 1;
+					kernel << 1 << 0.1 << 1 << 0.1 << 1 << 
+					          0.1 << 1 << 0.1 << 1 << 0.1 << 
+					          1 << 0.1 << 1 << 0.1 << 1 << 
+					          0.1 << 1 << 0.1 << 1 << 0.1 << 
+					          1 << 0.1 << 1 << 0.1 << 1;
+					for(int i=0;i<kernelSize;i++)
+						kernel[i] = i == kernelSize/2? kernel[i] : kernel[i] * m_blurAmount;
+					divisor = -1; // TODO what divisor is right?? 16 is just a guess..
+
+				}
+			}
+			else
+			if(kernelType == "EMBOSS")
+			{
+				kernel  << 2 <<  0 << 0
+					<< 0 << -1 << 0 
+					<< 0 <<  0 << -1;
+				divisor = 16;
+			}
+			else
+			if(kernelType == "BLOOM")
+			{
+				kernel  << 5 <<  0 << 10
+					<< 0 << 10 <<  0
+					<< 10 << 0 <<  5;
+				divisor = 9;
+			}
+			else
+			if(kernelType == "MEAN")
+			{
+				for(int i=0;i<kernelSize;i++)
+					kernel << 1;
+				divisor = 9;
+			}
+			else
+			if(kernelType == "SHARP")
+			{
+				double sharpAmount = m_sharpAmount;
+				if(kernelSize == 9)
+				{
+					if(sharpAmount <= 1.0)
+						kernel  <<  0
+							<< -1 * sharpAmount
+							<<  0
+							
+							<< -1 * sharpAmount
+							<< (1 * sharpAmount * 4 + 1)
+							<< -1 * sharpAmount
+							
+							<<  0
+							<< -1 * sharpAmount
+							<<  0;
+					else
+						kernel  << -1 * sharpAmount
+							<< -1 * sharpAmount
+							<< -1 * sharpAmount
+							
+							<< -1 * sharpAmount
+							<< (1 * sharpAmount * 8 + 1)
+							<< -1 * sharpAmount
+							
+							<< -1 * sharpAmount
+							<< -1 * sharpAmount
+							<< -1 * sharpAmount;
+					divisor = 1; 
+				}
+				else
+				{
+					// TODO 
+					// -3, 12, 17, 12, -3
+					// or
+					// 1, -8, 0, 8, -1
+					// Convert those weights to a 5x5 matrix by doing vector multiply with its own transpose.
+					// See http://prideout.net/archive/bloom/index.php
+					
+					divisor = 1; // TODO use a divsior or no?
+				}
+			}
+			else
+			if(kernelType == "EDGE")
+			{
+				kernel  << 0 <<  1 << 0
+					<< 1 << -4 << 1
+					<< 0 <<  1 << 0;
+				
+				divisor = 16;
+			}
+			else
+			{
+				// passthru matrix leaves color unchanged
+				for(int i=0;i<kernelSize;i++)
+					kernel << (i == kernelSize / 2 ? 1 : 0);
+			}
+			
+			
+			QString convolveSource;
+			bool compareSideBySide = true;
+			
+			// convolution setup
+			{
+				convolveSource +=
+				"	highp vec4 color = vec4(0.0);\n"
+				"	vec4 sum = vec4(0.0);\n"
+				"	int i = 0;\n";
+			}
+			
+			if(compareSideBySide)
+			{
+				convolveSource +=
+				"	if(texPoint.s<0.495) {\n";
+			}
+			
+			// core of convolution
+			{
+				convolveSource += 
+				"	for( i=0; i<KERNEL_SIZE; i++ )\n"
+				"	{\n"
+				//"		vec4 tmp = texture2D(texRgb, texPoint + offset[i]);\n"
+				"		vec4 tmp = vec4(texture2D(texRgb, texPoint + offset[i]).bgr, 1.0);\n"
+				"		sum += tmp * kernel[i];\n"
+				"	}\n"
+				// clamp is necessary for some filters such as sharpening - doesnt hurt others
+				"	color = clamp(sum,0.0,1.0);\n";
+			}
+			
+			if(compareSideBySide)
+			{
+				convolveSource +=
+				"	} else if(texPoint.s>0.505) {\n"
+				"		color = vec4(texture2D(texRgb, texPoint).bgr, 1.0);\n"
+				"	} else {\n"
+				"		color = vec4(1.0, 0.0, 0.0, 1.0);\n" 
+				"	}\n";
+			}
+			
+			if(divisor == -1)
+			{
+				float sum = 0;
+				for(int i=0;i<kernelSize;i++)
+					sum += i < kernel.size() ? kernel[i] : 0;
+					
+				for(int i=0;i<kernelSize;i++)
+					m_convKernel[i] = i < kernel.size() ? kernel[i] / sum : 0;
+			}
+			else
+			{
+				for(int i=0;i<kernelSize;i++)
+					m_convKernel[i] = i < kernel.size() ? kernel[i] / divisor : 0;
+			
+			}
+			
+			// Passthru for no filter
+			//"    highp vec4 color = vec4(texture2D(texRgb, texPoint).bgr, 1.0);\n"
+			
+			prog = QString(prog).arg(uniformDefs).arg(convolveSource);
+			qDebug() << "GLVideoDrawable::resizeTextures(): prog:"<<prog;
+			
+
+			qDebug() << "GLVideoDrawable::resizeTextures(): "<<(QObject*)this<<"\t offsets:\n";
+			for(int i=0;i<kernelSize*2;i+=2)
+				qDebug() << "\t "<<m_convOffsets[i]<<" x "<<m_convOffsets[i+1];
+				
+			qDebug() << "GLVideoDrawable::resizeTextures(): "<<(QObject*)this<<"\t kernel:\n";
+			int inc = kernelSize == 9 ? 3 : 5;
+			for(int i=0;i<kernelSize;i+= inc)
+				if(kernelSize == 9)
+					qDebug() << "\t { " <<
+						m_convKernel[i+0] << ", " << 
+						m_convKernel[i+1] << ", " << 
+						m_convKernel[i+2] <<
+						" }";
+				else
+					qDebug() << "\t { " <<
+						m_convKernel[i+0] << ", " << 
+						m_convKernel[i+1] << ", " << 
+						m_convKernel[i+2] << ", " << 
+						m_convKernel[i+3] << ", " << 
+						m_convKernel[i+4] <<  
+						" }";
+			
+			QByteArray out;
+			out.append(prog);
+			return out;
+
+		}
 		break;
         case QVideoFrame::Format_ARGB32:
          	if(debugShaderName)
@@ -1321,7 +1619,11 @@ const char * GLVideoDrawable::resizeTextures(const QSize& frameSize, bool second
 		break;
 	}
 
-	return fragmentProgram;
+	//qDebug() << "GLVideoDrawable::resizeTextures(): "<<(QObject*)this<<"\t fragmentProgram output:\n"<<fragmentProgram<<"\n -- [end] -- \n"; 
+	QByteArray shader;
+	shader.append(fragmentProgram);
+	return shader;
+	//return fragmentProgram;
 }
 
 void GLVideoDrawable::viewportResized(const QSize& /*newSize*/)
@@ -2516,6 +2818,10 @@ void GLVideoDrawable::paintGL()
 				m_program->setUniformValue("whiteLevel", (GLfloat)m_whiteLevel);
 				m_program->setUniformValue("blackLevel", (GLfloat)m_blackLevel);
 				m_program->setUniformValue("gamma",      (GLfloat)m_gamma);
+				
+				m_program->setUniformValueArray("kernel", m_convKernel.constData(),  m_kernelSize, 1);
+    				m_program->setUniformValueArray("offset", m_convOffsets.constData(), m_kernelSize, 2);
+				
 				/// TODO
 				//m_program->setUniformValue("midLevel",   (GLfloat)midLevel);
 				 
@@ -3006,6 +3312,42 @@ void GLVideoDrawable::setGamma(double g)
 	updateGL();
 }
 
+void GLVideoDrawable::setConvFilterType(ConvFilterType convFilterType)
+{
+	m_convFilterType = convFilterType;
+	setVideoFormat(m_videoFormat);
+	updateGL();
+}
+ 
+void GLVideoDrawable::setSharpAmount(double value)
+{
+	m_sharpAmount = value;
+	setVideoFormat(m_videoFormat);
+	updateGL();
+}
+
+void GLVideoDrawable::setBlurAmount(double value)
+{
+	m_blurAmount = value;
+	setVideoFormat(m_videoFormat);
+	updateGL();
+}
+
+void GLVideoDrawable::setKernelSize(int size)
+{
+	m_kernelSize = size;
+	setVideoFormat(m_videoFormat);
+	updateGL();
+}
+
+void GLVideoDrawable::setCustomKernel(QVariantList list) 
+{
+	m_customKernel = list;
+	setVideoFormat(m_videoFormat);
+	updateGL();
+}
+
+	
 VideoDisplayOptionWidget::VideoDisplayOptionWidget(GLVideoDrawable *drawable, QWidget *parent)
 	: QWidget(parent)
 	, m_drawable(drawable)
