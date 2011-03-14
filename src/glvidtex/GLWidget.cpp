@@ -1174,7 +1174,7 @@ void GLWidget::paintGL()
 			{
 // 				glFlush();
 // 				glFinish();
-				glReadBuffer(GL_FRONT);
+				//glReadBuffer(GL_FRONT);
  				glBindTexture(GL_TEXTURE_2D, m_readbackTextureId);
  				glCopyTexSubImage2D(GL_TEXTURE_2D,
  					0, // level 
