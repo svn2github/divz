@@ -99,9 +99,9 @@ void GLImageDrawable::setImage(const QImage& image, bool insidePaint)
 // 	QPainter bgPainter(&bgImage);
 // 	bgPainter.fillRect(bgImage.rect(), bgTexture);
 // 	bgPainter.end();
-// 	bgImage = bgImage.convertToFormat(QImage::Format_RGB32);
-	
-//	localImage = bgImage;
+// 	//bgImage = bgImage.convertToFormat(QImage::Format_RGB32);
+// 	
+// 	localImage = bgImage;
 		
 	//qDebug() << "GLImageDrawable::setImage(): "<<(QObject*)this<<" mark5";
 

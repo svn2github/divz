@@ -348,9 +348,14 @@ private slots:
 	
 	void sendVidOpts();
 	
+	void setAdvancedFilter(QString);
+	
 private:
+	int indexOfFilter(int);
+	
 	QVBoxLayout *m_layout;
 	QPointer<DirectorSourceWidget> m_source;
+	QPointer<QWidget> m_sharpAmountWidget;
 	DirectorWindow *m_dir;
 	GLVideoDrawable *m_vid;
 	

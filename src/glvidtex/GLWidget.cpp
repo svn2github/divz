@@ -290,7 +290,7 @@ GLWidget::GLWidget(QWidget *parent, QGLWidget *shareWidget)
 	//, m_readbackSizeAuto(true)
 	, m_readbackFbo(0)
 	, m_firstPbo(false)
-	, m_backgroundColor(Qt::black) 
+	, m_backgroundColor(Qt::transparent) //Qt::black) 
 {
 
 	m_readbackSize = QSize(640,480);
@@ -626,9 +626,9 @@ void GLWidget::initShaders()
 	
 	Q_UNUSED(qt_glsl_xrgbShaderProgram);
 	Q_UNUSED(qt_glsl_argbShaderProgram);
-	Q_UNUSED(qt_glsl_xrgbLevelsShaderProgram);
-	Q_UNUSED(qt_glsl_argbLevelsShaderProgram);
-	Q_UNUSED(qt_glsl_rgbLevelsShaderProgram);
+// 	Q_UNUSED(qt_glsl_xrgbLevelsShaderProgram);
+// 	Q_UNUSED(qt_glsl_argbLevelsShaderProgram);
+// 	Q_UNUSED(qt_glsl_rgbLevelsShaderProgram);
 	Q_UNUSED(qt_glsl_yuvPlanarShaderProgram);
 	Q_UNUSED(qt_glsl_xyuvShaderProgram);
 	Q_UNUSED(qt_glsl_ayuvShaderProgram);

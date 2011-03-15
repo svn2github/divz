@@ -1820,6 +1820,10 @@ void PropertyEditorWindow::setSourceWidget(DirectorSourceWidget* source)
 			
 			GLVideoDrawable *gld = new GLVideoDrawable();
 			gld->setVideoSource(filter);
+			
+			gld->setFilterType(GLVideoDrawable::Filter_Sharp);
+			gld->setSharpAmount(1.25); // creates a nice relief/outline effect on the histogram
+			
 			vid->addDrawable(gld);
 			gld->setRect(vid->viewport());
 			
@@ -1845,10 +1849,10 @@ void PropertyEditorWindow::setSourceWidget(DirectorSourceWidget* source)
 			//form->addRow(tr("&Mid:"),   PropertyEditorFactory::generatePropertyEditor(item, "midLevel",   SLOT(setMidLevel(int)), opts));
 			form->addRow(tr("&White:"), PropertyEditorFactory::generatePropertyEditor(item, "whiteLevel", SLOT(setWhiteLevel(int)), opts));
 			
-			opts.min = 0.1;
-			opts.max = 3.0;
-			form->addRow(tr("&Gamma:"), PropertyEditorFactory::generatePropertyEditor(item, "gamma", SLOT(setGamma(double)), opts));
-			
+// 			opts.min = 0.1;
+// 			opts.max = 3.0;
+// 			form->addRow(tr("&Gamma:"), PropertyEditorFactory::generatePropertyEditor(item, "gamma", SLOT(setGamma(double)), opts));
+// 			
 			QPushButton *btn = new QPushButton("Apply to Player");
 			connect(btn, SIGNAL(clicked()), this, SLOT(sendVidOpts()));
 			form->addRow("",btn);
@@ -1866,6 +1870,38 @@ void PropertyEditorWindow::setSourceWidget(DirectorSourceWidget* source)
 			form->addRow(tr("&Contrast:"), 		PropertyEditorFactory::generatePropertyEditor(item, "contrast",   SLOT(setContrast(int)), opts));
 			form->addRow(tr("&Saturation:"), 	PropertyEditorFactory::generatePropertyEditor(item, "saturation", SLOT(setSaturation(int)), opts));
 			form->addRow(tr("&Hue:"), 		PropertyEditorFactory::generatePropertyEditor(item, "hue",        SLOT(setHue(int)), opts));
+			
+			QPushButton *btn = new QPushButton("Apply to Player");
+			connect(btn, SIGNAL(clicked()), this, SLOT(sendVidOpts()));
+			form->addRow("",btn);
+		}
+		
+		// Advanced Filters
+		{
+			NEW_SECTION("Advanced Filters");
+			
+			QComboBox *combo = new QComboBox();
+			QStringList filterNames = QStringList() 
+				<< "(None)"
+				<< "Sharp"
+				<< "Blur"
+				<< "Mean"
+				<< "Bloom"
+				<< "Emboss"
+				<< "Edge";
+			combo->addItems(filterNames);
+			connect(combo, SIGNAL(activated(QString)), this, SLOT(setAdvancedFilter(QString)));
+			form->addRow(tr("&Filter:"), combo);
+			
+			combo->setCurrentIndex(indexOfFilter((int)item->filterType()));
+			
+			opts.min = 0;
+			opts.max = 2;
+			opts.step = 1;//.25;
+			
+			m_sharpAmountWidget = PropertyEditorFactory::generatePropertyEditor(item, "sharpAmount", SLOT(setSharpAmount(double)), opts);
+			
+			form->addRow(tr("&Sharp Amount:"), m_sharpAmountWidget);
 			
 			QPushButton *btn = new QPushButton("Apply to Player");
 			connect(btn, SIGNAL(clicked()), this, SLOT(sendVidOpts()));
@@ -1962,6 +1998,56 @@ void PropertyEditorWindow::setSourceWidget(DirectorSourceWidget* source)
 	
 }
 
+void PropertyEditorWindow::setAdvancedFilter(QString name)
+{
+	if(m_sharpAmountWidget)
+		m_sharpAmountWidget->setEnabled(name == "Sharp");
+	/*	
+			QStringList filterNames = QStringList() 
+				<< "(None)"
+				<< "Sharp"
+				<< "Blur"
+				<< "Mean"
+				<< "Bloom"
+				<< "Emboss"
+				<< "Edge";
+	*/
+	
+	GLVideoDrawable::FilterType type = 
+		name == "(None)" ?	GLVideoDrawable::Filter_None :
+		name == "Sharp" ?	GLVideoDrawable::Filter_Sharp :
+		name == "Blur" ?	GLVideoDrawable::Filter_Blur :
+		name == "Mean" ?	GLVideoDrawable::Filter_Mean :
+		name == "Bloom" ?	GLVideoDrawable::Filter_Bloom :
+		name == "Emboss" ?	GLVideoDrawable::Filter_Emboss :
+		name == "Edge" ?	GLVideoDrawable::Filter_Edge :
+		GLVideoDrawable::Filter_None;
+	
+	m_vid->setFilterType(type);
+}
+
+int PropertyEditorWindow::indexOfFilter(int filter)
+{
+	GLVideoDrawable::FilterType type = (GLVideoDrawable::FilterType)filter;
+	if(type == GLVideoDrawable::Filter_None)
+		return 0;
+		
+	if(type == GLVideoDrawable::Filter_Sharp)
+		return 1;
+	if(type == GLVideoDrawable::Filter_Blur)
+		return 2;
+	if(type == GLVideoDrawable::Filter_Mean)
+		return 3;
+	if(type == GLVideoDrawable::Filter_Bloom)
+		return 4;
+	if(type == GLVideoDrawable::Filter_Emboss)
+		return 5;
+	if(type == GLVideoDrawable::Filter_Edge)
+		return 6;
+	
+	return 0;
+}	
+
 void PropertyEditorWindow::sendVidOpts()
 {
 	if(!m_dir->players() || !m_vid)
@@ -1983,8 +2069,8 @@ void PropertyEditorWindow::sendVidOpts()
 	QStringList props = QStringList() 
 		<< "whiteLevel"
 		<< "blackLevel"
-		<< "midLevel"
-		<< "gamma"
+// 		<< "midLevel"
+// 		<< "gamma"
 		<< "brightness"
 		<< "contrast" 
 		<< "hue"
@@ -1994,7 +2080,9 @@ void PropertyEditorWindow::sendVidOpts()
 		<< "cropTop"
 		<< "cropBottom"
 		<< "cropLeft"
-		<< "cropRight";
+		<< "cropRight"
+		<< "filterType"
+		<< "sharpAmount";
 		
 		
 		

@@ -101,7 +101,7 @@ QImage HistogramFilter::makeHistogram(const QImage& image)
 	//smallSize.scale(4,1,Qt::KeepAspectRatio);
 	//smallSize.scale(160,120,Qt::KeepAspectRatio);
 	
-	QImage origScaled = image.scaled(640,480).scaled(smallSize);
+	QImage origScaled = image;//.scaled(640,480).scaled(smallSize);
 	if(origScaled.format() != QImage::Format_RGB32)
 		origScaled = origScaled.convertToFormat(QImage::Format_RGB32);
 		

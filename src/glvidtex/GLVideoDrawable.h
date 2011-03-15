@@ -134,7 +134,7 @@ class GLVideoDrawable : public GLDrawable
 	Q_PROPERTY(bool videoSenderEnabled READ videoSenderEnabled WRITE setVideoSenderEnabled);
 	Q_PROPERTY(int videoSenderPort READ videoSenderPort WRITE setVideoSenderPort);
 	
-	Q_PROPERTY(ConvFilterType convFilterType READ convFilterType WRITE setConvFilterType);
+	Q_PROPERTY(FilterType filterType READ filterType WRITE setFilterType);
 	Q_PROPERTY(double sharpAmount READ sharpAmount WRITE setSharpAmount);
 	Q_PROPERTY(double blurAmount READ blurAmount WRITE setBlurAmount); 
 	Q_PROPERTY(int kernelSize READ kernelSize WRITE setKernelSize);
@@ -201,21 +201,21 @@ public:
 	double cropRight() { return cropBottomRight().x(); }
 	double cropBottom() { return cropBottomRight().y(); }
 	
-	typedef enum ConvFilterType {
-		ConvBlur,
-		ConvEmboss,
-		ConvBloom,
-		ConvMean,
-		ConvSharp,
-		ConvEdge,
-		ConvCustom
+	typedef enum FilterType {
+		Filter_None,
+		Filter_Blur,
+		Filter_Emboss,
+		Filter_Bloom,
+		Filter_Mean,
+		Filter_Sharp,
+		Filter_Edge,
+		Filter_CustomConvultionKernel
 	};
 	
-	Q_ENUMS(ConvFilterType);
+	Q_ENUMS(FilterType);
 	
 	QVariantList customKernel() { return m_customKernel; }
-	int convFilterTypeInt() { return (int)m_convFilterType; }
-	ConvFilterType convFilterType() { return m_convFilterType; }
+	FilterType filterType() { return m_filterType; }
 	double sharpAmount() { return m_sharpAmount; }
 	double blurAmount() { return m_blurAmount; } 
 	int kernelSize() { return m_kernelSize; }
@@ -277,8 +277,8 @@ public slots:
 	
 	void setCrossFadeMode(CrossFadeMode mode);
 	
-	void setConvFilterType(int type) { setConvFilterType((ConvFilterType)type); }
-	void setConvFilterType(ConvFilterType convFilterType); 
+	void setFilterType(int type) { setFilterType((FilterType)type); }
+	void setFilterType(FilterType filterType); 
 	void setSharpAmount(double value);
 	void setBlurAmount(double value);
 	void setKernelSize(int size);
@@ -525,7 +525,7 @@ private:
 	QVarLengthArray<GLfloat> m_convKernel;
 	int m_kernelSize;
 	
-	ConvFilterType m_convFilterType;
+	FilterType m_filterType;
 	double m_sharpAmount;
 	double m_blurAmount;
 	QVariantList m_customKernel;
