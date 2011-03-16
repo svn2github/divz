@@ -615,6 +615,22 @@ static const char *glwidget_glsl_rgbNoAlphaShaderProgram =
         //vec4(color.rgb, texture2D(texRgb, texPoint).a * alpha * texture2D(alphaMask, textureCoord.st).a);\n"
         "}\n";
 
+static const char *glwidget_glsl_rgbShaderProgram =
+        "uniform sampler2D texRgb;\n"
+        "uniform sampler2D alphaMask;\n"
+        "uniform mediump mat4 colorMatrix;\n"
+        "uniform mediump float alpha;\n"
+        "uniform mediump float texOffsetX;\n"
+        "uniform mediump float texOffsetY;\n"
+        "varying highp vec2 textureCoord;\n"
+        "void main(void)\n"
+        "{\n"
+        "    mediump vec2 texPoint = vec2(textureCoord.s + texOffsetX, textureCoord.t + texOffsetY);\n"
+        "    highp vec4 color = vec4(texture2D(texRgb, texPoint).rgb, 1.0);\n"
+        "    color = colorMatrix * color;\n"
+        "    gl_FragColor = vec4(color.rgb, texture2D(texRgb, texPoint).a * alpha * texture2D(alphaMask, textureCoord.st).a);\n"
+        "}\n";
+
 
 void GLWidget::initShaders()
 {
@@ -626,6 +642,7 @@ void GLWidget::initShaders()
 	
 	Q_UNUSED(qt_glsl_xrgbShaderProgram);
 	Q_UNUSED(qt_glsl_argbShaderProgram);
+	Q_UNUSED(qt_glsl_rgbShaderProgram);
 // 	Q_UNUSED(qt_glsl_xrgbLevelsShaderProgram);
 // 	Q_UNUSED(qt_glsl_argbLevelsShaderProgram);
 // 	Q_UNUSED(qt_glsl_rgbLevelsShaderProgram);
@@ -634,8 +651,8 @@ void GLWidget::initShaders()
 	Q_UNUSED(qt_glsl_ayuvShaderProgram);
 	Q_UNUSED(qt_glsl_uyvyShaderProgram);
 	Q_UNUSED(qt_glsl_yuyvShaderProgram);
-
-	const char *fragmentProgram = qt_glsl_rgbShaderProgram;
+	
+	const char *fragmentProgram = glwidget_glsl_rgbShaderProgram;
 	
 	if(!m_program->shaders().isEmpty())
 		m_program->removeAllShaders();
@@ -667,6 +684,7 @@ void GLWidget::initShaders()
 	else
 	if (!m_program->addShaderFromSourceCode(QGLShader::Fragment, fragmentProgram))
 	{
+		qDebug() << "GLWidget::initShaders: Fragment program used: \n"<<fragmentProgram; //glwidget_glsl_rgbShaderProgram;
 		qWarning("GLWidget::initShaders: Shader compile error %s", qPrintable(m_program->log()));
 		m_program->removeAllShaders();
 		return;

@@ -1160,7 +1160,11 @@ bool GLVideoDrawable::setVideoFormat(const VideoFormat& format, bool secondSourc
 			if(!program->shaders().isEmpty())
 				program->removeAllShaders();
 				
+			//qDebug() << "Fragment used:"<<fragmentProgram.constData();
+				
 			//qDebug() << "GLVideoDrawable::setVideoFormat: fragmentProgram:"<<fragmentProgram.constData();
+			// This seems to be needed for some reason!!! Grrr....(live camera in director window is black without this...)
+			(void*)fragmentProgram.constData();
 
 			if(!QGLShaderProgram::hasOpenGLShaderPrograms())
 			{
@@ -1265,11 +1269,11 @@ QByteArray GLVideoDrawable::resizeTextures(const QSize& frameSize, bool secondSo
 	m_yuv = false;
 	m_yuv2 = false;
 	
-	qDebug() << "GLVideoDrawable::resizeTextures(): "<<(QObject*)this<<"\t frame size:"<<frameSize;
+	//qDebug() << "GLVideoDrawable::resizeTextures(): "<<(QObject*)this<<"\t frame size:"<<frameSize;
 	
 	bool rgb = false;
 	
-	bool debugShaderName = true;
+	bool debugShaderName = false;
 	switch (m_videoFormat.pixelFormat)
 	{
 	/// RGB Formats
@@ -1361,6 +1365,10 @@ QByteArray GLVideoDrawable::resizeTextures(const QSize& frameSize, bool secondSo
 	//m_filterType = Filter_Sharp;
 	//m_levelsEnabled = false;
 	
+	QString pixelOrder = 
+		m_videoFormat.pixelFormat == QVideoFrame::Format_RGB24 || 
+		m_videoFormat.pixelFormat == QVideoFrame::Format_RGB565 ? "rgb" : "bgr"; 
+		
 	if(m_levelsEnabled || m_filterType != Filter_None)
 	{
 		
@@ -1381,7 +1389,7 @@ QByteArray GLVideoDrawable::resizeTextures(const QSize& frameSize, bool secondSo
 		QString fragSource;
 		
 		//m_filterType = ConvSharp;
-		
+			
 		if(m_filterType != Filter_None)
 		{
 			if(!rgb)
@@ -1395,39 +1403,12 @@ QByteArray GLVideoDrawable::resizeTextures(const QSize& frameSize, bool secondSo
 
 				int kernelSize = m_kernelSize;
 				
-				uniformDefs = QString(
-					"#define KERNEL_SIZE %1\n"
-					"uniform mediump float kernel[KERNEL_SIZE];\n"
-					"uniform highp vec2 offset[KERNEL_SIZE];\n"
-					).arg(m_kernelSize);
-				
-				float step_w = 1.0/frameSize.width();
-				float step_h = 1.0/frameSize.height();
-					
-				m_convOffsets.clear();
-				m_convOffsets.resize(kernelSize * 2);
-				m_convKernel.resize(kernelSize);
-				
-				int kernelWidth  = kernelSize ==  9 ? 3 :
-						   kernelSize == 25 ? 5 :
-						   (int)sqrt(kernelSize);
-				int kernelHeight = kernelSize ==  9 ? 3 :
-						   kernelSize == 25 ? 5 :
-						   (int)sqrt(kernelSize);
-				for(int y = 0; y < kernelHeight; ++y) 
-				{
-					for(int x = 0; x < kernelWidth; ++x) 
-					{
-						m_convOffsets[(y * kernelWidth + x) * 2]     = step_w * (x - (kernelWidth  / 2));
-						m_convOffsets[(y * kernelWidth + x) * 2 + 1] = step_h * (    (kernelHeight / 2) - y);
-					}
-				}
-				
 				QList<float> kernel;
 				float divisor = 1;
 					
 				if(m_filterType == Filter_Blur)
 				{
+					kernelSize = 25;
 					if(kernelSize == 9)
 					{
 						kernel << 1 << 2 << 1 <<
@@ -1444,14 +1425,14 @@ QByteArray GLVideoDrawable::resizeTextures(const QSize& frameSize, bool secondSo
 					}
 					else if(kernelSize == 25)
 					{
-						kernel << 1 <<  4 <<  6 <<  4 << 1 << 
-							4 << 16 << 24 << 16 << 4 << 
-							6 << 24 << 36 << 24 << 6 << 
-							4 << 16 << 24 << 16 << 4 << 
-							1 <<  4 <<  6 <<  4 << 1;
-						divisor = -1;
+// 						kernel << 1 <<  4 <<  6 <<  4 << 1 << 
+// 							4 << 16 << 24 << 16 << 4 << 
+// 							6 << 24 << 36 << 24 << 6 << 
+// 							4 << 16 << 24 << 16 << 4 << 
+// 							1 <<  4 <<  6 <<  4 << 1;
+// 						divisor = -1;
 	
-						m_blurAmount = 1;
+						//m_blurAmount = 1;
 						kernel << 1 << 0.1 << 1 << 0.1 << 1 << 
 							0.1 << 1 << 0.1 << 1 << 0.1 << 
 							1 << 0.1 << 1 << 0.1 << 1 << 
@@ -1547,48 +1528,35 @@ QByteArray GLVideoDrawable::resizeTextures(const QSize& frameSize, bool secondSo
 						kernel << (i == kernelSize / 2 ? 1 : 0);
 				}
 				
+				if(m_filterType != Filter_CustomConvultionKernel)
+					m_kernelSize = kernelSize;
 				
-				bool compareSideBySide = false;
+				uniformDefs = QString(
+					"#define KERNEL_SIZE %1\n"
+					"uniform mediump float kernel[KERNEL_SIZE];\n"
+					"uniform highp vec2 offset[KERNEL_SIZE];\n"
+					).arg(m_kernelSize);
+					
+				float step_w = 1.0/frameSize.width();
+				float step_h = 1.0/frameSize.height();
+					
+				m_convOffsets.clear();
+				m_convOffsets.resize(kernelSize * 2);
+				m_convKernel.resize(kernelSize);
 				
-				//convolution setup
+				int kernelWidth  = kernelSize ==  9 ? 3 :
+						   kernelSize == 25 ? 5 :
+						   (int)sqrt(kernelSize);
+				int kernelHeight = kernelSize ==  9 ? 3 :
+						   kernelSize == 25 ? 5 :
+						   (int)sqrt(kernelSize);
+				for(int y = 0; y < kernelHeight; ++y) 
 				{
-					convolveSource +=
-					"	highp vec4 color = vec4(0.0);\n"
-					"	vec4 sum = vec4(0.0);\n"
-					"	int i = 0;\n";
-				}
-				
-				if(compareSideBySide)
-				{
-					convolveSource +=
-					"	if(texPoint.s<0.495) {\n";
-				}
-				
-				QString pixelOrder = 
-					m_videoFormat.pixelFormat == QVideoFrame::Format_RGB24 || 
-					m_videoFormat.pixelFormat == QVideoFrame::Format_RGB565 ? "rgb" : "bgr"; 
-				
-				//core of convolution
-				{
-					convolveSource += 
-					"	for( i=0; i<KERNEL_SIZE; i++ )\n"
-					"	{\n"
-					//"		vec4 tmp = texture2D(texRgb, texPoint + offset[i]);\n"
-					"		vec4 tmp = vec4(texture2D(texRgb, texPoint + offset[i])."+pixelOrder+", 1.0);\n"
-					"		sum += tmp * kernel[i];\n"
-					"	}\n"
-					//clamp is necessary for some filters such as sharpening - doesnt hurt others
-					"	color = clamp(sum,0.0,1.0);\n";
-				}
-				
-				if(compareSideBySide)
-				{
-					convolveSource +=
-					"	} else if(texPoint.s>0.505) {\n"
-					"		color = vec4(texture2D(texRgb, texPoint)."+pixelOrder+", 1.0);\n"
-					"	} else {\n"
-					"		color = vec4(1.0, 0.0, 0.0, 1.0);\n" 
-					"	}\n";
+					for(int x = 0; x < kernelWidth; ++x) 
+					{
+						m_convOffsets[(y * kernelWidth + x) * 2]     = step_w * (x - (kernelWidth  / 2));
+						m_convOffsets[(y * kernelWidth + x) * 2 + 1] = step_h * (    (kernelHeight / 2) - y);
+					}
 				}
 				
 				if(divisor == -1)
@@ -1606,31 +1574,103 @@ QByteArray GLVideoDrawable::resizeTextures(const QSize& frameSize, bool secondSo
 						m_convKernel[i] = i < kernel.size() ? kernel[i] / divisor : 0;
 				
 				}
+				
+				bool compareSideBySide = false;
+				
+				//convolution setup
+				{
+					convolveSource +=
+					"	highp vec4 color = vec4(0.0);\n";
+					//"	vec4 sum = vec4(0.0);\n"
+					//"	int i = 0;\n";
+				}
+				
+				if(compareSideBySide)
+				{
+					convolveSource +=
+					"	if(texPoint.s<0.495) {\n";
+				}
+				
+				//core of convolution
+				{
+					// Try to be smarter than the GLSL compiler and unroll the loop for it
+// 					convolveSource += 
+// 					"	for( i=0; i<KERNEL_SIZE; i++ )\n"
+// 					"	{\n"
+// 					//"		vec4 tmp = texture2D(texRgb, texPoint + offset[i]);\n"
+// 					"		vec4 tmp = vec4(texture2D(texRgb, texPoint + offset[i])."+pixelOrder+", 1.0);\n"
+// 					"		sum += tmp * kernel[i];\n"
+// 					"	}\n"
+				
+					for(int i=0;i<kernelSize;i++)
+					{
+						//QString num = QString().sprintf("%f",i < m_convKernel.size() ? m_convKernel[i] : 1.0);
+						// Not hardcoding kernel value because we want to be able to adjust kernel values live without recompiling the shader
+						convolveSource +=
+							"	color += kernel["+QString::number(i)+"] * vec4(texture2D(texRgb, texPoint + offset["+QString::number(i)+"])."+pixelOrder+", 1.0);\n";
+							//"	color += "+num+" * vec4(texture2D(texRgb, texPoint + offset["+QString::number(i)+"])."+pixelOrder+", 1.0);\n";
+					}
+				}
+				
+				if(compareSideBySide)
+				{
+					convolveSource +=
+					"	} else if(texPoint.s>0.505) {\n"
+					"		color = vec4(texture2D(texRgb, texPoint)."+pixelOrder+", 1.0);\n"
+					"	} else {\n"
+					"		color = vec4(1.0, 0.0, 0.0, 1.0);\n" 
+					"	}\n";
+				}
 			}
 		}
+		else
+		{
+			convolveSource += 
+				"	highp vec4 color = vec4(texture2D(texRgb, texPoint)."+pixelOrder+", 1.0);\n";
+		}
 		
-		//convolveSource += "    color = colorMatrix * color;\n";
+		convolveSource += "	color = colorMatrix * color;\n";
+
 		
 		if(m_levelsEnabled
 			#ifdef RECOMPILE_SHADERS_TO_INCLUDE_LEVELS 
-			&&
-			(m_blackLevel > 0 ||
-			 m_whiteLevel < 255)
+			&& (m_blackLevel > 0 ||
+			    m_whiteLevel < 255)
 			#endif
-		)
+		  )
 		{
 			uniformDefs +=
-				"uniform highp float blackLevel;\n"
-				"uniform highp float whiteLevel;\n"  /// TODO add midLevel adjustments
-				"uniform highp float gamma;\n";
+				"uniform mediump float blackLevel;\n"
+				"uniform mediump float whiteLevel;\n";
+				//  /// TODO add midLevel adjustments
+				//"uniform highp float gamma;\n";
 
 			convolveSource += 
 				#ifndef RECOMPILE_SHADERS_TO_INCLUDE_LEVELS
-				"	if(whiteLevel > 0.0 || blackLevel > 0.0)\n"
+					// Since whiteLevel is really the delta between black and white, then inverted, it won't be less than 1.0.
+					// For example, the user says white is 220 and black is 18 - thats a delta of 202. 
+					// Invert that by doing 255/202 and white is 1.262376.
+					// blackLevel really is just black level normalized by 255.
+				"	if(whiteLevel > 1.0 || blackLevel > 0.0)\n"
 				#endif
-				"		color =  clamp((color - blackLevel) * whiteLevel, 0.0, 1.0);\n";
+				// This levels code is based on the example given in gpu gems, referenced at:
+				// http://http.developer.nvidia.com/GPUGems/gpugems_ch22.html.
+				// Original formula given:
+				// outPixel = (pow(((inPixel * 255.0) - inBlack) / (inWhite - inBlack), inGamma) * (outWhite - outBlack) + outBlack) / 255.0;
+				// Since we don't need the gamma correction, and we convert white/black to 0-1 instead of upconverting the color to 0-255,
+				// we can simplify things by doing vector subtraction/multilication much more easily in one statement.
+				// Additionally, I found that dividing by the delta of (white-black) caused *really wierd* problems when crossfading -
+				// it faded in all white at 0-.2ish opacity, then faded correctly near 1. - I never could figure out why!
+				// However, I noticed when multiplying by the inverted delta, the problem went away...wierd.
+				//"		color =  clamp((color - blackLevel) * whiteLevel, 0.0, 1.0);\n";
+				// Moved clamping lower - since we do it for a filter as well, why duplicate clamps?
+				"		color =  (color - blackLevel) * whiteLevel;\n";
 		}
 		
+		convolveSource +=
+			//clamp is necessary for some filters such as sharpening - doesnt hurt others
+			"	color = clamp(color,0.0,1.0);\n";
+			
 		//Passthru for no filter
 		//"    highp vec4 color = vec4(texture2D(texRgb, texPoint).bgr, 1.0);\n"
 		
@@ -1664,11 +1704,28 @@ QByteArray GLVideoDrawable::resizeTextures(const QSize& frameSize, bool secondSo
 		out.append(programSource);
 		return out;
 	}
-
-	//qDebug() << "GLVideoDrawable::resizeTextures(): "<<(QObject*)this<<"\t fragmentProgram output:\n"<<fragmentProgram<<"\n -- [end] -- \n"; 
-	QByteArray shader;
-	shader.append(fragmentProgram);
-	return shader;
+	else
+	{
+		QString programSource = QString(fragmentProgram);
+		
+		if(programSource.indexOf("%1") > -1)
+		{
+			programSource = QString(programSource)
+				.arg("")
+				.arg("highp vec4 color = vec4(texture2D(texRgb, texPoint)."+pixelOrder+", 1.0);\n");
+				
+			QByteArray out;
+			out.append(programSource);
+			return out;
+		}
+		else
+		{
+			//qDebug() << "GLVideoDrawable::resizeTextures(): "<<(QObject*)this<<"\t fragmentProgram output:\n"<<fragmentProgram<<"\n -- [end] -- \n"; 
+			QByteArray shader;
+			shader.append(fragmentProgram);
+			return shader;
+		}
+	}
 	//return fragmentProgram;
 }
 
@@ -3366,7 +3423,9 @@ void GLVideoDrawable::setLevelsEnabled(bool flag)
 
 void GLVideoDrawable::setBlackLevel(int x)
 {
+	#ifdef RECOMPILE_SHADERS_TO_INCLUDE_LEVELS
 	int old = m_blackLevel;
+	#endif
 	m_blackLevel = x;
 	// recompile shaders to include levels adjustments if m_levelsEnabled
 	#ifdef RECOMPILE_SHADERS_TO_INCLUDE_LEVELS
@@ -3379,7 +3438,9 @@ void GLVideoDrawable::setBlackLevel(int x)
 
 void GLVideoDrawable::setWhiteLevel(int x)
 {
+	#ifdef RECOMPILE_SHADERS_TO_INCLUDE_LEVELS
 	int old = m_whiteLevel;
+	#endif
 	m_whiteLevel = x;
 	// recompile shaders to include levels adjustments if m_levelsEnabled
 	#ifdef RECOMPILE_SHADERS_TO_INCLUDE_LEVELS
@@ -3404,6 +3465,9 @@ void GLVideoDrawable::setGamma(double g)
 
 void GLVideoDrawable::setFilterType(FilterType filterType)
 {
+	if(m_filterType == filterType)
+		return;
+		
 	m_filterType = filterType;
 	setVideoFormat(m_videoFormat);
 	updateGL();
@@ -3411,9 +3475,58 @@ void GLVideoDrawable::setFilterType(FilterType filterType)
  
 void GLVideoDrawable::setSharpAmount(double value)
 {
+	//qDebug() << "GLVideoDrawable::setSharpAmount: "<<value;
+	
 	m_sharpAmount = value;
-	setVideoFormat(m_videoFormat);
-	updateGL();
+	//setVideoFormat(m_videoFormat);
+	if(m_filterType == Filter_Sharp)
+	{
+		double sharpAmount = m_sharpAmount;
+		//sharpAmount = 1.25;
+		if(m_kernelSize == 9)
+		{
+			QList<float> kernel;
+			
+			if(sharpAmount <= 1.0)
+				kernel	<<  0
+					<< -1 * sharpAmount
+					<<  0
+					
+					<< -1 * sharpAmount
+					<< (1 * sharpAmount * 4 + 1)
+					<< -1 * sharpAmount
+					
+					<<  0
+					<< -1 * sharpAmount
+					<<  0;
+			else
+				kernel  << -1 * sharpAmount
+					<< -1 * sharpAmount
+					<< -1 * sharpAmount
+					
+					<< -1 * sharpAmount
+					<< (1 * sharpAmount * 8 + 1)
+					<< -1 * sharpAmount
+					
+					<< -1 * sharpAmount
+					<< -1 * sharpAmount
+					<< -1 * sharpAmount;
+			 
+			m_convKernel.resize(m_kernelSize);
+			for(int i=0;i<m_kernelSize;i++)
+				m_convKernel[i] = i < kernel.size() ? kernel[i] : 0;
+		}
+	}
+	
+	if(m_isCameraThread)
+	{
+		if(m_updateLeader == this)
+			updateGL(true);
+	}
+	else
+	{
+		updateGL();
+	}
 }
 
 void GLVideoDrawable::setBlurAmount(double value)

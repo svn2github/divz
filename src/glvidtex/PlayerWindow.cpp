@@ -798,7 +798,7 @@ void PlayerWindow::receivedMap(QVariantMap map)
 			if(!gld)
 			{
 				foreach(GLScene *scene, m_overlays->sceneList())
-					if(gld = scene->lookupDrawable(id))
+					if((gld = scene->lookupDrawable(id)) != NULL)
 						break;
 			}
 			
@@ -866,12 +866,14 @@ void PlayerWindow::receivedMap(QVariantMap map)
 								vid->setXFadeLength(m_xfadeSpeed);
 								
 							QVariant::Type propType = gld->metaObject()->property(gld->metaObject()->indexOfProperty(qPrintable(name))).type();
-							if(propType == QVariant::Int ||
-							   propType == QVariant::Double ||
-							   propType == QVariant::PointF ||
-							   propType == QVariant::Point ||
-							   propType == QVariant::RectF ||
-							   propType == QVariant::Rect)
+							if((propType == QVariant::Int ||
+							    propType == QVariant::Double ||
+							    propType == QVariant::PointF ||
+							    propType == QVariant::Point ||
+							    propType == QVariant::RectF ||
+							    propType == QVariant::Rect) 
+							    /*&&
+							    (name != "sharpAmount")*/)
 							{
 								QAbsoluteTimeAnimation *anim = new QAbsoluteTimeAnimation(gld, qPrintable(name));
 								anim->setEndValue(value);
@@ -1245,6 +1247,8 @@ bool PlayerWindow::setGroup(GLSceneGroup *group)
 		connect(m_group->playlist(), SIGNAL(currentItemChanged(GLScene*)), this, SLOT(setScene(GLScene*)));
 		m_group->playlist()->play();
 	}
+	
+	return true;
 }
 
 void PlayerWindow::displayScene(GLScene *scene)
@@ -1691,7 +1695,7 @@ void PlayerJsonServer::dispatch(QTcpSocket *socket, const QStringList &pathEleme
 			if(!gld)
 			{
 				foreach(GLScene *scene, m_win->overlays()->sceneList())
-					if(gld = scene->lookupDrawable(id))
+					if((gld = scene->lookupDrawable(id)) != NULL)
 						break;
 			}
 			

@@ -1900,6 +1900,7 @@ void PropertyEditorWindow::setSourceWidget(DirectorSourceWidget* source)
 			opts.step = 1;//.25;
 			
 			m_sharpAmountWidget = PropertyEditorFactory::generatePropertyEditor(item, "sharpAmount", SLOT(setSharpAmount(double)), opts);
+			m_sharpAmountWidget->setEnabled(item->filterType() == GLVideoDrawable::Filter_Sharp);
 			
 			form->addRow(tr("&Sharp Amount:"), m_sharpAmountWidget);
 			
