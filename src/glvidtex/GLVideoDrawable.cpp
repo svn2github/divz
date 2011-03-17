@@ -1061,6 +1061,8 @@ QVariant GLVideoDrawable::itemChange(GraphicsItemChange change, const QVariant &
 
 void GLVideoDrawable::initGL()
 {
+	GLDrawable::initGL();
+	
 	// Just to be safe, dont re-initalize this 'widgets' GL state if already passed thru here once.
 	if(m_glInited)
 		return;
@@ -1741,7 +1743,7 @@ void GLVideoDrawable::canvasResized(const QSizeF& /*newSize*/)
 	updateRects();
 }
 
-void GLVideoDrawable::drawableResized(const QSizeF& /*newSize*/)
+void GLVideoDrawable::drawableRectChanged(const QRectF& /*newRect*/)
 {
 	//qDebug() << "GLVideoDrawable::drawableResized()";
 	//updateAlignment();
@@ -2504,6 +2506,8 @@ void GLVideoDrawable::updateTexture(bool secondSource)
 
 void GLVideoDrawable::paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget)
 {
+	paintChildren(true, painter, option, widget); // paint children below
+	
 	m_unrenderedFrames --;
 	
 // 	painter->setPen(pen);
@@ -2548,7 +2552,8 @@ void GLVideoDrawable::paint(QPainter * painter, const QStyleOptionGraphicsItem *
 	painter->setRenderHint(QPainter::SmoothPixmapTransform, true);
 
 	double opac = opacity() * (m_fadeActive ? m_fadeValue:1);
-	//qDebug() << "GLVideoDrawable::paint(): "<<(QObject*)this<<" opac used:"<<opac<<", m_:"<<opacity()<<", fade act:"<<m_fadeActive<<", fade val:"<<m_fadeValue;
+	//qDebug() << "GLVideoDrawable::paint(): "<<(QObject*)this<<", target:"<<target; 
+	//<<" opac used:"<<opac<<", m_:"<<opacity()<<", fade act:"<<m_fadeActive<<", fade val:"<<m_fadeValue;
 	painter->setOpacity(opac);
 
 	if(!m_frame)
@@ -2671,7 +2676,10 @@ void GLVideoDrawable::paint(QPainter * painter, const QStyleOptionGraphicsItem *
 	m_frameCount ++;
 
 	painter->setOpacity(1.);
+	
 	GLDrawable::paint(painter, option, widget);
+	
+	paintChildren(false, painter, option, widget); // paint children above
 
 }
 
@@ -2705,6 +2713,8 @@ void GLVideoDrawable::updateAnimations(bool insidePaint)
 
 void GLVideoDrawable::paintGL()
 {
+	paintGLChildren(true); // paint children below 
+	
 	m_unrenderedFrames --;
 	
 	if(!m_validShader)
@@ -3397,6 +3407,8 @@ void GLVideoDrawable::paintGL()
 	}
 
 	m_frameCount ++;
+	
+	paintGLChildren(false); // paint children above
 
 // 	qDebug() << "GLVideoDrawable::paintGL(): "<<(QObject*)this<<" Mark - end";
 }

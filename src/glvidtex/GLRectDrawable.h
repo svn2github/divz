@@ -28,6 +28,8 @@ public slots:
 protected:
 	void renderImage();
 	
+	virtual void drawableResized(const QSizeF& newSize);
+	
 	// For compat with QGraphicsItem
 	virtual void paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget);
 	

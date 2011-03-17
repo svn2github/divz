@@ -66,6 +66,9 @@ GLDrawable::GLDrawable(QObject *parent)
 	, m_playlist(0)
 	, m_scene(0)
 	, m_updatesLocked(false)
+	, m_glInited(false)
+	, m_lockCalcCoverage(false)
+	, m_parent(0)
 {
 	// QGraphicsItem
 	{
@@ -287,6 +290,9 @@ void GLDrawable::setVisible(bool flag)
 	}
 
 	//qDebug() << "GLDrawable::setVisible(): "<<(QObject*)this<<": Flag:"<<flag<<" mark5";
+	
+	foreach(GLDrawable *child, m_children)
+		child->setVisible(flag);
 
 	m_lockVisibleSetter = false;
 
@@ -562,27 +568,58 @@ void GLDrawable::setRect(const QRectF& rect)
 	// Notify QGraphicsItem of upcoming change
 	prepareGeometryChange();
 
+	QRectF oldRect = m_rect;
+	
 	m_rect = rect;
 	if(m_rect.width()<0)
 		m_rect.setWidth(0);
 	if(m_rect.height()<0)
 		m_rect.setHeight(0);
- 	//qDebug() << "GLDrawable::setRect(): "<<this<<", pos:"<<rect.topLeft();
-	//qDebug() << "GLDrawable::setRect: "<<this<<rect;
-	//qDebug() << "GLDrawable::setRect: "<<rect;
-// 	qDebug() << "GLDrawable::setRect: size: "<<rect.size();
-
-	drawableResized(rect.size());
-	emit drawableResized(rect.size());
+ 	//qDebug() << "GLDrawable::setRect(): "<<(QObject*)this<<", pos:"<<rect.topLeft();
+	
+	if(rect.size() != oldRect.size())
+	{
+		drawableResized(rect.size());
+		emit drawableResized(rect.size());
+		emit sizeChanged(rect.size());
+	}
 // 	if(!m_inAlignment)
 // 		updateAlignment();
-	updateGL();
 	layoutChildren();
 
 	setPos(rect.topLeft());
+	
+	m_lockCalcCoverage = true;
+	QPointF delta = rect.topLeft() - oldRect.topLeft();
+	foreach(GLDrawable *child, m_children)
+	{
+		QRectF childRect = child->rect();
+		child->setRect(QRectF(childRect.topLeft() + delta, childRect.size()));
+	}
+	m_lockCalcCoverage = false;
+	
+	calcCoverageRect();
+	
+	updateGL();
+	
+	if(rect.topLeft() != oldRect.topLeft())
+	{
+		drawableMoved(rect.topLeft());
+		emit positionChanged(rect.topLeft());
+	}
+		
+	emit rectChanged(rect);
+	drawableRectChanged(rect);
+}
 
-	emit sizeChanged(rect.size());
-	emit positionChanged(rect.topLeft());
+void GLDrawable::drawableMoved(const QPointF& /*newPoint*/) 
+{
+	// NOOP
+}
+
+void GLDrawable::drawableRectChanged(const QRectF& /*rect*/)
+{
+	// NOOP
 }
 
 void GLDrawable::setZIndexModifier(double mod)
@@ -613,10 +650,14 @@ double GLDrawable::zIndexModifier()
 
 double GLDrawable::opacity()
 {
+	double opac = m_opacity;
+	if(m_parent)
+		opac *= m_parent->opacity();
+			
 	if(m_scene)
-		return m_opacity * m_scene->opacity();
+		return opac * m_scene->opacity();
 	else
-		return m_opacity;
+		return opac;
 }
 
 void GLDrawable::setZIndex(double z)
@@ -839,6 +880,9 @@ void GLDrawable::setGLWidget(GLWidget* w)
 		setRect(QRectF(QPointF(0,0),canvasSize()));
 
 	updateAlignment();
+	
+	foreach(GLDrawable *child, m_children)
+		child->setGLWidget(w);
 
 	if(m_animPendingGlWidget)
 	{
@@ -880,9 +924,50 @@ void GLDrawable::paintGL()
 	// NOOP
 }
 
+void GLDrawable::paintGLChildren(bool under)
+{
+	//qDebug() << "GLDrawable::paintGLChildren(): "<<(QObject*)this<<": under:"<<under<<", m_glw:"<<m_glw;
+	if(m_glw)
+	{
+		QRectF viewport = m_glw->viewport();
+		if(!viewport.isValid())
+		{
+			QSizeF canvas = m_glw->canvasSize();
+			if(canvas.isNull() || !canvas.isValid())
+				canvas = QSizeF(1000.,750.);
+			viewport = QRectF(QPointF(0.,0.),canvas);
+		}
+		
+		//qDebug() << "GLDrawable::paintGLChildren(): "<<(QObject*)this<<": viewport:"<<viewport;
+	
+		//int counter = 0;
+		foreach(GLDrawable *drawable, m_children)
+		{
+			//qDebug() << "GLWidget::paintGL(): ["<<counter++<<"] drawable->rect: "<<drawable->rect();
+	
+			//qDebug() << "GLDrawable::paintGLChildren(): "<<(QObject*)this<<": drawable:"<<((QObject*)drawable)<<", vp:"<<viewport<<", rect:"<<drawable->rect()<<", isvis:"<<drawable->isVisible()<<", opac:"<<drawable->opacity()<<", intersects:"<<drawable->rect().intersects(viewport)<<", z:"<<drawable->zIndex()<<", under:"<<under;
+			// Don't draw if not visible or if opacity == 0
+			if(drawable->isVisible() &&
+			   drawable->opacity() > 0 &&
+			   drawable->rect().intersects(viewport) &&
+			   (under ? drawable->zIndex() < 0 : drawable->zIndex() >= 0))
+			{
+				//qDebug() << "GLDrawable::paintGLChildren(): "<<(QObject*)this<<":  painting drawable:"<<((QObject*)drawable);
+				drawable->paintGL();
+			}
+	// 		qDebug() << "GLWidget::paintGL(): drawable:"<<((void*)drawable)<<", draw done";
+		}
+	}
+
+}
+
+
 void GLDrawable::initGL()
 {
-	// NOOP
+	m_glInited = true;
+	
+	foreach(GLDrawable *child, m_children)
+		child->initGL();
 }
 
 void GLDrawable::paint(QPainter * painter, const QStyleOptionGraphicsItem * /*option*/, QWidget * /*widget*/)
@@ -899,6 +984,28 @@ void GLDrawable::paint(QPainter * painter, const QStyleOptionGraphicsItem * /*op
 		painter->drawRect(QRectF(boundingRect()).adjusted(-0.5, -0.5, +0.5, +0.5));
 	}
 }
+
+void GLDrawable::paintChildren(bool under, QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget)
+{
+	foreach(GLDrawable *drawable, m_children)
+	{
+		//qDebug() << "GLWidget::paintGL(): ["<<counter++<<"] drawable->rect: "<<drawable->rect();
+
+		//qDebug() << "GLWidget::paintGL(): drawable:"<<((QObject*)drawable)<<", vp:"<<viewport<<", rect:"<<drawable->rect()<<", isvis:"<<drawable->isVisible()<<", opac:"<<drawable->opacity()<<", intersects:"<<drawable->rect().intersects(viewport)<<", z:"<<drawable->zIndex();
+		// Don't draw if not visible or if opacity == 0
+		if(drawable->isVisible() &&
+			drawable->opacity() > 0 &&
+			(under ? drawable->zIndex() < 0 : drawable->zIndex() >= 0))
+		{
+			//qDebug() << "GLWidget::paintGL(): drawable:"<<((QObject*)drawable);
+			drawable->paint(painter, option, widget);
+		}
+// 		qDebug() << "GLWidget::paintGL(): drawable:"<<((void*)drawable)<<", draw done";
+	}
+	
+}
+
+
 
 
 QByteArray GLDrawable::AnimParam::toByteArray()
@@ -1319,6 +1426,86 @@ void GLDrawable::layoutChildren()
 	// layout corners
 	foreach (CornerItem * corner, m_cornerItems)
 		corner->relayout(boundingRect().toRect()); //m_contentsRect);
+}
+
+/// Children are affected by the following parent attributes:
+/// - Opacity (queried by child)
+/// - Position (rect() is always absolute coordinates, not relative to parent - parent will adjust childs rect automatically)
+/// - ZIndex - Relative to parent. Negative ZIndex draws BELOW parent, positive draws above parent
+/// - Fade In/Out length - Video drawable children query parent for crossfade length
+/// - Visibility (setting parent visible will not draw children - since the parent what calls the paint routines anyway!)
+void GLDrawable::addChild(GLDrawable *item)
+{
+	if(m_children.contains(item))
+	{
+		qDebug() << "GLDrawable::addChild: "<<(QObject*)item<<" already present in children list, not re-adding.";
+		return;
+	}
+
+	item->setGLWidget(m_glw);
+	item->setParent(this);
+	m_children << item;
+	connect(item, SIGNAL(zIndexChanged(double)), this, SLOT(childZIndexChanged()));
+	connect(item, SIGNAL(rectChanged(QRectF)), this, SLOT(childRectChanged()));
+	if(m_glInited)
+	{
+		//qDebug() << "GLWidget::addDrawable()";
+		item->initGL();
+	}
+	
+	//qDebug() << "GLDrawable::addChild(): "<<(QObject*)this<<": Added child: "<<(QObject*)item;
+	sortChildren();
+	calcCoverageRect();
+	updateGL();
+}
+
+void GLDrawable::removeChild(GLDrawable *item)
+{
+// 	qDebug() << "GLWidget::removeDrawable(): drawable:"<<((void*)item);
+	m_children.removeAll(item);
+	item->setGLWidget(0);
+	item->setParent(0);
+	disconnect(item, 0, this, 0);
+	// sort not needed since order implicitly stays the same
+	calcCoverageRect();
+	updateGL();
+}
+
+void GLDrawable::childZIndexChanged()
+{
+	sortChildren();
+}
+
+bool GLDrawable_drawable_zIndex_compare(GLDrawable *a, GLDrawable *b)
+{
+	return (a && b) ? a->zIndex() < b->zIndex() : true;
+}
+
+
+void GLDrawable::sortChildren()
+{
+	qSort(m_children.begin(), m_children.end(), GLDrawable_drawable_zIndex_compare);
+}
+
+void GLDrawable::childRectChanged()
+{
+	calcCoverageRect();
+}
+
+void GLDrawable::calcCoverageRect()
+{
+	if(m_lockCalcCoverage)
+		return;
+	
+	QRectF coverage = rect();
+	foreach(GLDrawable *child, m_children)
+		coverage |= child->rect();
+	m_coverageRect = coverage;
+}
+
+void GLDrawable::setParent(GLDrawable *parent)
+{
+	m_parent = parent;
 }
 
 // void GLDrawable::setSelected(bool flag)

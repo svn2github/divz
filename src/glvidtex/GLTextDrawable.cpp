@@ -3,6 +3,8 @@
 #include "EntityList.h"
 #include "GLWidget.h"
 
+#include "GLRectDrawable.h"
+
 #define DEFAULT_CLOCK_FORMAT "yyyy-MM-dd h:mm:ss ap"
 
 GLTextDrawable::GLTextDrawable(QString text, QObject *parent)
@@ -63,6 +65,13 @@ GLTextDrawable::GLTextDrawable(QString text, QObject *parent)
 	//setIsScroller(true);
 	//setRssUrl(QUrl()); //"http://www.mypleasanthillchurch.org/phc/boards/rss"));
 	QTimer::singleShot(100,this,SLOT(testXfade()));
+	
+// 	GLRectDrawable *child = new GLRectDrawable();
+// 	child->setBorderColor(Qt::white);
+// 	child->setFillColor(Qt::red);
+// 	child->setRect(QRectF(rect().topLeft() - QPointF(-50, 50),QSizeF(400,200)));
+// 	child->setZIndex(-1);
+// 	addChild(child);
 
 }
 GLTextDrawable::~GLTextDrawable()

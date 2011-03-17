@@ -37,8 +37,14 @@ void GLRectDrawable::setCornerRounding(double d)
 	renderImage();
 }
 
+void GLRectDrawable::drawableResized(const QSizeF& /*newSize*/)
+{
+	renderImage();
+}
+
 void GLRectDrawable::renderImage()
 {
+	//qDebug() << "GLRectDrawable::renderImage(): "<<(QObject*)this<<": rect:"<<rect();
 	QImage image(rect().size().toSize(),QImage::Format_ARGB32);
 	memset(image.scanLine(0),0,image.byteCount());
 	QPainter painter(&image);
@@ -69,6 +75,8 @@ void GLRectDrawable::paint(QPainter * painter, const QStyleOptionGraphicsItem * 
 	if(!painter->isActive())
 		return;
 		
+	paintChildren(true, painter, 0,0);
+		
 	painter->setOpacity(opacity());
 	
 	QRectF target = QRectF(QPointF(0,0),rect().size());
@@ -85,5 +93,7 @@ void GLRectDrawable::paint(QPainter * painter, const QStyleOptionGraphicsItem * 
 	{
 		painter->fillRect(target, m_fillColor);
 	}
+	
+	paintChildren(false, painter, 0,0);
 }
 

@@ -305,7 +305,7 @@ protected:
 	
 	virtual void viewportResized(const QSize& newSize);
 	virtual void canvasResized(const QSizeF& newSize);
-	virtual void drawableResized(const QSizeF& newSize);
+	virtual void drawableRectChanged(const QRectF& newRect);
 	
 	void initGL();
 

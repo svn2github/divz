@@ -200,6 +200,13 @@ public:
 	
 	bool updatesLocked() { return m_updatesLocked; }
 	
+	QList<GLDrawable*> children() { return m_children; }
+	
+	QRectF coverageRect() { return m_coverageRect; }
+	
+	GLDrawable *parent() { return m_parent; }
+	
+	
 public slots:
 	bool lockUpdates(bool flag);
 	void updateGL(bool now=false);
@@ -249,6 +256,10 @@ public slots:
 	void setFadeInLength(int);
 	void setFadeOutLength(int);
 	
+	void addChild(GLDrawable*);
+	void removeChild(GLDrawable*);
+	
+	
 signals:
 	void sizeChanged(const QSizeF&);
 	void positionChanged(const QPointF&);
@@ -262,6 +273,9 @@ signals:
 	
 	// emitted right before the name is changed
 	void itemNameChanging(const QString& name);
+	
+	void childAdded(GLDrawable*);
+	void chilRemoved(GLDrawable*);
 
 protected slots:
 	friend class GLEditorGraphicsScene;
@@ -274,6 +288,11 @@ protected slots:
 	void propAnimFinished();
 	
 	void editingModeChanged(bool flag);
+	
+	void childZIndexChanged();
+	void sortChildren();
+	void childRectChanged();
+	void calcCoverageRect();
 
 protected:
 	void updateAnimValues();
@@ -286,9 +305,14 @@ protected:
 	virtual void viewportResized(const QSize& newSize);
 	virtual void canvasResized(const QSizeF& newSize);
 	virtual void drawableResized(const QSizeF& newSize);
+	virtual void drawableMoved(const QPointF& newPoint);
+	virtual void drawableRectChanged(const QRectF&);
 
 	virtual void paintGL();
 	virtual void initGL();
+	
+	virtual void paintGLChildren(bool under = false);
+	virtual void paintChildren(bool under, QPainter *painter, const QStyleOptionGraphicsItem * option, QWidget * widget);
 	
 	// For compat with QGraphicsItem
 	virtual void paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget);
@@ -322,6 +346,8 @@ protected:
 	bool                m_controlsVisible;
 	
 	QList<QAbsoluteTimeAnimationPtr> m_absoluteTimeAnimations;
+	
+	void setParent(GLDrawable*);
 
 private:
 	QAbsoluteTimeAnimation* setupRectAnimation(const QRectF& other, bool animateIn);
@@ -385,6 +411,14 @@ private:
 	GLScene *m_scene;
 	
 	bool m_updatesLocked;
+	
+	QList<GLDrawable*> m_children;
+	bool m_glInited;
+	
+	QRectF m_coverageRect;
+	bool m_lockCalcCoverage;
+	
+	GLDrawable *m_parent;
 };
 
 bool operator==(const GLDrawable::AnimParam&a, const GLDrawable::AnimParam&b);
@@ -539,6 +573,7 @@ private:
 	int m_currentItemIndex;
 	
 	QString m_durationProperty;
+	
 
 };
 
