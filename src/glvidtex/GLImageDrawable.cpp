@@ -28,6 +28,7 @@ GLImageDrawable::GLImageDrawable(QString file, QObject *parent)
 	, m_shadowOffset(3.0,3.0) 
 	, m_shadowColor(Qt::black)
 	, m_shadowOpacity(1.0)
+	, m_shadowDrawable(0)
 {
 	setImage(QImage("dot.gif"));
 	setCrossFadeMode(GLVideoDrawable::FrontAndBack);
@@ -35,9 +36,13 @@ GLImageDrawable::GLImageDrawable(QString file, QObject *parent)
 	if(!file.isEmpty())
 		setImageFile(file);
 
-	connect(&m_dirtyBatchTimer, SIGNAL(timeout()), this, SLOT(reapplyBorderAndShadow()));
-	m_dirtyBatchTimer.setSingleShot(true);
-	m_dirtyBatchTimer.setInterval(50);
+	connect(&m_shadowDirtyBatchTimer, SIGNAL(timeout()), this, SLOT(updateShadow()));
+	m_shadowDirtyBatchTimer.setSingleShot(true);
+	m_shadowDirtyBatchTimer.setInterval(50);
+	
+	connect(&m_borderDirtyBatchTimer, SIGNAL(timeout()), this, SLOT(reapplyBorder()));
+	m_borderDirtyBatchTimer.setSingleShot(true);
+	m_borderDirtyBatchTimer.setInterval(50);
 }
 
 GLImageDrawable::~GLImageDrawable()
@@ -90,7 +95,7 @@ void GLImageDrawable::setImage(const QImage& image, bool insidePaint)
 
 	QImage localImage;
 	if(m_shadowEnabled || m_borderWidth > 0.001)
-		localImage = applyBorderAndShadow(image);
+		localImage = applyBorder(image);
 	else
 		localImage = image;
 		
@@ -166,6 +171,9 @@ void GLImageDrawable::setImage(const QImage& image, bool insidePaint)
 		if(!liveStatus())
 			m_needUpdate = true;
 	}
+
+	updateShadow();
+		
 
 	//qDebug() << "GLImageDrawable::setImage(): "<<(QObject*)this<<" Set image size:"<<m_frame->image().size();
 
@@ -510,80 +518,101 @@ void GLImageDrawable::setBorderColor(const QColor& value)
 {
 	m_borderColor = value;
 	borderSettingsChanged();
-	shadowOrBorderDirty();
+	borderDirty();
 }
 
 void GLImageDrawable::setBorderWidth(double value)
 {
 	m_borderWidth = value;
 	borderSettingsChanged();
-	shadowOrBorderDirty();
+	borderDirty();
 }
 
 void GLImageDrawable::setShadowEnabled(bool value)
 {
 	m_shadowEnabled = value;
-	shadowOrBorderDirty();
+	if(value && !m_shadowDrawable)
+	{
+		m_shadowDrawable = new GLImageDrawable();
+		m_shadowDrawable->setRect(rect());
+		m_shadowDrawable->setZIndex(-1);
+// 		m_shadowDrawable->setBorderWidth(3);
+// 		m_shadowDrawable->setBorderColor(Qt::yellow);
+		m_shadowDrawable->setObjectName("Shadow");
+		m_shadowDrawable->setAspectRatioMode(Qt::IgnoreAspectRatio);
+		addChild(m_shadowDrawable);
+		
+		setShadowOffset(m_shadowOffset);
+		//setShadowOpacity(m_shadowOpacity);
+		shadowDirty();
+	}
+	else
+	if(!value && m_shadowDrawable)
+	{
+		removeChild(m_shadowDrawable);
+		m_shadowDrawable->deleteLater();
+		m_shadowDrawable = 0;
+	}
 }
 
 void GLImageDrawable::setShadowBlurRadius(double value)
 {
 	m_shadowBlurRadius = value;
-	shadowOrBorderDirty();
+	shadowDirty();
 }
 
 void GLImageDrawable::setShadowOffset(const QPointF& value)
 {
 	m_shadowOffset = value;
-	shadowOrBorderDirty();
+// 	if(m_shadowDrawable)
+// 		m_shadowDrawable->setRect(QRectF(rect().topLeft() + value, m_shadowDrawable->rect().size()));
+// 
+// 	updateGL();
+	shadowDirty();
 }
 
 void GLImageDrawable::setShadowColor(const QColor& value)
 {
 	m_shadowColor = value;
-	shadowOrBorderDirty();
+	shadowDirty();
 }
 
 void GLImageDrawable::setShadowOpacity(double value)
 {
 	m_shadowOpacity = value;
-	shadowOrBorderDirty();
+	shadowDirty();
 }
 
-void GLImageDrawable::shadowOrBorderDirty()
+void GLImageDrawable::shadowDirty()
 {
-	if(m_dirtyBatchTimer.isActive())
-		m_dirtyBatchTimer.stop();
-		
-	m_dirtyBatchTimer.start();
+// 	if(m_shadowDirtyBatchTimer.isActive())
+// 		m_shadowDirtyBatchTimer.stop();
+// 		
+// 	m_shadowDirtyBatchTimer.start();
+	updateShadow();
 }
 
-void GLImageDrawable::reapplyBorderAndShadow()
+void GLImageDrawable::borderDirty()
+{
+	if(m_borderDirtyBatchTimer.isActive())
+		m_borderDirtyBatchTimer.stop();
+		
+	m_borderDirtyBatchTimer.start();
+}
+
+void GLImageDrawable::reapplyBorder()
 {
 	setImage(m_image);
 }
 
-QImage GLImageDrawable::applyBorderAndShadow(const QImage& sourceImg)
+void GLImageDrawable::updateShadow()
 {
-	if(!m_shadowEnabled && (!renderBorder() || m_borderWidth < 0.001))
-		return sourceImg;
+	if(!m_shadowDrawable)
+		return;
 		
+	QImage sourceImg = m_imageWithBorder.isNull() ? m_image : m_imageWithBorder;
+	
 	QSizeF originalSizeWithBorder = sourceImg.size();
-	if(renderBorder() && m_borderWidth > 0.001)
-	{
-		double x = m_borderWidth * 2;
-		originalSizeWithBorder.rwidth()  += x;
-		originalSizeWithBorder.rheight() += x;
-		
-		if(!m_shadowEnabled)
-		{
-			QImage cache(originalSizeWithBorder.toSize(),QImage::Format_ARGB32_Premultiplied);
-			memset(cache.scanLine(0),0,cache.byteCount());
-			QPainter p(&cache);
-			drawImageWithBorder(&p,sourceImg);
-			return cache;
-		}
-	}
 	
 	QPointF scale = m_glw ? QPointF(m_glw->transform().m11(), m_glw->transform().m22()) : QPointF(1.,1.);
 	
@@ -595,15 +624,15 @@ QImage GLImageDrawable::applyBorderAndShadow(const QImage& sourceImg)
 	// create temporary pixmap to hold a copy of the text
 	double radiusSpacing = radius;// / 1.75;// * 1.5;
 	double radius2 = radius * 2;
-	double offx = fabs(m_shadowOffset.x());
-	double offy = fabs(m_shadowOffset.y());
+// 	double offx = 0; //fabs(m_shadowOffset.x());
+// 	double offy = 0; //fabs(m_shadowOffset.y());
 	double newWidth  = originalSizeWithBorder.width() 
-			 + radius2 * scale.x()// blur on both sides
-			 + offx * scale.x();
+			 + radius2 * scale.x();// blur on both sides
+			 //+ offx * scale.x();
 	
 	double newHeight = originalSizeWithBorder.height() 
-			 + radius2 * scale.y()// blur on both sides
-			 + offy * scale.y();
+			 + radius2 * scale.y();// blur on both sides
+			 //+ offy * scale.y();
 			
 	QSizeF blurSize(newWidth,newHeight);
 // 	blurSize.rwidth()  *= scale.x();
@@ -618,43 +647,37 @@ QImage GLImageDrawable::applyBorderAndShadow(const QImage& sourceImg)
 	//tmpPainter.scale(scale.x(),scale.y());
 	
 	tmpPainter.save();
-	QPointF translate1(radiusSpacing + (m_shadowOffset.x() > 0 ? m_shadowOffset.x() : 0), 
-			   radiusSpacing + (m_shadowOffset.y() > 0 ? m_shadowOffset.y() : 0));
+	QPointF translate1(radiusSpacing, 
+			   radiusSpacing);
 	translate1.rx() *= scale.x();
 	translate1.ry() *= scale.y();
-	//qDebug() << "stage1: radiusSpacing:"<<radiusSpacing<<", m_shadowOffset:"<<m_shadowOffset<<", translate1:"<<translate1; 
+	//qDebug() << "stage1: radiusSpacing:"<<radiusSpacing<<", m_shadowOffset:"<<m_shadowOffset<<", translate1:"<<translate1;
+	//qDebug() << "GLImageDrawable::updateShadow(): translate1:"<<translate1<<", scale:"<<scale; 
 	
 	tmpPainter.translate(translate1);
-	
-	if(renderBorder() && m_borderWidth > 0.001)
-		drawImageWithBorder(&tmpPainter, sourceImg);
-	else
-	{
-		//tmpPainter.scale(1,1);
-		tmpPainter.drawImage(0,0,sourceImg);
-	}
+	tmpPainter.drawImage(0,0,sourceImg);
 	
 	tmpPainter.restore();
 	
 	// color the orignal image by applying a color to the copy using a QPainter::CompositionMode_DestinationIn operation. 
 	// This produces a homogeneously-colored pixmap.
-	QRect rect = tmpImage.rect();
+	QRect imgRect = tmpImage.rect();
 	tmpPainter.setCompositionMode(QPainter::CompositionMode_SourceIn);
 	
 	QColor color = m_shadowColor;
 	// clamp m_shadowOpacity to 1.0 because we handle values >1.0 by repainting the blurred image over itself (m_shadowOpacity-1) times.
 	color.setAlpha((int)(255.0 * (m_shadowOpacity > 1.0 ? 1.0 : m_shadowOpacity)));
-	tmpPainter.fillRect(rect, color);
+	tmpPainter.fillRect(imgRect, color);
 	
 	tmpPainter.end();
 
 	// blur the colored text
 	ImageFilters::blurImage(tmpImage, (int)(radius * scale.x()));
 	
-	QPainter painter2(&tmpImage);
-	
 	if(m_shadowOpacity > 1.0)
 	{
+		QPainter painter2(&tmpImage);
+	
 		int times = (int)(m_shadowOpacity - 1.0);
 		// Cap at 10 - an arbitrary cap just to prevent the user from taxing the CPU too much.
 		if(times > 10)
@@ -674,32 +697,44 @@ QImage GLImageDrawable::applyBorderAndShadow(const QImage& sourceImg)
 		painter2.setOpacity(1.0);
 	}
 	
-	painter2.save();
-	QPointF translate2(radiusSpacing + (m_shadowOffset.x() < 0 ? m_shadowOffset.x() * -1 : 0), 
-			   radiusSpacing + (m_shadowOffset.y() < 0 ? m_shadowOffset.y() * -1 : 0));
-	translate2.rx() *= scale.x();
-	translate2.ry() *= scale.y();
-	//qDebug() << "stage12 radiusSpacing:"<<radiusSpacing<<", m_shadowOffset:"<<m_shadowOffset<<", translate2:"<<translate2;
-	painter2.translate(translate2);
+	// Notice: Older versions of this shadow code drew the sourceImg back on top of the shadow -
+	// Since we are drawaing the drop shadow as a separate texture below the real image in the 
+	// m_shadowDrawable, we are not going to draw the sourceImg on top now.
 	
-	//qDebug() << "stage13: sourceImg.size():"<<sourceImg.size();
+	QPointF point = rect().topLeft() + m_shadowOffset - QPointF(radiusSpacing,radiusSpacing);
+	//qDebug() << "GLImageDrawable::updateShadow(): shadow location:"<<point<<", size:"<<tmpImage.size()<<", rect().topLeft():"<<rect().topLeft()<<", m_shadowOffset:"<<m_shadowOffset<<", radiusSpacing:"<<radiusSpacing;
+	m_shadowDrawable->setRect(QRectF(point, tmpImage.size()));
 	
-	// Render the original image (with or without the border) on top of the blurred copy
-	if(renderBorder() && m_borderWidth > 0.001)
-		drawImageWithBorder(&painter2,sourceImg);
-	else
-		painter2.drawImage(0,0,sourceImg);
-	
-	painter2.restore();
-	
-	return tmpImage;
+	m_shadowDrawable->setImage(tmpImage);
+	//updateGL();
 }
 
-void GLImageDrawable::drawImageWithBorder(QPainter *p, const QImage &sourceImg)
+QImage GLImageDrawable::applyBorder(const QImage& sourceImg)
 {
-	Q_ASSERT(p);
-	int bw = (int)(m_borderWidth / 2);
-	p->drawImage(bw,bw,sourceImg); //drawImage(bw,bw,sourceImg);
-	p->setPen(QPen(m_borderColor,m_borderWidth));
-	p->drawRect(sourceImg.rect().adjusted(bw,bw,bw,bw)); //QRectF(sourceImg.rect()).adjusted(-bw,-bw,bw,bw));
+	if(renderBorder() && 
+	   m_borderWidth > 0.001)
+	{
+		QSizeF originalSizeWithBorder = sourceImg.size();
+
+		double x = m_borderWidth * 2;
+		originalSizeWithBorder.rwidth()  += x;
+		originalSizeWithBorder.rheight() += x;
+		
+		QImage cache(originalSizeWithBorder.toSize(),QImage::Format_ARGB32_Premultiplied);
+		memset(cache.scanLine(0),0,cache.byteCount());
+		QPainter p(&cache);
+		
+		int bw = (int)(m_borderWidth / 2);
+		p.drawImage(bw,bw,sourceImg); //drawImage(bw,bw,sourceImg);
+		p.setPen(QPen(m_borderColor,m_borderWidth));
+		p.drawRect(sourceImg.rect().adjusted(bw,bw,bw,bw)); //QRectF(sourceImg.rect()).adjusted(-bw,-bw,bw,bw));
+		
+		m_imageWithBorder = cache;
+		return cache;
+	}
+	
+	if(!m_imageWithBorder.isNull())
+		m_imageWithBorder = QImage();
+	
+	return sourceImg;
 }

@@ -2562,7 +2562,7 @@ void GLVideoDrawable::paint(QPainter * painter, const QStyleOptionGraphicsItem *
 	if(!m_frame->image().isNull())
 	{
 		painter->drawImage(target,m_frame->image(),source);
- 		//qDebug() << "GLVideoDrawable::paint(): "<<(QObject*)this<<" Painted m_frame, size:" << m_frame->image().size()<<", source:"<<source<<", target:"<<target<<", m_targetRect:"<<m_targetRect;
+ 		//qDebug() << "GLVideoDrawable::paint(): "<<(QObject*)this<<" Painted m_frame, size:" << m_frame->image().size()<<", source:"<<source<<", target:"<<target<<", m_targetRect:"<<m_targetRect<<", rect:"<<rect()<<", pos:"<<pos();
 	}
 	else
 	{

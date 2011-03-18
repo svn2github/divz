@@ -235,6 +235,9 @@ void GLDrawable::updateGL(bool now)
 		m_glw->updateGL(now);
 	if(scene())
 		update(); // compat with QGraphicsItem
+	else
+	if(parent() && parent()->scene())
+		parent()->update();
 }
 
 void GLDrawable::show()
@@ -998,7 +1001,11 @@ void GLDrawable::paintChildren(bool under, QPainter * painter, const QStyleOptio
 			(under ? drawable->zIndex() < 0 : drawable->zIndex() >= 0))
 		{
 			//qDebug() << "GLWidget::paintGL(): drawable:"<<((QObject*)drawable);
+			painter->save();
+			painter->translate(drawable->pos() - pos());
 			drawable->paint(painter, option, widget);
+			//painter->translate(drawable->pos() - pos());
+			painter->restore();
 		}
 // 		qDebug() << "GLWidget::paintGL(): drawable:"<<((void*)drawable)<<", draw done";
 	}

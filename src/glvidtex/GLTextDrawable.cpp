@@ -719,8 +719,8 @@ void GLTextDrawable::setText(const QString& text)
 		  !m_cachedImage.isNull())
 		{
 			//qDebug() << "GLTextDrawable::setText: Cached image matches text, not re-rendering.";
-			//lock = m_renderer->lockUpdates(true);
-			//setImage(m_cachedImage);
+			lock = m_renderer->lockUpdates(true);
+			setImage(m_cachedImage);
 		}
 	}
 

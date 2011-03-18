@@ -104,15 +104,21 @@ protected:
 	double	m_shadowOpacity;
 	
 	/// Starts a timer to call reapplyBorderAndShadow() in 50ms in order to batch updates to the above attributes
-	void shadowOrBorderDirty();
-	QTimer m_dirtyBatchTimer;
+	void shadowDirty();
+	void borderDirty();
+	QTimer m_shadowDirtyBatchTimer;
+	QTimer m_borderDirtyBatchTimer;
+	
+	QImage m_imageWithBorder;
 	
 	/// Apply the {Border attributes} and {Shadow attributes} to the given image and return the new image, possibly larger than the original depending on settings. 
-	QImage applyBorderAndShadow(const QImage&);
-	void drawImageWithBorder(QPainter *p, const QImage &srcImage);
-
+	QImage applyBorder(const QImage&);
+	
+	GLImageDrawable *m_shadowDrawable;
+	
 protected slots:
-	void reapplyBorderAndShadow();
+	void reapplyBorder();
+	void updateShadow();
 	
 private:
 	void setVideoSource(VideoSource*);
