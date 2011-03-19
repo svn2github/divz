@@ -703,10 +703,34 @@ void GLImageDrawable::updateShadow()
 	
 	QPointF point = rect().topLeft() + m_shadowOffset - QPointF(radiusSpacing,radiusSpacing);
 	//qDebug() << "GLImageDrawable::updateShadow(): shadow location:"<<point<<", size:"<<tmpImage.size()<<", rect().topLeft():"<<rect().topLeft()<<", m_shadowOffset:"<<m_shadowOffset<<", radiusSpacing:"<<radiusSpacing;
-	m_shadowDrawable->setRect(QRectF(point, tmpImage.size()));
+	double scale_w = 1.0;// fabs((double)(rect().width() - sourceImg.width())) / sourceImg.width();
+	double scale_h = 1.0;//fabs((double)(rect().height() - sourceImg.height())) / sourceImg.height();
+	
+	QSizeF size(((double)tmpImage.width()) * scale_w, ((double)tmpImage.height()) * scale_h);
+	
+	//qDebug() << "GLImageDrawable::updateShadow: rect.size:"<<rect().size()<<", sourceImg.size:"<<sourceImg.size()<<", scale:"<<scale_w<<"x"<<scale_h<<", tmpImage.size:"<<tmpImage.size()<<", shadow size:"<<size;
+	
+	m_shadowDrawable->setRect(QRectF(point, size));
 	
 	m_shadowDrawable->setImage(tmpImage);
 	//updateGL();
+}
+
+void GLImageDrawable::drawableResized(const QSizeF& newSize)
+{
+// 	if(m_shadowDrawable)
+// 	{
+// 		QImage sourceImg = m_imageWithBorder.isNull() ? m_image : m_imageWithBorder;
+// 		
+// 		QPointF point = rect().topLeft() + m_shadowOffset - QPointF(m_shadowBlurRadius,m_shadowBlurRadius);
+// 		//qDebug() << "GLImageDrawable::updateShadow(): shadow location:"<<point<<", size:"<<tmpImage.size()<<", rect().topLeft():"<<rect().topLeft()<<", m_shadowOffset:"<<m_shadowOffset<<", radiusSpacing:"<<radiusSpacing;
+// 		double scale_w = (double)(rect().width() - sourceImg.width()) / rect().width();
+// 		double scale_h = (double)(rect().height() - sourceImg.height()) / rect().height();
+// 		QPointF sizeScale(scale_w,scale_h);
+// 	
+// 		QImage tmpImage = m_shadowDrawable->image();
+// 		m_shadowDrawable->setRect(QRectF(point, QSizeF(((double)tmpImage.width()) * scale_w, ((double)tmpImage.height()) * scale_h)));
+// 	}
 }
 
 QImage GLImageDrawable::applyBorder(const QImage& sourceImg)

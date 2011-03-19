@@ -115,6 +115,7 @@ protected:
 	QImage applyBorder(const QImage&);
 	
 	GLImageDrawable *m_shadowDrawable;
+	virtual void drawableResized(const QSizeF&);
 	
 protected slots:
 	void reapplyBorder();
