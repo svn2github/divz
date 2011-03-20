@@ -1,4 +1,5 @@
 #include "GLImageDrawable.h"
+#include "GLTextDrawable.h"
 
 #include "GLWidget.h"
 
@@ -697,18 +698,42 @@ void GLImageDrawable::updateShadow()
 		painter2.setOpacity(1.0);
 	}
 	
+// 	{
+// 		QPainter painter2(&tmpImage);
+// 		painter2.setPen(Qt::yellow);
+// 		
+// 		QPointF translate1(radiusSpacing, 
+// 				radiusSpacing);
+// 		translate1.rx() *= scale.x();
+// 		translate1.ry() *= scale.y();
+// 		//qDebug() << "stage1: radiusSpacing:"<<radiusSpacing<<", m_shadowOffset:"<<m_shadowOffset<<", translate1:"<<translate1;
+// 		//qDebug() << "GLImageDrawable::updateShadow(): translate1:"<<translate1<<", scale:"<<scale; 
+// 		
+// 		painter2.translate(translate1);
+// 		painter2.drawImage(0,0,sourceImg);
+// 		painter2.drawRect(sourceImg.rect());
+// 	
+// 	}
+	
+	
 	// Notice: Older versions of this shadow code drew the sourceImg back on top of the shadow -
 	// Since we are drawaing the drop shadow as a separate texture below the real image in the 
 	// m_shadowDrawable, we are not going to draw the sourceImg on top now.
 	
-	QPointF point = rect().topLeft() + m_shadowOffset - QPointF(radiusSpacing,radiusSpacing);
 	//qDebug() << "GLImageDrawable::updateShadow(): shadow location:"<<point<<", size:"<<tmpImage.size()<<", rect().topLeft():"<<rect().topLeft()<<", m_shadowOffset:"<<m_shadowOffset<<", radiusSpacing:"<<radiusSpacing;
-	double scale_w = 1.0;// fabs((double)(rect().width() - sourceImg.width())) / sourceImg.width();
-	double scale_h = 1.0;//fabs((double)(rect().height() - sourceImg.height())) / sourceImg.height();
+	bool scaleFlag = dynamic_cast<GLTextDrawable*>(this) == NULL;
+// 	double scale_w = scaleFlag ? fabs((double)(rect().width()  - sourceImg.width()))  / sourceImg.width()  : 1.0;
+// 	double scale_h = scaleFlag ? fabs((double)(rect().height() - sourceImg.height())) / sourceImg.height() : 1.0;
+	double scale_w = scaleFlag ? m_targetRect.width()  / m_sourceRect.width()  : 1.0;
+	double scale_h = scaleFlag ? m_targetRect.height() / m_sourceRect.height() : 1.0;
+	
+// 	scale_w *= 2;
+// 	scale_h *= 2;
 	
 	QSizeF size(((double)tmpImage.width()) * scale_w, ((double)tmpImage.height()) * scale_h);
+	QPointF point = rect().topLeft() + QPointF(m_shadowOffset.x() * scale_w, m_shadowOffset.y() * scale_h) - QPointF(m_shadowBlurRadius * scale_w,m_shadowBlurRadius * scale_h);
 	
-	//qDebug() << "GLImageDrawable::updateShadow: rect.size:"<<rect().size()<<", sourceImg.size:"<<sourceImg.size()<<", scale:"<<scale_w<<"x"<<scale_h<<", tmpImage.size:"<<tmpImage.size()<<", shadow size:"<<size;
+	//qDebug() << "GLImageDrawable::updateShadow: "<<(QObject*)this<<" m_targetRect:"<<m_targetRect.size()<<", m_sourceRect:"<<m_sourceRect.size()<<", scale:"<<scale_w<<"x"<<scale_h<<", tmpImage:"<<tmpImage.size()<<", new size:"<<size<<", point:"<<point;
 	
 	m_shadowDrawable->setRect(QRectF(point, size));
 	
@@ -716,21 +741,28 @@ void GLImageDrawable::updateShadow()
 	//updateGL();
 }
 
-void GLImageDrawable::drawableResized(const QSizeF& newSize)
+void GLImageDrawable::drawableResized(const QSizeF& /*newSize*/)
 {
-// 	if(m_shadowDrawable)
-// 	{
-// 		QImage sourceImg = m_imageWithBorder.isNull() ? m_image : m_imageWithBorder;
-// 		
-// 		QPointF point = rect().topLeft() + m_shadowOffset - QPointF(m_shadowBlurRadius,m_shadowBlurRadius);
-// 		//qDebug() << "GLImageDrawable::updateShadow(): shadow location:"<<point<<", size:"<<tmpImage.size()<<", rect().topLeft():"<<rect().topLeft()<<", m_shadowOffset:"<<m_shadowOffset<<", radiusSpacing:"<<radiusSpacing;
-// 		double scale_w = (double)(rect().width() - sourceImg.width()) / rect().width();
-// 		double scale_h = (double)(rect().height() - sourceImg.height()) / rect().height();
-// 		QPointF sizeScale(scale_w,scale_h);
-// 	
-// 		QImage tmpImage = m_shadowDrawable->image();
-// 		m_shadowDrawable->setRect(QRectF(point, QSizeF(((double)tmpImage.width()) * scale_w, ((double)tmpImage.height()) * scale_h)));
-// 	}
+	if(m_shadowDrawable)
+	{
+		QImage sourceImg = m_imageWithBorder.isNull() ? m_image : m_imageWithBorder;
+		QImage tmpImage = m_shadowDrawable->image();
+		
+		//QPointF point = rect().topLeft() + m_shadowOffset - QPointF(m_shadowBlurRadius,m_shadowBlurRadius);
+		bool scaleFlag = dynamic_cast<GLTextDrawable*>(this) == NULL;
+		double scale_w = scaleFlag ? m_targetRect.width()  / m_sourceRect.width()  : 1.0;
+		double scale_h = scaleFlag ? m_targetRect.height() / m_sourceRect.height() : 1.0;
+		
+		QPointF point = rect().topLeft() 
+		
+			+ QPointF(m_shadowOffset.x() * scale_w, m_shadowOffset.y() * scale_h) 
+		
+			- QPointF(m_shadowBlurRadius * scale_w, m_shadowBlurRadius * scale_h);
+		
+		//qDebug() << "GLImageDrawable::drawableResized: "<<(QObject*)this<<" shadow location:"<<point<<", size:"<<tmpImage.size()<<", rect().topLeft():"<<rect().topLeft()<<", m_shadowOffset:"<<m_shadowOffset<<", m_shadowBlurRadius:"<<m_shadowBlurRadius;
+		
+		m_shadowDrawable->setRect(QRectF(point, QSizeF(((double)tmpImage.width()) * scale_w, ((double)tmpImage.height()) * scale_h)));
+	}
 }
 
 QImage GLImageDrawable::applyBorder(const QImage& sourceImg)
