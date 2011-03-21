@@ -160,14 +160,6 @@ PlayerWindow::PlayerWindow(QWidget *parent)
 	, m_configLoaded(false)
 	, m_vidSendMgr(0)
 {
-	//WinXP - m_vidSendMgr causes the app to freeze
-	#ifdef Q_OS_WIN
-		m_vidSendMgr = 0;
- 	#else
- 		m_vidSendMgr = new VideoInputSenderManager();
- 		m_vidSendMgr->setSendingEnabled(true);
- 	#endif
-
 	QVBoxLayout *layout = new QVBoxLayout(this);
 	layout->setContentsMargins(0,0,0,0);
 }
@@ -204,6 +196,19 @@ void PlayerWindow::loadConfig(const QString& configFile, bool verbose)
 		parts = str.split("x"); \
 		point = QPoint(parts[0].toInt(),parts[1].toInt()); \
 		if(verbose) qDebug() << "PlayerWindow: " key ": " << point;
+		
+	bool vidSendEnab = READ_STRING("input-monitor-enabled","true") == "true";
+	//WinXP - m_vidSendMgr causes the app to freeze
+	#ifdef Q_OS_WIN
+		if(READ_STRING("force-input-monitor-enabled","false") == "false")
+			vidSendEnab = false;
+ 	#endif
+ 	
+ 	if(vidSendEnab)
+ 	{
+ 		m_vidSendMgr = new VideoInputSenderManager();
+ 		m_vidSendMgr->setSendingEnabled(true);
+ 	}
 
 	m_useGLWidget = READ_STRING("compat","false") == "false";
 	if(m_useGLWidget)
@@ -2201,10 +2206,10 @@ QVariantList PlayerJsonServer::examineGroup(GLSceneGroup *group)
 	{
 		QVariantMap map;
 
-		map["id"] = scene->sceneId();
-		map["name"] = scene->sceneName();
+		map["id"]       = scene->sceneId();
+		map["name"]     = scene->sceneName();
 		map["duration"] = scene->duration();
-		map["autodur"] = scene->autoDuration();
+		map["autodur"]  = scene->autoDuration();
 		map["datetime"] = scene->scheduledTime();
 		map["autotime"] = scene->autoSchedule();
 

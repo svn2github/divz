@@ -1563,6 +1563,7 @@ SwitcherWindow::SwitcherWindow(DirectorWindow * dir)
 	// Create buttons for all widgets (call subwindowAdded() directly)
 	// Insert event filter
 	// ....
+	dir->installEventFilter(this);
 	
 	m_layout = new QHBoxLayout(this);
 	m_lastBtn = 0;
@@ -1590,11 +1591,26 @@ void SwitcherWindow::notifyIsLive(DirectorSourceWidget* src)
 	btn->setIcon(QPixmap(":/data/stock-media-rec.png"));
 }
 
-bool SwitcherWindow::eventFilter(QObject *, QEvent *)
+bool SwitcherWindow::eventFilter(QObject *obj, QEvent *event)
 {
 	/// TODO
 	// Translate keypress into a specific DirectorSourceWidget* and call switchTo() on that window
-	return false;
+	if (event->type() == QEvent::KeyPress) 
+	{
+		QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
+		
+		int idx = keyEvent->text().toInt();
+		if(idx > 0 && idx <= m_sourceList.size())
+		{
+			qDebug() << "SwitcherWindow::eventFilter(): "<<keyEvent->text()<<", activating input #"<<idx;
+			idx --; 
+			DirectorSourceWidget *src = m_sourceList.at(idx);
+			src->raise();
+			src->switchTo();
+			notifyIsLive(src);
+		}
+	}
+	return QObject::eventFilter(obj, event);
 }
 	
 void SwitcherWindow::buttonClicked()
