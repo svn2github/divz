@@ -1177,7 +1177,7 @@ bool GLVideoDrawable::setVideoFormat(const VideoFormat& format, bool secondSourc
 			if (fragmentProgram.isEmpty())
 			{
  				//if(format.pixelFormat != QVideoFrame::Format_Invalid)
- 					qDebug() << "GLVideoDrawable: No shader program found - format not supported.";
+ 					//qDebug() << "GLVideoDrawable: No shader program found - format not supported.";
 				return false;
 			}
 			else
@@ -2713,6 +2713,9 @@ void GLVideoDrawable::updateAnimations(bool insidePaint)
 
 void GLVideoDrawable::paintGL()
 {
+	if(!m_glw)
+		return;
+		
 	paintGLChildren(true); // paint children below 
 	
 	m_unrenderedFrames --;
@@ -2756,6 +2759,16 @@ void GLVideoDrawable::paintGL()
 
 	QRectF source = m_sourceRect;
 	QRectF target = m_targetRect;
+	
+	if(parent() && parent()->hasFrameBuffer())
+	{
+		// offset our target negativly by the difference between our self and our parent
+		QPointF diff = rect().topLeft() - parent()->rect().topLeft();
+		target = QRectF(target.topLeft() - diff, target.size());//moveBy(-diff.x(), -diff.y());
+		//qDebug() << "GLVideoDrawable::paintGL():"<<(QObject*)this<<": offset diff: "<<diff<<", old pos:"<<m_targetRect.topLeft()<<", new pos:"<<target.topLeft();
+		
+	}
+	
 
 	source = source.adjusted(
 		m_displayOpts.cropTopLeft.x() * source.width(),

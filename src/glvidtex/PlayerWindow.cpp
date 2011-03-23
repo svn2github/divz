@@ -1375,13 +1375,15 @@ void PlayerWindow::addScene(GLScene *scene, int zmod, bool fadeInOpac)
 		//qDebug() << "PlayerWindow::displayScene: Set new scene opac to 0";
 
 // 		//double maxZIndex = -100000;
+		scene->setGLWidget(m_glWidget, zmod);
+
 		foreach(GLDrawable *drawable, newSceneList)
 		{
-			drawable->setZIndexModifier(zmod);
+			//drawable->setZIndexModifier(zmod);
 			
 			connect(drawable->playlist(), SIGNAL(currentItemChanged(GLPlaylistItem*)), this, SLOT(currentPlaylistItemChanged(GLPlaylistItem*)));
 			connect(drawable->playlist(), SIGNAL(playerTimeChanged(double)), this, SLOT(playlistTimeChanged(double)));
-			m_glWidget->addDrawable(drawable);
+			//m_glWidget->addDrawable(drawable);
 			//qDebug() << "PlayerWindow::displayScene: Adding drawable:"<<(QObject*)drawable;
 
 			if(GLVideoDrawable *vid = dynamic_cast<GLVideoDrawable*>(drawable))
@@ -1449,13 +1451,16 @@ void PlayerWindow::opacityAnimationFinished(GLScene *scene)
 	//qDebug() << "PlayerWindow::opacityAnimationFinished: Found "<<list.size()<<" drawables to remove";
 	foreach(GLDrawable *drawable, list)
 	{
-		if(m_glWidget)
-			m_glWidget->removeDrawable(drawable);
-		else
+		if(!m_glWidget)
+		//	m_glWidget->removeDrawable(drawable);
+		//else
 			m_graphicsScene->removeItem(drawable);
 
 		qDebug() << "PlayerWindow::opacityAnimationFinished: removing drawable:"<<(QObject*)drawable;
 	}
+	
+	if(m_glWidget)
+		scene->detachGLWidget();
 
 	disconnect(scene, 0, this, 0);
 

@@ -10,6 +10,7 @@ class QPropertyAnimation;
 class GLWidget;
 class GLEditorGraphicsScene;
 class GLScene;
+class QGLFramebufferObject;
 
 // GLDrawable uses Z_MAX combined with the zIndexModifier to scale the zIndex to where zIndexModifier=<z<zIndexModifier
 #define Z_MAX 10000
@@ -206,6 +207,8 @@ public:
 	
 	GLDrawable *parent() { return m_parent; }
 	
+	bool hasFrameBuffer() { return m_frameBuffer!= NULL && m_enableBuffering; }
+	
 	
 public slots:
 	bool lockUpdates(bool flag);
@@ -348,6 +351,9 @@ protected:
 	QList<QAbsoluteTimeAnimationPtr> m_absoluteTimeAnimations;
 	
 	void setParent(GLDrawable*);
+
+	QGLFramebufferObject *m_frameBuffer;
+	bool m_enableBuffering;
 
 private:
 	QAbsoluteTimeAnimation* setupRectAnimation(const QRectF& other, bool animateIn);

@@ -114,7 +114,8 @@ void DirectorWindow::chooseOutput()
 	qSort(playerList.begin(), playerList.end(), PlayerConnection::sortByUseCount);
 	foreach(PlayerConnection *con, playerList)
 	{
-		itemList << QString("Player: %1").arg(con->name());
+		//itemList << QString("Player: %1").arg(con->name());
+		itemList << con->name();
 		qDebug() << "DirectorWindow::choseOutput:"<<con->name()<<" useCount:"<<con->useCount();
 	}
 	
@@ -255,8 +256,9 @@ void DirectorWindow::showPlayerLiveMonitor()
 	foreach(PlayerConnection *con, m_players->players())
 		if(con->isConnected())
 		{
-			itemList << QString("Player: %1").arg(con->name());
-			players << con;
+			//itemList << QString("Player: %1").arg(con->name());
+			itemList << con->name();
+			players  << con;
 		}
 	
 	// Dont prompt the user if only one player is connected
@@ -1593,7 +1595,6 @@ void SwitcherWindow::notifyIsLive(DirectorSourceWidget* src)
 
 bool SwitcherWindow::eventFilter(QObject *obj, QEvent *event)
 {
-	/// TODO
 	// Translate keypress into a specific DirectorSourceWidget* and call switchTo() on that window
 	if (event->type() == QEvent::KeyPress) 
 	{

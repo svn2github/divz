@@ -234,6 +234,10 @@ public:
 	/** The description of this scene type. For example: "Dynamicaly loads weather information from Google based on ZIP code." */
 	virtual QString description();
 	
+	/** Subclasses should override and return true of the subclass automatically updates the scene duration based on some logic. For example, the GLSceneTypeRandomVideo class 
+	    automatically updates the scene duration to match that of the currently playing video. Therefore, GLSceneTypeRandomVideo::doesAutomateSceneDuration() returns true. */
+	virtual bool doesAutomateSceneDuration() { return false; }
+	
 	/** Audit the \a sceneTemplate by checking the list of items in this scene against list of fields (See FieldInfo)
 		expected by this GLSceneType.
 		 

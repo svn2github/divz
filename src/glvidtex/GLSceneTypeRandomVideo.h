@@ -36,6 +36,7 @@ public:
 	virtual QString id()		{ return "92adaf7b-7fbb-42c7-8024-7e357cb2fa8b"; }
 	virtual QString title()		{ return "Random Video"; }
 	virtual QString description()	{ return "Displays a random video from a given directory."; }
+	virtual bool doesAutomateSceneDuration() { return true; }
 	
 	/** Returns the current location parameter value.
 		\sa setLocation() */

@@ -5,6 +5,8 @@
 #include "GLVideoDrawable.h"
 #include "GLSceneGroup.h"
 
+#include <QGLFramebufferObject>
+
 QAutoDelPropertyAnimation::QAutoDelPropertyAnimation(QObject * target, const QByteArray & propertyName, QObject * parent)
 	: QPropertyAnimation(target,propertyName,parent)
 {
@@ -69,6 +71,8 @@ GLDrawable::GLDrawable(QObject *parent)
 	, m_glInited(false)
 	, m_lockCalcCoverage(false)
 	, m_parent(0)
+	, m_frameBuffer(0)
+	, m_enableBuffering(false)
 {
 	// QGraphicsItem
 	{
@@ -106,6 +110,9 @@ GLDrawable::GLDrawable(QObject *parent)
 
 GLDrawable::~GLDrawable()
 {
+	if(parent())
+		parent()->removeChild(this);
+		
 	qDeleteAll(m_cornerItems);
 	m_cornerItems.clear();
 }
@@ -231,13 +238,25 @@ void GLDrawable::updateGL(bool now)
 	if(m_updatesLocked)
 		return;
 		
-	if(m_glw)
-		m_glw->updateGL(now);
-	if(scene())
-		update(); // compat with QGraphicsItem
+	if(parent())
+	{
+		parent()->updateGL(now);
+	}
 	else
-	if(parent() && parent()->scene())
-		parent()->update();
+	{
+		if(m_glw)
+		{
+			//qDebug() << "GLDrawable::updateGL(): "<<(QObject*)this<<": now:"<<now;
+			m_glw->updateGL(now);
+		}
+		
+		if(scene())
+			update(); // compat with QGraphicsItem
+	}
+// 	else
+// 	if(parent() && 
+// 	   parent()->scene())
+// 		parent()->update();
 }
 
 void GLDrawable::show()
@@ -603,6 +622,19 @@ void GLDrawable::setRect(const QRectF& rect)
 	
 	calcCoverageRect();
 	
+	if(m_frameBuffer &&
+	   m_frameBuffer->size() != m_coverageRect.size())
+	{
+		if(m_glw && 
+			QGLContext::currentContext() != m_glw->context())
+			m_glw->makeCurrent();
+		
+		delete m_frameBuffer;
+		m_frameBuffer = new QGLFramebufferObject(m_coverageRect.size().toSize());
+	}
+	
+	
+	
 	updateGL();
 	
 	if(rect.topLeft() != oldRect.topLeft())
@@ -654,12 +686,12 @@ double GLDrawable::zIndexModifier()
 double GLDrawable::opacity()
 {
 	double opac = m_opacity;
-	if(m_parent)
-		opac *= m_parent->opacity();
-			
-	if(m_scene)
-		return opac * m_scene->opacity();
-	else
+ 	if(m_parent && !m_parent->hasFrameBuffer())
+ 		opac *= m_parent->opacity();
+// 			
+// 	if(m_scene)
+// 		return opac * m_scene->opacity();
+// 	else
 		return opac;
 }
 
@@ -924,14 +956,36 @@ void GLDrawable::drawableResized(const QSizeF& /*newSize*/)
 
 void GLDrawable::paintGL()
 {
-	// NOOP
+	paintGLChildren(true);
+	// Nothing else to do here...
+	paintGLChildren(false);
 }
 
 void GLDrawable::paintGLChildren(bool under)
 {
 	//qDebug() << "GLDrawable::paintGLChildren(): "<<(QObject*)this<<": under:"<<under<<", m_glw:"<<m_glw;
+	if(m_children.isEmpty())
+		return;
+		
 	if(m_glw)
 	{
+		if(under && m_enableBuffering)
+		{
+			if(!m_frameBuffer)
+			{
+				m_frameBuffer = new QGLFramebufferObject(m_coverageRect.size().toSize());
+				qDebug() << "GLDrawable::paintGLChildren(): "<<(QObject*)this<<": created frame buffer of size:"<<m_frameBuffer->size();
+			}
+				
+			if(!m_frameBuffer->isBound())
+				m_frameBuffer->bind();
+			
+			//qglClearColor(Qt::transparent);
+			glClearColor(0,0,0,0);
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			glLoadIdentity(); // Reset The View
+		}
+		
 		QRectF viewport = m_glw->viewport();
 		if(!viewport.isValid())
 		{
@@ -959,6 +1013,33 @@ void GLDrawable::paintGLChildren(bool under)
 				drawable->paintGL();
 			}
 	// 		qDebug() << "GLWidget::paintGL(): drawable:"<<((void*)drawable)<<", draw done";
+		}
+		
+		if(!under && m_frameBuffer)
+		{
+			m_frameBuffer->release();
+			
+			glBindTexture(GL_TEXTURE_2D, m_frameBuffer->texture());
+
+			//glTranslatef(0.0f,0.0f,-3.42f);
+
+			QRectF target = m_coverageRect;
+
+			qreal
+				vx1 = target.left(),
+				vx2 = target.right(),
+				vy1 = target.bottom(),
+				vy2 = target.top();
+
+			
+			glBegin(GL_QUADS);
+				
+				glTexCoord2f(0.0f, 0.0f); glVertex3f(vx1,vy1,  0.0f); // bottom left // 3
+				glTexCoord2f(1.0f, 0.0f); glVertex3f(vx2,vy1,  0.0f); // bottom right // 2
+				glTexCoord2f(1.0f, 1.0f); glVertex3f(vx2,vy2,  0.0f); // top right  // 1
+				glTexCoord2f(0.0f, 1.0f); glVertex3f(vx1,vy2,  0.0f); // top left // 0
+				
+			glEnd();
 		}
 	}
 

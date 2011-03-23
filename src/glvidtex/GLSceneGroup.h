@@ -267,6 +267,8 @@ protected:
 	
 	GLSceneType *m_sceneType;
 	GLSceneGroup *m_group;
+	
+	GLDrawable *m_rootObj;
 };
 
 class GLSceneGroupPlaylist;

@@ -253,6 +253,7 @@ GLScene::GLScene(QObject *parent)
 	, m_autoSchedule(true)
 	, m_sceneType(0)
 	, m_group(0)
+	, m_rootObj(0)
 {
 	connect(&m_fadeTimer, SIGNAL(timeout()), this, SLOT(fadeTick()));
 }
@@ -273,6 +274,7 @@ GLScene::GLScene(QByteArray& ba, QObject *parent)
 	, m_autoSchedule(true)
 	, m_sceneType(0)
 	, m_group(0)
+	, m_rootObj(0)
 {
 	connect(&m_fadeTimer, SIGNAL(timeout()), this, SLOT(fadeTick()));
 	fromByteArray(ba);
@@ -658,15 +660,25 @@ QGraphicsScene * GLScene::graphicsScene()
 // connects the drawables in this scene to an actual display widget.
 // Only one widget can be set at a time - if the widget is changed,
 // the drawables are removed from the old and added to the new
-void GLScene::setGLWidget(GLWidget *glw, int /*zIndexOffset*/)
+void GLScene::setGLWidget(GLWidget *glw, int zIndexOffset)
 {
 	if(m_glWidget)
 		detachGLWidget();
 
 	m_glWidget = glw;
-
+	
+	if(!m_rootObj)
+		m_rootObj = new GLDrawable();
+	
 	foreach(GLDrawable *d, m_itemList)
-		m_glWidget->addDrawable(d);
+	{
+		//d->setZIndexModifier(zIndexOffset);
+		//m_glWidget->addDrawable(d);
+		m_rootObj->addChild(d);
+	}
+	
+	m_rootObj->setZIndexModifier(zIndexOffset);
+	m_glWidget->addDrawable(m_rootObj);
 		
 	if(sceneType())		
 		sceneType()->setLiveStatus(true);
@@ -678,7 +690,9 @@ void GLScene::detachGLWidget()
 		return;
 
 	foreach(GLDrawable *d, m_itemList)
-		m_glWidget->removeDrawable(d);
+		//m_glWidget->removeDrawable(d);
+		m_rootObj->removeChild(d);
+	m_glWidget->removeDrawable(m_rootObj);
 
 	if(sceneType())		
 		sceneType()->setLiveStatus(false);
@@ -755,8 +769,16 @@ void GLScene::setOpacity(double d, bool animate, double animDuration)
 	//qDebug() << "GLScene::setOpacity: "<<d;
 	m_opacity = d;
 	emit opacityChanged(d);
-	foreach(GLDrawable *d, m_itemList)
-		d->updateGL();
+	if(m_rootObj)
+	{
+		//m_rootObj->updateGL();
+		m_rootObj->setOpacity(d);
+	}
+	else
+	{
+		foreach(GLDrawable *d, m_itemList)
+			d->updateGL();
+	}
 }
 
 
