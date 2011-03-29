@@ -31,7 +31,7 @@ GLImageDrawable::GLImageDrawable(QString file, QObject *parent)
 	, m_shadowOpacity(1.0)
 	, m_shadowDrawable(0)
 {
-	setImage(QImage("dot.gif"));
+	//setImage(QImage("dot.gif"));
 	setCrossFadeMode(GLVideoDrawable::FrontAndBack);
 
 	if(!file.isEmpty())
@@ -77,7 +77,7 @@ void GLImageDrawable::setImage(const QImage& image, bool insidePaint)
 	   !insidePaint)
 	{
  		m_frame2 = m_frame;
- 		//qDebug() << "GLImageDrawable::setImage(): "<<(QObject*)this<<" Starting crossfade with m_frame2";
+ 		//sqDebug() << "GLImageDrawable::setImage(): "<<(QObject*)this<<" Starting crossfade with m_frame2";
 		//m_frame2 = VideoFramePtr(new VideoFrame(m_image,1000/30));
 		updateTexture(true); // true = read from m_frame2
 		xfadeStart();
@@ -531,6 +531,9 @@ void GLImageDrawable::setBorderWidth(double value)
 
 void GLImageDrawable::setShadowEnabled(bool value)
 {
+// 	m_shadowEnabled = false;
+// 	return;
+	
 	m_shadowEnabled = value;
 	if(value && !m_shadowDrawable)
 	{

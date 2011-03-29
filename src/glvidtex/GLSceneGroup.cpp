@@ -667,19 +667,30 @@ void GLScene::setGLWidget(GLWidget *glw, int zIndexOffset)
 
 	m_glWidget = glw;
 	
-	if(!m_rootObj)
-		m_rootObj = new GLDrawable();
-	
-	foreach(GLDrawable *d, m_itemList)
+	//if(!m_rootObj)
+	//	m_rootObj = new GLDrawable();
+		
+	if(m_rootObj)
 	{
-		//d->setZIndexModifier(zIndexOffset);
-		//m_glWidget->addDrawable(d);
-		m_rootObj->addChild(d);
+		foreach(GLDrawable *d, m_itemList)
+		{
+			//d->setZIndexModifier(zIndexOffset);
+			//m_glWidget->addDrawable(d);
+			m_rootObj->addChild(d);
+		}
+		
+		m_rootObj->setZIndexModifier(zIndexOffset);
+		m_glWidget->addDrawable(m_rootObj);
+	}
+	else
+	{
+		foreach(GLDrawable *d, m_itemList)
+		{
+			d->setZIndexModifier(zIndexOffset);
+			m_glWidget->addDrawable(d);
+		}
 	}
 	
-	m_rootObj->setZIndexModifier(zIndexOffset);
-	m_glWidget->addDrawable(m_rootObj);
-		
 	if(sceneType())		
 		sceneType()->setLiveStatus(true);
 }
@@ -690,9 +701,13 @@ void GLScene::detachGLWidget()
 		return;
 
 	foreach(GLDrawable *d, m_itemList)
-		//m_glWidget->removeDrawable(d);
-		m_rootObj->removeChild(d);
-	m_glWidget->removeDrawable(m_rootObj);
+		if(m_rootObj)
+			m_rootObj->removeChild(d);
+		else
+			m_glWidget->removeDrawable(d);
+	
+	if(m_rootObj)
+		m_glWidget->removeDrawable(m_rootObj);
 
 	if(sceneType())		
 		sceneType()->setLiveStatus(false);

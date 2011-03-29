@@ -178,6 +178,8 @@ public:
 	GLSceneType *sceneType() { return m_sceneType; }
 
 	bool fadeActive() { return m_fadeActive; }
+	
+	GLDrawable *rootObj() { return m_rootObj; }
 
 public slots:
 	void setSceneName(const QString& name);

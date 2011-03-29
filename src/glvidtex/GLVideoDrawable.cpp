@@ -11,7 +11,7 @@
 #include "VideoSender.h"
 
 #include <QImageWriter>
-
+#include <QGLFramebufferObject>
 #include <string.h>
 
 #include "GLCommonShaders.h"
@@ -2763,10 +2763,21 @@ void GLVideoDrawable::paintGL()
 	if(parent() && parent()->hasFrameBuffer())
 	{
 		// offset our target negativly by the difference between our self and our parent
-		QPointF diff = rect().topLeft() - parent()->rect().topLeft();
-		target = QRectF(target.topLeft() - diff, target.size());//moveBy(-diff.x(), -diff.y());
-		//qDebug() << "GLVideoDrawable::paintGL():"<<(QObject*)this<<": offset diff: "<<diff<<", old pos:"<<m_targetRect.topLeft()<<", new pos:"<<target.topLeft();
+		QPointF diff = target.topLeft() - parent()->coverageRect().topLeft();
+		target = QRectF(diff, target.size());//moveBy(-diff.x(), -diff.y());
+		qDebug() << "GLVideoDrawable::paintGL():"<<(QObject*)this<<": offset diff: "<<diff<<", old pos:"<<m_targetRect.topLeft()<<", new pos:"<<target.topLeft();
 		
+	}
+	else
+	if(hasFrameBuffer())
+	{
+		QPointF targ = target.topLeft();
+		QPointF obj  = coverageRect().topLeft();
+		QPointF diff = targ - obj;
+		//diff = QPointF(6,310);
+		target = QRectF(diff, target.size());
+		qDebug() << "GLVideoDrawable::paintGL():"<<(QObject*)this<<": self FB: diff: "<<diff<<", obj pos:"<<obj<<", targ pos:"<<targ<<", new target:"<<target<<", coverage:"<<coverageRect();
+		//m_useShaders = false;
 	}
 	
 
@@ -2780,11 +2791,15 @@ void GLVideoDrawable::paintGL()
 // 		qDebug() << "GLVideoDrawable::paintGL():"<<(QObject*)this<<": source:"<<source<<", target:"<<target<<" ( crop:"<<m_displayOpts.cropTopLeft<<"/"<<m_displayOpts.cropBottomRight<<")";
 
 
-	const int width  = QGLContext::currentContext()->device()->width();
-	const int height = QGLContext::currentContext()->device()->height();
+	const int width  = hasFrameBuffer() ? m_frameBuffer->width() : 
+		(parent() && parent()->hasFrameBuffer()) ? parent()->coverageRect().width() : 
+		QGLContext::currentContext()->device()->width();
+	const int height = hasFrameBuffer() ? m_frameBuffer->height() : 
+		(parent() && parent()->hasFrameBuffer()) ? parent()->coverageRect().height() :
+		QGLContext::currentContext()->device()->height();
 
 	//QPainter painter(this);
-	QTransform transform =  m_glw->transform(); //= painter.deviceTransform();
+	QTransform transform =  ((parent() && parent()->hasFrameBuffer()) || hasFrameBuffer()) ? QTransform() : m_glw->transform(); //= painter.deviceTransform();
 	if(m_lastKnownTransform != transform)
 	{
 		m_lastKnownTransform = transform;

@@ -688,11 +688,15 @@ double GLDrawable::opacity()
 	double opac = m_opacity;
  	if(m_parent && !m_parent->hasFrameBuffer())
  		opac *= m_parent->opacity();
-// 			
-// 	if(m_scene)
-// 		return opac * m_scene->opacity();
-// 	else
-		return opac;
+			
+/*	if(m_scene
+	   && !m_scene->rootObj()
+	   )
+		opac *= m_scene->opacity();*/
+	
+	//qDebug() << "GLDrawable::opacity(): "<<opac;
+	
+	return opac;
 }
 
 void GLDrawable::setZIndex(double z)
@@ -964,6 +968,7 @@ void GLDrawable::paintGL()
 void GLDrawable::paintGLChildren(bool under)
 {
 	//qDebug() << "GLDrawable::paintGLChildren(): "<<(QObject*)this<<": under:"<<under<<", m_glw:"<<m_glw;
+	
 	if(m_children.isEmpty())
 		return;
 		
@@ -977,13 +982,29 @@ void GLDrawable::paintGLChildren(bool under)
 				qDebug() << "GLDrawable::paintGLChildren(): "<<(QObject*)this<<": created frame buffer of size:"<<m_frameBuffer->size();
 			}
 				
-			if(!m_frameBuffer->isBound())
-				m_frameBuffer->bind();
+			//if(!m_frameBuffer->isBound())
+			m_frameBuffer->bind();
 			
 			//qglClearColor(Qt::transparent);
 			glClearColor(0,0,0,0);
+			//glClearColor(0,1,0,1);
+			//glClearColor(0.1f, 0.1f, 0.2f, 1.0f);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-			glLoadIdentity(); // Reset The View
+			//glLoadIdentity(); // Reset The View
+			
+			int width = m_frameBuffer->size().width();
+			int height = m_frameBuffer->size().height();
+			glViewport(0,0,width,height); //(width - side) / 2, (height - side) / 2, side, side);
+			
+			glMatrixMode(GL_PROJECTION);						// Select The Projection Matrix
+			glLoadIdentity();							// Reset The Projection Matrix
+		
+			// Calculate The Aspect Ratio Of The Window
+			//gluPerspective(45.0f,(GLfloat)w/(GLfloat)h,0.1f,100.0f);
+			glOrtho(0, width, height, 0, -1, 1);
+		
+			glMatrixMode(GL_MODELVIEW);						// Select The Modelview Matrix
+			glLoadIdentity();							// Reset The Modelview Matrix
 		}
 		
 		QRectF viewport = m_glw->viewport();
@@ -1015,15 +1036,50 @@ void GLDrawable::paintGLChildren(bool under)
 	// 		qDebug() << "GLWidget::paintGL(): drawable:"<<((void*)drawable)<<", draw done";
 		}
 		
-		if(!under && m_frameBuffer)
+		if(!under && 
+		   m_frameBuffer)
 		{
 			m_frameBuffer->release();
 			
+			QRectF target = m_coverageRect;
+			
+			int width = 0;
+			int height = 0;
+			if(parent() && parent()->hasFrameBuffer())
+			{
+				QGLFramebufferObject *fbo = parent()->m_frameBuffer; 
+				width  = fbo->size().width();
+				height = fbo->size().height();
+				target = QRectF(m_coverageRect.topLeft() - parent()->coverageRect().topLeft(), target.size()); 
+				fbo->bind();
+			}
+			else
+			{
+				width  = m_glw->width();
+				height = m_glw->height();
+				target = m_glw->transform().mapRect(target);
+			}
+			
+			glViewport(0,0,width,height); //(width - side) / 2, (height - side) / 2, side, side);
+			
+			glMatrixMode(GL_PROJECTION);						// Select The Projection Matrix
+			glLoadIdentity();							// Reset The Projection Matrix
+		
+			// Calculate The Aspect Ratio Of The Window
+			//gluPerspective(45.0f,(GLfloat)w/(GLfloat)h,0.1f,100.0f);
+			glOrtho(0, width, height, 0, -1, 1);
+		
+			glMatrixMode(GL_MODELVIEW);						// Select The Modelview Matrix
+			glLoadIdentity();							// Reset The Modelview Matrix
+			
+			
+			const bool wasEnabled = glIsEnabled(GL_TEXTURE_2D);
+			glEnable(GL_TEXTURE_2D);
 			glBindTexture(GL_TEXTURE_2D, m_frameBuffer->texture());
 
 			//glTranslatef(0.0f,0.0f,-3.42f);
 
-			QRectF target = m_coverageRect;
+			//qDebug() << "GLDrawable::paintGLChildren(): "<<(QObject*)this<<": drawing FBO to rect:"<<target;
 
 			qreal
 				vx1 = target.left(),
@@ -1031,6 +1087,19 @@ void GLDrawable::paintGLChildren(bool under)
 				vy1 = target.bottom(),
 				vy2 = target.top();
 
+			//float opacity = 0.25;
+			float opac = (float)m_opacity;
+			if(m_parent && !m_parent->hasFrameBuffer())
+ 				opac *= m_parent->opacity();
+			
+			if(m_scene
+				&& !m_scene->rootObj()
+				)
+				opac *= m_scene->opacity();
+				
+	
+			//qDebug() << "GLDrawable::paintGLChildren(): "<<(QObject*)this<<": opac:"<<opac;
+			glColor4f(opac,opac,opac,opac);
 			
 			glBegin(GL_QUADS);
 				
@@ -1040,9 +1109,11 @@ void GLDrawable::paintGLChildren(bool under)
 				glTexCoord2f(0.0f, 1.0f); glVertex3f(vx1,vy2,  0.0f); // top left // 0
 				
 			glEnd();
+			
+			if (!wasEnabled)
+        			glDisable(GL_TEXTURE_2D);
 		}
 	}
-
 }
 
 
