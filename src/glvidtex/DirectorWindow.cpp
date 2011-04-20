@@ -39,6 +39,7 @@ DirectorWindow::DirectorWindow(QWidget *parent)
 	: QMainWindow(parent)
 	, ui(new Ui::DirectorWindow)
 	, m_players(0)
+	, m_hasVideoInputsList(false)
 {
 	ui->setupUi(this);
 	
@@ -85,6 +86,8 @@ QList<QMdiSubWindow*> DirectorWindow::subwindows()
 
 void DirectorWindow::chooseOutput()
 {
+	m_hasVideoInputsList = false;
+		
 	bool wasOpen = false;
 	if(!ui->mdiArea->subWindowList().isEmpty())
 	{
@@ -142,15 +145,13 @@ void DirectorWindow::chooseOutput()
 	connect(ok, SIGNAL(clicked()), &dlg, SLOT(accept()));
 	
 	m_connected = false;
-	
+		
 	//vbox->addStretch(1);
 	vbox->addLayout(buttons);
 	dlg.setLayout(vbox);
 	dlg.adjustSize();
 	if(dlg.exec())
 	{
-		m_hasVideoInputsList = false;
-		
 		int idx = sourceBox->currentIndex();
 		PlayerConnection *player = playerList.at(idx);
 		
@@ -193,11 +194,15 @@ void DirectorWindow::initConnection(PlayerConnection *player)
 
 void DirectorWindow::videoInputListReceived(const QStringList& inputs)
 {
+	qDebug() << "DirectorWindow::videoInputListReceived: "<<inputs;
+	//qDebug() << "DirectorWindow::videoInputListReceived: m_hasVideoInputsList:"<<m_hasVideoInputsList;
 	if(m_hasVideoInputsList)
+		return;
+	if(inputs.isEmpty())
 		return;
 	m_hasVideoInputsList = true;
  	int index = 0;
-	//qDebug() << "DirectorWindow::videoInputListReceived: "<<inputs;
+ 	//qDebug() << "DirectorWindow::videoInputListReceived: Creating windows";
 	foreach(QString con, inputs)
 	{
 		QStringList opts = con.split(",");
@@ -474,6 +479,7 @@ void DirectorWindow::readSettings()
 
 void DirectorWindow::createUserSubwindows()
 {
+	return;
 	foreach(QVariant data, m_storedWindowOptions)
 	{
 		QVariantMap opts = data.toMap();

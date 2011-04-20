@@ -319,6 +319,7 @@ void PlayerConnection::connectPlayer(bool sendDefaults)
 
 void PlayerConnection::requestVideoInputList()
 {
+	qDebug() << "PlayerConnection::requestVideoInputList()";
 	sendCommand(QVariantList() << "cmd" << GLPlayer_ListVideoInputs);
 }
 
@@ -701,8 +702,8 @@ void PlayerConnection::receivedMap(QVariantMap map)
 		foreach(QVariant item, list)
 			m_videoInputs << item.toString();
 		m_videoIputsReceived = true;
+		qDebug() << "PlayerConnection::receivedMap: [INFO] Received video input list: "<<m_videoInputs;
 		emit videoInputListReceived(m_videoInputs);
-		//qDebug() << "PlayerConnection::receivedMap: [INFO] Received video input list: "<<m_videoInputs;
 	}
 	else
 	if(cmd == GLPlayer_CurrentPlaylistItemChanged ||
