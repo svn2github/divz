@@ -723,10 +723,22 @@ void DirectorWindow::setFadeSpeedTime(double sec)
 		ui->fadeSpeedSlider->blockSignals(block);
 	}
 	
+	if(ui->fadeSpeedBox->value() != sec)
+	{
+		bool block = ui->fadeSpeedBox->blockSignals(true);
+		ui->fadeSpeedBox->setValue(sec);
+		ui->fadeSpeedBox->blockSignals(block);
+	}
+	
 	qDebug() << "DirectorWindow::setFadeSpeedTime: sec:"<<sec<<", ms:"<<ms;
 	foreach(PlayerConnection *con, m_players->players())
 		con->setCrossfadeSpeed(ms);
 	
+}
+
+double DirectorWindow::fadeSpeedTime()
+{
+	return ui->fadeSpeedBox->value();
 }
 
 
@@ -1460,6 +1472,15 @@ CameraWidget::CameraWidget(DirectorWindow* dir, VideoReceiver *rx, QString con, 
 	m_configMenu = new QMenu(this);
 	QAction * action;
 	QSettings settings;
+	
+	// Add Properties menu item
+	action = m_configMenu->addAction("Properties...");
+	//action->setCheckable(true);
+	//action->setChecked(m_deinterlace);
+	connect(action, SIGNAL(triggered()), this, SLOT(showPropertyEditor()));
+	
+	
+	// Add Deinterlace menu item
 	m_deinterlace = settings.value(QString("%1/deint").arg(con),false).toBool();
 	
 	action = m_configMenu->addAction("Deinterlace");
@@ -1467,11 +1488,7 @@ CameraWidget::CameraWidget(DirectorWindow* dir, VideoReceiver *rx, QString con, 
 	action->setChecked(m_deinterlace);
 	connect(action, SIGNAL(toggled(bool)), this, SLOT(setDeinterlace(bool)));
 	
-	action = m_configMenu->addAction("Properties...");
-	//action->setCheckable(true);
-	//action->setChecked(m_deinterlace);
-	connect(action, SIGNAL(triggered()), this, SLOT(showPropertyEditor()));
-	
+	// Switch to cam on click
 	connect(m_glWidget, SIGNAL(clicked()), this, SLOT(switchTo()));
 }
 	
@@ -1500,6 +1517,16 @@ bool CameraWidget::switchTo()
 	if(!m_dir->players())
 		return false;
 		
+	bool cutFlag = (QApplication::keyboardModifiers() & Qt::ShiftModifier);
+		
+	qDebug() << "CameraWidget::switchTo: cutFlag: "<<cutFlag;
+	
+	double fadeSpeed = m_dir->fadeSpeedTime();
+	if(cutFlag)
+	{
+		m_dir->setFadeSpeedTime(0);
+	}
+	 
 	foreach(PlayerConnection *player, m_dir->players()->players())
 	{
 		if(player->isConnected())
@@ -1510,6 +1537,11 @@ bool CameraWidget::switchTo()
 		}
 	}
 	 
+	if(cutFlag)
+	{
+		m_dir->setFadeSpeedTime(fadeSpeed);
+	}
+	
 	setDeinterlace(m_deinterlace);
 	
 	if(m_switcher)

@@ -328,6 +328,12 @@ void GLVideoDrawable::setVideoSource(VideoSource *source)
 
 void GLVideoDrawable::xfadeStart(bool invertStart)
 {
+	if(m_xfadeLength <= 50/1000)
+	{
+		xfadeStop();
+		return;
+	}
+
 	m_fadeTick.start();
 	//m_fadeTime.start();
 	m_fadeActive = true;
@@ -335,7 +341,7 @@ void GLVideoDrawable::xfadeStart(bool invertStart)
 	m_startOpacity = invertStart ? 1.0 - m_fadeValue : m_fadeValue;
 //	m_fadeValue = 0.0;
 	//qDebug() << "GLVideoDrawable::xfadeStart()";
-
+	
 	m_fadeCurve.setType(QEasingCurve::InOutQuad);
 //	m_fadeCurve.setType(QEasingCurve::OutCubic);
 }

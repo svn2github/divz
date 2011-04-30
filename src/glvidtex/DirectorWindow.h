@@ -46,7 +46,9 @@ public:
 	
 	PlayerConnectionList *players() { return m_players; }
 	
-	QList<QMdiSubWindow*> subwindows(); 
+	QList<QMdiSubWindow*> subwindows();
+	 
+	double fadeSpeedTime();
 
 signals:
 	void closed();
