@@ -1892,6 +1892,42 @@ void PropertyEditorWindow::setSourceWidget(DirectorSourceWidget* source)
 			filter->setDrawBorder(true);
 		}
 		
+		// Profiles
+		{
+			NEW_SECTION("Store/Load Settings");
+			
+			m_settingsCombo = new QComboBox();
+			
+			QSettings s;
+			QVariantList list = s.value(QString("vidopts/%1").arg(source->windowTitle())).toList();
+			QStringList nameList = QStringList(); 
+			QList<QVariantMap> mapList; 
+			foreach(QVariantList data, list)
+			{
+				QVariantMap map = data.toMap();
+				
+				nameList << map["name"].toString();
+				mapList << map;
+			}
+			
+			m_settingsCombo->addItems(nameList);
+			//connect(combo, SIGNAL(activated(QString)), this, SLOT(loadVidOpts(QString)));
+			form->addRow(tr("&Settings:"), m_settingsCombo);
+			
+			
+			QHBoxLayout *hbox = new QHBoxLayout();
+			
+			QPushButton *btn1 = new QPushButton("Load");
+			connect(btn1, SIGNAL(clicked()), this, SLOT(loadVidopts()));
+			
+			QPushButton *btn2 = new QPushButton("Save As...");
+			connect(btn2, SIGNAL(clicked()), this, SLOT(saveVidOpts()));
+			
+			form->addRow("",hbox);
+			
+			
+		}
+		
 		// Levels
 		{
 			NEW_SECTION("White/Black Levels");
