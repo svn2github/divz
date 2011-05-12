@@ -352,6 +352,9 @@ private slots:
 	
 	void setAdvancedFilter(QString);
 	
+	void loadVidOpts();
+	void saveVidOpts();
+	
 private:
 	int indexOfFilter(int);
 	
@@ -360,6 +363,9 @@ private:
 	QPointer<QWidget> m_sharpAmountWidget;
 	DirectorWindow *m_dir;
 	GLVideoDrawable *m_vid;
+	
+	QPointer<QComboBox> m_settingsCombo;
+	QList<QVariantMap>  m_settingsList;
 	
 };
 

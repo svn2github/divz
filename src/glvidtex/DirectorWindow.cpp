@@ -1901,24 +1901,22 @@ void PropertyEditorWindow::setSourceWidget(DirectorSourceWidget* source)
 			QSettings s;
 			QVariantList list = s.value(QString("vidopts/%1").arg(source->windowTitle())).toList();
 			QStringList nameList = QStringList(); 
-			QList<QVariantMap> mapList; 
-			foreach(QVariantList data, list)
+			foreach(QVariant data, list)
 			{
 				QVariantMap map = data.toMap();
 				
 				nameList << map["name"].toString();
-				mapList << map;
+				m_settingsList << map;
 			}
 			
 			m_settingsCombo->addItems(nameList);
 			//connect(combo, SIGNAL(activated(QString)), this, SLOT(loadVidOpts(QString)));
 			form->addRow(tr("&Settings:"), m_settingsCombo);
 			
-			
 			QHBoxLayout *hbox = new QHBoxLayout();
 			
 			QPushButton *btn1 = new QPushButton("Load");
-			connect(btn1, SIGNAL(clicked()), this, SLOT(loadVidopts()));
+			connect(btn1, SIGNAL(clicked()), this, SLOT(loadVidOpts()));
 			
 			QPushButton *btn2 = new QPushButton("Save As...");
 			connect(btn2, SIGNAL(clicked()), this, SLOT(saveVidOpts()));
@@ -2190,6 +2188,15 @@ void PropertyEditorWindow::sendVidOpts()
 	}
 }
 
+void PropertyEditorWindow::loadVidOpts()
+{
+
+}
+
+void PropertyEditorWindow::saveVidOpts()
+{
+
+}
 
 void PropertyEditorWindow::sourceDestroyed() { setSourceWidget(0); }
 	
