@@ -44,7 +44,13 @@ QString PropertyEditorFactory::guessTitle(QString field)
 	return tmp;
 }
 
-
+EditorUpdateAdapter *EditorUpdateAdapter::getAdapterFromObject(QObject *object, const char *propBaseName)
+{
+	QString prop = QString("%1_editor").arg(propBaseName);
+	QVariant ptr = object->setProperty(qPrintable(prop), ptr);
+	EditorUpdateAdapter *adapt = (EditorUpdateAdapter *)ptr.value<void *>();
+	return adapt;
+}
 
 QWidget * PropertyEditorFactory::generatePropertyEditor(QObject *object, const char *property, const char *slot, PropertyEditorOptions opts, const char *changeSignal)
 {
@@ -65,6 +71,12 @@ QWidget * PropertyEditorFactory::generatePropertyEditor(QObject *object, const c
 		opts.type = prop.type();
 
 	//qDebug() << "generatePropertyEditor: prop:"<<property<<", opts.type:"<<opts.type<<", variant:"<<(opts.value.isValid() ? opts.value : prop);
+	
+	#define StoreEditor(box) \
+		QString prop = QString("%1_editor").arg(property);\
+		EditorUpdateAdapter *adapt = new EditorUpdateAdapter(box);\
+		QVariant ptr = qVariantFromValue((void *) adapt); \
+		object->setProperty(qPrintable(prop), ptr); 
 
 	if(opts.type == QVariant::Int)
 	{
@@ -118,6 +130,7 @@ QWidget * PropertyEditorFactory::generatePropertyEditor(QObject *object, const c
 			hbox->addWidget(resetBtn);
 		}
 		
+		StoreEditor(spin);
 		
 	}
 	else
@@ -137,6 +150,7 @@ QWidget * PropertyEditorFactory::generatePropertyEditor(QObject *object, const c
 		if(changeSignal)
 			new PropertyChangeListener(object, changeSignal, box, SLOT(setChecked(bool)), prop, property);
 
+		StoreEditor(box); 
 		return box;
 	}
 	else
@@ -149,6 +163,8 @@ QWidget * PropertyEditorFactory::generatePropertyEditor(QObject *object, const c
 		
 		if(changeSignal)
 			new PropertyChangeListener(object, changeSignal, box, SLOT(setText(const QString&)), prop, property);
+		
+		StoreEditor(box);
 		
 		if(opts.stringIsFile || opts.stringIsDir)
 		{
@@ -191,7 +207,7 @@ QWidget * PropertyEditorFactory::generatePropertyEditor(QObject *object, const c
 		QObject::connect(box, SIGNAL(dateTimeChanged(const QDateTime&)), object, slot);
 		
 		delete base;
-		
+		StoreEditor(box);
 		return box;
 	}
 	else
@@ -207,6 +223,7 @@ QWidget * PropertyEditorFactory::generatePropertyEditor(QObject *object, const c
 		if(changeSignal)
 			new PropertyChangeListener(object, changeSignal, editor, SLOT(setValue(const QSizeF&)), prop, property);
 
+		StoreEditor(editor);
 		return editor;
 	}
 	else
@@ -236,7 +253,8 @@ QWidget * PropertyEditorFactory::generatePropertyEditor(QObject *object, const c
 		connect(editor, SIGNAL(valueChanged(const QPointF&)), object, slot);
 		if(changeSignal)
 			new PropertyChangeListener(object, changeSignal, editor, SLOT(setValue(const QPointF&)), prop, property);
-
+		
+		StoreEditor(editor);
 		return editor;
 	}
 	else
@@ -253,6 +271,7 @@ QWidget * PropertyEditorFactory::generatePropertyEditor(QObject *object, const c
 		if(changeSignal)
 			new PropertyChangeListener(object, changeSignal, editor, SLOT(setValue(double)), prop, property);
 
+		StoreEditor(editor);
 		return editor;
 	}
 	else

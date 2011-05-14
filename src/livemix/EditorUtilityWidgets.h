@@ -141,6 +141,26 @@ private:
 	QVariant m_value;
 };
 
+
+/** \class EditorUpdateAdapter
+*/ 
+class EditorUpdateAdapter : public QObject
+{
+	Q_OBJECT
+public:
+	EditorUpdateAdapter(QWidget *editor);
+	
+	static EditorUpdateAdapter *getAdapterFromObject(QObject *object, const char *propBaseName); 
+	
+public slots:
+	void setValue(QVariant);
+	
+private:
+	QWidget *m_editor;
+};
+
+// Q_DECLARE_METATYPE(EditorUpdateAdapter)
+
 /** \class BrowseDialogLauncher
 	Launch a QFileDialog in response to a slot with a predefined title and filter and emit a signal when the dialog is closed with the chosen file. 
 	Used by PropertyEditorFactory to implement the 'browse' functionality.
