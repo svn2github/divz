@@ -128,9 +128,21 @@ void MjpegClient::processBlock()
 		else
 		if(m_dataBlock.contains("content-type:"))
 		{
-			// allow for buggy servers (some IP cameras - trendnet, I'm looking at you!) 
+			// allow for buggy servers (some IP cameras - trendnet, I'm looking at you!)
 			// sometimes dont use proper case in their headers.
 			ctypeString = "content-type:";
+		}
+		else
+		if(m_dataBlock.contains("Content-type:"))
+		{
+			// allow for another buggy server - Linksys WVC54GCA (Issue 113) 
+			ctypeString = "Content-type:";
+		}
+		else
+		if(m_dataBlock.contains("content-Type:"))
+		{
+			// I dont know of any server that sends it with c-T, but lets cover our bases anyway... 
+			ctypeString = "content-Type:";
 		}
 		
 		if(ctypeString)
