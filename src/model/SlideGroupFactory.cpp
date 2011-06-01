@@ -330,15 +330,18 @@ SlideGroupViewControl::~SlideGroupViewControl()
 void SlideGroupViewControl::setListModeEnabled(bool flag)
 {
 	m_listModeEnabled = flag;
-	if(flag)
+	if(m_listView)
 	{
-		m_listView->setViewMode(QListView::ListMode);
-		m_listView->setFlow(QListView::TopToBottom);
-	}
-	else
-	{
-		m_listView->setViewMode(QListView::IconMode);
-		m_listView->setFlow(QListView::LeftToRight);
+		if(flag)
+		{
+			m_listView->setViewMode(QListView::ListMode);
+			m_listView->setFlow(QListView::TopToBottom);
+		}
+		else
+		{
+			m_listView->setViewMode(QListView::IconMode);
+			m_listView->setFlow(QListView::LeftToRight);
+		}
 	}
 	QSettings s;
 	s.setValue(QString("slideviewcontrol/%1").arg(m_isPreviewControl ? "preview-list-mode" : "list-mode"),m_listModeEnabled);
