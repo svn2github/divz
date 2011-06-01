@@ -425,6 +425,8 @@ private:
 	bool m_lockCalcCoverage;
 	
 	GLDrawable *m_parent;
+	
+	bool m_lockSetRect;
 };
 
 bool operator==(const GLDrawable::AnimParam&a, const GLDrawable::AnimParam&b);

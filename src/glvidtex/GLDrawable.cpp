@@ -73,6 +73,7 @@ GLDrawable::GLDrawable(QObject *parent)
 	, m_parent(0)
 	, m_frameBuffer(0)
 	, m_enableBuffering(false)
+	, m_lockSetRect(false)
 {
 	// QGraphicsItem
 	{
@@ -586,6 +587,11 @@ void GLDrawable::setRect(const QRectF& rect)
 {
 	if(m_rect == rect)
 		return;
+		
+	// Prevent unlimited recursion
+	if(m_lockSetRect)
+		return;
+	m_lockSetRect = true;
 
 	// Notify QGraphicsItem of upcoming change
 	prepareGeometryChange();
@@ -645,6 +651,8 @@ void GLDrawable::setRect(const QRectF& rect)
 		
 	emit rectChanged(rect);
 	drawableRectChanged(rect);
+	
+	m_lockSetRect = false;
 }
 
 void GLDrawable::drawableMoved(const QPointF& /*newPoint*/) 
