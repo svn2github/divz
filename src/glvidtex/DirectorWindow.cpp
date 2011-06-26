@@ -1897,6 +1897,7 @@ void PropertyEditorWindow::setSourceWidget(DirectorSourceWidget* source)
 			NEW_SECTION("Store/Load Settings");
 			
 			m_settingsCombo = new QComboBox();
+			m_settingsList.clear();
 			
 			QSettings s;
 			QVariantList list = s.value(QString("vidopts/%1").arg(source->windowTitle())).toList();
@@ -1917,12 +1918,26 @@ void PropertyEditorWindow::setSourceWidget(DirectorSourceWidget* source)
 			
 			QPushButton *btn1 = new QPushButton("Load");
 			connect(btn1, SIGNAL(clicked()), this, SLOT(loadVidOpts()));
+			hbox->addWidget(btn1);
 			
 			QPushButton *btn2 = new QPushButton("Save As...");
 			connect(btn2, SIGNAL(clicked()), this, SLOT(saveVidOpts()));
+			hbox->addWidget(btn2);
+			
+			QPushButton *btn3 = new QPushButton("Delete");
+			connect(btn3, SIGNAL(clicked()), this, SLOT(deleteVidOpt()));
+			hbox->addWidget(btn3);
 			
 			form->addRow("",hbox);
 			
+			
+			QVariant var = source->property("_currentSetting");
+			if(var.isValid())
+			{
+				int idx = var.toInt();
+				m_settingsCombo->setCurrentIndex(idx);
+				loadVidOpts(false); // false = dont call setSource(...);
+			}
 			
 		}
 		
@@ -2188,14 +2203,159 @@ void PropertyEditorWindow::sendVidOpts()
 	}
 }
 
-void PropertyEditorWindow::loadVidOpts()
+void PropertyEditorWindow::deleteVidOpt()
 {
+	if(!m_settingsCombo || !m_vid || !m_source)
+		return;
+	
+	int idx = m_settingsCombo->currentIndex();
+	if(idx < 0 || idx >= m_settingsList.size())
+		return;
+	qDebug() << "PropertyEditorWindow::deleteVidOpt(): idx:"<<idx;
+	QVariantMap map = m_settingsList[idx];
 
+	if(QMessageBox::question(this, "Really Delete?", QString("Are you sure you want to delete '%1'?").arg(map["name"].toString()),
+		QMessageBox::Ok | QMessageBox::Cancel) == QMessageBox::Ok)
+	{
+		QSettings s;
+		
+		QString key = QString("vidopts/%1").arg(m_source->windowTitle());
+		QVariantList list = s.value(key).toList(), newList;
+		QStringList nameList = QStringList();
+		int counter = 0; 
+		foreach(QVariant data, list)
+		{
+			if(counter != idx)
+			{
+				newList << data;
+			}
+			
+			counter ++;
+		}
+		
+		s.setValue(key, newList);
+	}
+	
+	setSourceWidget(m_source);
+}
+
+void PropertyEditorWindow::loadVidOpts(bool setSource)
+{
+	if(!m_settingsCombo || !m_vid || !m_source)
+		return;
+	
+	int idx = m_settingsCombo->currentIndex();
+	if(idx < 0 || idx >= m_settingsList.size())
+		return;
+		 
+	QVariantMap map = m_settingsList[idx];
+	
+	QList<QString> props = map.keys();
+	
+	foreach(QString prop, props)
+	{
+		m_vid->setProperty(qPrintable(prop), map[prop]);
+	}
+	
+	foreach(PlayerConnection *player, m_dir->players()->players())
+	{
+		if(player->isConnected())
+		{
+			foreach(QString prop, props)
+			{
+				player->setUserProperty(m_vid, m_vid->property(qPrintable(prop)), prop);
+			}
+		}
+	}
+	
+	m_source->setProperty("_currentSetting", idx);
+	
+	if(setSource)
+		setSourceWidget(m_source);
 }
 
 void PropertyEditorWindow::saveVidOpts()
 {
+	if(!m_settingsCombo || !m_vid || !m_source)
+		return;
 
+	QStringList props = QStringList() 
+		<< "whiteLevel"
+		<< "blackLevel"
+// 		<< "midLevel"
+// 		<< "gamma"
+		<< "brightness"
+		<< "contrast" 
+		<< "hue"
+		<< "saturation"
+		<< "flipHorizontal"
+		<< "flipVertical"
+		<< "cropTop"
+		<< "cropBottom"
+		<< "cropLeft"
+		<< "cropRight"
+		<< "filterType"
+		<< "sharpAmount";
+		
+	QVariantMap map;
+	
+	foreach(QString prop, props)
+	{
+		map[prop] = m_vid->property(qPrintable(prop));
+	}
+	
+	int idx = m_settingsCombo->currentIndex();
+	
+	QString name = "";
+	if(idx > 0)
+	{
+		name = m_settingsCombo->itemText(idx);
+	}
+	
+	bool ok;
+	QString text = QInputDialog::getText(this, tr("Setting Name"),
+						tr("Setting name:"), QLineEdit::Normal,
+						name, &ok);
+	if (ok && !text.isEmpty())
+	{
+		name = text;
+		map["name"] = name;
+	
+		QSettings s;
+		
+		bool found = false;
+		QVariantList newList;
+		
+		QString key = QString("vidopts/%1").arg(m_source->windowTitle());
+		QVariantList list = s.value(key).toList();
+		QStringList nameList = QStringList(); 
+		foreach(QVariant data, list)
+		{
+			QVariantMap map = data.toMap();
+			
+			if(map["name"].toString() == name)
+			{
+				newList << QVariant(map);
+				found = true;
+				//idx = newList.size()-1;
+			}
+			else
+			{
+				newList << data;
+			}
+		}
+		
+		if(!found)
+		{
+			newList << QVariant(map);
+			idx = newList.size() - 1;
+		}
+		
+		s.setValue(key, newList);
+	}
+	
+	m_source->setProperty("_currentSetting", idx);
+	setSourceWidget(m_source);
 }
 
 void PropertyEditorWindow::sourceDestroyed() { setSourceWidget(0); }

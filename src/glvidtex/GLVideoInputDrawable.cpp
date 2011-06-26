@@ -25,10 +25,11 @@ GLVideoInputDrawable::GLVideoInputDrawable(QString file, QObject *parent)
 
 GLVideoInputDrawable::~GLVideoInputDrawable()
 {
+	setVideoSource(0);
 	if(m_rx)
 	{
-		m_rx->exit();
-		delete m_rx;
+		m_rx->release(this);
+		//delete m_rx;
 	}
 }
 

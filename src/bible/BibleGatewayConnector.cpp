@@ -5,7 +5,9 @@
 #include <QStringList>
 
 
-#define URL_BASE "http://www.biblegateway.com/passage/"
+// 2011-06-04 - It appears that this URL points to the new BG design...thankfully, they left the "classic design" at, well...classic.biblegateway.com
+//#define URL_BASE "http://www.biblegateway.com/passage/"
+#define URL_BASE "http://classic.biblegateway.com/passage/"
 
 BibleGatewayConnector::BibleGatewayConnector(QObject *parent) 
 	: BibleConnector(parent)

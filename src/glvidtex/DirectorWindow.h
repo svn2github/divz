@@ -352,8 +352,9 @@ private slots:
 	
 	void setAdvancedFilter(QString);
 	
-	void loadVidOpts();
+	void loadVidOpts(bool setSource=true);
 	void saveVidOpts();
+	void deleteVidOpt();
 	
 private:
 	int indexOfFilter(int);
