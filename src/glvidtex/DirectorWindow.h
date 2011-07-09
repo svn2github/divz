@@ -356,6 +356,8 @@ private slots:
 	void saveVidOpts();
 	void deleteVidOpt();
 	
+	void setStraightValue(double);
+	
 private:
 	int indexOfFilter(int);
 	

@@ -150,10 +150,12 @@ class EditorUpdateAdapter : public QObject
 public:
 	EditorUpdateAdapter(QWidget *editor);
 	
-	static EditorUpdateAdapter *getAdapterFromObject(QObject *object, const char *propBaseName); 
+	static EditorUpdateAdapter *getAdapterFromObject(QObject *object, const char *propBaseName);
+	 
+	QWidget *widget() { return m_editor; }
 	
-public slots:
-	void setValue(QVariant);
+// public slots:
+// 	void setValue(QVariant);
 	
 private:
 	QWidget *m_editor;

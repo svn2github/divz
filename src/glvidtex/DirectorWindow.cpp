@@ -2015,7 +2015,7 @@ void PropertyEditorWindow::setSourceWidget(DirectorSourceWidget* source)
 			
 		// Croping
 		{
-			NEW_SECTION("Croping");
+			NEW_SECTION("Croping/Straightening");
 			
 			opts.doubleIsPercentage = true;
 			opts.suffix = "%";
@@ -2033,6 +2033,18 @@ void PropertyEditorWindow::setSourceWidget(DirectorSourceWidget* source)
 			opts.min = -100;
 			opts.max = 0;
 			form->addRow(tr("Crop &Bottom:"),	PropertyEditorFactory::generatePropertyEditor(item, "cropBottom", SLOT(setCropBottom(int)), opts));
+			
+			opts.reset();
+			//opts.suffix = " deg";
+			opts.min = -360.0;
+			opts.max =  360.0;
+			opts.step = 1;
+			opts.defaultValue = 0;
+			//opts.type = QVariant::Int;
+			opts.type = QVariant::Double;
+			opts.value = item->rotation().z();
+			form->addRow(tr("&Straighten:"), PropertyEditorFactory::generatePropertyEditor(this, "zRotation", SLOT(setStraightValue(double)), opts));
+
 			
 			QPushButton *btn = new QPushButton("Apply to Player");
 			connect(btn, SIGNAL(clicked()), this, SLOT(sendVidOpts()));
@@ -2187,7 +2199,8 @@ void PropertyEditorWindow::sendVidOpts()
 		<< "cropLeft"
 		<< "cropRight"
 		<< "filterType"
-		<< "sharpAmount";
+		<< "sharpAmount"
+		<< "rotation";
 		
 		
 		
@@ -2295,7 +2308,8 @@ void PropertyEditorWindow::saveVidOpts()
 		<< "cropLeft"
 		<< "cropRight"
 		<< "filterType"
-		<< "sharpAmount";
+		<< "sharpAmount"
+		<< "rotation";
 		
 	QVariantMap map;
 	
@@ -2356,6 +2370,61 @@ void PropertyEditorWindow::saveVidOpts()
 	
 	m_source->setProperty("_currentSetting", idx);
 	setSourceWidget(m_source);
+}
+
+void PropertyEditorWindow::setStraightValue(double value)
+{
+	if(!m_vid || !m_source)
+		return;
+	
+	// here's the easy part
+	QVector3D rot = m_vid->rotation(); 
+	rot.setZ(value); 
+	m_vid->setProperty("rotation", rot);
+	
+	// now to calculate cropping
+	
+	QVector3D rotationPoint = m_vid->rotationPoint();
+	//QRectF rect = m_vid->rect();
+	
+	// We're going to set the rect ourselves here
+	QSizeF canvas = m_vid->canvasSize();
+	QRectF rect(QPointF(0,0),canvas);
+
+	qreal x = rect.width()  * rotationPoint.x() + rect.x();
+	qreal y = rect.height() * rotationPoint.y() + rect.y();
+	
+	QTransform transform = QTransform()
+		.translate(x,y)
+		.rotate(rot.x(),Qt::XAxis)
+		.rotate(rot.y(),Qt::YAxis)
+		.rotate(rot.z(),Qt::ZAxis)
+		.translate(-x,-y);
+	
+	QRectF rotRect = transform.mapRect(rect);
+	
+	//qDebug() << "PropertyEditorWindow::setStraightValue("<<value<<"): orig rect:"<<rect<<", rotated rect:"<<rotRect;
+	
+	QPointF tld = rotRect.topLeft()     - rect.topLeft();
+	QPointF brd = rotRect.bottomRight() - rect.bottomRight();
+// 	qDebug() << "\t topLeftDiff:		"<<tld;
+// 	qDebug() << "\t bottomRightDiff:	"<<brd;
+	 
+// 	PropertyEditorWindow::setStraightValue( 19 ): orig rect: QRectF(0,0 1000x750) , rotated rect: QRectF(-94.8473,-142.354 1189.69x1034.71)
+//          topLeftDiff:            QPointF(-94.8473, -142.354)
+//          bottomRightDiff:        QPointF(94.8473, 142.354)
+
+	// 2.2 is just a "magic number" found by guessing
+	
+	double rx = tld.x()*2.2;
+	double ry = tld.y()*2.2;
+	double rw = canvas.width() + fabs(rx*2);
+	double rh = canvas.height() + fabs(ry*2);
+
+	QRectF newRect = QRectF(rx,ry,rw,rh);
+	m_vid->setProperty("rect", newRect);	
+	
+	//qDebug() << "\t newRect:        	"<<newRect;
 }
 
 void PropertyEditorWindow::sourceDestroyed() { setSourceWidget(0); }

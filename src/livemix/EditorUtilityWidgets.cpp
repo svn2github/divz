@@ -58,9 +58,9 @@ EditorUpdateAdapter::EditorUpdateAdapter(QWidget *widget)
 
 }
 
-void EditorUpdateAdapter::setValue(QVariant value)
-{
-}
+// void EditorUpdateAdapter::setValue(QVariant value)
+// {
+// }
 
 QWidget * PropertyEditorFactory::generatePropertyEditor(QObject *object, const char *property, const char *slot, PropertyEditorOptions opts, const char *changeSignal)
 {
@@ -82,12 +82,11 @@ QWidget * PropertyEditorFactory::generatePropertyEditor(QObject *object, const c
 
 	//qDebug() << "generatePropertyEditor: prop:"<<property<<", opts.type:"<<opts.type<<", variant:"<<(opts.value.isValid() ? opts.value : prop);
 	
-	#define StoreEditor(box) QString prop = QString("%1_editor").arg(property); 
-	/*
+	#define StoreEditor(box) QString prop = QString("%1_editor").arg(property);\
 		EditorUpdateAdapter *adapt = new EditorUpdateAdapter(box);\
 		QVariant ptr = qVariantFromValue((void *) adapt); \
-		object->setProperty(qPrintable(prop), ptr); 
-	*/
+		object->setProperty(qPrintable(prop), ptr);
+		 
 	if(opts.type == QVariant::Int)
 	{
 		QSpinBox *spin = new QSpinBox(base);
