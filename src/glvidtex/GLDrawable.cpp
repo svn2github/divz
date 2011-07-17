@@ -697,12 +697,10 @@ double GLDrawable::opacity()
  	if(m_parent && !m_parent->hasFrameBuffer())
  		opac *= m_parent->opacity();
 			
-/*	if(m_scene
-	   && !m_scene->rootObj()
-	   )
-		opac *= m_scene->opacity();*/
+	if(m_scene  && !m_scene->rootObj())
+		opac *= m_scene->opacity();
 	
-	//qDebug() << "GLDrawable::opacity(): "<<opac;
+	//qDebug() << "GLDrawable::opacity(): "<<(QObject*)this<<opac;
 	
 	return opac;
 }

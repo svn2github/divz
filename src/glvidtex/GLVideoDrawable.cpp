@@ -100,7 +100,7 @@ GLVideoDrawable::GLVideoDrawable(QObject *parent)
 	, m_source2(0)
 	, m_frameCount(0)
 	, m_latencyAccum(0)
-	, m_debugFps(true)
+	, m_debugFps(false)
 	, m_validShader(false)
 	, m_validShader2(false)
 	, m_uploadedCacheKey(0)
@@ -331,6 +331,7 @@ void GLVideoDrawable::xfadeStart(bool invertStart)
 	if(m_xfadeLength <= 50/1000)
 	{
 		xfadeStop();
+		//qDebug() << "GLVideoDrawable::xfadeStart(): "<<(QObject*)this<<" m_xfadeLength is "<<m_xfadeLength<<", less than "<<(50/1000)<<", not running fade";
 		return;
 	}
 
@@ -340,7 +341,7 @@ void GLVideoDrawable::xfadeStart(bool invertStart)
 	m_fadeTimeStarted = false;
 	m_startOpacity = invertStart ? 1.0 - m_fadeValue : m_fadeValue;
 //	m_fadeValue = 0.0;
-	//qDebug() << "GLVideoDrawable::xfadeStart()";
+	//qDebug() << "GLVideoDrawable::xfadeStart(): "<<(QObject*)this<<" start opacity: "<<m_startOpacity;
 	
 	m_fadeCurve.setType(QEasingCurve::InOutQuad);
 //	m_fadeCurve.setType(QEasingCurve::OutCubic);

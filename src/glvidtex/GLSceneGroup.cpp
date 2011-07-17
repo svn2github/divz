@@ -780,6 +780,10 @@ void GLScene::setOpacity(double d, bool animate, double animDuration)
 		
 		return;
 	}
+	else
+	{
+		//qDebug() << "GLScene::setOpacity: animate flag false";
+	}
 	
 	//qDebug() << "GLScene::setOpacity: "<<d;
 	m_opacity = d;
@@ -788,9 +792,11 @@ void GLScene::setOpacity(double d, bool animate, double animDuration)
 	{
 		//m_rootObj->updateGL();
 		m_rootObj->setOpacity(d);
+		//qDebug() << "GLScene::setOpacity: Set root "<<(QObject*)m_rootObj<<" opacity "<<d;
 	}
 	else
 	{
+		//qDebug() << "GLScene::setOpacity: Calling updateGL in hopes they honor our opacity "<<d;
 		foreach(GLDrawable *d, m_itemList)
 			d->updateGL();
 	}
@@ -809,7 +815,7 @@ void GLScene::fadeTick()
 	}
 	if(m_fadeClock.elapsed() >= m_crossfadeSpeed)
 	{
-		//qDebug() << "GLScene::fadeTick: fade ended ("<<time<<" > "<<m_crossfadeSpeed<<")";
+		//qDebug() << "GLScene::fadeTick: fade ended ("<<m_fadeClock.elapsed()<<" > "<<m_crossfadeSpeed<<")";
 		m_fadeActive = false;
 		m_fadeTimer.stop();
 		setOpacity(m_endOpacity);

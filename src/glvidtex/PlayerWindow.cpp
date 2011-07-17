@@ -1419,7 +1419,10 @@ void PlayerWindow::addScene(GLScene *scene, int zmod, bool fadeInOpac)
 	}
 
 	if(fadeInOpac)
+	{
+		//qDebug() << "PlayerWindow::addScene: fade in scene:"<<scene<<" at "<<m_xfadeSpeed<<"ms";
 		scene->setOpacity(1,true,m_xfadeSpeed); // animate fade in
+	}
 	
 
 	GLDrawableList list = scene->drawableList();
