@@ -40,6 +40,8 @@ function gotoUrl(url)
 		window.RequestObject.open("GET",url + '&date=' + (new Date().getTime()), true);
 		window.RequestObject.send(null);
 	}
+	
+	return false;
 }
 
 function incSlide(dir)
@@ -66,7 +68,10 @@ function incSlide(dir)
 			if(typeof(nextElm.onclick))
 			{
 				nextElm.onclick();
-				nextElm.scrollIntoView(true);
+				nextElm.scrollIntoView(false);
+				var linkElm;
+				if(linkElm = document.getElementById('prev_link'))
+					linkElm.focus();
 				return true;
 			}
 		}
@@ -78,6 +83,9 @@ function incSlide(dir)
 			{
 				nextElm.onclick();
 				nextElm.scrollIntoView(false);
+				var linkElm;
+				if(linkElm = document.getElementById('next_link'))
+					linkElm.focus();
 				return true;
 			}
 		}
