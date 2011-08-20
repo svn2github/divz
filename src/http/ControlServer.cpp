@@ -166,7 +166,7 @@ void ControlServer::screenListGroups(QTcpSocket *socket, const QStringList &path
 		outputGroupList << row;
 	}
 	
-	SimpleTemplate tmpl(":/data/http/doc.tmpl");
+	SimpleTemplate tmpl("data/http/doc.tmpl");
 	tmpl.param("list",outputGroupList);
 	
 	OutputControl * outputControl = mw->outputControl(liveId);
@@ -181,7 +181,18 @@ void ControlServer::screenListGroups(QTcpSocket *socket, const QStringList &path
 	else
 		tmpl.param("docfile",QFileInfo(doc->filename()).baseName());
 	
-	Http_Send_Ok(socket) << tmpl.toString();
+// 	Http_Send_Ok(socket) << 
+// 		"Content-Type: text/html\n\n" <<
+// 		tmpl.toString();
+
+	QHttpResponseHeader header(QString("HTTP/1.0 200 OK"));
+	header.setValue("Content-Type", "text/html");
+
+	respond(socket,header);
+	
+	QTextStream output(socket);
+	output.setAutoDetectUnicode(true);
+	output << tmpl.toString();
 }
 
 
@@ -327,7 +338,7 @@ void ControlServer::screenLoadGroup(QTcpSocket *socket, const QStringList &path,
 			outputSlideList << row;
 		}
 		
-		SimpleTemplate tmpl(":/data/http/group.tmpl");
+		SimpleTemplate tmpl("data/http/group.tmpl");
 		tmpl.param("list",outputSlideList);
 		tmpl.param("grid", dynamic_cast<SongSlideGroup*>(group) == NULL);
 		tmpl.param("groupidx", docModel->indexForGroup(group).row());

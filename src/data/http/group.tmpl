@@ -1,26 +1,215 @@
 <html>
 <head>
 	<title>%%grouptitle%% - DViz</title>
-	<link rel="shortcut icon" type="image/x-icon" href="/:/data/http/favicon.ico">
+	<link rel="shortcut icon" type="image/x-icon" href="/:/data/http/favicon.ico"/>
 	<link rel="stylesheet" type="text/css" href='/:/data/http/styles.css' />
-	<script src="/:/data/http/control-scripts.js"></script>
+	<!--<script src="/:/data/http/control-scripts.js"></script>-->
+	<script src="/data/http/control-scripts.js"></script>
+	<!--<script src="/data/http/jquery-1.5.2.min.js"></script>-->
 	<meta name="viewport" content="user-scalable=no, width=320" />
 	<meta name="apple-mobile-web-app-capable" content="yes" />
 	
+	<style>
+	body {
+		margin: 0;
+		padding: 0;
+		background: white;
+		font-family: Sans-Serif;
+	}
+	ul.menu, 
+	ul.menu li,
+	ul.slides,
+	ul.slides li {
+		list-style: none;
+		padding: 0;
+		margin: 0;
+	}
+	
+	ul.menu li a {
+		padding: .5em 1em;
+		display: block;
+		border: 1px solid black;
+		margin: .5em 0em 0 1em;
+		
+	}
+	
+	h1 {
+		margin:0;
+		padding: 5px 5px;
+		background: rgb(220,220,220);
+		border-bottom: 1px solid black;
+		font-size: 14px;
+	}
+	
+	ul.menu li {
+		float: left;
+	}
+	
+	.fc { clear:both}
+	
+	.button-wrapper {
+		width: 97%;
+		margin: 0em auto;
+		padding: 1em;
+		/*display: table;*/
+	}
+	.button {
+		float: left;
+		background: rgb(220,220,220);
+		border: 1px solid black;
+		width: 43%;
+		/*display: table-cell;*/
+		text-align: center;
+		
+		padding: 1em 2em;
+		color: black;
+		text-decoration: none;
+		font-weight:bold;
+		font-size: 150%;
+		display: block;
+	}
+	
+	.button-wrapper div:first-child {
+		border-right: 0;
+	}
+	
+	.button-prev {
+		width: 25%;
+	}
+	
+	.button-next {
+		width: 60%;
+	}
+	
+	.slides-wrapper {
+		border:1px solid black;
+		overflow: auto;
+		width: 95%;
+		height: 154px;
+		margin-top: .5em;
+		/*margin-left: .5em;*/
+	}
+	
+	.slides li {
+		float: left;
+	}
+	
+	.slides li .text {
+		display: none !important;
+	}
+	
+	
+	#top {
+		position: fixed;
+		background: white;
+	}
+		
+	
+	</style>
+
 </head>
 <body>
-	<h1>%%grouptitle%%</h1>
-	<a href='/?nocache=%%date%%'>&laquo; Main</a> | %%include::/data/http/inc-ctrl-toggles.tmpl%%
-	<table>
+	<div id="top">
+		<h1>%%grouptitle%%</h1>
+		
+		<ul class='menu'>
+			<li> <a href='/?nocache=%%date%%'>&laquo; Main</a> </li>
+		
+			<li> 
+			%%if:black_toggled%%
+				<a href='#' onclick='toggle_black(1,this)' class='ctrl_enabled'>Black</a>
+			%%else%%
+				<a href='#' onclick='toggle_black(0,this)' class='ctrl_disabled'>Black</a>
+			%%/if:black_toggled%%
+			</li>
+			
+			<li>
+			%%if:clear_toggled%%
+				<a href='#' onclick='toggle_clear(1,this)' class='ctrl_enabled'>Clear</a>
+			%%else%%
+				<a href='#' onclick='toggle_clear(0,this)' class='ctrl_disabled'>Clear</a>
+			%%/if:clear_toggled%%
+			</li>
+		</ul>
+		
+		<div class=fc>
+		
+		<div class='button-wrapper'>
+			<a class='button button-prev' href='#' onclick='gotoUrl("/go/prev")'>Prev</a>
+			<a class='button button-next' href='#' onclick='gotoUrl("/go/next")'>Next</a>
+			
+			<div class=fc>
+		</div>
+		
+	</div>
+	
+	
+	
+	<!--<br/>-->
+	
+	<!--Quick: <input type='text' id='qslide' lenth='10' onfocus='select()' onkeyup="if_enter(event,'toggle_qslide()')"/>
+	%%if:qslide_toggled%%
+		<a href='#' onclick='toggle_qslide(1,this)' class='ctrl_enabled' id='quickslide_link'>Show</a>
+	%%else%%
+		<a href='#' onclick='toggle_qslide(0,this)' class='ctrl_disabled' id='quickslide_link'>Show</a>
+	%%/if:qslide_toggled%%-->
+	
+	<!--<div class='slides-wrapper'>
+		<ul class='slides'>
+		%%loop:list%%
+			<li>
+				<div class='slide'>
+					<a name='slide%%slide%%'>
+						<a href='#slide%%slide%%' onclick='return false'>
+							<img 
+								id='img%%slide%%' 
+								onclick='setSlide("/group/%%groupidx%%?slide=%%slide%%",this)' 
+								src='/group/%%groupidx%%/icon?slide=%%slide%%' 
+								border='0' 
+								class='%%if:live_flag%%live%%else%%notlive%%/if:live_flag%%' 
+								alt='%%if:text%%%%text%%%%/if:text%%'/>
+						</a>
+					</a>
+					<script>
+						window.imageElementList.push(document.getElementById('img%%slide%%'));
+						%%if:live_flag%%checkTextForSlide(document.getElementById('img%%slide%%'))%%/if:live_flag%%
+					</script>
+					
+				</div>
+			</li>
+		%%/loop:list%%
+		</ul>	
+	</div>-->
+
+	<!--<h1>%%grouptitle%%</h1>
+	<a href='/?nocache=%%date%%'>&laquo; Main</a> | %%include:data/http/inc-ctrl-toggles.tmpl%%
+	-->
+	<table >
 	%%loop:list%%
 		<tr>
-			<td><a name='slide%%slide%%'><a href='#slide%%slide%%' onclick='return false'><img id='img%%slide%%' onclick='setSlide("/group/%%groupidx%%?slide=%%slide%%",this)' src='/group/%%groupidx%%/icon?slide=%%slide%%' border=0 class='%%if:live_flag%%live%%else%%notlive%%/if:live_flag%%' alt='%%if:text%%%%text%%%%/if:text%%'></a></a>
-			<script>window.imageElementList.push(document.getElementById('img%%slide%%'));%%if:live_flag%%checkTextForSlide(document.getElementById('img%%slide%%'))%%/if:live_flag%%</script>
+			<td>
+				<a name='slide%%slide%%'>
+					<a href='#slide%%slide%%' onclick='return false'>
+						<img 
+							id='img%%slide%%' 
+							onclick='setSlide("/group/%%groupidx%%?slide=%%slide%%",this)' 
+							src='/group/%%groupidx%%/icon?slide=%%slide%%' 
+							border='0' 
+							class='%%if:live_flag%%live%%else%%notlive%%/if:live_flag%%' 
+							alt='%%if:text%%%%text%%%%/if:text%%'/>
+					</a>
+				</a>
+				<script>
+					window.imageElementList.push(document.getElementById('img%%slide%%'));
+					%%if:live_flag%%checkTextForSlide(document.getElementById('img%%slide%%'))%%/if:live_flag%%
+				</script>
 			</td>
 			%%if:text%%<td>%%text%%</td>%%/if:text%%
 			
 		</tr>
 	%%/loop:list%%
 	</table>
+	
+	<div class=fc></div>
 </body>
 </html>

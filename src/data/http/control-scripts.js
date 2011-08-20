@@ -66,7 +66,7 @@ function incSlide(dir)
 			if(typeof(nextElm.onclick))
 			{
 				nextElm.onclick();
-				//nextElm.scrollIntoView(true);
+				nextElm.scrollIntoView(true);
 				return true;
 			}
 		}
@@ -77,7 +77,7 @@ function incSlide(dir)
 			if(typeof(nextElm.onclick))
 			{
 				nextElm.onclick();
-				//nextElm.scrollIntoView(false);
+				nextElm.scrollIntoView(false);
 				return true;
 			}
 		}
