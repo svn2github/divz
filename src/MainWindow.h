@@ -141,6 +141,7 @@ protected slots:
 
 	void actionAppSettingsDialog();
 	void actionDocSettingsDialog();
+	void actionMidiSettingsDialog();
 
 	void actionAboutDviz();
 	void actionDvizWebsite();
@@ -235,8 +236,7 @@ private:
 	ViewServer * m_viewServer;
 	
 	/** static */
-	static MainWindow * static_mainWindow;	
-
+	static MainWindow * static_mainWindow;
 };
 
 #endif // MAINWINDOW_H

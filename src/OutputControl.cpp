@@ -1118,6 +1118,10 @@ void OutputControl::setCrossFadeSpeed(int value)
 		
 	m_inst->setFadeSpeed(speed);
 	m_inst->setFadeQuality(quality);
+	
+	// Update GUI - added for use with DVizMidiInputAdapter
+	if(m_fadeSlider->value() != value)
+		m_fadeSlider->setValue(value);
 }
 
 void OutputControl::setIsOutputSynced(int flag) 

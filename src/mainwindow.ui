@@ -40,6 +40,7 @@
     <addaction name="actionSave_As"/>
     <addaction name="separator"/>
     <addaction name="actionApp_Settings"/>
+    <addaction name="actionMIDI_Input_Settings"/>
     <addaction name="actionDoc_Settings"/>
     <addaction name="separator"/>
     <addaction name="actionExit"/>
@@ -289,6 +290,11 @@
    </property>
    <property name="text">
     <string>Add Camera Viewer</string>
+   </property>
+  </action>
+  <action name="actionMIDI_Input_Settings">
+   <property name="text">
+    <string>MIDI Input Settings...</string>
    </property>
   </action>
  </widget>

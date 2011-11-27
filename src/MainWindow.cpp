@@ -59,6 +59,9 @@
 #include "http/ControlServer.h"
 #include "http/ViewServer.h"
 
+#include "DVizMidiInputAdapter.h"
+#include "MidiInputSettings.h"
+
 MainWindow * MainWindow::static_mainWindow = 0;
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -1398,6 +1401,11 @@ void MainWindow::actionDocSettingsDialog()
 
 }
 
+void MainWindow::actionMidiSettingsDialog()
+{
+	MidiInputSettings *d = new MidiInputsettings(DVizMidiInputAdapter::inst(),this);
+	d->exec();
+}
 
 void MainWindow::groupSelected(const QModelIndex &idx)
 {

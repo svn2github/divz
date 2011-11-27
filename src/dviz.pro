@@ -127,7 +127,8 @@ SOURCES += \
 	DirectoryListModel.cpp \
 	ImportGroupDialog.cpp \
 	MimeTypes.cpp \
-	SharedMemoryImageWriter.cpp
+	SharedMemoryImageWriter.cpp \
+	DVizMidiInputAdapter.h 
 	
 
 QT += core \
@@ -182,7 +183,7 @@ include(bible/bible.pri)
 include(viewer/client.pri)
 include(imgtool/exiv2-0.18.2-qtbuild/qt_build_root.pri)
 include(webgroup/webgroup.pri)
-
+include(miditcp/miditcp.pri)
 
 # deployment on Linux
 unix {
