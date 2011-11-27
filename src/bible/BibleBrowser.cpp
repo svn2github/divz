@@ -570,6 +570,7 @@ void BibleBrowser::setupVersionCombo()
 {
 	QList<QStringPair> list;
 	
+	list.append(qMakePair(QString("NIV1984"),QString(tr("New International Version 1984"))));
 	list.append(qMakePair(QString("NIV"),QString(tr("New International Version"))));
 	list.append(qMakePair(QString("NASB"),QString(tr("New American Standard Bible"))));
 	list.append(qMakePair(QString("MSG"),QString(tr("The Message"))));
@@ -673,7 +674,7 @@ void BibleBrowser::setupVersionCombo()
 		m_versionCombo->addItem(QString("%1%2").arg(text.left(MAX_VERSION_NAME_LENGTH)).arg(text.length() > MAX_VERSION_NAME_LENGTH ? "..." : ""), code);
 	}
 	
-	m_versionCombo->setCurrentIndex(m_versionCombo->findData("NIV"));
+	m_versionCombo->setCurrentIndex(m_versionCombo->findData("NIV1984"));
 }
 
 void BibleBrowser::setupTextBox(TextBoxItem *tmpText)

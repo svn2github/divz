@@ -152,7 +152,9 @@ void GLImageHttpDrawable::handleNetworkData(QNetworkReply *networkReply)
 				//qDebug() << "GLImageHttpDrawable::handleNetworkData(): [DEBUG] No change, current slide:"<<m_slideName;
 			}
 			else
+			if(str.indexOf("slide_id") > -1)
 			{
+				qDebug() << "GLImageHttpDrawable::handleNetworkData(): [DEBUG] Result:"<<str;
 				static QRegExp dataExtract("slide_id:(-?\\d+),slide_name:\"([^\"]+)\"",Qt::CaseInsensitive);
 				if(dataExtract.indexIn(str))
 				{

@@ -237,7 +237,7 @@ void ViewServer::reqSendImage(QTcpSocket *socket, const QStringList &path, const
 			{
 				
 				if(!m_scene)
-					m_scene = new MyGraphicsScene(MyGraphicsScene::StaticPreview);
+					m_scene = new MyGraphicsScene(MyGraphicsScene::Live);
 				if(m_scene->sceneRect() != m_sceneRect)
 					m_scene->setSceneRect(m_sceneRect);
 					

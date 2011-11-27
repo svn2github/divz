@@ -1,5 +1,5 @@
 #include <QCoreApplication>
-
+#include <QDebug>
 #include "3rdparty/rtmidi/RtMidi.h"
 
 int main(int argc, char **argv)
@@ -49,10 +49,11 @@ int main(int argc, char **argv)
 				// Do something with MIDI data.
 				//done = true;
 			}
+			qDebug() << "Bytes in:"<<nBytes;
 			// Sleep for 10 milliseconds.
-			sleep( 10 );
+			sleep( 1 );
 			
-			done = true;
+			//done = true;
 		}
 		
 		qDebug("MidiTest: Done testing input!");

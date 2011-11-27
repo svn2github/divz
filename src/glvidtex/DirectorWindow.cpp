@@ -2345,9 +2345,9 @@ void PropertyEditorWindow::saveVidOpts()
 		QStringList nameList = QStringList(); 
 		foreach(QVariant data, list)
 		{
-			QVariantMap map = data.toMap();
+			QVariantMap existingMap = data.toMap();
 			
-			if(map["name"].toString() == name)
+			if(existingMap["name"].toString() == name)
 			{
 				newList << QVariant(map);
 				found = true;
