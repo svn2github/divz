@@ -16,6 +16,8 @@ public:
 	
 	bool start(const QString& host="", int port=3729);
 	void exit();
+	
+	bool isConnected() { return m_connected; }
 
 signals:
 	void midiFrameReady(int chan, int key, int val);
@@ -25,6 +27,7 @@ signals:
 	void error(QString);	
 	void socketConnected();
 	void connected();
+	void connectionStatusChanged(bool isConnected);
 
 private slots:
 	void dataReady();

@@ -7,12 +7,12 @@ MidiServerThread::MidiServerThread(int socketDescriptor, MidiServer *parent)
 	: QThread(parent)
 	, m_socketDescriptor(socketDescriptor)
 {
+	m_socket = new QTcpSocket();
 	connect(parent, SIGNAL(midiFrameReady(int, int, int)), this, SLOT(midiFrameReady(int,int,int))); 
 }
 
 void MidiServerThread::run()
 {
-	m_socket = new QTcpSocket();
 	connect(m_socket, SIGNAL(disconnected()), this, SLOT(deleteLater()));
 	
 	if(!m_socket->setSocketDescriptor(m_socketDescriptor)) 

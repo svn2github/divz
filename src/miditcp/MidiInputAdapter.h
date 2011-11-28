@@ -4,6 +4,8 @@
 #include <QtGui>
 #include <QDebug>
 
+class MidiReceiver;
+
 class MidiInputAction : public QObject
 {
 	//Q_OBJECT
@@ -12,13 +14,13 @@ public:
 	virtual ~MidiInputAction() {} 
 	
 	// Just return a UUID - makes life easier. Used for mapping persistance across application executions
-	QString id() { return "0000-0000-0000-0000"; }
+	virtual QString id() { return "0000-0000-0000-0000"; }
 	
 	// Displayed to user in config dialog
-	QString name() { return "Hello, World"; }
+	virtual QString name() { return "Hello, World"; }
 	
 	// Fader or Button
-	bool isFader() { return false; }
+	virtual bool isFader() { return false; }
 
 	// Reimplement this to do the real work
 	virtual void trigger(int value) { qDebug() << "Hello, World! Value is:"<<value; }
@@ -29,6 +31,7 @@ class MidiInputAdapter : public QObject
 	Q_OBJECT
 public:	
 	MidiInputAdapter();
+	~MidiInputAdapter();
 
 	QList<MidiInputAction*> availableActions() { return m_actionList; }
 	
@@ -42,6 +45,8 @@ public:
 	
 	int keyForAction(MidiInputAction*);
 	MidiInputAction *actionForKey(int key);
+	
+	bool isConnected();
 
 public slots:
 	void setMappings(QHash<int,MidiInputAction*>);
@@ -53,6 +58,7 @@ public slots:
 signals:
 	// used mainly to configure and update mappings
 	void midiKeyReceived(int key, int val);
+	void connectionStatusChanged(bool);
 
 protected slots:
 	void midiFrameReady(int chan, int key, int val);
@@ -69,6 +75,9 @@ protected:
 	QList<MidiInputAction*> m_actionList;
 	MidiReceiver *m_receiver;
 	bool m_configMode;
+	
+	QString m_host;
+	int m_port;
 
 };
 

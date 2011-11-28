@@ -128,7 +128,7 @@ SOURCES += \
 	ImportGroupDialog.cpp \
 	MimeTypes.cpp \
 	SharedMemoryImageWriter.cpp \
-	DVizMidiInputAdapter.h 
+	DVizMidiInputAdapter.cpp
 	
 
 QT += core \

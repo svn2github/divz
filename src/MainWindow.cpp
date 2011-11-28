@@ -60,7 +60,7 @@
 #include "http/ViewServer.h"
 
 #include "DVizMidiInputAdapter.h"
-#include "MidiInputSettings.h"
+#include "MidiInputSettingsDialog.h"
 
 MainWindow * MainWindow::static_mainWindow = 0;
 
@@ -157,6 +157,11 @@ MainWindow::MainWindow(QWidget *parent) :
 	m_ui->actionDoc_Settings->setIcon(QIcon(":data/stock-properties.png"));
 	connect(m_ui->actionDoc_Settings, SIGNAL(triggered()), this, SLOT(actionDocSettingsDialog()));
 	actionList << m_ui->actionDoc_Settings;
+	
+	//m_ui->actionMIDI_Input_Settings->setIcon(QIcon(":data/stock-properties.png"));
+	connect(m_ui->actionMIDI_Input_Settings, SIGNAL(triggered()), this, SLOT(actionMidiSettingsDialog()));
+	actionList << m_ui->actionMIDI_Input_Settings;
+	
 
 	connect(m_ui->actionAbout_DViz, SIGNAL(triggered()), this, SLOT(actionAboutDviz()));
 	connect(m_ui->actionVisit_DViz_Website, SIGNAL(triggered()), this, SLOT(actionDvizWebsite()));
@@ -226,6 +231,8 @@ MainWindow::MainWindow(QWidget *parent) :
 // 	sg->show();
 //  	if(m_doc->at(0))
 //  		sg->setSlideGroup(m_doc->at(0));
+
+	(void*)DVizMidiInputAdapter::instance();
 }
 
 
@@ -1403,7 +1410,7 @@ void MainWindow::actionDocSettingsDialog()
 
 void MainWindow::actionMidiSettingsDialog()
 {
-	MidiInputSettings *d = new MidiInputsettings(DVizMidiInputAdapter::inst(),this);
+	MidiInputSettingsDialog *d = new MidiInputSettingsDialog(DVizMidiInputAdapter::instance(),this);
 	d->exec();
 }
 

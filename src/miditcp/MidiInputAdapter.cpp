@@ -1,8 +1,32 @@
+#include "MidiInputAdapter.h"
 #include "MidiReceiver.h"
 
-#include "MidiInputAdapter.h"
+	
+/*
+class DebugDummyAction : public MidiInputAction
+{
+	QString id() { return "e99f7bb5-271f-4203-bd87-6b2c609279de"; }
+	QString name() { return "Rating"; }
+	bool isFader() { return true; }
+	void trigger(int value)
+	{
+		qDebug() << qPrintable(name())<<": "<<value;
+	}
+};
 
-MidiInputAdpater::MidiInputAdapter()
+class DebugDummyAction2 : public MidiInputAction
+{
+	QString id() { return "e99f7bb5-271f-4203-bd87-6b2c609279de1234"; }
+	QString name() { return "Foobar"; }
+	bool isFader() { return true; }
+	void trigger(int value)
+	{
+		qDebug() << qPrintable(name())<<": "<<value;
+	}
+};
+*/
+	
+MidiInputAdapter::MidiInputAdapter()
 	: QObject()
 	, m_receiver(new MidiReceiver())
 	, m_configMode(false)
@@ -12,9 +36,10 @@ MidiInputAdpater::MidiInputAdapter()
 	setupActionList();
 	loadSettings();
 	connect(m_receiver, SIGNAL(midiFrameReady(int,int,int)), this, SLOT(midiFrameReady(int,int,int)));
+	connect(m_receiver, SIGNAL(connectionStatusChanged(bool)), this, SIGNAL(connectionStatusChanged(bool)));
 }
 
-MidiInputAdpater::~MidiInputAdpater()
+MidiInputAdapter::~MidiInputAdapter()
 {
 	if(m_receiver)
 	{
@@ -29,7 +54,11 @@ bool MidiInputAdapter::triggerMappingForKey(int key, int value)
 	MidiInputAction *action = actionForKey(key);
 	if(action)
 	{
-		action->trigger(value);
+		if(action->isFader())
+			action->trigger(value);
+		else
+			if(value == 0) // button release
+				action->trigger(value);
 		return true;
 	}
 	else
@@ -39,18 +68,23 @@ bool MidiInputAdapter::triggerMappingForKey(int key, int value)
 	}
 }
 
-int MidiInputAdpater::keyForAction(MidiInputAction *action)
+int MidiInputAdapter::keyForAction(MidiInputAction *action)
 {
 	QList<int> keys = m_mappings.keys(action);
 	return keys.isEmpty() ? -1 : keys.first();
 }
 
-MidiInputAction *MidiInputAdpater::actionForKey(int key)
+MidiInputAction *MidiInputAdapter::actionForKey(int key)
 {
 	if(!m_mappings.contains(key))
 		return 0;
 		
 	return m_mappings.value(key);
+}
+
+bool MidiInputAdapter::isConnected()
+{
+	return m_receiver->isConnected();
 }
 
 void MidiInputAdapter::setMappings(QHash<int,MidiInputAction*> hash)
@@ -78,6 +112,8 @@ void MidiInputAdapter::setConfigMode(bool flag)
 
 void MidiInputAdapter::midiFrameReady(int chan, int key, int val)
 {
+	Q_UNUSED(chan);
+	
 	if(!m_configMode)
 		triggerMappingForKey(key, val);
 	
@@ -88,6 +124,7 @@ void MidiInputAdapter::setupActionList()
 {
 	/// REIMPL in subclasses
 	m_actionList << new MidiInputAction(); // hello, world basic implementation
+	//m_actionList << new DebugDummyAction() << new DebugDummyAction2();
 }
 
 
@@ -97,9 +134,13 @@ void MidiInputAdapter::storeSettings()
 	settings.setValue("MidiInputAdapter/host", host());
 	settings.setValue("MidiInputAdapter/port", port());
 	
-	QMap<int,QString> mappings;
+	QHash<QString,QVariant> mappings;
 	foreach(int key, m_mappings.keys())
-		mappings[key] = m_mappings[key]->id();
+	{
+		MidiInputAction *act = m_mappings[key];
+		if(act)
+			mappings[QString("%1").arg(key)] = QVariant(act->id());
+	}
 	
 	settings.setValue("MidiInputAdapter/mappings", mappings);
 }
@@ -114,13 +155,13 @@ void MidiInputAdapter::loadSettings()
 	foreach(MidiInputAction *act, m_actionList)
 		id2act[act->id()] = act;
 	
-	QMap<int,QString> mappings = settings.setValue("MidiInputAdapter/mappings").toMap();
+	QHash<QString,QVariant> mappings = settings.value("MidiInputAdapter/mappings").toHash();
 	QHash<int,MidiInputAction*> newMappings;
-	foreach(int key, mappings.keys())
-		newMappings[key] = id2act[mappings[key]];
+	foreach(QString key, mappings.keys())
+		newMappings[key.toInt()] = id2act[mappings[key].toString()];
 	
 	m_mappings = newMappings;
 	
-	m_receiver->start(host, port);
+	m_receiver->start(m_host, m_port);
 }
 

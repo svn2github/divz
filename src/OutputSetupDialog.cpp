@@ -302,9 +302,11 @@ void OutputSetupDialog::setupScreenList()
 						.arg(geom.left())
 						.arg(geom.top());
 		qDebug() << "setupScreenList(): screenNum:"<<screenNum<<", diz:"<<diz;
+		
 		QTableWidgetItem *t = prototype->clone();
 		t->setText(QString("Screen %1").arg(screenNum+1));
 		tbl->setItem(screenNum,0,t);
+		
 		t = prototype->clone();
 		t->setText(diz);
 		tbl->setItem(screenNum,1,t);

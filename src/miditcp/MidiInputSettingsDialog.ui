@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>MidiInputSettings</class>
- <widget class="QDialog" name="MidiInputSettings">
+ <class>MidiInputSettingsDialog</class>
+ <widget class="QDialog" name="MidiInputSettingsDialog">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -37,7 +37,11 @@
       </widget>
      </item>
      <item>
-      <widget class="QLineEdit" name="hostEdit"/>
+      <widget class="QLineEdit" name="hostEdit">
+       <property name="text">
+        <string>localhost</string>
+       </property>
+      </widget>
      </item>
      <item>
       <widget class="QLabel" name="label_3">
@@ -47,12 +51,22 @@
       </widget>
      </item>
      <item>
-      <widget class="QSpinBox" name="portBox"/>
+      <widget class="QSpinBox" name="portBox">
+       <property name="minimum">
+        <number>1</number>
+       </property>
+       <property name="maximum">
+        <number>65536</number>
+       </property>
+       <property name="value">
+        <number>3729</number>
+       </property>
+      </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="connectBtn">
+      <widget class="QPushButton" name="hostApplyBtn">
        <property name="text">
-        <string>Connect</string>
+        <string>Apply</string>
        </property>
       </widget>
      </item>
@@ -99,30 +113,55 @@
      </column>
      <column>
       <property name="text">
-       <string>MIDI Channel</string>
+       <string>MIDI Key</string>
       </property>
      </column>
      <column>
       <property name="text">
-       <string>Change</string>
-      </property>
-     </column>
-     <column>
-      <property name="text">
-       <string>Preview</string>
+       <string>Current Value</string>
       </property>
      </column>
     </widget>
    </item>
    <item>
-    <widget class="QDialogButtonBox" name="buttonBox">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="standardButtons">
-      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
-     </property>
-    </widget>
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <item>
+      <widget class="QPushButton" name="changeBtn">
+       <property name="toolTip">
+        <string>To change a key for a row, first click on the row to change and click &quot;Change Key&quot;</string>
+       </property>
+       <property name="text">
+        <string>Change Key for Selected Row</string>
+       </property>
+       <property name="checkable">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QDialogButtonBox" name="buttonBox">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="standardButtons">
+        <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </item>
   </layout>
  </widget>
@@ -131,32 +170,32 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>accepted()</signal>
-   <receiver>MidiInputSettings</receiver>
+   <receiver>MidiInputSettingsDialog</receiver>
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>248</x>
-     <y>254</y>
+     <x>470</x>
+     <y>379</y>
     </hint>
     <hint type="destinationlabel">
-     <x>157</x>
-     <y>274</y>
+     <x>373</x>
+     <y>381</y>
     </hint>
    </hints>
   </connection>
   <connection>
    <sender>buttonBox</sender>
    <signal>rejected()</signal>
-   <receiver>MidiInputSettings</receiver>
+   <receiver>MidiInputSettingsDialog</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>316</x>
-     <y>260</y>
+     <x>540</x>
+     <y>380</y>
     </hint>
     <hint type="destinationlabel">
-     <x>286</x>
-     <y>274</y>
+     <x>282</x>
+     <y>371</y>
     </hint>
    </hints>
   </connection>

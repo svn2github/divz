@@ -89,11 +89,15 @@ void MidiReceiver::connectionReady()
 	m_connected = true;
 	
 	emit connected();
+	emit connectionStatusChanged(m_connected);
 }
 
 
 void MidiReceiver::lostConnection()
 {
+	m_connected = false;
+	emit connectionStatusChanged(false);
+	
 	if(m_autoReconnect)
 	{
 		if(m_verbose)
