@@ -88,6 +88,8 @@
     <addaction name="actionChoose_Output"/>
     <addaction name="actionPlayer_Setup"/>
     <addaction name="separator"/>
+    <addaction name="actionMIDI_Input_Settings"/>
+    <addaction name="separator"/>
     <addaction name="actionExit"/>
    </widget>
    <widget class="QMenu" name="menuEdit">
@@ -133,7 +135,7 @@
   </action>
   <action name="actionMonitor_Players_Live">
    <property name="text">
-    <string>&amp;Show Live Monitor</string>
+    <string>Show &amp;Live Monitor</string>
    </property>
   </action>
   <action name="actionAdd_Video_Player">
@@ -185,6 +187,11 @@
   <action name="actionAdd_Camera_Mixer">
    <property name="text">
     <string>Add Camera &amp;Mixer</string>
+   </property>
+  </action>
+  <action name="actionMIDI_Input_Settings">
+   <property name="text">
+    <string>MIDI Input Settings...</string>
    </property>
   </action>
  </widget>

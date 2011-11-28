@@ -30,6 +30,9 @@
 
 #include "GLWidget.h"
 
+#include "DirectorMidiInputAdapter.h"
+#include "MidiInputSettingsDialog.h"
+
 #include <QCDEStyle>
 #include <QCleanlooksStyle>
 
@@ -40,6 +43,7 @@ DirectorWindow::DirectorWindow(QWidget *parent)
 	, ui(new Ui::DirectorWindow)
 	, m_players(0)
 	, m_hasVideoInputsList(false)
+	, m_isBlack(0)
 {
 	ui->setupUi(this);
 	
@@ -241,6 +245,9 @@ void DirectorWindow::videoInputListReceived(const QStringList& inputs)
 		}
 	}
 	
+	// DirectorMidiInputAdapter uses the switcher window to switch sources - so add it automatically once cameras are received
+	showSwitcher();
+	
 }
 
 DirectorMdiSubwindow *DirectorWindow::addSubwindow(QWidget *widget)
@@ -355,9 +362,18 @@ void DirectorWindow::showPlayerLiveMonitor(PlayerConnection *con)
 	}
 }
 
+void DirectorWindow::showMidiSetupDialog()
+{
+	MidiInputSettingsDialog *d = new MidiInputSettingsDialog(DirectorMidiInputAdapter::instance(this),this);
+	d->exec();
+}
+
 
 void DirectorWindow::setupUI()
 {
+	// Create adapter instance in case not already created
+	(void*)DirectorMidiInputAdapter::instance(this);
+	
 // 	m_graphicsScene = new QGraphicsScene();
 // 	ui->graphicsView->setScene(m_graphicsScene);
 	//ui->graphicsView->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
@@ -372,6 +388,7 @@ void DirectorWindow::setupUI()
 	
 	connect(ui->actionMonitor_Players_Live, SIGNAL(triggered()), this, SLOT(showPlayerLiveMonitor()));
 	connect(ui->actionChoose_Output, SIGNAL(triggered()), this, SLOT(chooseOutput()));
+	connect(ui->actionMIDI_Input_Settings, SIGNAL(triggered()), this, SLOT(showMidiSetupDialog()));
 	connect(ui->actionExit, SIGNAL(triggered()), qApp, SLOT(quit()));
 	connect(ui->actionPlayer_Setup, SIGNAL(triggered()), this, SLOT(showPlayerSetupDialog()));
 	
@@ -683,6 +700,7 @@ void DirectorWindow::showAllSubwindows()
 
 void DirectorWindow::fadeBlack(bool toBlack)
 {
+	m_isBlack = toBlack;
 	foreach(PlayerConnection *con, m_players->players())
 		con->fadeBlack(toBlack);
 }
@@ -1730,8 +1748,9 @@ void SwitcherWindow::setupButtons()
 				
 			connect(src, SIGNAL(destroyed()), this, SLOT(windowClosed()));
 			
-			QPushButton *btn = new QPushButton(QPixmap(":/data/stock-media-play.png"),QString("%1").arg(count++));
-			btn->setToolTip(src->windowTitle());
+			QPushButton *btn = new QPushButton(QPixmap(":/data/stock-media-play.png"),tr("%1: %2").arg(count++).arg(src->windowTitle()));
+			//btn->setToolTip(src->windowTitle());
+			//count++;
 			
 			connect(btn, SIGNAL(clicked()), this, SLOT(buttonClicked()));
 			m_layout->addWidget(btn);
@@ -1760,6 +1779,14 @@ void SwitcherWindow::keyPressEvent(QKeyEvent *event)
 	{
 		qDebug() << "SwitcherWindow::keyPressEvent(): "<<event->text()<<", activating input #"<<idx;
 		idx --; 
+		activateSource(idx);
+	}
+}
+
+void SwitcherWindow::activateSource(int idx)
+{
+	if(idx >= 0 && idx < m_sourceList.size())
+	{
 		DirectorSourceWidget *src = m_sourceList.at(idx);
 		src->raise();
 		src->switchTo();
@@ -2321,9 +2348,17 @@ void PropertyEditorWindow::saveVidOpts()
 	int idx = m_settingsCombo->currentIndex();
 	
 	QString name = "";
-	if(idx > 0)
+	if(idx >= 0)
 	{
 		name = m_settingsCombo->itemText(idx);
+	}
+	else
+	{
+		QVariant var = m_source->property("_currentSetting");
+		if(var.isValid())
+		{
+			name = m_settingsCombo->itemText(var.toInt());
+		}
 	}
 	
 	bool ok;
@@ -3080,7 +3115,7 @@ bool VideoPlayerWidget::switchTo()
  		if(player->isConnected())
  		{
  			//if(player->lastGroup() != group)
- 				player->setGroup(m_group, m_scene);
+ 			player->setGroup(m_group, m_scene);
  			player->setUserProperty(m_video, m_video->videoFile(), "videoFile");
  			player->setUserProperty(m_video, m_video->position(), "position");
  			player->setUserProperty(m_video, m_video->volume(), "volume");

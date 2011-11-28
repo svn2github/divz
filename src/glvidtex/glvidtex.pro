@@ -52,6 +52,7 @@ HEADERS       = GLWidget.h \
 		RssParser.h \
 		GLImageHttpDrawable.h
 		
+		
 SOURCES       = GLWidget.cpp \
 		../livemix/VideoSource.cpp \
 		../livemix/VideoThread.cpp \
@@ -98,7 +99,7 @@ SOURCES       = GLWidget.cpp \
 		EntityList.cpp \
 		BMDOutput.cpp \
 		RssParser.cpp \
-		GLImageHttpDrawable.cpp
+		GLImageHttpDrawable.cpp 
 	
 # MD5 is used for caching in GLImageDrawable
 include(../3rdparty/md5/md5.pri)
@@ -166,7 +167,8 @@ director: {
 		VideoInputSenderManager.h \
 		DrawableDirectorWidget.h \
 		ScenePropertiesDialog.h \
-		VideoInputColorBalancer.h 
+		VideoInputColorBalancer.h \
+		DirectorMidiInputAdapter.h 
 	
 		
 		
@@ -185,10 +187,15 @@ director: {
 		VideoInputSenderManager.cpp \
 		DrawableDirectorWidget.cpp \
 		ScenePropertiesDialog.cpp \
-		VideoInputColorBalancer.cpp 
+		VideoInputColorBalancer.cpp \
+		DirectorMidiInputAdapter.cpp
 		
 	include(../3rdparty/richtextedit/richtextedit.pri)
 	include(../qtcolorpicker/qtcolorpicker.pri)
+	
+	# MIDI Input for camera switching / xfade speed control 
+	include(../miditcp/miditcp.pri)
+
 }
 
 # 'glplayer' ('glvidtex') compile target

@@ -81,7 +81,7 @@ void MidiInputSettingsDialog::setupUi()
 		ui->tableWidget->setItem(row, col++, new QTableWidgetItem(action->name()));
 		
 		// Input type - Fader/Button
-		ui->tableWidget->setItem(row, col++, new QTableWidgetItem(action->isFader() ? "Fader" : "Button"));
+		ui->tableWidget->setItem(row, col++, new QTableWidgetItem(action->isFader() ? "Slider" : "Button"));
 		
 		// Current key mapped
 		int key = m_adap->keyForAction(action);

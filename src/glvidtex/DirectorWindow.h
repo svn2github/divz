@@ -49,6 +49,10 @@ public:
 	QList<QMdiSubWindow*> subwindows();
 	 
 	double fadeSpeedTime();
+	
+	SwitcherWindow *switcher() { return m_switcherWin; }
+	
+	bool isBlack() { return m_isBlack; }
 
 signals:
 	void closed();
@@ -59,6 +63,7 @@ signals:
 public slots:
 	
 	void showPlayerSetupDialog();
+	void showMidiSetupDialog();
 	
 	
 	void fadeBlack(bool toBlack=true);
@@ -149,7 +154,8 @@ private:
 	QPointer<SwitcherWindow> m_switcherWin;
 	QPointer<HistogramWindow> m_histoWin;
 	QPointer<InputBalanceWindow> m_inputBalanceWin;
-		
+	
+	bool m_isBlack;
 	
 };
 
@@ -312,6 +318,17 @@ public:
 	
 public slots:
 	void notifyIsLive(DirectorSourceWidget*);
+	void activateSource(int);
+// 	void activateSource1() { activateSource(0); }
+// 	void activateSource2() { activateSource(1); }
+// 	void activateSource3() { activateSource(2); }
+// 	void activateSource4() { activateSource(3); }
+// 	void activateSource5() { activateSource(4); }
+// 	void activateSource6() { activateSource(5); }
+// 	void activateSource7() { activateSource(6); }
+// 	void activateSource8() { activateSource(7); }
+// 	void activateSource9() { activateSource(8); }
+// 	void activateSource10() { activateSource(9); }
 
 protected:
 	bool eventFilter(QObject *, QEvent *);
