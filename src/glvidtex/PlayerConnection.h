@@ -126,7 +126,7 @@ public slots:
 	
 	void testConnection();
 	
-	void setGroup(GLSceneGroup *group, GLScene *initialScene=0);
+	void setGroup(GLSceneGroup *group, GLScene *initialScene=0, bool preloadOnly=false);
 	void setScene(GLScene*); // must be part of 'group'
 	void setUserProperty(GLDrawable *, QVariant value, QString propertyName="");
 	void setVisibility(GLDrawable *, bool isVisible=true);

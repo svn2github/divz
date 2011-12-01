@@ -41,8 +41,19 @@ QtVideoSource::QtVideoSource(QObject *parent)
 QtVideoSource::~QtVideoSource()
 {
 	m_player->stop();
+	//m_player->deleteLater();
+	delete m_player;
+	m_player = 0;
+	
 	m_playlist->clear();
+	//m_playlist->deleteLater();
+	delete m_playlist;
+	m_playlist = 0;
+	
 	m_surfaceAdapter->stop();
+	//m_surfaceAdapter->deleteLater();
+	delete m_surfaceAdapter;
+	m_surfaceAdapter = 0;
 }
 
 void QtVideoSource::start(QThread::Priority /*priority*/)
@@ -99,6 +110,7 @@ void QtVideoSource::present(QImage image)
 
 VideoSurfaceAdapter::VideoSurfaceAdapter(QtVideoSource *e, QObject *parent)
 	: QAbstractVideoSurface(parent)
+	, m_hasFirstFrame(false)
 	, emitter(e)
 	, m_pixelFormat(QVideoFrame::Format_Invalid)
 	, imageFormat(QImage::Format_Invalid)
@@ -210,9 +222,15 @@ bool VideoSurfaceAdapter::present(const QVideoFrame &frame)
 		currentFrame = frame;
 	
 		//widget->repaint(targetRect);
-		
 		if (currentFrame.map(QAbstractVideoBuffer::ReadOnly)) 
 		{
+			if(!m_hasFirstFrame)
+			{
+				m_hasFirstFrame = true;
+				emit firstFrameReceived();
+			}
+			
+
 // 			const QTransform oldTransform = painter->transform();
 // 		
 // 			if (surfaceFormat().scanLineDirection() == QVideoSurfaceFormat::BottomToTop) {

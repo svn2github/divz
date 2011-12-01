@@ -1337,11 +1337,13 @@ void GLWidget::paintGL()
 					target.right() + 1 , target.top()
 				};
 				
-				bool flipHorizontal = false;
-				bool flipVertical = false;
+				/// Unused currently
+// 				bool flipHorizontal = false;
+// 				bool flipVertical = false;
 				
-				double sourceWidth  = (double)width();
-				double sourceHeight = (double)height();
+				/// Unused currently
+// 				double sourceWidth  = (double)width();
+// 				double sourceHeight = (double)height();
 				
 				const GLfloat txLeft   = 0; //flipHorizontal ? source.right()  / sourceWidth : source.left()  / sourceWidth;
 				const GLfloat txRight  = 1.25; //flipHorizontal ? source.left()   / sourceWidth : source.right() / sourceWidth;
@@ -2493,6 +2495,8 @@ GLWidgetOutputStream::GLWidgetOutputStream(GLWidget *parent)
 	, m_fps(35)
 	, m_frameUpdated(false)
 {
+	m_data.clear(); /// IS this needed?
+	
 	setAutoDestroy(false);
  	setIsBuffered(false);
 	setImage(QImage("dot.gif"));
@@ -2549,9 +2553,9 @@ void GLWidgetOutputStream::run()
 	{
  		if(m_frameUpdated)
  		{
+			QMutexLocker lock(&m_dataMutex);
 			if(m_data)
 			{
-				QMutexLocker lock(&m_dataMutex);
 				QImage img((uchar*)m_data.data(), m_size.width(), m_size.height(), m_format);
 				img = img.mirrored();
 

@@ -989,6 +989,8 @@ void GLSceneGroup::fromByteArray(QByteArray& array)
 	image.loadFromData(bytes);
 	m_pixmap = QPixmap::fromImage(image);
 
+	// TODO...
+	//qDeleteAll(m_scenes);
 	m_scenes.clear();
 	QVariantList scenes = map["scenes"].toList();
 	foreach(QVariant var, scenes)

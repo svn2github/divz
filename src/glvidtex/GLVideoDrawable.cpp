@@ -164,6 +164,25 @@ GLVideoDrawable::~GLVideoDrawable()
 		//qDebug() << "GLVideoDrawable::~GLVideoDrawable(): "<<(QObject*)this<<" In destructor, calling electUpdateLeader() to elect new leader";
 		electUpdateLeader(this); // reelect an update leader, ignore this drawable
 	} 
+	
+	m_alphaMask = QImage(); // see if this frees the mask, because reported by valgrind...
+	//
+	// The mask was reported still in memory at end of process by valgrind:
+	//
+// 	==22564== 307,200 bytes in 1 blocks are possibly lost in loss record 5,901 of 5,912
+// 	==22564==    at 0x4005903: malloc (vg_replace_malloc.c:195)
+// 	==22564==    by 0x560C669: QImageData::create(QSize const&, QImage::Format, int) (qimage.cpp:242)
+// 	==22564==    by 0x560D9C5: QImage::QImage(int, int, QImage::Format) (qimage.cpp:837)
+// 	==22564==    by 0x560EDF4: QImage::convertToFormat(QImage::Format, QFlags<Qt::ImageConversionFlag>) const (qimage.cpp:3428)
+// 	==22564==    by 0x80980D9: GLVideoDrawable::setAlphaMask(QImage const&) (GLVideoDrawable.cpp:603)
+// 	==22564==    by 0x8098A8F: GLVideoDrawable::updateRects(bool) (GLVideoDrawable.cpp:1880)
+// 	==22564==    by 0x809682D: GLVideoDrawable::updateTexture(bool) (GLVideoDrawable.cpp:2197)
+// 	==22564==    by 0x809E876: GLVideoDrawable::frameReady() (GLVideoDrawable.cpp:450)
+// 	==22564==    by 0x8264201: GLVideoDrawable::qt_metacall(QMetaObject::Call, int, void**) (moc_GLVideoDrawable.cpp:381)
+// 	==22564==    by 0x8267792: GLVideoFileDrawable::qt_metacall(QMetaObject::Call, int, void**) (moc_GLVideoFileDrawable.cpp:101)
+// 	==22564==    by 0x604CADA: QMetaObject::metacall(QObject*, QMetaObject::Call, int, void**) (qmetaobject.cpp:237)
+// 	==22564==    by 0x605A5A6: QMetaObject::activate(QObject*, QMetaObject const*, int, void**) (qobject.cpp:3285)
+
 }
 
 void GLVideoDrawable::setFpsLimit(float fps)
@@ -397,8 +416,11 @@ void GLVideoDrawable::disconnectVideoSource()
 	if(!m_source)
 		return;
 	m_source->release(this);
-	disconnect(m_source, 0, this, 0);
+	
+	/// NOTE: This PROBABLY is not a good idea - to NOT disconnect...
+	//disconnect(m_source, 0, this, 0);
 	emit sourceDiscarded(m_source);
+	
 	m_source = 0;
 }
 
@@ -407,8 +429,11 @@ void GLVideoDrawable::disconnectVideoSource2()
 	if(!m_source2)
 		return;
 	m_source2->release(this);
-	disconnect(m_source2, 0, this, 0);
+	
+	/// NOTE: This PROBABLY is not a good idea - to NOT disconnect...
+	//disconnect(m_source2, 0, this, 0);
 	emit sourceDiscarded(m_source2);
+	
 	m_source2 = 0;
 }
 
@@ -2798,12 +2823,12 @@ void GLVideoDrawable::paintGL()
 // 		qDebug() << "GLVideoDrawable::paintGL():"<<(QObject*)this<<": source:"<<source<<", target:"<<target<<" ( crop:"<<m_displayOpts.cropTopLeft<<"/"<<m_displayOpts.cropBottomRight<<")";
 
 
-	const int width  = hasFrameBuffer() ? m_frameBuffer->width() : 
+	const int width  = (int)( hasFrameBuffer() ? m_frameBuffer->width() : 
 		(parent() && parent()->hasFrameBuffer()) ? parent()->coverageRect().width() : 
-		QGLContext::currentContext()->device()->width();
-	const int height = hasFrameBuffer() ? m_frameBuffer->height() : 
+		QGLContext::currentContext()->device()->width() );
+	const int height = (int)( hasFrameBuffer() ? m_frameBuffer->height() : 
 		(parent() && parent()->hasFrameBuffer()) ? parent()->coverageRect().height() :
-		QGLContext::currentContext()->device()->height();
+		QGLContext::currentContext()->device()->height() );
 
 	//QPainter painter(this);
 	QTransform transform =  ((parent() && parent()->hasFrameBuffer()) || hasFrameBuffer()) ? QTransform() : m_glw->transform(); //= painter.deviceTransform();

@@ -147,6 +147,8 @@ PlayerWindow::PlayerWindow(QWidget *parent)
 	, m_playerVersion(15)
 	, m_col(0)
 	, m_group(0)
+	, m_oldGroup(0)
+	, m_preloadGroup(0)
 	, m_scene(0)
 	, m_oldScene(0)
 	, m_graphicsView(0)
@@ -503,7 +505,14 @@ void PlayerWindow::loadConfig(const QString& configFile, bool verbose)
 // 						}
 
 						//scene->setGLWidget(this);
+						
+						//// JUST for TESTING video preroll performance
+						//m_testScene = scene;
+						//qDebug() << "PlayerWindow: [DEBUG]: Starting 5sec timer till scene goes live to allow video to settle";
+						//QTimer::singleShot(5000, this, SLOT(setTestScene()));
+						
 						displayScene(scene);
+						
 						qDebug() << "PlayerWindow: [DEBUG]: Loaded File: "<<loadGroup<<", GroupID: "<<m_group->groupId()<<", SceneID: "<< scene->sceneId();
 
 						if(m_outputEncoder &&
@@ -583,6 +592,13 @@ void PlayerWindow::loadConfig(const QString& configFile, bool verbose)
 // 	scene->addDrawable(img);
 	
 	//addOverlay(scene);
+	
+}
+
+void PlayerWindow::setTestScene()
+{
+	qDebug() << "PlayerWindow::setTestScene: [DEBUG]: Loading test scene now";
+	displayScene(m_testScene);
 	
 }
 
@@ -730,16 +746,54 @@ void PlayerWindow::receivedMap(QVariantMap map)
 		}
 	}
 	else
-	if(cmd == GLPlayer_LoadSlideGroup)
+	if(cmd == GLPlayer_LoadSlideGroup ||
+	   cmd == GLPlayer_PreloadSlideGroup)
 	{
 		QByteArray ba = map["data"].toByteArray();
-		GLSceneGroup *group = new GLSceneGroup(ba);
-		if(setGroup(group) && 
-		   group->size() > 0)
-			setScene(group->at(0));
+		
+		if(cmd == GLPlayer_PreloadSlideGroup)
+		{
+			if(m_preloadGroup)
+			{
+				delete m_preloadGroup;
+				m_preloadGroup = 0;
+			}
+			
+			m_preloadGroup = new GLSceneGroup(ba);
+		}
+		else
+		{
+			GLSceneGroup *group  = 0;
+			if(m_preloadGroup)
+			{
+				// If we preloaded a group,
+				// check to see if this LoadSlideGroupCall is for the group we preloaded.
+				// If it *IS* then use the preloaded group pointer and DON'T even 
+				// create a new GLSceneGroup.
+				// If the groupId's DO NOT match, then delete the preloaded 
+				// group and move on with life.
+				if(map.contains("groupid") &&
+				   map["groupid"].toInt() == m_preloadGroup->groupId())
+				{
+					group = m_preloadGroup;
+				}
+				else
+				{
+					delete m_preloadGroup;
+					m_preloadGroup = 0;
+				}
+			}
+			
+			if(!group)
+				group = new GLSceneGroup(ba);
+			
+			if(setGroup(group) && 
+			   group->size() > 0)
+				setScene(group->at(0));
+		}
 		
 		sendReply(QVariantList()
-				<< "cmd" << GLPlayer_LoadSlideGroup
+				<< "cmd" << cmd
 				<< "status" << true);
 	}
 	else
@@ -1250,6 +1304,7 @@ bool PlayerWindow::setGroup(GLSceneGroup *group)
 	if(m_group)
 	{
 		connect(m_group->playlist(), SIGNAL(currentItemChanged(GLScene*)), this, SLOT(setScene(GLScene*)));
+		//// NB: DISABLED *JUST* FOR TESTING!!!
 		m_group->playlist()->play();
 	}
 	
@@ -1258,7 +1313,7 @@ bool PlayerWindow::setGroup(GLSceneGroup *group)
 
 void PlayerWindow::displayScene(GLScene *scene)
 {
-	//qDebug() << "PlayerWindow::displayScene: New scene:"<<scene;
+	qDebug() << "PlayerWindow::displayScene: New scene:"<<scene;
 	if(scene == m_scene)
 	{
 		qDebug() << "PlayerWindow::displayScene: Scene pointers match, not setting new scene";

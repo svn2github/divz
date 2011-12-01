@@ -14,6 +14,7 @@ class SimpleV4L2;
 #include "../livemix/VideoSource.h"
 
 
+
 class VideoSender : public QTcpServer
 {
 	Q_OBJECT

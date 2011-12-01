@@ -3101,6 +3101,18 @@ bool VideoPlayerWidget::loadFile(QString fileName)
 	{
 		m_filename = fileName;
 		setWindowTitle(QString("Video - %1").arg(QFileInfo(fileName).fileName()));
+		
+		pause();
+		
+		foreach(PlayerConnection *player, m_director->players()->players())
+		{
+			if(player->isConnected())
+			{
+				//if(player->lastGroup() != group)
+				player->setGroup(m_group, 0, true);
+			}
+		}
+		
 		return true;
 	}
 	return false;

@@ -32,6 +32,9 @@ public:
 	int status();
 	quint64 position();
 	
+	// GLDrawable:: - overridden to remote the 'status' prop
+	virtual void loadPropsFromMap(const QVariantMap&, bool onlyApplyIfChanged = false);
+	
 signals:
 	void videoFileChanged(const QString&);
 	void positionChanged(qint64 position);
@@ -56,6 +59,8 @@ private slots:
 	//void positionChanged ( qint64 position )
 	//void seekableChanged ( bool seekable )
 	void stateChanged ( QMediaPlayer::State state );
+	
+	void firstFrameReceived();
 #endif 
 
 protected:

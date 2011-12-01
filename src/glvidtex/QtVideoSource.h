@@ -38,7 +38,11 @@ public:
 	
 	QVideoFrame::PixelFormat pixelFormat() { return m_pixelFormat; }
 
+signals:
+	void firstFrameReceived();
+
 private:
+	bool m_hasFirstFrame;
 	QtVideoSource *emitter;
 	QVideoFrame::PixelFormat m_pixelFormat;
 	QImage::Format imageFormat;
@@ -63,7 +67,8 @@ public:
 	QString file() { return m_file; }
 	
 	QMediaPlaylist * playlist() { return m_playlist; }
-	QMediaPlayer * player() { return m_player; }  
+	QMediaPlayer * player() { return m_player; }
+	VideoSurfaceAdapter *surfaceAdapter() { return m_surfaceAdapter; }
 	
 public slots:	
 	void start(QThread::Priority priority = QThread::InheritPriority);

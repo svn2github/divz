@@ -37,7 +37,7 @@ HEADERS       = GLWidget.h \
 		HistogramFilter.h \ 
 		StaticVideoSource.h \
 		VideoDifferenceFilter.h \
-		FaceDetectFilter.h \
+		#FaceDetectFilter.h \
 		GLSceneGroupType.h \
 		GLSceneTypeCurrentWeather.h \
 		GLSpinnerDrawable.h \
@@ -86,7 +86,7 @@ SOURCES       = GLWidget.cpp \
 		HistogramFilter.cpp \
 		StaticVideoSource.cpp \
 		VideoDifferenceFilter.cpp \
-		FaceDetectFilter.cpp \
+		#FaceDetectFilter.cpp \
 		GLSceneGroupType.cpp \
 		QtGetOpt.cpp  \
 		GLSpinnerDrawable.cpp \

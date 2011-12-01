@@ -153,6 +153,8 @@ protected slots:
 	void removeSubview(int id);
 	void addSubview(GLWidgetSubview *view);
 	
+	void setTestScene();
+	
 private:
 	void sendReply(QVariantList);
 	
@@ -173,6 +175,7 @@ private:
 	GLSceneGroupCollection *m_col;
 	GLSceneGroup *m_group;
 	GLSceneGroup *m_oldGroup;
+	GLSceneGroup *m_preloadGroup;
 	QPointer<GLScene> m_scene;
 	QPointer<GLScene> m_oldScene;
 
@@ -207,6 +210,10 @@ private:
 	PlayerJsonServer *m_jsonServer;
 	
 	GLSceneGroup *m_overlays;
+	
+	GLScene *m_testScene;
+	
+	
 };
 
 #endif

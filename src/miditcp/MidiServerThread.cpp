@@ -13,7 +13,7 @@ MidiServerThread::MidiServerThread(int socketDescriptor, MidiServer *parent)
 
 void MidiServerThread::run()
 {
-	connect(m_socket, SIGNAL(disconnected()), this, SLOT(deleteLater()));
+	connect(m_socket, SIGNAL(disconnected()), this, SLOT(quit()));
 	
 	if(!m_socket->setSocketDescriptor(m_socketDescriptor)) 
 	{

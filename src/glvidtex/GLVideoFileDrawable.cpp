@@ -7,6 +7,15 @@
 #include <QPropertyAnimation>
 #include "GLEditorGraphicsScene.h"
 
+// #define QTime2Timestamp(time) ( time.hour()   * 60 * 60 * 1000 +	\
+// 				time.minute() * 60 * 1000      + 	\
+// 				time.second() * 1000           +	\
+// 				time.msec() )
+
+#define QTime2TimestampSmall(time) ( time.second() * 1000           +	\
+				     time.msec() )
+
+
 GLVideoFileDrawable::GLVideoFileDrawable(QString file, QObject *parent)
 	: GLVideoDrawable(parent)
 	, m_videoLength(-1)
@@ -30,7 +39,7 @@ void GLVideoFileDrawable::testXfade()
 	
 bool GLVideoFileDrawable::setVideoFile(const QString& file)
 {
-	qDebug() << "GLVideoFileDrawable::setVideoFile(): "<<(QObject*)this<<" file:"<<file;
+	qDebug() << "GLVideoFileDrawable::setVideoFile(): "<<(QObject*)this<<" file:"<<file<<", timestamp: "<<QTime2TimestampSmall(QTime::currentTime());
 	
 	QFileInfo fileInfo(file);
 	if(!fileInfo.exists())
@@ -50,6 +59,11 @@ bool GLVideoFileDrawable::setVideoFile(const QString& file)
 		anim->start();
 		
 		disconnect(m_qtSource->player(), 0, this, 0);
+		disconnect(m_qtSource->surfaceAdapter(), 0, this, 0);
+		
+		//m_qtSource->deleteLater();
+		delete m_qtSource;
+		m_qtSource = 0;
 	}
 	
 	m_qtSource = new QtVideoSource();
@@ -61,7 +75,8 @@ bool GLVideoFileDrawable::setVideoFile(const QString& file)
 	connect(m_qtSource->player(), SIGNAL(durationChanged ( qint64 )), this, SLOT(setDuration ( qint64 )));
 	connect(m_qtSource->player(), SIGNAL(error ( QMediaPlayer::Error )), this, SLOT(error ( QMediaPlayer::Error )));
 	connect(m_qtSource->player(), SIGNAL(stateChanged ( QMediaPlayer::State )), this, SLOT(stateChanged ( QMediaPlayer::State )));
-	
+	connect(m_qtSource->surfaceAdapter(), SIGNAL(firstFrameReceived()), this, SLOT(firstFrameReceived()));
+		
 	// Reset length for next query to videoLength(), below 
 	m_videoLength = -1;
 	
@@ -70,6 +85,12 @@ bool GLVideoFileDrawable::setVideoFile(const QString& file)
 	// Volume will be raised in setLiveStatus() below
 	m_qtSource->player()->setVolume(0);
 	
+	// NOTE: If we are NOT "live", then the firstFrameReceived() slot will immediately pause
+	// Since we are muted, no audio will be sent if not live even before it's paused.
+	// By playing it here, and pausing when first frame received, we are getting the video 
+	// "cued up" and ready to play for when it actually goes live.
+	m_qtSource->player()->play(); 
+	
 	if(liveStatus())
 	{
 		qDebug() << "GLVideoFileDrawable::setVideoFile: "<<file<<": Live, calling setLiveStatus to play";
@@ -77,7 +98,7 @@ bool GLVideoFileDrawable::setVideoFile(const QString& file)
 	}
 	else
 	{
-		qDebug() << "GLVideoFileDrawable::setVideoFile: "<<file<<": Waiting to play till live";
+		//qDebug() << "GLVideoFileDrawable::setVideoFile: "<<file<<": Waiting to play till live";
 	}
 
 #else
@@ -92,6 +113,21 @@ bool GLVideoFileDrawable::setVideoFile(const QString& file)
 }
 
 #ifdef HAS_QT_VIDEO_SOURCE
+void GLVideoFileDrawable::firstFrameReceived()
+{
+	qDebug() << "GLVideoFileDrawable::firstFrameReceived(): "<<(QObject*)this<<" file:"<<m_videoFile<<", first frame received at timestamp: "<<QTime2TimestampSmall(QTime::currentTime());
+	
+	if(!m_qtSource)
+		return;
+		
+	if(!liveStatus())
+	{
+		m_qtSource->player()->pause();
+		qDebug() << "GLVideoFileDrawable::firstFrameReceived(): "<<(QObject*)this<<" file:"<<m_videoFile<<", pausing till live, timestamp: "<<QTime2TimestampSmall(QTime::currentTime());
+	}
+	
+}
+
 void GLVideoFileDrawable::setDuration ( qint64 duration )
 {
 	double newDuration = ((double)duration) / 1000.;
@@ -203,9 +239,21 @@ bool GLVideoFileDrawable::isMuted()
 
 }
 
+void GLVideoFileDrawable::loadPropsFromMap(const QVariantMap& map, bool onlyApplyIfChanged)
+{
+	QVariantMap tmpCopy = map;
+	tmpCopy.remove("status"); // TBD is this a good idea to remove it from load props?
+	// Why not a good idea? Well, does the player use loadPRopsFromMap() when controlling over the network?
+	// I know it creates the objects with this function, but what about controlling the status -
+	// I think it calls setPRoperty("status",...) - TBD
+	
+	GLVideoDrawable::loadPropsFromMap(tmpCopy, onlyApplyIfChanged);
+	
+}
+
 void GLVideoFileDrawable::setStatus(int status)
 { 
-	//qDebug() << "GLVideoFileDrawable::setStatus: "<<status;
+	qDebug() << "GLVideoFileDrawable::setStatus: "<<status;
 #ifdef HAS_QT_VIDEO_SOURCE
 	if(m_qtSource)
 	{
@@ -259,7 +307,7 @@ quint64 GLVideoFileDrawable::position()
 void GLVideoFileDrawable::setLiveStatus(bool flag)
 {
 	GLVideoDrawable::setLiveStatus(flag);
-	qDebug() << "GLVideoFileDrawable::setLiveStatus: "<<flag;
+	qDebug() << "GLVideoFileDrawable::setLiveStatus: "<<flag<<" at timestamp "<<QTime2TimestampSmall(QTime::currentTime());
 #ifdef HAS_QT_VIDEO_SOURCE	
 
 	qDebug() << "GLVideoFileDrawable::setLiveStatus: new status:"<<flag;

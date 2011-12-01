@@ -489,19 +489,29 @@ void PlayerConnection::setAspectRatioMode(Qt::AspectRatioMode mode)
 		<< "flag"	<< (mode == Qt::IgnoreAspectRatio ? true : false));
 }
 
-void PlayerConnection::setGroup(GLSceneGroup *group, GLScene *initialScene)
+void PlayerConnection::setGroup(GLSceneGroup *group, GLScene *initialScene, bool preloadOnly)
 {
 	if(!group)
 		return;
 
 	m_group = group;
 
-	sendCommand(QVariantList()
-		<< "cmd" 	<< GLPlayer_LoadSlideGroup
-		<< "data"	<< group->toByteArray());
-
-	if(initialScene)
-		setScene(initialScene);
+	if(preloadOnly)
+	{
+		sendCommand(QVariantList()
+			<< "cmd" 	<< GLPlayer_PreloadSlideGroup
+			<< "data"	<< group->toByteArray());
+	}
+	else
+	{
+		sendCommand(QVariantList()
+			<< "cmd" 	<< GLPlayer_LoadSlideGroup
+			<< "data"	<< group->toByteArray()
+			<< "groupid"	<< group->groupId()); // used to match the group to a previous preload call if one exists
+	
+		if(initialScene)
+			setScene(initialScene);
+	}
 }
 
 void PlayerConnection::setScene(GLScene* scene) // must be part of 'group'

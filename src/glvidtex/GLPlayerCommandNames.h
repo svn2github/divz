@@ -10,6 +10,7 @@
 #define GLPlayer_SetBlackout "SetBlackout"
 #define GLPlayer_SetCrossfadeSpeed "SetCrossfadeSpeed"
 
+#define GLPlayer_PreloadSlideGroup "PreloadSlideGroup"
 #define GLPlayer_LoadSlideGroup "LoadSlideGroup"
 #define GLPlayer_SetSlide "SetSlide"
 #define GLPlayer_SetLayout "SetLayout"

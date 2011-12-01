@@ -12,8 +12,8 @@ VideoSender::VideoSender(QObject *parent)
 	: QTcpServer(parent)
 	, m_adaptiveWriteEnabled(true)
 	, m_source(0)
-	, m_transmitFps(10)
 	, m_transmitSize(240,180)
+	, m_transmitFps(10)
 	//, m_transmitSize(0,0)
 	//, m_scaledFrame(0)
 	//, m_frame(0)
@@ -26,6 +26,24 @@ VideoSender::VideoSender(QObject *parent)
 VideoSender::~VideoSender()
 {
 	setVideoSource(0);
+	m_dataPtr.clear(); // allow the pointer being held to be deleted
+	
+	// Valgrind reported that the pointer in m_dataPtr didnt get deleted at close of program:
+	
+// 	==22564== 326,400 bytes in 3 blocks are possibly lost in loss record 5,903 of 5,912
+// 	==22564==    at 0x4005903: malloc (vg_replace_malloc.c:195)
+// 	==22564==    by 0x80A8BB5: VideoSender::processFrame() (VideoSender.cpp:151)
+// 	==22564==    by 0x8266001: VideoSender::qt_metacall(QMetaObject::Call, int, void**) (moc_VideoSender.cpp:95)
+// 	==22564==    by 0x604CADA: QMetaObject::metacall(QObject*, QMetaObject::Call, int, void**) (qmetaobject.cpp:237)
+// 	==22564==    by 0x605A5A6: QMetaObject::activate(QObject*, QMetaObject const*, int, void**) (qobject.cpp:3285)
+// 	==22564==    by 0x60B1176: QTimer::timeout() (moc_qtimer.cpp:134)
+// 	==22564==    by 0x606353D: QTimer::timerEvent(QTimerEvent*) (qtimer.cpp:271)
+// 	==22564==    by 0x60580AE: QObject::event(QEvent*) (qobject.cpp:1204)
+// 	==22564==    by 0x553ABCE: QApplicationPrivate::notify_helper(QObject*, QEvent*) (qapplication.cpp:4300)
+// 	==22564==    by 0x553E98D: QApplication::notify(QObject*, QEvent*) (qapplication.cpp:3704)
+// 	==22564==    by 0x604650A: QCoreApplication::notifyInternal(QObject*, QEvent*) (qcoreapplication.cpp:704)
+// 	==22564==    by 0x60762C2: QTimerInfoList::activateTimers() (qcoreapplication.h:215)
+
 }
 
 void VideoSender::setTransmitSize(const QSize& size)
@@ -498,7 +516,7 @@ void VideoSenderThread::dataReady()
 
 void VideoSenderThread::processBlock()
 {
-	bool ok;
+// 	bool ok;
 	QDataStream stream(&m_dataBlock, QIODevice::ReadOnly);
 	QVariantMap map;
 	stream >> map;
@@ -669,9 +687,8 @@ void VideoSenderThread::processBlock()
 		m_sender->setTransmitSize(originalSize);
 	}
 	else
-	if(cmd == Video_GetFPS)
+	if(cmd == Video_GetSize)
 	{
-		int fps = m_sender->transmitFps();
 		QSize size = m_sender->transmitSize();
 		qDebug() << "VideoSenderThread::processBlock: "<<cmd<<": Getting size:"<<size;
 		

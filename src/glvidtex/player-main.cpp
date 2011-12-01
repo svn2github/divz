@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
 	// do the parsing and check for errors
 	if (!opts.parse())
 	{
-			fprintf(stderr,"Usage: %s [--verbose] [-c|--config configfile]\n - If no config file specified, it defaults to 'player.ini'", qPrintable(opts.appName()));
+			fprintf(stderr,"Usage: %s [--verbose] [-c|--config configfile]\n - If no config file specified, it defaults to 'player.ini'\n", qPrintable(opts.appName()));
 			return 1;
 	}
 
