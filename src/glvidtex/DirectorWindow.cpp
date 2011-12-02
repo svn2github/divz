@@ -2926,14 +2926,21 @@ VideoPlayerWidget::VideoPlayerWidget(DirectorWindow *d)
 	, m_scene(0)
 	, m_collection(0)
 	, m_director(d)
+	, m_lockSetPosition(false)
+	, m_isLocalPlayer(false)
+	, m_pos(0.0)
+	, m_muted(false)
+	, m_volume(100)
+	, m_dur(0.0)
+	, m_isSliderDown(false) // used to stop updates from video object
 {
 	m_collection = new GLSceneGroupCollection();
 	m_group = new GLSceneGroup();
-		m_scene = new GLScene();
-			m_scene->setSceneName("Video Player");
-				m_video = new GLVideoFileDrawable();
-			m_scene->addDrawable(m_video);
-		m_group->addScene(m_scene);
+	m_scene = new GLScene();
+	m_scene->setSceneName("Video Player");
+	m_video = new GLVideoFileDrawable();
+	m_scene->addDrawable(m_video);
+	m_group->addScene(m_scene);
 	m_collection->addGroup(m_group);
 	
 	connect(m_video, SIGNAL(positionChanged(qint64)), this, SLOT(positionChanged(qint64)));
@@ -2964,6 +2971,8 @@ VideoPlayerWidget::VideoPlayerWidget(DirectorWindow *d)
 		m_seekSlider->setSingleStep(1);
 		m_seekSlider->setPageStep(30);
 		connect(m_seekSlider, SIGNAL(valueChanged(int)), this, SLOT(setPosition(int)));
+		connect(m_seekSlider, SIGNAL(sliderPressed()), this, SLOT(sliderPressed()));
+		connect(m_seekSlider, SIGNAL(sliderReleased()), this, SLOT(sliderReleased()));
 		hbox->addWidget(m_seekSlider);
 	}
 	
@@ -3004,6 +3013,11 @@ VideoPlayerWidget::VideoPlayerWidget(DirectorWindow *d)
 	
 	connect(m_glw, SIGNAL(clicked()), this, SLOT(switchTo()));
 	//loadFile("hd_vid/Dolphins_720.wmv-xvid.avi");
+	
+	
+	foreach(PlayerConnection *player, m_director->players()->players())
+		if(player->isLocalPlayer())
+		   m_isLocalPlayer = true;
 }
 
 void VideoPlayerWidget::showPropertyEditor()
@@ -3012,9 +3026,23 @@ void VideoPlayerWidget::showPropertyEditor()
 		m_dir->showPropertyEditor(this);
 }	
 
+void VideoPlayerWidget::sliderPressed()
+{
+	m_isSliderDown = true;
+}
+
+void VideoPlayerWidget::sliderReleased()
+{
+	m_isSliderDown = false;
+}
+
+
 void VideoPlayerWidget::positionChanged(qint64 position)
 {
 	if(m_video->status() != 1)
+		return;
+		
+	if(m_isSliderDown)
 		return;
 		
 	position = position / 1000;
@@ -3102,6 +3130,14 @@ bool VideoPlayerWidget::loadFile(QString fileName)
 		m_filename = fileName;
 		setWindowTitle(QString("Video - %1").arg(QFileInfo(fileName).fileName()));
 		
+		// If the player is "local" (running on same host as director)
+		// we mute the director's video copy so it doesn't compete with the audio from the player
+		if(m_isLocalPlayer)
+		{
+			m_video->setMuted(true);
+			m_video->setVolume(0);
+		}
+		
 		pause();
 		
 		foreach(PlayerConnection *player, m_director->players()->players())
@@ -3130,11 +3166,14 @@ bool VideoPlayerWidget::switchTo()
  			player->setGroup(m_group, m_scene);
  			player->setUserProperty(m_video, m_video->videoFile(), "videoFile");
  			player->setUserProperty(m_video, m_video->position(), "position");
- 			player->setUserProperty(m_video, m_video->volume(), "volume");
- 			player->setUserProperty(m_video, m_video->isMuted(), "muted");
- 			player->setUserProperty(m_video, m_video->status(), "status");
+ 			player->setUserProperty(m_video, m_volume, "volume");
+ 			player->setUserProperty(m_video, m_muted, "muted");
+ 			//player->setUserProperty(m_video, m_video->status(), "status");
 		}
 	}
+	
+	play();
+	
 	
 	if(m_switcher)
 		m_switcher->notifyIsLive(this);
@@ -3151,7 +3190,13 @@ VideoPlayerWidget::~VideoPlayerWidget()
 void VideoPlayerWidget::setMuted(bool flag)
 {
 	qDebug() << "VideoPlayerWidget::setMuted(): "<<flag;
-	m_video->setMuted(flag);
+	
+	// If the player is "local" (running on same host as director)
+	// we don't unmute the director's video copy so it doesn't compete with the audio from the player
+	if(!m_isLocalPlayer)
+		m_video->setMuted(flag);
+		
+	m_muted = flag;
 	syncProperty("muted", flag);
 	m_muteButton->setIcon( flag ? QPixmap("../data/stock-volume-mute.png") : QPixmap("../data/stock-volume.png") );
 }
@@ -3159,7 +3204,14 @@ void VideoPlayerWidget::setMuted(bool flag)
 void VideoPlayerWidget::setVolume(int v)
 {
 	//qDebug() << "VideoPlayerWidget::setVolume(): "<<v;
-	m_video->setVolume(v);
+	
+	// If the player is "local" (running on same host as director)
+	// we don't set the volume (it's muted at the start)
+	// the director's video copy so it doesn't compete with the audio from the player
+	if(!m_isLocalPlayer)
+		m_video->setVolume(v);
+		
+	m_volume = v;
 	syncProperty("volume", v);
 }
 

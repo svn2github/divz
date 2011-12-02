@@ -75,6 +75,8 @@ public:
 	QSizeF canvasSize() { return m_canvasSize; }
 	Qt::AspectRatioMode aspectRatioMode() { return m_aspectRatioMode; }
 	
+	bool isLocalPlayer() { return m_host == "127.0.0.1" || m_host == "localhost"; }
+	
 	bool autoconnect() { return m_autoconnect; }
 	bool autoReconnect() { return m_autoReconnect; }
 	

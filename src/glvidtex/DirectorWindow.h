@@ -535,6 +535,9 @@ private slots:
 	void positionChanged(qint64 position);
 	void durationChanged(double duration); // in seconds
 	void statusChanged(int);
+	
+	void sliderPressed();
+	void sliderReleased();
 
 private:
 	void syncProperty(QString prop, QVariant value);
@@ -555,6 +558,8 @@ private:
 	
 	bool m_lockSetPosition;
 	
+	bool m_isLocalPlayer;
+	
 	QString m_filename;
 // 	double m_in;
 // 	double m_out;
@@ -562,6 +567,8 @@ private:
 	bool m_muted;
 	int m_volume;
 	double m_dur;
+	
+	bool m_isSliderDown;
 	
 };
 

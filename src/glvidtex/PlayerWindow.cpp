@@ -776,6 +776,7 @@ void PlayerWindow::receivedMap(QVariantMap map)
 				   map["groupid"].toInt() == m_preloadGroup->groupId())
 				{
 					group = m_preloadGroup;
+					m_preloadGroup = 0;
 				}
 				else
 				{
