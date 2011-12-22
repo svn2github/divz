@@ -143,7 +143,7 @@ editor: {
 }
 
 # 'gldirector' compile target
-director: {
+gldirector | director: {
 	TARGET = gldirector
 	
 	FORMS += DirectorWindow.ui \

@@ -74,6 +74,8 @@ public slots:
 	
 	/// DirectorSourceWidget subclasses can use this to request the property editor be displayed for their instance.
 	void showPropertyEditor(DirectorSourceWidget*);
+	
+	void toggleOverlay();
 
 private slots:
 	void playerAdded(PlayerConnection *);
@@ -104,6 +106,8 @@ private slots:
 	void showCamColorWin();
 	
 	DirectorMdiSubwindow *addSubwindow(QWidget*);
+	
+	void slotSubwindowActivated(QMdiSubWindow*);
 	
 protected:
 	void closeEvent(QCloseEvent *event);
@@ -156,6 +160,8 @@ private:
 	QPointer<InputBalanceWindow> m_inputBalanceWin;
 	
 	bool m_isBlack;
+	
+	OverlayWidget *m_lastSelectedOverlayWindow;
 	
 };
 
@@ -285,6 +291,8 @@ public:
 	virtual void loadFromMap(const QVariantMap&);
 	virtual GLScene *scene() { return m_scene; }
 	
+	bool isOverlayVisible() { return m_lastIndexShown > -1; }
+	
 public slots:
 	void setCurrentIndex(int x) { m_combo->setCurrentIndex(x); }
 	bool loadFile(QString);
@@ -302,12 +310,15 @@ private slots:
  	void selectedGroupIndexChanged(int);
 
 private:
+	void hideOverlay(GLScene*);
+	
 	GLWidget *m_glw;
 	GLSceneGroup *m_setGroup;
 	GLScene *m_scene;
 	GLSceneGroupCollection *m_collection;
 	DirectorWindow *m_director;
 	QComboBox *m_combo;
+	int m_lastIndexShown;
 };
 
 class SwitcherWindow : public QWidget

@@ -47,6 +47,17 @@ namespace DirectorMidiAction
 			mw->setFadeSpeedPercent((int)speed);
 		}
 	};
+	
+	class ToggleOverlay : public MidiInputAction
+	{
+		QString id() { return "ab80606a-776d-4f9d-a3b8-682ca561e105"; }
+		QString name() { return "Toggle Overlay"; }
+		void trigger(int)
+		{
+			mw->toggleOverlay();	
+		}
+	};
+	
 };
 
 void DirectorMidiInputAdapter::setupActionList()
@@ -55,6 +66,7 @@ void DirectorMidiInputAdapter::setupActionList()
 	m_actionList
 		<< new DirectorMidiAction::FadeSpeedFader()
 		<< new DirectorMidiAction::BlackButton()
+		<< new DirectorMidiAction::ToggleOverlay()
 		<< new DirectorMidiAction::ActivateSourceButton(0)
 		<< new DirectorMidiAction::ActivateSourceButton(1)
 		<< new DirectorMidiAction::ActivateSourceButton(2)

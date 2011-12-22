@@ -22,6 +22,8 @@ VideoInputSenderManager::VideoInputSenderManager(QObject *parent)
 		
 		m_videoSenders[dev] = sender;
 	}
+	
+	//videoConnections();
 }
 
 VideoInputSenderManager::~VideoInputSenderManager()

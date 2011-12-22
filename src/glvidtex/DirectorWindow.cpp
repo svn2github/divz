@@ -44,6 +44,7 @@ DirectorWindow::DirectorWindow(QWidget *parent)
 	, m_players(0)
 	, m_hasVideoInputsList(false)
 	, m_isBlack(0)
+	, m_lastSelectedOverlayWindow(0)
 {
 	ui->setupUi(this);
 	
@@ -404,6 +405,7 @@ void DirectorWindow::setupUI()
 	
 	connect(ui->mdiArea, SIGNAL(subWindowActivated(QMdiSubWindow*)), this, SLOT(updateMenus()));
 	connect(ui->mdiArea, SIGNAL(subWindowActivated(QMdiSubWindow*)), this, SIGNAL(subwindowActivated(QMdiSubWindow*)));
+	connect(ui->mdiArea, SIGNAL(subWindowActivated(QMdiSubWindow*)), this, SLOT(slotSubwindowActivated(QMdiSubWindow*)));
 	m_windowMapper = new QSignalMapper(this);
 	connect(m_windowMapper, SIGNAL(mapped(QWidget*)), this, SLOT(setActiveSubWindow(QWidget*)));
 	
@@ -882,11 +884,39 @@ CameraMixerWidget *DirectorWindow::addCameraMixer()
 OverlayWidget *DirectorWindow::addOverlay()
 {
 	OverlayWidget *vid = new OverlayWidget(this); 
-	
+	m_lastSelectedOverlayWindow = vid;
 	addSubwindow(vid);
 	
 	return vid;
 }
+
+void DirectorWindow::toggleOverlay()
+{
+	if(!m_lastSelectedOverlayWindow)
+		return;
+	if(m_lastSelectedOverlayWindow->isOverlayVisible())
+		m_lastSelectedOverlayWindow->hideOverlay();
+	else
+		m_lastSelectedOverlayWindow->showOverlay();
+	
+}
+
+void DirectorWindow::slotSubwindowActivated(QMdiSubWindow* win)
+{
+	if(!win)
+		return;
+		
+	// This should just check for DirectorSourceWidget* subclass and call setSourceWidget()
+	if(OverlayWidget *src = dynamic_cast<OverlayWidget*>(win->widget()))
+	{
+		m_lastSelectedOverlayWindow = src;
+	}
+	else
+	{
+		qDebug() << "DirectorWindow::subwindowActivated: Window activated: "<<win<<", widget:"<<win->widget()<<" - not a OverlayWidget";
+	}
+}
+
 
 void DirectorWindow::showPreviewWin()
 {
@@ -1051,6 +1081,7 @@ void GroupPlayerWidget::browse()
 {
 	QSettings settings;
 	QString curFile = m_collection->fileName();
+	qDebug() << "GroupPlayerWidget: File Debug: browse: curFile:"<<curFile;
 	if(curFile.trimmed().isEmpty())
 		curFile = settings.value("last-collection-file").toString();
 
@@ -1071,6 +1102,7 @@ bool GroupPlayerWidget::loadFile(QString fileName)
 {
 	if(m_collection->readFile(fileName))
 	{
+		qDebug() << "GroupPlayerWidget: File Debug: loadFile: readFile from "<<fileName;
 		setWindowTitle(QString("Player - %1").arg(QFileInfo(fileName).fileName()));
 		m_combo->setModel(m_collection->at(0));
 		return true;
@@ -1082,6 +1114,7 @@ bool GroupPlayerWidget::loadFile(QString fileName)
 void GroupPlayerWidget::saveFile()
 {
 	QString curFile = m_collection->fileName();
+	qDebug() << "GroupPlayerWidget: File Debug: saveFile: curFile: "<<curFile;
 	
 	QSettings settings;
 	
@@ -1101,6 +1134,7 @@ void GroupPlayerWidget::saveFile()
 	
 	if(!curFile.isEmpty())
 	{
+		qDebug() << "GroupPlayerWidget: File Debug: saveFile: writing to "<<curFile;
 		m_collection->writeFile(curFile);
 	}
 	
@@ -1173,6 +1207,7 @@ OverlayWidget::OverlayWidget(DirectorWindow *d)
 	, m_scene(0)
 	, m_collection(0)
 	, m_director(d)
+	, m_lastIndexShown(-1) // used to auto-hide last shown when pressing play on a new overlay scene
 {
 	
 	QVBoxLayout *vbox = new QVBoxLayout(this);
@@ -1344,7 +1379,12 @@ void OverlayWidget::showOverlay()
 	int idx = m_combo->currentIndex();
 	
 	GLSceneGroup *group = m_collection->at(0); 
+	
+	if(m_lastIndexShown > -1)
+		hideOverlay(group->at(m_lastIndexShown));
+		
 	GLScene *scene = group->at(idx);
+	m_lastIndexShown = idx;
 	
 	foreach(PlayerConnection *player, m_director->players()->players())
 		if(player->isConnected())
@@ -1358,9 +1398,19 @@ void OverlayWidget::hideOverlay()
 	GLSceneGroup *group = m_collection->at(0); 
 	GLScene *scene = group->at(idx);
 	
+	hideOverlay(scene);
+}
+
+void OverlayWidget::hideOverlay(GLScene *scene)
+{
+	if(!scene)
+		return;
+		
 	foreach(PlayerConnection *player, m_director->players()->players())
 		if(player->isConnected())
 			player->removeOverlay(scene);
+			
+	m_lastIndexShown = -1;
 }
 
 OverlayWidget::~OverlayWidget()
