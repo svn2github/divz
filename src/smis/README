@@ -1,0 +1,85 @@
+SMIS
+Syncronized Multi-stream Information Sets
+
+NOTE: Anyone reading this: This is all just a theory/idea right now - writing all this out to try to think it through before doing the coding. - JB 20111231
+
+Example Usage:
+	A database of "songs", wherein:
+		Each "song" is composed of:
+			- Lyrics
+			- Sheetmusic
+			- Chords (in the form of "Chord Line/Lyric Line", for example)
+			- Slides for the lyrics (special graphcis, animations, etc)
+			- Lighting cues
+			
+		Each of these "elements" of the song (lyrics, sheet music):
+			- are assumed to be linear sets of information
+			- can be "Synchronized" for display/playback/etc
+			
+		Syncronization can be:
+			- Loose
+			- Tight
+			- Absolute
+		
+			Wherein:
+				- Loose meerly means the current song is syncronized
+				- Tight means the current block element is syncronized
+				- Absolute means the current "line" level element is syncronized
+				
+	Usage scenario:
+		In a church, the musicians on stage all have tablets running a "StageMusic" client - all of the musicians tablets are syncornized with a central server.
+		However, the tablet for the pianist is set to a "master" mode, so she can change the current block element (e.g. verse of the song) and all the tablets
+		of the other musicians automatically change.
+		 
+		Additionally, in the control booth, the computer system connected to the audience-facing projectors is connected to the same central server used by the
+		"StageMusic" tablets the musicans use. The control booth computers monitor the current block element (e.g. verse of the song) and project the lyrics
+		(or special slides of present) for that verse of the current song. The technician running the computers in the sound booth can optionally change the 
+		current lyrics displayed, without affecting the tablets on stage.
+		
+	Analysis of usage scenario:
+		- Syncronization is "tight" in this scenario (current block element ("verse") of the song (and current song)) is transmitted in real-time to all clients.
+		- Each client selects the desired "Stream" to display (e.g. sheet music/lyrics/chords).
+			- For the musicians on stage, those tablets would display the "Chords" stream
+			- For the pianist, her tablet would display the "Sheetmusic" stream
+			- For the control booth, that computer would display the "Lyrics" stream (or the "Slides" stream if present)
+		- Clients have the ability to deviate from the current stream position
+		
+	Alternate usage scenario:
+		In a church, the tech team creates a set of slides for the Pastor's sermon.
+			- The tech team loads the sermon outline provided by the pastor and breaks down the outline by creating slides for each point and then linking them to that spot on the outline.
+			- Additionally, the team pulls out the verse references indicated in the outline and creates header/verse slides for those verses.
+			- The team may also pull in visual illustrations (graphics, videos, etc) and link them to the appros spots on the outline
+			- The broadcast team can then review the set of assets (slides, verses, graphics) created for the sermon and create alternate overlays/lower thirds for broadcast (CCTV, streaming, recording)
+		During the sermon, the pastor has a tablet on the pulpit which displays a "StageSlides" client. The pastor's StageSlides client would display his outline (which may be several pages),
+		with the current "section" highlighted. A list of slides/assets associated with each point would also appear on screen to the side, with the current item highlighted. During the sermon, the pastor
+		is able to touch an asset (slide/verse/etc) in order to make that asset current instead of the current one being broadcast by the server.
+		 
+		During the sermon, the computer running the audience-facing projection system also connects to the central server in a "master" mode. The available assets for the sermon
+		are displayed, and the operator can switch between assets at will. The current asset selected is, of course, broadcast back to the pastor's tablet via the central server.
+		
+		Also during the sermon, the broadcast switch computers connect to the central server and monitor for changes to the current asset set. When a slide or verse (etc) is selected (by the projectionist
+		operator or the pastor) that has associated broadcast overlays or lower-thirds associated, those broadcast assets are displayed for the switch operator to optially display. The broadcast switch
+		operator can then trigger the overlay/lower third with the desired broadcast asset (for example, verse reference formatted for a lower-third, or graphic image in upper-right) when appropriate.
+		
+	Analysis of the usage scenario:
+		- In this scenario, the "block level" elements are a bit more blurry - the information available in any stream for the current block may be empty, in which case the client must handle it appropriatly.
+		- The client may also decide to display a single stream for the current "Information Set" in its entirety - e.g. the pastor's outline.
+		- Changing the 'current block element' doesn't /require/ the client to do anything (such as with the broadcast software) - it just makes indicates a change
+		- Not stated in the scenario, but changes to the Information Set should be broadcast to clients in real time and clients must handle it appropriatly
+		- Also to be considered, should multiple "alternate" assets occupy the same "block level" in the "Information Set"?
+			- E.g. alternate broadcast assets for the current asset
+			- Also e.g. a "Verse" "block level" element - may have a header and a body slide, while being the same "block level" element in the pastor's outline.
+				- And the same "block level" element in the broadcast stream may be just a lower-third with the text of the verse, or also a full-screen textual overlay with an animated background
+			- Those two examples (verse slides and broadcaste) would lead me to think (after typing the parent point) that these alternate assets are subsets of a block element
+				- E.g. the "current block" is the verse in this example, but "inside" the current block can be multiple unique assets (ref slide, body slide, or lower third, full screen text)
+				- The client /can/ syncronize the current asset inside the block, but they may not even LINE UP or be identical (e.g. the slides for the control booth may split the verse over several slides,
+				  or the broadcast stream may not even have the text)
+		- After thinking all this through, it would seem that MUCH of the syncronized stream generation should be automatic as much as possible
+			- E.g. for one person preping a SMIS for the sermon, generating AND syncronizing all the assets could take forever
+				- The "editor" should make it all intuitive - use templates/intelligent defaults - 
+					- E.g. when adding a verse, generate the title slide, body text, lower thirds, full graphics - all automatically - and allow editing later
+						- Key though is to generate the syncronization links between those
+		
+		
+				
+		
