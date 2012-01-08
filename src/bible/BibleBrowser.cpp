@@ -245,15 +245,17 @@ void BibleBrowser::setupUI()
 	m_search->setCompleter(completer);
 	
 	QPushButton * btnSearch = new QPushButton(QPixmap(":/data/stock-find.png"),"");
-	btnSearch->setToolTip("Seach BibleGateway.com for the verse reference entered on the left.");
+	btnSearch->setToolTip("Seach BibleGateway.com for the verse reference entered on the left (ENTER)");
 	
 	m_liveBtn = new QPushButton(QPixmap(":/data/stock-fullscreen.png"),"");
-	m_liveBtn->setToolTip("Send the selected verses to the output without adding to the document.");
+	m_liveBtn->setToolTip("Send the selected verses to the output without adding to the document (Ctrl+E)");
 	m_liveBtn->setVisible(false);
+	m_liveBtn->setShortcut(tr("Ctrl+E"));
 	
 	m_addBtn = new QPushButton(QPixmap(":/data/stock-add.png"),"");
-	m_addBtn->setToolTip("Add verses below as a slide group to current document");
+	m_addBtn->setToolTip("Add verses below as a slide group to current document (Ctrl+D)");
 	m_addBtn->setVisible(false);
+	m_addBtn->setShortcut(tr("Ctrl+D"));
 	
 	m_spinnerLabel = new QLabel();
 	m_spinnerLabel->setVisible(false);
@@ -458,6 +460,7 @@ void BibleBrowser::addVersesToDocument()
 	SlideGroup *group = createSlideGroup(true);
 	if(group && !appendToExistingGroup())
 		MainWindow::mw()->currentDocument()->addGroup(group);
+	m_search->selectAll();
 }
 
 void BibleBrowser::sendVersesLive()
@@ -469,6 +472,7 @@ void BibleBrowser::sendVersesLive()
 		cullGeneratedGroups();
 		m_generatedGroups << group;
 	}
+	m_search->selectAll();
 }
 	
 void BibleBrowser::addPrevVerse()
