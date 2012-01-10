@@ -42,7 +42,7 @@ QList<EyeCounterResult> EyeCounter::detectEyes(QImage image, bool includeFacesWi
 	if(image.format() != QImage::Format_ARGB32)
 		image = image.convertToFormat(QImage::Format_ARGB32);
 		
-	cvImg = cvCreateImageHeader( cvSize(image.width(), image.width()), IPL_DEPTH_8U, 4);
+	cvImg = cvCreateImageHeader( cvSize(image.width(), image.height()), IPL_DEPTH_8U, 4);
 	cvImg->imageData = (char*) image.bits();
 	
 // 	uchar* newdata = (uchar*) malloc(sizeof(uchar) * image.byteCount());
