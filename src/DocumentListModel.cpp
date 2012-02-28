@@ -16,6 +16,10 @@
 #include "DeepProgressIndicator.h"
 #include "AppSettings.h"
 
+#include "songdb/SongSlideGroup.h"
+#include "songdb/SongRecord.h"
+#include "songdb/SongBrowser.h"
+
 #include <QPixmap>
 #include <QPixmapCache>
 
@@ -34,7 +38,6 @@ bool group_num_compare(SlideGroup *a, SlideGroup *b)
 {
 	return (a && b) ? a->groupNumber() < b->groupNumber() : true;
 }
-
 
 
 DocumentListModel::DocumentListModel(Document *d, QObject *parent)
@@ -106,10 +109,6 @@ Qt::ItemFlags DocumentListModel::flags(const QModelIndex &index) const
 	return/* Qt::ItemIsEditable | */Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsDropEnabled;
 }
 
-
-#include "songdb/SongSlideGroup.h"
-#include "songdb/SongRecord.h"
-#include "songdb/SongBrowser.h"
 
 bool DocumentListModel::dropMimeData ( const QMimeData * data, Qt::DropAction action, int /*row*/, int /*column*/, const QModelIndex & parent )
 {

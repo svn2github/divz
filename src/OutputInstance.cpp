@@ -248,7 +248,9 @@ void OutputInstance::applyOutputSettings(bool startHidden)
 // 		   m_output->mjpegServerEnabled())
 // 			m_grabTimer->start(1000 / m_output->mjpegServerFPS());
 		
-		m_viewer->setMjpegServerEnabled(m_output->mjpegServerEnabled(), m_output->mjpegServerPort(), m_output->mjpegServerFPS()); 
+		m_viewer->setMjpegServerEnabled(m_output->mjpegServerEnabled(), m_output->mjpegServerPort(), m_output->mjpegServerFPS());
+		
+		m_viewer->setIgnoreAspectRatio(m_output->ignoreAR()); 
 
 // 		if(!m_jpegServer ||
 // 		m_jpegServer->serverPort() != m_output->mjpegServerPort())

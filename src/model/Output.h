@@ -28,6 +28,7 @@ class Output : public QObject
 	Q_PROPERTY(int mjpegServerPort READ mjpegServerPort WRITE setMjpegServerPort);
 	Q_PROPERTY(int mjpegServerFPS READ mjpegServerFPS WRITE setMjpegServerFPS);
 	
+	Q_PROPERTY(bool ignoreAR READ ignoreAR WRITE setIgnoreAR);
 	
 	static Output * m_staticPreviewInstance;
 	static Output * m_staticWidgetInstance;
@@ -89,6 +90,9 @@ public:
 	int mjpegServerFPS() { return m_mjpegServerFPS; } 
 	void setMjpegServerFPS(int);
 	
+	bool ignoreAR() { return m_ignoreAR; }
+	void setIgnoreAR(bool flag);
+	
 	
 	QByteArray toByteArray();
 	void fromByteArray(QByteArray);
@@ -120,7 +124,9 @@ private:
 	bool m_stayOnTop;
 	bool m_mjpegServerEnabled;
 	int m_mjpegServerPort;
-	int m_mjpegServerFPS;	
+	int m_mjpegServerFPS;
+	
+	bool m_ignoreAR;
 	
 	OutputInstance * m_instance;
 

@@ -41,6 +41,7 @@ void Output::setupDefaults()
 	m_mjpegServerEnabled	= false;
 	m_mjpegServerPort	= 8080;
 	m_mjpegServerFPS	= 7;
+	m_ignoreAR		= false;
 }
 
 void Output::generateId()
@@ -85,6 +86,8 @@ void Output::setMjpegServerEnabled(bool x) { m_mjpegServerEnabled = x; }
 void Output::setMjpegServerPort(int x) { m_mjpegServerPort = x; }
 void Output::setMjpegServerFPS(int x) { m_mjpegServerFPS = x; }
 
+void Output::setIgnoreAR(bool flag) { m_ignoreAR = flag; }
+
 
 QByteArray Output::toByteArray()
 {
@@ -107,6 +110,7 @@ QByteArray Output::toByteArray()
 	b << QVariant(mjpegServerEnabled());
 	b << QVariant(mjpegServerPort());
 	b << QVariant(mjpegServerFPS());
+	b << QVariant(ignoreAR());
 	
 	return array;
 }
@@ -136,6 +140,8 @@ void Output::fromByteArray(QByteArray array)
 	b >> x; setMjpegServerEnabled(x.isNull() ? false : x.toBool());
 	b >> x; setMjpegServerPort(x.isNull() ? 8080     : x.toInt());
 	b >> x; setMjpegServerFPS(x.isNull() ? 7         : x.toInt());
+	
+	b >> x; setIgnoreAR(x.isNull() ? false : x.toBool());
 }
 
 void Output::setInstance(OutputInstance *instance)

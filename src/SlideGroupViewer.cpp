@@ -1435,13 +1435,27 @@ void SlideGroupViewer::resizeEvent(QResizeEvent *)
 	adjustViewScaling();
 }
 
+void SlideGroupViewer::setIgnoreAspectRatio(bool flag)
+{
+	m_ignoreAspectRatio = flag;
+	adjustViewScaling();
+}
+
 void SlideGroupViewer::adjustViewScaling()
 {
 	float sx = ((float)m_view->width()) / m_scene->width();
 	float sy = ((float)m_view->height()) / m_scene->height();
 
-	float scale = qMin(sx,sy);
-	m_view->setTransform(QTransform().scale(scale,scale));
+	if(m_ignoreAspectRatio)
+	{
+		m_view->setTransform(QTransform().scale(sx,sy));
+	}
+	else
+	{
+		float scale = qMin(sx,sy);
+		m_view->setTransform(QTransform().scale(scale,scale));
+	}
+	
         //qDebug("Scaling: %.02f x %.02f = %.02f",sx,sy,scale);
 	m_view->update();
 	//m_view->fitInView(m_scene->sceneRect(), Qt::KeepAspectRatioByExpanding);

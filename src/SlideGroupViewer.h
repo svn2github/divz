@@ -155,6 +155,8 @@ public:
 	int fadeSpeed()   { return m_fadeSpeed;   }
 	int fadeQuality() { return m_fadeQuality; } 
 	
+	bool ignoreAspectRatio() { return m_ignoreAspectRatio; }
+	
 	void setCanZoom(bool);
 	bool canZoom();
 
@@ -230,6 +232,8 @@ public slots:
 	
 	void setSharedMemoryImageWriterEnabled(bool enable, const QString& key="");
 	void setMjpegServerEnabled(bool enable, int port=8080, int fps=15);
+	
+	void setIgnoreAspectRatio(bool flag);
 
 private slots:
 	void appSettingsChanged();
@@ -339,6 +343,8 @@ private:
 	
 	JpegServer *m_jpegServer;
 	bool m_jpegServerEnabled;
+	
+	bool m_ignoreAspectRatio;
 };
 
 #endif // SLIDEGROUPVIEWER_H

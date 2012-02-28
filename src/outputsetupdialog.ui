@@ -112,6 +112,13 @@
          </widget>
         </item>
         <item>
+         <widget class="QCheckBox" name="ignoreAR">
+          <property name="text">
+           <string>Ignore output Aspect Ratio</string>
+          </property>
+         </widget>
+        </item>
+        <item>
          <widget class="QTabWidget" name="tabWidget">
           <property name="currentIndex">
            <number>0</number>
