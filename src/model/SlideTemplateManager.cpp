@@ -147,7 +147,10 @@ void TemplateSelectorWidget::editTemplate()
 		
  	SlideGroup * tmpl = selectedGroup();
  	if(!tmpl)
+ 	{
+ 		newTemplate();
  		return;
+ 	}
  		
  	MainWindow::mw()->editGroup(selectedGroup());
 	
@@ -162,6 +165,25 @@ void TemplateSelectorWidget::editTemplate()
 		connect(m_editWin, SIGNAL(closed()), this, SLOT(editorWindowClosed()));
 }
 
+void TemplateSelectorWidget::delTemplate()
+{
+// 	if(selectedGroup())
+// 		MainWindow::mw()->editGroup(selectedGroup());
+		
+ 	SlideGroup * tmpl = selectedGroup();
+ 	if(!tmpl)
+ 		return;
+ 		
+ 	SlideGroup *group = selectedGroup();
+	
+	int idx = m_doc->groupList().indexOf(group);
+	m_doc->removeGroup(group);
+	
+	setSelectedGroup(m_doc->at(qMax(0,idx-1)));
+	
+	// force save
+	SlideTemplateManager::instance()->templateDocument(m_type)->save();
+}
 
 void TemplateSelectorWidget::editorWindowClosed()
 {
@@ -222,6 +244,11 @@ void TemplateSelectorWidget::setupUI()
 	m_newButton->setToolTip("Create a new template");
 	connect(m_newButton, SIGNAL(clicked()), this, SLOT(newTemplate()));
 	hbox->addWidget(m_newButton);
+	
+	m_delButton= new QPushButton(QPixmap(":/data/stock-delete.png"),"",this);
+	m_delButton->setToolTip("Delete Selected template");
+	connect(m_delButton, SIGNAL(clicked()), this, SLOT(delTemplate()));
+	hbox->addWidget(m_delButton);
 	
 	hbox->addStretch(1);
 	

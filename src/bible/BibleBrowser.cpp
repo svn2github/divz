@@ -110,6 +110,7 @@ void BibleBrowser::saveSettings()
 	s.setValue("biblebrowser/show-full-ref-at-start",		m_showFullRefAtStart);
 	s.setValue("biblebrowser/show-full-ref-at-end",			m_showFullRefAtEnd);
 	s.setValue("biblebrowser/show-responsive-reading-lables",	m_showResponsiveReadingLabels);
+	
 	s.setValue("biblebrowser/current-version",			m_versionCombo->currentIndex());
 	s.setValue("biblebrowser/last-reference",			m_search->text());
 	s.setValue("biblebrowser/template-id",				m_template ? m_template->groupId() : 0);

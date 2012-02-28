@@ -70,6 +70,8 @@ public:
 	
 	DocumentListModel * documentListModel() { return m_docModel; }
 	
+	SongBrowser * songBrowser() { return m_songBrowser; }
+	
 	bool autosaveEnabled();
 	
 	// Here for compat with dviz-viewer source

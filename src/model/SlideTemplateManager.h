@@ -71,6 +71,7 @@ private slots:
 	void showSample();
 	void editTemplate();
 	void newTemplate();
+	void delTemplate();
 	
 	void editorWindowClosed();
 
@@ -83,6 +84,7 @@ private:
 	QPushButton * m_sampleButton;
 	QPushButton * m_editButton;
 	QPushButton * m_newButton;
+	QPushButton * m_delButton;
 	DocumentListModel *m_model;
 	Document *m_doc;
 	SlideGroup *m_selected;

@@ -109,6 +109,7 @@ Qt::ItemFlags DocumentListModel::flags(const QModelIndex &index) const
 
 #include "songdb/SongSlideGroup.h"
 #include "songdb/SongRecord.h"
+#include "songdb/SongBrowser.h"
 
 bool DocumentListModel::dropMimeData ( const QMimeData * data, Qt::DropAction action, int /*row*/, int /*column*/, const QModelIndex & parent )
 {
@@ -141,6 +142,9 @@ bool DocumentListModel::dropMimeData ( const QMimeData * data, Qt::DropAction ac
 				SongRecord *song = SongRecordListModel::instance()->songAt(songIdString.toInt());
 				SongSlideGroup *group = new SongSlideGroup();
 				group->setSong(song);
+				
+				SlideGroup *curTmpl = MainWindow::mw()->songBrowser()->currentTemplate();
+				group->setSlideTemplates(curTmpl);
 				
 				//qDebug() << "DocumentListModel::dropMimeData: Dropped song: "<<song->title();
 				

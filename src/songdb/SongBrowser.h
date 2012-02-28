@@ -12,7 +12,7 @@ class QSplitter;
 class MyQListView;
 class SongRecordListModel;
 class SongRecord;
-
+class SlideGroup;
 
 class SongBrowser : public QWidget
 {
@@ -32,6 +32,8 @@ public:
 	
 	QByteArray saveState();
 	bool restoreState (const QByteArray & state);
+	
+	SlideGroup *currentTemplate() { return m_template; } 
 	
 signals:
 	void songSelected(SongRecord*);
@@ -57,6 +59,8 @@ protected slots:
 	void editSongInDB();
 	void deleteCurrentSong();
 	
+	void templateChanged(SlideGroup*);
+	
 	void searchOnline();
 	
 protected:
@@ -75,6 +79,8 @@ protected:
 	QTextEdit     * m_songTextPreview;
 	QSplitter     * m_splitter;
 	QPushButton   * m_onlineBtn;
+	
+	SlideGroup    * m_template;
 	
 
 };

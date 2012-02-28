@@ -15,6 +15,8 @@
 #include "SongRecord.h"
 #include "SongSearchOnlineDialog.h"
 
+#include "model/SlideTemplateManager.h"
+
 class MyQListView : public QListView
 {
 public:
@@ -40,6 +42,7 @@ SongBrowser::SongBrowser(QWidget *parent)
 	, m_editingEnabled(true)
 	, m_filteringEnabled(true)
 	, m_previewEnabled(true)
+	, m_template(0)
 {
 	setObjectName("SongBrowser");
 	setupUI();
@@ -124,8 +127,13 @@ void SongBrowser::setupUI()
 	m_splitter->addWidget(topBase);
 
 	// add song text preview
-	m_songTextPreview = new QTextEdit;
+	QWidget *bottomBase = new QWidget();
+	vbox = new QVBoxLayout(bottomBase);
+	SET_MARGIN(vbox,0);
+	
+	m_songTextPreview = new QTextEdit(bottomBase);
 	m_songTextPreview->setReadOnly(true);
+	vbox->addWidget(m_songTextPreview);
 
 	QFont font;
 	font.setFamily("Courier");
@@ -134,12 +142,37 @@ void SongBrowser::setupUI()
 	m_songTextPreview->setFont(font);
 
 	new SongEditorHighlighter(m_songTextPreview->document());
-	m_splitter->addWidget(m_songTextPreview);
 	
+	// Find the template
+	QSettings settings;
+	int templateId = settings.value("songbrowser/template-id",0).toInt();
+	if(templateId > 0)
+		m_template = SlideTemplateManager::instance()->findTemplate(SlideTemplateManager::Songs,templateId);
 	
+	// Setup the template selector widget
+	TemplateSelectorWidget *tmplWidget = new TemplateSelectorWidget(SlideTemplateManager::Songs,"Style:",this);
+	if(m_template)
+		tmplWidget->setSelectedGroup(m_template);
+	else
+		m_template = tmplWidget->selectedGroup();
+		
+	connect(tmplWidget, SIGNAL(currentGroupChanged(SlideGroup*)), this, SLOT(templateChanged(SlideGroup*)));
+	vbox->addWidget(tmplWidget);
+	
+	// Add bottom base to splitter
+	m_splitter->addWidget(bottomBase);
+	
+	// Connect song list signals
 	connect(m_songList, SIGNAL(doubleClicked(const QModelIndex &)), this, SLOT(songDoubleClicked(const QModelIndex &)));
 	connect(m_songList,       SIGNAL(clicked(const QModelIndex &)), this, SLOT(songSingleClicked(const QModelIndex &)));
 }
+
+void SongBrowser::templateChanged(SlideGroup* group)
+{
+	m_template = group;
+	QSettings().setValue("songbrowser/template-id", m_template ? m_template->groupId() : 0);
+}
+
 
 void SongBrowser::searchOnline()
 {
