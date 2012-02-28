@@ -1214,7 +1214,13 @@ Slide * BibleBrowser::addSlide(SlideGroup *group, TextBoxItem *tmpText, int real
 	slide->setSlideNumber(slideNum);
 	group->addSlide(slide);
 	
-	tmpText->warmVisualCache();
+	//tmpText->warmVisualCache();
+	
+	// Delay warming the visual cache to increase UI responsiveness when quickly adding verses
+	int slideNbr = group->numSlides();
+	int delay = slideNbr * 5000;
+	qDebug()<<"BibleBrowser::addSlide(): slideNbr:"<<slideNbr<<": delaying "<<delay<<"ms before warmVisualCache()";
+	QTimer::singleShot(delay, tmpText, SLOT(warmVisualCache()));
 	
 	return slide;
 }

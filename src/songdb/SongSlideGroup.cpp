@@ -10,6 +10,7 @@
 #include <QTextDocument>
 #include <QTextBlock>
 #include <QTextOption>
+#include <QTextEdit>
 
 #define DEBUG_TEXTOSLIDES 0
 
@@ -320,72 +321,120 @@ void SongSlideGroup::textToSlides(SongTextFilter filter)
 		}
 	
 
-		// Create the HTML for the lyrics
-		QStringList lines = passage.split("\n");
-		QStringList html;
-		html << slideHeader;
-		foreach(QString line, lines)
-		{
-			if(filter == AllowAll || !line.contains(excludeLineRegExp))
-			{
-				html << linePrefix;
-				html << line;
-				html << lineSuffix;
-			}
-		}
-		html << slideFooter;
-
 		// Run a basic algorithim to find the max font size to fit inside this text rectangle (textRect)
-		QString htmlStr = html.join("");
+		QString htmlStr;
 		QRectF screenRect = MainWindow::mw() ? MainWindow::mw()->standardSceneRect() : FALLBACK_SCREEN_RECT;
 		QRectF textRect = screenRect;
 		if(textboxFromTemplate)
-			textRect = text->contentsRect();
-
-		int ptSize = 32;	// starting pt size (must match pt size in static html above)
-		int sizeInc = 4;	// how big of a jump to add to the ptSize each iteration
-		int maxPtSize = 72;
-
-		int count = 0;		// current loop iteration
-		int maxCount = 50; 	// max iterations of the search loop (allows font to get up to 232pt)
-		bool done = false;
-
-		int lastGoodSize = ptSize;
-		QString lastGoodHtml = htmlStr;
-
-		// for centering
-		qreal boxHeight = -1;
-
-		while(!done && count++ < maxCount)
 		{
-			QString htmlCopy = htmlStr;
-			htmlCopy = htmlCopy.replace("size:32pt",QString("size:%1pt").arg(ptSize));
-			doc.setHtml(htmlCopy);
-			doc.setTextWidth(textRect.width());
-
-			QSizeF sz = doc.size();
-
-			if(sz.height() < textRect.height() &&
-			   ptSize < maxPtSize)
-			{
-				lastGoodSize = ptSize;
-				lastGoodHtml = htmlCopy;
-				boxHeight = sz.height();
-
-				//qDebug()<<"size search: "<<ptSize<<"pt was good, trying higher";
-				ptSize += sizeInc;
-
-			}
+			textRect = text->contentsRect();
+			
+			// Create the text for the lyrics
+			QStringList filtered;
+			QStringList lines = passage.split("\n");
+			foreach(QString line, lines)
+				if(filter == AllowAll || !line.contains(excludeLineRegExp))
+					filtered << line;
+					
+			QString filteredPassage = filtered.join("\n");
+			
+			// First, grab the html from the text box from the template
+			QTextDocument doc;
+			if (Qt::mightBeRichText(text->text()))
+				doc.setHtml(text->text());
 			else
-			{
-				if(DEBUG_TEXTOSLIDES)
-					qDebug()<<"SongSlideGroup::textToSlides(): size search: last good ptsize:"<<lastGoodSize<<", stopping search";
-				done = true;
-			}
+				doc.setPlainText(text->text());
+			
+			// Select the html in the template and extract the character format
+			QTextCursor cursor(&doc);
+			cursor.select(QTextCursor::Document);
+			QTextCharFormat charFormat = cursor.charFormat();
+			QTextBlockFormat blockFormat = cursor.blockFormat();
+			QTextCharFormat blockCharFormat = cursor.blockCharFormat();
+			
+			// Replace the document with the lyrics text
+			if (Qt::mightBeRichText(filteredPassage))
+				doc.setHtml(filteredPassage);
+			else
+				doc.setPlainText(filteredPassage);
+				
+			// Merge back in the extracted character format
+			QTextCursor cursor2(&doc);
+			cursor2.select(QTextCursor::Document);
+			
+			cursor2.mergeBlockCharFormat(blockCharFormat);
+			cursor2.mergeBlockFormat(blockFormat);
+			cursor2.mergeCharFormat(charFormat);
+			
+			// Get the resulting HTML to apply to the text item
+			htmlStr = doc.toHtml();
 		}
-
-		htmlStr = lastGoodHtml;
+		else
+		{
+			// Create the HTML for the lyrics
+			QStringList lines = passage.split("\n");
+			QStringList html;
+			html << slideHeader;
+			foreach(QString line, lines)
+			{
+				if(filter == AllowAll || !line.contains(excludeLineRegExp))
+				{
+					html << linePrefix;
+					html << line;
+					html << lineSuffix;
+				}
+			}
+			html << slideFooter;
+			
+		 	htmlStr = html.join("");
+		}
+// 
+// 		int ptSize = 32;	// starting pt size (must match pt size in static html above)
+// 		int sizeInc = 4;	// how big of a jump to add to the ptSize each iteration
+// 		int maxPtSize = 72;
+// 
+// 		int count = 0;		// current loop iteration
+// 		int maxCount = 50; 	// max iterations of the search loop (allows font to get up to 232pt)
+// 		bool done = false;
+// 
+// 		int lastGoodSize = ptSize;
+// 		QString lastGoodHtml = htmlStr;
+// 
+// 		// for centering
+// 		qreal boxHeight = -1;
+// 
+// 		while(!done && count++ < maxCount)
+// 		{
+// 			QString htmlCopy = htmlStr;
+// 			htmlCopy = htmlCopy.replace("size:32pt",QString("size:%1pt").arg(ptSize));
+// 			doc.setHtml(htmlCopy);
+// 			doc.setTextWidth(textRect.width());
+// 
+// 			QSizeF sz = doc.size();
+// 
+// 			if(sz.height() < textRect.height() &&
+// 			   ptSize < maxPtSize)
+// 			{
+// 				lastGoodSize = ptSize;
+// 				lastGoodHtml = htmlCopy;
+// 				boxHeight = sz.height();
+// 
+// 				//qDebug()<<"size search: "<<ptSize<<"pt was good, trying higher";
+// 				ptSize += sizeInc;
+// 
+// 			}
+// 			else
+// 			{
+// 				if(DEBUG_TEXTOSLIDES)
+// 					qDebug()<<"SongSlideGroup::textToSlides(): size search: last good ptsize:"<<lastGoodSize<<", stopping search";
+// 				done = true;
+// 			}
+// 		}
+// 
+// 		htmlStr = lastGoodHtml;
 		text->setText(htmlStr);
+		qreal boxHeight = text->fitToSize(textRect.size().toSize(), 32, 72);
+		//qDebug() << "SongSlideGroup::textToSlides(): slideNbr:"<<slideNbr<<": firtToSize boxHeight:"<<boxHeight<<", given size:"<<textRect.size().toSize();
 		
 		// these two dynamic properties are used in the SongFoldbackTextFilter to 
 		// reference back to this slide group, extract original text, and mutate
@@ -429,7 +478,7 @@ void SongSlideGroup::textToSlides(SongTextFilter filter)
 			}
 
 			if(DEBUG_TEXTOSLIDES)
-				qDebug()<<"SongSlideGroup::textToSlides(): slideNbr:"<<slideNbr<<": Textbox was not in template, finalized setup at 0x0, rect:"<<textRect;
+				qDebug()<<"SongSlideGroup::textToSlides(): slideNbr:"<<slideNbr<<": Textbox was not in template (or almost centered), finalized setup at 0x0, rect:"<<textRect;
 		}
 		
 		//qDebug()<<"SongSlideGroup::textToSlides(): slideNbr:"<<slideNbr<<": textboxFromTemplate:"<<textboxFromTemplate<<", boxHeight:"<<boxHeight;
@@ -438,7 +487,11 @@ void SongSlideGroup::textToSlides(SongTextFilter filter)
 		
 		addSlide(slide);
 		
-		text->warmVisualCache();
+		// Delay warming the visual cache to increase UI responsiveness when quickly adding songs
+		int rv = (rand() % 500) - (500/2); // get a random number +/- 500ms
+		int delay = slideNbr * 5000 + rv; // add a random +/- 500ms to stagger hits to the warming method
+		//qDebug()<<"SongSlideGroup::textToSlides(): slideNbr:"<<slideNbr<<": delaying "<<delay<<"ms before warmVisualCache()";
+		QTimer::singleShot(delay, text, SLOT(warmVisualCache()));
 		
 		if(DEBUG_TEXTOSLIDES)
 			qDebug()<<"SongSlideGroup::textToSlides(): Added passage:"<<passage;

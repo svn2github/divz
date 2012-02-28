@@ -479,13 +479,13 @@ TextBoxWarmingThreadManager::TextBoxWarmingThreadManager(AbstractVisualItem *mod
 	QString key = TextBoxContent::cacheKey(model);
 	if(QPixmapCache::find(key,cache))
 	{
-		//qDebug()<<"TextBoxWarmingThreadManager(): modelItem:"<<model->itemName()<<": Cache HIT";
+		qDebug()<<"TextBoxWarmingThreadManager(): modelItem:"<<model->itemName()<<": Cache HIT";
 		deleteLater();
 	}
 	else
 	if(QFile(key).exists())
 	{
-		//qDebug()<<"TextBoxWarmingThreadManager(): modelItem:"<<model->itemName()<<": Cache load from"<<key;
+		qDebug()<<"TextBoxWarmingThreadManager(): modelItem:"<<model->itemName()<<": Cache load from"<<key;
 		cache.load(key);
 		QPixmapCache::insert(key,cache);
 		deleteLater();

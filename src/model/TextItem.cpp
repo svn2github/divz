@@ -164,12 +164,14 @@ int TextItem::fitToSize(const QSize& size, int minimumFontSize, int maximumFontS
 		cursor.select(QTextCursor::Document);
 		
 		QTextCharFormat format;
-			
+		
+		int lastHeightTmp = -1;
 		while(!done && count++ < maxCount)
 		{
 			format.setFontPointSize(ptSize);
 			cursor.mergeCharFormat(format);
 			
+			lastHeightTmp = heightTmp;
 			heightTmp = doc.documentLayout()->documentSize().height();
 			
 			if(heightTmp < height &&
@@ -180,14 +182,15 @@ int TextItem::fitToSize(const QSize& size, int minimumFontSize, int maximumFontS
 				boxHeight = heightTmp;
 
 				sizeInc *= 1.1;
-// 				qDebug()<<"size search: "<<ptSize<<"pt was good, trying higher, inc:"<<sizeInc<<"pt";
+ 				//qDebug()<<"size search: "<<ptSize<<"pt was good, trying higher, inc:"<<sizeInc<<"pt, boxHeight:"<<boxHeight;
 				ptSize += sizeInc;
 
 			}
 			else
 			{
-// 				qDebug()<<"fitToSize: size search: last good ptsize:"<<lastGoodSize<<", stopping search";
-				done = true;
+ 				boxHeight = lastHeightTmp;
+				//qDebug()<<"fitToSize: size search: last good ptsize:"<<lastGoodSize<<", stopping search, boxHeight:"<<boxHeight;
+ 				done = true;
 			}
 		}
 		
@@ -233,8 +236,8 @@ int TextItem::fitToSize(const QSize& size, int minimumFontSize, int maximumFontS
 		
 		setText(doc.toHtml());
 		
-		//qDebug()<<"TextItem::fitToSize(): size search: caching ptsize:"<<lastGoodSize<<", count: "<<count<<"( minimum size was:"<<minimumFontSize<<")";
-		boxHeight = heightTmp;
+		//qDebug()<<"TextItem::fitToSize(): size search: caching ptsize:"<<lastGoodSize<<", count: "<<count<<"( minimum size was:"<<minimumFontSize<<"), last boxHeight:"<<boxHeight;
+		//boxHeight = heightTmp;
 		//static_autoTextSizeCache[sizeKey] = lastGoodSize;
 		
 		// We are using a QCache instead of a plain QMap, so that requires a pointer value 

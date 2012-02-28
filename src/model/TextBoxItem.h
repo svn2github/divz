@@ -15,7 +15,6 @@ public:
 	
 	// ::AbstractVisualItem
 	AbstractContent * createDelegate(QGraphicsScene*scene=0,QGraphicsItem*parent=0);
-	void warmVisualCache();
 	
 	// ::AbstractItem
 	
@@ -25,8 +24,11 @@ public:
 	
 	// loading/saving
         void toXml(QDomElement & parentElement) const;
-        
+
         AbstractItem * clone() const;
+
+public slots:
+       void warmVisualCache();
 };
 
 

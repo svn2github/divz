@@ -207,7 +207,7 @@ void TemplateSelectorWidget::newTemplate()
 {
 	Slide * slide = new Slide();
 	SlideGroup *g = new SlideGroup();
-	g->setGroupTitle(QString("%2 %1").arg(m_doc->numGroups()).arg(SlideTemplateManager::typeToString(m_type)));
+	g->setGroupTitle(QString("%2 %1").arg(m_doc->numGroups()+1).arg(SlideTemplateManager::typeToString(m_type)));
 	g->addSlide(slide);
 	m_doc->addGroup(g);
 	

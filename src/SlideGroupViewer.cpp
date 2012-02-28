@@ -271,6 +271,7 @@ SlideGroupViewer::SlideGroupViewer(QWidget *parent)
 	    , m_shmemWriter(0)
 	    , m_sharedMemoryImageWriterEnabled(false)
 	    , m_jpegServer(0)
+	    , m_ignoreAspectRatio(false)
 {
 	QRect sceneRect(0,0,1024,768);
 	m_blackSlideRefCount++;
