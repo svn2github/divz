@@ -253,3 +253,33 @@ void SongRecordListModel::filter(const QString &filter)
 	}
 }
 
+/* Drag/drop support */
+Qt::ItemFlags SongRecordListModel::flags(const QModelIndex &index) const
+{
+	if (index.isValid())	
+		return /*Qt::ItemIsEditable |*/ Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsDragEnabled;
+	
+	return/* Qt::ItemIsEditable | */Qt::ItemIsEnabled | Qt::ItemIsSelectable/* | Qt::ItemIsDropEnabled*/;
+}
+
+
+
+
+QMimeData * SongRecordListModel::mimeData(const QModelIndexList & list) const
+{
+	if(list.size() <= 0)
+		return 0;
+		
+	QStringList x;
+	foreach(QModelIndex idx, list)
+		x << QString::number(idx.row());
+	
+	QByteArray ba;
+	ba.append(x.join(","));
+	
+	QMimeData *data = new QMimeData();
+	data->setData(itemMimeType(), ba);
+	
+	return data;
+}
+

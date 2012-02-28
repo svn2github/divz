@@ -33,6 +33,17 @@ public:
 	QVariant data(const QModelIndex &index, int role) const;
 	QVariant headerData(int section, Qt::Orientation orientation,
 				int role = Qt::DisplayRole) const;
+				
+	/* Drag and Drop Support */
+	Qt::ItemFlags flags(const QModelIndex &index) const;
+	Qt::DropActions supportedDropActions() const { return Qt::CopyAction; }
+
+	QStringList mimeTypes () const { QStringList x; x<<itemMimeType(); return x; }
+ 	QMimeData * mimeData(const QModelIndexList & indexes) const;
+ 	//bool dropMimeData(const QMimeData * data, Qt::DropAction action, int row, int column, const QModelIndex & parent);
+ 	
+ 	// Not from AbstractListModel, just for utility
+	static QString itemMimeType() { return "application/x-dviz-song-listmodel-item"; }
 
 protected slots:
 	// songrecord::add/delete notifies us via protected functions about new/removed

@@ -45,6 +45,7 @@
 #include "camera_test/CameraThread.h"
 
 #include "songdb/SongSlideGroup.h"
+#include "songdb/SongRecordListModel.h"
 #include "songdb/SongRecord.h"
 #include "songdb/SongBrowser.h"
 #include "bible/BibleBrowser.h"
@@ -61,6 +62,7 @@
 
 #include "DVizMidiInputAdapter.h"
 #include "MidiInputSettingsDialog.h"
+
 
 MainWindow * MainWindow::static_mainWindow = 0;
 

@@ -16,6 +16,8 @@ JpegServer::JpegServer(QObject *parent)
 	, m_adaptiveWriteEnabled(true)
 	, m_timeAccum(0)
 	, m_frameCount(0)
+	, m_onlyRenderOnSlideChange(false)
+	, m_slideChanged(true)
 {
 	connect(&m_timer, SIGNAL(timeout()), this, SLOT(generateNextFrame()));
 	setFps(m_fps);
@@ -24,6 +26,16 @@ JpegServer::JpegServer(QObject *parent)
 void JpegServer::setFps(int fps)
 {
 	m_timer.setInterval(1000/fps);
+}
+
+void JpegServer::onlyRenderOnSlideChange(bool flag)
+{
+	m_onlyRenderOnSlideChange = flag;
+}
+
+void JpegServer::slideChanged()
+{
+	m_slideChanged = true; // will be checked by generateNextFrame(), below
 }
 	
 void JpegServer::setScene(QGraphicsScene *scene)
@@ -61,6 +73,21 @@ void JpegServer::generateNextFrame()
 	if(!m_scene || !MainWindow::mw())
 		return;
 		
+	if(m_onlyRenderOnSlideChange &&
+	   !m_slideChanged &&
+	   !m_cachedImage.isNull())
+	{
+		//qDebug() << "JpegServer::generateNextFrame(): Hit Cache";
+		emit frameReady(m_cachedImage);
+		return;
+	}
+	
+	if(m_onlyRenderOnSlideChange)
+	{
+		m_slideChanged = false;
+		//qDebug() << "JpegServer::generateNextFrame(): Cache fallthru ...";
+	}
+	
 	m_time.start();
 	
 	QImage image(FRAME_WIDTH,
@@ -87,6 +114,9 @@ void JpegServer::generateNextFrame()
 	painter.end();
 	
  	emit frameReady(image);
+	
+	if(m_onlyRenderOnSlideChange)
+		m_cachedImage = image;
 	
 // 	QImageWriter writer("frame.png", "png");
 // 	writer.write(image);

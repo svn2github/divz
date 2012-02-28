@@ -26,6 +26,10 @@ public:
 	int fps() { return m_fps; }
 	
 // 	QString myAddress();
+	void onlyRenderOnSlideChange(bool flag=true);
+
+public slots:
+	void slideChanged();
 
 private slots:
 	void generateNextFrame();
@@ -51,6 +55,10 @@ private:
 	int m_frameCount;
 	
 	QTime m_time;
+	
+	bool m_onlyRenderOnSlideChange;
+	bool m_slideChanged;
+	QImage m_cachedImage;
 
 };
 

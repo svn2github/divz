@@ -1281,6 +1281,9 @@ void SlideGroupViewer::setSlideInternal(Slide *slide)
 // 		m_bgContent = dynamic_cast<BackgroundContent *>(absBg);
 // 		m_bgContent->setViewerWidget(this);
 	}
+	
+	if(m_jpegServer)
+		m_jpegServer->slideChanged();
 }
 
 // void SlideGroupViewer::paintEvent(QPaintEvent*)

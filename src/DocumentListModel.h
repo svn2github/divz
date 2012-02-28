@@ -6,6 +6,8 @@
 #include <QGraphicsView>
 #include <QTimer>
 
+#include "songdb/SongRecordListModel.h"
+
 class Document;
 class MyGraphicsScene;
 #include <QMimeData>
@@ -41,7 +43,7 @@ public:
 	Qt::ItemFlags flags(const QModelIndex &index) const;
 	Qt::DropActions supportedDropActions() const { return Qt::MoveAction | Qt::CopyAction; }
 
-	QStringList mimeTypes () const { QStringList x; x<<itemMimeType(); return x; }
+	QStringList mimeTypes () const { QStringList x; x << itemMimeType() << SongRecordListModel::itemMimeType(); return x; }
  	QMimeData * mimeData(const QModelIndexList & indexes) const;
  	bool dropMimeData(const QMimeData * data, Qt::DropAction action, int row, int column, const QModelIndex & parent);
  	
@@ -49,7 +51,7 @@ public:
  	bool setData(const QModelIndex & index, const QVariant & value, int role = Qt::EditRole);
  	
  	// Not from AbstractListModel, just for utility
-	QString itemMimeType() const { return "application/x-dviz-document-listmodel-item"; }
+	static QString itemMimeType() { return "application/x-dviz-document-listmodel-item"; }
 	//QString interListItemMimeType() const { return "application/x-dviz-document-listmodel-item-bytearray"; }
 		
 		

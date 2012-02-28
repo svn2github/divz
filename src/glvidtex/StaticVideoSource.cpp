@@ -37,13 +37,13 @@ void StaticVideoSource::run()
 {
 	while(!m_killed)
 	{
- 		if(m_frameUpdated)
+ 		//if(m_frameUpdated)
  		{
 			enqueue(new VideoFrame(m_image,1000/30));
-			m_frameUpdated = false;
+			//m_frameUpdated = false;
 			emit frameReady();
 		}
-		msleep(100);
+		msleep(1000/m_fps);
 	}
 }
 

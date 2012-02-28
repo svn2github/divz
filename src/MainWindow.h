@@ -118,7 +118,9 @@ public slots:
 	void hotkeyLogo();
 	void hotkeyNextSlide();
 	void hotkeyPrevSlide();
-
+	
+	void slotSendToOutputs();
+	
 protected slots:
 	void currentTabChanged(int);
 	
@@ -153,8 +155,6 @@ protected slots:
 	
 	void saveWindowState();
 	void loadWindowState();
-	
-	void slotSendToOutputs();
 	
 	void previewSlideDoubleClicked(Slide*);
 

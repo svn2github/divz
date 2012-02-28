@@ -76,6 +76,16 @@ namespace DVizMidiAction
 		}
 	};
 	
+	class SendToOutputBtn : public MidiInputAction
+	{
+		QString id() { return "845c4401-75f0-4777-b554-92f86e2a4cbd"; }
+		QString name() { return "Send Selected Group to Outputs"; }
+		void trigger(int)
+		{
+			mw->slotSendToOutputs();
+		}
+	};
+	
 	class FadeSpeedFader : public MidiInputAction
 	{
 		QString id() { return "1188e63f-4723-424c-b5fc-a1068da669c7"; }
@@ -104,6 +114,7 @@ void DVizMidiInputAdapter::setupActionList()
 		<< new DVizMidiAction::BlackButton()
 		<< new DVizMidiAction::ClearButton()
 		<< new DVizMidiAction::LogoButton()
+		<< new DVizMidiAction::SendToOutputBtn()
 		<< new DVizMidiAction::NextSlideButton()
 		<< new DVizMidiAction::PrevSlideButton()
 		<< new DVizMidiAction::FadeSpeedFader();

@@ -84,6 +84,7 @@ void SongBrowser::setupUI()
 	
 	// Now for the song list itself
 	m_songList = new MyQListView(this);
+	m_songList->setDragEnabled(true);
 	m_songList->setAlternatingRowColors(true);
 	
 	m_songListModel = SongRecordListModel::instance();
