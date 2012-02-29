@@ -66,6 +66,8 @@ AppSettingsDialog::AppSettingsDialog(QWidget *parent) :
 	
 	AppSettingsDialog_setupGenericDirectoryCompleter(m_ui->templateFolder);
 	
+	m_ui->titlesafeAmount->setValue(AppSettings::titlesafeAmount());
+	
 	// apply signal changes
 	m_ui->httpControlEnabled->setChecked(false);
 	m_ui->httpControlEnabled->setChecked(true);
@@ -212,7 +214,7 @@ void AppSettingsDialog::slotAccepted()
 	QSettings settings;
 	settings.setValue("max-backups",m_ui->maxBackups->value());
 	
-	
+	AppSettings::setTitlesafeAmount(m_ui->titlesafeAmount->value());
 	
 	close();
 }

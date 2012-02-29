@@ -43,7 +43,7 @@ bool SongFoldbackTextFilter::isMandatoryFor(OutputInstance * inst)
 				   inst->output()->tags().toLower().indexOf("foldback") > -1);
 }
 
-bool SongFoldbackTextFilter::approve(AbstractItem *) { return true; }
+bool SongFoldbackTextFilter::approve(AbstractItem *item) { return item && item->inherits("TextBoxItem"); }
 AbstractItem * SongFoldbackTextFilter::mutate(const AbstractItem *sourceItem)
 {
 
@@ -135,7 +135,7 @@ AbstractItem * SongFoldbackTextFilter::mutate(const AbstractItem *sourceItem)
 		}
 		else
 		{
-			return SlideTextOnlyFilter::mutate(sourceItem);
+			return 0; //SlideTextOnlyFilter::mutate(sourceItem);
 		}
 	}
 

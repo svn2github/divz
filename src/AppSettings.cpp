@@ -86,6 +86,8 @@ QHash<QString,QString> AppSettings::m_hotkeys;
 
 QString AppSettings::m_templateStorageFolder;
 
+double AppSettings::m_titlesafeAmount = 0.075;
+
 // I'll use this code at the church to debug some crashes.
 // However, disbaling it for now because I'm not sure
 // how well it performs in production - I don't want somebody
@@ -275,6 +277,8 @@ void AppSettings::load()
 	m_cacheDir = QDir(s.value("app/cache-dir",QDir::temp().absolutePath()).toString());
 	m_templateStorageFolder = s.value("app/template-folder",QDir::homePath()).toString();
 	
+	m_titlesafeAmount = s.value("app/titlesafe",0.075).toDouble();
+	
 	QVariantList pairList = s.value("app/resource-path-translations").toList();
 	
 	m_resourcePathTranslations.clear();
@@ -331,6 +335,8 @@ void AppSettings::save()
 	
 	s.setValue("app/cache-dir",m_cacheDir.absolutePath());
 	s.setValue("app/template-folder",m_templateStorageFolder);
+	
+	s.setValue("app/titlesafe",m_titlesafeAmount);
 	
 	QVariantList pairList;
 	foreach(QStringPair pair, m_resourcePathTranslations)
@@ -650,3 +656,21 @@ void AppSettings::setTemplateStorageFolder(const QString& folder)
 	m_templateStorageFolder = folder;
 }
 
+void AppSettings::setTitlesafeAmount(double val)
+{
+	m_titlesafeAmount = val;
+}
+
+QRect AppSettings::adjustToTitlesafe(QRect rect)
+{
+	int xMargin = rect.width()  * AppSettings::titlesafeAmount();
+	int yMargin = rect.height() * AppSettings::titlesafeAmount();
+	return rect.adjusted(xMargin,yMargin,-xMargin,-yMargin);
+}
+
+QRectF AppSettings::adjustToTitlesafe(QRectF rect)
+{
+	double xMargin = rect.width()  * AppSettings::titlesafeAmount();
+	double yMargin = rect.height() * AppSettings::titlesafeAmount();
+	return rect.adjusted(xMargin,yMargin,-xMargin,-yMargin);
+}

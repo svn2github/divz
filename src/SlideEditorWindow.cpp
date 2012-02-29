@@ -1373,6 +1373,21 @@ void SlideEditorWindow::setupViewportLines()
 		// right vert third
 		addVpLineX(x2,r.y(), r.height());
 	}
+	
+	bool showTitlesafeGuide = true;
+	if(showTitlesafeGuide)
+	{
+		int xMargin = r.width()  * AppSettings::titlesafeAmount();
+		int yMargin = r.height() * AppSettings::titlesafeAmount();
+		
+		// add top/bottom lines
+		addVpLineY(yMargin,xMargin,r.width()-xMargin);
+		addVpLineY(r.height()-yMargin,xMargin,r.width()-xMargin);
+
+		// add left/right lines
+		addVpLineX(xMargin,yMargin,r.height()-yMargin);
+		addVpLineX(r.width()-xMargin,yMargin,r.height()-yMargin);
+	}
 }
 
 void SlideEditorWindow::slidesDropped(QList<Slide*> list)

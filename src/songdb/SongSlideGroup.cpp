@@ -6,6 +6,7 @@
 #include "model/Slide.h"
 #include "model/SlideGroup.h"
 #include "MainWindow.h"
+#include "AppSettings.h"
 
 #include <QTextDocument>
 #include <QTextBlock>
@@ -323,7 +324,7 @@ void SongSlideGroup::textToSlides(SongTextFilter filter)
 
 		// Run a basic algorithim to find the max font size to fit inside this text rectangle (textRect)
 		QString htmlStr;
-		QRectF screenRect = MainWindow::mw() ? MainWindow::mw()->standardSceneRect() : FALLBACK_SCREEN_RECT;
+		QRectF screenRect = AppSettings::adjustToTitlesafe(MainWindow::mw() ? MainWindow::mw()->standardSceneRect() : FALLBACK_SCREEN_RECT);
 		QRectF textRect = screenRect;
 		if(textboxFromTemplate)
 		{
@@ -462,7 +463,7 @@ void SongSlideGroup::textToSlides(SongTextFilter filter)
 			{
 				qreal y = textRect.height()/2 - boxHeight/2;
 				//qDebug() << "SongSlideGroup::textToSlides(): centering: boxHeight:"<<boxHeight<<", textRect height:"<<textRect.height()<<", centered Y:"<<y;
-				textRect = QRectF(0,y,textRect.width(),boxHeight);
+				textRect = QRectF(screenRect.x(),y + screenRect.y(),textRect.width(),boxHeight);
 			}
 
 			text->setPos(QPointF(0,0));

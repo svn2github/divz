@@ -839,7 +839,7 @@ void MainWindow::songSelected(SongRecord *song)
 	group->setSong(song);
 	
 	SlideGroup *curTmpl = m_songBrowser->currentTemplate();
-	group->setSlideTemplates(curTmpl);
+	group->setSlideTemplates(curTmpl->clone());
 	
 	m_doc->addGroup(group);
 	if(!liveInst()->slideGroup())

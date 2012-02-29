@@ -103,6 +103,12 @@ public:
 	static void setTemplateStorageFolder(const QString& dir);
 	static QString templateStorageFolder() { return m_templateStorageFolder; }
 	
+	static double titlesafeAmount() { return m_titlesafeAmount; }
+	static void setTitlesafeAmount(double);
+	static QRect adjustToTitlesafe(QRect);
+	static QRectF adjustToTitlesafe(QRectF);
+	
+	
 protected:
 	friend class MainWindow;
 // 	static double setCurrentDocumentAspectRatio(double);
@@ -145,6 +151,8 @@ private:
 	static QHash<QString,QString> m_hotkeys;
 	
 	static QString m_templateStorageFolder;
+	
+	static double m_titlesafeAmount;
 
 };
 

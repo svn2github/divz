@@ -469,7 +469,8 @@ Slide * SlideGroupViewer::applySlideFilters(Slide * sourceSlide)
 			// However, if the muted is the SAME as the sourceItem, we DONT want the slide deleting the sourceItem,
 			// because the sourceItem comes straight from the sourceSlide, which still has to exist long after
 			// this slide goes off-screen.
-			slide->addItem(mutated,mutated != sourceItem);
+			if(mutated)
+				slide->addItem(mutated,mutated != sourceItem);
 
 			// determine max zvalue for use in rebasing overlay items
 			AbstractVisualItem * visual = dynamic_cast<AbstractVisualItem*>(sourceItem);
