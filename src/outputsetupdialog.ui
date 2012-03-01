@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>785</width>
-    <height>535</height>
+    <width>710</width>
+    <height>631</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -186,7 +186,7 @@ p, li { white-space: pre-wrap; }
                   <number>65536</number>
                  </property>
                  <property name="value">
-                  <number>8080</number>
+                  <number>8999</number>
                  </property>
                 </widget>
                </item>
@@ -199,8 +199,11 @@ p, li { white-space: pre-wrap; }
                </item>
                <item row="1" column="3">
                 <widget class="QSpinBox" name="mjpegFps">
+                 <property name="specialValueText">
+                  <string>(Raw Video)</string>
+                 </property>
                  <property name="minimum">
-                  <number>1</number>
+                  <number>0</number>
                  </property>
                  <property name="maximum">
                   <number>30</number>
@@ -219,6 +222,16 @@ p, li { white-space: pre-wrap; }
                   </size>
                  </property>
                 </spacer>
+               </item>
+               <item row="2" column="1" colspan="4">
+                <widget class="QLabel" name="label_12">
+                 <property name="text">
+                  <string>Setting &quot;FPS&quot; to &quot;(Raw Video)&quot; will generate a stream compatible with LivePro. (This feed uses less CPU cycles and encodes the alpha channel but it is NOT with compatible any other programs that expect MJPEG feeds.)</string>
+                 </property>
+                 <property name="wordWrap">
+                  <bool>true</bool>
+                 </property>
+                </widget>
                </item>
               </layout>
              </widget>
@@ -368,7 +381,7 @@ p, li { white-space: pre-wrap; }
                   <number>65536</number>
                  </property>
                  <property name="value">
-                  <number>8080</number>
+                  <number>8999</number>
                  </property>
                 </widget>
                </item>
@@ -381,8 +394,11 @@ p, li { white-space: pre-wrap; }
                </item>
                <item row="1" column="3">
                 <widget class="QSpinBox" name="mjpegFps2">
+                 <property name="specialValueText">
+                  <string>(Raw Video)</string>
+                 </property>
                  <property name="minimum">
-                  <number>1</number>
+                  <number>0</number>
                  </property>
                  <property name="maximum">
                   <number>30</number>
@@ -402,21 +418,31 @@ p, li { white-space: pre-wrap; }
                  </property>
                 </spacer>
                </item>
+               <item row="2" column="1" colspan="4">
+                <widget class="QLabel" name="label_13">
+                 <property name="text">
+                  <string>Setting &quot;FPS&quot; to &quot;(Raw Video)&quot; will generate a stream compatible with LivePro. (This feed uses less CPU cycles and encodes the alpha channel but it is NOT with compatible any other programs that expect MJPEG feeds.)</string>
+                 </property>
+                 <property name="wordWrap">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item row="3" column="1">
+                <spacer name="verticalSpacer">
+                 <property name="orientation">
+                  <enum>Qt::Vertical</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>20</width>
+                   <height>40</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
               </layout>
              </widget>
-            </item>
-            <item>
-             <spacer name="verticalSpacer">
-              <property name="orientation">
-               <enum>Qt::Vertical</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>20</width>
-                <height>40</height>
-               </size>
-              </property>
-             </spacer>
             </item>
            </layout>
           </widget>

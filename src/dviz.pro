@@ -129,7 +129,17 @@ SOURCES += \
 	MimeTypes.cpp \
 	SharedMemoryImageWriter.cpp \
 	DVizMidiInputAdapter.cpp
+
+HEADERS += \
+	glvidtex/VideoSender.h \
+	#livemix/VideoFrame.h \
+	#livemix/VideoSource.h
 	
+SOURCES += \
+	glvidtex/VideoSender.cpp \
+	#livemix/VideoFrame.cpp \
+	#livemix/VideoSource.cpp
+
 
 QT += core \
 	gui \

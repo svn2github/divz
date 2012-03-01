@@ -253,6 +253,7 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans, int speed, i
 	{
 		clear();
 		m_slide = 0;
+		emit transitionFinished(0);
 		return;
 	}
 	
@@ -274,7 +275,7 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans, int speed, i
 	m_currentTransition = trans;
 	
 	if(DEBUG_MYGRAPHICSSCENE)
-		qDebug() << "MyGraphicsScene::setSlide(): Setting slide # "<<slide->slideNumber();
+		qDebug() << "MyGraphicsScene::setSlide(): "<<this<<" Setting slide # "<<slide->slideNumber();
 	
 // 	//QMap<QString,AbstractItem*> consumedDuplicates;
 // 	QList<quint32> consumedDuplicates;
@@ -325,7 +326,7 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans, int speed, i
 		}
 			
 		if(DEBUG_MYGRAPHICSSCENE)
-			qDebug() << "MyGraphicsScene::setSlide(): [final] speed:"<<speed<<", quality:"<<quality;
+			qDebug() << "MyGraphicsScene::setSlide(): "<<this<<" [final] speed:"<<speed<<", quality:"<<quality;
 		
 		if(!m_fadeTimer)
 		{
@@ -423,7 +424,7 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans, int speed, i
 
 		emit crossFadeStarted(m_slide,slide);
 		if(DEBUG_MYGRAPHICSSCENE)
-			qDebug() << "MyGraphicsScene::setSlide(): Starting fade timer for"<<ms<<"ms"<<"/frame, inc:"<<inc<<", steps:"<<m_fadeSteps<<" ( speed:"<<speed<<", quality:"<<quality<<")";
+			qDebug() << "MyGraphicsScene::setSlide(): "<<this<<" Starting fade timer for"<<ms<<"ms"<<"/frame, inc:"<<inc<<", steps:"<<m_fadeSteps<<" ( speed:"<<speed<<", quality:"<<quality<<")";
 		
 	}
 
@@ -523,8 +524,11 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans, int speed, i
 // 	m_liveRoot->setOpacity(0);
 	m_liveRoot->setZValue(300);
 	
+	if(trans == None || (speed == 0 && quality == 0))
+		emit transitionFinished(slide);
+	
 	if(DEBUG_MYGRAPHICSSCENE)
-		qDebug() << "MyGraphicsScene::setSlide(): Setting slide # "<<slide->slideNumber()<<" - DONE.";
+		qDebug() << "MyGraphicsScene::setSlide(): "<<this<<" Setting slide # "<<slide->slideNumber()<<" - DONE.";
 }
 
 QList<AbstractContent *> MyGraphicsScene::abstractContent(bool onlyMasterItems)
@@ -585,7 +589,7 @@ AbstractContent * MyGraphicsScene::createVisualDelegate(AbstractItem *item, QGra
 	if (AbstractVisualItem * visualItem = dynamic_cast<AbstractVisualItem *>(item))
 	{
 		if(DEBUG_MYGRAPHICSSCENE)
-			qDebug() << "MyGraphicsScene::createVisualDelegate(): Creating new content item from:"<<visualItem->itemName();
+			qDebug() << "MyGraphicsScene::createVisualDelegate(): "<<this<<" Creating new content item from:"<<visualItem->itemName();
 		AbstractContent * visual = visualItem->createDelegate(this,m_liveRoot);
 		addContent(visual, true);
 		
@@ -618,7 +622,7 @@ void MyGraphicsScene::endTransition()
 	m_fadeTimer->stop();
 	
 	if(DEBUG_MYGRAPHICSSCENE)
-		qDebug() << "MyGraphicsScene::endTransition(): mark";
+		qDebug() << "MyGraphicsScene::endTransition(): "<<this<<" mark";
 
 	#if QT46_OPAC_ENAB > 0
 		qSetEffectOpacity(m_fadeRoot,0);
@@ -652,6 +656,7 @@ void MyGraphicsScene::endTransition()
 	
 	emit crossFadeFinished(m_slidePrev,m_slide);
 	emit slideDiscarded(m_slidePrev);
+	emit transitionFinished(m_slide);
 	update();
 	
 }
@@ -690,7 +695,7 @@ void MyGraphicsScene::slotTransitionStep()
 			m_liveRoot->setOpacity(fadeVal); //m_liveRoot->opacity() + inc);
 		#endif
 		if(DEBUG_MYGRAPHICSSCENE)
-			qDebug()<<"MyGraphicsScene::slotTransitionStep(): [STEP DONE] step"<<m_fadeStepCounter<<"/"<<m_fadeSteps<<", fadeVal:"<<fadeVal<<", fade:"<<m_fadeRoot->opacity()<<", live:"<<m_liveRoot->opacity()<<" [m_fadeFrameMs:"<<m_fadeFrameMs<<", elapsed:"<<elapsed<<"]";
+			qDebug()<<"MyGraphicsScene::slotTransitionStep(): "<<this<<" [STEP DONE] step"<<m_fadeStepCounter<<"/"<<m_fadeSteps<<", fadeVal:"<<fadeVal<<", fade:"<<m_fadeRoot->opacity()<<", live:"<<m_liveRoot->opacity()<<" [m_fadeFrameMs:"<<m_fadeFrameMs<<", elapsed:"<<elapsed<<"]";
 			//qDebug()<<"MyGraphicsScene::slotTransitionStep(): [STEP DONE] step"<<m_fadeStepCounter<<"/"<<m_fadeSteps<<", inc:"<<inc<<", fade:"<<m_fadeRoot->opacity()<<", live:"<<m_liveRoot->opacity();
 		update();
 	}

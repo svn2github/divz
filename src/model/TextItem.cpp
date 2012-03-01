@@ -181,7 +181,7 @@ int TextItem::fitToSize(const QSize& size, int minimumFontSize, int maximumFontS
 				//lastGoodHtml = text();
 				boxHeight = heightTmp;
 
-				sizeInc *= 1.1;
+				//sizeInc *= 1.1;
  				//qDebug()<<"size search: "<<ptSize<<"pt was good, trying higher, inc:"<<sizeInc<<"pt, boxHeight:"<<boxHeight;
 				ptSize += sizeInc;
 

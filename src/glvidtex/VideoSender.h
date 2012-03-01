@@ -55,6 +55,8 @@ public slots:
 	void setTransmitFps(int fps=-1); // auto fps based on source if -1
 	void setTransmitSize(const QSize& size=QSize()); // null size means auto size based on input
 	void setTransmitSize(int x, int y) { setTransmitSize(QSize(x,y)); }
+	
+	void transmitImage(QImage);
 
 private slots:
 	void frameReady();
@@ -83,6 +85,8 @@ private:
 	QMutex m_sendMutex;
 	
 	bool m_consumerRegistered;
+	
+	//QImage m_transmitImage;
 	
 };
 

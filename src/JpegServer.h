@@ -9,24 +9,32 @@
 #include <QTimer>
 #include <QTime>
 
+class VideoSender;
+class MyGraphicsScene;
+
 class JpegServer : public QTcpServer
 {
 	Q_OBJECT
 	
 public:
 	JpegServer(QObject *parent = 0);
+	~JpegServer();
 	
 	void setAdaptiveWriteEnabled(bool flag) { m_adaptiveWriteEnabled = flag; }
 	bool adaptiveWriteEnabled() { return m_adaptiveWriteEnabled; }
 	
-	void setScene(QGraphicsScene *scene);
-	QGraphicsScene *scene() { return m_scene; }
+	void setScene(MyGraphicsScene *scene);
+	MyGraphicsScene *scene() { return m_scene; }
 	
 	void setFps(int fps);
 	int fps() { return m_fps; }
 	
 // 	QString myAddress();
 	void onlyRenderOnSlideChange(bool flag=true);
+	
+	bool start(int port, bool isVideoSender=false);
+	int listenPort() { return m_port; }
+	
 
 public slots:
 	void slideChanged();
@@ -43,7 +51,7 @@ protected:
 private:
 	void updateRects();
 	
-	QGraphicsScene *m_scene;
+	MyGraphicsScene *m_scene;
 	int m_fps;
 	QTimer m_timer;
 	bool m_adaptiveWriteEnabled;
@@ -59,6 +67,9 @@ private:
 	bool m_onlyRenderOnSlideChange;
 	bool m_slideChanged;
 	QImage m_cachedImage;
+	
+	VideoSender *m_sender;
+	int m_port;
 
 };
 

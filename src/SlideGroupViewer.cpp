@@ -1010,12 +1010,13 @@ void SlideGroupViewer::setViewerState(ViewerState state)
 Slide * SlideGroupViewer::setSlide(int x)
 {
 	m_slideNum = x;
-	//qDebug() << "SlideGroupViewer::setSlide(): Setting slide to idx"<<x;
+	qDebug() << "SlideGroupViewer::setSlide(): Setting slide to idx"<<x;
 	return setSlide(m_sortedSlides.at(x));
 }
 
 Slide * SlideGroupViewer::setSlide(Slide *slide, bool takeOwnership)
 {
+	//qDebug() << "SlideGroupViewer::setSlide(): Setting slide to ptr "<<slide;
 	if(m_bgWaitingForNextSlide)
 	{
 		//qDebug() << "SlideGroupViewer::setSlide: Applying Background because m_bgWaitingForNextSlide is true";
@@ -1264,8 +1265,6 @@ void SlideGroupViewer::setSlideInternal(Slide *slide)
 			m_scene->setMasterSlide(applySlideFilters(master)); 
 		else
 			m_scene->setMasterSlide(0);
-			//  1300 - one year
-			// 250
 	}
 	else
 	{
@@ -1286,6 +1285,9 @@ void SlideGroupViewer::setSlideInternal(Slide *slide)
 	
 	if(m_jpegServer)
 		m_jpegServer->slideChanged();
+
+	//if(m_jpegServer)
+	//	QTimer::singleShot(5000,m_jpegServer,SLOT(slideChanged()));
 }
 
 // void SlideGroupViewer::paintEvent(QPaintEvent*)
@@ -1570,7 +1572,7 @@ void SlideGroupViewer::setMjpegServerEnabled(bool enable, int port, int fps)
 	if(enable)
 	{
 		if(!m_jpegServer ||
-		    m_jpegServer->serverPort() != port)
+		    m_jpegServer->listenPort() != port)
 		{
 			if(m_jpegServer)
 				delete m_jpegServer;
@@ -1579,7 +1581,9 @@ void SlideGroupViewer::setMjpegServerEnabled(bool enable, int port, int fps)
 			m_jpegServer->setScene(m_scene);
 			m_jpegServer->setFps(fps);
 			
-			if (!m_jpegServer->listen(QHostAddress::Any,port)) 
+			//if (!m_jpegServer->listen(QHostAddress::Any,port))
+			//qDebug() << "SlideGroupViewer::setMjpegServerEnabled: port:"<<port<<", fps:"<<fps; 
+			if(!m_jpegServer->start(port, fps < 1)) 
 			{
 				qDebug() << "JpegServer could not start: "<<m_jpegServer->errorString();
 			}

@@ -93,6 +93,8 @@ class MyGraphicsScene : public QGraphicsScene
 		void crossFadeStarted(Slide *oldSlide, Slide *newSlide);
 		void crossFadeFinished(Slide *oldSlide, Slide *newSlide);
 		
+		void transitionFinished(Slide *newSlide);
+		
 		void slideDiscarded(Slide*);
 		
 		void itemDoubleClicked(AbstractContent *item);

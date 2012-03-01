@@ -479,20 +479,20 @@ TextBoxWarmingThreadManager::TextBoxWarmingThreadManager(AbstractVisualItem *mod
 	QString key = TextBoxContent::cacheKey(model);
 	if(QPixmapCache::find(key,cache))
 	{
-		qDebug()<<"TextBoxWarmingThreadManager(): modelItem:"<<model->itemName()<<": Cache HIT";
+		//qDebug()<<"TextBoxWarmingThreadManager(): modelItem:"<<model->itemName()<<": Cache HIT";
 		deleteLater();
 	}
 	else
 	if(QFile(key).exists())
 	{
-		qDebug()<<"TextBoxWarmingThreadManager(): modelItem:"<<model->itemName()<<": Cache load from"<<key;
+		//qDebug()<<"TextBoxWarmingThreadManager(): modelItem:"<<model->itemName()<<": Cache load from"<<key;
 		cache.load(key);
 		QPixmapCache::insert(key,cache);
 		deleteLater();
 	}
 	else
 	{
-		qDebug()<<"TextBoxWarmingThreadManager(): modelItem:"<<model->itemName()<<": Cache MISS";
+		//qDebug()<<"TextBoxWarmingThreadManager(): modelItem:"<<model->itemName()<<": Cache MISS";
 		m_thread = new TextBoxWarmingThread(model);
 		connect(m_thread, SIGNAL(renderDone(QImage*)), this, SLOT(renderDone(QImage*)));
 		connect(m_thread, SIGNAL(finished()), m_thread, SLOT(deleteLater()));

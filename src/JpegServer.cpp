@@ -3,11 +3,15 @@
 #include "MainWindow.h"
 #include <QNetworkInterface>
 
+#include "MyGraphicsScene.h"
+#include "glvidtex/VideoSender.h"
+
 #include <QPainter>
 
 #define FRAME_WIDTH  640
 #define FRAME_HEIGHT 480
-#define FRAME_FORMAT QImage::Format_ARGB32_Premultiplied
+#define FRAME_FORMAT QImage::Format_ARGB32
+//_Premultiplied
 
 JpegServer::JpegServer(QObject *parent)
 	: QTcpServer(parent)
@@ -18,13 +22,26 @@ JpegServer::JpegServer(QObject *parent)
 	, m_frameCount(0)
 	, m_onlyRenderOnSlideChange(false)
 	, m_slideChanged(true)
+	, m_sender(0)
 {
 	connect(&m_timer, SIGNAL(timeout()), this, SLOT(generateNextFrame()));
 	setFps(m_fps);
 }
 
+JpegServer::~JpegServer()
+{
+	if(m_sender)
+	{
+		delete m_sender;
+		m_sender = 0;
+	}
+}
+
 void JpegServer::setFps(int fps)
 {
+	m_fps = fps; 
+	if(fps < 1)
+		fps = 1;
 	m_timer.setInterval(1000/fps);
 }
 
@@ -36,12 +53,47 @@ void JpegServer::onlyRenderOnSlideChange(bool flag)
 void JpegServer::slideChanged()
 {
 	m_slideChanged = true; // will be checked by generateNextFrame(), below
+	//generateNextFrame();
 }
 	
-void JpegServer::setScene(QGraphicsScene *scene)
+void JpegServer::setScene(MyGraphicsScene *scene)
 {
+	if(m_scene)
+		disconnect(m_scene, 0, this, 0);
+		
 	m_scene = scene;
+	connect(m_scene, SIGNAL(transitionFinished(Slide*)), this, SLOT(generateNextFrame()));
 }
+
+bool JpegServer::start(int port, bool isVideoSender)
+{
+	if(!isVideoSender)
+	{
+		if(!listen(QHostAddress::Any,port))
+		{
+			qDebug() << "JpegServer::start(): Unable to open MJPEG server on port"<<port<<": Is it already in use?";
+			return false; 
+		}
+		
+		qDebug() << "JpegServer::start(): Started MJPEG server on port "<<port;
+	}
+	else
+	{
+		m_sender = new VideoSender();
+		m_sender->setTransmitFps(-1); // auto fps
+		m_sender->setTransmitSize(QSize()); // transmit original size, no scaling
+		if(!m_sender->listen(QHostAddress::Any,port))
+		{
+			qDebug() << "JpegServer::start(): Unable to open VideoSender server on port"<<port<<": Is it already in use?";
+			return false; 
+		}
+		
+		qDebug() << "JpegServer::start(): Started LivePro-compatible VideoSender server on port "<<port;
+	}
+	
+	return true;
+}
+
 
 void JpegServer::incomingConnection(int socketDescriptor)
 {
@@ -88,6 +140,8 @@ void JpegServer::generateNextFrame()
 		//qDebug() << "JpegServer::generateNextFrame(): Cache fallthru ...";
 	}
 	
+	//qDebug() << "JpegServer::generateNextFrame(): Rendering scene "<<m_scene;
+	
 	m_time.start();
 	
 	QImage image(FRAME_WIDTH,
@@ -115,6 +169,9 @@ void JpegServer::generateNextFrame()
 	
  	emit frameReady(image);
 	
+	if(m_sender)
+		m_sender->transmitImage(image);
+	
 	if(m_onlyRenderOnSlideChange)
 		m_cachedImage = image;
 	
@@ -124,7 +181,7 @@ void JpegServer::generateNextFrame()
 	m_frameCount ++;
 	m_timeAccum  += m_time.elapsed();
 	
-	if(m_frameCount % m_fps == 0)
+	if(m_frameCount % (m_fps?m_fps:10) == 0)
 	{
 		QString msPerFrame;
 		msPerFrame.setNum(((double)m_timeAccum) / ((double)m_frameCount), 'f', 2);
@@ -132,11 +189,13 @@ void JpegServer::generateNextFrame()
 		qDebug() << "JpegServer::generateNextFrame(): Avg MS per Frame:"<<msPerFrame<<", threadId:"<<QThread::currentThreadId();
 	}
 			
-	if(m_frameCount % (m_fps * 10) == 0)
+	if(m_frameCount % ((m_fps?m_fps:10) * 10) == 0)
 	{
 		m_timeAccum  = 0;
 		m_frameCount = 0;
 	}
+	
+	//qDebug() << "JpegServer::generateNextFrame(): Done rendering "<<m_scene;
 }
 
 /** Thread **/
