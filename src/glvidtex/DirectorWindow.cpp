@@ -1941,33 +1941,33 @@ void PropertyEditorWindow::setSourceWidget(DirectorSourceWidget* source)
 		m_vid = item;
 		
 		// Histo
-		{
-			NEW_SECTION("Histogram");
-			
-			GLWidget *vid = new GLWidget();
-			vid->setBackgroundColor(palette().color(QPalette::Window));
-			vid->setViewport(QRectF(0,0,255*3,128*3)); // approx histogram output size for a 4:3 video frame
-			
-			HistogramFilter *filter = new HistogramFilter();
-			
-			GLVideoDrawable *gld = new GLVideoDrawable();
-			gld->setVideoSource(filter);
-			
-			gld->setFilterType(GLVideoDrawable::Filter_Sharp);
-			gld->setSharpAmount(1.25); // creates a nice relief/outline effect on the histogram
-			
-			vid->addDrawable(gld);
-			gld->setRect(vid->viewport());
-			
-			form->addWidget(vid);
-			
-			filter->setHistoType(HistogramFilter::Gray);
-			//filter->setVideoSource(item->videoSource());
-			filter->setVideoSource(item->glWidget()->outputStream());
-			filter->setIncludeOriginalImage(false);
-			filter->setFpsLimit(10);
-			filter->setDrawBorder(true);
-		}
+// 		{
+// 			NEW_SECTION("Histogram");
+// 			
+// 			GLWidget *vid = new GLWidget();
+// 			vid->setBackgroundColor(palette().color(QPalette::Window));
+// 			vid->setViewport(QRectF(0,0,255*3,128*3)); // approx histogram output size for a 4:3 video frame
+// 			
+// 			HistogramFilter *filter = new HistogramFilter();
+// 			
+// 			GLVideoDrawable *gld = new GLVideoDrawable();
+// 			gld->setVideoSource(filter);
+// 			
+// 			gld->setFilterType(GLVideoDrawable::Filter_Sharp);
+// 			gld->setSharpAmount(1.25); // creates a nice relief/outline effect on the histogram
+// 			
+// 			vid->addDrawable(gld);
+// 			gld->setRect(vid->viewport());
+// 			
+// 			form->addWidget(vid);
+// 			
+// 			filter->setHistoType(HistogramFilter::Gray);
+// 			//filter->setVideoSource(item->videoSource());
+// 			filter->setVideoSource(item->glWidget()->outputStream());
+// 			filter->setIncludeOriginalImage(false);
+// 			filter->setFpsLimit(10);
+// 			filter->setDrawBorder(true);
+// 		}
 		
 		// Profiles
 		{

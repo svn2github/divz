@@ -100,7 +100,7 @@ SlideGroup * SongSlideGroup::createDefaultTemplates()
 	text->setItemId(ItemFactory::nextId());
 	text->setItemName(QString("TextBox%1").arg(text->itemId()));
 
-	QRectF textRect = MainWindow::mw() ? MainWindow::mw()->standardSceneRect() : FALLBACK_SCREEN_RECT;
+	QRectF textRect = AppSettings::adjustToTitlesafe(MainWindow::mw() ? MainWindow::mw()->standardSceneRect() : FALLBACK_SCREEN_RECT);
 
 	text->setPos(QPointF(0,0));
 	text->setContentsRect(textRect);
@@ -112,6 +112,20 @@ SlideGroup * SongSlideGroup::createDefaultTemplates()
 	text->setOutlineEnabled(true);
 	text->setShadowEnabled(true);
 	text->setShadowBlurRadius(11);
+	
+	static QString slideHeader = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">"
+				     "<html>"
+				     "<head><meta name=\"qrichtext\" content=\"1\" />"
+				     "<style type=\"text/css\">p, li { white-space: pre-wrap; }</style>"
+				     "</head>"
+				     "<body style=\"font-family:'Sans Serif'; font-size:9pt; font-weight:400; font-style:normal;\">";
+	static QString linePrefix  = "<p align=\"center\" style=\"margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">"
+				     "<span style=\" font-family:'Sans-Serif'; font-size:32pt; font-weight:800;\">";
+	static QString lineSuffix =  "</span>"
+				     "</p>";
+	static QString slideFooter = "</body></html>";
+	
+	text->setText(QString("%1%2Template%3%4").arg(slideHeader).arg(linePrefix).arg(lineSuffix).arg(slideFooter));
 
 	slide->addItem(text);
 	group->addSlide(slide);
@@ -448,7 +462,7 @@ void SongSlideGroup::textToSlides(SongTextFilter filter)
 		// Finalize setup
 		// magic number 
 		int heightDifference = abs(screenRect.height() - textRect.height());
-		if(DEBUG_TEXTOSLIDES)
+		//if(DEBUG_TEXTOSLIDES)
 			qDebug()<<"SongSlideGroup::textToSlides(): slideNbr:"<<slideNbr<<": textRect.height():"<<textRect.height()<<"screenRect.height():"<<screenRect.height()<<", heightDifference:"<<heightDifference;
 		
 		// Arbitrary magic number to force centering for small amounts of differences.
@@ -489,8 +503,8 @@ void SongSlideGroup::textToSlides(SongTextFilter filter)
 		addSlide(slide);
 		
 		// Delay warming the visual cache to increase UI responsiveness when quickly adding songs
-		int rv = (rand() % 500) - (500/2); // get a random number +/- 500ms
-		int delay = slideNbr * 5000 + rv; // add a random +/- 500ms to stagger hits to the warming method
+		int rv = (rand() % 500) - (500/2); // get a random number +/- 250ms
+		int delay = slideNbr * 5000 + rv; // add a random +/- 250ms to stagger hits to the warming method
 		//qDebug()<<"SongSlideGroup::textToSlides(): slideNbr:"<<slideNbr<<": delaying "<<delay<<"ms before warmVisualCache()";
 		QTimer::singleShot(delay, text, SLOT(warmVisualCache()));
 		

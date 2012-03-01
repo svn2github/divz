@@ -895,13 +895,13 @@ void SlideEditorWindow::textFitToSlide()
 	if(m_currentTextItems.size() <= 0)
 		return;
 
-	QRectF rect = m_scene->sceneRect();
+	QRectF rect = AppSettings::adjustToTitlesafe(m_scene->sceneRect());
 	QSize size = rect.size().toSize();
 	foreach(TextBoxContent *text, m_currentTextItems)
 	{
 		dynamic_cast<TextItem*>(text->modelItem())->fitToSize(size,8);
 		text->modelItem()->setPos(QPointF(0,0));
-		text->modelItem()->setContentsRect(QRectF(QPointF(0,0),rect.size()));
+		text->modelItem()->setContentsRect(rect); //QRectF(rect.topLeft(),rect.size()));
 	}
 
 	textNaturalBox();
@@ -917,7 +917,7 @@ void SlideEditorWindow::textNaturalBox()
 
 	foreach(TextBoxContent *text, m_currentTextItems)
 	{
-		QSize natural = dynamic_cast<TextItem*>(text->modelItem())->findNaturalSize(m_scene->sceneRect().width());
+		QSize natural = dynamic_cast<TextItem*>(text->modelItem())->findNaturalSize(AppSettings::adjustToTitlesafe(m_scene->sceneRect()).width());
 		QRectF newRect = QRectF(text->modelItem()->contentsRect().topLeft(),QSizeF(natural));
 		//qDebug() << "SlideEditorWindow::textNaturalBox: "<<text->modelItem()->itemName()<<": natural:"<<natural<<", newRect:"<<newRect;
 		text->modelItem()->setContentsRect(newRect);

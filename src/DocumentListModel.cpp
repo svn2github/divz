@@ -143,7 +143,7 @@ bool DocumentListModel::dropMimeData ( const QMimeData * data, Qt::DropAction ac
 				group->setSong(song);
 				
 				SlideGroup *curTmpl = MainWindow::mw()->songBrowser()->currentTemplate();
-				group->setSlideTemplates(curTmpl->clone());
+				group->setSlideTemplates(curTmpl ? curTmpl->clone() : 0);
 				
 				//qDebug() << "DocumentListModel::dropMimeData: Dropped song: "<<song->title();
 				

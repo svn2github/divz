@@ -2246,7 +2246,7 @@ void GLVideoDrawable::updateTexture(bool secondSource)
 		}
 		
 		if(!paramsChanged && 
-		  (!secondSource ? m_frame->hasTextureId() : m_frame2->hasTextureId()))
+		  (!secondSource ? m_frame&& m_frame->hasTextureId() : m_frame2 && m_frame2->hasTextureId()))
 		{
 			// GPU already has texture for this frame, dont upload
 			VideoFrame *frame = (VideoFrame*)m_frame.data();
@@ -3107,7 +3107,7 @@ void GLVideoDrawable::paintGL()
 				
 				glActiveTexture(GL_TEXTURE0);
 				//glBindTexture(GL_TEXTURE_2D, m_textureIds[0]);
-				glBindTexture(GL_TEXTURE_2D, m_frame->hasTextureId() ? m_frame->textureId() : m_textureIds[0]);
+				glBindTexture(GL_TEXTURE_2D, m_frame && m_frame->hasTextureId() ? m_frame->textureId() : m_textureIds[0]);
 
 				glActiveTexture(GL_TEXTURE1);
 				glBindTexture(GL_TEXTURE_2D, m_alphaTextureId);
@@ -3160,7 +3160,7 @@ void GLVideoDrawable::paintGL()
 		//glTranslatef(0.0f,0.0f,-3.42f);
 
 		//glBindTexture(GL_TEXTURE_2D, m_textureIds[0]);
-		glBindTexture(GL_TEXTURE_2D, m_frame->hasTextureId() ? m_frame->textureId() : m_textureIds[0]);
+		glBindTexture(GL_TEXTURE_2D, m_frame && m_frame->hasTextureId() ? m_frame->textureId() : m_textureIds[0]);
 
 		QPolygonF points = transform.map(QPolygonF(target));
  		//qDebug() << "target: "<<target;
@@ -3345,7 +3345,7 @@ void GLVideoDrawable::paintGL()
 				else
 				{
 					glActiveTexture(GL_TEXTURE0);
-					glBindTexture(GL_TEXTURE_2D, m_frame2->hasTextureId() ? m_frame2->textureId() : m_textureIds2[0]);
+					glBindTexture(GL_TEXTURE_2D, m_frame2 && m_frame2->hasTextureId() ? m_frame2->textureId() : m_textureIds2[0]);
 					
 					glActiveTexture(GL_TEXTURE1);
 					glBindTexture(GL_TEXTURE_2D, m_alphaTextureId);
@@ -3398,7 +3398,7 @@ void GLVideoDrawable::paintGL()
 			glLoadIdentity(); // Reset The View
 			//glTranslatef(0.0f,0.0f,-3.42f);
 
-			glBindTexture(GL_TEXTURE_2D, m_frame2->hasTextureId() ? m_frame2->textureId() : m_textureIds2[0]);
+			glBindTexture(GL_TEXTURE_2D, m_frame2 && m_frame2->hasTextureId() ? m_frame2->textureId() : m_textureIds2[0]);
 			//glBindTexture(GL_TEXTURE_2D, m_textureIds2[0]);
 
 			target2 = transform.mapRect(target2);
