@@ -173,6 +173,15 @@ void SongBrowser::templateChanged(SlideGroup* group)
 	QSettings().setValue("songbrowser/template-id", m_template ? m_template->groupId() : 0);
 }
 
+SlideGroup *SongBrowser::createSlideGroup(SongRecord *song)
+{
+	SongSlideGroup *group = new SongSlideGroup();
+	group->setSong(song);
+	
+	group->setSlideTemplates(m_template ? m_template->clone() : 0);
+	
+	return group;
+}
 
 void SongBrowser::searchOnline()
 {

@@ -59,6 +59,8 @@
 #include "model/SlideGroupFactory.h"
 #include "SlideGroupListModel.h"
 
+#include "model/Output.h"
+
 #include "items/OutputViewConfig.h"
 #include "items/OutputViewContent.h"
 
@@ -252,6 +254,8 @@ SlideEditorWindow::SlideEditorWindow(SlideGroup *group, QWidget * parent)
     m_currentConfig(0),
     m_itemListView(0),
     m_masterSlideEditor(0),
+    m_altEditAction(0),
+    m_altEditorWindow(0),
     m_iconSize(192),
     m_iconSizeSlider(0),
     m_lockIconSizeSetter(false)
@@ -470,6 +474,11 @@ void SlideEditorWindow::setupToolbar()
 	m_masterSlideAction = toolbar->addAction(QIcon(":/data/master-slide.png"), tr("Edit Master Slide"));
 	m_masterSlideAction->setShortcut(QString(tr("CTRL+SHIFT+M")));
 	connect(m_masterSlideAction, SIGNAL(triggered()), this, SLOT(editMasterSlide()));
+	
+	m_altEditAction = toolbar->addAction(QIcon(":/data/stock-jump-to.png"), tr("Edit Alternate Groups"));
+	m_altEditAction->setShortcut(QString(tr("CTRL+SHIFT+R")));
+	connect(m_altEditAction, SIGNAL(triggered()), this, SLOT(editAltGroups()));
+	
 
 	toolbar->addSeparator();
 
@@ -956,6 +965,54 @@ void SlideEditorWindow::editMasterSlide()
 	}
 }
 
+
+void SlideEditorWindow::editAltGroups()
+{
+	if(!m_slideGroup)
+		return;
+
+	if(!m_altEditorWindow)
+		m_altEditorWindow = new SlideEditorWindow(0,this);
+	
+	// First, dialog to choose output
+	QList<Output*> allOut = AppSettings::outputs();
+	
+	QStringList items;
+	foreach(Output *out, allOut)
+		items << out->name();
+	
+	bool ok;
+	QString item = QInputDialog::getItem(this, tr("Choose Output"),
+						tr("Output:"), items, 0, false, &ok);
+	if (ok && !item.isEmpty())
+	{
+		int outputIdx = items.indexOf(item);
+		Output *output = allOut[outputIdx];
+			
+		SlideGroup *altGroup = m_slideGroup->altGroupForOutput(output);
+		if(!altGroup)
+		{
+			altGroup = new SlideGroup();
+			altGroup->setGroupTitle(QString(tr("Alternate Group for Output %1 for Group %2")).arg(output->name()).arg(m_slideGroup->groupTitle().isEmpty() ? QString(tr("Group %1")).arg(m_slideGroup->groupNumber()) : m_slideGroup->groupTitle()));
+			//
+			
+			Slide *slide = new Slide();
+			altGroup->addSlide(slide);
+			
+			m_slideGroup->setAltGroupForOutput(output, altGroup);
+		}
+		
+		altGroup->setProperty("isAltGroup",true);
+		
+		m_altEditorWindow->setSlideGroup(altGroup,altGroup->at(0));
+		//connect(m_altEditorWindow, SIGNAL(closed()), this, SLOT(altEditorClosed()));
+
+		m_altEditorWindow->show();
+	}
+	
+}
+
+
 void SlideEditorWindow::masterSlideEditorClosed()
 {
 	// TODO anything needed to do here?
@@ -1423,7 +1480,13 @@ void SlideEditorWindow::setSlideGroup(SlideGroup *group, Slide *curSlide)
 		m_masterSlideAction->setVisible(false);
 	else
 		m_scene->setMasterSlide(m_slideGroup->masterSlide());
-
+		
+	QVariant altFlag = group->property("isAltGroup");
+	if(altFlag.isValid() && altFlag.toBool())
+		m_altEditAction->setVisible(false);
+	//else
+		//m_scene->setMasterSlide(m_slideGroup->masterSlide());
+	
 
 	// Trigger slideItemChange slot connections, but not an undo entry
 	m_ignoreUndoPropChanges = true;

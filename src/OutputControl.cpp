@@ -883,10 +883,13 @@ void OutputControl::setupFoldbackSettings()
 		if(m_outputIsSynced || m_firstRun)
 		{
 			m_firstRun = false;
-			setIsOutputSynced(true);
-	// 		setTextOnlyFilterEnabled(true);
-	// 		setTextResizeEnabled(true);
-			setAdvancedWidgetVisible(true);
+			if(m_syncInst)
+			{
+				setIsOutputSynced(true);
+		// 		setTextOnlyFilterEnabled(true);
+		// 		setTextResizeEnabled(true);
+				setAdvancedWidgetVisible(true);
+			}
 			m_fadeSlider->setValue(0);
 		}
 	}

@@ -7,7 +7,7 @@
 #include <QMutex>
 #include <QMutexLocker>
 
-#define DEBUG
+//#define DEBUG
 
 QMap<QString,VideoReceiver *> VideoReceiver::m_threadMap;
 QMutex VideoReceiver::m_threadCacheMutex;
@@ -22,10 +22,20 @@ QString VideoReceiver::cacheKey()
 	return cacheKey(m_host,m_port);
 }
 
-VideoReceiver * VideoReceiver::getReceiver(const QString& host, int port)
+VideoReceiver * VideoReceiver::getReceiver(const QString& hostTmp, int port)
 {
+	QString host = hostTmp;
+	
 	if(host.isEmpty())
 		return 0;
+	
+	// Assume they passed a single QString with the format of "Host:Port"
+	if(host.indexOf(":") > 0 && port < 0)
+	{
+		QStringList list = host.split(":");
+		host = list[0];
+		port = list[1].toInt();
+	}
 
 	QMutexLocker lock(&m_threadCacheMutex);
 
@@ -72,6 +82,7 @@ VideoReceiver::VideoReceiver(QObject *parent)
 	, m_autoResize(-1,-1)
 	, m_autoReconnect(true)
 	, m_byteCount(-1)
+	, m_hasReceivedHintsFromServer(false)
 	, m_connected(false)
 	
 {
@@ -82,6 +93,11 @@ VideoReceiver::VideoReceiver(QObject *parent)
 // 	m_label->show();
 // #endif
 	setIsBuffered(false);
+	
+	QImage blueImage(16,16, QImage::Format_RGB32);
+	blueImage.fill(Qt::blue);
+	
+	enqueue(new VideoFrame(blueImage,1000/30));
 }
 VideoReceiver::~VideoReceiver()
 {
@@ -89,9 +105,6 @@ VideoReceiver::~VideoReceiver()
 	//qDebug() << "VideoReceiver::~VideoReceiver(): "<<this;
 	#endif
 	
-	QMutexLocker lock(&m_threadCacheMutex);
-	m_threadMap.remove(cacheKey());
-
 	if(m_socket)
 		exit();
 		
@@ -99,7 +112,15 @@ VideoReceiver::~VideoReceiver()
 	wait();
 }
 
-  
+
+void VideoReceiver::destroySource()
+{
+	QMutexLocker lock(&m_threadCacheMutex);
+	m_threadMap.remove(cacheKey());
+	
+	VideoSource::destroySource();
+}
+
 bool VideoReceiver::connectTo(const QString& host, int port, QString url, const QString& user, const QString& pass)
 {
 	if(url.isEmpty())
@@ -138,7 +159,7 @@ bool VideoReceiver::connectTo(const QString& host, int port, QString url, const 
 	connect(m_socket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(lostConnection(QAbstractSocket::SocketError)));
 	
 	m_socket->connectToHost(host,port);
-	m_socket->setReadBufferSize(1024 * 1024);
+	m_socket->setReadBufferSize(1024 * 1024 * 5);
 	
 	//qDebug() << "VideoReceiver::connectTo: Connecting to"<<host<<"with socket:"<<m_socket;
 	
@@ -157,6 +178,9 @@ void VideoReceiver::connectionReady()
 	m_connected = true;
 	
 	emit connected();
+	
+	// Proactively request video hints
+	queryVideoHints();
 }
 
 void VideoReceiver::log(const QString& str)
@@ -284,6 +308,14 @@ void VideoReceiver::setSize(int w, int h)
 		<< "h"   << h);
 }
 
+void VideoReceiver::setVideoHints(QVariantMap hints)
+{
+	m_videoHints = hints;
+	sendCommand(QVariantList() 
+		<< "cmd" << Video_SetVideoHints
+		<< "hints" << hints);
+}
+
 
 void VideoReceiver::queryHue()
 {
@@ -321,6 +353,12 @@ void VideoReceiver::querySize()
 		<< "cmd" << Video_GetSize);
 }
 
+void VideoReceiver::queryVideoHints()
+{
+	sendCommand(QVariantList() 
+		<< "cmd" << Video_GetVideoHints);
+}
+
 void VideoReceiver::dataReady()
 {
 	if(!m_connected)
@@ -353,10 +391,11 @@ void VideoReceiver::processBlock()
 		if(m_dataBlock.size() >= HEADER_SIZE)
 		{
 			QByteArray header = m_dataBlock.left(HEADER_SIZE);
-			m_dataBlock.remove(0,HEADER_SIZE);
+			//m_dataBlock.remove(0,HEADER_SIZE);
 			
 			const char *headerData = header.constData();
 			sscanf(headerData,"%d",&m_byteCount);
+			//qDebug() << "VideoReceiver::processBlock(): First frame on connect, m_byteCount:"<<m_byteCount; 
 		}
 	}
 	
@@ -364,6 +403,8 @@ void VideoReceiver::processBlock()
 	{
 		int frameSize = m_byteCount+HEADER_SIZE;
 		
+		//qDebug() << "VideoReceiver::processBlock: Port: "<<m_port<<": m_byteCount:"<<m_byteCount<<" bytes, m_dataBlock size:"<<m_dataBlock.size()<<", frameSize:"<<frameSize;
+	
 		while(m_dataBlock.size() >= frameSize)
 		{
 			QByteArray block = m_dataBlock.left(frameSize);
@@ -377,6 +418,8 @@ void VideoReceiver::processBlock()
 								
 			int byteTmp,imgX,imgY,pixelFormatId,imageFormatId,bufferType,timestamp,holdTime,origX,origY;
 			
+			//qDebug() << "VideoReceiver::processBlock: header data:"<<headerData;
+				
 			sscanf(headerData,
 					"%d " // byteCount
 					"%d " // w
@@ -402,6 +445,7 @@ void VideoReceiver::processBlock()
 			if(imgX < 0 && imgY < 0 && holdTime < 0)
 			{
 				// data frame from VideoSender in response to a query request (Video_Get* command)
+				// or from a signal received by the VideoSender (such as signalStatusChanged(bool))
 				
 				if(byteTmp != m_byteCount)
 				{
@@ -410,22 +454,38 @@ void VideoReceiver::processBlock()
 					//qDebug() << "VideoReceiver::processBlock: Frame size changed: "<<frameSize;
 				}
 				
+				QDataStream stream(&block, QIODevice::ReadOnly);
+				QVariantMap map;
+				stream >> map;
 				
-				/// TODO: The parsing code here wont work for data replies. Need to rework to parse header, get byte count, THEN get data packet from header
+				qDebug() << "VideoReceiver::processBlock: Port: "<<m_port<<": Received MAP block: "<<map;
+				
+				processReceivedMap(map);
 			}
 			else
 			// No need to create and emit frames if noone is listeneing for frames!
-			if(!m_consumerList.isEmpty())
+			if(m_consumerList.isEmpty())
+			{
+				qDebug() << "VideoReceiver::processBlock: Port: "<<m_port<<": No consumers, not processingframe";
+				m_dataBlock.clear();
+				return;
+			}
+			else
 			{
 				//qDebug() << "raw header scan: byteTmp:"<<byteTmp<<", size:"<<imgX<<"x"<<imgY;
 				
 				//qDebug() << "VideoReceiver::processBlock: raw header data:"<<headerData;
-				if(byteTmp > 1024*1024*1024 ||
+				if(byteTmp > 1024*1024*1024     ||
 					imgX > 1900 || imgX < 0 ||
 					imgY > 1900 || imgY < 0)
 				{
-					qDebug() << "VideoReceiver::processBlock: Frame too large (bytes > 1GB or invalid W/H)";
+					qDebug() << "VideoReceiver::processBlock: Frame too large (bytes > 1GB or invalid W/H): "<<byteTmp<<imgX<<imgY;
 					m_dataBlock.clear();
+					
+					QImage blueImage(16,16, QImage::Format_RGB32);
+					blueImage.fill(Qt::blue);
+					enqueue(new VideoFrame(blueImage,1000/30));
+					
 					return;
 				}
 				
@@ -435,7 +495,6 @@ void VideoReceiver::processBlock()
 					frameSize = m_byteCount + HEADER_SIZE;
 					//qDebug() << "VideoReceiver::processBlock: Frame size changed: "<<frameSize;
 				}
-				//qDebug() << "VideoReceiver::processBlock: header data:"<<headerData;
 				//QImage frame = QImage::fromData(block);
 			
 				//QImage frame = QImage::fromData(block);
@@ -483,9 +542,10 @@ void VideoReceiver::processBlock()
 				else
 				{
 					//QByteArray array;
-					//qDebug() << "m_byteCount:"<<m_byteCount<<", size:"<<imgX<<"x"<<imgY;
+					qDebug() << "m_byteCount:"<<m_byteCount<<", size:"<<imgX<<"x"<<imgY;
 					uchar *pointer = frame->allocPointer(m_byteCount);
-					memcpy(pointer, (const char*)block.constData(), m_byteCount);
+					//if(pointer && m_byteCount > 0)
+						memcpy(pointer, (const char*)block.constData(), m_byteCount);
 					//array.append((const char*)block.constData(), m_byteCount);
 					//frame->setByteArray(array);
 				}
@@ -494,6 +554,9 @@ void VideoReceiver::processBlock()
 // 					frame->setSize(QSize(origX,origY));
 // 				else
 					frame->setSize(QSize(imgX,imgY));
+					
+				//qDebug() << "VideoReceiver::processBlock: Port: "<<m_port<<": New Frame, frame size:"<<frame->size()<<", consumers size:"<< m_consumerList.size();
+				//frame->image().save("frametest.jpg");
 	
 				#ifdef DEBUG_VIDEOFRAME_POINTERS
 				qDebug() << "VideoReceiver::processBlock(): Enqueing new frame:"<<frame;
@@ -594,4 +657,65 @@ void VideoReceiver::exit()
 	}
 }
 
+void VideoReceiver::processReceivedMap(const QVariantMap & map)
+{
+	QString cmd = map["cmd"].toString();
+	//qDebug() << "VideoSenderThread::processBlock: map:"<<map;
+	
+	if(cmd == Video_GetHue)
+	{
+		emit currentHue(map["value"].toInt());
+	}
+	else
+	if(cmd == Video_GetSaturation)
+	{
+		emit currentSaturation(map["value"].toInt());
+	}
+	else
+	if(cmd == Video_GetBright)
+	{
+		emit currentContrast(map["value"].toInt());
+	}
+	else
+	if(cmd == Video_GetContrast)
+	{
+		emit currentBrightness(map["value"].toInt());
+	}
+	else
+	if(cmd == Video_GetFPS)
+	{
+		//"value" << fps
+		emit currentFPS(map["value"].toInt());
+	}
+	else
+	if(cmd == Video_GetSize)
+	{
+		//"w" << size.width() << "h" << size.height()
+		emit currentSize(map["w"].toInt(), map["h"].toInt());
+	}
+	else
+	if(cmd == Video_GetVideoHints)
+	{
+		m_videoHints = map["hints"].toMap();
+		m_hasReceivedHintsFromServer = true;
+		emit currentVideoHints(m_videoHints);
+	}
+	else
+	if(cmd == Video_SignalStatusChanged)
+	{
+		//<< "flag"	<< flag
+		emit signalStatusChanged(map["flag"].toBool());
+	}
+	else
+	{
+		qDebug() << "VideoReceiver::processReceivedMap: Unknown map received, cmd:"<<cmd<<", full map:"<<map;
+	}
+	
+}
 
+QVariantMap VideoReceiver::videoHints(bool *hasReceivedFromServer)
+{
+	if(hasReceivedFromServer)
+		*hasReceivedFromServer = m_hasReceivedHintsFromServer;
+	return m_videoHints;
+}

@@ -351,7 +351,7 @@ void VideoSender::incomingConnection(int socketDescriptor)
 			m_source->registerConsumer(this);
 	}
 		
-		
+	QTimer::singleShot(0, this, SIGNAL(receivedFrame()));
 	//qDebug() << "VideoSender: "<<this<<" Client Connected, Socket Descriptor:"<<socketDescriptor;
 }
 
@@ -396,6 +396,8 @@ void VideoSenderThread::run()
 	
 	qDebug() << "VideoSenderThread: Connection from "<<m_socket->peerAddress().toString(); //, Socket Descriptor:"<<socketDescriptor;
 	
+	//sendMap(QVariantMap());
+	//frameReady(); // try to send any data already in the parent
 	
 	// enter event loop
 	exec();
@@ -442,16 +444,16 @@ void VideoSenderThread::frameReady()
 			
 			#define HEADER_SIZE 256
 			
-			if(!m_sentFirstHeader)
-			{
-				m_sentFirstHeader = true;
-				char headerData[HEADER_SIZE];
-				memset(&headerData, 0, HEADER_SIZE);
-				sprintf((char*)&headerData,"%d",byteCount);
-				//qDebug() << "header data:"<<headerData;
-				
-				m_socket->write((const char*)&headerData,HEADER_SIZE);
-			}
+// 			if(!m_sentFirstHeader)
+// 			{
+// 				m_sentFirstHeader = true;
+// 				char headerData[HEADER_SIZE];
+// 				memset(&headerData, 0, HEADER_SIZE);
+// 				sprintf((char*)&headerData,"%d",byteCount);
+// 				//qDebug() << "header data:"<<headerData;
+// 				
+// 				m_socket->write((const char*)&headerData,HEADER_SIZE);
+// 			}
 			
 			if(byteCount > 0)
 			{

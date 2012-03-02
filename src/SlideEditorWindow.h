@@ -106,6 +106,9 @@ private slots:
 	void editMasterSlide();
 	void masterSlideEditorClosed();
 	
+	void editAltGroups();
+	//void altEditorClosed();
+	
 	void centerSelVert();
 	void centerSelHorz();
 	
@@ -208,7 +211,10 @@ private:
 	
 	QAction * m_masterSlideAction;
 	
-	SlideEditorWindow * m_masterSlideEditor;
+	SlideEditorWindow *m_masterSlideEditor;
+	
+	QAction * m_altEditAction;
+	SlideEditorWindow *m_altEditorWindow;
 	
 	int m_iconSize;
 	QSlider * m_iconSizeSlider;

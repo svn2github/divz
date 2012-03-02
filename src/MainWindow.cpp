@@ -835,11 +835,7 @@ void MainWindow::slideLibraryGroupSelected(const QModelIndex&)
 
 void MainWindow::songSelected(SongRecord *song)
 {
-	SongSlideGroup *group = new SongSlideGroup();
-	group->setSong(song);
-	
-	SlideGroup *curTmpl = m_songBrowser->currentTemplate();
-	group->setSlideTemplates(curTmpl ? curTmpl->clone() : 0);
+	SlideGroup *group = m_songBrowser->createSlideGroup(song);
 	
 	m_doc->addGroup(group);
 	if(!liveInst()->slideGroup())

@@ -5,6 +5,7 @@
 class Slide;
 class QFileInfo;
 class Document;
+class Output;
 #include "AbstractVisualItem.h"
 
 class SlideGroup : public QObject
@@ -95,7 +96,10 @@ public:
 	QString assumedName();
 	
 	void setDocument(Document*);
-	Document *document() { return m_doc; }
+	Document *document() { return m_doc; };
+	
+	virtual SlideGroup *altGroupForOutput(Output*);
+	virtual void setAltGroupForOutput(Output*, SlideGroup*);
 
 signals:
 	// Operation = "Add", "Remove", "Change"
@@ -141,7 +145,7 @@ protected:
 	
 	Document * m_doc;
 
-
+	QHash<int, SlideGroup*> m_altGroupForOutput;
 
 };
 

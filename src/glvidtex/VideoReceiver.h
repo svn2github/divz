@@ -15,10 +15,11 @@
   #include <QLabel>
 #endif
 
-#include "../livemix/VideoSource.h"
-#include "../livemix/VideoFrame.h"
+#include "VideoSource.h"
+#include "VideoFrame.h"
 
 #include <QMutex>
+#include <QUrl>
 
 class VideoReceiver: public VideoSource
 {
@@ -33,9 +34,11 @@ private:
 	static QString cacheKey(const QString&,int);
 
 public:
+	static QList<VideoReceiver*> receivers() { return m_threadMap.values(); }
+	
+	static VideoReceiver * getReceiver(const QUrl& url) { return getReceiver(url.host(), url.port()); };
 	static VideoReceiver * getReceiver(const QString& host, int port=-1);
 	~VideoReceiver();
-	
 	
 	bool connectTo(const QString& host, int port=-1, QString url = "/", const QString& user="", const QString& pass="");
 	void exit();
@@ -60,6 +63,11 @@ public:
 	
 	bool isConnected() { return m_connected; }
 	
+	// VideoSource::
+	virtual void destroySource();
+	
+	QVariantMap videoHints(bool *hasReceivedFromServer=0);
+	
 public slots:
 	void setHue(int);
 	void setSaturation(int);
@@ -77,6 +85,9 @@ public slots:
 	void queryFPS();
 	void querySize();
 	
+	void queryVideoHints();
+	void setVideoHints(QVariantMap);
+	
 signals:
 	void socketDisconnected();
 	void socketError(QAbstractSocket::SocketError);
@@ -91,6 +102,11 @@ signals:
 	void currentFPS(int);
 	void currentSize(int, int);
 	
+	void currentVideoHints(QVariantMap);
+	
+	// Emitted only when connected to a CameraThread on the server side
+	void signalStatusChanged(bool);
+	
 private slots:
 	void dataReady();
 	void processBlock();
@@ -100,6 +116,8 @@ private slots:
 	void connectionReady();
 
 private:
+	void processReceivedMap(const QVariantMap&);
+	
 	QString cacheKey();
 	
 	QTime timestampToQTime(int);
@@ -125,6 +143,9 @@ private:
 	int m_byteCount;
 	
 	VideoFrame *m_frame;
+	
+	QVariantMap m_videoHints;
+	bool m_hasReceivedHintsFromServer;
 	
 #ifdef MJPEG_TEST
 	QLabel *m_label;

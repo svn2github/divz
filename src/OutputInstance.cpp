@@ -31,7 +31,7 @@ bool OuputInstance_slide_num_compare(Slide *a, Slide *b)
 	return (a && b) ? a->slideNumber() < b->slideNumber() : true;
 }
 
-OutputInstance::OutputInstance(Output *out, bool startHidden, QWidget *parent)
+OutputInstance::OutputInstance(Output *out, bool /*startHidden*/, QWidget *parent)
 	: QWidget(parent)
 	, m_output(out)
 	, m_viewer(0)
@@ -101,7 +101,7 @@ OutputInstance::OutputInstance(Output *out, bool startHidden, QWidget *parent)
 	   out->name().toLower().indexOf("live") >= 0)
 		m_viewer->setSharedMemoryImageWriterEnabled(true,"dviz/live");
 			
-	applyOutputSettings();
+	applyOutputSettings(/*startHidden*/);
 	
 }
 
@@ -402,12 +402,36 @@ void OutputInstance::setSlideGroup(SlideGroup *group, Slide * startSlide)
 	emit slideGroupChanged(group,startSlide);
 	foreach(OutputInstance *m, m_mirrors)
 		m->setSlideGroup(group,startSlide);
+	
 	if(isLocal())
 	{
 // 		qDebug() << "OutputInstance::setSlideGroup: ["<<m_output->name()<<"] Calling m_viewer->setSlideGroup(), group:"<<group->assumedName()<<", startSlide:"<<startSlide;
 		//setVisible(m_output->isEnabled());
+		if(startSlide)
+			m_slideNum = m_sortedSlides.indexOf(startSlide);
+		else
+			m_slideNum = 0;
 
-		m_viewer->setSlideGroup(group,startSlide);
+		bool foundAlt = false;
+		if(group)
+		{
+			SlideGroup *altGroup = group->altGroupForOutput(m_output);
+			if(altGroup)
+			{
+				foundAlt = true;
+				
+				// resolve the start slide for the alt group - just match by index
+				Slide *newStart = 0;
+				int startIdx = group->indexOf(startSlide);
+				if(startIdx > -1)
+					newStart = altGroup->at(startIdx);
+				
+				m_viewer->setSlideGroup(altGroup,newStart);
+			}
+		}
+		
+		if(!foundAlt)
+			m_viewer->setSlideGroup(group,startSlide);
 	}
 	else
 	{
@@ -803,7 +827,7 @@ Slide * OutputInstance::setSlide(int x)
 		//qDebug() << "OutputInstance::setSlide: ["<<m_output->name()<<"] "<<x<<" is out of range, size: "<<m_sortedSlides.size();
 		return 0;
 	}
-		
+	
 	return setSlide(m_sortedSlides.at(x));	
 }
 
@@ -833,7 +857,42 @@ Slide * OutputInstance::setSlide(Slide *slide, bool takeOwnership)
 		//qDebug() << "OutputInstance::setSlide: ["<<m_output->name()<<"] Setting slide#"<<m_slideNum;
 		//setVisible(m_output->isEnabled());
 		
-		m_viewer->setSlide(slide,takeOwnership);
+		if(slide)
+			m_slideNum = m_sortedSlides.indexOf(slide);
+		else
+			m_slideNum = 0;
+		
+		bool foundAlt = false;
+		if(!takeOwnership && 
+		    m_slideGroup)
+		{
+			SlideGroup *altGroup = m_slideGroup->altGroupForOutput(m_output);
+			if(altGroup)
+			{
+				//foundAlt = true;
+				
+				// resolve the start slide for the alt group - just match by index
+				Slide *newSlide = 0;
+				
+				QList<Slide*> slist = altGroup->slideList();
+				qSort(slist.begin(), slist.end(), OuputInstance_slide_num_compare);
+				newSlide = slist.isEmpty() ? 0 :
+					m_slideNum < slist.size() && m_slideNum > -1 ? slist.at(m_slideNum) : 0;
+				
+// 				int startIdx = group->indexOf(slide);
+// 				if(startIdx > -1)
+// 					newStart = altGroup->at(startIdx);
+				
+				if(newSlide)
+				{
+					m_viewer->setSlide(newSlide); // NOT takeOwnership here....checked above...
+					foundAlt = true;
+				}
+			}
+		}
+		
+		if(!foundAlt)
+			m_viewer->setSlide(slide,takeOwnership);
 		
 		// 20100216: Moved setSlideInternal() to AFTER the call to m_viewer inorder for proper controlWidgets()
 		// functionality. In MyGraphicsScene, the parentItem() is checked and only items with the "live root"

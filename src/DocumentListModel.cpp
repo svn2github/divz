@@ -41,12 +41,12 @@ bool group_num_compare(SlideGroup *a, SlideGroup *b)
 
 
 DocumentListModel::DocumentListModel(Document *d, QObject *parent)
-		: QAbstractListModel(parent), 
-			m_doc(d),/* m_scene(0), m_view(0),*/ 
-			m_iconSize(48,0), 
-			m_dirtyTimer(0), 
-			m_sceneRect(0,0,1024,768),
-			m_queuedIconGenerationMode(false)
+		: QAbstractListModel(parent)
+		, m_doc(d)/* m_scene(0), m_view(0),*/ 
+		, m_iconSize(48,0) 
+		, m_sceneRect(0,0,1024,768)
+		, m_dirtyTimer(0)
+		, m_queuedIconGenerationMode(false)
 {
 	if(!m_blankPixmap)
 	{
@@ -139,11 +139,8 @@ bool DocumentListModel::dropMimeData ( const QMimeData * data, Qt::DropAction ac
 			foreach(QString songIdString, list)
 			{
 				SongRecord *song = SongRecordListModel::instance()->songAt(songIdString.toInt());
-				SongSlideGroup *group = new SongSlideGroup();
-				group->setSong(song);
 				
-				SlideGroup *curTmpl = MainWindow::mw()->songBrowser()->currentTemplate();
-				group->setSlideTemplates(curTmpl ? curTmpl->clone() : 0);
+				SlideGroup *group = MainWindow::mw()->songBrowser()->createSlideGroup(song);
 				
 				//qDebug() << "DocumentListModel::dropMimeData: Dropped song: "<<song->title();
 				

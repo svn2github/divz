@@ -15,6 +15,7 @@
 #include "camera/CameraSlideGroup.h"
 #include "webgroup/WebSlideGroup.h"
 #include "groupplayer/GroupPlayerSlideGroup.h"
+#include "model/Output.h"
 
 #define ID_COUNTER_KEY "slidegroup/id-counter"
 
@@ -248,6 +249,19 @@ void SlideGroup::saveProperties(QVariantMap& map) const
 	
 	if(m_masterSlide)
 		map["master"] = m_masterSlide->toByteArray();
+		
+	QVariantMap alts;
+	foreach(int outId, m_altGroupForOutput.keys())
+	{
+		QByteArray ba = m_altGroupForOutput.value(outId)->toByteArray();
+		alts[QString("%1").arg(outId)] = ba;
+	}
+	map["alt"] = alts;
+	
+// 	if(!alts.isEmpty())
+// 		qDebug() << "SlideGroup::saveProperties: "<<m_groupId<<" alts:"<<alts;
+// 	else
+// 		qDebug() << "SlideGroup::saveProperties: "<<m_groupId<<" No valid alts stored";
 }
 
 void SlideGroup::saveSlideList(QVariantMap& map)  const
@@ -382,6 +396,29 @@ void SlideGroup::loadProperties(QVariantMap &map)
 		m_masterSlide = new Slide();
 		QByteArray ba = master.toByteArray();
 		m_masterSlide->fromByteArray(ba);
+	}
+	
+	QVariant alt = map["alt"];
+	if(alt.isValid())
+	{
+		QVariantMap map = alt.toMap();
+		foreach(QString outputIdString, map.keys())
+		{
+			int id = outputIdString.toInt();
+			
+			QVariant groupData = map.value(outputIdString);
+			QByteArray ba = groupData.toByteArray();
+			
+			SlideGroup *group  = SlideGroup::fromByteArray(ba);
+			
+			//qDebug() << "SlideGroup: "<<m_groupId<<" Loading alt id:"<<outputIdString<<", group:"<<group;
+			
+			m_altGroupForOutput[id] = group;
+		}
+	}
+	else
+	{
+		//qDebug() << "SlideGroup: "<<m_groupId<<" No valid alt found";
 	}
 }
 	
@@ -569,3 +606,16 @@ void SlideGroup::setDocument(Document *doc)
 {
 	m_doc = doc;
 }
+
+SlideGroup *SlideGroup::altGroupForOutput(Output *output)
+{
+	if(m_altGroupForOutput.contains(output->id()))
+		return m_altGroupForOutput.value(output->id());
+	return 0;
+}
+
+void SlideGroup::setAltGroupForOutput(Output *output, SlideGroup *group)
+{
+	m_altGroupForOutput[output->id()] = group;
+}
+

@@ -35,6 +35,8 @@ public:
 	
 	SlideGroup *currentTemplate() { return m_template; } 
 	
+	SlideGroup *createSlideGroup(SongRecord *song);
+	
 signals:
 	void songSelected(SongRecord*);
 	

@@ -10,6 +10,7 @@ class OutputInstance;
 class Output : public QObject
 {
 	Q_OBJECT
+	Q_PROPERTY(int id READ id);
 	Q_PROPERTY(bool isSystem READ isSystem WRITE setIsSystem);
 	Q_PROPERTY(bool isEnabled READ isEnabled WRITE setIsEnabled);
 	Q_PROPERTY(QString name READ name WRITE setName);
