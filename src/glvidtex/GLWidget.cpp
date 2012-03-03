@@ -515,7 +515,8 @@ void GLWidget::initializeGL()
 
 	qDebug() << "GLWidget::initGL: GLSL Shaders Enabled: "<<m_useShaders;
 
-	initShaders();
+	if(m_useShaders)
+		initShaders();
 
 	m_glInited = true;
 

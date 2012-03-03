@@ -684,7 +684,6 @@ void BibleBrowser::setupVersionCombo()
 
 void BibleBrowser::setupTextBox(TextBoxItem *tmpText)
 {
-
 	// Outline pen for the text
 	QPen pen = QPen(Qt::black,1.5);
 	pen.setJoinStyle(Qt::MiterJoin);
@@ -1220,7 +1219,6 @@ Slide * BibleBrowser::addSlide(SlideGroup *group, TextBoxItem *tmpText, int real
 	if(!textboxFromTemplate)
 	{
 		setupTextBox(tmpText);
-	
 		slide->addItem(tmpText);
 	}
 	

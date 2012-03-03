@@ -5,6 +5,7 @@
 #include "model/ItemFactory.h"
 #include "model/Slide.h"
 #include "model/SlideGroup.h"
+#include "model/Output.h"
 #include "MainWindow.h"
 #include "AppSettings.h"
 
@@ -32,27 +33,20 @@ SongSlideGroup::~SongSlideGroup()
 		delete m_song;
 }
 
-void SongSlideGroup::setSong(SongRecord *s)
+void SongSlideGroup::setSong(SongRecord *songRecord)
 {
-	// Pseudo code:
-	// If has previous song
-	//	go thru all existing slides
-	//	emit slideChanged - "remove"
-	//	remove slides
-	// After set song:
-	//	convert song to slides
-	//	emit slide changed "add"
-	//emit slideChanged(slide, "add", 0, "", "", QVariant());
-
-	//if(m_song)
 	removeAllSlides();
 
 	m_song = s;
+	
+	if(!songRecord)
+		return;
+		
 	//qDebug() << "SongSlideGroup::setSong: songId:"<<m_song->songId()<<", title: "<<s->title();
 
-	m_text = s->text();
+	m_text = songRecord->text();
 
-	setGroupTitle(s->title());
+	setGroupTitle(songRecord->title());
 
 	// convert the text to slides
 	textToSlides();
@@ -186,9 +180,38 @@ void SongSlideGroup::textToSlides(SongTextFilter filter)
 	}
 	
         if(DEBUG_TEXTOSLIDES)
-        	qDebug() << "SongSlideGroup::textToSlides(): filter int:"<<filter<<", using exclusion pattern:"<<excludeLineRegExp.pattern();
+        	qDebug() << "SongSli[deGroup::textToSlides(): filter int:"<<filter<<", using exclusion pattern:"<<excludeLineRegExp.pattern();
 
 	SlideGroup * templates = slideTemplates();
+	
+	if(song())
+	{
+		//qDebug() << "SongSlideGroup::textToSlides(): "<<song()->title()<<": Checking for output tempaltes";
+		
+		QList<Output*> allOut = AppSettings::outputs();
+		foreach(Output *out, allOut)
+		{
+			SlideGroup *outputTemplate = templates->altGroupForOutput(out);
+			if(outputTemplate)
+			{
+				qDebug() << "SongSlideGroup::textToSlides(): "<<song()->title()<<": Creating alternate group from template for output: "<<out->name();
+				
+				SongSlideGroup *group = new SongSlideGroup();
+				group->setSong(song());
+				group->setSlideTemplates(outputTemplate);
+				
+				if(SlideGroup *oldGroup = altGroupForOutput(out))
+				{
+					setAltGroupForOutput(out, 0); // just to be safe...
+					if(SongSlideGroup *oldSongGroup = dynamic_cast<SongSlideGroup*>(oldGroup))
+						oldSongGroup->setSong(0); // if we don't zero, it deletes song, below... 
+					delete oldGroup;
+				}
+						
+				setAltGroupForOutput(out, group);
+			}
+		}
+	}
 	
 	if(DEBUG_TEXTOSLIDES)
 		qDebug() << "SongSlideGroup::textToSlides(): slides:"<<list;
