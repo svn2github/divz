@@ -37,7 +37,7 @@ void SongSlideGroup::setSong(SongRecord *songRecord)
 {
 	removeAllSlides();
 
-	m_song = s;
+	m_song = songRecord;
 	
 	if(!songRecord)
 		return;

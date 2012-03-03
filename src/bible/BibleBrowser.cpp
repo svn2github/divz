@@ -1131,72 +1131,113 @@ SlideGroup * BibleBrowser::createSlideGroup(bool allowAppend)
 
 }
 
+void textToDocument(QTextDocument& doc, const QString& text)
+{
+	if (Qt::mightBeRichText(text))
+		doc.setHtml(text);
+	else
+		doc.setPlainText(text);
+}
+
+TextBoxItem *findTextItem(Slide *slide, const QString& textKey)
+{
+	QList<AbstractItem *> items = slide->itemList();
+	
+	TextBoxItem * text = 0;
+
+	QTextDocument doc;
+			
+	foreach(AbstractItem * item, items)
+	{
+		AbstractVisualItem * newVisual = dynamic_cast<AbstractVisualItem*>(item);
+		//if(DEBUG_TEXTOSLIDES)
+		//	qDebug()<<"BibleBrowser::addSlide(): item list: "<<newVisual->itemName();
+		
+		if(item->itemClass() == TextBoxItem::ItemClass)
+		{
+			TextBoxItem *text = dynamic_cast<TextBoxItem*>(item);
+			if(!text)
+				continue;
+				
+			QTextDocument doc;
+			textToDocument(doc, text->text());
+			
+			if(doc.toPlainText().indexOf("#verses") >= 0)
+			{
+				//if(DEBUG_TEXTOSLIDES)
+				qDebug()<<"BibleBrowser::findTextItem(): Found textbox from template for key "<<textKey<<", name:"<<text->itemName();
+				return dynamic_cast<TextBoxItem*>(item);
+			}
+		}
+	}
+	
+	return 0;
+}
+
+
+QString mergeTextItem(const QString &destTemplate, const QString &source)
+{
+	QTextDocument doc;
+	textToDocument(doc, destTemplate);
+	QTextCursor cursor(&doc);
+	cursor.select(QTextCursor::Document);
+	
+	QTextCharFormat charFormat = cursor.charFormat();
+	QTextBlockFormat blockFormat = cursor.blockFormat();
+	QTextCharFormat blockCharFormat = cursor.blockCharFormat();
+	
+	QTextDocument doc2;
+	textToDocument(doc2, source);
+	QTextCursor cursor2(&doc2);
+	cursor2.select(QTextCursor::Document);
+	
+	cursor2.mergeBlockCharFormat(blockCharFormat);
+	cursor2.mergeBlockFormat(blockFormat);
+	cursor2.mergeCharFormat(charFormat);
+	
+	return doc2.toHtml();
+}
+
+void mergeTextItem(TextBoxItem *dest, const QString &source)
+{
+	dest->setText(mergeTextItem(dest->text(), source));
+}
+
+void mergeTextItem(TextBoxItem *dest, TextBoxItem *source)
+{
+	mergeTextItem(dest, source->text());
+}
+
+
 Slide * BibleBrowser::addSlide(SlideGroup *group, TextBoxItem *tmpText, int realHeight, const QSize & fitSize, const QString & /*plain*/)
 {
 	Slide *slide = 0;
 	
 	int slideNum = group->numSlides();
 	
-	bool textboxFromTemplate = false;;
+	//bool textboxFromTemplate = false;;
+	
+	QRect slideRect = AppSettings::adjustToTitlesafe(MainWindow::mw()->standardSceneRect());
+	QRect textRect = slideRect;
+	
+	TextBoxItem * templateTextbox = 0;
 	
 	//qDebug() << "Slide "<<slideNum<<": [\n"<<plain<<"\n]";
 	if(m_template && m_template->numSlides() > 0)
 	{
 		slide = m_template->at(0)->clone();
 		
-		// Use the first textbox in the slide as the lyrics slide
+		// Use the first textbox in the slide as the textbox
 		// "first" as defined by ZValue
-		QList<AbstractItem *> items = slide->itemList();
-		
-		TextBoxItem * text = 0;
-	
-		QTextDocument doc;
-				
-		foreach(AbstractItem * item, items)
-		{
-			AbstractVisualItem * newVisual = dynamic_cast<AbstractVisualItem*>(item);
-			//if(DEBUG_TEXTOSLIDES)
-				qDebug()<<"BibleBrowser::addSlide(): item list: "<<newVisual->itemName();
-			if(!text && item->itemClass() == TextBoxItem::ItemClass)
-			{
-				text = dynamic_cast<TextBoxItem*>(item);
-				
-				if (Qt::mightBeRichText(text->text()))
-					doc.setHtml(text->text());
-				else
-					doc.setPlainText(text->text());
-				if(doc.toPlainText().indexOf("#verses") >= 0)
-				{
-					textboxFromTemplate = true;
-					//if(DEBUG_TEXTOSLIDES)
-						qDebug()<<"BibleBrowser::addSlide(): Found textbox from template, name:"<<text->itemName();
-				}
-			}
-		}
-		
+		TextBoxItem *text = findTextItem(slide, "#verses");
+			
 		// copy format from template to text box passed in, then use the resulting html in the template text box
-		if(textboxFromTemplate)
+		if(text) 
 		{
-			QTextCursor cursor(&doc);
-			cursor.select(QTextCursor::Document);
-			QTextCharFormat charFormat = cursor.charFormat();
-			QTextBlockFormat blockFormat = cursor.blockFormat();
-			QTextCharFormat blockCharFormat = cursor.blockCharFormat();
+			mergeTextItem(text, tmpText);
 			
-			QTextDocument doc2;
-			if (Qt::mightBeRichText(tmpText->text()))
-				doc2.setHtml(tmpText->text());
-			else
-				doc2.setPlainText(tmpText->text());
-				
-			QTextCursor cursor2(&doc2);
-			cursor2.select(QTextCursor::Document);
-			
-			cursor2.mergeBlockCharFormat(blockCharFormat);
-			cursor2.mergeBlockFormat(blockFormat);
-			cursor2.mergeCharFormat(charFormat);
-			
-			text->setText(doc2.toHtml());
+			templateTextbox = text;
+			textRect = text->contentsRect().toRect();
 		}
 	}
 	else
@@ -1209,14 +1250,33 @@ Slide * BibleBrowser::addSlide(SlideGroup *group, TextBoxItem *tmpText, int real
 		bg->setFillBrush(Qt::blue);
 	}
 	
-
-	// Center text on screen
-	QRect slideRect = AppSettings::adjustToTitlesafe(MainWindow::mw()->standardSceneRect());
-	qreal y = qMax(slideRect.y(), fitSize.height()/2 - realHeight/2);
-	//qDebug() << "SongSlideGroup::textToSlides(): centering: boxHeight:"<<boxHeight<<", textRect height:"<<textRect.height()<<", centered Y:"<<y;
-	tmpText->setContentsRect(QRectF(slideRect.x(),y,fitSize.width(),realHeight));
-
-	if(!textboxFromTemplate)
+	// get it up here early for debugging
+	int slideNbr = group->numSlides();
+	
+	// Attempt to enter text on screen
+	int heightDifference = abs(slideRect.height() - textRect.height());
+	
+	// Arbitrary magic number to force centering for small amounts of differences.
+	// We test the difference here because don't want to force-center the textbox if it came from the template
+	// and was intentionally located off-center. But if the user tried to get it to fill the screen and missed
+	// by a few pixels (<20), then go ahead and center it for the user.
+	//qDebug()<<"BibleBrowser::addSlide(): slideNbr: "<<slideNbr<<": heightDifference: "<<heightDifference;
+	if(heightDifference < 20 &&
+	   realHeight > -1)
+	{
+		qreal y = qMax(slideRect.y(), fitSize.height()/2 - realHeight/2);
+		//qDebug() << "SongSlideGroup::textToSlides(): centering: boxHeight:"<<boxHeight<<", textRect height:"<<textRect.height()<<", centered Y:"<<y;
+		//QRectF centeredRect(slideRect.x(),y,fitSize.width(),realHeight);
+		QRectF centeredRect(slideRect.x(),y + slideRect.y(),textRect.width(),realHeight);
+		TextBoxItem *text = templateTextbox ? templateTextbox : tmpText; 
+		
+		text->setPos(QPointF(0,0));
+		text->setContentsRect(centeredRect);
+		
+		qDebug()<<"BibleBrowser::addSlide(): slideNbr: "<<slideNbr<<": centeredRect: "<<centeredRect<<", templateTextbox:"<<templateTextbox; 
+	}
+	
+	if(!templateTextbox)
 	{
 		setupTextBox(tmpText);
 		slide->addItem(tmpText);
@@ -1228,7 +1288,6 @@ Slide * BibleBrowser::addSlide(SlideGroup *group, TextBoxItem *tmpText, int real
 	//tmpText->warmVisualCache();
 	
 	// Delay warming the visual cache to increase UI responsiveness when quickly adding verses
-	int slideNbr = group->numSlides();
 	int delay = slideNbr * 5000;
 	qDebug()<<"BibleBrowser::addSlide(): slideNbr:"<<slideNbr<<": delaying "<<delay<<"ms before warmVisualCache()";
 	QTimer::singleShot(delay, tmpText, SLOT(warmVisualCache()));
