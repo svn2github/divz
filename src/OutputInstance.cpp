@@ -220,10 +220,10 @@ void OutputInstance::applyOutputSettings(bool startHidden)
 		else
 		{
 			geom = m_output->customRect();
-			if(m_output->stayOnTop())
-				setWindowFlags(Qt::WindowStaysOnTopHint | Qt::FramelessWindowHint | Qt::ToolTip);
-			else
-				setWindowFlags(Qt::FramelessWindowHint);
+// 			if(m_output->stayOnTop())
+// 				setWindowFlags(Qt::WindowStaysOnTopHint | Qt::FramelessWindowHint | Qt::ToolTip);
+// 			else
+// 				setWindowFlags(Qt::FramelessWindowHint);
 		}
 
 		resize(geom.width(),geom.height());
@@ -427,6 +427,12 @@ void OutputInstance::setSlideGroup(SlideGroup *group, Slide * startSlide)
 					newStart = altGroup->at(startIdx);
 				
 				m_viewer->setSlideGroup(altGroup,newStart);
+				
+				qDebug() << "OutputInstance::setSlideGroup: ["<<m_output->name()<<"] Got alternate group "<<altGroup<<", newStart:"<<newStart<<", startIdx:"<<startIdx;
+			}
+			else
+			{
+				//qDebug() << "OutputInstance::setSlideGroup: ["<<m_output->name()<<"] Did not find alt group";
 			}
 		}
 		
@@ -887,8 +893,21 @@ Slide * OutputInstance::setSlide(Slide *slide, bool takeOwnership)
 				{
 					m_viewer->setSlide(newSlide); // NOT takeOwnership here....checked above...
 					foundAlt = true;
+					qDebug() << "OutputInstance::setSlide: ["<<m_output->name()<<"] Got alternate group "<<altGroup<<", newSlide:"<<newSlide<<", m_slideNum:"<<m_slideNum<<", intended slide: "<<slide<<", intended group:"<<m_slideGroup;
+				}
+				else
+				{
+					qDebug() << "OutputInstance::setSlide: ["<<m_output->name()<<"] Did not find newSlide, slist.size:"<<slist.size()<<", m_slideNum:"<<m_slideNum;
 				}
 			}
+			else
+			{
+				//qDebug() << "OutputInstance::setSlide: ["<<m_output->name()<<"] No alt group found";
+			}
+		}
+		else
+		{
+			//qDebug() << "OutputInstance::setSlide: ["<<m_output->name()<<"] Did not look for alt group, takeOwnership:"<<takeOwnership<<", m_slideGroup:"<<m_slideGroup;
 		}
 		
 		if(!foundAlt)

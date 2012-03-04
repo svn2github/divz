@@ -109,6 +109,7 @@ MyGraphicsScene::MyGraphicsScene(ContextHint hint, QObject * parent)
     , m_masterSlide(0)
     , m_bg(0)
     , m_fadeClockStarted(false)
+    , m_lastElapsed(-1)
 {
 	m_staticRoot = new RootObject(this);
 	m_staticRoot->setPos(0,0);
@@ -288,7 +289,7 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans, int speed, i
 	if(DEBUG_MYGRAPHICSSCENE)
 		qDebug() << "MyGraphicsScene::setSlide(): "<<this<<" trans:"<<trans<<", speed:"<<speed<<", quality:"<<quality;
 	//trans = None;
-	if(trans == None || (speed == 0 && quality == 0))
+	if(trans == None || (speed <= 1 && quality <= 1))
 	{
 		clear();
 	}
@@ -409,6 +410,7 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans, int speed, i
 		m_currentFadeTime = 0;
 		//m_fadeTime.start();
 		m_fadeClockStarted = false;
+		m_lastElapsed = -1;
 
  		double inc = (double)1 / m_fadeSteps;
 
@@ -424,7 +426,7 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans, int speed, i
 
 		emit crossFadeStarted(m_slide,slide);
 		if(DEBUG_MYGRAPHICSSCENE)
-			qDebug() << "MyGraphicsScene::setSlide(): "<<this<<" Starting fade timer for"<<ms<<"ms"<<"/frame, inc:"<<inc<<", steps:"<<m_fadeSteps<<" ( speed:"<<speed<<", quality:"<<quality<<")";
+			qDebug() << "MyGraphicsScene::setSlide(): "<<this<<" Starting fade timer for"<<ms<<"ms"<<"/frame, inc:"<<inc<<", steps:"<<m_fadeSteps<<" ( speed:"<<speed<<", quality:"<<quality<<") at "<<QTime::currentTime().msec();
 		
 	}
 
@@ -672,6 +674,25 @@ void MyGraphicsScene::slotTransitionStep()
 	}
 	
 	int elapsed = m_fadeTime.elapsed();
+	if(m_lastElapsed > 0)
+	{
+		// Try to adjust for something that slowed down the fade process by stopping and resuming the timer
+		
+		int elapsedDelta = elapsed - m_lastElapsed;
+		int interval = m_fadeTimer->interval();
+		if(elapsedDelta > interval * 4) // we skipped something, reset and adjust to last elapsed
+		{
+			int orig = m_fadeLength;
+			int moreTime = elapsedDelta * .9; // magic number
+			m_fadeLength += moreTime;
+			//m_fadeTime.start();
+			qDebug() << "ERROR: Skipped by "<<elapsedDelta<<"ms (interval*2:"<<(interval*2)<<"), adding "<<moreTime<<"ms to "<<orig<<"ms, new fadeLength: "<<m_fadeLength<<"ms"; 
+		}
+	}
+	
+	
+	m_lastElapsed = elapsed;
+	
 	double fadeVal = ((double)elapsed) / ((double)m_fadeLength); 
 		
 	if( /*++ m_fadeStepCounter < m_fadeSteps && */elapsed < m_fadeLength)
@@ -695,7 +716,8 @@ void MyGraphicsScene::slotTransitionStep()
 			m_liveRoot->setOpacity(fadeVal); //m_liveRoot->opacity() + inc);
 		#endif
 		if(DEBUG_MYGRAPHICSSCENE)
-			qDebug()<<"MyGraphicsScene::slotTransitionStep(): "<<this<<" [STEP DONE] step"<<m_fadeStepCounter<<"/"<<m_fadeSteps<<", fadeVal:"<<fadeVal<<", fade:"<<m_fadeRoot->opacity()<<", live:"<<m_liveRoot->opacity()<<" [m_fadeFrameMs:"<<m_fadeFrameMs<<", elapsed:"<<elapsed<<"]";
+		//step"<<m_fadeStepCounter<<"/"<<m_fadeSteps<<", 
+			qDebug()<<"MyGraphicsScene::slotTransitionStep(): "<<this<<" [STEP DONE] fadeVal:"<<fadeVal<<", fade:"<<m_fadeRoot->opacity()<<", live:"<<m_liveRoot->opacity()<<" [m_fadeFrameMs:"<<m_fadeFrameMs<<", elapsed:"<<elapsed<<"] at "<<QTime::currentTime().msec();
 			//qDebug()<<"MyGraphicsScene::slotTransitionStep(): [STEP DONE] step"<<m_fadeStepCounter<<"/"<<m_fadeSteps<<", inc:"<<inc<<", fade:"<<m_fadeRoot->opacity()<<", live:"<<m_liveRoot->opacity();
 		update();
 	}

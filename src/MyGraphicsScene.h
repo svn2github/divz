@@ -140,6 +140,9 @@ class MyGraphicsScene : public QGraphicsScene
 		int m_fadeLength;
 		int m_fadeFrameMs;
 		int m_currentFadeTime;
+		int m_lastElapsed;
+		QVariantMap m_fadeData; // HACK, here only till I figre out what I'm doing!
+		
 		
 		ContextHint m_contextHint;
 		
