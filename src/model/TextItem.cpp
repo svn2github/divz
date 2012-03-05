@@ -151,7 +151,7 @@ int TextItem::fitToSize(const QSize& size, int minimumFontSize, int maximumFontS
 		
 		QTextDocument doc;
 		
-		int heightTmp;
+		int heightTmp = 0;
 		
 		doc.setTextWidth(width);
 		if (Qt::mightBeRichText(text()))
@@ -182,14 +182,14 @@ int TextItem::fitToSize(const QSize& size, int minimumFontSize, int maximumFontS
 				boxHeight = heightTmp;
 
 				//sizeInc *= 1.1;
- 				//qDebug()<<"size search: "<<ptSize<<"pt was good, trying higher, inc:"<<sizeInc<<"pt, boxHeight:"<<boxHeight;
+ 				qDebug()<<"size search: "<<ptSize<<"pt was good, trying higher, inc:"<<sizeInc<<"pt, boxHeight:"<<boxHeight;
 				ptSize += sizeInc;
 
 			}
 			else
 			{
- 				boxHeight = lastHeightTmp;
-				//qDebug()<<"fitToSize: size search: last good ptsize:"<<lastGoodSize<<", stopping search, boxHeight:"<<boxHeight;
+ 				//boxHeight = lastHeightTmp < 0 ? heightTmp : lastHeightTmp;
+				qDebug()<<"fitToSize: size search: last good ptsize:"<<lastGoodSize<<", stopping search, boxHeight:"<<boxHeight;
  				done = true;
 			}
 		}
@@ -202,7 +202,7 @@ int TextItem::fitToSize(const QSize& size, int minimumFontSize, int maximumFontS
 			done = false;
 			sizeInc = 1;
 			
-			//qDebug()<<"TextItem::fitToSize(): size search: going UP failed, now I'll try to go DOWN";
+			qDebug()<<"TextItem::fitToSize(): size search: going UP failed, now I'll try to go DOWN";
 			
 			while(!done && count++ < maxCount)
 			{
@@ -219,13 +219,13 @@ int TextItem::fitToSize(const QSize& size, int minimumFontSize, int maximumFontS
 					boxHeight = heightTmp;
 	
 					sizeInc *= 1.1;
-					//qDebug()<<"size search: "<<ptSize<<"pt was good, trying higher, inc:"<<sizeInc<<"pt";
+					qDebug()<<"size search: "<<ptSize<<"pt was good, trying higher, inc:"<<sizeInc<<"pt";
 					ptSize -= sizeInc;
 	
 				}
 				else
 				{
-					//qDebug()<<"SongSlideGroup::textToSlides(): size search: last good ptsize:"<<lastGoodSize<<", stopping search";
+					qDebug()<<"SongSlideGroup::textToSlides(): size search: last good ptsize:"<<lastGoodSize<<", stopping search";
 					done = true;
 				}
 			}
@@ -236,7 +236,7 @@ int TextItem::fitToSize(const QSize& size, int minimumFontSize, int maximumFontS
 		
 		setText(doc.toHtml());
 		
-		//qDebug()<<"TextItem::fitToSize(): size search: caching ptsize:"<<lastGoodSize<<", count: "<<count<<"( minimum size was:"<<minimumFontSize<<"), last boxHeight:"<<boxHeight;
+		qDebug()<<"TextItem::fitToSize(): size search: caching ptsize:"<<lastGoodSize<<", count: "<<count<<"( minimum size was:"<<minimumFontSize<<"), last boxHeight:"<<boxHeight;
 		//boxHeight = heightTmp;
 		//static_autoTextSizeCache[sizeKey] = lastGoodSize;
 		

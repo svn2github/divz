@@ -119,6 +119,16 @@
          </widget>
         </item>
         <item>
+         <widget class="QCheckBox" name="requireAltGroup">
+          <property name="toolTip">
+           <string>If checked, this output will not show anything unless a specially-designed 'alternate' group is present for the current slide group, such as a lower-third template for a song, etc.</string>
+          </property>
+          <property name="text">
+           <string>Require Alternate Group</string>
+          </property>
+         </widget>
+        </item>
+        <item>
          <widget class="QTabWidget" name="tabWidget">
           <property name="currentIndex">
            <number>0</number>

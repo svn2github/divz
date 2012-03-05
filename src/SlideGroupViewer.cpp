@@ -790,6 +790,9 @@ void SlideGroupViewer::clear()
 		m_nativeViewer->dispose();
 		m_nativeViewer = 0;
 	}
+	
+	if(m_jpegServer)
+		m_jpegServer->slideChanged();
 }
 
 void SlideGroupViewer::slideChanged(Slide *slide, QString slideOperation, AbstractItem *item, QString /*operation*/, QString /*fieldName*/, QVariant /*value*/)

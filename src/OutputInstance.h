@@ -158,7 +158,7 @@ protected:
 	
 	QTimer * m_grabTimer;
 
-	SlideGroup * m_slideGroup;
+	QPointer<SlideGroup> m_slideGroup;
 	QList<Slide*> m_sortedSlides;
 	QList<QPointer<Slide> > m_ownedSlides;
 //	QHash<int,QPixmap> m_pixmaps;

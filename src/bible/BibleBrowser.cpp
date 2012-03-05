@@ -1273,7 +1273,7 @@ Slide * BibleBrowser::addSlide(SlideGroup *group, TextBoxItem *tmpText, int real
 		text->setPos(QPointF(0,0));
 		text->setContentsRect(centeredRect);
 		
-		qDebug()<<"BibleBrowser::addSlide(): slideNbr: "<<slideNbr<<": centeredRect: "<<centeredRect<<", templateTextbox:"<<templateTextbox; 
+		qDebug()<<"BibleBrowser::addSlide(): slideNbr: "<<slideNbr<<": centeredRect: "<<centeredRect<<", templateTextbox:"<<templateTextbox<<", realHeight:"<<realHeight; 
 	}
 	
 	if(!templateTextbox)

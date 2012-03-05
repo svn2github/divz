@@ -59,6 +59,7 @@ OutputSetupDialog::OutputSetupDialog(QWidget *parent) :
 	//connect(m_ui->allowMultipleIncomming, SIGNAL(stateChanged(int)), this, SLOT(slotAllowMultChanged(int)));
 	
 	connect(m_ui->ignoreAR, SIGNAL(toggled(bool)), this, SLOT(slotIgnoreAR(bool)));
+	connect(m_ui->requireAltGroup, SIGNAL(toggled(bool)), this, SLOT(slotRequireAlt(bool)));
 	
 	connect(m_ui->btnNewOutput, SIGNAL(clicked()), this, SLOT(slotNew()));
 	connect(m_ui->btnDelOutput, SIGNAL(clicked()), this, SLOT(slotDel()));
@@ -212,6 +213,14 @@ void OutputSetupDialog::slotIgnoreAR(bool x)
 	m_output->setIgnoreAR(x);
 }
 
+void OutputSetupDialog::slotRequireAlt(bool x)
+{
+	if(!m_output)
+		return;
+	m_output->setRequireAltGroup(x);
+}
+
+
 
 void OutputSetupDialog::slotMjpegPort(int x)
 {
@@ -280,6 +289,7 @@ void OutputSetupDialog::setOutput(Output *output)
 	m_ui->mjpegFps->setValue(output->mjpegServerFPS());
 	
 	m_ui->ignoreAR->setChecked(output->ignoreAR());
+	m_ui->requireAltGroup->setChecked(output->requireAltGroup());
 	
 	// flush any changes the previosly-selected output back into the list view
 	//setupOutputList();

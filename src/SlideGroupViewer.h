@@ -10,6 +10,7 @@
 #include <QFileInfo>
 #include <QCache>
 #include <QGLWidget>
+#include <QPointer>
 
 #include "MyGraphicsScene.h"
 
@@ -279,7 +280,7 @@ private:
 	QMap<QString,bool> m_videoProvidersConsumed;
 	QMap<QString,bool> m_videoProvidersOpened;
 	
-	SlideGroup * m_slideGroup;
+	QPointer<SlideGroup> m_slideGroup;
 	QList<Slide*> m_sortedSlides;
 //	QHash<int,QPixmap> m_pixmaps;
 

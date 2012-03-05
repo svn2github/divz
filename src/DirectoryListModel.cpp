@@ -471,7 +471,7 @@ void DirectoryListModel::loadEntryList()
 	foreach(FileFlag data, files)
 	    m_entryList << data.file;
 	
-	qDebug() << "qSort entry list elapsed:"<<t2.elapsed();
+	//qDebug() << "qSort entry list elapsed:"<<t2.elapsed();
 	
 	endInsertRows();
 	

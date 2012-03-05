@@ -30,6 +30,7 @@ class Output : public QObject
 	Q_PROPERTY(int mjpegServerFPS READ mjpegServerFPS WRITE setMjpegServerFPS);
 	
 	Q_PROPERTY(bool ignoreAR READ ignoreAR WRITE setIgnoreAR);
+	Q_PROPERTY(bool requireAltGroup READ requireAltGroup WRITE setRequireAltGroup);
 	
 	static Output * m_staticPreviewInstance;
 	static Output * m_staticWidgetInstance;
@@ -94,6 +95,9 @@ public:
 	bool ignoreAR() { return m_ignoreAR; }
 	void setIgnoreAR(bool flag);
 	
+	bool requireAltGroup() { return m_requireAltGroup; }
+	void setRequireAltGroup(bool flag);
+	
 	
 	QByteArray toByteArray();
 	void fromByteArray(QByteArray);
@@ -128,6 +132,7 @@ private:
 	int m_mjpegServerFPS;
 	
 	bool m_ignoreAR;
+	bool m_requireAltGroup;
 	
 	OutputInstance * m_instance;
 

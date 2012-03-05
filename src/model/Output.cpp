@@ -42,6 +42,7 @@ void Output::setupDefaults()
 	m_mjpegServerPort	= 8080;
 	m_mjpegServerFPS	= 7;
 	m_ignoreAR		= false;
+	m_requireAltGroup	= false;
 }
 
 void Output::generateId()
@@ -87,6 +88,7 @@ void Output::setMjpegServerPort(int x) { m_mjpegServerPort = x; }
 void Output::setMjpegServerFPS(int x) { m_mjpegServerFPS = x; }
 
 void Output::setIgnoreAR(bool flag) { m_ignoreAR = flag; }
+void Output::setRequireAltGroup(bool flag) { m_requireAltGroup = flag; }
 
 
 QByteArray Output::toByteArray()
@@ -111,6 +113,7 @@ QByteArray Output::toByteArray()
 	b << QVariant(mjpegServerPort());
 	b << QVariant(mjpegServerFPS());
 	b << QVariant(ignoreAR());
+	b << QVariant(requireAltGroup());
 	
 	return array;
 }
@@ -142,6 +145,8 @@ void Output::fromByteArray(QByteArray array)
 	b >> x; setMjpegServerFPS(x.isNull() ? 7         : x.toInt());
 	
 	b >> x; setIgnoreAR(x.isNull() ? false : x.toBool());
+	b >> x; setRequireAltGroup(x.isNull() ? false : x.toBool());
+	
 }
 
 void Output::setInstance(OutputInstance *instance)

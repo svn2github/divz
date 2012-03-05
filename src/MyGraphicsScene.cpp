@@ -165,8 +165,9 @@ void MyGraphicsScene::setContextHint(ContextHint hint)
 	m_contextHint = hint;
 }
 
-void MyGraphicsScene::clear()
+void MyGraphicsScene::clear(bool emitTxFinished)
 {
+	//qDebug() << "MyGraphicsScene::clear() "<<this;
 	foreach(AbstractContent *content, m_content)
 	{
 		m_content.removeAll(content);
@@ -185,6 +186,12 @@ void MyGraphicsScene::clear()
 	
 	emit slideDiscarded(m_slide);
 	m_slide = 0;
+	
+	if(emitTxFinished)
+	{
+		//qDebug() << "MyGraphicsScene::clear(): "<<this<<" emitting transitionFinished()";
+		emit transitionFinished(0);
+	}
 	
 	// dont remove our fade/live root
 	//QGraphicsScene::clear();
@@ -254,7 +261,7 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans, int speed, i
 	{
 		clear();
 		m_slide = 0;
-		emit transitionFinished(0);
+		//emit transitionFinished(0);
 		return;
 	}
 	
@@ -293,7 +300,7 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans, int speed, i
 	bool crossFading = false;
 	if(trans == None || (speed <= 1 && quality <= 1))
 	{
-		clear();
+		clear(false); // dont emit transitionFinished(0) - we do that later
 	}
 	else
 	{
@@ -530,7 +537,10 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans, int speed, i
 	m_liveRoot->setZValue(300);
 	
 	if(!crossFading)
+	{
+		//qDebug() << "MyGraphicsScene::setSlide(): "<<this<<" emitting transitionFinished()"; 
 		emit transitionFinished(slide);
+	}
 	
 	if(DEBUG_MYGRAPHICSSCENE)
 		qDebug() << "MyGraphicsScene::setSlide(): "<<this<<" Setting slide # "<<slide->slideNumber()<<" - DONE.";
@@ -661,6 +671,7 @@ void MyGraphicsScene::endTransition()
 	
 	emit crossFadeFinished(m_slidePrev,m_slide);
 	emit slideDiscarded(m_slidePrev);
+	//qDebug() << "MyGraphicsScene::endTransition(): "<<this<<" emitting transitionFinished()";
 	emit transitionFinished(m_slide);
 	update();
 	

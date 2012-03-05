@@ -40,6 +40,8 @@ protected slots:
 	void slotMjpegFps(int);
 	
 	void slotIgnoreAR(bool);
+	
+	void slotRequireAlt(bool);
 
 protected:
 	void changeEvent(QEvent *e);

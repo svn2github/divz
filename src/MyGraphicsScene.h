@@ -61,7 +61,7 @@ class MyGraphicsScene : public QGraphicsScene
 		AbstractVisualItem * newImageItem();
 		AbstractVisualItem * newOutputView();
 		
-		void clear();
+		void clear(bool emitTxFinished=true);
 		
 		ContextHint contextHint() { return m_contextHint; }
 		void setContextHint(ContextHint);
@@ -141,8 +141,6 @@ class MyGraphicsScene : public QGraphicsScene
 		int m_fadeFrameMs;
 		int m_currentFadeTime;
 		int m_lastElapsed;
-		QVariantMap m_fadeData; // HACK, here only till I figre out what I'm doing!
-		
 		
 		ContextHint m_contextHint;
 		

@@ -400,8 +400,6 @@ void OutputInstance::setSlideGroup(SlideGroup *group, Slide * startSlide)
 {
 // 	qDebug() << "OutputInstance::setSlideGroup: ["<<m_output->name()<<"] emitting slideGroupChanged(), group:"<<group->assumedName();
 	emit slideGroupChanged(group,startSlide);
-	foreach(OutputInstance *m, m_mirrors)
-		m->setSlideGroup(group,startSlide);
 	
 	if(isLocal())
 	{
@@ -428,6 +426,10 @@ void OutputInstance::setSlideGroup(SlideGroup *group, Slide * startSlide)
 				
 				m_viewer->setSlideGroup(altGroup,newStart);
 				
+				foreach(OutputInstance *m, m_mirrors)
+					m->setSlideGroup(altGroup,newStart);
+	
+				
 				qDebug() << "OutputInstance::setSlideGroup: ["<<m_output->name()<<"] Got alternate group "<<altGroup<<", newStart:"<<newStart<<", startIdx:"<<startIdx;
 			}
 			else
@@ -437,10 +439,27 @@ void OutputInstance::setSlideGroup(SlideGroup *group, Slide * startSlide)
 		}
 		
 		if(!foundAlt)
-			m_viewer->setSlideGroup(group,startSlide);
+		{
+			if(m_output->requireAltGroup())
+			{
+				qDebug() << "OutputInstance::setSlideGroup: ["<<m_output->name()<<"] No alternate group found and output requires dedicated alt group, clearing slide group with (0,0)";
+				//m_viewer->setSlideGroup(0,0);
+				clear(); // this will clear mirrors, too - so we dont need to do our foreach(..mirrors...) here
+			}
+			else
+			{
+				m_viewer->setSlideGroup(group,startSlide);
+				foreach(OutputInstance *m, m_mirrors)
+					m->setSlideGroup(group,startSlide);
+			}
+	
+		}
 	}
 	else
 	{
+		foreach(OutputInstance *m, m_mirrors)
+			m->setSlideGroup(group,startSlide);
+	
 		//qDebug() << "OutputInstance::setSlideGroup: ["<<m_output->name()<<"] Calling m_outputServer->sendCommand(), group:"<<group->assumedName()<<",  startSlide:"<<startSlide;
 		if(startSlide)
 			m_slideNum = m_sortedSlides.indexOf(startSlide);
@@ -852,9 +871,6 @@ void OutputInstance::setSlideInternal(Slide *slide)
 Slide * OutputInstance::setSlide(Slide *slide, bool takeOwnership)
 {
 	//qDebug() << "OutputInstance::setSlide: ["<<m_output->name()<<"] Updating mirrors to slidePtr"<<slide;
-	foreach(OutputInstance *m, m_mirrors)
-		m->setSlide(slide);
-		
 	if(!m_output->isEnabled())
 		return 0;
 		
@@ -891,6 +907,9 @@ Slide * OutputInstance::setSlide(Slide *slide, bool takeOwnership)
 				
 				if(newSlide)
 				{
+					foreach(OutputInstance *m, m_mirrors)
+						m->setSlide(newSlide);
+						
 					m_viewer->setSlide(newSlide); // NOT takeOwnership here....checked above...
 					foundAlt = true;
 					qDebug() << "OutputInstance::setSlide: ["<<m_output->name()<<"] Got alternate group "<<altGroup<<", newSlide:"<<newSlide<<", m_slideNum:"<<m_slideNum<<", intended slide: "<<slide<<", intended group:"<<m_slideGroup;
@@ -911,7 +930,20 @@ Slide * OutputInstance::setSlide(Slide *slide, bool takeOwnership)
 		}
 		
 		if(!foundAlt)
-			m_viewer->setSlide(slide,takeOwnership);
+		{
+			if(m_output->requireAltGroup())
+			{
+				qDebug() << "OutputInstance::setSlide: ["<<m_output->name()<<"] No alternate group found and output requires dedicated alt group, clearing slide with (0,0)";
+				//m_viewer->setSlide(0,false);
+				clear(); // this will clear mirrors too
+			}
+			else
+			{
+				foreach(OutputInstance *m, m_mirrors)
+					m->setSlide(slide);
+				m_viewer->setSlide(slide,takeOwnership);
+			}
+		}
 		
 		// 20100216: Moved setSlideInternal() to AFTER the call to m_viewer inorder for proper controlWidgets()
 		// functionality. In MyGraphicsScene, the parentItem() is checked and only items with the "live root"
@@ -923,6 +955,9 @@ Slide * OutputInstance::setSlide(Slide *slide, bool takeOwnership)
 	}
 	else
 	{
+		foreach(OutputInstance *m, m_mirrors)
+			m->setSlide(slide);
+		
 		setSlideInternal(slide);
 	
 		if(m_outputServer)
