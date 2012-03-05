@@ -8,6 +8,8 @@
 #include <QTime>
 #include <QProcess>
 
+//#define DEBUG_VIDEOFRAME_POINTERS
+
 VideoSender::VideoSender(QObject *parent)
 	: QTcpServer(parent)
 	, m_adaptiveWriteEnabled(true)

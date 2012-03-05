@@ -289,12 +289,15 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans, int speed, i
 	if(DEBUG_MYGRAPHICSSCENE)
 		qDebug() << "MyGraphicsScene::setSlide(): "<<this<<" trans:"<<trans<<", speed:"<<speed<<", quality:"<<quality;
 	//trans = None;
+	
+	bool crossFading = false;
 	if(trans == None || (speed <= 1 && quality <= 1))
 	{
 		clear();
 	}
 	else
 	{
+		crossFading = true;
 // 		//QStringList newSlideKeys;
 // 		QMap<quint32,AbstractItem*> newSlideKeys;
 // 		// have existing content?
@@ -526,7 +529,7 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans, int speed, i
 // 	m_liveRoot->setOpacity(0);
 	m_liveRoot->setZValue(300);
 	
-	if(trans == None || (speed == 0 && quality == 0))
+	if(!crossFading)
 		emit transitionFinished(slide);
 	
 	if(DEBUG_MYGRAPHICSSCENE)

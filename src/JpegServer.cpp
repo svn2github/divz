@@ -129,7 +129,7 @@ void JpegServer::generateNextFrame()
 	   !m_slideChanged &&
 	   !m_cachedImage.isNull())
 	{
-		//qDebug() << "JpegServer::generateNextFrame(): Hit Cache";
+		qDebug() << "JpegServer::generateNextFrame(): Hit Cache";
 		emit frameReady(m_cachedImage);
 		return;
 	}
@@ -140,7 +140,7 @@ void JpegServer::generateNextFrame()
 		//qDebug() << "JpegServer::generateNextFrame(): Cache fallthru ...";
 	}
 	
-	//qDebug() << "JpegServer::generateNextFrame(): Rendering scene "<<m_scene;
+	qDebug() << "JpegServer::generateNextFrame(): Rendering scene "<<m_scene;
 	
 	m_time.start();
 	
@@ -170,7 +170,14 @@ void JpegServer::generateNextFrame()
  	emit frameReady(image);
 	
 	if(m_sender)
+	{
+		qDebug() << "JpegServer::generateNextFrame(): Sending image via VideoSender";
 		m_sender->transmitImage(image);
+	}
+	else
+	{
+		qDebug() << "JpegServer::generateNextFrame(): No VideoSender created";
+	}
 	
 	if(m_onlyRenderOnSlideChange)
 		m_cachedImage = image;
