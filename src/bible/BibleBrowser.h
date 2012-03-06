@@ -96,7 +96,7 @@ protected:
 	void closeEvent(QCloseEvent *);
 	
 	void setupTextBox(TextBoxItem *);
-	Slide * addSlide(SlideGroup *, TextBoxItem *, int height, const QSize & fitSize, const QString & plain);
+	Slide * addSlide(SlideGroup *, TextBoxItem *, int height, const QRect & fitRect, const QString & plain);
 	
 	void setupUI();
 	void setupVersionCombo();

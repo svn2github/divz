@@ -190,19 +190,19 @@ void JpegServer::generateNextFrame()
 	m_frameCount ++;
 	m_timeAccum  += m_time.elapsed();
 	
-	if(m_frameCount % (m_fps?m_fps:10) == 0)
-	{
-		QString msPerFrame;
-		msPerFrame.setNum(((double)m_timeAccum) / ((double)m_frameCount), 'f', 2);
-	
-		qDebug() << "JpegServer::generateNextFrame(): Avg MS per Frame:"<<msPerFrame<<", threadId:"<<QThread::currentThreadId();
-	}
-			
-	if(m_frameCount % ((m_fps?m_fps:10) * 10) == 0)
-	{
-		m_timeAccum  = 0;
-		m_frameCount = 0;
-	}
+// 	if(m_frameCount % (m_fps?m_fps:10) == 0)
+// 	{
+// 		QString msPerFrame;
+// 		msPerFrame.setNum(((double)m_timeAccum) / ((double)m_frameCount), 'f', 2);
+// 	
+// 		qDebug() << "JpegServer::generateNextFrame(): Avg MS per Frame:"<<msPerFrame<<", threadId:"<<QThread::currentThreadId();
+// 	}
+// 			
+// 	if(m_frameCount % ((m_fps?m_fps:10) * 10) == 0)
+// 	{
+// 		m_timeAccum  = 0;
+// 		m_frameCount = 0;
+// 	}
 	
 	//qDebug() << "JpegServer::generateNextFrame(): Done rendering "<<m_scene;
 }

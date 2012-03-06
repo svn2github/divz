@@ -977,32 +977,61 @@ void SlideEditorWindow::editAltGroups()
 	// First, dialog to choose output
 	QList<Output*> allOut = AppSettings::outputs();
 	
+	// Invert sort order
+	QList<Output*> tmp;
+	foreach(Output *out, allOut)
+		tmp.prepend(out);
+	allOut = tmp;
+	
 	QStringList items;
 	foreach(Output *out, allOut)
 		items << out->name();
 	
 	bool ok;
 	QString item = QInputDialog::getItem(this, tr("Choose Output"),
-						tr("Output:"), items, 0, false, &ok);
+						   tr("Output:"), items, 0, false, &ok);
 	if (ok && !item.isEmpty())
 	{
 		int outputIdx = items.indexOf(item);
 		Output *output = allOut[outputIdx];
 			
 		SlideGroup *altGroup = m_slideGroup->altGroupForOutput(output);
+		if(altGroup && altGroup->numSlides() <= 0)
+		{
+			altGroup->deleteLater();
+			altGroup = 0;
+		}
+		
 		if(!altGroup)
 		{
-			altGroup = new SlideGroup();
+			altGroup = m_slideGroup->clone();
+			
 			altGroup->setGroupTitle(QString(tr("Alternate Group for Output %1 for Group %2")).arg(output->name()).arg(m_slideGroup->groupTitle().isEmpty() ? QString(tr("Group %1")).arg(m_slideGroup->groupNumber()) : m_slideGroup->groupTitle()));
 			//
-			
-			Slide *slide = new Slide();
-			altGroup->addSlide(slide);
+			if(m_slideGroup->numSlides() <= 0)
+			{
+				Slide *slide = new Slide();
+				altGroup->addSlide(slide);
+			}
+			else
+			{
+				QList<Slide *> primarySlides = m_slideGroup->slideList();
+				QList<Slide *> altSlides     = altGroup->slideList();
+				
+				// Link the two sets of slides together (alt slide->primary slide) by slide index
+				for(int i=0; i<primarySlides.size(); i++)
+					altSlides[i]->setPrimarySlideId(primarySlides[i]->slideId());
+			}
 			
 			m_slideGroup->setAltGroupForOutput(output, altGroup);
 		}
 		
 		altGroup->setProperty("isAltGroup",true);
+		
+		QVariant slideGroupVar;
+		slideGroupVar.setValue(m_slideGroup);
+		altGroup->setProperty("primaryGroup",  slideGroupVar);
+		
 		
 		m_altEditorWindow->setSlideGroup(altGroup,altGroup->at(0));
 		//connect(m_altEditorWindow, SIGNAL(closed()), this, SLOT(altEditorClosed()));
@@ -1973,7 +2002,20 @@ void SlideEditorWindow::slideProperties()
 
 	SlideSettingsDialog d(slide,this);
 	//d.adjustSize();
-	d.resize(400, 400);
+	d.resize(450, 650); // TODO ?
+	
+	QVariant altFlagVar = m_slideGroup->property("isAltGroup");
+	bool altFlag = altFlagVar.isValid() && altFlagVar.toBool();
+		
+	if(altFlag)
+	{
+		d.resize(550, 650); // TODO ?
+		
+		QVariant slideGroupVar = m_slideGroup->property("primaryGroup");
+		SlideGroup * slideGroup = slideGroupVar.value<SlideGroup*>();
+		d.setPrimaryGroup(slideGroup);
+	}
+	
 	d.exec();
 }
 

@@ -420,9 +420,49 @@ void OutputInstance::setSlideGroup(SlideGroup *group, Slide * startSlide)
 				
 				// resolve the start slide for the alt group - just match by index
 				Slide *newStart = 0;
-				int startIdx = group->indexOf(startSlide);
-				if(startIdx > -1)
-					newStart = altGroup->at(startIdx);
+// 				int startIdx = group->indexOf(startSlide);
+// 				if(startIdx > -1)
+// 					newStart = altGroup->at(startIdx);
+					
+					
+				QList<Slide*> altSlides = altGroup->altSlides(startSlide);
+				if(!altSlides.isEmpty())
+				{
+					// Using the current slide on the viewer, go to the next "alternate" slide
+					// in for the primary slide - e.g. multiple clicks on the primary slide
+					// cycle thru the alternate slides for that primary slide.
+					//
+					// This is done by finding the current index of the current "live" slide,
+					// then just incrementing that index by 1 and getting the new slide,
+					// looping back to the start.
+					//
+					// Note: this logic is only applicable if the 'primarySlideId' has been setup -
+					// otherwise, we fall thru to the section below where we just match by slide
+					// index number (e.g. the second slide in the primary list gets the second slide
+					// in the altGroup list)
+					Slide *currentSlide = m_viewer->slide();
+					
+					int currentIdx = altSlides.indexOf(currentSlide);
+					
+					// If currentIdx is -1, that's okay - we increment it by 1 to 0 anyway
+					//if(currentIdx < 0)
+					//	currentIdx = 0;
+					
+					currentIdx ++;
+					if(currentIdx >= altSlides.size())
+						currentIdx = 0;
+					
+					newStart = altSlides.at(currentIdx);
+				}
+				else
+				{
+					int startIdx = group->indexOf(startSlide);
+					if(startIdx > -1)
+						newStart = altGroup->at(startIdx);
+
+				}
+				
+				
 				
 				m_viewer->setSlideGroup(altGroup,newStart);
 				
@@ -430,7 +470,7 @@ void OutputInstance::setSlideGroup(SlideGroup *group, Slide * startSlide)
 					m->setSlideGroup(altGroup,newStart);
 	
 				
-				qDebug() << "OutputInstance::setSlideGroup: ["<<m_output->name()<<"] Got alternate group "<<altGroup<<", newStart:"<<newStart<<", startIdx:"<<startIdx;
+				qDebug() << "OutputInstance::setSlideGroup: ["<<m_output->name()<<"] Got alternate group "<<altGroup<<", newStart:"<<newStart;/*<<", startIdx:"<<startIdx;*/
 			}
 			else
 			{
@@ -442,7 +482,7 @@ void OutputInstance::setSlideGroup(SlideGroup *group, Slide * startSlide)
 		{
 			if(m_output->requireAltGroup())
 			{
-				qDebug() << "OutputInstance::setSlideGroup: ["<<m_output->name()<<"] No alternate group found and output requires dedicated alt group, clearing slide group with (0,0)";
+				//qDebug() << "OutputInstance::setSlideGroup: ["<<m_output->name()<<"] No alternate group found and output requires dedicated alt group, clearing slide group with (0,0)";
 				//m_viewer->setSlideGroup(0,0);
 				clear(); // this will clear mirrors, too - so we dont need to do our foreach(..mirrors...) here
 			}
@@ -515,6 +555,9 @@ Slide * OutputInstance::setSlideGroupInternal(SlideGroup *group, Slide * startSl
 			m_slideNum = 0;
 		else
 			qDebug("OutputInstance::setSlideGroup: Group[0] has 0 slides");
+			
+		if(slist.isEmpty())
+			return 0;
 			
 		Slide * first = slist.first();
 		setSlideInternal(first);
@@ -896,10 +939,42 @@ Slide * OutputInstance::setSlide(Slide *slide, bool takeOwnership)
 				// resolve the start slide for the alt group - just match by index
 				Slide *newSlide = 0;
 				
-				QList<Slide*> slist = altGroup->slideList();
-				qSort(slist.begin(), slist.end(), OuputInstance_slide_num_compare);
-				newSlide = slist.isEmpty() ? 0 :
-					m_slideNum < slist.size() && m_slideNum > -1 ? slist.at(m_slideNum) : 0;
+				QList<Slide*> altSlides = altGroup->altSlides(slide);
+				if(!altSlides.isEmpty())
+				{
+					// Using the current slide on the viewer, go to the next "alternate" slide
+					// in for the primary slide - e.g. multiple clicks on the primary slide
+					// cycle thru the alternate slides for that primary slide.
+					//
+					// This is done by finding the current index of the current "live" slide,
+					// then just incrementing that index by 1 and getting the new slide,
+					// looping back to the start.
+					//
+					// Note: this logic is only applicable if the 'primarySlideId' has been setup -
+					// otherwise, we fall thru to the section below where we just match by slide
+					// index number (e.g. the second slide in the primary list gets the second slide
+					// in the altGroup list)
+					Slide *currentSlide = m_viewer->slide();
+					
+					int currentIdx = altSlides.indexOf(currentSlide);
+					
+					// If currentIdx is -1, that's okay - we increment it by 1 to 0 anyway
+					//if(currentIdx < 0)
+					//	currentIdx = 0;
+					
+					currentIdx ++;
+					if(currentIdx >= altSlides.size())
+						currentIdx = 0;
+					
+					newSlide = altSlides.at(currentIdx);
+				}
+				else
+				{
+					QList<Slide*> slist = altGroup->slideList();
+					qSort(slist.begin(), slist.end(), OuputInstance_slide_num_compare);
+					newSlide = slist.isEmpty() ? 0 :
+						m_slideNum < slist.size() && m_slideNum > -1 ? slist.at(m_slideNum) : 0;
+				}
 				
 // 				int startIdx = group->indexOf(slide);
 // 				if(startIdx > -1)
@@ -916,7 +991,7 @@ Slide * OutputInstance::setSlide(Slide *slide, bool takeOwnership)
 				}
 				else
 				{
-					qDebug() << "OutputInstance::setSlide: ["<<m_output->name()<<"] Did not find newSlide, slist.size:"<<slist.size()<<", m_slideNum:"<<m_slideNum;
+					qDebug() << "OutputInstance::setSlide: ["<<m_output->name()<<"] Has alt group "<<altGroup<<", but did not find newSlide"; //slist.size:"<<slist.size()<<", m_slideNum:"<<m_slideNum;
 				}
 			}
 			else
@@ -933,7 +1008,7 @@ Slide * OutputInstance::setSlide(Slide *slide, bool takeOwnership)
 		{
 			if(m_output->requireAltGroup())
 			{
-				qDebug() << "OutputInstance::setSlide: ["<<m_output->name()<<"] No alternate group found and output requires dedicated alt group, clearing slide with (0,0)";
+				//qDebug() << "OutputInstance::setSlide: ["<<m_output->name()<<"] No alternate group found and output requires dedicated alt group, clearing slide with (0,0)";
 				//m_viewer->setSlide(0,false);
 				clear(); // this will clear mirrors too
 			}

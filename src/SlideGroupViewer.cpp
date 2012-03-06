@@ -1019,6 +1019,8 @@ Slide * SlideGroupViewer::setSlide(int x)
 
 Slide * SlideGroupViewer::setSlide(Slide *slide, bool takeOwnership)
 {
+	m_slide = slide;
+	
 	//qDebug() << "SlideGroupViewer::setSlide(): Setting slide to ptr "<<slide;
 	if(m_bgWaitingForNextSlide)
 	{

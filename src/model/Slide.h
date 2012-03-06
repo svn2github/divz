@@ -17,7 +17,8 @@ class Slide : public QObject
 	Q_PROPERTY(double inheritFadeSettings READ inheritFadeSettings WRITE setInheritFadeSettings);
 	Q_PROPERTY(double crossFadeSpeed READ crossFadeSpeed WRITE setCrossFadeSpeed);
 	Q_PROPERTY(double crossFadeQuality READ crossFadeQuality WRITE setCrossFadeQuality);
-
+	
+	Q_PROPERTY(int primarySlideId READ primarySlideId WRITE setPrimarySlideId);
 
 public:
 	Slide();
@@ -50,6 +51,8 @@ public:
 	ITEM_PROPDEF(CrossFadeSpeed,	double,	crossFadeSpeed);    // secs
 	ITEM_PROPDEF(CrossFadeQuality,	double,	crossFadeQuality);  // frames
 	
+	ITEM_PROPDEF(PrimarySlideId,	int,	primarySlideId);
+	
 	Slide * clone() const;
 	
 	// guess a change time based on slide contents
@@ -74,6 +77,8 @@ private:
 	bool m_inheritFadeSettings;
 	double m_crossFadeSpeed;
 	double m_crossFadeQuality;
+
+	int m_primarySlideId;
 };
 
 //Q_DECLARE_METATYPE(Slide);

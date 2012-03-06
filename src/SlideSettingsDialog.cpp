@@ -1,11 +1,13 @@
 #include "SlideSettingsDialog.h"
 #include "ui_SlideSettingsDialog.h"
 #include "model/Slide.h"
+#include "model/SlideGroup.h"
 #include "model/BackgroundItem.h"
 #include "model/ImageItem.h"
 #include "model/TextBoxItem.h"
 #include "items/BackgroundConfig.h"
 #include "items/BackgroundContent.h"
+#include "SlideGroupListModel.h"
 #include <QMessageBox>
 #include "ui_GenericItemConfig.h"
 
@@ -13,7 +15,8 @@
 SlideSettingsDialog::SlideSettingsDialog(Slide *slide, QWidget *parent) :
 	QDialog(parent),
 	m_ui(new Ui::SlideSettingsDialog),
-	m_slide(slide)
+	m_slide(slide),
+	m_primaryGroupModel(0)
 {
 	m_ui->setupUi(this);
 	m_ui->slideChangeTime->setValue(slide->autoChangeTime());
@@ -44,7 +47,24 @@ SlideSettingsDialog::SlideSettingsDialog(Slide *slide, QWidget *parent) :
 	
 	m_ui->slideName->setFocus();
 	
+	m_ui->primarySlideBox->setVisible(false);
+	
 	connect(m_ui->buttonBox, SIGNAL(accepted()), this, SLOT(slotAccepted()));
+}
+
+void SlideSettingsDialog::setPrimaryGroup(SlideGroup *primary)
+{
+	m_ui->primarySlideBox->setVisible(true);
+	
+	m_primaryGroupModel = new SlideGroupListModel();
+	m_ui->primarySlideList->setModel(m_primaryGroupModel);
+	m_primaryGroupModel->setSlideGroup(primary);
+	
+	Slide *primarySlide = primary->slideById(m_slide->primarySlideId());
+	QModelIndex modelIndex = m_primaryGroupModel->indexForSlide(primarySlide);
+	qDebug() << "SlideSettingsDialog::setPrimaryGroup: m_slide->primarySlideId():"<<m_slide->primarySlideId()<<",primarySlide:"<<primarySlide<<",modelIndex:"<<modelIndex; 
+	if(modelIndex.row() > -1)
+		m_ui->primarySlideList->setCurrentIndex(modelIndex.row());
 }
 
 void SlideSettingsDialog::slotAccepted()
@@ -53,6 +73,27 @@ void SlideSettingsDialog::slotAccepted()
 	m_slide->setCrossFadeSpeed(m_ui->speedBox->value());
 	m_slide->setCrossFadeQuality(m_ui->qualityBox->value());
 	m_slide->setSlideName(m_ui->slideName->text());
+	
+	if(m_primaryGroupModel)
+	{
+		int idx = m_ui->primarySlideList->currentIndex();
+		if(idx >= 0)
+		{
+			Slide *slide = m_primaryGroupModel->slideAt(idx);
+			m_slide->setPrimarySlideId(slide->slideId());
+			
+			qDebug() << "SlideSettingsDialog::slotAccepted(): idx:"<<idx<<", slide:"<<slide<<",slide->slideId():"<<slide->slideId();  
+		}
+		else
+		{
+			QMessageBox::critical(this,"Select a Primary Slide","No primary slide selected - choose one and try again.");
+			return;
+		}
+	}
+	else
+	{
+		qDebug() << "SlideSettingsDialog::slotAccepted(): not alternate group";
+	}
 	
 	close();
 }

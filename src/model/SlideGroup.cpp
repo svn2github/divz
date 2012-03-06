@@ -51,6 +51,41 @@ SlideGroup::~SlideGroup()
 
 QList<Slide *> SlideGroup::slideList() { return m_slides; }
 
+Slide *SlideGroup::slideById(int id)
+{
+	foreach(Slide *slide, m_slides)
+		if(slide->slideId() == id)
+			return slide;
+	
+	return 0;
+}
+
+QList<Slide*> SlideGroup::altSlides(Slide *primarySlide)
+{
+	if(!primarySlide)
+		return QList<Slide*>();
+	int primaryId = primarySlide->slideId();
+	
+	QList<Slide*> alts;
+	foreach(Slide *slide, m_slides)
+		if(slide->primarySlideId() == primaryId)
+			alts << slide;
+			
+	return alts;
+	
+}
+
+// QList<Slide*> SlideGroup::altSlides(int primarySlideId)
+// {
+// 	QList<Slide*> alts;
+// 	foreach(Slide *slide, m_slides)
+// 		if(slide->primarySlideId() == primarySlideId)
+// 			alts << slide;
+// 	
+// 	return id;
+// }
+
+
 void SlideGroup::addSlide(Slide *slide)
 {
 	assert(slide != NULL);

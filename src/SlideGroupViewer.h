@@ -14,6 +14,7 @@
 
 #include "MyGraphicsScene.h"
 
+#include "model/Slide.h"
 #include "model/SlideGroup.h"
 
 #include "model/AbstractItemFilter.h"
@@ -134,6 +135,8 @@ public:
 	//void setSlideGroup(SlideGroup*, int startSlide = 0);
 	void setSlideGroup(SlideGroup*, Slide *slide = 0);
 	SlideGroup * slideGroup() { return m_slideGroup; }
+	
+	Slide *slide() { return m_slide; }
 	
 	int numSlides() { return m_sortedSlides.size(); }
 	
@@ -281,6 +284,7 @@ private:
 	QMap<QString,bool> m_videoProvidersOpened;
 	
 	QPointer<SlideGroup> m_slideGroup;
+	QPointer<Slide> m_slide;
 	QList<Slide*> m_sortedSlides;
 //	QHash<int,QPixmap> m_pixmaps;
 

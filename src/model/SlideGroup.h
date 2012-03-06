@@ -68,6 +68,9 @@ public:
 	int numSlides() { return m_slides.size(); }
 	Slide * at(int sortedIdx) { return sortedIdx < m_slides.size() ? m_slides.at(sortedIdx) : 0; }
 	int indexOf(Slide *slide) { return m_slides.indexOf(slide); }
+	Slide * slideById(int id);
+	QList<Slide*> altSlides(Slide *primarySlide);
+	//QList<Slide*> altSlides(int primarySlideId);
 
 	void removeSlide(Slide *);
 
@@ -149,6 +152,7 @@ protected:
 
 };
 
+Q_DECLARE_METATYPE(SlideGroup*);
 // Q_DECLARE_METATYPE(SlideGroup::GroupType);
 Q_DECLARE_METATYPE(SlideGroup::EndOfGroupAction);
 

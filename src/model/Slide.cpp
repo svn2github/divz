@@ -27,6 +27,7 @@ Slide::Slide()
 	m_inheritFadeSettings = true;
 	m_crossFadeSpeed = 250;
 	m_crossFadeQuality = 15;
+	m_primarySlideId = -1;
 }
 Slide::~Slide() 
 {
@@ -80,6 +81,13 @@ void Slide::setCrossFadeQuality(double x)
 	double old = m_crossFadeQuality;
 	m_crossFadeQuality = x;	
 	emit slideItemChanged(0,"change","crossFadeQuality",x,old); 
+}
+
+void Slide::setPrimarySlideId(int x) 
+{ 
+	double old = m_primarySlideId;
+	m_primarySlideId = x;	
+	emit slideItemChanged(0,"change","primarySlideId",x,old); 
 }
 
 
@@ -169,6 +177,8 @@ bool Slide::fromXml(QDomElement & pe)
 	m_inheritFadeSettings = inherit.isNull() ? true : (bool)inherit.toInt();
 	m_crossFadeSpeed = pe.attribute("fade-speed").toDouble();
 	m_crossFadeQuality = pe.attribute("fade-quality").toDouble();
+	
+	m_primarySlideId = pe.attribute("primary-slideid").toInt();
 
 	// for each child of 'slide'
 	for (QDomElement element = pe.firstChildElement(); !element.isNull(); element = element.nextSiblingElement()) 
@@ -230,6 +240,7 @@ void Slide::toXml(QDomElement & pe) const
 	pe.setAttribute("inherit-fade",(int)m_inheritFadeSettings);
 	pe.setAttribute("fade-speed",m_crossFadeSpeed);
 	pe.setAttribute("fade-quality",m_crossFadeQuality);
+	pe.setAttribute("primary-slideid",m_primarySlideId);
 	
 	foreach (AbstractItem * content, m_items) 
 	{

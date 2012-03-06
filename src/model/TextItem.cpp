@@ -62,7 +62,7 @@ void TextItem::setYTextAlign(Qt::Alignment z)
 }
 
 
-void TextItem::changeFontSize(double size)
+QSize TextItem::changeFontSize(double size)
 {
 	QTextDocument doc;
 	if (Qt::mightBeRichText(text()))
@@ -76,9 +76,13 @@ void TextItem::changeFontSize(double size)
 	QTextCharFormat format;
 	format.setFontPointSize(size);
 	cursor.mergeCharFormat(format);
-	cursor.mergeBlockCharFormat(format);
+	//cursor.mergeBlockCharFormat(format);
 
 	setText(doc.toHtml());
+	
+	doc.setHtml(text()); // force recalc of documentSize
+	
+	return doc.size().toSize();
 }
 
 
@@ -126,7 +130,6 @@ int TextItem::fitToSize(const QSize& size, int minimumFontSize, int maximumFontS
 		else
 			doc.setPlainText(text());
 
-			
 		QTextCursor cursor(&doc);
 		cursor.select(QTextCursor::Document);
 		
@@ -134,110 +137,126 @@ int TextItem::fitToSize(const QSize& size, int minimumFontSize, int maximumFontS
 		format.setFontPointSize(ptSize);
 		cursor.mergeCharFormat(format);
 		
-		boxHeight = doc.documentLayout()->documentSize().height();
+		// force recalc of documentSize() -- see notes on why this is required in the block below
+		doc.setHtml(doc.toHtml());
+			
+		boxHeight = doc.size().height();
 		
 		setText(doc.toHtml());
+		
+		// We cant use this because it doesn't call doc.setTextWidth(width)
+		//boxHeight = changeFontSize(ptSize).height();
 	}
 	else
 	{
-		double ptSize = minimumFontSize > 0 ? minimumFontSize : findFontSize();
-		double sizeInc = 1;	// how big of a jump to add to the ptSize each iteration
-		int count = 0;		// current loop iteration
-		int maxCount = 100; 	// max iterations of the search loop
-		bool done = false;
+		double ptSize   = minimumFontSize > 0 ? minimumFontSize : findFontSize();
+		double sizeInc  = 0.9;	// how big of a jump to add to the ptSize each iteration
+		int    count    = 0;	// current loop iteration
+		int    maxCount = 100; 	// max iterations of the search loop
+		bool   done = false;
 		
-		int lastGoodSize = ptSize;
+		double  lastGoodSize = ptSize;
 		QString lastGoodHtml = text();
 		
+		double heightTmp = 0;
+		
 		QTextDocument doc;
-		
-		int heightTmp = 0;
-		
-		doc.setTextWidth(width);
 		if (Qt::mightBeRichText(text()))
 			doc.setHtml(text());
 		else
 			doc.setPlainText(text());
 
-			
+		doc.setTextWidth(width);
+		
 		QTextCursor cursor(&doc);
 		cursor.select(QTextCursor::Document);
 		
 		QTextCharFormat format;
 		
-		int lastHeightTmp = -1;
+		bool foundGood = false;
 		while(!done && count++ < maxCount)
 		{
 			format.setFontPointSize(ptSize);
 			cursor.mergeCharFormat(format);
 			
-			lastHeightTmp = heightTmp;
-			heightTmp = doc.documentLayout()->documentSize().height();
+			heightTmp = doc.size().height();
 			
 			if(heightTmp < height &&
 			      ptSize < maximumFontSize)
 			{
 				lastGoodSize = ptSize;
-				//lastGoodHtml = text();
-				boxHeight = heightTmp;
-
-				//sizeInc *= 1.1;
- 				qDebug()<<"size search: "<<ptSize<<"pt was good, trying higher, inc:"<<sizeInc<<"pt, boxHeight:"<<boxHeight;
+				foundGood = true;
+				
+				sizeInc *= 1.1;
+ 				//qDebug()<<"size search: "<<ptSize<<"pt was good, trying higher, inc:"<<sizeInc<<"pt, heightTmp:"<<heightTmp;
 				ptSize += sizeInc;
 
 			}
 			else
 			{
- 				//boxHeight = lastHeightTmp < 0 ? heightTmp : lastHeightTmp;
-				qDebug()<<"fitToSize: size search: last good ptsize:"<<lastGoodSize<<", stopping search, boxHeight:"<<boxHeight;
+ 				//qDebug()<<"fitToSize: size search: last good ptsize:"<<lastGoodSize<<", stopping search, heightTmp:"<<heightTmp;
  				done = true;
 			}
 		}
-		
-		if(boxHeight < 0 && minimumFontSize <= 0) // didnt find a size
+
+		if(!foundGood)// && minimumFontSize <= 0) // didnt find a size
 		{
-			ptSize = 100;
-			
-			count = 0;
-			done = false;
+			ptSize  = 100;
+			count   = 0;
+			done    = false;
 			sizeInc = 1;
 			
-			qDebug()<<"TextItem::fitToSize(): size search: going UP failed, now I'll try to go DOWN";
+			//qDebug()<<"TextItem::fitToSize(): size search: going UP failed, now I'll try to go DOWN";
 			
-			while(!done && count++ < maxCount)
+			while(!done && 
+			      count++ < maxCount &&
+			      ptSize >= minimumFontSize)
 			{
-				
 				format.setFontPointSize(ptSize);
 				cursor.mergeCharFormat(format);
 				
-				heightTmp = doc.documentLayout()->documentSize().height();
+				heightTmp = doc.size().height();
 				
 				if(heightTmp < height)
 				{
 					lastGoodSize = ptSize;
-					//lastGoodHtml = text();
-					boxHeight = heightTmp;
-	
+					
 					sizeInc *= 1.1;
-					qDebug()<<"size search: "<<ptSize<<"pt was good, trying higher, inc:"<<sizeInc<<"pt";
+					//qDebug()<<"size search: [down] "<<ptSize<<"pt was good, trying higher, inc:"<<sizeInc<<"pt";
 					ptSize -= sizeInc;
 	
 				}
 				else
 				{
-					qDebug()<<"SongSlideGroup::textToSlides(): size search: last good ptsize:"<<lastGoodSize<<", stopping search";
+					//qDebug()<<"fitToSize: size search: [down] size search: last good ptsize:"<<lastGoodSize<<", stopping search";
 					done = true;
 				}
 			}
 		}
+		
+	
 
 		format.setFontPointSize(lastGoodSize);
 		cursor.mergeCharFormat(format);
 		
 		setText(doc.toHtml());
 		
-		qDebug()<<"TextItem::fitToSize(): size search: caching ptsize:"<<lastGoodSize<<", count: "<<count<<"( minimum size was:"<<minimumFontSize<<"), last boxHeight:"<<boxHeight;
-		//boxHeight = heightTmp;
+		// force recalc of documentSize() - otherwise the docSize is wrong for some reason...
+		doc.setHtml(doc.toHtml());
+		
+		/*
+			Note on the above setHtml() call - when we just relied on the doc.size() (below) after calling mergCharFormat(),
+			testing found that the height was "off" (too small) - this was found by calling TestItem::findNaturalSize() with the
+			same with we use for this method - and it returned a height identical to the height given when we use the
+			setHtml() call here - therefore, for some reason, this is required - I'd have to search thru Qt's sources to really
+			understand why, but for now, it works..... 
+		*/
+		
+
+		QSizeF docSize = doc.size();
+		boxHeight = docSize.height();
+		
+		//qDebug()<<"TextItem::fitToSize(): size search: caching ptsize:"<<lastGoodSize<<", count: "<<count<<"( minimum size was:"<<minimumFontSize<<"), docSize:"<<docSize<<", size arg:"<<size;
 		//static_autoTextSizeCache[sizeKey] = lastGoodSize;
 		
 		// We are using a QCache instead of a plain QMap, so that requires a pointer value 
@@ -246,21 +265,22 @@ int TextItem::fitToSize(const QSize& size, int minimumFontSize, int maximumFontS
 		static_autoTextSizeCache.insert(sizeKey, new double(lastGoodSize),1);
 	}
 	
-	return boxHeight;
+	return (int)boxHeight;
 	
 }
 
 QSize TextItem::findNaturalSize(int atWidth)
 {
 	QTextDocument doc;
-	if(atWidth > 0)
-		doc.setTextWidth(atWidth);
 	if (Qt::mightBeRichText(text()))
 		doc.setHtml(text());
 	else
 		doc.setPlainText(text());
 	
-	QSize firstSize = doc.documentLayout()->documentSize().toSize();
+	if(atWidth > 0)
+		doc.setTextWidth(atWidth);
+		
+	QSize firstSize = doc.size().toSize();
 	QSize checkSize = firstSize;
 	
 // 	qDebug() << "TextItem::findNaturalSize: atWidth:"<<atWidth<<", firstSize:"<<firstSize;
@@ -275,9 +295,9 @@ QSize TextItem::findNaturalSize(int atWidth)
 	{
 		int w = checkSize.width() - deInc;
 		doc.setTextWidth(w);
-		checkSize = doc.documentLayout()->documentSize().toSize();
+		checkSize = doc.size().toSize();
 		
-// 		qDebug() << "TextItem::findNaturalSize: w:"<<w<<", checkSize:"<<checkSize<<", counter:"<<counter;
+ 		//qDebug() << "TextItem::findNaturalSize: w:"<<w<<", checkSize:"<<checkSize<<", counter:"<<counter;
 		counter ++;
 	}
 	
@@ -285,20 +305,20 @@ QSize TextItem::findNaturalSize(int atWidth)
 	{
 		int w = checkSize.width() + deInc;
 		doc.setTextWidth(w);
-		checkSize = doc.documentLayout()->documentSize().toSize();
-// 		qDebug() << "TextItem::findNaturalSize: Final Size: w:"<<w<<", checkSize:"<<checkSize;
+		checkSize = doc.size().toSize();
+ 		//qDebug() << "TextItem::findNaturalSize: Final Size: w:"<<w<<", checkSize:"<<checkSize;
 		return checkSize;
 	}
 	else
 	{
-// 		qDebug() << "TextItem::findNaturalSize: No Change, firstSize:"<<checkSize;
+ 		//qDebug() << "TextItem::findNaturalSize: No Change, firstSize:"<<checkSize;
 		return firstSize;
 	}
 }
 
 
 #include <assert.h>
-AbstractContent * TextItem::createDelegate(QGraphicsScene *scene,QGraphicsItem*parent)
+AbstractContent * TextItem::createDelegate(QGraphicsScene *scene, QGraphicsItem*parent)
 {
  	TextContent * textContent = new TextContent(scene,parent);
 //	SimpleTextContent * textContent = new TextContent(scene);

@@ -32,7 +32,7 @@ public:
 	
 	double fontSize() const { return m_fontSize; }
 	void setFontSize(double);
-	void changeFontSize(double); // force change the html font size
+	QSize changeFontSize(double); // force change the html font size, returns the new size of the text itself
 	double findFontSize();
 	int fitToSize(const QSize &, int minimumFontSize = 0, int maximumFontSize = 500);
 	QSize findNaturalSize(int atWidth = -1);
