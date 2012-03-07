@@ -204,8 +204,16 @@ void AppSettingsDialog::slotAccepted()
 
 	QTableWidget * tableWidget = m_ui->resourceTranslations;
 	AppSettings::ResourcePathTranslations res;
-	for(int row=0; row<tableWidget->rowCount(); row++)
-		res.append(QStringPair(tableWidget->item(row,0)->text(), tableWidget->item(row,1)->text()));
+	if(tableWidget->rowCount() > 0)
+	{
+		for(int row=0; row<tableWidget->rowCount(); row++)
+		{
+			QTableWidgetItem *first = tableWidget->item(row,0);
+			QTableWidgetItem *second = tableWidget->item(row,1);
+			if(first && second)
+				res.append(QStringPair(first->text(), second->text()));
+		}
+	}
 	
 	AppSettings::setResourcePathTranslations(res);
 	
