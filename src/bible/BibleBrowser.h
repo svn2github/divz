@@ -91,7 +91,9 @@ protected slots:
 	void showConfigMenu();
 	
 protected:
-	SlideGroup * createSlideGroup(bool allowAppend=false);
+	SlideGroup * createSlideGroup(SlideGroup *templateGroup, bool allowAppend=false);
+	Slide *getTemplateSlide(SlideGroup *templateGroup, int slide=0);
+	SlideGroup *getTemplate();
 	
 	void closeEvent(QCloseEvent *);
 	

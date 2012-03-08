@@ -121,12 +121,14 @@ QWebView *AppSettings::m_checkinWebview = 0;
 		switch (type)
 		{
 			case QtDebugMsg:
+				//AppSettings::sendCheckin("/core/debug",QString(msg));
 				if(qt_origMsgHandler)
 					qt_origMsgHandler(type,msg);
 				else
 					fprintf(stderr, "Debug: %s\n", msg);
 				break;
 			case QtWarningMsg:
+				AppSettings::sendCheckin("/core/warn",QString(msg));
 				if(qt_origMsgHandler)
 					qt_origMsgHandler(QtDebugMsg,msg);
 				else
@@ -139,6 +141,7 @@ QWebView *AppSettings::m_checkinWebview = 0;
 	// 				fprintf(stderr, "Critical: %s\n", msg);
 	// 			break;
 			case QtFatalMsg:
+				AppSettings::sendCheckin("/core/fatal",QString(msg));
 				if(qt_origMsgHandler)
 				{
 					qt_origMsgHandler(QtDebugMsg,msg);

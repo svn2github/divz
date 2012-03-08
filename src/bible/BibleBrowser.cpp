@@ -32,6 +32,8 @@
 #include "model/SlideTemplateManager.h"
 #include "ChooseGroupDialog.h"
 
+using namespace SlideTemplateUtilities;
+
 
 BibleBrowser::BibleBrowser(QWidget *parent)
 	: QWidget(parent)
@@ -358,6 +360,13 @@ void BibleBrowser::showConfigMenu()
 
 void BibleBrowser::templateChanged(SlideGroup* group)
 {
+	if(m_template && group->property("-auto-template").toBool())
+	{
+		// we auto-created this template in getTemplate() - delete it since we dont need it now
+		delete m_template;
+		m_template = 0;
+	}
+	
 	m_template = group;
 	saveSettings();
 }
@@ -458,7 +467,7 @@ void BibleBrowser::loadVerses(const QString & filter)
 
 void BibleBrowser::addVersesToDocument()
 {
-	SlideGroup *group = createSlideGroup(true);
+	SlideGroup *group = createSlideGroup(getTemplate(), true);
 	if(group && !appendToExistingGroup())
 		MainWindow::mw()->currentDocument()->addGroup(group);
 	m_search->selectAll();
@@ -466,7 +475,7 @@ void BibleBrowser::addVersesToDocument()
 
 void BibleBrowser::sendVersesLive()
 {
-	SlideGroup *group = createSlideGroup();
+	SlideGroup *group = createSlideGroup(getTemplate());
 	if(group)
 	{
 		MainWindow::mw()->setLiveGroup(group);
@@ -697,7 +706,224 @@ void BibleBrowser::setupTextBox(TextBoxItem *tmpText)
 	tmpText->setShadowBlurRadius(6);
 }
 
-SlideGroup * BibleBrowser::createSlideGroup(bool allowAppend)
+SlideGroup * BibleBrowser::getTemplate()
+{
+	if(!m_template)
+	{
+		SlideGroup *group = new SlideGroup();
+		Slide *slide = new Slide();
+	
+		AbstractVisualItem * bg = dynamic_cast<AbstractVisualItem*>(slide->background());
+
+		bg->setFillType(AbstractVisualItem::Solid);
+		bg->setFillBrush(Qt::blue);
+		
+		group->addSlide(slide); // first slide, used for "show ref at start" and "show ref at end"
+		group->addSlide(slide->clone()); // second slide, used for the individual verse slides
+		
+		// Allow this template to be deleted if user selects one using the SlideTemplateManager UI
+		group->setProperty("-auto-template",true);
+		
+		// We dont setup the individual text boxes - those will be created as needed in getTemplateSlide(SlideGroup *, int number)
+		
+		m_template = group;
+	}
+	
+	return m_template;
+}
+
+Slide *BibleBrowser::getTemplateSlide(SlideGroup *templateGroup, int slideNum)
+{
+	QString blockPrefix = "<span style='font-family:Calibri,Tahoma,Arial,Sans-Serif;font-weight:800'><b>";
+	QString blockSuffix = "</b></span>";
+	
+	TextBoxItem * tmpText = 0;
+	
+	int MinTextSize = 48;
+	int MaxTextSize = 72;
+
+	// This will be adjusted below if we were told to add responsive reading labels
+	QRect fitRect = AppSettings::adjustToTitlesafe(MainWindow::mw()->standardSceneRect());
+	// Used for placement of labels around the edges of the slide
+	QRect slideRect = AppSettings::adjustToTitlesafe(MainWindow::mw()->standardSceneRect());
+	
+	
+
+	if(slideNum <= 0)
+	{
+		Slide *slide = templateGroup->at(0);
+		if(!slide)
+		{
+			slide = new Slide();
+		
+			AbstractVisualItem * bg = dynamic_cast<AbstractVisualItem*>(slide->background());
+	
+			bg->setFillType(AbstractVisualItem::Solid);
+			bg->setFillBrush(Qt::blue);
+			
+			templateGroup->addSlide(slide);
+		}
+		
+		TextBoxItem *tmpText = findTextItem(slide, "#text");
+		
+		if(!tmpText)
+		{
+			tmpText = new TextBoxItem();
+			tmpText->setItemId(ItemFactory::nextId());
+			tmpText->setItemName(QString("TextBoxItem%1").arg(tmpText->itemId()));
+			
+			tmpText->setText("<center><span style='font-family:Constantia,Times New Roman,Serif;font-weight:800'><b>#text</b></span></center>");
+			tmpText->changeFontSize(72);
+			tmpText->setContentsRect(fitRect);
+			setupTextBox(tmpText);
+			
+			slide->addItem(tmpText);
+		}
+		
+		return slide;
+	}
+	else
+	{
+		// Here we prep the responsive reading label object and adjust the "fitRect" (from above) to allow for space at the top of each slide
+		TextBoxItem * labelItem = 0;
+		QSize labelSize;
+		
+		if(   showResponsiveReadingLabels()
+		   || showFullRefAtFirstTop()
+		   || showFullRefTopEachSlide()
+		   || showFullRefBottomEachSlide()
+		   || showFullRefAtBottomLast())
+		{
+			labelItem = new TextBoxItem();
+			labelItem->setItemId(ItemFactory::nextId());
+			labelItem->setItemName(QString("TextBoxItem%1").arg(labelItem->itemId()));
+			
+			// Note: We're not actually *using* this label at the top - we're just using this string to get the *size* of the label
+			labelItem->setText(QString("<span style='font-family:Calibri,Tahoma,Arial,Sans-Serif;font-weight:800'><b>Congregation</b></span></center>"));;
+			labelItem->changeFontSize(40); // TODO...configurable?
+			
+			labelSize = labelItem->findNaturalSize();
+			
+			setupTextBox(labelItem);
+			labelItem->setFillBrush(Qt::yellow);
+		}
+		
+		
+		Slide *slide = templateGroup->at(1);
+		if(!slide)
+		{
+			slide = new Slide();
+		
+			AbstractVisualItem * bg = dynamic_cast<AbstractVisualItem*>(slide->background());
+	
+			bg->setFillType(AbstractVisualItem::Solid);
+			bg->setFillBrush(Qt::blue);
+			
+			templateGroup->addSlide(slide);
+		}
+		
+		
+		QRect currentFitRect = fitRect;
+		
+		if((showFullRefAtFirstTop() && slideNumber==(showFullRefAtStart() ? 1:0)) || showFullRefTopEachSlide())
+			currentFitRect.setY(currentFitRect.y() + labelSize.height());
+		
+		if(showResponsiveReadingLabels())
+			// move down to make space for the label
+			currentFitRect.setY(currentFitRect.y() + labelSize.height());
+			
+		if(showFullRefBottomEachSlide() || showFullRefAtBottomLast()) // HACK to test for showFullRefAtBottomLast here!
+			currentFitRect.setBottom( currentFitRect.bottom() - labelSize.height());
+			
+		TextBoxItem *tmpText = findTextItem(slide, "#verses");
+		if(!tmpText)
+		{
+			tmpText = new TextBoxItem();
+			tmpText->setItemId(ItemFactory::nextId());
+			tmpText->setItemName(QString("TextBox%1").arg(tmpText->itemId()));
+			tmpText->setZValue(99);
+			tmpText->setText("#verses");
+			setupTextBox(tmpText);
+			tmpText->setContentsRect(currentFitRect);
+		}
+		
+		if(m_showResponsiveReadingLabels || showFullRefAtFirstTop() || showFullRefTopEachSlide())
+		{
+			int responsiveYPos = 0;
+			if((showFullRefAtFirstTop() && slideNumber==(showFullRefAtStart() ? 1:0)) || showFullRefTopEachSlide())
+			{
+				TextBoxItem *labelText = findTextItem(slide, "#ref");
+				if(!labelText)
+				{
+					
+					// Clone the label so we dont have to re-create it
+					TextBoxItem * label = dynamic_cast<TextBoxItem*>(labelItem->clone());
+					label->setFillBrush(Qt::white);
+					label->setText("<span style='font-family:Calibri,Tahoma,Arial,Sans-Serif;font-weight:800'><b>#ref</b></span></center>");
+					label->changeFontSize(40);
+					
+					// Adjust the size of the label
+					QSize sz = label->findNaturalSize(fitRect.width());
+					label->setContentsRect(QRectF(slideRect.x(),slideRect.y(),sz.width(),sz.height()));
+					responsiveYPos = sz.height() + slideRect.y();
+					
+					//qDebug() << "responsive reading: #"<<labelCounter<<", labelText:"<<labelText<<", sz:"<<sz<<", rect:"<<label->contentsRect();
+					
+					slide->addItem(label);
+				}
+			}
+			
+			if(showResponsiveReadingLabels())
+			{
+				TextBoxItem *labelText = findTextItem(slide, "#reading");
+				if(!labelText)
+				{
+					// Clone the label so we dont have to re-create it
+					TextBoxItem * label = dynamic_cast<TextBoxItem*>(labelItem->clone());
+					label->setText("<span style='font-family:Calibri,Tahoma,Arial,Sans-Serif;font-weight:800'><b>#reading</b></span></center>");
+					label->changeFontSize(40);
+					
+					// Adjust the size of the label
+					QSize sz = label->findNaturalSize(fitRect.width());
+					label->setContentsRect(QRectF(slideRect.x(),responsiveYPos,sz.width(),sz.height()));
+					
+					//qDebug() << "responsive reading: #"<<labelCounter<<", labelText:"<<labelText<<", sz:"<<sz<<", rect:"<<label->contentsRect();
+					
+					slide->addItem(label);
+				}
+			}
+		}
+		
+		if(showFullRefBottomEachSlide())
+		{
+			TextBoxItem *labelText = findTextItem(slide, "#ref-bottom");
+			if(!labelText)
+			{
+				// Clone the label so we dont have to re-create it
+				TextBoxItem * label = dynamic_cast<TextBoxItem*>(labelItem->clone());
+				label->setFillBrush(Qt::white);
+				label->setText("<span style='font-family:Calibri,Tahoma,Arial,Sans-Serif;font-weight:800'><b>#ref-bottom</b></span></center>");
+				label->changeFontSize(40);
+				
+				// Adjust the size of the label
+				QSize sz = label->findNaturalSize(fitRect.width());
+				label->setContentsRect(QRectF(slideRect.x(),slideRect.bottom() - sz.height(),sz.width(),sz.height()));
+				
+				//qDebug() << "responsive reading: #"<<labelCounter<<", labelText:"<<labelText<<", sz:"<<sz<<", rect:"<<label->contentsRect();
+				
+				slide->addItem(label);
+			}
+		}
+			
+		delete labelItem;
+		
+		return slide;
+	}
+	
+}
+
+
+SlideGroup * BibleBrowser::createSlideGroup(SlideGroup *templateGroup, bool allowAppend)
 {
 	BibleVerseList verseList = m_currentList;
 	
@@ -785,50 +1011,29 @@ SlideGroup * BibleBrowser::createSlideGroup(bool allowAppend)
 	Slide * startSlide = 0;
 	if(showFullRefAtStart())
 	{
-		tmpText = new TextBoxItem();
-		tmpText->setItemId(ItemFactory::nextId());
-		tmpText->setItemName(QString("TextBoxItem%1").arg(tmpText->itemId()));
-		
 		QString refString = m_currentRef.toString();
-		
+			
 		// Add basic text to first slide indicating it's responsive reading
 		if(m_showResponsiveReadingLabels)
 			refString = tr("Please stand as we read together<br>%1").arg(refString);
 		
-		tmpText->setText(QString("<center><span style='font-family:Constantia,Times New Roman,Serif;font-weight:800'><b>%1</b></span></center>").arg(refString));
-		tmpText->changeFontSize(72);
-		QSize size = tmpText->findNaturalSize();
-		
-		startSlide = addSlide(group,tmpText,size.height(),fitRect,m_currentRef.toString());
-		startSlide->setSlideName(m_currentRef.toString());
-		
-		tmpText = 0;
+		Slide *slide = getTemplateSlide(templateGroup, 0)->clone();
+		TextBoxItem *text = findTextItem(slide, "#text");
+		if(text)
+		{
+			mergeTextItem(text, refString);
+			intelligentCenterTextbox(text);
+			addSlideWithText(group, slide, text);
+		}
+		else
+		{
+			// Couldn't find #text (even though getTemplateSlide() should've created it!
+			delete slide; 
+			slide = 0;
+		}
 	}
 
 	
-	// Here we prep the responsive reading label object and adjust the "fitRect" (from above) to allow for space at the top of each slide
-	TextBoxItem * labelItem = 0;
-	QSize labelSize;
-	if(m_showResponsiveReadingLabels || showFullRefAtFirstTop() || showFullRefTopEachSlide() || showFullRefBottomEachSlide() || showFullRefAtBottomLast())
-	{
-		labelItem = new TextBoxItem();
-		labelItem->setItemId(ItemFactory::nextId());
-		labelItem->setItemName(QString("TextBoxItem%1").arg(labelItem->itemId()));
-		
-		// Note: We're not actually *using* this label at the top - we're just using this string to get the *size* of the label
-		labelItem->setText(QString("<span style='font-family:Calibri,Tahoma,Arial,Sans-Serif;font-weight:800'><b>Congregation</b></span></center>"));;
-		labelItem->changeFontSize(40); // TODO...configurable?
-		
-		labelSize = labelItem->findNaturalSize();
-		
-		setupTextBox(labelItem);
-		labelItem->setFillBrush(Qt::yellow);
-	
-		// resize usable area to allow for space at top of each slide for this label
-		//fitRect.setX(fitRect.x() + labelSize.height());
-		//fitRect.setHeight(fitRect.height() - labelSize.height());
-	}
-
 	// In the future, these labels should be an option in the UI - for now, we'll hardcocde them
 	QString leaderLabel  = tr("Leader:");
 	QString readingLabel = tr("Congregation:");
@@ -850,9 +1055,6 @@ SlideGroup * BibleBrowser::createSlideGroup(bool allowAppend)
 	// we need to use tmpText outside the loop at the end if showFullRefAtBottomLast() is true
 	bool recreateTextBox = true;
 	
-	// Used for placement of labels around the edges of the slide
-	QRect slideRect = AppSettings::adjustToTitlesafe(MainWindow::mw()->standardSceneRect());
-	
 	for(int x=0; x<lines.size(); x++)
 	{
 		if(tmpList.isEmpty() &&
@@ -865,35 +1067,14 @@ SlideGroup * BibleBrowser::createSlideGroup(bool allowAppend)
 
 		if(recreateTextBox)
 		{
-			tmpText = new TextBoxItem();
-			tmpText->setItemId(ItemFactory::nextId());
-			tmpText->setItemName(QString("TextBox%1").arg(tmpText->itemId()));
-			tmpText->setZValue(99);
-		}
-
-		tmpText->setText(QString("%1%2%3")
-					.arg(blockPrefix)
-					.arg(tmpList.join("\n"))
-					.arg(blockSuffix));
-
-		QRect currentFitRect = fitRect;
-		
-		if((showFullRefAtFirstTop() && slideNumber==1) || showFullRefTopEachSlide())
-		{
-			currentFitRect.setY(currentFitRect.y() + labelSize.height());
-			//currentFitRect.setHeight( currentFitRect.height() - labelSize.height() );
+			currentSlide = getTemplateSlide(templateGroup, slideNumber)->clone();
+			tmpText = findTextItem(slide, "#verses");
 		}
 		
-		if(m_showResponsiveReadingLabels)
-		{
-			// move down to make space for the label
-			currentFitRect.setY(currentFitRect.y() + labelSize.height());
-			//currentFitRect.setHeight( currentFitRect.height() - labelSize.height() );
-		}
-			
-		if(showFullRefBottomEachSlide() || showFullRefAtBottomLast()) // HACK to test for showFullRefAtBottomLast here!
-			currentFitRect.setBottom( currentFitRect.bottom() - labelSize.height());
-			
+		mergeTextItem(tmpText, tmpList.join("\n"));
+		
+		QRect currentFitRect = tmpText->contextRect();
+		
 		//realHeight = tmpText->fitToSize(fitSize,MinTextSize,MaxTextSize);
 		realHeight = tmpText->fitToSize(currentFitRect.size(), MinTextSize, MaxTextSize);
  		//qDebug() << "x:"<<x<<", realHeight:"<<realHeight<<", currentFitRect:"<<currentFitRect;
@@ -913,93 +1094,42 @@ SlideGroup * BibleBrowser::createSlideGroup(bool allowAppend)
 				QString line = tmpList.takeLast();
 				lines.prepend(line);
 				
-				tmpText->setText(QString("%1%2%3")
-							.arg(blockPrefix)
-							.arg(tmpList.join("\n"))
-							.arg(blockSuffix));
+				mergeTextItem(tmpText, tmpList.join("\n"));
+				
 				realHeight = tmpText->fitToSize(currentFitRect.size(),MinTextSize,MaxTextSize);
 			}
 
-			currentSlide = addSlide(group,tmpText,realHeight,currentFitRect,tmpList.join("\n"));
+			// Verse slide
+			intelligentCenterTextbox(tmpText);
+			addSlideWithText(group, currentSlide, text);
+			
+			//currentSlide = addSlide(group,tmpText,realHeight,currentFitRect,tmpList.join("\n"));
 			if(showEachVerseOnSeperateSlide())
-			{
 				currentSlide->setSlideName(QString("v %1").arg(verseList[x].verseNumber()));
-			}
 			
 			slideNumber++;
 			
 			if(m_showResponsiveReadingLabels || showFullRefAtFirstTop() || showFullRefTopEachSlide())
 			{
-				int responsiveYPos = 0;
 				if((showFullRefAtFirstTop() && slideNumber==1) || showFullRefTopEachSlide())
 				{
-					// Resize the main text box by "pushing it down" to allow for room for the label at the top of the slide.
-					//QRectF rect = tmpText->contentsRect();
-					//tmpText->setContentsRect(QRectF(rect.x(),rect.y() + labelSize.height(),rect.width(),rect.height()));
-					// dont adjust rect.height here because the rect should have been sized to fitRect, who's height was already adjusted to labelSize, above
-				
-					//QString labelText = labelCounter ++ % 2 == 0 ? leaderLabel : readingLabel;
-					
-					// Clone the label so we dont have to re-create it
-					TextBoxItem * label = dynamic_cast<TextBoxItem*>(labelItem->clone());
-					label->setFillBrush(Qt::white);
-					label->setText(QString("<span style='font-family:Calibri,Tahoma,Arial,Sans-Serif;font-weight:800'><b>%1</b></span></center>").arg(m_currentRef.toString()));
-					label->changeFontSize(40);
-					
-					// Adjust the size of the label
-					QSize sz = label->findNaturalSize(fitRect.width());
-					label->setContentsRect(QRectF(slideRect.x(),slideRect.y(),sz.width(),sz.height()));
-					responsiveYPos = sz.height() + slideRect.y();
-					
-					//qDebug() << "responsive reading: #"<<labelCounter<<", labelText:"<<labelText<<", sz:"<<sz<<", rect:"<<label->contentsRect();
-					
-					currentSlide->addItem(label);
+					TextBoxItem *label = findTextItem(currentSlide, "#ref");
+					mergeTextItem(label, m_currentRef.toString());
 				}
 				
 				if(m_showResponsiveReadingLabels)
 				{
-					// Resize the main text box by "pushing it down" to allow for room for the label at the top of the slide.
-					//QRectF rect = tmpText->contentsRect();
-					//tmpText->setContentsRect(QRectF(rect.x(),rect.y() + labelSize.height(),rect.width(),rect.height()));
-					// dont adjust rect.height here because the rect should have been sized to fitRect, who's height was already adjusted to labelSize, above
-				
 					QString labelText = labelCounter ++ % 2 == 0 ? leaderLabel : readingLabel;
 					
-					// Clone the label so we dont have to re-create it
-					TextBoxItem * label = dynamic_cast<TextBoxItem*>(labelItem->clone());
-					label->setText(QString("<span style='font-family:Calibri,Tahoma,Arial,Sans-Serif;font-weight:800'><b>%1</b></span></center>").arg(labelText));
-					label->changeFontSize(40);
-					
-					// Adjust the size of the label
-					QSize sz = label->findNaturalSize(fitRect.width());
-					label->setContentsRect(QRectF(slideRect.x(),responsiveYPos,sz.width(),sz.height()));
-					
-					//qDebug() << "responsive reading: #"<<labelCounter<<", labelText:"<<labelText<<", sz:"<<sz<<", rect:"<<label->contentsRect();
-					
-					currentSlide->addItem(label);
+					TextBoxItem *label = findTextItem(currentSlide, "#reading");
+					mergeTextItem(label, labelText);
 				}
 			}
 			
 			if(showFullRefBottomEachSlide())
 			{
-				// Resize the main text box by "pulling it up" to allow for room for the label at the top of the slide.
-				//QRectF rect = tmpText->contentsRect();
-				//tmpText->setContentsRect(QRectF(rect.x(),rect.y(),rect.width(),rect.height()-labelSize.height()));
-				// dont adjust rect.height here because the rect should have been sized to fitRect, who's height was already adjusted to labelSize, above
-			
-				// Clone the label so we dont have to re-create it
-				TextBoxItem * label = dynamic_cast<TextBoxItem*>(labelItem->clone());
-				label->setFillBrush(Qt::white);
-				label->setText(QString("<span style='font-family:Calibri,Tahoma,Arial,Sans-Serif;font-weight:800'><b>%1</b></span></center>").arg(m_currentRef.toString()));
-				label->changeFontSize(40);
-				
-				// Adjust the size of the label
-				QSize sz = label->findNaturalSize(fitRect.width());
-				label->setContentsRect(QRectF(slideRect.x(),slideRect.bottom() - sz.height(),sz.width(),sz.height()));
-				
-				//qDebug() << "responsive reading: #"<<labelCounter<<", labelText:"<<labelText<<", sz:"<<sz<<", rect:"<<label->contentsRect();
-				
-				currentSlide->addItem(label);
+				TextBoxItem *label = findTextItem(currentSlide, "#ref-bottom");
+				mergeTextItem(label, m_currentRef.toString());
 			}
 				
 				
@@ -1017,82 +1147,33 @@ SlideGroup * BibleBrowser::createSlideGroup(bool allowAppend)
 	// which would mean we have a dangling blob of text that never got added - so add it here. (Such as the last slide in a long list of slides)
  	if(realHeight>0 && recreateTextBox)
  	{
- 		currentSlide = addSlide(group,tmpText,realHeight,fitRect,tmpList.join("\n"));
- 		
- 		// This block is just an exact duplication of the label block above - but it seems more work than necessary right now to move it into
- 		// it's own subroutine for now.
- 		if(m_showResponsiveReadingLabels || showFullRefTopEachSlide())
+ 		// Verse slide
+		intelligentCenterTextbox(tmpText);
+		addSlideWithText(group, currentSlide, text);
+		
+		slideNumber++;
+		
+		if(m_showResponsiveReadingLabels || showFullRefAtFirstTop() || showFullRefTopEachSlide())
 		{
-			int responsiveYPos = 0;
-			if(showFullRefTopEachSlide())
+			if((showFullRefAtFirstTop() && slideNumber==1) || showFullRefTopEachSlide())
 			{
-				// Resize the main text box by "pushing it down" to allow for room for the label at the top of the slide.
-				//QRectF rect = tmpText->contentsRect();
-				//tmpText->setContentsRect(QRectF(rect.x(),rect.y() + labelSize.height(),rect.width(),rect.height()));
-				// dont adjust rect.height here because the rect should have been sized to fitRect, who's height was already adjusted to labelSize, above
-			
-				//QString labelText = labelCounter ++ % 2 == 0 ? leaderLabel : readingLabel;
-				
-				// Clone the label so we dont have to re-create it
-				TextBoxItem * label = dynamic_cast<TextBoxItem*>(labelItem->clone());
-				label->setFillBrush(Qt::white);
-				label->setText(QString("<span style='font-family:Calibri,Tahoma,Arial,Sans-Serif;font-weight:800'><b>%1</b></span></center>").arg(m_currentRef.toString()));
-				label->changeFontSize(40);
-				
-				// Adjust the size of the label
-				QSize sz = label->findNaturalSize(fitRect.width());
-				label->setContentsRect(QRectF(slideRect.x(),slideRect.y(),sz.width(),sz.height()));
-				responsiveYPos = slideRect.y() + sz.height();
-				
-				//qDebug() << "responsive reading: #"<<labelCounter<<", labelText:"<<labelText<<", sz:"<<sz<<", rect:"<<label->contentsRect();
-				
-				currentSlide->addItem(label);
+				TextBoxItem *label = findTextItem(currentSlide, "#ref");
+				mergeTextItem(label, m_currentRef.toString());
 			}
 			
 			if(m_showResponsiveReadingLabels)
 			{
-				// Resize the main text box by "pushing it down" to allow for room for the label at the top of the slide.
-				//QRectF rect = tmpText->contentsRect();
-				//tmpText->setContentsRect(QRectF(rect.x(),rect.y() + labelSize.height(),rect.width(),rect.height()));
-				// dont adjust rect.height here because the rect should have been sized to fitRect, who's height was already adjusted to labelSize, above
-			
 				QString labelText = labelCounter ++ % 2 == 0 ? leaderLabel : readingLabel;
-					
-				// Clone the label so we dont have to re-create it
-				TextBoxItem * label = dynamic_cast<TextBoxItem*>(labelItem->clone());
-				label->setText(QString("<span style='font-family:Calibri,Tahoma,Arial,Sans-Serif;font-weight:800'><b>%1</b></span></center>").arg(labelText));
-				label->changeFontSize(40);
 				
-				// Adjust the size of the label
-				QSize sz = label->findNaturalSize(fitRect.width());
-				label->setContentsRect(QRectF(slideRect.x(),responsiveYPos,sz.width(),sz.height()));
-				
-				//qDebug() << "responsive reading: #"<<labelCounter<<", labelText:"<<labelText<<", sz:"<<sz<<", rect:"<<label->contentsRect();
-				
-				currentSlide->addItem(label);
+				TextBoxItem *label = findTextItem(currentSlide, "#reading");
+				mergeTextItem(label, labelText);
 			}
 		}
 		
 		if(showFullRefBottomEachSlide())
 		{
-			// Resize the main text box by "pulling it up" to allow for room for the label at the top of the slide.
-			//QRectF rect = tmpText->contentsRect();
-			//tmpText->setContentsRect(QRectF(rect.x(),rect.y(),rect.width(),rect.height()-labelSize.height()));
-			// dont adjust rect.height here because the rect should have been sized to fitRect, who's height was already adjusted to labelSize, above
-		
-			// Clone the label so we dont have to re-create it
-			TextBoxItem * label = dynamic_cast<TextBoxItem*>(labelItem->clone());
-			label->setFillBrush(Qt::white);
-			label->setText(QString("<span style='font-family:Calibri,Tahoma,Arial,Sans-Serif;font-weight:800'><b>%1</b></span></center>").arg(m_currentRef.toString()));
-			label->changeFontSize(40);
-			
-			// Adjust the size of the label
-			QSize sz = label->findNaturalSize(fitRect.width());
-			label->setContentsRect(QRectF(slideRect.x(),slideRect.bottom() - sz.height(),sz.width(),sz.height()));
-			
-			//qDebug() << "responsive reading: #"<<labelCounter<<", labelText:"<<labelText<<", sz:"<<sz<<", rect:"<<label->contentsRect();
-			
-			currentSlide->addItem(label);
+			TextBoxItem *label = findTextItem(currentSlide, "#ref-bottom");
+			mergeTextItem(label, m_currentRef.toString());
 		}
 	}
 	
@@ -1118,24 +1199,31 @@ SlideGroup * BibleBrowser::createSlideGroup(bool allowAppend)
 		currentSlide->addItem(label);
 	}
 	
-		
 	// Same thing as the starting slide - add an ending slide with the full text reference at the end if requested.
 	if(showFullRefAtEnd())
 	{
-		tmpText = new TextBoxItem();
-		tmpText->setItemId(ItemFactory::nextId());
-		tmpText->setItemName(QString("TextBoxItem%1").arg(tmpText->itemId()));
-	
-		tmpText->setText(QString("<center><span style='font-family:Constantia,Times New Roman,Serif;font-weight:800'><b>%1</b></span></center>").arg(m_currentRef.toString()));
-		tmpText->changeFontSize(72);
-		QSize size = tmpText->findNaturalSize();
+		QString refString = m_currentRef.toString();
+			
+		// Add basic text to first slide indicating it's responsive reading
+		if(m_showResponsiveReadingLabels)
+			refString = tr("PLease be seated.<br>%1").arg(refString);
 		
-		// get fitRect again because it may have been changed to accomodate reading labels
-		QRect fitRect = AppSettings::adjustToTitlesafe(MainWindow::mw()->standardSceneRect());
-		addSlide(group,tmpText,size.height(),fitRect,m_currentRef.toString());
-		
-		tmpText = 0;
+		Slide *slide = getTemplateSlide(templateGroup, -1)->clone();
+		TextBoxItem *text = findTextItem(slide, "#text");
+		if(text)
+		{
+			mergeTextItem(text, refString);
+			intelligentCenterTextbox(text);
+			addSlideWithText(group, slide, text);
+		}
+		else
+		{
+			// Couldn't find #text (even though getTemplateSlide() should've created it!
+			delete slide; 
+			slide = 0;
+		}
 	}
+	
 	
 	// close the dialog
 	progress.setValue(progress.maximum());
@@ -1144,83 +1232,8 @@ SlideGroup * BibleBrowser::createSlideGroup(bool allowAppend)
 
 }
 
-void textToDocument(QTextDocument& doc, const QString& text)
-{
-	if (Qt::mightBeRichText(text))
-		doc.setHtml(text);
-	else
-		doc.setPlainText(text);
-}
-
-TextBoxItem *findTextItem(Slide *slide, const QString& textKey)
-{
-	QList<AbstractItem *> items = slide->itemList();
 	
-	//TextBoxItem * text = 0;
-
-	QTextDocument doc;
-			
-	foreach(AbstractItem * item, items)
-	{
-		//AbstractVisualItem * newVisual = dynamic_cast<AbstractVisualItem*>(item);
-		//if(DEBUG_TEXTOSLIDES)
-		//	qDebug()<<"BibleBrowser::addSlide(): item list: "<<newVisual->itemName();
-		
-		if(item->itemClass() == TextBoxItem::ItemClass)
-		{
-			TextBoxItem *text = dynamic_cast<TextBoxItem*>(item);
-			if(!text)
-				continue;
-				
-			QTextDocument doc;
-			textToDocument(doc, text->text());
-			
-			if(doc.toPlainText().indexOf("#verses") >= 0)
-			{
-				//if(DEBUG_TEXTOSLIDES)
-				qDebug()<<"BibleBrowser::findTextItem(): Found textbox from template for key "<<textKey<<", name:"<<text->itemName();
-				return dynamic_cast<TextBoxItem*>(item);
-			}
-		}
-	}
 	
-	return 0;
-}
-
-
-QString mergeTextItem(const QString &destTemplate, const QString &source)
-{
-	QTextDocument doc;
-	textToDocument(doc, destTemplate);
-	QTextCursor cursor(&doc);
-	cursor.select(QTextCursor::Document);
-	
-	QTextCharFormat charFormat = cursor.charFormat();
-	QTextBlockFormat blockFormat = cursor.blockFormat();
-	QTextCharFormat blockCharFormat = cursor.blockCharFormat();
-	
-	QTextDocument doc2;
-	textToDocument(doc2, source);
-	QTextCursor cursor2(&doc2);
-	cursor2.select(QTextCursor::Document);
-	
-	cursor2.mergeBlockCharFormat(blockCharFormat);
-	cursor2.mergeBlockFormat(blockFormat);
-	cursor2.mergeCharFormat(charFormat);
-	
-	return doc2.toHtml();
-}
-
-void mergeTextItem(TextBoxItem *dest, const QString &source)
-{
-	dest->setText(mergeTextItem(dest->text(), source));
-}
-
-void mergeTextItem(TextBoxItem *dest, TextBoxItem *source)
-{
-	mergeTextItem(dest, source->text());
-}
-
 
 Slide * BibleBrowser::addSlide(SlideGroup *group, TextBoxItem *tmpText, int realHeight, const QRect & fitRect, const QString & /*plain*/)
 {
@@ -1317,15 +1330,7 @@ Slide * BibleBrowser::addSlide(SlideGroup *group, TextBoxItem *tmpText, int real
 		//qDebug()<<"BibleBrowser::addSlide(): slideNbr: "<<slideNbr<<": centeredRect: "<<centeredRect<<", realHeight:"<<realHeight<<", fitRect:"<<fitRect<<", y:"<<y<<", nat:"<<natSize;
 	}
 	
-	slide->setSlideNumber(slideNum);
-	group->addSlide(slide);
-	
-	//tmpText->warmVisualCache();
-	
-	// Delay warming the visual cache to increase UI responsiveness when quickly adding verses
-	int delay = slideNbr * 5000;
-	//qDebug()<<"BibleBrowser::addSlide(): slideNbr:"<<slideNbr<<": delaying "<<delay<<"ms before warmVisualCache()";
-	QTimer::singleShot(delay, tmpText, SLOT(warmVisualCache()));
+	addSlideWithText(group, slide, tmpText);
 	
 	return slide;
 }

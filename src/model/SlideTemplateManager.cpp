@@ -1,6 +1,5 @@
 #include "SlideTemplateManager.h"
 
-#include "SlideGroup.h"
 #include "AppSettings.h"
 #include "Document.h"
 #include "DocumentListModel.h"
@@ -8,9 +7,152 @@
 #include "Slide.h"
 #include "SlideGroup.h"
 #include "SlideEditorWindow.h"
+#include "TextBoxItem.h"
 
 #include <QFile>
 #include <QDir>
+#include <QTextDocument>
+#include <QTextEdit>
+	
+	
+namespace SlideTemplateUtilities
+{
+	void textToDocument(QTextDocument& doc, const QString& text)
+	{
+		if (Qt::mightBeRichText(text))
+			doc.setHtml(text);
+		else
+			doc.setPlainText(text);
+	}
+	
+	TextBoxItem *findTextItem(Slide *slide, const QString& textKey)
+	{
+		QList<AbstractItem *> items = slide->itemList();
+		
+		//TextBoxItem * text = 0;
+	
+		QTextDocument doc;
+				
+		foreach(AbstractItem * item, items)
+		{
+			//AbstractVisualItem * newVisual = dynamic_cast<AbstractVisualItem*>(item);
+			//if(DEBUG_TEXTOSLIDES)
+			//	qDebug()<<"addSlide(): item list: "<<newVisual->itemName();
+			
+			if(item->itemClass() == TextBoxItem::ItemClass)
+			{
+				TextBoxItem *text = dynamic_cast<TextBoxItem*>(item);
+				if(!text)
+					continue;
+					
+				QTextDocument doc;
+				textToDocument(doc, text->text());
+				
+				if(doc.toPlainText().indexOf("#verses") >= 0)
+				{
+					//if(DEBUG_TEXTOSLIDES)
+					qDebug()<<"findTextItem(): Found textbox from template for key "<<textKey<<", name:"<<text->itemName();
+					return dynamic_cast<TextBoxItem*>(item);
+				}
+			}
+		}
+		
+		return 0;
+	}
+	
+	
+	QString mergeTextItem(const QString &destTemplate, const QString &source)
+	{
+		QTextDocument doc;
+		textToDocument(doc, destTemplate);
+		QTextCursor cursor(&doc);
+		cursor.select(QTextCursor::Document);
+		
+		QTextCharFormat charFormat = cursor.charFormat();
+		QTextBlockFormat blockFormat = cursor.blockFormat();
+		QTextCharFormat blockCharFormat = cursor.blockCharFormat();
+		
+		QTextDocument doc2;
+		textToDocument(doc2, source);
+		QTextCursor cursor2(&doc2);
+		cursor2.select(QTextCursor::Document);
+		
+		cursor2.mergeBlockCharFormat(blockCharFormat);
+		cursor2.mergeBlockFormat(blockFormat);
+		cursor2.mergeCharFormat(charFormat);
+		
+		return doc2.toHtml();
+	}
+	
+	void mergeTextItem(TextBoxItem *dest, const QString &source)
+	{
+		dest->setText(mergeTextItem(dest->text(), source));
+	}
+	
+	void mergeTextItem(TextBoxItem *dest, TextBoxItem *source)
+	{
+		mergeTextItem(dest, source->text());
+	}
+	
+	void addSlideWithText(SlideGroup *group, Slide *slide, TextBoxItem *text)
+	{
+		int slideNbr = group->numSlides();
+		
+		slide->setSlideNumber(slideNbr);
+		group->addSlide(slide);
+		
+		if(text)
+		{
+			// Delay warming the visual cache to increase UI responsiveness when quickly adding slides
+			int delay = slideNbr * 5000;
+			//qDebug()<<"SlideTemplateUtilities::addSlideWithText(): slideNbr:"<<slideNbr<<": delaying "<<delay<<"ms before warmVisualCache()";
+			QTimer::singleShot(delay, text, SLOT(warmVisualCache()));
+		}
+	}
+	
+	
+	void intelligentCenterTextbox(TextBoxItem *textbox)
+	{
+		QRect slideRect = AppSettings::adjustToTitlesafe(MainWindow::mw()->standardSceneRect());
+		QRect textRect = textbox->contentsRect().toRect();
+		
+		// Attempt to enter text on screen
+		int heightDifference = abs(slideRect.height() - textRect.height());
+		
+		// Arbitrary magic number to force centering for small amounts of differences.
+		// We test the difference here because don't want to force-center the textbox if it came from the template
+		// and was intentionally located off-center. But if the user tried to get it to fill the screen and missed
+		// by a few pixels (<20), then go ahead and center it for the user.
+		//qDebug()<<"BibleBrowser::addSlide(): slideNbr: "<<slideNbr<<": heightDifference: "<<heightDifference;
+		
+		QSize natSize = textbox->findNaturalSize(textRect.width()); // 20 = buffer for shadow on right
+			
+		if(heightDifference < 20 &&
+		   natSize.height() > -1)
+		{
+			qreal y = qMax(0, slideRect.height()/2 - natSize.height()/2);
+			
+			QRectF centeredRect(slideRect.x(),slideRect.y() + y,textRect.width(),natSize.height());
+			
+			textbox->setPos(QPointF(0,0));
+			textbox->setContentsRect(centeredRect);
+			
+			//qDebug()<<"BibleBrowser::addSlide(): [templated] slideNbr: "<<slideNbr<<": centeredRect: "<<centeredRect<<", templateTextbox:"<<templateTextbox<<", realHeight:"<<realHeight; 
+		}
+		else
+		if(heightDifference > 20)
+		{
+			// Center it within its own contents rect
+			qreal y = qMax(0, textRect.height()/2 - natSize.height()/2);
+			
+			QRectF centeredRect(textRect.x(),textRect.y() + y,textRect.width(),natSize.height());
+			
+			//textbox->setPos(QPointF(0,0));
+			textbox->setContentsRect(centeredRect);
+		}
+	}
+
+};
 
 SlideTemplateManager * SlideTemplateManager::m_staticInstance = 0;
 

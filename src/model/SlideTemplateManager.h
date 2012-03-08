@@ -5,11 +5,25 @@
 #include <QComboBox>
 #include <QPushButton>
 #include <QHash>
+#include <QTextDocument>
 
 class DocumentListModel;
 class Document;
 class SlideGroup;
 class AbstractSlideGroupEditor;
+class TextBoxItem;
+class Slide;
+
+namespace SlideTemplateUtilities
+{
+	void mergeTextItem(TextBoxItem *dest, TextBoxItem *source);
+	void mergeTextItem(TextBoxItem *dest, const QString &source);
+	QString mergeTextItem(const QString &destTemplate, const QString &source);
+	TextBoxItem *findTextItem(Slide *slide, const QString& textKey);
+	void textToDocument(QTextDocument& doc, const QString& text);
+	void addSlideWithText(SlideGroup *group, Slide *slide, TextBoxItem *text);
+	void intelligentCenterTextbox(TextBoxItem *text);
+}
 
 
 class SlideTemplateManager : public QObject
