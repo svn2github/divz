@@ -94,7 +94,8 @@ HEADERS += \
 	DirectoryListModel.h \
 	ImportGroupDialog.h \
 	MimeTypes.h \
-	SharedMemoryImageWriter.h
+	SharedMemoryImageWriter.h \
+	glvidtex/EntityList.h
 
 	
 SOURCES += \
@@ -128,7 +129,8 @@ SOURCES += \
 	ImportGroupDialog.cpp \
 	MimeTypes.cpp \
 	SharedMemoryImageWriter.cpp \
-	DVizMidiInputAdapter.cpp
+	DVizMidiInputAdapter.cpp \
+	glvidtex/EntityList.cpp
 
 HEADERS += \
 	glvidtex/VideoSender.h \

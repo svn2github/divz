@@ -49,7 +49,7 @@ AbstractItem * SongFoldbackTextFilter::mutate(const AbstractItem *sourceItem)
 
 	static QString slideHeader = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\"><html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">p, li { white-space: pre-wrap; }</style></head><body style=\"font-family:'Courier New,Monospace'; font-size:38pt; font-weight:800; font-style:normal;\">";
 	static QString slideFooter = "</body></html>";
-	static QString linePrefix = "<p align=\"left\" style=\"margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:'Courier New,Monospace'; font-size:38pt; font-weight:800;\">";
+	static QString linePrefix = "<p align=\"left\" style=\"margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; background:black; color:white;\"><span style=\" font-family:'Courier New,Monospace'; fcolor:white;background:black;ont-size:38pt; font-weight:800;\">";
 	static QString lineSuffix = "</span></p>";
 
 	static QString highlightBlockPrefix = "<p align=\"left\" style=\"margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; background:blue; color:white\"><span style=\" font-family:'Courier New,Monospace'; color:white;background:blue;font-size:.8em; font-weight:800;\">";

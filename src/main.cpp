@@ -4,6 +4,7 @@
 #include <QtGui/QApplication>
 #include <QPixmapCache>
 #include <QMessageBox>
+#include <QInputDialog>
 
 #ifdef Q_WS_X11
 	#include <X11/Xlib.h>
@@ -60,6 +61,57 @@ int main(int argc, char **argv)
  		}
 */
 	//}
+	
+	if(AppSettings::registrationName().isEmpty() ||
+	   AppSettings::registrationOrgName().isEmpty())
+	{
+		QString nameGuess = AppSettings::registrationName();
+		QString orgGuess = AppSettings::registrationOrgName();
+		
+		qDebug() << "main debug:"<<nameGuess<<orgGuess;
+		
+		#ifdef Q_OS_WIN
+		settings.insertSearchPath( QSettings::Windows,"/Microsoft/Windows/CurrentVersion");
+		nameGuess = settings.readEntry( "/RegisteredOwner" );
+		orgGuess = settings.readEntry( "/RegisteredOrganization" );
+		
+		if(nameGuess.isEmpty())
+		{
+			LPTSTR lpszSystemInfo; // pointer to system information
+			DWORD cchBuff = 256; // size of user name
+			TCHAR tchBuffer[UNLEN + 1]; // buffer for expanded string
+			
+			lpszSystemInfo = tchBuffer;
+			
+			// Get and display the user name.
+			GetUserName(lpszSystemInfo, &cchBuff);
+			
+			//Unicode string needs to be converted
+			nameGuess = QString::fromUcs2(lpszSystemInfo);
+		}
+		
+		#endif
+		
+		#ifdef Q_OS_LINUX
+		nameGuess = QString( getenv("USER") );
+		#endif
+		
+		bool ok;
+		QString text = QInputDialog::getText(0, QObject::tr("Confirm Your Name"),
+							QObject::tr("Your name:"), QLineEdit::Normal,
+							nameGuess, &ok);
+		if (ok && !text.isEmpty())
+			AppSettings::setRegistrationName(text);
+		
+		text = QInputDialog::getText(0,		QObject::tr("Confirm Your Organization"),
+							QObject::tr("Your organization:"), QLineEdit::Normal,
+							orgGuess, &ok);
+		if (ok && !text.isEmpty())
+			AppSettings::setRegistrationOrgName(text);
+	
+		AppSettings::save();
+	}
+	
 
 	MainWindow *mw = new MainWindow();
 	mw->show();

@@ -745,6 +745,8 @@ bool MainWindow::openFile(const QString & file)
 	m_docModel->setDocument(m_doc);
 
 	d->close();
+	
+	AppSettings::sendCheckin("/main/loadfile",file);
 //	qDebug() << "MainWindow::open(): m_docModel->setDocument() - end";
 
 	return true;
@@ -757,6 +759,8 @@ void MainWindow::saveFile(const QString & file)
 	setWindowTitle(QString(tr("DViz - %1")).arg(QFileInfo(m_doc->filename()).fileName()));
 
 	saveWindowState();
+	
+	AppSettings::sendCheckin("/main/savefile",m_doc->filename());
 
 }
 
@@ -909,6 +913,7 @@ void MainWindow::setSelectedBackground(const QFileInfo &info)
 		{
 			group->changeBackground(info);
 			//qDebug() << "Finished setting "<<abs<<" as background on group "<<group->groupTitle();
+			AppSettings::sendCheckin("/main/set-selected-background",info.absolutePath());
 		}
 	}
 	else
@@ -1206,6 +1211,8 @@ void MainWindow::actionAppSettingsDialog()
 		
 	if(AppSettings::httpViewerEnabled())
 		m_viewServer = new ViewServer(AppSettings::httpViewerPort(),this);
+		
+	AppSettings::sendCheckin("/main/appsettings-dialog");
 
 }
 
@@ -1407,6 +1414,8 @@ void MainWindow::actionDocSettingsDialog()
 	d->exec();
 	if(ar != m_doc->aspectRatio())
 		emit aspectRatioChanged(m_doc->aspectRatio());
+		
+	AppSettings::sendCheckin("/main/docsettings-dialog");
 
 }
 
@@ -1414,6 +1423,8 @@ void MainWindow::actionMidiSettingsDialog()
 {
 	MidiInputSettingsDialog *d = new MidiInputSettingsDialog(DVizMidiInputAdapter::instance(),this);
 	d->exec();
+	
+	AppSettings::sendCheckin("/main/midisettings-dialog");
 }
 
 void MainWindow::groupSelected(const QModelIndex &idx)

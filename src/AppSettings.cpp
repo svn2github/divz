@@ -18,6 +18,7 @@ Q_IMPORT_PLUGIN(qtiff)
 #include <QLocale>
 #include <QNetworkInterface>
 #include <QHash>
+#include <QWebView>
 
 #include "model/Output.h"
 #include "model/SlideGroupFactory.h"
@@ -40,6 +41,8 @@ Q_IMPORT_PLUGIN(qtiff)
 #include "itemlistfilters/SlideForegroundOnlyFilter.h"
 
 #include "model/SlideTemplateManager.h"
+
+#include <QUrl>
 
 // init RenderOpts defaults
 bool RenderOpts::LastMirrorEnabled = true;
@@ -87,6 +90,11 @@ QHash<QString,QString> AppSettings::m_hotkeys;
 QString AppSettings::m_templateStorageFolder;
 
 double AppSettings::m_titlesafeAmount = 0.075;
+
+bool AppSettings::m_isStatSendingEnabled = true;
+QString AppSettings::m_regName = "";
+QString AppSettings::m_regOrgName = "";
+QWebView *AppSettings::m_checkinWebview = 0;
 
 // I'll use this code at the church to debug some crashes.
 // However, disbaling it for now because I'm not sure
@@ -297,6 +305,10 @@ void AppSettings::load()
 	m_httpViewerEnabled = s.value("app/http-viewer/enabled",true).toBool();
 	m_httpViewerPort = s.value("app/http-viewer/port",8081).toInt();
 	
+	m_isStatSendingEnabled = s.value("app/stat-sending-enabled",true).toBool();
+	m_regName = s.value("app/reg-name","").toString();
+	m_regOrgName = s.value("app/reg-org-name","").toString();
+	
 	QPixmapCache::setCacheLimit(m_pixmapCacheSize * 1024);
 	
 	updateLiveAspectRatio();
@@ -353,6 +365,10 @@ void AppSettings::save()
 	
 	s.setValue("app/http-viewer/enabled",m_httpViewerEnabled);
 	s.setValue("app/http-viewer/port",m_httpViewerPort);
+	
+	s.setValue("app/stat-sending-enabled",m_isStatSendingEnabled);
+	s.setValue("app/reg-name",m_regName);
+	s.setValue("app/reg-org-name",m_regOrgName);
 	
 	saveOutputs(&s);
 
@@ -674,3 +690,75 @@ QRectF AppSettings::adjustToTitlesafe(QRectF rect)
 	double yMargin = rect.height() * AppSettings::titlesafeAmount();
 	return rect.adjusted(xMargin,yMargin,-xMargin,-yMargin);
 }
+
+void AppSettings::setStatSendingEnabled(bool flag)
+{
+	m_isStatSendingEnabled = flag;
+	save();
+}
+
+void AppSettings::setRegistrationName(QString val)
+{
+	m_regName = val;
+	save();
+}
+
+void AppSettings::setRegistrationOrgName(QString val)
+{
+	m_regOrgName = val;
+	save();
+}
+
+
+#define _toPercentEncoding(a) a
+void AppSettings::sendCheckin(QString path, QString data)
+{
+	if(!m_checkinWebview)
+	{
+		m_checkinWebview = new QWebView();
+		m_checkinWebview->setWindowFlags(Qt::FramelessWindowHint | Qt::ToolTip);
+		m_checkinWebview->resize(1,1);
+		m_checkinWebview->move(-1000,-1000);
+		//m_checkinWebview->resize(320,240);
+		//m_checkinWebview->move(0,0);
+		
+		m_checkinWebview->show();
+	}
+	
+	QString osInfo;
+	
+	#ifdef Q_OS_LINUX
+	osInfo = "Linux";
+	#endif
+	
+	#if Q_OS_WIN
+	QSettings settings;
+	settings.insertSearchPath( QSettings::Windows,"/Microsoft/Windows/CurrentVersion");
+	QString productID = settings.readEntry( "/ProductID" );
+	osInfo = QString("Windows (%1)").arg(productId);
+	#endif
+	
+	#if Q_OS_MAC
+	osInfo = "Mac";
+	#endif
+	
+	if(osInfo.isEmpty())
+		osInfo = "Unknown";
+	
+	QString url = QString(
+		"http://www.mybryanlife.com/blog/dviz%1"
+			"?path=%1"
+			"&name=%2"
+			"&org=%3"
+			"&data=%4"
+			"&os_info=%5")
+		.arg(_toPercentEncoding(path))
+		.arg(_toPercentEncoding(!m_isStatSendingEnabled ? QString("-anon-") : m_regName))
+		.arg(_toPercentEncoding(!m_isStatSendingEnabled ? QString("-anon-") : m_regOrgName))
+		.arg(_toPercentEncoding(data))
+		.arg(_toPercentEncoding(!m_isStatSendingEnabled ? QString("-anon-") : osInfo));
+	m_checkinWebview->load(url);
+	
+	qDebug()  << "AppSettings::sendCheckin: Hit URL: "<<url;
+}
+

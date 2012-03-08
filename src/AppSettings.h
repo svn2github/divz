@@ -14,6 +14,7 @@
 
 class MainWindow;
 class Output;
+class QWebView;
 class AppSettings
 {
 public:
@@ -108,6 +109,16 @@ public:
 	static QRect adjustToTitlesafe(QRect);
 	static QRectF adjustToTitlesafe(QRectF);
 	
+	static bool isStatSendingEnabled() { return m_isStatSendingEnabled; }
+	static void setStatSendingEnabled(bool);
+	
+	static QString registrationName()  { return m_regName; }
+	static void setRegistrationName(QString);
+	
+	static QString registrationOrgName() {  return m_regOrgName; }
+	static void setRegistrationOrgName(QString);
+	
+	static void sendCheckin(QString path, QString data="");
 	
 protected:
 	friend class MainWindow;
@@ -153,6 +164,12 @@ private:
 	static QString m_templateStorageFolder;
 	
 	static double m_titlesafeAmount;
+	
+	static bool m_isStatSendingEnabled;
+	static QString m_regName;
+	static QString m_regOrgName;
+	
+	static QWebView *m_checkinWebview;
 
 };
 
