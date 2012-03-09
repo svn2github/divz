@@ -462,9 +462,11 @@ void OutputInstance::setSlideGroup(SlideGroup *group, Slide * startSlide)
 
 				}
 				
+// 				QString counterKey = tr("-altGroup-%1-currentIdx").arg(m_output->id());
+// 				foreach(Slide *slide, m_sortedSlides)
+// 					slide->setProperty(qPrintable(counterKey), -1);
 				
-				
-				m_viewer->setSlideGroup(altGroup,newStart);
+				m_viewer->setSlideGroup(altGroup,0); //newStart);
 				
 				foreach(OutputInstance *m, m_mirrors)
 					m->setSlideGroup(altGroup,newStart);
@@ -954,9 +956,14 @@ Slide * OutputInstance::setSlide(Slide *slide, bool takeOwnership)
 					// otherwise, we fall thru to the section below where we just match by slide
 					// index number (e.g. the second slide in the primary list gets the second slide
 					// in the altGroup list)
-					Slide *currentSlide = m_viewer->slide();
 					
+					Slide *currentSlide = m_viewer->slide();
 					int currentIdx = altSlides.indexOf(currentSlide);
+					
+					//QString counterKey = tr("-altGroup-%1-currentIdx").arg(m_output->id());
+					//int currentIdx = slide->property(qPrintable(counterKey)).toInt();
+					
+					int oldIdx = currentIdx;
 					
 					// If currentIdx is -1, that's okay - we increment it by 1 to 0 anyway
 					//if(currentIdx < 0)
@@ -965,11 +972,16 @@ Slide * OutputInstance::setSlide(Slide *slide, bool takeOwnership)
 					currentIdx ++;
 					if(currentIdx >= altSlides.size())
 						currentIdx = 0;
+						
+					//slide->setProperty(qPrintable(counterKey), currentIdx);
+					
+					//qDebug() << "OutputInstance::setSlide: ["<<m_output->name()<<"] Slide linkages, currentIdx:"<<oldIdx<<", new idx:"<<currentIdx;
 					
 					newSlide = altSlides.at(currentIdx);
 				}
 				else
 				{
+					qDebug() << "OutputInstance::setSlide: ["<<m_output->name()<<"] No alt slide linkages found, falling back to numerical coorelation";
 					QList<Slide*> slist = altGroup->slideList();
 					qSort(slist.begin(), slist.end(), OuputInstance_slide_num_compare);
 					newSlide = slist.isEmpty() ? 0 :

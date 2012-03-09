@@ -45,6 +45,8 @@ public:
 	
 	bool appendToExistingGroup() { return m_appendToExistingGroup; }
 	
+	bool allowSplitVersesInAltGroups() { return m_allowSplitVersesInAltGroups; }
+	
  	
 	
 signals:
@@ -69,6 +71,8 @@ public slots:
 	void setShowResponsiveReadingLabels(bool);
 	
  	void setAppendToExistingGroup(bool);
+ 	
+ 	void setAllowSplitVersesInAltGroups(bool);
 
 	void addVersesToDocument();
 	void sendVersesLive();
@@ -99,6 +103,8 @@ protected:
 	
 	void setupTextBox(TextBoxItem *);
 	Slide * addSlide(SlideGroup *, TextBoxItem *, int height, const QRect & fitRect, const QString & plain);
+	void createTitleSlide(SlideGroup *templateGroup, SlideGroup *group, bool isFirst = true);
+	void setupOptionalLabels(Slide *currentSlide, int slideNumber);
 	
 	void setupUI();
 	void setupVersionCombo();
@@ -122,6 +128,7 @@ protected:
 	BibleVerseList	m_currentList;
 	BibleVerseRef	m_currentRef;
 	QMenu         * m_configMenu;
+	QDialog       * m_configDialog;
 	
 	bool m_showEachVerseOnSeperateSlide;
 	
@@ -138,6 +145,8 @@ protected:
 	bool m_showResponsiveReadingLabels;
 	
 	bool m_appendToExistingGroup;
+	
+	bool m_allowSplitVersesInAltGroups;
 	
 	QList<SlideGroup*> m_generatedGroups;
 	void cullGeneratedGroups();

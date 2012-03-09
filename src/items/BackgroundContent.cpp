@@ -828,6 +828,21 @@ void BackgroundContent::paintBackground(QPainter *painter, const QRect & exposed
 
 	painter->setPen(Qt::NoPen);
 	AbstractVisualItem::FillType fill = modelItem()->fillType();
+	if(fill == AbstractVisualItem::None)
+	{
+		if(sceneContextHint() != MyGraphicsScene::Live)
+		{
+			QSize size = cRect.size();
+			size /= 2.5;
+			
+			QImage bgImage(size, QImage::Format_ARGB32_Premultiplied);
+			QBrush bgTexture(QPixmap("livemix/squares2.png"));
+			
+			painter->setBrush(bgTexture); //modelItem()->fillBrush());
+			painter->drawRect(cRect); //QRect(QPoint(0,0),cRect.size()));
+		}
+	}
+	else
 	if(fill == AbstractVisualItem::Solid)
 	{
 		painter->setBrush(modelItem()->fillBrush());

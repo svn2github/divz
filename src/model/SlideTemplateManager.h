@@ -23,6 +23,7 @@ namespace SlideTemplateUtilities
 	void textToDocument(QTextDocument& doc, const QString& text);
 	void addSlideWithText(SlideGroup *group, Slide *slide, TextBoxItem *text);
 	void intelligentCenterTextbox(TextBoxItem *text);
+	void conditionallyFitAndAlign(TextBoxItem *text, int minSize=32, int maxSize=72);
 }
 
 

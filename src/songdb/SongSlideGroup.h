@@ -27,6 +27,8 @@ public:
 	SongSlideGroup();
 	~SongSlideGroup();
 	
+	static QString songTagRegexpList() { return "Title|Verse|Chorus|Tag|Bridge|End(ing)?|Intro(duction)?"; }
+	
 	typedef enum { GroupType = 2 };
 	int groupType() const { return GroupType; }	
 	
@@ -36,6 +38,9 @@ public:
 	QString text() { return m_text; }
 	void setText(QString);
 	
+	QStringList arrangement() { return m_arrangement; }
+	void     setArrangement(QStringList arr);
+
 	bool isTextDiffFromDb() { return m_isTextDiffFromDb; }
 	
 	inline SlideGroup * slideTemplates() { return m_slideTemplates; }
@@ -48,6 +53,11 @@ public:
         virtual void toXml(QDomElement & parentElement) const;
 
 	void changeBackground(AbstractVisualItem::FillType fillType, QVariant fillValue, Slide *onlyThisSlide);
+	
+	// Rearrange a block of text based on the arragment
+	static QString rearrange(QString text, QStringList arragement);
+	static QStringList findDefaultArragement(QString text);
+	
 protected:
 	typedef enum SongTextFilter { Standard, AllowRear, AllowAll };
 	void textToSlides(SongTextFilter filter = Standard);
@@ -63,6 +73,8 @@ private:
 	SongRecord * m_song;
 	QString m_text;
 	bool m_isTextDiffFromDb;
+	
+	QStringList m_arrangement;
 	
 	SlideGroup *m_slideTemplates;
 

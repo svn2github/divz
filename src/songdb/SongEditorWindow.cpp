@@ -47,6 +47,7 @@ SongEditorWindow::SongEditorWindow(SlideGroup *g, QWidget *parent) :
 	
 	QVBoxLayout * vbox = new QVBoxLayout(centerWidget);
 	
+	// Title editor
 	QHBoxLayout * hbox1 = new QHBoxLayout();
 	QLabel *label = new QLabel("&Title: ");
 	hbox1->addWidget(label);
@@ -55,10 +56,34 @@ SongEditorWindow::SongEditorWindow(SlideGroup *g, QWidget *parent) :
 	
 	label->setBuddy(m_title);
 	hbox1->addWidget(m_title);
-
 	
 	vbox->addLayout(hbox1);
 	
+	// Default arrangement
+	QHBoxLayout *hbox2 = new QHBoxLayout();
+	label = new QLabel("Default Arrangement: ");
+	hbox2->addWidget(label);
+	
+	m_defaultArrangement = new QLineEdit();
+	m_defaultArrangement->setReadOnly(true);
+	hbox2->addWidget(m_defaultArrangement);
+	
+	vbox->addLayout(hbox2);
+
+	// My arrangement
+	QHBoxLayout *hbox3 = new QHBoxLayout();
+	label = new QLabel("Current &Arrangement: ");
+	hbox3->addWidget(label);
+	
+	m_arrangement = new QLineEdit();
+	m_arrangement->setReadOnly(false);
+	connect(m_arrangement, SIGNAL(textChanged(const QString&)), this, SLOT(arrTextChanged(const QString&)));
+	label->setBuddy(m_arrangement);
+	hbox3->addWidget(m_arrangement);
+	
+	vbox->addLayout(hbox3);
+
+
 	setWindowIcon(QIcon(":/data/icon-d.png"));
 	
 	QFont font;
@@ -66,42 +91,65 @@ SongEditorWindow::SongEditorWindow(SlideGroup *g, QWidget *parent) :
 	font.setFixedPitch(true);
 	font.setPointSize(10);
 	
+	QHBoxLayout *editorHBox = new QHBoxLayout();
+	editorHBox->setContentsMargins(0,0,0,0);
+	
 	m_editor = new MyQTextEdit;
 	m_editor->setFont(font);
+	editorHBox->addWidget(m_editor);
+	connect(m_editor, SIGNAL(textChanged()), this, SLOT(editTextChanged()));
 	//m_editor->setAcceptRichText(false);
 	
 	m_highlighter = new SongEditorHighlighter(m_editor->document());
 	
-	vbox->addWidget(m_editor);
+	// Arrangement preview box
+	m_arrangementPreview = new MyQTextEdit;
+	m_arrangementPreview->setFont(font);
+	m_arrangementPreview->setReadOnly(true);
+	editorHBox->addWidget(m_arrangementPreview);
+	//m_editor->setAcceptRichText(false);
+	
+	(void*)new SongEditorHighlighter(m_arrangementPreview->document());
+	
+	//vbox->addWidget(m_editor);
+	vbox->addLayout(editorHBox);
 	
 	
-	QHBoxLayout * hbox2 = new QHBoxLayout();
+	QHBoxLayout * hboxBottom = new QHBoxLayout();
 	
-	m_tmplEditButton = new QPushButton("Edit &Background && Templates...");
+	m_tmplEditButton = new QPushButton("Edit &Template...");
 	m_tmplEditButton->setIcon(QIcon(":data/stock-select-color.png"));
 	connect(m_tmplEditButton, SIGNAL(clicked()), this, SLOT(editSongTemplate()));
-	hbox2->addWidget(m_tmplEditButton);
+	hboxBottom->addWidget(m_tmplEditButton);
 	
-	hbox2->addStretch();
+	hboxBottom->addStretch();
 	
-	m_syncBox = new QCheckBox("S&ync Changes to Database");
+	m_syncBox = new QCheckBox("S&ync Changes to DB");
 	m_syncBox->setToolTip("If checked, saving changes will update the master song database as well as the copy of the song in this document");
 	m_syncBox->setChecked(true);
 	connect(m_syncBox, SIGNAL(toggled(bool)), this, SLOT(setSyncToDatabase(bool)));
 	
-	hbox2->addWidget(m_syncBox);
+	hboxBottom->addWidget(m_syncBox);
+	
+	QCheckBox *showArrPreview = new QCheckBox("S&how Arrangement Preview");
+	showArrPreview->setToolTip("Show/hide arrangement preview window");
+	showArrPreview->setChecked(true);
+	connect(showArrPreview, SIGNAL(toggled(bool)), this, SLOT(showArrPreview(bool)));
+	
+	hboxBottom->addWidget(m_syncBox);
+	
 	
 	QPushButton *btn;
 	btn = new QPushButton("&Save Song");
 	btn->setIcon(QIcon(":data/stock-save.png"));
 	connect(btn, SIGNAL(clicked()), this, SLOT(accepted()));
-	hbox2->addWidget(btn);
+	hboxBottom->addWidget(btn);
 	
 	btn = new QPushButton("&Cancel");
 	connect(btn, SIGNAL(clicked()), this, SLOT(close()));
-	hbox2->addWidget(btn);
+	hboxBottom->addWidget(btn);
 	
-	vbox->addLayout(hbox2);
+	vbox->addLayout(hboxBottom);
 	
 	//setLayout(vbox);
 	setCentralWidget(centerWidget);
@@ -113,6 +161,11 @@ SongEditorWindow::SongEditorWindow(SlideGroup *g, QWidget *parent) :
 // 	connect(m_editWin, SIGNAL(closed()), this, SLOT(editorWindowClosed()));
 //	}
 	
+}
+
+void SongEditorWindow::showArrPreview(bool flag)
+{
+	m_arrangementPreview->setVisible(flag);
 }
 
 void SongEditorWindow::showSyncOption(bool flag)
@@ -184,10 +237,41 @@ void SongEditorWindow::setSlideGroup(SlideGroup *g,Slide */*curSlide*/)
 	m_title->setText(songGroup->groupTitle());
 	setWindowTitle(songGroup->groupTitle() + " - Song Editor");
 	m_editor->setFocus(Qt::OtherFocusReason);
-			
+	
+	m_defaultArrangement->setText(SongSlideGroup::findDefaultArragement(songGroup->text()).join(", "));
+	m_arrangement->setText(songGroup->arrangement().join(", "));
+	m_arrangementPreview->setText(SongSlideGroup::rearrange(songGroup->text(), songGroup->arrangement()));
 }
 
-void SongEditorWindow::setSlideGroup(SlideGroup *g,bool syncToDatabase) 
+void SongEditorWindow::arrTextChanged(const QString& newArr)
+{
+	SongSlideGroup * songGroup = dynamic_cast<SongSlideGroup*>(m_slideGroup);
+	if(!songGroup)
+		return;
+	
+	QStringList newArrList = newArr.split(QRegExp("\\s*,\\s*"));
+	
+	qDebug() << "SongEditorWindow::arrTextChanged: "<<newArrList<<" from "<<newArr;
+	
+	if(newArrList != m_currArrPreviewList)
+	{
+		m_currArrPreviewList= newArrList;
+		//songGroup->setArrangement(newArrList);
+		
+		// Update arr text
+		//m_arrangement->setText(newArrList.join(", "));
+		m_arrangementPreview->setText(SongSlideGroup::rearrange(m_editor->toPlainText(), newArrList));
+	}
+}
+
+void SongEditorWindow::editTextChanged()
+{
+	QString plainText = m_editor->toPlainText();
+	m_defaultArrangement->setText(SongSlideGroup::findDefaultArragement(plainText).join(", "));
+	m_arrangementPreview->setText(SongSlideGroup::rearrange(plainText, m_currArrPreviewList));
+}
+
+void SongEditorWindow::setSlideGroup(SlideGroup *g, bool syncToDatabase) 
 {
 	setSlideGroup(g);
 	if(syncToDatabase)
@@ -221,6 +305,9 @@ void SongEditorWindow::accepted()
 			songGroup->setGroupTitle(m_title->text());
 			//songGroup->song()->setText(m_editor->toPlainText());
 			songGroup->setText(m_editor->toPlainText());
+			
+			QStringList newArrList = m_arrangement->text().split(QRegExp("\\s*,\\s*"));
+			songGroup->setArrangement(newArrList);
 			
 			if(m_syncToDatabase)
 			{
@@ -263,20 +350,18 @@ SongEditorHighlighter::SongEditorHighlighter(QTextDocument *parent)
 	tagFormat.setFontWeight(QFont::Bold);
 	tagFormat.setForeground(Qt::white);
 	tagFormat.setBackground(Qt::red);
-	rule.pattern = QRegExp("\\s*(Verse|Chorus|Tag|Bridge|End(ing)?|Intro(duction)?)(\\s+\\d+)?(\\s*\\(.*\\))?\\s*");
+	rule.pattern = QRegExp(tr("^\\s*(%1)(\\s+\\d+)?(\\s*\\(.*\\))?\\s*.*$").arg(SongSlideGroup::songTagRegexpList()));
 	rule.format = tagFormat;
 	highlightingRules.append(rule);
 	
 	rearFormat.setFontWeight(QFont::Bold);
 	rearFormat.setForeground(Qt::white);
 	rearFormat.setBackground(Qt::blue);
-	rule.pattern = QRegExp("\\s*((?:B:|R:|C:|T:|G:|\\[|\\|).*)");
+	rule.pattern = QRegExp("^\\s*((?:B:|R:|C:|T:|G:|\\[|\\|).*).*$");
 	rule.format = rearFormat;
 	highlightingRules.append(rule);
 }
-//! [6]
 
-//! [7]
 void SongEditorHighlighter::highlightBlock(const QString &text)
 {
 	foreach (const HighlightingRule &rule, highlightingRules) 

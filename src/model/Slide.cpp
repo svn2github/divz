@@ -95,8 +95,6 @@ Slide * Slide::clone() const
 {
 	Slide * newSlide = new Slide();
 	
-	newSlide->setSlideId(ItemFactory::nextId());
-	
 	// So we dont have to engineer our own method of tracking
 	// properties, just assume all inherited objects delcare the relevant
 	// properties using Q_PROPERTY macro
@@ -115,6 +113,8 @@ Slide * Slide::clone() const
 	
 	foreach(AbstractItem *oldItem, m_items)
 		newSlide->addItem(oldItem->clone());
+	
+	newSlide->setSlideId(ItemFactory::nextId());
 	
 	return newSlide;
 }

@@ -17,6 +17,7 @@
 	
 namespace SlideTemplateUtilities
 {
+	/// Apply the \a text to \a doc appropriatly (either as rich text or plain text)
 	void textToDocument(QTextDocument& doc, const QString& text)
 	{
 		if (Qt::mightBeRichText(text))
@@ -25,20 +26,16 @@ namespace SlideTemplateUtilities
 			doc.setPlainText(text);
 	}
 	
+	/// \return The TextBoxItem that has the string \a textKey in it, or NULL if not found  
 	TextBoxItem *findTextItem(Slide *slide, const QString& textKey)
 	{
 		QList<AbstractItem *> items = slide->itemList();
 		
-		//TextBoxItem * text = 0;
-	
+		
 		QTextDocument doc;
 				
 		foreach(AbstractItem * item, items)
 		{
-			//AbstractVisualItem * newVisual = dynamic_cast<AbstractVisualItem*>(item);
-			//if(DEBUG_TEXTOSLIDES)
-			//	qDebug()<<"addSlide(): item list: "<<newVisual->itemName();
-			
 			if(item->itemClass() == TextBoxItem::ItemClass)
 			{
 				TextBoxItem *text = dynamic_cast<TextBoxItem*>(item);
@@ -48,10 +45,10 @@ namespace SlideTemplateUtilities
 				QTextDocument doc;
 				textToDocument(doc, text->text());
 				
-				if(doc.toPlainText().indexOf("#verses") >= 0)
+				if(doc.toPlainText().indexOf(textKey) >= 0)
 				{
 					//if(DEBUG_TEXTOSLIDES)
-					qDebug()<<"findTextItem(): Found textbox from template for key "<<textKey<<", name:"<<text->itemName();
+					//qDebug()<<"SlideTemplateUtilities::findTextItem(): Found textbox from template for key "<<textKey<<", name:"<<text->itemName();
 					return dynamic_cast<TextBoxItem*>(item);
 				}
 			}
@@ -61,6 +58,7 @@ namespace SlideTemplateUtilities
 	}
 	
 	
+	/// Merge the plain text from \a source together with the rich text formatting in \a destTemplate and return the resulting HTML
 	QString mergeTextItem(const QString &destTemplate, const QString &source)
 	{
 		QTextDocument doc;
@@ -84,16 +82,19 @@ namespace SlideTemplateUtilities
 		return doc2.toHtml();
 	}
 	
+	/// Convenience function, calls mergeTextItem() (above) internally with \a source as the source argument and the text from \a dest as the destTemplate argument, then calls \a dest->setText() with the new HTML
 	void mergeTextItem(TextBoxItem *dest, const QString &source)
 	{
 		dest->setText(mergeTextItem(dest->text(), source));
 	}
 	
+	/// Convenience function, calls mergeTextItem() (above) internally with the text() from \a source and \a dest as an argument
 	void mergeTextItem(TextBoxItem *dest, TextBoxItem *source)
 	{
 		mergeTextItem(dest, source->text());
 	}
 	
+	/// Add the \a slide to the \a group, assign a slide number, and start a timer to pre-render the \a text box
 	void addSlideWithText(SlideGroup *group, Slide *slide, TextBoxItem *text)
 	{
 		int slideNbr = group->numSlides();
@@ -111,6 +112,8 @@ namespace SlideTemplateUtilities
 	}
 	
 	
+	/// First, try to center in the slide if the box is close (within 20px) of the slides height,
+	/// otherwise, center textual contents of the box within the original contents rect
 	void intelligentCenterTextbox(TextBoxItem *textbox)
 	{
 		QRect slideRect = AppSettings::adjustToTitlesafe(MainWindow::mw()->standardSceneRect());
@@ -123,7 +126,7 @@ namespace SlideTemplateUtilities
 		// We test the difference here because don't want to force-center the textbox if it came from the template
 		// and was intentionally located off-center. But if the user tried to get it to fill the screen and missed
 		// by a few pixels (<20), then go ahead and center it for the user.
-		//qDebug()<<"BibleBrowser::addSlide(): slideNbr: "<<slideNbr<<": heightDifference: "<<heightDifference;
+		//qDebug()<<"intelligentCenterTextbox(): slideNbr: "<<slideNbr<<": heightDifference: "<<heightDifference;
 		
 		QSize natSize = textbox->findNaturalSize(textRect.width()); // 20 = buffer for shadow on right
 			
@@ -137,7 +140,7 @@ namespace SlideTemplateUtilities
 			textbox->setPos(QPointF(0,0));
 			textbox->setContentsRect(centeredRect);
 			
-			//qDebug()<<"BibleBrowser::addSlide(): [templated] slideNbr: "<<slideNbr<<": centeredRect: "<<centeredRect<<", templateTextbox:"<<templateTextbox<<", realHeight:"<<realHeight; 
+			//qDebug()<<"intelligentCenterTextbox(): [templated] slideNbr: "<<slideNbr<<": centeredRect: "<<centeredRect<<", templateTextbox:"<<templateTextbox<<", realHeight:"<<realHeight; 
 		}
 		else
 		if(heightDifference > 20)
@@ -152,6 +155,17 @@ namespace SlideTemplateUtilities
 		}
 	}
 
+	/// Only calls fitToSize() if the size of the text in the box doesnt fit within the contents rect.
+	/// If fitToSize() is called, it also calls \a intelligentCenterTextbox() to center the text contents in the contents rect.
+	void conditionallyFitAndAlign(TextBoxItem *label, int minSize, int maxSize)
+	{
+		QSize natSize = label->findNaturalSize(label->contentsRect().width());
+		if(natSize.height() > label->contentsRect().height())
+		{
+			label->fitToSize(label->contentsRect().size().toSize(),minSize,maxSize);
+			intelligentCenterTextbox(label); // try to center text within its contents rect
+		}
+	}
 };
 
 SlideTemplateManager * SlideTemplateManager::m_staticInstance = 0;

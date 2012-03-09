@@ -1006,8 +1006,8 @@ void SlideEditorWindow::editAltGroups()
 		{
 			altGroup = m_slideGroup->clone();
 			
-			altGroup->setGroupTitle(QString(tr("Alternate Group for Output %1 for Group %2")).arg(output->name()).arg(m_slideGroup->groupTitle().isEmpty() ? QString(tr("Group %1")).arg(m_slideGroup->groupNumber()) : m_slideGroup->groupTitle()));
-			//
+			altGroup->setGroupTitle(QString(tr("Alternate %2 for %1")).arg(output->name()).arg(m_slideGroup->groupTitle().isEmpty() ? QString(tr("Group %1")).arg(m_slideGroup->groupNumber()) : m_slideGroup->groupTitle()));
+			
 			if(m_slideGroup->numSlides() <= 0)
 			{
 				Slide *slide = new Slide();
@@ -1015,6 +1015,7 @@ void SlideEditorWindow::editAltGroups()
 			}
 			else
 			{
+				qDebug() << "SlideEditorWindow::editAltGroups(): Cloning primary slides for empty alternate group";
 				QList<Slide *> primarySlides = m_slideGroup->slideList();
 				QList<Slide *> altSlides     = altGroup->slideList();
 				

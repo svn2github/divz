@@ -119,7 +119,11 @@ SlideGroup * SongSlideGroup::createDefaultTemplates()
 				     "</p>";
 	static QString slideFooter = "</body></html>";
 	
-	text->setText(QString("%1%2Template%3%4").arg(slideHeader).arg(linePrefix).arg(lineSuffix).arg(slideFooter));
+	text->setText(QString("%1%2Template%3%4")
+		.arg(slideHeader)
+		.arg(linePrefix)
+		.arg(lineSuffix)
+		.arg(slideFooter));
 
 	slide->addItem(text);
 	group->addSlide(slide);
@@ -155,8 +159,10 @@ void SongSlideGroup::textToSlides(SongTextFilter filter)
 				     "</p>";
 	static QString slideFooter = "</body></html>";
 	
-	QString text = m_text.replace("\r\n","\n");
+	QString text = rearrange(m_text, m_arrangement);
 	QStringList list = text.split("\n\n");
+	
+	qDebug()<<"SongSlideGroup::textToSlides(): "<<(song() ? song()->title() : " (no song) ")<<": Using text: "<<list; 
 
 	// Outline pen for the text
 	QPen pen = QPen(Qt::black,1.5);
@@ -167,8 +173,8 @@ void SongSlideGroup::textToSlides(SongTextFilter filter)
 
 	QRegExp excludeLineRegExp(
         		//filter == Standard ? "^\\s*(Verse|Chorus|Tag|Bridge|End(ing)?|Intro(duction)|B:|R:|C:|T:|G:)?)(\\s*\\(.*\\))?\\s*$" :
-        		filter == Standard  ? "^\\s*(Verse|Chorus|Tag|Bridge|End(ing)?|Intro(duction)?|B:|R:|C:|T:|G:|\\[|\\|)(\\s+\\d+)?(\\s*\\(.*\\))?\\s*.*$" :
-        		filter == AllowRear ? "^\\s*(Verse|Chorus|Tag|Bridge|End(ing)?|Intro(duction)?)(\\s+\\d+)?(\\s*\\(.*\\))?\\s*.*$" :
+        		filter == Standard  ? tr("^\\s*(%1|B:|R:|C:|T:|G:|\\[|\\|)(\\s+\\d+)?(\\s*\\(.*\\))?\\s*.*$").arg(SongSlideGroup::songTagRegexpList()) :
+        		filter == AllowRear ? tr("^\\s*(%1)(\\s+\\d+)?(\\s*\\(.*\\))?\\s*.*$").arg(SongSlideGroup::songTagRegexpList()) :
         		"",
         	Qt::CaseInsensitive);
 
@@ -180,7 +186,7 @@ void SongSlideGroup::textToSlides(SongTextFilter filter)
 	}
 	
         if(DEBUG_TEXTOSLIDES)
-        	qDebug() << "SongSli[deGroup::textToSlides(): filter int:"<<filter<<", using exclusion pattern:"<<excludeLineRegExp.pattern();
+        	qDebug() << "SongSlideGroup::textToSlides(): filter int:"<<filter<<", using exclusion pattern:"<<excludeLineRegExp.pattern();
 
 	SlideGroup * templates = slideTemplates();
 	
@@ -655,6 +661,13 @@ void SongSlideGroup::fromVariantMap(QVariantMap &map)
 		qDebug("SongSlideGroup::fromXml: Invalid songid %d in XML!",songid);
 	}
 
+	QVariantList arr = map["arr"].toList();
+	m_arrangement.clear();
+	foreach(QVariant var, arr)
+		m_arrangement << var.toString();
+		
+	//m_arrangement = QStringList() << "Title" << "Verse 3" << "Verse 2" << "Chorus" << "Chorus";
+	
 	//qDebug() << "SongSlideGroup::fromXml(): Loading text, num slides:"<<numSlides();
 	QString text = map["text"].toString();
 	setText(text);
@@ -673,6 +686,11 @@ void SongSlideGroup::toVariantMap(QVariantMap &map) const
 	
 	// song specific stuff
 	map["text"] = m_text;
+	
+	QVariantList arr;
+	foreach(QString name, m_arrangement)
+		arr << name;
+	map["arr"] = QVariant(arr);
 	
 	if(m_song)
 		map["songid"] = m_song->songId();
@@ -722,3 +740,107 @@ void SongSlideGroup::changeBackground(AbstractVisualItem::FillType fillType, QVa
 	
 	m_slideTemplates->changeBackground(fillType,fillValue,m_slideTemplates->at(0));
 }
+
+void SongSlideGroup::setArrangement(QStringList arr)
+{
+	m_arrangement = arr;
+}
+
+
+QString SongSlideGroup::rearrange(QString text, QStringList arragement)
+{
+	//qDebug() << "SongSlideGroup::rearrange: Original text: "<<text;
+	QStringList defaultArr = findDefaultArragement(text);
+	qDebug() << "SongSlideGroup::rearrange: Original arrangement: "<<defaultArr;
+	
+	QRegExp blockTitleRegexp(tr("^\\s*((?:%1)(?:\\s+\\d+)?(?:\\s*\\(.*\\))?)\\s*.*$").arg(SongSlideGroup::songTagRegexpList()), Qt::CaseInsensitive);
+
+	QString cleanedText = text.replace("\r\n","\n");
+	QStringList blockList = cleanedText.split("\n\n");
+	
+	QHash<QString,QString> blockHash;
+	
+	QString curBlockTitle;
+	QStringList curBlockText;
+	foreach(QString passage, blockList)
+	{
+		int pos = blockTitleRegexp.indexIn(passage);
+		if(pos != -1)
+		{
+			// first, add block to hash if we have a block already
+			if(!curBlockTitle.isEmpty())
+				blockHash[curBlockTitle] = curBlockText.join("\n\n");
+			
+			// start new block
+			curBlockTitle = blockTitleRegexp.cap(1);
+			curBlockText.clear();
+		}
+		
+		QStringList filtered;
+		QStringList lines = passage.split("\n");
+		foreach(QString line, lines)
+			if(!line.contains(blockTitleRegexp))
+				filtered << line;
+				
+		curBlockText.append(filtered.join("\n"));
+	}
+	
+	if(!curBlockTitle.isEmpty())
+		blockHash[curBlockTitle] = curBlockText.join("\n\n");
+		
+	//qDebug() << "SongSlideGroup::rearrange: Original blocks: "<<blockHash;
+	qDebug() << "SongSlideGroup::rearrange: Processing arragnement: "<<arragement;
+	
+	QStringList output;
+	foreach(QString blockTitle, arragement)
+	{
+		if(blockHash.contains(blockTitle))
+		{
+			//qDebug() << "SongSlideGroup::rearrange: [process] Block: "<<blockTitle;
+			output << QString("%1\n%2")
+				.arg(blockTitle)
+				.arg(blockHash.value(blockTitle));
+		}
+		else
+		{
+			qDebug() << "SongSlideGroup::rearrange: [process] [Error] Arrangement block not found in original text: "<<blockTitle;
+		}
+	}
+	
+	QString outputText = output.join("\n\n");
+	//qDebug() << "SongSlideGroup::rearrange: Output: "<<outputText;
+	return outputText;
+}
+
+
+QStringList SongSlideGroup::findDefaultArragement(QString text)
+{
+	QRegExp blockTitleRegexp(tr("^\\s*((?:%1)(?:\\s+\\d+)?(?:\\s*\\(.*\\))?)\\s*.*$").arg(SongSlideGroup::songTagRegexpList()), Qt::CaseInsensitive);
+
+	QString cleanedText = text.replace("\r\n","\n");
+	QStringList blockList = cleanedText.split("\n\n");
+	
+	QStringList blockTitleList;
+	
+	QString curBlockTitle;
+	QStringList curBlockText;
+	foreach(QString passage, blockList)
+	{
+		int pos = blockTitleRegexp.indexIn(passage);
+		if(pos != -1)
+		{
+			// first, add block to hash if we have a block already
+			if(!curBlockTitle.isEmpty())
+				blockTitleList << curBlockTitle;
+			
+			// start new block
+			curBlockTitle = blockTitleRegexp.cap(1);
+		}
+	}
+	
+	if(!curBlockTitle.isEmpty())
+		blockTitleList << curBlockTitle;
+	
+	return blockTitleList;
+}
+

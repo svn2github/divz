@@ -128,7 +128,7 @@ QWebView *AppSettings::m_checkinWebview = 0;
 					fprintf(stderr, "Debug: %s\n", msg);
 				break;
 			case QtWarningMsg:
-				AppSettings::sendCheckin("/core/warn",QString(msg));
+				//AppSettings::sendCheckin("/core/warn",QString(msg));
 				if(qt_origMsgHandler)
 					qt_origMsgHandler(QtDebugMsg,msg);
 				else
@@ -714,8 +714,13 @@ void AppSettings::setRegistrationOrgName(QString val)
 
 
 #define _toPercentEncoding(a) a
+static bool AppSettings_checkin_locked = false;
 void AppSettings::sendCheckin(QString path, QString data)
 {
+	if(AppSettings_checkin_locked)
+		return;
+	AppSettings_checkin_locked = true;
+	
 	if(!m_checkinWebview)
 	{
 		m_checkinWebview = new QWebView();
@@ -763,5 +768,7 @@ void AppSettings::sendCheckin(QString path, QString data)
 	m_checkinWebview->load(url);
 	
 	qDebug()  << "AppSettings::sendCheckin: Hit URL: "<<url;
+	
+	AppSettings_checkin_locked = false;
 }
 

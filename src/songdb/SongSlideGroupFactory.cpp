@@ -57,7 +57,7 @@ AbstractItem * SongFoldbackTextFilter::mutate(const AbstractItem *sourceItem)
 	static QString nextLinePrefix = "<p align=\"left\" style=\"margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; background:green; color:white\"><span style=\" font-family:'Courier New,Monospace'; color:white;background:green;font-size:36pt; font-weight:800;\">";
 
 	//static QRegExp excludeLineRegExp("^\\s*(Verse|Chorus|Tag|Bridge|End(ing)?|Intro(duction)?|B:|R:|C:|T:|G:|\\|)(.*)?\\s*$",Qt::CaseInsensitive);
-	static QRegExp rxTag("^\\s*(Verse|Chorus|Tag|Bridge|End(ing)?|Intro(duction)?)(\\s+\\d+)?(\\s*\\(.*\\))?\\s*");
+	static QRegExp rxTag(tr("^\\s*(%1)(\\s+\\d+)?(\\s*\\(.*\\))?\\s*").arg(SongSlideGroup::songTagRegexpList()));
 	static QRegExp rxRear("^\\s*((?:B:|R:|C:|T:|G:|\\[|\\|).*)\\s*");
 
 
@@ -102,7 +102,7 @@ AbstractItem * SongFoldbackTextFilter::mutate(const AbstractItem *sourceItem)
 				if(row+1 < list.size())
 				{
 					QString next = list[row+1];
-					next = next.replace(QRegExp("(Verse|Chorus|Tag|Bridge|End(ing)?|Intro(duction)?|B:|R:|C:|T:|G:|\\|)(\\s+\\d+)?(\\s*\\([^\n]*\\)[^\n]*)?",Qt::CaseInsensitive),""); // dont show rear text in first line of next slide
+					next = next.replace(QRegExp(tr("(%1?|B:|R:|C:|T:|G:|\\|)(\\s+\\d+)?(\\s*\\([^\n]*\\)[^\n]*)?").arg(SongSlideGroup::songTagRegexpList()),Qt::CaseInsensitive),""); // dont show rear text in first line of next slide
 
 					QString textBlob = next.replace("\n","/");
 					QString substring = textBlob.left(28); // TODO MAGIC NUMBER ...is 28 a good width?

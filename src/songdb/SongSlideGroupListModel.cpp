@@ -78,7 +78,7 @@ QPixmap SongSlideGroupListModel::generatePixmap(Slide *slide)
 
 	static QString highlightBlockPrefix = "<p align=\"left\" style=\"margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; background:red; color:white\"><span style=\" font-family:'Sans Serif'; color:white;background:red;font-size:9pt; font-weight:400;\">";
 	
-	static QRegExp rxTag("\\s*(Verse|Chorus|Tag|Bridge|End(ing)?|Intro(duction)?)(\\s+\\d+)?(\\s*\\(.*\\))?\\s*");
+	static QRegExp rxTag(tr("\\s*(%1)(\\s+\\d+)?(\\s*\\(.*\\))?\\s*").arg(SongSlideGroup::songTagRegexpList()));
 	static QRegExp rxRear("\\s*((?:B:|R:|C:|T:|G:|\\[|\\|).*)\\s*");
 	
 	SongSlideGroup * songGroup = dynamic_cast<SongSlideGroup*>(m_slideGroup);
@@ -88,7 +88,8 @@ QPixmap SongSlideGroupListModel::generatePixmap(Slide *slide)
 		return QPixmap();
 	}
 	
-	QString text = songGroup->text().replace("\r\n","\n");
+	//QString text = songGroup->text().replace("\r\n","\n");
+	QString text = SongSlideGroup::rearrange(songGroup->text(), songGroup->arrangement());
 	QStringList list = text.split("\n\n");
 	
 	int row = slide->slideNumber();

@@ -69,11 +69,20 @@ protected:
 
 private slots:
 	void editorWindowClosed();
+	
+	void showArrPreview(bool);
+	
+	void arrTextChanged(const QString&);
+	
+	void editTextChanged();
 
 private:
 	MyQTextEdit *m_editor;
+	MyQTextEdit *m_arrangementPreview;
 	SongEditorHighlighter *m_highlighter;
 	QLineEdit *m_title;
+	QLineEdit *m_defaultArrangement;
+	QLineEdit *m_arrangement;
 	SlideGroup *m_slideGroup;
 	AbstractSlideGroupEditor *m_editWin;
 	
@@ -82,6 +91,8 @@ private:
 	bool m_syncToDatabase;
 	
 	QCheckBox * m_syncBox;
+	
+	QStringList m_currArrPreviewList;
 };
 
 

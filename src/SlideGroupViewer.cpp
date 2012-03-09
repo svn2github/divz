@@ -967,17 +967,17 @@ void SlideGroupViewer::setSlideGroup(SlideGroup *group, Slide *startSlide)
 	}
 	else
 	{
-		QList<Slide*> slist = group->slideList();
-		if(slist.size() > 0)
-		{
-			//qDebug() << "SlideGroupViewer::setSlideGroup(): Setting slide group #"<<group->groupNumber()<<", defaulting to slide 0";
-			setSlide(m_sortedSlides.at(0));
-			//m_slideListView->setCurrentIndex(m_slideModel->indexForRow(0));
-		}
-		else
-		{
-			qDebug("SlideGroupViewer::setSlideGroup: Group[0] has 0 slides");
-		}
+// 		QList<Slide*> slist = group->slideList();
+// 		if(slist.size() > 0)
+// 		{
+// 			//qDebug() << "SlideGroupViewer::setSlideGroup(): Setting slide group #"<<group->groupNumber()<<", defaulting to slide 0";
+// 			setSlide(m_sortedSlides.at(0));
+// 			//m_slideListView->setCurrentIndex(m_slideModel->indexForRow(0));
+// 		}
+// 		else
+// 		{
+// 			qDebug("SlideGroupViewer::setSlideGroup: Group[0] has 0 slides");
+// 		}
 	}
 
 // 	if(m_blackEnabled && blackNative)
