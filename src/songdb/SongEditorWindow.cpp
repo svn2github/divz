@@ -6,9 +6,12 @@
 #include <QLabel>
 #include <QTextEdit>
 #include <QCheckBox>
+#include <QPalette>
 
 #include "SlideEditorWindow.h"
 #include "SongSlideGroup.h"
+
+#include "ArrangementListModel.h"
 
 // Neede to access the openSlideEditor() function
 #include "MainWindow.h"
@@ -39,7 +42,8 @@ SongEditorWindow::SongEditorWindow(SlideGroup *g, QWidget *parent) :
 	AbstractSlideGroupEditor(g,parent),
 	m_slideGroup(0),
 	m_editWin(0),
-	m_syncToDatabase(true)
+	m_syncToDatabase(true),
+	m_arrModel(0)
 {
 	setAttribute(Qt::WA_DeleteOnClose,true);
 	
@@ -66,13 +70,18 @@ SongEditorWindow::SongEditorWindow(SlideGroup *g, QWidget *parent) :
 	
 	m_defaultArrangement = new QLineEdit();
 	m_defaultArrangement->setReadOnly(true);
+	
+	QPalette p = m_defaultArrangement->palette();
+	p.setColor(QPalette::Base, Qt::lightGray);
+	m_defaultArrangement->setPalette(p);
+
 	hbox2->addWidget(m_defaultArrangement);
 	
 	vbox->addLayout(hbox2);
 
 	// My arrangement
 	QHBoxLayout *hbox3 = new QHBoxLayout();
-	label = new QLabel("Current &Arrangement: ");
+	label = new QLabel("Current &Arrangement:");
 	hbox3->addWidget(label);
 	
 	m_arrangement = new QLineEdit();
@@ -80,6 +89,22 @@ SongEditorWindow::SongEditorWindow(SlideGroup *g, QWidget *parent) :
 	connect(m_arrangement, SIGNAL(textChanged(const QString&)), this, SLOT(arrTextChanged(const QString&)));
 	label->setBuddy(m_arrangement);
 	hbox3->addWidget(m_arrangement);
+	
+	QPushButton *btn = new QPushButton("Default");
+	btn->setIcon(QIcon(":/data/stock-undo.png"));
+	btn->setToolTip("Reset arrangement to default arrangement (above)");
+	connect(btn, SIGNAL(clicked()), this, SLOT(resetArr()));
+	hbox3->addWidget(btn);
+	
+	
+	btn = new QPushButton("List");
+	btn->setCheckable(true);
+	btn->setIcon(QIcon(":/data/stock-find-and-replace.png"));
+	btn->setToolTip("Show/hide the arrangement drag-and-drop list");
+	connect(btn, SIGNAL(toggled(bool)), this, SLOT(arrListViewToggled(bool)));
+	hbox3->addWidget(btn);
+	
+	QPushButton *listBtn = btn;
 	
 	vbox->addLayout(hbox3);
 
@@ -91,8 +116,9 @@ SongEditorWindow::SongEditorWindow(SlideGroup *g, QWidget *parent) :
 	font.setFixedPitch(true);
 	font.setPointSize(10);
 	
-	QHBoxLayout *editorHBox = new QHBoxLayout();
-	editorHBox->setContentsMargins(0,0,0,0);
+	//QHBoxLayout *editorHBox = new QHBoxLayout();
+	//editorHBox->setContentsMargins(0,0,0,0);
+	QSplitter *editorHBox = new QSplitter();
 	
 	m_editor = new MyQTextEdit;
 	m_editor->setFont(font);
@@ -106,14 +132,46 @@ SongEditorWindow::SongEditorWindow(SlideGroup *g, QWidget *parent) :
 	m_arrangementPreview = new MyQTextEdit;
 	m_arrangementPreview->setFont(font);
 	m_arrangementPreview->setReadOnly(true);
+	
+	QPalette p2 = m_arrangementPreview->palette();
+	p2.setColor(QPalette::Base, Qt::lightGray);
+	m_arrangementPreview->setPalette(p2);
+
 	editorHBox->addWidget(m_arrangementPreview);
 	//m_editor->setAcceptRichText(false);
 	
 	(void*)new SongEditorHighlighter(m_arrangementPreview->document());
 	
-	//vbox->addWidget(m_editor);
-	vbox->addLayout(editorHBox);
+	// List view
+	m_arrModel = new ArrangementListModel();
+	connect(m_arrModel, SIGNAL(blockListChanged(QStringList)), this, SLOT(arrModelChange(QStringList)));
 	
+	QListView *arrListView = new QListView();
+	
+	arrListView->setSizePolicy(QSizePolicy(QSizePolicy::Minimum, QSizePolicy::Expanding));
+	arrListView->setViewMode(QListView::ListMode);
+	arrListView->setWrapping(false);
+	arrListView->setFlow(QListView::TopToBottom);
+	
+	arrListView->setMovement(QListView::Free);
+	arrListView->setWordWrap(true);
+	arrListView->setSelectionMode(QAbstractItemView::ExtendedSelection);
+	arrListView->setDragEnabled(true);
+	arrListView->setAcceptDrops(true);
+	arrListView->setDropIndicatorShown(true);
+	
+	arrListView->setModel(m_arrModel);
+	m_arrListView = arrListView;
+	
+	editorHBox->addWidget(arrListView);
+	
+	editorHBox->setStretchFactor(0,10);
+	editorHBox->setStretchFactor(1,10);
+	editorHBox->setStretchFactor(2,1);
+	
+	//vbox->addWidget(m_editor);
+	//vbox->addLayout(editorHBox);
+	vbox->addWidget(editorHBox);
 	
 	QHBoxLayout * hboxBottom = new QHBoxLayout();
 	
@@ -131,15 +189,14 @@ SongEditorWindow::SongEditorWindow(SlideGroup *g, QWidget *parent) :
 	
 	hboxBottom->addWidget(m_syncBox);
 	
-	QCheckBox *showArrPreview = new QCheckBox("S&how Arrangement Preview");
-	showArrPreview->setToolTip("Show/hide arrangement preview window");
-	showArrPreview->setChecked(true);
-	connect(showArrPreview, SIGNAL(toggled(bool)), this, SLOT(showArrPreview(bool)));
+	QCheckBox *showArrPreviewCb = new QCheckBox("Arrangement Preview");
+	showArrPreviewCb->setToolTip("Show/hide arrangement preview window");
+	showArrPreviewCb->setChecked(true);
+	connect(showArrPreviewCb, SIGNAL(toggled(bool)), this, SLOT(showArrPreview(bool)));
 	
-	hboxBottom->addWidget(m_syncBox);
+	hboxBottom->addWidget(showArrPreviewCb);
 	
 	
-	QPushButton *btn;
 	btn = new QPushButton("&Save Song");
 	btn->setIcon(QIcon(":data/stock-save.png"));
 	connect(btn, SIGNAL(clicked()), this, SLOT(accepted()));
@@ -156,6 +213,18 @@ SongEditorWindow::SongEditorWindow(SlideGroup *g, QWidget *parent) :
 	
 	resize(500,600);
 	
+	QSettings set;
+	bool flag = set.value("songdb/arrlistview",true).toBool();
+	arrListViewToggled(flag);
+	listBtn->setChecked(flag);
+	
+	flag = set.value("songdb/arrpreview",true).toBool();
+	showArrPreviewCb->setChecked(flag);
+	showArrPreview(flag);
+	
+	
+	
+	
 		
 // 	m_editWin = new SlideEditorWindow();
 // 	connect(m_editWin, SIGNAL(closed()), this, SLOT(editorWindowClosed()));
@@ -163,9 +232,18 @@ SongEditorWindow::SongEditorWindow(SlideGroup *g, QWidget *parent) :
 	
 }
 
+void SongEditorWindow::arrListViewToggled(bool flag)
+{
+	m_arrListView->setVisible(flag);
+	
+	QSettings().setValue("songdb/arrlistview",flag);
+}
+
 void SongEditorWindow::showArrPreview(bool flag)
 {
 	m_arrangementPreview->setVisible(flag);
+	
+	QSettings().setValue("songdb/arrpreview",flag);
 }
 
 void SongEditorWindow::showSyncOption(bool flag)
@@ -241,25 +319,43 @@ void SongEditorWindow::setSlideGroup(SlideGroup *g,Slide */*curSlide*/)
 	m_defaultArrangement->setText(SongSlideGroup::findDefaultArragement(songGroup->text()).join(", "));
 	m_arrangement->setText(songGroup->arrangement().join(", "));
 	m_arrangementPreview->setText(SongSlideGroup::rearrange(songGroup->text(), songGroup->arrangement()));
+	
+	if(m_arrModel)
+		m_arrModel->setBlockList(songGroup->arrangement());
 }
 
 void SongEditorWindow::arrTextChanged(const QString& newArr)
+{
+	QStringList newArrList = newArr.split(QRegExp("\\s*,\\s*"));
+	
+	//qDebug() << "SongEditorWindow::arrTextChanged: "<<newArrList<<" from "<<newArr;
+	
+	arrModelChange(newArrList, false);
+	
+}
+
+void SongEditorWindow::resetArr()
 {
 	SongSlideGroup * songGroup = dynamic_cast<SongSlideGroup*>(m_slideGroup);
 	if(!songGroup)
 		return;
 	
-	QStringList newArrList = newArr.split(QRegExp("\\s*,\\s*"));
-	
-	qDebug() << "SongEditorWindow::arrTextChanged: "<<newArrList<<" from "<<newArr;
-	
+	arrModelChange(SongSlideGroup::findDefaultArragement(songGroup->text()));
+}
+
+void SongEditorWindow::arrModelChange(QStringList newArrList, bool changeLineEdit)
+{
+	//qDebug() << "SongEditorWindow::arrModelChange: "<<newArrList;
 	if(newArrList != m_currArrPreviewList)
 	{
-		m_currArrPreviewList= newArrList;
-		//songGroup->setArrangement(newArrList);
+		m_currArrPreviewList = newArrList;
 		
 		// Update arr text
-		//m_arrangement->setText(newArrList.join(", "));
+		if(changeLineEdit)
+			m_arrangement->setText(newArrList.join(", "));
+		
+		if(m_arrModel)
+			m_arrModel->setBlockList(newArrList);
 		m_arrangementPreview->setText(SongSlideGroup::rearrange(m_editor->toPlainText(), newArrList));
 	}
 }

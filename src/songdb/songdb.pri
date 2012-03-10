@@ -11,7 +11,8 @@ HEADERS +=  \
 	SongSlideGroupListModel.h \
 	SongEditorWindow.h \
 	SongBrowser.h \
-	SongSearchOnlineDialog.h
+	SongSearchOnlineDialog.h \
+	ArrangementListModel.h
 
     
 SOURCES += \
@@ -22,4 +23,5 @@ SOURCES += \
 	SongSlideGroupListModel.cpp \
 	SongEditorWindow.cpp \
 	SongBrowser.cpp \
-	SongSearchOnlineDialog.cpp
+	SongSearchOnlineDialog.cpp \
+	ArrangementListModel.cpp

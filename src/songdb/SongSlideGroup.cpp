@@ -162,7 +162,7 @@ void SongSlideGroup::textToSlides(SongTextFilter filter)
 	QString text = rearrange(m_text, m_arrangement);
 	QStringList list = text.split("\n\n");
 	
-	qDebug()<<"SongSlideGroup::textToSlides(): "<<(song() ? song()->title() : " (no song) ")<<": Using text: "<<list; 
+	//qDebug()<<"SongSlideGroup::textToSlides(): "<<(song() ? song()->title() : " (no song) ")<<": Using text: "<<list; 
 
 	// Outline pen for the text
 	QPen pen = QPen(Qt::black,1.5);
@@ -749,13 +749,16 @@ void SongSlideGroup::setArrangement(QStringList arr)
 
 QString SongSlideGroup::rearrange(QString text, QStringList arragement)
 {
+	QString cleanedText = text.replace("\r\n","\n");
+	if(arragement.isEmpty())
+		return cleanedText;
+	
 	//qDebug() << "SongSlideGroup::rearrange: Original text: "<<text;
 	QStringList defaultArr = findDefaultArragement(text);
-	qDebug() << "SongSlideGroup::rearrange: Original arrangement: "<<defaultArr;
+	//qDebug() << "SongSlideGroup::rearrange: Original arrangement: "<<defaultArr;
 	
 	QRegExp blockTitleRegexp(tr("^\\s*((?:%1)(?:\\s+\\d+)?(?:\\s*\\(.*\\))?)\\s*.*$").arg(SongSlideGroup::songTagRegexpList()), Qt::CaseInsensitive);
 
-	QString cleanedText = text.replace("\r\n","\n");
 	QStringList blockList = cleanedText.split("\n\n");
 	
 	QHash<QString,QString> blockHash;
@@ -789,7 +792,7 @@ QString SongSlideGroup::rearrange(QString text, QStringList arragement)
 		blockHash[curBlockTitle] = curBlockText.join("\n\n");
 		
 	//qDebug() << "SongSlideGroup::rearrange: Original blocks: "<<blockHash;
-	qDebug() << "SongSlideGroup::rearrange: Processing arragnement: "<<arragement;
+	//qDebug() << "SongSlideGroup::rearrange: Processing arragnement: "<<arragement;
 	
 	QStringList output;
 	foreach(QString blockTitle, arragement)

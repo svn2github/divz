@@ -36,6 +36,7 @@ class SlideEditorWindow;
 class QCloseEvent;
 class SongRecord;
 class QPushButton;
+class ArrangementListModel;
 #include <QCheckBox>
 
 class SongEditorWindow : public AbstractSlideGroupEditor 
@@ -75,6 +76,11 @@ private slots:
 	void arrTextChanged(const QString&);
 	
 	void editTextChanged();
+	
+	void arrModelChange(QStringList, bool changeLineEdit=true);
+	void resetArr();
+	
+	void arrListViewToggled(bool);
 
 private:
 	MyQTextEdit *m_editor;
@@ -93,6 +99,9 @@ private:
 	QCheckBox * m_syncBox;
 	
 	QStringList m_currArrPreviewList;
+
+	ArrangementListModel *m_arrModel;
+	QListView *m_arrListView;
 };
 
 
