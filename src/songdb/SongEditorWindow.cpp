@@ -340,7 +340,7 @@ void SongEditorWindow::resetArr()
 	if(!songGroup)
 		return;
 	
-	arrModelChange(SongSlideGroup::findDefaultArragement(songGroup->text()));
+	arrModelChange(SongSlideGroup::findDefaultArragement(m_editor->toPlainText()));
 }
 
 void SongEditorWindow::arrModelChange(QStringList newArrList, bool changeLineEdit)
@@ -356,6 +356,7 @@ void SongEditorWindow::arrModelChange(QStringList newArrList, bool changeLineEdi
 		
 		if(m_arrModel)
 			m_arrModel->setBlockList(newArrList);
+			
 		m_arrangementPreview->setText(SongSlideGroup::rearrange(m_editor->toPlainText(), newArrList));
 	}
 }

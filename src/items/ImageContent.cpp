@@ -450,7 +450,7 @@ void ImageContent::drawForeground(QPainter *painter, bool screenTranslation)
 			QRect destRect(0,0,tmpRect.width(),tmpRect.height());
 			
 			// cache the scaled pixmap according to the transformed size of the view
-			QString foregroundKey = QString(cacheKey()+":%1:%2").arg(destRect.width()).arg(destRect.height());
+			QString foregroundKey = QString(cacheKey()+":%1:%2:%3").arg(destRect.width()).arg(destRect.height()).arg(m_fileName);
 			
 			//qDebug() << "ImageContent::drawForeground: " << dbg_counter << "cRect:"<<cRect<<", tmpRect:"<<tmpRect;
 			

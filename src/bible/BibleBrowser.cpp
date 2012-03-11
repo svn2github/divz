@@ -1128,7 +1128,7 @@ SlideGroup * BibleBrowser::createSlideGroup(SlideGroup *templateGroup, bool allo
 	else
 	{
 		group = new SlideGroup();
-		group->setGroupTitle(m_currentRef.toString());
+		group->setGroupTitle(m_currentRef.toString() + (showResponsiveReadingLabels() ? " - Responsive" : ""));
 	}
 	
 

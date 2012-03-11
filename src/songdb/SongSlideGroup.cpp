@@ -369,9 +369,12 @@ void SongSlideGroup::textToSlides(SongTextFilter filter)
 		QString htmlStr;
 		QRectF screenRect = AppSettings::adjustToTitlesafe(MainWindow::mw() ? MainWindow::mw()->standardSceneRect() : FALLBACK_SCREEN_RECT);
 		QRectF textRect = screenRect;
+		int currentMinTextSize = 32;
 		if(textboxFromTemplate)
 		{
 			textRect = text->contentsRect();
+			
+			currentMinTextSize = text->findFontSize();
 			
 			// Create the text for the lyrics
 			QStringList filtered;
@@ -477,7 +480,7 @@ void SongSlideGroup::textToSlides(SongTextFilter filter)
 // 
 // 		htmlStr = lastGoodHtml;
 		text->setText(htmlStr);
-		qreal boxHeight = text->fitToSize(textRect.size().toSize(), 32, 72);
+		qreal boxHeight = text->fitToSize(textRect.size().toSize(), currentMinTextSize, 72);
 		//qDebug() << "SongSlideGroup::textToSlides(): slideNbr:"<<slideNbr<<": firtToSize boxHeight:"<<boxHeight<<", given size:"<<textRect.size().toSize();
 		
 		// these two dynamic properties are used in the SongFoldbackTextFilter to 
@@ -753,6 +756,14 @@ QString SongSlideGroup::rearrange(QString text, QStringList arragement)
 	if(arragement.isEmpty())
 		return cleanedText;
 	
+	bool isEmpty = true;
+	foreach(QString block, arragement)
+	if(!block.isEmpty())
+		isEmpty = false;
+	
+	if(isEmpty)
+		return cleanedText;
+	
 	//qDebug() << "SongSlideGroup::rearrange: Original text: "<<text;
 	QStringList defaultArr = findDefaultArragement(text);
 	//qDebug() << "SongSlideGroup::rearrange: Original arrangement: "<<defaultArr;
@@ -792,7 +803,7 @@ QString SongSlideGroup::rearrange(QString text, QStringList arragement)
 		blockHash[curBlockTitle] = curBlockText.join("\n\n");
 		
 	//qDebug() << "SongSlideGroup::rearrange: Original blocks: "<<blockHash;
-	//qDebug() << "SongSlideGroup::rearrange: Processing arragnement: "<<arragement;
+	qDebug() << "SongSlideGroup::rearrange: Processing arragnement: "<<arragement;
 	
 	QStringList output;
 	foreach(QString blockTitle, arragement)
@@ -811,7 +822,7 @@ QString SongSlideGroup::rearrange(QString text, QStringList arragement)
 	}
 	
 	QString outputText = output.join("\n\n");
-	//qDebug() << "SongSlideGroup::rearrange: Output: "<<outputText;
+	qDebug() << "SongSlideGroup::rearrange: Output: "<<outputText;
 	return outputText;
 }
 
