@@ -60,16 +60,18 @@ public:
 	
 protected:
 	typedef enum SongTextFilter { Standard, AllowRear, AllowAll };
-	void textToSlides(SongTextFilter filter = Standard);
 	void removeAllSlides();
 	
 	void fromVariantMap(QVariantMap &);
 	void   toVariantMap(QVariantMap &) const;
 	
 protected slots:
+	void textToSlides(SongTextFilter filter = Standard);
 	void aspectRatioChanged(double x);
 
 private:
+	void hitTextToSlides();
+	
 	SongRecord * m_song;
 	QString m_text;
 	bool m_isTextDiffFromDb;
@@ -77,6 +79,9 @@ private:
 	QStringList m_arrangement;
 	
 	SlideGroup *m_slideTemplates;
+	
+	double m_lastAspectRatio;
+	QTimer m_textRegenTimer;
 
 
 };
