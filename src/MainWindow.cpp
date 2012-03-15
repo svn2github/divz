@@ -63,6 +63,8 @@
 #include "DVizMidiInputAdapter.h"
 #include "MidiInputSettingsDialog.h"
 
+#include "TextImportDialog.h"
+
 
 MainWindow * MainWindow::static_mainWindow = 0;
 
@@ -582,6 +584,18 @@ void MainWindow::addGroupPlayer()
 
 void MainWindow::textImportTool()
 {
+	if(!m_doc)
+		return;
+// 	TextImportDialog d;
+// 	d.exec();
+
+	// Show dialog non-modal so the template editor can be used from within the dialog
+	TextImportDialog *dialog = new TextImportDialog();
+	connect(dialog, SIGNAL(accepted()), dialog, SLOT(deleteLater()));
+	connect(dialog, SIGNAL(rejected()), dialog, SLOT(deleteLater()));
+	dialog->show();
+	
+	/*
 	QString fileName = QFileDialog::getOpenFileName(this, tr("Select Text File"),
 		AppSettings::previousPath("text"),
 		tr("Text Files (*.txt);;Any File (*.*)")
@@ -694,6 +708,7 @@ void MainWindow::textImportTool()
 
 		m_doc->addGroup(group);
 	}
+	*/
 }
 
 bool MainWindow::openFile(const QString & file)

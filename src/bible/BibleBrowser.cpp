@@ -795,6 +795,7 @@ Slide *BibleBrowser::getTemplateSlide(SlideGroup *templateGroup, int slideNum)
 		// We'll need more than one slide, but the user didn't add a second slide to the template group,
 		// so, assuming they've set the background they want on this first slide, 
 		// duplicate and add it to the template before adding our textbox
+		// (Basically, this is for backwards compatibility with background-only templates)
 		if(showFullRefAtStart() && templateGroup->numSlides() == 1)
 		{
 			templateGroup->addSlide(slide->clone());
@@ -1132,12 +1133,8 @@ SlideGroup * BibleBrowser::createSlideGroup(SlideGroup *templateGroup, bool allo
 	}
 	
 
-	QString blockPrefix = "<span style='font-family:Calibri,Tahoma,Arial,Sans-Serif;font-weight:800'><b>";
-	QString blockSuffix = "</b></span>";
-	
 	TextBoxItem * tmpText = 0;
 	int realHeight=0;
-	
 	
 	// Prepare the alternate groups if present in template, only if not appending.
 	// If appending, assume group already has appros alt groups if desired,

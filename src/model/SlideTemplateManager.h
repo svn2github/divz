@@ -20,6 +20,7 @@ namespace SlideTemplateUtilities
 	void mergeTextItem(TextBoxItem *dest, const QString &source);
 	QString mergeTextItem(const QString &destTemplate, const QString &source);
 	TextBoxItem *findTextItem(Slide *slide, const QString& textKey);
+	QStringList findTextItemNames(Slide *Slide);
 	void textToDocument(QTextDocument& doc, const QString& text);
 	void addSlideWithText(SlideGroup *group, Slide *slide, TextBoxItem *text);
 	void intelligentCenterTextbox(TextBoxItem *text);

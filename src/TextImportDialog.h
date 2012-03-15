@@ -8,6 +8,10 @@ namespace Ui {
 }
 
 class SlideGroup;
+class Slide;
+class TextBoxItem;
+
+#include <QScriptEngine>
 
 class TextImportDialog : public QDialog 
 {
@@ -22,11 +26,18 @@ protected slots:
 	
 	void doImport();
 	void browseBtn();
+	void scriptBrowseBtn();
 	
 protected:
 	void changeEvent(QEvent *e);
 	
 	void setupUi();
+	
+	SlideGroup *getTemplate();
+	void setupTextBox(TextBoxItem *tmpText);
+	Slide *getTemplateSlide(SlideGroup *templateGroup, int /*slideNum*/);
+	
+	SlideGroup *generateSlideGroup(SlideGroup *templateGroup, QString text, bool isPlain, QScriptEngine &scriptEngine, QString scriptFilename);
 
 private:
 	Ui::TextImportDialog *m_ui;

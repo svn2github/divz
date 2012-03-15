@@ -31,7 +31,6 @@ namespace SlideTemplateUtilities
 	{
 		QList<AbstractItem *> items = slide->itemList();
 		
-		
 		QTextDocument doc;
 				
 		foreach(AbstractItem * item, items)
@@ -55,6 +54,36 @@ namespace SlideTemplateUtilities
 		}
 		
 		return 0;
+	}
+	
+	/// \return List of text item names, e.g. #text, #verses, #refs, etc.
+	QStringList findTextItemNames(Slide *slide)
+	{
+		QList<AbstractItem *> items = slide->itemList();
+		
+		QStringList list;
+		QRegExp nameRx("(#[^\\s]+)");
+		
+		foreach(AbstractItem * item, items)
+		{
+			if(item->itemClass() == TextBoxItem::ItemClass)
+			{
+				TextBoxItem *text = dynamic_cast<TextBoxItem*>(item);
+				if(!text)
+					continue;
+					
+				QTextDocument doc;
+				textToDocument(doc, text->text());
+				
+				QString plainText = doc.toPlainText();
+				int namePos = nameRx.indexIn(plainText);
+				if(namePos > -1 &&
+				  !list.contains(nameRx.cap(1)))
+					list.append(nameRx.cap(1));
+			}
+		}
+		
+		return list;
 	}
 	
 	

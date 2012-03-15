@@ -60,7 +60,8 @@ FORMS += mainwindow.ui \
 	SlideSettingsDialog.ui \
 	SlideGroupSettingsDialog.ui \
 	ImageImportDialog.ui \
-	ImportGroupDialog.ui
+	ImportGroupDialog.ui \
+	TextImportDialog.ui
 	
 RESOURCES += dviz.qrc
 
@@ -95,7 +96,8 @@ HEADERS += \
 	ImportGroupDialog.h \
 	MimeTypes.h \
 	SharedMemoryImageWriter.h \
-	glvidtex/EntityList.h
+	glvidtex/EntityList.h \
+	TextImportDialog.h
 
 	
 SOURCES += \
@@ -130,7 +132,8 @@ SOURCES += \
 	MimeTypes.cpp \
 	SharedMemoryImageWriter.cpp \
 	DVizMidiInputAdapter.cpp \
-	glvidtex/EntityList.cpp
+	glvidtex/EntityList.cpp \
+	TextImportDialog.cpp
 
 HEADERS += \
 	glvidtex/VideoSender.h \
@@ -147,7 +150,8 @@ QT += core \
 	gui \
 	svg \
 	network \
-	xml
+	xml \
+	script
 
 unix {
 	LIBS += -lavdevice -lavformat -lavcodec -lavutil -lswscale -lbz2

@@ -6,12 +6,12 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>434</width>
+    <width>453</width>
     <height>407</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>Text Import Tool</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_4">
    <item>
@@ -46,7 +46,10 @@
         <item>
          <widget class="QRadioButton" name="fmtPlain">
           <property name="text">
-           <string>Plain Text (uses template '#text' field)</string>
+           <string>Plain Text (will be put in template '#text' field, or first box found)</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
           </property>
          </widget>
         </item>
@@ -100,7 +103,7 @@
       <item>
        <widget class="QLabel" name="label_3">
         <property name="text">
-         <string>While not required, scripts (written in simple JavaScript) allow you to change each slide as they are created. Scripts have access to the input data, the template, and the resulting slide. Scripts are executed once per slide during the import.</string>
+         <string>While not required, scripts (written in JavaScript) allow you to change each slide as they are created. Scripts have access to the input data, the template, and the resulting slide. Scripts are executed once per slide during the import.</string>
         </property>
         <property name="wordWrap">
          <bool>true</bool>
