@@ -21,7 +21,8 @@ using namespace SlideTemplateUtilities;
 
 TextImportDialog::TextImportDialog(QWidget *parent) :
     QDialog(parent),
-    m_ui(new Ui::TextImportDialog)
+    m_ui(new Ui::TextImportDialog),
+    m_template(0)
 {
 	m_ui->setupUi(this);
 	setupUi();
@@ -203,7 +204,7 @@ Slide *TextImportDialog::getTemplateSlide(SlideGroup *templateGroup, int /*slide
 	return slide;
 }
 
-QScriptValue TextImportDialog_script_qDebug(QScriptContext *context, QScriptEngine *engine)
+QScriptValue TextImportDialog_script_qDebug(QScriptContext *context, QScriptEngine */*engine*/)
 {
 	QStringList list;
 	for(int i=0; i<context->argumentCount(); i++)
@@ -217,7 +218,7 @@ QScriptValue TextImportDialog_script_qDebug(QScriptContext *context, QScriptEngi
 QScriptValue TextImportDialog_script_findTextItem(QScriptContext *context, QScriptEngine *engine)
 {
 	QObject *slideObj = context->argument(0).toQObject();
-	QString itemName   = context->argument(1).toString();
+	QString itemName  = context->argument(1).toString();
 	if(!slideObj)
 	{
 		qDebug() << "TextImportDialog_script_findTextItem(slide,itemName): Must give Slide (QObject) as first argument"; 
@@ -236,6 +237,51 @@ QScriptValue TextImportDialog_script_findTextItem(QScriptContext *context, QScri
 	}
 	TextBoxItem *tmpText = findTextItem(slide, itemName);
 	return engine->newQObject(tmpText);
+}
+
+QScriptValue TextImportDialog_script_findFontSize(QScriptContext *context, QScriptEngine */*engine*/)
+{
+	QObject *obj = context->argument(0).toQObject();
+	if(!obj)
+	{
+		qDebug() << "TextImportDialog_script_findFontSize(textbox): Must give Slide (QObject) as first argument"; 
+		return QScriptValue(QScriptValue::NullValue);
+	}
+	TextBoxItem *text = dynamic_cast<TextBoxItem*>(obj);
+	if(!text)
+	{
+		qDebug() << "TextImportDialog_script_findFontSize(textbox): First argument is not a TextBoxItem"; 
+		return QScriptValue(QScriptValue::NullValue);
+	}
+	return QScriptValue(text->findFontSize());
+}
+
+
+QScriptValue TextImportDialog_script_changeFontSize(QScriptContext *context, QScriptEngine */*engine*/)
+{
+	QObject *obj = context->argument(0).toQObject();
+	if(!obj)
+	{
+		qDebug() << "TextImportDialog_script_changeFontSize(textbox,fontSize): Must give Slide (QObject) as first argument"; 
+		return QScriptValue(QScriptValue::NullValue);
+	}
+	TextBoxItem *text = dynamic_cast<TextBoxItem*>(obj);
+	if(!text)
+	{
+		qDebug() << "TextImportDialog_script_changeFontSize(textbox,fontSize): First argument is not a Slide"; 
+		return QScriptValue(QScriptValue::NullValue);
+	}
+	
+	
+	QScriptValue fontSizeVal = context->argument(1);
+	if(!fontSizeVal.isNumber())
+	{
+		qDebug() << "TextImportDialog_script_changeFontSize(textbox,fontSize): Second argument is not a number"; 
+		return QScriptValue(QScriptValue::NullValue);
+	}
+	double size = (double)fontSizeVal.toNumber();
+	text->changeFontSize(size);
+	return QScriptValue(text->findFontSize());
 }
 
 void TextImportDialog::doImport()
@@ -267,12 +313,18 @@ void TextImportDialog::doImport()
 	QScriptEngine scriptEngine;
 	if(!scriptFilename.isEmpty())
 	{
-		QScriptValue fDebug = scriptEngine.newFunction(TextImportDialog_script_qDebug);
-		scriptEngine.globalObject().setProperty("debug", fDebug);
-		
+		// Install some custom functions for the script
+		QScriptValue fDebug        = scriptEngine.newFunction(TextImportDialog_script_qDebug);
 		QScriptValue fFindTextItem = scriptEngine.newFunction(TextImportDialog_script_findTextItem);
-		scriptEngine.globalObject().setProperty("findTextItem", fFindTextItem);
- 		
+		QScriptValue fChangeFntSz  = scriptEngine.newFunction(TextImportDialog_script_changeFontSize);
+		QScriptValue fFindFntSz    = scriptEngine.newFunction(TextImportDialog_script_findFontSize);
+		
+		scriptEngine.globalObject().setProperty("debug",          fDebug);
+		scriptEngine.globalObject().setProperty("findTextItem",   fFindTextItem);
+		scriptEngine.globalObject().setProperty("changeFontSize", fChangeFntSz);
+		scriptEngine.globalObject().setProperty("findFontSize",   fFindFntSz);
+		
+ 		// Read the file
 		QFile scriptFile(scriptFilename);
 		if(!scriptFile.open(QIODevice::ReadOnly))
 		{
@@ -427,7 +479,7 @@ SlideGroup *TextImportDialog::generateSlideGroup(SlideGroup *templateGroup, QStr
 			// so we should create a new slide, add the text, and then start searching again.
 			if(realHeight < 0 || realHeight > currentFitRect.height())
 			{
-				int tmpVar = realHeight; //debugging
+				//int tmpVar = realHeight; //debugging
 				
 				// More than one line, so the last line is the line that made the slide overflow the screen - 
 				// therefore take it off and return it to the buffer for the next slide to use.
@@ -546,6 +598,9 @@ SlideGroup *TextImportDialog::generateSlideGroup(SlideGroup *templateGroup, QStr
 			QStringList currentVarContent;
 			foreach(QString line, blockLines)
 			{
+				if(line.startsWith("//"))
+					continue;
+					
 				int namePos = nameRx.indexIn(line);
 				if(namePos == 0) // variable pattern at start of line
 				{
@@ -593,7 +648,7 @@ SlideGroup *TextImportDialog::generateSlideGroup(SlideGroup *templateGroup, QStr
 					hash.setProperty(varName, varHash.value(varName));
 				scriptEngine.globalObject().setProperty("dVars", hash);
 				
-				QScriptValue scriptResult = scriptEngine.evaluate(tr("newSlideCreated(%1)").arg(slideNumber));
+				QScriptValue scriptResult = scriptEngine.evaluate(tr("aboutToCreateSlide(%1)").arg(slideNumber));
 	
 				// Alert user of errors
 				if (scriptEngine.hasUncaughtException()) 
@@ -679,6 +734,26 @@ SlideGroup *TextImportDialog::generateSlideGroup(SlideGroup *templateGroup, QStr
 			
 			// Add slide to group
 			addSlideWithText(group, currentSlide, 0);
+			
+			// The script engine has already had the dSlide, etc variables setup if it reaches this block,
+			// so just execute the script once more
+			if(hasScript)
+			{
+				QScriptValue scriptResult = scriptEngine.evaluate(tr("newSlideCreated(%1)").arg(slideNumber));
+		
+				// Alert user of errors
+				if (scriptEngine.hasUncaughtException()) 
+				{
+					int line = scriptEngine.uncaughtExceptionLineNumber();
+					QMessageBox::critical(this,tr("Script Exception"),QString(tr("Uncaught Exception in file %1, line %2: \n\t%3\n\nImport canceled. Please fix script and try again."))
+						.arg(scriptFilename)
+						.arg(line)
+						.arg(scriptResult.toString()));
+					
+					delete group;
+					return 0;
+				}
+			}
 			
 			blockNum ++;
 		}

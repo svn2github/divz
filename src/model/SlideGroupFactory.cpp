@@ -169,7 +169,7 @@ SlideGroupViewControl::SlideGroupViewControl(OutputInstance *group, QWidget *w,b
 		
 		QSettings s;
 		m_listModeEnabled = s.value(QString("slideviewcontrol/%1").arg(m_isPreviewControl ? "preview-list-mode" : "list-mode"),m_listModeEnabled).toBool();
-		m_wrapModeEnabled = s.value(QString("slideviewcontrol/%1").arg(m_isPreviewControl ? "preview-wrap-mode" : "wrap-mode"),m_listModeEnabled).toBool();
+		m_wrapModeEnabled = s.value(QString("slideviewcontrol/%1").arg(m_isPreviewControl ? "preview-wrap-mode" : "wrap-mode"),m_wrapModeEnabled).toBool();
 		
 		if(m_isPreviewControl)
 		{
