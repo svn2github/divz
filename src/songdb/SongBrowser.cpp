@@ -245,16 +245,16 @@ void SongBrowser::addNewSong()
 	editor->show();
 }
 
-void SongBrowser::addNewSong(const QString& title, const QString& text)
+void SongBrowser::addNewSong(const QString& title, const QString& text, bool addToDoc)
 {
-	if(!m_editingEnabled)
-		return;
-		
 	SongRecord * song = new SongRecord();
 	song->setTitle(title);
 	song->setText(text);
 	SongRecord::addSong(song);
 	songCreated(song);
+	
+	if(addToDoc)
+		emit songSelected(song);
 }
 
 void SongBrowser::songCreated(SongRecord *song)

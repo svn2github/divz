@@ -116,6 +116,9 @@ void SongSearchOnlineDialog::searchProcExit(int, QProcess::ExitStatus)
 
 void SongSearchOnlineDialog::currentRowChanged(int row)
 {
+	if(row < 0 || row > m_resultset.size() - 1)
+		return;
+		
 	QVariant line = m_resultset[row];
 	QVariantMap map = line.toMap();
 	QString url = map["url"].toString();
@@ -174,7 +177,7 @@ void SongSearchOnlineDialog::slotSaveClicked()
 	
 	qDebug() << "[save] Adding song "<<title;
 	
-	m_sb->addNewSong(title,text);
+	m_sb->addNewSong(title,text,true); // true=add to doc
 	
 	close();
 }

@@ -27,6 +27,18 @@ sub normalize_text
 	
 	my @blocks;
 	
+	# If HTML, do some normalization
+	if($text =~ /<[^\>]+>/)
+	{
+		# Normalize the <br> tags
+		$text =~ s/<br\s*\/>/<br>/g;
+		
+		# Decode quote entity
+		$text =~ s/&#8220;/“/g;
+		$text =~ s/&#8221;/”/g;
+	}
+	
+	
 	if($format_hint eq 'htmlchorus')
 	{
 		my $counter = 1;
@@ -71,6 +83,52 @@ sub normalize_text
 		
 		# Rejoin the song
 		$text = join "\n\n", @blocks2;
+		
+		return $text;
+	}
+	elsif($format_hint eq 'timelesstruths')
+	{
+		my @blocks = split /\n/, $text;
+		my @blocks2;
+		my $refrain = undef;
+		my $counter = 1;
+		foreach my $block (@blocks)
+		{
+			$block =~ s/<\/?(ol|li|ul)[^\>]*>//g; # remove cruft
+			$block =~ s/(^\s+|\s+$)//g; # trim lines
+			next if !$block;
+			#print "[$block]\n";
+			
+			my @lines = split /<br>/, $block;
+			
+			# If this is the original refrain, process seprately
+			if($lines[0] =~ /Refrain/)
+			{
+				shift @lines; # take off refrain text
+				
+				@lines = try_split(@lines);
+				unshift @lines, "Chorus";
+				
+				$refrain = join "\n", @lines;
+			}
+			else
+			{
+				# Title the verse
+				@lines = try_split(@lines);
+				unshift @lines, "Verse ".($counter++);
+				
+				# Add the chorus after the verse
+				push @lines, "\n$refrain" if defined $refrain;
+			}
+			
+			# Push this combo block (Verse + chorus or just chorus if orig chorus) 
+			push @blocks2, join "\n", @lines;
+		}
+		
+		$text = join "\n\n", @blocks2;
+		
+		# Strip any remaining html
+		$text =~ s/<[^\>]+>//g;
 		
 		return $text;
 	}
@@ -273,8 +331,8 @@ our @LyricProviders =
 			my ($title) = $html =~ /<title>([^<]+)<\/title>/;
 			my ($text)  = $html =~ /<div id='songlyrics_h' class='dn'>((?:.|\n)+?)<\/div>/;
 			
-			$text =~ s/<br\s*\/>/<br>/g;
 			$text =~ s/<span class="b-lyrics-from-signature">\[ Lyrics from: [^\]]+\]<\/span>//g;
+			
 			$text = normalize_text($text,'htmlchorus');
 			
 			return 
@@ -299,9 +357,6 @@ our @LyricProviders =
 			my ($title) = $html =~ /<h1>([^<]+)<\/h1>/;
 			my ($text)  = $html =~ /<p id=['"]lyrics['"]>((?:.|\n)+?)<\/p>/;
 			my ($author) = $html =~ /<h2>([^<]+)<\/h2>/;
-			
-			# Normalize the <br> tag for htmlchorus formatter
-			$text =~ s/<br\s*\/>/<br>/g;
 			
 			# Hymnsite formatter (which this eventually hits)
 			# will replace (Refrain) with the text following the first Refrain
@@ -354,13 +409,30 @@ our @LyricProviders =
 				}
 			}
 			
-			# Normalize the <br> tag for htmlchorus formatter
-			$text =~ s/<br\s*\/>/<br>/g;
-			
 			#die $text;
 			$text = normalize_text($text,'htmlhymn');
 			
 			$title =~ s/, .*?\.org//g;
+			
+			return 
+			{
+				title	=> $title,
+				text	=> $text,
+			};
+		}
+	},
+	
+# http://library.timelesstruths.org/music/Stepping_in_the_Light/
+	{
+		url_regex => qr/library.timelesstruths.org\/music/,
+		process	=> sub 
+		{
+			my $html = shift;
+			my $url = shift;
+			my ($title) = $html =~ /<h1 class="first">([^<]+)<\/h1>/;
+			my ($text) = $html =~ /<div class="verses">((?:.|\n)+?)<\/div>/;
+			
+			$text = normalize_text($text,'timelesstruths');
 			
 			return 
 			{
