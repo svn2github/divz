@@ -5,6 +5,10 @@ use LWP;
 use HTML::TreeBuilder;
 use JSON qw/encode_json/;
 
+our @LyricProviders;
+use lib 'songdb';
+require 'lyricproviders.pl';
+
 sub url_encode
 {
 	shift if $_[0] eq __PACKAGE__;
@@ -116,15 +120,32 @@ foreach $search_result (@search_results){
 		$url = url_decode($q);
 	}
 	
-	push @result_list, 
+	my $good = 0;
+	foreach my $provider (@LyricProviders)
 	{
-		title => $title ? $title->as_text : undef,
-		summary => $summary ? $summary->as_text : undef,
-		url => $url,
-	};
+		my $regex = $provider->{url_regex};
+		if($url =~ /$regex/)
+		{
+			$good = 1;
+#			last;
+		}
+	}
+
+	if($good)
+	{
+		push @result_list, 
+		{
+			title => $title ? $title->as_text : undef,
+			summary => $summary ? $summary->as_text : undef,
+			url => $url,
+		};
+	}
 }
 
-print encode_json(\@result_list);
+
+print encode_json(\@result_list), "\n";
 
 #delete the treebuilder object.
 $page->delete;
+
+exit;
