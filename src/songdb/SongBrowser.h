@@ -47,6 +47,8 @@ public slots:
 	void setEditingEnabled(bool);
 	void setFilteringEnabled(bool);
 	void setPreviewEnabled(bool);
+	
+	void addNewSong(const QString& title, const QString& text);
 
 protected slots:
 	friend class MyQListView;

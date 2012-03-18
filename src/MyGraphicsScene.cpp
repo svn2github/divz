@@ -96,6 +96,8 @@ public:
 			opac->setOpacity(1);
 			setGraphicsEffect(opac);
 		#endif
+		
+		//setCacheMode(QGraphicsItem::DeviceCoordinateCache);
 	}
 	QRectF boundingRect() const { return QRectF(); } //MainWindow::mw()->standardSceneRect(); }
 	void paint(QPainter*, const QStyleOptionGraphicsItem*, QWidget*) {}
@@ -455,26 +457,10 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans, int speed, i
 	{
 		assert(item != NULL);
 		
-		
-		
-// 		quint32 key = item->valueKey();
-// 		
-// 		// item with exact same attributes NOT on the old slide
-// 		if(!consumedDuplicates.contains(key))
-// 		//if(!duplicateKeys[key])
-// 		//if(!consumedItems.contains(item))
-// 		//if(!consumedItemNames.contains(item->itemName()))
-// 		{
-			AbstractContent * visual = createVisualDelegate(item);
-			//determine max zvalue for use in rebasing overlay items
-			if(visual && visual->zValue() > baseZValue)
-				baseZValue = visual->zValue();
-// 			qDebug() << "MyGraphicsScene::setSlide(): New Slide: Item NOT duplicate:"<<item->itemName();
-// 		}
-// 		else
-// 		{
-// 			qDebug() << "MyGraphicsScene::setSlide(): New Slide: Item was duplicate:"<<item->itemName();
-// 		}
+		AbstractContent * visual = createVisualDelegate(item);
+		//determine max zvalue for use in rebasing overlay items
+		if(visual && visual->zValue() > baseZValue)
+			baseZValue = visual->zValue();
 	}
 	
 
@@ -492,19 +478,9 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans, int speed, i
 			if(bg)
 			{
 				continue;
-				//if(bg->fillType() == AbstractVisualItem::None)
-// 				{
-// 					//qDebug() << "Skipping inherited bg from seondary slide because exists and no fill";
-// 					continue;
-// 				}
-// 				else
-// 				{
-// 					secondaryBg = true;
-// 				}
 			}
 			else
 			{
-
 				AbstractContent * content = createVisualDelegate(item);
 				applyMasterSlideItemFlags(content);
 
@@ -520,10 +496,6 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans, int speed, i
 		{
 			//qDebug() << "MyGraphicsScene::setSlide(): Master Item List EMPTY";
 		}
-		
-// 		if(secondaryBg && originalBg)
-// 			removeVisualDelegate(originalBg);
-	
 	}
 	else
 	{

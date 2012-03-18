@@ -26,6 +26,8 @@ sub url_decode
 my $query = shift || 'to god be the glory'; 
 my $dont_preproc_url = shift || 0;
 
+#print STDERR "Googling for: \"$query\"...\n";
+
 my($user_agent, $url, $browser, $request, $max_result, $response, $start,
 $content, $search_result, @search_results);
 

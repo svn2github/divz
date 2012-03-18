@@ -2,34 +2,9 @@
 #define SONGEDITORWINDOW_H
 
 #include "SongSlideGroupFactory.h"
+#include "SongEditorHighlighter.h"
 
-#include <QSyntaxHighlighter>
-#include <QHash>
-#include <QTextCharFormat>
-#include <QTextDocument>
-#include <QLineEdit>
-
-class SongEditorHighlighter : public QSyntaxHighlighter
-{
-    Q_OBJECT
-
-public:
-	SongEditorHighlighter(QTextDocument *parent = 0);
-
-protected:
-	void highlightBlock(const QString &text);
-
-private:
-	struct HighlightingRule
-	{
-		QRegExp pattern;
-		QTextCharFormat format;
-	};
-	QVector<HighlightingRule> highlightingRules;
-	
-	QTextCharFormat rearFormat;
-	QTextCharFormat tagFormat;
-};
+#include <QtGui>
 
 class MyQTextEdit;
 class SlideEditorWindow;

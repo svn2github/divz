@@ -73,7 +73,7 @@ void SongBrowser::setupUI()
 	
 	m_onlineBtn = new QPushButton(QPixmap(":/data/stock-find.png"),"");
 	m_onlineBtn->setToolTip("Search for this song title online");
-	m_onlineBtn->setVisible(false);
+	//m_onlineBtn->setVisible(false);
 	
 	hbox->addWidget(label);
 	hbox->addWidget(m_songSearch);
@@ -185,8 +185,8 @@ SlideGroup *SongBrowser::createSlideGroup(SongRecord *song)
 
 void SongBrowser::searchOnline()
 {
-	SongSearchOnlineDialog d;
-// 	d.setText(m_songSearch->text());
+	SongSearchOnlineDialog d(this); // pass ptr to this so it can add songs to database
+	d.setText(m_songSearch->text());
 	d.exec();
 }
 
@@ -245,12 +245,23 @@ void SongBrowser::addNewSong()
 	editor->show();
 }
 
+void SongBrowser::addNewSong(const QString& title, const QString& text)
+{
+	if(!m_editingEnabled)
+		return;
+		
+	SongRecord * song = new SongRecord();
+	song->setTitle(title);
+	song->setText(text);
+	SongRecord::addSong(song);
+	songCreated(song);
+}
+
 void SongBrowser::songCreated(SongRecord *song)
 {
 	QModelIndex idx = m_songListModel->indexForSong(song);
 	if(idx.isValid())
 		m_songList->setCurrentIndex(idx);
-
 }
 
 
