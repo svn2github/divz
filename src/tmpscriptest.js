@@ -5,16 +5,8 @@
 // if dFormat is false, then dVars is present
 // aboutToCreateSlide(slideNumber) is called for each slide added with those global vars already set
 
-/* This script is designed to be used with a textfile of trvia questions in the format of:
-
-	#text: In what book does it say, “There is a time for everything”?
-	#opt1: A. Ecclesiastes*
-	#opt2: B. Isaiah
-	#opt3: C. Lamentations
-	#opt4: D. The Book of Life
-	#opt5: E. A and D
-
-And a template designed with the above named fields (well, six #optX fields anyway).
+/* This script is designed to be used with a textfile of trvia questions and apply pre/post formatting
+   to the slide templates.
  
 */
 

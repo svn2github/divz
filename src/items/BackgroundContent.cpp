@@ -810,6 +810,7 @@ void BackgroundContent::paint(QPainter * painter, const QStyleOptionGraphicsItem
 {
 	if(m_viewerWidget && m_viewerWidget!=widget)
 	{
+		//qDebug() << "BackgroundContent::paint: Not painting because widget given isnt the viewer widget registered";
 		return;	
 	}
 	else

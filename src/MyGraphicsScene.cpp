@@ -100,7 +100,81 @@ public:
 		//setCacheMode(QGraphicsItem::DeviceCoordinateCache);
 	}
 	QRectF boundingRect() const { return QRectF(); } //MainWindow::mw()->standardSceneRect(); }
-	void paint(QPainter*, const QStyleOptionGraphicsItem*, QWidget*) {}
+	//void paint(QPainter*, const QStyleOptionGraphicsItem*, QWidget*) {}
+	
+	void paint(QPainter *p, const QStyleOptionGraphicsItem*, QWidget*)
+	{
+		if(m_frozen)
+		{
+			p->drawImage(0, 0, m_cache);
+			//p->drawText(20, 20, " ** FROZEN **");
+		}
+		else
+		{
+			//p->drawText(20, 20, " -- thawed --");
+		}
+	}
+	
+	void setFrozen(bool flag)
+	{
+		
+		QList<QGraphicsItem*> kids = childItems();
+		foreach(QGraphicsItem *item, kids)
+			item->setVisible(true); // just to be sure
+			
+		// if freezing, then take a snapshot of all the kids and
+		// cache into the pixmap 'm_cache', then hide all the kids
+		if(flag)
+		{
+			QStyleOptionGraphicsItem option;
+			
+			QRectF rect = scene() ? scene()->sceneRect() : QRectF();
+			if(rect.isNull())
+			{
+				QList<QGraphicsItem*> kids = childItems();
+				foreach(QGraphicsItem *item, kids)
+				{
+					QRectF kidRect = item->boundingRect();
+					kidRect.translate(item->pos());
+					rect = rect.united(kidRect);
+				}
+			}
+			
+			QSize size = rect.size().toSize();
+			//qDebug() << "RenderProxyItem::setFrozen("<<flag<<"): Cache size:"<<size;
+			m_cache = QImage(size, QImage::Format_ARGB32_Premultiplied);
+			QPainter p(&m_cache);
+			p.setRenderHint(QPainter::Antialiasing, true);
+			p.setRenderHint(QPainter::SmoothPixmapTransform, true);
+			//paint(&p, 0, 0);
+			foreach(QGraphicsItem *item, kids)
+			{
+				//qDebug() << "RenderProxyItem::setFrozen("<<flag<<"): Rendering item: "<<item;
+				p.translate(item->pos());
+				option.exposedRect = item->boundingRect(); // paint entire item
+				p.setOpacity(item->opacity());
+				item->paint(&p, &option, 0);
+				p.translate(-item->pos());
+			}
+			p.end();
+			
+// 			qDebug() << "RenderProxyItem::setFrozen("<<flag<<"): Saving to proxycache.png";
+// 			m_cache.save("proxycache.png");
+			
+			//qDebug() << "RenderProxyItem::setFrozen("<<flag<<"): Done caching";
+			
+			// hide all kids
+			foreach(QGraphicsItem *item, kids)
+				item->setVisible(false); 
+		}
+		
+		m_frozen = flag;
+		
+	}
+	
+private:
+	QImage m_cache;
+	bool m_frozen;
 };
 
 MyGraphicsScene::MyGraphicsScene(ContextHint hint, QObject * parent)
@@ -194,6 +268,8 @@ void MyGraphicsScene::clear(bool emitTxFinished)
 		//qDebug() << "MyGraphicsScene::clear(): "<<this<<" emitting transitionFinished()";
 		emit transitionFinished(0);
 	}
+	
+	m_liveRoot->setFrozen(false);
 	
 	// dont remove our fade/live root
 	//QGraphicsScene::clear();
@@ -508,7 +584,11 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans, int speed, i
 // 	m_liveRoot->setOpacity(0);
 	m_liveRoot->setZValue(300);
 	
-	if(!crossFading)
+	if(crossFading)
+	{
+		m_liveRoot->setFrozen(true);
+	}
+	else
 	{
 		//qDebug() << "MyGraphicsScene::setSlide(): "<<this<<" emitting transitionFinished()"; 
 		emit transitionFinished(slide);
@@ -617,6 +697,7 @@ void MyGraphicsScene::endTransition()
 	#else
 		m_fadeRoot->setOpacity(0);
 		m_liveRoot->setOpacity(1);
+		m_liveRoot->setFrozen(false);
 	#endif
 	
 	QList<QGraphicsItem*> kids = m_staticRoot->childItems();

@@ -114,6 +114,12 @@ Slide * Slide::clone() const
 	foreach(AbstractItem *oldItem, m_items)
 		newSlide->addItem(oldItem->clone());
 	
+	// Set the slideId *after copying the properties
+	// because slideId is a Q_PROPERTY, therefore,
+	// if we set the slideId before copying properties,
+	// the above copy loop would just overrite any
+	// ID we set here. Therefore, set the ID after
+	// copying the properties.
 	newSlide->setSlideId(ItemFactory::nextId());
 	
 	return newSlide;

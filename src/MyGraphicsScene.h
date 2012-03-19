@@ -22,6 +22,7 @@ class BackgroundItem;
 class QVideoProvider;
 
 class MyGraphicsView;
+class RootObject;
 
 class MyGraphicsScene : public QGraphicsScene
 {
@@ -144,9 +145,9 @@ class MyGraphicsScene : public QGraphicsScene
 		
 		ContextHint m_contextHint;
 		
-		QGraphicsItem * m_fadeRoot;
-		QGraphicsItem * m_liveRoot;
-		QGraphicsItem * m_staticRoot;
+		RootObject * m_fadeRoot;
+		RootObject * m_liveRoot;
+		RootObject * m_staticRoot;
 		
 		BackgroundItem * m_bg;
 		
