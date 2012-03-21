@@ -22,9 +22,7 @@ public:
 	~SongEditorWindow();
 	
 public slots:
-	void setSlideGroup(SlideGroup*g,Slide *curSlide=0);
-	
-	void setSlideGroup(SlideGroup*g,bool syncToDatabase);
+	void setSlideGroup(SlideGroup *g, Slide *curSlide=0);
 	
 	void accepted();
 	//void rejected();
@@ -63,7 +61,8 @@ private:
 	SongEditorHighlighter *m_highlighter;
 	QLineEdit *m_title;
 	QLineEdit *m_defaultArrangement;
-	QLineEdit *m_arrangement;
+	//QLineEdit *m_arrangement;
+	QComboBox *m_arrangement;
 	SlideGroup *m_slideGroup;
 	AbstractSlideGroupEditor *m_editWin;
 	

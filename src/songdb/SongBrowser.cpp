@@ -237,7 +237,7 @@ void SongBrowser::addNewSong()
 	group->setSong(song);
 	
 	SongEditorWindow * editor = new SongEditorWindow();
-	editor->setSlideGroup(group,true);
+	editor->setSlideGroup(group);
 	editor->showSyncOption(false);
 	
 	connect(editor, SIGNAL(songCreated(SongRecord*)), this, SLOT(songCreated(SongRecord*)));
@@ -293,7 +293,7 @@ void SongBrowser::editSongInDB()
 		group->setSong(song);
 		
 		SongEditorWindow * editor = new SongEditorWindow();
-		editor->setSlideGroup(group,true);
+		editor->setSlideGroup(group);
 		editor->showSyncOption(false);
 		editor->show();
 		

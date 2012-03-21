@@ -22,6 +22,9 @@ private:
 	// may be causing errant behaviour for save/restore and centering text.
 	//Q_PROPERTY(QString text READ text WRITE setText);
 	//Q_PROPERTY(QString isTextDiffFromDb READ isTextDiffFromDb);
+	
+	// Advisory property for use in the song editor window
+	Q_PROPERTY(bool syncToDatabase READ syncToDatabase WRITE setSyncToDatabase);
 
 public:
 	SongSlideGroup();
@@ -42,6 +45,7 @@ public:
 	void     setArrangement(QStringList arr);
 
 	bool isTextDiffFromDb() { return m_isTextDiffFromDb; }
+	bool syncToDatabase() { return m_syncToDatabase; }
 	
 	inline SlideGroup * slideTemplates() { return m_slideTemplates; }
 	void setSlideTemplates(SlideGroup*);
@@ -57,6 +61,9 @@ public:
 	// Rearrange a block of text based on the arragment
 	static QString rearrange(QString text, QStringList arragement);
 	static QStringList findDefaultArragement(QString text);
+
+public slots:
+	void setSyncToDatabase(bool flag);
 	
 protected:
 	typedef enum SongTextFilter { Standard, AllowRear, AllowAll };
@@ -75,6 +82,7 @@ private:
 	SongRecord * m_song;
 	QString m_text;
 	bool m_isTextDiffFromDb;
+	bool m_syncToDatabase;
 	
 	QStringList m_arrangement;
 	

@@ -269,6 +269,7 @@ void MyGraphicsScene::clear(bool emitTxFinished)
 		emit transitionFinished(0);
 	}
 	
+	m_fadeRoot->setFrozen(false);
 	m_liveRoot->setFrozen(false);
 	
 	// dont remove our fade/live root
@@ -586,6 +587,7 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans, int speed, i
 	
 	if(crossFading)
 	{
+		m_fadeRoot->setFrozen(true);
 		m_liveRoot->setFrozen(true);
 	}
 	else
@@ -698,6 +700,7 @@ void MyGraphicsScene::endTransition()
 		m_fadeRoot->setOpacity(0);
 		m_liveRoot->setOpacity(1);
 		m_liveRoot->setFrozen(false);
+		m_fadeRoot->setFrozen(false);
 	#endif
 	
 	QList<QGraphicsItem*> kids = m_staticRoot->childItems();

@@ -21,7 +21,8 @@ SongSlideGroup::SongSlideGroup() : SlideGroup(),
 	m_text(""),
 	m_isTextDiffFromDb(false),
 	m_slideTemplates(0),
-	m_lastAspectRatio(-1)
+	m_lastAspectRatio(-1),
+	m_syncToDatabase(true)
 {
 	setEndOfGroupAction(SlideGroup::GotoNextGroup);
 	if(MainWindow::mw())
@@ -36,6 +37,11 @@ SongSlideGroup::~SongSlideGroup()
 {
 	if(m_song)
 		delete m_song;
+}
+
+void SongSlideGroup::setSyncToDatabase(bool flag)
+{
+	m_syncToDatabase = flag;
 }
 
 void SongSlideGroup::hitTextToSlides()
@@ -58,7 +64,10 @@ void SongSlideGroup::setSong(SongRecord *songRecord)
 	//qDebug() << "SongSlideGroup::setSong: songId:"<<m_song->songId()<<", title: "<<s->title();
 
 	m_text = songRecord->text();
-
+	
+	SongArrangement *arr = songRecord->defaultArrangement();
+	m_arrangement = arr->arrangement();
+	
 	setGroupTitle(songRecord->title());
 
 	// convert the text to slides

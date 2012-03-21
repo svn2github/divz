@@ -30,7 +30,7 @@ SongRecordListModel::SongRecordListModel()
 void SongRecordListModel::populateSongList()
 {
 	// prep db
-	(void)SongRecord::db();
+	(void)SongDatabase::db();
 	
 	m_populating = true;
 	
@@ -49,7 +49,7 @@ void SongRecordListModel::populateSongList()
 		clause = "WHERE title like ? OR text like ?";
 	
 	QSqlQuery query;
-	QString sql = QString("SELECT * FROM %1 %2 ORDER BY title").arg(SONG_TABLE).arg(clause);
+	QString sql = QString("SELECT songid FROM %1 %2 ORDER BY title").arg(SONG_TABLE).arg(clause);
 	//qDebug() << "SongRecordListModel::populateSongList(): sql:"<<sql;
 	
 	query.prepare(sql); 
@@ -80,7 +80,13 @@ void SongRecordListModel::populateSongList()
 		beginInsertRows(QModelIndex(),0,100);
 		
 		while(query.next())
-			addSong(SongRecord::fromQuery(query));
+		{
+			//addSong(SongRecord::fromQuery(query));
+			int id = query.record().value("songid").toInt();
+			// Call retrieve() instead of fromQuery()
+			// to make use of cached objects
+			addSong(SongRecord::retrieve(id));
+		}
 		
 		
 		endInsertRows();
@@ -149,7 +155,7 @@ void SongRecordListModel::addSong(SongRecord *song)
 	}
 	
 	m_songList << song;
-	connect(song, SIGNAL(songChanged(SongRecord*, QString, QVariant)), this, SLOT(songChanged(SongRecord*, QString, QVariant)));
+	connect(song, SIGNAL(recordChanged(SongRecord*, QString, QVariant)), this, SLOT(songChanged(SongRecord*, QString, QVariant)));
 	
 	//qDebug() << "SongRecordListModel::addSong(): Added songid"<<song->songId()<<", title:"<<song->title();
 	if(!m_populating)

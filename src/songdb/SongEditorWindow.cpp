@@ -81,12 +81,15 @@ SongEditorWindow::SongEditorWindow(SlideGroup *g, QWidget *parent) :
 
 	// My arrangement
 	QHBoxLayout *hbox3 = new QHBoxLayout();
-	label = new QLabel("Current &Arrangement:");
+	label = new QLabel("&Arrangement:");
 	hbox3->addWidget(label);
 	
-	m_arrangement = new QLineEdit();
-	m_arrangement->setReadOnly(false);
-	connect(m_arrangement, SIGNAL(textChanged(const QString&)), this, SLOT(arrTextChanged(const QString&)));
+	//m_arrangement = new QLineEdit();
+	//m_arrangement->setReadOnly(false);
+	m_arrangement = new QComboBox();
+	m_arrangement->setEditable(true);
+	m_arrangement->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Maximum);
+	connect(m_arrangement, SIGNAL(editTextChanged(const QString&)), this, SLOT(arrTextChanged(const QString&)));
 	label->setBuddy(m_arrangement);
 	hbox3->addWidget(m_arrangement);
 	
@@ -97,7 +100,7 @@ SongEditorWindow::SongEditorWindow(SlideGroup *g, QWidget *parent) :
 	hbox3->addWidget(btn);
 	
 	
-	btn = new QPushButton("List");
+	btn = new QPushButton("Show/Hide List");
 	btn->setCheckable(true);
 	btn->setIcon(QIcon(":/data/stock-find-and-replace.png"));
 	btn->setToolTip("Show/hide the arrangement drag-and-drop list");
@@ -310,6 +313,7 @@ void SongEditorWindow::setSlideGroup(SlideGroup *g,Slide */*curSlide*/)
 	SongSlideGroup * songGroup = dynamic_cast<SongSlideGroup*>(m_slideGroup);
 	if(!songGroup)
 		return;
+		
 	QString text = songGroup->text().replace("\r\n","\n");
 	m_editor->setPlainText(text);
 	m_title->setText(songGroup->groupTitle());
@@ -317,11 +321,28 @@ void SongEditorWindow::setSlideGroup(SlideGroup *g,Slide */*curSlide*/)
 	m_editor->setFocus(Qt::OtherFocusReason);
 	
 	m_defaultArrangement->setText(SongSlideGroup::findDefaultArragement(songGroup->text()).join(", "));
-	m_arrangement->setText(songGroup->arrangement().join(", "));
+	m_arrangement->setEditText(songGroup->arrangement().join(", "));
 	m_arrangementPreview->setText(SongSlideGroup::rearrange(songGroup->text(), songGroup->arrangement()));
 	
 	if(m_arrModel)
 		m_arrModel->setBlockList(songGroup->arrangement());
+		
+	bool syncToDatabase = songGroup->syncToDatabase();
+	if(syncToDatabase)
+	{
+		if(!songGroup->song()->songId())
+		{
+			setWindowTitle("New Song - Song Editor");
+			m_title->setText("");
+			m_title->setFocus(Qt::OtherFocusReason);
+		}
+	}
+	
+	m_syncToDatabase = syncToDatabase;
+	
+	m_syncBox->setChecked(syncToDatabase);
+	
+	//m_tmplEditButton->setVisible(!syncToDatabase);
 }
 
 void SongEditorWindow::arrTextChanged(const QString& newArr)
@@ -352,7 +373,7 @@ void SongEditorWindow::arrModelChange(QStringList newArrList, bool changeLineEdi
 		
 		// Update arr text
 		if(changeLineEdit)
-			m_arrangement->setText(newArrList.join(", "));
+			m_arrangement->setEditText(newArrList.join(", "));
 		
 		if(m_arrModel)
 			m_arrModel->setBlockList(newArrList);
@@ -368,28 +389,16 @@ void SongEditorWindow::editTextChanged()
 	m_arrangementPreview->setText(SongSlideGroup::rearrange(plainText, m_currArrPreviewList));
 }
 
-void SongEditorWindow::setSlideGroup(SlideGroup *g, bool syncToDatabase) 
-{
-	setSlideGroup(g);
-	if(syncToDatabase)
-	{
-		if(!dynamic_cast<SongSlideGroup*>(g)->song()->songId())
-		{
-			setWindowTitle("New Song - Song Editor");
-			m_title->setText("");
-			m_title->setFocus(Qt::OtherFocusReason);
-		}
-	}
-	
-	m_syncToDatabase = syncToDatabase;
-	
-	m_tmplEditButton->setVisible(!syncToDatabase);
-			
-}
 
 void SongEditorWindow::setSyncToDatabase(bool sync)
 {
 	m_syncToDatabase = sync;
+	
+	SongSlideGroup * songGroup = dynamic_cast<SongSlideGroup*>(m_slideGroup);
+	if(!songGroup)
+		return;
+	
+	songGroup->setSyncToDatabase(sync);
 }
 
 void SongEditorWindow::accepted()
@@ -403,7 +412,7 @@ void SongEditorWindow::accepted()
 			//songGroup->song()->setText(m_editor->toPlainText());
 			songGroup->setText(m_editor->toPlainText());
 			
-			QStringList newArrList = m_arrangement->text().split(QRegExp("\\s*,\\s*"));
+			QStringList newArrList = m_arrangement->currentText().split(QRegExp("\\s*,\\s*"));
 			songGroup->setArrangement(newArrList);
 			
 			if(m_syncToDatabase)
