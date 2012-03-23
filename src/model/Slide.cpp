@@ -10,6 +10,7 @@
 #include "BackgroundItem.h"
 #include "ItemFactory.h"
 
+
 #define ID_COUNTER_KEY "slide/id-counter"
 #include <QSettings>
 
@@ -165,6 +166,7 @@ void Slide::removeItem(AbstractItem *item)
 
 void Slide::itemChanged(QString s,QVariant v,QVariant old)
 {
+	m_revision ++;
 	AbstractItem * item = dynamic_cast<AbstractItem *>(sender());
 	emit slideItemChanged(item,"change",s,v,old);
 }
@@ -284,6 +286,24 @@ QByteArray Slide::toByteArray() const
 		map[name] = value;
 	}
 	
+	// Store dynamic properties as well
+	QList<QByteArray> dynamicProps = dynamicPropertyNames();
+	foreach(QByteArray name, dynamicProps)
+	{
+		if(name.startsWith("_q"))
+			continue;
+			
+		QVariant var = property(name.data());
+		// dont store userdefined types
+		if(var.isValid() && (int)var.type() < 127)
+		{
+			map[QString(name)] = var;
+			//qDebug() << "GLDrawable::propsToMap():"<<(QObject*)this<<": dynamic prop:"<<name<<", value:"<<var;
+		}
+	}
+	
+	map["rev"] = m_revision;
+	
 	QVariantList list;
 	foreach (AbstractItem * content, m_items) 
 		list << content->toByteArray();
@@ -302,19 +322,25 @@ void Slide::fromByteArray(QByteArray &array)
 	// So we dont have to engineer our own method of tracking
 	// properties, just assume all inherited objects delcare the relevant
 	// properties using Q_PROPERTY macro
-	const QMetaObject *metaobject = metaObject();
-	int count = metaobject->propertyCount();
-	for (int i=0; i<count; ++i)
+// 	const QMetaObject *metaobject = metaObject();
+// 	int count = metaobject->propertyCount();
+// 	for (int i=0; i<count; ++i)
+	foreach(QString propName, map.keys())
 	{
-		QMetaProperty metaproperty = metaobject->property(i);
-		const char *name = metaproperty.name();
-		QVariant value = map[name];
+// 		QMetaProperty metaproperty = metaobject->property(i);
+// 		const char *name = metaproperty.name();
+// 		QVariant value = map[name];
+		QVariant value = map[propName];
+		
 		//qDebug() << "AbstractItem::clone():"<<itemName()<<": prop:"<<name<<", value:"<<value;
 		if(value.isValid())
-			setProperty(name,value);
+			//setProperty(name,value);
+			setProperty(qPrintable(propName),value);
 		else
-			qDebug() << "Slide::loadByteArray: Unable to load property for "<<name<<", got invalid property from map";
+			qDebug() << "Slide::loadByteArray: Unable to load property for "<<propName<<", got invalid property from map";
 	}
+	
+	m_revision = map["rev"].toUInt();
 	
 	QVariantList items = map["items"].toList();
 	foreach(QVariant var, items)
@@ -384,3 +410,4 @@ double Slide::guessTimeout()
 	return guess;
 
 }
+

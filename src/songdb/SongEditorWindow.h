@@ -54,6 +54,9 @@ private slots:
 	void resetArr();
 	
 	void arrListViewToggled(bool);
+	
+	void arrActivated(const QString&);
+	void arrCurrentIndexChanged(const QString&);
 
 private:
 	MyQTextEdit *m_editor;

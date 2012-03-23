@@ -69,7 +69,7 @@ public:
 	// or file instances if the properties are EXACTLY the same
 	virtual quint32 valueKey();
 	
-	// ++ every time setChanged() is called, starts at zero for every object, not persistant across program runs
+	// ++ every time setChanged() is called, starts at zero for every object
 	quint32 revision() { return m_revision; }
 	
 	static QString guessTitle(QString field);
@@ -98,7 +98,7 @@ private:
 
 	bool		m_isBeingLoaded; // true if being loaded (fromXml) - prevents itemChanged() signal from being fired by setChanged()
 	
-	quint32 	m_revision; // ++ every time setChanged() is called, starts at zero for every object, not persistant across program runs
+	quint32 	m_revision; // ++ every time setChanged() is called, starts at zero for every object
 	
 	QByteArray 	m_valueKeyTmp; // used to create the valueKey()
 

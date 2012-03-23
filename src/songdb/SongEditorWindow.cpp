@@ -90,6 +90,8 @@ SongEditorWindow::SongEditorWindow(SlideGroup *g, QWidget *parent) :
 	m_arrangement->setEditable(true);
 	m_arrangement->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Maximum);
 	connect(m_arrangement, SIGNAL(editTextChanged(const QString&)), this, SLOT(arrTextChanged(const QString&)));
+	connect(m_arrangement, SIGNAL(currentIndexChanged(const QString &)), this, SLOT(arrCurrentIndexChanged(const QString&)));
+	connect(m_arrangement, SIGNAL(activated(const QString &)), this, SLOT(arrActivated(const QString&)));
 	label->setBuddy(m_arrangement);
 	hbox3->addWidget(m_arrangement);
 	
@@ -235,6 +237,15 @@ SongEditorWindow::SongEditorWindow(SlideGroup *g, QWidget *parent) :
 	
 }
 
+void SongEditorWindow::arrActivated(const QString& txt)
+{
+	qDebug() << "SongEditorWindow::arrActivated(): "<<txt;
+}
+void SongEditorWindow::arrCurrentIndexChanged(const QString& txt)
+{
+	qDebug() << "SongEditorWindow::arrCurrentIndexChanged(): "<<txt;
+}
+	
 void SongEditorWindow::arrListViewToggled(bool flag)
 {
 	m_arrListView->setVisible(flag);
@@ -421,6 +432,17 @@ void SongEditorWindow::accepted()
 				SongRecord * song = songGroup->song();
 				song->setTitle(m_title->text());
 				song->setText(m_editor->toPlainText());
+				
+				SongArrangement *arr = song->defaultArrangement();
+				arr->setArrangement(newArrList);
+				
+				SlideGroup * tmpl = songGroup->slideTemplates();
+				if(!tmpl)
+					tmpl = songGroup->createDefaultTemplates();
+				
+				arr->setTemplateGroup(tmpl);
+				
+				
 				
 				if(!songGroup->song()->songId())
 				{

@@ -134,6 +134,8 @@ QByteArray AbstractItem::toByteArray() const
 		//item->setProperty(name,value);
 		map[name] = value;
 	}
+	
+	map["rev"] = m_revision;
 
 	map["AbstractItem.ClassName"] = metaobject->className();
 	stream << map;
@@ -206,6 +208,8 @@ void AbstractItem::loadVariantMap(QVariantMap &map)
 		else
 			qDebug() << "AbstractItem::loadByteArray: Unable to load property for "<<name<<", got invalid property from map";
 	}
+	
+	m_revision = map["rev"].toUInt();
 }
 
 quint32 AbstractItem::valueKey()

@@ -66,7 +66,8 @@ void SongSlideGroup::setSong(SongRecord *songRecord)
 	m_text = songRecord->text();
 	
 	SongArrangement *arr = songRecord->defaultArrangement();
-	m_arrangement = arr->arrangement();
+	m_arrangement    = arr->arrangement();
+	m_slideTemplates = arr->templateGroup();
 	
 	setGroupTitle(songRecord->title());
 
@@ -676,16 +677,7 @@ bool SongSlideGroup::fromXml(QDomElement & pe)
 
 void SongSlideGroup::fromVariantMap(QVariantMap &map)
 {
-	QVariant templates = map["templates"];
-	if(templates.isValid())
-	{
-		QByteArray ba = templates.toByteArray();
-		SlideGroup *templates = SlideGroup::fromByteArray(ba);
-		setSlideTemplates(templates);
-	}
-	
-	
-	int songid = map["songid"].toInt();
+		int songid = map["songid"].toInt();
 	//qDebug() << "SongSlideGroup::fromXml(): songid from xml:"<<songid;
 
 	SongRecord *song = SongRecord::retrieve(songid);
@@ -702,6 +694,14 @@ void SongSlideGroup::fromVariantMap(QVariantMap &map)
 		qDebug("SongSlideGroup::fromXml: Invalid songid %d in XML!",songid);
 	}
 
+	QVariant templates = map["templates"];
+	if(templates.isValid())
+	{
+		QByteArray ba = templates.toByteArray();
+		SlideGroup *templates = SlideGroup::fromByteArray(ba);
+		setSlideTemplates(templates);
+	}
+	
 	QVariantList arr = map["arr"].toList();
 	m_arrangement.clear();
 	foreach(QVariant var, arr)
@@ -814,6 +814,7 @@ QString SongSlideGroup::rearrange(QString text, QStringList arragement)
 	
 	QString curBlockTitle;
 	QStringList curBlockText;
+	bool firstBlock = true;
 	foreach(QString passage, blockList)
 	{
 		int pos = blockTitleRegexp.indexIn(passage);
@@ -821,7 +822,18 @@ QString SongSlideGroup::rearrange(QString text, QStringList arragement)
 		{
 			// first, add block to hash if we have a block already
 			if(!curBlockTitle.isEmpty())
+			{
 				blockHash[curBlockTitle] = curBlockText.join("\n\n");
+			}
+			else
+			// or this is the first block and no title given - assume "Title" block
+			if(firstBlock && curBlockTitle.isEmpty() && !curBlockText.isEmpty())
+			{
+				curBlockTitle = "Title";
+				blockHash[curBlockTitle] = curBlockText.join("\n\n");
+			}
+			
+			firstBlock = false;
 			
 			// start new block
 			curBlockTitle = blockTitleRegexp.cap(1);
@@ -875,7 +887,8 @@ QStringList SongSlideGroup::findDefaultArragement(QString text)
 	QStringList blockTitleList;
 	
 	QString curBlockTitle;
-	QStringList curBlockText;
+	bool firstBlock = true;
+	int contentLines = 0;
 	foreach(QString passage, blockList)
 	{
 		int pos = blockTitleRegexp.indexIn(passage);
@@ -884,10 +897,21 @@ QStringList SongSlideGroup::findDefaultArragement(QString text)
 			// first, add block to hash if we have a block already
 			if(!curBlockTitle.isEmpty())
 				blockTitleList << curBlockTitle;
+			else
+			// or this is the first block and no title given - assume "Title" block
+			if(firstBlock && curBlockTitle.isEmpty() && contentLines > 0)
+			{
+				blockTitleList << "Title";
+			}
+			
 			
 			// start new block
 			curBlockTitle = blockTitleRegexp.cap(1);
+			contentLines = 0;
+			firstBlock = false;
 		}
+		
+		contentLines ++;
 	}
 	
 	if(!curBlockTitle.isEmpty())

@@ -255,8 +255,8 @@ SongArrangement::SongArrangement(SongRecord *song, QString title, QStringList ar
 SONG_PROPSET(SongArrangement, ArrId,	int,		arrId,		"arrid");
 SONG_PROPSET(SongArrangement, SongId,	int,		songId,		"songid");
 SONG_PROPSET(SongArrangement, Title,	QString,	title,		"title");
-SONG_PROPSET(SongArrangement, Arr,	QString,	arr,		"tags");
-SONG_PROPSET(SongArrangement, Tmpl,	QByteArray,	tmpl,		"tmpl");
+SONG_PROPSET(SongArrangement, Arr,	QString,	arr,		"arrangement");
+SONG_PROPSET(SongArrangement, Tmpl,	QByteArray,	tmpl,		"template");
 
 SongRecord *SongArrangement::song() const
 {
@@ -302,7 +302,7 @@ bool SongArrangement::updateDb(QString field, QVariant v)
 	
 	QSqlQuery query;
 	QString sql = QString("UPDATE %1 SET %2 = ? WHERE arrid = ?").arg(SONG_ARR_TABLE).arg(field);
-	//qDebug() << "updateDb():"<<sql<<", value:"<<v<<", songid:"<<m_songId;
+	qDebug() << "SongArrangement::updateDb():"<<sql<<", value:"<<v<<", arrid:"<<arrId();
 	query.prepare(sql); 
 	query.addBindValue(v);
 	query.addBindValue(arrId());

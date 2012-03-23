@@ -89,7 +89,7 @@
 class RootObject : public QGraphicsItem
 {
 public:
-	RootObject(QGraphicsScene*x):QGraphicsItem(0,x){
+	RootObject(MyGraphicsScene *scene):QGraphicsItem(0,scene), m_scene(scene){
 	
 		#if QT46_OPAC_ENAB > 0 
 			QGraphicsOpacityEffect * opac = new QGraphicsOpacityEffect();
@@ -126,6 +126,18 @@ public:
 		// cache into the pixmap 'm_cache', then hide all the kids
 		if(flag)
 		{
+			Slide *slide = m_scene->slide();
+			if(slide)
+			{
+				quint32 cr = slide->property("-root-cachedRev").toInt();
+				if(cr == slide->revision())
+				{
+					QVariant var = slide->property("-root-cachedImage");
+					m_cache = var.value<QImage>();
+					return;
+				}
+			}
+			
 			QStyleOptionGraphicsItem option;
 			
 			QRectF rect = scene() ? scene()->sceneRect() : QRectF();
@@ -165,7 +177,15 @@ public:
 			
 			// hide all kids
 			foreach(QGraphicsItem *item, kids)
-				item->setVisible(false); 
+				item->setVisible(false);
+				
+			if(slide)
+			{
+				slide->setProperty("-root-cachedRev",slide->revision());
+				slide->setProperty("-root-cachedImage", m_cache);
+			}
+			
+			return;
 		}
 		
 		m_frozen = flag;
@@ -175,6 +195,7 @@ public:
 private:
 	QImage m_cache;
 	bool m_frozen;
+	MyGraphicsScene *m_scene;
 };
 
 MyGraphicsScene::MyGraphicsScene(ContextHint hint, QObject * parent)

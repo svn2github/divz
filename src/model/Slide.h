@@ -57,6 +57,9 @@ public:
 	
 	// guess a change time based on slide contents
 	double guessTimeout();
+	
+	// Changes if any of the items have changed, persists across runs
+	quint32 revision() { return m_revision; }
 
 signals:
 	// Operation = "Add", "Remove", "Change"
@@ -79,6 +82,8 @@ private:
 	double m_crossFadeQuality;
 
 	int m_primarySlideId;
+	
+	quint32 m_revision; // ++ every time changed is called, starts at zero for every object
 };
 
 //Q_DECLARE_METATYPE(Slide);
