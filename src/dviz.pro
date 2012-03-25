@@ -199,7 +199,14 @@ include(bible/bible.pri)
 include(viewer/client.pri)
 include(imgtool/exiv2-0.18.2-qtbuild/qt_build_root.pri)
 include(webgroup/webgroup.pri)
-include(miditcp/miditcp.pri)
+
+nomiditcp: {
+	include(miditcp/miditcp.pri)
+}
+else: {
+	include(/opt/miditcp/client/miditcp.pri)
+}
+
 
 # deployment on Linux
 unix {

@@ -29,7 +29,9 @@ Slide::Slide()
 	m_crossFadeSpeed = 250;
 	m_crossFadeQuality = 15;
 	m_primarySlideId = -1;
+	m_revision = 1;
 }
+
 Slide::~Slide() 
 {
 	//qDebug() << "Slide::~Slide() - destorying slide";

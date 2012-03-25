@@ -129,12 +129,20 @@ public:
 			Slide *slide = m_scene->slide();
 			if(slide)
 			{
-				quint32 cr = slide->property("-root-cachedRev").toInt();
-				if(cr == slide->revision())
+				QVariant var = slide->property("-root-cachedRev");
+				if(var.isValid())
 				{
-					QVariant var = slide->property("-root-cachedImage");
-					m_cache = var.value<QImage>();
-					return;
+					quint32 cr = var.toInt();
+					if(cr == slide->revision())
+					{
+						var = slide->property("-root-cachedImage");
+						if(var.isValid())
+						{
+							m_cache = var.value<QImage>();
+							qDebug() << "RenderProxyItem::setFrozen("<<flag<<"): Hit cache at rev "<<cr;
+							return;
+						}
+					}
 				}
 			}
 			
@@ -156,6 +164,7 @@ public:
 			//qDebug() << "RenderProxyItem::setFrozen("<<flag<<"): Cache size:"<<size;
 			m_cache = QImage(size, QImage::Format_ARGB32_Premultiplied);
 			QPainter p(&m_cache);
+			//p.fillRect(m_cache.rect(), Qt::transparent);
 			p.setRenderHint(QPainter::Antialiasing, true);
 			p.setRenderHint(QPainter::SmoothPixmapTransform, true);
 			//paint(&p, 0, 0);
@@ -183,9 +192,10 @@ public:
 			{
 				slide->setProperty("-root-cachedRev",slide->revision());
 				slide->setProperty("-root-cachedImage", m_cache);
+				qDebug() << "RenderProxyItem::setFrozen("<<flag<<"): Missed cache, rendering for rev "<<slide->revision();
 			}
 			
-			return;
+			//return;
 		}
 		
 		m_frozen = flag;
