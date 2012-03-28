@@ -750,7 +750,27 @@ void SlideEditorWindow::setCurrentSlideLive()
 		return;
 	if(!m_slideGroup)
 		return;
+	
 	Slide * slide = m_scene->slide();
+	SlideGroup *group = m_slideGroup;
+	
+	QVariant altFlagVar = m_slideGroup->property("isAltGroup");
+	bool altFlag = altFlagVar.isValid() && altFlagVar.toBool();
+	if(slide && altFlag)
+	{
+		QVariant slideGroupVar   = m_slideGroup->property("primaryGroup");
+		SlideGroup *primaryGroup = slideGroupVar.value<SlideGroup*>();
+		Slide *primarySlide      = primaryGroup->slideById(slide->primarySlideId());
+		
+		if(primarySlide)
+		{
+			group = primaryGroup;
+			slide = primarySlide;
+			qDebug() << "SlideEditorWindow::setCurrentSlideLive(): Found primary slide for alternate group and slide, using that instead.";
+		}
+		
+	}
+	
 	double changeTime = slide->autoChangeTime();
 	if(changeTime > 0)
 	{
@@ -762,7 +782,7 @@ void SlideEditorWindow::setCurrentSlideLive()
 			slide->setAutoChangeTime(0);
 	}
 
-	MainWindow::mw()->setLiveGroup(m_slideGroup,slide,false); // false = dont show progress dialog
+	MainWindow::mw()->setLiveGroup(group, slide, false); // false = dont show progress dialog
 
 	if(changeTime > 0 && slide->autoChangeTime() == 0)
 	{

@@ -92,7 +92,7 @@ BibleVerseRef BibleVerseRef::verseRef(int newVerseNumber) const
 }
 
 
-#define DEBUG_NORMALIZE 0
+#define DEBUG_NORMALIZE 1
 BibleVerseRef BibleVerseRef::normalize(const QString& tmp, const BibleVersion &version)
 {
 	if(!bookNameMap_initalized)
