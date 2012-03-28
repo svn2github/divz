@@ -561,7 +561,7 @@ QPixmap SlideGroupListModel::generatePixmap(Slide *slide)
  	DeepProgressIndicator * d = DeepProgressIndicator::indicatorForObject(this);
  	if(d)
  		d->step();
- 	
+ 		
  	if(m_dataLoadPending.contains(slide))
  	{
  		if(m_dataLoadPending[slide]->isDataLoadComplete())
@@ -618,6 +618,22 @@ QPixmap SlideGroupListModel::generatePixmap(Slide *slide)
  	}
  	else
  	{
+// 	 	// Used the cached image instead of rendering our own
+// 		QVariant var = slide->property("-root-cachedRev");
+// 		if(var.isValid())
+// 		{
+// 			quint32 cr = var.toInt();
+// 			if(cr == slide->revision())
+// 			{
+// 				var = slide->property("-root-cachedImage");
+// 				if(var.type() == QVariant::Image &&
+// 					var.isValid())
+// 				{
+// 					return QPixmap::fromImage(var.value<QImage>().scaled(m_iconSize));
+// 				}
+// 			}
+// 		}
+		
 		if(!m_scene)
 			m_scene = new MyGraphicsScene(MyGraphicsScene::StaticPreview);
 		if(m_scene->sceneRect() != m_sceneRect)

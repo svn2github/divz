@@ -33,8 +33,8 @@
 
 ImageContent::ImageContent(QGraphicsScene * scene, QGraphicsItem * parent)
     : AbstractContent(scene, parent, false)
-    , m_shadowClipDirty(true)
     , m_svgRenderer(0)
+    , m_shadowClipDirty(true)
     , m_fileLoaded(false)
     , m_fileName("")
     , m_lastModelRev(0)
@@ -139,13 +139,54 @@ void ImageContent::loadFile(const QString &file)
 		}
 		else
 		{
-			QImageReader reader(file);
-			QImage image = reader.read();
-			if(image.isNull())
+			QFileInfo info(file);
+			QImage image;
+			
+			AbstractVisualItem *model = modelItem();
+			
+			// File not on disk, attempt to load from the model item
+			if(!info.exists())
 			{
-				qDebug() << "ImageContent::loadFile: Unable to read"<<file<<": "<<reader.errorString();
+				QString cachedFilename = model->property("-cached_image_filename").toString();
+				if(!cachedFilename.isEmpty() &&
+				    cachedFilename == file)
+				{
+					QByteArray bytes = model->property("-cached_image_bytes").toByteArray();
+					if(!bytes.isEmpty())
+					{
+						image.loadFromData(bytes);
+						qDebug() << "ImageContent::loadFile: Loaded "<<((int)bytes.size()/1024)<<"Kb bytes from model for missing file "<<file;
+					}
+				}
 			}
 			else
+			{
+				QImageReader reader(file);
+				image = reader.read();
+				
+				if(image.isNull())
+				{
+					qDebug() << "ImageContent::loadFile: Unable to read"<<file<<": "<<reader.errorString();
+				}
+				else
+				{
+					QFile fileBytesReader(file);
+					QByteArray bytes;
+					if (fileBytesReader.open(QIODevice::ReadOnly))
+					{
+						bytes = fileBytesReader.readAll();
+					
+						model->setProperty("-cached_image_filename", file);
+						model->setProperty("-cached_image_bytes",    bytes);
+						
+						qDebug() << "ImageContent::loadFile: Packed "<<((int)bytes.size()/1024)<<"Kb into model for file "<<file;
+						
+						bytes = QByteArray(); // release the memory from the byte array just to be conservative
+					}
+				}
+			}
+			
+			if(!image.isNull())
 			{
 				QPixmap px = QPixmap::fromImage(image);
 				setPixmap(px);

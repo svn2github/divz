@@ -1160,7 +1160,30 @@ QPixmap	SlideGroupFactory::generatePreviewPixmap(SlideGroup *group, QSize iconSi
 		qDebug("SlideGroupFactory::generatePreviewPixmap: No slide at 0");
 		return QPixmap();
 	}
+	
+// 	// Used the cached image instead of rendering our own
+// 	QVariant var = slide->property("-root-cachedImage");
+// 	if(var.type() == QVariant::Image &&
+// 		var.isValid())
+// 	{
+// 		return QPixmap::fromImage(var.value<QImage>().scaled(icon_w,icon_h));
+// 	}
 
+// 	// Used the cached image instead of rendering our own
+// 	QVariant var = slide->property("-root-cachedRev");
+// 	if(var.isValid())
+// 	{
+// 		quint32 cr = var.toInt();
+// 		if(cr == slide->revision())
+// 		{
+// 			var = slide->property("-root-cachedImage");
+// 			if(var.type() == QVariant::Image &&
+// 				var.isValid())
+// 			{
+// 				return QPixmap::fromImage(var.value<QImage>().scaled(icon_w,icon_h));
+// 			}
+// 		}
+// 	}
 
 	if(!m_scene)
 		m_scene = new MyGraphicsScene(MyGraphicsScene::StaticPreview);

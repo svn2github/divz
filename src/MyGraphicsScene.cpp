@@ -115,6 +115,8 @@ public:
 		}
 	}
 	
+	void setName(const QString& name) { m_name = name; }
+	
 	void setFrozen(bool flag)
 	{
 		
@@ -136,10 +138,11 @@ public:
 					if(cr == slide->revision())
 					{
 						var = slide->property("-root-cachedImage");
-						if(var.isValid())
+						if(var.type() == QVariant::Image &&
+						   var.isValid())
 						{
 							m_cache = var.value<QImage>();
-							qDebug() << "RenderProxyItem::setFrozen("<<flag<<"): Hit cache at rev "<<cr;
+							//qDebug() << "RenderProxyItem::setFrozen("<<flag<<"): "<<scene() <<"->"<< m_name <<"->"<< slide<<": Hit cache at rev "<<cr;
 							return;
 						}
 					}
@@ -192,7 +195,7 @@ public:
 			{
 				slide->setProperty("-root-cachedRev",slide->revision());
 				slide->setProperty("-root-cachedImage", m_cache);
-				qDebug() << "RenderProxyItem::setFrozen("<<flag<<"): Missed cache, rendering for rev "<<slide->revision();
+				qDebug() << "RenderProxyItem::setFrozen("<<flag<<"): "<<scene() <<"->"<< m_name <<"->"<< slide<<": Missed cache, rendering for rev "<<slide->revision();
 			}
 			
 			//return;
@@ -206,6 +209,7 @@ private:
 	QImage m_cache;
 	bool m_frozen;
 	MyGraphicsScene *m_scene;
+	QString m_name;
 };
 
 MyGraphicsScene::MyGraphicsScene(ContextHint hint, QObject * parent)
@@ -220,12 +224,15 @@ MyGraphicsScene::MyGraphicsScene(ContextHint hint, QObject * parent)
 {
 	m_staticRoot = new RootObject(this);
 	m_staticRoot->setPos(0,0);
+	m_staticRoot->setName("staticRoot");
 	
 	m_fadeRoot = new RootObject(this);
 	m_fadeRoot->setPos(0,0);
+	m_fadeRoot->setName("fadeRoot");
 	
 	m_liveRoot = new RootObject(this);
 	m_liveRoot->setPos(0,0);
+	m_liveRoot->setName("liveRoot");
 	
 	//installEventFilter(this);
 }

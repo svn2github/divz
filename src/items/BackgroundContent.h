@@ -101,7 +101,7 @@ class BackgroundContent : public AbstractContent, public QVideoConsumer
 	
     protected:
     	friend class BackgroundImageWarmingThread;
-    	static QImage * internalLoadFile(QString file,QString cacheKey, QRect rect);
+    	static QImage * internalLoadFile(QString file,QString cacheKey, QRect rect, AbstractVisualItem *item);
     
     private slots:
 	void setPixmap(const QPixmap & pixmap);

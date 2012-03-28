@@ -518,7 +518,7 @@ void BackgroundContent::setImageFile(const QString &file)
 			else
 			{
 // 				qDebug() << "BackgroundContent::setImageFile: "<<file<<": using internal load file";
-				QImage * cacheImg = internalLoadFile(file,cacheKey,contentsRect());
+				QImage * cacheImg = internalLoadFile(file,cacheKey,contentsRect(),modelItem());
 				if(cacheImg)
 				{
 					cache = QPixmap::fromImage(*cacheImg);
@@ -534,7 +534,7 @@ void BackgroundContent::setImageFile(const QString &file)
 	}
 }
 
-QImage * BackgroundContent::internalLoadFile(QString file,QString cacheKey, QRect contentsRect)
+QImage * BackgroundContent::internalLoadFile(QString file, QString cacheKey, QRect contentsRect, AbstractVisualItem *model)
 {
 	QImage * cache = 0;
 	if(QFile(cacheKey).exists() && QFileInfo(file).lastModified() <= QFileInfo(cacheKey).lastModified())
@@ -542,44 +542,84 @@ QImage * BackgroundContent::internalLoadFile(QString file,QString cacheKey, QRec
 		cache = new QImage();
 		cache->load(cacheKey);
 		return cache;
-
-
+		
 		//qDebug() << "BackgroundContent::setImageFile: file:"<<file<<", size:"<<size<<": hit DISK (loaded scaled from disk cache)";
 	}
-	else
+	
+	if(1) // we reached here
 	{
-
-		QImageReader reader(file);
-		QImage image = reader.read();
-		if(image.isNull())
+		QFileInfo info(file);
+		QImage image;
+		
+		// File not on disk, attempt to load from the model item
+		if(!info.exists())
 		{
-			if(reader.errorString().indexOf("Unable")>-1)
+			QString cachedFilename = model->property("-cached_image_filename").toString();
+			qDebug() << "BackgroundContent::internalLoadFile: [debug] cachedFilename:"<<cachedFilename<<", file:"<<file; 
+			if(!cachedFilename.isEmpty() &&
+			    cachedFilename == file)
 			{
-				qDebug() << "BackgroundContent::setImageFile: Unable to read"<<file<<": "<<reader.errorString()<<", Trying to force-reset some cache space";
-
-				QPixmapCache::setCacheLimit(10 * 1024);
-				QPixmap testPm(1024,768);
-				testPm.fill(Qt::lightGray);
-				if(QPixmapCache::insert("test",testPm))
-					qDebug() << "BackgroundContent::setImageFile: Unable to insert text pixmap into cache after shrinkage";
-
-				//QPixmapCache::setCacheLimit(AppSettings::pixmapCacheSize() * 1024);
-
-				image = reader.read();
-				if(image.isNull())
+				QByteArray bytes = model->property("-cached_image_bytes").toByteArray();
+				qDebug() << "BackgroundContent::internalLoadFile: [debug] bytes.size():"<<bytes.size();
+				if(!bytes.isEmpty())
 				{
-					qDebug() << "BackgroundContent::setImageFile: Still unable to read"<<file<<": "<<reader.errorString();
+					image.loadFromData(bytes);
+					qDebug() << "BackgroundContent::internalLoadFile: Loaded "<<((int)bytes.size()/1024)<<"Kb bytes from model for missing file "<<file;
 				}
 			}
-			else
-			{
-				qDebug() << "BackgroundContent::setImageFile: Unable to read"<<file<<": "<<reader.errorString();
-			}
-
 		}
-
+		else
+		{
+			QImageReader reader(file);
+			image = reader.read();
+			if(image.isNull())
+			{
+				if(reader.errorString().indexOf("Unable")>-1)
+				{
+					qDebug() << "BackgroundContent::internalLoadFile: Unable to read"<<file<<": "<<reader.errorString()<<", Trying to force-reset some cache space";
+	
+					QPixmapCache::setCacheLimit(10 * 1024);
+					QPixmap testPm(1024,768);
+					testPm.fill(Qt::lightGray);
+					if(QPixmapCache::insert("test",testPm))
+						qDebug() << "BackgroundContent::internalLoadFile: Unable to insert text pixmap into cache after shrinkage";
+	
+					//QPixmapCache::setCacheLimit(AppSettings::pixmapCacheSize() * 1024);
+	
+					image = reader.read();
+					if(image.isNull())
+					{
+						qDebug() << "BackgroundContent::internalLoadFile: Still unable to read"<<file<<": "<<reader.errorString();
+					}
+				}
+				else
+				{
+					qDebug() << "BackgroundContent::internalLoadFile: Unable to read"<<file<<": "<<reader.errorString();
+				}
+			}
+		}
+		
 		if(!image.isNull())
 		{
+			QFile fileBytesReader(file);
+			QByteArray bytes;
+			if (fileBytesReader.open(QIODevice::ReadOnly))
+			{
+				bytes = fileBytesReader.readAll();
+			
+				model->setProperty("-cached_image_filename", file);
+				model->setProperty("-cached_image_bytes",    bytes);
+				
+				qDebug() << "BackgroundContent::internalLoadFile: Packed "<<(int)(bytes.size()/1024)<<"Kb into model for file "<<model->property("-cached_image_filename").toString();
+			}
+			
+			//qDebug() << "BackgroundContent::internalLoadFile: Packed "<<(bytes.size()/1024)<<"Kb into model for file "<<file;
+			
+			bytes = QByteArray(); // release the memory from the byte array just to be conservative
+			
+			
+
+
 // 			qDebug() << "BackgroundContent::setImageFile: file:"<<file<<": loading from DISK";
 			// Re-render the image if AR difference between Image and Item is greater than X%
 			// TODO: Make the handling of a mistmatched AR user-selectable a la Windows Desktop Background dialog:
@@ -638,12 +678,12 @@ QImage * BackgroundContent::internalLoadFile(QString file,QString cacheKey, QRec
 
 			cache = new QImage(image.scaled(size,Qt::IgnoreAspectRatio,Qt::SmoothTransformation));
 			cache->save(cacheKey,"JPEG");
-
+			
 			return cache;
 		}
 		else
 		{
-			qDebug() << "BackgroundContent::setImageFile: file:"<<file<<" NOT LOADED";
+			qDebug() << "BackgroundContent::internalLoadFile: file:"<<file<<" NOT LOADED";
 		}
 	}
 
@@ -654,6 +694,7 @@ BackgroundImageWarmingThreadManager::BackgroundImageWarmingThreadManager(Backgro
 {
 	QPixmap cache;
 
+	bool renderNeeded = false;
 	if(QPixmapCache::find(key,cache))
 	{
 		//qDebug()<<"TextBoxWarmingThreadManager(): modelItem:"<<model->itemName()<<": Cache HIT";
@@ -669,6 +710,13 @@ BackgroundImageWarmingThreadManager::BackgroundImageWarmingThreadManager(Backgro
 		qDebug()<<"BackgroundImageWarmingThreadManager(): modelItem:"<<model->itemName()<<": Cache load from"<<key<<" finish";
 	}
 	else
+	if(model->property("-cached_image_filename").type() == QVariant::String)
+	{
+		renderNeeded = true;
+		
+	}
+	
+	if(renderNeeded)
 	{
 		//qDebug()<<"BackgroundImageWarmingThreadManager(): modelItem:"<<model->itemName()<<": Cache MISS";
 		m_thread = new BackgroundImageWarmingThread(model,key,rect);
@@ -685,10 +733,11 @@ void BackgroundImageWarmingThreadManager::renderDone(QImage *image)
 		deleteLater();
 		return;
 	}
-
+	
 	QPixmap cache = QPixmap::fromImage(*image);
 	cache.save(m_cacheKey,"JPEG");
 	QPixmapCache::insert(m_cacheKey, cache);
+
 	delete image; // QPixmap::fromImage() made a copy, so we dont need to waste this memory here
 	deleteLater();
 }
@@ -703,7 +752,7 @@ void BackgroundImageWarmingThread::run()
 	}
 
 	QString file = AppSettings::applyResourcePathTranslations(m_model->fillImageFile());
-	QImage * image = BackgroundContent::internalLoadFile(file,m_cacheKey,m_rect);
+	QImage * image = BackgroundContent::internalLoadFile(file,m_cacheKey,m_rect,m_model);
 	emit renderDone(image);
 }
 

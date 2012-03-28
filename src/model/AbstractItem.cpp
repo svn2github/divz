@@ -132,7 +132,58 @@ QByteArray AbstractItem::toByteArray() const
 		QVariant value = property(name);
  		//qDebug() << "AbstractItem::toByteArray():"<<itemName()<<": prop:"<<name<<", value:"<<value;
 		//item->setProperty(name,value);
+		if(value.type() == QVariant::Image)
+		{
+			// Store images as bytearrays because the default storage method is to compress as PNGs - which
+			// takes a while on a document with 100s of slides (each possibly with multiple PNGs as props)
+			QImage image = value.value<QImage>();
+			QByteArray data((const char*)image.bits(), image.byteCount());
+			value = data;
+			
+			// Must store size and format for loading image from byte array
+			map[QString("_q_dviz_img_%1_size").arg(name)]   = image.size();
+			map[QString("_q_dviz_img_%1_format").arg(name)] = (int)image.format();
+		}
+		
 		map[name] = value;
+	}
+	
+	// Store dynamic properties as well
+	QList<QByteArray> dynamicProps = dynamicPropertyNames();
+	foreach(QByteArray name, dynamicProps)
+	{
+		if(name.startsWith("_q"))
+			continue;
+			
+		QVariant var = property(name.data());
+		// dont store userdefined types
+		if(var.isValid() && (int)var.type() < 127)
+		{
+			if(var.type() == QVariant::Image)
+			{
+				QString propName(name);
+				
+				//qDebug() << this << ": Saving image for prop:"<<propName;
+				
+				QImage image = var.value<QImage>();
+				
+				// Must store size and format for loading image from byte array
+				map[QString("_q_dviz_img_%1_size").arg(propName)]   = image.size();
+				map[QString("_q_dviz_img_%1_format").arg(propName)] = (int)image.format();
+				// Since this is a dynamic prop, the loading code needs to have a way
+				// to look up the type of this prop before assuming its an image -
+				// so store the variant type in the map as well
+				map[QString("_q_dviz_propType_%1").arg(propName)]   = (int)var.type();
+				
+				// Store images as bytearrays because the default storage method is to compress as PNGs - which
+				// takes a while on a document with 100s of slides (each possibly with multiple PNGs as props)
+				QByteArray data((const char*)image.bits(), image.byteCount());
+				var = data;
+			}
+			
+			map[QString(name)] = var;
+			//qDebug() << "GLDrawable::propsToMap():"<<(QObject*)this<<": dynamic prop:"<<name<<", value:"<<var;
+		}
 	}
 	
 	map["rev"] = m_revision;
@@ -196,17 +247,64 @@ void AbstractItem::loadVariantMap(QVariantMap &map)
 	// properties, just assume all inherited objects delcare the relevant
 	// properties using Q_PROPERTY macro
 	const QMetaObject *metaobject = metaObject();
-	int count = metaobject->propertyCount();
-	for (int i=0; i<count; ++i)
+	foreach(QString propName, map.keys())
 	{
-		QMetaProperty metaproperty = metaobject->property(i);
-		const char *name = metaproperty.name();
-		QVariant value = map[name];
+		QVariant value = map[propName];
+		
+		// Check for the type of the property - if it's an image
+		// then we load it differently 
+		bool isImageProp = false;
+		int idx = metaobject->indexOfProperty(qPrintable(propName));
+		if(idx > 0)
+		{
+			QMetaProperty meta = metaobject->property(idx);
+			if(meta.type() == QVariant::Image)
+				isImageProp = true;
+		}
+		// Property not statically defined in header, it may be a 
+		// dynamic property - in that case, load stored type from file
+		else
+		{
+			// Prefix with _q so it's ignored when saved
+			QVariant::Type type = (QVariant::Type)map.value(QString("_q_dviz_propType_%1").arg(propName)).toInt();
+			if(type == QVariant::Image)
+				isImageProp = true;
+		}
+			
+		// If the prop is *intended* to be an image, but stored as a byte array,
+		// then load accordingly
+		if(isImageProp &&
+			value.type() == QVariant::ByteArray)
+		{
+			//qDebug() << this << ": Loading image for prop:"<<propName;
+			
+			QSize size = map[QString("_q_dviz_img_%1_size").arg(propName)].toSize();
+			QImage::Format format = (QImage::Format)map[QString("_q_dviz_img_%1_format").arg(propName)].toInt();
+
+			// Load image from byte array because it's quicker
+			// than relying on QVariant to save/load as a PNG
+			QByteArray bytes = value.toByteArray();
+			QImage image((const uchar*)bytes.constData(), size.width(), size.height(), format);
+			
+			// Force the image to copy the data from the byte array buffer to it's internal buffer
+			image = image.copy();
+
+			// Overwrite the bytes loaded from the map with the newly-loaded image
+			value = image;
+		}
+		else
+		{
+// 			if(propName.startsWith("-root"))
+// 			{
+// 				qDebug() << this << ": *NOT* Loading image for prop:"<<propName<<": isImageProp:"<<isImageProp<<", type:"<<value.type();
+// 			}
+		}
+		
 		//qDebug() << "AbstractItem::loadVariantMap():"<<itemName()<<": prop:"<<name<<", value:"<<value;
 		if(value.isValid())
-			setProperty(name,value);
+			setProperty(qPrintable(propName),value);
 		else
-			qDebug() << "AbstractItem::loadByteArray: Unable to load property for "<<name<<", got invalid property from map";
+			qDebug() << "AbstractItem::loadByteArray: Unable to load property for "<<propName<<", got invalid property from map";
 	}
 	
 	m_revision = map["rev"].toUInt();

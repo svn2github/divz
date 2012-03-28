@@ -49,7 +49,7 @@ void SongSlideGroup::hitTextToSlides()
 	if(m_textRegenTimer.isActive())
 		m_textRegenTimer.stop();
 	m_textRegenTimer.start();
-	qDebug() << "SongSlideGroup::hitTextToSlides()";
+	//qDebug() << "SongSlideGroup::hitTextToSlides()";
 }
 
 void SongSlideGroup::setSong(SongRecord *songRecord)
@@ -99,11 +99,11 @@ void SongSlideGroup::aspectRatioChanged(double newAr)
 		hitTextToSlides();
 		
 		m_lastAspectRatio = newAr;
-		qDebug() << "SongSlideGroup::aspectRatioChanged: Got new AR:"<<newAr;
+		//qDebug() << "SongSlideGroup::aspectRatioChanged: Got new AR:"<<newAr;
 	}
 	else
 	{
-		qDebug() << "SongSlideGroup::aspectRatioChanged: newAr not changed:"<<newAr;
+		//qDebug() << "SongSlideGroup::aspectRatioChanged: newAr not changed:"<<newAr;
 	}
 }
 
@@ -179,7 +179,7 @@ bool SongSlideGroup_itemZCompare(AbstractItem *a, AbstractItem *b)
 
 void SongSlideGroup::textToSlides(SongTextFilter filter)
 {
-	//if(DEBUG_TEXTOSLIDES)
+	if(DEBUG_TEXTOSLIDES)
 		qDebug()<<"SongSlideGroup::textToSlides(): "<<(song() ? song()->title() : " (no song) ")<<": Start of text to slides";
 	
 	static QString slideHeader = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">"
@@ -227,7 +227,8 @@ void SongSlideGroup::textToSlides(SongTextFilter filter)
 	
 	if(song())
 	{
-		qDebug() << "SongSlideGroup::textToSlides(): "<<song()->title()<<": Checking for output tempaltes";
+		if(DEBUG_TEXTOSLIDES)
+			qDebug() << "SongSlideGroup::textToSlides(): "<<song()->title()<<": Checking for output tempaltes";
 		
 		QList<Output*> allOut = AppSettings::outputs();
 		foreach(Output *out, allOut)
@@ -235,7 +236,8 @@ void SongSlideGroup::textToSlides(SongTextFilter filter)
 			SlideGroup *outputTemplate = templates->altGroupForOutput(out);
 			if(outputTemplate)
 			{
-				qDebug() << "SongSlideGroup::textToSlides(): "<<song()->title()<<": Creating alternate group from template for output: "<<out->name();
+				if(DEBUG_TEXTOSLIDES)
+					qDebug() << "SongSlideGroup::textToSlides(): "<<song()->title()<<": Creating alternate group from template for output: "<<out->name();
 				
 				SongSlideGroup *group = new SongSlideGroup();
 				group->setSong(song());
@@ -253,7 +255,8 @@ void SongSlideGroup::textToSlides(SongTextFilter filter)
 			}
 		}
 		
-		qDebug() << "SongSlideGroup::textToSlides(): "<<song()->title()<<": Done with alt templates";
+		if(DEBUG_TEXTOSLIDES)
+			qDebug() << "SongSlideGroup::textToSlides(): "<<song()->title()<<": Done with alt templates";
 	}
 	
 	if(DEBUG_TEXTOSLIDES)
@@ -274,11 +277,13 @@ void SongSlideGroup::textToSlides(SongTextFilter filter)
 		slide = templates->at(0)->clone();
 		if(DEBUG_TEXTOSLIDES)
 		{
-			qDebug()<<"SongSlideGroup::textToSlides(): slideNbr:"<<slideNbr<<": Cloned slide 0 (master)";
+			if(DEBUG_TEXTOSLIDES)
+				qDebug()<<"SongSlideGroup::textToSlides(): slideNbr:"<<slideNbr<<": Cloned slide 0 (master)";
 			AbstractItemList list = slide->itemList();
 			foreach(AbstractItem *item, list)
 			{
-				qDebug() << "SongSlideGroup::textToSlides(): \t Master Debug:"<<item->itemName();
+				if(DEBUG_TEXTOSLIDES)
+					qDebug() << "SongSlideGroup::textToSlides(): \t Master Debug:"<<item->itemName();
 			}
 		}
 			
@@ -574,7 +579,8 @@ void SongSlideGroup::textToSlides(SongTextFilter filter)
 		// Delay warming the visual cache to increase UI responsiveness when quickly adding songs
 		int rv = (rand() % 500) - (500/2); // get a random number +/- 250ms
 		int delay = slideNbr * 5000 + rv; // add a random +/- 250ms to stagger hits to the warming method
-		qDebug()<<"SongSlideGroup::textToSlides(): "<<(song() ? song()->title() : " (no song) ")<<": slideNbr:"<<slideNbr<<": delaying "<<delay<<"ms before warmVisualCache()";
+		if(DEBUG_TEXTOSLIDES)
+			qDebug()<<"SongSlideGroup::textToSlides(): "<<(song() ? song()->title() : " (no song) ")<<": slideNbr:"<<slideNbr<<": delaying "<<delay<<"ms before warmVisualCache()";
 		QTimer::singleShot(delay, text, SLOT(warmVisualCache()));
 		
 		if(DEBUG_TEXTOSLIDES)
@@ -582,7 +588,7 @@ void SongSlideGroup::textToSlides(SongTextFilter filter)
 		//qDebug()<<"SongSlideGroup::textToSlides(): Added slide#:"<<slide->slideNumber()<<", numSlides():"<<numSlides();
 	}
 	
-	//if(DEBUG_TEXTOSLIDES)
+	if(DEBUG_TEXTOSLIDES)
 		qDebug()<<"SongSlideGroup::textToSlides():"<<(song() ? song()->title() : " (no song) ")<<": End of text to slides, numSlides():"<<numSlides();
 }
 
@@ -677,7 +683,7 @@ bool SongSlideGroup::fromXml(QDomElement & pe)
 
 void SongSlideGroup::fromVariantMap(QVariantMap &map)
 {
-		int songid = map["songid"].toInt();
+	int songid = map["songid"].toInt();
 	//qDebug() << "SongSlideGroup::fromXml(): songid from xml:"<<songid;
 
 	SongRecord *song = SongRecord::retrieve(songid);
@@ -698,8 +704,16 @@ void SongSlideGroup::fromVariantMap(QVariantMap &map)
 	if(templates.isValid())
 	{
 		QByteArray ba = templates.toByteArray();
-		SlideGroup *templates = SlideGroup::fromByteArray(ba);
-		setSlideTemplates(templates);
+		if(!ba.isEmpty())
+		{
+			//qDebug() << "SongSlideGroup::fromVariantMap: Loading templates from byte array";
+			SlideGroup *templates = SlideGroup::fromByteArray(ba);
+			setSlideTemplates(templates);
+		}
+		else
+		{
+			//qDebug() << "
+		}
 	}
 	
 	QVariantList arr = map["arr"].toList();
@@ -853,7 +867,7 @@ QString SongSlideGroup::rearrange(QString text, QStringList arragement)
 		blockHash[curBlockTitle] = curBlockText.join("\n\n");
 		
 	//qDebug() << "SongSlideGroup::rearrange: Original blocks: "<<blockHash;
-	qDebug() << "SongSlideGroup::rearrange: Processing arragnement: "<<arragement;
+	//qDebug() << "SongSlideGroup::rearrange: Processing arragnement: "<<arragement;
 	
 	QStringList output;
 	foreach(QString blockTitle, arragement)
@@ -872,7 +886,7 @@ QString SongSlideGroup::rearrange(QString text, QStringList arragement)
 	}
 	
 	QString outputText = output.join("\n\n");
-	qDebug() << "SongSlideGroup::rearrange: Output: "<<outputText;
+	//qDebug() << "SongSlideGroup::rearrange: Output: "<<outputText;
 	return outputText;
 }
 
