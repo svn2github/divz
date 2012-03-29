@@ -297,7 +297,7 @@ QByteArray Slide::toByteArray() const
 			map[QString("_q_dviz_img_%1_format").arg(name)] = (int)image.format();
 		}
 		
-		//qDebug() << "AbstractItem::clone():"<<itemName()<<": prop:"<<name<<", value:"<<value;
+		//qDebug() << "AbstractItem::toByteArray(): [1] "<<this<<": prop:"<<name<<", value:"<<value;
 		//item->setProperty(name,value);
 		map[name] = value;
 	}
@@ -310,6 +310,9 @@ QByteArray Slide::toByteArray() const
 			continue;
 			
 		QVariant var = property(name.data());
+		
+		//qDebug() << "AbstractItem::toByteArray(): [2] "<<this<<": prop:"<<name<<", value:"<<var;
+		
 		// dont store userdefined types
 		if(var.isValid() && (int)var.type() < 127)
 		{

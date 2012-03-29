@@ -24,6 +24,8 @@
 #include "camera/CameraSlideGroup.h"
 #include "webgroup/WebSlideGroup.h"
 
+#include "DeepProgressIndicator.h"
+
 #include <QProgressDialog>
 #include <QApplication>
 
@@ -152,6 +154,9 @@ void Document::load(const QString & s)
 	else
 	//if(ext == "dvz" || ext == "dviz")
 	{
+		progress.setLabelText("Reading data from disk...");
+		QApplication::processEvents();
+		
 		QByteArray array = file.readAll();
 		
 		QDataStream stream(&array, QIODevice::ReadOnly);
@@ -167,6 +172,9 @@ void Document::load(const QString & s)
 		QVariantList items = map["groups"].toList();
 
 		progress.setMaximum(items.size());
+		progress.setLabelText("Processing data...");
+		QApplication::processEvents();
+		
 		int count = 0;
 		foreach(QVariant var, items)
 		{
@@ -280,9 +288,11 @@ void Document::save(const QString & filename)
 			break;
 	}
 
+	QFile renameObject(tmp);
 	QString backup = QString("%1.%2").arg(tmp).arg(counter);
-	file.copy(backup);
-	//qDebug() << "Copied "<<tmp<<" to "<<backup;
+	//qDebug() << "Document::save: Starting move from "<<tmp<<" to "<<backup;
+	renameObject.rename(backup);
+	//qDebug() << "Document::save: Move done from "<<tmp<<" to "<<backup;
 
 	counter ++;
 	settings.setValue(QString("filecounts/%1").arg(tmp),counter);
@@ -294,7 +304,6 @@ void Document::save(const QString & filename)
 		//throw 0;
 		return;
 	}
-	
 	
 	QFileInfo inf(tmp);
 	QString ext = inf.suffix();
@@ -328,13 +337,28 @@ void Document::save(const QString & filename)
 		QDataStream stream(&array, QIODevice::WriteOnly);
 		QVariantMap map;
 		
+		DeepProgressIndicator * d = DeepProgressIndicator::indicatorForObject(this);
+		
 		QVariantList list;
 		foreach (SlideGroup * group, m_groups)
+		{
+			if(d)
+				d->step();
+		
 			list << group->toByteArray();
+		}
 		
 		map["groups"] = list;
 		map["title"] = docTitle();
 		map["aspect"] = aspectRatio();
+		
+		if(d)
+		{
+			d->setSize(0);
+			d->setValue(-1);
+			d->setText("Writing to disk...");
+			QApplication::processEvents();
+		}
 		
 		//qDebug() << "SlideGroup::toByteArray(): "<<map;
 		stream << map;

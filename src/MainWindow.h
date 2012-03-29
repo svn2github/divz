@@ -95,7 +95,7 @@ public slots:
 	void previewSlideGroup(SlideGroup*);
 	
 	bool openFile(const QString &);
-	void saveFile(const QString &file = "");
+	void saveFile(const QString &file = "", bool allowThread=true);
 	
 	void clearAllOutputs();
 	void prevGroup();
@@ -151,7 +151,7 @@ protected slots:
 	void actionDvizWebsite();
 	
 	void actionOpen();
-	bool actionSave();
+	bool actionSave(bool allowThread=true);
 	bool actionSaveAs();
 	void actionNew();
 	

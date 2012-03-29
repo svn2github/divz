@@ -1,5 +1,6 @@
 #include "DeepProgressIndicator.h"
 #include <QDebug>
+#include <QApplication>
 
 QHash<void*,DeepProgressIndicator*> DeepProgressIndicator::static_indicatorMap;
 
@@ -41,6 +42,7 @@ void DeepProgressIndicator::step()
 	m_value = m_value + 1;
 	if(m_dialog)
 		m_dialog->setValue(m_value);
+	QApplication::processEvents();
 	//qDebug() << "DeepProgressIndicator::step(): "<<m_text<<":"<<m_value<<"/"<<m_size;
 }
 	

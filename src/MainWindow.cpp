@@ -280,7 +280,7 @@ void MainWindow::autosave()
 	//qDebug() << "Spawning autosave...";
 	if(!m_doc->filename().isEmpty())
 	{
-		statusBar()->showMessage(tr("Auto-saving document..."));
+		statusBar()->showMessage(tr("Saving %1...").arg(m_doc->filename()));
 		DocumentSaveThread * thread = new DocumentSaveThread(m_doc);
 		thread->start();
 		connect(thread, SIGNAL(finished()), this, SLOT(saveFinished()));
@@ -290,7 +290,7 @@ void MainWindow::autosave()
 
 void MainWindow::saveFinished()
 {
-	statusBar()->showMessage(QString(tr("Document saved as %1.")).arg(m_doc->filename()),1500);
+	statusBar()->showMessage(QString(tr("Document saved as %1.")).arg(m_doc->filename()),1000);
 }
 
 void MainWindow::actionToggleLiveOutput()
@@ -500,12 +500,12 @@ void MainWindow::actionOpen()
 	}
 }
 
-bool MainWindow::actionSave()
+bool MainWindow::actionSave(bool allowThread)
 {
 	if(m_doc->filename().isEmpty())
 		return actionSaveAs();
 	else
-		saveFile();
+		saveFile("", allowThread);
 	return true;
 
 }
@@ -767,16 +767,32 @@ bool MainWindow::openFile(const QString & file)
 	return true;
 }
 
-void MainWindow::saveFile(const QString & file)
+void MainWindow::saveFile(const QString & file, bool allowThread)
 {
-	m_doc->save(file.isEmpty() ? m_doc->filename() : file);
-
-	setWindowTitle(QString(tr("DViz - %1")).arg(QFileInfo(m_doc->filename()).fileName()));
-
-	saveWindowState();
+	QString filename = file.isEmpty() ? m_doc->filename() : file;
 	
-	AppSettings::sendCheckin("/main/savefile",m_doc->filename());
+	setWindowTitle(QString(tr("DViz - %1")).arg(QFileInfo(filename).fileName()));
+	saveWindowState();
 
+	if(allowThread)
+	{
+		m_doc->setFilename(filename);
+
+		autosave();
+		
+		AppSettings::sendCheckin("/main/savefile",filename);
+	}
+	else
+	{
+		DeepProgressIndicator *d = new DeepProgressIndicator(m_doc,this);
+		d->setText(QString(tr("Saving %1...")).arg(filename));
+		d->setTitle(QString(tr("Saving %1")).arg(filename));
+		d->setSize(m_doc->numGroups());
+		
+		m_doc->save(filename);
+		
+		d->close();
+	}
 }
 
 void MainWindow::setupSongList()
@@ -1164,7 +1180,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
 		};
 	}
 	else
-	if(actionSave())
+	if(actionSave(false)) // dont allow thread, show dialog instead
 	{
 		event->accept();
 		//m_liveView->hide();

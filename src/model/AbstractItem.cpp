@@ -130,7 +130,7 @@ QByteArray AbstractItem::toByteArray() const
 		QMetaProperty metaproperty = metaobject->property(i);
 		const char *name = metaproperty.name();
 		QVariant value = property(name);
- 		//qDebug() << "AbstractItem::toByteArray():"<<itemName()<<": prop:"<<name<<", value:"<<value;
+ 		//qDebug() << "AbstractItem::toByteArray(): [1] "<<itemName()<<": prop:"<<name<<", value:"<<value;
 		//item->setProperty(name,value);
 		if(value.type() == QVariant::Image)
 		{
@@ -156,6 +156,8 @@ QByteArray AbstractItem::toByteArray() const
 			continue;
 			
 		QVariant var = property(name.data());
+		//qDebug() << "AbstractItem::toByteArray(): [2] "<<itemName()<<": prop:"<<name<<", value:"<<var;
+		
 		// dont store userdefined types
 		if(var.isValid() && (int)var.type() < 127)
 		{
