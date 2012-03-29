@@ -101,7 +101,6 @@ HEADERS += \
 
 	
 SOURCES += \
-	main.cpp \
 	MainWindow.cpp \
 	MyGraphicsScene.cpp \
 	SlideGroupListModel.cpp \
@@ -236,5 +235,13 @@ win32|macx {
 	}
 }
 
-
+tests: {
+	SOURCES += testing-main.cpp \
+		   TestClass.cpp
+	HEADERS += TestClass.h
+	CONFIG += qtestlib
+}
+else: {
+	SOURCES += main.cpp
+}
 

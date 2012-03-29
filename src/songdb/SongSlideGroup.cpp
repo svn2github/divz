@@ -68,6 +68,7 @@ void SongSlideGroup::setSong(SongRecord *songRecord)
 	SongArrangement *arr = songRecord->defaultArrangement();
 	m_arrangement    = arr->arrangement();
 	m_slideTemplates = arr->templateGroup();
+	//qDebug() << "SongSlideGroup::setSong: Tmpl from default arr: "<<m_slideTemplates;
 	
 	setGroupTitle(songRecord->title());
 
@@ -708,6 +709,7 @@ void SongSlideGroup::fromVariantMap(QVariantMap &map)
 		{
 			//qDebug() << "SongSlideGroup::fromVariantMap: Loading templates from byte array";
 			SlideGroup *templates = SlideGroup::fromByteArray(ba);
+			//qDebug() << "SongSlideGroup::fromVariantMap: got:" <<templates;
 			setSlideTemplates(templates);
 		}
 		else

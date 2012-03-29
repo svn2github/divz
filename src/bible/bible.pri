@@ -6,7 +6,6 @@ QT += network
 # Generate the book name map file, BookNameMap.cpp
 system(perl book-abbrv-to-qt-map.pl)
 
-
 # Input
 FORMS += ChooseGroupDialog.ui
 
@@ -23,3 +22,10 @@ SOURCES += \
 	BibleGatewayConnector.cpp \
 	BibleBrowser.cpp \
 	ChooseGroupDialog.cpp
+	
+
+# Unit Tests
+tests: {
+	SOURCES += BibleTestClass.cpp
+	HEADERS += BibleTestClass.h
+}

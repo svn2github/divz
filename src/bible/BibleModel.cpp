@@ -51,7 +51,7 @@ BibleVerseRef BibleVerse::verseRef() const
 
 
 // cap 1 = book, 2 = chapter, 3 = verse, 4 = range end
-QRegExp BibleVerseRef::normalizeRegExp("((?:[1-9]\\s+)?\\w+)\\s+([0-9]+)(?:[:\\.]([0-9]+))?(?:\\s*-\\s*([0-9]+))?"); 
+QRegExp BibleVerseRef::normalizeRegExp("^((?:[1-9]\\s+)?\\w+)\\s+([0-9]+)(?:[:\\.]([0-9]+))?(?:\\s*-\\s*([0-9]+))?$"); 
 
 BibleVerseRef::BibleVerseRef(const BibleBook &book, const BibleChapter &chapter, int verseNumber, int range)
 	: m_book(book)
@@ -92,7 +92,7 @@ BibleVerseRef BibleVerseRef::verseRef(int newVerseNumber) const
 }
 
 
-#define DEBUG_NORMALIZE 1
+#define DEBUG_NORMALIZE 0
 BibleVerseRef BibleVerseRef::normalize(const QString& tmp, const BibleVersion &version)
 {
 	if(!bookNameMap_initalized)
@@ -111,6 +111,13 @@ BibleVerseRef BibleVerseRef::normalize(const QString& tmp, const BibleVersion &v
 	{
 		if(DEBUG_NORMALIZE)
 			qDebug() << "normalize("<<tmp<<"): step 0: exit - no match for referenceExtractRegExp";
+		return BibleVerseRef(false);
+	}
+	
+	if(normalizeRegExp.indexIn(raw) < 0)
+	{
+		if(DEBUG_NORMALIZE)
+			qDebug() << "normalize("<<tmp<<"): step 0: exit - no match for normalizeRegExp";
 		return BibleVerseRef(false);
 	}
 	
