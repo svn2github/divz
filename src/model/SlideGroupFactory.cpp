@@ -13,6 +13,8 @@
 
 #include "DeepProgressIndicator.h"
 
+#include "UserEventAction.h"
+
 #include <QListView>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -1222,3 +1224,16 @@ QPixmap	SlideGroupFactory::generatePreviewPixmap(SlideGroup *group, QSize iconSi
 
 	return icon;
 }
+
+
+QList<UserEventAction*> SlideGroupFactory::defaultActions()
+{
+	return QList<UserEventAction*>(); // TODO
+}
+
+void SlideGroupFactory::setDefaultActions(QList<UserEventAction*> list)
+{
+	// TODO
+}
+
+

@@ -97,7 +97,9 @@ HEADERS += \
 	MimeTypes.h \
 	SharedMemoryImageWriter.h \
 	glvidtex/EntityList.h \
-	TextImportDialog.h
+	TextImportDialog.h \
+	QStorableObject.h \
+	UserEventAction.h
 
 	
 SOURCES += \
@@ -132,7 +134,9 @@ SOURCES += \
 	SharedMemoryImageWriter.cpp \
 	DVizMidiInputAdapter.cpp \
 	glvidtex/EntityList.cpp \
-	TextImportDialog.cpp
+	TextImportDialog.cpp \
+	QStorableObject.cpp \
+	UserEventAction.cpp
 
 HEADERS += \
 	glvidtex/VideoSender.h \

@@ -548,13 +548,13 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans, int speed, i
 			qSetEffectOpacity(m_liveRoot,0);
 		#else
 			// xfade tx
-			//m_fadeRoot->setOpacity(1);
-			//m_liveRoot->setOpacity(0);
+			m_fadeRoot->setOpacity(1);
+			m_liveRoot->setOpacity(0);
 			
 			// Slide tx
 			//m_fadeRoot->setOpacity(1);
 			//m_liveRoot->setOpacity(1);
-			m_liveRoot->setPos(-sceneRect().width(),0);
+			//m_liveRoot->setPos(-sceneRect().width(),0);
 			
 		#endif
 
@@ -742,13 +742,13 @@ void MyGraphicsScene::endTransition()
 		qSetEffectOpacity(m_fadeRoot,0);
 		qSetEffectOpacity(m_liveRoot,1);
 	#else
-		//m_fadeRoot->setOpacity(0);
-		//m_liveRoot->setOpacity(1);
+		m_fadeRoot->setOpacity(0);
+		m_liveRoot->setOpacity(1);
 		m_liveRoot->setFrozen(false);
 		m_fadeRoot->setFrozen(false);
 		
 		// slide tx
-		m_liveRoot->setPos(0,0);
+		//m_liveRoot->setPos(0,0);
 	#endif
 	
 	QList<QGraphicsItem*> kids = m_staticRoot->childItems();
@@ -832,11 +832,11 @@ void MyGraphicsScene::slotTransitionStep()
 				opac->setOpacity(fadeVal); //opac->opacity() + inc);
 		#else
 			// xfade tx
-			//m_liveRoot->setOpacity(fadeVal); //m_liveRoot->opacity() + inc);
+			m_liveRoot->setOpacity(fadeVal); //m_liveRoot->opacity() + inc);
 			
 			// slide tx
-			m_liveRoot->setPos(-(sceneRect().width() * (1-fadeVal)),0);
-			m_fadeRoot->setPos(sceneRect().width() * fadeVal,0);
+			//m_liveRoot->setPos(-(sceneRect().width() * (1-fadeVal)),0);
+			//m_fadeRoot->setPos(sceneRect().width() * fadeVal,0);
 		#endif
 		if(DEBUG_MYGRAPHICSSCENE)
 		//step"<<m_fadeStepCounter<<"/"<<m_fadeSteps<<", 

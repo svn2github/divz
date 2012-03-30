@@ -6,6 +6,7 @@ class Slide;
 class QFileInfo;
 class Document;
 class Output;
+class UserEventAction;
 #include "AbstractVisualItem.h"
 
 class SlideGroup : public QObject
@@ -103,6 +104,9 @@ public:
 	
 	virtual SlideGroup *altGroupForOutput(Output*);
 	virtual void setAltGroupForOutput(Output*, SlideGroup*);
+	
+	virtual QList<UserEventAction*> userEventActions();
+	virtual void setUserEventActions(QList<UserEventAction*>);
 
 signals:
 	// Operation = "Add", "Remove", "Change"

@@ -173,6 +173,8 @@ signals:
 	
 };
 
+class UserEventAction;
+
 class MyGraphicsScene;
 class NativeViewer;
 class SlideGroupFactory 
@@ -197,12 +199,19 @@ public:
 	virtual AbstractSlideGroupEditor   * newEditor();
 	virtual NativeViewer * newNativeViewer(OutputInstance *instance = 0);
 	
-	virtual QPixmap generatePreviewPixmap(SlideGroup*, QSize iconSize, QRect sceneRect);
+	// Sublcasses are expected to store the any new list of default actions across instances
+	virtual QList<UserEventAction*> defaultActions();
+	virtual void setDefaultActions(QList<UserEventAction*>);
 
+	virtual QPixmap generatePreviewPixmap(SlideGroup*, QSize iconSize, QRect sceneRect);
+	
 protected:
 	// for use in generating preview pixmaps
 	MyGraphicsScene * m_scene;
+	
+	QList<UserEventAction*> m_actionList;
 };
 
 
 #endif
+
