@@ -7,7 +7,7 @@ EventActionItem::EventActionItem(QString action, ActionType type)
 	, m_actionType(type)
 {}
 	
-bool EventActionItem::isValid() { return m_type != Invalid; }
+bool EventActionItem::isValid() { return m_actionType != Invalid; }
 	
 void EventActionItem::setActionType(ActionType type)
 {
@@ -19,7 +19,7 @@ void EventActionItem::setAction(QString act)
 	m_action = act;
 }
 	
-UserEventAction::UserEventAction(QString event, QList<EventActionItem*> list);
+UserEventAction::UserEventAction(QString event, QList<EventActionItem*> list)
 	: QStorableObject()
 	, m_event(event)
 	, m_list(list)
@@ -31,7 +31,7 @@ void UserEventAction::setEvent(QString str)
 	m_event = str;
 }
 
-void UserEventAction::setActions(QList<EventActionItem> list)
+void UserEventAction::setActions(QList<EventActionItem*> list)
 {
 	m_list = list;
 }

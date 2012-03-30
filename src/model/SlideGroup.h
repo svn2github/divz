@@ -154,6 +154,7 @@ protected:
 
 	QHash<int, SlideGroup*> m_altGroupForOutput;
 
+	QList<UserEventAction*> m_userEventActions;
 };
 
 Q_DECLARE_METATYPE(SlideGroup*);

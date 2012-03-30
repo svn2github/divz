@@ -11,12 +11,12 @@ class EventActionItem : public QStorableObject
 	Q_PROPERTY(QString action READ action WRITE setAction); 
 	
 public:
+	enum ActionType { Invalid=-1, URL=0, Exec };
 	EventActionItem(QString action="", ActionType type=Invalid);
 	
 	bool isValid();
-	enum ActionType { Invalid=-1, URL=0, Exec };
 	
-	ActionType actionType() { return m_type; }
+	ActionType actionType() { return m_actionType; }
 	QString action() { return m_action; }
 	
 	void setActionType(ActionType type);
@@ -52,14 +52,14 @@ public:
 
 private:
 	QString m_event;
-	QList<EventActionItem> m_list;
+	QList<EventActionItem*> m_list;
 };
 
 typedef QList<UserEventAction*> UserEventActionList;
 
 class UserEventActionController
 {
-	Q_OBJECT
+//	Q_OBJECT
 public:
 	static QStringList availableActions();
 

@@ -654,3 +654,12 @@ void SlideGroup::setAltGroupForOutput(Output *output, SlideGroup *group)
 	m_altGroupForOutput[output->id()] = group;
 }
 
+QList<UserEventAction*> SlideGroup::userEventActions()
+{
+	return m_userEventActions;
+}
+
+void SlideGroup::setUserEventActions(QList<UserEventAction*> list)
+{
+	m_userEventActions = list;
+}
