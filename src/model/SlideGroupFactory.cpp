@@ -1099,9 +1099,15 @@ SlideGroupFactory * SlideGroupFactory::factoryForType(int type)
 	return m_factoryMap[type];
 }
 
+int SlideGroupFactory::typeForFactory(SlideGroupFactory *factory)
+{
+	return m_factoryMap.key(factory);
+}
+
 /** Class Members **/
 
 SlideGroupFactory::SlideGroupFactory() : m_scene(0) {}
+
 SlideGroupFactory::~SlideGroupFactory()
 {
 	if(m_scene)
@@ -1226,14 +1232,33 @@ QPixmap	SlideGroupFactory::generatePreviewPixmap(SlideGroup *group, QSize iconSi
 }
 
 
-QList<UserEventAction*> SlideGroupFactory::defaultActions()
+QStringListHash SlideGroupFactory::defaultActions()
 {
-	return QList<UserEventAction*>(); // TODO
+	if(m_actions.isEmpty())
+	{
+		QSettings s;
+		QString key = QString("actions/%1").arg(typeForFactory(this));
+		//qDebug() << "SlideGroupFactory::defaultActions: Loading actions from "<<key;
+		QVariant var = s.value(key);
+		
+		QVariantMap map = var.toMap();
+		m_actions = UserEventActionUtilities::fromVariantMap(map);
+	}
+	
+	return m_actions;
 }
 
-void SlideGroupFactory::setDefaultActions(QList<UserEventAction*> list)
+void SlideGroupFactory::setDefaultActions(QStringListHash hash)
 {
-	// TODO
+	m_actions = hash;
+	
+	QVariantMap map = UserEventActionUtilities::toVariantMap(m_actions);
+	
+	QSettings s;
+	QString key = QString("actions/%1").arg(typeForFactory(this));
+	s.setValue(key, map);
+	
+	//qDebug() << "SlideGroupFactory::setDefaultActions: Storing actions to "<<key;
 }
 
 

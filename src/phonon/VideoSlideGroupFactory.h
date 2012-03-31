@@ -60,8 +60,7 @@ private:
 };
 
 
-class VideoSlideGroupFactory : public QObject, 
-			       public SlideGroupFactory 
+class VideoSlideGroupFactory : public SlideGroupFactory 
 {
 	Q_OBJECT
 public:

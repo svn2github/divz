@@ -34,9 +34,13 @@ protected slots:
 	void addResBtn();
 	void delResBtn();
 	void adjustTableSize();
+	
+	void slideGroupTypeChanged(int);
+	void saveUserEventActions();
 
 private:
 	Ui::AppSettingsDialog *m_ui;
+	int m_currentEventGroupType;
 };
 
 #endif // APPSETTINGSDIALOG_H

@@ -7,6 +7,15 @@
 #include <QMessageBox>
 #include <QUrl>
 
+#include "UserEventAction.h"
+#include "model/SlideGroupFactory.h"
+#include "ppt/PPTSlideGroup.h"
+#include "phonon/VideoSlideGroup.h"
+#include "webgroup/WebSlideGroup.h"
+#include "camera/CameraSlideGroup.h"
+#include "songdb/SongSlideGroup.h"
+#include "groupplayer/GroupPlayerSlideGroup.h"
+
 #include <QDirModel>
 #include <QCompleter>
 static void AppSettingsDialog_setupGenericDirectoryCompleter(QLineEdit *lineEdit)
@@ -23,7 +32,8 @@ static void AppSettingsDialog_setupGenericDirectoryCompleter(QLineEdit *lineEdit
 
 AppSettingsDialog::AppSettingsDialog(QWidget *parent) :
 	QDialog(parent),
-	m_ui(new Ui::AppSettingsDialog)
+	m_ui(new Ui::AppSettingsDialog),
+	m_currentEventGroupType(-1)
 {
 	m_ui->setupUi(this);
 	m_ui->cbUseOpenGL->setChecked(AppSettings::useOpenGL());
@@ -119,6 +129,101 @@ AppSettingsDialog::AppSettingsDialog(QWidget *parent) :
 	connect(m_ui->resourceDelBtn, SIGNAL(clicked()), this, SLOT(delResBtn()));
 	connect(tableWidget, SIGNAL(itemChanged(QTableWidgetItem*)), this, SLOT(adjustTableSize()));
 	
+	typedef QPair<int,QString> ActionItem;
+	
+	QList<ActionItem> types = QList<ActionItem>()
+		<< ActionItem(SlideGroup::GroupType,		"Basic Slide Groups")
+		<< ActionItem(SongSlideGroup::GroupType,	"Songs")
+		<< ActionItem(PPTSlideGroup::GroupType,		"PowerPoint Files")
+		<< ActionItem(VideoSlideGroup::GroupType,	"Videos")
+		<< ActionItem(WebSlideGroup::GroupType,		"Webpages")
+		<< ActionItem(CameraSlideGroup::GroupType,	"Live Cameras")
+		<< ActionItem(GroupPlayerSlideGroup::GroupType,	"Group Players")
+		;
+
+	foreach(ActionItem item, types)
+	{
+		int type = item.first;
+		QString title = item.second;
+		
+		SlideGroupFactory *factory = SlideGroupFactory::factoryForType(type);
+		if(factory)
+		{
+			m_ui->slideGroupType->addItem( title, type );
+		}
+	}
+	
+	connect(m_ui->slideGroupType, SIGNAL(currentIndexChanged(int)), this, SLOT(slideGroupTypeChanged(int)));
+	slideGroupTypeChanged(0);
+	
+}
+
+void AppSettingsDialog::saveUserEventActions()
+{
+	if(m_currentEventGroupType < 0)
+		return;
+		
+	QStringListHash actions;
+	
+	// Get list of events defined in the table
+	QTableWidget * tableWidget = m_ui->eventTable;
+	QHash<QString,QString> userDefinedEvents;
+	for(int row=0; row<tableWidget->rowCount(); row++)
+	{
+		QTableWidgetItem *first  = tableWidget->item(row,0);
+		QTableWidgetItem *second = tableWidget->item(row,1);
+		if(first && second)
+		{
+			QString string = second->text();
+			if(!string.isEmpty())
+				actions[first->text()] = string.split(QRegExp("\\s*,\\s*"));
+		}
+	}
+	
+	// Find the factory
+	SlideGroupFactory *factory = SlideGroupFactory::factoryForType(m_currentEventGroupType);
+	if(factory)
+		factory->setDefaultActions(actions);
+}
+
+void AppSettingsDialog::slideGroupTypeChanged(int idx)
+{
+	if(m_currentEventGroupType > -1)
+		saveUserEventActions();
+	
+	if(idx < 0 || idx >= m_ui->slideGroupType->count())
+		return;
+	
+	// Grab the type from the combo box
+	QVariant data = m_ui->slideGroupType->itemData(idx);
+	int type = data.toInt();
+	
+	// Store for later for saving
+	m_currentEventGroupType = type;
+	
+	QStringListHash actions;
+	SlideGroupFactory *factory = SlideGroupFactory::factoryForType(type);
+	if(factory)
+		actions = factory->defaultActions();
+	
+	QTableWidget * tableWidget = m_ui->eventTable;
+	
+	QStringList availableEvents = UserEventActionUtilities::availableEvents();
+	tableWidget->setRowCount(availableEvents.size());
+	int row = 0;
+	
+	 // Build the table in the UI with the hash of events already in the factory and the available events (action is empty if none defined)
+	foreach(QString event, availableEvents)
+	{
+		QStringList list = actions[event];
+		
+		tableWidget->setItem(row,0,new QTableWidgetItem(event));
+		tableWidget->setItem(row,1,new QTableWidgetItem(list.join(", ")));
+		
+		// Event isn't editable
+		tableWidget->item(row,0)->setFlags(Qt::NoItemFlags);
+		row++;
+	}
 }
 
 void AppSettingsDialog::adjustTableSize()
@@ -223,6 +328,8 @@ void AppSettingsDialog::slotAccepted()
 	settings.setValue("max-backups",m_ui->maxBackups->value());
 	
 	AppSettings::setTitlesafeAmount(m_ui->titlesafeAmount->value());
+	
+	saveUserEventActions();
 	
 	close();
 }

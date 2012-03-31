@@ -8,6 +8,7 @@ class Document;
 class Output;
 class UserEventAction;
 #include "AbstractVisualItem.h"
+#include "UserEventAction.h"
 
 class SlideGroup : public QObject
 {
@@ -105,8 +106,8 @@ public:
 	virtual SlideGroup *altGroupForOutput(Output*);
 	virtual void setAltGroupForOutput(Output*, SlideGroup*);
 	
-	virtual QList<UserEventAction*> userEventActions();
-	virtual void setUserEventActions(QList<UserEventAction*>);
+	virtual QStringListHash userEventActions();
+	virtual void setUserEventActions(QStringListHash);
 
 signals:
 	// Operation = "Add", "Remove", "Change"
@@ -154,7 +155,7 @@ protected:
 
 	QHash<int, SlideGroup*> m_altGroupForOutput;
 
-	QList<UserEventAction*> m_userEventActions;
+	QStringListHash m_userEventActions;
 };
 
 Q_DECLARE_METATYPE(SlideGroup*);

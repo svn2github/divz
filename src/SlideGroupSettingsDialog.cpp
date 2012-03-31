@@ -1,6 +1,7 @@
 #include "SlideGroupSettingsDialog.h"
 #include "ui_SlideGroupSettingsDialog.h"
 #include "model/SlideGroup.h"
+#include "model/SlideGroupFactory.h"
 #include "DocumentListModel.h"
 #include "MainWindow.h"
 #include <QMessageBox>
@@ -32,6 +33,29 @@ SlideGroupSettingsDialog::SlideGroupSettingsDialog(SlideGroup *g, QWidget *paren
 	m_ui->title->setText(m_slideGroup->groupTitle().isEmpty() ? QString("Group %1").arg(m_slideGroup->groupNumber()+1) : m_slideGroup->groupTitle());
 	//connect(m_ui->title, SIGNAL(textChanged(const QString&)), this, SLOT(titleChanged(const QString&)));
 	
+	// automatically loads defaults from factory if needed
+	QStringListHash actions = g->userEventActions();
+	
+	QTableWidget * tableWidget = m_ui->eventTable;
+	
+	QStringList availableEvents = UserEventActionUtilities::availableEvents();
+	tableWidget->setRowCount(availableEvents.size());
+	int row = 0;
+	
+	 // Build the table in the UI with the hash of events already in the factory and the available events (action is empty if none defined)
+	foreach(QString event, availableEvents)
+	{
+		QStringList list = actions[event];
+		
+		tableWidget->setItem(row,0,new QTableWidgetItem(event));
+		tableWidget->setItem(row,1,new QTableWidgetItem(list.join(", ")));
+		
+		// Event isn't editable
+		tableWidget->item(row,0)->setFlags(Qt::NoItemFlags);
+		row++;
+	}
+	
+	
 	setWindowTitle("Slide Group Settings");
 	setWindowIcon(QIcon(":/data/icon-d.png"));
 	
@@ -39,8 +63,10 @@ SlideGroupSettingsDialog::SlideGroupSettingsDialog(SlideGroup *g, QWidget *paren
 		m_ui->btnUseApp->setChecked(true);
 	else
 		m_ui->btnUseGroup->setChecked(true);
+	
 	m_ui->speedBox->setValue(m_slideGroup->crossFadeSpeed());
 	m_ui->qualityBox->setValue(m_slideGroup->crossFadeQuality());
+	
 	connect(m_ui->buttonBox, SIGNAL(accepted()), this, SLOT(slotAccepted()));
 }
 
@@ -65,6 +91,27 @@ void SlideGroupSettingsDialog::slotAccepted()
 		return;
 	}
 	m_slideGroup->setJumpToGroupIndex(idx);
+	
+	
+	QStringListHash actions;
+	
+	// Get list of events defined in the table
+	QTableWidget * tableWidget = m_ui->eventTable;
+	QHash<QString,QString> userDefinedEvents;
+	for(int row=0; row<tableWidget->rowCount(); row++)
+	{
+		QTableWidgetItem *first  = tableWidget->item(row,0);
+		QTableWidgetItem *second = tableWidget->item(row,1);
+		if(first && second)
+		{
+			QString string = second->text();
+			if(!string.isEmpty())
+				actions[first->text()] = string.split(QRegExp("\\s*,\\s*"));
+		}
+	}
+	
+	m_slideGroup->setUserEventActions(actions);
+
 	
 	m_slideGroup->setInheritFadeSettings(m_ui->btnUseApp->isChecked());
 	m_slideGroup->setCrossFadeSpeed(m_ui->speedBox->value());

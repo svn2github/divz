@@ -8,6 +8,7 @@
 #include <QSettings>
 
 #include "Slide.h"
+#include "SlideGroupFactory.h"
 #include "MediaBrowser.h"
 #include "songdb/SongSlideGroup.h"
 #include "ppt/PPTSlideGroup.h"
@@ -16,6 +17,7 @@
 #include "webgroup/WebSlideGroup.h"
 #include "groupplayer/GroupPlayerSlideGroup.h"
 #include "model/Output.h"
+#include "UserEventAction.h"
 
 #define ID_COUNTER_KEY "slidegroup/id-counter"
 
@@ -293,6 +295,8 @@ void SlideGroup::saveProperties(QVariantMap& map) const
 	}
 	map["alt"] = alts;
 	
+	map["acts"] = QVariant(UserEventActionUtilities::toVariantMap(m_userEventActions));
+	
 // 	if(!alts.isEmpty())
 // 		qDebug() << "SlideGroup::saveProperties: "<<m_groupId<<" alts:"<<alts;
 // 	else
@@ -454,6 +458,14 @@ void SlideGroup::loadProperties(QVariantMap &map)
 	else
 	{
 		//qDebug() << "SlideGroup: "<<m_groupId<<" No valid alt found";
+	}
+	
+	
+	QVariant acts = map["acts"];
+	if(acts.isValid())
+	{
+		QVariantMap map = acts.toMap();
+		m_userEventActions = UserEventActionUtilities::fromVariantMap(map);
 	}
 }
 	
@@ -654,12 +666,21 @@ void SlideGroup::setAltGroupForOutput(Output *output, SlideGroup *group)
 	m_altGroupForOutput[output->id()] = group;
 }
 
-QList<UserEventAction*> SlideGroup::userEventActions()
+QStringListHash SlideGroup::userEventActions()
 {
+	if(m_userEventActions.isEmpty())
+	{
+		SlideGroupFactory *factory = SlideGroupFactory::factoryForType(groupType());
+		if(!factory)
+			factory = SlideGroupFactory::factoryForType(SlideGroup::GroupType);
+		
+		return factory->defaultActions();
+	}
+	
 	return m_userEventActions;
 }
 
-void SlideGroup::setUserEventActions(QList<UserEventAction*> list)
+void SlideGroup::setUserEventActions(QStringListHash list)
 {
 	m_userEventActions = list;
 }

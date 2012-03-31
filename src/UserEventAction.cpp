@@ -1,65 +1,42 @@
 #include "UserEventAction.h"
 #include <QtGui>
 
-EventActionItem::EventActionItem(QString action, ActionType type)
-	: QStorableObject()
-	, m_action(action)
-	, m_actionType(type)
-{}
-	
-bool EventActionItem::isValid() { return m_actionType != Invalid; }
-	
-void EventActionItem::setActionType(ActionType type)
-{
-	m_actionType = type;
-}
-
-void EventActionItem::setAction(QString act)
-{
-	m_action = act;
-}
-	
-UserEventAction::UserEventAction(QString event, QList<EventActionItem*> list)
-	: QStorableObject()
-	, m_event(event)
-	, m_list(list)
-{
-}
-	
-void UserEventAction::setEvent(QString str)
-{
-	m_event = str;
-}
-
-void UserEventAction::setActions(QList<EventActionItem*> list)
-{
-	m_list = list;
-}
-
-// QStorableObject::
-bool UserEventAction::fromVariantMap(const QVariantMap& map, bool onlyApplyIfChanged)
-{
-	return QStorableObject::fromVariantMap(map, onlyApplyIfChanged); // TODO
-}
-
-QVariantMap UserEventAction::toVariantMap()
-{
-	return QStorableObject::toVariantMap(); // TODO
-}
-	
 // Utility for slide group factories or whomever else cares
-/*static */QByteArray listToByteArray(QList<UserEventAction*>)
+/*static */QVariantMap UserEventActionUtilities::toVariantMap(QStringListHash hash)
 {
-	return QByteArray(); // TODO
+	QVariantMap map;
+	foreach(QString event, hash.keys())
+	{
+		QVariantList list;
+		foreach(QString string, hash[event])
+			list << string;
+		map[event] = QVariant(list);
+	}
+	return map;
 }
 
-/*static */QList<UserEventAction*> UserEventAction::listFromByteArray(QByteArray)
+/*static */QStringListHash UserEventActionUtilities::fromVariantMap(QVariantMap map)
 {
-	return QList<UserEventAction*>(); // TODO
+	QStringListHash output;
+	foreach(QString event, map.keys())
+	{
+		QVariantList list = map[event].toList();
+		
+		QStringList stringList;
+		foreach(QVariant var, list)
+			stringList << var.toString();
+		output[event] = stringList;
+	}
+	
+	return output;
 }
 
-QStringList UserEventActionController::availableActions()
+/*static */QStringList UserEventActionUtilities::availableEvents()
 {
-	return QStringList (); // TODO
+	return QStringList ()
+		<< UserEventAction_GroupGoLive
+		<< UserEventAction_GroupNotLive
+		<< UserEventAction_SlideGoLive
+		<< UserEventAction_SlideNotLive;
 }
 

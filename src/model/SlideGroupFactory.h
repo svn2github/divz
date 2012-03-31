@@ -17,6 +17,8 @@ class AbstractItem;
 #include <QPushButton>
 #include <QPointer>
 
+#include "UserEventAction.h"
+
 class QListView;
 class SlideGroupViewControl;
 
@@ -177,13 +179,16 @@ class UserEventAction;
 
 class MyGraphicsScene;
 class NativeViewer;
-class SlideGroupFactory 
+class SlideGroupFactory : public QObject
 {
-
+	// Added Q_OBJECT so we can access a metaObject() for use of the className() for storing actions in QSettings by classname
+	Q_OBJECT
+	
 public /*static*/:
 	static void registerFactoryForType(int type, SlideGroupFactory *);
 	static void removeFactoryForType(int type/*, SlideGroupFactory **/);
 	static SlideGroupFactory * factoryForType(int type);
+	static int typeForFactory(SlideGroupFactory *);
 
 private /*static*/:
 	static QHash<int, SlideGroupFactory*> m_factoryMap;
@@ -200,8 +205,8 @@ public:
 	virtual NativeViewer * newNativeViewer(OutputInstance *instance = 0);
 	
 	// Sublcasses are expected to store the any new list of default actions across instances
-	virtual QList<UserEventAction*> defaultActions();
-	virtual void setDefaultActions(QList<UserEventAction*>);
+	virtual QStringListHash defaultActions();
+	virtual void setDefaultActions(QStringListHash);
 
 	virtual QPixmap generatePreviewPixmap(SlideGroup*, QSize iconSize, QRect sceneRect);
 	
@@ -209,7 +214,7 @@ protected:
 	// for use in generating preview pixmaps
 	MyGraphicsScene * m_scene;
 	
-	QList<UserEventAction*> m_actionList;
+	QStringListHash m_actions;
 };
 
 
