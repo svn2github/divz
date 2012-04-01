@@ -152,6 +152,8 @@ protected:
 
 protected:
 // 	void updateControlWidget();
+	
+	void executeUserActions(SlideGroup *group, QString event);
 
 	Output *m_output;
 	SlideGroupViewer *m_viewer;

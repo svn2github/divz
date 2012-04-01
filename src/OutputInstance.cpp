@@ -21,6 +21,10 @@
 
 #include "itemlistfilters/SlideTextOnlyFilter.h"
 
+// Used for executing user actions
+#include <QNetworkAccessManager>
+#include <QNetworkRequest>
+
 // Size of the jpeg server image buffer before it starts
 // deleting frames. 10 is just an arbitrary magic nbr.
 #define MAX_IMGBUFFER_SIZE 10
@@ -398,7 +402,7 @@ void OutputInstance::setSlideGroup(SlideGroup *group, int startSlide)
 
 void OutputInstance::setSlideGroup(SlideGroup *group, Slide * startSlide)
 {
-// 	qDebug() << "OutputInstance::setSlideGroup: ["<<m_output->name()<<"] emitting slideGroupChanged(), group:"<<group->assumedName();
+ 	//qDebug() << "OutputInstance::setSlideGroup: ["<<m_output->name()<<"] emitting slideGroupChanged(), group:"<<group->assumedName();
 	emit slideGroupChanged(group,startSlide);
 	
 	if(isLocal())
@@ -526,6 +530,46 @@ void OutputInstance::setSlideGroup(SlideGroup *group, Slide * startSlide)
 	setSlideGroupInternal(group,startSlide);
 }
 
+
+void OutputInstance::executeUserActions(SlideGroup *group, QString event)
+{
+	//qDebug() << "OutputInstance::setSlideGroup: ["<<m_output->name()<<"] emitting slideGroupChanged(), group:"<<group->assumedName();
+	
+	// Don't execute actions for 'System' outputs
+	if(m_output->name().startsWith("Output::"))
+		return;
+	
+	// Currently, only execute actions for live output
+	if(m_output->name() != "Live")
+		return;
+	
+	qDebug() << "OutputInstance::executeUserActions("<<event<<"): "<<this<<" Output: "<<m_output->name()<<": Executing actions for group "<<group;
+	
+	// Trigger actions
+	QStringListHash actions = group->userEventActions();
+	if(actions.contains(event))
+	{
+		QStringList list = actions.value(event);
+		foreach(QString act, list)
+		{
+			if(act.contains("://"))
+			{
+				QNetworkAccessManager *net = new QNetworkAccessManager(this);
+				connect(net, SIGNAL(finished(QNetworkReply*)), net, SLOT(deleteLater()));
+				net->get(QNetworkRequest(act));
+				qDebug() << "OutputInstance::executeUserActions("<<event<<"): "<<this<<" "<<group<<": URL: "<<act;
+			}
+			else
+			{
+				QProcess *proc = new QProcess(this);
+				connect(proc, SIGNAL(finished(int, QProcess::ExitStatus)), proc, SLOT(deleteLater()));
+				proc->start(act);
+				qDebug() << "OutputInstance::executeUserActions("<<event<<"): "<<this<<" "<<group<<": Exec: "<<act;
+			}
+		}
+	}
+}
+
 Slide * OutputInstance::setSlideGroupInternal(SlideGroup *group, Slide * startSlide)
 {
 	if(m_slideGroup == group)
@@ -534,7 +578,15 @@ Slide * OutputInstance::setSlideGroupInternal(SlideGroup *group, Slide * startSl
 	m_slideNum = 0;
 
 	if(m_slideGroup)
+	{
 		disconnect(m_slideGroup,0,this,0);
+		
+		// Trigger any actions
+		executeUserActions(m_slideGroup, UserEventAction_GroupNotLive);
+	}
+	
+	executeUserActions(group, UserEventAction_GroupGoLive);
+
 	
 	connect(group,SIGNAL(slideChanged(Slide *, QString, AbstractItem *, QString, QString, QVariant)),this,SLOT(slideChanged(Slide *, QString, AbstractItem *, QString, QString, QVariant)));
 

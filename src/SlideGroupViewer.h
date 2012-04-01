@@ -258,7 +258,7 @@ protected:
 //  	void paintEvent(QPaintEvent *);
  
 	void adjustViewScaling();
-
+	
 private:
 	MyGraphicsScene * scene() { return m_scene; }
 	

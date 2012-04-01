@@ -878,49 +878,12 @@ void SlideGroupViewer::setSlideGroup(SlideGroup *group, Slide *startSlide)
 		//qDebug() << "SlideGroupViewer::setSlideGroup: Releasing video providers due to slide change";
 		releaseVideoProvders();
 		
-		// Trigger actions
-		QStringListHash actions = group->userEventActions();
-		if(actions.contains(UserEventAction_GroupNotLive))
-		{
-			QStringList list = actions.value(UserEventAction_GroupNotLive);
-			foreach(QString act, list)
-			{
-				if(act.contains("://"))
-				{
-					// TODO: Something like 
-					//networkManager.get(QNetworkRequest(QString(url)));
-				}
-				else
-				{
-					// TODO: Execute script
-				}
-			}
-		}
 	}
 
 	if(m_slideGroup != group)
 		connect(group,SIGNAL(slideChanged(Slide *, QString, AbstractItem *, QString, QString, QVariant)),this,SLOT(slideChanged(Slide *, QString, AbstractItem *, QString, QString, QVariant)));
 
 	m_slideGroup = group;
-
-	// Trigger any actions
-	QStringListHash actions = group->userEventActions();
-	if(actions.contains(UserEventAction_GroupGoLive))
-	{
-		QStringList list = actions.value(UserEventAction_GroupGoLive);
-		foreach(QString act, list)
-		{
-			if(act.contains("://"))
-			{
-				// TODO: Something like 
-				//networkManager.get(QNetworkRequest(QString(url)));
-			}
-			else
-			{
-				// TODO: Execute script
-			}
-		}
-	}
 
 	if(!m_isPreviewViewer || m_contextHint == MyGraphicsScene::Preview)
 	{
