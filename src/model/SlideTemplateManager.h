@@ -88,6 +88,7 @@ private slots:
 	void editTemplate();
 	void newTemplate();
 	void delTemplate();
+	void importGroup();
 	
 	void editorWindowClosed();
 

@@ -47,6 +47,7 @@ namespace Ui {
 
 class SongRecord;
 class SongBrowser;
+class BibleBrowser;
 class QFileInfo;
 class OutputInstance;
 class OutputControl;
@@ -71,6 +72,7 @@ public:
 	DocumentListModel * documentListModel() { return m_docModel; }
 	
 	SongBrowser * songBrowser() { return m_songBrowser; }
+	BibleBrowser * bibleBrowser() { return m_bibleBrowser; }
 	
 	bool autosaveEnabled();
 	
@@ -194,6 +196,7 @@ private:
 	OutputInstance    * m_liveView;
 	
 	SongBrowser * m_songBrowser;
+	BibleBrowser * m_bibleBrowser;
 
 	QSplitter   * m_splitter;
 	QListView   * m_groupView;

@@ -26,6 +26,24 @@ class BibleBrowser : public QWidget
 {
 	Q_OBJECT
 	
+	Q_PROPERTY(bool showEachVerseOnSeperateSlide READ showEachVerseOnSeperateSlide WRITE setShowEachVerseOnSeperateSlide);
+	Q_PROPERTY(bool showVerseNumbers READ showVerseNumbers WRITE setShowVerseNumbers);
+	
+	Q_PROPERTY(bool showFullRefTopEachSlide READ showFullRefTopEachSlide WRITE setShowFullRefTopEachSlide);
+ 	Q_PROPERTY(bool showFullRefBottomEachSlide READ showFullRefBottomEachSlide WRITE setShowFullRefBottomEachSlide);
+ 	Q_PROPERTY(bool showFullRefAtFirstTop READ showFullRefAtFirstTop WRITE setShowFullRefAtFirstTop);
+ 	Q_PROPERTY(bool showFullRefAtBottomLast READ showFullRefAtBottomLast WRITE setShowFullRefAtBottomLast);
+
+	Q_PROPERTY(bool showFullRefAtStart READ showFullRefAtStart WRITE setShowFullRefAtStart);
+	Q_PROPERTY(bool showFullRefAtEnd READ showFullRefAtEnd WRITE setShowFullRefAtEnd);
+	
+	Q_PROPERTY(bool showResponsiveReadingLabels READ showResponsiveReadingLabels WRITE setShowResponsiveReadingLabels);
+	
+	Q_PROPERTY(bool appendToExistingGroup READ appendToExistingGroup WRITE setAppendToExistingGroup);
+	
+	Q_PROPERTY(bool allowSplitVersesInAltGroups READ allowSplitVersesInAltGroups WRITE setAllowSplitVersesInAltGroups);
+	
+	
 public:
 	BibleBrowser(QWidget *parent=0);
 	~BibleBrowser();
@@ -82,6 +100,8 @@ public slots:
 	void getChapter();
 	void prevChapter();
 	void nextChapter();
+	
+	void addVersesToGroup(const QString& verses, SlideGroup *destination);
 
 protected slots:
 	void searchReturnPressed();
@@ -157,6 +177,10 @@ protected:
 	
 	SlideGroup	* m_template;
 	TemplateSelectorWidget * m_tmplWidget;
+	
+	bool m_lastDownloadAutomated;
+	bool m_downloadComplete;
+	SlideGroup *m_tempDest; 
 };
 
 

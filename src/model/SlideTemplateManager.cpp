@@ -8,6 +8,7 @@
 #include "SlideGroup.h"
 #include "SlideEditorWindow.h"
 #include "TextBoxItem.h"
+#include "ImportGroupDialog.h"
 
 #include <QFile>
 #include <QDir>
@@ -400,6 +401,22 @@ void TemplateSelectorWidget::newTemplate()
 	editTemplate();
 }
 
+void TemplateSelectorWidget::importGroup()
+{
+	ImportGroupDialog d;
+	d.setAddSelectedToMainWindow(false);
+	d.exec();
+	
+	SlideGroup *g = d.selectedGroup();
+	if(g)
+	{
+		// Clone the group because it will be deleted by ImportGroupDialog as soon as 'd' goes out of scope
+		g = g->clone();
+		m_doc->addGroup(g);
+		setSelectedGroup(g);
+	}
+}
+
 void TemplateSelectorWidget::setupUI()
 {
 	QHBoxLayout * hbox = new QHBoxLayout(this);
@@ -434,6 +451,11 @@ void TemplateSelectorWidget::setupUI()
 	m_delButton->setToolTip("Delete Selected template");
 	connect(m_delButton, SIGNAL(clicked()), this, SLOT(delTemplate()));
 	hbox->addWidget(m_delButton);
+	
+	QPushButton *importBtn = new QPushButton(QPixmap(":/data/stock-download.png"),"",this);
+	importBtn->setToolTip("Import Template");
+	connect(importBtn, SIGNAL(clicked()), this, SLOT(importGroup()));
+	hbox->addWidget(importBtn);
 	
 	hbox->addStretch(1);
 	

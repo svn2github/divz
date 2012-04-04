@@ -813,9 +813,9 @@ void MainWindow::setupBibleBrowser()
 	QVBoxLayout * baseLayout = new QVBoxLayout(m_ui->tabBible);
 	baseLayout->setContentsMargins(0,0,0,0);
 
-	BibleBrowser * bible = new BibleBrowser(m_ui->tabBible);
-	baseLayout->addWidget(bible);
-	m_ui->tabBible->setFocusProxy(bible);
+	m_bibleBrowser = new BibleBrowser(m_ui->tabBible);
+	baseLayout->addWidget(m_bibleBrowser);
+	m_ui->tabBible->setFocusProxy(m_bibleBrowser);
 }
 
 void MainWindow::setupSlideLibrary()

@@ -11,9 +11,13 @@
 #include "AppSettings.h"
 #include "MainWindow.h"
 
+#include "bible/BibleBrowser.h"
+
 #include <QScriptEngine>
 #include <QScriptValueIterator>
 #include <QtGui>
+#include <QDir>
+#include <QProgressDialog>
 
 
 
@@ -52,6 +56,14 @@ void TextImportDialog::setupUi()
 	completer->setWrapAround(true);
 	m_ui->scriptFile->setCompleter(completer);
 	
+	completer = new QCompleter(this);
+	dirModel = new QDirModel(completer);
+	completer->setModel(dirModel);
+	completer->setCompletionMode(QCompleter::PopupCompletion);
+	completer->setCaseSensitivity(Qt::CaseInsensitive);
+	completer->setWrapAround(true);
+	m_ui->preprocFile->setCompleter(completer);
+	
 	// Remember the last format selected
 	bool isPlainText = QSettings().value("textimport/plaintext",true).toBool();
 	m_ui->fmtPlain->setChecked(isPlainText);
@@ -78,9 +90,10 @@ void TextImportDialog::setupUi()
 	connect(tmplWidget, SIGNAL(currentGroupChanged(SlideGroup*)), this, SLOT(templateChanged(SlideGroup*)));
 	
 	// Connect slots
-	connect(m_ui->buttonBox,    SIGNAL(accepted()), this, SLOT(doImport()));
-	connect(m_ui->browse,       SIGNAL(clicked()),  this, SLOT(browseBtn()));
-	connect(m_ui->scriptBrowse, SIGNAL(clicked()),  this, SLOT(scriptBrowseBtn()));
+	connect(m_ui->buttonBox,     SIGNAL(accepted()), this, SLOT(doImport()));
+	connect(m_ui->browse,        SIGNAL(clicked()),  this, SLOT(browseBtn()));
+	connect(m_ui->scriptBrowse,  SIGNAL(clicked()),  this, SLOT(scriptBrowseBtn()));
+	connect(m_ui->preprocBrowse, SIGNAL(clicked()),  this, SLOT(preprocBrowseBtn()));
 	
 	
 }
@@ -110,6 +123,20 @@ void TextImportDialog::scriptBrowseBtn()
 	{
 		AppSettings::setPreviousPath("script",fileName);
 		m_ui->scriptFile->setText(fileName);
+	}
+}
+
+void TextImportDialog::preprocBrowseBtn()
+{
+	QString fileName = QFileDialog::getOpenFileName(this, tr("Select PRe-Processor"),
+		AppSettings::previousPath("preproc"),
+		tr("Perl Files (*.pl);;Bash Scripts (*.sh);;Windows EXE Files (*.exe);;Any File (*.*)")
+	);
+	
+	if(!fileName.isEmpty())
+	{
+		AppSettings::setPreviousPath("preproc",fileName);
+		m_ui->preprocFile->setText(fileName);
 	}
 }
 
@@ -167,11 +194,20 @@ void TextImportDialog::setupTextBox(TextBoxItem *tmpText)
 	tmpText->setShadowBlurRadius(6);
 }
 
-Slide *TextImportDialog::getTemplateSlide(SlideGroup *templateGroup, int /*slideNum*/)
+Slide *TextImportDialog::getTemplateSlide(SlideGroup *templateGroup, int slideNum, bool autoAddTextField)
 {
 	QRect fitRect = AppSettings::adjustToTitlesafe(MainWindow::mw()->standardSceneRect());
 	
-	Slide *slide = templateGroup->at(0);
+	// This has the effect of allowing the template designer to, for example, design two slides:
+	// one for the "first" slide (perhaps the title slide), which will be used when slideNum=0, 
+	// then design another slide (in the template, the second slide), which will be used for
+	// *every* other slide in the import, since when slideNum (in this example) is >0, say for example, 3
+	// it will be restrited to numSlides-1, which would be '1', which would get the second slide
+	// in the template. 
+	if(slideNum >= templateGroup->numSlides())
+		slideNum = templateGroup->numSlides()-1;
+		
+	Slide *slide = templateGroup->at(slideNum);
 	if(!slide)
 	{
 		slide = new Slide();
@@ -184,24 +220,37 @@ Slide *TextImportDialog::getTemplateSlide(SlideGroup *templateGroup, int /*slide
 		templateGroup->addSlide(slide);
 	}
 	
-	
-	TextBoxItem *tmpText = findTextItem(slide, "#text");
-	
-	if(!tmpText)
+	if(autoAddTextField)
 	{
-		tmpText = new TextBoxItem();
-		tmpText->setItemId(ItemFactory::nextId());
-		tmpText->setItemName(QString("TextBoxItem%1").arg(tmpText->itemId()));
+		TextBoxItem *tmpText = findTextItem(slide, "#text");
 		
-		tmpText->setText("<center><span style='font-family:Calibri,Tahoma,Arial,Sans-Serif;font-weight:800'><b>#text</b></span></center>");
-		tmpText->changeFontSize(72);
-		tmpText->setContentsRect(fitRect);
-		setupTextBox(tmpText);
-		
-		slide->addItem(tmpText);
+		if(!tmpText)
+		{
+			tmpText = new TextBoxItem();
+			tmpText->setItemId(ItemFactory::nextId());
+			tmpText->setItemName(QString("TextBoxItem%1").arg(tmpText->itemId()));
+			
+			tmpText->setText("<center><span style='font-family:Calibri,Tahoma,Arial,Sans-Serif;font-weight:800'><b>#text</b></span></center>");
+			tmpText->changeFontSize(72);
+			tmpText->setContentsRect(fitRect);
+			setupTextBox(tmpText);
+			
+			slide->addItem(tmpText);
+		}
 	}
 	
 	return slide;
+}
+
+Slide *TextImportDialog::getTemplateSlide(SlideGroup *templateGroup, QString name, int slideNum, bool autoAddTextField)
+{
+	QRect fitRect = AppSettings::adjustToTitlesafe(MainWindow::mw()->standardSceneRect());
+	
+	foreach(Slide *slide, templateGroup->slideList())
+		if(slide->slideName() == name)
+			return slide;
+	
+	return getTemplateSlide(templateGroup, slideNum, autoAddTextField);
 }
 
 QScriptValue TextImportDialog_script_qDebug(QScriptContext *context, QScriptEngine */*engine*/)
@@ -238,6 +287,31 @@ QScriptValue TextImportDialog_script_findTextItem(QScriptContext *context, QScri
 	TextBoxItem *tmpText = findTextItem(slide, itemName);
 	return engine->newQObject(tmpText);
 }
+
+// QScriptValue TextImportDialog_script_addVerses(QScriptContext *context, QScriptEngine *engine)
+// {
+// 	scriptEngine.globalObject().setProperty("dGroup", scriptGroup);
+// 	QObject *slideObj = context->argument(0).toQObject();
+// 	QString itemName  = context->argument(1).toString();
+// 	if(!slideObj)
+// 	{
+// 		qDebug() << "TextImportDialog_script_findTextItem(slide,itemName): Must give Slide (QObject) as first argument"; 
+// 		return QScriptValue(QScriptValue::NullValue);
+// 	}
+// 	Slide *slide = dynamic_cast<Slide*>(slideObj);
+// 	if(!slide)
+// 	{
+// 		qDebug() << "TextImportDialog_script_findTextItem(slide,itemName): First argument is not a Slide"; 
+// 		return QScriptValue(QScriptValue::NullValue);
+// 	}
+// 	if(itemName.isEmpty())
+// 	{
+// 		qDebug() << "TextImportDialog_script_findTextItem(slide,itemName): No item name given in second argument"; 
+// 		return QScriptValue(QScriptValue::NullValue);
+// 	}
+// 	TextBoxItem *tmpText = findTextItem(slide, itemName);
+// 	return engine->newQObject(tmpText);
+// }
 
 QScriptValue TextImportDialog_script_findFontSize(QScriptContext *context, QScriptEngine */*engine*/)
 {
@@ -290,13 +364,51 @@ void TextImportDialog::doImport()
 	QString fileName = m_ui->filename->text();
 	AppSettings::setPreviousPath("textimport",fileName);
 	
+	// Store the originally-given file for the group name later
+	QString originalFileName = fileName;
+	
 	bool isPlainText = m_ui->fmtPlain->isChecked();
 	QSettings().setValue("textimport/plaintext",isPlainText);
 	
 	QString scriptFilename = m_ui->scriptFile->text();
 	AppSettings::setPreviousPath("script",scriptFilename);
 	
-	qDebug() << "TextImportDialog::doImport(): Start, file:"<<fileName<<", isPLain? "<<isPlainText<<", script:"<<scriptFilename;
+	QString preprocFilename = m_ui->preprocFile->text();
+	AppSettings::setPreviousPath("preproc",preprocFilename);
+	
+	
+	// Setup progress dialog
+	QProgressDialog progress(QString(tr("Loading %1...")).arg(fileName),"",0,0);
+	progress.setWindowModality(Qt::WindowModal);
+	progress.setCancelButton(0); // hide cancel button
+	progress.setWindowIcon(QIcon(":/data/icon-d.png"));
+	progress.setWindowTitle(QString(tr("Loading %1")).arg(fileName));
+	progress.show();
+	m_progress = &progress;
+	QApplication::processEvents();
+	
+	
+	
+	qDebug() << "TextImportDialog::doImport(): Start, file:"<<fileName<<", isPLain? "<<isPlainText<<", script:"<<scriptFilename<<", preproc:"<<preprocFilename;
+	
+	QString tempFilename;
+	if(!preprocFilename.isEmpty())
+	{
+		tempFilename = tr("%1/dviz-textimportdialog-temp.txt").arg(QDir::tempPath());
+		
+		QProcess proc;
+		proc.start(preprocFilename, QStringList() << fileName << tempFilename);
+		
+		bool result = proc.waitForFinished();
+		if(!result)
+		{
+			QMessageBox::critical(this,tr("Pre-Processor Problem"),QString(tr("Preproc %1 didn't finish properly. Check the console - not sure why.")).arg(fileName));
+			return;
+		}
+		
+		fileName = tempFilename;
+		qDebug() << "TextImportDialog::doImport(): Preprocessor completed, using preproc temp file: "<<tempFilename;
+	}
 	
 	// Load text file
 	QFile file(fileName);
@@ -308,6 +420,9 @@ void TextImportDialog::doImport()
 
 	QTextStream stream(&file);
 	QString fileContents = stream.readAll();
+	
+	if(!tempFilename.isEmpty())
+		file.remove(); // file is closed before it is removed
 		
 	// Load script file
 	QScriptEngine scriptEngine;
@@ -323,6 +438,9 @@ void TextImportDialog::doImport()
 		scriptEngine.globalObject().setProperty("findTextItem",   fFindTextItem);
 		scriptEngine.globalObject().setProperty("changeFontSize", fChangeFntSz);
 		scriptEngine.globalObject().setProperty("findFontSize",   fFindFntSz);
+		
+		QScriptValue scriptBibleBrowser = scriptEngine.newQObject(MainWindow::mw()->bibleBrowser());
+		scriptEngine.globalObject().setProperty("BibleBrowser", scriptBibleBrowser);
 		
  		// Read the file
 		QFile scriptFile(scriptFilename);
@@ -344,7 +462,7 @@ void TextImportDialog::doImport()
 			int line = scriptEngine.uncaughtExceptionLineNumber();
 			//qDebug() << "uncaught exception at line" << line << ":" << result.toString();
 			QMessageBox::critical(this,tr("Script Exception"),QString(tr("Uncaught Exception in file %1, line %2: \n\t%3\n\nImport canceled. Please fix script and try again."))
-				.arg(fileName)
+				.arg(scriptFilename)
 				.arg(line)
 				.arg(scriptResult.toString()));
 			return;
@@ -361,7 +479,7 @@ void TextImportDialog::doImport()
 		return;
 	}
 	
-	group->setGroupTitle(AbstractItem::guessTitle(QFileInfo(fileName).baseName()));
+	group->setGroupTitle(AbstractItem::guessTitle(QFileInfo(originalFileName).baseName()));
 	
 	qDebug() << "TextImportDialog::doImport(): Checking for alternate groups";
 	
@@ -406,6 +524,10 @@ SlideGroup *TextImportDialog::generateSlideGroup(SlideGroup *templateGroup, QStr
 	if(isPlainText)
 	{
 		//qDebug() << "TextImportDialog::generateSlideGroup(): [plain] at start, text:"<<fileContents;
+		m_progress->setMaximum(0);
+		m_progress->setValue(-1);
+		m_progress->setLabelText("Processing text...");
+		QApplication::processEvents();
 		
 		int MinTextSize = 48;
 		int MaxTextSize = 72;
@@ -458,7 +580,45 @@ SlideGroup *TextImportDialog::generateSlideGroup(SlideGroup *templateGroup, QStr
 			if(recreateTextBox)
 			{
 				//qDebug() << "TextImportDialog::generateSlideGroup(): [plain] recreateTextBox, slideNumber:"<<slideNumber;
-				currentSlide = getTemplateSlide(templateGroup, slideNumber)->clone();
+				QString slideNameToUse = "";
+				if(hasScript)
+				{
+					QScriptValue scriptTmplGroup = scriptEngine.newQObject(templateGroup);
+					QScriptValue scriptGroup = scriptEngine.newQObject(group);
+					
+					scriptEngine.globalObject().setProperty("dGroup", scriptGroup);
+					scriptEngine.globalObject().setProperty("dTemplateGroup", scriptTmplGroup);
+					scriptEngine.globalObject().setProperty("dText", tmpList.join(""));
+					scriptEngine.globalObject().setProperty("dFormat", isPlainText);
+					
+					QScriptValue scriptResult = scriptEngine.evaluate(tr("getTemplateSlideName()"));
+		
+					// Alert user of errors
+					if (scriptEngine.hasUncaughtException()) 
+					{
+						int line = scriptEngine.uncaughtExceptionLineNumber();
+						QMessageBox::critical(this,tr("Script Exception"),QString(tr("Uncaught Exception in file %1, line %2: \n\t%3\n\nImport canceled. Please fix script and try again."))
+							.arg(scriptFilename)
+							.arg(line)
+							.arg(scriptResult.toString()));
+						
+						delete group;
+						return 0;
+					}
+					
+					if(scriptResult.isValid())
+					{
+						slideNameToUse = scriptResult.toString();
+						qDebug() << "TextImportDialog::generateSlideGroup(): [plain] Using slideNameToUse: "<<slideNameToUse;
+					}
+					else
+						qDebug() << "TextImportDialog::generateSlideGroup(): [plain] No slide name given";
+				}
+				
+				if(!slideNameToUse.isEmpty())
+					currentSlide = getTemplateSlide(templateGroup, slideNameToUse, slideNumber)->clone();
+				else
+					currentSlide = getTemplateSlide(templateGroup, slideNumber)->clone();
 				tmpText = findTextItem(currentSlide, "#text");
 				currentMinTextSize = (int)tmpText->findFontSize();
 				
@@ -559,7 +719,47 @@ SlideGroup *TextImportDialog::generateSlideGroup(SlideGroup *templateGroup, QStr
 		// which would mean we have a dangling blob of text that never got added - so add it here. (Such as the last slide in a long list of slides)
 		if(!tmpList.isEmpty() && recreateTextBox)
 		{
-			currentSlide = getTemplateSlide(templateGroup, slideNumber)->clone();
+			//currentSlide = getTemplateSlide(templateGroup, slideNumber)->clone();
+			QString slideNameToUse = "";
+			if(hasScript)
+			{
+				QScriptValue scriptTmplGroup = scriptEngine.newQObject(templateGroup);
+				QScriptValue scriptGroup = scriptEngine.newQObject(group);
+				
+				scriptEngine.globalObject().setProperty("dGroup", scriptGroup);
+				scriptEngine.globalObject().setProperty("dTemplateGroup", scriptTmplGroup);
+				scriptEngine.globalObject().setProperty("dText", tmpList.join(""));
+				scriptEngine.globalObject().setProperty("dFormat", isPlainText);
+				
+				QScriptValue scriptResult = scriptEngine.evaluate(tr("getTemplateSlideName()"));
+	
+				// Alert user of errors
+				if (scriptEngine.hasUncaughtException()) 
+				{
+					int line = scriptEngine.uncaughtExceptionLineNumber();
+					QMessageBox::critical(this,tr("Script Exception"),QString(tr("Uncaught Exception in file %1, line %2: \n\t%3\n\nImport canceled. Please fix script and try again."))
+						.arg(scriptFilename)
+						.arg(line)
+						.arg(scriptResult.toString()));
+					
+					delete group;
+					return 0;
+				}
+				
+				if(scriptResult.isValid())
+				{
+					slideNameToUse = scriptResult.toString();
+					qDebug() << "TextImportDialog::generateSlideGroup(): [plain2] Using slideNameToUse: "<<slideNameToUse;
+				}
+				else
+					qDebug() << "TextImportDialog::generateSlideGroup(): [plain2] No slide name given";
+			}
+			
+			if(!slideNameToUse.isEmpty())
+				currentSlide = getTemplateSlide(templateGroup, slideNameToUse, slideNumber)->clone();
+			else
+				currentSlide = getTemplateSlide(templateGroup, slideNumber)->clone();
+				
 			tmpText = findTextItem(currentSlide, "#text");
 			currentMinTextSize = (int)tmpText->findFontSize();
 			QRect currentFitRect = tmpText->contentsRect().toRect();
@@ -587,9 +787,16 @@ SlideGroup *TextImportDialog::generateSlideGroup(SlideGroup *templateGroup, QStr
 		// regex to extract variable name
 		QRegExp nameRx("(#[^\\s]+):\\s*");
 		
+		m_progress->setMaximum(blocks.size());
+		m_progress->setValue(0);
+		m_progress->setLabelText("Processing text...");
+		QApplication::processEvents();
+		
 		int blockNum = 0;
 		foreach(QString block, blocks)
 		{
+			m_progress->setValue(m_progress->value()+1);
+			
 			// Parse the block and extract variable:value pairs, and store in varHash
 			QStringList blockLines = block.split("\n");
 			QHash<QString,QString> varHash;
@@ -624,20 +831,12 @@ SlideGroup *TextImportDialog::generateSlideGroup(SlideGroup *templateGroup, QStr
 			if(!currentVarName.isEmpty())
 				varHash[currentVarName] = currentVarContent.join("\n");
 				
-			Slide *currentSlide = getTemplateSlide(templateGroup, slideNumber)->clone();
-				
-			//qDebug() << "TextImportDialog::generateSlideGroup(): [vars] varHash:" <<varHash;
-			
-			
-			// Execute script, if present, prior to applying variable values to the slide so that
-			// the script can use findTextItem() to locate items on the slide
+			// Setup the script engine for the next two calls
 			if(hasScript)
 			{
 				QScriptValue scriptTmplGroup = scriptEngine.newQObject(templateGroup);
 				QScriptValue scriptGroup = scriptEngine.newQObject(group);
-				QScriptValue scriptSlide = scriptEngine.newQObject(currentSlide);
 				
-				scriptEngine.globalObject().setProperty("dSlide", scriptSlide);
 				scriptEngine.globalObject().setProperty("dGroup", scriptGroup);
 				scriptEngine.globalObject().setProperty("dTemplateGroup", scriptTmplGroup);
 				scriptEngine.globalObject().setProperty("dFormat", isPlainText);
@@ -647,6 +846,53 @@ SlideGroup *TextImportDialog::generateSlideGroup(SlideGroup *templateGroup, QStr
 				foreach(QString varName, varHash.keys())
 					hash.setProperty(varName, varHash.value(varName));
 				scriptEngine.globalObject().setProperty("dVars", hash);
+			}
+				
+			// The 'false' means don't auto add the '#text' field so we don't assume the fields needed
+			//Slide *currentSlide = getTemplateSlide(templateGroup, slideNumber, false)->clone();
+			QString slideNameToUse = "";
+			if(hasScript)
+			{	
+				QScriptValue scriptResult = scriptEngine.evaluate(tr("getTemplateSlideName()"));
+	
+				// Alert user of errors
+				if (scriptEngine.hasUncaughtException()) 
+				{
+					int line = scriptEngine.uncaughtExceptionLineNumber();
+					QMessageBox::critical(this,tr("Script Exception"),QString(tr("Uncaught Exception in file %1, line %2: \n\t%3\n\nImport canceled. Please fix script and try again."))
+						.arg(scriptFilename)
+						.arg(line)
+						.arg(scriptResult.toString()));
+					
+					delete group;
+					return 0;
+				}
+				
+				if(scriptResult.isValid())
+				{
+					slideNameToUse = scriptResult.toString();
+					qDebug() << "TextImportDialog::generateSlideGroup(): [vars] Using slideNameToUse: "<<slideNameToUse;
+				}
+				else
+					qDebug() << "TextImportDialog::generateSlideGroup(): [vars] No slide name given";
+				 
+			}
+			
+			Slide *currentSlide;
+			if(!slideNameToUse.isEmpty())
+				currentSlide = getTemplateSlide(templateGroup, slideNameToUse, slideNumber, false)->clone();
+			else
+				currentSlide = getTemplateSlide(templateGroup, slideNumber, false)->clone();
+				
+			//qDebug() << "TextImportDialog::generateSlideGroup(): [vars] varHash:" <<varHash;
+			
+			
+			// Execute script, if present, prior to applying variable values to the slide so that
+			// the script can use findTextItem() to locate items on the slide
+			if(hasScript)
+			{
+				QScriptValue scriptSlide = scriptEngine.newQObject(currentSlide);
+				scriptEngine.globalObject().setProperty("dSlide", scriptSlide);
 				
 				QScriptValue scriptResult = scriptEngine.evaluate(tr("aboutToCreateSlide(%1)").arg(slideNumber));
 	
@@ -734,6 +980,9 @@ SlideGroup *TextImportDialog::generateSlideGroup(SlideGroup *templateGroup, QStr
 			
 			// Add slide to group
 			addSlideWithText(group, currentSlide, 0);
+			
+			if(currentSlide->slideName().startsWith("#"))
+				currentSlide->setSlideName(AbstractItem::guessTitle(currentSlide->slideName().replace("#","")));
 			
 			// The script engine has already had the dSlide, etc variables setup if it reaches this block,
 			// so just execute the script once more

@@ -514,9 +514,9 @@ bool SlideGroup::changeBackground(const QFileInfo & info, Slide *onlyThisSlide)
 	if(MediaBrowser::isImage(ext))
 		type = AbstractVisualItem::Image;
 	
-	if(type!=AbstractVisualItem::None)
+	if(type != AbstractVisualItem::None)
 	{
-		changeBackground(type,abs,onlyThisSlide);
+		changeBackground(type, abs, onlyThisSlide);
 		return true;
 	}
 	
@@ -530,7 +530,7 @@ void SlideGroup::changeBackground(AbstractVisualItem::FillType fillType, QVarian
 		slides.append(onlyThisSlide);
 	else
 		slides = slideList();
-		
+	
 	foreach(Slide * slide, slides)
 	{
 		AbstractVisualItem * bg = dynamic_cast<AbstractVisualItem*>(slide->background());

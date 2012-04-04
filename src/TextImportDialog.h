@@ -10,6 +10,7 @@ namespace Ui {
 class SlideGroup;
 class Slide;
 class TextBoxItem;
+class QProgressDialog;
 
 #include <QScriptEngine>
 
@@ -27,6 +28,7 @@ protected slots:
 	void doImport();
 	void browseBtn();
 	void scriptBrowseBtn();
+	void preprocBrowseBtn();
 	
 protected:
 	void changeEvent(QEvent *e);
@@ -35,7 +37,8 @@ protected:
 	
 	SlideGroup *getTemplate();
 	void setupTextBox(TextBoxItem *tmpText);
-	Slide *getTemplateSlide(SlideGroup *templateGroup, int /*slideNum*/);
+	Slide *getTemplateSlide(SlideGroup *templateGroup, int slideNum, bool autoAddTextField=true);
+	Slide *getTemplateSlide(SlideGroup *templateGroup, QString name, int slideNum=0, bool autoAddTextField=true);
 	
 	SlideGroup *generateSlideGroup(SlideGroup *templateGroup, QString text, bool isPlain, QScriptEngine &scriptEngine, QString scriptFilename);
 
@@ -43,6 +46,8 @@ private:
 	Ui::TextImportDialog *m_ui;
 	
 	SlideGroup *m_template;
+	
+	QProgressDialog *m_progress;
 };
 
 #endif // TEXTIMPORTDIALOG_H

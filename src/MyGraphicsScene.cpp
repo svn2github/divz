@@ -131,13 +131,14 @@ public:
 			Slide *slide = m_scene->slide();
 			if(slide)
 			{
-				QVariant var = slide->property("-root-cachedRev");
+				// Start key with _q to mark as 'private' (e.g. won't be stored in file)
+				QVariant var = slide->property("_q-root-cachedRev");
 				if(var.isValid())
 				{
 					quint32 cr = var.toInt();
 					if(cr == slide->revision())
 					{
-						var = slide->property("-root-cachedImage");
+						var = slide->property("_q-root-cachedImage");
 						if(var.type() == QVariant::Image &&
 						   var.isValid())
 						{
@@ -193,8 +194,9 @@ public:
 				
 			if(slide)
 			{
-				slide->setProperty("-root-cachedRev",slide->revision());
-				slide->setProperty("-root-cachedImage", m_cache);
+				// Start key with _q to mark as 'private' (e.g. won't be stored in file)
+				slide->setProperty("_q-root-cachedRev",slide->revision());
+				slide->setProperty("_q-root-cachedImage", m_cache);
 				qDebug() << "RenderProxyItem::setFrozen("<<flag<<"): "<<scene() <<"->"<< m_name <<"->"<< slide<<": Missed cache, rendering for rev "<<slide->revision();
 			}
 			

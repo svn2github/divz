@@ -2045,6 +2045,9 @@ void SlideEditorWindow::groupProperties()
 	SlideGroupSettingsDialog d(m_slideGroup,this);
 	d.adjustSize();
 	d.exec();
+	
+	// Change the window title in case the slide group title was changed
+	setWindowTitle(QString(tr("%1 - Slide Editor")).arg(m_slideGroup->groupTitle().isEmpty() ? QString(tr("Group %1")).arg(m_slideGroup->groupNumber()) : m_slideGroup->groupTitle()));
 }
 
 void SlideEditorWindow::delSlide()

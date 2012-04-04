@@ -14,7 +14,9 @@ ImportGroupDialog::ImportGroupDialog(QWidget *parent) :
 	QDialog(parent),
 	m_ui(new Ui::ImportGroupDialog),
 	m_model(new DocumentListModel),
-	m_doc(0)
+	m_doc(0),
+	m_selectedGroup(0),
+	m_addSelectedToMainWindow(true)
 {
 	m_ui->setupUi(this);
 
@@ -36,6 +38,8 @@ ImportGroupDialog::ImportGroupDialog(QWidget *parent) :
 
 ImportGroupDialog::~ImportGroupDialog()
 {
+	delete m_doc;
+	delete m_model;
 	delete m_ui;
 }
 
@@ -95,13 +99,15 @@ void ImportGroupDialog::slotAccept()
 		return;
 	}
 
-	SlideGroup * group = m_model->groupAt(idx);
-	SlideGroup * clone = group->clone();
-	clone->setGroupNumber(MainWindow::mw()->currentDocument()->numGroups());
-	MainWindow::mw()->currentDocument()->addGroup(clone);
+	m_selectedGroup = m_model->groupAt(idx);
+	
+	if(m_addSelectedToMainWindow)
+	{
+		SlideGroup * clone = m_selectedGroup->clone();
+		clone->setGroupNumber(MainWindow::mw()->currentDocument()->numGroups());
+		MainWindow::mw()->currentDocument()->addGroup(clone);
+	}
 
-	delete m_doc;
-	delete m_model;
 	close();
 }
 

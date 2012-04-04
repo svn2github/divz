@@ -16,6 +16,7 @@
 #include <QMenu>
 #include <QProgressDialog>
 #include <QCompleter>
+#include <QApplication> // for processEvents
 
 #include "BibleModel.h"
 #include "BibleGatewayConnector.h"
@@ -49,6 +50,9 @@ BibleBrowser::BibleBrowser(QWidget *parent)
 	, m_appendToExistingGroup(false)
 	, m_attemptAutoLive(false)
 	, m_template(0)
+	, m_lastDownloadAutomated(false)
+	, m_downloadComplete(false)
+	, m_tempDest(0)
 {
 	setObjectName("BibleBrowser");
 	
@@ -256,7 +260,7 @@ void BibleBrowser::setupUI()
 	QHBoxLayout *hbox = new QHBoxLayout(m_searchBase);
 	SET_MARGIN(hbox,0);
 	
-	QLabel *label = new QLabel("Searc&h:");
+	QLabel *label = new QLabel("Sea&rch:");
 	m_search = new QLineEdit(m_searchBase);
 	label->setBuddy(m_search);
 	setFocusProxy(m_search);
@@ -453,6 +457,13 @@ void BibleBrowser::referenceAvailable(const BibleVerseRef& reference, const Bibl
 	m_currentList = list;
 	m_currentRef = reference;
 	
+	if(m_lastDownloadAutomated)
+	{
+		m_downloadComplete = true;
+		m_lastDownloadAutomated = false; // reset for next DL
+		return;
+	}
+	
 	m_spinnerLabel->movie()->stop();
 	m_spinnerLabel->setVisible(false);
 	if(list.isEmpty())
@@ -479,6 +490,49 @@ void BibleBrowser::referenceAvailable(const BibleVerseRef& reference, const Bibl
 	
 	if(isLastGeneratedGroupStillLive())
 		sendVersesLive();
+}
+
+void BibleBrowser::addVersesToGroup(const QString& text, SlideGroup *dest)
+{
+	// Normalize the requested ref
+	QString versionCode = m_versionCombo->itemData(m_versionCombo->currentIndex()).toString();
+	BibleVerseRef ref = BibleVerseRef::normalize(text, BibleVersion(versionCode,versionCode));
+	if(!ref.valid())
+	{
+		qDebug() << "BibleBrowser::addVersesToGroup: Invalid ref: "<<text<<", not added";
+		return;
+	}
+	
+	// Lookup in cache, if present, just process, otherwise initate download
+	if(m_bible->findReference(ref))
+	{
+		m_currentRef = ref;
+		m_currentList = m_bible->loadReference(ref);
+	}
+	else
+	{
+		m_lastDownloadAutomated = true;
+		m_downloadComplete = false;
+		
+		m_bible->downloadReference(ref);
+		
+		while(!m_downloadComplete)
+		{
+			// Allow download to complete and signals processed,
+			// but block execution because this slot must execute async
+			qApp->processEvents();
+		}
+		
+		m_lastDownloadAutomated = false;
+		m_downloadComplete = false;
+	}
+	
+	// Do the bulk of the work here
+	m_tempDest = dest;
+	createSlideGroup(getTemplate(), true);
+	m_tempDest = 0; // reset so UI doesn't behave oddly
+	
+	// That's all, folks!
 }
 
 void BibleBrowser::loadVerses(const QString & filter)
@@ -987,6 +1041,8 @@ void BibleBrowser::createTitleSlide(SlideGroup *templateGroup, SlideGroup *group
 		//text->fitToSize(text->contentsRect().size().toSize(), currentMinTextSize, 99);
 		intelligentCenterTextbox(text);
 		addSlideWithText(group, slide, text);
+		
+		slide->setSlideName(m_currentRef.toString());
 	}
 	else
 	{
@@ -1003,43 +1059,36 @@ void BibleBrowser::setupOptionalLabels(Slide *currentSlide, int slideNumber)
 	// In the future, these labels should be an option in the UI - for now, we'll hardcocde them
 	const QString leaderLabel  = tr("Leader:");
 	const QString readingLabel = tr("Congregation:");
-	
-	
-	
-	if(showResponsiveReadingLabels() ||
-	   showFullRefAtFirstTop()       ||
-	   showFullRefTopEachSlide())
+
+	if((showFullRefAtFirstTop() && slideNumber==1)
+		|| showFullRefTopEachSlide())
 	{
-		if((showFullRefAtFirstTop() && slideNumber==1)
-		   || showFullRefTopEachSlide())
-		{
-			TextBoxItem *label = findTextItem(currentSlide, "#ref");
-			mergeTextItem(label, m_currentRef.toString());
-			conditionallyFitAndAlign(label,MinLabelSize);
-		}
-		else
-		{
-			TextBoxItem *label = findTextItem(currentSlide, "#ref");
-			if(label)
-				label->setOpacity(0.);
-		}
-		
-		if(showResponsiveReadingLabels())
-		{
-			QString labelText = slideNumber % 2 == 0 ? leaderLabel : readingLabel;
-			
-			TextBoxItem *label = findTextItem(currentSlide, "#reading");
-			mergeTextItem(label, labelText);
-			conditionallyFitAndAlign(label,MinLabelSize);
-		}
-		else
-		{
-			TextBoxItem *label = findTextItem(currentSlide, "#reading");
-			if(label)
-				label->setOpacity(0.);
-		}
+		TextBoxItem *label = findTextItem(currentSlide, "#ref");
+		mergeTextItem(label, m_currentRef.toString());
+		conditionallyFitAndAlign(label,MinLabelSize);
+	}
+	else
+	{
+		TextBoxItem *label = findTextItem(currentSlide, "#ref");
+		if(label)
+			label->setOpacity(0.);
 	}
 	
+	if(showResponsiveReadingLabels())
+	{
+		QString labelText = slideNumber % 2 == 0 ? leaderLabel : readingLabel;
+		
+		TextBoxItem *label = findTextItem(currentSlide, "#reading");
+		mergeTextItem(label, labelText);
+		conditionallyFitAndAlign(label,MinLabelSize);
+	}
+	else
+	{
+		TextBoxItem *label = findTextItem(currentSlide, "#reading");
+		if(label)
+			label->setOpacity(0.);
+	}
+
 	if(showFullRefBottomEachSlide())
 	{
 		TextBoxItem *label = findTextItem(currentSlide, "#ref-bottom");
@@ -1118,6 +1167,11 @@ SlideGroup * BibleBrowser::createSlideGroup(SlideGroup *templateGroup, bool allo
 
 	SlideGroup *group;
 	 
+	if(m_tempDest)
+	{
+		group = m_tempDest;
+	}
+	else
 	if(allowAppend && appendToExistingGroup())
 	{
 		ChooseGroupDialog d;
@@ -1269,7 +1323,7 @@ SlideGroup * BibleBrowser::createSlideGroup(SlideGroup *templateGroup, bool allo
 			
 			//currentSlide = addSlide(group,tmpText,realHeight,currentFitRect,tmpList.join("\n"));
 			if(showEachVerseOnSeperateSlide())
-				currentSlide->setSlideName(QString("v %1").arg(verseList[x].verseNumber()));
+				currentSlide->setSlideName((appendToExistingGroup() ? m_currentRef.toString() + ": " : "") + QString("v %1").arg(verseList[x].verseNumber()));
 			
 			slideNumber++;
 			
@@ -1385,7 +1439,7 @@ SlideGroup * BibleBrowser::createSlideGroup(SlideGroup *templateGroup, bool allo
 									altSlide->setPrimarySlideId(currentSlide->slideId());
 									
 									if(showEachVerseOnSeperateSlide())
-										altSlide->setSlideName(QString("v %1.%2").arg(verseList[verseListIndex].verseNumber()).arg(altSlideCount));
+										altSlide->setSlideName((appendToExistingGroup() ? m_currentRef.toString() + ": " : "") + QString("v %1.%2").arg(verseList[verseListIndex].verseNumber()).arg(altSlideCount));
 									
 									setupOptionalLabels(altSlide, slideNumber);
 									
@@ -1415,7 +1469,7 @@ SlideGroup * BibleBrowser::createSlideGroup(SlideGroup *templateGroup, bool allo
 								altSlideCount++;
 								
 								if(showEachVerseOnSeperateSlide())
-									altSlide->setSlideName(QString("v %1.%2").arg(verseList[verseListIndex].verseNumber()).arg(altSlideCount));
+									altSlide->setSlideName((appendToExistingGroup() ? m_currentRef.toString() + ": " : "") + QString("v %1.%2").arg(verseList[verseListIndex].verseNumber()).arg(altSlideCount));
 								
 								setupOptionalLabels(altSlide, slideNumber);
 								
@@ -1445,7 +1499,7 @@ SlideGroup * BibleBrowser::createSlideGroup(SlideGroup *templateGroup, bool allo
 							//qDebug() << "BibleBrowser::createSlideGroup(): [verse] Output "<<out->name()<<": [regular] Create alt slide for slide "<<slideNumber;
 							
 							if(showEachVerseOnSeperateSlide())
-								altSlide->setSlideName(QString("v %1").arg(verseList[verseListIndex].verseNumber()));
+								altSlide->setSlideName((appendToExistingGroup() ? m_currentRef.toString() + ": " : "") + QString("v %1").arg(verseList[verseListIndex].verseNumber()));
 							
 							setupOptionalLabels(altSlide, slideNumber);
 						}

@@ -7,13 +7,13 @@
     <x>0</x>
     <y>0</y>
     <width>453</width>
-    <height>407</height>
+    <height>563</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Text Import Tool</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout_4">
+  <layout class="QVBoxLayout" name="verticalLayout_5">
    <item>
     <widget class="QGroupBox" name="groupBox_3">
      <property name="title">
@@ -114,6 +114,46 @@
     </widget>
    </item>
    <item>
+    <widget class="QGroupBox" name="groupBox_2">
+     <property name="title">
+      <string>Pre-Processor</string>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout_4">
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_4">
+        <item>
+         <widget class="QLabel" name="label_4">
+          <property name="text">
+           <string>Pre-Processor Program:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="preprocFile"/>
+        </item>
+        <item>
+         <widget class="QPushButton" name="preprocBrowse">
+          <property name="text">
+           <string>Browse</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <widget class="QLabel" name="label_5">
+        <property name="text">
+         <string>While not required, pre-processors (typically perl scripts) are given two arguments: The file name from the &quot;File to Import&quot; box, and a second temporary output file. This program will be given 30 seconds at most to complete it's task and write the new text to the temp file given as it's second argument.</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
     <spacer name="verticalSpacer">
      <property name="orientation">
       <enum>Qt::Vertical</enum>
@@ -121,7 +161,7 @@
      <property name="sizeHint" stdset="0">
       <size>
        <width>20</width>
-       <height>40</height>
+       <height>41</height>
       </size>
      </property>
     </spacer>

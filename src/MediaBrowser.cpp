@@ -484,7 +484,9 @@ void MediaBrowser::setupUI()
 
 	SlideGroup *group = new SlideGroup();
 	group->addSlide(slide);
-	m_viewer->setSlideGroup(group);
+	
+	//qDebug() << "MediaBrowser::setupUI(): Setting slidegroup "<<group<<" on viewer "<<m_viewer; 
+	m_viewer->setSlideGroup(group, slide);
 	
 	m_viewerLayout->addWidget(m_viewer);
 	m_splitter->addWidget(m_viewerBase);
