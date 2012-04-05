@@ -1021,7 +1021,7 @@ Slide *BibleBrowser::getTemplateSlide(SlideGroup *templateGroup, int slideNum)
 	
 }
 
-void BibleBrowser::createTitleSlide(SlideGroup *templateGroup, SlideGroup *group, bool isFirst)
+Slide *BibleBrowser::createTitleSlide(SlideGroup *templateGroup, SlideGroup *group, bool isFirst)
 {
 	QString refString = m_currentRef.toString();
 		
@@ -1043,6 +1043,8 @@ void BibleBrowser::createTitleSlide(SlideGroup *templateGroup, SlideGroup *group
 		addSlideWithText(group, slide, text);
 		
 		slide->setSlideName(m_currentRef.toString());
+		
+		return slide;
 	}
 	else
 	{
@@ -1050,6 +1052,8 @@ void BibleBrowser::createTitleSlide(SlideGroup *templateGroup, SlideGroup *group
 		delete slide; 
 		slide = 0;
 	}
+	
+	return 0;
 }
 
 void BibleBrowser::setupOptionalLabels(Slide *currentSlide, int slideNumber)
@@ -1195,29 +1199,30 @@ SlideGroup * BibleBrowser::createSlideGroup(SlideGroup *templateGroup, bool allo
 	// and from here on out (after this block), we only create alt slides on *our* group
 	// if we have an alt group *already* on *our* group AND an alt group in the template for that output
 	QList<Output*> allOut = AppSettings::outputs();
-	if(!appendToExistingGroup())
+	//if(!appendToExistingGroup())
 	{
 		foreach(Output *out, allOut)
 		{
 			SlideGroup *outputTemplate = templateGroup->altGroupForOutput(out);
 			if(outputTemplate)
 			{
-				qDebug() << "BibleBrowser::createSlideGroup(): [prep] Creating alternate group from template for output: "<<out->name();
+				//qDebug() << "BibleBrowser::createSlideGroup(): [prep] Creating alternate group from template for output: "<<out->name();
 				
-				SlideGroup *altGroup = new SlideGroup();
-				altGroup->setGroupTitle(tr("Alternate %1 for %2").arg(m_currentRef.toString()).arg(out->name()));
+				SlideGroup *oldGroup = group->altGroupForOutput(out);
+				if(!oldGroup)
+				{
+					SlideGroup *altGroup = new SlideGroup();
+					altGroup->setGroupTitle(tr("Alternate %1 for %2").arg(m_currentRef.toString()).arg(out->name()));
+							
+					//qDebug() << "BibleBrowser::createSlideGroup(): [prep] * Added new alt group for: "<<out->name();
+					group->setAltGroupForOutput(out, altGroup);
+				}
+				else
+				{
+					//qDebug() << "BibleBrowser::createSlideGroup(): [prep] * Alt group already existed for: "<<out->name();
+				}
 				
-				//group->setSlideTemplates(outputTemplate);
-				
-// 				if(SlideGroup *oldGroup = groupaltGroupForOutput(out))
-// 				{
-// 					setAltGroupForOutput(out, 0); // just to be safe...
-// 					if(SongSlideGroup *oldSongGroup = dynamic_cast<SongSlideGroup*>(oldGroup))
-// 						oldSongGroup->setSong(0); // if we don't zero, it deletes song, below... 
-// 					delete oldGroup;
-// 				}
-						
-				group->setAltGroupForOutput(out, altGroup);
+				//qDebug() << "BibleBrowser::createSlideGroup(): [prep] *DONE* creating alternate group from template for output: "<<out->name();
 				
 			}
 		}
@@ -1227,22 +1232,26 @@ SlideGroup * BibleBrowser::createSlideGroup(SlideGroup *templateGroup, bool allo
 // 	Slide * startSlide = 0;
 	if(showFullRefAtStart())
 	{
-		createTitleSlide(templateGroup, // using slide from this template
-			         group,         // add to this group
-			         true);         // first slide (as opposed to last/closing slide)
-		
+		Slide *primaryTitleSlide = 
+			createTitleSlide(templateGroup, // using slide from this template
+					group,          // add to this group
+					true);          // first slide (as opposed to last/closing slide)
+			
 		foreach(Output *out, allOut)
 		{
 			SlideGroup *outputTemplate = templateGroup->altGroupForOutput(out);
 			if(outputTemplate)
 			{
-				qDebug() << "BibleBrowser::createSlideGroup(): [prep] Creating alternate group from template for output: "<<out->name();
+				//qDebug() << "BibleBrowser::createSlideGroup(): [prep] Creating alternate group from template for output: "<<out->name();
 				
 				if(SlideGroup *altGroup = group->altGroupForOutput(out))
 				{
-					createTitleSlide(outputTemplate, // using slide from this template
+					Slide *altTitleSlide = 
+						createTitleSlide(outputTemplate, // using slide from this template
 						         altGroup,       // add to this group
 						         true);          // first slide (as opposed to last/closing slide)
+					
+					altTitleSlide->setPrimarySlideId(primaryTitleSlide->slideId());
 				}
 			}
 		}
@@ -1284,7 +1293,7 @@ SlideGroup * BibleBrowser::createSlideGroup(SlideGroup *templateGroup, bool allo
 			//qDebug() << "BibleBrowser::createSlideGroup(): recreateTextBox, slideNumber:"<<slideNumber;
 			currentSlide = getTemplateSlide(templateGroup, slideNumber)->clone();
 			tmpText = findTextItem(currentSlide, "#verses");
-			currentMinTextSize = tmpText->findFontSize();
+			currentMinTextSize = (int)tmpText->findFontSize();
 			
 			//qDebug() << "BibleBrowser::createSlideGroup(): recreateTextBox, got currentSlide:"<<currentSlide<<", tmpText:"<<tmpText;
 		}
@@ -1391,7 +1400,7 @@ SlideGroup * BibleBrowser::createSlideGroup(SlideGroup *templateGroup, bool allo
 									//qDebug() << "BibleBrowser::createSlideGroup(): [clone] alt:"<<altSlide->slideId()<<", tmpl:"<<tmpl->slideId()<<", current:"<<currentSlide->slideId(); 
 									
 									altText = findTextItem(altSlide, "#verses");
-									currentMinTextSize = altText->findFontSize();
+									currentMinTextSize = (int)altText->findFontSize();
 									
 									//qDebug() << "BibleBrowser::createSlideGroup(): recreateTextBox, got currentSlide:"<<currentSlide<<", tmpText:"<<tmpText;
 								}
@@ -1485,7 +1494,7 @@ SlideGroup * BibleBrowser::createSlideGroup(SlideGroup *templateGroup, bool allo
 							
 							Slide *altSlide = getTemplateSlide(outputTemplate, slideNumber)->clone();
 							TextBoxItem *altText = findTextItem(altSlide, "#verses");
-							int currentMinTextSize = altText->findFontSize();
+							int currentMinTextSize = (int)altText->findFontSize();
 			
 							mergeTextItem(altText, tmpList.join(""));
 							
@@ -1549,9 +1558,10 @@ SlideGroup * BibleBrowser::createSlideGroup(SlideGroup *templateGroup, bool allo
 	// Same thing as the starting slide - add an ending slide with the full text reference at the end if requested.
 	if(showFullRefAtEnd())
 	{
-		createTitleSlide(templateGroup, // using slide from this template
-			         group,         // add to this group
-			         false);        // last slide 
+		Slide *primaryTitleSlide = 
+			createTitleSlide(templateGroup, // using slide from this template
+					group,          // add to this group
+					false);         // last slide (as opposed to first slide)) 
 		
 		foreach(Output *out, allOut)
 		{
@@ -1562,9 +1572,12 @@ SlideGroup * BibleBrowser::createSlideGroup(SlideGroup *templateGroup, bool allo
 				
 				if(SlideGroup *altGroup = group->altGroupForOutput(out))
 				{
-					createTitleSlide(outputTemplate, // using slide from this template
+					Slide *altTitleSlide = 
+						createTitleSlide(outputTemplate, // using slide from this template
 						         altGroup,       // add to this group
-						         false);         // last slide
+						         false);          // last slide (as opposed to first slide)
+					
+					altTitleSlide->setPrimarySlideId(primaryTitleSlide->slideId());
 				}
 			}
 		}

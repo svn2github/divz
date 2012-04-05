@@ -81,7 +81,7 @@ QString BibleVerseRef::toString(bool includeVersion) const
 
 QString BibleVerseRef::cacheKey() const
 {
-	qDebug() << "BibleVerseRef::cacheKey(): "<<toString(true);
+	//qDebug() << "BibleVerseRef::cacheKey(): "<<toString(true);
 	return toString(true);
 }
 

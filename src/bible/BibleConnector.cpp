@@ -22,7 +22,7 @@ void BibleConnector::downloadReference(const BibleVerseRef& reference)
 	BibleVerseList list;
 	 
 	QString urlString = urlForReference(reference);
-	qDebug() << "downloadReference("<<reference.cacheKey()<<"): "<<urlString;
+	qDebug() << "BibleConnector::downloadReference("<<reference.cacheKey()<<"): "<<urlString;
 	QUrl url(urlString);
 	QNetworkReply * reply = m_net->get(QNetworkRequest(url));
 	m_inProgress[reply] = reference;

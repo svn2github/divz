@@ -123,7 +123,7 @@ protected:
 	
 	void setupTextBox(TextBoxItem *);
 	Slide * addSlide(SlideGroup *, TextBoxItem *, int height, const QRect & fitRect, const QString & plain);
-	void createTitleSlide(SlideGroup *templateGroup, SlideGroup *group, bool isFirst = true);
+	Slide * createTitleSlide(SlideGroup *templateGroup, SlideGroup *group, bool isFirst = true);
 	void setupOptionalLabels(Slide *currentSlide, int slideNumber);
 	
 	void setupUI();

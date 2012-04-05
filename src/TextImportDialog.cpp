@@ -96,6 +96,9 @@ void TextImportDialog::setupUi()
 	connect(m_ui->preprocBrowse, SIGNAL(clicked()),  this, SLOT(preprocBrowseBtn()));
 	
 	
+	m_ui->filename->setText(AppSettings::previousPath("textimport"));
+	m_ui->scriptFile->setText(AppSettings::previousPath("script"));
+	m_ui->preprocFile->setText(AppSettings::previousPath("preproc"));
 }
 
 void TextImportDialog::browseBtn()
@@ -253,13 +256,14 @@ Slide *TextImportDialog::getTemplateSlide(SlideGroup *templateGroup, QString nam
 	return getTemplateSlide(templateGroup, slideNum, autoAddTextField);
 }
 
+static QString static_currentScriptFile="";
 QScriptValue TextImportDialog_script_qDebug(QScriptContext *context, QScriptEngine */*engine*/)
 {
 	QStringList list;
 	for(int i=0; i<context->argumentCount(); i++)
 		list.append(context->argument(i).toString());
 		
-	qDebug() << "Debug: [script] "<<qPrintable(list.join(" "));
+	qDebug() << "TextImportDialog: [Script]: "<<static_currentScriptFile<<": "<<qPrintable(list.join(" "));
 	
 	return QScriptValue(list.join(" "));
 }
@@ -428,6 +432,9 @@ void TextImportDialog::doImport()
 	QScriptEngine scriptEngine;
 	if(!scriptFilename.isEmpty())
 	{
+		// For debug output
+		static_currentScriptFile = scriptFilename;
+		 
 		// Install some custom functions for the script
 		QScriptValue fDebug        = scriptEngine.newFunction(TextImportDialog_script_qDebug);
 		QScriptValue fFindTextItem = scriptEngine.newFunction(TextImportDialog_script_findTextItem);
@@ -439,6 +446,8 @@ void TextImportDialog::doImport()
 		scriptEngine.globalObject().setProperty("changeFontSize", fChangeFntSz);
 		scriptEngine.globalObject().setProperty("findFontSize",   fFindFntSz);
 		
+		scriptEngine.globalObject().setProperty("InPrimaryGroup", true);
+	
 		QScriptValue scriptBibleBrowser = scriptEngine.newQObject(MainWindow::mw()->bibleBrowser());
 		scriptEngine.globalObject().setProperty("BibleBrowser", scriptBibleBrowser);
 		
@@ -479,9 +488,14 @@ void TextImportDialog::doImport()
 		return;
 	}
 	
+	// Apply group title using the original file name, just in case we used a pre-processor
 	group->setGroupTitle(AbstractItem::guessTitle(QFileInfo(originalFileName).baseName()));
 	
 	qDebug() << "TextImportDialog::doImport(): Checking for alternate groups";
+	
+	// Set a flag so scripts can respond differently for alternate groups
+	if(!scriptFilename.isEmpty())
+		scriptEngine.globalObject().setProperty("InPrimaryGroup", false);
 	
 	// Create alternate groups for outputs if present in template
 	QList<Output*> allOut = AppSettings::outputs();
@@ -490,9 +504,11 @@ void TextImportDialog::doImport()
 		SlideGroup *outputTemplate = templateGroup->altGroupForOutput(out);
 		if(outputTemplate)
 		{
-			qDebug() << "TextImportDialog::doImport(): [prep] Creating alternate group from template for output: "<<out->name();
+			SlideGroup *existingAlt = group->altGroupForOutput(out);
 			
-			SlideGroup *altGroup = generateSlideGroup(outputTemplate, fileContents, isPlainText, scriptEngine, scriptFilename);
+			qDebug() << "TextImportDialog::doImport(): [prep] Creating alternate group from template for output: "<<out->name()<<", existingAlt: "<<existingAlt;
+			
+			SlideGroup *altGroup = generateSlideGroup(outputTemplate, fileContents, isPlainText, scriptEngine, scriptFilename, existingAlt, group);
 			if(!altGroup)
 			{
 				// script error or other error, cancel import
@@ -514,11 +530,11 @@ void TextImportDialog::doImport()
 	close();
 }
 
-SlideGroup *TextImportDialog::generateSlideGroup(SlideGroup *templateGroup, QString fileContents, bool isPlainText, QScriptEngine &scriptEngine, QString scriptFilename)
+SlideGroup *TextImportDialog::generateSlideGroup(SlideGroup *templateGroup, QString fileContents, bool isPlainText, QScriptEngine &scriptEngine, QString scriptFilename, SlideGroup *append, SlideGroup *primary)
 {
-	SlideGroup *group = new SlideGroup();
+	SlideGroup *group = append ? append : new SlideGroup();
 	
-	int slideNumber = group->numSlides();
+	int slideNumber = 0; //group->numSlides();
 	
 	bool hasScript = !scriptFilename.isEmpty();
 	if(isPlainText)
@@ -606,7 +622,8 @@ SlideGroup *TextImportDialog::generateSlideGroup(SlideGroup *templateGroup, QStr
 						return 0;
 					}
 					
-					if(scriptResult.isValid())
+					if(scriptResult.isValid() &&
+					  !scriptResult.isUndefined())
 					{
 						slideNameToUse = scriptResult.toString();
 						qDebug() << "TextImportDialog::generateSlideGroup(): [plain] Using slideNameToUse: "<<slideNameToUse;
@@ -746,7 +763,8 @@ SlideGroup *TextImportDialog::generateSlideGroup(SlideGroup *templateGroup, QStr
 					return 0;
 				}
 				
-				if(scriptResult.isValid())
+				if(scriptResult.isValid() &&
+				  !scriptResult.isUndefined())
 				{
 					slideNameToUse = scriptResult.toString();
 					qDebug() << "TextImportDialog::generateSlideGroup(): [plain2] Using slideNameToUse: "<<slideNameToUse;
@@ -868,7 +886,8 @@ SlideGroup *TextImportDialog::generateSlideGroup(SlideGroup *templateGroup, QStr
 					return 0;
 				}
 				
-				if(scriptResult.isValid())
+				if(scriptResult.isValid() &&
+				  !scriptResult.isUndefined())
 				{
 					slideNameToUse = scriptResult.toString();
 					qDebug() << "TextImportDialog::generateSlideGroup(): [vars] Using slideNameToUse: "<<slideNameToUse;
@@ -883,7 +902,28 @@ SlideGroup *TextImportDialog::generateSlideGroup(SlideGroup *templateGroup, QStr
 				currentSlide = getTemplateSlide(templateGroup, slideNameToUse, slideNumber, false)->clone();
 			else
 				currentSlide = getTemplateSlide(templateGroup, slideNumber, false)->clone();
+			
+			// Store the slide number as an attribute (even though Slide::slideNumber() *probably* matches, this is just to be sure - for use in the {else} block
+			if(!primary)
+				currentSlide->setProperty("-primary-slideNumber", slideNumber);
+			else
+			{
+				// We're creating an alternate slide group, so look thru the givin primary group for a slide that has our slideNumber
+				// stored in its properties and use that as our primary slide
+				foreach(Slide *slide, primary->slideList())
+				{
+					int primarySlideNum = slide->property("-primary-slideNumber").toInt();
+					if(primarySlideNum == slideNumber)
+					{
+						currentSlide->setPrimarySlideId(slide->slideId());
+						//qDebug() << "TextImportDialog::generateSlideGroup(): [vars] Linked primary slide to alt slide for slideNumber:"<<slideNumber;
+						break;
+					}
+				}
 				
+				if(currentSlide->primarySlideId() < 0)
+					qDebug() << "TextImportDialog::generateSlideGroup(): [vars] Could not find primary slide for alt slideNumber:"<<slideNumber;
+			}
 			//qDebug() << "TextImportDialog::generateSlideGroup(): [vars] varHash:" <<varHash;
 			
 			
@@ -936,7 +976,7 @@ SlideGroup *TextImportDialog::generateSlideGroup(SlideGroup *templateGroup, QStr
 				TextBoxItem *tmpText = findTextItem(currentSlide, varName);
 				if(!tmpText)
 				{
-					qDebug() << "TextImportDialog::generateSlideGroup(): [vars] Error: Variable "<<varName<<" from text file in slide block "<<blockNum<<" not found in template slide";
+					//qDebug() << "TextImportDialog::generateSlideGroup(): [vars] Error: Variable "<<varName<<" from text file in slide block "<<blockNum<<" not found in template slide";
 				}
 				else
 				{
@@ -969,7 +1009,7 @@ SlideGroup *TextImportDialog::generateSlideGroup(SlideGroup *templateGroup, QStr
 			{
 				if(!varHash.contains(fieldName))
 				{
-					qDebug() << "TextImportDialog::generateSlideGroup(): [vars] Field "<<fieldName<<" not found in slide block "<<blockNum<<", hiding field on slide";
+					//qDebug() << "TextImportDialog::generateSlideGroup(): [vars] Field "<<fieldName<<" not found in slide block "<<blockNum<<", hiding field on slide";
 					TextBoxItem *item = findTextItem(currentSlide, fieldName);
 					if(item)
 						item->setOpacity(0.); 

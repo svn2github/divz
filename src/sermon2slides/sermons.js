@@ -41,9 +41,15 @@ function newSlideCreated(slideNum)
 
 	if(refToAdd)
 	{
-		BibleBrowser.setShowEachVerseOnSeperateSlide(true);
-		BibleBrowser.addVersesToGroup(refToAdd, dGroup);
-		debug("Added bible reference: ", refToAdd);
+		if(InPrimaryGroup)
+		{
+			BibleBrowser.setShowEachVerseOnSeperateSlide(true);
+			BibleBrowser.setAppendToExistingGroup(true);
+			BibleBrowser.addVersesToGroup(refToAdd, dGroup);
+			debug("Added bible reference: ", refToAdd);
+		}
+// 		else
+// 			debug("Not adding ref ", refToAdd, " because not in primary group");
 	}
 }
 

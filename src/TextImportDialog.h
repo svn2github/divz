@@ -40,7 +40,7 @@ protected:
 	Slide *getTemplateSlide(SlideGroup *templateGroup, int slideNum, bool autoAddTextField=true);
 	Slide *getTemplateSlide(SlideGroup *templateGroup, QString name, int slideNum=0, bool autoAddTextField=true);
 	
-	SlideGroup *generateSlideGroup(SlideGroup *templateGroup, QString text, bool isPlain, QScriptEngine &scriptEngine, QString scriptFilename);
+	SlideGroup *generateSlideGroup(SlideGroup *templateGroup, QString text, bool isPlain, QScriptEngine &scriptEngine, QString scriptFilename, SlideGroup *append=0, SlideGroup *primary=0);
 
 private:
 	Ui::TextImportDialog *m_ui;
