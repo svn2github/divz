@@ -68,8 +68,21 @@ while (@lines)
 		
 		if($sub_pnt)
 		{
-			print OUTPUT "#title: $title\n";
-			print OUTPUT "#bible: $sub_pnt\n\n";
+			if($sub_pnt =~ /;/)
+			{
+				my @verses = split/[\,;]/, $sub_pnt;
+				s/(^\s+|\s+$)//g foreach @verses;
+				foreach my $vs (@verses)
+				{
+					print OUTPUT "#title: $title\n";
+					print OUTPUT "#bible: $vs\n\n";
+				}
+			}
+			else
+			{
+				print OUTPUT "#title: $title\n";
+				print OUTPUT "#bible: $sub_pnt\n\n";
+			}
 		}
 	}
 	

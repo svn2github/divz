@@ -527,9 +527,16 @@ void BibleBrowser::addVersesToGroup(const QString& text, SlideGroup *dest)
 		m_downloadComplete = false;
 	}
 	
-	// Do the bulk of the work here
 	m_tempDest = dest;
+	if(!dest)
+		m_tempDest = new SlideGroup();
+	
+	// Do the bulk of the work here
 	createSlideGroup(getTemplate(), true);
+	
+	if(!dest)
+		MainWindow::mw()->currentDocument()->addGroup(m_tempDest);
+	
 	m_tempDest = 0; // reset so UI doesn't behave oddly
 	
 	// That's all, folks!
@@ -1174,6 +1181,8 @@ SlideGroup * BibleBrowser::createSlideGroup(SlideGroup *templateGroup, bool allo
 	if(m_tempDest)
 	{
 		group = m_tempDest;
+		if(group->groupTitle().isEmpty())
+			group->setGroupTitle(m_currentRef.toString() + (showResponsiveReadingLabels() ? " - Responsive" : ""));
 	}
 	else
 	if(allowAppend && appendToExistingGroup())

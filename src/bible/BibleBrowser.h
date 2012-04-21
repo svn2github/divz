@@ -101,7 +101,7 @@ public slots:
 	void prevChapter();
 	void nextChapter();
 	
-	void addVersesToGroup(const QString& verses, SlideGroup *destination);
+	void addVersesToGroup(const QString& verses, SlideGroup *destination=0);
 
 protected slots:
 	void searchReturnPressed();

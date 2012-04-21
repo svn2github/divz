@@ -10,6 +10,7 @@
 #include "model/Document.h"
 #include "AppSettings.h"
 #include "MainWindow.h"
+#include "MediaBrowser.h"
 
 #include "bible/BibleBrowser.h"
 
@@ -292,6 +293,93 @@ QScriptValue TextImportDialog_script_findTextItem(QScriptContext *context, QScri
 	return engine->newQObject(tmpText);
 }
 
+QScriptValue TextImportDialog_script_getFileList(QScriptContext *context, QScriptEngine *engine)
+{
+	QString folder = context->argument(0).toString();
+	QString filter = context->argument(1).toString();
+	
+	QDir dir(folder);
+	if(!dir.exists())
+	{
+		qDebug() << "TextImportDialog_script_getFileList(folder,filter): Folder given does not exist: "<<folder; 
+		return engine->newArray();
+	}
+
+	QStringList files;
+	if(!filter.isEmpty())
+		files = dir.entryList(QStringList() << filter);
+	else
+		files = dir.entryList();
+	
+	QScriptValue array = engine->newArray(files.length());
+	
+	for(int i=0; i<files.length(); i++)
+		array.setProperty(i, files[i]);
+	
+	return array;
+} 
+
+QScriptValue TextImportDialog_script_changeSlideBackground(QScriptContext *context, QScriptEngine */*engine*/)
+{
+	QObject *slideObj = context->argument(0).toQObject();
+	QString itemName  = context->argument(1).toString();
+	if(!slideObj)
+	{
+		qDebug() << "TextImportDialog_script_changeSlideBackground(slide,itemName): Must give Slide (QObject) as first argument"; 
+		return QScriptValue(QScriptValue::NullValue);
+	}
+	Slide *slide = dynamic_cast<Slide*>(slideObj);
+	if(!slide)
+	{
+		qDebug() << "TextImportDialog_script_changeSlideBackground(slide,itemName): First argument is not a Slide"; 
+		return QScriptValue(QScriptValue::NullValue);
+	}
+	if(itemName.isEmpty())
+	{
+		qDebug() << "TextImportDialog_script_changeSlideBackground(slide,itemName): No item name given in second argument"; 
+		return QScriptValue(QScriptValue::NullValue);
+	}
+	
+	QFileInfo info(itemName);
+	QString ext = info.suffix();
+	QString abs = info.absoluteFilePath();
+	
+	AbstractVisualItem::FillType fillType = AbstractVisualItem::None;
+	if(MediaBrowser::isVideo(ext))
+		fillType = AbstractVisualItem::Video;
+	else
+	if(MediaBrowser::isImage(ext))
+		fillType = AbstractVisualItem::Image;
+	else
+		fillType = AbstractVisualItem::Solid;
+		
+	if(fillType != AbstractVisualItem::None)
+	{
+		
+		AbstractVisualItem * bg = dynamic_cast<AbstractVisualItem*>(slide->background());
+		
+		bg->setFillType(fillType);
+		if(fillType == AbstractVisualItem::Video)
+		{
+			bg->setFillVideoFile(abs);
+		}
+		else
+		if(fillType == AbstractVisualItem::Image)
+		{
+			bg->setFillImageFile(abs);
+		}
+		else
+		if(fillType == AbstractVisualItem::Solid)
+		{
+			bg->setFillBrush(QColor(abs));
+		}
+	}
+		
+	
+	return QScriptValue(true);
+}
+
+
 // QScriptValue TextImportDialog_script_addVerses(QScriptContext *context, QScriptEngine *engine)
 // {
 // 	scriptEngine.globalObject().setProperty("dGroup", scriptGroup);
@@ -335,6 +423,25 @@ QScriptValue TextImportDialog_script_findFontSize(QScriptContext *context, QScri
 }
 
 
+QScriptValue TextImportDialog_script_intelligentCenterTextbox(QScriptContext *context, QScriptEngine */*engine*/)
+{
+	QObject *obj = context->argument(0).toQObject();
+	if(!obj)
+	{
+		qDebug() << "TextImportDialog_script_intelligentCenterTextbox(textbox): Must give TextBoxItem (QObject) as first argument"; 
+		return QScriptValue(QScriptValue::NullValue);
+	}
+	TextBoxItem *text = dynamic_cast<TextBoxItem*>(obj);
+	if(!text)
+	{
+		qDebug() << "TextImportDialog_script_intelligentCenterTextbox(textbox): First argument is not a TextBoxItem"; 
+		return QScriptValue(false);
+	}
+	intelligentCenterTextbox(text);
+	
+	return QScriptValue(true);
+}
+
 QScriptValue TextImportDialog_script_changeFontSize(QScriptContext *context, QScriptEngine */*engine*/)
 {
 	QObject *obj = context->argument(0).toQObject();
@@ -365,8 +472,37 @@ QScriptValue TextImportDialog_script_changeFontSize(QScriptContext *context, QSc
 void TextImportDialog::doImport()
 {
 	// Get settings from UI
-	QString fileName = m_ui->filename->text();
-	AppSettings::setPreviousPath("textimport",fileName);
+	
+	QString fileName;
+	QString pastedTempfile;
+	
+	if(m_ui->tabWidget->currentIndex() == 1)
+	{
+		// copy/paste buffer
+		QString text = m_ui->plainTextEdit->toPlainText();
+	
+		pastedTempfile = tr("%1/dviz-textimportdialog-pasted.txt").arg(QDir::tempPath());
+		
+		QFile file(pastedTempfile);
+		if(!file.open(QIODevice::WriteOnly))
+		{
+			QMessageBox::critical(this,tr("Can't Wriite Temp File"),QString(tr("Unable to write temp file %1")).arg(pastedTempfile));
+			return;
+		}
+	
+		QTextStream stream(&file);
+		stream << text;
+		file.close();
+		
+		fileName = pastedTempfile;
+		
+		qDebug() << "Wrote temp file: "<<pastedTempfile;
+	}
+	else
+	{
+		fileName = m_ui->filename->text();
+		AppSettings::setPreviousPath("textimport",fileName);
+	}
 	
 	// Store the originally-given file for the group name later
 	QString originalFileName = fileName;
@@ -428,6 +564,10 @@ void TextImportDialog::doImport()
 	if(!tempFilename.isEmpty())
 		file.remove(); // file is closed before it is removed
 		
+	// Remove the paste buffer
+	//if(!pastedTempfile.isEmpty())
+	//	QFile(pastedTempfile).remove();
+		
 	// Load script file
 	QScriptEngine scriptEngine;
 	if(!scriptFilename.isEmpty())
@@ -440,11 +580,17 @@ void TextImportDialog::doImport()
 		QScriptValue fFindTextItem = scriptEngine.newFunction(TextImportDialog_script_findTextItem);
 		QScriptValue fChangeFntSz  = scriptEngine.newFunction(TextImportDialog_script_changeFontSize);
 		QScriptValue fFindFntSz    = scriptEngine.newFunction(TextImportDialog_script_findFontSize);
+		QScriptValue fCntrTextBox  = scriptEngine.newFunction(TextImportDialog_script_intelligentCenterTextbox);
+		QScriptValue fFileList     = scriptEngine.newFunction(TextImportDialog_script_getFileList);
+		QScriptValue fChangeBg     = scriptEngine.newFunction(TextImportDialog_script_changeSlideBackground);
 		
 		scriptEngine.globalObject().setProperty("debug",          fDebug);
 		scriptEngine.globalObject().setProperty("findTextItem",   fFindTextItem);
 		scriptEngine.globalObject().setProperty("changeFontSize", fChangeFntSz);
 		scriptEngine.globalObject().setProperty("findFontSize",   fFindFntSz);
+		scriptEngine.globalObject().setProperty("intelligentCenterTextbox", fCntrTextBox);
+		scriptEngine.globalObject().setProperty("getFileList",    fFileList);
+		scriptEngine.globalObject().setProperty("changeSlideBackground", fChangeBg);
 		
 		scriptEngine.globalObject().setProperty("InPrimaryGroup", true);
 	
