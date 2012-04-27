@@ -142,7 +142,7 @@ CameraSlideGroupViewControl::CameraSlideGroupViewControl(OutputInstance *inst, Q
 void CameraSlideGroupViewControl::setIsPreviewControl(bool flag)
 {
 	SlideGroupViewControl::setIsPreviewControl(flag);
-// 	m_controlBase->setVisible(!flag);
+ 	//m_controlBase->setVisible(!flag);
 // 	if(flag)
 // 	    setMaximumHeight(0);
 }

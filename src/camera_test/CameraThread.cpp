@@ -6,6 +6,8 @@
 #include <QDebug>
 #include <QApplication>
 
+#include "CameraThread.h"
+
 extern "C" {
 #include "libswscale/swscale.h"
 #include "libavdevice/avdevice.h"
@@ -13,7 +15,6 @@ extern "C" {
 
 //#include "ccvt/ccvt.h"
 
-#include "CameraThread.h"
 #include "CameraViewerWidget.h"
 
 #if defined(Q_OS_WIN)

@@ -65,9 +65,7 @@ void NativeViewerCamera::show()
 	QRect rect = containerWidget()->geometry();
 	QPoint abs = WidgetUtil::absoluteWidgetPosition(containerWidget());
 	//qDebug() << "NativeViewerCamera::show: Showing at "<<abs<<", size:"<<rect.size();
-#ifdef PHONON_ENABLED
-// 	if(m_autoPlay)
-// 		m_media->play();
+	
 	if(!m_widget->parentWidget())
 	{
 		m_widget->resize(rect.size());
@@ -82,7 +80,6 @@ void NativeViewerCamera::show()
 	// work without both.
 	if(!m_widget->parentWidget())
 		m_widget->move(abs);
-#endif
 
 	//qDebug() << "NativeViewerCamera::show: done.";
 }
@@ -122,7 +119,6 @@ void NativeViewerCamera::fadeBlack(bool flag)
 	m_fadeOpacity = flag ? .999 : 0.001;
 	
 	m_fadeTimer.start();
-	// 760-733-9969
 }
 
 void NativeViewerCamera::fadeStep()

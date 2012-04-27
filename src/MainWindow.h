@@ -125,6 +125,8 @@ public slots:
 	
 	void slotSendToOutputs();
 	
+	void showPrevSelectedGroup();
+	
 protected slots:
 	void currentTabChanged(int);
 	
@@ -239,6 +241,9 @@ private:
 	
 	ControlServer * m_controlServer;
 	ViewServer * m_viewServer;
+	
+	SlideGroup *m_prevLiveGroup;
+	Slide *m_prevLiveSlide;
 	
 	/** static */
 	static MainWindow * static_mainWindow;

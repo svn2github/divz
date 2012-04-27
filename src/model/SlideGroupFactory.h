@@ -69,6 +69,8 @@ signals:
 	void slideDoubleClicked(Slide *);
 	void slideSelected(Slide *);
 	void iconSizeChanged(int);
+	void prevGroup();
+	
 	
 public slots:
 	virtual void setSlideGroup(SlideGroup *g, Slide *curSlide=0, bool allowProgressDialog=true);

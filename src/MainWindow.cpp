@@ -78,8 +78,9 @@ MainWindow::MainWindow(QWidget *parent) :
 	m_editWin(0),
 	m_autosaveTimer(0),
 	m_controlServer(0),
-	m_viewServer(0)
-
+	m_viewServer(0),
+	m_prevLiveGroup(0),
+	m_prevLiveSlide(0)
 {
 	static_mainWindow = this;
 
@@ -1319,6 +1320,17 @@ void MainWindow::setupHotkeys()
 		m_hotkeyActions.insert("prev-group",action);
 	}	
 	m_hotkeyActions["prev-group"]->setShortcut(AppSettings::hotkeySequence("prev-group"));
+	
+	
+	if(!m_hotkeyActions.contains("prev-sel-group"))
+	{
+		QAction * action = new QAction("Goto Prev Selected Group",this);
+		action->setShortcutContext(Qt::ApplicationShortcut);
+		addAction(action);
+		connect(action, SIGNAL(triggered()), this, SLOT(showPrevSelectedGroup()));
+		m_hotkeyActions.insert("prev-sel-group",action);
+	}	
+	m_hotkeyActions["prev-sel-group"]->setShortcut(AppSettings::hotkeySequence("prev-sel-group"));
 }
 
 void MainWindow::hotkeyBlack()
@@ -1558,6 +1570,11 @@ void MainWindow::previewSlideDoubleClicked(Slide *slide)
 	setLiveGroup(group,slide);
 }
 
+void MainWindow::showPrevSelectedGroup()
+{
+	setLiveGroup(m_prevLiveGroup, m_prevLiveSlide);
+}
+
 void MainWindow::setLiveGroup(SlideGroup *newGroup, Slide *currentSlide, bool allowProgressDialog)
 {
 	//qDebug() << "MainWindow::setLiveGroup: newGroup:"<<newGroup<<", slide:"<<currentSlide;
@@ -1572,6 +1589,12 @@ void MainWindow::setLiveGroup(SlideGroup *newGroup, Slide *currentSlide, bool al
 	}
 
 	QList<int> alreadyConsumed;
+	
+	if(liveInst())
+	{
+		m_prevLiveGroup = liveInst()->slideGroup();
+		m_prevLiveSlide = liveInst()->slide(); //liveCtrl()->selectedSlide();
+	}
 
 	foreach(OutputControl *outputCtrl, m_outputControls)
 	{
@@ -1637,6 +1660,9 @@ void MainWindow::sendGroupToOutput(Output *output, SlideGroup *newGroup, Slide *
 
 		ctrl = factory->newViewControl();
 		ctrl->setOutputView(inst);
+		
+		connect(ctrl, SIGNAL(prevGroup()), this, SLOT(showPrevSelectedGroup()));
+		
 		//m_outputTabs->addTab(ctrl,output->name());
 		outputCtrl->setViewControl(ctrl);
 		outputCtrl->setCustomFilters(factory->customFiltersFor(outputCtrl->outputInstance(),newGroup));
@@ -1654,7 +1680,7 @@ void MainWindow::sendGroupToOutput(Output *output, SlideGroup *newGroup, Slide *
 		// hackish, I know - need a generic way for the slide group factory to set the text resized flag as well
 		if(newGroup->groupType() == SongSlideGroup::GroupType && 
 			(output->tags().toLower().indexOf("foldback") >= 0 ||
-				output->name().toLower().indexOf("foldback") >= 0))
+			 output->name().toLower().indexOf("foldback") >= 0))
 			outputCtrl->setTextResizeEnabled(true);
 
 		m_viewControls[output->id()] = ctrl;

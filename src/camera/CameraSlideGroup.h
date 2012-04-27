@@ -2,7 +2,6 @@
 #define CAMERASLIDEGROUP_H
 
 #include "model/SlideGroup.h"
-// #include "NativeViewerPhonon.h"
 #include "NativeViewerCamera.h"
 
 #include <QHash>
@@ -51,7 +50,6 @@ private:
 	int m_mtime;
 
 	QHash<int,QPixmap> m_slidePixmapCache;
-	//NativeViewerPhonon * m_native;
 	QHash<int,NativeViewerCamera*> m_viewers;
 };
 Q_DECLARE_METATYPE(CameraSlideGroup*);

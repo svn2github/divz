@@ -106,7 +106,8 @@ AppSettingsDialog::AppSettingsDialog(QWidget *parent) :
 	m_ui->hotkeyNextGroup->setText(AppSettings::hotkeySequence("next-group"));
 	m_ui->hotkeyPrevSlide->setText(AppSettings::hotkeySequence("prev-slide"));
 	m_ui->hotkeyPrevGroup->setText(AppSettings::hotkeySequence("prev-group"));
-
+	m_ui->hotkeyPrevSelGroup->setText(AppSettings::hotkeySequence("prev-sel-group"));
+	
 	
 	controlPortChanged(AppSettings::httpControlPort());
 	viewerPortChanged(AppSettings::httpViewerPort());
@@ -306,6 +307,7 @@ void AppSettingsDialog::slotAccepted()
 	AppSettings::setHotkeySequence("next-group",m_ui->hotkeyNextGroup->text());
 	AppSettings::setHotkeySequence("prev-slide",m_ui->hotkeyPrevSlide->text());
 	AppSettings::setHotkeySequence("prev-group",m_ui->hotkeyPrevGroup->text());
+	AppSettings::setHotkeySequence("prev-sel-group",m_ui->hotkeyPrevSelGroup->text());
 
 	QTableWidget * tableWidget = m_ui->resourceTranslations;
 	AppSettings::ResourcePathTranslations res;

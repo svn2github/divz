@@ -86,6 +86,16 @@ namespace DVizMidiAction
 		}
 	};
 	
+	class PrevSelGroupBtn : public MidiInputAction
+	{
+		QString id() { return "cf844d71-f955-45c3-8602-1d55fb94a403"; }
+		QString name() { return "Show Previously Selected Group"; }
+		void trigger(int)
+		{
+			mw->showPrevSelectedGroup();
+		}
+	};
+	
 	class FadeSpeedFader : public MidiInputAction
 	{
 		QString id() { return "1188e63f-4723-424c-b5fc-a1068da669c7"; }
@@ -117,6 +127,7 @@ void DVizMidiInputAdapter::setupActionList()
 		<< new DVizMidiAction::SendToOutputBtn()
 		<< new DVizMidiAction::NextSlideButton()
 		<< new DVizMidiAction::PrevSlideButton()
+		<< new DVizMidiAction::PrevSelGroupBtn()
 		<< new DVizMidiAction::FadeSpeedFader();
 	
 	qDebug() << "DVizMidiInputAdapter::setupActionList(): Added "<<m_actionList.size() <<" actions to the MIDI Action List";

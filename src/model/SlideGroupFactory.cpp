@@ -232,15 +232,25 @@ SlideGroupViewControl::SlideGroupViewControl(OutputInstance *group, QWidget *w,b
 
 		//hbox->addStretch(1);
 
+		// "Prev Group" button
+		QPushButton *prevGroupBtn = new QPushButton(QIcon(":/data/control_repeat_blue.png"),"");
+		prevGroupBtn->setToolTip(tr("Go to the previously-live group (and slide in that group)"));
+		connect(prevGroupBtn, SIGNAL(clicked()), this, SIGNAL(prevGroup()));
+		hbox->addWidget(prevGroupBtn);
+		
+		
 		// "Prev" button
 		m_prevBtn = new QPushButton(QIcon(":/data/control_start_blue.png"),"");
+		m_prevBtn->setToolTip(tr("Go to the previous slide in this group"));
 		connect(m_prevBtn, SIGNAL(clicked()), this, SLOT(prevSlide()));
 		hbox->addWidget(m_prevBtn);
 
 		// "Next" button
 		m_nextBtn = new QPushButton(QIcon(":/data/control_end_blue.png"),"");
+		m_nextBtn->setToolTip(tr("Go to the next slide in this group"));
 		connect(m_nextBtn, SIGNAL(clicked()), this, SLOT(nextSlide()));
 		hbox->addWidget(m_nextBtn);
+		
 
 // 		label = new QLabel("Zoom:");
 // 		hbox->addWidget(label);
