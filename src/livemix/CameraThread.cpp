@@ -958,7 +958,10 @@ void CameraThread::readFrame()
 	QMutexLocker lock(&m_readMutex);
 
 	QTime capTime = QTime::currentTime();
-	//qDebug() << "CameraThread::readFrame(): My Frame Count # "<<m_frameCount ++;
+	#ifdef DEBUG
+	//qDebug() << "CameraThread::run: "<<this<<" In Thread ID "<<QThread::currentThreadId();
+	qDebug() << "CameraThread::readFrame(): My Frame Count # "<<m_frameCount;
+	#endif
 	m_frameCount ++;
 
 	#if defined(Q_OS_LINUX)
@@ -966,7 +969,7 @@ void CameraThread::readFrame()
 	{
 		if(!m_inited)
 		{
-			//qDebug() << "CameraThread::readFrame(): Unable to read raw from from V4L interface because not inited, error? "<<m_error;
+			qDebug() << "CameraThread::readFrame(): Unable to read raw from from V4L interface because not inited, error? "<<m_error;
 			return;
 		}
 			
@@ -997,14 +1000,18 @@ void CameraThread::readFrame()
 						(uchar*)dest, (uchar*)dest+h*stride,
 						h, stride, bottomFrame);
 						
-				//qDebug() << "CameraThread::enqueue call: deinterlaced raw V4L2 frame:"<<deinterlacedFrame;
+				#ifdef DEBUG
+				qDebug() << "CameraThread::enqueue call: deinterlaced raw V4L2 frame:"<<deinterlacedFrame;
+				#endif
 				enqueue(deinterlacedFrame);
 				
 				delete frame;
 			}
 			else
 			{
-				//qDebug() << "CameraThread::enqueue call: raw V4L2 frame:"<<frame<<", reading at fps:"<<m_fps;
+				#ifdef DEBUG
+				qDebug() << "CameraThread::enqueue call: raw V4L2 frame:"<<frame<<", reading at fps:"<<m_fps;
+				#endif
 				enqueue(frame);
 			}
 		}

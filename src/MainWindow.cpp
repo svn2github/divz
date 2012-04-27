@@ -1083,17 +1083,11 @@ void MainWindow::setupCentralWidget()
 	m_splitter->addWidget(m_splitter2);
 
 
-
-
 	// live view control on right side of splitter
 	m_outputTabs = new QTabWidget();
 
 	setupOutputControls();
 	m_splitter->addWidget(m_outputTabs);
-
-
-
-
 }
 
 void MainWindow::slotSendToOutputs()

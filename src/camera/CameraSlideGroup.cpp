@@ -75,8 +75,9 @@ void CameraSlideGroup::loadFile()
 
 	Slide *slide = new Slide();
 	BackgroundItem * bg = dynamic_cast<BackgroundItem*>(slide->background());
-	bg->setFillType(AbstractVisualItem::Image);
-	bg->setFillImageFile(":/data/stock-panel-screenshot.png"); //QVideoIconGenerator::cacheFile(QFileInfo(m_device).canonicalFilePath()));
+	bg->setFillType(AbstractVisualItem::Solid);
+	//bg->setFillBrush(Qt::black);
+	//bg->setFillImageFile(":/data/stock-panel-screenshot.png"); //QVideoIconGenerator::cacheFile(QFileInfo(m_device).canonicalFilePath()));
 
 	slide->setSlideNumber(0);
 

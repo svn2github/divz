@@ -21,6 +21,8 @@ public:
 
 	bool addSelectedToMainWindow() { return m_addSelectedToMainWindow; }
 	void setAddSelectedToMainWindow(bool flag) { m_addSelectedToMainWindow=flag; }
+	
+	void setCurrentDocument(Document *, bool isForeign=true);
 
 protected:
 	void changeEvent(QEvent *e);
@@ -34,6 +36,7 @@ private:
 	Ui::ImportGroupDialog *m_ui;
 	DocumentListModel *m_model;
 	Document *m_doc;
+	bool m_foreignDoc;
 	SlideGroup *m_selectedGroup;
 	bool m_addSelectedToMainWindow;
 };

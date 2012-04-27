@@ -11,7 +11,7 @@
 
 NativeViewerCamera::NativeViewerCamera()
 	: NativeViewer()
-	, m_state(NativeViewer::Running)
+	, m_state(NativeViewer::Black)
 	, m_cameraGroup(0)
 	, m_fadeSpeed(1000)
 	, m_fadeSteps(15)
@@ -21,7 +21,8 @@ NativeViewerCamera::NativeViewerCamera()
 	m_widget = new VideoWidget();
 	m_widget->setCursor(Qt::BlankCursor);
 	m_widget->setWindowFlags(Qt::WindowStaysOnTopHint | Qt::FramelessWindowHint | Qt::ToolTip);
-
+	m_widget->setOpacity(0);
+	
 	connect(&m_fadeTimer, SIGNAL(timeout()), this, SLOT(fadeStep()));
 	m_fadeTimer.setInterval(m_fadeSpeed/m_fadeSteps);
 }
@@ -51,10 +52,17 @@ void NativeViewerCamera::setSlideGroup(SlideGroup *group)
 	m_cameraGroup = dynamic_cast<CameraSlideGroup*>(group);
 	m_cameraGroup->addNativeViewer(outputId(),this);
 	
-	m_camera = CameraThread::threadForCamera(m_cameraGroup->device());
+	QString device = m_cameraGroup->device();
+	
+	m_camera = CameraThread::threadForCamera(device);
+	#ifndef Q_OS_WIN
+	m_camera->enableRawFrames(true);
+	#endif
 	//m_camera->enableRawFrames(true);
 	m_widget->setVideoSource(m_camera);
 	//m_widget->setCamera(m_cameraGroup->device());
+	
+	qDebug() << "NativeViewerCamera::setSlideGroup(): Using device: "<<device<<", m_camera:"<<m_camera;
 }
 
 void NativeViewerCamera::show()
@@ -81,6 +89,8 @@ void NativeViewerCamera::show()
 	if(!m_widget->parentWidget())
 		m_widget->move(abs);
 
+	//m_widget->setOpacity(0);
+	//fadeBlack(false);
 	//qDebug() << "NativeViewerCamera::show: done.";
 }
 
@@ -125,29 +135,35 @@ void NativeViewerCamera::fadeStep()
 {
 	qreal inc = (qreal)1/m_fadeSteps * (qreal)m_fadeDirection;
 	m_fadeOpacity += inc;
-// 	qDebug() << "fadeStep: "<<m_fadeOpacity<<","<<m_fadeDirection<<","<<inc;
+ 	//qDebug() << "NativeViewerCamera::fadeStep(): "<<m_fadeOpacity<<","<<m_fadeDirection<<","<<inc;
 	
 	if(m_fadeOpacity <= 0 || m_fadeOpacity >=1)
+	{
 		m_fadeTimer.stop();
+		m_widget->setOpacity(m_fadeDirection < 0 ? 0 : 1.0);
+	}
 	else
 		m_widget->setOpacity(m_fadeOpacity);
 }
 
 void NativeViewerCamera::setState(NativeViewer::NativeShowState state)
 {
-// 	qDebug() << "NativeViewerCamera::setState: state:"<<state;
+ 	//qDebug() << "NativeViewerCamera::setState: state:"<<state;
+ 	NativeViewer::NativeShowState oldState = m_state;
 	m_state = state;
 	switch(state)
 	{
 		case NativeViewer::Running:
 			show();
-			fadeBlack(false);
+			if(oldState != NativeViewer::Running)
+				fadeBlack(false);
 			break;
 		case NativeViewer::Paused:
 // 			m_media->pause();
 			break;
 		case NativeViewer::Black:
-			fadeBlack(true);
+			if(oldState != NativeViewer::Black) 
+				fadeBlack(true);
 			break;
 		case NativeViewer::White:
 		case NativeViewer::Done:

@@ -919,6 +919,9 @@ void SlideGroupViewer::setSlideGroup(SlideGroup *group, Slide *startSlide)
 				
 				// copy current 'black' state to viewer
 				
+				if(!m_blackEnabled)
+					native->setState(NativeViewer::Running);
+				
 				blackNative = false;
 	
 				//qDebug() << "SlideGroupViewer::setSlideGroup: Setup done, mudging our style and hiding ourself.";

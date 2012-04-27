@@ -79,7 +79,7 @@ public:
 	AbstractSlideGroupEditor   * newEditor();
 	NativeViewer * newNativeViewer(OutputInstance *instance = 0);
 	
-// 	QPixmap generatePreviewPixmap(SlideGroup*, QSize iconSize, QRect sceneRect);
+ 	QPixmap generatePreviewPixmap(SlideGroup*, QSize iconSize, QRect sceneRect);
 };
 
 

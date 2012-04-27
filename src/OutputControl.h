@@ -82,6 +82,7 @@ protected slots:
 	
 	void newLogo();
 	void editLogo();
+	void selectLogo();
 	void logoActionTriggered(QAction*);
 	void logoEditorClosed();
 

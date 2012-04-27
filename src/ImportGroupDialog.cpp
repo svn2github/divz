@@ -16,7 +16,8 @@ ImportGroupDialog::ImportGroupDialog(QWidget *parent) :
 	m_model(new DocumentListModel),
 	m_doc(0),
 	m_selectedGroup(0),
-	m_addSelectedToMainWindow(true)
+	m_addSelectedToMainWindow(true),
+	m_foreignDoc(false)
 {
 	m_ui->setupUi(this);
 
@@ -38,7 +39,8 @@ ImportGroupDialog::ImportGroupDialog(QWidget *parent) :
 
 ImportGroupDialog::~ImportGroupDialog()
 {
-	delete m_doc;
+	if(!m_foreignDoc)
+		delete m_doc;
 	delete m_model;
 	delete m_ui;
 }
@@ -57,17 +59,29 @@ void ImportGroupDialog::fileSelected(const QString& tmp)
 	}
 	else
 	{
-
-		if(m_doc)
-		{
-			m_model->releaseDocument();
-			delete m_doc;
-		}
-
-		m_doc = new Document(fileName);
-		m_model->setDocument(m_doc);
-		m_ui->groupWidget->setEnabled(true);
+		setCurrentDocument(new Document(fileName), false);
 	}
+}
+
+/** If \a foreign is \c true then ImportGroupDialog assumes the caller of setCurrentDocument() will take responsibility for deleting the Document* object when done with it - ImportGroupDialog will NOT delete \a doc if \a foreign is \c true */  
+void ImportGroupDialog::setCurrentDocument(Document *doc, bool foreign)
+{
+	if(m_doc)
+	{
+		m_model->releaseDocument();
+		if(!m_foreignDoc)
+			delete m_doc;
+	}
+	
+	m_foreignDoc = foreign;
+	
+	m_ui->browseBtn->setEnabled(!foreign);
+	m_ui->file->setEnabled(!foreign);
+	m_ui->label->setEnabled(!foreign);
+	
+	m_doc = doc;
+	m_model->setDocument(m_doc);
+	m_ui->groupWidget->setEnabled(doc ? true : false);
 }
 
 void ImportGroupDialog::browse()

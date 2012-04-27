@@ -21,6 +21,7 @@
 #include "MainWindow.h"
 #include "OutputInstance.h"
 #include "AppSettings.h"
+#include "ImportGroupDialog.h"
 
 #include "itemlistfilters/SlideTextOnlyFilter.h"
 #include "itemlistfilters/SlideBackgroundOnlyFilter.h"
@@ -246,6 +247,9 @@ void OutputControl::setupLogoMenu()
 	action = m_logoMenu->addAction("Add New Logo...");
 	connect(action, SIGNAL(triggered()), this, SLOT(newLogo()));
 	
+	action = m_logoMenu->addAction("Select Group from Document...");
+	connect(action, SIGNAL(triggered()), this, SLOT(selectLogo()));
+	
 	m_configLogo->setMenu(m_logoMenu);
 }
 
@@ -304,6 +308,28 @@ void OutputControl::newLogo()
 	
 	m_selectedLogo = g;
 	editLogo();
+}
+
+void OutputControl::selectLogo()
+{
+	ImportGroupDialog d;
+	d.setAddSelectedToMainWindow(false);
+	d.setCurrentDocument(MainWindow::mw()->currentDocument());
+	d.exec();
+	
+	SlideGroup *g = d.selectedGroup();
+	if(g)
+	{
+		// Clone the group because it will be deleted by ImportGroupDialog as soon as 'd' goes out of scope
+		g = g->clone();
+		//m_doc->addGroup(g);
+		
+		SlideTemplateManager::instance()->templateDocument(SlideTemplateManager::Logo)->addGroup(g);
+		m_selectedLogo = g;
+		
+		SlideTemplateManager::instance()->templateDocument(SlideTemplateManager::Logo)->save();
+		setupLogoMenu();
+	}
 }
 
 void OutputControl::logoActionTriggered(QAction *action)
@@ -941,18 +967,35 @@ void OutputControl::fadeLogoFrame(bool flag)
 	if(!m_selectedLogo)
 		return;
 		
-	if(flag)
+	// If user selected a logo from current document, fade to that group directly using UI
+	if(m_selectedLogo)
 	{
-		SlideGroup * group = m_inst->slideGroup();
-		
-		m_inst->setSlideGroup(m_selectedLogo);
+		SlideGroup *logoGroup = MainWindow::mw()->currentDocument()->groupById(m_selectedLogo->groupId());
+		if(logoGroup)
+		{
+			if(flag)
+				MainWindow::mw()->setLiveGroup(logoGroup);
+			else
+				MainWindow::mw()->showPrevSelectedGroup();
+			
+			return;
+		}
 	}
 	else
 	{
-		if(m_ctrl && m_ctrl->slideGroup())
-			m_inst->setSlideGroup(m_ctrl->slideGroup());
+		if(flag)
+		{
+			SlideGroup * group = m_inst->slideGroup();
+			
+			m_inst->setSlideGroup(m_selectedLogo);
+		}
 		else
-			fadeBlackFrame(true);
+		{
+			if(m_ctrl && m_ctrl->slideGroup())
+				m_inst->setSlideGroup(m_ctrl->slideGroup());
+			else
+				fadeBlackFrame(true);
+		}
 	}
 	
 	if(m_logoButton->isChecked() != flag)

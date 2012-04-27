@@ -232,6 +232,13 @@ void CameraSlideGroupViewControl::setSlideGroup(SlideGroup *g, Slide *curSlide, 
 // 	connect(m_cameraGroup, SIGNAL(slideChanged(Slide *, QString, AbstractItem *, QString, QString, QVariant)), this, SLOT(slideChanged(Slide *, QString, AbstractItem *, QString, QString, QVariant)));
 }
 
+QPixmap	CameraSlideGroupFactory::generatePreviewPixmap(SlideGroup */*group*/, QSize iconSize, QRect /*sceneRect*/)
+{
+	return QPixmap(":/data/stock-panel-screenshot.png").scaled(iconSize);
+}
+
+
+
 // void CameraSlideGroupViewControl::outputIsSyncedChanged()
 // {
 // 	// check sync status
