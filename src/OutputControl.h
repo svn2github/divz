@@ -146,6 +146,8 @@ protected:
 	
 	QCheckBox		* m_wrapModeCheckbox;
 	QCheckBox		* m_listModeCheckbox;
+	
+	bool			m_logoActive;
 };
 
 

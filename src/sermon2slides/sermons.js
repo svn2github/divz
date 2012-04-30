@@ -28,6 +28,11 @@ debug("Using background: ", backgroundFile);
 // the variables read from the text file.
 function aboutToCreateSlide(slideNum)
 {
+	if(InPrimaryGroup)
+		// Yes, this will set the group name multiple times - but until we add a new 'newGroupCreated' API or whatever,
+		// this is where we'll put it
+		dGroup.groupName = "Message Slides";
+		
 	textBoxPtr = false;
 	
 	if(dVars["#bible"])

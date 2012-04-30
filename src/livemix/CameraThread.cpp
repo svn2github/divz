@@ -211,7 +211,7 @@ QMutex CameraThread::threadCacheMutex;
 
 CameraThread::CameraThread(const QString& camera, QObject *parent)
 	: VideoSource(parent)
-	, m_fps(30)
+	, m_fps(24)
 	, m_inited(false)
 	, m_cameraFile(camera)
 	, m_frameCount(0)
@@ -703,21 +703,22 @@ void CameraThread::start(QThread::Priority priority)
 {
 	QThread::start(priority);
 	
-	/*
+	
 	connect(&m_readTimer, SIGNAL(timeout()), this, SLOT(readFrame()));
 	double finalFps = m_fps * 1.5 * (m_deinterlace ? 2 : 1);
 	qDebug() << "CameraThread::start: m_fps:"<<m_fps<<", finalFps:"<<finalFps;
 	m_readTimer.setInterval(1000 / finalFps);
 	initCamera();
 	m_readTimer.start();
-	*/
+	
 }
 
 void CameraThread::run()
 {
  	initCamera();
 
-	
+	exec();
+	/*
 	#ifdef DEBUG
 	qDebug() << "CameraThread::run: "<<this<<" In Thread ID "<<QThread::currentThreadId();
 	#endif
@@ -742,6 +743,7 @@ void CameraThread::run()
 		msleep(int(1000 / m_fps / 1.5 / (m_deinterlace ? 1 : 2)));
 		//msleep(int(1000 / m_fps / 1.5));// (m_deinterlace ? 1 : 2)));
 	};
+	*/
 }
 
 void CameraThread::setDeinterlace(bool flag)

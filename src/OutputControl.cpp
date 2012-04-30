@@ -41,6 +41,7 @@ OutputControl::OutputControl(QWidget *parent)
 	, m_selectedLogo(0)
 	, m_zoomSlider(0)
 	, m_firstRun(true)
+	, m_logoActive(false)
 {
 	setupUI();
 }
@@ -964,24 +965,41 @@ void OutputControl::fadeBlackFrame(bool flag)
 
 void OutputControl::fadeLogoFrame(bool flag)
 {
+	//qDebug() << "OutputControl::fadeLogoFrame: "<<flag<<": Start";
+	
+	// Simple locking so that we don't try to show the logo if its already visible - that could mess up 
+	// mainwindow's internal state and prevent showPrevSelectedGroup() to work as expected when turning off the logo
+	if(m_logoActive == flag)
+		return;
+	
+	m_logoActive = flag;
+	
 	if(!m_selectedLogo)
 		return;
 		
 	// If user selected a logo from current document, fade to that group directly using UI
+	bool foundDocumentLogo = false;
 	if(m_selectedLogo)
 	{
 		SlideGroup *logoGroup = MainWindow::mw()->currentDocument()->groupById(m_selectedLogo->groupId());
 		if(logoGroup)
 		{
 			if(flag)
+			{
+				//qDebug() << "OutputControl::fadeLogoFrame: "<<flag<<": Showing LOGO live: "<<logoGroup;
 				MainWindow::mw()->setLiveGroup(logoGroup);
+			}
 			else
+			{
+				//qDebug() << "OutputControl::fadeLogoFrame: "<<flag<<": Main return to previous group";
 				MainWindow::mw()->showPrevSelectedGroup();
+			}
 			
-			return;
+			foundDocumentLogo = true;
 		}
 	}
-	else
+	
+	if(!foundDocumentLogo)
 	{
 		if(flag)
 		{

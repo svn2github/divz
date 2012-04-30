@@ -552,7 +552,7 @@ void VideoWidget::setFps(int fps)
 	}
 
 	// If we use a different fps, dont use buffered frames, just take the last frame as it comes
-	if(m_thread)
+	if(m_thread) // && !dynamic_cast<CameraThread*>(m_thread))
 		m_thread->setIsBuffered(m_forceFps < 0);
 }
 

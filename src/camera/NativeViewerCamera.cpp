@@ -22,6 +22,7 @@ NativeViewerCamera::NativeViewerCamera()
 	m_widget->setCursor(Qt::BlankCursor);
 	m_widget->setWindowFlags(Qt::WindowStaysOnTopHint | Qt::FramelessWindowHint | Qt::ToolTip);
 	m_widget->setOpacity(0);
+	m_widget->setFps(24);
 	
 	connect(&m_fadeTimer, SIGNAL(timeout()), this, SLOT(fadeStep()));
 	m_fadeTimer.setInterval(m_fadeSpeed/m_fadeSteps);

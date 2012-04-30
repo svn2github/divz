@@ -885,7 +885,7 @@ void SlideGroupViewer::setSlideGroup(SlideGroup *group, Slide *startSlide)
 
 	m_slideGroup = group;
 
-	if(!m_isPreviewViewer || m_contextHint == MyGraphicsScene::Preview)
+	if(!m_isPreviewViewer)// || m_contextHint == MyGraphicsScene::Preview)
 	{
 		SlideGroupFactory *factory = SlideGroupFactory::factoryForType(m_slideGroup->groupType());
 		if(factory)

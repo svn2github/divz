@@ -1566,6 +1566,7 @@ void MainWindow::previewSlideDoubleClicked(Slide *slide)
 
 void MainWindow::showPrevSelectedGroup()
 {
+	//qDebug() << "MainWindow::showPrevSelectedGroup: RESTORE: m_prevLiveGroup:"<<m_prevLiveGroup<<", m_prevLiveSlide:"<<m_prevLiveSlide;
 	setLiveGroup(m_prevLiveGroup, m_prevLiveSlide);
 }
 
@@ -1586,8 +1587,12 @@ void MainWindow::setLiveGroup(SlideGroup *newGroup, Slide *currentSlide, bool al
 	
 	if(liveInst())
 	{
-		m_prevLiveGroup = liveInst()->slideGroup();
-		m_prevLiveSlide = liveInst()->slide(); //liveCtrl()->selectedSlide();
+		if(liveInst()->slideGroup() != newGroup)
+		{
+			m_prevLiveGroup = liveInst()->slideGroup();
+			m_prevLiveSlide = liveInst()->slide(); //liveCtrl()->selectedSlide();
+			//qDebug() << "MainWindow::setLiveGroup: Stored previous live group/slide: m_prevLiveGroup:"<<m_prevLiveGroup<<", m_prevLiveSlide:"<<m_prevLiveSlide; 
+		}
 	}
 
 	foreach(OutputControl *outputCtrl, m_outputControls)
