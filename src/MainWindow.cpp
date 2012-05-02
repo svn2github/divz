@@ -65,7 +65,6 @@
 
 #include "TextImportDialog.h"
 
-
 MainWindow * MainWindow::static_mainWindow = 0;
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -428,6 +427,8 @@ void MainWindow::showEvent(QShowEvent *evt)
 	raise(); // raise above output instances
 	
 	m_ui->tabWidget->setCurrentIndex(0);
+	
+	m_groupView->setModel(m_docModel);
 
 }
 
@@ -834,8 +835,9 @@ void MainWindow::setupSlideLibrary()
 
 // List of groups
 	QListView * m_slideLibraryView = new QListView(m_ui->tabSlides);
+	//m_slideLibraryView->setObjectName("m_slideLibraryView");
 
-	m_groupView->setViewMode(QListView::ListMode);
+	m_slideLibraryView->setViewMode(QListView::ListMode);
 	//m_slideLibraryView->setViewMode(QListView::IconMode);
 	m_slideLibraryView->setMovement(QListView::Free);
 	m_slideLibraryView->setWordWrap(true);
@@ -1026,6 +1028,7 @@ void MainWindow::setupCentralWidget()
 
 	// List of groups
 	m_groupView = new QListView(leftBase);
+	//m_groupView->setObjectName("m_groupView");
 
 	m_groupView->setViewMode(QListView::ListMode);
 	//m_groupView->setViewMode(QListView::IconMode);
@@ -1037,7 +1040,7 @@ void MainWindow::setupCentralWidget()
 	m_groupView->setDropIndicatorShown(true);
 	m_groupView->setEditTriggers(QAbstractItemView::EditKeyPressed);
 
-	m_groupView->setModel(m_docModel);
+	//m_groupView->setModel(m_docModel);
 	m_groupView->setContextMenuPolicy(Qt::ActionsContextMenu);
 	m_groupView->insertAction(0,m_ui->actionEdit_Slide_Group);
 	m_groupView->insertAction(0,m_ui->actionSlide_Group_Properties);
@@ -1568,6 +1571,8 @@ void MainWindow::showPrevSelectedGroup()
 {
 	//qDebug() << "MainWindow::showPrevSelectedGroup: RESTORE: m_prevLiveGroup:"<<m_prevLiveGroup<<", m_prevLiveSlide:"<<m_prevLiveSlide;
 	setLiveGroup(m_prevLiveGroup, m_prevLiveSlide);
+	QModelIndex idx = m_docModel->indexForGroup(m_prevLiveGroup);
+	m_groupView->setCurrentIndex(idx);
 }
 
 void MainWindow::setLiveGroup(SlideGroup *newGroup, Slide *currentSlide, bool allowProgressDialog)

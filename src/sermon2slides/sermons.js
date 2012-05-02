@@ -20,7 +20,7 @@ debug("Initializing sermon.js script");
 var files = getFileList("./sermon2slides/backgrounds/", "*.jpg");
 var rval = Math.random();
 var randIdx = parseInt(rval * files.length);
-debug("rval:",rval," length:",files.length,", randIdx:",randIdx);
+//debug("rval:",rval," length:",files.length,", randIdx:",randIdx);
 var backgroundFile = "./sermon2slides/backgrounds/" + files[randIdx];
 debug("Using background: ", backgroundFile);
 
