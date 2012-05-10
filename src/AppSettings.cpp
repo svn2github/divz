@@ -739,11 +739,14 @@ void AppSettings::sendCheckin(QString path, QString data)
 	osInfo = "Linux";
 	#endif
 	
-	#if Q_OS_WIN
+        #ifdef Q_OS_WIN
+        /*
 	QSettings settings;
 	settings.insertSearchPath( QSettings::Windows,"/Microsoft/Windows/CurrentVersion");
 	QString productID = settings.readEntry( "/ProductID" );
 	osInfo = QString("Windows (%1)").arg(productId);
+        */
+        osInfo = "Windows";
 	#endif
 	
 	#if Q_OS_MAC

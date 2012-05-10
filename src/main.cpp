@@ -5,6 +5,7 @@
 #include <QPixmapCache>
 #include <QMessageBox>
 #include <QInputDialog>
+#include <QSplashScreen>
 
 #ifdef Q_WS_X11
 	#include <X11/Xlib.h>
@@ -29,10 +30,17 @@ int main(int argc, char **argv)
  	#endif
 
  	#if defined(Q_OS_WIN)
-		QApplication::setStyle(new QtDotNetStyle()); //QtDotNetStyle::Office));
+        //	QApplication::setStyle(new QtDotNetStyle()); //QtDotNetStyle::Office));
  	#endif
 
  	QApplication app(argc, argv);
+
+        QPixmap pixmap(":/data/DViz-splash.png");
+        QSplashScreen splash(pixmap);
+        splash.show();
+        app.processEvents();
+        app.processEvents();
+
 	AppSettings::initApp("DVizControl");
 
 	AppSettings::load();
@@ -71,7 +79,9 @@ int main(int argc, char **argv)
 		qDebug() << "main debug:"<<nameGuess<<orgGuess;
 		
 		#ifdef Q_OS_WIN
-		settings.insertSearchPath( QSettings::Windows,"/Microsoft/Windows/CurrentVersion");
+                /*
+                QSettings settings;
+                settings.insertSearchPath( QSettings::Windows,"/Microsoft/Windows/CurrentVersion");
 		nameGuess = settings.readEntry( "/RegisteredOwner" );
 		orgGuess = settings.readEntry( "/RegisteredOrganization" );
 		
@@ -89,7 +99,7 @@ int main(int argc, char **argv)
 			//Unicode string needs to be converted
 			nameGuess = QString::fromUcs2(lpszSystemInfo);
 		}
-		
+                */
 		#endif
 		
 		#ifdef Q_OS_LINUX

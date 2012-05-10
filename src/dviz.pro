@@ -207,7 +207,12 @@ nomiditcp: {
 	include(miditcp/miditcp.pri)
 }
 else: {
-	include(/opt/miditcp/client/miditcp.pri)
+    win32: {
+        include(../../miditcp/client/miditcp.pri)
+    }
+    linux: {
+            include(/opt/miditcp/client/miditcp.pri)
+    }
 }
 
 
