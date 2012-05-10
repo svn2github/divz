@@ -1569,9 +1569,9 @@ void MainWindow::previewSlideDoubleClicked(Slide *slide)
 
 void MainWindow::showPrevSelectedGroup()
 {
-	//qDebug() << "MainWindow::showPrevSelectedGroup: RESTORE: m_prevLiveGroup:"<<m_prevLiveGroup<<", m_prevLiveSlide:"<<m_prevLiveSlide;
 	setLiveGroup(m_prevLiveGroup, m_prevLiveSlide);
 	QModelIndex idx = m_docModel->indexForGroup(m_prevLiveGroup);
+	qDebug() << "MainWindow::showPrevSelectedGroup: RESTORE: m_prevLiveGroup:"<<m_prevLiveGroup<<", m_prevLiveSlide:"<<m_prevLiveSlide<<", idx:"<<idx;
 	m_groupView->setCurrentIndex(idx);
 }
 

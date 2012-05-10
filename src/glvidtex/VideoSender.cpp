@@ -786,6 +786,11 @@ void VideoSenderThread::processBlock()
 		sendReply(QVariantList() << "cmd" << cmd << "w" << size.width() << "h" << size.height());
 	}
 	else
+	if(cmd == Video_Ping)
+	{
+		sendReply(QVariantList() << "cmd" << cmd << "ping" << map["ping"]);
+	}
+	else
 	{
 		// Unknown Command
 		qDebug() << "VideoSenderThread::processBlock: "<<cmd<<": Unknown command.";

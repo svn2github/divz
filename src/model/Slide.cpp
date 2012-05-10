@@ -10,6 +10,7 @@
 #include "BackgroundItem.h"
 #include "ItemFactory.h"
 
+#include <QTextDocument>
 
 #define ID_COUNTER_KEY "slide/id-counter"
 #include <QSettings>
@@ -442,8 +443,9 @@ double Slide::guessTimeout()
 	double assumedImageArea = 1024 * 768;
 	double perItemWeight = 0.1;
 	double perImageWeightFactorOfArea = 1/(assumedImageArea / 2);
-	double perTextWeightFactorOfLength = 60.0 / (300.0 * 5.0);
-	// formula for text factor is: 60seconds / (300.0 avg words per minute for avg adult * 5 letters per avg word length)
+	double perTextWeightFactorOfLength = 60.0 / (180.0 * 5.0);
+	// formula for text factor is: 60seconds / (180.0 avg words per minute for avg adult * 5 letters per avg word length)
+	// Adjusted down from 300 wpm to 180 wpm based on reading speeds for on air advertising 
 	
 	static QRegExp rxToText("<[^>]*>");
 	
@@ -456,17 +458,17 @@ double Slide::guessTimeout()
 		{
 			//qDebug() << "Processing visual:"<<vis->itemName();
 			special = false;
-			if(vis->itemClass() == BackgroundItem::ItemClass)
-			{
-				if(vis->fillType() == AbstractVisualItem::Image ||
-				   vis->fillType() == AbstractVisualItem::Video)
-				{
-					
-					guess += assumedImageArea * perImageWeightFactorOfArea;
-					special = true;
-				}
-			}
-			else
+// 			if(vis->itemClass() == BackgroundItem::ItemClass)
+// 			{
+// 				if(vis->fillType() == AbstractVisualItem::Image ||
+// 				   vis->fillType() == AbstractVisualItem::Video)
+// 				{
+// 					
+// 					guess += assumedImageArea * perImageWeightFactorOfArea;
+// 					special = true;
+// 				}
+// 			}
+// 			else
 			if(vis->itemClass() == ImageItem::ItemClass)
 			{
 				QRectF cRect = vis->contentsRect();
@@ -477,7 +479,14 @@ double Slide::guessTimeout()
 			if(vis->itemClass() == TextBoxItem::ItemClass)
 			{
 				TextBoxItem * textBox = dynamic_cast<TextBoxItem*>(vis);
-				QString text = textBox->text().replace( rxToText, "" );
+				QString text = textBox->text();//.replace( rxToText, "" );
+				if(Qt::mightBeRichText(text))
+				{
+					QTextDocument doc;
+					doc.setHtml(text);
+					text = doc.toPlainText();
+				}
+
 				double g = ((double)text.length()) * perTextWeightFactorOfLength;
 				//qDebug() << "Found textbox:"<<vis->itemName()<<", length:"<<text.length()<<", g:"<<g<<", factor:"<<perTextWeightFactorOfLength;
 				guess += g;
