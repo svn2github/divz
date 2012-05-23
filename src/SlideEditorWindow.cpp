@@ -2013,6 +2013,41 @@ void SlideEditorWindow::dupSlide()
 			m_slideGroup->at(i)->setSlideNumber(i+1);
 
 	m_slideGroup->addSlide(slide);
+	
+	QVariant altFlagVar = m_slideGroup->property("isAltGroup");
+	bool altFlag = altFlagVar.isValid() && altFlagVar.toBool();
+	
+	if(!altFlag)
+	{
+		// First, dialog to choose output
+		QList<Output*> allOut = AppSettings::outputs();
+		
+		// Go thru all outputs and find any alt groups
+		foreach(Output *output, allOut)
+		{
+			SlideGroup *altGroup = m_slideGroup->altGroupForOutput(output);
+			if(altGroup)
+			{
+				QList<Slide*> altSlides = altGroup->altSlides(oldSlide);
+				
+				// Duplicate alt slides for this slide in the alt groups
+				foreach(Slide *oldSlide, altSlides)
+				{
+					Slide * slide = oldSlide->clone();
+				
+					slide->setSlideNumber(oldSlide->slideNumber() + 1);
+					slide->setSlideId(altGroup->numSlides());
+				
+					int oldIdx = altGroup->indexOf(oldSlide);
+					if(oldIdx > -1)
+						for(int i=oldIdx + 1; i<altGroup->numSlides(); i++)
+							m_slideGroup->at(i)->setSlideNumber(i+1);
+				
+					altGroup->addSlide(slide);
+				}
+			}
+		}
+	}
 
 	setCurrentSlide(slide);
 }

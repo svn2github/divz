@@ -256,7 +256,7 @@ MyGraphicsScene::~MyGraphicsScene()
 	// Since the items are cloned when added to the copy buffer,
 	// AND cloned when pasted, its safe to delete them from memory
 	// in destructor
-	if(m_copyBuffer.size())
+	if(!m_copyBuffer.isEmpty())
 		qDeleteAll(m_copyBuffer);
 	
 }
@@ -1035,8 +1035,9 @@ void MyGraphicsScene::copyCurrentSelection(bool removeSelection)
 	// Since the items are cloned when added to the copy buffer,
 	// AND cloned when pasted, its safe to delete them from memory
 	// when replacing the buffer
-	if(m_copyBuffer.size())
+	if(!m_copyBuffer.isEmpty())
 		qDeleteAll(m_copyBuffer);
+	
 	m_copyBuffer.clear();
 		
 		
@@ -1060,7 +1061,7 @@ void MyGraphicsScene::copyCurrentSelection(bool removeSelection)
 
 void MyGraphicsScene::pasteCopyBuffer()
 {
-	if(!m_copyBuffer.size())
+	if(m_copyBuffer.isEmpty())
 		return;
 	
 	if(!m_slide)
@@ -1072,9 +1073,11 @@ void MyGraphicsScene::pasteCopyBuffer()
 	{
 		if(!item)
 			continue;
+			
 		AbstractItem * clone = item->clone();
 		if(!clone)
 			continue;
+			
 		m_slide->addItem(clone);
 		
 		// last visual item, not last AbstractItem
