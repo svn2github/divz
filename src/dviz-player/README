@@ -1,0 +1,4 @@
+DViz Player is designed to receive rendered frames from DViz via a VideoReceiver class and transition between the frames, thereby compartmentalizing rendering of the fades to a separate process.
+
+It should communicate with DViz over a simple VarNet server, while the frames will be received via VideoReceiver.
+

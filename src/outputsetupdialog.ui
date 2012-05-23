@@ -33,12 +33,6 @@
           <attribute name="verticalHeaderVisible">
            <bool>false</bool>
           </attribute>
-          <attribute name="verticalHeaderVisible">
-           <bool>false</bool>
-          </attribute>
-          <attribute name="horizontalHeaderShowSortIndicator" stdset="0">
-           <bool>false</bool>
-          </attribute>
           <column>
            <property name="text">
             <string>Name</string>
@@ -160,9 +154,6 @@ p, li { white-space: pre-wrap; }
               <attribute name="verticalHeaderVisible">
                <bool>false</bool>
               </attribute>
-              <attribute name="verticalHeaderVisible">
-               <bool>false</bool>
-              </attribute>
               <column/>
               <column/>
              </widget>
@@ -209,6 +200,12 @@ p, li { white-space: pre-wrap; }
                </item>
                <item row="1" column="3">
                 <widget class="QSpinBox" name="mjpegFps">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
                  <property name="specialValueText">
                   <string>(Raw Video)</string>
                  </property>
@@ -220,23 +217,10 @@ p, li { white-space: pre-wrap; }
                  </property>
                 </widget>
                </item>
-               <item row="1" column="4">
-                <spacer name="horizontalSpacer">
-                 <property name="orientation">
-                  <enum>Qt::Horizontal</enum>
-                 </property>
-                 <property name="sizeHint" stdset="0">
-                  <size>
-                   <width>40</width>
-                   <height>20</height>
-                  </size>
-                 </property>
-                </spacer>
-               </item>
                <item row="2" column="1" colspan="4">
                 <widget class="QLabel" name="label_12">
                  <property name="text">
-                  <string>Setting &quot;FPS&quot; to &quot;(Raw Video)&quot; will generate a stream compatible with LivePro. (This feed uses less CPU cycles and encodes the alpha channel but it is NOT with compatible any other programs that expect MJPEG feeds.)</string>
+                  <string>Setting &quot;FPS&quot; to &quot;(Raw Video)&quot; (FPS value of 0) will generate a stream compatible with LivePro. (This feed uses less CPU cycles and encodes the alpha channel but it is NOT with compatible any other programs that expect MJPEG feeds.)</string>
                  </property>
                  <property name="wordWrap">
                   <bool>true</bool>
@@ -404,6 +388,12 @@ p, li { white-space: pre-wrap; }
                </item>
                <item row="1" column="3">
                 <widget class="QSpinBox" name="mjpegFps2">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
                  <property name="specialValueText">
                   <string>(Raw Video)</string>
                  </property>
@@ -415,23 +405,10 @@ p, li { white-space: pre-wrap; }
                  </property>
                 </widget>
                </item>
-               <item row="1" column="4">
-                <spacer name="horizontalSpacer_2">
-                 <property name="orientation">
-                  <enum>Qt::Horizontal</enum>
-                 </property>
-                 <property name="sizeHint" stdset="0">
-                  <size>
-                   <width>40</width>
-                   <height>20</height>
-                  </size>
-                 </property>
-                </spacer>
-               </item>
                <item row="2" column="1" colspan="4">
                 <widget class="QLabel" name="label_13">
                  <property name="text">
-                  <string>Setting &quot;FPS&quot; to &quot;(Raw Video)&quot; will generate a stream compatible with LivePro. (This feed uses less CPU cycles and encodes the alpha channel but it is NOT with compatible any other programs that expect MJPEG feeds.)</string>
+                  <string>Setting &quot;FPS&quot; to &quot;(Raw Video)&quot; (FPS value of 0) will generate a stream compatible with LivePro. (This feed uses less CPU cycles and encodes the alpha channel but it is NOT with compatible any other programs that expect MJPEG feeds.)</string>
                  </property>
                  <property name="wordWrap">
                   <bool>true</bool>
