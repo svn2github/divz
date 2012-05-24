@@ -892,7 +892,7 @@ void OutputControl::setOutputInstance(OutputInstance * inst)
 	//connect(m_inst, SIGNAL(slideChanged(int)), this, SLOT(slideChanged(int)));
 
 	// HACK need to default to app settings
-	m_fadeSlider->setValue(25);
+	m_fadeSlider->setValue(QSettings().value("last-fade-value",24).toInt());
 	
 	setupFoldbackSettings();
 		
@@ -1165,6 +1165,8 @@ void OutputControl::setCustomFilters(AbstractItemFilterList list)
 
 void OutputControl::setCrossFadeSpeed(int value)
 {
+	QSettings().setValue("last-fade-value", value);
+	
 	double percent = ((double)value) / 100.0;
 	double speed = 2000.0 * percent;
 	if(speed<1)
