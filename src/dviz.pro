@@ -191,7 +191,7 @@ include(qvideo/qvideo.pri)
 include(qtcolorpicker/qtcolorpicker.pri)
 #include(qtmultimedia/audio/audio.pri)
 include(camera/camera.pri)
-include(3rdparty/rtmidi/rtmidi.pri)
+#include(3rdparty/rtmidi/rtmidi.pri)
 include(3rdparty/md5/md5.pri)
 include(3rdparty/qjson/qjson.pri)
 include(ppt/ppt.pri)
@@ -203,17 +203,17 @@ include(viewer/client.pri)
 include(imgtool/exiv2-0.18.2-qtbuild/qt_build_root.pri)
 include(webgroup/webgroup.pri)
 
-nomiditcp: {
-	include(miditcp/miditcp.pri)
+#nomiditcp: {
+#	include(miditcp/miditcp.pri)
+#}
+#else: {
+win32: {
+        include(../../miditcp/client/miditcp.pri)
 }
 else: {
-    win32: {
-        include(../../miditcp/client/miditcp.pri)
-    }
-    linux: {
-            include(/opt/miditcp/client/miditcp.pri)
-    }
+	include(/opt/miditcp/client/miditcp.pri)
 }
+#}
 
 
 # deployment on Linux

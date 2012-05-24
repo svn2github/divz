@@ -45,7 +45,7 @@
 #include "RenderOpts.h"
 
 #include <QPushButton>
-
+#include <QApplication>
 #include <QAbstractTextDocumentLayout>
 #include <QFile>
 #include <QGraphicsSceneDragDropEvent>
@@ -1028,6 +1028,8 @@ int MyGraphicsScene::maxZValue()
 	return max+1;
 }
 
+#define ItemList_MimeType "data/dviz-item-list"
+
 void MyGraphicsScene::copyCurrentSelection(bool removeSelection)
 {
 	QList<QGraphicsItem *> selection = selectedItems();
@@ -1035,6 +1037,7 @@ void MyGraphicsScene::copyCurrentSelection(bool removeSelection)
 	// Since the items are cloned when added to the copy buffer,
 	// AND cloned when pasted, its safe to delete them from memory
 	// when replacing the buffer
+	/*
 	if(!m_copyBuffer.isEmpty())
 		qDeleteAll(m_copyBuffer);
 	
@@ -1057,10 +1060,134 @@ void MyGraphicsScene::copyCurrentSelection(bool removeSelection)
 				m_slide->removeItem(model);
 		}
 	}
+	*/
+	
+	QTextDocument textBuffer;
+	QTextCursor textCursor(&textBuffer);
+	
+	QVariantList list;
+	foreach(QGraphicsItem *item, selection)
+	{
+		AbstractContent * content = dynamic_cast<AbstractContent *>(item);
+		if(content)
+		{
+			AbstractItem * model = content->modelItem();
+			if(!model)
+				continue;
+				 
+			list << model->toByteArray();
+			
+			if(TextBoxContent * text = dynamic_cast<TextBoxContent *>(content))
+				textCursor.insertHtml(text->toHtml());
+			
+			// this will add it to the undo stack and remove it from the scene
+			if(removeSelection && m_slide)
+				m_slide->removeItem(model);
+		}
+	}
+	
+	QByteArray array;
+	QDataStream stream(&array, QIODevice::WriteOnly);
+	stream << list;
+	
+	QMimeData *mimeData = new QMimeData();
+	mimeData->setData(ItemList_MimeType, array);
+	mimeData->setText(textBuffer.toPlainText());
+	mimeData->setHtml(textBuffer.toHtml());
+	
+	QClipboard *clipboard = QApplication::clipboard();
+	clipboard->setMimeData(mimeData);
 }
 
 void MyGraphicsScene::pasteCopyBuffer()
 {
+	QClipboard *clipboard = QApplication::clipboard();
+	const QMimeData *mimeData = clipboard->mimeData();
+	
+	if(mimeData->hasFormat(ItemList_MimeType))
+	{
+		QByteArray bytes = mimeData->data(ItemList_MimeType);
+		QDataStream stream(&bytes, QIODevice::ReadOnly);
+		QVariantList list;
+		stream >> list;
+		
+		foreach(QVariant var, list)
+		{
+			QByteArray ba = var.toByteArray();
+			
+			AbstractItem *item = AbstractItem::fromByteArray(ba);
+			if(!item)
+				continue;
+				
+			m_slide->addItem(item);
+			
+			// last visual item, not last AbstractItem
+			m_content.last()->setSelected(true);
+		}
+		
+		qDebug() << "MyGraphicsScene::pasteCopyBuffer(): Pasted "<<list.size()<<" items from clipboard";
+	}
+	else
+	if (mimeData->hasImage()) 
+	{
+		QPixmap pixmap = qvariant_cast<QPixmap>(mimeData->imageData());
+		
+		QString downloadPath = QDir::homePath();
+		QString testFolder = tr("%1/Downloads").arg(downloadPath);
+		if(QDir(testFolder).exists())
+			downloadPath = testFolder;
+		
+		QString fileToWrite;
+		bool foundOpenSlot = false;
+		int counter = 0;
+		while(counter++ < 10000)
+		{
+			fileToWrite = tr("%1/DVizPastedImage%2.png").arg(downloadPath).arg(counter);
+			if(!QFileInfo(fileToWrite).exists())
+			{
+				foundOpenSlot = true;
+				break;
+			}
+		}
+		
+		if(foundOpenSlot)
+		{
+			qDebug() << "MyGraphicsScene::pasteCopyBuffer(): Saving pasted image to: "<<fileToWrite;
+			pixmap.save(fileToWrite);
+			
+			ImageItem *t = new ImageItem();
+			t->setPos(nearCenter(sceneRect()));
+			t->setItemId(ItemFactory::nextId());
+			t->setItemName(QString("ImageItem%1").arg(t->itemId()));
+			t->setZValue(maxZValue());
+			t->setFillImageFile(fileToWrite);
+			
+			m_slide->addItem(t);
+			
+			// last visual item, not last AbstractItem
+			m_content.last()->setSelected(true);
+		}
+		else
+		{
+			qDebug() << "MyGraphicsScene::pasteCopyBuffer(): Unable to paste image into "<<downloadPath<<" - delete some of the DVizPastedImage*.png files and try again.";
+		}
+	}
+	else if (mimeData->hasHtml()) 
+	{
+		newTextItem(mimeData->html());
+		m_content.last()->setSelected(true); 
+	}
+	else if (mimeData->hasText()) 
+	{
+		newTextItem(mimeData->text());
+		m_content.last()->setSelected(true);
+	}
+	else
+	{
+		qDebug() << "MyGraphicsScene::pasteCopyBuffer(): Unable to handle pasted data"; 
+	}
+	
+/*
 	if(m_copyBuffer.isEmpty())
 		return;
 	
@@ -1083,6 +1210,7 @@ void MyGraphicsScene::pasteCopyBuffer()
 		// last visual item, not last AbstractItem
 		m_content.last()->setSelected(true);
 	}
+*/
 }
 
 void MyGraphicsScene::selectAll()

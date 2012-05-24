@@ -10,7 +10,7 @@ int main(int argc, char **argv)
 		host = argv[1];
 	
 	int cmdPort = 9977;
-        int vidPort = 8931;
+        int vidPort = 8930;
 	if(argc >= 3)
 		cmdPort = QString(argv[2]).toInt();
 	

@@ -2009,8 +2009,11 @@ void SlideEditorWindow::dupSlide()
 
 	int oldIdx = m_slideGroup->indexOf(oldSlide);
 	if(oldIdx > -1)
+	{
+		QList<Slide*> list = m_slideGroup->slideList();
 		for(int i=oldIdx + 1; i<m_slideGroup->numSlides(); i++)
-			m_slideGroup->at(i)->setSlideNumber(i+1);
+			list[i]->setSlideNumber(i+1);
+	}
 
 	m_slideGroup->addSlide(slide);
 	
@@ -2019,6 +2022,8 @@ void SlideEditorWindow::dupSlide()
 	
 	if(!altFlag)
 	{
+		Slide *primarySlide = slide;
+		
 		// First, dialog to choose output
 		QList<Output*> allOut = AppSettings::outputs();
 		
@@ -2037,11 +2042,15 @@ void SlideEditorWindow::dupSlide()
 				
 					slide->setSlideNumber(oldSlide->slideNumber() + 1);
 					slide->setSlideId(altGroup->numSlides());
+					slide->setPrimarySlideId(primarySlide->slideId());
 				
 					int oldIdx = altGroup->indexOf(oldSlide);
 					if(oldIdx > -1)
+					{
+						QList<Slide*> list = altGroup->slideList();
 						for(int i=oldIdx + 1; i<altGroup->numSlides(); i++)
-							m_slideGroup->at(i)->setSlideNumber(i+1);
+							list[i]->setSlideNumber(i+1);
+					}
 				
 					altGroup->addSlide(slide);
 				}

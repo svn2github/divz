@@ -12,10 +12,10 @@
 #include "ServerCommandNames.h"
 
 /**
-
 	TODO:
 	
 	- Setup simple app to render video receiver frames using the GLImageHttpDrawable from DViz
+		- Done
 	- Setup a VarNet server to handle the cross-fade times
 	- Adapt DViz to use a VarNet client (optionally compiled)
 		Make sure to leave room for future uses in the command strucutre, such as camera input crossfading and text overlays
@@ -23,9 +23,6 @@
 	- Add alternate transition types (flips, fades, blocks, disolves, coverflow...)  
 
 */
-
-
-
 
 
 MainWindow::MainWindow(QString host, int cmdPort, int vidPort)
@@ -59,10 +56,10 @@ MainWindow::MainWindow(QString host, int cmdPort, int vidPort)
 	// setGLWidget() adds all the drawables in the scene to the GLWidget
 	m_scene->setGLWidget(m_glWidget);
 
-
 	// Adjust window for a 4:3 aspect ratio
 	resize(640, 480);
-/*
+	
+
 	// Create timers to maintain connection of client
 	connect(&m_connectTimer, SIGNAL(timeout()), this, SLOT(connectTimeout()));
 	m_connectTimer.setInterval(5 * 1000);
@@ -74,7 +71,7 @@ MainWindow::MainWindow(QString host, int cmdPort, int vidPort)
 	connect(&m_pingDeadTimer, SIGNAL(timeout()), this, SLOT(lostConnection()));
 	m_pingDeadTimer.setInterval(2000);
 	m_pingDeadTimer.setSingleShot(true);
-*/
+
 	connectClient();
 }
 
@@ -107,7 +104,7 @@ void MainWindow::pingServer()
 	sendCommand(QVariantList() << "cmd" << Server_DeadPing);
 	
 	#ifdef DEBUG_SOCKET
-	//qDebug() << "PlayerConnection::pingServer(): ping sent";
+	//qDebug() << "MainWindow::pingServer(): ping sent";
 	#endif
 	
 	if(!m_pingDeadTimer.isActive())
@@ -203,7 +200,7 @@ void MainWindow::lostConnection()
 	
 	m_isConnected = false;
 	
-	//qDebug() << "PlayerConnection::lostConnection: m_autoReconnect:"<<m_autoReconnect; 
+	//qDebug() << "MainWindow::lostConnection: m_autoReconnect:"<<m_autoReconnect; 
 // 	if(m_autoReconnect)
 // 	{
 		QTimer::singleShot(1000,this,SLOT(reconnect()));
@@ -231,8 +228,8 @@ void MainWindow::connectTimeout()
 
 void MainWindow::reconnect()
 {
-        qDebug() << "PlayerConnection::reconnect: NOT RECONNECTING";
-        //qDebug() << "PlayerConnection::reconnect: Attempting to reconnect.";
+        qDebug() << "MainWindow::reconnect: NOT RECONNECTING";
+        //qDebug() << "MainWindow::reconnect: Attempting to reconnect.";
         //connectClient();
 }
 
@@ -398,7 +395,7 @@ void MainWindow::receivedMap(QVariantMap map)
 	if(cmd == Server_DeadPing)
 	{
 		#ifdef DEBUG_SOCKET
-		//qDebug() << "PlayerConnection::receivedMap: Ping received";
+		//qDebug() << "MainWindow::receivedMap: Ping received";
 		#endif
 		
 		m_pingDeadTimer.stop();

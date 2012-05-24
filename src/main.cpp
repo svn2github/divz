@@ -126,6 +126,7 @@ int main(int argc, char **argv)
 	MainWindow *mw = new MainWindow();
 	mw->show();
 
+	splash.hide();
 	int ret = app.exec();
 
 	AppSettings::save();
