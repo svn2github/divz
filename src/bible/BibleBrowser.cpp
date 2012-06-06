@@ -163,6 +163,7 @@ void BibleBrowser::setupUI()
 	vbox->addLayout(hboxTop);
 	
 	m_versionCombo = new QComboBox(this);
+	m_versionCombo->setSizePolicy(QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed));
 	setupVersionCombo();
 	hboxTop->addWidget(m_versionCombo);
 	
@@ -416,7 +417,7 @@ void BibleBrowser::searchTextChanged(const QString &text)
 	{
 		m_spinnerLabel->movie()->start();
 		QString versionCode = m_versionCombo->itemData(m_versionCombo->currentIndex()).toString();
-		BibleVerseRef ref = BibleVerseRef::normalize(text, BibleVersion(versionCode,versionCode));
+		BibleVerseRef ref = BibleVerseRef::normalize(text, BibleVersion(versionCode, versionCode));
 		if(!ref.valid())
 		{
 			m_spinnerLabel->movie()->stop();
@@ -426,6 +427,7 @@ void BibleBrowser::searchTextChanged(const QString &text)
 			QMessageBox::warning(this,"Invalid Reference",QString(tr("Sorry, but %1 doesn't seem to be a valid bible reference.")).arg(text));
 			return;
 		}
+		
 		qDebug() << "BibleBrowser::searchTextChanged: "<<text;
 		if(m_bible->findReference(ref))
 		{

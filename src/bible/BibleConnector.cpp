@@ -117,7 +117,6 @@ BibleVerseList BibleConnector::loadReference(const BibleVerseRef& ref)
 {
 	if(!findReference(ref))
 		return BibleVerseList();
-		
 	
 	return loadCached(ref);
 }

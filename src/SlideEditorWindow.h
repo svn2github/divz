@@ -219,6 +219,8 @@ private:
 	int m_iconSize;
 	QSlider * m_iconSizeSlider;
 	bool m_lockIconSizeSetter;
+	
+	int m_curSlideChangeCount;
 
 };
 

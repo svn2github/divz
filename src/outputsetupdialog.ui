@@ -33,6 +33,12 @@
           <attribute name="verticalHeaderVisible">
            <bool>false</bool>
           </attribute>
+          <attribute name="verticalHeaderVisible">
+           <bool>false</bool>
+          </attribute>
+          <attribute name="horizontalHeaderShowSortIndicator" stdset="0">
+           <bool>false</bool>
+          </attribute>
           <column>
            <property name="text">
             <string>Name</string>
@@ -154,6 +160,9 @@ p, li { white-space: pre-wrap; }
               <attribute name="verticalHeaderVisible">
                <bool>false</bool>
               </attribute>
+              <attribute name="verticalHeaderVisible">
+               <bool>false</bool>
+              </attribute>
               <column/>
               <column/>
              </widget>
@@ -201,7 +210,7 @@ p, li { white-space: pre-wrap; }
                <item row="1" column="3">
                 <widget class="QSpinBox" name="mjpegFps">
                  <property name="sizePolicy">
-                  <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                  <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
                    <horstretch>0</horstretch>
                    <verstretch>0</verstretch>
                   </sizepolicy>
@@ -226,6 +235,19 @@ p, li { white-space: pre-wrap; }
                   <bool>true</bool>
                  </property>
                 </widget>
+               </item>
+               <item row="1" column="4">
+                <spacer name="horizontalSpacer">
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>40</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                </spacer>
                </item>
               </layout>
              </widget>
@@ -389,7 +411,7 @@ p, li { white-space: pre-wrap; }
                <item row="1" column="3">
                 <widget class="QSpinBox" name="mjpegFps2">
                  <property name="sizePolicy">
-                  <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                  <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
                    <horstretch>0</horstretch>
                    <verstretch>0</verstretch>
                   </sizepolicy>
@@ -424,6 +446,19 @@ p, li { white-space: pre-wrap; }
                   <size>
                    <width>20</width>
                    <height>40</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+               <item row="1" column="4">
+                <spacer name="horizontalSpacer_2">
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>40</width>
+                   <height>20</height>
                   </size>
                  </property>
                 </spacer>

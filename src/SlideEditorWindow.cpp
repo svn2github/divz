@@ -258,7 +258,8 @@ SlideEditorWindow::SlideEditorWindow(SlideGroup *group, QWidget * parent)
     m_altEditorWindow(0),
     m_iconSize(192),
     m_iconSizeSlider(0),
-    m_lockIconSizeSetter(false)
+    m_lockIconSizeSetter(false),
+    m_curSlideChangeCount(0)
 {
 
 	m_scene = new MyGraphicsScene(MyGraphicsScene::Editor,this);
@@ -1228,7 +1229,7 @@ void SlideEditorWindow::setupSlideList()
 	m_slideListView->setDropIndicatorShown(true);
 
 	connect(m_slideListView,SIGNAL(activated(const QModelIndex &)),this,SLOT(slideSelected(const QModelIndex &)));
-	connect(m_slideListView,SIGNAL(clicked(const QModelIndex &)),this,SLOT(slideSelected(const QModelIndex &)));
+	//connect(m_slideListView,SIGNAL(clicked(const QModelIndex &)),this,SLOT(slideSelected(const QModelIndex &)));
 
 	// deleting old selection model per http://doc.trolltech.com/4.5/qabstractitemview.html#setModel
 	QItemSelectionModel *m = m_slideListView->selectionModel();
@@ -1602,6 +1603,122 @@ void SlideEditorWindow::setCurrentSlide(Slide *slide)
 {
 	if(!slide)
 		return;
+		
+	if(m_curSlideChangeCount > 0)
+	{
+		QVariant altFlagVar = m_slideGroup->property("isAltGroup");
+		bool altFlag = altFlagVar.isValid() && altFlagVar.toBool();
+		
+		if(!altFlag)
+		{
+			Slide *primarySlide = m_scene->slide();
+			
+			bool hasAltSlides = false;
+			
+			// First, find out if there are alt groups for on group
+			QList<Output*> allOut = AppSettings::outputs();
+			foreach(Output *output, allOut)
+			{
+				SlideGroup *altGroup = m_slideGroup->altGroupForOutput(output);
+				if(altGroup)
+					hasAltSlides = true;
+			}
+			
+			// If we find an alt group, prompt to copy data over
+			if(hasAltSlides)
+			{
+				QMessageBox msgBox;
+				msgBox.setText("The slide has been modified, and one or more alternate groups exist.");
+				msgBox.setInformativeText("Do you want to copy over the slide items from this slide to the cooresponding alternate slides? (A new alternate slide will be created if one does not exist.)");
+				msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::YesToAll | QMessageBox::Cancel);
+				msgBox.setDefaultButton(QMessageBox::Yes);
+				msgBox.button(QMessageBox::Yes)->setText("Copy Items");
+				msgBox.button(QMessageBox::YesToAll)->setText("Copy Items and Background");
+				msgBox.button(QMessageBox::Cancel)->setText("Don't Copy");
+				int ret = msgBox.exec();
+				
+				// If user says yes or yesToAll, then do the magic
+				if(ret != QMessageBox::Cancel)
+				{
+					bool inclBackground = ret == QMessageBox::YesToAll;
+					
+					// Go thru all outputs and find any alt groups
+					foreach(Output *output, allOut)
+					{
+						SlideGroup *altGroup = m_slideGroup->altGroupForOutput(output);
+						if(altGroup)
+						{
+							QList<Slide*> altSlides = altGroup->altSlides(primarySlide);
+							
+							if(altSlides.isEmpty())
+							{
+								// create alt slide
+								Slide * slide = primarySlide->clone();
+							
+								// Update props
+								slide->setSlideNumber(altGroup->numSlides());
+								slide->setSlideId(ItemFactory::nextId());
+								slide->setPrimarySlideId(primarySlide->slideId());
+								
+								// Clear background if they didn't want the background
+								if(!inclBackground)
+								{
+									BackgroundItem * bgTmp = dynamic_cast<BackgroundItem*>(slide->background());
+									bgTmp->setFillType(AbstractVisualItem::None);
+								}
+							
+								// Add to the alt group
+								altGroup->addSlide(slide);
+							}
+							else
+							{
+								// Duplicate alt slides for this slide in the alt groups
+								foreach(Slide *slide, altSlides)
+								{
+									// Remove all existing items
+									QList<AbstractItem *> items = slide->itemList();
+									foreach(AbstractItem *item, items)
+										slide->removeItem(item);
+										
+									// Copy over new items
+									QList<AbstractItem *> newItems = primarySlide->itemList();
+									foreach(AbstractItem *item, newItems)
+									{
+										bool ignoreItem = false;
+										// If this item is a bg item and user said no BG, then skip this item
+										if(!inclBackground)
+										{
+											BackgroundItem * bgTmp = dynamic_cast<BackgroundItem*>(item);
+											if(bgTmp)
+												ignoreItem = true;
+										}
+										
+										// Clone item and add to alt slide
+										if(!ignoreItem)
+										{
+											AbstractItem *newItem = item->clone();
+											slide->addItem(newItem);
+										}
+									} // each new item
+									
+									// Clear background if they didn't want the background
+									if(!inclBackground)
+									{
+										BackgroundItem * bgTmp = dynamic_cast<BackgroundItem*>(slide->background());
+										bgTmp->setFillType(AbstractVisualItem::None);
+									}
+								
+								} // each slide
+							} // alt slides not empty
+						} // alt group for output
+					} // each output
+				} // not cancel button
+			} // has alt slides
+		} // not alt group
+	} // change count >0
+		
+	// Reset change count
+	m_curSlideChangeCount = 0;
 
 	QModelIndex idx = m_slideModel->indexForSlide(slide);
 	if(idx.isValid() && idx.row() != m_slideListView->currentIndex().row())
@@ -1818,6 +1935,7 @@ private:
 
 // WARNING This command WILL crash dviz if you undo call redo() after undo(), then add an item to that slide - segfault!
 // Need to fix! However, I've got to leave for the day so I'm going to commit this code and work later on it.
+// TODO Test to see if the above warning is still valid, if so, fix it! - JB 20120606 
 
 class UndoSlideRemoved : public QUndoCommand
 {
@@ -1868,6 +1986,7 @@ void SlideEditorWindow::slideChanged(Slide *slide, QString slideOperation, Abstr
 		if(!m_ignoreUndoPropChanges)
 		{
 			m_undoStack->push(new UndoSlideRemoved(this,slide));
+			m_curSlideChangeCount ++;
 		}
 	}
 	else
@@ -1886,6 +2005,7 @@ void SlideEditorWindow::slideChanged(Slide *slide, QString slideOperation, Abstr
 		else
 		{
 			m_undoStack->push(new UndoSlideAdded(this,slide));
+			m_curSlideChangeCount ++;
 		}
 	}
 	else
@@ -1906,6 +2026,7 @@ void SlideEditorWindow::slideItemChanged(AbstractItem *item, QString operation, 
 		if(!m_ignoreUndoPropChanges && ! dynamic_cast<BackgroundItem*>(item))
 		{
 			m_undoStack->push(new UndoSlideItemAdded(this,m_scene->slide(),item));
+			m_curSlideChangeCount ++;
 		}
 	}
 	else
@@ -1914,6 +2035,7 @@ void SlideEditorWindow::slideItemChanged(AbstractItem *item, QString operation, 
 		if(!m_ignoreUndoPropChanges)
 		{
 			m_undoStack->push(new UndoSlideItemRemoved(this,m_scene->slide(),item));
+			m_curSlideChangeCount ++;
 		}
 	}
 	else
@@ -1927,6 +2049,7 @@ void SlideEditorWindow::slideItemChanged(AbstractItem *item, QString operation, 
 				{
 					QUndoCommand * changeCmd = new UndoSlideItemChanged(this,item,fieldName,value,oldValue);
 					m_undoStack->push(changeCmd);
+					m_curSlideChangeCount ++;
 
 					//qDebug() << "SlideEditorWindow::slideItemChanged: New Cmd for "<<item->itemName()<<", field:"<<fieldName<<", oldValue:"<<oldValue<<", newValue:"<<value;
 				}
@@ -1990,7 +2113,7 @@ void SlideEditorWindow::newSlide()
 {
 	Slide * slide = new Slide();
 	slide->setSlideNumber(m_slideGroup->numSlides());
-	slide->setSlideId(m_slideGroup->numSlides());
+	slide->setSlideId(ItemFactory::nextId());
 
 	//qDebug() << "newSlide: ADDING "<<slide->slideNumber();
 	m_slideGroup->addSlide(slide);
@@ -2005,7 +2128,7 @@ void SlideEditorWindow::dupSlide()
 	Slide * slide = oldSlide->clone();
 
 	slide->setSlideNumber(oldSlide->slideNumber() + 1);
-	slide->setSlideId(m_slideGroup->numSlides());
+	slide->setSlideId(ItemFactory::nextId());
 
 	int oldIdx = m_slideGroup->indexOf(oldSlide);
 	if(oldIdx > -1)
@@ -2041,7 +2164,7 @@ void SlideEditorWindow::dupSlide()
 					Slide * slide = oldSlide->clone();
 				
 					slide->setSlideNumber(oldSlide->slideNumber() + 1);
-					slide->setSlideId(altGroup->numSlides());
+					slide->setSlideId(ItemFactory::nextId());
 					slide->setPrimarySlideId(primarySlide->slideId());
 				
 					int oldIdx = altGroup->indexOf(oldSlide);
@@ -2102,8 +2225,50 @@ void SlideEditorWindow::delSlide()
 	QModelIndex idx = m_slideModel->indexForSlide(slide);
 	QModelIndex prev = m_slideModel->indexForRow(idx.row() - 1 > 0 ? idx.row() - 1 : 0);
 
+	// Dont trigger a 'slide changed' note
+	m_curSlideChangeCount = 0;
+	
 	m_slideGroup->removeSlide(slide);
 	//m_undoStack->push(new UndoSlideRemoved(this,slide));
+
+	QVariant altFlagVar = m_slideGroup->property("isAltGroup");
+	bool altFlag = altFlagVar.isValid() && altFlagVar.toBool();
+	
+	if(!altFlag)
+	{
+		Slide *primarySlide = slide;
+		
+		// First, dialog to choose output
+		QList<Output*> allOut = AppSettings::outputs();
+		
+		// Go thru all outputs and find any alt groups
+		foreach(Output *output, allOut)
+		{
+			SlideGroup *altGroup = m_slideGroup->altGroupForOutput(output);
+			if(altGroup)
+			{
+				QList<Slide*> altSlides = altGroup->altSlides(slide);
+				
+				// If we find some alternate slides for the slide we deleted,
+				// prompt to delete the alt slides as well
+				if(!altSlides.isEmpty())
+				{
+					QMessageBox::StandardButton button = QMessageBox::question(this, "Delete Alternate Slides?", tr("Alternate slides were found for the slide you just deleted in the alternate group for the %1 output. Do you want to delete these cooresponding alternate slides as well?").arg(output->name()), QMessageBox::Yes | QMessageBox::No );
+					
+					// If user says yes, remove the slide and delete later
+					if(button == QMessageBox::Yes)
+					{
+						foreach(Slide *altSlide, altSlides)
+						{
+							altGroup->removeSlide(altSlide);
+							altSlide->deleteLater();
+						}
+					}
+				}
+			}
+		}
+	}
+	
 
 	Slide *newSlide = 0;
 	if(prev.isValid())
@@ -2118,6 +2283,7 @@ void SlideEditorWindow::delSlide()
 // 		setupViewportLines();
 // 	}
 
+	
 	QList<Slide*> slides = m_slideGroup->slideList();
 	int counter = 0;
 	foreach(Slide *s, slides)

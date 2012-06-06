@@ -197,6 +197,9 @@ void SlideItemListModel::internalSetup()
 		return;
 		
 	QList<AbstractItem*> slist = m_slide->itemList();
+	if(slist.isEmpty())
+		return;
+		
 	qSort(slist.begin(), slist.end(), SlideItemListModel_item_zval_compare);
 	m_sortedItems = slist;
 
