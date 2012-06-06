@@ -78,7 +78,7 @@ while (@lines)
 		
 		# Sometimes the point tile includes a verse in parenthesis like this: "Foobar (Mark 1:22)"
 		# Here we want to seperate out this verse from the point so it can be formatted on its own
-		if($pnt_title =~ /\((\d+.*?)\)/)
+		if($pnt_title =~ /\((.*?\d+.*?)\)/)
 		{
 			$sub_pnt = $1;
 			$sub_pnt =~ s/(^\s+|\s+$)//g;

@@ -47,7 +47,7 @@ AbstractItem * ItemFactory::createItem(quint32 itemClass)
 ItemFactory::ItemFactory()
 {
 	QSettings s;
-	m_idCounter = (quint32)s.value("items/id_counter", 0).toInt();
+	m_idCounter = (quint32)s.value("items/id_counter", 100).toInt();
 }
 
 ItemFactory::~ItemFactory()

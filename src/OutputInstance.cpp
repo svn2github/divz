@@ -582,10 +582,12 @@ Slide * OutputInstance::setSlideGroupInternal(SlideGroup *group, Slide * startSl
 		disconnect(m_slideGroup,0,this,0);
 		
 		// Trigger any actions
-		executeUserActions(m_slideGroup, UserEventAction_GroupNotLive);
+		if(!m_blackEnabled)
+			executeUserActions(m_slideGroup, UserEventAction_GroupNotLive);
 	}
 	
-	executeUserActions(group, UserEventAction_GroupGoLive);
+	if(!m_blackEnabled)
+		executeUserActions(group, UserEventAction_GroupGoLive);
 
 	
 	connect(group,SIGNAL(slideChanged(Slide *, QString, AbstractItem *, QString, QString, QVariant)),this,SLOT(slideChanged(Slide *, QString, AbstractItem *, QString, QString, QVariant)));
@@ -1205,6 +1207,8 @@ void OutputInstance::fadeBlackFrame(bool enable)
 		
 	// set the flag only if the output is enabled inorder to reflect the true status of the output
 	m_blackEnabled = enable;
+	
+	executeUserActions(m_slideGroup, enable ? UserEventAction_GroupNotLive : UserEventAction_GroupGoLive);
 	
 	if(isLocal())
 	{

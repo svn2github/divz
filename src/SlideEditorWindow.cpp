@@ -1538,12 +1538,23 @@ void SlideEditorWindow::setSlideGroup(SlideGroup *group, Slide *curSlide)
 	//else
 		//m_scene->setMasterSlide(m_slideGroup->masterSlide());
 	
+	bool idChanged = false;
 
 	// Trigger slideItemChange slot connections, but not an undo entry
 	m_ignoreUndoPropChanges = true;
 	QList<Slide*> slist = group->slideList();
 	foreach(Slide *slide, slist)
+	{
+		//slide->setSlideId(ItemFactory::nextId());
+		//qDebug() << "SlideEditorWindow::setSlidegroup: slideId:"<<slide->slideId();
+		if(slide->slideId() < 100)
+		{
+			slide->setSlideId(ItemFactory::nextId());
+			idChanged = true;
+		}
+		
 		slideChanged(slide, "add", 0, "", "", QVariant());
+	}
 	m_ignoreUndoPropChanges = false;
 
 	connect(group,SIGNAL(slideChanged(Slide *, QString, AbstractItem *, QString, QString, QVariant)),this,SLOT(slideChanged(Slide *, QString, AbstractItem *, QString, QString, QVariant)));
@@ -1564,6 +1575,15 @@ void SlideEditorWindow::setSlideGroup(SlideGroup *group, Slide *curSlide)
 			setCurrentSlide(m_slideModel->slideAt(0));
 		else
 			qDebug("SlideEditorWindow::setSlideGroup: Group[0] has 0 slides");
+	}
+	
+	if(idChanged)
+	{
+	 	QMessageBox::warning(this, tr("DViz Slide Editor"),
+			tr("Invalid slide IDs have been fixed. This may have broken the alternate slide group's"
+			   "connection to primary slides. Please double-check the alternate groups, if any."),
+			QMessageBox::Ok,
+			QMessageBox::Ok);
 	}
 
 
