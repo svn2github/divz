@@ -14,14 +14,16 @@ HEADERS +=  \
 	BibleConnector.h \
 	BibleGatewayConnector.h \
 	BibleBrowser.h \
-	ChooseGroupDialog.h
+	ChooseGroupDialog.h \
+	LocalBibleManager.h
 SOURCES += \
 	BibleModel.cpp \
 	BookNameMap.cpp \
 	BibleConnector.cpp \
 	BibleGatewayConnector.cpp \
 	BibleBrowser.cpp \
-	ChooseGroupDialog.cpp
+	ChooseGroupDialog.cpp \
+	LocalBibleManager.cpp
 	
 
 # Unit Tests

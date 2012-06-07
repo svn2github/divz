@@ -20,6 +20,7 @@
 
 #include "BibleModel.h"
 #include "BibleGatewayConnector.h"
+#include "LocalBibleManager.h"
 
 #include "model/Slide.h"
 #include "model/SlideGroup.h"
@@ -55,7 +56,6 @@ BibleBrowser::BibleBrowser(QWidget *parent)
 	, m_tempDest(0)
 {
 	setObjectName("BibleBrowser");
-	
 	
 	QSettings s;
 	
@@ -438,7 +438,7 @@ void BibleBrowser::searchTextChanged(const QString &text)
 			m_bible->downloadReference(ref);
 		}
 		
-		AppSettings::sendCheckin("/bible/search",text);
+		AppSettings::sendCheckin("/bible/search",ref.toString(true));
 	}
 	else
 	{
@@ -682,6 +682,11 @@ typedef QPair<QString,QString> QStringPair;
 void BibleBrowser::setupVersionCombo()
 {
 	QList<QStringPair> list;
+	
+	QList<BibleData*> localBibles = LocalBibleManager::inst()->localBibles();
+	
+	foreach(BibleData *data, localBibles)
+		list.append(qMakePair(data->code,QString("*%1").arg(data->name)));
 	
 	list.append(qMakePair(QString("NIV1984"),QString(tr("New International Version 1984"))));
 	list.append(qMakePair(QString("NIV"),QString(tr("New International Version"))));

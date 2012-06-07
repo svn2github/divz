@@ -1,4 +1,5 @@
 #include "BibleModel.h"
+#include "LocalBibleManager.h"
 
 BibleVersion::BibleVersion(const QString& name, const QString& code) :
 	  m_name(name.isEmpty() ? "New International Version" : name)
@@ -81,7 +82,7 @@ QString BibleVerseRef::toString(bool includeVersion) const
 
 QString BibleVerseRef::cacheKey() const
 {
-	qDebug() << "BibleVerseRef::cacheKey(): "<<toString(true);
+	//qDebug() << "BibleVerseRef::cacheKey(): "<<toString(true);
 	return toString(true);
 }
 
@@ -134,6 +135,14 @@ BibleVerseRef BibleVerseRef::normalize(const QString& tmp, const BibleVersion &v
 	QString bookTmp = book.toLower().trimmed();
 	if(bookNameMap.contains(bookTmp))
 		book = bookNameMap.value(bookTmp);
+		
+	BibleData *bibleData = LocalBibleManager::inst()->bibleData(version.code());
+	if(bibleData && bibleData->bookInfo.contains(book))
+	{
+		book = bibleData->bookInfo[book].displayName;
+		if(DEBUG_NORMALIZE)
+			qDebug() << "normalize("<<tmp<<"): step 1.a: norm:"<<book<<chapter<<verse<<range;
+	}
 		
 	if(book.isEmpty() || chapter.isEmpty())
 		return BibleVerseRef(false);
