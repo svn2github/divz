@@ -1,12 +1,18 @@
 #include "LocalBibleManager.h"
-
+#include "DeepProgressIndicator.h"
 #include <QtGui>
 
 LocalBibleManager *LocalBibleManager::static_inst = 0;
 	
 LocalBibleManager::LocalBibleManager()
 {
+	DeepProgressIndicator *d = new DeepProgressIndicator(this);
+	d->setText(tr("Loading Bibles..."));
+	d->setTitle(tr("Loading Bibles"));
+	
 	scanBiblesFolder();
+	
+	d->close();
 }
 	
 	
@@ -17,9 +23,17 @@ LocalBibleManager *LocalBibleManager::inst()
 	return static_inst;
 }
 
+	
+bool LocalBibleManager_compare_titles(BibleData *a, BibleData *b)
+{
+	return (a && b) ? a->name < b->name : true;
+}
+
 QList<BibleData*> LocalBibleManager::localBibles()
 {
-	return m_localBibles.values();
+	QList<BibleData *> bibles = m_localBibles.values();
+	qSort(bibles.begin(), bibles.end(), LocalBibleManager_compare_titles);
+	return bibles;
 }
 
 BibleData *LocalBibleManager::bibleData(QString versionCode)
@@ -29,19 +43,37 @@ BibleData *LocalBibleManager::bibleData(QString versionCode)
 	
 	return 0;
 }
-	
+
 void LocalBibleManager::scanBiblesFolder()
 {
 	QStringList loadedFiles;
 	foreach(BibleData *data, m_localBibles.values())
 		loadedFiles << data->file;
 	
+	DeepProgressIndicator * d = DeepProgressIndicator::indicatorForObject(this);
+	
+	if(d)
+	{
+		d->setSize(loadedFiles.size());
+		d->setValue(0);
+		QApplication::processEvents();
+	}
+	
 	QString folder = "bibles";
+	
+	int progressCounter = 0;
 	
 	QDir bibleDir(folder);
 	QStringList bibles = bibleDir.entryList(QStringList() << "*.dzb" << "*.dvizbible", QDir::Files);
 	foreach(QString file, bibles)
 	{
+		if(d)
+		{
+			d->setValue(progressCounter++);
+			d->setText(tr("Reading Bible from %1...").arg(file));
+			QApplication::processEvents();
+		}
+		
 		if(!loadedFiles.contains(file))
 		{
 			BibleData *data = loadBible(tr("%1/%2").arg(folder).arg(file));
