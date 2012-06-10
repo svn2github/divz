@@ -33,9 +33,10 @@ sub normalize_text
 		# Normalize the <br> tags
 		$text =~ s/<br\s*\/>/<br>/g;
 		
-		# Decode quote entity
+		# Decode quote entities
 		$text =~ s/&#8220;/“/g;
 		$text =~ s/&#8221;/”/g;
+		$text =~ s/&#8217;/'/g; # not exactly correct, but close enough...
 	}
 	
 	

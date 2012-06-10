@@ -685,15 +685,15 @@ void BibleBrowser::setupVersionCombo()
 {
 	QList<QStringPair> list;
 	
-	QList<BibleData*> localBibles = LocalBibleManager::inst()->localBibles();
+	QList<BibleDataPlaceholder*> localBibles = LocalBibleManager::inst()->biblePlaceholders();
 	
-	foreach(BibleData *data, localBibles)
-		list.append(qMakePair(data->code,QString("%1").arg(data->name)));
+	foreach(BibleDataPlaceholder *data, localBibles)
+		list.append(qMakePair(data->code(),QString("%1").arg(data->name())));
 		
 	// Disabled many of the "unusual" versions below since they are now more reliably available thru the LocalBibleManager
 	
-	list.append(qMakePair(QString("NIV1984"),QString(tr("New International Version 1984 (Online)"))));
-	list.append(qMakePair(QString("NIV"),QString(tr("New International Version (Online)"))));
+	list.append(qMakePair(QString("NIV1984"),QString(tr("BibleGateway.com: NIV 1984 "))));
+	list.append(qMakePair(QString("NIV"),QString(tr("BibleGateway.com: NIV Latest"))));
 // 	list.append(qMakePair(QString("NASB"),QString(tr("New American Standard Bible"))));
 // 	list.append(qMakePair(QString("MSG"),QString(tr("The Message"))));
 // 	list.append(qMakePair(QString("AMP"),QString(tr("Amplified Bible"))));
@@ -709,7 +709,7 @@ void BibleBrowser::setupVersionCombo()
 // 	list.append(qMakePair(QString("YLT"),QString(tr("Young's Literal Translation"))));
 // 	list.append(qMakePair(QString("DARBY"),QString(tr("Darby Translation"))));
 // 	list.append(qMakePair(QString("HCSB"),QString(tr("Holman Christian Standard Bible"))));
-	list.append(qMakePair(QString("NIRV"),QString(tr("New International Reader's Version (Online)"))));
+	list.append(qMakePair(QString("NIRV"),QString(tr("BibleGateway.com: New International Reader's Version"))));
 	//list.append(qMakePair(QString("WYC"),QString(tr("Wycliffe New Testament"))));
 	
 	
@@ -728,7 +728,7 @@ void BibleBrowser::setupVersionCombo()
 	
 	
 	//list.append(qMakePair(QString("WE"),QString(tr("Worldwide English (New Testament)"))));
-	list.append(qMakePair(QString("NIVUK"),QString(tr("New International Version - UK (Online)"))));
+	list.append(qMakePair(QString("NIVUK"),QString(tr("BibleGateway.com: NIV - UK"))));
 // 	list.append(qMakePair(QString("TNIV"),QString(tr("Today's New International Version"))));
 // 	list.append(qMakePair(QString("RVR1960"),QString(tr("Reina-Valera 1960"))));
 // 	list.append(qMakePair(QString("NVI"),QString(tr("Nueva Versión Internacional"))));
@@ -1352,8 +1352,14 @@ SlideGroup * BibleBrowser::createSlideGroup(SlideGroup *templateGroup, bool allo
 			addSlideWithText(group, currentSlide, tmpText);
 			
 			//currentSlide = addSlide(group,tmpText,realHeight,currentFitRect,tmpList.join("\n"));
+			QString slideName = tr("%1v %2")
+				.arg(appendToExistingGroup() ? tr("%1: ").arg(m_currentRef.toString()) : "")
+				.arg(verseList[x].verseNumber());
+			
+			qDebug() << "BibleBrowser::createSlideGroup(): [verse] index "<<x<<", slideName: "<<slideName;
+			
 			if(showEachVerseOnSeperateSlide())
-				currentSlide->setSlideName((appendToExistingGroup() ? m_currentRef.toString() + ": " : "") + QString("v %1").arg(verseList[x].verseNumber()));
+				currentSlide->setSlideName(slideName);
 			
 			slideNumber++;
 			
@@ -1469,7 +1475,8 @@ SlideGroup * BibleBrowser::createSlideGroup(SlideGroup *templateGroup, bool allo
 									altSlide->setPrimarySlideId(currentSlide->slideId());
 									
 									if(showEachVerseOnSeperateSlide())
-										altSlide->setSlideName((appendToExistingGroup() ? m_currentRef.toString() + ": " : "") + QString("v %1.%2").arg(verseList[verseListIndex].verseNumber()).arg(altSlideCount));
+										altSlide->setSlideName(tr("%1.%2").arg(slideName).arg(altSlideCount));
+									//(appendToExistingGroup() ? m_currentRef.toString() + ": " : "") + QString("v %1.%2").arg(verseList[verseListIndex].verseNumber()).arg(altSlideCount));
 									
 									setupOptionalLabels(altSlide, slideNumber);
 									
@@ -1499,7 +1506,8 @@ SlideGroup * BibleBrowser::createSlideGroup(SlideGroup *templateGroup, bool allo
 								altSlideCount++;
 								
 								if(showEachVerseOnSeperateSlide())
-									altSlide->setSlideName((appendToExistingGroup() ? m_currentRef.toString() + ": " : "") + QString("v %1.%2").arg(verseList[verseListIndex].verseNumber()).arg(altSlideCount));
+									altSlide->setSlideName(tr("%1.%2").arg(slideName).arg(altSlideCount));
+									//altSlide->setSlideName((appendToExistingGroup() ? m_currentRef.toString() + ": " : "") + QString("v %1.%2").arg(verseList[verseListIndex].verseNumber()).arg(altSlideCount));
 								
 								setupOptionalLabels(altSlide, slideNumber);
 								
@@ -1529,7 +1537,8 @@ SlideGroup * BibleBrowser::createSlideGroup(SlideGroup *templateGroup, bool allo
 							//qDebug() << "BibleBrowser::createSlideGroup(): [verse] Output "<<out->name()<<": [regular] Create alt slide for slide "<<slideNumber;
 							
 							if(showEachVerseOnSeperateSlide())
-								altSlide->setSlideName((appendToExistingGroup() ? m_currentRef.toString() + ": " : "") + QString("v %1").arg(verseList[verseListIndex].verseNumber()));
+								altSlide->setSlideName(slideName); 
+								//(appendToExistingGroup() ? m_currentRef.toString() + ": " : "") + QString("v %1").arg(verseList[verseListIndex].verseNumber()));
 							
 							setupOptionalLabels(altSlide, slideNumber);
 						}

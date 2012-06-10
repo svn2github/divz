@@ -151,7 +151,10 @@ BibleVerseList BibleConnector::loadReference(const BibleVerseRef& ref)
 		
 		//qDebug() << "BibleConnector::loadReference: [Book Info] Loaded displayName "<<displayName<<" for book "<<book;
 		
-		if(ref.verseRange() < 1)
+		// The list of verses to return
+		BibleVerseList outputList;
+		
+		if(ref.verseNumber() > -1 && ref.verseRange() < 1)
 		{
 			int verse = ref.verseNumber();
 			
@@ -177,32 +180,41 @@ BibleVerseList BibleConnector::loadReference(const BibleVerseRef& ref)
 			
 			QString text = chapHash[verse];
 			
-			m_cache[ref.cacheKey()] = BibleVerse(bookChapter, verse, text);
+			outputList << BibleVerse(bookChapter, verse, text);
 			//qDebug() << "BibleConnector::loadReference: [Single Verse] Loaded local bible text for reference "<<ref<<": "<<text; 
 		}
 		else
 		{
 			//qDebug() << "BibleConnector::loadReference: [Multi Verse:"<<ref<<"]: Looking for refs from "<<ref.verseNumber()<<" to "<<ref.verseRange()+1;
-			for(int i=ref.verseNumber(); i<ref.verseRange()+1; i++)
+			if(!bibleData->bibleText.contains(book))
 			{
-				BibleVerseRef thisRef = ref.verseRef(i);
+				qDebug() << "BibleConnector::loadReference: [Multi Verse] book not found:"<<book;
+				return BibleVerseList();
+			}
+			
+			QHash<int, QHash<int, QString > > bookHash = bibleData->bibleText[book];
+			if(!bookHash.contains(chap))
+			{
+				qDebug() << "BibleConnector::loadReference: [Multi Verse] book "<<book<<" ok, chapter not found:"<<chap;
+				return BibleVerseList();
+			}
+			
+			BibleVerseRef workingRef = ref;
+			
+			QHash<int, QString > chapHash = bookHash[chap];
+			if(workingRef.verseNumber() < 0)
+			{
+				workingRef.setVerseNumber(1);
+				workingRef.setVerseRange(chapHash.values().size());
+				qDebug() << "BibleConnector::loadReference: [Multi Verse] book "<<book<<" ok, chapter "<<chap<<" ok, whole chapter: 1 -"<<ref.verseRange();
+			}
+			
+			for(int i=workingRef.verseNumber(); i<workingRef.verseRange()+1; i++)
+			{
+				BibleVerseRef thisRef = workingRef.verseRef(i);
 				
 				int verse = thisRef.verseNumber();
-				
-				if(!bibleData->bibleText.contains(book))
-				{
-					qDebug() << "BibleConnector::loadReference: [Multi Verse] book not found:"<<book;
-					return BibleVerseList();
-				}
-				
-				QHash<int, QHash<int, QString > > bookHash = bibleData->bibleText[book];
-				if(!bookHash.contains(chap))
-				{
-					qDebug() << "BibleConnector::loadReference: [Multi Verse] book "<<book<<" ok, chapter not found:"<<chap;
-					return BibleVerseList();
-				}
 					
-				QHash<int, QString > chapHash = bookHash[chap];
 				if(!chapHash.contains(verse))
 				{
 					qDebug() << "BibleConnector::loadReference: [Multi Verse] book "<<book<<" ok, chapter "<<chap<<" ok, verse not found:"<<verse;
@@ -211,15 +223,16 @@ BibleVerseList BibleConnector::loadReference(const BibleVerseRef& ref)
 				
 				QString text = chapHash[verse];
 				
-				m_cache[thisRef.cacheKey()] = BibleVerse(bookChapter, thisRef.verseNumber(), text);
+				outputList << BibleVerse(bookChapter, thisRef.verseNumber(), text);
 				//qDebug() << "BibleConnector::loadReference: [Multi Verse:"<<ref<<"] Loaded local bible text for reference "<<thisRef<<": "<<text;
 			}
 		}
 		
 		//qDebug() << "BibleConnector::loadReference: Local Bible Version "<<ref.book().version().code()<<", should be in cache now...";
 		
-		// NOTE We don't actually return the data *directly* from the 'local bible' right here - instead, we've loaded the requested reference into the verse cache,
-		// which then will be returned by loadCached(ref), below.
+		// NOTE we did not load these into the cache since it would just duplicate RAM used - the cache is designed primarily
+		// to prevent extra/unecessary network access for Bibles located on the internet
+		return outputList;
 	}
 	
 	return loadCached(ref);

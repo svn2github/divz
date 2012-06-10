@@ -15,8 +15,6 @@ close(INPUT);
 
 open(OUTPUT,">$output_file") || die "Unable to write output $output_file: $!";
 
-#$_ = shift @lines while /^\s*$/;
- 
 my $title;
 my $found_title = 0;
 while(!$found_title)
@@ -81,9 +79,9 @@ while (@lines)
 		if($pnt_title =~ /\((.*?\d+.*?)\)/)
 		{
 			$sub_pnt = $1;
-			$sub_pnt =~ s/(^\s+|\s+$)//g;
-			$pnt_title =~ s/\((\d+.*?)\)//g;
-			$pnt_title =~ s/(^\s+|\s+$)//g;
+			$sub_pnt =~ s/(^\s+|\s+$)//g; # trim spaces on subpoint
+			$pnt_title =~ s/\((.*?\d+.*?)\)//g; # remove parenthetical reference
+			$pnt_title =~ s/(^\s+|\s+$)//g; # trim spaces on point
 		}
 		
 		if($sub_pnt =~ /^(\d+)([-:]\d+)?/)

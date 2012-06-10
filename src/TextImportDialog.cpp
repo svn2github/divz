@@ -634,8 +634,11 @@ void TextImportDialog::doImport()
 		return;
 	}
 	
+	
 	// Apply group title using the original file name, just in case we used a pre-processor
-	group->setGroupTitle(AbstractItem::guessTitle(QFileInfo(originalFileName).baseName()));
+	if(group->groupTitle().isEmpty())
+		group->setGroupTitle(AbstractItem::guessTitle(QFileInfo(originalFileName).baseName()));
+	
 	
 	qDebug() << "TextImportDialog::doImport(): Checking for alternate groups";
 	

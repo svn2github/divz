@@ -1650,9 +1650,10 @@ void SlideEditorWindow::setCurrentSlide(Slide *slide)
 				QMessageBox msgBox;
 				msgBox.setText("The slide has been modified, and one or more alternate groups exist.");
 				msgBox.setInformativeText("Do you want to copy over the slide items from this slide to the cooresponding alternate slides? (A new alternate slide will be created if one does not exist.)");
-				msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::YesToAll | QMessageBox::Cancel);
+				msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::Ignore | QMessageBox::YesToAll | QMessageBox::Cancel);
 				msgBox.setDefaultButton(QMessageBox::Yes);
 				msgBox.button(QMessageBox::Yes)->setText("Copy Items");
+				msgBox.button(QMessageBox::Ignore)->setText("Only Copy Text");
 				msgBox.button(QMessageBox::YesToAll)->setText("Copy Items and Background");
 				msgBox.button(QMessageBox::Cancel)->setText("Don't Copy");
 				int ret = msgBox.exec();
@@ -1661,6 +1662,7 @@ void SlideEditorWindow::setCurrentSlide(Slide *slide)
 				if(ret != QMessageBox::Cancel)
 				{
 					bool inclBackground = ret == QMessageBox::YesToAll;
+					bool onlyText       = ret == QMessageBox::Ignore;
 					
 					// Go thru all outputs and find any alt groups
 					foreach(Output *output, allOut)
@@ -1680,6 +1682,51 @@ void SlideEditorWindow::setCurrentSlide(Slide *slide)
 								slide->setSlideId(ItemFactory::nextId());
 								slide->setPrimarySlideId(primarySlide->slideId());
 								
+								// Only have to do this remove/copy routine if 'text only' is included
+								if(onlyText)
+								{
+									// Remove all existing items
+									QList<AbstractItem *> items = slide->itemList();
+									foreach(AbstractItem *item, items)
+									{
+										bool removeItem = true;
+										TextItem * tmp = dynamic_cast<TextItem*>(item);
+										if(!tmp)
+											removeItem = false;
+										
+										if(removeItem)
+											slide->removeItem(item);
+									}
+										
+									// Copy over new items
+									QList<AbstractItem *> newItems = primarySlide->itemList();
+									foreach(AbstractItem *item, newItems)
+									{
+										bool ignoreItem = false;
+										// If this item is a bg item and user said no BG, then skip this item
+										if(!inclBackground)
+										{
+											BackgroundItem * bgTmp = dynamic_cast<BackgroundItem*>(item);
+											if(bgTmp)
+												ignoreItem = true;
+										}
+										
+										if(onlyText)
+										{
+											TextItem * tmp = dynamic_cast<TextItem*>(item);
+											if(!tmp)
+												ignoreItem = true;
+										}
+										
+										// Clone item and add to alt slide
+										if(!ignoreItem)
+										{
+											AbstractItem *newItem = item->clone();
+											slide->addItem(newItem);
+										}
+									} // each new item
+								}
+								
 								// Clear background if they didn't want the background
 								if(!inclBackground)
 								{
@@ -1698,7 +1745,18 @@ void SlideEditorWindow::setCurrentSlide(Slide *slide)
 									// Remove all existing items
 									QList<AbstractItem *> items = slide->itemList();
 									foreach(AbstractItem *item, items)
-										slide->removeItem(item);
+									{
+										bool removeItem = true;
+										if(onlyText)
+										{
+											TextItem * tmp = dynamic_cast<TextItem*>(item);
+											if(!tmp)
+												removeItem = false;
+										}
+										
+										if(removeItem)
+											slide->removeItem(item);
+									}
 										
 									// Copy over new items
 									QList<AbstractItem *> newItems = primarySlide->itemList();
@@ -1710,6 +1768,13 @@ void SlideEditorWindow::setCurrentSlide(Slide *slide)
 										{
 											BackgroundItem * bgTmp = dynamic_cast<BackgroundItem*>(item);
 											if(bgTmp)
+												ignoreItem = true;
+										}
+										
+										if(onlyText)
+										{
+											TextItem * tmp = dynamic_cast<TextItem*>(item);
+											if(!tmp)
 												ignoreItem = true;
 										}
 										
