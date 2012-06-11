@@ -1365,7 +1365,7 @@ SlideGroup * BibleBrowser::createSlideGroup(SlideGroup *templateGroup, bool allo
 			
 			setupOptionalLabels(currentSlide, slideNumber);
 			
-			int verseListIndex = x;
+			//int verseListIndex = x;
 			foreach(Output *out, allOut)
 			{
 				SlideGroup *outputTemplate = templateGroup->altGroupForOutput(out);

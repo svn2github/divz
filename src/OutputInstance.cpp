@@ -546,25 +546,28 @@ void OutputInstance::executeUserActions(SlideGroup *group, QString event)
 	qDebug() << "OutputInstance::executeUserActions("<<event<<"): "<<this<<" Output: "<<m_output->name()<<": Executing actions for group "<<group;
 	
 	// Trigger actions
-	QStringListHash actions = group->userEventActions();
-	if(actions.contains(event))
+	if(group)
 	{
-		QStringList list = actions.value(event);
-		foreach(QString act, list)
+		QStringListHash actions = group->userEventActions();
+		if(actions.contains(event))
 		{
-			if(act.contains("://"))
+			QStringList list = actions.value(event);
+			foreach(QString act, list)
 			{
-				QNetworkAccessManager *net = new QNetworkAccessManager(this);
-				connect(net, SIGNAL(finished(QNetworkReply*)), net, SLOT(deleteLater()));
-				net->get(QNetworkRequest(act));
-				qDebug() << "OutputInstance::executeUserActions("<<event<<"): "<<this<<" "<<group<<": URL: "<<act;
-			}
-			else
-			{
-				QProcess *proc = new QProcess(this);
-				connect(proc, SIGNAL(finished(int, QProcess::ExitStatus)), proc, SLOT(deleteLater()));
-				proc->start(act);
-				qDebug() << "OutputInstance::executeUserActions("<<event<<"): "<<this<<" "<<group<<": Exec: "<<act;
+				if(act.contains("://"))
+				{
+					QNetworkAccessManager *net = new QNetworkAccessManager(this);
+					connect(net, SIGNAL(finished(QNetworkReply*)), net, SLOT(deleteLater()));
+					net->get(QNetworkRequest(act));
+					qDebug() << "OutputInstance::executeUserActions("<<event<<"): "<<this<<" "<<group<<": URL: "<<act;
+				}
+				else
+				{
+					QProcess *proc = new QProcess(this);
+					connect(proc, SIGNAL(finished(int, QProcess::ExitStatus)), proc, SLOT(deleteLater()));
+					proc->start(act);
+					qDebug() << "OutputInstance::executeUserActions("<<event<<"): "<<this<<" "<<group<<": Exec: "<<act;
+				}
 			}
 		}
 	}

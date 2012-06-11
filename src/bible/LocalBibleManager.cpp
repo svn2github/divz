@@ -221,8 +221,10 @@ BibleData *BibleDataPlaceholder::data()
 	if(!m_data)
 	{
 		qDebug() << "BibleDataPlaceholder::data(): Re-loading data for: "<<name() << "("<<code()<<")";
-		m_data = m_mgr->loadBible(file(), true); // true =  show progress
+		m_data = m_mgr->loadBible(file(), true); // true = show progress
 		m_mgr->justLoaded(this); // inform the manager we just loaded our data so it can remove older data from other Bibles, if present
+// 		qDebug() << "BibleDataPlaceholder::data(): m_data:"<<m_data;
+// 		qDebug() << "BibleDataPlaceholder::data(): bookInfo test:" << m_data->bookInfo["John"].displayName;
 	}
 	return m_data;
 	
