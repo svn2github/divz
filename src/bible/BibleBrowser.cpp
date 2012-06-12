@@ -95,6 +95,8 @@ BibleBrowser::BibleBrowser(QWidget *parent)
 	
 	m_bible = new BibleGatewayConnector();
 	connect(m_bible, SIGNAL(referenceAvailable(const BibleVerseRef& , const BibleVerseList &)), this, SLOT(referenceAvailable(const BibleVerseRef& , const BibleVerseList &)));
+	
+	connect(LocalBibleManager::inst(), SIGNAL(bibleListChanged()), this, SLOT(setupVersionCombo()));
 }
 	
 BibleBrowser::~BibleBrowser() 
@@ -170,6 +172,11 @@ void BibleBrowser::setupUI()
 	hboxTop->addWidget(m_versionCombo);
 	
 	connect(m_versionCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(searchReturnPressed()));
+	
+	QPushButton *editBtn = new QPushButton(QPixmap(":/data/stock-edit.png"),"");
+	editBtn->setToolTip("Get More Bibles or Enable/Disable Bibles");
+	connect(editBtn, SIGNAL(clicked()), LocalBibleManager::inst(), SLOT(getMoreBibles()));
+	hboxTop->addWidget(editBtn);
 	
 	QPushButton *configBtn = new QPushButton(QPixmap(":/data/stock-preferences.png"),"");
 	configBtn->setToolTip("Setup Slide Creator Options");
@@ -683,6 +690,11 @@ typedef QPair<QString,QString> QStringPair;
 
 void BibleBrowser::setupVersionCombo()
 {
+	int currentVersionIndex = m_versionCombo->currentIndex();
+	QString currentVersionCode = m_versionCombo->itemData(currentVersionIndex).toString();
+	
+	m_versionCombo->clear();
+	
 	QList<QStringPair> list;
 	
 	QList<BibleDataPlaceholder*> localBibles = LocalBibleManager::inst()->biblePlaceholders();
@@ -690,104 +702,12 @@ void BibleBrowser::setupVersionCombo()
 	foreach(BibleDataPlaceholder *data, localBibles)
 		list.append(qMakePair(data->code(),QString("%1").arg(data->name())));
 		
-	// Disabled many of the "unusual" versions below since they are now more reliably available thru the LocalBibleManager
-	
-	list.append(qMakePair(QString("NIV1984"),QString(tr("BibleGateway.com: NIV 1984 "))));
-	list.append(qMakePair(QString("NIV"),QString(tr("BibleGateway.com: NIV Latest"))));
-// 	list.append(qMakePair(QString("NASB"),QString(tr("New American Standard Bible"))));
-// 	list.append(qMakePair(QString("MSG"),QString(tr("The Message"))));
-// 	list.append(qMakePair(QString("AMP"),QString(tr("Amplified Bible"))));
-// 	list.append(qMakePair(QString("NLT"),QString(tr("New Living Translation"))));
-// 	list.append(qMakePair(QString("KJV"),QString(tr("King James Version"))));
-// 	list.append(qMakePair(QString("ESV"),QString(tr("English Standard Version"))));
-// 	list.append(qMakePair(QString("CEV"),QString(tr("Contemporary English Version"))));
-	
-// 	list.append(qMakePair(QString("NKJV"),QString(tr("New King James Version"))));
-// 	list.append(qMakePair(QString("NCV"),QString(tr("New Century Version"))));
-// 	list.append(qMakePair(QString("KJ21"),QString(tr("21st Century King James Version"))));
-// 	list.append(qMakePair(QString("ASV"),QString(tr("American Standard Version"))));
-// 	list.append(qMakePair(QString("YLT"),QString(tr("Young's Literal Translation"))));
-// 	list.append(qMakePair(QString("DARBY"),QString(tr("Darby Translation"))));
-// 	list.append(qMakePair(QString("HCSB"),QString(tr("Holman Christian Standard Bible"))));
-	list.append(qMakePair(QString("NIRV"),QString(tr("BibleGateway.com: New International Reader's Version"))));
-	//list.append(qMakePair(QString("WYC"),QString(tr("Wycliffe New Testament"))));
-	
-	
-// 	//list.append(qMakePair(QString("AMU"),QString(tr("Amuzgo de Guerrero"))));
-// 	list.append(qMakePair(QString("ALAB"),QString(tr("Arabic Life Application Bible"))));
-// 	list.append(qMakePair(QString("BULG"),QString(tr("Bulgarian Bible"))));
-// 	list.append(qMakePair(QString("BG1940"),QString(tr("1940 Bulgarian Bible"))));
-// 	//list.append(qMakePair(QString("CCO"),QString(tr("Chinanteco de Comaltepec"))));
-// 	//list.append(qMakePair(QString("CKW"),QString(tr("Cakchiquel Occidental"))));
-// 	
-// 	list.append(qMakePair(QString("HCV"),QString(tr("Haitian Creole Version"))));
-// 	//list.append(qMakePair(QString("SNC"),QString(tr("Slovo na cestu"))));
-// 	list.append(qMakePair(QString("DN1933"),QString(tr("Dette er Biblen pÃ¥ dansk"))));
-// 	//list.append(qMakePair(QString("HOF"),QString(tr("Hoffnung für Alle"))));
-// 	list.append(qMakePair(QString("LUTH1545"),QString(tr("Luther Bibel 1545"))));
-	
-	
-	//list.append(qMakePair(QString("WE"),QString(tr("Worldwide English (New Testament)"))));
-	list.append(qMakePair(QString("NIVUK"),QString(tr("BibleGateway.com: NIV - UK"))));
-// 	list.append(qMakePair(QString("TNIV"),QString(tr("Today's New International Version"))));
-// 	list.append(qMakePair(QString("RVR1960"),QString(tr("Reina-Valera 1960"))));
-// 	list.append(qMakePair(QString("NVI"),QString(tr("Nueva Versión Internacional"))));
-// 	list.append(qMakePair(QString("RVR1995"),QString(tr("Reina-Valera 1995"))));
-// 	//list.append(qMakePair(QString("CST"),QString(tr("Castilian"))));
-// 	list.append(qMakePair(QString("RVA"),QString(tr("Reina-Valera Antigua"))));
-// 	
-// 	//list.append(qMakePair(QString("BLS"),QString(tr("Biblia en Lenguaje Sencillo"))));
-// 	list.append(qMakePair(QString("LBLA"),QString(tr("La Biblia de las Américas"))));
-// 	list.append(qMakePair(QString("LSG"),QString(tr("Louis Segond"))));
-// 	list.append(qMakePair(QString("BDS"),QString(tr("La Bible du Semeur"))));
-// 	//list.append(qMakePair(QString("WHNU"),QString(tr("1881 Westcott-Hort New Testament"))));
-// 	//list.append(qMakePair(QString("TR1550"),QString(tr("1550 Stephanus New Testament"))));
-// 	//list.append(qMakePair(QString("TR1894"),QString(tr("1894 Scrivener New Testament"))));
-// 	
-// 	//list.append(qMakePair(QString("WLC"),QString(tr("The Westminster Leningrad Codex"))));
-// 	//list.append(qMakePair(QString("HLGN"),QString(tr("Hiligaynon Bible"))));
-// 	//list.append(qMakePair(QString("CRO"),QString(tr("Croatian Bible"))));
-// 	list.append(qMakePair(QString("KAR"),QString(tr("Hungarian KÃ¡roli"))));
-// 	
-// 	list.append(qMakePair(QString("ICELAND"),QString(tr("Icelandic Bible"))));
-// 	list.append(qMakePair(QString("LND"),QString(tr("La Nuova Diodati"))));
-// 	//list.append(qMakePair(QString("LM"),QString(tr("La Parola è Vita"))));
-// 	//list.append(qMakePair(QString("JAC"),QString(tr("Jacalteco, Oriental"))));
-// 	//list.append(qMakePair(QString("KEK"),QString(tr("Kekchi"))));
-// 	
-// 	list.append(qMakePair(QString("KOREAN"),QString(tr("Korean Bible"))));
-// 	list.append(qMakePair(QString("MAORI"),QString(tr("Maori Bible"))));
-// 	//list.append(qMakePair(QString("MNT"),QString(tr("Macedonian New Testament"))));
-// 	//list.append(qMakePair(QString("MVC"),QString(tr("Mam, Central"))));
-// 	//list.append(qMakePair(QString("MVJ"),QString(tr("Mam de Todos Santos Chuchumatán"))));
-// 	
-// 	//list.append(qMakePair(QString("REIMER"),QString(tr("Reimer 2001"))));
-// 	//list.append(qMakePair(QString("NGU"),QString(tr("Náhuatl de Guerrero"))));
-// 	list.append(qMakePair(QString("HTB"),QString(tr("Het Boek"))));
-// 	list.append(qMakePair(QString("DNB1930"),QString(tr("Det Norsk Bibelselskap 1930"))));
-// 	//list.append(qMakePair(QString("LB"),QString(tr("Levande Bibeln"))));
-// 	
-// 	list.append(qMakePair(QString("OL"),QString(tr("O Livro"))));
-// 	list.append(qMakePair(QString("AA"),QString(tr("João Ferreira de Almeida Atualizada"))));
-// 	//list.append(qMakePair(QString("QUT"),QString(tr("Quiché, Centro Occidental"))));
-// 	list.append(qMakePair(QString("RMNN"),QString(tr("Romanian"))));
-// 	//list.append(qMakePair(QString("TLCR"),QString(tr("Romanian"))));
-// 	
-// 	list.append(qMakePair(QString("RUSV"),QString(tr("Russian Synodal Version"))));
-// 	//list.append(qMakePair(QString("SZ"),QString(tr("Slovo Zhizny"))));
-// 	//list.append(qMakePair(QString("NPK"),QString(tr("Nádej pre kazdého"))));
-// 	list.append(qMakePair(QString("ALB"),QString(tr("Albanian Bible"))));
-// 	list.append(qMakePair(QString("SVL"),QString(tr("Levande Bibeln"))));
-// 	list.append(qMakePair(QString("SV1917"),QString(tr("Svenska 1917"))));
-// 	
-// 	//list.append(qMakePair(QString("SNT"),QString(tr("Swahili New Testament"))));
-// 	//list.append(qMakePair(QString("SND"),QString(tr("Ang Salita ng Diyos"))));
-// 	list.append(qMakePair(QString("UKR"),QString(tr("Ukrainian Bible"))));
-// 	//list.append(qMakePair(QString("USP"),QString(tr("Uspanteco"))));
-// 	list.append(qMakePair(QString("VIET"),QString(tr("1934 Vietnamese Bible"))));
-// 	list.append(qMakePair(QString("CUVS"),QString(tr("Chinese Union Version (Simplified)"))));
-// 	list.append(qMakePair(QString("CUV"),QString(tr("Chinese Union Version (Traditional)"))));
-	
+	// Add in Bibles from BibleGateway.com - feel free to add more codes here if desired
+	list.append(qMakePair(QString("NIV1984"), QString(tr("BibleGateway.com: NIV 1984 "))));
+	list.append(qMakePair(QString("NIV"),     QString(tr("BibleGateway.com: NIV Latest"))));
+	list.append(qMakePair(QString("NIRV"),    QString(tr("BibleGateway.com: New International Reader's Version"))));
+	list.append(qMakePair(QString("NIVUK"),   QString(tr("BibleGateway.com: NIV - UK"))));
+
 	#define MAX_VERSION_NAME_LENGTH 32
 	foreach(QStringPair pair, list)
 	{
@@ -797,7 +717,10 @@ void BibleBrowser::setupVersionCombo()
 	}
 	
 	// Default bible shipped with DViz is KJV
-	m_versionCombo->setCurrentIndex(m_versionCombo->findData("ENGLISHKJV"));
+	if(currentVersionIndex > -1)
+		m_versionCombo->setCurrentIndex(m_versionCombo->findData(currentVersionCode));
+	else
+		m_versionCombo->setCurrentIndex(m_versionCombo->findData("ENGLISHKJV"));
 }
 
 void BibleBrowser::setupTextBox(TextBoxItem *tmpText)

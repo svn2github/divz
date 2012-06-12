@@ -8,6 +8,11 @@
 // The number of minutes to keep Bible data loaded in RAM before freeing
 #define BIBLE_DATA_RELEASE_TIMER 10
 
+// Location of the list of files online
+#define BIBLE_INDEX_DOWNLOAD_URL "http://www.mybryanlife.com/dviz-bibles/index.txt"
+
+// Location where Bibles are stored online - append a "/englishkjv.dzb", for example, and you got the Bible file you're looking for
+#define BIBLE_DOWNLOAD_URL_BASE "http://www.mybryanlife.com/dviz-bibles"
 
 
 LocalBibleManager *LocalBibleManager::static_inst = 0;
@@ -34,8 +39,14 @@ bool LocalBibleManager_compare_titles(BibleDataPlaceholder *a, BibleDataPlacehol
 QList<BibleDataPlaceholder*> LocalBibleManager::biblePlaceholders()
 {
 	QList<BibleDataPlaceholder *> bibles = m_localBibles.values();
-	qSort(bibles.begin(), bibles.end(), LocalBibleManager_compare_titles);
-	return bibles;
+	
+	QList<BibleDataPlaceholder *> notDisabled;
+	foreach(BibleDataPlaceholder *data, bibles)
+		if(!data->disabled())
+			notDisabled << data;
+		
+	qSort(notDisabled.begin(), notDisabled.end(), LocalBibleManager_compare_titles);
+	return notDisabled;
 }
 
 BibleData *LocalBibleManager::bibleData(QString versionCode)
@@ -46,6 +57,12 @@ BibleData *LocalBibleManager::bibleData(QString versionCode)
 	return 0;
 }
 
+///! scanBiblesFolder() - Scan the './bibles' folder for '*.dzb' files.
+// .dzb files store 3 pieces of data for the Bible: the 'header' (name/code),
+// the book index, and the actual text. We really only need the header (name/code)
+// to display to the user and to make up the BibleDataPlaceholder. Only when the
+// user *actually* requests the version ('code') is the book index and actual text
+// actually needed in RAM.
 void LocalBibleManager::scanBiblesFolder()
 {
 	QStringList loadedFiles;
@@ -71,26 +88,79 @@ void LocalBibleManager::scanBiblesFolder()
 	progress.setMaximum(bibles.size());
 	qDebug() << "LocalBibleManager::scanBiblesFolder(): Loading " << bibles.size() << " bibles";
 	
+	QSettings settings;
+	settings.beginGroup("localbibles");
+	
+	bool listChanged = false;
+	
 	foreach(QString file, bibles)
 	{
 		progress.setValue(progressCounter++);
 		progress.setLabelText(tr("Reading Bible from %1...").arg(file));
 		QApplication::processEvents();
 		
-		if(!loadedFiles.contains(file))
+		QString absFile = tr("%1/%2").arg(folder).arg(file);
+			
+		settings.beginGroup(absFile);
+		
+		if(!loadedFiles.contains(absFile))
 		{
-			BibleData *data = loadBible(tr("%1/%2").arg(folder).arg(file));
-			BibleDataPlaceholder *placeholder = new BibleDataPlaceholder(data, this);
-			m_localBibles[data->code] = placeholder;
-			qDebug() << "LocalBibleMananger::scanBiblesFolder: Loaded bible "<<data->name<<" from "<<file;
+			bool disabled = settings.value("disabled", false).toBool();
+			bool indexed  = settings.value("indexed",  false).toBool();
+			
+			QString name, code;
+			
+			if(!indexed)
+			{
+				// If not already indexed, load the data from the disk
+				// and store the name/code into QSettings for later use.
+				BibleData *data = loadBible(absFile, false, true); // false = show progress, true = header only
+				name = data->name;
+				code = data->code;
+				delete data;
+				
+				settings.setValue("indexed", true);
+				settings.setValue("name",    name);
+				settings.setValue("code",    code);
+			}
+			else
+			{
+				name = settings.value("name").toString();
+				code = settings.value("code").toString();
+			}
+			
+			BibleDataPlaceholder *placeholder = new BibleDataPlaceholder(this, absFile, name, code, disabled);
+			m_localBibles[code] = placeholder;
+			
+			qDebug() << "LocalBibleMananger::scanBiblesFolder(): Bible "<<name<<" stored in "<<file;
 			
 			// Free data until actually accessed by the user
 			placeholder->releaseData();
+			
+			listChanged = true;
 		}
+		else
+		{
+			bool disabled = settings.value("disabled", false).toBool();
+			QString code  = settings.value("code").toString();
+			qDebug() << "LocalBibleMananger::scanBiblesFolder(): Updating code "<<code<<": Disabled: "<<disabled;
+			if(m_localBibles[code]->disabled() != disabled)
+			{
+				listChanged = true;
+				m_localBibles[code]->setDisabled(disabled);
+			}
+		}
+		
+		settings.endGroup(); // group: absFile
 	}
+	
+	settings.endGroup(); // group: "localbibles"
+	
+	if(listChanged)
+		emit bibleListChanged();
 }
 
-BibleData *LocalBibleManager::loadBible(QString fileName, bool showProgress)
+BibleData *LocalBibleManager::loadBible(QString fileName, bool showProgress, bool headerOnly)
 {
 	QFile file(fileName);
 	if (!file.open(QIODevice::ReadOnly)) 
@@ -123,6 +193,14 @@ BibleData *LocalBibleManager::loadBible(QString fileName, bool showProgress)
 	bibleData->file = fileName;
 	bibleData->name = map["name"].toString();
 	bibleData->code = map["code"].toString();
+	
+	if(headerOnly)
+	{
+		if(showProgress)
+			delete progress;
+			
+		return bibleData;
+	}
 	
 	// convert book info to a QHash
 	QVariantMap bookInfoMap = map["bookNames"].toMap();
@@ -194,25 +272,52 @@ void LocalBibleManager::justLoaded(BibleDataPlaceholder *placeholder)
 	}
 }
 
+void LocalBibleManager::getMoreBibles()
+{
+	BibleDownloadDialog dialog;
+	dialog.exec();
+	
+	if(dialog.listChanged())
+		scanBiblesFolder();
+}
+
 /// 
 
-BibleDataPlaceholder::BibleDataPlaceholder(BibleData *bible, LocalBibleManager *mgr)
+BibleDataPlaceholder::BibleDataPlaceholder(LocalBibleManager *mgr, BibleData *bible, bool flag)
 		: QObject()
 		, m_mgr(mgr)
 		, m_file(bible->file)
 		, m_name(bible->name)
 		, m_code(bible->code)
 		, m_data(bible)
+		, m_disabled(flag)
 {
-	connect(&m_expireTimer, SIGNAL(timeout()), this, SLOT(releaseData()));
-	// Release Bible data after 10 minutes
-	m_expireTimer.setInterval(60 * BIBLE_DATA_RELEASE_TIMER * 1000);
-	m_expireTimer.setSingleShot(true);
+	setupTimer();
+}
+
+BibleDataPlaceholder::BibleDataPlaceholder(LocalBibleManager *mgr, QString file, QString name, QString code, bool flag)
+		: QObject()
+		, m_mgr(mgr)
+		, m_file(file)
+		, m_name(name)
+		, m_code(code)
+		, m_data(0)
+		, m_disabled(flag)
+{
+	setupTimer();
 }
 
 BibleDataPlaceholder::~BibleDataPlaceholder()
 {
 	releaseData();
+}
+
+void BibleDataPlaceholder::setupTimer()
+{
+	connect(&m_expireTimer, SIGNAL(timeout()), this, SLOT(releaseData()));
+	// Release Bible data after 10 minutes
+	m_expireTimer.setInterval(60 * BIBLE_DATA_RELEASE_TIMER * 1000);
+	m_expireTimer.setSingleShot(true);
 }
 
 BibleData *BibleDataPlaceholder::data()
@@ -241,3 +346,281 @@ void BibleDataPlaceholder::releaseData()
 	m_expireTimer.stop();
 }
 
+///
+
+BibleDownloadDialog::BibleDownloadDialog()
+	: QDialog()
+	, m_file(0)
+	, m_progressDialog(0)
+	, m_reply(0)
+{
+	setWindowTitle("Bibles Available");
+	
+	setupUi();
+	m_progressDialog = new QProgressDialog(this);
+	
+	m_indexDownloadMode = true;
+	
+	m_downloadRequestAborted = false;
+	m_reply = m_manager.get(QNetworkRequest(QUrl(BIBLE_INDEX_DOWNLOAD_URL)));
+	connect(m_reply, SIGNAL(finished()),  this, SLOT(downloadFinished()));
+	connect(m_reply, SIGNAL(readyRead()), this, SLOT(downloadReadyRead()));
+	connect(m_reply, SIGNAL(downloadProgress(qint64,qint64)), this, SLOT(downloadProgress(qint64,qint64)));
+	connect(m_progressDialog, SIGNAL(canceled()), this, SLOT(cancelDownload()));
+ 
+	m_progressDialog->setWindowTitle("Downloading Data");
+	m_progressDialog->setLabelText(tr("Downloading list of available bibles..."));
+	m_progressDialog->exec();
+}
+
+void BibleDownloadDialog::downloadProgress(qint64 bytesReceived, qint64 bytesTotal)
+{
+	if(m_downloadRequestAborted)
+		return;
+	
+	m_progressDialog->setMaximum(bytesTotal);
+	m_progressDialog->setValue(bytesReceived);
+}
+
+void BibleDownloadDialog::downloadReadyRead()
+{
+	if(m_indexDownloadMode)
+		m_indexBuffer.append(m_reply->readAll());
+	else
+	if(m_file)
+		m_file->write(m_reply->readAll());
+}
+
+void BibleDownloadDialog::cancelDownload()
+{
+	m_downloadRequestAborted = true;
+	m_reply->abort();
+	
+	if(m_indexDownloadMode)
+	{
+		close();
+		deleteLater();
+	}
+		
+	m_listWidget->setEnabled(true);
+}
+
+void BibleDownloadDialog::downloadFinished()
+{
+	m_listWidget->setEnabled(true);
+	
+	if(m_downloadRequestAborted)
+	{
+		if(m_file)
+		{
+			m_file->close();
+			m_file->remove();
+			delete m_file;
+			m_file = NULL;
+		}
+		m_reply->deleteLater();
+		m_progressDialog->hide();
+		return;
+	}
+	
+	downloadReadyRead();
+	m_progressDialog->hide();
+	
+	if(m_file)
+	{
+		m_file->flush();
+		m_file->close();
+	}
+ 
+	if(m_reply->error())
+	{
+		//Download failed
+		QMessageBox::information(this, "Download failed", tr("Failed: %1").arg(m_reply->errorString()));
+	}
+	else
+	if(m_indexDownloadMode)
+	{
+		m_indexDownloadMode = false;
+		processBibleIndex();
+	}
+ 
+	m_reply->deleteLater();
+	m_reply = NULL;
+	
+	if(m_file)
+	{
+		delete m_file;
+		m_file = NULL;
+	}
+}
+
+void BibleDownloadDialog::processBibleIndex()
+{
+	QString indexBuffer = QString(m_indexBuffer);
+	QStringList lines = indexBuffer.split("\n");
+	
+	QSettings settings;
+	settings.beginGroup("localbibles");
+	
+	QString folder = "bibles";
+
+	foreach(QString entry, lines)
+	{
+		if(entry.isEmpty())
+			continue;
+			
+		// Parse the line by spltting on commas
+		QStringList fields = entry.split(",");
+		if(fields.size() < 3)
+		{
+			qDebug() << "BibleDownloadDialog::processBibleIndex(): Problem parsing line:"<<entry<<": Too few fields";
+			continue;
+		}
+		 
+		QString file = fields[0];
+		QString name = fields[1];
+		QString code = fields[2];
+		
+		// Add/update the values in QSettings for this entry
+		QString absFile = tr("%1/%2").arg(folder).arg(file);
+		settings.beginGroup(absFile);
+		
+		settings.setValue("indexed", true);
+		settings.setValue("name",    name);
+		settings.setValue("code",    code);
+		settings.setValue("url",     tr("%1/%2").arg(BIBLE_DOWNLOAD_URL_BASE).arg(file));
+		
+		bool exists   = QFileInfo(absFile).exists();
+		bool disabled = settings.value("disabled", exists ? false : true).toBool();
+		
+		settings.endGroup();
+		
+		qDebug() << "BibleDownloadDialog::processBibleIndex(): Indexed: "<<absFile<<": "<<name;
+		
+		// Add the item to the QListWidget
+		QListWidgetItem *item = new QListWidgetItem(name);
+		item->setCheckState(disabled ? Qt::Unchecked : Qt::Checked);
+		item->setData(Qt::UserRole, absFile); 
+		
+		m_listWidget->addItem(item);
+	}
+}
+
+void BibleDownloadDialog::listItemChanged(QListWidgetItem * item)
+{
+	// extract value for enabled/disabled
+	bool checked = item->checkState() == Qt::Checked;
+	
+	// Load bible settings
+	QSettings settings;
+	settings.beginGroup("localbibles");
+	
+	// Grab the filename for this list item and start that settings group
+	QString absFile = item->data(Qt::UserRole).toString();
+	settings.beginGroup(absFile);
+	
+	// Check to see if the file exists and if its disabled currently
+	bool exists = QFileInfo(absFile).exists();
+		
+	// m_listChanged is used by LocalBibleManager to know if it should rescan the Bibles folder and/or emit a signal
+	m_listChanged = true;
+	
+	bool disabled = !checked;
+	settings.setValue("disabled", disabled);
+	
+	//qDebug() << "BibleDownloadDialog::listItemChanged(): "<<absFile<<": disabled:"<<disabled<<", exists:"<<exists<<", delete:"<<m_deleteDisabledFiles;
+	
+	if(checked && exists)
+	{
+		//qDebug() << "BibleDownloadDialog::listItemChanged(): "<<absFile<<": checked && exists, nothing to do here";
+		// nothing to do here, just update settings (above)
+		return;
+	}
+	
+	if(checked && !exists)
+	{
+		//qDebug() << "BibleDownloadDialog::listItemChanged(): "<<absFile<<": checked && !exists, downloading";
+		startDownload(settings.value("url").toString());
+		return;
+	}
+	
+	if(!checked && exists && m_deleteDisabledFiles)
+	{
+		//qDebug() << "BibleDownloadDialog::listItemChanged(): "<<absFile<<": !checked && exists && delete: Removing "<<absFile;	
+		QFile::remove(absFile);
+		return;
+	}
+}
+
+void BibleDownloadDialog::startDownload(QString urlString)
+{
+	QUrl url(urlString);
+	QString shortFilename = QFileInfo(url.path()).fileName();
+	QString filename = tr("bibles/%2").arg(shortFilename);
+	
+	qDebug() << "BibleDownloadDialog::startDownload(): "<<urlString;
+ 
+	if(QFile::exists(filename))
+	{
+		if(QMessageBox::question(this, tr("Downloader"),
+			tr("There already exists a file called %1 in "
+				"the 'bibles' directory. Overwrite?").arg(filename),
+				QMessageBox::Yes|QMessageBox::No, QMessageBox::No)
+				== QMessageBox::No)
+				return;
+		QFile::remove(filename);
+	}
+ 
+	m_file = new QFile(filename);
+	if(!m_file->open(QIODevice::WriteOnly))
+	{
+		QMessageBox::information(this, "Downloader", 
+			tr("Unable to save the file %1: %2.")
+			.arg(filename).arg(m_file->errorString()));
+		delete m_file;
+		m_file = NULL;
+		return;
+	}
+ 
+	m_downloadRequestAborted = false;
+	m_reply = m_manager.get(QNetworkRequest(url));
+	connect(m_reply, SIGNAL(finished()),  this, SLOT(downloadFinished()));
+	connect(m_reply, SIGNAL(readyRead()), this, SLOT(downloadReadyRead()));
+	connect(m_reply, SIGNAL(downloadProgress(qint64,qint64)), this, SLOT(downloadProgress(qint64,qint64)));
+	connect(m_progressDialog, SIGNAL(canceled()), this, SLOT(cancelDownload()));
+ 
+	m_progressDialog->setLabelText(tr("Downloading %1...").arg(shortFilename));
+	m_listWidget->setEnabled(false);
+	m_progressDialog->exec();
+}
+
+void BibleDownloadDialog::deleteWhenDisabledChanged(bool flag)
+{
+	m_deleteDisabledFiles = flag;
+	
+	QSettings settings;
+	settings.beginGroup("localbibles");
+	
+	settings.setValue("deleteDisabledFiles", flag);
+}
+
+void BibleDownloadDialog::setupUi()
+{
+	QVBoxLayout *vbox = new QVBoxLayout(this);
+	
+	vbox->addWidget(new QLabel("Select Bibles from the list below and\nthey will be downloaded automatically."));
+	
+	m_listWidget = new QListWidget();
+	connect(m_listWidget, SIGNAL(itemChanged(QListWidgetItem *)), this, SLOT(listItemChanged(QListWidgetItem *)));
+	vbox->addWidget(m_listWidget);
+	
+	QSettings settings;
+	settings.beginGroup("localbibles");
+	
+	m_deleteDisabledFiles = settings.value("deleteDisabledFiles", false).toBool();
+	
+	QCheckBox *cb = new QCheckBox("Delete Bibles from disk when disabled\n(Will be downloaded again as needed.)");
+	cb->setChecked(m_deleteDisabledFiles);
+	connect(cb, SIGNAL(toggled(bool)), this, SLOT(deleteWhenDisabledChanged(bool)));
+	vbox->addWidget(cb);
+}

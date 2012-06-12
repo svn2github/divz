@@ -102,7 +102,7 @@ public slots:
 	void nextChapter();
 	
 	void addVersesToGroup(const QString& verses, SlideGroup *destination=0);
-
+	
 protected slots:
 	void searchReturnPressed();
 	void searchTextChanged(const QString&);
@@ -113,6 +113,8 @@ protected slots:
 	void templateChanged(SlideGroup*);
 	
 	void showConfigMenu();
+	
+	void setupVersionCombo();
 	
 protected:
 	SlideGroup * createSlideGroup(SlideGroup *templateGroup, bool allowAppend=false);
@@ -127,7 +129,6 @@ protected:
 	void setupOptionalLabels(Slide *currentSlide, int slideNumber);
 	
 	void setupUI();
-	void setupVersionCombo();
 	
 	
 	QWidget	      * m_searchBase;
