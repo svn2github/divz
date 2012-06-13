@@ -182,11 +182,13 @@ SongEditorWindow::SongEditorWindow(SlideGroup *g, QWidget *parent) :
 	
 	m_tmplEditButton = new QPushButton("Edit &Template...");
 	m_tmplEditButton->setIcon(QIcon(":data/stock-select-color.png"));
+	m_tmplEditButton->setToolTip("Edit the template associated with this song arrangement");
 	connect(m_tmplEditButton, SIGNAL(clicked()), this, SLOT(editSongTemplate()));
 	hboxBottom->addWidget(m_tmplEditButton);
 	
 	QPushButton *tmplResetButton = new QPushButton("");
 	tmplResetButton->setIcon(QIcon(":data/stock-undo.png"));
+	tmplResetButton->setToolTip("Reset template on this song to use the current template set in the main Song Browser");
 	connect(tmplResetButton, SIGNAL(clicked()), this, SLOT(resetSongTemplate()));
 	hboxBottom->addWidget(tmplResetButton);
 	
