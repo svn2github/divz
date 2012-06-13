@@ -110,7 +110,10 @@ void SongSlideGroup::aspectRatioChanged(double newAr)
 
 SlideGroup * SongSlideGroup::createDefaultTemplates()
 {
+	qDebug() << "SongSlideGroup::createDefaultTemplates: Creating default templates for "<<this;
+	
 	SlideGroup *group = new SlideGroup();
+	group->setProperty("-auto-template", true);
 
 	Slide *slide = new Slide();
 

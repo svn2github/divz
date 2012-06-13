@@ -181,7 +181,12 @@ SlideGroup *SongBrowser::createSlideGroup(SongRecord *song)
 	// Only use the template from the our template widget 
 	// if there is *not* a template in the default arrangement in the database
 	if(!song->defaultArrangement()->templateGroup())
-		group->setSlideTemplates(m_template ? m_template->clone() : 0);
+	{
+		SlideGroup *tmpl = m_template ? m_template->clone() : 0;
+		if(tmpl)
+			tmpl->setProperty("-auto-template", true);
+		group->setSlideTemplates(tmpl);
+	}
 	
 	return group;
 }
@@ -295,8 +300,8 @@ void SongBrowser::editSongInDB()
 		SongSlideGroup * group = new SongSlideGroup();
 		group->setSong(song);
 		
-		if(!song->defaultArrangement()->templateGroup())
-			group->setSlideTemplates(m_template ? m_template->clone() : 0);
+		//if(!song->defaultArrangement()->templateGroup())
+		//	group->setSlideTemplates(m_template ? m_template->clone() : 0);
 	
 		SongEditorWindow * editor = new SongEditorWindow();
 		editor->setSlideGroup(group);

@@ -28,6 +28,7 @@ public slots:
 	//void rejected();
 	
 	void editSongTemplate();
+	void resetSongTemplate();
 	
 	void setSyncToDatabase(bool);
 	

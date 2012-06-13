@@ -10,7 +10,7 @@
 
 #include "SlideEditorWindow.h"
 #include "SongSlideGroup.h"
-
+#include "SongBrowser.h"
 #include "ArrangementListModel.h"
 
 // Neede to access the openSlideEditor() function
@@ -185,6 +185,11 @@ SongEditorWindow::SongEditorWindow(SlideGroup *g, QWidget *parent) :
 	connect(m_tmplEditButton, SIGNAL(clicked()), this, SLOT(editSongTemplate()));
 	hboxBottom->addWidget(m_tmplEditButton);
 	
+	QPushButton *tmplResetButton = new QPushButton("");
+	tmplResetButton->setIcon(QIcon(":data/stock-undo.png"));
+	connect(tmplResetButton, SIGNAL(clicked()), this, SLOT(resetSongTemplate()));
+	hboxBottom->addWidget(tmplResetButton);
+	
 	hboxBottom->addStretch();
 	
 	m_syncBox = new QCheckBox("S&ync Changes to DB");
@@ -265,6 +270,41 @@ void SongEditorWindow::showSyncOption(bool flag)
 	m_syncBox->setVisible(flag);
 }
 
+void SongEditorWindow::resetSongTemplate()
+{
+	if(!m_slideGroup)
+		return;
+	
+	SongSlideGroup * songGroup = dynamic_cast<SongSlideGroup*>(m_slideGroup);
+	if(!songGroup)
+		return;
+	
+
+	// Get current template from SongBrowser
+	SlideGroup *tmpl = MainWindow::mw()->songBrowser()->currentTemplate();
+	if(tmpl)
+		// We just want to keep a copy of the current tmpl in the song browser, not the real pointer
+		tmpl = tmpl->clone();
+	else
+		// If no current template, use default template styles
+		tmpl = songGroup->createDefaultTemplates();
+		
+	// Flag this as an 'auto template' (not user defined)
+	tmpl->setProperty("-auto-template", true);
+	
+	// If editor present, update the group in the template editor
+	if(m_editWin)
+		m_editWin->setSlideGroup(tmpl);
+	
+	// If old template on the song slidegroup, then delete it (later in event loop)
+	SlideGroup * oldTmpl = songGroup->slideTemplates();
+	if(oldTmpl)
+		oldTmpl->deleteLater();	
+	
+	// Finally, assign the new template to the song group
+	songGroup->setSlideTemplates(tmpl);
+}
+
 void SongEditorWindow::editSongTemplate()
 {
 	if(!m_slideGroup)
@@ -300,7 +340,16 @@ void SongEditorWindow::editorWindowClosed()
 	if(!songGroup)
 		return;
 
-	songGroup->setSlideTemplates(songGroup->slideTemplates());
+	SlideGroup *group = songGroup->slideTemplates();
+	if(m_editWin)
+	{
+		SlideEditorWindow *win = dynamic_cast<SlideEditorWindow*>(m_editWin);
+		if(!win || win->groupChangeCount() > 0)
+		{
+			group->setProperty("-auto-template", false);
+			songGroup->setSlideTemplates(group);
+		}
+	}
 	
 // 	m_editWin->deleteLater();
 // 	m_editWin = 0;
@@ -437,12 +486,12 @@ void SongEditorWindow::accepted()
 				arr->setArrangement(newArrList);
 				
 				SlideGroup * tmpl = songGroup->slideTemplates();
-				if(!tmpl)
-					tmpl = songGroup->createDefaultTemplates();
-				
-				arr->setTemplateGroup(tmpl);
-				
-				
+				//if(!tmpl)
+				//	tmpl = songGroup->createDefaultTemplates();
+				if(tmpl && !tmpl->property("-auto-template").toBool())
+					arr->setTemplateGroup(tmpl);
+				else
+					arr->setTemplateGroup(0);
 				
 				if(!songGroup->song()->songId())
 				{

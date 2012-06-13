@@ -58,6 +58,9 @@ public:
 	
 	int iconSize() { return m_iconSize; }
 	
+	int curSlideChangeCount() { return m_curSlideChangeCount; }
+	int groupChangeCount()    { return m_groupChangeCount; }
+	
 public slots:
 	void setSlideGroup(SlideGroup*g,Slide *curSlide=0);
 	void setCurrentSlide(Slide *slide);
@@ -221,6 +224,7 @@ private:
 	bool m_lockIconSizeSetter;
 	
 	int m_curSlideChangeCount;
+	int m_groupChangeCount;
 
 };
 

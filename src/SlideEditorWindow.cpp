@@ -259,7 +259,8 @@ SlideEditorWindow::SlideEditorWindow(SlideGroup *group, QWidget * parent)
     m_iconSize(192),
     m_iconSizeSlider(0),
     m_lockIconSizeSetter(false),
-    m_curSlideChangeCount(0)
+    m_curSlideChangeCount(0),
+    m_groupChangeCount(0)
 {
 
 	m_scene = new MyGraphicsScene(MyGraphicsScene::Editor,this);
@@ -1521,7 +1522,8 @@ void SlideEditorWindow::setSlideGroup(SlideGroup *group, Slide *curSlide)
 		delete m_masterSlideEditor;
 		m_masterSlideEditor = 0;
 	}
-
+	
+	m_groupChangeCount = 0;
 
 	m_slideGroup = group;
 	m_slideModel->setSlideGroup(group);
@@ -2072,6 +2074,7 @@ void SlideEditorWindow::slideChanged(Slide *slide, QString slideOperation, Abstr
 		{
 			m_undoStack->push(new UndoSlideRemoved(this,slide));
 			m_curSlideChangeCount ++;
+			m_groupChangeCount ++;
 		}
 	}
 	else
@@ -2091,6 +2094,7 @@ void SlideEditorWindow::slideChanged(Slide *slide, QString slideOperation, Abstr
 		{
 			m_undoStack->push(new UndoSlideAdded(this,slide));
 			m_curSlideChangeCount ++;
+			m_groupChangeCount ++;
 		}
 	}
 	else
@@ -2112,6 +2116,7 @@ void SlideEditorWindow::slideItemChanged(AbstractItem *item, QString operation, 
 		{
 			m_undoStack->push(new UndoSlideItemAdded(this,m_scene->slide(),item));
 			m_curSlideChangeCount ++;
+			m_groupChangeCount ++;
 		}
 	}
 	else
@@ -2121,6 +2126,7 @@ void SlideEditorWindow::slideItemChanged(AbstractItem *item, QString operation, 
 		{
 			m_undoStack->push(new UndoSlideItemRemoved(this,m_scene->slide(),item));
 			m_curSlideChangeCount ++;
+			m_groupChangeCount ++;
 		}
 	}
 	else
@@ -2135,6 +2141,7 @@ void SlideEditorWindow::slideItemChanged(AbstractItem *item, QString operation, 
 					QUndoCommand * changeCmd = new UndoSlideItemChanged(this,item,fieldName,value,oldValue);
 					m_undoStack->push(changeCmd);
 					m_curSlideChangeCount ++;
+					m_groupChangeCount ++;
 
 					//qDebug() << "SlideEditorWindow::slideItemChanged: New Cmd for "<<item->itemName()<<", field:"<<fieldName<<", oldValue:"<<oldValue<<", newValue:"<<value;
 				}
