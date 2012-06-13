@@ -353,24 +353,36 @@ BibleDownloadDialog::BibleDownloadDialog()
 	, m_file(0)
 	, m_progressDialog(0)
 	, m_reply(0)
+	, m_downloadRequestAborted(false)
+	, m_indexDownloadMode(false)
 {
 	setWindowTitle("Bibles Available");
 	
 	setupUi();
 	m_progressDialog = new QProgressDialog(this);
-	
+
+	QTimer::singleShot(0, this, SLOT(startDownloadingIndex()));
+}
+
+void BibleDownloadDialog::startDownloadingIndex()
+{
+	QUrl url(BIBLE_INDEX_DOWNLOAD_URL);
+
+	m_file = NULL;
 	m_indexDownloadMode = true;
-	
+
 	m_downloadRequestAborted = false;
-	m_reply = m_manager.get(QNetworkRequest(QUrl(BIBLE_INDEX_DOWNLOAD_URL)));
+	m_reply = m_manager.get(QNetworkRequest(url));
 	connect(m_reply, SIGNAL(finished()),  this, SLOT(downloadFinished()));
 	connect(m_reply, SIGNAL(readyRead()), this, SLOT(downloadReadyRead()));
 	connect(m_reply, SIGNAL(downloadProgress(qint64,qint64)), this, SLOT(downloadProgress(qint64,qint64)));
 	connect(m_progressDialog, SIGNAL(canceled()), this, SLOT(cancelDownload()));
- 
-	m_progressDialog->setWindowTitle("Downloading Data");
+
+	m_listWidget->setEnabled(false);
+
+	m_progressDialog->setWindowTitle("Downloading Bible List");
 	m_progressDialog->setLabelText(tr("Downloading list of available bibles..."));
-	m_progressDialog->exec();
+	m_progressDialog->show();
 }
 
 void BibleDownloadDialog::downloadProgress(qint64 bytesReceived, qint64 bytesTotal)
@@ -384,6 +396,9 @@ void BibleDownloadDialog::downloadProgress(qint64 bytesReceived, qint64 bytesTot
 
 void BibleDownloadDialog::downloadReadyRead()
 {
+	if(!m_reply || !m_reply->bytesAvailable())
+	    return;
+
 	if(m_indexDownloadMode)
 		m_indexBuffer.append(m_reply->readAll());
 	else
@@ -393,13 +408,14 @@ void BibleDownloadDialog::downloadReadyRead()
 
 void BibleDownloadDialog::cancelDownload()
 {
+	qDebug() << "BibleDownloadDialog::cancelDownload()";
 	m_downloadRequestAborted = true;
 	m_reply->abort();
 	
 	if(m_indexDownloadMode)
 	{
-		close();
-		deleteLater();
+		reject();
+		//deleteLater();
 	}
 		
 	m_listWidget->setEnabled(true);
@@ -407,62 +423,106 @@ void BibleDownloadDialog::cancelDownload()
 
 void BibleDownloadDialog::downloadFinished()
 {
-	m_listWidget->setEnabled(true);
-	
-	if(m_downloadRequestAborted)
-	{
-		if(m_file)
-		{
-			m_file->close();
-			m_file->remove();
-			delete m_file;
-			m_file = NULL;
-		}
-		m_reply->deleteLater();
-		m_progressDialog->hide();
-		return;
-	}
-	
-	downloadReadyRead();
+	//qDebug() << "BibleDownloadDialog::downloadFinished(): Signal for: "<<m_reply->url().toString()<<", processing...";
 	m_progressDialog->hide();
-	
+
+	// Make sure we've read all the data from the socket
+	downloadReadyRead();
+
 	if(m_file)
 	{
 		m_file->flush();
 		m_file->close();
 	}
- 
-	if(m_reply->error())
+
+	m_listWidget->setEnabled(true);
+
+	if(m_downloadRequestAborted)
+	{
+		if(m_file)
+		{
+			m_file->remove();
+			delete m_file;
+			m_file = NULL;
+		}
+		m_reply->deleteLater();
+		return;
+	}
+
+	if(m_reply->error() && m_reply->errorString() != "Connection closed")
 	{
 		//Download failed
-		QMessageBox::information(this, "Download failed", tr("Failed: %1").arg(m_reply->errorString()));
+
+		qDebug() << "BibleDownloadDialog::downloadFinished(): Error downloading "<<m_reply->url().toString()<<": "<<m_reply->errorString();
+		if(m_indexDownloadMode)
+		{
+			qDebug() << "BibleDownloadDialog::downloadFinished(): m_indexDownloadMode, closing dialog";
+			reject();
+		}
+
+		QMessageBox::information(this, "Download failed", tr("Error getting %2:\n%1").arg(m_reply->errorString()).arg(m_reply->url().toString()));
 	}
 	else
 	if(m_indexDownloadMode)
 	{
 		m_indexDownloadMode = false;
 		processBibleIndex();
+
+		m_indexBuffer.clear();
 	}
- 
-	m_reply->deleteLater();
-	m_reply = NULL;
-	
+
+
+	#ifndef Q_WS_WIN
+	/// NOTE - YES, this DOES leak memory if not enabled - but
+	/// for some WIERD reason, this causes a crash on Windows - so disabling for now.
+	if(m_reply)
+	{
+		m_reply->deleteLater();
+		m_reply = NULL;
+	}
+	#endif
+
+
 	if(m_file)
 	{
 		delete m_file;
 		m_file = NULL;
 	}
+
+
+	qDebug() << "BibleDownloadDialog::downloadFinished(): Done downloading: "<<m_reply->url().toString();
+}
+
+
+bool BibleDownloadDialog_compare_titles(BibleIndexData a, BibleIndexData b)
+{
+	return a.name < b.name;
 }
 
 void BibleDownloadDialog::processBibleIndex()
 {
+	/*
+	QString indexBuffer = "afrikaans.dzb,Afrikaans Bible,AFRIKAANS\n"
+				"albanian.dzb,Albanian Bible,ALBANIAN\n"
+				"croatian.dzb,Croatian Bible,CROATIAN\n"
+				"czech.dzb,Czech  Bible,CZECH\n"
+				"czechcep.dzb,Czech Cep Bible,CZECHCEP\n"
+				"czechekumenicka.dzb,Czech Ekumenicka Bible,CZECHEKUMENICKA\n"
+				"danish.dzb,Danish Bible,DANISH\n"
+				"dari.dzb,Dari Bible,DARI\n"
+				"dutch.dzb,Dutch Bible,DUTCH\n";
+	*/
 	QString indexBuffer = QString(m_indexBuffer);
+
 	QStringList lines = indexBuffer.split("\n");
 	
 	QSettings settings;
 	settings.beginGroup("localbibles");
 	
 	QString folder = "bibles";
+
+	// We'll add data to this list below
+	m_indexList.clear();
 
 	foreach(QString entry, lines)
 	{
@@ -495,16 +555,50 @@ void BibleDownloadDialog::processBibleIndex()
 		
 		settings.endGroup();
 		
-		qDebug() << "BibleDownloadDialog::processBibleIndex(): Indexed: "<<absFile<<": "<<name;
+		//qDebug() << "BibleDownloadDialog::processBibleIndex(): Indexed: "<<absFile<<": "<<name;
 		
+		/*
 		// Add the item to the QListWidget
 		QListWidgetItem *item = new QListWidgetItem(name);
 		item->setCheckState(disabled ? Qt::Unchecked : Qt::Checked);
 		item->setData(Qt::UserRole, absFile); 
 		
 		m_listWidget->addItem(item);
+		*/
+
+		BibleIndexData indexItem;
+		indexItem.name = name;
+		indexItem.disabled = disabled;
+		indexItem.absFile = absFile;
+		m_indexList << indexItem;
+	}
+
+	qSort(m_indexList.begin(), m_indexList.end(), BibleDownloadDialog_compare_titles);
+
+	populateList();
+}
+
+void BibleDownloadDialog::populateList(QString filter)
+{
+	// Make lowercase for case-insensitive matching
+	filter = filter.toLower();
+
+	m_listWidget->clear();
+	foreach(BibleIndexData indexItem, m_indexList)
+	{
+		if(!filter.isEmpty() &&
+		   !indexItem.name.toLower().contains(filter))
+		   continue;
+
+		// Add the item to the QListWidget
+		QListWidgetItem *item = new QListWidgetItem(indexItem.name);
+		item->setCheckState(indexItem.disabled ? Qt::Unchecked : Qt::Checked);
+		item->setData(Qt::UserRole, indexItem.absFile);
+
+		m_listWidget->addItem(item);
 	}
 }
+
 
 void BibleDownloadDialog::listItemChanged(QListWidgetItem * item)
 {
@@ -546,7 +640,7 @@ void BibleDownloadDialog::listItemChanged(QListWidgetItem * item)
 	
 	if(!checked && exists && m_deleteDisabledFiles)
 	{
-		//qDebug() << "BibleDownloadDialog::listItemChanged(): "<<absFile<<": !checked && exists && delete: Removing "<<absFile;	
+		//qDebug() << "BibleDownloadDialog::listItemChanged(): "<<absFile<<": !checked && exists && delete: Removing "<<absFile;
 		QFile::remove(absFile);
 		return;
 	}
@@ -589,9 +683,10 @@ void BibleDownloadDialog::startDownload(QString urlString)
 	connect(m_reply, SIGNAL(downloadProgress(qint64,qint64)), this, SLOT(downloadProgress(qint64,qint64)));
 	connect(m_progressDialog, SIGNAL(canceled()), this, SLOT(cancelDownload()));
  
+	m_progressDialog->setWindowTitle(tr("Downloading %1").arg(shortFilename));
 	m_progressDialog->setLabelText(tr("Downloading %1...").arg(shortFilename));
 	m_listWidget->setEnabled(false);
-	m_progressDialog->exec();
+	m_progressDialog->show();
 }
 
 void BibleDownloadDialog::deleteWhenDisabledChanged(bool flag)
@@ -609,6 +704,15 @@ void BibleDownloadDialog::setupUi()
 	QVBoxLayout *vbox = new QVBoxLayout(this);
 	
 	vbox->addWidget(new QLabel("Select Bibles from the list below and\nthey will be downloaded automatically."));
+
+	QHBoxLayout *hbox = new QHBoxLayout();
+	hbox->addWidget(new QLabel("Search: "));
+
+	QLineEdit *searchBox = new QLineEdit();
+	hbox->addWidget(searchBox);
+	connect(searchBox, SIGNAL(textChanged(QString)), this, SLOT(populateList(QString)));
+
+	vbox->addLayout(hbox);
 	
 	m_listWidget = new QListWidget();
 	connect(m_listWidget, SIGNAL(itemChanged(QListWidgetItem *)), this, SLOT(listItemChanged(QListWidgetItem *)));

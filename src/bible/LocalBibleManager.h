@@ -97,6 +97,14 @@ public:
 	virtual ~LocalBibleManager(){};
 };
 
+class BibleIndexData
+{
+public:
+	QString name;
+	QString absFile;
+	bool disabled;
+};
+
 class BibleDownloadDialog : public QDialog
 {
 	Q_OBJECT
@@ -116,11 +124,15 @@ protected slots:
 	
 	void deleteWhenDisabledChanged(bool flag);
 
+	void startDownloadingIndex();
+
+	void populateList(QString filter="");
+
 protected:
 	void setupUi();
 	void processBibleIndex();
 	void startDownload(QString);
-	
+
 	QNetworkAccessManager m_manager;
 	QFile *m_file;
 	QProgressDialog *m_progressDialog;
@@ -135,7 +147,8 @@ protected:
 	bool m_deleteDisabledFiles;
 	
 	bool m_listChanged;
-	
+
+	QList<BibleIndexData> m_indexList;
 };
 
 #endif
