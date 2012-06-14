@@ -207,12 +207,12 @@ include(webgroup/webgroup.pri)
 #	include(miditcp/miditcp.pri)
 #}
 #else: {
-win32: {
+#win32: {
         include(../../miditcp/client/miditcp.pri)
-}
-else: {
-	include(/opt/miditcp/client/miditcp.pri)
-}
+#}
+#else: {
+#	include(/opt/miditcp/client/miditcp.pri)
+#}
 #}
 
 

@@ -3,7 +3,9 @@
 
 #include "AbstractContent.h"
 //#include "qvideo/QVideoBuffer.h"
+#ifndef NO_LIBAV
 #include "qvideo/QVideo.h"
+#endif
 #include "qvideo/QVideoProvider.h"
 #include "ButtonItem.h"
 

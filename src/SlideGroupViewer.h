@@ -9,7 +9,9 @@
 #include <QCloseEvent>
 #include <QFileInfo>
 #include <QCache>
+#ifndef NO_OPENGL
 #include <QGLWidget>
+#endif
 #include <QPointer>
 
 #include "MyGraphicsScene.h"

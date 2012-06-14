@@ -2,6 +2,10 @@
 #include "MyGraphicsScene.h"
 #include "RenderOpts.h"
 
+#ifdef NO_OPENGL
+#define QT_NO_OPENGL 1
+#endif
+
 #include <QAction>
 #include <QApplication>
 #include <QDir>
@@ -74,8 +78,10 @@
 #include "items/TextContent.h"
 #include "items/TextBoxConfig.h"
 #include "items/TextBoxContent.h"
+#ifndef NO_LIBAV
 #include "items/VideoFileContent.h"
 #include "items/VideoFileConfig.h"
+#endif
 #include "items/BackgroundContent.h"
 #include "items/BackgroundConfig.h"
 #include "items/BoxConfig.h"
@@ -1166,6 +1172,7 @@ void SlideEditorWindow::updatePropDock(AbstractContent *content)
 
 void SlideEditorWindow::appSettingsChanged()
 {
+	#ifndef NO_OPENGL
 	if(AppSettings::useOpenGL() && !m_usingGL)
 	{
 		m_usingGL = true;
@@ -1175,10 +1182,13 @@ void SlideEditorWindow::appSettingsChanged()
 	else
 	if(!AppSettings::useOpenGL() && m_usingGL)
 	{
+	#endif
 		m_usingGL = false;
 		m_view->setViewport(new QWidget());
 		//qDebug("SlideEditorWindow::appSettingsChanged(): Loaded Non-GL Viewport");
+	#ifndef NO_OPENGL
 	}
+	#endif
 
 	setupViewportLines();
 }
