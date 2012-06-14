@@ -47,7 +47,7 @@ sub normalize_text
 		$text =~ s/\n<br>\n([^\s]+)/"\n\n".($1 ne "Refrain" ? ($counter++).".$1" : $1)/segi;
 		# HTML to text
 		$text =~ s/<[^\>]+>//g;
-		#print "$format_hint:\n$text\n";
+		#print STDERR "$format_hint:\n$text\n";
 		# Tell the hymnsite formatter to use 'Tag X' instead of 'Verse X'
 		return normalize_text($text, 'hymnsite', 'Tag');
 	}
@@ -171,8 +171,10 @@ sub normalize_text
 	}
 	elsif($format_hint eq 'hymnsite' || $text =~ /\d\.\s{2,}.*?\n?\s{3,}\w/) # Hymnsite format text
 	{
+		#print STDERR "$format_hint:\n".join("\n",@lines)."\n";
+		
 		my $blines = [];
-		my $btitle = undef;
+		my $btitle = "Verse 1";
 		my $refrain_text = undef;
 		foreach my $line (@lines)
 		{
@@ -181,7 +183,7 @@ sub normalize_text
 			{
 				# If we already have a block header in temp var, then 
 				# store the block on the list
-				if($btitle)
+				if($btitle && @$blines)
 				{
 					push @blocks, "$btitle\n". join("\n", try_split(@$blines));
 					
@@ -328,7 +330,8 @@ our @LyricProviders =
 		process	=> sub 
 		{
 			my $html = shift;
-			my $url = shift;
+			my $url  = shift;
+			
 			my ($title) = $html =~ /<title>([^<]+)<\/title>/;
 			my ($text)  = $html =~ /<div id='songlyrics_h' class='dn'>((?:.|\n)+?)<\/div>/;
 			

@@ -471,6 +471,7 @@ void BibleDownloadDialog::downloadFinished()
 		m_indexBuffer.clear();
 	}
 
+	qDebug() << "BibleDownloadDialog::downloadFinished(): Done downloading: "<<m_reply->url().toString();
 
 	#ifndef Q_WS_WIN
 	/// NOTE - YES, this DOES leak memory if not enabled - but
@@ -489,8 +490,6 @@ void BibleDownloadDialog::downloadFinished()
 		m_file = NULL;
 	}
 
-
-	qDebug() << "BibleDownloadDialog::downloadFinished(): Done downloading: "<<m_reply->url().toString();
 }
 
 

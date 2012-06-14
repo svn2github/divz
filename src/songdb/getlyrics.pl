@@ -33,7 +33,7 @@ sub main
 			
 			print LOG "Got results: ".Dumper($results);
 			
-			print STDERR "Got results: ".Dumper($results);
+			#print STDERR "Got results: ".Dumper($results);
 			print LOG "JSON: $json\n";
 			
 			print $json, "\n";
