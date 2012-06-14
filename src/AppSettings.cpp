@@ -227,7 +227,7 @@ void AppSettings::initApp(const QString& appName)
 	SlideGroupFactory::registerFactoryForType(VideoSlideGroup::GroupType,		new VideoSlideGroupFactory());
 	SlideGroupFactory::registerFactoryForType(WebSlideGroup::GroupType,		new WebSlideGroupFactory());
 	SlideGroupFactory::registerFactoryForType(CameraSlideGroup::GroupType,		new CameraSlideGroupFactory());
-	
+
 	RenderOpts::OxygenStyleQuirks = qApp->style()->objectName() == QLatin1String("oxygen");
 
 	QSettings s;

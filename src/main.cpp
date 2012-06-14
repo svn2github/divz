@@ -31,7 +31,7 @@ int main(int argc, char **argv)
 
  	#if defined(Q_OS_WIN)
         //	QApplication::setStyle(new QtDotNetStyle()); //QtDotNetStyle::Office));
- 	#endif
+	#endif
 
  	QApplication app(argc, argv);
 
@@ -69,7 +69,7 @@ int main(int argc, char **argv)
  		}
 */
 	//}
-	
+
 	if(AppSettings::registrationName().isEmpty() ||
 	   AppSettings::registrationOrgName().isEmpty())
 	{
@@ -79,27 +79,27 @@ int main(int argc, char **argv)
 		qDebug() << "main debug:"<<nameGuess<<orgGuess;
 		
 		#ifdef Q_OS_WIN
-                /*
-                QSettings settings;
-                settings.insertSearchPath( QSettings::Windows,"/Microsoft/Windows/CurrentVersion");
+		/*
+		QSettings settings;
+		settings.insertSearchPath( QSettings::Windows,"/Microsoft/Windows/CurrentVersion");
 		nameGuess = settings.readEntry( "/RegisteredOwner" );
 		orgGuess = settings.readEntry( "/RegisteredOrganization" );
-		
+
 		if(nameGuess.isEmpty())
 		{
 			LPTSTR lpszSystemInfo; // pointer to system information
 			DWORD cchBuff = 256; // size of user name
 			TCHAR tchBuffer[UNLEN + 1]; // buffer for expanded string
-			
+
 			lpszSystemInfo = tchBuffer;
-			
+
 			// Get and display the user name.
 			GetUserName(lpszSystemInfo, &cchBuff);
-			
+
 			//Unicode string needs to be converted
 			nameGuess = QString::fromUcs2(lpszSystemInfo);
 		}
-                */
+		*/
 		#endif
 		
 		#ifdef Q_OS_LINUX
@@ -121,7 +121,7 @@ int main(int argc, char **argv)
 	
 		AppSettings::save();
 	}
-	
+
 
 	MainWindow *mw = new MainWindow();
 	mw->show();

@@ -101,7 +101,7 @@ bool BibleConnector::findReference(const BibleVerseRef &ref)
 {
 	if(isCached(ref))
 		return true;
-	
+
 	BibleData *localBible = LocalBibleManager::inst()->bibleData(ref.book().version().code());
 	// Return true because the entire Bible text for this version is already
 	// present on disk, so we don't need to check further
@@ -181,7 +181,7 @@ BibleVerseList BibleConnector::loadReference(const BibleVerseRef& ref)
 			QString text = chapHash[verse];
 			
 			outputList << BibleVerse(bookChapter, verse, text);
-			//qDebug() << "BibleConnector::loadReference: [Single Verse] Loaded local bible text for reference "<<ref<<": "<<text; 
+			//qDebug() << "BibleConnector::loadReference: [Single Verse] Loaded local bible text for reference "<<ref<<": "<<text;
 		}
 		else
 		{

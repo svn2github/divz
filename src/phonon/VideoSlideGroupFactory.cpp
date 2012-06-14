@@ -26,22 +26,27 @@ VideoSlideGroupFactory::VideoSlideGroupFactory()
 	// enumerate outputs
 	// for each output id, create native viewer for that ID and cache
 	
-	// delay call till after app and mainwindow are initalized, 
+	// Note: In 'debug' mode on Windows 7, setting up the Phonon viewers
+	// on app startup causes the app to crash.
+	#ifdef QT_NO_DEBUG
+	// delay call till after app and mainwindow are initalized,
 	// since this constructor is called before the Qt event loop is even started.
 	QTimer::singleShot(50,this,SLOT(setupNativeViewers()));
+	#endif
 }
 
 void VideoSlideGroupFactory::setupNativeViewers()
 {
+	#ifdef QT_NO_DEBUG
 	QList<Output*> outputs = AppSettings::outputs();
 	
 	foreach(Output * out, outputs)
 	{
 		if(!m_nativeViewers.contains(out->id()))
 		{
+			qDebug() << "VideoSlideGroupFactory::setupNativeViewers(): Creating NativeViewerPhonon object for Output ID "<<out->id();
 			NativeViewer *viewer = new NativeViewerPhonon(true); // true = reusable, e.g. dont delete in the NativeViewer::dispose() call
 			m_nativeViewers[out->id()] = viewer;
-			qDebug() << "VideoSlideGroupFactory::setupNativeViewers(): Creating NativeViewerPhonon object for Output ID "<<out->id();
 		}
 	}
 	
@@ -51,6 +56,7 @@ void VideoSlideGroupFactory::setupNativeViewers()
 		m_mainWindowConnected = true;
 		connect(MainWindow::mw(), SIGNAL(appSettingsChanged()), this, SLOT(setupNativeViewers()));
 	}
+	#endif
 	
 }
 

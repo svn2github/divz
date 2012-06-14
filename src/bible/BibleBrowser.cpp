@@ -486,7 +486,7 @@ void BibleBrowser::referenceAvailable(const BibleVerseRef& reference, const Bibl
 		m_addBtn->setVisible(true);
 		m_liveBtn->setVisible(true);
 		m_refBase->setVisible(true);
-		
+
 		QStringList listText;
 		foreach(BibleVerse verse, list)
 		{
@@ -1082,7 +1082,7 @@ SlideGroup * BibleBrowser::createSlideGroup(SlideGroup *templateGroup, bool allo
 		
 		lines << prefix + verse.text();
 	}
-	
+
 	// If user did NOT request each verse on seperate slide, then combine the verses into a blob of text
 	// and break them up at sentance markers and other break points to fit more text on each slide.
 	// Of course, if the user wants a single verse per slide, than this is all irrelevant.
@@ -1248,7 +1248,7 @@ SlideGroup * BibleBrowser::createSlideGroup(SlideGroup *templateGroup, bool allo
 		
 		//realHeight = tmpText->fitToSize(fitSize,MinTextSize,MaxTextSize);
 		realHeight = tmpText->fitToSize(currentFitRect.size(), currentMinTextSize, MaxTextSize);
- 		//qDebug() << "x:"<<x<<", realHeight:"<<realHeight<<", currentFitRect:"<<currentFitRect;
+		//qDebug() << "x:"<<x<<", realHeight:"<<realHeight<<", currentFitRect:"<<currentFitRect;
 		
 		// If the 'realHeight' is <0, it means that it didnt fit on the slide.
 		// Therefore, we've found the max # of text frags that fit on this slide
@@ -1275,9 +1275,12 @@ SlideGroup * BibleBrowser::createSlideGroup(SlideGroup *templateGroup, bool allo
 			addSlideWithText(group, currentSlide, tmpText);
 			
 			//currentSlide = addSlide(group,tmpText,realHeight,currentFitRect,tmpList.join("\n"));
-			QString slideName = tr("%1v %2")
+			QString slideName =
+				showEachVerseOnSeperateSlide() ?
+				(tr("%1v %2")
 				.arg(appendToExistingGroup() ? tr("%1: ").arg(m_currentRef.toString()) : "")
-				.arg(verseList[x].verseNumber());
+				.arg(verseList[x].verseNumber())) :
+				"";
 			
 			qDebug() << "BibleBrowser::createSlideGroup(): [verse] index "<<x<<", slideName: "<<slideName;
 			
