@@ -567,7 +567,7 @@ void BibleDownloadDialog::processBibleIndex()
 
 		BibleIndexData indexItem;
 		indexItem.name = name;
-		indexItem.disabled = disabled;
+		indexItem.disabled = disabled || !exists;
 		indexItem.absFile = absFile;
 		m_indexList << indexItem;
 	}
