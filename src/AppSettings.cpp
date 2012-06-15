@@ -754,7 +754,7 @@ void AppSettings::sendCheckin(QString path, QString data)
         osInfo = "Windows";
 	#endif
 	
-	#if Q_OS_MAC
+	#ifdef Q_OS_MAC
 	osInfo = "Mac";
 	#endif
 	

@@ -10,7 +10,7 @@ NativeViewerWebKit::NativeViewerWebKit()
 	: NativeViewer()
 	, m_webGroup(0)
 {
-	m_widget = new GLFrameRenderWidget(QGLFormat(QGL::SampleBuffers));
+	m_widget = new GLFrameRenderWidget(/*QGLFormat(QGL::SampleBuffers)*/);
 	m_widget->setWindowFlags(Qt::WindowStaysOnTopHint | Qt::FramelessWindowHint | Qt::ToolTip);
 	m_widget->setCursor(Qt::BlankCursor);
 	m_widget->setParentViewer(this);
@@ -113,7 +113,7 @@ void NativeViewerWebKit::setState(NativeViewer::NativeShowState state)
 
 
 /// GLFrameRenderWidget
-GLFrameRenderWidget::GLFrameRenderWidget(const QGLFormat &format, QWidget *parent)
+GLFrameRenderWidget::GLFrameRenderWidget(/*const QGLFormat &format,*/ QWidget *parent)
 	: QWidget(parent)//format
 	, m_blackOpacity(0)
 	, m_fadeInc(0)

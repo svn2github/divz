@@ -31,13 +31,19 @@ unix {
 		VERSION = "$${VERSION}-r$${SVNREV}"
 	}
 	VERSTR = '\\"$${VERSION}\\"'  # place quotes around the version string
+}
 
+unix:!macx {
 	# On Centos 5.2 and up, it seems the FC version has an incompatible symbol with Qt. 
 	# Following the instructions at the following URL puts an updated FC version in
 	# /opt/fontconfig... - here we include the lib dir just incase. This should not affect
 	# anything on other Unix versions.
 	# http://theitdepartment.wordpress.com/2009/03/15/centos-qt-fcfreetypequeryface/
 	LIBS += -L/opt/fontconfig-2.4.2/lib/
+}
+
+macx {
+	LIBS += -lz -lexpat -liconv
 }
 
 DEFINES += VER=\"$${VERSTR}\" # create a VER macro containing the version string
@@ -154,7 +160,7 @@ QT += core \
 	xml \
 	script
 
-unix {
+unix:!macx {
 	LIBS += -lavdevice -lavformat -lavcodec -lavutil -lswscale -lbz2
 }
 
@@ -176,7 +182,7 @@ win32 {
 		-lswscale-0
 }
 
-unix | win32 {
+unix:!macx | win32 {
 #win32 {
 	# This should define DVIZ_HAS_CAMERA
 	include(camera/camera.pri)
@@ -185,7 +191,7 @@ unix | win32 {
 }
 else: {
 	# MacOS X (at least my emulator) can't build with opengl '
-	DEFINES += NO_OPENGL
+	DEFINES += NO_OPENGL QT_NO_OPENGL
 	# MacOS X (at least my emulator) doesn't have headers for libav (that I know of) '
 	DEFINES += NO_LIBAV
 }

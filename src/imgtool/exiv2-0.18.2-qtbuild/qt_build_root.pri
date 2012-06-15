@@ -225,3 +225,10 @@ unix {
 		EXV_HAVE_ICONV		# 'iconv' function
 		
 }
+
+macx {
+	DEFINES -= \
+		EXV_ENABLE_NLS
+}
+
+

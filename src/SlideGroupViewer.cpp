@@ -3,7 +3,9 @@
 #include "RenderOpts.h"
 
 #include <QVBoxLayout>
+#ifndef QT_NO_OPENGL
 # include <QtOpenGL/QGLWidget>
+#endif
 
 #ifdef DVIZ_HAS_QVIDEO
 #include "qvideo/QVideoProvider.h"
@@ -732,6 +734,7 @@ void SlideGroupViewer::forceGLDisabled(bool flag)
 
 void SlideGroupViewer::appSettingsChanged()
 {
+#ifndef QT_NO_OPENGL
 	if(!m_usingGL && !m_forceGLDisabled && AppSettings::useOpenGL())
 	{
 		m_usingGL = true;
@@ -741,10 +744,13 @@ void SlideGroupViewer::appSettingsChanged()
 	else
 	if(m_usingGL && (m_forceGLDisabled || !AppSettings::useOpenGL()))
 	{
+#endif
 		m_usingGL = false;
 		m_view->setViewport(new QWidget());
 		//qDebug("SlideGroupViewer::appSettingsChanged(): Loaded Non-GL Viewport");
+#ifndef QT_NO_OPENGL
 	}
+#endif
 	
 // 	QBrush brBrush;
 // 	QPalette p(brBrush,brBrush,brBrush,brBrush,brBrush,brBrush,brBrush,brBrush,brBrush);

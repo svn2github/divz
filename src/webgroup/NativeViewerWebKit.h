@@ -9,7 +9,9 @@ class WebSlideGroup;
 
 // TODO - do we need to code a non-OpenGL version for compat with non-GL systems?
 #include <QtGui>
+#ifndef QT_NO_OPENGL
 #include <QGLWidget>
+#endif
 class NativeViewerWebKit;
 
 // Based on the GLRenderWidgetImplementation in Qt's /src/3rdparty/phonon/gstreamer/glrenderer.h 
@@ -17,7 +19,7 @@ class GLFrameRenderWidget : public QWidget
 {
     	Q_OBJECT
 public:
-	 GLFrameRenderWidget(const QGLFormat &format, QWidget *parent=0);
+	 GLFrameRenderWidget(/*const QGLFormat &format,*/ QWidget *parent=0);
 	~GLFrameRenderWidget();
 	
 	// Parent viewer is just used to get the fade settings right now
