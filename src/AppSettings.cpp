@@ -32,8 +32,11 @@ Q_IMPORT_PLUGIN(qtiff)
 #include "webgroup/WebSlideGroup.h"
 #include "groupplayer/GroupPlayerSlideGroup.h"
 #include "groupplayer/GroupPlayerSlideGroupFactory.h"
+
+#ifdef DVIZ_HAS_CAMERA
 #include "camera/CameraSlideGroup.h"
 #include "camera/CameraSlideGroupFactory.h"
+#endif
 
 #include "itemlistfilters/SlideTextOnlyFilter.h"
 #include "itemlistfilters/SlideNonTextOnlyFilter.h"
@@ -226,7 +229,9 @@ void AppSettings::initApp(const QString& appName)
 	SlideGroupFactory::registerFactoryForType(GroupPlayerSlideGroup::GroupType,	new GroupPlayerSlideGroupFactory());
 	SlideGroupFactory::registerFactoryForType(VideoSlideGroup::GroupType,		new VideoSlideGroupFactory());
 	SlideGroupFactory::registerFactoryForType(WebSlideGroup::GroupType,		new WebSlideGroupFactory());
+	#ifdef DVIZ_HAS_CAMERA
 	SlideGroupFactory::registerFactoryForType(CameraSlideGroup::GroupType,		new CameraSlideGroupFactory());
+	#endif
 
 	RenderOpts::OxygenStyleQuirks = qApp->style()->objectName() == QLatin1String("oxygen");
 
@@ -682,8 +687,8 @@ void AppSettings::setTitlesafeAmount(double val)
 
 QRect AppSettings::adjustToTitlesafe(QRect rect)
 {
-	int xMargin = rect.width()  * AppSettings::titlesafeAmount();
-	int yMargin = rect.height() * AppSettings::titlesafeAmount();
+	int xMargin = (int)(rect.width()  * AppSettings::titlesafeAmount());
+	int yMargin = (int)(rect.height() * AppSettings::titlesafeAmount());
 	return rect.adjusted(xMargin,yMargin,-xMargin,-yMargin);
 }
 

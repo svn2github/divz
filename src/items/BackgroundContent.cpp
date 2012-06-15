@@ -25,8 +25,14 @@
 
 #include "SlideGroupViewer.h"
 
-#include "qvideo/QVideoProvider.h"
-#include "qvideo/QVideo.h"
+#ifdef DVIZ_HAS_QVIDEO
+	#include "qvideo/QVideoProvider.h"
+	#include "qvideo/QVideo.h"
+#else
+class QVideoProvider;
+class QVideo;
+#endif
+
 #include "3rdparty/md5/qtmd5.h"
 #include "MediaBrowser.h"
 #include "AppSettings.h"
@@ -43,7 +49,9 @@
 BackgroundContent::BackgroundContent(QGraphicsScene * scene, QGraphicsItem * parent)
     : AbstractContent(scene, parent, false)
     , m_still(false)
+#ifdef DVIZ_HAS_QVIDEO
     , m_videoProvider(0)
+#endif
     , m_sceneSignalConnected(false)
     , m_svgRenderer(0)
     , m_fileLoaded(false)
@@ -57,9 +65,10 @@ BackgroundContent::BackgroundContent(QGraphicsScene * scene, QGraphicsItem * par
     , m_controlBase(0)
     , m_slider(0)
     , m_lockSeekValueChanging(false)
-    , m_startVideoPausedInPreview(true)
+    , m_speedSlider(0)
     , m_playBtn(0)
     , m_pauseBtn(0)
+    , m_startVideoPausedInPreview(true)
     , m_videoPauseEventCompleted(false)
 #ifdef PHONON_ENABLED
     , m_proxy(0)
@@ -69,7 +78,6 @@ BackgroundContent::BackgroundContent(QGraphicsScene * scene, QGraphicsItem * par
     , m_isUserPlaying(false)
     , m_isUserPaused(false)
     , m_viewerWidget(0)
-    , m_speedSlider(0)
 {
 	m_dontSyncToModel = true;
 
@@ -117,13 +125,16 @@ BackgroundContent::~BackgroundContent()
 
 	m_inDestructor = true;
 
+#ifdef DVIZ_HAS_QVIDEO	
 	if(m_videoProvider)
 	{
- 		if(m_videoPlaying)
+ 		
+		if(m_videoPlaying)
  			m_videoProvider->pause();
 		m_videoProvider->disconnectReceiver(this);
 		QVideoProvider::releaseProvider(m_videoProvider);
 	}
+#endif
 
 	if(m_controlBase)
 	{
@@ -151,10 +162,15 @@ BackgroundContent::~BackgroundContent()
 // :: QVideoConsumer
 bool BackgroundContent::allowMediaStop(QVideoProvider* p)
 {
+#ifdef DVIZ_HAS_QVIDEO
 	if(!m_inDestructor &&
 	    isVisible()    &&
 	    p == m_videoProvider)
 		return false;
+#else
+	Q_UNUSED(p)
+#endif
+
 	return true;
 }
 
@@ -167,12 +183,14 @@ void BackgroundContent::dispose(bool anim)
 	{
 		m_videoPollTimer.stop();
 	}
-
+	
+	#ifdef DVIZ_HAS_QVIDEO
 	if(m_videoProvider && m_videoPlaying)
 	{
 		m_videoPlaying = false;
 		m_videoProvider->pause();
 	}
+	#endif
 
 //  	qDebug() << "BackgroundContent::dispose(): hit "<<this;
 
@@ -182,6 +200,7 @@ void BackgroundContent::dispose(bool anim)
 // ::QGraphicsItem
 void BackgroundContent::show()
 {
+	#ifdef DVIZ_HAS_QVIDEO
 	if(m_videoProvider && !m_videoPlaying) // && (sceneContextHint() != MyGraphicsScene::Preview || !m_startVideoPausedInPreview))
 	{
 		//qDebug() << "BackgroundContent::show: Playing video";
@@ -192,6 +211,7 @@ void BackgroundContent::show()
  	{
  		//qDebug() << "BackgroundContent::show: No provider, not playing video";
  	}
+ 	#endif
  	AbstractContent::show();
 
 }
@@ -252,7 +272,7 @@ void BackgroundContent::syncFromModelItem(AbstractVisualItem *model)
 
 		QSize size = contentsRect().size();
 
-		double width  = size.width();
+		//double width  = size.width();
 		double height = size.height();
 
 		double aspectRatio = m_pixmap.isNull() || m_pixmap.height() <=0 ? 0 : m_pixmap.width() / m_pixmap.height();
@@ -391,7 +411,7 @@ void BackgroundContent::animateZoom()
 void BackgroundContent::setImageFile(const QString &file)
 {
 
-
+	#ifdef DVIZ_HAS_QVIDEO
 	if(m_videoProvider)
 	{
 		// TODO We ASSUME were playing the video before we got the image
@@ -406,6 +426,7 @@ void BackgroundContent::setImageFile(const QString &file)
 		QVideoProvider::releaseProvider(m_videoProvider);
 		m_videoProvider = 0;
 	}
+	#endif
 
 	// JPEGs, especially large ones (e.g. file on disk is > 2MB, etc) take a long time to load, decode, and convert to pixmap.
 	// (Long by UI standards anyway, e.g. > .2sec). So, we optimize away extreneous loadings by not reloading if the file & mtime
@@ -456,8 +477,8 @@ void BackgroundContent::setImageFile(const QString &file)
 		// the pixelation is more visible.
 		if(modelItem()->zoomEffectEnabled() && modelItem()->zoomFactor() > 2.0)
 		{
-			size.setWidth(size.width()   * modelItem()->zoomFactor());
-			size.setHeight(size.height() * modelItem()->zoomFactor());
+			size.setWidth((int)(size.width()   * modelItem()->zoomFactor()));
+			size.setHeight((int)(size.height() * modelItem()->zoomFactor()));
 		}
 
 		QDir path(QString("%1/%2").arg(AppSettings::cachePath()).arg(BG_IMG_CACHE_DIR));
@@ -644,14 +665,14 @@ QImage * BackgroundContent::internalLoadFile(QString file, QString cacheKey, QRe
 				if(imageSize.width() > imageSize.height())
 				{
 					// set width to rect.width and then scale height according to imageAr
-					width = rect.width();
-					height = width * (1/imageAr);
+					width = (int)rect.width();
+					height = (int)(width * (1/imageAr));
 				}
 				else
 				{
 					// set height to rect.height since its taller than it is wide, and scale width according to imageAr
 					height = rect.height();
-					width = height * imageAr;
+					width = (int)(height * imageAr);
 				}
 				int y = rect.height()/2 - height/2;
 				int x = rect.width()/2  - width/2;
@@ -971,9 +992,9 @@ void BackgroundContent::paintBackground(QPainter *painter, const QRect & exposed
 						float sx = ((float)MAX_SCALED_WIDTH)  / ((float)destRect.width());
 						float sy = ((float)MAX_SCALED_HEIGHT) / ((float)destRect.height());
 
-						float scale = qMin(sx,sy);
-						destRect.setWidth( destRect.width()  * sx);
-						destRect.setHeight(destRect.height() * sy);
+						//float scale = qMin(sx,sy);
+						destRect.setWidth( (int)(destRect.width()  * sx));
+						destRect.setHeight((int)(destRect.height() * sy));
 					}
 
 					// cache the scaled pixmap according to the transformed size of the view
@@ -1189,7 +1210,9 @@ void BackgroundContent::setVideoFile(const QString &name)
 		if(sceneContextHint() == MyGraphicsScene::StaticPreview ||
 		   sceneContextHint() == MyGraphicsScene::Monitor)
 		{
+			#ifdef DVIZ_HAS_QVIDEO
 			setPixmap(QVideoProvider::iconForFile(name));
+			#endif
 		}
 		#ifdef PHONON_ENABLED
 		else
@@ -1231,6 +1254,7 @@ void BackgroundContent::setVideoFile(const QString &name)
 
 		}
 		#else
+		#ifdef DVIZ_HAS_QVIDEO
  		else
 		{
 			if(DEBUG_BACKGROUNDCONTENT)
@@ -1317,6 +1341,7 @@ void BackgroundContent::setVideoFile(const QString &name)
 			}
 		}
 		#endif
+		#endif
 	}
 	else
 	{
@@ -1400,6 +1425,7 @@ void BackgroundContent::setPixmap(const QPixmap & pixmap)
 	else
 		update();
 
+	#ifdef DVIZ_HAS_QVIDEO
 	if(((sceneContextHint() != MyGraphicsScene::Live &&
 	     sceneContextHint() != MyGraphicsScene::Preview)
 	     || (sceneContextHint() == MyGraphicsScene::Preview && m_startVideoPausedInPreview && !m_isUserPlaying)) &&
@@ -1417,6 +1443,7 @@ void BackgroundContent::setPixmap(const QPixmap & pixmap)
 		}
 		m_videoPauseEventCompleted = true;
 	}
+	#endif
         //GFX_CHANGED();
 }
 
@@ -1490,6 +1517,7 @@ void BackgroundContent::pollVideoClock()
 
   	qDebug() << "BackgroundContent::pollVideoClock(): hit controlBase: "<<m_controlBase;
 
+	#ifdef DVIZ_HAS_QVIDEO
 	if(m_videoProvider &&
 	   m_videoPlaying &&
 	   modelItem()->fillVideoFile() != "" &&
@@ -1524,6 +1552,7 @@ void BackgroundContent::pollVideoClock()
 
  		//qDebug() << "BackgroundContent::pollVideoClock(): Clock at "<<((int)clock)<<" / "<<m_videoProvider->duration(); //<<", time used:"<<t.elapsed();
 	}
+	#endif
 
 	m_lockSeekValueChanging = false;
 }
@@ -1533,9 +1562,13 @@ void BackgroundContent::seek(int x)
 	if(m_lockSeekValueChanging)
 		return;
 
+	#ifdef DVIZ_HAS_QVIDEO
 	int delta = x; // - m_videoProvider->videoClock();
 	m_videoProvider->seekTo(abs(delta), delta < 0 ? AVSEEK_FLAG_BACKWARD : 0);
  	qDebug() << "BackgroundContent::seek(): x:"<<x<<", delta:"<<delta<<", AVSEEK_FLAG_BACKWARD:"<<AVSEEK_FLAG_BACKWARD;
+ 	#else
+ 	Q_UNUSED(x)
+ 	#endif
 }
 
 void BackgroundContent::controlWidgetDestroyed()
@@ -1592,8 +1625,10 @@ void BackgroundContent::setVideoSpeed1(int speed)
 	if(m_speedSpinBox->value() != d)
 		m_speedSpinBox->setValue(d);
 		
+	#ifdef DVIZ_HAS_QVIDEO
 	if(m_videoProvider)
 		m_videoProvider->videoObject()->setVideoSpeedMultiplier(d);
+	#endif
 	modelItem()->setVideoSpeedMultiplier(d);
 }
 
@@ -1607,11 +1642,13 @@ void BackgroundContent::setVideoSpeed2(double speed)
 	double d = speed * 10.0;
 //  	qDebug() << "BackgroundContent::setVideoSpeed2:     d:"<<d;
 // 	setVideoSpeed1(d);
-	if(m_speedSlider->value() != d)
-		m_speedSlider->setValue(d);
+	if(m_speedSlider->value() != (int)d)
+		m_speedSlider->setValue((int)d);
 	
+	#ifdef DVIZ_HAS_QVIDEO
 	if(m_videoProvider)
 		m_videoProvider->videoObject()->setVideoSpeedMultiplier(speed);
+	#endif
 	modelItem()->setVideoSpeedMultiplier(speed);
 }
 
@@ -1619,6 +1656,7 @@ QWidget * BackgroundContent::controlWidget()
 {
 //  	return 0;
 
+#ifdef DVIZ_HAS_QVIDEO
 	if(modelItem()->fillVideoFile() != "" &&
 	   modelItem()->fillType() == AbstractVisualItem::Video)
 	{
@@ -1716,6 +1754,7 @@ QWidget * BackgroundContent::controlWidget()
 
 	}
 	else
+#endif
 	{
 #ifdef PHONON_ENABLED
 		if(!m_player)
@@ -1794,12 +1833,16 @@ void BackgroundContent::playBtnClicked()
 {
 	m_isUserPlaying = true;
 	m_isUserPaused = false;
+	#ifdef DVIZ_HAS_QVIDEO
 	m_videoProvider->videoObject()->play();
+	#endif
 }
 
 void BackgroundContent::pauseBtnClicked()
 {
 	m_isUserPlaying = false;
 	m_isUserPaused = true;
+	#ifdef DVIZ_HAS_QVIDEO
 	m_videoProvider->videoObject()->pause();
+	#endif
 }

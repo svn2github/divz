@@ -7,23 +7,20 @@ DEPENDPATH += $$PWD
 # for linux cenos qt 2010.01
 #LIBS += -lCamera
 
+DEFINES += DVIZ_HAS_CAMERA
 
 HEADERS += NativeViewerCamera.h \
 	   CameraSlideGroup.h \
 	   CameraSlideGroupFactory.h \
-	   #../camera_test/CameraViewerWidget.h
 		../livemix/VideoWidget.h \
 		../livemix/CameraThread.h \
-		../livemix/VideoSource.h \
-		../livemix/VideoFrame.h
+		../livemix/VideoSource.h 
 SOURCES += NativeViewerCamera.cpp \ 
 	   CameraSlideGroup.cpp \
 	   CameraSlideGroupFactory.cpp \
-#	   ../camera_test/CameraViewerWidget.cpp
 		../livemix/VideoWidget.cpp \
 		../livemix/CameraThread.cpp \
-		../livemix/VideoSource.cpp \
-		../livemix/VideoFrame.cpp
+		../livemix/VideoSource.cpp 
 
 unix: {
 	HEADERS += \

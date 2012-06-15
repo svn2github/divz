@@ -22,7 +22,10 @@
 #include <QCheckBox>
 #include <QInputDialog>
 
+#ifdef DVIZ_HAS_QVIDEO
 #include "qvideo/QVideoProvider.h"
+#endif 
+
 #include "3rdparty/md5/qtmd5.h"
 #include "AppSettings.h"
 
@@ -225,6 +228,7 @@ public:
 			d->step();
 
 		QApplication::processEvents();
+		#ifdef DVIZ_HAS_QVIDEO
 		if(MediaBrowser::isVideo(info.suffix()))
 		{
 			//qDebug() << "MyQFileIconProvider::icon(): video file:"<<info.absoluteFilePath();
@@ -232,6 +236,7 @@ public:
 			//return QFileIconProvider::icon(info);
 		}
 		else
+		#endif
 		if(MediaBrowser::isImage(info.suffix()))
 		{
 			//qDebug() << "MyQFileIconProvider::icon(): image file:"<<info.absoluteFilePath();

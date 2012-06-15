@@ -20,9 +20,7 @@ HEADERS += \
     TextBoxContent.h \
     TextBoxConfig.h \
     BoxContent.h \
-    VideoFileContent.h \
     GenericItemConfig.h \
-    VideoFileConfig.h \
     BackgroundContent.h \
     BackgroundConfig.h \
     BoxConfig.h \
@@ -47,9 +45,7 @@ SOURCES += \
     TextBoxContent.cpp \
     TextBoxConfig.cpp \
     BoxContent.cpp \
-    VideoFileContent.cpp \
     GenericItemConfig.cpp \
-    VideoFileConfig.cpp \
     BackgroundContent.cpp \
     BackgroundConfig.cpp \
     BoxConfig.cpp \
@@ -58,3 +54,15 @@ SOURCES += \
     OutputViewContent.cpp \
     OutputViewConfig.cpp \
     #SlideGroupContent.cpp
+
+
+DVIZ_HAS_QVIDEO: {
+	
+	HEADERS += \
+		VideoFileContent.h \
+		VideoFileConfig.h
+		
+	SOURCES += \
+		VideoFileContent.cpp \
+		VideoFileConfig.cpp
+}

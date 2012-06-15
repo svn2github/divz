@@ -4,7 +4,9 @@
 
 #include "VideoSlideGroup.h"
 
+#ifdef DVIZ_HAS_QVIDEO
 #include "qvideo/QVideoProvider.h"
+#endif
 
 NativeViewerPhonon::NativeViewerPhonon(bool makeReusable)
 	: NativeViewer()
@@ -104,9 +106,11 @@ QPixmap NativeViewerPhonon::snapshot()
 // 	QRect rect = containerWidget()->geometry();
 // 	QPoint abs = WidgetUtil::absoluteWidgetPosition(containerWidget());
 // 	return QPixmap::grabWindow(qApp->desktop()->winId(), abs.x(), abs.y(), rect.width(), rect.height());
+	#ifdef DVIZ_HAS_QVIDEO
 	if(m_videoGroup)
 		return QVideoProvider::iconForFile(m_videoGroup->file());
 	else
+	#endif
 		return QPixmap();
 }
 

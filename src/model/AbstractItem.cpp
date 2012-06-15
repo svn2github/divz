@@ -221,9 +221,11 @@ AbstractItem * AbstractItem::fromByteArray(QByteArray &array)
 	if (className == "ImageItem")
 		content = new ImageItem();
 	else 
+	#ifdef DVIZ_HAS_QVIDEO
 	if (className == "VideoFileItem")
 		content = new VideoFileItem();
-	else 
+	else
+	#endif 
 	if (className == "BackgroundItem")
 		content = new BackgroundItem();
 	else

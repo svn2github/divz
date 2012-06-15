@@ -9,12 +9,11 @@
 
 #include <QtCore>
 #include <QtGui>
-#ifndef NO_LIBAV
+
 extern "C" {
 #include "libavcodec/avcodec.h"
 #include "libavformat/avformat.h"
 }
-#endif
 
 #include "QVideoBuffer.h"
 #include <QtGui/QMovie>

@@ -11,7 +11,9 @@
 
 #include "NativeViewerPhonon.h"
 
+#ifdef DVIZ_HAS_QVIDEO
 #include "qvideo/QVideoProvider.h"
+#endif
 
 #include <QProgressBar>
 #include <QWidget>
@@ -70,12 +72,16 @@ void VideoSlideGroup::loadFile()
 	    qDebug() << "VideoSlideGroup::loadFile(): "<<m_file;
 
 	// ignore return value, we will "steal" the cache file as the background for our fake slide
+	#ifdef DVIZ_HAS_QVIDEO
 	QVideoProvider::iconForFile(m_file);
+	#endif
 
 	Slide *slide = new Slide();
 	BackgroundItem * bg = dynamic_cast<BackgroundItem*>(slide->background());
 	bg->setFillType(AbstractVisualItem::Image);
+	#ifdef DVIZ_HAS_QVIDEO
 	bg->setFillImageFile(QVideoIconGenerator::cacheFile(QFileInfo(m_file).canonicalFilePath()));
+	#endif
 
 	slide->setSlideNumber(0);
 

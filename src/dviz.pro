@@ -25,7 +25,7 @@ VERSTR = '\\"$${BUILDNUM}\\"'  # place quotes around the version string
 unix {
 	VERSION  = "0.9.5"
 	VERSION = "$${VERSION}-b$${BUILDNUM}"
-	SVNREV   = $$system(svn info -r HEAD . | grep Changed\ Rev | cut -b 19-)
+	#SVNREV   = $$system(svn info -r HEAD . | grep Changed\ Rev | cut -b 19-)
 	
 	!isEmpty(SVNREV) {
 		VERSION = "$${VERSION}-r$${SVNREV}"
@@ -88,7 +88,6 @@ HEADERS += \
 	OutputInstance.h \
 	OutputControl.h \
 	JpegServer.h \
-	camera_test/CameraServer.h \
 	DeepProgressIndicator.h \
 	OutputServer.h \
 	ImageImportDialog.h \
@@ -124,7 +123,6 @@ SOURCES += \
 	OutputInstance.cpp \
 	OutputControl.cpp \
 	JpegServer.cpp \
-	camera_test/CameraServer.cpp \
 	DeepProgressIndicator.cpp \
 	OutputServer.cpp \
 	ImageImportDialog.cpp \
@@ -140,12 +138,12 @@ SOURCES += \
 
 HEADERS += \
 	glvidtex/VideoSender.h \
-	#livemix/VideoFrame.h \
+	livemix/VideoFrame.h 
 	#livemix/VideoSource.h
 	
 SOURCES += \
 	glvidtex/VideoSender.cpp \
-	#livemix/VideoFrame.cpp \
+	livemix/VideoFrame.cpp 
 	#livemix/VideoSource.cpp
 
 
@@ -178,6 +176,21 @@ win32 {
 		-lswscale-0
 }
 
+unix | win32 {
+#win32 {
+	# This should define DVIZ_HAS_CAMERA
+	include(camera/camera.pri)
+	# This should define DVIZ_HAS_QVIDEO
+	include(qvideo/qvideo.pri)
+}
+else: {
+	# MacOS X (at least my emulator) can't build with opengl '
+	DEFINES += NO_OPENGL
+	# MacOS X (at least my emulator) doesn't have headers for libav (that I know of) '
+	DEFINES += NO_LIBAV
+}
+
+
 include(frames/frames.pri)
 include(items/items.pri)
 include(model/model.pri)
@@ -187,10 +200,8 @@ include(3rdparty/richtextedit/richtextedit.pri)
 #include(3rdparty/qtgradienteditor/qtgradienteditor.pri)
 include(3rdparty/videocapture/videocapture.pri)
 include(3rdparty/analyzers/analyzers.pri)
-include(qvideo/qvideo.pri)
 include(qtcolorpicker/qtcolorpicker.pri)
 #include(qtmultimedia/audio/audio.pri)
-include(camera/camera.pri)
 #include(3rdparty/rtmidi/rtmidi.pri)
 include(3rdparty/md5/md5.pri)
 include(3rdparty/qjson/qjson.pri)
@@ -202,6 +213,7 @@ include(bible/bible.pri)
 include(viewer/client.pri)
 include(imgtool/exiv2-0.18.2-qtbuild/qt_build_root.pri)
 include(webgroup/webgroup.pri)
+
 
 #nomiditcp: {
 #	include(miditcp/miditcp.pri)
@@ -231,10 +243,12 @@ unix {
 		man
 }
 
+win32 {
+       include(3rdparty/qtdotnetstyle-2.3_1/qtdotnetstyle.pri)
+}
 
 # static builds
 win32|macx {
-	include(3rdparty/qtdotnetstyle-2.3_1/qtdotnetstyle.pri)
 	contains(CONFIG, static)|contains(CONFIG, qt_no_framework) {
 		DEFINES  += STATIC_LINK
 		QTPLUGIN += qgif \

@@ -41,8 +41,11 @@
 #include "ppt/PPTSlideGroup.h"
 #include "phonon/VideoSlideGroup.h"
 #include "webgroup/WebSlideGroup.h"
+
+#ifdef DVIZ_HAS_CAMERA
 #include "camera/CameraSlideGroup.h"
-#include "camera_test/CameraThread.h"
+#include "livemix/CameraThread.h"
+#endif
 
 #include "songdb/SongSlideGroup.h"
 #include "songdb/SongRecordListModel.h"
@@ -70,12 +73,12 @@ MainWindow * MainWindow::static_mainWindow = 0;
 MainWindow::MainWindow(QWidget *parent) :
 	QMainWindow(parent),
 	m_ui(new Ui::MainWindow),
-	m_liveView(0),
-	m_docModel(0),
-	m_doc(0),
-	m_viewControl(0),
 	m_editWin(0),
+	m_docModel(0),
+	m_liveView(0),
+	m_doc(0),
 	m_autosaveTimer(0),
+	m_viewControl(0),
 	m_controlServer(0),
 	m_viewServer(0),
 	m_prevLiveGroup(0),
@@ -200,7 +203,11 @@ MainWindow::MainWindow(QWidget *parent) :
 	
 	connect(m_ui->actionAdd_Video_File, SIGNAL(triggered()), this, SLOT(actionAddVideo()));
 	connect(m_ui->actionAdd_Web_Page, SIGNAL(triggered()), this, SLOT(actionAddWeb()));
+	#ifdef DVIZ_HAS_CAMERA
 	connect(m_ui->actionAdd_Camera_Viewer, SIGNAL(triggered()), this, SLOT(actionAddCamera()));
+	#else
+	m_ui->actionAdd_Camera_Viewer->setVisible(false);
+	#endif
 	
 	m_ui->actionAdd_Video_File->setIcon(QIcon(":/data/stock-panel-multimedia.png"));
 	m_ui->actionAdd_Web_Page->setIcon(QIcon(":/data/url-icon.png"));
@@ -375,13 +382,19 @@ void MainWindow::actionAddCamera()
 {
  	QString lastCamera = AppSettings::previousPath("camera");
  	
- 	QStringList cameras = CameraThread::enumerateDevices();
+ 	QStringList cameras = 
+ 		#ifdef DVIZ_HAS_CAMERA
+ 		CameraThread::enumerateDevices();
+ 		#else
+ 		QStringList();
+ 		#endif
  	if(!cameras.size())
  	{
  		QMessageBox::critical(this,tr("No Cameras Found"),tr("Sorry, but no camera devices were found attached to this computer."));
  		return;
  	}
 
+#ifdef DVIZ_HAS_CAMERA
 	QStringList items;
 	int counter = 1;
 	foreach(QString dev, cameras)
@@ -412,6 +425,7 @@ void MainWindow::actionAddCamera()
 		QModelIndex idx = m_docModel->indexForGroup(group);
 		m_groupView->setCurrentIndex(idx);
 	}
+#endif
 }
 
 void MainWindow::showEvent(QShowEvent *evt)
@@ -848,7 +862,7 @@ void MainWindow::setupSlideLibrary()
 	m_slideLibraryView->setEditTriggers(QAbstractItemView::EditKeyPressed);
 
 	DocumentListModel * m_libModel = new DocumentListModel();
-	Document * doc = SlideTemplateManager::instance()->templateDocument(SlideTemplateManager::Logo);
+	/*Document * doc = */SlideTemplateManager::instance()->templateDocument(SlideTemplateManager::Logo);
 
 	m_slideLibraryView->setModel(m_libModel);
 	m_slideLibraryView->setContextMenuPolicy(Qt::ActionsContextMenu);
@@ -1191,6 +1205,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
 		event->ignore();
 	}
 
+	qApp->exit();
 	//deleteLater();
 }
 
@@ -1516,7 +1531,7 @@ void MainWindow::previewSlideGroup(SlideGroup *newGroup)
 {
 	//qDebug() << "MainWindow::previewSlideGroup: Loading preview slide\n";
 
-	SlideGroup * oldGroup = m_previewControl->slideGroup();
+// 	SlideGroup * oldGroup = m_previewControl->slideGroup();
 
 	//qDebug() << "MainWindow::setLiveGroup(): newGroup->groupType():"<<newGroup->groupType()<<", SlideGroup::GroupType:"<<SlideGroup::GroupType;
 // 	if((oldGroup && oldGroup->groupType() != newGroup->groupType())
@@ -1628,7 +1643,7 @@ void MainWindow::setLiveGroup(SlideGroup *newGroup, Slide *currentSlide, bool al
 }
 
 
-void MainWindow::sendGroupToOutput(Output *output, SlideGroup *newGroup, Slide *currentSlide, bool allowProgressDialog)
+void MainWindow::sendGroupToOutput(Output *output, SlideGroup *newGroup, Slide *currentSlide, bool /*allowProgressDialog*/)
 {
 	if(!newGroup)
 		return;
@@ -1637,7 +1652,7 @@ void MainWindow::sendGroupToOutput(Output *output, SlideGroup *newGroup, Slide *
 	OutputControl *outputCtrl = outputControl(output->id());
 	SlideGroupViewControl *ctrl = viewControl(output->id());
 
-	SlideGroup * oldGroup = ctrl->slideGroup();
+// 	SlideGroup * oldGroup = ctrl->slideGroup();
 
 	//if(!inst->isVisible())
 	//	inst->show();
@@ -1843,5 +1858,5 @@ QRect MainWindow::standardSceneRect(double aspectRatio)
 	}
 
 	int height = 768;
-	return QRect(0,0,aspectRatio * height,height);
+	return QRect(0,0,(int)(aspectRatio * height),height);
 }

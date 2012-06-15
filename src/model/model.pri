@@ -9,7 +9,6 @@ HEADERS +=  \
 	ItemFactory.h \
 	TextBoxItem.h \
         BoxItem.h \
-        VideoFileItem.h \
         SlideGroup.h \
         Document.h \
         Output.h \
@@ -29,7 +28,6 @@ SOURCES += \
 	ItemFactory.cpp \
 	TextBoxItem.cpp \
         BoxItem.cpp \
-        VideoFileItem.cpp \
         SlideGroup.cpp \
         Document.cpp \
         Output.cpp \
@@ -39,3 +37,12 @@ SOURCES += \
         AbstractItemFilter.cpp \
         OutputViewItem.cpp \
         SlideTemplateManager.cpp
+
+DVIZ_HAS_QVIDEO {
+
+	HEADERS += \
+		VideoFileItem.h
+	SOURCES += \
+		VideoFileItem.cpp
+
+}

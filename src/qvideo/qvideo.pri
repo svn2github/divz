@@ -1,6 +1,9 @@
 VPATH += $$PWD
 DEPENDPATH += $$PWD
 
+DEFINES += DVIZ_HAS_QVIDEO
+CONFIG  += DVIZ_HAS_QVIDEO
+
 HEADERS +=  \
 	QVideo.h \
 	QVideoBuffer.h \

@@ -78,7 +78,7 @@
 #include "items/TextContent.h"
 #include "items/TextBoxConfig.h"
 #include "items/TextBoxContent.h"
-#ifndef NO_LIBAV
+#ifdef DVIZ_HAS_QVIDEO
 #include "items/VideoFileContent.h"
 #include "items/VideoFileConfig.h"
 #endif
@@ -437,9 +437,11 @@ void SlideEditorWindow::setupToolbar()
 	newBox->setShortcut(QString(tr("CTRL+SHIFT+B")));
 	connect(newBox, SIGNAL(triggered()), this, SLOT(newBoxItem()));
 
+	#ifdef DVIZ_HAS_QVIDEO
 	QAction  *newVideo = toolbar->addAction(QIcon(":/data/stock-panel-multimedia.png"), tr("New Video Item"));
 	newVideo->setShortcut(QString(tr("CTRL+SHIFT+V")));
 	connect(newVideo, SIGNAL(triggered()), this, SLOT(newVideoItem()));
+	#endif
 
 	QAction  *newImage = toolbar->addAction(QIcon(":/data/insert-image-24.png"), tr("New Image Item"));
 	newImage->setShortcut(QString(tr("CTRL+SHIFT+I")));
@@ -1138,9 +1140,11 @@ void SlideEditorWindow::updatePropDock(AbstractContent *content)
 		if (OutputViewContent * text = dynamic_cast<OutputViewContent *>(content))
 			p = new OutputViewConfig(text);
 		else
+		#ifdef DVIZ_HAS_QVIDEO
 		if (VideoFileContent * vid = dynamic_cast<VideoFileContent *>(content))
 			p = new VideoFileConfig(vid);
 		else
+		#endif
 		if (BackgroundContent * bg = dynamic_cast<BackgroundContent *>(content))
 			p = new BackgroundConfig(bg);
 		else

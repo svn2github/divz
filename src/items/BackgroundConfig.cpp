@@ -16,6 +16,11 @@ BackgroundConfig::BackgroundConfig(BackgroundContent * v, QWidget * parent)
 	//m_commonUi->tabWidget->setTabText(idx,"Video File");
 	m_commonUi->tabWidget->setCurrentIndex(idx);
 	//m_commonUi->videoFilenameBox->setFocus();
+	
+	#ifndef DVIZ_HAS_QVIDEO
+	m_commonUi->bgOptVideo->setVisible(false);
+	m_commonUi->bgVideo->setVisible(false);
+	#endif
 }
 
 BackgroundConfig::~BackgroundConfig()

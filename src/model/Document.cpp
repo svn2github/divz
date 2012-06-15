@@ -21,7 +21,9 @@
 #include "songdb/SongSlideGroup.h"
 #include "ppt/PPTSlideGroup.h"
 #include "phonon/VideoSlideGroup.h"
+#ifdef DVIZ_HAS_CAMERA
 #include "camera/CameraSlideGroup.h"
+#endif
 #include "webgroup/WebSlideGroup.h"
 
 #include "DeepProgressIndicator.h"
@@ -217,14 +219,19 @@ bool Document::fromXml(QDomElement & pe)
 		{
 			g = new PPTSlideGroup();
 		}
+		else
 		if (element.tagName() == "video")
 		{
 			g = new VideoSlideGroup();
 		}
+		else
+		#ifdef DVIZ_HAS_CAMERA
 		if (element.tagName() == "camera")
 		{
 			g = new CameraSlideGroup();
 		}
+		else
+		#endif
 		if (element.tagName() == "web")
 		{
 			g = new WebSlideGroup();

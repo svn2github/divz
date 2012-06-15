@@ -19,8 +19,11 @@
 #include "items/TextBoxContent.h"
 #include "items/OutputViewConfig.h"
 #include "items/OutputViewContent.h"
+#ifdef DVIZ_HAS_QVIDEO
 #include "items/VideoFileContent.h"
 #include "items/VideoFileConfig.h"
+#include "model/VideoFileItem.h"
+#endif
 #include "items/BackgroundContent.h"
 #include "items/BackgroundConfig.h"
 #include "items/BoxConfig.h"
@@ -33,7 +36,6 @@
 #include "model/TextItem.h"
 #include "model/TextBoxItem.h"
 #include "model/BoxItem.h"
-#include "model/VideoFileItem.h"
 #include "model/BackgroundItem.h"
 #include "model/ImageItem.h"
 #include "model/OutputViewItem.h"
@@ -217,12 +219,12 @@ private:
 MyGraphicsScene::MyGraphicsScene(ContextHint hint, QObject * parent)
     : QGraphicsScene(parent)
     , m_slide(0)
-    , m_fadeTimer(0)
-    , m_contextHint(hint)
     , m_masterSlide(0)
+    , m_fadeTimer(0)
+    , m_lastElapsed(-1)
+    , m_contextHint(hint)
     , m_bg(0)
     , m_fadeClockStarted(false)
-    , m_lastElapsed(-1)
 {
 	m_staticRoot = new RootObject(this);
 	m_staticRoot->setPos(0,0);
@@ -316,7 +318,7 @@ void MyGraphicsScene::clear(bool emitTxFinished)
 	//QGraphicsScene::clear();
 }
 	
-void MyGraphicsScene::slideItemChanged(AbstractItem *item, QString operation, QString fieldName, QVariant value, QVariant /*oldValue*/)
+void MyGraphicsScene::slideItemChanged(AbstractItem *item, QString operation, QString /*fieldName*/, QVariant /*value*/, QVariant /*oldValue*/)
 {
 	Slide * slide = dynamic_cast<Slide *>(sender());
 	
@@ -591,7 +593,7 @@ void MyGraphicsScene::setSlide(Slide *slide, SlideTransition trans, int speed, i
 	if(m_masterSlide)
 	{
 		//qDebug() << "MyGraphicsScene::setSlide(): using master ptr:"<<PTRS(m_masterSlide);
-		bool secondaryBg = false;
+// 		bool secondaryBg = false;
 		
 		QList<AbstractItem *> items = m_masterSlide->itemList();
 		foreach(AbstractItem *item, items)
@@ -803,7 +805,7 @@ void MyGraphicsScene::slotTransitionStep()
 		if(elapsedDelta > interval * 4) // we skipped something, reset and adjust to last elapsed
 		{
 			int orig = m_fadeLength;
-			int moreTime = elapsedDelta * .9; // magic number
+			int moreTime = (int)(elapsedDelta * .9); // magic number
 			m_fadeLength += moreTime;
 			//m_fadeTime.start();
 			qDebug() << "ERROR: Skipped by "<<elapsedDelta<<"ms (interval*2:"<<(interval*2)<<"), adding "<<moreTime<<"ms to "<<orig<<"ms, new fadeLength: "<<m_fadeLength<<"ms"; 
@@ -966,6 +968,7 @@ AbstractVisualItem * MyGraphicsScene::newBoxItem()
 
 AbstractVisualItem * MyGraphicsScene::newVideoItem()
 {
+	#ifdef DVIZ_HAS_QVIDEO
 	VideoFileItem *t = new VideoFileItem();
 	if(!m_slide)
 		return 0;
@@ -979,8 +982,11 @@ AbstractVisualItem * MyGraphicsScene::newVideoItem()
 	
 	m_slide->addItem(t); //m_slide->createText();
 	
-
 	return t;
+	#else
+	return 0;
+	#endif
+
 }
 
 AbstractVisualItem * MyGraphicsScene::newImageItem()
@@ -1023,7 +1029,7 @@ int MyGraphicsScene::maxZValue()
 	int max = 0;
 	foreach(AbstractContent *c, m_content)
 		if(c->zValue() > max)
-			max = c->zValue();
+			max = (int)c->zValue();
 	//qDebug()<<"newImageItem: max:"<<max;
 	return max+1;
 }
@@ -1456,9 +1462,11 @@ void MyGraphicsScene::configureContent(AbstractContent *content)
 	if (OutputViewContent * text = dynamic_cast<OutputViewContent *>(content))
 		p = new OutputViewConfig(text);
 	else
+	#ifdef DVIZ_HAS_QVIDEO
 	if (VideoFileContent * vid = dynamic_cast<VideoFileContent *>(content))
 		p = new VideoFileConfig(vid);
 	else
+	#endif
 	if (BackgroundContent * bg = dynamic_cast<BackgroundContent *>(content))
 		p = new BackgroundConfig(bg);
 	else
@@ -1593,12 +1601,12 @@ void MyGraphicsScene::slotDeleteContent()
 		m_slide->removeItem(content->modelItem());
 		if(DEBUG_MYGRAPHICSSCENE_ITEM_MGMT)
 			qDebug() << "MyGraphicsScene::slotDeleteContent(): Disposing of item: "<<content->modelItem()->itemName();
-		content->dispose();
+		content->dispose(false); // no anim
 		//delete content;
 	}
 }
 
-void MyGraphicsScene::slotDeleteConfig(GenericItemConfig * config)
+void MyGraphicsScene::slotDeleteConfig(GenericItemConfig * /*config*/)
 {
 // 	m_configs.removeAll(config);
 // 	config->dispose();

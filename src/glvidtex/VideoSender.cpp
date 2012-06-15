@@ -2,7 +2,9 @@
 #include "VideoSenderCommands.h"
 
 // for setting hue, color, etc
+#ifndef NO_LIBAV
 #include "../livemix/CameraThread.h"
+#endif
 
 #include <QNetworkInterface>
 #include <QTime>
@@ -621,6 +623,7 @@ void VideoSenderThread::processBlock()
 	QString cmd = map["cmd"].toString();
 	//qDebug() << "VideoSenderThread::processBlock: map:"<<map;
 	
+	#ifndef NO_LIBAV
 	if(cmd == Video_SetHue ||
 	   cmd == Video_SetSaturation ||
 	   cmd == Video_SetBright ||
@@ -736,6 +739,7 @@ void VideoSenderThread::processBlock()
 			<< "value"	<< colorValue);
 	}
 	else
+	#endif
 	if(cmd == Video_SetFPS)
 	{
 		int fps = map["fps"].toInt();

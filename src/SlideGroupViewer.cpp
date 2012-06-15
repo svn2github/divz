@@ -5,7 +5,9 @@
 #include <QVBoxLayout>
 # include <QtOpenGL/QGLWidget>
 
+#ifdef DVIZ_HAS_QVIDEO
 #include "qvideo/QVideoProvider.h"
+#endif
 
 #include "MainWindow.h"
 #include "AppSettings.h"
@@ -242,9 +244,9 @@ int SlideGroupViewer::m_blackSlideRefCount = 0;
 SlideGroupViewer::SlideGroupViewer(QWidget *parent)
 	    : QWidget(parent)
 	    , m_slideGroup(0)
+	    , m_slideNum(-1)
 	    , m_scene(0)
 	    , m_view(0)
-	    , m_slideNum(-1)
 	    , m_usingGL(false)
 // 	    , m_clearSlide(0)
 // 	    , m_clearSlideNum(-1)
@@ -260,14 +262,14 @@ SlideGroupViewer::SlideGroupViewer(QWidget *parent)
 	    , m_clonedSlide(0)
 	    , m_clonedOriginal(0)
 	    , m_fadeInProgress(false)
-	    , m_nativeViewer(0)
 	    , m_isPreviewViewer(false)
 	    , m_viewerState(SlideGroupViewer::Running)
+	    , m_nativeViewer(0)
 	    , m_overrideEndAction(false)
 	    , m_groupEndAction(SlideGroup::Stop)
 	    , m_forceGLDisabled(false)
-	    , m_outputId(0)
 	    , m_contextHint(MyGraphicsScene::Live)
+	    , m_outputId(0)
 	    , m_shmemWriter(0)
 	    , m_sharedMemoryImageWriterEnabled(false)
 	    , m_jpegServer(0)
@@ -321,7 +323,7 @@ SlideGroupViewer::SlideGroupViewer(QWidget *parent)
 // 	setPalette(p);
 }
 
-void SlideGroupViewer::setSharedMemoryImageWriterEnabled(bool enable, const QString& key)
+void SlideGroupViewer::setSharedMemoryImageWriterEnabled(bool /*enable*/, const QString& /*key*/)
 {
 // 	m_sharedMemoryImageWriterEnabled = enable;
 // 	if(!m_shmemWriter)
@@ -497,7 +499,7 @@ Slide * SlideGroupViewer::applySlideFilters(Slide * sourceSlide)
 
 		foreach(AbstractItem * item, items)
 		{
-			AbstractVisualItem * newVisual = dynamic_cast<AbstractVisualItem*>(item);
+// 			AbstractVisualItem * newVisual = dynamic_cast<AbstractVisualItem*>(item);
 			//qDebug()<<"SongSlideGroup::textToSlides(): slideNbr:"<<slideNbr<<": item list
 			if(!text && item->inherits("TextBoxItem"))
 			{
@@ -751,7 +753,7 @@ void SlideGroupViewer::appSettingsChanged()
 // 	m_view->viewport()->setPalette(p);
 }
 
-void SlideGroupViewer::aspectRatioChanged(double x)
+void SlideGroupViewer::aspectRatioChanged(double /*x*/)
 {
 	//qDebug("SlideGroupViewer::aspectRatioChanged(): New aspect ratio: %.02f",x);
 	m_scene->setSceneRect(MainWindow::mw()->standardSceneRect());
@@ -1089,7 +1091,7 @@ bool SlideGroupViewer::reapplySpecialFrames()
 	return false;
 }
 
-void SlideGroupViewer::crossFadeFinished(Slide *oldSlide,Slide*/*newSlide*/)
+void SlideGroupViewer::crossFadeFinished(Slide */*oldSlide*/,Slide*/*newSlide*/)
 {
 //  	qDebug() << "SlideGroupViewer::crossFadeFinished: mark"; 
 // 	if(m_bgWaitingForNextSlide)
@@ -1100,7 +1102,7 @@ void SlideGroupViewer::crossFadeFinished(Slide *oldSlide,Slide*/*newSlide*/)
 // 	}
 }
 
-void SlideGroupViewer::slideDiscarded(Slide *oldSlide)
+void SlideGroupViewer::slideDiscarded(Slide */*oldSlide*/)
 {
 // 	qDebug() << "SlideGroupViewer::slideDiscarded: mark";
 	if(m_bgWaitingForNextSlide)
@@ -1242,8 +1244,8 @@ void SlideGroupViewer::setSlideInternal(Slide *slide)
 	// change to slide group if set
 	if(m_slideGroup && !m_slideGroup->inheritFadeSettings())
 	{
-		speed = m_slideGroup->crossFadeSpeed();
-		quality = m_slideGroup->crossFadeQuality();
+		speed   = (int)m_slideGroup->crossFadeSpeed();
+		quality = (int)m_slideGroup->crossFadeQuality();
 		//qDebug() << "SlideGroupViewer::setSlideInternal(): [group] speed:"<<speed<<", quality:"<<quality;
 	}
 
@@ -1253,9 +1255,9 @@ void SlideGroupViewer::setSlideInternal(Slide *slide)
 		// the 0.01 test is due to the fact that I forgot to initalize cross fade speed/quality in the Slide object constructor in
 		// older builds (fixed now.) So, if user loads file from older builds, these variables may have corrupted settings, so dont allow overide.
 		if(slide->crossFadeSpeed() > 0.01)
-			speed = slide->crossFadeSpeed();
+			speed = (int)slide->crossFadeSpeed();
 		if(slide->crossFadeQuality() > 0.01)
-			quality = slide->crossFadeQuality();
+			quality = (int)slide->crossFadeQuality();
 		//qDebug() << "SlideGroupViewer::setSlideInternal(): [slide] speed:"<<speed<<", quality:"<<quality;
 	}
 
@@ -1483,6 +1485,8 @@ void SlideGroupViewer::initVideoProviders()
 	if(!m_slideGroup)
 		return;
 
+	#ifdef DVIZ_HAS_QVIDEO
+	
 	if(scene()->contextHint() != MyGraphicsScene::Live && 
 	   scene()->contextHint() != MyGraphicsScene::Preview)
 	   return;
@@ -1524,6 +1528,7 @@ void SlideGroupViewer::initVideoProviders()
 			}
 		}
 	}
+	#endif
 }
 
 void SlideGroupViewer::releaseVideoProvders()
@@ -1532,12 +1537,14 @@ void SlideGroupViewer::releaseVideoProvders()
 	   scene()->contextHint() != MyGraphicsScene::Preview)
 	   return;
 	
+	#ifdef DVIZ_HAS_QVIDEO
 	foreach(QVideoProvider *p, m_videoProviders)
 	{
 // 		p->pause();
 		p->disconnectReceiver(this);
 		QVideoProvider::releaseProvider(p);
 	}
+	#endif
 
 	m_videoProvidersConsumed.clear();
 	m_videoProvidersOpened.clear();
@@ -1547,6 +1554,7 @@ void SlideGroupViewer::releaseVideoProvders()
 
 void SlideGroupViewer::videoStreamStarted()
 {
+	#ifdef DVIZ_HAS_QVIDEO
 	QVideoProvider *p = dynamic_cast<QVideoProvider *>(sender());
 	if(!p)
 		return;
@@ -1557,6 +1565,7 @@ void SlideGroupViewer::videoStreamStarted()
 // 		qDebug() << "SlideGroupViewer::videoStreamStarted: "<<this<<" Consuming video stream "<<p->canonicalFilePath()<<" and requesting pause";
 		p->pause();
 	}
+	#endif
 }
 
 // Only relevant AFTER a slide has been set on the instance.

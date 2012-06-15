@@ -6,7 +6,9 @@
 #include "OutputViewItem.h"
 #include "BoxItem.h"
 #include "ImageItem.h"
+#ifdef DVIZ_HAS_QVIDEO
 #include "VideoFileItem.h"
+#endif
 #include "BackgroundItem.h"
 #include "ItemFactory.h"
 
@@ -212,9 +214,11 @@ bool Slide::fromXml(QDomElement & pe)
 		else
 		if (element.tagName() == "image")
 			content = new ImageItem();
+		#ifdef DVIZ_HAS_QVIDEO
 		else 
 		if (element.tagName() == "videofile")
 			content = new VideoFileItem();
+		#endif
 		else 
 		if (element.tagName() == "background")
 			content = new BackgroundItem();

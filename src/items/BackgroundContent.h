@@ -139,7 +139,9 @@ class BackgroundContent : public AbstractContent, public QVideoConsumer
 
 	QPixmap m_pixmap;
 	QSize m_imageSize;
+	#ifdef DVIZ_HAS_QVIDEO
 	QVideoProvider * m_videoProvider;
+	#endif
 	bool m_still;
 	
 	bool m_sceneSignalConnected;

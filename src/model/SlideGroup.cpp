@@ -13,7 +13,9 @@
 #include "songdb/SongSlideGroup.h"
 #include "ppt/PPTSlideGroup.h"
 #include "phonon/VideoSlideGroup.h"
+#ifdef DVIZ_HAS_CAMERA
 #include "camera/CameraSlideGroup.h"
+#endif
 #include "webgroup/WebSlideGroup.h"
 #include "groupplayer/GroupPlayerSlideGroup.h"
 #include "model/Output.h"
@@ -358,12 +360,14 @@ SlideGroup * SlideGroup::fromByteArray(QByteArray &array, Document *context)
 		//qDebug("cmdSetSlideGroup: Group type: Video");
 		group = new VideoSlideGroup();
 	}
+	#ifdef DVIZ_HAS_CAMERA
 	else
 	if(className == "CameraSlideGroup")
 	{
 		//qDebug("cmdSetSlideGroup: Group type: Camera");
 		group = new CameraSlideGroup();
 	}
+	#endif
 	else
 	if(className == "GroupPlayerSlideGroup")
 	{
