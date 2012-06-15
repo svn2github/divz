@@ -62,6 +62,8 @@ class GenericItemConfig : public QWidget
 		
 		void slotVideoDblClicked(const QFileInfo&);
 		void slotImageDblClicked(const QFileInfo&);
+		
+		void itemChanged(QString fieldName, QVariant value, QVariant oldValue);
 	
 	protected:
 		friend class SlideSettingsDialog;

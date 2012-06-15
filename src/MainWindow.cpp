@@ -327,6 +327,7 @@ void MainWindow::actionAddPPT()
 		//	setLiveGroup(group);
 		QModelIndex idx = m_docModel->indexForGroup(group);
 		m_groupView->setCurrentIndex(idx);
+		groupSelected(idx);
 	}
 }
 
@@ -347,6 +348,7 @@ void MainWindow::actionAddVideo()
 		//	setLiveGroup(group);
 		QModelIndex idx = m_docModel->indexForGroup(group);
 		m_groupView->setCurrentIndex(idx);
+		groupSelected(idx);
 	}
 }
 
@@ -375,6 +377,7 @@ void MainWindow::actionAddWeb()
 		//	setLiveGroup(group);
 		QModelIndex idx = m_docModel->indexForGroup(group);
 		m_groupView->setCurrentIndex(idx);
+		groupSelected(idx);
 	}
 }
 
@@ -424,6 +427,7 @@ void MainWindow::actionAddCamera()
 		//	setLiveGroup(group);
 		QModelIndex idx = m_docModel->indexForGroup(group);
 		m_groupView->setCurrentIndex(idx);
+		groupSelected(idx);
 	}
 #endif
 }
@@ -894,6 +898,7 @@ void MainWindow::songSelected(SongRecord *song)
 		setLiveGroup(group);
 	QModelIndex idx = m_docModel->indexForGroup(group);
 	m_groupView->setCurrentIndex(idx);
+	groupSelected(idx);
 }
 
 
@@ -943,6 +948,7 @@ void MainWindow::fileSelected(const QFileInfo &info)
 		setLiveGroup(group);
 	QModelIndex idx = m_docModel->indexForGroup(group);
 	m_groupView->setCurrentIndex(idx);
+	groupSelected(idx);
 }
 
 void MainWindow::setSelectedBackground(const QFileInfo &info)
@@ -999,6 +1005,7 @@ void MainWindow::groupsDropped(QList<SlideGroup*> list)
 {
 	QModelIndex idx = m_docModel->indexForGroup(list.first());
 	m_groupView->setCurrentIndex(idx);
+	groupSelected(idx);
 }
 
 
@@ -1522,7 +1529,7 @@ void MainWindow::jumpToGroup(int nextRow)
 	
 	m_groupView->setCurrentIndex(nextIdx);	
 	setLiveGroup(nextGroup);
-
+	groupSelected(nextIdx);
 	
 }
 
@@ -1588,6 +1595,7 @@ void MainWindow::showPrevSelectedGroup()
 	QModelIndex idx = m_docModel->indexForGroup(m_prevLiveGroup);
 	qDebug() << "MainWindow::showPrevSelectedGroup: RESTORE: m_prevLiveGroup:"<<m_prevLiveGroup<<", m_prevLiveSlide:"<<m_prevLiveSlide<<", idx:"<<idx;
 	m_groupView->setCurrentIndex(idx);
+	groupSelected(idx);
 }
 
 void MainWindow::setLiveGroup(SlideGroup *newGroup, Slide *currentSlide, bool allowProgressDialog)
@@ -1773,6 +1781,8 @@ void MainWindow::actionNewGroup()
 
 	QModelIndex idx = m_docModel->indexForGroup(g);
 	m_groupView->setCurrentIndex(idx);
+	
+	groupSelected(idx);
 }
 
 void MainWindow::actionDelGroup()
@@ -1791,7 +1801,11 @@ void MainWindow::deleteGroup(SlideGroup *s)
 	m_doc->removeGroup(s);
 
 	if(idx.row()>0)
-		m_groupView->setCurrentIndex(m_docModel->indexForRow(idx.row()-1));
+	{
+		QModelIndex newIdx = m_docModel->indexForRow(idx.row()-1);
+		m_groupView->setCurrentIndex(newIdx);
+		groupSelected(newIdx);
+	}
 }
 
 

@@ -92,6 +92,7 @@ GenericItemConfig::GenericItemConfig(AbstractContent * content, QWidget *parent)
 	
 	AbstractVisualItem * model = m_content->modelItem();
 	
+	connect(model, SIGNAL(itemChanged(QString, QVariant, QVariant)), this, SLOT(itemChanged(QString, QVariant, QVariant)));
 	
 	// read other properties
 	if(m_content->mirrorEnabled())
@@ -484,7 +485,7 @@ void GenericItemConfig::slotSizeChanged(double)
 	s.setHeight((int)m_commonUi->contentHeight->value());
 	
 	QRectF cr = m_content->modelItem()->contentsRect();
-	cr.setSize(m_origSize);
+	cr.setSize(s);//m_origSize);
 	m_content->modelItem()->setContentsRect(cr);
 }
 
@@ -496,6 +497,23 @@ void GenericItemConfig::slotLocationChanged(double)
 	p.setY(m_commonUi->locationY->value());
 	m_content->modelItem()->setPos(p);
 	
+}
+
+void GenericItemConfig::itemChanged(QString fieldName, QVariant value, QVariant oldValue)
+{
+	if(fieldName == "pos")
+	{
+		QPointF pos = m_content->modelItem()->pos();
+		m_commonUi->locationX->setValue(pos.x());
+		m_commonUi->locationY->setValue(pos.y());
+	}
+	else
+	if(fieldName == "contentsRect")
+	{
+		QRectF rect = m_content->modelItem()->contentsRect();
+		m_commonUi->contentHeight->setValue(rect.height());
+		m_commonUi->contentWidth->setValue(rect.width());
+	}
 }
 
 void GenericItemConfig::setShadowColor(const QColor & c)

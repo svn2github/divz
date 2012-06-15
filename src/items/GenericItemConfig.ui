@@ -23,7 +23,7 @@
       <enum>QTabWidget::Rounded</enum>
      </property>
      <property name="currentIndex">
-      <number>2</number>
+      <number>0</number>
      </property>
      <property name="usesScrollButtons">
       <bool>false</bool>
@@ -1303,6 +1303,77 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>tabWidget</tabstop>
+  <tabstop>front</tabstop>
+  <tabstop>raise</tabstop>
+  <tabstop>lower</tabstop>
+  <tabstop>back</tabstop>
+  <tabstop>locationX</tabstop>
+  <tabstop>locationY</tabstop>
+  <tabstop>locationReset</tabstop>
+  <tabstop>contentWidth</tabstop>
+  <tabstop>contentHeight</tabstop>
+  <tabstop>sizeReset</tabstop>
+  <tabstop>opacityBox</tabstop>
+  <tabstop>opacityReset</tabstop>
+  <tabstop>save</tabstop>
+  <tabstop>del</tabstop>
+  <tabstop>opacitySlider</tabstop>
+  <tabstop>outlineNone</tabstop>
+  <tabstop>outlineSolid</tabstop>
+  <tabstop>outlineBox</tabstop>
+  <tabstop>bgNone</tabstop>
+  <tabstop>bgColor</tabstop>
+  <tabstop>bgGradient</tabstop>
+  <tabstop>gradientSelector</tabstop>
+  <tabstop>bgImage</tabstop>
+  <tabstop>imageFilenameBox</tabstop>
+  <tabstop>imageBrowseButton</tabstop>
+  <tabstop>bgVideo</tabstop>
+  <tabstop>videoBrowseButton</tabstop>
+  <tabstop>videoPlayButton</tabstop>
+  <tabstop>videoFilenameBox</tabstop>
+  <tabstop>endActionCombo</tabstop>
+  <tabstop>shadowNone</tabstop>
+  <tabstop>shadowSolid</tabstop>
+  <tabstop>alphaBox</tabstop>
+  <tabstop>transparencySlider</tabstop>
+  <tabstop>blurBox</tabstop>
+  <tabstop>blurSlider</tabstop>
+  <tabstop>directionDial</tabstop>
+  <tabstop>directionBox</tabstop>
+  <tabstop>distanceSlider</tabstop>
+  <tabstop>distanceBox</tabstop>
+  <tabstop>shadowOffsetPresetTL</tabstop>
+  <tabstop>shadowOffsetPresetT</tabstop>
+  <tabstop>shadowOffsetPresetTR</tabstop>
+  <tabstop>shadowOffsetPresetL</tabstop>
+  <tabstop>shadowOffsetPresetR</tabstop>
+  <tabstop>shadowOffsetPresetBL</tabstop>
+  <tabstop>shadowOffsetPresetB</tabstop>
+  <tabstop>shadowOffsetPresetBR</tabstop>
+  <tabstop>shadowXOffsetBox</tabstop>
+  <tabstop>shadowYOffsetBox</tabstop>
+  <tabstop>shadowOffsetPreset0</tabstop>
+  <tabstop>reflectionNone</tabstop>
+  <tabstop>reflectionEnabled</tabstop>
+  <tabstop>mirrorOffset</tabstop>
+  <tabstop>zoomEnabled</tabstop>
+  <tabstop>zoomFactor</tabstop>
+  <tabstop>zoomSpeedSlider</tabstop>
+  <tabstop>zoomSpeedBox</tabstop>
+  <tabstop>zoomDirRandom</tabstop>
+  <tabstop>zoomDirOut</tabstop>
+  <tabstop>zoomDirIn</tabstop>
+  <tabstop>zoomLoop</tabstop>
+  <tabstop>anchorCenter</tabstop>
+  <tabstop>anchorRandom</tabstop>
+  <tabstop>anchorOther</tabstop>
+  <tabstop>zoomAnchorCombo</tabstop>
+  <tabstop>zoomAnchorDial</tabstop>
+  <tabstop>btnSave</tabstop>
+ </tabstops>
  <resources>
   <include location="../dviz.qrc"/>
  </resources>
