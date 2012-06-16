@@ -25,12 +25,14 @@ VERSTR = '\\"$${BUILDNUM}\\"'  # place quotes around the version string
 unix {
 	VERSION  = "0.9.5"
 	VERSION = "$${VERSION}-b$${BUILDNUM}"
-	#SVNREV   = $$system(svn info -r HEAD . | grep Changed\ Rev | cut -b 19-)
+	SVNREV   = $$system(svn info -r HEAD . | grep Changed\ Rev | cut -b 19-)
 	
 	!isEmpty(SVNREV) {
 		VERSION = "$${VERSION}-r$${SVNREV}"
 	}
 	VERSTR = '\\"$${VERSION}\\"'  # place quotes around the version string
+	
+	DEFINES += BUILD_SVN_REV=$${SVNREV}
 }
 
 unix:!macx {
@@ -104,7 +106,8 @@ HEADERS += \
 	glvidtex/EntityList.h \
 	TextImportDialog.h \
 	QStorableObject.h \
-	UserEventAction.h
+	UserEventAction.h \
+	CheckUpdatesDialog.h
 
 	
 SOURCES += \
@@ -140,7 +143,8 @@ SOURCES += \
 	glvidtex/EntityList.cpp \
 	TextImportDialog.cpp \
 	QStorableObject.cpp \
-	UserEventAction.cpp
+	UserEventAction.cpp \
+	CheckUpdatesDialog.cpp
 
 HEADERS += \
 	glvidtex/VideoSender.h \

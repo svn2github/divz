@@ -170,7 +170,6 @@ QWebView *AppSettings::m_checkinWebview = 0;
 	}
 #endif // CUSTOM_MSG_HANDLER
 
-
 void AppSettings::initApp(const QString& appName)
 {
 	#if defined(CUSTOM_MSG_HANDLER)

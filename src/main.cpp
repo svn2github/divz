@@ -7,6 +7,8 @@
 #include <QInputDialog>
 #include <QSplashScreen>
 
+#include "CheckUpdatesDialog.h"
+
 #ifdef Q_WS_X11
 	#include <X11/Xlib.h>
 #endif
@@ -125,6 +127,11 @@ int main(int argc, char **argv)
 
 	MainWindow *mw = new MainWindow();
 	mw->show();
+	
+	CheckUpdatesDialogLauncher *update = new CheckUpdatesDialogLauncher();
+	QObject::connect(update, SIGNAL(updateCheckFinished()), update, SLOT(deleteLater()));
+	update->start();
+	
 
 	splash.hide();
 	int ret = app.exec();
