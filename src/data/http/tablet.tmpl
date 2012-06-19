@@ -47,8 +47,8 @@
 			<tr><td width='25%' valign=top nowrap>
 			 
 			 	<ul data-role="controlgroup" data-type="horizontal" class="localnav">
-					<li><a href="#" data-role="button" data-transition="fade" class="ui-btn-active">Song Database</a></li>
-					<li><a href="http://www.google.com" data-role="button" data-transition="fade">Current Schedule</a></li>
+					<li><a href="#" id='modebtn-db'   data-role="button" data-transition="fade" class="ui-btn-active">Song Database</a></li>
+					<li><a href="#" id='modebtn-file' data-role="button" data-transition="fade">Current Schedule</a></li>
 				</ul>
 			
 				
@@ -57,7 +57,7 @@
 					<input type="search" name="password" id="search" value="" style='width:100%'/>
 				</div>
 
-				<ul data-role="listview" data-inset="true" >
+				<ul data-role="listview" data-inset="true" id="results-list">
 					<li><a href="#" onclick='$.mobile.showPageLoadingMsg();'>Test Item</a></li>
 				</ul>
 			</td>
@@ -75,6 +75,86 @@
 	</div><!-- /content -->
 
 </div><!-- /page -->
+<script>
+$(function()
+{
+	$('#modebtn-db')  .on('click',function() { updateListMode('db')   });
+	$('#modebtn-file').on('click',function() { updateListMode('file') });
+	$('#search').on('keyup',  function() { updateListFilter(this.value); });
+	$('#search').on('change', function() { updateListFilter(this.value); });
+	
+	window.ListMode = 'db';
+	window.ListFilter = '';
+	
+	function updateListMode(modeName)
+	{
+		window.ListMode = 'db';
+		reloadList();
+	}
+	
+	function updateListFilter(filter)
+	{
+		window.ListFilter = filter;
+		reloadList();
+	}
+	
+	function reloadList()
+	{
+		var url = '/list?mode='+window.ListMode+'&filter='+window.ListFilter;
+		$.ajax({
+			type: "GET",
+			url: url,
+			//data: postData,
+			success: function(data)
+			{
+				//alert("Got post data:"+data+", type:"+typeof(data));
+				if(typeof(data) == "string")
+				{
+					// something wierd on server - should be JSON!
+					//errorFunc();
+				}
+				else
+				{
+					var list = $("#results-list");
+					
+					// remove all kids
+					list.remove('li');
+					
+					// Create new list elements
+					for(var i=0; i<data.list.length; i++)
+					{
+						var item = data.list[i];
+						var listItem = $("<li><a href='#' onclick='showListItem("+item.itemid+")'>"+item.name+"</a></li>");
+						list.append(listItem);
+					}
+					
+					if(data.more)
+						list.append($("<li>More than 10 items found...</li"));
+					
+					/*
+					$("#no_posts_msg").hide();
+					//alert(data);
+					//console.debug(data);
+					$("#post-tmpl").tmpl(data).insertAfter("#post-placeholder");
+					$("#post-placeholder").hide();
+					
+					// Update the polling script
+					window.PollingTimestamp = data.timestamp;
+					window.LockPolling = false;
+					
+					// Run onload scripts
+					runOnloadScripts();
+					*/
+				}	
+			},
+			//error: errorFunc
+			
+		});
+	}
 
+	reloadList();
+});
+
+</script>
 </body>
 </html>

@@ -13,6 +13,7 @@
 #include "model/SlideGroupFactory.h"
 
 #include "songdb/SongSlideGroup.h"
+#include "songdb/SongRecordListModel.h"
 
 #include <QTcpSocket>
 
@@ -24,6 +25,7 @@ TabletServer::TabletServer(quint16 port, QObject* parent)
 	: HttpServer(port,parent)
 {
 	mw = MainWindow::mw();
+	m_songListModel = SongRecordListModel::instance();
 }
 
 // Tablet server:
@@ -43,7 +45,7 @@ TabletServer::TabletServer(quint16 port, QObject* parent)
 void TabletServer::dispatch(QTcpSocket *socket, const QStringList &path, const QStringMap &query)
 {
 	QString pathStr = path.join("/");
-	qDebug() << "TabletServer::dispatch(): pathStr: "<<pathStr;
+	qDebug() << "TabletServer::dispatch(): path: "<<path;
 	
 	if(pathStr.startsWith("data/")   ||
 	   pathStr.startsWith(":/data/") ||
@@ -81,9 +83,11 @@ void TabletServer::mainScreen(QTcpSocket *socket, const QStringList &path, const
 	}
 	
 	QStringList pathCopy = path;
-	pathCopy.takeFirst();
+	//pathCopy.takeFirst();
 	QString control = pathCopy.isEmpty() ? "" : pathCopy.takeFirst().toLower();
 	//bool flag = pathCopy.isEmpty() ? 0 : pathCopy.takeFirst().toInt();
+	
+	qDebug() << "TabletServer::mainScreen(): control: "<<control;
 	
 	if(control.isEmpty())
 	{
@@ -158,7 +162,41 @@ void TabletServer::mainScreen(QTcpSocket *socket, const QStringList &path, const
 		// 	}
 		// 	
 		
-		QString jsonString = "[]";
+		qDebug() << "TabletServer::mainScreen(): list: mode: "<<mode<<", filter: "<<filter;
+		qDebug() << "TabletServer::mainScreen(): list: assuming 'db' mode for development right now...";
+		
+		m_songListModel->filter(filter);
+		
+		
+		QVariantMap result;
+		QVariantList resultList;
+		
+		bool moreResults = m_songListModel->rowCount() > 10;
+		int resultCount = qMin(10, m_songListModel->rowCount());
+		
+		for(int i=0; i<resultCount; i++)
+		{
+			SongRecord *song = m_songListModel->songAt(i);
+			if(!song)
+			{
+				qDebug() << "TabletServer::mainScreen(): list: db: No song at index: "<<i;
+				continue; 
+			}
+			
+			QVariantMap line;
+			line["id"] = song->songId();
+			line["title"] = song->title();
+			line["text"] = song->text();
+			
+			resultList << line;
+		}
+		
+		result["list"] = resultList;
+		result["more"] = moreResults;
+		
+		// ...
+		
+		QString jsonString = m_toJson.serialize(result);
 		
 		Http_Send_Ok(socket) << 
 			"Content-Type: text/plain\n\n" <<
@@ -175,7 +213,11 @@ void TabletServer::mainScreen(QTcpSocket *socket, const QStringList &path, const
 		// If mode==db, user should have option of adding to schedule
 		// TODO provide editor for songs on tablet?
 		
-		QString jsonString = "[]";
+		QVariantMap result;
+		
+		// ...
+		
+		QString jsonString = m_toJson.serialize(result);
 		
 		Http_Send_Ok(socket) << 
 			"Content-Type: text/plain\n\n" <<
@@ -192,7 +234,11 @@ void TabletServer::mainScreen(QTcpSocket *socket, const QStringList &path, const
 		// return confirmation
 		// TODO sync with any other tablets
 		
-		QString jsonString = "[]";
+		QVariantMap result;
+		
+		// ...
+		
+		QString jsonString = m_toJson.serialize(result);
 		
 		Http_Send_Ok(socket) << 
 			"Content-Type: text/plain\n\n" <<
