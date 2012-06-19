@@ -62,6 +62,7 @@
 
 #include "http/ControlServer.h"
 #include "http/ViewServer.h"
+#include "http/TabletServer.h"
 
 #include "DVizMidiInputAdapter.h"
 #include "MidiInputSettingsDialog.h"
@@ -81,6 +82,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	m_viewControl(0),
 	m_controlServer(0),
 	m_viewServer(0),
+	m_tabletServer(0),
 	m_prevLiveGroup(0),
 	m_prevLiveSlide(0)
 {
@@ -232,8 +234,9 @@ MainWindow::MainWindow(QWidget *parent) :
 	
 	if(AppSettings::httpViewerEnabled())
 		m_viewServer = new ViewServer(AppSettings::httpViewerPort(),this);
-	//else
-	//	qDebug() << "MainWindow: HTTP Viewer Server not Enabled";
+		
+ 	if(AppSettings::httpTabletServerEnabled())
+ 		m_tabletServer = new TabletServer(AppSettings::httpTabletServerPort(),this);
 		
 // 	SlideGroupViewer *sg = new SlideGroupViewer();
 // 	QRect geom(450,0,640,480);
@@ -1263,6 +1266,12 @@ void MainWindow::actionAppSettingsDialog()
 	if(AppSettings::httpViewerEnabled())
 		m_viewServer = new ViewServer(AppSettings::httpViewerPort(),this);
 		
+	if(m_tabletServer)
+		delete m_tabletServer;
+		
+	if(AppSettings::httpTabletServerEnabled())
+ 		m_tabletServer = new TabletServer(AppSettings::httpTabletServerPort(),this);
+	
 	AppSettings::sendCheckin("/main/appsettings-dialog");
 
 }

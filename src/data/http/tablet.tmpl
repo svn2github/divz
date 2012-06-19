@@ -1,0 +1,80 @@
+<!DOCTYPE html> 
+<html> 
+	<head> 
+	<title>DViz iPad Song App</title> 
+	<meta name="viewport" content="width=device-width, initial-scale=1"> 
+	<!--<link rel="stylesheet" href="http://code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.css" />
+	<script src="http://code.jquery.com/jquery-1.7.1.min.js"></script>
+	<script src="http://code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.js"></script>-->
+	-<link rel="stylesheet" href="/www/jquery.mobile-1.1.0/jquery.mobile-1.1.0.min.css" />
+	<script src="/www/jquery-1.7.1.min.js"></script>
+	<script src="/www/jquery.mobile-1.1.0/jquery.mobile-1.1.0.min.js"></script>-->
+	<style>
+	.localnav {
+		margin:0 0 0px 0;
+		overflow:hidden;
+	}
+	.localnav li {
+		float:left;
+	}
+	.localnav .ui-btn-inner { 
+		padding: .6em 10px; 
+		font-size:80%; 
+	}
+	
+	.content-view {
+		padding: 10px;
+		margin-left: 20px;
+	}
+	
+	#song-search.ui-field-contain .ui-input-search {
+		width:84%;
+	}
+	</style>
+</head> 
+<body> 
+
+<div data-role="page">
+
+	<div data-role="header">
+		<h1>DViz iPad Song App</h1>
+	</div><!-- /header -->
+
+	<div data-role="content">
+		
+		<table border=0 cellspacing=0 cellpadding=0 width='100%'>
+			
+			<tr><td width='25%' valign=top nowrap>
+			 
+			 	<ul data-role="controlgroup" data-type="horizontal" class="localnav">
+					<li><a href="#" data-role="button" data-transition="fade" class="ui-btn-active">Song Database</a></li>
+					<li><a href="http://www.google.com" data-role="button" data-transition="fade">Current Schedule</a></li>
+				</ul>
+			
+				
+				<div data-role="fieldcontain" id='song-search'>
+					<!--<label for="search">Search:</label>-->
+					<input type="search" name="password" id="search" value="" style='width:100%'/>
+				</div>
+
+				<ul data-role="listview" data-inset="true" >
+					<li><a href="#" onclick='$.mobile.showPageLoadingMsg();'>Test Item</a></li>
+				</ul>
+			</td>
+			<td valign=top>
+				<div id='song-content' class='content-view ui-corner-all ui-shadow ui-body-c'>
+					<h3>Song Preview</h3>
+					<p>Foobar framitz</p>
+					
+				</div>
+			</td>
+		</table>
+			
+
+		
+	</div><!-- /content -->
+
+</div><!-- /page -->
+
+</body>
+</html>

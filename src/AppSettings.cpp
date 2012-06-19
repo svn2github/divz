@@ -87,6 +87,8 @@ int AppSettings::m_httpControlPort = 8080;
 bool AppSettings::m_httpViewerEnabled = true;
 int AppSettings::m_httpViewerPort = 8081;
 
+bool AppSettings::m_httpTabletServerEnabled = true;
+int AppSettings::m_httpTabletServerPort = 8082;
 
 QHash<QString,QString> AppSettings::m_hotkeys;
 
@@ -312,6 +314,9 @@ void AppSettings::load()
 	m_httpViewerEnabled = s.value("app/http-viewer/enabled",true).toBool();
 	m_httpViewerPort = s.value("app/http-viewer/port",8081).toInt();
 	
+	m_httpTabletServerEnabled = s.value("app/http-tablet-server/enabled",true).toBool();
+	m_httpTabletServerPort = s.value("app/http-tablet-server/port",8082).toInt();
+	
 	m_isStatSendingEnabled = s.value("app/stat-sending-enabled",true).toBool();
 	m_regName = s.value("app/reg-name","").toString();
 	m_regOrgName = s.value("app/reg-org-name","").toString();
@@ -373,6 +378,9 @@ void AppSettings::save()
 	s.setValue("app/http-viewer/enabled",m_httpViewerEnabled);
 	s.setValue("app/http-viewer/port",m_httpViewerPort);
 	
+	s.setValue("app/http-tablet-server/enabled",m_httpTabletServerEnabled);
+	s.setValue("app/http-tablet-server/port",m_httpTabletServerPort);
+	
 	s.setValue("app/stat-sending-enabled",m_isStatSendingEnabled);
 	s.setValue("app/reg-name",m_regName);
 	s.setValue("app/reg-org-name",m_regOrgName);
@@ -420,6 +428,16 @@ void AppSettings::setHttpViewerPort(int x)
 void AppSettings::setHttpViewerEnabled(bool flag)
 {
 	m_httpViewerEnabled = flag;
+}
+
+void AppSettings::setHttpTabletServerPort(int x)
+{
+	m_httpTabletServerPort = x;
+}
+
+void AppSettings::setHttpTabletServerEnabled(bool flag)
+{
+	m_httpTabletServerEnabled = flag;
 }
 
 void AppSettings::setLiveEditMode(LiveEditMode mode)

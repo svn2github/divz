@@ -96,6 +96,12 @@ public:
 	static int httpViewerPort() { return m_httpViewerPort; }
 	static void setHttpViewerPort(int);
 	
+	static bool httpTabletServerEnabled() { return m_httpTabletServerEnabled; }
+	static void setHttpTabletServerEnabled(bool);
+	
+	static int httpTabletServerPort() { return m_httpTabletServerPort; }
+	static void setHttpTabletServerPort(int);
+	
 	static QString myIpAddress();
 	
 	static void setHotkeySequence(const QString& actionName, const QString& keySequence);
@@ -158,6 +164,9 @@ private:
 	
 	static bool m_httpViewerEnabled;
 	static int m_httpViewerPort;
+	
+	static bool m_httpTabletServerEnabled;
+	static int m_httpTabletServerPort;
 	
 	static QHash<QString,QString> m_hotkeys;
 	
