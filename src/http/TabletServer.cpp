@@ -191,16 +191,28 @@ void TabletServer::mainScreen(QTcpSocket *socket, const QStringList &path, const
 			resultList << line;
 		}
 		
-		result["list"] = resultList;
+		result["num"]  = resultList.size();
+		result["list"] = QVariant(resultList);
 		result["more"] = moreResults;
 		
 		// ...
 		
 		QString jsonString = m_toJson.serialize(result);
 		
-		Http_Send_Ok(socket) << 
-			"Content-Type: text/plain\n\n" <<
-			jsonString;
+		qDebug() << "TabletServer::mainScreen(): list: result: "<<result;
+		qDebug() << "TabletServer::mainScreen(): list: json:   "<<jsonString;
+		
+// 		Http_Send_Ok(socket) << 
+// 			"Content-Type: application/json\n\n" <<
+// 			jsonString;
+
+		QHttpResponseHeader header(QString("HTTP/1.0 200 OK"));
+		header.setValue("Content-Type", "application/json");
+		respond(socket, header);
+		
+		QTextStream output(socket);
+		output.setAutoDetectUnicode(true);
+		output << jsonString;
 	}
 	else
 	if(control == "view_item")

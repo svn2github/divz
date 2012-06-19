@@ -892,7 +892,7 @@ void OutputControl::setOutputInstance(OutputInstance * inst)
 	//connect(m_inst, SIGNAL(slideChanged(int)), this, SLOT(slideChanged(int)));
 
 	// HACK need to default to app settings
-	m_fadeSlider->setValue(QSettings().value("last-fade-value",24).toInt());
+	m_fadeSlider->setValue(QSettings().value("last-fade-value",25).toInt());
 	
 	setupFoldbackSettings();
 		

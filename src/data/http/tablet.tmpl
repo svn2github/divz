@@ -30,6 +30,14 @@
 	#song-search.ui-field-contain .ui-input-search {
 		width:84%;
 	}
+	
+	#result-list-box .hint {
+		font-size: .95em;
+		color: rgb(100,100,100);
+		font-style: italic;
+		padding-left: 4em;
+	}
+	
 	</style>
 </head> 
 <body> 
@@ -57,14 +65,17 @@
 					<input type="search" name="password" id="search" value="" style='width:100%'/>
 				</div>
 
-				<ul data-role="listview" data-inset="true" id="results-list">
-					<li><a href="#" onclick='$.mobile.showPageLoadingMsg();'>Test Item</a></li>
-				</ul>
+				<!-- for removing and re-adding the result list -->
+				<div id="result-list-box">
+					<ul data-role="listview" data-inset="true" id="results-list">
+						<li><a href="#" onclick='$.mobile.showPageLoadingMsg();'>Test Item</a></li>
+					</ul>
+				</div>
 			</td>
 			<td valign=top>
 				<div id='song-content' class='content-view ui-corner-all ui-shadow ui-body-c'>
 					<h3>Song Preview</h3>
-					<p>Foobar framitz</p>
+					<p>Select an item from the list on the left to view.</p>
 					
 				</div>
 			</td>
@@ -80,7 +91,7 @@ $(function()
 {
 	$('#modebtn-db')  .on('click',function() { updateListMode('db')   });
 	$('#modebtn-file').on('click',function() { updateListMode('file') });
-	$('#search').on('keyup',  function() { updateListFilter(this.value); });
+	$('#search').on('keyup',  function() { updateListFilter(this.value, true); });
 	$('#search').on('change', function() { updateListFilter(this.value); });
 	
 	window.ListMode = 'db';
@@ -92,14 +103,51 @@ $(function()
 		reloadList();
 	}
 	
-	function updateListFilter(filter)
+	function updateListFilter(filter, delay)
 	{
 		window.ListFilter = filter;
-		reloadList();
+		if(!delay)
+			reloadList();
+		else
+		{
+			// preemtively show the loading msg even tho we are waiting a qtr sec
+			if(!window.LoadingMsgVisible)
+			{
+				window.LoadingMsgVisible = true;
+				$.mobile.showPageLoadingMsg();
+			}
+			clearTimeout(updateListFilter.timer);
+			updateListFilter.timer = setTimeout(reloadList, 250);
+		}
+	}
+	
+	window.showListItem = function(itemid)
+	{
+		var item = window.SearchResults[itemid];
+		if(!item)
+		{
+			alert("Error: Item "+itemid+" not found in RAM");
+			return;
+		}
+		
+		$("#song-content").html("<h3>"+item.title+"</h3><code><pre>"+item.text+"</pre></code>");
 	}
 	
 	function reloadList()
 	{
+		if(!window.LoadingMsgVisible)
+		{
+			window.LoadingMsgVisible = true;
+			$.mobile.showPageLoadingMsg();
+		}
+		
+		if(!reloadList.accessCount)
+			reloadList.accessCount = 0;
+		
+		reloadList.accessCount ++;
+		
+		var thisCount = reloadList.accessCount;
+		
 		var url = '/list?mode='+window.ListMode+'&filter='+window.ListFilter;
 		$.ajax({
 			type: "GET",
@@ -107,6 +155,12 @@ $(function()
 			//data: postData,
 			success: function(data)
 			{
+				if(reloadList.accessCount > thisCount)
+				{
+					// another request was sent while this one was pending - ignore these results and wait for the next set
+					return;
+				}
+				
 				//alert("Got post data:"+data+", type:"+typeof(data));
 				if(typeof(data) == "string")
 				{
@@ -115,21 +169,34 @@ $(function()
 				}
 				else
 				{
-					var list = $("#results-list");
+					$("#results-list").remove();
+					$("#result-list-box span.hint").remove();
 					
-					// remove all kids
-					list.remove('li');
+					var list = $('<ul data-role="listview" data-inset="true" id="results-list"></ul>');
+					
+					window.SearchResults = {};
 					
 					// Create new list elements
 					for(var i=0; i<data.list.length; i++)
 					{
 						var item = data.list[i];
-						var listItem = $("<li><a href='#' onclick='showListItem("+item.itemid+")'>"+item.name+"</a></li>");
+						
+						var listItem = $("<li><a href='javascript:void(showListItem("+item.id+"));'>"+item.title+"</a></li>");
 						list.append(listItem);
+						
+						window.SearchResults[item.id] = item;
 					}
 					
+					$("#result-list-box").append(list);
+					list.listview();
+					
 					if(data.more)
-						list.append($("<li>More than 10 items found...</li"));
+						$("#result-list-box").append($("<span class=hint>More than 10 items found...</span>"));
+						
+					if(data.list.length == 1)
+						showListItem(data.list[0].id);
+					
+					
 					
 					/*
 					$("#no_posts_msg").hide();
@@ -146,6 +213,9 @@ $(function()
 					runOnloadScripts();
 					*/
 				}	
+				
+				window.LoadingMsgVisible = false;
+				$.mobile.hidePageLoadingMsg();
 			},
 			//error: errorFunc
 			
