@@ -4,6 +4,8 @@
 #include "3rdparty/qjson/serializer.h"
 #include "3rdparty/qjson/parser.h"
 
+#include <QVariant>
+
 class MainWindow;
 class SongRecordListModel;
 
@@ -16,7 +18,8 @@ public:
 protected:
 	void dispatch(QTcpSocket *socket, const QStringList &pathElements, const QStringMap &query);
 	void mainScreen(QTcpSocket *socket, const QStringList &pathElements, const QStringMap &query);
-	//void screenLoadGroup(QTcpSocket *socket, const QStringList &pathElements, const QStringMap &query);
+	
+	QVariantMap genArrMapping(QString text, QStringList arragement);
 	
 private:
 	MainWindow * mw;

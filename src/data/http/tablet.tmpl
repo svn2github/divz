@@ -28,7 +28,7 @@
 	}
 	
 	#song-search.ui-field-contain .ui-input-search {
-		width:84%;
+		width: 77%;
 	}
 	
 	#result-list-box .hint {
@@ -37,6 +37,39 @@
 		font-style: italic;
 		padding-left: 4em;
 	}
+	
+	#add-item-btn {
+		float: left;
+		margin-top: 0em;
+		margin-right: 1.5em;
+		
+	}
+	
+	#preview-notice {
+		padding-top: 1em;
+	}
+	
+	#song-content .song-tag-main,
+	#song-content .song-tag-rear {
+		font-weight: bold;
+		background: red;
+		color: white;
+		text-shadow: none;
+		padding-right: .1em;
+	}
+	
+	#song-content .song-tag-rear {
+		background: blue;
+	}
+	
+	#song-content .song-text-block-live {
+		outline: 3px dotted red;
+	}
+	
+	#song-content .song-text-block {
+		font-family: Monospace !important;
+	}
+	
 	
 	</style>
 </head> 
@@ -68,7 +101,7 @@
 				<!-- for removing and re-adding the result list -->
 				<div id="result-list-box">
 					<ul data-role="listview" data-inset="true" id="results-list">
-						<li><a href="#" onclick='$.mobile.showPageLoadingMsg();'>Test Item</a></li>
+						<!--<li><a href="#" onclick='$.mobile.showPageLoadingMsg();'>Test Item</a></li>-->
 					</ul>
 				</div>
 			</td>
@@ -133,34 +166,191 @@ $(function()
 		}
 	}
 	
+	// Regex patterns and logic based on (and roughly equivelant to) the code in SongEditorHighlighter.cpp
+	var songTagRegexpList = "Title|Verse|Chorus|Tag|Bridge|End(ing)?|Intro(duction)?";
+	var tagPattern  = "^(\\s*(?:" + songTagRegexpList + ")(?:\\s+\\d+)?(?:\\s*\\(.*\\))?\\s*.*)$";
+	var rearPattern = "^(\\s*(?:(?:B:|R:|C:|T:|G:|\\[|\\|).*).*)$";
+	var tagFormatRegex  = new RegExp(tagPattern, "gi");
+	var rearFormatRegex = new RegExp(rearPattern, "gi");
+	
+	window.syntaxHighlight = function(text)
+	{
+		var lines = text.split("\n");
+		var linesOut = [];
+		for(var i=0; i<lines.length;i++)
+		{
+			var line = lines[i];
+			line = line.replace(tagFormatRegex,  "<span class='song-tag-main'>$1</span>");
+			line = line.replace(rearFormatRegex, "<span class='song-tag-rear'>$1</span>");
+
+			linesOut[linesOut.length] = line;
+		}
+		return linesOut.join("<br>\n");
+	}
+	
 	window.showListItem = function(itemid)
 	{
 		window.CurrentListItemDisplayed = itemid;
 		var item = window.SearchResults[itemid];
 		if(!itemid || !item)
 		{
-			$("#song-content").html("<h3>Song Preview</h3><p>Select an item from the list on the left to view.</p>");
+			$("#song-content").html("<h3>(No song selected)</h3>");
 			return;
 		}
 		
-		// TODO: Format and display song text, enable click-to-golive functionality
+		if(window.ListMode == 'db')
+		{
+			$("#song-content").html(""
+				+"<div class='ui-body ui-body-e' id='preview-notice'>"
+					+"<a data-role='button' data-icon='star' id='add-item-btn' href='javascript:void(addToSchedule("+itemid+"))'>Add to Schedule</a>"
+					+"<span id='add-item-msg'>This is a preview from the database - to add it to the current schedule, use the button on the right.</span>"
+				+"</div>"
+				+"<h3>"+item.title+"</h3>"
+				+"<code>"+syntaxHighlight(item.text)+"</code>");
+				
+			$('#add-item-btn').button();
+		}
+		else
+		{
+			var slideMapping = item.mapping;
+			
+			// Split the song text into blocks (double newline), wrap the blocks in a <div> decorated with bits of data and enable 'click to go live'
+			// functionality on the div, syntax highlight it, then wrap it all back up into a nice HTML block for display
+			var blocksOut = [];
+			var blocks = item.text.split("\n\n");
+			for(var i=0; i<blocks.length; i++)
+			{
+				var block = syntaxHighlight(blocks[i]);
+				
+				var mappingList = slideMapping[i];
+				if(!mappingList)
+					mappingList = [];
+					
+				var blockOut = "<div x:idx='"+i+"' x:mapping='"+mappingList.join(',')+"' class='song-text-block'>"+block+"</div>";
+				blocksOut[blocksOut.length] = blockOut;
+			}
+			
+			// Insert the new HTML into the content area
+			$("#song-content").html("<h3>" + item.title + "</h3>" + blocksOut.join("<br>"));
+			
+			// Add the 'click to go live' handler
+			$("#song-content .song-text-block").on('click', function()
+			{
+				var idx     = $(this).attr('x:idx');
+				var mapping = $(this).attr('x:mapping').split(',');
+				if(mapping.length == 1 && mapping[0] == "")
+					mapping = [];
+				
+				// Update UI
+				if(window.LastLiveBlock)
+					window.LastLiveBlock.removeClass('song-text-block-live');
+				$(this).addClass('song-text-block-live');
+				window.LastLiveBlock = $(this);
+				
+				slideGoLive(itemid, idx, mapping);
+			});
+			
+		}
+	}
+	
+	window.slideGoLive = function(itemid, idx, mapList)
+	{
+		if(!window.LoadingMsgVisible)
+		{
+			window.LoadingMsgVisible = true;
+			$.mobile.showPageLoadingMsg();
+		}
 		
-		$("#song-content").html("<h3>"+item.title+"</h3><code><pre>"+item.text+"</pre></code>");
+		var slide = idx;
+		
+		if(mapList && mapList.length > 0)
+		{
+			if(window.LastLiveSlide == idx)
+			{
+				window.SlideMappingIdx ++;
+				if(window.SlideMappingIdx >= mapList.length)
+					window.SlideMappingIdx = 0;
+			}
+			else
+				window.SlideMappingIdx = 0;
+	
+			slide = mapList[window.SlideMappingIdx];
+			
+			window.LastLiveSlide = idx;
+		}
+		
+		var url = '/show_slide?group='+itemid+'&slide='+slide;
+		$.ajax({
+			type: "GET",
+			url: url,
+			success: function(data)
+			{
+				window.LoadingMsgVisible = false;
+				$.mobile.hidePageLoadingMsg();
+			}
+		});
+	}
+	
+	window.addToSchedule = function(itemid)
+	{
+		if(!window.LoadingMsgVisible)
+		{
+			window.LoadingMsgVisible = true;
+			$.mobile.showPageLoadingMsg();
+		}
+		
+		var url = '/add_song?songid='+itemid;
+		$.ajax({
+			type: "GET",
+			url: url,
+			//data: postData,
+			success: function(data)
+			{
+				// Update the 'Add to Schedule' button to say 'View Schedule' and act accordingly
+				var addBtn = $("#add-item-btn");
+				addBtn.removeClass('ui-btn-up-e');
+				addBtn.addClass('ui-btn-up-b');
+				$("#add-item-btn .ui-btn-text").html("View Schedule");
+				addBtn.on('click', function() {
+					updateListMode('file');
+					return false;
+				});
+				
+				window.LoadingMsgVisible = false;
+				$.mobile.hidePageLoadingMsg();
+				
+				// Change the message text
+				$("#add-item-msg").html("Item added! Click the 'View Schedule' button to view the current schedule.");
+			}
+		});
 	}
 	
 	function reloadList(pollingFlag, md5)
 	{
+		if(pollingFlag == undefined)
+			pollingFlag = 0;
+		if(md5 == undefined)
+			md5 = 0;
+			
 		if(!pollingFlag && !window.LoadingMsgVisible)
 		{
 			window.LoadingMsgVisible = true;
 			$.mobile.showPageLoadingMsg();
 		}
 		
+		
+		// accessCount is used to ignore results received after
+		// another request has been sent. For example, if calling reloadList()
+		// in response to user keypresses, this is possible:
+		// [request1] [request2] [result1] [result2]
+		// In this case, it's a waste of time to update the UI with [result1] because
+		// [request2] has already been sent, invalidating any info received in [result1],
+		// so we just ignore [result1] if the accessCount of the result is less than
+		// the accessCount of the most recent request.
 		if(!reloadList.accessCount)
 			reloadList.accessCount = 0;
 		
 		reloadList.accessCount ++;
-		
 		var thisCount = reloadList.accessCount;
 		
 		// md5 only relevant if polling - server uses it to check for change
@@ -187,65 +377,66 @@ $(function()
 				{
 					if(data.nochange)
 					{
-						setTimeout(function() { reloadList(true, data.md5); }, 1000);
+						clearTimeout(reloadList.timerId);
+						reloadList.timerId = setTimeout(function() { reloadList(true, data.md5); }, 1000);
 						return;
 					}
 						
+					// Remove existing list
 					$("#results-list").remove();
 					$("#result-list-box span.hint").remove();
 					
+					// Re-create the <UL> list
 					var list = $('<ul data-role="listview" data-inset="true" id="results-list"></ul>');
 					
+					// Clear the results cache
 					window.SearchResults = {};
 					
 					// Create new list elements
 					for(var i=0; i<data.list.length; i++)
 					{
 						var item = data.list[i];
+						var shortTitle = item.title.substring(0,20) + (item.title.length > 20 ? "..." :"");
 						
-						var listItem = $("<li><a href='javascript:void(showListItem("+item.id+"));'>"+item.title+"</a></li>");
-						list.append(listItem);
+						list.append($("<li><a href='javascript:void(showListItem("+item.id+"));'>"+shortTitle+"</a></li>"));
 						
 						window.SearchResults[item.id] = item;
 					}
 					
 					$("#result-list-box").append(list);
+					// Re-apply the jQuery-mobile List Widget behaviours
 					list.listview();
 					
+					// Display hints about the results if needed
 					if(data.more)
 						$("#result-list-box").append($("<span class=hint>More than "+data.cutoff+" items found...</span>"));
 					else	
 					if(data.list.length <= 0)
 						$("#result-list-box").append($("<span class=hint>" + (window.ListFilter == "" ? "No songs found!" : "No matching songs found.") + "</span>"));
 					
+					// Update the song preview on the right
 					if(data.list.length == 1)
 						showListItem(data.list[0].id);
 					else
 					if(window.CurrentListItemDisplayed)
 						showListItem(window.CurrentListItemDisplayed);
 					else
+// 					// NOTE - FOR DEBUGGING
+// 					if(SearchResults[2])
+// 						showListItem(2);
+// 					else
 						showListItem(false);
-					
-					/*
-					$("#no_posts_msg").hide();
-					//alert(data);
-					//console.debug(data);
-					$("#post-tmpl").tmpl(data).insertAfter("#post-placeholder");
-					$("#post-placeholder").hide();
-					
-					// Update the polling script
-					window.PollingTimestamp = data.timestamp;
-					window.LockPolling = false;
-					
-					// Run onload scripts
-					runOnloadScripts();
-					*/
 				}	
 				
 				window.LoadingMsgVisible = false;
 				$.mobile.hidePageLoadingMsg();
 				
-				setTimeout(function() { reloadList(true, data.md5); }, 1000);
+				// If user switches list 'modes' (from db->file) between reloads,
+				// multiple reload timers could get started - this just ensures only one reload timer is active.
+				clearTimeout(reloadList.timerId);
+				
+				// Setup a timer to poll the server in approx 1sec for changes
+				//reloadList.timerId = setTimeout(function() { reloadList(true, data.md5); }, 1000);
 			},
 			//error: errorFunc
 			

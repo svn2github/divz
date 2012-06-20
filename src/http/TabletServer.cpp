@@ -14,6 +14,7 @@
 
 #include "songdb/SongSlideGroup.h"
 #include "songdb/SongRecordListModel.h"
+#include "songdb/SongBrowser.h"
 
 #include "3rdparty/md5/qtmd5.h"
 
@@ -89,7 +90,7 @@ void TabletServer::mainScreen(QTcpSocket *socket, const QStringList &path, const
 	QString control = pathCopy.isEmpty() ? "" : pathCopy.takeFirst().toLower();
 	//bool flag = pathCopy.isEmpty() ? 0 : pathCopy.takeFirst().toInt();
 	
-	qDebug() << "TabletServer::mainScreen(): control: "<<control;
+	//qDebug() << "TabletServer::mainScreen(): control: "<<control;
 	
 	if(control.isEmpty())
 	{
@@ -139,7 +140,7 @@ void TabletServer::mainScreen(QTcpSocket *socket, const QStringList &path, const
 		// TODO add button to search online
 		
 		
-		qDebug() << "TabletServer::mainScreen(): list: mode: "<<mode<<", filter: "<<filter;
+		//qDebug() << "TabletServer::mainScreen(): list: mode: "<<mode<<", filter: "<<filter;
 		
 		QVariantMap result;
 		QVariantList resultList;
@@ -216,10 +217,12 @@ void TabletServer::mainScreen(QTcpSocket *socket, const QStringList &path, const
 					if(tooltip.isValid())
 						viewText = tooltip.toString();
 					
-					row["id"]        = songGroup->groupId();
+					row["id"]        = idx; //songGroup->groupId();
 					row["title"]     = viewText;
 					row["live_flag"] = group == liveGroup;
 					row["text"]	 = songGroup->text();
+					
+					row["mapping"]	= genArrMapping(songGroup->text(), songGroup->arrangement());
 					
 					resultList << row;
 					
@@ -253,7 +256,6 @@ void TabletServer::mainScreen(QTcpSocket *socket, const QStringList &path, const
 			
 		result["md5"] = currentMD5;
 		
-		// ...
 		
 		QString jsonString = m_toJson.serialize(result);
 		
@@ -273,35 +275,105 @@ void TabletServer::mainScreen(QTcpSocket *socket, const QStringList &path, const
 		output << jsonString;
 	}
 	else
-	if(control == "view_item")
+	if(control == "add_song")
 	{
-		QString mode = query["mode"]; // Either "db" or "file"
-		QString itemid = query["itemid"]; // If mode==db, expect songId. If mode==file, expect groupId
+		int songid = query["songid"].toInt();
 		
-		// Find item from DB or File, extract text blocks, return blocks
-		// TODO resolve - blocks linked to slides
-		// If mode==db, user should have option of adding to schedule
-		// TODO provide editor for songs on tablet?
+		// TODO: Retrieve songid from database
+		// Call MainWindow::mw()->songBrowser()->createSongGroup()
+		// Add to main document (see import slide group...)
+		// Return msg indicating added!
 		
 		QVariantMap result;
 		
-		// ...
+		SongRecord *song = SongRecord::retrieve(songid);
+		if(!song)
+		{
+			Http_Send_404(socket) 
+				<< "Invalid songid";
+		}
+		else
+		{
+			SlideGroup *group = mw->songBrowser()->createSlideGroup(song);
+			
+			group->setGroupNumber(mw->currentDocument()->numGroups());
+			mw->currentDocument()->addGroup(group);
+			
+			result["groupnum"] = group->groupNumber();
+		}
 		
 		QString jsonString = m_toJson.serialize(result);
 		
-		Http_Send_Ok(socket) << 
-			"Content-Type: text/plain\n\n" <<
-			jsonString;
+		QHttpResponseHeader header(QString("HTTP/1.0 200 OK"));
+		header.setValue("Content-Type", "application/json");
+		respond(socket, header);
+		
+		QTextStream output(socket);
+		output.setAutoDetectUnicode(true);
+		output << jsonString;
 	}
 	else
 	if(control == "show_slide")
 	{
-		QString mode = query["mode"]; // Either "db" or "file"
-		QString itemid = query["itemid"]; // If mode==db, expect songId. If mode==file, expect groupId
-		QString blockid = query["blockid"]; // If mode==db, expect block name, if mode==file, expect slideId
+		int groupIdx = query["group"].toInt();
 		
-		// find slide in schedule and send to output
-		// return confirmation
+		Document * doc = mw->currentDocument();
+		if(!doc)
+		{
+			generic404(socket,path,query);
+			return;
+		}
+		
+		if(groupIdx < 0 || groupIdx >= doc->numGroups())
+		{
+			generic404(socket,path,query);
+			return;
+		}
+		
+		DocumentListModel * docModel = mw->documentListModel();
+		SlideGroup *group = docModel->groupAt(groupIdx);
+		if(!group)
+		{
+			generic404(socket,path,query);
+			return;
+		}
+		
+		int liveId = AppSettings::taggedOutput("live")->id();
+		SlideGroup *liveGroup = mw->outputInst(liveId)->slideGroup();
+		
+		SlideGroupViewControl *viewControl = mw->viewControl(liveId);
+		Slide * liveSlide = viewControl->selectedSlide();
+		
+		int idx = query.value("slide").toInt();
+		if(idx < 0 || idx > group->numSlides())
+		{
+			generic404(socket,path,query);
+			return;
+		}
+		
+		Slide *slide = group->at(idx);
+		
+		
+		if(liveGroup != group ||
+		   liveSlide != slide)
+			mw->setLiveGroup(group,
+					 ! slide ? liveSlide : slide); // prevent changing slides when loading the group page if group already live on different slide
+		
+		if(liveGroup == group &&
+		   liveSlide != slide/* &&
+		   nextPathElement != "icon"*/)
+		{
+			// this is JUST a change slide request
+			mw->setLiveGroup(liveGroup,slide);
+			
+			// 204 = HTTP No Content, ("...[the browser] SHOULD NOT change its document view...")
+			Http_Send_Response(socket,"HTTP/1.0 204 Changed Slide") << "";
+			
+			// BlackBerry Internet Browser doesnt honor HTTP 204, so we have to use javascript to make it not change the current document
+			
+			return;
+		}
+		
 		// TODO sync with any other tablets
 		
 		QVariantMap result;
@@ -320,163 +392,115 @@ void TabletServer::mainScreen(QTcpSocket *socket, const QStringList &path, const
 	}
 }
 
-/*
-void TabletServer::screenLoadGroup(QTcpSocket *socket, const QStringList &path, const QStringMap &query)
+
+QVariantMap TabletServer::genArrMapping(QString text, QStringList arragement)
 {
-	QStringList pathCopy = path;
-	pathCopy.takeFirst();
-	int groupIdx = pathCopy.takeFirst().toInt();
-	QString nextPathElement = pathCopy.isEmpty() ? "" : pathCopy.takeFirst().toLower();
+	QVariantMap arrMap;
+	
+	QString cleanedText = text.replace("\r\n","\n");
+	if(arragement.isEmpty())
+		return arrMap;
+	
+	bool isEmpty = true;
+	foreach(QString block, arragement)
+		if(!block.isEmpty())
+			isEmpty = false;
+	
+	if(isEmpty)
+		return arrMap;
+	
+	//qDebug() << "SongSlideGroup::rearrange: Original text: "<<text;
+	//QStringList defaultArr = findDefaultArragement(text);
+	//qDebug() << "SongSlideGroup::rearrange: Original arrangement: "<<defaultArr;
+	
+	QRegExp blockTitleRegexp(tr("^\\s*((?:%1)(?:\\s+\\d+)?(?:\\s*\\(.*\\))?)\\s*.*$").arg(SongSlideGroup::songTagRegexpList()), Qt::CaseInsensitive);
 
-	Document * doc = mw->currentDocument();
-	if(!doc)
+	QStringList blockList = cleanedText.split("\n\n");
+	
+	QHash<QString,QString> blockHash;
+	QHash<QString,int> blockIdxHash;
+	
+	int blockIdxCounter = 0;
+	
+	QString curBlockTitle;
+	QStringList curBlockText;
+	bool firstBlock = true;
+	foreach(QString passage, blockList)
 	{
-		generic404(socket,path,query);
-		return;
-	}
-	
-	if(groupIdx < 0 || groupIdx >= doc->numGroups())
-	{
-		generic404(socket,path,query);
-		return;
-	}
-	
-	DocumentListModel * docModel = mw->documentListModel();
-	SlideGroup *group = docModel->groupAt(groupIdx);
-	if(!group)
-	{
-		generic404(socket,path,query);
-		return;
-	}
-	
-	int liveId = AppSettings::taggedOutput("live")->id();
-	SlideGroup *liveGroup = mw->outputInst(liveId)->slideGroup();
-	
-	SlideGroupViewControl *viewControl = mw->viewControl(liveId);
-	Slide * liveSlide = viewControl->selectedSlide();
-	
-	// to access/set black/clear
-	OutputControl * outputControl = mw->outputControl(liveId);
-	
-	Slide * slide = 0;
-		
-	if(query.contains("slide"))
-	{
-		int idx = query.value("slide").toInt();
-		if(idx < 0 || idx > group->numSlides())
+		int pos = blockTitleRegexp.indexIn(passage);
+		if(pos != -1)
 		{
-			generic404(socket,path,query);
-			return;
+			// first, add block to hash if we have a block already
+			if(!curBlockTitle.isEmpty())
+			{
+				blockHash[curBlockTitle] = curBlockText.join("\n\n");
+				blockIdxHash[curBlockTitle] = blockIdxCounter ++;
+				
+			}
+			else
+			// or this is the first block and no title given - assume "Title" block
+			if(firstBlock && curBlockTitle.isEmpty() && !curBlockText.isEmpty())
+			{
+				curBlockTitle = "Title";
+				blockHash[curBlockTitle] = curBlockText.join("\n\n");
+				blockIdxHash[curBlockTitle] = blockIdxCounter ++;
+			}
+			
+			firstBlock = false;
+			
+			// start new block
+			curBlockTitle = blockTitleRegexp.cap(1);
+			curBlockText.clear();
 		}
 		
-		slide = group->at(idx);
-		
-		if(liveGroup == group &&
-		   liveSlide != slide &&
-		   nextPathElement != "icon")
-		{
-			// this is JUST a change slide request
-			mw->setLiveGroup(liveGroup,slide);
-			
-			// 204 = HTTP No Content, ("...[the browser] SHOULD NOT change its document view...")
-			Http_Send_Response(socket,"HTTP/1.0 204 Changed Slide") << "";
-			
-			// BlackBerry Internet Browser doesnt honor HTTP 204, so we have to use javascript to make it not change the current document
-			
-			return;
-		}
-			
+		QStringList filtered;
+		QStringList lines = passage.split("\n");
+		foreach(QString line, lines)
+			if(!line.contains(blockTitleRegexp))
+				filtered << line;
+				
+		curBlockText.append(filtered.join("\n"));
 	}
 	
-	SlideGroupListModel *model = viewControl->slideGroupListModel();
-	
-	if(nextPathElement == "icon")
+	if(!curBlockTitle.isEmpty())
 	{
-		QVariant icon;
-		if(slide)
-		{
-			// If the slide group was just loaded to live for the first time
-			// this session, the icons could come back gray if left in 
-			// queued icon gen mode. Therefore, turn that mode off for now.
-			bool oldMode = model->queuedIconGenerationMode();
-			model->setQueuedIconGenerationMode(false);
-			
-			icon = model->data(model->indexForSlide(slide), Qt::DecorationRole);
-			
-			model->setQueuedIconGenerationMode(oldMode);
+		blockHash[curBlockTitle] = curBlockText.join("\n\n");
+		blockIdxHash[curBlockTitle] = blockIdxCounter ++;
+	}
 		
+	//qDebug() << "SongSlideGroup::rearrange: Original blocks: "<<blockHash;
+	//qDebug() << "SongSlideGroup::rearrange: Processing arragnement: "<<arragement;
+	
+	QStringList output;
+	blockIdxCounter = 0;
+	foreach(QString blockTitle, arragement)
+	{
+		if(blockHash.contains(blockTitle))
+		{
+			//qDebug() << "SongSlideGroup::rearrange: [process] Block: "<<blockTitle;
+			output << QString("%1\n%2")
+				.arg(blockTitle)
+				.arg(blockHash.value(blockTitle));
+				
+			QString idx = QString::number(blockIdxHash[blockTitle]);
+			if(!arrMap.contains(idx))
+				arrMap[idx] = QVariantList();
+			
+			QVariantList usageList = arrMap[idx].toList();
+			usageList << blockIdxCounter ++; 
+			arrMap[idx] = usageList;
 		}
 		else
 		{
-			icon = docModel->data(docModel->indexForGroup(group), Qt::DecorationRole);
+			qDebug() << "TabletServer::genarrMapping: [process] [Error] Arrangement block not found in original text: "<<blockTitle;
 		}
-		
-		if(icon.isValid())
-		{
-			QHttpResponseHeader header(QString("HTTP/1.0 200 OK"));
-			header.setValue("content-type", "image/png");
-			respond(socket,header);
-			
-			QPixmap iconPixmap = icon.value<QPixmap>();
-			iconPixmap.save(socket, "PNG");
-		}
-		else
-		{
-			generic404(socket,path,query);
-			return;
-		}
-	}
-	else
-	{
-		if(liveGroup != group ||
-		   liveSlide != slide)
-			mw->setLiveGroup(group,
-					 ! slide ? liveSlide : slide); // prevent changing slides when loading the group page if group already live on different slide
-		
-		SlideGroupViewControl *viewControl = mw->viewControl(liveId);
-		SlideGroupListModel *model = viewControl->slideGroupListModel();
-		Slide * liveSlide = viewControl->view()->slide(); //selectedSlide();
-		
-		if(!model)
-		{
-			Http_Send_404(socket) 
-				<< "Wierd - slide group model not found!";
-			return;
-		}
-		
-		QVariantList outputSlideList;
-		for(int idx = 0; idx < model->rowCount(); idx++)
-		{
-			Slide * slide = model->slideAt(idx);
-			QVariantMap row;
-			
-			QString viewText = model->data(model->index(slide->slideNumber(),0), Qt::DisplayRole).toString();
-			QString toolText = model->data(model->index(slide->slideNumber(),0), Qt::ToolTipRole).toString();
-			
-			if(!toolText.trimmed().isEmpty())
-				viewText = toolText;
-			
-			row["slide"]     = idx;
-			row["text"]      = viewText;
-			row["live_flag"] = slide == liveSlide;
-			
-			outputSlideList << row;
-		}
-		
-		SimpleTemplate tmpl("data/http/group.tmpl");
-		tmpl.param("list",outputSlideList);
-		tmpl.param("grid", dynamic_cast<SongSlideGroup*>(group) == NULL);
-		tmpl.param("groupidx", docModel->indexForGroup(group).row());
-		tmpl.param("grouptitle", group->assumedName());
-		
-		tmpl.param("black_toggled", outputControl->isBlackToggled());
-		tmpl.param("clear_toggled", outputControl->isClearToggled());
-		tmpl.param("qslide_toggled", viewControl->isQuickSlideToggled());
-		
-		tmpl.param("date", QDateTime::currentDateTime().toTime_t());
-		
-		Http_Send_Ok(socket) << tmpl.toString();
 	}
 	
-}*/
-
+	QString outputText = output.join("\n\n");
+	//qDebug() << "SongSlideGroup::rearrange: Output: "<<outputText;
+	//return outputText;
+	
+	qDebug() << "TabletServer::genarrMap: Converted arr "<<arragement<<" to: "<<arrMap;
+	
+	return arrMap;
+}
