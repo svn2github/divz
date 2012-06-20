@@ -40,7 +40,7 @@
 		font-size: .95em;
 		color: rgb(100,100,100);
 		font-style: italic;
-		padding-left: 4em;
+		padding-left: 2em;
 	}
 	
 	#add-item-btn {
@@ -115,7 +115,6 @@
 				<!-- for removing and re-adding the result list -->
 				<div id="result-list-box">
 					<ul data-role="listview" data-inset="true" id="results-list">
-						<!--<li><a href="#" onclick='$.mobile.showPageLoadingMsg();'>Test Item</a></li>-->
 					</ul>
 				</div>
 			</td>
@@ -126,6 +125,7 @@
 				</ul>
 				
 				<div id='song-content' class='content-view ui-corner-all ui-shadow ui-body-c'>
+				<!--<div id='song-content' data-role="page" data-theme="c" data-content-theme="c">--> 
 					<h3>Song Preview</h3>
 					<p>Select an item from the list on the left to view.</p>
 					
@@ -141,17 +141,21 @@
 <script>
 $(function()
 {
-	$('#modebtn-db')  .on('click',function() { updateListMode('db')   });
-	$('#modebtn-file').on('click',function() { updateListMode('file') });
-	$('#search').on('keyup',  function() { updateListFilter(this.value, true); });
-	$('#search').on('change', function() { updateListFilter(this.value); });
-	
 	$('#tablet-control').on('click', function() { updateTabletMode('control') });
 	$('#tablet-viewer') .on('click', function() { updateTabletMode('viewer')  }); 
+	$('#modebtn-db')  .on('click',function() { updateListMode('db')   });
+	$('#modebtn-file').on('click',function() { updateListMode('file') });
+	$('#search').on('keyup',  function() { updateListFilter(this.value, true); }); // true = delay loading
+	$('#search').on('change', function() { updateListFilter(this.value); });
 	
+	// Initalize global state variables (not config values)
 	window.TabletMode = 'control';
 	window.ListMode = 'file';
 	window.ListFilter = '';
+	window.LoadingMsgVisible = false;
+	window.SearchResults = {};
+	window.SlideMappingIdx = 0;
+	window.LastLiveSlide = 0; 
 	
 	function updateTabletMode(modeName)
 	{
@@ -221,11 +225,7 @@ $(function()
 		else
 		{
 			// preemtively show the loading msg even tho we are waiting a bit
-			if(!window.LoadingMsgVisible)
-			{
-				window.LoadingMsgVisible = true;
-				$.mobile.showPageLoadingMsg();
-			}
+			showLoadingMsg();
 			
 			clearTimeout(updateListFilter.timer);
 			updateListFilter.timer = setTimeout(reloadList, 500);
@@ -246,6 +246,10 @@ $(function()
 		for(var i=0; i<lines.length;i++)
 		{
 			var line = lines[i];
+			
+			// Make sure we keep the spacing in text so chords line up appropriatly
+			line = line.replace(/\s{2}/g,'&nbsp;&nbsp;');
+			
 			line = line.replace(tagFormatRegex,  "<span class='song-tag-main'>$1</span>");
 			line = line.replace(rearFormatRegex, "<span class='song-tag-rear'>$1</span>");
 
@@ -325,6 +329,21 @@ $(function()
 		}
 	}
 	
+	window.showLoadingMsg = function()
+	{
+		if(!window.LoadingMsgVisible)
+		{
+			window.LoadingMsgVisible = true;
+			$.mobile.showPageLoadingMsg();
+		}
+	}
+	
+	window.hideLoadingMsg = function()
+	{
+		window.LoadingMsgVisible = false;
+		$.mobile.hidePageLoadingMsg();
+	}
+	
 	window.updateLiveSlideUI = function(newLiveBlock, dontScroll)
 	{
 		if(window.LastLiveBlock)
@@ -344,16 +363,16 @@ $(function()
 	
 	window.slideGoLive = function(itemid, idx, mapList)
 	{
-		if(!window.LoadingMsgVisible)
-		{
-			window.LoadingMsgVisible = true;
-			$.mobile.showPageLoadingMsg();
-		}
+		showLoadingMsg();
 		
+		// Default slide to the idx given so that slides
+		// without mappings show as intended
 		var slide = idx;
 		
 		if(mapList && mapList.length > 0)
 		{
+			// if slideGoLive() called for the same slide with multiple mappings,
+			// iterate thru the list of mapped slides and show each in turn
 			if(window.LastLiveSlide == idx)
 			{
 				window.SlideMappingIdx ++;
@@ -372,21 +391,13 @@ $(function()
 		$.ajax({
 			type: "GET",
 			url: url,
-			success: function(data)
-			{
-				window.LoadingMsgVisible = false;
-				$.mobile.hidePageLoadingMsg();
-			}
+			success: window.hideLoadingMsg
 		});
 	}
 	
 	window.addToSchedule = function(itemid)
 	{
-		if(!window.LoadingMsgVisible)
-		{
-			window.LoadingMsgVisible = true;
-			$.mobile.showPageLoadingMsg();
-		}
+		showLoadingMsg();
 		
 		var url = '/add_song?songid='+itemid;
 		$.ajax({
@@ -405,8 +416,7 @@ $(function()
 					return false;
 				});
 				
-				window.LoadingMsgVisible = false;
-				$.mobile.hidePageLoadingMsg();
+				hideLoadingMsg();
 				
 				// Change the message text
 				$("#add-item-msg").html("Item added! Click the 'View Schedule' button to view the current schedule.");
@@ -501,12 +511,8 @@ $(function()
 		if(md5 == undefined)
 			md5 = 0;
 			
-		if(!pollingFlag && !window.LoadingMsgVisible)
-		{
-			window.LoadingMsgVisible = true;
-			$.mobile.showPageLoadingMsg();
-		}
-		
+		if(!pollingFlag)
+			showLoadingMsg();
 		
 		// accessCount is used to ignore results received after
 		// another request has been sent. For example, if calling reloadList()
@@ -597,15 +603,14 @@ $(function()
 						showListItem(false);
 				}	
 				
-				window.LoadingMsgVisible = false;
-				$.mobile.hidePageLoadingMsg();
+				hideLoadingMsg();
 				
 				// If user switches list 'modes' (from db->file) between reloads,
 				// multiple reload timers could get started - this just ensures only one reload timer is active.
 				clearTimeout(reloadList.timerId);
 				
 				// Setup a timer to poll the server in approx 1sec for changes
-				//reloadList.timerId = setTimeout(function() { reloadList(true, data.md5); }, 1000);
+				reloadList.timerId = setTimeout(function() { reloadList(true, data.md5); }, 1000);
 			},
 			//error: errorFunc
 			
