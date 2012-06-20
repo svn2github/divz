@@ -1,14 +1,15 @@
 <!DOCTYPE html> 
 <html> 
 	<head> 
-	<title>DViz iPad Song App</title> 
+	<title>DViz Tablet Song App</title> 
 	<meta name="viewport" content="width=device-width, initial-scale=1"> 
 	<!--<link rel="stylesheet" href="http://code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.css" />
 	<script src="http://code.jquery.com/jquery-1.7.1.min.js"></script>
 	<script src="http://code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.js"></script>-->
-	-<link rel="stylesheet" href="/www/jquery.mobile-1.1.0/jquery.mobile-1.1.0.min.css" />
+	<link rel="stylesheet" href="/www/jquery.mobile-1.1.0/jquery.mobile-1.1.0.min.css" />
 	<script src="/www/jquery-1.7.1.min.js"></script>
-	<script src="/www/jquery.mobile-1.1.0/jquery.mobile-1.1.0.min.js"></script>-->
+	<script src="/www/jquery.mobile-1.1.0/jquery.mobile-1.1.0.min.js"></script>
+		
 	<style>
 	.localnav {
 		margin:0 0 0px 0;
@@ -25,6 +26,10 @@
 	.content-view {
 		padding: 10px;
 		margin-left: 20px;
+	}
+	#tablet-switcher {
+		margin-left: 20px;
+		margin-bottom: 15px;
 	}
 	
 	#song-search.ui-field-contain .ui-input-search {
@@ -70,6 +75,15 @@
 		font-family: Monospace !important;
 	}
 	
+	/* Style the padding between blocks as an outer block so when we call scrollIntoView() we can have some padding while still retaining the outline tight around the block */
+	#song-content .song-file-block {
+		padding-bottom: 2em;
+	}
+	
+	#page-table .onecol {
+		margin-left: -20px;
+	}
+	
 	
 	</style>
 </head> 
@@ -78,14 +92,14 @@
 <div data-role="page">
 
 	<div data-role="header">
-		<h1>DViz iPad Song App</h1>
+		<h1>DViz Tablet Song App</h1>
 	</div><!-- /header -->
 
 	<div data-role="content">
 		
-		<table border=0 cellspacing=0 cellpadding=0 width='100%'>
+		<table border=0 cellspacing=0 cellpadding=0 width='100%' id='page-table' class='twocol'>
 			
-			<tr><td width='25%' valign=top nowrap>
+			<tr><td width='25%' valign=top nowrap id='control-col'>
 			 
 			 	<ul data-role="controlgroup" data-type="horizontal" class="localnav">
 					<li><a href="#" id='modebtn-file' data-role="button" data-transition="fade" class="ui-btn-active">Current Schedule</a></li>
@@ -106,6 +120,11 @@
 				</div>
 			</td>
 			<td valign=top>
+				<ul data-role="controlgroup" data-type="horizontal" class="localnav" id='tablet-switcher'>
+					<li><a href="#" id='tablet-control' data-role="button" data-transition="fade" class="ui-btn-active">Control Tablet</a></li>
+					<li><a href="#" id='tablet-viewer'  data-role="button" data-transition="fade">View-Only Tablet</a></li>
+				</ul>
+				
 				<div id='song-content' class='content-view ui-corner-all ui-shadow ui-body-c'>
 					<h3>Song Preview</h3>
 					<p>Select an item from the list on the left to view.</p>
@@ -127,8 +146,55 @@ $(function()
 	$('#search').on('keyup',  function() { updateListFilter(this.value, true); });
 	$('#search').on('change', function() { updateListFilter(this.value); });
 	
+	$('#tablet-control').on('click', function() { updateTabletMode('control') });
+	$('#tablet-viewer') .on('click', function() { updateTabletMode('viewer')  }); 
+	
+	window.TabletMode = 'control';
 	window.ListMode = 'file';
 	window.ListFilter = '';
+	
+	function updateTabletMode(modeName)
+	{
+		window.TabletMode = modeName;
+		
+		// remove existing classes
+		$('#tablet-control').removeClass('ui-btn-active');
+		$('#tablet-viewer').removeClass('ui-btn-active');
+		
+		// Set current mode button active
+		if(modeName == 'control')
+			$('#tablet-control').addClass('ui-btn-active');
+		else
+			$('#tablet-viewer').addClass('ui-btn-active');
+		
+		if(modeName == 'viewer')
+		{
+			// Start polling for changes
+			clearTimeout(window.pollLiveSlide.timerId);
+			window.pollLiveSlide.timerId = setInterval(window.pollLiveSlide, 500);
+			
+			// Set list mode to file
+			updateListMode('file');
+			
+			// Hide list columnn
+			$('#control-col').hide();
+			
+			// adjust formatting
+			$('#page-table').removeClass('twocol');
+			$('#page-table').addClass('onecol');
+		}
+		else
+		{
+			// Leave list mode as whatever, dont worry about polling (it will get stopped when user clicks a song)
+			
+			// Show list column
+			$('#control-col').show();
+		
+			// adjust formatting
+			$('#page-table').removeClass('onecol');
+			$('#page-table').addClass('twocol');
+		}
+	}
 	
 	function updateListMode(modeName)
 	{
@@ -190,9 +256,12 @@ $(function()
 	
 	window.showListItem = function(itemid)
 	{
+		if(window.TabletMode == 'control')
+			clearTimeout(window.pollLiveSlide.timerId);
+		
 		window.CurrentListItemDisplayed = itemid;
 		var item = window.SearchResults[itemid];
-		if(!itemid || !item)
+		if(itemid == undefined || !item)
 		{
 			$("#song-content").html("<h3>(No song selected)</h3>");
 			return;
@@ -226,31 +295,51 @@ $(function()
 				if(!mappingList)
 					mappingList = [];
 					
-				var blockOut = "<div x:idx='"+i+"' x:mapping='"+mappingList.join(',')+"' class='song-text-block'>"+block+"</div>";
+				var blockOut = "<div class='song-file-block'><div id='slide-idx-"+i+"' x:idx='"+i+"' x:mapping='"+mappingList.join(',')+"' class='song-text-block'>"+block+"</div></div>";
 				blocksOut[blocksOut.length] = blockOut;
 			}
 			
 			// Insert the new HTML into the content area
-			$("#song-content").html("<h3>" + item.title + "</h3>" + blocksOut.join("<br>"));
+			$("#song-content").html("<h3>" + item.title + "</h3>" + blocksOut.join(""));
 			
 			// Add the 'click to go live' handler
 			$("#song-content .song-text-block").on('click', function()
 			{
+				if(window.TabletMode == 'viewer')
+					return;
+			
 				var idx     = $(this).attr('x:idx');
 				var mapping = $(this).attr('x:mapping').split(',');
 				if(mapping.length == 1 && mapping[0] == "")
 					mapping = [];
 				
 				// Update UI
-				if(window.LastLiveBlock)
-					window.LastLiveBlock.removeClass('song-text-block-live');
-				$(this).addClass('song-text-block-live');
-				window.LastLiveBlock = $(this);
+				updateLiveSlideUI($(this));
 				
 				slideGoLive(itemid, idx, mapping);
 			});
 			
+			clearTimeout(window.pollLiveSlide.timerId);
+			window.pollLiveSlide.timerId = setInterval(window.pollLiveSlide, 500);
+			
 		}
+	}
+	
+	window.updateLiveSlideUI = function(newLiveBlock, dontScroll)
+	{
+		if(window.LastLiveBlock)
+			window.LastLiveBlock.removeClass('song-text-block-live');
+		newLiveBlock.addClass('song-text-block-live');
+		window.LastLiveBlock = newLiveBlock;
+		
+		if(dontScroll)
+			return;
+		
+		var blockPos = newLiveBlock.offset().top;
+		var winHeightHalf = $(window).height() / 2;
+		var blockHeight = newLiveBlock.height();
+		var scrollPos = blockPos - winHeightHalf + blockHeight;
+		$('html, body').animate({scrollTop: scrollPos}, 0);
 	}
 	
 	window.slideGoLive = function(itemid, idx, mapList)
@@ -324,6 +413,86 @@ $(function()
 			}
 		});
 	}
+	
+	window.pollLiveSlide = function()
+	{
+		var url = '/poll_live_slide';
+		$.ajax({
+			type: "GET",
+			url: url,
+			//data: postData,
+			success: function(data)
+			{
+				//window.CurrentListItemDisplayed = itemid;
+				//var item = window.SearchResults[itemid];
+				if(!data.error)
+				{
+					try
+					{
+						var groupNum = data.groupIdx;
+						var slideNum = data.slideIdx;
+						
+						// TODO adapt code for "View Only" mode
+						if(groupNum != window.CurrentListItemDisplayed)
+						{
+							if(window.TabletMode == 'control')
+								return;
+							
+							// If viewer, assume we're in 'file' list mode and have current list of songs,
+							// so we just tell it to show the next live song
+							showListItem(groupNum);
+						}
+						
+						if(window.pollLiveSlide.lastLiveSlide == slideNum &&
+						   window.pollLiveSlide.lastLiveGroup == groupNum)
+							return;
+						
+						window.pollLiveSlide.lastLiveSlide = slideNum;
+						window.pollLiveSlide.lastLiveGroup = groupNum;
+						
+						var item = window.SearchResults[groupNum];
+						
+						var slideMapping = item.mapping;
+						
+						// We have to find slideNum in mappings and map back to non-arranged slide
+						// If not found in mappings, use 1-1 mapping
+						
+						var mappedIdx = -1;
+						// slideMapping is a hash, not a straight list, hence the 'var x in y' syntax
+						for(var i in slideMapping)
+						{
+							if(mappedIdx < 0)
+							{
+								var mappingList = slideMapping[i];
+								if(!mappingList)
+									mappingList = [];
+								
+								for(var j=0; j<mappingList.length; j++)
+									if(mappingList[j] == slideNum)
+										mappedIdx = i;
+							}
+						}
+						
+						if(mappedIdx < 0)
+							mappedIdx = slideNum;
+							
+						var $block = $("#slide-idx-" + mappedIdx);
+						
+						updateLiveSlideUI($block);
+					}
+					catch(e)
+					{
+						if(window && window.console)
+							window.console.debug(e);
+					}
+				}
+				
+				//clearTimeout(window.pollLiveSlide.timerId);
+				//window.pollLiveSlide.timerId = setInterval(window.pollLiveSlide, 2000);
+			}
+		});
+	}
+	
 	
 	function reloadList(pollingFlag, md5)
 	{
@@ -443,7 +612,15 @@ $(function()
 		});
 	}
 
-	reloadList();
+	// Update tablet mode based on url
+	if(window.location.search.indexOf("tablet=viewer") > -1)
+	{
+		updateTabletMode("viewer");
+	}
+	else
+		// Reload if not viewer because updateTabletMode(viewer) reloads list in file mode
+		reloadList();
+
 });
 
 </script>

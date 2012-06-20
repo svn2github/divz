@@ -357,7 +357,7 @@ void TabletServer::mainScreen(QTcpSocket *socket, const QStringList &path, const
 		if(liveGroup != group ||
 		   liveSlide != slide)
 			mw->setLiveGroup(group,
-					 ! slide ? liveSlide : slide); // prevent changing slides when loading the group page if group already live on different slide
+				! slide ? liveSlide : slide); // prevent changing slides when loading the group page if group already live on different slide
 		
 		if(liveGroup == group &&
 		   liveSlide != slide/* &&
@@ -373,18 +373,55 @@ void TabletServer::mainScreen(QTcpSocket *socket, const QStringList &path, const
 			
 			return;
 		}
+		else
+			Http_Send_Response(socket,"HTTP/1.0 204 No Change") << "";
 		
 		// TODO sync with any other tablets
+	}
+	else
+	if(control =="poll_live_slide")
+	{
+		DocumentListModel * docModel = mw->documentListModel();
 		
 		QVariantMap result;
+		bool ok = true;
 		
-		// ...
+		int liveId = AppSettings::taggedOutput("live")->id();
+		SlideGroup *liveGroup = mw->outputInst(liveId)->slideGroup();
+		if(!liveGroup)
+		{
+			ok = false;
+			result["error"] = "NLG";
+		}
+		
+		int groupIdx = docModel->indexForGroup(liveGroup).row();
+		
+		SlideGroupViewControl *viewControl = mw->viewControl(liveId);
+		Slide * liveSlide = viewControl->selectedSlide();
+		if(!liveSlide && ok)
+		{
+			ok = false;
+			result["error"] = "NLS";
+		}
+		
+		if(ok)
+		{
+			int slideIdx = liveGroup->indexOf(liveSlide);
+			
+			result["groupIdx"] = groupIdx;
+			result["slideIdx"] = slideIdx;
+		}
 		
 		QString jsonString = m_toJson.serialize(result);
 		
-		Http_Send_Ok(socket) << 
-			"Content-Type: text/plain\n\n" <<
-			jsonString;
+		QHttpResponseHeader header(QString("HTTP/1.0 200 OK"));
+		header.setValue("Content-Type", "application/json");
+		respond(socket, header);
+		
+		QTextStream output(socket);
+		output.setAutoDetectUnicode(true);
+		output << jsonString;
+		
 	}
 	else
 	{
