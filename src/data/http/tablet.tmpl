@@ -55,8 +55,8 @@
 			<tr><td width='25%' valign=top nowrap>
 			 
 			 	<ul data-role="controlgroup" data-type="horizontal" class="localnav">
-					<li><a href="#" id='modebtn-db'   data-role="button" data-transition="fade" class="ui-btn-active">Song Database</a></li>
-					<li><a href="#" id='modebtn-file' data-role="button" data-transition="fade">Current Schedule</a></li>
+					<li><a href="#" id='modebtn-file' data-role="button" data-transition="fade" class="ui-btn-active">Current Schedule</a></li>
+					<li><a href="#" id='modebtn-db'   data-role="button" data-transition="fade">Song Database</a></li>
 				</ul>
 			
 				
@@ -94,12 +94,23 @@ $(function()
 	$('#search').on('keyup',  function() { updateListFilter(this.value, true); });
 	$('#search').on('change', function() { updateListFilter(this.value); });
 	
-	window.ListMode = 'db';
+	window.ListMode = 'file';
 	window.ListFilter = '';
 	
 	function updateListMode(modeName)
 	{
-		window.ListMode = 'db';
+		window.ListMode = modeName;
+		
+		// remove existing classes
+		$('#modebtn-db').removeClass('ui-btn-active');
+		$('#modebtn-file').removeClass('ui-btn-active');
+		
+		// Set current mode button active
+		if(modeName == 'db')
+			$('#modebtn-db').addClass('ui-btn-active');
+		else
+			$('#modebtn-file').addClass('ui-btn-active');
+	
 		reloadList();
 	}
 	
@@ -110,32 +121,36 @@ $(function()
 			reloadList();
 		else
 		{
-			// preemtively show the loading msg even tho we are waiting a qtr sec
+			// preemtively show the loading msg even tho we are waiting a bit
 			if(!window.LoadingMsgVisible)
 			{
 				window.LoadingMsgVisible = true;
 				$.mobile.showPageLoadingMsg();
 			}
+			
 			clearTimeout(updateListFilter.timer);
-			updateListFilter.timer = setTimeout(reloadList, 250);
+			updateListFilter.timer = setTimeout(reloadList, 500);
 		}
 	}
 	
 	window.showListItem = function(itemid)
 	{
+		window.CurrentListItemDisplayed = itemid;
 		var item = window.SearchResults[itemid];
-		if(!item)
+		if(!itemid || !item)
 		{
-			alert("Error: Item "+itemid+" not found in RAM");
+			$("#song-content").html("<h3>Song Preview</h3><p>Select an item from the list on the left to view.</p>");
 			return;
 		}
+		
+		// TODO: Format and display song text, enable click-to-golive functionality
 		
 		$("#song-content").html("<h3>"+item.title+"</h3><code><pre>"+item.text+"</pre></code>");
 	}
 	
-	function reloadList()
+	function reloadList(pollingFlag, md5)
 	{
-		if(!window.LoadingMsgVisible)
+		if(!pollingFlag && !window.LoadingMsgVisible)
 		{
 			window.LoadingMsgVisible = true;
 			$.mobile.showPageLoadingMsg();
@@ -148,7 +163,8 @@ $(function()
 		
 		var thisCount = reloadList.accessCount;
 		
-		var url = '/list?mode='+window.ListMode+'&filter='+window.ListFilter;
+		// md5 only relevant if polling - server uses it to check for change
+		var url = '/list?mode='+window.ListMode+'&filter='+window.ListFilter+'&poll='+pollingFlag+'&md5='+md5;
 		$.ajax({
 			type: "GET",
 			url: url,
@@ -169,6 +185,12 @@ $(function()
 				}
 				else
 				{
+					if(data.nochange)
+					{
+						setTimeout(function() { reloadList(true, data.md5); }, 1000);
+						return;
+					}
+						
 					$("#results-list").remove();
 					$("#result-list-box span.hint").remove();
 					
@@ -191,12 +213,18 @@ $(function()
 					list.listview();
 					
 					if(data.more)
-						$("#result-list-box").append($("<span class=hint>More than 10 items found...</span>"));
-						
+						$("#result-list-box").append($("<span class=hint>More than "+data.cutoff+" items found...</span>"));
+					else	
+					if(data.list.length <= 0)
+						$("#result-list-box").append($("<span class=hint>" + (window.ListFilter == "" ? "No songs found!" : "No matching songs found.") + "</span>"));
+					
 					if(data.list.length == 1)
 						showListItem(data.list[0].id);
-					
-					
+					else
+					if(window.CurrentListItemDisplayed)
+						showListItem(window.CurrentListItemDisplayed);
+					else
+						showListItem(false);
 					
 					/*
 					$("#no_posts_msg").hide();
@@ -216,6 +244,8 @@ $(function()
 				
 				window.LoadingMsgVisible = false;
 				$.mobile.hidePageLoadingMsg();
+				
+				setTimeout(function() { reloadList(true, data.md5); }, 1000);
 			},
 			//error: errorFunc
 			

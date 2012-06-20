@@ -15,6 +15,8 @@
 #include "songdb/SongSlideGroup.h"
 #include "songdb/SongRecordListModel.h"
 
+#include "3rdparty/md5/qtmd5.h"
+
 #include <QTcpSocket>
 
 #include <QDateTime>
@@ -124,8 +126,11 @@ void TabletServer::mainScreen(QTcpSocket *socket, const QStringList &path, const
 	else
 	if(control == "list")
 	{
-		QString mode = query["mode"]; // Either "db" or "file"
+		QString mode   = query["mode"]; // Either "db" or "file"
 		QString filter = query["filter"]; // Can be empty
+		
+		bool pollingFlag  = query["poll"] == "true";
+		QString clientMD5 = query["md5"]; // the md5 of the list contents to use to check for changes if pollingFlag == true
 		
 		// Compile list of results matching mode (from db or from current sched) and the filter, and return as json string
 		
@@ -133,74 +138,127 @@ void TabletServer::mainScreen(QTcpSocket *socket, const QStringList &path, const
 		
 		// TODO add button to search online
 		
-		// TODO: will this code be useful?
-		// 	int liveId = AppSettings::taggedOutput("live")->id();
-		// 	SlideGroup *liveGroup = mw->outputInst(liveId)->slideGroup();
-		// 	
-		// 	DocumentListModel * model = mw->documentListModel();
-		// 	
-		// 	uint secs = QDateTime::currentDateTime().toTime_t();
-		// 	QVariantList outputGroupList;
-		// 	for(int idx = 0; idx < model->rowCount(); idx++)
-		// 	{
-		// 		SlideGroup * group = model->groupAt(idx);
-		// 		
-		// 		QVariantMap row;
-		// 		
-		// 		QVariant tooltip = model->data(model->index(group->groupNumber(),0), Qt::ToolTipRole);
-		// 		QString viewText = group->assumedName();
-		// 		
-		// 		if(tooltip.isValid())
-		// 			viewText = tooltip.toString();
-		// 		
-		// 		row["group"]     = idx;
-		// 		row["text"]      = viewText;
-		// 		row["live_flag"] = group == liveGroup;
-		// 		row["date"]	 = secs;
-		// 		
-		// 		outputGroupList << row;
-		// 	}
-		// 	
 		
 		qDebug() << "TabletServer::mainScreen(): list: mode: "<<mode<<", filter: "<<filter;
-		qDebug() << "TabletServer::mainScreen(): list: assuming 'db' mode for development right now...";
-		
-		m_songListModel->filter(filter);
-		
 		
 		QVariantMap result;
 		QVariantList resultList;
+			
+		bool moreResults = false;
+		int listCutoffLimit = 10; // included in results even though only relevant to 'db' mode
 		
-		bool moreResults = m_songListModel->rowCount() > 10;
-		int resultCount = qMin(10, m_songListModel->rowCount());
-		
-		for(int i=0; i<resultCount; i++)
+		// Buffer for compiling MD5 hash
+		QStringList md5sigList;
+			
+		if(mode == "db")
 		{
-			SongRecord *song = m_songListModel->songAt(i);
-			if(!song)
+			// List cutoff limit only relevant when searching/quering database.
+			// Cutoff not honored or implemented for file schedule
+			QString maxResults = query["max"];
+			if(!maxResults.isEmpty())
+				listCutoffLimit = maxResults.toInt();
+			if(listCutoffLimit < 1)
+				listCutoffLimit = 1;
+			
+			
+			m_songListModel->filter(filter);
+			
+			moreResults = m_songListModel->rowCount() > listCutoffLimit;
+			int resultCount = qMin(listCutoffLimit, m_songListModel->rowCount());
+			
+			for(int i=0; i<resultCount; i++)
 			{
-				qDebug() << "TabletServer::mainScreen(): list: db: No song at index: "<<i;
-				continue; 
+				SongRecord *song = m_songListModel->songAt(i);
+				if(!song)
+				{
+					qDebug() << "TabletServer::mainScreen(): list: db: No song at index: "<<i;
+					continue;
+				}
+				
+				QVariantMap line;
+				line["id"]    = song->songId();
+				line["title"] = song->title();
+				line["text"]  = song->text();
+				
+				resultList << line;
+				
+				md5sigList.append(QString::number(song->songId()));
+				md5sigList.append(song->title());
+				md5sigList.append(song->text());
 			}
+		}
+		else
+		{
+			int liveId = AppSettings::taggedOutput("live")->id();
+			SlideGroup *liveGroup = mw->outputInst(liveId)->slideGroup();
 			
-			QVariantMap line;
-			line["id"] = song->songId();
-			line["title"] = song->title();
-			line["text"] = song->text();
+			DocumentListModel * model = mw->documentListModel();
 			
-			resultList << line;
+			//uint secs = QDateTime::currentDateTime().toTime_t();
+			
+			QString lowerFilter = filter.toLower();
+			
+			for(int idx = 0; idx < model->rowCount(); idx++)
+			{
+				SlideGroup * group = model->groupAt(idx);
+				
+				SongSlideGroup *songGroup = dynamic_cast<SongSlideGroup*>(group);
+				
+				if(songGroup && ( 
+					songGroup->groupTitle().toLower().contains(lowerFilter) ||
+					songGroup->text().toLower().contains(lowerFilter)))
+				{
+					QVariantMap row;
+					
+					QVariant tooltip = model->data(model->index(group->groupNumber(),0), Qt::ToolTipRole);
+					QString viewText = group->assumedName();
+					
+					if(tooltip.isValid())
+						viewText = tooltip.toString();
+					
+					row["id"]        = songGroup->groupId();
+					row["title"]     = viewText;
+					row["live_flag"] = group == liveGroup;
+					row["text"]	 = songGroup->text();
+					
+					resultList << row;
+					
+					md5sigList.append(QString::number(songGroup->groupId()));
+					md5sigList.append(viewText);
+					md5sigList.append(songGroup->text());
+					md5sigList.append(group == liveGroup ? "y" : "n");
+				}
+				
+				// We don't limit the number of results in the document results
+				moreResults = false;
+			}
 		}
 		
-		result["num"]  = resultList.size();
-		result["list"] = QVariant(resultList);
-		result["more"] = moreResults;
+		QString currentMD5 = MD5::md5sum(md5sigList.join(""));
+			
+		bool isChanged = true;
+		if(pollingFlag && 
+		   currentMD5 == clientMD5)
+			isChanged = false;
+		
+		if(isChanged)
+		{
+			result["num"]    = resultList.size();
+			result["list"]   = QVariant(resultList);
+			result["more"]   = moreResults;
+			result["cutoff"] = listCutoffLimit;
+		}
+		else
+			result["nochange"] = true;
+			
+		result["md5"] = currentMD5;
 		
 		// ...
 		
 		QString jsonString = m_toJson.serialize(result);
 		
 		qDebug() << "TabletServer::mainScreen(): list: result: "<<result;
-		qDebug() << "TabletServer::mainScreen(): list: json:   "<<jsonString;
+		//qDebug() << "TabletServer::mainScreen(): list: json:   "<<jsonString;
 		
 // 		Http_Send_Ok(socket) << 
 // 			"Content-Type: application/json\n\n" <<
