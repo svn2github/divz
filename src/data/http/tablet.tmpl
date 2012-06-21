@@ -54,6 +54,10 @@
 		padding-top: 1em;
 	}
 	
+	#song-content {
+		font-size: 1.2em;
+	}
+	
 	#song-content .song-tag-main,
 	#song-content .song-tag-rear {
 		font-weight: bold;
@@ -80,10 +84,16 @@
 		padding-bottom: 2em;
 	}
 	
-	#page-table .onecol {
-		margin-left: -20px;
+	#page-table.onecol .content-view,
+	#page-table.onecol #tablet-switcher { 
+		margin-left: -5px;
 	}
 	
+	#conlost {
+		z-index: 999;
+		width:20em;
+		padding: .5em 2em 2em 2em;
+	}
 	
 	</style>
 </head> 
@@ -119,6 +129,14 @@
 				</div>
 			</td>
 			<td valign=top>
+				
+				<div style='float:right'>
+					<ul data-role="controlgroup" data-type="horizontal" class="localnav" id='font-size'>
+						<li><a href="#" id='font-up' data-role="button" data-transition="fade">Text +</a></li>
+						<li><a href="#" id='font-dn' data-role="button" data-transition="fade">Text -</a></li>
+					</ul>
+				</div>
+				
 				<ul data-role="controlgroup" data-type="horizontal" class="localnav" id='tablet-switcher'>
 					<li><a href="#" id='tablet-control' data-role="button" data-transition="fade" class="ui-btn-active">Control Tablet</a></li>
 					<li><a href="#" id='tablet-viewer'  data-role="button" data-transition="fade">View-Only Tablet</a></li>
@@ -141,12 +159,56 @@
 <script>
 $(function()
 {
+	// Cookies
+	function createCookie(name, value, days) {
+		if (days == undefined)
+			days = 365 * 99;
+		if (days) {
+			var date = new Date();
+			date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+			var expires = "; expires=" + date.toGMTString();
+		}
+		else var expires = "";
+	
+		document.cookie = name + "=" + value + expires + "; path=/";
+	}
+
+	function readCookie(name) {
+		var nameEQ = name + "=";
+		var ca = document.cookie.split(';');
+		for (var i = 0; i < ca.length; i++) {
+			var c = ca[i];
+			while (c.charAt(0) == ' ') c = c.substring(1, c.length);
+			if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
+		}
+		return null;
+	}
+
+	function eraseCookie(name) {
+		createCookie(name, "", -1);
+	}
+
 	$('#tablet-control').on('click', function() { updateTabletMode('control') });
 	$('#tablet-viewer') .on('click', function() { updateTabletMode('viewer')  }); 
 	$('#modebtn-db')  .on('click',function() { updateListMode('db')   });
 	$('#modebtn-file').on('click',function() { updateListMode('file') });
 	$('#search').on('keyup',  function() { updateListFilter(this.value, true); }); // true = delay loading
 	$('#search').on('change', function() { updateListFilter(this.value); });
+	$('#font-up').on('click', function() { changeFontSize(1.2); });
+	$('#font-dn').on('click', function() { changeFontSize(0.8); });
+	
+	function changeFontSize(inc)
+	{
+		var currentFontSize = $('#song-content').css('font-size');
+		var currentFontSizeNum = parseFloat(currentFontSize, 10);
+		var newFontSize = currentFontSizeNum*inc;
+		$('#song-content').css('font-size', newFontSize);
+		createCookie('song-content-font-size', newFontSize);
+		return false;
+	}
+	
+	var storedFontSize = parseFloat(readCookie('song-content-font-size'));
+	$('#song-content').css('font-size', storedFontSize);
 	
 	// Initalize global state variables (not config values)
 	window.TabletMode = 'control';
@@ -340,25 +402,64 @@ $(function()
 	
 	window.hideLoadingMsg = function()
 	{
-		window.LoadingMsgVisible = false;
-		$.mobile.hidePageLoadingMsg();
+		if(window.LoadingMsgVisible)
+		{
+			window.LoadingMsgVisible = false;
+			$.mobile.hidePageLoadingMsg();
+		}
+	}
+	
+	window.showConLost = function()
+	{
+		//console.debug("Connection Lost...");
+		if(window.ConLostVisible)
+			return;
+			
+		window.ConLostVisible = true;
+
+		//$.mobile.showPageLoadingMsg("b","Connection Lost, Reconnecting...");
+		var elm = $("<div class='ui-body ui-body-a' id='conlost'><center><h3>Connection Lost</h3>Trying to reconnect...</center></div>");
+		$(document.body).append(elm);
+		window.showConLost.elm = elm;
+		
+		var win = $(window);
+		elm.css('top', win.height() /2 - elm.height()/2 + $(window).scrollTop() );
+		elm.css('left', win.width() /2 - elm.width() /2 );
+	}
+	
+	window.hideConLost = function()
+	{
+		if(window.ConLostVisible)
+		{
+			window.ConLostVisible = false;
+			//$.mobile.hidePageLoadingMsg();
+			window.showConLost.elm.hide();
+		}
 	}
 	
 	window.updateLiveSlideUI = function(newLiveBlock, dontScroll)
 	{
-		if(window.LastLiveBlock)
-			window.LastLiveBlock.removeClass('song-text-block-live');
-		newLiveBlock.addClass('song-text-block-live');
-		window.LastLiveBlock = newLiveBlock;
-		
-		if(dontScroll)
+		// No change
+		if(window.LastLiveBlock == newLiveBlock)
 			return;
 		
-		var blockPos = newLiveBlock.offset().top;
-		var winHeightHalf = $(window).height() / 2;
-		var blockHeight = newLiveBlock.height();
-		var scrollPos = blockPos - winHeightHalf + blockHeight;
-		$('html, body').animate({scrollTop: scrollPos}, 0);
+		// Clear style on last block
+		if(window.LastLiveBlock)
+			window.LastLiveBlock.removeClass('song-text-block-live');
+		
+		// Scroll into view
+		if(!dontScroll)
+		{
+			var blockPos = newLiveBlock.offset().top;
+			var winHeightHalf = $(window).height() / 2;
+			var blockHeight = newLiveBlock.height();
+			var scrollPos = blockPos - winHeightHalf + blockHeight;
+			$('html, body').animate({scrollTop: scrollPos}, 0);
+		}
+		
+		// Update CSS on new block
+		newLiveBlock.addClass('song-text-block-live');
+		window.LastLiveBlock = newLiveBlock;
 	}
 	
 	window.slideGoLive = function(itemid, idx, mapList)
@@ -430,9 +531,15 @@ $(function()
 		$.ajax({
 			type: "GET",
 			url: url,
-			//data: postData,
+			error: function(data)
+			{
+				//console.debug(url + ":error:",data);
+				showConLost();
+			},
 			success: function(data)
 			{
+				hideConLost();
+				
 				//window.CurrentListItemDisplayed = itemid;
 				//var item = window.SearchResults[itemid];
 				if(!data.error)
@@ -533,9 +640,15 @@ $(function()
 		$.ajax({
 			type: "GET",
 			url: url,
-			//data: postData,
+			error: function(data)
+			{
+				//console.debug(url + ":error:",data);
+				showConLost();
+			},
 			success: function(data)
 			{
+				hideConLost();
+				
 				if(reloadList.accessCount > thisCount)
 				{
 					// another request was sent while this one was pending - ignore these results and wait for the next set
@@ -552,8 +665,8 @@ $(function()
 				{
 					if(data.nochange)
 					{
-						clearTimeout(reloadList.timerId);
-						reloadList.timerId = setTimeout(function() { reloadList(true, data.md5); }, 1000);
+// 						clearTimeout(reloadList.timerId);
+// 						reloadList.timerId = setTimeout(function() { reloadList(true, data.md5); }, 1000);
 						return;
 					}
 						
@@ -605,12 +718,11 @@ $(function()
 				
 				hideLoadingMsg();
 				
-				// If user switches list 'modes' (from db->file) between reloads,
-				// multiple reload timers could get started - this just ensures only one reload timer is active.
-				clearTimeout(reloadList.timerId);
+// 				// If user switches list 'modes' (from db->file) between reloads,
+// 				// multiple reload timers could get started - this just ensures only one reload timer is active.
+// 				clearTimeout(reloadList.timerId);
 				
-				// Setup a timer to poll the server in approx 1sec for changes
-				reloadList.timerId = setTimeout(function() { reloadList(true, data.md5); }, 1000);
+				reloadList.latestMd5 = data.md5;
 			},
 			//error: errorFunc
 			
@@ -625,6 +737,9 @@ $(function()
 	else
 		// Reload if not viewer because updateTabletMode(viewer) reloads list in file mode
 		reloadList();
+		
+	// Setup a timer to poll the server in approx 1sec for changes
+	reloadList.timerId = setInterval(function() { reloadList(true, reloadList.latestMd5); }, 1000);
 
 });
 
