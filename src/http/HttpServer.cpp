@@ -67,43 +67,88 @@ void HttpServer::readClient()
 		logMessage(qPrintable(socket->peerAddress().toString()) << qPrintable(tokens.join(" ")));
 		// sample list: ("GET", "/link?test=time", "HTTP/1.1", "")
 		
-		
-		if (tokens[0] == "GET") 
-		{
-			QUrl req(tokens[1]);
-			
-			QString path = QUrl::fromPercentEncoding(req.encodedPath());
-			QStringList pathElements = path.split('/');
-			if(!pathElements.isEmpty() && pathElements.at(0).trimmed().isEmpty())
-				pathElements.takeFirst(); // remove the first empty element
-			//logMessage(pathElements);
-			
-			QList<QPair<QByteArray, QByteArray> > encodedQuery = req.encodedQueryItems();
-			
-			QStringMap map;
-			foreach(QByteArrayPair bytePair, encodedQuery)
-				map[QUrl::fromPercentEncoding(bytePair.first)] = QUrl::fromPercentEncoding(bytePair.second);
-			
-			//logMessage(map);
-			
-			dispatch(socket,pathElements,map);
-		}
-		else
-		{
-			//os << "HTTP/1.0 404 Not Found\r\n";
-			respond(socket,QString("HTTP/1.0 404 Not Found"));
-		}
-		
+		// Read in HTTP headers
  		QStringList headerBuffer;
  		headerBuffer.append(line); // add first line
  		while(socket->canReadLine())
- 			headerBuffer.append(QString(socket->readLine()));
- 			//qDebug() << "HttpServer::readClient(): Extra: " << qPrintable();
+ 		{
+ 			QString line = socket->readLine();
+ 			//qDebug() << "HttpServer::readClient(): " << qPrintable(line);
+ 			if(line.isEmpty())
+ 				break;
+ 			headerBuffer.append(line);
+ 		}
+ 		
+ 		QHttpRequestHeader request(headerBuffer.join(""));
+		
+ 		// Decode request path
+ 		
+ 		//QUrl req(tokens[1]);
+		QUrl req(request.path());
+		
+		QString path = QUrl::fromPercentEncoding(req.encodedPath());
+		QStringList pathElements = path.split('/');
+		if(!pathElements.isEmpty() && pathElements.at(0).trimmed().isEmpty())
+			pathElements.takeFirst(); // remove the first empty element
+		//logMessage(pathElements);
+		
+		QList<QPair<QByteArray, QByteArray> > encodedQuery = req.encodedQueryItems();
+		
+		QStringMap map;
+		foreach(QByteArrayPair bytePair, encodedQuery)
+			map[QUrl::fromPercentEncoding(bytePair.first).replace("+"," ")] = QUrl::fromPercentEncoding(bytePair.second).replace("+"," ");
+		
+		//if (tokens[0] == "GET") 
+		if (request.method() == "GET")
+		{
+			//logMessage(map);
+			dispatch(socket, pathElements, map);
+		}
+		else
+		if (request.method() == "POST")
+		{
+			QByteArray postData = socket->readAll();
+			
+			int contentLength = request.value("Content-Length").toInt();
+			while(postData.size() < contentLength)
+			{
+				// Dangerous, I know...could block....
+				socket->waitForReadyRead();
+				QByteArray tmp = socket->readAll();
+				postData.append(tmp);
+			}
+			
+			//qDebug() << "HttpServer::readClient(): Final postData:" << postData;
+			
+			if(request.value("Content-Type").indexOf("application/x-www-form-urlencoded") > -1)
+			{
+				QList<QByteArray> pairs = postData.split('&');
+				foreach(QByteArray pair, pairs)
+				{
+					QList<QByteArray> keyValue = pair.split('=');
+					if(keyValue.size() < 2)
+						continue;
+					
+					map[QUrl::fromPercentEncoding(keyValue[0]).replace("+"," ")] = QUrl::fromPercentEncoding(keyValue[1]).replace("+"," ");
+				}
+				
+				//qDebug() << "Debug: Decoded POST data: "<<map<<" from "<<QString(postData);
+				
+				dispatch(socket, pathElements, map);
+			}
+			else
+			{
+				respond(socket,QString("HTTP/1.0 500 Content-Type for POST must be application/x-www-form-urlencoded"));
+			}
+		}
+		else
+		{
+			respond(socket,QString("HTTP/1.0 500 Method not used"));
+		}
 			
 		bool closeSocket = true;
 		
 		/*
-		QHttpRequestHeader headers(headerBuffer.join(""));
 		if(headers.hasKey("Connection") &&
 		   headers.value ("Connection") == "Keep-Alive")
 		{

@@ -135,10 +135,7 @@ void TabletServer::mainScreen(QTcpSocket *socket, const QStringList &path, const
 		
 		// Compile list of results matching mode (from db or from current sched) and the filter, and return as json string
 		
-		// TODO poll for changes to schedule / database
-		
 		// TODO add button to search online
-		
 		
 		//qDebug() << "TabletServer::mainScreen(): list: mode: "<<mode<<", filter: "<<filter;
 		
@@ -180,6 +177,7 @@ void TabletServer::mainScreen(QTcpSocket *socket, const QStringList &path, const
 				line["id"]    = song->songId();
 				line["title"] = song->title();
 				line["text"]  = song->text();
+				line["arr"]   = song->defaultArrangement()->arrangement().join(", ");
 				
 				resultList << line;
 				
@@ -190,8 +188,8 @@ void TabletServer::mainScreen(QTcpSocket *socket, const QStringList &path, const
 		}
 		else
 		{
-			int liveId = AppSettings::taggedOutput("live")->id();
-			SlideGroup *liveGroup = mw->outputInst(liveId)->slideGroup();
+// 			int liveId = AppSettings::taggedOutput("live")->id();
+// 			SlideGroup *liveGroup = mw->outputInst(liveId)->slideGroup();
 			
 			DocumentListModel * model = mw->documentListModel();
 			
@@ -220,8 +218,8 @@ void TabletServer::mainScreen(QTcpSocket *socket, const QStringList &path, const
 					row["id"]        = idx; //songGroup->groupId();
 					row["title"]     = viewText;
 					row["text"]	 = songGroup->text();
-					
-					row["mapping"]	= genArrMapping(songGroup->text(), songGroup->arrangement());
+					row["arr"]	 = songGroup->arrangement().join(", ");
+					row["mapping"]	 = genArrMapping(songGroup->text(), songGroup->arrangement());
 					
 					resultList << row;
 					
@@ -264,6 +262,62 @@ void TabletServer::mainScreen(QTcpSocket *socket, const QStringList &path, const
 // 			"Content-Type: application/json\n\n" <<
 // 			jsonString;
 
+		QHttpResponseHeader header(QString("HTTP/1.0 200 OK"));
+		header.setValue("Content-Type", "application/json");
+		respond(socket, header);
+		
+		QTextStream output(socket);
+		output.setAutoDetectUnicode(true);
+		output << jsonString;
+	}
+	else
+	if(control == "save_song")
+	{
+		QString mode   = query["mode"]; // Either "db" or "file"
+		int itemid     = query["itemid"].toInt(); // If mode is db, itemid is a songid, otherwise, it's a group index
+		
+		QString title  = query["title"];
+		QString text   = query["text"];
+		QString arrTxt = query["arr"];
+		
+		SongRecord *song;
+		
+		if(mode == "file")
+		{
+			DocumentListModel * model = mw->documentListModel();
+			SlideGroup * group = model->groupAt(itemid);
+			SongSlideGroup *songGroup = dynamic_cast<SongSlideGroup*>(group);
+			
+			// Update the document model 
+			songGroup->setGroupTitle(title);
+			songGroup->setText(text); // automatically regenerates slides in document
+			
+			song = songGroup->song();
+		}
+		else
+		{
+			song = SongRecord::retrieve(itemid);
+		}
+		
+		if(!song)
+		{
+			Http_Send_404(socket) 
+				<< "Invalid songid";
+		}
+		
+		song->setTitle(title);
+		song->setText(text);
+		
+		SongArrangement *arr = song->defaultArrangement();
+		arr->setArrangement(arrTxt.split(QRegExp("\\s*,\\s*")));
+		
+		// Changes automatically committed to database
+		
+		QVariantMap result;
+		result["mapping"] = genArrMapping(song->text(), arr->arrangement());
+		
+		QString jsonString = m_toJson.serialize(result);
+		
 		QHttpResponseHeader header(QString("HTTP/1.0 200 OK"));
 		header.setValue("Content-Type", "application/json");
 		respond(socket, header);

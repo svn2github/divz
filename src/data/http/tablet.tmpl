@@ -385,13 +385,14 @@ $(function()
 		{
 			$("#song-content").html(""
 				+"<div class='ui-body ui-body-e' id='preview-notice'>"
-					+"<a data-role='button' data-icon='star' id='add-item-btn' href='javascript:void(addToSchedule("+itemid+"))'>Add to Schedule</a>"
+					+"<a data-role='button' data-icon='plus' id='add-item-btn' href='javascript:void(addToSchedule("+itemid+"))'>Add to Schedule</a>"
 					+"<span id='add-item-msg'>This is a preview from the database - to add it to the current schedule, use the button on the right.</span>"
 				+"</div>"
+				+"<a data-role='button' data-icon='gear' data-inline='true' id='edit-item-btn' href='javascript:void(editSong("+itemid+"))' style='float:right' data-theme='b'>Edit Song</a>"
 				+"<h3>"+item.title+"</h3>"
-				+"<code>"+syntaxHighlight(item.text)+"</code>");
-				
-			$('#add-item-btn').button();
+				+"<code>"+syntaxHighlight(item.text)+"</code>")
+				// Trigger jQuery mobile updates
+				.trigger( "create" );
 		}
 		else
 		{
@@ -414,7 +415,14 @@ $(function()
 			}
 			
 			// Insert the new HTML into the content area
-			$("#song-content").html("<h3>" + item.title + "</h3>" + blocksOut.join(""));
+			$("#song-content").html(""
+				+ "<a data-role='button' data-icon='gear' data-inline='true' id='edit-item-btn' href='javascript:void(editSong("+itemid+"))' ontouchstart='editSong("+itemid+");return false'"
+					+ " style='float:right' data-theme='b'>Edit Song</a>"
+				+ "<h3 style='font-size: 120% !important'>" + item.title + "</h3>" 
+				+ blocksOut.join("")
+			)
+			// Trigger jQuery mobile decorations
+			.trigger( "create" );
 			
 			// Add the 'click to go live' handler
 			$("#song-content .song-text-block").on('click',      function() { sendBlockLive(itemid, this, false); } );
@@ -568,6 +576,89 @@ $(function()
 				
 				// Change the message text
 				$("#add-item-msg").html("Item added! Click the 'View Schedule' button to view the current schedule.");
+			}
+		});
+	}
+	
+	window.editSong = function(itemid)
+	{
+		window.editSong.itemid = itemid;
+		
+		var item = window.SearchResults[itemid];
+		if(itemid == undefined || !item)
+		{
+			$("#song-content").html("<h3>(No song selected)</h3>");
+			return;
+		}
+		
+		
+		$("#song-content").html(""
+			+ "<a data-role='button' data-icon='check' data-inline='true' id='save-edit-btn'   href='javascript:void(saveSongChanges("+itemid+"))' ontouchstart='saveSongChanges("+itemid+");return false'"
+				+ " data-theme='b'>Save Changes</a>"
+			+ "<a data-role='button'                   data-inline='true' id='cancel-edit-btn' href='javascript:void(cancelEditSong("+itemid+"))'  ontouchstart='cancelEditSong("+itemid+");return false'"
+				+ " >Cancel</a>"
+			+ "<div data-role='fieldcontain'><label for='song-title-edit'>Title:</label>       <input id='song-title-edit' type='text' value='" + item.title + "' size=30></div>" 
+			+ "<div data-role='fieldcontain'><label for='song-arr-edit'>  Arrangement:</label> <input id='song-arr-edit'   type='text' value='" + item.arr + "' size=30></div>"
+			+ "<textarea id='song-text-edit' rows=30 cols=30'></textarea>"
+		)
+		// Trigger jQuery mobile decorations
+		.trigger( "create" );
+
+		$('#song-text-edit').attr('value', item.text);
+		
+		// Initially the edit mode JUST a text editor
+		
+		// Futre plans:
+		// Editor mode with blocks
+		// Long press OR copy block to edit block in popup dialog
+		// Drag to rearrange blocks
+		
+	}
+	
+	window.cancelEditSong = function(itemid)
+	{
+		showListItem(itemid);
+	}
+	
+	window.saveSongChanges = function(itemid)
+	{
+		var item = window.SearchResults[itemid];
+		if(itemid == undefined || !item)
+		{
+			$("#song-content").html("<h3>(No song selected)</h3>");
+			return;
+		}
+		
+		// Update internal text representation
+		item.title = $('#song-title-edit').attr('value');
+		item.text  = $('#song-text-edit').attr('value');
+		item.arr   = $('#song-arr-edit').attr('value');
+		
+		// TODO:
+		// Make sure we transmit arrangement
+		
+ 		showLoadingMsg();
+		
+		var postData = 
+		{
+			title	: item.title,
+			text	: item.text,
+			arr	: item.arr,
+			itemid	: itemid,
+			// Server needs ListMode so it can correctly contextualize the itemid into either a SongID or a GroupNum
+			mode	: window.ListMode,
+		};
+		
+ 		var url = '/tablet/save_song';
+		$.ajax({
+			type: "POST",
+			url: url,
+			data: postData,
+			success: function(data)
+			{
+				showListItem(itemid);
+				
+				hideLoadingMsg();
 			}
 		});
 	}
