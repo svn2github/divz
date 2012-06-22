@@ -1,8 +1,17 @@
 <!DOCTYPE html> 
-<html> 
-	<head> 
+<html manifest="/www/tablet/cache.manifest"> 
+	<head>
 	<title>DViz Tablet Song App</title> 
-	<meta name="viewport" content="width=device-width, initial-scale=1"> 
+	<!--<meta name="viewport" content="width=device-width, initial-scale=1">-->
+	<meta name="viewport" content="width=device-width, user-scalable=no" />
+	<meta name="apple-mobile-web-app-capable" content="yes" />
+	<meta name="apple-mobile-web-app-status-bar-style" content="default" /> <!--The values for content are default, black and black-translucent-->
+	<link rel="apple-touch-icon" href="/www/tablet/apple-touch-icon.png" /> <!-- If you don't want the glossy finish applied automatically, use apple-touch-icon-precomposed instead of apple-touch-icon. -->
+		<!--114x114 .png file - On older iPhones, which used 56x56 icons, and the iPad, which uses 72x72 icons, the graphic automatically scales down.--> 
+	<link rel="apple-touch-startup-image" href="/www/tablet/startup.png" />
+		<!--The file must be exactly 320x460, or else the iPhone ignores it. (The iPad requires 1004x768.)--> 
+	
+	 
 	<!--<link rel="stylesheet" href="http://code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.css" />
 	<script src="http://code.jquery.com/jquery-1.7.1.min.js"></script>
 	<script src="http://code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.js"></script>-->
@@ -99,7 +108,16 @@
 </head> 
 <body> 
 
-<div data-role="page">
+<div data-role="page" ontouchmove="BlockMove(event);">
+
+	<script>
+	// From http://matt.might.net/articles/how-to-native-iphone-ipad-apps-in-javascript/
+	// See section "Preventing elastic scrolling"
+	function BlockMove(event) {
+		// Tell Safari not to move the window.
+		event.preventDefault() ;
+	}
+	</script>
 
 	<div data-role="header">
 		<h1>DViz Tablet Song App</h1>
@@ -189,13 +207,23 @@ $(function()
 	}
 
 	$('#tablet-control').on('click', function() { updateTabletMode('control') });
-	$('#tablet-viewer') .on('click', function() { updateTabletMode('viewer')  }); 
+	$('#tablet-viewer') .on('click', function() { updateTabletMode('viewer')  });
+	$('#tablet-control').on('touchstart', function(event) { updateTabletMode('control'); event.stopPropagation(); });
+	$('#tablet-viewer') .on('touchstart', function(event) { updateTabletMode('viewer');  event.stopPropagation(); });
+
 	$('#modebtn-db')  .on('click',function() { updateListMode('db')   });
 	$('#modebtn-file').on('click',function() { updateListMode('file') });
-	$('#search').on('keyup',  function() { updateListFilter(this.value, true); }); // true = delay loading
-	$('#search').on('change', function() { updateListFilter(this.value); });
+	$('#modebtn-db')  .on('touchstart',function(event) { updateListMode('db');   event.stopPropagation(); });
+	$('#modebtn-file').on('touchstart',function(event) { updateListMode('file'); event.stopPropagation(); });
+	
 	$('#font-up').on('click', function() { changeFontSize(1.2); });
 	$('#font-dn').on('click', function() { changeFontSize(0.8); });
+	$('#font-up').on('touchstart', function() { changeFontSize(1.2); event.stopPropagation(); });
+	$('#font-dn').on('touchstart', function() { changeFontSize(0.8); event.stopPropagation(); });
+	
+	$('#search').on('keyup',  function() { updateListFilter(this.value, true); }); // true = delay loading
+	$('#search').on('change', function() { updateListFilter(this.value); });
+	
 	
 	function changeFontSize(inc)
 	{
@@ -301,6 +329,23 @@ $(function()
 	var tagFormatRegex  = new RegExp(tagPattern, "gi");
 	var rearFormatRegex = new RegExp(rearPattern, "gi");
 	
+	
+	window.sendBlockLive = function(itemid, block, touched)
+	{
+		if(window.TabletMode == 'viewer')
+			return;
+	
+		var idx     = $(block).attr('x:idx');
+		var mapping = $(block).attr('x:mapping').split(',');
+		if(mapping.length == 1 && mapping[0] == "")
+			mapping = [];
+		
+		// Update UI
+		updateLiveSlideUI($(block));
+		
+		slideGoLive(itemid, idx, mapping, touched);
+	}
+	
 	window.syntaxHighlight = function(text)
 	{
 		var lines = text.split("\n");
@@ -322,6 +367,9 @@ $(function()
 	
 	window.showListItem = function(itemid)
 	{
+		//consoleDebug("showListItem(): ",itemid);
+		window.pollLiveSlide.lastLiveSlide = false;
+		
 		if(window.TabletMode == 'control')
 			clearTimeout(window.pollLiveSlide.timerId);
 		
@@ -369,27 +417,26 @@ $(function()
 			$("#song-content").html("<h3>" + item.title + "</h3>" + blocksOut.join(""));
 			
 			// Add the 'click to go live' handler
-			$("#song-content .song-text-block").on('click', function()
-			{
-				if(window.TabletMode == 'viewer')
-					return;
+			$("#song-content .song-text-block").on('click',      function() { sendBlockLive(itemid, this, false); } );
 			
-				var idx     = $(this).attr('x:idx');
-				var mapping = $(this).attr('x:mapping').split(',');
-				if(mapping.length == 1 && mapping[0] == "")
-					mapping = [];
-				
-				// Update UI
-				updateLiveSlideUI($(this));
-				
-				slideGoLive(itemid, idx, mapping);
-			});
+			// 'ontouchstart' added per http://matt.might.net/articles/how-to-native-iphone-ipad-apps-in-javascript/
+			// See 'Detecting touch and gesture events' - "...good reason to do this..."
+			$("#song-content .song-text-block").on('touchstart', function() { sendBlockLive(itemid, this, true); } );
 			
 			clearTimeout(window.pollLiveSlide.timerId);
 			window.pollLiveSlide.timerId = setInterval(window.pollLiveSlide, 500);
 			
 		}
 	}
+	
+	// consoleDebug(..) calls fail in Google Chrome with "Illegal Invocation" errors - why can't you call window.console.debug via a function reference?
+	var is_chrome = navigator.userAgent.toLowerCase().indexOf('chrome') > -1;
+	if(!is_chrome &&
+	   window.console && 
+	   window.console.debug)
+	   window.consoleDebug = window.console.debug;
+	else
+	   window.consoleDebug = function() {}
 	
 	window.showLoadingMsg = function()
 	{
@@ -462,7 +509,7 @@ $(function()
 		window.LastLiveBlock = newLiveBlock;
 	}
 	
-	window.slideGoLive = function(itemid, idx, mapList)
+	window.slideGoLive = function(itemid, idx, mapList, touched)
 	{
 		showLoadingMsg();
 		
@@ -488,7 +535,7 @@ $(function()
 			window.LastLiveSlide = idx;
 		}
 		
-		var url = '/show_slide?group='+itemid+'&slide='+slide;
+		var url = '/tablet/show_slide?group='+itemid+'&slide='+slide+(touched?'&touched=true':'');
 		$.ajax({
 			type: "GET",
 			url: url,
@@ -500,7 +547,7 @@ $(function()
 	{
 		showLoadingMsg();
 		
-		var url = '/add_song?songid='+itemid;
+		var url = '/tablet/add_song?songid='+itemid;
 		$.ajax({
 			type: "GET",
 			url: url,
@@ -527,7 +574,7 @@ $(function()
 	
 	window.pollLiveSlide = function()
 	{
-		var url = '/poll_live_slide';
+		var url = '/tablet/poll_live_slide';
 		$.ajax({
 			type: "GET",
 			url: url,
@@ -540,34 +587,44 @@ $(function()
 			{
 				hideConLost();
 				
-				//window.CurrentListItemDisplayed = itemid;
-				//var item = window.SearchResults[itemid];
 				if(!data.error)
 				{
-					try
-					{
+// 					try
+// 					{
 						var groupNum = data.groupIdx;
 						var slideNum = data.slideIdx;
 						
-						// TODO adapt code for "View Only" mode
 						if(groupNum != window.CurrentListItemDisplayed)
 						{
+							// We don't change groups on the "control" tablet because
+							// we assume the user wants to control the changing of groups
 							if(window.TabletMode == 'control')
 								return;
 							
 							// If viewer, assume we're in 'file' list mode and have current list of songs,
 							// so we just tell it to show the next live song
+							consoleDebug("pollLiveSlide(): group# changed, showing new group:",groupNum);
 							showListItem(groupNum);
 						}
 						
 						if(window.pollLiveSlide.lastLiveSlide == slideNum &&
 						   window.pollLiveSlide.lastLiveGroup == groupNum)
+						{
+							//consoleDebug("pollLiveSlide(): No change in slide#/group#");
 							return;
+						}
 						
 						window.pollLiveSlide.lastLiveSlide = slideNum;
 						window.pollLiveSlide.lastLiveGroup = groupNum;
 						
 						var item = window.SearchResults[groupNum];
+						if(!item)
+						{
+							consoleDebug("pollLiveSlide(): Group num given does not exist in window.SearchResults, groupNum:", groupNum);
+							if(window.TabletMode == 'viewer')
+								showListItem(false);
+							return;
+						}
 						
 						var slideMapping = item.mapping;
 						
@@ -595,13 +652,18 @@ $(function()
 							
 						var $block = $("#slide-idx-" + mappedIdx);
 						
+						consoleDebug("pollLiveSlide(): Updating live block, mappedIdx:",mappedIdx);
 						updateLiveSlideUI($block);
-					}
-					catch(e)
-					{
-						if(window && window.console)
-							window.console.debug(e);
-					}
+// 					}
+// 					catch(e)
+// 					{
+// 						consoleDebug(e);
+// 					}
+				}
+				else
+				{
+					if(window.TabletMode == 'viewer')
+						showListItem(false);
 				}
 				
 				//clearTimeout(window.pollLiveSlide.timerId);
@@ -636,7 +698,7 @@ $(function()
 		var thisCount = reloadList.accessCount;
 		
 		// md5 only relevant if polling - server uses it to check for change
-		var url = '/list?mode='+window.ListMode+'&filter='+window.ListFilter+'&poll='+pollingFlag+'&md5='+md5;
+		var url = '/tablet/list?mode='+window.ListMode+'&filter='+window.ListFilter+'&poll='+pollingFlag+'&md5='+md5;
 		$.ajax({
 			type: "GET",
 			url: url,
@@ -686,7 +748,9 @@ $(function()
 						var item = data.list[i];
 						var shortTitle = item.title.substring(0,20) + (item.title.length > 20 ? "..." :"");
 						
-						list.append($("<li><a href='javascript:void(showListItem("+item.id+"));'>"+shortTitle+"</a></li>"));
+						// 'ontouchstart' added per http://matt.might.net/articles/how-to-native-iphone-ipad-apps-in-javascript/
+						// See 'Detecting touch and gesture events' - "...good reason to do this..."
+						list.append($("<li><a href='javascript:void(showListItem("+item.id+"));' ontouchstart='showListItem("+item.id+");return false'>"+shortTitle+"</a></li>"));
 						
 						window.SearchResults[item.id] = item;
 					}
@@ -703,17 +767,20 @@ $(function()
 						$("#result-list-box").append($("<span class=hint>" + (window.ListFilter == "" ? "No songs found!" : "No matching songs found.") + "</span>"));
 					
 					// Update the song preview on the right
-					if(data.list.length == 1)
-						showListItem(data.list[0].id);
-					else
-					if(window.CurrentListItemDisplayed)
-						showListItem(window.CurrentListItemDisplayed);
-					else
-// 					// NOTE - FOR DEBUGGING
-// 					if(SearchResults[2])
-// 						showListItem(2);
-// 					else
-						showListItem(false);
+					if(window.TabletMode == 'control')
+					{
+						if(data.list.length == 1)
+							showListItem(data.list[0].id);
+						else
+						if(window.CurrentListItemDisplayed)
+							showListItem(window.CurrentListItemDisplayed);
+						else
+	// 					// NOTE - FOR DEBUGGING
+	// 					if(SearchResults[2])
+	// 						showListItem(2);
+	// 					else
+							showListItem(false);
+					}
 				}	
 				
 				hideLoadingMsg();

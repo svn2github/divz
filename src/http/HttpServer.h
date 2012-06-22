@@ -56,7 +56,7 @@ public:
 	void generic404(QTcpSocket *socket, const QStringList &path = QStringList(), const QStringMap & map = QStringMap());
 	
 	// Simple file serving routine - reads the file, guesses the content type from extension (supports png,jp(e)g,gif,css,js, and html), and sends it to the socket
-	bool serveFile(QTcpSocket *socket, const QString &);
+	bool serveFile(QTcpSocket *socket, const QString &, bool addExpiresHeader = true);
 	
 protected:
 	// Make a class that inherits HttpServer and override this function to handle requests yourself.

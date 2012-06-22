@@ -14,7 +14,7 @@
 
 #define FILE_BUFFER_SIZE 4096
 
-#define logMessage(a) qDebug() << "[INFO]"<< QDateTime::currentDateTime().toString() << a;
+#define logMessage(a) qDebug() << "[INFO]"<< qPrintable(QDateTime::currentDateTime().toString()) << a;
 
 HttpServer::HttpServer(quint16 port, QObject* parent)
 	: QTcpServer(parent)
@@ -64,7 +64,7 @@ void HttpServer::readClient()
 	{
 		QString line = socket->readLine();
 		QStringList tokens = QString(line).split(QRegExp("[ \r\n][ \r\n]*"));
-		logMessage(tokens);
+		logMessage(qPrintable(socket->peerAddress().toString()) << qPrintable(tokens.join(" ")));
 		// sample list: ("GET", "/link?test=time", "HTTP/1.1", "")
 		
 		
@@ -94,16 +94,35 @@ void HttpServer::readClient()
 			respond(socket,QString("HTTP/1.0 404 Not Found"));
 		}
 		
+ 		QStringList headerBuffer;
+ 		headerBuffer.append(line); // add first line
+ 		while(socket->canReadLine())
+ 			headerBuffer.append(QString(socket->readLine()));
+ 			//qDebug() << "HttpServer::readClient(): Extra: " << qPrintable();
 			
-		socket->close();
-	
+		bool closeSocket = true;
+		
+		/*
+		QHttpRequestHeader headers(headerBuffer.join(""));
+		if(headers.hasKey("Connection") &&
+		   headers.value ("Connection") == "Keep-Alive")
+		{
+			qDebug() << "HttpServer::readClient(): Keep-Alive!";
+			closeSocket = false;
+		}
+		*/
+		
+		if(closeSocket)
+			socket->close();
+		
 		if (socket->state() == QTcpSocket::UnconnectedState) 
 		{
+			if(!closeSocket)
+				socket->close();
+				
 			delete socket;
 			logMessage("Connection closed");
 		}
-		
-		
 	}
 }
 
@@ -115,6 +134,8 @@ void HttpServer::respond(QTcpSocket *socket, const QHttpResponseHeader &tmp)
 	QHttpResponseHeader header = tmp;
 	if(!header.hasKey("content-type"))
 		header.setValue("content-type", "text/html; charset=\"utf-8\"");
+		
+	header.setValue("Connection", "Keep-Alive");
 	
 	os << header.toString();
 	//os << "\r\n";
@@ -166,13 +187,24 @@ void HttpServer::generic404(QTcpSocket *socket, const QStringList &pathElements,
 	   << "Sorry, <code>"<<toPathString(pathElements,query)<<"</code> was not found.";
 }
 
-bool HttpServer::serveFile(QTcpSocket *socket, const QString &pathStr)
+bool HttpServer::serveFile(QTcpSocket *socket, const QString &pathStr, bool addExpiresHeader)
 {
 	if(!pathStr.contains(".."))
 	{
 		QFileInfo fileInfo(pathStr);
+		
 		// Workaround to allow serving resources by assuming the Qt resources start with ":/"
 		QString abs = pathStr.startsWith(":/") ? pathStr : fileInfo.canonicalFilePath();
+		
+		// Attempt to serve a gzipped version of the file if it exists
+// 		QString gzipFile = tr("%1.gz").arg(abs);
+// 		bool gzipEncoding = false;
+// 		if(QFile::exists(gzipFile))
+// 		{
+// 			gzipEncoding = true;
+// 			abs = gzipFile;
+// 		}
+			
 		QFile file(abs);
 		if(!file.open(QIODevice::ReadOnly))
 		{
@@ -185,8 +217,6 @@ bool HttpServer::serveFile(QTcpSocket *socket, const QString &pathStr)
 			return false;
 		}
 		
-		logMessage(QString("[FILE] %1").arg(abs));
-		
 		QString ext = fileInfo.suffix().toLower();
 		QString contentType =	ext == "png"  ? "image/png" : 
 					ext == "jpg"  ? "image/jpg" :
@@ -195,11 +225,28 @@ bool HttpServer::serveFile(QTcpSocket *socket, const QString &pathStr)
 					ext == "css"  ? "text/css" :
 					ext == "html" ? "text/html" :
 					ext == "js"   ? "text/javascript" :
+					ext == "gz"   ? "application/x-gzip" :
 					ext == "ico"  ? "image/vnd.microsoft.icon" :
+					ext == "manifest" ? "text/cache-manifest"  : /* to support Safari's manifest files */
 					"application/octet-stream";
 				
+		logMessage(QString("[FILE] OK (%2) %1").arg(abs).arg(contentType));
+		
 		QHttpResponseHeader header(QString("HTTP/1.0 200 OK"));
 		header.setValue("Content-Type", contentType);
+		
+		if(addExpiresHeader)
+		{
+			QDateTime time = QDateTime::currentDateTime().addDays(30);
+			QString expires = time.toString("ddd, dd MMM yyyy hh:mm:ss 'GMT'");
+			header.setValue("Expires", expires);
+		}
+		
+// 		if(gzipEncoding)
+// 		{
+// 			header.setValue("Vary", "Accept-Encoding");
+// 			header.setValue("Content-Encoding", "gzip");
+// 		}
 	
 		respond(socket,header);
 		

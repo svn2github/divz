@@ -48,7 +48,7 @@ TabletServer::TabletServer(quint16 port, QObject* parent)
 void TabletServer::dispatch(QTcpSocket *socket, const QStringList &path, const QStringMap &query)
 {
 	QString pathStr = path.join("/");
-	qDebug() << "TabletServer::dispatch(): path: "<<path;
+	//qDebug() << "TabletServer::dispatch(): path: "<<path;
 	
 	if(pathStr.startsWith("data/")   ||
 	   pathStr.startsWith(":/data/") ||
@@ -86,7 +86,7 @@ void TabletServer::mainScreen(QTcpSocket *socket, const QStringList &path, const
 	}
 	
 	QStringList pathCopy = path;
-	//pathCopy.takeFirst();
+	pathCopy.takeFirst(); // should be "tablet", but could be anything - /tablet/ is canonized for use in the tablet cache manifest for sfari
 	QString control = pathCopy.isEmpty() ? "" : pathCopy.takeFirst().toLower();
 	//bool flag = pathCopy.isEmpty() ? 0 : pathCopy.takeFirst().toInt();
 	
@@ -219,7 +219,6 @@ void TabletServer::mainScreen(QTcpSocket *socket, const QStringList &path, const
 					
 					row["id"]        = idx; //songGroup->groupId();
 					row["title"]     = viewText;
-					row["live_flag"] = group == liveGroup;
 					row["text"]	 = songGroup->text();
 					
 					row["mapping"]	= genArrMapping(songGroup->text(), songGroup->arrangement());
@@ -229,7 +228,6 @@ void TabletServer::mainScreen(QTcpSocket *socket, const QStringList &path, const
 					md5sigList.append(QString::number(songGroup->groupId()));
 					md5sigList.append(viewText);
 					md5sigList.append(songGroup->text());
-					md5sigList.append(group == liveGroup ? "y" : "n");
 				}
 				
 				// We don't limit the number of results in the document results
@@ -259,7 +257,7 @@ void TabletServer::mainScreen(QTcpSocket *socket, const QStringList &path, const
 		
 		QString jsonString = m_toJson.serialize(result);
 		
-		qDebug() << "TabletServer::mainScreen(): list: result: "<<result;
+		//qDebug() << "TabletServer::mainScreen(): list: result: "<<result;
 		//qDebug() << "TabletServer::mainScreen(): list: json:   "<<jsonString;
 		
 // 		Http_Send_Ok(socket) << 
@@ -537,7 +535,7 @@ QVariantMap TabletServer::genArrMapping(QString text, QStringList arragement)
 	//qDebug() << "SongSlideGroup::rearrange: Output: "<<outputText;
 	//return outputText;
 	
-	qDebug() << "TabletServer::genarrMap: Converted arr "<<arragement<<" to: "<<arrMap;
+	//qDebug() << "TabletServer::genarrMap: Converted arr "<<arragement<<" to: "<<arrMap;
 	
 	return arrMap;
 }
