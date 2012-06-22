@@ -95,7 +95,7 @@
 	
 	#page-table.onecol .content-view,
 	#page-table.onecol #tablet-switcher { 
-		margin-left: -5px;
+		margin-left: 0px;
 	}
 	
 	#conlost {
@@ -147,18 +147,21 @@
 				</div>
 			</td>
 			<td valign=top>
-				
-				<div style='float:right'>
-					<ul data-role="controlgroup" data-type="horizontal" class="localnav" id='font-size'>
-						<li><a href="#" id='font-up' data-role="button" data-transition="fade">Text +</a></li>
-						<li><a href="#" id='font-dn' data-role="button" data-transition="fade">Text -</a></li>
-					</ul>
+				<!-- This overflow:auto;width:100% trick clears the floats - see http://www.quirksmode.org/css/clearing.html -->
+				<div style='overflow:auto;width:100%'>
+					<div style='float:right'>
+						<ul data-role="controlgroup" data-type="horizontal" class="localnav" id='font-size'>
+							<li><a href="#" id='font-up' data-role="button" data-transition="fade">Text +</a></li>
+							<li><a href="#" id='font-dn' data-role="button" data-transition="fade">Text -</a></li>
+						</ul>
+					</div>
+					<div style='float:left'>
+						<ul data-role="controlgroup" data-type="horizontal" class="localnav" id='tablet-switcher'>
+							<li><a href="#" id='tablet-control' data-role="button" data-transition="fade" class="ui-btn-active">Control Tablet</a></li>
+							<li><a href="#" id='tablet-viewer'  data-role="button" data-transition="fade">View-Only Tablet</a></li>
+						</ul>
+					</div>
 				</div>
-				
-				<ul data-role="controlgroup" data-type="horizontal" class="localnav" id='tablet-switcher'>
-					<li><a href="#" id='tablet-control' data-role="button" data-transition="fade" class="ui-btn-active">Control Tablet</a></li>
-					<li><a href="#" id='tablet-viewer'  data-role="button" data-transition="fade">View-Only Tablet</a></li>
-				</ul>
 				
 				<div id='song-content' class='content-view ui-corner-all ui-shadow ui-body-c'>
 				<!--<div id='song-content' data-role="page" data-theme="c" data-content-theme="c">--> 
@@ -208,18 +211,18 @@ $(function()
 
 	$('#tablet-control').on('click', function() { updateTabletMode('control') });
 	$('#tablet-viewer') .on('click', function() { updateTabletMode('viewer')  });
-	$('#tablet-control').on('touchstart', function(event) { updateTabletMode('control'); event.stopPropagation(); });
-	$('#tablet-viewer') .on('touchstart', function(event) { updateTabletMode('viewer');  event.stopPropagation(); });
+	$('#tablet-control').on('touchstart', function(event) { updateTabletMode('control'); return false; });
+	$('#tablet-viewer') .on('touchstart', function(event) { updateTabletMode('viewer');  return false; });
 
 	$('#modebtn-db')  .on('click',function() { updateListMode('db')   });
 	$('#modebtn-file').on('click',function() { updateListMode('file') });
-	$('#modebtn-db')  .on('touchstart',function(event) { updateListMode('db');   event.stopPropagation(); });
-	$('#modebtn-file').on('touchstart',function(event) { updateListMode('file'); event.stopPropagation(); });
+	$('#modebtn-db')  .on('touchstart',function(event) { updateListMode('db');   return false; });
+	$('#modebtn-file').on('touchstart',function(event) { updateListMode('file'); return false; });
 	
 	$('#font-up').on('click', function() { changeFontSize(1.2); });
 	$('#font-dn').on('click', function() { changeFontSize(0.8); });
-	$('#font-up').on('touchstart', function() { changeFontSize(1.2); event.stopPropagation(); });
-	$('#font-dn').on('touchstart', function() { changeFontSize(0.8); event.stopPropagation(); });
+	$('#font-up').on('touchstart', function() { changeFontSize(1.2); return false; });
+	$('#font-dn').on('touchstart', function() { changeFontSize(0.8); return false; });
 	
 	$('#search').on('keyup',  function() { updateListFilter(this.value, true); }); // true = delay loading
 	$('#search').on('change', function() { updateListFilter(this.value); });
@@ -276,6 +279,9 @@ $(function()
 			// adjust formatting
 			$('#page-table').removeClass('twocol');
 			$('#page-table').addClass('onecol');
+
+			// Hide edit button if present
+			$('#edit-item-btn').hide();
 		}
 		else
 		{
@@ -287,6 +293,9 @@ $(function()
 			// adjust formatting
 			$('#page-table').removeClass('onecol');
 			$('#page-table').addClass('twocol');
+
+			// Show button if needed
+			$('#edit-item-btn').show();
 		}
 	}
 	
@@ -429,12 +438,15 @@ $(function()
 			
 			// 'ontouchstart' added per http://matt.might.net/articles/how-to-native-iphone-ipad-apps-in-javascript/
 			// See 'Detecting touch and gesture events' - "...good reason to do this..."
-			$("#song-content .song-text-block").on('touchstart', function() { sendBlockLive(itemid, this, true); } );
+			$("#song-content .song-text-block").on('touchstart', function() { sendBlockLive(itemid, this, true); return false; } );
 			
 			clearTimeout(window.pollLiveSlide.timerId);
 			window.pollLiveSlide.timerId = setInterval(window.pollLiveSlide, 500);
 			
 		}
+
+		if(window.TabletMode != 'control')
+			$('#edit-item-btn').hide();
 	}
 	
 	// consoleDebug(..) calls fail in Google Chrome with "Illegal Invocation" errors - why can't you call window.console.debug via a function reference?
