@@ -19,21 +19,39 @@ QT += sql multimedia
 #	DEFINES += PHONON_ENABLED
 #}
 
-BUILDNUM = $$system(perl buildcount.pl -v)
-VERSTR = '\\"$${BUILDNUM}\\"'  # place quotes around the version string
-
-unix {
-	VERSION  = "0.9.5"
-	VERSION = "$${VERSION}-b$${BUILDNUM}"
-	SVNREV   = $$system(svn info -r HEAD . | grep Changed\ Rev | cut -b 19-)
-	
-	!isEmpty(SVNREV) {
-		VERSION = "$${VERSION}-r$${SVNREV}"
-	}
-	VERSTR = '\\"$${VERSION}\\"'  # place quotes around the version string
-	
-	DEFINES += BUILD_SVN_REV=$${SVNREV}
+win32 {
+    exists(C:\Perl64\bin\perl.exe) {
+	PERL = "C:\Perl64\bin\perl.exe"
+    }
+    exists(C:\Perl\bin\perl.exe) {
+	PERL = "C:\Perl\bin\perl.exe"
+    }
+    isEmpty(PERL) {
+	message("Perl not found in path, unable to find SVN rev or build count")
+    }
 }
+unix {
+    PERL = "perl"
+    SVNREV  = $$system(svn info -r HEAD . | grep Changed\ Rev | cut -b 19-)
+}
+windows {
+    SVNREV  = $$system($$PERL findsvnrev.pl)
+}
+
+#BUILDNUM = $$system($$PERL buildcount.pl -v)
+#VERSTR = '\\"$${BUILDNUM}\\"'  # place quotes around the version string
+
+VERSION  = "0.9.5"
+
+#VERSION = "$${VERSION}-b$${BUILDNUM}"
+
+!isEmpty(SVNREV) {
+    #VERSION = "$${VERSION}-r$${SVNREV}"
+    VERSION = "$${SVNREV}"
+}
+VERSTR = '\\"$${VERSION}\\"'  # place quotes around the version string
+
+DEFINES += BUILD_SVN_REV=$${SVNREV}
 
 unix:!macx {
 	# On Centos 5.2 and up, it seems the FC version has an incompatible symbol with Qt. 
