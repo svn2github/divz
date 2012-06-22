@@ -93,6 +93,8 @@ void SongBrowser::setupUI()
 	m_songListModel = SongRecordListModel::instance();
 	m_songList->setModel(m_songListModel);
 	
+	connect(m_songListModel, SIGNAL(filterChanged(QString)), this, SLOT(songModelFilterChanged(QString)));
+	
 	// setup buttons at bottom
 	m_editingButtons = new QWidget(this);
 	QHBoxLayout *hbox2 = new QHBoxLayout(m_editingButtons);
@@ -343,6 +345,12 @@ void SongBrowser::songFilterChanged(const QString &text)
 	QModelIndex idx = m_songListModel->indexForRow(0);
 	if(idx.isValid())
 		m_songList->setCurrentIndex(idx);
+}
+
+void SongBrowser::songModelFilterChanged(QString text)
+{
+	if(text != m_songSearch->text())
+		m_songSearch->setText(text);
 }
 
 void SongBrowser::songFilterReset()

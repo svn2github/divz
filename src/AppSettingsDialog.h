@@ -29,6 +29,7 @@ protected slots:
 	void linkActivated(const QString&);
 	
 	void viewerPortChanged(int);
+	void tabletPortChanged(int);
 	//void slotRejected();
 	
 	void addResBtn();

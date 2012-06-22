@@ -55,6 +55,7 @@ protected slots:
 	void songDoubleClicked(const QModelIndex &);
 	void songSingleClicked(const QModelIndex &);
 	void songFilterChanged(const QString&);
+	void songModelFilterChanged(QString);
 	void songFilterReset();
 	void songSearchReturnPressed();
 	void addNewSong();

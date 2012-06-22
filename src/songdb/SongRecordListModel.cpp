@@ -256,6 +256,7 @@ void SongRecordListModel::filter(const QString &filter)
 	{
 		m_filter = filter;
 		populateSongList();
+		emit filterChanged(filter);
 	}
 }
 

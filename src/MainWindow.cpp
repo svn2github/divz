@@ -233,10 +233,10 @@ MainWindow::MainWindow(QWidget *parent) :
 		m_controlServer = new ControlServer(AppSettings::httpControlPort(),this);
 	
 	if(AppSettings::httpViewerEnabled())
-		m_viewServer = new ViewServer(AppSettings::httpViewerPort(),this);
+		m_viewServer    = new ViewServer(AppSettings::httpViewerPort(),this);
 		
- 	if(AppSettings::httpTabletServerEnabled())
- 		m_tabletServer = new TabletServer(AppSettings::httpTabletServerPort(),this);
+	if(AppSettings::httpTabletServerEnabled())
+		m_tabletServer  = new TabletServer(AppSettings::httpTabletServerPort(),this);
 		
 // 	SlideGroupViewer *sg = new SlideGroupViewer();
 // 	QRect geom(450,0,640,480);
@@ -1255,19 +1255,28 @@ void MainWindow::actionAppSettingsDialog()
 	
 	// update control server
 	if(m_controlServer)
+	{
 		delete m_controlServer;
+		m_controlServer = 0;
+	}
 	
 	if(AppSettings::httpControlEnabled())
 		m_controlServer = new ControlServer(AppSettings::httpControlPort(),this);
 		
 	if(m_viewServer)
+	{
 		delete m_viewServer;
+		m_viewServer = 0;
+	}
 		
 	if(AppSettings::httpViewerEnabled())
 		m_viewServer = new ViewServer(AppSettings::httpViewerPort(),this);
 		
 	if(m_tabletServer)
+	{
 		delete m_tabletServer;
+		m_tabletServer = 0;
+	}
 		
 	if(AppSettings::httpTabletServerEnabled())
  		m_tabletServer = new TabletServer(AppSettings::httpTabletServerPort(),this);

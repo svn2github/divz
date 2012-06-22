@@ -92,11 +92,21 @@ AppSettingsDialog::AppSettingsDialog(QWidget *parent) :
 	m_ui->httpViewerEnabled->setChecked(AppSettings::httpViewerEnabled());
 	m_ui->httpViewerPort->setValue(AppSettings::httpViewerPort());
 	
+	// apply signal changes
+	m_ui->httpViewerEnabled->setChecked(false);
+	m_ui->httpViewerEnabled->setChecked(true);
+	
+	m_ui->httpTabletEnabled->setChecked(AppSettings::httpTabletServerEnabled());
+	m_ui->httpTabletPort->setValue(AppSettings::httpTabletServerPort());
+	
 	connect(m_ui->httpControlPort, SIGNAL(valueChanged(int)), this, SLOT(controlPortChanged(int)));
 	connect(m_ui->httpControlUrlLabel, SIGNAL(linkActivated(const QString&)), this, SLOT(linkActivated(const QString&)));
 	
 	connect(m_ui->httpViewerPort, SIGNAL(valueChanged(int)), this, SLOT(viewerPortChanged(int)));
 	connect(m_ui->httpViewerUrlLabel, SIGNAL(linkActivated(const QString&)), this, SLOT(linkActivated(const QString&)));
+	
+	connect(m_ui->httpTabletPort, SIGNAL(valueChanged(int)), this, SLOT(tabletPortChanged(int)));
+	connect(m_ui->httpTabletUrlLabel, SIGNAL(linkActivated(const QString&)), this, SLOT(linkActivated(const QString&)));
 	
 	m_ui->hotkeyBlack->setText(AppSettings::hotkeySequence("black"));
 	m_ui->hotkeyClear->setText(AppSettings::hotkeySequence("clear"));
@@ -111,6 +121,7 @@ AppSettingsDialog::AppSettingsDialog(QWidget *parent) :
 	
 	controlPortChanged(AppSettings::httpControlPort());
 	viewerPortChanged(AppSettings::httpViewerPort());
+	tabletPortChanged(AppSettings::httpTabletServerPort());
 	
 	
 	QTableWidget * tableWidget = m_ui->resourceTranslations;
@@ -273,6 +284,12 @@ void AppSettingsDialog::viewerPortChanged(int port)
 	m_ui->httpViewerUrlLabel->setText(QString("Viewer URL is: <a href='%1'>%1</a>").arg(url));
 }
 
+void AppSettingsDialog::tabletPortChanged(int port)
+{
+	QString url = QString("http://%1:%2/").arg(AppSettings::myIpAddress()).arg(port);
+	m_ui->httpTabletUrlLabel->setText(QString("Tablet URL is: <a href='%1'>%1</a>").arg(url));
+}
+
 void AppSettingsDialog::linkActivated(const QString& link)
 {
 	if(!QDesktopServices::openUrl(QUrl(link)))
@@ -298,6 +315,9 @@ void AppSettingsDialog::slotAccepted()
 	
 	AppSettings::setHttpViewerEnabled(m_ui->httpViewerEnabled->isChecked());
 	AppSettings::setHttpViewerPort(m_ui->httpViewerPort->value());
+	
+	AppSettings::setHttpTabletServerEnabled(m_ui->httpTabletEnabled->isChecked());
+	AppSettings::setHttpTabletServerPort(m_ui->httpTabletPort->value());
 	
 	AppSettings::setHotkeySequence("black",m_ui->hotkeyBlack->text());
 	AppSettings::setHotkeySequence("clear",m_ui->hotkeyClear->text());

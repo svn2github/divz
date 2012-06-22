@@ -23,7 +23,7 @@
       <attribute name="title">
        <string>Outputs</string>
       </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout_18">
+      <layout class="QVBoxLayout" name="verticalLayout_9">
        <item>
         <widget class="QGroupBox" name="groupBox_2">
          <property name="title">
@@ -54,127 +54,118 @@ p, li { white-space: pre-wrap; }
        <item>
         <widget class="QGroupBox" name="groupBox_8">
          <property name="title">
-          <string>HTTP Remote Control</string>
+          <string>HTTP Remote Control, Viewing, and Tablet Servers</string>
          </property>
-         <layout class="QVBoxLayout" name="verticalLayout_9">
-          <item>
+         <layout class="QGridLayout" name="gridLayout_2">
+          <item row="1" column="0">
            <widget class="QCheckBox" name="httpControlEnabled">
             <property name="text">
-             <string>Enable HTTP Remote Control Server</string>
+             <string>Enable HTTP Remote Control</string>
             </property>
            </widget>
           </item>
-          <item>
-           <widget class="QWidget" name="widget" native="true">
-            <layout class="QHBoxLayout" name="horizontalLayout_5">
-             <property name="margin">
-              <number>0</number>
-             </property>
-             <item>
-              <widget class="QLabel" name="label_13">
-               <property name="text">
-                <string>Remote Control Port:</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QSpinBox" name="httpControlPort">
-               <property name="minimum">
-                <number>1025</number>
-               </property>
-               <property name="maximum">
-                <number>65536</number>
-               </property>
-               <property name="value">
-                <number>8080</number>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <spacer name="horizontalSpacer">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>40</width>
-                 <height>20</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-            </layout>
+          <item row="1" column="1">
+           <widget class="QLabel" name="label_13">
+            <property name="text">
+             <string>Port:</string>
+            </property>
            </widget>
           </item>
-          <item>
+          <item row="1" column="2">
+           <widget class="QSpinBox" name="httpControlPort">
+            <property name="minimum">
+             <number>1025</number>
+            </property>
+            <property name="maximum">
+             <number>65536</number>
+            </property>
+            <property name="value">
+             <number>8080</number>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
            <widget class="QLabel" name="httpControlUrlLabel">
             <property name="text">
-             <string>Control URL: http://localhost:8080/</string>
+             <string>    Remote Control URL: http://localhost:8080/</string>
             </property>
            </widget>
           </item>
-         </layout>
-        </widget>
-       </item>
-       <item>
-        <widget class="QGroupBox" name="groupBox_11">
-         <property name="title">
-          <string>HTTP Viewing Server</string>
-         </property>
-         <layout class="QVBoxLayout" name="verticalLayout_14">
-          <item>
+          <item row="3" column="0">
            <widget class="QCheckBox" name="httpViewerEnabled">
             <property name="text">
              <string>Enable HTTP Viewing Server</string>
             </property>
            </widget>
           </item>
-          <item>
-           <widget class="QWidget" name="widget_2" native="true">
-            <layout class="QHBoxLayout" name="horizontalLayout_9">
-             <property name="margin">
-              <number>0</number>
-             </property>
-             <item>
-              <widget class="QLabel" name="label_24">
-               <property name="text">
-                <string>Viewer Port:</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QSpinBox" name="httpViewerPort">
-               <property name="minimum">
-                <number>1025</number>
-               </property>
-               <property name="maximum">
-                <number>65536</number>
-               </property>
-               <property name="value">
-                <number>8081</number>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <spacer name="horizontalSpacer_5">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>40</width>
-                 <height>20</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-            </layout>
+          <item row="3" column="1">
+           <widget class="QLabel" name="label_28">
+            <property name="text">
+             <string>Port:</string>
+            </property>
            </widget>
           </item>
-          <item>
+          <item row="3" column="2">
+           <widget class="QSpinBox" name="httpViewerPort">
+            <property name="minimum">
+             <number>1025</number>
+            </property>
+            <property name="maximum">
+             <number>65536</number>
+            </property>
+            <property name="value">
+             <number>8081</number>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0">
            <widget class="QLabel" name="httpViewerUrlLabel">
             <property name="text">
-             <string>Control URL: http://localhost:8081/</string>
+             <string>    Viewer URL: http://localhost:8081/</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="0">
+           <widget class="QCheckBox" name="httpTabletEnabled">
+            <property name="text">
+             <string>Enable HTTP Tablet Server</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="1">
+           <widget class="QLabel" name="label_29">
+            <property name="text">
+             <string>Port:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="2">
+           <widget class="QSpinBox" name="httpTabletPort">
+            <property name="minimum">
+             <number>1025</number>
+            </property>
+            <property name="maximum">
+             <number>65536</number>
+            </property>
+            <property name="value">
+             <number>8082</number>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="0">
+           <widget class="QLabel" name="httpTabletUrlLabel">
+            <property name="text">
+             <string>    Tablet URL: http://localhost:8082/</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0" colspan="3">
+           <widget class="QLabel" name="label_24">
+            <property name="text">
+             <string>You can use your smartphone, tablet (iPad, etc) to remotely control or view DViz via the built-in web browser at the following addresses.</string>
+            </property>
+            <property name="wordWrap">
+             <bool>true</bool>
             </property>
            </widget>
           </item>
@@ -1081,8 +1072,8 @@ p, li { white-space: pre-wrap; }
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>275</x>
-     <y>423</y>
+     <x>284</x>
+     <y>492</y>
     </hint>
     <hint type="destinationlabel">
      <x>157</x>
@@ -1097,8 +1088,8 @@ p, li { white-space: pre-wrap; }
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>343</x>
-     <y>423</y>
+     <x>352</x>
+     <y>492</y>
     </hint>
     <hint type="destinationlabel">
      <x>286</x>
@@ -1117,8 +1108,8 @@ p, li { white-space: pre-wrap; }
      <y>123</y>
     </hint>
     <hint type="destinationlabel">
-     <x>486</x>
-     <y>120</y>
+     <x>484</x>
+     <y>125</y>
     </hint>
    </hints>
   </connection>
@@ -1129,8 +1120,8 @@ p, li { white-space: pre-wrap; }
    <slot>setValue(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>486</x>
-     <y>120</y>
+     <x>484</x>
+     <y>125</y>
     </hint>
     <hint type="destinationlabel">
      <x>325</x>
@@ -1149,8 +1140,8 @@ p, li { white-space: pre-wrap; }
      <y>155</y>
     </hint>
     <hint type="destinationlabel">
-     <x>486</x>
-     <y>152</y>
+     <x>484</x>
+     <y>157</y>
     </hint>
    </hints>
   </connection>
@@ -1161,8 +1152,8 @@ p, li { white-space: pre-wrap; }
    <slot>setValue(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>486</x>
-     <y>152</y>
+     <x>484</x>
+     <y>157</y>
     </hint>
     <hint type="destinationlabel">
      <x>334</x>
@@ -1177,12 +1168,12 @@ p, li { white-space: pre-wrap; }
    <slot>setValue(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>486</x>
-     <y>162</y>
+     <x>484</x>
+     <y>170</y>
     </hint>
     <hint type="destinationlabel">
-     <x>407</x>
-     <y>165</y>
+     <x>397</x>
+     <y>172</y>
     </hint>
    </hints>
   </connection>
@@ -1193,44 +1184,156 @@ p, li { white-space: pre-wrap; }
    <slot>setValue(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>407</x>
-     <y>165</y>
+     <x>397</x>
+     <y>172</y>
     </hint>
     <hint type="destinationlabel">
-     <x>486</x>
-     <y>162</y>
+     <x>484</x>
+     <y>170</y>
     </hint>
    </hints>
   </connection>
   <connection>
    <sender>httpControlEnabled</sender>
    <signal>toggled(bool)</signal>
-   <receiver>widget</receiver>
+   <receiver>label_13</receiver>
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>265</x>
-     <y>191</y>
+     <x>119</x>
+     <y>188</y>
     </hint>
     <hint type="destinationlabel">
-     <x>358</x>
-     <y>219</y>
+     <x>331</x>
+     <y>188</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>httpControlEnabled</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>httpControlPort</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>149</x>
+     <y>198</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>369</x>
+     <y>198</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>httpControlEnabled</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>httpControlUrlLabel</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>77</x>
+     <y>184</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>140</x>
+     <y>210</y>
     </hint>
    </hints>
   </connection>
   <connection>
    <sender>httpViewerEnabled</sender>
    <signal>toggled(bool)</signal>
-   <receiver>widget_2</receiver>
+   <receiver>label_28</receiver>
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>223</x>
-     <y>297</y>
+     <x>130</x>
+     <y>236</y>
     </hint>
     <hint type="destinationlabel">
-     <x>255</x>
-     <y>320</y>
+     <x>315</x>
+     <y>244</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>groupBox_8</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>httpViewerPort</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>118</x>
+     <y>226</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>357</x>
+     <y>233</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>httpViewerEnabled</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>httpViewerUrlLabel</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>89</x>
+     <y>244</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>94</x>
+     <y>269</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>httpTabletEnabled</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>label_29</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>104</x>
+     <y>283</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>316</x>
+     <y>289</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>httpTabletEnabled</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>httpTabletPort</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>190</x>
+     <y>287</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>376</x>
+     <y>282</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>httpTabletEnabled</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>httpTabletUrlLabel</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>85</x>
+     <y>290</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>125</x>
+     <y>310</y>
     </hint>
    </hints>
   </connection>

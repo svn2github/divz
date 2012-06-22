@@ -45,6 +45,9 @@ public:
  	// Not from AbstractListModel, just for utility
 	static QString itemMimeType() { return "application/x-dviz-song-listmodel-item"; }
 
+signals:
+	void filterChanged(QString);
+
 protected slots:
 	// songrecord::add/delete notifies us via protected functions about new/removed
 	friend class SongRecord;
