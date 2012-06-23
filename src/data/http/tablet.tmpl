@@ -1,7 +1,9 @@
 <!DOCTYPE html> 
-<html manifest="/www/tablet/cache.manifest"> 
+<!--<html manifest="/www/tablet/cache.manifest">--> 
+<html>
 	<head>
 	<title>DViz Tablet Song App</title> 
+	
 	<!--<meta name="viewport" content="width=device-width, initial-scale=1">-->
 	<meta name="viewport" content="width=device-width, user-scalable=no" />
 	<meta name="apple-mobile-web-app-capable" content="yes" />
@@ -17,7 +19,9 @@
 	<script src="http://code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.js"></script>-->
 	<link rel="stylesheet" href="/www/jquery.mobile-1.1.0/jquery.mobile-1.1.0.min.css" />
 	<script src="/www/jquery-1.7.1.min.js"></script>
+	<script src='https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.12/jquery-ui.min.js'></script>
 	<script src="/www/jquery.mobile-1.1.0/jquery.mobile-1.1.0.min.js"></script>
+	<script src="/www/jquery.ui.touch-punch.min.js"></script>
 		
 	<style>
 	.localnav {
@@ -67,8 +71,8 @@
 		font-size: 1.2em;
 	}
 	
-	#song-content .song-tag-main,
-	#song-content .song-tag-rear {
+	.song-tag-main,
+	.song-tag-rear {
 		font-weight: bold;
 		background: red;
 		color: white;
@@ -76,7 +80,7 @@
 		padding-right: .1em;
 	}
 	
-	#song-content .song-tag-rear {
+	.song-tag-rear {
 		background: blue;
 	}
 	
@@ -104,19 +108,112 @@
 		padding: .5em 2em 2em 2em;
 	}
 	
+	#edit-page {
+		z-index: 100;
+		position: absolute;
+		width: 100%;
+		height:100%;
+		top: 0;
+		left: 0;
+		margin-top:-2px;
+	}
+	
+	.outer-block {
+		cursor: move;
+		float: left;
+		list-style: none outside none;
+		
+	}
+	
+	.inner-block {
+		border: 1px solid black;
+		border-top: 0;
+		color: black;
+		
+		font-size: 0.75em;
+		/*font-weight: bold;*/
+		
+		margin: 0.5em;
+		text-shadow: 0 0 3px #FFFFFF;
+		/*width: 6em;*/
+		font-family: Monospace !important;
+		height: 15em;
+		
+		float: left;
+		
+		background: white;
+	}
+	
+	.inner-block textarea {
+		width: 100%;
+		height: 100%;
+		font-family: Monospace !important;
+		font-size: 1em;
+		border: 0;
+	}
+	
+	.outer-block .inner-block .title {
+		/*margin: -0.25em;*/
+		/*margin-top: -.75em;*/
+		margin-bottom: 0.25em;
+		padding-left: .25em;
+		font-weight: bold;
+	}
+	
+	.outer-block .inner-block .text {
+		padding: 0.25em;
+		/*text-align: center;*/
+	}
+	
+	
+	.outer-block.block-type-chorus .inner-block {
+		border-top: 4px solid green;
+	}
+	
+	.outer-block.block-type-chorus .inner-block .title {
+		background: green;
+	}
+	
+	
+	.outer-block.block-type-verse .inner-block {
+		border-top: 4px solid blue;
+	}
+	
+	.outer-block.block-type-verse .inner-block .title {
+		background: blue;
+		color: white;
+	}
+	
+	.outer-block.block-type-bridge .inner-block {
+		border-top: 4px solid yellow;
+	}
+	
+	.outer-block.block-type-bridge .inner-block .title {
+		background: yellow;
+	}
+	
+	.outer-block.block-type-tag .inner-block {
+		border-top: 4px solid red;
+	}
+	
+	.outer-block.block-type-tag .inner-block .title {
+		background: red;
+	}
+	
 	</style>
 </head> 
 <body> 
 
-<div data-role="page" ontouchmove="BlockMove(event);">
+<div data-role="page" >
 
 	<script>
-	// From http://matt.might.net/articles/how-to-native-iphone-ipad-apps-in-javascript/
-	// See section "Preventing elastic scrolling"
-	function BlockMove(event) {
-		// Tell Safari not to move the window.
-		event.preventDefault() ;
-	}
+// 	ontouchmove="BlockMove(event);"
+// 	// From http://matt.might.net/articles/how-to-native-iphone-ipad-apps-in-javascript/
+// 	// See section "Preventing elastic scrolling"
+// 	function BlockMove(event) {
+// 		// Tell Safari not to move the window.
+// 		event.preventDefault() ;
+// 	}
 	</script>
 
 	<div data-role="header">
@@ -160,6 +257,8 @@
 							<li><a href="#" id='tablet-control' data-role="button" data-transition="fade" class="ui-btn-active">Control Tablet</a></li>
 							<li><a href="#" id='tablet-viewer'  data-role="button" data-transition="fade">View-Only Tablet</a></li>
 						</ul>
+						
+						 <!--<b><a href="/" id='debug-reload'>DEBUG RELOAD</a></b>-->
 					</div>
 				</div>
 				
@@ -180,6 +279,7 @@
 <script>
 $(function()
 {
+	$("#debug-reload").attr('href','/?date='+(new Date()).getTime());
 	// Cookies
 	function createCookie(name, value, days) {
 		if (days == undefined)
@@ -230,10 +330,10 @@ $(function()
 	
 	function changeFontSize(inc)
 	{
-		var currentFontSize = $('#song-content').css('font-size');
+		var currentFontSize = $('.song-text-wrapper').css('font-size');
 		var currentFontSizeNum = parseFloat(currentFontSize, 10);
 		var newFontSize = currentFontSizeNum*inc;
-		$('#song-content').css('font-size', newFontSize);
+		$('.song-text-wrapper').css('font-size', newFontSize);
 		createCookie('song-content-font-size', newFontSize);
 		return false;
 	}
@@ -268,7 +368,7 @@ $(function()
 		{
 			// Start polling for changes
 			clearTimeout(window.pollLiveSlide.timerId);
-			window.pollLiveSlide.timerId = setInterval(window.pollLiveSlide, 500);
+			//window.pollLiveSlide.timerId = setInterval(window.pollLiveSlide, 500);
 			
 			// Set list mode to file
 			updateListMode('file');
@@ -331,14 +431,6 @@ $(function()
 		}
 	}
 	
-	// Regex patterns and logic based on (and roughly equivelant to) the code in SongEditorHighlighter.cpp
-	var songTagRegexpList = "Title|Verse|Chorus|Tag|Bridge|End(ing)?|Intro(duction)?";
-	var tagPattern  = "^(\\s*(?:" + songTagRegexpList + ")(?:\\s+\\d+)?(?:\\s*\\(.*\\))?\\s*.*)$";
-	var rearPattern = "^(\\s*(?:(?:B:|R:|C:|T:|G:|\\[|\\|).*).*)$";
-	var tagFormatRegex  = new RegExp(tagPattern, "gi");
-	var rearFormatRegex = new RegExp(rearPattern, "gi");
-	
-	
 	window.sendBlockLive = function(itemid, block, touched)
 	{
 		if(window.TabletMode == 'viewer')
@@ -354,6 +446,13 @@ $(function()
 		
 		slideGoLive(itemid, idx, mapping, touched);
 	}
+	
+	// Regex patterns and syntaxHighlight() logic based on (and roughly equivelant to) the code in SongEditorHighlighter.cpp
+	var songTagRegexpList = "Title|Verse|Chorus|Tag|Bridge|End(ing)?|Intro(duction)?";
+	var tagPattern  = "^(\\s*(?:" + songTagRegexpList + ")(?:\\s+\\d+)?(?:\\s*\\(.*\\))?\\s*.*)$";
+	var rearPattern = "^(\\s*(?:(?:B:|R:|C:|T:|G:|\\[|\\|).*).*)$";
+	var tagFormatRegex  = new RegExp(tagPattern, "gi");
+	var rearFormatRegex = new RegExp(rearPattern, "gi");
 	
 	window.syntaxHighlight = function(text)
 	{
@@ -393,13 +492,13 @@ $(function()
 		if(window.ListMode == 'db')
 		{
 			$("#song-content").html(""
-				+"<div class='ui-body ui-body-e' id='preview-notice'>"
+				+ "<div class='ui-body ui-body-e' id='preview-notice'>"
 					+"<a data-role='button' data-icon='plus' id='add-item-btn' href='javascript:void(addToSchedule("+itemid+"))'>Add to Schedule</a>"
 					+"<span id='add-item-msg'>This is a preview from the database - to add it to the current schedule, use the button on the right.</span>"
-				+"</div>"
-				+"<a data-role='button' data-icon='gear' data-inline='true' id='edit-item-btn' href='javascript:void(editSong("+itemid+"))' style='float:right' data-theme='b'>Edit Song</a>"
-				+"<h3>"+item.title+"</h3>"
-				+"<code>"+syntaxHighlight(item.text)+"</code>")
+				+ "</div>"
+				+ "<a data-role='button' data-icon='gear' data-inline='true' id='edit-item-btn' href='javascript:void(editSong("+itemid+"))' style='float:right' data-theme='b'>Edit Song</a>"
+				+ "<h3>"+item.title+"</h3>"
+				+ "<div class='song-text-wrapper'><code>"+syntaxHighlight(item.text)+"</code></div>")
 				// Trigger jQuery mobile updates
 				.trigger( "create" );
 		}
@@ -428,7 +527,9 @@ $(function()
 				+ "<a data-role='button' data-icon='gear' data-inline='true' id='edit-item-btn' href='javascript:void(editSong("+itemid+"))' ontouchstart='editSong("+itemid+");return false'"
 					+ " style='float:right' data-theme='b'>Edit Song</a>"
 				+ "<h3 style='font-size: 120% !important'>" + item.title + "</h3>" 
-				+ blocksOut.join("")
+				+ "<div class='song-text-wrapper'>"
+					+ blocksOut.join("")
+				+ "</div>"
 			)
 			// Trigger jQuery mobile decorations
 			.trigger( "create" );
@@ -441,7 +542,7 @@ $(function()
 			$("#song-content .song-text-block").on('touchstart', function() { sendBlockLive(itemid, this, true); return false; } );
 			
 			clearTimeout(window.pollLiveSlide.timerId);
-			window.pollLiveSlide.timerId = setInterval(window.pollLiveSlide, 500);
+			//window.pollLiveSlide.timerId = setInterval(window.pollLiveSlide, 500);
 			
 		}
 
@@ -450,12 +551,14 @@ $(function()
 	}
 	
 	// consoleDebug(..) calls fail in Google Chrome with "Illegal Invocation" errors - why can't you call window.console.debug via a function reference?
-	var is_chrome = navigator.userAgent.toLowerCase().indexOf('chrome') > -1;
-	if(!is_chrome &&
-	   window.console && 
-	   window.console.debug)
-	   window.consoleDebug = window.console.debug;
-	else
+// 	var is_chrome = navigator.userAgent.toLowerCase().indexOf('chrome') > -1;
+// 	var is_safari = navigator.userAgent.toLowerCase().indexOf('safari') > -1;
+// 	if(!is_chrome &&
+// 	   !is_safari &&
+// 	   window.console && 
+// 	   window.console.debug)
+// 	   window.consoleDebug = window.console.debug;
+// 	else
 	   window.consoleDebug = function() {}
 	
 	window.showLoadingMsg = function()
@@ -592,6 +695,140 @@ $(function()
 		});
 	}
 	
+	window.genCompressedArr = function(item)
+	{
+		//var tagPattern = "(\\s*(?:" + songTagRegexpList + ")(?:\\s+\\d+)?(?:\\s*\\(.*\\))?\\s*.*)";
+		//var tagRegex   = new RegExp(tagPattern, "gi");
+		
+		
+		var cleanedText = item.text.replace("\r\n","\n");
+		var blockList = cleanedText.split("\n\n");
+		
+		var arrList = [];
+		var blockHash = {};
+		
+		var storeBlock = function(blockTitle,blockText)
+		{
+			//$.inArray(value,array)
+			//if($.inArray(blockTitle, arrList) &&
+			if(blockHash[blockTitle])
+			{
+				if(blockHash[blockTitle] == blockText)
+				{
+					// text of this block same as already stored, just add title to arrangement list
+					arrList.push(blockTitle);
+					//console.debug("genCompressedArr.storeBlock: [existing, no change] blockTitle:", blockTitle);
+				}
+				else
+				{
+					// Same title, new text - add counter to title
+					var counter = 1;
+					while(blockHash[blockTitle+" "+counter])
+						counter ++;
+					
+					blockTitle += " "+counter;
+					
+					blockHash[blockTitle] = blockText;
+					arrList.push(blockTitle);
+					
+					//console.debug("genCompressedArr.storeBlock: [existing, uniqueify] blockTitle:", blockTitle);
+				}
+			}
+			else
+			{
+				blockHash[blockTitle] = blockText;
+				arrList.push(blockTitle);
+				//console.debug("genCompressedArr.storeBlock: [new title] blockTitle:", blockTitle);
+			}
+		};
+		
+		//console.debug("blockList: ", blockList);
+		
+		var curBlockTitle;
+		var curBlockText = [];
+		var firstBlock = true;
+		for(var idx=0; idx<blockList.length; idx++)
+		{
+			var passage = blockList[idx];
+			
+			var newBlockTitle = false;
+			var filtered = [];
+			var lines = passage.split("\n");
+			for(var lineIdx in lines)
+			{
+				var line = lines[lineIdx];
+				var matchData = tagFormatRegex.exec(line);
+				if(matchData)
+					newBlockTitle = matchData[1];
+				else
+					filtered[filtered.length] = line;
+			}
+			
+			//console.debug("current block idx: ", idx, ", newBlockTitle: ", newBlockTitle);
+			if(newBlockTitle)
+			{
+				//console.debug("curBlockTitle: ",curBlockTitle, "text line1: ",curBlockText[0]);
+				// first, add block to hash if we have a block already
+				if(curBlockTitle != "" && curBlockTitle != undefined)
+				{
+					//blockHash[curBlockTitle] = curBlockText.join("\n\n");
+					storeBlock(curBlockTitle, curBlockText.join("\n\n"));
+				}
+				else
+				// or this is the first block and no title given - assume "Title" block
+				if(firstBlock && curBlockText.length>0)
+				{
+					curBlockTitle = "Title";
+					//blockHash[curBlockTitle] = curBlockText.join("\n\n");
+					storeBlock(curBlockTitle, curBlockText.join("\n\n"));
+				}
+				
+				firstBlock = false;
+				
+				// start new block
+				curBlockTitle = newBlockTitle;
+				curBlockText = [];
+			}
+			
+			curBlockText.push(filtered.join("\n"));
+		}
+		
+		if(curBlockTitle != "")
+			//blockHash[curBlockTitle] = curBlockText.join("\n\n");
+			storeBlock(curBlockTitle, curBlockText.join("\n\n"));
+// 			
+// 		//qDebug() << "SongSlideGroup::rearrange: Original blocks: "<<blockHash;
+// 		//qDebug() << "SongSlideGroup::rearrange: Processing arragnement: "<<arragement;
+		
+		var output = [];
+		for(var idx in arrList)
+		{
+			var blockTitle = arrList[idx];
+			if(blockHash[blockTitle])
+			{
+				//qDebug() << "SongSlideGroup::rearrange: [process] Block: "<<blockTitle;
+				output[output.length] =
+					blockTitle + "\n" + 
+					blockHash[blockTitle];
+				
+				
+			}
+			else
+			{
+				consoleDebug("editSong(): [process] [Error] Arrangement block not found in original text: ", blockTitle);
+			}
+		}
+		
+		var outputText = output.join("\n\n");
+		item.text = outputText;
+		item.arr = arrList.join(", ");
+		
+		//console.debug(arrList);
+		//console.debug(outputText);
+		return item;
+		
+	};
+	
 	window.editSong = function(itemid)
 	{
 		window.editSong.itemid = itemid;
@@ -604,6 +841,7 @@ $(function()
 		}
 		
 		
+		/*
 		$("#song-content").html(""
 			+ "<a data-role='button' data-icon='check' data-inline='true' id='save-edit-btn'   href='javascript:void(saveSongChanges("+itemid+"))' ontouchstart='saveSongChanges("+itemid+");return false'"
 				+ " data-theme='b'>Save Changes</a>"
@@ -617,6 +855,173 @@ $(function()
 		.trigger( "create" );
 
 		$('#song-text-edit').attr('value', item.text);
+		*/
+		
+		$("#song-content").html("");
+		
+		var $div = $("<div id='edit-page' class='ui-corner-all ui-shadow ui-body-c'>"
+			+ "<h1 style='float:left;display:none'>Song Editor</h1>"
+			+ "<a data-role='button' data-icon='check' data-inline='true' id='save-edit-btn'   href='javascript:void(saveSongChanges("+itemid+"))' ontouchstart='saveSongChanges("+itemid+");return false'"
+				+ " data-theme='b'>Save Changes</a>"
+			+ "<a data-role='button'                   data-inline='true' id='cancel-edit-btn' href='javascript:void(cancelEditSong("+itemid+"))'  ontouchstart='cancelEditSong("+itemid+");return false'"
+				+ " >Cancel</a>"
+			+ "<div data-role='fieldcontain'><label for='song-title-edit'>Title:</label>       <input id='song-title-edit' type='text' value='" + item.title + "' size=30></div>"
+			+ "<ul id='edit-box'></li>"
+			+ "</div>");
+		$(document.body).append($div);
+		
+		$div.trigger( "create" );
+		
+		// Generate an optimal arrangement if no arrangement given already
+		if(item.arr == "")
+			item = genCompressedArr(item);
+		
+		var arrList = item.arr.split(/\s*,\s*/);
+		
+		var isEmpty = true;
+		for(var idx in arrList);
+			if(arrList[idx] != "")
+				isEmpty = false;
+		
+		if(isEmpty)
+		{
+			item = genCompressedArr(item);
+			arrList = item.arr.split(/\s*,\s*/);
+		}
+		
+		console.debug("editSong(): arrList:", arrList);
+		
+		var cleanedText = item.text.replace("\r\n","\n");
+		var blockList = cleanedText.split("\n\n");
+		
+		console.debug("editSong(): blockList: ", blockList); 
+		
+		var blockHash = {};
+		
+		var curBlockTitle;
+		var curBlockText = [];
+		var firstBlock = true;
+		for(var idx=0; idx<blockList.length; idx++)
+		{
+			var passage = blockList[idx];
+			
+			var newBlockTitle = false;
+			var filtered = [];
+			var lines = passage.split("\n");
+			for(var lineIdx in lines)
+			{
+				var line = lines[lineIdx];
+				var matchData = tagFormatRegex.exec(line);
+				if(matchData)
+					newBlockTitle = matchData[1];
+				else
+					filtered[filtered.length] = line;
+			}
+			
+			//console.debug("current block idx: ", idx, ", newBlockTitle: ", newBlockTitle);
+			if(newBlockTitle)
+			{
+				//console.debug("curBlockTitle: ",curBlockTitle, "text line1: ",curBlockText[0]);
+				// first, add block to hash if we have a block already
+				if(curBlockTitle != "" && curBlockTitle != undefined)
+				{
+					blockHash[curBlockTitle] = curBlockText.join("\n\n");
+				}
+				else
+				// or this is the first block and no title given - assume "Title" block
+				if(firstBlock && curBlockText.length>0)
+				{
+					curBlockTitle = "Title";
+					blockHash[curBlockTitle] = curBlockText.join("\n\n");
+				}
+				
+				firstBlock = false;
+				
+				// start new block
+				curBlockTitle = newBlockTitle;
+				curBlockText = [];
+			}
+			
+			curBlockText.push(filtered.join("\n"));
+		}
+		
+		if(curBlockTitle != "")
+			blockHash[curBlockTitle] = curBlockText.join("\n\n");
+// 			
+		
+		console.debug("editSong(): blockHash:", blockHash);
+		
+// 		//qDebug() << "SongSlideGroup::rearrange: Original blocks: "<<blockHash;
+// 		//qDebug() << "SongSlideGroup::rearrange: Processing arragnement: "<<arragement;
+		
+		var output = [];
+		for(var idx in arrList)
+		{
+			var blockTitle = arrList[idx];
+			if(blockHash[blockTitle])
+			{
+				//qDebug() << "SongSlideGroup::rearrange: [process] Block: "<<blockTitle;
+				/*
+				output[output.length] =
+					blockTitle + "\n" + 
+					blockHash[blockTitle];
+				*/
+				var blockText = blockHash[blockTitle];
+				var innerBlocks = blockText.split(/\n\n/);
+				
+				var blockClass = blockTitle.split(/\s/)[0].toLowerCase();
+				
+				var blockDiv = $("<li class='outer-block block-type-"+blockClass+"'>");
+				
+				var firstInner = true;
+				for(var blockIdx in innerBlocks)
+				{
+					var innerText = innerBlocks[blockIdx];
+					var innerBlockDiv = $("<div class='inner-block'>"
+						+ "<div class='title'>" + (firstInner ? blockTitle : "&nbsp;") + "</div>" 
+						+ "<div class='text'>"  + syntaxHighlight(innerText) + "</div>"
+						//+ "<textarea>"  + innerText + "</textarea>"
+						+ "</div>");
+					blockDiv.append(innerBlockDiv);
+					firstInner = false;
+				}
+				
+				$("#edit-box").append(blockDiv);
+				
+			}
+			else
+			{
+				console.debug("editSong(): [process] [Error] Arrangement block not found in original text: ", blockTitle);
+			}
+		}
+		/*
+		$( ".outer-block" ).draggable({
+			cancel: "a.ui-icon", // clicking an icon won't initiate dragging
+			revert: "invalid", // when not dropped, the item will revert back to its initial position
+			//containment: $( "#demo-frame" ).length ? "#demo-frame" : "document", // stick to demo-frame if present
+			helper: "clone",
+			cursor: "move"
+		});*/
+		
+		$( "#edit-box" ).sortable();
+		//$( "#edit-box" ).disableSelection();
+		/*
+		$("#edit-box .outer-block").mousedown(function() {
+			this.timerid = setTimeout( function() { alert("longpress"); }, 750 ); 
+		});
+		
+		$("#edit-box .outer-block").mouseup(function() {
+			clearTimeout(this.timerid);
+		});*/
+		
+		$("#edit-box .outer-block").on('click', function() {
+		//	alert('hello');
+		});
+		
+		//var outputText = output.join("\n\n");
+		//qDebug() << "SongSlideGroup::rearrange: Output: "<<outputText;
+
+		
 		
 		// Initially the edit mode JUST a text editor
 		
@@ -768,9 +1173,6 @@ $(function()
 					if(window.TabletMode == 'viewer')
 						showListItem(false);
 				}
-				
-				//clearTimeout(window.pollLiveSlide.timerId);
-				//window.pollLiveSlide.timerId = setInterval(window.pollLiveSlide, 2000);
 			}
 		});
 	}
@@ -872,17 +1274,17 @@ $(function()
 					// Update the song preview on the right
 					if(window.TabletMode == 'control')
 					{
-						if(data.list.length == 1)
-							showListItem(data.list[0].id);
+						//if(data.list.length == 1)
+						// NOTE - FOR DEBUGGING
+							showListItem(data.list[1].id);
+							editSong(data.list[1].id);
+						/*
 						else
 						if(window.CurrentListItemDisplayed)
 							showListItem(window.CurrentListItemDisplayed);
 						else
-	// 					// NOTE - FOR DEBUGGING
-	// 					if(SearchResults[2])
-	// 						showListItem(2);
-	// 					else
 							showListItem(false);
+						*/
 					}
 				}	
 				
@@ -909,7 +1311,7 @@ $(function()
 		reloadList();
 		
 	// Setup a timer to poll the server in approx 1sec for changes
-	reloadList.timerId = setInterval(function() { reloadList(true, reloadList.latestMd5); }, 1000);
+	//reloadList.timerId = setInterval(function() { reloadList(true, reloadList.latestMd5); }, 1000);
 
 });
 

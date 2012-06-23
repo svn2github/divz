@@ -1,7 +1,7 @@
 CACHE MANIFEST
 
 # Bump this with each release:
-# Serial number 5 
+# Serial number 6 
 
 /favicon.ico
 /www/jquery-1.7.1.min.js
@@ -14,3 +14,4 @@ CACHE MANIFEST
 
 NETWORK:
 /tablet/
+/
