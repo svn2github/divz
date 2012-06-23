@@ -17,6 +17,7 @@
 	<!--<link rel="stylesheet" href="http://code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.css" />
 	<script src="http://code.jquery.com/jquery-1.7.1.min.js"></script>
 	<script src="http://code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.js"></script>-->
+	<link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css"/>
 	<link rel="stylesheet" href="/www/jquery.mobile-1.1.0/jquery.mobile-1.1.0.min.css" />
 	<script src="/www/jquery-1.7.1.min.js"></script>
 	<script src='https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.12/jquery-ui.min.js'></script>
@@ -24,6 +25,11 @@
 	<script src="/www/jquery.ui.touch-punch.min.js"></script>
 		
 	<style>
+	
+	/* set ui-page z-index for compat with jQuery dialogs */
+	.ui-page {
+	}
+	
 	.localnav {
 		margin:0 0 0px 0;
 		overflow:hidden;
@@ -109,6 +115,7 @@
 	}
 	
 	#edit-page {
+		/* -1 so its above .ui-page (-999) but below jQuery dialogs */
 		z-index: 100;
 		position: absolute;
 		width: 100%;
@@ -144,6 +151,15 @@
 		background: white;
 	}
 	
+	.block-button {
+		text-align: left;
+		font-family: Monospace !important;
+		height: 15em;
+		float: left;
+		font-size: 0.65em;
+		
+	}
+	
 	.inner-block textarea {
 		width: 100%;
 		height: 100%;
@@ -160,6 +176,13 @@
 		font-weight: bold;
 	}
 	
+	.outer-block .block-button .title {
+		text-shadow: none;
+		padding-left: .25em;
+		margin-bottom: 0.25em;
+		font-weight: bold;
+	}
+	
 	.outer-block .inner-block .text {
 		padding: 0.25em;
 		/*text-align: center;*/
@@ -170,6 +193,7 @@
 		border-top: 4px solid green;
 	}
 	
+	.outer-block.block-type-chorus .block-button .title,
 	.outer-block.block-type-chorus .inner-block .title {
 		background: green;
 	}
@@ -179,6 +203,7 @@
 		border-top: 4px solid blue;
 	}
 	
+	.outer-block.block-type-verse .block-button .title,
 	.outer-block.block-type-verse .inner-block .title {
 		background: blue;
 		color: white;
@@ -188,6 +213,7 @@
 		border-top: 4px solid yellow;
 	}
 	
+	.outer-block.block-type-bridge .block-button .title,
 	.outer-block.block-type-bridge .inner-block .title {
 		background: yellow;
 	}
@@ -196,16 +222,33 @@
 		border-top: 4px solid red;
 	}
 	
+	.outer-block.block-type-tag .block-button .title,
 	.outer-block.block-type-tag .inner-block .title {
 		background: red;
 	}
 	
+	#edit-song-block-text-form {
+		/*display: none;*/
+	}
 	</style>
 </head> 
-<body> 
+<body>
+
+<!--<div id="edit-song-block-text-form" title="Edit Song Block Text">
+	
+		<form>
+		<fieldset>
+			<label for="song-block-text-edit">Text</label>
+			<textarea name="song-block-text-edit" id="song-block-text-edit" class="text ui-widget-content ui-corner-all" /></textarea>
+		</fieldset>
+		</form>
+	</div>-->
+
+
 
 <div data-role="page" >
 
+	
 	<script>
 // 	ontouchmove="BlockMove(event);"
 // 	// From http://matt.might.net/articles/how-to-native-iphone-ipad-apps-in-javascript/
@@ -368,7 +411,7 @@ $(function()
 		{
 			// Start polling for changes
 			clearTimeout(window.pollLiveSlide.timerId);
-			//window.pollLiveSlide.timerId = setInterval(window.pollLiveSlide, 500);
+			window.pollLiveSlide.timerId = setInterval(window.pollLiveSlide, 500);
 			
 			// Set list mode to file
 			updateListMode('file');
@@ -542,7 +585,7 @@ $(function()
 			$("#song-content .song-text-block").on('touchstart', function() { sendBlockLive(itemid, this, true); return false; } );
 			
 			clearTimeout(window.pollLiveSlide.timerId);
-			//window.pollLiveSlide.timerId = setInterval(window.pollLiveSlide, 500);
+			window.pollLiveSlide.timerId = setInterval(window.pollLiveSlide, 500);
 			
 		}
 
@@ -747,7 +790,7 @@ $(function()
 		var curBlockTitle;
 		var curBlockText = [];
 		var firstBlock = true;
-		for(var idx=0; idx<blockList.length; idx++)
+		for(var idx in blockList)
 		{
 			var passage = blockList[idx];
 			
@@ -865,8 +908,15 @@ $(function()
 				+ " data-theme='b'>Save Changes</a>"
 			+ "<a data-role='button'                   data-inline='true' id='cancel-edit-btn' href='javascript:void(cancelEditSong("+itemid+"))'  ontouchstart='cancelEditSong("+itemid+");return false'"
 				+ " >Cancel</a>"
-			+ "<div data-role='fieldcontain'><label for='song-title-edit'>Title:</label>       <input id='song-title-edit' type='text' value='" + item.title + "' size=30></div>"
-			+ "<ul id='edit-box'></li>"
+			+ "<a data-role='button'                   data-inline='true' id='edit-text-btn'   href='javascript:void(editText())'  ontouchstart='editText();return false'"
+				+ " data-theme='e'>Edit Text</a>"
+			+ "<a data-role='button'                   data-inline='true' id='dup-block-btn'   href='javascript:void(dupBlock())'  ontouchstart='dupBlock();return false'"
+				+ " data-theme='e'>Duplicate Block</a>"
+			+ "<a data-role='button'                   data-inline='true' id='del-block-btn'   href='javascript:void(delBlock())'  ontouchstart='delBlock();return false'"
+				+ " data-theme='e'>Remove Block</a>"
+			+ "<input id='song-title-edit' type='text' value='" + item.title + "' size=30 style='margin-left:.75em'>"
+			+ "<div id='edit-msg' style='margin-left:.75em'>&nbsp;</div>"
+			+ "<ul id='edit-box' style='margin-left:-2em'></li>"
 			+ "</div>");
 		$(document.body).append($div);
 		
@@ -889,19 +939,19 @@ $(function()
 			arrList = item.arr.split(/\s*,\s*/);
 		}
 		
-		console.debug("editSong(): arrList:", arrList);
+		//console.debug("editSong(): arrList:", arrList);
 		
 		var cleanedText = item.text.replace("\r\n","\n");
 		var blockList = cleanedText.split("\n\n");
 		
-		console.debug("editSong(): blockList: ", blockList); 
+		//console.debug("editSong(): blockList: ", blockList); 
 		
 		var blockHash = {};
 		
 		var curBlockTitle;
 		var curBlockText = [];
 		var firstBlock = true;
-		for(var idx=0; idx<blockList.length; idx++)
+		for(var idx in blockList)
 		{
 			var passage = blockList[idx];
 			
@@ -949,11 +999,12 @@ $(function()
 			blockHash[curBlockTitle] = curBlockText.join("\n\n");
 // 			
 		
-		console.debug("editSong(): blockHash:", blockHash);
+		//console.debug("editSong(): blockHash:", blockHash);
 		
 // 		//qDebug() << "SongSlideGroup::rearrange: Original blocks: "<<blockHash;
 // 		//qDebug() << "SongSlideGroup::rearrange: Processing arragnement: "<<arragement;
 		
+		var firstInnerBlock = 0;
 		var output = [];
 		for(var idx in arrList)
 		{
@@ -973,25 +1024,32 @@ $(function()
 				
 				var blockDiv = $("<li class='outer-block block-type-"+blockClass+"'>");
 				
+				blockDiv.attr('x:blockTitle', blockTitle);
+				blockDiv.attr('x:blockText',  blockText);
+				
 				var firstInner = true;
 				for(var blockIdx in innerBlocks)
 				{
 					var innerText = innerBlocks[blockIdx];
-					var innerBlockDiv = $("<div class='inner-block'>"
+					var innerBlockDiv = $("<a data-role='button' data-inline='true' class='block-button'>"
+					//var innerBlockDiv = $("<div class='inner-block'>
 						+ "<div class='title'>" + (firstInner ? blockTitle : "&nbsp;") + "</div>" 
 						+ "<div class='text'>"  + syntaxHighlight(innerText) + "</div>"
 						//+ "<textarea>"  + innerText + "</textarea>"
-						+ "</div>");
+						//+ "</div>");
+						+ "</a>");
 					blockDiv.append(innerBlockDiv);
 					firstInner = false;
+					
+					firstInnerBlock = innerBlockDiv; /// NOTE for debugging
 				}
 				
-				$("#edit-box").append(blockDiv);
+				$("#edit-box").append(blockDiv).trigger("create");
 				
 			}
 			else
 			{
-				console.debug("editSong(): [process] [Error] Arrangement block not found in original text: ", blockTitle);
+				//console.debug("editSong(): [process] [Error] Arrangement block not found in original text: ", blockTitle);
 			}
 		}
 		/*
@@ -1018,6 +1076,8 @@ $(function()
 		//	alert('hello');
 		});
 		
+		window.editText(firstInnerBlock);
+		
 		//var outputText = output.join("\n\n");
 		//qDebug() << "SongSlideGroup::rearrange: Output: "<<outputText;
 
@@ -1030,6 +1090,104 @@ $(function()
 		// Long press OR copy block to edit block in popup dialog
 		// Drag to rearrange blocks
 		
+	}
+	
+	window.enableSongBlockClick = function(callback, msg)
+	{
+		$("#edit-box .outer-block").on('click.songBlockClick', function() {
+			callback($(this).parents('.outer-block'));
+		});
+		
+		$("#edit-msg").html(msg);
+	}
+	
+	window.disableSongBlockClick = function() 
+	{
+		$("#edit-box .outer-block").off('click.songBlockClick');
+		$("#edit-msg").html('&nbsp;');
+	}
+	
+	window.editText = function(blockDiv)
+	{
+		if(!blockDiv)
+		{
+			enableSongBlockClick(window.editText, "Touch a block to edit the text in that block or block group.");
+			return;
+		}
+		
+		disableSongBlockClick();
+		
+// 		$("#edit-song-block-text-form").dialog(
+// 		{
+// 			modal: true,
+// 			buttons: 
+// 			{
+// 				"Save Text": function() 
+// 				{
+// 					// Remove all inenr blocks
+// 					blockDiv.children().each(function() {
+// 						$(this).remove();
+// 					});
+// 					
+// 					
+// 					// Get title and new text
+// 					var blockTitle = blockDiv.attr('x:blockTitle');
+// 					var blockText  = $.trim($("#song-block-text-edit").val());
+// 					blockDiv.attr('x:blockText', blockText);
+// 					
+// 					// Recreate inner blocks
+// 					var innerBlocks = blockText.split(/\n\n/);
+// 					
+// 					var firstInner = true;
+// 					for(var blockIdx in innerBlocks)
+// 					{
+// 						var innerText = innerBlocks[blockIdx];
+// 						var innerBlockDiv = $("<a data-role='button' data-inline='true' class='block-button'>"
+// 						//var innerBlockDiv = $("<div class='inner-block'>
+// 							+ "<div class='title'>" + (firstInner ? blockTitle : "&nbsp;") + "</div>" 
+// 							+ "<div class='text'>"  + syntaxHighlight(innerText) + "</div>"
+// 							//+ "<textarea>"  + innerText + "</textarea>"
+// 							//+ "</div>");
+// 							+ "</a>");
+// 						blockDiv.append(innerBlockDiv);
+// 						firstInner = false;
+// 					}
+// 					
+// 					blockDiv.trigger("create");
+// 					
+// 					
+// 					$(this).dialog("close"); 
+// 					
+// 					$("#edit-page").show();
+// 					// If I use the following all subseq. actions are empty:
+// 					// $("#message").val(''); 
+// 				},
+// 				Cancel : function()
+// 				{
+// 					$(this).dialog("close");
+// 					$("#edit-page").show();
+// 				}
+// 				
+// 			}
+// 		} );
+		//$("#edit-song-block-text-form").dialog('open');
+		
+		console.debug($("#edit-song-block-text-form"));
+		
+// 		$("#edit-page").hide();
+// 
+// 		$("#song-block-text-edit").attr('value', blockDiv.attr('x:blockText'));
+		
+	}
+	
+	window.dupBlock = function(itemid)
+	{
+	
+	}
+	
+	window.delBlock = function(itemid)
+	{
+	
 	}
 	
 	window.cancelEditSong = function(itemid)
@@ -1149,7 +1307,7 @@ $(function()
 								if(!mappingList)
 									mappingList = [];
 								
-								for(var j=0; j<mappingList.length; j++)
+								for(var j in mappingList)
 									if(mappingList[j] == slideNum)
 										mappedIdx = i;
 							}
@@ -1274,17 +1432,17 @@ $(function()
 					// Update the song preview on the right
 					if(window.TabletMode == 'control')
 					{
-						//if(data.list.length == 1)
 						// NOTE - FOR DEBUGGING
-							showListItem(data.list[1].id);
-							editSong(data.list[1].id);
-						/*
+						//showListItem(data.list[1].id);
+						//editSong(data.list[1].id);
+							
+						if(data.list.length == 1)
+							showListItem(data.list[0].id);
 						else
 						if(window.CurrentListItemDisplayed)
 							showListItem(window.CurrentListItemDisplayed);
 						else
 							showListItem(false);
-						*/
 					}
 				}	
 				
@@ -1311,7 +1469,7 @@ $(function()
 		reloadList();
 		
 	// Setup a timer to poll the server in approx 1sec for changes
-	//reloadList.timerId = setInterval(function() { reloadList(true, reloadList.latestMd5); }, 1000);
+	reloadList.timerId = setInterval(function() { reloadList(true, reloadList.latestMd5); }, 1000);
 
 });
 
