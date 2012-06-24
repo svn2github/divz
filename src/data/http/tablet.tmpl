@@ -274,7 +274,7 @@
 		top: 0;
 		left: 0;
 		z-index: 3; /* display above highlights */
-		color: black;
+		/*color: black;*/
 	}
 	
 	.textarea-highlight-display,
@@ -864,7 +864,7 @@ $(function()
 		
 		//console.debug("blockList: ", blockList);
 		
-		var curBlockTitle;
+		var curBlockTitle = false;
 		var curBlockText = [];
 		var firstBlock = true;
 		for(var idx in blockList)
@@ -889,7 +889,7 @@ $(function()
 			{
 				//console.debug("curBlockTitle: ",curBlockTitle, "text line1: ",curBlockText[0]);
 				// first, add block to hash if we have a block already
-				if(curBlockTitle != "" && curBlockTitle != undefined)
+				if(curBlockTitle)
 				{
 					//blockHash[curBlockTitle] = curBlockText.join("\n\n");
 					storeBlock(curBlockTitle, curBlockText.join("\n\n"));
@@ -913,7 +913,16 @@ $(function()
 			curBlockText.push(filtered.join("\n"));
 		}
 		
-		if(curBlockTitle != "")
+		// No block titles found, so make our own
+		if(firstBlock && 
+		   !curBlockTitle)
+		{
+			var miniList = curBlockText;//.split("\n\n");
+			for(var idx in miniList)
+				storeBlock("Verse "+(parseInt(idx)+1), miniList[idx]);
+		}
+		else
+		if(curBlockTitle)
 			//blockHash[curBlockTitle] = curBlockText.join("\n\n");
 			storeBlock(curBlockTitle, curBlockText.join("\n\n"));
 // 			
@@ -1059,7 +1068,7 @@ $(function()
 		
 		var blockHash = {};
 		
-		var curBlockTitle;
+		var curBlockTitle = false;
 		var curBlockText = [];
 		var firstBlock = true;
 		for(var idx in blockList)
@@ -1084,7 +1093,7 @@ $(function()
 			{
 				//console.debug("curBlockTitle: ",curBlockTitle, "text line1: ",curBlockText[0]);
 				// first, add block to hash if we have a block already
-				if(curBlockTitle != "" && curBlockTitle != undefined)
+				if(curBlockTitle)
 				{
 					blockHash[curBlockTitle] = curBlockText.join("\n\n");
 				}
@@ -1106,7 +1115,17 @@ $(function()
 			curBlockText.push(filtered.join("\n"));
 		}
 		
-		if(curBlockTitle != "")
+		// No block titles found, so make our own
+		if(firstBlock && 
+		   !curBlockTitle)
+		{
+			var miniList = curBlockText;//.split("\n\n");
+			for(var idx in miniList)
+				blockHash["Verse "+(parseInt(idx)+1)] = miniList[idx];
+		}
+		else
+		if(curBlockTitle)
+			//blockHash[curBlockTitle] = curBlockText.join("\n\n");
 			blockHash[curBlockTitle] = curBlockText.join("\n\n");
 // 			
 		
@@ -1166,26 +1185,38 @@ $(function()
 	}
 	
 	
-	window.syncHighlights = function(ta)
-	{
-		var val = ta.val(); //$.trim(t.val());
-		//console.debug(val);
-		var html = syntaxHighlight(val);
-		ta.closest(".textarea-highlight-wrap").children(".textarea-highlight-display").html(html);
-	}
-	
 	function setupSyntaxHighlighter(textarea)
 	{
+		var syncHighlights = function(ta)
+		{
+			var val  = ta.val();
+			var html = syntaxHighlight(val);
+			ta.closest(".textarea-highlight-wrap").children(".textarea-highlight-display").html(html);
+		}
+
 		var wrap = $("<div class='textarea-highlight-wrap'><div class='textarea-highlight-display'></div></div>");
-		textarea.parent().append(wrap);
+		wrap.insertAfter(textarea);
 		wrap.append(textarea);
-// 		var wrap = $(".textarea-highlight-wrap");
 	
 		textarea.on('keyup', function() {
 			syncHighlights($(this));
 		});
 		
-		wrap.children(".textarea-highlight-display").css('font-size', textarea.css('font-size'));
+		var display = wrap.children(".textarea-highlight-display");
+		display.css('font-size',   textarea.css('font-size'));
+		display.css('line-height', textarea.css('line-height'));
+		
+		// sync height of wrapper to textarea
+		var timerid = setInterval(function() {
+			var $ta = wrap.children("textarea");
+			wrap.height($ta.height() + parseFloat($ta.css('padding-top')) + parseFloat($ta.css('padding-bottom')));
+		}, 250);
+		
+		textarea.attr('x:syntaxHighlighter.timerid', timerid);
+		
+		textarea.bind('remove', function() {
+			clearInterval(textarea.attr('x:syntaxHighlighter.timerid'));
+		});
 		
 		syncHighlights(textarea);
 	}
@@ -1203,13 +1234,13 @@ $(function()
 		var blockTitle = blockDiv.attr('x:blockTitle');
 		window.editText.currentBlockTitle = blockTitle;
 		
-		//$.mobile.showPageLoadingMsg("b","Connecwindow.editText.elmtion Lost, Reconnecting...");
 		var elm = $("<div class='ui-body ui-body-a' id='editblock-text'><center><h3>Edit " + blockTitle + "</h3></center>"
 			+ "<input id='song-block-title-edit' type='text' value='" + blockTitle + "' size=30>"
 			+ "<textarea id='song-block-text-edit'></textarea>"
 			+ "<a data-role='button' data-icon='check' data-inline='true' id='song-block-save-btn' data-theme='b'>Save Changes</a>"
 			+ "<a data-role='button' data-inline='true' id='song-block-cancel-btn'>Cancel</a>"
 			+ "</div>");
+			
 		$(document.body).append(elm).trigger("create");
 		window.editText.elm = elm;
 		
@@ -1218,9 +1249,12 @@ $(function()
 		elm.css('left', win.width() /2 - elm.width() /2 );
 		
 		$("#song-block-text-edit").val(blockDiv.attr('x:blockText'));
-		//setupSyntaxHighlighter($("#song-block-text-edit"));
+		setupSyntaxHighlighter($("#song-block-text-edit"));
 	
-		$("#song-block-cancel-btn").on('click', function() { window.editText.elm.remove(); });
+		$("#song-block-cancel-btn").on('click', function()
+		{
+			window.editText.elm.remove();
+		});
 		
 		$("#song-block-save-btn").on('click', function()
 		{
