@@ -246,6 +246,45 @@
 		font-family: Monospace !important;
 	}
 	
+		
+		
+	.textarea-highlight-wrap {
+		position: relative;
+	}
+	.textarea-highlight-display {
+		position: absolute;
+		top: 2px;
+		left: 2px;
+		z-index: 1; /* display behind <textarea> */
+			
+		/* just for testing */
+	/* 	 background: green; */
+		
+		line-height: 1.4;
+		padding:0.4em;
+		
+		color: transparent;
+	}
+	
+	.textarea-highlight-wrap textarea {
+		background: transparent;
+		position: absolute;
+		top: 0;
+		left: 0;
+		z-index: 3; /* display above highlights */
+		color: black;
+	}
+	
+	.textarea-highlight-display,
+	.textarea-highlight-wrap textarea {
+		font-family: Monospace;
+		/*font-size: 12px;*/ /* todo sync font via jquery */
+	}
+	
+	/* Override all text colors in highlight area */
+	.textarea-highlight-display * {
+		color: transparent; 
+	}
 	
 	</style>
 </head> 
@@ -294,18 +333,20 @@
 			<td valign=top>
 				<!-- This overflow:auto;width:100% trick clears the floats - see http://www.quirksmode.org/css/clearing.html -->
 				<div style='overflow:auto;width:100%'>
-					<div style='float:right'>
-						<ul data-role="controlgroup" data-type="horizontal" class="localnav" id='font-size'>
-							<li><a href="#" id='font-up' data-role="button" data-transition="fade">Text +</a></li>
-							<li><a href="#" id='font-dn' data-role="button" data-transition="fade">Text -</a></li>
-						</ul>
-					</div>
 					<div style='float:left'>
 						<ul data-role="controlgroup" data-type="horizontal" class="localnav" id='tablet-switcher'>
 							<li><a href="#" id='tablet-control' data-role="button" data-transition="fade" class="ui-btn-active">Control Tablet</a></li>
 							<li><a href="#" id='tablet-viewer'  data-role="button" data-transition="fade">Viewer Tablet</a></li>
 						</ul>
 					</div>
+					
+					<div style='float:left;margin-left: 1em'>
+						<ul data-role="controlgroup" data-type="horizontal" class="localnav" id='font-size'>
+							<li><a href="#" id='font-up' data-role="button" data-transition="fade">Text +</a></li>
+							<li><a href="#" id='font-dn' data-role="button" data-transition="fade">Text -</a></li>
+						</ul>
+					</div>
+					
 				</div>
 				
 				<div id='song-content' class='content-view ui-corner-all ui-shadow ui-body-c'>
@@ -575,7 +616,7 @@ $(function()
 			$("#song-content").html(""
 				+ "<a data-role='button' data-icon='gear' data-inline='true' id='edit-item-btn' href='javascript:void(editSong("+itemid+"))' ontouchstart='editSong("+itemid+");return false'"
 					+ " style='float:right' data-theme='b'>Edit Song</a>"
-				+ "<h3 style='font-size: 120% !important'>" + item.title + "</h3>" 
+				+ "<h3>" + item.title + "</h3>" 
 				+ "<div class='song-text-wrapper'>"
 					+ blocksOut.join("")
 				+ "</div>"
@@ -1096,6 +1137,31 @@ $(function()
 		$("#edit-msg").html('&nbsp;');
 	}
 	
+	
+	window.syncHighlights = function(ta)
+	{
+		var val = ta.val(); //$.trim(t.val());
+		//console.debug(val);
+		var html = syntaxHighlight(val);
+		ta.closest(".textarea-highlight-wrap").children(".textarea-highlight-display").html(html);
+	}
+	
+	function setupSyntaxHighlighter(textarea)
+	{
+		var wrap = $("<div class='textarea-highlight-wrap'><div class='textarea-highlight-display'></div></div>");
+		textarea.parent().append(wrap);
+		wrap.append(textarea);
+// 		var wrap = $(".textarea-highlight-wrap");
+	
+		textarea.on('keyup', function() {
+			syncHighlights($(this));
+		});
+		
+		wrap.children(".textarea-highlight-display").css('font-size', textarea.css('font-size'));
+		
+		syncHighlights(textarea);
+	}
+	
 	window.editText = function(blockDiv)
 	{
 		if(!blockDiv)
@@ -1124,6 +1190,7 @@ $(function()
 		elm.css('left', win.width() /2 - elm.width() /2 );
 		
 		$("#song-block-text-edit").val(blockDiv.attr('x:blockText'));
+		//setupSyntaxHighlighter($("#song-block-text-edit"));
 	
 		$("#song-block-cancel-btn").on('click', function() { window.editText.elm.remove(); });
 		

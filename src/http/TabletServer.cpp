@@ -392,9 +392,10 @@ void TabletServer::mainScreen(QTcpSocket *socket, const QStringList &path, const
 		
 		int liveId = AppSettings::taggedOutput("live")->id();
 		SlideGroup *liveGroup = mw->outputInst(liveId)->slideGroup();
+		Slide * liveSlide = mw->outputInst(liveId)->slide();
 		
-		SlideGroupViewControl *viewControl = mw->viewControl(liveId);
-		Slide * liveSlide = viewControl->selectedSlide();
+		//SlideGroupViewControl *viewControl = mw->viewControl(liveId);
+		//Slide * liveSlide = viewControl->selectedSlide();
 		
 		int idx = query.value("slide").toInt();
 		if(idx < 0 || idx > group->numSlides())
@@ -440,16 +441,16 @@ void TabletServer::mainScreen(QTcpSocket *socket, const QStringList &path, const
 		
 		int liveId = AppSettings::taggedOutput("live")->id();
 		SlideGroup *liveGroup = mw->outputInst(liveId)->slideGroup();
+		Slide *liveSlide = mw->outputInst(liveId)->slide();
 		if(!liveGroup)
 		{
 			ok = false;
 			result["error"] = "NLG";
 		}
 		
-		int groupIdx = docModel->indexForGroup(liveGroup).row();
+// 		SlideGroupViewControl *viewControl = mw->viewControl(liveId);
+// 		Slide * liveSlide = viewControl->selectedSlide();
 		
-		SlideGroupViewControl *viewControl = mw->viewControl(liveId);
-		Slide * liveSlide = viewControl->selectedSlide();
 		if(!liveSlide && ok)
 		{
 			ok = false;
@@ -458,8 +459,9 @@ void TabletServer::mainScreen(QTcpSocket *socket, const QStringList &path, const
 		
 		if(ok)
 		{
+			int groupIdx = docModel->indexForGroup(liveGroup).row();
 			int slideIdx = liveGroup->indexOf(liveSlide);
-			
+
 			result["groupIdx"] = groupIdx;
 			result["slideIdx"] = slideIdx;
 		}
