@@ -149,6 +149,8 @@
 		float: left;
 		
 		background: white;
+		
+		white-space: normal;
 	}
 	
 	.block-button {
@@ -285,6 +287,32 @@
 	.textarea-highlight-display * {
 		color: transparent; 
 	}
+	
+	/* Override ui-btn-down-c and ui-btn-hover-c for song block draging
+	   because sometimes on tablets jQuery doesn't register "touch up" events
+	   and the btn stays "stuck" on the down or hover styles */
+
+	#edit-box .ui-btn-down-c,
+	#edit-box .ui-btn-hover-c {
+		/*just a copy of .ui-btn-up-c*/
+		border: 1px solid 		#ccc /*{c-bup-border}*/;
+		background: 			#eee /*{c-bup-background-color}*/;
+		font-weight: bold;
+		color: 					#222 /*{c-bup-color}*/;
+		text-shadow: 0 /*{c-bup-shadow-x}*/ 1px /*{c-bup-shadow-y}*/ 0 /*{c-bup-shadow-radius}*/ #ffffff /*{c-bup-shadow-color}*/;
+		background-image: -webkit-gradient(linear, left top, left bottom, from( #ffffff /*{c-bup-background-start}*/), to( #f1f1f1 /*{c-bup-background-end}*/)); /* Saf4+, Chrome */
+		background-image: -webkit-linear-gradient( #ffffff /*{c-bup-background-start}*/, #f1f1f1 /*{c-bup-background-end}*/); /* Chrome 10+, Saf5.1+ */
+		background-image:    -moz-linear-gradient( #ffffff /*{c-bup-background-start}*/, #f1f1f1 /*{c-bup-background-end}*/); /* FF3.6 */
+		background-image:     -ms-linear-gradient( #ffffff /*{c-bup-background-start}*/, #f1f1f1 /*{c-bup-background-end}*/); /* IE10 */
+		background-image:      -o-linear-gradient( #ffffff /*{c-bup-background-start}*/, #f1f1f1 /*{c-bup-background-end}*/); /* Opera 11.10+ */
+		background-image:         linear-gradient( #ffffff /*{c-bup-background-start}*/, #f1f1f1 /*{c-bup-background-end}*/);
+	}
+	#edit-box .ui-btn-down-c  a.ui-link-inherit,
+	#edit-box .ui-btn-hover-c a.ui-link-inherit {
+		/*just a copy of .ui-btn-up-c a.ui-link-inherit*/
+		color: 					#2F3E46 /*{c-bup-color}*/;
+	}
+
 	
 	</style>
 </head> 
