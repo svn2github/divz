@@ -235,6 +235,9 @@ MainWindow::MainWindow(QWidget *parent) :
 	if(AppSettings::httpViewerEnabled())
 		m_viewServer    = new ViewServer(AppSettings::httpViewerPort(),this);
 		
+ 	//if(AppSettings::httpTabletServerEnabled())
+ 	//	m_tabletServer = new TabletServer(8099, this); //AppSettings::httpTabletServerPort(),this);
+	
 	if(AppSettings::httpTabletServerEnabled())
 		m_tabletServer  = new TabletServer(AppSettings::httpTabletServerPort(),this);
 		

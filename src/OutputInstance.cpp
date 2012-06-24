@@ -224,8 +224,8 @@ void OutputInstance::applyOutputSettings(bool startHidden)
 		else
 		{
 			geom = m_output->customRect();
-// 			if(m_output->stayOnTop())
-// 				setWindowFlags(Qt::WindowStaysOnTopHint | Qt::FramelessWindowHint | Qt::ToolTip);
+ 			if(m_output->stayOnTop())
+ 				setWindowFlags(Qt::WindowStaysOnTopHint | Qt::FramelessWindowHint | Qt::ToolTip);
 // 			else
 // 				setWindowFlags(Qt::FramelessWindowHint);
 		}

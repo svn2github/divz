@@ -37,6 +37,7 @@ sub normalize_text
 		$text =~ s/&#8220;/“/g;
 		$text =~ s/&#8221;/”/g;
 		$text =~ s/&#8217;/'/g; # not exactly correct, but close enough...
+		$text =~ s/&#8212;/—/g;
 	}
 	
 	

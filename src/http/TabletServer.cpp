@@ -523,7 +523,9 @@ QVariantMap TabletServer::genArrMapping(QString text, QStringList arragement)
 			if(!curBlockTitle.isEmpty())
 			{
 				blockHash[curBlockTitle] = curBlockText.join("\n\n");
-				blockIdxHash[curBlockTitle] = blockIdxCounter ++;
+				blockIdxHash[curBlockTitle] = blockIdxCounter;
+				
+				blockIdxCounter += curBlockText.size();
 				
 			}
 			else
@@ -532,7 +534,9 @@ QVariantMap TabletServer::genArrMapping(QString text, QStringList arragement)
 			{
 				curBlockTitle = "Title";
 				blockHash[curBlockTitle] = curBlockText.join("\n\n");
-				blockIdxHash[curBlockTitle] = blockIdxCounter ++;
+				blockIdxHash[curBlockTitle] = blockIdxCounter;
+				
+				blockIdxCounter += curBlockText.size();
 			}
 			
 			firstBlock = false;
@@ -554,7 +558,8 @@ QVariantMap TabletServer::genArrMapping(QString text, QStringList arragement)
 	if(!curBlockTitle.isEmpty())
 	{
 		blockHash[curBlockTitle] = curBlockText.join("\n\n");
-		blockIdxHash[curBlockTitle] = blockIdxCounter ++;
+		blockIdxHash[curBlockTitle] = blockIdxCounter;
+		blockIdxCounter += curBlockText.size();
 	}
 		
 	//qDebug() << "SongSlideGroup::rearrange: Original blocks: "<<blockHash;
@@ -567,17 +572,24 @@ QVariantMap TabletServer::genArrMapping(QString text, QStringList arragement)
 		if(blockHash.contains(blockTitle))
 		{
 			//qDebug() << "SongSlideGroup::rearrange: [process] Block: "<<blockTitle;
+			QString blockText = blockHash.value(blockTitle);
 			output << QString("%1\n%2")
 				.arg(blockTitle)
-				.arg(blockHash.value(blockTitle));
+				.arg(blockText);
 				
-			QString idx = QString::number(blockIdxHash[blockTitle]);
-			if(!arrMap.contains(idx))
-				arrMap[idx] = QVariantList();
-			
-			QVariantList usageList = arrMap[idx].toList();
-			usageList << blockIdxCounter ++; 
-			arrMap[idx] = usageList;
+			QStringList innerBlocks = blockText.split("\n\n");
+				
+			int idx = blockIdxHash[blockTitle];
+			for(int i=idx; i<idx+innerBlocks.size(); i++)
+			{
+				QString idxKey = QString::number(i);
+				if(!arrMap.contains(idxKey))
+					arrMap[idxKey] = QVariantList();
+					
+				QVariantList usageList = arrMap[idxKey].toList();
+				usageList << blockIdxCounter ++; 
+				arrMap[idxKey] = usageList;
+			}
 		}
 		else
 		{

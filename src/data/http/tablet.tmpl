@@ -13,16 +13,16 @@
 	<link rel="apple-touch-startup-image" href="/www/tablet/startup.png" />
 		<!--The file must be exactly 320x460, or else the iPhone ignores it. (The iPad requires 1004x768.)--> 
 	
-	 
 	<!--<link rel="stylesheet" href="http://code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.css" />
 	<script src="http://code.jquery.com/jquery-1.7.1.min.js"></script>
 	<script src="http://code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.js"></script>-->
-	<link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css"/>
+	
+	<link rel="stylesheet" href="/www/jquery.ui-1.8.21/css/smoothness/jquery-ui-1.8.21.custom.css"/>
 	<link rel="stylesheet" href="/www/jquery.mobile-1.1.0/jquery.mobile-1.1.0.min.css" />
 	<script src="/www/jquery-1.7.1.min.js"></script>
-	<script src='https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.12/jquery-ui.min.js'></script>
+	<script src='/www/jquery.ui-1.8.21/js/jquery-ui-1.8.21.custom.min.js'></script>
+	<script src="/www/jquery.ui.touch-punch.min.js"></script> <!-- augments touch events to be compatible with jquery-ui -->
 	<script src="/www/jquery.mobile-1.1.0/jquery.mobile-1.1.0.min.js"></script>
-	<script src="/www/jquery.ui.touch-punch.min.js"></script>
 		
 	<style>
 	
@@ -156,7 +156,7 @@
 		font-family: Monospace !important;
 		height: 15em;
 		float: left;
-		font-size: 0.65em;
+		font-size: 0.70em;
 		
 	}
 	
@@ -181,6 +181,8 @@
 		padding-left: .25em;
 		margin-bottom: 0.25em;
 		font-weight: bold;
+		font-family: Sans-Serif !important;
+		font-size: 1em;
 	}
 	
 	.outer-block .inner-block .text {
@@ -190,23 +192,24 @@
 	
 	
 	.outer-block.block-type-chorus .inner-block {
-		border-top: 4px solid green;
+		border-top: 4px solid lime;
 	}
 	
 	.outer-block.block-type-chorus .block-button .title,
 	.outer-block.block-type-chorus .inner-block .title {
-		background: green;
+		background: lime;
+		/*color: white;*/
 	}
 	
 	
 	.outer-block.block-type-verse .inner-block {
-		border-top: 4px solid blue;
+		border-top: 4px solid darkorange;
 	}
 	
 	.outer-block.block-type-verse .block-button .title,
 	.outer-block.block-type-verse .inner-block .title {
-		background: blue;
-		color: white;
+		background: darkorange;
+		/*color: white;*/
 	}
 	
 	.outer-block.block-type-bridge .inner-block {
@@ -298,10 +301,8 @@
 					<div style='float:left'>
 						<ul data-role="controlgroup" data-type="horizontal" class="localnav" id='tablet-switcher'>
 							<li><a href="#" id='tablet-control' data-role="button" data-transition="fade" class="ui-btn-active">Control Tablet</a></li>
-							<li><a href="#" id='tablet-viewer'  data-role="button" data-transition="fade">View-Only Tablet</a></li>
+							<li><a href="#" id='tablet-viewer'  data-role="button" data-transition="fade">Viewer Tablet</a></li>
 						</ul>
-						
-						 <!--<b><a href="/" id='debug-reload'>DEBUG RELOAD</a></b>-->
 					</div>
 				</div>
 				
@@ -322,6 +323,8 @@
 <script>
 $(function()
 {
+	window.DEBUG_DISABLE_POLLING = false;
+	 
 	$("#debug-reload").attr('href','/?date='+(new Date()).getTime());
 	// Cookies
 	function createCookie(name, value, days) {
@@ -411,7 +414,8 @@ $(function()
 		{
 			// Start polling for changes
 			clearTimeout(window.pollLiveSlide.timerId);
-			window.pollLiveSlide.timerId = setInterval(window.pollLiveSlide, 500);
+			if(!DEBUG_DISABLE_POLLING)
+				window.pollLiveSlide.timerId = setInterval(window.pollLiveSlide, 500);
 			
 			// Set list mode to file
 			updateListMode('file');
@@ -476,8 +480,8 @@ $(function()
 	
 	window.sendBlockLive = function(itemid, block, touched)
 	{
-		if(window.TabletMode == 'viewer')
-			return;
+		//if(window.TabletMode == 'viewer')
+		//	return;
 	
 		var idx     = $(block).attr('x:idx');
 		var mapping = $(block).attr('x:mapping').split(',');
@@ -585,7 +589,8 @@ $(function()
 			$("#song-content .song-text-block").on('touchstart', function() { sendBlockLive(itemid, this, true); return false; } );
 			
 			clearTimeout(window.pollLiveSlide.timerId);
-			window.pollLiveSlide.timerId = setInterval(window.pollLiveSlide, 500);
+			if(!DEBUG_DISABLE_POLLING)
+				window.pollLiveSlide.timerId = setInterval(window.pollLiveSlide, 500);
 			
 		}
 
@@ -667,7 +672,7 @@ $(function()
 			var winHeightHalf = $(window).height() / 2;
 			var blockHeight = newLiveBlock.height();
 			var scrollPos = blockPos - winHeightHalf + blockHeight;
-			$('html, body').animate({scrollTop: scrollPos}, 0);
+			$('html, body').animate({scrollTop: scrollPos}, 1000);
 		}
 		
 		// Update CSS on new block
@@ -1033,7 +1038,7 @@ $(function()
 					var innerText = innerBlocks[blockIdx];
 					var innerBlockDiv = $("<a data-role='button' data-inline='true' class='block-button'>"
 					//var innerBlockDiv = $("<div class='inner-block'>
-						+ "<div class='title'>" + (firstInner ? blockTitle : "&nbsp;") + "</div>" 
+						+ "<div class='title'>" + (firstInner ? blockTitle : /*"&nbsp;"*/ "<i>"+blockTitle+" (Contd.)</i>") + "</div>" 
 						+ "<div class='text'>"  + syntaxHighlight(innerText) + "</div>"
 						//+ "<textarea>"  + innerText + "</textarea>"
 						//+ "</div>");
@@ -1192,6 +1197,7 @@ $(function()
 	
 	window.cancelEditSong = function(itemid)
 	{
+		$("#edit-page").remove();
 		showListItem(itemid);
 	}
 	
@@ -1469,7 +1475,8 @@ $(function()
 		reloadList();
 		
 	// Setup a timer to poll the server in approx 1sec for changes
-	reloadList.timerId = setInterval(function() { reloadList(true, reloadList.latestMd5); }, 1000);
+	if(!DEBUG_DISABLE_POLLING)
+		reloadList.timerId = setInterval(function() { reloadList(true, reloadList.latestMd5); }, 1000);
 
 });
 
