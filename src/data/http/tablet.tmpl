@@ -83,6 +83,7 @@
 		background: red;
 		color: white;
 		text-shadow: none;
+		padding: 0;
 		padding-right: .1em;
 	}
 	
@@ -101,6 +102,7 @@
 	/* Style the padding between blocks as an outer block so when we call scrollIntoView() we can have some padding while still retaining the outline tight around the block */
 	#song-content .song-file-block {
 		padding-bottom: 2em;
+		cursor: pointer;
 	}
 	
 	#page-table.onecol .content-view,
@@ -111,6 +113,12 @@
 	#conlost {
 		z-index: 999;
 		width:20em;
+		padding: .5em 2em 2em 2em;
+	}
+	
+	#songmenu {
+		z-index: 800;
+		width: 20em;
 		padding: .5em 2em 2em 2em;
 	}
 	
@@ -254,22 +262,26 @@
 		position: relative;
 	}
 	.textarea-highlight-display {
+		/*background: #222;*/ /* jq mobile theme c */
+		/*width: 100%;*/
+		/*height: 96%;*/
+		
 		position: absolute;
-		top: 2px;
+		top: 1px;
 		left: 2px;
 		z-index: 1; /* display behind <textarea> */
 			
 		/* just for testing */
 	/* 	 background: green; */
 		
-		line-height: 1.4;
+		/*line-height: 1.4;*/
 		padding:0.4em;
 		
 		color: transparent;
 	}
 	
 	.textarea-highlight-wrap textarea {
-		background: transparent;
+		background: transparent; /* necessary for highlights to show thru */
 		position: absolute;
 		top: 0;
 		left: 0;
@@ -500,6 +512,7 @@ $(function()
 
 			// Hide edit button if present
 			$('#edit-item-btn').hide();
+			$('#menu-item-btn').hide();
 		}
 		else
 		{
@@ -514,6 +527,7 @@ $(function()
 
 			// Show button if needed
 			$('#edit-item-btn').show();
+			$('#menu-item-btn').show();
 		}
 	}
 	
@@ -642,6 +656,7 @@ $(function()
 			
 			// Insert the new HTML into the content area
 			$("#song-content").html(""
+ 				+ "<a data-role='button' data-icon='arrow-d' data-inline='true' id='menu-item-btn' href='javascript:void(songMenu("+itemid+"))' style='float:right'>More...</a>"
 				+ "<a data-role='button' data-icon='gear' data-inline='true' id='edit-item-btn' href='javascript:void(editSong("+itemid+"))' ontouchstart='editSong("+itemid+");return false'"
 					+ " style='float:right' data-theme='b'>Edit Song</a>"
 				+ "<h3>" + item.title + "</h3>" 
@@ -666,7 +681,54 @@ $(function()
 		}
 
 		if(window.TabletMode != 'control')
+		{
 			$('#edit-item-btn').hide();
+			$('#menu-item-btn').hide();
+		}
+	}
+	
+	
+	window.songMenu = function(itemid)
+	{
+		//console.debug("Connection Lost...");
+		window.songMenu.itemid = itemid;
+		var item = window.SearchResults[itemid];
+		window.songMenu.item = item;
+		
+		//$.mobile.showPageLoadingMsg("b","Connection Lost, Reconnecting...");
+		var elm = $("<div class='ui-body ui-body-a' id='songmenu'>"
+			+ "<center>"
+			+ "<h3>"+item.title+"</h3>"
+			// jQuery mobile craps out with a wierd error in the trigger("create") call, below, when using the listview mode
+// 			+ "<ul data-role='listview' id='songmenu-list'>"
+// 			+	"<li><a href='javascript:void(editSong("+item.id+"));' ontouchstart='editSong("+item.id+");return false'>Edit Song</a></li>"
+// 			+	"<li class='ui-disabled'><a href='javascript:void(removeSong("+item.id+"));' ontouchstart='removeSong("+item.id+");return false' class='ui-disabled'>Remove Song</a></li>"
+// 			+	"<li class='ui-disabled'><a href='javascript:void(printSong("+item.id+"));'  ontouchstart='printSong("+item.id+");return false' class='ui-disabled'>Print Song</a></li>"
+// 			+ "</ul>"
+			+ "<a data-role='button' href='javascript:void(editSong("+item.id+"));'   ontouchstart='editSong("+item.id+");return false'>Edit Song</a></li>"
+			+ "<a data-role='button' href='javascript:void(removeSong("+item.id+"));' ontouchstart='removeSong("+item.id+");return false'>Remove Song</a></li>"
+			//+ "<a data-role='button' href='javascript:void(printSong("+item.id+"));'  ontouchstart='printSong("+item.id+");return false' class='ui-disabled'>Print Song</a></li>"
+			+ "<hr size=1>"
+			+ "<a data-role='button' href='javascript:void(closeSongMenu())'          ontouchstart='closeSongMenu();return false'>Cancel</a>"
+			+ "</center>"
+			+ "</div>");
+			
+		$(document.body).append(elm);
+		elm.trigger("create");
+		window.songMenu.elm = elm;
+		
+		// Close menu when any option clicked
+		elm.on('click', closeSongMenu);
+		
+		var win = $(window);
+		elm.css('top', win.height() /2 - elm.height()/2 + $(window).scrollTop() );
+		elm.css('left', win.width() /2 - elm.width() /2 );
+	}
+	
+	window.closeSongMenu = function()
+	{
+		if(window.songMenu.elm)
+			window.songMenu.elm.remove();
 	}
 	
 	// consoleDebug(..) calls fail in Google Chrome with "Illegal Invocation" errors - why can't you call window.console.debug via a function reference?
@@ -740,7 +802,7 @@ $(function()
 		{
 			// Scroll into view
 			if(!dontScroll &&
-			newLiveBlock.offset())
+			    newLiveBlock.offset())
 			{
 				var blockPos = newLiveBlock.offset().top;
 				var winHeightHalf = $(window).height() / 2;
@@ -782,10 +844,14 @@ $(function()
 			window.LastLiveSlide = idx;
 		}
 		
-		var url = '/tablet/show_slide?group='+itemid+'&slide='+slide+(touched?'&touched=true':'');
 		$.ajax({
 			type: "GET",
-			url: url,
+			url: '/tablet/show_slide',
+			data: { 
+				group: itemid,
+				slide: slide,
+				touched: touched ? true : false,
+			},
 			success: window.hideLoadingMsg
 		});
 	}
@@ -794,11 +860,10 @@ $(function()
 	{
 		showLoadingMsg();
 		
-		var url = '/tablet/add_song?songid='+itemid;
 		$.ajax({
-			type: "GET",
-			url: url,
-			//data: postData,
+			type: "POST",
+			url: '/tablet/add_song',
+			data: { songid: itemid },
 			success: function(data)
 			{
 				// Update the 'Add to Schedule' button to say 'View Schedule' and act accordingly
@@ -815,6 +880,27 @@ $(function()
 				
 				// Change the message text
 				$("#add-item-msg").html("Item added! Click the 'View Schedule' button to view the current schedule.");
+			}
+		});
+	}
+	
+	window.removeSong = function(itemid)
+	{
+		showLoadingMsg();
+		
+		$.ajax({
+			type: "POST",
+			url: '/tablet/del_song',
+			data:
+			{
+				itemid: itemid,
+				// Server needs ListMode so it can correctly contextualize the itemid into either a SongID or a GroupNum
+				mode: window.ListMode
+			},
+			success: function(data)
+			{
+				showListItem(false);
+				hideLoadingMsg();
 			}
 		});
 	}
@@ -1179,7 +1265,7 @@ $(function()
 			callback($(this).closest('.outer-block'));
 		});
 		
-		$("#edit-msg").html("<b>"+msg+"</b>");
+		$("#edit-msg").html("<b>"+msg+"</b> (<a href='#' onclick='disableSongBlockClick();return false'><b>Cancel</b></a>)");
 	}
 	
 	window.disableSongBlockClick = function() 
@@ -1406,21 +1492,19 @@ $(function()
 		
  		showLoadingMsg();
 		
-		var postData = 
-		{
-			title	: item.title,
-			text	: item.text,
-			arr	: item.arr,
-			itemid	: itemid,
-			// Server needs ListMode so it can correctly contextualize the itemid into either a SongID or a GroupNum
-			mode	: window.ListMode,
-		};
-		
- 		var url = '/tablet/save_song';
 		$.ajax({
 			type: "POST",
-			url: url,
-			data: postData,
+			url: '/tablet/save_song',
+			data:
+			postData = 
+			{
+				title	: item.title,
+				text	: item.text,
+				arr	: item.arr,
+				itemid	: itemid,
+				// Server needs ListMode so it can correctly contextualize the itemid into either a SongID or a GroupNum
+				mode	: window.ListMode,
+			},
 			success: function(data)
 			{
 				item.mapping = data.mapping; // download new arrangement mapping into item
@@ -1435,10 +1519,9 @@ $(function()
 	
 	window.pollLiveSlide = function()
 	{
-		var url = '/tablet/poll_live_slide';
 		$.ajax({
 			type: "GET",
-			url: url,
+			url: '/tablet/poll_live_slide',
 			error: function(data)
 			{
 				//console.debug(url + ":error:",data);
@@ -1450,80 +1533,75 @@ $(function()
 				
 				if(!data.error)
 				{
-// 					try
-// 					{
-						var groupNum = data.groupIdx;
-						var slideNum = data.slideIdx;
-						
-						if(groupNum != window.CurrentListItemDisplayed)
+					var groupNum = data.groupIdx;
+					var slideNum = data.slideIdx;
+					
+					if(groupNum != window.CurrentListItemDisplayed)
+					{
+						// We don't change groups on the "control" tablet because
+						// we assume the user wants to control the changing of groups
+						if(window.TabletMode == 'control')
 						{
-							// We don't change groups on the "control" tablet because
-							// we assume the user wants to control the changing of groups
-							if(window.TabletMode == 'control')
-							{
-								updateLiveSlideUI(false);
-								return;
-							}
-							
-							// If viewer, assume we're in 'file' list mode and have current list of songs,
-							// so we just tell it to show the next live song
-							consoleDebug("pollLiveSlide(): group# changed, showing new group:",groupNum);
-							showListItem(groupNum);
-						}
-						
-						if(window.pollLiveSlide.lastLiveSlide == slideNum &&
-						   window.pollLiveSlide.lastLiveGroup == groupNum)
-						{
-							//consoleDebug("pollLiveSlide(): No change in slide#/group#");
-							return;
-						}
-						
-						window.pollLiveSlide.lastLiveSlide = slideNum;
-						window.pollLiveSlide.lastLiveGroup = groupNum;
-						
-						var item = window.SearchResults[groupNum];
-						if(!item)
-						{
-							//console.debug("pollLiveSlide(): Group num given does not exist in window.SearchResults, groupNum:", groupNum);
-							if(window.TabletMode == 'viewer')
-								showListItem(false);
+							window.pollLiveSlide.lastLiveSlide = slideNum;
+							window.pollLiveSlide.lastLiveGroup = groupNum;
 							updateLiveSlideUI(false);
 							return;
 						}
 						
-						var slideMapping = item.mapping;
-						
-						// We have to find slideNum in mappings and map back to non-arranged slide
-						// If not found in mappings, use 1-1 mapping
-						
-						var mappedIdx = -1;
-						// slideMapping is a hash, not a straight list, hence the 'var x in y' syntax
-						for(var i in slideMapping)
-						{
-							if(mappedIdx < 0)
-							{
-								var mappingList = slideMapping[i];
-								if(!mappingList)
-									mappingList = [];
-								
-								for(var j in mappingList)
-									if(mappingList[j] == slideNum)
-										mappedIdx = i;
-							}
-						}
-						
+						// If viewer, assume we're in 'file' list mode and have current list of songs,
+						// so we just tell it to show the next live song
+						consoleDebug("pollLiveSlide(): group# changed, showing new group:",groupNum);
+						showListItem(groupNum);
+					}
+					
+					if(window.pollLiveSlide.lastLiveSlide == slideNum &&
+					   window.pollLiveSlide.lastLiveGroup == groupNum)
+					{
+						//consoleDebug("pollLiveSlide(): No change in slide#/group#");
+						return;
+					}
+					
+					window.pollLiveSlide.lastLiveSlide = slideNum;
+					window.pollLiveSlide.lastLiveGroup = groupNum;
+					
+					var item = window.SearchResults[groupNum];
+					if(!item)
+					{
+						//console.debug("pollLiveSlide(): Group num given does not exist in window.SearchResults, groupNum:", groupNum);
+						if(window.TabletMode == 'viewer')
+							showListItem(false);
+						updateLiveSlideUI(false);
+						return;
+					}
+					
+					var slideMapping = item.mapping;
+					
+					// We have to find slideNum in mappings and map back to non-arranged slide
+					// If not found in mappings, use 1-1 mapping
+					
+					var mappedIdx = -1;
+					// slideMapping is a hash, not a straight list, hence the 'var x in y' syntax
+					for(var i in slideMapping)
+					{
 						if(mappedIdx < 0)
-							mappedIdx = slideNum;
+						{
+							var mappingList = slideMapping[i];
+							if(!mappingList)
+								mappingList = [];
 							
-						var $block = $("#slide-idx-" + mappedIdx);
+							for(var j in mappingList)
+								if(mappingList[j] == slideNum)
+									mappedIdx = i;
+						}
+					}
+					
+					if(mappedIdx < 0)
+						mappedIdx = slideNum;
 						
-						consoleDebug("pollLiveSlide(): Updating live block, mappedIdx:",mappedIdx);
-						updateLiveSlideUI($block);
-// 					}
-// 					catch(e)
-// 					{
-// 						consoleDebug(e);
-// 					}
+					var $block = $("#slide-idx-" + mappedIdx);
+					
+					consoleDebug("pollLiveSlide(): Updating live block, mappedIdx:",mappedIdx);
+					updateLiveSlideUI($block);
 				}
 				else
 				{
@@ -1561,11 +1639,16 @@ $(function()
 		reloadList.accessCount ++;
 		var thisCount = reloadList.accessCount;
 		
-		// md5 only relevant if polling - server uses it to check for change
-		var url = '/tablet/list?mode='+window.ListMode+'&filter='+window.ListFilter+'&poll='+pollingFlag+'&md5='+md5;
 		$.ajax({
 			type: "GET",
-			url: url,
+			url: '/tablet/list',
+			data:
+			{
+				mode:	window.ListMode,
+				filter:	window.ListFilter,
+				poll:	pollingFlag,
+				md5:	md5 // md5 only relevant if polling - server uses it to check for change
+			},
 			error: function(data)
 			{
 				//console.debug(url + ":error:",data);

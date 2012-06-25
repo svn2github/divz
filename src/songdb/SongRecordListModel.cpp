@@ -103,6 +103,9 @@ void SongRecordListModel::populateSongList()
 
 void SongRecordListModel::songChanged(SongRecord *song, QString /*field*/, QVariant /*value*/)
 {
+	if(!m_populating)
+		m_currentChangeSequence ++;
+	
 	if(m_dirtyTimer->isActive())
 		m_dirtyTimer->stop();
 
@@ -160,6 +163,7 @@ void SongRecordListModel::addSong(SongRecord *song)
 	//qDebug() << "SongRecordListModel::addSong(): Added songid"<<song->songId()<<", title:"<<song->title();
 	if(!m_populating)
 	{
+		m_currentChangeSequence ++;
 		sortList();
 		endInsertRows();
 	}
@@ -178,6 +182,7 @@ void SongRecordListModel::removeSong(SongRecord *song)
 	
 	if(!m_populating)
 	{
+		m_currentChangeSequence ++;
 		sortList();
 		endRemoveRows();
 	}

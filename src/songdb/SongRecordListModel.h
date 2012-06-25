@@ -44,6 +44,9 @@ public:
  	
  	// Not from AbstractListModel, just for utility
 	static QString itemMimeType() { return "application/x-dviz-song-listmodel-item"; }
+	
+	// Store and compare later to see if the list changed without having to compare everything in a result set
+	int currentChangeSequence()  { return m_currentChangeSequence; }
 
 signals:
 	void filterChanged(QString);
@@ -72,6 +75,8 @@ private:
 	QTimer * m_dirtyTimer;
 	
 	bool m_populating;
+	
+	int m_currentChangeSequence;
 	
 	static SongRecordListModel * static_instance;
 };

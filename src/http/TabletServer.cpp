@@ -150,39 +150,67 @@ void TabletServer::mainScreen(QTcpSocket *socket, const QStringList &path, const
 			
 		if(mode == "db")
 		{
-			// List cutoff limit only relevant when searching/quering database.
-			// Cutoff not honored or implemented for file schedule
-			QString maxResults = query["max"];
-			if(!maxResults.isEmpty())
-				listCutoffLimit = maxResults.toInt();
-			if(listCutoffLimit < 1)
-				listCutoffLimit = 1;
-			
-			m_songListModel->filter(filter);
-			
-			moreResults = m_songListModel->rowCount() > listCutoffLimit;
-			int resultCount = qMin(listCutoffLimit, m_songListModel->rowCount());
-			
-			for(int i=0; i<resultCount; i++)
+			bool isChanged = true;
+			if(pollingFlag)
 			{
-				SongRecord *song = m_songListModel->songAt(i);
-				if(!song)
+				int currentChangeSequence = m_songListModel->currentChangeSequence();
+				QString seqString = QString::number(currentChangeSequence);
+				
+				// md5sigList is used to generate the md5 to send back to the client
+				md5sigList << seqString;
+				
+				QString seqMd5 = MD5::md5sum(md5sigList.join(""));
+				
+				isChanged = false;
+				
+				if(seqMd5 != clientMD5)
+					isChanged = true;
+			}
+			
+			// Only regen list if 'isChanged' - and isChanged is only set to 'false' if:
+			//  - Client is in polling mode
+			//  - Client MD5 matches the MD5 of current sequence number
+			// We do this because generating the list makes a call to filter()
+			// which can cause trouble if the filter string is empty and the user
+			// in the DViz main UI is trying to search for something (which would NOT change
+			// the sequence number above, but would change the filter) 
+			if(isChanged)
+			{
+				// List cutoff limit only relevant when searching/quering database.
+				// Cutoff not honored or implemented for file schedule
+				QString maxResults = query["max"];
+				if(!maxResults.isEmpty())
+					listCutoffLimit = maxResults.toInt();
+				if(listCutoffLimit < 1)
+					listCutoffLimit = 1;
+				
+				m_songListModel->filter(filter);
+				
+				moreResults = m_songListModel->rowCount() > listCutoffLimit;
+				int resultCount = qMin(listCutoffLimit, m_songListModel->rowCount());
+				
+				for(int i=0; i<resultCount; i++)
 				{
-					qDebug() << "TabletServer::mainScreen(): list: db: No song at index: "<<i;
-					continue;
+					SongRecord *song = m_songListModel->songAt(i);
+					if(!song)
+					{
+						qDebug() << "TabletServer::mainScreen(): list: db: No song at index: "<<i;
+						continue;
+					}
+					
+					QVariantMap line;
+					line["id"]    = song->songId();
+					line["title"] = song->title();
+					line["text"]  = song->text();
+					line["arr"]   = song->defaultArrangement()->arrangement().join(", ");
+					
+					resultList << line;
+					
+					// We use the sequence md5 (above) for the md5 sig instead of the list contents now
+// 					md5sigList.append(QString::number(song->songId()));
+// 					md5sigList.append(song->title());
+// 					md5sigList.append(song->text());
 				}
-				
-				QVariantMap line;
-				line["id"]    = song->songId();
-				line["title"] = song->title();
-				line["text"]  = song->text();
-				line["arr"]   = song->defaultArrangement()->arrangement().join(", ");
-				
-				resultList << line;
-				
-				md5sigList.append(QString::number(song->songId()));
-				md5sigList.append(song->title());
-				md5sigList.append(song->text());
 			}
 		}
 		else
@@ -330,11 +358,6 @@ void TabletServer::mainScreen(QTcpSocket *socket, const QStringList &path, const
 	{
 		int songid = query["songid"].toInt();
 		
-		// TODO: Retrieve songid from database
-		// Call MainWindow::mw()->songBrowser()->createSongGroup()
-		// Add to main document (see import slide group...)
-		// Return msg indicating added!
-		
 		QVariantMap result;
 		
 		SongRecord *song = SongRecord::retrieve(songid);
@@ -352,6 +375,53 @@ void TabletServer::mainScreen(QTcpSocket *socket, const QStringList &path, const
 			
 			result["groupnum"] = group->groupNumber();
 		}
+		
+		QString jsonString = m_toJson.serialize(result);
+		
+		QHttpResponseHeader header(QString("HTTP/1.0 200 OK"));
+		header.setValue("Content-Type", "application/json");
+		respond(socket, header);
+		
+		QTextStream output(socket);
+		output.setAutoDetectUnicode(true);
+		output << jsonString;
+	}
+	else
+	if(control == "del_song")
+	{
+		QString mode   = query["mode"]; // Either "db" or "file"
+		
+		int itemid = query["itemid"].toInt();
+		
+		if(mode == "file")
+		{
+			DocumentListModel * model = mw->documentListModel();
+			SlideGroup * group = model->groupAt(itemid);
+			SongSlideGroup *songGroup = dynamic_cast<SongSlideGroup*>(group);
+			
+			if(!songGroup)
+			{
+				Http_Send_404(socket) 
+					<< "Invalid songid";
+			}
+			
+			mw->currentDocument()->removeGroup(songGroup);
+		}
+		else
+		{
+			SongRecord *song = SongRecord::retrieve(itemid);
+			if(!song)
+			{
+				Http_Send_404(socket) 
+					<< "Invalid songid";
+			}
+			
+			SongRecord::deleteSong(song);
+		}
+		
+		QVariantMap result;
+		
+		// Nothing to see here, move along.
 		
 		QString jsonString = m_toJson.serialize(result);
 		
@@ -427,11 +497,9 @@ void TabletServer::mainScreen(QTcpSocket *socket, const QStringList &path, const
 		}
 		else
 			Http_Send_Response(socket,"HTTP/1.0 204 No Change") << "";
-		
-		// TODO sync with any other tablets
 	}
 	else
-	if(control =="poll_live_slide")
+	if(control == "poll_live_slide")
 	{
 		DocumentListModel * docModel = mw->documentListModel();
 		
