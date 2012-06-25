@@ -736,19 +736,23 @@ $(function()
 		if(window.LastLiveBlock)
 			window.LastLiveBlock.removeClass('song-text-block-live');
 		
-		// Scroll into view
-		if(!dontScroll &&
-		   newLiveBlock.offset())
+		if(newLiveBlock)
 		{
-			var blockPos = newLiveBlock.offset().top;
-			var winHeightHalf = $(window).height() / 2;
-			var blockHeight = newLiveBlock.height();
-			var scrollPos = blockPos - winHeightHalf + blockHeight;
-			$('html, body').animate({scrollTop: scrollPos}, 1000);
+			// Scroll into view
+			if(!dontScroll &&
+			newLiveBlock.offset())
+			{
+				var blockPos = newLiveBlock.offset().top;
+				var winHeightHalf = $(window).height() / 2;
+				var blockHeight = newLiveBlock.height();
+				var scrollPos = blockPos - winHeightHalf + blockHeight;
+				$('html, body').animate({scrollTop: scrollPos}, 1000);
+			}
+			
+			// Update CSS on new block
+			newLiveBlock.addClass('song-text-block-live');
 		}
 		
-		// Update CSS on new block
-		newLiveBlock.addClass('song-text-block-live');
 		window.LastLiveBlock = newLiveBlock;
 	}
 	
@@ -1456,7 +1460,10 @@ $(function()
 							// We don't change groups on the "control" tablet because
 							// we assume the user wants to control the changing of groups
 							if(window.TabletMode == 'control')
+							{
+								updateLiveSlideUI(false);
 								return;
+							}
 							
 							// If viewer, assume we're in 'file' list mode and have current list of songs,
 							// so we just tell it to show the next live song
@@ -1477,9 +1484,10 @@ $(function()
 						var item = window.SearchResults[groupNum];
 						if(!item)
 						{
-							consoleDebug("pollLiveSlide(): Group num given does not exist in window.SearchResults, groupNum:", groupNum);
+							//console.debug("pollLiveSlide(): Group num given does not exist in window.SearchResults, groupNum:", groupNum);
 							if(window.TabletMode == 'viewer')
 								showListItem(false);
+							updateLiveSlideUI(false);
 							return;
 						}
 						
@@ -1521,6 +1529,8 @@ $(function()
 				{
 					if(window.TabletMode == 'viewer')
 						showListItem(false);
+					
+					updateLiveSlideUI(false);
 				}
 			}
 		});

@@ -158,7 +158,6 @@ void TabletServer::mainScreen(QTcpSocket *socket, const QStringList &path, const
 			if(listCutoffLimit < 1)
 				listCutoffLimit = 1;
 			
-			
 			m_songListModel->filter(filter);
 			
 			moreResults = m_songListModel->rowCount() > listCutoffLimit;
