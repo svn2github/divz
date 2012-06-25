@@ -494,6 +494,10 @@ void SongEditorWindow::accepted()
 					arr->setTemplateGroup(tmpl);
 				else
 					arr->setTemplateGroup(0);
+					
+				// Set the same templates pointer on the song group as we just loaded
+				// inorder to force the slide group to regen slides incase the arrangement changes
+				songGroup->setSlideTemplates(tmpl);
 				
 				if(!songGroup->song()->songId())
 				{
