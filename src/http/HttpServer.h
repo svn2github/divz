@@ -60,7 +60,7 @@ public:
 	
 protected:
 	// Make a class that inherits HttpServer and override this function to handle requests yourself.
-	virtual void dispatch(QTcpSocket *socket, const QStringList &pathElements, const QStringMap &query);
+	virtual void dispatch(QTcpSocket *socket, const QStringList &pathElements, const QStringMap &query, const QHttpRequestHeader &request);
 	
 	// Send the HTTP response line 
 	void respond(QTcpSocket *socket, const QHttpResponseHeader &);

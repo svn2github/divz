@@ -45,7 +45,7 @@ TabletServer::TabletServer(quint16 port, QObject* parent)
 // - Enable searching/editing of song databfase to add chords
 // - Add select songs to Document
 	
-void TabletServer::dispatch(QTcpSocket *socket, const QStringList &path, const QStringMap &query)
+void TabletServer::dispatch(QTcpSocket *socket, const QStringList &path, const QStringMap &query, const QHttpRequestHeader &request)
 {
 	QString pathStr = path.join("/");
 	//qDebug() << "TabletServer::dispatch(): path: "<<path;
@@ -118,7 +118,7 @@ void TabletServer::mainScreen(QTcpSocket *socket, const QStringList &path, const
 		QHttpResponseHeader header(QString("HTTP/1.0 200 OK"));
 		header.setValue("Content-Type", "text/html");
 	
-		respond(socket,header);
+		respond(socket, header);
 		
 		QTextStream output(socket);
 		output.setAutoDetectUnicode(true);

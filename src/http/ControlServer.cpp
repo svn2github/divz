@@ -37,7 +37,7 @@ ControlServer::ControlServer(quint16 port, QObject* parent)
 //	click slide to go live
 
 	
-void ControlServer::dispatch(QTcpSocket *socket, const QStringList &path, const QStringMap &query)
+void ControlServer::dispatch(QTcpSocket *socket, const QStringList &path, const QStringMap &query, const QHttpRequestHeader &/*request*/)
 {
 	
 	//generic404(socket,path,query);

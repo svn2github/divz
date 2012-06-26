@@ -102,7 +102,7 @@ void HttpServer::readClient()
 		if (request.method() == "GET")
 		{
 			//logMessage(map);
-			dispatch(socket, pathElements, map);
+			dispatch(socket, pathElements, map, request);
 		}
 		else
 		if (request.method() == "POST")
@@ -134,7 +134,7 @@ void HttpServer::readClient()
 				
 				//qDebug() << "Debug: Decoded POST data: "<<map<<" from "<<QString(postData);
 				
-				dispatch(socket, pathElements, map);
+				dispatch(socket, pathElements, map, request);
 			}
 			else
 			{
@@ -177,10 +177,11 @@ void HttpServer::respond(QTcpSocket *socket, const QHttpResponseHeader &tmp)
 	os.setAutoDetectUnicode(true);
 	
 	QHttpResponseHeader header = tmp;
-	if(!header.hasKey("content-type"))
+	if(!header.hasKey("content-type") &&
+	   !header.hasKey("Content-Type"))
 		header.setValue("content-type", "text/html; charset=\"utf-8\"");
 		
-	header.setValue("Connection", "Keep-Alive");
+	//header.setValue("Connection", "Keep-Alive");
 	
 	os << header.toString();
 	//os << "\r\n";
@@ -325,9 +326,9 @@ bool HttpServer::serveFile(QTcpSocket *socket, const QString &pathStr, bool addE
 	}
 }
 
-void HttpServer::dispatch(QTcpSocket *socket, const QStringList &pathElements, const QStringMap &query)
+void HttpServer::dispatch(QTcpSocket *socket, const QStringList &pathElements, const QStringMap &query, const QHttpRequestHeader &/*request*/)
 {
-	generic404(socket,pathElements,query);
+	generic404(socket, pathElements, query);
 }
 
 void HttpServer::discardClient()
