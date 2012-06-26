@@ -1,0 +1,51 @@
+<!DOCTYPE html> 
+<!--<html manifest="/www/tablet/cache.manifest">--> 
+<html>
+	<head>
+	<title>DViz Login</title> 
+	
+	<!--<meta name="viewport" content="width=device-width, initial-scale=1">-->
+	<meta name="viewport" content="width=device-width, user-scalable=no" />
+	<meta name="apple-mobile-web-app-capable" content="yes" />
+	<meta name="apple-mobile-web-app-status-bar-style" content="default" /> <!--The values for content are default, black and black-translucent-->
+	<link rel="apple-touch-icon" href="/www/tablet/apple-touch-icon.png" /> <!-- If you don't want the glossy finish applied automatically, use apple-touch-icon-precomposed instead of apple-touch-icon. -->
+		<!--114x114 .png file - On older iPhones, which used 56x56 icons, and the iPad, which uses 72x72 icons, the graphic automatically scales down.--> 
+	<link rel="apple-touch-startup-image" href="/www/tablet/startup.png" />
+		<!--The file must be exactly 320x460, or else the iPhone ignores it. (The iPad requires 1004x768.)--> 
+	
+	<link rel="stylesheet" href="/www/jquery.mobile-1.1.0/jquery.mobile-1.1.0.min.css" />
+	<script src="/www/jquery-1.7.1.min.js"></script>
+	<script src="/www/jquery.mobile-1.1.0/jquery.mobile-1.1.0.min.js"></script>
+	<script src="/www/jquery.md5.min.js"></script>
+</head> 
+<body>
+
+<div data-role="page" >
+
+	<div data-role="header">
+		<h1>DViz Login</h1>
+	</div><!-- /header -->
+
+	<div data-role="content">
+		<form action="/tablet/login" method=POST data-ajax="false" onsubmit="$('#passmd5').val($.md5($('#pass').val()+'%%ip%%'));$('#pass').val('');return true">
+			<div>
+				<label for="user">User name:</label>
+				<input  id="user" name="user" type="text" size=30>
+			</div>
+			<div>
+				<label for="pass">Password:</label>
+				<input  id="pass" name="pass" type="text" size=30>
+			</div>
+			<input type="hidden" name="passmd5" id="passmd5" value="">
+			<input type="hidden" name="from" value="%%urlfrom%%">
+			<input type="submit" value="Login">
+		</form>
+
+		
+	</div><!-- /content -->
+
+</div><!-- /page -->
+
+</script>
+</body>
+</html>

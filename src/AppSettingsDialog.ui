@@ -17,7 +17,7 @@
    <item>
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>0</number>
+      <number>6</number>
      </property>
      <widget class="QWidget" name="tab">
       <attribute name="title">
@@ -166,6 +166,13 @@ p, li { white-space: pre-wrap; }
             </property>
             <property name="wordWrap">
              <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="7" column="0">
+           <widget class="QPushButton" name="httpUserBtn">
+            <property name="text">
+             <string>Setup Web Users and Passwords ...</string>
             </property>
            </widget>
           </item>

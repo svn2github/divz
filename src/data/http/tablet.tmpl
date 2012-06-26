@@ -36,6 +36,8 @@
 	}
 	.localnav li {
 		float:left;
+		
+		margin-bottom: 15px;
 	}
 	.localnav .ui-btn-inner { 
 		padding: .6em 10px; 
@@ -48,7 +50,7 @@
 	}
 	#tablet-switcher {
 		margin-left: 20px;
-		margin-bottom: 15px;
+		/*margin-bottom: 15px;*/
 	}
 	
 	#song-search.ui-field-contain .ui-input-search {
@@ -332,17 +334,6 @@
 
 <div data-role="page" >
 
-	
-	<script>
-// 	ontouchmove="BlockMove(event);"
-// 	// From http://matt.might.net/articles/how-to-native-iphone-ipad-apps-in-javascript/
-// 	// See section "Preventing elastic scrolling"
-// 	function BlockMove(event) {
-// 		// Tell Safari not to move the window.
-// 		event.preventDefault() ;
-// 	}
-	</script>
-
 	<div data-role="header">
 		<h1>DViz Tablet Song App</h1>
 	</div><!-- /header -->
@@ -373,10 +364,17 @@
 			<td valign=top>
 				<!-- This overflow:auto;width:100% trick clears the floats - see http://www.quirksmode.org/css/clearing.html -->
 				<div style='overflow:auto;width:100%'>
+				
+					<div style='float:right'>
+						<ul data-role="controlgroup" data-type="horizontal" class="localnav" id='logout'>
+							<li><a href="/tablet/login" data-role="button" data-ajax="false">%%user_name%% | Sign Out</a></li>
+						</ul>
+					</div>
+					
 					<div style='float:left'>
 						<ul data-role="controlgroup" data-type="horizontal" class="localnav" id='tablet-switcher'>
-							<li><a href="#" id='tablet-control' data-role="button" data-transition="fade" class="ui-btn-active">Control Tablet</a></li>
-							<li><a href="#" id='tablet-viewer'  data-role="button" data-transition="fade">Viewer Tablet</a></li>
+							<li><a href="#" id='tablet-control' data-role="button" data-transition="fade" class="ui-btn-active">Show List</a></li>
+							<li><a href="#" id='tablet-viewer'  data-role="button" data-transition="fade">Hide List</a></li>
 						</ul>
 					</div>
 					
@@ -406,9 +404,22 @@
 <script>
 $(function()
 {
+	window.USER_IS_ADMIN = %%is_admin%%;
+	window.USER_IS_USER  = %%is_user%%;
+	window.USER_IS_GUEST = %%is_guest%%;
+	window.USER_LEVEL    = %%user_level%%;
+	
+	window.LEVEL_ADMIN = 2;
+	window.LEVEL_USER  = 1;
+	window.LEVEL_GUEST = 0;
+	
 	window.DEBUG_DISABLE_POLLING = false;
-	 
-	$("#debug-reload").attr('href','/?date='+(new Date()).getTime());
+	
+	if(window.USER_LEVEL < window.LEVEL_ADMIN)
+	{
+		$("#song-search").hide();
+	}
+		
 	// Cookies
 	function createCookie(name, value, days) {
 		if (days == undefined)
@@ -667,12 +678,20 @@ $(function()
 			// Trigger jQuery mobile decorations
 			.trigger( "create" );
 			
-			// Add the 'click to go live' handler
-			$("#song-content .song-text-block").on('click',      function() { sendBlockLive(itemid, this, false); } );
-			
-			// 'ontouchstart' added per http://matt.might.net/articles/how-to-native-iphone-ipad-apps-in-javascript/
-			// See 'Detecting touch and gesture events' - "...good reason to do this..."
-			$("#song-content .song-text-block").on('touchstart', function() { sendBlockLive(itemid, this, true); return false; } );
+			// User level for changing slides *is* enforced in TabletServer.cpp - this just makes suer the UI corresponds to the user's actual permissions
+			if(window.USER_LEVEL > window.LEVEL_GUEST)
+			{
+				// Add the 'click to go live' handler
+				$("#song-content .song-text-block").on('click',      function() { sendBlockLive(itemid, this, false); } );
+				
+				// 'ontouchstart' added per http://matt.might.net/articles/how-to-native-iphone-ipad-apps-in-javascript/
+				// See 'Detecting touch and gesture events' - "...good reason to do this..."
+				$("#song-content .song-text-block").on('touchstart', function() { sendBlockLive(itemid, this, true); return false; } );
+			}
+			else
+			{
+				$("#song-content .song-file-block").css('cursor', 'text');
+			}
 			
 			clearTimeout(window.pollLiveSlide.timerId);
 			if(!DEBUG_DISABLE_POLLING)
@@ -1746,9 +1765,11 @@ $(function()
 	}
 
 	// Update tablet mode based on url
-	if(window.location.search.indexOf("tablet=viewer") > -1)
+	if(window.location.search.indexOf("tablet=viewer") > -1 ||
+	   window.USER_LEVEL < window.LEVEL_ADMIN)
 	{
 		updateTabletMode("viewer");
+		$("#tablet-switcher").remove();
 	}
 	else
 		// Reload if not viewer because updateTabletMode(viewer) reloads list in file mode

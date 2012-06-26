@@ -8,9 +8,11 @@ HEADERS += \
 	SimpleTemplate.h \
 	ControlServer.h \
 	ViewServer.h \
-	TabletServer.h
+	TabletServer.h \
+	HttpUserUtil.h
 SOURCES += HttpServer.cpp \
 	SimpleTemplate.cpp \
 	ControlServer.cpp \
 	ViewServer.cpp \
-	TabletServer.cpp
+	TabletServer.cpp \
+	HttpUserUtil.cpp

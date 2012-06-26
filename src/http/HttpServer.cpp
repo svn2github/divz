@@ -1,4 +1,5 @@
 #include "HttpServer.h"
+#include "SimpleTemplate.h"
 
 #include <QDateTime>
 #include <QTcpServer>
@@ -12,16 +13,22 @@
 #include <QFileInfo>
 #include <QDir>
 
+#include "HttpUserUtil.h"
+#include "3rdparty/md5/qtmd5.h"
+
 #define FILE_BUFFER_SIZE 4096
 
 #define logMessage(a) qDebug() << "[INFO]"<< qPrintable(QDateTime::currentDateTime().toString()) << a;
 
+#define HTTP_USER_COOKIE "dvz.user"
+#define HTTP_USER_COOKIE_EXPIRES 365
+
 HttpServer::HttpServer(quint16 port, QObject* parent)
 	: QTcpServer(parent)
 	, m_disabled(false)
+	, m_socket(0)
 {
-	listen(QHostAddress::Any, port);
-	
+	listen(QHostAddress::Any, port);	
 }
 	
 void HttpServer::incomingConnection(int socket)
@@ -62,6 +69,8 @@ void HttpServer::readClient()
 	QTcpSocket* socket = (QTcpSocket*)sender();
 	if (socket->canReadLine()) 
 	{
+		m_socket = socket;
+	
 		QString line = socket->readLine();
 		QStringList tokens = QString(line).split(QRegExp("[ \r\n][ \r\n]*"));
 		logMessage(qPrintable(socket->peerAddress().toString()) << qPrintable(tokens.join(" ")));
@@ -80,6 +89,27 @@ void HttpServer::readClient()
  		}
  		
  		QHttpRequestHeader request(headerBuffer.join(""));
+ 		
+ 		// Read cookies from header
+ 		m_cookies.clear();
+ 		m_setCookies.clear();
+ 		
+		QStringList cookies = request.value("Cookie").split(QRegExp("\\s*;\\s*"));
+		foreach(QString cookieData, cookies)
+		{
+			QStringList data = cookieData.split("=");
+			if(data.size() < 2)
+				continue;
+			
+			QString name  = QUrl::fromPercentEncoding(data.takeFirst().toAscii()).replace("+", " ");
+			QString value = QUrl::fromPercentEncoding(data.takeFirst().toAscii()).replace("+", " ");
+			
+			m_cookies[name] = value;
+			//qDebug() << "HttpServer::readClient(): [cookies] Received: "<<name<<" = "<<value; 
+		}
+		
+		// Attempt to find a user from the header
+		loadCurrentUser();
 		
  		// Decode request path
  		
@@ -96,13 +126,13 @@ void HttpServer::readClient()
 		
 		QStringMap map;
 		foreach(QByteArrayPair bytePair, encodedQuery)
-			map[QUrl::fromPercentEncoding(bytePair.first).replace("+"," ")] = QUrl::fromPercentEncoding(bytePair.second).replace("+"," ");
+			map[QUrl::fromPercentEncoding(bytePair.first).replace("+", " ")] = QUrl::fromPercentEncoding(bytePair.second).replace("+", " ");
 		
 		//if (tokens[0] == "GET") 
 		if (request.method() == "GET")
 		{
 			//logMessage(map);
-			dispatch(socket, pathElements, map, request);
+			dispatch(socket, pathElements, map);
 		}
 		else
 		if (request.method() == "POST")
@@ -129,12 +159,12 @@ void HttpServer::readClient()
 					if(keyValue.size() < 2)
 						continue;
 					
-					map[QUrl::fromPercentEncoding(keyValue[0]).replace("+"," ")] = QUrl::fromPercentEncoding(keyValue[1]).replace("+"," ");
+					map[QUrl::fromPercentEncoding(keyValue[0]).replace("+", " ")] = QUrl::fromPercentEncoding(keyValue[1]).replace("+", " ");
 				}
 				
 				//qDebug() << "Debug: Decoded POST data: "<<map<<" from "<<QString(postData);
 				
-				dispatch(socket, pathElements, map, request);
+				dispatch(socket, pathElements, map);
 			}
 			else
 			{
@@ -171,19 +201,209 @@ void HttpServer::readClient()
 	}
 }
 
+void HttpServer::loginPage(QTcpSocket *socket, const QStringList &path, const QStringMap &query, QString templateFile/* = ""*/)
+{
+	QStringList pathCopy = path;
+	//pathCopy.takeFirst(); 
+	QString action = pathCopy.isEmpty() ? "" : pathCopy.takeFirst().toLower();
+	
+	QString ip = socket->peerAddress().toString();
+	
+	if(templateFile.isEmpty())
+		templateFile = "data/http/login.tmpl";
+		
+	SimpleTemplate tmpl(templateFile);
+	
+	if(HttpUserUtil::instance()->currentUser())
+	{
+		tmpl.param("logout", true);
+		setUserCookie(0);
+	}
+	
+	if(query.contains("user") &&
+	   (query.contains("pass") || query.contains("passmd5")))
+	{
+		//qDebug() << "HttpServer::loginPage(): query:"<<query;
+		
+		QString user = query.value("user");
+		HttpUser *userData = HttpUserUtil::instance()->getUser(user);
+		if(userData)
+		{
+			bool ok = false;
+			QString passmd5 = query.value("passmd5");
+			if(!passmd5.isEmpty())
+			{
+				QString correctPassEncoded = MD5::md5sum(QString("%1%2").arg(userData->pass()).arg(ip));
+				if(correctPassEncoded == passmd5)
+					ok = true;
+			}
+			else
+			if(query.value("pass") == userData->pass())
+			{
+				ok = true;
+			}
+			
+			if(ok)
+			{
+				HttpUserUtil::instance()->setCurrentUser(userData);
+				setUserCookie(userData);
+				
+				QString urlFrom = QUrl::fromPercentEncoding(query.value("from").toAscii()).replace("+", " ");
+				
+				if(urlFrom.isEmpty())
+					urlFrom = "/";
+				
+				//qDebug() << "HttpServer::loginPage(): urlFrom:"<<urlFrom;
+				
+				qDebug() << "HttpServer::loginPage(): Authenticated user "<<userData->user()<<", level "<<userData->level()<<", redirecting to "<<urlFrom;
+				
+				redirect(socket, urlFrom);
+				
+				return;
+			}
+		}
+		
+		tmpl.param("login-error", true);
+	}
+
+	tmpl.param("urlfrom",	query.value("from"));
+	tmpl.param("user",	query.value("user"));
+	tmpl.param("ip",	ip);
+
+	Http_Send_Ok(socket) << tmpl.toString();	
+}
+
+void HttpServer::redirect(QTcpSocket *socket, const QString &url, bool addExpiresHeader)
+{
+	QHttpResponseHeader header(QString("HTTP/1.0 302 Moved Temporarily"));
+	header.setValue("Location", url);
+	
+	if(addExpiresHeader)
+	{
+		QDateTime time = QDateTime::currentDateTime().addDays(30);
+		QString expires = time.toString("ddd, dd MMM yyyy hh:mm:ss 'GMT'");
+		header.setValue("Expires", expires);
+	}
+	
+
+	respond(socket, header);
+}
+
+void HttpServer::loadCurrentUser()
+{
+	QString userCookie = cookie(HTTP_USER_COOKIE);
+	
+	QString ip = m_socket->peerAddress().toString();
+	
+	HttpUserUtil::instance()->setCurrentUser(0);
+	
+	if(!userCookie.isEmpty())
+	{
+		QStringList data = userCookie.split(":");
+		if(data.length() < 2)
+			return;
+			
+		QString user        = QUrl::fromPercentEncoding(data.takeFirst().toAscii()).replace("+", " ");
+		QString passEncoded = QUrl::fromPercentEncoding(data.takeFirst().toAscii()).replace("+", " ");
+		
+		if(user.isEmpty())
+			return;
+		
+		HttpUser *userData = HttpUserUtil::instance()->getUser(user);
+		if(!userData)
+			return;
+			
+		QString correctPassEncoded = MD5::md5sum(QString("%1%2").arg(userData->pass()).arg(ip));
+		
+		if(passEncoded == correctPassEncoded)	
+			HttpUserUtil::instance()->setCurrentUser(userData);
+	}
+}
+
+void HttpServer::setUserCookie(HttpUser *userData)
+{
+	QString ip = m_socket->peerAddress().toString();
+	
+	if(!userData)
+	{
+		setCookie(HTTP_USER_COOKIE, ":", HTTP_USER_COOKIE_EXPIRES);
+	}
+	else
+	{
+		QString user = QUrl::toPercentEncoding(userData->user()).replace(" ", "+");
+		
+		QString correctPassEncoded = MD5::md5sum(QString("%1%2").arg(userData->pass()).arg(ip));
+		QString pass = QUrl::toPercentEncoding(correctPassEncoded).replace(" ", "+");
+		
+		QString userCookie = QString("%1:%2").arg(user).arg(pass);
+	
+		setCookie(HTTP_USER_COOKIE, userCookie, HTTP_USER_COOKIE_EXPIRES);
+	}
+}
+
+
+void HttpServer::setCookie(QString key, QString value, int expiresDays)
+{
+	setCookie(key, value, QDateTime::currentDateTime().addDays(expiresDays));
+}
+
+void HttpServer::setCookie(QString key, QString value, QDateTime expires, QString domain, QString path)
+{
+	QString encodedValue = QUrl::toPercentEncoding(value).replace(" ", "+");
+	if(expires.isValid())
+		encodedValue += "; Expires=" + expires.toString("ddd, dd MMM yyyy hh:mm:ss 'GMT'");
+	
+	if(!domain.isEmpty())
+		encodedValue += "; Domain=" + domain;
+	
+	if(!path.isEmpty())
+		encodedValue += "; Path=" + path;
+	
+	m_setCookies[key] = encodedValue;
+	
+	// Override cookie value from headers so subsequent calls to cookie() return this value instead of the one from the header
+	m_cookies[key] = value;
+}
+
 void HttpServer::respond(QTcpSocket *socket, const QHttpResponseHeader &tmp)
 {
 	QTextStream os(socket);
 	os.setAutoDetectUnicode(true);
 	
 	QHttpResponseHeader header = tmp;
-	if(!header.hasKey("content-type") &&
-	   !header.hasKey("Content-Type"))
-		header.setValue("content-type", "text/html; charset=\"utf-8\"");
-		
+	
 	//header.setValue("Connection", "Keep-Alive");
 	
-	os << header.toString();
+	QStringList cookieHeaders;
+	foreach(QString cookieName, m_setCookies.keys())
+	{
+		QString name = QUrl::toPercentEncoding(cookieName).replace(" ", "+");
+		QString header = QString("Set-Cookie: %1=%2").arg(name).arg(m_setCookies[cookieName]);
+		cookieHeaders.append(header);
+		
+		//qDebug() << "HttpServer::respond(): [cookies] "<<header;
+	}
+	
+	if(!header.hasKey("content-type") &&
+	   !header.hasKey("Content-Type"))
+		header.setValue("Content-Type", "text/html; charset=\"utf-8\"");
+	
+	// We have to chop off the blank line from the toString() method so we can add on 
+	// the cookie headers ourselves before sending to the client.
+	// We have to add the "set-cookie" headers manually (e.g. instead of using header.setvalue())
+	// because setValue() overwrites the previous value if the same key (e.g. "Set-Cookie") is used
+	// again in the same header. Since we could have more tha one cookie being set in a single
+	// respond() call, we have to make our own list of Set-Cookie headers and add them in manually.
+	
+	QString headers = header.toString();
+	headers = headers.left(headers.length() - 2); // chop off the blank line at the end
+	
+	headers += cookieHeaders.join("\r\n");
+	headers += "\r\n\r\n"; // add in blank line again
+	
+	//qDebug() << "HttpServer::respond(): [final headers] "<<qPrintable(headers);
+	
+	os << headers;
 	//os << "\r\n";
 	os.flush();
 	
@@ -198,19 +418,20 @@ void HttpServer::respond(QTcpSocket *socket, const QHttpResponseHeader &tmp,cons
 
 QString HttpServer::toPathString(const QStringList &pathElements, const QStringMap &query, bool encoded)
 {
-	QStringList list;
+	QStringList buffer;
 	foreach(QString element, pathElements)
-		list << "/" << QUrl::toPercentEncoding(element);
+		buffer << "/" << QUrl::toPercentEncoding(element).replace(" ", "+");
 	if(!query.isEmpty())
 	{
-		list << "?";
+		buffer << "?";
+		QStringList list;
 		foreach(QString key, query.keys())
 		{
 			if(encoded)
 			{
-				list << QUrl::toPercentEncoding(key)
+				list << QUrl::toPercentEncoding(key).replace(" ", "+")
 				     << "="
-				     << QUrl::toPercentEncoding(query.value(key));
+				     << QUrl::toPercentEncoding(query.value(key)).replace(" ", "+");
 			}
 			else
 			{
@@ -219,8 +440,10 @@ QString HttpServer::toPathString(const QStringList &pathElements, const QStringM
 				     << query.value(key);
 			}
 		}
+		buffer << list.join("&");
 	}
-	return list.join("");
+	
+	return buffer.join("");
 }
 
 void HttpServer::generic404(QTcpSocket *socket, const QStringList &pathElements, const QStringMap &query)
@@ -326,7 +549,7 @@ bool HttpServer::serveFile(QTcpSocket *socket, const QString &pathStr, bool addE
 	}
 }
 
-void HttpServer::dispatch(QTcpSocket *socket, const QStringList &pathElements, const QStringMap &query, const QHttpRequestHeader &/*request*/)
+void HttpServer::dispatch(QTcpSocket *socket, const QStringList &pathElements, const QStringMap &query)
 {
 	generic404(socket, pathElements, query);
 }
@@ -336,3 +559,4 @@ void HttpServer::discardClient()
 	QTcpSocket* socket = (QTcpSocket*)sender();
 	socket->deleteLater();
 }
+

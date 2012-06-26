@@ -14,7 +14,7 @@ public:
 	ViewServer(quint16 port, QObject* parent = 0);
 	
 protected:
-	void dispatch(QTcpSocket *socket, const QStringList &pathElements, const QStringMap &query, const QHttpRequestHeader &request);
+	void dispatch(QTcpSocket *socket, const QStringList &pathElements, const QStringMap &query);
 	
 	void reqCheckForChange(QTcpSocket *socket, const QStringList &pathElements, const QStringMap &query);
 	void reqSendImage(QTcpSocket *socket, const QStringList &pathElements, const QStringMap &query);

@@ -1,6 +1,8 @@
 #include "TabletServer.h"
 #include "SimpleTemplate.h"
 
+#include "HttpUserUtil.h"
+
 #include "AppSettings.h"
 #include "MainWindow.h"
 #include "DocumentListModel.h"
@@ -45,7 +47,7 @@ TabletServer::TabletServer(quint16 port, QObject* parent)
 // - Enable searching/editing of song databfase to add chords
 // - Add select songs to Document
 	
-void TabletServer::dispatch(QTcpSocket *socket, const QStringList &path, const QStringMap &query, const QHttpRequestHeader &request)
+void TabletServer::dispatch(QTcpSocket *socket, const QStringList &path, const QStringMap &query)
 {
 	QString pathStr = path.join("/");
 	//qDebug() << "TabletServer::dispatch(): path: "<<path;
@@ -92,10 +94,37 @@ void TabletServer::mainScreen(QTcpSocket *socket, const QStringList &path, const
 	
 	//qDebug() << "TabletServer::mainScreen(): control: "<<control;
 	
+	HttpUser *user = HttpUserUtil::instance()->currentUser();
+	
+	if(control != "login")
+	{
+		if(!user)
+		{
+			QStringMap q2 = query;
+			q2["from"] = QUrl::toPercentEncoding(toPathString(path,q2).toAscii()).replace(" ", "+");
+			redirect(socket, "/tablet/login");
+			return;
+		}
+		
+		// I've decided to allow guests "view-only" access
+		
+// 		else
+// 		if(user->level() == HttpUser::Guest)
+// 		{
+// 			Http_Send_Ok(socket) << "<html><head><title>Not Allowed</title></head><body><h1>Not Allowed</h1>Sorry, you're not allowed to access this site. (<a href='/tablet/login'>Login again</a>)</body></html";
+// 			return;
+// 		}
+	}
+	
 	if(control.isEmpty())
 	{
 	
 		SimpleTemplate tmpl("data/http/tablet.tmpl");
+		tmpl.param("user_name", user->user());
+		tmpl.param("user_level", (int)user->level());
+		tmpl.param("is_admin", user->level() == HttpUser::Admin);
+		tmpl.param("is_user",  user->level() == HttpUser::User);
+		tmpl.param("is_guest", user->level() == HttpUser::Guest);
 		
 // 		tmpl.param("list",outputGroupList);
 // 		
@@ -125,10 +154,24 @@ void TabletServer::mainScreen(QTcpSocket *socket, const QStringList &path, const
 		output << tmpl.toString();
 	}
 	else
+	if(control == "login")
+	{
+		loginPage(socket, path, query);
+	}
+	else
 	if(control == "list")
 	{
-		QString mode   = query["mode"]; // Either "db" or "file"
 		QString filter = query["filter"]; // Can be empty
+		
+		// Don't allow non-admins to search because it would interfere with the main UI
+		if(!filter.isEmpty() &&
+		    user->level() < HttpUser::Admin)
+		{
+			Http_Send_500txt(socket, "Not Authorized");
+			return;
+		}
+		
+		QString mode   = query["mode"]; // Either "db" or "file"
 		
 		bool pollingFlag  = query["poll"] == "true";
 		QString clientMD5 = query["md5"]; // the md5 of the list contents to use to check for changes if pollingFlag == true
@@ -300,6 +343,12 @@ void TabletServer::mainScreen(QTcpSocket *socket, const QStringList &path, const
 	else
 	if(control == "save_song")
 	{
+		if(user->level() < HttpUser::Admin)
+		{
+			Http_Send_500txt(socket, "Not Authorized");
+			return;
+		}
+		
 		QString mode   = query["mode"]; // Either "db" or "file"
 		int itemid     = query["itemid"].toInt(); // If mode is db, itemid is a songid, otherwise, it's a group index
 		
@@ -356,6 +405,12 @@ void TabletServer::mainScreen(QTcpSocket *socket, const QStringList &path, const
 	else
 	if(control == "add_song")
 	{
+		if(user->level() < HttpUser::Admin)
+		{
+			Http_Send_500txt(socket, "Not Authorized");
+			return;
+		}
+		
 		int songid = query["songid"].toInt();
 		
 		QVariantMap result;
@@ -389,6 +444,12 @@ void TabletServer::mainScreen(QTcpSocket *socket, const QStringList &path, const
 	else
 	if(control == "del_song")
 	{
+		if(user->level() < HttpUser::Admin)
+		{
+			Http_Send_500txt(socket, "Not Authorized");
+			return;
+		}
+		
 		QString mode   = query["mode"]; // Either "db" or "file"
 		
 		int itemid = query["itemid"].toInt();
@@ -436,6 +497,12 @@ void TabletServer::mainScreen(QTcpSocket *socket, const QStringList &path, const
 	else
 	if(control == "show_slide")
 	{
+		if(user->level() < HttpUser::User)
+		{
+			Http_Send_500txt(socket, "Not Authorized");
+			return;
+		}
+		
 		int groupIdx = query["group"].toInt();
 		
 		Document * doc = mw->currentDocument();
@@ -501,6 +568,12 @@ void TabletServer::mainScreen(QTcpSocket *socket, const QStringList &path, const
 	else
 	if(control == "poll_live_slide")
 	{
+		if(user->level() < HttpUser::Guest)
+		{
+			Http_Send_500txt(socket, "Not Authorized");
+			return;
+		}
+		
 		DocumentListModel * docModel = mw->documentListModel();
 		
 		QVariantMap result;

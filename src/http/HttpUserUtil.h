@@ -3,37 +3,38 @@
 
 #include <QString>
 #include <QHash>
+#include <QHttpRequestHeader>
 
 class HttpUser
 {
 public:
-	HttpUser(const QString& user = "",
-		 const QString& pass = "",
-		 UserLevel level = Guest)
-		: m_user(user)
-		, m_pass(pass)
-		, m_userLevel(level)
-		{}
-		
-	QString user() { return m_user; }
-	Qstring pass() { return m_pass; }
-	
-	void setUser(const QString& user) { m_user = user; }
-	void setPass(const Qstring& pass) { m_pass = pass; }
-	
 	enum UserLevel {
 		Guest = 0,
 		User,
 		Admin
 	};
 	
-	UserLevel userLevel() { return m_userLevel; }
-	void setUserLevel(UserLevel level) { m_userLevel = level ;}
+	HttpUser(const QString& user = "",
+		 const QString& pass = "",
+		 UserLevel level = Guest)
+		: m_user(user)
+		, m_pass(pass)
+		, m_level(level)
+		{}
+		
+	QString user() { return m_user; }
+	QString pass() { return m_pass; }
+	
+	void setUser(const QString& user) { m_user = user; }
+	void setPass(const QString& pass) { m_pass = pass; }
+	
+	UserLevel level() { return m_level; }
+	void setLevel(UserLevel level) { m_level = level ;}
 	
 private:
 	QString m_user;
-	Qstring m_pass;
-	UserLevel m_userLevel
+	QString m_pass;
+	UserLevel m_level;
 };
 
 class HttpUserUtil
@@ -44,7 +45,7 @@ class HttpUserUtil
 public:
 	~HttpUserUtil();
 	
-	HttpUserUtil *instance();
+	static HttpUserUtil *instance();
 	
 	QList<HttpUser *> users() { return m_users; }
 	
@@ -54,15 +55,17 @@ public:
 	HttpUser *getUser(const QString& user);
 	bool isValid(const QString& user, const QString& pass);
 	
-	HttpUser *getUserFromRequest(const QHttpRequestHeader &request);
-	QString getUserCookie(HttpUser *);
-
+	void setCurrentUser(HttpUser *);
+	HttpUser *currentUser() { return m_currentUser; }
+	
 private:
 	void storeUsers();
 	void loadUsers();
 	
 	QList<HttpUser *> m_users;
 	QHash<QString, HttpUser*> m_userLookup;
+	
+	HttpUser *m_currentUser;
 
 };
 

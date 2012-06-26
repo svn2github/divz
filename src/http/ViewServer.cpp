@@ -50,7 +50,7 @@ ViewServer::ViewServer(quint16 port, QObject* parent)
 // Polling for changes will be handled by dedicated routine 
 
 	
-void ViewServer::dispatch(QTcpSocket *socket, const QStringList &path, const QStringMap &query, const QHttpRequestHeader &/*request*/)
+void ViewServer::dispatch(QTcpSocket *socket, const QStringList &path, const QStringMap &query)
 {
 	
 	//generic404(socket,path,query);

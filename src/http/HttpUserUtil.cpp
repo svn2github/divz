@@ -1,5 +1,7 @@
 #include "HttpUserUtil.h"
 
+#include <QSettings>
+
 #define HTTP_USER_STORE "httpusers.ini"
 
 HttpUserUtil *HttpUserUtil::m_inst = 0;
@@ -13,6 +15,7 @@ HttpUserUtil *HttpUserUtil::instance()
 }
 
 HttpUserUtil::HttpUserUtil()
+	: m_currentUser(0)
 {
 	loadUsers();
 }
@@ -35,11 +38,17 @@ void HttpUserUtil::loadUsers()
 		HttpUser *user = new HttpUser();
 		user->setUser(settings.value("user").toString());
 		user->setPass(settings.value("pass").toString());
-		user->setUserLevel((HttpUser::UserLevel)settings.value("level").toInt());
+		user->setLevel((HttpUser::UserLevel)settings.value("level").toInt());
 		addUser(user);
 	}
 	
 	settings.endArray();
+	
+	if(numUsers <= 0)
+	{
+		addUser(new HttpUser("admin","admin",HttpUser::Admin));
+	}
+	
 }
 
 void HttpUserUtil::storeUsers()
@@ -47,12 +56,13 @@ void HttpUserUtil::storeUsers()
 	QSettings settings(HTTP_USER_STORE, QSettings::IniFormat);
 	
 	settings.beginWriteArray("users");
+	int i = 0;
 	foreach(HttpUser *user, users())
 	{
-		settings.setArrayIndex(i);
-		settings.setValue("user", user->user());
-		settings.setValue("pass", user->pass());
-		settings.setValue("level", (int)user->userLevel());
+		settings.setArrayIndex(i++);
+		settings.setValue("user",  user->user());
+		settings.setValue("pass",  user->pass());
+		settings.setValue("level", (int)user->level());
 	}
 	settings.endArray();
 }
@@ -66,6 +76,8 @@ void HttpUserUtil::addUser(HttpUser *user)
 	{
 		m_users << user;
 		m_userLookup[user->user()] = user;
+		
+		storeUsers();
 	}
 }
 
@@ -94,12 +106,7 @@ bool HttpUserUtil::isValid(const QString& user, const QString& pass)
 	return data->pass() == pass;
 }
 
-HttpUser *HttpUserUtil::getUserFromRequest(const QHttpRequestHeader &request)
+void HttpUserUtil::setCurrentUser(HttpUser *user)
 {
-
-}
-
-QString HttpUserUtil::getUserCookie(HttpUser *data)
-{
-
+	m_currentUser = user;
 }
