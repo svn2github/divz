@@ -356,6 +356,8 @@ void TabletServer::mainScreen(QTcpSocket *socket, const QStringList &path, const
 		QString text   = query["text"];
 		QString arrTxt = query["arr"];
 		
+		QStringList newArrList = arrTxt.split(QRegExp("\\s*,\\s*"));
+		
 		SongRecord *song;
 		
 		if(mode == "file")
@@ -365,6 +367,7 @@ void TabletServer::mainScreen(QTcpSocket *socket, const QStringList &path, const
 			SongSlideGroup *songGroup = dynamic_cast<SongSlideGroup*>(group);
 			
 			// Update the document model 
+			songGroup->setArrangement(newArrList);
 			songGroup->setGroupTitle(title);
 			songGroup->setText(text); // automatically regenerates slides in document
 			
@@ -385,7 +388,7 @@ void TabletServer::mainScreen(QTcpSocket *socket, const QStringList &path, const
 		song->setText(text);
 		
 		SongArrangement *arr = song->defaultArrangement();
-		arr->setArrangement(arrTxt.split(QRegExp("\\s*,\\s*")));
+		arr->setArrangement(newArrList);
 		
 		// Changes automatically committed to database
 		

@@ -103,7 +103,7 @@
 	
 	/* Style the padding between blocks as an outer block so when we call scrollIntoView() we can have some padding while still retaining the outline tight around the block */
 	#song-content .song-file-block {
-		padding-bottom: 2em;
+		padding-bottom: 1em;
 		cursor: pointer;
 	}
 	
@@ -1141,6 +1141,8 @@ $(function()
 				+ " data-theme='e'>Edit Text</a>"
 			+ "<a data-role='button'                   data-inline='true' id='dup-block-btn'   href='javascript:void(dupBlock())'  ontouchstart='dupBlock();return false'"
 				+ " data-theme='e'>Duplicate Block</a>"
+			+ "<a data-role='button'                   data-inline='true' id='dup-block-btn'   href='javascript:void(newBlock())'  ontouchstart='newBlock();return false'"
+				+ " data-theme='e'>New Block</a>"
 			+ "<a data-role='button'                   data-inline='true' id='del-block-btn'   href='javascript:void(delBlock())'  ontouchstart='delBlock();return false'"
 				+ " data-theme='e'>Remove Block</a>"
 			+ "<input id='song-title-edit' type='text' value='" + item.title + "' size=30 style='margin-left:.75em'>"
@@ -1367,9 +1369,16 @@ $(function()
 		
 		$("#song-block-save-btn").on('click', function()
 		{
-			var blockTitle = window.editText.currentBlockTitle;
-			var blockDivList = window.editSong.blockLookup[blockTitle];
+			var currentBlockTitle = window.editText.currentBlockTitle;
+			var blockDivList = window.editSong.blockLookup[currentBlockTitle];
 			
+			// Get title and new text
+			var blockTitle = $.trim($("#song-block-title-edit").val()); //blockDiv.attr('x:blockTitle');
+			var blockText  = $.trim($("#song-block-text-edit").val());
+			var blockClass = blockTitle.split(/\s/)[0].toLowerCase();
+			
+			var innerBlocks = blockText.split(/\n\n/);
+				
 			for(var blockDivIdx in blockDivList)
 			{
 				var blockDiv = blockDivList[blockDivIdx];
@@ -1384,20 +1393,14 @@ $(function()
 				var oldBlockClass = oldBlockTitle.split(/\s/)[0].toLowerCase();
 				blockDiv.removeClass("block-type-"+oldBlockClass);
 				
-				// Get title and new text
-				var blockTitle = $.trim($("#song-block-title-edit").val()); //blockDiv.attr('x:blockTitle');
-				var blockText  = $.trim($("#song-block-text-edit").val());
-				
 				blockDiv.attr('x:blockTitle', blockTitle);
 				blockDiv.attr('x:blockText',  blockText);
 				
-				var blockClass = blockTitle.split(/\s/)[0].toLowerCase();
 				blockDiv.addClass("block-type-"+blockClass);
 				
 				// Recreate inner blocks
-				var innerBlocks = blockText.split(/\n\n/);
-				
 				var firstInner = true;
+				
 				for(var blockIdx in innerBlocks)
 				{
 					var innerText = innerBlocks[blockIdx];
@@ -1412,6 +1415,10 @@ $(function()
 				
 				blockDiv.trigger("create");
 			}
+			
+			
+			window.editSong.blockLookup[currentBlockTitle] = null;
+			window.editSong.blockLookup[blockTitle] = blockDivList;
 			
 			window.editText.elm.remove();
 		});
@@ -1429,6 +1436,14 @@ $(function()
 		
 		var blockTitle = blockDiv.attr('x:blockTitle');
 		var blockText  = blockDiv.attr('x:blockText');
+		
+		createEditBlock(blockTitle, blockText);
+	}
+	
+	window.newBlock = function(blockDiv)
+	{
+		var blockTitle = "New Block";
+		var blockText  = "(New Text)";
 		
 		createEditBlock(blockTitle, blockText);
 	}
