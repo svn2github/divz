@@ -17,6 +17,8 @@ public:
 protected slots:
 	void addUser();
 	void delUser();
+	void slotAccepted();
+	void adjustTableSize();
 
 protected:
 	void changeEvent(QEvent *e);

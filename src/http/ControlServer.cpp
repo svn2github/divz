@@ -14,6 +14,8 @@
 
 #include "songdb/SongSlideGroup.h"
 
+#include "HttpUserUtil.h"
+
 #include <QTcpSocket>
 
 #include <QDateTime>
@@ -44,9 +46,34 @@ void ControlServer::dispatch(QTcpSocket *socket, const QStringList &path, const 
 	QString pathStr = path.join("/");
 	//qDebug() << "pathStr: "<<pathStr;
 	
+	HttpUser *user = HttpUserUtil::instance()->currentUser();
+	
+	if(!pathStr.startsWith("login"))
+	{
+		if(!user)
+		{
+			QStringMap q2 = query;
+			q2["from"] = QUrl::toPercentEncoding(toPathString(path,q2).toAscii()).replace(" ", "+");
+			redirect(socket, "/login");
+			return;
+		}
+		else
+		if(user->level() < HttpUser::Admin)
+		{
+			Http_Send_Ok(socket) << "<html><head><title>Not Allowed</title></head><body><h1>Not Allowed</h1>Sorry, you're not allowed to access this site. (<a href='/tablet/login'>Login again</a>)</body></html";
+			return;
+		}
+	}
+	
+	
 	if(pathStr.isEmpty())
 	{
 		screenListGroups(socket,path,query);
+	}
+	else
+	if(pathStr.startsWith("login"))
+	{
+		loginPage(socket, path, query, "/login");
 	}
 	else
 	if(pathStr.startsWith("group/"))
@@ -54,8 +81,10 @@ void ControlServer::dispatch(QTcpSocket *socket, const QStringList &path, const 
 		screenLoadGroup(socket,path,query);
 	}
 	else
-	if(pathStr.startsWith("data/") ||
-	   pathStr.startsWith(":/data/"))
+	if(pathStr.startsWith("data/")   ||
+	   pathStr.startsWith(":/data/") ||
+	   pathStr.startsWith("www/")    ||
+	   pathStr.startsWith(":/data/www/"))
 	{
 		serveFile(socket,pathStr);
 	}
@@ -180,6 +209,13 @@ void ControlServer::screenListGroups(QTcpSocket *socket, const QStringList &path
 		tmpl.param("docfile",tr("New File"));
 	else
 		tmpl.param("docfile",QFileInfo(doc->filename()).baseName());
+		
+	HttpUser *user = HttpUserUtil::instance()->currentUser();
+	tmpl.param("user_name", user->user());
+	tmpl.param("user_level", (int)user->level());
+	tmpl.param("is_admin", user->level() == HttpUser::Admin);
+	tmpl.param("is_user",  user->level() == HttpUser::User);
+	tmpl.param("is_guest", user->level() == HttpUser::Guest);
 	
 // 	Http_Send_Ok(socket) << 
 // 		"Content-Type: text/html\n\n" <<
@@ -347,6 +383,13 @@ void ControlServer::screenLoadGroup(QTcpSocket *socket, const QStringList &path,
 		tmpl.param("black_toggled", outputControl->isBlackToggled());
 		tmpl.param("clear_toggled", outputControl->isClearToggled());
 		tmpl.param("qslide_toggled", viewControl->isQuickSlideToggled());
+		
+		HttpUser *user = HttpUserUtil::instance()->currentUser();
+		tmpl.param("user_name", user->user());
+		tmpl.param("user_level", (int)user->level());
+		tmpl.param("is_admin", user->level() == HttpUser::Admin);
+		tmpl.param("is_user",  user->level() == HttpUser::User);
+		tmpl.param("is_guest", user->level() == HttpUser::Guest);
 		
 		tmpl.param("date", QDateTime::currentDateTime().toTime_t());
 		

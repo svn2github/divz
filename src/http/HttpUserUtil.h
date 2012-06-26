@@ -48,6 +48,7 @@ public:
 	static HttpUserUtil *instance();
 	
 	QList<HttpUser *> users() { return m_users; }
+	void setUsers(QList<HttpUser *> users); /* replace users with this list */
 	
 	void addUser(HttpUser *);
 	void removeUser(HttpUser *);

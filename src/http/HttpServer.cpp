@@ -201,7 +201,7 @@ void HttpServer::readClient()
 	}
 }
 
-void HttpServer::loginPage(QTcpSocket *socket, const QStringList &path, const QStringMap &query, QString templateFile/* = ""*/)
+void HttpServer::loginPage(QTcpSocket *socket, const QStringList &path, const QStringMap &query, QString loginUrl, QString templateFile/* = ""*/)
 {
 	QStringList pathCopy = path;
 	//pathCopy.takeFirst(); 
@@ -266,6 +266,7 @@ void HttpServer::loginPage(QTcpSocket *socket, const QStringList &path, const QS
 		tmpl.param("login-error", true);
 	}
 
+	tmpl.param("login_url", loginUrl);
 	tmpl.param("urlfrom",	query.value("from"));
 	tmpl.param("user",	query.value("user"));
 	tmpl.param("ip",	ip);
@@ -399,7 +400,7 @@ void HttpServer::respond(QTcpSocket *socket, const QHttpResponseHeader &tmp)
 	headers = headers.left(headers.length() - 2); // chop off the blank line at the end
 	
 	headers += cookieHeaders.join("\r\n");
-	headers += "\r\n\r\n"; // add in blank line again
+	headers += "\r\n"; // add in blank line again
 	
 	//qDebug() << "HttpServer::respond(): [final headers] "<<qPrintable(headers);
 	

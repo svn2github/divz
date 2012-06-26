@@ -90,7 +90,7 @@ protected:
 	
 	
 	// Login/logout page
-	virtual void loginPage(QTcpSocket *socket, const QStringList &pathElements, const QStringMap &query, QString templateFile = "");
+	virtual void loginPage(QTcpSocket *socket, const QStringList &pathElements, const QStringMap &query, QString loginUrl, QString templateFile = "");
 		
 private slots:
 	void readClient();

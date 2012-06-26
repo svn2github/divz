@@ -7,6 +7,8 @@
 #include <QMessageBox>
 #include <QUrl>
 
+#include "http/HttpUserSetupDialog.h"
+
 #include "UserEventAction.h"
 #include "model/SlideGroupFactory.h"
 #include "ppt/PPTSlideGroup.h"
@@ -168,6 +170,14 @@ AppSettingsDialog::AppSettingsDialog(QWidget *parent) :
 	connect(m_ui->slideGroupType, SIGNAL(currentIndexChanged(int)), this, SLOT(slideGroupTypeChanged(int)));
 	slideGroupTypeChanged(0);
 	
+	connect(m_ui->httpUserBtn, SIGNAL(clicked()), this, SLOT(httpUserSetup()));
+	
+}
+
+void AppSettingsDialog::httpUserSetup()
+{
+	HttpUserSetupDialog d;
+	d.exec();
 }
 
 void AppSettingsDialog::saveUserEventActions()

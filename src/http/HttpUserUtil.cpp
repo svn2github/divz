@@ -1,6 +1,7 @@
 #include "HttpUserUtil.h"
 
 #include <QSettings>
+#include <QDebug>
 
 #define HTTP_USER_STORE "httpusers.ini"
 
@@ -31,6 +32,9 @@ void HttpUserUtil::loadUsers()
 	
 	int numUsers = settings.beginReadArray("users");
 	
+	m_users.clear();
+	m_userLookup.clear();
+		
 	for(int i=0; i<numUsers; i++)
 	{
 		settings.setArrayIndex(i);
@@ -48,7 +52,17 @@ void HttpUserUtil::loadUsers()
 	{
 		addUser(new HttpUser("admin","admin",HttpUser::Admin));
 	}
+}
+
+void HttpUserUtil::setUsers(QList<HttpUser *> users)
+{
+	qDeleteAll(m_users);
 	
+	m_userLookup.clear();
+	m_users.clear();
+	
+	foreach(HttpUser *user, users)
+		addUser(user);
 }
 
 void HttpUserUtil::storeUsers()
@@ -78,6 +92,8 @@ void HttpUserUtil::addUser(HttpUser *user)
 		m_userLookup[user->user()] = user;
 		
 		storeUsers();
+		
+		qDebug() << "HttpUserUtil::addUser(): Added user: "<<user->user()<<", level: "<<user->level();
 	}
 }
 

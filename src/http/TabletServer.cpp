@@ -156,7 +156,7 @@ void TabletServer::mainScreen(QTcpSocket *socket, const QStringList &path, const
 	else
 	if(control == "login")
 	{
-		loginPage(socket, path, query);
+		loginPage(socket, path, query, "/tablet/login");
 	}
 	else
 	if(control == "list")

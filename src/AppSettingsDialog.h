@@ -38,6 +38,8 @@ protected slots:
 	
 	void slideGroupTypeChanged(int);
 	void saveUserEventActions();
+	
+	void httpUserSetup();
 
 private:
 	Ui::AppSettingsDialog *m_ui;

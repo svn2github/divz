@@ -27,14 +27,14 @@
 	</div><!-- /header -->
 
 	<div data-role="content">
-		<form action="/tablet/login" method=POST data-ajax="false" onsubmit="$('#passmd5').val($.md5($('#pass').val()+'%%ip%%'));$('#pass').val('');return true">
+		<form action="%%login_url%%" method=POST data-ajax="false" onsubmit="$('#passmd5').val($.md5($('#pass').val()+'%%ip%%'));$('#pass').val('');return true">
 			<div>
 				<label for="user">User name:</label>
 				<input  id="user" name="user" type="text" size=30>
 			</div>
 			<div>
 				<label for="pass">Password:</label>
-				<input  id="pass" name="pass" type="text" size=30>
+				<input  id="pass" name="pass" type="password" size=30>
 			</div>
 			<input type="hidden" name="passmd5" id="passmd5" value="">
 			<input type="hidden" name="from" value="%%urlfrom%%">
