@@ -709,12 +709,14 @@ $(function()
 	
 	window.songMenu = function(itemid)
 	{
+		if(window.songMenu.elm)
+			closeSongMenu();
+			
 		//console.debug("Connection Lost...");
 		window.songMenu.itemid = itemid;
 		var item = window.SearchResults[itemid];
 		window.songMenu.item = item;
 		
-		//$.mobile.showPageLoadingMsg("b","Connection Lost, Reconnecting...");
 		var elm = $("<div class='ui-body ui-body-a' id='songmenu'>"
 			+ "<center>"
 			+ "<h3>"+item.title+"</h3>"
@@ -747,7 +749,10 @@ $(function()
 	window.closeSongMenu = function()
 	{
 		if(window.songMenu.elm)
+		{
 			window.songMenu.elm.remove();
+			window.songMenu.elm = false;
+		}
 	}
 	
 	// consoleDebug(..) calls fail in Google Chrome with "Illegal Invocation" errors - why can't you call window.console.debug via a function reference?
