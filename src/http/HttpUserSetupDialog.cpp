@@ -51,6 +51,14 @@ void HttpUserSetupDialog::addUser()
 	tableWidget->setItem(row,0,new QTableWidgetItem("newuser"));
 	tableWidget->setItem(row,1,new QTableWidgetItem("newpass"));
 	tableWidget->setItem(row,2,new QTableWidgetItem("0"));
+		
+	QComboBox *levelCombo = new QComboBox();
+	
+	levelCombo->addItems(QStringList() << "Guest" << "User" << "Admin");
+	levelCombo->setCurrentIndex(0);
+	
+	tableWidget->setCellWidget(row, 2, levelCombo);
+	
 }
 
 void HttpUserSetupDialog::delUser()

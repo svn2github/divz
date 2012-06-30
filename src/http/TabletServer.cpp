@@ -100,9 +100,8 @@ void TabletServer::mainScreen(QTcpSocket *socket, const QStringList &path, const
 	{
 		if(!user)
 		{
-			QStringMap q2 = query;
-			q2["from"] = QUrl::toPercentEncoding(toPathString(path,q2).toAscii()).replace(" ", "+");
-			redirect(socket, "/tablet/login");
+			QString from = QUrl::toPercentEncoding(toPathString(path,query).toAscii()).replace(" ", "+");
+			redirect(socket, "/tablet/login?from=" + from);
 			return;
 		}
 		

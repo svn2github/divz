@@ -286,7 +286,6 @@ void HttpServer::redirect(QTcpSocket *socket, const QString &url, bool addExpire
 		header.setValue("Expires", expires);
 	}
 	
-
 	respond(socket, header);
 }
 
@@ -399,7 +398,11 @@ void HttpServer::respond(QTcpSocket *socket, const QHttpResponseHeader &tmp)
 	QString headers = header.toString();
 	headers = headers.left(headers.length() - 2); // chop off the blank line at the end
 	
-	headers += cookieHeaders.join("\r\n");
+	if(!cookieHeaders.isEmpty())
+	{
+		headers += cookieHeaders.join("\r\n");
+		headers +=  "\r\n";
+	}
 	headers += "\r\n"; // add in blank line again
 	
 	//qDebug() << "HttpServer::respond(): [final headers] "<<qPrintable(headers);
