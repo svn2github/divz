@@ -84,7 +84,7 @@ function newSlideCreated(slideNum)
 			if(lastVerseAdded != refToAdd)
 			{
 				BibleBrowser.setShowEachVerseOnSeperateSlide(true);
-				BibleBrowser.setAppendToExistingGroup(true);
+				//BibleBrowser.setAppendToExistingGroup(true);
 				
 				// Leaving the second arg off (e.g. NULL) will cause 
 				// BibleBrowser to add the verses as a group to the current document instead of dGroup
@@ -93,7 +93,7 @@ function newSlideCreated(slideNum)
 				
 				debug("Added bible reference: ", refToAdd);
 				
-				BibleBrowser.setAppendToExistingGroup(false);
+				//BibleBrowser.setAppendToExistingGroup(false);
 			}
 			
 			lastVerseAdded = refToAdd;
