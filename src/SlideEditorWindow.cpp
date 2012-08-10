@@ -173,6 +173,7 @@ class MyGraphicsView : public QGraphicsView
 		void setMyScene(MyGraphicsScene * desk)
 		{
 			setScene(desk);
+			//desk->setItemIndexMethod(QGraphicsScene::NoIndex);
 			m_desk = desk;
 		}
 
@@ -1180,7 +1181,14 @@ void SlideEditorWindow::appSettingsChanged()
 	if(AppSettings::useOpenGL() && !m_usingGL)
 	{
 		m_usingGL = true;
-		m_view->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
+		QGLWidget *glw = new QGLWidget(QGLFormat(QGL::SampleBuffers));
+		//if (noScreenSync)
+		//	glw->format().setSwapInterval(0);
+		glw->setAutoFillBackground(false);
+		m_view->setViewport(glw);
+		m_view->setCacheMode(QGraphicsView::CacheNone);
+
+		//m_view->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
 		//qDebug("SlideEditorWindow::appSettingsChanged(): Loaded OpenGL Viewport");
 	}
 	else
@@ -1189,6 +1197,7 @@ void SlideEditorWindow::appSettingsChanged()
 	#endif
 		m_usingGL = false;
 		m_view->setViewport(new QWidget());
+		m_view->setCacheMode(QGraphicsView::CacheBackground);
 		//qDebug("SlideEditorWindow::appSettingsChanged(): Loaded Non-GL Viewport");
 	#ifndef NO_OPENGL
 	}

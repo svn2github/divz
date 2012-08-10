@@ -304,6 +304,7 @@ SlideGroupViewer::SlideGroupViewer(QWidget *parent)
 	m_scene = new MyGraphicsScene(m_contextHint);
 	m_scene->setSceneRect(sceneRect);
 	m_view->setScene(m_scene);
+	//m_scene->setItemIndexMethod(QGraphicsScene::NoIndex);
 
 	// inorder to set the background on the rest of the slides if asked to set background on next live slide
 	connect(m_scene, SIGNAL(crossFadeFinished(Slide*,Slide*)), this, SLOT(crossFadeFinished(Slide*,Slide*)));
@@ -738,7 +739,14 @@ void SlideGroupViewer::appSettingsChanged()
 	if(!m_usingGL && !m_forceGLDisabled && AppSettings::useOpenGL())
 	{
 		m_usingGL = true;
-		m_view->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
+		QGLWidget *glw = new QGLWidget(QGLFormat(QGL::SampleBuffers));
+		//if (noScreenSync)
+		//	glw->format().setSwapInterval(0);
+		glw->setAutoFillBackground(false);
+		m_view->setViewport(glw);
+		m_view->setCacheMode(QGraphicsView::CacheNone);
+		
+		//m_view->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
 		//qDebug("SlideGroupViewer::appSettingsChanged(): Loaded OpenGL Viewport");
 	}
 	else
@@ -747,6 +755,7 @@ void SlideGroupViewer::appSettingsChanged()
 #endif
 		m_usingGL = false;
 		m_view->setViewport(new QWidget());
+		m_view->setCacheMode(QGraphicsView::CacheBackground);
 		//qDebug("SlideGroupViewer::appSettingsChanged(): Loaded Non-GL Viewport");
 #ifndef QT_NO_OPENGL
 	}
