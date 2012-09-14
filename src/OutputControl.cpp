@@ -266,13 +266,13 @@ void OutputControl::editLogo()
  		
  	//MainWindow::mw()->editGroup(tmpl);
 	
-	if(m_editWin)
-	{
-		m_editWin->show();
-		m_editWin->raise();
-		m_editWin->setSlideGroup(tmpl);
-	}
-	else
+// 	if(m_editWin)
+// 	{
+// 		m_editWin->show();
+// 		m_editWin->raise();
+// 		m_editWin->setSlideGroup(tmpl);
+// 	}
+// 	else
 	if((m_editWin = MainWindow::mw()->openSlideEditor(tmpl)) != 0)
 		connect(m_editWin, SIGNAL(closed()), this, SLOT(logoEditorClosed()));
 		
@@ -287,16 +287,52 @@ void OutputControl::logoEditorClosed()
 	
 	SlideTemplateManager::instance()->templateDocument(SlideTemplateManager::Logo)->save();
 	
-  	//QTimer::singleShot(1000,m_editWin,SLOT(deleteLater()));
-  	//m_editWin->deleteL
-//  	m_editWin = 0;
+	// NOTE: 2012-09-14
+	// Don't delete, delete later, or whatever - for some flippin annoying reason,
+	// when we delete m_editWin, we segFault - gdb stacktrace is useless:
+	/*
+	(gdb) bt
+#0  0x0c3dcd60 in ?? ()
+#1  0x01ff753b in QWidget::event (this=0x9993ac8, event=0xbfffdc3c) at /var/tmp/qt-src/src/gui/kernel/qwidget.cpp:8084
+#2  0x0246bdcf in QMenu::event (this=0x9993ac8, e=0xbfffdc3c) at /var/tmp/qt-src/src/gui/widgets/qmenu.cpp:2414
+#3  0x01f93bcf in QApplicationPrivate::notify_helper (this=0x85c0698, receiver=0x9993ac8, e=0xbfffdc3c) at /var/tmp/qt-src/src/gui/kernel/qapplication.cpp:4300
+#4  0x01f9798e in QApplication::notify (this=0xbfffe5d0, receiver=0x9993ac8, e=0xbfffdc3c) at /var/tmp/qt-src/src/gui/kernel/qapplication.cpp:3704
+#5  0x0719650b in QCoreApplication::notifyInternal (this=0xbfffe5d0, receiver=0x9993ac8, event=0xbfffdc3c) at /var/tmp/qt-src/src/corelib/kernel/qcoreapplication.cpp:704
+#6  0x01fe68fb in sendEvent (this=0x9993ac8) at ../../include/QtCore/../../src/corelib/kernel/qcoreapplication.h:215
+#7  QWidget::ensurePolished (this=0x9993ac8) at /var/tmp/qt-src/src/gui/kernel/qwidget.cpp:9329
+#8  0x01ff72cf in QWidget::event (this=0x9993ac8, event=0x99a4fc8) at /var/tmp/qt-src/src/gui/kernel/qwidget.cpp:8080
+#9  0x0246bdcf in QMenu::event (this=0x9993ac8, e=0x99a4fc8) at /var/tmp/qt-src/src/gui/widgets/qmenu.cpp:2414
+#10 0x01f93bcf in QApplicationPrivate::notify_helper (this=0x85c0698, receiver=0x9993ac8, e=0x99a4fc8) at /var/tmp/qt-src/src/gui/kernel/qapplication.cpp:4300
+#11 0x01f9798e in QApplication::notify (this=0xbfffe5d0, receiver=0x9993ac8, e=0x99a4fc8) at /var/tmp/qt-src/src/gui/kernel/qapplication.cpp:3704
+#12 0x0719650b in QCoreApplication::notifyInternal (this=0xbfffe5d0, receiver=0x9993ac8, event=0x99a4fc8) at /var/tmp/qt-src/src/corelib/kernel/qcoreapplication.cpp:704
+#13 0x0719743e in QCoreApplicationPrivate::sendPostedEvents (receiver=0x0, event_type=0, data=0x85bde68) at /var/tmp/qt-src/src/corelib/kernel/qcoreapplication.h:215
+#14 0x071976ed in QCoreApplication::sendPostedEvents (receiver=0x0, event_type=0) at /var/tmp/qt-src/src/corelib/kernel/qcoreapplication.cpp:1238
+#15 0x071c3b1f in sendPostedEvents (s=0x85c2790) at /var/tmp/qt-src/src/corelib/kernel/qcoreapplication.h:220
+#16 postEventSourceDispatch (s=0x85c2790) at /var/tmp/qt-src/src/corelib/kernel/qeventdispatcher_glib.cpp:276
+#17 0x042b11a2 in g_main_context_dispatch () from /lib/libglib-2.0.so.0
+#18 0x042b4196 in ?? () from /lib/libglib-2.0.so.0
+#19 0x042b46ee in g_main_context_iteration () from /lib/libglib-2.0.so.0
+#20 0x071c3e38 in QEventDispatcherGlib::processEvents (this=0x85bf510, flags=...) at /var/tmp/qt-src/src/corelib/kernel/qeventdispatcher_glib.cpp:412
+#21 0x0204e375 in QGuiEventDispatcherGlib::processEvents (this=0x85bf510, flags=...) at /var/tmp/qt-src/src/gui/kernel/qguieventdispatcher_glib.cpp:204
+#22 0x071955dd in QEventLoop::processEvents (this=0xbfffe540, flags=...) at /var/tmp/qt-src/src/corelib/kernel/qeventloop.cpp:149
+#23 0x0719596d in QEventLoop::exec (this=0xbfffe540, flags=...) at /var/tmp/qt-src/src/corelib/kernel/qeventloop.cpp:201
+#24 0x071977ac in QCoreApplication::exec () at /var/tmp/qt-src/src/corelib/kernel/qcoreapplication.cpp:981
+#25 0x01f93367 in QApplication::exec () at /var/tmp/qt-src/src/gui/kernel/qapplication.cpp:3579
+#26 0x083eda6a in main (argc=48, argv=0x9993cc8) at main.cpp:137
+(gdb) make
+*/
+	// So, for now, don't delete m_editWin
+	
+	//QTimer::singleShot(1000,m_editWin,SLOT(deleteLater()));
+	//m_editWin->deleteLater();
+	m_editWin = 0;
 	
 	
 	setupLogoMenu();
 	
 	//raise();
 	//setFocus();
-	//qDebug() << "SongEditorWindow::editorWindowClosed(): setting focus to self:"<<this<<", m_editWin="<<m_editWin;
+	qDebug() << "OutputControl::logoEditorClosed(): Edit win closed, m_editWin="<<m_editWin;
 }
 
 
