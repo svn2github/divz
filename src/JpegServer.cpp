@@ -67,6 +67,7 @@ void JpegServer::setScene(MyGraphicsScene *scene)
 
 bool JpegServer::start(int port, bool isVideoSender)
 {
+	m_sender = 0;
 	if(!isVideoSender)
 	{
 		if(!listen(QHostAddress::Any,port))
@@ -92,6 +93,12 @@ bool JpegServer::start(int port, bool isVideoSender)
 	}
 	
 	return true;
+}
+
+void JpegServer::fadeSpeedChanged(int speed)
+{
+	if(m_sender)
+		m_sender->sendCustomSignal("setFadeSpeed", speed);
 }
 
 

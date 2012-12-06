@@ -2,6 +2,7 @@
 #include "VideoSenderCommands.h"
 
 // for setting hue, color, etc
+//#include "CameraThread.h"
 #ifndef NO_LIBAV
 #include "../livemix/CameraThread.h"
 #endif
@@ -10,14 +11,17 @@
 #include <QTime>
 #include <QProcess>
 
-//#define DEBUG_VIDEOFRAME_POINTERS
+int VideoSender::m_videoSenderPortAllocator = 7755;
+
+
 
 VideoSender::VideoSender(QObject *parent)
 	: QTcpServer(parent)
 	, m_adaptiveWriteEnabled(true)
 	, m_source(0)
 	, m_transmitSize(240,180)
-	, m_transmitFps(10)
+//	, m_transmitSize(320,240)
+	, m_transmitFps(15)
 	//, m_transmitSize(0,0)
 	//, m_scaledFrame(0)
 	//, m_frame(0)
@@ -48,6 +52,60 @@ VideoSender::~VideoSender()
 // 	==22564==    by 0x604650A: QCoreApplication::notifyInternal(QObject*, QEvent*) (qcoreapplication.cpp:704)
 // 	==22564==    by 0x60762C2: QTimerInfoList::activateTimers() (qcoreapplication.h:215)
 
+}
+
+QString VideoSender::ipAddress()
+{
+	QString ipAddress;
+
+	QList<QHostAddress> ipAddressesList = QNetworkInterface::allAddresses();
+	// use the first non-localhost IPv4 address
+	for (int i = 0; i < ipAddressesList.size(); ++i)
+	{
+		if (ipAddressesList.at(i) != QHostAddress::LocalHost &&
+		    ipAddressesList.at(i).toIPv4Address())
+		{
+			QString tmp = ipAddressesList.at(i).toString();
+			
+			// TODO: Need a way to find the *names* of the adapters - these
+			// IPs are prefixes my VirtualBox/VMWare installs are using for their
+			// virtual adapters. Need a way to skip virtual interfaces.
+			if(!tmp.startsWith("192.168.122.") &&
+			   !tmp.startsWith("192.168.56."))
+				ipAddress = tmp;
+		}
+	}
+
+	// if we did not find one, use IPv4 localhost
+	if (ipAddress.isEmpty())
+		ipAddress = QHostAddress(QHostAddress::LocalHost).toString();
+	
+	return ipAddress;
+}
+
+int VideoSender::start(int port)
+{
+	if(port < 0)
+	{
+		bool done = false;
+		while(!done)
+		{
+			port = m_videoSenderPortAllocator ++;
+			if(listen(QHostAddress::Any,port))
+			{
+				done = true;
+			}
+		}
+	}
+	else
+	{
+		if(!listen(QHostAddress::Any,port))
+		{
+			qDebug() << "VideoSender::start(): Unable to open server on port"<<port<<": Is it already in use?"; 
+		}
+	}
+	
+	return port;
 }
 
 void VideoSender::setTransmitSize(const QSize& size)
@@ -174,6 +232,9 @@ void VideoSender::processFrame()
 			const uchar *src = (const uchar*)scaledImage.bits();
 			memcpy(ptr, src, scaledImage.byteCount());
 			
+			if(m_dataPtr)
+				m_dataPtr.clear();
+				
 			m_dataPtr = QSharedPointer<uchar>(ptr);
 			m_byteCount = scaledImage.byteCount();
 			m_imageFormat = scaledImage.format();
@@ -211,6 +272,11 @@ void VideoSender::setVideoSource(VideoSource *source)
 		connect(m_source, SIGNAL(frameReady()), this, SLOT(frameReady()));
 		connect(m_source, SIGNAL(destroyed()), this, SLOT(disconnectVideoSource()));
 		
+		if(CameraThread *camera = dynamic_cast<CameraThread*>(m_source))
+		{
+			connect(camera, SIGNAL(signalStatusChanged(bool)), this, SIGNAL(signalStatusChanged(bool)));
+		}
+		
 		//qDebug() << "GLVideoDrawable::setVideoSource(): "<<objectName()<<" m_source:"<<m_source;
 		//setVideoFormat(m_source->videoFormat());
 		m_consumerRegistered = false;
@@ -222,6 +288,12 @@ void VideoSender::setVideoSource(VideoSource *source)
 		qDebug() << "VideoSender::setVideoSource(): "<<this<<" Source is NULL";
 	}
 
+}
+
+void VideoSender::sendCustomSignal(QString key, QVariant value)
+{
+	// picked up by threads
+	emit customSignal(key, value);
 }
 
 void VideoSender::disconnectVideoSource()
@@ -339,11 +411,16 @@ void VideoSender::transmitImage(QImage image)
 	emit receivedFrame();
 }
 
+
 void VideoSender::incomingConnection(int socketDescriptor)
 {
+	qRegisterMetaType<QVariant>("QVariant"); // so we can use it in a QueuedConnection
+	
 	VideoSenderThread *thread = new VideoSenderThread(socketDescriptor, m_adaptiveWriteEnabled);
 	connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
 	connect(this, SIGNAL(receivedFrame()), thread, SLOT(frameReady()), Qt::QueuedConnection);
+	connect(this, SIGNAL(signalStatusChanged(bool)), thread, SLOT(signalStatusChanged(bool)), Qt::QueuedConnection);
+	connect(this, SIGNAL(customSignal(QString, QVariant)), thread, SLOT(customSignal(QString, QVariant)), Qt::QueuedConnection);
 	thread->moveToThread(thread);
 	thread->setSender(this);
 	thread->start();
@@ -356,6 +433,7 @@ void VideoSender::incomingConnection(int socketDescriptor)
 	}
 		
 	QTimer::singleShot(0, this, SIGNAL(receivedFrame()));
+		
 	//qDebug() << "VideoSender: "<<this<<" Client Connected, Socket Descriptor:"<<socketDescriptor;
 }
 
@@ -400,8 +478,6 @@ void VideoSenderThread::run()
 	
 	qDebug() << "VideoSenderThread: Connection from "<<m_socket->peerAddress().toString(); //, Socket Descriptor:"<<socketDescriptor;
 	
-	//sendMap(QVariantMap());
-	//frameReady(); // try to send any data already in the parent
 	
 	// enter event loop
 	exec();
@@ -409,6 +485,21 @@ void VideoSenderThread::run()
 	// when frameReady() signal arrives, write data with header to socket
 }
 
+void VideoSenderThread::signalStatusChanged(bool flag)
+{
+	sendReply(QVariantList() 
+			<< "cmd"	<< Video_SignalStatusChanged
+			<< "flag"	<< flag);
+}
+
+void VideoSenderThread::customSignal(QString key, QVariant value)
+{
+	qDebug() << "VideoSenderThread::customSignal: key:"<<key<<", value:"<<value;
+	sendReply(QVariantList() 
+			<< "cmd"	<< Video_SignalCustom
+			<< "key"	<< key
+			<< "value"	<< value);
+}
 
 void VideoSenderThread::frameReady()
 {
@@ -448,6 +539,7 @@ void VideoSenderThread::frameReady()
 			
 			#define HEADER_SIZE 256
 			
+			// We dont need to send a "first header" because the VideoReceiver now can handle it just fine without a 'first header'
 // 			if(!m_sentFirstHeader)
 // 			{
 // 				m_sentFirstHeader = true;
@@ -623,7 +715,6 @@ void VideoSenderThread::processBlock()
 	QString cmd = map["cmd"].toString();
 	//qDebug() << "VideoSenderThread::processBlock: map:"<<map;
 	
-	#ifndef NO_LIBAV
 	if(cmd == Video_SetHue ||
 	   cmd == Video_SetSaturation ||
 	   cmd == Video_SetBright ||
@@ -739,7 +830,6 @@ void VideoSenderThread::processBlock()
 			<< "value"	<< colorValue);
 	}
 	else
-	#endif
 	if(cmd == Video_SetFPS)
 	{
 		int fps = map["fps"].toInt();
@@ -788,6 +878,54 @@ void VideoSenderThread::processBlock()
 		qDebug() << "VideoSenderThread::processBlock: "<<cmd<<": Getting size:"<<size;
 		
 		sendReply(QVariantList() << "cmd" << cmd << "w" << size.width() << "h" << size.height());
+	}
+	else
+// 	if(cmd == Video_SetVideoHints)
+// 	{
+// 		QVariantMap hints = map["hints"].toMap();
+// 		
+// 		VideoSource *source = m_sender->videoSource();
+// 		CameraThread *camera = dynamic_cast<CameraThread*>(source);
+// 		if(!camera)
+// 		{
+// 			// error
+// 			qDebug() << "VideoSenderThread::processBlock: "<<cmd<<": Video source is not a video input class ('CameraThread'), unable to get/set video hints, qobject:"<<(QObject*)source; 
+// 			return;
+// 		}
+// 		
+// 		camera->setVideoHints(hints);
+// 	}
+// 	else
+// 	if(cmd == Video_GetVideoHints)
+// 	{
+// 		VideoSource *source = m_sender->videoSource();
+// 		CameraThread *camera = dynamic_cast<CameraThread*>(source);
+// 		if(!camera)
+// 		{
+// 			// error
+// 			qDebug() << "VideoSenderThread::processBlock: "<<cmd<<": Video source is not a video input class ('CameraThread'), unable to get/set video hints, qobject:"<<(QObject*)source; 
+// 			return;
+// 		}
+// 		
+// 		QVariantMap map = camera->videoHints();
+// 		
+// 		sendReply(QVariantList() << "cmd" << cmd << "hints" << map);
+// 	}
+//	else
+	if(cmd == Video_SetCardInput)
+	{
+		QString name = map["input"].toString();
+		
+		VideoSource *source = m_sender->videoSource();
+		CameraThread *camera = dynamic_cast<CameraThread*>(source);
+		if(!camera)
+		{
+			// error
+			qDebug() << "VideoSenderThread::processBlock: "<<cmd<<": Video source is not a video input class ('CameraThread'), unable to set card input, qobject:"<<(QObject*)source; 
+			return;
+		}
+		
+		camera->setInput(name);
 	}
 	else
 	if(cmd == Video_Ping)

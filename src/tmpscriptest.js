@@ -62,6 +62,8 @@ function newSlideCreated(slideNum)
 		changeFontSize(tmpPtr.opt2, minFont);
 		changeFontSize(tmpPtr.opt1, minFont);
 	}
+	
+	return true;
 }
 
 // HTML values for use in converting the plain text to Qt-parsable rich text

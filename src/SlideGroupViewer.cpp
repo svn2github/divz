@@ -400,9 +400,12 @@ void SlideGroupViewer::setAutoResizeTextEnabled(bool enable)
 
 void SlideGroupViewer::setFadeSpeed(int value)
 {
+	qDebug() << "SlideGroupViewer::setFadeSpeed: value:"<<value<<", m_jpegServer:"<<m_jpegServer;
 	m_fadeSpeed = value;
 	if(m_nativeViewer)
 		m_nativeViewer->setFadeSpeed(value);
+	if(m_jpegServer)
+		m_jpegServer->fadeSpeedChanged(value);
 }
 
 void SlideGroupViewer::setFadeQuality(int value)

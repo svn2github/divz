@@ -108,10 +108,7 @@ void HttpServer::readClient()
 			//qDebug() << "HttpServer::readClient(): [cookies] Received: "<<name<<" = "<<value; 
 		}
 		
-		// Attempt to find a user from the header
-		loadCurrentUser();
-		
- 		// Decode request path
+		// Decode request path
  		
  		//QUrl req(tokens[1]);
 		QUrl req(request.path());
@@ -128,6 +125,11 @@ void HttpServer::readClient()
 		foreach(QByteArrayPair bytePair, encodedQuery)
 			map[QUrl::fromPercentEncoding(bytePair.first).replace("+", " ")] = QUrl::fromPercentEncoding(bytePair.second).replace("+", " ");
 		
+		
+		// Attempt to find a user from the header
+		loadCurrentUser(map);
+		
+ 		
 		//if (tokens[0] == "GET") 
 		if (request.method() == "GET")
 		{
@@ -289,7 +291,7 @@ void HttpServer::redirect(QTcpSocket *socket, const QString &url, bool addExpire
 	respond(socket, header);
 }
 
-void HttpServer::loadCurrentUser()
+void HttpServer::loadCurrentUser(const QStringMap &query)
 {
 	QString userCookie = cookie(HTTP_USER_COOKIE);
 	
@@ -317,6 +319,19 @@ void HttpServer::loadCurrentUser()
 		
 		if(passEncoded == correctPassEncoded)	
 			HttpUserUtil::instance()->setCurrentUser(userData);
+	}
+	else
+	{
+		QString user = query.value("user");
+		HttpUser *userData = HttpUserUtil::instance()->getUser(user);
+		if(userData)
+		{
+			if(query.value("pass") == userData->pass())
+			{
+				HttpUserUtil::instance()->setCurrentUser(userData);
+				setUserCookie(userData);
+			}
+		}
 	}
 }
 

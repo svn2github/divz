@@ -440,14 +440,14 @@ void Slide::fromByteArray(QByteArray &array)
 	}
 }
 
-double Slide::guessTimeout()
+double Slide::guessTimeout(int wordsPerMin)
 {
 	double guess = 0;
 	
 	double assumedImageArea = 1024 * 768;
 	double perItemWeight = 0.1;
 	double perImageWeightFactorOfArea = 1/(assumedImageArea / 2);
-	double perTextWeightFactorOfLength = 60.0 / (180.0 * 5.0);
+	double perTextWeightFactorOfLength = 60.0 / (wordsPerMin * 5.0);
 	// formula for text factor is: 60seconds / (180.0 avg words per minute for avg adult * 5 letters per avg word length)
 	// Adjusted down from 300 wpm to 180 wpm based on reading speeds for on air advertising 
 	

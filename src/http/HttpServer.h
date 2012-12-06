@@ -97,7 +97,7 @@ private slots:
 	void discardClient();
 	
 private:
-	void loadCurrentUser();
+	void loadCurrentUser(const QStringMap &query);
 	void setUserCookie(HttpUser *);
 
 	bool m_disabled;

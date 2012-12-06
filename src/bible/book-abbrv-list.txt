@@ -70,8 +70,8 @@ Galatians 	Gal, Ga
 Ephesians 	Ephes, Eph
 Philippians 	Phil, Php
 Colossians 	Col, Col
-1 Thessalonians 	1 Thess, 1 Th, I Th, 1Th, I Thes, 1Thes, I Thess, 1Thess, I Thessalonians, 1Thessalonians, 1st Thessalonians, First Thessalonians
-2 Thessalonians 	2 Thess, 2 Th, II Th, 2Th, II Thes, 2Thes, II Thess, 2Thess, II Thessalonians, 2Thessalonians, 2nd Thessalonians, Second Thessalonians
+1 Thessalonians 	1 Thess, 1 Th, I Th, 1Th, I Thes, 1Thes, 1 Thes, I Thess, 1Thess, I Thessalonians, 1Thessalonians, 1st Thessalonians, First Thessalonians
+2 Thessalonians 	2 Thess, 2 Th, II Th, 2Th, II Thes, 2Thes, 2 Thes, II Thess, 2Thess, II Thessalonians, 2Thessalonians, 2nd Thessalonians, Second Thessalonians
 1 Timothy 	1 Tim, 1 Ti, I Ti, 1Ti, I Tim, 1Tim, I Timothy, 1Timothy, 1st Timothy, First Timothy
 2 Timothy 	2 Tim, 2 Ti, II Ti, 2Ti, II Tim, 2Tim, II Timothy, 2Timothy, 2nd Timothy, Second Timothy
 Titus 	Titus, Tit

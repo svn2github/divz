@@ -181,10 +181,10 @@ while (@lines)
 		# Sometimes definitions look like this: "Word - definition of word"
 		# Here we separate out the word from the definition for formatting
 		my $word = '';
-		if($define =~ /([^\s]+)\s*[-–]\s*/)
+		if($define =~ /([^-–]+)\s*[-–]\s*/)
 		{
 			$word = $1;
-			$define =~ s/([^\s]+)\s*[-–]\s*//g;  # remove the word
+			$define =~ s/([^-–]+)\s*[-–]\s*//g;  # remove the word
 			$define =~ s/^(\w)/uc($1)/segi; # capitalize first letter of new definition string
 		}
 		
@@ -259,7 +259,7 @@ while (@lines)
 				#print "\t\t\t Debug: Parsed '$last_book', '$last_chap'\n";
 			}
 			
-			$vs =~ s/\s+\([a-z\d]+\)$//g; # Trim parenthetical numbers from end of verses, e.g Heb 11:2 (2)
+			$vs =~ s/\s+[\(“"].+?[”"\)]$//g; # Trim parenthetical numbers from end of verses, e.g Heb 11:2 (2)
 			print "\t\t - $vs\n";
 			
 			output_bible($vs);

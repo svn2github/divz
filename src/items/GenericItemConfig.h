@@ -88,6 +88,8 @@ class GenericItemConfig : public QWidget
 		bool m_updateShadowDistanceAndDirection_changing;
 		
 		void updateShadowDistanceAndDirection();
+		
+		bool m_inItemChangedSlot;
 	
 	private Q_SLOTS:
 // 		void on_newFrame_clicked();

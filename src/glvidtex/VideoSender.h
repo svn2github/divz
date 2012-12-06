@@ -42,13 +42,18 @@ public:
 	void sendUnlock() { m_sendMutex.unlock(); }
 	
 	void setVideoSource(VideoSource *source);
-// 	QString myAddress();
+ 	
+ 	static QString ipAddress();
 
 	int transmitFps() { return m_transmitFps; }
 	QSize transmitSize() { return m_transmitSize; }
+	
+	int start(int port=-1); // -1 = auto-allocate
 		
 signals: 
 	void receivedFrame();
+	void signalStatusChanged(bool);
+	void customSignal(QString key, QVariant value);
 	
 public slots:
 	void disconnectVideoSource();
@@ -56,7 +61,9 @@ public slots:
 	void setTransmitSize(const QSize& size=QSize()); // null size means auto size based on input
 	void setTransmitSize(int x, int y) { setTransmitSize(QSize(x,y)); }
 	
-	void transmitImage(QImage);
+	void sendCustomSignal(QString key, QVariant value);
+	
+	void transmitImage(QImage image);
 
 private slots:
 	void frameReady();
@@ -86,8 +93,7 @@ private:
 	
 	bool m_consumerRegistered;
 	
-	//QImage m_transmitImage;
-	
+	static int m_videoSenderPortAllocator;
 };
 
 
@@ -108,6 +114,8 @@ signals:
 
 public slots:
 	void frameReady();
+	void signalStatusChanged(bool);
+	void customSignal(QString key, QVariant value);
 	
 protected slots:
 	void dataReady();

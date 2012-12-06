@@ -87,6 +87,7 @@ GenericItemConfig::GenericItemConfig(AbstractContent * content, QWidget *parent)
 	, m_okButton(0)
 	//, m_frame(FrameFactory::defaultPanelFrame())
 	, m_updateShadowDistanceAndDirection_changing(false)
+	, m_inItemChangedSlot(false)
 {
 	m_commonUi->setupUi(this);
 	
@@ -444,7 +445,7 @@ void GenericItemConfig::slotMirrorOn(bool checked)
 
 
 void GenericItemConfig::slotOpacityChanged(int o)
-{
+{	
 	m_content->modelItem()->setOpacity((double)o / 100);
 }
 
@@ -480,6 +481,9 @@ void GenericItemConfig::slotResetSize()
 	
 void GenericItemConfig::slotSizeChanged(double)
 {
+	if(m_inItemChangedSlot)
+		return;
+		
 	QSize s;
 	s.setWidth((int)m_commonUi->contentWidth->value());
 	s.setHeight((int)m_commonUi->contentHeight->value());
@@ -492,6 +496,9 @@ void GenericItemConfig::slotSizeChanged(double)
 
 void GenericItemConfig::slotLocationChanged(double)
 {
+	if(m_inItemChangedSlot)
+		return;
+		
 	QPointF p;
 	p.setX(m_commonUi->locationX->value());
 	p.setY(m_commonUi->locationY->value());
@@ -501,6 +508,8 @@ void GenericItemConfig::slotLocationChanged(double)
 
 void GenericItemConfig::itemChanged(QString fieldName, QVariant value, QVariant oldValue)
 {
+	m_inItemChangedSlot = true;
+	/*
 	if(fieldName == "pos")
 	{
 		QPointF pos = m_content->modelItem()->pos();
@@ -514,6 +523,8 @@ void GenericItemConfig::itemChanged(QString fieldName, QVariant value, QVariant 
 		m_commonUi->contentHeight->setValue(rect.height());
 		m_commonUi->contentWidth->setValue(rect.width());
 	}
+	*/
+	m_inItemChangedSlot = false;
 }
 
 void GenericItemConfig::setShadowColor(const QColor & c)

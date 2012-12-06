@@ -379,6 +379,36 @@ QScriptValue TextImportDialog_script_changeSlideBackground(QScriptContext *conte
 	return QScriptValue(true);
 }
 
+QScriptValue TextImportDialog_script_guessSlideTimeout(QScriptContext *context, QScriptEngine */*engine*/)
+{
+	QObject *slideObj = context->argument(0).toQObject();
+	int wpm = context->argument(1).toString().toInt();
+	if(!slideObj)
+	{
+		qDebug() << "TextImportDialog_script_guessSlideTimeout(slide,wpm=180): Must give Slide (QObject) as first argument"; 
+		return QScriptValue(QScriptValue::NullValue);
+	}
+	Slide *slide = dynamic_cast<Slide*>(slideObj);
+	if(!slide)
+	{
+		qDebug() << "TextImportDialog_script_guessSlideTimeout(slide,wpm=180): First argument is not a Slide"; 
+		return QScriptValue(QScriptValue::NullValue);
+	}
+	if(wpm < 1)
+	{
+		//qDebug() << "TextImportDialog_script_guessSlideTimeout(slide,wpm=180): No item name given in second argument"; 
+		//return QScriptValue(QScriptValue::NullValue);
+		wpm = 180;
+	}
+	
+	double time = slide->guessTimeout(wpm);
+	slide->setAutoChangeTime(time);
+		
+	
+	return QScriptValue(true);
+}
+
+
 
 // QScriptValue TextImportDialog_script_addVerses(QScriptContext *context, QScriptEngine *engine)
 // {
@@ -583,6 +613,7 @@ void TextImportDialog::doImport()
 		QScriptValue fCntrTextBox  = scriptEngine.newFunction(TextImportDialog_script_intelligentCenterTextbox);
 		QScriptValue fFileList     = scriptEngine.newFunction(TextImportDialog_script_getFileList);
 		QScriptValue fChangeBg     = scriptEngine.newFunction(TextImportDialog_script_changeSlideBackground);
+		QScriptValue fGuessTimeout = scriptEngine.newFunction(TextImportDialog_script_guessSlideTimeout);
 		
 		scriptEngine.globalObject().setProperty("debug",          fDebug);
 		scriptEngine.globalObject().setProperty("findTextItem",   fFindTextItem);
@@ -591,6 +622,7 @@ void TextImportDialog::doImport()
 		scriptEngine.globalObject().setProperty("intelligentCenterTextbox", fCntrTextBox);
 		scriptEngine.globalObject().setProperty("getFileList",    fFileList);
 		scriptEngine.globalObject().setProperty("changeSlideBackground", fChangeBg);
+		scriptEngine.globalObject().setProperty("guessSlideTimeout", fGuessTimeout);
 		
 		scriptEngine.globalObject().setProperty("InPrimaryGroup", true);
 	
@@ -865,6 +897,15 @@ SlideGroup *TextImportDialog::generateSlideGroup(SlideGroup *templateGroup, QStr
 							
 							delete group;
 							return 0;
+						}
+						else
+						{
+							if(!scriptResult.toBool())
+							{
+								group->removeSlide(currentSlide);
+								currentSlide->deleteLater();
+								currentSlide = 0;
+							}
 						}
 					}
 				
@@ -1190,6 +1231,15 @@ SlideGroup *TextImportDialog::generateSlideGroup(SlideGroup *templateGroup, QStr
 					
 					delete group;
 					return 0;
+				}
+				else
+				{
+					if(!scriptResult.toBool())
+					{
+						group->removeSlide(currentSlide);
+						currentSlide->deleteLater();
+						currentSlide = 0;
+					}
 				}
 			}
 			

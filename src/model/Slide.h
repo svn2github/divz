@@ -56,7 +56,7 @@ public:
 	Slide * clone() const;
 	
 	// guess a change time based on slide contents
-	double guessTimeout();
+	double guessTimeout(int wordsPerMin=180);
 	
 	// Changes if any of the items have changed, persists across runs
 	quint32 revision() { return m_revision; }

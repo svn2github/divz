@@ -38,6 +38,7 @@ public:
 
 public slots:
 	void slideChanged();
+	void fadeSpeedChanged(int);
 
 private slots:
 	void generateNextFrame();

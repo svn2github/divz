@@ -1184,7 +1184,7 @@ void SlideEditorWindow::appSettingsChanged()
 		QGLWidget *glw = new QGLWidget(QGLFormat(QGL::SampleBuffers));
 		//if (noScreenSync)
 		//	glw->format().setSwapInterval(0);
-		glw->setAutoFillBackground(false);
+		//glw->setAutoFillBackground(false);
 		m_view->setViewport(glw);
 		m_view->setCacheMode(QGraphicsView::CacheNone);
 

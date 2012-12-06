@@ -72,9 +72,14 @@ function newSlideCreated(slideNum)
 	else
 	if(dVars["#title"])
 		dSlide.slideName = "Title Slide";
+	else
+		return false;
 	
 	if(InPrimaryGroup)
-		changeSlideBackground(dSlide, backgroundFile);
+	{
+		//changeSlideBackground(dSlide, backgroundFile);
+		//guessSlideTimeout(dSlide, 225); // 2nd arg is WPM
+	}
 
 	if(refToAdd)
 	{
@@ -88,8 +93,10 @@ function newSlideCreated(slideNum)
 				
 				// Leaving the second arg off (e.g. NULL) will cause 
 				// BibleBrowser to add the verses as a group to the current document instead of dGroup
-				BibleBrowser.addVersesToGroup(refToAdd);
 				//BibleBrowser.addVersesToGroup(refToAdd, dGroup);
+				
+				BibleBrowser.addVersesToGroup(refToAdd);
+				
 				
 				debug("Added bible reference: ", refToAdd);
 				
@@ -97,10 +104,18 @@ function newSlideCreated(slideNum)
 			}
 			
 			lastVerseAdded = refToAdd;
+			
 		}
 // 		else
 // 			debug("Not adding ref ", refToAdd, " because not in primary group");
+
+		refToAdd = false;
+
+		// We've decided we don't want bible ref slides showing up in the sermon since we already added refs to the main document
+		return false;
 	}
+	
+	return true;
 }
 
 // This hook allows you to return the name of a slide from the template group to find.
