@@ -5,10 +5,51 @@ DEPENDPATH += $$PWD ../
 INCLUDEPATH += $$PWD ../
 VPATH += ../
 
-MOC_DIR = .build
-OBJECTS_DIR = .build
-RCC_DIR = .build
-UI_DIR = .build
+MOC_DIR = ../.build
+OBJECTS_DIR = ../.build
+RCC_DIR = ../.build
+UI_DIR = ../.build
+
+
+qt += multimedia
+
+
+win32 {
+    QT_MOBILITY_HOME = C:/Qt/qt-mobility-opensource-src-1.0.2
+}
+unix {
+    #QT_MOBILITY_HOME = /opt/qt-mobility-opensource-src-1.0.1
+     QT_MOBILITY_HOME = /opt/qt-mobility-opensource-src-1.1.0-beta2
+    #QT_MOBILITY_HOME = /opt/qt-mobility-opensource-src-1.1.0-tp
+}
+
+# To enable, use: qmake CONFIG+=mobility, and make sure QT_MOBILITY_HOME is correct
+# To run: Make sure QT_PLUGIN_PATH has $QT_MOBILITY_HOME/plugins added, else media will not play
+#         ..and make sure $LD_LIBRARY_PATH has $QT_MOBILITY_HOME/lib - otherwise app will not start.
+mobility: {
+        isEmpty(QT_MOBILITY_SOURCE_TREE):QT_MOBILITY_SOURCE_TREE = $$QT_MOBILITY_HOME
+        isEmpty(QT_MOBILITY_BUILD_TREE):QT_MOBILITY_BUILD_TREE = $$QT_MOBILITY_HOME
+
+        #now include the dynamic config
+        include($$QT_MOBILITY_BUILD_TREE/config.pri)
+
+        CONFIG += mobility multimedia
+        MOBILITY = multimedia
+
+        INCLUDEPATH += \
+                $$QT_MOBILITY_HOME/src \
+                $$QT_MOBILITY_HOME/src/global \
+                $$QT_MOBILITY_HOME/src/multimedia \
+                $$QT_MOBILITY_HOME/src/multimedia/audio \
+                $$QT_MOBILITY_HOME/src/multimedia/video
+
+        LIBS += -L$$QT_MOBILITY_BUILD_TREE/lib \
+                -lQtMultimediaKit
+
+        DEFINES += \
+                QT_MOBILITY_ENABLED \
+                HAS_QT_VIDEO_SOURCE
+}
 
 # Input
 

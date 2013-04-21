@@ -496,7 +496,7 @@ $(function()
 		
 		// remove existing classes
 		$('#tablet-control').removeClass('ui-btn-active');
-		$('#tablet-viewer').removeClass('ui-btn-active');
+		$('#tablet-viewer' ).removeClass('ui-btn-active');
 		
 		// Set current mode button active
 		if(modeName == 'control')
@@ -587,6 +587,8 @@ $(function()
 		// Update UI
 		updateLiveSlideUI($(block));
 		
+		//console.debug('sendBlockLive: itemid:', itemid,', idx:', idx, ', mapping:', mapping, ', touched:', touched); 
+		
 		slideGoLive(itemid, idx, mapping, touched);
 	}
 	
@@ -653,6 +655,123 @@ $(function()
 			// functionality on the div, syntax highlight it, then wrap it all back up into a nice HTML block for display
 			var blocksOut = [];
 			var blocks = item.text.split("\n\n");
+// 			var getBlocks = function(item)
+// 			{
+// 				// Generate an optimal arrangement if no arrangement given already
+// 				if(item.arr == "")
+// 					item = genCompressedArr(item);
+// 				
+// 				var arrList = item.arr.split(/\s*,\s*/);
+// 				
+// 				var isEmpty = true;
+// 				for(var idx in arrList);
+// 					if(arrList[idx] != "")
+// 						isEmpty = false;
+// 				
+// 				if(isEmpty)
+// 				{
+// 					item = genCompressedArr(item);
+// 					arrList = item.arr.split(/\s*,\s*/);
+// 				}
+// 				
+// 				//console.debug("editSong(): arrList:", arrList);
+// 				
+// 				var cleanedText = item.text.replace("\r\n","\n");
+// 				var blockList = cleanedText.split("\n\n");
+// 				
+// 				//console.debug("editSong(): blockList: ", blockList); 
+// 				
+// 				var blockHash = {};
+// 				
+// 				var curBlockTitle = false;
+// 				var curBlockText = [];
+// 				var firstBlock = true;
+// 				for(var idx in blockList)
+// 				{
+// 					var passage = blockList[idx];
+// 					
+// 					var newBlockTitle = false;
+// 					var filtered = [];
+// 					var lines = passage.split("\n");
+// 					for(var lineIdx in lines)
+// 					{
+// 						var line = lines[lineIdx];
+// 						var matchData = tagFormatRegex.exec(line);
+// 						if(matchData)
+// 							newBlockTitle = matchData[1];
+// 						else
+// 							filtered[filtered.length] = line;
+// 					}
+// 					
+// 					//console.debug("current block idx: ", idx, ", newBlockTitle: ", newBlockTitle);
+// 					if(newBlockTitle)
+// 					{
+// 						//console.debug("curBlockTitle: ",curBlockTitle, "text line1: ",curBlockText[0]);
+// 						// first, add block to hash if we have a block already
+// 						if(curBlockTitle)
+// 						{
+// 							blockHash[curBlockTitle] = curBlockText.join("\n\n");
+// 						}
+// 						else
+// 						// or this is the first block and no title given - assume "Title" block
+// 						if(firstBlock && curBlockText.length>0)
+// 						{
+// 							curBlockTitle = "Title";
+// 							blockHash[curBlockTitle] = curBlockText.join("\n\n");
+// 						}
+// 						
+// 						firstBlock = false;
+// 						
+// 						// start new block
+// 						curBlockTitle = newBlockTitle;
+// 						curBlockText = [];
+// 					}
+// 					
+// 					curBlockText.push(filtered.join("\n"));
+// 				}
+// 				
+// 				// No block titles found, so make our own
+// 				if(firstBlock && 
+// 				  !curBlockTitle)
+// 				{
+// 					var miniList = curBlockText;//.split("\n\n");
+// 					for(var idx in miniList)
+// 						blockHash["Verse "+(parseInt(idx)+1)] = miniList[idx];
+// 				}
+// 				else
+// 				if(curBlockTitle)
+// 					//blockHash[curBlockTitle] = curBlockText.join("\n\n");
+// 					blockHash[curBlockTitle] = curBlockText.join("\n\n");
+// 		// 			
+// 				
+// 				//console.debug("editSong(): blockHash:", blockHash);
+// 				
+// 		// 		//qDebug() << "SongSlideGroup::rearrange: Original blocks: "<<blockHash;
+// 		// 		//qDebug() << "SongSlideGroup::rearrange: Processing arragnement: "<<arragement;
+// 		
+// 				var firstBlockDiv = 0;
+// 				var output = [];
+// 				for(var idx in arrList)
+// 				{
+// 					var blockTitle = arrList[idx];
+// 					if(blockHash[blockTitle])
+// 					{
+// 						//qDebug() << "SongSlideGroup::rearrange: [process] Block: "<<blockTitle;
+// 						output[output.length] =
+// 							blockTitle + "\n" + 
+// 							blockHash[blockTitle];
+// 						//var blockText = blockHash[blockTitle];
+// 					}
+// 					else
+// 					{
+// 						//console.debug("editSong(): [process] [Error] Arrangement block not found in original text: ", blockTitle);
+// 					}
+// 				}
+// 				
+// 				return output;
+// 			}
+// 			
+// 			var blocks = getBlocks(item);
 			for(var i=0; i<blocks.length; i++)
 			{
 				var block = syntaxHighlight(blocks[i]);
@@ -844,6 +963,7 @@ $(function()
 	
 	window.slideGoLive = function(itemid, idx, mapList, touched)
 	{
+		console.debug('slideGoLive: itemid:', itemid,', idx:', idx, ', mapList:', mapList, ', touched:', touched);
 		showLoadingMsg();
 		
 		// Default slide to the idx given so that slides
@@ -867,6 +987,8 @@ $(function()
 			
 			window.LastLiveSlide = idx;
 		}
+
+		console.debug('/tablet/show_slide: itemid:', itemid, ', slide:', slide); 
 		
 		$.ajax({
 			type: "GET",
@@ -1574,7 +1696,7 @@ $(function()
 				{
 					var groupNum = data.groupIdx;
 					var slideNum = data.slideIdx;
-					
+
 					if(groupNum != window.CurrentListItemDisplayed)
 					{
 						// We don't change groups on the "control" tablet because
@@ -1599,6 +1721,8 @@ $(function()
 						//consoleDebug("pollLiveSlide(): No change in slide#/group#");
 						return;
 					}
+
+					console.debug('/tablet/poll_live_slide: groupNum:',groupNum,', slideNum:', slideNum);
 					
 					window.pollLiveSlide.lastLiveSlide = slideNum;
 					window.pollLiveSlide.lastLiveGroup = groupNum;
@@ -1614,6 +1738,7 @@ $(function()
 					}
 					
 					var slideMapping = item.mapping;
+					console.debug('slideMapping:', slideMapping);
 					
 					// We have to find slideNum in mappings and map back to non-arranged slide
 					// If not found in mappings, use 1-1 mapping
@@ -1636,6 +1761,8 @@ $(function()
 					
 					if(mappedIdx < 0)
 						mappedIdx = slideNum;
+
+					console.debug('... mappedIdx:', mappedIdx);
 						
 					var $block = $("#slide-idx-" + mappedIdx);
 					
@@ -1732,6 +1859,7 @@ $(function()
 					for(var i=0; i<data.list.length; i++)
 					{
 						var item = data.list[i];
+						//item.mapping = {};
 						var shortTitle = item.title.substring(0,20) + (item.title.length > 20 ? "..." :"");
 						
 						// 'ontouchstart' added per http://matt.might.net/articles/how-to-native-iphone-ipad-apps-in-javascript/
@@ -1739,6 +1867,7 @@ $(function()
 						list.append($("<li><a href='javascript:void(showListItem("+item.id+"));' ontouchstart='showListItem("+item.id+");return false'>"+shortTitle+"</a></li>"));
 						
 						window.SearchResults[item.id] = item;
+						console.debug(item);
 					}
 					
 					$("#result-list-box").append(list);
